@@ -1,45 +1,37 @@
 // מסך התחברות - מודול 1 (auth)
-// כולל לוגו, שדות מייל וסיסמה, וקישור "שכחתי סיסמה"
+// המסך הראשון של המערכת: המשתמש מזין מייל וסיסמה, ואנחנו בודקים מולם דרך Supabase
 
 import { useState } from "react"
 import { supabase } from "@/supabaseClient"
 
 export default function LoginPage() {
+  // משתני מצב: שומרים את מה שהמשתמש מקליד, והודעות שגיאה/טעינה
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [errorMsg, setErrorMsg] = useState("")
-  const [infoMsg, setInfoMsg] = useState("") // הודעה ירוקה (למשל אחרי שליחת איפוס)
   const [loading, setLoading] = useState(false)
 
-  // התחברות רגילה עם מייל וסיסמה
+  // הפונקציה שרצה כשלוחצים על כפתור ההתחברות
   async function handleLogin(e) {
-    e.preventDefault()
+    e.preventDefault() // מונע מהדף להתרענן
     setErrorMsg("")
-    setInfoMsg("")
     setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    // הפנייה ל-Supabase: "בדוק אם המייל והסיסמה האלה נכונים"
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    })
 
     setLoading(false)
+
     if (error) {
+      // אם הפרטים שגויים - מציגים הודעה ידידותית בעברית
       setErrorMsg("מייל או סיסמה שגויים. נסה שוב.")
     } else {
+      // אם הצליח - בינתיים רק הודעה. בהמשך נעביר למסך הבית
+      setErrorMsg("")
       alert("התחברת בהצלחה! 🎉")
-    }
-  }
-
-  // שכחתי סיסמה - שולח מייל איפוס לכתובת שהוזנה
-  async function handleForgotPassword() {
-    if (!email) {
-      setErrorMsg("הזן קודם את כתובת הדוא״ל שלך בשדה למעלה.")
-      return
-    }
-    setErrorMsg("")
-    const { error } = await supabase.auth.resetPasswordForEmail(email)
-    if (error) {
-      setErrorMsg("לא הצלחנו לשלוח מייל איפוס. בדוק את הכתובת.")
-    } else {
-      setInfoMsg("נשלח אליך מייל לאיפוס הסיסמה. בדוק את תיבת הדוא״ל.")
     }
   }
 
@@ -49,13 +41,11 @@ export default function LoginPage() {
         onSubmit={handleLogin}
         className="bg-white p-8 rounded-2xl shadow-md w-full max-w-sm flex flex-col gap-4"
       >
-        {/* לוגו החברה */}
-        <img src="/regin-logo.png" alt="REG-IN" className="h-12 mx-auto mb-2" />
-
-        <h1 className="text-xl font-bold text-center text-slate-800">
-          כניסה למערכת
+        <h1 className="text-2xl font-bold text-center text-slate-800">
+          כניסה למערכת REG-IN
         </h1>
 
+        {/* שדה מייל */}
         <input
           type="email"
           placeholder="כתובת דוא״ל"
@@ -65,6 +55,7 @@ export default function LoginPage() {
           className="border border-slate-300 rounded-lg p-3 text-right"
         />
 
+        {/* שדה סיסמה */}
         <input
           type="password"
           placeholder="סיסמה"
@@ -74,25 +65,18 @@ export default function LoginPage() {
           className="border border-slate-300 rounded-lg p-3 text-right"
         />
 
-        {/* הודעות שגיאה / מידע */}
-        {errorMsg && <p className="text-red-600 text-sm text-center">{errorMsg}</p>}
-        {infoMsg && <p className="text-green-600 text-sm text-center">{infoMsg}</p>}
+        {/* הודעת שגיאה - מופיעה רק אם יש */}
+        {errorMsg && (
+          <p className="text-red-600 text-sm text-center">{errorMsg}</p>
+        )}
 
+        {/* כפתור ההתחברות */}
         <button
           type="submit"
           disabled={loading}
           className="bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg p-3 transition disabled:opacity-50"
         >
           {loading ? "מתחבר..." : "התחברות"}
-        </button>
-
-        {/* קישור שכחתי סיסמה */}
-        <button
-          type="button"
-          onClick={handleForgotPassword}
-          className="text-teal-600 hover:underline text-sm text-center"
-        >
-          שכחת סיסמה?
         </button>
       </form>
     </div>
