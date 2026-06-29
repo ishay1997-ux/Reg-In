@@ -13,6 +13,7 @@ export default function LoginPage() {
 
   async function handleLogin(e) {
     e.preventDefault()
+    console.log("גרסה חדשה רצה!")
     setErrorMsg("")
     setInfoMsg("")
 
