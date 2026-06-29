@@ -1,37 +1,64 @@
 // מסך התחברות - מודול 1 (auth)
-// המסך הראשון של המערכת: המשתמש מזין מייל וסיסמה, ואנחנו בודקים מולם דרך Supabase
+// כולל לוגו, ולידציה מקומית, ניקוי רווחים, ואיפוס שגיאות תוך כדי הקלדה
 
 import { useState } from "react"
 import { supabase } from "@/supabaseClient"
 
 export default function LoginPage() {
-  // משתני מצב: שומרים את מה שהמשתמש מקליד, והודעות שגיאה/טעינה
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [errorMsg, setErrorMsg] = useState("")
+  const [infoMsg, setInfoMsg] = useState("")
   const [loading, setLoading] = useState(false)
 
-  // הפונקציה שרצה כשלוחצים על כפתור ההתחברות
   async function handleLogin(e) {
-    e.preventDefault() // מונע מהדף להתרענן
+    e.preventDefault()
     setErrorMsg("")
+    setInfoMsg("")
+
+    // ניקוי רווחים מיותרים מקצוות המייל (למקרה של העתק-הדבק)
+    const cleanEmail = email.trim()
+
+    // ולידציה מקומית - לפני שפונים לשרת, חוסך בקשות מיותרות
+    if (!cleanEmail) {
+      setErrorMsg("יש להזין כתובת דוא״ל.")
+      return
+    }
+    if (password.length < 6) {
+      setErrorMsg("הסיסמה חייבת להכיל לפחות 6 תווים.")
+      return
+    }
+
+    // רק אחרי שהבדיקות עברו - מדליקים מצב טעינה
     setLoading(true)
 
-    // הפנייה ל-Supabase: "בדוק אם המייל והסיסמה האלה נכונים"
     const { error } = await supabase.auth.signInWithPassword({
-      email: email,
+      email: cleanEmail,
       password: password,
     })
 
     setLoading(false)
 
     if (error) {
-      // אם הפרטים שגויים - מציגים הודעה ידידותית בעברית
       setErrorMsg("מייל או סיסמה שגויים. נסה שוב.")
     } else {
-      // אם הצליח - בינתיים רק הודעה. בהמשך נעביר למסך הבית
-      setErrorMsg("")
+      // TODO: אחרי בניית מסך הבית (מודול 7) - להעביר לשם במקום alert
       alert("התחברת בהצלחה! 🎉")
+    }
+  }
+
+  async function handleForgotPassword() {
+    const cleanEmail = email.trim()
+    if (!cleanEmail) {
+      setErrorMsg("הזן קודם את כתובת הדוא״ל שלך בשדה למעלה.")
+      return
+    }
+    setErrorMsg("")
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail)
+    if (error) {
+      setErrorMsg("לא הצלחנו לשלוח מייל איפוס. בדוק את הכתובת.")
+    } else {
+      setInfoMsg("נשלח אליך מייל לאיפוס הסיסמה. בדוק את תיבת הדוא״ל.")
     }
   }
 
@@ -41,42 +68,55 @@ export default function LoginPage() {
         onSubmit={handleLogin}
         className="bg-white p-8 rounded-2xl shadow-md w-full max-w-sm flex flex-col gap-4"
       >
-        <h1 className="text-2xl font-bold text-center text-slate-800">
-          כניסה למערכת REG-IN
+        <img src="/regin-logo.png" alt="REG-IN" className="h-12 mx-auto mb-2" />
+
+        <h1 className="text-xl font-bold text-center text-slate-800">
+          כניסה למערכת
         </h1>
 
-        {/* שדה מייל */}
+        {/* שדה מייל - איפוס שגיאה ברגע שמתחילים להקליד */}
         <input
           type="email"
           placeholder="כתובת דוא״ל"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value)
+            setErrorMsg("")
+          }}
           required
           className="border border-slate-300 rounded-lg p-3 text-right"
         />
 
-        {/* שדה סיסמה */}
+        {/* שדה סיסמה - איפוס שגיאה ברגע שמתחילים להקליד */}
         <input
           type="password"
           placeholder="סיסמה"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value)
+            setErrorMsg("")
+          }}
           required
           className="border border-slate-300 rounded-lg p-3 text-right"
         />
 
-        {/* הודעת שגיאה - מופיעה רק אם יש */}
-        {errorMsg && (
-          <p className="text-red-600 text-sm text-center">{errorMsg}</p>
-        )}
+        {errorMsg && <p className="text-red-600 text-sm text-center">{errorMsg}</p>}
+        {infoMsg && <p className="text-green-600 text-sm text-center">{infoMsg}</p>}
 
-        {/* כפתור ההתחברות */}
         <button
           type="submit"
           disabled={loading}
           className="bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg p-3 transition disabled:opacity-50"
         >
           {loading ? "מתחבר..." : "התחברות"}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleForgotPassword}
+          className="text-teal-600 hover:underline text-sm text-center"
+        >
+          שכחת סיסמה?
         </button>
       </form>
     </div>
