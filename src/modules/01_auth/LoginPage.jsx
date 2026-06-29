@@ -16,10 +16,8 @@ export default function LoginPage() {
     setErrorMsg("")
     setInfoMsg("")
 
-    // ניקוי רווחים מיותרים מקצוות המייל (למקרה של העתק-הדבק)
     const cleanEmail = email.trim()
 
-    // ולידציה מקומית - לפני שפונים לשרת, חוסך בקשות מיותרות
     if (!cleanEmail) {
       setErrorMsg("יש להזין כתובת דוא״ל.")
       return
@@ -29,7 +27,6 @@ export default function LoginPage() {
       return
     }
 
-    // רק אחרי שהבדיקות עברו - מדליקים מצב טעינה
     setLoading(true)
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -64,8 +61,10 @@ export default function LoginPage() {
 
   return (
     <div dir="rtl" className="min-h-screen flex items-center justify-center bg-slate-50">
+      {/* noValidate - מבטל את הולידציה של הדפדפן כדי שהקוד שלנו ירוץ תמיד */}
       <form
         onSubmit={handleLogin}
+        noValidate
         className="bg-white p-8 rounded-2xl shadow-md w-full max-w-sm flex flex-col gap-4"
       >
         <img src="/regin-logo.png" alt="REG-IN" className="h-12 mx-auto mb-2" />
@@ -74,7 +73,6 @@ export default function LoginPage() {
           כניסה למערכת
         </h1>
 
-        {/* שדה מייל - איפוס שגיאה ברגע שמתחילים להקליד */}
         <input
           type="email"
           placeholder="כתובת דוא״ל"
@@ -83,11 +81,9 @@ export default function LoginPage() {
             setEmail(e.target.value)
             setErrorMsg("")
           }}
-          required
           className="border border-slate-300 rounded-lg p-3 text-right"
         />
 
-        {/* שדה סיסמה - איפוס שגיאה ברגע שמתחילים להקליד */}
         <input
           type="password"
           placeholder="סיסמה"
@@ -96,7 +92,6 @@ export default function LoginPage() {
             setPassword(e.target.value)
             setErrorMsg("")
           }}
-          required
           className="border border-slate-300 rounded-lg p-3 text-right"
         />
 
