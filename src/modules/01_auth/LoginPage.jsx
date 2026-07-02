@@ -1,8 +1,10 @@
 // מסך התחברות - מודול 1 (auth)
-// כולל לוגו, ולידציה מקומית, ניקוי רווחים, ואיפוס שגיאות תוך כדי הקלדה
+// כולל לוגו, ולידציה מקומית, ניקוי רווחים, איפוס שגיאות תוך כדי הקלדה, ובדיקת סטטוס/הרשאה לאחר התחברות
 
 import { useState } from "react"
 import { supabase } from "@/supabaseClient"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -34,14 +36,35 @@ export default function LoginPage() {
       password: password,
     })
 
-    setLoading(false)
-
     if (error) {
       setErrorMsg("מייל או סיסמה שגויים. נסה שוב.")
-    } else {
-      // TODO: אחרי בניית מסך הבית (מודול 7) - להעביר לשם במקום alert
-      alert("התחברת בהצלחה! 🎉")
+      setLoading(false)
+      return
     }
+
+    const { data: userData, error: dbError } = await supabase
+      .from("users")
+      .select("status, role_id")
+      .eq("email", cleanEmail)
+      .single()
+
+    if (dbError || !userData) {
+      setErrorMsg("משתמש זה אינו מורשה במערכת. פנה למנהל.")
+      await supabase.auth.signOut()
+      setLoading(false)
+      return
+    }
+
+    if (userData.status === "frozen") {
+      setErrorMsg('חשבונך הוקפא זמנית. פנה למנכ"ל לצורך בירור.')
+      await supabase.auth.signOut()
+      setLoading(false)
+      return
+    }
+
+    // TODO: אחרי בניית מסך הבית (מודול 7) - להעביר לשם במקום alert
+    alert("התחברת בהצלחה! 🎉")
+    setLoading(false)
   }
 
   async function handleForgotPassword() {
@@ -73,7 +96,7 @@ export default function LoginPage() {
           כניסה למערכת
         </h1>
 
-        <input
+        <Input
           type="email"
           placeholder="כתובת דוא״ל"
           value={email}
@@ -81,10 +104,10 @@ export default function LoginPage() {
             setEmail(e.target.value)
             setErrorMsg("")
           }}
-          className="border border-slate-300 rounded-lg p-3 text-right"
+          className="h-auto p-3 text-right rounded-lg border-slate-300"
         />
 
-        <input
+        <Input
           type="password"
           placeholder="סיסמה"
           value={password}
@@ -92,27 +115,28 @@ export default function LoginPage() {
             setPassword(e.target.value)
             setErrorMsg("")
           }}
-          className="border border-slate-300 rounded-lg p-3 text-right"
+          className="h-auto p-3 text-right rounded-lg border-slate-300"
         />
 
         {errorMsg && <p className="text-red-600 text-sm text-center">{errorMsg}</p>}
         {infoMsg && <p className="text-green-600 text-sm text-center">{infoMsg}</p>}
 
-        <button
+        <Button
           type="submit"
           disabled={loading}
-          className="bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg p-3 transition disabled:opacity-50"
+          className="w-full h-auto p-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"
         >
           {loading ? "מתחבר..." : "התחברות"}
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
+          variant="link"
           onClick={handleForgotPassword}
-          className="text-teal-600 hover:underline text-sm text-center"
+          className="h-auto p-0 text-teal-600 text-sm"
         >
           שכחת סיסמה?
-        </button>
+        </Button>
       </form>
     </div>
   )
