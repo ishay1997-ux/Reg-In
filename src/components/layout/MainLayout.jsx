@@ -23,11 +23,11 @@ export default function MainLayout() {
     return <Navigate to="/login" replace />
   }
 
-  if (user.status === "frozen") {
+  if (user.status === "inactive") {
     return (
       <div dir="rtl" className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="bg-white p-8 rounded-2xl shadow-md max-w-sm text-center">
-          <p className="text-red-600 font-semibold">חשבונך הוקפא זמנית. פנה למנכ"ל לצורך בירור.</p>
+          <p className="text-red-600 font-semibold">חשבון זה אינו פעיל במערכת. פנה למנכ"ל לצורך בירור.</p>
         </div>
       </div>
     )

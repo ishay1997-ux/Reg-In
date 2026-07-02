@@ -57,8 +57,8 @@ export default function LoginPage() {
       return
     }
 
-    if (userData.status === "frozen") {
-      setErrorMsg('חשבונך הוקפא זמנית. פנה למנכ"ל לצורך בירור.')
+    if (userData.status === "inactive") {
+      setErrorMsg('חשבון זה אינו פעיל במערכת. פנה למנכ"ל לצורך בירור.')
       await supabase.auth.signOut()
       setLoading(false)
       return

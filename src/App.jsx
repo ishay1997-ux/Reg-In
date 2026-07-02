@@ -6,8 +6,10 @@ import ProtectedRoute from "@/components/layout/ProtectedRoute"
 import LoginPage from "@/modules/01_auth/LoginPage"
 import SystemManagementPage from "@/modules/01_auth/SystemManagementPage"
 import UsersManagementPage from "@/modules/01_auth/UsersManagementPage"
+import PermissionsMatrixPage from "@/modules/01_auth/PermissionsMatrixPage"
 import WelcomePage from "@/components/WelcomePage"
 import UnderConstruction from "@/components/UnderConstruction"
+import ProfileSettingsPage from "@/components/ProfileSettingsPage"
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
 
           <Route element={<MainLayout />}>
             <Route index element={<WelcomePage />} />
+            {/* נגיש לכל משתמש מחובר בלי קשר לתפקיד - בכוונה בלי ProtectedRoute, MainLayout כבר חוסם לא-מחוברים/מוקפאים */}
+            <Route path="profile" element={<ProfileSettingsPage />} />
 
             <Route
               path="system"
@@ -29,7 +33,7 @@ function App() {
             >
               <Route index element={<Navigate to="users" replace />} />
               <Route path="users" element={<UsersManagementPage />} />
-              <Route path="permissions" element={<UnderConstruction moduleName="הרשאות" />} />
+              <Route path="permissions" element={<PermissionsMatrixPage />} />
               <Route path="params" element={<UnderConstruction moduleName="פרמטרים" />} />
             </Route>
             <Route path="users" element={<Navigate to="/system/users" replace />} />

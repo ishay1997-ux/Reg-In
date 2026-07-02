@@ -30,7 +30,7 @@ create table users (
   email text primary key,
   role_id int references roles (role_id) on delete restrict,
   full_name text not null,
-  status text not null default 'active' check (status in ('active', 'frozen')),
+  status text not null default 'active' check (status in ('active', 'inactive')),
   phone text
 );
 

@@ -1,11 +1,12 @@
 // מסך ניהול משתמשים - טאב ראשון בתוך "ניהול מערכת" (SystemManagementPage), נגיש למנכ"ל בלבד.
 // ה-Route כבר מוגן ב-ProtectedRoute allow={CEO_ROLE_NAME} (App.jsx) ו-RLS אוכף גם ברמת ה-DB,
 // לכן אין כאן יותר בדיקת session/role עצמאית כפולה - רק טעינת הדאטה בפועל דרך useAuth().
-// טבלת עובדים, הוספת משתמש חדש, הקפאה/שחזור.
+// טבלת עובדים, הוספת משתמש חדש, מחיקה רכה (status='inactive' - שורות כאלה מוסתרות מהטבלה).
 // ⚠️ OPEN חלקי (PROJECT_MASTER §7 פריט 2): phone נוסף לסכמה (02/07/2026) ונכלל כאן.
 // username עדיין לא בסכמה - נשאר בחוץ עד להכרעה משותפת עם ישי.
 
 import { useEffect, useState } from "react"
+import { Trash2 } from "lucide-react"
 import { supabase } from "@/supabaseClient"
 import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
@@ -26,9 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const ISRAELI_MOBILE_REGEX = /^0(5[0-9])-?\d{7}$/
+import { EMAIL_REGEX, ISRAELI_MOBILE_REGEX } from "@/lib/validators"
 
 export default function UsersManagementPage() {
   const { user: currentUser } = useAuth()
@@ -132,11 +131,15 @@ export default function UsersManagementPage() {
     loadUsersAndRoles()
   }
 
-  async function handleToggleStatus(targetUser) {
-    const nextStatus = targetUser.status === "active" ? "frozen" : "active"
+  async function handleDeleteUser(targetUser) {
+    // מחיקה רכה: status='inactive' מסתיר את השורה מהטבלה (ראו הסינון ב-render) - הפעולה
+    // מרגישה חד-כיוונית מנקודת המבט של ה-UI, לכן אישור לפני שליחה.
+    const confirmed = window.confirm(`למחוק את המשתמש "${targetUser.full_name}"? השורה תוסתר מהרשימה.`)
+    if (!confirmed) return
+
     const { error } = await supabase
       .from("users")
-      .update({ status: nextStatus })
+      .update({ status: "inactive" })
       .eq("email", targetUser.email)
 
     if (!error) {
@@ -252,41 +255,36 @@ export default function UsersManagementPage() {
           </tr>
         </thead>
         <tbody>
-          {users.map((targetUser) => {
-            const isSelf = targetUser.email === currentUser?.email
-            return (
-              <tr key={targetUser.email} className="border-b border-slate-100">
-                <td className="py-3">{targetUser.full_name}</td>
-                <td className="py-3 text-slate-600">{targetUser.email}</td>
-                <td className="py-3 text-slate-600">{targetUser.phone || "—"}</td>
-                <td className="py-3">{targetUser.roles?.role_name}</td>
-                <td className="py-3">
-                  <span
-                    className={
-                      "px-2 py-1 rounded-full text-xs font-medium " +
-                      (targetUser.status === "active"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-slate-200 text-slate-600")
-                    }
-                  >
-                    {targetUser.status === "active" ? "פעיל" : "מוקפא"}
-                  </span>
-                </td>
-                <td className="py-3">
-                  <Button
-                    type="button"
-                    variant="link"
-                    disabled={isSelf}
-                    title={isSelf ? "לא ניתן להקפיא את החשבון שלך" : undefined}
-                    onClick={() => handleToggleStatus(targetUser)}
-                    className="h-auto p-0 text-sm text-teal-600"
-                  >
-                    {targetUser.status === "active" ? "הקפא" : "שחזר"}
-                  </Button>
-                </td>
-              </tr>
-            )
-          })}
+          {users
+            .filter((u) => u.status !== "inactive")
+            .map((targetUser) => {
+              const isSelf = targetUser.email === currentUser?.email
+              return (
+                <tr key={targetUser.email} className="border-b border-slate-100">
+                  <td className="py-3">{targetUser.full_name}</td>
+                  <td className="py-3 text-slate-600">{targetUser.email}</td>
+                  <td className="py-3 text-slate-600">{targetUser.phone || "—"}</td>
+                  <td className="py-3">{targetUser.roles?.role_name}</td>
+                  <td className="py-3">
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                      פעיל
+                    </span>
+                  </td>
+                  <td className="py-3">
+                    <Button
+                      type="button"
+                      variant="link"
+                      disabled={isSelf}
+                      title={isSelf ? "לא ניתן למחוק את החשבון שלך" : "מחק משתמש"}
+                      onClick={() => handleDeleteUser(targetUser)}
+                      className="h-auto p-0 text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </td>
+                </tr>
+              )
+            })}
         </tbody>
       </table>
     </div>

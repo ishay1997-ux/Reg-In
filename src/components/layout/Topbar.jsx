@@ -2,7 +2,7 @@
 // ותפריט משתמש (שם+תפקיד מתוך AuthContext, וכפתור התנתקות אמיתי).
 
 import { useNavigate } from "react-router-dom"
-import { Search, LogOut, User } from "lucide-react"
+import { Search, LogOut, User, UserCog } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { cn } from "@/lib/utils"
 import {
@@ -58,6 +58,11 @@ export default function Topbar({ collapsed }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent dir="rtl" align="start">
           <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => navigate("/profile")}>
+            <UserCog className="size-4" />
+            הגדרות פרופיל
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onClick={handleLogout}>
             <LogOut className="size-4" />
