@@ -5,6 +5,8 @@
 מסמך-העל של הפרויקט. מסביר *מה* בונים, *באיזה סדר*, *מי אחראי*, ו*איך עובדים יחד ב-Git*.
 מיועד לישי ולעמית. שמרו אותו בריפו (בתיקיית `docs/`) ועדכנו אותו תוך כדי הדרך.
 
+> 🧭 **מסמך זה הוא ה-Single Source of Truth התפעולי (מדריך-על / אינדקס):** מרכז את ההקשר, כללי ה-AI, מפת הנתיבים, פרוטוקול ה-DB ולוג הסטטוס — **ומצביע** אל [PROJECT_MASTER.md](PROJECT_MASTER.md) (האפיון המפורט) בלי לשכפל אותו. מפת כל התיעוד: [docs/README.md](README.md).
+
 ---
 
 ## 1. עקרונות העבודה (לקרוא פעם אחת, לזכור לתמיד)
@@ -191,5 +193,74 @@ git push origin ishay/module-1-permissions
 את **הקוד עצמו כותבים יחד בשידור חי** עם Claude, צעד-צעד, כמו שעבדנו על התשתית. המדריך הוא המפה; הקוד נכתב כשמגיעים לכל תחנה.
 
 **הסדר:** מייצרים מדריך מיקרו לכל שלב *כשמגיעים אליו* — לא את כולם מראש — כי הפרטים מתחדדים תוך כדי, וכך לא מציפים את עצמנו. המדריך הראשון (מודול 1) כבר מוכן.
+
+---
+
+## 9. הקשר מפתח וסביבת פיתוח
+
+- **צוות:** ישי (בעל הריפו) + עמית — שני מפתחים בעבודה מקבילה.
+- **Stack:** Vite 8 + React 19 · JavaScript (לא TypeScript) · Tailwind 4 + shadcn/ui + Radix · Supabase (Auth + Postgres 17) · ממשק עברי RTL מלא · alias `@/` → `src/`.
+- **לקוח Supabase:** `src/supabaseClient.js` → מיובא כ-`@/supabaseClient` (⚠️ **לא** `@/lib/`).
+- **סביבה:** Windows + PowerShell (פקודות ב-PowerShell). `.env.local` מקומי לכל מפתח (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) — **git-ignored, לא נדחף לעולם**.
+- **פרויקט Supabase:** `Reg-In` (ref `yfeovxppnfoafmfbdfvh`), אזור `eu-west-3`. שרת פיתוח: `npm run dev` (port 5173).
+
+---
+
+## 10. כללי התנהלות ל-AI (Claude) — Rules of Engagement
+
+1. **שאל שאלות הבהרה לפני עבודה** כשמשהו לא חד-משמעי (קוד, DB, מבנה קבצים) — אל תניח.
+2. **Plan Mode:** לתכנן ולקבל אישור לפני ביצוע; במצב תכנון לא נוגעים בקבצים (מלבד קובץ התוכנית).
+3. **הערות בעברית, "why-first":** להסביר את הכוונה האדריכלית ואת הטיפול במקרי-קצה — לא לתאר תחביר. לשמור על צפיפות ההערות של הקוד הסובב (לא להעמיס על קוד שכבר ברור).
+4. **לצטט קובץ+שורה**, לא לסמוך על הזיכרון.
+5. **לא לשכתב/למחוק טבלאות קיימות.** שינויי DB רק דרך **migration בעל שם** עם כותרת "why" בעברית.
+6. **לעולם לא לקמט סודות** (`.env.local`, סיסמאות) ל-Git.
+7. **תיעוד וסנכרון (חובה):** בסוף כל צעד — לתעד ב-`CLAUDE_CODE_LOG.md` (נרטיב/למה) + שורה מתוארכת ב-`CHANGELOG.md`, וליישר כל מסמך שנסתר מהמציאות. חלוקת האחריות בין הקבצים: ראו §12.
+8. **לוודא בפועל (verify):** להריץ את האפליקציה/בדיקות ולראות שהשינוי עובד — לא להסתפק בהנחה.
+
+---
+
+## 11. מפת תיקיות ונתיבים בפועל (מודול 1)
+
+משלים את עץ המודולים המתוכנן ב-§2 — אלה **המיקומים בפועל** של קוד מודול 1 (חלקו מחוץ ל-`modules/`, כי הוא תשתית משותפת):
+
+```
+src/
+├── main.jsx · App.jsx            ← עץ הניתוב (AuthProvider עוטף את כל ה-Router)
+├── supabaseClient.js             → @/supabaseClient
+├── contexts/AuthContext.jsx      ← קונטקסט אימות/הרשאות (useAuth, reload, signOut)
+├── components/
+│   ├── layout/                   MainLayout · Sidebar · Topbar · ProtectedRoute
+│   ├── ui/                       shadcn: button·input·dialog·select·switch·dropdown-menu
+│   ├── ProfileSettingsPage.jsx   ← משותף (לא תחת 01_auth) — נגיש לכל מחובר
+│   ├── WelcomePage.jsx · UnderConstruction.jsx
+├── lib/                          constants.js (CEO_ROLE_NAME) · validators.js · utils.js (cn)
+└── modules/01_auth/              LoginPage · SystemManagementPage · UsersManagementPage · PermissionsMatrixPage
+```
+
+מפת כל התיעוד: [docs/README.md](README.md).
+
+---
+
+## 12. פרוטוקול סנכרון DB (ומה מתעדים איפה)
+
+- **מתעדים רק DDL / פונקציות / טריגרים / RLS.** לא מתעדים INSERT/UPDATE/DELETE של בדיקה. Seed (roles/modules) הוא היוצא-מן-הכלל המותר (הוא מגדיר את מטריצת ההרשאות).
+- **כל שינוי DB = migration בעל שם** עם כותרת "why" בעברית.
+- **מי מתעד מה (בלי כפילות):** `CLAUDE_CODE_LOG.md` = נרטיב/למה/החלטות/tech-debt · `CHANGELOG.md` = שורות מתוארכות (`סוג DB/קוד · מי · מה · מודולים מושפעים`) · מדריך זה = כללים + מצביע-סטטוס בלבד.
+
+### יומן DB — מודול 1 (נכון ל-02/07/2026)
+- **פונקציות:** `current_user_role_id() → int` · SQL · STABLE · SECURITY DEFINER · `search_path=''` (לאחר הקשחה). מחזירה `role_id` של המשתמש המחובר (`auth.email()`) רק אם `status='active'`. עוקפת RLS ולכן חסינה מרקורסיה בתוך policies של `users`. הרשאת EXECUTE: `authenticated`/`postgres`/`service_role` בלבד (`anon`/PUBLIC הוסרו).
+- **טריגרים:** אין. (במיוחד: אין `handle_new_user` המסנכרן `auth.users`→`public.users`; משתמשים נוצרים דרך seed / מסך המנכ"ל.)
+- **RLS:** `roles`/`modules`/`permissions` — SELECT לכל authenticated; `permissions` כתיבה למנכ"ל בלבד. `users` — SELECT self-או-מנכ"ל · `users_update_self` (UPDATE, מקפיא `role_id`+`status`) · write למנכ"ל. **11 טבלאות מודולים עתידיים:** RLS מופעל, אפס policies = deny-all מכוון עד בניית המודול.
+- **מיגרציות:** `…112703` soft-delete (frozen→inactive) · `…143254` users_update_self · `…143405` fix_recursion · `harden_current_user_role_id` (קיבוע search_path + הסרת EXECUTE מ-anon, 02/07).
+- **חוב DB פתוח:** `authenticated` עדיין יכול לקרוא לפונקציה כ-RPC (נדרש ל-RLS — מקובל) · Leaked-Password Protection כבוי (מודול 10) · `auth.email()` לא עטוף ב-`(select …)` ב-2 policies (אופטימיזציית initplan עתידית).
+
+---
+
+## 13. תוכנית ולוג סטטוס
+
+- **מודול 1 — ✅ ברובו מוכן.** הושלם בפאס האחרון (02/07): refactor ל-`AuthContext` (`useCallback`/`mountedRef`/Guard Clause), הערות עברית מקצועיות בכל קבצי המודול + תיקון hooks ב-`PermissionsMatrixPage` (מודול lint-נקי), הקשחת `current_user_role_id`, ניקוי תיעוד (מחיקת README boilerplate, שחרור `reference_spec` מ-`.md.md`→`.md` + כותרת "קפוא", יצירת `docs/README.md`), והעשרת מדריך זה ל-SSOT.
+- **ממתין:** commit + PR/merge ל-`dev`; החלטות פתוחות ב-[PROJECT_MASTER §7](PROJECT_MASTER.md).
+- **Backlog מודול 1 (נדחה בכוונה):** CAPTCHA (אפיון 5.6.1) · שינוי-אימייל עצמי · טבלת העדפות התראות · חיפוש ב-Topbar · UI ל-`params` (מודול 9) · 12 תרחישי RLS על `customers` (מודול 2).
+- **הבא בתור:** מודול 2 (לקוחות, עמית).
 
 </div>

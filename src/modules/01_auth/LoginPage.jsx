@@ -44,6 +44,9 @@ export default function LoginPage() {
       return
     }
 
+    // גם אם ההזדהות מול Supabase Auth הצליחה, בודקים שוב את השורה ב-users: ייתכן משתמש
+    // Auth תקין שאין לו שורת users (לא מורשה) או שהושבת (status='inactive'). בשני המקרים
+    // מתנתקים מיד (signOut) כדי לא להשאיר session פעיל למי שאסור לו להיכנס.
     const { data: userData, error: dbError } = await supabase
       .from("users")
       .select("status, role_id")

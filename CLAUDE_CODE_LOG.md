@@ -26,7 +26,7 @@
 - `src/modules/01_auth/LoginPage.jsx` — shadcn (Input/Button), ולידציה מקומית, בדיקת status/role אחרי אימות מוצלח מול Supabase, מנווט ל-`/` (לא `alert` יותר).
 - `src/lib/constants.js` (`CEO_ROLE_NAME`), `src/lib/validators.js` (`EMAIL_REGEX`,`ISRAELI_MOBILE_REGEX`,`MIN_PASSWORD_LENGTH`) — קבועים/ולידציות משותפים בין כמה מסכים, כדי לא לשכפל.
 - `src/components/ui/switch.jsx` — טוגל (עוטף `Switch` מ-`radix-ui`, אותה תבנית עטיפה כמו `dialog.jsx`/`select.jsx`), RTL-aware (`rtl:` variant על כיוון ה-thumb).
-- DB: RLS פעיל בפועל רק על 4 טבלאות (`roles`,`modules`,`permissions`,`users`) דרך `current_user_role_id()` (SECURITY DEFINER, אוכפת גם `status='active'`). **שאר 11 הטבלאות העסקיות חסומות לגמרי** (RLS on, 0 policies) — כל מודול עתידי יגלה דאטה ריק עד שיוסיף policy.
+- DB: RLS פעיל בפועל רק על 4 טבלאות (`roles`,`modules`,`permissions`,`users`) דרך `current_user_role_id()` (SECURITY DEFINER, אוכפת גם `status='active'`; **הוקשחה 02/07:** `search_path=''` + EXECUTE רק ל-`authenticated`/`postgres`/`service_role`). **שאר 11 הטבלאות העסקיות חסומות לגמרי** (RLS on, 0 policies) — כל מודול עתידי יגלה דאטה ריק עד שיוסיף policy.
 - `users.status` — `'active'`/`'inactive'` בלבד (תואם למוסכמה הקיימת ב-`customers`/`hostesses`). `'frozen'` הוחלף לגמרי; מיגרציית ה-DB רצה בהצלחה (פירוט בסעיף 2.1).
 
 ---
@@ -42,6 +42,15 @@
 - **ליטוש 2: נטרול טוגלי התראות** ב-`ProfileSettingsPage.jsx` - שני ה-`Switch` ב"העדפות והתראות" קיבלו `disabled` + תווית `(בקרוב)` ליד כל שם, כדי לא ליצור רושם מטעה שהתכונה כבר פעילה.
 - **צעד 10 — מסך מטריצת הרשאות** (`PermissionsMatrixPage.jsx` חדש, ב-`/system/permissions`) — פירוט מלא בסעיף 2.2 למטה.
 - **שום דבר מכל זה עדיין לא עבר `git commit`** מעבר למצוין למעלה — כל העבודה מאז ה-refactor הקודם (הגדרות פרופיל, שני הליטושים, מטריצת הרשאות) עדיין לוקאלית, ממתינה לסקירת ישי.
+- **פאס ליטוש Context/Hooks + תיעוד (02/07/2026, סשן Claude):**
+  - `AuthContext.jsx` — 3 תיקוני hooks: `loadUser` ב-`useCallback([])` (reference יציב + exhaustive-deps בלי לולאה); **Guard Clause** ל-`useAuth` (זריקת שגיאה מפורשת מחוץ ל-`<AuthProvider>` במקום קריסת null); `mountedRef` שחוסם `setState` אחרי unmount (דליפת זיכרון). התנהגות זהה לצרכנים. אומת ב-preview: CEO נטען, ESLint 0 בעיות (2 חוקים שנשתקו נקודתית במודע: `set-state-in-effect` על bootstrap, `only-export-components` על ייצוא useAuth).
+  - **הערות עברית "why-first"** בכל קבצי מודול 1. תובנה: רוב הקבצים כבר היו מתועדים היטב — ההשלמות נקודתיות (AuthContext במלואו; MainLayout/ProtectedRoute/App/LoginPage/PermissionsMatrix בנקודות why חסרות). לא הועמס על קוד שכבר ברור.
+  - תוקן hooks-lint **קיים-מראש** ב-`PermissionsMatrixPage.jsx` (`loadData`→`useCallback` לפני ה-`useEffect`) — כל מודול 1 עכשיו **lint-נקי**.
+  - **DB — migration `harden_current_user_role_id`:** `search_path=''` + שמות מלאים; הסרת EXECUTE מ-`anon`/PUBLIC (נשאר ל-`authenticated`, נדרש כי policies קוראות לפונקציה בהקשר authenticated). אומת: CEO עדיין נטען. נותרו במכוון: authenticated-RPC (נדרש), leaked-password (מודול 10), initplan `auth.email()` (עתידי).
+  - **תיעוד:** נמחק `README.md` boilerplate; `reference_spec/*.md.md`→`.md` + כותרת "קפוא" (**לא נמחקו** — מקור סמכותי ייחודי: DFD/ADISSA, הנחות-יסוד, roadmap); נוצר `docs/README.md` (אינדקס); מדריך-מאקרו הורחב ל-SSOT (§9–13); תוקן `PROJECT_MASTER §2.1` (`frozen`→`inactive`, `phone`).
+  - **תיקון עובדתי:** קביעה קודמת ש-`.vscode/settings.json` "נדחף עם סיסמה" הייתה **שגויה** — `git log --all` ריק, הקובץ gitignored מלכתחילה; הסיסמה מעולם לא הייתה ב-Git. (`docs/CHANGELOG.md` כן מכיל סיסמאות-בדיקה גלויות — בחירה מודעת של ישי.)
+  - **תיקון drift:** `users_update_self` שתועד כ"לא הוחל" — בפועל **הוחל** (2 מיגרציות). התיעוד היה מאחור מול ה-DB; תוקן.
+  - עדיין לא עבר `git commit`.
 
 ---
 

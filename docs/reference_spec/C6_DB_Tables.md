@@ -1,3 +1,5 @@
+<!-- FROZEN / DO NOT EDIT HERE: searchable Markdown export of chapters 5-6 of the approved specification. Source of truth = the .docx in this folder (REG-IN report). To change content: edit the .docx and re-export. -->
+
 – ניתוח המערכת
 2.1	 שיטת הניתוח הנבחרת
 תרשים זרימת נתונים (DFD - Data Flow Diagram) הוא כלי גרפי המאפשר לתאר את זרימת המידע בין תהליכים, מאגרי נתונים וגורמים חיצוניים. לצורך ניתוח מערכת REG-IN נבחרה שיטה זו בהתאם למתודולוגיית ADISSA של פרופ' פרץ שובל. הניתוח מוצג בשלוש רמות פירוט: תרשים הקשר (רמה 0), תרשים הפונקציות הראשיות (רמה 1), ותרשימי הפירוק לפונקציית משנה (רמה 2).

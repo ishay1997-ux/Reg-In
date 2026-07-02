@@ -1,3 +1,5 @@
+<!-- FROZEN / DO NOT EDIT HERE: searchable Markdown export of chapters 5-6 of the approved specification. Source of truth = the .docx in this folder (REG-IN report). To change content: edit the .docx and re-export. -->
+
 פרק 1	– אפיון מערכת המידע החדשה
 1.1	 מטרות המערכת
 מערכת REG-IN תוכננה במטרה להחליף את שיטות הניהול המבוזרות והידניות (אקסל, קבוצות וואטסאפ) במערכת מידע אחודה עבור החברה. מטרותיה המרכזיות הן:

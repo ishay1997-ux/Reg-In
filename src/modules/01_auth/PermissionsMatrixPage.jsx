@@ -5,7 +5,7 @@
 // עריכתן כאן הייתה מטעה כי לא הייתה משפיעה בפועל על שום דבר.
 // עמודת המנכ"ל נעולה (תמיד "עריכה") - מניעת self-lockout, כמו במחיקת משתמש ב-UsersManagementPage.
 
-import { Fragment, useEffect, useState } from "react"
+import { Fragment, useCallback, useEffect, useState } from "react"
 import { Check, Eye, Minus } from "lucide-react"
 import { supabase } from "@/supabaseClient"
 import { CEO_ROLE_NAME } from "@/lib/constants"
@@ -34,11 +34,9 @@ export default function PermissionsMatrixPage() {
   const [roles, setRoles] = useState([])
   const [permMap, setPermMap] = useState({})
 
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  async function loadData() {
+  // loadData עטוף ב-useCallback([]) — reference יציב שנכנס למערך התלויות של ה-useEffect
+  // ומספק את exhaustive-deps בלי לולאה. מוגדר לפני ה-useEffect שקורא לו (מונע "accessed before declared").
+  const loadData = useCallback(async () => {
     setLoading(true)
     setLoadError("")
 
@@ -68,13 +66,20 @@ export default function PermissionsMatrixPage() {
     }
     setPermMap(map)
     setLoading(false)
-  }
+  }, [])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- טעינת נתוני המטריצה בעלייה; loadData מדליק setLoading כחיווי טעינה (מכוון, כמו ב-AuthContext).
+    loadData()
+  }, [loadData])
 
   async function handleCellClick(roleId, moduleId) {
     const key = `${roleId}-${moduleId}`
     const current = permMap[key] || "blocked"
     const next = CYCLE[(CYCLE.indexOf(current) + 1) % CYCLE.length]
 
+    // עדכון אופטימי: מרעננים את ה-UI מיד (תגובה מהירה), כותבים ל-DB, ואם הכתיבה נכשלה
+    // (למשל חסימת RLS — רק מנכ"ל מורשה לכתוב ל-permissions) מגלגלים חזרה לערך הקודם.
     setPermMap((prev) => ({ ...prev, [key]: next }))
     setCellError("")
 
@@ -85,7 +90,7 @@ export default function PermissionsMatrixPage() {
       .eq("module_id", moduleId)
 
     if (error) {
-      setPermMap((prev) => ({ ...prev, [key]: current }))
+      setPermMap((prev) => ({ ...prev, [key]: current })) // rollback לערך שלפני הקליק
       setCellError("השינוי לא נשמר. נסה שוב.")
     }
   }

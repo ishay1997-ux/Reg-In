@@ -29,6 +29,8 @@ export default function ProtectedRoute({ allow, children }) {
   }
 
   const allowList = Array.isArray(allow) ? allow : [allow]
+  // גישה אם עובר לפחות תנאי אחד (OR): שם-תפקיד תואם, או הרשאת מודול 'edit'/'view'.
+  // 'blocked' לא נבדק בכוונה => נופל ל-false, כלומר חסימה כברירת מחדל.
   const isAllowed = allowList.some(
     (entry) => entry === user.roleName || permissions[entry] === "edit" || permissions[entry] === "view"
   )

@@ -11,6 +11,8 @@ export default function MainLayout() {
   const { loading, user } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
 
+  // ממתינים לסיום טעינת ה-Auth לפני כל החלטת ניתוב — אחרת user=null זמני היה מפנה
+  // בטעות ל-/login בכל רענון (באונס התחברות/הבהוב).
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -20,9 +22,11 @@ export default function MainLayout() {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" replace /> // אין session => למסך ההתחברות
   }
 
+  // הגנה-כפולה: משתמש שהושבת (מחיקה רכה, status='inactive') באמצע session נחסם כאן
+  // ברינדור הבא — לא רק בכניסה (LoginPage). חוסם את כל האזור המוגן.
   if (user.status === "inactive") {
     return (
       <div dir="rtl" className="min-h-screen flex items-center justify-center bg-slate-50">
