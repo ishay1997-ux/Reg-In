@@ -2,11 +2,13 @@
 // כולל לוגו, ולידציה מקומית, ניקוי רווחים, איפוס שגיאות תוך כדי הקלדה, ובדיקת סטטוס/הרשאה לאחר התחברות
 
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { supabase } from "@/supabaseClient"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 export default function LoginPage() {
+  const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [errorMsg, setErrorMsg] = useState("")
@@ -62,9 +64,8 @@ export default function LoginPage() {
       return
     }
 
-    // TODO: אחרי בניית מסך הבית (מודול 7) - להעביר לשם במקום alert
-    alert("התחברת בהצלחה! 🎉")
     setLoading(false)
+    navigate("/")
   }
 
   async function handleForgotPassword() {
