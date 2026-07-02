@@ -210,3 +210,16 @@ create policy "users_select_self_or_ceo" on users for select to authenticated
 create policy "users_write_ceo_only" on users for all to authenticated
   using (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'))
   with check (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'));
+
+-- עדכון-עצמי של פרופיל (מודול 1) — משתמש מעדכן את השורה שלו בלבד (phone/full_name),
+-- עם הקפאת role_id ו-status כדי למנוע הסלמת-הרשאות עצמית והפעלה-מחדש עצמית.
+-- הקפאת role_id דרך current_user_role_id() (SECURITY DEFINER, עוקפת RLS => חסינת רקורסיה;
+-- subquery ישיר על users כאן היה גורם infinite recursion). policy זו permissive ומתווספת
+-- ל-users_write_ceo_only ב-OR — המנכ"ל ממשיך לעדכן כל שורה/כל עמודה דרך אותה policy.
+create policy "users_update_self" on users for update to authenticated
+  using (email = auth.email())
+  with check (
+    email = auth.email()
+    and role_id = current_user_role_id()
+    and status = 'active'
+  );

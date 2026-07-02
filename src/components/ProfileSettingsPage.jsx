@@ -54,6 +54,7 @@ export default function ProfileSettingsPage() {
 }
 
 function PersonalDetailsSection({ user, reload }) {
+  const [fullName, setFullName] = useState(user?.fullName || "")
   const [phone, setPhone] = useState(user?.phone || "")
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
@@ -64,38 +65,46 @@ function PersonalDetailsSection({ user, reload }) {
     setError("")
     setSuccess("")
 
+    const cleanFullName = fullName.trim()
     const cleanPhone = phone.trim()
+
+    if (cleanFullName.length < 2) {
+      setError("שם מלא חייב להכיל לפחות 2 תווים.")
+      return
+    }
     if (cleanPhone && !ISRAELI_MOBILE_REGEX.test(cleanPhone)) {
       setError("מספר טלפון נייד לא תקין (לדוגמה: 050-1234567).")
       return
     }
 
     setSaving(true)
-    const { error: updateError } = await supabase
+    // מותר ב-RLS (מדיניות users_update_self מקפיאה רק role_id/status, לא full_name/phone).
+    // .select() מחזיר את השורות שבאמת עודכנו — אם RLS חסם בשקט (0 שורות), לא נציג
+    // הצלחה כוזבת. (זו בדיוק התקלה שהמדיניות users_update_self נועדה לתקן.)
+    const { data: updated, error: updateError } = await supabase
       .from("users")
-      .update({ phone: cleanPhone || null })
+      .update({ full_name: cleanFullName, phone: cleanPhone || null })
       .eq("email", user.email)
+      .select()
     setSaving(false)
 
-    if (updateError) {
+    if (updateError || !updated || updated.length === 0) {
       setError("שמירה נכשלה. נסה שוב.")
       return
     }
 
-    setSuccess("הטלפון עודכן בהצלחה.")
+    setSuccess("הפרטים עודכנו בהצלחה.")
     await reload()
   }
 
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <p className="text-sm text-slate-500">שם מלא</p>
-        <p className="text-slate-800 font-medium">{user?.fullName}</p>
-      </div>
-
-      <div>
         <p className="text-sm text-slate-500">תפקיד</p>
         <p className="text-slate-800 font-medium">{user?.roleName}</p>
+        {/* תפקיד לא ניתן לעריכה עצמית בכוונה - חסום גם ב-RLS (users_update_self מקפיא role_id).
+            שינוי תפקיד נעשה רק ע"י המנכ"ל דרך מסך ניהול משתמשים. */}
+        <p className="text-xs text-slate-400 mt-0.5">לשינוי תפקיד פנה למנכ"ל.</p>
       </div>
 
       <div>
@@ -107,15 +116,27 @@ function PersonalDetailsSection({ user, reload }) {
         </p>
       </div>
 
-      <form onSubmit={handleSave} noValidate className="flex flex-col gap-1.5 pt-2 border-t border-slate-100">
-        <label className="text-sm text-slate-700">טלפון</label>
-        <Input
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="050-1234567"
-          className="h-auto p-3 text-right rounded-lg border-slate-300 max-w-xs"
-        />
+      <form onSubmit={handleSave} noValidate className="flex flex-col gap-4 pt-2 border-t border-slate-100">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm text-slate-700">שם מלא</label>
+          <Input
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="שם פרטי ומשפחה"
+            className="h-auto p-3 text-right rounded-lg border-slate-300 max-w-xs"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm text-slate-700">טלפון</label>
+          <Input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="050-1234567"
+            className="h-auto p-3 text-right rounded-lg border-slate-300 max-w-xs"
+          />
+        </div>
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
         {success && <p className="text-green-600 text-sm">{success}</p>}

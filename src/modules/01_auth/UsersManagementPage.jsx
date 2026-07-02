@@ -1,12 +1,16 @@
 // מסך ניהול משתמשים - טאב ראשון בתוך "ניהול מערכת" (SystemManagementPage), נגיש למנכ"ל בלבד.
 // ה-Route כבר מוגן ב-ProtectedRoute allow={CEO_ROLE_NAME} (App.jsx) ו-RLS אוכף גם ברמת ה-DB,
 // לכן אין כאן יותר בדיקת session/role עצמאית כפולה - רק טעינת הדאטה בפועל דרך useAuth().
-// טבלת עובדים, הוספת משתמש חדש, מחיקה רכה (status='inactive' - שורות כאלה מוסתרות מהטבלה).
+// טבלת עובדים, הוספת משתמש חדש, ומצב פעיל/לא-פעיל דו-כיווני (status='active'/'inactive').
+// ⚠️ בכוונה אין כאן שום מסגור של "מחיקה": אין טקסט/אייקון "מחק", ואין הסתרה חד-כיוונית -
+// שורות inactive מוצגות בטבלה עם תג סטטוס, וניתן להחזיר אותן ל-active מאותו כפתור בדיוק.
+// אותה מוסכמה (status דו-כיווני, לא "מחיקה") חלה גם על מסכי לקוחות (מודול 2) ודיילות
+// (מודול 4) כשייבנו - ראו docs/CHANGELOG.md, סעיף "חובות עתידיים".
 // ⚠️ OPEN חלקי (PROJECT_MASTER §7 פריט 2): phone נוסף לסכמה (02/07/2026) ונכלל כאן.
 // username עדיין לא בסכמה - נשאר בחוץ עד להכרעה משותפת עם ישי.
 
 import { useEffect, useState } from "react"
-import { Trash2 } from "lucide-react"
+import { Pencil, UserCheck, UserX } from "lucide-react"
 import { supabase } from "@/supabaseClient"
 import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
@@ -18,7 +22,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   Select,
@@ -28,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { EMAIL_REGEX, ISRAELI_MOBILE_REGEX } from "@/lib/validators"
+import { cn } from "@/lib/utils"
 
 export default function UsersManagementPage() {
   const { user: currentUser } = useAuth()
@@ -38,6 +42,7 @@ export default function UsersManagementPage() {
   const [roles, setRoles] = useState([])
 
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingUser, setEditingUser] = useState(null) // null = מצב הוספה; אחרת = עריכת השורה הזו
   const [formEmail, setFormEmail] = useState("")
   const [formFullName, setFormFullName] = useState("")
   const [formPhone, setFormPhone] = useState("")
@@ -73,6 +78,7 @@ export default function UsersManagementPage() {
   }
 
   function resetForm() {
+    setEditingUser(null)
     setFormEmail("")
     setFormFullName("")
     setFormPhone("")
@@ -80,18 +86,28 @@ export default function UsersManagementPage() {
     setFormError("")
   }
 
-  async function handleAddUser(e) {
+  function openAddDialog() {
+    resetForm()
+    setDialogOpen(true)
+  }
+
+  function openEditDialog(targetUser) {
+    setEditingUser(targetUser)
+    setFormEmail(targetUser.email)
+    setFormFullName(targetUser.full_name)
+    setFormPhone(targetUser.phone || "")
+    setFormRoleId(String(targetUser.role_id))
+    setFormError("")
+    setDialogOpen(true)
+  }
+
+  async function handleSubmit(e) {
     e.preventDefault()
     setFormError("")
 
-    const cleanEmail = formEmail.trim()
     const cleanFullName = formFullName.trim()
     const cleanPhone = formPhone.trim()
 
-    if (!EMAIL_REGEX.test(cleanEmail)) {
-      setFormError('יש להזין כתובת דוא"ל תקינה.')
-      return
-    }
     if (cleanFullName.length < 2) {
       setFormError("שם מלא חייב להכיל לפחות 2 תווים.")
       return
@@ -107,23 +123,46 @@ export default function UsersManagementPage() {
 
     setSaving(true)
 
-    const { error } = await supabase.from("users").insert({
-      email: cleanEmail,
-      full_name: cleanFullName,
-      phone: cleanPhone || null,
-      role_id: Number(formRoleId),
-      status: "active",
-    })
+    if (editingUser) {
+      // עריכה: דוא"ל לא ניתן לשינוי כאן (מפתח זיהוי RLS+FK) - רק שם/טלפון/תפקיד.
+      const { data: updated, error } = await supabase
+        .from("users")
+        .update({ full_name: cleanFullName, phone: cleanPhone || null, role_id: Number(formRoleId) })
+        .eq("email", editingUser.email)
+        .select()
 
-    setSaving(false)
+      setSaving(false)
 
-    if (error) {
-      if (error.code === "23505") {
-        setFormError("כבר קיים משתמש עם כתובת הדוא\"ל הזו.")
-      } else {
-        setFormError("שמירה נכשלה. נסה שוב.")
+      if (error || !updated || updated.length === 0) {
+        setFormError("שמירת השינויים נכשלה. נסה שוב.")
+        return
       }
-      return
+    } else {
+      const cleanEmail = formEmail.trim()
+      if (!EMAIL_REGEX.test(cleanEmail)) {
+        setSaving(false)
+        setFormError('יש להזין כתובת דוא"ל תקינה.')
+        return
+      }
+
+      const { error } = await supabase.from("users").insert({
+        email: cleanEmail,
+        full_name: cleanFullName,
+        phone: cleanPhone || null,
+        role_id: Number(formRoleId),
+        status: "active",
+      })
+
+      setSaving(false)
+
+      if (error) {
+        if (error.code === "23505") {
+          setFormError("כבר קיים משתמש עם כתובת הדוא\"ל הזו.")
+        } else {
+          setFormError("שמירה נכשלה. נסה שוב.")
+        }
+        return
+      }
     }
 
     setDialogOpen(false)
@@ -131,20 +170,31 @@ export default function UsersManagementPage() {
     loadUsersAndRoles()
   }
 
-  async function handleDeleteUser(targetUser) {
-    // מחיקה רכה: status='inactive' מסתיר את השורה מהטבלה (ראו הסינון ב-render) - הפעולה
-    // מרגישה חד-כיוונית מנקודת המבט של ה-UI, לכן אישור לפני שליחה.
-    const confirmed = window.confirm(`למחוק את המשתמש "${targetUser.full_name}"? השורה תוסתר מהרשימה.`)
-    if (!confirmed) return
+  async function handleToggleStatus(targetUser) {
+    const nextStatus = targetUser.status === "active" ? "inactive" : "active"
 
-    const { error } = await supabase
-      .from("users")
-      .update({ status: "inactive" })
-      .eq("email", targetUser.email)
-
-    if (!error) {
-      loadUsersAndRoles()
+    // אישור רק לפני השבתה (חוסמת התחברות בפועל) - הפעלה מחדש היא פעולה הפיכה/בטוחה
+    // באותה מידה, לכן בלי חיכוך מיותר. שני הכיוונים משתמשים באותו כפתור/פעולה.
+    if (nextStatus === "inactive") {
+      const confirmed = window.confirm(
+        `להשבית את המשתמש "${targetUser.full_name}"? הוא לא יוכל להתחבר למערכת עד שיוחזר לפעיל.`
+      )
+      if (!confirmed) return
     }
+
+    // .select() כדי לזהות חסימת RLS שקטה (0 שורות) ולא להיכשל בשקט.
+    const { data: updated, error } = await supabase
+      .from("users")
+      .update({ status: nextStatus })
+      .eq("email", targetUser.email)
+      .select()
+
+    if (error || !updated || updated.length === 0) {
+      window.alert(nextStatus === "inactive" ? "השבתת המשתמש נכשלה. נסה שוב." : "הפעלת המשתמש נכשלה. נסה שוב.")
+      return
+    }
+
+    loadUsersAndRoles()
   }
 
   if (loading) {
@@ -160,6 +210,13 @@ export default function UsersManagementPage() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-bold text-slate-800">רשימת עובדים</h2>
 
+        <Button
+          onClick={openAddDialog}
+          className="h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"
+        >
+          + הוספת משתמש חדש
+        </Button>
+
         <Dialog
           open={dialogOpen}
           onOpenChange={(open) => {
@@ -167,26 +224,26 @@ export default function UsersManagementPage() {
             if (!open) resetForm()
           }}
         >
-          <DialogTrigger asChild>
-            <Button className="h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold">
-              + הוספת משתמש חדש
-            </Button>
-          </DialogTrigger>
           <DialogContent dir="rtl">
             <DialogHeader>
-              <DialogTitle>הוספת משתמש חדש</DialogTitle>
-              <DialogDescription>המשתמש יתווסף לטבלת המשתמשים במערכת.</DialogDescription>
+              <DialogTitle>{editingUser ? "עריכת משתמש" : "הוספת משתמש חדש"}</DialogTitle>
+              <DialogDescription>
+                {editingUser
+                  ? "עדכון שם, טלפון ותפקיד. לשינוי כתובת דוא\"ל יש ליצור משתמש חדש."
+                  : "המשתמש יתווסף לטבלת המשתמשים במערכת."}
+              </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleAddUser} noValidate className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm text-slate-700">דוא"ל</label>
                 <Input
                   type="email"
                   value={formEmail}
+                  disabled={!!editingUser}
                   onChange={(e) => setFormEmail(e.target.value)}
                   placeholder="email@regin.co.il"
-                  className="h-auto p-3 text-right rounded-lg border-slate-300"
+                  className="h-auto p-3 text-right rounded-lg border-slate-300 disabled:opacity-60"
                 />
               </div>
 
@@ -213,7 +270,11 @@ export default function UsersManagementPage() {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm text-slate-700">תפקיד</label>
-                <Select value={formRoleId} onValueChange={setFormRoleId}>
+                <Select
+                  value={formRoleId}
+                  onValueChange={setFormRoleId}
+                  disabled={editingUser?.email === currentUser?.email}
+                >
                   <SelectTrigger className="w-full h-auto p-3 rounded-lg border-slate-300">
                     <SelectValue placeholder="בחר תפקיד" />
                   </SelectTrigger>
@@ -225,6 +286,11 @@ export default function UsersManagementPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                {/* מניעת self-lockout: מנכ"ל שעורך את עצמו לא יכול לשנות את התפקיד של עצמו -
+                    אותו עיקרון בדיוק כמו נעילת עמודת המנכ"ל במטריצה ומניעת מחיקה עצמית. */}
+                {editingUser?.email === currentUser?.email && (
+                  <p className="text-xs text-slate-400">לא ניתן לשנות תפקיד לחשבון שלך.</p>
+                )}
               </div>
 
               {formError && <p className="text-red-600 text-sm">{formError}</p>}
@@ -235,7 +301,7 @@ export default function UsersManagementPage() {
                   disabled={saving}
                   className="w-full h-auto p-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
                 >
-                  {saving ? "שומר..." : "הוסף משתמש"}
+                  {saving ? "שומר..." : editingUser ? "שמור שינויים" : "הוסף משתמש"}
                 </Button>
               </DialogFooter>
             </form>
@@ -255,36 +321,66 @@ export default function UsersManagementPage() {
           </tr>
         </thead>
         <tbody>
-          {users
-            .filter((u) => u.status !== "inactive")
-            .map((targetUser) => {
-              const isSelf = targetUser.email === currentUser?.email
-              return (
-                <tr key={targetUser.email} className="border-b border-slate-100">
-                  <td className="py-3">{targetUser.full_name}</td>
-                  <td className="py-3 text-slate-600">{targetUser.email}</td>
-                  <td className="py-3 text-slate-600">{targetUser.phone || "—"}</td>
-                  <td className="py-3">{targetUser.roles?.role_name}</td>
-                  <td className="py-3">
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                      פעיל
-                    </span>
-                  </td>
-                  <td className="py-3">
+          {users.map((targetUser) => {
+            const isSelf = targetUser.email === currentUser?.email
+            const isActive = targetUser.status === "active"
+            return (
+              <tr
+                key={targetUser.email}
+                className={cn("border-b border-slate-100", !isActive && "opacity-60")}
+              >
+                <td className="py-3">{targetUser.full_name}</td>
+                <td className="py-3 text-slate-600">{targetUser.email}</td>
+                <td className="py-3 text-slate-600">{targetUser.phone || "—"}</td>
+                <td className="py-3">{targetUser.roles?.role_name}</td>
+                <td className="py-3">
+                  <span
+                    className={cn(
+                      "px-2 py-1 rounded-full text-xs font-medium",
+                      isActive ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"
+                    )}
+                  >
+                    {isActive ? "פעיל" : "לא פעיל"}
+                  </span>
+                </td>
+                <td className="py-3">
+                  <div className="flex items-center gap-3">
                     <Button
                       type="button"
                       variant="link"
-                      disabled={isSelf}
-                      title={isSelf ? "לא ניתן למחוק את החשבון שלך" : "מחק משתמש"}
-                      onClick={() => handleDeleteUser(targetUser)}
-                      className="h-auto p-0 text-red-600 hover:text-red-700"
+                      title="ערוך משתמש"
+                      onClick={() => openEditDialog(targetUser)}
+                      className="h-auto p-0 text-teal-600 hover:text-teal-700"
                     >
-                      <Trash2 className="size-4" />
+                      <Pencil className="size-4" />
                     </Button>
-                  </td>
-                </tr>
-              )
-            })}
+                    {isActive ? (
+                      <Button
+                        type="button"
+                        variant="link"
+                        disabled={isSelf}
+                        title={isSelf ? "לא ניתן להשבית את החשבון שלך" : "השבת משתמש"}
+                        onClick={() => handleToggleStatus(targetUser)}
+                        className="h-auto p-0 text-red-600 hover:text-red-700"
+                      >
+                        <UserX className="size-4" />
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="link"
+                        title="הפעל משתמש מחדש"
+                        onClick={() => handleToggleStatus(targetUser)}
+                        className="h-auto p-0 text-teal-600 hover:text-teal-700"
+                      >
+                        <UserCheck className="size-4" />
+                      </Button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>
