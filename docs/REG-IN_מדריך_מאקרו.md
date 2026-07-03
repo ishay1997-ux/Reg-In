@@ -247,20 +247,22 @@ src/
 - **כל שינוי DB = migration בעל שם** עם כותרת "why" בעברית.
 - **מי מתעד מה (בלי כפילות):** `CLAUDE_CODE_LOG.md` = נרטיב/למה/החלטות/tech-debt · `CHANGELOG.md` = שורות מתוארכות (`סוג DB/קוד · מי · מה · מודולים מושפעים`) · מדריך זה = כללים + מצביע-סטטוס בלבד.
 
-### יומן DB — מודול 1 (נכון ל-02/07/2026)
+### יומן DB — מודול 1 (נכון ל-03/07/2026)
 - **פונקציות:** `current_user_role_id() → int` · SQL · STABLE · SECURITY DEFINER · `search_path=''` (לאחר הקשחה). מחזירה `role_id` של המשתמש המחובר (`auth.email()`) רק אם `status='active'`. עוקפת RLS ולכן חסינה מרקורסיה בתוך policies של `users`. הרשאת EXECUTE: `authenticated`/`postgres`/`service_role` בלבד (`anon`/PUBLIC הוסרו).
+- **פונקציות נעילת חשבון (03/07):** `check_login_lock(text)` (מחזיר `locked_until` אם נעול; EXECUTE ל-`anon`+`authenticated`) · `register_failed_login(text)` (מונה כשלונות, נועל אחרי 5 ל-15 דק'; EXECUTE ל-`anon`+`authenticated`) · `reset_login_attempts()` (מאפס לפי `auth.email()`; EXECUTE ל-`authenticated` **בלבד**). כולן SECURITY DEFINER, `search_path=''`.
+- **טבלאות (03/07):** `login_attempts` (`email` PK, `failed_count`, `locked_until`, `last_attempt_at`) — RLS-on **בלי policies**; גישה רק דרך 3 הפונקציות למעלה.
 - **טריגרים:** אין. (במיוחד: אין `handle_new_user` המסנכרן `auth.users`→`public.users`; משתמשים נוצרים דרך seed / מסך המנכ"ל.)
 - **RLS:** `roles`/`modules`/`permissions` — SELECT לכל authenticated; `permissions` כתיבה למנכ"ל בלבד. `users` — SELECT self-או-מנכ"ל · `users_update_self` (UPDATE, מקפיא `role_id`+`status`) · write למנכ"ל. **11 טבלאות מודולים עתידיים:** RLS מופעל, אפס policies = deny-all מכוון עד בניית המודול.
-- **מיגרציות:** `…112703` soft-delete (frozen→inactive) · `…143254` users_update_self · `…143405` fix_recursion · `harden_current_user_role_id` (קיבוע search_path + הסרת EXECUTE מ-anon, 02/07).
+- **מיגרציות:** `…112703` soft-delete (frozen→inactive) · `…143254` users_update_self · `…143405` fix_recursion · `harden_current_user_role_id` (02/07) · `module1_login_attempts_lockout` + `module1_reset_login_attempts_revoke_anon` (נעילת חשבון, 03/07).
 - **חוב DB פתוח:** `authenticated` עדיין יכול לקרוא לפונקציה כ-RPC (נדרש ל-RLS — מקובל) · Leaked-Password Protection כבוי (מודול 10) · `auth.email()` לא עטוף ב-`(select …)` ב-2 policies (אופטימיזציית initplan עתידית).
 
 ---
 
 ## 13. תוכנית ולוג סטטוס
 
-- **מודול 1 — ✅ ברובו מוכן.** הושלם בפאס האחרון (02/07): refactor ל-`AuthContext` (`useCallback`/`mountedRef`/Guard Clause), הערות עברית מקצועיות בכל קבצי המודול + תיקון hooks ב-`PermissionsMatrixPage` (מודול lint-נקי), הקשחת `current_user_role_id`, ניקוי תיעוד (מחיקת README boilerplate, שחרור `reference_spec` מ-`.md.md`→`.md` + כותרת "קפוא", יצירת `docs/README.md`), והעשרת מדריך זה ל-SSOT.
+- **מודול 1 — ✅ ברובו גמור ומאומת (עודכן 03/07/2026).** מעבר לעבודת 02/07 (refactor `AuthContext`, מטריצת הרשאות, סטטוס דו-כיווני, הקשחת `current_user_role_id`, ניקוי תיעוד): **מודל אבטחה חדש** — Google Sign-In אמיתי + נעילת חשבון (5 כשלונות → 15 דק') + `sessionStorage`, **CAPTCHA בוטל**; גישת "ניהול מערכת" עברה ל-**permission-driven** (פתר split-brain); סרגל צד — כפתור כיווץ בראש + "ניהול מערכת" קישור שטוח. **בדיקת UI/UX מקיפה (3 תפקידים) עברה**, וכל תיעוד מודול 1 סונכרן למציאות.
 - **ממתין:** commit + PR/merge ל-`dev`; החלטות פתוחות ב-[PROJECT_MASTER §7](PROJECT_MASTER.md).
-- **Backlog מודול 1 (נדחה בכוונה):** CAPTCHA (אפיון 5.6.1) · שינוי-אימייל עצמי · טבלת העדפות התראות · חיפוש ב-Topbar · UI ל-`params` (מודול 9) · 12 תרחישי RLS על `customers` (מודול 2).
+- **Backlog מודול 1 (נדחה בכוונה):** שינוי-אימייל עצמי · טבלת העדפות התראות · חיפוש ב-Topbar · UI ל-`params` (מודול 9) · שדרוג נעילת חשבון ל-Auth Hook (דורש תוכנית Team) · 12 תרחישי RLS על `customers` (מודול 2). *(CAPTCHA — **לא** backlog: בוטל רשמית והוחלף במודל האבטחה החדש.)*
 - **הבא בתור:** מודול 2 (לקוחות, עמית).
 
 </div>

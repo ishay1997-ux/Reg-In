@@ -223,3 +223,85 @@ create policy "users_update_self" on users for update to authenticated
     and role_id = current_user_role_id()
     and status = 'active'
   );
+
+-- ============================================================
+-- נעילת חשבון אחרי כשלונות התחברות (מודול 1 — סגירה; החליף את דרישת ה-CAPTCHA)
+-- ------------------------------------------------------------
+-- מונה פר-אימייל שננעל אחרי 5 כשלונות רצופים ל-15 דקות, נאכף בזרימת ההתחברות
+-- (LoginPage.jsx) דרך 3 פונקציות SECURITY DEFINER. מגובה ב-rate limiting המובנה
+-- (פר-IP) של Supabase. הערה: Auth Hook ("Password verification attempt") היה הפתרון
+-- הרובוסטי אך הוא נעול לתוכנית Team; לכן זו אכיפה ברמת אפליקציה/DB — מספקת למערכת
+-- פנימית סגורה, אך ניתנת לעקיפה בקריאת API ישירה (מתועד ב-PROJECT_MASTER §5.1).
+-- ============================================================
+
+create table if not exists login_attempts (
+  email text primary key,
+  failed_count int not null default 0,
+  locked_until timestamptz,
+  last_attempt_at timestamptz not null default now()
+);
+
+-- RLS פעיל בלי policies: אין גישה ישירה מהלקוח לטבלה; רק דרך 3 הפונקציות למטה.
+alter table login_attempts enable row level security;
+
+-- check_login_lock: מחזיר את מועד שחרור הנעילה אם החשבון נעול כרגע, אחרת NULL.
+-- נקרא לפני ההתחברות => זמין ל-anon.
+create or replace function check_login_lock(p_email text)
+returns timestamptz
+language sql security definer
+set search_path = ''
+as $$
+  select locked_until from public.login_attempts
+  where email = p_email and locked_until is not null and locked_until > now();
+$$;
+
+-- register_failed_login: מגדיל את מונה הכשלונות; בהגעה ל-5 נועל ל-15 דקות ומאפס את המונה.
+-- מחזיר את מועד שחרור הנעילה אם ננעל כעת, אחרת NULL. זמין ל-anon (נקרא לפני התחברות מוצלחת).
+create or replace function register_failed_login(p_email text)
+returns timestamptz
+language plpgsql security definer
+set search_path = ''
+as $$
+declare
+  v_count int;
+  v_locked timestamptz;
+begin
+  insert into public.login_attempts (email, failed_count, last_attempt_at)
+    values (p_email, 1, now())
+  on conflict (email) do update
+    set failed_count = public.login_attempts.failed_count + 1,
+        last_attempt_at = now()
+  returning failed_count into v_count;
+
+  if v_count >= 5 then
+    v_locked := now() + interval '15 minutes';
+    update public.login_attempts
+      set locked_until = v_locked, failed_count = 0
+      where email = p_email;
+    return v_locked;
+  end if;
+
+  return null;
+end;
+$$;
+
+-- reset_login_attempts: מאפס את המונה/נעילה של המשתמש המחובר בלבד (auth.email()).
+-- זמין ל-authenticated בלבד => anon לא יכול לאפס מונה של אחר כדי לעקוף נעילה.
+create or replace function reset_login_attempts()
+returns void
+language sql security definer
+set search_path = ''
+as $$
+  delete from public.login_attempts where email = auth.email();
+$$;
+
+revoke all on function check_login_lock(text) from public;
+revoke all on function register_failed_login(text) from public;
+revoke all on function reset_login_attempts() from public;
+grant execute on function check_login_lock(text) to anon, authenticated;
+grant execute on function register_failed_login(text) to anon, authenticated;
+grant execute on function reset_login_attempts() to authenticated;
+-- Supabase נותן ברירת-מחדל EXECUTE ישיר ל-anon על פונקציות חדשות ב-public; מבטלים
+-- אותו במפורש כדי ש-reset יהיה authenticated-בלבד (least-privilege; ממילא no-op ל-anon
+-- כי auth.email() הוא NULL).
+revoke execute on function reset_login_attempts() from anon;

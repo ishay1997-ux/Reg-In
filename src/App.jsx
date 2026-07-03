@@ -6,8 +6,9 @@
 //   • /login — הנתיב הציבורי היחיד, מחוץ ל-MainLayout (בלי סרגלים, בלי הגנת session).
 //   • כל השאר — מקוננים תחת <MainLayout> שאוכף session פעיל + status='active'.
 //       – / (WelcomePage) ו-/profile נגישים לכל משתמש מחובר.
-//       – /system/* — מנכ"ל בלבד (ProtectedRoute allow={CEO_ROLE_NAME}); מאחד
-//         ניהול-משתמשים/הרשאות/פרמטרים תחת טאבים עם URL אמיתי לכל אחד.
+//       – /system/* — permission-driven (ProtectedRoute allow={SYSTEM_MODULES}): נגיש למי
+//         שיש לו edit/view על "ניהול הרשאות"/"הגדרות מערכת" (כרגע המנכ"ל בלבד לפי ה-seed,
+//         אך מונע-הרשאה ולא role קשיח); מאחד ניהול-משתמשים/הרשאות/פרמטרים תחת טאבים.
 //       – מודולים עסקיים (customers/quotes/...) — כל אחד חסום לפי הרשאת המודול שלו
 //         (allow="<module_name>"); כרגע מציגים UnderConstruction עד שייבנו.
 // ProtectedRoute כאן = שכבת הגנה שנייה מעל סינון-התפריט ב-Sidebar ומעל RLS ב-DB (הגנה לעומק).
@@ -15,7 +16,7 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider } from "@/contexts/AuthContext"
-import { CEO_ROLE_NAME } from "@/lib/constants"
+import { SYSTEM_MODULES } from "@/lib/constants"
 import MainLayout from "@/components/layout/MainLayout"
 import ProtectedRoute from "@/components/layout/ProtectedRoute"
 import LoginPage from "@/modules/01_auth/LoginPage"
@@ -41,7 +42,7 @@ function App() {
             <Route
               path="system"
               element={
-                <ProtectedRoute allow={CEO_ROLE_NAME}>
+                <ProtectedRoute allow={SYSTEM_MODULES}>
                   <SystemManagementPage />
                 </ProtectedRoute>
               }
@@ -81,7 +82,7 @@ function App() {
               path="hostesses"
               element={
                 <ProtectedRoute allow="דיילות">
-                  <UnderConstruction moduleName="גיוס" />
+                  <UnderConstruction moduleName="דיילות" />
                 </ProtectedRoute>
               }
             />

@@ -21,6 +21,11 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)             // { email, fullName, phone, status, roleId, roleName } או null (אורח)
   const [permissions, setPermissions] = useState({}) // { [module_name]: 'edit' | 'view' | 'blocked' }
 
+  // authError — הודעת שער-הרשאה שנקבעת כשיש session תקין ב-Auth אך המשתמש אינו מורשה
+  // במערכת (אין שורת users). קריטי בעיקר לזרימת Google OAuth: היא חוזרת ל-app (לא ל-LoginPage),
+  // ולכן צריך מקום מרכזי לשדר ממנו את השגיאה חזרה למסך ההתחברות.
+  const [authError, setAuthError] = useState(null)
+
   // דגל "האם הרכיב עדיין מותקן". loadUser אסינכרוני, ואם המשתמש התנתק/ניווט בזמן
   // ה-await אסור לקרוא ל-setState על רכיב מפורק (דליפת זיכרון + אזהרת React).
   // בחרנו ב-ref ולא ב-state: עדכון הדגל לא אמור לגרום רינדור, ואנחנו צריכים ערך "חי"
@@ -58,8 +63,14 @@ export function AuthProvider({ children }) {
       .single()
     if (!mountedRef.current) return
 
-    // שורה חסרה/שגיאה (למשל משתמש קיים ב-Auth בלי שורת users תואמת) => לא-מזוהה.
+    // שורה חסרה/שגיאה: יש session תקין ב-Auth אך אין שורת users תואמת — למשל התחברות Google
+    // עם חשבון שאינו מורשה במערכת. מנתקים את ה-session היתום ומדליקים authError, כדי שמסך
+    // ההתחברות (שאליו MainLayout יפנה כש-user=null) יסביר למשתמש למה נחסם. בלי ה-signOut היה
+    // נשאר session מיותם שמנווט בלולאה ל-/login בלי הודעה.
     if (myRowError || !myRow) {
+      await supabase.auth.signOut()
+      if (!mountedRef.current) return
+      setAuthError('החשבון שאיתו התחברת אינו מורשה במערכת. פנה למנכ"ל.')
       setUser(null)
       setPermissions({})
       setLoading(false)
@@ -74,6 +85,9 @@ export function AuthProvider({ children }) {
       roleId: myRow.role_id,
       roleName: myRow.roles?.role_name || "",
     })
+
+    // התחברות מזוהה ותקינה — מנקים שגיאת שער קודמת אם נותרה מניסיון קודם.
+    setAuthError(null)
 
     // 3) הרשאות נטענות רק למשתמש 'active'. משתמש שעבר "מחיקה רכה" (status='inactive')
     //    מקבל מפת הרשאות ריקה — כך גם אם מסך כלשהו יטעה ויציג אותו, אין לו מודול מותר.
@@ -132,8 +146,12 @@ export function AuthProvider({ children }) {
     setPermissions({})
   }, [])
 
+  // ניקוי ידני של authError — מסך ההתחברות קורא לזה כשהמשתמש מתחיל להקליד/מנסה מחדש,
+  // כדי שהשגיאה מהניסיון הקודם לא תישאר תקועה על המסך.
+  const clearAuthError = useCallback(() => setAuthError(null), [])
+
   return (
-    <AuthContext.Provider value={{ loading, user, permissions, reload: loadUser, signOut }}>
+    <AuthContext.Provider value={{ loading, user, permissions, authError, clearAuthError, reload: loadUser, signOut }}>
       {children}
     </AuthContext.Provider>
   )

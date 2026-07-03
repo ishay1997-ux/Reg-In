@@ -6,6 +6,7 @@
 import { useState } from "react"
 import { supabase } from "@/supabaseClient"
 import { useAuth } from "@/contexts/AuthContext"
+import { CEO_ROLE_NAME } from "@/lib/constants"
 import { ISRAELI_MOBILE_REGEX, MIN_PASSWORD_LENGTH } from "@/lib/validators"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -103,17 +104,17 @@ function PersonalDetailsSection({ user, reload }) {
         <p className="text-sm text-slate-500">תפקיד</p>
         <p className="text-slate-800 font-medium">{user?.roleName}</p>
         {/* תפקיד לא ניתן לעריכה עצמית בכוונה - חסום גם ב-RLS (users_update_self מקפיא role_id).
-            שינוי תפקיד נעשה רק ע"י המנכ"ל דרך מסך ניהול משתמשים. */}
-        <p className="text-xs text-slate-400 mt-0.5">לשינוי תפקיד פנה למנכ"ל.</p>
+            שינוי תפקיד נעשה רק ע"י המנכ"ל דרך מסך ניהול משתמשים. הרמז מוסתר למנכ"ל עצמו -
+            אין לו את מי לפנות אליו, וההודעה נשמעה מוזרה כשהמנכ"ל צופה בפרופיל של עצמו. */}
+        {user?.roleName !== CEO_ROLE_NAME && (
+          <p className="text-xs text-slate-400 mt-0.5">לשינוי תפקיד פנה למנכ"ל.</p>
+        )}
       </div>
 
       <div>
         <p className="text-sm text-slate-500">דוא"ל</p>
         <p className="text-slate-800 font-medium">{user?.email}</p>
         {/* שינוי אימייל עצמאי לא נתמך כרגע - ראו CLAUDE_CODE_LOG.md (email = מפתח זיהוי RLS+FK) */}
-        <p className="text-xs text-slate-400 mt-0.5">
-          לא ניתן לעריכה עצמית כרגע. לשינוי כתובת הדוא"ל פנה למנכ"ל.
-        </p>
       </div>
 
       <form onSubmit={handleSave} noValidate className="flex flex-col gap-4 pt-2 border-t border-slate-100">

@@ -1,6 +1,6 @@
 Hi Claude,
 
-We are preparing to move to the next phase of the project: **Module [MODULE_NUMBER]: [MODULE_NAME]**.
+We are preparing to move to the next phase of the project: **Module [MODULE_NUMBER]: [MODULE_NAME]** (feature branch `[BRANCH_NAME]`).
 Your task in this turn is to act as our Lead Software Architect and Product Manager, preparing the official blueprint and implementation strategy for this module.
 
 ### ⚠️ Workflow & Plan Rules:
@@ -26,6 +26,7 @@ You have the creative freedom to suggest optimizations, modern patterns (e.g., s
 If you identify any contradictions, omissions, or ambiguities between the text spec, database schema, or visual mockups, halt and list them at the top of your response under **"Questions & Assumptions for Ishay"**, strictly divided into:
 - 🛑 **Must Decide NOW:** Blockers that must be settled for Phase 1 (DB) and Phase 2 (UI) of this module.
 - ⏳ **Can Decide LATER:** Lower-priority items we can defer, explicitly stating *at which future module or deployment stage* they will become critical.
+- 🧭 **Deviations from the approved spec:** if we intentionally diverge from the frozen approved spec (like dropping CAPTCHA in Module 1), record the decision in the LIVING docs (`PROJECT_MASTER`, this guide, `CHANGELOG`) with a short "deviation from 5.x" note — never edit the frozen `reference_spec/*` exports.
 
 ### 📜 Expected Blueprint Structure (Granular Steps & Stopping Points)
 The blueprint you present for `docs/micro_guides/REG-IN_מדריך_מיקרו_מודול_[MODULE_NUMBER].md` must break down each phase into **granular, sequentially numbered Steps (צעדים)**. Every single step MUST end with a clear, verifiable **Stopping Point (נקודת עצירה)** to ensure we test before moving forward.
@@ -34,7 +35,8 @@ The blueprint you present for `docs/micro_guides/REG-IN_מדריך_מיקרו_מ
 
 Structure outline:
 - **Context & Scope:** Brief architectural alignment, hardcoded constraints vs. dynamic DB routing, and layout strategy.
-- **Phase 1: Infrastructure & DB (Numbered Steps):** Schema validation, constraints, soft-delete mechanisms, and core Seed/mock data generation scripts.
+- **Security / Auth model:** State explicitly how this module authenticates & authorizes — RLS policies, role/permission gates, and session/OAuth handling. Every module leans on the Module-1 auth foundation, so make the dependency explicit.
+- **Phase 1: Infrastructure & DB (Numbered Steps):** Schema validation, constraints, soft-delete mechanisms, and core Seed/mock data. **Before seeding: list any data-review gaps (enum mismatches, missing/typo values, spec-vs-schema conflicts) to resolve with Ishay — do NOT invent data.**
 - **Phase 2: UI & Frontend Development (Numbered Steps):** Layout, views, components (utilizing shadcn/ui and Lucide elements), form states, client-side validation schemas, and local state handling.
 - **Phase 3: Control & Integration (Numbered Steps):** Gatekeeping, backend integrations, regression testing parameters, system boundaries, and strict Git/Branch management guidelines (ensuring code remains on the feature branch with no premature PRs).
 - **Phase 4: QA & Handoff (The UX/Logic Verification Matrix):** A comprehensive table listing detailed test scenarios, explicit user roles executing them, actions, and expected behaviors/results (Frontend alerts, DB blockages, RLS enforcement).

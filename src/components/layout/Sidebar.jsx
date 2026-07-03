@@ -1,13 +1,12 @@
 // סרגל צד קבוע (ימין, RTL), מתקפל. 7 המודולים העסקיים נשלפים בפועל מטבלת modules ומסוננים
-// לפי מפת ההרשאות של המשתמש המחובר - blocked לא מוצג כלל. "לוח בקרה" קבוע ולא כפוף להרשאה.
-// "ניהול מערכת" (מאחד את "ניהול הרשאות"+"הגדרות מערכת") הוא פריט קשיח נפרד, מוצג אך ורק
-// לתפקיד מנכ"ל (בדיקת roleName ישירה, לא permission-based) - הסתרה מבנית אמיתית, לא רק
-// ריקון-מהרשימה. יש לו accordion: כשהתפריט מורחב, קליק על ההורה פותח/סוגר 3 קישורי-בת
-// (ניהול משתמשים/הרשאות/פרמטרים); כשהתפריט מכווץ, קליק על האייקון מנווט ישירות ליעד
-// ברירת המחדל בלי flyover (צמצום היקף מאושר).
+// לפי מפת ההרשאות של המשתמש המחובר - blocked לא מוצג כלל. "מסך הבית" קבוע ולא כפוף להרשאה.
+// "ניהול מערכת" (מאחד את מודולי "ניהול הרשאות"+"הגדרות מערכת") הוא קישור שטוח יחיד המנווט
+// ליעד ברירת המחדל /system/users; ניווט-המשנה (משתמשים/הרשאות/פרמטרים) נעשה דרך הטאבים
+// האופקיים בתוכן המסך (SystemManagementPage). מוצג permission-driven: רק אם למשתמש יש
+// edit/view על אחד ממודולי המערכת (לא בדיקת role==='מנכ"ל' קשיחה) - כך המטריצה היא מקור האמת.
 
 import { useEffect, useState } from "react"
-import { NavLink, useLocation, useNavigate } from "react-router-dom"
+import { NavLink, useLocation } from "react-router-dom"
 import {
   LayoutDashboard,
   Users,
@@ -18,13 +17,12 @@ import {
   Wallet,
   BarChart3,
   Settings,
-  ChevronDown,
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react"
 import { supabase } from "@/supabaseClient"
 import { useAuth } from "@/contexts/AuthContext"
-import { CEO_ROLE_NAME } from "@/lib/constants"
+import { SYSTEM_MODULES } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 
 // מיפוי הצגה (אייקון + נתיב) לכל module_name בפועל מהסכמה - הטקסט עצמו תמיד נשלף מה-DB.
@@ -40,18 +38,10 @@ const MODULE_META = {
   'דו"חות': { path: "/reports", icon: BarChart3 },
 }
 
-const SYSTEM_TABS = [
-  { path: "/system/users", label: "ניהול משתמשים" },
-  { path: "/system/permissions", label: "הרשאות" },
-  { path: "/system/params", label: "פרמטרים" },
-]
-
 export default function Sidebar({ collapsed, onToggleCollapse }) {
-  const { user, permissions } = useAuth()
+  const { permissions } = useAuth()
   const [modules, setModules] = useState([])
-  const [systemOpen, setSystemOpen] = useState(false)
   const location = useLocation()
-  const navigate = useNavigate()
 
   useEffect(() => {
     supabase
@@ -62,17 +52,9 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
   }, [])
 
   const visibleModules = modules.filter((m) => permissions[m.module_name] !== "blocked")
-  const isCeo = user?.roleName === CEO_ROLE_NAME
+  // גישה ל"ניהול מערכת" נאכפת לפי הרשאה (permission-driven), לא לפי role==='מנכ"ל' קשיח.
+  const canManageSystem = SYSTEM_MODULES.some((m) => permissions[m] === "edit" || permissions[m] === "view")
   const isSystemSectionActive = location.pathname.startsWith("/system")
-  const systemExpanded = systemOpen || isSystemSectionActive
-
-  function handleSystemParentClick() {
-    if (collapsed) {
-      navigate("/system/users")
-    } else {
-      setSystemOpen((open) => !open)
-    }
-  }
 
   return (
     <aside
@@ -82,12 +64,28 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
         collapsed ? "w-16" : "w-60"
       )}
     >
-      <div className="h-16 flex items-center justify-center border-b border-slate-100 shrink-0">
-        {collapsed ? (
-          <span className="text-teal-600 font-bold text-lg">R</span>
-        ) : (
-          <img src="/regin-logo.png" alt="REG-IN" className="h-9" />
+      {/* כותרת עליונה: כשמורחב - רשת 3 עמודות (spacer|לוגו|כפתור) כדי שהלוגו יהיה באמצע
+          האמת, לא רק ב"שאר השטח" אחרי הכפתור (ה-spacer ברוחב זהה לכפתור מאזן את הצדדים).
+          כשמכווץ - כפתור יחיד ממורכז. */}
+      <div
+        className={cn(
+          "h-16 items-center border-b border-slate-100 shrink-0 px-2",
+          collapsed ? "flex justify-center" : "grid grid-cols-[2.25rem_1fr_2.25rem]"
         )}
+      >
+        {!collapsed && <div aria-hidden="true" />}
+        {!collapsed && (
+          <img src="/regin-logo.png" alt="REG-IN" className="h-9 justify-self-center" />
+        )}
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          title={collapsed ? "הרחבת התפריט" : "כיווץ התפריט"}
+          aria-label={collapsed ? "הרחבת התפריט" : "כיווץ התפריט"}
+          className="flex items-center justify-center rounded-lg p-2 text-slate-500 hover:bg-slate-50 transition-colors justify-self-center"
+        >
+          {collapsed ? <ChevronsLeft className="size-5" /> : <ChevronsRight className="size-5" />}
+        </button>
       </div>
 
       <nav className="flex-1 overflow-y-auto py-3 flex flex-col gap-1 px-2">
@@ -96,16 +94,16 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
           end
           className={({ isActive }) =>
             cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+              "flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
               isActive
                 ? "bg-teal-50 text-teal-700"
                 : "text-slate-600 hover:bg-slate-50"
             )
           }
-          title={collapsed ? "לוח בקרה" : undefined}
+          title={collapsed ? "מסך הבית" : undefined}
         >
           <LayoutDashboard className="size-5 shrink-0" />
-          {!collapsed && <span>לוח בקרה</span>}
+          {!collapsed && <span>מסך הבית</span>}
         </NavLink>
 
         {visibleModules.map((m) => {
@@ -118,7 +116,7 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
               to={meta.path}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  "flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   isActive
                     ? "bg-teal-50 text-teal-700"
                     : "text-slate-600 hover:bg-slate-50"
@@ -132,64 +130,22 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
           )
         })}
 
-        {isCeo && (
-          <div>
-            <button
-              type="button"
-              onClick={handleSystemParentClick}
-              className={cn(
-                "w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                isSystemSectionActive
-                  ? "bg-teal-50 text-teal-700"
-                  : "text-slate-600 hover:bg-slate-50"
-              )}
-              title={collapsed ? "ניהול מערכת" : undefined}
-            >
-              <Settings className="size-5 shrink-0" />
-              {!collapsed && (
-                <>
-                  <span className="flex-1 text-right">ניהול מערכת</span>
-                  <ChevronDown
-                    className={cn("size-4 shrink-0 transition-transform", systemExpanded && "rotate-180")}
-                  />
-                </>
-              )}
-            </button>
-
-            {!collapsed && systemExpanded && (
-              <div className="mt-1 flex flex-col gap-1">
-                {SYSTEM_TABS.map((tab) => (
-                  <NavLink
-                    key={tab.path}
-                    to={tab.path}
-                    className={({ isActive }) =>
-                      cn(
-                        "rounded-lg pr-8 pl-3 py-2 text-sm transition-colors",
-                        isActive
-                          ? "bg-teal-50 text-teal-700 font-medium"
-                          : "text-slate-500 hover:bg-slate-50"
-                      )
-                    }
-                  >
-                    {tab.label}
-                  </NavLink>
-                ))}
-              </div>
+        {canManageSystem && (
+          <NavLink
+            to="/system/users"
+            className={cn(
+              "flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+              isSystemSectionActive
+                ? "bg-teal-50 text-teal-700"
+                : "text-slate-600 hover:bg-slate-50"
             )}
-          </div>
+            title={collapsed ? "ניהול מערכת" : undefined}
+          >
+            <Settings className="size-5 shrink-0" />
+            {!collapsed && <span>ניהול מערכת</span>}
+          </NavLink>
         )}
       </nav>
-
-      <div className="border-t border-slate-100 p-2 shrink-0">
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className="w-full flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-500 hover:bg-slate-50 transition-colors"
-        >
-          {collapsed ? <ChevronsLeft className="size-4" /> : <ChevronsRight className="size-4" />}
-          {!collapsed && <span>כיווץ</span>}
-        </button>
-      </div>
     </aside>
   )
 }

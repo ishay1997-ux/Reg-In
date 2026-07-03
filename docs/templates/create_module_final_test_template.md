@@ -18,6 +18,7 @@ Review the Supabase RLS policies and constraints established in this module.
 - Are there any logical data leaks where a lower-privileged role can read/write restricted data?
 - Does the system strictly enforce the new 'active'/'inactive' soft-delete protocol across all UI filters and DB queries?
 - For at least the highest-risk scenarios in the Phase 4 Verification Matrix, independently re-verify the result against the actual policy definition — do not just trust a ✅ already marked in the guide.
+- **Auth/security model regression:** re-verify the login security model still holds — the OAuth authorization gate (unknown/inactive accounts signed out), the account-lockout counter, and password/session handling — not only table RLS.
 - Call out any potential security vulnerabilities or bypasses.
 
 ### 3. 🧠 Claude's Architectural Review & Pro-Tips (Free Hand)
@@ -29,16 +30,39 @@ You have complete freedom to judge the quality of the written code and UI/UX.
 ### 4. 🧹 Housekeeping Check
 - Confirm `docs/CHANGELOG.md` was updated for this module (DB changes and code changes).
 - Confirm `git status` on the branch is clean of temporary/debug files (no stray `console.log`, commented-out code, or scratch files).
+- Run `npm run lint` — must be clean (the only automated check in the repo).
+- Run a live **preview smoke test** of the module's key flows (per the verification workflow) and share proof (screenshot / logs / network).
+- Provide an **explicit list of every file changed** in this module (code, DB/schema, docs).
 
-### 5. 🛑 Open Issues - MUST FIX NOW (Blockers)
+### 5. 📊 QA Coverage Matrix (functional + non-functional)
+Fill this table for THIS module — mark each test type ✅ done / ⚠️ partial / ❌ none / N-A, with a one-line justification (what was actually run, or why it doesn't apply at this stage). Be honest about gaps and defer them to Section 6 — do not over-claim. This mirrors the professional QA taxonomy so the academic report can cite real coverage.
+
+**Functional:** Unit · Integration · End-to-End (E2E) · Regression · UAT (User Acceptance).
+**Non-functional:** Security/Penetration · Performance/Load · Usability (UI/UX) · Compatibility (cross-browser/device).
+
+| Test type | Status | Evidence / why |
+|---|---|---|
+| Unit | | |
+| Integration | | |
+| E2E | | |
+| Regression | | |
+| UAT | | |
+| Security/Pen | | |
+| Performance/Load | | |
+| Usability (UI/UX) | | |
+| Compatibility | | |
+
+Note which gaps are acceptable-for-now (state the future module/milestone that closes them) versus a real blocker (→ Section 6).
+
+### 6. 🛑 Open Issues - MUST FIX NOW (Blockers)
 List any critical bugs, incomplete specs, failed test scenarios from the matrix, or RLS gaps that **must be resolved immediately** before this code touches any shared branch. If none exist, state "None".
 
-### 6. ⏳ Open Issues - HANDLE LATER (Technical Debt)
+### 7. ⏳ Open Issues - HANDLE LATER (Technical Debt)
 List lower-priority improvements, minor UX polish, or architectural hooks that we can safely defer to future modules. For each item, explicitly state **at which future module or deployment stage** this issue must be reopened and solved.
 
 ### 👑 Final Merge Verdict
 Provide a definitive, binary recommendation: Can we merge this branch into `dev`/`main` right now?
 - **[YES]** - If the module is fully stable, secure, and compliant with the Definition of Done.
-- **[NO]** - If there is even one blocker from Section 5. Provide a clear, 2-sentence justification for your verdict.
+- **[NO]** - If there is even one blocker from Section 6. Provide a clear, 2-sentence justification for your verdict.
 
 Please run your audit and output the review report now.
