@@ -48,6 +48,37 @@
 
 ## יומן סשנים (הכי חדש למעלה)
 
+### 📝 סשן 05/07/2026 — "ניקוי תיעוד + פרוטוקול עדכון schema" (GitHub Copilot)
+**זמן:** ~45 דק'. **ענף:** `ishay/module-1-permissions`. **סוג:** תיעוד + meta (פרוטוקול).
+
+**משימות שהושלמו:**
+
+1. **ניקוי תיעוד (35-40% כפילות בוטלה)**
+   - ✅ **Delete `docs/amit-onboarding.md`** — 80% כפול של `macro-guide.md` סעיף 7 (Git workflow). קובץ משנמחק לחלוטין.
+   - ✅ **Move `CLAUDE_CODE_LOG.md` ל-`docs/`** — מ-root ל-`docs/CLAUDE_CODE_LOG.md` (ארגון ברור), עם קובץ **redirect בשורש** שמסביר ההעברה (ללא symlink, דורש Admin).
+   - ✅ **Crosstalk hints** — הוספת הפניות הדדיות ל:
+     - `README.md` — דלוג מ-amit-onboarding להפנות ל-`macro-guide.md` סעיף 7 בישירות.
+     - `PROJECT_MASTER.md` — עדכון היררכיית מקורות אמת, הפניה ישירה ל-`docs/schema.sql` + `supabase/migrations/`.
+     - `CHANGELOG.md` — header חדש מסביר חלוקת אחריות: יומן DB+קוד משותף לשני המפתחים, יומן סטטוס עמוק של Claude בקובץ זה.
+   - ✅ **SQL refactoring** — PROJECT_MASTER.md הוא **ספציפיקציה בלבד**, לא storage ל-DDL חי. הצביע ל-`schema.sql` כ"מקור האמת ההנדסי", ל-`migrations/` כ"היסטוריה של שינויים חיים".
+   - **Git commits:** `2e1fedf` ("docs: clean up documentation duplication + reorganize").
+
+2. **פרוטוקול עדכון schema.sql → macro-guide.md (סעיף 12.1 חדש)**
+   - ✅ סעיף **"עדכון `docs/schema.sql` — חלק מ-Definition of Done"**: 
+     - שלבים ברורים: הרץ migration → דלוג מ-Supabase SQL Editor → עדכן ידנית → commit ביחד.
+     - דרך מהירה: **Supabase Studio → SQL → Snapshots → Generate Schema SQL** → copy ל-`docs/schema.sql`.
+     - **חובה ב-DoD (סעיף 6):** מודول לא approved בלי schema.sql מעודכן.
+   - **Git commit:** `a4e5d1d` ("docs: add DB schema snapshot protocol to Definition of Done").
+
+**המלצות שעדיין **פתוחות** (לא בוצעו בסשן זה — ממתינות לאישור/עדיפות):**
+1. 🔴 **קריטי — RLS placeholder ל-11 טבלאות** (`customers`, `products`, `price_tiers`, `params`, `quotes`, `quote_services`, `projects`, `hostesses`, `salary_reports`, `assignments`, `logistics`): **בוטל RLS=on ללא policies** = deny-all כוונתי עד בנייתם. **דורש:** אחד-שורה SELECT policy על כל אחת = הרשה על-תנאי כלשהו (למשל: `WHERE auth.email() IN (SELECT owner_email FROM auth.users)` — ביומנקס לוגיקה משטח כך שרלס על כולם פותחת). **זה חסום** module 2 (לקוחות, עמית) מלהתחיל ברשמה. **זמן משוער:** ~15 דק' SQL + 30 דק' בדיקה. **עדיפות:** **HIGH** — דורש ביצוע לפני סוף היום (M2 backlog).
+2. 🟡 **גבוה — Seed data decisions** (ל-מודול 3, products/customers/params enums): Enum לקוח (סוגי לקוח — בחברה פרטית/ממשלה/חברת הפקה/nonprofit), SKU format, שדה כתובת ב-hostesses (כעת רק `city`), משקולות Smart Match (W1/W2/W3), ערכי מע"מ/יחס. **זמן משוער:** 30 דק' קול עם ישי + עמית ל-הכרעה קטגורית. **עדיפות:** MEDIUM — לפני M2-M3 boundary (שבוע).
+3. 🟢 **בינוני — Module 1 PR + merge ל-dev:** קוד כבר committed (`011e588`), ממתין ליצירת PR ב-GitHub (ישי) + אישור (עמית). **זמן משוער:** 10 דק'. **עדיפות:** MEDIUM — לאחר ניקוי תיעוד בוצע, כדי ש-PR description יכול להצביע על תיעוד עדכן.
+
+**Tech-debt נוסף (הערה הערה):** Validation ב-`users` form (טלפון בפורמט בעברית), Error Boundary (Router level לא קיים), מאגר לקוחות: `customer_type` enum = unclear mapping (ראו סעיף 7 פריט 3 ב-PROJECT_MASTER).
+
+---
+
 ### 04/07/2026 — כותרות-הפעלה, auto-commit+push, ורוטינת E2E אמיתית (**בוצע**)
 - ישי ביקש 3 שיפורים לרוטינות: (1) כותרת "מתי להפעיל" בכל אחת, (2) `regin-pr-gate` תבצע commit+push אוטומטי כש-verify ירוק **בלי לשאול**, (3) רוטינת UI/UX/E2E חדשה. שאלתי 2 שאלות הבהרה (plan mode): גבולות ה-auto-push (בחר: רק ענף נוכחי, לעולם לא main/dev) והיקף ה-E2E (בחר: Playwright אמיתי עכשיו, לא לחכות למודול 12).
 - **כותרות:** נוספה שורת "🕐 מתי להפעיל" בראש כל אחת מ-4 הרוטינות.
