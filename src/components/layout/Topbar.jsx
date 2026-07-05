@@ -1,10 +1,10 @@
 // סרגל עליון קבוע: תיבת חיפוש (placeholder ויזואלי בלבד - אין עדיין נתונים לחפש בהם),
 // ותפריט משתמש (שם+תפקיד מתוך AuthContext, וכפתור התנתקות אמיתי).
 
-import { useNavigate } from "react-router-dom"
-import { Search, LogOut, User, UserCog } from "lucide-react"
-import { useAuth } from "@/contexts/AuthContext"
-import { cn } from "@/lib/utils"
+import { useNavigate } from 'react-router-dom'
+import { Search, LogOut, User, UserCog } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { cn } from '@/lib/utils'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu'
 
 export default function Topbar({ collapsed }) {
   const { user, signOut } = useAuth()
@@ -20,15 +20,15 @@ export default function Topbar({ collapsed }) {
 
   async function handleLogout() {
     await signOut()
-    navigate("/login")
+    navigate('/login')
   }
 
   return (
     <header
       dir="rtl"
       className={cn(
-        "fixed top-0 left-0 h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 transition-all duration-200",
-        collapsed ? "right-16" : "right-60"
+        'fixed top-0 left-0 h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 transition-all duration-200',
+        collapsed ? 'right-16' : 'right-60',
       )}
     >
       <div className="relative w-72 max-w-full">
@@ -59,7 +59,7 @@ export default function Topbar({ collapsed }) {
         <DropdownMenuContent dir="rtl" align="start">
           <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigate("/profile")}>
+          <DropdownMenuItem onClick={() => navigate('/profile')}>
             <UserCog className="size-4" />
             הגדרות פרופיל
           </DropdownMenuItem>

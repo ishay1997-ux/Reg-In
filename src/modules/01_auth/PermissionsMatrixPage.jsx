@@ -5,31 +5,35 @@
 // עריכתן כאן הייתה מטעה כי לא הייתה משפיעה בפועל על שום דבר.
 // עמודת המנכ"ל נעולה (תמיד "עריכה") - מניעת self-lockout, כמו במחיקת משתמש ב-UsersManagementPage.
 
-import { Fragment, useCallback, useEffect, useState } from "react"
-import { Check, Eye, Minus } from "lucide-react"
-import { supabase } from "@/supabaseClient"
-import { CEO_ROLE_NAME } from "@/lib/constants"
-import { cn } from "@/lib/utils"
+import { Fragment, useCallback, useEffect, useState } from 'react'
+import { Check, Eye, Minus } from 'lucide-react'
+import { supabase } from '@/supabaseClient'
+import { CEO_ROLE_NAME } from '@/lib/constants'
+import { cn } from '@/lib/utils'
 
-const CYCLE = ["edit", "view", "blocked"]
+const CYCLE = ['edit', 'view', 'blocked']
 
 const LEVEL_STYLE = {
-  edit: { Icon: Check, className: "bg-teal-600 text-white border-teal-600", label: "צפייה ועריכה" },
-  view: { Icon: Eye, className: "bg-white text-teal-600 border-teal-500", label: "צפייה בלבד" },
-  blocked: { Icon: Minus, className: "bg-white text-slate-400 border-slate-300", label: "אין גישה" },
+  edit: { Icon: Check, className: 'bg-teal-600 text-white border-teal-600', label: 'צפייה ועריכה' },
+  view: { Icon: Eye, className: 'bg-white text-teal-600 border-teal-500', label: 'צפייה בלבד' },
+  blocked: {
+    Icon: Minus,
+    className: 'bg-white text-slate-400 border-slate-300',
+    label: 'אין גישה',
+  },
 }
 
 const GROUPS = [
-  { label: "לקוחות ומכירות", modules: ["לקוחות", "הצעות מחיר"] },
-  { label: "תפעול ופרויקטים", modules: ["פרויקטים", "דיילות"] },
-  { label: "לוגיסטיקה", modules: ["לוגיסטיקה"] },
-  { label: "כספים ודוחות", modules: ["כספים", 'דו"חות'] },
+  { label: 'לקוחות ומכירות', modules: ['לקוחות', 'הצעות מחיר'] },
+  { label: 'תפעול ופרויקטים', modules: ['פרויקטים', 'דיילות'] },
+  { label: 'לוגיסטיקה', modules: ['לוגיסטיקה'] },
+  { label: 'כספים ודוחות', modules: ['כספים', 'דו"חות'] },
 ]
 
 export default function PermissionsMatrixPage() {
   const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState("")
-  const [cellError, setCellError] = useState("")
+  const [loadError, setLoadError] = useState('')
+  const [cellError, setCellError] = useState('')
   const [modules, setModules] = useState([])
   const [roles, setRoles] = useState([])
   const [permMap, setPermMap] = useState({})
@@ -38,25 +42,25 @@ export default function PermissionsMatrixPage() {
   // ומספק את exhaustive-deps בלי לולאה. מוגדר לפני ה-useEffect שקורא לו (מונע "accessed before declared").
   const loadData = useCallback(async () => {
     setLoading(true)
-    setLoadError("")
+    setLoadError('')
 
     const [{ data: modulesData, error: modulesError }, { data: rolesData }, { data: permsData }] =
       await Promise.all([
-        supabase.from("modules").select("module_id, module_name").order("module_id"),
-        supabase.from("roles").select("role_id, role_name").order("role_id"),
-        supabase.from("permissions").select("role_id, module_id, permission_level"),
+        supabase.from('modules').select('module_id, module_name').order('module_id'),
+        supabase.from('roles').select('role_id, role_name').order('role_id'),
+        supabase.from('permissions').select('role_id, module_id, permission_level'),
       ])
 
     if (modulesError) {
-      setLoadError("שגיאה בטעינת נתוני המטריצה.")
+      setLoadError('שגיאה בטעינת נתוני המטריצה.')
       setLoading(false)
       return
     }
 
     setModules(
       (modulesData || []).filter(
-        (m) => m.module_name !== "ניהול הרשאות" && m.module_name !== "הגדרות מערכת"
-      )
+        (m) => m.module_name !== 'ניהול הרשאות' && m.module_name !== 'הגדרות מערכת',
+      ),
     )
     setRoles(rolesData || [])
 
@@ -75,23 +79,23 @@ export default function PermissionsMatrixPage() {
 
   async function handleCellClick(roleId, moduleId) {
     const key = `${roleId}-${moduleId}`
-    const current = permMap[key] || "blocked"
+    const current = permMap[key] || 'blocked'
     const next = CYCLE[(CYCLE.indexOf(current) + 1) % CYCLE.length]
 
     // עדכון אופטימי: מרעננים את ה-UI מיד (תגובה מהירה), כותבים ל-DB, ואם הכתיבה נכשלה
     // (למשל חסימת RLS — רק מנכ"ל מורשה לכתוב ל-permissions) מגלגלים חזרה לערך הקודם.
     setPermMap((prev) => ({ ...prev, [key]: next }))
-    setCellError("")
+    setCellError('')
 
     const { error } = await supabase
-      .from("permissions")
+      .from('permissions')
       .update({ permission_level: next })
-      .eq("role_id", roleId)
-      .eq("module_id", moduleId)
+      .eq('role_id', roleId)
+      .eq('module_id', moduleId)
 
     if (error) {
       setPermMap((prev) => ({ ...prev, [key]: current })) // rollback לערך שלפני הקליק
-      setCellError("השינוי לא נשמר. נסה שוב.")
+      setCellError('השינוי לא נשמר. נסה שוב.')
     }
   }
 
@@ -137,7 +141,10 @@ export default function PermissionsMatrixPage() {
             return (
               <Fragment key={group.label}>
                 <tr className="bg-slate-100">
-                  <td colSpan={roles.length + 1} className="py-2 px-3 text-sm font-semibold text-slate-600">
+                  <td
+                    colSpan={roles.length + 1}
+                    className="py-2 px-3 text-sm font-semibold text-slate-600"
+                  >
                     {group.label}
                   </td>
                 </tr>
@@ -146,13 +153,17 @@ export default function PermissionsMatrixPage() {
                     <td className="py-3 px-3 font-medium text-slate-700">{m.module_name}</td>
                     {roles.map((role) => {
                       const isCeo = role.role_name === CEO_ROLE_NAME
-                      const level = isCeo ? "edit" : permMap[`${role.role_id}-${m.module_id}`] || "blocked"
+                      const level = isCeo
+                        ? 'edit'
+                        : permMap[`${role.role_id}-${m.module_id}`] || 'blocked'
                       return (
                         <td key={role.role_id} className="py-3 px-3 text-center">
                           <PermissionCircle
                             level={level}
                             disabled={isCeo}
-                            onClick={isCeo ? undefined : () => handleCellClick(role.role_id, m.module_id)}
+                            onClick={
+                              isCeo ? undefined : () => handleCellClick(role.role_id, m.module_id)
+                            }
                             title={isCeo ? 'למנכ"ל תמיד עריכה מלאה' : undefined}
                           />
                         </td>
@@ -179,9 +190,9 @@ function PermissionCircle({ level, disabled, onClick, title }) {
       onClick={onClick}
       title={title ?? label}
       className={cn(
-        "size-8 mx-auto rounded-full border-2 flex items-center justify-center transition-colors",
+        'size-8 mx-auto rounded-full border-2 flex items-center justify-center transition-colors',
         className,
-        disabled ? "cursor-default opacity-90" : "cursor-pointer hover:opacity-80"
+        disabled ? 'cursor-default opacity-90' : 'cursor-pointer hover:opacity-80',
       )}
     >
       <Icon className="size-4" />

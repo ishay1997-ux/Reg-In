@@ -9,16 +9,16 @@
 // להסתמך עליה לביטחון — לקוח יכול לשקר, ה-DB לא.
 // ============================================================================
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
-import { supabase } from "@/supabaseClient"
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { supabase } from '@/supabaseClient'
 
 // ערך ברירת המחדל null בכוונה — הוא מה שמאפשר ל-Guard Clause ב-useAuth (בתחתית)
 // לזהות קריאה מחוץ ל-<AuthProvider>.
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [loading, setLoading] = useState(true)       // true עד לסיום הטעינה הראשונה — מונע הבהוב/ניתוב לפני שידוע מי המשתמש
-  const [user, setUser] = useState(null)             // { email, fullName, phone, status, roleId, roleName } או null (אורח)
+  const [loading, setLoading] = useState(true) // true עד לסיום הטעינה הראשונה — מונע הבהוב/ניתוב לפני שידוע מי המשתמש
+  const [user, setUser] = useState(null) // { email, fullName, phone, status, roleId, roleName } או null (אורח)
   const [permissions, setPermissions] = useState({}) // { [module_name]: 'edit' | 'view' | 'blocked' }
 
   // authError — הודעת שער-הרשאה שנקבעת כשיש session תקין ב-Auth אך המשתמש אינו מורשה
@@ -57,9 +57,9 @@ export function AuthProvider({ children }) {
     // 2) שליפת שורת המשתמש מטבלת users (כולל שם התפקיד דרך join ל-roles).
     //    מדיניות RLS (users_select_self_or_ceo) מבטיחה שמשתמש רגיל שולף רק את השורה שלו.
     const { data: myRow, error: myRowError } = await supabase
-      .from("users")
-      .select("email, full_name, phone, status, role_id, roles(role_name)")
-      .eq("email", email)
+      .from('users')
+      .select('email, full_name, phone, status, role_id, roles(role_name)')
+      .eq('email', email)
       .single()
     if (!mountedRef.current) return
 
@@ -83,7 +83,7 @@ export function AuthProvider({ children }) {
       phone: myRow.phone,
       status: myRow.status,
       roleId: myRow.role_id,
-      roleName: myRow.roles?.role_name || "",
+      roleName: myRow.roles?.role_name || '',
     })
 
     // התחברות מזוהה ותקינה — מנקים שגיאת שער קודמת אם נותרה מניסיון קודם.
@@ -91,11 +91,11 @@ export function AuthProvider({ children }) {
 
     // 3) הרשאות נטענות רק למשתמש 'active'. משתמש שעבר "מחיקה רכה" (status='inactive')
     //    מקבל מפת הרשאות ריקה — כך גם אם מסך כלשהו יטעה ויציג אותו, אין לו מודול מותר.
-    if (myRow.status === "active") {
+    if (myRow.status === 'active') {
       const { data: permRows } = await supabase
-        .from("permissions")
-        .select("permission_level, modules(module_name)")
-        .eq("role_id", myRow.role_id)
+        .from('permissions')
+        .select('permission_level, modules(module_name)')
+        .eq('role_id', myRow.role_id)
       if (!mountedRef.current) return
 
       // משטחים לרשומה { module_name: level } לגישה O(1) מהרכיבים (Sidebar/ProtectedRoute).
@@ -151,7 +151,9 @@ export function AuthProvider({ children }) {
   const clearAuthError = useCallback(() => setAuthError(null), [])
 
   return (
-    <AuthContext.Provider value={{ loading, user, permissions, authError, clearAuthError, reload: loadUser, signOut }}>
+    <AuthContext.Provider
+      value={{ loading, user, permissions, authError, clearAuthError, reload: loadUser, signOut }}
+    >
       {children}
     </AuthContext.Provider>
   )
@@ -169,7 +171,7 @@ export function useAuth() {
   const ctx = useContext(AuthContext)
   if (ctx === null) {
     throw new Error(
-      "useAuth חייב להיקרא בתוך <AuthProvider>. ודא שהרכיב עטוף ב-<AuthProvider> בעץ הרכיבים (ראה App.jsx)."
+      'useAuth חייב להיקרא בתוך <AuthProvider>. ודא שהרכיב עטוף ב-<AuthProvider> בעץ הרכיבים (ראה App.jsx).',
     )
   }
   return ctx

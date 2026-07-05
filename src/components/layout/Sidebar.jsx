@@ -5,8 +5,8 @@
 // האופקיים בתוכן המסך (SystemManagementPage). מוצג permission-driven: רק אם למשתמש יש
 // edit/view על אחד ממודולי המערכת (לא בדיקת role==='מנכ"ל' קשיחה) - כך המטריצה היא מקור האמת.
 
-import { useEffect, useState } from "react"
-import { NavLink, useLocation } from "react-router-dom"
+import { useEffect, useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   Users,
@@ -19,23 +19,23 @@ import {
   Settings,
   ChevronsLeft,
   ChevronsRight,
-} from "lucide-react"
-import { supabase } from "@/supabaseClient"
-import { useAuth } from "@/contexts/AuthContext"
-import { SYSTEM_MODULES } from "@/lib/constants"
-import { cn } from "@/lib/utils"
+} from 'lucide-react'
+import { supabase } from '@/supabaseClient'
+import { useAuth } from '@/contexts/AuthContext'
+import { SYSTEM_MODULES } from '@/lib/constants'
+import { cn } from '@/lib/utils'
 
 // מיפוי הצגה (אייקון + נתיב) לכל module_name בפועל מהסכמה - הטקסט עצמו תמיד נשלף מה-DB.
 // "ניהול הרשאות" ו"הגדרות מערכת" מכוונות לא נעדרות מכאן - הן מוצגות דרך פריט "ניהול מערכת"
 // הקשיח למטה, לא כקישורים בודדים.
 const MODULE_META = {
-  "לקוחות": { path: "/customers", icon: Users },
-  "הצעות מחיר": { path: "/quotes", icon: FileText },
-  "פרויקטים": { path: "/projects", icon: Briefcase },
-  "דיילות": { path: "/hostesses", icon: UserRound },
-  "לוגיסטיקה": { path: "/logistics", icon: Package },
-  "כספים": { path: "/finance", icon: Wallet },
-  'דו"חות': { path: "/reports", icon: BarChart3 },
+  לקוחות: { path: '/customers', icon: Users },
+  'הצעות מחיר': { path: '/quotes', icon: FileText },
+  פרויקטים: { path: '/projects', icon: Briefcase },
+  דיילות: { path: '/hostesses', icon: UserRound },
+  לוגיסטיקה: { path: '/logistics', icon: Package },
+  כספים: { path: '/finance', icon: Wallet },
+  'דו"חות': { path: '/reports', icon: BarChart3 },
 }
 
 export default function Sidebar({ collapsed, onToggleCollapse }) {
@@ -45,23 +45,25 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
 
   useEffect(() => {
     supabase
-      .from("modules")
-      .select("module_id, module_name")
-      .order("module_id")
+      .from('modules')
+      .select('module_id, module_name')
+      .order('module_id')
       .then(({ data }) => setModules(data || []))
   }, [])
 
-  const visibleModules = modules.filter((m) => permissions[m.module_name] !== "blocked")
+  const visibleModules = modules.filter((m) => permissions[m.module_name] !== 'blocked')
   // גישה ל"ניהול מערכת" נאכפת לפי הרשאה (permission-driven), לא לפי role==='מנכ"ל' קשיח.
-  const canManageSystem = SYSTEM_MODULES.some((m) => permissions[m] === "edit" || permissions[m] === "view")
-  const isSystemSectionActive = location.pathname.startsWith("/system")
+  const canManageSystem = SYSTEM_MODULES.some(
+    (m) => permissions[m] === 'edit' || permissions[m] === 'view',
+  )
+  const isSystemSectionActive = location.pathname.startsWith('/system')
 
   return (
     <aside
       dir="rtl"
       className={cn(
-        "fixed top-0 right-0 h-screen bg-white border-l border-slate-200 flex flex-col transition-all duration-200 z-30",
-        collapsed ? "w-16" : "w-60"
+        'fixed top-0 right-0 h-screen bg-white border-l border-slate-200 flex flex-col transition-all duration-200 z-30',
+        collapsed ? 'w-16' : 'w-60',
       )}
     >
       {/* כותרת עליונה: כשמורחב - רשת 3 עמודות (spacer|לוגו|כפתור) כדי שהלוגו יהיה באמצע
@@ -69,8 +71,8 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
           כשמכווץ - כפתור יחיד ממורכז. */}
       <div
         className={cn(
-          "h-16 items-center border-b border-slate-100 shrink-0 px-2",
-          collapsed ? "flex justify-center" : "grid grid-cols-[2.25rem_1fr_2.25rem]"
+          'h-16 items-center border-b border-slate-100 shrink-0 px-2',
+          collapsed ? 'flex justify-center' : 'grid grid-cols-[2.25rem_1fr_2.25rem]',
         )}
       >
         {!collapsed && <div aria-hidden="true" />}
@@ -80,8 +82,8 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
         <button
           type="button"
           onClick={onToggleCollapse}
-          title={collapsed ? "הרחבת התפריט" : "כיווץ התפריט"}
-          aria-label={collapsed ? "הרחבת התפריט" : "כיווץ התפריט"}
+          title={collapsed ? 'הרחבת התפריט' : 'כיווץ התפריט'}
+          aria-label={collapsed ? 'הרחבת התפריט' : 'כיווץ התפריט'}
           className="flex items-center justify-center rounded-lg p-2 text-slate-500 hover:bg-slate-50 transition-colors justify-self-center"
         >
           {collapsed ? <ChevronsLeft className="size-5" /> : <ChevronsRight className="size-5" />}
@@ -94,13 +96,11 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
           end
           className={({ isActive }) =>
             cn(
-              "flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-              isActive
-                ? "bg-teal-50 text-teal-700"
-                : "text-slate-600 hover:bg-slate-50"
+              'flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+              isActive ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50',
             )
           }
-          title={collapsed ? "מסך הבית" : undefined}
+          title={collapsed ? 'מסך הבית' : undefined}
         >
           <LayoutDashboard className="size-5 shrink-0" />
           {!collapsed && <span>מסך הבית</span>}
@@ -116,10 +116,8 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
               to={meta.path}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-teal-50 text-teal-700"
-                    : "text-slate-600 hover:bg-slate-50"
+                  'flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                  isActive ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50',
                 )
               }
               title={collapsed ? m.module_name : undefined}
@@ -134,12 +132,12 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
           <NavLink
             to="/system/users"
             className={cn(
-              "flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+              'flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
               isSystemSectionActive
-                ? "bg-teal-50 text-teal-700"
-                : "text-slate-600 hover:bg-slate-50"
+                ? 'bg-teal-50 text-teal-700'
+                : 'text-slate-600 hover:bg-slate-50',
             )}
-            title={collapsed ? "ניהול מערכת" : undefined}
+            title={collapsed ? 'ניהול מערכת' : undefined}
           >
             <Settings className="size-5 shrink-0" />
             {!collapsed && <span>ניהול מערכת</span>}

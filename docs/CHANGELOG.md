@@ -3,6 +3,9 @@
 # REG-IN — יומן שינויים (CHANGELOG)
 
 > **למה הקובץ הזה קיים:** כשמסיימים מודול או משנים את מסד הנתונים, כותבים פה שורה. ככה כל אחד מהשותפים יודע מה השני סיים, בלי לזכור בעל-פה ובלי לשאול. **חובה לעדכן כאן בכל סיום מודול ובכל שינוי בטבלאות ה-DB.**
+>
+> 📍 **יומן משותף ל-ישי ועמית — סטטוס עבודה משותף.**  
+> (יומן סטטוס פנימי של Claude: [CLAUDE_CODE_LOG.md](CLAUDE_CODE_LOG.md) — החלטות טכניות, סנאפשוטים, tech-debt)
 
 ---
 # REG-IN — לכניסה ובדיקות
@@ -54,6 +57,9 @@
 | 02/07 | ישי | **מודול 1 — ברובו מוכן** (צעדים 1,2,4,5,6,8,9 מתוך 14 במדריך המאוחד; 3 מסופק מראש). מסך התחברות: שדרוג shadcn/ui + הגנת פרונטנד (חוסם משתמש מוקפא/לא-מורשה). מסך ניהול משתמשים חדש (`UsersManagementPage`, CEO-בלבד, RLS-מוגן). **תשתית ניתוב חדשה**: `react-router-dom` + `MainLayout`+`Sidebar`(מתקפל, RBAC-מסונן מ-DB)+`Topbar`(פרופיל+Logout)+`ProtectedRoute` (הגנת נתיבים גלובלית)+`AuthContext` משותף. `App.jsx` הוגדר מחדש עם כל ה-Routes. **לא בוצע commit — הכל עדיין רק לוקאלית, ממתין לסקירה** | מודול 2+ יכולים להתחיל לבנות מסכים אמיתיים במקום ה-`UnderConstruction` placeholder ב-`/customers` וכו', ברגע שמודול 1 יעבור merge ל-`dev` |
 | 30/06 | ישי | מודול 0 — תשתית (Vite, Tailwind, Supabase, RTL) | כולם |
 | 30/06 | ישי | מודול 1 (חלקי) — מסך התחברות + Auth + משתמש מנכ"ל | — |
+| 04/07 | ישי (Claude) | **ספרינט הקשחה — תשתית פרויקט (לא פיצ'ר-מודול).** שער-איכות `npm run verify` (lint+format+test+build); Prettier + ESLint נקי; Husky pre-commit→lint-staged; **Vitest** (16 בדיקות: `validators`/`permissions`/`ProtectedRoute`) + `isAllowed()` חולץ ל-`src/lib/permissions.js`; **CI** `.github/workflows/ci.yml` (על PR: lint+test+build+gitleaks); **מיגרציות מגורסנות** ב-`supabase/migrations/` (baseline + 6 מיגרציות שנמשכו מה-remote — **ללא שינוי סכימה בפועל**); `vercel.json`+`.env.example` (מוכן, לא-מופעל). ראה `docs/architecture_and_qa_roadmap.md` (סטנדרט+DoD) ו-`supabase/README.md` | שני המפתחים — מכאן: כל PR עובר `npm run verify`; שינויי DB = קובץ מיגרציה חדש (לא עריכת schema.sql); בדיקות `*.test.js` לצד לוגיקה חדשה |
+| 04/07 | ישי (Claude) | **⚠️ שינוי שמות-קבצים בתיעוד — עמית, שים לב ללינקים ישנים ששמרת!** תוכן RTL לא נגע, רק שמות: `REG-IN_מדריך_מאקרו.md`→`docs/macro-guide.md`, `REG-IN_מדריך_לעמית_מאוחד.md`→`docs/amit-onboarding.md`, `micro_guides/REG-IN_מדריך_מיקרו_מודול_1.md`→`micro_guides/module-1.md`. `docs/mokap/`→`docs/mockups/` (11 תת-תיקיות + 44 תמונות, שמות אנגליים). כל הקישורים הפנימיים תוקנו | עמית — לעדכן bookmarks/קיצורי-דרך אם יש; מדריכי-מיקרו עתידיים ייקראו `module-2.md` וכו' (לא שם עברי) |
+| 04/07 | ישי (Claude) | **E2E אמיתי (Playwright) הוקדם ממודול 12 — לזרימות מודול 1 (Auth/RBAC) בלבד.** `@playwright/test` + Chromium; `playwright.config.js`; `e2e/auth.spec.js`+`e2e/permissions.spec.js` (6 בדיקות, ירוקות). `npm run test:e2e` — **לא** חלק מ-`verify`/CI (איטי במכוון, רוטינה נפרדת `regin-e2e-check`). ⚠️ **דורש `.env.local` מקומי** עם `E2E_CEO_EMAIL/PASSWORD`+`E2E_STAFF_EMAIL/PASSWORD` (ראו `.env.example`) — בלי זה הבדיקות מדלגות על עצמן (לא נכשלות). `regin-pr-gate` שודרגה: verify ירוק על ענף פיצ'ר → commit+push אוטומטי (לעולם לא main/dev) | עמית — אם תרצה להריץ E2E מקומית, תצטרך להוסיף את אותם 4 משתני-סביבה ל-`.env.local` שלך |
 | _(שורה חדשה כאן)_ | | | |
 
 ---

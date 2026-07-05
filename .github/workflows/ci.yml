@@ -1,0 +1,46 @@
+# שער האיכות של המאמר (§3-4): רץ אוטומטית בכל PR ובכל דחיפה ל-dev/main.
+# חוסם מיזוג של קוד ששובר lint / בדיקות / build, וסורק דלף סודות.
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+
+jobs:
+  quality-gate:
+    name: Lint · Test · Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test:run
+
+      - name: Build
+        run: npm run build
+
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # נכשל אם נמצא מפתח/סוד בקוד. חינמי לריפו אישי/ציבורי;
+      # לארגון יש להוסיף secret בשם GITLEAKS_LICENSE.
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

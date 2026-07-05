@@ -2,13 +2,13 @@
 // שורת טאבים אמיתית (NavLink, לא state פנימי) כדי שלכל טאב יהיה URL אמיתי - ריענון/קישור ישיר עובדים.
 // תוכן הטאב הפעיל מגיע דרך <Outlet/> מתתי-הנתיבים שמוגדרים ב-App.jsx.
 
-import { NavLink, Outlet } from "react-router-dom"
-import { cn } from "@/lib/utils"
+import { NavLink, Outlet } from 'react-router-dom'
+import { cn } from '@/lib/utils'
 
 const TABS = [
-  { path: "users", label: "ניהול משתמשים" },
-  { path: "permissions", label: "הרשאות" },
-  { path: "params", label: "פרמטרים" },
+  { path: 'users', label: 'ניהול משתמשים' },
+  { path: 'permissions', label: 'הרשאות' },
+  { path: 'params', label: 'פרמטרים' },
 ]
 
 export default function SystemManagementPage() {
@@ -23,10 +23,10 @@ export default function SystemManagementPage() {
             to={tab.path}
             className={({ isActive }) =>
               cn(
-                "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
+                'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
                 isActive
-                  ? "border-teal-600 text-teal-700"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
+                  ? 'border-teal-600 text-teal-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-700',
               )
             }
           >

@@ -7,7 +7,8 @@
 // איבר עובר (OR). שמות תפקידים ושמות מודולים הן שתי קבוצות מחרוזות שלא חופפות בפועל,
 // כך שאין דו-משמעות בבדיקה.
 
-import { useAuth } from "@/contexts/AuthContext"
+import { useAuth } from '@/contexts/AuthContext'
+import { isAllowed } from '@/lib/permissions'
 
 export default function ProtectedRoute({ allow, children }) {
   const { loading, user, permissions } = useAuth()
@@ -28,14 +29,7 @@ export default function ProtectedRoute({ allow, children }) {
     )
   }
 
-  const allowList = Array.isArray(allow) ? allow : [allow]
-  // גישה אם עובר לפחות תנאי אחד (OR): שם-תפקיד תואם, או הרשאת מודול 'edit'/'view'.
-  // 'blocked' לא נבדק בכוונה => נופל ל-false, כלומר חסימה כברירת מחדל.
-  const isAllowed = allowList.some(
-    (entry) => entry === user.roleName || permissions[entry] === "edit" || permissions[entry] === "view"
-  )
-
-  if (!isAllowed) {
+  if (!isAllowed(user, permissions, allow)) {
     return (
       <div className="flex items-center justify-center py-24">
         <div className="bg-white p-8 rounded-2xl shadow-md max-w-sm text-center">

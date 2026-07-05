@@ -14,18 +14,18 @@
 // ProtectedRoute כאן = שכבת הגנה שנייה מעל סינון-התפריט ב-Sidebar ומעל RLS ב-DB (הגנה לעומק).
 // ============================================================================
 
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import { AuthProvider } from "@/contexts/AuthContext"
-import { SYSTEM_MODULES } from "@/lib/constants"
-import MainLayout from "@/components/layout/MainLayout"
-import ProtectedRoute from "@/components/layout/ProtectedRoute"
-import LoginPage from "@/modules/01_auth/LoginPage"
-import SystemManagementPage from "@/modules/01_auth/SystemManagementPage"
-import UsersManagementPage from "@/modules/01_auth/UsersManagementPage"
-import PermissionsMatrixPage from "@/modules/01_auth/PermissionsMatrixPage"
-import WelcomePage from "@/components/WelcomePage"
-import UnderConstruction from "@/components/UnderConstruction"
-import ProfileSettingsPage from "@/components/ProfileSettingsPage"
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { SYSTEM_MODULES } from '@/lib/constants'
+import MainLayout from '@/components/layout/MainLayout'
+import ProtectedRoute from '@/components/layout/ProtectedRoute'
+import LoginPage from '@/modules/01_auth/LoginPage'
+import SystemManagementPage from '@/modules/01_auth/SystemManagementPage'
+import UsersManagementPage from '@/modules/01_auth/UsersManagementPage'
+import PermissionsMatrixPage from '@/modules/01_auth/PermissionsMatrixPage'
+import WelcomePage from '@/components/WelcomePage'
+import UnderConstruction from '@/components/UnderConstruction'
+import ProfileSettingsPage from '@/components/ProfileSettingsPage'
 
 function App() {
   return (

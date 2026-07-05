@@ -9,12 +9,12 @@
 // ⚠️ OPEN חלקי (PROJECT_MASTER §7 פריט 2): phone נוסף לסכמה (02/07/2026) ונכלל כאן.
 // username עדיין לא בסכמה - נשאר בחוץ עד להכרעה משותפת עם ישי.
 
-import { useEffect, useState } from "react"
-import { Pencil, UserCheck, UserX } from "lucide-react"
-import { supabase } from "@/supabaseClient"
-import { useAuth } from "@/contexts/AuthContext"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useEffect, useState } from 'react'
+import { Pencil, UserCheck, UserX } from 'lucide-react'
+import { supabase } from '@/supabaseClient'
+import { useAuth } from '@/contexts/AuthContext'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
@@ -22,32 +22,32 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { EMAIL_REGEX, ISRAELI_MOBILE_REGEX } from "@/lib/validators"
-import { cn } from "@/lib/utils"
+} from '@/components/ui/select'
+import { EMAIL_REGEX, ISRAELI_MOBILE_REGEX } from '@/lib/validators'
+import { cn } from '@/lib/utils'
 
 export default function UsersManagementPage() {
   const { user: currentUser } = useAuth()
 
   const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState("")
+  const [loadError, setLoadError] = useState('')
   const [users, setUsers] = useState([])
   const [roles, setRoles] = useState([])
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState(null) // null = מצב הוספה; אחרת = עריכת השורה הזו
-  const [formEmail, setFormEmail] = useState("")
-  const [formFullName, setFormFullName] = useState("")
-  const [formPhone, setFormPhone] = useState("")
-  const [formRoleId, setFormRoleId] = useState("")
-  const [formError, setFormError] = useState("")
+  const [formEmail, setFormEmail] = useState('')
+  const [formFullName, setFormFullName] = useState('')
+  const [formPhone, setFormPhone] = useState('')
+  const [formRoleId, setFormRoleId] = useState('')
+  const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -56,18 +56,18 @@ export default function UsersManagementPage() {
 
   async function loadUsersAndRoles() {
     setLoading(true)
-    setLoadError("")
+    setLoadError('')
 
     const [{ data: usersData, error: usersError }, { data: rolesData }] = await Promise.all([
       supabase
-        .from("users")
-        .select("email, full_name, phone, status, role_id, roles(role_name)")
-        .order("full_name"),
-      supabase.from("roles").select("role_id, role_name").order("role_id"),
+        .from('users')
+        .select('email, full_name, phone, status, role_id, roles(role_name)')
+        .order('full_name'),
+      supabase.from('roles').select('role_id, role_name').order('role_id'),
     ])
 
     if (usersError) {
-      setLoadError("שגיאה בטעינת רשימת המשתמשים.")
+      setLoadError('שגיאה בטעינת רשימת המשתמשים.')
       setLoading(false)
       return
     }
@@ -79,11 +79,11 @@ export default function UsersManagementPage() {
 
   function resetForm() {
     setEditingUser(null)
-    setFormEmail("")
-    setFormFullName("")
-    setFormPhone("")
-    setFormRoleId("")
-    setFormError("")
+    setFormEmail('')
+    setFormFullName('')
+    setFormPhone('')
+    setFormRoleId('')
+    setFormError('')
   }
 
   function openAddDialog() {
@@ -95,29 +95,29 @@ export default function UsersManagementPage() {
     setEditingUser(targetUser)
     setFormEmail(targetUser.email)
     setFormFullName(targetUser.full_name)
-    setFormPhone(targetUser.phone || "")
+    setFormPhone(targetUser.phone || '')
     setFormRoleId(String(targetUser.role_id))
-    setFormError("")
+    setFormError('')
     setDialogOpen(true)
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setFormError("")
+    setFormError('')
 
     const cleanFullName = formFullName.trim()
     const cleanPhone = formPhone.trim()
 
     if (cleanFullName.length < 2) {
-      setFormError("שם מלא חייב להכיל לפחות 2 תווים.")
+      setFormError('שם מלא חייב להכיל לפחות 2 תווים.')
       return
     }
     if (cleanPhone && !ISRAELI_MOBILE_REGEX.test(cleanPhone)) {
-      setFormError("מספר טלפון נייד לא תקין (לדוגמה: 050-1234567).")
+      setFormError('מספר טלפון נייד לא תקין (לדוגמה: 050-1234567).')
       return
     }
     if (!formRoleId) {
-      setFormError("יש לבחור תפקיד.")
+      setFormError('יש לבחור תפקיד.')
       return
     }
 
@@ -126,15 +126,19 @@ export default function UsersManagementPage() {
     if (editingUser) {
       // עריכה: דוא"ל לא ניתן לשינוי כאן (מפתח זיהוי RLS+FK) - רק שם/טלפון/תפקיד.
       const { data: updated, error } = await supabase
-        .from("users")
-        .update({ full_name: cleanFullName, phone: cleanPhone || null, role_id: Number(formRoleId) })
-        .eq("email", editingUser.email)
+        .from('users')
+        .update({
+          full_name: cleanFullName,
+          phone: cleanPhone || null,
+          role_id: Number(formRoleId),
+        })
+        .eq('email', editingUser.email)
         .select()
 
       setSaving(false)
 
       if (error || !updated || updated.length === 0) {
-        setFormError("שמירת השינויים נכשלה. נסה שוב.")
+        setFormError('שמירת השינויים נכשלה. נסה שוב.')
         return
       }
     } else {
@@ -145,21 +149,21 @@ export default function UsersManagementPage() {
         return
       }
 
-      const { error } = await supabase.from("users").insert({
+      const { error } = await supabase.from('users').insert({
         email: cleanEmail,
         full_name: cleanFullName,
         phone: cleanPhone || null,
         role_id: Number(formRoleId),
-        status: "active",
+        status: 'active',
       })
 
       setSaving(false)
 
       if (error) {
-        if (error.code === "23505") {
-          setFormError("כבר קיים משתמש עם כתובת הדוא\"ל הזו.")
+        if (error.code === '23505') {
+          setFormError('כבר קיים משתמש עם כתובת הדוא"ל הזו.')
         } else {
-          setFormError("שמירה נכשלה. נסה שוב.")
+          setFormError('שמירה נכשלה. נסה שוב.')
         }
         return
       }
@@ -171,26 +175,28 @@ export default function UsersManagementPage() {
   }
 
   async function handleToggleStatus(targetUser) {
-    const nextStatus = targetUser.status === "active" ? "inactive" : "active"
+    const nextStatus = targetUser.status === 'active' ? 'inactive' : 'active'
 
     // אישור רק לפני השבתה (חוסמת התחברות בפועל) - הפעלה מחדש היא פעולה הפיכה/בטוחה
     // באותה מידה, לכן בלי חיכוך מיותר. שני הכיוונים משתמשים באותו כפתור/פעולה.
-    if (nextStatus === "inactive") {
+    if (nextStatus === 'inactive') {
       const confirmed = window.confirm(
-        `להשבית את המשתמש "${targetUser.full_name}"? הוא לא יוכל להתחבר למערכת עד שיוחזר לפעיל.`
+        `להשבית את המשתמש "${targetUser.full_name}"? הוא לא יוכל להתחבר למערכת עד שיוחזר לפעיל.`,
       )
       if (!confirmed) return
     }
 
     // .select() כדי לזהות חסימת RLS שקטה (0 שורות) ולא להיכשל בשקט.
     const { data: updated, error } = await supabase
-      .from("users")
+      .from('users')
       .update({ status: nextStatus })
-      .eq("email", targetUser.email)
+      .eq('email', targetUser.email)
       .select()
 
     if (error || !updated || updated.length === 0) {
-      window.alert(nextStatus === "inactive" ? "השבתת המשתמש נכשלה. נסה שוב." : "הפעלת המשתמש נכשלה. נסה שוב.")
+      window.alert(
+        nextStatus === 'inactive' ? 'השבתת המשתמש נכשלה. נסה שוב.' : 'הפעלת המשתמש נכשלה. נסה שוב.',
+      )
       return
     }
 
@@ -226,11 +232,11 @@ export default function UsersManagementPage() {
         >
           <DialogContent dir="rtl">
             <DialogHeader>
-              <DialogTitle>{editingUser ? "עריכת משתמש" : "הוספת משתמש חדש"}</DialogTitle>
+              <DialogTitle>{editingUser ? 'עריכת משתמש' : 'הוספת משתמש חדש'}</DialogTitle>
               <DialogDescription>
                 {editingUser
-                  ? "עדכון שם, טלפון ותפקיד. לשינוי כתובת דוא\"ל יש ליצור משתמש חדש."
-                  : "המשתמש יתווסף לטבלת המשתמשים במערכת."}
+                  ? 'עדכון שם, טלפון ותפקיד. לשינוי כתובת דוא"ל יש ליצור משתמש חדש.'
+                  : 'המשתמש יתווסף לטבלת המשתמשים במערכת.'}
               </DialogDescription>
             </DialogHeader>
 
@@ -301,7 +307,7 @@ export default function UsersManagementPage() {
                   disabled={saving}
                   className="w-full h-auto p-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
                 >
-                  {saving ? "שומר..." : editingUser ? "שמור שינויים" : "הוסף משתמש"}
+                  {saving ? 'שומר...' : editingUser ? 'שמור שינויים' : 'הוסף משתמש'}
                 </Button>
               </DialogFooter>
             </form>
@@ -323,24 +329,24 @@ export default function UsersManagementPage() {
         <tbody>
           {users.map((targetUser) => {
             const isSelf = targetUser.email === currentUser?.email
-            const isActive = targetUser.status === "active"
+            const isActive = targetUser.status === 'active'
             return (
               <tr
                 key={targetUser.email}
-                className={cn("border-b border-slate-100", !isActive && "opacity-60")}
+                className={cn('border-b border-slate-100', !isActive && 'opacity-60')}
               >
                 <td className="py-3">{targetUser.full_name}</td>
                 <td className="py-3 text-slate-600">{targetUser.email}</td>
-                <td className="py-3 text-slate-600">{targetUser.phone || "—"}</td>
+                <td className="py-3 text-slate-600">{targetUser.phone || '—'}</td>
                 <td className="py-3">{targetUser.roles?.role_name}</td>
                 <td className="py-3">
                   <span
                     className={cn(
-                      "px-2 py-1 rounded-full text-xs font-medium",
-                      isActive ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"
+                      'px-2 py-1 rounded-full text-xs font-medium',
+                      isActive ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600',
                     )}
                   >
-                    {isActive ? "פעיל" : "לא פעיל"}
+                    {isActive ? 'פעיל' : 'לא פעיל'}
                   </span>
                 </td>
                 <td className="py-3">
@@ -359,7 +365,7 @@ export default function UsersManagementPage() {
                         type="button"
                         variant="link"
                         disabled={isSelf}
-                        title={isSelf ? "לא ניתן להשבית את החשבון שלך" : "השבת משתמש"}
+                        title={isSelf ? 'לא ניתן להשבית את החשבון שלך' : 'השבת משתמש'}
                         onClick={() => handleToggleStatus(targetUser)}
                         className="h-auto p-0 text-red-600 hover:text-red-700"
                       >

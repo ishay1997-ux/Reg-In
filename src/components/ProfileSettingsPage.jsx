@@ -3,25 +3,25 @@
 // לא-מחוברים ומוקפאים, וזו רמת ההגנה הנדרשת כאן).
 // טאבים מקומיים (state, לא Routes) - עמוד שטוח אחד, אין הבדל הרשאות בין הטאבים.
 
-import { useState } from "react"
-import { supabase } from "@/supabaseClient"
-import { useAuth } from "@/contexts/AuthContext"
-import { CEO_ROLE_NAME } from "@/lib/constants"
-import { ISRAELI_MOBILE_REGEX, MIN_PASSWORD_LENGTH } from "@/lib/validators"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
-import { cn } from "@/lib/utils"
+import { useState } from 'react'
+import { supabase } from '@/supabaseClient'
+import { useAuth } from '@/contexts/AuthContext'
+import { CEO_ROLE_NAME } from '@/lib/constants'
+import { ISRAELI_MOBILE_REGEX, MIN_PASSWORD_LENGTH } from '@/lib/validators'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
+import { cn } from '@/lib/utils'
 
 const TABS = [
-  { key: "details", label: "פרטים אישיים" },
-  { key: "security", label: "אבטחה" },
-  { key: "notifications", label: "העדפות והתראות" },
+  { key: 'details', label: 'פרטים אישיים' },
+  { key: 'security', label: 'אבטחה' },
+  { key: 'notifications', label: 'העדפות והתראות' },
 ]
 
 export default function ProfileSettingsPage() {
   const { user, reload } = useAuth()
-  const [activeTab, setActiveTab] = useState("details")
+  const [activeTab, setActiveTab] = useState('details')
 
   return (
     <div dir="rtl">
@@ -34,10 +34,10 @@ export default function ProfileSettingsPage() {
             type="button"
             onClick={() => setActiveTab(tab.key)}
             className={cn(
-              "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
+              'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
               activeTab === tab.key
-                ? "border-teal-600 text-teal-700"
-                : "border-transparent text-slate-500 hover:text-slate-700"
+                ? 'border-teal-600 text-teal-700'
+                : 'border-transparent text-slate-500 hover:text-slate-700',
             )}
           >
             {tab.label}
@@ -46,35 +46,35 @@ export default function ProfileSettingsPage() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-md p-6 max-w-xl">
-        {activeTab === "details" && <PersonalDetailsSection user={user} reload={reload} />}
-        {activeTab === "security" && <SecuritySection user={user} />}
-        {activeTab === "notifications" && <NotificationsSection />}
+        {activeTab === 'details' && <PersonalDetailsSection user={user} reload={reload} />}
+        {activeTab === 'security' && <SecuritySection user={user} />}
+        {activeTab === 'notifications' && <NotificationsSection />}
       </div>
     </div>
   )
 }
 
 function PersonalDetailsSection({ user, reload }) {
-  const [fullName, setFullName] = useState(user?.fullName || "")
-  const [phone, setPhone] = useState(user?.phone || "")
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
+  const [fullName, setFullName] = useState(user?.fullName || '')
+  const [phone, setPhone] = useState(user?.phone || '')
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [saving, setSaving] = useState(false)
 
   async function handleSave(e) {
     e.preventDefault()
-    setError("")
-    setSuccess("")
+    setError('')
+    setSuccess('')
 
     const cleanFullName = fullName.trim()
     const cleanPhone = phone.trim()
 
     if (cleanFullName.length < 2) {
-      setError("שם מלא חייב להכיל לפחות 2 תווים.")
+      setError('שם מלא חייב להכיל לפחות 2 תווים.')
       return
     }
     if (cleanPhone && !ISRAELI_MOBILE_REGEX.test(cleanPhone)) {
-      setError("מספר טלפון נייד לא תקין (לדוגמה: 050-1234567).")
+      setError('מספר טלפון נייד לא תקין (לדוגמה: 050-1234567).')
       return
     }
 
@@ -83,18 +83,18 @@ function PersonalDetailsSection({ user, reload }) {
     // .select() מחזיר את השורות שבאמת עודכנו — אם RLS חסם בשקט (0 שורות), לא נציג
     // הצלחה כוזבת. (זו בדיוק התקלה שהמדיניות users_update_self נועדה לתקן.)
     const { data: updated, error: updateError } = await supabase
-      .from("users")
+      .from('users')
       .update({ full_name: cleanFullName, phone: cleanPhone || null })
-      .eq("email", user.email)
+      .eq('email', user.email)
       .select()
     setSaving(false)
 
     if (updateError || !updated || updated.length === 0) {
-      setError("שמירה נכשלה. נסה שוב.")
+      setError('שמירה נכשלה. נסה שוב.')
       return
     }
 
-    setSuccess("הפרטים עודכנו בהצלחה.")
+    setSuccess('הפרטים עודכנו בהצלחה.')
     await reload()
   }
 
@@ -117,7 +117,11 @@ function PersonalDetailsSection({ user, reload }) {
         {/* שינוי אימייל עצמאי לא נתמך כרגע - ראו CLAUDE_CODE_LOG.md (email = מפתח זיהוי RLS+FK) */}
       </div>
 
-      <form onSubmit={handleSave} noValidate className="flex flex-col gap-4 pt-2 border-t border-slate-100">
+      <form
+        onSubmit={handleSave}
+        noValidate
+        className="flex flex-col gap-4 pt-2 border-t border-slate-100"
+      >
         <div className="flex flex-col gap-1.5">
           <label className="text-sm text-slate-700">שם מלא</label>
           <Input
@@ -147,7 +151,7 @@ function PersonalDetailsSection({ user, reload }) {
           disabled={saving}
           className="w-fit h-auto py-2 px-4 mt-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
         >
-          {saving ? "שומר..." : "שמור שינויים"}
+          {saving ? 'שומר...' : 'שמור שינויים'}
         </Button>
       </form>
     </div>
@@ -155,24 +159,24 @@ function PersonalDetailsSection({ user, reload }) {
 }
 
 function SecuritySection({ user }) {
-  const [currentPassword, setCurrentPassword] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [saving, setSaving] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError("")
-    setSuccess("")
+    setError('')
+    setSuccess('')
 
     if (newPassword.length < MIN_PASSWORD_LENGTH) {
       setError(`הסיסמה החדשה חייבת להכיל לפחות ${MIN_PASSWORD_LENGTH} תווים.`)
       return
     }
     if (newPassword !== confirmPassword) {
-      setError("הסיסמה החדשה ואימות הסיסמה אינם תואמים.")
+      setError('הסיסמה החדשה ואימות הסיסמה אינם תואמים.')
       return
     }
 
@@ -186,7 +190,7 @@ function SecuritySection({ user }) {
 
     if (reauthError) {
       setSaving(false)
-      setError("הסיסמה הנוכחית שגויה.")
+      setError('הסיסמה הנוכחית שגויה.')
       return
     }
 
@@ -194,14 +198,14 @@ function SecuritySection({ user }) {
     setSaving(false)
 
     if (updateError) {
-      setError("עדכון הסיסמה נכשל. נסה שוב.")
+      setError('עדכון הסיסמה נכשל. נסה שוב.')
       return
     }
 
-    setSuccess("הסיסמה עודכנה בהצלחה.")
-    setCurrentPassword("")
-    setNewPassword("")
-    setConfirmPassword("")
+    setSuccess('הסיסמה עודכנה בהצלחה.')
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
   }
 
   return (
@@ -244,7 +248,7 @@ function SecuritySection({ user }) {
         disabled={saving}
         className="w-fit h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
       >
-        {saving ? "מעדכן..." : "עדכון סיסמה"}
+        {saving ? 'מעדכן...' : 'עדכון סיסמה'}
       </Button>
     </form>
   )
@@ -263,7 +267,9 @@ function NotificationsSection() {
           <p className="text-sm font-medium text-slate-800">
             התראות מייל על פרויקטים חדשים <span className="text-xs text-slate-400">(בקרוב)</span>
           </p>
-          <p className="text-xs text-slate-500">קבלת הודעת דוא"ל בכל פעם שנפתח פרויקט חדש שרלוונטי אליך.</p>
+          <p className="text-xs text-slate-500">
+            קבלת הודעת דוא"ל בכל פעם שנפתח פרויקט חדש שרלוונטי אליך.
+          </p>
         </div>
         <Switch checked={emailNewProjects} onCheckedChange={setEmailNewProjects} disabled />
       </div>
@@ -271,9 +277,12 @@ function NotificationsSection() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-slate-800">
-            התראות SMS על שינויי שיבוץ ברגע האחרון <span className="text-xs text-slate-400">(בקרוב)</span>
+            התראות SMS על שינויי שיבוץ ברגע האחרון{' '}
+            <span className="text-xs text-slate-400">(בקרוב)</span>
           </p>
-          <p className="text-xs text-slate-500">קבלת מסרון כשיש שינוי דחוף בשיבוץ שלך קרוב לתאריך האירוע.</p>
+          <p className="text-xs text-slate-500">
+            קבלת מסרון כשיש שינוי דחוף בשיבוץ שלך קרוב לתאריך האירוע.
+          </p>
         </div>
         <Switch checked={smsLastMinuteChanges} onCheckedChange={setSmsLastMinuteChanges} disabled />
       </div>
