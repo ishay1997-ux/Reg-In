@@ -247,6 +247,23 @@ src/
 - **כל שינוי DB = migration בעל שם** עם כותרת "why" בעברית.
 - **מי מתעד מה (בלי כפילות):** `CLAUDE_CODE_LOG.md` = נרטיב/למה/החלטות/tech-debt · `CHANGELOG.md` = שורות מתוארכות (`סוג DB/קוד · מי · מה · מודולים מושפעים`) · מדריך זה = כללים + מצביע-סטטוס בלבד.
 
+### 12.1 📋 עדכון `docs/schema.sql` — חלק מ-Definition of Done
+
+**`docs/schema.sql` הוא snapshot בלבד לקריאה מהירה.** מקור האמת = `supabase/migrations/*.sql`. **כדי לשמור על סנכרון:**
+
+**אחרי כל `supabase migration new` + עריכת ה-migration:**
+1. **הרץ את ה-migration** — `supabase migration up` (או דרך Supabase Studio).
+2. **בדוק ש-migration הרצה בהצלחה** — Supabase CLI יגיד "migration applied successfully".
+3. **דלוג מ-`docs/schema.sql`:** העתק את הDDL החדש/שונה מה-migration, או יצא Snapshot מ-Supabase (SQL dump) והעדכן את הקובץ ידנית.
+   - **דרך קלה:** בSupabase SQL Editor — תחת **SQL** → **Snapshots** → לחץ **"Generate schema SQL"** → תחזיר את כל ה-schema כיום. העתק ל-`docs/schema.sql`.
+4. **commit ביחד:**
+   ```bash
+   git add supabase/migrations/…_name.sql docs/schema.sql
+   git commit -m "db: [migration name] + update schema snapshot"
+   ```
+   
+⚠️ **חובה בסעיף 6 (DoD):** כל migration חייב להגיע ל-PR עם `docs/schema.sql` מעודכן. אחרת — לא approved.
+
 ### יומן DB — מודול 1 (נכון ל-03/07/2026)
 - **פונקציות:** `current_user_role_id() → int` · SQL · STABLE · SECURITY DEFINER · `search_path=''` (לאחר הקשחה). מחזירה `role_id` של המשתמש המחובר (`auth.email()`) רק אם `status='active'`. עוקפת RLS ולכן חסינה מרקורסיה בתוך policies של `users`. הרשאת EXECUTE: `authenticated`/`postgres`/`service_role` בלבד (`anon`/PUBLIC הוסרו).
 - **פונקציות נעילת חשבון (03/07):** `check_login_lock(text)` (מחזיר `locked_until` אם נעול; EXECUTE ל-`anon`+`authenticated`) · `register_failed_login(text)` (מונה כשלונות, נועל אחרי 5 ל-15 דק'; EXECUTE ל-`anon`+`authenticated`) · `reset_login_attempts()` (מאפס לפי `auth.email()`; EXECUTE ל-`authenticated` **בלבד**). כולן SECURITY DEFINER, `search_path=''`.
