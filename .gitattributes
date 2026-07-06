@@ -1,0 +1,3 @@
+# סקריפטי bash חייבים סופי-שורה LF — עם CRLF של Windows הם נשברים ב-Git Bash
+# (שגיאות '\r': command not found). בלי זה, core.autocrlf=true היה ממיר אותם ב-checkout.
+*.sh text eol=lf
