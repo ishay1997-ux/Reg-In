@@ -68,6 +68,7 @@
 6. **§7.24 ב-PROJECT_MASTER** (סיסמאות — סיכון מקובל, סגור) + עדכון code_review פריט 10 + עדכון claude_routines.md (hooks בסקריפטים, בדיקת מדריך-מיקרו-פעיל ב-docs-sync) + 2 עותקי SKILL.md מקומיים (docs-sync, pr-gate).
 7. **ה-Stop hook הורחב** (`.claude/hooks/check-docs-updated.sh`): קוד תחת `src/modules/NN_*/` שהשתנה בלי עדכון `module-N.md` → חסימה. נבדק ב-3 תרחישים (שינוי בלי עדכון → חוסם; עם עדכון → עובר; אחרי revert → נקי).
 8. **סגירת מודול 1 — verdict [YES]:** ‏gitleaks על כל 39 הקומיטים — אין ממצאים (אין צורך ב-`.gitleaksignore`; אם ה-CI בכל זאת יאדים — מוסיפים fingerprints עם הפניה ל-§7.24) · ‏`npm run test:e2e` ‏8/8 · ‏`npm run format` + ‏`npm run verify` ירוקים.
+9. **Dry-run לטמפלט הפתיחה** (סוכן נפרד, סימולציית פתיחת מודול 2, קריאה-בלבד): הטמפלט "95% חד-משמעי, מוכן לייצור"; 5 חידודים שאותרו יושמו מיד — סדר הפלט בצ'אט (הערכה→טריאז'→הצעות→בלופרינט; ההצעות לא נשמרות לקובץ), דיוק כלל הציטוט (קובץ+סעיף מספיק לתיעוד), דוגמאות אימות בכל הצורות (SQL/בדיקות/preview), הוספת `architecture_and_qa_roadmap.md` לרשימת הקריאה. בנוסף: היומן הזה קוצר חזרה מתחת לסף ה-250 (דחיסת 2 רשומות 04/07 ישנות) וסעיף רפרנס הטמפלטים עודכן.
 
 **נותר לישי (ידני):** פתיחת PR ב-GitHub (‏base: `dev` ← compare: `ishay/module-1-permissions`) → המתנה ל-CI (‏quality-gate + secret-scan) → Merge (לבד — הערת ה-⚠️ כבר ב-CHANGELOG). אחרי המיזוג, בסשן הבא: הפיכת שורת מודול 1 ל-✅ ב-STATUS ופתיחת מודול 4.
 
@@ -203,25 +204,9 @@
 ### 04/07/2026 — בקשת רוטינת בדיקות (מקוצר — הביצוע בפועל ברשומה הבאה)
 ישי ביקש רוטינת בדיקות ad-hoc; הוחלט לבנות תשתית בדיקות אמיתית קודם (לא הייתה תשתית כלל). שום דבר לא בוצע בפועל בסשן הזה (הודעות התנגשו תוך כדי החלפות `/model`) — הביצוע המלא (Vitest+16 בדיקות+CI) קרה ברשומה הבאה, "ספרינט הקשחה".
 
-### 04/07/2026 — הקמת רוטינת הסנכרון האוטומטית (השיחה שיצרה את הרשומה הבאה)
-- נוצרה משימה מתוזמנת **`regin-docs-sync`** דרך מנגנון `scheduled-tasks` המקומי של Claude Code (**לא** `CronCreate` — לזה תפוגה של 7 ימים, לא מתאים לריצה מתמשכת). קרון `53 6 */3 * *` (כל 3 ימים, 06:53 מקומי). **⚠️ מגבלה:** רצה רק כשהאפליקציה פתוחה; אם סגורה בזמן הריצה — רצה ב-launch הבא, לא נעלמת (לא מנגנון ענן חסין-סגירה כמו שהנחתי בהתחלה — תוקן לישי במפורש).
-- **היקף:** קריאת קוד/DB/git → תיקון סטיות בתיעוד + בדיקת התאמה **בין הקבצים עצמם** → auto-edit בתיעוד בלבד → "System pulse" קריאה-בלבד (lint/outdated/audit/Supabase advisors/git-status) → רשומת יומן. **גבולות קשיחים:** לעולם לא `src/`/`schema.sql`/`reference_spec/*`, לעולם לא commit/push/DB-write. עודכנה פעם אחת אחרי האישור הראשוני להוסיף ל-Pulse: `npm audit` (חולשות ידועות, שונה מ-`npm outdated`) + Supabase security/performance advisors (בדיוק סוג הבעיה שתפסתי ידנית פעם קודמת - הרשאת anon שגויה).
-- **⚠️ שקיפות שנדרשה:** אין לי גישה למודל/רמת-המאמץ שהרוטינה רצה בהם בפועל — סכמות ה-tool לא חושפות זאת. נאמר לישי במפורש, לא נוחש.
-- **הבהרת "ממצא מוזר":** בזמן שבדקתי את הריצה הראשונה מצאתי `git status` נקי לגמרי + commit חדש (`011e588`) שלא הכרתי. **ישי אישר שהוא ביצע את ה-commit+push בעצמו** — לא קשור לרוטינה (שאסור לה) ולא אלי.
-- ראו את הרשומה הבאה (נכתבה ע"י הרוטינה עצמה, ריצה ראשונה שהופעלה ידנית) לתוצאות בפועל.
-
-### 04/07/2026 — בדיקת סנכרון תיעוד אוטומטית (routine)
-- **ממצא ותיקון (סתירה בין-קבצית):** 4 מסמכים (`CLAUDE_CODE_LOG.md` פעמיים, `PROJECT_MASTER.md`, מדריך מאקרו, מדריך מיקרו מודול 1 שלוש פעמים) עדיין כתבו "ממתין ל-commit+PR ל-`dev`" — אבל `git log` מראה שה-commit האחרון (`011e588`, 03/07/2026 20:27) כבר בוצע ו-`git status` נקי לחלוטין. תוקן בכל 7 המקומות ל"ממתין ל-PR+merge ל-`dev` (הקוד כבר committed)" — משאיר את החוסם האמיתי (PR+merge) בלי לטעון שה-commit עדיין לא קרה.
-- **וידוא קוד מול תיעוד** (`AuthContext.jsx`, `Sidebar.jsx`, `constants.js`, `supabaseClient.js`, `App.jsx`, `schema.sql`): הכל תואם למתואר — שער-הרשאה מרכזי ב-AuthContext, Sidebar עם קישור שטוח permission-driven + כפתור כיווץ בראש, `SYSTEM_MODULES`/`CEO_ROLE_NAME` ב-constants, `sessionStorage` ב-supabaseClient, `moduleName="דיילות"` ב-App.jsx (התיקון מ-03/07 עדיין בתוקף), 3 פונקציות נעילת החשבון + `login_attempts` בסכמה. שום דריפט קוד↔תיעוד לא נמצא.
-- **וידוא DB בפועל (Supabase MCP, read-only):** `roles`=5, `modules`=9, `permissions`=45, RLS מופעל על כל 16 הטבלאות — תואם ל-Seed המתועד. `login_attempts`=1 שורה (נתוני בדיקה, לא מתועד בכוונה לפי מדיניות הקובץ).
-- **Pulse (Step 5, read-only):**
-  - `npm run lint`: **נכשל** — 8 שגיאות, כולן ב-`src/components/ui/*.jsx` (shadcn גנרי, `React` לא בשימוש) + `vite.config.js` (`__dirname` לא מוגדר). **לא בקוד מודול 1 עצמו** — התיעוד הקיים ("המודול כולו lint-נקי") מתייחס לקוד המודול, לא לרכיבי ה-UI הגנריים/קונפיג, ונשאר נכון.
-  - `npm outdated`: 5 חבילות בפיגור מינורי בלבד (`@supabase/supabase-js`, `lucide-react`, `radix-ui`, `shadcn`, `vite`) — לא דרמטי, FYI בלבד.
-  - `npm audit`: **0 חולשות ידועות**.
-  - Supabase advisors — **security**: רק ממצאים כבר-מתועדים (RLS-on-בלי-policies על 11 טבלאות עסקיות + `login_attempts`; EXECUTE ל-`anon`/`authenticated` על 4 פונקציות נעילת-החשבון/הרשאות — סיכון מקובל ומתועד; Leaked Password Protection כבוי — backlog מודול 10). שום ממצא אבטחה **חדש**.
-  - Supabase advisors — **performance** (חדש, FYI בלבד — לא תוקן): 7 מפתחות זרים בלי אינדקס מכסה (`assignments`, `logistics`, `permissions`, `projects`, `quote_services`, `quotes`, `users`); "multiple permissive policies" על `permissions`/`users` (SELECT/UPDATE). לא נרשם בעבר ב-tech-debt — שווה החלטה עתידית של ישי אם להוסיף אינדקסים/לאחד policies, לא דחוף כרגע (0 שורות דאטה עסקי).
-  - `git status`: נקי — אין diff ממתין ל-commit.
-- **לא נמצאו סתירות פתוחות חדשות הדורשות הכרעת ישי** מעבר לרשימה הקיימת ב-`PROJECT_MASTER.md` §7.
+### 04/07/2026 — הקמת `regin-docs-sync` + ריצתה הראשונה (מקוצר)
+- נוצרה המשימה המתוזמנת `regin-docs-sync` (scheduled-tasks מקומי, לא CronCreate; מאז 06/07 — Manual בלבד). גבולות: תיעוד בלבד, לעולם לא `src/`/מיגרציות/git-write.
+- ריצה ראשונה: תוקנה סתירה בין-קבצית ("ממתין ל-commit" ↔ בפועל committed `011e588`) ב-7 מקומות; קוד↔תיעוד↔DB אומתו תואמים (5/9/45, RLS על 16 טבלאות). Pulse: ‏8 שגיאות lint ב-shadcn/config (תוקנו מאז בספרינט ההקשחה), ‏0 חולשות audit. **FYI לעתיד (לא תוקן):** ‏Supabase performance advisors — 7 FK בלי אינדקס מכסה + "multiple permissive policies" על `permissions`/`users`; לא דחוף (0 דאטה עסקי), החלטת ישי כשיהיה עומס.
 
 ### 03/07/2026 — סנכרון תיעוד מקיף + מטריצת QA
 - סונכרנו כל מסמכי מודול 1 למציאות (מדריך מיקרו: סטטוסי צעדים + DoD + "מה בפועל" ליד כל סטייה, בלי למחוק את המתכון המקורי; מדריך מאקרו §12/§13; PROJECT_MASTER §1). קובץ זה עבר restructure מלא (280→~90 שורות): snapshot שנכתב-מחדש + יומן סשנים append-only + ארכיון מקוצר + מדיניות תחזוקה. אומת: grep על `accordion`/`frozen`/"לוח בקרה" — כולם רק בהקשר היסטורי/מתכון, לא כטענת מצב-נוכחי.
@@ -271,8 +256,8 @@
 - **מיגרציות מרכזיות:** soft-delete (frozen→inactive) · `users_update_self` · `harden_current_user_role_id` · `module1_login_attempts_lockout` · `module1_reset_login_attempts_revoke_anon`.
 - **חוב DB פתוח (קופל לכאן ממדריך המאקרו הישן לפני מחיקתו, 06/07/2026):** `auth.email()` לא עטוף ב-`(select …)` בשתי policies — אופטימיזציית initplan עתידית, לא דחוף (0 שורות דאטה עסקי כרגע).
 
-## רפרנס: טמפלטים ו-hook
+## רפרנס: טמפלטים ו-hooks
 
-`docs/templates/create_micro_guide_template.md` (פתיחת מודול) + `create_module_final_test_template.md` (סגירה) — כוללים היררכיית מקורות-אמת, ציטוט קובץ+שורה, RTL, משמעת Git, מטריצת QA. **Stop hook ב-`.claude/settings.json`** (משותף, **ב-git** — מגיע גם לעמית ב-clone; תוקן 06/07/2026, קודם היה ב-`settings.local.json` האישי ומצביע בטעות על `CLAUDE_CODE_LOG.md` בשורש) חוסם סיום-תור עד שהיומן הזה **וגם `STATUS.md`** מעודכנים.
+`docs/templates/create_micro_guide_template.md` (פתיחה) + `create_module_final_test_template.md` (סגירה) — נכתבו מחדש 06/07 (לילה): התוצר הוא מדריך מיקרו **באנגלית, כתוב לקלוד** (9 סעיפים, תגי 🤖/👤, פרוטוקול עדכון-עצמי); טמפלט הסגירה **מתמיד** את תוצאות האודיט לתיעוד ומדפיס הוראות PR. עברו dry-run מוצלח (מודול 2, סוכן נפרד) — 5 חידודים יושמו בעקבותיו. **ה-hooks בסקריפטים** (`.claude/hooks/`, ‏settings.json רק מפנה): ‏Stop — ‏`check-docs-updated.sh` חוסם סיום-תור עד שהיומן הזה + `STATUS.md` מעודכנים, **וגם** אם קוד `src/modules/NN_*/` השתנה בלי עדכון `docs/micro_guides/module-N.md`; ‏PreToolUse — ‏`protect-frozen-files.sh` מגן על C5/C6.
 
 </div>

@@ -10,10 +10,10 @@ The micro-guide's **primary reader is a future Claude Code session with zero mem
 - Do not write for a human following a tutorial. Write for an agent: exact paths, exact commands, expected outputs, unambiguous stop conditions.
 
 ### ⚠️ Workflow & Plan Rules
-1. **Plan-then-Approve:** present the full blueprint in chat for Ishay/Amit's review. Write `docs/micro_guides/module-[MODULE_NUMBER].md` to disk **only after explicit approval**.
-2. **Grounding & Citations:** no chat memory, no assumptions. Every factual claim about existing code, DB, or config MUST cite a file path + line number you read in this turn.
+1. **Plan-then-Approve:** present everything in chat for Ishay/Amit's review, in this exact order: (a) Sequence & Dependency Assessment → (b) Questions & Assumptions triage → (c) Claude's Optimization Proposals (chat-only — NOT saved into the micro-guide unless explicitly approved into a step) → (d) the full 9-section blueprint. Write `docs/micro_guides/module-[MODULE_NUMBER].md` to disk **only after explicit approval**, containing only the approved 9 sections.
+2. **Grounding & Citations:** no chat memory, no assumptions. Every factual claim about existing code, DB, or config MUST cite a source you read in this turn — file + line for code, file + section (e.g. `PROJECT_MASTER.md §3`) for docs; filename alone is acceptable only when the whole file is the subject (e.g. a migration).
 3. **Hierarchy of Truth:** `docs/schema.sql` (highest) ➔ approved spec `docs/reference_spec/C5_*`+`C6_*` via `PROJECT_MASTER.md` ➔ mockups (`docs/mockups/`) ➔ previous micro-guides (lowest). Frozen spec files are never edited; intentional deviations are recorded in living docs with a "deviation from 5.x" note.
-4. Read before writing: `CLAUDE.md`, `STATUS.md`, `docs/PROJECT_MASTER.md` (sections [RELEVANT_SECTIONS] **and** the full §7 registry), `docs/schema.sql`, the current codebase, and `docs/micro_guides/module-1.md` as the format exemplar.
+4. Read before writing: `CLAUDE.md`, `STATUS.md`, `docs/PROJECT_MASTER.md` (sections [RELEVANT_SECTIONS] **and** the full §7 registry), `docs/schema.sql`, `docs/architecture_and_qa_roadmap.md` (the canonical DoD that section 7 instantiates), the current codebase, and `docs/micro_guides/module-1.md` as the format exemplar.
 
 ### 🔄 Sequence & Dependency Validation
 Before blueprinting, challenge the workflow itself: is building *this module now* sound given data-model cross-references? Missing prerequisites? Will this architecture strain upcoming modules? State your conclusion first.
@@ -46,7 +46,7 @@ Output file: `docs/micro_guides/module-[MODULE_NUMBER].md` (English filename —
 ### ✍️ Machine-First Writing Rules
 - Each step is self-contained: an agent landing on it cold can execute it from the step text + context packet alone.
 - Prefer instructions + load-bearing skeletons (SQL policy templates, function signatures) over full code dumps — code is written live at build time, guided by the step. Include full SQL only where exactness is load-bearing (RLS policies, constraints).
-- Every verification is a *command with an expected output* (e.g., `select count(*) from X;` → `N`), not "make sure it works".
+- Every 🤖 verification is a *concrete mechanism with an expected result*, never "make sure it works". Acceptable forms: SQL (`select count(*) from customers;` → `0`) · test run (`npm run test:run` → `N passed`) · E2E (`npm run test:e2e` → `N passed`) · preview evidence (snapshot/screenshot of a named screen state). Pick the cheapest form that actually proves the step.
 - Hebrew comments in code follow iron rule 3 (why-first) — the guide states this once, not per step.
 
 Now output: your Sequence Assessment, Questions & Assumptions (if any), Optimization Proposals, and the complete blueprint per the 9-section structure — in chat, for approval.
