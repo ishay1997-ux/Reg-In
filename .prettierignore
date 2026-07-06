@@ -5,3 +5,4 @@ public
 *.md
 docs
 supabase/migrations
+.claude
