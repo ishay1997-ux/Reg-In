@@ -21,7 +21,9 @@
 
 **תיעוד — שמות קבצים ורוטינות (04/07, המשך):** כל שמות-הקבצים העבריים המובילים תחת `docs/` הוחלפו לשמות אנגליים (תוכן RTL לא נגע): `macro-guide.md`, `amit-onboarding.md`, `micro_guides/module-1.md`. `docs/mokap/` → `docs/mockups/` עם 11 תת-תיקיות באנגלית (`customers-screen`, `quote-screen` וכו') ו-44 התמונות ממוספרות `01.png..NN.png` לפי סדר ההופעה ב-`mockup_descriptions.md`. כל ההפניות תוקנו (`README.md`, `PROJECT_MASTER.md`, `amit-onboarding.md`, כאן).
 
-**4 רוטינות ידניות** (scheduled-tasks, Manual only, כולן `enabled`, כל אחת עם כותרת "🕐 מתי להפעיל"):
+**ערכת מדריכים + סדר בריפו (06/07/2026, חדש):** `../CLAUDE.md`+`../STATUS.md`+`../README.md` בשורש, `docs/guides/**` (מפת דרכים + מסלול אישי לישי ולעמית + 2 מדריכים משותפים, 8 סעיפים קבועים בכל מדריך-מודול), `docs/claude_routines.md` (מקור קנוני ל-4 הרוטינות), `docs/code_review_2026-07.md`. **`STATUS.md` הוא כתובת-אמת יחידה לסטטוס מודולים מעכשיו** — לא כפול כאן. `macro-guide.md`/`WORKFLOW.md`/`docs/README.md`/`CLAUDE_CODE_LOG.md`-בשורש נמחקו (תוכנם נותב לקבצים החדשים). ה-Stop hook עבר מ-`.claude/settings.local.json` ל-`.claude/settings.json` (משותף, ב-git).
+
+**4 רוטינות ידניות** (scheduled-tasks, Manual only, כולן `enabled`, כל אחת עם כותרת "🕐 מתי להפעיל"; ⚠️ `list_scheduled_tasks` לא מציג אותן — ראו רשומת הסשן 06/07 למטה):
 - `regin-docs-sync` — סנכרון תיעוד/בין-קבצי, auto-fix.
 - `regin-health-pulse` — lint/outdated/audit/Supabase-advisors/git-status, read-only, שורת יומן אחת.
 - `regin-pr-gate` — מריצה `npm run verify`; **אם ירוק על ענף פיצ'ר אישי → commit+push אוטומטי** (בדיקת-ענף מוחלטת: לעולם לא על `main`/`master`/`dev`, לעולם לא `--force`; אם ה-push נדחה — עוצרת ומדווחת, לא מנסה לפתור). אם אדום — אבחון עברי, לא מתקנת קוד.
@@ -47,6 +49,29 @@
 ---
 
 ## יומן סשנים (הכי חדש למעלה)
+
+### 📝 סשן 06/07/2026 — "ערכת מדריכים יד-ביד (בהשראת מלאי 710) + סדר בריפו" (Claude Code)
+**זמן:** סשן ממושך, כלל איפוס-חלקי למצב-תכנון (plan mode) בעקבות בקשה מפורשת. **ענף:** `ishay/module-1-permissions`. **סוג:** תיעוד + meta (ללא שינוי קוד/DB).
+
+**רקע:** ישי ראה ערכת מדריכים שנבנתה לפרויקט נפרד ("מלאי 710") ורצה להעתיק את התבנית ל-REG-IN — שלושה קהלים (ישי/עמית/Claude), 8 סעיפים קבועים בכל מדריך, פרומפטים מוכנים להדבקה, "כתוב כאילו כלום לא קיים" עם ✅ על מה שבוצע. בנוסף: לעמית אין עדיין כלום (לא VS Code), 3 קומיטים מקומיים לא-נדחפים על הענף, ובקשה מפורשת לבקרת קוד + הבטחה ש-4 הרוטינות מתועדות כך שחשבון Claude אחר (עמית) יידע בדיוק מה לעשות איתן.
+
+**תגלית קריטית שעיצבה את הביצוע:** ה-Stop hook הישן (ב-`.claude/settings.local.json`) הצביע על `CLAUDE_CODE_LOG.md` בשורש — קובץ **redirect בלבד** (היומן האמיתי עבר ל-`docs/` ב-05/07) — ומכיוון ש-`[ -f "$LOG" ] || exit 0`, מחיקת ה-redirect (מתוכננת) הייתה מנטרלת את ה-hook לצמיתות בלי לשים לב. תוקן **לפני** המחיקה.
+
+**⚠️ אילוץ תפעולי שהתגלה בפועל:** ניסיון Claude לערוך את `.claude/settings.json`/`.claude/settings.local.json` (Write/Edit) נחסם קטגורית ע"י ה-auto-mode classifier ("Self-Modification") — **גם** כשזה חלק מתוכנית מאושרת. ישי ביצע את תיקון ה-hook **ידנית**, ובפיצול נכון יותר מהמתוכנן: `.claude/settings.json` (חדש, משותף, **ב-git**) מכיל רק את ה-hook; `.claude/settings.local.json` (אישי, ממשיך untracked) מכיל רק permissions. **לקח לעתיד:** אין לנסות לערוך את שני הקבצים האלה — להציג טקסט מוכן ולבקש מישי להדביק.
+
+**בוצע (4 קומיטים על הענף):**
+1. **`ee4fabe`** — `CLAUDE.md`+`STATUS.md`+`README.md` חדשים בשורש.
+2. **`b79dfc3`** — `.claude/settings.json` (ה-hook המתוקן, אחרי התיקון הידני של ישי) נוסף ל-git.
+3. **`8a83730`** — עץ `docs/guides/` מלא (roadmap + מסלול ישי [close-module-1 + מודולים 4/5/9/10] + מסלול עמית [5 שלבי אונבורדינג מאפס-ניסיון + מודולים 2/3/7/8/11] + 2 מדריכים משותפים [מודול 6, מודול 12]) · `docs/claude_routines.md` (הגדרות קנוניות מלאות ל-4 הרוטינות, כולל טקסט ה-SKILL.md המדויק, פרוטוקול עדכון, וטבלת טריגרי-צמיחה) · `docs/code_review_2026-07.md` (P0/P1/P2 מנותבים לכל מדריך) · `PROJECT_MASTER.md` §7 קיבל 11 שאלות פתוחות נוספות (11–21, מ-11 טבלאות RLS-חסומות ועד נוסחת בונוס) · `.prettierignore` קיבל `.claude` (כי `settings.json` עכשיו tracked ונכשל ב-format:check).
+4. **`9c7be05`** — מיזוג ומחיקה: `macro-guide.md`/`WORKFLOW.md`/`docs/README.md`/`CLAUDE_CODE_LOG.md`-בשורש נמחקו אחרי ניתוב התוכן; לפני המחיקה קופל פריט "חוב DB פתוח" (auth.email() לא עטוף ב-select, initplan) מ-macro-guide §12 לכאן (סעיף "רפרנס: יומן DB" למטה) כדי שלא ילך לאיבוד. תוקנו הפניות ב-`PROJECT_MASTER.md`/`architecture_and_qa_roadmap.md`/`CHANGELOG.md`/2 הטמפלטים. רשומות יומן מתוארכות **לא** נערכו (רק snapshot זה).
+
+**עדכון 4 קבצי SKILL.md מחוץ לריפו** (`~/.claude/scheduled-tasks/*/SKILL.md`) — הותאמו במדויק ל-`docs/claude_routines.md` (נתיבים: root log→`docs/CLAUDE_CODE_LOG.md`, macro-guide→נמחק; נוסף STATUS.md/CLAUDE.md/guides/**/claude_routines.md לרשימת docs-sync; e2e-check הפך דינמי — קורא `e2e/*.spec.js` בפועל במקום להניח "מודול 1 בלבד"; לכולן נוסף איסור עריכת `.claude/settings*.json`).
+
+**⚠️ ממצא לא-צפוי, לא טופל:** `mcp__scheduled-tasks__list_scheduled_tasks` מחזיר "No scheduled tasks found" למרות ש-4 תיקיות ה-SKILL.md קיימות בפועל ב-`~/.claude/scheduled-tasks/`. סימן שהאינדקס שה-tool קורא ממנו לא מכיר את 4 המשימות (נוצרו כנראה בדרך אחרת מ-`create_scheduled_task`, או גרסת-Claude-Code שונה). **לא נוגע בקבצים בעצמם** — התוכן שלהם עודכן ותקין; ישי צריך לאמת בעצמו שכפתור "Run now" ב-UI שהוא מכיר עדיין מפעיל אותן. **לא נבדק** בפועל end-to-end ריצה של הרוטינה בגלל זה — בוצעה חלופה: הרצה ידנית של אותן 4 בדיקות (lint/outdated/audit/git-status) ותוצאה נקייה (0 שגיאות lint, `vitest` בפיגור-פאטץ' בלבד, 0 חולשות, git נקי).
+
+**אימות שבוצע:** `npm run verify` ירוק לאחר כל שלב · grep גורף אחרי המחיקות = 0 הפניות שבורות (מחוץ ליומנים ההיסטוריים) · בדיקת קישורים יחסיים על כל קובצי ה-md ב-git = 0 שבורים · כל 12 מדריכי-המודול מכילים בדיוק 8/8 סעיפים · כל שמות הקבצים החדשים ASCII, כל התוכן UTF-8.
+
+**פתוח לישי:** הכרעת §7.21 (מודל בעלות-דאטה ל-RLS) חוסמת את סגירת מודול 1 (מדריך `docs/guides/ishay/01_close_module_1.md`) ואת תחילת מודול 2.
 
 ### 📝 סשן 05/07/2026 — "ניקוי תיעוד + פרוטוקול עדכון schema" (GitHub Copilot)
 **זמן:** ~45 דק'. **ענף:** `ishay/module-1-permissions`. **סוג:** תיעוד + meta (פרוטוקול).
