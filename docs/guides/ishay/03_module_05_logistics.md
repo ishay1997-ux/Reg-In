@@ -29,22 +29,37 @@ Checklist לוגיסטי לכל פרויקט: כל פריט (`site`/`product`) �
 
 ## ⑤ החלק של Claude
 
-בלופרינט לפי התבנית: יצירת שורות `logistics` אוטומטית באישור הצעה (מסונן ל-`category ∈ {site,product}` — לא שירותי דיילות), מסך checklist עם עדכון סטטוס, לוגיקת auto-advance לפרויקט כש-100% מוכן, טיפול בשינוי תכולה (הוספה/הסרה משפיעה על ה-checklist). **מציית לשפת העיצוב וטבלת הצבעים ב-PROJECT_MASTER §4.**
+בלופרינט לפי התבנית: יצירת שורות `logistics` אוטומטית באישור הצעה (מסונן ל-`category ∈ {site,product}` — לא שירותי דיילות), מסך checklist עם עדכון סטטוס, לוגיקת auto-advance לפרויקט כש-100% מוכן, טיפול בשינוי תכולה (הוספה/הסרה משפיעה על ה-checklist). **מציית לשפת העיצוב וטבלת הצבעים ב-PROJECT_MASTER §4.** **מתחזק את `docs/micro_guides/module-5.md` חי לאורך כל הבנייה** — סטטוס צעדים, סטיות וחוב טכני מתעדכנים באותו סשן (ה-Stop hook אוכף).
 
-## ⑥ 📋 הפרומפט להדבקה
+## ⑥ 📋 שלושת הפרומפטים להדבקה
 
-**פתיחה:**
+**1) פתיחת מודול (פעם אחת):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/ishay/03_module_05_logistics.md
-ואת docs/PROJECT_MASTER.md (סעיפים 5.8-5.9).
+ואת docs/PROJECT_MASTER.md (סעיפים 5.8-5.9, §7 פריט 22).
 אנחנו פותחים את מודול 5 — לוגיסטיקה, על ענף ishay/module-5-logistics.
 
-בצע את התבנית הבאה (docs/templates/create_micro_guide_template.md) עם:
-MODULE_NUMBER=5 · MODULE_NAME=לוגיסטיקה · RELEVANT_SECTIONS=§5.8-5.9 · BRANCH_NAME=ishay/module-5-logistics
-קרא בעצמך את קובץ התבנית docs/templates/create_micro_guide_template.md ובצע אותו כלשונו עם הפרמטרים שלמעלה (אין צורך שאדביק את תוכנו).
+קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
+MODULE_NUMBER=5 · MODULE_NAME=לוגיסטיקה · RELEVANT_SECTIONS=§5.8-5.9, §7.22 · BRANCH_NAME=ishay/module-5-logistics
+
+הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-5.md.
 ```
 
-**סגירה:** `create_module_final_test_template.md` עם `MODULE_NUMBER=5`.
+**2) המשך בנייה (בכל סשן עבודה, עד שכל הצעדים ✅):**
+```
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-5.md.
+המשך מ"הצעד הפעיל" שבכותרת המצב. אמת בעצמך כל נקודת עצירה 🤖 (הרץ את פקודת האימות והצג ראיה),
+ועצור לאישורי בכל נקודת 👤 ובסוף כל פזה. עדכן את מדריך המיקרו תוך כדי העבודה (סעיף 8 שלו).
+בסוף הסשן: עדכן יומנים לפי הפרוטוקול ב-CLAUDE.md והסבר לי בעברית פשוטה איפה עצרנו ומה הבא.
+```
+
+**3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
+```
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-5.md.
+קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+MODULE_NUMBER=5 · MODULE_NAME=לוגיסטיקה · BRANCH_NAME=ishay/module-5-logistics
+בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים) והדפס לי את הוראות ה-PR בעברית.
+```
 
 ## ⑦ בדיקת קבלה
 

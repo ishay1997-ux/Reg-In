@@ -1,343 +1,173 @@
-<div dir="rtl">
+# REG-IN — Micro-Guide | Module 1: Users & Permissions (as-built)
 
-# REG-IN — מדריך מיקרו | מודול 1: משתמשים והרשאות (גרסה מאוחדת)
-
-**אחראי:** ישי · **שבועות:** 2–3 · **תלוי ב:** מודול 0 (הושלם ✅)
-
-> **מה המודול הזה עושה:** מאפשר למנכ"ל לפתוח משתמשים ולקבוע מטריצת הרשאות (עריכה / צפייה / חסום) לכל תפקיד מול כל מודול — בלי מתכנת.
-> **למה הוא ראשון וקריטי:** זה המודול ש"כולם שואלים אותו". כל מודול אחר במערכת בודק מולו הרשאות (RLS). חייב להיות יציב והרמטי לפני שממשיכים.
-
-> ✋ **מתודולוגיה:** המודול מחולק ל-**4 פזות עבודה**: הכנה → פיתוח → בקרה → QA. כל צעד = משימה אחת. אחרי כל צעד יש **🔻 נקודת עצירה** — אל תעבור הלאה לפני שהיא ירוקה. את הקוד נכתוב יחד בשידור חי כשתגיע לכל צעד. קובץ זה מחליף לגמרי את שני הקבצים הקודמים (`REG-IN_מדריך_מיקרו_מודול_1.md` הישן ו-`מדריך_מודול_1_לבדיקה.md`).
-
-**קובץ זה מתעדף:** בכל סתירה — `docs/schema.sql` גובר על האפיון, האפיון גובר על מוקאפים, מוקאפים גוברים על מדריכים אחרים (כולל זה). כל פער שלא נפתר מסומן **⚠️ OPEN — פתוח להכרעה משותפת עם ישי**, ולא נקבע ערך בקוד בלי אישור.
+> **Audience:** a future Claude Code session with zero memory. Humans (Ishay/Amit) only approve and decide.
+> **Format:** this file is the pilot of the machine-first micro-guide format (9 sections, per `docs/templates/create_micro_guide_template.md`). Module 1 was built before this format existed, so it is recorded here **as-built** — it doubles as the format exemplar for modules 2–12.
+> **Language rule:** guide in English; Hebrew appears only as data (DB values, UI strings). Chat reports to Ishay/Amit — always Hebrew.
 
 ---
 
-## 📌 מצב נוכחי (עודכן 03/07/2026 — תואם למציאות)
+## 1. 🟢 Live Status Header
 
-> **מודול 1 — ✅ ברובו גמור ומאומת, קוד כבר committed (`011e588`), ממתין ל-PR+merge ל-`dev`.** הצעדים למטה נשמרים כ**מתכון היסטורי** (התכנון המקורי, כולל ה-SQL/קוד המקוריים). כל צעד מסומן במצבו **בפועל**, וכשהמימוש סטה מהמתכון יש הערת **"↳ מה בפועל"**.
+| Field | Value |
+|---|---|
+| Module | 1 — Users & Permissions (משתמשים והרשאות) |
+| Owner | Ishay |
+| Branch | `ishay/module-1-permissions` |
+| **Status** | **🔒 Closed — awaiting PR/merge (closing audit passed 06/07/2026: verdict YES)** |
+| Last updated | 06/07/2026 |
+| Active step | 5.3 — PR & merge (👤 Ishay: open PR base:`dev` ← compare:`ishay/module-1-permissions`) |
 
-- ✅ Seed מלא: `roles` (5), `modules` (9), `permissions` (45).
-- ✅ RLS על 4 טבלאות הליבה + `current_user_role_id()` (מוקשח).
-- ✅ מסך התחברות: shadcn, ולידציה מקומית, **Google Sign-In אמיתי**, **נעילת חשבון** (5 כשלונות → 15 דק'), navigate ל-`/`.
-- ✅ מסך ניהול משתמשים (CRUD + סטטוס דו-כיווני active/inactive) · ✅ מסך מטריצת הרשאות (4 קבוצות, auto-save) · ✅ הגדרות פרופיל.
-- ✅ מודל אבטחה חדש: CAPTCHA **בוטל**, הוחלף ב-Google + נעילה + `sessionStorage`. גישת "ניהול מערכת" = **permission-driven** (`SYSTEM_MODULES`), לא role-קשיח.
-- ⏸️ **פתוח/נדחה:** 12 תרחישי RLS על `customers` (מודול 2) · PR+merge ל-`dev` (הקוד כבר committed) · backlog (ראו מדריך מאקרו §13).
+| Phase / step | Status |
+|---|---|
+| Phase 1 — DB & RLS (steps 1.1–1.4) | ✅ done |
+| Phase 2 — Business logic & helpers (2.1–2.2) | ✅ done |
+| Phase 3 — UI (3.1–3.5) | ✅ done |
+| Phase 4 — Control & integration (4.1–4.2) | ✅ done |
+| Phase 5 — QA & handoff: 5.1 test infra | ✅ done |
+| Phase 5: 5.2 core RLS scenarios (5–12) | ✅ done (verified live 02/07) |
+| Phase 5: 5.2b extended 12-scenario matrix on `customers` | ⏸️ deferred → Module 2 (Ishay's ruling, 02/07) |
+| Phase 5: 5.3 PR + merge to `dev` | 🔨 in progress |
+| Phase 5: 5.4 handoff message to Amit (RLS template ready) | ⬜ pending (after merge) |
 
----
+## 2. 📦 Context Packet for Claude
 
-## 🏗️ פזה 1: הכנה ותכנון (Pre-Build)
+**Purpose (3 lines):** CEO opens users and sets a permissions matrix (edit/view/blocked) per role × module — without a programmer. Every other module checks permissions against this module (RLS + UI gates). It is the security foundation of the whole system.
 
-*שלב יישור קו, מילוי חורים בדאטה ופירוק סתירות לפני שנוגעים בקוד האפליקציה.*
+**Code map (all verified on disk 06/07/2026):**
 
-### צעד 1 — אימות והשלמת נתוני היסוד (Seed) · ✅ הושלם
+| Path | Role |
+|---|---|
+| `src/contexts/AuthContext.jsx` | Single source of truth: session → `users` row → `{user, permissions}`. Central auth gate — session without an active `users` row → `signOut()` + `authError` (covers Google OAuth returns too). Exposes `useAuth()`. |
+| `src/modules/01_auth/LoginPage.jsx` | Email/password + real Google Sign-In (`signInWithOAuth`) + account lockout (5 failures → 15 min, via RPCs). |
+| `src/modules/01_auth/SystemManagementPage.jsx` | Tab container for the system screens. |
+| `src/modules/01_auth/UsersManagementPage.jsx` | CEO-only CRUD: add/edit (name/phone/role), bidirectional active/inactive status (soft delete — no "delete" framing), self-lockout prevention. |
+| `src/modules/01_auth/PermissionsMatrixPage.jsx` | 7 business modules in 4 groups × 5 roles; CEO column locked; auto-save per click; stable `data-testid="perm-cell-{moduleId}-{roleId}"`. |
+| `src/components/layout/` — `MainLayout.jsx`, `Sidebar.jsx`, `Topbar.jsx`, `ProtectedRoute.jsx` | Session guard + inactive block; RTL collapsible sidebar fed dynamically from `modules` table (`blocked` hidden); profile/logout; route-level permission guard (`allow` = modules/roles). |
+| `src/components/ErrorBoundary.jsx` | Wraps the whole route tree in `App.jsx` — render crash ≠ silent white screen. |
+| `src/components/ProfileSettingsPage.jsx` | All users, own data: details / security (real password change via re-auth + `updateUser`) / notifications (disabled, "coming soon"). |
+| `src/lib/constants.js` | `CEO_ROLE_NAME`, `SYSTEM_MODULES` — canonical Hebrew name strings, prevents typo-drift. |
+| `src/lib/permissions.js` + `src/lib/validators.js` | `isAllowed(user, modules)` extracted for testability; form validators. Unit-tested. |
+| `src/supabaseClient.js` | Import as `@/supabaseClient` (NOT `@/lib/`). Session persistence = `sessionStorage` (tab close = logout; refresh survives). |
 
-> ↳ **מה בפועל:** `roles`=5, `modules`=9, `permissions`=45 מאוכלסים ומאומתים ב-DB.
+**DB (live-verified 06/07/2026 via Supabase MCP, project `yfeovxppnfoafmfbdfvh`):**
+- Core tables + row counts: `roles`=5, `modules`=9, `permissions`=45 (5×9), `users` (email PK, status active/inactive), `login_attempts`.
+- 7 policies on the 4 core tables (see section 4). 11 business tables: RLS-on with zero policies (deliberate deny-all) until each module adds its own.
+- Migrations (`supabase/migrations/`, chronological): `20260629000000_baseline_schema` · `20260702112703_users_status_soft_delete` (frozen→inactive) · `20260702143254_module1_users_update_self` + `20260702143405_..._fix_recursion` · `20260702195258_harden_current_user_role_id` (search_path='', the load-bearing function for ALL future RLS — see §7.21) · `20260703071534_module1_login_attempts_lockout` (3 SECURITY DEFINER RPCs) · `20260703071740_module1_reset_login_attempts_revoke_anon`.
 
-✅ **פריט פתוח #10 הוכרע (01/07/2026, ישי): "מסך הבית נגיש לכולם."** מסך הבית **אינו** שורה בטבלת `modules`/`permissions` — נגיש תמיד לכל משתמש מחובר, בלי בדיקת הרשאה. הוא קיים רק כמסך/מודול-קוד (`src/modules/07_dashboard/`), לא כמודול-RBAC.
+**Spec & mockups:** `PROJECT_MASTER.md` §3 (default matrix seed), §5.1, §6; mockups under `docs/mockups/` (login, users, permissions screens). Design language: §4 (teal `#14B8A6`, bg `#F8FAFC`, right sidebar) — approved and binding.
 
-**מה עושים:**
-1. **5 התפקידים** (טבלת `roles`) — כבר קיימים ✅: מנכ"ל, מנהלת פרויקטים, מנהלת כספים ולקוחות, מנהלת גיוס ושיבוץ, מנהלת לוגיסטיקה.
-2. **המודולים** (טבלת `modules`) — **9 שורות בלבד**: לקוחות · הצעות מחיר · פרויקטים · דיילות · לוגיסטיקה · כספים · דו"חות · ניהול הרשאות · הגדרות מערכת. **⚠️ לבדוק בפועל:** אם כבר הוזנו 10 שורות ב-Supabase (כפי שרשום ב-CHANGELOG מ-29/06) — **למחוק את שורת "מסך הבית"** לפני שממשיכים, כדי שהמספרים יתאימו להכרעה.
-3. **מטריצת ברירת המחדל של `permissions`** — ✅ **בוצע**. **45 שורות** (5 תפקידים × 9 מודולים), לפי מטריצת סעיף 3 ב-`PROJECT_MASTER.md` (המנכ"ל = `edit` לכל 9 המודולים; שאר 4 התפקידים לפי אותה טבלה).
+**Test infra (real, current):** Vitest — 16 unit tests (`src/lib/validators.test.js`, `src/lib/permissions.test.js`, `src/components/layout/ProtectedRoute.test.jsx`) via `npm run test:run`; Playwright — 8 E2E (`e2e/auth.spec.js`, `e2e/permissions.spec.js`) via `npm run test:e2e` (needs `E2E_CEO_*`/`E2E_STAFF_*` in `.env.local`; Chromium only, workers=1 — shared test DB); quality gate `npm run verify` (lint+format:check+test+build); CI `.github/workflows/ci.yml` (lint+test+build+gitleaks on PR); Husky pre-commit.
+*(This supersedes the old appendix that claimed "no test runner / manual E2E only" — that was true on 03/07, obsolete since the 04–06/07 hardening.)*
 
-**🔻 נקודת עצירה:** `select count(*) from modules;` מחזיר **9**, ו-`select count(*) from permissions;` מחזיר **45**.
+## 3. 🧭 Decisions Ledger
 
-### צעד 2 — הגדרות אימות (Supabase Auth) — ✅ הושלם
+| Item | Ruling | Who | Date | Unblocked |
+|---|---|---|---|---|
+| §7.2 | `phone` added to `users`; no `username` (email = identifier) | Ishay | 02/07 | Users screen |
+| §7.5 | Matrix grouped into 4 super-groups (per mockup), not flat | Ishay | 02/07 | Matrix screen |
+| §7.8 | CAPTCHA cancelled (deviation from frozen 5.6.1) → Google Sign-In + account lockout | Ishay | 03/07 | Login |
+| §7.10 | `modules` = 9 rows; dashboard is NOT an RBAC module — always accessible | Ishay | 01/07 | Seed, matrix |
+| §7.21 | RLS = role→module matrix ONLY, no row-level ownership; standard policy template written in PROJECT_MASTER §7.21 | Ishay | 06/07 | Module 2+ RLS |
+| §7.24 | Test-user passwords exposed in old git history will NOT be rotated — accepted, documented risk (academic project) | Ishay | 06/07 | PR (gitleaks handling) |
+| local | Session in `sessionStorage` (shared-computer safety) | Ishay | 03/07 | supabaseClient |
+| local | "System management" access is permission-driven (`SYSTEM_MODULES`), not hardcoded role check | Ishay | 03/07 | Sidebar/routes |
+| local | Soft delete = bidirectional active/inactive toggle; inactive rows shown dimmed, not hidden | Ishay | 02/07 | Users screen; pattern binding for M2/M4 |
 
-משתמש מנכ"ל בדיקה קיים גם ב-Authentication וגם בטבלת `users` (email, `role_id` של מנכ"ל, `full_name`, `status='active'`). אין פעולה נדרשת — צעד זה נשאר לתיעוד היסטורי בלבד.
+## 4. 🛡️ Security & Auth Model Statement
 
-**🔻 נקודת עצירה:** (כבר ירוק) — קיים משתמש מנכ"ל תקין בשני המקומות.
+- **Helper function (load-bearing for ALL future RLS):** `current_user_role_id()` — SECURITY DEFINER, `search_path=''`, returns `role_id` only for `status='active'`, EXECUTE for `authenticated` only. Every future policy goes through it (§7.21 template).
+- **Policies (7, live-verified):** `roles_select_all`, `modules_select_all`, `permissions_select_all` (read open to authenticated); `permissions_write_ceo_only`, `users_write_ceo_only` (ALL, CEO only); `users_select_self_or_ceo`; `users_update_self` (self-update of phone/full_name only — `role_id`/`status` escalation rejected, verified live).
+- **Login lockout:** `login_attempts` + `check_login_lock`/`register_failed_login`/`reset_login_attempts` (SECURITY DEFINER, `search_path=''`, anon EXECUTE revoked). 5 failures → 15 min. Google OAuth bypasses the lockout by design (password-only counter) — safe demo path.
+- **OAuth gate:** a Google account without an active `users` row is signed out immediately in `AuthContext` with a visible error.
+- **Accepted limitations (documented, deliberate):** lockout enforced at app/DB level, bypassable via direct API calls (robust Auth Hook needs a paid Supabase tier — internal closed system, acceptable); old test-user passwords remain in git history (§7.24 — no rotation, academic project); no audit trail (§7.23, deferred by design).
 
-### צעד 3 — מיפוי פערים ודגלים (Flags Management)
-
-**מה עושים:** לפני שנוגעים בקוד, לוודא שכל הפערים הידועים בין המוקאפים/האפיון/הסכמה מסומנים במפורש בתוך המדריך הזה (לא רק ב-`PROJECT_MASTER.md`), במקום המדויק שבו הם רלוונטיים:
-
-| # | פער | רלוונטי לצעד | סטטוס |
-|---|-----|--------------|-------|
-| 2 | טופס משתמשים במוקאפ כולל `username`+`טלפון` שאינם ב-`users` | צעד 9 | ✅ **הוכרע** — `phone` נוסף לסכמה; `username` לא (המייל = מזהה) |
-| 4 | ערכי מטריצת ההרשאות במוקאפ שונים מהאפיון (5.4) בחלק מהתפקידים | צעד 10 | 🔓 OPEN (הערכים מהאפיון הם ה-Seed הקובע) |
-| 5 | מבנה שטוח מול 4 קבוצות-על במטריצה | צעד 10 | ✅ **הוכרע** — 4 קבוצות-על (לפי המוקאפ), מומש |
-| 8 | CAPTCHA נדרש באפיון (5.6.1) | צעד 7 | ✅ **הוכרע (03/07/2026)** — CAPTCHA בוטל, הוחלף ב-Google Sign-In + נעילת חשבון |
-| **10** | מילון הנתונים באפיון (C6) מונה 9 מודולים בלבד, בלי "מסך הבית" | צעד 1, צעד 10 | ✅ **הוכרע** — 9 מודולים, מסך הבית לכולם |
-
-**🔻 נקודת עצירה:** כל 5 השורות בטבלה מופיעות שוב, מילה במילה, בתוך הצעדים המצוינים בעמודה השנייה — לא רק כאן.
-
----
-
-## 💻 פזה 2: פיתוח וקידוד (The Build)
-
-*כתיבת הלוגיקה והממשק — הן במסד הנתונים והן בקוד ה-React.*
-
-### צעד 4 — פונקציית העזר המאובטחת (DB Security Helper) · ✅ הושלם
-
-> ↳ **מה בפועל:** הפונקציה קיימת ו**הוקשחה מאז** (`search_path=''`, שמות מלאים, EXECUTE ל-authenticated בלבד). הערך `frozen` בסכמה למטה הוחלף ל-`inactive` (מיגרציה).
-
-**מה עושים:** כתיבת פונקציית עזר `SECURITY DEFINER` שמונעת רקורסיה בפוליסיז של טבלאות ההרשאות, **ואוכפת גם את סטטוס המשתמש** — משתמש `frozen` יקבל `NULL` ויינעל מחוץ לכל הדאטה העסקי, גם אם יש לו session פעיל ב-Supabase Auth.
-
+### 🚨 Emergency playbook — unlock during a demo
+Paste in Supabase SQL Editor:
 ```sql
--- RLS — מודול 1, צעד 4 — פונקציית עזר מאובטחת עם אכיפת סטטוס
-create or replace function current_user_role_id()
-returns int
-language sql security definer stable
-as $$
-  select role_id from users
-  where email = auth.email() and status = 'active';
-$$;
+-- unlock one account / everyone / inspect:
+delete from public.login_attempts where email = '<email>';
+delete from public.login_attempts;
+select email, failed_count, locked_until from public.login_attempts;
 ```
-
-**🔻 נקודת עצירה:** הפונקציה נוצרת ללא שגיאות. בדיקה ידנית: משתמש עם `status='active'` מקבל `role_id` תקין; משתמש עם `status='frozen'` מקבל `NULL`.
-
-### צעד 5 — הפעלת RLS על 4 טבלאות הליבה (SQL מלא) · ✅ הושלם
-
-> ↳ **מה בפועל:** ה-RLS פעיל על 4 הטבלאות + נוספה policy `users_update_self` (עדכון-עצמי, מקפיא `role_id`/`status`) שלא הופיעה במתכון המקורי.
-
-**מה עושים:** הפעלת Row Level Security וכתיבת ה-policies בפועל על `roles`, `modules`, `permissions`, `users`. זה ה-SQL המדויק (לא רק תיאור מילולי) — להזריק לסוף `docs/schema.sql` בסקציה חדשה "RLS — מודול 1, צעד 5":
-
-```sql
--- roles, modules: קריאה פתוחה לכולם, אין policy לכתיבה (חסום כברירת מחדל)
-alter table roles enable row level security;
-create policy "roles_select_all" on roles for select to authenticated using (true);
-
-alter table modules enable row level security;
-create policy "modules_select_all" on modules for select to authenticated using (true);
-
--- permissions: קריאה פתוחה לכולם; כתיבה רק למנכ"ל
-alter table permissions enable row level security;
-create policy "permissions_select_all" on permissions for select to authenticated using (true);
-create policy "permissions_write_ceo_only" on permissions for all to authenticated
-  using (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'))
-  with check (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'));
-
--- users: כל אחד רואה את שורת עצמו, המנכ"ל רואה הכל; כתיבה רק למנכ"ל
-alter table users enable row level security;
-create policy "users_select_self_or_ceo" on users for select to authenticated
-  using (email = auth.email() or current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'));
-create policy "users_write_ceo_only" on users for all to authenticated
-  using (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'))
-  with check (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'));
-```
-
-**מיד אחרי — בדיקת עשן קצרה (לפני שממשיכים לצעד 6!):** לא כל 10 התרחישים (אלה מגיעים בפזה 4) — רק 3 בדיקות מהירות ב-SQL Editor כדי לתפוס תקלת יסוד לפני שבונים מסכים על גביה:
-1. מחובר כתפקיד כלשהו: `select * from roles;` ו-`select * from modules;` → מחזיר שורות לכולם.
-2. מחובר כלא-מנכ"ל: `update permissions set permission_level='edit' where role_id=1 and module_id=1;` → 0 שורות עודכנו / שגיאת RLS.
-3. מחובר כמנכ"ל: אותה פקודה → מצליחה.
-
-**🔻 נקודת עצירה:** 4 הטבלאות עם RLS פעיל, ה-SQL רץ ללא שגיאות, ו-3 בדיקות העשן ירוקות. **אל תעבור לצעד 6 אם משהו כאן אדום.**
-
-> ⚠️ **נקודות תורפה:** (1) **רגישות מוחלטת למילים** — ה-policy משווה `role_name = 'מנכ"ל'` כמחרוזת מדויקת; לבדוק ב-Table Editor שאין רווח נסתר או הבדל כתיב, אחרת ה-RLS ייכשל בשקט. (2) **`for all`** מתאים כרגע כי כל פעולות הכתיבה חולקות אותו כלל; אם בעתיד יידרש כלל שונה לכל פעולה (insert/update/delete נפרדים) — יהיה צריך לפצל.
-
-### צעד 6 — הגנת פרונטנד (Frontend Guard) · ✅ הושלם — הורחב מאז
-
-> ↳ **מה בפועל:** שער ההרשאה **עבר ל-`AuthContext`** (מרכזי, מכסה גם חזרת Google OAuth), לא רק ב-`LoginPage`. `frozen`→`inactive`. ה-`alert("התחברת!")` שבמתכון הוחלף ב-`navigate("/")`. נוספו Google Sign-In + נעילת חשבון (צעד 7).
-
-**מה עושים:** עדכון `handleLogin` בקובץ `src/modules/01_auth/LoginPage.jsx` — מיד אחרי אימות מוצלח מול Supabase, לבדוק את הסטטוס והתפקיד מטבלת `users`. אם המשתמש לא קיים או `frozen` — הודעת שגיאה ברורה + ניתוק (`signOut`) מיידי.
-
-```javascript
-setLoading(true)
-
-const { error } = await supabase.auth.signInWithPassword({
-  email: cleanEmail,
-  password: password,
-})
-
-if (error) {
-  setErrorMsg("מייל או סיסמה שגויים. נסה שוב.")
-  setLoading(false)
-} else {
-  const { data: userData, error: dbError } = await supabase
-    .from('users')
-    .select('status, role_id')
-    .eq('email', cleanEmail)
-    .single()
-
-  if (dbError || !userData) {
-    setErrorMsg("משתמש זה אינו מורשה במערכת. פנה למנהל.")
-    await supabase.auth.signOut()
-    setLoading(false)
-    return
-  }
-
-  if (userData.status === 'frozen') {
-    setErrorMsg("חשבונך הוקפא זמנית. פנה למנכ\"ל לצורך בירור.")
-    await supabase.auth.signOut()
-    setLoading(false)
-    return
-  }
-
-  // הצלחה זמנית (יוחלף בניווט למסך הבית במודול 7)
-  alert("התחברת בהצלחה! 🎉")
-  setLoading(false)
-}
-```
-
-הקוד מייבא `supabase` מ-`@/supabaseClient` (הנתיב הקיים כבר בקובץ — אין צורך לשנות ייבוא).
-
-**🔻 נקודת עצירה:** התחברות עם משתמש `frozen` נחסמת עם ההודעה הנכונה ומנותקת; התחברות עם משתמש `active` עוברת כרגיל.
-
-### צעד 7 — מודל אבטחה: ביטול CAPTCHA + Google Sign-In + נעילת חשבון (✅ הושלם 03/07/2026)
-
-**הוכרע (ישי):** דרישת ה-CAPTCHA (אפיון 5.6.1) **בוטלה** לחלוטין — פוגעת ב-UX ובבדיקות אוטומטיות במערכת פנימית סגורה. במקומה מודל אבטחה חדש:
-
-1. **Google Sign-In אמיתי** — כפתור OAuth (`signInWithOAuth`) מול Supabase ב-`LoginPage.jsx`. שער ההרשאה (שורת `users` פעילה) נאכף מרכזית ב-`AuthContext` בעת החזרה מ-OAuth: חשבון גוגל שאין לו שורת `users` מנותק מיד (`signOut`) עם `authError` שמוצג במסך ההתחברות.
-2. **נעילת חשבון אחרי 5 ניסיונות כושלים** — מונה `login_attempts` ב-DB + 3 פונקציות `SECURITY DEFINER` (`check_login_lock`/`register_failed_login`/`reset_login_attempts`, `search_path=''`), נעילה ל-15 דק', נאכף בזרימת ההתחברות ב-`LoginPage.jsx`. מגובה ב-rate limiting המובנה (פר-IP) של Supabase.
-   - הערה: ה-Auth Hook הרובוסטי ("Password verification attempt") נעול לתוכנית Team; לכן האכיפה ברמת אפליקציה/DB — מספקת למערכת פנימית סגורה, אך ניתנת לעקיפה בקריאת API ישירה (מתועד).
-3. **קונפיג (בוצע):** OAuth Client ב-Google Cloud + הפעלת Google provider ב-Supabase (Client ID/Secret בדשבורד בלבד, לא ב-repo). ה-SQL של הנעילה הורץ על הפרויקט (migrations `module1_login_attempts_lockout` + `module1_reset_login_attempts_revoke_anon`).
-
-האפיון הקפוא (`reference_spec/C5`) **לא נערך** — הסטייה מתועדת ב-`PROJECT_MASTER §5.1/§7.8`.
-
-**🔻 נקודת עצירה:** כפתור Google מופיע ומחובר; 5 ניסיונות סיסמה כושלים נועלים את החשבון (נבדק חי מול ה-DB — 1-4 מחזירים null, ה-5 נועל); חשבון גוגל לא-מורשה מנותק עם הודעה. ✅
-
-> #### 🚨 Playbook חירום — שחרור נעילה בזמן מצגת/פיתוח
-> אם נתקעים אחרי 5 טעויות סיסמה לפני/במהלך הדגמה, מדביקים ב-Supabase SQL Editor:
-> ```sql
-> -- שחרור חשבון בודד מיידי:
-> delete from public.login_attempts where email = 'ishay1997@gmail.com';
-> -- שחרור כולם לפני מצגת (reset גורף):
-> delete from public.login_attempts;
-> -- הצצה למצב הנעילות הנוכחי:
-> select email, failed_count, locked_until from public.login_attempts;
-> ```
-> **טיפ:** הנעילה נפתחת אוטומטית אחרי 15 דק' בכל מקרה, ו**התחברות עם Google עוקפת את הנעילה לגמרי** (הנעילה חלה רק על סיסמה) — מסלול כניסה בטוח למצגת.
-
-**עדכון המשך (03/07/2026 — באטצ' שני, אחרי סגירת מודול 1):**
-- **גישת "ניהול מערכת" עברה ל-permission-driven** (Topic A): הגישה ל-`/system/*` וההצגה ב-Sidebar נאכפות לפי הרשאת המשתמש על מודולי "ניהול הרשאות"/"הגדרות מערכת" (`SYSTEM_MODULES` ב-`constants.js`), במקום בדיקת `role==='מנכ"ל'` קשיחה. פותר את ה-"split-brain RBAC" — שורות ה-Seed של מודולי המערכת הפכו למקור אמת חי. ה-Seed הנוכחי (מנכ"ל=edit, השאר blocked) → התנהגות זהה, כעת מונעת-דאטה.
-- **התמדת session** (Topic B): `supabaseClient.js` עבר מ-localStorage ל-`sessionStorage` — סגירת לשונית/דפדפן = ניתוק (בטיחות מחשב משותף); רענון דף שומר על ה-session.
-
-### צעד 8 — שדרוג ממשק ל-shadcn/ui · ✅ הושלם
-
-**מה עושים:** החלפת ה-`<input>`/`<button>` הגנריים במסך ההתחברות ברכיבי `shadcn/ui` הרשמיים. **⚠️ תלות מקדימה:** ב-`src/components/ui/` קיים כרגע רק `button.jsx` — **אין `input.jsx` עדיין**. יש להוסיף את הקומפוננטה (`npx shadcn add input` או המקבילה בפרויקט) *לפני* השימוש בה. צבע מותג: טורקיז (`teal-600`, `~#14B8A6`), פונט Geist, Tailwind 4.
-
-**🔻 נקודת עצירה:** מסך ההתחברות משתמש ב-`Button`/`Input` המשותפים מ-`src/components/ui/`, לא בתגי HTML גולמיים, ונראה זהה ויזואלית למה שהיה קודם.
-
-### צעד 9 — מסך ניהול משתמשים · ✅ הושלם — הורחב מאז
-
-> ↳ **מה בפועל:** במקום "הקפאה" חד-כיוונית (`frozen`) — **סטטוס דו-כיווני** active/inactive מאותו כפתור (בלי מסגור "מחיקה"). נוספו: עמודת `phone`, כפתור **עריכה** (שם/טלפון/תפקיד), מניעת self-lockout. שורות `inactive` מוצגות (מעומעמות), לא מוסתרות.
-
-**מה עושים:** ב-`src/modules/01_auth/` (נגיש למנכ"ל בלבד, מאובטח ב-RLS מצעד 5):
-- **טבלת משתמשים:** שם מלא, דוא"ל, תפקיד, סטטוס (פעיל/מוקפא).
-- **טופס הוספה (מודל):** דוא"ל, שם מלא, בחירת תפקיד (dropdown הניזון מ-`roles`). ולידציה: מייל תקין וייחודי.
-- **הקפאת משתמש:** `status='frozen'` — לא מחיקה, לשימור היסטוריה.
-- 🔓 **OPEN (פריט 2):** המוקאפ מציג `username`+`טלפון` שאינם בסכמת `users` — לבנות לפי הסכמה בלבד (email, role_id, full_name, status) ולהשאיר את הדגל פתוח, לא להוסיף עמודות בלי אישור ישי.
-
-**🔻 נקודת עצירה:** המנכ"ל מוסיף משתמש שני, הוא מופיע בטבלה, והקפאה מעדכנת סטטוס מיידית ב-DB.
-
-### צעד 10 — מסך מטריצת הרשאות · ✅ הושלם
-
-> ↳ **מה בפועל:** מומש עם **7 מודולים עסקיים ב-4 קבוצות-על** (לא רשימה שטוחה של 9); 2 מודולי המערכת לא מוצגים במטריצה (גישתם permission-driven בקוד). עמודת מנכ"ל נעולה, auto-save לכל קליק.
-
-**מה עושים:** רשת דו-ממדית: שורות = 5 תפקידים, עמודות = **9 מודולים** (הוכרע — לא כולל מסך הבית, ראו פריט 10 בצעד 1). כל תא — כפתור לחיץ במחזוריות `edit`/`view`/`blocked`, כותב ל-`permissions`. **לשלוף את רשימת המודולים דינמית מטבלת `modules`** (לא Hard-code 9 בקוד) — כך שאם יתווסף/יוסר מודול בעתיד, המסך ממשיך לעבוד בלי שינוי קוד.
-
-- ✅ **הוכרע (פריט 10):** 9 עמודות, לא 10. מסך הבית לא מופיע במטריצה כלל.
-- ✅ **הוכרע (פריט 5):** מקובצת ל-**4 קבוצות-על** (לפי המוקאפ), לא רשימה שטוחה. מומש.
-- 🔓 **OPEN (פריט 4):** ערכי ברירת המחדל במוקאפ שונים מהאפיון בחלק מהתאים — טבלת סעיף 3 ב-`PROJECT_MASTER.md` (מהאפיון) היא הקובעת לערכי ה-Seed, לא המוקאפ.
-
-**🔻 נקודת עצירה:** שינוי תא במטריצה נשמר ב-`permissions` ונשאר גם אחרי רענון הדף; המטריצה מציגה בדיוק 9 עמודות הנשלפות מ-`modules`.
-
----
-## ⚙️ פזה 3: בקרה ואינטגרציה (Control)
-
-### צעד 11 — בקרת שער לפני מיזוג · ✅ אומת חי (03/07/2026)
-
-> ↳ **מה בפועל:** בדיקת רגרסיה על ה-RLS + חומת ה-`inactive` עברה; ה-guard חוסם URL ישיר (אומת ב-3 תפקידים). נותר רק ה-commit/PR עצמו.
-
-**מה עושים:**
-1. **לחזור על בדיקת העשן מצעד 5 + התאמה לסטטוס החדש:** לוודא שבניית 2 המסכים (מודול 9 - הגדרות פרופיל, ומודול 10 - מטריצת הרשאות) לא שינתה או פגעה ביסודות ה-RLS של בסיס הנתונים.
-2. **אימות חומת הסטטוס החדש:** יש לוודא באופן מפורש וממוקד שמשתמש שסטטוס ה-DB שלו עודכן ל-`inactive` (במקום `frozen` שהיה נהוג בעבר) נחסם בצורה הרמטית לחלוטין – הן ברמת חסימת הגישה בפרונטנד (`LoginPage.jsx` ו-`MainLayout.jsx`) והן ברמת חוקי ה-RLS בבסיס הנתונים.
-3. **משמעת Git:** קוד נשאר בענף `ishay/module-1-permissions` בלבד. אין PR ל-`dev` כל עוד יש TODOs זמניים, חורים בלוגיקה, או צעד מפזה 4 שלא ירוק.
-
-**🔻 נקודת עצירה:** בדיקת העשן ירוקה לחלוטין; המערכת מזהה וחוסמת בהצלחה רשומות בסטטוס `inactive`; ו-`git status` נקי לחלוטין מקבצים זמניים או שאריות דיבוג.
-
-## 🧪 פזה 4: QA ומסירה (QA & Handoff)
-
-### צעד 12 — בדיקת 12 התרחישים המורחבת (השער הפורמלי)
-
-> ⏸️ **נדחה רשמית למודול 2 (החלטת ישי, 02/07/2026).** RLS על `customers` שייך למודול 2 — כרגע `customers` היא RLS-on-בלי-policies (חסומה גורפת), ולכן תרחישים 1–4 (קריאה/כתיבה של מנכ"ל ל-`customers`) לא יכולים לעבור עד שמודול 2 יוסיף policies. **תבנית ה-RLS על 4 טבלאות הליבה אומתה בנפרד** (ראו למטה) — הדחייה נוגעת רק לשכפול על `customers`, לא ליסודות מודול 1.
->
-> **תרחישים 5–12 (הנוגעים לטבלאות הליבה של מודול 1 — `roles`/`modules`/`permissions`/`users`) אומתו חיים ב-02/07/2026** מול פרויקט Supabase `yfeovxppnfoafmfbdfvh`:
-> - **6** (לא-מנכ"ל `update permissions`) → 0 שורות ✅ · **7** (מנכ"ל `update permissions`) → מצליח ✅
-> - **9** (לא-מנכ"ל `select * from users`) → רואה רק את עצמו (שורה אחת) ✅ · **10** (מנכ"ל) → רואה את כל 4 ✅
-> - **11** (התחברות `inactive`) → נחסם ב-`LoginPage.jsx`+`MainLayout.jsx` ✅ · **12** (`inactive` בטבלת הניהול) → מסונן ב-`UsersManagementPage.jsx` ✅
-> - נבדק בנוסף: policy `users_update_self` — עדכון-עצמי של טלפון מצליח, אך הסלמת `role_id`/`status` נדחית ✅
-
-**מה עושים (יבוצע במודול 2):** שכפול תבנית ה-RLS על טבלת `customers` (בסביבת הבדיקה המאובטחת שלכם) והרצת 12 תרחישי קצה מלאים כדי לוודא שאין אף חור אבטחה במערכת:
-
-| # | פעולה | מבצע | תוצאה צפויה | תוצאה בפועל |
-| --- | --- | --- | --- | --- |
-| 1 | `select * from customers` | מנכ"ל | מחזיר שורות | ☐ |
-| 2 | `select * from customers` | תפקיד חסום | מחזיר 0 שורות | ☐ |
-| 3 | `insert into customers(...)` | תפקיד חסום | נכשל — RLS policy | ☐ |
-| 4 | `insert into customers(...)` | מנכ"ל | מצליח | ☐ |
-| 5 | `select * from roles/modules` | כל תפקיד | מצליח לכולם | ☐ |
-| 6 | `update permissions set ...` | לא-מנכ"ל | נכשל | ☐ |
-| 7 | אותו update | מנכ"ל | מצליח | ☐ |
-| 8 | `select * from users where email=auth.email()` | כל תפקיד | רואה רק את עצמו | ☐ |
-| 9 | `select * from users` (הכל) | לא-מנכ"ל | רואה רק את עצמו | ☐ |
-| 10 | `select * from users` (הכל) | מנכ"ל | רואה את כולם (כולל inactive ב-DB) | ☐ |
-| 11 | **ניסיון התחברות (Login) למערכת** | משתמש `inactive` | **נכשל** — נחסם במסך הלוגין עם הודעת שגיאה אדומה | ☐ |
-| 12 | **צפייה בטבלת ניהול משתמשים (UI)** | מנכ"ל | משתמשים בסטטוס `inactive` **אינם מופיעים** (מסוננים בקוד) | ☐ |
-
-**🔻 נקודת עצירה:** כל 12 השורות עוברות בהצלחה (✅), ומתועדות בפועל ליד כל שורה בדו"ח המסירה של קלוד.
-
----
-
-### צעד 13 — צ'קליסט רגרסיה ל-UX (לא עבודה חדשה — רק לוודא שלא נשבר)
-
-מסך ההתחברות ומסך הפרופיל עודכנו. יש לוודא שכל השינויים בצעדים 9-10 לא שברו התנהגות קיימת:
-
-* ✅ פרטים שגויים ← הודעה בעברית; הקלדה מחדש מאפסת את השגיאה. (אומת 03/07)
-* ✅ ניסיון כניסה עם משתמש `inactive` ← חוסם ומציג את ההודעה הייעודית ומנתק. (אומת)
-* ✅ מסך הגדרות פרופיל ← שני טוגלי ההתראות מנוטרלים (disabled) + תווית "(בקרוב)". (אומת)
-* ✅ לוגו נטען תקין · ✅ `trim` מנקה רווחים · ✅ סיסמה קצרה/מייל ריק נחסמים מקומית בלי פנייה ל-Auth. (אומת)
-
-**🔻 נקודת עצירה:** ✅ כל הסעיפים עברו בבדיקת ה-UI/UX המקיפה (03/07/2026) — שום דבר לא נסוג לאחור.
-
-### צעד 14 — בדיקת קבלה סופית (Definition of Done)
-
-המודול **Done** רק כשהכל ירוק:
-
-* ✅ `roles`, `modules`, `permissions` מאוכלסים במספר השורות המוסכם (5/9/45).
-* ✅ RLS פעיל ואוכף על 4 טבלאות הליבה; משתמש `inactive` חסום ברמת ה-DB (RLS + constraint), לא רק בפרונטנד.
-* ✅ מסך ניהול משתמשים עובד מקצה לקצה — **סטטוס דו-כיווני** active/inactive (הוחלף מסגור "מחיקה"), עריכה, self-lockout.
-* ✅ מסך מטריצת הרשאות (4 קבוצות, עמודת מנכ"ל נעולה, Auto-Save) עובד. אומת חי מול ה-DB (03/07).
-* ✅ סימולציה: אומת ב-**3 תפקידים** (מנכ"ל/כספים/גיוס) — כל אחד רואה בדיוק את המוגדר לו; ProtectedRoute חוסם URL ישיר.
-* ⏸️ 12 התרחישים המורחבים על טבלת `customers` — **נדחה רשמית למודול 2** (ראו צעד 12). תרחישי הליבה 5–12 אומתו חיים.
-* ✅ CAPTCHA — **בוטל במפורש (03/07/2026)**, הוחלף במודל אבטחה חדש (Google + נעילה, צעד 7). נבדק חי.
-* ✅ עודכן `docs/CHANGELOG.md` ו-`CLAUDE_CODE_LOG.md` (מיגרציות + שינויי קוד).
-* ☐ **נותר:** הודעה לעמית שתבנית ה-RLS מוכנה לשכפול · PR + merge ל-`dev` שעמית אישר (הקוד עצמו כבר committed).
-
-> כשהכל מסומן — **מודול 1 גמור**, ועמית יכול לאכוף RLS אמיתי על הלקוחות.
-
----
-
-## 📊 נספח: מטריצת כיסוי QA — מודול 1 (עודכן 03/07/2026)
-
-מיפוי הבדיקות שבוצעו בפועל מול הטקסונומיה המקצועית (פונקציונלי / לא-פונקציונלי). לגיטימי להציג בדוח האקדמי — עם הפערים המסומנים ביושר כ"עבודה עתידית".
-
-### פונקציונלי (מה המערכת עושה)
-
-| סוג | סטטוס | מה בוצע בפועל / הערה |
+Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
+
+## 5. 🏗️ Phase & Step Plan (as-built record)
+
+> Original build predates this format; steps below are the as-built summary: what was planned → what was actually built → where → how verified. The original Hebrew step-by-step recipe (with full SQL) lives in git history of this file (pre-06/07 version).
+
+**Phase 1 — DB & RLS ✅**
+- **1.1 Seed:** roles=5, modules=9 (per §7.10), permissions=45 seeded per PROJECT_MASTER §3 matrix. Verified: `select count(*)` → 5/9/45 (live, 06/07).
+- **1.2 Auth pairing:** CEO test user exists in both Supabase Auth and `users`.
+- **1.3 Helper function:** `current_user_role_id()` created, later hardened (migration `20260702195258`). Verified: active user → role_id; inactive → NULL.
+- **1.4 RLS on 4 core tables:** 7 policies (section 4). ↳ as-built: `users_update_self` added beyond the original plan (+ recursion fix migration). Verified: smoke tests + impersonation transactions (`request.jwt.claims` + rollback).
+
+**Phase 2 — Business logic & helpers ✅**
+- **2.1 `src/lib/`:** `isAllowed()` extracted to `permissions.js`; `validators.js`; `constants.js` (`CEO_ROLE_NAME`, `SYSTEM_MODULES`). ↳ as-built: extraction happened during the hardening sprint, driven by testability (iron rule 14 was codified later — this module is its precedent).
+- **2.2 Unit tests:** 16 Vitest tests across 3 files. Verified: `npm run test:run` green.
+
+**Phase 3 — UI ✅**
+- **3.1 Login:** shadcn/ui, local validation, Hebrew errors, Google button, lockout UX. ↳ as-built: CAPTCHA from spec 5.6.1 cancelled (§7.8); `frozen` wording → `inactive`.
+- **3.2 Routing shell:** react-router-dom v7 + `MainLayout`/`Sidebar`/`Topbar`/`ProtectedRoute`/`AuthContext` — new infra all future modules ride on.
+- **3.3 Users management:** CRUD + bidirectional status + edit dialog + self-lockout prevention. ↳ as-built: replaced one-way "freeze" with active/inactive toggle; `phone` column added (§7.2).
+- **3.4 Permissions matrix:** dynamic from `modules` table (no hardcoded list), 4 groups, CEO column locked, auto-save. ↳ as-built: system modules (2) not displayed in matrix — their access is permission-driven in code.
+- **3.5 Profile settings:** details + real password change (re-auth → `updateUser`) + disabled notification toggles.
+
+**Phase 4 — Control & integration ✅**
+- **4.1 Regression gate:** RLS smoke tests re-run after UI build; `inactive` wall verified at both frontend (LoginPage/MainLayout) and RLS level; direct-URL blocking verified across 3 roles.
+- **4.2 Code review closure:** all P0/P1 of `docs/code_review_2026-07.md` fixed 06/07 (engines, `.env.example`, ErrorBoundary, `lang="he" dir="rtl"`, load-bearing migration comment, 2 new E2E). P2 routed: #8 → next `modules`-schema touch; #9 → Module 3; #10 → closed via §7.24.
+
+**Phase 5 — QA & handoff**
+- **5.1 Test infra ✅:** Vitest+Playwright+CI as in section 2. `npm run verify` + `npm run test:e2e` (8/8) green (06/07).
+- **5.2 Core RLS scenarios 5–12 ✅** (verified live 02/07): non-CEO `update permissions` → 0 rows; CEO → succeeds; non-CEO sees only self in `users`; CEO sees all; inactive login blocked; inactive filtered in UI; self-update escalation rejected.
+- **5.2b ⏸️ deferred → Module 2:** scenarios 1–4 (the 12-scenario matrix on `customers`) — `customers` is deny-all until Module 2 writes its policies per §7.21. First task there.
+- **5.3 🔨 PR & merge (👤 Ishay):** push branch → GitHub PR base:`dev` ← compare:`ishay/module-1-permissions` → CI green (quality-gate + gitleaks; on gitleaks findings see §7.24 — `.gitleaksignore`, not rotation) → merge (Amit not yet at review stage — ⚠️ noted in CHANGELOG).
+- **5.4 ⬜ Handoff:** after merge — tell Amit `dev` is ready and the §7.21 policy template awaits Module 2.
+
+## 6. 📊 QA Matrix
+
+| Test type | Planned | As-run (closing audit) |
 |---|---|---|
-| **Unit** | ❌ אין | אין test-runner (רק ESLint). לשקול Vitest במודול עתידי. |
-| **Integration** | ⚠️ חלקי (ידני) | login→Supabase→שליפת `users`/`permissions`/`modules` אומת חי; לא אוטומטי. |
-| **E2E** | ✅ ידני חזק | תהליכים מלאים רב-תפקידיים (login→sidebar→ניווט→חסימה→logout) + ניסוי propagation מלא (CEO משנה הרשאה חי). לא אוטומטי (אין Playwright/Cypress). |
-| **Regression** | ✅ ידני | אחרי כל שינוי — אימות מחדש של ה-guards/RLS/חומת inactive. |
-| **UAT** | ⚠️ חלקי | ישי בדק ידנית (הוספה/מחיקה/ולידציות). UAT פורמלי מול מרצים = אבן דרך M5. |
+| Unit | validators, permissions, ProtectedRoute | ✅ 16/16 Vitest green (`npm run test:run`) |
+| Integration | login→Supabase→users/permissions fetch | ⚠️ manual (live-verified); not automated |
+| E2E | auth flows + matrix editing + self-lockout | ✅ 8/8 Playwright green (`npm run test:e2e`) |
+| Regression | guards/RLS/inactive wall after every change | ✅ manual + E2E re-runs |
+| UAT | Ishay manual passes | ⚠️ partial; formal UAT = M5 milestone |
+| Security/Pen | impersonation RLS tests, lockout, escalation, direct-URL | ✅ module's strength — verified live |
+| Performance/Load | none | ❌ N/A at this stage (no scale data; revisit ~M3) |
+| Usability (UI/UX) | full RTL pass, 3 roles, all screens | ✅ done 03/07 (2 findings fixed) |
+| Compatibility | Chromium only | ⚠️ minimal; cross-browser+mobile before M5 |
 
-### לא-פונקציונלי (איך המערכת מתנהגת)
+## 7. ✅ Definition of Done
 
-| סוג | סטטוס | מה בוצע בפועל / הערה |
-|---|---|---|
-| **Security / Pen** | ✅ **חוזק המודול** | RLS אומת ב**התחזות** (טרנזקציות `request.jwt.claims` + rollback); נעילת חשבון אומתה חי (5→נעילה); שער permission-driven; **חסימת URL ישיר** אומתה ב-3 תפקידים; advisor checks; מניעת self-lockout + הסלמת-הרשאות. |
-| **Performance / Load** | ❌ אין | לא רלוונטי בשלב זה (אין דאטה כבד). לשקול לקראת מודול 3 (מנוע תמחור) / M5. |
-| **Usability / UI-UX** | ✅ בוצע (03/07) | סבב מקיף: 3 תפקידים, כל המסכים, RTL, מירכוז סרגל, אין שגיאות קונסול. 2 ממצאים תוקנו. |
-| **Compatibility** | ⚠️ מינימלי | נבדק רק בדפדפן ה-preview (Chromium) + רוחב טאבלט אחד. אין cross-browser (Safari/Edge/Firefox) או מובייל אמיתי. |
+- [x] Seed counts: `roles`=5, `modules`=9, `permissions`=45 (live-verified 06/07 — MCP + Ishay's Table Editor check).
+- [x] RLS active and enforcing on 4 core tables; `inactive` blocked at DB level, not only frontend.
+- [x] `current_user_role_id()` hardened; lockout RPC trio deployed; anon EXECUTE revoked.
+- [x] Users screen end-to-end (bidirectional status, edit, self-lockout prevention).
+- [x] Permissions matrix (4 groups, CEO column locked, auto-save) — persists across refresh.
+- [x] Role simulation: 3 roles see exactly what their permissions dictate; direct-URL blocked.
+- [x] CAPTCHA deviation documented (§7.8); frozen spec untouched.
+- [x] All migrations applied + `docs/schema.sql` snapshot current + committed together.
+- [x] `npm run verify` green; `npm run test:e2e` 8/8 green (re-verified at closing audit, 06/07/2026).
+- [x] Closing audit: gitleaks scan of full history (39 commits) — no leaks found; CI secret-scan expected green with no `.gitleaksignore` needed (§7.24 fallback documented if CI disagrees).
+- [x] Code review P0/P1 closed (`docs/code_review_2026-07.md`).
+- [x] CHANGELOG + CLAUDE_CODE_LOG + STATUS current.
+- [ ] **PR opened, CI green, merged to `dev`** (👤 Ishay — the only remaining gate).
+- [ ] Fresh `dev` checkout: `npm install && npm run dev` → Google login works, CEO reaches the matrix.
+- [ ] Handoff message to Amit (§7.21 template ready for Module 2).
 
-### מה נשאר (עבודה עתידית מוצהרת)
-- בדיקות **אוטומטיות** (Unit/Integration/E2E דרך runner + CI) — מודול עתידי.
-- **Performance/Load** — לקראת מודול 3 / הגשה.
-- **Compatibility** — cross-browser + מובייל לפני M5.
-- **UAT** פורמלי — M5 (הגשה).
-- 12 תרחישי RLS על `customers` — מודול 2.
+## 8. 🔄 Self-Update Protocol
 
-</div>
+*(Dormant for this module — kept as the canonical example for modules 2–12.)*
+1. At every step transition, update section 1 (status header + step table) **in the same session, before moving on**.
+2. Any deviation from plan → inline "↳ as-built" note on the step + a dated line in section 9.
+3. The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if code under `src/modules/NN_*/` changed but the module's micro-guide didn't — keep this file current as you work, not as an afterthought.
+4. The `CLAUDE.md` end-of-session protocol applies on top (CHANGELOG → CLAUDE_CODE_LOG → STATUS).
+
+## 9. 📝 Deviations & Tech-Debt Log
+
+- 03/07 — CAPTCHA (spec 5.6.1) cancelled → Google Sign-In + lockout (§7.8). Frozen spec untouched.
+- 02/07 — `frozen` → `inactive`; one-way freeze → bidirectional toggle (binding pattern for M2 `customers.status`, M4 `hostesses.status`).
+- 02/07 — Matrix: 4 super-groups per mockup (§7.5); seed values from spec §3, not mockup (§7.4 note).
+- 04–06/07 — E2E/Vitest/CI pulled forward from Module 12 (deliberate — security-critical surface first).
+- 06/07 — §7.24: test-user passwords in git history stay — accepted risk, no rotation; gitleaks findings (if any) handled via `.gitleaksignore`.
+- Deferred backlog (target): 12 RLS scenarios on `customers` (M2) · self email-change, Topbar search, `params` UI (M9) · lockout via Auth Hook (needs paid tier) · admin modules exposure in matrix (future) · router-level ErrorBoundary (future) · `MODULE_META` stable key — P2#8 (next `modules` schema touch).

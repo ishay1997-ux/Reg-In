@@ -8,8 +8,8 @@
 | # | שלב | קובץ | הערה |
 |---|-----|------|------|
 | 0 | תשתית | — | ✅ הושלם |
-| 1 | בניית מודול 1 (הרשאות) | `docs/micro_guides/module-1.md` | ✅ ~95%, נותרה סגירה |
-| 1.5 | **סגירת מודול 1** | [01_close_module_1.md](01_close_module_1.md) | 🔨 **כאן אתה עומד** |
+| 1 | בניית מודול 1 (הרשאות) | `docs/micro_guides/module-1.md` | ✅ הושלם |
+| 1.5 | **סגירת מודול 1** | [01_close_module_1.md](01_close_module_1.md) | 🔨 **כאן אתה עומד** — נותר: פתיחת PR ומיזוג |
 | 4 | מודול 4 — דיילות + Smart Match | [02_module_04_hostesses.md](02_module_04_hostesses.md) | ⬜ |
 | 5 | מודול 5 — לוגיסטיקה | [03_module_05_logistics.md](03_module_05_logistics.md) | ⬜ |
 | 6 | 🤝 מודול 6 — פרויקטים (עם עמית) | [../shared/module_06_projects.md](../shared/module_06_projects.md) | ⬜ בין שלב 5 לשלב 9 |

@@ -34,24 +34,38 @@
 
 ## ⑤ החלק של Claude
 
-בונה בלופרינט מלא לפי `docs/templates/create_micro_guide_template.md` (Phase 1 DB/RLS → Phase 2 UI → Phase 3 בקרה → Phase 4 QA), עם טריאז' 🛑/⏳ לשאלות שנותרו פתוחות. **מציית לשפת העיצוב וטבלת הצבעים ב-PROJECT_MASTER §4.** מודול זה נשען על RLS/Auth ממודול 1 — מצהיר במפורש איך (איזה תפקידים עורכים/צופים ב-`hostesses`, לפי המודל שהוכרע ב-[§7.21](../../PROJECT_MASTER.md)).
+בונה בלופרינט מלא לפי `docs/templates/create_micro_guide_template.md` (פזות: DB/RLS → לוגיקה עסקית `src/lib`+`api.js` → UI → בקרה → QA), עם טריאז' 🛑/⏳ לשאלות שנותרו פתוחות. **מציית לשפת העיצוב וטבלת הצבעים ב-PROJECT_MASTER §4.** מודול זה נשען על RLS/Auth ממודול 1 — מצהיר במפורש איך (איזה תפקידים עורכים/צופים ב-`hostesses`, לפי המודל שהוכרע ב-[§7.21](../../PROJECT_MASTER.md)). **מתחזק את `docs/micro_guides/module-4.md` חי לאורך כל הבנייה** — סטטוס צעדים, סטיות ("↳ as-built") וחוב טכני מתעדכנים באותו סשן שבו קרו (ה-Stop hook אוכף זאת).
 
-## ⑥ 📋 הפרומפט להדבקה
+## ⑥ 📋 שלושת הפרומפטים להדבקה
 
-**פתיחה:**
+**1) פתיחת מודול (פעם אחת):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/ishay/02_module_04_hostesses.md
 ואת docs/PROJECT_MASTER.md (סעיפים 5.10–5.12, §7 פריטים 6, 14, 15, 16).
 אנחנו פותחים את מודול 4 — דיילות + Smart Match, על ענף ishay/module-4-hostesses.
 
-בצע את התבנית הבאה (docs/templates/create_micro_guide_template.md) עם:
+קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=4 · MODULE_NAME=דיילות + Smart Match · RELEVANT_SECTIONS=§5.10-5.12, §7.6/14/15/16 · BRANCH_NAME=ishay/module-4-hostesses
-קרא בעצמך את קובץ התבנית docs/templates/create_micro_guide_template.md ובצע אותו כלשונו עם הפרמטרים שלמעלה (אין צורך שאדביק את תוכנו).
 
 חובה: "שאלות פתוחות" מסעיף ② במדריך שלי נכנסות לטריאז' 🛑/⏳ שלך — אל תכריע בהן לבד.
+הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-4.md.
 ```
 
-**סגירה (בסוף הבנייה):** הדבק את `docs/templates/create_module_final_test_template.md` ממולא (`MODULE_NUMBER=4`, `BRANCH_NAME=ishay/module-4-hostesses`).
+**2) המשך בנייה (בכל סשן עבודה, עד שכל הצעדים ✅):**
+```
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-4.md.
+המשך מ"הצעד הפעיל" שבכותרת המצב. אמת בעצמך כל נקודת עצירה 🤖 (הרץ את פקודת האימות והצג ראיה),
+ועצור לאישורי בכל נקודת 👤 ובסוף כל פזה. עדכן את מדריך המיקרו תוך כדי העבודה (סעיף 8 שלו).
+בסוף הסשן: עדכן יומנים לפי הפרוטוקול ב-CLAUDE.md והסבר לי בעברית פשוטה איפה עצרנו ומה הבא.
+```
+
+**3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
+```
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-4.md.
+קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+MODULE_NUMBER=4 · MODULE_NAME=דיילות + Smart Match · BRANCH_NAME=ishay/module-4-hostesses
+בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים) והדפס לי את הוראות ה-PR בעברית.
+```
 
 ## ⑦ בדיקת קבלה
 

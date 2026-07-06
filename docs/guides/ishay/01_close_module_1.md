@@ -28,7 +28,7 @@
 ## ④ החלק שלך
 
 1. ✅ ~~**הכרעת §7.21 (מודל RLS)**~~ — **בוצע (06/07/2026):** הוכרע "הרשאה אך ורק לפי מטריצת role→module", נרשם ב-[PROJECT_MASTER §7.21](../../PROJECT_MASTER.md) כולל תבנית ה-policy המוכנה למודול 2.
-2. **בדיקת ה-Supabase (חשוב! — הצעד הפתוח היחיד לפני ה-PR):** Supabase Dashboard → **Table Editor** → `modules` — ספור שורות. **התוצאה הצפויה: 9** (התיקון בוצע כבר ב-02/07 לפי ה-CHANGELOG — זו בדיקת אימות בלבד). אם בכל זאת 10 (יש שורת "מסך הבית") — תגיד ל-Claude "יש 10 שורות ב-modules, יש למחוק את מסך הבית" (ר' [PROJECT_MASTER §7.10](../../PROJECT_MASTER.md)). בדוק גם `permissions` — אמור להיות 45 (5×9).
+2. ✅ ~~**בדיקת ה-Supabase**~~ — **בוצע (06/07/2026):** ישי אימת ב-Table Editor וגם Claude אימת דרך Supabase MCP — `modules`=9, `permissions`=45, `roles`=5. בנוסף: הוחלט (ישי, 06/07) **לא להחליף את סיסמאות משתמשי הבדיקה** — סיכון מקובל ומתועד, ר' [PROJECT_MASTER §7.24](../../PROJECT_MASTER.md); אם gitleaks ב-CI יתריע על ההיסטוריה — הטיפול הוא `.gitleaksignore`, לא רוטציה.
 3. **לאחר ש-Claude מדווח "verify ירוק ונדחף"**: כנס ל-GitHub → הריפו → **Pull requests** → **New pull request** → `base: dev` ← `compare: ishay/module-1-permissions` → תיאור קצר → **Create pull request**.
 4. **חכה ל-CI** (סמן ירוק/אדום ב-PR). אם אדום — הדבק ל-Claude את הודעת הכשל.
 5. **מיזוג:** אם עמית כבר בסבב סקירה — תן לו לאשר. אם לא — לחץ **Merge pull request** בעצמך, ותתעד שורה ב-CHANGELOG שהמיזוג בוצע בלי סקירת עמית (הוא עדיין לא בשלב הזה).

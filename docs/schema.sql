@@ -14,7 +14,7 @@ create table roles (
   role_name text not null
 );
 
--- 2. טבלת מודולים (10 מודולים במטריצת ההרשאות)
+-- 2. טבלת מודולים (9 מודולים במטריצת ההרשאות — §7.10: מסך הבית אינו שורת מודול, נגיש לכולם)
 create table modules (
   module_id serial primary key,
   module_name text not null

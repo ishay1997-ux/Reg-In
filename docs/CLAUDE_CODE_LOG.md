@@ -13,7 +13,7 @@
 
 ---
 
-## מצב נוכחי (snapshot — 06/07/2026, ערב)
+## מצב נוכחי (snapshot — 06/07/2026, לילה)
 
 **Stack:** React 19 + Vite 8 · JavaScript (לא TS) · Tailwind 4 + shadcn/ui (מעל Radix) · Lucide · Supabase (Auth + Postgres 17 + RLS) · react-router-dom v7 · RTL מלא · alias `@/`→`src/`. **Session ב-`sessionStorage`** (סגירת לשונית/דפדפן = ניתוק; רענון שומר).
 
@@ -23,7 +23,7 @@
 
 **ערכת מדריכים + סדר בריפו (06/07/2026, חדש):** `../CLAUDE.md`+`../STATUS.md`+`../README.md` בשורש, `docs/guides/**` (מפת דרכים + מסלול אישי לישי ולעמית + 2 מדריכים משותפים, 8 סעיפים קבועים בכל מדריך-מודול), `docs/claude_routines.md` (מקור קנוני ל-4 הרוטינות), `docs/code_review_2026-07.md`. **`STATUS.md` הוא כתובת-אמת יחידה לסטטוס מודולים מעכשיו** — לא כפול כאן. `macro-guide.md`/`WORKFLOW.md`/`docs/README.md`/`CLAUDE_CODE_LOG.md`-בשורש נמחקו (תוכנם נותב לקבצים החדשים). ה-Stop hook עבר מ-`.claude/settings.local.json` ל-`.claude/settings.json` (משותף, ב-git).
 
-**חיזוקי תשתית-תיעוד (06/07/2026 ערב, חדש):** ‏(1) **לוגיקת ה-hooks יושבת בסקריפטים** `.claude/hooks/check-docs-updated.sh` (ה-Stop hook) + `.claude/hooks/protect-frozen-files.sh` (PreToolUse — חוסם עריכה/מחיקה של C5/C6; קריאה מותרת) — `settings.json` רק מפנה (`bash .claude/hooks/<script>`), כך ש-Claude יכול לתחזק את הלוגיקה בלי לגעת בקובץ החסום-לעריכה-עצמית. **ממתין:** ישי מדביק את `settings.json` החדש. ‏(2) **CLAUDE.md כללים 13–14:** פרוטוקול שינוי מהותי (עדכון כל האדוות באותו סשן) + SSOT ללוגיקה עסקית (`src/lib/` + `api.js` פר-מודול ממודול 2). ‏(3) **PROJECT_MASTER:** TOC, סטטוס רק ב-STATUS, §7.22 (לוגיסטיקה actual<planned) + §7.23 (audit-trail — נדחה במודע). ‏(4) פרומפטי ⑥ במדריכים: Claude קורא את הטמפלט בעצמו. ‏(5) `mockup_descriptions.md` = תיאורי מסכים בלבד (העותק-אב הישן והסותר נוקה). ‏(6) פרטי ההתחברות הוסרו מ-CHANGELOG (החלפת סיסמאות ב-Supabase על ישי). ‏(7) 4 קבצי פלטי-סוכנים נמחקו מ-`reference_spec/`.
+**חיזוקי תשתית-תיעוד (06/07/2026 ערב, חדש):** ‏(1) **לוגיקת ה-hooks יושבת בסקריפטים** `.claude/hooks/check-docs-updated.sh` (ה-Stop hook — כולל, מ-06/07 לילה, אכיפת מדריך-מיקרו-חי: קוד `src/modules/NN_*/` שהשתנה בלי עדכון `docs/micro_guides/module-N.md` חוסם סיום סשן) + `.claude/hooks/protect-frozen-files.sh` (PreToolUse — חוסם עריכה/מחיקה של C5/C6; קריאה מותרת) — `settings.json` רק מפנה (`bash .claude/hooks/<script>`), כך ש-Claude יכול לתחזק את הלוגיקה בלי לגעת בקובץ החסום-לעריכה-עצמית. ✅ ישי הדביק את `settings.json` החדש (06/07, אומת בדיף). ‏(2) **CLAUDE.md כללים 13–14:** פרוטוקול שינוי מהותי (עדכון כל האדוות באותו סשן) + SSOT ללוגיקה עסקית (`src/lib/` + `api.js` פר-מודול ממודול 2). ‏(3) **PROJECT_MASTER:** TOC, סטטוס רק ב-STATUS, §7.22 (לוגיסטיקה actual<planned) + §7.23 (audit-trail — נדחה במודע). ‏(4) פרומפטי ⑥ במדריכים: Claude קורא את הטמפלט בעצמו. ‏(5) `mockup_descriptions.md` = תיאורי מסכים בלבד (העותק-אב הישן והסותר נוקה). ‏(6) פרטי ההתחברות הוסרו מ-CHANGELOG (החלפת סיסמאות ב-Supabase על ישי). ‏(7) 4 קבצי פלטי-סוכנים נמחקו מ-`reference_spec/`.
 
 **4 רוטינות ידניות** (scheduled-tasks, Manual only, כולן `enabled`, כל אחת עם כותרת "🕐 מתי להפעיל"; ⚠️ `list_scheduled_tasks` לא מציג אותן — ראו רשומת הסשן 06/07 למטה):
 - `regin-docs-sync` — סנכרון תיעוד/בין-קבצי, auto-fix.
@@ -33,7 +33,9 @@
 
 **E2E (Playwright) — הוקדם ממודול 12, מותקן עכשיו לזרימות מודול 1 בלבד** (Auth/RBAC — המשטח הכי קריטי-אבטחתית): `@playwright/test` + Chromium בלבד, `playwright.config.js` (workers=1 בכוונה — DB-בדיקה משותף + Auth אמיתי, מקביליות גרמה ל-timeout מקרי בבדיקה הראשונה). `e2e/auth.spec.js` + `e2e/permissions.spec.js`, 6 בדיקות, כולן ירוקות. פרטי-בדיקה (`E2E_CEO_*`/`E2E_STAFF_*`) ב-`.env.local` בלבד (לא ב-git), נקראים דרך `process.env` — לא סוד חדש בקוד-מגורסן. **לא** נוסף ל-CI/ל-`verify` (E2E איטי במכוון, נשאר רוטינה נפרדת). `docs/architecture_and_qa_roadmap.md` עודכן (חלק 0 + חלק F.1 חדש לרוטינות).
 
-**מודול 1 (משתמשים והרשאות) — ✅ ברובו גמור ומאומת, קוד כבר committed (`011e588`), ממתין ל-PR+merge ל-`dev`.**
+**מערכת מדריכי-מיקרו machine-first (06/07/2026 לילה, חדש):** לכל מודול 3 פרומפטים במדריך השלב (⑥: פתיחה/המשך-בנייה/סגירה) · הטמפלטים ב-`docs/templates/` מפיקים מדריך מיקרו **באנגלית, כתוב לקלוד** (9 סעיפים: כותרת-מצב חיה, חבילת הקשר, יומן הכרעות, מודל אבטחה, פזות DB→לוגיקה→UI→בקרה→QA עם תגי 🤖/👤, מטריצת QA, ‏DoD, פרוטוקול עדכון-עצמי, יומן סטיות) · `module-1.md` = הפיילוט (as-built) · כלל ברזל 15 + צעד 0 בפרוטוקול סוף-סשן מעגנים את העדכון-החי, וה-Stop hook אוכף.
+
+**מודול 1 (משתמשים והרשאות) — 🔒 סגור (verdict YES, אודיט 06/07 לילה), ממתין רק ל-PR+merge של ישי ל-`dev`.**
 
 זרימת RBAC בקוד:
 - `contexts/AuthContext.jsx` — מקור אמת יחיד: session→שורת `users`→`{user, permissions}`. **שער ההרשאה המרכזי** כאן: session בלי שורת `users` פעילה → `signOut`+`authError` (מכסה גם חזרת OAuth). חושף `useAuth()`.
@@ -44,13 +46,30 @@
 - **DB:** RLS על 4 טבלאות ליבה (`roles`/`modules`/`permissions`/`users`) + `current_user_role_id()` (SECURITY DEFINER, מוקשח). `login_attempts` + 3 פונקציות SECURITY DEFINER לנעילה. 11 טבלאות עסקיות = RLS-on-deny-all עד בניית המודול.
 - **מודל אבטחה:** CAPTCHA **בוטל** (הוחלף ב-Google Sign-In + נעילה + sessionStorage). מתועד כסטייה מ-5.6.1 בתיעוד החי; `reference_spec` הקפוא לא נגע.
 
-**פתוח במודול 1:** PR+merge ל-`dev` (הקוד כבר committed) · 12 תרחישי RLS על `customers` (נדחה ל-M2) · backlog נדחה: שינוי-אימייל עצמי, טבלת העדפות, חיפוש Topbar, UI ל-`params` (מודול 9), שדרוג נעילה ל-Auth Hook (דורש תוכנית Team), חשיפת מודולי-אדמין במטריצה, Error Boundary ברמת Router.
+**פתוח במודול 1:** רק PR+merge ל-`dev` (ישי, ידני; ‏gitleaks על ההיסטוריה נקי, ה-CI צפוי ירוק; §7.24 — סיסמאות לא מוחלפות, החלטה סגורה) · 12 תרחישי RLS על `customers` (נדחה ל-M2) · backlog נדחה: שינוי-אימייל עצמי, טבלת העדפות, חיפוש Topbar, UI ל-`params` (מודול 9), שדרוג נעילה ל-Auth Hook (דורש תוכנית Team), חשיפת מודולי-אדמין במטריצה, Error Boundary ברמת Router.
 
 **הבא בתור:** מודול 2 (לקוחות, עמית).
 
 ---
 
 ## יומן סשנים (הכי חדש למעלה)
+
+### 📝 סשן 06/07/2026 (לילה) — "סגירת מודול 1 + מערכת מדריכי-מיקרו machine-first" (Claude Code)
+**רקע:** ישי סגר את שלושת הפריטים שחיכו לו: אימת ב-Table Editor (‏`modules`=9, `permissions`=45 ✓), הדביק את `settings.json` החדש (אומת בדיף — תקין, שני הסקריפטים ב-`.claude/hooks/` פעילים), והכריע **לא להחליף את סיסמאות 5 משתמשי הבדיקה** (פרויקט אקדמי — סיכון מקובל, תועד כ-§7.24). ביקש: לסגור את מודול 1, ולשדרג את מערך הטמפלטים כך שמדריכי המיקרו ייכתבו **לקלוד כבונה** (אנגלית מלאה, machine-first) בעוד מדריכי `docs/guides/` נשארים בעברית לבני-אדם.
+
+**הכרעות ישי בסשן:** ‏(1) PR אחד עם הכל על `ishay/module-1-permissions` ‏(2) בבנייה לפי מדריך מיקרו — קלוד מאמת 🔻 טכניים לבד ועוצר לאישור רק בסוף כל פזה/הכרעות §7 ‏(3) אין רוטציית סיסמאות ‏(4) הרחבת ה-Stop hook לאכיפת עדכון מדריך-המיקרו הפעיל ‏(5) מיקרו-מדריכים באנגלית, מדריכי-אדם בעברית.
+
+**בוצע:**
+1. **אימות סכמה מול DB חי** (Supabase MCP, קריאה בלבד): ‏roles=5, modules=9, permissions=45 ✓ · 7 policies על 4 טבלאות הליבה ✓ · 4 פונקציות SECURITY DEFINER ✓ · כל 16 הטבלאות RLS-on ✓. סחף יחיד תוקן: הערת "10 מודולים" ב-`docs/schema.sql` (שורה 17) → 9.
+2. **שני טמפלטים חדשים** ב-`docs/templates/`: פתיחה (בלופרינט machine-first, 9 סעיפים, תגי 🤖/👤, פרוטוקול עדכון-עצמי, שם פלט `module-N.md` באנגלית — תוקנה הפרת כלל 11 שבטמפלט הישן) + סגירה (אודיט מול ה-DoD של מדריך המיקרו + **התמדה** לתיעוד + הוראות PR מודפסות).
+3. **`docs/micro_guides/module-1.md` נדרס** ונכתב מחדש כ-as-built באנגלית — פיילוט הפורמט. תוקן נספח ה-QA שהתיישן (טען "אין test-runner"; במציאות Vitest ‏16 + Playwright ‏8 + CI).
+4. **11 מדריכי מודול:** ⑥ → 3 פרומפטים (פתיחה/המשך/סגירה) + שורת "מתחזק מדריך מיקרו חי" ב-⑤. גם: roadmap §5+§8, README, ishay/00+01.
+5. **CLAUDE.md:** כלל ברזל 15 (מדריך מיקרו חי) + צעד 0 בפרוטוקול סוף-סשן + שכתוב "עבודה לפי מדריך" (חלוקת שפות: guides=עברית לאדם, micro_guides+templates=אנגלית לקלוד).
+6. **§7.24 ב-PROJECT_MASTER** (סיסמאות — סיכון מקובל, סגור) + עדכון code_review פריט 10 + עדכון claude_routines.md (hooks בסקריפטים, בדיקת מדריך-מיקרו-פעיל ב-docs-sync) + 2 עותקי SKILL.md מקומיים (docs-sync, pr-gate).
+7. **ה-Stop hook הורחב** (`.claude/hooks/check-docs-updated.sh`): קוד תחת `src/modules/NN_*/` שהשתנה בלי עדכון `module-N.md` → חסימה. נבדק ב-3 תרחישים (שינוי בלי עדכון → חוסם; עם עדכון → עובר; אחרי revert → נקי).
+8. **סגירת מודול 1 — verdict [YES]:** ‏gitleaks על כל 39 הקומיטים — אין ממצאים (אין צורך ב-`.gitleaksignore`; אם ה-CI בכל זאת יאדים — מוסיפים fingerprints עם הפניה ל-§7.24) · ‏`npm run test:e2e` ‏8/8 · ‏`npm run format` + ‏`npm run verify` ירוקים.
+
+**נותר לישי (ידני):** פתיחת PR ב-GitHub (‏base: `dev` ← compare: `ishay/module-1-permissions`) → המתנה ל-CI (‏quality-gate + secret-scan) → Merge (לבד — הערת ה-⚠️ כבר ב-CHANGELOG). אחרי המיזוג, בסשן הבא: הפיכת שורת מודול 1 ל-✅ ב-STATUS ופתיחת מודול 4.
 
 ### 📝 סשן 06/07/2026 (ערב) — "סגירת פינות בתשתית: אבטחה, hooks, סנכרון תיעוד" (Claude Code)
 **רקע:** ישי עבר על ערכת המדריכים ושאל שורת שאלות (הערות בקוד, טיפול בשינויים מהותיים, hooks, מה עובר לעמית, PROJECT_MASTER, CHANGELOG, מוקאפים, מנוי). תוכנן בפלאן-מוד עם 4 סוכני-חקירה; כל ההכרעות אושרו ע"י ישי. **הערה חשובה:** הסשן רץ מתיקיית `gedood_710` (פרויקט אחר) — עבד על נתיבים מוחלטים; סשנים עתידיים של REG-IN לפתוח מתוך `C:\Users\ishay\Reg-In`.

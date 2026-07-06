@@ -1,45 +1,52 @@
 Hi Claude,
 
-We are preparing to move to the next phase of the project: **Module [MODULE_NUMBER]: [MODULE_NAME]** (feature branch `[BRANCH_NAME]`).
-Your task in this turn is to act as our Lead Software Architect and Product Manager, preparing the official blueprint and implementation strategy for this module.
+We are opening **Module [MODULE_NUMBER]: [MODULE_NAME]** (feature branch `[BRANCH_NAME]`).
+Your task in this turn: act as Lead Software Architect and produce the module's **micro-guide** — the machine-actionable blueprint that a *future Claude session* will execute step by step.
 
-### ⚠️ Workflow & Plan Rules:
-1. **Plan-then-Approve:** Do NOT write application code yet, and do NOT write the final file to disk. Present the full structural blueprint within your plan for my formal review and green light.
-2. **Grounding & Citations:** Do not rely on chat memory or assumptions. Every factual claim regarding the existing code, DB, or configuration MUST be backed by an explicit file path and line number citation that you read in this turn.
-3. **Hierarchy of Truth:** You must strictly resolve all contradictions based on our established hierarchy: `docs/schema.sql` (Highest) ➔ `PROJECT_MASTER.md` / Approved Spec ➔ Visual Mockups ➔ Previous Micro-Guides (Lowest).
+### 🎯 Role & Audience (read this first — it shapes everything)
+The micro-guide's **primary reader is a future Claude Code session with zero memory of this conversation**. Ishay/Amit will only: paste prompts, answer decision questions, and approve at phase boundaries. Therefore:
+- Every step must be executable by Claude **without asking anything** that the guide could have answered.
+- Write the guide in **full English** (machine-first precision). Hebrew appears ONLY as data — DB values (module/role names like 'לקוחות', 'מנכ"ל'), UI strings, and user-facing message texts. All chat reports to Ishay/Amit are always in **Hebrew**.
+- Do not write for a human following a tutorial. Write for an agent: exact paths, exact commands, expected outputs, unambiguous stop conditions.
 
-Please read `PROJECT_MASTER.md` (specifically sections [RELEVANT_SECTIONS]), review the existing codebase, and analyze data schemas and future module dependencies. 
+### ⚠️ Workflow & Plan Rules
+1. **Plan-then-Approve:** present the full blueprint in chat for Ishay/Amit's review. Write `docs/micro_guides/module-[MODULE_NUMBER].md` to disk **only after explicit approval**.
+2. **Grounding & Citations:** no chat memory, no assumptions. Every factual claim about existing code, DB, or config MUST cite a file path + line number you read in this turn.
+3. **Hierarchy of Truth:** `docs/schema.sql` (highest) ➔ approved spec `docs/reference_spec/C5_*`+`C6_*` via `PROJECT_MASTER.md` ➔ mockups (`docs/mockups/`) ➔ previous micro-guides (lowest). Frozen spec files are never edited; intentional deviations are recorded in living docs with a "deviation from 5.x" note.
+4. Read before writing: `CLAUDE.md`, `STATUS.md`, `docs/PROJECT_MASTER.md` (sections [RELEVANT_SECTIONS] **and** the full §7 registry), `docs/schema.sql`, the current codebase, and `docs/micro_guides/module-1.md` as the format exemplar.
 
-Your thinking process and the resulting guide must fulfill the following mandates:
+### 🔄 Sequence & Dependency Validation
+Before blueprinting, challenge the workflow itself: is building *this module now* sound given data-model cross-references? Missing prerequisites? Will this architecture strain upcoming modules? State your conclusion first.
 
-### 1. 🔄 Sequence & Dependency Validation
-Before mapping out the guide, challenge our workflow. Verify if developing *this specific module right now* is logically sound based on data model cross-references. 
-- Are there prerequisites from other modules we skipped? 
-- Will this architecture break or overcomplicate upcoming modules? 
-- State your conclusion on the workflow sequence clearly at the beginning.
+### 🎯 Triage of Gaps & Questions
+If you find contradictions/omissions/ambiguities between spec, schema, or mockups — halt and list them at the top under **"Questions & Assumptions for Ishay"**:
+- 🛑 **Must decide NOW** — blocks Phase 1 (DB) or later phases of this module.
+- ⏳ **Can decide LATER** — state at which future module/stage it becomes critical.
+- 🧭 **Deviations from frozen spec** — record in living docs only, never edit `reference_spec/*`.
+- 📌 **§7 cross-references** — cite item numbers that block (🛑) vs. relevant-but-deferred (⏳). Never restate their text.
 
-### 2. 🧠 Architectural Suggestions & Pro-Tips (Separate Proposals)
-You have the creative freedom to suggest optimizations, modern patterns (e.g., standardizing soft deletes as 'active'/'inactive' status, React Hook Form + Zod), or missing edge cases. 
-**Crucial:** Do NOT bake these suggestions into the core numbered steps of the blueprint yet. List them under a separate section called `"Claude's Optimization Proposals"` so they can be explicitly approved or rejected.
+### 🧠 Optimization Proposals (separate!)
+You may suggest patterns/optimizations/edge-cases — but list them under a separate `"Claude's Optimization Proposals"` section for explicit approval. Do NOT bake unapproved suggestions into the numbered steps.
 
-### 3. 🎯 Triage of Gaps & Questions
-If you identify any contradictions, omissions, or ambiguities between the text spec, database schema, or visual mockups, halt and list them at the top of your response under **"Questions & Assumptions for Ishay"**, strictly divided into:
-- 🛑 **Must Decide NOW:** Blockers that must be settled for Phase 1 (DB) and Phase 2 (UI) of this module.
-- ⏳ **Can Decide LATER:** Lower-priority items we can defer, explicitly stating *at which future module or deployment stage* they will become critical.
-- 🧭 **Deviations from the approved spec:** if we intentionally diverge from the frozen approved spec (like dropping CAPTCHA in Module 1), record the decision in the LIVING docs (`PROJECT_MASTER`, this guide, `CHANGELOG`) with a short "deviation from 5.x" note — never edit the frozen `reference_spec/*` exports.
-- 📌 **Cross-reference `PROJECT_MASTER.md` §7:** state explicitly which numbered open-question items from §7 block this module (🛑) versus which are merely relevant-but-deferred (⏳) — cite item numbers, don't restate their text.
+### 📜 Required Micro-Guide Structure (exactly these 9 sections)
+Output file: `docs/micro_guides/module-[MODULE_NUMBER].md` (English filename — iron rule 11; English content per Role & Audience above).
 
-### 📜 Expected Blueprint Structure (Granular Steps & Stopping Points)
-The blueprint you present for `docs/micro_guides/REG-IN_מדריך_מיקרו_מודול_[MODULE_NUMBER].md` must break down each phase into **granular, sequentially numbered Steps (צעדים)**. Every single step MUST end with a clear, verifiable **Stopping Point (נקודת עצירה)** to ensure we test before moving forward.
+1. **🟢 Live Status Header** — module, branch, owner, overall status, "Last updated", "**Active step: N**", and a step→status table using: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (with target module) · ❌ blocked (with reason). This header is the single line of truth a fresh session reads first.
+2. **📦 Context Packet for Claude** — module purpose in ≤3 lines; map of existing files to touch/reuse (paths + line refs); DB tables + relevant migrations; dependencies on other modules; spec sections (5.x) + mockup folders; environment facts (supabase client import path `@/supabaseClient`, dev server, RTL, etc.). Everything a zero-memory session needs to start working without exploration.
+3. **🧭 Decisions Ledger** — table: §7 item / local decision · the ruling · who · date · which step it unblocks. Cite §7 numbers only.
+4. **🛡️ Security & Auth Model Statement** (iron rule 9) — how this module leans on Module-1 auth: RLS policies per the §7.21 standard template (state the exact `module_name` string used in the policy), role/permission gates in UI (`SYSTEM_MODULES`/`isAllowed` patterns), session/OAuth handling, and explicitly accepted limitations.
+5. **🏗️ Phase & Step Plan** — canonical phase order: **Phase 1 DB/RLS → Phase 2 Business Logic (`src/lib/` + `src/modules/NN_name/api.js` + unit tests; iron rule 14: UI never duplicates a formula) → Phase 3 UI → Phase 4 Control & Integration → Phase 5 QA & Handoff** (merge/adapt phases only with a stated reason). Every step specifies: **Goal · Files · What to do · Verification command + expected output · 🔻 stop-point tagged 🤖 or 👤**.
+   - **🤖 (default):** Claude verifies by itself (SQL check, unit/E2E test, preview screenshot/snapshot) — reports the evidence and continues.
+   - **👤 (human gate):** required ONLY at: end of every phase · §7/product decisions · before applying any migration (shared Supabase project!) · anything touching secrets/accounts/OAuth config · final DoD sign-off.
+6. **📊 QA Matrix** — planned coverage per test type (Unit · Integration · E2E · Regression · UAT · Security/Pen · Performance · Usability · Compatibility) with an empty "as-run" column that the closing audit fills in. Align to the real infra: Vitest (`npm run test:run`), Playwright specs in `e2e/` (`npm run test:e2e`), CI (`.github/workflows/ci.yml`).
+7. **✅ Definition of Done** — checkboxes: the canonical DoD from `docs/architecture_and_qa_roadmap.md` instantiated for this module + module-specific items (row counts, policies, flows). Includes: migration applied + `docs/schema.sql` snapshot updated + committed together (DB protocol in `CLAUDE.md`).
+8. **🔄 Self-Update Protocol** — mandatory verbatim rules: (a) at every step transition, update the status header + step table **in the same session, before moving on**; (b) any deviation from the plan gets an inline "↳ as-built" note on the step + a line in section 9; (c) the repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/[MODULE_NUMBER]*_*/` changed but this guide didn't — keep it current, not as an afterthought; (d) end-of-session protocol in `CLAUDE.md` applies (CHANGELOG → CLAUDE_CODE_LOG → STATUS).
+9. **📝 Deviations & Tech-Debt Log** — append-only dated lines; summarizes all "↳ as-built" notes and deferred items with their target module/milestone.
 
-**Formatting Requirement:** The final output guide content must be written in **clear Hebrew**, properly formatted, and fully wrapped inside a `<div dir="rtl">` tag for perfect RTL scannability.
+### ✍️ Machine-First Writing Rules
+- Each step is self-contained: an agent landing on it cold can execute it from the step text + context packet alone.
+- Prefer instructions + load-bearing skeletons (SQL policy templates, function signatures) over full code dumps — code is written live at build time, guided by the step. Include full SQL only where exactness is load-bearing (RLS policies, constraints).
+- Every verification is a *command with an expected output* (e.g., `select count(*) from X;` → `N`), not "make sure it works".
+- Hebrew comments in code follow iron rule 3 (why-first) — the guide states this once, not per step.
 
-Structure outline:
-- **Context & Scope:** Brief architectural alignment, hardcoded constraints vs. dynamic DB routing, and layout strategy.
-- **Security / Auth model:** State explicitly how this module authenticates & authorizes — RLS policies, role/permission gates, and session/OAuth handling. Every module leans on the Module-1 auth foundation, so make the dependency explicit.
-- **Phase 1: Infrastructure & DB (Numbered Steps):** Schema validation, constraints, soft-delete mechanisms, and core Seed/mock data. **Before seeding: list any data-review gaps (enum mismatches, missing/typo values, spec-vs-schema conflicts) to resolve with Ishay — do NOT invent data.**
-- **Phase 2: UI & Frontend Development (Numbered Steps):** Layout, views, components (utilizing shadcn/ui and Lucide elements), form states, client-side validation schemas, and local state handling.
-- **Phase 3: Control & Integration (Numbered Steps):** Gatekeeping, backend integrations, regression testing parameters, system boundaries, and strict Git/Branch management guidelines (ensuring code remains on the feature branch with no premature PRs).
-- **Phase 4: QA & Handoff (The UX/Logic Verification Matrix):** A comprehensive table listing detailed test scenarios, explicit user roles executing them, actions, and expected behaviors/results (Frontend alerts, DB blockages, RLS enforcement).
-
-Please output your Sequence Assessment, Questions (if any), and the complete structured Blueprint for the micro-guide now.
+Now output: your Sequence Assessment, Questions & Assumptions (if any), Optimization Proposals, and the complete blueprint per the 9-section structure — in chat, for approval.

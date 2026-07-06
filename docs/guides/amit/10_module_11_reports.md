@@ -27,22 +27,37 @@
 
 ## ⑤ החלק של Claude
 
-בלופרינט: 5 דו"חות כ-Views/RPC ב-DB (מהיר, RLS-מוגן, לא סנכרון ידני), ייצוא Excel לתקציר השכר עם קוד ייחודי שמונע כפל-תשלום (`salary_reports`). **מציית לשפת העיצוב ולטבלת הצבעים ב-PROJECT_MASTER §4.**
+בלופרינט: 5 דו"חות כ-Views/RPC ב-DB (מהיר, RLS-מוגן, לא סנכרון ידני), ייצוא Excel לתקציר השכר עם קוד ייחודי שמונע כפל-תשלום (`salary_reports`). **מציית לשפת העיצוב ולטבלת הצבעים ב-PROJECT_MASTER §4.** **מתחזק את `docs/micro_guides/module-11.md` חי לאורך כל הבנייה** (ה-Stop hook אוכף).
 
-## ⑥ 📋 הפרומפט להדבקה
+## ⑥ 📋 שלושת הפרומפטים להדבקה
 
-**פתיחה:**
+**1) פתיחת מודול (פעם אחת):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/amit/10_module_11_reports.md
 ואת docs/PROJECT_MASTER.md (סעיף 5.17).
 אנחנו פותחים את מודול 11 — דו"חות מנהלים, על ענף amit/module-11-reports.
 
-בצע את התבנית הבאה (docs/templates/create_micro_guide_template.md) עם:
+קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=11 · MODULE_NAME=דו"חות מנהלים · RELEVANT_SECTIONS=§5.17 · BRANCH_NAME=amit/module-11-reports
-קרא בעצמך את קובץ התבנית docs/templates/create_micro_guide_template.md ובצע אותו כלשונו עם הפרמטרים שלמעלה (אין צורך שאדביק את תוכנו).
+
+הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-11.md.
 ```
 
-**סגירה:** `create_module_final_test_template.md` עם `MODULE_NUMBER=11`.
+**2) המשך בנייה (בכל סשן עבודה, עד שכל הצעדים ✅):**
+```
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-11.md.
+המשך מ"הצעד הפעיל" שבכותרת המצב. אמת בעצמך כל נקודת עצירה 🤖 (הרץ את פקודת האימות והצג ראיה),
+ועצור לאישורי בכל נקודת 👤 ובסוף כל פזה. עדכן את מדריך המיקרו תוך כדי העבודה (סעיף 8 שלו).
+בסוף הסשן: עדכן יומנים לפי הפרוטוקול ב-CLAUDE.md והסבר לי בעברית פשוטה איפה עצרנו ומה הבא.
+```
+
+**3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
+```
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-11.md.
+קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+MODULE_NUMBER=11 · MODULE_NAME=דו"חות מנהלים · BRANCH_NAME=amit/module-11-reports
+בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים) והדפס לי את הוראות ה-PR בעברית.
+```
 
 ## ⑦ בדיקת קבלה
 

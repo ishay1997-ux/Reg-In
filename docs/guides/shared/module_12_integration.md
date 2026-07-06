@@ -33,20 +33,40 @@
 
 ## ⑤ החלק של Claude
 
-מרחיב E2E לפי המודולים שנבנו, בונה סקריפט Seed, מלווה את חיבור Vercel (בדיקת build תקין, `vercel.json`, משתני סביבה), מריץ audit סופי (lint+test+build+E2E מלא), ומעדכן את `docs/claude_routines.md` אם `regin-e2e-check` צריכה עדכון בפועל (ר' טבלת "טריגרי צמיחה" שם). **מציית לשפת העיצוב ולטבלת הצבעים ב-PROJECT_MASTER §4** — זה שלב ליטוש, לא שלב שינוי-עיצוב.
+מרחיב E2E לפי המודולים שנבנו, בונה סקריפט Seed, מלווה את חיבור Vercel (בדיקת build תקין, `vercel.json`, משתני סביבה), מריץ audit סופי (lint+test+build+E2E מלא), ומעדכן את `docs/claude_routines.md` אם `regin-e2e-check` צריכה עדכון בפועל (ר' טבלת "טריגרי צמיחה" שם). **מציית לשפת העיצוב ולטבלת הצבעים ב-PROJECT_MASTER §4** — זה שלב ליטוש, לא שלב שינוי-עיצוב. **מתחזק את `docs/micro_guides/module-12.md` חי לאורך כל הבנייה** (ה-Stop hook אוכף).
 
-## ⑥ 📋 הפרומפט להדבקה
+## ⑥ 📋 שלושת הפרומפטים להדבקה
 
-**פתיחה:**
+**1) פתיחת מודול (פעם אחת):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/shared/module_12_integration.md
 ו-docs/claude_routines.md. אנחנו במודול 12 — אינטגרציה והגשה, על ענף shared/module-12-integration.
 
-בצע: (1) בדוק אילו מודולים חסרי E2E ותציע specs חדשים, (2) בנה סקריפט Seed מלא,
-(3) הרץ audit סופי (verify + E2E מלא), (4) הכן אותי לחיבור Vercel — אילו משתני סביבה בדיוק צריך להזין.
+קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
+MODULE_NUMBER=12 · MODULE_NAME=אינטגרציה והגשה · RELEVANT_SECTIONS=כלל האפיון + ⑦ בכל מדריכי המודולים · BRANCH_NAME=shared/module-12-integration
+
+בבלופרינט כלול במפורש: (1) מיפוי מודולים חסרי E2E + specs חדשים, (2) סקריפט Seed ריאליסטי,
+(3) audit סופי (verify + E2E מלא), (4) צעדי חיבור Vercel — אילו משתני סביבה בדיוק מזינים ואיפה.
+הצג את הבלופרינט לאישורנו; רק אחרי שנאשר — שמור אותו כ-docs/micro_guides/module-12.md.
 ```
 
-**סגירה:** `create_module_final_test_template.md` עם `MODULE_NUMBER=12` — כאן ה-DoD כולל גם "פרוס ועובד ב-Vercel", לא רק merge ל-dev.
+**2) המשך בנייה (בכל סשן עבודה, עד שכל הצעדים ✅):**
+```
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-12.md.
+המשך מ"הצעד הפעיל" שבכותרת המצב. אמת בעצמך כל נקודת עצירה 🤖 (הרץ את פקודת האימות והצג ראיה),
+ועצור לאישור בכל נקודת 👤 ובסוף כל פזה (חיבור Vercel והזנת משתני סביבה = תמיד 👤).
+עדכן את מדריך המיקרו תוך כדי העבודה (סעיף 8 שלו).
+בסוף הסשן: עדכן יומנים לפי הפרוטוקול ב-CLAUDE.md והסבר לי בעברית פשוטה איפה עצרנו ומה הבא.
+```
+
+**3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
+```
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-12.md.
+קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+MODULE_NUMBER=12 · MODULE_NAME=אינטגרציה והגשה · BRANCH_NAME=shared/module-12-integration
+כאן ה-DoD כולל גם "פרוס ועובד ב-Vercel" (נבדק מהטלפון ומהמחשב), לא רק merge.
+בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים) והדפס לנו את הוראות ה-PR בעברית.
+```
 
 ## ⑦ בדיקת קבלה
 

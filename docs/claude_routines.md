@@ -55,12 +55,12 @@ STEP 2 — Read the doc set:
 - `CLAUDE.md` (root — iron rules)
 - `docs/guides/**` (system roadmap + Ishay/Amit/shared track guides)
 - `docs/claude_routines.md` (canonical routines doc — also diff it against the 4 local SKILL.md files under `~/.claude/scheduled-tasks/*/SKILL.md` and report drift between them)
-- `docs/micro_guides/*.md` (per-module blueprints, named `module-N.md`)
+- `docs/micro_guides/*.md` (per-module LIVING blueprints, named `module-N.md`, written in English FOR Claude — each has a Live Status Header with an "Active step" line, a step→status table, and a Deviations log. These are working documents, not archives: check that the active module's guide is in sync with reality.)
 - `docs/PROJECT_MASTER.md` (including the §7 open-questions registry)
 - `docs/CHANGELOG.md`
 - `docs/architecture_and_qa_roadmap.md` (engineering standard / DoD — check its "חלק 0: מצב היישום" table still matches reality, e.g. if CI/tests/migrations/E2E status changed)
 
-STEP 3 — Cross-file consistency check: verify these agree with EACH OTHER, not just with reality in isolation. Example: a micro-guide step marked done (✅) must match STATUS.md's module-status row and PROJECT_MASTER's "מצב נוכחי" (current state) line. Flag and fix any contradiction found between files.
+STEP 3 — Cross-file consistency check: verify these agree with EACH OTHER, not just with reality in isolation. Example: a micro-guide step marked done (✅) must match STATUS.md's module-status row and PROJECT_MASTER's "מצב נוכחי" (current state) line. Specifically for the ACTIVE module's micro-guide (`docs/micro_guides/module-N.md`): its Live Status Header must match STATUS.md's row for that module AND the actual code under `src/modules/NN_*/`; no step may be left 🔨 (in progress) without an explanatory note; the "Last updated" date must not predate the newest change to that module's code. Flag and fix any contradiction found between files.
 
 STEP 4 — Auto-edit stale sections directly (you have approval to edit docs autonomously): status badges, STATUS.md's module table, "מצב נוכחי" snapshots, Definition-of-Done checkboxes, stale terminology that no longer matches the code (e.g. renamed statuses, removed UI patterns, renamed functions, renamed files/folders). Fix the actual text, don't just flag it. EXCEPTION: never rewrite a dated journal entry in `docs/CHANGELOG.md` or `docs/CLAUDE_CODE_LOG.md`'s session log — those are historical records, even if they mention a file that no longer exists. Only "מצב נוכחי" (current-status) snapshots get rewritten; dated entries only get appended to, never edited.
 
@@ -175,7 +175,7 @@ HARD SAFETY BOUNDARIES (do not violate these under any circumstance):
 - Never run `gh pr create`, `gh pr merge`, or any GitHub API write — PR creation is a manual step, always.
 - Never edit `.claude/settings.json` or `.claude/settings.local.json`.
 - If `npm run verify` itself is missing or the repo is in an unexpected state (e.g. package.json doesn't have a `verify` script) — say so plainly rather than guessing or trying to reconstruct it yourself.
-- Note: this repo's Stop hook (defined in `.claude/settings.json`, shared via git) checks whether `docs/CLAUDE_CODE_LOG.md` AND `STATUS.md` were updated after other tracked files changed. If your own commit includes code/doc changes without a fresh journal entry, the hook may block you from ending the session — if that happens, add a brief journal line to `docs/CLAUDE_CODE_LOG.md` (and confirm STATUS.md is still accurate) describing this auto-commit, then let the hook's own re-check pass. This is an existing repo safety net, not something to route around.
+- Note: this repo's hooks live as bash scripts under `.claude/hooks/` (`.claude/settings.json`, shared via git, only points at them): the Stop hook `check-docs-updated.sh` blocks session end if `docs/CLAUDE_CODE_LOG.md`/`STATUS.md` are stale relative to other changed files, AND if code under `src/modules/NN_*/` changed without the matching `docs/micro_guides/module-N.md` being updated; the PreToolUse hook `protect-frozen-files.sh` blocks any edit/delete of the frozen spec exports (C5/C6). If the Stop hook blocks you after your own auto-commit, add a brief journal line to `docs/CLAUDE_CODE_LOG.md` (and confirm STATUS.md is still accurate), then let the hook's re-check pass. These are existing repo safety nets, not something to route around.
 
 Respond in Hebrew, concise and direct.
 ```
@@ -250,8 +250,8 @@ Respond in Hebrew, concise — a pass/fail summary, not a full report, unless th
 | רוטינה | טריגר לעדכון | מה משתנה |
 |---|---|---|
 | `regin-e2e-check` | מודול חדש מקבל קובצי `e2e/*.spec.js` משלו | ה-STEP 1/3 כבר כתובים גנרית ("list e2e/*.spec.js", "don't hardcode coverage") — **בפועל לא צריך לגעת בפרומפט**; רק לוודא שהתיאור הכולל ("Coverage today is module 1 only") בכותרת סעיף 2 כאן מתעדכן |
-| `regin-docs-sync` | נוסף/נמחק קובץ תיעוד חשוב (כמו שקרה בערכה הזו: STATUS.md, CLAUDE.md, guides/**) | STEP 2 ("Read the doc set") — להוסיף/להסיר שורה |
-| `regin-pr-gate` | ה-hook ב-`.claude/settings.json` משתנה | ה-HARD SAFETY BOUNDARIES, ההערה על ה-Stop hook — לעדכן את התיאור שלו |
+| `regin-docs-sync` | נוסף/נמחק קובץ תיעוד חשוב (כמו שקרה בערכה הזו: STATUS.md, CLAUDE.md, guides/**) · או שפורמט מדריכי המיקרו משתנה (כמו המעבר ל-machine-first באנגלית, 06/07) | STEP 2 ("Read the doc set") — להוסיף/להסיר שורה; STEP 3 — לעדכן את בדיקת מדריך-המיקרו-הפעיל |
+| `regin-pr-gate` | לוגיקת ה-hooks ב-`.claude/hooks/*.sh` (או ההפניה ב-`settings.json`) משתנה | ה-HARD SAFETY BOUNDARIES, ההערה על ה-hooks — לעדכן את התיאור שלהם |
 | `regin-health-pulse` | נוסף כלי-בדיקה חדש (npm script/MCP) לפרויקט | STEP 1 — להוסיף שורת בדיקה |
 
 4. **מעולם לא לשכתב רשומות יומן מתוארכות** (ב-`docs/CHANGELOG.md` או ב-`docs/CLAUDE_CODE_LOG.md`'s session log) — גם אם הן מזכירות קובץ שכבר לא קיים. רק snapshots של "מצב נוכחי" נכתבים-מחדש; רשומות מתוארכות רק מתווספות.

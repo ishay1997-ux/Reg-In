@@ -31,13 +31,13 @@
 
 ## ⑤ החלק של Claude
 
-**Phase 1** — מריץ Seed ל-`products`/`price_tiers`/`params` לפי `docs/reference_spec/products_and_params.md` (ההחלטות נעולות; ערך מע"מ בפועל לפי הכרעת ישי). **Phase 2** — מסך יצירת הצעה (בחירת לקוח, פרטי אירוע, בחירת שירותים, חישוב חי), הפקת PDF. **Phase 3-4** — סטטוס הצעה, פקיעה אוטומטית ל-30 יום, בדיקת תרחיש הדוגמה. **מציית לשפת העיצוב ולטבלת הצבעים ב-PROJECT_MASTER §4.**
+**Phase 1** — מריץ Seed ל-`products`/`price_tiers`/`params` לפי `docs/reference_spec/products_and_params.md` (ההחלטות נעולות; ערך מע"מ בפועל לפי הכרעת ישי) + RLS. **Phase 2** — מנוע התמחור כ-SSOT ב-`src/lib/pricing.js` + `api.js` עם בדיקות יחידה (כלל ברזל 14 — ה-UI רק מייבא, לא משכפל נוסחה). **Phase 3** — מסך יצירת הצעה (בחירת לקוח, פרטי אירוע, בחירת שירותים, חישוב חי), הפקת PDF. **Phase 4-5** — סטטוס הצעה, פקיעה אוטומטית ל-30 יום, בדיקת תרחיש הדוגמה. **מציית לשפת העיצוב ולטבלת הצבעים ב-PROJECT_MASTER §4.** **מתחזק את `docs/micro_guides/module-3.md` חי לאורך כל הבנייה** (ה-Stop hook אוכף).
 
 **בדיקת אמת מהאפיון (M2 milestone) — לצטט ל-Claude, זו הבדיקה הקובעת:** לקוח קיים עם 5% הנחה קבועה, 300 אורחים, 4 שעות, 300 תגים רגילים + 300 שרוכי בד, 10% הנחה ידנית → **סה"כ לתשלום: 6,319 ₪** בדיוק.
 
-## ⑥ 📋 הפרומפט להדבקה
+## ⑥ 📋 שלושת הפרומפטים להדבקה
 
-**פתיחה:**
+**1) פתיחת מודול (פעם אחת):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/amit/07_module_03_quotes.md,
 docs/reference_spec/products_and_params.md ו-docs/PROJECT_MASTER.md (סעיפים 5.4-5.5, §7 פריטים 1, 12, 13).
@@ -46,12 +46,28 @@ docs/reference_spec/products_and_params.md ו-docs/PROJECT_MASTER.md (סעיפי
 ההכרעה של ישי במע"מ: ___ (17 או 18)
 ההכרעה באחסון PDF: ___
 
-בצע את התבנית הבאה (docs/templates/create_micro_guide_template.md) עם:
+קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=3 · MODULE_NAME=הצעות מחיר · RELEVANT_SECTIONS=§5.4-5.5, §7.1/12/13 · BRANCH_NAME=amit/module-3-quotes
-קרא בעצמך את קובץ התבנית docs/templates/create_micro_guide_template.md ובצע אותו כלשונו עם הפרמטרים שלמעלה (אין צורך שאדביק את תוכנו).
+
+הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-3.md.
 ```
 
-**סגירה:** `create_module_final_test_template.md` עם `MODULE_NUMBER=3`, ובנוסף לבקש הרצה מפורשת של תרחיש הבדיקה (6,319 ₪) כחלק מהאודיט.
+**2) המשך בנייה (בכל סשן עבודה, עד שכל הצעדים ✅):**
+```
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-3.md.
+המשך מ"הצעד הפעיל" שבכותרת המצב. אמת בעצמך כל נקודת עצירה 🤖 (הרץ את פקודת האימות והצג ראיה),
+ועצור לאישורי בכל נקודת 👤 ובסוף כל פזה. עדכן את מדריך המיקרו תוך כדי העבודה (סעיף 8 שלו).
+בסוף הסשן: עדכן יומנים לפי הפרוטוקול ב-CLAUDE.md והסבר לי בעברית פשוטה איפה עצרנו ומה הבא.
+```
+
+**3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
+```
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-3.md.
+קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+MODULE_NUMBER=3 · MODULE_NAME=הצעות מחיר · BRANCH_NAME=amit/module-3-quotes
+חובה באודיט: הרצה מפורשת של תרחיש הבדיקה מהאפיון — התוצאה חייבת להיות 6,319 ₪ בדיוק.
+בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים) והדפס לי את הוראות ה-PR בעברית.
+```
 
 ## ⑦ בדיקת קבלה
 

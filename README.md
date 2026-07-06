@@ -47,8 +47,8 @@
 ```
 
 ## איך עובדים עם Claude — בקצרה
-- **מדריך אחד = פגישת עבודה אחת.** כל מדריך ב-`docs/guides/` בנוי מ-8 סעיפים קבועים, כולל "הפרומפט להדבקה" ו"בדיקת קבלה".
-- **מודול חדש** נפתח עם תבנית `docs/templates/create_micro_guide_template.md` (Claude מייצר בלופרינט → מאשרים → בונים צעד-צעד עם עצירות 🔻) ונסגר עם `create_module_final_test_template.md`. הפרטים: [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md).
+- **מדריך אחד = פגישת עבודה אחת.** כל מדריך ב-`docs/guides/` בנוי מ-8 סעיפים קבועים, כולל **שלושת הפרומפטים להדבקה** (פתיחה / המשך-בנייה / סגירה) ו"בדיקת קבלה".
+- **מודול חדש** נפתח עם פרומפט הפתיחה (Claude קורא את `docs/templates/create_micro_guide_template.md` בעצמו ומייצר **מדריך מיקרו** — בלופרינט חי באנגלית, כתוב ל-Claude → אתם מאשרים → Claude בונה, מאמת עצירות 🔻 טכניות לבד ועוצר לאישורכם בסוף כל פזה) ונסגר עם פרומפט הסגירה (אודיט + עדכון כל התיעוד + הוראות PR מודפסות לכם). מדריך המיקרו מתעדכן תוך כדי העבודה — hook חוסם סיום סשן אם קוד מודול השתנה בלי עדכונו. הפרטים: [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) §5.
 - **בסוף כל סשן** Claude מעדכן את היומנים ואת STATUS.md — יש hook שלא נותן לו לסיים בלי זה.
 - **סודות** (`.env.local`, סיסמאות) עוברים רק בערוץ פרטי בין ישי לעמית — לעולם לא בריפו, בצ'אט או במדריכים.
 
@@ -58,7 +58,7 @@
 | [CLAUDE.md](CLAUDE.md) | כללי הברזל של Claude — נטען אוטומטית בכל סשן |
 | [STATUS.md](STATUS.md) | **לוח המצב היחיד** — סטטוס מודולים + השלב הנוכחי של כל מסלול |
 | [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) | מפת הדרכים: מודולים, תלויות, אבני דרך, שיטת העבודה |
-| [docs/guides/ishay/](docs/guides/ishay/) · [docs/guides/amit/](docs/guides/amit/) · [docs/guides/shared/](docs/guides/shared/) | מדריכי השלבים (8 סעיפים + פרומפט בכל אחד) |
+| [docs/guides/ishay/](docs/guides/ishay/) · [docs/guides/amit/](docs/guides/amit/) · [docs/guides/shared/](docs/guides/shared/) | מדריכי השלבים בעברית (8 סעיפים + 3 פרומפטים בכל אחד) |
 | [docs/PROJECT_MASTER.md](docs/PROJECT_MASTER.md) | האפיון המסונתז: סכמה, הרשאות, 17 מסכים + **§7 שאלות פתוחות** |
 | [docs/schema.sql](docs/schema.sql) | סכמת DB בפועל (snapshot; מקור-אמת לשינויים = `supabase/migrations/`) |
 | [docs/architecture_and_qa_roadmap.md](docs/architecture_and_qa_roadmap.md) | סטנדרט הנדסי + Definition of Done + QA |
@@ -67,8 +67,8 @@
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | יומן שינויים מתוארך (DB+קוד) — משותף לשני המפתחים |
 | [docs/CLAUDE_CODE_LOG.md](docs/CLAUDE_CODE_LOG.md) | יומן הסשנים של Claude (נרטיב, החלטות, tech-debt) |
 | [supabase/README.md](supabase/README.md) | ניהול מיגרציות DB |
-| [docs/micro_guides/](docs/micro_guides/) | בלופרינטים של מודולים ש-Claude מייצר (module-1.md ✅, השאר ייווצרו) |
-| [docs/templates/](docs/templates/) | התבניות לפתיחת מודול ולסגירתו |
+| [docs/micro_guides/](docs/micro_guides/) | מדריכי מיקרו — בלופרינטים חיים **באנגלית, כתובים ל-Claude** (module-1.md ✅, השאר ייווצרו בפתיחת כל מודול) |
+| [docs/templates/](docs/templates/) | התבניות (אנגלית) לפתיחת מודול ולסגירתו — Claude קורא אותן בעצמו |
 | [docs/mockups/](docs/mockups/) | 44 צילומי מוקאפ + [תיאורים](docs/mockups/mockup_descriptions.md) — רפרנס ויזואלי בלבד |
 | `docs/reference_spec/` | האפיון המאושר (פרקים 5–6) — **קפוא, לא לערוך**; + `products_and_params.md` (החלטות Seed) |
 

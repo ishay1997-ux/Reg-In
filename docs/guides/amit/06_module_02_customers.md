@@ -32,11 +32,11 @@
 
 ## ⑤ החלק של Claude
 
-בלופרינט מלא לפי `docs/templates/create_micro_guide_template.md`: **Phase 1** — RLS policies על `customers` (הראשונות מסוג הזה בפרויקט; לפי המודל שהוכרע ב-§7.21), constraints, מיפוי enum. **Phase 2** — מסך רשימה+סינון, טופס הוספה/עריכה, ארכוב דו-כיווני (בלי מסגור "מחיקה" — לפי המוסכמה שנקבעה במודול 1). **Phase 3-4** — בקרה ו-QA. **מציית לשפת העיצוב ולטבלת הצבעים ב-PROJECT_MASTER §4.**
+בלופרינט מלא לפי `docs/templates/create_micro_guide_template.md`: **Phase 1** — RLS policies על `customers` (הראשונות מסוג הזה בפרויקט; לפי המודל שהוכרע ב-§7.21) + 12 תרחישי ה-RLS שנדחו ממודול 1, constraints, מיפוי enum. **Phase 2** — לוגיקה עסקית ו-`api.js` (כלל ברזל 14: שאילתות המודול מרוכזות ב-`src/modules/02_customers/api.js`). **Phase 3** — מסך רשימה+סינון, טופס הוספה/עריכה, ארכוב דו-כיווני (בלי מסגור "מחיקה" — לפי המוסכמה שנקבעה במודול 1). **Phase 4-5** — בקרה ו-QA. **מציית לשפת העיצוב ולטבלת הצבעים ב-PROJECT_MASTER §4.** **מתחזק את `docs/micro_guides/module-2.md` חי לאורך כל הבנייה** (ה-Stop hook אוכף).
 
-## ⑥ 📋 הפרומפט להדבקה
+## ⑥ 📋 שלושת הפרומפטים להדבקה
 
-**פתיחה:**
+**1) פתיחת מודול (פעם אחת):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/amit/06_module_02_customers.md
 ואת docs/PROJECT_MASTER.md (סעיף 5.3, §7 פריטים 3, 11, 21).
@@ -45,14 +45,28 @@
 זו ה-RLS policy הראשונה על טבלה עסקית בפרויקט — היא תשמש תבנית לכל המודולים הבאים.
 תזכיר לי במפורש את ההכרעה ב-§7.21 לפני שאתה כותב אותה.
 
-בצע את התבנית הבאה (docs/templates/create_micro_guide_template.md) עם:
+קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=2 · MODULE_NAME=לקוחות · RELEVANT_SECTIONS=§5.3, §7.3/11/21 · BRANCH_NAME=amit/module-2-customers
-קרא בעצמך את קובץ התבנית docs/templates/create_micro_guide_template.md ובצע אותו כלשונו עם הפרמטרים שלמעלה (אין צורך שאדביק את תוכנו).
 
 חובה: "שאלות פתוחות" מסעיף ② במדריך שלי נכנסות לטריאז' 🛑/⏳ שלך — אל תכריע בהן לבד.
+הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-2.md.
 ```
 
-**סגירה:** `create_module_final_test_template.md` עם `MODULE_NUMBER=2`.
+**2) המשך בנייה (בכל סשן עבודה, עד שכל הצעדים ✅):**
+```
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-2.md.
+המשך מ"הצעד הפעיל" שבכותרת המצב. אמת בעצמך כל נקודת עצירה 🤖 (הרץ את פקודת האימות והצג ראיה),
+ועצור לאישורי בכל נקודת 👤 ובסוף כל פזה. עדכן את מדריך המיקרו תוך כדי העבודה (סעיף 8 שלו).
+בסוף הסשן: עדכן יומנים לפי הפרוטוקול ב-CLAUDE.md והסבר לי בעברית פשוטה איפה עצרנו ומה הבא.
+```
+
+**3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
+```
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-2.md.
+קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+MODULE_NUMBER=2 · MODULE_NAME=לקוחות · BRANCH_NAME=amit/module-2-customers
+בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים) והדפס לי את הוראות ה-PR בעברית.
+```
 
 ## ⑦ בדיקת קבלה
 

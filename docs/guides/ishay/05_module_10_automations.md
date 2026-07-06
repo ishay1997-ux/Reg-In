@@ -28,22 +28,37 @@
 
 ## ⑤ החלק של Claude
 
-בלופרינט: Cron/Scheduled Function לתזכורות ופקיעה, זרימת שכחתי-סיסמה מלאה (Supabase `resetPasswordForEmail`), הפעלת Leaked Password Protection ב-Supabase Auth settings, תבניות מייל בעברית RTL. **מציית לשפת העיצוב ולטבלת הצבעים ב-PROJECT_MASTER §4** (במיילים שיש להם ממשק).
+בלופרינט: Cron/Scheduled Function לתזכורות ופקיעה, זרימת שכחתי-סיסמה מלאה (Supabase `resetPasswordForEmail`), הפעלת Leaked Password Protection ב-Supabase Auth settings, תבניות מייל בעברית RTL. **מציית לשפת העיצוב ולטבלת הצבעים ב-PROJECT_MASTER §4** (במיילים שיש להם ממשק). **מתחזק את `docs/micro_guides/module-10.md` חי לאורך כל הבנייה** (ה-Stop hook אוכף).
 
-## ⑥ 📋 הפרומפט להדבקה
+## ⑥ 📋 שלושת הפרומפטים להדבקה
 
-**פתיחה:**
+**1) פתיחת מודול (פעם אחת):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/ishay/05_module_10_automations.md,
 docs/CHANGELOG.md (חלק "חובות עתידיים") ו-docs/PROJECT_MASTER.md.
 אנחנו פותחים את מודול 10 — אוטומציות, על ענף ishay/module-10-automations.
 
-בצע את התבנית הבאה (docs/templates/create_micro_guide_template.md) עם:
+קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=10 · MODULE_NAME=אוטומציות · RELEVANT_SECTIONS=חובות עתידיים ב-CHANGELOG · BRANCH_NAME=ishay/module-10-automations
-קרא בעצמך את קובץ התבנית docs/templates/create_micro_guide_template.md ובצע אותו כלשונו עם הפרמטרים שלמעלה (אין צורך שאדביק את תוכנו).
+
+הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-10.md.
 ```
 
-**סגירה:** `create_module_final_test_template.md` עם `MODULE_NUMBER=10`.
+**2) המשך בנייה (בכל סשן עבודה, עד שכל הצעדים ✅):**
+```
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-10.md.
+המשך מ"הצעד הפעיל" שבכותרת המצב. אמת בעצמך כל נקודת עצירה 🤖 (הרץ את פקודת האימות והצג ראיה),
+ועצור לאישורי בכל נקודת 👤 ובסוף כל פזה. עדכן את מדריך המיקרו תוך כדי העבודה (סעיף 8 שלו).
+בסוף הסשן: עדכן יומנים לפי הפרוטוקול ב-CLAUDE.md והסבר לי בעברית פשוטה איפה עצרנו ומה הבא.
+```
+
+**3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
+```
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-10.md.
+קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+MODULE_NUMBER=10 · MODULE_NAME=אוטומציות · BRANCH_NAME=ishay/module-10-automations
+בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים) והדפס לי את הוראות ה-PR בעברית.
+```
 
 ## ⑦ בדיקת קבלה
 
