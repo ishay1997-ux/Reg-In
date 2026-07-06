@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "statusMessage": "בודק אם docs/CLAUDE_CODE_LOG.md ו-STATUS.md מעודכנים...",
+            "command": "LOG=\"docs/CLAUDE_CODE_LOG.md\"; ST=\"STATUS.md\"; [ -f \"$LOG\" ] || exit 0; LOG_M=$(stat -c %Y \"$LOG\" 2>/dev/null || echo 0); ST_M=$(stat -c %Y \"$ST\" 2>/dev/null || echo 0); CHANGED=$(git status --porcelain -- . \":!$LOG\" \":!$ST\" 2>/dev/null); [ -z \"$CHANGED\" ] && exit 0; NEWEST=0; while IFS= read -r line; do f=$(printf '%s' \"$line\" | cut -c4-); [ -f \"$f\" ] || continue; m=$(stat -c %Y \"$f\" 2>/dev/null || echo 0); [ \"$m\" -gt \"$NEWEST\" ] && NEWEST=$m; done <<< \"$CHANGED\"; MISS=\"\"; [ \"$NEWEST\" -gt \"$LOG_M\" ] && MISS=\"docs/CLAUDE_CODE_LOG.md\"; [ \"$NEWEST\" -gt \"$ST_M\" ] && MISS=\"$MISS STATUS.md\"; if [ -n \"$MISS\" ]; then echo \"{\\\"decision\\\":\\\"block\\\",\\\"reason\\\":\\\"קבצים השתנו מאז העדכון האחרון של: $MISS. עדכן את היומן (docs/CLAUDE_CODE_LOG.md) ואת לוח המצב (STATUS.md) לפני סיום התור. אם אין שינוי-סטטוס אמיתי — עדכן ב-STATUS.md רק את שורת 'עודכן לאחרונה' אחרי שווידאת שהלוח עדיין נכון.\\\"}\"; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
