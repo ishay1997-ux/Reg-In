@@ -165,6 +165,7 @@ export default function PermissionsMatrixPage() {
                               isCeo ? undefined : () => handleCellClick(role.role_id, m.module_id)
                             }
                             title={isCeo ? 'למנכ"ל תמיד עריכה מלאה' : undefined}
+                            testId={`perm-cell-${m.module_id}-${role.role_id}`}
                           />
                         </td>
                       )
@@ -180,12 +181,13 @@ export default function PermissionsMatrixPage() {
   )
 }
 
-function PermissionCircle({ level, disabled, onClick, title }) {
+function PermissionCircle({ level, disabled, onClick, title, testId }) {
   const { Icon, className, label } = LEVEL_STYLE[level]
 
   return (
     <button
       type="button"
+      data-testid={testId}
       disabled={disabled}
       onClick={onClick}
       title={title ?? label}

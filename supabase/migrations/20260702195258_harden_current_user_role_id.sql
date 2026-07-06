@@ -4,6 +4,11 @@
 -- (2) הסרת EXECUTE מ-PUBLIC ו-anon — הפונקציה נחוצה רק בתוך policies (רצות בהקשר authenticated),
 --     אין סיבה שתהיה חשופה כ-RPC ל-anon. authenticated נשאר עם EXECUTE (הרשאה מפורשת קיימת) —
 --     הסרתו הייתה שוברת כל בדיקת RLS שקוראת לפונקציה, ולכן אזהרת authenticated_* נשארת במכוון.
+--
+-- ⚠️ הערה חוצה-מודולים (06/07/2026): זו פונקציית העזר ה-load-bearing היחידה של כל RLS בפרויקט —
+--     תבנית ה-policy הסטנדרטית לכל טבלה עסקית (מודול 2 ואילך, ראו docs/PROJECT_MASTER.md §7.21)
+--     קוראת לה ישירות בכל SELECT/ALL policy. שינוי חתימה או התנהגות שלה בעתיד = לבדוק את כל
+--     ה-policies בפרויקט, לא רק את מודול 1.
 create or replace function public.current_user_role_id()
   returns integer
   language sql

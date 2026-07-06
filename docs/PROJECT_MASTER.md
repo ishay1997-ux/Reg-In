@@ -269,7 +269,31 @@
 18. **חוקי אדום/צהוב/ירוק בלוח האירועים:** "פרויקט אדום = ב-14 הימים הקרובים שלא סיימו הכנות" — אך מה נחשב "לא מוכן": שיבוץ<100% **או** לוגיסטיקה<100%, או דווקא שניהם? סטטוס: **פתוח — להכרעה משותפת עם ישי** (מודול 7; param `ימי_אזהרה_קדם_אירוע`=14).
 19. **חלוקת בונוס פרויקט + גזירת שעות בפועל:** איך `project_bonus` מתחלק בין הדיילות (שווה בשווה? לפי שעות?), ואיך "סך שעות האירוע" הופך לשעות פר-דיילת (לכל אחת מלוא משך האירוע, עם override ידני ב-`assignments.actual_hours`?). סטטוס: **פתוח — להכרעה משותפת עם ישי** (מודול 8).
 20. **איחור בתשלום / החזר בביטול:** האפיון לא מגדיר תזכורות או טיפול בלקוח שלא שילם, ולא מדיניות החזר כשפרויקט מבוטל אחרי אישור הצעה. סטטוס: **פתוח — להכרעה משותפת עם ישי** (מודול 8; ייתכן שמחוץ להיקף — להכריע במפורש).
-21. **מודל בעלות-דאטה ל-RLS (11 הטבלאות העסקיות):** 🛑 **חוסם את סגירת מודול 1 ואת תחילת מודול 2.** כל הטבלאות העסקיות כרגע ב-deny-all מכוון; לפני כתיבת ה-policies הראשונות יש להכריע: הגישה נקבעת אך ורק לפי מטריצת ההרשאות (תפקיד→מודול→edit/view/blocked), או שיש גם בעלות ברמת רשומה (למשל `projects.owner_email` מגביל עריכה לבעלים)? ההכרעה תתועד כאן ותשמש תבנית לכל ה-policies. סטטוס: **פתוח — להכרעה משותפת עם ישי ועמית** (ishay/01 + מודול 2).
+21. **מודל בעלות-דאטה ל-RLS (11 הטבלאות העסקיות):** ✅ **הוכרע (06/07/2026, ישי).** הגישה לכל טבלה עסקית נקבעת **אך ורק** לפי מטריצת ההרשאות (תפקיד→מודול→`edit`/`view`/`blocked`) — **בלי** בעלות ברמת-רשומה (כלומר אין הגבלה נוספת כמו "רק הבעלים של הפרויקט יכול לערוך אותו"; מי שיש לו `edit` על המודול עורך את כל הרשומות של אותו מודול, ומי שיש לו `view` רואה את כולן). **תבנית ה-policy הסטנדרטית לכל טבלה עסקית עתידית** (למשל `customers`):
+    ```sql
+    alter table <table_name> enable row level security;
+    create policy "<table_name>_select_by_permission" on <table_name> for select to authenticated
+      using (exists (
+        select 1 from permissions p
+        where p.role_id = current_user_role_id()
+          and p.module_id = (select module_id from modules where module_name = '<שם-המודול-המתאים>')
+          and p.permission_level in ('edit', 'view')
+      ));
+    create policy "<table_name>_write_by_permission" on <table_name> for all to authenticated
+      using (exists (
+        select 1 from permissions p
+        where p.role_id = current_user_role_id()
+          and p.module_id = (select module_id from modules where module_name = '<שם-המודול-המתאים>')
+          and p.permission_level = 'edit'
+      ))
+      with check (exists (
+        select 1 from permissions p
+        where p.role_id = current_user_role_id()
+          and p.module_id = (select module_id from modules where module_name = '<שם-המודול-המתאים>')
+          and p.permission_level = 'edit'
+      ));
+    ```
+    **החמרה עתידית אפשרית (לא כרגע):** אם יידרש בהמשך (למשל "מנהלת פרויקטים רואה רק את הפרויקטים שהיא `owner_email` שלהם") — זו תהיה תוספת `and owner_email = auth.email()` ל-policy הספציפית, לא שינוי במודל הכללי. סטטוס: **סגור.** מודול 2 (ואילך) כותב את ה-policies הראשונות לפי התבנית הזו.
 
 ---
 *נבנה מקריאה ישירה של `docs/schema.sql`, האפיון המאושר (פרקים 5–6, כולל אימות ציטוטים מול הטקסט המקורי), ו-44 קבצי המוקאפ ב-`docs/mockups/` (כרפרנס ויזואלי בלבד).*
