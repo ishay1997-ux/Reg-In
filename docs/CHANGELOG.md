@@ -5,7 +5,7 @@
 > **למה הקובץ הזה קיים:** כשמסיימים מודול או משנים את מסד הנתונים, כותבים פה שורה. ככה כל אחד מהשותפים יודע מה השני סיים, בלי לזכור בעל-פה ובלי לשאול. **חובה לעדכן כאן בכל סיום מודול ובכל שינוי בטבלאות ה-DB.**
 >
 > 📍 **יומן משותף ל-ישי ועמית — סטטוס עבודה משותף.**  
-> (יומן סטטוס פנימי של Claude: [CLAUDE_CODE_LOG.md](CLAUDE_CODE_LOG.md) — החלטות טכניות, סנאפשוטים, tech-debt)
+> (יומן סטטוס פנימי של Claude: [CLAUDE_CODE_LOG.md](CLAUDE_CODE_LOG.md) — החלטות טכניות, סנאפשוטים, tech-debt · לוח מצב מודולים חי: [../STATUS.md](../STATUS.md))
 
 ---
 # REG-IN — לכניסה ובדיקות
@@ -48,6 +48,7 @@
 
 | תאריך | מי | מה הושלם | מי שתלוי בזה יכול להתחיל |
 |-------|-----|----------|--------------------------|
+| 06/07 | ישי (Claude) | **⚠️ עמית, שים לב — מפת הקבצים בתיעוד השתנתה! נוצרה ערכת מדריכים מלאה** בהשראת ערכת "מלאי 710": `CLAUDE.md`+`STATUS.md`+`README.md` חדשים בשורש (**קרא אותם ראשונים**), `docs/guides/` (מפת דרכים + מסלול אישי לך עם 01_install_tools.md כשלב ראשון, מסלול לישי, ומודולים משותפים), `docs/claude_routines.md` (איך ליצור את 4 הרוטינות בחשבון Claude *שלך* — הן פר-מחשב, `git clone` לא מביא אותן), `docs/code_review_2026-07.md`. **נמחקו** (תוכן מוזג לערכה החדשה): `docs/macro-guide.md`, `docs/WORKFLOW.md`, `docs/README.md`, `CLAUDE_CODE_LOG.md` בשורש. `PROJECT_MASTER.md` §7 קיבל 11 שאלות פתוחות נוספות (11–21). ה-Stop hook עבר מ-`.claude/settings.local.json` (אישי) ל-`.claude/settings.json` (משותף, ב-git — תגיע אליך אוטומטית ב-clone) | עמית — עדכן bookmarks; תתחיל מ-`docs/guides/amit/01_install_tools.md` |
 | 03/07 | ישי (Claude) | **מודול 1 — באטצ' 2: Sidebar שטוח + admin permission-driven + session hardening.** `Sidebar`: "ניהול מערכת" עבר מ-accordion לקישור **שטוח** (מנווט ל-`/system/users`; ניווט-משנה דרך הטאבים בתוכן). **Topic A**: גישת `/system/*` עברה מ-`role==='מנכ"ל'` קשיח ל-**permission-driven** (`SYSTEM_MODULES` ב-`constants.js`, נאכף ב-`Sidebar`+`App.jsx` ProtectedRoute) — פתר את ה-split-brain. **Topic B**: `supabaseClient` → `sessionStorage` (ניתוק בסגירת לשונית/דפדפן). תיעוד: playbook חירום לשחרור נעילה; החלטות Seed של products/params ננעלו (Topic D, בראש `products_and_params.md`) | מודול 2+ — אותה מוסכמת גישת-מערכת permission-driven; החלטות ה-Seed נעולות ל-Seed במודול 3 |
 | 03/07 | ישי (Claude) | **מודול 1 — סגירה: Google Sign-In + נעילת חשבון + UX Sidebar + ביטול CAPTCHA.** `LoginPage`: כפתור **Google OAuth אמיתי** (`signInWithOAuth`) + **נעילת-חשבון** (RPCs `check_login_lock`/`register_failed_login`/`reset_login_attempts`) בזרימת הכניסה. `AuthContext`: **שער הרשאה מרכזי** לזרימת OAuth — חשבון גוגל בלי שורת `users` מנותק (`signOut`) עם `authError`. `Sidebar`: כפתור הכיווץ **הועבר מהתחתית לראש התפריט** (ליד הלוגו). תיעוד: CAPTCHA בוטל רשמית; 2 הטמפלטים עודכנו + `docs/WORKFLOW.md` חדש | מודול 2+ — מודל האבטחה/Auth יציב; אותה מוסכמת שער-הרשאה חלה על מסכים חדשים |
 | 02/07 | ישי (Claude) | **מודול 1 — ליטוש Context/Hooks + הערות + ניקוי תיעוד.** `AuthContext`: `loadUser` ב-`useCallback`, Guard Clause ל-`useAuth` (זריקת שגיאה מחוץ ל-Provider), `mountedRef` נגד setState-אחרי-unmount. הערות עברית "why-first" בכל קבצי המודול; תוקן hooks-lint ב-`PermissionsMatrixPage` (useCallback) — המודול כולו lint-נקי. תיעוד: נמחק README boilerplate, `reference_spec/*.md.md`→`.md`+כותרת "קפוא", נוצר `docs/README.md`, מדריך-מאקרו הורחב ל-SSOT (§9–13) | ללא שינוי חוזה — מודול 2+ ממשיכים כרגיל |

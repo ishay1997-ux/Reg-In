@@ -29,6 +29,7 @@ You have complete freedom to judge the quality of the written code and UI/UX.
 
 ### 4. 🧹 Housekeeping Check
 - Confirm `docs/CHANGELOG.md` was updated for this module (DB changes and code changes).
+- Confirm `../STATUS.md`'s module table row was updated to reflect this module's new status.
 - Confirm `git status` on the branch is clean of temporary/debug files (no stray `console.log`, commented-out code, or scratch files).
 - Run `npm run lint` — must be clean (the only automated check in the repo).
 - Run a live **preview smoke test** of the module's key flows (per the verification workflow) and share proof (screenshot / logs / network).

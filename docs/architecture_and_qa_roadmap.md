@@ -36,7 +36,7 @@
 1. `npm run verify` ירוק (lint + format:check + בדיקות + build).
 2. אם נגעת בלוגיקה טהורה — יש/עודכנה בדיקת יחידה (`*.test.js`).
 3. אם שינית DB — יש קובץ מיגרציה חדש ב-`supabase/migrations/`, הוחל, ו-`docs/schema.sql` עודכן כ-snapshot.
-4. תועד: שורה ב-`docs/CHANGELOG.md` (מה השתנה) ו/או `CLAUDE_CODE_LOG.md` (למה/החלטות).
+4. תועד: שורה ב-`docs/CHANGELOG.md` (מה השתנה) ו/או `docs/CLAUDE_CODE_LOG.md` (למה/החלטות); אם השתנה סטטוס מודול/שלב — עדכן גם `../STATUS.md`.
 5. אין סודות/מפתחות בקוד (ה-CI חוסם אוטומטית).
 6. מוזג ל-`dev` דרך PR (ה-CI ירוק חוסם מיזוג שבור).
 
@@ -63,6 +63,8 @@
 | `regin-health-pulse` | read-only: lint + npm outdated + npm audit + Supabase advisors + git status, שורת יומן אחת | שבועי, או לפני מיזוג גדול |
 | `regin-pr-gate` | מריצה `npm run verify`; אם ירוק **על ענף פיצ'ר אישי** — commit+push אוטומטי (לעולם לא על `main`/`dev`, לעולם לא `--force`); אם אדום — אבחון בעברית בלי לתקן קוד | ממש לפני פתיחת PR |
 | `regin-e2e-check` | מריצה `npm run test:e2e` (Playwright, מודול 1) ומדווחת סיכום עברי pass/fail | לפני מיזוג גדול ל-`dev`, או אחרי שינוי בזרימות Auth/הרשאות |
+
+**ההגדרות הקנוניות המלאות של 4 הרוטינות + פרוטוקול העדכון שלהן:** [docs/claude_routines.md](claude_routines.md).
 
 ---
 
@@ -95,7 +97,7 @@
 ### ג. ניהול המשימות
 המשימות נכנסות לכלי ניהול (כמו Jira או Linear) בצורת **User Stories** קטנים וממוקדים, המוגדרים עם **Definition of Done (DoD)** קשוח: משימה לא מסתיימת כשכתבו את הקוד, אלא רק כשהיא עברה בדיקות, תועדה במסמכים הרלוונטיים, ונקייה משגיאות.
 
-> **התאמה לפרויקט:** לשני מפתחים, Jira/Linear הם over-engineering. ה-docs (מדריך מאקרו + WORKFLOW) + ה-DoD בחלק 0 ממלאים את התפקיד. ה"חוזים" בין המודולים מעוגנים ב-`docs/schema.sql` + RLS (schema-first).
+> **התאמה לפרויקט:** לשני מפתחים, Jira/Linear הם over-engineering. ה-docs (`docs/guides/00_roadmap.md` + `../CLAUDE.md`) + ה-DoD בחלק 0 ממלאים את התפקיד. ה"חוזים" בין המודולים מעוגנים ב-`docs/schema.sql` + RLS (schema-first).
 
 ## 3. אסטרטגיית אוטומציות: מתי מפעילים ומה?
 

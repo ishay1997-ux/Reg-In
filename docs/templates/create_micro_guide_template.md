@@ -27,6 +27,7 @@ If you identify any contradictions, omissions, or ambiguities between the text s
 - 🛑 **Must Decide NOW:** Blockers that must be settled for Phase 1 (DB) and Phase 2 (UI) of this module.
 - ⏳ **Can Decide LATER:** Lower-priority items we can defer, explicitly stating *at which future module or deployment stage* they will become critical.
 - 🧭 **Deviations from the approved spec:** if we intentionally diverge from the frozen approved spec (like dropping CAPTCHA in Module 1), record the decision in the LIVING docs (`PROJECT_MASTER`, this guide, `CHANGELOG`) with a short "deviation from 5.x" note — never edit the frozen `reference_spec/*` exports.
+- 📌 **Cross-reference `PROJECT_MASTER.md` §7:** state explicitly which numbered open-question items from §7 block this module (🛑) versus which are merely relevant-but-deferred (⏳) — cite item numbers, don't restate their text.
 
 ### 📜 Expected Blueprint Structure (Granular Steps & Stopping Points)
 The blueprint you present for `docs/micro_guides/REG-IN_מדריך_מיקרו_מודול_[MODULE_NUMBER].md` must break down each phase into **granular, sequentially numbered Steps (צעדים)**. Every single step MUST end with a clear, verifiable **Stopping Point (נקודת עצירה)** to ensure we test before moving forward.

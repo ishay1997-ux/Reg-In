@@ -3,7 +3,7 @@
 # CLAUDE_CODE_LOG — יומן עבודה פנימי של Claude Code
 
 > קובץ זה **לא** מיועד לישי לתחזק — הוא ליצירה ועדכון עצמי שלי (Claude Code) בין סשנים, כדי לא לאבד הקשר. ישי יכול לקרוא אבל האחריות על עדכונו שלי. עדכן בסוף כל סשן משמעותי.
-> מקורות אמת אחרים שלא כפולים כאן: `docs/PROJECT_MASTER.md` (סכמה/הרשאות/מסכים), `docs/CHANGELOG.md` (יומן DB+קוד לשני המפתחים), `docs/micro_guides/module-1.md` (מתכון צעד-צעד), `docs/macro-guide.md` (SSOT תפעולי).
+> מקורות אמת אחרים שלא כפולים כאן: `docs/PROJECT_MASTER.md` (סכמה/הרשאות/מסכים + §7 שאלות פתוחות), `docs/CHANGELOG.md` (יומן DB+קוד לשני המפתחים), `docs/micro_guides/module-1.md` (מתכון צעד-צעד), `../CLAUDE.md` (כללי ברזל), `../STATUS.md` (לוח מצב מודולים), `docs/guides/00_roadmap.md` (מפת הדרכים התפעולית — מחליף את `macro-guide.md`/`WORKFLOW.md` הישנים, שמוזגו לכאן ולערכת ה-guides).
 
 ## מדיניות תחזוקה (לקרוא לפני עריכה)
 - **"מצב נוכחי"** = snapshot שנכתב-**מחדש** כל פעם לשקף מציאות. לא append, לא נותנים לו להתיישן.
@@ -201,9 +201,10 @@
 - **טבלאות חדשות:** `login_attempts` (email PK, failed_count, locked_until, RLS-on בלי policies — גישה רק דרך הפונקציות).
 - **RLS:** `roles`/`modules`/`permissions` SELECT-לכל-authenticated (permissions כתיבה למנכ"ל) · `users` self-או-מנכ"ל + `users_update_self`. **טריגרים:** אין.
 - **מיגרציות מרכזיות:** soft-delete (frozen→inactive) · `users_update_self` · `harden_current_user_role_id` · `module1_login_attempts_lockout` · `module1_reset_login_attempts_revoke_anon`.
+- **חוב DB פתוח (קופל לכאן ממדריך המאקרו הישן לפני מחיקתו, 06/07/2026):** `auth.email()` לא עטוף ב-`(select …)` בשתי policies — אופטימיזציית initplan עתידית, לא דחוף (0 שורות דאטה עסקי כרגע).
 
 ## רפרנס: טמפלטים ו-hook
 
-`docs/templates/create_micro_guide_template.md` (פתיחת מודול) + `create_module_final_test_template.md` (סגירה) — כוללים היררכיית מקורות-אמת, ציטוט קובץ+שורה, RTL, משמעת Git, מטריצת QA. Stop hook ב-`.claude/settings.local.json` (אישי, לא ב-git) חוסם סיום-תור עד שהיומן הזה מעודכן.
+`docs/templates/create_micro_guide_template.md` (פתיחת מודול) + `create_module_final_test_template.md` (סגירה) — כוללים היררכיית מקורות-אמת, ציטוט קובץ+שורה, RTL, משמעת Git, מטריצת QA. **Stop hook ב-`.claude/settings.json`** (משותף, **ב-git** — מגיע גם לעמית ב-clone; תוקן 06/07/2026, קודם היה ב-`settings.local.json` האישי ומצביע בטעות על `CLAUDE_CODE_LOG.md` בשורש) חוסם סיום-תור עד שהיומן הזה **וגם `STATUS.md`** מעודכנים.
 
 </div>
