@@ -19,11 +19,12 @@ The micro-guide's **primary reader is a future Claude Code session with zero mem
 Before blueprinting, challenge the workflow itself: is building *this module now* sound given data-model cross-references? Missing prerequisites? Will this architecture strain upcoming modules? State your conclusion first.
 
 ### 🎯 Triage of Gaps & Questions
-If you find contradictions/omissions/ambiguities between spec, schema, or mockups — halt and list them at the top under **"Questions & Assumptions for Ishay"**:
-- 🛑 **Must decide NOW** — blocks Phase 1 (DB) or later phases of this module.
-- ⏳ **Can decide LATER** — state at which future module/stage it becomes critical.
+While reading, collect every contradiction/omission/ambiguity between spec, schema, and mockups. Then, BEFORE writing the blueprint, act on each by category — never decide an open question yourself (iron rule 1):
+- 🛑 **Must decide NOW** (blocks Phase 1 or a later phase) — **ASK Ishay/Amit directly, in-session, via the AskUserQuestion tool** — do not just list-and-hope. Batch them into as few rounds as possible; give concrete options where the choice is bounded (an "Other" free-text path is always available). Bake each answer into the Decisions Ledger (section 3) before presenting the blueprint.
+- ⏳ **Can decide LATER** — do NOT ask about these now (that defeats the point of deferring). Record each in the Decisions Ledger marked "OPEN — deferred", stating the future module/stage where it becomes critical.
 - 🧭 **Deviations from frozen spec** — record in living docs only, never edit `reference_spec/*`.
-- 📌 **§7 cross-references** — cite item numbers that block (🛑) vs. relevant-but-deferred (⏳). Never restate their text.
+- 📌 **§7 cross-references** — cite item numbers that block (🛑) vs. relevant-but-deferred (⏳). Never restate their text. A genuinely NEW open question (not yet in §7) is surfaced to Ishay and proposed as a new PROJECT_MASTER §7 item per CLAUDE.md rule 13 — never self-answered.
+- **Persistence rule:** every triage item must survive into the saved guide — decided ones in the Decisions Ledger (§3), deferred/new ones in the Decisions Ledger and Deviations & Tech-Debt Log (§9). Nothing you surfaced may live only in chat.
 
 ### 🧠 Optimization Proposals (separate!)
 You may suggest patterns/optimizations/edge-cases — but list them under a separate `"Claude's Optimization Proposals"` section for explicit approval. Do NOT bake unapproved suggestions into the numbered steps.
