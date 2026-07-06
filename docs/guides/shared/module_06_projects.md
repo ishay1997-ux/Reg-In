@@ -46,7 +46,7 @@
 
 בצע את התבנית הבאה (docs/templates/create_micro_guide_template.md) עם:
 MODULE_NUMBER=6 · MODULE_NAME=פרויקטים · RELEVANT_SECTIONS=§5.6-5.7, §7.7/17 · BRANCH_NAME=shared/module-6-projects
-[הדבק כאן את תוכן התבנית המלא מהקובץ]
+קרא בעצמך את קובץ התבנית docs/templates/create_micro_guide_template.md ובצע אותו כלשונו עם הפרמטרים שלמעלה (אין צורך שאדביק את תוכנו).
 ```
 
 **סגירה:** `create_module_final_test_template.md` עם `MODULE_NUMBER=6`.

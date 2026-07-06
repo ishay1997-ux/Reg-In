@@ -42,7 +42,7 @@
 
 בצע את התבנית הבאה (docs/templates/create_micro_guide_template.md) עם:
 MODULE_NUMBER=8 · MODULE_NAME=כספים וסגירת אירוע · RELEVANT_SECTIONS=§5.13-5.14, §7.19/20 · BRANCH_NAME=amit/module-8-finance
-[הדבק כאן את תוכן התבנית המלא מהקובץ]
+קרא בעצמך את קובץ התבנית docs/templates/create_micro_guide_template.md ובצע אותו כלשונו עם הפרמטרים שלמעלה (אין צורך שאדביק את תוכנו).
 ```
 
 **סגירה:** `create_module_final_test_template.md` עם `MODULE_NUMBER=8`.

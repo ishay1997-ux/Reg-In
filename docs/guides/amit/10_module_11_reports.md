@@ -39,7 +39,7 @@
 
 בצע את התבנית הבאה (docs/templates/create_micro_guide_template.md) עם:
 MODULE_NUMBER=11 · MODULE_NAME=דו"חות מנהלים · RELEVANT_SECTIONS=§5.17 · BRANCH_NAME=amit/module-11-reports
-[הדבק כאן את תוכן התבנית המלא מהקובץ]
+קרא בעצמך את קובץ התבנית docs/templates/create_micro_guide_template.md ובצע אותו כלשונו עם הפרמטרים שלמעלה (אין צורך שאדביק את תוכנו).
 ```
 
 **סגירה:** `create_module_final_test_template.md` עם `MODULE_NUMBER=11`.

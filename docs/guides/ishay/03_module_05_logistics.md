@@ -41,7 +41,7 @@ Checklist לוגיסטי לכל פרויקט: כל פריט (`site`/`product`) �
 
 בצע את התבנית הבאה (docs/templates/create_micro_guide_template.md) עם:
 MODULE_NUMBER=5 · MODULE_NAME=לוגיסטיקה · RELEVANT_SECTIONS=§5.8-5.9 · BRANCH_NAME=ishay/module-5-logistics
-[הדבק כאן את תוכן התבנית המלא מהקובץ]
+קרא בעצמך את קובץ התבנית docs/templates/create_micro_guide_template.md ובצע אותו כלשונו עם הפרמטרים שלמעלה (אין צורך שאדביק את תוכנו).
 ```
 
 **סגירה:** `create_module_final_test_template.md` עם `MODULE_NUMBER=5`.

@@ -48,7 +48,7 @@ docs/reference_spec/products_and_params.md ו-docs/PROJECT_MASTER.md (סעיפי
 
 בצע את התבנית הבאה (docs/templates/create_micro_guide_template.md) עם:
 MODULE_NUMBER=3 · MODULE_NAME=הצעות מחיר · RELEVANT_SECTIONS=§5.4-5.5, §7.1/12/13 · BRANCH_NAME=amit/module-3-quotes
-[הדבק כאן את תוכן התבנית המלא מהקובץ]
+קרא בעצמך את קובץ התבנית docs/templates/create_micro_guide_template.md ובצע אותו כלשונו עם הפרמטרים שלמעלה (אין צורך שאדביק את תוכנו).
 ```
 
 **סגירה:** `create_module_final_test_template.md` עם `MODULE_NUMBER=3`, ובנוסף לבקש הרצה מפורשת של תרחיש הבדיקה (6,319 ₪) כחלק מהאודיט.

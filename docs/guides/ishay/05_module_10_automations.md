@@ -40,7 +40,7 @@ docs/CHANGELOG.md (חלק "חובות עתידיים") ו-docs/PROJECT_MASTER.md
 
 בצע את התבנית הבאה (docs/templates/create_micro_guide_template.md) עם:
 MODULE_NUMBER=10 · MODULE_NAME=אוטומציות · RELEVANT_SECTIONS=חובות עתידיים ב-CHANGELOG · BRANCH_NAME=ishay/module-10-automations
-[הדבק כאן את תוכן התבנית המלא מהקובץ]
+קרא בעצמך את קובץ התבנית docs/templates/create_micro_guide_template.md ובצע אותו כלשונו עם הפרמטרים שלמעלה (אין צורך שאדביק את תוכנו).
 ```
 
 **סגירה:** `create_module_final_test_template.md` עם `MODULE_NUMBER=10`.

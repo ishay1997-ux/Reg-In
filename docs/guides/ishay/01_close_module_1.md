@@ -27,17 +27,17 @@
 
 ## ④ החלק שלך
 
-1. **הכרעת §7.21 (מודל RLS):** קרא את פריט 21 בסעיף 7 של [PROJECT_MASTER](../../PROJECT_MASTER.md) ("סתירות/פערים פתוחים"). ההחלטה הפשוטה ביותר (מומלצת להתחלה, אפשר להחמיר בהמשך): **הרשאה נקבעת אך ורק לפי מטריצת role→module** (בלי בעלות ברמת-רשומה) — כל מי שיש לו `edit`/`view` על מודול רואה/עורך את כל הרשומות של אותו מודול. תגיד ל-Claude את ההחלטה — הוא ירשום אותה ב-§7.21.
-2. **בדיקת ה-Supabase (חשוב!):** Supabase Dashboard → **Table Editor** → `modules` — ספור שורות. אם 10 (יש שורת "מסך הבית") — תגיד ל-Claude "יש 10 שורות ב-modules, יש למחוק את מסך הבית" (ר' [PROJECT_MASTER §7.10](../../PROJECT_MASTER.md)). בדוק גם `permissions` — אמור להיות 45 (5×9).
+1. ✅ ~~**הכרעת §7.21 (מודל RLS)**~~ — **בוצע (06/07/2026):** הוכרע "הרשאה אך ורק לפי מטריצת role→module", נרשם ב-[PROJECT_MASTER §7.21](../../PROJECT_MASTER.md) כולל תבנית ה-policy המוכנה למודול 2.
+2. **בדיקת ה-Supabase (חשוב! — הצעד הפתוח היחיד לפני ה-PR):** Supabase Dashboard → **Table Editor** → `modules` — ספור שורות. **התוצאה הצפויה: 9** (התיקון בוצע כבר ב-02/07 לפי ה-CHANGELOG — זו בדיקת אימות בלבד). אם בכל זאת 10 (יש שורת "מסך הבית") — תגיד ל-Claude "יש 10 שורות ב-modules, יש למחוק את מסך הבית" (ר' [PROJECT_MASTER §7.10](../../PROJECT_MASTER.md)). בדוק גם `permissions` — אמור להיות 45 (5×9).
 3. **לאחר ש-Claude מדווח "verify ירוק ונדחף"**: כנס ל-GitHub → הריפו → **Pull requests** → **New pull request** → `base: dev` ← `compare: ishay/module-1-permissions` → תיאור קצר → **Create pull request**.
 4. **חכה ל-CI** (סמן ירוק/אדום ב-PR). אם אדום — הדבק ל-Claude את הודעת הכשל.
 5. **מיזוג:** אם עמית כבר בסבב סקירה — תן לו לאשר. אם לא — לחץ **Merge pull request** בעצמך, ותתעד שורה ב-CHANGELOG שהמיזוג בוצע בלי סקירת עמית (הוא עדיין לא בשלב הזה).
 
 ## ⑤ החלק של Claude
 
-1. מכריע/מתעד את §7.21 לפי הנחיית ישי; אם 10 שורות ב-`modules` — כותב ומריץ מיגרציית תיקון (מחיקת שורת "מסך הבית") ומאמת שנשארו 9, ו-`permissions`=45.
-2. מתקן P0 מ-[code_review_2026-07.md](../../code_review_2026-07.md): `engines` ב-`package.json`, הערת E2E ב-`.env.example`.
-3. מיישם את פריטי P1 שנבחרו: Error Boundary ב-`src/App.jsx`, חיבור טאב "אבטחה" ל-`supabase.auth.updateUser({password})`, השלמת `e2e/permissions.spec.js` (בדיקת שינוי תא בפועל + הגנת self-lockout), הערת תיעוד ב-migration של `current_user_role_id()`. **מציית לשפת העיצוב ולטבלת הצבעים ב-PROJECT_MASTER §4 — בלי להמציא עיצוב חדש.**
+1. ✅ ~~מכריע/מתעד את §7.21~~ — **בוצע (06/07/2026, commit `6460fc4`).** נותר רק אימות הספירה ב-Table Editor ע"י ישי (צעד ④2).
+2. ✅ ~~מתקן P0~~ — **בוצע (06/07/2026):** `engines` ב-`package.json`, הערת E2E ב-`.env.example`.
+3. ✅ ~~מיישם את פריטי P1~~ — **בוצע (06/07/2026):** Error Boundary עוטף את `App.jsx`, E2E מורחב (8/8 ירוק), הערת migration, `lang="he" dir="rtl"`. (שינוי סיסמה נמצא כבר-ממומש — הממצא בבקרת הקוד היה מיושן.)
 4. מריץ `regin-e2e-check` (או ישירות `npm run test:e2e`) ומדווח תוצאה.
 5. מריץ `regin-pr-gate` — verify, ואם ירוק על ענף הפיצ'ר: commit+push.
 6. מעדכן `STATUS.md` (מודול 1 → ✅), `docs/CHANGELOG.md` (שורה מתוארכת), `docs/CLAUDE_CODE_LOG.md` (רשומת סשן + "מצב נוכחי" מרוענן).

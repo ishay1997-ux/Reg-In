@@ -47,7 +47,7 @@
 
 בצע את התבנית הבאה (docs/templates/create_micro_guide_template.md) עם:
 MODULE_NUMBER=2 · MODULE_NAME=לקוחות · RELEVANT_SECTIONS=§5.3, §7.3/11/21 · BRANCH_NAME=amit/module-2-customers
-[הדבק כאן את תוכן התבנית המלא מהקובץ]
+קרא בעצמך את קובץ התבנית docs/templates/create_micro_guide_template.md ובצע אותו כלשונו עם הפרמטרים שלמעלה (אין צורך שאדביק את תוכנו).
 
 חובה: "שאלות פתוחות" מסעיף ② במדריך שלי נכנסות לטריאז' 🛑/⏳ שלך — אל תכריע בהן לבד.
 ```

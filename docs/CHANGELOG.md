@@ -8,17 +8,9 @@
 > (יומן סטטוס פנימי של Claude: [CLAUDE_CODE_LOG.md](CLAUDE_CODE_LOG.md) — החלטות טכניות, סנאפשוטים, tech-debt · לוח מצב מודולים חי: [../STATUS.md](../STATUS.md))
 
 ---
-# REG-IN — לכניסה ובדיקות
-*מדובר בפרויקט אקדמי רמת אבטחה צריכה להיות סבירה לא חזקה*
 
-תפקיד	אימייל	טלפון
-מנכ"ל	ishay1997@gmail.com
-מנהלת פרויקטים	projects.test@regin.co.il
-מנהלת כספים ולקוחות	finance.test@regin.co.il
-מנהלת גיוס ושיבוץ	recruit.test@regin.co.il
-מנהלת לוגיסטיקה	logistics.test@regin.co.il
-הסיסמה של 4 המשתמשים הלא-מנכ"ל היא RegIn2026! (זהה בכולם, לנוחות בדיקה).
-סיסמה מנכ"ל ishay1997
+> 🔑 **פרטי התחברות למשתמשי הבדיקה (5 התפקידים):** אצל ישי, בערוץ פרטי בלבד — **לעולם לא בקובץ הזה ולא בשום קובץ ב-repo.**
+
 ## איך ממלאים (כללים)
 
 - **סיימת מודול / חלק ממנו?** הוסף שורה תחת "עדכוני קוד".
@@ -48,6 +40,7 @@
 
 | תאריך | מי | מה הושלם | מי שתלוי בזה יכול להתחיל |
 |-------|-----|----------|--------------------------|
+| 06/07 | ישי (Claude) | **סגירת פינות בתשתית התיעוד וההגנות (לא קוד אפליקציה).** ‏(1) **אבטחה:** בלוק פרטי ההתחברות הוסר מהקובץ הזה (הסיסמאות מוחלפות ב-Supabase; פרטים מישי בערוץ פרטי). ‏(2) **hooks עברו לסקריפטים** ב-`.claude/hooks/` (`check-docs-updated.sh` + חדש: `protect-frozen-files.sh` שחוסם עריכה/מחיקה של C5/C6 הקפואים) — `settings.json` רק מפנה אליהם. ‏(3) **CLAUDE.md:** 2 כללי ברזל חדשים — פרוטוקול שינוי מהותי (כלל 13), SSOT ללוגיקה עסקית + `api.js` פר-מודול (כלל 14). ‏(4) **PROJECT_MASTER:** תוכן עניינים, סטטוס הועבר ל-STATUS בלבד, §7.22–7.23 חדשים, עדכון שורות מיושנות. ‏(5) **מדריכים:** פרומפטי ⑥ פושטו (Claude קורא את הטמפלט בעצמו — בלי הדבקת תוכן ידנית); ishay/01 עודכן למצב אמת. ‏(6) `mockup_descriptions.md` נוקה מעותק-אב ישן וסותר — עכשיו תיאורי מסכים בלבד. ‏(7) 4 קבצי פלטי-סוכנים נמחקו מ-`reference_spec/` | עמית — הכללים החדשים ב-CLAUDE.md וה-hooks יגיעו אליך אוטומטית ב-clone; שום דבר לא חוסם אותך |
 | 06/07 | ישי (Claude) | **מודול 1 — סגירה: הכרעת §7.21 (מודל RLS) + תיקוני בקרת קוד P0/P1.** §7.21: הרשאה לכל טבלה עסקית עתידית נקבעת אך ורק לפי מטריצת role→module (בלי בעלות ברמת-רשומה) — תבנית ה-policy המדויקת נכתבה ב-`PROJECT_MASTER.md` §7.21, מוכנה לשכפול במודול 2. תיקונים: `package.json` (`engines: node>=20`), `.env.example` (הערת E2E אופציונלי), `src/components/ErrorBoundary.jsx` חדש (עוטף את `App.jsx` — קריסת רינדור לא-מטופלת כבר לא = מסך לבן), `index.html` (`lang="he" dir="rtl"`, היה `lang="en"` בלי dir), הערת load-bearing ב-migration של `current_user_role_id()`, ו-2 בדיקות E2E חדשות ב-`e2e/permissions.spec.js` (שינוי-תא מלא + הגנת self-lockout על עמודת המנכ"ל). `npm run verify` ו-`npm run test:e2e` (8/8) ירוקים. **בדיקה ידנית שנמצאה כבר ממומשת:** שינוי סיסמה ב-`ProfileSettingsPage.jsx` כבר מחובר ל-`supabase.auth.updateUser` — ממצא קודם בבקרת הקוד היה מיושן | מודול 2 (עמית) — תבנית ה-RLS מוכנה לשכפול על `customers`; שאר המפתחים - ה-Error Boundary וה-RTL הגלובלי חלים על כל מסך עתידי |
 | 06/07 | ישי (Claude) | **⚠️ עמית, שים לב — מפת הקבצים בתיעוד השתנתה! נוצרה ערכת מדריכים מלאה** בהשראת ערכת "מלאי 710": `CLAUDE.md`+`STATUS.md`+`README.md` חדשים בשורש (**קרא אותם ראשונים**), `docs/guides/` (מפת דרכים + מסלול אישי לך עם 01_install_tools.md כשלב ראשון, מסלול לישי, ומודולים משותפים), `docs/claude_routines.md` (איך ליצור את 4 הרוטינות בחשבון Claude *שלך* — הן פר-מחשב, `git clone` לא מביא אותן), `docs/code_review_2026-07.md`. **נמחקו** (תוכן מוזג לערכה החדשה): `docs/macro-guide.md`, `docs/WORKFLOW.md`, `docs/README.md`, `CLAUDE_CODE_LOG.md` בשורש. `PROJECT_MASTER.md` §7 קיבל 11 שאלות פתוחות נוספות (11–21). ה-Stop hook עבר מ-`.claude/settings.local.json` (אישי) ל-`.claude/settings.json` (משותף, ב-git — תגיע אליך אוטומטית ב-clone) | עמית — עדכן bookmarks; תתחיל מ-`docs/guides/amit/01_install_tools.md` |
 | 03/07 | ישי (Claude) | **מודול 1 — באטצ' 2: Sidebar שטוח + admin permission-driven + session hardening.** `Sidebar`: "ניהול מערכת" עבר מ-accordion לקישור **שטוח** (מנווט ל-`/system/users`; ניווט-משנה דרך הטאבים בתוכן). **Topic A**: גישת `/system/*` עברה מ-`role==='מנכ"ל'` קשיח ל-**permission-driven** (`SYSTEM_MODULES` ב-`constants.js`, נאכף ב-`Sidebar`+`App.jsx` ProtectedRoute) — פתר את ה-split-brain. **Topic B**: `supabaseClient` → `sessionStorage` (ניתוק בסגירת לשונית/דפדפן). תיעוד: playbook חירום לשחרור נעילה; החלטות Seed של products/params ננעלו (Topic D, בראש `products_and_params.md`) | מודול 2+ — אותה מוסכמת גישת-מערכת permission-driven; החלטות ה-Seed נעולות ל-Seed במודול 3 |
@@ -76,13 +69,13 @@
 - ✅ ~~**כניסה עם גוגל**~~ — **בוצע (03/07/2026)**: כפתור Google OAuth אמיתי במסך ההתחברות (הוקדם ממודול 10 כחלק ממודל האבטחה החדש).
 - ✅ ~~**CAPTCHA**~~ — **בוטל רשמית (03/07/2026)**, הוחלף ב-Google Sign-In + נעילת חשבון (מודל אבטחה חדש, ראו PROJECT_MASTER §5.1).
 - **שדרוג נעילת החשבון ל-Auth Hook** → כרגע האכיפה ברמת אפליקציה/DB (`login_attempts` + RPCs, מתאים ל-Free plan) וניתנת לעקיפה בקריאת API ישירה. לנעילה שרת-אמיתית שאי-אפשר לעקוף — Password Verification Hook (נעול לתוכנית Team). לשקול אם/כשעולים לתוכנית בתשלום.
-- **מסך מטריצת הרשאות** → טרם נבנה (צעד 10 במדריך מודול 1). כרגע ה-Sidebar מנתב "ניהול הרשאות" ל-`/users` כפתרון ביניים — לעדכן כשהמסך הזה ייבנה.
+- ✅ ~~**מסך מטריצת הרשאות**~~ — **נבנה (02/07/2026)**: `PermissionsMatrixPage` ב-`/system/permissions` (ראו שורת "צעד 10 + ליטושים" בעדכוני קוד).
 - **RLS על 11 הטבלאות הנותרות** → רק `roles`/`modules`/`permissions`/`users` מוגנות. כל טבלה אחרת חסומה לגמרי (RLS on, 0 policies) — כל מי שבונה מודול חדש יצטרך להוסיף policy לפני שהטבלה שלו תחזיר נתונים.
-- **הקשחת `current_user_role_id()`** — `search_path` לא מקובע (`SECURITY DEFINER` ללא `set search_path`) + הרשאת `EXECUTE` ל-`anon` לא הוסרה. לתקן בתחילת מודול 2, ברגע שנכתבת ה-policy האמיתית הראשונה על `customers` שנשענת על הפונקציה הזו — להקשיח לפני שהיא load-bearing על דאטה עסקי.
+- ✅ ~~**הקשחת `current_user_role_id()`**~~ — **בוצע (02/07/2026)**: migration `harden_current_user_role_id` — `search_path=''` מקובע + EXECUTE הוסר מ-`anon` (ראו שורת ה-DB מ-02/07).
 - **הפעלת Leaked Password Protection** ב-Supabase Auth (בדיקת HaveIBeenPwned) → מודול 10, יחד עם זרימת "שכחתי סיסמה" המלאה.
 - ✅ ~~**Split-brain RBAC**~~ — **נפתר (03/07/2026)**: גישת "ניהול מערכת" עברה ל-permission-driven (`SYSTEM_MODULES` נאכף ב-`Sidebar`+`App.jsx`, קורא את מפת `permissions` על מודולים 8-9 במקום `role === CEO` קשיח). שורות ה-Seed של מודולי המערכת הפכו למקור אמת חי — כבר לא דאטה מת. *נותר אופציונלי:* לחשוף את 2 מודולי המערכת גם במטריצת ההרשאות ב-UI, כדי לאפשר הענקת גישת-מערכת לתפקיד אחר דרך המסך במקום SQL.
 - **מיפוי מודולים לפי מחרוזת עברית** (`MODULE_META` ב-Sidebar, `GROUPS` במטריצת ההרשאות) — שינוי שם מודול ב-DB ישבור בשקט את התצוגה (`if (!meta) return null`). להעביר למפתח יציב (`module_id`/slug) בפעם הבאה שנוגעים בסכמת `modules`.
-- **Error Boundary ברמת ה-Router** — אין כרגע ב-`App.jsx`; שגיאת render לא-מטופלת = מסך לבן. להוסיף במודול הבא עם זרימות דאטה כבדות יותר בצד לקוח (למשל מודול 3 — הצעות מחיר).
+- ✅ ~~**Error Boundary ברמת ה-Router**~~ — **בוצע (06/07/2026)**: `src/components/ErrorBoundary.jsx` עוטף את `App.jsx`; קריסת render מציגה הודעה בעברית במקום מסך לבן.
 - **מוסכמת "פעיל/לא-פעיל" דו-כיוונית ללא מסגור "מחיקה"** — הוכרעה סופית ב-`UsersManagementPage.jsx` (02/07/2026, לפי בקשת ישי): בלי כפתור/אייקון/הודעת "מחיקה", תג סטטוס אמיתי בטבלה, ושינוי סטטוס הפיך בשני הכיוונים מאותו כפתור. **מחייב באופן זהה** במסך לקוחות (מודול 2, `customers.status`) ובמסך דיילות (מודול 4, `hostesses.status`) כשייבנו במקום ה-`UnderConstruction` הנוכחי — שתי הטבלאות כבר כוללות עמודת `status active/inactive` בסכמה, אין צורך במיגרציה.
 
 ---

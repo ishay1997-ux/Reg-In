@@ -13,7 +13,7 @@
 
 ---
 
-## מצב נוכחי (snapshot — 04/07/2026)
+## מצב נוכחי (snapshot — 06/07/2026, ערב)
 
 **Stack:** React 19 + Vite 8 · JavaScript (לא TS) · Tailwind 4 + shadcn/ui (מעל Radix) · Lucide · Supabase (Auth + Postgres 17 + RLS) · react-router-dom v7 · RTL מלא · alias `@/`→`src/`. **Session ב-`sessionStorage`** (סגירת לשונית/דפדפן = ניתוק; רענון שומר).
 
@@ -22,6 +22,8 @@
 **תיעוד — שמות קבצים ורוטינות (04/07, המשך):** כל שמות-הקבצים העבריים המובילים תחת `docs/` הוחלפו לשמות אנגליים (תוכן RTL לא נגע): `macro-guide.md`, `amit-onboarding.md`, `micro_guides/module-1.md`. `docs/mokap/` → `docs/mockups/` עם 11 תת-תיקיות באנגלית (`customers-screen`, `quote-screen` וכו') ו-44 התמונות ממוספרות `01.png..NN.png` לפי סדר ההופעה ב-`mockup_descriptions.md`. כל ההפניות תוקנו (`README.md`, `PROJECT_MASTER.md`, `amit-onboarding.md`, כאן).
 
 **ערכת מדריכים + סדר בריפו (06/07/2026, חדש):** `../CLAUDE.md`+`../STATUS.md`+`../README.md` בשורש, `docs/guides/**` (מפת דרכים + מסלול אישי לישי ולעמית + 2 מדריכים משותפים, 8 סעיפים קבועים בכל מדריך-מודול), `docs/claude_routines.md` (מקור קנוני ל-4 הרוטינות), `docs/code_review_2026-07.md`. **`STATUS.md` הוא כתובת-אמת יחידה לסטטוס מודולים מעכשיו** — לא כפול כאן. `macro-guide.md`/`WORKFLOW.md`/`docs/README.md`/`CLAUDE_CODE_LOG.md`-בשורש נמחקו (תוכנם נותב לקבצים החדשים). ה-Stop hook עבר מ-`.claude/settings.local.json` ל-`.claude/settings.json` (משותף, ב-git).
+
+**חיזוקי תשתית-תיעוד (06/07/2026 ערב, חדש):** ‏(1) **לוגיקת ה-hooks יושבת בסקריפטים** `.claude/hooks/check-docs-updated.sh` (ה-Stop hook) + `.claude/hooks/protect-frozen-files.sh` (PreToolUse — חוסם עריכה/מחיקה של C5/C6; קריאה מותרת) — `settings.json` רק מפנה (`bash .claude/hooks/<script>`), כך ש-Claude יכול לתחזק את הלוגיקה בלי לגעת בקובץ החסום-לעריכה-עצמית. **ממתין:** ישי מדביק את `settings.json` החדש. ‏(2) **CLAUDE.md כללים 13–14:** פרוטוקול שינוי מהותי (עדכון כל האדוות באותו סשן) + SSOT ללוגיקה עסקית (`src/lib/` + `api.js` פר-מודול ממודול 2). ‏(3) **PROJECT_MASTER:** TOC, סטטוס רק ב-STATUS, §7.22 (לוגיסטיקה actual<planned) + §7.23 (audit-trail — נדחה במודע). ‏(4) פרומפטי ⑥ במדריכים: Claude קורא את הטמפלט בעצמו. ‏(5) `mockup_descriptions.md` = תיאורי מסכים בלבד (העותק-אב הישן והסותר נוקה). ‏(6) פרטי ההתחברות הוסרו מ-CHANGELOG (החלפת סיסמאות ב-Supabase על ישי). ‏(7) 4 קבצי פלטי-סוכנים נמחקו מ-`reference_spec/`.
 
 **4 רוטינות ידניות** (scheduled-tasks, Manual only, כולן `enabled`, כל אחת עם כותרת "🕐 מתי להפעיל"; ⚠️ `list_scheduled_tasks` לא מציג אותן — ראו רשומת הסשן 06/07 למטה):
 - `regin-docs-sync` — סנכרון תיעוד/בין-קבצי, auto-fix.
@@ -49,6 +51,13 @@
 ---
 
 ## יומן סשנים (הכי חדש למעלה)
+
+### 📝 סשן 06/07/2026 (ערב) — "סגירת פינות בתשתית: אבטחה, hooks, סנכרון תיעוד" (Claude Code)
+**רקע:** ישי עבר על ערכת המדריכים ושאל שורת שאלות (הערות בקוד, טיפול בשינויים מהותיים, hooks, מה עובר לעמית, PROJECT_MASTER, CHANGELOG, מוקאפים, מנוי). תוכנן בפלאן-מוד עם 4 סוכני-חקירה; כל ההכרעות אושרו ע"י ישי. **הערה חשובה:** הסשן רץ מתיקיית `gedood_710` (פרויקט אחר) — עבד על נתיבים מוחלטים; סשנים עתידיים של REG-IN לפתוח מתוך `C:\Users\ishay\Reg-In`.
+
+**ממצא פתיחה:** ה"עבודה שנקטעה" (11 קבצים) כבר נסגרה בינתיים בקומיט `6460fc4` (סשן קודם שהתאושש) — אומת `npm run verify` ירוק מחדש. **בוצע בסשן זה:** ‏(1) הסרת פרטי ההתחברות מ-CHANGELOG + סימון ממצא P2#10 כסגור. ‏(2) hooks→סקריפטים + hook הגנת-C5/C6 חדש (נבדקו ב-5 תרחישי קלט מדומה, כולל הוודאה שעריכת קובץ שרק *מזכיר* את C5 לא נחסמת). ‏(3) PROJECT_MASTER: TOC, סטטוס→STATUS בלבד, חידודי §5.7/§5.11/§5.14 (הפניות לפריטי §7 החוסמים), §7.22–23, עדכון שורות מיושנות (§6 ניתוב-login, Seed=9, §7.10 סגור-בפועל). ‏(4) CLAUDE.md כללים 13–14 + הרחבת כלל 3 (הערות על כל לוגיקה עסקית). ‏(5) פישוט פרומפטי ⑥ ב-10 מדריכי מודול. ‏(6) ishay/01 עודכן למצב-אמת (צעדים שבוצעו סומנו ✅; נותר: אימות Table Editor + PR). ‏(7) שכתוב `mockup_descriptions.md` (היה עותק-PROJECT_MASTER ישן מ-01/07 עם 10-מודולים/`frozen` — נשמרו רק תיאורי 44 התמונות, שהם תוכן ייחודי). ‏(8) מחיקת 4 קבצי פלטי-הסוכנים מ-`reference_spec/` אחרי חילוץ הידע. ‏(9) עדכון CHANGELOG של סעיפי TODO מיושנים (מטריצה/hardening/ErrorBoundary — בוצעו מזמן).
+
+**ממתין לישי:** הדבקת `settings.json` החדש · החלפת סיסמאות 5 משתמשי הבדיקה ב-Supabase · אימות `modules`=9/`permissions`=45 ב-Table Editor · פתיחת PR (ishay/01 ④3).
 
 ### 📝 סשן 06/07/2026 — "ערכת מדריכים יד-ביד (בהשראת מלאי 710) + סדר בריפו" (Claude Code)
 **זמן:** סשן ממושך, כלל איפוס-חלקי למצב-תכנון (plan mode) בעקבות בקשה מפורשת. **ענף:** `ishay/module-1-permissions`. **סוג:** תיעוד + meta (ללא שינוי קוד/DB).
