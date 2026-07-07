@@ -187,13 +187,19 @@ create table logistics (
 -- RLS — מודול 1, צעדים 4-5 (בוצע בפועל ב-Supabase; מתועד כאן לשחזור/היסטוריה)
 -- ============================================================
 
-create or replace function current_user_role_id()
-returns int
-language sql security definer stable
+-- הגרסה המוקשחת (מיגרציית 20260702195258): search_path='' + שמות סכמה מלאים + revoke מ-anon/PUBLIC.
+-- (07/07/2026: תוקן דריפט בקובץ הזה — הופיעה כאן בטעות הגרסה הטרום-מוקשחת.)
+create or replace function public.current_user_role_id()
+  returns integer
+  language sql
+  stable
+  security definer
+  set search_path = ''
 as $$
-  select role_id from users
-  where email = auth.email() and status = 'active';
+  select role_id from public.users where email = auth.email() and status = 'active';
 $$;
+
+revoke execute on function public.current_user_role_id() from public, anon;
 
 alter table roles enable row level security;
 create policy "roles_select_all" on roles for select to authenticated using (true);
@@ -208,8 +214,13 @@ create policy "permissions_write_ceo_only" on permissions for all to authenticat
   with check (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'));
 
 alter table users enable row level security;
+-- (07/07/2026, מיגרציית initplan: קריאות auth.email()/current_user_role_id() עטופות ב-(select …) —
+--  חישוב פעם-לשאילתה במקום פעם-לשורה. זהות התנהגותית; ראו 20260707163709.)
 create policy "users_select_self_or_ceo" on users for select to authenticated
-  using (email = auth.email() or current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'));
+  using (
+    email = (select auth.email())
+    or (select current_user_role_id()) = (select role_id from roles where role_name = 'מנכ"ל')
+  );
 create policy "users_write_ceo_only" on users for all to authenticated
   using (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'))
   with check (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'));
@@ -220,10 +231,10 @@ create policy "users_write_ceo_only" on users for all to authenticated
 -- subquery ישיר על users כאן היה גורם infinite recursion). policy זו permissive ומתווספת
 -- ל-users_write_ceo_only ב-OR — המנכ"ל ממשיך לעדכן כל שורה/כל עמודה דרך אותה policy.
 create policy "users_update_self" on users for update to authenticated
-  using (email = auth.email())
+  using (email = (select auth.email()))
   with check (
-    email = auth.email()
-    and role_id = current_user_role_id()
+    email = (select auth.email())
+    and role_id = (select current_user_role_id())
     and status = 'active'
   );
 
