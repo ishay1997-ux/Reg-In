@@ -90,13 +90,17 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
         </button>
       </div>
 
+      {/* יישור פריטים: במצב מורחב כל השורות מיושרות לקצה הימני (justify-start ב-RTL) כך
+          שהאייקונים יושבים על קו אנכי אחיד - הסטנדרט המקובל בתפריטי ניווט; מרכוז מוחל רק
+          במצב מכווץ, כשנשאר אייקון בודד בלי טקסט. */}
       <nav className="flex-1 overflow-y-auto py-3 flex flex-col gap-1 px-2">
         <NavLink
           to="/"
           end
           className={({ isActive }) =>
             cn(
-              'flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+              collapsed ? 'justify-center' : 'justify-start',
               isActive ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50',
             )
           }
@@ -116,7 +120,8 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
               to={meta.path}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                  collapsed ? 'justify-center' : 'justify-start',
                   isActive ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50',
                 )
               }
@@ -132,7 +137,8 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
           <NavLink
             to="/system/users"
             className={cn(
-              'flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+              collapsed ? 'justify-center' : 'justify-start',
               isSystemSectionActive
                 ? 'bg-teal-50 text-teal-700'
                 : 'text-slate-600 hover:bg-slate-50',
