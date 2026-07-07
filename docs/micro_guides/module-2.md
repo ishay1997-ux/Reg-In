@@ -349,7 +349,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 | Integration | 14-scenario RLS matrix (SQL, live), storage-policy probe (blocked role upload → fails), duplicate-ח"פ round-trip | |
 | E2E | `e2e/customers.spec.js` (acceptance ⑦) + M1 8 specs regression — Playwright, Chromium, workers=1 | |
 | Regression | M1 unit+E2E suites green after every phase; core-RLS spot checks (scenarios 6/9) | |
-| UAT | Amit manual pass vs guide ⑦ checklist; formal UAT stays M5 milestone | |
+| UAT | Amit manual pass vs guide ⑦ checklist; formal UAT stays Module 12 / milestone M5 "הגשה" (PROJECT_MASTER §6) | |
 | Security/Pen | impersonation matrix incl. view-tier (13–14), direct-URL, blocked-role sidebar, storage write as blocked role | |
 | Performance | N/A (tiny data; revisit ~M3) | |
 | Usability | RTL pass on all 6 new components, empty states, Hebrew errors | |
