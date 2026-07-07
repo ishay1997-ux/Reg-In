@@ -74,6 +74,6 @@ MODULE_NUMBER=5 · MODULE_NAME=לוגיסטיקה · BRANCH_NAME=ishay/module-5-
 ## ⑧ אם משהו השתבש
 
 - checklist ריק אחרי אישור הצעה → בדוק RLS על `logistics`, ואת הסינון לפי `category`.
-- תקוע? → פרומפט חילוץ ב-[README](../../../README.md).
+- תקוע? → [ספריית הפרומפטים המצביים](../prompt_library.md) — חילוץ, סטייה מהתוכנית, undo, קונפליקט ועוד.
 
 </div>

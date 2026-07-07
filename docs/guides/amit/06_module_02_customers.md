@@ -84,6 +84,6 @@ MODULE_NUMBER=2 · MODULE_NAME=לקוחות · BRANCH_NAME=amit/module-2-custome
 
 - מסך ריק אחרי שהוספת RLS → בדוק שה-policy אכן מפנה ל-`current_user_role_id()` בצורה תקינה (ר' `CLAUDE.md` — פרוטוקול DB).
 - verify אדום → `regin-pr-gate` תאבחן.
-- תקוע? → פרומפט חילוץ ב-[README](../../../README.md).
+- תקוע? → [ספריית הפרומפטים המצביים](../prompt_library.md) — חילוץ, סטייה מהתוכנית, undo, קונפליקט ועוד.
 
 </div>

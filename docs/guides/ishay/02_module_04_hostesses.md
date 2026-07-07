@@ -81,6 +81,6 @@ MODULE_NUMBER=4 · MODULE_NAME=דיילות + Smart Match · BRANCH_NAME=ishay/m
 
 - מסך ריק בטבלת `hostesses` → כנראה חסרות RLS policies — ראה פרוטוקול ב-`CLAUDE.md`.
 - verify אדום → `regin-pr-gate` תאבחן.
-- תקוע? → פרומפט החילוץ ב-[README](../../../README.md).
+- תקוע? → [ספריית הפרומפטים המצביים](../prompt_library.md) — חילוץ, סטייה מהתוכנית, undo, קונפליקט ועוד.
 
 </div>
