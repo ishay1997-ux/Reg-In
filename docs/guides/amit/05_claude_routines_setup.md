@@ -12,6 +12,7 @@
 ## ② תנאי כניסה
 
 - [ ] [04_git_and_module_workflow.md](04_git_and_module_workflow.md) הושלם.
+- [ ] [04b_claude_code_power_setup.md](04b_claude_code_power_setup.md) הושלם — Supabase MCP מחובר (כדי שבדיקת ה-advisors ברוטינות תרוץ במקום לדלג).
 
 ## ③ חלוקת עבודה
 
@@ -44,6 +45,6 @@ regin-docs-sync, regin-health-pulse, regin-pr-gate, regin-e2e-check.
 ## ⑧ אם משהו השתבש
 
 - **המשימה לא נוצרה** — ודא שאתה בתוך תיקיית הריפו של `Reg-In` כשה-Claude Code רץ.
-- **`regin-health-pulse` מדווחת "Supabase advisors skipped — no MCP access"** — זה תקין; ל-MCP של Supabase יש הגדרה נפרדת שלא חובה בשלב הזה.
+- **`regin-health-pulse` מדווחת "Supabase advisors skipped — no MCP access"** — סימן שה-Supabase MCP לא מחובר. חזור ל-[04b](04b_claude_code_power_setup.md) ואשר/התחבר לשרת; לאחר מכן בדיקת ה-advisors תרוץ. (גם בלי זה הרוטינה עובדת — היא רק מדלגת על בדיקת ה-advisors ומדווחת על כך במפורש.)
 
 </div>

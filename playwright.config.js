@@ -24,6 +24,11 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   reporter: [['list'], ['html', { open: 'never' }]],
+  // ברירת המחדל של Playwright (30 שניות לבדיקה) נחתכת כשהרשת מול Supabase איטית:
+  // זרימת login מלאה = עד 8 קריאות-רשת עוקבות (RPCs + Auth + שליפות), ונצפו ריצות
+  // אמיתיות של 25-35 שניות ברשת סלולרית/איטית (07/07/2026). הבדיקות עצמן טוריות
+  // (worker אחד), אז תקרה נדיבה לא מאריכה ריצה ירוקה - רק מונעת כשל-שווא.
+  timeout: 60_000,
   expect: { timeout: 10_000 },
   use: {
     baseURL: 'http://localhost:5173',

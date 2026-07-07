@@ -29,9 +29,19 @@
 
 1. ✅ ~~**הכרעת §7.21 (מודל RLS)**~~ — **בוצע (06/07/2026):** הוכרע "הרשאה אך ורק לפי מטריצת role→module", נרשם ב-[PROJECT_MASTER §7.21](../../PROJECT_MASTER.md) כולל תבנית ה-policy המוכנה למודול 2.
 2. ✅ ~~**בדיקת ה-Supabase**~~ — **בוצע (06/07/2026):** ישי אימת ב-Table Editor וגם Claude אימת דרך Supabase MCP — `modules`=9, `permissions`=45, `roles`=5. בנוסף: הוחלט (ישי, 06/07) **לא להחליף את סיסמאות משתמשי הבדיקה** — סיכון מקובל ומתועד, ר' [PROJECT_MASTER §7.24](../../PROJECT_MASTER.md); אם gitleaks ב-CI יתריע על ההיסטוריה — הטיפול הוא `.gitleaksignore`, לא רוטציה.
-3. **לאחר ש-Claude מדווח "verify ירוק ונדחף"**: כנס ל-GitHub → הריפו → **Pull requests** → **New pull request** → `base: dev` ← `compare: ishay/module-1-permissions` → תיאור קצר → **Create pull request**.
-4. **חכה ל-CI** (סמן ירוק/אדום ב-PR). אם אדום — הדבק ל-Claude את הודעת הכשל.
-5. **מיזוג:** אם עמית כבר בסבב סקירה — תן לו לאשר. אם לא — לחץ **Merge pull request** בעצמך, ותתעד שורה ב-CHANGELOG שהמיזוג בוצע בלי סקירת עמית (הוא עדיין לא בשלב הזה).
+3. **⚠️ חדש (07/07) — שני קומיטים לפני ה-PR.** בעץ העבודה יושבים שינויים לא-מקומטים משני סוגים, ושניהם חייבים להיכנס ל-PR הזה (עמית עובד על מחשב אחר — קבצים שלא עוברים דרך `dev` לא יגיעו אליו לעולם, כולל מדריך-המיקרו של מודול 2 שהוא צריך). בצע כשני קומיטים נפרדים כדי שההיסטוריה תישאר קריאה:
+   ```bash
+   git add src/components/layout/Sidebar.jsx
+   git commit -m "fix: יישור פריטי הסייד-בר לקו ימני אחיד (מרכוז רק במצב מכווץ)"
+   git add docs/ STATUS.md
+   git commit -m "docs: פתיחת מודול 2 - מדריך מיקרו + סגירת §7.3/§7.11 + שדרוג טמפלטים + רישום חובות §6"
+   git status   # חייב להיות נקי עכשיו
+   git push
+   ```
+   (אפשר גם לבקש מ-Claude לבצע. **אל תריץ `regin-pr-gate` לפני הצעד הזה** — היא עושה commit לכל מה שפתוח בערימה אחת.)
+4. **פתיחת ה-PR:** כנס ל-GitHub → הריפו → **Pull requests** → **New pull request** → `base: dev` ← `compare: ishay/module-1-permissions` → תיאור קצר → **Create pull request**.
+5. **חכה ל-CI** (סמן ירוק/אדום ב-PR). אם אדום — הדבק ל-Claude את הודעת הכשל.
+6. **מיזוג:** אם עמית כבר בסבב סקירה — תן לו לאשר. אם לא — לחץ **Merge pull request** בעצמך, ותתעד שורה ב-CHANGELOG שהמיזוג בוצע בלי סקירת עמית (הוא עדיין לא בשלב הזה).
 
 ## ⑤ החלק של Claude
 
@@ -44,17 +54,17 @@
 
 ## ⑥ 📋 הפרומפט להדבקה
 
+> הפרומפט המקורי של השלב כבר בוצע (P0/P1, §7.21, אימותים — הכל ✅ למעלה). מה שנותר: הקומיטים והדחיפה. הפרומפט המעודכן:
+
 ```
-אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/ishay/01_close_module_1.md,
-docs/code_review_2026-07.md ו-docs/PROJECT_MASTER.md §7.
-
-ההכרעה שלי לפריט §7.21 (מודל RLS): הרשאה אך ורק לפי מטריצת role→module (בלי בעלות ברמת-רשומה).
-[אם בדקת את Supabase Table Editor, ספר לי גם: modules=___ שורות, permissions=___ שורות]
-
-בצע את "החלק של Claude" בשלב הזה: תקן/יישם את פריטי P0 ו-P1 מ-code_review_2026-07.md,
-הרץ E2E ו-verify, ואם ירוק — דחוף לענף.
-בסוף: עדכן STATUS.md/CHANGELOG/CLAUDE_CODE_LOG לפי הפרוטוקול ב-CLAUDE.md,
-והסבר לי בדיוק אילו בדיקות לעשות ב-Table Editor ואיך לפתוח את ה-PR.
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/guides/ishay/01_close_module_1.md.
+כל צעדי הסגירה של מודול 1 בוצעו; נותרו רק הקומיטים והדחיפה לפי צעד ④3 במדריך:
+1) commit ראשון — src/components/layout/Sidebar.jsx בלבד (תיקון היישור, 07/07).
+2) commit שני — כל קבצי ה-docs + STATUS.md (חבילת פתיחת מודול 2: מדריך מיקרו, PROJECT_MASTER,
+   טמפלטים, מדריכים, יומנים).
+3) ודא ש-git status נקי, הרץ npm run verify, ואם ירוק — git push.
+בסוף: הדפס לי בעברית את הוראות פתיחת ה-PR (base: dev ← compare: ishay/module-1-permissions)
+ומה לבדוק ב-CI.
 ```
 
 ## ⑦ בדיקת קבלה

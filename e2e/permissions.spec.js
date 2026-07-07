@@ -10,7 +10,22 @@ async function login(page, email, password) {
   await page.getByPlaceholder('כתובת דוא״ל').fill(email)
   await page.getByPlaceholder('סיסמה').fill(password)
   await page.getByRole('button', { name: 'התחברות', exact: true }).click()
-  await expect(page).toHaveURL('/')
+  // login מוצלח = שרשרת קריאות-רשת ארוכה (lock-check, Auth, reset, שליפת users) לפני הניווט -
+  // timeout מורחב מונע כשל-שווא ברשת איטית (האפליקציה תקינה, הרשת לא).
+  await expect(page).toHaveURL('/', { timeout: 30_000 })
+}
+
+// כתיבת תא במטריצה היא אסינכרונית: ה-UI מתעדכן אופטימית מיד, אבל ה-PATCH ל-Supabase עוד
+// באוויר. reload/סיום-בדיקה לפני שהתשובה חזרה מבטלים את הכתיבה באמצע (נצפה בפועל ברשת
+// איטית, 07/07/2026: ה-preflight נרשם בשרת וה-PATCH נעלם). לכן כל קליק עוטף בהמתנה
+// מפורשת לתשובת ה-PATCH. ההאזנה נרשמת לפני הקליק כדי לא לפספס תשובה מהירה.
+async function clickCellAndAwaitWrite(page, cell) {
+  const patchDone = page.waitForResponse(
+    (r) => r.url().includes('/rest/v1/permissions') && r.request().method() === 'PATCH',
+    { timeout: 30_000 },
+  )
+  await cell().click()
+  await patchDone
 }
 
 test.describe('הגנת-נתיבים לפי הרשאה (ProtectedRoute + מטריצת הרשאות)', () => {
@@ -63,7 +78,7 @@ test.describe('מטריצת הרשאות — שינוי תא ודחיסת עצמ
       moduleRowLocator(page, 'פרויקטים').locator('td').nth(columnIndex).locator('button')
 
     const titleBefore = await cell().getAttribute('title')
-    await cell().click()
+    await clickCellAndAwaitWrite(page, cell)
     // ה-title משתנה מיידית (עדכון אופטימי) - מוכיח שהקליק בכלל נרשם, לפני שבודקים DB.
     await expect(cell()).not.toHaveAttribute('title', titleBefore)
     const titleAfterClick = await cell().getAttribute('title')
@@ -72,9 +87,10 @@ test.describe('מטריצת הרשאות — שינוי תא ודחיסת עצמ
     await page.reload()
     await expect(cell()).toHaveAttribute('title', titleAfterClick)
 
-    // מחזירים למצב ההתחלתי כדי לא להשאיר שינוי-צד בסביבת הבדיקה המשותפת.
-    await cell().click()
-    await cell().click()
+    // מחזירים למצב ההתחלתי כדי לא להשאיר שינוי-צד בסביבת הבדיקה המשותפת - ובהמתנה לכל
+    // כתיבה, אחרת סגירת הדפדפן בסוף הבדיקה קוטעת את השחזור וה-side-effect כן נשאר.
+    await clickCellAndAwaitWrite(page, cell)
+    await clickCellAndAwaitWrite(page, cell)
   })
 
   test('עמודת המנכ"ל נעולה במטריצה (הגנת self-lockout) - לא ניתן ללחוץ ולא לאבד גישת מנהל', async ({

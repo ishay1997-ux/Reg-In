@@ -40,12 +40,13 @@ For each type — Unit · Integration · E2E · Regression · UAT · Security/Pe
 Critical bugs, failed matrix scenarios, RLS gaps that must be resolved before this code touches a shared branch. If none: "None".
 
 ### 7. ⏳ Tech Debt — HANDLE LATER
-Deferred improvements, each with the future module/stage where it must be reopened. These also get appended to the micro-guide's Deviations & Tech-Debt Log (section 9).
+Deferred improvements, each with the future module/stage where it must be reopened. These get appended to the micro-guide's Deviations & Tech-Debt Log (section 9) **AND registered as lines in `docs/PROJECT_MASTER.md` §6 with their target module** — §6 is mandatory reading in every module's opening prompt; a debt that lives only in this module's own log will never be found by the module that must repay it.
 
 ### 👑 Final Merge Verdict
 Binary: **[YES]** — stable, secure, DoD-compliant, mergeable into `dev` now / **[NO]** — at least one Section-6 blocker. Two-sentence justification.
 
 ### 💾 Persistence (mandatory — the audit is not done until these are written)
+0. **§6 debt registration check:** verify every Section-7 item AND every 🕗 row of the micro-guide's "Capabilities delivered vs deferred" table appears in `docs/PROJECT_MASTER.md` §6 with a target module — add any missing line now.
 1. **Micro-guide:** tick the DoD checkboxes you verified; fill the QA matrix "as-run" column; append Section-7 items to its Deviations & Tech-Debt Log; set the status header to `🔒 Closed — awaiting PR/merge` (on YES) with today's date.
 2. **`docs/CHANGELOG.md`:** dated line — "מודול [MODULE_NUMBER] נסגר — verdict [YES/NO]" + one-line scope.
 3. **`docs/CLAUDE_CODE_LOG.md`:** session entry summarizing the audit result and any blockers.

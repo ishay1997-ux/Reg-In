@@ -27,7 +27,11 @@ test.describe('התחברות (מודול 1)', () => {
     await page.getByPlaceholder('כתובת דוא״ל').fill(CEO_EMAIL)
     await page.getByPlaceholder('סיסמה').fill('wrong-password-just-once')
     await page.getByRole('button', { name: 'התחברות', exact: true }).click()
-    await expect(page.getByText(/מייל או סיסמה שגויים|החשבון ננעל/)).toBeVisible()
+    // עד שההודעה מוצגת עוברות 3 קריאות-רשת עוקבות (check_login_lock → Auth → register_failed_login),
+    // כל אחת עם preflight משלה - ברשת איטית זה חורג מ-10 השניות של ברירת המחדל.
+    await expect(page.getByText(/מייל או סיסמה שגויים|החשבון ננעל/)).toBeVisible({
+      timeout: 30_000,
+    })
   })
 
   test('התחברות מוצלחת עם CEO מגיעה למסך הבית (MainLayout)', async ({ page }) => {
@@ -36,7 +40,9 @@ test.describe('התחברות (מודול 1)', () => {
     await page.getByPlaceholder('כתובת דוא״ל').fill(CEO_EMAIL)
     await page.getByPlaceholder('סיסמה').fill(CEO_PASSWORD)
     await page.getByRole('button', { name: 'התחברות', exact: true }).click()
-    await expect(page).toHaveURL('/')
+    // login מוצלח = שרשרת קריאות-רשת ארוכה (lock-check, Auth, reset, שליפת users) לפני הניווט -
+    // timeout מורחב מונע כשל-שווא ברשת איטית (האפליקציה תקינה, הרשת לא).
+    await expect(page).toHaveURL('/', { timeout: 30_000 })
     await expect(page.getByText('ברוכים הבאים לכלים הניהוליים של REG-IN')).toBeVisible()
     // כל test מקבל browser context מבודד ב-Playwright - אין session שדולף לטסט הבא.
   })
