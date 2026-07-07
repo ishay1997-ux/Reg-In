@@ -72,15 +72,16 @@ SCOPE NOTE: this routine only handles documentation truthfulness. It does NOT ru
 
 STEP 1 — Read current reality:
 - Actual code state under `src/` (skim structure/key files, don't need exhaustive review).
-- Actual DB state via the Supabase MCP if available (tables/RLS/functions for whichever module is currently active per the docs). If MCP access is not available in this context, do NOT silently skip and claim success — proceed with the file-only checks below and explicitly note in your journal entry: "DB check skipped (no MCP access this run)".
+- Actual DB state via the Supabase MCP (tables/RLS/functions for whichever module is currently active per the docs). The repo ships `.mcp.json`, so the Supabase MCP is expected to be configured; if MCP access is not available in this run it means it isn't authenticated here — do NOT silently skip and claim success: proceed with the file-only checks below and explicitly note it in your journal entry: "DB check skipped (MCP not authenticated this run)".
 - `git log --oneline -10` and `git status --short`.
 
 STEP 2 — Read the doc set:
 - `docs/CLAUDE_CODE_LOG.md` (session journal)
 - `STATUS.md` (root — single module-status board)
 - `CLAUDE.md` (root — iron rules)
+- `README.md` (root — homepage: who's-who, the prompts, the doc-map; check its links / doc-map still point at files that exist and match reality)
 - `docs/guides/**` (system roadmap + Ishay/Amit/shared track guides)
-- `docs/claude_routines.md` (canonical routines doc — also diff it against the 4 local SKILL.md files under `~/.claude/scheduled-tasks/*/SKILL.md` and report drift between them)
+- `docs/claude_routines.md` (canonical routines doc — also diff it against the 4 local SKILL.md files under `~/.claude/scheduled-tasks/*/SKILL.md` and report drift between them; per the dual-update protocol in §4, drift on Ishay's side means a routine-behaviour change was applied to the canonical without updating his live copy — flag it as a missed sync, not as routine manual maintenance)
 - `docs/micro_guides/*.md` (per-module LIVING blueprints, named `module-N.md`, written in English FOR Claude — each has a Live Status Header with an "Active step" line, a step→status table, and a Deviations log. These are working documents, not archives: check that the active module's guide is in sync with reality.)
 - `docs/PROJECT_MASTER.md` (including the §7 open-questions registry)
 - `docs/CHANGELOG.md`
@@ -185,13 +186,13 @@ Report this diagnosis in Hebrew as your final answer. Do NOT edit any source fil
 STEP 3 — If it PASSES, run the auto-commit+push flow. Follow this exactly, in order:
   a. Run `git branch --show-current`. If the result is `main`, `master`, or `dev` (case-insensitive) — STOP HERE. Do not stage, commit, or push anything. Report: "verify ירוק, אבל אני על ענף מוגן (<branch>) — לא מבצע commit אוטומטי כאן. בצע ידנית או עבור לענף פיצ'ר." This check is not optional and has no override.
   b. Run `git status --short`. If there is no output (clean working tree) — report "verify ירוק, אין מה לקומט" and stop. Nothing to do.
-  c. Otherwise, stage everything: `git add -A`.
+  c. Otherwise, stage everything: `git add -A`. ⚠️ This captures the ENTIRE working tree. This routine assumes Ironclad Rule 16 (it runs only when no other Claude session has uncommitted work), so the tree should contain only the change you intend to ship. If the staged set clearly includes files unrelated to a single coherent change (e.g. another session's in-progress work), do NOT invent a commit message that misrepresents them — commit only if it is all one coherent change; otherwise STOP, do not commit, and report the full staged file list for a human to sort out.
   d. Write a real commit message in Hebrew, in the imperative/summary style already used in this repo's history (check `git log --oneline -5` for tone) — summarize what actually changed by looking at `git diff --stat --cached` and, if relevant, the newest entries in `docs/CHANGELOG.md`/`docs/CLAUDE_CODE_LOG.md`. Do NOT use a generic message like "update files". End the commit message with a clear automation tag on its own line: `🤖 Auto-committed by regin-pr-gate (verify green)`.
   e. Commit: `git commit -m "<message>"`.
   f. Push with `git push`. If there is no upstream yet, use `git push -u origin <current-branch>` instead. Do NOT ever use `--force` or `--force-with-lease` — if the push is rejected because the remote has diverged, STOP and report exactly what git said; do not attempt to merge, rebase, or force-push to resolve it yourself.
   g. Never run `gh pr create` or open a pull request — that stays a manual, human-initiated step. Report success and that a PR can now be opened.
 
-STEP 4 — Report your result in Hebrew, concise and direct — this is meant to be read in seconds. State clearly which of these happened: verify failed (with diagnosis) / verify passed but on a protected branch (no commit) / verify passed, nothing to commit / verify passed and committed+pushed (with the commit message and branch name) / push was rejected (with the exact git error).
+STEP 4 — Report your result in Hebrew, concise and direct — this is meant to be read in seconds. State clearly which of these happened: verify failed (with diagnosis) / verify passed but on a protected branch (no commit) / verify passed, nothing to commit / verify passed and committed+pushed (with the commit message and branch name) / push was rejected (with the exact git error). When you committed, also list the files that were committed (from `git diff --stat` of the commit) so an accidental sweep of unrelated or parallel-session work is caught immediately.
 
 HARD SAFETY BOUNDARIES (do not violate these under any circumstance):
 - The protected-branch check in Step 3a is absolute — `main`/`master`/`dev` NEVER get an automatic commit or push from this routine, no matter what verify says.
@@ -263,7 +264,9 @@ Respond in Hebrew, concise — a pass/fail summary, not a full report, unless th
 
 כשעמית מגיע לשלב [amit/05_claude_routines_setup](guides/amit/05_claude_routines_setup.md) — הוא מדביק ל-Claude Code שלו (בתוך תיקיית הריפו המקומית שלו) פרומפט שמפנה לקובץ הזה. Claude (בחשבון של עמית) קורא את הקובץ הזה, ולכל אחת מ-4 הרוטינות — יוצר משימה מתוזמנת חדשה (**Manual בלבד, בלי cron**) בשם המדויק (`regin-docs-sync` וכו'), עם תוכן ה-SKILL.md המדויק שמופיע כאן בכל בלוק קוד. הפרטים הטכניים המדויקים של "איך יוצרים" (איפה זה נשמר במחשב, איזו פקודה) — Claude Code כבר יודע לבד; אין צורך שהמדריך הזה יכתיב אותם.
 
-**בדיקת קבלה מהירה:** אחרי היצירה, מריצים את `regin-health-pulse` פעם אחת — היא read-only ומהירה, והצלחה שלה (שורת יומן חדשה ב-`docs/CLAUDE_CODE_LOG.md`) מוכיחה שגם ה-hook ב-`.claude/settings.json` מקבל אותה כעדכון-יומן תקין.
+**בדיקת קבלה מהירה:** אחרי היצירה, מריצים את `regin-health-pulse` פעם אחת — היא read-only ומהירה, והצלחה שלה (שורת יומן חדשה ב-`docs/CLAUDE_CODE_LOG.md` + הסשן מסתיים בלי חסימה) מוכיחה שהרוטינה נוצרה תקין ורצה מקצה-לקצה. (הערה: ה-Stop hook המודע-לסשן **מדלג** על health-pulse — היא עורכת רק את היומן, קובץ שמוחרג מסימון-העריכה, אז אין לה מרקר; זה מכוון ותקין.)
+
+⚠️ **הערת תצוגה:** ייתכן שהכלי `list_scheduled_tasks` לא יציג את הרוטינות שנוצרו (באג ידוע — ר' `STATUS.md`) — היעדרן מהרשימה **אינו** כשל יצירה. האימות האמיתי הוא בדיקת-הקבלה למעלה (הרצת `regin-health-pulse` בפועל).
 
 ---
 
