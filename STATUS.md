@@ -2,7 +2,7 @@
 
 # REG-IN — לוח מצב
 
-> עודכן לאחרונה: 07/07/2026 (ערב)
+> עודכן לאחרונה: 07/07/2026 13:52
 > **לוח בלבד — לא סיפור.** מתעדכן ע"י Claude בסוף כל סשן (נאכף ב-hook). היסטוריה ונרטיב → `docs/CLAUDE_CODE_LOG.md` · שינויים מתוארכים → `docs/CHANGELOG.md`.
 
 ## טבלת המודולים
@@ -26,7 +26,7 @@
 | 12 | אינטגרציה והגשה (כולל פריסת Vercel) | 🤝 משותף | ⬜ | | [shared/module_12](docs/guides/shared/module_12_integration.md) |
 
 ## המסלול של ישי
-**השלב הנוכחי:** [docs/guides/ishay/01_close_module_1.md](docs/guides/ishay/01_close_module_1.md) — נותר רק הצעד הידני: פתיחת PR ב-GitHub (base: `dev` ← compare: `ishay/module-1-permissions`), המתנה ל-CI, ‏Merge. אחרי המיזוג → [ishay/02](docs/guides/ishay/02_module_04_hostesses.md) (מודול 4).
+**השלב הנוכחי:** [docs/guides/ishay/01_close_module_1.md](docs/guides/ishay/01_close_module_1.md) — להדביק את **פרומפט הסגירה המעודכן** (⑥, Opus): אודיט חוזר על מדריך המיקרו המסונכרן + קומיט ה-docs הפתוחים; ואז הצעד הידני — פתיחת PR (base: `dev` ← compare: `ishay/module-1-permissions`, יש בלוק 🧩 מוכן במדריך), CI, ‏Merge. אחרי המיזוג → [ishay/02](docs/guides/ishay/02_module_04_hostesses.md) (מודול 4).
 מפת המסלול המלאה: [docs/guides/ishay/00_track.md](docs/guides/ishay/00_track.md)
 
 ## המסלול של עמית
@@ -38,6 +38,8 @@
 **חוסמים את הצעדים הקרובים:** ‎#1 (מע"מ 17/18 — מודול 3). מודול 2 — אין חסמי §7; חסם יחיד: merge של מודול 1 ל-`dev`.
 
 ## תזכורות תפעוליות
+- 🔧 **ה-Stop hook מודע-לסשן (07/07/2026 12:55):** שיחת **קריאה-בלבד** ליד שיחה כותבת פעילה כבר **לא נחסמת** בלולאה — סשן שלא ערך קבצים בעצמו פטור מבדיקת התיעוד. השינוי בקבצי ה-hook בלבד (`.claude/hooks/*.sh`), לא בקומיט עדיין. ר' CHANGELOG + LOG (רשומת 12:55).
+- 🆕 **כללי ברזל 16–17 + מדריך 04c (07/07/2026 10:47):** ‏מקביליות — שיחה כותבת אחת בכל רגע (מקביל = קריאה/תכנון בלבד) · כל צעד 👤 מקבל "פרומפט מסירה 🧩" לתוסף הכרום · תאריכי יומנים מעכשיו `DD/MM/YYYY HH:MM` · Plan Mode רק בפתיחה/סגירה/§7 · מדריך חדש: [amit/04c](docs/guides/amit/04c_working_with_claude.md) (עבודה נכונה עם Claude — גם לישי). ‏`module-1.md` סונכרן במלואו לטמפלט — פרומפט הסגירה המעודכן ב-[ishay/01 ⑥](docs/guides/ishay/01_close_module_1.md) מוכן להדבקה.
 - 📘 **מדריך חדש לעמית (07/07):** [04b_claude_code_power_setup.md](docs/guides/amit/04b_claude_code_power_setup.md) — כיוונון Claude Code חזק (MCP/סקילים/פלאגינים). ‏`.mcp.json` כבר מגורסן ומספק Supabase MCP; עמית רק מאשר+מתחבר. בקומיט `ec408d4` — יגיע לעמית דרך ה-merge.
 - ✅ **2 משתמשים אמיתיים נוספו (07/07):** עמית מילר + טל רודגולד, שניהם מנכ"ל. עמית התחבר בפועל ✓. ⚠️ **טל מעולם לא התחבר** — הסיסמה שלו היא זו שהוגדרה ב-03/07; אם אבדה: מחיקה ויצירה מחדש ב-Supabase‏ Authentication→Users (לא recovery-mail — אין מסך איפוס עד מודול 10).
 - ✅ **הקומיטים לפני ה-PR בוצעו (07/07):** ‏`594c26b` (סייד-בר) + `ec408d4` (חבילת docs: מדריך מיקרו מודול 2 + 04b + טמפלטים) — נדחפו ל-origin. **לפני פתיחת ה-PR:** ‏commit אחד קטן לקבצי היומנים שעוד פתוחים (`git add docs/ STATUS.md && git commit && git push`). אחרי ה-merge: להריץ `regin-docs-sync` ‏(Run now).

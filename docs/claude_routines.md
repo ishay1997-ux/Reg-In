@@ -18,6 +18,32 @@
 - כל רוטינה רצה כסשן Claude נטול-זיכרון: היא לא זוכרת שום שיחה קודמת, וכל ההקשר שהיא צריכה כתוב בתוך ה-SKILL.md שלה או נגיש דרך קריאת קבצי הריפו.
 - כל 4 הרוטינות **קוראות/כותבות רק בתוך הריפו** (למעט בדיקות read-only כמו `npm audit`); אף אחת לא נוגעת ב-`git push`/`merge`/`main`/`dev` בלי בדיקת-גדר מפורשת.
 
+### ⛔ מקביליות — רוטינה לא רצה לצד שיחה כותבת
+
+כל 4 הרוטינות מוסיפות לפחות שורת יומן ל-`docs/CLAUDE_CODE_LOG.md`, וה-Stop hook של הריפו משווה חותמות-זמן של קבצי היומנים המשותפים. לכן (כלל ברזל 16 ב-`CLAUDE.md`): **לא מפעילים רוטינה בזמן שסשן Claude אחר כותב קוד או תיעוד** — מחכים שהסשן יסתיים (או שהוא בשלב קריאה-בלבד). רוטינה מול רוטינה: גם כן אחת בתור — כולן נוגעות באותו יומן.
+
+**פורמט תאריך בשורות היומן שהרוטינות מוסיפות (מ-07/07/2026):** `DD/MM/YYYY HH:MM` — את השעה לוקחים מהמערכת, לא מנחשים. רשומות עבר בפורמט הישן לא משכתבים.
+
+### 🗺️ מתי מריצים מה — מפה מהירה
+
+לכל רוטינה יש שורת "🕐 מתי" משלה (למטה), אבל ברגע של PR/merge כמה מהן רלוונטיות — לכן הטבלה והרצף כאן.
+
+**לפי הרגע:**
+
+| הרגע | הרוטינה |
+|---|---|
+| סיימתי צעד/מודול (לפני סגירת סשן עבודה) | `regin-docs-sync` |
+| שבועי / בדיקת-בריאות סתם | `regin-health-pulse` |
+| שיניתי זרימת Auth/הרשאות | `regin-e2e-check` |
+| עומד לפתוח PR / למזג | **הרצף למטה ⬇️** |
+
+**רצף לפני PR (בסדר הזה — חשוב!):**
+1. `regin-docs-sync` — **קודם** (הוא עורך תיעוד).
+2. `regin-e2e-check` — אם נגעת בקוד/UI/Auth (מיותר ל-PR של תיעוד בלבד).
+3. `regin-pr-gate` — **אחרון**: הוא עושה `git add -A`, מקמט את הכל (כולל עדכוני התיעוד מצעד 1) ודוחף.
+
+⚠️ **למה pr-gate אחרון:** אם תריץ `regin-docs-sync` *אחרי* `regin-pr-gate`, עדכוני התיעוד יישארו לא-מקומטים (pr-gate כבר קימט וסגר). `regin-health-pulse` אינה חלק מהרצף המחייב — זולה, הרץ מתי שבא.
+
 ---
 
 ## 2. הרוטינות — הגדרה מלאה לכל אחת
@@ -64,7 +90,7 @@ STEP 3 — Cross-file consistency check: verify these agree with EACH OTHER, not
 
 STEP 4 — Auto-edit stale sections directly (you have approval to edit docs autonomously): status badges, STATUS.md's module table, "מצב נוכחי" snapshots, Definition-of-Done checkboxes, stale terminology that no longer matches the code (e.g. renamed statuses, removed UI patterns, renamed functions, renamed files/folders). Fix the actual text, don't just flag it. EXCEPTION: never rewrite a dated journal entry in `docs/CHANGELOG.md` or `docs/CLAUDE_CODE_LOG.md`'s session log — those are historical records, even if they mention a file that no longer exists. Only "מצב נוכחי" (current-status) snapshots get rewritten; dated entries only get appended to, never edited.
 
-STEP 5 — Journal the run: append ONE new dated entry under `docs/CLAUDE_CODE_LOG.md`'s session-journal section (find its existing "יומן סשנים" heading and add above the most recent entry, i.e. newest-first) describing what was found/fixed. If nothing needed fixing, write a short "no drift found, all clean" entry — still leave a trail. If `docs/CLAUDE_CODE_LOG.md` is approaching/over ~250 lines, compress the OLDEST journal entries into terser one-liners under an archive heading (per the log's own stated maintenance policy — check for a "מדיניות תחזוקה" section near the top of that file) — never compress the newest entries. If you changed STATUS.md, also bump its "עודכן לאחרונה" date line.
+STEP 5 — Journal the run: append ONE new dated entry (date format `DD/MM/YYYY HH:MM`, taken from the system clock — never date-only) under `docs/CLAUDE_CODE_LOG.md`'s session-journal section (find its existing "יומן סשנים" heading and add above the most recent entry, i.e. newest-first) describing what was found/fixed. If nothing needed fixing, write a short "no drift found, all clean" entry — still leave a trail. If `docs/CLAUDE_CODE_LOG.md` is approaching/over ~250 lines, compress the OLDEST journal entries into terser one-liners under an archive heading (per the log's own stated maintenance policy — check for a "מדיניות תחזוקה" section near the top of that file) — never compress the newest entries. If you changed STATUS.md, also bump its "עודכן לאחרונה" date line.
 
 HARD SAFETY BOUNDARIES (do not violate these under any circumstance):
 - Docs-only for edits. Never edit anything under `src/`. Never edit `docs/schema.sql` beyond reading it. Never run any DB migration or write query — read-only Supabase access only.
@@ -111,7 +137,7 @@ STEP 1 — Run these checks, all read-only:
 - If Supabase MCP access is available, run the security advisors check (and performance advisors if available) for the project. Report any new/unresolved findings (e.g. a table with RLS enabled but no policies, a function with an unintended `anon`/public EXECUTE grant, missing search_path hardening) as an FYI line. This is read-only — never modify grants, policies, run a migration, or write to the DB in any way.
 - `git status --short` — if there's a large uncommitted diff, note it as a gentle one-line reminder. Do not commit or stage anything yourself.
 
-STEP 2 — Journal ONE short entry: append a single dated line (not a full narrative entry — a pulse, not a report) under `docs/CLAUDE_CODE_LOG.md`'s session-journal section (find the "יומן סשנים" heading, add above the most recent entry). Format: date, then a compact summary of the 5 checks above (pass/fail + FYIs). Do not touch any other part of `docs/CLAUDE_CODE_LOG.md` (no "מצב נוכחי" edits, no DoD checkbox edits, no STATUS.md edits — that's `regin-docs-sync`'s job, not this routine's).
+STEP 2 — Journal ONE short entry: append a single dated line (not a full narrative entry — a pulse, not a report) under `docs/CLAUDE_CODE_LOG.md`'s session-journal section (find the "יומן סשנים" heading, add above the most recent entry). Format: date+time (`DD/MM/YYYY HH:MM`, from the system clock — never date-only), then a compact summary of the 5 checks above (pass/fail + FYIs). Do not touch any other part of `docs/CLAUDE_CODE_LOG.md` (no "מצב נוכחי" edits, no DoD checkbox edits, no STATUS.md edits — that's `regin-docs-sync`'s job, not this routine's).
 
 HARD SAFETY BOUNDARIES (do not violate these under any circumstance):
 - Absolutely read-only except for the single journal line in Step 2. Never edit `src/`, never edit any other doc (including STATUS.md), never edit `docs/schema.sql`, never touch `supabase/migrations/`.
@@ -243,8 +269,9 @@ Respond in Hebrew, concise — a pass/fail summary, not a full report, unless th
 
 ## 4. פרוטוקול עדכון — איך Claude שומר את הרוטינות מסונכרנות
 
-1. **הקובץ הזה (`docs/claude_routines.md`) הוא המקור הקנוני.** עותקי ה-`SKILL.md` המקומיים (`~/.claude/scheduled-tasks/<name>/SKILL.md`, בכל מחשב בנפרד) הם **שכפולים**. כל שינוי בהתנהגות של רוטינה — קודם משנים כאן, ואז כל מפתח (ישי, עמית) מעדכן את העותק המקומי שלו בעצמו.
-2. **`regin-docs-sync` בודקת דריפט אוטומטית:** כחלק מ-STEP 2 שלה (ר' הפרומפט למעלה), היא משווה את התוכן כאן מול עותקי ה-SKILL.md המקומיים בכל הרצה, ומדווחת בלוג אם הם לא תואמים. Claude שמריץ אותה **לא** מתקן את קבצי ה-SKILL.md בעצמו (הם מחוץ לריפו, מחוץ לתחום העריכה שלה) — היא רק מזהירה, וישי/עמית מעדכנים ידנית.
+1. **הקובץ הזה (`docs/claude_routines.md`) הוא המקור הקנוני — וקבוע.** עותקי ה-`SKILL.md` המקומיים (`~/.claude/scheduled-tasks/<name>/SKILL.md`, בכל מחשב בנפרד, מחוץ ל-git) הם **מופעים חיים** של הקנוני, לא תחליף לו. **הקובץ הזה לא נמחק אחרי אונבורדינג** — הוא הגיבוי היחיד (העותקים החיים מחוץ ל-git, בלי היסטוריה/שחזור), מקור-השחזור למחשב חדש/התקנה-מחדש, המול-להשוואה של `regin-docs-sync` לזיהוי דריפט, והרשומה המשותפת היחידה לתיאום בין שני המפתחים. מחיקתו תשבור את כל אלה.
+   - **פרוטוקול עדכון דו-צדדי (מ-07/07/2026):** כל שינוי ב**התנהגות** של רוטינה — Claude מעדכן **גם** את הקובץ הקנוני כאן **וגם**, בסשן של ישי, את 4 קבצי ה-SKILL.md החיים של ישי (`~/.claude/scheduled-tasks/regin-*/SKILL.md`) — כך הצד של ישי לא דורף. **אמית:** העותקים החיים שלו במחשב שלו, מחוץ להישג-ידו של סשן של ישי — הוא מסנכרן אותם בעצמו (ה-Claude שלו קורא את הקנוני המעודכן, או הרצת ה-setup מחדש), ו-`regin-docs-sync` מדווחת על דריפט canonical↔local כרשת-ביטחון.
+2. **`regin-docs-sync` בודקת דריפט אוטומטית:** כחלק מ-STEP 2 שלה (ר' הפרומפט למעלה), היא משווה את התוכן כאן מול עותקי ה-SKILL.md המקומיים בכל הרצה, ומדווחת בלוג אם הם לא תואמים. Claude שמריץ אותה **לא** מתקן את קבצי ה-SKILL.md בעצמו (הם מחוץ לריפו, מחוץ לתחום העריכה שלה) — היא רק מזהירה. את התיקון עושים לפי הפרוטוקול בנקודה 1: בצד של ישי — Claude מעדכן את החי בסשן רגיל; בצד של אמית — אמית / ה-Claude שלו.
 3. **טבלת טריגרי-צמיחה** — מתי עדכון בפועל נדרש (לא רק דריפט, אלא שינוי-כוונה אמיתי):
 
 | רוטינה | טריגר לעדכון | מה משתנה |

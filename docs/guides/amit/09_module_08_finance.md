@@ -62,7 +62,8 @@ MODULE_NUMBER=8 · MODULE_NAME=כספים וסגירת אירוע · RELEVANT_SE
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-8.md.
 קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=8 · MODULE_NAME=כספים וסגירת אירוע · BRANCH_NAME=amit/module-8-finance
-בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים) והדפס לי את הוראות ה-PR בעברית.
+בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
+בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.
 ```
 
 ## ⑦ בדיקת קבלה

@@ -60,7 +60,8 @@ MODULE_NUMBER=5 · MODULE_NAME=לוגיסטיקה · RELEVANT_SECTIONS=§5.8-5.9
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-5.md.
 קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=5 · MODULE_NAME=לוגיסטיקה · BRANCH_NAME=ishay/module-5-logistics
-בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים) והדפס לי את הוראות ה-PR בעברית.
+בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
+בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.
 ```
 
 ## ⑦ בדיקת קבלה

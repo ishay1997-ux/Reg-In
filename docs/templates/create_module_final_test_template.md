@@ -47,7 +47,7 @@ Binary: **[YES]** — stable, secure, DoD-compliant, mergeable into `dev` now / 
 
 ### 💾 Persistence (mandatory — the audit is not done until these are written)
 0. **§6 debt registration check:** verify every Section-7 item AND every 🕗 row of the micro-guide's "Capabilities delivered vs deferred" table appears in `docs/PROJECT_MASTER.md` §6 with a target module — add any missing line now.
-1. **Micro-guide:** tick the DoD checkboxes you verified; fill the QA matrix "as-run" column; append Section-7 items to its Deviations & Tech-Debt Log; set the status header to `🔒 Closed — awaiting PR/merge` (on YES) with today's date.
+1. **Micro-guide:** tick the DoD checkboxes you verified; fill the QA matrix "as-run" column; append Section-7 items to its Deviations & Tech-Debt Log; set the status header to `🔒 Closed — awaiting PR/merge` (on YES) with today's date+time (`DD/MM/YYYY HH:MM`, from the system clock — all dated doc entries below use this format too).
 2. **`docs/CHANGELOG.md`:** dated line — "מודול [MODULE_NUMBER] נסגר — verdict [YES/NO]" + one-line scope.
 3. **`docs/CLAUDE_CODE_LOG.md`:** session entry summarizing the audit result and any blockers.
 4. **`STATUS.md`:** module row → "ממתין ל-PR/merge" (the ✅ flip happens only after the actual merge); refresh "עודכן לאחרונה".
@@ -55,7 +55,7 @@ Binary: **[YES]** — stable, secure, DoD-compliant, mergeable into `dev` now / 
 ### 🚀 PR Instructions (print at the very end, in Hebrew)
 Print for Ishay/Amit, concretely, as numbered steps:
 0. **Push first (the audit never pushes):** run the `regin-pr-gate` routine (Run now — it commits+pushes on a green verify, feature branches only), or ask Claude in-session to commit+push per the end-of-session state.
-1. GitHub → Pull requests → New → base: `dev` ← compare: `[BRANCH_NAME]` → short description (provide a ready-to-paste one) → Create. What to watch in CI (quality-gate + secret-scan/gitleaks); on red — paste the failing log back to Claude.
+1. GitHub → Pull requests → New → base: `dev` ← compare: `[BRANCH_NAME]` → short description (provide a ready-to-paste one) → Create. What to watch in CI (quality-gate + secret-scan/gitleaks); on red — paste the failing log back to Claude. **Also print a "🧩 prompt for Claude-in-Chrome" (iron rule 17): a self-contained Hebrew prompt Ishay/Amit can paste into the Chrome extension to open this exact PR (repo, base, compare, title, one-line description) and report CI status — no secrets in it.**
 2. Merge rules: if the partner is at the PR-review stage, wait for their approval; otherwise merge alone and Claude has already noted the ⚠️ "merged without partner review" line in CHANGELOG.
 3. After merge: pull `dev` fresh, ask Claude to flip the module row to ✅, and run the `regin-docs-sync` routine (Run now) as the final cross-file consistency pass (CLAUDE.md rule 13(ד)).
 (`npm run verify` and `npm run test:e2e` are NOT extra steps for the human — the audit above already ran them; `regin-e2e-check`/`regin-health-pulse` stay optional.)

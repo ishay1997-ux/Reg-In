@@ -14,6 +14,7 @@
 | 03 | הרצה ראשונה + סיור | [03_first_run.md](03_first_run.md) | ⬜ |
 | 04 | Git ולולאת המודול | [04_git_and_module_workflow.md](04_git_and_module_workflow.md) | ⬜ |
 | 04b | כיוונון Claude Code חזק (MCP/סקילים/פלאגינים) | [04b_claude_code_power_setup.md](04b_claude_code_power_setup.md) | ⬜ מחבר את Supabase MCP לפני שלב 05 |
+| 04c | לעבוד נכון עם Claude (פרומפטים/טוקנים/קיצורים) | [04c_working_with_claude.md](04c_working_with_claude.md) | ⬜ מדריך קריאה — 20 דקות שמחזירות את עצמן |
 | 05 | הקמת רוטינות Claude | [05_claude_routines_setup.md](05_claude_routines_setup.md) | ⬜ |
 | 2 | מודול 2 — לקוחות | [06_module_02_customers.md](06_module_02_customers.md) | ⬜ |
 | 3 | מודול 3 — הצעות מחיר | [07_module_03_quotes.md](07_module_03_quotes.md) | ⬜ |

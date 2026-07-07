@@ -59,6 +59,7 @@
 | [STATUS.md](STATUS.md) | **לוח המצב היחיד** — סטטוס מודולים + השלב הנוכחי של כל מסלול |
 | [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) | מפת הדרכים: מודולים, תלויות, אבני דרך, שיטת העבודה |
 | [docs/guides/ishay/](docs/guides/ishay/) · [docs/guides/amit/](docs/guides/amit/) · [docs/guides/shared/](docs/guides/shared/) | מדריכי השלבים בעברית (8 סעיפים + 3 פרומפטים בכל אחד) |
+| [docs/guides/amit/04c_working_with_claude.md](docs/guides/amit/04c_working_with_claude.md) | **המדריך לעבודה עם Claude**: פרומפטים, חיסכון בטוקנים, Plan Mode, קיצורי מקלדת, "איזה כלי למה" — רלוונטי לשני המפתחים |
 | [docs/PROJECT_MASTER.md](docs/PROJECT_MASTER.md) | האפיון המסונתז: סכמה, הרשאות, 17 מסכים + **§7 שאלות פתוחות** |
 | [docs/schema.sql](docs/schema.sql) | סכמת DB בפועל (snapshot; מקור-אמת לשינויים = `supabase/migrations/`) |
 | [docs/architecture_and_qa_roadmap.md](docs/architecture_and_qa_roadmap.md) | סטנדרט הנדסי + Definition of Done + QA |
@@ -67,7 +68,7 @@
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | יומן שינויים מתוארך (DB+קוד) — משותף לשני המפתחים |
 | [docs/CLAUDE_CODE_LOG.md](docs/CLAUDE_CODE_LOG.md) | יומן הסשנים של Claude (נרטיב, החלטות, tech-debt) |
 | [supabase/README.md](supabase/README.md) | ניהול מיגרציות DB |
-| [docs/micro_guides/](docs/micro_guides/) | מדריכי מיקרו — בלופרינטים חיים **באנגלית, כתובים ל-Claude** (module-1.md ✅, השאר ייווצרו בפתיחת כל מודול) |
+| [docs/micro_guides/](docs/micro_guides/) | מדריכי מיקרו — בלופרינטים חיים **באנגלית, כתובים ל-Claude** (module-1.md ✅ · module-2.md 📘 · השאר ייווצרו בפתיחת כל מודול) |
 | [docs/templates/](docs/templates/) | התבניות (אנגלית) לפתיחת מודול ולסגירתו — Claude קורא אותן בעצמו |
 | [docs/mockups/](docs/mockups/) | 44 צילומי מוקאפ + [תיאורים](docs/mockups/mockup_descriptions.md) — רפרנס ויזואלי בלבד |
 | `docs/reference_spec/` | האפיון המאושר (פרקים 5–6) — **קפוא, לא לערוך**; + `products_and_params.md` (החלטות Seed) |

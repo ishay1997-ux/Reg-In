@@ -60,7 +60,8 @@ MODULE_NUMBER=7 · MODULE_NAME=מסך הבית / Dashboard · RELEVANT_SECTIONS=
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-7.md.
 קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=7 · MODULE_NAME=מסך הבית / Dashboard · BRANCH_NAME=amit/module-7-dashboard
-בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים) והדפס לי את הוראות ה-PR בעברית.
+בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
+בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.
 ```
 
 ## ⑦ בדיקת קבלה

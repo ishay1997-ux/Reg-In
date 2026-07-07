@@ -14,7 +14,7 @@
 | Owner | Ishay |
 | Branch | `ishay/module-1-permissions` |
 | **Status** | **🔒 Closed — awaiting PR/merge (closing audit passed 06/07/2026: verdict YES)** |
-| Last updated | 06/07/2026 |
+| Last updated | 07/07/2026 10:47 (template-conformance backfill: sections 2/5/6) |
 | Active step | 5.3 — PR & merge (👤 Ishay: open PR base:`dev` ← compare:`ishay/module-1-permissions`) |
 
 | Phase / step | Status |
@@ -32,6 +32,17 @@
 ## 2. 📦 Context Packet for Claude
 
 **Purpose (3 lines):** CEO opens users and sets a permissions matrix (edit/view/blocked) per role × module — without a programmer. Every other module checks permissions against this module (RLS + UI gates). It is the security foundation of the whole system.
+
+**Capabilities delivered vs deferred** *(backfilled 07/07/2026 per current template — sources: section 9 here + PROJECT_MASTER §6)*:
+
+| Capability | What M1 delivers | Which module completes it | Tracked where |
+|---|---|---|---|
+| RLS authorization | `current_user_role_id()` (hardened) + §7.21 policy template + 7 policies on the 4 core tables | M2 — first business-table policies + the 12-scenario matrix on `customers` | PROJECT_MASTER §6 · section 9 here |
+| Login & lockout | Email+password, Google Sign-In, 5-failures→15-min lockout (app+DB level) | Auth-Hook–level enforcement — future (needs paid Supabase tier) | Section 4 "accepted limitations" |
+| User self-service | Own name/phone edit + real password change (re-auth → `updateUser`) | Self email-change → M9; self-service password *reset* (forgot-password) → M10 | Section 9 · PROJECT_MASTER §6 |
+| Admin screens | Users CRUD + permissions matrix (7 business modules, 4 groups) | `params` UI → M9; admin-modules exposure in matrix → future | Section 9 |
+| Navigation shell | Sidebar/Topbar/ProtectedRoute/AuthContext (all modules ride on this) | Topbar global search → M9 | Section 9 |
+| Test coverage | Vitest 16 + Playwright 8 (Chromium only, workers=1) + CI | Cross-browser+mobile → before M5; formal UAT → M5; full-system E2E → M12 | Section 6 · PROJECT_MASTER §6 |
 
 **Code map (all verified on disk 06/07/2026):**
 
@@ -95,6 +106,16 @@ Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
 
 > Original build predates this format; steps below are the as-built summary: what was planned → what was actually built → where → how verified. The original Hebrew step-by-step recipe (with full SQL) lives in git history of this file (pre-06/07 version).
 
+**Model & effort per phase** *(backfilled 07/07/2026, as-built — what was actually appropriate; binding pattern for modules 2–12)*:
+
+| Phase | Model | Effort | Why |
+|---|---|---|---|
+| 1 — DB & RLS | Opus | High | Security foundation; `current_user_role_id()` is load-bearing for ALL future RLS |
+| 2 — Business logic & helpers | Sonnet | Medium | Mechanical extraction to `src/lib/` + unit tests |
+| 3 — UI | Sonnet | Medium | Screens from approved mockups; no new business decisions |
+| 4 — Control & integration | Opus | High | Security regression (impersonation, escalation, direct-URL) |
+| 5 — QA & handoff | Opus | High | Closing audit, E2E diagnosis, gitleaks/history review |
+
 **Phase 1 — DB & RLS ✅**
 - **1.1 Seed:** roles=5, modules=9 (per §7.10), permissions=45 seeded per PROJECT_MASTER §3 matrix. Verified: `select count(*)` → 5/9/45 (live, 06/07).
 - **1.2 Auth pairing:** CEO test user exists in both Supabase Auth and `users`.
@@ -125,17 +146,19 @@ Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
 
 ## 6. 📊 QA Matrix
 
-| Test type | Planned | As-run (closing audit) |
+*(As-run column = audit evidence, not impressions — refreshed 07/07/2026 after the slow-network E2E hardening session.)*
+
+| Test type | Planned | As-run (closing audit — evidence) |
 |---|---|---|
-| Unit | validators, permissions, ProtectedRoute | ✅ 16/16 Vitest green (`npm run test:run`) |
-| Integration | login→Supabase→users/permissions fetch | ⚠️ manual (live-verified); not automated |
-| E2E | auth flows + matrix editing + self-lockout | ✅ 8/8 Playwright green (`npm run test:e2e`) |
-| Regression | guards/RLS/inactive wall after every change | ✅ manual + E2E re-runs |
-| UAT | Ishay manual passes | ⚠️ partial; formal UAT = M5 milestone |
-| Security/Pen | impersonation RLS tests, lockout, escalation, direct-URL | ✅ module's strength — verified live |
+| Unit | validators, permissions, ProtectedRoute | ✅ 16/16 Vitest green — `npm run test:run`, re-verified at closing audit 06/07 and again in the 07/07 verify run |
+| Integration | login→Supabase→users/permissions fetch | ⚠️ not automated — covered manually: live login→fetch verified in the 03/07 UI/UX pass and the 06/07 audit; automation deliberately not scheduled (E2E covers the same path end-to-end) |
+| E2E | auth flows + matrix editing + self-lockout | ✅ 8/8 Playwright green — `npm run test:e2e`, 07/07, **after** the slow-network fix (`clickCellAndAwaitWrite` now awaits the PATCH response before reload; before the fix 2/8 were red under network throttling) |
+| Regression | guards/RLS/inactive wall after every change | ✅ RLS smoke re-run post-UI (step 4.1, 02/07) + full E2E re-runs at audit (06–07/07) |
+| UAT | Ishay manual passes | ⚠️ informal passes by Ishay only (03–06/07); formal UAT = M5 milestone (tracked in section 2 capabilities table) |
+| Security/Pen | impersonation RLS tests, lockout, escalation, direct-URL | ✅ impersonation transactions (`request.jwt.claims` + rollback), escalation rejection, direct-URL blocks across 3 roles — live-verified 02/07, re-checked 06/07 via Supabase MCP |
 | Performance/Load | none | ❌ N/A at this stage (no scale data; revisit ~M3) |
-| Usability (UI/UX) | full RTL pass, 3 roles, all screens | ✅ done 03/07 (2 findings fixed) |
-| Compatibility | Chromium only | ⚠️ minimal; cross-browser+mobile before M5 |
+| Usability (UI/UX) | full RTL pass, 3 roles, all screens | ✅ done 03/07 — 2 findings found and fixed same day |
+| Compatibility | Chromium only | ⚠️ Chromium-only by config (workers=1, shared test DB); cross-browser+mobile before M5 — tracked in section 2 capabilities table |
 
 ## 7. ✅ Definition of Done
 
@@ -170,4 +193,5 @@ Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
 - 02/07 — Matrix: 4 super-groups per mockup (§7.5); seed values from spec §3, not mockup (§7.4 note).
 - 04–06/07 — E2E/Vitest/CI pulled forward from Module 12 (deliberate — security-critical surface first).
 - 06/07 — §7.24: test-user passwords in git history stay — accepted risk, no rotation; gitleaks findings (if any) handled via `.gitleaksignore`.
+- 07/07/2026 10:47 — template-conformance backfill ahead of the closing-prompt re-run: added the capabilities-delivered-vs-deferred table (section 2), the model-&-effort-per-phase table (section 5), and replaced QA-matrix as-run impressions with audit evidence (section 6). No code or status change — documentation alignment only.
 - Deferred backlog (target): 12 RLS scenarios on `customers` (M2) · self email-change, Topbar search, `params` UI (M9) · lockout via Auth Hook (needs paid tier) · admin modules exposure in matrix (future) · router-level ErrorBoundary (future) · `MODULE_META` stable key — P2#8 (next `modules` schema touch).

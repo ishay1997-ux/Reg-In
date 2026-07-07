@@ -66,7 +66,8 @@ MODULE_NUMBER=4 · MODULE_NAME=דיילות + Smart Match · RELEVANT_SECTIONS=�
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-4.md.
 קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=4 · MODULE_NAME=דיילות + Smart Match · BRANCH_NAME=ishay/module-4-hostesses
-בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים) והדפס לי את הוראות ה-PR בעברית.
+בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
+בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.
 ```
 
 ## ⑦ בדיקת קבלה
