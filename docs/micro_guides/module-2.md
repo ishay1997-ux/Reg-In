@@ -15,7 +15,7 @@
 | Owner | Amit |
 | Branch | `amit/module-2-customers` (create from `dev` **after** Module 1 merges — step 0.1) |
 | **Status** | **⬜ Not started — blocked on precondition P0 (Module 1 PR/merge pending, STATUS.md)** |
-| Last updated | 07/07/2026 |
+| Last updated | 07/07/2026 16:37 (§7.21 lockstep: draft-SQL calls wrapped in `(select …)` per initplan lint) |
 | **Active step** | **0.1 — Preconditions** |
 
 | Phase / step | Status |
@@ -129,7 +129,7 @@ alter table customers enable row level security; -- idempotent (כבר פעיל 
 create policy "customers_select_by_permission" on customers for select to authenticated
   using (exists (
     select 1 from permissions p
-    where p.role_id = current_user_role_id()
+    where p.role_id = (select current_user_role_id())
       and p.module_id = (select module_id from modules where module_name = 'לקוחות')
       and p.permission_level in ('edit', 'view')
   ));
@@ -137,13 +137,13 @@ create policy "customers_select_by_permission" on customers for select to authen
 create policy "customers_write_by_permission" on customers for all to authenticated
   using (exists (
     select 1 from permissions p
-    where p.role_id = current_user_role_id()
+    where p.role_id = (select current_user_role_id())
       and p.module_id = (select module_id from modules where module_name = 'לקוחות')
       and p.permission_level = 'edit'
   ))
   with check (exists (
     select 1 from permissions p
-    where p.role_id = current_user_role_id()
+    where p.role_id = (select current_user_role_id())
       and p.module_id = (select module_id from modules where module_name = 'לקוחות')
       and p.permission_level = 'edit'
   ));
@@ -161,7 +161,7 @@ insert into storage.buckets (id, name, public) values ('marketing', 'marketing',
 create policy "marketing_read_by_permission" on storage.objects for select to authenticated
   using (bucket_id = 'marketing' and exists (
     select 1 from permissions p
-    where p.role_id = current_user_role_id()
+    where p.role_id = (select current_user_role_id())
       and p.module_id = (select module_id from modules where module_name = 'לקוחות')
       and p.permission_level in ('edit', 'view')
   ));
@@ -169,7 +169,7 @@ create policy "marketing_read_by_permission" on storage.objects for select to au
 create policy "marketing_insert_by_permission" on storage.objects for insert to authenticated
   with check (bucket_id = 'marketing' and exists (
     select 1 from permissions p
-    where p.role_id = current_user_role_id()
+    where p.role_id = (select current_user_role_id())
       and p.module_id = (select module_id from modules where module_name = 'לקוחות')
       and p.permission_level = 'edit'
   ));
@@ -177,13 +177,13 @@ create policy "marketing_insert_by_permission" on storage.objects for insert to 
 create policy "marketing_update_by_permission" on storage.objects for update to authenticated
   using (bucket_id = 'marketing' and exists (
     select 1 from permissions p
-    where p.role_id = current_user_role_id()
+    where p.role_id = (select current_user_role_id())
       and p.module_id = (select module_id from modules where module_name = 'לקוחות')
       and p.permission_level = 'edit'
   ))
   with check (bucket_id = 'marketing' and exists (
     select 1 from permissions p
-    where p.role_id = current_user_role_id()
+    where p.role_id = (select current_user_role_id())
       and p.module_id = (select module_id from modules where module_name = 'לקוחות')
       and p.permission_level = 'edit'
   ));
@@ -191,7 +191,7 @@ create policy "marketing_update_by_permission" on storage.objects for update to 
 create policy "marketing_delete_by_permission" on storage.objects for delete to authenticated
   using (bucket_id = 'marketing' and exists (
     select 1 from permissions p
-    where p.role_id = current_user_role_id()
+    where p.role_id = (select current_user_role_id())
       and p.module_id = (select module_id from modules where module_name = 'לקוחות')
       and p.permission_level = 'edit'
   ));
@@ -379,6 +379,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 
 ## 9. 📝 Deviations & Tech-Debt Log
 
+- 07/07/2026 16:37 — Blueprint SQL updated in lockstep with the §7.21 template: all 8 `current_user_role_id()` calls in the Step-1.1 draft migration wrapped as `(select current_user_role_id())` (Supabase `auth_rls_initplan` lint fix — behavior-identical, perf-only; retroactively applied to Module 1's `users` policies in migration `20260707163709`). The Step-1.1 verify gate (textual identity with §7.21) remains valid — both sides updated together.
 - 06/07 — Frozen spec 1.6.3 mentions a "delete" button; implemented as bidirectional archive per spec 1.5.3's own "ניתן להפוך ללא פעיל" + M1 binding convention. Frozen spec untouched.
 - 06/07 — "Send marketing material" implemented as `mailto:` + permanent public URL (no server-side email until Module 10; signed-URL variant explicitly rejected). Temporary, documented deviation.
 - Deferred backlog (target): revenue metric wiring (M3 pricing SSOT → M8) · satisfaction stars/filter go live with feedback data (M8) · real marketing email send (M10) · §7.12 quote-PDF storage decision (M3 — bucket namespace reserved) · §7.23 audit trail (after M12) · merge tool for historical duplicates (only if ever needed — §7.11 says none planned).

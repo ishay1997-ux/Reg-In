@@ -16,7 +16,7 @@
 
 ---
 
-## מצב נוכחי (snapshot — 07/07/2026 12:11)
+## מצב נוכחי (snapshot — 07/07/2026 16:37)
 
 **Stack:** React 19 + Vite 8 · JavaScript (לא TS) · Tailwind 4 + shadcn/ui (מעל Radix) · Lucide · Supabase (Auth + Postgres 17 + RLS) · react-router-dom v7 · RTL מלא · alias `@/`→`src/`. **Session ב-`sessionStorage`** (סגירת לשונית/דפדפן = ניתוק; רענון שומר).
 
@@ -51,6 +51,8 @@
 - **DB:** RLS על 4 טבלאות ליבה (`roles`/`modules`/`permissions`/`users`) + `current_user_role_id()` (SECURITY DEFINER, מוקשח). `login_attempts` + 3 פונקציות SECURITY DEFINER לנעילה. 11 טבלאות עסקיות = RLS-on-deny-all עד בניית המודול.
 - **מודל אבטחה:** CAPTCHA **בוטל** (הוחלף ב-Google Sign-In + נעילה + sessionStorage). מתועד כסטייה מ-5.6.1 בתיעוד החי; `reference_spec` הקפוא לא נגע.
 
+**Advisor triage (07/07, ‏16:09+16:37):** ממצאי ה-advisors מוינו ל-§4 "Advisor acceptances" ב-`module-1.md` — SECURITY DEFINER 0028/0029 מקובל-בכוונה (2 מ-3 פונקציות-נעילה חשופות ל-anon *נדרש*, לא באג — תוקנה נוסחה מטעה ב-§4); DoS של נעילה-לפי-אימייל מקובל (Decisions Ledger §7.8↳, ישי); leaked-password חסום-בתוכנית (Pro); FK-indexes + multiple-permissive נדחים ל-§9 (ה-restructure נדחה במכוון — סיכון על משטח מאומת בלי רווח). **`auth_rls_initplan` — תוקן (הכרעת ישי: ב'):** מיגרציית `20260707163709` עטפה את הקריאות ב-`(select …)` בשתי ה-policies של `users`; **תבנית §7.21 + טיוטת module-2.md עודכנו בנעילה** — כל policy ממודול 2 נולדת עטופה. אומת חי: התחזות+הסלמה+verify+E2E ‏8/8. בונוס: תוקן דריפט ישן ב-`docs/schema.sql` (גוף `current_user_role_id()` טרום-מוקשח).
+
 **פתוח במודול 1:** רק PR+merge ל-`dev` (ישי, ידני; ‏gitleaks על ההיסטוריה נקי, ה-CI צפוי ירוק; §7.24 — סיסמאות לא מוחלפות, החלטה סגורה). **כל הקומיטים על הענף נדחפו (07/07):** ‏`594c26b` (ליטוש Sidebar, קומיט נפרד) · ‏`ec408d4` (חבילת docs פתיחת מודול 2 + מדריך 04b; כולל, בסחיפת ‏add ‏-A, את הקשחת ה-E2E) · קומיט התיעוד של סשני הסגירה. ‏E2E ‏8/8 + ‏verify ירוקים אחרי ההקשחה · 12 תרחישי RLS על `customers` (נדחה ל-M2) · backlog נדחה: שינוי-אימייל עצמי, טבלת העדפות, חיפוש Topbar, UI ל-`params` (מודול 9), שדרוג נעילה ל-Auth Hook (דורש תוכנית Team), חשיפת מודולי-אדמין במטריצה, Error Boundary ברמת Router.
 
 **מודול 2 (לקוחות) — 📘 בלופרינט מוכן (07/07/2026), בנייה חסומה עד merge של מודול 1.** `docs/micro_guides/module-2.md` נוצר לפי טמפלט הפתיחה (ישי הכריע במקום עמית, שטרם התחיל); עבר סבב אימות אדוורסרי (3 בודקים, 18 ממצאים — תוקנו). הכרעות שהתקבלו בפתיחה: §7.3 (תוויות לפי אפיון) · §7.11 (בלי מיזוג; ח"פ קנוני; חיפוש סלחני לפי איש-קשר/חברה/תחילת-ח"פ; חסימת כפילות + הצעת שחזור מארכיון) · שיווק = Storage ציבורי+mailto (אמיתי ב-M10) · כרטיס לקוח מלא עם empty states · תרחישי view ‏13–14 · מיון עמודות בתוך המודול. **מנגנון חוב חוצה-מודולים חדש (משוב ישי):** כל 🕗 נרשם ב-PROJECT_MASTER §6 עם מודול-יעד, וטמפלט הפתיחה מחייב קריאת §6 — כך M3/M6/M8/M10 ידעו להשלים את כרטיס הלקוח/כוכבים/שליחה. הטמפלטים שודרגו גם ב: תקציר יכולות בעברית, הצהרת השתלבות ("לא שוברים כלום"), סגנון שאלות הכרעה (רקע+משמעות+הסבר לכל אפשרות+המלצה), טבלת מודל+מאמץ פר-פזה.
@@ -60,6 +62,20 @@
 ---
 
 ## יומן סשנים (הכי חדש למעלה)
+
+### 📝 סשן 07/07/2026 16:37 — "מיגרציית initplan על users + יישור תבנית §7.21" (Claude Code, המשך אותו סשן)
+**סוג:** DB (מיגרציה) + תיעוד. תוכנן ואושר ב-plan-mode (הכרעת ישי: אופציה ב' — לתקן על הענף לפני ה-merge). ההחלה דרך MCP ‏`apply_migration` אושרה במפורש בתוכנית (כמו 6 המיגרציות הקודמות).
+**בוצע:** ‏(1) `20260707163709_module1_users_rls_initplan_select_wrap` — עטיפת `auth.email()`/`current_user_role_id()` ב-`(select …)` בשתי ה-policies שה-advisor סימן (`users_select_self_or_ceo`, `users_update_self`); ‏DROP+CREATE לפי דפוס-הבית, שאר ה-policies לא נגועות. ‏(2) **אימות מלא לפני commit:** ‏advisors — שתי רשומות ה-initplan נעלמו · ‏pg_policies מציג ביטויים עטופים · התחזות read-only: עובדת רואה 1 (עצמה), מנכ"ל 7 (הכל) · הסלמת-role של עובדת → ‏ERROR 42501 (בתוך rollback; השורה אומתה שלמה) · ‏`npm run verify` ירוק · ‏E2E ‏8/8. ‏(3) `docs/schema.sql` עודכן כירורגית (ה-policies העטופות) + **תוקן דריפט ישן**: גוף `current_user_role_id()` בקובץ היה הגרסה הטרום-מוקשחת — הוחלף במוקשח (התואם ל-DB החי). ‏(4) אדוות כלל-13: תבנית §7.21 ב-PROJECT_MASTER עטופה + הערה מתוארכת (מחייב ממודול 2); טיוטת ה-SQL ב-module-2.md עטופה בנעילה (שער-הזהות-הטקסטואלית נשמר); supabase/README (שורת מיגרציה, ספירות); module-1.md ‏§2/§4/§9. ‏(5) קומיטים: ‏deps (patch-bump) · ‏db (מיגרציה+snapshot יחד) · ‏docs — **בלי push** (לפי בקשת ישי).
+**למה זה חשוב מעבר ללינט:** התיקון נעשה רגע לפני שמודול 2 משכפל את התבנית ל-11 טבלאות — כל ה-policies העתידיות נולדות עטופות במקום לתקן רטרואקטיבית.
+
+### 📝 סשן 07/07/2026 16:09 — "המשך אינטראקטיבי ל-health-pulse: bump חבילות + triage advisors" (Claude Code)
+**סוג:** deps + תיעוד (אין DB, אין שינוי-לוגיקה). המשך ישיר לשורת ה-pulse של 15:52 — ישי נכח והכווין.
+**בוצע:** ‏(1) **bump-patch** ל-3 חבילות (`@supabase/supabase-js` 2.110.1, `radix-ui` 1.6.2, `vitest` 4.1.10) — lint נקי, 16/16 Vitest ירוקים, 0 פגיעויות. `package.json`+`package-lock.json` השתנו, **טרם קומטו** (ישי יחליט על קומיט). ‏(2) **triage של ה-advisors** לתוך `module-1.md`: §4 בלוק "Advisor acceptances" חדש, §3 שורת Decisions Ledger `§7.8↳` (קבלת DoS בשם ישי), §9 רשומה + הרחבת backlog. **תיקון תוך-כדי:** §4 טענה "anon EXECUTE revoked" על שלישיית הנעילה — לא מדויק; רק `reset_login_attempts` היא authenticated-only, שתי האחרות חשופות ל-anon **בכוונה** (רצות טרום-אימות). תוקן.
+**הכרעת ישי:** DoS של נעילה-לפי-אימייל (§7.8) — **מקובל** (מערכת פנימית/אקדמית, פקיעה 15 דק' + עקיפת Google תוחמות את הנזק); מיטיגציית-IP נדחית ל-backlog.
+**פתוח (ממתין להכרעת ישי):** סעיף 3 — `auth_rls_initplan` על `users` (עטיפת `auth.<fn>()` ב-`(select …)`). זו אופטימיזציה חסרת-השפעה בקנה-המידה הנוכחי; השאלה היא (א) להשאיר דחוי [המלצתי] / (ב) מיגרציה על הענף לפני merge / (ג) לתחוב ל-M2 [נגד — smell של ownership]. אין שינוי-סטטוס למודול 1: עדיין 🔒 סגור-ממתין-merge.
+**leaked-password:** ישי ניסה להדליק ב-Studio — נדחה, זמין רק ב-Pro. מתועד כ-blocked-by-plan (לא הוזנח).
+
+- **💓 07/07/2026 15:52 — `regin-health-pulse` (רוטינה, קריאה-בלבד):** lint ✅ · `npm audit` ✅ 0 פגיעויות · git נקי. FYI `npm outdated`: 3 חבילות בפער patch בלבד (supabase-js 2.110.0→.1, radix-ui 1.6.1→.2, vitest 4.1.9→.10). FYI Supabase advisors — security: RLS-enabled-no-policy (INFO) על 12 הטבלאות העסקיות שטרם נבנו (deny-all מכוון) + WARN סביב מודול 1: 4 פונקציות SECURITY DEFINER חשופות ל-anon/authenticated (`check_login_lock`,`register_failed_login`,`current_user_role_id`,`reset_login_attempts` — נראה מכוון לזרימת login/הרשאות, לוודא בסגירה) ו-leaked-password-protection כבוי ב-Auth; performance: FK לא-מאונדקסים (INFO) + `auth_rls_initplan`/`multiple_permissive_policies` (WARN) על `users`/`permissions`. אין ממצא חוסם.
 
 ### 📝 סשן 07/07/2026 15:45 — "ספריית פרומפטים מצבית + ביקורת מערך המדריכים" (Claude Code)
 **סוג:** תיעוד בלבד. תוכנן ואושר ב-plan-mode (סבב שאלות-הכרעה עם ישי).

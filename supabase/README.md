@@ -23,13 +23,14 @@
 | `20260702195258_harden_current_user_role_id.sql` | remote | הקשחת search_path + revoke |
 | `20260703071534_module1_login_attempts_lockout.sql` | remote | טבלת נעילת-חשבון + 3 פונקציות |
 | `20260703071740_module1_reset_login_attempts_revoke_anon.sql` | remote | least-privilege ל-reset |
+| `20260707163709_module1_users_rls_initplan_select_wrap.sql` | חדש (07/07, הוחל ב-MCP) | עטיפת `(select …)` ב-2 ה-policies של users — תיקון לינט `auth_rls_initplan` |
 
-הרצת baseline → 6 המיגרציות משחזרת בדיוק את המצב הנוכחי. ⚠️ אין להריץ אותן שוב על
+הרצת baseline → המיגרציות שאחריו לפי הסדר משחזרת בדיוק את המצב הנוכחי. ⚠️ אין להריץ אותן שוב על
 ה-DB הקיים — רק על DB ריק (branch/staging).
 
 ## סנכרון ההיסטוריה (צעד ידני חד-פעמי, כשתקשר את ה-CLI)
 
-6 המיגרציות כבר רשומות כ-applied ב-remote. רק ה-baseline מקומי-בלבד; רושמים אותו
+כל המיגרציות שאחרי ה-baseline כבר רשומות כ-applied ב-remote. רק ה-baseline מקומי-בלבד; רושמים אותו
 כ"כבר-הוחל" כדי ש-`migration list` יהיה נקי:
 
 ```bash

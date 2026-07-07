@@ -288,25 +288,26 @@
     create policy "<table_name>_select_by_permission" on <table_name> for select to authenticated
       using (exists (
         select 1 from permissions p
-        where p.role_id = current_user_role_id()
+        where p.role_id = (select current_user_role_id())
           and p.module_id = (select module_id from modules where module_name = '<שם-המודול-המתאים>')
           and p.permission_level in ('edit', 'view')
       ));
     create policy "<table_name>_write_by_permission" on <table_name> for all to authenticated
       using (exists (
         select 1 from permissions p
-        where p.role_id = current_user_role_id()
+        where p.role_id = (select current_user_role_id())
           and p.module_id = (select module_id from modules where module_name = '<שם-המודול-המתאים>')
           and p.permission_level = 'edit'
       ))
       with check (exists (
         select 1 from permissions p
-        where p.role_id = current_user_role_id()
+        where p.role_id = (select current_user_role_id())
           and p.module_id = (select module_id from modules where module_name = '<שם-המודול-המתאים>')
           and p.permission_level = 'edit'
       ));
     ```
-    **החמרה עתידית אפשרית (לא כרגע):** אם יידרש בהמשך (למשל "מנהלת פרויקטים רואה רק את הפרויקטים שהיא `owner_email` שלהם") — זו תהיה תוספת `and owner_email = auth.email()` ל-policy הספציפית, לא שינוי במודל הכללי. סטטוס: **סגור.** מודול 2 (ואילך) כותב את ה-policies הראשונות לפי התבנית הזו.
+    **עדכון תבנית (07/07/2026):** קריאות `current_user_role_id()` (וכל `auth.<fn>()` עתידי) בתבנית עטופות ב-`(select …)` — תיקון לינט `auth_rls_initplan` של Supabase (חישוב פעם-לשאילתה במקום פעם-לשורה; זהות התנהגותית מלאה, שינוי ביצועים בלבד). הוחל רטרואקטיבית על 2 ה-policies של `users` במיגרציית `20260707163709`; מחייב כל policy חדשה ממודול 2 והלאה.
+    **החמרה עתידית אפשרית (לא כרגע):** אם יידרש בהמשך (למשל "מנהלת פרויקטים רואה רק את הפרויקטים שהיא `owner_email` שלהם") — זו תהיה תוספת `and owner_email = (select auth.email())` ל-policy הספציפית, לא שינוי במודל הכללי. סטטוס: **סגור.** מודול 2 (ואילך) כותב את ה-policies הראשונות לפי התבנית הזו.
 22. **לוגיסטיקה — `actual_qty` קטן מ-`planned_qty`:** הסכמה מכילה את שתי העמודות, אך האפיון שותק לגבי המשמעות כשבפועל סופק/הוכן פחות מהמתוכנן (חוסר באירוע? פחת? האם זה חוסם "מוכן לביצוע"? האם משפיע על עלויות הרכש ברווחיות §5.14). סטטוס: **פתוח — להכרעה משותפת עם ישי** (מודול 5 / מודול 8).
 23. **היסטוריית עריכות (Audit Trail):** האפיון לא דורש תיעוד "מי שינה מה ומתי" על רשומות עסקיות (לקוח שנערך פעמיים — הגרסה הקודמת אובדת; last-write-wins). כרגע זו ההתנהגות המכוונת. אם בעתיד יידרש audit — זו טבלה/מנגנון חדש, לא שינוי לטבלאות הקיימות. סטטוס: **פתוח — מודע ונדחה בכוונה** (לשקול מחדש אחרי מודול 12, לפי צורך אמיתי של המשתמשות).
 24. **סיסמאות משתמשי הבדיקה שנחשפו בהיסטוריית git:** ✅ **הוכרע (06/07/2026, ישי).** סיסמאות 5 משתמשי הבדיקה הופיעו בעבר ב-`docs/CHANGELOG.md`; הבלוק הוסר מהקבצים (P2‏#10 בבקרת הקוד) אך נשאר בהיסטוריית git. **ההחלטה: לא מחליפים את הסיסמאות** — זהו פרויקט אקדמי, מערכת פנימית סגורה עם משתמשי-בדיקה בלבד, והריפו פרטי; העלות של רוטציה (עדכון `.env.local` אצל שני המפתחים + סנכרון E2E) אינה מוצדקת מול הסיכון. הסיכון מקובל ומתועד. אם הריפו יהפוך ציבורי או שייכנסו משתמשים אמיתיים — לפתוח מחדש (רוטציה מלאה + מחיקת היסטוריה). השלכה תפעולית: ממצא gitleaks על ההיסטוריה (אם יופיע ב-CI) מטופל ב-`.gitleaksignore` עם הפניה לפריט זה, לא ברוטציה. סטטוס: **סגור.**
