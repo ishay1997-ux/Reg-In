@@ -10,6 +10,26 @@
 # (1-3) היומן ולוח המצב: docs/CLAUDE_CODE_LOG.md + STATUS.md חייבים להתעדכן
 #     אחרי הקובץ ששונה אחרון.
 # אם משהו חסר — פולטים JSON עם decision:block והסשן לא מסתיים עד שמעדכנים.
+#
+# מודעות-לסשן (נוסף 07/07/2026, כלל ברזל 16): הבדיקה חלה רק על סשן שערך קבצים
+# בעצמו. סשן קריאה-בלבד (שלא ביצע Edit/Write/NotebookEdit) פטור לגמרי — גם אם
+# סשן כותב אחר "מלכלך" את עץ-העבודה המשותף. את "מי ערך ומתי" קובע קובץ-הסימון
+# שכותב protect-frozen-files.sh (mtime = זמן העריכה האחרונה של הסשן).
+
+# --- קריאת stdin וזיהוי הסשן ---
+INPUT=$(cat)
+SESSION_ID=$(printf '%s' "$INPUT" | grep -o '"session_id"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/')
+GITDIR=$(git rev-parse --absolute-git-dir 2>/dev/null)
+MUTDIR="${GITDIR:-${TMPDIR:-/tmp}}/regin-session-mutations"
+MARK="$MUTDIR/$SESSION_ID"
+
+# ניקוי סימונים ישנים (מעל יומיים) כדי שהתיקייה לא תיפוח. לא נוגע בסשן הנוכחי.
+find "$MUTDIR" -type f -mmin +2880 -delete 2>/dev/null
+
+# דילוג קריאה-בלבד: session_id ידוע ואין לו קובץ סימון = הסשן הזה לא ערך כלום
+# בעצמו. עוברים נקי בלי לחסום. (session_id לא זמין → לא מדלגים; ממשיכים לבדיקה
+# המלאה כ-fail-safe שמשמר את ההתנהגות הישנה.)
+[ -n "$SESSION_ID" ] && [ ! -s "$MARK" ] && exit 0
 
 LOG="docs/CLAUDE_CODE_LOG.md"
 ST="STATUS.md"
@@ -53,19 +73,30 @@ while IFS= read -r line; do
 done <<< "$CHANGED"
 
 # --- אכיפה 1-3: יומן ולוח מצב ---
+# משווים מול זמן העריכה של *הסשן הזה* (mtime של הסימון), לא מול NEWEST הגלובלי —
+# כך שינויים לא-מקומיטים של סשן מקביל לא נספרים. בלי session_id → נשארים על NEWEST.
+if [ -n "$SESSION_ID" ] && [ -s "$MARK" ]; then
+  EDIT_TS=$(stat -c %Y "$MARK" 2>/dev/null || echo 0)
+else
+  EDIT_TS=$NEWEST
+fi
+
 MISS=""
-[ "$NEWEST" -gt "$LOG_M" ] && MISS="docs/CLAUDE_CODE_LOG.md"
-[ "$NEWEST" -gt "$ST_M" ] && MISS="$MISS STATUS.md"
+[ "$EDIT_TS" -gt "$LOG_M" ] && MISS="docs/CLAUDE_CODE_LOG.md"
+[ "$EDIT_TS" -gt "$ST_M" ] && MISS="$MISS STATUS.md"
 
 REASON=""
 if [ -n "$MG_STALE" ]; then
   REASON="קוד מודול השתנה בלי שמדריך המיקרו שלו עודכן אחריו:$MG_STALE. עדכן בו את כותרת המצב, טבלת הצעדים והסטיות (כלל ברזל 15, צעד 0 בפרוטוקול סוף-סשן). "
 fi
 if [ -n "$MISS" ]; then
-  REASON="${REASON}קבצים השתנו מאז העדכון האחרון של: $MISS. עדכן את היומן (docs/CLAUDE_CODE_LOG.md) ואת לוח המצב (STATUS.md) לפני סיום התור. אם אין שינוי-סטטוס אמיתי — עדכן ב-STATUS.md רק את שורת 'עודכן לאחרונה' אחרי שווידאת שהלוח עדיין נכון."
+  REASON="${REASON}הסשן הזה ערך קבצים אחרי העדכון האחרון של: $MISS. עדכן את היומן (docs/CLAUDE_CODE_LOG.md) ואת לוח המצב (STATUS.md) לפני סיום התור. אם אין שינוי-סטטוס אמיתי — עדכן ב-STATUS.md רק את שורת 'עודכן לאחרונה' אחרי שווידאת שהלוח עדיין נכון."
 fi
 
 if [ -n "$REASON" ]; then
-  echo "{\"decision\":\"block\",\"reason\":\"$REASON\"}"
+  # תיוג ברור: זו בדיקה אוטומטית של הריפו, לא הודעה אנושית — כדי שלא יתבלבלו
+  # (המשתמש חשב פעם שההודעות מגיעות ממנו/מ-Claude).
+  PREFIX="🤖 בדיקה אוטומטית של הריפו (Stop hook — לא הודעה מ-Claude או מהמשתמש): "
+  echo "{\"decision\":\"block\",\"reason\":\"${PREFIX}${REASON}\"}"
 fi
 exit 0
