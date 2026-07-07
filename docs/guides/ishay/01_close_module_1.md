@@ -14,7 +14,7 @@
 ## ② תנאי כניסה
 
 - [x] הקוד קיים ועובד מקומית — ✅ אומת בסשן זה.
-- [x] 3 קומיטים מקומיים על `ishay/module-1-permissions`, לא נדחפו — ✅ (ranked ahead of `origin/ishay/module-1-permissions` ב-3, מאחור ב-0).
+- [x] קומיטים מקומיים על `ishay/module-1-permissions` — ✅ נכון ל-07/07 16:56: ממתינים ל-push (‏`088cb39` deps · ‏`3da7baf` מיגרציית initplan+snapshot · ‏`c792c5d` docs · קומיט סנכרון-התיעוד; מאחור 0). ה-push נעשה בפרומפט ⑥.
 - [x] `.claude/settings.json` (hook משותף) ו-`CLAUDE.md`/`STATUS.md`/`README.md` כבר נוצרו ונקומטו בענף הזה.
 - [ ] `npm run verify` ירוק **כרגע** (יש להריץ ולוודא — לא הונח כעובדה).
 - 🛑 **הכרעה נדרשת לפני שממשיכים:** [PROJECT_MASTER §7 פריט 21](../../PROJECT_MASTER.md) — מודל בעלות-דאטה ל-RLS. בלי הכרעה כאן, מודול 2 יתחיל לבנות policies בלי כלל אחיד.
@@ -29,7 +29,7 @@
 
 1. ✅ ~~**הכרעת §7.21 (מודל RLS)**~~ — **בוצע (06/07/2026):** הוכרע "הרשאה אך ורק לפי מטריצת role→module", נרשם ב-[PROJECT_MASTER §7.21](../../PROJECT_MASTER.md) כולל תבנית ה-policy המוכנה למודול 2.
 2. ✅ ~~**בדיקת ה-Supabase**~~ — **בוצע (06/07/2026):** ישי אימת ב-Table Editor וגם Claude אימת דרך Supabase MCP — `modules`=9, `permissions`=45, `roles`=5. בנוסף: הוחלט (ישי, 06/07) **לא להחליף את סיסמאות משתמשי הבדיקה** — סיכון מקובל ומתועד, ר' [PROJECT_MASTER §7.24](../../PROJECT_MASTER.md); אם gitleaks ב-CI יתריע על ההיסטוריה — הטיפול הוא `.gitleaksignore`, לא רוטציה.
-3. ✅ ~~שני קומיטים לפני ה-PR~~ — **בוצע (07/07):** ‏`594c26b` (תיקון הסייד-בר) + `ec408d4` (חבילת ה-docs: מדריך מיקרו מודול 2, טמפלטים, מדריך 04b) — קומטו ונדחפו. **נותר צעד קטן:** אם `git status` עדיין מציג קבצי docs פתוחים (עדכוני היומנים/הטמפלט מהסשנים האחרונים) — בקש מ-Claude, או בעצמך: `git add docs/ STATUS.md && git commit -m "docs: עדכוני יומנים וטמפלט סגירה" && git push`. רק אחר-כך פתח את ה-PR, כדי שהכל ייכנס אליו.
+3. ✅ ~~שני קומיטים לפני ה-PR~~ — **בוצע (07/07):** ‏`594c26b` (תיקון הסייד-בר) + `ec408d4` (חבילת ה-docs) — קומטו ונדחפו. **עדכון 16:56:** קבצי היומנים כבר קומטו (`c792c5d`), ונוספו גם `088cb39` (deps) ו-`3da7baf` (מיגרציית `initplan` — ‏advisors נקיים; עץ-העבודה נקי). **נותר רק `git push`** (הענף ‏ahead ‏3) — נעשה בפרומפט ⑥ (או `regin-pr-gate`). רק אחרי ה-push פתח את ה-PR, כדי שהכל ייכנס אליו.
 4. **פתיחת ה-PR:** כנס ל-GitHub → הריפו → **Pull requests** → **New pull request** → `base: dev` ← `compare: ishay/module-1-permissions` → תיאור קצר → **Create pull request**.
 
    > 🧩 **פרומפט לקלוד בדפדפן** (הדבק בתוסף הכרום כשאתה ב-GitHub):
@@ -70,8 +70,8 @@
    docs/templates/create_micro_guide_template.md — אם חסר משהו, השלם לפני שתמשיך.
 2) קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
    MODULE_NUMBER=1 · MODULE_NAME=משתמשים והרשאות · BRANCH_NAME=ishay/module-1-permissions
-3) אם git status מציג קבצים פתוחים — קבץ אותם לקומיט docs אחד, הרץ npm run verify,
-   ואם ירוק — git push.
+3) אם git status מציג קבצים פתוחים — קבץ אותם לקומיט docs אחד. בכל מקרה (גם אם העץ נקי):
+   הרץ npm run verify, ואם ירוק — git push (הענף צפוי להיות ahead; ודא סנכרון מלא מול origin).
 בסוף: בצע את סעיף ההתמדה (מדריך מיקרו + יומנים, תאריך+שעה), והדפס לי בעברית את הוראות
 פתיחת ה-PR + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.
 ```
