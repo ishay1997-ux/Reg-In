@@ -2,7 +2,7 @@
 
 # REG-IN — לוח מצב
 
-> עודכן לאחרונה: 08/07/2026 18:18
+> עודכן לאחרונה: 08/07/2026 18:35
 > **לוח בלבד — לא סיפור.** מתעדכן ע"י Claude בסוף כל סשן (נאכף ב-hook). היסטוריה ונרטיב → `docs/CLAUDE_CODE_LOG.md` · שינויים מתוארכים → `docs/CHANGELOG.md`.
 
 ## טבלת המודולים
@@ -12,8 +12,8 @@
 | # | מודול | אחראי | סטטוס | ענף | מדריך שלב |
 |---|-------|-------|:-----:|-----|-----------|
 | 0 | תשתית | ישי | ✅ | — | — |
-| 1 | משתמשים והרשאות | ישי | 🔒 סגור — **אודיט-הסגירה החוזר עבר 08/07/2026 (verdict YES שוב)**: DoD אומת, RLS חי, advisors נקי, E2E הוקשח ל-8/8 (תוקן flake test-only). **✅ PR #2 פתוח** (`dev` ← הענף); quality-gate ירוק, gitleaks נפל על 403-הרשאה (לא דלף) → **תוקן ב-`32d55bd`** (permissions ל-secret-scan); נותר: אימות ריצת-CI חוזרת ירוקה + merge (👤 ישי) | `ishay/module-1-permissions` | [ishay/01](docs/guides/ishay/01_close_module_1.md) |
-| 2 | לקוחות | עמית | ⬜ 📘 בלופרינט מוכן (07/07) — בנייה אחרי merge של מודול 1 | `amit/module-2-customers` (עתידי) | [amit/06](docs/guides/amit/06_module_02_customers.md) · [מדריך מיקרו](docs/micro_guides/module-2.md) |
+| 1 | משתמשים והרשאות | ישי | ✅ **הושלם ומוזג ל-`dev`** (‏PR [#2](https://github.com/ishay1997-ux/Reg-In/pull/2), ‏08/07/2026 18:35 — merge commit, 54 קומיטים). ‏quality-gate+gitleaks ירוקים (gitleaks תוקן ב-`32d55bd` אחרי כשל-403-הרשאה ראשוני; לא נמצא דלף). **⬜ נותר: מסירה לעמית** (הודעה מוכנה) **+ `regin-docs-sync` Run now** | `ishay/module-1-permissions` (מוזג; ניקוי-ענף בהמתנה להחלטת ישי) | [ishay/01](docs/guides/ishay/01_close_module_1.md) |
+| 2 | לקוחות | עמית | ⬜ 📘 בלופרינט מוכן (07/07) — **החסם הוסר: מודול 1 מוזג ל-`dev` (08/07/2026 18:35)**; עמית עדיין ב-`01_install_tools`, לא התחיל בפועל | `amit/module-2-customers` (עתידי) | [amit/06](docs/guides/amit/06_module_02_customers.md) · [מדריך מיקרו](docs/micro_guides/module-2.md) |
 | 3 | הצעות מחיר | עמית | ⬜ | | [amit/07](docs/guides/amit/07_module_03_quotes.md) |
 | 4 | דיילות + Smart Match | ישי | ⬜ | | [ishay/02](docs/guides/ishay/02_module_04_hostesses.md) |
 | 5 | לוגיסטיקה | ישי | ⬜ | | [ishay/03](docs/guides/ishay/03_module_05_logistics.md) |
@@ -26,7 +26,7 @@
 | 12 | אינטגרציה והגשה (כולל פריסת Vercel) | 🤝 משותף | ⬜ | | [shared/module_12](docs/guides/shared/module_12_integration.md) |
 
 ## המסלול של ישי
-**השלב הנוכחי:** [docs/guides/ishay/01_close_module_1.md](docs/guides/ishay/01_close_module_1.md) — **האודיט החוזר הושלם (verdict YES, 08/07/2026 18:18) וה-push בוצע**, העץ נקי (קובץ ה-mockup תוקן ואינו מוחרג יותר). נותר הצעד הידני היחיד — פתיחת PR (base: `dev` ← compare: `ishay/module-1-permissions`, בלוק 🧩 מוכן), CI, ‏Merge. אחרי המיזוג → [ishay/02](docs/guides/ishay/02_module_04_hostesses.md) (מודול 4).
+**השלב הנוכחי:** מודול 1 **נסגר ומוזג** (‏PR #2, 08/07/2026 18:35). שני צעדי-ניקוי לפני מודול 4: **(1)** שליחת הודעת-המסירה לעמית (מוכנה בתגובת הסשן — dev מוכן, §7.21 template ממתין לצעד 1.1) **(2)** הרצת `regin-docs-sync` (Run now, ידני — עקביות אחרונה אחרי המיזוג). אחר-כך → [ishay/02](docs/guides/ishay/02_module_04_hostesses.md) (מודול 4).
 מפת המסלול המלאה: [docs/guides/ishay/00_track.md](docs/guides/ishay/00_track.md)
 
 ## המסלול של עמית
@@ -52,7 +52,7 @@
 - ✅ **הקומיטים לפני ה-PR נדחפו (08/07/2026 18:18):** אודיט-הסגירה החוזר (`9d111eb` — תיקון-הטסט ה-flaky ב-`e2e/permissions.spec.js` test-only + התמדת-האודיט) + `6b44349` (טמפלט-הצעת-מחיר הוסב לשם אנגלי `quote_template_draft.docx` + חיווט §7.12/mockup_descriptions/amit/07) — שניהם על origin. **נותר לישי: פתיחת PR ← `dev`, CI ירוק, merge** (בלוק 🧩 מוכן — ר' תגובת הסשן). אחרי ה-merge: להריץ `regin-docs-sync` ‏(Run now) + לשלוח לעמית את הודעת-המסירה שהוכנה בסשן זה.
 - ✅ תיקוני P0+P1 מבקרת הקוד בוצעו (06/07): Error Boundary, engines, .env.example, `lang="he" dir="rtl"`, הערת תיעוד ל-RLS load-bearing function, 2 בדיקות E2E חדשות למטריצה. ‏07/07: ה-E2E הוקשח לרשת איטית (המתנה מפורשת לכתיבת PATCH לפני reload + ‏timeouts מורחבים) — `npm run verify` + `npm run test:e2e` ‏(8/8) אומתו ירוקים מחדש.
 - ✅ שלושת פריטי טרום-ה-PR נסגרו (06/07): ‏(1) אומת ב-Table Editor — `modules`=9, `permissions`=45. ‏(2) `.claude/settings.json` החדש הודבק ע"י ישי (hooks בסקריפטים + הגנת קבצים קפואים — אומת בדיף). ‏(3) 🔒 **הוחלט (ישי, 06/07): סיסמאות 5 משתמשי הבדיקה לא יוחלפו** — פרויקט אקדמי, סיכון מקובל ומתועד; ר' [PROJECT_MASTER §7.24](docs/PROJECT_MASTER.md).
-- ⚠️ `mcp__scheduled-tasks__list_scheduled_tasks` לא מציג את 4 הרוטינות הקיימות (`~/.claude/scheduled-tasks/*`) — ודא ידנית שכפתור "Run now" עדיין מפעיל אותן (ר' `docs/CLAUDE_CODE_LOG.md`, סשן 06/07).
+- ✅ **תוקן/התיישן (08/07/2026 18:35):** ‏`mcp__scheduled-tasks__list_scheduled_tasks` **כן מציג** את 4 הרוטינות כשנבדק כעת (כולן `enabled`, `taskId`/`lastRunAt` תקינים) — ההערה הישנה (06/07) שהוא "לא מציג" כבר לא נכונה; ייתכן תוקן בעדכון-כלים בין הסשנים. אין לי כלי-הפעלה ישיר לרוטינות (create/update/list בלבד) — "Run now" עדיין דורש לחיצה של ישי/עמית ב-UI.
 - ✅ 4 קבצי פלטי-הסוכנים ב-`docs/reference_spec/` נמחקו (06/07) אחרי שכל הידע מהם שולב ב-PROJECT_MASTER/מדריכים.
 
 </div>
