@@ -49,6 +49,7 @@
 ## 2. הרוטינות — הגדרה מלאה לכל אחת
 
 ### 🔄 `regin-docs-sync`
+> 🕓 עודכנה (קנוני): 08/07/2026 17:15 — נוסף שלב חותמת-אימות (למטה) · קודם: 07/07/2026 ערב (שדרוג לאודיט-עמוק) · סונכרנה: ישי ✓ (העותק החי עודכן באותו סשן, 08/07/2026 17:15) · עמית ✗ (טרם-אונבורדינג)
 
 **מטרה (שודרגה 07/07/2026 לאודיט-סנכרון עמוק):** לסנכרן את כל התיעוד מול המציאות (קוד/DB) **ומול עצמו**, ומעל הכול — **לתפוס כל החלטה שהוכרעה ונשארה "פתוחה"/בערך-ישן במקום אחר** (לשני הכיוונים). קוראת הכול במלואו (לא skim), מסווגת כל ממצא בעץ-הכרעה (מכני→מתקנת · יש-מקור-הכרעה→מסנכרנת · עמום→שואלת), ומפיקה conflict-ledger.
 
@@ -99,6 +100,7 @@ STEP 6 — Output + journal:
 - Summarize the Class 1+2 fixes applied.
 - Produce the CONFLICT LEDGER: a clearly-headed block listing every Class 3 item — even if empty ("0 קונפליקטים פתוחים"), so its absence is never ambiguous.
 - Append ONE new dated entry (`DD/MM/YYYY HH:MM` from the system clock — never date-only) under `docs/CLAUDE_CODE_LOG.md`'s "יומן סשנים" (newest-first) describing what was found/fixed/asked. If nothing needed fixing, write a short "no drift found, all clean" entry. If the log is approaching/over ~250 lines, compress the OLDEST entries per the log's own "מדיניות תחזוקה". If you changed STATUS.md, also bump its "עודכן לאחרונה" line. If the run was interactive and conflicts were answered — apply the answers as Class 2 and record them.
+- FRESHNESS STAMP (green runs ONLY — added 08/07/2026): if and only if this run ends with an EMPTY conflict ledger (0 open Class-3 items), stamp each core doc you fully audited — `STATUS.md`, `docs/CHANGELOG.md`, `docs/CLAUDE_CODE_LOG.md`, `docs/PROJECT_MASTER.md`, `docs/db_roadmap.md` — with one header line: `✅ אומת-סנכרון: DD/MM/YYYY HH:MM (regin-docs-sync)` (replace the previous stamp line if one exists; never stack duplicates). A run with open conflicts must NOT stamp anything — the stamp means "verified consistent", not "was visited". If you also verified canonical↔local SKILL sync, refresh the routines' 🕓 stamp lines in `docs/claude_routines.md` §2 accordingly.
 
 HARD SAFETY BOUNDARIES (do not violate these under any circumstance):
 - Docs-only for edits. Never edit anything under `src/`. Never edit `docs/schema.sql` beyond reading it. Never run any DB migration or write query — read-only Supabase access only.
@@ -119,6 +121,7 @@ Write your journal entry in Hebrew (matching the rest of the log's language), RT
 ---
 
 ### 🩺 `regin-health-pulse`
+> 🕓 עודכנה (קנוני): 07/07/2026 · סונכרנה: ישי ✓ (אומת-mtime ‏08/07/2026) · עמית ✗ (טרם-אונבורדינג)
 
 **מטרה:** בדיקת בריאות זולה וקריאה-בלבד — lint, תלויות מיושנות, `npm audit`, Supabase advisors, `git status`. שורת יומן אחת, לא תיעוד מלא.
 
@@ -162,6 +165,7 @@ Write your journal line in Hebrew (matching the rest of the log's language), RTL
 ---
 
 ### 🚦 `regin-pr-gate`
+> 🕓 עודכנה (קנוני): 07/07/2026 ערב · סונכרנה: ישי ✓ (אומת-mtime ‏08/07/2026) · עמית ✗ (טרם-אונבורדינג)
 
 **מטרה:** להריץ את שער האיכות `npm run verify` (lint+format+test+build). אם ירוק **על ענף פיצ'ר אישי** — commit+push אוטומטי. אם אדום — אבחון בעברית בלי לתקן קוד.
 
@@ -219,6 +223,7 @@ Respond in Hebrew, concise and direct.
 ---
 
 ### 🧪 `regin-e2e-check`
+> 🕓 עודכנה (קנוני): 06/07/2026 (יצירה) · סונכרנה: ישי ✓ (אומת-mtime ‏08/07/2026) · עמית ✗ (טרם-אונבורדינג)
 
 **מטרה:** להריץ את חבילת ה-E2E האמיתית (Playwright) ולדווח תקציר עברי pass/fail. **כיסוי היום: מודול 1 בלבד** (התרחבות = ראה "טריגרי צמיחה" בסעיף 4 למטה).
 
@@ -280,7 +285,7 @@ Respond in Hebrew, concise — a pass/fail summary, not a full report, unless th
 ## 4. פרוטוקול עדכון — איך Claude שומר את הרוטינות מסונכרנות
 
 1. **הקובץ הזה (`docs/claude_routines.md`) הוא המקור הקנוני — וקבוע.** עותקי ה-`SKILL.md` המקומיים (`~/.claude/scheduled-tasks/<name>/SKILL.md`, בכל מחשב בנפרד, מחוץ ל-git) הם **מופעים חיים** של הקנוני, לא תחליף לו. **הקובץ הזה לא נמחק אחרי אונבורדינג** — הוא הגיבוי היחיד (העותקים החיים מחוץ ל-git, בלי היסטוריה/שחזור), מקור-השחזור למחשב חדש/התקנה-מחדש, המול-להשוואה של `regin-docs-sync` לזיהוי דריפט, והרשומה המשותפת היחידה לתיאום בין שני המפתחים. מחיקתו תשבור את כל אלה.
-   - **פרוטוקול עדכון דו-צדדי (מ-07/07/2026):** כל שינוי ב**התנהגות** של רוטינה — Claude מעדכן **גם** את הקובץ הקנוני כאן **וגם**, בסשן של ישי, את 4 קבצי ה-SKILL.md החיים של ישי (`~/.claude/scheduled-tasks/regin-*/SKILL.md`) — כך הצד של ישי לא דורף. **אמית:** העותקים החיים שלו במחשב שלו, מחוץ להישג-ידו של סשן של ישי — הוא מסנכרן אותם בעצמו (ה-Claude שלו קורא את הקנוני המעודכן, או הרצת ה-setup מחדש), ו-`regin-docs-sync` מדווחת על דריפט canonical↔local כרשת-ביטחון.
+   - **פרוטוקול עדכון דו-צדדי (מ-07/07/2026):** כל שינוי ב**התנהגות** של רוטינה — Claude מעדכן **גם** את הקובץ הקנוני כאן **וגם**, בסשן של ישי, את 4 קבצי ה-SKILL.md החיים של ישי (`~/.claude/scheduled-tasks/regin-*/SKILL.md`) — כך הצד של ישי לא דורף. **וכן (מ-08/07/2026): את שורת-החותמת 🕓 בראש סעיף-הרוטינה כאן** (עודכנה/סונכרנה — ישי/עמית) — חותמת בלי עדכון-בפועל היא שקר; ‏`regin-docs-sync` מאמתת אותן מול mtime בכל ריצה. **אמית:** העותקים החיים שלו במחשב שלו, מחוץ להישג-ידו של סשן של ישי — הוא מסנכרן אותם בעצמו (ה-Claude שלו קורא את הקנוני המעודכן, או הרצת ה-setup מחדש), ו-`regin-docs-sync` מדווחת על דריפט canonical↔local כרשת-ביטחון.
 2. **`regin-docs-sync` בודקת דריפט אוטומטית:** כחלק מ-STEP 2 שלה (ר' הפרומפט למעלה), היא משווה את התוכן כאן מול עותקי ה-SKILL.md המקומיים בכל הרצה, ומדווחת בלוג אם הם לא תואמים. Claude שמריץ אותה **לא** מתקן את קבצי ה-SKILL.md בעצמו (הם מחוץ לריפו, מחוץ לתחום העריכה שלה) — היא רק מזהירה. את התיקון עושים לפי הפרוטוקול בנקודה 1: בצד של ישי — Claude מעדכן את החי בסשן רגיל; בצד של אמית — אמית / ה-Claude שלו.
 3. **טבלת טריגרי-צמיחה** — מתי עדכון בפועל נדרש (לא רק דריפט, אלא שינוי-כוונה אמיתי):
 

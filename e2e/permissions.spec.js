@@ -68,6 +68,10 @@ test.describe('מטריצת הרשאות — שינוי תא ודחיסת עצמ
       .filter({ has: page.getByRole('cell', { name: moduleName, exact: true }) })
   }
 
+  // מחזור התוויות במטריצה (edit→view→blocked) — תואם ל-CYCLE + LEVEL_STYLE ב-PermissionsMatrixPage.jsx.
+  // מאפשר לחשב את התווית-הצפויה-אחרי-קליק דטרמיניסטית, במקום להסתפק ב"שונה מהקודם" (שביר למרוצי-מצב).
+  const TITLE_CYCLE = ['צפייה ועריכה', 'צפייה בלבד', 'אין גישה']
+
   test('CEO משנה תא במטריצה (עריכה→צפייה→חסום), והשינוי נשמר אחרי רענון', async ({ page }) => {
     test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
     await login(page, CEO_EMAIL, CEO_PASSWORD)
@@ -77,14 +81,22 @@ test.describe('מטריצת הרשאות — שינוי תא ודחיסת עצמ
     const cell = () =>
       moduleRowLocator(page, 'פרויקטים').locator('td').nth(columnIndex).locator('button')
 
+    // חובה לפני הקליק: המתנה ל-networkidle כדי ששתי קריאות loadData של StrictMode (dev מריץ את
+    // ה-useEffect פעמיים) יושלמו ויוחלו. אחרת, בהתנעה קרה ה-loadData השני נפתר *אחרי* הקליק ודורס
+    // את העדכון האופטימי בערך ה-DB הישן — המרוץ שגרם ל-flake (נכשל 1/3 בהרצה קרה, 08/07/2026).
+    await page.waitForLoadState('networkidle')
+
     const titleBefore = await cell().getAttribute('title')
+    // התווית-הבאה נגזרת דטרמיניסטית מהמחזור — עמידה בפני מרוץ (assertion יציב במקום "לא שווה לקודם").
+    const titleAfterClick = TITLE_CYCLE[(TITLE_CYCLE.indexOf(titleBefore) + 1) % TITLE_CYCLE.length]
+
     await clickCellAndAwaitWrite(page, cell)
-    // ה-title משתנה מיידית (עדכון אופטימי) - מוכיח שהקליק בכלל נרשם, לפני שבודקים DB.
-    await expect(cell()).not.toHaveAttribute('title', titleBefore)
-    const titleAfterClick = await cell().getAttribute('title')
+    // ה-title עובר לערך-הבא במחזור מיידית (עדכון אופטימי) — הוכחה שהקליק נרשם, לפני בדיקת ה-DB.
+    await expect(cell()).toHaveAttribute('title', titleAfterClick)
 
     // רענון מלא מוודא שהערך אכן נכתב ל-permissions ב-DB, לא רק ל-state המקומי בזיכרון.
     await page.reload()
+    await page.waitForLoadState('networkidle')
     await expect(cell()).toHaveAttribute('title', titleAfterClick)
 
     // מחזירים למצב ההתחלתי כדי לא להשאיר שינוי-צד בסביבת הבדיקה המשותפת - ובהמתנה לכל
