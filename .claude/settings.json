@@ -1,0 +1,41 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "statusMessage": "טוען הקשר-פתיחה...",
+            "command": "bash .claude/hooks/session-start-context.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "statusMessage": "בודק הגנה על קבצי האפיון הקפואים...",
+            "command": "bash .claude/hooks/protect-frozen-files.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "statusMessage": "בודק אם docs/CLAUDE_CODE_LOG.md ו-STATUS.md מעודכנים...",
+            "command": "bash .claude/hooks/check-docs-updated.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

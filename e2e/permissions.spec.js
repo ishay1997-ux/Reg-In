@@ -1,0 +1,124 @@
+import { test, expect } from '@playwright/test'
+
+const CEO_EMAIL = process.env.E2E_CEO_EMAIL
+const CEO_PASSWORD = process.env.E2E_CEO_PASSWORD
+const STAFF_EMAIL = process.env.E2E_STAFF_EMAIL
+const STAFF_PASSWORD = process.env.E2E_STAFF_PASSWORD
+
+async function login(page, email, password) {
+  await page.goto('/login')
+  await page.getByPlaceholder('כתובת דוא״ל').fill(email)
+  await page.getByPlaceholder('סיסמה').fill(password)
+  await page.getByRole('button', { name: 'התחברות', exact: true }).click()
+  // login מוצלח = שרשרת קריאות-רשת ארוכה (lock-check, Auth, reset, שליפת users) לפני הניווט -
+  // timeout מורחב מונע כשל-שווא ברשת איטית (האפליקציה תקינה, הרשת לא).
+  await expect(page).toHaveURL('/', { timeout: 30_000 })
+}
+
+// כתיבת תא במטריצה היא אסינכרונית: ה-UI מתעדכן אופטימית מיד, אבל ה-PATCH ל-Supabase עוד
+// באוויר. reload/סיום-בדיקה לפני שהתשובה חזרה מבטלים את הכתיבה באמצע (נצפה בפועל ברשת
+// איטית, 07/07/2026: ה-preflight נרשם בשרת וה-PATCH נעלם). לכן כל קליק עוטף בהמתנה
+// מפורשת לתשובת ה-PATCH. ההאזנה נרשמת לפני הקליק כדי לא לפספס תשובה מהירה.
+async function clickCellAndAwaitWrite(page, cell) {
+  const patchDone = page.waitForResponse(
+    (r) => r.url().includes('/rest/v1/permissions') && r.request().method() === 'PATCH',
+    { timeout: 30_000 },
+  )
+  await cell().click()
+  await patchDone
+}
+
+test.describe('הגנת-נתיבים לפי הרשאה (ProtectedRoute + מטריצת הרשאות)', () => {
+  test('משתמש לוגיסטיקה נחסם ממטריצת ההרשאות (CEO-בלבד)', async ({ page }) => {
+    test.skip(
+      !STAFF_EMAIL || !STAFF_PASSWORD,
+      'E2E_STAFF_EMAIL/E2E_STAFF_PASSWORD לא הוגדרו ב-.env.local',
+    )
+    await login(page, STAFF_EMAIL, STAFF_PASSWORD)
+    await page.goto('/system/permissions')
+    await expect(page.getByText('אין לך הרשאה לצפות במסך זה')).toBeVisible()
+    await expect(page.getByText('מטריצת הרשאות')).not.toBeVisible()
+  })
+
+  test('CEO נכנס בהצלחה למסך מטריצת ההרשאות', async ({ page }) => {
+    test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await page.goto('/system/permissions')
+    await expect(page.getByText('מטריצת הרשאות')).toBeVisible()
+  })
+})
+
+test.describe('מטריצת הרשאות — שינוי תא ודחיסת עצמי (self-lockout)', () => {
+  // ממפים שם-עמודה (שם תפקיד) -> אינדקס ה-td בשורה, לפי סדר ה-th בכותרת (roles.map
+  // זהה בשורת הכותרת ובשורות הגוף - ר' PermissionsMatrixPage.jsx). נמנעים מ-ID קשיחים
+  // מה-DB, ומתאמצים רק את שמות המודולים/התפקידים שכבר קבועים ב-Seed.
+  async function columnIndexForRole(page, roleName) {
+    // הטבלה מוצגת רק אחרי ש-loadData מסתיים (לפני כן "טוען...") - מחכים לעוגן יציב
+    // (הכותרת) לפני שקוראים thead th, אחרת התוכן עוד לא קיים ב-DOM.
+    await expect(page.getByRole('heading', { name: 'מטריצת הרשאות' })).toBeVisible()
+    const headerTexts = (await page.locator('thead th').allTextContents()).map((t) => t.trim())
+    const index = headerTexts.indexOf(roleName)
+    expect(index, `לא נמצאה עמודת "${roleName}" בכותרת המטריצה`).toBeGreaterThan(0)
+    return index
+  }
+
+  function moduleRowLocator(page, moduleName) {
+    return page
+      .locator('tbody tr')
+      .filter({ has: page.getByRole('cell', { name: moduleName, exact: true }) })
+  }
+
+  // מחזור התוויות במטריצה (edit→view→blocked) — תואם ל-CYCLE + LEVEL_STYLE ב-PermissionsMatrixPage.jsx.
+  // מאפשר לחשב את התווית-הצפויה-אחרי-קליק דטרמיניסטית, במקום להסתפק ב"שונה מהקודם" (שביר למרוצי-מצב).
+  const TITLE_CYCLE = ['צפייה ועריכה', 'צפייה בלבד', 'אין גישה']
+
+  test('CEO משנה תא במטריצה (עריכה→צפייה→חסום), והשינוי נשמר אחרי רענון', async ({ page }) => {
+    test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await page.goto('/system/permissions')
+
+    const columnIndex = await columnIndexForRole(page, 'מנהלת לוגיסטיקה')
+    const cell = () =>
+      moduleRowLocator(page, 'פרויקטים').locator('td').nth(columnIndex).locator('button')
+
+    // חובה לפני הקליק: המתנה ל-networkidle כדי ששתי קריאות loadData של StrictMode (dev מריץ את
+    // ה-useEffect פעמיים) יושלמו ויוחלו. אחרת, בהתנעה קרה ה-loadData השני נפתר *אחרי* הקליק ודורס
+    // את העדכון האופטימי בערך ה-DB הישן — המרוץ שגרם ל-flake (נכשל 1/3 בהרצה קרה, 08/07/2026).
+    await page.waitForLoadState('networkidle')
+
+    const titleBefore = await cell().getAttribute('title')
+    // התווית-הבאה נגזרת דטרמיניסטית מהמחזור — עמידה בפני מרוץ (assertion יציב במקום "לא שווה לקודם").
+    const titleAfterClick = TITLE_CYCLE[(TITLE_CYCLE.indexOf(titleBefore) + 1) % TITLE_CYCLE.length]
+
+    await clickCellAndAwaitWrite(page, cell)
+    // ה-title עובר לערך-הבא במחזור מיידית (עדכון אופטימי) — הוכחה שהקליק נרשם, לפני בדיקת ה-DB.
+    await expect(cell()).toHaveAttribute('title', titleAfterClick)
+
+    // רענון מלא מוודא שהערך אכן נכתב ל-permissions ב-DB, לא רק ל-state המקומי בזיכרון.
+    await page.reload()
+    await page.waitForLoadState('networkidle')
+    await expect(cell()).toHaveAttribute('title', titleAfterClick)
+
+    // מחזירים למצב ההתחלתי כדי לא להשאיר שינוי-צד בסביבת הבדיקה המשותפת - ובהמתנה לכל
+    // כתיבה, אחרת סגירת הדפדפן בסוף הבדיקה קוטעת את השחזור וה-side-effect כן נשאר.
+    await clickCellAndAwaitWrite(page, cell)
+    await clickCellAndAwaitWrite(page, cell)
+  })
+
+  test('עמודת המנכ"ל נעולה במטריצה (הגנת self-lockout) - לא ניתן ללחוץ ולא לאבד גישת מנהל', async ({
+    page,
+  }) => {
+    test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await page.goto('/system/permissions')
+
+    const ceoColumnIndex = await columnIndexForRole(page, 'מנכ"ל')
+    const ceoButton = moduleRowLocator(page, 'פרויקטים')
+      .locator('td')
+      .nth(ceoColumnIndex)
+      .locator('button')
+
+    await expect(ceoButton).toBeDisabled()
+    await expect(ceoButton).toHaveAttribute('title', 'למנכ"ל תמיד עריכה מלאה')
+  })
+})
