@@ -12,7 +12,7 @@
 | # | מודול | אחראי | סטטוס | ענף | מדריך שלב |
 |---|-------|-------|:-----:|-----|-----------|
 | 0 | תשתית | ישי | ✅ | — | — |
-| 1 | משתמשים והרשאות | ישי | 🔒 סגור — **אודיט-הסגירה החוזר עבר 08/07/2026 (verdict YES שוב)**: DoD אומת, RLS חי, advisors נקי, E2E הוקשח ל-8/8 (תוקן flake test-only). **✅ נדחף ל-origin (08/07/2026 18:18)** — נותר: פתיחת PR ← `dev` + CI ירוק + merge (👤 ישי) | `ishay/module-1-permissions` | [ishay/01](docs/guides/ishay/01_close_module_1.md) |
+| 1 | משתמשים והרשאות | ישי | 🔒 סגור — **אודיט-הסגירה החוזר עבר 08/07/2026 (verdict YES שוב)**: DoD אומת, RLS חי, advisors נקי, E2E הוקשח ל-8/8 (תוקן flake test-only). **✅ PR #2 פתוח** (`dev` ← הענף); quality-gate ירוק, gitleaks נפל על 403-הרשאה (לא דלף) → **תוקן ב-`32d55bd`** (permissions ל-secret-scan); נותר: אימות ריצת-CI חוזרת ירוקה + merge (👤 ישי) | `ishay/module-1-permissions` | [ishay/01](docs/guides/ishay/01_close_module_1.md) |
 | 2 | לקוחות | עמית | ⬜ 📘 בלופרינט מוכן (07/07) — בנייה אחרי merge של מודול 1 | `amit/module-2-customers` (עתידי) | [amit/06](docs/guides/amit/06_module_02_customers.md) · [מדריך מיקרו](docs/micro_guides/module-2.md) |
 | 3 | הצעות מחיר | עמית | ⬜ | | [amit/07](docs/guides/amit/07_module_03_quotes.md) |
 | 4 | דיילות + Smart Match | ישי | ⬜ | | [ishay/02](docs/guides/ishay/02_module_04_hostesses.md) |
