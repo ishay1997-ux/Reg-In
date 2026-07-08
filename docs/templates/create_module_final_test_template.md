@@ -30,6 +30,7 @@ Refactoring/perf/state-management proposals; UX smoothness (loading states, erro
 - `git status` clean of debug/temp files; no stray `console.log`/commented-out blocks in the diff.
 - **No loose ends in the micro-guide:** no step left 🔨 without an explanatory note; status header current.
 - `docs/CHANGELOG.md` has this module's DB+code lines; migrations committed together with an updated `docs/schema.sql`.
+- **DB health:** run Supabase advisors (MCP, read-only — security + performance): zero findings introduced by this module, or a written triage note per finding. Verify no drift between the live DB and `docs/schema.sql` for the tables this module touched (spot-check via `list_tables`).
 - Live preview smoke test of the module's key flows (per the verification workflow) with proof (screenshot/log/network).
 - Explicit list of every file changed in this module (code, DB, docs).
 
@@ -46,7 +47,9 @@ Deferred improvements, each with the future module/stage where it must be reopen
 Binary: **[YES]** — stable, secure, DoD-compliant, mergeable into `dev` now / **[NO]** — at least one Section-6 blocker. Two-sentence justification.
 
 ### 💾 Persistence (mandatory — the audit is not done until these are written)
-0. **§6 debt registration check:** verify every Section-7 item AND every 🕗 row of the micro-guide's "Capabilities delivered vs deferred" table appears in `docs/PROJECT_MASTER.md` §6 with a target module — add any missing line now.
+0. **§6 debt registration check:** verify every Section-7 item (the audit report's tech-debt section — NOT `PROJECT_MASTER.md` §7) AND every 🕗 row of the micro-guide's "Capabilities delivered vs deferred" table appears in `docs/PROJECT_MASTER.md` §6 with a target module — add any missing line now.
+0b. **§7 ripple check (iron rule 13(א)-(ג), explicitly — not just 13(ז)):** for every `PROJECT_MASTER.md` §7 item this module ruled or implemented: (a) the §7 item itself is marked ruled with date+owner (and the batch note updated if it was the cluster's last open item); (b) the ruled value is reflected in the code/DB where it lives; (c) grep `§7.N` AND `מראת §7.N` across `docs/guides/**` + `docs/micro_guides/**` — every citation is current and every tagged mirror (🔗) matches §7 verbatim. Fix what doesn't.
+0c. **DB-roadmap + 📣 check:** in `docs/db_roadmap.md` — mark every row this module executed as Done (dated strike-list, §10 there), add rows for newly-discovered deferred DB work; then verify every schema/§7/shared-surface change from this module that touches the OTHER developer's modules/tables got a 📣-tagged CHANGELOG line, and print the ready-to-paste Hebrew note to them in this audit's report if any is missing.
 1. **Micro-guide:** tick the DoD checkboxes you verified; fill the QA matrix "as-run" column; append Section-7 items to its Deviations & Tech-Debt Log; set the status header to `🔒 Closed — awaiting PR/merge` (on YES) with today's date+time (`DD/MM/YYYY HH:MM`, from the system clock — all dated doc entries below use this format too).
 2. **`docs/CHANGELOG.md`:** dated line — "מודול [MODULE_NUMBER] נסגר — verdict [YES/NO]" + one-line scope.
 3. **`docs/CLAUDE_CODE_LOG.md`:** session entry summarizing the audit result and any blockers.
@@ -55,10 +58,10 @@ Binary: **[YES]** — stable, secure, DoD-compliant, mergeable into `dev` now / 
 
 ### 🚀 PR Instructions (print at the very end, in Hebrew)
 Print for Ishay/Amit, concretely, as numbered steps:
-0. **Push first (the audit never pushes):** run the `regin-pr-gate` routine (Run now — it commits+pushes on a green verify, feature branches only), or ask Claude in-session to commit+push per the end-of-session state.
+0. **Push first (the audit never pushes) — in the mandatory pre-PR order** (`docs/claude_routines.md` §1): if docs may have drifted, run `regin-docs-sync` FIRST (it edits docs; running it after pr-gate leaves its fixes uncommitted), then run the `regin-pr-gate` routine (Run now — it stages EVERYTHING, commits+pushes on a green verify, feature branches only), or ask Claude in-session to commit+push per the end-of-session state.
 1. GitHub → Pull requests → New → base: `dev` ← compare: `[BRANCH_NAME]` → short description (provide a ready-to-paste one) → Create. What to watch in CI (quality-gate + secret-scan/gitleaks); on red — paste the failing log back to Claude. **Also print a "🧩 prompt for Claude-in-Chrome" (iron rule 17): a self-contained Hebrew prompt Ishay/Amit can paste into the Chrome extension to open this exact PR (repo, base, compare, title, one-line description) and report CI status — no secrets in it.**
 2. Merge rules: if the partner is at the PR-review stage, wait for their approval; otherwise merge alone and Claude has already noted the ⚠️ "merged without partner review" line in CHANGELOG.
-3. After merge: pull `dev` fresh, ask Claude to flip the module row to ✅, and run the `regin-docs-sync` routine (Run now) as the final cross-file consistency pass (CLAUDE.md rule 13(ד)).
+3. After merge: pull `dev` fresh, ask Claude to flip the module row to ✅, and run the `regin-docs-sync` routine (Run now — the deep sync-audit) as the final cross-file consistency pass (CLAUDE.md rule 13(ז)).
 (`npm run verify` and `npm run test:e2e` are NOT extra steps for the human — the audit above already ran them; `regin-e2e-check`/`regin-health-pulse` stay optional.)
 
 Run the audit now and output the full report.

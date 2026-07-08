@@ -4,9 +4,12 @@
 # כדי ש-Claude יוכל לתחזק אותה בלי לגעת ב-settings.json, שעריכתו על-ידי Claude
 # חסומה על-ידי ההגנה המובנית של Claude Code).
 #
-# שתי אכיפות, לפי סדר פרוטוקול סוף-הסשן ב-CLAUDE.md:
+# שלוש אכיפות, לפי סדר פרוטוקול סוף-הסשן ב-CLAUDE.md:
 # (0) מדריך-מיקרו חי (כלל ברזל 15): קוד של מודול (src/modules/NN_*/) שהשתנה
 #     מחייב שמדריך המיקרו שלו (docs/micro_guides/module-N.md) יעודכן אחריו.
+# (0ב) מפת ה-DB (נוסף 08/07/2026 — המקבילה של כלל 15 ל-DB): מיגרציה שהשתנתה
+#     (supabase/migrations/**) מחייבת ש-docs/db_roadmap.md יעודכן אחריה —
+#     כך המפה המרוכזת של שינויי-הסכמה מתעדכנת תוך-כדי-עבודה, לא בדיעבד.
 # (1-3) היומן ולוח המצב: docs/CLAUDE_CODE_LOG.md + STATUS.md חייבים להתעדכן
 #     אחרי הקובץ ששונה אחרון.
 # אם משהו חסר — פולטים JSON עם decision:block והסשן לא מסתיים עד שמעדכנים.
@@ -40,8 +43,10 @@ ST="STATUS.md"
 LOG_M=$(stat -c %Y "$LOG" 2>/dev/null || echo 0)
 ST_M=$(stat -c %Y "$ST" 2>/dev/null || echo 0)
 
-# כל השינויים חוץ מהיומן ולוח המצב עצמם
-CHANGED=$(git status --porcelain -- . ":!$LOG" ":!$ST" 2>/dev/null)
+# כל השינויים חוץ מהיומן ולוח המצב עצמם.
+# ‏-uall (נוסף 08/07/2026): בלעדיו git מקבץ קבצים לא-מוכרים לתיקייה ("?? dir/")
+# והבדיקות פר-קובץ מפספסות את הקובץ הראשון בתיקייה חדשה (מודול חדש / מיגרציה ראשונה).
+CHANGED=$(git status --porcelain -uall -- . ":!$LOG" ":!$ST" 2>/dev/null)
 [ -z "$CHANGED" ] && exit 0
 
 # --- אכיפה 0: מדריך-מיקרו חי ---
@@ -49,6 +54,7 @@ CHANGED=$(git status --porcelain -- . ":!$LOG" ":!$ST" 2>/dev/null)
 # docs/micro_guides/module-N.md עודכן אחריו. מודול שעדיין אין לו מדריך-מיקרו
 # (טרם נוצר בפתיחתו) — לא חוסמים; האכיפה חלה רק ממרגע שהמדריך קיים.
 MG_STALE=""
+RM_STALE=""
 NEWEST=0
 while IFS= read -r line; do
   f=$(printf '%s' "$line" | cut -c4-)
@@ -69,6 +75,16 @@ while IFS= read -r line; do
         case " $MG_STALE " in *" $mg "*) ;; *) MG_STALE="$MG_STALE $mg" ;; esac
       fi
       ;;
+    supabase/migrations/*.sql)
+      # אכיפה 0ב: מיגרציה חדשה/ששונתה מחייבת עדכון של מפת ה-DB אחריה.
+      # ‏*.sql בלבד — בתיקייה יושב גם CLAUDE.md (מצביע-תיקייה) שאינו מיגרציה
+      # (עריכתו הפעילה false-positive ביום ההוספה — 08/07/2026).
+      # אם המפה עוד לא קיימת (ריפו במצב מעבר) — לא חוסמים.
+      rm_f="docs/db_roadmap.md"
+      [ -f "$rm_f" ] || continue
+      rmm=$(stat -c %Y "$rm_f" 2>/dev/null || echo 0)
+      [ "$m" -gt "$rmm" ] && RM_STALE=1
+      ;;
   esac
 done <<< "$CHANGED"
 
@@ -88,6 +104,9 @@ MISS=""
 REASON=""
 if [ -n "$MG_STALE" ]; then
   REASON="קוד מודול השתנה בלי שמדריך המיקרו שלו עודכן אחריו:$MG_STALE. עדכן בו את כותרת המצב, טבלת הצעדים והסטיות (כלל ברזל 15, צעד 0 בפרוטוקול סוף-סשן). "
+fi
+if [ -n "$RM_STALE" ]; then
+  REASON="${REASON}מיגרציה השתנתה בלי ש-docs/db_roadmap.md עודכן אחריה — עדכן את שורות-המפה הרלוונטיות ואת רשימת-ה-Done (db_roadmap.md סעיף 10; המקבילה של כלל ברזל 15 ל-DB). "
 fi
 if [ -n "$MISS" ]; then
   REASON="${REASON}הסשן הזה ערך קבצים אחרי העדכון האחרון של: $MISS. עדכן את היומן (docs/CLAUDE_CODE_LOG.md) ואת לוח המצב (STATUS.md) לפני סיום התור. אם אין שינוי-סטטוס אמיתי — עדכן ב-STATUS.md רק את שורת 'עודכן לאחרונה' אחרי שווידאת שהלוח עדיין נכון."

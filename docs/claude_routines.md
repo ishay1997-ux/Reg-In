@@ -50,48 +50,55 @@
 
 ### 🔄 `regin-docs-sync`
 
-**מטרה:** לסנכרן את כל התיעוד מול המציאות (קוד/DB) **ומול עצמו** (שני קבצים שסותרים אחד את השני) — ומתקנת ישירות טקסט שהתיישן (badges, "מצב נוכחי", checkboxes של DoD).
+**מטרה (שודרגה 07/07/2026 לאודיט-סנכרון עמוק):** לסנכרן את כל התיעוד מול המציאות (קוד/DB) **ומול עצמו**, ומעל הכול — **לתפוס כל החלטה שהוכרעה ונשארה "פתוחה"/בערך-ישן במקום אחר** (לשני הכיוונים). קוראת הכול במלואו (לא skim), מסווגת כל ממצא בעץ-הכרעה (מכני→מתקנת · יש-מקור-הכרעה→מסנכרנת · עמום→שואלת), ומפיקה conflict-ledger.
 
-**🕐 מתי להפעיל:** אחרי סיום צעד/מודול, לפני סגירת סשן עבודה.
+**🕐 מתי להפעיל:** אחרי סיום צעד/מודול, לפני סגירת סשן עבודה, ותמיד לפני סגירת מודול / מיזוג גדול. כל ריצה = האודיט העמוק המלא (הכרעת ישי 07/07).
 
 **הפרומפט הקנוני המלא (זה מה שיושב ב-SKILL.md; זה מה שמעתיקים בעת יצירה בחשבון חדש):**
 
 ```
 ---
 name: regin-docs-sync
-description: REG-IN: sync all Module docs to actual code/DB reality and cross-check docs against each other (auto-fixes stale text). Read-only system health checks now live in the separate regin-health-pulse routine.
+description: REG-IN: deep semantic sync-audit — reads every doc IN FULL plus all decision-bearing code/DB, verifies every §7/§6 decision propagated (both directions), classifies findings (mechanical=fix, ruled=sync, ambiguous=ask), outputs a conflict ledger. Read-only system health checks live in the separate regin-health-pulse routine.
 ---
 
-🕐 מתי להפעיל: אחרי סיום צעד/מודול, לפני סגירת סשן עבודה.
+🕐 מתי להפעיל: אחרי סיום צעד/מודול, לפני סגירת סשן עבודה, ותמיד לפני סגירת מודול / מיזוג גדול. כל ריצה = האודיט העמוק המלא.
 
-You are running a recurring documentation-sync check for the REG-IN project (React 19 + Vite + Supabase + Tailwind, Hebrew RTL, repo at the current working directory). You have no memory of any prior conversation — everything you need is below or in the repo itself.
+You are running the recurring documentation sync-audit for the REG-IN project (React 19 + Vite + Supabase + Tailwind, Hebrew RTL, repo at the current working directory). You have no memory of any prior conversation — everything you need is below or in the repo itself.
 
-GOAL: keep the project's documentation truthful — both "does each doc match actual reality" and "do the docs agree with EACH OTHER" (not just doc-vs-code drift, but cross-file contradictions).
+GOAL: keep the project's documentation truthful — "does each doc match actual reality (code/DB)", "do the docs agree with EACH OTHER", and above all: **no decision that was already ruled may stay open or stale anywhere else** (in either direction). This is a semantic consistency audit, not a line-diff.
 
 SCOPE NOTE: this routine only handles documentation truthfulness. It does NOT run lint/npm audit/outdated-deps/Supabase-advisors/git-status — that lightweight read-only check is a separate routine, `regin-health-pulse`, run independently so it stays cheap and can be triggered on its own.
 
-STEP 1 — Read current reality:
-- Actual code state under `src/` (skim structure/key files, don't need exhaustive review).
-- Actual DB state via the Supabase MCP (tables/RLS/functions for whichever module is currently active per the docs). The repo ships `.mcp.json`, so the Supabase MCP is expected to be configured; if MCP access is not available in this run it means it isn't authenticated here — do NOT silently skip and claim success: proceed with the file-only checks below and explicitly note it in your journal entry: "DB check skipped (MCP not authenticated this run)".
-- `git log --oneline -10` and `git status --short`.
+STEP 1 — Read reality and the full doc set (exhaustive — every doc IN FULL, no skimming):
+- Docs: `docs/CLAUDE_CODE_LOG.md` · `STATUS.md` · `CLAUDE.md` (iron rules — rule 13 is the ripple checklist this audit enforces) · `README.md` (check its links/doc-map still point at real files) · `docs/guides/**` · `docs/micro_guides/*.md` (LIVING blueprints, English, `module-N.md` — Live Status Header, step table, Deviations log) · `docs/PROJECT_MASTER.md` (especially §6 + the full §7 registry) · `docs/CHANGELOG.md` · `docs/architecture_and_qa_roadmap.md` (check its "חלק 0: מצב היישום" table) · `docs/claude_routines.md` (canonical routines — also diff against the 4 local SKILL.md files under `~/.claude/scheduled-tasks/*/SKILL.md`; per the dual-update protocol in its §4, drift on Ishay's side means a behaviour change missed his live copy — flag as a missed sync) · `docs/reference_spec/products_and_params.md` (the LOCKED Seed decisions at its top are a first-class ruling source).
+- Decision-bearing code/DB — where ruled values physically live: `docs/schema.sql`, the cumulative state of `supabase/migrations/**`, `src/lib/**` (the SSOT layer per iron rule 14: pricing/customers/constants/permissions/validators), enforcement patterns in `src/modules/**` + `src/components/layout/**`, and seed values.
+- Actual DB via the Supabase MCP (read-only): tables/RLS/functions + `params` rows (ruled values like VAT live there). If MCP access is not available this run — do NOT silently skip and claim success: proceed file-only and note in the journal: "DB check skipped (MCP not authenticated this run)".
+- git as the recency oracle: `git log --oneline -20`, `git status --short`; and when a passage has no timestamp, use `git log -1 --format=%cd -- <path>` and `git log -p -S"<token>" -- <path>` to establish which side is newer.
 
-STEP 2 — Read the doc set:
-- `docs/CLAUDE_CODE_LOG.md` (session journal)
-- `STATUS.md` (root — single module-status board)
-- `CLAUDE.md` (root — iron rules)
-- `README.md` (root — homepage: who's-who, the prompts, the doc-map; check its links / doc-map still point at files that exist and match reality)
-- `docs/guides/**` (system roadmap + Ishay/Amit/shared track guides)
-- `docs/claude_routines.md` (canonical routines doc — also diff it against the 4 local SKILL.md files under `~/.claude/scheduled-tasks/*/SKILL.md` and report drift between them; per the dual-update protocol in §4, drift on Ishay's side means a routine-behaviour change was applied to the canonical without updating his live copy — flag it as a missed sync, not as routine manual maintenance)
-- `docs/micro_guides/*.md` (per-module LIVING blueprints, named `module-N.md`, written in English FOR Claude — each has a Live Status Header with an "Active step" line, a step→status table, and a Deviations log. These are working documents, not archives: check that the active module's guide is in sync with reality.)
-- `docs/PROJECT_MASTER.md` (including the §7 open-questions registry)
-- `docs/CHANGELOG.md`
-- `docs/architecture_and_qa_roadmap.md` (engineering standard / DoD — check its "חלק 0: מצב היישום" table still matches reality, e.g. if CI/tests/migrations/E2E status changed)
+STEP 2 — Decision-state audit (§7 + §6) — the core step:
+- For every §7 item: parse its status (✅ ruled/closed vs open), the ruled value, date, owner.
+- FORWARD (ruled → propagated): for every ✅-ruled item verify the ruled value is reflected in (a) the code/DB where it physically lives, (b) every other doc that mentions the topic, (c) every guide citing it — grep `§7.N` AND `מראת §7.N` across `docs/guides/**` + `docs/micro_guides/**`. Report every place still showing the old value or still calling it "open/TBD".
+- BACKWARD (open-but-actually-done): for every still-OPEN item, check whether it was already implemented/ruled in code/DB/CHANGELOG/Seed. If yes → stale-open: with a clear dated ruling record it's Class 2 (sync it, citing the record); without one it's Class 3 (ask). NEVER close a §7 item on your own authority — rulings belong to Ishay (iron rule 1).
+- §6 ↔ §7 ↔ "מצב נוכחי": the same fact must not be "done" in one place and "open" in another. Check §7's own header/batch notes still match the actual item mix.
 
-STEP 3 — Cross-file consistency check: verify these agree with EACH OTHER, not just with reality in isolation. Example: a micro-guide step marked done (✅) must match STATUS.md's module-status row and PROJECT_MASTER's "מצב נוכחי" (current state) line. Specifically for the ACTIVE module's micro-guide (`docs/micro_guides/module-N.md`): its Live Status Header must match STATUS.md's row for that module AND the actual code under `src/modules/NN_*/`; no step may be left 🔨 (in progress) without an explanatory note; the "Last updated" date must not predate the newest change to that module's code. Flag and fix any contradiction found between files.
+STEP 3 — Cross-file consistency + structural integrity:
+- Existing checks: the ACTIVE module's micro-guide Live Status Header ↔ STATUS.md's row ↔ actual code under `src/modules/NN_*/` ↔ PROJECT_MASTER's "מצב נוכחי"; no step left 🔨 without a note; "Last updated" not older than the module's newest code change; `claude_routines.md` ↔ the 4 live SKILL.md copies.
+- Structural integrity: broken markdown tables (a row missing cells, two rows merged into one, a squashed `_(שורה חדשה כאן)_` marker), broken internal links, duplicate H1s across files.
+- Mirror convention (iron rule 13): any text tagged `🔗 מראת §7.N` that deviates from §7.N's current text = Class 2 (auto-sync FROM §7 — §7 is the declared SSOT). Any UNTAGGED restatement of a §7 decision = an "untagged mirror" finding — flag it for tagging (or conversion to a bare citation); do not sync it blindly until tagged.
 
-STEP 4 — Auto-edit stale sections directly (you have approval to edit docs autonomously): status badges, STATUS.md's module table, "מצב נוכחי" snapshots, Definition-of-Done checkboxes, stale terminology that no longer matches the code (e.g. renamed statuses, removed UI patterns, renamed functions, renamed files/folders). Fix the actual text, don't just flag it. EXCEPTION: never rewrite a dated journal entry in `docs/CHANGELOG.md` or `docs/CLAUDE_CODE_LOG.md`'s session log — those are historical records, even if they mention a file that no longer exists. Only "מצב נוכחי" (current-status) snapshots get rewritten; dated entries only get appended to, never edited.
+STEP 4 — Classify every finding and act (the decision tree):
+- Class 1 — mechanical drift (renamed file/path, badge, date, moved section; broken table structure whose original content is recoverable from git history): fix directly.
+- Class 2 — an un-propagated decision (there IS a ruling record: a ✅ §7 item with date/owner, a dated CHANGELOG line, a locked Seed decision — OR the truth hierarchy `schema.sql` › reference_spec/אפיון › mockups › guides yields an unambiguous winner): sync the stale side to the ruling value, and cite in the journal BOTH the stale location AND the ruling source.
+- Class 3 — genuinely ambiguous (same-tier sources conflict, no ruling record, git recency inconclusive): do NOT edit either side. If the run is interactive (a human is present / "Run now" inside a live session) — ask directly, one question per conflict, presenting both sides + your recommendation. If headless — write a prominent "⚠️ ממתין להחלטת ישי" block per conflict in the journal (both claims + file:line for each side + your recommended answer), and fix nothing.
+- Anti-noise: before flagging any "conflict", check whether it is a DOCUMENTED intentional deviation (a ✅ §7 ruling, a "סטייה מ-5.x" note, an as-built note). Documented deviations are NOT conflicts — never re-flag them run after run (e.g. VAT 17→18, CAPTCHA removal). The frozen files under `docs/reference_spec/` are EXPECTED to disagree with later rulings — that is what the deviation notes are for.
 
-STEP 5 — Journal the run: append ONE new dated entry (date format `DD/MM/YYYY HH:MM`, taken from the system clock — never date-only) under `docs/CLAUDE_CODE_LOG.md`'s session-journal section (find its existing "יומן סשנים" heading and add above the most recent entry, i.e. newest-first) describing what was found/fixed. If nothing needed fixing, write a short "no drift found, all clean" entry — still leave a trail. If `docs/CLAUDE_CODE_LOG.md` is approaching/over ~250 lines, compress the OLDEST journal entries into terser one-liners under an archive heading (per the log's own stated maintenance policy — check for a "מדיניות תחזוקה" section near the top of that file) — never compress the newest entries. If you changed STATUS.md, also bump its "עודכן לאחרונה" date line.
+STEP 5 — Auto-edit approval + historical-record exception: you may edit docs autonomously for Class 1+2 (status badges, STATUS.md's table, "מצב נוכחי" snapshots, DoD checkboxes, stale terminology, tagged mirrors). EXCEPTION: never rewrite a dated journal entry in `docs/CHANGELOG.md` or `docs/CLAUDE_CODE_LOG.md`'s session log — those are historical records (the ONE exception: repairing the broken table STRUCTURE of an entry — restoring lost cells verbatim from git history — is allowed and is not a content rewrite). Only "מצב נוכחי" snapshots get rewritten; dated entries otherwise only get appended.
+
+STEP 6 — Output + journal:
+- Summarize the Class 1+2 fixes applied.
+- Produce the CONFLICT LEDGER: a clearly-headed block listing every Class 3 item — even if empty ("0 קונפליקטים פתוחים"), so its absence is never ambiguous.
+- Append ONE new dated entry (`DD/MM/YYYY HH:MM` from the system clock — never date-only) under `docs/CLAUDE_CODE_LOG.md`'s "יומן סשנים" (newest-first) describing what was found/fixed/asked. If nothing needed fixing, write a short "no drift found, all clean" entry. If the log is approaching/over ~250 lines, compress the OLDEST entries per the log's own "מדיניות תחזוקה". If you changed STATUS.md, also bump its "עודכן לאחרונה" line. If the run was interactive and conflicts were answered — apply the answers as Class 2 and record them.
 
 HARD SAFETY BOUNDARIES (do not violate these under any circumstance):
 - Docs-only for edits. Never edit anything under `src/`. Never edit `docs/schema.sql` beyond reading it. Never run any DB migration or write query — read-only Supabase access only.
@@ -202,7 +209,7 @@ HARD SAFETY BOUNDARIES (do not violate these under any circumstance):
 - Never run `gh pr create`, `gh pr merge`, or any GitHub API write — PR creation is a manual step, always.
 - Never edit `.claude/settings.json` or `.claude/settings.local.json`.
 - If `npm run verify` itself is missing or the repo is in an unexpected state (e.g. package.json doesn't have a `verify` script) — say so plainly rather than guessing or trying to reconstruct it yourself.
-- Note: this repo's hooks live as bash scripts under `.claude/hooks/` (`.claude/settings.json`, shared via git, only points at them): the Stop hook `check-docs-updated.sh` is **session-aware** (07/07/2026) — it blocks session end only if THIS session edited files via Edit/Write/NotebookEdit (tracked by a per-session marker under the repo's git dir) AND `docs/CLAUDE_CODE_LOG.md`/`STATUS.md` are older than this session's last such edit; a session that only ran shell/git commands (no Edit/Write) records no marker and is never blocked. It also blocks if code under `src/modules/NN_*/` changed without the matching `docs/micro_guides/module-N.md` being updated. The PreToolUse hook `protect-frozen-files.sh` blocks any edit/delete of the frozen spec exports (C5/C6). Since this routine changes files only via git/shell (not Edit/Write), it normally records no marker and the Stop hook won't block it — but if it ever does block after your auto-commit, add a brief journal line to `docs/CLAUDE_CODE_LOG.md` (and confirm STATUS.md is accurate), then let the re-check pass. These are existing repo safety nets, not something to route around.
+- Note: this repo's hooks live as bash scripts under `.claude/hooks/` (`.claude/settings.json`, shared via git, only points at them): the Stop hook `check-docs-updated.sh` is **session-aware** (07/07/2026) — it blocks session end only if THIS session edited files via Edit/Write/NotebookEdit (tracked by a per-session marker under the repo's git dir; since 07/07 evening the marker records only edits to paths INSIDE the repo tree — plan files/scratchpad edits don't count) AND `docs/CLAUDE_CODE_LOG.md`/`STATUS.md` are older than this session's last such edit; a session that only ran shell/git commands (no Edit/Write) records no marker and is never blocked. It also blocks if code under `src/modules/NN_*/` changed without the matching `docs/micro_guides/module-N.md` being updated. The PreToolUse hook `protect-frozen-files.sh` blocks any edit/delete of the frozen spec exports (C5/C6). Since this routine changes files only via git/shell (not Edit/Write), it normally records no marker and the Stop hook won't block it — but if it ever does block after your auto-commit, add a brief journal line to `docs/CLAUDE_CODE_LOG.md` (and confirm STATUS.md is accurate), then let the re-check pass. These are existing repo safety nets, not something to route around.
 
 Respond in Hebrew, concise and direct.
 ```
