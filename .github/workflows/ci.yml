@@ -35,6 +35,12 @@ jobs:
   secret-scan:
     name: Secret scan (gitleaks)
     runs-on: ubuntu-latest
+    # gitleaks-action קורא ל-GET /pulls/{n}/commits כדי לסרוק את הקומיטים של ה-PR —
+    # דורש pull-requests:read. בלי בלוק זה ה-GITHUB_TOKEN מקבל רק contents:read
+    # (ברירת-המחדל המצומצמת) והפעולה נופלת ב-403. contents:read נדרש ל-checkout.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
         with:
