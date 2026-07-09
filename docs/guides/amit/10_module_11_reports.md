@@ -42,6 +42,7 @@
 קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=11 · MODULE_NAME=דו"חות מנהלים · RELEVANT_SECTIONS=§5.17 · BRANCH_NAME=amit/module-11-reports
 
+חובה: "שאלות פתוחות" מסעיף ② במדריך שלי = פריטי §7, מנותבות לישי להכרעה (§7 = ישי, כלל 1) — אל תכריע בהן לבד.
 הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-11.md.
 ```
 
