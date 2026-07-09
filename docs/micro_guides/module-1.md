@@ -13,9 +13,9 @@
 | Module | 1 — Users & Permissions (משתמשים והרשאות) |
 | Owner | Ishay |
 | Branch | `ishay/module-1-permissions` |
-| **Status** | **🔒 Closed — awaiting PR/merge (closing audit passed 06/07/2026 AND re-run 08/07/2026: verdict YES both times)** |
-| Last updated | 08/07/2026 17:55 (re-run closing audit: DoD re-walked, RLS re-verified live, advisors clean, `verify` green, **E2E hardened to 8/8** — a StrictMode-race flake in the matrix-write test was found and fixed test-only, §9). Prior: 07/07/2026 16:37 initplan migration applied + verified. |
-| Active step | 5.3 — PR & merge (👤 Ishay: open PR base:`dev` ← compare:`ishay/module-1-permissions`) |
+| **Status** | **✅ Closed & Merged to `dev`** (PR [#2](https://github.com/ishay1997-ux/Reg-In/pull/2), merge commit `3ba5c5f`, 08/07/2026 18:35 — quality-gate + gitleaks green) |
+| Last updated | 08/07/2026 18:52 (regin-docs-sync: synced status header + step table + DoD checkbox to reflect the actual PR #2 merge — was stale at "awaiting PR/merge"). Prior: 08/07/2026 17:55 re-run closing audit (DoD re-walked, RLS re-verified live, advisors clean, `verify` green, E2E hardened to 8/8 — StrictMode-race flake fixed test-only, §9). |
+| Active step | 5.4 — Handoff to Amit (message not yet sent) |
 
 | Phase / step | Status |
 |---|---|
@@ -26,8 +26,8 @@
 | Phase 5 — QA & handoff: 5.1 test infra | ✅ done |
 | Phase 5: 5.2 core RLS scenarios (5–12) | ✅ done (verified live 02/07) |
 | Phase 5: 5.2b extended 12-scenario matrix on `customers` | ⏸️ deferred → Module 2 (Ishay's ruling, 02/07) |
-| Phase 5: 5.3 PR + merge to `dev` | 🔨 in progress |
-| Phase 5: 5.4 handoff message to Amit (RLS template ready) | ⬜ pending (after merge) |
+| Phase 5: 5.3 PR + merge to `dev` | ✅ done (PR #2, merge commit `3ba5c5f`, 08/07/2026 18:35) |
+| Phase 5: 5.4 handoff message to Amit (RLS template ready) | ⬜ pending (merge done — message not yet sent) |
 
 ## 2. 📦 Context Packet for Claude
 
@@ -149,7 +149,7 @@ Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
 - **5.1 Test infra ✅:** Vitest+Playwright+CI as in section 2. `npm run verify` + `npm run test:e2e` (8/8) green (06/07).
 - **5.2 Core RLS scenarios 5–12 ✅** (verified live 02/07): non-CEO `update permissions` → 0 rows; CEO → succeeds; non-CEO sees only self in `users`; CEO sees all; inactive login blocked; inactive filtered in UI; self-update escalation rejected.
 - **5.2b ⏸️ deferred → Module 2:** scenarios 1–4 (the 12-scenario matrix on `customers`) — `customers` is deny-all until Module 2 writes its policies per §7.21. First task there.
-- **5.3 🔨 PR & merge (👤 Ishay):** push branch → GitHub PR base:`dev` ← compare:`ishay/module-1-permissions` → CI green (quality-gate + gitleaks; on gitleaks findings see §7.24 — `.gitleaksignore`, not rotation) → merge (Amit not yet at review stage — ⚠️ noted in CHANGELOG).
+- **5.3 ✅ PR & merge (👤 Ishay):** PR [#2](https://github.com/ishay1997-ux/Reg-In/pull/2) opened base:`dev` ← compare:`ishay/module-1-permissions` → CI green (quality-gate + gitleaks — one gitleaks 403 permission fix needed first, `32d55bd`, not a leak finding) → merged (merge commit `3ba5c5f`, 08/07/2026 18:35; Amit not yet at review stage — noted in CHANGELOG). A small follow-up docs-only PR [#3](https://github.com/ishay1997-ux/Reg-In/pull/3) then flipped STATUS/CHANGELOG/LOG to reflect the merge.
 - **5.4 ⬜ Handoff:** after merge — tell Amit `dev` is ready and the §7.21 policy template awaits Module 2.
 
 ## 6. 📊 QA Matrix
@@ -182,8 +182,8 @@ Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
 - [x] Closing audit: gitleaks scan of full history (39 commits) — no leaks found; CI secret-scan expected green with no `.gitleaksignore` needed (§7.24 fallback documented if CI disagrees).
 - [x] Code review P0/P1 closed (`docs/code_review_2026-07.md`).
 - [x] CHANGELOG + CLAUDE_CODE_LOG + STATUS current.
-- [ ] **PR opened, CI green, merged to `dev`** (👤 Ishay — the only remaining gate).
-- [ ] Fresh `dev` checkout: `npm install && npm run dev` → Google login works, CEO reaches the matrix.
+- [x] **PR opened, CI green, merged to `dev`** — PR #2, merge commit `3ba5c5f`, 08/07/2026 18:35.
+- [ ] Fresh `dev` checkout: `npm install && npm run dev` → Google login works, CEO reaches the matrix. **Not yet performed by any session — no evidence found; flagged, not checked off.**
 - [ ] Handoff message to Amit (§7.21 template ready for Module 2).
 
 ## 8. 🔄 Self-Update Protocol

@@ -14,7 +14,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Edit|Write|NotebookEdit|Bash",
+        "matcher": "Edit|Write|NotebookEdit|Bash|PowerShell|mcp__Desktop_Commander__write_file|mcp__Desktop_Commander__edit_block|mcp__Desktop_Commander__move_file|mcp__Desktop_Commander__create_directory|mcp__Desktop_Commander__start_process",
         "hooks": [
           {
             "type": "command",

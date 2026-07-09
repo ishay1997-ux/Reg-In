@@ -88,6 +88,28 @@ while IFS= read -r line; do
   esac
 done <<< "$CHANGED"
 
+# --- אכיפה 0ג: חוב חוצה-מודולים (🚧) ---
+# מדריך-מיקרו שהשתנה ומכיל טוקן "🚧 מN" (מודול-יעד) מחייב שורה תואמת "🚧 מN"
+# ב-PROJECT_MASTER §6 — הרשם שסשן-עתידי קורא בפתיחת מודול N כדי לדעת אילו חובות
+# הושארו לו. 🚧 במדריך בלי תאום ב-§6 = חוב שקט (Session-Blindness). אותו דפוס
+# fail-open כמו 0/0ב: אם PM לא קיים או אין מדריך שהשתנה — לא חוסמים. (כלל ברזל 15.)
+PM="docs/PROJECT_MASTER.md"
+HG_MISS=""
+if [ -f "$PM" ]; then
+  while IFS= read -r line; do
+    f=$(printf '%s' "$line" | cut -c4-)
+    case "$f" in
+      docs/micro_guides/module-*.md)
+        [ -f "$f" ] || continue
+        # כל טוקן "🚧 מN" ייחודי במדריך → חייב "🚧 מN" תואם ב-§6.
+        for tgt in $(grep -oE '🚧 מ[0-9]+' "$f" 2>/dev/null | grep -oE '[0-9]+' | sort -u); do
+          grep -qF "🚧 מ$tgt" "$PM" 2>/dev/null || HG_MISS="$HG_MISS ${f##*/}→מ$tgt"
+        done
+        ;;
+    esac
+  done <<< "$CHANGED"
+fi
+
 # --- אכיפה 1-3: יומן ולוח מצב ---
 # משווים מול זמן העריכה של *הסשן הזה* (mtime של הסימון), לא מול NEWEST הגלובלי —
 # כך שינויים לא-מקומיטים של סשן מקביל לא נספרים. בלי session_id → נשארים על NEWEST.
@@ -107,6 +129,9 @@ if [ -n "$MG_STALE" ]; then
 fi
 if [ -n "$RM_STALE" ]; then
   REASON="${REASON}מיגרציה השתנתה בלי ש-docs/db_roadmap.md עודכן אחריה — עדכן את שורות-המפה הרלוונטיות ואת רשימת-ה-Done (db_roadmap.md סעיף 10; המקבילה של כלל ברזל 15 ל-DB). "
+fi
+if [ -n "$HG_MISS" ]; then
+  REASON="${REASON}חוב חוצה-מודולים (🚧) לא נרשם ב-PROJECT_MASTER §6 —$HG_MISS. לכל שורת '🚧 מN' במדריך-מיקרו חייבת שורה תואמת '🚧 מN' ב-§6 (הרשם שהמודול העתידי קורא בפתיחתו כדי לחזור ולהשלים; כלל ברזל 15). הוסף את השורות החסרות ב-§6 בפורמט '🚧 מN ← מ<מודול-מקור> · מה · מקור: micro_guides/module-<מקור>.md'. "
 fi
 if [ -n "$MISS" ]; then
   REASON="${REASON}הסשן הזה ערך קבצים אחרי העדכון האחרון של: $MISS. עדכן את היומן (docs/CLAUDE_CODE_LOG.md) ואת לוח המצב (STATUS.md) לפני סיום התור. אם אין שינוי-סטטוס אמיתי — עדכן ב-STATUS.md רק את שורת 'עודכן לאחרונה' אחרי שווידאת שהלוח עדיין נכון."
