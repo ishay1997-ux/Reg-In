@@ -14,8 +14,10 @@
 > `supabase/migrations/**` without touching this file.
 >
 > **Created:** 08/07/2026 (structural-attack audit, §7 batch 61–70).
-> **Last verified vs live DB:** 08/07/2026 08:34 via Supabase MCP (read-only): `list_tables`,
-> `get_advisors` (security+performance), `list_migrations`, `list_extensions`.
+> **Last verified vs live DB:** 08/07/2026 18:54 via Supabase MCP (read-only): `get_advisors`
+> (security — same 12 accepted `rls_enabled_no_policy` INFOs + accepted SECURITY DEFINER/leaked-password
+> WARNs, zero new findings), `list_migrations` (still 7 — no new migration since creation). Prior: 08:34.
+> ✅ אומת-סנכרון: 08/07/2026 18:54 (regin-docs-sync)
 
 ---
 
@@ -45,8 +47,8 @@
 - [ ] **Every number a screen displays has a named source column or computation** (the C5:833 lesson —
       a displayed figure with no data home is a 🛑 finding, not a shrug)
 - [ ] Time columns: `timestamptz` only; Asia/Jerusalem job semantics (§7.56)
-- [ ] Money columns: `numeric(12,2)` (§7.25↳)
-- [ ] `created_at`/`updated_at` + `moddatetime` on new tables (§7.23↳, once nodded)
+- [ ] Money columns: `numeric(12,2)` (§7.74)
+- [ ] `created_at`/`updated_at` + `moddatetime` on new tables (§7.73, once nodded)
 - [ ] Seed impact? (roles/modules/params exception only — DB protocol) · Storage impact? (§5 lane)
 - [ ] 👤 gate BEFORE applying (shared Supabase project, rule 10) — coordinate with the partner
 - [ ] After apply: refresh `docs/schema.sql`, commit migration+snapshot **together**
@@ -78,12 +80,12 @@ Additional decided / nod-pending rows (cite-only):
 | A-10 | per-table RLS policies from the standard template, `(select …)` wrapped | §7.21 | decided | every module | with each module's first migration; multi-module tables gated on §7.63 |
 | A-11 | `pg_cron` install + quote-expiry daily job | §7.42 | decided | 3 | first consumer = quote expiry (T2) |
 | A-12 | Seed: products (11) + price_tiers (40) + params (17 incl. `שכר_מינימום_שעתי`) | §7.13 + `reference_spec/products_and_params.md` (locked decisions) | pending exec | 3 | blocker removed (VAT=18%) |
-| A-13 | `created_at`/`updated_at` + `moddatetime` trigger, all business tables, one migration | §7.23↳ | 👍 nod | 2 (rolling) | also anchors T2 validity semantics |
+| A-13 | `created_at`/`updated_at` + `moddatetime` trigger, all business tables, one migration | §7.73 | 👍 nod | 2 (rolling) | also anchors T2 validity semantics |
 | A-14 | NOT NULL: `users.role_id` · `quotes.customer_id` · `projects.owner_email` · `projects.quote_id` | §7.62 | 👍 nod | 2 / 3 / 6 | users → with A-8 in the M2 infra migration |
 | A-15 | partial UNIQUE on active assignment statuses (one active row per hostess+project) | §7.54 | 👍 nod | 4 | kills double-count/double-pay class |
 | A-16 | timestamptz + Asia/Jerusalem standard for all new time columns & jobs | §7.56 | 👍 nod | 3+ | first pg_cron job |
-| A-17 | money columns → `numeric(12,2)` | §7.25↳ | 👍 nod | 3 | with A-9 in the pricing migrations |
-| A-18 | `login_attempts` stale-row purge job (>30d from `last_attempt_at`) | §7.42↳ | 👍 nod | 3/10 | after A-11 |
+| A-17 | money columns → `numeric(12,2)` | §7.74 | 👍 nod | 3 | with A-9 in the pricing migrations |
+| A-18 | `login_attempts` stale-row purge job (>30d from `last_attempt_at`) | §7.75 | 👍 nod | 3/10 | after A-11 |
 
 ### A2. Log-registered debt with a decided direction (SSOT: the logs)
 
@@ -108,8 +110,8 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | §7.64 | natural PKs (email/ח"פ/ת"ז/SKU) vs surrogate keys; ON UPDATE policy; auth-UUID linkage | 🔴🔴 | M3 blueprint |
 | §7.63 | column-level ownership vs row-level RLS (projects finance columns; hostesses bank/ת"ז) | 🔴 | direction before M2 policies |
 | §7.67 | assignment → service-line/shift lineage (unblocks §7.19/29/30) | 🔴 | M4 blueprint |
-| §7.17↳ | change-order data home / single project-line entity (logistics⟷quote_services lineage) | 🔴 | M6 (direction earlier helps M5) |
-| §7.52↳ | financial snapshot as a unit: decide §7.51 (VAT) + §7.28 (cost) + §7.52 (profit) together | 🔴 | M3 (VAT part) / M6/8 |
+| §7.72 | change-order data home / single project-line entity (logistics⟷quote_services lineage) | 🔴 | M6 (direction earlier helps M5) |
+| §7.78 | financial snapshot as a unit: decide §7.51 (VAT) + §7.28 (cost) + §7.52 (profit) together | 🔴 | M3 (VAT part) / M6/8 |
 | §7.68 | salary report as a document: `period` UNIQUE + frozen line snapshots (absorbs §7.46 edge) |  | M8 |
 | §7.61 | unified Storage plan: buckets + `storage.objects` policies (private+signed URLs?) |  | direction at M6; first bucket M2 |
 
@@ -117,8 +119,8 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 
 | Ref | Question (label) | Decide before |
 |---|---|---|
-| §7.49 (+↳) | quote→project conversion RPC (atomicity; copies event-identity snapshot) | M3 |
-| §7.50 (+↳) | DB-level lock: approved quote + closed/archived project card (column-granular — ties §7.63) | M3 / 6 |
+| §7.49 + §7.76 | quote→project conversion RPC (atomicity; copies event-identity snapshot) | M3 |
+| §7.50 + §7.77 | DB-level lock: approved quote + closed/archived project card (column-granular — ties §7.63) | M3 / 6 |
 | §7.53 | hostess-count CHECK >0 → ≥0 (site/tags-only events) | M3/6 |
 | §7.30 | multi-day / cross-midnight events representation | M3/4 |
 | §7.55 | event-side coordinates + geocode service choice + NULL rule | M4 |
@@ -134,7 +136,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | §7.57 | ghost param `יום_הפקת_דוח_שכר` — seed it or drop it | M3 seed / M8 |
 | §7.60 | Module 10 has no spec — its tables (dispatch-log etc.) synthesized at blueprint | M10 |
 | §7.23 | full audit trail (who-changed-what) — deliberately deferred | reconsider at M12 |
-| §7.12↳ | DROP timing for deprecated `quotes.pdf_url` | M12 cleanup (or never) |
+| §7.71 | DROP timing for deprecated `quotes.pdf_url` | M12 cleanup (or never) |
 
 ## 4. Lane C — Engineering hygiene (no product decision; execution discipline)
 
@@ -152,7 +154,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 |---|---|---|---|
 | `marketing` bucket (public) + 4 `storage.objects` policies | decided in blueprint | `micro_guides/module-2.md` step 1.1 | 2 |
 | summary-reports bucket (mandatory closure upload) · payroll files · invoice PDFs — one plan: names, private+Signed-URLs, policy template | OPEN | §7.61 (cites §7.38, §7.36) | 6/8 |
-| `pg_cron` install + jobs (quote expiry, event-passed, login purge) | decided | §7.42 (+↳) | 3 |
+| `pg_cron` install + jobs (quote expiry, event-passed, login purge) | decided | §7.42 + §7.75 | 3 |
 | scheduled Edge Function (sender: reminders, dispatch) | decided direction | §7.42 | 10 |
 | Supabase Auth Hook (lockout) · Leaked-Password Protection | parked / deferred | logs (A-22/A-23) | plan-gated / 10 |
 
@@ -169,12 +171,12 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | products | unit/category CHECKs exist; ON UPDATE for sku 🔴 (§7.64) · seed (A-12) |
 | price_tiers | seed (A-12) · sanity CHECKs min_qty>0/max≥min (§7.41 bundle) |
 | params | UNIQUE (§7.40) · typed+history (§7.70) · seed (A-12) · ghost param (§7.57) |
-| quotes | NOT NULL customer_id (A-14) · vat_rate_snapshot (§7.51/§7.52↳) · lock (§7.50) · CHECK ≥0 (§7.53) · expiry anchor (A-13/§7.42) · pdf_url drop (§7.12↳) · discounts CHECK (A-9) |
-| quote_services | closing_unit_cost (§7.47-mirror) · color/reason enums (§7.41) · change-order model (§7.17↳) |
-| projects | §7.47-mirror ×2 (times, cancelled_at) · NOT NULL owner/quote_id (A-14) · finance-column ownership 🔴 (§7.63) · name snapshot (§7.49↳) · close-lock (§7.50↳) · profit stored? (§7.52) · coords (§7.55) · multi-day (§7.30) |
+| quotes | NOT NULL customer_id (A-14) · vat_rate_snapshot (§7.51/§7.78) · lock (§7.50) · CHECK ≥0 (§7.53) · expiry anchor (A-13/§7.42) · pdf_url drop (§7.71) · discounts CHECK (A-9) |
+| quote_services | closing_unit_cost (§7.47-mirror) · color/reason enums (§7.41) · change-order model (§7.72) |
+| projects | §7.47-mirror ×2 (times, cancelled_at) · NOT NULL owner/quote_id (A-14) · finance-column ownership 🔴 (§7.63) · name snapshot (§7.76) · close-lock (§7.77) · profit stored? (§7.52) · coords (§7.55) · multi-day (§7.30) |
 | hostesses | §7.47-mirror (address/coords) · bank-column protection 🔴 (§7.63) · ת"ז key 🔴 (§7.64) · email UNIQUE (§7.65) · min-wage rule (§7.66) |
 | assignments | §7.47-mirror ×2 (token, attendance) · shift lineage 🔴 (§7.67) · partial-unique (A-15) · travel (§7.69) · FK indexes (C-1) |
-| logistics | actual<planned (§7.22) · lineage/cost (§7.17↳) · FK index (C-1) |
+| logistics | actual<planned (§7.22) · lineage/cost (§7.72) · FK index (C-1) |
 | salary_reports | month-id UNIQUE (§7.40/§7.47-mirror) · document model (§7.68) · storage (§7.61) |
 
 ## 7. RLS rollout matrix (module × tables it WRITES; base input for §7.63)
@@ -200,14 +202,14 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | Soft-delete via `status` columns | consistent convention (users/customers/hostesses/products) | §7.34 decision demands more |
 | Hostess availability = absence of date-conflict in assignments | spec-explicit (C5:756); no calendar entity | business asks for availability preferences/vacations |
 | Single KV `params` for templates+integration | small, editable via M9 UI | §7.70 decides split; template versioning demanded |
-| `quotes.pdf_url` column stays (unused) | dropping is churn (§7.12) | §7.12↳ cleanup batch at M12 |
+| `quotes.pdf_url` column stays (unused) | dropping is churn (§7.12) | §7.71 cleanup batch at M12 |
 
 ## 9. Known reference-spec defects (C5/C6 read with a grain of salt — verified 08/07/2026)
 
 | # | Defect | Where | Handled by |
 |---|---|---|---|
 | 1 | Projects field table printed inside the Quotes section, no §2.4.4 table of its own | C6:243–261 vs C6:276 | awareness; schema already mapped correctly |
-| 2 | `quote_services`/`assignments`/`logistics` labeled "M:N link tables" though they carry lifecycle+money (association entities) | C6 §2.4.11/13/14 | §7.67 + §7.17↳ address the resulting lineage gaps |
+| 2 | `quote_services`/`assignments`/`logistics` labeled "M:N link tables" though they carry lifecycle+money (association entities) | C6 §2.4.11/13/14 | §7.67 + §7.72 address the resulting lineage gaps |
 | 3 | `pdf_url` marked mandatory (חובה) | C6:235 | overruled — §7.12 (deprecated, nullable) |
 | 4 | Two overlapping cancel-reason fields (C6 `cancel_reason` 4-value vs §7.16(ב) `cancellation_reason`) | C6:256 vs §7.47 | §7.16↳ — reconcile at M4/8 migration |
 | 5 | SKU format appears 3 ways: `-06ST` (catalog) / `ST-04`+`TAG-REG-B` (worked example) / `06ST` (seed decision) | P:24 / C5:184–186 / P:8 | seed decisions #2 rule |
@@ -220,7 +222,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | 12 | Login screen specifies CAPTCHA — replaced by lockout + Google Sign-In | C5:488 | §7.8 (decided) |
 | 13 | C6 describes trigger T3 as "send final details" (that's the manual §1.8.6 action) | C6:22 | §7.42↳ (07/07) — implement per §1.8.7 |
 | 14 | T3 reminder wording says "מחר" while the timing is a param in hours | C5:1127 vs P:99 | §7.42↳ — the param rules |
-| 15 | Gross profit "computed and saved" vs "derived, not stored" | C5:453 vs C6:279 | §7.52 (+↳ snapshot-as-a-unit) |
+| 15 | Gross profit "computed and saved" vs "derived, not stored" | C5:453 vs C6:279 | §7.52 + §7.78 (snapshot-as-a-unit) |
 
 ## 10. Maintenance protocol (how this file stays alive)
 

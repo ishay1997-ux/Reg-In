@@ -15,7 +15,7 @@
 | Owner | Amit |
 | Branch | `amit/module-2-customers` (create from `dev` **after** Module 1 merges — step 0.1) |
 | **Status** | **⬜ Not started — blocked on precondition P0 (Module 1 PR/merge pending, STATUS.md)** |
-| Last updated | 08/07/2026 12:24 (DB-attack audit sync: step-1.1 nod bundle extended with §7.62+§7.23↳ · §7.63 direction gate + §7.64/§7.65 ledger rows added · `docs/db_roadmap.md` created — mandatory read before Phase 1) |
+| Last updated | 09/07/2026 (rider promotion §7.71–78: this file's §7.23↳ citations re-pointed to **§7.73**; prior 08/07 12:24 DB-attack audit sync: step-1.1 nod bundle extended with §7.62+§7.73 · §7.63 direction gate + §7.64/§7.65 ledger rows added · `docs/db_roadmap.md` created — mandatory read before Phase 1) |
 | **Active step** | **0.1 — Preconditions** |
 
 | Phase / step | Status |
@@ -38,11 +38,11 @@
 | Add/edit/archive customer, forgiving search, filters, permission gates | ✅ full | — | — |
 | Marketing upload + `mailto:` send to consented | ✅ full (interim send model) | M10: real server-side email + tracking | PROJECT_MASTER §6 |
 | Customer card — details | ✅ full | — | — |
-| Customer card — project history | 🕗 frame + empty state | M6 (projects data + policies) | PROJECT_MASTER §6 |
-| Customer card — totalRevenue + avgFeedback metrics | 🕗 placeholder ("אין נתונים עדיין") | M3 (pricing SSOT) + M8 (feedback) | PROJECT_MASTER §6 |
-| Satisfaction stars in list + satisfaction filter | 🕗 present-but-inert | M8 | PROJECT_MASTER §6 |
+| Customer card — project history | 🚧 מ6 · frame + empty state | M6 (projects data + policies) | PROJECT_MASTER §6 |
+| Customer card — totalRevenue + avgFeedback metrics | 🚧 מ3 · 🚧 מ8 · placeholder ("אין נתונים עדיין") | M3 (pricing SSOT) + M8 (feedback) | PROJECT_MASTER §6 |
+| Satisfaction stars in list + satisfaction filter | 🚧 מ8 · present-but-inert | M8 | PROJECT_MASTER §6 |
 
-Rule: every 🕗 row above MUST have a matching line in PROJECT_MASTER §6 naming the target module — the opening prompt of every module reads §6, which is how future sessions know to come back and finish these.
+Rule (ENFORCED — iron rule 15 + Stop hook): every 🚧 row above carries a `🚧 מN` token (N = the target module that finishes it) and MUST have a byte-matching `🚧 מN` line in `PROJECT_MASTER.md` §6, written in the SAME session the 🚧 is created. The opening prompt of every module greps `🚧 מ<its-number>` in §6 to learn every debt owed to it — that is how future sessions know to come back and finish these. A 🚧 row with no matching §6 line is a silent-debt BUG that the Stop hook (`check-docs-updated.sh`, enforcement 0ג) blocks session end on. (🚧 = cross-module capability debt; distinct from ⏳ deferred-decision and 🕓 freshness-stamp.)
 
 **Existing files to touch/reuse (verified on disk 06/07/2026):**
 
@@ -79,14 +79,14 @@ Rule: every 🕗 row above MUST have a matching line in PROJECT_MASTER §6 namin
 | local | View-tier RLS scenarios 13–14 approved into step 1.3 (06/07); "restore from archive?" offer in the add-flow approved (07/07 — reconsidered after initial rejection) | Ishay | 06–07/07 | Steps 1.3, 3.2 |
 | local | Customer card built in full with empty states ("אין נתונים עדיין") for project history & derived metrics; revenue formula NOT duplicated here (M3 SSOT owns pricing) | Ishay | 06/07 | Step 3.6 |
 | inherited | Bidirectional active/inactive archive, dimmed rows, no "delete" framing (module-1.md binding pattern) | Ishay | 02/07 | Step 3.4 |
-| **OPEN — nod pending (blocks step 1.1)** | §7.40(א) — `roles.role_name`/`modules.module_name` are NOT UNIQUE while every RLS policy (incl. this module's) matches them as strings; STATUS flags it "להנהון לפני ה-policies של מודול 2". §7.48 — enabling RLS on the 11 business tables exists live but in NO migration (reproducibility gap; ruled-open 07/07 evening). **On Ishay's nod, both belong in this module's step-1.1 migration** (unique constraints + `enable row level security` for the remaining 10 business tables — `customers` is already covered by the draft). Ask at the 1.1 gate if not yet nodded. **08/07 audit — two more nods for the same bundle:** §7.62 (`users.role_id` SET NOT NULL — all RLS rides on `current_user_role_id()`; run a zero-NULLs check first) · §7.23↳ (`created_at`/`updated_at` + `moddatetime` on all business tables — data accumulating without timestamps is history lost forever) | — | — | Step 1.1 |
+| **OPEN — nod pending (blocks step 1.1)** | §7.40(א) — `roles.role_name`/`modules.module_name` are NOT UNIQUE while every RLS policy (incl. this module's) matches them as strings; STATUS flags it "להנהון לפני ה-policies של מודול 2". §7.48 — enabling RLS on the 11 business tables exists live but in NO migration (reproducibility gap; ruled-open 07/07 evening). **On Ishay's nod, both belong in this module's step-1.1 migration** (unique constraints + `enable row level security` for the remaining 10 business tables — `customers` is already covered by the draft). Ask at the 1.1 gate if not yet nodded. **08/07 audit — two more nods for the same bundle:** §7.62 (`users.role_id` SET NOT NULL — all RLS rides on `current_user_role_id()`; run a zero-NULLs check first) · §7.73 (`created_at`/`updated_at` + `moddatetime` on all business tables — data accumulating without timestamps is history lost forever; promoted 09/07 from the §7.23 rider) | — | — | Step 1.1 |
 | **OPEN — direction requested (at the 1.1 gate)** | §7.63 (08/07 audit) — column-ownership vs row-level RLS: no change to THIS migration (`customers` is single-module), but ask Ishay for the multi-module direction (child-table split / RPC / masked views) so the §7.21 precedent isn't copied blindly to `projects`/`hostesses` later | — | — | Step 1.1 gate (awareness) |
 | **OPEN — deferred** | §7.64 (08/07 audit) — ח"פ as PK: a typo-fix becomes FK-blocked once quotes exist, and two units of the same government body (same ח"פ) are unrepresentable. Decision due before the M3 blueprint; M2 ships the PK as-is | — | — | (M3 gate) |
 | **OPEN — deferred (surfaces at step 3.2)** | §7.65 (08/07 audit) — `customers.email` uniqueness unruled (spec silent; shared contact across two companies may be legitimate). M2 ships without UNIQUE; a later nod adds it via migration | — | — | Step 3.2 note |
 | **OPEN — deferred (surfaces at step 3.4)** | §7.34 — archiving a customer with live obligations (active quotes/projects) is unruled; M2 ships the plain status toggle with NO guard. When M3 exists this becomes real — flag at the 3.4 build if Ishay wants a warning/block behavior earlier | — | — | Step 3.4 note |
 | **OPEN — deferred** | Customer-card metric wiring: totalRevenue ← M3 pricing SSOT (`src/lib/pricing.js`), avgFeedback ← `projects.feedback_score` (M8 data). Critical at M3/M8 | — | — | (placeholders only in M2) |
 | **OPEN — deferred** | §7.23 audit trail — customer edits are last-write-wins by design; revisit after M12 | — | — | — |
-| **OPEN — deferred** | §7.12 quote-PDF storage — M3 decision; this module's bucket deliberately named `marketing` to avoid collision | — | — | — |
+| **RULED — §7.12 (07/07)** | quote-PDF = generated on-the-fly from data, NO stored file (`quotes.pdf_url` deprecated). Nothing for M2 to reserve against; the bucket stays named `marketing` for clarity, not collision-avoidance | Ishay | 07/07 | — |
 
 ## 4. 🛡️ Security & Auth Model Statement (iron rule 9)
 
@@ -123,7 +123,7 @@ Rule: every 🕗 row above MUST have a matching line in PROJECT_MASTER §6 namin
 **Files:** `supabase/migrations/<YYYYMMDDHHMMSS>_module2_customers_rls_and_marketing.sql`.
 **What — full SQL (exactness is load-bearing; §7.21 template verbatim, placeholders resolved):**
 > 🔗 מראת §7.21 — SSOT: PROJECT_MASTER §7 (the two `customers` policies mirror the standard template incl. the `(select …)` initplan wrap; synced by regin-docs-sync — never hand-edit here without updating §7 first).
-> **Pending-nod extension (see Decisions Ledger):** if §7.40(א)+§7.48 are nodded by build time, extend THIS migration with the two unique constraints and `enable row level security` for the remaining 10 business tables. **08/07 audit — same rule for two more nods:** §7.62 (`users.role_id` SET NOT NULL, after a live zero-NULLs check) and §7.23↳ (`created_at`/`updated_at` + `moddatetime` trigger on all business tables) — one infra migration, not four separate ones.
+> **Pending-nod extension (see Decisions Ledger):** if §7.40(א)+§7.48 are nodded by build time, extend THIS migration with the two unique constraints and `enable row level security` for the remaining 10 business tables. **08/07 audit — same rule for two more nods:** §7.62 (`users.role_id` SET NOT NULL, after a live zero-NULLs check) and §7.73 (`created_at`/`updated_at` + `moddatetime` trigger on all business tables) — one infra migration, not four separate ones.
 > **§7.63 awareness (08/07 audit):** `customers` is single-module, so the §7.21 template applies here as-is — but this migration is the project-wide precedent. At the 1.1 👤 gate, ask Ishay for the §7.63 *direction* (column-ownership for multi-module tables like `projects`/`hostesses`) so later modules don't copy this pattern blindly where it doesn't fit.
 
 ```sql
@@ -340,7 +340,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 #### Step 5.3 — Docs persistence 🔻🤖
 **Goal:** end-of-session protocol satisfied (Stop hook will enforce anyway) + cross-module debts registered where future modules will find them.
 **Files:** this guide (sections 1/6/9 finalized) → `docs/PROJECT_MASTER.md` §6 → `docs/CHANGELOG.md` → `docs/CLAUDE_CODE_LOG.md` → `STATUS.md` (that order, per CLAUDE.md).
-**What:** verify every 🕗 row of section 2's capabilities table has its PROJECT_MASTER §6 line with target module (add/refresh any missing); CHANGELOG gets a DB line (policies+constraints+bucket, incl. the bucket-INSERT seed-exception note) + a code line; CLAUDE_CODE_LOG "מצב נוכחי" rewritten + dated session entry; STATUS module-2 row updated.
+**What:** verify every 🚧 row of section 2's capabilities table has its byte-matching `🚧 מN` line in PROJECT_MASTER §6 (add/refresh any missing — the Stop hook blocks otherwise); CHANGELOG gets a DB line (policies+constraints+bucket, incl. the bucket-INSERT seed-exception note) + a code line; CLAUDE_CODE_LOG "מצב נוכחי" rewritten + dated session entry; STATUS module-2 row updated.
 **Verify 🤖:** `grep -n "מודול 2" docs/PROJECT_MASTER.md` → §6 shows the deferred-completion lines; `bash .claude/hooks/check-docs-updated.sh` → exit 0; `git status --short` shows only the intended doc files as modified.
 
 #### Step 5.4 — Closing audit + PR 🔻👤
@@ -391,4 +391,4 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 - 07/07/2026 16:37 — Blueprint SQL updated in lockstep with the §7.21 template: all 8 `current_user_role_id()` calls in the Step-1.1 draft migration wrapped as `(select current_user_role_id())` (Supabase `auth_rls_initplan` lint fix — behavior-identical, perf-only; retroactively applied to Module 1's `users` policies in migration `20260707163709`). The Step-1.1 verify gate (textual identity with §7.21) remains valid — both sides updated together.
 - 06/07 — Frozen spec 1.6.3 mentions a "delete" button; implemented as bidirectional archive per spec 1.5.3's own "ניתן להפוך ללא פעיל" + M1 binding convention. Frozen spec untouched.
 - 06/07 — "Send marketing material" implemented as `mailto:` + permanent public URL (no server-side email until Module 10; signed-URL variant explicitly rejected). Temporary, documented deviation.
-- Deferred backlog (target): revenue metric wiring (M3 pricing SSOT → M8) · satisfaction stars/filter go live with feedback data (M8) · real marketing email send (M10) · §7.12 quote-PDF storage decision (M3 — bucket namespace reserved) · §7.23 audit trail (after M12) · merge tool for historical duplicates (only if ever needed — §7.11 says none planned).
+- Deferred backlog (target): revenue metric wiring (M3 pricing SSOT → M8) · satisfaction stars/filter go live with feedback data (M8) · real marketing email send (M10) · §7.23 audit trail (after M12) · merge tool for historical duplicates (only if ever needed — §7.11 says none planned). *(§7.12 quote-PDF removed from backlog — ruled 07/07: no stored file.)*
