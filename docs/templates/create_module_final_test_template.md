@@ -45,7 +45,7 @@ Deferred improvements, each with the future module/stage where it must be reopen
 
 ### 👑 Final Merge Verdict
 Binary: **[YES]** — stable, secure, DoD-compliant, mergeable into `dev` now / **[NO]** — at least one Section-6 blocker. Two-sentence justification.
-**Typed-echo DoD sign-off (partner safety net — llm-council 09/07/2026):** a **[YES]** verdict is an irreversible gate — before it stands, print a 👤 gate where the human (Ishay/Amit) types the module name + `DoD` (NOT just "yes"/"approve") to confirm they reviewed the DoD checklist. This is one of only two typed-echo gates (the other = applying a migration, DB protocol in `CLAUDE.md`); every other 👤 gate takes an ordinary approval.
+**Typed-echo DoD sign-off (partner safety net):** a **[YES]** verdict is an irreversible gate — before it stands, print a 👤 gate where the human (Ishay/Amit) types the module name + `DoD` (NOT just "yes"/"approve") to confirm they reviewed the DoD checklist. This is one of only two typed-echo gates (the other = applying a migration, DB protocol in `CLAUDE.md`); every other 👤 gate takes an ordinary approval.
 
 ### 💾 Persistence (mandatory — the audit is not done until these are written)
 0. **§6 debt registration check:** verify every Section-7 item (the audit report's tech-debt section — NOT `PROJECT_MASTER.md` §7) AND every 🚧 row of the micro-guide's "Capabilities delivered vs deferred" table has a byte-matching `🚧 מN` line in `docs/PROJECT_MASTER.md` §6 (`grep '🚧 מN' docs/PROJECT_MASTER.md` per target module N) — add any missing line now. The Stop hook (`check-docs-updated.sh` enforcement 0ג) already blocks a session that leaves a 🚧 unregistered; this is the closing audit's belt-and-suspenders re-check.
