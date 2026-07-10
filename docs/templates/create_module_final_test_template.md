@@ -12,11 +12,11 @@ Act as Senior QA Engineer, Security Auditor, and Release Manager: run the end-of
 Structure your audit exactly as follows:
 
 ### 1. 📋 Definition-of-Done Walkthrough
-Go through every checkbox in the micro-guide's DoD section, one by one. Mark ✅/❌ with specific evidence (file/line, query result, or test output) — not impressions.
+Go through every checkbox in the micro-guide's DoD section, one by one. Mark ✅/❌ with specific evidence (file/line, query result, or test output) — not impressions. **Post-merge items** (PR opened / CI green / merged) are NOT audit-time checkboxes and NOT Section-6 blockers — mark them **N/A-at-audit (post-merge)**, never ❌: the audit must not merge, so it confirms the module is *mergeable*, and the PR/CI/merge happen afterward.
 
 ### 2. 🛡️ Security & RLS Stress-Test
 - Verify the module's policies against the §7.21 standard template (`PROJECT_MASTER.md`): can a role with `blocked` on this module read/write its table? Can `view` write?
-- Soft-delete protocol: `status='inactive'` rows excluded/handled everywhere (UI filters + DB queries).
+- Soft-delete protocol: `status='inactive'` rows **handled per the module's OWN ruling** (audit against the guide, not a generic "exclude everywhere") — e.g. this module's binding pattern is **dimmed-not-hidden in the list** + excluded only from the marketing send + offered-for-restore in the add-flow; a `status='active'` filter on the list would be a REGRESSION here, not compliance. Verify inactive is handled correctly at each surface the guide specifies.
 - **Auth regression:** the Module-1 security model still holds — OAuth authorization gate (unknown/inactive accounts signed out), account lockout, session handling.
 - For the highest-risk scenarios in the micro-guide's QA matrix, independently re-verify against the live policy definitions — never trust a pre-marked ✅.
 - Call out any leak/bypass found.
