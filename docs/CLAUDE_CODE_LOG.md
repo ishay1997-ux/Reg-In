@@ -16,10 +16,10 @@
 
 ---
 
-## מצב נוכחי (snapshot — 10/07/2026 11:56)
+## מצב נוכחי (snapshot — 10/07/2026 16:19)
 ✅ אומת-סנכרון: 10/07/2026 11:18 (regin-docs-sync — אחרי גל-הנאמנות, 0 קונפליקטים)
 
-**איפה עומדים:** מודול 1 סגור ומוזג. גל חיסון-התשתית + אודיט-נאמנות מודול-2 מוזגו ל-`dev` (**PR #5, merge `5ddb002`**). התשתית **קפואה 🧊** עד ראיות-שדה ממודול 4 (🔮 checkpoint). **מודול 2 (לקוחות) — ישי התחיל במקום עמית (עמית עסוק; המשך-אפשרי כהעברת-כותב על אותו ענף).** ענף `ishay/module-2-customers` מ-dev טרי · צעד 0.1 ✅ (`.env.local` קיים, M1 ב-dev). **תקוע ב-👤: חבילת-ה-nod של Phase 1** — §7.40(א) ייחודיות · §7.48 enable-RLS · §7.62 NOT NULL ל-`users.role_id` · §7.73 חותמות-זמן · כיוון §7.63 (בעלות-עמודות) — כולן במיגרציית-1.1, הכרעת-ישי לפני הכתיבה. **מודל Phase-1: Opus/High** (תקדים-ה-RLS הראשון). מדריך-מיקרו מוקשח (אודיט-נאמנות 10/07) הוא מפת-הבנייה.
+**איפה עומדים:** מודול 1 סגור ומוזג. גל חיסון-התשתית + אודיט-נאמנות מודול-2 מוזגו ל-`dev` (**PR #5, merge `5ddb002`**). התשתית **קפואה 🧊** עד ראיות-שדה ממודול 4 (🔮 checkpoint). **מודול 2 (לקוחות) — ישי התחיל במקום עמית (עמית עסוק; המשך-אפשרי כהעברת-כותב על אותו ענף).** ענף `ishay/module-2-customers` מ-dev טרי · צעד 0.1 ✅ (`.env.local` קיים, M1 ב-dev). **חבילת-ה-nod אושרה (ישי, 10/07)** ו-**§7.64 הוכרע — מפתח surrogate ל-customers** (`customer_id bigint` PK; ח"פ→`company_number` unique not null; + כיוון קנוני לכל המפתחות: SKU=טבעי+CASCADE/ת"ז=surrogate/email=קבלה). מיגרציית 1.1 (`20260710160735_module2_customers_surrogate_key_rls_and_marketing`) **נכתבה** — SECTION 1 כירורגיית-מפתח + SECTION 2 nod-bundle + SECTION 3 RLS/bucket — **הוחלה ב-MCP ואומתה חי (10/07 16:32)**: PK=bigint · company_number unique+not-null+check · 2+4 policies · FK · 11 triggers · 0/0 rows. הבא: step 1.3 (מטריצת RLS). §7.63 נדחה ל-M6/M8. write-back מלא בוצע (§7 · db_roadmap · guides amit/06,07 + ishay/02 · מדריך-מיקרו; **סטיית-C6 §2.4.1 מתועדת** ב-§9). **מודל Phase-1: Opus/High** (תקדים-ה-RLS הראשון). מדריך-מיקרו הוא מפת-הבנייה.
 
 **מקורות-אמת:** סכמה `docs/schema.sql` (16 טבלאות) · אפיון-קפוא = תעתיקי `reference_spec/C5_clean_transcript.md`+`C6_clean_transcript.md` (דרגה 2) · שינויי-DB עתידיים `docs/db_roadmap.md` · שאלות פתוחות = PROJECT_MASTER §7 (grep). היסטוריית-הגל המלאה: יומן-הסשנים למטה.
 
@@ -71,6 +71,9 @@
 ---
 
 ## יומן סשנים (הכי חדש למעלה)
+
+### 📝 10/07/2026 16:07 (הכרעת-ישי) — §7.64 הוכרע: surrogate ל-customers + כיוון קנוני; מיגרציית 1.1 נכתבה
+המשך לבקשת-ישי "מועצה — האם להתחיל מודול 2". **מהלך:** ‏(1) מועצת llm-council (5 יועצים + 3 מבקרים) על ח"פ-כ-PK — **פה-אחד: surrogate**. ‏(2) ישי הכריע §7.64: `customers` → `customer_id bigint` identity PK, ח"פ→`company_number unique not null`; **+ כיוון קנוני לכל המפתחות** (חיצוני/PII→surrogate · SKU→טבעי+`ON UPDATE CASCADE` · users.email→קבלה): sku=M3 · ת"ז=M4 · email=M9. ‏(3) בקר-תוכנית בהקשר-טרי (כלל 2ב) תפס 3 חורים — נסגרו (`regin-docs-sync` בסוף-סשן · לוגי-Phase-A · amit/06+ishay/02). **בוצע (Phase A, בלי apply):** write-back §7.64/11/62/47 + קטלוג · `db_roadmap` (Lane B + per-table) · guides amit/06 (סטטוס) + **amit/07 (הסבר-הכלל לעמית, §②)** + ishay/02 (ת"ז) · מדריך-מיקרו module-2 (כותרת/Context/Ledger/step-1.1 SQL/DoD/§9) · **מיגרציה `20260710160735_module2_customers_surrogate_key_rls_and_marketing.sql` נכתבה** (SECTION 1 כירורגיה + SECTION 2 nod-bundle + SECTION 3 RLS/bucket). **אימות-חי לפני-הכתיבה (MCP):** customers 0 שורות · quotes 0 שורות · FK `quotes_customer_id_fkey` (text→customer_id) קיים מהבסיס — הכירורגיה זולה אך אמיתית (drop FK→PK-surgery→quotes type→re-FK). **סטיית-C6 §2.4.1 מתועדת** (§9). **Phase B בוצע:** ישי הקליד שם-מיגרציה (typed-echo) → הוחלה ב-MCP (remote version `20260710132720`) → אומתה חי (הכל ירוק) → `schema.sql` עודכן → commit. **advisor חדש `moddatetime`-in-public — מקובל** (בלוק-ה-fix נחסם ב-auto-mode classifier כי מיגרציה חדשה ל-DB המשותף דורשת typed-echo נפרד; לא-קריטי, הכרעת-ישי "לא לחשוש אם לא קריטי"). §7.63 נדחה ל-M6/M8. הבא: step 1.3.
 
 ### 📝 10/07/2026 12:27 — תיקון dogfooding: פרומפט-סגירה (amit/06) גנרי לענף
 ממצא מה-dogfooding של פרומפט-הבנייה: פרומפט-3 (סגירה) ב-`amit/06` קידד קשיח `BRANCH_NAME=amit/module-2-customers` — שגוי כשישי בונה על `ishay/module-2-customers`. **תוקן:** ה-BRANCH_NAME נלקח מכותרת ה-Live Status Header של `module-2.md` (לא-קשיח, שורד העברת-כותב). פרומפט-1 (פתיחה) + צעד-git הושארו `amit/` (מיותרים למ2 — פתיחה קרתה; נכונים לעמית כברירת-מחדל).

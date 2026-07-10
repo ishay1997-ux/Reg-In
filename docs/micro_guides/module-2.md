@@ -14,14 +14,14 @@
 | Module | 2 — Customers (לקוחות) |
 | Owner | **ישי (started 10/07)** · Amit (may continue — writer-handover on THIS branch, not a parallel branch) |
 | Branch | `ishay/module-2-customers` (created from fresh `dev` 10/07/2026, after PR #5 merged — step 0.1 ✅) |
-| **Status** | **🔨 In progress — Phase 1 (DB & RLS); step 0.1 done, step 1.1 gated on the nod-bundle 👤 (Ishay)** |
-| Last updated | 10/07/2026 11:56 (module 2 STARTED by Ishay: PR #5 merged to `dev` `5ddb002`, branch created, preconditions passed. Next: Phase-1 nod-bundle decision. Prior history — see §9) |
-| **Active step** | **1.1 — Write the migration (BLOCKED on the nod-bundle 👤 decision — §7.40(א)/48/62/73 + §7.63 direction)** |
+| **Status** | **🔨 In progress — Phase 1 (DB & RLS); 0.1–1.2 ✅. Migration 1.1 APPLIED + live-verified (10/07 16:32; §7.64 surrogate + nod-bundle + RLS/bucket). Active: step 1.3 (14-scenario RLS matrix).** |
+| Last updated | 10/07/2026 16:35 (migration 1.1 APPLIED via MCP + live-verified + `schema.sql` snapshot; §7.64 surrogate PK live. moddatetime-in-public WARN accepted. Prior history — see §9) |
+| **Active step** | **1.3 — Run the deferred 14-scenario RLS matrix (1.1 migration applied+verified, 1.2 snapshot+commit done). §7.63 deferred M6/M8.** |
 
 | Phase / step | Status |
 |---|---|
 | 0.1 Preconditions: M1 merged + branch created | ✅ done (M1 in dev `3ba5c5f`; branch `ishay/module-2-customers`; `.env.local` present) |
-| Phase 1 — DB & RLS (1.1–1.4) | 🔨 in progress (1.1 gated on nod-bundle) |
+| Phase 1 — DB & RLS (1.1–1.4) | 🔨 in progress (1.1 ✅ applied+verified · 1.2 ✅ snapshot+commit · 1.3 RLS matrix next · 1.4 phase-close) |
 | Phase 2 — Business logic (2.1–2.2) | ⬜ pending |
 | Phase 3 — UI (3.1–3.6) | ⬜ pending |
 | Phase 4 — Control & integration (4.1–4.2) | ⬜ pending |
@@ -60,7 +60,7 @@ Rule (ENFORCED — iron rule 15 + Stop hook): every 🚧 row above carries a `�
 
 **Files to create:** `src/modules/02_customers/` → `api.js` (ALL Supabase queries of this module — iron rule 14), `CustomersPage.jsx`, `CustomerFormDialog.jsx`, `CustomerDetailsCard.jsx`, `CustomersFilterSheet.jsx`, `MarketingPanel.jsx` · `src/lib/customers.js` + `src/lib/customers.test.js` · `e2e/customers.spec.js` · one migration (step 1.1).
 
-**DB:** table `customers` (docs/schema.sql:41-51): `customer_id` text PK (=ח"פ), `customer_type` check in (`private_company`,`government`,`production_company`,`nonprofit`), `company_name`, `contact_name`, `phone`, `email` (all not null), `discount_percent` numeric default 0, `marketing_consent` bool default false, `status` check (`active`,`inactive`) default `active`. **Current RLS state: enabled live with ZERO policies (deliberate deny-all; live-verified 06/07 per module-1.md §2) — NOT yet codified in any migration; step 1.1 codifies it.** Relevant existing migrations: `20260629000000_baseline_schema.sql:43` (created `customers`) · `20260702195258_harden_current_user_role_id.sql` (hardened `current_user_role_id()` — docs/schema.sql:190-196 — the helper EVERY new policy calls). Related FK: `quotes.customer_id → customers` (schema.sql:86, on delete restrict) — Module 3 depends on this table. `projects`/`quotes` are ALSO deny-all until M3/M6 → customer-card history queries legitimately return empty.
+**DB:** table `customers` (docs/schema.sql:41-51): `customer_id` **bigint surrogate PK (§7.64, 10/07)** + `company_number` text unique not null (=ח"פ; renamed from the old text PK), `customer_type` check in (`private_company`,`government`,`production_company`,`nonprofit`), `company_name`, `contact_name`, `phone`, `email` (all not null), `discount_percent` numeric default 0, `marketing_consent` bool default false, `status` check (`active`,`inactive`) default `active`. **Current RLS state: enabled live with ZERO policies (deliberate deny-all; live-verified 06/07 per module-1.md §2) — NOT yet codified in any migration; step 1.1 codifies it.** Relevant existing migrations: `20260629000000_baseline_schema.sql:43` (created `customers`) · `20260702195258_harden_current_user_role_id.sql` (hardened `current_user_role_id()` — docs/schema.sql:190-196 — the helper EVERY new policy calls). Related FK: `quotes.customer_id → customers` (schema.sql:86, on delete restrict; **type→bigint in 1.1 per §7.64**) — Module 3 depends on this table. `projects`/`quotes` are ALSO deny-all until M3/M6 → customer-card history queries legitimately return empty.
 
 **Dependencies:** Module 1 auth infra (AuthContext, ProtectedRoute, matrix seed: roles=5/modules=9/permissions=45). Permission row for this module: `module_name='לקוחות'`; seed per PROJECT_MASTER §3 — מנכ"ל=edit, מנהלת פרויקטים=edit, מנהלת כספים ולקוחות=edit, מנהלת גיוס ושיבוץ=blocked, מנהלת לוגיסטיקה=blocked (no seeded `view` — hence view-tier scenarios 13–14).
 
@@ -80,7 +80,7 @@ Rule (ENFORCED — iron rule 15 + Stop hook): every 🚧 row above carries a `�
 |---|---|---|---|---|
 | §7.21 | RLS = role→module matrix ONLY; standard 2-policy template (PROJECT_MASTER §7.21); `module_name='לקוחות'` for this table | Ishay | 06/07 | Step 1.1 |
 | §7.3 | `customer_type` UI labels = frozen-spec wording (C5 §1.5.3), 1:1: `private_company`=חברה פרטית · `government`=חברה ממשלתית · `production_company`=חברת הפקה · `nonprofit`=עמותה. Mockup labels rejected | Ishay | 06/07 | Steps 2.1, 3.2, 3.3 |
-| §7.11 | No merge feature. ח"פ (`customer_id`) is the single canonical identifier. UX requirement (refined 07/07): forgiving-but-unambiguous search — match by contact name alone, company name alone, or ח"פ prefix; every result displays company_name + contact_name + ח"פ so the user picks exactly the right one. Add-flow keys on ח"פ — existing active ח"פ ⇒ friendly error ("חברה זו כבר רשומה במערכת") + quick link to edit the existing card; existing **archived** ח"פ ⇒ explicit "restore from archive?" offer. Historical duplicate (if ever) ⇒ manual archive, no auto-fix script. Search logic lives in `src/lib/customers.js` for reuse by M3's quote-flow customer picker | Ishay | 06–07/07 | Steps 2.1, 3.2, 3.3 |
+| §7.11 | No merge feature. ח"פ (now `company_number`, UNIQUE — the surrogate `customer_id bigint` is the PK per §7.64) is the single canonical business identifier. UX requirement (refined 07/07): forgiving-but-unambiguous search — match by contact name alone, company name alone, or ח"פ prefix; every result displays company_name + contact_name + ח"פ so the user picks exactly the right one. Add-flow keys on ח"פ — existing active ח"פ ⇒ friendly error ("חברה זו כבר רשומה במערכת") + quick link to edit the existing card; existing **archived** ח"פ ⇒ explicit "restore from archive?" offer. Historical duplicate (if ever) ⇒ manual archive, no auto-fix script. Search logic lives in `src/lib/customers.js` for reuse by M3's quote-flow customer picker | Ishay | 06–07/07 | Steps 2.1, 3.2, 3.3 |
 | local | Marketing "send" in M2 = upload to Supabase Storage + `mailto:` with BCC of consented emails + file link. Real server-side email = Module 10 (deviation logged, section 9) | Ishay | 06/07 | Steps 1.1 (bucket), 3.5 |
 | local | Marketing bucket is **public** (permanent `getPublicUrl` links; signed-URL proposal explicitly rejected — accepted limitation, marketing material is non-sensitive) | Ishay | 06/07 | Steps 1.1, 3.5 |
 | local | View-tier RLS scenarios 13–14 approved into step 1.3 (06/07); "restore from archive?" offer in the add-flow approved (07/07 — reconsidered after initial rejection) | Ishay | 06–07/07 | Steps 1.3, 3.2 |
@@ -88,7 +88,7 @@ Rule (ENFORCED — iron rule 15 + Stop hook): every 🚧 row above carries a `�
 | inherited | Bidirectional active/inactive archive, dimmed rows, no "delete" framing (module-1.md binding pattern) | Ishay | 02/07 | Step 3.4 |
 | **✅ RULED — nod bundle APPROVED (Ishay, 10/07/2026; live pre-checks all green: 0 NULL role_ids, 0 dup role/module names, RLS already live)** | **All four go into step-1.1 migration:** §7.40(א) — `unique` on `roles.role_name` + `modules.module_name`. §7.48 — `enable row level security` (idempotent) on the 10 remaining business tables (`customers` already in the base). §7.62 — `alter table users alter column role_id set not null` (ONLY the users.role_id part; quotes/projects stay for M3/M6). §7.73 — `created_at`/`updated_at timestamptz` + `moddatetime` trigger on all 11 business tables (needs `create extension if not exists moddatetime`). One infra migration bundled with the customers policies. | Ishay | 10/07 | Step 1.1 (write now) |
 | **✅ RULED — §7.63 DEFERRED to M6/M8 (Ishay, 10/07/2026)** | Column-ownership direction NOT decided now — `customers` is single-module so §7.21 applies as-is for step 1.1. §7.63 stays OPEN, targeted at M6/M8 where finance actually writes columns on another module's table; the concrete case will shape the direction (child-table split / RPC / masked views). Do NOT blindly copy §7.21 to multi-module tables later — flag at M6/M8. | Ishay | 10/07 | (M6/M8 gate) |
-| **OPEN — deferred** | §7.64 (08/07 audit) — ח"פ as PK: a typo-fix becomes FK-blocked once quotes exist, and two units of the same government body (same ח"פ) are unrepresentable. Decision due before the M3 blueprint; M2 ships the PK as-is | — | — | (M3 gate) |
+| **✅ RULED — §7.64 (Ishay, 10/07/2026)** | **Surrogate PK adopted in M2 step 1.1:** `customer_id bigint generated always as identity` PK; ח"פ → `company_number text unique not null`. Fixes the FK-blocked-typo + dual-government-unit problems. **Deviation from frozen C6 §2.4.1** (which draws ח"פ as PK) — logged in §9. The canonical PRINCIPLE is also ruled for the rest: external/PII→surrogate, system-owned SKU→natural+`ON UPDATE CASCADE`, `users.email`→accept (sku=M3 · ת"ז=M4 · email=M9) | Ishay | 10/07 | Step 1.1 (write now) |
 | **OPEN — deferred (surfaces at step 3.2)** | §7.65 (08/07 audit) — `customers.email` uniqueness unruled (spec silent; shared contact across two companies may be legitimate). M2 ships without UNIQUE; a later nod adds it via migration | — | — | Step 3.2 note |
 | **OPEN — deferred (surfaces at step 3.4)** | §7.34 — archiving a customer with live obligations (active quotes/projects) is unruled; M2 ships the plain status toggle with NO guard. When M3 exists this becomes real — flag at the 3.4 build if Ishay wants a warning/block behavior earlier | — | — | Step 3.4 note |
 | **OPEN — deferred** | Customer-card metric wiring: totalRevenue ← M3 pricing SSOT (`src/lib/pricing.js`), avgFeedback ← `projects.feedback_score` (M8 data). Critical at M3/M8 | — | — | (placeholders only in M2) |
@@ -133,7 +133,7 @@ Rule (ENFORCED — iron rule 15 + Stop hook): every 🚧 row above carries a `�
 **Files:** `supabase/migrations/<YYYYMMDDHHMMSS>_module2_customers_rls_and_marketing.sql`.
 **What — full SQL (exactness is load-bearing; §7.21 template verbatim, placeholders resolved):**
 > 🔗 מראת §7.21 — SSOT: PROJECT_MASTER §7 (the two `customers` policies mirror the standard template incl. the `(select …)` initplan wrap; synced by regin-docs-sync — never hand-edit here without updating §7 first).
-> **Pending-nod extension (see Decisions Ledger):** if §7.40(א)+§7.48 are nodded by build time, extend THIS migration with the two unique constraints and `enable row level security` for the remaining 10 business tables. **08/07 audit — same rule for two more nods:** §7.62 (`users.role_id` SET NOT NULL, after a live zero-NULLs check) and §7.73 (`created_at`/`updated_at` + `moddatetime` trigger on all business tables) — one infra migration, not four separate ones.
+> **✅ RULED 10/07 — THIS migration (step 1.1) now bundles three sections (verbatim SQL = the migration file `20260710160735_module2_customers_surrogate_key_rls_and_marketing.sql`):** **SECTION 1** — §7.64 customers surrogate-key surgery (drop `quotes_customer_id_fkey`; drop PK; rename `customer_id`→`company_number` + `set not null`; add `customer_id bigint generated always as identity` PK; `company_number` unique + 9-digit check; alter `quotes.customer_id`→bigint; re-add FK). **SECTION 2** — the nod-bundle: §7.40(א) unique on `roles.role_name`/`modules.module_name`; §7.48 `enable row level security` on the 10 remaining business tables (customers already on); §7.62 `users.role_id SET NOT NULL` (0 NULLs live 10/07 ✓); §7.73 `created_at`/`updated_at` + `moddatetime` trigger on all 11 business tables. **SECTION 3** — the customers RLS policies + marketing bucket (below). One infra migration.
 > **§7.63 awareness (08/07 audit):** `customers` is single-module, so the §7.21 template applies here as-is — but this migration is the project-wide precedent. At the 1.1 👤 gate, ask Ishay for the §7.63 *direction* (column-ownership for multi-module tables like `projects`/`hostesses`) so later modules don't copy this pattern blindly where it doesn't fit.
 
 ```sql
@@ -142,6 +142,45 @@ Rule (ENFORCED — iron rule 15 + Stop hook): every 🚧 row above carries a `�
 -- כאן הוא מקודד לראשונה (idempotent). בנוסף: constraints הגנה-לעומק, ו-bucket שיווקי ציבורי.
 -- הערה על שורת ה-INSERT ל-storage.buckets: זהו Seed-תצורה חד-פעמי (מקביל לחריג המותר של
 -- roles/modules/params בפרוטוקול ה-DB) — לא דאטה עסקי.
+-- ===== SECTION 1 — §7.64 customers surrogate PK (RULED 10/07; deviation from frozen C6 §2.4.1) =====
+-- why: ח"פ הוא מפתח חיצוני שיכול לזוז (תיקון-הקלדה) ולהתנגש (שתי יחידות של אותו גוף ממשלתי = אותו ח"פ);
+-- PK חייב להיות קבוע-ופנימי. לכן מספר-רץ פנימי כ-PK, וח"פ יורד לעמודה עסקית unique. הטבלה ריקה (0 שורות) — זול.
+alter table quotes drop constraint quotes_customer_id_fkey;
+alter table customers drop constraint customers_pkey;            -- לאמת שם-PK חי לפני הרצה (default: customers_pkey)
+alter table customers rename column customer_id to company_number;
+alter table customers alter column company_number set not null;  -- ח"פ = חובה (§7.11)
+alter table customers add constraint customers_company_number_key unique (company_number);
+alter table customers add column customer_id bigint generated always as identity primary key;
+alter table quotes alter column customer_id type bigint using customer_id::bigint;  -- טבלה ריקה
+alter table quotes add constraint quotes_customer_id_fkey
+  foreign key (customer_id) references customers(customer_id) on delete restrict;
+
+-- ===== SECTION 2 — nod-bundle (§7.40א · §7.48 · §7.62 · §7.73), RULED 10/07 =====
+-- why §7.40(א): role_name/module_name משמשים כמחרוזות בכל ה-RLS — UNIQUE מונע כפילות-שקטה ששוברת אבטחה.
+alter table roles   add constraint roles_role_name_key     unique (role_name);
+alter table modules add constraint modules_module_name_key unique (module_name);
+-- why §7.48: קידוד enable-RLS (idempotent) ל-10 הטבלאות שנותרו (customers כבר פעיל; deny-all מכוון עד policies).
+alter table products enable row level security;
+alter table price_tiers enable row level security;
+alter table params enable row level security;
+alter table quotes enable row level security;
+alter table quote_services enable row level security;
+alter table projects enable row level security;
+alter table hostesses enable row level security;
+alter table salary_reports enable row level security;
+alter table assignments enable row level security;
+alter table logistics enable row level security;
+-- why §7.62: כל שרשרת ה-RLS נשענת על role_id (משתמש בלי תפקיד = NULL = מסכים ריקים). 0 NULLs חי 10/07 ✓.
+alter table users alter column role_id set not null;
+-- why §7.73: created_at/updated_at + moddatetime לכל 11 הטבלאות העסקיות. דוגמה לטבלה אחת; המיגרציה חוזרת על
+-- הבלוק ל-11: customers, products, price_tiers, params, quotes, quote_services, projects, hostesses,
+-- salary_reports, assignments, logistics.
+create extension if not exists moddatetime;
+--   alter table <t> add column created_at timestamptz not null default now();
+--   alter table <t> add column updated_at timestamptz not null default now();
+--   create trigger <t>_set_updated_at before update on <t> for each row execute function moddatetime(updated_at);
+
+-- ===== SECTION 3 — customers RLS (§7.21) + marketing bucket =====
 alter table customers enable row level security; -- idempotent (כבר פעיל בפרויקט החי)
 
 create policy "customers_select_by_permission" on customers for select to authenticated
@@ -166,9 +205,9 @@ create policy "customers_write_by_permission" on customers for all to authentica
       and p.permission_level = 'edit'
   ));
 
--- why: הגנה-לעומק מתחת לולידציית ה-UI — ח"פ = בדיוק 9 ספרות (PROJECT_MASTER §5.3; האפיון
--- הקפוא 1.5.3 קובע ייחודיות בלבד), אחוז הנחה 0–100. מותנה באימות שהטבלה ריקה (צעד 1.2).
-alter table customers add constraint customers_id_9_digits check (customer_id ~ '^[0-9]{9}$');
+-- why: הגנה-לעומק מתחת לולידציית ה-UI — ח"פ (`company_number`) = בדיוק 9 ספרות (PROJECT_MASTER §5.3;
+-- האפיון הקפוא 1.5.3 קובע ייחודיות בלבד), אחוז הנחה 0–100. מותנה באימות שהטבלה ריקה (צעד 1.2).
+alter table customers add constraint customers_company_number_9_digits check (company_number ~ '^[0-9]{9}$');
 alter table customers add constraint customers_discount_range check (discount_percent >= 0 and discount_percent <= 100);
 
 -- why: אזור השיווק (מסך 5.6.3) — bucket ציבורי (הכרעת ישי 06/07: קישור קבוע, לא Signed URL);
@@ -222,8 +261,8 @@ create policy "marketing_delete_by_permission" on storage.objects for delete to 
 #### Step 1.2 — Apply migration + snapshot 🔻🤖
 **Goal:** policies live in the shared project; snapshot + migration committed together (DB protocol).
 **Files:** `docs/schema.sql` (update), the step-1.1 migration (commit).
-**What:** (a) pre-check: `select count(*) from customers;` (MCP execute_sql) → must be `0`; if non-zero — STOP, consult Ishay (fallback: add constraints as `not valid` + `validate constraint` after cleanup). (b) Apply via Supabase CLI (`supabase db push`) or MCP `apply_migration` (authorized by the **typed-echo** from the 1.1 gate — a plain 1.1 approval is not enough). (c) Update `docs/schema.sql` by appending the new DDL into the documented snapshot in its existing comment style (it is a curated, commented snapshot — do NOT overwrite it with a raw dump; Studio "Generate schema SQL" is the manual alternative). Note: `storage.*` objects won't appear in the public-schema snapshot — add them as a commented block; their source of truth is the migration file + CHANGELOG DB line. (d) Commit **migration + snapshot together**: `git commit -m "db: מודול 2 — RLS ללקוחות לפי תבנית §7.21 + bucket שיווק + עדכון schema snapshot"`.
-**Verify 🤖:** `select policyname from pg_policies where tablename='customers';` → exactly `customers_select_by_permission`, `customers_write_by_permission` · `select policyname from pg_policies where schemaname='storage' and tablename='objects' and policyname like 'marketing_%';` → exactly the 4 names from 1.1 · `select count(*) from storage.buckets where id='marketing';` → 1 · `git show --stat HEAD` lists both the migration and `docs/schema.sql`.
+**What:** (a) pre-check: `select count(*) from customers;` **and `select count(*) from quotes;`** (MCP execute_sql) → **both** must be `0` (the §7.64 surrogate surgery + `quotes.customer_id` type-change require empty tables); if non-zero — STOP, consult Ishay (fallback: add constraints as `not valid` + `validate constraint` after cleanup). (b) Apply via Supabase CLI (`supabase db push`) or MCP `apply_migration` (authorized by the **typed-echo** from the 1.1 gate — a plain 1.1 approval is not enough). (c) Update `docs/schema.sql` by appending the new DDL into the documented snapshot in its existing comment style (it is a curated, commented snapshot — do NOT overwrite it with a raw dump; Studio "Generate schema SQL" is the manual alternative). Note: `storage.*` objects won't appear in the public-schema snapshot — add them as a commented block; their source of truth is the migration file + CHANGELOG DB line. (d) Commit **migration + snapshot together**: `git commit -m "db: מודול 2 — RLS ללקוחות לפי תבנית §7.21 + bucket שיווק + עדכון schema snapshot"`.
+**Verify 🤖:** `select policyname from pg_policies where tablename='customers';` → exactly `customers_select_by_permission`, `customers_write_by_permission` · `select policyname from pg_policies where schemaname='storage' and tablename='objects' and policyname like 'marketing_%';` → exactly the 4 names from 1.1 · `select count(*) from storage.buckets where id='marketing';` → 1 · **PK check → `customer_id / bigint`; `company_number` unique+not-null+9-digit check present; FK `quotes_customer_id_fkey` on bigint** · `git show --stat HEAD` lists both the migration and `docs/schema.sql`.
 
 #### Step 1.3 — Run the deferred 12(+2)-scenario RLS matrix 🔻🤖
 **Goal:** close Module 1's formally-deferred gate (module-1.md step 5.2b) — now possible because `customers` has policies; plus the approved view-tier scenarios 13–14.
@@ -279,7 +318,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 #### Step 2.2 — Module API layer 🔻🤖
 **Goal:** all Supabase access of the module concentrated in one file (iron rule 14).
 **Files:** `src/modules/02_customers/api.js` (new).
-**What:** `listCustomers()`, `getCustomer(id)`, `createCustomer(c)`, `updateCustomer(id, patch)` (never touches `customer_id`), `setCustomerStatus(id, status)`, `getCustomerProjects(id)` (via `quotes`→`projects`; legitimately empty until M3/M6), `uploadMarketingFile(file)` (bucket `marketing`; validates PDF/JPG/PNG ≤10MB per mockup), `getMarketingPublicUrl(path)` (permanent public URL — bucket ruling), `getConsentedCustomerEmails()` (`marketing_consent=true and status='active'`).
+**What:** `listCustomers()`, `getCustomer(id)`, `createCustomer(c)`, `updateCustomer(id, patch)` (never changes `company_number`/ח"פ in M2; the surrogate `customer_id` PK is immutable by definition), `setCustomerStatus(id, status)`, `getCustomerProjects(id)` (via `quotes`→`projects`; legitimately empty until M3/M6), `uploadMarketingFile(file)` (bucket `marketing`; validates PDF/JPG/PNG ≤10MB per mockup), `getMarketingPublicUrl(path)` (permanent public URL — bucket ruling), `getConsentedCustomerEmails()` (`marketing_consent=true and status='active'`).
 **Verify 🤖:** `npm run lint` → 0 errors; `grep -rnE "from\(['\"\`]customers['\"\`]\)" src/ --include=*.jsx --include=*.js` (covers single/double-quote + backtick — a naive single-quote-only grep passes while a double-quoted `from("customers")` hides) → matches ONLY inside `src/modules/02_customers/api.js`.
 **🔻👤 end-of-phase gate.**
 
@@ -295,7 +334,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 #### Step 3.2 — Add/Edit dialog 🔻🤖
 **Goal:** spec 1.5.3's full field set with §7.11's duplicate-proof add flow.
 **Files:** `src/modules/02_customers/CustomerFormDialog.jsx` (new).
-**What:** fields per mockup 05/06 + spec 1.5.3: שם לקוח, ח"פ (9 digits; **read-only in edit** — PK), סוג לקוח (4 spec labels), אחוז הנחה (0–100), איש קשר, אימייל, טלפון, מאושר לדיוור (toggle). §7.11 duplicate flow on save: existing **active** ח"פ ⇒ friendly Hebrew error ("חברה זו כבר רשומה במערכת") naming the existing customer (company + contact) + quick action "ערוך את הכרטיס הקיים" that opens it; existing **archived** ח"פ ⇒ explicit offer "הלקוח קיים בארכיון — לשחזר?" that restores `status='active'` and opens the card for editing (approved 07/07). Validation via `src/lib/validators.js` only.
+**What:** fields per mockup 05/06 + spec 1.5.3: שם לקוח, ח"פ (`company_number`; 9 digits; **read-only in edit** — kept immutable in M2 by choice; the surrogate PK now makes future ח"פ-correction schema-safe, §7.64), סוג לקוח (4 spec labels), אחוז הנחה (0–100), איש קשר, אימייל, טלפון, מאושר לדיוור (toggle). §7.11 duplicate flow on save: existing **active** ח"פ ⇒ friendly Hebrew error ("חברה זו כבר רשומה במערכת") naming the existing customer (company + contact) + quick action "ערוך את הכרטיס הקיים" that opens it; existing **archived** ח"פ ⇒ explicit offer "הלקוח קיים בארכיון — לשחזר?" that restores `status='active'` and opens the card for editing (approved 07/07). Validation via `src/lib/validators.js` only.
 **Spec-mandated exact strings (C5 §5.6.17.4 — do not paraphrase):** ח"פ validation error = **"שגיאה: מספר ח.פ. חייב להכיל 9 ספרות בדיוק"** (verbatim; blocks save on partial input); edit-dialog title = **"עריכת לקוח: [company_name]"** (add-dialog title = "לקוח חדש").
 **Validation UX (C5 §5.6.17.4 — two layers, spec-mandated, previously dropped):** (1) client-side on field-blur — instant inline feedback, no DB round-trip; (2) server-side on save — write only after ALL fields pass. Visual feedback: on success a green strip **"הנתונים נשמרו בהצלחה"** that auto-fades; on error a **red border + focused message under the offending field**, with all other valid fields retained in the form.
 **Phone = free-form** (non-empty only — no regex; decision-Ishay 10/07). **§7.65 note (open — deferred):** `customers.email` has NO UNIQUE constraint in M2 — do NOT add email-uniqueness validation here; a later nod would add it via migration.
@@ -387,8 +426,9 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 ## 7. ✅ Definition of Done (instantiates docs/architecture_and_qa_roadmap.md)
 
 - [ ] Migration applied to the shared project; `pg_policies` shows exactly the 2 `customers` policies and exactly the 4 `marketing_*` storage policies; `docs/schema.sql` snapshot updated and committed **together** with the migration.
+- [ ] **§7.64 surrogate PK live:** `customers.customer_id` = `bigint` identity PK; `company_number` (ח"פ) is `unique not null` + 9-digit check; `quotes.customer_id` FK is `bigint`; the **deviation from frozen C6 §2.4.1** is logged in §9.
 - [ ] All 14 RLS scenarios pass with pasted evidence (closes M1's deferred gate 5.2b).
-- [ ] `customer_type` UI shows the 4 frozen-spec labels (§7.3); duplicate ח"פ produces the §7.11 friendly flow (edit-link for active, restore-offer for archived); search finds a customer by contact name alone / company name alone / ח"פ prefix; ח"פ immutable in edit.
+- [ ] `customer_type` UI shows the 4 frozen-spec labels (§7.3); duplicate ח"פ produces the §7.11 friendly flow (edit-link for active, restore-offer for archived); search finds a customer by contact name alone / company name alone / ח"פ prefix; ח"פ (`company_number`) immutable in edit by M2 choice (surrogate PK makes future correction schema-safe).
 - [ ] Archive is bidirectional, dimmed, delete-free (M1 binding pattern).
 - [ ] Marketing: upload lands in the public `marketing` bucket; send = `mailto:` (encodeURIComponent'd) with BCC of consented+active only; clipboard fallbacks present.
 - [ ] Customer card renders with all three metric empty states (revenue / gross-profit §7.79 / feedback); no pricing/profit formula anywhere in module-2 code (`grep -rn -e '0.18' -e 'vat' -e 'מע"מ' src/modules/02_customers src/lib/customers.js` → 0 business-formula hits; single-quoted `-e` args so the Hebrew `"` does not break the shell).
@@ -412,6 +452,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 
 ## 9. 📝 Deviations & Tech-Debt Log
 
+- 10/07/2026 16:07 — **§7.64 RULED (Ishay) — customers surrogate PK.** `customer_id` changed from `text` (=ח"פ) to `bigint generated always as identity`; ח"פ moved to `company_number text unique not null`. Fixes FK-blocked-typo + dual-government-unit (two units, same ח"פ). **Deviation from frozen C6 §2.4.1** (draws ח"פ as customers PK) — logged here per iron rule 8; C6/C5 require only *uniqueness*, preserved by `company_number unique`. `quotes.customer_id` FK type→bigint (consequence; its SET NOT NULL stays M3). **Canonical principle also ruled** for the rest (external/PII→surrogate; system-owned SKU→natural+`ON UPDATE CASCADE`; users.email→accept): products.sku=M3, hostesses.id_number=M4 (own C6 deviation), users.email=M9. Migration `20260710160735_module2_customers_surrogate_key_rls_and_marketing.sql` authored (SECTION 1 surgery + SECTION 2 nod-bundle + SECTION 3 RLS/bucket); pending typed-echo apply.
 - 10/07/2026 10:44 — **Semantic-review pass (llm-council + 2 adversarial critics + spec-fidelity A→B audit; Ishay-approved plan, decisions ①ב/②א/③/④א).** Content/fidelity fixes: (a) **Test Identities** block added to §2 (5 users, claims-forging, positive-control) — dissolves the RLS-matrix/UI-login gaps; (b) **customer phone → FREE-FORM** — reversed the invented `ISRAELI_PHONE_REGEX` (spec sets no customer-phone format; the 050-059 rule is the hostess screen only, C5 §5.6.17.4); (c) **cumulative gross-profit** metric restored to the card as a placeholder + 🚧 מ7 + new §7.79 (C5 §5.6.3 shows it; the draft had dropped it silently); (d) **validation UX** (green success strip / red field-error, C5 §5.6.17.4) + **exact spec strings** (ח"פ error, edit title) added to 3.2; (e) mockup-only details (two search boxes, column sort, upload replace/remove, satisfaction text-tag §7.80) re-marked **🗣️ confirm-intent** — narrated + confirmed before build, not built blindly (mockups = limited-liability). Coherence fixes: `sortCustomers` created in 2.1 (was referenced-but-uncreated); storage-42501 fallback → **comment-out** (was "keep as documentation", re-failing replay); **typed-echo** enforced at the 1.1/1.2 apply gate; step-1.3 impersonation skeleton uses `sub`+`email` with a **positive-control sanity gate**; step-3.5 verify asserts the **encoded body** + silent-truncation guard; partial-nod path added to 1.1; module-1.md **backward write-back** added to 5.3; brittle greps fixed; DoD split into audit-time vs post-merge; header timestamp → HH:MM. New §7 items 79 (gross-profit) + 80 (satisfaction tag) registered; §7.36 (upload↔DB atomicity) **anchored** (already open — not re-created).
 - 07/07/2026 22:08 — Synced to the adversarial spec-audit (§7.48–60) + new doc conventions: (a) two nod-pending gates added to the Decisions Ledger and wired to step 1.1 — §7.40(א) unique constraints and §7.48 enable-RLS codification (the step-1.1 migration is their natural home once nodded); (b) §7.34 (archive-with-live-obligations) noted on step 3.4 as deliberately unguarded in M2; (c) the step-1.1 SQL block tagged as a 🔗 mirror of §7.21 per the new mirror convention (CLAUDE.md rule 13).
 - 07/07/2026 16:37 — Blueprint SQL updated in lockstep with the §7.21 template: all 8 `current_user_role_id()` calls in the Step-1.1 draft migration wrapped as `(select current_user_role_id())` (Supabase `auth_rls_initplan` lint fix — behavior-identical, perf-only; retroactively applied to Module 1's `users` policies in migration `20260707163709`). The Step-1.1 verify gate (textual identity with §7.21) remains valid — both sides updated together.
