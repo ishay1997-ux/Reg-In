@@ -2,7 +2,7 @@
 
 # REG-IN — לוח מצב
 
-> עודכן לאחרונה: 10/07/2026 16:44
+> עודכן לאחרונה: 10/07/2026 16:57
 > ✅ אומת-סנכרון: 10/07/2026 11:18 (regin-docs-sync — אחרי גל-הנאמנות, 0 קונפליקטים)
 > **לוח מצב-עכשיו (לא ארכיון).** מתעדכן ע"י Claude בסוף כל סשן (נאכף ב-hook). היסטוריה ונרטיב → `docs/CLAUDE_CODE_LOG.md` · שינויים מתוארכים → `docs/CHANGELOG.md`. *(התזכורות התפעוליות למטה = מצב-חי מתגלגל, לא היסטוריה.)*
 
@@ -14,7 +14,7 @@
 |---|-------|-------|:-----:|-----|-----------|
 | 0 | תשתית | ישי | ✅ | — | — |
 | 1 | משתמשים והרשאות | ישי | ✅ **מוזג ל-`dev`** (PR [#2](https://github.com/ishay1997-ux/Reg-In/pull/2)) | `ishay/module-1-permissions` (מוזג) | [ishay/01](docs/guides/ishay/01_close_module_1.md) |
-| 2 | לקוחות | **ישי** (התחלה 10/07) · עמית (המשך אפשרי) | 🔨 **בעבודה — Phase 1** (0.1–1.2 ✅ · §7.64+nod הוכרעו והוחלו 10/07 · מיגרציית 1.1 אומתה חי · הבא: 1.3 מטריצת RLS) | `ishay/module-2-customers` | [amit/06](docs/guides/amit/06_module_02_customers.md) · [מדריך מיקרו](docs/micro_guides/module-2.md) |
+| 2 | לקוחות | **ישי** (התחלה 10/07) · עמית (המשך אפשרי) | 🔨 **בעבודה — Phase 1** (0.1–1.3 ✅ · מיגרציה הוחלה+אומתה · מטריצת RLS 12/14 SQL-PASS · הבא: 1.4 סגירת-פאזה 👤) | `ishay/module-2-customers` | [amit/06](docs/guides/amit/06_module_02_customers.md) · [מדריך מיקרו](docs/micro_guides/module-2.md) |
 | 3 | הצעות מחיר | עמית | ⬜ | | [amit/07](docs/guides/amit/07_module_03_quotes.md) |
 | 4 | דיילות + Smart Match | ישי | ⬜ | | [ishay/02](docs/guides/ishay/02_module_04_hostesses.md) |
 | 5 | לוגיסטיקה | ישי | ⬜ | | [ishay/03](docs/guides/ishay/03_module_05_logistics.md) |
@@ -27,7 +27,7 @@
 | 12 | אינטגרציה והגשה (כולל פריסת Vercel) | 🤝 משותף | ⬜ | | [shared/module_12](docs/guides/shared/module_12_integration.md) |
 
 ## המסלול של ישי
-**השלב הנוכחי:** **מודול 2 (לקוחות) — התחלתי במקום עמית (10/07)**, ענף `ishay/module-2-customers` מ-dev טרי. צעד 0.1 ✅. **חבילת-ה-nod + §7.64 הוכרעו (ישי, 10/07)** — מיגרציית 1.1 (`20260710160735_…surrogate_key_rls_and_marketing`) **הוחלה+אומתה חי (10/07 16:32)** — surrogate ל-customers + nod-bundle + RLS/bucket. הבא: step 1.3 (מטריצת RLS). §7.63 נדחה ל-M6/M8. (מודול 4 = אחרי מודול 2.) *(גל חיסון-התשתית הוקפא 🧊 — ר' תזכורת למטה; PR #5 מוזג.)*
+**השלב הנוכחי:** **מודול 2 (לקוחות) — התחלתי במקום עמית (10/07)**, ענף `ishay/module-2-customers` מ-dev טרי. צעד 0.1 ✅. **חבילת-ה-nod + §7.64 הוכרעו (ישי, 10/07)** — מיגרציית 1.1 (`20260710160735_…surrogate_key_rls_and_marketing`) **הוחלה+אומתה חי (10/07)** — surrogate ל-customers + nod-bundle + RLS/bucket. **מטריצת RLS (step 1.3) רצה: 12/14 SQL-PASS** (11–12 UI→4.1; סוגר את שער-ה-RLS הדחוי של מודול 1). הבא: **step 1.4 סגירת-פאזה 👤**. §7.63 נדחה ל-M6/M8. (מודול 4 = אחרי מודול 2.) *(גל חיסון-התשתית הוקפא 🧊 — ר' תזכורת למטה; PR #5 מוזג.)*
 מפת המסלול המלאה: [docs/guides/ishay/00_track.md](docs/guides/ishay/00_track.md)
 
 ## המסלול של עמית

@@ -14,14 +14,14 @@
 | Module | 2 — Customers (לקוחות) |
 | Owner | **ישי (started 10/07)** · Amit (may continue — writer-handover on THIS branch, not a parallel branch) |
 | Branch | `ishay/module-2-customers` (created from fresh `dev` 10/07/2026, after PR #5 merged — step 0.1 ✅) |
-| **Status** | **🔨 In progress — Phase 1 (DB & RLS); 0.1–1.2 ✅. Migration 1.1 APPLIED + live-verified (10/07 16:32; §7.64 surrogate + nod-bundle + RLS/bucket). Active: step 1.3 (14-scenario RLS matrix).** |
-| Last updated | 10/07/2026 16:44 (migration 1.1 APPLIED+verified + `schema.sql`; §7.64 surrogate PK live. moddatetime moved to `extensions` — migration 20260710164420, WARN cleared. Prior — see §9) |
-| **Active step** | **1.3 — Run the deferred 14-scenario RLS matrix (1.1 migration applied+verified, 1.2 snapshot+commit done). §7.63 deferred M6/M8.** |
+| **Status** | **🔨 In progress — Phase 1 (DB & RLS); 0.1–1.3 ✅. Migration applied+verified; RLS matrix 12/14 SQL-PASS (11–12 UI→4.1). Active: step 1.4 — Phase-1 closure 👤 (human sign-off).** |
+| Last updated | 10/07/2026 16:57 (step 1.3 RLS matrix run: 12/14 SQL-PASS, 11–12 UI→4.1; closes M1's deferred gate 5.2b. Migration+moddatetime applied earlier. Active: 1.4 phase-close 👤. Prior — see §9) |
+| **Active step** | **1.4 — Phase-1 closure 👤 (human sign-off on the RLS foundation before code is built on it). 1.3 matrix passed 12/14 SQL; 11–12 UI → step 4.1.** |
 
 | Phase / step | Status |
 |---|---|
 | 0.1 Preconditions: M1 merged + branch created | ✅ done (M1 in dev `3ba5c5f`; branch `ishay/module-2-customers`; `.env.local` present) |
-| Phase 1 — DB & RLS (1.1–1.4) | 🔨 in progress (1.1 ✅ applied+verified · 1.2 ✅ snapshot+commit · 1.3 RLS matrix next · 1.4 phase-close) |
+| Phase 1 — DB & RLS (1.1–1.4) | 🔨 in progress (1.1 ✅ · 1.2 ✅ · 1.3 ✅ RLS matrix 12/14 SQL, 11–12 UI→4.1 · 1.4 phase-close 👤 next) |
 | Phase 2 — Business logic (2.1–2.2) | ⬜ pending |
 | Phase 3 — UI (3.1–3.6) | ⬜ pending |
 | Phase 4 — Control & integration (4.1–4.2) | ⬜ pending |
@@ -297,7 +297,9 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 | 13 | grant `view` on 'לקוחות' (in txn) → `select * from customers` | granted role | rows returned | ☐ |
 | 14 | same grant → `insert into customers(...)` | granted role | RLS violation (write needs `edit`) | ☐ |
 
-**Verify 🤖:** every row's "As-run evidence" filled with the actual output — then report the table in Hebrew.
+**Verify 🤖 — ✅ AS-RUN 10/07/2026 (MCP impersonation transactions, all rolled back; customers/quotes still 0 rows, logistics perm still `blocked`):**
+1 CEO select=**1**✓ · 2 logistics select=**0** (same CEO row — RLS filters)✓ · 3 logistics insert=**42501 RLS violation**✓ · 4 CEO insert **ok**✓ · 5 logistics: roles=**5**/modules=**9**✓ · 6 non-CEO perm-update=**0 rows**✓ · 7 CEO perm-update=**45 rows**✓ · 8 own-user-row=**1**✓ · 9 non-CEO users-visible=**1**✓ · 10 CEO users-visible=**7**✓ · 13 view→select=**1**✓ · 14 view→insert=**42501 denied** (write needs edit)✓.
+**11–12 = UI checks** (inactive-user login blocked · inactive rows dimmed) — deferred to step 4.1 (already covered by M1's 8 green E2E specs). **12/14 SQL-verified PASS.** Positive control (CEO=1) + negative control (logistics=0) on the SAME row prove the impersonation is real (not a broken-claims false-deny). Closes Module-1's deferred RLS gate (module-1.md step 5.2b — mark ✅ at step 5.3).
 
 #### Step 1.4 — Phase 1 closure 🔻👤
 **Goal:** human sign-off on the security foundation before code is built on it.
