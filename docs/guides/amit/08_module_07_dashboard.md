@@ -46,6 +46,7 @@
 קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=7 · MODULE_NAME=מסך הבית / Dashboard · RELEVANT_SECTIONS=§5.2, §7.9/18 · BRANCH_NAME=amit/module-7-dashboard
 
+חובה: "שאלות פתוחות" מסעיף ② במדריך שלי = פריטי §7, מנותבות לישי להכרעה (§7 = ישי, כלל 1) — אל תכריע בהן לבד.
 הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-7.md.
 ```
 

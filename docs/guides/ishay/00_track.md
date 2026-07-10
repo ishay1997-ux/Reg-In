@@ -9,8 +9,8 @@
 |---|-----|------|------|
 | 0 | תשתית | — | ✅ הושלם |
 | 1 | בניית מודול 1 (הרשאות) | `docs/micro_guides/module-1.md` | ✅ הושלם |
-| 1.5 | **סגירת מודול 1** | [01_close_module_1.md](01_close_module_1.md) | 🔨 **כאן אתה עומד** — נותר: פתיחת PR ומיזוג |
-| 4 | מודול 4 — דיילות + Smart Match | [02_module_04_hostesses.md](02_module_04_hostesses.md) | ⬜ |
+| 1.5 | **סגירת מודול 1** | [01_close_module_1.md](01_close_module_1.md) | ✅ הושלם — מוזג ל-`dev` (PR #2) |
+| 4 | מודול 4 — דיילות + Smart Match | [02_module_04_hostesses.md](02_module_04_hostesses.md) | 🔨 **כאן אתה עומד** — הבא, אחרי הקפאת-התשתית |
 | 5 | מודול 5 — לוגיסטיקה | [03_module_05_logistics.md](03_module_05_logistics.md) | ⬜ |
 | 6 | 🤝 מודול 6 — פרויקטים (עם עמית) | [../shared/module_06_projects.md](../shared/module_06_projects.md) | ⬜ בין שלב 5 לשלב 9 |
 | 9 | מודול 9 — הגדרות מערכת | [04_module_09_settings.md](04_module_09_settings.md) | ⬜ |

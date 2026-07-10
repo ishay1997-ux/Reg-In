@@ -35,7 +35,7 @@
 
 ## ④ החלק שלך
 
-1. אמת עם ישי את §7.1 ו-§7.12 — אל תתחיל את ה-Seed בלעדיהן.
+1. §7.1 ו-§7.12 כבר מוכרעים (ר' ②) — ישם לפי §7, אל תשאל מחדש. השאלות שעדיין פתוחות (§7.49–53 וכו', ר' ②) מנותבות לישי להכרעה, לא מוכרעות לבד.
 2. `git checkout -b amit/module-3-quotes`.
 3. הדבק פרומפט, אשר בלופרינט, בנה.
 
@@ -62,6 +62,7 @@ docs/reference_spec/products_and_params.md ו-docs/PROJECT_MASTER.md (סעיפי
 קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=3 · MODULE_NAME=הצעות מחיר · RELEVANT_SECTIONS=§5.4-5.5, §7.1/12/13/25/26/27/28/42 · BRANCH_NAME=amit/module-3-quotes
 
+חובה: "שאלות פתוחות" מסעיף ② במדריך שלי = פריטי §7, מנותבות לישי להכרעה (§7 = ישי, כלל 1) — אל תכריע בהן לבד.
 הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-3.md.
 ```
 
