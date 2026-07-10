@@ -72,7 +72,7 @@ MODULE_NUMBER=2 · MODULE_NAME=לקוחות · RELEVANT_SECTIONS=§5.3, §7.3/11
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-2.md.
 קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
-MODULE_NUMBER=2 · MODULE_NAME=לקוחות · BRANCH_NAME=amit/module-2-customers
+MODULE_NUMBER=2 · MODULE_NAME=לקוחות · BRANCH_NAME=<הענף כפי שמופיע בכותרת ה-Live Status Header של docs/micro_guides/module-2.md — לא קשיח, כדי לשרוד העברת-כותב; כרגע ishay/module-2-customers>
 בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
 בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.
 ```
