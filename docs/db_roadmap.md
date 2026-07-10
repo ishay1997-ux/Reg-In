@@ -203,7 +203,6 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | Hostess availability = absence of date-conflict in assignments | spec-explicit (C5:756); no calendar entity | business asks for availability preferences/vacations |
 | Single KV `params` for templates+integration | small, editable via M9 UI | §7.70 decides split; template versioning demanded |
 | `quotes.pdf_url` column stays (unused) | dropping is churn (§7.12) | §7.71 cleanup batch at M12 |
-| `moddatetime` extension in `public` schema (migration `20260710160735`) | advisor WARN only; functional; common Supabase pattern | a security audit requires it → 1-line `alter extension moddatetime set schema extensions` |
 
 ## 9. Known reference-spec defects (C5/C6 read with a grain of salt — verified 08/07/2026)
 
@@ -242,4 +241,5 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
-- 10/07/2026 — migration `20260710160735` applied: **§7.64 customers surrogate PK** · **A-8** enable-RLS (10 business tables) · **A-13** timestamps+moddatetime (11 tables) · **§7.40(א)** roles/modules UNIQUE · **§7.62** users.role_id NOT NULL · **§7.21** customers 2 policies + marketing bucket + 4 storage policies. New advisor: moddatetime-in-public (accepted — §8).
+- 10/07/2026 — migration `20260710160735` applied: **§7.64 customers surrogate PK** · **A-8** enable-RLS (10 business tables) · **A-13** timestamps+moddatetime (11 tables) · **§7.40(א)** roles/modules UNIQUE · **§7.62** users.role_id NOT NULL · **§7.21** customers 2 policies + marketing bucket + 4 storage policies.
+- 10/07/2026 — migration `20260710164420` applied: moddatetime extension moved `public`→`extensions` (advisor `extension_in_public` cleared; 11 triggers intact). Advisors back to baseline accepted set, zero new.

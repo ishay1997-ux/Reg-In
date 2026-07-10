@@ -330,8 +330,8 @@ revoke execute on function reset_login_attempts() from anon;
 -- ============================================================
 -- created_at/updated_at + טריגר moddatetime נוספו ל-11 הטבלאות העסקיות (customers, products, price_tiers,
 -- params, quotes, quote_services, projects, hostesses, salary_reports, assignments, logistics).
--- מוצג inline ל-customers/quotes; ליתר 9 — הדפוס למטה. התוסף moddatetime ב-schema public
--- (advisor WARN extension_in_public — מקובל; תיקון-עתידי אופציונלי: alter extension moddatetime set schema extensions).
+-- מוצג inline ל-customers/quotes; ליתר 9 — הדפוס למטה. התוסף moddatetime הועבר ל-schema `extensions`
+-- (מיגרציה 20260710164420 — מ-public לפי המלצת Supabase; 11 הטריגרים נקשרים ל-OID ונשארו תקינים).
 
 -- §7.40(א): ייחודיות מפתחות-המחרוזת שכל ה-RLS משווה כמחרוזת
 alter table roles   add constraint roles_role_name_key     unique (role_name);
@@ -353,7 +353,7 @@ alter table assignments enable row level security;
 alter table logistics enable row level security;
 
 -- §7.73: הדפוס לכל אחת מ-9 הטבלאות שלא-מוצגות-inline למעלה:
-create extension if not exists moddatetime;   -- ב-public (WARN מקובל)
+create extension if not exists moddatetime with schema extensions;   -- schema ייעודי (advisor extension_in_public)
 --   alter table <t> add column created_at timestamptz not null default now();
 --   alter table <t> add column updated_at timestamptz not null default now();
 --   create trigger <t>_set_updated_at before update on <t> for each row execute function moddatetime(updated_at);

@@ -15,7 +15,7 @@
 | Owner | **ישי (started 10/07)** · Amit (may continue — writer-handover on THIS branch, not a parallel branch) |
 | Branch | `ishay/module-2-customers` (created from fresh `dev` 10/07/2026, after PR #5 merged — step 0.1 ✅) |
 | **Status** | **🔨 In progress — Phase 1 (DB & RLS); 0.1–1.2 ✅. Migration 1.1 APPLIED + live-verified (10/07 16:32; §7.64 surrogate + nod-bundle + RLS/bucket). Active: step 1.3 (14-scenario RLS matrix).** |
-| Last updated | 10/07/2026 16:35 (migration 1.1 APPLIED via MCP + live-verified + `schema.sql` snapshot; §7.64 surrogate PK live. moddatetime-in-public WARN accepted. Prior history — see §9) |
+| Last updated | 10/07/2026 16:44 (migration 1.1 APPLIED+verified + `schema.sql`; §7.64 surrogate PK live. moddatetime moved to `extensions` — migration 20260710164420, WARN cleared. Prior — see §9) |
 | **Active step** | **1.3 — Run the deferred 14-scenario RLS matrix (1.1 migration applied+verified, 1.2 snapshot+commit done). §7.63 deferred M6/M8.** |
 
 | Phase / step | Status |
