@@ -12,16 +12,16 @@
 | Field | Value |
 |---|---|
 | Module | 2 — Customers (לקוחות) |
-| Owner | Amit |
-| Branch | `amit/module-2-customers` (create from `dev` **after** Module 1 merges — step 0.1) |
-| **Status** | **⬜ Not started — blocked on precondition P0 (Module 1 PR/merge pending, STATUS.md)** |
-| Last updated | 10/07/2026 10:44 (semantic-review pass — council+critics+spec-fidelity: Test-Identities block · phone free-form (spec-faithful) · gross-profit placeholder · 3 new §7 items anchored · typed-echo/storage-fallback/grep fixes. Prior history — see §9) |
-| **Active step** | **0.1 — Preconditions** |
+| Owner | **ישי (started 10/07)** · Amit (may continue — writer-handover on THIS branch, not a parallel branch) |
+| Branch | `ishay/module-2-customers` (created from fresh `dev` 10/07/2026, after PR #5 merged — step 0.1 ✅) |
+| **Status** | **🔨 In progress — Phase 1 (DB & RLS); step 0.1 done, step 1.1 gated on the nod-bundle 👤 (Ishay)** |
+| Last updated | 10/07/2026 11:56 (module 2 STARTED by Ishay: PR #5 merged to `dev` `5ddb002`, branch created, preconditions passed. Next: Phase-1 nod-bundle decision. Prior history — see §9) |
+| **Active step** | **1.1 — Write the migration (BLOCKED on the nod-bundle 👤 decision — §7.40(א)/48/62/73 + §7.63 direction)** |
 
 | Phase / step | Status |
 |---|---|
-| 0.1 Preconditions: M1 merged + branch created | ❌ blocked (M1 awaiting PR/merge) |
-| Phase 1 — DB & RLS (1.1–1.4) | ⬜ pending |
+| 0.1 Preconditions: M1 merged + branch created | ✅ done (M1 in dev `3ba5c5f`; branch `ishay/module-2-customers`; `.env.local` present) |
+| Phase 1 — DB & RLS (1.1–1.4) | 🔨 in progress (1.1 gated on nod-bundle) |
 | Phase 2 — Business logic (2.1–2.2) | ⬜ pending |
 | Phase 3 — UI (3.1–3.6) | ⬜ pending |
 | Phase 4 — Control & integration (4.1–4.2) | ⬜ pending |
