@@ -14,15 +14,15 @@
 | Module | 2 — Customers (לקוחות) |
 | Owner | **ישי (started 10/07)** · Amit (may continue — writer-handover on THIS branch, not a parallel branch) |
 | Branch | `ishay/module-2-customers` (created from fresh `dev` 10/07/2026, after PR #5 merged — step 0.1 ✅) |
-| **Status** | **🔨 In progress — Phase 1 (DB & RLS); 0.1–1.3 ✅. Migration applied+verified; RLS matrix 12/14 SQL-PASS (11–12 UI→4.1). Active: step 1.4 — Phase-1 closure 👤 (human sign-off).** |
+| **Status** | **🔨 In progress — Phase 1 ✅. Phase 2: 2.1 ✅ (`customers.js` + validators + 32 unit tests green). Active: step 2.2 — module API layer (`src/modules/02_customers/api.js`).** |
 | Last updated | 10/07/2026 16:57 (step 1.3 RLS matrix run: 12/14 SQL-PASS, 11–12 UI→4.1; closes M1's deferred gate 5.2b. Migration+moddatetime applied earlier. Active: 1.4 phase-close 👤. Prior — see §9) |
-| **Active step** | **1.4 — Phase-1 closure 👤 (human sign-off on the RLS foundation before code is built on it). 1.3 matrix passed 12/14 SQL; 11–12 UI → step 4.1.** |
+| **Active step** | **2.2 — Module API layer: `src/modules/02_customers/api.js` (ALL Supabase queries of the module — iron rule 14). (2.1 done: customers.js + validators + 32 tests. M1 gate 5.2b → mark at 5.3.)** |
 
 | Phase / step | Status |
 |---|---|
 | 0.1 Preconditions: M1 merged + branch created | ✅ done (M1 in dev `3ba5c5f`; branch `ishay/module-2-customers`; `.env.local` present) |
-| Phase 1 — DB & RLS (1.1–1.4) | 🔨 in progress (1.1 ✅ · 1.2 ✅ · 1.3 ✅ RLS matrix 12/14 SQL, 11–12 UI→4.1 · 1.4 phase-close 👤 next) |
-| Phase 2 — Business logic (2.1–2.2) | ⬜ pending |
+| Phase 1 — DB & RLS (1.1–1.4) | ✅ done (1.1–1.4; migration applied+verified; RLS matrix 12/14 SQL, 11–12 UI→4.1; Ishay signed 1.4 10/07) |
+| Phase 2 — Business logic (2.1–2.2) | 🔨 in progress (2.1 ✅ customers.js+validators+32 tests · 2.2 active) |
 | Phase 3 — UI (3.1–3.6) | ⬜ pending |
 | Phase 4 — Control & integration (4.1–4.2) | ⬜ pending |
 | Phase 5 — QA & handoff (5.1–5.4) | ⬜ pending |
@@ -316,7 +316,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 **Goal:** every business rule of the module exists exactly once, unit-tested, before any UI.
 **Files:** `src/lib/customers.js` (new), `src/lib/customers.test.js` (new), `src/lib/validators.js` + `src/lib/validators.test.js` (extend).
 **What:** `CUSTOMER_TYPE_LABELS` (§7.3 ruling — the 4 spec labels keyed by enum) · `matchesCustomerFilters(customer, filters)` (type/consent/min-discount + free-text that matches company_name alone, contact_name alone, or a ח"פ **prefix** — the §7.11 forgiving-search ruling; written here so M3's quote-flow customer picker reuses it) · `sortCustomers(customers, key, dir)` (client-side sort by company_name/customer_type/discount_percent/status — consumed by step 3.3's column-header sort; unit-tested here so the UI never re-implements the comparator) · `deriveCustomerMetrics(projects)` → `{totalRevenue: null, grossProfit: null, avgFeedback: number|null}` (feedback avg from `projects.feedback_score` when data exists; **totalRevenue AND grossProfit return null** with a comment — totalRevenue → M3 pricing SSOT, grossProfit → M7 profitability (§7.79); NO revenue/profit formula here) · validators: `COMPANY_ID_REGEX = /^[0-9]{9}$/` + a discount 0–100 helper. ⚠️ **Customer phone = FREE-FORM — do NOT add/apply `ISRAELI_PHONE_REGEX` for customers** (spec sets no format; non-empty check only — decision-Ishay 10/07, §2 validators note).
-**Verify 🤖:** `npm run test:run` → all green (existing 16 + new).
+**Verify 🤖 — ✅ AS-RUN 10/07/2026:** `npm run test:run` → **32 passed** (16 existing + 16 new: `CUSTOMER_TYPE_LABELS` · `matchesCustomerFilters` §7.11 · `sortCustomers` · `deriveCustomerMetrics` null-revenue/profit · `COMPANY_ID_REGEX` · `isValidDiscountPercent`). Files prettier-clean + eslint-clean (lint passed). ⚠️ **repo-wide `format:check` fails locally on Windows only** — `git ls-files --eol` = `i/lf w/crlf` (CRLF working-tree, LF in git); Prettier diff is line-endings only. **CI (Linux/LF) unaffected — do NOT mass-reformat.**
 
 #### Step 2.2 — Module API layer 🔻🤖
 **Goal:** all Supabase access of the module concentrated in one file (iron rule 14).
