@@ -65,6 +65,9 @@ export function sortCustomers(customers, key, dir = 'asc') {
 // totalRevenue מגיע מ-SSOT-התמחור של מודול 3 (src/lib/pricing.js), grossProfit מרווחיות מודול 7
 // (§7.79) — אין כאן נוסחת-הכנסה/רווח (כלל 14: לא משכפלים; המקור הוא המודול האחראי).
 // avgFeedback נגזר מ-projects.feedback_score כשיש נתונים (מודול 8 ימלא), אחרת null.
+// 🚧 מ3 · 🚧 מ7 · 🚧 מ8 — חוב חוצה-מודולים רשום ב-PROJECT_MASTER §6 ("השלמות כרטיס לקוח"):
+// מ3 מחבר totalRevenue (דרך pricing.js) · מ7 מחבר grossProfit (§7.79) · מ8 ממלא feedback_score.
+// פרומפט-הפתיחה של כל מודול-יעד גורף `grep '🚧 מ<מספרו>' §6` וחוזר לחווט כאן — כלל ברזל 15.
 export function deriveCustomerMetrics(projects = []) {
   const scores = projects
     .map((p) => p?.feedback_score)

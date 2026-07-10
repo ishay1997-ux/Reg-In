@@ -2,7 +2,7 @@
 
 # REG-IN — לוח מצב
 
-> עודכן לאחרונה: 10/07/2026 17:46
+> עודכן לאחרונה: 10/07/2026 19:26
 > ✅ אומת-סנכרון: 10/07/2026 11:18 (regin-docs-sync — אחרי גל-הנאמנות, 0 קונפליקטים)
 > **לוח מצב-עכשיו (לא ארכיון).** מתעדכן ע"י Claude בסוף כל סשן (נאכף ב-hook). היסטוריה ונרטיב → `docs/CLAUDE_CODE_LOG.md` · שינויים מתוארכים → `docs/CHANGELOG.md`. *(התזכורות התפעוליות למטה = מצב-חי מתגלגל, לא היסטוריה.)*
 
@@ -14,7 +14,7 @@
 |---|-------|-------|:-----:|-----|-----------|
 | 0 | תשתית | ישי | ✅ | — | — |
 | 1 | משתמשים והרשאות | ישי | ✅ **מוזג ל-`dev`** (PR [#2](https://github.com/ishay1997-ux/Reg-In/pull/2)) | `ishay/module-1-permissions` (מוזג) | [ishay/01](docs/guides/ishay/01_close_module_1.md) |
-| 2 | לקוחות | **ישי** (התחלה 10/07) · עמית (המשך אפשרי) | 🔨 **בעבודה — Phase 2** (Phase 1 ✅ נסגר · 2.1 ✅ customers.js+validators+32 בדיקות · הבא: 2.2 api.js) | `ishay/module-2-customers` | [amit/06](docs/guides/amit/06_module_02_customers.md) · [מדריך מיקרו](docs/micro_guides/module-2.md) |
+| 2 | לקוחות | **ישי** (התחלה 10/07) · עמית (המשך אפשרי) | 🔨 **בעבודה — Phase 2 ✅ הושלם** (2.1 customers.js+validators+32 בדיקות · 2.2 api.js — 9 שאילתות · עומד ב-🔻👤 שער-סוף-פזה → הבא Phase 3 UI) | `ishay/module-2-customers` | [amit/06](docs/guides/amit/06_module_02_customers.md) · [מדריך מיקרו](docs/micro_guides/module-2.md) |
 | 3 | הצעות מחיר | עמית | ⬜ | | [amit/07](docs/guides/amit/07_module_03_quotes.md) |
 | 4 | דיילות + Smart Match | ישי | ⬜ | | [ishay/02](docs/guides/ishay/02_module_04_hostesses.md) |
 | 5 | לוגיסטיקה | ישי | ⬜ | | [ishay/03](docs/guides/ishay/03_module_05_logistics.md) |
@@ -27,7 +27,7 @@
 | 12 | אינטגרציה והגשה (כולל פריסת Vercel) | 🤝 משותף | ⬜ | | [shared/module_12](docs/guides/shared/module_12_integration.md) |
 
 ## המסלול של ישי
-**השלב הנוכחי:** **מודול 2 (לקוחות) — התחלתי במקום עמית (10/07)**, ענף `ishay/module-2-customers` מ-dev טרי. צעד 0.1 ✅. **חבילת-ה-nod + §7.64 הוכרעו (ישי, 10/07)** — מיגרציית 1.1 (`20260710160735_…surrogate_key_rls_and_marketing`) **הוחלה+אומתה חי (10/07)** — surrogate ל-customers + nod-bundle + RLS/bucket. מטריצת RLS 12/14 SQL-PASS. **Phase 1 נסגר (חתימת-ישי, step 1.4).** **Phase 2: 2.1 ✅** (`src/lib/customers.js` + validators + 32 בדיקות ירוקות). הבא: **step 2.2 (`api.js`)**. §7.63 נדחה ל-M6/M8. (מודול 4 = אחרי מודול 2.) *(גל חיסון-התשתית הוקפא 🧊 — ר' תזכורת למטה; PR #5 מוזג.)*
+**השלב הנוכחי:** **מודול 2 (לקוחות) — התחלתי במקום עמית (10/07)**, ענף `ishay/module-2-customers` מ-dev טרי. צעד 0.1 ✅. **חבילת-ה-nod + §7.64 הוכרעו (ישי, 10/07)** — מיגרציית 1.1 (`20260710160735_…surrogate_key_rls_and_marketing`) **הוחלה+אומתה חי (10/07)** — surrogate ל-customers + nod-bundle + RLS/bucket. מטריצת RLS 12/14 SQL-PASS. **Phase 1 נסגר (חתימת-ישי, step 1.4).** **Phase 2 ✅ הושלם** — 2.1 (`src/lib/customers.js` + validators + 32 בדיקות ירוקות) + 2.2 (`src/modules/02_customers/api.js` — 9 שאילתות המודול, כלל 14; lint 0-err · `from('customers')` מרוכז · prettier נקי · **בדיקה-מלאה 19:26: 32/32 · build ✓ · DoD-grep 0**). מצביעי-🚧 בקוד (מ6/מ10/מ3/מ7/מ8) + `supabase/README.md` רוענן (2 שורות-מיגרציה + פער-מספור remote). **עומד ב-🔻👤 שער-סוף-Phase-2 לחתימת-ישי;** פתיחת Phase 3 (UI) תיפתח בסבב-P13 (§7.36/79/80/65/34 + confirm-intent מוקאפ). §7.63 נדחה ל-M6/M8. (מודול 4 = אחרי מודול 2.) *(גל חיסון-התשתית הוקפא 🧊 — ר' תזכורת למטה; PR #5 מוזג.)*
 מפת המסלול המלאה: [docs/guides/ishay/00_track.md](docs/guides/ishay/00_track.md)
 
 ## המסלול של עמית

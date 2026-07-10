@@ -23,10 +23,18 @@
 | `20260702195258_harden_current_user_role_id.sql` | remote | הקשחת search_path + revoke |
 | `20260703071534_module1_login_attempts_lockout.sql` | remote | טבלת נעילת-חשבון + 3 פונקציות |
 | `20260703071740_module1_reset_login_attempts_revoke_anon.sql` | remote | least-privilege ל-reset |
-| `20260707163709_module1_users_rls_initplan_select_wrap.sql` | חדש (07/07, הוחל ב-MCP) | עטיפת `(select …)` ב-2 ה-policies של users — תיקון לינט `auth_rls_initplan` |
+| `20260707163709_module1_users_rls_initplan_select_wrap.sql` | חדש (07/07, הוחל ב-MCP; ‏remote: `20260707133754`) | עטיפת `(select …)` ב-2 ה-policies של users — תיקון לינט `auth_rls_initplan` |
+| `20260710160735_module2_customers_surrogate_key_rls_and_marketing.sql` | חדש (10/07, הוחל ב-MCP; ‏remote: `20260710132720`) | מודול 2: ‏§7.64 מפתח-surrogate ל-customers (ח"פ→`company_number`) + חבילת-nod (‏§7.40א/48/62/73) + ‏2 ‏policies ל-customers (תבנית §7.21) + ‏bucket ‏`marketing` + ‏4 ‏policies ל-storage |
+| `20260710164420_module2_moddatetime_to_extensions_schema.sql` | חדש (10/07, הוחל ב-MCP; ‏remote: `20260710134449`) | העברת `moddatetime` מ-`public` ל-`extensions` (תיקון advisor `extension_in_public`; ‏11 הטריגרים נקשרים ל-OID ולכן נשארו תקינים) |
 
 הרצת baseline → המיגרציות שאחריו לפי הסדר משחזרת בדיוק את המצב הנוכחי. ⚠️ אין להריץ אותן שוב על
 ה-DB הקיים — רק על DB ריק (branch/staging).
+
+> ⚠️ **פער-מספור מקומי↔remote (מיגרציות שהוחלו ב-MCP):** ‏`apply_migration` של ה-MCP חותם את
+> הגרסה ב-remote לפי שעת-UTC, בעוד שם-הקובץ המקומי נקבע לפי השעון המקומי (ישראל, ‏UTC+3) —
+> לכן שלוש המיגרציות האחרונות רשומות ב-remote תחת גרסה שונה משם-הקובץ (מפורט בטבלה).
+> ה-SQL זהה; רק המספר שונה. בעת `supabase migration list`/`repair` יש ליישר לפי העמודה
+> "remote" בטבלה למעלה, לא לפי שם-הקובץ. (אומת חי ב-MCP ‏`list_migrations`, ‏10/07/2026.)
 
 ## סנכרון ההיסטוריה (צעד ידני חד-פעמי, כשתקשר את ה-CLI)
 
@@ -36,8 +44,11 @@
 ```bash
 supabase link --project-ref yfeovxppnfoafmfbdfvh
 supabase migration repair --status applied 20260629000000
-supabase migration list          # אימות: כל 7 מסומנים applied בשני הצדדים
+supabase migration list          # אימות: כל המיגרציות מסומנות applied בשני הצדדים
 ```
+
+בנוסף, בגלל פער-המספור המקומי↔remote (ההערה למעלה), שלוש המיגרציות שהוחלו ב-MCP יופיעו
+כ"לא-מיושרות" ב-`migration list` — מיישרים לפי גרסאות-ה-remote שבטבלה (rename מקומי או `repair`).
 
 ## רוטינת שינוי DB (מכאן והלאה)
 
