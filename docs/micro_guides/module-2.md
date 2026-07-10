@@ -263,6 +263,7 @@ create policy "marketing_delete_by_permission" on storage.objects for delete to 
 **Files:** `docs/schema.sql` (update), the step-1.1 migration (commit).
 **What:** (a) pre-check: `select count(*) from customers;` **and `select count(*) from quotes;`** (MCP execute_sql) → **both** must be `0` (the §7.64 surrogate surgery + `quotes.customer_id` type-change require empty tables); if non-zero — STOP, consult Ishay (fallback: add constraints as `not valid` + `validate constraint` after cleanup). (b) Apply via Supabase CLI (`supabase db push`) or MCP `apply_migration` (authorized by the **typed-echo** from the 1.1 gate — a plain 1.1 approval is not enough). (c) Update `docs/schema.sql` by appending the new DDL into the documented snapshot in its existing comment style (it is a curated, commented snapshot — do NOT overwrite it with a raw dump; Studio "Generate schema SQL" is the manual alternative). Note: `storage.*` objects won't appear in the public-schema snapshot — add them as a commented block; their source of truth is the migration file + CHANGELOG DB line. (d) Commit **migration + snapshot together**: `git commit -m "db: מודול 2 — RLS ללקוחות לפי תבנית §7.21 + bucket שיווק + עדכון schema snapshot"`.
 **Verify 🤖:** `select policyname from pg_policies where tablename='customers';` → exactly `customers_select_by_permission`, `customers_write_by_permission` · `select policyname from pg_policies where schemaname='storage' and tablename='objects' and policyname like 'marketing_%';` → exactly the 4 names from 1.1 · `select count(*) from storage.buckets where id='marketing';` → 1 · **PK check → `customer_id / bigint`; `company_number` unique+not-null+9-digit check present; FK `quotes_customer_id_fkey` on bigint** · `git show --stat HEAD` lists both the migration and `docs/schema.sql`.
+**✅ AS-RUN 10/07/2026:** applied via MCP `apply_migration` (remote version `20260710132720`) after the typed-echo. Live-verified: customers PK=`customer_id`/**bigint** · `company_number` unique+not-null+9-digit ✓ · **2** customers policies + **4** `marketing_*` storage policies ✓ · `marketing` bucket=1 ✓ · `quotes.customer_id`=bigint + FK ✓ · **11** moddatetime triggers · `users.role_id` NOT NULL ✓. Storage policies applied live (no 42501). Committed with `schema.sql` in **`edaae68`**; follow-up **`2da6d5e`** moved moddatetime→`extensions` (advisor `extension_in_public` cleared; advisors = baseline accepted, zero new).
 
 #### Step 1.3 — Run the deferred 12(+2)-scenario RLS matrix 🔻🤖
 **Goal:** close Module 1's formally-deferred gate (module-1.md step 5.2b) — now possible because `customers` has policies; plus the approved view-tier scenarios 13–14.
@@ -282,20 +283,20 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 
 | # | Action | Actor (role) | Expected | As-run evidence |
 |---|---|---|---|---|
-| 1 | `select * from customers` | מנכ"ל | returns the row from #4 | ☐ |
-| 2 | `select * from customers` | מנהלת לוגיסטיקה (blocked) | 0 rows | ☐ |
-| 3 | `insert into customers(...)` | מנהלת לוגיסטיקה (blocked) | RLS violation error | ☐ |
-| 4 | `insert into customers(...)` | מנכ"ל | succeeds | ☐ |
-| 5 | `select * from roles; select * from modules;` | every role | rows for all | ☐ |
-| 6 | `update permissions set ...` | non-CEO | 0 rows updated | ☐ |
-| 7 | same update | מנכ"ל | succeeds (inside rollback!) | ☐ |
-| 8 | `select * from users where email = auth.email()` | any role | exactly own row | ☐ |
-| 9 | `select * from users` | non-CEO | own row only | ☐ |
-| 10 | `select * from users` | מנכ"ל | all users incl. inactive | ☐ |
-| 11 | Login attempt in the app | inactive user | blocked at LoginPage with red error (UI check) | ☐ |
-| 12 | Users management screen | מנכ"ל | inactive users shown **dimmed** (per M1 as-built ruling — supersedes the old table's "filtered out" wording) | ☐ |
-| 13 | grant `view` on 'לקוחות' (in txn) → `select * from customers` | granted role | rows returned | ☐ |
-| 14 | same grant → `insert into customers(...)` | granted role | RLS violation (write needs `edit`) | ☐ |
+| 1 | `select * from customers` | מנכ"ל | returns the row from #4 | ✅ **1 row** (CEO sees own insert) |
+| 2 | `select * from customers` | מנהלת לוגיסטיקה (blocked) | 0 rows | ✅ **0** (RLS filters the CEO row) |
+| 3 | `insert into customers(...)` | מנהלת לוגיסטיקה (blocked) | RLS violation error | ✅ **42501** new-row-violates-RLS |
+| 4 | `insert into customers(...)` | מנכ"ל | succeeds | ✅ **inserted** (count→1) |
+| 5 | `select * from roles; select * from modules;` | every role | rows for all | ✅ **roles=5, modules=9** (logistics) |
+| 6 | `update permissions set ...` | non-CEO | 0 rows updated | ✅ **0 rows** |
+| 7 | same update | מנכ"ל | succeeds (inside rollback!) | ✅ **45 rows** (in rollback) |
+| 8 | `select * from users where email = auth.email()` | any role | exactly own row | ✅ **1** (own row) |
+| 9 | `select * from users` | non-CEO | own row only | ✅ **1** (own only) |
+| 10 | `select * from users` | מנכ"ל | all users incl. inactive | ✅ **7** (all users) |
+| 11 | Login attempt in the app | inactive user | blocked at LoginPage with red error (UI check) | ⏳ **UI → step 4.1** (covered by M1's green E2E) |
+| 12 | Users management screen | מנכ"ל | inactive users shown **dimmed** (per M1 as-built ruling — supersedes the old table's "filtered out" wording) | ⏳ **UI → step 4.1** (covered by M1's green E2E) |
+| 13 | grant `view` on 'לקוחות' (in txn) → `select * from customers` | granted role | rows returned | ✅ **1 row** (view grants SELECT) |
+| 14 | same grant → `insert into customers(...)` | granted role | RLS violation (write needs `edit`) | ✅ **42501** denied (write needs edit) |
 
 **Verify 🤖 — ✅ AS-RUN 10/07/2026 (MCP impersonation transactions, all rolled back; customers/quotes still 0 rows, logistics perm still `blocked`):**
 1 CEO select=**1**✓ · 2 logistics select=**0** (same CEO row — RLS filters)✓ · 3 logistics insert=**42501 RLS violation**✓ · 4 CEO insert **ok**✓ · 5 logistics: roles=**5**/modules=**9**✓ · 6 non-CEO perm-update=**0 rows**✓ · 7 CEO perm-update=**45 rows**✓ · 8 own-user-row=**1**✓ · 9 non-CEO users-visible=**1**✓ · 10 CEO users-visible=**7**✓ · 13 view→select=**1**✓ · 14 view→insert=**42501 denied** (write needs edit)✓.
