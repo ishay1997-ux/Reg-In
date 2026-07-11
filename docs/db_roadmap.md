@@ -111,7 +111,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | §7.63 | column-level ownership vs row-level RLS (projects finance columns; hostesses bank/ת"ז) | 🔴 | direction before M2 policies |
 | §7.67 | assignment → service-line/shift lineage (unblocks §7.19/29/30) | 🔴 | M4 blueprint |
 | §7.72 | change-order data home / single project-line entity (logistics⟷quote_services lineage) | 🔴 | M6 (direction earlier helps M5) |
-| §7.78 | financial snapshot as a unit: decide §7.51 (VAT) + §7.28 (cost) + §7.52 (profit) together | 🔴 | M3 (VAT part) / M6/8 |
+| §7.78 | financial snapshot as a unit — **converging (RULED 11/07):** VAT snapshot-at-approval (§7.51) · final-profit stored-₪-at-closure, expected derived live (§7.52 two-figure) · cost frozen (§7.28). Frame: price-side freezes at approval, actuals-side at closure; M6/8 ratify | 🔴 | M6/8 (M3 VAT part RULED) |
 | §7.68 | salary report as a document: `period` UNIQUE + frozen line snapshots (absorbs §7.46 edge) |  | M8 |
 | §7.61 | unified Storage plan: buckets + `storage.objects` policies (private+signed URLs?) |  | direction at M6; first bucket M2 |
 
@@ -119,9 +119,9 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 
 | Ref | Question (label) | Decide before |
 |---|---|---|
-| §7.49 + §7.76 | quote→project conversion RPC (atomicity; copies event-identity snapshot) | M3 |
-| §7.50 + §7.77 | DB-level lock: approved quote + closed/archived project card (column-granular — ties §7.63) | M3 / 6 |
-| §7.53 | hostess-count CHECK >0 → ≥0 (site/tags-only events) | M3/6 |
+| §7.49 + §7.76 | quote→project conversion RPC — **RULED 11/07 (Ishay): atomic RPC, all-or-nothing; project born-complete incl. identity snapshot; approval stays human-in-loop (no email approve button — deferred M10+)** | M3 (execute) |
+| §7.50 + §7.77 | DB-level lock — **§7.50 RULED 11/07 (Ishay): trigger blocks UPDATE/DELETE on approved quotes+quote_services (may share the §7.49 migration)**; §7.77 (project close-lock, column-granular — ties §7.63) still open | M3 (execute §7.50) / 6 |
+| §7.53 | ~~hostess-count CHECK >0 → ≥0~~ — **CLOSED 11/07 (Ishay): "אין אירוע בלי דיילות" — CHECK >0 stays, no schema change** | — |
 | §7.30 | multi-day / cross-midnight events representation | M3/4 |
 | §7.55 | event-side coordinates + geocode service choice + NULL rule | M4 |
 | §7.65 | business-email uniqueness (hostesses UNIQUE? customers open) | M2/4 |
@@ -172,9 +172,9 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | products | unit/category CHECKs exist; sku stays natural PK + **ON UPDATE CASCADE — RULED §7.64 (10/07)**, exec M3 · seed (A-12) |
 | price_tiers | seed (A-12) · sanity CHECKs min_qty>0/max≥min (§7.41 bundle) |
 | params | UNIQUE (§7.40) · typed+history (§7.70) · seed (A-12) · ghost param (§7.57) |
-| quotes | NOT NULL customer_id (A-14) · vat_rate_snapshot (§7.51/§7.78) · lock (§7.50) · CHECK ≥0 (§7.53) · expiry anchor (A-13/§7.42) · pdf_url drop (§7.71) · discounts CHECK (A-9) |
+| quotes | NOT NULL customer_id (A-14) · vat_rate_snapshot (**§7.51 RULED 11/07**) · lock (**§7.50 RULED 11/07**) · conversion RPC atomic + identity snapshot (**§7.49+76 RULED 11/07**) · ~~CHECK ≥0 (§7.53)~~ **closed 11/07 — stays >0** · expiry anchor (A-13/§7.42) · pdf_url drop (§7.71) · discounts CHECK (A-9) |
 | quote_services | closing_unit_cost (§7.47-mirror) · color/reason enums (§7.41) · change-order model (§7.72) |
-| projects | §7.47-mirror ×2 (times, cancelled_at) · NOT NULL owner/quote_id (A-14) · finance-column ownership 🔴 (§7.63) · name snapshot (§7.76) · close-lock (§7.77) · profit stored? (§7.52) · coords (§7.55) · multi-day (§7.30) |
+| projects | §7.47-mirror ×2 (times, cancelled_at) · NOT NULL owner/quote_id (A-14) · finance-column ownership 🔴 (§7.63) · name snapshot (**§7.76 RULED 11/07** — inside the §7.49 RPC) · close-lock (§7.77) · profit stored (**§7.52 RULED 11/07**: final ₪ stored at closure; expected derived live; % display-derived) · coords (§7.55) · multi-day (§7.30) |
 | hostesses | §7.47-mirror (address/coords) · bank-column protection 🔴 (§7.63) · ת"ז → **surrogate — RULED §7.64 (10/07)**, exec M4 (§7.67/54 coord; סטיית-C6) · email UNIQUE (§7.65) · min-wage rule (§7.66) |
 | assignments | §7.47-mirror ×2 (token, attendance) · shift lineage 🔴 (§7.67) · partial-unique (A-15) · travel (§7.69) · FK indexes (C-1) |
 | logistics | actual<planned (§7.22) · lineage/cost (§7.72) · FK index (C-1) |
@@ -223,7 +223,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | 12 | Login screen specifies CAPTCHA — replaced by lockout + Google Sign-In | C5:488 | §7.8 (decided) |
 | 13 | C6 describes trigger T3 as "send final details" (that's the manual §1.8.6 action) | C6:22 | §7.42↳ (07/07) — implement per §1.8.7 |
 | 14 | T3 reminder wording says "מחר" while the timing is a param in hours | C5:1127 vs P:99 | §7.42↳ — the param rules |
-| 15 | Gross profit "computed and saved" vs "derived, not stored" | C5:453 vs C6:279 | §7.52 + §7.78 (snapshot-as-a-unit) |
+| 15 | Gross profit "computed and saved" vs "derived, not stored" — **resolved 11/07 (§7.52 two-figure ruling): both were right about different numbers (final=stored, expected=derived)** | C5:453 vs C6:279 | §7.52 + §7.78 (snapshot-as-a-unit) |
 
 ## 10. Maintenance protocol (how this file stays alive)
 
