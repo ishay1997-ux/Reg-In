@@ -14,8 +14,8 @@
 | Owner | Ishay |
 | Branch | `ishay/module-1-permissions` |
 | **Status** | **✅ Closed & Merged to `dev`** (PR [#2](https://github.com/ishay1997-ux/Reg-In/pull/2), merge commit `3ba5c5f`, 08/07/2026 18:35 — quality-gate + gitleaks green) |
-| Last updated | 08/07/2026 18:52 (regin-docs-sync: synced status header + step table + DoD checkbox to reflect the actual PR #2 merge — was stale at "awaiting PR/merge"). Prior: 08/07/2026 17:55 re-run closing audit (DoD re-walked, RLS re-verified live, advisors clean, `verify` green, E2E hardened to 8/8 — StrictMode-race flake fixed test-only, §9). |
-| Active step | 5.4 — Handoff to Amit (message not yet sent) |
+| Last updated | 12/07/2026 02:40 (format-alignment pass, fresh-context audit: `🚧 מN` tokens in the capabilities table, 5.4-handoff marked superseded — M2 built by Ishay, §7.21 already instantiated; DoD anon-EXECUTE wording fixed to match §4; §8 synced to template item (h); see §9 dated entry). Prior: 08/07/2026 18:52 regin-docs-sync merge-flip; 08/07/2026 17:55 re-run closing audit (DoD re-walked, RLS re-verified live, advisors clean, `verify` green, E2E 8/8). |
+| Active step | — (module closed & merged; 5.4 handoff superseded 12/07/2026 — see step table) |
 
 | Phase / step | Status |
 |---|---|
@@ -27,7 +27,7 @@
 | Phase 5: 5.2 core RLS scenarios (5–12) | ✅ done (verified live 02/07) |
 | Phase 5: 5.2b extended matrix on `customers` | ✅ CLOSED in Module 2 — step 1.3 ran the 14-scenario RLS matrix on `customers` (deferred here 02/07 per Ishay's ruling; discharged 10/07 when M2 wrote the §7.21 policies). Backward write-back per M2 step 5.3 (11/07/2026). |
 | Phase 5: 5.3 PR + merge to `dev` | ✅ done (PR #2, merge commit `3ba5c5f`, 08/07/2026 18:35) |
-| Phase 5: 5.4 handoff message to Amit (RLS template ready) | ⬜ pending (merge done — message not yet sent) |
+| Phase 5: 5.4 handoff message to Amit (RLS template ready) | ✅ superseded (12/07/2026) — M2 was built by Ishay and instantiated the §7.21 template on `customers` directly (module-2.md steps 1.1/1.3); the planned message became moot. Amit's handoff happens at his actual onboarding entry point. |
 
 ## 2. 📦 Context Packet for Claude
 
@@ -37,13 +37,15 @@
 
 | Capability | What M1 delivers | Which module completes it | Tracked where |
 |---|---|---|---|
-| RLS authorization | `current_user_role_id()` (hardened) + §7.21 policy template + 7 policies on the 4 core tables | M2 — first business-table policies + the 12-scenario matrix on `customers` | PROJECT_MASTER §6 · section 9 here |
+| RLS authorization | `current_user_role_id()` (hardened) + §7.21 policy template + 7 policies on the 4 core tables | ✅ discharged by M2 (step 1.3 — the **14-scenario** RLS matrix on `customers`; §7.21 instantiated 10/07/2026; backward write-back 11/07) | PROJECT_MASTER §6 · section 9 here |
 | Login & lockout | Email+password, Google Sign-In, 5-failures→15-min lockout (app+DB level) | Auth-Hook–level enforcement — future (needs paid Supabase tier) | Section 4 "accepted limitations" |
-| User self-service | Own name/phone edit + real password change (re-auth → `updateUser`) | Self email-change → M9; self-service password *reset* (forgot-password) → M10 | Section 9 · PROJECT_MASTER §6 |
-| Admin screens | Users CRUD + permissions matrix (7 business modules, 4 groups) | `params` UI → M9; admin-modules exposure in matrix → future | Section 9 |
-| Navigation shell | Sidebar/Topbar/ProtectedRoute/AuthContext (all modules ride on this) | Topbar global search → M9 | Section 9 |
-| Test coverage | Vitest 16 + Playwright 8 (Chromium only, workers=1) + CI | Cross-browser+mobile → before M5; formal UAT + full-system E2E → M12 (Ishay ruling 07/07 — aligned with `architecture_and_qa_roadmap.md`) | Section 6 · PROJECT_MASTER §6 |
-| Notification preferences | Profile-screen email/SMS toggles delivered **deliberately disabled** (no preferences table yet — `ProfileSettingsPage.jsx`) | Preferences table + UI activation → M9; actual notification sending → M10 (Ishay ruling 07/07) | Section 9 · PROJECT_MASTER §6 |
+| User self-service | Own name/phone edit + real password change (re-auth → `updateUser`) | Self email-change → M9 (M9's own scope — no §6 token); self-service password *reset* (forgot-password) → 🚧 מ10 | Section 9 · PROJECT_MASTER §6 |
+| Admin screens | Users CRUD + permissions matrix (7 business modules, 4 groups) | `params` UI → M9 (M9's own scope); admin-modules exposure in matrix → future | Section 9 |
+| Navigation shell | Sidebar/Topbar/ProtectedRoute/AuthContext (all modules ride on this) | Topbar global search → M9 (M9's own scope) | Section 9 |
+| Test coverage | Vitest 16 + Playwright 8 (Chromium only, workers=1) + CI | Cross-browser+mobile → before M5; formal UAT + full-system E2E → 🚧 מ12 (Ishay ruling 07/07 — aligned with `architecture_and_qa_roadmap.md`) | Section 6 · PROJECT_MASTER §6 |
+| Notification preferences | Profile-screen email/SMS toggles delivered **deliberately disabled** (no preferences table yet — `ProfileSettingsPage.jsx`) | Preferences table + UI activation → 🚧 מ9; actual notification sending → 🚧 מ10 (Ishay ruling 07/07) | Section 9 · PROJECT_MASTER §6 |
+
+**Rule:** every `🚧 מN` token above must have a byte-matching `🚧 מN` line in PROJECT_MASTER §6 — the only registry module-N's opening prompt greps (`grep '🚧 מN'`); Stop-hook enforced (iron rule 15). *(Tokens backfilled 12/07/2026 — format alignment to the current template; the matching §6 lines already existed.)*
 
 **Code map (all verified on disk 06/07/2026):**
 
@@ -150,7 +152,7 @@ Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
 - **5.2 Core RLS scenarios 5–12 ✅** (verified live 02/07): non-CEO `update permissions` → 0 rows; CEO → succeeds; non-CEO sees only self in `users`; CEO sees all; inactive login blocked; inactive filtered in UI; self-update escalation rejected.
 - **5.2b ✅ CLOSED in Module 2 (backward write-back, M2 step 5.3, 11/07/2026):** the `customers` scenarios (deny-all here until M2's policies) were discharged by **Module 2 step 1.3** — the 14-scenario RLS matrix on `customers` (12 SQL-verified PASS + scenarios 11–12 covered live by these M1 E2E specs; §7.21 template instantiated with `module_name='לקוחות'`). See `docs/micro_guides/module-2.md` step 1.3. The forward-only `🚧 מN` mechanism doesn't cover a debt repaid backward, hence this explicit mark.
 - **5.3 ✅ PR & merge (👤 Ishay):** PR [#2](https://github.com/ishay1997-ux/Reg-In/pull/2) opened base:`dev` ← compare:`ishay/module-1-permissions` → CI green (quality-gate + gitleaks — one gitleaks 403 permission fix needed first, `32d55bd`, not a leak finding) → merged (merge commit `3ba5c5f`, 08/07/2026 18:35; Amit not yet at review stage — noted in CHANGELOG). A small follow-up docs-only PR [#3](https://github.com/ishay1997-ux/Reg-In/pull/3) then flipped STATUS/CHANGELOG/LOG to reflect the merge.
-- **5.4 ⬜ Handoff:** after merge — tell Amit `dev` is ready and the §7.21 policy template awaits Module 2.
+- **5.4 ✅ superseded (12/07/2026):** the planned "tell Amit the §7.21 template awaits Module 2" became moot — M2 was built by Ishay (branch `ishay/module-2-customers`, merged PR #6) and instantiated the template on `customers` itself. Amit's handoff happens at his actual onboarding entry point.
 
 ## 6. 📊 QA Matrix
 
@@ -172,7 +174,7 @@ Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
 
 - [x] Seed counts: `roles`=5, `modules`=9, `permissions`=45 (live-verified 06/07 — MCP + Ishay's Table Editor check).
 - [x] RLS active and enforcing on 4 core tables; `inactive` blocked at DB level, not only frontend.
-- [x] `current_user_role_id()` hardened; lockout RPC trio deployed; anon EXECUTE revoked.
+- [x] `current_user_role_id()` hardened; lockout RPC trio deployed; anon EXECUTE revoked on `reset_login_attempts` only — the 2 pre-auth probes keep `anon` by design (§4; wording fixed 12/07/2026 to match the 07/07 §4 correction).
 - [x] Users screen end-to-end (bidirectional status, edit, self-lockout prevention).
 - [x] Permissions matrix (4 groups, CEO column locked, auto-save) — persists across refresh.
 - [x] Role simulation: 3 roles see exactly what their permissions dictate; direct-URL blocked.
@@ -182,9 +184,10 @@ Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
 - [x] Closing audit: gitleaks scan of full history (39 commits) — no leaks found; CI secret-scan expected green with no `.gitleaksignore` needed (§7.24 fallback documented if CI disagrees).
 - [x] Code review P0/P1 closed (`docs/code_review_2026-07.md`).
 - [x] CHANGELOG + CLAUDE_CODE_LOG + STATUS current.
-- [x] **PR opened, CI green, merged to `dev`** — PR #2, merge commit `3ba5c5f`, 08/07/2026 18:35.
 - [ ] Fresh `dev` checkout: `npm install && npm run dev` → Google login works, CEO reaches the matrix. **Not yet performed by any session — no evidence found; flagged, not checked off.**
-- [ ] Handoff message to Amit (§7.21 template ready for Module 2).
+- [x] ~~Handoff message to Amit (§7.21 template ready for Module 2)~~ — superseded 12/07/2026: M2 built by Ishay, §7.21 already instantiated on `customers` (see step 5.4).
+
+**Post-merge (template rule 7 — not an audit-time checkbox):** ✅ PR #2 opened, CI green, merged to `dev` — merge commit `3ba5c5f`, 08/07/2026 18:35.
 
 ## 8. 🔄 Self-Update Protocol
 
@@ -193,9 +196,12 @@ Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
 2. Any deviation from plan → inline "↳ as-built" note on the step + a dated line in section 9.
 3. The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if code under `src/modules/NN_*/` changed but the module's micro-guide didn't — keep this file current as you work, not as an afterthought.
 4. The `CLAUDE.md` end-of-session protocol applies on top (CHANGELOG → CLAUDE_CODE_LOG → STATUS).
+5. On entering a new phase: collect every Ledger question anchored to it and present them to Ishay/Amit for batch ruling (P13 style) **before** the phase's first step — template item (h). *(Backfilled 12/07/2026 — exemplar alignment.)*
+6. Template items (e)–(g) map to `CLAUDE.md` iron rules 13/15/16 + the end-of-session protocol — they bind here too.
 
 ## 9. 📝 Deviations & Tech-Debt Log
 
+- 12/07/2026 02:40 — **Format-alignment pass (no code/DB; fresh-context agent audit + fixes):** capabilities table gained literal `🚧 מN` tokens + the §6 byte-match Rule (was prose "→ M9/M10/M12"); RLS row marked ✅ discharged-by-M2 and "12-scenario"→"14-scenario"; 5.4-handoff marked ✅ superseded (M2 built by Ishay — §7.21 instantiated on `customers`; the planned Amit message became moot); DoD anon-EXECUTE line fixed to match §4's 07/07 correction; PR checkbox converted to a Post-merge note (template rule 7); §8 gained items 5–6 (phase-entry sweep (h) + (e)–(g) rule citations); backlog wording softened (only notifications carries §6 tokens). Guide format now matches module-2.md + the current template.
 - 03/07 — CAPTCHA (spec 5.6.1) cancelled → Google Sign-In + lockout (§7.8). Frozen spec untouched.
 - 02/07 — `frozen` → `inactive`; one-way freeze → bidirectional toggle (binding pattern for M2 `customers.status`, M4 `hostesses.status`).
 - 02/07 — Matrix: 4 super-groups per mockup (§7.5); seed values from spec §3, not mockup (§7.4 note).
@@ -208,4 +214,4 @@ Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
 - 07/07/2026 16:37 — **Post-closure DB touch (Ishay-approved plan, option ב):** migration `20260707163709_module1_users_rls_initplan_select_wrap` applied via MCP — `(select …)` wrap on the 2 initplan-flagged `users` policies. Behavior-identical (re-verified: impersonation smoke + escalation block + verify + E2E 8/8). Bonus: fixed a pre-existing `docs/schema.sql` drift (stale pre-hardening `current_user_role_id()` body at ~:190). §7.21 template + module-2.md draft SQL wrapped in lockstep. Module status unchanged (🔒 closed, awaiting PR/merge).
 - 07/07/2026 16:09 — `regin-health-pulse` follow-up (doc-only, no code/DB): patch-bumped 3 deps (`@supabase/supabase-js` 2.110.1, `radix-ui` 1.6.2, `vitest` 4.1.10 — lint clean, 16/16 Vitest green). Triaged the Supabase advisors into §4 "Advisor acceptances" (SECURITY DEFINER 0028/0029 accepted; account-lockout DoS accepted per §3 §7.8↳; leaked-password blocked-by-plan; perf WARNs deferred). Corrected a §4 inaccuracy: prior wording implied `anon` EXECUTE was fully revoked on the lockout trio — in fact 2 of 3 keep `anon` by design.
 - 08/07/2026 17:55 — **Re-run closing audit (verdict YES again) + E2E flake fix.** Ran the full audit against this guide's DoD: DoD re-walked (counts `roles`=5/`modules`=9/`permissions`=45 live; users grew to 7 — the 2 real CEO users added 07/07); RLS re-verified live via MCP (all `users`/`permissions` policies `(select …)`-wrapped, CEO-only writes, `users_update_self` escalation-block intact, `schema.sql` in sync — no drift); advisors clean of NEW findings (12× `rls_enabled_no_policy` INFO + 5 SECURITY-DEFINER WARN + leaked-password WARN + 8 FK-index INFO + 3 `multiple_permissive` WARN — all previously triaged/accepted). **Flake found & fixed (Ishay-approved, test-only):** `e2e/permissions.spec.js` matrix-write test failed 1/3 on cold runs — a StrictMode double-`loadData` (dev runs the effect twice) resolving *after* the click clobbered the optimistic title with the stale DB value. Fix: `await page.waitForLoadState('networkidle')` before the click (both loadData calls settle first) + a deterministic next-title assertion (`TITLE_CYCLE`) replacing the fragile `not.toHaveAttribute(before)`. Product code unchanged (identical to the 07/07 8/8-green commit `6460fc4`); CI unaffected (CI runs Vitest+build, not E2E). Re-verified: `verify` green, full suite 8/8, the fixed test 3/3 cold. Shared test-DB left net-zero (3 cold-fails × 1 click + 2 passes × 3 clicks = whole cycles; cell back to seed `blocked`). **Migration-version note (no action):** this guide cites the initplan migration as `20260707163709` (local filename, local time); `list_migrations` records it as `20260707133754` (Supabase stores the version in UTC — 13:37Z = 16:37 Asia/Jerusalem). Same migration; not a drift.
-- Deferred backlog (target): 12 RLS scenarios on `customers` (M2) · self email-change, Topbar search, `params` UI (M9) · **notification-preferences table + toggle activation (M9), actual sending (M10)** — registered in PROJECT_MASTER §6, 07/07 open-items audit · lockout via Auth Hook (needs paid tier) · **IP-combined lockout to bound the §7.8 email-keyed DoS** · **leaked-password protection — blocked-by-plan (Supabase Pro)** · FK covering indexes + `multiple_permissive_policies` restructure (perf advisors — accepted/deferred, see §4) · admin modules exposure in matrix (future) · router-level ErrorBoundary (future) · `MODULE_META` stable key — P2#8 (next `modules` schema touch). *(initplan fix — done 07/07, removed from backlog.)*
+- Deferred backlog (target): ~~12 RLS scenarios on `customers` (M2)~~ ✅ discharged (M2 step 1.3, 14-scenario matrix) · self email-change, Topbar search, `params` UI (M9 — M9's own scope; no §6 token) · **notification-preferences table + toggle activation (🚧 מ9), actual sending (🚧 מ10)** — the notifications line is the one registered in PROJECT_MASTER §6 (07/07 open-items audit; wording corrected 12/07/2026 — the M9-scope items were never §6-registered) · lockout via Auth Hook (needs paid tier) · **IP-combined lockout to bound the §7.8 email-keyed DoS** · **leaked-password protection — blocked-by-plan (Supabase Pro)** · FK covering indexes + `multiple_permissive_policies` restructure (perf advisors — accepted/deferred, see §4) · admin modules exposure in matrix (future) · router-level ErrorBoundary (future) · `MODULE_META` stable key — P2#8 (next `modules` schema touch). *(initplan fix — done 07/07, removed from backlog.)*
