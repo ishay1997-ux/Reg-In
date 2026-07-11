@@ -56,7 +56,7 @@
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | יומן שינויים מתוארך (DB+קוד) — משותף לשני המפתחים |
 | [docs/CLAUDE_CODE_LOG.md](docs/CLAUDE_CODE_LOG.md) | יומן הסשנים של Claude (נרטיב, החלטות, tech-debt) |
 | [supabase/README.md](supabase/README.md) | ניהול מיגרציות DB |
-| [docs/micro_guides/](docs/micro_guides/) | מדריכי מיקרו — בלופרינטים חיים **באנגלית, כתובים ל-Claude** (module-1.md ✅ · module-2.md 📘 · השאר ייווצרו בפתיחת כל מודול) |
+| [docs/micro_guides/](docs/micro_guides/) | מדריכי מיקרו — בלופרינטים חיים **באנגלית, כתובים ל-Claude** (module-1.md ✅ · module-2.md ✅ מוזג · השאר ייווצרו בפתיחת כל מודול) |
 | [docs/templates/](docs/templates/) | התבניות (אנגלית) לפתיחת מודול ולסגירתו — Claude קורא אותן בעצמו |
 | [docs/mockups/](docs/mockups/) | 44 צילומי מוקאפ + [תיאורים](docs/mockups/mockup_descriptions.md) — רפרנס ויזואלי בלבד |
 | `docs/reference_spec/` | האפיון המאושר (פרקים 5–6) — **קפוא, לא לערוך**; + `products_and_params.md` (החלטות Seed) |

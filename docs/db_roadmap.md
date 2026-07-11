@@ -17,7 +17,7 @@
 > **Last verified vs live DB:** 08/07/2026 18:54 via Supabase MCP (read-only): `get_advisors`
 > (security — same 12 accepted `rls_enabled_no_policy` INFOs + accepted SECURITY DEFINER/leaked-password
 > WARNs, zero new findings), `list_migrations` (still 7 — no new migration since creation). Prior: 08:34.
-> ✅ אומת-סנכרון: 08/07/2026 18:54 (regin-docs-sync)
+> ✅ אומת-סנכרון: 11/07/2026 23:20 (regin-docs-sync — אחרי סגירת מודול 2 + PR #6, 0 קונפליקטים)
 
 ---
 
