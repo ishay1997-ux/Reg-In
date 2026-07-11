@@ -55,7 +55,10 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  /* פרימרי = טורקיז-המותג (§4, #0D9488 / teal-600). מחווט ל-token כדי ש-<Button> ברירת-מחדל
+     ו-variant=link ייצאו טורקיז אוטומטית, בלי override ידני בכל כפתור (מונע דריפט "כפתור-שחור").
+     הכרעת-ישי 11/07. (ה-token של dark-mode נשאר כברירת-shadcn — dark לא פעיל, מטופל במעבר-M12.) */
+  --primary: #0d9488;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);

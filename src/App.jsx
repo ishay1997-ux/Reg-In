@@ -30,6 +30,7 @@ import CustomersPage from '@/modules/02_customers/CustomersPage'
 import WelcomePage from '@/components/WelcomePage'
 import UnderConstruction from '@/components/UnderConstruction'
 import ProfileSettingsPage from '@/components/ProfileSettingsPage'
+import NotFound from '@/components/NotFound'
 
 function App() {
   return (
@@ -119,6 +120,9 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  {/* catch-all: נתיב לא-מוכר בתוך המעטפת ⇒ 404 במקום מסך-לבן. לא-מחובר מופנה
+                      ל-login ע"י MainLayout לפני שמגיעים לכאן (תיקון 11/07). */}
+                  <Route path="*" element={<NotFound />} />
                 </Route>
               </Routes>
             </ToastProvider>

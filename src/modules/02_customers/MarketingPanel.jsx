@@ -3,16 +3,21 @@
 // 🚧 מ10 — שליחת-שרת אמיתית + מעקב-שליחות (רשום ב-PROJECT_MASTER §6 "שליחת חומר שיווקי אמיתית").
 // edit-only: כל הפקדים כאן מותנים בהרשאת edit (העמוד מרנדר את הפאנל רק ל-edit; שכבת ה-RLS/Storage
 // היא החומה האמיתית — כלל 9).
+//
+// רדיזיין 11/07 (הכרעת-ישי): במקום מונה-אטום — **רשימת-נמענים** עם צ'קבוקס לכל לקוח מאושר (וי בדיפולט)
+// + תצוגה-מקדימה של החומר. ביטול-וי = החרגה **לשליחה הזו בלבד**; ההסכמה-הקבועה (המתג ברשימת-הלקוחות)
+// לא משתנה כאן. השליחה עצמה נשארת mailto (המכניקה האמיתית = מ10).
 
 import { useEffect, useState } from 'react'
 import { Upload, Send, Copy, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ToastProvider'
+import { CUSTOMER_TYPE_LABELS } from '@/lib/customers'
 import { cn } from '@/lib/utils'
 import {
   uploadMarketingFile,
   getMarketingPublicUrl,
-  getConsentedCustomerEmails,
+  getConsentedCustomers,
   MARKETING_ALLOWED_MIME,
 } from '@/modules/02_customers/api'
 
@@ -23,31 +28,36 @@ const MAILTO_MAX_CHARS = 1900
 
 const SUBJECT = 'חומר שיווקי מ-REG-IN'
 
-// הסכמה דקדוקית לספירת-הנמענים (0 / יחיד / רבים) — "1 לקוחות אישרו" שגוי; ל-1 נדרש לשון-יחיד.
-function consentedPhrase(count) {
-  if (count === 0) return 'אין לקוחות שאישרו קבלת דיוור'
-  if (count === 1) return 'לקוח אחד אישר קבלת דיוור'
-  return `${count} לקוחות אישרו קבלת דיוור`
-}
-
 export default function MarketingPanel({ refreshKey, embedded = false }) {
   const toast = useToast() // התראה אחידה (במקום window.alert) — כשל-העתקה ללוח
-  const [consentedEmails, setConsentedEmails] = useState([])
-  const [uploaded, setUploaded] = useState(null) // { path, name }
+  const [recipients, setRecipients] = useState([]) // לקוחות מאושרים-פעילים (שורות מלאות)
+  // החרגות פר-שליחה (§Q3, הכרעת-ישי): customer_id שהוסר-לו-הוי לשליחה הנוכחית בלבד. לא נוגע ב-DB.
+  const [excludedIds, setExcludedIds] = useState(() => new Set())
+  const [uploaded, setUploaded] = useState(null) // { path, name, type }
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState('') // 'link' | 'recipients' — משוב זמני
+  const [recipientsError, setRecipientsError] = useState(false) // כשל-טעינת המאושרים — נבדל מ"אין מאושרים"
 
-  // נמענים דרך ה-SSOT (api.getConsentedCustomerEmails מרכז את הפרדיקט consent=true AND active).
+  // נמענים דרך ה-SSOT (api.getConsentedCustomers מרכז את הפרדיקט consent=true AND active).
   // refreshKey משתנה בעמוד-האב בכל טעינה/שינוי-הסכמה — כדי שהרשימה כאן לא תפגר אחרי מתג ברשימה.
   useEffect(() => {
     let cancelled = false
     ;(async () => {
       try {
-        const emails = await getConsentedCustomerEmails()
-        if (!cancelled) setConsentedEmails(emails)
+        const rows = await getConsentedCustomers()
+        if (!cancelled) {
+          setRecipients(rows)
+          // הקהל השתנה ⇒ ברירת-מחדל "כולם נבחרים" (מאפסים החרגות פר-שליחה קודמות).
+          setExcludedIds(new Set())
+          setRecipientsError(false)
+        }
       } catch {
-        if (!cancelled) setConsentedEmails([])
+        // כשל-טעינה נבדל מ"אין מאושרים" (תיקון 11/07): דגל-שגיאה גלוי במקום רשימה-ריקה מטעה.
+        if (!cancelled) {
+          setRecipients([])
+          setRecipientsError(true)
+        }
       }
     })()
     return () => {
@@ -65,7 +75,8 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
       // §7.36 (מעוגן): במודול 2 ההעלאה היא פעולת-Storage יחידה (אין כתיבת-DB מזווגת) — אין תרחיש
       // קובץ-יתום כאן. הולידציה (סוג/גודל) חיה ב-api.uploadMarketingFile, לא משוכפלת כאן.
       const { path } = await uploadMarketingFile(file)
-      setUploaded({ path, name: file.name })
+      // type נשמר לתצוגה-המקדימה (תמונה מול PDF); הוא נבדק כבר ב-uploadMarketingFile מול MARKETING_ALLOWED_MIME.
+      setUploaded({ path, name: file.name, type: file.type })
     } catch (err) {
       setError(err.message || 'העלאת הקובץ נכשלה.')
     } finally {
@@ -79,21 +90,43 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
     setCopied('')
   }
 
+  function toggleRecipient(customerId) {
+    setExcludedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(customerId)) next.delete(customerId)
+      else next.add(customerId)
+      return next
+    })
+  }
+
+  const allSelected = excludedIds.size === 0
+  function toggleAll() {
+    // כולם-נבחרים ⇒ "נקה הכל" (מחריג את כולם); אחרת ⇒ "בחר הכל" (מנקה את ההחרגות).
+    if (allSelected) setExcludedIds(new Set(recipients.map((r) => r.customer_id)))
+    else setExcludedIds(new Set())
+  }
+
+  // הנמענים שנבחרו לשליחה הנוכחית; ה-BCC נגזר מהם עם dedup על email (email אינו UNIQUE §7.65).
+  const checkedRecipients = recipients.filter((r) => !excludedIds.has(r.customer_id))
+  const bccEmails = [...new Set(checkedRecipients.map((r) => r.email))]
+
   const publicUrl = uploaded ? getMarketingPublicUrl(uploaded.path) : ''
-  const bccList = consentedEmails.join(',')
   // subject+body מקודדים ב-encodeURIComponent (load-bearing): ה-& וה-? בתוך ה-URL הציבורי היו
   // חותכים את גוף ה-mailto אחרת. ה-body נושא את הקישור הציבורי לחומר.
   const body = `לצפייה בחומר השיווקי: ${publicUrl}`
   const mailtoHref = uploaded
-    ? `mailto:?bcc=${encodeURIComponent(bccList)}&subject=${encodeURIComponent(
+    ? `mailto:?bcc=${encodeURIComponent(bccEmails.join(','))}&subject=${encodeURIComponent(
         SUBJECT,
       )}&body=${encodeURIComponent(body)}`
     : ''
 
-  const hasRecipients = consentedEmails.length > 0
+  const hasRecipients = checkedRecipients.length > 0
   const tooLong = mailtoHref.length > MAILTO_MAX_CHARS
-  // "שלח" פעיל רק כשיש קובץ וגם נמענים — ולא כשה-mailto ייחתך בשקט (אז מפנים ל"העתק רשימת נמענים").
+  // "שלח" פעיל רק כשיש קובץ וגם נמענים מסומנים — ולא כשה-mailto ייחתך בשקט (אז מפנים ל"העתק רשימת נמענים").
   const canSend = !!uploaded && hasRecipients && !tooLong
+
+  const isImage = uploaded?.type?.startsWith('image/')
+  const isPdf = uploaded?.type === 'application/pdf'
 
   async function copyToClipboard(text, kind) {
     try {
@@ -111,25 +144,22 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
       className={cn('flex flex-col gap-4', !embedded && 'bg-white rounded-2xl shadow-md p-6')}
       data-testid="marketing-panel"
     >
-      {/* כשמוטמע בדיאלוג — הכותרת והרקע מגיעים מ-DialogContent; מציגים רק את מונה-המאושרים. */}
-      {embedded ? (
-        <p className="text-sm text-slate-500" data-testid="marketing-consented-count">
-          {consentedPhrase(consentedEmails.length)}.
-        </p>
-      ) : (
+      {/* כשמוטמע בדיאלוג — הכותרת והרקע מגיעים מ-DialogContent; כותרת-הרשימה למטה מציגה את הספירה. */}
+      {!embedded && (
         <div>
           <h2 className="text-lg font-bold text-slate-800">אזור שיווק</h2>
           <p className="text-sm text-slate-500 mt-1">
-            העלו חומר שיווקי ושלחו אותו ללקוחות שאישרו קבלת דיוור.{' '}
-            {consentedPhrase(consentedEmails.length)}.
+            העלו חומר שיווקי, בחרו נמענים מבין הלקוחות שאישרו דיוור, ושלחו.
           </p>
         </div>
       )}
 
-      {/* אזור ההעלאה — קלט קובץ מוסתר מאחורי כפתור (בלי drag-drop, הכרעת P13) */}
+      {/* אזור ההעלאה — קלט קובץ נגיש-למקלדת (sr-only) מאחורי label-ככפתור (בלי drag-drop, הכרעת P13) */}
       <div className="flex items-center gap-3 flex-wrap">
+        {/* נגישות-מקלדת (תיקון 11/07): הקלט היה display:none ולכן מחוץ ל-tab-order — הפעולה המרכזית
+            של הפאנל נחסמה למקלדת. sr-only שומר אותו ב-tab-order; focus-within מסמן מיקוד על ה-label. */}
         <label
-          className="inline-flex items-center gap-2 h-auto py-2.5 px-4 rounded-lg border border-slate-300 text-slate-700 font-semibold cursor-pointer hover:bg-slate-50"
+          className="inline-flex items-center gap-2 h-auto py-2.5 px-4 rounded-lg border border-slate-300 text-slate-700 font-semibold cursor-pointer hover:bg-slate-50 focus-within:ring-2 focus-within:ring-teal-500"
           data-testid="marketing-upload-label"
         >
           <Upload className="size-4" />
@@ -139,7 +169,8 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
             accept={MARKETING_ALLOWED_MIME.join(',')}
             onChange={handleFileChange}
             disabled={busy}
-            className="hidden"
+            aria-label={uploaded ? 'החלף קובץ שיווקי' : 'העלה קובץ שיווקי'}
+            className="sr-only"
             data-testid="marketing-file-input"
           />
         </label>
@@ -154,6 +185,7 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
               type="button"
               variant="link"
               title="הסר קובץ"
+              aria-label="הסר את הקובץ שהועלה"
               onClick={handleRemove}
               className="h-auto p-0 text-red-600 hover:text-red-700"
               data-testid="marketing-remove"
@@ -165,7 +197,25 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
         {busy && <span className="text-sm text-slate-400">מעלה...</span>}
       </div>
 
-      <p className="text-xs text-slate-400">קבצים נתמכים: PDF, JPG, PNG · עד 10MB.</p>
+      <p className="text-xs text-slate-500">קבצים נתמכים: PDF, JPG, PNG · עד 10MB.</p>
+
+      {/* תצוגה-מקדימה של החומר שהועלה (רדיזיין 11/07) — כדי לראות מה נשלח לפני השליחה. גודל בינוני. */}
+      {uploaded && (isImage || isPdf) && (
+        <div
+          className="rounded-lg border border-slate-200 overflow-hidden bg-slate-50"
+          data-testid="marketing-preview"
+        >
+          {isImage ? (
+            <img
+              src={publicUrl}
+              alt={`תצוגה מקדימה: ${uploaded.name}`}
+              className="max-h-64 w-auto mx-auto object-contain"
+            />
+          ) : (
+            <embed src={publicUrl} type="application/pdf" className="w-full h-64" />
+          )}
+        </div>
+      )}
 
       {error && (
         <p className="text-red-600 text-sm" data-testid="marketing-error">
@@ -173,14 +223,73 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
         </p>
       )}
 
-      {/* אזהרת קיטוע-שקט: יותר מדי נמענים לרשימת BCC ב-mailto */}
+      {/* רשימת-הנמענים (רדיזיין 11/07): הלקוחות המאושרים-לדיוור, כל אחד עם צ'קבוקס לבחירה פר-שליחה
+          (וי בדיפולט). ביטול-וי = החרגה מהשליחה הזו בלבד — ההסכמה הקבועה (המתג ברשימת-הלקוחות) לא משתנה. */}
+      {recipientsError ? (
+        <p className="text-amber-700 text-sm" role="alert" data-testid="marketing-recipients-error">
+          שגיאה בטעינת רשימת הנמענים המאושרים.
+        </p>
+      ) : recipients.length === 0 ? (
+        <p className="text-sm text-slate-500" data-testid="marketing-no-recipients">
+          אין לקוחות שאישרו קבלת דיוור.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2" data-testid="marketing-recipients">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-slate-700">
+              נמענים — {checkedRecipients.length} מתוך {recipients.length} נבחרו
+            </span>
+            <Button
+              type="button"
+              variant="link"
+              onClick={toggleAll}
+              className="h-auto p-0 text-teal-600 hover:text-teal-700 text-sm"
+              data-testid="marketing-recipients-toggle-all"
+            >
+              {allSelected ? 'נקה הכל' : 'בחר הכל'}
+            </Button>
+          </div>
+          <div className="max-h-56 overflow-y-auto rounded-lg border border-slate-200 divide-y divide-slate-100">
+            {recipients.map((r) => (
+              <label
+                key={r.customer_id}
+                className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-slate-50"
+                data-testid="marketing-recipient-row"
+              >
+                <input
+                  type="checkbox"
+                  checked={!excludedIds.has(r.customer_id)}
+                  onChange={() => toggleRecipient(r.customer_id)}
+                  className="size-4 shrink-0 accent-teal-600"
+                  aria-label={`שלח ל${r.company_name}`}
+                  data-testid="marketing-recipient-checkbox"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-slate-700 truncate">
+                    {r.company_name}
+                  </div>
+                  <div className="text-xs text-slate-500 truncate">
+                    {r.contact_name} · <span dir="ltr">{r.email}</span>
+                  </div>
+                </div>
+                <div className="text-xs text-slate-500 shrink-0 text-left">
+                  {CUSTOMER_TYPE_LABELS[r.customer_type] ?? r.customer_type}
+                  {Number(r.discount_percent) > 0 && ` · ${Number(r.discount_percent)}%`}
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* אזהרת קיטוע-שקט: יותר מדי נמענים מסומנים לרשימת BCC ב-mailto */}
       {uploaded && tooLong && (
         <p
           className="text-amber-700 text-sm bg-amber-50 border border-amber-200 rounded-lg p-3"
           data-testid="marketing-toolong"
         >
-          רשימת הנמענים ארוכה מדי לשליחה דרך תוכנת הדוא"ל (חלק מהנמענים היו נחתכים בשקט). השתמשו
-          ב"העתק רשימת נמענים" ושלחו ידנית, או המתינו לשליחת-השרת (מודול 10).
+          רשימת הנמענים ארוכה מדי לשליחה דרך תוכנת הדוא"ל (חלק מהנמענים היו נחתכים בשקט). בטלו חלק
+          מהנמענים, השתמשו ב"העתק רשימת נמענים" ושלחו ידנית, או המתינו לשליחת-השרת (מודול 10).
         </p>
       )}
 
@@ -193,22 +302,24 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
             data-testid="marketing-send"
           >
             <Send className="size-4" />
-            שלח ללקוחות מאושרים
+            שלח לנמענים שנבחרו
           </a>
         ) : (
           <span
-            className="inline-flex items-center gap-2 h-auto py-2.5 px-4 rounded-lg bg-slate-200 text-slate-400 font-semibold cursor-not-allowed"
+            className="inline-flex items-center gap-2 h-auto py-2.5 px-4 rounded-lg bg-slate-200 text-slate-500 font-semibold cursor-not-allowed"
             title={
               !uploaded
                 ? 'יש להעלות קובץ תחילה'
                 : !hasRecipients
-                  ? 'אין לקוחות שאישרו דיוור'
+                  ? recipients.length === 0
+                    ? 'אין לקוחות שאישרו דיוור'
+                    : 'לא נבחרו נמענים לשליחה'
                   : 'רשימת הנמענים ארוכה מדי — השתמשו בהעתקה'
             }
             data-testid="marketing-send-disabled"
           >
             <Send className="size-4" />
-            שלח ללקוחות מאושרים
+            שלח לנמענים שנבחרו
           </span>
         )}
 
@@ -228,7 +339,7 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
           type="button"
           variant="outline"
           disabled={!hasRecipients}
-          onClick={() => copyToClipboard(consentedEmails.join(', '), 'recipients')}
+          onClick={() => copyToClipboard(bccEmails.join(', '), 'recipients')}
           className="h-auto py-2.5 px-4 rounded-lg border-slate-300 text-slate-700 gap-2"
           data-testid="marketing-copy-recipients"
         >

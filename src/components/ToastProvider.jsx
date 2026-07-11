@@ -74,12 +74,11 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={api}>
       {children}
-      {/* מרכז-תחתון, צף, לא חוסם; RTL. aria-live=polite כדי שקוראי-מסך יכריזו על ההתראה. */}
+      {/* מרכז-תחתון, צף, לא חוסם; RTL. ה-live-region עבר לכל toast בנפרד (למטה) כדי ששגיאה תוכרז
+          assertive (role=alert) והצלחה/מידע polite (role=status) — במקום polite אחיד לכולם (תיקון 11/07). */}
       <div
         dir="rtl"
         className="fixed bottom-4 left-1/2 z-50 flex w-full max-w-sm -translate-x-1/2 flex-col items-center gap-2 px-4"
-        role="status"
-        aria-live="polite"
       >
         {toasts.map((t) => {
           const v = VARIANTS[t.variant] ?? VARIANTS.info
@@ -87,6 +86,9 @@ export function ToastProvider({ children }) {
           return (
             <div
               key={t.id}
+              // שגיאה = assertive (role=alert) — מוכרזת מיד; הצלחה/מידע = polite (role=status). תיקון 11/07.
+              role={t.variant === 'error' ? 'alert' : 'status'}
+              aria-live={t.variant === 'error' ? 'assertive' : 'polite'}
               className={cn(
                 'flex w-full items-center gap-3 rounded-xl border px-4 py-3 shadow-md',
                 'animate-in fade-in slide-in-from-bottom-2 duration-200',

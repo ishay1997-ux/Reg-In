@@ -19,8 +19,10 @@ import { getCustomer, getCustomerProjects, listCustomerContacts } from '@/module
 function DetailRow({ label, value, ltr }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-xs text-slate-400">{label}</span>
-      <span className="text-sm text-slate-700" dir={ltr ? 'ltr' : undefined}>
+      <span className="text-xs text-slate-500">{label}</span>
+      {/* יישור אחיד לימין (הכרעת-ישי 11/07): dir=ltr שומר על סדר-התווים למספר/אימייל,
+          ו-text-right מיישר אותם לקצה-ימין כמו שאר הפרטים — במקום להידחף שמאלה. */}
+      <span className="text-sm text-slate-700 text-right" dir={ltr ? 'ltr' : undefined}>
         {value || '—'}
       </span>
     </div>
@@ -129,10 +131,11 @@ export default function CustomerDetailsCard({ open, onOpenChange, customerId }) 
                       data-testid={`customer-card-contact-${cc.contact_id}`}
                     >
                       <span className="font-medium text-slate-700">{cc.contact_name}</span>
-                      <span className="text-slate-600" dir="ltr">
+                      {/* טלפון/אימייל: dir=ltr לסדר-תווים, text-right ליישור אחיד לימין (הכרעת-ישי) */}
+                      <span className="text-slate-600 text-right" dir="ltr">
                         {cc.phone || '—'}
                       </span>
-                      <span className="text-slate-600" dir="ltr">
+                      <span className="text-slate-600 text-right" dir="ltr">
                         {cc.email || '—'}
                       </span>
                     </div>

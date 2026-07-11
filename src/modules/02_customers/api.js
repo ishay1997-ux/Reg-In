@@ -58,18 +58,19 @@ export async function getCustomerProjects(customerId) {
   return data ?? []
 }
 
-// כתובות הדוא"ל של הלקוחות שמאושרים לדיוור **וגם** פעילים — קהל-היעד ל-BCC של אזור-השיווק
-// (step 3.5). why-first: לא-פעיל לא מקבל דיוור גם אם נתן הסכמה בעבר (ארכיון = מחוץ לתפוצה).
-export async function getConsentedCustomerEmails() {
+// הלקוחות המאושרים-לדיוור **וגם** הפעילים — קהל-היעד של אזור-השיווק (step 3.5). מחזיר שורות מלאות
+// (שם/איש-קשר/אימייל/סוג/הנחה) כדי שהפאנל יציג רשימת-נמענים לבחירה פר-שליחה, לא רק מונה (רדיזיין 11/07).
+// ה-BCC נגזר מהמסומנים בצד-ה-UI עם dedup על email (email אינו UNIQUE §7.65 — איש-קשר משותף לשתי חברות
+// לגיטימי; Set מונע דיוור כפול). why-first: לא-פעיל לא מקבל דיוור גם אם נתן הסכמה בעבר (ארכיון=מחוץ לתפוצה).
+export async function getConsentedCustomers() {
   const { data, error } = await supabase
     .from('customers')
-    .select('email')
+    .select('customer_id, company_name, contact_name, email, customer_type, discount_percent')
     .eq('marketing_consent', true)
     .eq('status', 'active')
+    .order('company_name')
   if (error) throw toError(error, 'שגיאה בטעינת רשימת הנמענים המאושרים.')
-  // dedup: אותו אימייל יכול להופיע על שתי שורות-לקוח (email אינו UNIQUE — §7.65, איש-קשר משותף
-  // לשתי חברות לגיטימי). Set מונע דיוור כפול לאותו נמען ב-BCC.
-  return [...new Set((data ?? []).map((row) => row.email))]
+  return data ?? []
 }
 
 // ---- כתיבות (Writes) ----

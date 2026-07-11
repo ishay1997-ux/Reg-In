@@ -133,8 +133,14 @@ export default function CustomerFormDialog({
   const [savedOk, setSavedOk] = useState(false)
   // אנשי-קשר נוספים (§7.81): כל שורה {_rk (מפתח-react יציב), contact_name, phone, email}.
   const [contacts, setContacts] = useState([])
-  // שגיאות-ולידציה פר-שורת-איש-קשר (בקשת-ישי 11/07): שורה בשימוש חייבת שם + אימייל תקין. מפתח = _rk.
+  // שגיאות-ולידציה פר-שורת-איש-קשר (§7.81, הכרעת-ישי 11/07): שם חובה + טלפון או אימייל. מפתח = _rk,
+  // הערך = {field, msg} כדי לצבוע את השדה הרלוונטי באדום ('both' = טלפון+אימייל יחד).
   const [contactErrors, setContactErrors] = useState({})
+  // תיקון אובדן-נתונים (11/07): במצב-עריכה שומרים אנשי-קשר רק אחרי טעינה מוצלחת. בלי זה, כשל-טעינה
+  // שקט היה משאיר contacts=[] ובשמירה replaceCustomerContacts היה מוחק את כל אנשי-הקשר הקיימים ב-DB.
+  // add-mode: אין מה לטעון ⇒ מותר לשמור מיד (true).
+  const [contactsLoaded, setContactsLoaded] = useState(!editingCustomer)
+  const [contactsLoadError, setContactsLoadError] = useState(false)
 
   // טעינת אנשי-הקשר הקיימים בעריכה (fetch, לא sync-מ-props). remount-דרך-key באב מריץ פעם אחת.
   useEffect(() => {
@@ -152,9 +158,13 @@ export default function CustomerFormDialog({
               email: r.email ?? '',
             })),
           )
+          // רק אחרי טעינה מוצלחת מותר ל-replaceCustomerContacts לרוץ בשמירה (מונע מחיקה עקב כשל-טעינה).
+          setContactsLoaded(true)
         }
       } catch {
-        // כשל בטעינת אנשי-הקשר לא חוסם את עריכת הלקוח — משאירים ריק.
+        // כשל-טעינה לא חוסם עריכת-לקוח, אבל חוסם את שמירת אנשי-הקשר (contactsLoaded נשאר false) כדי
+        // לא למחוק את הקיימים ב-DB; מציגים אזהרה גלויה במקום כשל שקט.
+        if (!cancelled) setContactsLoadError(true)
       }
     })()
     return () => {
@@ -210,16 +220,31 @@ export default function CustomerFormDialog({
     }
     setFieldErrors(errors)
 
-    // ולידציית אנשי-קשר נוספים (§7.81, בקשת-ישי 11/07): שורה שיש בה תוכן כלשהו (שם/טלפון/אימייל)
-    // חייבת שם + אימייל תקין — כדי לא לשמור איש-קשר חלקי. שורה ריקה לגמרי מתעלמים ממנה
-    // (replaceCustomerContacts גם מסנן שורות בלי שם). phone נשאר אופציונלי לאיש-קשר נוסף.
+    // ולידציית אנשי-קשר נוספים (§7.81, הכרעת-ישי 11/07): שורה "בשימוש" (יש בה תוכן) חייבת שם +
+    // לפחות אחד מ{טלפון, אימייל}; מה שהוזן נבדק שהוא תקין דרך validateField (אותם כללי-SSOT כמו
+    // השדות הראשיים). ערך-השגיאה = {field, msg} כדי לצבוע את השדה הנכון; שורה ריקה לגמרי מדולגת
+    // (replaceCustomerContacts גם מסנן שורות בלי שם).
     const cErrors = {}
     for (const c of contacts) {
-      const inUse = [c.contact_name, c.phone, c.email].some((f) => (f ?? '').trim() !== '')
-      if (!inUse) continue
-      if (!(c.contact_name ?? '').trim()) cErrors[c._rk] = 'יש להזין שם לאיש הקשר.'
-      else if (!EMAIL_REGEX.test((c.email ?? '').trim()))
-        cErrors[c._rk] = 'יש להזין אימייל תקין לאיש הקשר.'
+      const name = (c.contact_name ?? '').trim()
+      const phone = (c.phone ?? '').trim()
+      const email = (c.email ?? '').trim()
+      if (!name && !phone && !email) continue
+      if (!name) {
+        cErrors[c._rk] = { field: 'contact_name', msg: 'יש להזין שם לאיש הקשר.' }
+        continue
+      }
+      if (!phone && !email) {
+        cErrors[c._rk] = { field: 'both', msg: 'יש להזין טלפון או אימייל לאיש הקשר.' }
+        continue
+      }
+      const phoneMsg = phone ? validateField('phone', phone) : ''
+      if (phoneMsg) {
+        cErrors[c._rk] = { field: 'phone', msg: phoneMsg }
+        continue
+      }
+      const emailMsg = email ? validateField('email', email) : ''
+      if (emailMsg) cErrors[c._rk] = { field: 'email', msg: emailMsg }
     }
     setContactErrors(cErrors)
 
@@ -252,7 +277,10 @@ export default function CustomerFormDialog({
         saved = await createCustomer({ ...payload, company_number: form.company_number.trim() })
       }
       // אנשי-הקשר הנוספים (§7.81) נשמרים כיחידה אחרי שהלקוח נשמר (replace צריך את ה-customer_id).
-      await replaceCustomerContacts(saved.customer_id, contacts)
+      // נשמרים רק אם נטענו בהצלחה (או מצב-הוספה) — אחרת דילוג, לא מחיקה (תיקון אובדן-הנתונים 11/07).
+      if (contactsLoaded) {
+        await replaceCustomerContacts(saved.customer_id, contacts)
+      }
       // הצלחה: פס ירוק "הנתונים נשמרו בהצלחה" (חובת-אפיון) שדוהה-אוטומטית — ואז סגירה ורענון.
       setSavedOk(true)
       setTimeout(() => {
@@ -292,6 +320,13 @@ export default function CustomerFormDialog({
       // חובת-אפיון: שדה שגוי מקבל מסגרת אדומה + הודעה ממוקדת מתחתיו; שאר השדות נשארים כמו-שהם.
       fieldErrors[name] && 'border-red-500 focus-visible:ring-red-300',
     )
+  }
+
+  // צביעת-שדה באדום בשורת-איש-קשר לפי {field} של השגיאה ('both' צובע גם טלפון וגם אימייל).
+  function contactFieldInvalid(rk, field) {
+    const err = contactErrors[rk]
+    if (!err) return false
+    return err.field === field || (err.field === 'both' && (field === 'phone' || field === 'email'))
   }
 
   return (
@@ -343,6 +378,7 @@ export default function CustomerFormDialog({
           {duplicate && (
             <div
               className="rounded-lg border border-amber-300 bg-amber-50 p-3 flex flex-col gap-2"
+              role="alert"
               data-testid="customer-duplicate-notice"
             >
               {duplicate.isActive ? (
@@ -469,69 +505,109 @@ export default function CustomerFormDialog({
             </div>
           </div>
 
-          {/* אנשי-קשר נוספים (§7.81, אופציה C) — הראשי הוא השדות למעלה; כאן מוסיפים/מסירים נוספים */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm text-slate-700">אנשי קשר נוספים</label>
-              <Button
-                type="button"
-                variant="link"
-                onClick={addContactRow}
-                className="h-auto gap-1 p-0 text-teal-600 hover:text-teal-700"
-                data-testid="contact-add-row"
-              >
-                <Plus className="size-4" />
-                הוסף איש קשר
-              </Button>
-            </div>
-            {contacts.map((c) => (
-              <div key={c._rk} className="flex flex-col gap-1">
-                <div className="flex items-center gap-2" data-testid="contact-row">
-                  <Input
-                    value={c.contact_name}
-                    onChange={(e) => updateContactRow(c._rk, 'contact_name', e.target.value)}
-                    placeholder="שם"
-                    className={cn(
-                      'h-auto flex-1 rounded-lg border-slate-300 p-2 text-right',
-                      contactErrors[c._rk] && 'border-red-500',
-                    )}
-                  />
-                  <Input
-                    value={c.phone}
-                    onChange={(e) => updateContactRow(c._rk, 'phone', e.target.value)}
-                    placeholder="טלפון"
-                    dir="ltr"
-                    className="h-auto flex-1 rounded-lg border-slate-300 p-2"
-                  />
-                  <Input
-                    value={c.email}
-                    onChange={(e) => updateContactRow(c._rk, 'email', e.target.value)}
-                    placeholder="אימייל"
-                    dir="ltr"
-                    className={cn(
-                      'h-auto flex-1 rounded-lg border-slate-300 p-2',
-                      contactErrors[c._rk] && 'border-red-500',
-                    )}
-                  />
-                  <Button
-                    type="button"
-                    variant="link"
-                    title="הסר איש קשר"
-                    onClick={() => removeContactRow(c._rk)}
-                    className="h-auto p-0 text-red-600 hover:text-red-700"
-                    data-testid="contact-remove"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-                {contactErrors[c._rk] && (
-                  <p className="text-red-600 text-sm" data-testid="contact-row-error">
-                    {contactErrors[c._rk]}
-                  </p>
-                )}
+          {/* אנשי-קשר נוספים (§7.81, אופציה C) — הראשי הוא השדות למעלה; כאן כרטיס לכל נוסף.
+              עיצוב-כרטיסים + ולידציה "שם + טלפון/אימייל" (הכרעת-ישי 11/07). אם טעינת-הקשרים נכשלה —
+              מסתירים את העורך ומראים אזהרה, כדי לא לאבד עריכות שלא יישמרו (contactsLoaded=false). */}
+          {contactsLoadError ? (
+            <p
+              className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800"
+              role="alert"
+              data-testid="customer-contacts-load-error"
+            >
+              לא ניתן לטעון את אנשי הקשר הנוספים כרגע. שאר פרטי הלקוח יישמרו כרגיל; נסו שוב מאוחר
+              יותר לעריכת אנשי הקשר.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm text-slate-700">אנשי קשר נוספים</label>
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={addContactRow}
+                  className="h-auto gap-1 p-0 text-teal-600 hover:text-teal-700"
+                  data-testid="contact-add-row"
+                >
+                  <Plus className="size-4" />
+                  הוסף איש קשר
+                </Button>
               </div>
-            ))}
-          </div>
+              {contacts.map((c, idx) => (
+                <div
+                  key={c._rk}
+                  className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3"
+                  data-testid="contact-row"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-slate-500">איש קשר {idx + 1}</span>
+                    <Button
+                      type="button"
+                      variant="link"
+                      title="הסר איש קשר"
+                      aria-label={`הסר איש קשר ${idx + 1}`}
+                      onClick={() => removeContactRow(c._rk)}
+                      className="h-auto p-0 text-red-600 hover:text-red-700"
+                      data-testid="contact-remove"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-slate-500">שם</label>
+                    <Input
+                      value={c.contact_name}
+                      onChange={(e) => updateContactRow(c._rk, 'contact_name', e.target.value)}
+                      placeholder="שם איש הקשר"
+                      aria-invalid={contactFieldInvalid(c._rk, 'contact_name') || undefined}
+                      className={cn(
+                        'h-auto rounded-lg border-slate-300 p-2 text-right',
+                        contactFieldInvalid(c._rk, 'contact_name') && 'border-red-500',
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-slate-500">טלפון</label>
+                      <Input
+                        value={c.phone}
+                        onChange={(e) => updateContactRow(c._rk, 'phone', e.target.value)}
+                        placeholder="050-0000000"
+                        dir="ltr"
+                        aria-invalid={contactFieldInvalid(c._rk, 'phone') || undefined}
+                        className={cn(
+                          'h-auto rounded-lg border-slate-300 p-2',
+                          contactFieldInvalid(c._rk, 'phone') && 'border-red-500',
+                        )}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-slate-500">אימייל</label>
+                      <Input
+                        value={c.email}
+                        onChange={(e) => updateContactRow(c._rk, 'email', e.target.value)}
+                        placeholder="name@company.co.il"
+                        dir="ltr"
+                        aria-invalid={contactFieldInvalid(c._rk, 'email') || undefined}
+                        className={cn(
+                          'h-auto rounded-lg border-slate-300 p-2',
+                          contactFieldInvalid(c._rk, 'email') && 'border-red-500',
+                        )}
+                      />
+                    </div>
+                  </div>
+                  {contactErrors[c._rk] && (
+                    <p
+                      className="text-red-600 text-sm"
+                      role="alert"
+                      data-testid="contact-row-error"
+                    >
+                      {contactErrors[c._rk].msg}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="flex items-center justify-between">
             <label className="text-sm text-slate-700">מאושר לדיוור שיווקי</label>
@@ -544,7 +620,7 @@ export default function CustomerFormDialog({
           </div>
 
           {formError && (
-            <p className="text-red-600 text-sm" data-testid="customer-form-error">
+            <p className="text-red-600 text-sm" role="alert" data-testid="customer-form-error">
               {formError}
             </p>
           )}

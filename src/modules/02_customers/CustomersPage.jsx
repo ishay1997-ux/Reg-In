@@ -173,7 +173,7 @@ export default function CustomersPage() {
   }, [customers, searchText, filters, statusView, sortKey, sortDir])
 
   // מפתח-רענון לאזור-השיווק: משתנה בדיוק כשקבוצת המאושרים-הפעילים משתנה (מתג-הסכמה/ארכוב/עריכה),
-  // כדי שהפאנל יביא-מחדש את רשימת ה-BCC מ-getConsentedCustomerEmails ולא יפגר. מפתח-מטמון בלבד,
+  // כדי שהפאנל יביא-מחדש את רשימת-הנמענים מ-getConsentedCustomers ולא יפגר. מפתח-מטמון בלבד,
   // לא שכפול-לוגיקה — הפרדיקט האמיתי (consent AND active) חי ב-api (כלל 14).
   const consentedSignature = customers
     .filter((c) => c.marketing_consent && c.status === 'active')
@@ -216,7 +216,21 @@ export default function CustomersPage() {
   }
 
   if (loadError) {
-    return <p className="text-red-600 font-semibold">{loadError}</p>
+    // מסלול-שגיאה עם "נסה שוב" (תיקון 11/07): קודם החלפת-כל-המסך אילצה רענון-דפדפן כדי להתאושש.
+    return (
+      <div className="flex flex-col items-center gap-3 py-12 text-center" role="alert">
+        <p className="text-red-600 font-semibold">{loadError}</p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={reloadCustomers}
+          className="h-auto py-2 px-4 rounded-lg border-slate-300 text-slate-700"
+          data-testid="customers-load-retry"
+        >
+          נסה שוב
+        </Button>
+      </div>
+    )
   }
 
   return (
@@ -351,12 +365,24 @@ export default function CustomersPage() {
             )}
 
             {visibleCustomers.length === 0 ? (
-              // הרשימה לא-ריקה אבל אף שורה לא עוברת את הסינון/חיפוש — מצב "אין תוצאות" נפרד.
+              // אף שורה לא עוברת את הסינון. הקופי תלוי-הקשר (תיקון 11/07): חיפוש/סינון פעיל ⇒ "אין
+              // תוצאות + שנו חיפוש"; אחרת ⇒ ארכיון-ריק או אין-פעילים — כדי לא להציע "לשנות חיפוש"
+              // כשאין חיפוש כלל (המצב הקודם היה מטעה בתצוגת-הארכיון הריקה).
               <div className="py-12 text-center" data-testid="customers-no-results">
-                <p className="text-slate-500 font-medium">אין לקוחות התואמים את החיפוש.</p>
-                <p className="text-slate-400 text-sm mt-1">
-                  נסו לשנות את מונחי החיפוש או לנקות את הסינון.
-                </p>
+                {searchText.trim() !== '' || activeFilterCount > 0 ? (
+                  <>
+                    <p className="text-slate-500 font-medium">אין לקוחות התואמים את החיפוש.</p>
+                    <p className="text-slate-500 text-sm mt-1">
+                      נסו לשנות את מונחי החיפוש או לנקות את הסינון.
+                    </p>
+                  </>
+                ) : statusView === 'inactive' ? (
+                  <p className="text-slate-500 font-medium">אין לקוחות בארכיון.</p>
+                ) : (
+                  <p className="text-slate-500 font-medium">
+                    אין לקוחות פעילים — כל הלקוחות בארכיון.
+                  </p>
+                )}
               </div>
             ) : (
               // עטיפת-גלילה אופקית: 11 עמודות גולשות במסך צר (מובייל) — min-w שומר על רוחב קריא
@@ -413,8 +439,18 @@ export default function CustomersPage() {
                           key={customer.customer_id}
                           data-testid={`customer-row-${customer.customer_id}`}
                           onClick={() => openCard(customer.customer_id)}
+                          // נגישות-מקלדת (תיקון 11/07): השורה נפתחה רק בעכבר. tabIndex+onKeyDown פותחים
+                          // ב-Enter/רווח; focus-ring מסמן מיקוד. (סמנטיקת-row-as-button המלאה — מעבר a11y מ12.)
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              openCard(customer.customer_id)
+                            }
+                          }}
+                          aria-label={`פתח כרטיס לקוח: ${customer.company_name}`}
                           className={cn(
-                            'border-b border-slate-100 cursor-pointer hover:bg-slate-50',
+                            'border-b border-slate-100 cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500',
                             !isActive && 'opacity-60',
                           )}
                         >
@@ -472,6 +508,7 @@ export default function CustomersPage() {
                                   type="button"
                                   variant="link"
                                   title="ערוך לקוח"
+                                  aria-label={`ערוך לקוח: ${customer.company_name}`}
                                   onClick={() => openEditDialog(customer)}
                                   className="h-auto p-0 text-teal-600 hover:text-teal-700"
                                   data-testid={`customer-edit-${customer.customer_id}`}
@@ -486,6 +523,7 @@ export default function CustomersPage() {
                                     type="button"
                                     variant="link"
                                     title="העבר לארכיון"
+                                    aria-label={`העבר לארכיון: ${customer.company_name}`}
                                     onClick={() => handleToggleStatus(customer)}
                                     className="h-auto p-0"
                                     data-testid={`customer-archive-${customer.customer_id}`}
@@ -499,6 +537,7 @@ export default function CustomersPage() {
                                     type="button"
                                     variant="link"
                                     title="שחזר מהארכיון"
+                                    aria-label={`שחזר מהארכיון: ${customer.company_name}`}
                                     onClick={() => handleToggleStatus(customer)}
                                     className="h-auto p-0"
                                     data-testid={`customer-restore-${customer.customer_id}`}
