@@ -37,17 +37,20 @@ create table users (
   phone text
 );
 
--- 5. טבלת לקוחות (מודול 2)
+-- 5. טבלת לקוחות (מודול 2) — §7.64 (10/07): מפתח surrogate; ח"פ = company_number עסקי unique (סטייה מ-C6 §2.4.1)
 create table customers (
-  customer_id text primary key,
+  customer_id bigint generated always as identity primary key,               -- §7.64: surrogate פנימי (היה ח"פ text)
+  company_number text not null unique check (company_number ~ '^[0-9]{9}$'),  -- ח"פ (9 ספרות) — המזהה העסקי הקנוני
   customer_type text not null check (customer_type in ('private_company', 'government', 'production_company', 'nonprofit')),
   company_name text not null,
   contact_name text not null,
   phone text not null,
   email text not null,
-  discount_percent numeric not null default 0,
+  discount_percent numeric not null default 0 check (discount_percent >= 0 and discount_percent <= 100),
   marketing_consent boolean not null default false,
-  status text not null default 'active' check (status in ('active', 'inactive'))
+  status text not null default 'active' check (status in ('active', 'inactive')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()   -- §7.73 + טריגר moddatetime (ר' בלוק מודול 2 בתחתית)
 );
 
 -- 6. טבלת מוצרים ומחירים (קטלוג: אתר / דיילת / מוצר)
@@ -83,7 +86,7 @@ create table params (
 -- 9. טבלת הצעות מחיר (מודול 3)
 create table quotes (
   quote_id serial primary key,
-  customer_id text references customers(customer_id) on delete restrict,
+  customer_id bigint references customers(customer_id) on delete restrict,   -- §7.64: bigint (עוקב אחרי ה-surrogate PK של customers)
   event_name text not null,
   issue_date date not null default current_date,
   estimated_hours numeric not null check (estimated_hours > 0),
@@ -96,7 +99,9 @@ create table quotes (
   applied_customer_discount numeric not null,
   manual_discount numeric not null default 0,
   rejection_reason text,
-  notes text
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()   -- §7.73
 );
 
 -- 10. טבלת שירותי הצעה (שורות ההצעה)
@@ -319,3 +324,109 @@ grant execute on function reset_login_attempts() to authenticated;
 -- אותו במפורש כדי ש-reset יהיה authenticated-בלבד (least-privilege; ממילא no-op ל-anon
 -- כי auth.email() הוא NULL).
 revoke execute on function reset_login_attempts() from anon;
+
+-- ============================================================
+-- מודול 2 — יסוד ה-DB (מיגרציה 20260710160735, בוצע בפועל 10/07/2026; §7.64 + חבילת-nod §7.40א/48/62/73)
+-- ============================================================
+-- created_at/updated_at + טריגר moddatetime נוספו ל-11 הטבלאות העסקיות (customers, products, price_tiers,
+-- params, quotes, quote_services, projects, hostesses, salary_reports, assignments, logistics).
+-- מוצג inline ל-customers/quotes; ליתר 9 — הדפוס למטה. התוסף moddatetime הועבר ל-schema `extensions`
+-- (מיגרציה 20260710164420 — מ-public לפי המלצת Supabase; 11 הטריגרים נקשרים ל-OID ונשארו תקינים).
+
+-- §7.40(א): ייחודיות מפתחות-המחרוזת שכל ה-RLS משווה כמחרוזת
+alter table roles   add constraint roles_role_name_key     unique (role_name);
+alter table modules add constraint modules_module_name_key unique (module_name);
+
+-- §7.62: users.role_id חובה (כל שרשרת ה-RLS נשענת עליו — NULL = מסכים ריקים)
+alter table users alter column role_id set not null;
+
+-- §7.48: enable-RLS ל-10 הטבלאות העסקיות שנותרו (customers ב-RLS מאז מודול 1; deny-all מכוון עד policies)
+alter table products enable row level security;
+alter table price_tiers enable row level security;
+alter table params enable row level security;
+alter table quotes enable row level security;
+alter table quote_services enable row level security;
+alter table projects enable row level security;
+alter table hostesses enable row level security;
+alter table salary_reports enable row level security;
+alter table assignments enable row level security;
+alter table logistics enable row level security;
+
+-- §7.73: הדפוס לכל אחת מ-9 הטבלאות שלא-מוצגות-inline למעלה:
+create extension if not exists moddatetime with schema extensions;   -- schema ייעודי (advisor extension_in_public)
+--   alter table <t> add column created_at timestamptz not null default now();
+--   alter table <t> add column updated_at timestamptz not null default now();
+--   create trigger <t>_set_updated_at before update on <t> for each row execute function moddatetime(updated_at);
+
+-- §7.21: ה-policies העסקיות הראשונות בפרויקט — customers (הרשאה לפי מטריצת role→module בלבד; התקדים לכל מודול)
+alter table customers enable row level security;
+create policy "customers_select_by_permission" on customers for select to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+      and p.permission_level in ('edit', 'view')));
+create policy "customers_write_by_permission" on customers for all to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+      and p.permission_level = 'edit'))
+  with check (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+      and p.permission_level = 'edit'));
+
+-- אזור השיווק (מסך 5.6.3): bucket ציבורי + 4 policies על storage.objects לפי אותה מטריצת 'לקוחות'
+insert into storage.buckets (id, name, public) values ('marketing', 'marketing', true) on conflict (id) do nothing;
+create policy "marketing_read_by_permission" on storage.objects for select to authenticated
+  using (bucket_id = 'marketing' and exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+      and p.permission_level in ('edit', 'view')));
+create policy "marketing_insert_by_permission" on storage.objects for insert to authenticated
+  with check (bucket_id = 'marketing' and exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+      and p.permission_level = 'edit'));
+create policy "marketing_update_by_permission" on storage.objects for update to authenticated
+  using (bucket_id = 'marketing' and exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+      and p.permission_level = 'edit'))
+  with check (bucket_id = 'marketing' and exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+      and p.permission_level = 'edit'));
+create policy "marketing_delete_by_permission" on storage.objects for delete to authenticated
+  using (bucket_id = 'marketing' and exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+      and p.permission_level = 'edit'));
+
+-- §7.81 (11/07/2026): ריבוי אנשי-קשר ללקוח — טבלת-ילד customer_contacts (אנשי-קשר *נוספים*; הראשי
+-- נשאר inline על customers, אופציה C — סטיית-C6 §2.4.1). RLS = אותה מטריצת 'לקוחות'. הוחל 11/07.
+create table customer_contacts (
+  contact_id  bigint generated always as identity primary key,
+  customer_id bigint not null references customers(customer_id) on delete cascade on update cascade,
+  contact_name text not null,
+  phone text,
+  email text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index customer_contacts_customer_id_idx on customer_contacts (customer_id);
+create trigger customer_contacts_set_updated_at before update on customer_contacts for each row execute function extensions.moddatetime(updated_at);
+alter table customer_contacts enable row level security;
+create policy "customer_contacts_select_by_permission" on customer_contacts for select to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+      and p.permission_level in ('edit', 'view')));
+create policy "customer_contacts_write_by_permission" on customer_contacts for all to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+      and p.permission_level = 'edit'))
+  with check (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+      and p.permission_level = 'edit'));

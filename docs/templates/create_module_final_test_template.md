@@ -21,8 +21,16 @@ Go through every checkbox in the micro-guide's DoD section, one by one. Mark ✅
 - For the highest-risk scenarios in the micro-guide's QA matrix, independently re-verify against the live policy definitions — never trust a pre-marked ✅.
 - Call out any leak/bypass found.
 
+### 2b. 🎨 UX & Validation Audit
+**Binding — not "suggestions only" (that is §3).** Audit the module's screens against its spec + the §4 design language:
+- **Phase-3 UX review honored:** the micro-guide's end-of-Phase-3 🎨 UX & functional review actually ran and its rulings were applied — check §9 / the status header for it.
+- **Design & functional states:** §4 palette/layout/RTL conformance; every screen has its loading · empty · no-results · error-with-retry · success states; every primary action is keyboard-operable with a visible focus ring. Verify live where feasible (the §4 preview smoke test).
+- **Validation-completeness:** walk the module's spec'd validation rules (fields, formats, cross-field, business rules — from its C5 process/screens + C6 tables) and confirm each is implemented AND covered; confirm every spec-silent validation choice was surfaced to Ishay/Amit (not silently invented or omitted).
+- **Redesign judgement:** flag anything that should be redesigned / added / removed. A real UX defect (a missing/broken state, an unreachable primary action, misleading copy) is a **§6 blocker**; a polish/scope item is a **§7 tech-debt** line with its target module.
+Results feed the §5 **Usability** as-run cell and the §1 DoD UX-&-validation checkbox. (System-wide RTL/cross-browser/mobile stay the M12 usability sweep — this audit is the module's own gate, not that.)
+
 ### 3. 🧠 Architectural Review & Pro-Tips (free hand)
-Refactoring/perf/state-management proposals; UX smoothness (loading states, error boundaries, RTL, responsiveness); messy spots that accumulated during fixes. Suggestions only — no code edits in this audit.
+Refactoring/perf/state-management proposals; messy spots that accumulated during fixes. Suggestions only — no code edits in this audit. (UX & validation quality is now the binding **§2b** audit above — not a free-hand suggestion; F1 subtraction: it lived here as a soft bullet before, and moved up to a real gate.)
 
 ### 4. 🧹 Housekeeping Check
 - `npm run verify` (lint + format:check + unit tests + build) — must be green.

@@ -13,6 +13,8 @@ import { useEffect, useState } from 'react'
 import { Pencil, UserCheck, UserX } from 'lucide-react'
 import { supabase } from '@/supabaseClient'
 import { useAuth } from '@/contexts/AuthContext'
+import { useConfirm } from '@/components/ConfirmDialog'
+import { useToast } from '@/components/ToastProvider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -35,6 +37,8 @@ import { cn } from '@/lib/utils'
 
 export default function UsersManagementPage() {
   const { user: currentUser } = useAuth()
+  const confirm = useConfirm() // חלון-וידוא משותף (במקום window.confirm) — לפני השבתת משתמש
+  const toast = useToast() // התראה אחידה (במקום window.alert) — כשל השבתה/הפעלה
 
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
@@ -180,9 +184,11 @@ export default function UsersManagementPage() {
     // אישור רק לפני השבתה (חוסמת התחברות בפועל) - הפעלה מחדש היא פעולה הפיכה/בטוחה
     // באותה מידה, לכן בלי חיכוך מיותר. שני הכיוונים משתמשים באותו כפתור/פעולה.
     if (nextStatus === 'inactive') {
-      const confirmed = window.confirm(
-        `להשבית את המשתמש "${targetUser.full_name}"? הוא לא יוכל להתחבר למערכת עד שיוחזר לפעיל.`,
-      )
+      const confirmed = await confirm({
+        title: 'השבתת משתמש',
+        message: `להשבית את המשתמש "${targetUser.full_name}"? הוא לא יוכל להתחבר למערכת עד שיוחזר לפעיל.`,
+        confirmLabel: 'השבת משתמש',
+      })
       if (!confirmed) return
     }
 
@@ -194,7 +200,7 @@ export default function UsersManagementPage() {
       .select()
 
     if (error || !updated || updated.length === 0) {
-      window.alert(
+      toast.error(
         nextStatus === 'inactive' ? 'השבתת המשתמש נכשלה. נסה שוב.' : 'הפעלת המשתמש נכשלה. נסה שוב.',
       )
       return
@@ -208,7 +214,21 @@ export default function UsersManagementPage() {
   }
 
   if (loadError) {
-    return <p className="text-red-600 font-semibold">{loadError}</p>
+    // מסלול-שגיאה עם "נסה שוב" (תיקון 11/07): קודם החלפת-כל-המסך אילצה רענון-דפדפן כדי להתאושש.
+    return (
+      <div className="flex flex-col items-center gap-3 py-12 text-center" role="alert">
+        <p className="text-red-600 font-semibold">{loadError}</p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={loadUsersAndRoles}
+          className="h-auto py-2 px-4 rounded-lg border-slate-300 text-slate-700"
+          data-testid="users-load-retry"
+        >
+          נסה שוב
+        </Button>
+      </div>
+    )
   }
 
   return (

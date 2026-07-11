@@ -8,7 +8,7 @@ import Topbar from './Topbar'
 import { cn } from '@/lib/utils'
 
 export default function MainLayout() {
-  const { loading, user } = useAuth()
+  const { loading, user, signOut } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
 
   // ממתינים לסיום טעינת ה-Auth לפני כל החלטת ניתוב — אחרת user=null זמני היה מפנה
@@ -30,10 +30,19 @@ export default function MainLayout() {
   if (user.status === 'inactive') {
     return (
       <div dir="rtl" className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="bg-white p-8 rounded-2xl shadow-md max-w-sm text-center">
+        <div className="bg-white p-8 rounded-2xl shadow-md max-w-sm text-center flex flex-col gap-4">
           <p className="text-red-600 font-semibold">
             חשבון זה אינו פעיל במערכת. פנה למנכ"ל לצורך בירור.
           </p>
+          {/* התנתקות (תיקון 11/07): בלי זה המסך היה מבוי-סתום — ה-session חי ב-sessionStorage
+              והמשתמש נתקע. signOut מאפס את user ⇒ הרינדור הבא מפנה ל-login. */}
+          <button
+            type="button"
+            onClick={signOut}
+            className="mx-auto h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"
+          >
+            התנתקות
+          </button>
         </div>
       </div>
     )

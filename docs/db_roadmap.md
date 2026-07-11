@@ -75,13 +75,13 @@ Additional decided / nod-pending rows (cite-only):
 
 | # | Change | Source | Status | Module | Trigger |
 |---|---|---|---|---|---|
-| A-8 | enable-RLS migration for the 11 business tables (idempotent; restore-gap — live is fine) | §7.48 | 👍 nod | 2 | before first M2 policies (module-2.md step 1.1 pending-nod extension) |
+| A-8 | enable-RLS migration for the 11 business tables (idempotent; restore-gap — live is fine) | §7.48 | **✅ APPLIED `20260710160735` (SECTION 2), 10/07** | 2 | before first M2 policies (module-2.md step 1.1) |
 | A-9 | discount CHECKs: 0–100 + combined ≤100% (customers/quotes) | §7.26 | decided | 2/3 | M2 step 1.2 draft exists |
 | A-10 | per-table RLS policies from the standard template, `(select …)` wrapped | §7.21 | decided | every module | with each module's first migration; multi-module tables gated on §7.63 |
 | A-11 | `pg_cron` install + quote-expiry daily job | §7.42 | decided | 3 | first consumer = quote expiry (T2) |
 | A-12 | Seed: products (11) + price_tiers (40) + params (17 incl. `שכר_מינימום_שעתי`) | §7.13 + `reference_spec/products_and_params.md` (locked decisions) | pending exec | 3 | blocker removed (VAT=18%) |
 | A-13 | `created_at`/`updated_at` + `moddatetime` trigger, all business tables, one migration | §7.73 | 👍 nod | 2 (rolling) | also anchors T2 validity semantics |
-| A-14 | NOT NULL: `users.role_id` · `quotes.customer_id` · `projects.owner_email` · `projects.quote_id` | §7.62 | 👍 nod | 2 / 3 / 6 | users → with A-8 in the M2 infra migration |
+| A-14 | NOT NULL: `users.role_id` · `quotes.customer_id` · `projects.owner_email` · `projects.quote_id` | §7.62 | 👍 nod | 2 / 3 / 6 | users → with A-8 in the M2 infra migration; **`quotes.customer_id`→bigint in M2 (§7.64 type-change; its SET NOT NULL still M3)** |
 | A-15 | partial UNIQUE on active assignment statuses (one active row per hostess+project) | §7.54 | 👍 nod | 4 | kills double-count/double-pay class |
 | A-16 | timestamptz + Asia/Jerusalem standard for all new time columns & jobs | §7.56 | 👍 nod | 3+ | first pg_cron job |
 | A-17 | money columns → `numeric(12,2)` | §7.74 | 👍 nod | 3 | with A-9 in the pricing migrations |
@@ -107,7 +107,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 
 | Ref | Question (label) | 🔴 | Decide before |
 |---|---|---|---|
-| §7.64 | natural PKs (email/ח"פ/ת"ז/SKU) vs surrogate keys; ON UPDATE policy; auth-UUID linkage | 🔴🔴 | M3 blueprint |
+| §7.64 | natural PKs (email/ח"פ/ת"ז/SKU) vs surrogate — **direction RULED 10/07**: external/PII→surrogate; system-owned (SKU)→natural+ON UPDATE CASCADE; users.email→accept+CASCADE | 🔴🔴 | per-module: customers=**M2 now** · sku=M3 · ת"ז=M4 · email=M9 |
 | §7.63 | column-level ownership vs row-level RLS (projects finance columns; hostesses bank/ת"ז) | 🔴 | direction before M2 policies |
 | §7.67 | assignment → service-line/shift lineage (unblocks §7.19/29/30) | 🔴 | M4 blueprint |
 | §7.72 | change-order data home / single project-line entity (logistics⟷quote_services lineage) | 🔴 | M6 (direction earlier helps M5) |
@@ -152,7 +152,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 
 | Item | Status | Source | Module |
 |---|---|---|---|
-| `marketing` bucket (public) + 4 `storage.objects` policies | decided in blueprint | `micro_guides/module-2.md` step 1.1 | 2 |
+| `marketing` bucket (public) + 4 `storage.objects` policies | **✅ APPLIED in migration `20260710160735` (10/07)** | `micro_guides/module-2.md` step 1.1 | 2 |
 | summary-reports bucket (mandatory closure upload) · payroll files · invoice PDFs — one plan: names, private+Signed-URLs, policy template | OPEN | §7.61 (cites §7.38, §7.36) | 6/8 |
 | `pg_cron` install + jobs (quote expiry, event-passed, login purge) | decided | §7.42 + §7.75 | 3 |
 | scheduled Edge Function (sender: reminders, dispatch) | decided direction | §7.42 | 10 |
@@ -165,16 +165,17 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | roles | UNIQUE (§7.40 · §7.47-mirror row) — load-bearing: all CEO policies subquery `role_name='מנכ"ל'` |
 | modules | UNIQUE (§7.40) · slug/module_id refactor (A-21) |
 | permissions | FK index (C-1) · multiple_permissive (C-2) |
-| users | NOT NULL role_id (A-14) · key strategy 🔴 (§7.64) · email sync (A-20) · FK index (C-1) |
+| users | NOT NULL role_id (A-14) · email key = **accept + ON UPDATE CASCADE — RULED §7.64 (10/07)**, exec M9 · email sync (A-20) · FK index (C-1) |
 | login_attempts | purge job (A-18) · Auth Hook upgrade (A-22) |
-| customers | policies (A-10) · discount CHECK (A-9) · timestamps (A-13) · ח"פ key/multi-unit 🔴 (§7.64) · email UNIQUE (§7.65) · deactivate guards (§7.34) |
-| products | unit/category CHECKs exist; ON UPDATE for sku 🔴 (§7.64) · seed (A-12) |
+| customers | policies (A-10) · discount CHECK (A-9) · timestamps (A-13) · **surrogate PK — RULED §7.64 (10/07): `customer_id bigint` + `company_number` unique not null; exec M2 step 1.1 (סטיית-C6 §2.4.1)** · email UNIQUE (§7.65) · deactivate guards (§7.34) · **+ child `customer_contacts` — §7.81 (11/07), ריבוי אנשי-קשר אופציה C (איש-קשר ראשי נשאר inline)** |
+| customer_contacts | **NEW child table — RULED §7.81 (11/07): ריבוי אנשי-קשר, אופציה C.** FK→`customers(customer_id)` on delete/update cascade + covering index (C-1 ✓) · RLS §7.21 ('לקוחות', same gate as customers) · moddatetime (§7.73). Migration `20260711013517_module2_customer_contacts.sql` — **✅ APPLIED 11/07 (verified live via MCP: table/7-cols/FK/covering-index/trigger[extensions.moddatetime]/RLS/2 policies)**; api/UI wiring = step 3.7; סטיית-C6 §2.4.1 (single inline contact) |
+| products | unit/category CHECKs exist; sku stays natural PK + **ON UPDATE CASCADE — RULED §7.64 (10/07)**, exec M3 · seed (A-12) |
 | price_tiers | seed (A-12) · sanity CHECKs min_qty>0/max≥min (§7.41 bundle) |
 | params | UNIQUE (§7.40) · typed+history (§7.70) · seed (A-12) · ghost param (§7.57) |
 | quotes | NOT NULL customer_id (A-14) · vat_rate_snapshot (§7.51/§7.78) · lock (§7.50) · CHECK ≥0 (§7.53) · expiry anchor (A-13/§7.42) · pdf_url drop (§7.71) · discounts CHECK (A-9) |
 | quote_services | closing_unit_cost (§7.47-mirror) · color/reason enums (§7.41) · change-order model (§7.72) |
 | projects | §7.47-mirror ×2 (times, cancelled_at) · NOT NULL owner/quote_id (A-14) · finance-column ownership 🔴 (§7.63) · name snapshot (§7.76) · close-lock (§7.77) · profit stored? (§7.52) · coords (§7.55) · multi-day (§7.30) |
-| hostesses | §7.47-mirror (address/coords) · bank-column protection 🔴 (§7.63) · ת"ז key 🔴 (§7.64) · email UNIQUE (§7.65) · min-wage rule (§7.66) |
+| hostesses | §7.47-mirror (address/coords) · bank-column protection 🔴 (§7.63) · ת"ז → **surrogate — RULED §7.64 (10/07)**, exec M4 (§7.67/54 coord; סטיית-C6) · email UNIQUE (§7.65) · min-wage rule (§7.66) |
 | assignments | §7.47-mirror ×2 (token, attendance) · shift lineage 🔴 (§7.67) · partial-unique (A-15) · travel (§7.69) · FK indexes (C-1) |
 | logistics | actual<planned (§7.22) · lineage/cost (§7.72) · FK index (C-1) |
 | salary_reports | month-id UNIQUE (§7.40/§7.47-mirror) · document model (§7.68) · storage (§7.61) |
@@ -240,4 +241,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 4. This file never *decides*: a new open question found here goes to §7 (P10) and comes back as a
    citation.
 
-<!-- Done strike-list (dated) — empty at creation, 08/07/2026 -->
+<!-- Done strike-list (dated) -->
+- 10/07/2026 — migration `20260710160735` applied: **§7.64 customers surrogate PK** · **A-8** enable-RLS (10 business tables) · **A-13** timestamps+moddatetime (11 tables) · **§7.40(א)** roles/modules UNIQUE · **§7.62** users.role_id NOT NULL · **§7.21** customers 2 policies + marketing bucket + 4 storage policies.
+- 10/07/2026 — migration `20260710164420` applied: moddatetime extension moved `public`→`extensions` (advisor `extension_in_public` cleared; 11 triggers intact). Advisors back to baseline accepted set, zero new.
+- 11/07/2026 — migration `20260711013517_module2_customer_contacts.sql` applied: **§7.81** child table `customer_contacts` (FK cascade + covering index [C-1 ✓ for this FK] + `extensions.moddatetime` + RLS §7.21 'לקוחות' 2 policies). Closing-audit note (11/07 22:33): advisors show `multiple_permissive_policies` on customers/customer_contacts — inherent to the §7.21 two-policy template (same as M1's users/permissions baseline), accepted; `quotes_customer_id_fkey` still unindexed — already scheduled as C-1 (M3's first migration touching `quotes`).
