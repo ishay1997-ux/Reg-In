@@ -2,7 +2,7 @@
 
 # REG-IN — לוח מצב
 
-> עודכן לאחרונה: 11/07/2026 22:55
+> עודכן לאחרונה: 11/07/2026 23:05
 > ✅ אומת-סנכרון: 10/07/2026 11:18 (regin-docs-sync — אחרי גל-הנאמנות, 0 קונפליקטים)
 > **לוח מצב-עכשיו (לא ארכיון).** מתעדכן ע"י Claude בסוף כל סשן (נאכף ב-hook). היסטוריה ונרטיב → `docs/CLAUDE_CODE_LOG.md` · שינויים מתוארכים → `docs/CHANGELOG.md`. *(התזכורות התפעוליות למטה = מצב-חי מתגלגל, לא היסטוריה.)*
 
@@ -14,7 +14,7 @@
 |---|-------|-------|:-----:|-----|-----------|
 | 0 | תשתית | ישי | ✅ | — | — |
 | 1 | משתמשים והרשאות | ישי | ✅ **מוזג ל-`dev`** (PR [#2](https://github.com/ishay1997-ux/Reg-In/pull/2)) | `ishay/module-1-permissions` (מוזג) | [ishay/01](docs/guides/ishay/01_close_module_1.md) |
-| 2 | לקוחות | **ישי** (10–11/07) | 🔒 **ממתין ל-PR/merge** — אודיט-סגירה 5.4 הושלם (11/07 22:33, סשן טרי): **verdict [YES] · DoD typed-echo נחתם ("לקוחות DoD")**. ‏13/13 DoD · RLS אומת-מחדש עצמאית · שערים ירוקים (lint 0·37/37·build ✓·e2e 10/2-skip) · DB נקי (0/0/0). **אימות-ויזואלי-סופי נחתם (ישי 22:55)** — כל שערי-האנוש של המודול סגורים. נותר: פתיחת PR ‏base ‏`dev` ← ‏compare ‏`ishay/module-2-customers` (הוראות+🧩 הודפסו 22:42; קומיטי-הדוקס נדחפו). ה-✅ נדלק אחרי ה-merge בפועל | `ishay/module-2-customers` | [amit/06](docs/guides/amit/06_module_02_customers.md) · [מדריך מיקרו](docs/micro_guides/module-2.md) |
+| 2 | לקוחות | **ישי** (10–11/07) | 🔒 **PR [#6](https://github.com/ishay1997-ux/Reg-In/pull/6) פתוח — ממתין למיזוג.** אודיט-סגירה [YES] + DoD-typed-echo + שער-ויזואלי כולם נחתמו (ישי, 22:39/22:55). ‏**`dev`←`ishay/module-2-customers`, 25 קומיטים/39 קבצים; CI ירוק** — `gh pr view 6` (אומת חי בסשן): שני-הצ'קים (Lint·Test·Build + gitleaks) `SUCCESS`, `mergeable: MERGEABLE`. ה-✅ נדלק אחרי ה-merge בפועל | `ishay/module-2-customers` | [amit/06](docs/guides/amit/06_module_02_customers.md) · [מדריך מיקרו](docs/micro_guides/module-2.md) |
 | 3 | הצעות מחיר | עמית | ⬜ | | [amit/07](docs/guides/amit/07_module_03_quotes.md) |
 | 4 | דיילות + Smart Match | ישי | ⬜ | | [ishay/02](docs/guides/ishay/02_module_04_hostesses.md) |
 | 5 | לוגיסטיקה | ישי | ⬜ | | [ishay/03](docs/guides/ishay/03_module_05_logistics.md) |
@@ -27,7 +27,7 @@
 | 12 | אינטגרציה והגשה (כולל פריסת Vercel) | 🤝 משותף | ⬜ | | [shared/module_12](docs/guides/shared/module_12_integration.md) |
 
 ## המסלול של ישי
-**השלב הנוכחי:** **מודול 2 (לקוחות) 🔒 סגור — ממתין ל-PR/merge.** אודיט-הסגירה (5.4) הושלם 11/07 22:33–22:42 בסשן טרי: verdict **[YES]**, ‏DoD typed-echo נחתם. פרטי-האודיט: ‏CHANGELOG ‏22:42 + מדריך-מיקרו §9 + ‏CLAUDE_CODE_LOG. **אימות-ויזואלי-סופי נחתם (ישי 22:55) וקומיטי-הדוקס נדחפו. פעולות-אנוש נותרות:** ‏(1) פתיחת PR ‏base ‏`dev` ← ‏compare ‏`ishay/module-2-customers` (בלוק-🧩 הודפס 22:42) ‏(2) אחרי-merge: להדליק ✅ בטבלה + ‏`regin-docs-sync`. **הבא בתור: מודול 4 (דיילות + Smart Match)** — פתיחה דרך פרומפט-⑥ של [ishay/02](docs/guides/ishay/02_module_04_hostesses.md), עם טמפלט-הפתיחה המעודכן (תקציר-חוויה · 🎤 ראיון-PM · שערי-ויזואל). *(ההיסטוריה המלאה של בניית-מ2 — ביומנים; תקציר-העבר שהיה כאן הוחלף בסגירה, 22:42.)*
+**השלב הנוכחי:** **מודול 2 (לקוחות) 🔒 סגור — ממתין ל-PR/merge.** אודיט-הסגירה (5.4) הושלם 11/07 22:33–22:42 בסשן טרי: verdict **[YES]**, ‏DoD typed-echo נחתם. פרטי-האודיט: ‏CHANGELOG ‏22:42 + מדריך-מיקרו §9 + ‏CLAUDE_CODE_LOG. **PR [#6](https://github.com/ishay1997-ux/Reg-In/pull/6) פתוח, CI ירוק** (`gh pr view 6` אומת חי: שני-הצ'קים SUCCESS, mergeable). **פעולת-אנוש נותרת יחידה:** מיזוג (ישי, כשירצה) → `git checkout dev && git pull` → להדליק ✅ בטבלה + ‏`regin-docs-sync`. **הבא בתור: מודול 4 (דיילות + Smart Match)** — פתיחה דרך פרומפט-⑥ של [ishay/02](docs/guides/ishay/02_module_04_hostesses.md), עם טמפלט-הפתיחה המעודכן (תקציר-חוויה · 🎤 ראיון-PM · שערי-ויזואל). *(ההיסטוריה המלאה של בניית-מ2 — ביומנים; תקציר-העבר שהיה כאן הוחלף בסגירה, 22:42.)*
 מפת המסלול המלאה: [docs/guides/ishay/00_track.md](docs/guides/ishay/00_track.md)
 
 ## המסלול של עמית
