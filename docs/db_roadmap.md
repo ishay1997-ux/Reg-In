@@ -167,7 +167,8 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | permissions | FK index (C-1) · multiple_permissive (C-2) |
 | users | NOT NULL role_id (A-14) · email key = **accept + ON UPDATE CASCADE — RULED §7.64 (10/07)**, exec M9 · email sync (A-20) · FK index (C-1) |
 | login_attempts | purge job (A-18) · Auth Hook upgrade (A-22) |
-| customers | policies (A-10) · discount CHECK (A-9) · timestamps (A-13) · **surrogate PK — RULED §7.64 (10/07): `customer_id bigint` + `company_number` unique not null; exec M2 step 1.1 (סטיית-C6 §2.4.1)** · email UNIQUE (§7.65) · deactivate guards (§7.34) |
+| customers | policies (A-10) · discount CHECK (A-9) · timestamps (A-13) · **surrogate PK — RULED §7.64 (10/07): `customer_id bigint` + `company_number` unique not null; exec M2 step 1.1 (סטיית-C6 §2.4.1)** · email UNIQUE (§7.65) · deactivate guards (§7.34) · **+ child `customer_contacts` — §7.81 (11/07), ריבוי אנשי-קשר אופציה C (איש-קשר ראשי נשאר inline)** |
+| customer_contacts | **NEW child table — RULED §7.81 (11/07): ריבוי אנשי-קשר, אופציה C.** FK→`customers(customer_id)` on delete/update cascade + covering index (C-1 ✓) · RLS §7.21 ('לקוחות', same gate as customers) · moddatetime (§7.73). Migration `20260711013517_module2_customer_contacts.sql` — **✅ APPLIED 11/07 (verified live via MCP: table/7-cols/FK/covering-index/trigger[extensions.moddatetime]/RLS/2 policies)**; api/UI wiring = step 3.7; סטיית-C6 §2.4.1 (single inline contact) |
 | products | unit/category CHECKs exist; sku stays natural PK + **ON UPDATE CASCADE — RULED §7.64 (10/07)**, exec M3 · seed (A-12) |
 | price_tiers | seed (A-12) · sanity CHECKs min_qty>0/max≥min (§7.41 bundle) |
 | params | UNIQUE (§7.40) · typed+history (§7.70) · seed (A-12) · ghost param (§7.57) |

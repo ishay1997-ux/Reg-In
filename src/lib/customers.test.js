@@ -35,6 +35,12 @@ describe('matchesCustomerFilters — חיפוש סלחני (§7.11)', () => {
     expect(matchesCustomerFilters(c(), { text: '514' })).toBe(true) // תחילת ח"פ
   })
 
+  it('מוצא לפי שם איש-קשר *נוסף* (customer_contacts, §7.81)', () => {
+    const withExtra = c({ customer_contacts: [{ contact_name: 'מיכל לוי' }] })
+    expect(matchesCustomerFilters(withExtra, { text: 'מיכל' })).toBe(true) // איש-קשר נוסף
+    expect(matchesCustomerFilters(withExtra, { text: 'דנה' })).toBe(true) // עדיין מוצא את הראשי
+  })
+
   it('ח"פ = התאמת-תחילית בלבד, לא אמצע', () => {
     expect(matchesCustomerFilters(c({ company_number: '514000001' }), { text: '000' })).toBe(false)
   })
@@ -57,6 +63,30 @@ describe('matchesCustomerFilters — חיפוש סלחני (§7.11)', () => {
     expect(
       matchesCustomerFilters(c({ marketing_consent: false }), { marketingConsent: null }),
     ).toBe(true)
+  })
+})
+
+describe('matchesCustomerFilters — פילטרים חדשים (ב/ג)', () => {
+  it('status: מסנן פעילים בלבד כשסופק; לא מסנן כשלא (toggle-ארכיון)', () => {
+    expect(matchesCustomerFilters(c({ status: 'inactive' }), { status: 'active' })).toBe(false)
+    expect(matchesCustomerFilters(c({ status: 'inactive' }), {})).toBe(true) // "הצג ארכיון" דלוק
+  })
+
+  it('hasDiscount: יש/אין הנחה (בוליאני מפורש בלבד)', () => {
+    expect(matchesCustomerFilters(c({ discount_percent: 0 }), { hasDiscount: true })).toBe(false)
+    expect(matchesCustomerFilters(c({ discount_percent: 5 }), { hasDiscount: true })).toBe(true)
+    expect(matchesCustomerFilters(c({ discount_percent: 5 }), { hasDiscount: false })).toBe(false)
+    expect(matchesCustomerFilters(c({ discount_percent: 0 }), { hasDiscount: false })).toBe(true)
+  })
+
+  it('createdAfter: "נוספו-לאחרונה" לפי סף-תאריך (השוואת-Date)', () => {
+    const cutoff = '2026-06-11T00:00:00Z'
+    expect(
+      matchesCustomerFilters(c({ created_at: '2026-07-10T00:00:00Z' }), { createdAfter: cutoff }),
+    ).toBe(true)
+    expect(
+      matchesCustomerFilters(c({ created_at: '2026-01-01T00:00:00Z' }), { createdAfter: cutoff }),
+    ).toBe(false)
   })
 })
 
@@ -99,11 +129,19 @@ describe('sortCustomers', () => {
   })
 })
 
-describe('deriveCustomerMetrics', () => {
-  it('totalRevenue + grossProfit תמיד null במודול 2 (SSOT במודול 3/7)', () => {
+describe('deriveCustomerMetrics — 5 מדדים ממוקדי-מנהלת-לקוחות', () => {
+  it('הכנסות/גודל-עסקה/אירוע-אחרון/רדום = null במ2; רווח-גולמי ירד מהכרטיס', () => {
     const m = deriveCustomerMetrics([{ feedback_score: 4 }])
     expect(m.totalRevenue).toBeNull()
-    expect(m.grossProfit).toBeNull()
+    expect(m.avgDealSize).toBeNull()
+    expect(m.lastEventDate).toBeNull()
+    expect(m.isDormant).toBeNull()
+    expect(m).not.toHaveProperty('grossProfit') // ירד מהכרטיס — יעדו מ8/מ11
+  })
+
+  it('projectCount = אורך-הרשימה, אך null כשריקה (0-נראה מטעה עד מ6)', () => {
+    expect(deriveCustomerMetrics([{}, {}, {}]).projectCount).toBe(3)
+    expect(deriveCustomerMetrics([]).projectCount).toBeNull()
   })
 
   it('avgFeedback = ממוצע feedback_score כשיש, אחרת null', () => {

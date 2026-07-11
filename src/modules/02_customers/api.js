@@ -21,7 +21,11 @@ function toError(error, fallbackMessage) {
 // כל הלקוחות (פעילים ולא-פעילים) ממוינים לפי שם-חברה. הסינון/המיון העדין נעשה בצד-לקוח דרך
 // src/lib/customers.js (מסך קטן, דאטה קטן) — כאן מביאים את הסט המלא שה-RLS מתיר לתפקיד.
 export async function listCustomers() {
-  const { data, error } = await supabase.from('customers').select('*').order('company_name')
+  // כולל את אנשי-הקשר הנוספים (§7.81) לחיפוש הסלחני על פני כולם (matchesText ב-src/lib/customers.js).
+  const { data, error } = await supabase
+    .from('customers')
+    .select('*, customer_contacts(contact_name)')
+    .order('company_name')
   if (error) throw toError(error, 'שגיאה בטעינת רשימת הלקוחות.')
   return data ?? []
 }
@@ -63,7 +67,9 @@ export async function getConsentedCustomerEmails() {
     .eq('marketing_consent', true)
     .eq('status', 'active')
   if (error) throw toError(error, 'שגיאה בטעינת רשימת הנמענים המאושרים.')
-  return (data ?? []).map((row) => row.email)
+  // dedup: אותו אימייל יכול להופיע על שתי שורות-לקוח (email אינו UNIQUE — §7.65, איש-קשר משותף
+  // לשתי חברות לגיטימי). Set מונע דיוור כפול לאותו נמען ב-BCC.
+  return [...new Set((data ?? []).map((row) => row.email))]
 }
 
 // ---- כתיבות (Writes) ----
@@ -79,11 +85,14 @@ export async function createCustomer(customer) {
 
 // עדכון לקוח קיים לפי ה-PK. company_number (ח"פ) ו-customer_id לעולם לא משתנים במודול 2 —
 // מוסרים אותם מה-patch הגנתית כדי שקורא לא ישנה בטעות מזהה עסקי/מפתח (החלטת-קיבוע §7.11/§7.64).
+// status גם מוסר: ארכוב/שחזור עובר **רק** דרך setCustomerStatus (מוסכמת-הארכיון), כך שבאג-UI
+// שיעביר status בטעות לא יעקוף את הפונקציה הייעודית — שכבת-הגנה נוספת, לא החומה (ה-RLS הוא החומה).
 // .select() חושף חסימת-RLS שקטה: 0 שורות מוחזרות = הרשאה נדחתה (view בלי edit) → שגיאה, לא הצלחה-שקטה.
 export async function updateCustomer(customerId, patch) {
   const safePatch = { ...patch }
   delete safePatch.customer_id
   delete safePatch.company_number
+  delete safePatch.status
   const { data, error } = await supabase
     .from('customers')
     .update(safePatch)
@@ -106,6 +115,43 @@ export async function setCustomerStatus(customerId, status) {
   if (!data || data.length === 0)
     throw toError({ code: 'RLS_DENIED' }, 'אין הרשאה לשנות את סטטוס הלקוח.')
   return data[0]
+}
+
+// ---- אנשי-קשר נוספים (customer_contacts, §7.81 — מודל אופציה C) ----
+// איש-הקשר הראשי חי inline על customers; כאן רק ה*נוספים*. RLS זהה (הרשאת מודול 'לקוחות').
+
+// אנשי-הקשר הנוספים של לקוח, ממוינים לפי סדר-יצירה.
+export async function listCustomerContacts(customerId) {
+  const { data, error } = await supabase
+    .from('customer_contacts')
+    .select('*')
+    .eq('customer_id', customerId)
+    .order('contact_id')
+  if (error) throw toError(error, 'שגיאה בטעינת אנשי הקשר.')
+  return data ?? []
+}
+
+// שמירת קבוצת אנשי-הקשר הנוספים של לקוח = replace (מחיקה + הכנסה). why: הטופס עורך את כל הקבוצה
+// כיחידה, ו-replace פשוט ואמין מ-diff לרשימה קטנה; ה-contact_id מתחדש בכל שמירה — מקובל כי אנשי-הקשר
+// אינם מפתח-זר לשום דבר. שורות בלי שם מסוננות (שם = חובה ב-DB). מחזיר את השורות שנשמרו.
+export async function replaceCustomerContacts(customerId, contacts) {
+  const { error: delError } = await supabase
+    .from('customer_contacts')
+    .delete()
+    .eq('customer_id', customerId)
+  if (delError) throw toError(delError, 'שמירת אנשי הקשר נכשלה.')
+  const rows = (contacts ?? [])
+    .filter((c) => (c.contact_name ?? '').trim() !== '')
+    .map((c) => ({
+      customer_id: customerId,
+      contact_name: c.contact_name.trim(),
+      phone: (c.phone ?? '').trim() || null,
+      email: (c.email ?? '').trim() || null,
+    }))
+  if (rows.length === 0) return []
+  const { data, error } = await supabase.from('customer_contacts').insert(rows).select()
+  if (error) throw toError(error, 'שמירת אנשי הקשר נכשלה.')
+  return data ?? []
 }
 
 // ---- אחסון שיווקי (Storage) ----

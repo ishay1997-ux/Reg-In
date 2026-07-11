@@ -18,23 +18,38 @@ function matchesText(customer, rawText) {
   const q = (rawText ?? '').trim().toLowerCase()
   if (q === '') return true
   const company = (customer.company_name ?? '').toLowerCase()
-  const contact = (customer.contact_name ?? '').toLowerCase()
   const companyNumber = customer.company_number ?? '' // ח"פ (מאז §7.64 עמודה עסקית, לא ה-PK)
-  return company.includes(q) || contact.includes(q) || companyNumber.startsWith(q)
+  // איש-הקשר הראשי (inline) + כל אנשי-הקשר הנוספים (customer_contacts, §7.81) — חיפוש על פני כולם,
+  // כדי שאיתור-לקוח לפי שם-איש-קשר (§7.11) יעבוד גם כשההתאמה היא לאיש-קשר משני.
+  const contactNames = [
+    customer.contact_name,
+    ...(customer.customer_contacts ?? []).map((cc) => cc.contact_name),
+  ]
+  const contactMatch = contactNames.some((n) => (n ?? '').toLowerCase().includes(q))
+  return company.includes(q) || contactMatch || companyNumber.startsWith(q)
 }
 
-// סינון לקוחות לפי מסך 5.6.3 + המסננת המתקדמת (מוקאפ 04): סוג-לקוח, מאושר-דיוור,
-// אחוז-הנחה-מינימלי, וטקסט חופשי (§7.11). כל קריטריון שלא-סופק = לא-מסנן (משאיר את הרשומה).
+// סינון לקוחות לפי מסך 5.6.3 + המסננת המתקדמת (מוקאפ 04): סוג-לקוח, מאושר-דיוור, אחוז-הנחה,
+// יש/אין-הנחה, סטטוס (toggle-ארכיון), "נוספו-לאחרונה", וטקסט חופשי (§7.11). כל קריטריון שלא-סופק =
+// לא-מסנן (משאיר את הרשומה). הפונקציה טהורה: הסף לתאריך "נוספו-לאחרונה" (createdAfter) מחושב ב-UI
+// ומועבר פנימה — כדי שהיא תישאר נבדקת בלי תלות בשעון.
 export function matchesCustomerFilters(customer, filters = {}) {
-  const { text, customerType, marketingConsent, minDiscount } = filters
+  const { text, customerType, marketingConsent, minDiscount, hasDiscount, status, createdAfter } =
+    filters
+  // סטטוס: מסננים רק כשסופק ערך מפורש. toggle-הארכיון בעמוד שולח status='active' כברירת-מחדל
+  // (מציג פעילים בלבד — סטיית-הכרעה מ-5.x, ר' §9 במדריך); כשמדליקים "הצג ארכיון" הוא לא נשלח כלל.
+  if (status && customer.status !== status) return false
   if (customerType && customer.customer_type !== customerType) return false
   // הסכמת-דיוור: מסננים רק כשהפילטר בוליאני מפורש; undefined/null = "לא אכפת", לא מסנן.
   if (typeof marketingConsent === 'boolean' && customer.marketing_consent !== marketingConsent) {
     return false
   }
-  if (minDiscount != null && Number(customer.discount_percent ?? 0) < Number(minDiscount)) {
-    return false
-  }
+  const discount = Number(customer.discount_percent ?? 0)
+  if (minDiscount != null && discount < Number(minDiscount)) return false
+  // יש/אין-הנחה (הכרעת-ישי): true = הנחה>0 · false = בדיוק 0. בוליאני-מפורש בלבד.
+  if (typeof hasDiscount === 'boolean' && discount > 0 !== hasDiscount) return false
+  // "נוספו-לאחרונה": created_at ≥ הסף. השוואת-Date (לא מחרוזת) עמידה להבדלי-פורמט בין +00:00 ל-Z.
+  if (createdAfter && new Date(customer.created_at ?? 0) < new Date(createdAfter)) return false
   return matchesText(customer, text)
 }
 
@@ -61,21 +76,33 @@ export function sortCustomers(customers, key, dir = 'asc') {
   })
 }
 
-// מדדים נגזרים לכרטיס-הלקוח (step 3.6). totalRevenue + grossProfit מוחזרים null **במכוון**:
-// totalRevenue מגיע מ-SSOT-התמחור של מודול 3 (src/lib/pricing.js), grossProfit מנוסחת-הרווח של
-// מודול 8 (סגירת-תיק ורווחיות, אפיון 5.14; §7.79) — אין כאן נוסחת-הכנסה/רווח (כלל 14: לא
-// משכפלים; המקור הוא המודול האחראי).
-// avgFeedback נגזר מ-projects.feedback_score כשיש נתונים (מודול 8 ימלא), אחרת null.
-// ⚠️ למחווט-מ8: האפיון (5.7.3) ממצע משוב על **אירועי-עבר בלבד** — לסנן פרויקטים-שהסתיימו לפני
-// הממוצע (הפונקציה היום ממצעת כל מה שמגיע; getCustomerProjects לא מסנן סטטוס).
-// 🚧 מ3 · 🚧 מ8 — חוב חוצה-מודולים רשום ב-PROJECT_MASTER §6 ("השלמות כרטיס לקוח"):
-// מ3 מחבר totalRevenue (דרך pricing.js) · מ8 מחבר grossProfit (§7.79) וממלא feedback_score.
-// פרומפט-הפתיחה של כל מודול-יעד גורף `grep '🚧 מ<מספרו>' §6` וחוזר לחווט כאן — כלל ברזל 15.
+// מדדים נגזרים לכרטיס-הלקוח (step 3.6) — 5 מדדים ממוקדי-מנהלת-לקוחות (הכרעת-ישי 11/07):
+// הכנסות · מספר-אירועים · אירוע-אחרון(רדום?) · גודל-עסקה-ממוצע · ממוצע-משוב. רווח-גולמי **ירד**
+// מהכרטיס (החלטת-פרסונה — יעדו מסך-הכספים מ8 ודו"ח-הניהול מ11; §9 במדריך מתעד את הסטייה).
+// כולם placeholder עד שהמודול-מקור נוחת (כלל 14: לא משכפלים נוסחאות; המקור הוא המודול האחראי):
+//   projectCount — נגזר מיד מאורך הרשימה (0-נראה מוחזר null כדי לא להטעות כל עוד projects deny-all).
+//   totalRevenue + avgDealSize — מ-SSOT-התמחור של מ3 (src/lib/pricing.js).
+//   lastEventDate + isDormant — מתאריכי-הפרויקט של מ6.
+//   avgFeedback — מ-feedback_score של מ8. ⚠️ למחווט-מ8: האפיון (5.7.3) ממצע אירועי-עבר בלבד
+//   (getCustomerProjects לא מסנן סטטוס — לסנן פרויקטים-שהסתיימו לפני הממוצע).
+// 🚧 מ3 · 🚧 מ6 · 🚧 מ8 — רשום ב-PROJECT_MASTER §6 ("השלמות כרטיס לקוח"); כל מודול-יעד גורף
+// `grep '🚧 מ<מספרו>' §6` וחוזר לחווט כאן — כלל ברזל 15.
 export function deriveCustomerMetrics(projects = []) {
+  // מספר-אירועים: 0-נראה → null (projects עדיין deny-all עד מ6; 0-נראה ≠ 0-אמיתי) כדי שהכרטיס
+  // יציג "אין נתונים עדיין" ולא "0" מטעה.
+  const projectCount = projects.length > 0 ? projects.length : null
   const scores = projects
     .map((p) => p?.feedback_score)
     .filter((s) => typeof s === 'number' && !Number.isNaN(s))
   const avgFeedback =
     scores.length > 0 ? scores.reduce((sum, s) => sum + s, 0) / scores.length : null
-  return { totalRevenue: null, grossProfit: null, avgFeedback }
+  // הכנסות/גודל-עסקה (מ3) ואירוע-אחרון/רדום (מ6) — null עד החיווט. avgDealSize = totalRevenue/projectCount.
+  return {
+    totalRevenue: null,
+    projectCount,
+    lastEventDate: null,
+    isDormant: null,
+    avgDealSize: null,
+    avgFeedback,
+  }
 }

@@ -401,3 +401,32 @@ create policy "marketing_delete_by_permission" on storage.objects for delete to 
     where p.role_id = (select current_user_role_id())
       and p.module_id = (select module_id from modules where module_name = 'לקוחות')
       and p.permission_level = 'edit'));
+
+-- §7.81 (11/07/2026): ריבוי אנשי-קשר ללקוח — טבלת-ילד customer_contacts (אנשי-קשר *נוספים*; הראשי
+-- נשאר inline על customers, אופציה C — סטיית-C6 §2.4.1). RLS = אותה מטריצת 'לקוחות'. הוחל 11/07.
+create table customer_contacts (
+  contact_id  bigint generated always as identity primary key,
+  customer_id bigint not null references customers(customer_id) on delete cascade on update cascade,
+  contact_name text not null,
+  phone text,
+  email text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index customer_contacts_customer_id_idx on customer_contacts (customer_id);
+create trigger customer_contacts_set_updated_at before update on customer_contacts for each row execute function extensions.moddatetime(updated_at);
+alter table customer_contacts enable row level security;
+create policy "customer_contacts_select_by_permission" on customer_contacts for select to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+      and p.permission_level in ('edit', 'view')));
+create policy "customer_contacts_write_by_permission" on customer_contacts for all to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+      and p.permission_level = 'edit'))
+  with check (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+      and p.permission_level = 'edit'));
