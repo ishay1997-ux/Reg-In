@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+# Stop hook — חוסם סיום סשן אם קבצים השתנו בלי שעודכן התיעוד המחייב.
+# הלוגיקה ישבה קודם ישירות בתוך .claude/settings.json (הועברה לכאן 06/07/2026
+# כדי ש-Claude יוכל לתחזק אותה בלי לגעת ב-settings.json, שעריכתו על-ידי Claude
+# חסומה על-ידי ההגנה המובנית של Claude Code).
+#
+# שלוש אכיפות, לפי סדר פרוטוקול סוף-הסשן ב-CLAUDE.md:
+# (0) מדריך-מיקרו חי (כלל ברזל 15): קוד של מודול (src/modules/NN_*/) שהשתנה
+#     מחייב שמדריך המיקרו שלו (docs/micro_guides/module-N.md) יעודכן אחריו.
+# (0ב) מפת ה-DB (נוסף 08/07/2026 — המקבילה של כלל 15 ל-DB): מיגרציה שהשתנתה
+#     (supabase/migrations/**) מחייבת ש-docs/db_roadmap.md יעודכן אחריה —
+#     כך המפה המרוכזת של שינויי-הסכמה מתעדכנת תוך-כדי-עבודה, לא בדיעבד.
+# (1-3) היומן ולוח המצב: docs/CLAUDE_CODE_LOG.md + STATUS.md חייבים להתעדכן
+#     אחרי הקובץ ששונה אחרון.
+# אם משהו חסר — פולטים JSON עם decision:block והסשן לא מסתיים עד שמעדכנים.
+#
+# מודעות-לסשן (נוסף 07/07/2026, כלל ברזל 16): הבדיקה חלה רק על סשן שערך קבצים
+# בעצמו. סשן קריאה-בלבד (שלא ביצע Edit/Write/NotebookEdit) פטור לגמרי — גם אם
+# סשן כותב אחר "מלכלך" את עץ-העבודה המשותף. את "מי ערך ומתי" קובע קובץ-הסימון
+# שכותב protect-frozen-files.sh (mtime = זמן העריכה האחרונה של הסשן).
+
+# --- קריאת stdin וזיהוי הסשן ---
+INPUT=$(cat)
+SESSION_ID=$(printf '%s' "$INPUT" | grep -o '"session_id"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/')
+GITDIR=$(git rev-parse --absolute-git-dir 2>/dev/null)
+MUTDIR="${GITDIR:-${TMPDIR:-/tmp}}/regin-session-mutations"
+MARK="$MUTDIR/$SESSION_ID"
+
+# ניקוי סימונים ישנים (מעל יומיים) כדי שהתיקייה לא תיפוח. לא נוגע בסשן הנוכחי.
+find "$MUTDIR" -type f -mmin +2880 -delete 2>/dev/null
+
+# דילוג קריאה-בלבד: session_id ידוע ואין לו קובץ סימון = הסשן הזה לא ערך כלום
+# בעצמו. עוברים נקי בלי לחסום. (session_id לא זמין → לא מדלגים; ממשיכים לבדיקה
+# המלאה כ-fail-safe שמשמר את ההתנהגות הישנה.)
+[ -n "$SESSION_ID" ] && [ ! -s "$MARK" ] && exit 0
+
+LOG="docs/CLAUDE_CODE_LOG.md"
+ST="STATUS.md"
+
+# אם היומן לא קיים (ריפו במצב חריג) — לא חוסמים, עדיף סשן שנסגר מאשר נעילה נצחית.
+[ -f "$LOG" ] || exit 0
+
+LOG_M=$(stat -c %Y "$LOG" 2>/dev/null || echo 0)
+ST_M=$(stat -c %Y "$ST" 2>/dev/null || echo 0)
+
+# כל השינויים חוץ מהיומן ולוח המצב עצמם.
+# ‏-uall (נוסף 08/07/2026): בלעדיו git מקבץ קבצים לא-מוכרים לתיקייה ("?? dir/")
+# והבדיקות פר-קובץ מפספסות את הקובץ הראשון בתיקייה חדשה (מודול חדש / מיגרציה ראשונה).
+CHANGED=$(git status --porcelain -uall -- . ":!$LOG" ":!$ST" 2>/dev/null)
+[ -z "$CHANGED" ] && exit 0
+
+# --- אכיפה 0: מדריך-מיקרו חי ---
+# לכל קובץ ששונה תחת src/modules/NN_*/ נגזר מספר המודול N ונבדק שהמדריך
+# docs/micro_guides/module-N.md עודכן אחריו. מודול שעדיין אין לו מדריך-מיקרו
+# (טרם נוצר בפתיחתו) — לא חוסמים; האכיפה חלה רק ממרגע שהמדריך קיים.
+MG_STALE=""
+RM_STALE=""
+NEWEST=0
+while IFS= read -r line; do
+  f=$(printf '%s' "$line" | cut -c4-)
+  [ -f "$f" ] || continue
+  m=$(stat -c %Y "$f" 2>/dev/null || echo 0)
+  [ "$m" -gt "$NEWEST" ] && NEWEST=$m
+  case "$f" in
+    src/modules/*)
+      dir=${f#src/modules/}
+      dir=${dir%%/*}
+      nn=${dir%%_*}
+      case "$nn" in '' | *[!0-9]*) continue ;; esac
+      n=$((10#$nn))
+      mg="docs/micro_guides/module-$n.md"
+      [ -f "$mg" ] || continue
+      mgm=$(stat -c %Y "$mg" 2>/dev/null || echo 0)
+      if [ "$m" -gt "$mgm" ]; then
+        case " $MG_STALE " in *" $mg "*) ;; *) MG_STALE="$MG_STALE $mg" ;; esac
+      fi
+      ;;
+    supabase/migrations/*.sql)
+      # אכיפה 0ב: מיגרציה חדשה/ששונתה מחייבת עדכון של מפת ה-DB אחריה.
+      # ‏*.sql בלבד — בתיקייה יושב גם CLAUDE.md (מצביע-תיקייה) שאינו מיגרציה
+      # (עריכתו הפעילה false-positive ביום ההוספה — 08/07/2026).
+      # אם המפה עוד לא קיימת (ריפו במצב מעבר) — לא חוסמים.
+      rm_f="docs/db_roadmap.md"
+      [ -f "$rm_f" ] || continue
+      rmm=$(stat -c %Y "$rm_f" 2>/dev/null || echo 0)
+      [ "$m" -gt "$rmm" ] && RM_STALE=1
+      ;;
+  esac
+done <<< "$CHANGED"
+
+# --- אכיפה 0ג: חוב חוצה-מודולים (🚧) ---
+# מדריך-מיקרו שהשתנה ומכיל טוקן "🚧 מN" (מודול-יעד) מחייב שורה תואמת "🚧 מN"
+# ב-PROJECT_MASTER §6 — הרשם שסשן-עתידי קורא בפתיחת מודול N כדי לדעת אילו חובות
+# הושארו לו. 🚧 במדריך בלי תאום ב-§6 = חוב שקט (Session-Blindness). אותו דפוס
+# fail-open כמו 0/0ב: אם PM לא קיים או אין מדריך שהשתנה — לא חוסמים. (כלל ברזל 15.)
+PM="docs/PROJECT_MASTER.md"
+HG_MISS=""
+if [ -f "$PM" ]; then
+  while IFS= read -r line; do
+    f=$(printf '%s' "$line" | cut -c4-)
+    case "$f" in
+      docs/micro_guides/module-*.md)
+        [ -f "$f" ] || continue
+        # כל טוקן "🚧 מN" ייחודי במדריך → חייב "🚧 מN" תואם ב-§6.
+        for tgt in $(grep -oE '🚧 מ[0-9]+' "$f" 2>/dev/null | grep -oE '[0-9]+' | sort -u); do
+          grep -qF "🚧 מ$tgt" "$PM" 2>/dev/null || HG_MISS="$HG_MISS ${f##*/}→מ$tgt"
+        done
+        ;;
+    esac
+  done <<< "$CHANGED"
+fi
+
+# --- אכיפה 1-3: יומן ולוח מצב ---
+# משווים מול זמן העריכה של *הסשן הזה* (mtime של הסימון), לא מול NEWEST הגלובלי —
+# כך שינויים לא-מקומיטים של סשן מקביל לא נספרים. בלי session_id → נשארים על NEWEST.
+if [ -n "$SESSION_ID" ] && [ -s "$MARK" ]; then
+  EDIT_TS=$(stat -c %Y "$MARK" 2>/dev/null || echo 0)
+else
+  EDIT_TS=$NEWEST
+fi
+
+MISS=""
+[ "$EDIT_TS" -gt "$LOG_M" ] && MISS="docs/CLAUDE_CODE_LOG.md"
+[ "$EDIT_TS" -gt "$ST_M" ] && MISS="$MISS STATUS.md"
+
+REASON=""
+if [ -n "$MG_STALE" ]; then
+  REASON="קוד מודול השתנה בלי שמדריך המיקרו שלו עודכן אחריו:$MG_STALE. עדכן בו את כותרת המצב, טבלת הצעדים והסטיות (כלל ברזל 15, צעד 0 בפרוטוקול סוף-סשן). "
+fi
+if [ -n "$RM_STALE" ]; then
+  REASON="${REASON}מיגרציה השתנתה בלי ש-docs/db_roadmap.md עודכן אחריה — עדכן את שורות-המפה הרלוונטיות ואת רשימת-ה-Done (db_roadmap.md סעיף 10; המקבילה של כלל ברזל 15 ל-DB). "
+fi
+if [ -n "$HG_MISS" ]; then
+  REASON="${REASON}חוב חוצה-מודולים (🚧) לא נרשם ב-PROJECT_MASTER §6 —$HG_MISS. לכל שורת '🚧 מN' במדריך-מיקרו חייבת שורה תואמת '🚧 מN' ב-§6 (הרשם שהמודול העתידי קורא בפתיחתו כדי לחזור ולהשלים; כלל ברזל 15). הוסף את השורות החסרות ב-§6 בפורמט '🚧 מN ← מ<מודול-מקור> · מה · מקור: micro_guides/module-<מקור>.md'. "
+fi
+if [ -n "$MISS" ]; then
+  REASON="${REASON}הסשן הזה ערך קבצים אחרי העדכון האחרון של: $MISS. עדכן את היומן (docs/CLAUDE_CODE_LOG.md) ואת לוח המצב (STATUS.md) לפני סיום התור. אם אין שינוי-סטטוס אמיתי — עדכן ב-STATUS.md רק את שורת 'עודכן לאחרונה' אחרי שווידאת שהלוח עדיין נכון."
+fi
+
+if [ -n "$REASON" ]; then
+  # תיוג ברור: זו בדיקה אוטומטית של הריפו, לא הודעה אנושית — כדי שלא יתבלבלו
+  # (המשתמש חשב פעם שההודעות מגיעות ממנו/מ-Claude).
+  PREFIX="🤖 בדיקה אוטומטית של הריפו (Stop hook — לא הודעה מ-Claude או מהמשתמש): "
+  echo "{\"decision\":\"block\",\"reason\":\"${PREFIX}${REASON}\"}"
+fi
+exit 0
