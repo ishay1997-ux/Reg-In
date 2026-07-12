@@ -2,7 +2,7 @@
 
 # REG-IN — לוח מצב
 
-> עודכן לאחרונה: 12/07/2026 05:50
+> עודכן לאחרונה: 12/07/2026 08:02
 > ✅ אומת-סנכרון: 11/07/2026 23:20 (regin-docs-sync — אחרי סגירת מודול 2 + PR #6, 0 קונפליקטים)
 > **לוח מצב-עכשיו (לא ארכיון).** מתעדכן ע"י Claude בסוף כל סשן (נאכף ב-hook). היסטוריה ונרטיב → `docs/CLAUDE_CODE_LOG.md` · שינויים מתוארכים → `docs/CHANGELOG.md`. *(התזכורות התפעוליות למטה = מצב-חי מתגלגל, לא היסטוריה.)*
 
@@ -15,7 +15,7 @@
 | 0 | תשתית | ישי | ✅ | — | — |
 | 1 | משתמשים והרשאות | ישי | ✅ **מוזג ל-`dev`** (PR [#2](https://github.com/ishay1997-ux/Reg-In/pull/2)) | `ishay/module-1-permissions` (מוזג) | [ishay/01](docs/guides/ishay/01_close_module_1.md) |
 | 2 | לקוחות | **ישי** (10–11/07) | ✅ **מוזג ל-`dev`** (PR [#6](https://github.com/ishay1997-ux/Reg-In/pull/6), merge-commit `e69383a`; `gh pr view 6` אומת חי: `state: MERGED`, שני-הצ'קים `SUCCESS`) | `ishay/module-2-customers` (מוזג) | [amit/06](docs/guides/amit/06_module_02_customers.md) · [מדריך מיקרו](docs/micro_guides/module-2.md) |
-| 3 | הצעות מחיר | **ישי** (הכרעת 12/07; עמית — סיוע בהכרעות) | ⬜ | | [amit/07](docs/guides/amit/07_module_03_quotes.md) |
+| 3 | הצעות מחיר | **ישי** (הכרעת 12/07; עמית — סיוע בהכרעות) | 🔨 **ענף נפתח — ממתין לבלופרינט** | `ishay/module-3-quotes` (נפתח 12/07 מ-dev טרי `fd0ada0`; ⚠️ **לא** `amit/module-3-quotes` שבמדריך — הבעלות עברה לישי) | [amit/07](docs/guides/amit/07_module_03_quotes.md) |
 | 4 | דיילות + Smart Match | ישי | ⬜ | | [ishay/02](docs/guides/ishay/02_module_04_hostesses.md) |
 | 5 | לוגיסטיקה | ישי | ⬜ | | [ishay/03](docs/guides/ishay/03_module_05_logistics.md) |
 | 6 | פרויקטים (המחבר) | 🤝 משותף | ⬜ | | [shared/module_06](docs/guides/shared/module_06_projects.md) |
@@ -27,7 +27,7 @@
 | 12 | אינטגרציה והגשה (כולל פריסת Vercel) | 🤝 משותף | ⬜ | | [shared/module_12](docs/guides/shared/module_12_integration.md) |
 
 ## המסלול של ישי
-**השלב הנוכחי:** **מודול 2 (לקוחות) ✅ מוזג ל-`dev`** (PR [#6](https://github.com/ishay1997-ux/Reg-In/pull/6), merge-commit `e69383a`, 11/07 23:09 — `gh pr view 6` אומת חי: `state: MERGED`, שני-הצ'קים `SUCCESS`). אודיט-הסגירה [YES] + ‏DoD-typed-echo + שער-ויזואלי — כל השערים נחתמו (ישי, 22:39/22:55). `regin-docs-sync` הורצה אחרי-המיזוג (23:20, ר' תזכורות למטה) — 0 קונפליקטים. **הבא בתור: מודול 3 (הצעות-מחיר) — ישי** (הכרעת 12/07; עמית מסייע בהכרעות) — פתיחה דרך פרומפט-⑥ של [amit/07](docs/guides/amit/07_module_03_quotes.md), עם טמפלט-הפתיחה המעודכן (תקציר-חוויה · 🎤 ראיון-PM · שערי-ויזואל); סבב-ההכרעות-הקדם כבר בוצע (ר' "שאלות פתוחות" למטה). מודול 4 — אחריו. *(ההיסטוריה המלאה של בניית-מ2 — ביומנים.)*
+**השלב הנוכחי:** **מודול 3 (הצעות-מחיר) — ישי; ענף `ishay/module-3-quotes` נפתח מ-dev טרי (`fd0ada0`, 12/07).** מודול 2 סגור+מוזג (PR [#6](https://github.com/ishay1997-ux/Reg-In/pull/6)); דוקס-הפוסט-מיזוג + הכרעות-קדם-מ3 מוזגו (PR [#7](https://github.com/ishay1997-ux/Reg-In/pull/7), `fd0ada0`). **הפעולה הבאה: פרומפט-הפתיחה ⑥ של [amit/07](docs/guides/amit/07_module_03_quotes.md) ב-Plan Mode** (Opus/גבוה) → בלופרינט-מ3 (ייכתב כ-`docs/micro_guides/module-3.md`), עם טמפלט-הפתיחה המעודכן (🎤 ראיון-PM · תקציר-חוויה · שערי-ויזואל). **הכרעות-הקדם כבר רשומות ב-§7** (§7.49–53+76+78; ר' "שאלות פתוחות") — הבלופרינט מיישם, לא שואל מחדש; נותרו לסבב-הפתיחה §7.70/75/13/74 + #30 (רב-יומי, מומלץ לדחות למ4). מודול 4 — אחרי מ3. *(ההיסטוריה המלאה של בניית-מ2 — ביומנים.)*
 מפת המסלול המלאה: [docs/guides/ishay/00_track.md](docs/guides/ishay/00_track.md)
 
 ## המסלול של עמית
