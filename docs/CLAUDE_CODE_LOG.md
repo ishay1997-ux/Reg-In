@@ -17,13 +17,13 @@
 
 ---
 
-## Current State (snapshot — 12/07/2026 03:49)
+## Current State (snapshot — 12/07/2026 08:16)
 <!-- target ~15 lines · snapshot is rewritten, not appended · no internal dates (F4) · over budget? compress / move to journal -->
 ✅ Sync-verified: 11/07/2026 23:20 (regin-docs-sync — after closing module 2 + PR #6, 0 conflicts)
 
-**Where we stand:** Module 1 (users/permissions) and Module 2 (customers) are **closed and merged into `dev`** (PR #2, PR #6). The engineering infrastructure is **frozen 🧊** until field evidence from module 4 (🔮 checkpoint — see STATUS). **Next up: Module 3 (quotes) — Ishay** (Amit assists on decisions); the pre-decision round for M3 is already done (§7.49–53 + riders). Module 4 (hostesses + Smart Match) comes after.
+**Where we stand:** Module 1 (users/permissions) and Module 2 (customers) are **closed, merged into `dev`, and promoted to `main`** (PR #2, PR #6, PR #8) — **milestone 1** (tag `milestone-1` on merge `4b09d2f`; verified: `main` content == `dev`, no force-push, no WIP leak). The engineering infrastructure is **frozen 🧊** until field evidence from module 4 (🔮 checkpoint — see STATUS). **Next up: Module 3 (quotes) — Ishay** (Amit assists on decisions); branch **`ishay/module-3-quotes`** opened from fresh `dev`; the M3 pre-decision rounds are done (§7.49–53 + riders + the 04:48/05:24 rounds — zero open questions). Module 4 (hostesses + Smart Match) comes after.
 
-**Open reminder:** Delete the `ishay/module-2-customers` branch (merged, not auto-deleted)? — awaiting Ishay's instruction.
+**Branch tree (cleaned 12/07, Ishay-approved):** only `main` / `dev` / `ishay/module-3-quotes` remain — all merged personal branches + 5 `agents/*` experiment branches (+worktrees) + `docs-council-hardening` (content shipped via PR #4) deleted, local **and** origin.
 
 **Truth-sources:** schema `docs/schema.sql` (16 tables) · frozen spec = transcripts `reference_spec/C5_clean_transcript.md`+`C6_clean_transcript.md` (grade 2) · future DB changes `docs/db_roadmap.md` · open questions = `PROJECT_MASTER §7` (count always via grep). **Live module status = `STATUS.md`** (not duplicated here).
 
@@ -35,6 +35,9 @@
 
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
+
+### 12/07/2026 08:16 — Milestone-1 promotion (dev→main) verified + branch cleanup + tag (Ishay-approved; git housekeeping, no code/DB)
+Ishay promoted `dev`→`main` at the first milestone (PR #8, merge `4b09d2f`); this session **verified it from two independent angles** (evidence-cited, not from memory): (1) `git diff origin/main origin/dev` = empty → identical content; (2) `dev` is an ancestor of `main`, only the merge commit is new, merge parents = `2292a39` (old main) + `fd0ada0` (dev); (3) module-3 WIP tip NOT on main (no leak); (4) old-main preserved as ancestor (no force-push); (5) `gh pr view 8` = `state: MERGED`, base `main` ← head `dev`. All 7/7 green. Then **tagged `milestone-1`** on `4b09d2f` (annotated, pushed to origin — verified `refs/tags/milestone-1` → `4b09d2f`). **Branch cleanup (Ishay-approved):** removed 5 `agents/*` experiment worktrees+branches (0 unique commits), 4 merged personal branches (`governance-cleanup`, `module-1-post-merge-docs`, `module-2-customers`, `module-2-post-merge-docs`) local+origin, and `docs-council-hardening` (its lone commit `4591c57` shipped as content via PR #4 — confirmed in the merged-PR list). Opened **`ishay/module-3-quotes`** off fresh `dev` (`fd0ada0`) with a STATUS pointer so a fresh blueprint session finds it (ishay/, NOT amit/ — ownership moved to Ishay). These housekeeping doc commits live on the module-3 branch and reach `dev` when M3 merges (Ishay accepted the deferred visibility). Next: M3 opening prompt ⑥ in Plan Mode.
 
 ### 12/07/2026 05:24 — Module-3 pre-blueprint triage round 2 (2 audit agents) + §7 write-back (Ishay's rulings; docs-only)
 Before writing the M3 blueprint, Ishay asked to "find and close all the holes." Ran two parallel fresh-context Explore agents: one auditing spec-coverage (C5/C6 quotes/pricing vs §7 + schema), one auditing process/infra readiness (guide, db_roadmap, §6 debts, template, prerequisites). They surfaced **1 hard blocker + ~13 gaps**, none contradicting an existing ruling — genuine white space. Ishay ruled all of it, one-by-one:
