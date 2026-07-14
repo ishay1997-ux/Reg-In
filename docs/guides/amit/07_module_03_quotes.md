@@ -74,7 +74,7 @@ docs/reference_spec/products_and_params.md, docs/module3_prices_tab_design_notes
 היקף נוסף שהוכרע (14/07): (א) §7.83 — ה-RLS ל-params/products/price_tiers = select-פתוח-לכל-authenticated + כתיבה-CEO-בלבד (מחליף את תבנית-§7.21 עבורן). (ב) §7.84 — המודול בונה **גם** טאב "מחירים" חדש בניהול-מערכת (קטלוג/מדרגות/2-פרמטרים, כתיבה CEO); עיצוב-רקע ב-docs/module3_prices_tab_design_notes.md — שקלל אותו ב-DB Design Challenge, אל תבנה עיוור לפיו. (ג) §7.85 — מבנה-מפתח quote_services (PK-משולש מול line_id סינתטי) = שאלה ל-DB Design Challenge, לא הוכרעה.
 
 קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
-MODULE_NUMBER=3 · MODULE_NAME=הצעות מחיר · RELEVANT_SECTIONS=§5.2-5.6 (תהליך+מסכי-הצעה+תמחור), §7 כל ·מ3· + §7.82 · BRANCH_NAME=ishay/module-3-quotes
+MODULE_NUMBER=3 · MODULE_NAME=הצעות מחיר · RELEVANT_SECTIONS=§5.2-5.6 (תהליך+מסכי-הצעה+תמחור), §7 כל ·מ3· + §7.82/83/84/85 · BRANCH_NAME=ishay/module-3-quotes
 
 חובה: "שאלות פתוחות" מסעיף ② במדריך שלי = פריטי §7, מנותבות לישי להכרעה (§7 = ישי, כלל 1) — אל תכריע בהן לבד.
 הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-3.md.
