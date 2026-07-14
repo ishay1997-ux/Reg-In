@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REG-IN · ניהול פרויקטים — מוקאפ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* צבעים מתוך המערכת הבנויה: teal-600 = #0D9488 (‎--primary, §4), פלטת slate של Tailwind, רקע slate-50 */
+  :root{
+    --teal-50:#F0FDFA; --teal-100:#CCFBF1; --teal-600:#0D9488; --teal-700:#0F766E;
+    --slate-50:#F8FAFC; --slate-100:#F1F5F9; --slate-200:#E2E8F0; --slate-300:#CBD5E1;
+    --slate-400:#94A3B8; --slate-500:#64748B; --slate-600:#475569; --slate-700:#334155; --slate-800:#1E293B;
+    --green-100:#DCFCE7; --green-600:#16A34A; --green-700:#15803D;
+    --amber-100:#FEF3C7; --amber-500:#F59E0B; --amber-700:#B45309;
+    --red-50:#FEF2F2; --red-100:#FEE2E2; --red-600:#DC2626; --red-700:#B91C1C;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  /* המערכת מייבאת Geist Variable; עברית נופלת לפונט-המערכת (Segoe UI ב-Windows) — כמו שרואים בפועל */
+  body{font-family:'Geist','Segoe UI',system-ui,Arial,sans-serif; background:#E2E8F0; color:var(--slate-800);
+       -webkit-font-smoothing:antialiased}
+  .app{width:1360px; margin:0 auto; display:flex; min-height:840px; background:var(--slate-50);
+       box-shadow:0 10px 40px rgba(15,23,42,.14)}
+
+  /* ===== Sidebar (ימין, w-60=240px) ===== */
+  .sidebar{width:240px; background:#fff; border-inline-start:1px solid var(--slate-200);
+           display:flex; flex-direction:column}
+  .side-head{height:64px; display:grid; grid-template-columns:36px 1fr 36px; align-items:center;
+             border-bottom:1px solid var(--slate-100); padding:0 8px}
+  .side-head img{height:36px; justify-self:center}
+  .collapse{width:36px; height:36px; border-radius:8px; border:0; background:transparent; color:var(--slate-500);
+            display:flex; align-items:center; justify-content:center; cursor:pointer; justify-self:center}
+  .collapse:hover{background:var(--slate-50)}
+  .collapse svg{width:20px; height:20px}
+  nav{flex:1; padding:12px 8px; display:flex; flex-direction:column; gap:4px}
+  .nav-item{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:8px;
+            color:var(--slate-600); font-size:14px; font-weight:500; cursor:pointer}
+  .nav-item svg{width:20px; height:20px; flex:none}
+  .nav-item:hover{background:var(--slate-50)}
+  .nav-item.active{background:var(--teal-50); color:var(--teal-700)}
+
+  /* ===== Main ===== */
+  .main{flex:1; display:flex; flex-direction:column; min-width:0}
+  .topbar{height:64px; background:#fff; border-bottom:1px solid var(--slate-200);
+          display:flex; align-items:center; justify-content:space-between; padding:0 24px}
+  .search{position:relative; width:288px}
+  .search svg{position:absolute; right:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--slate-400)}
+  .search input{width:100%; height:36px; border-radius:8px; border:1px solid var(--slate-200); background:var(--slate-50);
+                padding:0 36px 0 12px; font-family:inherit; font-size:14px; color:var(--slate-500)}
+  .search input::placeholder{color:var(--slate-400)}
+  .user{display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; cursor:pointer}
+  .user:hover{background:var(--slate-50)}
+  .user .txt{display:flex; flex-direction:column; align-items:flex-end; line-height:1.3}
+  .user .nm{font-size:14px; font-weight:500; color:var(--slate-800)}
+  .user .rl{font-size:12px; color:var(--slate-500)}
+  .avatar{width:36px; height:36px; border-radius:50%; background:var(--teal-600); color:#fff;
+          display:flex; align-items:center; justify-content:center; font-weight:600; font-size:15px}
+
+  .content{padding:24px; overflow:auto}
+
+  /* כרטיס לבן — סגנון מודול 2: rounded-2xl shadow-md p-6 */
+  .card{background:#fff; border-radius:18px; box-shadow:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1); padding:24px}
+  .card-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:20px}
+  .card-head h2{font-size:18px; font-weight:700; color:var(--slate-800)}
+  .card-head .sub{font-size:13px; color:var(--slate-500); margin-top:3px; font-weight:400}
+
+  /* מדדי-בקרה קומפקטיים (משולש צווארי-הבקבוק: זמן · אנשים · ציוד) */
+  .kpis{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px}
+  .kpi{display:flex; align-items:center; gap:11px; padding:11px 14px; border:1px solid var(--slate-200); border-radius:12px; background:#fff}
+  .kpi .ic{width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex:none}
+  .kpi .ic svg{width:18px; height:18px}
+  .kpi .num{font-size:20px; font-weight:700; line-height:1}
+  .kpi .lbl{font-size:12.5px; color:var(--slate-500); margin-top:3px}
+  .ic.red{background:var(--red-100); color:var(--red-600)} .num.red{color:var(--red-600)}
+  .ic.amber{background:var(--amber-100); color:var(--amber-700)} .num.amber{color:var(--amber-700)}
+  .ic.teal{background:var(--teal-50); color:var(--teal-600)} .num.teal{color:var(--teal-700)}
+
+  /* לשוניות סטטוס (אפיון §5.6.6) */
+  .tabs{display:flex; gap:4px; border-bottom:1px solid var(--slate-200); margin-bottom:18px}
+  .tab{padding:10px 16px; font-size:14px; font-weight:500; color:var(--slate-500); cursor:pointer;
+       border-bottom:2px solid transparent; display:flex; align-items:center; gap:8px; margin-bottom:-1px}
+  .tab .cnt{background:var(--slate-100); color:var(--slate-500); border-radius:20px; padding:1px 8px; font-size:12px; font-weight:600}
+  .tab:hover{color:var(--slate-700)}
+  .tab.active{color:var(--teal-700); border-bottom-color:var(--teal-600); font-weight:600}
+  .tab.active .cnt{background:var(--teal-100); color:var(--teal-700)}
+
+  /* שורת חיפוש/סינון — סגנון מודול 2 */
+  .toolbar{display:flex; align-items:center; gap:12px; margin-bottom:18px; flex-wrap:wrap}
+  .tb-search{position:relative; flex:1; min-width:200px; max-width:360px}
+  .tb-search svg{position:absolute; right:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--slate-400)}
+  .tb-search input{width:100%; height:40px; border-radius:8px; border:1px solid var(--slate-300); background:#fff;
+                   padding:0 40px 0 12px; font-family:inherit; font-size:14px; color:var(--slate-700)}
+  .tb-search input::placeholder{color:var(--slate-400)}
+  .btn-outline{height:40px; border-radius:8px; border:1px solid var(--slate-300); background:#fff; color:var(--slate-700);
+       padding:0 16px; font-family:inherit; font-size:14px; font-weight:500; cursor:pointer;
+       display:flex; align-items:center; gap:8px}
+  .btn-outline:hover{background:var(--slate-50)}
+  .btn-outline svg{width:16px; height:16px}
+
+  /* מסנני-מהירים (chips) — דפוס ה-preset של מודול 2 */
+  .quickfilters{display:flex; align-items:center; gap:8px; margin-bottom:18px; flex-wrap:wrap}
+  .qf-label{font-size:13px; color:var(--slate-500); margin-inline-end:2px}
+  .chip{height:34px; border-radius:8px; border:1px solid var(--slate-300); background:#fff; color:var(--slate-700);
+        padding:0 13px; font-family:inherit; font-size:13.5px; font-weight:500; cursor:pointer;
+        display:flex; align-items:center; gap:7px}
+  .chip:hover{background:var(--slate-50)}
+  .chip svg{width:15px; height:15px}
+
+  /* טבלה — סגנון מודול 2 */
+  table{width:100%; border-collapse:collapse; text-align:right}
+  thead tr{border-bottom:1px solid var(--slate-200)}
+  thead th{font-size:13px; color:var(--slate-500); font-weight:500; text-align:right; padding:8px 12px; white-space:nowrap}
+  tbody td{padding:14px 12px; border-bottom:1px solid var(--slate-100); font-size:14px; vertical-align:middle}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:var(--slate-50)}
+  tbody tr:last-child td{border-bottom:0}
+  .pid{color:var(--teal-600); font-weight:600; white-space:nowrap; direction:ltr; text-align:right}
+  .pname{font-weight:500; color:var(--slate-800)} .pclient{color:var(--slate-500); font-size:13px; margin-top:2px}
+  .date{font-weight:500; color:var(--slate-700)} .guests{color:var(--slate-500); font-size:13px; margin-top:2px}
+  .cname{color:var(--slate-700); margin-bottom:6px; font-size:13.5px}
+  .cbtns{display:flex; gap:6px}
+  .cbtn{width:30px; height:30px; border-radius:8px; background:var(--slate-50); border:1px solid var(--slate-200);
+        display:flex; align-items:center; justify-content:center; color:var(--slate-500); cursor:pointer}
+  .cbtn svg{width:15px; height:15px}
+  .cbtn:hover{border-color:var(--teal-600); color:var(--teal-600)}
+
+  .metric{min-width:96px}
+  .metric .mtop{display:flex; justify-content:space-between; align-items:baseline; font-size:13px; margin-bottom:5px}
+  .metric .mtop b{font-weight:600} .metric .mtop .lab{color:var(--slate-400); font-weight:400; font-size:12px}
+  .bar{height:6px; border-radius:6px; background:var(--slate-100); overflow:hidden}
+  .bar > i{display:block; height:100%; border-radius:6px}
+  .full{background:var(--green-600)} .part{background:var(--teal-600)} .low{background:var(--amber-500)}
+  .v-full{color:var(--green-700)} .v-part{color:var(--teal-700)} .v-low{color:var(--amber-700)}
+
+  .pill{display:inline-block; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:500; white-space:nowrap}
+  .pill.proc{background:var(--amber-100); color:var(--amber-700)}
+  .pill.ready{background:var(--green-100); color:var(--green-700)}
+  .pill.new{background:var(--slate-100); color:var(--slate-600)}
+
+  .urg{display:inline-flex; align-items:center; gap:4px; margin-top:6px; font-size:11.5px; font-weight:600;
+       color:var(--red-600); background:var(--red-100); padding:2px 8px; border-radius:20px}
+  .urg svg{width:12px; height:12px}
+  tr.urgent{background:var(--red-50)} tr.urgent:hover{background:#FEE7E7} tr.urgent .date{color:var(--red-600)}
+  .chev svg{width:18px; height:18px; color:var(--slate-400)}
+  tbody tr:hover .chev svg{color:var(--teal-600)}
+
+  .foot{margin-top:16px; font-size:13px; color:var(--slate-500); display:flex; align-items:center; gap:8px}
+  .foot svg{width:16px; height:16px; color:var(--teal-600); flex:none}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== Sidebar (מדויק לפי Sidebar.jsx) ===== -->
+  <aside class="sidebar">
+    <div class="side-head">
+      <span></span>
+      <img src="regin-logo.png" alt="REG-IN">
+      <button class="collapse" title="כיווץ התפריט"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 7l5 5-5 5M6 7l5 5-5 5"/></svg></button>
+    </div>
+    <nav>
+      <!-- מסך הבית -->
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>מסך הבית</div>
+      <!-- לקוחות (Users) -->
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="7" r="3.2"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 3.5a3.2 3.2 0 0 1 0 6.2"/><path d="M21.5 20a6.5 6.5 0 0 0-5-6.3"/></svg>לקוחות</div>
+      <!-- הצעות מחיר (FileText) -->
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4"/><path d="M9 13h6M9 17h6M9 9h2"/></svg>הצעות מחיר</div>
+      <!-- פרויקטים (Briefcase) — פעיל -->
+      <div class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></svg>פרויקטים</div>
+      <!-- דיילות (UserRound) -->
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>דיילות</div>
+      <!-- לוגיסטיקה (Package) -->
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9z"/><path d="M4 6.5l8 4.5 8-4.5M12 11v9"/></svg>לוגיסטיקה</div>
+      <!-- כספים (Wallet) -->
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h12v4"/><rect x="3" y="7" width="18" height="12" rx="2"/><path d="M16 12h3v3h-3a1.5 1.5 0 0 1 0-3z"/></svg>כספים</div>
+      <!-- דו"חות (BarChart3) -->
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M8 17v-5M13 17V8M18 17v-9"/></svg>דו״חות</div>
+      <!-- ניהול מערכת (Settings) -->
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.7-1L14.5 2h-5l-.3 2.9a7 7 0 0 0-1.7 1l-2.4-1-2 3.4L3 11a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.3 2.9h5l.3-2.9a7 7 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6a7 7 0 0 0 .1-1z"/></svg>ניהול מערכת</div>
+    </nav>
+  </aside>
+
+  <!-- ===== Main ===== -->
+  <div class="main">
+    <!-- Topbar (מדויק לפי Topbar.jsx): חיפוש בלבד + תפריט משתמש; אין פעמון/גלגל-שיניים -->
+    <div class="topbar">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+        <input placeholder="חיפוש..." disabled>
+      </div>
+      <div class="user">
+        <span class="txt"><span class="nm">דנה לוי</span><span class="rl">מנהלת פרויקטים</span></span>
+        <span class="avatar">ד</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>ניהול פרויקטים</h2>
+            <div class="sub">מוכנוּת, צווארי בקבוק וסטטוס תפעולי בזמן אמת</div>
+          </div>
+        </div>
+
+        <!-- מדדי-בקרה קומפקטיים -->
+        <div class="kpis">
+          <div class="kpi">
+            <div class="ic red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>
+            <div><div class="num red">2</div><div class="lbl">פרויקטים אדומים (14 יום)</div></div>
+          </div>
+          <div class="kpi">
+            <div class="ic amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></div>
+            <div><div class="num amber">9</div><div class="lbl">שיבוצים חסרים</div></div>
+          </div>
+          <div class="kpi">
+            <div class="ic teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9z"/><path d="M4 6.5l8 4.5 8-4.5M12 11v9"/></svg></div>
+            <div><div class="num teal">14</div><div class="lbl">משימות לוגיסטיקה פתוחות</div></div>
+          </div>
+        </div>
+
+        <!-- לשוניות מחזור-חיים (אפיון §5.6.6) -->
+        <div class="tabs">
+          <div class="tab">טרם החל <span class="cnt">4</span></div>
+          <div class="tab active">בתהליך <span class="cnt">7</span></div>
+          <div class="tab">מוכן לביצוע <span class="cnt">5</span></div>
+          <div class="tab">אירוע הסתיים <span class="cnt">12</span></div>
+        </div>
+
+        <!-- שורת חיפוש/סינון (דפוס מודול 2) -->
+        <div class="toolbar">
+          <div class="tb-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+            <input placeholder="חיפוש לפי שם פרויקט, לקוח או מספר...">
+          </div>
+          <button class="btn-outline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>סינון</button>
+          <button class="btn-outline">כל הלקוחות <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+          <button class="btn-outline">טווח תאריכים <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+        </div>
+
+        <!-- מסנני-מהירים: צלילה בלחיצה למשולש צווארי-הבקבוק -->
+        <div class="quickfilters">
+          <span class="qf-label">סינון מהיר:</span>
+          <button class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg>דחופים (14 יום)</button>
+          <button class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>חסרי שיבוץ</button>
+          <button class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9z"/><path d="M4 6.5l8 4.5 8-4.5M12 11v9"/></svg>חסרי לוגיסטיקה</button>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>מס׳ פרויקט</th>
+              <th>פרטי פרויקט</th>
+              <th>תאריך וקיבולת</th>
+              <th>איש קשר</th>
+              <th>סטטוס שיבוץ</th>
+              <th>סטטוס לוגיסטיקה</th>
+              <th>סטטוס תפעולי</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="urgent">
+              <td class="pid">PRJ-2588</td>
+              <td><div class="pname">כנס לקוחות שנתי</div><div class="pclient">מדיטק בע״מ</div></td>
+              <td><div class="date">21.07.2026</div><div class="guests">300 אורחים</div>
+                  <div class="urg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5M12 16h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>דחוף · 9 ימים</div></td>
+              <td><div class="cname">עו״ד רון גל</div><div class="cbtns">
+                  <span class="cbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+                  <span class="cbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h3l2 5-2 1a11 11 0 0 0 5 5l1-2 5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></span></div></td>
+              <td><div class="metric"><div class="mtop"><b class="v-low">4/6</b><span class="lab">דיילות</span></div><div class="bar"><i class="low" style="width:67%"></i></div></div></td>
+              <td><div class="metric"><div class="mtop"><b class="v-low">5/8</b><span class="lab">משימות</span></div><div class="bar"><i class="low" style="width:63%"></i></div></div></td>
+              <td><span class="pill proc">בתהליך</span></td>
+              <td class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></td>
+            </tr>
+
+            <tr>
+              <td class="pid">PRJ-2585</td>
+              <td><div class="pname">טקס פרסים עירוני</div><div class="pclient">עיריית חדרה</div></td>
+              <td><div class="date">02.08.2026</div><div class="guests">500 אורחים</div></td>
+              <td><div class="cname">שרית מזרחי</div><div class="cbtns">
+                  <span class="cbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+                  <span class="cbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h3l2 5-2 1a11 11 0 0 0 5 5l1-2 5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></span></div></td>
+              <td><div class="metric"><div class="mtop"><b class="v-part">8/10</b><span class="lab">דיילות</span></div><div class="bar"><i class="part" style="width:80%"></i></div></div></td>
+              <td><div class="metric"><div class="mtop"><b class="v-full">6/6</b><span class="lab">משימות</span></div><div class="bar"><i class="full" style="width:100%"></i></div></div></td>
+              <td><span class="pill proc">בתהליך</span></td>
+              <td class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></td>
+            </tr>
+
+            <tr>
+              <td class="pid">PRJ-2590</td>
+              <td><div class="pname">יום גיבוש חברה</div><div class="pclient">הייטק גרופ</div></td>
+              <td><div class="date">09.08.2026</div><div class="guests">80 אורחים</div></td>
+              <td><div class="cname">טל אבידן</div><div class="cbtns">
+                  <span class="cbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+                  <span class="cbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h3l2 5-2 1a11 11 0 0 0 5 5l1-2 5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></span></div></td>
+              <td><div class="metric"><div class="mtop"><b class="v-full">2/2</b><span class="lab">דיילות</span></div><div class="bar"><i class="full" style="width:100%"></i></div></div></td>
+              <td><div class="metric"><div class="mtop"><b class="v-low">1/4</b><span class="lab">משימות</span></div><div class="bar"><i class="low" style="width:25%"></i></div></div></td>
+              <td><span class="pill proc">בתהליך</span></td>
+              <td class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></td>
+            </tr>
+
+            <tr>
+              <td class="pid">PRJ-2591</td>
+              <td><div class="pname">השקת סבב גיוס בינ״ל</div><div class="pclient">גלובל ונצ׳רס בע״מ</div></td>
+              <td><div class="date">20.08.2026</div><div class="guests">220 אורחים</div></td>
+              <td><div class="cname">מאיה רון</div><div class="cbtns">
+                  <span class="cbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+                  <span class="cbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h3l2 5-2 1a11 11 0 0 0 5 5l1-2 5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></span></div></td>
+              <td><div class="metric"><div class="mtop"><b class="v-part">3/5</b><span class="lab">דיילות</span></div><div class="bar"><i class="part" style="width:60%"></i></div></div></td>
+              <td><div class="metric"><div class="mtop"><b class="v-part">4/6</b><span class="lab">משימות</span></div><div class="bar"><i class="part" style="width:67%"></i></div></div></td>
+              <td><span class="pill proc">בתהליך</span></td>
+              <td class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></td>
+            </tr>
+
+            <tr>
+              <td class="pid">PRJ-2593</td>
+              <td><div class="pname">כנס רפואה 2026</div><div class="pclient">איגוד הרופאים</div></td>
+              <td><div class="date">28.08.2026</div><div class="guests">300 אורחים</div></td>
+              <td><div class="cname">ד״ר חיים שטרן</div><div class="cbtns">
+                  <span class="cbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+                  <span class="cbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h3l2 5-2 1a11 11 0 0 0 5 5l1-2 5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></span></div></td>
+              <td><div class="metric"><div class="mtop"><b class="v-full">6/6</b><span class="lab">דיילות</span></div><div class="bar"><i class="full" style="width:100%"></i></div></div></td>
+              <td><div class="metric"><div class="mtop"><b class="v-low">3/9</b><span class="lab">משימות</span></div><div class="bar"><i class="low" style="width:33%"></i></div></div></td>
+              <td><span class="pill proc">בתהליך</span></td>
+              <td class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="foot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+          לחיצה על שורה פותחת את כרטיס הפרויקט המלא. הסטטוס התפעולי משתנה אוטומטית לפי מדדי השיבוץ והלוגיסטיקה — 100% בשניהם ⇐ "מוכן לביצוע".
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

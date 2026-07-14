@@ -79,13 +79,14 @@ Additional decided / nod-pending rows (cite-only):
 | A-9 | discount CHECKs: 0–100 + combined ≤100% (customers/quotes) | §7.26 | decided | 2/3 | M2 step 1.2 draft exists |
 | A-10 | per-table RLS policies from the standard template, `(select …)` wrapped | §7.21 | decided | every module | with each module's first migration; multi-module tables gated on §7.63 |
 | A-11 | `pg_cron` install + quote-expiry daily job | §7.42 | decided | 3 | first consumer = quote expiry (T2) |
-| A-12 | Seed: products (11) + price_tiers (40) + params (17 incl. `שכר_מינימום_שעתי`) | §7.13 + `reference_spec/products_and_params.md` (locked decisions) | pending exec | 3 | blocker removed (VAT=18%) |
+| A-12 | Seed: products (11) + price_tiers (40) + params (20 rows, #1–20 incl. `שכר_מינימום_שעתי` and 4 new template rows #17–20 added 14/07) | §7.13 + `reference_spec/products_and_params.md` (locked decisions) | pending exec | 3 | blocker removed (VAT=18%); **note (14/07): the A-19 RLS + M3 "prices" screen (§7.84) land alongside this seed, not instead of it — seed still runs first via migration, the screen is for post-seed maintenance only** |
 | A-13 | `created_at`/`updated_at` + `moddatetime` trigger, all business tables, one migration | §7.73 | 👍 nod | 2 (rolling) | also anchors T2 validity semantics |
 | A-14 | NOT NULL: `users.role_id` · `quotes.customer_id` · `projects.owner_email` · `projects.quote_id` | §7.62 | 👍 nod | 2 / 3 / 6 | users → with A-8 in the M2 infra migration; **`quotes.customer_id`→bigint in M2 (§7.64 type-change; its SET NOT NULL still M3)** |
 | A-15 | partial UNIQUE on active assignment statuses (one active row per hostess+project) | §7.54 | 👍 nod | 4 | kills double-count/double-pay class |
 | A-16 | timestamptz + Asia/Jerusalem standard for all new time columns & jobs | §7.56 | 👍 nod | 3+ | first pg_cron job |
-| A-17 | money columns → `numeric(12,2)` | §7.74 | 👍 nod | 3 | with A-9 in the pricing migrations |
+| A-17 | money columns → `numeric(12,2)` | §7.74 | 👍 nod | 3 | with A-9 in the pricing migrations; **still not applied as of 14/07 — the A-19 RLS migration deliberately does NOT touch column types, this stays here** |
 | A-18 | `login_attempts` stale-row purge job (>30d from `last_attempt_at`) | §7.75 | 👍 nod | 3/10 | after A-11 |
+| A-19 | RLS: `select` open to all `authenticated` + write CEO-only (module 'הגדרות מערכת') on `params`/`products`/`price_tiers` — write is now real (not deferred) since the M3 "מחירים" tab (§7.84) will write to these | §7.83 | decided | 3 | with the M3 migration; params write reuses the same 2 policies when M9 builds the full params screen |
 
 ### A2. Log-registered debt with a decided direction (SSOT: the logs)
 
@@ -122,6 +123,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | §7.49 + §7.76 | quote→project conversion RPC — **RULED 11/07 (Ishay): atomic RPC, all-or-nothing; project born-complete incl. identity snapshot; approval stays human-in-loop (no email approve button — deferred M10+)** | M3 (execute) |
 | §7.50 + §7.77 | DB-level lock — **§7.50 RULED 11/07 (Ishay): trigger blocks UPDATE/DELETE on approved quotes+quote_services (may share the §7.49 migration)**; §7.77 (project close-lock, column-granular — ties §7.63) still open | M3 (execute §7.50) / 6 |
 | §7.53 | ~~hostess-count CHECK >0 → ≥0~~ — **CLOSED 11/07 (Ishay): "אין אירוע בלי דיילות" — CHECK >0 stays, no schema change** | — |
+| §7.85 | `quote_services` PK structure — triple `(quote_id, sku, line_number)` vs synthetic `line_id bigint` (candidate, per §7.64 policy); cleaner downstream refs for §7.67/§7.72; color scenario handled either way | M3 blueprint (DB Design Challenge) |
 | §7.30 | multi-day / cross-midnight events representation | M3/4 |
 | §7.55 | event-side coordinates + geocode service choice + NULL rule | M4 |
 | §7.65 | business-email uniqueness (hostesses UNIQUE? customers open) | M2/4 |
@@ -169,9 +171,9 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | login_attempts | purge job (A-18) · Auth Hook upgrade (A-22) |
 | customers | policies (A-10) · discount CHECK (A-9) · timestamps (A-13) · **surrogate PK — RULED §7.64 (10/07): `customer_id bigint` + `company_number` unique not null; exec M2 step 1.1 (סטיית-C6 §2.4.1)** · email UNIQUE (§7.65) · deactivate guards (§7.34) · **+ child `customer_contacts` — §7.81 (11/07), ריבוי אנשי-קשר אופציה C (איש-קשר ראשי נשאר inline)** |
 | customer_contacts | **NEW child table — RULED §7.81 (11/07): ריבוי אנשי-קשר, אופציה C.** FK→`customers(customer_id)` on delete/update cascade + covering index (C-1 ✓) · RLS §7.21 ('לקוחות', same gate as customers) · moddatetime (§7.73). Migration `20260711013517_module2_customer_contacts.sql` — **✅ APPLIED 11/07 (verified live via MCP: table/7-cols/FK/covering-index/trigger[extensions.moddatetime]/RLS/2 policies)**; api/UI wiring = step 3.7; סטיית-C6 §2.4.1 (single inline contact) |
-| products | unit/category CHECKs exist; sku stays natural PK + **ON UPDATE CASCADE — RULED §7.64 (10/07)**, exec M3 · seed (A-12) |
-| price_tiers | seed (A-12) · sanity CHECKs min_qty>0/max≥min (§7.41 bundle) |
-| params | UNIQUE (§7.40) · typed+history (§7.70) · seed (A-12) · ghost param (§7.57) |
+| products | unit/category CHECKs exist; sku stays natural PK + **ON UPDATE CASCADE — RULED §7.64 (10/07)**, exec M3 · seed (A-12) · RLS select-all/write-CEO (A-19, §7.83) · write UI = M3 "מחירים" tab (§7.84) |
+| price_tiers | seed (A-12) · sanity CHECKs min_qty>0/max≥min (§7.41 bundle) · RLS select-all/write-CEO (A-19, §7.83) · write UI = M3 "מחירים" tab (§7.84) |
+| params | UNIQUE (§7.40) · typed+history (§7.70) · seed (A-12, now 20 rows #1–20) · ghost param (§7.57) · RLS select-all/write-CEO (A-19, §7.83) · write UI for the 2 pricing rows only = M3 "מחירים" tab (§7.84); the other 18 rows still wait for the full M9 params screen |
 | quotes | NOT NULL customer_id (A-14) · vat_rate_snapshot (**§7.51 RULED 11/07**) · lock (**§7.50 RULED 11/07**) · conversion RPC atomic + identity snapshot (**§7.49+76 RULED 11/07**) · ~~CHECK ≥0 (§7.53)~~ **closed 11/07 — stays >0** · expiry anchor (A-13/§7.42) · pdf_url drop (§7.71) · discounts CHECK (A-9) |
 | quote_services | closing_unit_cost (§7.47-mirror) · color/reason enums (§7.41) · change-order model (§7.72) |
 | projects | §7.47-mirror ×2 (times, cancelled_at) · NOT NULL owner/quote_id (A-14) · finance-column ownership 🔴 (§7.63) · name snapshot (**§7.76 RULED 11/07** — inside the §7.49 RPC) · close-lock (§7.77) · profit stored (**§7.52 RULED 11/07**: final ₪ stored at closure; expected derived live; % display-derived) · coords (§7.55) · multi-day (§7.30) |
