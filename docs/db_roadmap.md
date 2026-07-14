@@ -17,7 +17,7 @@
 > **Last verified vs live DB:** 08/07/2026 18:54 via Supabase MCP (read-only): `get_advisors`
 > (security — same 12 accepted `rls_enabled_no_policy` INFOs + accepted SECURITY DEFINER/leaked-password
 > WARNs, zero new findings), `list_migrations` (still 7 — no new migration since creation). Prior: 08:34.
-> ✅ אומת-סנכרון: 11/07/2026 23:20 (regin-docs-sync — אחרי סגירת מודול 2 + PR #6, 0 קונפליקטים)
+> ✅ אומת-סנכרון: 14/07/2026 22:36 (regin-docs-sync — סבב-סגירת-קרקע + ראיון-PM + מועצת-תמחור, 0 קונפליקטים)
 
 ---
 
@@ -69,6 +69,7 @@
 | `assignments` | `invite_token`, `invite_sent_at` (+פקיעה) | §7.45 | 4 |
 | `assignments` | `attendance_status`, `lateness_level`, `no_show_reason` | §7.16(א) | 4/8 |
 | `quote_services` | `closing_unit_cost` (הקפאת עלות) | §7.28 | 3 |
+| `quotes` | `estimated_start_time` + `estimated_end_time` (time); `estimated_hours` נגזר-מההפרש | §7.82/F23 | 3 |
 | `params` / `roles` / `modules` / `salary_reports` | אילוצי-ייחודיות | §7.40 | 2/3/8 |
 
 Additional decided / nod-pending rows (cite-only):
@@ -123,7 +124,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | §7.49 + §7.76 | quote→project conversion RPC — **RULED 11/07 (Ishay): atomic RPC, all-or-nothing; project born-complete incl. identity snapshot; approval stays human-in-loop (no email approve button — deferred M10+)** | M3 (execute) |
 | §7.50 + §7.77 | DB-level lock — **§7.50 RULED 11/07 (Ishay): trigger blocks UPDATE/DELETE on approved quotes+quote_services (may share the §7.49 migration)**; §7.77 (project close-lock, column-granular — ties §7.63) still open | M3 (execute §7.50) / 6 |
 | §7.53 | ~~hostess-count CHECK >0 → ≥0~~ — **CLOSED 11/07 (Ishay): "אין אירוע בלי דיילות" — CHECK >0 stays, no schema change** | — |
-| §7.85 | `quote_services` PK structure — triple `(quote_id, sku, line_number)` vs synthetic `line_id bigint` (candidate, per §7.64 policy); cleaner downstream refs for §7.67/§7.72; color scenario handled either way | M3 blueprint (DB Design Challenge) |
+| §7.85 | ✅ **RULED (Ishay 14/07)** — `quote_services` PK = synthetic `line_id bigint generated always as identity`; `quote_id`/`sku`/`color`/`line_number` become regular columns. Per §7.64 policy; single-column downstream refs for §7.67 (M4)/§7.72 (M6). Exec: M3 `quote_services` migration | M3 |
 | §7.30 | multi-day / cross-midnight events representation | M3/4 |
 | §7.55 | event-side coordinates + geocode service choice + NULL rule | M4 |
 | §7.65 | business-email uniqueness (hostesses UNIQUE? customers open) | M2/4 |
@@ -145,6 +146,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | # | Rider | Source | Timing |
 |---|---|---|---|
 | C-1 | 8 FK covering indexes: `permissions.module_id`, `users.role_id`, `quotes.customer_id`, `quote_services.sku`, `projects.owner_email`, `assignments.id_number`, `assignments.salary_report_id`, `logistics.sku` | advisors `unindexed_foreign_keys` (triaged 07/07) | with each module's first migration touching that table |
+| C-6 | index `quotes(quote_status, updated_at)` — serves the daily pg_cron expiry scan (§7.42/§7.82 expiry-from-`updated_at`) and the ⭐"expiring-soon" worklist filter (§7.82) | pre-M3 gap hunt 14/07 (Ishay nod) | with the M3 quotes migrations |
 | C-2 | `multiple_permissive_policies` on users/permissions | advisors WARN — deferred (micro-guide M1 §9) | reconsider at M12 |
 | C-3 | `(select …)` initplan wrap in every new policy | §7.21 template | always |
 | C-4 | advisors run after every applied migration | this file §1 | always |
