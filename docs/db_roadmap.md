@@ -64,7 +64,8 @@
 | טבלה | עמודות חדשות | מקור-הכרעה | מודול-ביצוע |
 |---|---|---|---|
 | `hostesses` | `address` (טקסט), `lat`, `lng` (קואורדינטות) | §7.6, §7.14 | 4 |
-| `projects` | זמני התחלה/סיום לאירוע + סיווג "קצר/ארוך" | §7.29, §7.45, §7.43 (קשור §7.30) | 4 |
+| `projects` | ~~זמני התחלה/סיום לאירוע~~ ✅ **עמודות-הזמן (`final_start_time`/`final_end_time`) הוקדמו למ3** (הכרעת-ישי 15/07/2026, בלופרינט-מ3: נזרעות מההצעה ב-RPC-ההמרה וניתנות-לעריכה על הפרויקט — ההצעה נעולה §7.50); **נותר למ4: סיווג "קצר/ארוך" בלבד** | §7.29, §7.45, §7.43 (קשור §7.30) | 3 (זמנים) · 4 (סיווג) |
+| `projects` | `event_name` + `customer_id` (snapshot-זהות) | §7.76 (היקף הוכרע 15/07/2026) | 3 |
 | `projects` | `cancelled_at` (timestamptz), `cancellation_reason` enum(`standard`,`force_majeure`) | §7.16(ב) | 4/8 |
 | `assignments` | `invite_token`, `invite_sent_at` (+פקיעה) | §7.45 | 4 |
 | `assignments` | `attendance_status`, `lateness_level`, `no_show_reason` | §7.16(א) | 4/8 |
@@ -84,7 +85,7 @@ Additional decided / nod-pending rows (cite-only):
 | A-13 | `created_at`/`updated_at` + `moddatetime` trigger, all business tables, one migration | §7.73 | 👍 nod | 2 (rolling) | also anchors T2 validity semantics |
 | A-14 | NOT NULL: `users.role_id` · `quotes.customer_id` · `projects.owner_email` · `projects.quote_id` | §7.62 | 👍 nod | 2 / 3 / 6 | users → with A-8 in the M2 infra migration; **`quotes.customer_id`→bigint in M2 (§7.64 type-change; its SET NOT NULL still M3)** |
 | A-15 | partial UNIQUE on active assignment statuses (one active row per hostess+project) | §7.54 | 👍 nod | 4 | kills double-count/double-pay class |
-| A-16 | timestamptz + Asia/Jerusalem standard for all new time columns & jobs | §7.56 | 👍 nod | 3+ | first pg_cron job |
+| A-16 | timestamptz + Asia/Jerusalem standard for all new time columns & jobs | §7.56 | **✅ nodded (Ishay 15/07, blueprint-M3) — with a reality note: Supabase `cron.timezone`=GMT (fixed); the date-granular expiry job runs at a fixed UTC hour ≈01:00 Israel, which delivers the ruled behavior** | 3+ | first pg_cron job (M3 step 1.5) |
 | A-17 | money columns → `numeric(12,2)` | §7.74 | 👍 nod | 3 | with A-9 in the pricing migrations; **still not applied as of 14/07 — the A-19 RLS migration deliberately does NOT touch column types, this stays here** |
 | A-18 | `login_attempts` stale-row purge job (>30d from `last_attempt_at`) | §7.75 | 👍 nod | 3/10 | after A-11 |
 | A-19 | RLS: `select` open to all `authenticated` + write CEO-only (module 'הגדרות מערכת') on `params`/`products`/`price_tiers` — write is now real (not deferred) since the M3 "מחירים" tab (§7.84) will write to these | §7.83 | decided | 3 | with the M3 migration; params write reuses the same 2 policies when M9 builds the full params screen |
@@ -145,7 +146,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 
 | # | Rider | Source | Timing |
 |---|---|---|---|
-| C-1 | 8 FK covering indexes: `permissions.module_id`, `users.role_id`, `quotes.customer_id`, `quote_services.sku`, `projects.owner_email`, `assignments.id_number`, `assignments.salary_report_id`, `logistics.sku` | advisors `unindexed_foreign_keys` (triaged 07/07) | with each module's first migration touching that table |
+| C-1 | 8 FK covering indexes: `permissions.module_id`, `users.role_id`, `quotes.customer_id`, `quote_services.sku`, `projects.owner_email`, `assignments.id_number`, `assignments.salary_report_id`, `logistics.sku` **+ `projects.customer_id` (new FK added M3 via LOCAL-5, 15/07 — needs the same covering index)** | advisors `unindexed_foreign_keys` (triaged 07/07) | with each module's first migration touching that table; **`quotes.customer_id` + `quote_services.sku` (+quote_id) + `projects.customer_id` scheduled in M3 migration 1.1 (blueprint 15/07)** |
 | C-6 | index `quotes(quote_status, updated_at)` — serves the daily pg_cron expiry scan (§7.42/§7.82 expiry-from-`updated_at`) and the ⭐"expiring-soon" worklist filter (§7.82) | pre-M3 gap hunt 14/07 (Ishay nod) | with the M3 quotes migrations |
 | C-2 | `multiple_permissive_policies` on users/permissions | advisors WARN — deferred (micro-guide M1 §9) | reconsider at M12 |
 | C-3 | `(select …)` initplan wrap in every new policy | §7.21 template | always |
@@ -176,9 +177,9 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | products | unit/category CHECKs exist; sku stays natural PK + **ON UPDATE CASCADE — RULED §7.64 (10/07)**, exec M3 · seed (A-12) · RLS select-all/write-CEO (A-19, §7.83) · write UI = M3 "מחירים" tab (§7.84) |
 | price_tiers | seed (A-12) · sanity CHECKs min_qty>0/max≥min (§7.41 bundle) · RLS select-all/write-CEO (A-19, §7.83) · write UI = M3 "מחירים" tab (§7.84) |
 | params | UNIQUE (§7.40) · typed+history (§7.70) · seed (A-12, now 20 rows #1–20) · ghost param (§7.57) · RLS select-all/write-CEO (A-19, §7.83) · write UI for the 2 pricing rows only = M3 "מחירים" tab (§7.84); the other 18 rows still wait for the full M9 params screen |
-| quotes | NOT NULL customer_id (A-14) · vat_rate_snapshot (**§7.51 RULED 11/07**) · lock (**§7.50 RULED 11/07**) · conversion RPC atomic + identity snapshot (**§7.49+76 RULED 11/07**) · ~~CHECK ≥0 (§7.53)~~ **closed 11/07 — stays >0** · expiry anchor (A-13/§7.42) · pdf_url drop (§7.71) · discounts CHECK (A-9) |
-| quote_services | closing_unit_cost (§7.47-mirror) · color/reason enums (§7.41) · change-order model (§7.72) |
-| projects | §7.47-mirror ×2 (times, cancelled_at) · NOT NULL owner/quote_id (A-14) · finance-column ownership 🔴 (§7.63) · name snapshot (**§7.76 RULED 11/07** — inside the §7.49 RPC) · close-lock (§7.77) · profit stored (**§7.52 RULED 11/07**: final ₪ stored at closure; expected derived live; % display-derived) · coords (§7.55) · multi-day (§7.30) |
+| quotes | NOT NULL customer_id (A-14) · vat_rate_snapshot (**§7.51 RULED 11/07**) · lock (**§7.50 RULED 11/07**) · conversion RPC atomic + identity snapshot (**§7.49+76 RULED 11/07**) · ~~CHECK ≥0 (§7.53)~~ **closed 11/07 — stays >0** · expiry anchor (A-13/§7.42) · pdf_url drop (§7.71) · discounts CHECK (A-9) · **start/end times + GENERATED estimated_hours w/ +24h wrap (F23+LOCAL-2, blueprint 15/07 — M3 mig 1.1)** |
+| quote_services | closing_unit_cost (§7.47-mirror) · color/reason enums (§7.41) · change-order model (§7.72) · **line_id surrogate PK (§7.85 RULED 14/07 — M3 mig 1.1)** |
+| projects | §7.47-mirror ×2 (times — **הוקדם למ3, LOCAL-1 15/07**; cancelled_at) · NOT NULL owner/quote_id (A-14) · finance-column ownership 🔴 (§7.63) · identity snapshot (**§7.76 RULED 11/07; scope ruled 15/07: event_name+customer_id** — inside the §7.49 RPC, columns in M3 mig 1.1) · close-lock (§7.77) · profit stored (**§7.52 RULED 11/07**: final ₪ stored at closure; expected derived live; % display-derived) · coords (§7.55) · multi-day (§7.30) |
 | hostesses | §7.47-mirror (address/coords) · bank-column protection 🔴 (§7.63) · ת"ז → **surrogate — RULED §7.64 (10/07)**, exec M4 (§7.67/54 coord; סטיית-C6) · email UNIQUE (§7.65) · min-wage rule (§7.66) |
 | assignments | §7.47-mirror ×2 (token, attendance) · shift lineage 🔴 (§7.67) · partial-unique (A-15) · travel (§7.69) · FK indexes (C-1) |
 | logistics | actual<planned (§7.22) · lineage/cost (§7.72) · FK index (C-1) |
