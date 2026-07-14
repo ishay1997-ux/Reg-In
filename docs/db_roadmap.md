@@ -42,7 +42,7 @@
 - [ ] Named migration + Hebrew "why" header; never edit an applied migration — fix-forward only (P15)
 - [ ] §7 scan: does this change execute/affect a §7 item or a row in this file? Cite it in the header
 - [ ] New/touched table: RLS policies per §7.21 standard template; `(select …)` initplan wrap mandatory
-- [ ] FKs: explicit ON DELETE **and** ON UPDATE decision (§7.64 policy) + covering index (C-1)
+- [ ] FKs: explicit ON DELETE **and** ON UPDATE decision (§7.64 policy) + covering index (C-1) — **this applies to ANY new FK column, including one born from a blueprint / PM-interview ruling mid-module, not only the FKs already enumerated in the C-1 list (that list predates today's rulings; cross-check it, don't assume "not in C-1 ⇒ nothing to do")**
 - [ ] Constraints: CHECK / UNIQUE / NOT NULL per this file's §6 per-table index
 - [ ] **Every number a screen displays has a named source column or computation** (the C5:833 lesson —
       a displayed figure with no data home is a 🛑 finding, not a shrug)
