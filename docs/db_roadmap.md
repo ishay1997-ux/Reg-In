@@ -17,7 +17,7 @@
 > **Last verified vs live DB:** 08/07/2026 18:54 via Supabase MCP (read-only): `get_advisors`
 > (security — same 12 accepted `rls_enabled_no_policy` INFOs + accepted SECURITY DEFINER/leaked-password
 > WARNs, zero new findings), `list_migrations` (still 7 — no new migration since creation). Prior: 08:34.
-> ✅ אומת-סנכרון: 14/07/2026 22:36 (regin-docs-sync — סבב-סגירת-קרקע + ראיון-PM + מועצת-תמחור, 0 קונפליקטים)
+> ✅ אומת-סנכרון: 15/07/2026 23:25 (regin-docs-sync — אודיט פוסט-בלופרינט-מ3: §7 85 פריטים סונכרן בכל המקומות, 4 חותמות-רפרנס רועננו, 0 קונפליקטים)
 
 ---
 
