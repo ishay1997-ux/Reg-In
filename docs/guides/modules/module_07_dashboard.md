@@ -19,14 +19,14 @@
 
 ## ③ חלוקת עבודה
 
-| ישי | אתה | Claude |
-|---|---|---|
-| מכריע ב-§7.18 ו-§7.9 | בונה עם Claude | בונה בלופרינט, מיישם |
+| ישי | Claude |
+|---|---|
+| מכריע ב-§7.18 ו-§7.9; בונה עם Claude | בונה בלופרינט, מיישם |
 
 ## ④ החלק שלך
 
-1. אמת עם ישי את §7.18 (ו-§7.9 אם רלוונטי).
-2. `git checkout -b amit/module-7-dashboard`.
+1. הכרע ב-§7.18 (ו-§7.9 אם רלוונטי) — הכרעת §7 = ישי (כלל 1).
+2. `git checkout -b ishay/module-7-dashboard`.
 3. הדבק פרומפט, אשר בלופרינט, בנה.
 
 ## ⑤ החלק של Claude
@@ -39,14 +39,14 @@
 
 **1) פתיחת מודול (פעם אחת):**
 ```
-אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/amit/08_module_07_dashboard.md
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/modules/module_07_dashboard.md
 ואת docs/PROJECT_MASTER.md (סעיף 5.2, §7 פריטים 9, 18).
-אנחנו פותחים את מודול 7 — מסך הבית, על ענף amit/module-7-dashboard.
+אנחנו פותחים את מודול 7 — מסך הבית, על ענף ishay/module-7-dashboard.
 
 קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
-MODULE_NUMBER=7 · MODULE_NAME=מסך הבית / Dashboard · RELEVANT_SECTIONS=§5.2, §7.9/18 · BRANCH_NAME=amit/module-7-dashboard
+MODULE_NUMBER=7 · MODULE_NAME=מסך הבית / Dashboard · RELEVANT_SECTIONS=§5.2, §7.9/18 · BRANCH_NAME=ishay/module-7-dashboard
 
-חובה: "שאלות פתוחות" מסעיף ② במדריך שלי = פריטי §7, מנותבות לישי להכרעה (§7 = ישי, כלל 1) — אל תכריע בהן לבד.
+חובה: "שאלות פתוחות" מסעיף ② במדריך שלי = פריטי §7 — הצג לי אותן להכרעה (§7 = ישי, כלל 1), אל תכריע בהן לבד.
 הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-7.md.
 ```
 
@@ -64,7 +64,7 @@ MODULE_NUMBER=7 · MODULE_NAME=מסך הבית / Dashboard · RELEVANT_SECTIONS=
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-7.md.
 קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
-MODULE_NUMBER=7 · MODULE_NAME=מסך הבית / Dashboard · BRANCH_NAME=amit/module-7-dashboard
+MODULE_NUMBER=7 · MODULE_NAME=מסך הבית / Dashboard · BRANCH_NAME=ishay/module-7-dashboard
 בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
 בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.
 ```

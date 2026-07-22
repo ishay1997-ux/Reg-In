@@ -16,13 +16,13 @@
 
 ## ③ חלוקת עבודה
 
-| ישי | אתה | Claude |
-|---|---|---|
-| בונה ומכריע | בונה עם Claude | בונה בלופרינט, מיישם |
+| ישי | Claude |
+|---|---|
+| בונה ומכריע (עם Claude) | בונה בלופרינט, מיישם |
 
 ## ④ החלק שלך
 
-1. `git checkout -b amit/module-11-reports`.
+1. `git checkout -b ishay/module-11-reports`.
 2. הדבק פרומפט, אשר בלופרינט, בנה.
 
 ## ⑤ החלק של Claude
@@ -35,14 +35,14 @@
 
 **1) פתיחת מודול (פעם אחת):**
 ```
-אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/amit/10_module_11_reports.md
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/modules/module_11_reports.md
 ואת docs/PROJECT_MASTER.md (סעיף 5.17).
-אנחנו פותחים את מודול 11 — דו"חות מנהלים, על ענף amit/module-11-reports.
+אנחנו פותחים את מודול 11 — דו"חות מנהלים, על ענף ishay/module-11-reports.
 
 קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
-MODULE_NUMBER=11 · MODULE_NAME=דו"חות מנהלים · RELEVANT_SECTIONS=§5.17 · BRANCH_NAME=amit/module-11-reports
+MODULE_NUMBER=11 · MODULE_NAME=דו"חות מנהלים · RELEVANT_SECTIONS=§5.17 · BRANCH_NAME=ishay/module-11-reports
 
-חובה: "שאלות פתוחות" מסעיף ② במדריך שלי = פריטי §7, מנותבות לישי להכרעה (§7 = ישי, כלל 1) — אל תכריע בהן לבד.
+חובה: "שאלות פתוחות" מסעיף ② במדריך שלי = פריטי §7 — הצג לי אותן להכרעה (§7 = ישי, כלל 1), אל תכריע בהן לבד.
 הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-11.md.
 ```
 
@@ -60,7 +60,7 @@ MODULE_NUMBER=11 · MODULE_NAME=דו"חות מנהלים · RELEVANT_SECTIONS=§
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-11.md.
 קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
-MODULE_NUMBER=11 · MODULE_NAME=דו"חות מנהלים · BRANCH_NAME=amit/module-11-reports
+MODULE_NUMBER=11 · MODULE_NAME=דו"חות מנהלים · BRANCH_NAME=ishay/module-11-reports
 בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
 בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.
 ```

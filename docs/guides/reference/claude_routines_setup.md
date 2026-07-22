@@ -1,18 +1,18 @@
 <div dir="rtl">
 
-# 🤖 שלב 05 — הקמת 4 הרוטינות של Claude
+# 🤖 רפרנס — הקמת 4 הרוטינות של Claude
 
 > מקומו בהיררכיית האמת: הוראות תפעוליות בלבד.
-> צעדים שבוצעו מסומנים ✅.
+> **מסמך ההקמה הקנוני של הרוטינות.** ההגדרות עצמן (מה כל רוטינה עושה, תוכן ה-SKILL.md, מתי מריצים) חיות ב-[docs/claude_routines.md](../../claude_routines.md) — כאן רק **איך מקימים אותן על מחשב שאין לו אותן**.
 
-## ① מה נשיג בשלב הזה
+## ① מה נשיג כאן
 
-4 המשימות המתוזמנות (routines) שישי כבר משתמש בהן — `regin-docs-sync`, `regin-health-pulse`, `regin-pr-gate`, `regin-e2e-check` — נוצרות גם בחשבון Claude שלך. הן **פר-מחשב, לא פר-ריפו** — אז `git clone` לא מביא אותן אוטומטית, וצריך ליצור אותן פעם אחת.
+4 המשימות המתוזמנות (routines) של הפרויקט — `regin-docs-sync`, `regin-health-pulse`, `regin-pr-gate`, `regin-e2e-check` — נוצרות בחשבון ה-Claude שעל המחשב הזה. הן **פר-מחשב, לא פר-ריפו** — אז `git clone` לא מביא אותן אוטומטית, וצריך ליצור אותן פעם אחת על כל מכונה.
 
 ## ② תנאי כניסה
 
-- [ ] [04_git_and_module_workflow.md](04_git_and_module_workflow.md) הושלם.
-- [ ] [04b_claude_code_power_setup.md](04b_claude_code_power_setup.md) הושלם — Supabase MCP מחובר (כדי שבדיקת ה-advisors ברוטינות תרוץ במקום לדלג).
+- [ ] [git_workflow.md](git_workflow.md) מוכר — הריפו משוכפל ואתה יודע לעבוד בו.
+- [ ] [claude_code_setup.md](claude_code_setup.md) הושלם — Supabase MCP מחובר (כדי שבדיקת ה-advisors ברוטינות תרוץ במקום לדלג).
 
 ## ③ חלוקת עבודה
 
@@ -33,7 +33,7 @@
 ## ⑥ 📋 הפרומפט להדבקה
 
 ```
-היי Claude. קרא docs/claude_routines.md וצור אצלי את 4 הרוטינות
+היי Claude. קרא docs/claude_routines.md וצור על המחשב הזה את 4 הרוטינות
 בדיוק לפי ההגדרות הקנוניות שם (משימות מתוזמנות מסוג Manual בלבד, בלי cron):
 regin-docs-sync, regin-health-pulse, regin-pr-gate, regin-e2e-check.
 אחרי היצירה — הרץ רשימה ותציג לי שכולן קיימות ומאופשרות (enabled).
@@ -46,6 +46,6 @@ regin-docs-sync, regin-health-pulse, regin-pr-gate, regin-e2e-check.
 ## ⑧ אם משהו השתבש
 
 - **המשימה לא נוצרה** — ודא שאתה בתוך תיקיית הריפו של `Reg-In` כשה-Claude Code רץ.
-- **`regin-health-pulse` מדווחת "Supabase advisors skipped — no MCP access"** — סימן שה-Supabase MCP לא מחובר. חזור ל-[04b](04b_claude_code_power_setup.md) ואשר/התחבר לשרת; לאחר מכן בדיקת ה-advisors תרוץ. (גם בלי זה הרוטינה עובדת — היא רק מדלגת על בדיקת ה-advisors ומדווחת על כך במפורש.)
+- **`regin-health-pulse` מדווחת "Supabase advisors skipped — no MCP access"** — סימן שה-Supabase MCP לא מחובר. חזור ל-[claude_code_setup.md](claude_code_setup.md) ואשר/התחבר לשרת; לאחר מכן בדיקת ה-advisors תרוץ. (גם בלי זה הרוטינה עובדת — היא רק מדלגת על בדיקת ה-advisors ומדווחת על כך במפורש.)
 
 </div>
