@@ -7,18 +7,20 @@
 ## מי זה מי
 | מי | תפקיד |
 |---|---|
-| **ישי** | בעל הריפו · מודולים 0, 1, 4, 5, 9, 10 · מסלול: [docs/guides/ishay/00_track.md](docs/guides/ishay/00_track.md) |
-| **עמית** | מפתח שותף · מודולים 2, 3, 7, 8, 11 · מסלול: [docs/guides/amit/00_track.md](docs/guides/amit/00_track.md) |
+| **ישי** | בעל הריפו · **המפתח היחיד** · כל המודולים 0–12 · הסדר ולוח-הדדליינים: [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) |
 | **Claude** | כותב את הקוד, מריץ את הפקודות, מתקן תקלות, מעדכן את התיעוד · הכללים שלו: [CLAUDE.md](CLAUDE.md) |
-| 🤝 משותף | מודולים 6, 12 — שני המפתחים יחד: [docs/guides/shared/](docs/guides/shared/) |
+
+> *עד 07/2026 היו שני מפתחים; **עמית פרש 22/07/2026** ומודוליו (2, 3, 7, 8, 11) עברו לישי. אזכוריו ביומנים המתוארכים הם היסטוריה קפואה ולא מצב-נוכחי. ⚠️ "עמית מילר" בדאטת-המערכת הוא משתמש/לקוח — לא המפתח.*
+
+⏱️ **דדליין-הגשה: 19/09/2026.**
 
 ## איפה אני? → פתח את…
 | מצב | פתח את |
 |---|---|
 | לא זוכר איפה עצרנו | [STATUS.md](STATUS.md) — לוח המצב, ואז המדריך שהוא מפנה אליו |
-| רוצה להבין את התמונה הגדולה | [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) — מפת הדרכים |
-| ישי, מתחיל שלב חדש | [docs/guides/ishay/00_track.md](docs/guides/ishay/00_track.md) |
-| עמית, מתחיל (אפילו בלי VS Code) | [docs/guides/amit/01_install_tools.md](docs/guides/amit/01_install_tools.md) |
+| רוצה להבין את התמונה הגדולה | [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) — מפת הדרכים + לוח-הדדליינים |
+| מתחיל מודול חדש | [docs/guides/modules/](docs/guides/modules/) — מדריך לכל מודול |
+| מקים מחדש סביבה במחשב חדש | [docs/guides/reference/install_tools.md](docs/guides/reference/install_tools.md) |
 | רוצה לדעת מה המערכת אמורה לעשות | [docs/PROJECT_MASTER.md](docs/PROJECT_MASTER.md) |
 | משהו השתבש / סיטואציה מיוחדת | [ספריית הפרומפטים המצביים](docs/guides/prompt_library.md) |
 
@@ -26,26 +28,27 @@
 
 **הפרומפט האוניברסלי (P1)** — כשלא זוכרים איפה עצרנו:
 ```
-אני [ישי/עמית]. קרא את CLAUDE.md ואת STATUS.md והמשך מאיפה שעצרנו במסלול שלי.
+אני ישי. קרא את CLAUDE.md ואת STATUS.md והמשך מאיפה שעצרנו.
 לפני שאתה עושה משהו — הסבר לי במילים פשוטות איפה אנחנו עומדים ומה השלב הבא.
 ```
 
 **לכל שאר הסיטואציות** — 📚 **[ספריית הפרומפטים המצביים](docs/guides/prompt_library.md)** (המקור הקנוני, כולל P1; ‏P1–P25): חילוץ, סטייה מהתוכנית, undo, ‏merge conflict, רגרסיה אחרי משיכה, שיחת קריאה-בלבד מקבילה, "עשיתי ידנית", שאלה פתוחה ל-§7, למידה, אודיט-סנכרון בתוך-סשן, סשן-הכרעות, המשכת-עבודת-השני, תקרית-מיגרציה, אודיט-ערעור-DB, סקירת-סשן-אחר, המשכת-תוכנית-שנקטעה, סנכרון-טרום-merge, סקירה-סמנטית-עמוקה-לפני-אבן-דרך (מועצה), בדיקת-עיצוב-UI, בחינה-מחדש-בביקורת, סקירת-PR, ודחיסת-תיעוד/סיכום-יום. מוצאים את הסיטואציה בטבלה שם ומדביקים.
 
 ## איך עובדים עם Claude — בקצרה
-- **מדריך אחד = פגישת עבודה אחת.** כל מדריך ב-`docs/guides/` בנוי מ-8 סעיפים קבועים, כולל **שלושת הפרומפטים להדבקה** (פתיחה / המשך-בנייה / סגירה) ו"בדיקת קבלה".
-- **מודול חדש** נפתח עם פרומפט הפתיחה (Claude קורא את `docs/templates/create_micro_guide_template.md` בעצמו ומייצר **מדריך מיקרו** — בלופרינט חי באנגלית, כתוב ל-Claude → אתם מאשרים → Claude בונה, מאמת עצירות 🔻 טכניות לבד ועוצר לאישורכם בסוף כל פזה) ונסגר עם פרומפט הסגירה (אודיט + עדכון כל התיעוד + הוראות PR מודפסות לכם). מדריך המיקרו מתעדכן תוך כדי העבודה — hook חוסם סיום סשן אם קוד מודול השתנה בלי עדכונו. הפרטים: [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) §5.
+- **מדריך אחד = פגישת עבודה אחת.** כל מדריך ב-`docs/guides/modules/` בנוי מ-8 סעיפים קבועים, כולל **שלושת הפרומפטים להדבקה** (פתיחה / המשך-בנייה / סגירה) ו"בדיקת קבלה".
+- **מודול חדש** נפתח עם פרומפט הפתיחה (Claude קורא את `docs/templates/create_micro_guide_template.md` בעצמו ומייצר **מדריך מיקרו** — בלופרינט חי באנגלית, כתוב ל-Claude → אתה מאשר → Claude בונה, מאמת עצירות 🔻 טכניות לבד ועוצר לאישורך בסוף כל פזה) ונסגר עם פרומפט הסגירה (אודיט + עדכון כל התיעוד + הוראות PR מודפסות לך). מדריך המיקרו מתעדכן תוך כדי העבודה — hook חוסם סיום סשן אם קוד מודול השתנה בלי עדכונו. הפרטים: [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) §5.
 - **בסוף כל סשן** Claude מעדכן את היומנים ואת STATUS.md — יש hook שלא נותן לו לסיים בלי זה.
-- **סודות** (`.env.local`, סיסמאות) עוברים רק בערוץ פרטי בין ישי לעמית — לעולם לא בריפו, בצ'אט או במדריכים.
+- **סודות** (`.env.local`, סיסמאות) נשארים מקומיים בלבד — לעולם לא בריפו, בצ'אט או במדריכים.
 
 ## מפת כל התיעוד
 | מסמך | תפקיד |
 |------|-------|
 | [CLAUDE.md](CLAUDE.md) | כללי הברזל של Claude — נטען אוטומטית בכל סשן |
-| [STATUS.md](STATUS.md) | **לוח המצב היחיד** — סטטוס מודולים + השלב הנוכחי של כל מסלול |
-| [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) | מפת הדרכים: מודולים, תלויות, אבני דרך, שיטת העבודה |
-| [docs/guides/ishay/](docs/guides/ishay/) · [docs/guides/amit/](docs/guides/amit/) · [docs/guides/shared/](docs/guides/shared/) | מדריכי השלבים בעברית (8 סעיפים + 3 פרומפטים בכל אחד) |
-| [docs/guides/amit/04c_working_with_claude.md](docs/guides/amit/04c_working_with_claude.md) | **המדריך לעבודה עם Claude**: פרומפטים, חיסכון בטוקנים, Plan Mode, קיצורי מקלדת, "איזה כלי למה" — רלוונטי לשני המפתחים |
+| [STATUS.md](STATUS.md) | **לוח המצב היחיד** — סטטוס מודולים + הצעד הנוכחי |
+| [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) | מפת הדרכים: מודולים, תלויות, אבני דרך, **לוח-הדדליינים ל-19/09**, שיטת העבודה |
+| [docs/guides/modules/](docs/guides/modules/) | מדריך שלב לכל מודול, בעברית (8 סעיפים + 3 פרומפטים בכל אחד) |
+| [docs/guides/reference/](docs/guides/reference/) | מדריכי-רפרנס קבועים: ‏Git · עבודה-עם-Claude · כיוונון-Claude-Code · רוטינות · התקנת-כלים |
+| [docs/guides/reference/working_with_claude.md](docs/guides/reference/working_with_claude.md) | **המדריך לעבודה עם Claude**: פרומפטים, חיסכון בטוקנים, Plan Mode, קיצורי מקלדת, "איזה כלי למה" |
 | [docs/guides/prompt_library.md](docs/guides/prompt_library.md) | 📚 **ספריית הפרומפטים המצביים** (P1–P25): חילוץ, סטייה, undo, קונפליקט, רגרסיה, "עשיתי ידנית", אודיט-סנכרון, סשן-הכרעות, המשכת-עבודת-השני, תקרית-מיגרציה, אודיט-ערעור-DB, סקירת-סשן-אחר, המשכת-תוכנית, סנכרון-טרום-merge, דחיסת-תיעוד ועוד — לפי סיטואציה |
 | [docs/PROJECT_MASTER.md](docs/PROJECT_MASTER.md) | האפיון המסונתז: סכמה, הרשאות, 17 מסכים + **§7 שאלות פתוחות** |
 | [docs/schema.sql](docs/schema.sql) | סכמת DB בפועל (snapshot; מקור-אמת לשינויים = `supabase/migrations/`) |
@@ -53,7 +56,7 @@
 | [docs/architecture_and_qa_roadmap.md](docs/architecture_and_qa_roadmap.md) | סטנדרט הנדסי + Definition of Done + QA |
 | [docs/claude_routines.md](docs/claude_routines.md) | 4 הרוטינות של Claude — הגדרות קנוניות + פרוטוקול עדכון |
 | [docs/code_review_2026-07.md](docs/code_review_2026-07.md) | בקרת קוד מודול 1 + המלצות להמשך |
-| [docs/CHANGELOG.md](docs/CHANGELOG.md) | יומן שינויים מתוארך (DB+קוד) — משותף לשני המפתחים |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | יומן שינויים מתוארך (DB+קוד) — ציר-הזמן של הפרויקט |
 | [docs/CLAUDE_CODE_LOG.md](docs/CLAUDE_CODE_LOG.md) | יומן הסשנים של Claude (נרטיב, החלטות, tech-debt) |
 | [supabase/README.md](supabase/README.md) | ניהול מיגרציות DB |
 | [docs/micro_guides/](docs/micro_guides/) | מדריכי מיקרו — בלופרינטים חיים **באנגלית, כתובים ל-Claude** (module-1.md ✅ · module-2.md ✅ מוזג · השאר ייווצרו בפתיחת כל מודול) |

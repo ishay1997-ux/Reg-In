@@ -50,10 +50,10 @@
 - [ ] Money columns: `numeric(12,2)` (§7.74)
 - [ ] `created_at`/`updated_at` + `moddatetime` on new tables (§7.73, once nodded)
 - [ ] Seed impact? (roles/modules/params exception only — DB protocol) · Storage impact? (§5 lane)
-- [ ] 👤 gate BEFORE applying (shared Supabase project, rule 10) — coordinate with the partner
+- [ ] 👤 typed-echo gate BEFORE applying (irreversible on the live project — DB protocol, rule 10)
 - [ ] After apply: refresh `docs/schema.sql`, commit migration+snapshot **together**
 - [ ] Run Supabase advisors (MCP read-only) — zero new findings, or a written triage note
-- [ ] Ripple: mark executed rows here + §7.47 + CHANGELOG (📣 if it touches the partner's modules/tables)
+- [ ] Ripple: mark executed rows here + §7.47 + CHANGELOG (name the affected FUTURE modules in the line)
 
 ## 2. Lane A — Committed / near-certain ("pretty sure we'll change")
 
@@ -237,10 +237,11 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    Enforced: the Stop hook blocks sessions that changed `supabase/migrations/**` without touching
    this file. The loop closes from three directions: module open (blueprint template reads this
    file) → during work (hook) → module close (final-test template marks rows Done).
-2. **Partner notification 📣:** a row executed/added/changed whose target module or tables belong
-   to the OTHER developer ⇒ the CHANGELOG line is tagged 📣 with their name AND the session's final
-   report prints a ready-to-paste Hebrew note to them (what changed, where it meets them, what to
-   read). The responsibility is on the session that made the change, not on the reader.
+2. **Forward notice:** a row executed/added/changed whose target module or tables belong to a
+   FUTURE module ⇒ the CHANGELOG line names those module numbers, so the session that opens that
+   module finds the change instead of rediscovering it. The responsibility is on the session that
+   made the change, not on the reader. *(Replaced the cross-developer 📣 tag, retired 22/07/2026
+   with the move to a single developer.)*
 3. **Executed rows** move to a dated strike-list at the bottom of the relevant lane (numbering is
    never reused — like §7). `regin-docs-sync` audits rows against §7 + `schema.sql` on each run.
 4. This file never *decides*: a new open question found here goes to §7 (P10) and comes back as a

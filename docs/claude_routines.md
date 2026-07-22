@@ -2,7 +2,7 @@
 
 # 🤖 REG-IN — 4 הרוטינות של Claude (הגדרות קנוניות)
 
-> **קובץ זה הוא המקור הקנוני.** אם אתה Claude וקוראים לך לעדכן, ליצור, או להבין את "4 הרוטינות" של REG-IN — **זה המקום**. הקובץ נועד לעמוד בפני עצמו: חשבון Claude אחר (של עמית, או סשן טרי בעתיד) שקורא רק את הקובץ הזה, בלי שום הקשר קודם, אמור להבין בדיוק מה כל רוטינה עושה, מתי מריצים אותה, ואיך יוצרים אותה מחדש בחשבון חדש.
+> **קובץ זה הוא המקור הקנוני.** אם אתה Claude וקוראים לך לעדכן, ליצור, או להבין את "4 הרוטינות" של REG-IN — **זה המקום**. הקובץ נועד לעמוד בפני עצמו: סשן טרי, או חשבון Claude על מחשב אחר, שקורא רק את הקובץ הזה בלי שום הקשר קודם — אמור להבין בדיוק מה כל רוטינה עושה, מתי מריצים אותה, ואיך יוצרים אותה מחדש בחשבון חדש.
 >
 > **מקומו בהיררכיית האמת:** זהו תיעוד תפעולי, לא ליבת המערכת — אבל הוא **המקור הראשי** לתוכן הרוטינות (עדכון תוכן קודם כאן, אחר-כך בעותקי ה-SKILL.md המקומיים; ר' "פרוטוקול עדכון" בסוף).
 
@@ -13,7 +13,7 @@
 **"רוטינה" = משימה מתוזמנת של Claude Code (scheduled task), מסוג Manual בלבד — בלי cron, בלי הפעלה אוטומטית ברקע.** אתה (או Claude) לוחצים "הפעל עכשיו", וזה מריץ סשן Claude שלם עם הנחיות קבועות מראש, שמדווח בעברית בסוף.
 
 **עובדות מפתח:**
-- **פר-מחשב/חשבון Claude, לא פר-ריפו.** הרוטינות מוגדרות כקובץ `SKILL.md` בתיקייה `~/.claude/scheduled-tasks/<שם-הרוטינה>/SKILL.md` — כלומר בפרופיל המשתמש של Windows, **מחוץ לריפו של Git**. זה אומר: **אם עמית עושה `git clone` לריפו — הוא לא מקבל אותן אוטומטית.** צריך ליצור אותן בחשבון שלו בנפרד (ר' סעיף 3 למטה).
+- **פר-מחשב/חשבון Claude, לא פר-ריפו.** הרוטינות מוגדרות כקובץ `SKILL.md` בתיקייה `~/.claude/scheduled-tasks/<שם-הרוטינה>/SKILL.md` — כלומר בפרופיל המשתמש של Windows, **מחוץ לריפו של Git**. זה אומר: **`git clone` של הריפו למחשב חדש לא מביא אותן** — צריך ליצור אותן שם בנפרד (ר' סעיף 3 למטה).
 - **Manual בלבד.** אין תזמון-זמן קבוע (לא "כל יום ב-20:00") — רק "הרץ עכשיו" כשמחליטים שזה הזמן.
 - כל רוטינה רצה כסשן Claude נטול-זיכרון: היא לא זוכרת שום שיחה קודמת, וכל ההקשר שהיא צריכה כתוב בתוך ה-SKILL.md שלה או נגיש דרך קריאת קבצי הריפו.
 - כל 4 הרוטינות **קוראות/כותבות רק בתוך הריפו** (למעט בדיקות read-only כמו `npm audit`); אף אחת לא נוגעת ב-`git push`/`merge`/`main`/`dev` בלי בדיקת-גדר מפורשת.
@@ -49,7 +49,7 @@
 ## 2. הרוטינות — הגדרה מלאה לכל אחת
 
 ### 🔄 `regin-docs-sync`
-> 🕓 עודכנה (קנוני): 10/07/2026 00:12 — STEP 2 בולט-🚧 הומר לציטוט כלל 15 (קונסולידציית-§7; מכניקת-האודיט נשמרה) · קודם: 08/07/2026 17:15 (חותמת-אימות) · 07/07/2026 ערב (אודיט-עמוק) · סונכרנה: ישי ✓ (העותק החי עודכן זהה-בייט באותו סשן, 10/07/2026 00:12) · עמית ✗ (טרם-אונבורדינג)
+> 🕓 עודכנה (קנוני): 10/07/2026 00:12 — STEP 2 בולט-🚧 הומר לציטוט כלל 15 (קונסולידציית-§7; מכניקת-האודיט נשמרה) · קודם: 08/07/2026 17:15 (חותמת-אימות) · 07/07/2026 ערב (אודיט-עמוק) · סונכרנה: ישי ✓ (העותק החי עודכן זהה-בייט באותו סשן, 10/07/2026 00:12)
 
 **מטרה (שודרגה 07/07/2026 לאודיט-סנכרון עמוק):** לסנכרן את כל התיעוד מול המציאות (קוד/DB) **ומול עצמו**, ומעל הכול — **לתפוס כל החלטה שהוכרעה ונשארה "פתוחה"/בערך-ישן במקום אחר** (לשני הכיוונים). קוראת הכול במלואו (לא skim), מסווגת כל ממצא בעץ-הכרעה (מכני→מתקנת · יש-מקור-הכרעה→מסנכרנת · עמום→שואלת), ומפיקה conflict-ledger.
 
@@ -73,7 +73,7 @@ SCOPE NOTE: this routine only handles documentation truthfulness. It does NOT ru
 
 STEP 0 — Merge-status check (do this FIRST, before trusting any local git state — added 08/07/2026 after a real incident): `git fetch origin --prune`, then check whether the current branch's tip is already an ancestor of `origin/dev` (`git merge-base --is-ancestor HEAD origin/dev` — exit 0 means yes) or whether `git log origin/dev --oneline -5` shows a merge commit for this exact branch name. **Local git log/status alone cannot detect this** — a human can merge the current branch's PR on GitHub mid-session, invisibly to a session that never fetches. If the current branch is already merged into `origin/dev`:
 - Say so explicitly and prominently in the journal/report — do not silently proceed as if still pre-merge.
-- Any further doc fixes this audit finds are still valid content, but they must NOT be piled onto the now-shipped branch as if it were still open. Recommend to Ishay/Amit: pull `dev` fresh and open a new small branch for these fixes (or, if they prefer, push more commits to the same branch name and open a second PR from it — their call, not this routine's).
+- Any further doc fixes this audit finds are still valid content, but they must NOT be piled onto the now-shipped branch as if it were still open. Recommend to Ishay: pull `dev` fresh and open a new small branch for these fixes (or, if they prefer, push more commits to the same branch name and open a second PR from it — their call, not this routine's).
 - Never push or open a PR yourself either way — this routine stays docs-only per the hard safety boundaries below.
 
 STEP 1 — Read reality and the full doc set (exhaustive — every doc IN FULL, no skimming):
@@ -130,7 +130,7 @@ Write your CLAUDE_CODE_LOG journal entry in **English** (the log is a Claude-fac
 ---
 
 ### 🩺 `regin-health-pulse`
-> 🕓 עודכנה (קנוני): 07/07/2026 · סונכרנה: ישי ✓ (אומת-mtime ‏08/07/2026) · עמית ✗ (טרם-אונבורדינג)
+> 🕓 עודכנה (קנוני): 07/07/2026 · סונכרנה: ישי ✓ (אומת-mtime ‏08/07/2026)
 
 **מטרה:** בדיקת בריאות זולה וקריאה-בלבד — lint, תלויות מיושנות, `npm audit`, Supabase advisors, `git status`. שורת יומן אחת, לא תיעוד מלא.
 
@@ -174,7 +174,7 @@ Write your journal line in Hebrew (matching the rest of the log's language), RTL
 ---
 
 ### 🚦 `regin-pr-gate`
-> 🕓 עודכנה (קנוני): 07/07/2026 ערב · סונכרנה: ישי ✓ (אומת-mtime ‏08/07/2026) · עמית ✗ (טרם-אונבורדינג)
+> 🕓 עודכנה (קנוני): 07/07/2026 ערב · סונכרנה: ישי ✓ (אומת-mtime ‏08/07/2026)
 
 **מטרה:** להריץ את שער האיכות `npm run verify` (lint+format+test+build). אם ירוק **על ענף פיצ'ר אישי** — commit+push אוטומטי. אם אדום — אבחון בעברית בלי לתקן קוד.
 
@@ -232,7 +232,7 @@ Respond in Hebrew, concise and direct.
 ---
 
 ### 🧪 `regin-e2e-check`
-> 🕓 עודכנה (קנוני): 11/07/2026 (שורת-הכיסוי → מודולים 1–2, טריגר-צמיחה בסגירת-מ2; הפרומפט עצמו גנרי — לא נגעו) · סונכרנה: ישי ✓ (העותק החי כבר גנרי — נבדק 11/07/2026, אין דריפט) · עמית ✗ (טרם-אונבורדינג)
+> 🕓 עודכנה (קנוני): 11/07/2026 (שורת-הכיסוי → מודולים 1–2, טריגר-צמיחה בסגירת-מ2; הפרומפט עצמו גנרי — לא נגעו) · סונכרנה: ישי ✓ (העותק החי כבר גנרי — נבדק 11/07/2026, אין דריפט)
 
 **מטרה:** להריץ את חבילת ה-E2E האמיתית (Playwright) ולדווח תקציר עברי pass/fail. **כיסוי היום: מודולים 1–2** (‏`auth`+`permissions`+`customers` ‏spec-ים; 2 ספי finance/logistics מדלגים-בחן עד `E2E_FINANCE_*`/`E2E_LOGISTICS_*` — עודכן 11/07/2026 בסגירת-מ2; התרחבות = ראה "טריגרי צמיחה" בסעיף 4 למטה).
 
@@ -281,9 +281,11 @@ Respond in Hebrew, concise — a pass/fail summary, not a full report, unless th
 
 ---
 
-## 3. איך יוצרים את הרוטינות בחשבון Claude חדש (עמית!)
+## 3. איך יוצרים את הרוטינות במחשב/חשבון Claude חדש
 
-כשעמית מגיע לשלב [amit/05_claude_routines_setup](guides/amit/05_claude_routines_setup.md) — הוא מדביק ל-Claude Code שלו (בתוך תיקיית הריפו המקומית שלו) פרומפט שמפנה לקובץ הזה. Claude (בחשבון של עמית) קורא את הקובץ הזה, ולכל אחת מ-4 הרוטינות — יוצר משימה מתוזמנת חדשה (**Manual בלבד, בלי cron**) בשם המדויק (`regin-docs-sync` וכו'), עם תוכן ה-SKILL.md המדויק שמופיע כאן בכל בלוק קוד. הפרטים הטכניים המדויקים של "איך יוצרים" (איפה זה נשמר במחשב, איזו פקודה) — Claude Code כבר יודע לבד; אין צורך שהמדריך הזה יכתיב אותם.
+**מדריך ההקמה המעשי:** [reference/claude_routines_setup](guides/reference/claude_routines_setup.md) — שם הפרומפט להדבקה וסדר הצעדים. הסעיף הזה מסביר רק את המנגנון.
+
+מדביקים ל-Claude Code (בתוך תיקיית הריפו המקומית) פרומפט שמפנה לקובץ הזה. Claude קורא אותו, ולכל אחת מ-4 הרוטינות — יוצר משימה מתוזמנת חדשה (**Manual בלבד, בלי cron**) בשם המדויק (`regin-docs-sync` וכו'), עם תוכן ה-SKILL.md המדויק שמופיע כאן בכל בלוק קוד. הפרטים הטכניים ("איפה זה נשמר, איזו פקודה") — Claude Code כבר יודע לבד.
 
 **בדיקת קבלה מהירה:** אחרי היצירה, מריצים את `regin-health-pulse` פעם אחת — היא read-only ומהירה, והצלחה שלה (שורת יומן חדשה ב-`docs/CLAUDE_CODE_LOG.md` + הסשן מסתיים בלי חסימה) מוכיחה שהרוטינה נוצרה תקין ורצה מקצה-לקצה. (הערה: ה-Stop hook המודע-לסשן **מדלג** על health-pulse — היא עורכת רק את היומן, קובץ שמוחרג מסימון-העריכה, אז אין לה מרקר; זה מכוון ותקין.)
 
@@ -294,7 +296,7 @@ Respond in Hebrew, concise — a pass/fail summary, not a full report, unless th
 ## 4. פרוטוקול עדכון — איך Claude שומר את הרוטינות מסונכרנות
 
 1. **הקובץ הזה (`docs/claude_routines.md`) הוא המקור הקנוני — וקבוע.** עותקי ה-`SKILL.md` המקומיים (`~/.claude/scheduled-tasks/<name>/SKILL.md`, בכל מחשב בנפרד, מחוץ ל-git) הם **מופעים חיים** של הקנוני, לא תחליף לו. **הקובץ הזה לא נמחק אחרי אונבורדינג** — הוא הגיבוי היחיד (העותקים החיים מחוץ ל-git, בלי היסטוריה/שחזור), מקור-השחזור למחשב חדש/התקנה-מחדש, המול-להשוואה של `regin-docs-sync` לזיהוי דריפט, והרשומה המשותפת היחידה לתיאום בין שני המפתחים. מחיקתו תשבור את כל אלה.
-   - **פרוטוקול עדכון דו-צדדי (מ-07/07/2026):** כל שינוי ב**התנהגות** של רוטינה — Claude מעדכן **גם** את הקובץ הקנוני כאן **וגם**, בסשן של ישי, את 4 קבצי ה-SKILL.md החיים של ישי (`~/.claude/scheduled-tasks/regin-*/SKILL.md`) — כך הצד של ישי לא דורף. **וכן (מ-08/07/2026): את שורת-החותמת 🕓 בראש סעיף-הרוטינה כאן** (עודכנה/סונכרנה — ישי/עמית) — חותמת בלי עדכון-בפועל היא שקר; ‏`regin-docs-sync` מאמתת אותן מול mtime בכל ריצה. **אמית:** העותקים החיים שלו במחשב שלו, מחוץ להישג-ידו של סשן של ישי — הוא מסנכרן אותם בעצמו (ה-Claude שלו קורא את הקנוני המעודכן, או הרצת ה-setup מחדש), ו-`regin-docs-sync` מדווחת על דריפט canonical↔local כרשת-ביטחון.
+   - **פרוטוקול עדכון דו-צדדי (מ-07/07/2026):** כל שינוי ב**התנהגות** של רוטינה — Claude מעדכן **גם** את הקובץ הקנוני כאן **וגם**, בסשן של ישי, את 4 קבצי ה-SKILL.md החיים של ישי (`~/.claude/scheduled-tasks/regin-*/SKILL.md`) — כך הצד של ישי לא דורף. **וכן (מ-08/07/2026): את שורת-החותמת 🕓 בראש סעיף-הרוטינה כאן** (עודכנה/סונכרנה) — חותמת בלי עדכון-בפועל היא שקר; ‏`regin-docs-sync` מאמתת אותן מול mtime בכל ריצה ומדווחת על דריפט canonical↔local כרשת-ביטחון.
 2. **`regin-docs-sync` בודקת דריפט אוטומטית:** כחלק מ-STEP 2 שלה (ר' הפרומפט למעלה), היא משווה את התוכן כאן מול עותקי ה-SKILL.md המקומיים בכל הרצה, ומדווחת בלוג אם הם לא תואמים. Claude שמריץ אותה **לא** מתקן את קבצי ה-SKILL.md בעצמו (הם מחוץ לריפו, מחוץ לתחום העריכה שלה) — היא רק מזהירה. את התיקון עושים לפי הפרוטוקול בנקודה 1: בצד של ישי — Claude מעדכן את החי בסשן רגיל; בצד של אמית — אמית / ה-Claude שלו.
 3. **טבלת טריגרי-צמיחה** — מתי עדכון בפועל נדרש (לא רק דריפט, אלא שינוי-כוונה אמיתי):
 
