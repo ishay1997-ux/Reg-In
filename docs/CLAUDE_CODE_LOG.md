@@ -38,6 +38,14 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 📤 22/07/2026 20:35 — PR #9 opened (Ishay), CI green, awaiting his merge
+
+Ishay opened the PR from the Chrome extension and pasted the result: **"#9 'ארגון-מחדש למפתח יחיד + בלופרינט מודול 3' (dev ← ishay/solo-reorg), עם 17 קומיטים ו-46 קבצים שהשתנו… Lint · Test · Build — עבר ✓ … Secret scan (gitleaks) — עבר ✓ … ה-PR נשאר פתוח, לא מוזג."** Verified live in-session, not from his report alone: `gh pr view 9` → `state=OPEN mergeable=MERGEABLE dev <- ishay/solo-reorg files=46`; `gh pr checks 9` → `Lint · Test · Build  pass` + `Secret scan (gitleaks)  pass`.
+
+**He then asked whether his module-3 work survived the reorganization.** Answered with evidence rather than assurance (the pattern he responds to — proof over promise): all 13 M3 commits verified as ancestors of `origin/ishay/solo-reorg` via `git merge-base --is-ancestor` (13/13 ✓); the four M3 artifacts present with content (`micro_guides/module-3.md` 298 lines, `module3_prices_tab_design_notes.md` 126, the module guide 124, `products_and_params.md` 173); the blueprint's engineering body untouched — 28 steps before and after, 35 unique §7 citations before and after, 11 mentions of the 6,319 ₪ acceptance figure — with a 6-line diff that is entirely ownership/path wording. The whole-branch deletion list is 7 files: the 6 intended doc deletions plus one mockup PNG that `git log --diff-filter=D` attributes to **his own** commit `3845b3f` (replaced by the reworked HTML in the same commit), not to this session. `ishay/module-3-quotes` still exists locally and on origin.
+
+**Standing risk to carry forward:** once #9 merges, `ishay/module-3-quotes` becomes an ancestor of `dev` — a dead branch under iron rule 10. M3's build must resume on a branch cut fresh from `dev`. Flagged in STATUS's module-3 row and in the handoff.
+
 ### 🧹 22/07/2026 20:15 — Solo reorganization: docs restructured around a single developer + 19/09 deadline
 
 **Trigger (Ishay, in chat):** "עמית יוצא מהתמונה — הוא כבר לא מפתח שום חלק מהמערכת... מהיום אני המפתח היחיד." Plan-mode session: two Explore agents mapped the coupling (one over `docs/guides/`, one over everything else), a fresh-context Plan critic reviewed the plan (READY-WITH-FIXES, 7 findings, all applied), then Ishay ruled on three structural questions + the deadline.
