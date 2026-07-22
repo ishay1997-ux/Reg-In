@@ -11,7 +11,7 @@
 
 ## ② תנאי כניסה
 
-- [ ] מודול 1 מוזג ל-`dev` ([ishay/01](../ishay/01_close_module_1.md) הושלם).
+- [ ] מודול 1 מוזג ל-`dev` ([מדריך סגירת מודול 1](../modules/module_01_close.md) הושלם).
 - ✅ **שלוש השאלות הפתוחות שחסמו את המודול הוכרעו (06–07/07/2026, ישי, בפתיחת המודול):**
   > 🔗 **מראת §7.21+3+11** — SSOT: ‏PROJECT_MASTER §7 (לא לערוך כאן ידנית; מסונכרן ע"י `regin-docs-sync`)
   - **§7.21** — מודל ה-RLS סגור (תבנית ה-policy הסטנדרטית ב-PROJECT_MASTER §7.21).
@@ -23,16 +23,16 @@
 
 ## ③ חלוקת עבודה
 
-| ישי | אתה | Claude |
-|---|---|---|
-| מכריע בשאלות ה-🛑 (בטלפון/וואטסאפ אם צריך) | בונה עם Claude, פותח PR | בונה בלופרינט, מיישם |
+| ישי | Claude |
+|---|---|
+| מכריע בשאלות ה-🛑; בונה עם Claude, פותח PR | בונה בלופרינט, מיישם |
 
 ## ④ החלק שלך
 
 1. §7.21 + §7.3 + §7.11 מוכרעים (ר' ②) — אין מה לאמת מולם, רק ליישם.
-2. `git checkout dev && git pull && git checkout -b amit/module-2-customers` (רק אחרי שמודול 1 מוזג — ודא ש-`docs/micro_guides/module-2.md` קיים אצלך אחרי ה-pull; הוא מגיע דרך ה-PR של מודול 1).
+2. `git checkout dev && git pull && git checkout -b ishay/module-2-customers` (רק אחרי שמודול 1 מוזג — ודא ש-`docs/micro_guides/module-2.md` קיים אצלך אחרי ה-pull; הוא מגיע דרך ה-PR של מודול 1).
 3. הדבק את הפרומפט המתאים מסעיף ⑥ — פרומפט 2 (המשך-בנייה) אם הבלופרינט כבר קיים, אחרת פרומפט 1 (פתיחה). Claude ימשיך מ"הצעד הפעיל".
-4. בסוף — פרומפט הסגירה, ואז PR (ר' [04_git_and_module_workflow.md](04_git_and_module_workflow.md)).
+4. בסוף — פרומפט הסגירה, ואז PR (ר' [git_workflow.md](../reference/git_workflow.md)).
 
 ## ⑤ החלק של Claude
 
@@ -44,15 +44,15 @@
 
 **1) פתיחת מודול (פעם אחת — רק אם `docs/micro_guides/module-2.md` עדיין לא קיים; אם קיים, דלג לפרומפט 2, הרצה חוזרת תדרוס את הבלופרינט):**
 ```
-אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/amit/06_module_02_customers.md
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/modules/module_02_customers.md
 ואת docs/PROJECT_MASTER.md (סעיף 5.3, §7 פריטים 3, 11, 21).
-אנחנו פותחים את מודול 2 — לקוחות, על ענף amit/module-2-customers.
+אנחנו פותחים את מודול 2 — לקוחות, על ענף ishay/module-2-customers.
 
 זו ה-RLS policy הראשונה על טבלה עסקית בפרויקט — היא תשמש תבנית לכל המודולים הבאים.
 תזכיר לי במפורש את ההכרעה ב-§7.21 לפני שאתה כותב אותה.
 
 קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
-MODULE_NUMBER=2 · MODULE_NAME=לקוחות · RELEVANT_SECTIONS=§5.3, §7.3/11/21 · BRANCH_NAME=amit/module-2-customers
+MODULE_NUMBER=2 · MODULE_NAME=לקוחות · RELEVANT_SECTIONS=§5.3, §7.3/11/21 · BRANCH_NAME=ishay/module-2-customers
 
 חובה: "שאלות פתוחות" מסעיף ② במדריך שלי = פריטי §7, מנותבות לישי להכרעה (§7 = ישי, כלל 1) — אל תכריע בהן לבד.
 הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-2.md.

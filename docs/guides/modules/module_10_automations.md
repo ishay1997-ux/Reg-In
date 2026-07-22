@@ -42,7 +42,7 @@
 
 **1) פתיחת מודול (פעם אחת):**
 ```
-אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/ishay/05_module_10_automations.md,
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/modules/module_10_automations.md,
 docs/CHANGELOG.md (חלק "חובות עתידיים") ו-docs/PROJECT_MASTER.md.
 אנחנו פותחים את מודול 10 — אוטומציות, על ענף ishay/module-10-automations.
 

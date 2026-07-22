@@ -1,7 +1,7 @@
 # REG-IN — Micro-Guide | Module 2: Customers (לקוחות)
 
-> **Audience:** a future Claude Code session with zero memory. Humans (Ishay/Amit) only paste prompts, answer decision questions, and approve at phase boundaries.
-> **Language rule:** guide in English; Hebrew appears only as data (DB values like 'לקוחות', UI strings). All chat reports to Ishay/Amit — always in Hebrew.
+> **Audience:** a future Claude Code session with zero memory. Humans (Ishay) only paste prompts, answer decision questions, and approve at phase boundaries.
+> **Language rule:** guide in English; Hebrew appears only as data (DB values like 'לקוחות', UI strings). All chat reports to Ishay — always in Hebrew.
 > **Model rule (CLAUDE.md):** Opus for thinking steps (Phase 1 RLS, security, closing audit) · Sonnet for generation steps (Phase 3 UI, forms).
 > **Iron rule 3 (stated once):** every business rule in code gets a Hebrew why-first comment.
 
@@ -73,7 +73,7 @@ Rule (ENFORCED — iron rule 15 + Stop hook): every 🚧 row above carries a `�
 - **The 5 seeded test users (one per role).** Resolve the live `role → email → user_id` mapping from the seed — do NOT hard-code: `select u.user_id, u.email, r.role_name from users u join roles r on u.role_id = r.role_id order by r.role_name;` (MCP `execute_sql`, read-only).
 - **Impersonation for RLS scenarios (step 1.3 — SQL, no password):** `select set_config('request.jwt.claims', json_build_object('sub', '<user_id-uuid>', 'email', '<email>', 'role', 'authenticated')::text, true); set local role authenticated;`. `current_user_role_id()` resolves the caller via `auth.uid()`←`sub` (and `auth.email()`←`email`) — **BOTH keys must be present or every RLS query silently returns 0 rows** (a broken-impersonation deny-all is indistinguishable from a working RLS deny-all).
 - **Positive control (MANDATORY in step 1.3):** מנכ"ל (edit on every module) MUST return ≥1 row on the SELECT scenario — if it returns 0, the impersonation is broken, NOT the policy. Negative control: מנהלת לוגיסטיקה (blocked) returns 0. Both are already scenarios in step 1.3's table; treat CEO=1-row as the impersonation sanity gate before trusting any deny result.
-- **UI login (steps 3.1 / 4.1 / 5.1 — needs a password):** creds live in `.env.local` as `E2E_<ROLE>_EMAIL` / `E2E_<ROLE>_PASSWORD`. ⚠️ Only `E2E_FINANCE_*` + `E2E_LOGISTICS_*` are provisioned (added at step 5.1, 👤). CEO / project-manager / recruiter UI-login (needed earlier by 3.1/4.1) is NOT provisioned by default — at the 4.1 👤 gate either reuse a same-tier provisioned role or have Ishay/Amit add the missing `E2E_*`; do NOT assume they exist.
+- **UI login (steps 3.1 / 4.1 / 5.1 — needs a password):** creds live in `.env.local` as `E2E_<ROLE>_EMAIL` / `E2E_<ROLE>_PASSWORD`. ⚠️ Only `E2E_FINANCE_*` + `E2E_LOGISTICS_*` are provisioned (added at step 5.1, 👤). CEO / project-manager / recruiter UI-login (needed earlier by 3.1/4.1) is NOT provisioned by default — at the 4.1 👤 gate either reuse a same-tier provisioned role or have Ishay add the missing `E2E_*`; do NOT assume they exist.
 
 **Spec & mockups:** PROJECT_MASTER §5.3; frozen spec C5 §1.5.3 (process + field list incl. Hebrew type labels) + §1.6.3 (screen); mockups `docs/mockups/customers-screen/01-06.png` (visual reference ONLY): 01 list+marketing area, 04 filter sheet (type/satisfaction/consent/min-discount), 05-06 add/edit dialog. Design language: PROJECT_MASTER §4 (teal `#14B8A6`, bg `#F8FAFC`, right sidebar) — approved and binding (iron rule 8).
 
@@ -262,7 +262,7 @@ create policy "marketing_delete_by_permission" on storage.objects for delete to 
 
 **Known fallback (write it into the migration header if hit):** on current Supabase projects the `storage` schema may be owned by `supabase_storage_admin` — if `create policy on storage.objects` fails with 42501 "must be owner of table objects", create the 4 policies with these exact definitions via Dashboard → Storage → Policies instead, and **comment them out** in the migration file as a documented block. ⚠️ Do NOT leave live `create policy on storage.objects` statements in the file — they will re-fail on every `db push` / clean replay and break reproducibility (the very gap §7.48 exists to close). Add an "↳ as-built" note here + a dated line in section 9. **Reproducibility note for the closing audit:** if this fallback is taken, the 4 storage policies live only in the Dashboard, so a fresh-environment replay yields `2 customers + 0 storage` policies — record this explicitly so the drift-check does not misread the legitimate difference as a defect.
 **Verify 🤖 (pre-gate):** `Test-Path supabase/migrations/<name>.sql` → True; pass criterion: the two `customers` policy bodies are textually identical to PROJECT_MASTER §7.21's template after substituting `<table_name>`=customers, `<שם-המודול-המתאים>`='לקוחות' (side-by-side diff shows zero logic differences).
-**🔻👤 gate — MANDATORY (typed-echo, DB protocol): shared Supabase project.** Ishay/Amit reviews the SQL text AND **types the migration name** (not "yes"/"approve") as the irreversible-apply confirmation — this is one of the two typed-echo gates in the project (CLAUDE.md DB protocol). That typed-echo IS the apply authorization consumed at step 1.2; a plain approval here is NOT sufficient to apply.
+**🔻👤 gate — MANDATORY (typed-echo, DB protocol): shared Supabase project.** Ishay reviews the SQL text AND **types the migration name** (not "yes"/"approve") as the irreversible-apply confirmation — this is one of the two typed-echo gates in the project (CLAUDE.md DB protocol). That typed-echo IS the apply authorization consumed at step 1.2; a plain approval here is NOT sufficient to apply.
 
 #### Step 1.2 — Apply migration + snapshot 🔻🤖
 **Goal:** policies live in the shared project; snapshot + migration committed together (DB protocol).
@@ -311,12 +311,12 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 #### Step 1.4 — Phase 1 closure 🔻👤
 **Goal:** human sign-off on the security foundation before code is built on it.
 **Files:** this guide (status header + step table updated first — protocol section 8).
-**What:** show Ishay/Amit the filled 14-row table + both pg_policies outputs.
+**What:** show Ishay the filled 14-row table + both pg_policies outputs.
 **🔻👤 end-of-phase gate.**
 
 ### Phase 2 — Business Logic (iron rule 14: SSOT in `src/lib/`, queries in `api.js`, UI only imports)
 
-> Placement note (stated reason, per template): guide amit/06 §⑤ lists "מיפוי enum" under Phase 1 — the DB side needs no work (the 4 enum values already exist as a CHECK, docs/schema.sql:43), so the mapping is deliberately implemented as code-side data here in Phase 2.
+> Placement note (stated reason, per template): guide modules/module_02_customers §⑤ lists "מיפוי enum" under Phase 1 — the DB side needs no work (the 4 enum values already exist as a CHECK, docs/schema.sql:43), so the mapping is deliberately implemented as code-side data here in Phase 2.
 
 #### Step 2.1 — Pure logic + validators + unit tests 🔻🤖
 **Goal:** every business rule of the module exists exactly once, unit-tested, before any UI.
@@ -401,7 +401,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 #### Step 5.1 — Module E2E 🔻🤖 (creds sub-step 👤) ✅ VERIFIED 11/07 03:07
 **Goal:** guide ⑦ acceptance automated.
 **Files:** `e2e/customers.spec.js` (new); `.env.local` (creds — human).
-**What:** Playwright specs mirroring guide ⑦: finance-role creates customer & sees it · logistics-role has no customers module (sidebar + direct URL) · filter works · archive is reversible. Needs `E2E_FINANCE_*` / `E2E_LOGISTICS_*` creds — **👤 Ishay/Amit adds them to `.env.local` (secrets gate; never committed)**; specs must `test.skip` gracefully when absent (existing convention, e2e/permissions.spec.js:20).
+**What:** Playwright specs mirroring guide ⑦: finance-role creates customer & sees it · logistics-role has no customers module (sidebar + direct URL) · filter works · archive is reversible. Needs `E2E_FINANCE_*` / `E2E_LOGISTICS_*` creds — **👤 Ishay adds them to `.env.local` (secrets gate; never committed)**; specs must `test.skip` gracefully when absent (existing convention, e2e/permissions.spec.js:20).
 **Verify 🤖:** `npm run test:e2e` → 8 old + new all pass (paste the total).
 ↳ **as-built 11/07 03:07:** `e2e/customers.spec.js` written. **Coverage mapped to the two tiers we actually hold** (Ishay 11/07: creds are fine/academic-light, but Claude does not type test passwords → the framework injects env creds): `edit-tier (CEO)` runs the full lifecycle (create → save-success strip → see-via-search → filter no-results/back → archive→hidden-by-default → הצג-ארכיון→restore) · `blocked (STAFF=לוגיסטיקה)` = no 'לקוחות' sidebar link + direct `/customers` shows "אין הרשאה". **finance/logistics-named variants** included, `test.skip` gracefully until `E2E_FINANCE_*`/`E2E_LOGISTICS_*` exist. **Self-cleaning:** `afterAll` hard-deletes the unique-ח"פ test customer via a CEO-authenticated supabase-js client (no UI delete by design; `customer_contacts` FK cascade) — verified live after the run **customers=0 / contacts=0**. **Result: `npm run test:e2e` → 10 passed / 2 skipped** (8 M1 + 2 new active + 2 finance/logistics skipped). The 👤 creds sub-step is now optional (both tiers covered by CEO+STAFF); activating the finance/logistics creds later auto-runs the 2 skipped specs.
 
@@ -421,7 +421,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 #### Step 5.4 — Closing audit + PR 🔻👤 ✅ DONE 11/07/2026 22:33–22:42
 **Goal:** formal module closure (final DoD sign-off gate).
 **Files:** none here — the closing template drives its own persistence.
-**What:** run `docs/templates/create_module_final_test_template.md` (the closing prompt in amit/06 ⑥) → DoD sign-off → PR base:`dev` ← compare:`amit/module-2-customers`.
+**What:** run `docs/templates/create_module_final_test_template.md` (the closing prompt in modules/module_02_customers ⑥) → DoD sign-off → PR base:`dev` ← compare:`amit/module-2-customers`.
 **🔻👤 final gate.**
 ↳ **as-run 11/07 22:33 (fresh session, per Ishay's choice):** full template audit — verdict **[YES]**, **DoD typed-echo signed 22:39 ("לקוחות DoD")**. Branch name resolved from THIS header (`ishay/module-2-customers`) — the `amit/…` in What above was the blueprint-era placeholder. Full report in chat; §9 entry below. Test data cleaned with Ishay's approval (0/0/0 live). PR = after Ishay's post-signature visual pass (instructions + 🧩 printed by the audit session).
 
@@ -455,7 +455,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 - [x] No secrets in code/docs (CI gitleaks green); `.env.local` untouched by git. *(Audit: `git ls-files .env.local` = empty; gitleaks = CI post-push, N/A-at-audit.)*
 - [x] CHANGELOG + CLAUDE_CODE_LOG + STATUS current; this guide's header/table/deviations current. *(Finalized in the closing-audit persistence pass, 22:42 — incl. correcting the stale "uncommitted/not-pushed" claims with fresh git evidence.)*
 
-**Post-merge (verified AFTER the closing audit — NOT audit-time checkboxes, since the audit must not merge; not Section-6 blockers):** PR to `dev` opened · CI green · merged. The closing audit confirms the module is *mergeable* (green verify + no blocker); the actual PR/CI/merge happen after, by Ishay/Amit.
+**Post-merge (verified AFTER the closing audit — NOT audit-time checkboxes, since the audit must not merge; not Section-6 blockers):** PR to `dev` opened · CI green · merged. The closing audit confirms the module is *mergeable* (green verify + no blocker); the actual PR/CI/merge happen after, by Ishay.
 
 ## 8. 🔄 Self-Update Protocol (verbatim rules)
 
@@ -464,7 +464,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 3. The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if code under `src/modules/02_*/` changed but this guide didn't — keep this file current as you work, not as an afterthought.
 4. The `CLAUDE.md` end-of-session protocol applies on top (CHANGELOG → CLAUDE_CODE_LOG → STATUS).
 5. **On ENTERING a phase (template §8(h)):** sweep the Decisions Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling BEFORE the phase's first step — e.g. entering Phase 1, present the §7.40(א)/§7.48/§7.62/§7.73 nod bundle + the §7.63 direction; entering Phase 3, surface the §7.36/§7.79/§7.80 + confirm-intent (mockup) items. Deferred questions get settled at the phase door, not mid-step.
-6. **(e)–(g) per CLAUDE.md iron rules 13/15/16 + end-of-session protocol** (new-open-question → stop+§7 · migration/DB-gap → db_roadmap same session · other-developer change → 📣) — these apply automatically; not restated here (F1).
+6. **(e)–(g) per CLAUDE.md iron rules 13/15/16 + end-of-session protocol** (new-open-question → stop+§7 · migration/DB-gap → db_roadmap same session · shared-surface change → name the affected future modules in the CHANGELOG line) — these apply automatically; not restated here (F1).
 
 ## 9. 📝 Deviations & Tech-Debt Log
 

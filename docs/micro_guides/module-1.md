@@ -1,8 +1,8 @@
 # REG-IN — Micro-Guide | Module 1: Users & Permissions (as-built)
 
-> **Audience:** a future Claude Code session with zero memory. Humans (Ishay/Amit) only approve and decide.
+> **Audience:** a future Claude Code session with zero memory. Humans (Ishay) only approve and decide.
 > **Format:** this file is the pilot of the machine-first micro-guide format (9 sections, per `docs/templates/create_micro_guide_template.md`). Module 1 was built before this format existed, so it is recorded here **as-built** — it doubles as the format exemplar for modules 2–12.
-> **Language rule:** guide in English; Hebrew appears only as data (DB values, UI strings). Chat reports to Ishay/Amit — always Hebrew.
+> **Language rule:** guide in English; Hebrew appears only as data (DB values, UI strings). Chat reports to Ishay — always Hebrew.
 
 ---
 
@@ -196,7 +196,7 @@ Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
 2. Any deviation from plan → inline "↳ as-built" note on the step + a dated line in section 9.
 3. The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if code under `src/modules/NN_*/` changed but the module's micro-guide didn't — keep this file current as you work, not as an afterthought.
 4. The `CLAUDE.md` end-of-session protocol applies on top (CHANGELOG → CLAUDE_CODE_LOG → STATUS).
-5. On entering a new phase: collect every Ledger question anchored to it and present them to Ishay/Amit for batch ruling (P13 style) **before** the phase's first step — template item (h). *(Backfilled 12/07/2026 — exemplar alignment.)*
+5. On entering a new phase: collect every Ledger question anchored to it and present them to Ishay for batch ruling (P13 style) **before** the phase's first step — template item (h). *(Backfilled 12/07/2026 — exemplar alignment.)*
 6. Template items (e)–(g) map to `CLAUDE.md` iron rules 13/15/16 + the end-of-session protocol — they bind here too.
 
 ## 9. 📝 Deviations & Tech-Debt Log

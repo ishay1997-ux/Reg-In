@@ -11,7 +11,7 @@
 
 ## ② תנאי כניסה
 
-- [ ] מודול 1 מוזג ל-`dev` ([ishay/01](01_close_module_1.md) הושלם).
+- [ ] מודול 1 מוזג ל-`dev` ([מדריך סגירת מודול 1](../modules/module_01_close.md) הושלם).
 - ✅ **אשכול השיבוץ הוכרע (07/07/2026, ישי — אודיט הפריטים הפתוחים)** — כבר לא לשאול, רק ליישם לפי [PROJECT_MASTER §7](../../PROJECT_MASTER.md):
   > 🔗 **מראת §7.6+14+15+16+29+33+43+44+45+47** — SSOT: ‏PROJECT_MASTER §7 (לא לערוך כאן ידנית; מסונכרן ע"י `regin-docs-sync`)
   - **§7.6** כתובת: להוסיף `hostesses.address` + `lat`/`lng` (קואורדינטות מגאוקוד).
@@ -50,7 +50,7 @@
 
 **1) פתיחת מודול (פעם אחת):**
 ```
-אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/ishay/02_module_04_hostesses.md
+אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/modules/module_04_hostesses.md
 ואת docs/PROJECT_MASTER.md (סעיפים 5.10–5.12, §7 פריטים 6, 14, 15, 16).
 אנחנו פותחים את מודול 4 — דיילות + Smart Match, על ענף ishay/module-4-hostesses.
 
