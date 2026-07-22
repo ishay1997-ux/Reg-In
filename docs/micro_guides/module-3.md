@@ -9,9 +9,9 @@
 |---|---|
 | Module | 3 — הצעות מחיר (Quotes) |
 | Owner | ישי (sole developer — all rulings and build; guide `modules/module_03_quotes.md` §③) |
-| Branch | `ishay/module-3-quotes` (opened 12/07 from dev `fd0ada0`) — ⚠️ **once PR #9 merges this branch is an ancestor of `dev` (dead, iron rule 10): cut a fresh branch from updated `dev` and replace this cell with its name** |
+| Branch | `ishay/module-3-quotes-build` (cut 22/07 from dev `a35c92f`, after PR #9 merged; the old `ishay/module-3-quotes` is now an ancestor of `dev` — dead, iron rule 10) |
 | Status | 📘 Blueprint approved — build not started |
-| Last updated | 15/07/2026 01:10 |
+| Last updated | 22/07/2026 21:00 |
 | **Active step** | **1.0** |
 
 Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · ❌ blocked):
