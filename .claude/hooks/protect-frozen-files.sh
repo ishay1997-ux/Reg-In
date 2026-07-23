@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# PreToolUse hook — הגנת קבצי-האפיון הקפואים (C5/C6) + מיגרציות append-only + סימון-עריכה פר-סשן.
-# חסימה = exit 2 + הסבר ב-stderr (Claude מקבל את ההסבר וממשיך אחרת). קריאה מהקבצים מותרת תמיד.
+# PreToolUse hook — הגנת קבצי-האפיון הקפואים (C5/C6) + CHANGELOG שהוקפא + מיגרציות
+# append-only + סימון-עריכה פר-סשן. חסימה = exit 2 + הסבר ב-stderr (Claude מקבל את
+# ההסבר וממשיך אחרת). קריאה מהקבצים מותרת תמיד.
 #
-# תפקידים: (א) חסימת עריכה/מחיקה של C5/C6 הקפואים · (ב) חסימת עריכה/מחיקה של מיגרציה
-# שכבר קומטה (append-only) · (ג) רישום "סימון עריכה" פר-session_id (ה-Stop hook מבחין
-# בעזרתו בין סשן-שערך לסשן-קריאה — כלל ברזל 16).
+# תפקידים: (א) חסימת עריכה/מחיקה של C5/C6 הקפואים · (ב) חסימת עריכה/מחיקה של
+# docs/CHANGELOG.md שהוקפא 23/07/2026 (נוסף אז — עד אז הייתה זו הקפאה תיעודית-בלבד
+# בלי אכיפה בפועל; ישי שאל "האם זה חסום כמו שצריך?" והתשובה הייתה לא) ·
+# (ג) חסימת עריכה/מחיקה של מיגרציה שכבר קומטה (append-only) · (ד) רישום "סימון
+# עריכה" פר-session_id (ה-Stop hook מבחין בעזרתו בין סשן-שערך לסשן-קריאה — כלל ברזל 16).
 #
 # עדכון 08/07/2026 (מועצת-llm-council — סגירת שני ממצאי-המבקר):
 #  (1) באג ה-Bash-branch תוקן: בודקים את שדה-הפקודה בלבד, לא את כל הקלט. קודם: שם-קפוא
@@ -19,6 +22,8 @@
 
 INPUT=$(cat)
 FROZEN='C5_clean_transcript|C6_clean_transcript'
+# CHANGELOG.md תחת docs/ — לא כל CHANGELOG.md בעולם (node_modules מלא בהם, ולא נוגעים בהם ממילא).
+CHANGELOG_FROZEN='CHANGELOG\.md'
 # פעלים הרסניים על קובץ (shell + PowerShell). cp/copy נוספו 08/07 (ממצא-מבקר).
 DESTRUCTIVE='rm |del |mv |move |cp |copy |Remove-Item|Move-Item|Copy-Item|sed -i|tee |truncate'
 
@@ -27,6 +32,10 @@ SESSION_ID=$(printf '%s' "$INPUT" | grep -o '"session_id"[[:space:]]*:[[:space:]
 
 block() {
   echo "❄️ הקובץ הזה קפוא (אפיון מאושר, פרקים 5–6) — אסור לערוך או למחוק אותו לעולם. סטייה מהאפיון מתועדת בתיעוד החי בלבד (PROJECT_MASTER / מדריך המודול / CLAUDE_CODE_LOG) עם הערת 'סטייה מ-5.x'. ראו היררכיית מקורות האמת ב-CLAUDE.md." >&2
+  exit 2
+}
+block_changelog() {
+  echo "⛔ docs/CHANGELOG.md הוקפא 23/07/2026 (הכרעת-ישי) — ארכיון-קריאה-בלבד, אסור לכתוב/למחוק בו. המשך ציר-הזמן: git log + CLAUDE_CODE_LOG · שינויי-DB: db_roadmap+migrations · חובות: PROJECT_MASTER §6. אם באמת נדרש לתקן משהו בבאנר-ההקפאה עצמו — זה שינוי-מדיניות, לא עדכון-תוכן: תשאל את ישי קודם ותעדכן את ההוק הזה, לא לעקוף אותו." >&2
   exit 2
 }
 block_migration() {
@@ -75,6 +84,8 @@ case "$TOOL" in
     PATH_FIELDS=$(printf '%s' "$INPUT" | grep -oE '"(file_path|path|source|destination)"[[:space:]]*:[[:space:]]*"[^"]*"')
     # קפוא — כל נתיב שנמצא. (grep על ערך-ריק = אין התאמה, לא חוסם.)
     printf '%s' "$PATH_FIELDS" | grep -Eq "$FROZEN" && block
+    # CHANGELOG.md שהוקפא — לא node_modules (חבילות-npm רבות מכילות CHANGELOG.md משלהן).
+    printf '%s' "$PATH_FIELDS" | grep -Eq "$CHANGELOG_FROZEN" && ! printf '%s' "$PATH_FIELDS" | grep -qi 'node_modules' && block_changelog
     # מיגרציות + marker — פר-נתיב; ה-marker נרשם פעם אחת (הנתיב הראשון בתוך-הריפו מספיק).
     FIRST_MARKED=0
     while IFS= read -r field; do
@@ -92,6 +103,9 @@ case "$TOOL" in
     [ -z "$CMD" ] && exit 0
     if printf '%s' "$CMD" | grep -Eq "$FROZEN"; then
       printf '%s' "$CMD" | grep -Eq "$DESTRUCTIVE" && block
+    fi
+    if printf '%s' "$CMD" | grep -Eq "$CHANGELOG_FROZEN" && ! printf '%s' "$CMD" | grep -qi 'node_modules'; then
+      printf '%s' "$CMD" | grep -Eq "$DESTRUCTIVE" && block_changelog
     fi
     if printf '%s' "$CMD" | grep -Eq 'supabase[/\\]+migrations'; then
       printf '%s' "$CMD" | grep -Eq "$DESTRUCTIVE" && block_migration
