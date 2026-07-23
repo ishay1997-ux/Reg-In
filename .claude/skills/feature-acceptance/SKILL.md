@@ -29,5 +29,8 @@ Hebrew close: תחנות שעברו (N) · פערים שתוקנו (N) · פער
 ## Relationship to existing gates (do not duplicate)
 🗣️ experience-brief = intent BEFORE code · 🤖 evidence = built correctly technically · 🎨 phase gate / closing §2b = design & states audit at fixed points · **this skill = the on-demand intent-vs-reality diff, whenever Ishay wants it**. It never replaces the fixed gates; it is how Ishay triggers that comparison at will.
 
-## Discipline
-Shared blocks A+B of the module skills apply (read `.claude/skills/module-build/SKILL.md` if not loaded). Skill-specific instances: "אמור להיות Y" is always CITED (brief/spec/mockup — flag mockup-only expectations as limited-liability); never claim a station passed without having actually driven it this session (screenshot = the evidence); resume rule — an interrupted walkthrough resumes from the recorded station, not from memory.
+<!-- shared kernel — identical in all six skills; a change here updates all six + _shared/discipline.md in the same session -->
+## Discipline (mandatory — shared doctrine)
+Read **`.claude/skills/_shared/discipline.md`** and apply it as part of this skill — it is the single source of the shared doctrine: **no citation without a same-turn check** (§7/file/merge/DB claims verified before written) · **resume-after-interruption** (narration is intent, not evidence — re-derive position from disk) · **how to talk to Ishay** (plain Hebrew, understanding-declarations invited for correction, reasoned recommendations).
+<!-- end shared kernel -->
+Skill-specific instances: "אמור להיות Y" is always CITED (brief/spec/mockup — flag mockup-only expectations as limited-liability); never claim a station passed without having actually driven it this session (screenshot = the evidence); an interrupted walkthrough resumes from the recorded station, not from memory.

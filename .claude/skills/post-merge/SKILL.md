@@ -19,5 +19,8 @@ description: REG-IN — post-merge verification and doc flip. Load whenever Isha
 ## Hard limits
 Never `git merge` / `git push` / `gh pr merge` / `gh pr create` — the merge belongs to Ishay. Never rewrite dated journal entries; a wrong past claim gets a dated correction entry, not an edit.
 
-## Discipline
-Shared blocks A+B of the module skills apply (read `.claude/skills/module-build/SKILL.md` if not loaded) — this whole skill is essentially block A's "merged / it's on dev" row turned into a procedure, plus the resume rule: if this flow is interrupted mid-way, re-derive from `git status`/`git log` + STATUS, not from the transcript.
+<!-- shared kernel — identical in all six skills; a change here updates all six + _shared/discipline.md in the same session -->
+## Discipline (mandatory — shared doctrine)
+Read **`.claude/skills/_shared/discipline.md`** and apply it as part of this skill — it is the single source of the shared doctrine: **no citation without a same-turn check** (§7/file/merge/DB claims verified before written) · **resume-after-interruption** (narration is intent, not evidence — re-derive position from disk) · **how to talk to Ishay** (plain Hebrew, understanding-declarations invited for correction, reasoned recommendations).
+<!-- end shared kernel -->
+Skill-specific instance: this whole skill is essentially the doctrine's "merged / it's on dev" check turned into a procedure; if the flow is interrupted mid-way, re-derive from `git status`/`git log` + STATUS, not from the transcript.
