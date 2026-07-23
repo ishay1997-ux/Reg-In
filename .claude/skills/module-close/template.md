@@ -62,7 +62,7 @@ Binary: **[YES]** — stable, secure, DoD-compliant, mergeable into `dev` now / 
 1. **Micro-guide:** tick the DoD checkboxes you verified; fill the QA matrix "as-run" column; append Section-7 items to its Deviations & Tech-Debt Log; set the status header to `🔒 Closed — awaiting PR/merge` (on YES) with today's date+time (`DD/MM/YYYY HH:MM`, from the system clock — all dated doc entries below use this format too).
 2. **`docs/CLAUDE_CODE_LOG.md`:** session entry summarizing the audit result and any blockers (this is where the "module closed — verdict" record lives now; `docs/CHANGELOG.md` was retired 23/07/2026 and is not written to).
 3. **`STATUS.md`:** module row → "ממתין ל-PR/merge" (the ✅ flip happens only after the actual merge); refresh "עודכן לאחרונה".
-5. **Routine growth-triggers check:** consult the growth-triggers table in `docs/claude_routines.md` §4 — did this module trip a routine-update trigger (new `e2e/*.spec.js` files, a new/removed key doc, changed hook logic, a new check tool)? If yes, update the canonical routine text AND (in Ishay's session) his live SKILL.md copies per the dual-update protocol there; if no, state "no routine triggers" in the audit report.
+4. **Routine growth-triggers check:** consult the growth-triggers table in `docs/claude_routines.md` §4 — did this module trip a routine-update trigger (new `e2e/*.spec.js` files, a new/removed key doc, changed hook logic, a new check tool)? If yes, update the canonical routine text AND (in Ishay's session) his live SKILL.md copies per the dual-update protocol there; if no, state "no routine triggers" in the audit report.
 
 ### 🚀 PR Instructions (print at the very end, in Hebrew)
 Print for Ishay, concretely, as numbered steps:
