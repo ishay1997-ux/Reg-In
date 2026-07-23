@@ -36,7 +36,7 @@
 
 ## איך עובדים עם Claude — בקצרה
 - **מדריך אחד = פגישת עבודה אחת.** כל מדריך ב-`docs/guides/modules/` בנוי מ-8 סעיפים קבועים, כולל **שלושת הפרומפטים להדבקה** (פתיחה / המשך-בנייה / סגירה) ו"בדיקת קבלה".
-- **אפשר גם בלי הדבקה (מ-23/07/2026):** לשלושת הפרומפטים יש **סקילים** בריפו (`.claude/skills/module-blueprint` · `module-build` · `module-close`) שנטענים אוטומטית לפי מה שאתה אומר — "פתח מודול 4" / "תמשיך לבנות" / "סגור את המודול". הדבקת הפרומפט מהמדריך עדיין עובדת (הוא חבילת-ההקשר וה-fallback).
+- **אפשר גם בלי הדבקה (מ-23/07/2026):** לשלושת הפרומפטים יש **סקילים** בריפו (`.claude/skills/module-blueprint` · `module-build` · `module-close`) שנטענים אוטומטית לפי מה שאתה אומר — "פתח מודול 4" / "תמשיך לבנות" / "סגור את המודול". הדבקת הפרומפט מהמדריך עדיין עובדת (הוא חבילת-ההקשר וה-fallback). **ומאותו יום גם 3 סקילי-עזר לתהליכים החוזרים:** ‏"בוא נסגור שאלות פתוחות" (`section7-rulings` — סבב-הכרעות שקל לעבור) · "מיזגתי" (`post-merge` — אימות-בראיות + היפוך-STATUS) · "בוא נעבור על מה שבנית" (`feature-acceptance` — סיור-קבלה מודרך מול מה שהתכוונת).
 - **מודול חדש** נפתח עם פרומפט הפתיחה או הסקיל `module-blueprint` (Claude קורא את טמפלט-הבלופרינט `.claude/skills/module-blueprint/template.md` בעצמו ומייצר **מדריך מיקרו** — בלופרינט חי באנגלית, כתוב ל-Claude → אתה מאשר → Claude בונה, מאמת עצירות 🔻 טכניות לבד ועוצר לאישורך בסוף כל פזה) ונסגר עם פרומפט הסגירה / הסקיל `module-close` (אודיט + עדכון כל התיעוד + הוראות PR מודפסות לך). מדריך המיקרו מתעדכן תוך כדי העבודה — hook חוסם סיום סשן אם קוד מודול השתנה בלי עדכונו. הפרטים: [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) §5.
 - **בסוף כל סשן** Claude מעדכן את היומנים ואת STATUS.md — יש hook שלא נותן לו לסיים בלי זה.
 - **סודות** (`.env.local`, סיסמאות) נשארים מקומיים בלבד — לעולם לא בריפו, בצ'אט או במדריכים.
@@ -61,7 +61,7 @@
 | [docs/CLAUDE_CODE_LOG.md](docs/CLAUDE_CODE_LOG.md) | יומן הסשנים של Claude (נרטיב, החלטות, tech-debt) |
 | [supabase/README.md](supabase/README.md) | ניהול מיגרציות DB |
 | [docs/micro_guides/](docs/micro_guides/) | מדריכי מיקרו — בלופרינטים חיים **באנגלית, כתובים ל-Claude** (module-1.md ✅ · module-2.md ✅ מוזג · השאר ייווצרו בפתיחת כל מודול) |
-| [.claude/skills/](.claude/skills/) | סקילי-זרימת-המודול (`module-blueprint`/`module-build`/`module-close`) — נטענים לפי טריגר; טמפלטי הפתיחה/סגירה (אנגלית) חיים בתוכם כ-`template.md`. Claude קורא בעצמו |
+| [.claude/skills/](.claude/skills/) | סקילי-זרימת-המודול (`module-blueprint`/`module-build`/`module-close`; טמפלטי הפתיחה/סגירה חיים בתוכם כ-`template.md`) + סקילי-עזר (`section7-rulings`/`post-merge`/`feature-acceptance`) — נטענים לפי טריגר. Claude קורא בעצמו |
 | [docs/mockups/](docs/mockups/) | 44 צילומי מוקאפ + [תיאורים](docs/mockups/mockup_descriptions.md) — רפרנס ויזואלי בלבד |
 | `docs/reference_spec/` | האפיון המאושר (פרקים 5–6) — **קפוא, לא לערוך**; + `products_and_params.md` (החלטות Seed) |
 
