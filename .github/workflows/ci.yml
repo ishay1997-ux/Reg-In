@@ -23,8 +23,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Lint כולל מעכשיו את כללי sonarjs (כפילות/מורכבות) ברמת 'warn' — הם מופיעים
+      # בלוג אבל לא מפילים את השלב. אחרי סגירת מודול 3: מהדקים ל-'error' (eslint.config.js)
+      # ואז השלב הזה יחסום אוטומטית (החלטת-ישי 23/07/2026).
       - name: Lint
         run: npm run lint
+
+      # שער-כפילות (jscpd) — כרגע מדווח-ולא-חוסם (continue-on-error) בשלב-האזהרות.
+      # ⚠️ הידוק אחרי מ3: להסיר את continue-on-error כדי שכפילות מעל הסף (3% ב-.jscpd.json)
+      # תחסום מיזוג. מרוכז עם הידוק-ה-sonarjs כשמודול 3 נסגר.
+      - name: Duplication scan (jscpd)
+        run: npm run dup
+        continue-on-error: true
 
       - name: Test
         run: npm run test:run

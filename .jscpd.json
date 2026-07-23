@@ -1,0 +1,15 @@
+{
+  "threshold": 3,
+  "minTokens": 50,
+  "reporters": ["console"],
+  "format": ["javascript", "jsx"],
+  "gitignore": true,
+  "ignore": [
+    "**/node_modules/**",
+    "dist/**",
+    "src/components/ui/**",
+    "**/*.test.{js,jsx}",
+    "**/*.spec.{js,jsx}",
+    "e2e/**"
+  ]
+}

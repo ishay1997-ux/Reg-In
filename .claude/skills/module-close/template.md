@@ -42,6 +42,13 @@ Refactoring/perf/state-management proposals; messy spots that accumulated during
 - Live preview smoke test of the module's key flows (per the verification workflow) with proof (screenshot/log/network).
 - Explicit list of every file changed in this module (code, DB, docs).
 
+### 4b. 🔁 Duplication & Shared-Component Check (binding — keeps the codebase reviewable)
+Guard against copy-paste and against logic that *should* be shared but was re-implemented — so an experienced engineer opening the repo finds one home per concept (iron rule 14 SSOT), not five near-copies.
+- **Mechanical (textual clones):** run `npm run dup` (jscpd). For every clone that involves this module's files, decide: **extract to `src/lib/`** (or a shared component) if it's genuine shared logic, OR record why it stays separate. jscpd only catches textual clones — it is the floor, not the ceiling.
+- **Complexity (spaghetti):** run `npm run lint` and review this module's `sonarjs/cognitive-complexity` + `sonarjs/no-identical-functions` warnings. Each is fixed now (small + safe) or logged as a §7 tech-debt line with its target.
+- **Semantic "should-be-shared but isn't" (the careful one — Ishay's explicit ask):** actively hunt for functions/components/validators in this module that duplicate the *intent* of code elsewhere even when jscpd does NOT flag them (a formatter, a picker, a permission check, a money/date helper re-derived instead of imported from `src/lib/`). For each candidate, **do NOT reflexively recommend merging** — separation is sometimes deliberate and correct. First trace BOTH sites: do they share the same invariants, and would they change together or independently? Only recommend unifying when they genuinely must stay in lockstep; otherwise **record why the separation is intentional** so no future audit re-raises it. A confident wrong "share this" that couples two things which must evolve apart is worse than leaving the duplication (same verify-the-recommendation discipline as the `quality-audit` skill — read the function you'd change and every caller before proposing the change).
+- Findings route to §7 tech-debt (with target module) — or §6 if a duplication is an active bug risk (two copies that must agree and already drifted).
+
 ### 5. 📊 QA Coverage Matrix (fill the micro-guide's "as-run" column)
 For each type — Unit · Integration · E2E · Regression · UAT · Security/Pen · Performance/Load · Usability · Compatibility — mark ✅ done / ⚠️ partial / ❌ none / N-A with one-line evidence. Be honest; over-claiming here poisons the academic report. Acceptable gaps get a target module/milestone; real gaps go to Section 6.
 
