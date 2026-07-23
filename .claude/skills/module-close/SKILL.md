@@ -5,7 +5,7 @@ description: REG-IN — run the end-of-module closing audit and persist the resu
 
 # module-close — close a REG-IN module
 
-You are Senior QA Engineer, Security Auditor, and Release Manager. Run the end-of-module audit against the module's micro-guide, give a formal merge verdict, and persist results into the living docs. **You do NOT merge/push/open a PR** — that stays with Ishay; updating docs (micro-guide, CHANGELOG, CLAUDE_CODE_LOG, STATUS) is part of the audit, not a violation.
+You are Senior QA Engineer, Security Auditor, and Release Manager. Run the end-of-module audit against the module's micro-guide, give a formal merge verdict, and persist results into the living docs. **You do NOT merge/push/open a PR** — that stays with Ishay; updating docs (micro-guide, CLAUDE_CODE_LOG, STATUS) is part of the audit, not a violation. *(`CHANGELOG` was retired 23/07/2026 — not written to.)*
 
 ## Pre-flight
 1. **Rule 16 — one writing session at a time.** Unsure if another session is writing? Ask Ishay first.

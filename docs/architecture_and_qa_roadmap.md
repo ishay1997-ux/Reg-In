@@ -36,7 +36,7 @@
 1. `npm run verify` ירוק (lint + format:check + בדיקות + build).
 2. אם נגעת בלוגיקה טהורה — יש/עודכנה בדיקת יחידה (`*.test.js`).
 3. אם שינית DB — יש קובץ מיגרציה חדש ב-`supabase/migrations/`, הוחל, ו-`docs/schema.sql` עודכן כ-snapshot.
-4. תועד: שורה ב-`docs/CHANGELOG.md` (מה השתנה) ו/או `docs/CLAUDE_CODE_LOG.md` (למה/החלטות); אם השתנה סטטוס מודול/שלב — עדכן גם `../STATUS.md`.
+4. תועד: רשומת-סשן ב-`docs/CLAUDE_CODE_LOG.md` (מה+למה/החלטות) + שינוי-DB גם ב-`docs/db_roadmap.md` §10; אם השתנה סטטוס מודול/שלב — עדכן גם `../STATUS.md`. *(‏`CHANGELOG.md` הוקפא 23/07/2026 — ארכיון בלבד.)*
 5. אין סודות/מפתחות בקוד (ה-CI חוסם אוטומטית).
 6. מוזג ל-`dev` דרך PR (ה-CI ירוק חוסם מיזוג שבור).
 
@@ -48,7 +48,7 @@
 | עיצוב קוד | `npm run format` | לפי הצורך |
 | בדיקות בזמן פיתוח | `npm run test` (watch) | תוך כדי כתיבת לוגיקה |
 | מודול חדש | סקילי-זרימת-המודול (`.claude/skills/module-blueprint`/`module-close` + הטמפלטים שבתוכם) + ה-DoD למעלה | בתחילת כל מודול |
-| שינוי DB | מיגרציה חדשה → apply → עדכן schema.sql → CHANGELOG (ראה `supabase/README.md`) | בכל שינוי סכימה |
+| שינוי DB | מיגרציה חדשה → apply → עדכן schema.sql → db_roadmap §10 (ראה `supabase/README.md`) | בכל שינוי סכימה |
 | סריקת אבטחה | `npm audit` + Supabase advisors (MCP) | שבועי / לפני מיזוג גדול |
 | עדכון תלויות | `npm outdated` → עדכון מבוקר → `npm run verify` | חודשי |
 

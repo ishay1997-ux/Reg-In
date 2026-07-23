@@ -22,7 +22,7 @@ The active module's `docs/micro_guides/module-N.md` is the approved plan and you
 - **Verify every 🔻🤖 yourself** with a concrete mechanism + evidence (SQL count / unit / E2E / preview screenshot), report it, and continue. Mid-phase visual evidence is 🤖-with-screenshot, never a human wait.
 - **Stop at every 👤 gate and at end-of-phase** (incl. the end-of-Phase-3 🎨 UX & functional review). **Before applying any migration:** the typed-echo gate (Ishay types the migration name — DB protocol); a plain approval is not sufficient to apply, and it is not pre-granted at an earlier step.
 - **Update the micro-guide as you go** (iron rule 15): step transitions update the status header + step table in the same session; deviations get a "↳ as-built" note + a §9 line. The Stop hook blocks session end if `src/modules/NN_*/` changed without the guide being updated.
-- **End of session:** run the CLAUDE.md end-of-session protocol (CHANGELOG → CLAUDE_CODE_LOG → STATUS) and explain to Ishay in plain Hebrew where you stopped and what's next.
+- **End of session:** run the CLAUDE.md end-of-session protocol (CLAUDE_CODE_LOG → STATUS; `CHANGELOG` was retired 23/07/2026) and explain to Ishay in plain Hebrew where you stopped and what's next.
 
 ## Size-gate for change requests (Ishay's standing request — he shouldn't have to estimate size himself)
 On ANY non-trivial change request that arrives mid-build (design / feature / behaviour), classify OUT LOUD before building, per the CLAUDE.md triage rule (rule 1):

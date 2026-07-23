@@ -57,7 +57,7 @@
 | [docs/architecture_and_qa_roadmap.md](docs/architecture_and_qa_roadmap.md) | סטנדרט הנדסי + Definition of Done + QA |
 | [docs/claude_routines.md](docs/claude_routines.md) | 4 הרוטינות של Claude — הגדרות קנוניות + פרוטוקול עדכון |
 | [docs/code_review_2026-07.md](docs/code_review_2026-07.md) | בקרת קוד מודול 1 + המלצות להמשך |
-| [docs/CHANGELOG.md](docs/CHANGELOG.md) | יומן שינויים מתוארך (DB+קוד) — ציר-הזמן של הפרויקט |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | ⛔ **הוקפא 23/07/2026 — ארכיון בלבד** (ציר-הזמן החי: `git log` + CLAUDE_CODE_LOG · DB: db_roadmap+migrations · חובות: PROJECT_MASTER §6) |
 | [docs/CLAUDE_CODE_LOG.md](docs/CLAUDE_CODE_LOG.md) | יומן הסשנים של Claude (נרטיב, החלטות, tech-debt) |
 | [supabase/README.md](supabase/README.md) | ניהול מיגרציות DB |
 | [docs/micro_guides/](docs/micro_guides/) | מדריכי מיקרו — בלופרינטים חיים **באנגלית, כתובים ל-Claude** (module-1.md ✅ · module-2.md ✅ מוזג · השאר ייווצרו בפתיחת כל מודול) |
@@ -68,6 +68,6 @@
 ## היררכיית מקורות אמת (בסתירה — הגבוה קובע)
 `docs/schema.sql` ← האפיון המאושר (פרקים 5–6, `reference_spec/`) ← המוקאפים ← המדריכים.
 
-> ⚠️ קבצי `reference_spec/*.md` הם ייצוא קפוא של האפיון המאושר — לא לערוך ידנית. סטיות מהאפיון נרשמות בתיעוד החי בלבד (PROJECT_MASTER / מדריך המודול / CHANGELOG).
+> ⚠️ קבצי `reference_spec/*.md` הם ייצוא קפוא של האפיון המאושר — לא לערוך ידנית. סטיות מהאפיון נרשמות בתיעוד החי בלבד (PROJECT_MASTER / מדריך המודול / CLAUDE_CODE_LOG).
 
 </div>

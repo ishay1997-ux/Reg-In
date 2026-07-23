@@ -4,7 +4,7 @@
 > pending/future database work — it is an **execution aggregator, NOT a decision registry**.
 > Open questions live ONLY in `PROJECT_MASTER.md` §7 (iron rule; `docs/CLAUDE.md`). Decided rows
 > cite `§7.N`; the single verbatim copy here is the §7.47 mirror (tagged per iron rule 13).
-> Log-sourced debt cites `CHANGELOG.md §TODO` / `CLAUDE_CODE_LOG.md §tech-debt`.
+> Log-sourced debt cites `PROJECT_MASTER.md §6` (the single debt registry) / `CLAUDE_CODE_LOG.md §tech-debt`. *(The old `CHANGELOG.md §TODO` home was retired 23/07/2026 — CHANGELOG is now a frozen archive; its §TODO debts moved to §6.)*
 >
 > **Read triggers:** before designing ANY migration · at every module blueprint
 > (`create_micro_guide_template.md` mandates it) · at §7 decision sessions touching schema (P13) ·
@@ -34,7 +34,7 @@
 - Advisors snapshot (08/07/2026 08:34): **security** — 12× `rls_enabled_no_policy` INFO (by design,
   until per-module policies land) · 5× SECURITY DEFINER WARNs on the 4 Module-1 functions
   (intentional: lockout functions must be anon-callable; documented) · `auth_leaked_password_protection`
-  WARN (deferred → M10, CHANGELOG §TODO). **performance** — 8× `unindexed_foreign_keys` INFO (Lane C-1) ·
+  WARN (deferred → M10, PROJECT_MASTER §6 / A-23). **performance** — 8× `unindexed_foreign_keys` INFO (Lane C-1) ·
   3× `multiple_permissive_policies` WARN on users/permissions (triaged & deferred, micro-guide M1 §9).
 
 ## 1. Migration Design Checklist — run for EVERY schema change (the "deep thinking" pre-flight)
@@ -53,7 +53,7 @@
 - [ ] 👤 typed-echo gate BEFORE applying (irreversible on the live project — DB protocol, rule 10)
 - [ ] After apply: refresh `docs/schema.sql`, commit migration+snapshot **together**
 - [ ] Run Supabase advisors (MCP read-only) — zero new findings, or a written triage note
-- [ ] Ripple: mark executed rows here + §7.47 + CHANGELOG (name the affected FUTURE modules in the line)
+- [ ] Ripple: mark executed rows here + §7.47 + name the affected FUTURE modules in the §10 Done-row and in PROJECT_MASTER §6 (the CHANGELOG was retired 23/07/2026)
 
 ## 2. Lane A — Committed / near-certain ("pretty sure we'll change")
 
@@ -95,9 +95,9 @@ Additional decided / nod-pending rows (cite-only):
 | # | Change | Source | Module/Trigger |
 |---|---|---|---|
 | A-20 | `users.email` ON UPDATE CASCADE + `auth.users`↔`public.users` email sync | `CLAUDE_CODE_LOG.md` §tech-debt | folded into the §7.64 decision; next users-schema touch |
-| A-21 | `MODULE_META` Hebrew-string → `module_id`/slug | `CHANGELOG.md` §TODO | next `modules` schema touch |
-| A-22 | account lockout → Supabase Auth Hook | `CHANGELOG.md` §TODO | requires Team plan — parked |
-| A-23 | Leaked-Password Protection (Auth setting) | `CHANGELOG.md` §TODO | M10 |
+| A-21 | `MODULE_META` Hebrew-string → `module_id`/slug | `PROJECT_MASTER.md` §6 | next `modules` schema touch |
+| A-22 | account lockout → Supabase Auth Hook | `PROJECT_MASTER.md` §6 | requires Team plan — parked |
+| A-23 | Leaked-Password Protection (Auth setting) | `PROJECT_MASTER.md` §6 | M10 |
 | A-24 | notification-preferences table (+UI toggles wired) | `PROJECT_MASTER.md` §6 (Ishay 07/07) | M9 builds table+UI; M10 wires sending |
 | A-25 | send/dispatch-log entity (marketing + automations; no C6 table exists) | §6 + §7.60 | M10 |
 | A-26 | password-reset flow storage (6-digit code — or Supabase Auth OTP instead; decide at blueprint) | §6 ("שכחתי סיסמה") + C5 §1.8.9 | M10 |
@@ -238,7 +238,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    this file. The loop closes from three directions: module open (blueprint template reads this
    file) → during work (hook) → module close (final-test template marks rows Done).
 2. **Forward notice:** a row executed/added/changed whose target module or tables belong to a
-   FUTURE module ⇒ the CHANGELOG line names those module numbers, so the session that opens that
+   FUTURE module ⇒ the §10 Done-row here **and** a PROJECT_MASTER §6 line name those module numbers, so the session that opens that
    module finds the change instead of rediscovering it. The responsibility is on the session that
    made the change, not on the reader. *(Replaced the cross-developer 📣 tag, retired 22/07/2026
    with the move to a single developer.)*

@@ -5,7 +5,7 @@ Act as Senior QA Engineer, Security Auditor, and Release Manager: run the end-of
 
 ### ⚠️ Audit Rules
 1. **Read the micro-guide first:** `docs/micro_guides/module-[MODULE_NUMBER].md` is the contract you audit against — its Definition of Done, its QA matrix, its decisions ledger. Do not audit against a generic checklist.
-2. **Assessment + doc persistence only:** do NOT run `git merge`/`git push`/`gh pr create` — the PR and merge stay with Ishay. Updating documentation (micro-guide, CHANGELOG, CLAUDE_CODE_LOG, STATUS) is part of this audit, not a violation.
+2. **Assessment + doc persistence only:** do NOT run `git merge`/`git push`/`gh pr create` — the PR and merge stay with Ishay. Updating documentation (micro-guide, CLAUDE_CODE_LOG, STATUS) is part of this audit, not a violation.
 3. **Grounding & Citations:** every claim about RLS, code state, or test results cites the exact file+line or the exact query/command you ran and its actual output in this turn.
 4. Chat report to Ishay — in **Hebrew**. Doc updates — English in micro-guides, Hebrew in the human docs (per each file's existing language).
 
@@ -37,7 +37,7 @@ Refactoring/perf/state-management proposals; messy spots that accumulated during
 - `npm run test:e2e` — run and report pass/fail/skipped (env-var skips are OK, say so).
 - `git status` clean of debug/temp files; no stray `console.log`/commented-out blocks in the diff.
 - **No loose ends in the micro-guide:** no step left 🔨 without an explanatory note; status header current.
-- `docs/CHANGELOG.md` has this module's DB+code lines; migrations committed together with an updated `docs/schema.sql`.
+- migrations committed together with an updated `docs/schema.sql`; every DB change has its `db_roadmap §10` Done-row. *(The `docs/CHANGELOG.md` DB+code line is no longer required — the file was retired 23/07/2026.)*
 - **DB health:** run Supabase advisors (MCP, read-only — security + performance): zero findings introduced by this module, or a written triage note per finding. Verify no drift between the live DB and `docs/schema.sql` for the tables this module touched (spot-check via `list_tables`).
 - Live preview smoke test of the module's key flows (per the verification workflow) with proof (screenshot/log/network).
 - Explicit list of every file changed in this module (code, DB, docs).
@@ -58,11 +58,10 @@ Binary: **[YES]** — stable, secure, DoD-compliant, mergeable into `dev` now / 
 ### 💾 Persistence (mandatory — the audit is not done until these are written)
 0. **§6 debt registration check (iron rule 15):** verify every Section-7 item (the audit report's tech-debt section — NOT `PROJECT_MASTER.md` §7) AND every 🚧 row of the micro-guide's "Capabilities delivered vs deferred" table has its byte-matching `🚧 מN` line in `docs/PROJECT_MASTER.md` §6 (`grep '🚧 מN' docs/PROJECT_MASTER.md` per target module N) — add any missing line now. This is the closing audit's belt-and-suspenders re-check of the rule-15 mechanism the Stop hook (`check-docs-updated.sh` 0ג) already enforces.
 0b. **§7 ripple check — run iron rule 13(א)-(ג) explicitly (not just 13(ז)) for every `PROJECT_MASTER.md` §7 item this module ruled or implemented.** The load-bearing audit action: the §7 item itself marked ruled (date+owner, batch note updated if it was the cluster's last open item); the ruled value reflected in the code/DB where it lives; and `grep '§7.N'` AND `'מראת §7.N'` across `docs/guides/**` + `docs/micro_guides/**` — every citation current and every tagged mirror (🔗) matching §7 verbatim. Fix what doesn't.
-0c. **DB-roadmap check:** in `docs/db_roadmap.md` — mark every row this module executed as Done (dated strike-list, §10 there), and add rows for newly-discovered deferred DB work. Then verify that every schema/§7/shared-surface change from this module that lands on a FUTURE module's tables or surface is named in its CHANGELOG line (module numbers listed), so the session that opens that module finds it. *(The old cross-developer 📣 tag was retired 22/07/2026 — single developer.)*
+0c. **DB-roadmap check:** in `docs/db_roadmap.md` — mark every row this module executed as Done (dated strike-list, §10 there), and add rows for newly-discovered deferred DB work. Then verify that every schema/§7/shared-surface change from this module that lands on a FUTURE module's tables or surface is named in its `db_roadmap §10` Done-row **and** a `PROJECT_MASTER §6` line (module numbers listed), so the session that opens that module finds it. *(The old `CHANGELOG` forward-notice was retired with the file, 23/07/2026; the cross-developer 📣 tag, 22/07/2026 — single developer.)*
 1. **Micro-guide:** tick the DoD checkboxes you verified; fill the QA matrix "as-run" column; append Section-7 items to its Deviations & Tech-Debt Log; set the status header to `🔒 Closed — awaiting PR/merge` (on YES) with today's date+time (`DD/MM/YYYY HH:MM`, from the system clock — all dated doc entries below use this format too).
-2. **`docs/CHANGELOG.md`:** dated line — "מודול [MODULE_NUMBER] נסגר — verdict [YES/NO]" + one-line scope.
-3. **`docs/CLAUDE_CODE_LOG.md`:** session entry summarizing the audit result and any blockers.
-4. **`STATUS.md`:** module row → "ממתין ל-PR/merge" (the ✅ flip happens only after the actual merge); refresh "עודכן לאחרונה".
+2. **`docs/CLAUDE_CODE_LOG.md`:** session entry summarizing the audit result and any blockers (this is where the "module closed — verdict" record lives now; `docs/CHANGELOG.md` was retired 23/07/2026 and is not written to).
+3. **`STATUS.md`:** module row → "ממתין ל-PR/merge" (the ✅ flip happens only after the actual merge); refresh "עודכן לאחרונה".
 5. **Routine growth-triggers check:** consult the growth-triggers table in `docs/claude_routines.md` §4 — did this module trip a routine-update trigger (new `e2e/*.spec.js` files, a new/removed key doc, changed hook logic, a new check tool)? If yes, update the canonical routine text AND (in Ishay's session) his live SKILL.md copies per the dual-update protocol there; if no, state "no routine triggers" in the audit report.
 
 ### 🚀 PR Instructions (print at the very end, in Hebrew)

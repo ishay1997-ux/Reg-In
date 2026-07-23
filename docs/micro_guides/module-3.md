@@ -44,7 +44,7 @@ Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · �
 | 4.5 | Phase-4 gate 🔻👤 | ⬜ |
 | 5.1 | Acceptance scenario from spec (6,319 in live UI) 🔻🤖 screenshot | ⬜ |
 | 5.2 | QA matrix as-run fill + DoD walkthrough 🔻🤖 | ⬜ |
-| 5.3 | Docs: §6 wiring, module-1.md correction, db_roadmap, CHANGELOG/LOG/STATUS 🔻🤖 | ⬜ |
+| 5.3 | Docs: §6 wiring, module-1.md correction, db_roadmap §10, CLAUDE_CODE_LOG/STATUS 🔻🤖 | ⬜ |
 | 5.4 | Closing audit + PR (FRESH session, final-test template, DoD typed-echo) 🔻👤 | ⬜ |
 
 ### 2. 📦 Context Packet for Claude
@@ -248,7 +248,7 @@ Verify 🤖: SQL battery — approve happy path creates project+logistics rows (
 
 **Step 5.2 — QA matrix + DoD walkthrough 🔻🤖.** Goal: honest closure inputs. Files: this guide. What: fill as-run; every DoD box evidenced or ❌-with-reason (honest reporting). Verify: updated §6/§7 of this guide.
 
-**Step 5.3 — Docs closure 🔻🤖.** Goal: leave the doc-system consistent. Files: PROJECT_MASTER.md, docs/micro_guides/module-1.md, docs/db_roadmap.md, CHANGELOG/LOG/STATUS. What: §6: mark the 4 delivered מ3 debts done (strikethrough+date; the 🚧 מ10 auto-email line was already added 15/07/2026 at blueprint save); fix module-1.md "params UI → M9" note (design-notes risk #7); db_roadmap rows (A-9/11/12/14/17/19, C-1, C-6, §7.85, §6 table rows) marked applied; CHANGELOG (name the FUTURE modules this lands on — M6/M10 — so their opening session finds it); CLAUDE_CODE_LOG; STATUS. Verify: greps + diff review.
+**Step 5.3 — Docs closure 🔻🤖.** Goal: leave the doc-system consistent. Files: PROJECT_MASTER.md, docs/micro_guides/module-1.md, docs/db_roadmap.md, CLAUDE_CODE_LOG/STATUS. What: §6: mark the 4 delivered מ3 debts done (strikethrough+date; the 🚧 מ10 auto-email line was already added 15/07/2026 at blueprint save) — **and name the FUTURE modules each change lands on (M6/M10) in the §6 line + db_roadmap §10 Done-row, so their opening session finds it** (`CHANGELOG` was retired 23/07/2026 — this replaces the old "name modules in the CHANGELOG line"); fix module-1.md "params UI → M9" note (design-notes risk #7); db_roadmap rows (A-9/11/12/14/17/19, C-1, C-6, §7.85, §6 table rows) marked applied; CLAUDE_CODE_LOG; STATUS. Verify: greps + diff review.
 
 **Step 5.4 — Closing audit + PR 🔻👤.** FRESH session runs the `module-close` skill (its `template.md` — the ex-`create_module_final_test_template.md`, relocated 23/07) with MODULE_NUMBER=3 · MODULE_NAME=הצעות מחיר · BRANCH_NAME=ishay/module-3-quotes-build: independent re-verification → DoD **typed-echo** sign-off → PR instructions (base:dev ← ishay/module-3-quotes-build) + 🧩 Chrome prompt. Post-merge items (PR/CI/merge) are NOT audit checkboxes. ↳ as-built (23/07): template path moved into `.claude/skills/module-close/`; branch corrected to the live `-build` branch.
 
@@ -271,7 +271,7 @@ Canonical (architecture_and_qa_roadmap.md:32-41) instantiated:
 - [ ] `npm run verify` green.
 - [ ] Unit tests exist for all new `src/lib` logic (pricing/catalog/validators).
 - [ ] 5 migrations applied via MCP after typed-echo; `docs/schema.sql` snapshot refreshed; committed together.
-- [ ] CHANGELOG + CLAUDE_CODE_LOG + STATUS updated (end-of-session protocol each session).
+- [ ] CLAUDE_CODE_LOG + STATUS updated (end-of-session protocol each session; `CHANGELOG` retired 23/07/2026).
 - [ ] No secrets in code (CI gitleaks green locally).
 
 Module-specific:

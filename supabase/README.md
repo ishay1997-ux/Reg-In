@@ -56,4 +56,4 @@ supabase migration list          # אימות: כל המיגרציות מסומ�
 2. כתוב את ה-DDL (רק שינוי דלתא — `alter table ...`, לא הסכימה המלאה).
 3. החל: `supabase db push` (או דרך Supabase MCP `apply_migration`).
 4. עדכן את `docs/schema.sql` כ-snapshot של המצב החדש.
-5. תעד ב-`CHANGELOG.md`.
+5. תעד ב-`docs/db_roadmap.md` §10 (רשימת-ה-Done) וברשומת-הסשן ב-`docs/CLAUDE_CODE_LOG.md`. *(‏`CHANGELOG.md` הוקפא 23/07/2026.)*
