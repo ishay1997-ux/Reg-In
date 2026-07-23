@@ -430,3 +430,174 @@ create policy "customer_contacts_write_by_permission" on customer_contacts for a
     where p.role_id = (select current_user_role_id())
       and p.module_id = (select module_id from modules where module_name = 'לקוחות')
       and p.permission_level = 'edit'));
+
+-- ============================================================
+-- מודול 3 (הצעות מחיר) — מיגרציה 1: מבנה ואילוצים (20260723111005, הוחל 23/07/2026)
+-- דלתאות על הטבלאות שהוגדרו למעלה (base). הטבלאות היו ריקות בהחלה => אפס אובדן-נתונים.
+-- ============================================================
+
+-- params: ייחודיות שם-הפרמטר (§7.40ב) — ה-Seed מעדכן לפי-שם
+alter table params add constraint params_param_name_key unique (param_name);
+
+-- products: יחידה מרשימה סגורה (§7.82/F13) + טיפוסי-כסף (§7.74)
+alter table products add constraint products_unit_check check (unit in ('יחידה', 'פרויקט', 'משמרת', 'מטר'));
+alter table products alter column base_price type numeric(12,2);
+alter table products alter column cost type numeric(12,2);
+
+-- price_tiers: כסף מדויק (§7.74) + היגיון (§7.41) + sku ON UPDATE CASCADE (§7.64)
+alter table price_tiers alter column special_price type numeric(12,2);
+alter table price_tiers add constraint price_tiers_min_qty_check check (min_qty > 0);
+alter table price_tiers add constraint price_tiers_max_qty_check check (max_qty is null or max_qty >= min_qty);
+alter table price_tiers drop constraint price_tiers_sku_fkey;
+alter table price_tiers add constraint price_tiers_sku_fkey
+  foreign key (sku) references products(sku) on delete cascade on update cascade;
+
+-- quote_services: בנייה-מחדש (§7.85) — line_id סינתטי, עלות-קפואה (§7.28), צבע (§7.41), sku CASCADE (§7.64), כסף (§7.74)
+alter table quote_services drop constraint quote_services_pkey;
+alter table quote_services add column line_id bigint generated always as identity primary key;
+alter table quote_services add column closing_unit_cost numeric(12,2) not null check (closing_unit_cost >= 0);
+alter table quote_services alter column closing_unit_price type numeric(12,2);
+alter table quote_services add constraint quote_services_color_check
+  check (color is null or color in ('לבן', 'שחור', 'אפור', 'טורקיז', 'כחול'));
+alter table quote_services add constraint quote_services_quote_line_key unique (quote_id, line_number);
+alter table quote_services drop constraint quote_services_sku_fkey;
+alter table quote_services add constraint quote_services_sku_fkey
+  foreign key (sku) references products(sku) on delete restrict on update cascade;
+
+-- quotes: snapshots/זמנים/מחזור-חיים/הנחות (§7.51/82/62/26 + LOCAL-2)
+alter table quotes add column vat_rate_snapshot numeric(5,2);       -- §7.51
+alter table quotes add column rejection_notes text;                 -- §7.82/F3
+alter table quotes add column estimated_start_time time not null;   -- §7.82/F23
+alter table quotes add column estimated_end_time time not null;     -- §7.82/F23
+alter table quotes drop column estimated_hours;                     -- מוקלד → מחושב
+alter table quotes add column estimated_hours numeric(4,2) generated always as (
+  case when estimated_end_time > estimated_start_time
+       then extract(epoch from (estimated_end_time - estimated_start_time)) / 3600
+       else extract(epoch from (estimated_end_time - estimated_start_time)) / 3600 + 24
+  end
+) stored;                                                           -- LOCAL-2: גלגול חוצה-חצות +24
+alter table quotes alter column customer_id set not null;           -- §7.62
+alter table quotes alter column applied_customer_discount type numeric(12,2);  -- §7.74
+alter table quotes alter column manual_discount type numeric(12,2);            -- §7.74
+alter table quotes add constraint quotes_applied_discount_range
+  check (applied_customer_discount >= 0 and applied_customer_discount <= 100);
+alter table quotes add constraint quotes_manual_discount_range
+  check (manual_discount >= 0 and manual_discount <= 100);
+alter table quotes add constraint quotes_combined_discount_max
+  check (applied_customer_discount + manual_discount <= 100);
+alter table quotes add constraint quotes_rejection_reason_check
+  check (rejection_reason is null or rejection_reason in
+    ('מחיר', 'חוסר זמינות/לו"ז', 'נבחר מתחרה', 'תקציב לקוח', 'האירוע בוטל אצל הלקוח', 'פג תוקף', 'אחר'));
+alter table quotes add constraint quotes_rejection_notes_required
+  check (rejection_reason is distinct from 'אחר' or rejection_notes is not null);
+alter table quotes add constraint quotes_rejected_iff_reason
+  check ((quote_status = 'rejected') = (rejection_reason is not null));
+
+-- projects: snapshot-זהות + זמני-אירוע (§7.76 + LOCAL-1/5) — ה-RPC-האישור ממלא
+alter table projects add column event_name text;                                      -- §7.76
+alter table projects add column customer_id bigint references customers(customer_id);  -- LOCAL-5 (FK חדש)
+alter table projects add column final_start_time time;                                -- LOCAL-1
+alter table projects add column final_end_time time;                                  -- LOCAL-1
+
+-- logistics: sku ON UPDATE CASCADE (§7.64)
+alter table logistics drop constraint logistics_sku_fkey;
+alter table logistics add constraint logistics_sku_fkey
+  foreign key (sku) references products(sku) on delete restrict on update cascade;
+
+-- אינדקסים: C-1 (עמודות-FK) + C-6 (סריקת-פקיעה יומית / "פג-בקרוב")
+create index if not exists quotes_customer_id_idx      on quotes (customer_id);
+create index if not exists quotes_status_updated_idx   on quotes (quote_status, updated_at);
+create index if not exists quote_services_sku_idx      on quote_services (sku);
+create index if not exists quote_services_quote_id_idx on quote_services (quote_id);
+create index if not exists projects_customer_id_idx    on projects (customer_id);
+create index if not exists projects_owner_email_idx    on projects (owner_email);
+create index if not exists logistics_sku_idx           on logistics (sku);
+
+-- ============================================================
+-- מודול 3 — מיגרציה 3: RLS policies (20260723113500) — quotes/quote_services §7.21 · catalog §7.83
+-- ============================================================
+create policy "quotes_select_by_permission" on quotes for select to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+      and p.permission_level in ('edit', 'view')));
+create policy "quotes_write_by_permission" on quotes for all to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+      and p.permission_level = 'edit'))
+  with check (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+      and p.permission_level = 'edit'));
+create policy "quote_services_select_by_permission" on quote_services for select to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+      and p.permission_level in ('edit', 'view')));
+create policy "quote_services_write_by_permission" on quote_services for all to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+      and p.permission_level = 'edit'))
+  with check (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+      and p.permission_level = 'edit'));
+-- §7.83: catalog — open read to authenticated + CEO write via 'הגדרות מערכת'
+create policy "products_select_all_authenticated"    on products    for select to authenticated using (true);
+create policy "price_tiers_select_all_authenticated" on price_tiers for select to authenticated using (true);
+create policy "params_select_all_authenticated"      on params      for select to authenticated using (true);
+create policy "products_write_ceo_only" on products for all to authenticated
+  using (exists (select 1 from permissions p where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת') and p.permission_level = 'edit'))
+  with check (exists (select 1 from permissions p where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת') and p.permission_level = 'edit'));
+create policy "price_tiers_write_ceo_only" on price_tiers for all to authenticated
+  using (exists (select 1 from permissions p where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת') and p.permission_level = 'edit'))
+  with check (exists (select 1 from permissions p where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת') and p.permission_level = 'edit'));
+create policy "params_write_ceo_only" on params for all to authenticated
+  using (exists (select 1 from permissions p where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת') and p.permission_level = 'edit'))
+  with check (exists (select 1 from permissions p where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת') and p.permission_level = 'edit'));
+
+-- ============================================================
+-- מודול 3 — מיגרציה 4: lock trigger + RPCs (20260723115000)
+-- ============================================================
+-- §7.50/F5: נועל UPDATE/DELETE על הצעה/שורה שאינה in_progress (מגן על שחזור-PDF §7.12 + רווחיות §7.28)
+create or replace function public.enforce_quote_in_progress_lock()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare v_status text;
+begin
+  if TG_TABLE_NAME = 'quotes' then v_status := OLD.quote_status;
+  else select q.quote_status into v_status from public.quotes q where q.quote_id = OLD.quote_id; end if;
+  if v_status is distinct from 'in_progress' then
+    raise exception 'הצעה נעולה: עריכה/מחיקה מותרת רק בסטטוס in_progress (נמצא: %)', coalesce(v_status,'unknown') using errcode='P0001';
+  end if;
+  return case when TG_OP = 'DELETE' then OLD else NEW end;
+end; $$;
+create trigger quotes_lock_non_in_progress         before update or delete on quotes         for each row execute function public.enforce_quote_in_progress_lock();
+create trigger quote_services_lock_non_in_progress before update or delete on quote_services for each row execute function public.enforce_quote_in_progress_lock();
+-- ⚠️ 3 ה-RPCs: הגוף המלא (הסמכותי) בקובץ supabase/migrations/20260723115000_module3_lock_and_conversion_rpc.sql.
+--    כאן החתימות בלבד (schema.sql הוא snapshot-רפרנס; מקור-האמת-לשחזור = המיגרציות, ר' כותרת-הקובץ):
+--    • approve_quote_and_create_project(p_quote_id int) returns int  — SECURITY DEFINER, search_path=''
+--        §7.49 המרה: בדיקת-edit-פנימית → הקפאת cost(§7.28)+VAT(§7.51) → project נולד-שלם(§7.76/LOCAL-1/5, F22) → logistics.
+--        grants: revoke public,anon; grant authenticated.
+--    • create_quote(p_header jsonb, p_lines jsonb) returns int        — SECURITY INVOKER, F17 (RLS הוא הקיר).
+--    • replace_quote_lines(p_quote_id int, p_header jsonb, p_lines jsonb) returns void — SECURITY INVOKER, F17.
+--        grants (שתיהן): revoke public,anon; grant authenticated.
+
+-- ============================================================
+-- מודול 3 — מיגרציה 5: pg_cron (expiry + login cleanup) + lock-fn revoke (20260723120500)
+-- ============================================================
+create extension if not exists pg_cron with schema pg_catalog;
+select cron.schedule('module3-quote-expiry', '0 1 * * *', $job$
+  update public.quotes set quote_status='rejected', rejection_reason='פג תוקף'
+   where quote_status='in_progress'
+     and updated_at < now() - ((select param_value::int from public.params where param_name='ימי_תוקף_הצעה') * interval '1 day'); $job$);  -- §7.42/§7.56
+select cron.schedule('module1-login-attempts-cleanup', '30 1 * * *', $job$
+  delete from public.login_attempts where last_attempt_at < now() - interval '30 days'; $job$);  -- §7.75
+revoke execute on function public.enforce_quote_in_progress_lock() from public, anon, authenticated;  -- advisor hygiene
