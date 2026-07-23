@@ -10,9 +10,9 @@
 | Module | 3 — הצעות מחיר (Quotes) |
 | Owner | ישי (sole developer — all rulings and build; guide `modules/module_03_quotes.md` §③) |
 | Branch | `ishay/module-3-quotes-build` (cut 22/07 from dev `a35c92f`, after PR #9 merged; the old `ishay/module-3-quotes` is now an ancestor of `dev` — dead, iron rule 10) |
-| Status | 🔨 Phase 1 DB COMPLETE (5/5) + 1.6 impersonation matrix passed + schema.sql synced. **At the 1.7 phase gate — awaiting Ishay's approval → Phase 2.** |
-| Last updated | 23/07/2026 18:45 |
-| **Active step** | **1.7** (Phase-1 gate 🔻👤) |
+| Status | ✅ **Phase 1 (DB) CLOSED — gate 1.7 approved by Ishay 23/07/2026 evening** (chat: "פאזה 2 אני ממשיך שבוע הבא"). Next: Phase 2 (business logic). Work resumes next week. |
+| Last updated | 23/07/2026 19:24 |
+| **Active step** | **2.1** (`src/lib/pricing.js` SSOT + unit tests — the 6,319 gate) |
 
 Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · ❌ blocked):
 
@@ -25,7 +25,7 @@ Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · �
 | 1.4 | Migration 4: lock trigger (F5/§7.50) + conversion RPC (§7.49/76/F22) + atomic edit RPC (F17) 🔻👤 typed-echo | ✅ (via MCP; full battery: happy/double-click/lock/permission/no-orphan all pass; lock-fn revoke folded into mig 5) |
 | 1.5 | Migration 5: pg_cron install + expiry job (§7.42/F4/§7.56) + login_attempts cleanup (§7.75) 🔻👤 typed-echo | ✅ (via MCP; 2 cron jobs active; expiry+cleanup logic verified; lock-fn revoke cleared the 2 advisor findings) |
 | 1.6 | RLS + RPC verification battery (impersonation matrix + positive control) 🔻🤖 | ✅ (matrix passed: CEO/projmgr[edit]+finance[view] see quotes, logistics[blocked]=0; catalog open-read to all 4 roles=11 products; products write CEO-only [logistics DENIED, CEO ALLOWED]) |
-| 1.7 | Phase-1 gate: schema.sql snapshot + advisors + db_roadmap update + report 🔻👤 | ⬜ |
+| 1.7 | Phase-1 gate: schema.sql snapshot + advisors + db_roadmap update + report 🔻👤 | ✅ (all gate inputs done in-session [snapshot synced, advisors run, db_roadmap §10 row, report]; **Ishay approved 23/07 evening via chat — "פאזה 2 אני ממשיך שבוע הבא"**) |
 | 2.1 | `src/lib/pricing.js` SSOT + unit tests (6,319 gate) 🔻🤖 | ⬜ |
 | 2.2 | `src/lib/catalog.js` labels + validators.js additions + tests 🔻🤖 | ⬜ |
 | 2.3 | `src/modules/03_quotes/api.js` (+ prices tab api) 🔻🤖 | ⬜ |

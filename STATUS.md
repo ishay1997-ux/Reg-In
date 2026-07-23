@@ -2,7 +2,7 @@
 
 # REG-IN — לוח מצב
 
-> עודכן לאחרונה: 23/07/2026 19:08
+> עודכן לאחרונה: 23/07/2026 19:24
 > ✅ אומת-סנכרון: 15/07/2026 23:25 (regin-docs-sync — אודיט פוסט-בלופרינט-מ3: §7 85 פריטים סונכרן בכל המקומות, 4 חותמות-רפרנס רועננו, 0 קונפליקטים)
 > **לוח מצב-עכשיו (לא ארכיון).** מתעדכן ע"י Claude בסוף כל סשן (נאכף ב-hook). היסטוריה ונרטיב + ציר-זמן → `docs/CLAUDE_CODE_LOG.md` + `git log` · שינויי-DB → `docs/db_roadmap.md` + migrations. *(‏`CHANGELOG` הוקפא 23/07/2026 — ארכיון בלבד. התזכורות התפעוליות למטה = מצב-חי מתגלגל, לא היסטוריה.)*
 > 👤 **מפתח יחיד: ישי** (מ-22/07/2026 — עמית פרש; כל 13 המודולים שלו). ⏱️ **דדליין-הגשה: 19/09/2026** — לוח-הדדליינים המלא: [00_roadmap §3](docs/guides/00_roadmap.md).
@@ -16,7 +16,7 @@
 | 0 | תשתית | ✅ | — | — | — |
 | 1 | משתמשים והרשאות | ✅ **מוזג ל-`dev`** (PR [#2](https://github.com/ishay1997-ux/Reg-In/pull/2)) | — | `ishay/module-1-permissions` (מוזג) | [module_01](docs/guides/modules/module_01_close.md) |
 | 2 | לקוחות | ✅ **מוזג ל-`dev`** (PR [#6](https://github.com/ishay1997-ux/Reg-In/pull/6), merge-commit `e69383a`; `gh pr view 6` אומת חי: `state: MERGED`, שני-הצ'קים `SUCCESS`) | — | `ishay/module-2-customers` (מוזג) | [module_02](docs/guides/modules/module_02_customers.md) · [מדריך מיקרו](docs/micro_guides/module-2.md) |
-| 3 | הצעות מחיר | 🔨 **פזה 1 (DB) הושלמה 5/5 + סוללת-התחזות (1.6) עברה + schema.sql סונכרן. בשער-1.7 — ממתין לאישורך → פזה 2** | **07/08** | `ishay/module-3-quotes-build` (נפתח 22/07 מ-dev טרי `a35c92f`) | [module_03](docs/guides/modules/module_03_quotes.md) · [מדריך מיקרו](docs/micro_guides/module-3.md) |
+| 3 | הצעות מחיר | 🔨 **פזה 1 (DB) נסגרה — שער-1.7 אושר (ישי, 23/07 ערב). הצעד הפעיל: 2.1 (pricing.js — שער-6,319). ממשיכים שבוע הבא: "תמשיך לבנות"** | **07/08** | `ishay/module-3-quotes-build` (נפתח 22/07 מ-dev טרי `a35c92f`) | [module_03](docs/guides/modules/module_03_quotes.md) · [מדריך מיקרו](docs/micro_guides/module-3.md) |
 | 4 | דיילות + Smart Match | ⬜ | **21/08** | | [module_04](docs/guides/modules/module_04_hostesses.md) |
 | 5 | לוגיסטיקה | ⬜ | **04/09** (פזה משולבת עם 6) | | [module_05](docs/guides/modules/module_05_logistics.md) |
 | 6 | פרויקטים (המחבר) | ⬜ | **04/09** (פזה משולבת עם 5) | | [module_06](docs/guides/modules/module_06_projects.md) |
