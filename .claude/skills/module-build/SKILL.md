@@ -44,6 +44,8 @@ The 710 lesson: four clerical errors — wrong section cite, item attributed to 
 | "column/policy/index exists" | live query via Supabase MCP (read-only) |
 
 Can't check right now → write **"unverified"**, never as fact. Mark certainty in every output: "verified (file:line / query)" ≠ "pattern worth checking" — never let the two look alike. Prefer a grep anchor (function name / string) over a line number; line numbers rot between writing and executing.
+
+**Resume-after-interruption rule (the 23/07 migration-5 incident):** a turn can die between announcing an action and doing it (usage limit, crash, context compact) — **narration is intent, not evidence**, and this trap fires *silently*: the resumed turn doesn't write a false "already done" claim, it just *acts* as if the last announced action happened. Therefore, on ANY resume — "המשך מאיפה שעצרת", a fresh session picking up mid-flow, or continuing after a visible cut — do NOT advance from the transcript's last narration. Re-derive position from disk first: `git status` + the micro-guide's status header/step table + the current step's own verification command. A step whose verification hasn't passed is NOT done, no matter what the previous turn said; the typical loss is a half-step (file saved, its doc-ripple lost) — finish the missing half before starting the next step. *(Real incident: "saving migration 5 + updating docs" was cut mid-turn — the file survived, the db_roadmap update didn't, and the resumed turn jumped to step 1.6; Ishay caught it.)*
 <!-- end shared block A -->
 
 <!-- shared block B — identical by design across the three module skills; change → update all three same session -->
