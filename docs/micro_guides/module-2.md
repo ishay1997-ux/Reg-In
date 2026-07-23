@@ -421,7 +421,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 #### Step 5.4 — Closing audit + PR 🔻👤 ✅ DONE 11/07/2026 22:33–22:42
 **Goal:** formal module closure (final DoD sign-off gate).
 **Files:** none here — the closing template drives its own persistence.
-**What:** run `docs/templates/create_module_final_test_template.md` (the closing prompt in modules/module_02_customers ⑥) → DoD sign-off → PR base:`dev` ← compare:`amit/module-2-customers`.
+**What:** run `.claude/skills/module-close/template.md` (the closing prompt in modules/module_02_customers ⑥) → DoD sign-off → PR base:`dev` ← compare:`amit/module-2-customers`.
 **🔻👤 final gate.**
 ↳ **as-run 11/07 22:33 (fresh session, per Ishay's choice):** full template audit — verdict **[YES]**, **DoD typed-echo signed 22:39 ("לקוחות DoD")**. Branch name resolved from THIS header (`ishay/module-2-customers`) — the `amit/…` in What above was the blueprint-era placeholder. Full report in chat; §9 entry below. Test data cleaned with Ishay's approval (0/0/0 live). PR = after Ishay's post-signature visual pass (instructions + 🧩 printed by the audit session).
 

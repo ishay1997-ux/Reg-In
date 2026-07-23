@@ -36,7 +36,7 @@
 
 ## ⑤ החלק של Claude
 
-בלופרינט מלא לפי `docs/templates/create_micro_guide_template.md`: **Phase 1** — RLS policies על `customers` (הראשונות מסוג הזה בפרויקט; לפי המודל שהוכרע ב-§7.21) + 12 תרחישי ה-RLS שנדחו ממודול 1, constraints, מיפוי enum. **Phase 2** — לוגיקה עסקית ו-`api.js` (כלל ברזל 14: שאילתות המודול מרוכזות ב-`src/modules/02_customers/api.js`). **Phase 3** — מסך רשימה+סינון, טופס הוספה/עריכה, ארכוב דו-כיווני (בלי מסגור "מחיקה" — לפי המוסכמה שנקבעה במודול 1). **Phase 4-5** — בקרה ו-QA. **מציית לשפת העיצוב ולטבלת הצבעים ב-PROJECT_MASTER §4.** **מתחזק את `docs/micro_guides/module-2.md` חי לאורך כל הבנייה** (ה-Stop hook אוכף).
+בלופרינט מלא לפי `.claude/skills/module-blueprint/template.md`: **Phase 1** — RLS policies על `customers` (הראשונות מסוג הזה בפרויקט; לפי המודל שהוכרע ב-§7.21) + 12 תרחישי ה-RLS שנדחו ממודול 1, constraints, מיפוי enum. **Phase 2** — לוגיקה עסקית ו-`api.js` (כלל ברזל 14: שאילתות המודול מרוכזות ב-`src/modules/02_customers/api.js`). **Phase 3** — מסך רשימה+סינון, טופס הוספה/עריכה, ארכוב דו-כיווני (בלי מסגור "מחיקה" — לפי המוסכמה שנקבעה במודול 1). **Phase 4-5** — בקרה ו-QA. **מציית לשפת העיצוב ולטבלת הצבעים ב-PROJECT_MASTER §4.** **מתחזק את `docs/micro_guides/module-2.md` חי לאורך כל הבנייה** (ה-Stop hook אוכף).
 
 ## ⑥ 📋 שלושת הפרומפטים להדבקה
 
@@ -51,7 +51,7 @@
 זו ה-RLS policy הראשונה על טבלה עסקית בפרויקט — היא תשמש תבנית לכל המודולים הבאים.
 תזכיר לי במפורש את ההכרעה ב-§7.21 לפני שאתה כותב אותה.
 
-קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
+קרא בעצמך את התבנית .claude/skills/module-blueprint/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=2 · MODULE_NAME=לקוחות · RELEVANT_SECTIONS=§5.3, §7.3/11/21 · BRANCH_NAME=ishay/module-2-customers
 
 חובה: "שאלות פתוחות" מסעיף ② במדריך שלי = פריטי §7, מנותבות לישי להכרעה (§7 = ישי, כלל 1) — אל תכריע בהן לבד.
@@ -71,7 +71,7 @@ MODULE_NUMBER=2 · MODULE_NAME=לקוחות · RELEVANT_SECTIONS=§5.3, §7.3/11
 **3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-2.md.
-קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+קרא בעצמך את התבנית .claude/skills/module-close/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=2 · MODULE_NAME=לקוחות · BRANCH_NAME=<הענף כפי שמופיע בכותרת ה-Live Status Header של docs/micro_guides/module-2.md — לא קשיח, כדי לשרוד העברת-כותב; כרגע ishay/module-2-customers>
 בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
 בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.

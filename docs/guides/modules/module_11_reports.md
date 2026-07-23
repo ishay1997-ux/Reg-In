@@ -39,7 +39,7 @@
 ואת docs/PROJECT_MASTER.md (סעיף 5.17).
 אנחנו פותחים את מודול 11 — דו"חות מנהלים, על ענף ishay/module-11-reports.
 
-קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
+קרא בעצמך את התבנית .claude/skills/module-blueprint/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=11 · MODULE_NAME=דו"חות מנהלים · RELEVANT_SECTIONS=§5.17 · BRANCH_NAME=ishay/module-11-reports
 
 חובה: "שאלות פתוחות" מסעיף ② במדריך שלי = פריטי §7 — הצג לי אותן להכרעה (§7 = ישי, כלל 1), אל תכריע בהן לבד.
@@ -59,7 +59,7 @@ MODULE_NUMBER=11 · MODULE_NAME=דו"חות מנהלים · RELEVANT_SECTIONS=§
 **3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-11.md.
-קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+קרא בעצמך את התבנית .claude/skills/module-close/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=11 · MODULE_NAME=דו"חות מנהלים · BRANCH_NAME=ishay/module-11-reports
 בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
 בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.

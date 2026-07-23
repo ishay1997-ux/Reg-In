@@ -1,7 +1,7 @@
 # REG-IN — Micro-Guide | Module 1: Users & Permissions (as-built)
 
 > **Audience:** a future Claude Code session with zero memory. Humans (Ishay) only approve and decide.
-> **Format:** this file is the pilot of the machine-first micro-guide format (9 sections, per `docs/templates/create_micro_guide_template.md`). Module 1 was built before this format existed, so it is recorded here **as-built** — it doubles as the format exemplar for modules 2–12.
+> **Format:** this file is the pilot of the machine-first micro-guide format (9 sections, per `.claude/skills/module-blueprint/template.md`). Module 1 was built before this format existed, so it is recorded here **as-built** — it doubles as the format exemplar for modules 2–12.
 > **Language rule:** guide in English; Hebrew appears only as data (DB values, UI strings). Chat reports to Ishay — always Hebrew.
 
 ---

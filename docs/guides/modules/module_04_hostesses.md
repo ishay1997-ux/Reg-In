@@ -42,7 +42,7 @@
 
 ## ⑤ החלק של Claude
 
-בונה בלופרינט מלא לפי `docs/templates/create_micro_guide_template.md` (פזות: DB/RLS → לוגיקה עסקית `src/lib`+`api.js` → UI → בקרה → QA), עם טריאז' 🛑/⏳ לשאלות שנותרו פתוחות. **מציית לשפת העיצוב וטבלת הצבעים ב-PROJECT_MASTER §4.** מודול זה נשען על RLS/Auth ממודול 1 — מצהיר במפורש איך (איזה תפקידים עורכים/צופים ב-`hostesses`, לפי המודל שהוכרע ב-[§7.21](../../PROJECT_MASTER.md)). **מתחזק את `docs/micro_guides/module-4.md` חי לאורך כל הבנייה** — סטטוס צעדים, סטיות ("↳ as-built") וחוב טכני מתעדכנים באותו סשן שבו קרו (ה-Stop hook אוכף זאת).
+בונה בלופרינט מלא לפי `.claude/skills/module-blueprint/template.md` (פזות: DB/RLS → לוגיקה עסקית `src/lib`+`api.js` → UI → בקרה → QA), עם טריאז' 🛑/⏳ לשאלות שנותרו פתוחות. **מציית לשפת העיצוב וטבלת הצבעים ב-PROJECT_MASTER §4.** מודול זה נשען על RLS/Auth ממודול 1 — מצהיר במפורש איך (איזה תפקידים עורכים/צופים ב-`hostesses`, לפי המודל שהוכרע ב-[§7.21](../../PROJECT_MASTER.md)). **מתחזק את `docs/micro_guides/module-4.md` חי לאורך כל הבנייה** — סטטוס צעדים, סטיות ("↳ as-built") וחוב טכני מתעדכנים באותו סשן שבו קרו (ה-Stop hook אוכף זאת).
 
 ## ⑥ 📋 שלושת הפרומפטים להדבקה
 
@@ -54,7 +54,7 @@
 ואת docs/PROJECT_MASTER.md (סעיפים 5.10–5.12, §7 פריטים 6, 14, 15, 16).
 אנחנו פותחים את מודול 4 — דיילות + Smart Match, על ענף ishay/module-4-hostesses.
 
-קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
+קרא בעצמך את התבנית .claude/skills/module-blueprint/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=4 · MODULE_NAME=דיילות + Smart Match · RELEVANT_SECTIONS=§5.10-5.12, §7.6/14/15/16/29/33/43/44/45/47 · BRANCH_NAME=ishay/module-4-hostesses
 
 חובה: "שאלות פתוחות" מסעיף ② במדריך שלי נכנסות לטריאז' 🛑/⏳ שלך — אל תכריע בהן לבד.
@@ -74,7 +74,7 @@ MODULE_NUMBER=4 · MODULE_NAME=דיילות + Smart Match · RELEVANT_SECTIONS=�
 **3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-4.md.
-קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+קרא בעצמך את התבנית .claude/skills/module-close/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=4 · MODULE_NAME=דיילות + Smart Match · BRANCH_NAME=ishay/module-4-hostesses
 בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
 בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.

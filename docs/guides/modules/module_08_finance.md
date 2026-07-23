@@ -49,7 +49,7 @@
 ואת docs/PROJECT_MASTER.md (סעיפים 5.13-5.14, §7 פריטים 19, 20).
 אנחנו פותחים את מודול 8 — כספים וסגירת אירוע, על ענף ishay/module-8-finance.
 
-קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
+קרא בעצמך את התבנית .claude/skills/module-blueprint/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=8 · MODULE_NAME=כספים וסגירת אירוע · RELEVANT_SECTIONS=§5.13-5.14, §7.19/20 · BRANCH_NAME=ishay/module-8-finance
 
 חובה: "שאלות פתוחות" מסעיף ② במדריך שלי נכנסות לטריאז' 🛑/⏳ שלך — הצג לי אותן להכרעה, אל תכריע בהן לבד.
@@ -69,7 +69,7 @@ MODULE_NUMBER=8 · MODULE_NAME=כספים וסגירת אירוע · RELEVANT_SE
 **3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-8.md.
-קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+קרא בעצמך את התבנית .claude/skills/module-close/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=8 · MODULE_NAME=כספים וסגירת אירוע · BRANCH_NAME=ishay/module-8-finance
 בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
 בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.

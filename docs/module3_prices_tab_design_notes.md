@@ -2,7 +2,7 @@
 
 # חומר-רקע: עיצוב מסך "מחירים" (ניהול-מערכת) — מודול 3
 
-> **מעמד המסמך:** קלט-רקע לבלופרינט הרשמי של מודול 3 (`docs/templates/create_micro_guide_template.md`) — **לא** תוכן מאושר-לביצוע. ההחלטה *לבנות* את המסך סגורה (§7.84 ב-`PROJECT_MASTER.md`); העיצוב *הטכני* למטה עדיין צריך לעבור את ה-DB Design Challenge וה-🎤 PM Interview הרשמיים של הבלופרינט לפני שנכתב קוד. הופק ע"י סוכן-תכנון עצמאי (14/07/2026) שקרא ישירות את הקוד הקיים (`src/App.jsx`, `SystemManagementPage.jsx`, `UsersManagementPage.jsx`, `PermissionsMatrixPage.jsx`, מודול 2 המלא, `docs/schema.sql`, `docs/db_roadmap.md`, `docs/PROJECT_MASTER.md`, `products_and_params.md`).
+> **מעמד המסמך:** קלט-רקע לבלופרינט הרשמי של מודול 3 (טמפלט-הבלופרינט `.claude/skills/module-blueprint/template.md`, מופעל ע"י הסקיל `module-blueprint`) — **לא** תוכן מאושר-לביצוע. ההחלטה *לבנות* את המסך סגורה (§7.84 ב-`PROJECT_MASTER.md`); העיצוב *הטכני* למטה עדיין צריך לעבור את ה-DB Design Challenge וה-🎤 PM Interview הרשמיים של הבלופרינט לפני שנכתב קוד. הופק ע"י סוכן-תכנון עצמאי (14/07/2026) שקרא ישירות את הקוד הקיים (`src/App.jsx`, `SystemManagementPage.jsx`, `UsersManagementPage.jsx`, `PermissionsMatrixPage.jsx`, מודול 2 המלא, `docs/schema.sql`, `docs/db_roadmap.md`, `docs/PROJECT_MASTER.md`, `products_and_params.md`).
 
 ## היקף
 

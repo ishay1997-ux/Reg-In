@@ -47,7 +47,7 @@
 | verify לפני PR | `npm run verify` | לפני כל פתיחת PR |
 | עיצוב קוד | `npm run format` | לפי הצורך |
 | בדיקות בזמן פיתוח | `npm run test` (watch) | תוך כדי כתיבת לוגיקה |
-| מודול חדש | צ'קליסט `docs/templates/` + ה-DoD למעלה | בתחילת כל מודול |
+| מודול חדש | סקילי-זרימת-המודול (`.claude/skills/module-blueprint`/`module-close` + הטמפלטים שבתוכם) + ה-DoD למעלה | בתחילת כל מודול |
 | שינוי DB | מיגרציה חדשה → apply → עדכן schema.sql → CHANGELOG (ראה `supabase/README.md`) | בכל שינוי סכימה |
 | סריקת אבטחה | `npm audit` + Supabase advisors (MCP) | שבועי / לפני מיזוג גדול |
 | עדכון תלויות | `npm outdated` → עדכון מבוקר → `npm run verify` | חודשי |

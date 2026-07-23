@@ -6,7 +6,7 @@
 - ‏`STATUS.md` = לוח מצב-עכשיו בלבד · ‏`PROJECT_MASTER §7` = רישום השאלות-הפתוחות **היחיד**.
 - שכפול תוכן-החלטה מותר **רק** כמראה מתויגת `🔗 מראת §7.N` (כלל 13) — אחרת מצטטים מספר בלבד.
 - ‏`reference_spec/` = האפיון הקפוא (פרקים 5–6) = התעתיקים `C5_clean_transcript.md`/`C6_clean_transcript.md` (דרגה 2; החליפו את יצואי-ה-Word המקוריים שנמחקו 09/07/2026 אחרי אימות+PASS). קפוא, אסור לערוך (ה-hook חוסם); סטיות נרשמות בתיעוד החי. ציטוטי `C5:NNN`/`C6:NNN` נפתרים דרך הערות `<!-- מקור … L… -->` בתעתיק.
-- ‏`micro_guides/` + ‏`templates/` + ‏`CLAUDE_CODE_LOG.md` (מ-12/07/2026 — Claude-facing) באנגלית (עברית רק כדאטה); ‏`STATUS.md`/`CHANGELOG.md` ושאר docs בעברית.
+- ‏`micro_guides/` + טמפלטי-הסקילים (`.claude/skills/*/template.md`) + גוף-הסקילים (`.claude/skills/*/SKILL.md`) + ‏`CLAUDE_CODE_LOG.md` (מ-12/07/2026 — Claude-facing) באנגלית (עברית רק כדאטה); ‏`STATUS.md`/`CHANGELOG.md` ושאר docs בעברית. *(טמפלטי פתיחת/סגירת-מודול עברו מ-`docs/templates/` לתוך `.claude/skills/` ב-23/07/2026 — הסקילים `module-blueprint`/`module-build`/`module-close` נטענים לפי טריגר.)*
 - תאריכים: ‏`DD/MM/YYYY HH:MM` מהשעון (`Get-Date`/`date`), לא מנוחשים.
 - ‏DB עתידי: התצוגה המאוחדת = ‏`docs/db_roadmap.md` (אגרגטור-ביצוע; ההחלטות חיות רק ב-§7) — מתעדכן באותו סשן עם כל שינוי-סכמה/הכרעה.
 
