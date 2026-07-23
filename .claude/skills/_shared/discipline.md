@@ -1,31 +1,33 @@
-# Shared discipline doctrine — read by ALL six REG-IN skills
+# Shared discipline doctrine — read by all five repo-local REG-IN skills
 
-> **SSOT (created 23/07/2026, Ishay's suggestion):** this file is the single home of the discipline
-> doctrine shared by `module-blueprint` / `module-build` / `module-close` / `section7-rulings` /
-> `post-merge` / `feature-acceptance`. Each skill carries only a short identical kernel pointing here;
-> skill-specific discipline instances stay in each skill. A change to the doctrine is made HERE once —
-> not in six places. (History: the blocks lived inline ×3 in the module skills; the sync tax was paid
-> in practice on 23/07 — the resume rule required three synchronized edits — and extraction won.)
-> This file is not itself a skill (no SKILL.md, `_shared/` is not a skill directory) — it is read
-> on demand by the skills that cite it.
+> **SSOT split (23/07/2026, after Ishay wrote `~/.claude/CLAUDE.md`):** the *universal*
+> doctrine — language, talk style, PM authority, citation/resume discipline — now lives
+> in **`~/.claude/CLAUDE.md`** (cross-project, loads every session regardless of repo).
+> Read it first; it applies here unchanged. **This file now holds only the REG-IN-specific
+> instantiation on top of it** — which file/tool to check for which kind of claim, and
+> what "resume from disk" concretely means in this repo. Each of the six skills carries an
+> identical short kernel pointing to both files; a change to either is made once, not in
+> five places. (History: this file originally WAS the doctrine in full, extracted from ×3
+> inline duplication on 23/07 — see the Session Log. The doctrine was then generalized
+> into the global file the same day, on Ishay's own initiative, and this file narrowed to
+> the instantiation layer — the sync tax of maintaining the general principle in two
+> places was paid once already; no reason to pay it a third time. `feature-acceptance` —
+> originally the sixth skill sharing this kernel — moved OUT of the repo entirely the same
+> night, to Ishay's global `~/.claude/skills/`, being project-agnostic; it now carries its
+> own self-contained discipline section instead of pointing here.)
 
-## Block A — No citation without a same-turn check (execution instance of iron rule 4 + evidence discipline)
-The 710 lesson: four clerical errors — wrong section cite, item attributed to the wrong place, "already done" on a thing still open, stale branch state — all from writing from memory. A wrong citation is dangerous precisely because it lends unearned authority. Before you write any of these claims, run the check FIRST, same turn, then write:
+## REG-IN's citation-check targets (instantiates the global "no citation without a same-turn check")
 
-| Claim | Required check |
+| Claim | Where to check, in THIS repo |
 |---|---|
-| "item N in §7" / "it's written in X" | open the file, find the section, confirm number and scope (grep/read) |
+| "item N in §7" / "it's written in X" | open `docs/PROJECT_MASTER.md`, find the section, confirm number and scope (grep/read) |
 | "already done" / "still open" | full read/grep of the file — not tail, not partial offset, not memory |
-| "merged" / "it's on dev" | fresh `git fetch origin` + `git merge-base --is-ancestor` (rule 10) — a local branch lies |
+| "merged" / "it's on dev" | fresh `git fetch origin` + `git merge-base --is-ancestor` (iron rule 10) — a local branch lies |
 | "column/policy/index exists" | live query via Supabase MCP (read-only) |
 
-Can't check right now → write **"unverified"**, never as fact. Mark certainty in every output: "verified (file:line / query)" ≠ "pattern worth checking" — never let the two look alike. Prefer a grep anchor (function name / string) over a line number; line numbers rot between writing and executing.
+Prefer a grep anchor (function name / string) over a line number — line numbers rot between writing and executing.
 
-**Resume-after-interruption rule (the 23/07 migration-5 incident):** a turn can die between announcing an action and doing it (usage limit, crash, context compact) — **narration is intent, not evidence**, and this trap fires *silently*: the resumed turn doesn't write a false "already done" claim, it just *acts* as if the last announced action happened. Therefore, on ANY resume — "המשך מאיפה שעצרת", a fresh session picking up mid-flow, or continuing after a visible cut — do NOT advance from the transcript's last narration. Re-derive position from disk first: `git status` + the micro-guide's status header/step table + the current step's own verification command. A step whose verification hasn't passed is NOT done, no matter what the previous turn said; the typical loss is a half-step (file saved, its doc-ripple lost) — finish the missing half before starting the next step. *(Real incident: "saving migration 5 + updating docs" was cut mid-turn — the file survived, the db_roadmap update didn't, and the resumed turn jumped to step 1.6; Ishay caught it.)*
+**Resume-after-interruption, in THIS repo (the 23/07 migration-5 incident):** on any resume ("המשך מאיפה שעצרת", a fresh session picking up mid-flow, continuing after a visible cut) — re-derive position from disk before advancing: `git status` + the active micro-guide's status header/step table + the current step's own verification command. A step whose verification hasn't passed is NOT done, no matter what the previous turn narrated; the typical loss is a half-step (file saved, its doc-ripple lost) — finish the missing half before starting the next step. *(What actually happened: "saving migration 5 + updating docs" was cut mid-turn — the file survived, the db_roadmap update didn't, and the resumed turn jumped to step 1.6; Ishay caught it. The general principle this taught is now stated in the global file — this paragraph is just REG-IN's answer to "what counts as disk here.")*
 
-## Block B — How to talk to Ishay (product manager)
-- Think in English; **every word to Ishay in plain Hebrew.** No jargon; a needed technical term gets a parenthetical explanation.
-- Ishay is the **product manager** — only he knows how the business process actually works in the field. State your understanding as an **understanding-declaration invited for correction** ("this is how I understood it — correct me"), never as a settled fact.
-- Every decision question (rule 1 — §7 and product/design decisions are Ishay's, never yours) is presented as: background (why it comes up now, what it blocks) · what the ruling means going forward · each option with its concrete consequence · a reasoned recommendation. Recommend — don't lay out a bare menu. **Multi-item rulings rounds are the exception (Ishay's ruling 23/07):** recommendation-first, one-line background, full detail only on request ("פרט לי") — batches of 3–4, "מספיק להיום" always available (see `section7-rulings`).
-- In a planning/interview turn, always close with: **"על מה לא שאלתי ושווה שתספר לי?"**
-- "Not by force": no findings = say "אין הערות". An invented finding is worse than a blank page.
+## How to talk to Ishay
+Fully covered by `~/.claude/CLAUDE.md` — no REG-IN-specific override remains (the old "rulings-rounds recommendation-first" carve-out is now the global default too). The one place the style becomes a concrete *procedure* rather than a rule of thumb is the batching mechanics (3–4 per round, "מספיק להיום", recommendation-first, reality filter before designing for an edge case) — see `section7-rulings` (repo-local) and `feature-acceptance` (now global, `~/.claude/skills/`), which operationalize it end-to-end.

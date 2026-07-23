@@ -61,7 +61,7 @@
 | [docs/CLAUDE_CODE_LOG.md](docs/CLAUDE_CODE_LOG.md) | יומן הסשנים של Claude (נרטיב, החלטות, tech-debt) |
 | [supabase/README.md](supabase/README.md) | ניהול מיגרציות DB |
 | [docs/micro_guides/](docs/micro_guides/) | מדריכי מיקרו — בלופרינטים חיים **באנגלית, כתובים ל-Claude** (module-1.md ✅ · module-2.md ✅ מוזג · השאר ייווצרו בפתיחת כל מודול) |
-| [.claude/skills/](.claude/skills/) | סקילי-זרימת-המודול (`module-blueprint`/`module-build`/`module-close`; טמפלטי הפתיחה/סגירה חיים בתוכם כ-`template.md`) + סקילי-עזר (`section7-rulings`/`post-merge`/`feature-acceptance`) — נטענים לפי טריגר. Claude קורא בעצמו |
+| [.claude/skills/](.claude/skills/) | סקילי-זרימת-המודול (`module-blueprint`/`module-build`/`module-close`; טמפלטי הפתיחה/סגירה חיים בתוכם כ-`template.md`) + סקילי-עזר רפו-מקומיים (`section7-rulings`/`post-merge`) — נטענים לפי טריגר. Claude קורא בעצמו. **`feature-acceptance` עבר לתיקיית-הסקילים הגלובלית `~/.claude/skills/` (23/07 לילה)** — פרויקט-אגנוסטי (סגנון-העבודה של ישי, לא מבנה-הקבצים של REG-IN), משמש בכל פרויקט שלו |
 | [docs/mockups/](docs/mockups/) | 44 צילומי מוקאפ + [תיאורים](docs/mockups/mockup_descriptions.md) — רפרנס ויזואלי בלבד |
 | `docs/reference_spec/` | האפיון המאושר (פרקים 5–6) — **קפוא, לא לערוך**; + `products_and_params.md` (החלטות Seed) |
 

@@ -23,7 +23,7 @@ Read **`.claude/skills/module-blueprint/template.md`** (beside this file) and pe
 ## Council wiring (iron rule in CLAUDE.md — "כלי-עזר להחלטות")
 If a real trade-off surfaces (a contested §7 ruling, a DB-design fork, a pricing/Smart-Match formula), **offer** Ishay `council this` and wait for his approval before running it. Never run the council on your own initiative. The council feeds the decision; the decision itself is Ishay's (rule 1).
 
-<!-- shared kernel — identical in all six skills; a change here updates all six + _shared/discipline.md in the same session -->
+<!-- shared kernel — identical in all five repo-local skills (feature-acceptance moved to ~/.claude/skills/ 23/07 night — no longer part of this set); a change here updates all five + _shared/discipline.md in the same session -->
 ## Discipline (mandatory — shared doctrine)
-Read **`.claude/skills/_shared/discipline.md`** and apply it as part of this skill — it is the single source of the shared doctrine: **no citation without a same-turn check** (§7/file/merge/DB claims verified before written) · **resume-after-interruption** (narration is intent, not evidence — re-derive position from disk) · **how to talk to Ishay** (plain Hebrew, understanding-declarations invited for correction, reasoned recommendations).
+The universal doctrine lives in **`~/.claude/CLAUDE.md`** (loads every session, every project): plain-Hebrew communication · Ishay is the product manager — understanding-declarations invited for correction, product/design decisions are his · no citation without a same-turn check · resume from disk, not from narration. Read and apply it. Then read **`.claude/skills/_shared/discipline.md`** for the REG-IN instantiation — which file/tool verifies which kind of claim, and what "resume from disk" concretely means in this repo.
 <!-- end shared kernel -->
