@@ -29,6 +29,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # פורמט (Prettier) — נוסף 23/07/2026 אחרי ש-.gitattributes תוקן ל-LF-לכל-קובץ-טקסט
+      # (הבעיה הייתה רק בעותקים-מקומיים על Windows; מה שמחובר ל-Git תמיד היה נקי, אז
+      # השלב הזה חוסם מהיום הראשון בלי הפתעות).
+      - name: Format check
+        run: npm run format:check
+
       # שער-כפילות (jscpd) — כרגע מדווח-ולא-חוסם (continue-on-error) בשלב-האזהרות.
       # ⚠️ הידוק אחרי מ3: להסיר את continue-on-error כדי שכפילות מעל הסף (3% ב-.jscpd.json)
       # תחסום מיזוג. מרוכז עם הידוק-ה-sonarjs כשמודול 3 נסגר.
