@@ -34,7 +34,7 @@ On ANY non-trivial change request that arrives mid-build (design / feature / beh
 ## Council wiring
 Real trade-off with two sensible product-affecting directions? **Offer** `council this` and wait for Ishay's approval — never on your own initiative. The council feeds the decision; the decision is his (rule 1).
 
-<!-- shared kernel — identical in all five repo-local skills (feature-acceptance moved to ~/.claude/skills/ 23/07 night — no longer part of this set); a change here updates all five + _shared/discipline.md in the same session -->
+<!-- shared kernel — single line; the doctrine text lives ONLY in _shared/discipline.md (consolidated 24/07/2026, was duplicated in all five) -->
 ## Discipline (mandatory — shared doctrine)
-The universal doctrine lives in **`~/.claude/CLAUDE.md`** (loads every session, every project): plain-Hebrew communication · Ishay is the product manager — understanding-declarations invited for correction, product/design decisions are his · no citation without a same-turn check · resume from disk, not from narration. Read and apply it. Then read **`.claude/skills/_shared/discipline.md`** for the REG-IN instantiation — which file/tool verifies which kind of claim, and what "resume from disk" concretely means in this repo.
+Read **`.claude/skills/_shared/discipline.md`** first, before anything else in this skill — it is the single copy of the shared kernel (which itself opens by pointing to `~/.claude/CLAUDE.md` for the universal doctrine), plus the REG-IN-specific instantiation.
 <!-- end shared kernel -->

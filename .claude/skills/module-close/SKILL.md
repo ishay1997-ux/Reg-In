@@ -23,7 +23,7 @@ Read **`.claude/skills/module-close/template.md`** (beside this file) and perfor
 - The audit **never** runs `git merge`/`git push`/`gh pr create`. PR/CI/merge are post-merge items — N/A-at-audit, never a ❌ blocker.
 - PR instructions are printed in plain Hebrew AND as a self-contained "🧩 prompt for Claude-in-Chrome" (iron rule 17); OAuth/secrets stay manual.
 
-<!-- shared kernel — identical in all five repo-local skills (feature-acceptance moved to ~/.claude/skills/ 23/07 night — no longer part of this set); a change here updates all five + _shared/discipline.md in the same session -->
+<!-- shared kernel — single line; the doctrine text lives ONLY in _shared/discipline.md (consolidated 24/07/2026, was duplicated in all five) -->
 ## Discipline (mandatory — shared doctrine)
-The universal doctrine lives in **`~/.claude/CLAUDE.md`** (loads every session, every project): plain-Hebrew communication · Ishay is the product manager — understanding-declarations invited for correction, product/design decisions are his · no citation without a same-turn check · resume from disk, not from narration. Read and apply it. Then read **`.claude/skills/_shared/discipline.md`** for the REG-IN instantiation — which file/tool verifies which kind of claim, and what "resume from disk" concretely means in this repo.
+Read **`.claude/skills/_shared/discipline.md`** first, before anything else in this skill — it is the single copy of the shared kernel (which itself opens by pointing to `~/.claude/CLAUDE.md` for the universal doctrine), plus the REG-IN-specific instantiation.
 <!-- end shared kernel -->

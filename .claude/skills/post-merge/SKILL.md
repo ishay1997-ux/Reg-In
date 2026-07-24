@@ -19,8 +19,8 @@ description: REG-IN — post-merge verification and doc flip. Load whenever Isha
 ## Hard limits
 Never `git merge` / `git push` / `gh pr merge` / `gh pr create` — the merge belongs to Ishay. Never rewrite dated journal entries; a wrong past claim gets a dated correction entry, not an edit.
 
-<!-- shared kernel — identical in all five repo-local skills (feature-acceptance moved to ~/.claude/skills/ 23/07 night — no longer part of this set); a change here updates all five + _shared/discipline.md in the same session -->
+<!-- shared kernel — single line; the doctrine text lives ONLY in _shared/discipline.md (consolidated 24/07/2026, was duplicated in all five) -->
 ## Discipline (mandatory — shared doctrine)
-The universal doctrine lives in **`~/.claude/CLAUDE.md`** (loads every session, every project): plain-Hebrew communication · Ishay is the product manager — understanding-declarations invited for correction, product/design decisions are his · no citation without a same-turn check · resume from disk, not from narration. Read and apply it. Then read **`.claude/skills/_shared/discipline.md`** for the REG-IN instantiation — which file/tool verifies which kind of claim, and what "resume from disk" concretely means in this repo.
+Read **`.claude/skills/_shared/discipline.md`** first, before anything else in this skill — it is the single copy of the shared kernel (which itself opens by pointing to `~/.claude/CLAUDE.md` for the universal doctrine), plus the REG-IN-specific instantiation.
 <!-- end shared kernel -->
 Skill-specific instance: this whole skill is essentially the doctrine's "merged / it's on dev" check turned into a procedure; if the flow is interrupted mid-way, re-derive from `git status`/`git log` + STATUS, not from the transcript.

@@ -5,16 +5,22 @@
 > in **`~/.claude/CLAUDE.md`** (cross-project, loads every session regardless of repo).
 > Read it first; it applies here unchanged. **This file now holds only the REG-IN-specific
 > instantiation on top of it** — which file/tool to check for which kind of claim, and
-> what "resume from disk" concretely means in this repo. Each of the six skills carries an
-> identical short kernel pointing to both files; a change to either is made once, not in
-> five places. (History: this file originally WAS the doctrine in full, extracted from ×3
-> inline duplication on 23/07 — see the Session Log. The doctrine was then generalized
-> into the global file the same day, on Ishay's own initiative, and this file narrowed to
-> the instantiation layer — the sync tax of maintaining the general principle in two
-> places was paid once already; no reason to pay it a third time. `feature-acceptance` —
-> originally the sixth skill sharing this kernel — moved OUT of the repo entirely the same
-> night, to Ishay's global `~/.claude/skills/`, being project-agnostic; it now carries its
-> own self-contained discipline section instead of pointing here.)
+> what "resume from disk" concretely means in this repo. (History: this file originally WAS
+> the doctrine in full, extracted from ×3 inline duplication on 23/07 — see the Session Log.
+> The doctrine was then generalized into the global file the same day, on Ishay's own
+> initiative, and this file narrowed to the instantiation layer — the sync tax of
+> maintaining the general principle in two places was paid once already; no reason to pay
+> it a third time. `feature-acceptance` — originally the sixth skill sharing this kernel —
+> moved OUT of the repo entirely the same night, to Ishay's global `~/.claude/skills/`,
+> being project-agnostic; it now carries its own self-contained discipline section instead
+> of pointing here. **Consolidated further 24/07/2026 (skill-creator structural review):**
+> the five repo-local skills used to each carry their own copy of the kernel paragraph
+> below, with a comment asking whoever edits it to keep all five + this file in sync by
+> hand — a real drift risk with no single source of truth. Now each of the five carries
+> only a one-line pointer to this file; the kernel paragraph itself lives HERE ONCE.)
+
+## The shared kernel (every repo-local skill reads this first)
+Read **`~/.claude/CLAUDE.md`** (loads every session, every project) for the universal doctrine: plain-Hebrew communication · Ishay is the product manager — understanding-declarations invited for correction, product/design decisions are his · no citation without a same-turn check · resume from disk, not from narration. Read and apply it. Then continue reading the rest of this file for the REG-IN-specific instantiation below — which file/tool verifies which kind of claim, and what "resume from disk" concretely means in this repo.
 
 ## REG-IN's citation-check targets (instantiates the global "no citation without a same-turn check")
 

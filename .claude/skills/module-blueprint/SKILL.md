@@ -23,7 +23,7 @@ Read **`.claude/skills/module-blueprint/template.md`** (beside this file) and pe
 ## Council wiring (iron rule in CLAUDE.md — "כלי-עזר להחלטות")
 If a real trade-off surfaces (a contested §7 ruling, a DB-design fork, a pricing/Smart-Match formula), **offer** Ishay `council this` and wait for his approval before running it. Never run the council on your own initiative. The council feeds the decision; the decision itself is Ishay's (rule 1).
 
-<!-- shared kernel — identical in all five repo-local skills (feature-acceptance moved to ~/.claude/skills/ 23/07 night — no longer part of this set); a change here updates all five + _shared/discipline.md in the same session -->
+<!-- shared kernel — single line; the doctrine text lives ONLY in _shared/discipline.md (consolidated 24/07/2026, was duplicated in all five) -->
 ## Discipline (mandatory — shared doctrine)
-The universal doctrine lives in **`~/.claude/CLAUDE.md`** (loads every session, every project): plain-Hebrew communication · Ishay is the product manager — understanding-declarations invited for correction, product/design decisions are his · no citation without a same-turn check · resume from disk, not from narration. Read and apply it. Then read **`.claude/skills/_shared/discipline.md`** for the REG-IN instantiation — which file/tool verifies which kind of claim, and what "resume from disk" concretely means in this repo.
+Read **`.claude/skills/_shared/discipline.md`** first, before anything else in this skill — it is the single copy of the shared kernel (which itself opens by pointing to `~/.claude/CLAUDE.md` for the universal doctrine), plus the REG-IN-specific instantiation.
 <!-- end shared kernel -->
