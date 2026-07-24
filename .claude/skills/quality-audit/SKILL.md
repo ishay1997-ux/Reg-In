@@ -42,7 +42,7 @@ Run independent reviews **in parallel**, one per dimension. **Do not let a revie
 | Module boundaries, layering, SSOT adherence, debt | `general-purpose` agent told to invoke `engineering:architecture` + `engineering:tech-debt` |
 | **Duplication & should-be-shared (Ishay's emphasis)** | `general-purpose` agent — see the dedicated protocol below |
 
-**Verify dispatch targets exist first** (agent + skill names). If one is missing in this environment, say so in the report — **do not silently drop the dimension.**
+**Verify dispatch targets exist first** (agent + skill names) — concretely: check each named agent type against the available-agents listing, and each named skill against the available-skills listing, both already surfaced in this session's system context (or load via `ToolSearch` if a skill's schema isn't resolved yet). Record a one-line dated confirmation ("dispatch targets verified present, DD/MM/YYYY") in the report. If one is missing in this environment, say so in the report — **do not silently drop the dimension.**
 
 ### The duplication & should-be-shared dimension (the one Ishay cares most about)
 Give this agent three concrete jobs, in order:
@@ -69,6 +69,9 @@ Give this agent three concrete jobs, in order:
 ⚠️ **Findings that live only in the chat evaporate.** But this skill **writes nothing itself** — it is read-only and Ishay decides what enters the plan. Produce the report so it can be filed with no further digging:
 - REG-IN's durable homes are `docs/PROJECT_MASTER.md` **§6** (cross-module debt, mandatory reading at every module's opening) and **§7** (open questions/rulings). For each keep-worthy finding, give a **§6-ready one-line row** (with target module) or a §7-style question if it's a genuine open decision — shaped so Ishay (or a follow-up session he authorizes) can paste it in.
 - If a finding replaces or shrinks an item already in §6/§7, **say which one** — items that quietly go obsolete are how the registry drifts.
+
+## End of session
+**Log that this audit ran — the one write this read-only skill does make.** Append a dated `CLAUDE_CODE_LOG.md` entry (date, scope, the ranked findings' one-line headlines) even though the codebase itself gets zero writes: this is what a FUTURE quality-audit run means by "a prior audit is on record" ("What to produce" item 3, above) — without this, that check always resolves to nothing, no matter how many audits actually ran. This is the same end-of-session logging every other skill in this project does; it doesn't touch code/DB and isn't a decision about the codebase.
 
 ## Rules
 - **Read-only.** Modify nothing, touch no database with writes. Check `git status` first; if another session has uncommitted work in progress, prefer to postpone (say why).

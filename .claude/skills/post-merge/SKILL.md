@@ -7,10 +7,13 @@ description: REG-IN — post-merge verification and doc flip. Load whenever Isha
 
 **Why this skill exists:** the PR-confusion incident — PR facts written from memory (PR #2 vs #3 mixed up) survived in STATUS until Ishay caught them; stale local git misleads silently. CLAUDE.md's PR-checklist rule is binding here: **a PR/merge/branch fact is written ONLY with same-session git output quoted** — no fresh citation, no write.
 
+## Pre-flight
+**Rule 16 — one writing session at a time.** This skill writes to `STATUS.md` and `CLAUDE_CODE_LOG.md` — the same shared files `module-build`/`module-close` write to. Unsure if another session is writing right now? Ask Ishay first, before touching either file.
+
 ## Steps
 1. **Ingest Ishay's report as a first-class event** (CLAUDE.md evidence discipline): quote his exact words in the journal entry at absorption, BEFORE interpreting. Human testimony about an external system outranks stale local git — but both get reconciled next.
 2. **Fresh evidence, same turn:** `git fetch origin` → `git log --oneline origin/dev -3` → `git merge-base --is-ancestor <branch> origin/dev` (+ `gh pr view <N>` when the PR number is known). Quote the outputs verbatim. If git contradicts his report → fetch again, then surface the discrepancy to him — never silently pick a side.
-3. **STATUS flip:** module/track row → ✅ merged, with PR number + the cited evidence line (e.g. `` `state: MERGED`, checks `SUCCESS` `` — match the existing rows' style). No other STATUS surgery beyond what the merge changed.
+3. **STATUS flip:** before flipping, check the row was actually in "ממתין ל-PR/merge" (module-close's closing-audit persistence step sets this) — that's the evidence the closing audit ran. If the row shows something else (still mid-build, or no closing-audit trace), STOP and tell Ishay: this branch may be merging without ever having gone through `module-close`. Otherwise flip to ✅ merged, with PR number + the cited evidence line (e.g. `` `state: MERGED`, checks `SUCCESS` `` — match the existing rows' style). No other STATUS surgery beyond what the merge changed.
 4. **Dead-branch marking (iron rule 10):** the merged branch is history — never stack commits on it. Record it as merged-and-dead in STATUS/journal; offer (not execute unprompted) local branch deletion.
 5. **Next step for Ishay, in Hebrew:** one concrete line derived from STATUS/roadmap — "הצעד הבא שלך: …" (e.g. open the next module with "פתח מודול N", or pull `dev` fresh before cutting the next branch).
 6. **Milestone / doc-heavy merges:** recommend running `regin-docs-sync` (Run now — Ishay's click) as the cross-file consistency pass (rule 13(ז)).
