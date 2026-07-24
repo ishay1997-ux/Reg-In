@@ -1,6 +1,6 @@
 ---
 name: quality-audit
-description: REG-IN — comprehensive whole-codebase quality review (NOT a single-PR diff review). Load whenever Ishay asks to assess overall code health: "עשה סקירת קוד", "בדוק את איכות הקוד", "איך הקוד נראה / איך מהנדס תוכנה יתרשם", "סקירה מקיפה של כל המערכת", "יש כפילויות / קוד ספגטי?", "בדיקה כוללת לפני מיזוג/אבן-דרך", or code review / quality audit of the entire codebase. Dispatches parallel agents by dimension (silent failures · tests · comments · security · DB/RLS · accessibility · architecture · duplication/should-be-shared), verifies every finding AND its recommended fix itself, and returns a ranked Hebrew report + an ordered fix work-plan (recommendation-only). Read-only — writes nothing, decides nothing. Not for a single PR diff (use code-review) or one module's close (module-close).
+description: REG-IN — comprehensive whole-codebase quality review (NOT a single-PR diff review). Load whenever Ishay asks to assess overall code health: "עשה סקירת קוד", "בדוק את איכות הקוד", "איך הקוד נראה / איך מהנדס תוכנה יתרשם", "סקירה מקיפה של כל המערכת", "יש כפילויות / קוד ספגטי?", "בדיקה כוללת לפני מיזוג/אבן-דרך", "האם הטקסטים בממשק ברורים", "האם הבדיקות שלנו מכסות נכון", or code review / quality audit of the entire codebase. Dispatches parallel agents by dimension (silent failures · tests · testing strategy · comments · security · DB/RLS · accessibility · UI copy · architecture · duplication/should-be-shared), verifies every finding AND its recommended fix itself, and returns a ranked Hebrew report + an ordered fix work-plan (recommendation-only). Read-only — writes nothing, decides nothing. Not for a single PR diff (use code-review) or one module's close (module-close).
 ---
 
 # quality-audit — REG-IN whole-codebase health review
@@ -33,10 +33,12 @@ Run independent reviews **in parallel**, one per dimension. **Do not let a revie
 | --- | --- |
 | Swallowed errors, misleading fallbacks, silent failures | `pr-review-toolkit:silent-failure-hunter` |
 | Test coverage and its trade-offs (unit + E2E) | `pr-review-toolkit:pr-test-analyzer` |
+| Testing architecture — coverage *shape*, not individual test quality (pyramid balance; are the highest-risk business-logic paths protected at the right layer). Do NOT re-grade individual test files — that's the row above. | `general-purpose` agent told to invoke the `engineering:testing-strategy` skill, pointed explicitly at REG-IN's highest-risk logic: `src/lib/pricing.js`, Smart Match, permission/RLS enforcement |
 | Comment accuracy (the dense Hebrew why-first comments) | `pr-review-toolkit:comment-analyzer` |
 | Security, authorization, secrets | `code-modernization:security-auditor` |
 | DB / RLS / indexes / migrations (against §7.21 + the ruled model) | `general-purpose` agent told to invoke the `supabase:supabase-postgres-best-practices` skill + read live DB via Supabase MCP (read-only) |
 | Accessibility & field usability (Hebrew RTL, the real use context) | `general-purpose` agent told to invoke the `design:accessibility-review` skill |
+| Hebrew UI copy quality — error messages, empty states, CTAs, field labels. NOT technical a11y (contrast/keyboard-nav) — that's the row above. | `general-purpose` agent told to invoke the `design:ux-copy` skill, scoped to user-facing strings in `src/modules/` + `src/components/` (excluding `src/components/ui/`) |
 | Module boundaries, layering, SSOT adherence, debt | `general-purpose` agent told to invoke `engineering:architecture` + `engineering:tech-debt` |
 | **Duplication & should-be-shared (Ishay's emphasis)** | `general-purpose` agent — see the dedicated protocol below |
 

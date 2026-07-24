@@ -29,8 +29,16 @@ Go through every checkbox in the micro-guide's DoD section, one by one. Mark ✅
 - **Redesign judgement:** flag anything that should be redesigned / added / removed. A real UX defect (a missing/broken state, an unreachable primary action, misleading copy) is a **§6 blocker**; a polish/scope item is a **§7 tech-debt** line with its target module.
 Results feed the §5 **Usability** as-run cell and the §1 DoD UX-&-validation checkbox. (System-wide RTL/cross-browser/mobile stay the M12 usability sweep — this audit is the module's own gate, not that.)
 
+### 2c. 🔒 General Security Scan (binding — beyond RLS)
+**Different lens from §2 — that audits RLS/auth/session specifically; this audits the code itself for OWASP-class issues.** Dispatch `code-modernization:security-auditor`, scoped ONLY to this module's new/changed files (the micro-guide's "Files to create/touch" list, or `git diff` against the branch's base) — NOT the whole codebase (that periodic sweep is `quality-audit`'s job; don't re-run it here). Look for: injection (SQL/XSS), secrets committed to code, insecure deserialization, unsafe `dangerouslySetInnerHTML`/`eval`-style patterns, and other OWASP-class issues §2's RLS-focused check does not cover.
+Findings route like §4b: a real, exploitable vulnerability is a **§6 blocker**; a hardening suggestion with no live exploit path is a **§7 tech-debt** line with its target module.
+
 ### 3. 🧠 Architectural Review & Pro-Tips (free hand)
 Refactoring/perf/state-management proposals; messy spots that accumulated during fixes. Suggestions only — no code edits in this audit. (UX & validation quality is now the binding **§2b** audit above — not a free-hand suggestion; F1 subtraction: it lived here as a soft bullet before, and moved up to a real gate.)
+
+### 3b. 🤫 Silent-Failure Sweep (binding)
+**Different from §3 — that is free-hand architectural suggestions; this is a targeted hunt.** Dispatch `pr-review-toolkit:silent-failure-hunter`, scoped ONLY to this module's new/changed files. Look for: swallowed errors (empty or log-only `catch` blocks), misleading fallback values that present a failure as a success, and error paths that silently return default data instead of surfacing the problem — high-risk in a system handling real pricing/financial data.
+Findings route like §4b: a swallowed error on a live user-facing path is a **§6 blocker**; a defensive-but-noisy pattern worth tightening later is a **§7 tech-debt** line.
 
 ### 4. 🧹 Housekeeping Check
 - `npm run verify` (lint + format:check + unit tests + build) — must be green.
