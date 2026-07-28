@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
+import LoadingOrError from '@/components/LoadingOrError'
 import { CUSTOMER_TYPE_LABELS, matchesCustomerFilters, sortCustomers } from '@/lib/customers'
 import { listCustomers, setCustomerStatus, updateCustomer } from '@/modules/02_customers/api'
 import CustomerFormDialog from '@/modules/02_customers/CustomerFormDialog'
@@ -212,24 +213,16 @@ export default function CustomersPage() {
   }
 
   if (loading) {
-    return <p className="text-slate-500">טוען...</p>
+    return <LoadingOrError loading />
   }
 
   if (loadError) {
-    // מסלול-שגיאה עם "נסה שוב" (תיקון 11/07): קודם החלפת-כל-המסך אילצה רענון-דפדפן כדי להתאושש.
     return (
-      <div className="flex flex-col items-center gap-3 py-12 text-center" role="alert">
-        <p className="text-red-600 font-semibold">{loadError}</p>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={reloadCustomers}
-          className="h-auto py-2 px-4 rounded-lg border-slate-300 text-slate-700"
-          data-testid="customers-load-retry"
-        >
-          נסה שוב
-        </Button>
-      </div>
+      <LoadingOrError
+        error={loadError}
+        onRetry={reloadCustomers}
+        retryTestId="customers-load-retry"
+      />
     )
   }
 

@@ -10,6 +10,7 @@ import { Check, Eye, Minus } from 'lucide-react'
 import { supabase } from '@/supabaseClient'
 import { CEO_ROLE_NAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
+import LoadingOrError from '@/components/LoadingOrError'
 
 const CYCLE = ['edit', 'view', 'blocked']
 
@@ -100,11 +101,11 @@ export default function PermissionsMatrixPage() {
   }
 
   if (loading) {
-    return <p className="text-slate-500">טוען...</p>
+    return <LoadingOrError loading />
   }
 
   if (loadError) {
-    return <p className="text-red-600 font-semibold">{loadError}</p>
+    return <LoadingOrError error={loadError} />
   }
 
   return (

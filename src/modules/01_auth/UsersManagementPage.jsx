@@ -15,6 +15,7 @@ import { supabase } from '@/supabaseClient'
 import { useAuth } from '@/contexts/AuthContext'
 import { useConfirm } from '@/components/ConfirmDialog'
 import { useToast } from '@/components/ToastProvider'
+import LoadingOrError from '@/components/LoadingOrError'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -210,24 +211,16 @@ export default function UsersManagementPage() {
   }
 
   if (loading) {
-    return <p className="text-slate-500">טוען...</p>
+    return <LoadingOrError loading />
   }
 
   if (loadError) {
-    // מסלול-שגיאה עם "נסה שוב" (תיקון 11/07): קודם החלפת-כל-המסך אילצה רענון-דפדפן כדי להתאושש.
     return (
-      <div className="flex flex-col items-center gap-3 py-12 text-center" role="alert">
-        <p className="text-red-600 font-semibold">{loadError}</p>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={loadUsersAndRoles}
-          className="h-auto py-2 px-4 rounded-lg border-slate-300 text-slate-700"
-          data-testid="users-load-retry"
-        >
-          נסה שוב
-        </Button>
-      </div>
+      <LoadingOrError
+        error={loadError}
+        onRetry={loadUsersAndRoles}
+        retryTestId="users-load-retry"
+      />
     )
   }
 

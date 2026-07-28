@@ -42,6 +42,20 @@ jobs:
         run: npm run dup
         continue-on-error: true
 
+      # שער-קוד-מת (knip) — כרגע מדווח-ולא-חוסם (continue-on-error) בשלב-האזהרות.
+      # ⚠️ הידוק אחרי מ3: להסיר continue-on-error יחד עם הקשחת jscpd/sonarjs (ר' module-3.md §9).
+      - name: Dead code scan (knip)
+        run: npm run deadcode
+        continue-on-error: true
+
+      # שער-חולשות-אבטחה בחבילות (npm audit, severity high+) — כרגע מדווח-ולא-חוסם: יש
+      # 7 ממצאים קיימים (4 high — react-router/postcss/shadcn) שקדמו לשלב הזה ודורשים
+      # החלטת-שדרוג נפרדת (חלקם breaking change). ⚠️ הידוק: להסיר continue-on-error אחרי
+      # שהחולשות הקיימות טופלו/וותרו במפורש — לא בהכרח קשור לזמן סגירת-מ3 (ר' module-3.md §9).
+      - name: Dependency vulnerability scan (npm audit)
+        run: npm run audit
+        continue-on-error: true
+
       - name: Test
         run: npm run test:run
 
