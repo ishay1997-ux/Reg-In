@@ -29,7 +29,12 @@
   אותם כ-`null`. **זה לא קוד מת — לא למחוק.**
 - **`MARKETING_MAX_BYTES` מיוצא ואינו בשימוש חיצוני**; הטקסט "עד 10MB" מקודד-קשיח בקומפוננטה. שינוי
   המגבלה דורש עריכה בשני מקומות, אחד מהם פרוזה. *(‏knip מדווח על הייצוא — פריט בסגירת-מ3.)*
-- **מורכבות:** ‏`CustomerFormDialog` (33) ו-`MarketingPanel` (26) ו-`CustomersPage` (21) **ייפלו** כשכללי
-  sonarjs יוקשחו ל-`error` בסגירת מודול 3. פירוק שלהם הוא חלק מאותה מטלה.
+- **ולידציית טופס-הלקוח חיה ב-`src/lib/customers.js`, לא בדיאלוג** (הועברה 29/07/2026):
+  `validateCustomerField` · `validateCustomerForm` · `validateExtraContacts`. ‏`validateCustomerForm`
+  עוברת על `Object.keys(form)` ונשענת על כך ש-`validateCustomerField` מחזירה `''` לשם לא-מוכר —
+  **במכוון אין רשימת-שדות נפרדת** (היא הייתה סוטה בשקט מהטופס ביום שמוסיפים שדה).
+- **מורכבות:** ‏`MarketingPanel` (26) **ייפול** כשכללי sonarjs יוקשחו ל-`error` בסגירת מודול 3 —
+  והוא היחיד שנותר. *(‏`CustomerFormDialog` 33→ ו-`CustomersPage` 21→ ירדו מתחת לסף 29/07/2026
+  בהעברת הלוגיקה הטהורה ל-SSOT; הכרעת-ישי: `MarketingPanel` נדחה כי הוא פיצול-קומפוננטה שלמה.)*
 
 </div>

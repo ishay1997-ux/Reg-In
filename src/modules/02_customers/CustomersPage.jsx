@@ -20,7 +20,12 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
-import { CUSTOMER_TYPE_LABELS, matchesCustomerFilters, sortCustomers } from '@/lib/customers'
+import {
+  CUSTOMER_TYPE_LABELS,
+  countActiveFilters,
+  matchesCustomerFilters,
+  sortCustomers,
+} from '@/lib/customers'
 import { listCustomers, setCustomerStatus, updateCustomer } from '@/modules/02_customers/api'
 import CustomerFormDialog from '@/modules/02_customers/CustomerFormDialog'
 import CustomersFilterSheet from '@/modules/02_customers/CustomersFilterSheet'
@@ -152,12 +157,9 @@ export default function CustomersPage() {
   }
 
   // הרשימה הנראית = סינון (טקסט + מסננת) ואז מיון. useMemo כדי לא לחשב מחדש בכל רינדור לא-קשור.
-  const activeFilterCount =
-    (filters.customerType ? 1 : 0) +
-    (filters.marketingConsent === true ? 1 : 0) +
-    (filters.minDiscount != null ? 1 : 0) +
-    (typeof filters.hasDiscount === 'boolean' ? 1 : 0) +
-    (filters.newWithinDays ? 1 : 0)
+  // הספירה עצמה חיה ב-src/lib/customers.js ליד matchesCustomerFilters (כלל 14) — כדי שתג-הספירה
+  // לא יסטה מהשדות שבאמת מסננים.
+  const activeFilterCount = countActiveFilters(filters)
 
   const visibleCustomers = useMemo(() => {
     // מסנן-הסטטוס: 'active'/'inactive' מסננים לסטטוס יחיד, 'all' מסיר את ההגבלה (status=undefined).

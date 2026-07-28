@@ -2,7 +2,7 @@
 
 # REG-IN — לוח מצב
 
-> עודכן לאחרונה: 29/07/2026 01:20
+> עודכן לאחרונה: 29/07/2026 00:32
 > **לוח מצב-עכשיו בלבד — לא ארכיון.** היסטוריה ונרטיב → `docs/CLAUDE_CODE_LOG.md` + `git log` ·
 > שינויי-DB → `docs/db_roadmap.md` + migrations · שאלות פתוחות → `PROJECT_MASTER §7`.
 > *(הגרסה המלאה הקודמת, כולל 24 תזכורות היסטוריות: `docs/archive/STATUS_full_2026-07-28.md`.)*
@@ -65,14 +65,12 @@
   - **knip: 4 ממצאים** — 3 dependencies יתומות (`postcss`/`autoprefixer` אינם בשימוש ב-Tailwind v4) +
     הייצוא `MARKETING_MAX_BYTES` ב-`api.js`.
   - **audit: 4 חולשות high** (react-router/postcss/shadcn — קדמו ל-25/07).
-  - **3 קבצים ייפלו על מורכבות** כשמקשיחים: `CustomerFormDialog` (33) · `MarketingPanel` (26) ·
-    `CustomersPage` (21). פירוקם חלק מאותה מטלה.
+  - **`MarketingPanel` (26) ייפול על מורכבות** כשמקשיחים — הקובץ **היחיד** שנותר. *(‏`CustomerFormDialog`
+    ו-`CustomersPage` ירדו מתחת לסף 29/07 — ר' למטה.)*
   **`npm run gate` ירוק = המטלה הושלמה.**
-- **4 הערות בקוד שסותרות את הקוד** (אותרו בסקירת 28/07, לא תוקנו): `PermissionsMatrixPage.jsx:3-5` ·
-  `SystemManagementPage.jsx:1` · `UsersManagementPage.jsx:2` · `e2e/auth.spec.js:9` + מטפל-דיאלוג מת
-  ב-`e2e/customers.spec.js:68`. פירוט ב-`src/CLAUDE.md`.
-- **`PermissionsMatrixPage.jsx:91-100` כותב בלי `.select()`+בדיקת-שורות** — חורג ממוסכמת ה-RLS-guard.
-- **מצב-כהה: `--primary` תחת `.dark` נשאר אפור** — הפעלת מצב-כהה תאבד את הטורקיז בכל כפתור ברירת-מחדל.
+- **מצב-כהה נשבר ברמת-המערכת** — לא רק `--primary` האפור תחת `.dark`, אלא **32 צבעי-אור מקודדים-קשיח
+  ב-18 קבצים**. אין מתג מצב-כהה ⇒ לא נגיש היום, ותיקון הטוקן לבדו לא ייתן מצב-כהה תקין.
+  ⏸️ **נדחה ל-M12** (הכרעת-ישי 29/07; שינוי-צבע דורש אישור ממילא — כלל 8).
 - 👤 **ממתין להדבקה: `pr-review-toolkit` צריך לחזור ל-`true`** ב-`.claude/settings.json`. הוא כבוי בטעות שלי, ו-3 דיספאצ'ים חיים תלויים בו (`module-close` §3b · `quality-audit` ×3) — הם ייכשלו **בשקט** עד שיודלק. הבלוק המתוקן והמאומת ניתן בצ'אט (28/07).
 - **מחברי claude.ai טרם צומצמו** (make.com ~150 כלים, Gmail, Drive, מלונות…) — ר' `docs/toolbox.md`.
   לא נגענו במכוון; להחליט אחרי מדידת השפעת צמצום-הפלאגינים.

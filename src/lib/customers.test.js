@@ -1,9 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import {
   CUSTOMER_TYPE_LABELS,
+  countActiveFilters,
   matchesCustomerFilters,
   sortCustomers,
   deriveCustomerMetrics,
+  validateCustomerField,
+  validateCustomerForm,
+  validateExtraContacts,
 } from './customers'
 
 // עוזר-בנייה ללקוח-בדיקה (override נקודתי לכל תרחיש)
@@ -150,5 +154,115 @@ describe('deriveCustomerMetrics — 5 מדדים ממוקדי-מנהלת-לקו�
     )
     expect(deriveCustomerMetrics([]).avgFeedback).toBeNull()
     expect(deriveCustomerMetrics([{ feedback_score: null }]).avgFeedback).toBeNull()
+  })
+})
+
+// ---- הועברו לכאן 29/07/2026 מ-CustomerFormDialog/CustomersPage (מוקדי-מורכבות → SSOT) ----
+
+describe('countActiveFilters — תג ספירת-המסננים', () => {
+  it('אובייקט ריק = 0, וכל מסנן מוסיף 1', () => {
+    expect(countActiveFilters()).toBe(0)
+    expect(countActiveFilters({})).toBe(0)
+    expect(countActiveFilters({ customerType: 'nonprofit', newWithinDays: 7 })).toBe(2)
+  })
+
+  it('marketingConsent נספר רק כשהוא true (המסננת היא "מאושרי-דיוור")', () => {
+    expect(countActiveFilters({ marketingConsent: true })).toBe(1)
+    expect(countActiveFilters({ marketingConsent: false })).toBe(0)
+  })
+
+  it('hasDiscount=false הוא מסנן פעיל ("בלי הנחה"), ו-minDiscount=0 נספר גם הוא', () => {
+    expect(countActiveFilters({ hasDiscount: false })).toBe(1)
+    expect(countActiveFilters({ minDiscount: 0 })).toBe(1)
+  })
+})
+
+describe('validateCustomerField — ולידציה פר-שדה', () => {
+  it('שם-שדה לא-מוכר מוחזר כתקין (מה שמאפשר מעבר על כל מפתחות הטופס)', () => {
+    expect(validateCustomerField('marketing_consent', true)).toBe('')
+    expect(validateCustomerField('שדה-שלא-קיים', 'x')).toBe('')
+  })
+
+  it('ח"פ = 9 ספרות בדיוק, עם מחרוזת-האפיון המילולית', () => {
+    expect(validateCustomerField('company_number', '514000001')).toBe('')
+    expect(validateCustomerField('company_number', '5140000')).toBe(
+      'שגיאה: מספר ח.פ. חייב להכיל 9 ספרות בדיוק',
+    )
+  })
+
+  it('טלפון: אותיות נחסמות, ≥4 ספרות נדרשות, סימני-טלפון מותרים', () => {
+    expect(validateCustomerField('phone', '03-1234567')).toBe('')
+    expect(validateCustomerField('phone', '+972 (3) 123.4567')).toBe('')
+    expect(validateCustomerField('phone', '*2800')).not.toBe('') // כוכבית אינה סימן מותר
+    expect(validateCustomerField('phone', 'ן9999999')).not.toBe('') // הכרעת-ישי 11/07
+    expect(validateCustomerField('phone', '123')).not.toBe('') // פחות מ-4 ספרות
+    expect(validateCustomerField('phone', '')).toBe('יש להזין מספר טלפון.')
+  })
+
+  it('שם-לקוח ≥2 תווים, אימייל תקין, הנחה 0-100', () => {
+    expect(validateCustomerField('company_name', 'א')).not.toBe('')
+    expect(validateCustomerField('company_name', 'אב')).toBe('')
+    expect(validateCustomerField('email', 'a@b.co')).toBe('')
+    expect(validateCustomerField('email', 'a@b')).not.toBe('')
+    expect(validateCustomerField('discount_percent', '100')).toBe('')
+    expect(validateCustomerField('discount_percent', '101')).not.toBe('')
+  })
+})
+
+describe('validateCustomerForm — ולידציית השדות הראשיים', () => {
+  const validForm = {
+    company_name: 'טכנולוגיות אלפא',
+    company_number: '514000001',
+    customer_type: 'private_company',
+    contact_name: 'דנה כהן',
+    phone: '03-1234567',
+    email: 'dana@alpha.co.il',
+    discount_percent: '10',
+    marketing_consent: true,
+  }
+
+  it('טופס תקין = מפה ריקה', () => {
+    expect(validateCustomerForm(validForm)).toEqual({})
+  })
+
+  it('מחזירה רק את השדות הפגומים, ומדלגת על marketing_consent', () => {
+    const errors = validateCustomerForm({ ...validForm, email: 'לא-אימייל', phone: '' })
+    expect(Object.keys(errors).sort()).toEqual(['email', 'phone'])
+    expect(errors).not.toHaveProperty('marketing_consent')
+  })
+})
+
+describe('validateExtraContacts — אנשי-קשר נוספים (§7.81)', () => {
+  it('שורה ריקה לגמרי מדולגת', () => {
+    expect(validateExtraContacts([{ _rk: 1, contact_name: '', phone: '', email: '' }])).toEqual({})
+    expect(validateExtraContacts([{ _rk: 1 }])).toEqual({}) // שדות undefined
+  })
+
+  it('שורה עם תוכן בלי שם ⇒ שגיאה על שדה-השם', () => {
+    expect(validateExtraContacts([{ _rk: 1, phone: '03-1234567' }])).toEqual({
+      1: { field: 'contact_name', msg: 'יש להזין שם לאיש הקשר.' },
+    })
+  })
+
+  it('שם בלי טלפון ובלי אימייל ⇒ שגיאת both', () => {
+    expect(validateExtraContacts([{ _rk: 7, contact_name: 'מיכל לוי' }])).toEqual({
+      7: { field: 'both', msg: 'יש להזין טלפון או אימייל לאיש הקשר.' },
+    })
+  })
+
+  it('טלפון/אימייל פגומים נבדקים באותם כללים של השדות הראשיים', () => {
+    const errs = validateExtraContacts([
+      { _rk: 1, contact_name: 'א', phone: 'אבג' },
+      { _rk: 2, contact_name: 'ב', email: 'לא-אימייל' },
+    ])
+    expect(errs[1].field).toBe('phone')
+    expect(errs[2].field).toBe('email')
+  })
+
+  it('שורה תקינה (שם + אחד מהשניים) לא מייצרת שגיאה', () => {
+    expect(validateExtraContacts([{ _rk: 1, contact_name: 'מיכל', email: 'm@x.co' }])).toEqual({})
+    expect(validateExtraContacts([{ _rk: 2, contact_name: 'מיכל', phone: '03-1234567' }])).toEqual(
+      {},
+    )
   })
 })

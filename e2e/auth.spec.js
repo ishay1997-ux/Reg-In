@@ -6,7 +6,8 @@ const CEO_PASSWORD = process.env.E2E_CEO_PASSWORD
 test.describe('התחברות (מודול 1)', () => {
   test('מסך ההתחברות נטען, RTL ועברית מוצגים', async ({ page }) => {
     await page.goto('/login')
-    // ה-RTL מוחל ברמת ה-div העוטף בכל דף (ראו LoginPage.jsx) ולא על <html> עצמו.
+    // ה-RTL מוגדר גם על <html dir="rtl"> (index.html) וגם על ה-div העוטף בכל דף (LoginPage.jsx).
+    // .first() תופס את הראשון בעץ (<html>) - הבדיקה מאשרת שה-RTL קיים, לא היכן הוא מוגדר.
     await expect(page.locator('[dir="rtl"]').first()).toBeVisible()
     await expect(page.getByRole('heading', { name: 'כניסה למערכת' })).toBeVisible()
     await expect(page.getByPlaceholder('כתובת דוא״ל')).toBeVisible()

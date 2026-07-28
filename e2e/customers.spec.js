@@ -64,9 +64,8 @@ test.describe('לקוחות (מודול 2) — קבלה E2E (guide ⑦)', () => 
       !SUPABASE_URL || !SUPABASE_ANON,
       'VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY חסרים — אין ניקוי-DB, מדלגים כדי לא ללכלך את ה-DB המשותף',
     )
-    // ארכוב מפעיל window.confirm — מאשרים אוטומטית לאורך הבדיקה.
-    page.on('dialog', (dialog) => dialog.accept())
-
+    // הערה: לארכוב אין חלון-וידוא (הכרעת-ישי 11/07 — הפעולה הפיכה; CustomersPage.jsx). אין להוסיף
+    // כאן מטפל-dialog "ליתר ביטחון": הוא יאשר בשקט חלון לא-מכוון במקום שהבדיקה תיפול עליו.
     await login(page, CEO_EMAIL, CEO_PASSWORD)
     await page.goto('/customers')
     await expect(page.getByRole('heading', { name: 'רשימת לקוחות' })).toBeVisible()
