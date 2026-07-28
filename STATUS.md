@@ -2,7 +2,7 @@
 
 # REG-IN — לוח מצב
 
-> עודכן לאחרונה: 29/07/2026 00:30
+> עודכן לאחרונה: 29/07/2026 01:20
 > **לוח מצב-עכשיו בלבד — לא ארכיון.** היסטוריה ונרטיב → `docs/CLAUDE_CODE_LOG.md` + `git log` ·
 > שינויי-DB → `docs/db_roadmap.md` + migrations · שאלות פתוחות → `PROJECT_MASTER §7`.
 > *(הגרסה המלאה הקודמת, כולל 24 תזכורות היסטוריות: `docs/archive/STATUS_full_2026-07-28.md`.)*
@@ -59,7 +59,7 @@
 ## ⚠️ מטלות פתוחות
 
 - **`npm run gate` = הגדרת-הסיום של מטלת-ההקשחה** (נוסף 28/07). הפקודה מריצה `verify` → `dup` →
-  `deadcode` → `audit` ברצף. **היום היא נכשלת בכוונה** בשני השלבים האחרונים — וזה בדיוק מה שנשאר:
+  `deadcode` → `audit` → `check:context` ברצף. **היום היא נכשלת בכוונה** בשני השלבים האחרונים — וזה בדיוק מה שנשאר:
   - `sonarjs/*` ל-`error` ב-`eslint.config.js` + הסרת `continue-on-error` מ-jscpd/knip/audit ב-`ci.yml`
     (הכרעת-ישי 23/07, הורחבה 25/07; מתועד ב-`module-3.md §9`).
   - **knip: 4 ממצאים** — 3 dependencies יתומות (`postcss`/`autoprefixer` אינם בשימוש ב-Tailwind v4) +

@@ -91,6 +91,32 @@ Deferred improvements, each with the future module/stage where it must be reopen
 Binary: **[YES]** — stable, secure, DoD-compliant, mergeable into `dev` now / **[NO]** — at least one Section-6 blocker. Two-sentence justification.
 **Typed-echo DoD sign-off (irreversible-gate safeguard):** a **[YES]** verdict is an irreversible gate — before it stands, print a 👤 gate where the human (Ishay) types the module name + `DoD` (NOT just "yes"/"approve") to confirm they reviewed the DoD checklist. This is one of only two typed-echo gates (the other = applying a migration, DB protocol in `CLAUDE.md`); every other 👤 gate takes an ordinary approval.
 
+### 📄 The report itself — publish it as an HTML artifact, not a wall of chat text (added 29/07/2026)
+
+**Why this is binding and not a nicety:** Ishay cannot read code. A closing audit delivered as 200 lines of Hebrew chat with `file:line` citations is a format that almost guarantees he skims it — and skimming the close report is exactly how "זה לא מה שהתכוונתי" survives to the merge. The context-engineering doctrine is explicit that a rendered artifact is a **richer reference than prose**; here it is also the difference between a review that happens and one that doesn't.
+
+**How:** load the `artifact-design` skill first (required before the first publish), write the page to a file, then publish it with the `Artifact` tool. It is private to Ishay by default.
+
+**What the page must contain, in this order** — the reader is a product manager, not an engineer:
+1. **The verdict**, large and first: ✅ mergeable / ⛔ blocked, with the one-sentence reason.
+2. **What this module now does**, in plain Hebrew — the capabilities as a user experiences them, not the file list.
+3. **The evidence, shown not claimed** — the preview screenshots, the test counts you actually ran, the RLS matrix result. A number with no command behind it does not go on the page.
+4. **What was deliberately NOT built** and where it went (§6 debt lines, deferred §7 items, the target module for each).
+5. **Blockers** (if any) and **tech-debt** — separated, never mixed.
+6. **The comprehension quiz** (below).
+
+Keep the chat message itself short: the verdict, the link, and "תעבור על הדף ותגיד לי אם משהו לא כמו שהתכוונת".
+
+### 🎓 Comprehension quiz — 3 questions, before the merge (added 29/07/2026)
+
+At the bottom of the artifact, ask Ishay **three questions in plain Hebrew** about how the module actually behaves. Not trivia about the code — **behaviour he will have to live with**, phrased as concrete situations with real names and times:
+
+> *"דיילת מבטלת יומיים לפני האירוע. מה קורה עכשיו במערכת, ומה אתה צריך לעשות ידנית?"*
+
+**Why this exists:** Ishay's standing fear is that something broke silently and he won't know. He cannot verify that by reading a diff. A question he cannot answer is the cheapest possible signal that the built behaviour and his intent diverged — and it costs five minutes. It also serves the learning layer his instructions require: understanding the behaviour is a precondition to signing off on it.
+
+**Rules:** exactly three, one per riskiest behaviour of this module · each must have a definite answer that is visible in the artifact above it · **this is a signal, not a gate** — a wrong answer means "stop and walk him through it", never "merge blocked". Record in the micro-guide §9 anything the quiz revealed as a genuine intent gap.
+
 ### 💾 Persistence (mandatory — the audit is not done until these are written)
 0. **§6 debt registration check (iron rule 15):** verify every Section-7 item (the audit report's tech-debt section — NOT `PROJECT_MASTER.md` §7) AND every 🚧 row of the micro-guide's "Capabilities delivered vs deferred" table has its byte-matching `🚧 מN` line in `docs/PROJECT_MASTER.md` §6 (`grep '🚧 מN' docs/PROJECT_MASTER.md` per target module N) — add any missing line now. This is the closing audit's belt-and-suspenders re-check of the rule-15 mechanism the Stop hook (`check-docs-updated.sh` 0ג) already enforces.
 0b. **§7 ripple check — run iron rule 13(א)-(ג) explicitly (not just 13(ז)) for every `PROJECT_MASTER.md` §7 item this module ruled or implemented.** The load-bearing audit action: the §7 item itself marked ruled (date+owner, batch note updated if it was the cluster's last open item); the ruled value reflected in the code/DB where it lives; and `grep '§7.N'` AND `'מראת §7.N'` across `docs/guides/**` + `docs/micro_guides/**` — every citation current and every tagged mirror (🔗) matching §7 verbatim. Fix what doesn't.
@@ -98,6 +124,7 @@ Binary: **[YES]** — stable, secure, DoD-compliant, mergeable into `dev` now / 
 1. **Micro-guide:** tick the DoD checkboxes you verified; fill the QA matrix "as-run" column; append Section-7 items to its Deviations & Tech-Debt Log; set the status header to `🔒 Closed — awaiting PR/merge` (on YES) with today's date+time (`DD/MM/YYYY HH:MM`, from the system clock — all dated doc entries below use this format too).
 2. **`docs/CLAUDE_CODE_LOG.md`:** session entry summarizing the audit result and any blockers (this is where the "module closed — verdict" record lives now; `docs/CHANGELOG.md` was retired 23/07/2026 and is not written to).
 3. **`STATUS.md`:** module row → "ממתין ל-PR/merge" (the ✅ flip happens only after the actual merge); refresh "עודכן לאחרונה".
+3b. **`npm run check:context`** — must exit 0. It verifies that no skill dispatches an agent from a plugin that is disabled in this project (a failure mode that is silent at run time), that `docs/toolbox.md` matches `enabledPlugins` in both directions, that the CLAUDE.md tree is intact with the typed-echo gate present, and that every built module has its gotchas file. If this module added a `src/modules/NN_*/` directory, §4c's gotchas file is what makes this pass.
 4. **Routine growth-triggers check:** consult the growth-triggers table in `docs/claude_routines.md` §4 — did this module trip a routine-update trigger (new `e2e/*.spec.js` files, a new/removed key doc, changed hook logic, a new check tool)? If yes, update the canonical routine text AND (in Ishay's session) his live SKILL.md copies per the dual-update protocol there; if no, state "no routine triggers" in the audit report.
 
 ### 🚀 PR Instructions (print at the very end, in Hebrew)
