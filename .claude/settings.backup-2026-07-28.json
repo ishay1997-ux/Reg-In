@@ -31,32 +31,11 @@
           {
             "type": "command",
             "shell": "bash",
-            "statusMessage": "בודק אם התיעוד מעודכן...",
+            "statusMessage": "בודק אם docs/CLAUDE_CODE_LOG.md ו-STATUS.md מעודכנים...",
             "command": "bash .claude/hooks/check-docs-updated.sh"
           }
         ]
       }
     ]
-  },
-  "enabledPlugins": {
-    "supabase@claude-plugins-official": true,
-    "playwright@claude-plugins-official": true,
-    "code-review@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true,
-    "context7@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true,
-    "claude-md-management@claude-plugins-official": true,
-    "claude-code-setup@claude-plugins-official": false,
-    "feature-dev@claude-plugins-official": false,
-    "pr-review-toolkit@claude-plugins-official": true,
-    "code-simplifier@claude-plugins-official": false,
-    "project-artifact@claude-plugins-official": false,
-    "playground@claude-plugins-official": false,
-    "plugin-dev@claude-plugins-official": false,
-    "code-modernization@claude-plugins-official": false,
-    "hookify@claude-plugins-official": false,
-    "chrome-devtools-mcp@claude-plugins-official": false,
-    "superpowers@claude-plugins-official": false
   }
 }

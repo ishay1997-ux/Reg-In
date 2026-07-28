@@ -30,7 +30,11 @@ Go through every checkbox in the micro-guide's DoD section, one by one. Mark ✅
 Results feed the §5 **Usability** as-run cell and the §1 DoD UX-&-validation checkbox. (System-wide RTL/cross-browser/mobile stay the M12 usability sweep — this audit is the module's own gate, not that.)
 
 ### 2c. 🔒 General Security Scan (binding — beyond RLS)
-**Different lens from §2 — that audits RLS/auth/session specifically; this audits the code itself for OWASP-class issues.** Dispatch `code-modernization:security-auditor`, scoped ONLY to this module's new/changed files (the micro-guide's "Files to create/touch" list, or `git diff` against the branch's base) — NOT the whole codebase (that periodic sweep is `quality-audit`'s job; don't re-run it here). Look for: injection (SQL/XSS), secrets committed to code, insecure deserialization, unsafe `dangerouslySetInnerHTML`/`eval`-style patterns, and other OWASP-class issues §2's RLS-focused check does not cover.
+**Different lens from §2 — that audits RLS/auth/session specifically; this audits the code itself for OWASP-class issues.** Dispatch a general-purpose agent scoped ONLY to this module's new/changed files (the micro-guide's "Files to create/touch" list, or `git diff` against the branch's base) — NOT the whole codebase (that periodic sweep is `quality-audit`'s job; don't re-run it here). Give it this rubric verbatim, and require a file:line citation for every finding plus an explicit "checked, clean" for every empty category:
+
+> 1. **Injection** — SQL built by string concatenation instead of Supabase query builders / parameterized RPC args; any user-controlled value reaching `.rpc()` or a raw filter string. 2. **XSS** — `dangerouslySetInnerHTML`, `eval`, `new Function`, `innerHTML`, or user text rendered as markup. 3. **Secrets** — keys/tokens/passwords/service-role keys in source, tests, comments, or committed fixtures; anything that belongs in `.env.local`. 4. **Authorization in the client only** — a check that exists in React but has no matching RLS policy or RPC-internal check (in this project RLS is the real wall; the UI is convenience). 5. **Unsafe external input** — file uploads without type/size validation, `mailto`/URL construction without encoding, redirects built from user input. 6. **Error leakage** — raw DB/Postgres errors surfaced to the user, stack traces in production paths. 7. **Dependency risk** — run `npm run audit` and read the output; report high-severity findings introduced by this module's new packages (pre-existing ones are tracked in STATUS, don't re-litigate them).
+
+*(This used to dispatch the `security-auditor` agent of the **code-modernization** plugin. That plugin is disabled in REG-IN (28/07/2026) — it exists for legacy COBOL/.NET migration and cost far more context than this one agent was worth. The rubric above **is** the auditor's checklist, made explicit — which is also more auditable than a vendor agent's hidden prompt.)*
 Findings route like §4b: a real, exploitable vulnerability is a **§6 blocker**; a hardening suggestion with no live exploit path is a **§7 tech-debt** line with its target module.
 
 ### 3. 🧠 Architectural Review & Pro-Tips (free hand)
@@ -50,6 +54,21 @@ Findings route like §4b: a swallowed error on a live user-facing path is a **§
 - **DB health:** run Supabase advisors (MCP, read-only — security + performance): zero findings introduced by this module, or a written triage note per finding. Verify no drift between the live DB and `docs/schema.sql` for the tables this module touched (spot-check via `list_tables`).
 - Live preview smoke test of the module's key flows (per the verification workflow) with proof (screenshot/log/network).
 - Explicit list of every file changed in this module (code, DB, docs).
+- **`npm run gate`** — the composite (verify + dup + deadcode + audit). Run it once and report the output rather than reasoning about which checks apply. *(It is expected to fail on `deadcode`/`audit` until the quality-gate hardening task lands — see STATUS. **`npm run gate` green is that task's definition of done.**)*
+
+### 4c. 🧨 Module Gotchas File (binding — added 28/07/2026)
+**Write or refresh `src/modules/NN_name/CLAUDE.md`** — a short Hebrew file that loads automatically only when a future session touches this module's directory. This is REG-IN's living code map: it sits next to the code, so it cannot drift far, and it costs nothing until it is needed.
+
+**Include ONLY what a competent engineer would get *wrong* without being told** — the traps, not the tour:
+- Silent-failure paths (a function that strips fields, a flag whose removal deletes data, a query that legitimately returns empty).
+- Coupled edits — "change X and you must also change Y or Z breaks quietly".
+- Deliberate deviations that *look* like bugs (so nobody "fixes" them back).
+- This module's RLS surface and any deny-all table it reads.
+- Anything in the E2E contract (`data-testid`, Hebrew `title` strings) that renaming would break.
+
+**Exclude** anything visible from reading the code, anything already enforced by ESLint/CI/hooks, and anything already in `src/CLAUDE.md` (the cross-module layer). Cite `file:line`. Two worked examples to match in tone and density: `src/modules/01_auth/CLAUDE.md` and `src/modules/02_customers/CLAUDE.md`.
+
+**Also compact the micro-guide** (its §8(i)): the whole guide collapses to an as-built summary — what was built, the deviations (§9, never compacted), and the Ledger. Archive the pre-compaction copy under `docs/archive/`.
 
 ### 4b. 🔁 Duplication & Shared-Component Check (binding — keeps the codebase reviewable)
 Guard against copy-paste and against logic that *should* be shared but was re-implemented — so an experienced engineer opening the repo finds one home per concept (iron rule 14 SSOT), not five near-copies.

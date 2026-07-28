@@ -62,6 +62,12 @@ while IFS= read -r line; do
   m=$(stat -c %Y "$f" 2>/dev/null || echo 0)
   [ "$m" -gt "$NEWEST" ] && NEWEST=$m
   case "$f" in
+    src/modules/*/CLAUDE.md)
+      # מצביע-תיקייה (קובץ המוקשים של המודול) אינו קוד — עריכתו לבדה לא מחייבת עדכון מדריך-מיקרו.
+      # אותה מלכודת בדיוק שתוקנה 08/07/2026 בתיקיית המיגרציות (שם צומצם ל-*.sql בלבד):
+      # בלי החרגה זו, כתיבת src/modules/NN_*/CLAUDE.md מפעילה false-positive. (נוסף 28/07/2026.)
+      continue
+      ;;
     src/modules/*)
       dir=${f#src/modules/}
       dir=${dir%%/*}
@@ -123,18 +129,20 @@ MISS=""
 [ "$EDIT_TS" -gt "$LOG_M" ] && MISS="docs/CLAUDE_CODE_LOG.md"
 [ "$EDIT_TS" -gt "$ST_M" ] && MISS="$MISS STATUS.md"
 
+# הודעות קצרות ופעולתיות (קוצרו 28/07/2026 בשיפוץ-ההקשר): שורת-פעולה + הפניה, לא פסקת-הסבר.
+# הנימוקים המלאים חיים ב-CLAUDE.md (כלל 15) וב-docs/CLAUDE.md — לא צריך לשכפל אותם בכל חסימה.
 REASON=""
 if [ -n "$MG_STALE" ]; then
-  REASON="קוד מודול השתנה בלי שמדריך המיקרו שלו עודכן אחריו:$MG_STALE. עדכן בו את כותרת המצב, טבלת הצעדים והסטיות (כלל ברזל 15, צעד 0 בפרוטוקול סוף-סשן). "
+  REASON="עדכן את מדריך המיקרו (כותרת-מצב · טבלת-צעדים · סטיות):$MG_STALE. "
 fi
 if [ -n "$RM_STALE" ]; then
-  REASON="${REASON}מיגרציה השתנתה בלי ש-docs/db_roadmap.md עודכן אחריה — עדכן את שורות-המפה הרלוונטיות ואת רשימת-ה-Done (db_roadmap.md סעיף 10; המקבילה של כלל ברזל 15 ל-DB). "
+  REASON="${REASON}מיגרציה השתנתה — עדכן את docs/db_roadmap.md §10 (שורות-המפה + Done). "
 fi
 if [ -n "$HG_MISS" ]; then
-  REASON="${REASON}חוב חוצה-מודולים (🚧) לא נרשם ב-PROJECT_MASTER §6 —$HG_MISS. לכל שורת '🚧 מN' במדריך-מיקרו חייבת שורה תואמת '🚧 מN' ב-§6 (הרשם שהמודול העתידי קורא בפתיחתו כדי לחזור ולהשלים; כלל ברזל 15). הוסף את השורות החסרות ב-§6 בפורמט '🚧 מN ← מ<מודול-מקור> · מה · מקור: micro_guides/module-<מקור>.md'. "
+  REASON="${REASON}חוב 🚧 בלי רישום ב-PROJECT_MASTER §6 —$HG_MISS. הוסף שורה '🚧 מN ← מ<מקור> · מה · מקור: micro_guides/module-<מקור>.md'. "
 fi
 if [ -n "$MISS" ]; then
-  REASON="${REASON}הסשן הזה ערך קבצים אחרי העדכון האחרון של: $MISS. עדכן את היומן (docs/CLAUDE_CODE_LOG.md) ואת לוח המצב (STATUS.md) לפני סיום התור. אם אין שינוי-סטטוס אמיתי — עדכן ב-STATUS.md רק את שורת 'עודכן לאחרונה' אחרי שווידאת שהלוח עדיין נכון."
+  REASON="${REASON}עדכן לפני סיום: $MISS. (רשומת-יומן = 3–8 שורות; אם אין שינוי-סטטוס — ב-STATUS רק שורת 'עודכן לאחרונה', אחרי שווידאת שהלוח נכון.)"
 fi
 
 if [ -n "$REASON" ]; then
