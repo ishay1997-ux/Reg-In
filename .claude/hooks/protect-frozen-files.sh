@@ -46,24 +46,42 @@ block_migration() {
 # רושם סימון-עריכה פר-סשן עבור נתיב שיושב בתוך עץ-הריפו (מלבד LOG/STATUS — self-reference).
 # נרמול: backslashes → '/', case-insensitive מול שורש-הריפו. נתיב מחוץ-לעץ (תוכנית/scratchpad)
 # לא מסומן. זהה לסמנטיקה שהיתה ב-Edit-branch, מוצא לפונקציה לשימוש חוזר בכל כלי-כתיבה.
+#
+# עדכון 29/07/2026 (ביקורת-עמיתים חיצונית + תקרית-חיה: `LoginPage.jsx` חסם סשן שלא נגע בו —
+# ר' CLAUDE_CODE_LOG.md): במקום שורת-סימון גנרית ('x'), נכתב הנתיב-היחסי-לריפו עצמו
+# (lowercase, '/'). כך check-docs-updated.sh יודע בדיוק אילו קבצים *הסשן הזה* נגע בהם, ולא
+# רק "מישהו נגע במשהו". נתיב שלא ניתן לנרמל בבטחה (POSIX מוחלט כמו /c/…, או תבנית לא-מוכרת)
+# נופל לסנטינל '*' — "היקף לא-ידוע" — ו-check-docs-updated.sh מתייחס אליו שמרנית, כמו לפני
+# התיקון (לא מפספס קובץ; ר' הביקורת שם המליצה על נפילה-לאחור פר-קובץ, לא פר-סשן).
 record_marker() {
   FP="$1"
   OUTSIDE_REPO=0
   FPV=$(printf '%s' "$FP" | tr '\\' '/' | tr -s '/')
   TOP=$(git rev-parse --show-toplevel 2>/dev/null)
+  REL=""
   if [ -n "$TOP" ]; then
-    case "$FPV" in
-      [A-Za-z]:/*)
-        FPV_L=$(printf '%s' "$FPV" | tr '[:upper:]' '[:lower:]')
-        TOP_L=$(printf '%s' "$TOP" | tr '[:upper:]' '[:lower:]')
-        case "$FPV_L" in "$TOP_L"/*) ;; *) OUTSIDE_REPO=1 ;; esac
+    FPV_L=$(printf '%s' "$FPV" | tr '[:upper:]' '[:lower:]')
+    TOP_L=$(printf '%s' "$TOP" | tr '[:upper:]' '[:lower:]')
+    case "$FPV_L" in
+      [a-z]:/*)
+        case "$FPV_L" in
+          "$TOP_L"/*) REL="${FPV_L#"$TOP_L"/}" ;;
+          *) OUTSIDE_REPO=1 ;;
+        esac
         ;;
+      /*) ;; # נתיב-POSIX מוחלט (למשל /c/… ב-git-bash) — לא ננחש; סנטינל למטה.
+      *) REL="$FPV_L" ;; # כבר נראה יחסי (חלק מכלי Desktop-Commander שולחים כך) — נלקח כמו-שהוא.
     esac
   fi
   if [ "$OUTSIDE_REPO" -eq 0 ] && [ -n "$SESSION_ID" ] && ! printf '%s' "$FP" | grep -Eq 'CLAUDE_CODE_LOG\.md|STATUS\.md'; then
     GITDIR=$(git rev-parse --absolute-git-dir 2>/dev/null)
     MUTDIR="${GITDIR:-${TMPDIR:-/tmp}}/regin-session-mutations"
-    mkdir -p "$MUTDIR" 2>/dev/null && printf 'x\n' >> "$MUTDIR/$SESSION_ID"
+    mkdir -p "$MUTDIR" 2>/dev/null
+    if [ -n "$REL" ]; then
+      printf '%s\n' "$REL" >> "$MUTDIR/$SESSION_ID"
+    else
+      printf '*\n' >> "$MUTDIR/$SESSION_ID"
+    fi
   fi
 }
 

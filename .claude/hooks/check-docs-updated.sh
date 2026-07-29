@@ -18,6 +18,12 @@
 # בעצמו. סשן קריאה-בלבד (שלא ביצע Edit/Write/NotebookEdit) פטור לגמרי — גם אם
 # סשן כותב אחר "מלכלך" את עץ-העבודה המשותף. את "מי ערך ומתי" קובע קובץ-הסימון
 # שכותב protect-frozen-files.sh (mtime = זמן העריכה האחרונה של הסשן).
+#
+# ייחוס פר-קובץ (נוסף 29/07/2026, אכיפה 0 בלבד — ר' הביקורת+תקרית-LoginPage.jsx ב-
+# CLAUDE_CODE_LOG.md): קודם, כל קובץ-מודול ששונה בעץ נספר כ"טעון עדכון-מדריך", בלי
+# קשר למי נגע בו — סשן שלא כתב שורת-קוד אחת נחסם על עבודת סשן אחר. עכשיו קובץ-הסימון
+# מכיל את הנתיבים המדויקים (לא רק "נגעתי במשהו"), ואכיפה 0 סופרת קובץ רק אם הוא
+# מופיע שם (או שהסימון מכיל '*' — "סשן זה עשה שינוי-בהיקף-לא-ידוע", למשל דרך shell).
 
 # --- קריאת stdin וזיהוי הסשן ---
 INPUT=$(cat)
@@ -78,7 +84,21 @@ while IFS= read -r line; do
       [ -f "$mg" ] || continue
       mgm=$(stat -c %Y "$mg" 2>/dev/null || echo 0)
       if [ "$m" -gt "$mgm" ]; then
-        case " $MG_STALE " in *" $mg "*) ;; *) MG_STALE="$MG_STALE $mg" ;; esac
+        # ייחוס-לסשן: נספר רק אם *הסשן הזה* נגע ב-$f בדיוק (case-insensitive — Windows),
+        # או שיש סנטינל '*' (היקף-לא-ידוע — נשארים שמרניים, לא מפספסים). session_id חסר
+        # או אין marker בכלל → נשארים על ההתנהגות הישנה (סופרים תמיד), אותו fail-safe
+        # שכבר קיים לאכיפה 1-3 למטה.
+        COUNT_IT=1
+        if [ -n "$SESSION_ID" ] && [ -s "$MARK" ]; then
+          f_l=$(printf '%s' "$f" | tr '[:upper:]' '[:lower:]')
+          if grep -qxF '*' "$MARK" 2>/dev/null || grep -qxF "$f_l" "$MARK" 2>/dev/null; then
+            COUNT_IT=1
+          else
+            COUNT_IT=0
+          fi
+        fi
+        [ "$COUNT_IT" -eq 1 ] &&
+          case " $MG_STALE " in *" $mg "*) ;; *) MG_STALE="$MG_STALE $mg" ;; esac
       fi
       ;;
     supabase/migrations/*.sql)

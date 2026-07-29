@@ -55,6 +55,28 @@ printf '{"tool_name":"Write","session_id":"%s","tool_input":{"file_path":"C:\\\\
 if [ ! -s "$MUTDIR/$SID2" ]; then PASS=$((PASS+1)); echo "  ✅ קובץ-תוכנית מחוץ-לעץ לא רשם marker"; else FAIL=$((FAIL+1)); echo "  ❌ קובץ-תוכנית רשם marker בטעות"; fi
 rm -f "$MUTDIR/$SID2" 2>/dev/null
 
+echo "=== ייחוס-נתיב פר-סשן (נוסף 29/07/2026 — תקרית LoginPage.jsx) ==="
+TOP="$(git rev-parse --show-toplevel)"
+SID3="test-path-$$"
+rm -f "$MUTDIR/$SID3" 2>/dev/null
+printf '{"tool_name":"Edit","session_id":"%s","tool_input":{"file_path":"%s/src/modules/01_auth/LoginPage.jsx"}}' "$SID3" "$TOP" | bash "$HOOK" >/dev/null 2>&1
+if grep -qxF 'src/modules/01_auth/loginpage.jsx' "$MUTDIR/$SID3" 2>/dev/null; then
+  PASS=$((PASS+1)); echo "  ✅ נתיב-מוחלט נשמר כיחסי+lowercase (לא 'x' גנרי)"
+else
+  FAIL=$((FAIL+1)); echo "  ❌ הנתיב לא נשמר כמצופה — תוכן: $(cat "$MUTDIR/$SID3" 2>/dev/null)"
+fi
+rm -f "$MUTDIR/$SID3" 2>/dev/null
+
+SID4="test-relpath-$$"
+rm -f "$MUTDIR/$SID4" 2>/dev/null
+printf '{"tool_name":"mcp__Desktop_Commander__write_file","session_id":"%s","tool_input":{"path":"src/Foo.js"}}' "$SID4" | bash "$HOOK" >/dev/null 2>&1
+if grep -qxF 'src/foo.js' "$MUTDIR/$SID4" 2>/dev/null; then
+  PASS=$((PASS+1)); echo "  ✅ נתיב-יחסי-מראש (DC) נשמר lowercase כמו-שהוא"
+else
+  FAIL=$((FAIL+1)); echo "  ❌ נתיב-יחסי לא נשמר כמצופה — תוכן: $(cat "$MUTDIR/$SID4" 2>/dev/null)"
+fi
+rm -f "$MUTDIR/$SID4" 2>/dev/null
+
 echo ""
 echo "=== סיכום: $PASS עברו · $FAIL נכשלו ==="
 [ "$FAIL" -eq 0 ]
