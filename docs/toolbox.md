@@ -53,8 +53,11 @@
   `section7-rulings` · `post-merge` · `quality-audit` — **בריפו, תמיד זמינים.**
 - **הסקילים האישיים של ישי** (`~/.claude/skills/`): `llm-council` · `feature-acceptance` ·
   `notebooklm` · `token-saver` · `plan-and-ship` — **גלובליים, עובדים בכל פרויקט.**
-- **פקודות מובנות של Claude Code:** `/simplify` · `/code-review` · `/doctor` · `/review` ·
-  `/security-review` — לא תלויות בפלאגינים.
+- **פקודות וכלים מובנים של Claude Code:** `/simplify` · `/code-review` · `/doctor` · `/review` ·
+  `/security-review` · **הכלי `Artifact` והסקיל `artifact-design`** (פרסום דף — משמשים את דוח-סגירת-המודול)
+  — כולם מובנים ולא תלויים בפלאגינים.
+  ⚠️ **לא לבלבל:** הפלאגין `project-artifact` שכבוי למטה הוא דבר אחר לגמרי (דף-סטטוס משותף לצוות);
+  כיבויו **אינו** מונע פרסום ארטיפקטים.
 - **`.mcp.json`** (Supabase MCP) — קובץ נפרד, לא נגענו.
 
 ## 🤖 הבדיקה שמגנה על הקובץ הזה
