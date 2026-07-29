@@ -13,6 +13,17 @@ import {
   quoteToFormState,
   computeEventHours,
   crossesMidnight,
+  EXPIRING_SOON_DAYS,
+  quoteToPdfModel,
+  MANUAL_REJECTION_REASONS,
+  NON_LOSS_REJECTION_REASONS,
+  deriveQuoteAmount,
+  deriveQuoteExpiry,
+  isEventSoon,
+  deriveQuoteMetrics,
+  countRejectionReasons,
+  matchesQuoteFilters,
+  sortQuotes,
 } from '@/lib/quotes'
 
 // תרחיש-האפיון המחייב (C5 §5.5.4) — אותו תרחיש שמאמת את מנוע-הכסף, כאן בצורת-המסך.
@@ -42,7 +53,7 @@ describe('תוויות וקבועים — 1:1 מול אילוצי ה-DB', () => 
     expect(Object.keys(QUOTE_STATUS_LABELS)).toEqual(['in_progress', 'approved', 'rejected'])
   })
 
-  it('7 סיבות דחייה, זהות בית-בבית ל-CHECK', () => {
+  it('8 סיבות דחייה, זהות בית-בבית ל-CHECK (7 מקוריות + "נפתחה בטעות", מיגרציה 20260729191557)', () => {
     expect(REJECTION_REASONS).toEqual([
       'מחיר',
       'חוסר זמינות/לו"ז',
@@ -50,6 +61,7 @@ describe('תוויות וקבועים — 1:1 מול אילוצי ה-DB', () => 
       'תקציב לקוח',
       'האירוע בוטל אצל הלקוח',
       'פג תוקף',
+      'נפתחה בטעות',
       'אחר',
     ])
   })
@@ -348,5 +360,340 @@ describe('computeEventHours / crossesMidnight (LOCAL-2)', () => {
   it('קלט חסר ⇒ null ולא 0 (0 שעות היה נראה כמו נתון אמיתי)', () => {
     expect(computeEventHours('', '22:00')).toBeNull()
     expect(computeEventHours('18:00', null)).toBeNull()
+  })
+})
+
+// ── מסך ניהול ההצעות (צעד 3.3) ────────────────────────────────────────────────
+// שורות כפי שהן חוזרות מ-listQuotes(): עמודות ה-DB הגולמיות + quote_services + customers.
+// הצעה #6 היא בדיוק תרחיש-האפיון (5% לקוח + 10% ידנית ⇒ 6,319 ₪) — אותו עוגן כמו במנוע-הכסף.
+const WORKED_SERVICES = [
+  { qty: 6, closing_unit_price: 500 },
+  { qty: 300, closing_unit_price: 5 },
+  { qty: 300, closing_unit_price: 6 },
+]
+
+function quoteRow(overrides = {}) {
+  return {
+    quote_id: 6,
+    customer_id: 2,
+    event_name: 'כנס לקוחות שנתי',
+    quote_status: 'in_progress',
+    applied_customer_discount: 5,
+    manual_discount: 10,
+    vat_rate_snapshot: null,
+    updated_at: '2026-07-29T09:00:00.000Z',
+    estimated_event_date: '2026-08-22',
+    rejection_reason: null,
+    quote_services: WORKED_SERVICES,
+    customers: { company_name: 'מדיטק פתרונות בע"מ', contact_name: 'רון גל' },
+    ...overrides,
+  }
+}
+
+describe('deriveQuoteAmount — הסכום בשורת-הטבלה', () => {
+  it('תרחיש-האפיון מחזיר 6,319 ₪ בדיוק גם מצורת-ה-DB', () => {
+    expect(deriveQuoteAmount(quoteRow(), 18).total).toBe(6318.9)
+  })
+
+  it('אחוז-ההנחה המוצג הוא **חיבור** שתי ההנחות (§7.26/F7) — 5+10=15, לא 14.5', () => {
+    expect(deriveQuoteAmount(quoteRow(), 18).discountPercent).toBe(15)
+  })
+
+  it('בלי הנחה כלל ⇒ 0, כדי שהמסך ידע לא להציג את שורת "אחרי X% הנחה"', () => {
+    const row = quoteRow({ applied_customer_discount: 0, manual_discount: 0 })
+    expect(deriveQuoteAmount(row, 18).discountPercent).toBe(0)
+  })
+
+  it('הצעה מאושרת משתמשת ב-vat_rate_snapshot הקפוא ולא במע"מ החי (§7.51)', () => {
+    const approved = quoteRow({ quote_status: 'approved', vat_rate_snapshot: 17 })
+    // 5,355 לפני מע"מ; 17% ⇒ 6,265.35, ולא 6,318.90 שהיו יוצאים לפי 18% החי.
+    expect(deriveQuoteAmount(approved, 18).total).toBe(6265.35)
+  })
+
+  it('הצעה בלי שורות ⇒ 0 ולא קריסה', () => {
+    expect(deriveQuoteAmount(quoteRow({ quote_services: [] }), 18).total).toBe(0)
+  })
+
+  it('מע"מ שלא נטען (null) ⇒ null ולא סכום שמומצא בלי מע"מ', () => {
+    // "ריק אינו 0" — פרמטר-מערכת שנכשל בטעינה חייב לצעוק, לא להציג סכום נמוך אמין-למראה.
+    expect(deriveQuoteAmount(quoteRow(), null).total).toBeNull()
+  })
+})
+
+describe('deriveQuoteExpiry — "פג בעוד N יום" (F4: נספר מ-updated_at)', () => {
+  it('הצעה שעודכנה היום פגה בעוד מלוא ימי-התוקף', () => {
+    const exp = deriveQuoteExpiry(quoteRow(), 30, '2026-07-29')
+    expect(exp.expiryDate).toBe('2026-08-28')
+    expect(exp.daysLeft).toBe(30)
+    expect(exp.isExpiringSoon).toBe(false)
+  })
+
+  it('נשארו 5 ימים ⇒ נכנסת ל"פג בקרוב" (סף LOCAL-4 = 7)', () => {
+    const row = quoteRow({ updated_at: '2026-07-04T09:00:00.000Z' })
+    const exp = deriveQuoteExpiry(row, 30, '2026-07-29')
+    expect(exp.daysLeft).toBe(5)
+    expect(exp.isExpiringSoon).toBe(true)
+  })
+
+  it('בדיוק 7 ימים עדיין "פג בקרוב" — הסף כולל', () => {
+    const row = quoteRow({ updated_at: '2026-07-06T09:00:00.000Z' })
+    const exp = deriveQuoteExpiry(row, 30, '2026-07-29')
+    expect(exp.daysLeft).toBe(EXPIRING_SOON_DAYS)
+    expect(exp.isExpiringSoon).toBe(true)
+  })
+
+  it('הצעה סגורה (מאושרת/נדחתה) אינה פגה ⇒ null', () => {
+    expect(deriveQuoteExpiry(quoteRow({ quote_status: 'approved' }), 30, '2026-07-29')).toBeNull()
+    expect(deriveQuoteExpiry(quoteRow({ quote_status: 'rejected' }), 30, '2026-07-29')).toBeNull()
+  })
+
+  it('ימי-תוקף שלא נטענו ⇒ null, ולא ספירה לפי 30 מומצא', () => {
+    expect(deriveQuoteExpiry(quoteRow(), null, '2026-07-29')).toBeNull()
+  })
+})
+
+describe('isEventSoon — "אירועים קרובים" (מהפרמטר ימי_אזהרה_קדם_אירוע)', () => {
+  it('אירוע בעוד 12 יום נכנס לחלון של 14', () => {
+    const row = quoteRow({ estimated_event_date: '2026-08-10' })
+    expect(isEventSoon(row, 14, '2026-07-29')).toBe(true)
+  })
+
+  it('אירוע בעוד 24 יום — לא', () => {
+    expect(isEventSoon(quoteRow(), 14, '2026-07-29')).toBe(false)
+  })
+
+  it('אירוע שכבר עבר אינו "קרוב" — אין למה להיערך', () => {
+    const row = quoteRow({ estimated_event_date: '2026-07-01' })
+    expect(isEventSoon(row, 14, '2026-07-29')).toBe(false)
+  })
+})
+
+describe('deriveQuoteMetrics — שני המדדים שליד הכותרת', () => {
+  const MIXED = [
+    quoteRow({ quote_id: 1, quote_status: 'in_progress' }),
+    quoteRow({ quote_id: 2, quote_status: 'in_progress' }),
+    quoteRow({ quote_id: 3, quote_status: 'approved', vat_rate_snapshot: 18 }),
+    quoteRow({ quote_id: 4, quote_status: 'rejected', rejection_reason: 'תקציב לקוח' }),
+    quoteRow({ quote_id: 5, quote_status: 'rejected', rejection_reason: 'פג תוקף' }),
+    quoteRow({ quote_id: 6, quote_status: 'rejected', rejection_reason: 'נבחר מתחרה' }),
+  ]
+
+  it('"שווי הצעות פתוחות" מסכם רק את ההצעות בתהליך', () => {
+    const m = deriveQuoteMetrics(MIXED, 18)
+    expect(m.openCount).toBe(2)
+    expect(m.openValue).toBe(6318.9 * 2)
+  })
+
+  it('שיעור-אישור = מאושרות מתוך שנסגרו — 1 מתוך 4 = 25%', () => {
+    const m = deriveQuoteMetrics(MIXED, 18)
+    expect(m.closedCount).toBe(4)
+    expect(m.approvedCount).toBe(1)
+    expect(m.approvalRate).toBe(25)
+  })
+
+  it('"פג תוקף" **כן** נספר כהפסד — הלקוח לא ענה, וזו תוצאה עסקית', () => {
+    expect(NON_LOSS_REJECTION_REASONS).not.toContain('פג תוקף')
+  })
+
+  it('אף הצעה לא נסגרה ⇒ שיעור null ולא 0% (0% על מדגם ריק הוא מספר שקרי)', () => {
+    expect(deriveQuoteMetrics([quoteRow()], 18).approvalRate).toBeNull()
+  })
+
+  it('סיבת-דחייה שאינה-הפסד יוצאת מהמכנה של השיעור', () => {
+    const m = deriveQuoteMetrics(MIXED, 18, ['נבחר מתחרה'])
+    expect(m.closedCount).toBe(3)
+    expect(m.approvalRate).toBe(33.3)
+  })
+
+  it('"נפתחה בטעות" מוחרגת **כברירת-מחדל** — הצעה שנפתחה בטעות מעולם לא הוצעה ללקוח', () => {
+    const withMistake = [
+      ...MIXED,
+      quoteRow({ quote_id: 9, quote_status: 'rejected', rejection_reason: 'נפתחה בטעות' }),
+    ]
+    // בלי ההחרגה היו 5 סגורות ושיעור 20%; איתה — 4 ו-25%, בדיוק כמו לפני הטעות.
+    const m = deriveQuoteMetrics(withMistake, 18)
+    expect(m.closedCount).toBe(4)
+    expect(m.approvalRate).toBe(25)
+  })
+
+  it('"נפתחה בטעות" עדיין ניתנת לבחירה ידנית — היא הסיבה, לא תקלה', () => {
+    expect(MANUAL_REJECTION_REASONS).toContain('נפתחה בטעות')
+  })
+})
+
+describe('countRejectionReasons — פילוח הסיבות בלשונית "נדחו"', () => {
+  it('סופר רק דחויות, מהשכיח לנדיר', () => {
+    const rows = [
+      quoteRow({ quote_status: 'rejected', rejection_reason: 'תקציב לקוח' }),
+      quoteRow({ quote_status: 'rejected', rejection_reason: 'תקציב לקוח' }),
+      quoteRow({ quote_status: 'rejected', rejection_reason: 'פג תוקף' }),
+      quoteRow({ quote_status: 'in_progress' }),
+      quoteRow({ quote_status: 'approved' }),
+    ]
+    expect(countRejectionReasons(rows)).toEqual([
+      { reason: 'תקציב לקוח', count: 2 },
+      { reason: 'פג תוקף', count: 1 },
+    ])
+  })
+
+  it('אין דחויות ⇒ רשימה ריקה (המסך לא מציג שורת-פילוח ריקה)', () => {
+    expect(countRejectionReasons([quoteRow()])).toEqual([])
+  })
+})
+
+describe('matchesQuoteFilters — סינון צד-לקוח', () => {
+  const CTX = { todayIso: '2026-07-29', validityDays: 30, eventWarningDays: 14 }
+
+  it('חיפוש חופשי תופס שם-אירוע וגם שם-לקוח', () => {
+    expect(matchesQuoteFilters(quoteRow(), { text: 'כנס' }, CTX)).toBe(true)
+    expect(matchesQuoteFilters(quoteRow(), { text: 'מדיטק' }, CTX)).toBe(true)
+    expect(matchesQuoteFilters(quoteRow(), { text: 'עירייה' }, CTX)).toBe(false)
+  })
+
+  it('חיפוש סלחני לרווחים מיותרים', () => {
+    expect(matchesQuoteFilters(quoteRow(), { text: '  כנס לקוחות  ' }, CTX)).toBe(true)
+  })
+
+  it('סינון לפי לקוח', () => {
+    expect(matchesQuoteFilters(quoteRow(), { customerId: 2 }, CTX)).toBe(true)
+    expect(matchesQuoteFilters(quoteRow(), { customerId: 9 }, CTX)).toBe(false)
+  })
+
+  it('טווח תאריכי-אירוע — כולל את הקצוות', () => {
+    const exact = { eventDateFrom: '2026-08-22', eventDateTo: '2026-08-22' }
+    expect(matchesQuoteFilters(quoteRow(), exact, CTX)).toBe(true)
+    expect(matchesQuoteFilters(quoteRow(), { eventDateFrom: '2026-08-23' }, CTX)).toBe(false)
+    expect(matchesQuoteFilters(quoteRow(), { eventDateTo: '2026-08-21' }, CTX)).toBe(false)
+  })
+
+  it('מסנן "פג בקרוב" משאיר רק הצעות בתוך 7 ימים לתפוגה', () => {
+    const stale = quoteRow({ updated_at: '2026-07-04T09:00:00.000Z' })
+    expect(matchesQuoteFilters(quoteRow(), { expiringSoon: true }, CTX)).toBe(false)
+    expect(matchesQuoteFilters(stale, { expiringSoon: true }, CTX)).toBe(true)
+  })
+
+  it('"אירועים קרובים" עצמאי מ"פג בקרוב" — הצעה טרייה שהאירוע שלה בעוד 12 יום', () => {
+    const row = quoteRow({ estimated_event_date: '2026-08-10' })
+    expect(matchesQuoteFilters(row, { eventSoon: true }, CTX)).toBe(true)
+    expect(matchesQuoteFilters(row, { expiringSoon: true }, CTX)).toBe(false)
+  })
+
+  it('בלי מסננים — הכול עובר', () => {
+    expect(matchesQuoteFilters(quoteRow(), {}, CTX)).toBe(true)
+  })
+})
+
+describe('sortQuotes', () => {
+  const CTX = { defaultVatRate: 18 }
+  const A = quoteRow({ quote_id: 1, updated_at: '2026-07-20T09:00:00.000Z' })
+  const B = quoteRow({ quote_id: 2, updated_at: '2026-07-28T09:00:00.000Z' })
+  const C = quoteRow({
+    quote_id: 3,
+    updated_at: '2026-07-25T09:00:00.000Z',
+    manual_discount: 0,
+    estimated_event_date: '2026-07-31',
+  })
+
+  it('ברירת-המחדל "הקרוב לפוג ראשון" = הישן-שלא-נגעו-בו ראשון', () => {
+    expect(sortQuotes([B, C, A], 'expiry', CTX).map((q) => q.quote_id)).toEqual([1, 3, 2])
+  })
+
+  it('מיון לפי סכום — מהגבוה לנמוך (C בלי הנחה ידנית ולכן גבוהה יותר)', () => {
+    expect(sortQuotes([A, B, C], 'amount', CTX).map((q) => q.quote_id)).toEqual([3, 1, 2])
+  })
+
+  it('מיון לפי תאריך-אירוע — הקרוב ראשון', () => {
+    expect(sortQuotes([A, B, C], 'eventDate', CTX).map((q) => q.quote_id)).toEqual([3, 1, 2])
+  })
+
+  it('אינו משנה את המערך המקורי', () => {
+    const input = [B, A]
+    sortQuotes(input, 'expiry', CTX)
+    expect(input.map((q) => q.quote_id)).toEqual([2, 1])
+  })
+})
+
+describe('quoteToPdfModel — שורת-DB ⇒ צורת-הקלט של מנוע ה-PDF', () => {
+  const PRODUCTS = {
+    '04ST': { item_name: 'דיילת סטנדרט' },
+    'B-REG-TAG': { item_name: 'תג שם רגיל' },
+  }
+  const FULL = quoteRow({
+    issue_date: '2026-07-29',
+    estimated_location: 'אקספו תל אביב',
+    estimated_start_time: '18:00:00',
+    estimated_end_time: '22:00:00',
+    notes: 'כולל הקמה ופירוק',
+    customers: {
+      company_name: 'מדיטק פתרונות בע"מ',
+      company_number: '514789632',
+      contact_name: 'רון גל',
+      phone: '052-4471180',
+    },
+    quote_services: [
+      { sku: '04ST', qty: 6, closing_unit_price: 500, color: null, notes: '', line_number: 1 },
+      {
+        sku: 'B-REG-TAG',
+        qty: 300,
+        closing_unit_price: 5,
+        color: 'לבן',
+        notes: 'לוגו',
+        line_number: 2,
+      },
+    ],
+  })
+
+  it('ממפה לקוח, אירוע ושורות — כולל שם-מוצר מהקטלוג (ה-DB שומר מק"ט בלבד)', () => {
+    const model = quoteToPdfModel(FULL, PRODUCTS, 18, 30)
+    expect(model.customer).toEqual({
+      companyName: 'מדיטק פתרונות בע"מ',
+      companyNumber: '514789632',
+      contactName: 'רון גל',
+      phone: '052-4471180',
+    })
+    expect(model.event.name).toBe('כנס לקוחות שנתי')
+    expect(model.event.startTime).toBe('18:00')
+    expect(model.lines[0].itemName).toBe('דיילת סטנדרט')
+    expect(model.lines[1]).toMatchObject({ sku: 'B-REG-TAG', qty: 300, unitPrice: 5, color: 'לבן' })
+  })
+
+  it('"תוקף ההצעה עד" נגזר מ-updated_at + ימי-התוקף — אותו שעון כמו במסך (F4)', () => {
+    expect(quoteToPdfModel(FULL, PRODUCTS, 18, 30).validUntil).toBe('2026-08-28')
+  })
+
+  it('מק"ט שאינו בקטלוג ⇒ המק"ט עצמו כשם, ולעולם לא שורה ריקה במסמך ללקוח', () => {
+    const orphan = quoteRow({
+      quote_services: [{ sku: 'X-GONE', qty: 1, closing_unit_price: 10, line_number: 1 }],
+    })
+    expect(quoteToPdfModel(orphan, PRODUCTS, 18, 30).lines[0].itemName).toBe('X-GONE')
+  })
+
+  it('הצעה מאושרת נושאת את המע"מ הקפוא, לא את החי (§7.51)', () => {
+    const approved = quoteRow({ quote_status: 'approved', vat_rate_snapshot: 17 })
+    expect(quoteToPdfModel(approved, PRODUCTS, 18, 30).vatRate).toBe(17)
+  })
+
+  it('שורות מוגשות לפי line_number, גם אם ה-DB החזיר אותן בסדר אחר', () => {
+    const shuffled = quoteRow({
+      quote_services: [
+        { sku: 'B-REG-TAG', qty: 300, closing_unit_price: 5, line_number: 2 },
+        { sku: '04ST', qty: 6, closing_unit_price: 500, line_number: 1 },
+      ],
+    })
+    expect(quoteToPdfModel(shuffled, PRODUCTS, 18, 30).lines.map((l) => l.sku)).toEqual([
+      '04ST',
+      'B-REG-TAG',
+    ])
+  })
+})
+
+describe('MANUAL_REJECTION_REASONS — מה שמוצע בחלון הדחייה', () => {
+  it('כולן תת-קבוצה של 7 הסיבות שה-DB מכיר', () => {
+    MANUAL_REJECTION_REASONS.forEach((reason) => expect(REJECTION_REASONS).toContain(reason))
+  })
+
+  it('"פג תוקף" אינו נבחר ידנית — עבודת-הרקע היומית כותבת אותו (§7.41)', () => {
+    expect(MANUAL_REJECTION_REASONS).not.toContain('פג תוקף')
+    expect(REJECTION_REASONS).toContain('פג תוקף')
   })
 })

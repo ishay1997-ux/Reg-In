@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/supabaseClient'
 import { useAuth } from '@/contexts/AuthContext'
+import reginLogo from '@/assets/reg-in-logo.png'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -135,7 +136,7 @@ export default function LoginPage() {
         noValidate
         className="bg-white p-8 rounded-2xl shadow-md w-full max-w-sm flex flex-col gap-4"
       >
-        <img src="/regin-logo.png" alt="REG-IN" className="h-12 mx-auto mb-2" />
+        <img src={reginLogo} alt="REG-IN" className="h-12 mx-auto mb-2" />
 
         <h1 className="text-xl font-bold text-center text-slate-800">כניסה למערכת</h1>
 

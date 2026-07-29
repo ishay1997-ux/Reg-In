@@ -28,6 +28,7 @@ import UsersManagementPage from '@/modules/01_auth/UsersManagementPage'
 import PermissionsMatrixPage from '@/modules/01_auth/PermissionsMatrixPage'
 import CustomersPage from '@/modules/02_customers/CustomersPage'
 import QuoteBuilderPage from '@/modules/03_quotes/QuoteBuilderPage'
+import QuotesPage from '@/modules/03_quotes/QuotesPage'
 import WelcomePage from '@/components/WelcomePage'
 import UnderConstruction from '@/components/UnderConstruction'
 import ProfileSettingsPage from '@/components/ProfileSettingsPage'
@@ -73,13 +74,12 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                  {/* מודול 3 — מסך הניהול נבנה בצעד 3.3; מסך-הבנייה (3.2) חי כבר עכשיו
-                      בנתיבים /quotes/new ו-/quotes/:quoteId/edit. */}
+                  {/* מודול 3 — מסך הניהול (3.3) ומסך הבנייה/עריכה (3.2). */}
                   <Route
                     path="quotes"
                     element={
                       <ProtectedRoute allow="הצעות מחיר">
-                        <UnderConstruction moduleName="הצעות מחיר" />
+                        <QuotesPage />
                       </ProtectedRoute>
                     }
                   />

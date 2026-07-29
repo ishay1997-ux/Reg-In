@@ -10,6 +10,7 @@
 
 import { supabase } from '@/supabaseClient'
 import { PRICING_PARAM_NAMES } from '@/lib/pricing'
+import { QUOTE_SCREEN_PARAM_NAMES } from '@/lib/quotes'
 
 function toError(error, fallbackMessage) {
   const e = new Error(fallbackMessage)
@@ -23,13 +24,31 @@ function toError(error, fallbackMessage) {
 // כל ההצעות + שורותיהן, מהחדש-שעודכן קודם. מיון לפי updated_at תואם לאינדקס C-6
 // quotes(quote_status, updated_at) שה-DB בנה במקור עבור שאילתת-התפוגה, וגם משרת את
 // מסך-הניהול (F24: תגית "פג בקרוב" ממוינת לפי קרבה — מסונן/ממוין מחדש בצד-לקוח שם).
-/** @public צרכן: מסך-הניהול (צעד 3.3). להסיר את התג ברגע שהוא מייבא. */
+//
+// הצירוף ל-customers הוא **חלק מהמסך ולא נוחות**: כל שורה בטבלה מציגה את שם החברה ואת
+// איש-הקשר הראשי (§6 מ3 — הראשי בלבד, אנשי-הקשר הנוספים של §7.81 אינם מוצגים כאן).
+// טעינה נפרדת של הלקוחות הייתה מחייבת מיזוג-ידני בצד-הלקוח ומייצרת מצב-ביניים שבו
+// הטבלה מציגה שורות בלי שמות.
 export async function listQuotes() {
   const { data, error } = await supabase
     .from('quotes')
-    .select('*, quote_services(*)')
+    .select(
+      '*, quote_services(*), customers(customer_id, company_name, company_number, contact_name, phone, email)',
+    )
     .order('updated_at', { ascending: false })
   if (error) throw toError(error, 'שגיאה בטעינת רשימת ההצעות.')
+  return data ?? []
+}
+
+// שלושת הפרמטרים שמסך-הניהול צריך: מע"מ (לחישוב הסכומים), ימי-תוקף (ל"פג בעוד N יום")
+// וחלון-אזהרת-האירוע (למסנן "אירועים קרובים"). נטענים יחד כי המסך חסר-משמעות בלי שלושתם.
+// ⚠️ פרמטר שלא חוזר אינו מקבל ברירת-מחדל כאן — המסך מציג "—" במקום מספר מומצא.
+export async function getQuoteScreenParams() {
+  const { data, error } = await supabase
+    .from('params')
+    .select('param_name, param_value')
+    .in('param_name', Object.values(QUOTE_SCREEN_PARAM_NAMES))
+  if (error) throw toError(error, 'שגיאה בטעינת הגדרות ההצעות.')
   return data ?? []
 }
 
@@ -116,7 +135,6 @@ export async function saveQuoteEdit(quoteId, header, lines) {
 // אישור הצעה → הפיכתה לפרויקט שלם (§7.49, SECURITY DEFINER). ה-RPC בעצמו בודק הרשאת-עריכה,
 // חוסם תאריך-עבר (§7.32), מקפיא מע"מ+עלות, והוא בטוח-להקשה-כפולה (project.quote_id UNIQUE).
 // מחזיר את project_id החדש.
-/** @public צרכן: חלון-האישור במסך-הניהול (צעד 3.3). להסיר את התג ברגע שהוא מייבא. */
 export async function approveQuote(quoteId) {
   const { data, error } = await supabase.rpc('approve_quote_and_create_project', {
     p_quote_id: quoteId,
@@ -129,7 +147,6 @@ export async function approveQuote(quoteId) {
 // in_progress, וזה בדיוק המצב היחיד שממנו מותר לדחות (CHECK quotes_rejected_iff_reason
 // אוכף reason⇔status; 'אחר' דורש rejection_notes — נאכף גם ב-DB, כאן רק מעביר את מה שהתקבל).
 // .select() חושף חסימת-RLS שקטה, בדיוק כמו updateCustomer ב-02_customers/api.js.
-/** @public צרכן: חלון-הדחייה במסך-הניהול (צעד 3.3). להסיר את התג ברגע שהוא מייבא. */
 export async function rejectQuote(quoteId, reason, notes) {
   const { data, error } = await supabase
     .from('quotes')
