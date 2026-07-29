@@ -10,9 +10,9 @@
 | Module | 3 — הצעות מחיר (Quotes) |
 | Owner | ישי (sole developer — all rulings and build; guide `modules/module_03_quotes.md` §③) |
 | Branch | `ishay/module-3-quotes-build` (cut 22/07 from dev `a35c92f`, after PR #9 merged; the old `ishay/module-3-quotes` is now an ancestor of `dev` — dead, iron rule 10) |
-| Status | ✅ **Phase 2 (business logic) CLOSED — gate 2.4, `npm run gate` exit 0, 29/07/2026 09:58.** Phase-2 plan approved by Ishay 29/07/2026 (`~/.claude/plans/lazy-dazzling-catmull.md`). Next: Phase 3 (UI) — its first unit (3.1, PDF spike) needs a fresh 🗣️ brief + Ishay's approval before building (visual surface starts here). |
-| Last updated | 29/07/2026 10:20 (verified accurate — no content change; step 2.3's `api.js` matches its as-built row) |
-| **Active step** | **3.1** (PDF spike — Ishay's approval needed before starting Phase 3) |
+| Status | 🔨 **Phase 3 (UI) in progress. Step 3.1 (PDF engine) DONE 29/07/2026 14:34 — `npm run gate` exit 0, 139 tests, worked example renders 6,319 ₪ exactly, verified visually in Chrome's real PDF viewer.** Phase 1+2 closed (see done-tables below). |
+| Last updated | 29/07/2026 14:34 (step 3.1 landed) |
+| **Active step** | **3.2** (Quote builder screen — needs a 🗣️ brief + Ishay's approval before building) |
 
 Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · ❌ blocked):
 
@@ -30,7 +30,7 @@ Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · �
 | 2.2 | `src/lib/catalog.js` labels + validators.js additions + tests 🔻🤖 | ✅ (labels/PRODUCT_UNITS/LINE_COLORS pulled live via `pg_constraint` — not read off docs — byte-match to the 4 CHECKs; 6 new validators added to `validators.js`, additive-only; caught+fixed a `Number(null)===0` blank-as-valid-zero bug in the two "0-is-valid" validators before it shipped, regression test added. Suite 106→124, all pre-existing green) |
 | 2.3 | `src/modules/03_quotes/api.js` (+ prices tab api) 🔻🤖 | ✅ (writes route through `create_quote`/`replace_quote_lines`/`approve_quote_and_create_project` RPCs only, per F17; `rejectQuote` is the sole direct-update exception, documented + why. Live-DB smoke test of every query shape: 11 active products, 40 tiers, VAT=18/ratio=50 match exactly. Uncovered a real gate gap along the way — see below) |
 | 2.4 | Phase-2 gate: verify green + 6,319 evidence 🔻👤 | ✅ **CLOSED 29/07/2026 09:58 — `npm run gate` exits 0** (not just `verify`). 124 tests green (was 77 pre-Phase-2); 6,319 exact (subtotal 6300/discount 945/preVat 5355/vat 963.90/total 6318.90/display `6,319 ₪`). |
-| 3.1 | PDF engine spike: lib choice + Hebrew/RTL proof 🗣️→🔻🤖 screenshot | ⬜ |
+| 3.1 | PDF engine spike: lib choice + Hebrew/RTL proof 🗣️→🔻🤖 screenshot | ✅ (`@react-pdf/renderer` 4.5.1 + vendored Heebo **TTF**; 15 unit tests; 3 render cases — worked example / 14-line overflow / minimal — all verified visually in Chrome's pdfium. Two silent traps found and documented, plus 3 defects Ishay caught live — see §9) |
 | 3.2 | Quote builder screen (create+edit) 🗣️→🔻🤖 | ⬜ |
 | 3.3 | Quote management screen (tabs F24 + ⭐ + filters + actions) 🗣️→🔻🤖 | ⬜ |
 | 3.4 | Quote PDF render + download + mailto flow 🗣️→🔻🤖 screenshot | ⬜ |
@@ -298,6 +298,45 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 29/07/2026 14:34 — **Step 3.1 done. Two failure modes here are SILENT — neither throws, both
+  produce a wrong document that looks plausible. Do not re-derive them in 3.4.**
+  **(1) `@react-pdf/renderer`'s fontkit reads TTF/OTF only.** `@fontsource/heebo` (and every
+  modern font package) ships **woff/woff2 only**. Registering a woff **succeeds** — no error, no
+  warning — and then prints scrambled glyphs; woff2 prints nothing at all. Both were rendered and
+  looked at before the cause was known. Fix: the two Heebo weights are **vendored as `.ttf`** under
+  `src/assets/fonts/` (SIL OFL, license file beside them) and inlined as data-URIs via Vite's
+  `?inline`, so there is no network fetch that can fail silently either. Extracted once from
+  `@expo-google-fonts/heebo` (the only npm source shipping Hebrew TTF); that package is **not** a
+  dependency.
+  **(2) Bidi reorders character runs, not logical tokens.** A compound LTR token concatenated into
+  a Hebrew string flips: `18:00–22:00` prints `22:00–18:00` — syntactically fine, **business-wrong**,
+  and a customer would read the event as ending before it starts. **Ishay caught this in the mockup.**
+  Two fixes that do NOT work (both tested and rejected): a nested `<Text direction:'ltr'>`, and the
+  Unicode isolate characters LRI/PDI (U+2066/U+2069) — those order correctly but Heebo has no glyph
+  for them, so they print as garbage *inside* the text. **What works: the value in its OWN `<Text>`
+  with `direction:'ltr'`.** Hence the `<Ltr>` component — every SKU, date, time range, phone, ID and
+  money amount goes through it, and none is ever concatenated to a Hebrew label.
+  **↳ as-built deviations from the blueprint:** (a) file is **`quotePdf.jsx`**, not `.js` — it emits
+  React elements and Vite only applies the JSX transform to `.jsx`; keeping it `.js` would have meant
+  `createElement` for a whole document template. (b) A one-file `react-refresh/only-export-components`
+  exemption in `eslint.config.js` — this module never renders to the DOM, so Fast-Refresh cannot apply;
+  reasoned in place. (c) A `/** @public */` knip tag on `renderQuotePdfBlob` (its caller arrives in 3.4)
+  — scoped to the single export, unlike Phase 2's whole-file ignores.
+  **↳ Ishay's rulings during the step:** (i) **page 2 is a generic market-standard terms page** rather
+  than cramming everything onto one page — `QUOTE_TERMS` grew 2 → 7 entries and the section carries
+  `break`; the 5 added terms are **placeholder wording awaiting a legal pass**. (ii) Spacing/proportions
+  re-tuned to the approved mockup after he flagged the first render as too tight. (iii) He spotted the
+  **logo being stretched** — the `<Image>` had a width but no height, and flex's default
+  `alignItems: 'stretch'` sized it to the neighbouring block; fixed with the file's true 272×99 ratio
+  (`height: 43.7`, `objectFit: 'contain'`) plus `alignItems: 'flex-start'` on the header row.
+  **⚠️ Carry-forward for 3.4 — do NOT preview the PDF with pdf.js.** Chrome's built-in viewer (pdfium)
+  renders these files perfectly; **pdf.js rejects react-pdf's embedded font subset** (`OTS parsing error:
+  maxp: Bad maxZones`, `Invalid font data in ArrayBuffer`) and drops narrow glyphs — an hour was spent
+  chasing a defect that only ever existed in the diagnostic viewer. This is a known react-pdf trait
+  (react-pdf issue #3047: custom fonts fine in standard viewers, encoding issues under PDF parsers).
+  The `PdfPreview` glue must therefore be an `<iframe src={blobURL}>` (native viewer), not a pdf.js canvas.
+  **Not covered yet:** no E2E asserts PDF bytes (deliberate, per the 15/07 anti-gold-plating list), and
+  the document has only been read in Chromium — the cross-browser sweep is still the pre-M5 item.
 - 29/07/2026 10:30 — **DEVIATION from the approved contract, caught by Ishay in a blueprint-vs-code
   comparison — the design choice was deliberate, but it was NOT recognised as a deviation and so was
   never recorded. That recording failure is the real defect here, not the choice.** Blueprint (15/07)

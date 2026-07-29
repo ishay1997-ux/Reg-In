@@ -21,7 +21,7 @@
 <!-- target ~15 lines · no internal dates (F4) · over budget? compress / move to journal -->
 ✅ Sync-verified: gate green end-to-end (see latest session entry above)
 
-**Where we stand:** Modules 1 (users/permissions) and 2 (customers) are **closed, merged to `dev`, promoted to `main`** — milestone 1 (tag `milestone-1`). **Module 3 (quotes) — Phase 1 (DB) and Phase 2 (business logic / money SSOT) both CLOSED**, both gated and approved. Phase 2 delivered `src/lib/pricing.js`+`catalog.js` (money engine, 6,319-exact) and the `api.js`/`pricesApi.js` DB-write layer (RPC-routed, F17). **Active step: 3.1 — PDF spike, first unit of Phase 3 (UI); needs a fresh 🗣️ brief + Ishay's approval before building** (Phase 2 had no visual surface). Branch `ishay/module-3-quotes-build`, cut fresh from `dev` (`a35c92f`) after PR #9. Module 4's pre-decision round waits until M3 is done.
+**Where we stand:** Modules 1 (users/permissions) and 2 (customers) are **closed, merged to `dev`, promoted to `main`** — milestone 1 (tag `milestone-1`). **Module 3 (quotes) — Phase 1 (DB) and Phase 2 (business logic / money SSOT) both CLOSED**, both gated and approved. Phase 2 delivered `src/lib/pricing.js`+`catalog.js` (money engine, 6,319-exact) and the `api.js`/`pricesApi.js` DB-write layer (RPC-routed, F17). **Phase 3 (UI) started: step 3.1 (PDF engine) is DONE** — `quotePdf.jsx`, Hebrew/RTL proven in a real PDF reader, 6,319 ₪ exact. **Active step: 3.2 — quote builder screen** (needs a 🗣️ brief + Ishay's approval before building). Branch `ishay/module-3-quotes-build`, cut fresh from `dev` (`a35c92f`) after PR #9. Module 4's pre-decision round waits until M3 is done.
 
 **Governance:** single developer (Ishay), submission deadline **19/09/2026**, per-module schedule in `00_roadmap.md` §3. Overflow policy: **whole modules defer, nothing is trimmed** (leaf order M10→M11→M7; the 3→4→6+5 core, M8 and M12 never defer). **Infra freeze retired 29/07/2026** — replaced by the subtraction principle (F1): before adding governance, name what it replaces, out loud, logged.
 
@@ -41,6 +41,18 @@
 
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
+
+### 29/07/2026 14:40 — Step 3.1 (PDF engine) done. Both failure modes here are SILENT, and Ishay caught three defects I had shipped past myself
+
+Built `src/modules/03_quotes/quotePdf.jsx` — pure `quote ⇒ Blob`, `@react-pdf/renderer` 4.5.1, totals from `pricing.js` so the document can never disagree with the screen. Gate green: 139 tests (was 124), 0 clones, audit/knip/check:context clean.
+
+**Two traps that do not throw** — both produced a plausible-looking wrong document, both are now in `src/modules/03_quotes/CLAUDE.md`: (1) fontkit reads **TTF only**; `@fontsource/heebo` ships woff/woff2, `Font.register` *succeeds* on them and then prints gibberish (woff) or nothing (woff2). Fixed by vendoring the two Heebo TTFs (OFL) under `src/assets/fonts/` as `?inline` data-URIs. (2) Bidi reorders **character runs**, so `18:00–22:00` concatenated into a Hebrew string prints `22:00–18:00`. A nested `<Text direction:'ltr'>` does **not** fix it, and LRI/PDI isolates print as garbage glyphs — only a value in its **own** `<Text direction:'ltr'>` works (the `<Ltr>` component).
+
+**Ishay caught three things I had already looked at and passed:** the reversed time range (in the mockup, before any code); the logo being **stretched** (`<Image>` with width but no height, flex `alignItems: stretch` sized it to the neighbour — fixed to the real 272×99 ratio + `flex-start`); and the terms list rendering **left-aligned** (react-pdf defaults to left even inside `row-reverse` — now `textAlign: 'right'` at page level). Lesson worth keeping: I verified each render by reading it for *correctness of content* and stopped there; he read it as a **document**, and that is where all three lived.
+
+**Also his ruling:** page 2 is now a generic market-standard terms page (`QUOTE_TERMS` 2 → 7, `break` on the section) instead of compressing everything onto one page — the 5 added clauses are placeholder wording pending a legal pass.
+
+**⚠️ Cost worth not repeating: ~1h chasing a defect that only existed in the diagnostic viewer.** pdf.js rejects react-pdf's embedded font subset (`OTS parsing error: maxp: Bad maxZones`) and drops narrow glyphs; Chrome's own pdfium renders the same file perfectly. Confirmed as a known react-pdf trait (issue #3047). **Step 3.4's preview must be `<iframe src={blobURL}>`, never a pdf.js canvas.**
 
 ### 29/07/2026 13:22 — Ishay caught a second gap: a product idea existed only in a scratch plan file, not in durable docs
 

@@ -43,6 +43,16 @@ export default defineConfig([
       'react-refresh/only-export-components': 'off',
     },
   },
+  // מנוע ה-PDF (‏`quotePdf.jsx`) בונה רכיבי `@react-pdf/renderer` — Document/Page/Text —
+  // ולא רכיבי DOM. הוא לעולם לא מרונדר למסך, ולכן Fast-Refresh (HMR של React) אינו
+  // רלוונטי לו: הכלל `only-export-components` מגן על תרחיש שלא קיים כאן, ובתמורה היה
+  // מכריח לפצל תבנית-מסמך אחת לשני קבצים. פטור ממוקד לקובץ אחד, לא הרפיה גורפת.
+  {
+    files: ['src/modules/03_quotes/quotePdf.jsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
   // בקרת-איכות (sonarjs): זיהוי כפילויות ומורכבות-יתר לאורך כל הפיתוח, כדי שהקוד
   // יעמוד בסקירה של מהנדס-תוכנה. **הוקשח ל-'error' ב-29/07/2026** (החלטת-ישי 23/07)
   // אחרי שהממצא האחרון נסגר — `MarketingPanel` פוצל לתת-קומפוננטות והלוגיקה הטהורה

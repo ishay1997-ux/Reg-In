@@ -2,7 +2,7 @@
 
 # REG-IN — לוח מצב
 
-> עודכן לאחרונה: 29/07/2026 13:22
+> עודכן לאחרונה: 29/07/2026 14:40
 > **לוח מצב-עכשיו בלבד — לא ארכיון.** היסטוריה ונרטיב → `docs/CLAUDE_CODE_LOG.md` + `git log` ·
 > שינויי-DB → `docs/db_roadmap.md` + migrations · שאלות פתוחות → `PROJECT_MASTER §7`.
 > *(הגרסה המלאה הקודמת, כולל 24 תזכורות היסטוריות: `docs/archive/STATUS_full_2026-07-28.md`.)*
@@ -13,8 +13,11 @@
 **מודול 3 (הצעות מחיר) — פזה 1 (DB) ופזה 2 (לוגיקה עסקית/מנוע-הכסף) נסגרו.** שער-1.7 אושר
 23/07 ערב. שער-2.4 נסגר 29/07 10:05: `pricing.js`+`catalog.js`+ולידטורים+`api.js`+`pricesApi.js` —
 ‏`npm run gate` ירוק מקצה-לקצה, 124 בדיקות, תרחיש **6,319 ₪ מדויק**.
-**➡️ הצעד הפעיל: 3.1 — PDF spike** (ראשון בפזה 3/ממשק — דורש תקציר-חוויה 🗣️ ואישורך לפני בנייה,
-כי לפזה 2 לא היה שום משטח-ויזואלי). המשך: **"תמשיך לבנות"**.
+**צעד 3.1 (מנוע ה-PDF) נסגר 29/07 14:40** — `quotePdf.jsx`: עברית RTL מלאה, לוגו, מפל-הסכומים,
+‏**6,319 ₪ מדויק**, עמוד-תנאים נפרד. אומת ויזואלית במציג-ה-PDF האמיתי של Chrome ב-3 מקרים
+(תרחיש-האפיון · הצעה של 14 שורות שגולשת עמוד · הצעה מינימלית). `npm run gate` ירוק, 139 בדיקות.
+**➡️ הצעד הפעיל: 3.2 — מסך בניית ההצעה** (דורש תקציר-חוויה 🗣️ ואישורך לפני בנייה).
+המשך: **"תמשיך לבנות"**.
 ענף: `ishay/module-3-quotes-build` (נפתח 22/07 מ-`dev` טרי `a35c92f`).
 מדריך המיקרו: [docs/micro_guides/module-3.md](docs/micro_guides/module-3.md) (פזות 1–2 דחוסות).
 
@@ -32,7 +35,7 @@
 | 0 | תשתית | ✅ | — | — |
 | 1 | משתמשים והרשאות | ✅ מוזג ל-`dev` (PR [#2](https://github.com/ishay1997-ux/Reg-In/pull/2)) | — | [module_01](docs/guides/modules/module_01_close.md) |
 | 2 | לקוחות | ✅ מוזג ל-`dev` (PR [#6](https://github.com/ishay1997-ux/Reg-In/pull/6), `e69383a`) | — | [module_02](docs/guides/modules/module_02_customers.md) |
-| 3 | **הצעות מחיר** | 🔨 **פזה 3 — צעד 3.1** | **07/08** | [module_03](docs/guides/modules/module_03_quotes.md) |
+| 3 | **הצעות מחיר** | 🔨 **פזה 3 — צעד 3.2** | **07/08** | [module_03](docs/guides/modules/module_03_quotes.md) |
 | 4 | דיילות + Smart Match | ⬜ | 21/08 | [module_04](docs/guides/modules/module_04_hostesses.md) |
 | 5 | לוגיסטיקה | ⬜ | 04/09 (משולב עם 6) | [module_05](docs/guides/modules/module_05_logistics.md) |
 | 6 | פרויקטים (המחבר) | ⬜ | 04/09 (משולב עם 5) | [module_06](docs/guides/modules/module_06_projects.md) |
