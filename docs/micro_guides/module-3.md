@@ -10,9 +10,10 @@
 | Module | 3 — הצעות מחיר (Quotes) |
 | Owner | ישי (sole developer — all rulings and build; guide `modules/module_03_quotes.md` §③) |
 | Branch | `ishay/module-3-quotes-build` (cut 22/07 from dev `a35c92f`, after PR #9 merged; the old `ishay/module-3-quotes` is now an ancestor of `dev` — dead, iron rule 10) |
-| Status | 🔨 **Phase 3 (UI) in progress. Step 3.1 (PDF engine) DONE 29/07/2026 14:34 — `npm run gate` exit 0, 139 tests, worked example renders 6,319 ₪ exactly, verified visually in Chrome's real PDF viewer.** Phase 1+2 closed (see done-tables below). |
-| Last updated | 29/07/2026 18:57 (unchanged since 18:44 — still a PARALLEL session's uncommitted 3.3 code on this branch, still untouched by this session; its temp e2e specs came and went, ownership still unconfirmed by Ishay) |
-| **Active step** | **3.3** (mockup approved, 🔻👤 gate passed — build against `docs/mockups/quote-screen/09_quote_management_approved.html`). ⚠️ **Iron rule 16 — do NOT build 3.3 from this session until Ishay confirms ownership** — a parallel session already has uncommitted 3.3 code on this branch (evidence: `CLAUDE_CODE_LOG.md` 18:19+18:44 entries, `git status`). |
+| Status | 🔨 **Phase 3 (UI) in progress. Steps 3.1 (PDF engine) + 3.2 (builder) + 3.3 (management screen) DONE.** Phase 1+2 closed (see done-tables below). |
+| Last updated | 29/07/2026 19:30 — **3.3 built + migration 6 applied; `npm run gate` exit 0, 221 tests** (was 180). |
+| **Active step** | **3.4** (PDF send flow). ⚠️ Its 🗣️ direction is **already ruled** by Ishay 29/07 — preview dialog + download + "שלח במייל", mailto to the **primary contact only**, send shown on `in_progress` rows only, `<iframe>` blob and never pdf.js. What 3.3 already delivered: the preview dialog with view+download. See §9. |
+| ⚠️ Concurrency | 29/07 19:10 — the **ownership question from the 18:19–18:57 entries is RESOLVED by evidence**: the uncommitted 3.3 code was this build session's, it is now complete and gate-green. The other conversation wrote **no code** (its two commits `f67cb98`/`512184c` are docs only) and correctly stood down per iron rule 16. **Ishay must close the second conversation before the next step** — two sessions on one branch nearly caused a `git add -A` cross-commit. |
 
 Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · ❌ blocked):
 
@@ -32,7 +33,7 @@ Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · �
 | 2.4 | Phase-2 gate: verify green + 6,319 evidence 🔻👤 | ✅ **CLOSED 29/07/2026 09:58 — `npm run gate` exits 0** (not just `verify`). 124 tests green (was 77 pre-Phase-2); 6,319 exact (subtotal 6300/discount 945/preVat 5355/vat 963.90/total 6318.90/display `6,319 ₪`). |
 | 3.1 | PDF engine spike: lib choice + Hebrew/RTL proof 🗣️→🔻🤖 screenshot | ✅ (`@react-pdf/renderer` 4.5.1 + vendored Heebo **TTF**; 15 unit tests; 3 render cases — worked example / 14-line overflow / minimal — all verified visually in Chrome's pdfium. Two silent traps found and documented, plus 3 defects Ishay caught live — see §9) |
 | 3.2 | Quote builder screen (create+edit) 🗣️→🔻🤖 | ✅ (mockup approved 15:45 + 6 rulings; **live UI renders 6,319 ₪ exactly**; **save→DB and edit→save round-trip both proven through the real screen** — line numbering 1..3, cost frozen server-side, `manual_discount`=10 not silently 0, atomic replace keeps 3 lines; `npm run gate` exit 0, 177 tests. Three layout defects found by measurement — §9) |
-| 3.3 | Quote management screen (tabs F24 + ⭐ + filters + actions) 🗣️→🔻🤖 | ⬜ |
+| 3.3 | Quote management screen (tabs F24 + ⭐ + filters + actions) 🗣️→🔻🤖 | ✅ (built to the approved mockup `09_quote_management_approved.html`. TDD on 5 new `quotes.js` helpers — 34 tests written first, watched fail on unresolved imports, then implemented. Live-verified as CEO: 0 horizontal overflow, ₪ on the same side in all 12 amounts, all 7 columns aligned to **0.0px**, `6,319 ₪` + "אחרי 15% הנחה" on quote #6, chip filters toggle 6→1→6, rejection breakdown 3 reasons, reject-dialog validation, PDF blob 34,026 bytes whose extracted text carries the full 6,300→5,355→**6,319 ₪** waterfall. `npm run gate` exit 0, 219 tests. Three defects found by measurement — §9) |
 | 3.4 | Quote PDF render + download + mailto flow 🗣️→🔻🤖 screenshot | ⬜ |
 | 3.5 | Customer-card integration (quote history §6 + metrics + income filter) 🗣️→🔻🤖 | ⬜ |
 | 3.6 | Prices tab in /system (§7.84) 🗣️→🔻🤖 | ⬜ |
@@ -318,6 +319,74 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 29/07/2026 19:30 — **Migration 6 applied (typed-echo given): 8th rejection reason `נפתחה בטעות`.**
+  Full record in `docs/db_roadmap.md` + the §7.82/F2 write-back. Two things came out of it that belong here:
+  **(a) A quote cannot be deleted at all — proven, not assumed.** Ishay approved deleting the two leftover
+  test quotes; the DB refused. The lock trigger (§7.50) also guards `quote_services`, and on a cascading
+  DELETE the parent quote is already gone, so its status lookup returns NULL and the trigger raises `P0001`
+  ("נמצא: unknown"). **Deletion was never actually available** — which retroactively makes the 8th-reason
+  ruling the only workable answer, not merely the tidier one. Any future delete-quote feature must drop or
+  exempt that trigger first. Resolution taken instead: both quotes marked `rejected` + `'נפתחה בטעות'`,
+  which doubles as live end-to-end proof of the new feature.
+  **(b) The exclusion is honest, and measurable:** the נדחו tab now shows 5 rows and its breakdown leads with
+  "2 נפתחה בטעות", while the approval rate stayed **25% — 1 of 4** and "שווי הצעות פתוחות" returned to
+  **30,445 ₪**, the exact figures on the approved mockup.
+  **↳ Chip visibility refined after Ishay asked "if there is data, will they appear?"** — a fair challenge to a
+  blanket per-tab rule. Now per-chip and data-aware: **"פג בקרוב"** is hidden only where its count is
+  *structurally* 0 (expiry is defined for `in_progress` only), and **"אירועים קרובים"** — which measures the
+  *customer's* date, not our document's age — is shown wherever it has something to show. His own rule is
+  preserved untouched: when a chip is visible and its count is 0, it renders **disabled**, not hidden. Nothing
+  here switches a filter off permanently; real data lights them up on its own.
+- 29/07/2026 19:10 — **Step 3.3 BUILT. Two sessions were live on this branch at once (iron rule 16), and the
+  ownership question the other one raised is now answered by evidence: the uncommitted 3.3 code was mine.**
+  The other conversation wrote **no code** — its commits `f67cb98`/`512184c` are docs only — and it correctly
+  refused to build. Its own finding is worth keeping: **`git add -A` from one session sweeps another
+  session's in-progress files into its commit**; stage explicit paths whenever a parallel session is live.
+  Files: `QuotesPage.jsx` · `RejectQuoteDialog.jsx` · `ApproveQuoteDialog.jsx` · `QuoteActionDialog.jsx` ·
+  `QuoteDocumentDialog.jsx` + `quotes.js`(+test) + `api.js` + `App.jsx` route.
+  **↳ Three defects found by measuring, none visible in a screenshot — the same family as 3.2:**
+  (1) **The filter row silently wrapped to two lines.** Measured: five controls totalling **1,071px inside a
+  912px card**, so the two chips dropped to their own line and read as a different control. Root cause is
+  specific and worth keeping: two native `input[type=date]` occupy **258px** and cannot be shrunk below their
+  intrinsic width — the approved mockup draws a single narrow dropdown there. Fixed by making the date range a
+  **button that opens a panel** (the pattern `CustomersPage` already uses for "סינון") plus trimming the search
+  and customer controls; re-measured at 893px. (2) **My own assertion was wrong before the layout was.** The
+  fix looked like it had failed because I compared `getBoundingClientRect().top` — a 30px chip centred inside a
+  38px row legitimately sits 4px lower. Comparing **centres** showed all six controls at `centerY 291`. Same
+  lesson as 3.2's `30`→`30030`: on a red check, suspect the check. (3) **A blank white screen from a
+  temporal-dead-zone `const`** — `showChips` was declared *after* the line that used it. React rendered
+  nothing and the automated tests reported only "element not found"; the cause was invisible without reading
+  the order of declarations.
+  **↳ Deliberate deviations from the mockup, each with its reason:** (a) the date filter is a button+panel, not
+  two inline fields (above); (b) the two quick-filter chips are **hidden** on מאושרות/נדחו — a rejected quote
+  can never expire, so a permanently-disabled control there is noise by `src/CLAUDE.md` pass (2), and when
+  hidden they also stop filtering, so no invisible filter can hide rows; (c) the ⭳ download-arrow became an
+  **eye** labelled "צפייה במסמך" (Ishay's ruling: an icon that promises a download but opens a preview is
+  "same look, different job"); (d) row action buttons are the mockup's bordered 30px squares rather than the
+  project's `variant="link"` icon button — up to four actions share one row and need separation.
+  **↳ Pulled forward from 3.4 on purpose:** the document dialog ships here with **view + download**, because a
+  button rendered per the mockup that does nothing is worse than either alternative. What stays in 3.4 is the
+  actual new work: "שלח במייל" from the `תבנית_מייל_הצעת_מחיר` param, primary contact only, `in_progress` rows
+  only, and wiring the same dialog into the builder page.
+  **↳ Verification note — the PDF preview could not be eyeballed by the automated browser.** The `<iframe>`
+  renders blank in headless Chromium (no bundled PDF viewer) — the same class of viewer-artifact that cost an
+  hour in 3.1. Rather than chase it, the blob was fetched from the live page and written to disk: **34,026
+  bytes, `%PDF-` header**, and its extracted text carries quote #6, מדיטק, `18:00–22:00` in the correct order,
+  the three catalogue item names, and the full waterfall to **6,319 ₪**. Visual glyph rendering of this exact
+  engine was already proven in real Chrome in 3.1. **Still unverified by human eye: this dialog on Ishay's
+  screen** — one click at `/quotes` → 👁.
+  **↳ Shared-component review Ishay asked for, and what it found.** `jscpd` flagged two real clones between the
+  approve and reject dialogs; both are gone, folded into `QuoteActionDialog` (the shell owns saving-state and
+  error display, the caller owns validation and the action). Three near-duplicates that jscpd **cannot** see
+  because their strings differ: the right-side-magnifier search box (**4 files**), the three-branch empty state
+  (**2 files**), and the fact that `ConfirmDialog`/`useConfirm` — a shared confirm mechanism that already
+  exists — takes only plain text and therefore cannot carry either of these bodies. **Not extracted on purpose:**
+  two examples is where the wrong abstraction gets born; 3.5/3.6 will add the third and fourth, and step 3.7
+  (the Phase-3 UX gate) is the right moment. Merging `ConfirmDialog` with `QuoteActionDialog` touches modules 1
+  and 2, which are merged and closed — recommend deferring past the deadline.
+  **↳ Demo-data pollution to clean:** quotes **#14/#15** ("בדיקת שמירה …", "בדיקת דיילות ידנית …") are leftovers
+  from 3.2's throwaway verification specs. They inflate "שווי הצעות פתוחות" to 41,690 ₪ and the בתהליך tab to 6.
+  Deleting them is Ishay's call (they are data, and this repo has no delete-quote flow).
 - 29/07/2026 17:40 — **Step 3.3 🗣️ mockup, round 2 (`scratch.local/mockup_3_3.html`). Ishay's calls:**
   KPI strip cut 3 tiles → **2** ("שווי הצעות פתוחות" — he rejected "סכום בצנרת" as imported jargon —
   and "שיעור אישור" with "1 מתוך 4 שנסגרו" beside it, since a bare 25 % on four closed quotes
