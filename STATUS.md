@@ -2,7 +2,7 @@
 
 # REG-IN — לוח מצב
 
-> עודכן לאחרונה: 29/07/2026 18:44
+> עודכן לאחרונה: 29/07/2026 18:55
 > ⚠️ **כלל 16 — סשן מקביל חי על הענף, כותב 3.3 בפועל.** ב-18:19 הנחת ישי הייתה ש-3.3 מאושר-מוקאפ
 > וללא קוד; ב-18:44 `git status` מראה בפועל `QuotesPage.jsx`/`RejectQuoteDialog.jsx`/
 > `ApproveQuoteDialog.jsx`/`QuoteDocumentDialog.jsx` + עריכות ב-`quotes.js`/`api.js`/`App.jsx` —
