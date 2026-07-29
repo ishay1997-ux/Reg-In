@@ -42,6 +42,18 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 29/07/2026 19:55 — The red messages that would not clear: a state-vs-derived bug Ishay found by using the screen
+
+He hit it while driving the live builder, worked out the mechanism himself out loud ("so the check runs only when you press save"), and said he would not block on it — then asked for it anyway, which was right. **Cause:** the validation map was `state`, written once inside `handleSave`, so a corrected field kept its red message until the next click. **Fix:** the map is now derived every render — `submitAttempted ? validateQuoteForm(...) : {}`.
+
+**The tempting wrong fix, and why it was rejected:** "clear the error of the field just touched". Three rules on this form are **cross-field** — combined discount ≤100%, at-least-one-hostess-line, past event date — and per-field clearing would strand those on a screen that is already valid. Deriving the whole map is both simpler and correct. `todayIso` also moved into `handleSave`, so a form left open overnight is not validated against yesterday's date.
+
+**Verified in both directions**, since "errors disappear" is only half the requirement: a new form opens with **0** messages (it must not open red); saving it empty raises **7**; typing the event name clears *that* message with **no second save** and leaves the rest at **6**; the location clears its own, **5**. **Regression on the path I actually changed:** quote #6 in edit mode → `quote-save` → `replace_quote_lines` **204** → back at `/quotes`.
+
+**A metric that lied, worth recording.** My first counter reported "3 errors" on a freshly loaded, perfectly valid edit form. Enumerating the elements instead of trusting the number showed all of them legitimate: three row **delete icons** and two discount amounts (`-315 ₪`), all red by design. "How many red things are on screen" was never the question — the same shape of mistake as comparing `top` instead of centres earlier tonight.
+
+`npm run gate` exit 0, 221 tests.
+
 ### 29/07/2026 19:30 — Migration 6, and the DB proving that "delete the quote" was never an option
 
 Typed-echo given, `20260729191557_module3_add_rejection_reason_opened_by_mistake` applied via MCP and verified with `pg_get_constraintdef` (8 values). It is an explicit correction of Ishay's own §7.82/F2 ruling of 12/07 ("exactly 7"), written back to `PROJECT_MASTER` the same session per iron rule 13(a), with `schema.sql` and `db_roadmap` following. The exclusion from the approval-rate denominator lives in **code** (`NON_LOSS_REJECTION_REASONS`), not the DB — the DB does not compute metrics.

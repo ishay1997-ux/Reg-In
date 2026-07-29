@@ -319,6 +319,23 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 29/07/2026 19:55 — **Fix carried back into step 3.2: the red validation messages did not clear until the
+  next save.** Ishay found it while driving the live builder, diagnosed the behaviour himself out loud
+  ("so the check runs only when you press save"), and chose not to block on it — then asked for it anyway.
+  **Cause:** the error map was `state`, written once in `handleSave`; a corrected field kept its message
+  until the next click. **Fix:** the map is now *derived* every render — `submitAttempted ? validateQuoteForm(...) : {}`.
+  ⚠️ Deliberately **not** "clear the error of the field just touched": three rules here are cross-field
+  (combined discount ≤100% · at-least-one-hostess-line · past date), and per-field clearing would strand
+  them on a screen that is already valid. `todayIso` also moved into `handleSave` so a form left open
+  overnight is not validated against yesterday.
+  **Verified live, both directions:** a new form opens with **0** messages; saving it empty raises **7**;
+  typing the event name clears *that* message with **no second save** and leaves the rest (**6**), then
+  the location clears its own (**5**). **Regression on the path I actually changed:** quote #6 opened in
+  edit mode → `quote-save` → `replace_quote_lines` returned **204** → navigated back to `/quotes`.
+  **↳ A metric that lied and was corrected:** counting `.text-red-600` elements reported "3 errors" on a
+  freshly loaded, perfectly valid edit form. They were the three row **delete icons** and the two discount
+  amounts (`-315 ₪`), all legitimately red. Enumerated them rather than trusting the count — "how many red
+  things are on screen" was never the question.
 - 29/07/2026 19:30 — **Migration 6 applied (typed-echo given): 8th rejection reason `נפתחה בטעות`.**
   Full record in `docs/db_roadmap.md` + the §7.82/F2 write-back. Two things came out of it that belong here:
   **(a) A quote cannot be deleted at all — proven, not assumed.** Ishay approved deleting the two leftover

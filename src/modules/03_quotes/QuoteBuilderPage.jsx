@@ -88,7 +88,15 @@ export default function QuoteBuilderPage() {
   const [catalog, setCatalog] = useState({ products: [], tiers: [], params: [] })
   const [form, setForm] = useState(EMPTY_FORM)
   const [lines, setLines] = useState([])
-  const [errors, setErrors] = useState({})
+  // ⚠️ השגיאות **אינן** state — הן נגזרות מהטופס בכל רינדור, אחרי הניסיון-לשמור הראשון.
+  // למה לא state (מה שהיה כאן עד 29/07/2026, וישי תפס): מפת-שגיאות שנשמרת בלחיצת "שמור"
+  // נשארת תלויה מעל שדה שכבר תוקן, עד הלחיצה הבאה. גזירה חיה מנקה כל הודעה **ברגע**
+  // שהשדה שלה נעשה תקין, ומשאירה את מי שעדיין ריק — וזו בדיוק ההתנהגות שהוא ציפה לה.
+  // ⚠️ לא מנקים "שגיאה של השדה שנגעו בו" בלבד: כללים חוצי-שדות (סכום ההנחות ≤100%,
+  // חובת שורת-דיילות) תלויים בכמה שדות יחד, וניקוי-פר-שדה היה משאיר אותם תקועים.
+  const [submitAttempted, setSubmitAttempted] = useState(false)
+  // "היום" נשמר ב-state ולא מחושב ברינדור — react-hooks/purity אוסר Date בגוף הרינדור.
+  const [todayIso, setTodayIso] = useState('')
   const [customerDialogOpen, setCustomerDialogOpen] = useState(false)
   const [reloadTick, setReloadTick] = useState(0)
 
@@ -212,10 +220,12 @@ export default function QuoteBuilderPage() {
   }
 
   async function handleSave() {
-    // "היום" מחושב כאן, ב-handler, ולא ברינדור — react-hooks/purity אוסר Date בגוף הרינדור.
-    const todayIso = new Date().toLocaleDateString('sv-SE') // YYYY-MM-DD בזמן מקומי
-    const found = validateQuoteForm(form, lines, todayIso)
-    setErrors(found)
+    // רענון "היום" ברגע השמירה, ולא הסתמכות על מה שנקבע בטעינת המסך: טופס שנשאר פתוח
+    // לילה שלם היה נבדק מול תאריך של אתמול.
+    const freshToday = new Date().toLocaleDateString('sv-SE') // YYYY-MM-DD בזמן מקומי
+    setTodayIso(freshToday)
+    setSubmitAttempted(true)
+    const found = validateQuoteForm(form, lines, freshToday)
     if (Object.keys(found).length > 0) {
       toast.error('יש שדות שדורשים תיקון לפני השמירה.')
       return
@@ -239,6 +249,9 @@ export default function QuoteBuilderPage() {
       setSaving(false)
     }
   }
+
+  // הגזירה עצמה. לפני ניסיון-השמירה הראשון המפה ריקה — טופס חדש לא נפתח באדום.
+  const errors = submitAttempted ? validateQuoteForm(form, lines, todayIso) : {}
 
   if (loading) return <LoadingOrError loading />
   if (loadError) {
