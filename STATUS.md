@@ -2,7 +2,7 @@
 
 # REG-IN — לוח מצב
 
-> עודכן לאחרונה: 29/07/2026 23:52
+> עודכן לאחרונה: 30/07/2026 00:12
 > ✅ **כלל 16 — נפתר בראיות, ועכשיו גם במנגנון.** האזהרה שנרשמה כאן ב-18:44/18:57 הייתה נכונה;
 > הבעלות אושרה — 3.3 היה של סשן-הבנייה, הושלם ואומת. **תוספת מהערב: התקלה שגרמה לאזהרה —
 > ה-Stop hook לא ידע "מי" ערך קובץ, רק "שהוא" השתנה — תוקנה במנגנון עצמו** (`protect-frozen-files.sh`
@@ -73,7 +73,7 @@
 | 1 | משתמשים והרשאות | ✅ מוזג ל-`dev` (PR [#2](https://github.com/ishay1997-ux/Reg-In/pull/2)) | — | [module_01](docs/guides/modules/module_01_close.md) |
 | 2 | לקוחות | ✅ מוזג ל-`dev` (PR [#6](https://github.com/ishay1997-ux/Reg-In/pull/6), `e69383a`) | — | [module_02](docs/guides/modules/module_02_customers.md) |
 | 3 | **הצעות מחיר** | 🔨 **פזה 3 — צעד 3.4** | **07/08** | [module_03](docs/guides/modules/module_03_quotes.md) |
-| 4 | דיילות + Smart Match | ⬜ (🔬 מחקר-קדם + הכרעות בוצעו 29/07 — ארכיטקטורה + **7/8** תת-הכרעות סגורות; §7.15↳ + [מסמך-המחקר](docs/module4_smart_match_research.md). **נותרה 1:** אילו זוויות-מיון — לפתיחת מ4) | 21/08 | [module_04](docs/guides/modules/module_04_hostesses.md) |
+| 4 | דיילות + Smart Match | ⬜ (🔬 מחקר-קדם + הכרעות בוצעו 29/07 — ארכיטקטורה + **7/8** תת-הכרעות סגורות; §7.15↳ + [מסמך-המחקר](docs/module4_smart_match_research.md). **נותרו 3 לדיון 30/07:** אילו זוויות-מיון · דריסה-זמנית "לא הפעם" · אירוע דו-תפקידי (חסום §7.67)) | 21/08 | [module_04](docs/guides/modules/module_04_hostesses.md) |
 | 5 | לוגיסטיקה | ⬜ | 04/09 (משולב עם 6) | [module_05](docs/guides/modules/module_05_logistics.md) |
 | 6 | פרויקטים (המחבר) | ⬜ | 04/09 (משולב עם 5) | [module_06](docs/guides/modules/module_06_projects.md) |
 | 8 | כספים וסגירת אירוע | ⬜ | 08/09 | [module_08](docs/guides/modules/module_08_finance.md) |
