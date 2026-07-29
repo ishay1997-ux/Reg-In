@@ -468,6 +468,20 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 
 ## 9. 📝 Deviations & Tech-Debt Log
 
+- 29/07/2026 17:20 — **Post-close touch on this module's files, from M3 step 3.2 (Ishay caught it in
+  the shared `CustomerFormDialog` while creating a customer from the quote screen).** The dialog's
+  **left corners rendered square**: the scrollbar was painted into the rounded corner because
+  `overflow-y-auto` sat on the same element as `rounded-xl`. Fixed **once, in the shared
+  `components/ui/dialog.jsx`** rather than per-caller, so every dialog in the app benefits:
+  `DialogContent` is now `flex flex-col max-h-[90vh] overflow-hidden` with an inner
+  `flex-1 min-h-0 overflow-y-auto p-6` scroller. The three call sites here
+  (`CustomerFormDialog:274`, `CustomerDetailsCard:89`, `CustomersPage:565`) had their
+  `max-h-[90vh] overflow-y-auto` **removed** — leaving it would re-create the bug on the outer element.
+  ⚠️ **The first attempt broke it worse and Ishay caught that too within a minute:** without `min-h-0`
+  a flex child refuses to shrink below its content height, so the dialog **clipped** its bottom
+  (the submit button disappeared) instead of scrolling. Verified after the fix: dialog inside the
+  viewport, content scrolls, corner radius non-zero, submit button fully visible at the scroll bottom.
+  **No behavioural change to this module** — visual only; its 37 tests and the full gate stayed green.
 - 11/07/2026 22:55 — **Final 👤 visual pass SIGNED (Ishay: "אישרתי ויזואלית הכל מעולה")** — the 16:21/17:07 UX-rounds' pending visual gate, the module's last open human gate. Module fully closed; remaining = push doc commits + open the PR (human, instructions printed 22:42).
 - 11/07/2026 22:33 — **Step 5.4 closing audit (fresh session) — verdict [YES]; DoD typed-echo signed by Ishay 22:39.** Independent re-verification: 13/13 DoD ✓ (evidence per checkbox above) · RLS re-probed live via rolled-back MCP impersonation (CEO/blocked/view on customers+customer_contacts + scen-6/9 ≡ baseline; policy bodies ≡ §7.21 verbatim) · gates in-session: lint 0 · 37/37 · build exit-0 · e2e 10/2-skip · format:check=CRLF-noise-only (`git ls-files --eol`) · advisors triaged (MPP=§7.21-template characteristic, accepted; `quotes` FK index→C-1/M3; 10×deny-all=deliberate) · zero schema drift · live smoke unauth→login+clean console (a11y-snapshot; pane screenshot failed technically — renderer). **Fact corrections (fresh git evidence):** the module was fully committed AND pushed pre-audit (`git ls-remote`=`dce7675`=HEAD, not merged) — the header's "uncommitted/not-yet-pushed" notes were stale, fixed. §7.81's "awaiting typed-echo" note in PROJECT_MASTER was stale (applied 11/07) — fixed. db_roadmap §10 got its missing 11/07 strike-line. **Test-data cleanup (Ishay-approved in-gate):** customers 16/17 + 2 contacts (SQL, cascade) + marketing PDF (Storage API via CEO-authenticated supabase-js client, E2E env pattern — SQL delete blocked by `protect_delete`) → 0/0/0 live-verified. **Tech-debt registered:** atomic-RPC candidate for `replaceCustomerContacts` + write-policy split (a §7.21-template question) — both flagged for M3; marketing-flow E2E → M10. **Also this session (Ishay's rulings, pre-persistence): 3 opening-template adjustments** — 🗣️→mandatory experience-brief (תקציר-חוויה) + PM approval before code · 🤖 self-verification = functional+visual with screenshots (👤 only end-of-phase/design) · new 🎤 PM-Interview section before blueprint approval — + CLAUDE.md rule-1 ripple. 📣 Amit (binds M3's blueprint; CHANGELOG line). The 16:21/17:07 👤 visual pass: Ishay verifying live post-signature.
 - 11/07/2026 17:07 — **Marketing-screen redesign (recipient list + preview) + UX/validation gates added to BOTH templates (Ishay-directed).** Follow-on to the 16:21 UX round — same session/branch, before 5.4.

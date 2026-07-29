@@ -271,7 +271,9 @@ export default function CustomerFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !saving && onOpenChange(o)}>
-      <DialogContent dir="rtl" className="max-h-[90vh] overflow-y-auto">
+      {/* הגלילה והגובה-המרבי חיים כעת ב-DialogContent עצמו (ר' ההערה שם — פס-הגלילה
+          על האלמנט המעוגל ריבע את הפינות). אין לשחזר כאן overflow-y-auto. */}
+      <DialogContent dir="rtl">
         <DialogHeader>
           {/* כותרת-עריכה = מחרוזת-אפיון מדויקת: "עריכת לקוח: [שם]" (C5 §5.6.17.4) */}
           <DialogTitle data-testid="customer-dialog-title">

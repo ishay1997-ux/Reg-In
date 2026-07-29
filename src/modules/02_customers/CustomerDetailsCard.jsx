@@ -86,7 +86,7 @@ export default function CustomerDetailsCard({ open, onOpenChange, customerId }) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent dir="rtl" className="max-h-[90vh] overflow-y-auto" data-testid="customer-card">
+      <DialogContent dir="rtl" data-testid="customer-card">
         <DialogHeader>
           <DialogTitle>
             {customer ? `כרטיס לקוח: ${customer.company_name}` : 'כרטיס לקוח'}

@@ -62,19 +62,26 @@ function lineAgorot(qty, unitPrice) {
 // הייתה הופכת שגיאת-נתונים במחירון לשגיאת-תמחור שקטה.
 // אין מדרגות מתאימות (או אין מדרגות בכלל, כמו בשירותי-דיילות — החלטת-Seed #3) ⇒ base_price.
 // הסינון לפי sku מכוון: מותר להעביר לכאן את **כל** קטלוג-המדרגות בלי לסנן קודם.
-export function resolveUnitPrice(product, tiers, qty) {
-  const basePrice = toFiniteNumber(product?.base_price) ?? 0
+// המדרגה הזוכה עצמה (או null אם אין). מיוצאת כדי שמסך-הבנייה יוכל להסביר למשתמש **למה**
+// המחיר הוא 5 ₪ ולא 6 ₪ ("מדרגה 201–400") — בלי לשכפל את כלל-הבחירה במקום שני שיסטה ממנו.
+export function findMatchingTier(product, tiers, qty) {
   const q = toFiniteNumber(qty)
-  if (q === null) return basePrice
+  if (q === null) return null
 
   const candidates = (tiers ?? []).filter(
     (t) => t && (t.sku == null || t.sku === product?.sku) && (toFiniteNumber(t.min_qty) ?? 0) <= q,
   )
-  if (candidates.length === 0) return basePrice
+  if (candidates.length === 0) return null
 
-  const winner = candidates.reduce((best, t) =>
+  return candidates.reduce((best, t) =>
     (toFiniteNumber(t.min_qty) ?? 0) > (toFiniteNumber(best.min_qty) ?? 0) ? t : best,
   )
+}
+
+export function resolveUnitPrice(product, tiers, qty) {
+  const basePrice = toFiniteNumber(product?.base_price) ?? 0
+  const winner = findMatchingTier(product, tiers, qty)
+  if (winner === null) return basePrice
   return toFiniteNumber(winner.special_price) ?? basePrice
 }
 

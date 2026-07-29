@@ -9,7 +9,8 @@
     // 2 אפשרויות, ביקש שיקול-דעת ארכיטקטוני): פטור נקודתי ומתועד, לא השתקת-השער כולו.
     // 🔁 הסרה: ברגע שפזה 3 מייבאת בפועל — step 2.3 (getPricingCatalog וכו') ב-3.2/3.3,
     // ‏pricesApi.js ב-3.6 (docs/micro_guides/module-3.md). knip יחזור לבדוק אותם כרגיל.
-    "src/modules/03_quotes/api.js",
+    // ✅ 29/07/2026 — `src/modules/03_quotes/api.js` הוסר מהרשימה: צעד 3.2 מייבא ממנו בפועל
+    //    (createQuote/saveQuoteEdit/getQuote/getPricingCatalog). ‏pricesApi.js נשאר עד צעד 3.6.
     "src/modules/01_auth/pricesApi.js",
   ],
 }

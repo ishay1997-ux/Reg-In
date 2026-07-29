@@ -562,7 +562,7 @@ export default function CustomersPage() {
           edit-only: הכפתור והדיאלוג מרונדרים רק ל-edit (edit-vs-view, סעיף 4). */}
       {canEdit && (
         <Dialog open={marketingOpen} onOpenChange={setMarketingOpen}>
-          <DialogContent dir="rtl" className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogContent dir="rtl" className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>שליחת חומר שיווקי</DialogTitle>
               <DialogDescription>העלו חומר ושלחו אותו ללקוחות שאישרו קבלת דיוור.</DialogDescription>
