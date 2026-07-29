@@ -30,7 +30,7 @@
 | `security-guidance` | סקירת אבטחה — הצד שישי הכי לא יכול לבדוק לבד |
 | `skill-creator` | יצירה ושיפור סקילים — **ישי משתמש הרבה** |
 | `claude-md-management` | אודיט ושיפור קובצי CLAUDE.md |
-| `pr-review-toolkit` | **תלות אמיתית** — `module-close` §3c ו-`quality-audit` מפעילים את הסוכנים `silent-failure-hunter` · `pr-test-analyzer` · `comment-analyzer` בפועל |
+| `pr-review-toolkit` | **תלות אמיתית** — `module-close` §3b ו-`quality-audit` מפעילים את הסוכנים `silent-failure-hunter` · `pr-test-analyzer` · `comment-analyzer` בפועל |
 
 ## ⏸️ כבויים ב-REG-IN (10) — ומתי לבקש להדליק
 

@@ -127,7 +127,9 @@ if (existsSync(join(ROOT, 'src/modules'))) {
   for (const mod of readdirSync(join(ROOT, 'src/modules'))) {
     if (!statSync(join(ROOT, 'src/modules', mod)).isDirectory()) continue
     if (!existsSync(join(ROOT, 'src/modules', mod, 'CLAUDE.md')))
-      notes.push(`src/modules/${mod}/ קיים בלי CLAUDE.md (מוקשי-המודול) — module-close §4c.`)
+      problems.push(
+        `src/modules/${mod}/ קיים בלי CLAUDE.md (מוקשי-המודול) — חובה לפי module-close §4c.`,
+      )
   }
 }
 
