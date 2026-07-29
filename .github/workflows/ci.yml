@@ -23,9 +23,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Lint כולל מעכשיו את כללי sonarjs (כפילות/מורכבות) ברמת 'warn' — הם מופיעים
-      # בלוג אבל לא מפילים את השלב. אחרי סגירת מודול 3: מהדקים ל-'error' (eslint.config.js)
-      # ואז השלב הזה יחסום אוטומטית (החלטת-ישי 23/07/2026).
+      # Lint כולל את כללי sonarjs (כפילות/מורכבות). מאז 29/07/2026 הם ברמת 'error'
+      # (eslint.config.js) — כלומר מורכבות מעל 20 או קוד כפול **מפילים את השלב הזה**
+      # וחוסמים מיזוג. עד אז הם היו 'warn' כדי לא לחסום קוד קיים באמצע בניית מודול 3.
       - name: Lint
         run: npm run lint
 
@@ -35,26 +35,24 @@ jobs:
       - name: Format check
         run: npm run format:check
 
-      # שער-כפילות (jscpd) — כרגע מדווח-ולא-חוסם (continue-on-error) בשלב-האזהרות.
-      # ⚠️ הידוק אחרי מ3: להסיר את continue-on-error כדי שכפילות מעל הסף (3% ב-.jscpd.json)
-      # תחסום מיזוג. מרוכז עם הידוק-ה-sonarjs כשמודול 3 נסגר.
+      # שער-כפילות (jscpd) — **חוסם מאז 29/07/2026**: כפילות מעל הסף (3% ב-.jscpd.json)
+      # מפילה את השלב. הכפילות המקורית (UsersManagementPage↔CustomersPage) נפתרה 25/07
+      # בחילוץ src/components/LoadingOrError.jsx.
       - name: Duplication scan (jscpd)
         run: npm run dup
-        continue-on-error: true
 
-      # שער-קוד-מת (knip) — כרגע מדווח-ולא-חוסם (continue-on-error) בשלב-האזהרות.
-      # ⚠️ הידוק אחרי מ3: להסיר continue-on-error יחד עם הקשחת jscpd/sonarjs (ר' module-3.md §9).
+      # שער-קוד-מת (knip) — **חוסם מאז 29/07/2026**. ארבעת הממצאים שקדמו לו נסגרו באותו יום:
+      # 3 devDependencies יתומות הוסרו, ו-MARKETING_MAX_BYTES נעשה בשימוש אמיתי בקומפוננטה.
       - name: Dead code scan (knip)
         run: npm run deadcode
-        continue-on-error: true
 
-      # שער-חולשות-אבטחה בחבילות (npm audit, severity high+) — כרגע מדווח-ולא-חוסם: יש
-      # 7 ממצאים קיימים (4 high — react-router/postcss/shadcn) שקדמו לשלב הזה ודורשים
-      # החלטת-שדרוג נפרדת (חלקם breaking change). ⚠️ הידוק: להסיר continue-on-error אחרי
-      # שהחולשות הקיימות טופלו/וותרו במפורש — לא בהכרח קשור לזמן סגירת-מ3 (ר' module-3.md §9).
-      - name: Dependency vulnerability scan (npm audit)
+      # שער-חולשות-אבטחה בחבילות — **חוסם מאז 29/07/2026**. הפקודה מריצה את
+      # scripts/audit-gate.mjs (ולא `npm audit` ישירות): הוא חוסם על כל חולשה high/critical
+      # שאינה ברשימת-הפטורים המנומקת שבראשו, ומדפיס כל פטור בכל ריצה. 4 מ-6 החולשות
+      # ההיסטוריות נסגרו ב-`npm audit fix`; הנותרת (react-router GHSA-qwww-vcr4-c8h2)
+      # מפוטרת כי היא נוגעת רק ל-RSC APIs שהאפליקציה הזו אינה משתמשת בהם.
+      - name: Dependency vulnerability scan (audit-gate)
         run: npm run audit
-        continue-on-error: true
 
       - name: Test
         run: npm run test:run

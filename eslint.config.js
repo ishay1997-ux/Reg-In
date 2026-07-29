@@ -44,26 +44,27 @@ export default defineConfig([
     },
   },
   // בקרת-איכות (sonarjs): זיהוי כפילויות ומורכבות-יתר לאורך כל הפיתוח, כדי שהקוד
-  // יעמוד בסקירה של מהנדס-תוכנה. כרגע ברמת 'warn' בלבד — לא חוסם build/CI —
-  // ומוקשה לשער-חוסם ('error') אחרי סגירת מודול 3 (החלטת-ישי 23/07/2026, כדי לא
-  // לחסום קוד-מ3 קיים באמצע העבודה). לא חל על src/components/ui/ (shadcn vendored)
-  // ולא על קבצי-בדיקה (מורכבות בטסטים לגיטימית). הסט מובחר במכוון — no-duplicate-string
-  // הרועש הושמט. חבר לסקיל quality-audit (סקירה עמוקה יזומה) ולכלי jscpd (כפילות בין-קבצים).
+  // יעמוד בסקירה של מהנדס-תוכנה. **הוקשח ל-'error' ב-29/07/2026** (החלטת-ישי 23/07)
+  // אחרי שהממצא האחרון נסגר — `MarketingPanel` פוצל לתת-קומפוננטות והלוגיקה הטהורה
+  // עברה ל-`src/lib/marketing.js`. מכאן ואילך מורכבות מעל 20 **חוסמת** lint/CI.
+  // לא חל על src/components/ui/ (shadcn vendored) ולא על קבצי-בדיקה (מורכבות בטסטים
+  // לגיטימית). הסט מובחר במכוון — no-duplicate-string הרועש הושמט. חבר לסקיל
+  // quality-audit (סקירה עמוקה יזומה) ולכלי jscpd (כפילות בין-קבצים).
   {
     files: ['src/**/*.{js,jsx}'],
     ignores: ['src/components/ui/**', 'src/**/*.{test,spec}.{js,jsx}', 'src/test/**'],
     plugins: { sonarjs },
     rules: {
-      'sonarjs/no-identical-functions': 'warn', // ← הכי רלוונטי לשאלה: שתי פונקציות זהות
-      'sonarjs/no-identical-expressions': 'warn',
-      'sonarjs/no-duplicated-branches': 'warn',
-      'sonarjs/cognitive-complexity': ['warn', 20], // ← גלאי-ספגטי (מורכבות פר-פונקציה)
-      'sonarjs/no-collapsible-if': 'warn',
-      'sonarjs/no-redundant-boolean': 'warn',
-      'sonarjs/prefer-single-boolean-return': 'warn',
-      'sonarjs/no-nested-template-literals': 'warn',
-      'sonarjs/no-small-switch': 'warn',
-      'sonarjs/no-inverted-boolean-check': 'warn',
+      'sonarjs/no-identical-functions': 'error', // ← הכי רלוונטי לשאלה: שתי פונקציות זהות
+      'sonarjs/no-identical-expressions': 'error',
+      'sonarjs/no-duplicated-branches': 'error',
+      'sonarjs/cognitive-complexity': ['error', 20], // ← גלאי-ספגטי (מורכבות פר-פונקציה)
+      'sonarjs/no-collapsible-if': 'error',
+      'sonarjs/no-redundant-boolean': 'error',
+      'sonarjs/prefer-single-boolean-return': 'error',
+      'sonarjs/no-nested-template-literals': 'error',
+      'sonarjs/no-small-switch': 'error',
+      'sonarjs/no-inverted-boolean-check': 'error',
     },
   },
   // חייב להיות אחרון: מכבה כללי-עיצוב של ESLint שמתנגשים עם Prettier.
