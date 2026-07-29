@@ -487,7 +487,7 @@ alter table quotes add constraint quotes_combined_discount_max
   check (applied_customer_discount + manual_discount <= 100);
 alter table quotes add constraint quotes_rejection_reason_check
   check (rejection_reason is null or rejection_reason in
-    ('מחיר', 'חוסר זמינות/לו"ז', 'נבחר מתחרה', 'תקציב לקוח', 'האירוע בוטל אצל הלקוח', 'פג תוקף', 'אחר'));
+    ('מחיר', 'חוסר זמינות/לו"ז', 'נבחר מתחרה', 'תקציב לקוח', 'האירוע בוטל אצל הלקוח', 'פג תוקף', 'נפתחה בטעות', 'אחר'));
 alter table quotes add constraint quotes_rejection_notes_required
   check (rejection_reason is distinct from 'אחר' or rejection_notes is not null);
 alter table quotes add constraint quotes_rejected_iff_reason
