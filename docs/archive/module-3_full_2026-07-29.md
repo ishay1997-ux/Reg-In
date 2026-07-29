@@ -10,8 +10,8 @@
 | Module | 3 — הצעות מחיר (Quotes) |
 | Owner | ישי (sole developer — all rulings and build; guide `modules/module_03_quotes.md` §③) |
 | Branch | `ishay/module-3-quotes-build` (cut 22/07 from dev `a35c92f`, after PR #9 merged; the old `ishay/module-3-quotes` is now an ancestor of `dev` — dead, iron rule 10) |
-| Status | ✅ **Phase 2 (business logic) CLOSED — gate 2.4, `npm run gate` exit 0, 29/07/2026 09:58.** Phase-2 plan approved by Ishay 29/07/2026 (`~/.claude/plans/lazy-dazzling-catmull.md`). Next: Phase 3 (UI) — its first unit (3.1, PDF spike) needs a fresh 🗣️ brief + Ishay's approval before building (visual surface starts here). |
-| Last updated | 29/07/2026 10:20 (verified accurate — no content change; step 2.3's `api.js` matches its as-built row) |
+| Status | 🔨 **Phase 2 (business logic) IN PROGRESS.** Phase 1 (DB) closed — gate 1.7 approved by Ishay 23/07/2026 evening. Phase-2 plan approved by Ishay 29/07/2026 (`~/.claude/plans/lazy-dazzling-catmull.md` — doubles as the 🗣️ brief for the whole phase, since 2.1–2.3 have no visual surface). |
+| Last updated | 29/07/2026 09:58 (Phase 2 CLOSED — gate 2.4) |
 | **Active step** | **3.1** (PDF spike — Ishay's approval needed before starting Phase 3) |
 
 Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · ❌ blocked):
@@ -197,28 +197,15 @@ Canonical rules for every step: Goal · Files · What · Verification+expected �
 `quotes` daily. The lock trigger fails **loudly** (`P0001`, Hebrew message) on any UPDATE/DELETE of a
 non-`in_progress` quote — unlike every RLS denial, which fails silently as an empty result.
 
-#### Phase 2 — Business logic (SSOT) ✅ **CLOSED 29/07/2026 (gate 2.4, `npm run gate` exit 0)**
+#### Phase 2 — Business logic (SSOT)
 
-> **Compacted 29/07/2026** per §8(i). The step-by-step build instructions are spent — the authoritative
-> record of what was built is the files themselves (`src/lib/pricing.js`, `src/lib/catalog.js`,
-> `validators.js` additions, `src/modules/03_quotes/api.js`, `src/modules/01_auth/pricesApi.js`) and
-> their test suites. Full pre-compaction text: `docs/archive/module-3_full_2026-07-29.md`. Deviations
-> and as-built notes stay in §9 below.
+**Step 2.1 — pricing.js 🔻🤖.** Goal: the money SSOT (iron rule 14). Files: `src/lib/pricing.js`, `src/lib/pricing.test.js`. What: pure functions (no Supabase): `resolveUnitPrice(product, tiers, qty)` (§7.27 tie-break; base_price when no tiers); `computeLineTotal` (exact 2dp); `computeQuoteTotals(lines, appliedDiscount, manualDiscount, vatRate)` → {subtotal, discountAmount, preVat, vatAmount, total} all exact agorot (§7.25), additive discounts w/ validation ≤100 (§7.26); `recommendHostessCount(guests, ratio)` = ceil (F14); display helpers `formatShekelWhole` (F18); PRICING_PARAM_NAMES + parseVatPercent/parseGuestsRatio (from design notes — folded here, LOCAL-3). **F26 INVARIANT stated in file header comment: this engine knows only item×qty×price — no shift/hour semantics ever.** Tests: the 6,319 scenario EXACT (subtotal 6300.00, discount 945.00, preVat 5355.00, vat 963.90, total 6318.90, display 6,319) as the canonical test; tier boundaries (50/51, 200/201, 400/401, 1000/1001); unsorted tiers; qty below lowest tier → base_price; discount edge 0/100/101-rejected; combined >100 rejected; ceil recommendation (300/50=6, 301/50=7). Verify: `npm run test:run` → all green incl. 6,319 exact.
 
-| Step | What landed | Evidence |
-|---|---|---|
-| 2.1 | `src/lib/pricing.js`+test — money SSOT, TDD (test-first, watched fail, then implemented): `resolveUnitPrice`/`computeLineTotal`/`computeQuoteTotals`/`recommendHostessCount`/`formatShekelWhole`/`PRICING_PARAM_NAMES`/`parseVatPercent`/`parseGuestsRatio`. Whole-agorot integer math throughout (float-precision trap avoided by design, §9) | 29 new tests; **6,319 exact** (6300/945/5355/963.90/6318.90 → `6,319 ₪`); suite 77→106 |
-| 2.2 | `src/lib/catalog.js`+test (labels/PRODUCT_UNITS/LINE_COLORS) + 6 new `validators.js` exports (SKU/price/int/vat/ratio), additive-only | labels pulled live via `pg_constraint`, byte-match to the 4 CHECKs; suite 106→124; caught+fixed a blank-as-0 validator bug pre-ship (§9) |
-| 2.3 | `src/modules/03_quotes/api.js` + `src/modules/01_auth/pricesApi.js` — writes route through `create_quote`/`replace_quote_lines`/`approve_quote_and_create_project` RPCs only (F17); `rejectQuote` is the sole direct-update exception (documented why). ⚠️ **as-built: `listQuotes()` has NO `filters` param** (blueprint said `listQuotes(filters)`) — client-side filtering per M2's pattern; deviation recorded in §9 | live-DB smoke test of every query shape: 11 active products, 40 tiers, VAT=18/ratio=50 match exactly |
-| 2.4 | Phase gate | `npm run gate` exit 0 (verify+dup+deadcode+audit+check:context); 124 tests; two real gate gaps surfaced and resolved same-session, not deferred — §9 |
+**Step 2.2 — catalog.js + validators 🔻🤖.** Files: `src/lib/catalog.js`+test, `src/lib/validators.js`+test (⚠️ shared-surface: additive block only — no other module's build is active). What: PRODUCT_CATEGORY_LABELS/STATUS_LABELS/COLOR options (matching DB CHECKs); validators per design-notes §5 (SKU_REGEX no leading hyphen, prices, ints, vat 0–100, ratio). Verify: tests green; labels byte-match DB CHECK values.
 
-**⚠️ Carry-forward into Phase 3+ (do not re-derive):** `pricing.js` computes in **whole agorot
-(integers)**, converting to shekels only at the return — never re-derive totals from float shekel math
-in UI code. `computeQuoteTotals` takes lines shaped `{qty, unitPrice}`; DB rows (`closing_unit_price`)
-must be mapped to this shape by the caller. `api.js`'s `create_quote`/`replace_quote_lines` calls send
-`jsonb` keyed by exact column names — a typo'd key doesn't error, it silently becomes `NULL`/`0` server-side
-(see `src/modules/03_quotes/CLAUDE.md`). `knip.jsonc` carries a **temporary, dated exception** for
-`api.js`+`pricesApi.js` (no importing screen yet) — remove it when Phase 3 wires the imports (3.2/3.3/3.6).
+**Step 2.3 — api.js surfaces 🔻🤖.** Files: `src/modules/03_quotes/api.js`, `src/modules/01_auth/pricesApi.js`. What (pattern 02_customers/api.js toError): quotes: listQuotes(filters), getQuote(id) w/ lines, **createQuote + saveQuoteEdit both route through the atomic txn/RPC path (F17 — creation included, no half-states)**, approveQuote→rpc, rejectQuote(id, reason, notes), listQuotesByCustomer(customerId) (customer-card history §6), getPricingCatalog() (products active + tiers + 2 params); pricesApi per design-notes §3 (upsertPricingParam now SAFE to `.upsert()` — UNIQUE landed in 1.1; note deviation from notes). Verify: unit-less — exercised by E2E later; smoke via dev console against seeded DB (CEO login) showing catalog fetch 11 products.
+
+**Step 2.4 — Phase-2 gate 🔻👤.** verify green + 6,319 test evidence + Hebrew report.
 
 #### Phase 3 — UI (each unit: 🗣️ experience-brief → build → 🤖 functional+visual evidence w/ screenshots)
 
@@ -298,23 +285,6 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
-- 29/07/2026 10:30 — **DEVIATION from the approved contract, caught by Ishay in a blueprint-vs-code
-  comparison — the design choice was deliberate, but it was NOT recognised as a deviation and so was
-  never recorded. That recording failure is the real defect here, not the choice.** Blueprint (15/07)
-  specified `listQuotes(filters)`; as-built is **`listQuotes()`** — no parameter, always fetches every
-  quote. **Why the code is this way:** it follows M2's established pattern (`listCustomers()` +
-  `matchesCustomerFilters` in `src/lib/customers.js`) — fetch the full set the RLS allows, filter and
-  sort client-side. Step 3.3's own spec in this guide ("filters: customer, event-date range,
-  quote-date range" + tab counts + the ⭐ proximity chip) reads naturally as a client-side view layer,
-  so the two are consistent. **Ishay reviewed and did not require a change** — the deviation stands,
-  now documented. ⚠️ **Boundary worth stating once:** unlike `customers` (a stable-size list), quotes
-  **accumulate indefinitely**, and this call additionally pulls nested `quote_services(*)` for every
-  row. Fine at project scale; **this is the first place that would need real server-side filtering**
-  if the table ever grows large. **Process lesson (the actual takeaway):** a deliberate design choice
-  that silently contradicts an approved signature is indistinguishable from an oversight to a future
-  reader. When following a precedent from another module, check whether the precedent contradicts
-  *this* module's approved contract before adopting it — and if it does, that is a §9 line, even when
-  the choice itself is right.
 - 29/07/2026 09:58 — **as-built (step 2.3) + real ruling: `npm run gate` surfaced two genuine
   gaps that the phase-2 plan hadn't foreseen, both resolved same-session, not deferred.**
   (1) **knip flagged `api.js` + `pricesApi.js` as unused files** — correct as far as the tool can
