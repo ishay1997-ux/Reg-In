@@ -24,7 +24,7 @@ For bucket (b), ask plain yes/no existence questions in one small batch: "קור
 
 ## Step 3 — Decision rounds (bucket d)
 - **Batch size: 3–4 per round (Ishay's ruling 23/07)** via AskUserQuestion. After each batch offer: המשך / "מספיק להיום". Stopping mid-list is a first-class outcome — record exactly where the round stopped so the next session resumes cleanly.
-- **Presentation: recommendation-first, detail-on-demand (Ishay's ruling 23/07 — deliberately overrides the default full background·meaning·options format for THIS flow):** each question = one-line background + what it unblocks + options with **the recommendation FIRST, labeled (מומלץ)**. The full format (background · what the ruling means · per-option consequences) is provided only when he asks "פרט לי" or picks an unexpected option. His default action should be one tap on the recommendation — not analysis.
+- **Presentation: recommendation-first, detail-on-demand (the standing default in `~/.claude/CLAUDE.md`; every rulings surface uses it — blueprint template aligned 29/07/2026):** each question = one-line background + what it unblocks + options with **the recommendation FIRST, labeled (מומלץ)**. The full format (background · what the ruling means · per-option consequences) is provided only when he asks "פרט לי" or picks an unexpected option. His default action should be one tap on the recommendation — not analysis.
 - Hardest genuinely-contested items: flag them as such so he can defer them to a fresher moment; a real trade-off may deserve offering `council this` (CLAUDE.md — offer and wait, never run uninvited).
 
 ## Step 4 — Nod list (bucket c)
