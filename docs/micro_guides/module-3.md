@@ -11,8 +11,8 @@
 | Owner | ישי (sole developer — all rulings and build; guide `modules/module_03_quotes.md` §③) |
 | Branch | `ishay/module-3-quotes-build` (cut 22/07 from dev `a35c92f`, after PR #9 merged; the old `ishay/module-3-quotes` is now an ancestor of `dev` — dead, iron rule 10) |
 | Status | 🔨 **Phase 3 (UI) in progress. Step 3.1 (PDF engine) DONE 29/07/2026 14:34 — `npm run gate` exit 0, 139 tests, worked example renders 6,319 ₪ exactly, verified visually in Chrome's real PDF viewer.** Phase 1+2 closed (see done-tables below). |
-| Last updated | 29/07/2026 17:22 (3.2 built + hardened by Ishay's live use; **3.3 mockup presented, awaiting his review**) |
-| **Active step** | **3.3** (Quote management screen — needs a 🗣️ brief + Ishay's approval before building) |
+| Last updated | 29/07/2026 18:19 (**3.3 mockup approved** — see the step-3.3 blockquote below for the 7 rulings + what was rejected; no 3.3 code written by this session) |
+| **Active step** | **3.3** (mockup approved, 🔻👤 gate passed — build against `docs/mockups/quote-screen/09_quote_management_approved.html`). ⚠️ **Iron rule 16 — a PARALLEL session is live on this branch** (caught via the pre-commit hook on an in-progress, uncommitted `src/lib/quotes.test.js` that imports 3.3 helpers — `matchesQuoteFilters`/`sortQuotes`/`deriveQuoteExpiry`/`countRejectionReasons`). **Confirm with Ishay who is building 3.3 before touching it.** Details: `CLAUDE_CODE_LOG.md` 18:19 entry. |
 
 Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · ❌ blocked):
 
