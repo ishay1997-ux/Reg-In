@@ -66,6 +66,24 @@ Ishay pasted the `enabledPlugins` block (verified byte-identical to the validate
 
 **Verification:** `npm run verify` exit 0 (lint · format:check · 37 tests · build) · all internal markdown links in every changed doc resolve · every irreversible gate re-grepped and present · hooks syntax-checked, self-tested, and behaviourally re-tested. E2E deliberately not run: **zero `src/**/*.js` files changed**, and E2E mutates the shared live Supabase project.
 
+### 29/07/2026 08:40 — Contradiction audit + 4 rulings; the 🧊 infra-freeze retired
+
+Ishay asked whether anything in the instruction set still contradicts itself. A fresh-context audit over **25 governing files** (the whole CLAUDE.md tree, the global `~/.claude/CLAUDE.md`, all six skills, both templates, the hooks, STATUS, toolbox, README) returned 11 findings, 5 of them 🔴. **Three were caused by my own pruning the day before** and are the important lesson.
+
+**The self-inflicted failure:** the prune moved rules 2, 13(ז) and 15 out of root CLAUDE.md but never landed their text anywhere live — only in `docs/archive/`. Meanwhile ~12 live citations kept pointing at them, and rule 15 had a **three-way circular deferral** (blueprint template → "rule 15 is the SSOT, don't restate" ; root → the hook + module-build ; claude_routines → "defined in rule 15, this only audits it"). The root file's own promise — *"כלל שאינו מנוסח כאן עדיין בתוקף במלואו — הוא חי במקום שנטען בזמן הנכון"* — was false for exactly those three. **All three restored in full to `docs/CLAUDE.md`.** The generalizable rule: when relocating an instruction, verify the destination *contains the text*, not just that a pointer exists.
+
+Also fixed: `quality-audit` sent the security agent to §3b (silent-failure rubric) instead of §2c (OWASP) — the security scan would never have run while the report claimed it did · a false 👤 blocker in STATUS ("enable `pr-review-toolkit`") that was already true and surfaced every session · toolbox anchor §3c→§3b · §8(i) defined in the blueprint template so new guides are born with the compaction rule · `npm run gate` composition corrected + a duplicated `check:context` step removed · missing module gotchas file upgraded from advisory note to blocking error · stale two-developer text in `claude_routines.md`.
+
+**Four rulings by Ishay:**
+1. **Routines are Ishay's click.** Claude has no run tool, so "Claude will run it" was always wrong. SSOT written into rule 13(ז); all skill wordings aligned to *recommend and wait*.
+2. **Question format = recommendation FIRST.** The blueprint template put it last, contradicting the global file that loads every session. Aligned, and the "deliberate override" framing removed from `section7-rulings` — it is the default, not an exception.
+3. **Module-specific facts leave `src/CLAUDE.md`** and live only in the module's own file — `src/CLAUDE.md` loads on every code touch, the module file only for that module. This was the rule I wrote in `module-close` §4c and then broke myself.
+4. **🧊 infra-freeze RETIRED** (my recommendation, his ruling). Declared 09/07, then deliberately opened **six times** by 29/07. A freeze opened six times is not a constraint — it is a speed bump that costs deliberation on every governance decision, precisely the self-contradicting instruction the context doctrine warns about. **Replaced by the F1 subtraction principle alone:** before adding a rule/ritual/mechanism, check whether something already covers it and say out loud what is being subtracted; adding without subtracting is allowed but must be said and logged. The 🔮 post-module-4 checkpoint survives — that is what actually tests which mechanisms earned their keep. The 🧊 glyph now means "frozen file" (C5/C6) only.
+
+**Assessment Ishay asked for — are the rules written per the doctrine?** Six of the seven surviving rules are textbook gotchas (design hex, git merge-base after a real incident, DB-before-UI, handoff-prompt) or clean pointers. Rule 1 still prescribes a fixed verdict vocabulary rather than stating the intent — the one place still closer to "give Claude rules" than "let Claude use judgement". Recommended keeping it anyway: the fixed labels are what let Ishay scan an answer and catch a skipped triage, and that value beats doctrinal purity.
+
+Verification: `npm run verify` green · `npm run check:context` green after every step.
+
 ### 29/07/2026 01:20 — Three more doctrine items applied (Ishay: "נבצע לפי המלצתך")
 
 Asked what else from the articles was worth applying. Recommended five, Ishay approved all; #5 (a blindspot pass on the 19/09 schedule) folded into the module-4 session rather than run standalone.
