@@ -193,6 +193,7 @@ export default function QuotesPage() {
   const vatRate = parseVatPercent(params[QUOTE_SCREEN_PARAM_NAMES.vatPercent])
   const validityDays = params[QUOTE_SCREEN_PARAM_NAMES.validityDays]
   const eventWarningDays = params[QUOTE_SCREEN_PARAM_NAMES.eventWarningDays]
+  const emailTemplate = params[QUOTE_SCREEN_PARAM_NAMES.quoteEmailTemplate]
   const ctx = { todayIso, validityDays, eventWarningDays, defaultVatRate: vatRate }
 
   // בלי useMemo: הקומפיילר של React מזכר את זה לבד, ו-memoization ידני על ערך שנגזר
@@ -594,15 +595,19 @@ export default function QuotesPage() {
                         <div dir="ltr" className="text-[11.5px] text-slate-500 text-right">
                           {quote.customers?.phone}
                         </div>
-                        {/* אותו מנגנון בדיוק כמו פאנל-השיווק של מודול 2 — mailto, בלי תשתית
-                            חדשה. כפתור-חיוג tel: ירד בהכרעת-ישי: במחשב הוא לרוב לא מחייג. */}
+                        {/* קישור-פנייה כללי לאיש-הקשר (mailto ריק, אותו מנגנון כמו פאנל-השיווק
+                            של מודול 2). ⚠️ תפקיד שונה משליחת-ההצעה בחלון "צפייה במסמך" — שם
+                            נשלח בפועל המסמך עם תבנית-הגוף; זה כאן רק פותח תוכנת-דואר ריקה
+                            לפנייה חופשית. שמות שונים כדי שלא ייקראו כאותה פעולה. כפתור-חיוג
+                            tel: ירד בהכרעת-ישי: במחשב הוא לרוב לא מחייג. */}
                         {email && (
                           <a
                             href={`mailto:${email}`}
+                            title="מייל לאיש הקשר"
                             className="inline-block mt-1 text-[11px] text-teal-700 bg-teal-50 border border-teal-200 rounded-md px-1.5 py-0.5"
                             data-testid={`quote-mailto-${quote.quote_id}`}
                           >
-                            ✉ שליחת מייל
+                            ✉ מייל לאיש הקשר
                           </a>
                         )}
                       </td>
@@ -694,12 +699,15 @@ export default function QuotesPage() {
       </div>
 
       <QuoteDocumentDialog
+        key={`document-${documentQuote?.quote_id ?? 'none'}`}
         open={documentQuote != null}
         onOpenChange={(o) => !o && setDocumentQuote(null)}
         quote={documentQuote}
         productsBySku={productsBySku}
         vatRate={vatRate}
         validityDays={validityDays}
+        emailTemplate={emailTemplate}
+        canEdit={canEdit}
       />
       {/* remount לפי id (מוסכמת מודול 1/2): הטופס בתוך חלון-הדחייה מתאפס בפתיחה חדשה
           בלי effect שמסנכרן props→state — שהוא שגיאת-lint קשיחה בקונפיג הזה. */}

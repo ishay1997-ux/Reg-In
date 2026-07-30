@@ -9,6 +9,9 @@ import {
   recommendHostessCount,
   PRICING_PARAM_NAMES,
 } from '@/lib/pricing'
+// מנוע-המיילים המשותף (כלל 14 — הלוגיקה שאינה ייחודית להצעות-מחיר חיה שם פעם אחת,
+// ומודולים 4/8/11 יצרכו את אותו קוד ואת אותן בדיקות).
+import { buildEmailPayload, fillEmailTemplate } from '@/lib/email'
 
 // quotes.quote_status — שלושת הערכים של CHECK quotes_quote_status_check.
 export const QUOTE_STATUS_LABELS = {
@@ -256,6 +259,9 @@ export const QUOTE_SCREEN_PARAM_NAMES = {
   vatPercent: PRICING_PARAM_NAMES.VAT_PERCENT,
   validityDays: 'ימי_תוקף_הצעה',
   eventWarningDays: 'ימי_אזהרה_קדם_אירוע',
+  // גוף מייל-ההצעה (צעד 3.4). נטען יחד עם השאר כי `getQuoteScreenParams` שולפת
+  // בדיוק את הערכים שכאן — הוספת שם כאן היא כל מה שנדרש כדי שהמסך יקבל אותו.
+  quoteEmailTemplate: 'תבנית_מייל_הצעת_מחיר',
 }
 
 // סיבות-דחייה שאינן "הפסד" ולכן יוצאות מהמכנה של שיעור-האישור (הכרעת-ישי 29/07/2026).
@@ -501,5 +507,121 @@ export function sortQuotes(quotes, sortKey, ctx = {}) {
       return rows.sort((a, b) =>
         String(a.updated_at ?? '').localeCompare(String(b.updated_at ?? '')),
       )
+  }
+}
+
+// ── שליחת ההצעה במייל (צעד 3.4) ─────────────────────────────────────────────
+// גוף המייל **אינו כתוב בקוד** — הוא חי בפרמטר `תבנית_מייל_הצעת_מחיר` ב-params.
+// למה: ניסוח מול לקוח משתנה בלי לגעת בקוד (וכבר השתנה — מיגרציה 7 הסירה את
+// "והתנעת הפרויקט" בהכרעת-ישי), וזה גם אותו ערך שמודול 10 יצרוך בשליחה האוטומטית
+// (🚧 מ10 ב-PROJECT_MASTER §6) — כלומר מקור-אמת אחד לשני המימושים.
+
+// ⚠️ שמות ה-placeholders הם **חוזה מול הערך שבמסד**. שינוי שם בתבנית בלי שינוי כאן
+// מותיר סוגריים מרובעים בגוף שנשלח ללקוח — ולכן יש בדיקה שאוסרת placeholder שנשאר.
+// המנגנון עצמו (איך מחליפים, מה קורה בתבנית חסרה) חי ב-`src/lib/email.js` ומשותף לכל
+// המודולים; כאן רק **אילו** placeholders יש לתבנית של הצעת-מחיר.
+export function fillQuoteEmailTemplate(template, values) {
+  // שם-הנמען הוא תנאי-סף ולא "נחמד-שיהיה": "שלום ," הוא פתיחה שבורה במסמך שיוצא
+  // ללקוח. עדיף לא לשלוח בכלל מלשלוח מייל שנראה מקולקל, ולכן ריק ⇒ ריק.
+  const recipientName = values?.contactName?.trim() || values?.companyName?.trim() || ''
+  if (!recipientName) return ''
+
+  return fillEmailTemplate(template, {
+    '[שם_איש_קשר]': recipientName,
+    '[שם_פרויקט]': values?.eventName ?? '',
+    // התאריך מגיע **מפורמט מבחוץ** (`formatDate` של quotePdf) ולא מעוצב כאן, כדי
+    // שהמייל והמסמך המצורף יציגו את אותו תאריך באותו פורמט בדיוק.
+    '[תאריך_אירוע]': values?.eventDate ?? '',
+    // מיגרציה 9: החתימה מוזרקת כבלוק אחד שהקוד הרכיב (ר' buildSenderSignature).
+    '[חתימת_שולח]': buildSenderSignature(values?.sender),
+  })
+}
+
+// חתימת השולח בגוף המייל (הכרעת-ישי 30/07/2026, מיגרציה 9 — ה-placeholder `[חתימת_שולח]`).
+//
+// למה **מי ששלח** ולא פרטים קבועים של מנהלת-הפרויקטים: הרשאת-שליחה על 'הצעות מחיר' יש גם
+// למנהלת-פרויקטים וגם למנכ"ל (אומת מול המסד 30/07). פרטים קבועים היו שולחים את הלקוח
+// לאדם שלא מכיר את השיחה; המערכת ממילא יודעת מי לחץ, אז היא חותמת בשמו.
+//
+// ⚠️ ההרכבה כאן ולא בתבנית **בגלל שורת-הטלפון**: לשני משתמשי-מנכ"ל אין טלפון במסד, ומייל
+// שכתוב בו "טלפון:" בלי מספר גרוע ממייל בלי טלפון. תבנית-טקסט אינה יכולה להשמיט שורה
+// בתנאי — לכן יש placeholder **אחד** שהקוד מרכיב, ולא שלושה.
+// ⚠️ בלי שם — מחזיר ריק: חתימה בלי שם היא חתימה שבורה, ועדיף בלעדיה.
+export function buildSenderSignature(sender) {
+  const name = sender?.fullName?.trim()
+  if (!name) return ''
+
+  const role = sender?.roleName?.trim()
+  const lines = [role ? `${name} | ${role}, REG-IN` : `${name} | REG-IN`]
+  const phone = sender?.phone?.trim()
+  if (phone) lines.push(`טלפון: ${phone}`)
+  const email = sender?.email?.trim()
+  if (email) lines.push(`מייל: ${email}`)
+  return lines.join('\n')
+}
+
+const QUOTE_EMAIL_SUBJECT = 'הצעת מחיר מ-REG-IN'
+
+// הנושא אינו חלק מהתבנית שבמסד (היא מגדירה גוף בלבד) — ולכן נוסח כאן, באישור-ישי 30/07.
+export function quoteEmailSubject(quote) {
+  const eventName = quote?.event_name?.trim()
+  return eventName ? `${QUOTE_EMAIL_SUBJECT} — ${eventName}` : QUOTE_EMAIL_SUBJECT
+}
+
+// הכרעת-ישי 29/07: שליחה רק מהצעה **בתהליך**. הצעה שאושרה או נדחתה — המסמך שלה
+// כבר נשלח והוכרע, ושליחה חוזרת ממנה מבלבלת את הלקוח יותר משהיא עוזרת.
+export function isQuoteSendable(quote) {
+  return quote?.quote_status === 'in_progress'
+}
+
+// ⚠️ המנוע (חוזה-השדות, תקרת-הגודל, סיבת-ההשבתה, שלושת מצבי-התוצאה) חי ב-`src/lib/email.js`
+// ומשותף לכל המודולים ששולחים מייל. כאן נשאר **רק** מה שייחודי להצעת-מחיר: מי הנמען
+// (איש-הקשר הראשי, §6 מ3) ואילו שדות ממלאים את התבנית.
+export function buildQuoteEmailPayload({
+  quote,
+  template,
+  eventDate,
+  filename,
+  pdfBase64,
+  sender,
+} = {}) {
+  return buildEmailPayload({
+    // איש-הקשר הראשי בלבד (§6 מ3, אושר מחדש 30/07 — `customer_contacts` ריקה בפועל).
+    to: quote?.customers?.email,
+    subject: quoteEmailSubject(quote),
+    body: fillQuoteEmailTemplate(template, {
+      contactName: quote?.customers?.contact_name,
+      companyName: quote?.customers?.company_name,
+      eventName: quote?.event_name,
+      eventDate,
+      // מי ששלח — מגיע מהמשתמש המחובר (AuthContext), לא מהמסד בשאילתה נוספת.
+      sender,
+    }),
+    filename,
+    attachmentBase64: pdfBase64,
+  })
+}
+
+// ── תצוגת המסמך ממסך-הבנייה (צעד 3.4) ───────────────────────────────────────
+// המסמך נבנה ממה שעל המסך **עכשיו** ולא מהשורה השמורה. למה זה חשוב: המשתמש פותח
+// הצעה לעריכה, משנה כמות, ולוחץ "צפייה במסמך" — מסמך שמציג את הגרסה השמורה היה
+// מראה לו מספר אחר ממה שהוא רואה, וזה בדיוק מצב שבו נשלח ללקוח מסמך שגוי.
+// שלושת השדות שאין להם מקור בטופס (מספר ההצעה, תאריך ההנפקה, updated_at לחישוב
+// התוקף) מגיעים מהשורה השמורה — ולכן הכפתור מוצג רק במצב עריכה, שבו הם קיימים.
+// ⚠️ `customer` מוזרם מבחוץ: `getQuote()` אינה מצרפת את `customers`, ובלעדיו
+// המסמך היה יוצא בלי "לכבוד" ובלי ח"פ.
+export function formToPreviewQuote({ form, lines, savedQuote, customer } = {}) {
+  return {
+    ...buildQuoteHeader(form ?? {}),
+    quote_id: savedQuote?.quote_id,
+    issue_date: savedQuote?.issue_date,
+    updated_at: savedQuote?.updated_at,
+    vat_rate_snapshot: savedQuote?.vat_rate_snapshot ?? null,
+    customers: customer ?? savedQuote?.customers ?? null,
+    // המספור כאן הוא **תצוגתי בלבד** — המספור המחייב נקבע בשרת ב-RPC (with ordinality).
+    quote_services: buildQuoteLines(lines).map((line, index) => ({
+      ...line,
+      line_number: index + 1,
+    })),
   }
 }

@@ -10,9 +10,10 @@
 | Module | 3 — הצעות מחיר (Quotes) |
 | Owner | ישי (sole developer — all rulings and build; guide `modules/module_03_quotes.md` §③) |
 | Branch | `ishay/module-3-quotes-build` (cut 22/07 from dev `a35c92f`, after PR #9 merged; the old `ishay/module-3-quotes` is now an ancestor of `dev` — dead, iron rule 10) |
-| Status | 🔨 **Phase 3 (UI) in progress. Steps 3.1 (PDF engine) + 3.2 (builder) + 3.3 (management screen) DONE.** Phase 1+2 closed (see done-tables below). |
-| Last updated | 29/07/2026 19:30 — **3.3 built + migration 6 applied; `npm run gate` exit 0, 221 tests** (was 180). |
-| **Active step** | **3.4** (PDF send flow). ⚠️ Its 🗣️ direction is **already ruled** by Ishay 29/07 — preview dialog + download + "שלח במייל", mailto to the **primary contact only**, send shown on `in_progress` rows only, `<iframe>` blob and never pdf.js. What 3.3 already delivered: the preview dialog with view+download. See §9. |
+| Status | 🔨 **Phase 3 (UI) in progress. Steps 3.1–3.4 DONE.** Phase 1+2 closed (see done-tables below). |
+| Last updated | 30/07/2026 12:45 — **3.4 CLOSED (incl. migration 9, sender signature).** `npm run gate` exit 0, **283 tests** (was 219 at 3.3); 10 existing E2E green (regression checked). Demo data restored, `email_log` empty, no temp specs left. |
+| **Active step** | **3.5** (customer-card integration: quote history + revenue metrics + income filter). |
+| 🆕 **Read this before 3.5 — what changed in 3.4 that a fresh session would not guess** | (1) **A generic email engine now exists** — `src/lib/email.js` + Edge Function `send-email` + table `email_log`. It is **not** quote-specific; M4/M8/M11 reuse it (`src/CLAUDE.md` §"שליחת מייל" · §6 🚧 מ4·מ8·מ11). (2) **Migrations are at 9, not 5** — 6 (8th rejection reason) · 7+9 (email wording + sender signature: **deliberate deviations from FROZEN C5 §5.8.1**, `params` value only) · 8 (`email_log`). (3) **The project now has an external dependency** on Make.com (scenario 6759079) and its **first Edge Function**; the webhook URL is a Supabase secret and must never enter the repo. (4) **Direction incident #5** happened in an *outgoing email*, not a screen — `src/CLAUDE.md` now requires every outgoing Hebrew artefact to run its own direction pass. (5) **Two debts booked to 4.3:** no permanent E2E for the email path, and no test proving a `view`-level user is refused **by the function** rather than by a hidden button. (6) ⏳ One manual task left for Ishay in the Make UI: delete unused connection `regin-gmail-send` — **keep `regin-google-restricted`**. |
 | ⚠️ Concurrency | 29/07 19:10 — the **ownership question from the 18:19–18:57 entries is RESOLVED by evidence**: the uncommitted 3.3 code was this build session's, it is now complete and gate-green. The other conversation wrote **no code** (its two commits `f67cb98`/`512184c` are docs only) and correctly stood down per iron rule 16. **Ishay must close the second conversation before the next step** — two sessions on one branch nearly caused a `git add -A` cross-commit. |
 
 Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · ❌ blocked):
@@ -34,7 +35,7 @@ Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · �
 | 3.1 | PDF engine spike: lib choice + Hebrew/RTL proof 🗣️→🔻🤖 screenshot | ✅ (`@react-pdf/renderer` 4.5.1 + vendored Heebo **TTF**; 15 unit tests; 3 render cases — worked example / 14-line overflow / minimal — all verified visually in Chrome's pdfium. Two silent traps found and documented, plus 3 defects Ishay caught live — see §9) |
 | 3.2 | Quote builder screen (create+edit) 🗣️→🔻🤖 | ✅ (mockup approved 15:45 + 6 rulings; **live UI renders 6,319 ₪ exactly**; **save→DB and edit→save round-trip both proven through the real screen** — line numbering 1..3, cost frozen server-side, `manual_discount`=10 not silently 0, atomic replace keeps 3 lines; `npm run gate` exit 0, 177 tests. Three layout defects found by measurement — §9) |
 | 3.3 | Quote management screen (tabs F24 + ⭐ + filters + actions) 🗣️→🔻🤖 | ✅ (built to the approved mockup `09_quote_management_approved.html`. TDD on 5 new `quotes.js` helpers — 34 tests written first, watched fail on unresolved imports, then implemented. Live-verified as CEO: 0 horizontal overflow, ₪ on the same side in all 12 amounts, all 7 columns aligned to **0.0px**, `6,319 ₪` + "אחרי 15% הנחה" on quote #6, chip filters toggle 6→1→6, rejection breakdown 3 reasons, reject-dialog validation, PDF blob 34,026 bytes whose extracted text carries the full 6,300→5,355→**6,319 ₪** waterfall. `npm run gate` exit 0, 219 tests. Three defects found by measurement — §9) |
-| 3.4 | Quote PDF render + download + mailto flow 🗣️→🔻🤖 screenshot | ⬜ |
+| 3.4 | Quote PDF render + real email send (Make→Edge Function→Gmail) 🗣️→🔻🤖 screenshot | ✅ (proven on the real inbox: `REG-IN-quote-6.pdf` **33KB** = the known PDF size ⇒ base64 decoded, `<div dir="rtl">` body, 4 line breaks. `npm run gate` exit 0, **279 tests**; 10 existing E2E green. Six defects found by real-send, five of them mine — §9) |
 | 3.5 | Customer-card integration (quote history §6 + metrics + income filter) 🗣️→🔻🤖 | ⬜ |
 | 3.6 | Prices tab in /system (§7.84) 🗣️→🔻🤖 | ⬜ |
 | 3.7 | Phase-3 gate: 🎨 UX & functional review 🔻👤 | ⬜ |
@@ -59,7 +60,8 @@ Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · �
 | Quote creation/edit screen (customer pull, event data incl. start/end times, hostess recommendation w/ override, catalog lines w/ tiers+colors+notes, live totals) | ✅ full | — | — |
 | Quote management screen (status tabs, ⭐ expiring view, filters, approve/reject/edit) | ✅ full | — | — |
 | Pricing engine SSOT (`src/lib/pricing.js`, item×qty×price only — F26 invariant) | ✅ full | — | — |
-| PDF: real-time render, download, mailto + manual attach | ✅ engine + manual flow | 🚧 מ10 auto server-send w/ template #10 | §6 line added 15/07/2026 ✓ |
+| ~~PDF: real-time render, download, mailto + manual attach~~ → **PDF + REAL server-side email send** (Edge Function `send-email` → Make webhook → Gmail, PDF attached, template #10 from `params`, primary contact only, `in_progress` only) | ✅ full — **`mailto` was dropped, not deferred** | 🚧 מ10 keeps only: send **without** a third-party automation platform (own mail provider), delivery tracking, and auto-send on a trigger rather than a human click | §6 🚧 מ10 (narrowed 30/07) · §6 🚧 מ4·מ8·מ11 (the generic engine they reuse) |
+| Email send-journal `email_log` (generic `entity_type`/`entity_id`; server-written only) — the source of truth for "was this already sent" | ✅ full (**pulled forward from מ10**, Ishay 30/07) | — | `db_roadmap` A-20 |
 | Approval → project born complete (RPC; date/times/identity inherited; logistics rows derived; required_hostess_count=Σ hostess qty) | ✅ RPC + DB rows | project UI/lifecycle = מ6 · logistics UI = מ5 (no 🚧 — their spec'd scope, not a debt M3 leaves) | — |
 | Auto-expiry 30d (pg_cron daily, from updated_at, param-driven) | ✅ full | — | — |
 | Customer-card: quote history + revenues + avg-deal-size + income filter | ✅ (closes 4 of 5 §6 מ3 debts) | — | §6 lines get ✅ strikethrough on close |
@@ -80,14 +82,18 @@ Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · �
 - `src/modules/02_customers/api.js:23-192` — pattern for api.js (toError w/ code preservation; 23505 branching).
 
 **Files to create:**
-- `supabase/migrations/` — 5 named migrations (steps 1.1–1.5).
+- `supabase/migrations/` — ~~5~~ **9 named migrations** (1.1–1.5 in Phase 1; **6** rejection reason `נפתחה בטעות` 29/07; **7** quote-email wording 30/07; **8** `email_log` 30/07; **9** sender signature 30/07). ↳ as-built: 6–9 were not foreseen by the blueprint; each is recorded in `db_roadmap` §10 + §9 here.
 - `src/lib/pricing.js` + `pricing.test.js` — money SSOT.
 - `src/lib/catalog.js` + `catalog.test.js` — display labels (category/status/color), PRICING_PARAM_NAMES.
-- `src/modules/03_quotes/`: `api.js` · `QuotesPage.jsx` (tabs list) · `QuoteBuilderPage.jsx` (create/edit) · `QuoteLineEditor.jsx` · `QuoteSummaryPanel.jsx` · `RejectQuoteDialog.jsx` · `ApproveQuoteDialog.jsx` · `QuoteReadOnlyView.jsx` (reused by customer card history) · `quotePdf.js` (standalone pure engine, §7.12↳) + `PdfPreview` glue.
+- **`src/lib/email.js` + `email.test.js` — ↳ as-built 30/07, NOT in the blueprint: the generic email engine (template fill · 5-field Make contract · attachment ceiling · disabled-reason · three send outcomes · plain-text→RTL-HTML). Shared with M4/M8/M11 — see `src/CLAUDE.md` §"שליחת מייל".**
+- **`supabase/functions/send-email/index.ts` — ↳ as-built 30/07, NOT in the blueprint: the project's FIRST Edge Function. Holds the Make webhook URL (secret `MAKE_EMAIL_WEBHOOK_URL`), authenticates the caller, checks `edit` on 'הצעות מחיר' **against the DB**, forwards to Make, and writes `email_log` with service-role.**
+- `src/modules/03_quotes/`: `api.js` · `QuotesPage.jsx` (tabs list) · `QuoteBuilderPage.jsx` (create/edit) · `QuoteLineEditor.jsx` · `QuoteSummaryPanel.jsx` · `RejectQuoteDialog.jsx` · `ApproveQuoteDialog.jsx` · `QuoteReadOnlyView.jsx` (reused by customer card history) · `quotePdf.js` (standalone pure engine, §7.12↳) + `PdfPreview` glue. ↳ as-built: the file is **`quotePdf.jsx`** (JSX transform) and the preview glue is **`QuoteDocumentDialog.jsx`**, not a `PdfPreview`; `QuoteActionDialog.jsx` + `CustomerPicker.jsx` were added beyond the list.
 - `src/modules/01_auth/`: `PricesManagementPage.jsx` · `ProductFormDialog.jsx` · `PriceTiersDialog.jsx` · `PricingParamsCard.jsx` · `pricesApi.js` (per design-notes, weighed in DB challenge).
 - `e2e/quotes.spec.js` · `e2e/prices.spec.js`.
 
-**DB tables + migrations:** quotes, quote_services (rebuild §7.85), products, price_tiers, params (current defs schema.sql:57-117; all RLS-on/0-policies deny-all per schema.sql:344-353), projects+logistics written by RPC only. Existing migrations context: `20260710160735` (surrogate PK + nod bundle), `20260711013517` (customer_contacts).
+**DB tables + migrations:** quotes, quote_services (rebuild §7.85), products, price_tiers, params (current defs schema.sql:57-117; all RLS-on/0-policies deny-all per schema.sql:344-353), projects+logistics written by RPC only, **`email_log` (new table, migration 8 — generic send-journal, server-written only)**. Existing migrations context: `20260710160735` (surrogate PK + nod bundle), `20260711013517` (customer_contacts).
+
+**⚠️ External dependency added 30/07 (not in the blueprint — a new class of dependency for this project):** email delivery runs through **Make.com** (free plan, team 2049106): data structure `regin-quote` 511348 · webhook `regin-quote-email` 3471390 · scenario "REG-IN — שליחת מייל" 6759079 (ACTIVE, `immediately`) using connection `regin-google-restricted` 9407092, with a `Webhook response` 200-after-send / 502-on-error pair and a **Skip** error handler. Free-plan limits that bound this: 2 scenarios · 1,000 ops/month (≈500 sends) · 5MB attachment. 🔒 The webhook URL is a credential and lives **only** in the Supabase secret — never in this repo.
 
 **Dependencies:** M1 auth (current_user_role_id, permissions matrix, ProtectedRoute) · M2 customers (picker data, CustomerFormDialog, discount_percent, primary contact only — §6 מ3 contacts note).
 
@@ -146,6 +152,13 @@ Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · �
 | LOCAL-6 | ✅ RULED: quotes.notes renders as a distinct "הערות" block on the PDF **after the pricing waterfall, before the static "תנאים כלליים" terms** (so the money flow reads uninterrupted: lines → totals → notes → terms; C5:227 satisfied — notes ARE customer-facing). Ishay picked this over "under the lines table" (the blueprint's original recommendation) | ישי | 23/07 | 3.1 |
 | LOCAL-3 | Tier math lives in pricing.js (not catalog.js) — deviation from design-notes file split, same behavior (approved w/ blueprint 15/07) | ישי | 15/07 | 2.1 |
 | LOCAL-4 | ⭐ expiring = highlighted filter chip w/ count, not 4th tab (F24 delegated; approved w/ blueprint 15/07) | ישי | 15/07 | 3.3 |
+| LOCAL-7 | ✅ RULED 30/07: **real email send replaces the `mailto` flow of §7.12↳.** App → Edge Function → Make webhook → Gmail with the PDF attached. Reason: `mailto` cannot attach a file, so it added almost nothing over the download button. `mailto` **dropped, not deferred** | ישי | 30/07 | 3.4 |
+| LOCAL-8 | ✅ RULED 30/07: the email engine is **generic**, not quote-specific (`src/lib/email.js` + `send-email`) — `params` holds **6** email templates and M4/M8/M11 will send too. Enforcement: `src/CLAUDE.md` + §6 🚧 מ4·מ8·מ11 + `jscpd` in CI | ישי | 30/07 | 3.4, מ4/מ8/מ11 |
+| LOCAL-9 | ✅ RULED 30/07: **`email_log` pulled forward from מ10** — the only anti-double-send guard that survives a page refresh or a second user. Generic `(entity_type, entity_id)`; **server-written only** (a journal the browser can write to is not evidence) | ישי | 30/07 | 3.4 |
+| LOCAL-10 | ✅ RULED 30/07: quote-email wording — **"והתנעת הפרויקט" removed** ("לאישור ההצעה, אנא השב…"). ⚠️ deliberate deviation from FROZEN C5 §5.8.1; the frozen file is untouched, only the seeded `params` value | ישי | 30/07 | 3.4 (migration 7) |
+| LOCAL-11 | ✅ RULED 30/07: the mail is **signed by the actual sender** (name · role · phone if present · email) and not by a fixed "project manager" — the system already authenticates who clicked, so the customer always reaches the person who knows the quote. Phone line omitted when empty (2 of 3 CEO users have none) | ישי | 30/07 | 3.4 (migration 9) |
+| LOCAL-12 | ✅ RULED 30/07: **deploy to Vercel right after M3 closes**, not at M12 as `00_roadmap`/module_12 say — no recorded reason was found for the M12-only rule. ⚠️ Rotate the 5 test passwords the same day (§7.24 assumed a local-only app) | ישי | 30/07 | post-M3 |
+| §7.82 F19↳ | Re-confirmed live 30/07 against the DB (Ishay asked whether finance sends quotes): 'הצעות מחיר' = **edit** for מנהלת פרויקטים + מנכ"ל · **view** for מנהלת כספים · **blocked** for גיוס/לוגיסטיקה. Sending is an edit-level action and the Edge Function enforces it server-side | ישי (12/07, re-verified 30/07) | 30/07 | 3.4 |
 | ⏳ §7.71 | pdf_url DROP — deferred M12 | — | — | — |
 | ⏳ §7.72 | scope-change model — deferred M6 (candidate direction recorded in §7) | — | — | — |
 | ⏳ §7.67 | assignment↔line linkage — deferred M4 (line_id makes it 1-column) | — | — | — |
@@ -158,7 +171,9 @@ Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · �
 - **Lock trigger (F5):** DB-level, blocks UPDATE/DELETE on non-in_progress quotes and their lines regardless of role — protects §7.12 PDF-reconstruction + §7.28 profitability data even from edit-role API calls.
 - **UI gates:** route `<ProtectedRoute allow="הצעות מחיר">`; prices tab under SYSTEM_MODULES route + write-UI hidden unless `permissions['הגדרות מערכת']==='edit'` — convenience layer; RLS is the wall (App.jsx:14 doctrine).
 - **Read-path guard (§6 מ3):** quotes SELECT policy MUST keep plain §7.21 view-level access — `getCustomerProjects` (02_customers/api.js) reads quotes; narrowing would silently empty customer-card history.
-- **Accepted limitations:** module-level RLS (no row ownership, §7.21); session in sessionStorage (M1); logistics rows created by DEFINER RPC while logistics module RLS stays deny-all until M5 (rows invisible until M5 policies — accepted, spec'd order).
+- **↳ ADDED 30/07 — `email_log` (migration 8):** ONE policy only — `select` for edit|view on 'הצעות מחיר' (§7.21 shape, `entity_type='quote'` scoped). **No client write policy at all, by design:** only the Edge Function writes, with service-role. A journal the browser can write to is not evidence — anyone forging a request could log "sent" for a mail that never left. ⚠️ M4/M8/M11 each add their **own** module-gated SELECT policy and widen the `entity_type` CHECK; **never widen this policy to "any authenticated"**.
+- **↳ ADDED 30/07 — Edge Function `send-email` (the project's first):** it is the **only** holder of the Make webhook URL (Supabase secret `MAKE_EMAIL_WEBHOOK_URL`) — REG-IN is a client-only SPA, so any URL in client code ships in the public bundle and would be an open mail relay in the company's name. Two gates before it forwards anything: (1) `auth.getUser()` on the caller's JWT (`verify_jwt: true`); (2) a permission check **run as that user** so RLS applies — resolve their `users` row (`role_id` + `status='active'`) and require `edit` on 'הצעות מחיר'. ⚠️ **Both steps are mandatory and the second was got wrong once:** policy `permissions_select_all` is `using (true)`, so filtering by module alone returns all 45 rows and the check collapses — **a `using(true)` read policy means server code must scope by role itself.** Sending a document to a customer is an edit-level business action; the UI's disabled button is convenience, this is the wall (iron rule 9).
+- **Accepted limitations:** module-level RLS (no row ownership, §7.21); session in sessionStorage (M1); logistics rows created by DEFINER RPC while logistics module RLS stays deny-all until M5 (rows invisible until M5 policies — accepted, spec'd order). **↳ 30/07: mail delivery depends on an external automation platform (Make.com, free plan) whose webhook URL is a bearer-style secret — anyone holding it can send mail as the company. Accepted for now because the URL lives only in a Supabase secret and Make's own API-key option is available if it ever leaks; revisit at M10 when sending moves to an owned provider.**
 
 ### 5. 🏗️ Phase & Step Plan
 
@@ -249,9 +264,9 @@ must be mapped to this shape by the caller. `api.js`'s `create_quote`/`replace_q
 > which then pollutes the approval rate). Requires: CHECK migration + exclusion from the approval-rate
 > formula + a §7.82/F2 write-back. **Seed data already exists** (`node scripts/demo-seed.mjs`). Files: QuotesPage.jsx, RejectQuoteDialog, ApproveQuoteDialog, App.jsx. What: tabs by status w/ counts (F24 pattern from 01_overview_reworked.html): בתהליך/מאושרות/נדחו; ⭐ "פג בקרוב" highlighted filter chip w/ count (≤7 days to expiry, sorted by proximity — LOCAL-4); filters: customer, event-date range, quote-date range; rejection-breakdown counts in rejected tab (§7.82); sorts: amount/event date/expiry proximity; row actions per status: edit (in_progress), approve ✓ (green confirm modal §4), reject ✗ (red modal: 7-reason dropdown + notes required iff אחר), view (read-only QuoteReadOnlyView + הפק PDF). Verify: screenshots of tabs/filters/modals; counts match seeded test data.
 
-**Step 3.4 — PDF flow 🗣️ → 🔻🤖 screenshot.** Files: wire quotePdf into builder/management/read-only view. What: הפק PDF button → generate+download; שלח ללקוח → download + mailto (prefilled subject/body, manual attach — §7.12↳ flow, like M2 marketing). Verify: full-quote PDF screenshot (worked example, 6,319) + mailto opens.
+**Step 3.4 — PDF flow 🗣️ → 🔻🤖 screenshot.** ⚠️ **SUPERSEDED 30/07/2026 — see §9's 30/07 entry for the full reasoning; this paragraph is the original 15/07 blueprint, kept for the "what/why" that's still true.** Files: `src/lib/quotes.js` (done) · `QuoteDocumentDialog.jsx` (done) · `QuoteBuilderPage.jsx` (not started) · new: `supabase/functions/send-quote-email/index.ts`. What: view+download already shipped in 3.3; **real send** replaces the §7.12↳ mailto flow — dialog → Edge Function `send-quote-email` → Make webhook → Gmail, PDF attached, primary contact only, `in_progress` rows only (both rulings unchanged from 29/07). Verify: full-quote PDF screenshot (worked example, 6,319) + an actual inbox check (Claude has Gmail-read access this session) showing the mail with the attachment.
 
-**Step 3.5 — Customer-card integration 🗣️ → 🔻🤖.** Files: CustomerDetailsCard.jsx, src/lib/customers.js, CustomersFilterSheet.jsx/CustomersPage.jsx (⚠️ shared-surface ×3 — additive sections; regression: customers tests+E2E stay green). What: (a) quote history collapsible section: ALL customer quotes (date·event·status pill incl. פג-תוקף distinction via reason) → click = read-only view + הפק PDF ("אפיון-שותק — אושר ע"י ישי 11/07"); (b) revenues ("סה"כ הכנסות") = Σ approved-quote totals via pricing.js + avgDealSize = revenues÷approved-count → deriveCustomerMetrics wiring; (c) customers-list filter "מובילים לפי הכנסה" → matchesCustomerFilters extension (§6 line 264). Primary contact only in picker/PDF (§6 line 265). Verify: card screenshot w/ history+metrics; filter works; `npm run test:run` customers tests green.
+**Step 3.5 — Customer-card integration 🗣️ → 🔻🤖.** Files: CustomerDetailsCard.jsx, src/lib/customers.js, CustomersFilterSheet.jsx/CustomersPage.jsx (⚠️ shared-surface ×3 — additive sections; regression: customers tests+E2E stay green). What: (a) quote history collapsible section: ALL customer quotes (date·event·status pill incl. פג-תוקף distinction via reason) → click = read-only view + הפק PDF ("אפיון-שותק — אושר ע"י ישי 11/07"); (b) revenues ("סה"כ הכנסות") = Σ approved-quote totals via pricing.js + avgDealSize = revenues÷approved-count → deriveCustomerMetrics wiring; (c) customers-list filter "מובילים לפי הכנסה" → matchesCustomerFilters extension (§6 line 265). Primary contact only in picker/PDF (§6 line 266; re-confirmed 30/07/2026 in step 3.4's email-send scope — `customer_contacts` still 0 rows live). Verify: card screenshot w/ history+metrics; filter works; `npm run test:run` customers tests green.
 
 **Step 3.6 — Prices tab 🗣️ → 🔻🤖 ⚠️ shared-surface (SystemManagementPage.jsx, App.jsx).** Files: PricesManagementPage.jsx, ProductFormDialog.jsx, PriceTiersDialog.jsx, PricingParamsCard.jsx, pricesApi.js, SystemManagementPage.jsx, App.jsx. What: per design-notes (weighed: placement 01_auth ✓ consistent w/ system pages; stacked sections not sub-tabs ✓; status <Select> 3-value ✓ — flagged "מהמוקאפ/עיצוב-רקע — לאישורך" in the 🗣️ brief): products table + add/edit dialog (sku immutable on edit) + status select w/ optimistic rollback; tiers dialog (min_qty unique client check, max≥min, replace-all save); 2-param card (now plain upsert — UNIQUE exists). Verify: CEO flow screenshots; STAFF/blocked role sees read-only/RLS-denied evidence.
 
@@ -283,12 +298,12 @@ must be mapped to this shape by the caller. `api.js`'s `create_quote`/`replace_q
 
 | Type | Planned | As-run |
 |---|---|---|
-| Unit | pricing.js (6,319 exact, tiers, discounts, ceil), catalog labels vs DB CHECKs, validators | |
-| Integration | RPC battery (approve/double-click/rollback/permission), lock trigger, expiry job manual run, impersonation RLS matrix | |
-| E2E | quotes.spec.js + prices.spec.js (CEO+STAFF journeys) + existing 3 suites | |
-| Regression | `npm run verify` + M1/M2 smoke screenshots | |
+| Unit | pricing.js (6,319 exact, tiers, discounts, ceil), catalog labels vs DB CHECKs, validators | **279 tests green** as of 3.4 (219 at 3.3). +34 for `quotes.js`'s email/preview helpers, +36 for the generic `email.js` — **all written before the code and watched fail** |
+| Integration | RPC battery (approve/double-click/rollback/permission), lock trigger, expiry job manual run, impersonation RLS matrix | Phase-1 battery done (§1 table). **↳ 3.4 added a live server-side chain: Edge Function auth+permission gate → Make → Gmail, plus the `email_log` write** — verified by real sends, see §9 |
+| E2E | quotes.spec.js + prices.spec.js (CEO+STAFF journeys) + existing 3 suites | Permanent suites still owed (step 4.3). **↳ 3.4 used five throwaway specs** (send · resend · body-format · RTL · builder-preview + refresh-survival), each deleted after use. ⚠️ **The email path has NO permanent E2E yet — add one in 4.3** |
+| Regression | `npm run verify` + M1/M2 smoke screenshots | `npm run gate` exit 0 at every step end. **↳ 30/07: 10 existing E2E specs re-run green after 3.4's shared-file edits** (`api.js`, dialogs) |
 | UAT | Deferred to M12 (§6 ruling); Ishay's phase gates = interim UAT | |
-| Security/Pen | RLS positive+negative controls, §7.83 open-read proof, DEFINER RPC internal check, advisors after every migration | |
+| Security/Pen | RLS positive+negative controls, §7.83 open-read proof, DEFINER RPC internal check, advisors after every migration | Phase-1 matrix done. **↳ 3.4: the Edge Function's two gates (JWT + `edit` on 'הצעות מחיר' resolved per-role) — the role-scoping half was got wrong first and fixed; `email_log` has no client write policy; advisors after migration 8 = zero new findings.** ⚠️ **Still owed: a negative test proving a `view`-level user (finance) is refused by the FUNCTION and not merely by the hidden button — add in 4.3** |
 | Performance | Index C-6 used by expiry scan (EXPLAIN evidence); no further targets (internal tool) | |
 | Usability | Filled from step 3.7 🎨 review + closing UX audit | |
 | Compatibility | Chromium only now; cross-browser sweep = pre-M5 (§6 ruling) | |
@@ -296,8 +311,8 @@ must be mapped to this shape by the caller. `api.js`'s `create_quote`/`replace_q
 ### 7. ✅ Definition of Done
 Canonical (architecture_and_qa_roadmap.md:32-41) instantiated:
 - [ ] `npm run verify` green.
-- [ ] Unit tests exist for all new `src/lib` logic (pricing/catalog/validators).
-- [ ] 5 migrations applied via MCP after typed-echo; `docs/schema.sql` snapshot refreshed; committed together.
+- [ ] Unit tests exist for all new `src/lib` logic (pricing/catalog/validators/**email**).
+- [ ] ~~5~~ **9** migrations applied via MCP after typed-echo; `docs/schema.sql` snapshot refreshed; committed together.
 - [ ] CLAUDE_CODE_LOG + STATUS updated (end-of-session protocol each session; `CHANGELOG` retired 23/07/2026).
 - [ ] No secrets in code (CI gitleaks green locally).
 
@@ -309,7 +324,13 @@ Module-specific:
 - [ ] RPC: born-complete project + logistics rows + freezes + double-click safe + permission-checked.
 - [ ] pg_cron: 2 jobs scheduled (fixed UTC hour per §7.56 nod) + simulated-run evidence.
 - [ ] PDF: Hebrew RTL + embedded font screenshot (§7.41 — real verification, no rubber-stamp).
-- [ ] Rejection requires reason (7 values); 'אחר' requires notes; expiry lands as 'פג תוקף'.
+- [ ] Rejection requires reason (~~7~~ **8** values, incl. 'נפתחה בטעות'); 'אחר' requires notes; expiry lands as 'פג תוקף'.
+- [ ] **↳ ADDED 30/07 — email send (step 3.4), five separate boxes because each failed at least once:**
+  - [ ] the mail **arrives**, and the attachment **opens** — verified by size/bytes, not by filename or MIME type;
+  - [ ] the body is **RTL** and keeps the template's line breaks (direction incident #5 — an artefact leaving the system runs its own direction pass);
+  - [ ] `email_log` gets a row per send (**including failures**), and the dialog's "נשלח כבר" indicator **survives a page refresh**;
+  - [ ] the Edge Function refuses a `view`-level user **server-side** (not just a hidden button);
+  - [ ] the Make scenario answers 200 **only after** the mail module succeeded, and carries a Skip error handler so one bad recipient cannot disable it.
 - [ ] §6 מ3 debts closed (history/metrics/filter/contacts-note) + module-1.md correction + db_roadmap updated.
 - [ ] UX-&-validation checkbox: 🎨 review passed (design/states/RTL/keyboard) + validation-completeness (spec'd implemented, spec-silent confirmed).
 
@@ -319,6 +340,219 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 30/07/2026 09:31 — **Step 3.4 REVISED MID-BUILD: the ruled `mailto` design is superseded by real
+  sending. Full evidence chain, so a future reader doesn't re-litigate it.**
+  Ishay saw the planned flow (download→mailto→manual-attach) and asked "why not just send it".
+  **My first cost estimate was wrong** — I priced an external provider (Resend/SendGrid, ~a day) before
+  checking what he already has. He pointed at his own other project, `gedood_710`; reading it
+  (`src/lib/inventory.functions.ts` `postToMakeWebhook`) showed a **Make.com webhook** pattern
+  already in daily use there — the real cost is hours, not a day.
+  **Two gaps found by reading, not assumed:** (a) gedood sends **JSON only, never an attachment**
+  (grepped: no `base64`/`attachment` in that file) — the PDF-attach leg is new, not copied;
+  (b) REG-IN is a **pure client SPA** (unlike gedood's TanStack-Start server) — any `VITE_*` value
+  ships in the public bundle, so the Make webhook URL cannot live in client code. Resolution: a
+  **Supabase Edge Function** (`send-quote-email`) proxies the call — this is also exactly where
+  `PROJECT_MASTER §6` 🚧 מ10 already said the real auto-send belongs, so it's that module's home
+  built early in minimal form, not throwaway work.
+  **Deliberately NOT reusing gedood's Make account/scenario** — its own code documents a real 18/07
+  incident (one bad address made Make disable the *entire* scenario for every battalion), and the
+  free-plan 1,000-ops/month quota is shared account-wide; coupling an academic submission to a live
+  operational system was rejected on both grounds. A **fresh, empty Make team** (org 8213371, team
+  `2049106`) was verified live and used instead.
+  **`mailto` is dropped, not deferred** — it added almost nothing over the download button 3.3
+  already ships (both require a manual attach), so nothing of value was thrown away.
+  **Built so far, via the Make API (MCP), not the UI:** data structure `regin-quote` (id 511348, 5
+  text fields: to/subject/body/filename/pdf_base64) → webhook `regin-quote-email` (**hook id 3471390**
+  — 🔒 the URL itself is a credential and is deliberately NOT written in this repo: anyone holding it
+  can send mail from Ishay's Gmail. Retrieve it when needed via Make `hooks_get`, and store it only as
+  the Supabase secret `MAKE_QUOTE_WEBHOOK_URL`) → scenario blueprint (`gateway:CustomWebHook`
+  → `google-email:ActionSendEmail`, `attachments.data = toBinary({{1.pdf_base64}})`) with an
+  **`onerror: builtin:Ignore`** handler on the Gmail module — this is the direct fix for the incident
+  above: one bad recipient now discards *that* bundle and the scenario keeps running, instead of
+  disabling itself for every future send.
+  **❌ BLOCKED at `scenarios_create`:** `regin-gmail` (Ishay's first connection) was authorized via
+  Make's "Watch emails" module and only carries `gmail.send`/`gmail.readonly` scopes; `ActionSendEmail`
+  requires the broader `https://mail.google.com/` scope. Verified live via `connections_get` before
+  guessing. Fix in flight: Ishay re-authorizing through the **"Send an email"** module specifically
+  (a 🧩 prompt was given, name `regin-gmail-send`) — connection swap, not a redesign.
+  **Code landed regardless (independent of the Make blocker):** `src/lib/quotes.js` — TDD, 26 tests
+  written first and watched fail on `is not a function`, then implemented:
+  `fillQuoteEmailTemplate`/`quoteEmailSubject`/`isQuoteSendable`/`quoteEmailDisabledReason`/
+  `buildQuoteEmailPayload`/`formToPreviewQuote`, plus `quoteEmailTemplate` added to
+  `QUOTE_SCREEN_PARAM_NAMES`. `QuoteDocumentDialog.jsx` now sends via
+  `supabase.functions.invoke('send-quote-email', …)` instead of `window.location` mailto; a
+  blob→base64 helper was added locally (browser-only, doesn't belong in the pure PDF engine).
+  ⚠️ **as-built:** the dialog's send/error/sent state resets via **`key={quote?.quote_id}`
+  remount at the call site**, not an effect — a synchronous `setState` in the load-effect tripped
+  `react-hooks/set-state-in-effect` (hard error in this config), same family of trap as the
+  dialog-reset convention already documented in `src/CLAUDE.md`.
+  ⚠️ Renamed the row's plain mailto link "✉ שליחת מייל" → "✉ מייל לאיש הקשר" so it doesn't read as
+  the same action as the new real-send button — different mechanism, different label.
+  **Ruled unchanged from 29/07 and re-confirmed live 30/07:** primary contact only (`customer_contacts`
+  checked again — still 0 rows), send only on `in_progress` quotes.
+  **Also ruled 30/07 (Ishay, unprompted): deploy to Vercel right after M3 closes**, not at M12 as
+  `00_roadmap.md`/module_12 guide currently say — no recorded reason was found for the M12-only rule
+  when asked; the one real risk it protects (`§7.24`'s 5 unrotated test passwords, reasoned only for a
+  local-only app) becomes live-internet-exposed once deployed, so **rotate those 5 passwords the same
+  day as the early deploy**. Not yet written into `00_roadmap.md`/module_12 — do that when the deploy
+  is actually scheduled, not now (§6-style "name it when you act on it").
+  **↳ 30/07 09:45 — blind-spot sweep at Ishay's request ("handle the blind spots I didn't think of").
+  Eight findings; seven closed. Recorded because most of them are invisible in a screenshot:**
+  **(1) 🔒 MY OWN LEAK, caught minutes after making it:** I had written the full Make webhook URL into
+  this guide — a repo-committed file. Anyone holding that URL can send mail from Ishay's Gmail.
+  Removed; `grep` over the whole repo confirms zero occurrences. Only the hook **id** stays.
+  **(2) The success toast would have LIED.** A Make custom webhook answers `200 Accepted` the moment
+  the request arrives — **before** the email module runs — and the `Ignore` error handler then swallows
+  a genuine failure. Net effect: green "✓ נשלח" on mail that never left. Fixed in the scenario design:
+  `gateway:WebhookRespond` **200 only after** the Gmail module succeeds, `502` on the error branch, and
+  `builtin:Ignore` placed *after* that error response so the scenario still refuses to disable itself
+  (Ishay's 710 requirement). Blueprint validated via `validate_blueprint_schema`; creation still blocked
+  on the connection. ⚠️ Also corrected: scheduling must be `immediately`, **not** the `on-demand` I first
+  attempted — an instant webhook trigger cannot respond synchronously under on-demand.
+  **(3) No timeout** — `functions.invoke` has none, so "שולח..." could hang forever. Now 30s.
+  **(4) THREE outcomes, not two** — the subtle one. Ishay asked for "if it wasn't sent, toast to retry",
+  but on a timeout/network cut **we do not know**. Claiming "not sent" causes a duplicate mail to a real
+  customer; claiming "sent" hides a quote nobody got. So the unknown branch says exactly what is known:
+  check your Sent folder before re-sending. Detected via `err.message === 'TIMEOUT' || FunctionsFetchError`.
+  **(5) Malformed address blocked client-side** via the same `EMAIL_REGEX` the customer card validates
+  with — directly from Ishay's 710 lesson (one bad address disabled Make's whole scenario there).
+  **(6) AUTHORIZATION GAP nobody asked about:** send was gated on quote status only, so a **view-level**
+  role (finance) could email quotes to customers. Now also requires `edit` on 'הצעות מחיר'.
+  ⚠️ **Honest boundary:** that is the UI convenience layer. The wall must live **inside** the Edge
+  Function (check the caller's permission against the DB with their JWT) — not yet written; it is a
+  requirement of the function, not an optional extra (iron rule 9: RLS/server is the wall).
+  **(7) Attachment size ceiling** — Make free allows 5MB/file and rejects overflow **on its side**, i.e.
+  after the user saw "sent". `isPdfTooLargeToSend` blocks at 4MB of base64 (base64 inflates ~33%);
+  a typical quote is ~46KB, so the ceiling is nowhere near normal use.
+  **(8) ⚠️ NOT FIXED — declared debt: duplicate send across a page refresh or a second user.** The three
+  in-dialog guards (`sending` lock · `sent` disables the button and changes its colour · a `confirm()`
+  only on an already-sent quote) all live in component state. Real dedup needs a **send log in the DB** —
+  there is no other source of truth for "was this already sent". That is already **🚧 מ10**'s registered
+  debt ("ישות יומן-שליחות"), where sending moves server-side and is logged anyway. Pulling it forward
+  would be a scope increase and is **Ishay's ruling**, offered — **and RULED YES the same hour**:
+  migration `20260730095439_module3_email_log.sql` is authored and awaiting typed-echo (see
+  `db_roadmap` **A-20** for the full design + forward notice to M4/M8/M11). So #8 is now *decided and
+  pending apply*, not open.
+  **↳ Also ruled 30/07 (Ishay, on my recommendation): the email path is built as a GENERIC engine, not
+  a quote-specific one** — `send-email` Edge Function (not `send-quote-email`) + `src/lib/email.js`
+  holding template-fill/payload/size/state logic with its tests, and a thin per-module wrapper on top.
+  **Why it matters here:** `params` already carries **6** email templates (#10 quote · #11 shift invite ·
+  #12 customer feedback · #13 invoice · #14 shift cancellation · #20 salary report), i.e. M4/M8/M11 will
+  each send mail. **How it is enforced rather than hoped for:** a line in `src/CLAUDE.md` (auto-loads for
+  any session touching `src/`) + a `🚧` line in `PROJECT_MASTER §6` naming M4/M8/M11 (the registry a
+  module-open sweeps) + `jscpd`, which already **blocks** duplication in CI.
+  **↳ Correction worth keeping — I misdiagnosed the Make blocker twice before reading the spec.** I told
+  Ishay a Gmail *scope* was missing and sent him through two browser rounds. Wrong: `app-module_get` on
+  `google-email:ActionSendEmail` v2 declares its connection parameter as **`account:google-restricted`**,
+  while both connections he created are type `google-email` ("Gmail") — identical 5 scopes, wrong *type*.
+  `connections_list` filtered on `google-restricted` returns `[]`. **Lesson:** Make's "account X is not
+  compatible with module Y" is about the declared parameter **type** first and scopes second — read the
+  module spec before instructing a human to re-authorize. Also corrected: a webhook-triggered scenario
+  needs `scheduling: immediately`, not `on-demand`. And settled for good: using 710's Make account would
+  **not** have helped (same API, same type requirement) — the separate-account decision stands on the
+  quota + 18/07-shutdown grounds alone.
+  **Tests: 219 → 253** (34 new, all written before the code and watched fail); lint clean.
+  **↳ 📋 SCOPE-EXPANSION REGISTER (Ishay's explicit request 30/07: "record every scope expansion with
+  its reason, so nothing gets built twice").** Step 3.4 grew **three** times beyond its 15/07 blueprint.
+  Each row = what was added · why · where it is now registered so a future module finds it:
+  | # | Added | Why (short) | Registered in |
+  |---|---|---|---|
+  | 1 | Real sending (Make→Edge Function→Gmail) **replacing** `mailto` | Ishay: "why download at all". `mailto` cannot attach a file; it added almost nothing over the download button 3.3 already had | this §9 · `STATUS.md` · §6 🚧 מ10 (auto-send) |
+  | 2 | **Generic** engine `src/lib/email.js` + `send-email` (not quote-specific) | `params` already holds **6** email templates ⇒ M4/M8/M11 will send too; a per-module engine = 4 copies, and every fix must remember all 4 | `src/CLAUDE.md` §"שליחת מייל" (auto-loads for any `src/` session) · **§6 🚧 מ4·מ8·מ11** · `jscpd` blocks copies in CI |
+  | 3 | Table `email_log` pulled forward from M10 | the only one of 8 blind-spot findings client code cannot close — anti-double-send guards die on a page refresh / second user | `db_roadmap` **A-20** + Done row · `docs/schema.sql` · §6 line above |
+  **Cost paid, stated plainly:** these three are why 3.4 is ~half-done at 10:15 instead of finished.
+  Ishay was told, and ruled to proceed. **The anti-duplication mechanism is not a promise** — it is
+  three registries that a module-opening session actually reads (`grep '🚧 מN'` on §6 · the auto-loaded
+  `src/CLAUDE.md` · a CI duplication gate).
+  **↳ ✅ 30/07 11:10 — THE CHAIN IS PROVEN END TO END. Verified on the real inbox, not by a green test.**
+  A throwaway Playwright spec drove the real UI as CEO (`/quotes` → 👁 on #6 → send), and the message
+  was then read back **through the Gmail MCP**: `filename: REG-IN-quote-6.pdf`, `mimeType:
+  application/pdf` (⇒ Make's `toBinary()` really produced a file, not text), correct subject, and a body
+  carrying migration 7's wording (no "התנעת"). `email_log` row: `entity_id 6 · status sent · sent_by_email`.
+  `npm run gate` **exit 0, 270 tests**. Temp spec + `test-results/` deleted; the permanent suite is 4.3.
+  ⚠️ **Test-data method:** the demo customer's email is `ron@meditech-demo.co.il` — an invented domain
+  that can never receive mail, so receipt was unverifiable. Customer 46's email was **temporarily**
+  set to Ishay's own address for the run and **restored immediately after** (verified by re-select).
+  **↳ Two real defects the E2E caught that unit tests could not — both mine:**
+  **(1) A 403 for everyone, including the CEO.** My permission gate queried `permissions` filtered by
+  module only. But policy `permissions_select_all` is `using (true)`, so an authenticated user sees
+  **all 45 rows** (5 roles × 9 modules) — the query returned 5, `maybeSingle()` failed, and the function
+  answered "no permission" to every caller. Fix: resolve the caller's `users` row first (`role_id` +
+  `status='active'`, exactly what `AuthContext` does) and filter permissions by that role. **Lesson
+  worth keeping: a read policy of `using(true)` means server code must scope by role itself — RLS is
+  not doing it for you here.**
+  **(2) The mail went out and the journal stayed empty — the exact silent failure `email_log` exists to
+  prevent.** The client sent only the 5 Make-contract fields; `entity_id` is `NOT NULL`, so every insert
+  failed while the send succeeded. Anti-double-send protection was therefore *not* in force, with no
+  error anywhere. Fix: the dialog now sends `entity_type`/`entity_id`/`template_name` **alongside** the
+  contract (kept separate on purpose — the 5 fields belong to Make, these belong to our journal).
+  **↳ A contradiction in my own design, caught by the E2E assertion:** I had documented the post-send
+  button as *disabled* **and** as opening a re-send `confirm()` — mutually exclusive. Resolved in favour
+  of **enabled + confirm**, relabelled "שליחה חוזרת" and dropped from teal to outline: a customer saying
+  "I didn't get it" is a real case, and forcing a close-and-reopen is friction with no benefit, while the
+  grey "disabled-looking" button was itself misleading (`src/CLAUDE.md` pass 3).
+  **↳ Root cause of the three failed API attempts, now known exactly:** the Make UI builds
+  **`google-email:sendAnEmail` v4**, whose connection parameter is `account:google-email` — the type
+  Ishay's connections actually have. I kept trying **`ActionSendEmail`** (v1 wants `account:google`, v2
+  wants `account:google-restricted`), which nothing in his account could satisfy. **It was never a scope
+  or connection-type problem — it was the wrong module name.** Once the UI had created the scenario I
+  fixed its broken attachment expression via `scenarios_update` in one call
+  (`toBinary("1.pdf_base64")` → `toBinary(2.pdf_base64)`: wrong module number *and* quoted, so Make
+  would have attached the literal string). **For M4/M8/M11: scenario creation via API is possible —
+  use `google-email:sendAnEmail` version 4.**
+  **↳ Make assets now live (team 2049106):** data structure `regin-quote` (511348) · webhook
+  `regin-quote-email` (3471390) · scenario **"REG-IN — שליחת מייל"** (6759079, `immediately`, ACTIVE)
+  with connection `regin-google-restricted` (9407092). 🧹 **Owed cleanup:** two unused Gmail connections
+  (`regin-gmail` 9406233, `regin-gmail-send` 9406719 — `scenarioUsages: []`) and the still-missing
+  **error handler** ("Skip" in the UI, `builtin:Ignore` in the API) on the Gmail module; availability on
+  the free plan was **proved** by creating and deleting a throwaway scenario carrying one.
+  **↳ ✅ 12:30 — STEP 3.4 CLOSED. What landed after the first end-to-end proof, and the four further
+  defects that only a real send could reveal:**
+  **(a) The attachment was a corrupt file, and my earlier verification had MISSED it.** I had written
+  "`mimeType: application/pdf` ⇒ the attachment really worked" — **false**: Gmail derives the type from
+  the filename extension, not the content. Ishay opened it and got "corrupted or unsupported". Root
+  cause: **`toBinary()` in Make defaults to UTF-8 and does NOT decode base64** — the attachment was the
+  base64 *string* stored under a `.pdf` name. Fixed to `toBinary(2.pdf_base64; "base64")` (verified
+  against Make's own docs + a community thread on this exact symptom, not guessed). **Now byte-level
+  proof exists:** Gmail reports the attachment as **33KB**, matching step 3.1's known 34,026-byte PDF —
+  the broken version was ~46KB (the string). **Lesson: filename and MIME type are metadata, not
+  content. Verifying an attachment means verifying its size or bytes.**
+  **(b) The body rendered as one run-on paragraph** — the templates are plain text and the mail module
+  sends HTML, where `\n` means nothing.
+  **(c) ⚠️ DIRECTION INCIDENT #5 — the first one OUTSIDE a screen.** The Hebrew body rendered LTR at the
+  recipient, punctuation on the wrong side. Ishay caught it. **Notable: the attached PDF was already
+  correct — a correct document proves nothing about the mail carrying it.** Both (b) and (c) fixed
+  structurally in one function, `plainTextToEmailHtml`, which emits **direction wrapper + escaped
+  content + line breaks together** so no future caller can get one without the others (same principle as
+  `Money`/`LtrFieldGroup`). Generalised rule written into `src/CLAUDE.md`: **every Hebrew artefact that
+  leaves the system (mail · PDF · file · print) runs the direction pass itself** — it does not inherit
+  `<html dir="rtl">`, because it is read in a different tool entirely.
+  **(d) Verified in the sent mail, not asserted:** `htmlBody` = `<div dir="rtl" style="text-align:right">…`
+  with exactly 4 `<br>`, attachment present.
+  **Also landed:** builder-page "צפייה במסמך" (edit mode only, renders from the **live form** — proven
+  by typing an unsaved event name and finding it in the dialog title) · `getLastSuccessfulSend` +
+  the "נשלח כבר ב-… אל …" indicator, **proven to survive a page refresh** (a fresh page load shows it,
+  so it comes from `email_log` and not from component state — this is the half of finding #8 the table
+  was added for; the button also opens as "שליחה חוזרת") · the Make **error handler** (502 response then
+  "Skip", so a bad recipient can never disable the scenario again — his 710 incident).
+  🧹 **Test residue cleaned:** 4 `email_log` rows pointing at Ishay's personal address were deleted
+  (they would have made the demo show "sent to ishay1997@gmail.com"); customer 46's email was restored
+  to `ron@meditech-demo.co.il` after each of the five verification sends; all temp specs deleted.
+  ⏳ **One item left for Ishay (no API exists for it):** delete the unused Gmail connection
+  `regin-gmail-send` (9406719, `scenarioUsages: []`) in the Make UI. **Do NOT delete
+  `regin-google-restricted` (9407092) — it is the one the scenario uses.** `regin-gmail` is already gone.
+  **↳ 12:45 — migration 9 applied (typed-echo): the mail is signed by the ACTUAL sender.** Ishay asked
+  to add the project manager's phone/email "just in case"; I checked the matrix live and recommended
+  signing as **whoever sent it** instead — send permission belongs to both מנהלת פרויקטים and מנכ"ל, so
+  fixed details would point the customer at someone who does not know the quote. He approved the exact
+  wording. **One placeholder `[חתימת_שולח]`, not three:** `buildSenderSignature` assembles name · role ·
+  phone · email from `AuthContext` and **omits an empty phone line** — 2 of 3 CEO users have no phone in
+  the DB, and "טלפון:" with nothing after it is worse than no phone line; a text template cannot express
+  that condition, which is exactly why the composition lives in code and only the slot lives in `params`.
+  **Verified in the delivered mail** (not asserted): body contains `ישי אטיאס | מנכ"ל, REG-IN` ·
+  `טלפון: 050-1241223` · `מייל: …`, inside the RTL wrapper, with the PDF attached. `gate` exit 0, 283 tests.
+  **Answered while at it (his open question):** מנהלת כספים is **`view`** on 'הצעות מחיר' and therefore
+  **cannot send** — his own 12/07 ruling (§7.82/F19), now enforced server-side by the Edge Function.
 - 29/07/2026 19:55 — **Fix carried back into step 3.2: the red validation messages did not clear until the
   next save.** Ishay found it while driving the live builder, diagnosed the behaviour himself out loud
   ("so the check runs only when you press save"), and chose not to block on it — then asked for it anyway.

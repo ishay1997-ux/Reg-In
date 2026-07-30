@@ -52,6 +52,26 @@ export async function getQuoteScreenParams() {
   return data ?? []
 }
 
+// השליחה המוצלחת האחרונה של ישות נתונה, מ-`email_log` (מיגרציה 20260730095439).
+// **זהו מקור-האמת היחיד ל"האם כבר נשלח"** — ההגנות שבחלון חיות ב-state של הקומפוננטה
+// ולכן מתאפסות ברענון-דף או אצל משתמש שני; רק שאילתה כאן שורדת את שניהם.
+// מסונן ל-'sent' בכוונה: ניסיון שנכשל אינו "נשלח", והצגתו כאילו נשלח הייתה מונעת מהמשתמש
+// לשלוח מייל שהלקוח מעולם לא קיבל. ‏null = אין שליחה מוצלחת (או שה-RLS חוסם קריאה).
+// ⚠️ הטבלה גנרית (entity_type/entity_id) — מודולים 4/8/11 יקראו אותה באותה צורה.
+export async function getLastSuccessfulSend(entityType, entityId) {
+  const { data, error } = await supabase
+    .from('email_log')
+    .select('recipient, subject, created_at')
+    .eq('entity_type', entityType)
+    .eq('entity_id', entityId)
+    .eq('status', 'sent')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) throw toError(error, 'שגיאה בטעינת היסטוריית השליחות.')
+  return data ?? null
+}
+
 // הצעה בודדת + כל שורותיה, לצורך עריכה/צפייה/PDF. null אם אין שורה נגישה (לא-קיימת או RLS).
 export async function getQuote(quoteId) {
   const { data, error } = await supabase

@@ -601,3 +601,31 @@ select cron.schedule('module3-quote-expiry', '0 1 * * *', $job$
 select cron.schedule('module1-login-attempts-cleanup', '30 1 * * *', $job$
   delete from public.login_attempts where last_attempt_at < now() - interval '30 days'; $job$);  -- §7.75
 revoke execute on function public.enforce_quote_in_progress_lock() from public, anon, authenticated;  -- advisor hygiene
+
+-- ============================================================
+-- מודול 3 — מיגרציה 8: email_log (20260730095439, הוחל 30/07/2026)
+-- ============================================================
+-- יומן שליחות מיילים — מקור-האמת ל"האם נשלח". **גנרי** לפי (entity_type, entity_id): 6 תבניות-מייל
+-- קיימות ב-params ומודולים 4/8/11 ישלחו גם הם, ולכן אין כאן טבלה פר-מודול. אין FK אמיתי (הישות
+-- משתנה) — מקובל ביומן: שליחה היא היסטוריה, ובפרויקט אין מחיקה (§7.11).
+-- ⚠️ נכתב ע"י Edge Function בלבד (service-role); **אין policy כתיבה ללקוח** — יומן שהדפדפן
+-- יכול לכתוב אליו אינו ראיה. הוקדם ממודול 10 (§6 🚧 מ10) בהכרעת-ישי 30/07/2026.
+create table email_log (
+  email_log_id bigint generated always as identity primary key,
+  entity_type text not null check (entity_type in ('quote')),  -- מ4/מ8/מ11 מרחיבים בערך אחד כל אחד
+  entity_id bigint not null,
+  recipient text not null,
+  template_name text,
+  subject text,
+  status text not null check (status in ('sent', 'failed')),   -- אין 'unknown' במכוון
+  error_message text,
+  sent_by_email text,
+  created_at timestamptz not null default now()
+);
+create index idx_email_log_entity on email_log (entity_type, entity_id, created_at desc);
+alter table email_log enable row level security;
+create policy "email_log_select_quotes_module" on email_log for select to authenticated
+  using (entity_type = 'quote' and exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+      and p.permission_level in ('edit', 'view')));

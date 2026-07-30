@@ -24,6 +24,13 @@ import {
   countRejectionReasons,
   matchesQuoteFilters,
   sortQuotes,
+  QUOTE_SCREEN_PARAM_NAMES,
+  fillQuoteEmailTemplate,
+  quoteEmailSubject,
+  isQuoteSendable,
+  buildQuoteEmailPayload,
+  buildSenderSignature,
+  formToPreviewQuote,
 } from '@/lib/quotes'
 
 // תרחיש-האפיון המחייב (C5 §5.5.4) — אותו תרחיש שמאמת את מנוע-הכסף, כאן בצורת-המסך.
@@ -684,6 +691,264 @@ describe('quoteToPdfModel — שורת-DB ⇒ צורת-הקלט של מנוע ה
       '04ST',
       'B-REG-TAG',
     ])
+  })
+})
+
+// ── צעד 3.4 — שליחת ההצעה במייל ────────────────────────────────────────────
+// הגוף האמיתי מהמסד (מיגרציה 7, אחרי הסרת "והתנעת הפרויקט"). נשמר כאן כמות-שהוא
+// כדי שהבדיקות ייכשלו אם מישהו ישנה את שמות-ה-placeholders בתבנית.
+const EMAIL_TEMPLATE = `שלום [שם_איש_קשר],
+בהמשך לפנייתך, מצורפת בזאת הצעת מחיר לאירוע '[שם_פרויקט]' המתוכנן להתקיים בתאריך [תאריך_אירוע].
+ההצעה כוללת את מפרט הדיילות והשירותים שסיכמנו. לאישור ההצעה, אנא השב למייל זה או צור קשר עם מנהלת הפרויקטים.
+בברכה,
+צוות REG-IN.`
+
+const SENDABLE_QUOTE = {
+  quote_id: 6,
+  event_name: 'כנס לקוחות שנתי',
+  quote_status: 'in_progress',
+  estimated_event_date: '2026-08-22',
+  customers: {
+    company_name: 'מדיטק פתרונות בע"מ',
+    contact_name: 'רון גל',
+    email: 'ron@meditech-demo.co.il',
+  },
+}
+
+describe('QUOTE_SCREEN_PARAM_NAMES — שם תבנית-המייל', () => {
+  it('נטען מ-params באותו שם-בייט כמו ה-Seed', () => {
+    expect(QUOTE_SCREEN_PARAM_NAMES.quoteEmailTemplate).toBe('תבנית_מייל_הצעת_מחיר')
+  })
+})
+
+describe('fillQuoteEmailTemplate — מילוי התבנית מהמסד', () => {
+  it('שלושת ה-placeholders מוחלפים בערכים האמיתיים', () => {
+    const body = fillQuoteEmailTemplate(EMAIL_TEMPLATE, {
+      contactName: 'רון גל',
+      companyName: 'מדיטק פתרונות בע"מ',
+      eventName: 'כנס לקוחות שנתי',
+      eventDate: '22/08/2026',
+    })
+    expect(body).toContain('שלום רון גל,')
+    expect(body).toContain("לאירוע 'כנס לקוחות שנתי'")
+    expect(body).toContain('בתאריך 22/08/2026')
+  })
+
+  it('לא נשאר אף placeholder בגוף שנשלח ללקוח', () => {
+    const body = fillQuoteEmailTemplate(EMAIL_TEMPLATE, {
+      contactName: 'רון גל',
+      eventName: 'כנס לקוחות שנתי',
+      eventDate: '22/08/2026',
+    })
+    expect(body).not.toMatch(/\[[^\]]+\]/)
+  })
+
+  it('הניסוח שהוסר (מיגרציה 7) אינו חוזר דרך הקוד', () => {
+    const body = fillQuoteEmailTemplate(EMAIL_TEMPLATE, {
+      contactName: 'רון גל',
+      eventName: 'א',
+      eventDate: '01/01/2026',
+    })
+    expect(body).not.toContain('התנעת')
+  })
+
+  it('בלי איש-קשר — נופל לשם החברה, ולא ל"שלום ,"', () => {
+    const body = fillQuoteEmailTemplate(EMAIL_TEMPLATE, {
+      contactName: '',
+      companyName: 'מדיטק פתרונות בע"מ',
+      eventName: 'כנס',
+      eventDate: '22/08/2026',
+    })
+    expect(body).toContain('שלום מדיטק פתרונות בע"מ,')
+  })
+
+  it('תבנית חסרה ⇒ מחרוזת ריקה — לעולם לא מייל חצי-כתוב', () => {
+    expect(fillQuoteEmailTemplate('', { contactName: 'רון גל' })).toBe('')
+    expect(fillQuoteEmailTemplate(null, { contactName: 'רון גל' })).toBe('')
+  })
+
+  it('בלי שם נמען בכלל ⇒ ריק (פתיחה שבורה לא נשלחת ללקוח)', () => {
+    expect(fillQuoteEmailTemplate(EMAIL_TEMPLATE, { eventName: 'כנס' })).toBe('')
+  })
+
+  it('placeholder שמופיע פעמיים מוחלף בשני המקומות', () => {
+    const twice = 'שלום [שם_איש_קשר], שוב שלום [שם_איש_קשר]'
+    expect(fillQuoteEmailTemplate(twice, { contactName: 'רון' })).toBe('שלום רון, שוב שלום רון')
+  })
+})
+
+describe('buildSenderSignature — המייל נחתם בשם מי ששלח בפועל', () => {
+  it('שם · תפקיד · טלפון · מייל — בסדר הזה, שורה-שורה', () => {
+    expect(
+      buildSenderSignature({
+        fullName: 'ישי אטיאס',
+        roleName: 'מנכ"ל',
+        phone: '050-1241223',
+        email: 'ishay1997@gmail.com',
+      }),
+    ).toBe('ישי אטיאס | מנכ"ל, REG-IN\nטלפון: 050-1241223\nמייל: ishay1997@gmail.com')
+  })
+
+  it('⚠️ בלי טלפון — השורה **נעלמת** ולא נשארת "טלפון:" ריק (2 מ-3 המנכ"לים במסד בלי טלפון)', () => {
+    const sig = buildSenderSignature({
+      fullName: 'טל רודגולד',
+      roleName: 'מנכ"ל',
+      phone: null,
+      email: 'talrodgold@gmail.com',
+    })
+    expect(sig).not.toContain('טלפון')
+    expect(sig).toBe('טל רודגולד | מנכ"ל, REG-IN\nמייל: talrodgold@gmail.com')
+  })
+
+  it('בלי תפקיד — נשאר שם + REG-IN, בלי פסיק מדולדל', () => {
+    expect(buildSenderSignature({ fullName: 'נועה כהן', email: 'n@regin.co.il' })).toBe(
+      'נועה כהן | REG-IN\nמייל: n@regin.co.il',
+    )
+  })
+
+  it('בלי שם בכלל ⇒ ריק — עדיף בלי חתימה מחתימה שבורה', () => {
+    expect(buildSenderSignature({ email: 'a@b.co' })).toBe('')
+    expect(buildSenderSignature(null)).toBe('')
+  })
+})
+
+describe('quoteEmailSubject — שורת הנושא', () => {
+  it('נושא = "הצעת מחיר מ-REG-IN" + שם האירוע', () => {
+    expect(quoteEmailSubject(SENDABLE_QUOTE)).toBe('הצעת מחיר מ-REG-IN — כנס לקוחות שנתי')
+  })
+
+  it('בלי שם אירוע — הנושא נשאר תקין ולא מסתיים במקף מדולדל', () => {
+    expect(quoteEmailSubject({ quote_id: 6 })).toBe('הצעת מחיר מ-REG-IN')
+  })
+})
+
+describe('isQuoteSendable — הכרעת-ישי: שליחה רק בהצעות בתהליך', () => {
+  it('בתהליך ⇒ כן', () => {
+    expect(isQuoteSendable(SENDABLE_QUOTE)).toBe(true)
+  })
+
+  it('מאושרת או נדחתה ⇒ לא (המסמך נשלח בעבר; אין מה לשלוח שוב)', () => {
+    expect(isQuoteSendable({ ...SENDABLE_QUOTE, quote_status: 'approved' })).toBe(false)
+    expect(isQuoteSendable({ ...SENDABLE_QUOTE, quote_status: 'rejected' })).toBe(false)
+  })
+
+  it('בלי הצעה בכלל ⇒ לא', () => {
+    expect(isQuoteSendable(null)).toBe(false)
+  })
+})
+
+// סיבת-ההשבתה ותקרת-הגודל **עברו למנוע הגנרי** (`src/lib/email.js`) 30/07/2026 בהכרעת-ישי:
+// הן נכונות לכל מייל במערכת, לא רק להצעת-מחיר. הבדיקות שלהן חיות ב-`email.test.js`.
+
+describe('buildQuoteEmailPayload — החוזה מול תרחיש ה-Make', () => {
+  const ARGS = {
+    quote: SENDABLE_QUOTE,
+    template: EMAIL_TEMPLATE,
+    eventDate: '22/08/2026',
+    filename: 'quote-6.pdf',
+    pdfBase64: 'JVBERi0xLjcK',
+  }
+
+  it('חמשת השדות בדיוק — שמותיהם הם חוזה עם מבנה-הנתונים ב-Make', () => {
+    expect(Object.keys(buildQuoteEmailPayload(ARGS)).sort()).toEqual([
+      'body',
+      'filename',
+      'pdf_base64',
+      'subject',
+      'to',
+    ])
+  })
+
+  it('הנמען הוא איש-הקשר הראשי בלבד (§6 מ3)', () => {
+    expect(buildQuoteEmailPayload(ARGS).to).toBe('ron@meditech-demo.co.il')
+  })
+
+  it('הגוף מולא, והנושא נבנה', () => {
+    const payload = buildQuoteEmailPayload(ARGS)
+    expect(payload.body).toContain('שלום רון גל,')
+    expect(payload.subject).toBe('הצעת מחיר מ-REG-IN — כנס לקוחות שנתי')
+    expect(payload.pdf_base64).toBe('JVBERi0xLjcK')
+  })
+
+  it('חסר PDF / כתובת / תבנית ⇒ null, ולא מייל חלקי', () => {
+    expect(buildQuoteEmailPayload({ ...ARGS, pdfBase64: '' })).toBeNull()
+    expect(buildQuoteEmailPayload({ ...ARGS, template: '' })).toBeNull()
+    expect(
+      buildQuoteEmailPayload({ ...ARGS, quote: { ...SENDABLE_QUOTE, customers: {} } }),
+    ).toBeNull()
+  })
+})
+
+describe('formToPreviewQuote — תצוגת המסמך ממה שעל המסך, לא מהשורה השמורה', () => {
+  const FORM = {
+    customerId: 7,
+    eventName: 'כנס טכנולוגיה שנתי',
+    eventDate: '2026-09-15',
+    location: 'אקספו תל אביב',
+    startTime: '18:00',
+    endTime: '22:00',
+    guests: 300,
+    ratio: 50,
+    hostessCount: 6,
+    appliedDiscount: 5,
+    manualDiscount: 10,
+    notes: 'הערה ללקוח',
+  }
+  const SAVED = { quote_id: 6, issue_date: '2026-07-29', updated_at: '2026-07-29T10:00:00Z' }
+  const CUSTOMER = { company_name: 'מדיטק', company_number: '514', contact_name: 'רון גל' }
+
+  it('הכמות שעל המסך היא זו שתיכנס למסמך — גם לפני שמירה', () => {
+    const preview = formToPreviewQuote({
+      form: FORM,
+      lines: [{ sku: '04ST', qty: 9, unitPrice: 500 }],
+      savedQuote: SAVED,
+      customer: CUSTOMER,
+    })
+    expect(preview.quote_services[0].qty).toBe(9)
+    expect(preview.quote_services[0].closing_unit_price).toBe(500)
+  })
+
+  it('מספר ההצעה ותאריך-ההנפקה מגיעים מהשורה השמורה (אין להם מקור בטופס)', () => {
+    const preview = formToPreviewQuote({ form: FORM, lines: [], savedQuote: SAVED })
+    expect(preview.quote_id).toBe(6)
+    expect(preview.issue_date).toBe('2026-07-29')
+    expect(preview.updated_at).toBe('2026-07-29T10:00:00Z')
+  })
+
+  it('הלקוח מוזרם מבחוץ — getQuote אינה מחזירה אותו, ובלעדיו המסמך היה בלי "לכבוד"', () => {
+    const preview = formToPreviewQuote({
+      form: FORM,
+      lines: [],
+      savedQuote: SAVED,
+      customer: CUSTOMER,
+    })
+    expect(preview.customers.company_name).toBe('מדיטק')
+  })
+
+  it('התוצאה בצורת-שורת-DB — כלומר quoteToPdfModel קוראת אותה בלי מתאם נוסף', () => {
+    const preview = formToPreviewQuote({
+      form: FORM,
+      lines: [{ sku: '04ST', qty: 6, unitPrice: 500 }],
+      savedQuote: SAVED,
+      customer: CUSTOMER,
+    })
+    const model = quoteToPdfModel(preview, { '04ST': { item_name: 'דיילת' } }, 18, 30)
+    expect(model.event.name).toBe('כנס טכנולוגיה שנתי')
+    expect(model.lines[0].itemName).toBe('דיילת')
+    expect(model.appliedCustomerDiscount).toBe(5)
+    expect(model.manualDiscount).toBe(10)
+  })
+
+  it('שורות ממוספרות 1..N לפי הסדר שעל המסך (המספור האמיתי נקבע בשרת)', () => {
+    const preview = formToPreviewQuote({
+      form: FORM,
+      lines: [
+        { sku: '04ST', qty: 6, unitPrice: 500 },
+        { sku: 'B-REG-TAG', qty: 300, unitPrice: 5 },
+      ],
+      savedQuote: SAVED,
+    })
+    expect(preview.quote_services.map((l) => l.line_number)).toEqual([1, 2])
   })
 })
 

@@ -8,7 +8,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Eye } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
@@ -29,15 +29,24 @@ import {
   computeLinesCost,
   crossesMidnight,
   deriveProfitability,
+  formToPreviewQuote,
   linesToPricingShape,
   quoteToFormState,
   sumHostessQty,
   validateQuoteForm,
+  QUOTE_SCREEN_PARAM_NAMES,
 } from '@/lib/quotes'
 import { listCustomers } from '@/modules/02_customers/api'
 import CustomerFormDialog from '@/modules/02_customers/CustomerFormDialog'
-import { createQuote, getPricingCatalog, getQuote, saveQuoteEdit } from '@/modules/03_quotes/api'
+import {
+  createQuote,
+  getPricingCatalog,
+  getQuote,
+  getQuoteScreenParams,
+  saveQuoteEdit,
+} from '@/modules/03_quotes/api'
 import CustomerPicker from '@/modules/03_quotes/CustomerPicker'
+import QuoteDocumentDialog from '@/modules/03_quotes/QuoteDocumentDialog'
 import QuoteLineEditor from '@/modules/03_quotes/QuoteLineEditor'
 import QuoteSummaryPanel from '@/modules/03_quotes/QuoteSummaryPanel'
 
@@ -99,6 +108,11 @@ export default function QuoteBuilderPage() {
   const [todayIso, setTodayIso] = useState('')
   const [customerDialogOpen, setCustomerDialogOpen] = useState(false)
   const [reloadTick, setReloadTick] = useState(0)
+  // ⚠️ השורה השמורה נשמרת **בנוסף** לטופס, ולא רק מומרת אליו: המסמך צריך ממנה שלושה
+  // שדות שאין להם מקור בטופס — מספר-ההצעה, תאריך-ההנפקה, ו-updated_at (שממנו נגזר התוקף).
+  const [savedQuote, setSavedQuote] = useState(null)
+  const [screenParams, setScreenParams] = useState({})
+  const [documentOpen, setDocumentOpen] = useState(false)
 
   // טעינה: לקוחות + קטלוג-תמחור, ובמצב-עריכה גם ההצעה עצמה. כל ה-setState אחרי await
   // (react-hooks/set-state-in-effect), ודגל cancelled מונע כתיבה אחרי ניווט באמצע טעינה.
@@ -106,12 +120,18 @@ export default function QuoteBuilderPage() {
     let cancelled = false
     ;(async () => {
       try {
-        const [customerRows, catalogData, quote] = await Promise.all([
+        // ‏getQuoteScreenParams נטענת גם כאן ולא רק במסך-הניהול: `ימי_תוקף_הצעה` נדרש
+        // לשורת "תוקף ההצעה עד" שבמסמך, ובלעדיו המסמך שהמשתמש רואה מהבנייה היה מציג "—"
+        // בעוד שאותו מסמך מהניהול מציג תאריך — שני מסמכים שונים לאותה הצעה.
+        const [customerRows, catalogData, quote, paramRows] = await Promise.all([
           listCustomers(),
           getPricingCatalog(),
           isEditMode ? getQuote(Number(quoteId)) : Promise.resolve(null),
+          getQuoteScreenParams(),
         ])
         if (cancelled) return
+        setScreenParams(Object.fromEntries(paramRows.map((p) => [p.param_name, p.param_value])))
+        setSavedQuote(quote)
 
         const ratioParam = catalogData.params.find(
           (p) => p.param_name === PRICING_PARAM_NAMES.GUESTS_PER_HOSTESS_RATIO,
@@ -149,6 +169,13 @@ export default function QuoteBuilderPage() {
   }, [quoteId, isEditMode, reloadTick])
 
   const selectedCustomer = customers.find((c) => c.customer_id === form.customerId) ?? null
+
+  // מפת מק"ט⇒מוצר — המסמך צריך אותה כדי להציג שם-פריט ולא מק"ט (מוקש 3.1: מק"ט שאינו
+  // בקטלוג נופל חזרה למק"ט עצמו, כי שורה בלי שם במסמך-לקוח מביכה).
+  const productsBySku = useMemo(
+    () => Object.fromEntries(catalog.products.map((p) => [p.sku, p])),
+    [catalog.products],
+  )
 
   // המע"מ נקרא מהפרמטרים ולא מקודד — parseVatPercent מחזיר null כשהוא חסר, ואז המסך
   // מסרב לחשב במקום להמציא 0% (אותה דוקטרינה כמו ב-pricing.js).
@@ -283,16 +310,36 @@ export default function QuoteBuilderPage() {
           </h1>
           <p className="mt-0.5 text-xs text-slate-500">תוקף ההצעה: 30 יום ממועד השליחה</p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => navigate('/quotes')}
-          className="h-auto gap-2 rounded-lg border-slate-300 px-4 py-2 text-slate-700"
-          data-testid="quote-back"
-        >
-          <ArrowRight className="size-4" />
-          לרשימת ההצעות
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* ⚠️ במצב-עריכה בלבד: מספר-ההצעה, תאריך-ההנפקה וחלון-התוקף אינם קיימים בטופס
+              אלא רק בשורה השמורה, ובלעדיהם המסמך יוצא בלי מספר ובלי תאריכים.
+              המסמך נבנה **ממה שעל המסך עכשיו** (formToPreviewQuote) ולא מהשורה השמורה —
+              אחרת המשתמש היה מסתכל על גרסה אחת ושולח אחרת. אין כאן כפתור-שליחה:
+              ‏`isQuoteSendable` מחזיר false כי לתצוגה-מהטופס אין סטטוס, וזה מכוון —
+              שליחת גרסה שלא נשמרה הייתה מצרפת מסמך שה-DB אינו מחזיק. */}
+          {isEditMode && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDocumentOpen(true)}
+              className="h-auto gap-2 rounded-lg border-slate-300 px-4 py-2 text-slate-700"
+              data-testid="quote-builder-document"
+            >
+              <Eye className="size-4" />
+              צפייה במסמך
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate('/quotes')}
+            className="h-auto gap-2 rounded-lg border-slate-300 px-4 py-2 text-slate-700"
+            data-testid="quote-back"
+          >
+            <ArrowRight className="size-4" />
+            לרשימת ההצעות
+          </Button>
+        </div>
       </div>
 
       {/* ⚠️ minmax(0,1fr) ולא 1fr: ברירת-המחדל של עמודת-גריד היא minmax(auto,1fr), כלומר היא
@@ -598,6 +645,19 @@ export default function QuoteBuilderPage() {
           />
         )}
       </div>
+
+      {/* אותו חלון-מסמך של מסך-הניהול, כדי שלא יהיו שני מסמכים לאותה הצעה. הוא מקבל
+          "הצעה" שנבנתה מהטופס החי — ולכן שינוי כמות שטרם נשמר **כן** מופיע במסמך. */}
+      {documentOpen && (
+        <QuoteDocumentDialog
+          open
+          onOpenChange={setDocumentOpen}
+          quote={formToPreviewQuote({ form, lines, savedQuote, customer: selectedCustomer })}
+          productsBySku={productsBySku}
+          vatRate={vatRate}
+          validityDays={screenParams[QUOTE_SCREEN_PARAM_NAMES.validityDays]}
+        />
+      )}
 
       {/* F25 — טופס הלקוח של מודול 2 בשימוש חוזר כמות-שהוא, דרך props */}
       <CustomerFormDialog
