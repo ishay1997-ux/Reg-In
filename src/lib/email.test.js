@@ -7,37 +7,45 @@ import {
   classifySendError,
   emailSendDisabledReason,
   fillEmailTemplate,
+  findUnknownPlaceholders,
   isAttachmentTooLarge,
   plainTextToEmailHtml,
   sendResultMessage,
 } from '@/lib/email'
 
-// הגוף האמיתי מהמסד (מיגרציה 7, אחרי הסרת "והתנעת הפרויקט"). נשמר כאן כמות-שהוא כדי
-// שהבדיקות ייכשלו אם מישהו ישנה את שמות-ה-placeholders בתבנית שבמסד.
+// ⚠️ **העתק מדויק של הערך שבמסד** (`תבנית_מייל_הצעת_מחיר`) אחרי מיגרציות 7 ו-9 — כדי
+// שבדיקה תיפול אם שמות-ה-placeholders בתבנית ישתנו.
+// ⚠️ **התיישן פעם אחת (30/07/2026)** אחרי מיגרציה 9 והפסיק להגן בשקט; כל מיגרציה שנוגעת
+// בתבנית חייבת לעדכן גם את הקבוע הזה וגם את זה שב-`quotes.test.js`.
 const QUOTE_TEMPLATE = `שלום [שם_איש_קשר],
 בהמשך לפנייתך, מצורפת בזאת הצעת מחיר לאירוע '[שם_פרויקט]' המתוכנן להתקיים בתאריך [תאריך_אירוע].
-ההצעה כוללת את מפרט הדיילות והשירותים שסיכמנו. לאישור ההצעה, אנא השב למייל זה או צור קשר עם מנהלת הפרויקטים.
+ההצעה כוללת את מפרט הדיילות והשירותים שסיכמנו. לאישור ההצעה, אנא השב למייל זה או פנה אליי ישירות.
 בברכה,
-צוות REG-IN.`
+[חתימת_שולח]`
+
+// ארבעת השדות של התבנית שבמסד. **חייבים להיות מלאים** — מאז ההגנה על שדה-לא-מוכר,
+// מילוי חלקי מסרב לשלוח (וזה בדיוק מה שהפיל את הבדיקה הזו כשהיא נשארה עם 3 שדות).
+const ALL_FIELDS = {
+  '[שם_איש_קשר]': 'רון גל',
+  '[שם_פרויקט]': 'כנס לקוחות שנתי',
+  '[תאריך_אירוע]': '22/08/2026',
+  '[חתימת_שולח]': 'ישי אטיאס | מנכ"ל, REG-IN',
+}
 
 describe('fillEmailTemplate — מילוי תבנית מ-params', () => {
   it('מחליף כל placeholder שהועבר לו', () => {
-    const body = fillEmailTemplate(QUOTE_TEMPLATE, {
-      '[שם_איש_קשר]': 'רון גל',
-      '[שם_פרויקט]': 'כנס לקוחות שנתי',
-      '[תאריך_אירוע]': '22/08/2026',
-    })
+    const body = fillEmailTemplate(QUOTE_TEMPLATE, ALL_FIELDS)
     expect(body).toContain('שלום רון גל,')
     expect(body).toContain("לאירוע 'כנס לקוחות שנתי'")
     expect(body).toContain('בתאריך 22/08/2026')
+    expect(body).toContain('ישי אטיאס | מנכ"ל, REG-IN')
   })
 
   it('לא נשאר אף placeholder בגוף שנשלח ללקוח', () => {
-    const body = fillEmailTemplate(QUOTE_TEMPLATE, {
-      '[שם_איש_קשר]': 'רון גל',
-      '[שם_פרויקט]': 'כנס',
-      '[תאריך_אירוע]': '22/08/2026',
-    })
+    const body = fillEmailTemplate(QUOTE_TEMPLATE, ALL_FIELDS)
+    // ⚠️ הטענה על אורך היא **חלק מהבדיקה ולא קישוט**: בלעדיה מחרוזת ריקה עוברת את
+    // `not.toMatch` באופן ריק, והבדיקה הייתה "ירוקה" גם כשהמנוע מסרב לשלוח.
+    expect(body.length).toBeGreaterThan(50)
     expect(body).not.toMatch(/\[[^\]]+\]/)
   })
 
@@ -60,6 +68,60 @@ describe('fillEmailTemplate — מילוי תבנית מ-params', () => {
 
   it('בלי מפת-החלפות ⇒ התבנית כמות-שהיא (לא קורס)', () => {
     expect(fillEmailTemplate('שלום', undefined)).toBe('שלום')
+  })
+})
+
+describe('findUnknownPlaceholders — הגנה מפני עריכת-תבנית שהקוד לא מכיר', () => {
+  // ⚠️ למה זה קיים: §7.70 קובע שבמודול 3 מכוונים פרמטרים **דרך ה-Table Editor** (מסך-הפרמטרים
+  // הוא מ9), כלומר עריכת-תבנית ביד היא המסלול המתוכנן. שדה שיתווסף לתבנית ולא לקוד היה
+  // נשלח ללקוח כסוגריים גולמיים — בלי שגיאה, בלי אזהרה, ובמסמך עסקי.
+  const KNOWN = {
+    '[שם_איש_קשר]': 'רון גל',
+    '[שם_פרויקט]': 'כנס',
+    '[תאריך_אירוע]': '22/08/2026',
+    '[חתימת_שולח]': 'ישי אטיאס | מנכ"ל, REG-IN',
+  }
+
+  it('התבנית שבמסד היום — אפס שדות לא-מוכרים (אחרת השליחה חסומה בלי סיבה)', () => {
+    expect(findUnknownPlaceholders(QUOTE_TEMPLATE, KNOWN)).toEqual([])
+  })
+
+  it('שדה שנוסף לתבנית ולא לקוד — מזוהה בשמו, כדי שאפשר יהיה לתקן', () => {
+    expect(findUnknownPlaceholders('שלום [שם_חברה],', KNOWN)).toEqual(['[שם_חברה]'])
+  })
+
+  it('כמה שדות לא-מוכרים ⇒ כולם, בלי כפילויות', () => {
+    expect(findUnknownPlaceholders('[א] ו-[ב] ושוב [א]', KNOWN)).toEqual(['[א]', '[ב]'])
+  })
+
+  // ⚠️ **הבדיקה שמנעה באג אמיתי:** כל לקוחות-הדמו נקראים "… בע\"מ [דמו]", ולקוח בלי
+  // איש-קשר נופל לשם-החברה — כלומר סריקה על הגוף **אחרי** המילוי הייתה חוסמת שליחה
+  // לכל לקוחות-הדמו. הסריקה חייבת לרוץ על **התבנית**, לפני שהערכים נכנסים.
+  it('סוגריים בתוך ערך מוזרק אינם נחשבים placeholder — סורקים את התבנית, לא את התוצאה', () => {
+    const withDemoName = { ...KNOWN, '[שם_איש_קשר]': 'מדיטק פתרונות בע"מ [דמו]' }
+    expect(findUnknownPlaceholders(QUOTE_TEMPLATE, withDemoName)).toEqual([])
+  })
+
+  it('תבנית ריקה / חסרה ⇒ אין ממצאים (הטיפול בה הוא במקום אחר)', () => {
+    expect(findUnknownPlaceholders('', KNOWN)).toEqual([])
+    expect(findUnknownPlaceholders(null, KNOWN)).toEqual([])
+  })
+
+  it('סוגר בודד אינו placeholder', () => {
+    expect(findUnknownPlaceholders('מחיר [ ללא סוגר סוגר', KNOWN)).toEqual([])
+  })
+})
+
+describe('fillEmailTemplate — סירוב כשיש שדה לא-מוכר', () => {
+  it('תבנית עם שדה לא-מוכר ⇒ ריק, ולא גוף עם סוגריים גולמיים ללקוח', () => {
+    expect(fillEmailTemplate('שלום [שם_חברה],', { '[שם_איש_קשר]': 'רון' })).toBe('')
+  })
+
+  it('⇒ ומכיוון שהגוף ריק, גם המשלוח מסרב (buildEmailPayload מחזיר null)', () => {
+    const body = fillEmailTemplate('שלום [שם_חברה],', { '[שם_איש_קשר]': 'רון' })
+    expect(
+      buildEmailPayload({ to: 'a@b.co', subject: 'x', body, attachmentBase64: 'AAA' }),
+    ).toBeNull()
   })
 })
 

@@ -34,6 +34,7 @@ import {
   quoteToPdfModel,
   isQuoteSendable,
   buildQuoteEmailPayload,
+  findUnknownQuoteEmailPlaceholders,
   QUOTE_SCREEN_PARAM_NAMES,
 } from '@/lib/quotes'
 import {
@@ -169,6 +170,19 @@ export default function QuoteDocumentDialog({
         return
       }
 
+      // ⚠️ שדה-תבנית שהקוד אינו מכיר עוצר כאן, **עם שמו**: המנוע ממילא יסרב לשלוח
+      // (‏`fillEmailTemplate` מחזיר ריק), אבל הודעה כללית הייתה משאירה את המשתמש בלי
+      // מושג מה לתקן — והתיקון הוא שורה אחת ב-Table Editor. ר' `src/lib/email.js`.
+      const unknownFields = findUnknownQuoteEmailPlaceholders(emailTemplate)
+      if (unknownFields.length > 0) {
+        const list = unknownFields.join(', ')
+        setSendError(
+          `תבנית המייל מכילה שדה שהמערכת אינה מכירה: ${list}. יש לתקן את התבנית בהגדרות.`,
+        )
+        toast.error('תבנית המייל מכילה שדה לא-מוכר — המייל לא נשלח.')
+        return
+      }
+
       const payload = buildQuoteEmailPayload({
         quote,
         template: emailTemplate,
@@ -179,8 +193,8 @@ export default function QuoteDocumentDialog({
         // אותו אדם שה-Edge Function מאמתת ממילא, ובלי סבב-רשת נוסף.
         sender: user,
       })
-      // תנאי-הסף כבר נבדקו למעלה (disabledReason) — null כאן הוא תקלה אמיתית, לא
-      // מצב-משתמש צפוי, ולכן הודעה כללית ולא ניסיון-ניחוש מה בדיוק חסר.
+      // תנאי-הסף כבר נבדקו למעלה (disabledReason + שדות-התבנית) — null כאן הוא תקלה
+      // אמיתית, לא מצב-משתמש צפוי, ולכן הודעה כללית ולא ניסיון-ניחוש מה בדיוק חסר.
       if (!payload) throw new Error('הכנת נתוני-השליחה נכשלה.')
 
       // ⏱️ תקרת-זמן משלנו: ל-invoke אין timeout, ובלעדיה כפתור "שולח..." יכול להישאר

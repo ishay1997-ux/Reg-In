@@ -11,7 +11,7 @@ import {
 } from '@/lib/pricing'
 // מנוע-המיילים המשותף (כלל 14 — הלוגיקה שאינה ייחודית להצעות-מחיר חיה שם פעם אחת,
 // ומודולים 4/8/11 יצרכו את אותו קוד ואת אותן בדיקות).
-import { buildEmailPayload, fillEmailTemplate } from '@/lib/email'
+import { buildEmailPayload, fillEmailTemplate, findUnknownPlaceholders } from '@/lib/email'
 
 // quotes.quote_status — שלושת הערכים של CHECK quotes_quote_status_check.
 export const QUOTE_STATUS_LABELS = {
@@ -516,8 +516,21 @@ export function sortQuotes(quotes, sortKey, ctx = {}) {
 // "והתנעת הפרויקט" בהכרעת-ישי), וזה גם אותו ערך שמודול 10 יצרוך בשליחה האוטומטית
 // (🚧 מ10 ב-PROJECT_MASTER §6) — כלומר מקור-אמת אחד לשני המימושים.
 
+// ארבעת השדות שתבנית `תבנית_מייל_הצעת_מחיר` מכירה. **רשימה אחת** שממנה נגזרים גם המילוי
+// וגם בדיקת-השדות-הלא-מוכרים — שתי רשימות היו מתפצלות בשקט בדיוק ברגע שמוסיפים שדה.
+const QUOTE_EMAIL_PLACEHOLDERS = ['[שם_איש_קשר]', '[שם_פרויקט]', '[תאריך_אירוע]', '[חתימת_שולח]']
+
+// שדות שהתבנית שבמסד מכילה והקוד אינו מכיר. מוחזרים בשמם כדי שהמסך יוכל לומר **מה**
+// לתקן. ⚠️ הבדיקה על התבנית ולא על התוצאה — ר' ההסבר ב-`src/lib/email.js`.
+export function findUnknownQuoteEmailPlaceholders(template) {
+  return findUnknownPlaceholders(
+    template,
+    Object.fromEntries(QUOTE_EMAIL_PLACEHOLDERS.map((token) => [token, ''])),
+  )
+}
+
 // ⚠️ שמות ה-placeholders הם **חוזה מול הערך שבמסד**. שינוי שם בתבנית בלי שינוי כאן
-// מותיר סוגריים מרובעים בגוף שנשלח ללקוח — ולכן יש בדיקה שאוסרת placeholder שנשאר.
+// מותיר סוגריים מרובעים בגוף שנשלח ללקוח — ולכן המנוע **מסרב לשלוח** במקרה כזה.
 // המנגנון עצמו (איך מחליפים, מה קורה בתבנית חסרה) חי ב-`src/lib/email.js` ומשותף לכל
 // המודולים; כאן רק **אילו** placeholders יש לתבנית של הצעת-מחיר.
 export function fillQuoteEmailTemplate(template, values) {

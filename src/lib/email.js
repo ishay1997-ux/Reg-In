@@ -44,8 +44,33 @@ export function isAttachmentTooLarge(base64) {
 //     שנשלח ללקוח גרוע ממייל שלא נשלח.
 // (2) split/join ולא regex — התבניות מכילות סוגריים מרובעים, שהם תווים מיוחדים ב-regex.
 //     בנוסף זה מחליף **כל** המופעים, כולל placeholder שחוזר פעמיים באותה תבנית.
+// שדות-תבנית שהקוד **אינו** מכיר. מוחזרים בשמם כדי שההודעה למשתמש תוכל להצביע על מה
+// לתקן, ולא רק לומר "נכשל".
+//
+// ⚠️ **סורקים את התבנית ולא את התוצאה — וזה ההבדל בין הגנה לבאג.** כל לקוחות-הדמו נקראים
+// `… בע"מ [דמו]`, ולקוח בלי איש-קשר נופל לשם-החברה; סריקה על הגוף **אחרי** המילוי הייתה
+// מזהה את `[דמו]` כשדה-לא-מוכר וחוסמת שליחה לכל לקוחות-הדמו. ערכים מוזרקים הם דאטה
+// לגיטימית שמותר לה להכיל סוגריים; רק התבנית היא חוזה.
+//
+// ⚠️ הביטוי אינו חוצה שורות (`[^\]\n]`), כדי ששורה שנפתחת בסוגר ולא נסגרת לא "תבלע"
+// את כל הפסקה שאחריה.
+const PLACEHOLDER_PATTERN = /\[[^\]\n]+\]/g
+
+export function findUnknownPlaceholders(template, replacements) {
+  if (!template) return []
+  const known = new Set(Object.keys(replacements ?? {}))
+  const found = String(template).match(PLACEHOLDER_PATTERN) ?? []
+  return [...new Set(found)].filter((token) => !known.has(token))
+}
+
+// ⚠️ **מסרב כשיש שדה לא-מוכר** (מחזיר ריק, ולכן `buildEmailPayload` יחזיר null והשליחה
+// לא תצא). למה חסימה ולא אזהרה: §7.70 קובע שבמודול 3 עורכים פרמטרים דרך ה-Table Editor,
+// כלומר תוספת-שדה לתבנית היא תרחיש מתוכנן — ומייל שיוצא ללקוח עם `[שם_חברה]` גולמי הוא
+// נזק בלתי-הפיך מול לקוח משלם, בעוד שכפתור חסום עם הודעה ברורה נפתר בחצי דקה.
 export function fillEmailTemplate(template, replacements) {
   if (!template) return ''
+  if (findUnknownPlaceholders(template, replacements).length > 0) return ''
+
   return Object.entries(replacements ?? {}).reduce(
     (text, [token, value]) => text.split(token).join(String(value ?? '')),
     template,
