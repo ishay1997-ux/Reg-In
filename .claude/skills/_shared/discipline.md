@@ -1,4 +1,4 @@
-# Shared discipline doctrine — read by all five repo-local REG-IN skills
+# Shared discipline doctrine — read by all six repo-local REG-IN skills
 
 > **SSOT split (23/07/2026, after Ishay wrote `~/.claude/CLAUDE.md`):** the *universal*
 > doctrine — language, talk style, PM authority, citation/resume discipline — now lives
@@ -14,7 +14,7 @@
 > moved OUT of the repo entirely the same night, to Ishay's global `~/.claude/skills/`,
 > being project-agnostic; it now carries its own self-contained discipline section instead
 > of pointing here. **Consolidated further 24/07/2026 (skill-creator structural review):**
-> the five repo-local skills used to each carry their own copy of the kernel paragraph
+> the repo-local skills used to each carry their own copy of the kernel paragraph
 > below, with a comment asking whoever edits it to keep all five + this file in sync by
 > hand — a real drift risk with no single source of truth. Now each of the five carries
 > only a one-line pointer to this file; the kernel paragraph itself lives HERE ONCE.)

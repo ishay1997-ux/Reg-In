@@ -45,7 +45,11 @@ Refactoring/perf/state-management proposals; messy spots that accumulated during
 Findings route like §4b: a swallowed error on a live user-facing path is a **§6 blocker**; a defensive-but-noisy pattern worth tightening later is a **§7 tech-debt** line.
 
 ### 4. 🧹 Housekeeping Check
-- `npm run verify` (lint + format:check + unit tests + build) — must be green.
+- **`npm run gate`** — must exit 0. This is the project's blocking gate since 29/07/2026:
+  `verify` (lint + format:check + unit tests + build) **plus** `dup` (jscpd), `deadcode` (knip),
+  `audit`, and `check:context`. ⚠️ Closing a module on `verify` alone would certify it on a **weaker
+  bar than every individual build step already passes** — duplication, dead code and a broken
+  context tree would all slip through the most important gate in the project.
 - `npm run test:e2e` — run and report pass/fail/skipped (env-var skips are OK, say so).
 - `npm run audit` — different from §2c (that's this module's own code; this is third-party package CVEs, project-wide). If this module added any new dependency, confirm it introduced no new high/critical finding. Pre-existing findings (not caused by this module) are not this module's blocker — note them and move on.
 - `git status` clean of debug/temp files; no stray `console.log`/commented-out blocks in the diff.
@@ -132,6 +136,6 @@ Print for Ishay, concretely, as numbered steps:
 1. GitHub → Pull requests → New → base: `dev` ← compare: `[BRANCH_NAME]` → short description (provide a ready-to-paste one) → Create. What to watch in CI (quality-gate + secret-scan/gitleaks); on red — paste the failing log back to Claude. **Also print a "🧩 prompt for Claude-in-Chrome" (iron rule 17): a self-contained Hebrew prompt Ishay can paste into the Chrome extension to open this exact PR (repo, base, compare, title, one-line description) and report CI status — no secrets in it.**
 2. Merge rules: review the `Files changed` diff yourself, wait for CI to go green, then merge. On red — paste the failing log back to Claude before merging. *(Deliberately no 🧩 handoff block here — reviewed and confirmed with Ishay 24/07/2026: the merge decision is his alone, never Claude's, and opening the diff yourself is a trivial click — a 🧩 prompt would add ceremony without saving real effort. This is intentional, not an oversight; don't re-flag it.)*
 3. After merge: pull `dev` fresh, ask Claude to flip the module row to ✅, and run the `regin-docs-sync` routine yourself (Ishay's click) (Run now — the deep sync-audit) as the final cross-file consistency pass (CLAUDE.md rule 13(ז)).
-(`npm run verify` and `npm run test:e2e` are NOT extra steps for the human — the audit above already ran them; `regin-e2e-check`/`regin-health-pulse` stay optional.)
+(`npm run gate` and `npm run test:e2e` are NOT extra steps for the human — the audit above already ran them; `regin-e2e-check`/`regin-health-pulse` stay optional.)
 
 Run the audit now and output the full report.

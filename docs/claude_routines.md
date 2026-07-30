@@ -2,7 +2,7 @@
 
 # 🤖 REG-IN — 4 הרוטינות של Claude (הגדרות קנוניות)
 
-> **קובץ זה הוא המקור הקנוני.** אם אתה Claude וקוראים לך לעדכן, ליצור, או להבין את "4 הרוטינות" של REG-IN — **זה המקום**. הקובץ נועד לעמוד בפני עצמו: סשן טרי, או חשבון Claude על מחשב אחר, שקורא רק את הקובץ הזה בלי שום הקשר קודם — אמור להבין בדיוק מה כל רוטינה עושה, מתי מריצים אותה, ואיך יוצרים אותה מחדש בחשבון חדש.
+> **קובץ זה הוא הגיבוי המגורסן ומקור-השחזור של הרוטינות** (מ-30/07/2026; קודם הוגדר "המקור הקנוני"). מקור-האמת הוא **העותק החי** שרץ בפועל — `~/.claude/scheduled-tasks/<name>/SKILL.md`, שנמצא מחוץ ל-git ולכן בלי היסטוריה ובלי גיבוי; כאן הוא מגורסן. אם אתה Claude וקוראים לך לעדכן, ליצור, או להבין את "4 הרוטינות" של REG-IN — **זה המקום**. הקובץ נועד לעמוד בפני עצמו: סשן טרי, או חשבון Claude על מחשב אחר, שקורא רק את הקובץ הזה בלי שום הקשר קודם — אמור להבין בדיוק מה כל רוטינה עושה, מתי מריצים אותה, ואיך יוצרים אותה מחדש בחשבון חדש.
 >
 > **מקומו בהיררכיית האמת:** זהו תיעוד תפעולי, לא ליבת המערכת — אבל הוא **המקור הראשי** לתוכן הרוטינות (עדכון תוכן קודם כאן, אחר-כך בעותקי ה-SKILL.md המקומיים; ר' "פרוטוקול עדכון" בסוף).
 
@@ -58,11 +58,6 @@
 **הפרומפט הקנוני המלא (זה מה שיושב ב-SKILL.md; זה מה שמעתיקים בעת יצירה בחשבון חדש):**
 
 ```
----
-name: regin-docs-sync
-description: REG-IN: deep semantic sync-audit — reads every doc IN FULL plus all decision-bearing code/DB, verifies every §7/§6 decision propagated (both directions), classifies findings (mechanical=fix, ruled=sync, ambiguous=ask), outputs a conflict ledger. Read-only system health checks live in the separate regin-health-pulse routine.
----
-
 🕐 מתי להפעיל: אחרי סיום צעד/מודול, לפני סגירת סשן עבודה, ותמיד לפני סגירת מודול / מיזוג גדול. כל ריצה = האודיט העמוק המלא.
 
 You are running the recurring documentation sync-audit for the REG-IN project (React 19 + Vite + Supabase + Tailwind, Hebrew RTL, repo at the current working directory). You have no memory of any prior conversation — everything you need is below or in the repo itself.
@@ -73,14 +68,12 @@ SCOPE NOTE: this routine only handles documentation truthfulness. It does NOT ru
 
 STEP 0 — Merge-status check (do this FIRST, before trusting any local git state — added 08/07/2026 after a real incident): `git fetch origin --prune`, then check whether the current branch's tip is already an ancestor of `origin/dev` (`git merge-base --is-ancestor HEAD origin/dev` — exit 0 means yes) or whether `git log origin/dev --oneline -5` shows a merge commit for this exact branch name. **Local git log/status alone cannot detect this** — a human can merge the current branch's PR on GitHub mid-session, invisibly to a session that never fetches. If the current branch is already merged into `origin/dev`:
 - Say so explicitly and prominently in the journal/report — do not silently proceed as if still pre-merge.
-- Any further doc fixes this audit finds are still valid content, but they must NOT be piled onto the now-shipped branch as if it were still open. Recommend to Ishay: pull `dev` fresh and open a new small branch for these fixes (or, if they prefer, push more commits to the same branch name and open a second PR from it — their call, not this routine's).
+- Any further doc fixes this audit finds are still valid content, but they must NOT be piled onto the now-shipped branch as if it were still open. Recommend to Ishay/Amit: pull `dev` fresh and open a new small branch for these fixes (or, if they prefer, push more commits to the same branch name and open a second PR from it — their call, not this routine's).
 - Never push or open a PR yourself either way — this routine stays docs-only per the hard safety boundaries below.
 
-STEP 1 — Read reality and the full doc set (exhaustive — every doc IN FULL, no skimming):
-- Docs: `docs/CLAUDE_CODE_LOG.md` · `STATUS.md` · **the CLAUDE.md tree** — root `CLAUDE.md` (gotchas/gates + the FROZEN 1–17 rule index; pruned 28/07/2026 to 7 stated rules + a relocation table, so a rule missing from it is NOT deleted — check the table says where it lives) **plus the directory-scoped files that hold the full protocols**: `supabase/migrations/CLAUDE.md` (DB protocol incl. the typed-echo gate), `src/CLAUDE.md` (code/RTL/RLS gotchas + security model), `docs/CLAUDE.md` (**iron rule 13 — the ripple checklist this audit enforces — now lives HERE, not in root**), and `src/modules/NN_*/CLAUDE.md` (per-module gotchas, written/refreshed by `module-close` §4c). A protocol that drifted back into root, or a directory file contradicting root, is drift to fix · `docs/toolbox.md` (which plugins are on/off in this repo + the re-enable triggers) · `docs/archive/**` (frozen pre-28/07 full versions — **read-only, never edit, never stamp**; a doc pointing at archived content as if it were live is drift) · `README.md` (check its links/doc-map still point at real files) · `docs/guides/**` · `docs/micro_guides/*.md` (LIVING blueprints, English, `module-N.md` — Live Status Header, step table, Deviations log) · `.claude/skills/*/SKILL.md` + `.claude/skills/*/template.md` + `.claude/skills/_shared/discipline.md` (the FIVE repo-local skills — the module-flow three `module-blueprint`/`module-build`/`module-close` [their templates live beside them since 23/07/2026] + the two repo-local helpers `section7-rulings`/`post-merge` [23/07 evening] — verify trigger phrasings, routing, that the shared-kernel paragraph is identical ×5, and that `_shared/discipline.md` [narrowed 23/07 night to the REG-IN-specific instantiation layer — which file/tool verifies which claim here — on top of Ishay's project-independent `~/.claude/CLAUDE.md`, which now carries the universal doctrine] matches what the kernels promise; `docs/templates/` no longer exists, so a doc still pointing there is drift to fix). **`feature-acceptance` moved OUT of this repo to `~/.claude/skills/feature-acceptance/` (23/07 night — project-agnostic, reusable across Ishay's projects)**: it is out of scope for this repo-local audit (no kernel-identity check against it); verify only that no REG-IN doc still claims it lives under this repo's `.claude/skills/`. **`quality-audit` (added 23/07 night — repo-local whole-codebase quality review)** is a SIXTH repo-local skill but does **NOT** share the kernel (it carries its own "verify the recommendation" discipline); do not include it in the kernel-identity ×5 check — just verify its dispatch-target agent/skill names still exist and its trigger phrasings are intact. · `docs/PROJECT_MASTER.md` (especially §6 + the full §7 registry) · `docs/CHANGELOG.md` (⛔ retired 23/07/2026 — read-only archive; verify the retirement banner is intact and nothing wrote new dated lines to it, but do NOT stamp it or expect updates) · `docs/architecture_and_qa_roadmap.md` (check its "חלק 0: מצב היישום" table) · `docs/claude_routines.md` (canonical routines — also diff against the 4 local SKILL.md files under `~/.claude/scheduled-tasks/*/SKILL.md`; per the dual-update protocol in its §4, drift on Ishay's side means a behaviour change missed his live copy — flag as a missed sync) · `docs/reference_spec/products_and_params.md` (the LOCKED Seed decisions at its top are a first-class ruling source).
-- Decision-bearing code/DB — where ruled values physically live: `docs/schema.sql`, the cumulative state of `supabase/migrations/**`, `src/lib/**` (the SSOT layer per iron rule 14: pricing/customers/constants/permissions/validators), enforcement patterns in `src/modules/**` + `src/components/layout/**`, and seed values.
-- Actual DB via the Supabase MCP (read-only): tables/RLS/functions + `params` rows (ruled values like VAT live there). If MCP access is not available this run — do NOT silently skip and claim success: proceed file-only and note in the journal: "DB check skipped (MCP not authenticated this run)".
-- git as the recency oracle: `git log --oneline -20`, `git status --short`; and when a passage has no timestamp, use `git log -1 --format=%cd -- <path>` and `git log -p -S"<token>" -- <path>` to establish which side is newer.
+STEP 1 — Read reality and the full doc set (exhaustive — every doc IN FULL, no skimming).
+**Read `doc-map.md` beside this file** — it lists every doc to read, the decision-bearing code/DB
+where ruled values physically live, and the gotcha that makes each worth reading.
 
 STEP 2 — Decision-state audit (§7 + §6) — the core step:
 - For every §7 item: parse its status (✅ ruled/closed vs open), the ruled value, date, owner.
@@ -91,7 +84,7 @@ STEP 2 — Decision-state audit (§7 + §6) — the core step:
 - **Cross-module debt (🚧, added 09/07/2026):** the 🚧/§6 mechanism (every `🚧 מN` micro-guide token ⟺ a byte-matching `🚧 מN` line in `PROJECT_MASTER.md` §6; §6 = the router a future module greps on open, `grep '🚧 מ<its-number>' §6` = every debt owed to it; 🚧 ≠ ⏳ deferred-decision ≠ 🕓 freshness-stamp; Stop-hook `check-docs-updated.sh` 0ג enforcement) is defined in CLAUDE.md iron rule 15 — this step audits it, it does not redefine it. FORWARD: for each micro-guide 🚧-token, `grep -F '🚧 מN' docs/PROJECT_MASTER.md`; a missing §6 line is a silent-debt finding (Class 2 — add it, citing the source micro-guide). The Stop hook blocks a session that leaves a 🚧 unregistered, but this routine catches drift the hook can miss (a debt hand-edited out of §6, or a guide not touched this session). BACKWARD: every §6 `🚧 מN` line should name its source module; a §6 🚧 with no traceable source is a soft finding (flag, don't delete).
 
 STEP 3 — Cross-file consistency + structural integrity:
-- Existing checks: the ACTIVE module's micro-guide Live Status Header ↔ STATUS.md's row ↔ actual code under `src/modules/NN_*/` ↔ PROJECT_MASTER's "מצב נוכחי"; no step left 🔨 without a note; "Last updated" not older than the module's newest code change; `claude_routines.md` ↔ the 4 live SKILL.md copies.
+- Existing checks: the ACTIVE module's micro-guide Live Status Header ↔ STATUS.md's row ↔ actual code under `src/modules/NN_*/` ↔ PROJECT_MASTER's "מצב נוכחי"; no step left 🔨 without a note; "Last updated" not older than the module's newest code change; `docs/claude_routines.md` **as a versioned BACKUP of the 4 live SKILL.md copies** (one-way since 30/07/2026: live ⇒ repo, synced at module close — it is no longer "canonical", so a difference is a stale backup to refresh, NOT an ambiguity about which side is right; the live copy is what actually runs).
 - Structural integrity: broken markdown tables (a row missing cells, two rows merged into one, a squashed `_(שורה חדשה כאן)_` marker), broken internal links, duplicate H1s across files.
 - **LOG reference-sections drift (lesson 09/07/2026; the LOG is English since 12/07):** the reference sections of `docs/CLAUDE_CODE_LOG.md` (Operational Gotchas / Tech-debt / DB journal / Templates & hooks) are LIVING knowledge, not dated records — they rot silently while dated session entries stay frozen. Spot-check them against current reality: does "Open flags" still name items §7 has since closed (found stale 09/07 — pointed at VAT/address already ruled)? Does the hooks/templates description match the actual hook count + current template features (found stale 09/07 — described the 06/07 version)? A reference line contradicting reality = Class 1/2 fix (these are snapshots to refresh, NOT frozen dated entries — the "never rewrite dated entries" rule does not shield them). **After re-verifying a reference section, refresh its `🕓 reviewed DD/MM/YYYY HH:MM` header stamp to the run time** — each reference section carries a last-verified stamp; a stamp far older than today is itself the drift signal that nobody re-checked that section (added 09/07/2026 at Ishay's suggestion — makes stale reference-knowledge visible at a glance instead of hiding as identical-looking text).
 - **Broken-dispatch check (added 28/07/2026 after a real incident — 7 broken references found at once):** plugins are configured **per-project** in `.claude/settings.json` → `enabledPlugins`. For every agent or skill that a repo-local skill dispatches by name (grep `.claude/skills/**` for `plugin-name:agent-name` patterns), verify the owning plugin is still enabled there. A skill that dispatches an agent from a disabled plugin fails **silently at run time**, long after the config change. Cross-check the other direction too: `docs/toolbox.md`'s on/off tables must match `enabledPlugins` exactly, and every "turn it on when…" trigger must name a plugin that is actually installed. Report mismatches as Class 2 (the config is the truth; the docs follow). **Convention that keeps this check accurate:** a LIVE dispatch is written `plugin-name:agent-name`; a historical note about a reference that was removed must NOT use that colon form (write "the `agent-name` agent of the **plugin-name** plugin" instead), otherwise the grep flags dead prose as a broken dispatch.
@@ -130,6 +123,88 @@ Write your CLAUDE_CODE_LOG journal entry in **English** (the log is a Claude-fac
 
 ---
 
+**קובץ נלווה — `doc-map.md` (יושב לצד ה-SKILL.md של הרוטינה):**
+‏STEP 1 טוען אותו לפי דרישה. **בשחזור במחשב חדש — חייבים ליצור גם אותו**, אחרת הרוטינה תגיע ל-STEP 1 ולא תדע מה לקרוא.
+
+```
+# regin-docs-sync — the doc map (loaded on demand by STEP 1)
+
+Split out of `SKILL.md` on 30/07/2026. **Why:** the whole list used to be one paragraph inside the
+routine, so every run paid for it upfront. Anthropic's Claude-5 context guidance is explicit —
+prefer a tree of files loaded at the right time over one central repository of everything. Nothing
+was deleted in the split; this is the same content, moved.
+
+**Read this file at STEP 1.** Every entry is a doc to read IN FULL, with the gotcha that makes it
+worth reading. If an entry's parenthetical contradicts what you actually find, the repo wins —
+report the drift.
+
+## Living docs
+
+- `docs/CLAUDE_CODE_LOG.md` — English since 12/07/2026. Its **reference sections** (Operational
+  Gotchas / Tech-debt / DB journal / Templates & hooks) are living knowledge that rots silently
+  while dated entries stay frozen; each carries a `🕓 reviewed` stamp to refresh after verifying.
+- `STATUS.md` — current state only, Hebrew.
+- `docs/PROJECT_MASTER.md` — **§6** (the debt registry) and the full **§7** registry.
+- `docs/architecture_and_qa_roadmap.md` — check its "חלק 0: מצב היישום" table.
+- `docs/db_roadmap.md` · `docs/toolbox.md` (on/off tables must match `.claude/settings.json`) ·
+  `README.md` (its links/doc-map must point at real files).
+- `docs/guides/**` · `docs/micro_guides/*.md` (living blueprints, English: Live Status Header,
+  step table, §9 deviations log).
+
+## The CLAUDE.md tree
+
+Root `CLAUDE.md` was pruned 28/07/2026 to 7 stated rules + a relocation table — **a rule missing
+from root is NOT deleted**; check the table says where it lives. The full protocols live in:
+
+- `supabase/migrations/CLAUDE.md` — DB protocol, incl. the typed-echo gate.
+- `src/CLAUDE.md` — code/RTL/RLS gotchas + the security model.
+- `docs/CLAUDE.md` — **iron rule 13, the ripple checklist this audit enforces, lives HERE**.
+- `src/modules/NN_*/CLAUDE.md` — per-module gotchas (written by `module-close` §4c).
+
+A protocol that drifted back into root, or a directory file contradicting root, is drift to fix.
+
+## Skills
+
+The repo-local skills under `.claude/skills/`: the module-flow three (`module-blueprint`,
+`module-build`, `module-close` — templates beside them since 23/07/2026), the two helpers
+(`section7-rulings`, `post-merge`), and `quality-audit`. All import `_shared/discipline.md`;
+verify trigger phrasings, routing, and that the shared-kernel paragraph matches what the kernels
+promise. `docs/templates/` no longer exists — a doc pointing there is drift.
+
+⚠️ `feature-acceptance` moved OUT to `~/.claude/skills/` (23/07, project-agnostic) — out of scope
+here; verify only that no REG-IN doc still claims it lives under this repo.
+
+## Frozen / retired — read, never edit
+
+- `docs/reference_spec/**` — frozen spec exports. They are **expected** to disagree with later
+  rulings; that is what the deviation notes are for. `products_and_params.md`'s LOCKED Seed
+  decisions at the top are a first-class ruling source.
+- `docs/archive/**` — frozen pre-28/07 versions. A doc pointing at archived content as if live
+  is drift.
+- `docs/CHANGELOG.md` — retired 23/07/2026. Verify the retirement banner is intact and nothing
+  wrote new dated lines; do NOT stamp it.
+
+## Routines
+
+`docs/claude_routines.md` is the **versioned backup** of the four live copies at
+`~/.claude/scheduled-tasks/*/SKILL.md` (one-way since 30/07/2026: live ⇒ repo, at module close).
+The live copy is what actually runs, so a difference is a **stale backup to refresh**, not a
+conflict about which side is right. Flag it as such.
+
+## Decision-bearing code & DB — where ruled values physically live
+
+`docs/schema.sql` · the cumulative state of `supabase/migrations/**` · `src/lib/**` (the SSOT
+layer per iron rule 14: pricing/customers/quotes/email/constants/permissions/validators) ·
+enforcement patterns in `src/modules/**` + `src/components/layout/**` · seed values.
+
+Live DB via Supabase MCP, **read-only**: tables/RLS/functions + `params` rows (ruled values like
+VAT live there). No MCP this run ⇒ proceed file-only and say so in the journal — never claim
+success on a check you skipped.
+
+git as the recency oracle: `git log --oneline -20`, `git status --short`; for an undated passage,
+`git log -1 --format=%cd -- <path>` and `git log -p -S"<token>" -- <path>`.
+```
+
 ### 🩺 `regin-health-pulse`
 > 🕓 עודכנה (קנוני): 07/07/2026 · סונכרנה: ישי ✓ (אומת-mtime ‏08/07/2026)
 
@@ -140,11 +215,6 @@ Write your CLAUDE_CODE_LOG journal entry in **English** (the log is a Claude-fac
 **הפרומפט הקנוני המלא:**
 
 ```
----
-name: regin-health-pulse
-description: REG-IN: cheap read-only system health check — lint, outdated deps, npm audit, Supabase advisors, git status. Reports only, never edits code or docs beyond one journal line.
----
-
 🕐 מתי להפעיל: שבועי, או לפני מיזוג גדול — זול מספיק להריץ בלי לחשוב פעמיים.
 
 You are running a lightweight, read-only health-check for the REG-IN project (React 19 + Vite + Supabase + Tailwind, Hebrew RTL, repo at the current working directory). You have no memory of any prior conversation — everything you need is below or in the repo itself.
@@ -158,7 +228,7 @@ STEP 1 — Run these checks, all read-only:
 - If Supabase MCP access is available, run the security advisors check (and performance advisors if available) for the project. Report any new/unresolved findings (e.g. a table with RLS enabled but no policies, a function with an unintended `anon`/public EXECUTE grant, missing search_path hardening) as an FYI line. This is read-only — never modify grants, policies, run a migration, or write to the DB in any way.
 - `git status --short` — if there's a large uncommitted diff, note it as a gentle one-line reminder. Do not commit or stage anything yourself.
 
-STEP 2 — Journal ONE short entry: append a single dated line (not a full narrative entry — a pulse, not a report) under `docs/CLAUDE_CODE_LOG.md`'s session-journal section (find the "יומן סשנים" heading, add above the most recent entry). Format: date+time (`DD/MM/YYYY HH:MM`, from the system clock — never date-only), then a compact summary of the 5 checks above (pass/fail + FYIs). Do not touch any other part of `docs/CLAUDE_CODE_LOG.md` (no "מצב נוכחי" edits, no DoD checkbox edits, no STATUS.md edits — that's `regin-docs-sync`'s job, not this routine's).
+STEP 2 — Journal ONE short entry: append a single dated line (not a full narrative entry — a pulse, not a report) under `docs/CLAUDE_CODE_LOG.md`'s session log — the heading is `## Session Log (newest first)`; add directly above the most recent `### ` entry. Format: date+time (`DD/MM/YYYY HH:MM`, from the system clock — never date-only), then a compact summary of the 5 checks above (pass/fail + FYIs). Do not touch any other part of `docs/CLAUDE_CODE_LOG.md` (no "מצב נוכחי" edits, no DoD checkbox edits, no STATUS.md edits — that's `regin-docs-sync`'s job, not this routine's).
 
 HARD SAFETY BOUNDARIES (do not violate these under any circumstance):
 - Absolutely read-only except for the single journal line in Step 2. Never edit `src/`, never edit any other doc (including STATUS.md), never edit `docs/schema.sql`, never touch `supabase/migrations/`.
@@ -167,7 +237,7 @@ HARD SAFETY BOUNDARIES (do not violate these under any circumstance):
 - Never run `git commit`, `git push`, `git add`, or any merge.
 - If a check errors out (e.g. no Supabase MCP access this run) — say so plainly in the journal line ("Supabase advisors skipped — no MCP access"), don't silently skip it.
 
-Write your journal line in Hebrew (matching the rest of the log's language), RTL-appropriate. Keep it to one or two lines total — this is a pulse-check, not a narrative.
+Write your journal line in **English** — `docs/CLAUDE_CODE_LOG.md` is a Claude-facing file and has been English since 12/07/2026 (Hebrew only as data: names, UI strings, §7 refs). Keep it to one or two lines — a pulse, not a narrative. **Report to Ishay in the chat in Hebrew.**
 ```
 
 **גבולות בטיחות (תקציר):** read-only מלא חוץ משורת יומן אחת; לעולם לא `npm install`/`audit fix`/git-write.
@@ -184,45 +254,44 @@ Write your journal line in Hebrew (matching the rest of the log's language), RTL
 **הפרומפט הקנוני המלא:**
 
 ```
----
-name: regin-pr-gate
-description: REG-IN: run the npm run verify quality gate (lint+format+test+build). If green on a personal feature branch, auto-commit+push (never on main/master/dev, never force). If red, give a plain-Hebrew diagnosis without touching code. Run this right before opening a PR.
----
-
 🕐 מתי להפעיל: ממש לפני פתיחת PR — או בכל נקודה שרוצים "תמונת מצב ירוקה" מחויבת ל-git.
 
 You are running a pre-PR quality-gate check for the REG-IN project (React 19 + Vite + Supabase + Tailwind, Hebrew RTL, repo at the current working directory). You have no memory of any prior conversation — everything you need is below or in the repo itself.
 
-GOAL: wrap `npm run verify` (already defined in package.json as `lint && format:check && test:run && build`) with a human-readable Hebrew diagnosis, AND — when it passes on a safe branch — commit and push automatically so the human doesn't have to run `git add`/`commit`/`push` by hand. The value you add on a failure is NOT running the script — the user can do that themselves — it's translating a wall of terminal output into a clear "what failed, where, and why". The value you add on success is closing the loop: verified-green code should not just sit in the working tree.
+GOAL: wrap **`npm run gate`** — the project's blocking quality gate since 29/07/2026, defined in package.json as `verify && dup && deadcode && audit && check:context`, where `verify` is itself `lint && format:check && test:run && build` — with a human-readable Hebrew diagnosis, AND — when it passes on a safe branch — commit and push automatically so the human doesn't have to run `git add`/`commit`/`push` by hand. The value you add on a failure is NOT running the script — the user can do that themselves — it's translating a wall of terminal output into a clear "what failed, where, and why". The value you add on success is closing the loop: verified-green code should not just sit in the working tree.
 
-STEP 1 — Run `npm run verify`.
+STEP 1 — Run `npm run gate`.
 
-STEP 2 — If it FAILS: identify exactly which stage failed (lint / format:check / test:run / build) and:
+STEP 2 — If it FAILS: identify exactly which stage failed (lint / format:check / test:run / build / dup / deadcode / audit / check:context) and:
 - For a lint failure: name the file(s) and rule(s) that failed.
 - For a format:check failure: name the file(s) that are unformatted (tell the user `npm run format` will fix this safely — but do not run it yourself).
 - For a test failure: name the failing test file/test name, quote the actual vs. expected output, and give your best hypothesis for why (e.g. "the test expects X but the source function changed to return Y — likely the test wasn't updated after a recent edit, or vice versa").
 - For a build failure: quote the actual bundler error and the file/line it points to.
-Report this diagnosis in Hebrew as your final answer. Do NOT edit any source file, test file, or config file to fix the failure — a human (or a real coding session) decides the fix. Do not run `--fix` flags, do not run `npm run format` yourself. Do NOT proceed to Step 3 — no commit happens on a failing verify, ever.
+- For a `dup` (jscpd) failure: name the two duplicated locations and their line ranges. The usual fix is extracting the shared logic to `src/lib/` (iron rule 14) — say so, don't do it.
+- For a `deadcode` (knip) failure: name the unused export/file. ⚠️ It is often a **legitimately not-yet-wired** file awaiting a later step — `knip.jsonc` carries dated, self-removing exceptions for exactly that. Report it as "either wire it or add a dated exception", not as "delete it".
+- For an `audit` failure: name the package and severity. `scripts/audit-gate.mjs` honours documented waivers, so a failure here means a **new** finding, not a known one.
+- For a `check:context` failure: quote its message verbatim — it names the broken dispatch or missing CLAUDE.md file directly.
+Report this diagnosis in Hebrew as your final answer. Do NOT edit any source file, test file, or config file to fix the failure — a human (or a real coding session) decides the fix. Do not run `--fix` flags, do not run `npm run format` yourself. Do NOT proceed to Step 3 — no commit happens on a failing gate, ever.
 
 STEP 3 — If it PASSES, run the auto-commit+push flow. Follow this exactly, in order:
-  a. Run `git branch --show-current`. If the result is `main`, `master`, or `dev` (case-insensitive) — STOP HERE. Do not stage, commit, or push anything. Report: "verify ירוק, אבל אני על ענף מוגן (<branch>) — לא מבצע commit אוטומטי כאן. בצע ידנית או עבור לענף פיצ'ר." This check is not optional and has no override.
-  b. Run `git status --short`. If there is no output (clean working tree) — report "verify ירוק, אין מה לקומט" and stop. Nothing to do.
+  a. Run `git branch --show-current`. If the result is `main`, `master`, or `dev` (case-insensitive) — STOP HERE. Do not stage, commit, or push anything. Report: "השער ירוק, אבל אני על ענף מוגן (<branch>) — לא מבצע commit אוטומטי כאן. בצע ידנית או עבור לענף פיצ'ר." This check is not optional and has no override.
+  b. Run `git status --short`. If there is no output (clean working tree) — report "השער ירוק, אין מה לקומט" and stop. Nothing to do.
   c. Otherwise, stage everything: `git add -A`. ⚠️ This captures the ENTIRE working tree. This routine assumes Ironclad Rule 16 (it runs only when no other Claude session has uncommitted work), so the tree should contain only the change you intend to ship. If the staged set clearly includes files unrelated to a single coherent change (e.g. another session's in-progress work), do NOT invent a commit message that misrepresents them — commit only if it is all one coherent change; otherwise STOP, do not commit, and report the full staged file list for a human to sort out.
-  d. Write a real commit message in Hebrew, in the imperative/summary style already used in this repo's history (check `git log --oneline -5` for tone) — summarize what actually changed by looking at `git diff --stat --cached` and, if relevant, the newest entries in `docs/CLAUDE_CODE_LOG.md`. Do NOT use a generic message like "update files". End the commit message with a clear automation tag on its own line: `🤖 Auto-committed by regin-pr-gate (verify green)`.
+  d. Write a real commit message in Hebrew, in the imperative/summary style already used in this repo's history (check `git log --oneline -5` for tone) — summarize what actually changed by looking at `git diff --stat --cached` and, if relevant, the newest entries in `docs/CLAUDE_CODE_LOG.md`. Do NOT use a generic message like "update files". End the commit message with a clear automation tag on its own line: `🤖 Auto-committed by regin-pr-gate (gate green)`.
   e. Commit: `git commit -m "<message>"`.
   f. Push with `git push`. If there is no upstream yet, use `git push -u origin <current-branch>` instead. Do NOT ever use `--force` or `--force-with-lease` — if the push is rejected because the remote has diverged, STOP and report exactly what git said; do not attempt to merge, rebase, or force-push to resolve it yourself.
   g. Never run `gh pr create` or open a pull request — that stays a manual, human-initiated step. Report success and that a PR can now be opened.
 
-STEP 4 — Report your result in Hebrew, concise and direct — this is meant to be read in seconds. State clearly which of these happened: verify failed (with diagnosis) / verify passed but on a protected branch (no commit) / verify passed, nothing to commit / verify passed and committed+pushed (with the commit message and branch name) / push was rejected (with the exact git error). When you committed, also list the files that were committed (from `git diff --stat` of the commit) so an accidental sweep of unrelated or parallel-session work is caught immediately.
+STEP 4 — Report your result in Hebrew, concise and direct — this is meant to be read in seconds. State clearly which of these happened: the gate failed (with diagnosis) / the gate passed but on a protected branch (no commit) / the gate passed, nothing to commit / the gate passed and committed+pushed (with the commit message and branch name) / push was rejected (with the exact git error). When you committed, also list the files that were committed (from `git diff --stat` of the commit) so an accidental sweep of unrelated or parallel-session work is caught immediately.
 
 HARD SAFETY BOUNDARIES (do not violate these under any circumstance):
-- The protected-branch check in Step 3a is absolute — `main`/`master`/`dev` NEVER get an automatic commit or push from this routine, no matter what verify says.
+- The protected-branch check in Step 3a is absolute — `main`/`master`/`dev` NEVER get an automatic commit or push from this routine, no matter what the gate says.
 - Never use `git push --force` or `--force-with-lease`, ever, on any branch.
-- Never run `eslint --fix`, `prettier --write`, `npm run format`, or any auto-fixing command on a failing verify — diagnosis only, no code edits, no config edits.
+- Never run `eslint --fix`, `prettier --write`, `npm run format`, or any auto-fixing command on a failing gate — diagnosis only, no code edits, no config edits.
 - Never run `npm install` or change dependencies.
 - Never run `gh pr create`, `gh pr merge`, or any GitHub API write — PR creation is a manual step, always.
 - Never edit `.claude/settings.json` or `.claude/settings.local.json`.
-- If `npm run verify` itself is missing or the repo is in an unexpected state (e.g. package.json doesn't have a `verify` script) — say so plainly rather than guessing or trying to reconstruct it yourself.
+- If `npm run gate` itself is missing or the repo is in an unexpected state (e.g. package.json doesn't have a `gate` script) — say so plainly rather than guessing or trying to reconstruct it yourself.
 - Note: this repo's hooks live as bash scripts under `.claude/hooks/` (`.claude/settings.json`, shared via git, only points at them): the Stop hook `check-docs-updated.sh` is **session-aware** (07/07/2026) — it blocks session end only if THIS session edited files via Edit/Write/NotebookEdit (tracked by a per-session marker under the repo's git dir; since 07/07 evening the marker records only edits to paths INSIDE the repo tree — plan files/scratchpad edits don't count) AND `docs/CLAUDE_CODE_LOG.md`/`STATUS.md` are older than this session's last such edit; a session that only ran shell/git commands (no Edit/Write) records no marker and is never blocked. It also blocks if code under `src/modules/NN_*/` changed without the matching `docs/micro_guides/module-N.md` being updated. The PreToolUse hook `protect-frozen-files.sh` blocks any edit/delete of the frozen spec exports (C5/C6). Since this routine changes files only via git/shell (not Edit/Write), it normally records no marker and the Stop hook won't block it — but if it ever does block after your auto-commit, add a brief journal line to `docs/CLAUDE_CODE_LOG.md` (and confirm STATUS.md is accurate), then let the re-check pass. These are existing repo safety nets, not something to route around.
 
 Respond in Hebrew, concise and direct.
@@ -242,11 +311,6 @@ Respond in Hebrew, concise and direct.
 **הפרומפט הקנוני המלא:**
 
 ```
----
-name: regin-e2e-check
-description: REG-IN: run the real Playwright E2E suite (module 1 auth/RBAC flows) and give a Hebrew pass/fail summary with failure details. Read-only on code; only reads real Supabase test accounts, never writes to the DB.
----
-
 🕐 מתי להפעיל: לפני מיזוג גדול ל-`dev`, או אחרי שינוי בזרימות Auth/הרשאות.
 
 You are running the end-to-end (E2E) UI test suite for the REG-IN project (React 19 + Vite + Supabase + Tailwind, Hebrew RTL, repo at the current working directory). You have no memory of any prior conversation — everything you need is below or in the repo itself.
@@ -296,8 +360,8 @@ Respond in Hebrew, concise — a pass/fail summary, not a full report, unless th
 
 ## 4. פרוטוקול עדכון — איך Claude שומר את הרוטינות מסונכרנות
 
-1. **הקובץ הזה (`docs/claude_routines.md`) הוא המקור הקנוני — וקבוע.** עותקי ה-`SKILL.md` המקומיים (`~/.claude/scheduled-tasks/<name>/SKILL.md`, בכל מחשב בנפרד, מחוץ ל-git) הם **מופעים חיים** של הקנוני, לא תחליף לו. **הקובץ הזה לא נמחק אחרי אונבורדינג** — הוא הגיבוי היחיד (העותקים החיים מחוץ ל-git, בלי היסטוריה/שחזור), מקור-השחזור למחשב חדש/התקנה-מחדש, המול-להשוואה של `regin-docs-sync` לזיהוי דריפט, והרשומה המרכזית לתיאום בין סשנים (מפתח יחיד מ-22/07/2026). מחיקתו תשבור את כל אלה.
-   - **פרוטוקול עדכון דו-צדדי (מ-07/07/2026):** כל שינוי ב**התנהגות** של רוטינה — Claude מעדכן **גם** את הקובץ הקנוני כאן **וגם**, בסשן של ישי, את 4 קבצי ה-SKILL.md החיים של ישי (`~/.claude/scheduled-tasks/regin-*/SKILL.md`) — כך הצד של ישי לא דורף. **וכן (מ-08/07/2026): את שורת-החותמת 🕓 בראש סעיף-הרוטינה כאן** (עודכנה/סונכרנה) — חותמת בלי עדכון-בפועל היא שקר; ‏`regin-docs-sync` מאמתת אותן מול mtime בכל ריצה ומדווחת על דריפט canonical↔local כרשת-ביטחון.
+1. **הקובץ הזה (`docs/claude_routines.md`) הוא הגיבוי המגורסן — וקבוע.** עותקי ה-`SKILL.md` המקומיים (`~/.claude/scheduled-tasks/<name>/SKILL.md`, בכל מחשב בנפרד, מחוץ ל-git) הם **מופעים חיים** של הקנוני, לא תחליף לו. **הקובץ הזה לא נמחק אחרי אונבורדינג** — הוא הגיבוי היחיד (העותקים החיים מחוץ ל-git, בלי היסטוריה/שחזור), מקור-השחזור למחשב חדש/התקנה-מחדש, המול-להשוואה של `regin-docs-sync` לזיהוי דריפט, והרשומה המרכזית לתיאום בין סשנים (מפתח יחיד מ-22/07/2026). מחיקתו תשבור את כל אלה.
+   - **פרוטוקול עדכון חד-כיווני (מ-30/07/2026 — החליף את הדו-צדדי מ-07/07):** **העותק החי (`~/.claude/scheduled-tasks/<name>/SKILL.md`) הוא מקור-האמת** — הוא מה שבאמת רץ, ולכן תיקון חייב לנחות שם קודם כדי לקבל תוקף. הקובץ הזה הוא **הגיבוי המגורסן ומקור-השחזור**, ומסונכרן ממנו **חד-כיוונית (חי ⇐ ריפו) בסגירת מודול**, לא בכל שינוי. ⚠️ **מה שנגרע ולמה (עקרון-הגריעה F1):** חובת העדכון-בשני-המקומות-בכל-פעם נגרעה. היא נולדה 07/07 כשהיו שני מפתחים וכל צד היה צריך עותק מעודכן; **עמית פרש 22/07 ומאז היא רק ייצרה דריפט** — שתי גרסאות שנפרדות בשקט, ובדיקה שלמה ב-`regin-docs-sync` רק כדי לגלות מי מהן נכונה. מה שהיא **לא** גורעת: הקובץ הזה נשאר, כי העותקים החיים מחוץ ל-git ובלי היסטוריה — הוא הגיבוי היחיד. **שורות-החותמת 🕓** מציינות מעכשיו מתי סונכרן מהחי, לא 'עודכן קנוני'.
 2. **`regin-docs-sync` בודקת דריפט אוטומטית:** כחלק מ-STEP 2 שלה (ר' הפרומפט למעלה), היא משווה את התוכן כאן מול עותקי ה-SKILL.md המקומיים בכל הרצה, ומדווחת בלוג אם הם לא תואמים. Claude שמריץ אותה **לא** מתקן את קבצי ה-SKILL.md בעצמו (הם מחוץ לריפו, מחוץ לתחום העריכה שלה) — היא רק מזהירה. את התיקון עושים לפי הפרוטוקול בנקודה 1: בצד של ישי — Claude מעדכן את החי בסשן רגיל; בצד של ישי — הוא או סשן Claude שלו.
 3. **טבלת טריגרי-צמיחה** — מתי עדכון בפועל נדרש (לא רק דריפט, אלא שינוי-כוונה אמיתי):
 

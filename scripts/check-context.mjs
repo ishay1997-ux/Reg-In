@@ -133,6 +133,52 @@ if (existsSync(join(ROOT, 'src/modules'))) {
   }
 }
 
+// ---------- בדיקה 4: חובות §6 פתוחים של המודול הפעיל ----------
+// למה זה כאן (נוסף 30/07/2026, הכרעת-ישי): כלל ברזל 13 מחייב לסגור אדוות §6 **באותו סשן**,
+// אבל ה-Stop hook אוכף רק מדריך-מיקרו + יומן + לוח-מצב. §6 נשען אך ורק על משמעת — ובצעד 3.5
+// היא נכשלה: שלושה חובות מ3 שהצעד סגר בפועל נשארו פתוחים ברשם, וישי תפס זאת בשאלה כללית.
+//
+// ⚠️ **זו הערה ולא חסימה, במכוון.** התיעוד של Anthropic על הנדסת-הקשר מזהיר מפני ניסיון
+// "לנסח כל כלל אפשרי" ומכוון ל"ספציפי מספיק להנחות, גמיש מספיק לשיקול-דעת". לכן הבדיקה
+// **מזינה שיקול-דעת** (מציגה את העובדה ברגע סגירת-הצעד) ואינה מחליפה אותו — היא אינה מכריעה
+// אם החוב נסגר, רק דואגת שלא יישכח. חסימה כאן הייתה מייצרת רעש בכל צעד שאינו סוגר חוב.
+//
+// היוריסטיקה: בלוק-חוב שכבר מכיל ✅ נחשב מטופל ואינו מוצג. זו הקונבנציה בפועל ב-§6.
+{
+  const master = read('docs/PROJECT_MASTER.md')
+  // המודול הפעיל = מדריך-המיקרו ששורת ה-Status שלו נושאת 🔨 (בבנייה).
+  let activeModule = null
+  for (const file of walk('docs/micro_guides')) {
+    const num = /module-(\d+)\.md$/.exec(file)?.[1]
+    if (!num) continue
+    const statusRow = (read(file) ?? '').split('\n').find((l) => /^\|\s*\**Status/.test(l))
+    if (statusRow?.includes('🔨')) activeModule = num
+  }
+
+  if (master && activeModule) {
+    const lines = master.split('\n')
+    const start = lines.findIndex((l) => l.startsWith('## 6.'))
+    const end = lines.findIndex((l, i) => i > start && l.startsWith('## 7.'))
+    // חלוקה לבלוקים: פריט מתחיל ב-"- " בתחילת שורה וממשיך עד הפריט הבא.
+    const blocks = []
+    for (const line of lines.slice(start, end === -1 ? undefined : end)) {
+      if (/^- /.test(line)) blocks.push(line)
+      else if (blocks.length) blocks[blocks.length - 1] += '\n' + line
+    }
+    const openDebts = blocks.filter((b) => b.includes(`🚧 מ${activeModule}`) && !b.includes('✅'))
+    if (openDebts.length > 0) {
+      notes.push(
+        `§6 — ${openDebts.length} חובות פתוחים למודול ${activeModule} (לוודא בסגירת-צעד שאינם נסגרו בפועל):`,
+      )
+      for (const b of openDebts) {
+        // הכותרת המודגשת של הפריט, מקוצרת — מספיק כדי לזהות, בלי להציף את הפלט.
+        const title = /\*\*(.+?)[:(]/.exec(b)?.[1] ?? b.replace(/^- /, '')
+        notes.push(`   ↳ ${title.trim().slice(0, 70)}`)
+      }
+    }
+  }
+}
+
 // ---------- פלט ----------
 const quiet = process.argv.includes('--quiet')
 if (problems.length === 0) {
