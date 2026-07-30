@@ -44,6 +44,11 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 30/07/2026 23:28 — Two Ishay-approved pre-3.7 fixes, both live-verified
+- **What changed:** (1) `replaceCustomerContacts` (module 2, merged) reordered to read-old-ids → insert → delete-old-ids — tab-close mid-save can no longer wipe a customer's contacts (the exact failure that really deleted B-REG-TAG's tiers earlier tonight); upsert impossible here (only key = generated `contact_id`). Convention recorded in `02_customers/CLAUDE.md`: every future replace-style save is insert-first. (2) The prices status `<Select>` now disables while its PATCH is in flight (`savingStatusSku`).
+- **Verified:** contacts round-trip through the real form (add → fresh-read → remove → back to 0 rows, production state); select proven disabled during an artificially delayed PATCH and re-enabled after. Gate exit 0, 324 unit, **all 18 permanent E2E green after touching module-2 api**. DB checked clean (0 contacts · 04ST active · 40 tiers · 11 products).
+- **Note:** one test-selector strict-mode fix along the way (placeholder shared by primary + extra contact fields); the failure it produced was in the probe, not the product.
+
 ### 30/07/2026 23:09 — Ishay's "what haven't you checked?" round: bug #3 (same family) + 5 paths live-verified
 - **What changed:** `ProductFormDialog` sent `description: null` when empty, but `products.description` is NOT NULL with no default — **creating a product without a description could never work** (23502 masks the 23505 duplicate check; generic error shown). Fixed to `''`. Third same-day instance of "assumed the DB instead of checking it".
 - **Then closed every untested path live:** product edit round-trip · status select surviving reload (both ways) · duplicate-SKU friendly error with row count staying 11 · tiers add/empty-save on 04ST · successful create incl. default status + margin (test row `ZZZ-TEST` removed by SQL; DB verified byte-identical to seed: 11/40/18/50). Honest remainder: none on this screen; keyboard/mobile/finance-eye = 3.7's scope by design.

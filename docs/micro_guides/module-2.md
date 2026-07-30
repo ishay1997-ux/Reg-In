@@ -467,6 +467,16 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 6. **(e)–(g) per CLAUDE.md iron rules 13/15/16 + end-of-session protocol** (new-open-question → stop+§7 · migration/DB-gap → db_roadmap same session · shared-surface change → name the affected future modules in the CHANGELOG line) — these apply automatically; not restated here (F1).
 
 ## 9. 📝 Deviations & Tech-Debt Log
+- 30/07/2026 23:30 — **🐞 Cross-module fix (ruled by Ishay, before M3's 3.7 gate):
+  `replaceCustomerContacts` reordered from delete-then-insert to read-old-ids → insert → delete-old-ids.**
+  Why now: the identical pattern **really deleted** the 5 seed price tiers of B-REG-TAG in M3's 3.6
+  verification (browser closed between the two HTTP requests — they are not a transaction; the DELETE
+  landed, the INSERT never fired). An interruption now leaves visible duplicates (old+new side by
+  side, gone on next save), never an empty contact list. Upsert (the price_tiers fix) is impossible
+  here — the only key is the generated `contact_id`. `contactsLoaded` guard untouched. The convention
+  is now recorded in `src/modules/02_customers/CLAUDE.md`: **every future replace-style save, any
+  module, is built insert-first.** Live-verified through the real form (add contact → fresh-read →
+  remove → restore to 0 rows; `customer_contacts` was and remains 0 rows in production data).
 - 30/07/2026 18:35 — **🐞 The §7.34 warning had a silent hole, found because my own E2E archived a
   real customer twice.** `revenueByCustomer` is loaded by a **second, separate request** after the
   customer list. Clicking "העבר לארכיון" in the window before it returns meant `openCount` was

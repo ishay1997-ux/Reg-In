@@ -132,15 +132,25 @@ export async function listCustomerContacts(customerId) {
   return data ?? []
 }
 
-// שמירת קבוצת אנשי-הקשר הנוספים של לקוח = replace (מחיקה + הכנסה). why: הטופס עורך את כל הקבוצה
-// כיחידה, ו-replace פשוט ואמין מ-diff לרשימה קטנה; ה-contact_id מתחדש בכל שמירה — מקובל כי אנשי-הקשר
-// אינם מפתח-זר לשום דבר. שורות בלי שם מסוננות (שם = חובה ב-DB). מחזיר את השורות שנשמרו.
+// שמירת קבוצת אנשי-הקשר הנוספים של לקוח = replace. הטופס עורך את כל הקבוצה כיחידה;
+// ה-contact_id מתחדש בכל שמירה — מקובל כי אנשי-הקשר אינם מפתח-זר לשום דבר. שורות בלי שם
+// מסוננות (שם = חובה ב-DB). מחזיר את השורות שנשמרו.
+//
+// 🐞 סדר-הפעולות תוקן 30/07/2026 (בהכרעת-ישי, אחרי שאותה חולשה בדיוק מחקה בפועל את 5
+// מדרגות-המחיר של B-REG-TAG במודול 3): הגרסה הקודמת הייתה מחיקה-ואז-הכנסה, ושתי בקשות
+// HTTP אינן טרנזקציה — סגירת-דפדפן/רענון בין המחיקה להכנסה משאירה את הלקוח **בלי אנשי-קשר
+// בכלל**, בלי שגיאה. הסדר החדש: קריאת המזהים הישנים ← הכנסת החדשים ← מחיקת הישנים בלבד.
+// קטיעה באמצע משאירה לכל היותר כפילות **גלויה** (ישן+חדש זה לצד זה) שנעלמת בשמירה הבאה —
+// לעולם לא אובדן. ‏upsert (הפתרון של price_tiers) לא ישים כאן: המפתח היחיד הוא contact_id
+// מתחולל, ואין לשורה מפתח טבעי לעגון בו.
 export async function replaceCustomerContacts(customerId, contacts) {
-  const { error: delError } = await supabase
+  const { data: existing, error: listError } = await supabase
     .from('customer_contacts')
-    .delete()
+    .select('contact_id')
     .eq('customer_id', customerId)
-  if (delError) throw toError(delError, 'שמירת אנשי הקשר נכשלה.')
+  if (listError) throw toError(listError, 'שמירת אנשי הקשר נכשלה.')
+  const oldIds = (existing ?? []).map((r) => r.contact_id)
+
   const rows = (contacts ?? [])
     .filter((c) => (c.contact_name ?? '').trim() !== '')
     .map((c) => ({
@@ -149,10 +159,24 @@ export async function replaceCustomerContacts(customerId, contacts) {
       phone: (c.phone ?? '').trim() || null,
       email: (c.email ?? '').trim() || null,
     }))
-  if (rows.length === 0) return []
-  const { data, error } = await supabase.from('customer_contacts').insert(rows).select()
-  if (error) throw toError(error, 'שמירת אנשי הקשר נכשלה.')
-  return data ?? []
+
+  let saved = []
+  if (rows.length > 0) {
+    const { data, error } = await supabase.from('customer_contacts').insert(rows).select()
+    if (error) throw toError(error, 'שמירת אנשי הקשר נכשלה.')
+    saved = data ?? []
+  }
+
+  // מחיקת הישנים לפי המזהים שנקראו למעלה — לא לפי customer_id, שהיה מוחק גם את שזה-עתה הוכנסו.
+  if (oldIds.length > 0) {
+    const { error: delError } = await supabase
+      .from('customer_contacts')
+      .delete()
+      .in('contact_id', oldIds)
+    if (delError) throw toError(delError, 'שמירת אנשי הקשר נכשלה.')
+  }
+
+  return saved
 }
 
 // ---- אחסון שיווקי (Storage) ----

@@ -38,6 +38,10 @@ export default function PricesManagementPage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [rowError, setRowError] = useState('')
+  // המק"ט שעדכון-הסטטוס שלו בדרך לשרת. why: העדכון אופטימי ובלי חיווי היה נראה "נשמר" גם
+  // כשהבקשה עוד באוויר — ורענון באותה שנייה בלע אותה בשקט (נצפה בפועל, ממצא סבב-הפערים).
+  // נעילת המתג לרגע-השמירה גם מונעת שינוי-על-שינוי לפני שהראשון נחת.
+  const [savingStatusSku, setSavingStatusSku] = useState(null)
   // dialogSeq משתתף ב-key של הדיאלוגים: הגדלתו מאלצת remount ולכן איפוס-טופס, בלי
   // effect-סנכרון (הדפוס הקנוני בפרויקט — ר' CustomerFormDialog).
   const [dialogSeq, setDialogSeq] = useState(0)
@@ -74,12 +78,15 @@ export default function PricesManagementPage() {
   async function handleStatusChange(sku, nextStatus) {
     setRowError('')
     const previous = products.find((p) => p.sku === sku)?.status
+    setSavingStatusSku(sku)
     setProducts((prev) => prev.map((p) => (p.sku === sku ? { ...p, status: nextStatus } : p)))
     try {
       await setProductStatus(sku, nextStatus)
     } catch (err) {
       setProducts((prev) => prev.map((p) => (p.sku === sku ? { ...p, status: previous } : p)))
       setRowError(err.message || 'שינוי הסטטוס לא נשמר.')
+    } finally {
+      setSavingStatusSku(null)
     }
   }
 
@@ -200,7 +207,7 @@ export default function PricesManagementPage() {
                     <td className="py-2.5">
                       <Select
                         value={p.status}
-                        disabled={!canEdit}
+                        disabled={!canEdit || savingStatusSku === p.sku}
                         onValueChange={(v) => handleStatusChange(p.sku, v)}
                       >
                         <SelectTrigger
