@@ -25,6 +25,10 @@ export default function CustomerPicker({
   onCreateNew,
   disabled,
   error,
+  // ‏`Field` מזריק את זה כשיש שגיאה, כדי שהודעת-השגיאה שמתחת תיקשר לתיבה עצמה.
+  // חייב להתקבל ולהיות מועבר במפורש — הרכיב אינו פורש props, ולכן תכונה שלא נכתבה
+  // כאן פשוט נעלמת בלי שגיאה.
+  'aria-describedby': ariaDescribedBy,
 }) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
@@ -119,6 +123,7 @@ export default function CustomerPicker({
           onKeyDown={handleKeyDown}
           placeholder={'חיפוש לפי שם חברה, איש קשר או ח"פ...'}
           aria-invalid={error ? true : undefined}
+          aria-describedby={ariaDescribedBy}
           className="h-9 rounded-lg border-slate-300 pr-9 pl-3 text-right"
           data-testid="quote-customer-search"
         />

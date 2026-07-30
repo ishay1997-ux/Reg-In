@@ -32,6 +32,8 @@ import {
   buildSenderSignature,
   findUnknownQuoteEmailPlaceholders,
   formToPreviewQuote,
+  approvedQuotesLabel,
+  pendingQuotesLabel,
 } from '@/lib/quotes'
 
 // תרחיש-האפיון המחייב (C5 §5.5.4) — אותו תרחיש שמאמת את מנוע-הכסף, כאן בצורת-המסך.
@@ -981,5 +983,23 @@ describe('MANUAL_REJECTION_REASONS — מה שמוצע בחלון הדחייה',
   it('"פג תוקף" אינו נבחר ידנית — עבודת-הרקע היומית כותבת אותו (§7.41)', () => {
     expect(MANUAL_REJECTION_REASONS).not.toContain('פג תוקף')
     expect(REJECTION_REASONS).toContain('פג תוקף')
+  })
+})
+
+describe('תוויות-כמות עבריות — התאמת מין ומספר (ממצא סקירת 3.7)', () => {
+  // הטקסט שהופיע בפועל בעמוד הלקוח של מדיטק: "מ-1 הצעות שאושרו" ו-"1 ממתינות להחלטה".
+  // מספרים אמיתיים מהמסך: מדיטק = הצעה מאושרת אחת ו-הצעה פתוחה אחת.
+  it('יחיד: הצעה אחת מאושרת ואחת ממתינה', () => {
+    expect(approvedQuotesLabel(1)).toBe('מהצעה אחת שאושרה')
+    expect(pendingQuotesLabel(1)).toBe('הצעה אחת ממתינה להחלטה')
+  })
+
+  it('רבים: הניסוח הקיים נשמר', () => {
+    expect(approvedQuotesLabel(3)).toBe('מ-3 הצעות שאושרו')
+    expect(pendingQuotesLabel(4)).toBe('4 הצעות ממתינות להחלטה')
+  })
+
+  it('אפס ממתינות — עדיין רבים, כי "0 הצעה" שגוי', () => {
+    expect(pendingQuotesLabel(0)).toBe('אין הצעות שממתינות להחלטה')
   })
 })

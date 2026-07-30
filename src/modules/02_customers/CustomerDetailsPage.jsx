@@ -16,6 +16,7 @@ import { ArrowRight, Check, Eye, Pencil, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import LoadingOrError from '@/components/LoadingOrError'
 import Money from '@/components/Money'
+import RowAction from '@/components/RowAction'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
@@ -25,6 +26,8 @@ import {
   matchesQuoteFilters,
   sortQuotes,
   QUOTE_SCREEN_PARAM_NAMES,
+  approvedQuotesLabel,
+  pendingQuotesLabel,
 } from '@/lib/quotes'
 import { getCustomer, getCustomerProjects, listCustomerContacts } from '@/modules/02_customers/api'
 import {
@@ -102,26 +105,6 @@ function Detail({ label, value, ltr }) {
         {value || '—'}
       </span>
     </div>
-  )
-}
-
-function RowAction({ title, onClick, tone = 'neutral', testId, children }) {
-  return (
-    <button
-      type="button"
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-      data-testid={testId}
-      className={cn(
-        'size-[30px] rounded-md border inline-flex items-center justify-center transition-colors',
-        tone === 'approve' && 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100',
-        tone === 'reject' && 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100',
-        tone === 'neutral' && 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50',
-      )}
-    >
-      {children}
-    </button>
   )
 }
 
@@ -360,7 +343,7 @@ export default function CustomerDetailsPage() {
             value={metrics.totalRevenue}
             sub={
               metrics.approvedCount > 0
-                ? `מ-${metrics.approvedCount} הצעות שאושרו`
+                ? approvedQuotesLabel(metrics.approvedCount)
                 : 'טרם נסגרה עסקה'
             }
             testId="metric-revenue"
@@ -368,7 +351,7 @@ export default function CustomerDetailsPage() {
           <Highlight
             label="שווי הצעות פתוחות"
             value={metrics.openQuotesValue}
-            sub={`${counts.in_progress} ממתינות להחלטה`}
+            sub={pendingQuotesLabel(counts.in_progress)}
             testId="metric-open"
           />
           <Highlight

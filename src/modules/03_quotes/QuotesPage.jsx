@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
 import Money from '@/components/Money'
+import RowAction from '@/components/RowAction'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -65,28 +66,6 @@ const STATUS_PILL = {
   in_progress: { label: 'בתהליך', className: 'bg-amber-100 text-amber-700' },
   approved: { label: 'מאושרת', className: 'bg-green-100 text-green-700' },
   rejected: { label: 'נדחתה', className: 'bg-red-100 text-red-700' },
-}
-
-// כפתור-אייקון בשורה. המוקאפ מגדיר ריבוע ממוסגר 30px ולא את כפתור-הקישור של מסך הלקוחות —
-// כאן יש עד ארבע פעולות בשורה אחת, וממוסגר מפריד ביניהן בלי לצרוך רוחב של תוויות.
-function RowAction({ title, onClick, tone = 'neutral', testId, children }) {
-  return (
-    <button
-      type="button"
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-      data-testid={testId}
-      className={cn(
-        'size-[30px] rounded-md border inline-flex items-center justify-center transition-colors',
-        tone === 'approve' && 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100',
-        tone === 'reject' && 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100',
-        tone === 'neutral' && 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50',
-      )}
-    >
-      {children}
-    </button>
-  )
 }
 
 // מסנן-מהיר. הכרעת-ישי: זהו **כפתור** — לחיצה מסננת, לחיצה שנייה מבטלת — ולא אריח-מדד.

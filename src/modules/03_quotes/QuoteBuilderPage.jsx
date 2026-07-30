@@ -6,7 +6,7 @@
 //
 // המוקאפ אושר ע"י ישי 29/07/2026 אחרי ~11 סבבים; שש ההכרעות שלו מסומנות בקוד במקומן.
 
-import { useEffect, useMemo, useState } from 'react'
+import { cloneElement, isValidElement, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowRight, Eye } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -66,15 +66,30 @@ const EMPTY_FORM = {
 }
 
 // שדה-טופס רגיל (תווית מעל, הודעת-שגיאה מתחת) — קומפוננטה עליונה (react-hooks/static-components).
+// ⚠️ הסימון מוזרק לשדה עצמו ולא נכתב באתר-הקריאה (סקירת 3.7): עד 31/07/2026 רק בוחר-הלקוח
+// סימן את עצמו, ושם-האירוע/תאריך/מיקום קיבלו טקסט אדום מתחת ומסגרת אפורה רגילה — כלומר
+// מי שמסתכל לא רואה איזה שדה שגוי, ומי שמשתמש בקורא-מסך לא שומע זאת כלל. הזרקה כאן ולא
+// בשמונה אתרי-קריאה, כי אתר-קריאה שיישכח חוזר בשקט למצב הקודם.
+// ‏`aria-invalid` הוא גם מה שמפעיל את הגבול האדום המובנה של `Input` (`ui/input.jsx:13`) —
+// אין כאן צבע חדש (כלל 8), ובורר-התכונה גובר בספציפיות על `border-slate-300` שבאתר-הקריאה.
 function Field({ id, label, error, children, className }) {
+  const errorId = `${id}-error`
+  const markedChild =
+    error && isValidElement(children)
+      ? cloneElement(children, { 'aria-invalid': true, 'aria-describedby': errorId })
+      : children
   return (
     <div className={className}>
       <label htmlFor={id} className="mb-1 block text-xs text-slate-500">
         {label}
       </label>
-      {children}
+      {markedChild}
       {error && (
-        <p className="mt-1 text-xs font-medium text-red-600" data-testid={`quote-error-${id}`}>
+        <p
+          id={errorId}
+          className="mt-1 text-xs font-medium text-red-600"
+          data-testid={`quote-error-${id}`}
+        >
           {error}
         </p>
       )}
@@ -437,10 +452,12 @@ export default function QuoteBuilderPage() {
               <div className="md:col-span-3">
                 <LtrFieldGroup
                   data-testid="quote-time-range"
+                  errorId="quote-times-error"
                   items={[
                     {
                       id: 'quote-start-time',
                       label: 'שעת התחלה *',
+                      invalid: Boolean(errors.startTime),
                       inputProps: {
                         type: 'time',
                         value: form.startTime,
@@ -451,6 +468,7 @@ export default function QuoteBuilderPage() {
                     {
                       id: 'quote-end-time',
                       label: 'שעת סיום *',
+                      invalid: Boolean(errors.endTime),
                       inputProps: {
                         type: 'time',
                         value: form.endTime,
@@ -460,7 +478,7 @@ export default function QuoteBuilderPage() {
                   ]}
                 />
                 {(errors.startTime || errors.endTime) && (
-                  <p className="mt-1 text-xs font-medium text-red-600">
+                  <p id="quote-times-error" className="mt-1 text-xs font-medium text-red-600">
                     {errors.startTime || errors.endTime}
                   </p>
                 )}
@@ -482,10 +500,12 @@ export default function QuoteBuilderPage() {
               <div className="md:col-span-4">
                 <LtrFieldGroup
                   data-testid="quote-hostess-formula"
+                  errorId="quote-headcount-error"
                   items={[
                     {
                       id: 'quote-guests',
                       label: 'אורחים *',
+                      invalid: Boolean(errors.guests),
                       inputProps: {
                         type: 'number',
                         min: '1',
@@ -497,6 +517,7 @@ export default function QuoteBuilderPage() {
                     {
                       id: 'quote-ratio',
                       label: 'יחס',
+                      invalid: Boolean(errors.ratio),
                       inputProps: {
                         type: 'number',
                         min: '1',
@@ -508,6 +529,7 @@ export default function QuoteBuilderPage() {
                     {
                       id: 'quote-hostess-count',
                       label: 'דיילות *',
+                      invalid: Boolean(errors.hostessCount),
                       inputProps: {
                         type: 'number',
                         min: '1',
@@ -532,7 +554,7 @@ export default function QuoteBuilderPage() {
                     </Button>
                   )}
                 {(errors.guests || errors.ratio || errors.hostessCount) && (
-                  <p className="mt-1 text-xs font-medium text-red-600">
+                  <p id="quote-headcount-error" className="mt-1 text-xs font-medium text-red-600">
                     {errors.guests || errors.ratio || errors.hostessCount}
                   </p>
                 )}

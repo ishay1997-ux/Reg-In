@@ -12,7 +12,7 @@
 | Branch | `ishay/module-3-quotes-build` (cut 22/07 from dev `a35c92f`, after PR #9 merged; the old `ishay/module-3-quotes` is now an ancestor of `dev` — dead, iron rule 10) |
 | Status | 🔨 **Phase 3 (UI): steps 3.1–3.6 DONE, next is the 3.7 UX/functional gate.** Phase 1+2 closed (see done-tables below). |
 | Last updated | 30/07/2026 22:52 — **3.6 CLOSED.** `npm run gate` exit 0, **324 tests** (was 290); **25 E2E green, 0 skips**. Live DB verified byte-identical to Seed after all write-and-restore verification (40 tiers · VAT 18 · ratio 50 · quote #6 = 6,319 ₪). |
-| **Active step** | **3.6 ✅ COMPLETE — built and verified live 30/07 22:52.** Mockup approved (`docs/mockups/system-settings-screen/05_prices_tab_approved.html`), plan `~/.claude/plans/resilient-purring-bear.md`, rulings **LOCAL-19..21**. ⚠️ Read §9 (30/07 evening) before touching `replacePriceTiers` or any delete-then-insert save: a real data-loss incident happened and the fixed ordering (upsert→delete-stale) is load-bearing. **Next: 3.7 (Phase-3 gate — 🎨 UX & functional review, a 👤 stop).** |
+| **Active step** | **3.7 🔨 — the 🎨 sweep ran and all 4 findings were ruled by Ishay 31/07 ("כן לכל ההמלצות"); 3 are built and verified (gate 0 · 327 unit · 18 E2E · smoke green). ⚠️ TWO THINGS STILL BLOCK THE CLOSE, neither of which Claude can do: (a) Ishay runs `scripts/cleanup_test_quotes_14_15.sql` in the Supabase SQL Editor — the MCP classifier refuses the DDL; (b) Ishay clicks 👁 once in `/quotes` to confirm the PDF preview paints (no automated screenshot can show it).** Evidence: §9 entry 31/07 01:28. *(3.6 ✅ complete 30/07 22:52 — details kept below.)* **3.6 ✅ COMPLETE — built and verified live 30/07 22:52.** Mockup approved (`docs/mockups/system-settings-screen/05_prices_tab_approved.html`), plan `~/.claude/plans/resilient-purring-bear.md`, rulings **LOCAL-19..21**. ⚠️ Read §9 (30/07 evening) before touching `replacePriceTiers` or any delete-then-insert save: a real data-loss incident happened and the fixed ordering (upsert→delete-stale) is load-bearing. **Next: 3.7 (Phase-3 gate — 🎨 UX & functional review, a 👤 stop).** |
 | 🆕 **Read this before 3.5 — what changed in 3.4 that a fresh session would not guess** | (1) **A generic email engine now exists** — `src/lib/email.js` + Edge Function `send-email` + table `email_log`. It is **not** quote-specific; M4/M8/M11 reuse it (`src/CLAUDE.md` §"שליחת מייל" · §6 🚧 מ4·מ8·מ11). (2) **Migrations are at 9, not 5** — 6 (8th rejection reason) · 7+9 (email wording + sender signature: **deliberate deviations from FROZEN C5 §5.8.1**, `params` value only) · 8 (`email_log`). (3) **The project now has an external dependency** on Make.com (scenario 6759079) and its **first Edge Function**; the webhook URL is a Supabase secret and must never enter the repo. (4) **Direction incident #5** happened in an *outgoing email*, not a screen — `src/CLAUDE.md` now requires every outgoing Hebrew artefact to run its own direction pass. (5) **Two debts booked to 4.3:** no permanent E2E for the email path, and no test proving a `view`-level user is refused **by the function** rather than by a hidden button. (6) ✅ **DONE 31/07/2026** — Ishay deleted BOTH unused connections (`regin-gmail` 9406233 + `regin-gmail-send` 9406719) via browser-Claude; verified live via `connections_list` (only `regin-google-restricted` + Make's default remain) and `scenarios_get` 6759079 (`isActive: true`, connection 9407092 intact, onerror pair in place). |
 | ⚠️ Concurrency | 29/07 19:10 — the **ownership question from the 18:19–18:57 entries is RESOLVED by evidence**: the uncommitted 3.3 code was this build session's, it is now complete and gate-green. The other conversation wrote **no code** (its two commits `f67cb98`/`512184c` are docs only) and correctly stood down per iron rule 16. **Ishay must close the second conversation before the next step** — two sessions on one branch nearly caused a `git add -A` cross-commit. |
 
@@ -38,7 +38,7 @@ Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · �
 | 3.4 | Quote PDF render + real email send (Make→Edge Function→Gmail) 🗣️→🔻🤖 screenshot | ✅ (proven on the real inbox: `REG-IN-quote-6.pdf` **33KB** = the known PDF size ⇒ base64 decoded, `<div dir="rtl">` body, 4 line breaks. `npm run gate` exit 0, **279 tests**; 10 existing E2E green. Six defects found by real-send, five of them mine — §9) |
 | 3.5 | ~~Customer-card integration~~ → **Customer RECORD PAGE** (`/customers/:id`, tabs, quote history + metrics + sort/search/chips + revenue column) 🗣️→🔻🤖 | ✅ (gate 0, 290 unit + 13 E2E; 9,865 ₪ / 6,319 ₪ live; direction pass 0 findings; 30-quote view proven **without a single DB write**) |
 | 3.6 | Prices tab in /system (§7.84) 🗣️→🔻🤖 | ✅ (mockup approved w/ real data + 2 proactive additions [LOCAL-19/20]; gate 0, **324 unit** [was 290, 18 written first + watched fail]; **25 E2E green incl. all 18 pre-existing, 0 skips**; direction pass measured live [0 overflow · ₪ same side ×22 · price col 0.0px]; write-wall proven by SQL impersonation both directions; **2 real bugs caught by verification + 1 real data-loss incident, §9**) |
-| 3.7 | Phase-3 gate: 🎨 UX & functional review 🔻👤 | ⬜ |
+| 3.7 | Phase-3 gate: 🎨 UX & functional review 🔻👤 | 🔨 (sweep RUN + 4 findings RULED 31/07; **3 of 4 built & verified** — gate 0, 327 unit, 18 E2E, smoke green. **Blocking the close: (a) Ishay runs `scripts/cleanup_test_quotes_14_15.sql`; (b) one human click on 👁 in `/quotes`.** §9 31/07 01:28) |
 | 4.1 | Approval flow E2E (date guard §7.32, RPC, project born complete, locks) 🔻🤖 | ⬜ |
 | 4.2 | Rejection + expiry flows E2E (7 reasons, notes, cron simulation) 🔻🤖 | ⬜ |
 | 4.3 | e2e/quotes.spec.js + e2e/prices.spec.js suites 🔻🤖 | ⬜ |
@@ -361,6 +361,80 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 31/07/2026 01:28 — **Step 3.7 🎨 gate — the machine half is DONE; the rulings are Ishay's (👤).**
+  Method: three throwaway Playwright specs (`zz-review-37` · `zz-measure-37` · `zz-dialogs-37`),
+  network-level read-only guard (0 write requests reached Supabase in any run), **all three deleted
+  after use** — same convention as 3.4/3.6.
+  **What PASSED, measured not eyeballed** (across `/quotes` · `/quotes/new` · `/customers/:id` ·
+  `/system/prices`): every screen has loading + error-with-retry + empty + no-results states ·
+  **~200 real Tab stops, 0 focused elements without a visible focus indicator** · 0 horizontal
+  overflow · ₪ on the same side in every amount (`start=0 end=5` on the management screen) · every
+  mixed digit+Hebrew text node computes `direction: rtl` · **0 console/page errors** · Esc closes the
+  document dialog · focus lands inside the reject dialog on open · rejecting with no reason is
+  blocked **before the network** (0 requests). Two of the three pre-booked 3.7 items were already
+  fixed on 30/07 evening and re-verified here in code: `replaceCustomerContacts` is now
+  insert-then-delete-by-ids (`02_customers/api.js:146-180`) and the status `<Select>` is disabled
+  while its save is in flight (`PricesManagementPage.jsx:210`).
+  **⚠️ Not provable by machine (environment, not a bug — already documented in
+  `03_quotes/CLAUDE.md`):** the `<iframe src={blobUrl}>` PDF preview does not paint in an automated
+  screenshot, headless or headed. The blob IS produced (both dialog buttons are `disabled={!blobUrl}`
+  and render enabled) and the PDF bytes were proven in 3.1/3.3. **One human click on 👁 in `/quotes`
+  is the only way to close this — it stays a 👤 item.**
+  **↳ RULED 31/07/2026 01:3x — Ishay: "כן לכל ההמלצות". 3 of 4 BUILT + verified; the 4th is DB
+  cleanup that this environment refuses to run (see below).** Post-fix state: `npm run gate` exit 0 ·
+  **327 unit tests** (was 324) · **all 18 E2E green** · `npm run smoke` green · `jscpd` **4 clones
+  0.60% → 3 clones 0.44%**. Findings (1)+(3)+(4) below are DONE; (2) is handed over.
+  **FINDINGS (4) — presented to Ishay 31/07 01:2x:**
+  **(1) Error marking is inconsistent in the quote builder.** Measured after an empty save:
+  the customer picker gets `border-color oklch(0.577 0.245 27.325)` (red) + `aria-invalid="true"`,
+  while `quote-event-name` / `quote-event-date` / `quote-location` get
+  `oklch(0.869 0.022 252.894)` (plain slate) and **no `aria-invalid`, no `aria-describedby`** — red
+  helper text only. Every other form in the repo marks the field itself
+  (`CustomerFormDialog`, `PriceTiersDialog`, `ProductFormDialog` via `border-red-500`). Root cause:
+  the local `Field` component (`QuoteBuilderPage.jsx:69-83`) renders the error `<p>` but never wires
+  it to its child input. One-component fix; no new colour (iron rule 8 safe).
+  **(2) Two test quotes are permanently stuck in the live data.** `#14 בדיקת שמירה 1785332141457`
+  and `#15 בדיקת דיילות ידנית 1785332918430`, both on customer 46 (מדיטק), both
+  `rejected/'נפתחה בטעות'` — they are **half of מדיטק's quote list** and will ship in the Vercel
+  deploy (LOCAL-12). The lock trigger (§7.50) blocks UPDATE **and** DELETE on a non-`in_progress`
+  quote, so they can be neither renamed nor removed from the app. Surfaces a real capability gap:
+  a mistakenly-created quote can never be removed by anyone.
+  **(3) Hebrew number agreement** on the customer page metrics: `` `מ-${approvedCount} הצעות שאושרו` ``
+  and `` `${counts.in_progress} ממתינות להחלטה` `` render as "מ-1 הצעות שאושרו" / "1 ממתינות להחלטה"
+  (`CustomerDetailsPage.jsx:363,371`).
+  **(4) The third pre-booked item, confirmed:** `jscpd` = 4 clones, 0.65% jsx (threshold 3%, gate
+  green). Two are between `CustomerDetailsPage.jsx` and `QuotesPage.jsx`: `RowAction` is
+  **byte-identical** in both (~20 lines), and the three quote dialogs are wired with an identical
+  prop/`key` block. `RowAction` is a genuine should-be-shared component.
+  **AS-BUILT (what actually landed for 1/3/4):**
+  **(1)** the marking is injected by the container, not written at each call site — `Field`
+  (`QuoteBuilderPage.jsx`) clones its child with `aria-invalid` + `aria-describedby` when an error
+  exists, and `LtrFieldGroup` grew a per-item `invalid` flag + an `errorId` prop (the time range and
+  the guests÷ratio=hostesses formula were the two remaining unmarked fields, and they live in a
+  shared shell whose border belongs to the cell, not the input). `CustomerPicker` had to be taught to
+  **forward** `aria-describedby` explicitly — it does not spread props, so an attribute not named
+  there vanishes silently. **No new colour:** `aria-invalid:border-destructive` already exists on
+  `ui/input.jsx:13`, and the attribute selector outranks the call site's `border-slate-300`.
+  Measured live after the fix: all 7 invalid fields at `oklch(0.577 0.245 27.325)` with
+  `aria-invalid="true"` and a describedby that resolves to their own error `<p>`; the valid `יחס`
+  cell stays slate, so the marking discriminates rather than painting the whole group.
+  **(3)** `approvedQuotesLabel` / `pendingQuotesLabel` added to `src/lib/quotes.js` **TDD** (3 tests
+  written first, watched fail on `is not a function`, then implemented) — the rule lives in `lib` so
+  the next screen that counts quotes inherits the same Hebrew instead of re-deriving it.
+  **(4)** `RowAction` extracted to `src/components/RowAction.jsx` and consumed by both screens; the
+  second clone (the three quote dialogs' prop/`key` block) was **deliberately left** — the handlers
+  and `canEdit` differ per screen, so extracting it would trade duplication for a wrapper with two
+  behaviours. jscpd is 0.44% against a 3% threshold; this is a judgement call, not an oversight.
+  **⚠️ (2) IS NOT DONE — handed to Ishay, and this is the honest boundary.** The delete needs to
+  briefly disable `quotes_lock_non_in_progress`, and **this environment's safety classifier refuses
+  DDL/destructive SQL through the Supabase MCP** — it blocked both the trigger lookup and the
+  transaction. Not worked around. What exists instead: `scripts/cleanup_test_quotes_14_15.sql`
+  (one transaction: disable → delete → re-enable, plus three verification queries whose expected
+  answers are written in) and `scripts/restore_quotes_14_15.sql` (byte-for-byte restore, built from
+  a live `to_jsonb` snapshot taken **before** anything was attempted; `email_log` and `projects`
+  were both verified to hold zero references first). Ishay runs it in the Supabase SQL Editor.
+  **Until he does, quotes #14/#15 are still in the live DB** — do not report this step as closed on
+  the strength of the script existing.
 - 30/07/2026 22:52 — **Step 3.6 verification caught two real bugs AND caused one real data-loss
   incident (immediately repaired). All three are worth remembering:**
   **(1) `upsertPricingParam` could never have worked** — first real save from the screen returned

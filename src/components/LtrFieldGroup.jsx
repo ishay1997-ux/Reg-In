@@ -16,10 +16,14 @@
 //   { id, label, inputProps }                   — תא-קלט (הרכיב מרנדר את ה-<input> בעצמו,
 //                                                 וכך התווית והשדה קשורים ב-htmlFor/id תמיד)
 //   { op: '÷' }                                 — סימן מפריד (מוסתר מקוראי-מסך)
+//
+// `invalid` על פריט ⇒ התא נצבע אדום ומוכרז `aria-invalid`. נוסף בסקירת 3.7: בלעדיו
+// שדות-הקבוצה היו השדות היחידים במסך שקיבלו רק טקסט אדום מתחת, בזמן שכל השאר סומנו —
+// בדיוק חוסר-האחידות שהסקירה פתחה. `errorId` מקשר את ההודעה שמתחת לקבוצה לשדה עצמו.
 
 import { cn } from '@/lib/utils'
 
-export default function LtrFieldGroup({ items, className, 'data-testid': testId }) {
+export default function LtrFieldGroup({ items, className, errorId, 'data-testid': testId }) {
   // רוחב-העמודות נגזר מאותה רשימה: תא-ערך גמיש, סימן ברוחב-התוכן שלו.
   const columns = items.map((item) => (item.op ? 'auto' : '1fr')).join(' ')
 
@@ -67,6 +71,9 @@ export default function LtrFieldGroup({ items, className, 'data-testid': testId 
           isFirst && 'rounded-l-lg border-l',
           isLast && 'rounded-r-lg border-r',
           item.readOnly && 'bg-slate-100 text-slate-600',
+          // התא כולו נצבע, ולא רק ה-input שבתוכו: המסגרת כאן שייכת למעטפת, וצביעת
+          // ה-input לבדו הייתה מציירת מסגרת שנייה בתוך הראשונה.
+          item.invalid && 'border-destructive z-10',
         )
 
         if (item.readOnly) {
@@ -87,6 +94,8 @@ export default function LtrFieldGroup({ items, className, 'data-testid': testId 
               // המלצה מחושבת), ובלי זה כל הקלדה מחייבת קודם למחוק אותו ידנית. זו המוסכמה
               // המקובלת לשדות-מספר עם ברירת-מחדל — מקלידים ומחליפים.
               onFocus={(event) => event.target.select()}
+              aria-invalid={item.invalid ? true : undefined}
+              aria-describedby={item.invalid ? errorId : undefined}
               className="h-full w-full bg-transparent text-center outline-none focus-visible:ring-2 focus-visible:ring-teal-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               {...item.inputProps}
             />
