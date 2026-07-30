@@ -36,6 +36,14 @@ export async function listQuotes() {
       '*, quote_services(*), customers(customer_id, company_name, company_number, contact_name, phone, email)',
     )
     .order('updated_at', { ascending: false })
+    // 🐞 שובר-שוויון חובה (נוסף 30/07/2026, צעד 3.5 — באג חי שהתגלה בתכנון).
+    // ‏`updated_at` לבדו **אינו מפתח-מיון יציב**: אומת במסד שכבר יש שתי הצעות עם חותמת זהה
+    // לחלוטין (`2026-07-29 16:18:08.682902+00`), ו-Postgres אינו מבטיח סדר בתוך שוויון — כלומר
+    // השורות מחליפות מקום בין רענונים בלי סיבה נראית. ⚠️ זה מחמיר מבנית: עבודת-התפוגה היומית
+    // (pg_cron, §7.42) מעדכנת הרבה הצעות **בטרנזקציה אחת**, וכל שורה בטרנזקציה מקבלת את אותו
+    // `now()` בדיוק — כלומר ריצה אחת מייצרת גוש שלם של חותמות זהות.
+    // ⚠️ שום בדיקה אוטומטית לא תופסת את זה: ריצה בודדת רואה סדר כלשהו ועוברת.
+    .order('quote_id', { ascending: false })
   if (error) throw toError(error, 'שגיאה בטעינת רשימת ההצעות.')
   return data ?? []
 }
@@ -83,16 +91,37 @@ export async function getQuote(quoteId) {
   return data ?? null
 }
 
-// היסטוריית כל ההצעות של לקוח נתון (חדש-לישן) — כרטיס-הלקוח (§6 מ3, step 3.5).
-/** @public צרכן: כרטיס-הלקוח (צעד 3.5). להסיר את התג ברגע שהוא מייבא. */
+// היסטוריית כל ההצעות של לקוח נתון (חדש-לישן) — עמוד-הלקוח (§6 מ3, צעד 3.5).
 export async function listQuotesByCustomer(customerId) {
   const { data, error } = await supabase
     .from('quotes')
     .select('*, quote_services(*)')
     .eq('customer_id', customerId)
+    // ⚠️ `issue_date` הוא **תאריך ולא חותמת**, ולכן שוויון כאן הוא המצב הרגיל ולא מקרה-קצה:
+    // כל 10 הצעות-הדמו נושאות `2026-07-29`. בלי שובר-השוויון הסדר אקראי לחלוטין.
+    // `quote_id` יורד = "באותו יום, החדשה שנוצרה קודם" — טוטאלי, ולכן תמיד דטרמיניסטי.
     .order('issue_date', { ascending: false })
+    .order('quote_id', { ascending: false })
   if (error) throw toError(error, 'שגיאה בטעינת היסטוריית ההצעות של הלקוח.')
   return data ?? []
+}
+
+// אילו הצעות מתוך רשימה כבר נשלחו ללקוח — **שאילתה אחת** לכל העמוד (צעד 3.5).
+// ⚠️ במכוון לא `getLastSuccessfulSend` פר-שורה: על לקוח עם 30 הצעות זה 30 שאילתות (N+1).
+// מחזיר Set של entity_id, כי המסך שואל שאלה בוליאנית ("נשלחה?") ולא מציג תאריך —
+// הכרעת-ישי 30/07 (LOCAL-16): תאריך-השליחה כמעט תמיד זהה לתאריך-ההצעה ולכן הוא רעש.
+// ⚠️ מסונן ל-'sent': ניסיון שנכשל אינו שליחה, והצגתו ככזו תמנע מהמשתמש לשלוח מייל
+// שהלקוח מעולם לא קיבל.
+export async function getSentQuoteIds(quoteIds) {
+  if (!quoteIds?.length) return new Set()
+  const { data, error } = await supabase
+    .from('email_log')
+    .select('entity_id')
+    .eq('entity_type', 'quote')
+    .eq('status', 'sent')
+    .in('entity_id', quoteIds)
+  if (error) throw toError(error, 'שגיאה בטעינת היסטוריית השליחות.')
+  return new Set((data ?? []).map((row) => row.entity_id))
 }
 
 // קטלוג-התמחור לבניית הצעה: מוצרים **פעילים בלבד** (§7.34), כל מדרגות-המחיר, ו-2 פרמטרי-

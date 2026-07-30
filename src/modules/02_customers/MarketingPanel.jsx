@@ -293,7 +293,7 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
 // ⚠️ שתי תת-הקומפוננטות הבאות חייבות להישאר **ברמת-המודול** ולא בתוך MarketingPanel: קומפוננטה
 // מקוננת מקבלת זהות חדשה בכל render, React מרנדר מחדש את כל התת-עץ, ה-<embed> של ה-PDF מהבהב
 // והמיקוד בצ'קבוקסים אובד באמצע ניווט-מקלדת. אין כלל-lint שתופס את זה. אינן מיוצאות בכוונה
-// (‏`react-refresh/only-export-components`) — כמו DetailRow/MetricCard ב-CustomerDetailsCard.
+// (‏`react-refresh/only-export-components`) — כמו DetailRow/MetricCard ב-CustomerDetailsPage.
 
 // תצוגה-מקדימה של החומר שהועלה. kind ריק = אין מה להציג (אותו שער כמו התנאי המקורי בקומפוננטה).
 function MarketingPreview({ kind, url, name }) {

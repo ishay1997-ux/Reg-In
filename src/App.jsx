@@ -27,6 +27,7 @@ import SystemManagementPage from '@/modules/01_auth/SystemManagementPage'
 import UsersManagementPage from '@/modules/01_auth/UsersManagementPage'
 import PermissionsMatrixPage from '@/modules/01_auth/PermissionsMatrixPage'
 import CustomersPage from '@/modules/02_customers/CustomersPage'
+import CustomerDetailsPage from '@/modules/02_customers/CustomerDetailsPage'
 import QuoteBuilderPage from '@/modules/03_quotes/QuoteBuilderPage'
 import QuotesPage from '@/modules/03_quotes/QuotesPage'
 import WelcomePage from '@/components/WelcomePage'
@@ -71,6 +72,17 @@ function App() {
                     element={
                       <ProtectedRoute allow="לקוחות">
                         <CustomersPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  {/* עמוד-הלקוח (צעד 3.5) — היה חלון עד 30/07/2026.
+                      ⚠️ `<ProtectedRoute>` אינו אופציונלי: מסלול תחת MainLayout בלי עטיפה גלוי
+                      לכל משתמש מחובר, בלי lint ובלי אזהרה (src/CLAUDE.md). */}
+                  <Route
+                    path="customers/:customerId"
+                    element={
+                      <ProtectedRoute allow="לקוחות">
+                        <CustomerDetailsPage />
                       </ProtectedRoute>
                     }
                   />

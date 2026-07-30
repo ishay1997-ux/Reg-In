@@ -5,6 +5,7 @@
 // מוסכמת הארכיון (מודול 1, מחייבת): אין "מחיקה" — status דו-כיווני, שורות לא-פעילות מעומעמות ולא מוסתרות.
 
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Archive,
   ArchiveRestore,
@@ -18,19 +19,24 @@ import {
   Star,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useConfirm } from '@/components/ConfirmDialog'
 import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
 import {
   CUSTOMER_TYPE_LABELS,
   countActiveFilters,
+  deriveCustomerMetrics,
   matchesCustomerFilters,
   sortCustomers,
 } from '@/lib/customers'
+import { QUOTE_SCREEN_PARAM_NAMES } from '@/lib/quotes'
+import { formatShekelWhole } from '@/lib/pricing'
+import Money from '@/components/Money'
 import { listCustomers, setCustomerStatus, updateCustomer } from '@/modules/02_customers/api'
+import { getQuoteScreenParams, listQuotes } from '@/modules/03_quotes/api'
 import CustomerFormDialog from '@/modules/02_customers/CustomerFormDialog'
 import CustomersFilterSheet from '@/modules/02_customers/CustomersFilterSheet'
 import MarketingPanel from '@/modules/02_customers/MarketingPanel'
-import CustomerDetailsCard from '@/modules/02_customers/CustomerDetailsCard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -58,8 +64,22 @@ function SatisfactionPlaceholder() {
   )
 }
 
+// ⚠️ פענוח ערכים מהכתובת. ההבחנה בין "לא נבחר" ל-0/false היא load-bearing:
+// `minDiscount=0` הוא מסנן לגיטימי ("הנחה מ-0%") ו-`hasDiscount=false` הוא "בלי הנחה" —
+// ואילו `Number(null)` הוא 0 ו-`Boolean(null)` הוא false, כלומר המרה תמימה הייתה הופכת
+// "לא סיננתי" ל"סיננתי לאפס" בשקט. זו אותה מלכודת שמתועדת ב-quotes.js ("ריק אינו 0").
+function numParam(value) {
+  return value === null || value === '' ? undefined : Number(value)
+}
+
+function boolParam(value) {
+  return value === null ? undefined : value === 'true'
+}
+
 export default function CustomersPage() {
+  const navigate = useNavigate()
   const { permissions } = useAuth()
+  const confirm = useConfirm()
   const toast = useToast() // התראות אחידות (במקום window.alert) — שגיאות + משוב-הצלחה לארכוב/שחזור
   // edit-vs-view (סעיף 4 במדריך-המיקרו): רק edit מרנדר פקדים משנים; view מקבל מסך קריאה-בלבד.
   const canEdit = permissions['לקוחות'] === 'edit'
@@ -67,6 +87,12 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [customers, setCustomers] = useState([])
+  // הכנסות פר-לקוח (צעד 3.5). ⚠️ מחיר מודע: `listQuotes()` מביאה את **כל** ההצעות וכל
+  // שורות-המפרט שלהן, בשביל עמודה אחת. נבחר ביודעין — חישוב הסכום חייב לעבור דרך ה-SSOT
+  // של התמחור (§6: "לא לשכפל נוסחה"), וסכימה ב-SQL הייתה משכפלת את מדרגות ההנחות והמע"מ.
+  // 🔁 זה הצרכן השני של `listQuotes()`, שכבר מסומן כמקום הראשון שיצטרך סינון-בשאילתה.
+  // ⚠️ כשל כאן **אינו** מפיל את הרשימה: העמודה מציגה "—" והמסך ממשיך לעבוד.
+  const [revenueByCustomer, setRevenueByCustomer] = useState(null)
   const [consentSavingId, setConsentSavingId] = useState(null)
   // רענון הרשימה נעשה דרך "טיק" — העלאת המונה מריצה מחדש את effect-הטעינה. הדפוס הקנוני של
   // react-hooks/set-state-in-effect: ה-setState קורה רק בתגובה לתשובת ה-DB (אחרי await), לא סינכרונית,
@@ -86,6 +112,36 @@ export default function CustomersPage() {
         if (!cancelled) setLoadError('שגיאה בטעינת רשימת הלקוחות.')
       } finally {
         if (!cancelled) setLoading(false)
+      }
+
+      // ההכנסות נטענות **בנפרד ואחרי** רשימת-הלקוחות, ובלוק try משלהן: משתמש בלי הרשאת-קריאה
+      // להצעות (או תקלה ברשת) יקבל רשימת-לקוחות מלאה עם עמודת "—", ולא מסך-שגיאה במקום המסך.
+      try {
+        const [quoteRows, paramRows] = await Promise.all([listQuotes(), getQuoteScreenParams()])
+        if (cancelled) return
+        const vatRate = paramRows.find(
+          (p) => p.param_name === QUOTE_SCREEN_PARAM_NAMES.vatPercent,
+        )?.param_value
+        const byCustomer = new Map()
+        for (const quote of quoteRows) {
+          const list = byCustomer.get(quote.customer_id) ?? []
+          list.push(quote)
+          byCustomer.set(quote.customer_id, list)
+        }
+        const map = {}
+        for (const [id, list] of byCustomer) {
+          const m = deriveCustomerMetrics([], list, vatRate)
+          // נשמרים שלושה ערכים ולא רק ההכנסות: אזהרת-הארכוב (§7.34) צריכה את מספר
+          // ההצעות הפתוחות ואת שוויין, והם כבר חושבו כאן — שאילתה נוספת הייתה מיותרת.
+          map[id] = {
+            totalRevenue: m.totalRevenue,
+            openCount: m.openCount,
+            openQuotesValue: m.openQuotesValue,
+          }
+        }
+        setRevenueByCustomer(map)
+      } catch {
+        if (!cancelled) setRevenueByCustomer({})
       }
     })()
     return () => {
@@ -124,36 +180,86 @@ export default function CustomersPage() {
     setEditingCustomer(customer)
   }
 
-  // כרטיס הלקוח (3.6): נפתח בלחיצה על שורה. שומר רק את ה-id — הכרטיס עצמו קורא getCustomer טרי.
-  const [cardCustomerId, setCardCustomerId] = useState(null)
-  const [cardOpen, setCardOpen] = useState(false)
-
+  // ↳ 30/07/2026 (צעד 3.5): הכרטיס הפך מחלון ל**עמוד** — לחיצה על שורה מנווטת.
   function openCard(customerId) {
-    setCardCustomerId(customerId)
-    setCardOpen(true)
+    navigate(`/customers/${customerId}`)
   }
 
-  // חיפוש/סינון/מיון (3.3) — הכרעת P13: תיבת-חיפוש-אחת. הטקסט מנוהל בנפרד מהמסננת המתקדמת
-  // (סוג/דיוור/הנחה) כדי לשלב אותם ב-filters object אחד ל-matchesCustomerFilters (src/lib/customers.js).
-  const [searchText, setSearchText] = useState('')
-  const [filters, setFilters] = useState({}) // { customerType, marketingConsent, minDiscount, hasDiscount, newWithinDays }
+  // ⚠️ חיפוש/סינון/מיון חיים ב**כתובת** ולא ב-state (הועבר 30/07/2026, צעד 3.5).
+  // **הסיבה היא רגרסיה אמיתית שהמעבר לעמוד-לקוח יצר:** כשהכרטיס היה חלון, כל חמשת ערכי-המצב
+  // האלה שרדו — לא עזבנו את העמוד. ברגע שהכרטיס הוא עמוד, כל "חזור" היה מאפס אותם, והמשתמש
+  // שסינן לארכיון ופתח לקוח היה חוזר לרשימת הפעילים הריקה מסינון. זה לא נראה כמו באג אלא
+  // כמו "המערכת שכחה". הכתובת שורדת ניווט וגם הופכת רשימה מסוננת לקישור שאפשר לשמור.
+  // ⚠️ `showFilters` נשאר ב-state במכוון: הוא מתאר **איך המסך נראה**, לא "מה אני מסתכל עליו" —
+  // ופאנל שנפתח מעצמו בכניסה מקישור הוא הפתעה, לא שחזור.
+  const [searchParams, setSearchParams] = useSearchParams()
   const [showFilters, setShowFilters] = useState(false)
-  // תצוגת-סטטוס דו-מצבית (הכרעת-ישי 11/07): כפתור-יחיד שמוביל לארכיון ובחזרה, במקום toggle שהראה
-  // פעילים+ארכיון יחד (בלבל). 'active'=רשימת הפעילים (ברירת-מחדל) · 'inactive'=רשימת הארכיון בלבד.
-  // לעולם לא מציגים את שניהם יחד — מכוון (סטייה ממוסכמת-מודול-1 show-all+dim). §9 במדריך.
-  const [statusView, setStatusView] = useState('active')
-  // מיון בלחיצת-כותרת: sortKey ∈ {company_name, customer_type, discount_percent, status}; dir אסק/דסק.
-  // null = ללא מיון (סדר-הטעינה מ-api, שהוא לפי company_name). המשווה עצמו חי ב-sortCustomers — לא כאן.
-  const [sortKey, setSortKey] = useState(null)
-  const [sortDir, setSortDir] = useState('asc')
+
+  // כתיבה ממוזגת לכתובת. `replace` ולא push — אחרת כל הקלדה בתיבת-החיפוש הייתה רשומת-היסטוריה
+  // נפרדת, ו"חזור" היה מוחק תו-תו במקום לחזור לרשימה.
+  function writeParams(patch) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        for (const [key, value] of Object.entries(patch)) {
+          if (value === undefined || value === null || value === '') next.delete(key)
+          else next.set(key, String(value))
+        }
+        return next
+      },
+      { replace: true },
+    )
+  }
+
+  // ⚠️ הסטרים האלה **חייבים** לקבל גם את צורת-העדכון-הפונקציונלית של React (`set(v => ...)`),
+  // ולא רק ערך. שני אתרי-קריאה קיימים משתמשים בה (מתג-הארכיון ומתג-הדיוור), וכשהם קיבלו
+  // סטר שמצפה לערך — הפונקציה עצמה הומרה למחרוזת ונכתבה לכתובת. **אפס שגיאות, אפס קריסות:**
+  // הכפתור פשוט הפסיק לעבוד. נתפס ברגרסיית-E2E, לא בבנייה ולא ב-lint.
+  function resolveNext(valueOrFn, current) {
+    return typeof valueOrFn === 'function' ? valueOrFn(current) : valueOrFn
+  }
+
+  const searchText = searchParams.get('q') ?? ''
+  const setSearchText = (value) => writeParams({ q: resolveNext(value, searchText) })
+  // תצוגת-סטטוס דו-מצבית (הכרעת-ישי 11/07): 'active' (ברירת-מחדל) · 'inactive' = הארכיון בלבד.
+  // ברירת-המחדל אינה נכתבת לכתובת, כדי ש-/customers יישאר נקי.
+  const statusView = searchParams.get('status') ?? 'active'
+  const setStatusView = (value) => {
+    const next = resolveNext(value, statusView)
+    writeParams({ status: next === 'active' ? undefined : next })
+  }
+  const sortKey = searchParams.get('sort')
+  const sortDir = searchParams.get('dir') ?? 'asc'
+
+  const filters = useMemo(
+    () => ({
+      customerType: searchParams.get('type') ?? undefined,
+      marketingConsent: boolParam(searchParams.get('consent')),
+      minDiscount: numParam(searchParams.get('minDiscount')),
+      hasDiscount: boolParam(searchParams.get('hasDiscount')),
+      newWithinDays: numParam(searchParams.get('newDays')),
+      // הסף עצמו נשמר בכתובת ולא מחושב כאן: Date בגוף-רינדור הוא שגיאת react-hooks/purity,
+      // והוא ממילא מחושב בהאנדלר של המסננת (שם מותר לקרוא לשעון).
+      createdAfter: searchParams.get('createdAfter') ?? undefined,
+    }),
+    [searchParams],
+  )
+
+  function setFilters(valueOrFn) {
+    const next = resolveNext(valueOrFn, filters)
+    writeParams({
+      type: next.customerType,
+      consent: next.marketingConsent,
+      minDiscount: next.minDiscount,
+      hasDiscount: next.hasDiscount,
+      newDays: next.newWithinDays,
+      createdAfter: next.createdAfter,
+    })
+  }
 
   function toggleSort(key) {
-    if (sortKey === key) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortKey(key)
-      setSortDir('asc')
-    }
+    if (sortKey === key) writeParams({ dir: sortDir === 'asc' ? 'desc' : 'asc' })
+    else writeParams({ sort: key, dir: 'asc' })
   }
 
   // הרשימה הנראית = סינון (טקסט + מסננת) ואז מיון. useMemo כדי לא לחשב מחדש בכל רינדור לא-קשור.
@@ -165,15 +271,22 @@ export default function CustomersPage() {
     // מסנן-הסטטוס: 'active'/'inactive' מסננים לסטטוס יחיד, 'all' מסיר את ההגבלה (status=undefined).
     // createdAfter ("נוספו לאחרונה") מחושב במסננת (event handler) ומגיע דרך ...filters — לא כאן,
     // כדי לא לקרוא Date.now בזמן רינדור (react-hooks/purity).
-    const filtered = customers.filter((c) =>
-      matchesCustomerFilters(c, {
-        text: searchText,
-        ...filters,
-        status: statusView, // 'active' או 'inactive' — תמיד רשימה אחת, לא שתיהן
-      }),
-    )
+    const filtered = customers
+      .filter((c) =>
+        matchesCustomerFilters(c, {
+          text: searchText,
+          ...filters,
+          status: statusView, // 'active' או 'inactive' — תמיד רשימה אחת, לא שתיהן
+        }),
+      )
+      // ההכנסות ממוזגות לשורה **לפני** המיון, כדי שהמשווה של total_revenue יחיה ב-sortCustomers
+      // (מקום אחד, בדוק) ולא יישכפל כאן. null = עדיין נטען / אין הרשאה — התא יציג "—".
+      .map((c) => ({
+        ...c,
+        total_revenue: revenueByCustomer?.[c.customer_id]?.totalRevenue ?? null,
+      }))
     return sortKey ? sortCustomers(filtered, sortKey, sortDir) : filtered
-  }, [customers, searchText, filters, statusView, sortKey, sortDir])
+  }, [customers, revenueByCustomer, searchText, filters, statusView, sortKey, sortDir])
 
   // מפתח-רענון לאזור-השיווק: משתנה בדיוק כשקבוצת המאושרים-הפעילים משתנה (מתג-הסכמה/ארכוב/עריכה),
   // כדי שהפאנל יביא-מחדש את רשימת-הנמענים מ-getConsentedCustomers ולא יפגר. מפתח-מטמון בלבד,
@@ -198,12 +311,37 @@ export default function CustomersPage() {
     }
   }
 
-  // ארכוב/שחזור דו-כיווני (מוסכמת מודול 1; §7.34: בלי guard על התחייבויות פעילות — אין נתוני
-  // quotes/projects עדיין). §7.34 מסומן OPEN — כשמודול 3 קיים, זו הופכת לאזהרה-לא-חסימה (בלדג'ר).
+  // ארכוב/שחזור דו-כיווני (מוסכמת מודול 1).
+  // ⚠️ **§7.34 — התנאי שההערה הזו המתינה לו התקיים (30/07/2026).** עד צעד 3.5 נכתב כאן
+  // "בלי guard על התחייבויות פעילות — אין נתוני quotes/projects עדיין", ו"כשמודול 3 קיים
+  // זו הופכת לאזהרה". **מודול 3 קיים, ויש הצעות אמיתיות.** כלומר היום אפשר להעביר לארכיון
+  // לקוח שיש לו הצעה פתוחה — בלי אזהרה, בלי חיווי. **הפריט הוא §7 פתוח ולכן ההכרעה של ישי
+  // בלבד** (כלל 1) — הוצג לו 30/07 ולא הוכרע. אין לבנות כאן guard לפני הכרעתו.
   // בלי חלון-וידוא (הכרעת-ישי 11/07): הארכוב הפיך לחלוטין (שחזור בלחיצה מרשימת-הארכיון), פעולה
   // נמוכת-סיכון — וידוא כאן הוא חיכוך מיותר. עיקרון: וידוא רק לפעולות קריטיות (למשל השבתת-משתמש במ1).
   async function handleToggleStatus(customer) {
     const nextStatus = customer.status === 'active' ? 'inactive' : 'active'
+
+    // §7.34 — הכרעת-ישי 30/07/2026: **מתריעים, לא חוסמים.** ⚠️ חלון-הווידוא מותנה ומופיע
+    // **רק** כשיש הצעות פתוחות — הכרעת-11/07 ("ארכוב בלי וידוא, הפעולה הפיכה") נשמרת
+    // במקרה הרגיל. למה לא חסימה: ההצעה הפתוחה היא לרוב **הסיבה** לארכוב, וחסימה הייתה
+    // מכריחה לדחות הצעה רק כדי לארכב לקוח. ⛔ ובמפורש **לא** סוגרים את ההצעות אוטומטית —
+    // זו כתיבה לרשומות-כסף שהמשתמש לא ביקש.
+    const open = revenueByCustomer?.[customer.customer_id]
+    if (nextStatus === 'inactive' && open?.openCount > 0) {
+      const value = open.openQuotesValue
+      const ok = await confirm({
+        title: 'ללקוח יש הצעות פתוחות',
+        message:
+          `ל"${customer.company_name}" ` +
+          (open.openCount === 1 ? 'הצעה פתוחה אחת' : `${open.openCount} הצעות פתוחות`) +
+          (value != null ? ` בשווי ${formatShekelWhole(value)}` : '') +
+          '. הן יישארו פעילות וימשיכו לפוג כרגיל. להעביר לארכיון בכל זאת?',
+        confirmLabel: 'העבר לארכיון',
+      })
+      if (!ok) return
+    }
+
     try {
       const updated = await setCustomerStatus(customer.customer_id, nextStatus)
       setCustomers((prev) => prev.map((c) => (c.customer_id === updated.customer_id ? updated : c)))
@@ -415,6 +553,16 @@ export default function CustomersPage() {
                         onSort={toggleSort}
                       />
                       <th className="py-2 font-medium">תוכן שיווקי</th>
+                      {/* צעד 3.5 — "מי הלקוחות הגדולים שלי?". הכרעת-ישי: עמודה עם מיון ולא
+                          מסננת, כי מסננת מחייבת להמציא סף שרירותי ("מעל כמה ₪?") ומיון עונה
+                          ישירות. הערך נגזר מההצעות המאושרות דרך ה-SSOT של התמחור. */}
+                      <SortableHeader
+                        label={'סה"כ הכנסות'}
+                        colKey="total_revenue"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
                       <th className="py-2 font-medium">שביעות רצון</th>
                       <SortableHeader
                         label="סטטוס"
@@ -479,6 +627,15 @@ export default function CustomersPage() {
                               <span className="text-sm text-slate-600">
                                 {customer.marketing_consent ? 'מאושר' : 'לא מאושר'}
                               </span>
+                            )}
+                          </td>
+                          {/* "—" מבדיל בכוונה בין "עדיין נטען / אין הרשאה להצעות" (null) לבין
+                              "0 ₪" שהוא עובדה נכונה על לקוח שטרם סגר עסקה. */}
+                          <td className="py-3 text-slate-700">
+                            {customer.total_revenue == null ? (
+                              <span className="text-slate-400">—</span>
+                            ) : (
+                              <Money amount={customer.total_revenue} />
                             )}
                           </td>
                           <td className="py-3">
@@ -571,15 +728,6 @@ export default function CustomersPage() {
           </DialogContent>
         </Dialog>
       )}
-
-      {/* כרטיס הלקוח (3.6) — נפתח בלחיצה על שורה; קורא getCustomer טרי לפי ה-id.
-          key=customerId ⇒ remount טרי לכל לקוח (loading מתאפס, בלי effect-סנכרון) */}
-      <CustomerDetailsCard
-        key={cardCustomerId ?? 'none'}
-        open={cardOpen}
-        onOpenChange={setCardOpen}
-        customerId={cardCustomerId}
-      />
     </div>
   )
 }

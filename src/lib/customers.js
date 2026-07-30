@@ -3,6 +3,10 @@
 // חיפוש-הלקוח הסלחני (§7.11) — כדי שלא תיווצר לוגיקת-חיפוש כפולה שתסטה.
 
 import { COMPANY_ID_REGEX, EMAIL_REGEX, isValidDiscountPercent } from '@/lib/validators'
+// חישוב סכום-הצעה מגיע מ-SSOT של מודול 3 ולעולם לא משוכפל כאן (PROJECT_MASTER §6 מורה זאת
+// במפורש: "דרך ה-SSOT של התמחור — לא לשכפל נוסחה"). deriveQuoteAmount כבר עוטף את
+// computeQuoteTotals ומטפל במע"מ הקפוא מול החי, ולכן זו נקודת-הכניסה הנכונה.
+import { deriveQuoteAmount } from '@/lib/quotes'
 
 // §7.3 (הכרעת ישי 06/07): תוויות סוג-הלקוח לפי האפיון הקפוא C5 §1.5.3, 1:1 מול ערכי ה-enum ב-DB
 // (docs/schema.sql:43). מקור-אמת יחיד לתוויות — ה-UI לא כותב מחרוזות-עברית ידנית (מונע אי-התאמה).
@@ -71,7 +75,11 @@ export function countActiveFilters(filters = {}) {
 }
 
 // מיון צד-לקוח ללחיצת-כותרת-עמודה (step 3.3). מוגדר ונבדק כאן כדי שה-UI לא ישכפל את המשווה.
-const SORT_KEYS = ['company_name', 'customer_type', 'discount_percent', 'status']
+// `total_revenue` נוסף בצעד 3.5: הוא **אינו** עמודה במסד אלא ערך נגזר שהעמוד מחשב מההצעות
+// (דרך deriveCustomerMetrics) וממזג לשורה לפני המיון. הוא נמצא כאן ולא בעמוד כדי שהמשווה
+// יישאר במקום אחד ובדוק — בדיוק כמו שאר המפתחות.
+const SORT_KEYS = ['company_name', 'customer_type', 'discount_percent', 'status', 'total_revenue']
+const NUMERIC_SORT_KEYS = ['discount_percent', 'total_revenue']
 
 // key ∈ SORT_KEYS · dir ∈ 'asc'|'desc'. מחזיר עותק חדש (לא מוטציה על ה-prop). מפתח לא-מוכר =
 // מוחזר עותק בלי מיון (יציב, בלי לזרוק). customer_type ממוין לפי התווית העברית שרואים בתצוגה,
@@ -80,7 +88,9 @@ export function sortCustomers(customers, key, dir = 'asc') {
   if (!SORT_KEYS.includes(key)) return [...customers]
   const factor = dir === 'desc' ? -1 : 1
   return [...customers].sort((a, b) => {
-    if (key === 'discount_percent') {
+    if (NUMERIC_SORT_KEYS.includes(key)) {
+      // null ⇒ 0 במיון בלבד (התא עצמו מציג "—"): לקוח בלי הכנסות אכן נמצא בתחתית
+      // מיון-יורד, וזה בדיוק מה שהמשתמש מצפה לו כששואל "מי הגדולים שלי".
       return (Number(a[key] ?? 0) - Number(b[key] ?? 0)) * factor
     }
     let av = a[key]
@@ -187,7 +197,24 @@ export function validateExtraContacts(contacts = []) {
 //   (getCustomerProjects לא מסנן סטטוס — לסנן פרויקטים-שהסתיימו לפני הממוצע).
 // 🚧 מ3 · 🚧 מ6 · 🚧 מ8 — רשום ב-PROJECT_MASTER §6 ("השלמות כרטיס לקוח"); כל מודול-יעד גורף
 // `grep '🚧 מ<מספרו>' §6` וחוזר לחווט כאן — כלל ברזל 15.
-export function deriveCustomerMetrics(projects = []) {
+// ⚠️ סכימת סכומי-הצעות. הרעלה מכוונת: אם ולו הצעה אחת מחזירה total=null (מע"מ שלא נפתר —
+// לא קפוא בהצעה ולא נטען מ-params), הסכום **כולו** מוחזר null. הסיבה: סכום שחסרה בו הצעה
+// אחת נראה תקין לחלוטין, ולכן הוא מסוכן יותר מ"אין נתונים" — "ריק אינו 0" (quotes.js).
+// העיגול לשתי ספרות בסוף: הסכומים כבר באגורות שלמות, אך חיבור float צובר סחף (1180.0000000001).
+function sumQuoteTotals(rows, vatRate) {
+  let sum = 0
+  for (const row of rows) {
+    const { total } = deriveQuoteAmount(row, vatRate)
+    if (total === null) return null
+    sum += total
+  }
+  return Math.round(sum * 100) / 100
+}
+
+// ↳ הורחבה בצעד 3.5 (מודול 3) **בתוספת-פרמטרים בלבד**: קורא ישן שמעביר רק `projects` מקבל
+// בדיוק את מה שקיבל קודם, וכל ה-null המכוונים נשמרים. `quotes` = שורות listQuotesByCustomer
+// (צורת-DB גולמית), `vatRate` = המע"מ החי מ-params (ההצעות המאושרות גוברות עליו עם הקפוא שלהן).
+export function deriveCustomerMetrics(projects = [], quotes = null, vatRate = null) {
   // מספר-אירועים: 0-נראה → null (projects עדיין deny-all עד מ6; 0-נראה ≠ 0-אמיתי) כדי שהכרטיס
   // יציג "אין נתונים עדיין" ולא "0" מטעה.
   const projectCount = projects.length > 0 ? projects.length : null
@@ -196,13 +223,43 @@ export function deriveCustomerMetrics(projects = []) {
     .filter((s) => typeof s === 'number' && !Number.isNaN(s))
   const avgFeedback =
     scores.length > 0 ? scores.reduce((sum, s) => sum + s, 0) / scores.length : null
-  // הכנסות/גודל-עסקה (מ3) ואירוע-אחרון/רדום (מ6) — null עד החיווט. avgDealSize = totalRevenue/projectCount.
+
+  const base = { projectCount, lastEventDate: null, isDormant: null, avgFeedback }
+
+  // מודול 3 לא חווט בקריאה הזו (קורא ישן) ⇒ null מכוון ולא 0: "אין נתונים עדיין" הוא
+  // הודעה נכונה, ואילו "0 ₪" הוא טענה שקרית על לקוח שאולי הכניס מיליון.
+  if (!quotes) {
+    return {
+      ...base,
+      totalRevenue: null,
+      avgDealSize: null,
+      openQuotesValue: null,
+      approvedCount: null,
+    }
+  }
+
+  const approved = quotes.filter((q) => q?.quote_status === 'approved')
+  const open = quotes.filter((q) => q?.quote_status === 'in_progress')
+  const totalRevenue = sumQuoteTotals(approved, vatRate)
+
   return {
-    totalRevenue: null,
-    projectCount,
-    lastEventDate: null,
-    isDormant: null,
-    avgDealSize: null,
-    avgFeedback,
+    ...base,
+    totalRevenue,
+    // הכנסות מהצעות **מאושרות בלבד** — הצעה בתהליך אינה כסף שנכנס, והצעה שנדחתה בוודאי לא.
+    approvedCount: approved.length,
+    // ⚠️ אפס עסקאות ⇒ null ולא 0. "גודל עסקה ממוצע 0 ₪" על מדגם ריק הוא מספר שקרי, לא נמוך —
+    // אותו כלל בדיוק כמו approvalRate ב-quotes.js. חלוקה ב-0 הייתה גם מחזירה NaN למסך.
+    avgDealSize:
+      totalRevenue !== null && approved.length > 0
+        ? Math.round((totalRevenue / approved.length) * 100) / 100
+        : null,
+    // מדד אחר לגמרי מהכנסות: כמה כסף ממתין להחלטת הלקוח **עכשיו**. לקוח עם 0 הכנסות
+    // ו-16,520 ₪ פתוחים אינו לקוח חסר-ערך, והכרטיס חייב להראות את ההבדל.
+    openQuotesValue: sumQuoteTotals(open, vatRate),
+    // ⚠️ **0 אמיתי ולא null** (בשונה מהסכומים): זו התשובה "אין הצעות פתוחות", ואזהרת-הארכוב
+    // (§7.34, הכרעת-ישי 30/07) נשענת עליה כדי **לא** להופיע. null כאן היה מתפרש כ"לא ידוע"
+    // ומדליק חלון-וידוא על לקוח נקי לגמרי — בדיוק החיכוך שההכרעה מ-11/07 באה למנוע.
+    // הספירה גם אינה תלויה במע"מ, ולכן היא אמינה גם כשהסכום עצמו אינו ניתן לחישוב.
+    openCount: open.length,
   }
 }

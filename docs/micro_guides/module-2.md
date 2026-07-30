@@ -15,7 +15,7 @@
 | Owner | **ישי (started 10/07)** · Amit (may continue — writer-handover on THIS branch, not a parallel branch) |
 | Branch | `ishay/module-2-customers` (created from fresh `dev` 10/07/2026, after PR #5 merged — step 0.1 ✅) |
 | **Status** | **🔒 Closed — awaiting PR/merge (closing audit 11/07/2026 22:33, fresh session).** Verdict **[YES]**; DoD **typed-echo SIGNED by Ishay 11/07 22:39 ("לקוחות DoD")**; the 16:21/17:07 UX-rounds' 👤 visual pass **SIGNED by Ishay 22:55 ("אישרתי ויזואלית הכל מעולה")** — every human gate of the module is now closed. All phases 1–5 ✅. Test data cleaned with his approval (customers/contacts/marketing = **0/0/0**, live-verified). |
-| Last updated | 11/07/2026 22:42 (closing audit — see §9 22:33 entry; audit corrected two stale facts here: the module WAS fully committed **and pushed** before the audit — `git ls-remote` = `dce7675` = local HEAD, not merged) |
+| Last updated | **30/07/2026 14:45 — ⚠️ THE MODULE IS CLOSED AND MERGED, BUT THREE OF ITS FILES WERE REWRITTEN BY MODULE 3 (step 3.5). Read the §9 entry dated 30/07 before trusting the file list below.** In one line: `CustomerDetailsCard.jsx` **no longer exists** — the customer card is now a full record page (`CustomerDetailsPage.jsx`, route `customers/:customerId`), the list row **navigates** instead of opening a dialog, a sortable "סה"כ הכנסות" column was added, and `CustomersPage`'s search/filters/status/sort moved from `useState` into **URL query params**. Everything below this row still describes the module's own build (11/07) and is unchanged. |
 | **Active step** | **DONE — module closed. Remaining (human): Ishay's visual OK → push the audit-session doc commit → open PR base `dev` ← compare `ishay/module-2-customers` (instructions printed by the closing session, iron rule 17 🧩).** |
 
 | Phase / step | Status |
@@ -23,7 +23,7 @@
 | 0.1 Preconditions: M1 merged + branch created | ✅ done (M1 in dev `3ba5c5f`; branch `ishay/module-2-customers`; `.env.local` present) |
 | Phase 1 — DB & RLS (1.1–1.4) | ✅ done (1.1–1.4; migration applied+verified; RLS matrix 12/14 SQL, 11–12 UI→4.1; Ishay signed 1.4 10/07) |
 | Phase 2 — Business logic (2.1–2.2) | ✅ done (2.1 customers.js+validators+32 tests · 2.2 api.js — 9 queries, lint 0-err, from('customers') confined) |
-| Phase 3 — UI (3.1–3.6) | ✅ ALL (3.1 list · 3.2 add/edit+§7.11 · 3.3 search/filter/sort · 3.4 archive · 3.5 marketing · 3.6 card) — 👤 visual gate ✅ SIGNED (Ishay 11/07 02:56) |
+| Phase 3 — UI (3.1–3.6) | ✅ ALL (3.1 list · 3.2 add/edit+§7.11 · 3.3 search/filter/sort · 3.4 archive · 3.5 marketing · 3.6 card — ⚠️ **the card was replaced by a record page 30/07/2026, step 3.5 of module 3; see §9**) — 👤 visual gate ✅ SIGNED (Ishay 11/07 02:56) |
 | Phase 3 — enhancements (11/07, Ishay) | ✅ built (review fixes · +3 filters · הצג-ארכיון toggle · marketing→dialog · card 5-metrics) — gate green 36/36 · lint 0 · build ✓ |
 | Phase 3.7 — multi-contact (Option C) | ✅ **DONE** — migration applied + api CRUD (`listCustomerContacts`/`replaceCustomerContacts`) + form repeatable rows + card display + `matchesText` search; 37/37 · lint 0 · build ✓ |
 | Phase 4 — Control & integration (4.1–4.2) | ✅ DONE — 🤖-verified 11/07 02:48 (4.1 hybrid matrix walk · 4.2 regression 37/37 + 8/8 + RLS 6/9 baseline) + 👤 end-of-phase SIGNED (Ishay 11/07 02:56) |
@@ -61,7 +61,7 @@ Rule (ENFORCED — iron rule 15 + Stop hook): every 🚧 row above carries a `�
 | `src/modules/01_auth/UsersManagementPage.jsx` | The as-built pattern to copy: list + dialog CRUD + **bidirectional active/inactive with dimmed rows** (binding convention, module-1.md Deviations 02/07). |
 | `e2e/auth.spec.js`, `e2e/permissions.spec.js` | Playwright patterns (env-gated creds, workers=1, Chromium). |
 
-**Files to create:** `src/modules/02_customers/` → `api.js` (ALL Supabase queries of this module — iron rule 14), `CustomersPage.jsx`, `CustomerFormDialog.jsx`, `CustomerDetailsCard.jsx`, `CustomersFilterSheet.jsx`, `MarketingPanel.jsx` · `src/lib/customers.js` + `src/lib/customers.test.js` · `e2e/customers.spec.js` · one migration (step 1.1).
+**Files to create:** `src/modules/02_customers/` → `api.js` (ALL Supabase queries of this module — iron rule 14), `CustomersPage.jsx`, `CustomerFormDialog.jsx`, `CustomerDetailsCard.jsx` (⚠️ **deleted 30/07/2026** → `CustomerDetailsPage.jsx`), `CustomersFilterSheet.jsx`, `MarketingPanel.jsx` · `src/lib/customers.js` + `src/lib/customers.test.js` · `e2e/customers.spec.js` · one migration (step 1.1).
 
 **DB:** table `customers` (docs/schema.sql:41-51): `customer_id` **bigint surrogate PK (§7.64, 10/07)** + `company_number` text unique not null (=ח"פ; renamed from the old text PK), `customer_type` check in (`private_company`,`government`,`production_company`,`nonprofit`), `company_name`, `contact_name`, `phone`, `email` (all not null), `discount_percent` numeric default 0, `marketing_consent` bool default false, `status` check (`active`,`inactive`) default `active`. **Current RLS state: enabled live with ZERO policies (deliberate deny-all; live-verified 06/07 per module-1.md §2) — NOT yet codified in any migration; step 1.1 codifies it.** Relevant existing migrations: `20260629000000_baseline_schema.sql:43` (created `customers`) · `20260702195258_harden_current_user_role_id.sql` (hardened `current_user_role_id()` — docs/schema.sql:190-196 — the helper EVERY new policy calls). Related FK: `quotes.customer_id → customers` (schema.sql:86, on delete restrict; **type→bigint in 1.1 per §7.64**) — Module 3 depends on this table. `projects`/`quotes` are ALSO deny-all until M3/M6 → customer-card history queries legitimately return empty.
 
@@ -374,7 +374,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 
 #### Step 3.6 — Customer card 🔻🤖
 **Goal:** spec 1.6.3's "כרטיס לקוח" with the ruled empty-state scope.
-**Files:** `src/modules/02_customers/CustomerDetailsCard.jsx` (new).
+**Files:** `src/modules/02_customers/CustomerDetailsCard.jsx` (new). ⚠️ **This file was deleted 30/07/2026** — module 3 step 3.5 replaced the dialog with `CustomerDetailsPage.jsx` (route `customers/:customerId`); see §9.
 **What:** row click → card: **open with a fresh `getCustomer(id)` read** (not stale list state — another user may have edited since load; also the api function's designated consumer, reviewer finding 2, 10/07) + project history (via `getCustomerProjects` — empty state "אין פרויקטים עדיין") + metrics (סה"כ הכנסות / **רווח גולמי מצטבר** / ממוצע משוב — all three "אין נתונים עדיין" placeholders via `deriveCustomerMetrics`). **Gross-profit (§7.79):** required by C6 §2.4.1 (derived customer attr; citation corrected 10/07 — C5 §5.6.3 itself names only revenue+feedback) — render it as a placeholder now (formula + population are open, wired in **M8** which owns the profit formula, spec 5.14; retargeted from M7); do NOT drop it silently as the pre-10/07 draft did.
 **Verify 🤖:** preview — card opens showing details + all three metric empty states (revenue, gross-profit, feedback).
 **🔻👤 end-of-phase gate: visual pass vs design language §4 (colors/layout untouched without approval — iron rule 8).**
@@ -467,6 +467,47 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 6. **(e)–(g) per CLAUDE.md iron rules 13/15/16 + end-of-session protocol** (new-open-question → stop+§7 · migration/DB-gap → db_roadmap same session · shared-surface change → name the affected future modules in the CHANGELOG line) — these apply automatically; not restated here (F1).
 
 ## 9. 📝 Deviations & Tech-Debt Log
+- 30/07/2026 15:10 — **✅ §7.34 RULED AND BUILT (customers part): warn, don't block.** Ishay ruled on
+  my recommendation. Archiving a customer **who has open quotes** now opens a confirm naming the
+  count and their value ("לעיריית חדרה הצעה פתוחה אחת בשווי 16,520 ₪… להעביר לארכיון בכל זאת?").
+  ⚠️ **The confirm is conditional and appears ONLY when open quotes exist** — his 11/07 ruling
+  ("archive without confirmation, the action is reversible") still holds for the normal case, and
+  a test asserts exactly that. **Why not block:** the open quote is usually the *reason* for
+  archiving, so blocking would force rejecting a quote just to archive a customer. ⛔ **Explicitly
+  rejected: auto-closing the quotes along with the archive** — that writes to money records the
+  user never asked to touch. `openCount` was added to `deriveCustomerMetrics` (**0 is a real 0
+  here, not `null`** — `null` would read as "unknown" and fire the warning on a clean customer).
+  Costs no extra query: `CustomersPage` already loads quotes for the revenue column.
+  **Verified both directions:** the warning appears with the real numbers and **"ביטול" actually
+  leaves the customer active** (not merely displayed), and with no open quotes there is no dialog
+  at all. Market grounding: Pipeliner / OctopusPro / Dynamics all prompt on linked records.
+- 30/07/2026 14:56 — **🔔 §7.34's precondition became true, and this module owns it.** The archive
+  comment in `CustomersPage.handleToggleStatus` used to say "no guard on live commitments — there is
+  no `quotes`/`projects` data yet", and promised the guard would become a warning "once module 3
+  exists". **Module 3 now exists with real quotes.** Verified in code: `setCustomerStatus`
+  (`02_customers/api.js`) checks nothing, so a customer holding an open 16,520 ₪ quote can be
+  archived with **no warning and no indication**. The comment was rewritten to say so plainly.
+  ⚠️ **No guard was built** — §7.34 is an open §7 item and the ruling is Ishay's alone (iron rule 1);
+  presented to him 30/07, not decided. Do not build one before he rules.
+- 30/07/2026 14:30 — **⚠️ MODULE-2 SURFACE CHANGED BY MODULE 3 (step 3.5). The module is closed and
+  merged, but three of its files were rewritten — read this before trusting anything below.**
+  **`CustomerDetailsCard.jsx` NO LONGER EXISTS.** Ishay ruled (LOCAL-13 in `module-3.md`) that the
+  512px customer dialog becomes a full record page — `CustomerDetailsPage.jsx` at route
+  `customers/:customerId`. Reason: it could not hold 30 quotes, and M6 adds project cards on top.
+  Structure follows the standard CRM record page (highlights strip → grouped details → related-list
+  tabs), verified against Salesforce/ServiceNow docs rather than invented.
+  **What else moved:** `CustomersPage` row-click now **navigates** instead of opening a dialog;
+  a sortable **"סה"כ הכנסות"** column was added (values from `deriveCustomerMetrics`, which M3
+  extended with `quotes`/`vatRate` **by parameter-addition only** — every old call still returns the
+  four intentional `null`s, and the regression test for that is in `customers.test.js`).
+  **🐞 The one that cost a real bug — do not undo it:** `CustomersPage`'s search/filters/status/sort
+  moved from `useState` into **URL query params**, because a dialog preserved that state for free and
+  a page does not: without it, "back" from a customer page silently wiped 5 filter values. ⚠️ The
+  URL-backed setters **must** accept React's updater form (`set(v => …)`) — two existing call sites
+  (archive toggle · consent toggle) use it, and when they got a value-only setter the function was
+  stringified into the URL: **no error, no crash, the button simply stopped working.** Caught by the
+  `customers.spec.js` archive test, not by lint or build. `resolveNext()` in `CustomersPage` is what
+  keeps them working; removing it re-breaks both toggles silently.
 
 - 29/07/2026 17:20 — **Post-close touch on this module's files, from M3 step 3.2 (Ishay caught it in
   the shared `CustomerFormDialog` while creating a customer from the quote screen).** The dialog's

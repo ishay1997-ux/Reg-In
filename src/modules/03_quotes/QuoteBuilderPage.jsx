@@ -7,7 +7,7 @@
 // המוקאפ אושר ע"י ישי 29/07/2026 אחרי ~11 סבבים; שש ההכרעות שלו מסומנות בקוד במקומן.
 
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowRight, Eye } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
@@ -85,6 +85,10 @@ function Field({ id, label, error, children, className }) {
 export default function QuoteBuilderPage() {
   const { quoteId } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  // נשלף כאן ולא בתוך ה-effect: ערך פרימיטיבי יציב במערך-התלויות, בעוד ש-`searchParams`
+  // הוא אובייקט חדש בכל שינוי-כתובת — והיה גורם לטעינה מחדש של הלקוחות והקטלוג לחינם.
+  const preselectCustomerId = searchParams.get('customerId')
   const toast = useToast()
   const { permissions } = useAuth()
   const canEdit = permissions['הצעות מחיר'] === 'edit'
@@ -154,7 +158,20 @@ export default function QuoteBuilderPage() {
             setLines(state.lines)
           }
         } else {
-          setForm({ ...EMPTY_FORM, ratio: defaultRatio ?? '' })
+          // ↳ 30/07/2026: הגעה מ"+ הצעה חדשה" בעמוד-הלקוח מביאה `?customerId=` בכתובת,
+          // והלקוח נבחר מראש. ⚠️ **חייב לעבור דרך אותו צילום-הנחה של handleSelectCustomer**
+          // (F12): לקוח שנבחר בלי `appliedDiscount` היה מייצר הצעה עם 0% הנחה בשקט, למרות
+          // שבכרטיסו רשומה הנחה — בדיוק סוג הכשל שהמסך הזה בנוי למנוע.
+          // ⚠️ מזהה שאינו ברשימה (נמחק / אין הרשאה) נופל בשקט חזרה לטופס ריק, ולא מפיל את המסך.
+          const preselected = preselectCustomerId
+            ? customerRows.find((c) => c.customer_id === Number(preselectCustomerId))
+            : null
+          setForm({
+            ...EMPTY_FORM,
+            ratio: defaultRatio ?? '',
+            customerId: preselected?.customer_id ?? null,
+            appliedDiscount: Number(preselected?.discount_percent ?? 0),
+          })
         }
         setLoadError('')
       } catch {
@@ -166,7 +183,7 @@ export default function QuoteBuilderPage() {
     return () => {
       cancelled = true
     }
-  }, [quoteId, isEditMode, reloadTick])
+  }, [quoteId, isEditMode, reloadTick, preselectCustomerId])
 
   const selectedCustomer = customers.find((c) => c.customer_id === form.customerId) ?? null
 

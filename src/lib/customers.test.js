@@ -157,6 +157,103 @@ describe('deriveCustomerMetrics — 5 מדדים ממוקדי-מנהלת-לקו�
   })
 })
 
+// ---- חיווט מודול 3 (צעד 3.5): הכנסות · גודל-עסקה · שווי-פתוחות ----
+// שורות-ההצעה כאן הן **צורת-ה-DB** כפי ש-listQuotesByCustomer מחזירה אותן, לא צורה מומצאת —
+// אחרת הבדיקה תעבור על מיפוי שהמסך לא באמת מקבל.
+const q = (over = {}) => ({
+  quote_status: 'approved',
+  applied_customer_discount: '0.00',
+  manual_discount: '0.00',
+  vat_rate_snapshot: null,
+  quote_services: [{ qty: 1, closing_unit_price: '1000.00' }],
+  ...over,
+})
+
+describe('deriveCustomerMetrics — חיווט הכנסות ממודול 3 (צעד 3.5)', () => {
+  it('totalRevenue סוכם **מאושרות בלבד** — בתהליך ונדחו אינן הכנסה', () => {
+    const m = deriveCustomerMetrics(
+      [],
+      [q(), q({ quote_status: 'in_progress' }), q({ quote_status: 'rejected' })],
+      18,
+    )
+    expect(m.totalRevenue).toBe(1180) // 1000 + 18% מע"מ, רק ההצעה המאושרת
+    expect(m.approvedCount).toBe(1)
+  })
+
+  it('התרחיש האמיתי של מדיטק: 8,800 בסיס · 5% הנחת-לקוח · מע"מ 18% ⇒ 9,864.80', () => {
+    const m = deriveCustomerMetrics(
+      [],
+      [
+        q({
+          applied_customer_discount: '5.00',
+          vat_rate_snapshot: '18.00',
+          quote_services: [{ qty: 1, closing_unit_price: '8800.00' }],
+        }),
+      ],
+      18,
+    )
+    expect(m.totalRevenue).toBe(9864.8)
+    expect(m.avgDealSize).toBe(9864.8)
+  })
+
+  it('אפס מאושרות ⇒ totalRevenue אמיתי 0, אבל avgDealSize **null** ולא 0', () => {
+    // 0 הכנסות הוא עובדה נכונה; "גודל עסקה ממוצע 0" הוא מספר שקרי על מדגם ריק —
+    // אותו כלל בדיוק כמו approvalRate ב-quotes.js.
+    const m = deriveCustomerMetrics([], [q({ quote_status: 'in_progress' })], 18)
+    expect(m.totalRevenue).toBe(0)
+    expect(m.avgDealSize).toBeNull()
+    expect(m.approvedCount).toBe(0)
+  })
+
+  it('⚠️ מע"מ שלא נטען ⇒ totalRevenue null, לא 0 ("ריק אינו 0")', () => {
+    // סכום בלי מע"מ נראה אמין לחלוטין ולכן מסוכן במיוחד — עדיף "אין נתון" ממספר שגוי.
+    const m = deriveCustomerMetrics([], [q()], null)
+    expect(m.totalRevenue).toBeNull()
+    expect(m.avgDealSize).toBeNull()
+  })
+
+  it('הצעה מאושרת נשענת על vat_rate_snapshot הקפוא שלה, גם כשהמע"מ הנוכחי שונה (§7.51)', () => {
+    const m = deriveCustomerMetrics([], [q({ vat_rate_snapshot: '17.00' })], 18)
+    expect(m.totalRevenue).toBe(1170) // 17% הקפוא, לא 18% החי
+  })
+
+  it('openQuotesValue סוכם **בתהליך בלבד** — זה מדד אחר לגמרי מהכנסות', () => {
+    const m = deriveCustomerMetrics(
+      [],
+      [q(), q({ quote_status: 'in_progress' }), q({ quote_status: 'in_progress' })],
+      18,
+    )
+    expect(m.openQuotesValue).toBe(2360)
+    expect(m.totalRevenue).toBe(1180)
+  })
+
+  it('openCount סופר הצעות פתוחות — הבסיס לאזהרת-הארכוב (§7.34, הכרעת-ישי 30/07)', () => {
+    const m = deriveCustomerMetrics(
+      [],
+      [
+        q(),
+        q({ quote_status: 'in_progress' }),
+        q({ quote_status: 'in_progress' }),
+        q({ quote_status: 'rejected' }),
+      ],
+      18,
+    )
+    expect(m.openCount).toBe(2)
+    // ⚠️ אפס פתוחות הוא **0 אמיתי** ולא null: זו התשובה "אין מה להתריע עליו", והאזהרה
+    // נשענת עליה. null כאן היה מתפרש כ"לא ידוע" ומדליק אזהרה על לקוח נקי.
+    expect(deriveCustomerMetrics([], [q()], 18).openCount).toBe(0)
+  })
+
+  it('רגרסיה: קריאה ישנה בלי הצעות משאירה את כל ה-null המכוונים (מ2 לא נשבר)', () => {
+    // 02_customers/CLAUDE.md: "deriveCustomerMetrics מחזיר ארבעה null מכוונים — זה לא קוד מת".
+    const m = deriveCustomerMetrics([{ feedback_score: 4 }])
+    expect(m.totalRevenue).toBeNull()
+    expect(m.avgDealSize).toBeNull()
+    expect(m.openQuotesValue).toBeNull()
+    expect(m.approvedCount).toBeNull()
+  })
+})
+
 // ---- הועברו לכאן 29/07/2026 מ-CustomerFormDialog/CustomersPage (מוקדי-מורכבות → SSOT) ----
 
 describe('countActiveFilters — תג ספירת-המסננים', () => {

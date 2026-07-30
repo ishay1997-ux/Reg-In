@@ -12,7 +12,7 @@
 | Branch | `ishay/module-3-quotes-build` (cut 22/07 from dev `a35c92f`, after PR #9 merged; the old `ishay/module-3-quotes` is now an ancestor of `dev` — dead, iron rule 10) |
 | Status | 🔨 **Phase 3 (UI) in progress. Steps 3.1–3.4 DONE.** Phase 1+2 closed (see done-tables below). |
 | Last updated | 30/07/2026 12:45 — **3.4 CLOSED (incl. migration 9, sender signature).** `npm run gate` exit 0, **283 tests** (was 219 at 3.3); 10 existing E2E green (regression checked). Demo data restored, `email_log` empty, no temp specs left. |
-| **Active step** | **3.5** (customer-card integration: quote history + revenue metrics + income filter). |
+| **Active step** | **3.5 ✅ COMPLETE — built and verified live 30/07 14:45.** Mockup approved (`docs/mockups/customers-screen/07_customer_page_approved.html`), plan `~/.claude/plans/polished-stargazing-reddy.md`, rulings **LOCAL-13..18**. `npm run gate` exit 0, **290 unit tests** (was 283, 7 written first and watched fail); **13 E2E green incl. all 3 pre-existing suites**. Two real bugs caught by verification and fixed (§9), plus the shipped 3.3 sort bug. **Next: 3.6 (prices tab).** |
 | 🆕 **Read this before 3.5 — what changed in 3.4 that a fresh session would not guess** | (1) **A generic email engine now exists** — `src/lib/email.js` + Edge Function `send-email` + table `email_log`. It is **not** quote-specific; M4/M8/M11 reuse it (`src/CLAUDE.md` §"שליחת מייל" · §6 🚧 מ4·מ8·מ11). (2) **Migrations are at 9, not 5** — 6 (8th rejection reason) · 7+9 (email wording + sender signature: **deliberate deviations from FROZEN C5 §5.8.1**, `params` value only) · 8 (`email_log`). (3) **The project now has an external dependency** on Make.com (scenario 6759079) and its **first Edge Function**; the webhook URL is a Supabase secret and must never enter the repo. (4) **Direction incident #5** happened in an *outgoing email*, not a screen — `src/CLAUDE.md` now requires every outgoing Hebrew artefact to run its own direction pass. (5) **Two debts booked to 4.3:** no permanent E2E for the email path, and no test proving a `view`-level user is refused **by the function** rather than by a hidden button. (6) ⏳ One manual task left for Ishay in the Make UI: delete unused connection `regin-gmail-send` — **keep `regin-google-restricted`**. |
 | ⚠️ Concurrency | 29/07 19:10 — the **ownership question from the 18:19–18:57 entries is RESOLVED by evidence**: the uncommitted 3.3 code was this build session's, it is now complete and gate-green. The other conversation wrote **no code** (its two commits `f67cb98`/`512184c` are docs only) and correctly stood down per iron rule 16. **Ishay must close the second conversation before the next step** — two sessions on one branch nearly caused a `git add -A` cross-commit. |
 
@@ -36,7 +36,7 @@ Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · �
 | 3.2 | Quote builder screen (create+edit) 🗣️→🔻🤖 | ✅ (mockup approved 15:45 + 6 rulings; **live UI renders 6,319 ₪ exactly**; **save→DB and edit→save round-trip both proven through the real screen** — line numbering 1..3, cost frozen server-side, `manual_discount`=10 not silently 0, atomic replace keeps 3 lines; `npm run gate` exit 0, 177 tests. Three layout defects found by measurement — §9) |
 | 3.3 | Quote management screen (tabs F24 + ⭐ + filters + actions) 🗣️→🔻🤖 | ✅ (built to the approved mockup `09_quote_management_approved.html`. TDD on 5 new `quotes.js` helpers — 34 tests written first, watched fail on unresolved imports, then implemented. Live-verified as CEO: 0 horizontal overflow, ₪ on the same side in all 12 amounts, all 7 columns aligned to **0.0px**, `6,319 ₪` + "אחרי 15% הנחה" on quote #6, chip filters toggle 6→1→6, rejection breakdown 3 reasons, reject-dialog validation, PDF blob 34,026 bytes whose extracted text carries the full 6,300→5,355→**6,319 ₪** waterfall. `npm run gate` exit 0, 219 tests. Three defects found by measurement — §9) |
 | 3.4 | Quote PDF render + real email send (Make→Edge Function→Gmail) 🗣️→🔻🤖 screenshot | ✅ (proven on the real inbox: `REG-IN-quote-6.pdf` **33KB** = the known PDF size ⇒ base64 decoded, `<div dir="rtl">` body, 4 line breaks. `npm run gate` exit 0, **279 tests**; 10 existing E2E green. Six defects found by real-send, five of them mine — §9) |
-| 3.5 | Customer-card integration (quote history §6 + metrics + income filter) 🗣️→🔻🤖 | ⬜ |
+| 3.5 | ~~Customer-card integration~~ → **Customer RECORD PAGE** (`/customers/:id`, tabs, quote history + metrics + sort/search/chips + revenue column) 🗣️→🔻🤖 | ✅ (gate 0, 290 unit + 13 E2E; 9,865 ₪ / 6,319 ₪ live; direction pass 0 findings; 30-quote view proven **without a single DB write**) |
 | 3.6 | Prices tab in /system (§7.84) 🗣️→🔻🤖 | ⬜ |
 | 3.7 | Phase-3 gate: 🎨 UX & functional review 🔻👤 | ⬜ |
 | 4.1 | Approval flow E2E (date guard §7.32, RPC, project born complete, locks) 🔻🤖 | ⬜ |
@@ -159,6 +159,12 @@ Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · �
 | LOCAL-11 | ✅ RULED 30/07: the mail is **signed by the actual sender** (name · role · phone if present · email) and not by a fixed "project manager" — the system already authenticates who clicked, so the customer always reaches the person who knows the quote. Phone line omitted when empty (2 of 3 CEO users have none) | ישי | 30/07 | 3.4 (migration 9) |
 | LOCAL-12 | ✅ RULED 30/07: **deploy to Vercel right after M3 closes**, not at M12 as `00_roadmap`/module_12 say — no recorded reason was found for the M12-only rule. ⚠️ Rotate the 5 test passwords the same day (§7.24 assumed a local-only app) | ישי | 30/07 | post-M3 |
 | §7.82 F19↳ | Re-confirmed live 30/07 against the DB (Ishay asked whether finance sends quotes): 'הצעות מחיר' = **edit** for מנהלת פרויקטים + מנכ"ל · **view** for מנהלת כספים · **blocked** for גיוס/לוגיסטיקה. Sending is an edit-level action and the Edge Function enforces it server-side | ישי (12/07, re-verified 30/07) | 30/07 | 3.4 |
+| LOCAL-13 | ✅ RULED 30/07: **the customer card becomes a full RECORD PAGE** (`/customers/:customerId`), not a dialog. Ishay's reason: a 512px dialog cannot hold 30 quotes, and M6 adds project cards on top. His guiding principle, verbatim: **"כל המידע שיש במערכת על הלקוח, מסודר, עם חיפוש וסינון נוחים."** Structure follows the standard CRM record page (verified, not invented — Salesforce compact-layout/record-page docs + ServiceNow Horizon): highlights strip → grouped details → related-list tabs. **`CustomerDetailsCard.jsx` is deleted**, content moves to `CustomerDetailsPage.jsx` | ישי | 30/07 | 3.5 |
+| LOCAL-14 | ✅ RULED 30/07: **highlights strip = 3 LIVE metrics only** (הכנסות · שווי הצעות פתוחות · גודל עסקה ממוצע). The 3 still unwired (מספר אירועים · אירוע אחרון ← M6 · ממוצע משוב ← M8) drop to one muted line naming the module they wait for. ⚠️ Presentation-only deviation from Ishay's 11/07 "exactly 5 equal tiles" — **no metric was removed.** Reason: the strip must carry decision-driving facts, not 3 "אין נתונים עדיין" boxes | ישי | 30/07 | 3.5 |
+| LOCAL-15 | ✅ RULED 30/07: **the page carries actions, not just data** — header `✎ עריכת פרטים` (reuses `CustomerFormDialog` as-is) + `+ הצעה חדשה` (Ishay: "אהבתי את התוספת שלך"), and **all four row actions** on quote rows (✎ · 👁 · ✓ · ✕) exactly as `QuotesPage`. ⚠️ **TWO SEPARATE PERMISSION GATES on one page** — `permissions['לקוחות']` for the edit button, `permissions['הצעות מחיר']` for the quote actions. Verified live: **מנהלת כספים is `edit` on לקוחות but `view` only on הצעות מחיר**, so a single page-level gate would hand her approve/reject. Ishay offered to simplify ("זה רק פרויקט אקדמי") — **declined with reasoning:** it is one extra `const`, RLS refuses her anyway so a shared gate would only make the button lie, and the permissions matrix is a graded feature of his project | ישי | 30/07 | 3.5 |
+| LOCAL-16 | ✅ RULED 30/07: **"sent to customer" is shown as yes/no, WITHOUT a date.** Ishay's challenge: "אין אצלנו טיוטה, אז תאריך השליחה זה פשוט תאריך ההצעה לא?" — **he is right that there is no draft status** (verified live: `quotes_quote_status_check` = exactly `in_progress`/`approved`/`rejected`), and in practice build+send happen in one sitting, so the date is usually redundant. But the dates are **not** the same fact (send can lag, a quote can be re-sent, and a quote may never be sent at all), so the signal kept is the binary. **`⚠ טרם נשלחה` renders only on `in_progress` rows** — on a closed quote it is no longer an open action. Source: `email_log` (M3, 3.4), ONE batched query on `entity_id in (…)`, never `getLastSuccessfulSend` per row (N+1 on 30 quotes) | ישי | 30/07 | 3.5 |
+| LOCAL-18 | ✅ RULED 30/07: **sort control on the quotes tab** — `החדשות ראשונות` (default) · `סכום — מהגבוה` · `תאריך האירוע — הקרוב`. Labels are **byte-identical to the management screen** so one action doesn't have two vocabularies, and the comparator is the existing tested `sortQuotes`. ⚠️ `recent` deliberately bypasses `sortQuotes`: it IS the query order (`issue_date desc, quote_id desc`), and re-sorting client-side would drop the tiebreak that makes it deterministic. **Rejected in the same round:** an "ארכיון" tab (`לא-נדרש` — `נדחו` already IS the archive; in CRMs archive is a filter value, not a tab) and date-range filtering (status + search already cover 30 rows). **Registered to M6:** an upcoming-vs-past split for the projects tab — the right axis for an events company, built when the rows and policies exist | ישי | 30/07 | 3.5, 🚧 מ6 |
+| LOCAL-17 | ✅ RULED 30/07: **no `draft` quote status.** `in_progress` already IS the draft (nothing leaves the system without a human clicking send), and the only thing a draft status would add — "what hasn't gone out yet" — is exactly what LOCAL-16's marker delivers with no migration and no ripple into the lock trigger, the tabs, or the approval-rate formula. Verdict `לא-נדרש`; a formal draft status defers past the deadline if ever wanted | ישי | 30/07 | 3.5 |
 | ⏳ §7.71 | pdf_url DROP — deferred M12 | — | — | — |
 | ⏳ §7.72 | scope-change model — deferred M6 (candidate direction recorded in §7) | — | — | — |
 | ⏳ §7.67 | assignment↔line linkage — deferred M4 (line_id makes it 1-column) | — | — | — |
@@ -266,7 +272,19 @@ must be mapped to this shape by the caller. `api.js`'s `create_quote`/`replace_q
 
 **Step 3.4 — PDF flow 🗣️ → 🔻🤖 screenshot.** ⚠️ **SUPERSEDED 30/07/2026 — see §9's 30/07 entry for the full reasoning; this paragraph is the original 15/07 blueprint, kept for the "what/why" that's still true.** Files: `src/lib/quotes.js` (done) · `QuoteDocumentDialog.jsx` (done) · `QuoteBuilderPage.jsx` (not started) · new: `supabase/functions/send-quote-email/index.ts`. What: view+download already shipped in 3.3; **real send** replaces the §7.12↳ mailto flow — dialog → Edge Function `send-quote-email` → Make webhook → Gmail, PDF attached, primary contact only, `in_progress` rows only (both rulings unchanged from 29/07). Verify: full-quote PDF screenshot (worked example, 6,319) + an actual inbox check (Claude has Gmail-read access this session) showing the mail with the attachment.
 
-**Step 3.5 — Customer-card integration 🗣️ → 🔻🤖.** Files: CustomerDetailsCard.jsx, src/lib/customers.js, CustomersFilterSheet.jsx/CustomersPage.jsx (⚠️ shared-surface ×3 — additive sections; regression: customers tests+E2E stay green). What: (a) quote history collapsible section: ALL customer quotes (date·event·status pill incl. פג-תוקף distinction via reason) → click = read-only view + הפק PDF ("אפיון-שותק — אושר ע"י ישי 11/07"); (b) revenues ("סה"כ הכנסות") = Σ approved-quote totals via pricing.js + avgDealSize = revenues÷approved-count → deriveCustomerMetrics wiring; (c) customers-list filter "מובילים לפי הכנסה" → matchesCustomerFilters extension (§6 line 265). Primary contact only in picker/PDF (§6 line 266; re-confirmed 30/07/2026 in step 3.4's email-send scope — `customer_contacts` still 0 rows live). Verify: card screenshot w/ history+metrics; filter works; `npm run test:run` customers tests green.
+**Step 3.5 — Customer-card integration 🗣️ → 🔻🤖.**
+> ⚠️ **SUPERSEDED 30/07/2026 — read LOCAL-13..17 in the Ledger FIRST.** The paragraph below is the
+> 15/07 blueprint and is still correct on *what data* gets wired (history · revenue · avg deal size ·
+> revenue in the list), but **wrong on the container**: Ishay ruled the card becomes a full
+> **record page** at `/customers/:customerId` with tabs, header actions, and all four row actions.
+> The approved plan is `~/.claude/plans/polished-stargazing-reddy.md` (includes a verified
+> blind-spot sweep: back-button loses 5 list-state values · `issue_date` is identical across all 10
+> demo quotes so the sort needs a `quote_id` tiebreak · **there is no separate test DB — never inject
+> test rows to try the 30-quote view**). The approved mockup is
+> `docs/mockups/customers-screen/07_customer_page_approved.html`.
+> Where this paragraph and the plan differ, **the plan wins.**
+
+Files: CustomerDetailsCard.jsx, src/lib/customers.js, CustomersFilterSheet.jsx/CustomersPage.jsx (⚠️ shared-surface ×3 — additive sections; regression: customers tests+E2E stay green). What: (a) quote history collapsible section: ALL customer quotes (date·event·status pill incl. פג-תוקף distinction via reason) → click = read-only view + הפק PDF ("אפיון-שותק — אושר ע"י ישי 11/07"); (b) revenues ("סה"כ הכנסות") = Σ approved-quote totals via pricing.js + avgDealSize = revenues÷approved-count → deriveCustomerMetrics wiring; (c) customers-list filter "מובילים לפי הכנסה" → matchesCustomerFilters extension (§6 line 265). Primary contact only in picker/PDF (§6 line 266; re-confirmed 30/07/2026 in step 3.4's email-send scope — `customer_contacts` still 0 rows live). Verify: card screenshot w/ history+metrics; filter works; `npm run test:run` customers tests green.
 
 **Step 3.6 — Prices tab 🗣️ → 🔻🤖 ⚠️ shared-surface (SystemManagementPage.jsx, App.jsx).** Files: PricesManagementPage.jsx, ProductFormDialog.jsx, PriceTiersDialog.jsx, PricingParamsCard.jsx, pricesApi.js, SystemManagementPage.jsx, App.jsx. What: per design-notes (weighed: placement 01_auth ✓ consistent w/ system pages; stacked sections not sub-tabs ✓; status <Select> 3-value ✓ — flagged "מהמוקאפ/עיצוב-רקע — לאישורך" in the 🗣️ brief): products table + add/edit dialog (sku immutable on edit) + status select w/ optimistic rollback; tiers dialog (min_qty unique client check, max≥min, replace-all save); 2-param card (now plain upsert — UNIQUE exists). Verify: CEO flow screenshots; STAFF/blocked role sees read-only/RLS-denied evidence.
 
@@ -340,6 +358,92 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 30/07/2026 15:45 — **⏩ `e2e/customer-page.spec.js` PULLED FORWARD from 4.3, and the working method
+  changed — both on Ishay's ruling after he asked "how do we prevent these problems?".**
+  **The method change (`module-build` SKILL.md):** every 🗣️ brief now ends with **"מה ייחשב עובד"** —
+  3–5 Hebrew sentences stating observable end-to-end outcomes **with real numbers**, approved
+  alongside the mockup, and **verification is written against that list instead of against my memory
+  of what I built**. It replaces (F1 subtraction) the step where I invented the check-list after the
+  fact — the step that produced BUG 3. ⚠️ A sentence naming a control ("יש כפתור X") is explicitly
+  wrong; that is exactly what already passed while the feature was broken.
+  **The suite (6 tests, all green):** revenue column + sort + **filter surviving back-navigation** ·
+  live metrics + tabs + rejection reason + actions-by-status · **"+ הצעה חדשה" preselecting the
+  customer AND his discount** · a real PDF from the customer page (bytes, not a screenshot) ·
+  §7.34's archive warning **stopping the action on "ביטול"** · blocked role refused by direct URL.
+  ⚠️ **Two invariants a future editor must not break:** (1) **zero DB writes** — there is one live
+  Supabase and no test environment, so absent data is created by intercepting the response, never by
+  inserting rows; (2) the archive test covers **the cancel branch only** — the confirm branch would
+  mutate a real customer's status.
+  **🧪 The suite was mutation-tested, not just run green:** the discount-snapshot line was deleted on
+  purpose, the "+ הצעה חדשה" test went **red**, and the line was restored. A suite that has never
+  been seen failing is not evidence that it protects anything.
+- 30/07/2026 15:25 — **🐞 BUG 3, and the reason it matters more than the bug: Ishay asked "is there
+  anything you haven't checked?" and the answer was yes — a feature he had explicitly approved was
+  half-broken.** `+ הצעה חדשה` on the customer page navigated to `/quotes/new?customerId=46`, but
+  **`QuoteBuilderPage` never read the query string at all** (`grep useSearchParams` = 0 hits). The
+  button reached the right screen and **silently dropped the customer**. I had verified the button
+  *rendered*; I never verified what it *did*.
+  ⚠️ **The fix had a trap of its own:** preselecting the customer must go through the same discount
+  snapshot as `handleSelectCustomer` (F12) — setting `customerId` alone would create a quote at
+  **0% discount** for a customer whose card says 5%, silently. Both are now asserted.
+  **Three previously-unexercised paths verified in the same pass:** the document dialog opened
+  *from the customer page* really produces a valid PDF (33,738 bytes, `%PDF` header — proving the
+  `customers` injection works, without which the document ships with no "לכבוד" and no ח"פ);
+  a blocked role (logistics) is refused at `/customers/46` **by direct URL**, confirming the
+  `<ProtectedRoute>` wrapper actually holds; and lint is now at **zero warnings** (the new
+  `useSearchParams` read is lifted to a stable primitive so the load effect doesn't refetch).
+  ⚠️ **Still unverified and worth naming:** the two-permission-gate behaviour for **finance**
+  (`edit` on לקוחות + `view` on הצעות מחיר) — `.env.local` has no finance credentials, so the
+  branch where the edit button shows but approve/reject do not **has never been run**. It is
+  reasoned and RLS-backed, not observed. Add finance creds or cover it in 4.3.
+- 30/07/2026 14:30 — **Step 3.5 built. Three as-built deviations + two bugs caught by verification.**
+  **↳ as-built (1): `QuoteReadOnlyView.jsx` was NOT built** (the blueprint listed it). The existing
+  `QuoteDocumentDialog` already *is* "read-only view + generate PDF" — it renders the spec, prices,
+  discounts and total, with a download button. Building a second viewer would have been a second
+  place for the same numbers to drift. ⚠️ `listQuotesByCustomer` does **not** join `customers`, and
+  the PDF engine needs it for "לכבוד"+ח"פ — the page injects the already-loaded customer
+  (`{...quote, customers: customer}`), same pattern as `formToPreviewQuote`.
+  **↳ as-built (2): `CustomerDetailsCard.jsx` deleted**, replaced by `CustomerDetailsPage.jsx`
+  (LOCAL-13). Full ripple recorded in `module-2.md` §9 — that module is closed, so its guide is
+  where a future reader will look.
+  **↳ as-built (3): highlights strip carries 3 metrics, not 6** (LOCAL-14) — presentation only.
+  **🐞 BUG 1, found by the regression suite and NOT by lint/build/types:** moving `CustomersPage`'s
+  filter state into the URL broke **two** toggles (archive · marketing-consent) because both call
+  their setter with React's updater form (`set(v => …)`), and a value-only setter stringified the
+  *function* into the query string. **Zero errors, zero crashes — the buttons just stopped doing
+  anything.** `customers.spec.js`'s archive test caught it; the consent toggle had the identical
+  break and **no test covers it**, so it would have shipped. Fixed via `resolveNext()`.
+  ⚠️ **Lesson worth keeping: replacing a `useState` setter with a custom one silently changes its
+  contract.** Grep every call site for the `(v) => …` form before swapping.
+  **🐞 BUG 2, found by reading the screen as a document, not by any assertion:** the quote rows
+  rendered raw ISO dates (`2026-10-25`) while the management screen **and the PDF the customer
+  receives** both print `DD/MM/YYYY` via `formatDate`. Two formats for the same date in one system.
+  Fixed by importing the same `formatDate`.
+  **Verification actually run:** `npm run gate` exit 0 · 290 unit tests (283 before; 7 written first
+  and watched fail on `undefined`) · **13 E2E green including all 3 pre-existing suites** ·
+  direction pass measured in-browser (0 misalignment, all ₪ on one side, 0 horizontal overflow) ·
+  live as CEO: 9,865 ₪ revenue / 6,319 ₪ open / 9,865 ₪ avg on מדיטק.
+  ⚠️ **The 30-quote check wrote NOTHING to the database** — the rows were fabricated by intercepting
+  the REST response in Playwright. There is only one live Supabase project and no test environment;
+  injecting rows would have polluted real data (it did once already, in 3.4).
+  🚧 **Registered for M6:** the projects tab is deliberately empty with no controls, and Ishay's
+  idea of an **upcoming-vs-past** split for projects is the right axis for an events company —
+  it gets built together with the rows and the RLS policies, not before.
+- 30/07/2026 14:05 — **🐞 LIVE BUG IN ALREADY-SHIPPED CODE (step 3.3), found while planning 3.5:
+  the management screen's default sort is non-deterministic.** `listQuotes()` orders by
+  `updated_at desc` **only**, and ties are already present in production data — verified:
+  `select updated_at, count(*) from quotes group by updated_at having count(*)>1` returns
+  **2 quotes sharing `2026-07-29 16:18:08.682902+00`**. Postgres guarantees no order within a tie,
+  so those two rows can swap position between refreshes with no cause the user can see.
+  **It will get worse, structurally:** the daily expiry job (`pg_cron`, §7.42/F4) updates many
+  quotes **inside one transaction**, and every row written in a transaction gets the identical
+  `now()` — so one expiry run produces a whole block of quotes with byte-identical `updated_at`.
+  **Fix (both call sites, one line each): add `quote_id desc` as a tiebreaker** —
+  `listQuotes()` (sort key of the management screen) and `listQuotesByCustomer()` (which orders by
+  `issue_date desc`, where **all 10 demo quotes share `2026-07-29`** — that one is not a tie, it is
+  a total collapse of the sort key). ⚠️ **This is invisible to every kind of test we run**: a
+  single-run assertion sees *an* order and passes. Ishay has not seen it manifest yet.
+  Scheduled with step 3.5's build.
 - 30/07/2026 09:31 — **Step 3.4 REVISED MID-BUILD: the ruled `mailto` design is superseded by real
   sending. Full evidence chain, so a future reader doesn't re-litigate it.**
   Ishay saw the planned flow (download→mailto→manual-attach) and asked "why not just send it".
