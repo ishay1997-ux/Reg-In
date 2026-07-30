@@ -65,21 +65,47 @@ export async function listPriceTiers(sku) {
   return data ?? []
 }
 
-// שמירת קבוצת-המדרגות של מק"ט = מחיקה-מלאה+הכנסה-מחדש, כמו replaceCustomerContacts
-// במודול 2 — הטופס עורך את כל הקבוצה כיחידה, וזה פשוט ואמין יותר מ-diff לרשימה קטנה.
+// שמירת קבוצת-המדרגות של מק"ט כיחידה — **upsert ואז מחיקת-הנגרעות, ולא מחיקה-ואז-הכנסה.**
+//
+// 🐞 הסדר תוקן 30/07/2026 אחרי אובדן-נתונים אמיתי: בגרסת מחיקה-ואז-הכנסה (התבנית של
+// replaceCustomerContacts במודול 2), סגירת-דפדפן בין שתי הבקשות מחקה בפועל את כל 5 מדרגות
+// B-REG-TAG מהמסד החי — המחיקה הגיעה לשרת, ההכנסה כבר לא (קרה באימות-E2E; שוחזר מה-Seed).
+// שתי בקשות HTTP נפרדות אינן טרנזקציה, והסדר קובע מה קורה בקטיעה:
+//   מחיקה-ואז-הכנסה ⇒ הקטלוג נעלם. ‏upsert-ואז-מחיקה ⇒ לכל היותר נשארת מדרגה ישנה מיותרת,
+//   שנראית במסך וניתנת למחיקה בלחיצה. אותו מספר בקשות, כשל שקט הרבה פחות הרסני.
+// ⚠️ אותה חולשה קיימת עדיין ב-replaceCustomerContacts (מודול 2, מוזג) — נרשמה לסקירת 3.7,
+// לא תוקנה כאן כי היא מחוץ למשטח הצעד (shared-surface של מודול סגור).
 export async function replacePriceTiers(sku, tiers) {
-  const { error: delError } = await supabase.from('price_tiers').delete().eq('sku', sku)
-  if (delError) throw toError(delError, 'שמירת מדרגות המחיר נכשלה.')
   const rows = (tiers ?? []).map((t) => ({
     sku,
     min_qty: t.min_qty,
     max_qty: t.max_qty ?? null,
     special_price: t.special_price,
   }))
-  if (rows.length === 0) return []
-  const { data, error } = await supabase.from('price_tiers').insert(rows).select()
-  if (error) throw toError(error, 'שמירת מדרגות המחיר נכשלה.')
-  return data ?? []
+
+  let saved = []
+  if (rows.length > 0) {
+    // onConflict על ה-PK המשולב (sku, min_qty): שורה קיימת מתעדכנת, חדשה נוצרת.
+    const { data, error } = await supabase
+      .from('price_tiers')
+      .upsert(rows, { onConflict: 'sku,min_qty' })
+      .select()
+    if (error) throw toError(error, 'שמירת מדרגות המחיר נכשלה.')
+    saved = data ?? []
+    // כתיבה שנחסמה ע"י RLS חוזרת כ-0 שורות עם error: null — הכשל השקט המרכזי של הפרויקט.
+    if (saved.length === 0) throw toError({ code: 'RLS_DENIED' }, 'אין הרשאה לשמור מדרגות מחיר.')
+  }
+
+  // מחיקת המדרגות שהוסרו בטופס — אחרי שהחדשות כבר בפנים. min_qty עובר Number() בשכבת
+  // הדיאלוג, כך שהשרשור לרשימת in בטוח (מספרים בלבד, לא קלט-טקסט גולמי).
+  let deleteQuery = supabase.from('price_tiers').delete().eq('sku', sku)
+  if (rows.length > 0) {
+    deleteQuery = deleteQuery.not('min_qty', 'in', `(${rows.map((r) => r.min_qty).join(',')})`)
+  }
+  const { error: delError } = await deleteQuery
+  if (delError) throw toError(delError, 'שמירת מדרגות המחיר נכשלה.')
+
+  return saved
 }
 
 // ---- פרמטרי-תמחור (2 בלבד — לא כל params; ר' src/lib/pricing.js PRICING_PARAM_NAMES) ----
@@ -93,18 +119,26 @@ export async function getPricingParams() {
   return data ?? []
 }
 
-// ✅ upsert פשוט ובטוח (בניגוד להערת-הזהירות ב-design-notes §3): params_param_name_key
-// נחתה במיגרציה 20260723111005 (§7.40ב) — הטיפול ההגנתי המורכב שהוצע שם (0/1/>1 שורות)
-// כבר מיותר. onConflict מפורש כי אין UNIQUE-קונפליקט אחר על הטבלה שיכול לבלבל את ה-upsert.
-// ⚠️ לא שולח param_type: תקין רק כי שני הפרמטרים האלה תמיד קיימים מה-Seed (מיגרציה 2, נעולה,
-// לא ניתנים למחיקה מהמסך הזה) — כלומר ה-upsert תמיד פוגע ב-UPDATE, לא ב-INSERT. אם אי-פעם
-// תיפתח מחיקת-פרמטרים מהמסך, יש להוסיף param_type כאן (NOT NULL, בלי ברירת-מחדל ב-DB).
-export async function upsertPricingParam(paramName, value) {
+// 🐞 תוקן 30/07/2026 (צעד 3.6) — **ה-upsert שהיה כאן לא יכול היה לעבוד לעולם**, ונתפס רק
+// בשמירה אמיתית מהמסך: `23502 — null value in column "param_type"`.
+// **הטעות המושגית שהוחלפה:** ההערה הקודמת הניחה ש"שתי השורות תמיד קיימות ⇒ ה-upsert תמיד
+// פוגע ב-UPDATE ⇒ מותר לא לשלוח param_type". ‏Postgres לא עובד כך: ב-`INSERT … ON CONFLICT`
+// הוא **בונה קודם את שורת-המועמד** ומאמת עליה NOT NULL, ורק אחר-כך מגלה את הקונפליקט.
+// שורה קיימת אינה מצילה — האילוץ נבדק לפני.
+//
+// עדכון-בלבד, ולא "לתקן" ע"י הוספת param_type: זהו מסך-תחזוקה לשני פרמטרים זרועים (§7.84;
+// מסך-הפרמטרים המלא הוא מודול 9). בלי מסלול-INSERT, שם-פרמטר שגוי נכשל בקול (0 שורות)
+// במקום ליצור בשקט שורת-params רפאים שאיש לא יחפש.
+export async function updatePricingParam(paramName, value) {
   const { data, error } = await supabase
     .from('params')
-    .upsert({ param_name: paramName, param_value: String(value) }, { onConflict: 'param_name' })
+    .update({ param_value: String(value) })
+    .eq('param_name', paramName)
     .select()
-    .single()
   if (error) throw toError(error, 'שמירת הפרמטר נכשלה.')
-  return data
+  // 0 שורות = או שהפרמטר לא קיים, או שה-RLS חסם (מחזיר ריק עם error: null — הכשל השקט
+  // המרכזי של הפרויקט). שתי האפשרויות חייבות להישמע, לא להיראות כהצלחה.
+  if (!data || data.length === 0)
+    throw toError({ code: 'RLS_DENIED' }, `הפרמטר ${paramName} לא עודכן — ייתכן שאין לך הרשאה.`)
+  return data[0]
 }

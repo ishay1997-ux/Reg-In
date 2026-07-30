@@ -145,6 +145,20 @@ export function formatShekelWhole(amount) {
   return `${Math.round(n).toLocaleString('he-IL')} ₪`
 }
 
+// מחיר-קטלוג באגורות מלאות. why-first: F18 מעגל **סכומי-הצעה** לשקל שלם כדי שסכום השורות
+// יתחבר לסה"כ — אבל מסך תחזוקת-המחירים מציג את **המחיר עצמו**, ושם עיגול הוא שקר: עלות של
+// 2.50 ₪ שמוצגת "3 ₪" מסתירה בדיוק את הנתון שהמנכ"ל בא לבדוק. אפסים מיותרים נחתכים (6 ₪,
+// לא 6.00 ₪) כי טור-מחירים עם ".00" חוזר קשה יותר לסריקה בעין.
+export function formatShekelExact(amount) {
+  const n = toFiniteNumber(amount)
+  if (n === null) return '—'
+  const rounded = Math.round(n * 100) / 100
+  const text = Number.isInteger(rounded)
+    ? rounded.toLocaleString('he-IL')
+    : rounded.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return `${text} ₪`
+}
+
 // פענוח ערכי params (נשמרים כטקסט ב-DB). מחזירים null — ולא ברירת-מחדל שקטה — כדי
 // שהקורא ייאלץ להחליט מה לעשות כשהפרמטר חסר, במקום לתמחר לפי מספר מומצא.
 export function parseVatPercent(paramValueText) {
@@ -155,4 +169,72 @@ export function parseVatPercent(paramValueText) {
 export function parseGuestsRatio(paramValueText) {
   const n = toFiniteNumber(paramValueText)
   return n !== null && n > 0 ? n : null
+}
+
+// ── מסך המחירים (צעד 3.6) ──────────────────────────────────────────────────
+
+// שולי-רווח באחוזים מתוך מחיר-המכירה — (מחיר − עלות) / מחיר. why-first: שני הנתונים כבר
+// שמורים בכל שורת-מוצר, כך שהעמודה חינמית; המנכ"ל רואה מיד אילו פריטים משתלמים בלי לחשב
+// בראש. **מחזיר מספר שלילי כשהמחיר מתחת לעלות** ולא 0 — הפסד חייב להיראות כהפסד.
+// מחיר 0 או נתון חסר ⇒ null: אין מרווח מוגדר, והמסך מציג מקף ולא NaN.
+export function computeMarginPercent(basePrice, cost) {
+  const price = toFiniteNumber(basePrice)
+  const c = toFiniteNumber(cost)
+  if (price === null || c === null || price <= 0) return null
+  return Math.round(((price - c) / price) * 100)
+}
+
+// ולידציית עורך-המדרגות. why-first: המסד אוכף כל אילוץ כאן (min_qty שלם-חיובי, מחיר > 0,
+// PK משולב על (sku,min_qty)) — אבל כישלון-שמירה מוחזר כשגיאת-23505 גולמית אחרי round-trip,
+// והמשתמש לא יודע איזו שורה אשמה. הבדיקה כאן מקדימה את המסד ומצביעה על השדה עצמו.
+//
+// מבנה-ההחזרה מפריד **שגיאה מאזהרה** במכוון: שגיאה חוסמת שמירה (המסד ידחה ממילא),
+// אזהרה לא (מחיר מתחת לעלות עשוי להיות מכוון — מבצע, חיסול מלאי). ר' §7.27: ‏max_qty אינו
+// משתתף בבחירת-המדרגה, ולכן חפיפה בין טווחים אינה שגיאה — רק min_qty כפול היא.
+export function validateTierRows(rows, product = {}) {
+  const list = rows ?? []
+  const rowErrors = list.map(() => ({}))
+  const warnings = list.map(() => ({}))
+  const cost = toFiniteNumber(product?.cost)
+
+  // ספירת-הופעות מראש: min_qty כפול מסמן את **כל** השורות שמשתתפות בו, כי המשתמש
+  // לא יכול לדעת איזו מהן "המקורית" — סימון אחת בלבד היה נראה שרירותי.
+  const minQtyCounts = new Map()
+  list.forEach((row) => {
+    const key = String(row?.min_qty ?? '').trim()
+    if (key !== '') minQtyCounts.set(key, (minQtyCounts.get(key) ?? 0) + 1)
+  })
+
+  list.forEach((row, i) => {
+    const minRaw = String(row?.min_qty ?? '').trim()
+    const maxRaw = String(row?.max_qty ?? '').trim()
+    const priceRaw = String(row?.special_price ?? '').trim()
+    const min = toFiniteNumber(minRaw)
+    const max = toFiniteNumber(maxRaw)
+    const price = toFiniteNumber(priceRaw)
+
+    if (min === null || !Number.isInteger(min) || min <= 0) {
+      rowErrors[i].min_qty = 'מספר שלם גדול מאפס'
+    } else if (minQtyCounts.get(minRaw) > 1) {
+      rowErrors[i].min_qty = 'כמות זו מופיעה כבר במדרגה אחרת'
+    }
+
+    // ריק = "ללא הגבלה", וזה חוקי לגמרי (כך נראית המדרגה העליונה בכל מוצר בקטלוג).
+    if (maxRaw !== '') {
+      if (max === null || !Number.isInteger(max) || max <= 0) {
+        rowErrors[i].max_qty = 'מספר שלם גדול מאפס, או ריק לללא הגבלה'
+      } else if (min !== null && max < min) {
+        rowErrors[i].max_qty = 'לא יכול להיות קטן מ"מכמות"'
+      }
+    }
+
+    if (price === null || price <= 0) {
+      rowErrors[i].special_price = 'מחיר גדול מאפס'
+    } else if (cost !== null && price < cost) {
+      warnings[i].special_price = `מתחת לעלות (${cost} ₪)`
+    }
+  })
+
+  const isValid = rowErrors.every((e) => Object.keys(e).length === 0)
+  return { isValid, rowErrors, warnings, formError: null }
 }

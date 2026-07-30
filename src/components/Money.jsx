@@ -10,17 +10,21 @@
 // אחרת מהמסמך ששלחנו הוא בדיוק סוג הפער שמודול-הכסף אמור למנוע.
 // `unicode-bidi: isolate` מבודד את הסכום מהטקסט שסביבו, כך שההקשר לא יכול להשפיע עליו.
 
-import { formatShekelWhole } from '@/lib/pricing'
+// ‏`exact` (נוסף 30/07/2026, צעד 3.6): שומר אגורות במקום לעגל לשקל. נועד למסך תחזוקת-המחירים
+// בלבד, שבו המחיר עצמו הוא הנתון ועיגול של 2.50 ל-3 מסתיר אותו. **הרחבה ולא עקיפה** — כך
+// גם הטור הזה עובר דרך אותה עטיפת-כיווניות, במקום שיצוץ פורמט-כסף מקומי שני שיסטה ממנה.
+
+import { formatShekelExact, formatShekelWhole } from '@/lib/pricing'
 import { cn } from '@/lib/utils'
 
-export default function Money({ amount, className, 'data-testid': testId }) {
+export default function Money({ amount, exact = false, className, 'data-testid': testId }) {
   return (
     <span
       dir="ltr"
       className={cn('inline-block [unicode-bidi:isolate]', className)}
       data-testid={testId}
     >
-      {formatShekelWhole(amount)}
+      {exact ? formatShekelExact(amount) : formatShekelWhole(amount)}
     </span>
   )
 }

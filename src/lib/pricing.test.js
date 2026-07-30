@@ -3,11 +3,14 @@ import {
   PRICING_PARAM_NAMES,
   computeLineTotal,
   computeQuoteTotals,
+  formatShekelExact,
   formatShekelWhole,
   parseGuestsRatio,
   parseVatPercent,
   recommendHostessCount,
+  computeMarginPercent,
   resolveUnitPrice,
+  validateTierRows,
 } from './pricing'
 
 // מדרגות-המחיר האמיתיות מה-Seed (מיגרציה 20260723112000) — לא מספרים מומצאים, כדי שהבדיקה
@@ -230,5 +233,147 @@ describe('פרמטרי-התמחור — שמות ופענוח', () => {
     expect(parseGuestsRatio('50')).toBe(50)
     expect(parseGuestsRatio('0')).toBe(null)
     expect(parseGuestsRatio('לא-מספר')).toBe(null)
+  })
+})
+
+// ── צעד 3.6 (מסך המחירים) ──────────────────────────────────────────────────
+
+describe('computeMarginPercent — שולי רווח לעמודת מסך-המחירים', () => {
+  it('מחשב את המרווח מהמחירים האמיתיים בקטלוג', () => {
+    // תג שם רגיל - ממותג: 6 ₪ מחיר, 2.50 ₪ עלות ⇒ (6-2.5)/6 = 58.33% ⇒ 58%
+    expect(computeMarginPercent(6.0, 2.5)).toBe(58)
+    // דיילת 4 שעות: 500/300 ⇒ 40%
+    expect(computeMarginPercent(500, 300)).toBe(40)
+    // הקמת אתר: 2500/1200 ⇒ 52%
+    expect(computeMarginPercent(2500, 1200)).toBe(52)
+  })
+
+  it('עלות אפס ⇒ 100% מרווח, ולא חלוקה שמתפוצצת', () => {
+    expect(computeMarginPercent(50, 0)).toBe(100)
+  })
+
+  it('מחיר מכירה נמוך מהעלות ⇒ מרווח שלילי, לא אפס — הפסד צריך להיראות', () => {
+    expect(computeMarginPercent(2, 2.5)).toBe(-25)
+  })
+
+  it('מחיר אפס או נתון חסר ⇒ null (המסך מציג מקף, לא NaN%)', () => {
+    expect(computeMarginPercent(0, 5)).toBe(null)
+    expect(computeMarginPercent(null, 2)).toBe(null)
+    expect(computeMarginPercent(6, null)).toBe(null)
+    expect(computeMarginPercent('', '')).toBe(null)
+  })
+})
+
+describe('validateTierRows — ולידציית עורך מדרגות-המחיר', () => {
+  const okRows = [
+    { min_qty: '1', max_qty: '50', special_price: '6' },
+    { min_qty: '51', max_qty: '200', special_price: '5.5' },
+    { min_qty: '201', max_qty: '', special_price: '5' },
+  ]
+
+  it('חמש המדרגות האמיתיות של B-REG-TAG עוברות בלי שגיאה ובלי אזהרה', () => {
+    const rows = B_REG_TAG_TIERS.map((t) => ({
+      min_qty: String(t.min_qty),
+      max_qty: t.max_qty === null ? '' : String(t.max_qty),
+      special_price: String(t.special_price),
+    }))
+    const result = validateTierRows(rows, { cost: 2.5 })
+    expect(result.isValid).toBe(true)
+    expect(result.rowErrors).toEqual([{}, {}, {}, {}, {}])
+    expect(result.warnings).toEqual([{}, {}, {}, {}, {}])
+    expect(result.formError).toBe(null)
+  })
+
+  it('"עד כמות" ריק = ללא הגבלה, ואינו שגיאה', () => {
+    expect(validateTierRows(okRows).isValid).toBe(true)
+  })
+
+  it('שתי מדרגות עם אותה "מכמות" — שתיהן מסומנות, כי המשתמש לא יודע איזו לתקן', () => {
+    const rows = [
+      { min_qty: '1', max_qty: '50', special_price: '6' },
+      { min_qty: '1', max_qty: '200', special_price: '5' },
+    ]
+    const result = validateTierRows(rows)
+    expect(result.isValid).toBe(false)
+    expect(result.rowErrors[0].min_qty).toBeTruthy()
+    expect(result.rowErrors[1].min_qty).toBeTruthy()
+  })
+
+  it('"עד כמות" קטן מ"מכמות" ⇒ שגיאה על השדה הזה בלבד', () => {
+    const result = validateTierRows([{ min_qty: '100', max_qty: '50', special_price: '5' }])
+    expect(result.isValid).toBe(false)
+    expect(result.rowErrors[0].max_qty).toBeTruthy()
+    expect(result.rowErrors[0].min_qty).toBeUndefined()
+  })
+
+  it('"עד כמות" השווה ל"מכמות" חוקי — מדרגה של כמות בודדת', () => {
+    expect(validateTierRows([{ min_qty: '5', max_qty: '5', special_price: '5' }]).isValid).toBe(
+      true,
+    )
+  })
+
+  it('כמות לא-שלמה או אפס ⇒ שגיאה (המסד דורש שלם חיובי)', () => {
+    expect(validateTierRows([{ min_qty: '2.5', max_qty: '', special_price: '5' }]).isValid).toBe(
+      false,
+    )
+    expect(validateTierRows([{ min_qty: '0', max_qty: '', special_price: '5' }]).isValid).toBe(
+      false,
+    )
+  })
+
+  it('מחיר ריק / אפס / שלילי ⇒ שגיאה (המסד דורש > 0)', () => {
+    expect(validateTierRows([{ min_qty: '1', max_qty: '', special_price: '' }]).isValid).toBe(false)
+    expect(validateTierRows([{ min_qty: '1', max_qty: '', special_price: '0' }]).isValid).toBe(
+      false,
+    )
+    expect(validateTierRows([{ min_qty: '1', max_qty: '', special_price: '-3' }]).isValid).toBe(
+      false,
+    )
+  })
+
+  it('מחיר מתחת לעלות ⇒ אזהרה בלבד, והשמירה נשארת אפשרית', () => {
+    // תג שם רגיל - ממותג עולה 2.50 ₪; מדרגה של 2 ₪ היא הפסד — אבל ייתכן שהיא מכוונת.
+    const result = validateTierRows([{ min_qty: '1001', max_qty: '', special_price: '2' }], {
+      cost: 2.5,
+    })
+    expect(result.isValid).toBe(true)
+    expect(result.warnings[0].special_price).toBeTruthy()
+  })
+
+  it('מחיר השווה בדיוק לעלות אינו אזהרה — אפס רווח אינו הפסד', () => {
+    const result = validateTierRows([{ min_qty: '1', max_qty: '', special_price: '2.5' }], {
+      cost: 2.5,
+    })
+    expect(result.warnings[0].special_price).toBeUndefined()
+  })
+
+  it('בלי עלות ידועה אין אזהרות בכלל — לא ממציאים סף', () => {
+    const result = validateTierRows([{ min_qty: '1', max_qty: '', special_price: '0.01' }])
+    expect(result.warnings[0]).toEqual({})
+  })
+
+  it('רשימה ריקה חוקית — מוצר בלי מדרגות מתומחר לפי מחיר-הבסיס', () => {
+    const result = validateTierRows([])
+    expect(result.isValid).toBe(true)
+    expect(result.formError).toBe(null)
+  })
+})
+
+describe('formatShekelExact — תצוגת מחיר-קטלוג באגורות (מסך המחירים)', () => {
+  it('שומר אגורות שלא ניתן לעגל במסך שכל תפקידו מחירים', () => {
+    expect(formatShekelExact(2.5)).toBe('2.50 ₪')
+    expect(formatShekelExact(1.8)).toBe('1.80 ₪')
+    expect(formatShekelExact(4.5)).toBe('4.50 ₪')
+  })
+
+  it('סכום עגול מוצג בלי אפסים מיותרים', () => {
+    expect(formatShekelExact(6)).toBe('6 ₪')
+    expect(formatShekelExact(500)).toBe('500 ₪')
+    expect(formatShekelExact(2500)).toBe('2,500 ₪')
+  })
+
+  it('ערך חסר ⇒ מקף, בדיוק כמו formatShekelWhole', () => {
+    expect(formatShekelExact(null)).toBe('—')
+    expect(formatShekelExact('')).toBe('—')
   })
 })

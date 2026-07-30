@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 const TABS = [
   { path: 'users', label: 'ניהול משתמשים' },
   { path: 'permissions', label: 'הרשאות' },
+  { path: 'prices', label: 'מחירים' },
   { path: 'params', label: 'פרמטרים' },
 ]
 
