@@ -26,6 +26,7 @@
 | גרסון DB | ✅ | `supabase/migrations/` — baseline + 6 מיגרציות מגורסנות (ראה `supabase/README.md`) |
 | פריסה ל-Staging | 🟡 מוכן, לא-מופעל | `vercel.json` (SPA rewrite) + `.env.example`; חיבור Vercel = צעד ידני |
 | E2E | 🟡 פרוסה ראשונה | Playwright — `e2e/auth.spec.js` + `e2e/permissions.spec.js` (מודול 1 בלבד: login, route guards, מטריצת הרשאות). `npm run test:e2e`. כיסוי מלא לכל המודולים — מודול 12 |
+| בדיקת-עשן | ✅ (30/07/2026) | `npm run smoke` — מסע-קריאה-בלבד (נאכף ברשת) על כל המסכים הראשיים מול ערכי-עוגן אמיתיים (`e2e/smoke-anchors.json`); ~13 שניות; קודי-יציאה מובחנים (0 תקין · 1 באג · 2 סיסמה/משתמש · 3 אין שרת); **בנפרד מ-gate/CI בכוונה** — קרטוע-רשת לא חוסם פריסה. ארבעת הקודים הוכחו בשבירה-מכוונת. מודול חדש = מסך+עוגן ב-`e2e/smoke.spec.js` |
 | Load / UAT | ⬜ מתוכנן | נדחה למודול 12 (Integration & Handoff) לפי מפת המודולים |
 | Audit log / Error Boundary גלובלי | ⬜ backlog | לא חוסם; יתווסף עם הצמיחה |
 
