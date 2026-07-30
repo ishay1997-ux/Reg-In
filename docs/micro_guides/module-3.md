@@ -435,6 +435,27 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
   were both verified to hold zero references first). Ishay runs it in the Supabase SQL Editor.
   **Until he does, quotes #14/#15 are still in the live DB** — do not report this step as closed on
   the strength of the script existing.
+  **↳ SECOND SWEEP 31/07 02:1x, after Ishay asked "יש עוד משהו שלא בדקת?" — four more gaps closed,
+  all clean:** (a) **narrow viewports 1024 + 1366** on `/quotes` · `/quotes/new` · `/system/prices`
+  — **0 horizontal overflow** at either width (the filter row is calibrated to 893px in a 912px card,
+  so this was a real risk, not a formality); (b) **the screens through מנהלת כספים's eyes**
+  (`view` on quotes) — she gets the 4 rows and the 👁 document button and **nothing else**: no ✎/✓/✕,
+  no "+ הצעה חדשה", no ניהול-מערכת in the sidebar, and the actions column still reads as a column
+  rather than an empty gap; `/quotes/new` → "אין לך הרשאת עריכה להצעות מחיר.", `/system/prices` →
+  "אין לך הרשאה לצפות במסך זה."; (c) **"נסה שוב" actually recovers** — the quotes fetch was aborted
+  at the network layer, the error state rendered, the route was restored, one click brought the real
+  table back including `6,319`. Until now only the *markup* had been proven to exist; the button had
+  never been clicked. (d) **focus trap** — 25 consecutive Tabs inside the open reject dialog, **0
+  escapes** to the background.
+  ⚠️ **A probe bug worth remembering:** the first finance run reported `viewBtns: 0` and looked like
+  a real defect (a view-level user who cannot open the document). The button's testid is
+  `quote-document-<id>`, not `quote-view-<id>` — **my probe was wrong, the product was right.** The
+  screenshot is what settled it; a testid-only assertion would have produced a false finding.
+  **Still NOT checked, declared rather than implied:** the builder in **edit** mode with real lines
+  loaded (this round only opened an empty `/quotes/new`; 3.2 covered the loaded state) · a real
+  screen reader (the aria wiring is measured, not heard) · browser zoom 150/200% · widths below
+  1024 (desktop internal tool — the sidebar layout assumes it) · מנהלת פרויקטים's eyes specifically
+  (same `edit` level as CEO on quotes, so covered by inference, not by observation).
 - 30/07/2026 22:52 — **Step 3.6 verification caught two real bugs AND caused one real data-loss
   incident (immediately repaired). All three are worth remembering:**
   **(1) `upsertPricingParam` could never have worked** — first real save from the screen returned
