@@ -389,6 +389,21 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
   not gospel — this is why.
   **Environment note:** `knip` crashed twice with `Array buffer allocation failed` (machine had
   0.8GB free RAM, 104 node processes); passed unchanged later. Not a code finding.
+- 30/07/2026 23:09 — **Ishay's "מה עוד לא בדקת?" round closed 5 untested paths and caught bug #3
+  of the day, same family as the params one:** `ProductFormDialog` sent `description: null` for an
+  empty description, but `products.description` is **NOT NULL with no default** — so **creating any
+  product without a description could never work** (23502 before the PK check, generic error shown).
+  Fixed: empty string, not null. Then live-verified end-to-end: **(א)** product edit round-trip
+  (rename → fresh-read shows it → revert); **(ב)** status select survives a full page reload both
+  directions; **(ג)** duplicate-SKU shows the friendly "מק"ט כבר קיים" and creates nothing (row
+  count stays 11); **(ד)** tiers on a tier-less product (04ST): add → "1 מדרגות" → remove →
+  empty-list save → "ללא מדרגות"; **(ה)** successful create incl. default `active` status and live
+  margin column — the one path needing a test row (`ZZZ-TEST`), removed by SQL immediately after
+  (products has no FK referrers for a fresh SKU; DB verified byte-identical to seed after).
+  **🎨 3.7 review item found by a race:** the status `<Select>` saves silently (optimistic, no
+  "saving" indicator) — an immediate reload can kill the PATCH mid-flight and the change silently
+  reverts. Observed as a test flake (passed once, failed once); consider disabling the select while
+  the save is in flight.
 - 30/07/2026 17:40 — **Self-review after 3.4 closed ("what haven't I checked?", Ishay's standing prompt)
   found a silent customer-facing failure, and the fix nearly introduced a worse one.**
   **The defect:** `§7.70` states that in M3 params are tuned **through the Table Editor** (the typed

@@ -124,7 +124,11 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
     try {
       const payload = {
         item_name: form.item_name.trim(),
-        description: form.description.trim() || null,
+        // ⚠️ '' ולא null: products.description הוא NOT NULL בלי ברירת-מחדל. שליחת null על
+        // תיאור ריק נכשלה ב-23502 עוד לפני בדיקת-הכפילות — כלומר "מוצר חדש בלי תיאור"
+        // לא היה נוצר לעולם, עם הודעה גנרית (נתפס בסבב-הפערים 30/07, אותה משפחה כמו
+        // באג-הפרמטרים: הנחה על המסד במקום בדיקה מולו).
+        description: form.description.trim(),
         category: form.category,
         unit: form.unit,
         base_price: Number(form.base_price),
