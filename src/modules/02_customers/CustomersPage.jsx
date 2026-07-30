@@ -24,6 +24,7 @@ import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
 import {
   CUSTOMER_TYPE_LABELS,
+  archiveWarningMessage,
   countActiveFilters,
   deriveCustomerMetrics,
   matchesCustomerFilters,
@@ -327,19 +328,25 @@ export default function CustomersPage() {
     // במקרה הרגיל. למה לא חסימה: ההצעה הפתוחה היא לרוב **הסיבה** לארכוב, וחסימה הייתה
     // מכריחה לדחות הצעה רק כדי לארכב לקוח. ⛔ ובמפורש **לא** סוגרים את ההצעות אוטומטית —
     // זו כתיבה לרשומות-כסף שהמשתמש לא ביקש.
-    const open = revenueByCustomer?.[customer.customer_id]
-    if (nextStatus === 'inactive' && open?.openCount > 0) {
-      const value = open.openQuotesValue
-      const ok = await confirm({
-        title: 'ללקוח יש הצעות פתוחות',
-        message:
-          `ל"${customer.company_name}" ` +
-          (open.openCount === 1 ? 'הצעה פתוחה אחת' : `${open.openCount} הצעות פתוחות`) +
-          (value != null ? ` בשווי ${formatShekelWhole(value)}` : '') +
-          '. הן יישארו פעילות וימשיכו לפוג כרגיל. להעביר לארכיון בכל זאת?',
-        confirmLabel: 'העבר לארכיון',
-      })
-      if (!ok) return
+    // §7.34 — הכלל עצמו (כולל "לא-ידוע ⇒ שואלים") חי ב-`archiveWarningMessage` ונבדק שם.
+    if (nextStatus === 'inactive') {
+      // ⚠️ לקוח **בלי הצעות כלל** אינו מופיע במפה, ו-`undefined` שלו נראה זהה ל"טרם נטען".
+      // לכן כשהמפה נטענה, היעדר-רשומה מנורמל במפורש ל"אפס פתוחות" — אחרת כל לקוח נקי
+      // היה מקבל אזהרת "לא ידוע", וזו בדיוק ההפרעה שהכרעת-11/07 באה למנוע.
+      const metrics =
+        revenueByCustomer === null
+          ? null
+          : (revenueByCustomer[customer.customer_id] ?? { openCount: 0 })
+      const message = archiveWarningMessage(customer.company_name, metrics, formatShekelWhole)
+      if (message) {
+        const ok = await confirm({
+          title:
+            revenueByCustomer === null ? 'טרם ידוע אם יש הצעות פתוחות' : 'ללקוח יש הצעות פתוחות',
+          message,
+          confirmLabel: 'העבר לארכיון',
+        })
+        if (!ok) return
+      }
     }
 
     try {

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   CUSTOMER_TYPE_LABELS,
+  archiveWarningMessage,
   countActiveFilters,
   matchesCustomerFilters,
   sortCustomers,
@@ -167,6 +168,40 @@ const q = (over = {}) => ({
   vat_rate_snapshot: null,
   quote_services: [{ qty: 1, closing_unit_price: '1000.00' }],
   ...over,
+})
+
+describe('archiveWarningMessage — אזהרת-ארכוב (§7.34)', () => {
+  const money = (n) => `${n} ₪`
+
+  it('⚠️ "טרם נטען" מתריע — הוא **אינו** "אין הצעות פתוחות"', () => {
+    // הבאג שהכלל הזה נולד ממנו: ההצעות נטענות בבקשה שנייה, ולחיצה לפני שהיא חזרה
+    // דילגה על האזהרה וארכבה בשקט לקוחה עם הצעה פתוחה של 16,520 ₪.
+    expect(archiveWarningMessage('עיריית חדרה', null, money)).toContain('עדיין לא ידוע')
+    expect(archiveWarningMessage('עיריית חדרה', undefined, money)).toContain('עדיין לא ידוע')
+  })
+
+  it('נטען ואפס פתוחות ⇒ null — בלי חלון-וידוא (הכרעת-11/07 נשמרת)', () => {
+    expect(archiveWarningMessage('לקוח נקי', { openCount: 0 }, money)).toBeNull()
+  })
+
+  it('הצעה אחת ⇒ לשון יחיד + השווי; שתיים ⇒ לשון רבים', () => {
+    const one = archiveWarningMessage(
+      'עיריית חדרה',
+      { openCount: 1, openQuotesValue: 16520 },
+      money,
+    )
+    expect(one).toContain('הצעה פתוחה אחת')
+    expect(one).toContain('16520 ₪')
+    expect(archiveWarningMessage('x', { openCount: 2, openQuotesValue: 100 }, money)).toContain(
+      '2 הצעות פתוחות',
+    )
+  })
+
+  it('שווי שאינו ניתן לחישוב (מע"מ חסר) ⇒ מתריע בלי סכום, לא נופל', () => {
+    const msg = archiveWarningMessage('x', { openCount: 1, openQuotesValue: null }, money)
+    expect(msg).toContain('הצעה פתוחה אחת')
+    expect(msg).not.toContain('בשווי')
+  })
 })
 
 describe('deriveCustomerMetrics — חיווט הכנסות ממודול 3 (צעד 3.5)', () => {

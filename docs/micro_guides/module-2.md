@@ -467,6 +467,26 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 6. **(e)–(g) per CLAUDE.md iron rules 13/15/16 + end-of-session protocol** (new-open-question → stop+§7 · migration/DB-gap → db_roadmap same session · shared-surface change → name the affected future modules in the CHANGELOG line) — these apply automatically; not restated here (F1).
 
 ## 9. 📝 Deviations & Tech-Debt Log
+- 30/07/2026 18:35 — **🐞 The §7.34 warning had a silent hole, found because my own E2E archived a
+  real customer twice.** `revenueByCustomer` is loaded by a **second, separate request** after the
+  customer list. Clicking "העבר לארכיון" in the window before it returns meant `openCount` was
+  unknown, the warning **did not appear at all**, and the customer was archived silently — the exact
+  failure class this feature exists to prevent. **Fix: "not yet known" ≠ "no open quotes"** — an
+  unloaded map now produces its own confirm ("עדיין לא ידוע… להעביר בכל זאת?"). Same doctrine as the
+  money module's "ריק אינו 0".
+  ⚠️ **A second bug inside that fix, caught before it shipped:** a customer with **no quotes at all**
+  is absent from the map, and `undefined` looked identical to "not loaded" — every clean customer
+  would have got a spurious warning, defeating Ishay's 11/07 no-friction ruling. Absence is now
+  normalised to `{openCount: 0}` explicitly.
+  The rule moved to **`archiveWarningMessage` in `src/lib/customers.js` with 4 tests** — extracted
+  rather than silenced when `sonarjs/cognitive-complexity` tripped at 21/20, because "unknown vs
+  none" is a business classification, not wording. `customer-page.spec.js` now waits for the revenue
+  column before clicking, so it exercises the intended branch instead of the unknown one.
+  **Also unified:** `logistics-role` in `customers.spec.js` was **deleted** — a strict subset of the
+  STAFF test (same user `logistics.test@regin.co.il`, same assertions minus one; its own skip note
+  admitted "STAFF מכסה את שכבת ה-blocked"). It was a permanent skip demanding a second env pair for
+  one identity. **A second name for the same identity is not extra coverage.** Result: 18/18 E2E,
+  zero skips, and `E2E_LOGISTICS_*` is no longer needed at all.
 - 30/07/2026 15:10 — **✅ §7.34 RULED AND BUILT (customers part): warn, don't block.** Ishay ruled on
   my recommendation. Archiving a customer **who has open quotes** now opens a confirm naming the
   count and their value ("לעיריית חדרה הצעה פתוחה אחת בשווי 16,520 ₪… להעביר לארכיון בכל זאת?").
