@@ -71,18 +71,26 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
     await expect(page.getByTestId('metric-open')).toContainText('6,319')
     await expect(page.getByTestId('metric-avg-deal')).toContainText('9,865')
 
-    await expect(page.getByTestId('customer-tab-quotes')).toContainText('4')
+    // ⚠️ 2 ולא 4 — שתי הצעות-בדיקה של מדיטק (#14/#15) נמחקו מהמסד בסקירת 3.7
+    // (31/07/2026, הכרעת-ישי). הנתון השתנה בצדק, ולכן מעדכנים את המספר ולא מרככים
+    // את הטענה ל-"יש לשונית" (אותו כלל שכתוב בראש smoke-anchors.json).
+    await expect(page.getByTestId('customer-tab-quotes')).toContainText('2')
     await expect(page.getByTestId('customer-tab-projects')).toContainText('0')
-
-    // סיבת-הדחייה **חייבת** לשבת על השורה: כפתור-העין פותח את ה-PDF שהלקוח מקבל,
-    // ובו אין (ונכון שאין) סיבת-דחייה — כלומר זה המקום היחיד שבו היא נגישה.
-    await expect(page.getByTestId('customer-quote-14')).toContainText('נפתחה בטעות')
 
     // ארבע פעולות על הצעה בתהליך · צפייה בלבד על סגורה (הסגורות נעולות ב-DB ממילא).
     await expect(page.getByTestId('customer-quote-edit-6')).toBeVisible()
     await expect(page.getByTestId('customer-quote-approve-6')).toBeVisible()
     await expect(page.getByTestId('customer-quote-reject-6')).toBeVisible()
     await expect(page.getByTestId('customer-quote-approve-10')).toHaveCount(0)
+
+    // סיבת-הדחייה **חייבת** לשבת על השורה: כפתור-העין פותח את ה-PDF שהלקוח מקבל,
+    // ובו אין (ונכון שאין) סיבת-דחייה — כלומר זה המקום היחיד שבו היא נגישה.
+    // ⚠️ הטענה עברה ממדיטק לעיריית חדרה **כי למדיטק אין יותר הצעה דחויה** אחרי
+    // הניקוי. הכיסוי נשמר במלואו — לא נמחקה טענה, היא עברה ללקוח שיש לו את הנתון.
+    await page.goto('/customers')
+    await page.locator('tbody tr', { hasText: HADERA }).first().click()
+    await expect(page.getByTestId('customer-page')).toBeVisible()
+    await expect(page.getByTestId('customer-quote-11')).toContainText('תקציב לקוח')
   })
 
   test('"+ הצעה חדשה" פותח טופס עם הלקוח **וההנחה שלו** — לא רק מנווט', async ({ page }) => {
