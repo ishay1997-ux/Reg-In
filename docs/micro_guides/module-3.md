@@ -358,6 +358,38 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 30/07/2026 17:40 — **Self-review after 3.4 closed ("what haven't I checked?", Ishay's standing prompt)
+  found a silent customer-facing failure, and the fix nearly introduced a worse one.**
+  **The defect:** `§7.70` states that in M3 params are tuned **through the Table Editor** (the typed
+  params screen is M9) — so hand-editing a template is the *planned* path, not an edge case. A field
+  added to the template but not to the code shipped to the customer **as literal brackets**
+  (`שלום [שם_חברה],`) with no error anywhere. **Fix:** `findUnknownPlaceholders` in the generic engine;
+  `fillEmailTemplate` **refuses** to produce a body when the template carries an unknown field (so the
+  send cannot happen), and the dialog names the offending field so the fix is one line in the DB.
+  Refusal over warning because a bracketed document reaching a paying customer is irreversible, while a
+  blocked button with a precise message costs thirty seconds.
+  **⚠️ The near-miss worth keeping:** my first design scanned the **filled body**. Every demo customer is
+  named `… בע"מ [דמו]`, and a customer with no contact name falls back to the company name — so that
+  design would have **blocked sending to every demo customer**. The scan must run on the **template**,
+  before values are injected: injected values are data and may legitimately contain brackets; only the
+  template is a contract. There is now a test for exactly that case.
+  **Two more defects surfaced by the same pass:** (a) the template constants in **both** test files were
+  **stale** after migration 9 — still ending in "צוות REG-IN" while the DB had `[חתימת_שולח]`, so the
+  comment promising "a test will fail if the template changes" had quietly stopped being true; both are
+  now byte-synced to the DB and carry a warning that any template migration must update them. (b) the
+  assertion "no placeholder remains" passed **vacuously** on an empty string — it would have stayed green
+  even while the engine refused to send; a length assertion was added.
+  **Regression evidence (Ishay's explicit concern — 3.5 was already built and working):** the only callers
+  of the changed functions are in `QuoteDocumentDialog.jsx` (grep-verified; nothing in 3.5 touches them),
+  `npm run gate` exit 0 with **291 tests**, and **all 18 E2E specs pass — including the 6 new ones from
+  step 3.5**. jscpd reports 2 clones (0.44%, threshold 3%) — both between the other session's
+  `CustomerDetailsPage.jsx` and `QuotesPage.jsx`, i.e. **pre-existing to this change**, worth folding into
+  the 3.7 UX/quality gate.
+  **Still unverified and honestly declared:** the Make failure branch (502 → Skip) was configured and
+  read back from the blueprint but **never observed**. I deliberately did not manufacture a bogus send —
+  an invented address would be accepted by Gmail and bounce asynchronously, so it would prove nothing
+  while risking a real bounce. The right test belongs in 4.3: stub `functions.invoke` to reject and assert
+  the UI copy, plus a manual Make check by temporarily breaking the connection.
 - 30/07/2026 15:45 — **⏩ `e2e/customer-page.spec.js` PULLED FORWARD from 4.3, and the working method
   changed — both on Ishay's ruling after he asked "how do we prevent these problems?".**
   **The method change (`module-build` SKILL.md):** every 🗣️ brief now ends with **"מה ייחשב עובד"** —
