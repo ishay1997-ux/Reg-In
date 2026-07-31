@@ -39,7 +39,7 @@ Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · �
 | 3.5 | ~~Customer-card integration~~ → **Customer RECORD PAGE** (`/customers/:id`, tabs, quote history + metrics + sort/search/chips + revenue column) 🗣️→🔻🤖 | ✅ (gate 0, 290 unit + 13 E2E; 9,865 ₪ / 6,319 ₪ live; direction pass 0 findings; 30-quote view proven **without a single DB write**) |
 | 3.6 | Prices tab in /system (§7.84) 🗣️→🔻🤖 | ✅ (mockup approved w/ real data + 2 proactive additions [LOCAL-19/20]; gate 0, **324 unit** [was 290, 18 written first + watched fail]; **25 E2E green incl. all 18 pre-existing, 0 skips**; direction pass measured live [0 overflow · ₪ same side ×22 · price col 0.0px]; write-wall proven by SQL impersonation both directions; **2 real bugs caught by verification + 1 real data-loss incident, §9**) |
 | 3.7 | Phase-3 gate: 🎨 UX & functional review 🔻👤 | ✅ **CLOSED 31/07/2026 02:4x** — 2 sweeps, 4 findings ruled by Ishay and all 4 resolved (3 built + the DB cleanup he ran); both 👤 items returned (trigger check `O`/`O` + "רואים מעולה" on the PDF preview). Gate exit 0 · **327 unit** · **18/18 E2E** (one broke on the cleanup and was fixed without weakening it) · smoke green · jscpd 0.60%→0.44%. §9 31/07 |
-| 4.1 | Approval flow E2E (date guard §7.32, RPC, project born complete, locks) 🔻🤖 | ⬜ |
+| 4.1 | Approval flow E2E (date guard §7.32, RPC, project born complete, locks) 🔻👤 ⬅️ **re-tagged 31/07: a successful approval is irreversible** | ⬜ |
 | 4.2 | Rejection + expiry flows E2E (7 reasons, notes, cron simulation) 🔻🤖 | ⬜ |
 | 4.3 | e2e/quotes.spec.js + e2e/prices.spec.js suites 🔻🤖 | ⬜ |
 | 4.4 | Regression: full verify + existing E2E + M1/M2 screens 🔻🤖 | ⬜ |
@@ -295,7 +295,30 @@ Files: CustomerDetailsCard.jsx, src/lib/customers.js, CustomersFilterSheet.jsx/C
 
 #### Phase 4 — Control & integration
 
-**Step 4.1 — Approval flow edges 🔻🤖.** Goal: prove the conversion's integrity edges. Files: none new (SQL + live UI). What: E2E+SQL: approve → project 'טרם החל' born complete (event_name, customer_id, date, times, location, required_hostess_count=Σ, logistics rows count = non-hostess lines w/ serial numbers); vat_rate_snapshot=18.00 + closing_unit_cost frozen; past-date quote → blocked w/ friendly message (§7.32, today allowed); double-click → single project + friendly error; view-role sees no approve button AND direct RPC denied. Verify: evidence per assertion.
+**Step 4.1 — Approval flow edges 🔻👤 (re-tagged from 🤖 on 31/07/2026 — see the box).**
+
+> 🔴 **A SUCCESSFUL APPROVAL CANNOT BE UNDONE. Split this step in two.**
+> Measured 31/07/2026: trigger `quotes_lock_non_in_progress` (migration `20260723115000`) blocks
+> **`update` AND `delete`** on any quote whose status is not `in_progress`, and
+> `projects.quote_id … on delete restrict` (`20260629000000_baseline_schema.sql:119`) locks it
+> from the other side. **There is no "un-approve" path** — not in the UI, not in plain SQL. Every
+> test approval persists forever, and there is one live Supabase project (no test environment).
+> - ■ **Failure paths — safe, build them without asking.** Every rejected approval ends in
+>   `raise exception`, which rolls the transaction back: **zero DB change.** That covers the
+>   past-date guard (§7.32, today itself allowed), view-role denial (button absent *and* direct
+>   RPC refused), double-click (`projects.quote_id` is UNIQUE), already-handled, no-hostess-line,
+>   and round A's two VAT guards. Their messages route through `quoteServerErrorMessage`
+>   (`src/lib/quotes.js`, round D) — assert the **mapped** text reaches the screen, not the raw.
+> - ■ **The success path — 👤 stop.** The seed already contains **one approved quote with its
+>   project**: prove "project born complete" against it **read-only**. Only if that genuinely
+>   cannot cover an assertion, show Ishay exactly what would be created and on which quote, and
+>   wait. Do not approve to "just check".
+>
+> 🔴 **`products.cost` no longer exists on `products`** — round G moved it to `product_costs`
+> (`20260731155511`, §7.83↳). Three migrations define `approve_quote_and_create_project`; the
+> **last one wins**. Read the live definition, never copy a body from an older file.
+
+Goal: prove the conversion's integrity edges. Files: none new (SQL + live UI). What: E2E+SQL: approve → project 'טרם החל' born complete (event_name, customer_id, date, times, location, required_hostess_count=Σ, logistics rows count = non-hostess lines w/ serial numbers); vat_rate_snapshot=18.00 + closing_unit_cost frozen; past-date quote → blocked w/ friendly message (§7.32, today allowed); double-click → single project + friendly error; view-role sees no approve button AND direct RPC denied. Verify: evidence per assertion.
 
 **Step 4.2 — Rejection & expiry 🔻🤖.** Goal: prove the rejection/expiry lifecycle. Files: none new. What: reject w/o reason blocked; 'אחר' w/o notes blocked; rejected quote fully locked (edit UI hidden + direct UPDATE errors); expiry job simulation → rejected+'פג תוקף' appears in נדחו tab + breakdown; ⭐ chip counts quotes ≤7d. Verify: evidence.
 

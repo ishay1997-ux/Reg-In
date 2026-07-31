@@ -74,6 +74,28 @@
   **byte-identical by md5** — that is what "E changed no screen" rests on, not on looking similar.
   ⚠️ Baselines had to be captured with `git stash`, because Playwright wipes `test-results/` per run.
 
+### 31/07/2026 18:35 — **Step 4.1 re-tagged 🤖→👤, and the rule that made the fix belong in the guide** (docs only)
+- **The defect:** step 4.1 was tagged 🔻🤖 ("Claude verifies alone and continues") in both the
+  step table and the step body — while a successful approval is **irreversible**. Measured:
+  trigger `quotes_lock_non_in_progress` blocks `update` **and** `delete` once status leaves
+  `in_progress`, and `projects.quote_id … on delete restrict` locks it from the other side.
+  No un-approve path exists, and there is one live Supabase project. A session following the
+  guide faithfully would have approved a quote "to check" and changed the demo data forever.
+- **Fixed in the guide, not in a prompt** — and that distinction is the actual lesson. I had
+  written a long hand-off prompt carrying this warning; Ishay pushed back: *"corrections to
+  future steps belong in the guide, not the prompt."* He was right, and it exposed an
+  inconsistency in my own work an hour apart — I fixed the 4.3 gap **in the guide** and then
+  fixed the 4.1 gap **in a prompt**. Same class of problem, opposite treatments.
+- **Ruling recorded next to iron rule 15** (`docs/CLAUDE.md`): a discovery affecting a step that
+  hasn't started goes into the guide, same session. The practical test: knowledge still true in
+  a month (how the DB behaves, what is irreversible, what was removed) → guide; only a freshness
+  stamp (numbers that moved today) → prompt. What it subtracts: the long repeated prompts, and
+  the dependency on someone remembering to attach them.
+- The step body now splits 4.1 explicitly: **failure paths are safe to build unasked** (every
+  rejected approval ends in `raise exception` ⇒ transaction rolls back, zero DB change), while
+  the **success path is a 👤 stop** — and the seed's one already-approved quote can prove
+  "project born complete" read-only, without creating anything.
+
 ### 31/07/2026 18:20 — **Monitor discipline + a status board, from gedood-710's field use** (skill file only)
 - **Self-monitoring replaced waiting to be told.** Ishay asked "can't you check yourself?" — he
   was right, and the skill had been built around him relaying "the session finished", i.e. making
