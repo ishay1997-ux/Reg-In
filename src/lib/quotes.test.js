@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import {
   QUOTE_STATUS_LABELS,
+  QUOTE_ACTION_LABELS,
+  QUOTE_REJECTED_TOAST,
+  quoteApprovedToast,
   REJECTION_REASONS,
   isColorApplicable,
   linesToPricingShape,
@@ -606,6 +609,32 @@ describe('matchesQuoteFilters — סינון צד-לקוח', () => {
 
   it('בלי מסננים — הכול עובר', () => {
     expect(matchesQuoteFilters(quoteRow(), {}, CTX)).toBe(true)
+  })
+})
+
+// ⚠️ ששת הקבועים המשותפים (סבב E, 31/07/2026) — נבדקים כאן כי אחרת **אין להם שום כיסוי**:
+// ה-E2E מאתר את הכפתורים לפי `data-testid` ולא לפי `title`, וצילום-מסך אינו רואה תכונת-title
+// כלל. מפתח שהוקלד לא-נכון (`.edt`) היה מחזיר `undefined` — הכפתור פשוט מאבד את התווית
+// שלו, בלי קריסה ובלי ממצא-lint. זו בדיוק משפחת הכשל-השקט שהפרויקט הזה נלחם בה.
+describe('מחרוזות משותפות לשני מסכי-ההצעות', () => {
+  it('ארבע תוויות-הפעולה, בית-בבית', () => {
+    expect(QUOTE_ACTION_LABELS).toEqual({
+      view: 'צפייה במסמך',
+      edit: 'עריכת ההצעה',
+      approve: 'אישור ההצעה',
+      reject: 'דחיית ההצעה',
+    })
+  })
+
+  it('טוסט-הדחייה', () => {
+    expect(QUOTE_REJECTED_TOAST).toBe('ההצעה נדחתה.')
+  })
+
+  // שם-האירוע נכנס בתוך מרכאות-כפולות — הוא מה שאומר למשתמש **איזו** הצעה הפכה לפרויקט.
+  it('טוסט-האישור נושא את שם האירוע', () => {
+    expect(quoteApprovedToast('כנס לקוחות שנתי')).toBe(
+      'ההצעה אושרה ונפתח פרויקט חדש עבור "כנס לקוחות שנתי".',
+    )
   })
 })
 

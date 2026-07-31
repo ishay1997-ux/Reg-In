@@ -47,6 +47,33 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 31/07/2026 17:55 — **Audit rounds E+F closed — the 31/07 fix-plan is empty and deleted**
+- **E (cleanup, `2687447`) — three comments that contradicted the code beneath them, five copies
+  merged.** The dangerous one: `PriceTiersDialog` presented delete-then-insert as "the convention",
+  i.e. the exact ordering that wiped 5 live `B-REG-TAG` tiers on 30/07 — a future session could have
+  "aligned" the code to it. Merges: `toError` + the 8-site `RLS_DENIED` idiom → `src/lib/apiError.js`
+  (⛔ `toWriteError` deliberately stayed in module 3 — it injects quote-only server wording) ·
+  `QUOTE_STATUS_LABELS` revived as the single home for the three labels · `LoadingOrError` replacing
+  hand-written JSX (**outer guard kept** — its error branch returns unconditionally and would emit an
+  empty red `<p>`) · four action labels + two toasts → shared constants · `validateTierRows` now
+  imports the validators that had tests but no production consumer.
+- **F (test gaps, `c14bf32`).** `send-email/index.ts` was outside every automated check — ESLint skips
+  it as a *warning*, no unit test, not in `npm run build`; only Prettier saw it, i.e. format without
+  types. New CI job `edge-function-check` runs `deno check` **without `npm ci`** (with the repo's
+  `node_modules` present, deno demands every npm transitive locally and fails falsely). Two blind
+  tests opened: the injected-totals PDF test asserted only `not.toThrow()`, and `sortQuotes` gave
+  A and B identical values in both sort fields.
+- **Why this session is worth re-reading: the "watch it fail" rule paid off twice.**
+  ① The old F2 test, with the bug deliberately injected, passed **26/26** — that is the proof it was
+  blind, not an argument that it was. ② It also *corrected the finding*: F3 was written as "a reversed
+  comparator would stay green", and measurement showed a full reversal **was** caught. The real,
+  narrower defect: positions 2–3 of `[3,1,2]` came from **input order under a stable sort**, not from
+  the comparator — reordering the input array alone flipped `3,1,2 ⇄ 3,2,1` with zero code change.
+  **A finding can be right about the smell and wrong about the mechanism; only running it separates them.**
+- **Evidence:** gate exit 0 · 373 unit (from 366) · E2E 39/39 · four before/after screenshots
+  **byte-identical by md5** — that is what "E changed no screen" rests on, not on looking similar.
+  ⚠️ Baselines had to be captured with `git stash`, because Playwright wipes `test-results/` per run.
+
 ### 31/07/2026 17:45 — **`work-manager` absorbs three cross-project inputs from gedood-710** (skill file only)
 - **Taken (2/3).** ① *Push is not deploy* — a push can succeed while the host keeps serving the
   previous build, silently. Landed as a Job-B rule with their sharp detail: **count the assets**,

@@ -361,6 +361,34 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 31/07/2026 17:55 — **Rounds E+F landed — the audit fix-plan is now empty and deleted.** Commits
+  `2687447` (E, cleanup) and `c14bf32` (F, test gaps). Gate exit 0 · **373 unit tests** (from 366) ·
+  E2E 39/39 · four before/after screenshots **byte-identical (md5)**, which is what "E changed no
+  screen" rests on.
+  **What a future session must not undo:**
+  · `toError` + the `RLS_DENIED` idiom now live in **`src/lib/apiError.js`** (`assertRowsAffected`),
+  consumed by all three `api.js`. ⛔ **`toWriteError` deliberately stayed in `03_quotes/api.js`** —
+  it injects `quoteServerErrorMessage`, a module-3-only map; moving it would leak quote wording into
+  modules 1 and 2.
+  · `QUOTE_STATUS_LABELS`, `QUOTE_ACTION_LABELS`, `QUOTE_REJECTED_TOAST`, `quoteApprovedToast`
+  (`src/lib/quotes.js`) are the single home for those strings. The four action labels are an **E2E
+  contract** (`title=`) — changing the wording breaks two screens at once. The `פגה` branch and the
+  tab labels (`מאושרות`/`נדחו`) stayed local **on purpose**.
+  · `LoadingOrError` replaced hand-written JSX in `PricingParamsCard` and `PriceTiersDialog`, but the
+  **outer `loading || loadError` guard stayed**. ⛔ Its error branch returns unconditionally, so an
+  unguarded render emits an empty red `<p>` on every healthy screen. All 10 consumers now guard.
+  · `validateTierRows` (`pricing.js`) imports `isValidPositiveInt`/`isValidPositivePrice` instead of
+  restating the rules — the validators had tests but zero production consumers.
+  **New CI job `edge-function-check`** (`deno check` on `send-email/index.ts`). ⚠️ It runs **without
+  `npm ci`** on purpose: with the repo's `node_modules` present, deno demands every npm transitive be
+  installed there and fails falsely. `deno.lock` is gitignored — the function floats on
+  `jsr:@supabase/supabase-js@2`, same as the deployed runtime.
+  **A correction worth carrying:** the F3 finding was stated as "a reversed comparator would keep the
+  tests green". Measured, that is not quite right — a full reversal *was* caught. The real defect was
+  narrower and still worth fixing: with A and B sharing `quoteRow()` defaults, the `[3,1,2]` assertion
+  for positions 2–3 was produced by **input order under a stable sort**, not by the comparator.
+  Proof: reordering the input array alone flipped the result `3,1,2 ⇄ 3,2,1` with no code change.
+  The rows now differ in every sort field, and the two sorts return **different** orders.
 - 31/07/2026 16:30 — **Round G (DB hardening) landed — `products.cost` no longer exists.** Commit
   `b3470f2`; migration `20260731155511_round_g_db_hardening` (+2 fix-forward). What a future M3
   session must know: the catalog query is now `select('*, product_costs(cost)')` and every consumer
