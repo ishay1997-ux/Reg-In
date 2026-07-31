@@ -57,6 +57,7 @@
 | `permissions` | PK מורכב (`role_id`,`module_id`), `permission_level ∈ {edit,view,blocked}` | **טבלת הצומת = המטריצה** |
 | `users` | `email` (PK), `role_id`→roles, `full_name`, `phone`, `status ∈ {active,inactive}` | המייל = זהות Supabase Auth; `inactive` = מחיקה רכה |
 | `login_attempts` | `email` (PK), `failed_count`, `locked_until`, `last_attempt_at` | נעילת-חשבון אחרי כשלי-התחברות (מודול 1); RLS-on/0-policies — גישה רק דרך 3 פונקציות `SECURITY DEFINER` |
+| `login_rpc_calls` | `ip` (inet), `called_at` | **יומן הגבלת-הקצב** (§7.8↳, 31/07/2026): ‏`register_failed_login` חסומה מעל 15 קריאות/IP/שעה. RLS-on/0-policies + `revoke` — גישה רק מתוך הפונקציה. מתנקה בעצמה (שורות מעל שעה נמחקות בכל קריאה), ולכן בלי PK ובלי חותמות-עדכון |
 
 **הקשר (לב ה-RLS):** משתמש מזוהה ב-Auth לפי `email` → שורה ב-`users` → `role_id` → חיפוש ב-`permissions(role_id, module)` → `edit`/`view`/`blocked`. ה-DB אוכף, אי אפשר לעקוף מהלקוח.
 
@@ -64,7 +65,8 @@
 | טבלה | מודול | עמודות עיקריות |
 |------|-------|----------------|
 | `customers` | 2 | `customer_id`(PK — surrogate bigint, §7.64), `company_number`(ח"פ, unique not null), `customer_type ∈ {private_company,government,production_company,nonprofit}`, `company_name`, `contact_name`, `phone`, `email`, `discount_percent`, `marketing_consent`, `status` |
-| `products` | 3 | `sku`(PK), `item_name`, `category ∈ {site,hostess,product}`, `unit`, `base_price`, `cost`, `status`, `image_url` |
+| `products` | 3 | `sku`(PK), `item_name`, `description` (NOT NULL, ‏`default ''` מ-31/07), `category ∈ {site,hostess,product}`, `unit`, `base_price`, `status`, `image_url` — ⚠️ **`cost` אינו כאן יותר** (יצא לטבלת-בת 31/07, §7.83↳) |
+| `product_costs` | 3 | `sku`(PK+FK→products, cascade), `cost numeric(12,2)`, חותמות — **עלות-הרכש, מופרדת כדי שההרשאה תהיה ברמת-טבלה** (§7.83↳): קריאה לבעלי `edit` על 'הצעות מחיר' **או** על 'כספים' (מנכ"ל · מנהלת פרויקטים · מנהלת כספים), כתיבה מנכ"ל-בלבד. ⚠️ הצירוף מ-`products` חייב להישאר **LEFT** — §7.34 |
 | `price_tiers` | 3 | PK(`sku`,`min_qty`), `special_price`, `max_qty` — מחירון מדורג |
 | `params` | 9 | `param_id`(PK), `param_name`, `param_value`, `param_type ∈ {pricing_timing,control_alerts,smart_match,templates,integration_tech}` |
 | `quotes` | 3 | `quote_id`(PK), `customer_id`(FK→customers, bigint — §7.64), `event_name`, `issue_date`, `estimated_hours`, `recommended_hostess_count`, `estimated_guests`, `estimated_event_date`, `estimated_location` (⚠️ נושא-עומס — Smart Match קורא אותו), `quote_status ∈ {in_progress,approved,rejected}`, `applied_customer_discount`, `manual_discount`, `rejection_reason`, `notes`, `pdf_url` (deprecated — §7.12; גורל: §7.71) |

@@ -361,6 +361,22 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 31/07/2026 16:30 — **Round G (DB hardening) landed — `products.cost` no longer exists.** Commit
+  `b3470f2`; migration `20260731155511_round_g_db_hardening` (+2 fix-forward). What a future M3
+  session must know: the catalog query is now `select('*, product_costs(cost)')` and every consumer
+  still reads a flat `product.cost` because `flattenProductCost` (`src/lib/catalog.js`) normalizes
+  it in **both** API layers. ⛔ **Two invariants that break silently if touched:** the embed must
+  stay LEFT (an `!inner` drops disabled products → the §7.34 0 ₪ bug returns), and a missing cost
+  must stay `null` — `0` would read as "this product is free" and report revenue as pure profit.
+  Both are locked by unit tests that were watched failing on the broken version. Writes are now two
+  calls (`products` then `product_costs`), non-transactional by decision — this is a CEO-only
+  maintenance screen used ~twice a year (§7.84), and a half-write shows as "—" and is fixable by
+  re-saving. `create_quote`/`replace_quote_lines` raise a Hebrew `P0001` naming the **item** when a
+  SKU has no cost row, and that prefix is mapped in `SERVER_MESSAGE_RULES`.
+  ⚠️ **Process deviation worth not repeating:** the MCP connector timed out twice on the full
+  payload; the compacted retry silently dropped two function bodies while the column drop DID run,
+  briefly breaking quote approval and edit-save. **Compacting a payload is an edit and needs a
+  re-read against the source.** Full account in the migration file header.
 - 31/07/2026 15:20 — **⏸️ Ishay called the gold-plating, correctly — scope closed on round D.**
   His words: *"אתה מתאר מקרה קצה ממש, אולי פעם בחצי שנה משביתים מוצר ומה הסיכוי שבדיוק רוצים
   להשתמש בו"*. Applied his own reality filter and he is right about the **dropdown leak**

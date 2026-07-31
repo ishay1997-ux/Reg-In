@@ -61,7 +61,7 @@ create table products (
   category text not null check (category in ('site', 'hostess', 'product')),
   unit text not null,
   base_price numeric not null check (base_price >= 0),
-  cost numeric not null check (cost >= 0),
+  cost numeric not null check (cost >= 0),  -- ⛔ נמחקה 31/07/2026 (סבב G) — ר' הבלוק בסוף הקובץ: העלות חיה ב-product_costs
   status text not null default 'active' check (status in ('active', 'out_of_stock', 'inactive')),
   image_url text
 );
@@ -442,7 +442,7 @@ alter table params add constraint params_param_name_key unique (param_name);
 -- products: יחידה מרשימה סגורה (§7.82/F13) + טיפוסי-כסף (§7.74)
 alter table products add constraint products_unit_check check (unit in ('יחידה', 'פרויקט', 'משמרת', 'מטר'));
 alter table products alter column base_price type numeric(12,2);
-alter table products alter column cost type numeric(12,2);
+alter table products alter column cost type numeric(12,2);  -- ⛔ העמודה נמחקה 31/07 (סבב G); הטיפוס שרד ב-product_costs.cost
 
 -- price_tiers: כסף מדויק (§7.74) + היגיון (§7.41) + sku ON UPDATE CASCADE (§7.64)
 alter table price_tiers alter column special_price type numeric(12,2);
@@ -651,3 +651,75 @@ create policy "email_log_select_quotes_module" on email_log for select to authen
     where p.role_id = (select current_user_role_id())
       and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
       and p.permission_level in ('edit', 'view')));
+
+-- ============================================================
+-- סבב-תיקונים G — הקשחת-מסד (20260731155511 + 2 מיגרציות תיקון-קדימה, הוחל 31/07/2026)
+-- ============================================================
+-- ארבעה פערים שבהם המסד היה מתירני יותר מההכרעה שהוא אמור לאכוף (סקירת-הקוד 31/07 §G).
+
+-- (1) §7.8↳ — הגבלת-קצב לפונקציית-הכניסה: 15 קריאות לכל כתובת-IP בשעה.
+-- ‏`register_failed_login` מוענקת ל-anon ומקבלת כתובת-מייל כפרמטר, ולכן כל מחזיק מפתח-anon
+-- (=כל אחד; הוא בבנדל הציבורי) יכול היה לנעול כל חשבון ידוע שוב ושוב **בלי אף ניסיון-סיסמה**,
+-- והנעול אינו יכול לשחרר את עצמו. ההגבלה היא לפי **מי שמתקשר** ולא לפי הפרמטר, שנשלט ע"י התוקף.
+-- ⚠️ מקטינה חומרה ואינה סוגרת את הפער — הפתרון המלא (Auth Hook) דורש Team plan, נדחה בהכרעת-ישי.
+create table login_rpc_calls (
+  ip inet not null,
+  called_at timestamptz not null default now()
+);
+create index login_rpc_calls_ip_time_idx on login_rpc_calls (ip, called_at desc);
+alter table login_rpc_calls enable row level security;   -- deny-all מכוון: 0 policies
+revoke all on login_rpc_calls from anon, authenticated;  -- הגישה רק מתוך הפונקציה (DEFINER)
+-- ‏`register_failed_login` שוכתבה: בראשה שליפת IP מ-`request.headers→x-forwarded-for`, מחיקת
+-- שורות מעל שעה, ספירה, ומעל 15 — `raise` בהודעה **גנרית** (לא לחשוף לתוקף שזו הגנת-קצב).
+-- ‏IP חסר ⇒ מדלגים על ההגבלה ולא חוסמים (קורה רק בגישה ישירה למסד, לא דרך PostgREST).
+-- הלוגיקה העסקית (5 כשלונות ⇒ נעילת 15 דק') לא שונתה.
+
+-- (2) §7.83↳ — עלות-הרכש יוצאת מ-`products` לטבלת-בת, כדי שההרשאה תהיה ברמת-**טבלה**.
+-- ‏`products_select_all_authenticated` (using(true)) חשפה את `cost` — כלומר את המרווח — לכל
+-- משתמש מחובר, כולל מנהלת-גיוס ומנהלת-לוגיסטיקה שחסומות לגמרי על 'הצעות מחיר' (נמדד חי לפני
+-- התיקון: כל חמשת התפקידים קיבלו את העלויות ב-REST). ‏RLS ב-Postgres הוא ברמת-שורה, וכל
+-- המחוברים חולקים role אחד — ולכן פיצול-טבלה, לא הרשאת-עמודה; view עם security_invoker אינו פותר.
+create table product_costs (
+  sku text primary key references products (sku) on update cascade on delete cascade,
+  cost numeric(12,2) not null check (cost >= 0),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create trigger product_costs_set_updated_at before update on product_costs
+  for each row execute function extensions.moddatetime (updated_at);
+alter table product_costs enable row level security;
+-- קריאה: בעלי edit על 'הצעות מחיר' (רואי-הרווחיות, §7.28) **או** על 'כספים' (מ8, §7.79)
+-- ⟵ אומת חי: מנכ"ל · מנהלת פרויקטים · מנהלת כספים ולקוחות. כתיבה: מנכ"ל, כמו products.
+create policy "product_costs_select_by_permission" on product_costs for select to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id in (select module_id from modules where module_name in ('הצעות מחיר', 'כספים'))
+      and p.permission_level = 'edit'));
+create policy "product_costs_write_ceo_only" on product_costs for all to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת')
+      and p.permission_level = 'edit'))
+  with check (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת')
+      and p.permission_level = 'edit'));
+insert into product_costs (sku, cost) select sku, cost from products;  -- העתקה לפני המחיקה
+alter table products drop column cost;   -- ⚠️ העמודה בשורה 64 ובשורה 445 אינה קיימת יותר
+-- שלוש הפונקציות שקראו `products.cost` שוכתבו לקרוא מ-`product_costs`:
+--   • approve_quote_and_create_project (DEFINER — עוקף RLS, ההקפאה עובדת לכל מאשר מורשה)
+--   • create_quote · replace_quote_lines (INVOKER — בטוח: כל מי שרשאי לכתוב הצעה רשאי לקרוא עלות)
+-- ⚠️ שתי האחרונות זורקות `P0001` בעברית **הנוקבת בשם-המוצר** כשלמק"ט אין שורת-עלות, במקום
+-- ‏23502 גולמי על closing_unit_cost. התחילית "לא מוגדרת עלות למוצר" היא **חוזה** מול
+-- ‏`SERVER_MESSAGE_RULES` ב-`src/lib/quotes.js` — שינוי-ניסוח כאן בלי שם מפיל את המסך ל-fallback.
+-- ⚠️ צד-הלקוח קורא `select('*, product_costs(cost)')` — **LEFT במכוון**; inner join היה מפיל
+-- מוצר מושבת מהקטלוג ומחזיר את באג-ה-0 ₪ של §7.34.
+
+-- (3) תקרות-שרת ל-bucket `marketing` (היו null — הוולידציה חיה ב-JS בלבד, כלומר עקיפה ב-REST).
+-- ⚠️ תאומים של MARKETING_MAX_BYTES / MARKETING_ALLOWED_MIME ב-`src/modules/02_customers/api.js`.
+update storage.buckets set file_size_limit = 10485760,
+  allowed_mime_types = array['application/pdf', 'image/jpeg', 'image/png'] where id = 'marketing';
+
+-- (4) `products.description` — NOT NULL נשאר (זו הכוונה), נוספה ברירת-מחדל ריקה כרשת-ביטחון
+-- לכותב שישמיט את המפתח (הבאג שתוקן בטופס 30/07 המתין לכותב הבא).
+alter table products alter column description set default '';
