@@ -74,6 +74,27 @@
   **byte-identical by md5** — that is what "E changed no screen" rests on, not on looking similar.
   ⚠️ Baselines had to be captured with `git stash`, because Playwright wipes `test-results/` per run.
 
+### 31/07/2026 18:20 — **Monitor discipline + a status board, from gedood-710's field use** (skill file only)
+- **Self-monitoring replaced waiting to be told.** Ishay asked "can't you check yourself?" — he
+  was right, and the skill had been built around him relaying "the session finished", i.e. making
+  him a courier between two sessions. Now: a background loop exiting on **two conditions
+  together** (HEAD moved *and* clean tree, `--untracked-files=no`). Neither alone is sufficient.
+- **`git fetch` removed from the loop** — both sessions share one disk, so a commit is local the
+  instant it lands. It was the only costly step and the only reason to poll slowly; without it
+  the interval is chosen by how fast you want to know (~2 min per fix round).
+- 🔴 **Trap that is worse here than at 710: every commit in this repo carries the same git
+  identity**, mine and the builders'. Author-based filtering — the obvious fix — does not exist
+  as an option. Discipline instead: re-arm `BASE` after any commit of my own, and `git log -1`
+  before reporting "it landed". **Measured near-miss:** the monitor was armed 17:47, I committed
+  `9e35272` at 17:49 — HEAD moved, so condition one fired. The alert stayed silent **only because
+  the builder's tree was dirty**. The two-condition rule absorbed it; that is luck, not a
+  guarantee — it would fail if I committed during a quiet moment.
+- **Adopted an "איפה עומדים" closing board** (4–6 measured rows: running · just closed · free to
+  start now · deadline · needs-Ishay), with the constraint that makes it safe: **every row
+  measured the same turn or marked טעון בדיקה.** Written into the skill as the most dangerous
+  artifact of the role — it reads authoritative, Ishay acts on it directly, and a stale
+  "free to start" row sends him into a collision with a live session.
+
 ### 31/07/2026 18:15 — **Two silent debts given a home, after the manager review of rounds E+F** (docs only)
 - **Round E+F reviewed — no findings.** Verified by running, not reading: 376 unit tests green,
   lint clean, temp baseline spec deleted. Checked the two spots that could have broken quietly:

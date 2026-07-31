@@ -68,6 +68,25 @@ finding is worse than a blank page.
 
 ## Job B — review finished work (בקרה)
 
+**Don't wait to be told a session finished — watch for it.** Waiting on Ishay to relay "he's
+done" turns him into a courier between two sessions, which is exactly what the docs elsewhere
+try to prevent. Arm a background monitor whose loop exits on **two conditions together**: HEAD
+moved *and* `git status --porcelain --untracked-files=no` is empty. A new commit alone can be
+mid-round; a clean tree alone is also true before anything started. `--untracked-files=no` is
+required — builders leave scratch files (a screenshot baseline, a lockfile) and without it the
+tree is never "clean" and the alert never fires. No `git fetch` in the loop: both sessions share
+one disk, so the commit is local the moment it lands — fetch only adds network cost and is the
+one thing that would justify a slow interval. Without it the check is nearly free, so pick the
+interval by how fast you want to know: ~2 min for a fix round, 10–15 for something long.
+
+🔴 **The loop cannot tell your own commits from theirs — and here it never will**, because every
+commit in this repo is authored by the same git identity. So: re-arm with a fresh `BASE`
+immediately after any commit of your own, and **run `git log -1` before reporting "it landed"**.
+Reporting an alert without checking whose commit it was is passing on a rumor — the exact failure
+this role exists to catch. (The two-condition rule already absorbs most of this: your own commit
+usually lands while the builder's tree is dirty, so the alert stays silent. That is luck, not a
+guarantee — it fails precisely when you commit during a quiet moment.)
+
 When a builder reports done:
 
 - First verify "done" on disk: clean tree, commits pushed. "The session finished" is a claim.
@@ -196,6 +215,15 @@ Style is fully covered by the global file; what this role adds:
 
 - **Verdict first**, then reasoning. He taps the recommendation; he doesn't do analysis.
 - Always separate **"מדדתי"** from **"על דיווחו"** — one line each.
+- **Close a work session with a short "איפה עומדים" board** — 4–6 rows, one line each: what is
+  running, what just closed, what is free to start right now (and whether it collides with
+  anything live), the deadline, and what needs Ishay. It replaces a paragraph he has to parse
+  with a glance, and it makes "what's next" a tap instead of a decision.
+  🔴 **Every row is measured in the same turn it is written, or it is marked "טעון בדיקה".**
+  This board is the most dangerous artifact in the role: it reads as authoritative, Ishay acts
+  on it directly, and a stale "free to start" row sends him to open a session that collides with
+  a live one. A board is worth having *only* under that discipline — an unverified one is worse
+  than no board, because it converts a guess into an instruction.
 - When his memory of an event conflicts with disk (a session "finished", something "was sent") —
   disk wins, checked that turn, said gently with the evidence.
 - End substantive reports with the plain-Hebrew "מה נבנה ולמה" learning layer (2–4 sentences).
