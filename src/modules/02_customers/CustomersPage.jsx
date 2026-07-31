@@ -94,6 +94,12 @@ export default function CustomersPage() {
   // 🔁 זה הצרכן השני של `listQuotes()`, שכבר מסומן כמקום הראשון שיצטרך סינון-בשאילתה.
   // ⚠️ כשל כאן **אינו** מפיל את הרשימה: העמודה מציגה "—" והמסך ממשיך לעבוד.
   const [revenueByCustomer, setRevenueByCustomer] = useState(null)
+  // ⚠️ **כשל-טעינה אינו "ללקוח אין הצעות"** (סבב-תיקון 31/07/2026). עד לתאריך הזה ה-catch
+  // כתב `{}` — מפה **שנטענה** וריקה — ואז `handleToggleStatus` מיפה כל לקוח ל-openCount:0,
+  // ‏`archiveWarningMessage` החזיר null, ו**האזהרה נעלמה לגמרי**: לקוח עם שלוש הצעות פתוחות
+  // הגיע לארכיון בלי שאלה. הדגל הזה הוא המצב-השלישי המוצהר: המשתמש רואה שהנתונים לא נטענו
+  // ויכול לנסות שוב, ובינתיים כל ארכוב שואל וידוא. אותה דוקטרינת "ריק אינו 0" של מודול-הכסף.
+  const [revenueLoadFailed, setRevenueLoadFailed] = useState(false)
   const [consentSavingId, setConsentSavingId] = useState(null)
   // רענון הרשימה נעשה דרך "טיק" — העלאת המונה מריצה מחדש את effect-הטעינה. הדפוס הקנוני של
   // react-hooks/set-state-in-effect: ה-setState קורה רק בתגובה לתשובת ה-DB (אחרי await), לא סינכרונית,
@@ -141,8 +147,15 @@ export default function CustomersPage() {
           }
         }
         setRevenueByCustomer(map)
+        setRevenueLoadFailed(false)
       } catch {
-        if (!cancelled) setRevenueByCustomer({})
+        // ‏null ולא `{}` — ו**במפורש**, לא "להשאיר כמו שהיה": ה-effect רץ מחדש בכל reloadTick
+        // (שמירת-לקוח, "נסה שוב"), וכשל אחרי טעינה מוצלחת היה משאיר מפה ישנה שנראית תקפה
+        // בזמן שהבאנר מבטיח וידוא-ארכוב שלא היה קופץ.
+        if (!cancelled) {
+          setRevenueByCustomer(null)
+          setRevenueLoadFailed(true)
+        }
       }
     })()
     return () => {
@@ -415,6 +428,31 @@ export default function CustomersPage() {
           onSaved={reloadCustomers}
           onEditExisting={handleEditExisting}
         />
+
+        {/* נתוני-ההצעות נכשלו: הרשימה עצמה תקינה וממשיכה לעבוד, ולכן התראה לא-חוסמת ולא
+            מסך-שגיאה. הנוסח אומר גם מה **כן** משתנה בהתנהגות — כל ארכוב ישאל וידוא — כדי
+            שהשאלה הנוספת לא תיראה כתקלה. הגוון מועתק מבאנר-האזהרה של QuotesPage (מעבר-אחידות). */}
+        {revenueLoadFailed && (
+          <div
+            className="rounded-lg border border-amber-300 bg-amber-50 p-3 mb-4 flex items-center justify-between gap-3 flex-wrap"
+            role="alert"
+            data-testid="customers-revenue-error"
+          >
+            <p className="text-sm text-amber-800">
+              נתוני ההצעות לא נטענו — עמודת ההכנסות ריקה, וכל העברה לארכיון תבקש וידוא גם ללקוח שאין
+              לו הצעות פתוחות.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={reloadCustomers}
+              className="h-auto py-1.5 px-3 rounded-lg border-amber-300 text-amber-800 shrink-0"
+              data-testid="customers-revenue-retry"
+            >
+              נסה שוב
+            </Button>
+          </div>
+        )}
 
         {customers.length === 0 ? (
           // מצב-ריק: הטבלה ריקה בפרויקט החי (ה-seed הוסר בהכרעת-ישי 10/07) — זהו המצב הראשון שנראה.
