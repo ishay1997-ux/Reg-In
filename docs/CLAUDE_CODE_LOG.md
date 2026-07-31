@@ -47,7 +47,7 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
-### 31/07/2026 14:25 — **Audit fix-round D: DB messages reach the screen · inactive product never zeroes a line**
+### 31/07/2026 14:45 — **Audit fix-round D: DB messages reach the screen · inactive product never zeroes a line** — CLOSED (both 👤 approvals given; §D prompt deleted, C/E/F/G remain)
 - **What changed:** (1) `quoteServerErrorMessage` mapper in `src/lib/quotes.js` — 11 P0001 RAISE
   sites distinguished by Hebrew prefix (SQLSTATE only separates 42501/P0002/rest); wired via
   `toWriteError` into the 3 write paths of `03_quotes/api.js`. English enums translated, unknown →
