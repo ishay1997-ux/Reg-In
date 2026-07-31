@@ -47,6 +47,14 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 31/07/2026 15:40 — **Market-standard spot-check of the BUILT money/security rulings — zero defects found** (read-only, no code touched)
+- **Why:** Ishay asked "is everything built to what's standard?" Measured answer: of **85 §7 rulings, exactly 1 cites an external source** — the market-check habit only started 30/07. So the 13 money/security rulings already live in modules 1–3 were spot-checked retroactively. Ishay's calibration, applied as a third filter: *"בערבון מוגבל — בסוף זה פרויקט אקדמי."*
+- **Verified sound:** §7.25 (agorot stored / whole shekels displayed) · §7.26 (additive discounts, ≤100%, enforced in **both** `pricing.js` and DB CHECK — above the usual bar) · §7.27 (highest `min_qty ≤ qty` wins; the PK kills the only ambiguous case) · §7.49/50/51 (atomic conversion + post-approval lock + VAT snapshot = the "quote is a frozen snapshot" standard, re-confirmed against Salesforce CPQ the same day).
+- **§7.1 VAT — re-verified against live 2026 sources, not memory:** Israel is still **18%** (rose Jan-2025, no 2026 change). Live DB `אחוז_מעמ = 18`. **Zero hardcoded `18` in `src/lib/pricing.js`** — a future rate change is a data edit, which is itself the market-standard design.
+- **Deliberate deviations, judged CORRECT for this context (do not "fix"):** §7.21 (no record-level ownership — module-level permissions only; enterprise CRMs add row ownership, unjustified for a 5-person company) · §7.24 (exposed test passwords not rotated — private repo, test users only). ⚠️ **§7.24 has one live precondition worth re-asking: if the git history ever ships with the academic submission or the repo goes public, the ruling's premise breaks.** Asked Ishay; not a defect until answered.
+- **Already in flight, not a new finding:** §7.8's 5-attempt account lockout is the pattern OWASP now de-emphasizes in favour of IP rate-limiting — exactly what round **G** already carries (15/IP/hour).
+- ⛔ **Explicitly NOT done:** re-auditing the 72 non-money/non-security rulings against the market. Weeks of work, mostly business-specific, deadline 19/09. The habit is worth applying **forward** (module 4's pre-decision round), not backward.
+
 ### 31/07/2026 14:45 — **Audit fix-round D: DB messages reach the screen · inactive product never zeroes a line** — CLOSED (both 👤 approvals given; §D prompt deleted, C/E/F/G remain)
 - **What changed:** (1) `quoteServerErrorMessage` mapper in `src/lib/quotes.js` — 11 P0001 RAISE
   sites distinguished by Hebrew prefix (SQLSTATE only separates 42501/P0002/rest); wired via
