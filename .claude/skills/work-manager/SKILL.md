@@ -52,6 +52,11 @@ claim by claim. Method:
 - Check the plan's *verification* section, not just its build section: does it prove guards by
   **reintroducing the failure**, and prove permission changes in **both directions** (allowed
   user still can; blocked user really can't)?
+- **Unfamiliar territory ⇒ demand a blind-spot pass first.** A plan entering ground this project
+  has no precedent for (first external service, first-of-a-kind infra — e.g. the Vercel deploy,
+  pg_cron once) gets one added question before approval: "מה אנחנו כנראה מפספסים שלא נדע לשאול
+  עליו?". The closing question to Ishay covers what *he* knows and didn't say; this covers what
+  *nobody* thought of yet — different gap, different move (principles file, §3).
 - If the plan's own verification writes to the live DB, that needs Ishay's eyes-on approval
   **before** the run, not a report after (there is no test environment; a real data-loss incident
   already happened here).

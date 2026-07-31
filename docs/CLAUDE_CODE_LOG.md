@@ -47,6 +47,22 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 31/07/2026 17:00 — **Fix-plan registry consolidated: 7 rounds → 2** (manager session, docs only)
+- **§C deleted** — all three rulings executed: (1) rate-limit and (3) cost-split were built inside
+  round G itself (`b3470f2`, §7.8↳/§7.83↳); (2) the email engine lives in `PROJECT_MASTER §6:275↳`
+  in a wording more precise than the plan's draft. Nothing was left to open a session for.
+- **The `listQuotes` §6 line landed** (`§6:276↳`). It had existed ONLY inside the self-deleting
+  plan file — grep of PROJECT_MASTER returned 0 matches. Found by the work-manager skill's own
+  Job-C rule during its first eval run, i.e. the guardianship rule caught a real gap unprompted.
+- **§F shrunk, not deleted** — most of it duplicates module-3 phase 4 (4.1/4.2/4.3 already own
+  RLS/RPC/server-permission tests); running it standalone would have written the same tests twice.
+  The three items phase 4 does NOT cover stay: no deno/CI step for `send-email` (verified again:
+  eslint still reports "File ignored"), the 99,999 ₪ injection test that asserts no output string,
+  and the sort tests whose fixtures are identical on both sort keys. A ⚠️ header states the
+  shrink was approved on the condition of no loss, and names where the residue must land.
+- **Only E and F remain.** Ishay's condition ("no harm to the result") is why F was shrunk rather
+  than dropped — a self-deleting registry may only lose an item once it is genuinely covered.
+
 ### 31/07/2026 16:35 — **New skill: `work-manager`** (the manager/plan-critic role, extracted from a full day of live use)
 - **What:** `.claude/skills/work-manager/SKILL.md` — the seventh repo-local skill. Codifies the
   role this session performed all day: boot-from-disk, plan critique against code (symbol-anchored,
