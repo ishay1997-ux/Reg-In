@@ -192,4 +192,28 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
     await page.getByTestId('permissions-load-retry').click()
     await expect(page.getByRole('heading', { name: 'רשימת לקוחות' })).toBeVisible()
   })
+
+  // ── ואותה משפחה, דרגה אחת חמורה יותר: כשל בשליפת המשתמש ────────────────────
+  //
+  // עד 31/07 **כל** שגיאה כאן גררה `signOut` מלא + "החשבון שאיתו התחברת אינו מורשה" — כלומר
+  // תקלת-רשת בת-שנייה זרקה משתמש קיים מהמערכת והאשימה אותו. רק `PGRST116` (אין שורה) הוא
+  // המצב שבו ההודעה ההיא נכונה; אומת מול המסד החי שזה אכן הקוד שמוחזר על אפס-שורות.
+  test('משתמש: תקלה רגעית בשליפתו אומרת "זמנית" ולא "אינך מורשה"', async ({ page }) => {
+    await page.route('**/rest/v1/users*', (route) =>
+      route.fulfill({ status: 500, contentType: 'application/json', body: '{"message":"forced"}' }),
+    )
+    await page.goto('/login')
+    await page.getByPlaceholder('כתובת דוא״ל').fill(CEO_EMAIL)
+    await page.getByPlaceholder('סיסמה').fill(CEO_PASSWORD)
+    await page.getByRole('button', { name: 'התחברות', exact: true }).click()
+
+    await expect(page.getByText(/תקלה זמנית בטעינת פרטי החשבון/)).toBeVisible({ timeout: 30_000 })
+    // ⚠️ ההודעה השגויה חייבת **לא** להופיע: היא מאשימה את המשתמש בתקלה שאינה שלו.
+    await expect(page.getByText(/אינו מורשה במערכת/)).toHaveCount(0)
+
+    // ── הכשל מוסר: כניסה רגילה ─────────────────────────────────────────────
+    await page.unroute('**/rest/v1/users*')
+    await page.getByRole('button', { name: 'התחברות', exact: true }).click()
+    await expect(page).toHaveURL('/', { timeout: 30_000 })
+  })
 })

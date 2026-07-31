@@ -80,7 +80,19 @@ export default function LoginPage() {
       .eq('email', cleanEmail)
       .single()
 
-    if (dbError || !userData) {
+    // ⚠️ **תקלה רגעית אינה "אינך מורשה"** (סבב-תיקון 31/07/2026 — אותה הבחנה שנעשתה
+    // ב-`AuthContext`, וכאן היא נחוצה **קודם**: המסך הזה שולף את `users` בעצמו, ולכן הוא
+    // זה שנתקל בכשל ראשון). `.single()` מחזיר `PGRST116` כשאין שורה — אומת מול המסד החי,
+    // וזה המצב היחיד שבו ההודעה המאשימה נכונה. כל שגיאה אחרת (רשת/500) אמרה למשתמש
+    // לגיטימי שהוא אינו מורשה, וניתקה אותו — האשמה על תקלה שאינה שלו.
+    if (dbError && dbError.code !== 'PGRST116') {
+      setErrorMsg('תקלה זמנית בטעינת פרטי החשבון. נסה שוב בעוד רגע.')
+      await supabase.auth.signOut()
+      setLoading(false)
+      return
+    }
+
+    if (!userData) {
       setErrorMsg('משתמש זה אינו מורשה במערכת. פנה למנהל.')
       await supabase.auth.signOut()
       setLoading(false)
