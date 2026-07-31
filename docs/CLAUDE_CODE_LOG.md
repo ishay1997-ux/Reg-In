@@ -65,6 +65,19 @@
 - One additive src change: `data-testid="access-denied"` on `ProtectedRoute` (four suites pinned that
   screen by Hebrew string while E2E never runs in CI). Gate exit 0 · 376 unit · live DB byte-identical.
 
+### 31/07/2026 21:55 — **"Verified" is not "recorded" — the context checker caught the manager's own overclaim** (docs)
+- I ran `npm run gate` myself to verify the 4.2+4.3 round (**exit 0**). Its `check:context` step reported
+  **2 open `🚧 מ3` debts** — while the board line I had written at 21:20 said *"חובות מודול 3 נסגרו כולם"*.
+- **Both were true at once, and that is the failure.** I *verified* three debts as built (revenue metrics ·
+  PDF-engine purity · contacts-optional) but only *marked* one closed (the revenue filter). Verification
+  lived in my report; the registry never heard about it — so every future reader would still see them open.
+- Fixed: the M3 share of the customer-card line and the PDF-engine line now carry their closure **with the
+  evidence inline**. Checker re-run: **2 ⇒ 1**. The remaining one (extra contacts in the quote picker/PDF)
+  is genuinely optional by its own wording and is Ishay's call, not a measurement.
+- 🔑 **A verification that is not written into the registry has not happened.** The mechanical checker is
+  the only reason this surfaced tonight instead of at the 4.5 gate — where "all debts settled" would have
+  been rubber-stamped from my own board line.
+
 ### 31/07/2026 21:17 — **Module-3 debt audit before the 4.5 gate: 4 settled, 1 ruled "not required"** (docs)
 - Ran read-only against the live 4.2+4.3 round. Of the five `🚧 מ3` lines in §6: one was already
   closed 30/07; **revenue + avg-deal-size are built and route through the pricing SSOT** (no formula
