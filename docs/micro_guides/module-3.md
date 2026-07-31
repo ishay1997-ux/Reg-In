@@ -337,6 +337,33 @@ Goal: prove the conversion's integrity edges. Files: none new (SQL + live UI). W
 > them fine. If a future step does need DDL, the established fallback is a `scripts/*.sql` file with
 > the expected answers written in + a 🧩 handover prompt for Ishay to run in the SQL Editor.
 
+> 🔗 **RUN 4.2 AND 4.3 AS ONE ROUND — decided 31/07/2026, measured not felt.** 4.2 is defined
+> `Files: none new`, i.e. it produces tests with no file to put them in; 4.3 is what creates
+> `e2e/quotes.spec.js` and `e2e/prices.spec.js` (verified 31/07: neither exists yet). And 4.3's
+> journey is `create→edit→**reject**` — **the same rejection path that is the heart of 4.2**.
+> Run separately, one of them writes that path twice. ⇒ **Put 4.2's rejection tests inside the
+> `quotes.spec.js` you are creating anyway.** ⛔ Merging saves *writing*, never *coverage* — on
+> close, list which 4.2 item each test covers, and say out loud if one is uncovered.
+> **4.4 stays a verification step, not a round. 4.5 is a 👤 gate and is NOT part of this** —
+> finish, report, stop.
+>
+> 🔴 **Mine measured 31/07: E2E never runs in CI** (zero `playwright` references in
+> `.github/workflows/ci.yml`) **and 81 selectors across the suite match literal Hebrew strings.**
+> So a copy edit breaks tests while the gate stays green. Ishay ruled *not* to add E2E to CI
+> (it would require uploading the five `E2E_*` credential pairs as GitHub secrets — another home
+> for passwords already scheduled for rotation, §6 — for regression coverage that the manual
+> per-round run already provides). **What you must do instead: new tests select on `data-testid`,
+> not on text.** The 81 existing ones stay — reworking them is a whole round for no gain. Any
+> Hebrew string you *do* pin, mark in a comment as a contract.
+> ⚠️ And never touch the wording in `SERVER_MESSAGE_RULES` (`src/lib/quotes.js`) — it matches
+> server errors by Hebrew **prefix**; a reworded string drops the screen to a generic fallback
+> with no test failing.
+>
+> ♻️ **Don't rebuild the rollback battery — it is written verbatim in §9 (31/07 19:40).** Rejection
+> is nearly irreversible (`quotes_lock_non_in_progress` blocks `update` *and* `delete` on any
+> quote not `in_progress`), so 4.2 needs the same transaction-that-rolls-back pattern 4.1 used.
+> It has now been rebuilt from scratch three times (phase 1, round A, step 4.1). Copy and adapt.
+
 **Step 4.2 — Rejection & expiry 🔻🤖.** Goal: prove the rejection/expiry lifecycle. Files: none new. What: reject w/o reason blocked; 'אחר' w/o notes blocked; rejected quote fully locked (edit UI hidden + direct UPDATE errors); expiry job simulation → rejected+'פג תוקף' appears in נדחו tab + breakdown; ⭐ chip counts quotes ≤7d. Verify: evidence.
 
 **Step 4.3 — E2E suites 🔻🤖.** Files: e2e/quotes.spec.js, e2e/prices.spec.js. What: CEO+STAFF journeys per Test Identities (create→edit→reject; create→approve→locked; prices CRUD as CEO; denied as non-CEO). Serial (workers=1 config). Verify: `npm run test:e2e` all green (existing 3 suites too).
