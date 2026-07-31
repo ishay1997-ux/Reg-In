@@ -47,6 +47,23 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 31/07/2026 21:17 — **Module-3 debt audit before the 4.5 gate: 4 settled, 1 ruled "not required"** (docs)
+- Ran read-only against the live 4.2+4.3 round. Of the five `🚧 מ3` lines in §6: one was already
+  closed 30/07; **revenue + avg-deal-size are built and route through the pricing SSOT** (no formula
+  duplication — `sumQuoteTotals` → `deriveQuoteAmount` → `computeQuoteTotals`); **the PDF engine is
+  genuinely pure** (`buildQuoteDocument(quote)`, no hooks/context/screen state); extra contacts were
+  never owed (§6 defines them as optional).
+- 🔴 The one real gap: the **"מובילים לפי הכנסה"** filter was never built — `matchesCustomerFilters`
+  takes five keys and none is revenue. **Ishay's ruling: *"נסגור אותו לא נדרש"*.** Reason: step 3.5
+  answered the need differently — `total_revenue` is a live sort key, and a descending sort *is*
+  "who are my biggest customers". Reopen trigger recorded in §6 (list outgrows one screen, or
+  M9/M11 need revenue as a segment rather than an ordering).
+- 🔑 Recorded in §6 **as a measured closure, not a silent one** — the evidence that it is unbuilt sits
+  in the same line, so a later reader cannot mistake "closed" for "shipped".
+- ⚠️ Also written into the M10←M3 debt: the PDF engine is liftable **except** its three Vite `?inline`
+  asset imports (fonts + logo), which no server runtime provides. The one thing that would otherwise
+  surface only mid-lift.
+
 ### 31/07/2026 21:06 — **The 4.2+4.3 merge decision reached the three lines a session reads first** (docs)
 - The 🔗 box was committed at 20:25 (`c32fb6d`) — **27 insertions, zero deletions**: the Live Status
   Header, the Active-step row and the step table were untouched and still read *"Next: 4.2"*.
