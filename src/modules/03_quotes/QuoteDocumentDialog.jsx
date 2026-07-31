@@ -39,6 +39,9 @@ import {
 } from '@/lib/quotes'
 import {
   EMAIL_SEND_TIMEOUT_MS,
+  SEND_HISTORY_UNKNOWN_CONFIRM,
+  SEND_HISTORY_UNKNOWN_NOTICE,
+  SEND_LOG_FAILED_NOTICE,
   classifySendError,
   emailSendDisabledReason,
   isAttachmentTooLarge,
@@ -87,7 +90,14 @@ export default function QuoteDocumentDialog({
   const [sent, setSent] = useState(false)
   // שליחה מוצלחת קודמת **מהמסד** — לא מ-state. זו השכבה היחידה ששורדת רענון-דף ומשתמש
   // שני, ולכן היא זו שהופכת את ההגנה מפני שליחה-כפולה למשהו אמיתי (ממצא #8).
-  const [previousSend, setPreviousSend] = useState(null)
+  // ⚠️ **תלת-מצבי, ולא בוליאני** (סבב-תיקון 31/07/2026):
+  //   undefined = טרם ידוע (עדיין נטען, או שהשאילתה נכשלה) · null = נטען, אין שליחה קודמת ·
+  //   אובייקט = נשלח. עד לתאריך הזה הערך ההתחלתי היה null וה-catch היה ריק, כלומר "נכשל"
+  //   ו"לא נשלח מעולם" היו אותו ערך בדיוק — והחלון הכריז בביטחון "טרם נשלח" על סמך כשל.
+  const [previousSend, setPreviousSend] = useState(undefined)
+  // חיווי-הכשל הוא **מחרוזת ולא דגל**: יש לו שני נוסחים שונים לגמרי (שאילתת-היומן נכשלה
+  // מול "המייל יצא אבל היומן לא נכתב"), ודגל בוליאני היה מציג את ההודעה הלא-נכונה באחד מהם.
+  const [sendCheckNotice, setSendCheckNotice] = useState('')
 
   // ⚠️ blob-URL הוא משאב שדולף אם לא משחררים אותו — כל פתיחה מייצרת אחד חדש, וללא
   // revokeObjectURL הדפדפן מחזיק את כל המסמכים שנפתחו בסשן בזיכרון. הניקוי בפונקציית
@@ -117,11 +127,21 @@ export default function QuoteDocumentDialog({
     })()
 
     // שאילתת-היומן רצה במקביל להפקת ה-PDF ולא אחריה: היא אינה חוסמת את התצוגה, וכשל
-    // בה (למשל RLS) לא ימנע צפייה או הורדה — הוא רק ישאיר את החלון בלי חיווי-"נשלח כבר".
+    // בה (למשל RLS) לא ימנע צפייה או הורדה.
+    // ⚠️ אבל הוא **כן** משנה את מצב-ההגנה, ולכן אינו נבלע: הכשל משאיר את `previousSend`
+    // על undefined ("לא ידוע"), מציג חיווי, ומפעיל חלון-אישור לפני שליחה. איפוס החיווי
+    // ב-then הוא load-bearing: ה-effect רץ מחדש בכל פתיחה של אותו חלון, ובלעדיו פתיחה
+    // שנייה שהצליחה הייתה מציגה "לא ניתן היה לבדוק" לצד "נשלח כבר ב-…".
     if (quote?.quote_id) {
       getLastSuccessfulSend('quote', quote.quote_id)
-        .then((row) => !cancelled && setPreviousSend(row))
-        .catch(() => {})
+        .then((row) => {
+          if (cancelled) return
+          setPreviousSend(row)
+          setSendCheckNotice('')
+        })
+        .catch(() => {
+          if (!cancelled) setSendCheckNotice(SEND_HISTORY_UNKNOWN_NOTICE)
+        })
     }
 
     return () => {
@@ -172,11 +192,20 @@ export default function QuoteDocumentDialog({
   // (4) **השכבה שסוגרת את הפער האמיתי** (`email_log`, מיגרציה 8): שליחה מוצלחת שנרשמה
   //     במסד מפעילה את אותו חלון-אישור **גם ברענון-דף וגם אצל משתמש שני** — שלושת
   //     השכבות שמעליה חיות ב-state ומתאפסות. זה מה שהופך את ההגנה לאמיתית ולא מקומית.
+  // (5) **וכשהשכבה הרביעית עצמה לא זמינה** — שאילתה שנכשלה, או תשובה שטרם חזרה — שואלים
+  //     גם אז (ר' `sendEmail`). שכבת-הגנה שנשענת על שאילתה חייבת תשובה למקרה שהשאילתה
+  //     נכשלה, אחרת היא מגינה בדיוק כשאין בה צורך ומתפוגגת כשיש.
+  // ⚠️ `!= null` (ולא `!==`) מכוון: הוא false גם ל-undefined, כלומר "לא ידוע" אינו
+  //    "כבר נשלח" — הוא מסלול נפרד עם נוסח משלו.
   const alreadySent = sent || previousSend != null
 
   async function sendEmail() {
     if (!blob || disabledReason || sending) return
     if (alreadySent && !window.confirm('ההצעה כבר נשלחה ללקוח. לשלוח שוב?')) return
+    // (5) **"לא ידוע" מפעיל את ההגנה במקום לכבות אותה.** undefined = השאילתה נכשלה או
+    //     שעדיין לא חזרה (לחיצה מהירה אחרי פתיחת החלון — אותו מרוץ בדיוק שנתפס 30/07
+    //     במסך הלקוחות). במצב הזה אי-אפשר לדעת אם הלקוח כבר קיבל, ולכן שואלים.
+    if (previousSend === undefined && !window.confirm(SEND_HISTORY_UNKNOWN_CONFIRM)) return
 
     setSending(true)
     setSendError('')
@@ -227,7 +256,7 @@ export default function QuoteDocumentDialog({
       // מקצה-לקצה 30/07** (המייל הגיע עם ה-PDF, והיומן היה ריק).
       // הם נפרדים מ-`payload` בכוונה: `payload` הוא **חוזה חמשת-השדות מול Make**, ואלה
       // מיועדים ליומן שלנו בלבד — הפונקציה מעבירה ל-Make את החמישה ולא אותם.
-      const { error: fnError } = await Promise.race([
+      const { data: fnData, error: fnError } = await Promise.race([
         supabase.functions.invoke('send-email', {
           body: {
             ...payload,
@@ -241,7 +270,15 @@ export default function QuoteDocumentDialog({
       if (fnError) throw fnError
 
       setSent(true)
-      toast.success(`ההצעה נשלחה ל-${payload.to}.`)
+      // ⚠️ המסלול השני לאותה תקלה: המייל יצא, אך כתיבת `email_log` בשרת נכשלה. הפונקציה
+      // מחזירה ok:true בכוונה (המייל כבר אצל הלקוח), ועד 31/07/2026 הכשל חי רק ב-console
+      // של הפונקציה — כלומר ההגנה מפני שליחה-כפולה נעלמה בלי שאיש ידע. עכשיו נאמר בקול.
+      if (fnData?.log_failed) {
+        setSendCheckNotice(SEND_LOG_FAILED_NOTICE)
+        toast.error('המייל נשלח, אך רישום השליחה ביומן נכשל.')
+      } else {
+        toast.success(`ההצעה נשלחה ל-${payload.to}.`)
+      }
     } catch (err) {
       // שלושת המצבים (כולל "לא ידוע") והניסוח שלהם חיים ב-`src/lib/email.js` ונבדקים שם —
       // הקומפוננטה רק מציגה. ההבחנה עצמה קריטית: ר' ההערה במנוע.
@@ -291,6 +328,18 @@ export default function QuoteDocumentDialog({
         {/* חיווי "נשלח כבר" מהמסד — מוצג **גם בפתיחה ראשונה אחרי רענון-דף**, כלומר הוא
             עונה על השאלה "האם הלקוח כבר קיבל?" ולא רק מונע לחיצה כפולה. מוצג רק כשאין
             שליחה חדשה בחלון הזה, כדי שלא יופיעו שני חיוויים על אותו דבר. */}
+        {/* "לא ידוע" מוצג **לפני** שלוחצים, לא אחרי: המשתמש רואה שההגנה מפני שליחה-כפולה
+            אינה זמינה כרגע, ולכן השאלה שתיפתח בלחיצה לא תיראה כתקלה. הגוון ענבר = אזהרה
+            לא-חוסמת, אותו סגנון כמו באנר-הפרמטרים במסך-ההצעות (מעבר-אחידות). */}
+        {canSend && sendCheckNotice && (
+          <p
+            className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800"
+            role="alert"
+            data-testid="quote-send-check-notice"
+          >
+            {sendCheckNotice}
+          </p>
+        )}
         {canSend && previousSend && !sent && !sendError && (
           <p className="text-slate-600 text-sm" data-testid="quote-previous-send">
             נשלח כבר ב-{formatDate(previousSend.created_at)} אל {previousSend.recipient}

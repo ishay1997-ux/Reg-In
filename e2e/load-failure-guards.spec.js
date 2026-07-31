@@ -104,4 +104,49 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
     await expect(page.getByTestId('confirm-dialog-title')).toHaveText('ללקוח יש הצעות פתוחות')
     await page.getByTestId('confirm-dialog-cancel').click()
   })
+
+  // ── חלון-המסמך: "לא ידוע אם נשלח" מפעיל את ההגנה, לא מכבה אותה ─────────────
+  //
+  // ⚠️ **הבדיקה הזו נוגעת בכפתור שמוציא מייל אמיתי ללקוח שבמסד החי.** היירוט מפיל רק את
+  // שאילתת-היומן — לא את ה-invoke. לכן ה-dialog **תמיד מבוטל** (dismiss), ובסוף מאומת
+  // שאף בקשה ל-`functions/v1` לא יצאה. אישור בטעות = הצעה שנשלחת פעמיים ללקוח אמיתי.
+  test('חלון המסמך: כשל בשאילתת היומן ⇒ חיווי + שאלה לפני שליחה', async ({ page }) => {
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+
+    const sendRequests = []
+    page.on('request', (req) => {
+      if (req.url().includes('/functions/v1/')) sendRequests.push(req.url())
+    })
+    // window.confirm — מבטלים תמיד. `dismiss` ולא `accept`: ר' האזהרה למעלה.
+    const dialogMessages = []
+    page.on('dialog', async (dialog) => {
+      dialogMessages.push(dialog.message())
+      await dialog.dismiss()
+    })
+
+    // ── הכשל מוחזר בכוונה: שאילתת email_log נופלת ──────────────────────────
+    await page.route('**/rest/v1/email_log*', (route) =>
+      route.fulfill({ status: 500, contentType: 'application/json', body: '{"message":"forced"}' }),
+    )
+    await page.goto('/quotes')
+    // הצעה 6 — "בתהליך" ולכן כפתור-השליחה קיים, וגם **נשלחה כבר** בפועל: כלומר במסלול
+    // התקין היא מציגה "נשלח כבר", ובכשל היא חייבת להודות שאינה יודעת.
+    await page.getByTestId('quote-document-6').click()
+    await expect(page.getByTestId('quote-send-check-notice')).toBeVisible()
+    // ⚠️ הלב של הממצא: לפני התיקון החלון היה מציג בביטחון מצב "טרם נשלח".
+    await expect(page.getByTestId('quote-previous-send')).toHaveCount(0)
+
+    await page.getByTestId('quote-document-send').click()
+    await expect
+      .poll(() => dialogMessages.join('|'), { timeout: 10_000 })
+      .toContain('לא ניתן לוודא')
+    expect(sendRequests, 'אסור שתצא בקשת-שליחה אמיתית מהבדיקה').toHaveLength(0)
+
+    // ── הכשל מוסר: החלון חוזר לדעת את האמת ─────────────────────────────────
+    await page.unroute('**/rest/v1/email_log*')
+    await page.reload()
+    await page.getByTestId('quote-document-6').click()
+    await expect(page.getByTestId('quote-previous-send')).toBeVisible()
+    await expect(page.getByTestId('quote-send-check-notice')).toHaveCount(0)
+  })
 })

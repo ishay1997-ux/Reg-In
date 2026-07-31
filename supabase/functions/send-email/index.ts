@@ -111,6 +111,10 @@ Deno.serve(async (req) => {
   // מידע אמיתי למי שבודק למה הלקוח לא קיבל.
   // ⚠️ כשל בכתיבת-היומן לא מפיל את התשובה: המייל כבר יצא, ולומר "נכשל" בגללו היה גורם
   //    לשליחה כפולה ללקוח. נרשם ללוג הפונקציה כדי שלא ייעלם.
+  // ⚠️ **אבל לוג-פונקציה אינו התראה** (תוקן 31/07/2026): היומן הוא מקור-האמת היחיד
+  //    ל"כבר נשלח", ולכן כשל בכתיבתו **מכבה בשקט** את ההגנה מפני שליחה-כפולה — בדיוק
+  //    הכשל שהטבלה נועדה למנוע. התשובה מדווחת `log_failed` והמסך אומר זאת למשתמש.
+  //    השדה **אדיטיבי**: לקוח שאינו מכיר אותו מתנהג בדיוק כמו קודם.
   const admin = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -128,5 +132,5 @@ Deno.serve(async (req) => {
   if (logError) console.error('email_log insert failed:', logError.message)
 
   if (!ok) return json({ error: 'השליחה נכשלה.', detail: errorMessage }, 502)
-  return json({ ok: true })
+  return json(logError ? { ok: true, log_failed: true } : { ok: true })
 })

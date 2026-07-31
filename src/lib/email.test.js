@@ -10,6 +10,9 @@ import {
   findUnknownPlaceholders,
   isAttachmentTooLarge,
   plainTextToEmailHtml,
+  SEND_HISTORY_UNKNOWN_CONFIRM,
+  SEND_HISTORY_UNKNOWN_NOTICE,
+  SEND_LOG_FAILED_NOTICE,
   sendResultMessage,
 } from '@/lib/email'
 
@@ -289,5 +292,30 @@ describe('classifySendError — שלושת המצבים, וההבחנה שקל �
 describe('קבועים שהם חוזה', () => {
   it('תקרת-הזמן היא 30 שניות (מספיק לשליחה, קצר מכדי לתקוע משתמש)', () => {
     expect(EMAIL_SEND_TIMEOUT_MS).toBe(30_000)
+  })
+})
+
+// ⚠️ שלושת הנוסחים האלה נבדקים כי הם **הגדרת-ההתנהגות** ולא קישוט: כל אחד מהם הוא הרגע
+// שבו המערכת מודה שאינה יודעת אם הלקוח כבר קיבל את המסמך. נוסח שיאבד את ההבחנה הזו
+// (למשל "אירעה שגיאה") יחזיר בדיוק את הבאג שהם נולדו ממנו.
+describe('מצב "לא ידוע אם כבר נשלח" (סבב-תיקון 31/07)', () => {
+  it('החיווי אומר מה לא ידוע — ולא "שגיאה" כללית', () => {
+    expect(SEND_HISTORY_UNKNOWN_NOTICE).toContain('לא ניתן היה לבדוק')
+    expect(SEND_HISTORY_UNKNOWN_NOTICE).toContain('כבר נשלח')
+  })
+
+  it('שאלת-האישור מציגה את חוסר-הוודאות ומבקשת הכרעה', () => {
+    expect(SEND_HISTORY_UNKNOWN_CONFIRM).toContain('לא ניתן לוודא')
+    expect(SEND_HISTORY_UNKNOWN_CONFIRM).toContain('לשלוח בכל זאת?')
+  })
+
+  it('כשל-יומן אומר גם שהמייל **כן** נשלח וגם שההגנה לא תפעל בפעם הבאה', () => {
+    expect(SEND_LOG_FAILED_NOTICE).toContain('המייל נשלח')
+    expect(SEND_LOG_FAILED_NOTICE).toContain('לא תזהיר')
+  })
+
+  it('שלושת הנוסחים נבדלים זה מזה — הם שלושה מצבים, לא אחד', () => {
+    const all = [SEND_HISTORY_UNKNOWN_NOTICE, SEND_HISTORY_UNKNOWN_CONFIRM, SEND_LOG_FAILED_NOTICE]
+    expect(new Set(all).size).toBe(3)
   })
 })
