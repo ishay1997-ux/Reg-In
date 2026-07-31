@@ -149,4 +149,23 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
     await expect(page.getByTestId('quote-previous-send')).toBeVisible()
     await expect(page.getByTestId('quote-send-check-notice')).toHaveCount(0)
   })
+
+  // ── הרשאות: "לא הצלחנו לטעון" אינו "אין לך הרשאה" ─────────────────────────
+  test('הרשאות: כשל בטעינתן ⇒ הסבר + "נסה שוב", ולא מסך-דחייה', async ({ page }) => {
+    await page.route('**/rest/v1/permissions*', (route) =>
+      route.fulfill({ status: 500, contentType: 'application/json', body: '{"message":"forced"}' }),
+    )
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await page.goto('/customers')
+
+    // ⚠️ הלב של הממצא: המסך הזה נראה עד 31/07 **בדיוק** כמו שלילת-הרשאות אמיתית —
+    // הודעה שמאשימה את המשתמש בתקלת-רשת ולא נותנת לו שום פעולה.
+    await expect(page.getByText(/לא הצלחנו לטעון את ההרשאות/)).toBeVisible()
+    await expect(page.getByText('אין לך הרשאה לצפות במסך זה.')).toHaveCount(0)
+
+    // ── הכשל מוסר: "נסה שוב" מחזיר את המשתמש לעבודה בלי התחברות מחדש ────────
+    await page.unroute('**/rest/v1/permissions*')
+    await page.getByTestId('permissions-load-retry').click()
+    await expect(page.getByRole('heading', { name: 'רשימת לקוחות' })).toBeVisible()
+  })
 })
