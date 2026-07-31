@@ -79,6 +79,13 @@ one disk, so the commit is local the moment it lands — fetch only adds network
 one thing that would justify a slow interval. Without it the check is nearly free, so pick the
 interval by how fast you want to know: ~2 min for a fix round, 10–15 for something long.
 
+⚠️ **A monitor is a one-shot tool, not a service — arm it per wait, and know its three limits.**
+It **dies when the conversation ends**, so a fresh manager session inherits no watch and must arm
+its own. It **expires** (set a timeout deliberately; if the round outlasts it the monitor dies
+silently, and silence is indistinguishable from "still working"). And it **fires once and exits**
+— the next round needs a new one. Never treat "no alert" as "nothing landed": that inference is
+only valid while you know a monitor is armed and unexpired.
+
 🔴 **The loop cannot tell your own commits from theirs — and here it never will**, because every
 commit in this repo is authored by the same git identity. So: re-arm with a fresh `BASE`
 immediately after any commit of your own, and **run `git log -1` before reporting "it landed"**.
