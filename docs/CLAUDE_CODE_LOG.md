@@ -65,6 +65,24 @@
 - One additive src change: `data-testid="access-denied"` on `ProtectedRoute` (four suites pinned that
   screen by Hebrew string while E2E never runs in CI). Gate exit 0 · 376 unit · live DB byte-identical.
 
+### 31/07/2026 22:18 — **Step 4.3b scheduled before 4.4; last M3 debt ruled "not required"** (docs)
+- Ishay asked the build session *"what didn't you check"* right after 4.2+4.3 closed with a coverage
+  map claiming nothing was uncovered. **Four gaps surfaced inside that declared scope.** I re-verified
+  all four against the code before scheduling, and **moved two severities**.
+- 🔴 **The one the build session under-rated:** `enforce_quote_in_progress_lock` branches on
+  `TG_TABLE_NAME` — `quotes` reads `OLD.quote_status`, **everything else runs a subquery** against the
+  parent quote. Two triggers, one per table ⇒ the `quote_services` path is a **separate code path that
+  has never executed**, and it is what keeps an approved quote's lines frozen (⇒ old PDFs reproducible).
+- Measured worse than reported: `param-ratio` and `params-save` appear in **no** spec at all;
+  `param-vat` appears once, read-only, in `smoke.spec.js`. Downgraded the product-status toggle to 🟡 —
+  round D already covers the *consequence* of disabling, only the action is bare.
+- **Sequencing is the substance:** 4.4 *is* the regression step, so 4.3b runs before it or the 4.5 gate
+  signs an incomplete suite. Recorded as a step **plus** header/table rows — the same fix this file
+  logged at 21:06, applied to my own addition.
+- ✅ Last `🚧 מ3` (extra contacts in the quote picker/PDF) ruled **not required** — optional by its own
+  wording, M3 does not break, and choosing a recipient is a new request. `check-context` now reports
+  **zero** open M3 debts.
+
 ### 31/07/2026 21:55 — **"Verified" is not "recorded" — the context checker caught the manager's own overclaim** (docs)
 - I ran `npm run gate` myself to verify the 4.2+4.3 round (**exit 0**). Its `check:context` step reported
   **2 open `🚧 מ3` debts** — while the board line I had written at 21:20 said *"חובות מודול 3 נסגרו כולם"*.
