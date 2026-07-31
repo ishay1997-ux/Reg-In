@@ -68,16 +68,28 @@ finding is worse than a blank page.
 
 ## Job B — review finished work (בקרה)
 
-**Don't wait to be told a session finished — watch for it.** Waiting on Ishay to relay "he's
-done" turns him into a courier between two sessions, which is exactly what the docs elsewhere
-try to prevent. Arm a background monitor whose loop exits on **two conditions together**: HEAD
-moved *and* `git status --porcelain --untracked-files=no` is empty. A new commit alone can be
-mid-round; a clean tree alone is also true before anything started. `--untracked-files=no` is
-required — builders leave scratch files (a screenshot baseline, a lockfile) and without it the
-tree is never "clean" and the alert never fires. No `git fetch` in the loop: both sessions share
-one disk, so the commit is local the moment it lands — fetch only adds network cost and is the
-one thing that would justify a slow interval. Without it the check is nearly free, so pick the
-interval by how fast you want to know: ~2 min for a fix round, 10–15 for something long.
+**Don't wait to be told a session finished — watch for it.** Relaying "he's done" through Ishay
+makes him a courier between two sessions. Arm this via the Monitor tool **when you start waiting
+on a specific round** — not as an opening ritual: with nothing running there is nothing to wait
+for, and an idle monitor just fires on your own next commit.
+
+```bash
+BASE=$(git rev-parse HEAD)
+while true; do
+  sleep 120                                   # ~2 min per fix round · 600–900 for something long
+  if [ "$(git rev-parse HEAD)" != "$BASE" ] \
+     && [ -z "$(git status --porcelain --untracked-files=no)" ]; then
+    echo "✅ נחת — $(git log --oneline -1)"; exit 0
+  fi
+done
+```
+
+Four choices in there, each load-bearing — **resist adding a fifth condition per incident; that
+is how this grows into noise.** Both conditions together, because a commit alone can be mid-round
+and a clean tree alone is also true before anything started. `--untracked-files=no`, because
+builders leave scratch files and without it the tree is never "clean" and the alert never fires.
+No `git fetch`, because both sessions share one disk — it only adds network cost, and it is the
+sole reason anyone would poll slowly. And the interval follows how fast you want to know, not cost.
 
 ⚠️ **A monitor is a one-shot tool, not a service — arm it per wait, and know its three limits.**
 It **dies when the conversation ends**, so a fresh manager session inherits no watch and must arm
