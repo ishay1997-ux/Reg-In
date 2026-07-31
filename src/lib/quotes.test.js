@@ -611,25 +611,43 @@ describe('matchesQuoteFilters — סינון צד-לקוח', () => {
 
 describe('sortQuotes', () => {
   const CTX = { defaultVatRate: 18 }
-  const A = quoteRow({ quote_id: 1, updated_at: '2026-07-20T09:00:00.000Z' })
-  const B = quoteRow({ quote_id: 2, updated_at: '2026-07-28T09:00:00.000Z' })
+  // ⚠️ **לשלוש הרשומות ערכים מובחנים בכל שלושת שדות-המיון** (תוקן 31/07/2026, סבב F).
+  // עד אז A ו-B ירשו מ-`quoteRow()` את **אותו** manual_discount ואת **אותו**
+  // estimated_event_date — כלומר בשני המיונים הם היו שווים, והתוצאה `[3,1,2]` הוכיחה רק
+  // ש-C ראשונה. הסדר בין 1 ל-2 הגיע כולו מ**יציבות-המיון של JS** ולא מהמשווה, ומשווה
+  // הפוך בשדה המשני היה משאיר את הבדיקות ירוקות.
+  // זו המשפחה שמתועדת ב-src/CLAUDE.md: "נתוני-בדיקה אחידים = בדיקה שעוברת על קוד שבור".
+  const A = quoteRow({
+    quote_id: 1,
+    updated_at: '2026-07-20T09:00:00.000Z',
+    manual_discount: 10, // סכום אמצעי
+    estimated_event_date: '2026-09-15', // האירוע הרחוק ביותר
+  })
+  const B = quoteRow({
+    quote_id: 2,
+    updated_at: '2026-07-28T09:00:00.000Z',
+    manual_discount: 20, // ההנחה הגבוהה ⇒ הסכום הנמוך
+    estimated_event_date: '2026-08-22',
+  })
   const C = quoteRow({
     quote_id: 3,
     updated_at: '2026-07-25T09:00:00.000Z',
-    manual_discount: 0,
-    estimated_event_date: '2026-07-31',
+    manual_discount: 0, // בלי הנחה ⇒ הסכום הגבוה
+    estimated_event_date: '2026-07-31', // האירוע הקרוב ביותר
   })
 
   it('ברירת-המחדל "הקרוב לפוג ראשון" = הישן-שלא-נגעו-בו ראשון', () => {
     expect(sortQuotes([B, C, A], 'expiry', CTX).map((q) => q.quote_id)).toEqual([1, 3, 2])
   })
 
-  it('מיון לפי סכום — מהגבוה לנמוך (C בלי הנחה ידנית ולכן גבוהה יותר)', () => {
+  // ⚠️ שני המיונים מחזירים **סדר שונה זה מזה**, וזה העיקר: כך אף סדר-קלט מקרי אינו יכול
+  // לספק את שניהם, וכל אחד מהם מוכיח את המשווה שלו ולא את יציבות-המיון.
+  it('מיון לפי סכום — מהגבוה לנמוך (הנחה 0 < 10 < 20 ⇒ הסכום יורד)', () => {
     expect(sortQuotes([A, B, C], 'amount', CTX).map((q) => q.quote_id)).toEqual([3, 1, 2])
   })
 
-  it('מיון לפי תאריך-אירוע — הקרוב ראשון', () => {
-    expect(sortQuotes([A, B, C], 'eventDate', CTX).map((q) => q.quote_id)).toEqual([3, 1, 2])
+  it('מיון לפי תאריך-אירוע — הקרוב ראשון (07-31 · 08-22 · 09-15)', () => {
+    expect(sortQuotes([A, B, C], 'eventDate', CTX).map((q) => q.quote_id)).toEqual([3, 2, 1])
   })
 
   it('אינו משנה את המערך המקורי', () => {

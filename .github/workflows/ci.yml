@@ -60,6 +60,31 @@ jobs:
       - name: Build
         run: npm run build
 
+  # שער-הפונקציה-בשרת — נוסף 31/07/2026 (סבב F של סקירת-הקוד).
+  # **הפער שהוא סוגר:** `supabase/functions/send-email/index.ts` היה **מחוץ לכל בדיקה
+  # אוטומטית**. ‏ESLint מדלג עליו בשקט ("File ignored because no matching configuration
+  # was supplied" — אזהרה, לא כשל), אין לו בדיקת-יחידה, והוא לא נבנה ב-`npm run build`.
+  # ‏Prettier כן בודק אותו — כלומר **הפורמט** נשמר אבל **הטיפוסים** לא. וזהו הקובץ שמחזיק
+  # את כתובת ה-webhook הסודית ואת השער שמפריד בין משתמשת-צפייה לשליחת מסמך ללקוח.
+  #
+  # ⚠️ **job נפרד ובלי `npm ci` במכוון.** ‏deno מזהה `node_modules` של הריפו ואז דורש
+  # שכל תלות npm תהיה מותקנת שם (‏"Could not find a matching package for
+  # npm:@supabase/realtime-js") — כשל-שווא. בלי node_modules הוא פותר `jsr:`/`npm:`
+  # בעצמו, בדיוק כמו סביבת-הריצה האמיתית של Supabase Edge Functions.
+  #
+  # ‏`deno check` (טיפוסים) ולא `deno fmt`: Prettier כבר מפרמט את הקובץ הזה
+  # (‏`.prettierignore` מחריג רק את `supabase/migrations`), ושני מפרמטים היו נלחמים.
+  edge-function-check:
+    name: Edge function type-check (deno)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check send-email
+        run: deno check supabase/functions/send-email/index.ts
+
   secret-scan:
     name: Secret scan (gitleaks)
     runs-on: ubuntu-latest
