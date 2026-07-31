@@ -10,9 +10,9 @@
 | Module | 3 — הצעות מחיר (Quotes) |
 | Owner | ישי (sole developer — all rulings and build; guide `modules/module_03_quotes.md` §③) |
 | Branch | `ishay/module-3-quotes-build` (cut 22/07 from dev `a35c92f`, after PR #9 merged; the old `ishay/module-3-quotes` is now an ancestor of `dev` — dead, iron rule 10) |
-| Status | 🔨 **Phase 3 (UI) is CLOSED — 3.1–3.7 all done (the 3.7 gate signed 31/07/2026). Next: Phase 4, starting at step 4.1.** Phase 1+2 closed (see done-tables below). |
+| Status | 🔨 **Phase 4 is OPEN — 4.1 CLOSED 31/07/2026. Next: 4.2 (rejection + expiry).** Phase 1+2+3 closed (see done-tables below). ⚠️ Before 4.2: read the 🧰 verification-pattern box beside step 4.2 — the rolled-back battery is built and proven, do not re-invent it. |
 | Last updated | 31/07/2026 09:35 — **audit fix-round A (VAT guard) CLOSED.** Code + migration `20260731085335` both landed (typed-echo given, applied via MCP). `npm run gate` **exit 0** (343 unit tests) · E2E **21/21** (2nd run; see §9 on the 1 pre-existing `permissions.spec.js` flake in run 1). Every guard proven by **returning the failure**, not by watching it pass. See §9 (31/07 09:05). *(previous entry: 30/07/2026 22:52 — 3.6 CLOSED; `npm run gate` exit 0, 324 tests, 25 E2E green 0 skips, live DB byte-identical to Seed — 40 tiers · VAT 18 · ratio 50 · quote #6 = 6,319 ₪.)* |
-| **Active step** | **3.7 ✅ CLOSED 31/07/2026 — Phase 3 is done. NEXT IS 4.1 (approval-flow edges).** ⚠️ Read before 4.x: (1) the demo data **changed tonight** — quotes #14/#15 were deleted, so `quotes` is 8 rows / `quote_services` 20, and מדיטק (customer 46) has **2** quotes, not 4. **An E2E suite that asserts on real seed rows is coupled to them — `grep` the suite for an id before deleting it** (this bit once, and only the proactive regression caught it; CI never runs E2E). (2) The rejection-reason-on-row assertion now lives on עיריית חדרה's quote #11, not מדיטק's #14. (3) `RowAction` is now shared at `src/components/RowAction.jsx` — consume it, don't re-declare it. Evidence: §9 entry 31/07 01:28. *(3.6 ✅ complete 30/07 22:52 — details kept below.)* **3.6 ✅ COMPLETE — built and verified live 30/07 22:52.** Mockup approved (`docs/mockups/system-settings-screen/05_prices_tab_approved.html`), plan `~/.claude/plans/resilient-purring-bear.md`, rulings **LOCAL-19..21**. ⚠️ Read §9 (30/07 evening) before touching `replacePriceTiers` or any delete-then-insert save: a real data-loss incident happened and the fixed ordering (upsert→delete-stale) is load-bearing. **Next: 3.7 (Phase-3 gate — 🎨 UX & functional review, a 👤 stop).** |
+| **Active step** | **4.1 ✅ CLOSED 31/07/2026 19:2x — NEXT IS 4.2 (rejection + expiry).** ⚠️ Carry-forward from 4.1: (a) the E2E baseline is **38, not 39** — the older figure is off by one; (b) `closing_unit_cost` freeze must be tested by **moving the catalog and watching the line not move** — an equality check against the catalog passes on a broken freeze; (c) sequences do not roll back, so `projects.project_id` has burned 5 and 6. *(previous: 3.7 ✅ CLOSED 31/07/2026 — Phase 3 done.)* ⚠️ Read before 4.x: (1) the demo data **changed tonight** — quotes #14/#15 were deleted, so `quotes` is 8 rows / `quote_services` 20, and מדיטק (customer 46) has **2** quotes, not 4. **An E2E suite that asserts on real seed rows is coupled to them — `grep` the suite for an id before deleting it** (this bit once, and only the proactive regression caught it; CI never runs E2E). (2) The rejection-reason-on-row assertion now lives on עיריית חדרה's quote #11, not מדיטק's #14. (3) `RowAction` is now shared at `src/components/RowAction.jsx` — consume it, don't re-declare it. Evidence: §9 entry 31/07 01:28. *(3.6 ✅ complete 30/07 22:52 — details kept below.)* **3.6 ✅ COMPLETE — built and verified live 30/07 22:52.** Mockup approved (`docs/mockups/system-settings-screen/05_prices_tab_approved.html`), plan `~/.claude/plans/resilient-purring-bear.md`, rulings **LOCAL-19..21**. ⚠️ Read §9 (30/07 evening) before touching `replacePriceTiers` or any delete-then-insert save: a real data-loss incident happened and the fixed ordering (upsert→delete-stale) is load-bearing. **Next: 3.7 (Phase-3 gate — 🎨 UX & functional review, a 👤 stop).** |
 | 🆕 **Read this before 3.5 — what changed in 3.4 that a fresh session would not guess** | (1) **A generic email engine now exists** — `src/lib/email.js` + Edge Function `send-email` + table `email_log`. It is **not** quote-specific; M4/M8/M11 reuse it (`src/CLAUDE.md` §"שליחת מייל" · §6 🚧 מ4·מ8·מ11). (2) **Migrations are at 9, not 5** — 6 (8th rejection reason) · 7+9 (email wording + sender signature: **deliberate deviations from FROZEN C5 §5.8.1**, `params` value only) · 8 (`email_log`). (3) **The project now has an external dependency** on Make.com (scenario 6759079) and its **first Edge Function**; the webhook URL is a Supabase secret and must never enter the repo. (4) **Direction incident #5** happened in an *outgoing email*, not a screen — `src/CLAUDE.md` now requires every outgoing Hebrew artefact to run its own direction pass. (5) **Two debts booked to 4.3:** no permanent E2E for the email path, and no test proving a `view`-level user is refused **by the function** rather than by a hidden button. (6) ✅ **DONE 31/07/2026** — Ishay deleted BOTH unused connections (`regin-gmail` 9406233 + `regin-gmail-send` 9406719) via browser-Claude; verified live via `connections_list` (only `regin-google-restricted` + Make's default remain) and `scenarios_get` 6759079 (`isActive: true`, connection 9407092 intact, onerror pair in place). |
 | ⚠️ Concurrency | 29/07 19:10 — the **ownership question from the 18:19–18:57 entries is RESOLVED by evidence**: the uncommitted 3.3 code was this build session's, it is now complete and gate-green. The other conversation wrote **no code** (its two commits `f67cb98`/`512184c` are docs only) and correctly stood down per iron rule 16. **Ishay must close the second conversation before the next step** — two sessions on one branch nearly caused a `git add -A` cross-commit. |
 
@@ -39,7 +39,7 @@ Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · �
 | 3.5 | ~~Customer-card integration~~ → **Customer RECORD PAGE** (`/customers/:id`, tabs, quote history + metrics + sort/search/chips + revenue column) 🗣️→🔻🤖 | ✅ (gate 0, 290 unit + 13 E2E; 9,865 ₪ / 6,319 ₪ live; direction pass 0 findings; 30-quote view proven **without a single DB write**) |
 | 3.6 | Prices tab in /system (§7.84) 🗣️→🔻🤖 | ✅ (mockup approved w/ real data + 2 proactive additions [LOCAL-19/20]; gate 0, **324 unit** [was 290, 18 written first + watched fail]; **25 E2E green incl. all 18 pre-existing, 0 skips**; direction pass measured live [0 overflow · ₪ same side ×22 · price col 0.0px]; write-wall proven by SQL impersonation both directions; **2 real bugs caught by verification + 1 real data-loss incident, §9**) |
 | 3.7 | Phase-3 gate: 🎨 UX & functional review 🔻👤 | ✅ **CLOSED 31/07/2026 02:4x** — 2 sweeps, 4 findings ruled by Ishay and all 4 resolved (3 built + the DB cleanup he ran); both 👤 items returned (trigger check `O`/`O` + "רואים מעולה" on the PDF preview). Gate exit 0 · **327 unit** · **18/18 E2E** (one broke on the cleanup and was fixed without weakening it) · smoke green · jscpd 0.60%→0.44%. §9 31/07 |
-| 4.1 | Approval flow E2E (date guard §7.32, RPC, project born complete, locks) 🔻👤 ⬅️ **re-tagged 31/07: a successful approval is irreversible** | ⬜ |
+| 4.1 | Approval flow E2E (date guard §7.32, RPC, project born complete, locks) 🔻👤 ⬅️ **re-tagged 31/07: a successful approval is irreversible** | ✅ (rolled-back SQL battery: all 7 guards **returned their failure** · `e2e/quote-approval.spec.js` NEW, 6 tests, 3 of them mutation-proven · **zero net DB change, verified after**) |
 | 4.2 | Rejection + expiry flows E2E (7 reasons, notes, cron simulation) 🔻🤖 | ⬜ |
 | 4.3 | e2e/quotes.spec.js + e2e/prices.spec.js suites 🔻🤖 | ⬜ |
 | 4.4 | Regression: full verify + existing E2E + M1/M2 screens 🔻🤖 | ⬜ |
@@ -320,6 +320,23 @@ Files: CustomerDetailsCard.jsx, src/lib/customers.js, CustomersFilterSheet.jsx/C
 
 Goal: prove the conversion's integrity edges. Files: none new (SQL + live UI). What: E2E+SQL: approve → project 'טרם החל' born complete (event_name, customer_id, date, times, location, required_hostess_count=Σ, logistics rows count = non-hostess lines w/ serial numbers); vat_rate_snapshot=18.00 + closing_unit_cost frozen; past-date quote → blocked w/ friendly message (§7.32, today allowed); double-click → single project + friendly error; view-role sees no approve button AND direct RPC denied. Verify: evidence per assertion.
 
+> 🧰 **THE VERIFICATION PATTERN FOR EVERY 4.x STEP — built and proven in 4.1, do not re-invent it.**
+> A single `do $$ … $$` block that ends in an unconditional `raise exception` carrying the whole
+> report: Postgres aborts the statement, so **every write inside rolls back as a language guarantee**,
+> and the report still reaches you as the error text. Impersonate with
+> `set_config('request.jwt.claims', json_build_object('sub',…,'email',…,'role','authenticated')::text, true)`
+> — the MCP connection is `postgres` with **no JWT**, so `auth.email()` is null and the RPC's very
+> first guard would fire before anything else. Catch each expected failure in a nested
+> `begin … exception when others then` so one guard firing does not end the battery. Full working
+> battery + its measured output: §9, entry 31/07 19:1x. Prove the rollback first with a harmless
+> marker write, then read the row back — cheap, and it is the only thing standing between a typo
+> and a permanent change.
+> ⚠️ **The environment's safety classifier refuses DDL/destructive SQL through the Supabase MCP**
+> (measured 31/07 on the 14/15 cleanup: both `alter table … disable trigger` and the delete were
+> blocked). Plain `update`/`insert`/RPC inside the rolled-back block are **not** affected — 4.1 ran
+> them fine. If a future step does need DDL, the established fallback is a `scripts/*.sql` file with
+> the expected answers written in + a 🧩 handover prompt for Ishay to run in the SQL Editor.
+
 **Step 4.2 — Rejection & expiry 🔻🤖.** Goal: prove the rejection/expiry lifecycle. Files: none new. What: reject w/o reason blocked; 'אחר' w/o notes blocked; rejected quote fully locked (edit UI hidden + direct UPDATE errors); expiry job simulation → rejected+'פג תוקף' appears in נדחו tab + breakdown; ⭐ chip counts quotes ≤7d. Verify: evidence.
 
 **Step 4.3 — E2E suites 🔻🤖.** Files: e2e/quotes.spec.js, e2e/prices.spec.js. What: CEO+STAFF journeys per Test Identities (create→edit→reject; create→approve→locked; prices CRUD as CEO; denied as non-CEO). Serial (workers=1 config). Verify: `npm run test:e2e` all green (existing 3 suites too).
@@ -344,11 +361,11 @@ Goal: prove the conversion's integrity edges. Files: none new (SQL + live UI). W
 | Type | Planned | As-run |
 |---|---|---|
 | Unit | pricing.js (6,319 exact, tiers, discounts, ceil), catalog labels vs DB CHECKs, validators | **324 tests green** as of 3.6 (290 at 3.5). ↳ 3.6 added 18 (written first, watched fail): `validateTierRows` incl. the real seed tiers · `computeMarginPercent` from real catalog numbers · `formatShekelExact` |
-| Integration | RPC battery (approve/double-click/rollback/permission), lock trigger, expiry job manual run, impersonation RLS matrix | Phase-1 battery done (§1 table). **↳ 3.4 added a live server-side chain: Edge Function auth+permission gate → Make → Gmail, plus the `email_log` write** — verified by real sends, see §9 |
+| Integration | RPC battery (approve/double-click/rollback/permission), lock trigger, expiry job manual run, impersonation RLS matrix | Phase-1 battery done (§1 table). **↳ 3.4 added a live server-side chain: Edge Function auth+permission gate → Make → Gmail, plus the `email_log` write** — verified by real sends, see §9. **↳ 4.1 re-ran the approve battery on the ROUND-G function and all 7 guards returned their failure, plus a two-directional `closing_unit_cost` freeze proof; zero net DB change, read back after** (§9 31/07 19:2x). ⚠️ Still owed: the expiry job manual run (4.2) |
 | E2E | quotes.spec.js + prices.spec.js (CEO+STAFF journeys) + existing 3 suites | Permanent suites still owed (step 4.3). **↳ 3.4 used five throwaway specs** (send · resend · body-format · RTL · builder-preview + refresh-survival), each deleted after use. ⚠️ **The email path has NO permanent E2E yet — add one in 4.3**. **↳ 3.6 used one throwaway spec** (7 tests: catalog render · tier edit round-trip w/ restore · validation+warning · param→builder recommendation w/ restore · 6,319 regression · permission wall · measured direction pass), deleted after use; ⚠️ **4.3's permanent `prices.spec.js` must NOT copy it as-is — its write-and-restore flows touch the live DB; rebuild the write paths on `page.route` interception** |
 | Regression | `npm run verify` + M1/M2 smoke screenshots | `npm run gate` exit 0 at every step end. **↳ 30/07: 10 existing E2E specs re-run green after 3.4's shared-file edits** (`api.js`, dialogs) |
 | UAT | Deferred to M12 (§6 ruling); Ishay's phase gates = interim UAT | |
-| Security/Pen | RLS positive+negative controls, §7.83 open-read proof, DEFINER RPC internal check, advisors after every migration | Phase-1 matrix done. **↳ 3.4: the Edge Function's two gates (JWT + `edit` on 'הצעות מחיר' resolved per-role) — the role-scoping half was got wrong first and fixed; `email_log` has no client write policy; advisors after migration 8 = zero new findings.** ⚠️ **Still owed: a negative test proving a `view`-level user (finance) is refused by the FUNCTION and not merely by the hidden button — add in 4.3** |
+| Security/Pen | RLS positive+negative controls, §7.83 open-read proof, DEFINER RPC internal check, advisors after every migration | Phase-1 matrix done. **↳ 3.4: the Edge Function's two gates (JWT + `edit` on 'הצעות מחיר' resolved per-role) — the role-scoping half was got wrong first and fixed; `email_log` has no client write policy; advisors after migration 8 = zero new findings.** **↳ 4.1 closed HALF of the debt below:** a `view`-level user (finance) is now proven refused by the **conversion RPC itself** — a direct `/rest/v1/rpc/` call with her JWT returns `42501`, with a CEO control call on the same id returning `P0002` so the assertion cannot pass for the wrong reason (`e2e/quote-approval.spec.js`). ⚠️ **Still owed in 4.3: the same negative test for the EDGE FUNCTION `send-email`** — a different server, a different gate, and the one that was got wrong once |
 | Performance | Index C-6 used by expiry scan (EXPLAIN evidence); no further targets (internal tool) | |
 | Usability | Filled from step 3.7 🎨 review + closing UX audit | |
 | Compatibility | Chromium only now; cross-browser sweep = pre-M5 (§6 ruling) | |
@@ -366,7 +383,7 @@ Module-specific:
 - [ ] 6,319 ₪ EXACT in unit test AND live UI AND PDF.
 - [ ] Policies: quotes 2 · quote_services 2 · catalog 3×2; impersonation matrix evidence.
 - [ ] Lock: UPDATE/DELETE on non-in_progress errors (SQL evidence).
-- [ ] RPC: born-complete project + logistics rows + freezes + double-click safe + permission-checked.
+- [x] RPC: born-complete project + logistics rows + freezes + double-click safe + permission-checked. **(4.1, 31/07 — rolled-back battery, every guard returned its failure; `closing_unit_cost` freeze proven in both directions, not by equality.)**
 - [ ] pg_cron: 2 jobs scheduled (fixed UTC hour per §7.56 nod) + simulated-run evidence.
 - [ ] PDF: Hebrew RTL + embedded font screenshot (§7.41 — real verification, no rubber-stamp).
 - [ ] Rejection requires reason (~~7~~ **8** values, incl. 'נפתחה בטעות'); 'אחר' requires notes; expiry lands as 'פג תוקף'.
@@ -385,6 +402,69 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 31/07/2026 19:2x — **Step 4.1 CLOSED — the approval edges are proven, and not one existing row
+  was changed.** Baselines measured first, not assumed: **376 unit** · **38 E2E** (⚠️ the 39 quoted
+  in the 17:55 entry and by the manager session is **off by one** — statically 4+3+7+3+5+4+2+10 = 38
+  excluding the smoke suite, and the run agrees; corrected here rather than propagated).
+  **(1) The rolled-back SQL battery — all seven guards RETURNED their failure**, on quote #6, CEO
+  impersonated, one aborted `do` block (pattern now written up beside step 4.2):
+  · past date ⇒ `P0001 | לא ניתן לאשר הצעה שתאריך-האירוע שלה עבר (2026-07-30)`
+  · **today itself ⇒ approved** — the half that actually proves "today allowed" (§7.32) rather than
+  only "yesterday blocked"; both halves in one run, on the same quote.
+  · born complete ⇒ `name=כנס לקוחות שנתי | cust=46 | date=2026-07-31 | loc=אקספו תל אביב, ביתן 2 |
+  18:00:00-22:00:00 | hostess=6 | status=not_started | owner=<caller>` · logistics
+  `B-REG-TAG#1 x300, B-FAB-LAN#2 x300` (exactly the 2 non-hostess lines, serials 1..N) ·
+  `vat_rate_snapshot = 18.00`
+  · double-click ⇒ `ההצעה כבר טופלה (סטטוס approved)` **and `projects` count for the quote = 1**
+  · lock trigger ⇒ `הצעה נעולה: … (נמצא: approved)`
+  · view-role (finance) on a still-open quote ⇒ `42501 | אין הרשאה: נדרשת עריכה על הצעות מחיר`
+  **🔬 `closing_unit_cost` was proven FROZEN in both directions, which equality alone cannot do.**
+  Reading the seed rows shows the line cost equal to the catalog cost — that proves *populated*, not
+  *frozen*. So inside the transaction the catalog was moved **before** approval (`04ST` 300 ⇒ 999):
+  the approved line became **999**, proving the RPC reads `product_costs` at approval; then the
+  catalog was moved again (⇒ 111) and the line **stayed 999**, proving it is frozen after. ⛔ A future
+  session must not "simplify" this to a single equality check — that check passes on a broken freeze.
+  **Post-battery read-back:** 8 quotes (4/1/3) · 1 project · 2 logistics rows · quote #6 back at
+  `2026-08-22 / in_progress / notes intact / vat null` · `product_costs(04ST) = 300.00`. Identical
+  to the pre-state. ⚠️ **What does NOT roll back: sequences.** `projects.project_id` 6 was consumed
+  (5 was already burned by round A's control run). Internal id, not the customer-facing quote number.
+  **(2) `e2e/quote-approval.spec.js` — NEW, 6 tests, deliberately additive.** Checked first what
+  round D's spec already covers on screen (double-click · no-hostess · 42501 · P0002 · unknown-error ·
+  lock-on-reject) and built only the gaps: the §7.32 date message (its failRpc string is the
+  **verbatim live output** measured in (1), not an invented one) · view-role has no approve control
+  on `/quotes` **and** on `/customers/:id` · the RPC itself refuses her · a closed quote shows no
+  approve control even for the CEO.
+  🔒 **The one test that touches the real RPC runs on `p_quote_id = 999999`** — the permission guard
+  executes *before* the row lookup, so a healthy system answers `42501` and a broken one answers
+  `P0002`; either way there is no row to approve. **And that discrimination is itself a test:** the
+  identical call as CEO returns `P0002`, which is what stops the 42501 assertion from passing for the
+  wrong reason.
+  **🔬 Three of the six were mutation-proven (watched failing):** dropping the past-date rule from
+  `SERVER_MESSAGE_RULES` ⇒ the alert reads `"אישור ההצעה נכשל."` · widening both permission gates to
+  `!== 'blocked'` ⇒ **4 approve buttons appear for finance on `/quotes` and 1 on the customer page** ·
+  forcing `isOpen = true` ⇒ the approved quote #10 grows an approve button. All three reverted;
+  `git status` verified clean of them before the gate.
+  **(3) A second staleness in the same comment block** (`src/lib/quotes.js`): it named
+  `20260731085335` as the live RAISE source **and** claimed 11 P0001 sites. Measured live via
+  `pg_get_functiondef`: the three RPCs live in `20260731155511` (round G rewrote all of them), the
+  lock trigger in `20260723115000`, and P0001 is **9** sites, not 11. Both numbers were true for
+  round A that morning and wrong by evening. The comment now says so explicitly — **a pointer to a
+  migration file ages; a measurement from the DB does not.**
+  **↳ (3b) and the same stale count was hiding in two MORE places** — found only because Ishay asked
+  "what didn't you check": `db_roadmap.md` §6 (quotes row) and `src/modules/03_quotes/CLAUDE.md` both
+  also said 11. ⚠️ **I had explicitly cleared the `db_roadmap` line earlier in the session** — I
+  checked it for the migration *filename* and never for the *count*. Lesson worth carrying: when a
+  fact drifts, `grep` the **number** too, not just the identifier you happened to be chasing. Dated
+  journal entries that quote 11 were left alone (they were true when written — records are not rewritten).
+  **Final numbers:** `npm run gate` **exit 0** · **376 unit** (unchanged by design — 4.1 added no
+  `src/lib` logic, so it honestly added no unit tests) · full-suite E2E **44/44** (38 + 6) ·
+  `npm run smoke` green · `projects_project_id_seq.last_value = 6`, confirming the burned-sequence
+  claim by measurement rather than arithmetic.
+  📸 **Visual pass (throwaway spec, deleted):** the finance user's `/quotes` and `/customers/46`
+  screenshotted and reviewed — both screens fully intact (tabs 8/4/1/3, metrics, all 7 columns,
+  `6,319 ₪` live), with **only the eye icon** in the actions column. The customer page shows LOCAL-15
+  in one frame: "עריכת פרטים" present (she is `edit` on לקוחות) beside quote rows with no approve/
+  reject (she is `view` on הצעות מחיר). A DOM-count assertion alone cannot show a screen is whole.
 - 31/07/2026 17:55 — **Rounds E+F landed — the audit fix-plan is now empty and deleted.** Commits
   `2687447` (E, cleanup) and `c14bf32` (F, test gaps). Gate exit 0 · **373 unit tests** (from 366) ·
   E2E 39/39 · four before/after screenshots **byte-identical (md5)**, which is what "E changed no

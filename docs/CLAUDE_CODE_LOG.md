@@ -24,7 +24,7 @@
 ✅ Sync-verified: gate green end-to-end (31/07/2026 10:47 — gate exit 0 · 353 unit · E2E 24/24, 0 skips)
 ✅ אומת-סנכרון: 31/07/2026 01:02 (regin-docs-sync — 0 conflicts; 3 LOG reference lines + 4 section stamps refreshed)
 
-**Where we stand:** Modules 1 (users/permissions) and 2 (customers) are **closed, merged to `dev`, promoted to `main`** — milestone 1 (tag `milestone-1`). **Module 3 (quotes) — Phases 1 (DB) and 2 (money SSOT) both CLOSED.** Phase 3 (UI): **steps 3.1 (PDF engine) · 3.2 (quote builder) · 3.3 (quote management) · 3.4 (real email send) · 3.5 (customer record page) · 3.6 (prices tab in /system) all DONE**, gate green (`npm run gate` exit 0), 324 unit tests, 18 permanent E2E, 6,319 ₪ exact live on screen and in the PDF. Migrations at 9. `scripts/demo-seed.mjs` seeds 4 customers + 8 quotes through the real RPCs (reversible, `--reset`). **Phase 3 is CLOSED — the 3.7 🎨 gate was signed (both 👤 items returned from Ishay). Active step: 4.1 (approval-flow edges).** ⚠️ Demo data changed at the 3.7 close: `quotes` = 8 rows, `quote_services` = 20, customer 46 (מדיטק) has 2 quotes. `RowAction` is now shared at `src/components/RowAction.jsx`. Branch `ishay/module-3-quotes-build`, cut fresh from `dev` (`a35c92f`) after PR #9. Module 4's pre-decision round waits until M3 is done.
+**Where we stand:** Modules 1 (users/permissions) and 2 (customers) are **closed, merged to `dev`, promoted to `main`** — milestone 1 (tag `milestone-1`). **Module 3 (quotes) — Phases 1 (DB) and 2 (money SSOT) both CLOSED.** Phase 3 (UI): **steps 3.1 (PDF engine) · 3.2 (quote builder) · 3.3 (quote management) · 3.4 (real email send) · 3.5 (customer record page) · 3.6 (prices tab in /system) all DONE**, gate green (`npm run gate` exit 0), 324 unit tests, 18 permanent E2E, 6,319 ₪ exact live on screen and in the PDF. Migrations at 9. `scripts/demo-seed.mjs` seeds 4 customers + 8 quotes through the real RPCs (reversible, `--reset`). **Phase 3 is CLOSED; Phase 4 is OPEN — step 4.1 (approval-flow edges) is CLOSED. Active step: 4.2 (rejection + expiry).** The 4.x verification pattern is built and written up beside step 4.2 in the micro-guide: a rolled-back `do` block that ends in a deliberate `raise` — never approve a quote to "just check", there is no un-approve. Permanent E2E for the approval edges: `e2e/quote-approval.spec.js` (6 tests). ⚠️ Demo data changed at the 3.7 close: `quotes` = 8 rows, `quote_services` = 20, customer 46 (מדיטק) has 2 quotes. `RowAction` is now shared at `src/components/RowAction.jsx`. Branch `ishay/module-3-quotes-build`, cut fresh from `dev` (`a35c92f`) after PR #9. Module 4's pre-decision round waits until M3 is done.
 
 **Hook mechanism (29/07/2026, iron rule 16):** `check-docs-updated.sh`'s module-guide check now attributes per-file to the session that actually touched it (`protect-frozen-files.sh`'s marker stores real relative paths, not a bare flag) — see tonight's Session Log entry for why and how it was verified. Two-sessions-on-one-branch is now *survivable without cross-blaming*; it does **not** prevent two sessions building the same feature concurrently (a separate, deferred idea: per-step ownership claim).
 
@@ -46,6 +46,22 @@
 
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
+
+### 31/07/2026 19:2x — **Step 4.1 (approval-flow edges) CLOSED — proven without approving a single quote**
+- **Why it looks unusual:** approval is irreversible and there is one live DB, so the proof is a
+  rolled-back SQL battery + screen tests, with the DB read back after to show it did not move.
+- All 7 DB guards **returned their failure** (incl. today-is-allowed, the half that actually proves
+  §7.32). `closing_unit_cost` proven frozen **in both directions** — equality with the catalog only
+  proves *populated*. Full battery, outputs and the reusable pattern: `micro_guides/module-3.md` §9.
+- **NEW `e2e/quote-approval.spec.js` (6 tests)**, additive to round D's. The one test touching the real
+  RPC runs on a non-existent id, with a CEO control call proving the 42501 comes from the role.
+- Corrected two stale claims: E2E baseline is **38, not 39**; the RAISE-contract comment in
+  `src/lib/quotes.js` named a superseded migration and 11 P0001 sites (live: `20260731155511`, **9**).
+- ⚠️ **The stale "11 P0001 sites" was in two more files** (`db_roadmap` §6, `03_quotes/CLAUDE.md`) —
+  found only when Ishay asked what I hadn't checked. I had cleared the `db_roadmap` line earlier by
+  checking its *filename* and never its *count*. **When a fact drifts, grep the number too.**
+- `npm run gate` **exit 0** · **376 unit** (unchanged by design — no new `src/lib` logic) · E2E
+  **44/44** · `smoke` green · finance-role screens screenshot-reviewed (whole, actions column = eye only).
 
 ### 31/07/2026 17:55 — **Audit rounds E+F closed — the 31/07 fix-plan is empty and deleted**
 - **E (cleanup, `2687447`) — three comments that contradicted the code beneath them, five copies
