@@ -65,6 +65,18 @@
 - **Bonus:** fixed a pre-existing intermittent E2E failure in `load-failure-guards.spec.js`
   (signOut→loadUser remount wipes login inputs mid-test under load; recovery now starts from a
   fresh `goto`). Not the documented module-1 matrix flake — a different one.
+- **🐞 Follow-up 15:00, and the most useful part of the round:** Ishay asked *"what didn't you
+  check?"* and the answer contained a real defect **I had introduced**. The picker list was derived
+  once per table from all in-use skus ⇒ the disabled product appeared as a plain option in **every**
+  row, so it could be added to a NEW line — the exact inverse of §7.34. Nothing caught it: unit tests
+  don't render Radix, and every screenshot showed the select **closed**. Screenshotting the **open**
+  list is what exposed it. Fixed to `productGroupsFor(currentSku)`; E2E now locks both directions and
+  was watched failing against the broken version. The same follow-up added the **edit-save toast**
+  test that the approved plan promised and the first pass silently skipped — a different render path
+  from the approve dialog, so "works in approve" never covered it. E2E 34/34.
+  **Two durable lessons:** (1) *a screenshot of a closed control proves nothing about its list*;
+  (2) when a plan enumerates N verification sites, tick them off explicitly — the dropped one here
+  was invisible until asked about.
 
 ### 31/07/2026 12:01 — **Two of Ishay's rulings had no build site; moved into round G** (`d7e71bd`, docs only)
 - **The failure mode, and it is structural — worth remembering:** `docs/audit_2026-07-31_fix_plan.md` is self-deleting by design (round closes ⇒ its prompt is deleted). Round **C was a rulings round**, so Ishay's two DB rulings — rate-limit `register_failed_login` to **15/IP/hour**, and **split `products.cost`** into a child table — lived *only inside the prompt scheduled for deletion*. Neither D/E/F/G referenced them (verified: `register_failed_login` appears only under §C). Had the seven rounds run to completion, both rulings would have evaporated with their own prompt. **Generalized: a self-deleting plan must never be the only home of a decision** — rulings belong in a section that outlives the work item.

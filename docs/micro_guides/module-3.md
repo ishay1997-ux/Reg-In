@@ -361,6 +361,17 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 31/07/2026 15:00 — **🐞 Round-D follow-up: a §7.34 hole I introduced, caught by Ishay asking
+  "what didn't you check" — not by any test.** The picker list was computed **once for the whole
+  table** from the set of all in-use skus, so the disabled product showed up as a normal option in
+  **every** row — i.e. it could be added to a NEW line, which is exactly what the 12/07 ruling
+  forbids. Found by screenshotting the OPEN dropdown (the earlier shots only showed it closed).
+  Fixed: `productGroupsFor(currentSku)` per row — the exception is now the row's **own** sku only.
+  New E2E locks the direction (allowed in its own row, absent in another) and was **watched failing**
+  against the global-filter version. Also landed in the same follow-up: the planned-but-skipped E2E
+  for the **edit-save** error path (a toast, a different render path from the approve dialog's inline
+  row) — also watched failing with the mapper broken. Gate exit 0 · 360 unit · E2E **34/34**.
+  ⚠️ Generalized lesson: *a screenshot of a closed control proves nothing about the control's list.*
 - 31/07/2026 14:45 — **Fix-round D CLOSED.** Both 👤 visual approvals given by Ishay (the amber
   "מוצר מושבת" tag as laid out, and the PDF showing product NAME instead of sku for a disabled
   product). §D prompt deleted from `docs/audit_2026-07-31_fix_plan.md` per its lifecycle;

@@ -131,6 +131,26 @@ test.describe('הודעות-הכשל של המסד מגיעות למסך (סבב
     await expect(alert).not.toContainText('duplicate key')
   })
 
+  // ⚠️ **המסלול השני, ולא רק האישור.** ‏`toWriteError` עוטף שלוש כתיבות, וחלון-האישור הוא
+  // רק אחת מהן — השנייה היא שמירת-עריכה, שמציגה **טוסט** ולא שורה בחלון. נתיב-תצוגה אחר
+  // לגמרי, ולכן "עובד באישור" אינו מעיד עליו. (הבדיקה הזו הייתה בתוכנית המאושרת ונשמטה
+  // בסבב הראשון — נוספה 31/07 14:50 אחרי שישי שאל מה לא נבדק.)
+  test('כשל שמירת-עריכה: הטוסט מציג את ההודעה הממופה, לא את הגולמית', async ({ page }) => {
+    // המחרוזת מ-20260723115000 (`replace_quote_lines`), עם ערך-ה-enum שהמסד מזריק.
+    await failRpc(page, 'replace_quote_lines', {
+      message: 'לא ניתן לערוך הצעה שאינה בתהליך (סטטוס approved)',
+    })
+    await page.goto(`/quotes/${QUOTE_WITH_HOSTESS_LINE}/edit`)
+    await expect(page.getByTestId('quote-lines-table')).toBeVisible({ timeout: 30_000 })
+    await page.getByRole('button', { name: 'עדכון ההצעה' }).click()
+
+    const toast = page.getByTestId('toast-error')
+    await expect(toast).toBeVisible()
+    await expect(toast).toContainText('אינה בסטטוס')
+    await expect(toast).not.toContainText('approved')
+    await expect(toast).not.toContainText('עדכון ההצעה נכשל')
+  })
+
   test('רגרסיה — בלי יירוט, חלון-האישור נפתח נקי ובלי שגיאה', async ({ page }) => {
     // ⚠️ **לא לוחצים "אישור"**: אישור הוא בלתי-הפיך (יוצר פרויקט אמיתי). מה שנבדק כאן
     // הוא שהמסלול התקין לא נשבר מהשינוי — החלון נפתח, ואין הודעת-שגיאה תלויה בו.
@@ -175,6 +195,30 @@ test.describe('מוצר שהושבת אינו מפיל שורה קיימת ל-0 
     //     `sumHostessQty` עדיין רואה שורת-דיילות. **לא לוחצים שמור** (כתיבה למסד חי):
     //     נבדק שהוולידציה עצמה לא מסמנת את הטבלה, וזה בדיוק אותו כלל שחוסם את השמירה.
     await expect(page.getByTestId('quote-lines-error')).toHaveCount(0)
+  })
+
+  // ⚠️ **הפער שנתפס בצילום ולא בקוד** (31/07 14:55, אחרי ששאל ישי "מה לא בדקת"): הגרסה
+  // הראשונה חישבה את רשימת-המוצרים **פעם אחת לכל הטבלה** עם קבוצת כל המק"טים שבשימוש,
+  // ולכן המוצר המושבת הופיע כאופציה רגילה **בכל השורות** — כלומר אפשר היה לבחור אותו
+  // לשורה חדשה, בניגוד ישיר להכרעת-12/07. הבדיקה נועלת את הכיוון: מותר בשורה שלו, אסור באחרת.
+  test('§7.34 — המוצר המושבת מוצע רק בשורה שלו, ולא בשורה אחרת', async ({ page }) => {
+    await deactivateProduct(page, HOSTESS_SKU)
+    await page.goto(`/quotes/${QUOTE_WITH_HOSTESS_LINE}/edit`)
+    await expect(page.getByTestId('quote-lines-table')).toBeVisible({ timeout: 30_000 })
+
+    const pickers = page.getByTestId(/^quote-line-product-/)
+    const inactiveName = 'שירותי דיילת (4 שעות)'
+
+    // (א) בשורה שלו — כן, אחרת ה-trigger היה מתרוקן ומוחק ויזואלית מוצר ששמור במסד.
+    await pickers.first().click()
+    await expect(page.getByRole('option', { name: inactiveName })).toBeVisible()
+    await page.keyboard.press('Escape')
+
+    // (ב) בשורה אחרת (שורת התגים) — לא. זו האכיפה בפועל של §7.34.
+    await pickers.nth(1).click()
+    await expect(page.getByRole('option', { name: inactiveName })).toHaveCount(0)
+    // ובקרה שהרשימה אכן נפתחה, כדי ש-0 לא ינבע מכך שכלום לא מוצג.
+    await expect(page.getByRole('option', { name: 'שירותי דיילת (6 שעות)' })).toBeVisible()
   })
 
   test('רגרסיה — בלי יירוט, אין תג-השבתה ואין שינוי במסך', async ({ page }) => {

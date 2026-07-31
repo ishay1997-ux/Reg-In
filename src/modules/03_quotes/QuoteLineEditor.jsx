@@ -37,17 +37,22 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
   // §7.34 (הכרעת-ישי 12/07): מוצר שאינו `active` **אינו אופציה** בבורר. הסינון חי כאן ולא
   // בשאילתה (הועבר 31/07/2026, סבב D) — הקטלוג מביא הכול כדי שמוצר מושבת שכבר יושב על
   // שורה קיימת ימשיך להיפתר לשם/קטגוריה/מחיר, ורק ההוספה-מחדש חסומה.
-  // ⚠️ **חריג מכוון:** המק"ט שכבר נבחר בשורה נשאר ברשימה גם כשהוא מושבת — Radix מרנדר
-  // ‏`SelectValue` מהפריט התואם, וסינון גורף היה מציג את השורה כ"בחירת מוצר..." ריקה,
-  // כלומר מוחק ויזואלית מוצר ששמור במסד.
-  const selectedSkus = new Set((lines ?? []).map((line) => line.sku).filter(Boolean))
-  const grouped = ['hostess', 'site', 'product'].map((category) => ({
-    category,
-    label: PRODUCT_CATEGORY_LABELS[category],
-    items: products.filter(
-      (p) => p.category === category && (p.status === 'active' || selectedSkus.has(p.sku)),
-    ),
-  }))
+  //
+  // ⚠️ **הרשימה נגזרת פר-שורה, ולא פעם אחת לכל הטבלה** (תוקן 31/07/2026, אותו סבב, אחרי
+  // שצילום של הרשימה-הפתוחה חשף את הפער). החריג היחיד הוא **המק"ט של השורה עצמה**: הוא
+  // חייב להישאר ברשימה כי Radix מרנדר את ה-trigger מהפריט התואם, וסינונו היה מציג
+  // "בחירת מוצר..." ריק — כלומר מוחק ויזואלית מוצר ששמור במסד. ⛔ **לא לחשב פעם אחת מחוץ
+  // ללולאה עם קבוצת כל המק"טים שבשימוש** — זה מה שהיה כאן, והוא חשף את המוצר המושבת
+  // **בכל** שורה, כולל שורה חדשה. זה בדיוק מה שהכרעת-12/07 אוסרת.
+  function productGroupsFor(currentSku) {
+    return ['hostess', 'site', 'product'].map((category) => ({
+      category,
+      label: PRODUCT_CATEGORY_LABELS[category],
+      items: products.filter(
+        (p) => p.category === category && (p.status === 'active' || p.sku === currentSku),
+      ),
+    }))
+  }
 
   function updateLine(key, patch) {
     onChange(lines.map((line) => (line.key === key ? { ...line, ...patch } : line)))
@@ -144,7 +149,7 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
                         <SelectValue placeholder="בחירת מוצר..." />
                       </SelectTrigger>
                       <SelectContent dir="rtl">
-                        {grouped.map((group) =>
+                        {productGroupsFor(line.sku).map((group) =>
                           group.items.length === 0 ? null : (
                             <div key={group.category}>
                               <p className="bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-500">
