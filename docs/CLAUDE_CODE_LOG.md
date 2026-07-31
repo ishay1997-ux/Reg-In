@@ -47,6 +47,19 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 31/07/2026 21:06 — **The 4.2+4.3 merge decision reached the three lines a session reads first** (docs)
+- The 🔗 box was committed at 20:25 (`c32fb6d`) — **27 insertions, zero deletions**: the Live Status
+  Header, the Active-step row and the step table were untouched and still read *"Next: 4.2"*.
+- So a session following the guide faithfully would start at Active step, build 4.2 alone, mark it ✅
+  and stop — closing half a round and writing the rejection path twice, which is exactly what the
+  decision existed to prevent. Found by checking the header against the box, not by reading either.
+- Fixed in `c9dc34b`: all three now say **4.2+4.3 AS ONE ROUND**, the header points to **both** boxes
+  (🧰 + 🔗), and the 4.3 row carries the pointer to the two 3.4 debts.
+- 🔑 **A decision written only in the body of a long guide is not yet in effect** — check that it
+  reached the lines that are read *first* (status header · active step · step table).
+- Verified before staging: `git diff` was exactly 4 lines, all mine — no pending lines from the
+  parallel session were swept in (the failure that mixed two rounds earlier today).
+
 ### 31/07/2026 20:05 — **Skill prune measured and declined; growth-control added instead** (skill + docs)
 - **Measured, not felt.** `work-manager` is 237 lines — ~2.9× the next-largest repo skill, and it
   grew 150 → 237 in six hours with nothing ever removed. Two prunes were drafted (170 and 136
