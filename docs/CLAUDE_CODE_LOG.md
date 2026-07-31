@@ -47,6 +47,24 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 31/07/2026 21:43 — **Steps 4.2+4.3 closed as one round — E2E 44 ⇒ 66, zero DB change** (test + docs)
+- **Baseline measured first** (44/44, exit 0) so any later red was attributable. Rejection/expiry
+  guards proven in a rolled-back SQL battery: both CHECKs returned `23514`, the lock trigger fired on
+  `update` **and** `delete`, and the **expiry job body ran verbatim** (param 30⇒1 ⇒ exactly quotes
+  6–9 flip to `פג תוקף`); param emptied ⇒ raises. Read back **outside** the transaction: identical.
+- New: `e2e/quotes.spec.js` (9) · `e2e/prices.spec.js` (7) · **`e2e/quote-email.spec.js` (6)** — the
+  latter pays 3.4's two booked debts (permanent email-path test; finance refused **by the Edge
+  Function**, 403, with a CEO control returning 400 because the gate runs before the body is parsed).
+- **4 mutations watched failing** before any green was reported; 17 unrelated tests stayed green, so
+  each red was attributable. All reverted and grep-verified.
+- 🔑 **The real lesson — "passes when run alone" is the symptom, not the verdict.** Two full runs
+  failed on *different* tests, and both instincts ("known flake", "pre-existing") were wrong: the
+  cause was `route.fallback()` on read paths in my own interception, taxing every passing request
+  while the prices screen fetches tiers **per product** (12 reads). Switched to `route.continue()`
+  ⇒ **66/66 and the run got faster (7.2m ⇒ 5.7m)** — speed is what proved the diagnosis.
+- One additive src change: `data-testid="access-denied"` on `ProtectedRoute` (four suites pinned that
+  screen by Hebrew string while E2E never runs in CI). Gate exit 0 · 376 unit · live DB byte-identical.
+
 ### 31/07/2026 21:17 — **Module-3 debt audit before the 4.5 gate: 4 settled, 1 ruled "not required"** (docs)
 - Ran read-only against the live 4.2+4.3 round. Of the five `🚧 מ3` lines in §6: one was already
   closed 30/07; **revenue + avg-deal-size are built and route through the pricing SSOT** (no formula
