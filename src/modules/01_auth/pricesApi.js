@@ -5,13 +5,7 @@
 
 import { supabase } from '@/supabaseClient'
 import { flattenProductCost } from '@/lib/catalog'
-
-function toError(error, fallbackMessage) {
-  const e = new Error(fallbackMessage)
-  e.code = error?.code
-  e.cause = error
-  return e
-}
+import { toError, assertRowsAffected } from '@/lib/apiError'
 
 // ---- מוצרים ----
 
@@ -65,7 +59,7 @@ export async function updateProduct(sku, patch) {
   delete safePatch.cost
   const { data, error } = await supabase.from('products').update(safePatch).eq('sku', sku).select()
   if (error) throw toError(error, 'שמירת השינויים במוצר נכשלה.')
-  if (!data || data.length === 0) throw toError({ code: 'RLS_DENIED' }, 'אין הרשאה לעדכן מוצר זה.')
+  assertRowsAffected(data, 'אין הרשאה לעדכן מוצר זה.')
 
   // upsert ולא update: מוצר שנוצר לפני סבב G, או שכתיבת-העלות שלו נכשלה, אין לו שורה כלל —
   // ו-update היה מחזיר 0 שורות ונקרא בטעות "אין הרשאה".
@@ -75,8 +69,7 @@ export async function updateProduct(sku, patch) {
       .upsert({ sku, cost: Number(patch.cost) }, { onConflict: 'sku' })
       .select()
     if (costError) throw toError(costError, 'שמירת עלות המוצר נכשלה.')
-    if (!costData || costData.length === 0)
-      throw toError({ code: 'RLS_DENIED' }, 'אין הרשאה לעדכן את עלות המוצר.')
+    assertRowsAffected(costData, 'אין הרשאה לעדכן את עלות המוצר.')
   }
 
   return { ...data[0], cost: patch.cost !== undefined ? Number(patch.cost) : undefined }
@@ -85,8 +78,7 @@ export async function updateProduct(sku, patch) {
 export async function setProductStatus(sku, status) {
   const { data, error } = await supabase.from('products').update({ status }).eq('sku', sku).select()
   if (error) throw toError(error, 'שינוי סטטוס המוצר נכשל.')
-  if (!data || data.length === 0)
-    throw toError({ code: 'RLS_DENIED' }, 'אין הרשאה לשנות את סטטוס המוצר.')
+  assertRowsAffected(data, 'אין הרשאה לשנות את סטטוס המוצר.')
   return data[0]
 }
 
@@ -110,8 +102,10 @@ export async function listPriceTiers(sku) {
 // שתי בקשות HTTP נפרדות אינן טרנזקציה, והסדר קובע מה קורה בקטיעה:
 //   מחיקה-ואז-הכנסה ⇒ הקטלוג נעלם. ‏upsert-ואז-מחיקה ⇒ לכל היותר נשארת מדרגה ישנה מיותרת,
 //   שנראית במסך וניתנת למחיקה בלחיצה. אותו מספר בקשות, כשל שקט הרבה פחות הרסני.
-// ⚠️ אותה חולשה קיימת עדיין ב-replaceCustomerContacts (מודול 2, מוזג) — נרשמה לסקירת 3.7,
-// לא תוקנה כאן כי היא מחוץ למשטח הצעד (shared-surface של מודול סגור).
+// ✅ אותה חולשה **תוקנה גם ב-replaceCustomerContacts** (מודול 2) באותו יום — בצורה אחרת,
+// כי הפתרון כאן לא ישים שם: ל-price_tiers יש מפתח טבעי משולב (sku, min_qty) שאפשר לעשות
+// עליו upsert, ולאיש-קשר יש רק contact_id מתחולל. לכן שם הסדר הוא קריאת-המזהים-הישנים ←
+// הכנסה ← מחיקת-הישנים-בלבד. ר' src/modules/02_customers/api.js.
 export async function replacePriceTiers(sku, tiers) {
   const rows = (tiers ?? []).map((t) => ({
     sku,
@@ -128,9 +122,8 @@ export async function replacePriceTiers(sku, tiers) {
       .upsert(rows, { onConflict: 'sku,min_qty' })
       .select()
     if (error) throw toError(error, 'שמירת מדרגות המחיר נכשלה.')
-    saved = data ?? []
     // כתיבה שנחסמה ע"י RLS חוזרת כ-0 שורות עם error: null — הכשל השקט המרכזי של הפרויקט.
-    if (saved.length === 0) throw toError({ code: 'RLS_DENIED' }, 'אין הרשאה לשמור מדרגות מחיר.')
+    saved = assertRowsAffected(data, 'אין הרשאה לשמור מדרגות מחיר.')
   }
 
   // מחיקת המדרגות שהוסרו בטופס — אחרי שהחדשות כבר בפנים. min_qty עובר Number() בשכבת
@@ -175,7 +168,6 @@ export async function updatePricingParam(paramName, value) {
   if (error) throw toError(error, 'שמירת הפרמטר נכשלה.')
   // 0 שורות = או שהפרמטר לא קיים, או שה-RLS חסם (מחזיר ריק עם error: null — הכשל השקט
   // המרכזי של הפרויקט). שתי האפשרויות חייבות להישמע, לא להיראות כהצלחה.
-  if (!data || data.length === 0)
-    throw toError({ code: 'RLS_DENIED' }, `הפרמטר ${paramName} לא עודכן — ייתכן שאין לך הרשאה.`)
+  assertRowsAffected(data, `הפרמטר ${paramName} לא עודכן — ייתכן שאין לך הרשאה.`)
   return data[0]
 }

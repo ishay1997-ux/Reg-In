@@ -26,9 +26,13 @@ import {
   deriveQuoteAmount,
   matchesQuoteFilters,
   sortQuotes,
+  QUOTE_ACTION_LABELS,
+  QUOTE_REJECTED_TOAST,
   QUOTE_SCREEN_PARAM_NAMES,
+  QUOTE_STATUS_LABELS,
   approvedQuotesLabel,
   pendingQuotesLabel,
+  quoteApprovedToast,
 } from '@/lib/quotes'
 import { getCustomer, getCustomerProjects, listCustomerContacts } from '@/modules/02_customers/api'
 import {
@@ -63,17 +67,22 @@ const QUOTE_SORTS = [
   { key: 'eventDate', label: 'תאריך האירוע — הקרוב' },
 ]
 
+// שלוש התוויות נשאבות מ-QUOTE_STATUS_LABELS (`src/lib/quotes.js`), הבית הקנוני שנבדק שם
+// מול ערכי ה-CHECK — ולא מוקלדות מחדש כמו עד 31/07/2026.
+// ⚠️ **"פגה" נשאר ענף מקומי ואינו נכנס למפה המשותפת** — הוא אינו סטטוס אלא **סיבת-דחייה**
+// (§7.41) שהעמוד הזה בלבד בחר להציג כתגית נפרדת. דחיפתו למפה הייתה משנה גם את מסך-הניהול,
+// שם ההצעה הזו אמורה להיראות כ"נדחתה" ככל האחרות.
 function statusPill(quote) {
   if (quote.quote_status === 'approved') {
-    return { label: 'מאושרת', className: 'bg-green-100 text-green-700' }
+    return { label: QUOTE_STATUS_LABELS.approved, className: 'bg-green-100 text-green-700' }
   }
   if (quote.quote_status === 'in_progress') {
-    return { label: 'בתהליך', className: 'bg-amber-100 text-amber-700' }
+    return { label: QUOTE_STATUS_LABELS.in_progress, className: 'bg-amber-100 text-amber-700' }
   }
   if (quote.rejection_reason === EXPIRED_REASON) {
     return { label: 'פגה', className: 'bg-slate-100 text-slate-600' }
   }
-  return { label: 'נדחתה', className: 'bg-red-100 text-red-700' }
+  return { label: QUOTE_STATUS_LABELS.rejected, className: 'bg-red-100 text-red-700' }
 }
 
 // אריח ברצועת-ההדגשים. value=null ⇒ טקסט-ריק במקום מספר, לעולם לא 0 מטעה.
@@ -174,14 +183,14 @@ export default function CustomerDetailsPage() {
   async function handleApprove() {
     await approveQuote(approveTarget.quote_id)
     setApproveTarget(null)
-    toast.success(`ההצעה אושרה ונפתח פרויקט חדש עבור "${approveTarget.event_name}".`)
+    toast.success(quoteApprovedToast(approveTarget.event_name))
     setReloadTick((t) => t + 1)
   }
 
   async function handleReject(reason, notes) {
     await rejectQuote(rejectTarget.quote_id, reason, notes)
     setRejectTarget(null)
-    toast.success('ההצעה נדחתה.')
+    toast.success(QUOTE_REJECTED_TOAST)
     setReloadTick((t) => t + 1)
   }
 
@@ -599,7 +608,7 @@ export default function CustomerDetailsPage() {
                               <div className="flex gap-1.5 justify-start">
                                 {canEditQuotes && isOpen && (
                                   <RowAction
-                                    title="עריכת ההצעה"
+                                    title={QUOTE_ACTION_LABELS.edit}
                                     onClick={() => navigate(`/quotes/${quote.quote_id}/edit`)}
                                     testId={`customer-quote-edit-${quote.quote_id}`}
                                   >
@@ -607,7 +616,7 @@ export default function CustomerDetailsPage() {
                                   </RowAction>
                                 )}
                                 <RowAction
-                                  title="צפייה במסמך"
+                                  title={QUOTE_ACTION_LABELS.view}
                                   onClick={() => setDocumentQuote(quote)}
                                   testId={`customer-quote-document-${quote.quote_id}`}
                                 >
@@ -616,7 +625,7 @@ export default function CustomerDetailsPage() {
                                 {canEditQuotes && isOpen && (
                                   <>
                                     <RowAction
-                                      title="אישור ההצעה"
+                                      title={QUOTE_ACTION_LABELS.approve}
                                       tone="approve"
                                       onClick={() => setApproveTarget(quote)}
                                       testId={`customer-quote-approve-${quote.quote_id}`}
@@ -624,7 +633,7 @@ export default function CustomerDetailsPage() {
                                       <Check className="size-4" />
                                     </RowAction>
                                     <RowAction
-                                      title="דחיית ההצעה"
+                                      title={QUOTE_ACTION_LABELS.reject}
                                       tone="reject"
                                       onClick={() => setRejectTarget(quote)}
                                       testId={`customer-quote-reject-${quote.quote_id}`}

@@ -1,6 +1,10 @@
 // עורך מדרגות-המחיר של מוצר יחיד (§7.84, צעד 3.6). הקבוצה כולה נערכת כיחידה ונשמרת
-// במחיקה-והכנסה-מחדש (replacePriceTiers) — אותה מוסכמה כמו replaceCustomerContacts במודול 2,
-// כי רשימה קצרה כזו פשוטה ואמינה יותר מ-diff.
+// דרך replacePriceTiers — **upsert ואז מחיקת-הנגרעות**, ובשום אופן לא מחיקה-ואז-הכנסה.
+// ⛔ הסדר אינו סגנון: מחיקה-ואז-הכנסה מחקה בפועל את כל 5 המדרגות של B-REG-TAG מהמסד החי
+// (30/07/2026) כשהדפדפן נסגר בין שתי הבקשות. הנימוק המלא יושב על הפונקציה עצמה
+// (pricesApi.js), וכאן רק כדי שלא "ייושר" מכאן בחזרה. אותו לקח הוחל גם על
+// replaceCustomerContacts במודול 2 — שם בצורת קריאת-מזהים ← הכנסה ← מחיקת-הישנים,
+// כי לאיש-קשר אין מפתח-טבעי לעגון בו upsert.
 //
 // ⚠️ אותה מלכודת אובדן-נתונים שתוקנה במודול 2 (11/07): כשל-טעינה שקט היה משאיר rows=[]
 // והשמירה הייתה **מוחקת את כל המדרגות הקיימות**. ‏loaded נשאר false עד שליפה מוצלחת,
@@ -10,6 +14,7 @@ import { useEffect, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import LoadingOrError from '@/components/LoadingOrError'
 import {
   Dialog,
   DialogContent,
@@ -127,10 +132,10 @@ export default function PriceTiersDialog({ open, onOpenChange, product, onSaved 
           </DialogDescription>
         </DialogHeader>
 
+        {/* ⚠️ הטרנרי נשאר: LoadingOrError מחזיר את ענף-השגיאה בלי תנאי, ולכן רינדור
+            לא-שמור שלו היה מוסיף <p> אדום ריק לדיאלוג התקין. */}
         {loading || loadError ? (
-          <p className={loadError ? 'text-red-600 font-semibold' : 'text-slate-500'}>
-            {loadError || 'טוען...'}
-          </p>
+          <LoadingOrError loading={loading} error={loadError} />
         ) : (
           <div className="flex flex-col gap-3">
             <div className="grid grid-cols-[1fr_1fr_1fr_2rem] gap-2 text-xs text-slate-500">

@@ -21,7 +21,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import {
+  QUOTE_ACTION_LABELS,
+  QUOTE_REJECTED_TOAST,
   QUOTE_SCREEN_PARAM_NAMES,
+  QUOTE_STATUS_LABELS,
   countRejectionReasons,
   deriveQuoteAmount,
   deriveQuoteExpiry,
@@ -29,6 +32,7 @@ import {
   isEventSoon,
   matchesQuoteFilters,
   missingPricingParamsMessage,
+  quoteApprovedToast,
   sortQuotes,
 } from '@/lib/quotes'
 import { parseVatPercent } from '@/lib/pricing'
@@ -63,10 +67,14 @@ const SORTS = [
   { key: 'eventDate', label: 'תאריך האירוע — הקרוב' },
 ]
 
+// התוויות נשאבות מ-QUOTE_STATUS_LABELS (`src/lib/quotes.js`) — הבית הקנוני שלהן, שנבדק
+// שם מול שלושת ערכי ה-CHECK. ⚠️ עד 31/07/2026 הן היו מוקלדות כאן מחדש (וגם ב-
+// CustomerDetailsPage), כלומר שינוי-תווית במסד היה מיושר בשני מקומות ונשכח בשלישי.
+// ה-className נשאר מקומי במכוון: הוא **עיצוב** של המסך הזה, לא נתון של הסטטוס.
 const STATUS_PILL = {
-  in_progress: { label: 'בתהליך', className: 'bg-amber-100 text-amber-700' },
-  approved: { label: 'מאושרת', className: 'bg-green-100 text-green-700' },
-  rejected: { label: 'נדחתה', className: 'bg-red-100 text-red-700' },
+  in_progress: { label: QUOTE_STATUS_LABELS.in_progress, className: 'bg-amber-100 text-amber-700' },
+  approved: { label: QUOTE_STATUS_LABELS.approved, className: 'bg-green-100 text-green-700' },
+  rejected: { label: QUOTE_STATUS_LABELS.rejected, className: 'bg-red-100 text-red-700' },
 }
 
 // מסנן-מהיר. הכרעת-ישי: זהו **כפתור** — לחיצה מסננת, לחיצה שנייה מבטלת — ולא אריח-מדד.
@@ -252,14 +260,14 @@ export default function QuotesPage() {
   async function handleApprove() {
     await approveQuote(approveTarget.quote_id)
     setApproveTarget(null)
-    toast.success(`ההצעה אושרה ונפתח פרויקט חדש עבור "${approveTarget.event_name}".`)
+    toast.success(quoteApprovedToast(approveTarget.event_name))
     reload()
   }
 
   async function handleReject(reason, notes) {
     await rejectQuote(rejectTarget.quote_id, reason, notes)
     setRejectTarget(null)
-    toast.success('ההצעה נדחתה.')
+    toast.success(QUOTE_REJECTED_TOAST)
     reload()
   }
 
@@ -646,7 +654,7 @@ export default function QuotesPage() {
                         <div className="flex gap-1.5 justify-start">
                           {canEdit && isOpen && (
                             <RowAction
-                              title="עריכת ההצעה"
+                              title={QUOTE_ACTION_LABELS.edit}
                               onClick={() => navigate(`/quotes/${quote.quote_id}/edit`)}
                               testId={`quote-edit-${quote.quote_id}`}
                             >
@@ -654,7 +662,7 @@ export default function QuotesPage() {
                             </RowAction>
                           )}
                           <RowAction
-                            title="צפייה במסמך"
+                            title={QUOTE_ACTION_LABELS.view}
                             onClick={() => setDocumentQuote(quote)}
                             testId={`quote-document-${quote.quote_id}`}
                           >
@@ -663,7 +671,7 @@ export default function QuotesPage() {
                           {canEdit && isOpen && (
                             <>
                               <RowAction
-                                title="אישור ההצעה"
+                                title={QUOTE_ACTION_LABELS.approve}
                                 tone="approve"
                                 onClick={() => setApproveTarget(quote)}
                                 testId={`quote-approve-${quote.quote_id}`}
@@ -671,7 +679,7 @@ export default function QuotesPage() {
                                 <Check className="size-4" />
                               </RowAction>
                               <RowAction
-                                title="דחיית ההצעה"
+                                title={QUOTE_ACTION_LABELS.reject}
                                 tone="reject"
                                 onClick={() => setRejectTarget(quote)}
                                 testId={`quote-reject-${quote.quote_id}`}

@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import LoadingOrError from '@/components/LoadingOrError'
 import { PRICING_PARAM_NAMES } from '@/lib/pricing'
 import { isValidGuestsRatio, isValidVatPercent } from '@/lib/validators'
 import { getPricingParams, updatePricingParam } from '@/modules/01_auth/pricesApi'
@@ -94,12 +95,11 @@ export default function PricingParamsCard({ canEdit }) {
     }
   }
 
+  // ⚠️ התנאי נשאר כאן ואינו נדחף לתוך LoadingOrError: ענף-השגיאה שלו הוא return **בלי
+  // תנאי**, ולכן קריאה לא-שמורה הייתה פולטת <p> אדום **ריק** בכל רינדור תקין. כל שמונת
+  // הצרכנים בפרויקט שומרים עליו מבחוץ — זו מוסכמת-הבית, לא פרט-מימוש.
   if (loading || loadError) {
-    return (
-      <p className={loadError ? 'text-red-600 font-semibold' : 'text-slate-500'}>
-        {loadError || 'טוען...'}
-      </p>
-    )
+    return <LoadingOrError loading={loading} error={loadError} />
   }
 
   return (

@@ -12,19 +12,18 @@ import { supabase } from '@/supabaseClient'
 import { PRICING_PARAM_NAMES } from '@/lib/pricing'
 import { flattenProductCost } from '@/lib/catalog'
 import { QUOTE_SCREEN_PARAM_NAMES, quoteServerErrorMessage } from '@/lib/quotes'
-
-function toError(error, fallbackMessage) {
-  const e = new Error(fallbackMessage)
-  e.code = error?.code
-  e.cause = error
-  return e
-}
+import { toError, assertRowsAffected } from '@/lib/apiError'
 
 // כתיבות בלבד: ההודעה המדויקת של המסד גוברת על ה-fallback הכללי כשהיא מוכרת (סבב D).
 // למה רק בכתיבות: מסלולי-הכשל של המסד (נעילה/סטטוס/תאריך/מע"מ/הרשאה) נולדים ב-RPCs
 // ובטריגר-הנעילה, ורק הם נושאים הודעה שאומרת למשתמשת מה לעשות. שגיאת-קריאה היא כמעט
 // תמיד רשת/RLS — שם למחרוזת-המסד אין ערך למשתמשת, וה-fallback הקיים מדויק יותר.
 // ⚠️ ‏`quoteServerErrorMessage` מחזירה null לשגיאה לא-מוכרת ⇒ ה-fallback נשמר כלשונו.
+//
+// ⛔ **הוא נשאר כאן ולא עובר ל-`src/lib/apiError.js`** (נשקל ונדחה בסבב-הניקוי E, 31/07/2026):
+// ‏`quoteServerErrorMessage` הוא מיפוי הודעות-המסד של **מודול 3 בלבד** — נעילה, סטטוס,
+// תאריך, מע"מ, עלות-חסרה. העברתו למנוע המשותף הייתה מדליפה הודעות הצעות-מחיר למודולים
+// 1 ו-2, שקוראים לאותו `toError` על טבלאות אחרות לגמרי. רק `toError` משותף.
 function toWriteError(error, fallbackMessage) {
   return toError(error, quoteServerErrorMessage(error) ?? fallbackMessage)
 }
@@ -227,6 +226,6 @@ export async function rejectQuote(quoteId, reason, notes) {
     .eq('quote_id', quoteId)
     .select()
   if (error) throw toWriteError(error, 'דחיית ההצעה נכשלה.')
-  if (!data || data.length === 0) throw toError({ code: 'RLS_DENIED' }, 'אין הרשאה לדחות הצעה זו.')
+  assertRowsAffected(data, 'אין הרשאה לדחות הצעה זו.')
   return data[0]
 }

@@ -4,17 +4,9 @@
 // לוגיקה עסקית (תוויות, סינון, מיון, מדדים) חיה ב-src/lib/customers.js — כאן רק קלט/פלט מול ה-DB.
 
 import { supabase } from '@/supabaseClient'
-
-// עוטף שגיאת-Supabase כ-Error עם שדה code משומר, כדי שה-UI יוכל להבחין במקרים ידועים
-// (למשל 23505 = הפרת-unique על ח"פ, שמניע את זרימת-הכפילות §7.11 ב-step 3.2) בלי לחשוף את מבנה
-// אובייקט-השגיאה של supabase לכל הקוראים. why-first: זריקה (ולא החזרת {error}) מאפשרת ל-UI
-// לעטוף ב-try/catch נקי; קריאות-קריאה שנכשלות הן חריגות אמיתיות, לא זרימה רגילה.
-function toError(error, fallbackMessage) {
-  const e = new Error(fallbackMessage)
-  e.code = error?.code
-  e.cause = error
-  return e
-}
+// עוטף-השגיאות המשותף (חולץ 31/07/2026 — היה משוכפל זהה-בייט בשלושה api.js). הקוד המשומר
+// הוא מה שמניע כאן את זרימת-הכפילות §7.11 (‏23505 = הפרת-unique על ח"פ) ב-step 3.2.
+import { toError, assertRowsAffected } from '@/lib/apiError'
 
 // ---- קריאות (Reads) ----
 
@@ -100,7 +92,7 @@ export async function updateCustomer(customerId, patch) {
     .eq('customer_id', customerId)
     .select()
   if (error) throw toError(error, 'שמירת השינויים נכשלה.')
-  if (!data || data.length === 0) throw toError({ code: 'RLS_DENIED' }, 'אין הרשאה לעדכן לקוח זה.')
+  assertRowsAffected(data, 'אין הרשאה לעדכן לקוח זה.')
   return data[0]
 }
 
@@ -113,8 +105,7 @@ export async function setCustomerStatus(customerId, status) {
     .eq('customer_id', customerId)
     .select()
   if (error) throw toError(error, 'שינוי סטטוס הלקוח נכשל.')
-  if (!data || data.length === 0)
-    throw toError({ code: 'RLS_DENIED' }, 'אין הרשאה לשנות את סטטוס הלקוח.')
+  assertRowsAffected(data, 'אין הרשאה לשנות את סטטוס הלקוח.')
   return data[0]
 }
 

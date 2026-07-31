@@ -10,6 +10,11 @@
 // טהור לחלוטין: בלי Supabase, בלי Date, בלי קריאה לגלובלים — כדי שהבדיקות יוכיחו את
 // החישוב עצמו, ולא את הסביבה שסביבו.
 
+// ⚠️ הייבוא היחיד של הקובץ, ובכוונה: `validators.js` טהור אף הוא (בלי Supabase/Date/DOM),
+// ולכן הוא אינו מפר את האינווריאנטה שלמעלה. הוא הבית של כללי-החוקיות שנאכפים ב-
+// validateTierRows בתחתית הקובץ.
+import { isValidPositiveInt, isValidPositivePrice } from '@/lib/validators'
+
 // שמות הפרמטרים ב-params — SSOT למחרוזת, כדי ש-'אחוז_מעמ' לא ישוכפל בכמה קבצים ויתפצל
 // בשקט בהקלדה. חייבים להיות זהים בית-בבית לשורות ה-Seed (מיגרציה 20260723112000).
 export const PRICING_PARAM_NAMES = {
@@ -213,7 +218,10 @@ export function validateTierRows(rows, product = {}) {
     const max = toFiniteNumber(maxRaw)
     const price = toFiniteNumber(priceRaw)
 
-    if (min === null || !Number.isInteger(min) || min <= 0) {
+    // ⚠️ כללי-החוקיות עצמם מיובאים מ-validators.js ולא נכתבים כאן מחדש (אוחד 31/07/2026,
+    // סבב-ניקוי E): עד אז אותו כלל בדיוק היה כתוב פעמיים — נבדק שם, נאכף כאן — ושתי
+    // הגרסאות יכלו לסטות בשקט. הניסוח של ההודעה נשאר כאן, כי הוא של המסך ולא של הכלל.
+    if (!isValidPositiveInt(minRaw)) {
       rowErrors[i].min_qty = 'מספר שלם גדול מאפס'
     } else if (minQtyCounts.get(minRaw) > 1) {
       rowErrors[i].min_qty = 'כמות זו מופיעה כבר במדרגה אחרת'
@@ -221,14 +229,14 @@ export function validateTierRows(rows, product = {}) {
 
     // ריק = "ללא הגבלה", וזה חוקי לגמרי (כך נראית המדרגה העליונה בכל מוצר בקטלוג).
     if (maxRaw !== '') {
-      if (max === null || !Number.isInteger(max) || max <= 0) {
+      if (!isValidPositiveInt(maxRaw)) {
         rowErrors[i].max_qty = 'מספר שלם גדול מאפס, או ריק לללא הגבלה'
       } else if (min !== null && max < min) {
         rowErrors[i].max_qty = 'לא יכול להיות קטן מ"מכמות"'
       }
     }
 
-    if (price === null || price <= 0) {
+    if (!isValidPositivePrice(priceRaw)) {
       rowErrors[i].special_price = 'מחיר גדול מאפס'
     } else if (cost !== null && price < cost) {
       warnings[i].special_price = `מתחת לעלות (${cost} ₪)`
