@@ -151,7 +151,10 @@ export default function CustomerDetailsPage() {
   const [projects, setProjects] = useState([])
   const [contacts, setContacts] = useState([])
   const [quotes, setQuotes] = useState([])
-  const [sentIds, setSentIds] = useState(new Set())
+  // ⚠️ **`null` = טרם ידוע, Set = נטען** (31/07/2026, אותה משפחה כמו חלון-המסמך). קבוצה ריקה
+  // בכשל נקראת כ"אף הצעה לא נשלחה", והתווית "טרם נשלחה ללקוח" היא בדיוק הרמז שגורם לאדם
+  // לפתוח את החלון ולשלוח — כלומר שקר-בביטחון שמוביל לשליחה כפולה, לא קישוט.
+  const [sentIds, setSentIds] = useState(null)
   const [productsBySku, setProductsBySku] = useState({})
   const [params, setParams] = useState({})
   const [reloadTick, setReloadTick] = useState(0)
@@ -202,13 +205,14 @@ export default function CustomerDetailsPage() {
         setQuotes(qs)
         setParams(Object.fromEntries(paramRows.map((row) => [row.param_name, row.param_value])))
         setProductsBySku(Object.fromEntries(catalog.products.map((prod) => [prod.sku, prod])))
-        // יומן-השליחות נטען **אחרי** ההצעות כי הוא צריך את המזהים שלהן, אך כשלון בו לא מפיל
-        // את העמוד: הוא רק מוריד את חיווי "טרם נשלחה", ולא שווה למנוע בגללו את כל הכרטיס.
+        // יומן-השליחות נטען **אחרי** ההצעות כי הוא צריך את המזהים שלהן, וכשלון בו לא מפיל
+        // את העמוד — אבל גם **אינו נבלע**: הוא מחזיר את המצב ל"לא ידוע", שני החיוויים
+        // נעלמים והמשתמש מקבל שורת-הסבר במקומם.
         try {
           const ids = await getSentQuoteIds(qs.map((row) => row.quote_id))
           if (!cancelled) setSentIds(ids)
         } catch {
-          if (!cancelled) setSentIds(new Set())
+          if (!cancelled) setSentIds(null)
         }
         setLoadError('')
       } catch {
@@ -451,6 +455,17 @@ export default function CustomerDetailsPage() {
             </p>
           ) : (
             <>
+              {/* יומן-השליחות לא נטען: שני החיוויים ("נשלחה"/"טרם נשלחה") נעלמים, וזה נאמר
+                  במקומם. בלי השורה הזו היעלמותם הייתה נקראת כ"אין מידע כזה בכלל". */}
+              {sentIds === null && (
+                <p
+                  className="rounded-lg border border-amber-300 bg-amber-50 p-2.5 mb-3 text-[13px] text-amber-800"
+                  role="alert"
+                  data-testid="customer-sent-history-error"
+                >
+                  לא ניתן היה לבדוק אילו הצעות כבר נשלחו ללקוח — בדקו בחלון המסמך לפני שליחה.
+                </p>
+              )}
               {showControls && (
                 <div className="flex items-center gap-2 mb-3 flex-wrap">
                   <input
@@ -560,10 +575,10 @@ export default function CustomerDetailsPage() {
                                 )}
                               {/* כן/לא בלי תאריך (LOCAL-16) — ורק על הצעה פתוחה, שבה זו עדיין
                                   פעולה שאפשר לעשות. על הצעה סגורה זו כבר לא שאלה פתוחה. */}
-                              {isOpen && !sentIds.has(quote.quote_id) && (
+                              {sentIds && isOpen && !sentIds.has(quote.quote_id) && (
                                 <div className="text-[11.5px] text-amber-600">טרם נשלחה ללקוח</div>
                               )}
-                              {sentIds.has(quote.quote_id) && (
+                              {sentIds?.has(quote.quote_id) && (
                                 <div className="text-[11.5px] text-teal-700">נשלחה ללקוח</div>
                               )}
                             </td>

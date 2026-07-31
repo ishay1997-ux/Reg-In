@@ -153,6 +153,27 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
     await expect(page.getByTestId('quote-send-check-notice')).toHaveCount(0)
   })
 
+  // ── עמוד-הלקוח: אותה שאילתה, אותה משפחה — "טרם נשלחה" הוא הרמז שמוביל לשליחה ──
+  test('עמוד הלקוח: כשל ביומן ⇒ החיוויים נעלמים והסיבה נאמרת', async ({ page }) => {
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+
+    await page.route('**/rest/v1/email_log*', (route) =>
+      route.fulfill({ status: 500, contentType: 'application/json', body: '{"message":"forced"}' }),
+    )
+    // לקוח 46 (מדיטק) — שתי הצעות, אחת מהן "בתהליך" ונשלחה בפועל.
+    await page.goto('/customers/46')
+    await expect(page.getByTestId('customer-sent-history-error')).toBeVisible()
+    // ⚠️ הלב של הממצא: קבוצה ריקה הציגה "טרם נשלחה ללקוח" על הצעה **שכן** נשלחה.
+    await expect(page.getByText('טרם נשלחה ללקוח')).toHaveCount(0)
+    await expect(page.getByText('נשלחה ללקוח', { exact: true })).toHaveCount(0)
+
+    // ── הכשל מוסר: החיווי האמיתי חוזר ─────────────────────────────────────
+    await page.unroute('**/rest/v1/email_log*')
+    await page.reload()
+    await expect(page.getByTestId('customer-sent-history-error')).toHaveCount(0)
+    await expect(page.getByText('נשלחה ללקוח', { exact: true }).first()).toBeVisible()
+  })
+
   // ── הרשאות: "לא הצלחנו לטעון" אינו "אין לך הרשאה" ─────────────────────────
   test('הרשאות: כשל בטעינתן ⇒ הסבר + "נסה שוב", ולא מסך-דחייה', async ({ page }) => {
     await page.route('**/rest/v1/permissions*', (route) =>
