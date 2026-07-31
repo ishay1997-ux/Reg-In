@@ -47,7 +47,31 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
-### 31/07/2026 19:2x — **Step 4.1 (approval-flow edges) CLOSED — proven without approving a single quote**
+### 31/07/2026 19:55 — **A rule that guarded us all day had lost its home — caught by the skill's own eval agents**
+- **The failure, and it is the exact one the rule warns about.** "אזהרה 3 — שומר שלא נצפה נכשל
+  אינו שומר" lived only inside `docs/audit_2026-07-31_fix_plan.md`. When that file was compacted
+  to a tombstone this evening (315→164→33 lines) the warning went with it, while `STATUS.md:502`
+  kept naming it as the rule's home. Verified absent from `src/CLAUDE.md`,
+  `architecture_and_qa_roadmap.md` and `_shared/discipline.md`. **Now homed in `src/CLAUDE.md`**
+  atop §"בדיקה ירוקה אינה הוכחה" — auto-loaded for anyone working in `src/`, i.e. read when
+  relevant — with the broken pointer in STATUS corrected to say so.
+- **How it surfaced — worth recording, because nobody looked for it.** Six subagents were running
+  a pruning experiment on the `work-manager` skill (three role-based scenarios × two prune depths).
+  Two of them, independently, ran `git show` on the pre-compaction file to answer a *different*
+  question and noticed the rule was gone. Neither was asked to audit documentation.
+- **Also fixed in the same pass:** the literal placeholder `19:2x` (with the letter x) in 5 places
+  across STATUS/LOG/micro-guide — the digit was never filled in; set to `19:40`, the commit time
+  of `1087e74`. And `STATUS.md` header claimed "עודכן לאחרונה 20:00" while the clock read 19:49 —
+  a board declaring the future is exactly what breaks "who wrote last" reasoning between sessions.
+- **A finding that turned out already handled — withdrawn:** an agent reported STATUS/micro-guide
+  disagreeing on the E2E baseline (39 vs 38). STATUS line 192 is a *dated* round-F record; line
+  266 already carries the correction. Nothing to fix.
+- 🔴 **Left open deliberately, needs Ishay:** E2E never runs in CI (measured: zero `playwright`
+  references in `ci.yml`) while **81 selectors across the suite match on literal Hebrew strings**.
+  A copy edit breaks tests and the gate stays green. Two agents independently recommended running
+  any UI-copy pass *before* 4.2/4.3 freeze more strings into permanent suites.
+
+### 31/07/2026 19:40 — **Step 4.1 (approval-flow edges) CLOSED — proven without approving a single quote**
 - **Why it looks unusual:** approval is irreversible and there is one live DB, so the proof is a
   rolled-back SQL battery + screen tests, with the DB read back after to show it did not move.
 - All 7 DB guards **returned their failure** (incl. today-is-allowed, the half that actually proves
