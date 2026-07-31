@@ -44,7 +44,13 @@ import {
   isAttachmentTooLarge,
   sendResultMessage,
 } from '@/lib/email'
-import { renderQuotePdfBlob, quotePdfFileName, formatDate } from '@/modules/03_quotes/quotePdf'
+import {
+  renderQuotePdfBlob,
+  quotePdfFileName,
+  formatDate,
+  MISSING_VAT_MESSAGE,
+  MISSING_VAT_CODE,
+} from '@/modules/03_quotes/quotePdf'
 import { getLastSuccessfulSend } from '@/modules/03_quotes/api'
 
 // Blob ⇒ base64 גולמי (בלי ה-prefix `data:...;base64,`) — זה הפורמט שהעברנו ל-Edge
@@ -100,8 +106,13 @@ export default function QuoteDocumentDialog({
         setBlob(generatedBlob)
         setBlobUrl(createdUrl)
         setError('')
-      } catch {
-        if (!cancelled) setError('הפקת המסמך נכשלה.')
+      } catch (err) {
+        // ⚠️ "הפקת המסמך נכשלה" לבדה הייתה משאירה את המשתמש בלי מושג מה לתקן — והתיקון
+        // כאן הוא שורה אחת ב-Table Editor. פרמטר-מע"מ חסר מגיע עם קוד ייעודי מהמנוע
+        // (‏`quotePdf.jsx`) ומקבל את ההודעה שאומרת **מה חסר ואיפה מוסיפים אותו**.
+        if (!cancelled) {
+          setError(err?.code === MISSING_VAT_CODE ? err.message : 'הפקת המסמך נכשלה.')
+        }
       }
     })()
 
@@ -132,13 +143,21 @@ export default function QuoteDocumentDialog({
   // הכרעת-ישי 29/07: שליחה רק בהצעות "בתהליך". חלון-מסמך שנפתח מהבנייה (עדיין
   // לא נשמרה) מגיע עם canSend=false מהקורא — לפני-שמירה אין שורת-DB לשלוח בשמה.
   const canSend = isQuoteSendable(quote)
-  const disabledReason = canSend
-    ? emailSendDisabledReason({
-        email: quote?.customers?.email,
-        template: emailTemplate,
-        canEdit,
-      })
-    : ''
+  // מסמך שלא הופק בגלל מע"מ חסר חוסם **גם את השליחה** — והסיבה נאמרת ב-title ולא רק
+  // בפסקת-השגיאה. ההשוואה היא מול הקבוע המיובא מהמנוע (לא מחרוזת משוכפלת), כדי ששני
+  // הקבצים לא יוכלו להחזיק שני נוסחים.
+  // ⚠️ **לא** נכנס ל-`emailSendDisabledReason`: הוא המנוע הגנרי של כל שולחי-המייל
+  // במערכת (מ4/מ8/מ11), ומע"מ הוא עניין של הצעות-מחיר בלבד. ר' `src/CLAUDE.md`.
+  const vatBlocked = error === MISSING_VAT_MESSAGE
+  const disabledReason = vatBlocked
+    ? MISSING_VAT_MESSAGE
+    : canSend
+      ? emailSendDisabledReason({
+          email: quote?.customers?.email,
+          template: emailTemplate,
+          canEdit,
+        })
+      : ''
 
   // 🛡️ מניעת שליחה-כפולה (בקשת-ישי 30/07/2026) — שלוש שכבות, כי כל אחת חוסמת תרחיש אחר:
   // (1) `sending` חוסם לחיצה-כפולה מהירה על אותו כפתור (הכשל הנפוץ: לחיצה, אין משוב מיידי,
@@ -251,7 +270,11 @@ export default function QuoteDocumentDialog({
         </DialogHeader>
 
         {error ? (
-          <p className="text-red-600 font-semibold py-8 text-center" role="alert">
+          <p
+            className="text-red-600 font-semibold py-8 text-center"
+            role="alert"
+            data-testid="quote-document-error"
+          >
             {error}
           </p>
         ) : blobUrl ? (
@@ -314,6 +337,7 @@ export default function QuoteDocumentDialog({
             type="button"
             onClick={downloadPdf}
             disabled={!blobUrl}
+            title={vatBlocked ? MISSING_VAT_MESSAGE : undefined}
             variant={canSend ? 'outline' : undefined}
             className={cn(
               'h-auto py-2 px-4 rounded-lg font-semibold gap-2',

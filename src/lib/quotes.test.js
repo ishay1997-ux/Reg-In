@@ -34,6 +34,7 @@ import {
   formToPreviewQuote,
   approvedQuotesLabel,
   pendingQuotesLabel,
+  missingPricingParamsMessage,
 } from '@/lib/quotes'
 
 // תרחיש-האפיון המחייב (C5 §5.5.4) — אותו תרחיש שמאמת את מנוע-הכסף, כאן בצורת-המסך.
@@ -494,6 +495,20 @@ describe('deriveQuoteMetrics — שני המדדים שליד הכותרת', () 
     expect(m.openValue).toBe(6318.9 * 2)
   })
 
+  // "ריק אינו 0" גם באריח-המדד: מע"מ שלא נטען ⇒ השווי אינו ידוע, ולא "0 ₪".
+  // בלי זה המסך היה מציג 0 ₪ בדיוק מתחת לאזהרה שאומרת שאי-אפשר לתמחר.
+  it('מע"מ שלא נטען ⇒ "שווי הצעות פתוחות" null ולא 0', () => {
+    const m = deriveQuoteMetrics(MIXED, null)
+    expect(m.openValue).toBeNull()
+    expect(m.openCount).toBe(2)
+    expect(m.approvalRate).toBe(25)
+  })
+
+  it('אין הצעות פתוחות ⇒ 0 אמיתי, לא null', () => {
+    const closedOnly = MIXED.filter((q) => q.quote_status !== 'in_progress')
+    expect(deriveQuoteMetrics(closedOnly, 18).openValue).toBe(0)
+  })
+
   it('שיעור-אישור = מאושרות מתוך שנסגרו — 1 מתוך 4 = 25%', () => {
     const m = deriveQuoteMetrics(MIXED, 18)
     expect(m.closedCount).toBe(4)
@@ -724,6 +739,39 @@ const SENDABLE_QUOTE = {
 describe('QUOTE_SCREEN_PARAM_NAMES — שם תבנית-המייל', () => {
   it('נטען מ-params באותו שם-בייט כמו ה-Seed', () => {
     expect(QUOTE_SCREEN_PARAM_NAMES.quoteEmailTemplate).toBe('תבנית_מייל_הצעת_מחיר')
+  })
+})
+
+describe('missingPricingParamsMessage — האזהרה על פרמטר-מערכת חסר', () => {
+  it('שותקת כששני הפרמטרים קיימים', () => {
+    expect(missingPricingParamsMessage({ vatRate: 18, validityDays: '30' })).toBe('')
+  })
+
+  it('מע"מ חסר — נוקבת בשם הפרמטר ובהשלכה', () => {
+    const msg = missingPricingParamsMessage({ vatRate: null, validityDays: '30' })
+    expect(msg).toContain('אחוז_מעמ')
+    expect(msg).toContain('לא ניתן להפיק מסמכים ללקוחות')
+    expect(msg).not.toContain('ימי_תוקף_הצעה')
+  })
+
+  it('ימי-תוקף חסרים — ההשלכה היא שהצעות אינן פגות', () => {
+    const msg = missingPricingParamsMessage({ vatRate: 18, validityDays: undefined })
+    expect(msg).toContain('ימי_תוקף_הצעה')
+    expect(msg).toContain('הצעות אינן פגות אוטומטית')
+    expect(msg).not.toContain('אחוז_מעמ')
+  })
+
+  it('שניהם חסרים — לשון רבים ושתי ההשלכות', () => {
+    const msg = missingPricingParamsMessage({})
+    expect(msg).toContain('חסרים פרמטרי מערכת')
+    expect(msg).toContain('אחוז_מעמ')
+    expect(msg).toContain('ימי_תוקף_הצעה')
+  })
+
+  // "ריק אינו 0": מחרוזת ריקה היא שורה שנשמרה ריקה, לא הגדרה תקינה של אפס.
+  it('מחרוזת ריקה נחשבת חסרה, ו-0 נחשב ערך קיים', () => {
+    expect(missingPricingParamsMessage({ vatRate: '', validityDays: '30' })).toContain('אחוז_מעמ')
+    expect(missingPricingParamsMessage({ vatRate: 0, validityDays: '30' })).toBe('')
   })
 })
 

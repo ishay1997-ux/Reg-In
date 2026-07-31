@@ -6,7 +6,7 @@ import { Document, Page, Text, View, Image, Font, StyleSheet, pdf } from '@react
 import heeboRegular from '@/assets/fonts/Heebo_400Regular.ttf?inline'
 import heeboBold from '@/assets/fonts/Heebo_700Bold.ttf?inline'
 import regInLogo from '@/assets/reg-in-logo.png?inline'
-import { computeQuoteTotals, formatShekelWhole } from '@/lib/pricing'
+import { computeQuoteTotals, formatShekelWhole, parseVatPercent } from '@/lib/pricing'
 import { NO_COLOR_LABEL } from '@/lib/catalog'
 
 // ── מוקש 1: פורמט הגופן ────────────────────────────────────────────────────
@@ -253,6 +253,20 @@ function LinesTable({ lines }) {
   )
 }
 
+// ── מוקש 3: מע"מ חסר ────────────────────────────────────────────────────────
+// ‏`quote?.vatRate ?? 0` היה כאן עד 31/07/2026, והוא **עקף את דוקטרינת "ריק אינו 0"** של
+// ‏pricing.js: פרמטר `אחוז_מעמ` שנמחק מ-`params` (מסלול אמיתי — §7.84 קובע שהשורות נערכות
+// ידנית ב-Table Editor) הפיק ללקוח משלם מסמך שכתוב בו `מע"מ (0%)` וסכום נמוך ב-~15%,
+// **בלי שום שגיאה**. מסמך שגוי שנראה תקין גרוע ממסמך שלא הופק.
+// המנוע מסרב, ולא המסך שמעליו, כי הוא נקודת-החנק היחידה: שלושת המסכים מגיעים אליו,
+// ומודול 10 ירים אותו לשרת לשליחה אוטומטית — שם אין מסך שיגן.
+export const MISSING_VAT_MESSAGE =
+  'שיעור המע"מ אינו מוגדר בהגדרות המערכת — לא ניתן להפיק מסמך ללקוח. יש להוסיף את הפרמטר אחוז_מעמ בהגדרות המערכת.'
+
+// קוד-שגיאה סינתטי כדי שהקורא יבחין בין "פרמטר חסר" (הודעה שאומרת מה לתקן) לבין כשל-הפקה
+// כללי. אותה תבנית כמו `RLS_DENIED` ב-`02_customers/api.js`.
+export const MISSING_VAT_CODE = 'MISSING_VAT'
+
 // מבנה הקלט (ה-view-model שצעד 3.4 בונה מתוך ה-DB):
 //   quoteId · issueDate · validUntil
 //   customer { companyName, companyNumber, contactName, phone }
@@ -262,12 +276,19 @@ function LinesTable({ lines }) {
 // הסכומים **לא** מתקבלים מבחוץ אלא מחושבים כאן מ-pricing.js: אחרת ה-PDF יכול להציג
 // סכום שונה מהמסך, וזה בדיוק המסמך שהלקוח חותם עליו.
 export function buildQuoteDocument(quote) {
+  // אותה פונקציית-אימות שמסך-הבנייה משתמש בה (`parseVatPercent`), כדי ששני המקומות
+  // לא יוכלו לחלוק על השאלה "האם המע"מ ידוע": null = חסר / ריק / לא-מספר / מחוץ ל-0–100.
+  const vatRate = parseVatPercent(quote?.vatRate)
+  if (vatRate === null) {
+    throw Object.assign(new Error(MISSING_VAT_MESSAGE), { code: MISSING_VAT_CODE })
+  }
+
   const lines = quote?.lines ?? []
   const totals = computeQuoteTotals(
     lines.map((l) => ({ qty: l.qty, unitPrice: l.unitPrice })),
     quote?.appliedCustomerDiscount ?? 0,
     quote?.manualDiscount ?? 0,
-    quote?.vatRate ?? 0,
+    vatRate,
   )
   const customer = quote?.customer ?? {}
   const event = quote?.event ?? {}
@@ -345,10 +366,7 @@ export function buildQuoteDocument(quote) {
               value={formatShekelWhole(totals.preVat)}
               style={styles.totalPreVat}
             />
-            <TotalRow
-              label={`מע"מ (${quote?.vatRate ?? 0}%)`}
-              value={formatShekelWhole(totals.vatAmount)}
-            />
+            <TotalRow label={`מע"מ (${vatRate}%)`} value={formatShekelWhole(totals.vatAmount)} />
             <View style={styles.grand}>
               <Text>סה&quot;כ סופי לתשלום</Text>
               <Ltr>{formatShekelWhole(totals.total)}</Ltr>

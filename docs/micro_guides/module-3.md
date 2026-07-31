@@ -11,7 +11,7 @@
 | Owner | ישי (sole developer — all rulings and build; guide `modules/module_03_quotes.md` §③) |
 | Branch | `ishay/module-3-quotes-build` (cut 22/07 from dev `a35c92f`, after PR #9 merged; the old `ishay/module-3-quotes` is now an ancestor of `dev` — dead, iron rule 10) |
 | Status | 🔨 **Phase 3 (UI) is CLOSED — 3.1–3.7 all done (the 3.7 gate signed 31/07/2026). Next: Phase 4, starting at step 4.1.** Phase 1+2 closed (see done-tables below). |
-| Last updated | 30/07/2026 22:52 — **3.6 CLOSED.** `npm run gate` exit 0, **324 tests** (was 290); **25 E2E green, 0 skips**. Live DB verified byte-identical to Seed after all write-and-restore verification (40 tiers · VAT 18 · ratio 50 · quote #6 = 6,319 ₪). |
+| Last updated | 31/07/2026 09:35 — **audit fix-round A (VAT guard) CLOSED.** Code + migration `20260731085335` both landed (typed-echo given, applied via MCP). `npm run gate` **exit 0** (343 unit tests) · E2E **21/21** (2nd run; see §9 on the 1 pre-existing `permissions.spec.js` flake in run 1). Every guard proven by **returning the failure**, not by watching it pass. See §9 (31/07 09:05). *(previous entry: 30/07/2026 22:52 — 3.6 CLOSED; `npm run gate` exit 0, 324 tests, 25 E2E green 0 skips, live DB byte-identical to Seed — 40 tiers · VAT 18 · ratio 50 · quote #6 = 6,319 ₪.)* |
 | **Active step** | **3.7 ✅ CLOSED 31/07/2026 — Phase 3 is done. NEXT IS 4.1 (approval-flow edges).** ⚠️ Read before 4.x: (1) the demo data **changed tonight** — quotes #14/#15 were deleted, so `quotes` is 8 rows / `quote_services` 20, and מדיטק (customer 46) has **2** quotes, not 4. **An E2E suite that asserts on real seed rows is coupled to them — `grep` the suite for an id before deleting it** (this bit once, and only the proactive regression caught it; CI never runs E2E). (2) The rejection-reason-on-row assertion now lives on עיריית חדרה's quote #11, not מדיטק's #14. (3) `RowAction` is now shared at `src/components/RowAction.jsx` — consume it, don't re-declare it. Evidence: §9 entry 31/07 01:28. *(3.6 ✅ complete 30/07 22:52 — details kept below.)* **3.6 ✅ COMPLETE — built and verified live 30/07 22:52.** Mockup approved (`docs/mockups/system-settings-screen/05_prices_tab_approved.html`), plan `~/.claude/plans/resilient-purring-bear.md`, rulings **LOCAL-19..21**. ⚠️ Read §9 (30/07 evening) before touching `replacePriceTiers` or any delete-then-insert save: a real data-loss incident happened and the fixed ordering (upsert→delete-stale) is load-bearing. **Next: 3.7 (Phase-3 gate — 🎨 UX & functional review, a 👤 stop).** |
 | 🆕 **Read this before 3.5 — what changed in 3.4 that a fresh session would not guess** | (1) **A generic email engine now exists** — `src/lib/email.js` + Edge Function `send-email` + table `email_log`. It is **not** quote-specific; M4/M8/M11 reuse it (`src/CLAUDE.md` §"שליחת מייל" · §6 🚧 מ4·מ8·מ11). (2) **Migrations are at 9, not 5** — 6 (8th rejection reason) · 7+9 (email wording + sender signature: **deliberate deviations from FROZEN C5 §5.8.1**, `params` value only) · 8 (`email_log`). (3) **The project now has an external dependency** on Make.com (scenario 6759079) and its **first Edge Function**; the webhook URL is a Supabase secret and must never enter the repo. (4) **Direction incident #5** happened in an *outgoing email*, not a screen — `src/CLAUDE.md` now requires every outgoing Hebrew artefact to run its own direction pass. (5) **Two debts booked to 4.3:** no permanent E2E for the email path, and no test proving a `view`-level user is refused **by the function** rather than by a hidden button. (6) ✅ **DONE 31/07/2026** — Ishay deleted BOTH unused connections (`regin-gmail` 9406233 + `regin-gmail-send` 9406719) via browser-Claude; verified live via `connections_list` (only `regin-google-restricted` + Make's default remain) and `scenarios_get` 6759079 (`isActive: true`, connection 9407092 intact, onerror pair in place). |
 | ⚠️ Concurrency | 29/07 19:10 — the **ownership question from the 18:19–18:57 entries is RESOLVED by evidence**: the uncommitted 3.3 code was this build session's, it is now complete and gate-green. The other conversation wrote **no code** (its two commits `f67cb98`/`512184c` are docs only) and correctly stood down per iron rule 16. **Ishay must close the second conversation before the next step** — two sessions on one branch nearly caused a `git add -A` cross-commit. |
@@ -361,6 +361,75 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 31/07/2026 09:05 — **Audit fix-round A (VAT guard) — app code LANDED, migration WRITTEN BUT NOT
+  APPLIED.** Source: `docs/audit_2026-07-31_fix_plan.md` §A. Plan: `~/.claude/plans/temporal-greeting-torvalds.md`.
+  **Root cause, one family:** a `params` row that is deleted/renamed/blank turns into `0` or `NULL`
+  in three consumers that all bypass the `pricing.js` "empty is not 0" doctrine.
+  **What landed in `src/` (all green: 341 unit tests, `eslint .` clean):**
+  (1) `quotePdf.jsx` — `quote?.vatRate ?? 0` **deleted in both places** (the `computeQuoteTotals`
+  call and the `מע"מ (…%)` label). `buildQuoteDocument` now validates via the *existing*
+  `parseVatPercent` and throws `MISSING_VAT_MESSAGE` carrying `code: 'MISSING_VAT'` (same synthetic
+  -code pattern as `RLS_DENIED` in `02_customers/api.js`). ⚠️ **Reader-trace done before changing it:**
+  `buildQuoteDocument` has ZERO production callers — the only path is `renderQuotePdfBlob` →
+  `QuoteDocumentDialog.jsx` (one call site), reached from `QuotesPage` · `CustomerDetailsPage` ·
+  `QuoteBuilderPage` (the last already blocks earlier). So the throw surfaces in exactly one dialog,
+  and M10's future server-side lift gets an error instead of a wrong document.
+  (2) `QuoteDocumentDialog.jsx` — the blind `catch {}` now distinguishes `MISSING_VAT` and shows the
+  message that says *what to fix*; the error `<p>` gained `data-testid="quote-document-error"`.
+  Download/send were **already** dead when `blobUrl` is empty — verified, not rebuilt; the reason
+  string was added to both `title`s. ⚠️ `emailSendDisabledReason` was deliberately NOT touched — it
+  is the generic engine shared with M4/M8/M11.
+  (3) `CustomerDetailsPage.jsx:228` passed the **raw `param_value` string** where `QuotesPage` passes
+  `parseVatPercent(...)`; aligned. Two screens feeding different types into one prop is a latent bug.
+  (4) NEW `missingPricingParamsMessage()` in `src/lib/quotes.js` + amber banner on `QuotesPage`
+  (`data-testid="quotes-missing-params"`, style copied from `CustomerFormDialog`, not invented).
+  **Ishay's ruling 31/07:** the expiry cron failing loudly is not enough on its own —
+  `cron.job_run_details` is a place nobody opens, so the same failure must be visible on screen.
+  (5) Tests: `quotePdf.test.jsx` had ONLY `not.toThrow()` and both cases passed `vatRate: 18`, so the
+  `?? 0` path was never covered. Added 8 guard assertions + a `0%`-is-legal case.
+  🔬 **Guard proven by RETURNING the failure** (not by watching it pass): temporarily restoring
+  `parseVatPercent(...) ?? 0` turned **8 tests red**; restoring the guard returned 24/24 green.
+  (6) **A fourth site of the same family, found while screenshotting** (not in the audit's list of
+  three): `deriveQuoteMetrics` summed `total ?? 0`, so the header tile read **"שווי הצעות פתוחות:
+  0 ₪"** directly beneath the banner saying pricing is impossible. Now `null` ⇒ `—`
+  (`formatShekelWhole(null)`), same convention as `approvalRate`. Also caught by eye in the same
+  screenshot: the banner said "יש להוסיף את **השורות**" for a single missing row — number agreement
+  now follows the count (a translated-sounding label is a `src/CLAUDE.md` wording-pass failure).
+  ✅ **DB side — migration `20260731085335_module3_vat_and_expiry_param_guards.sql` APPLIED**
+  (typed-echo given). Full evidence in `docs/db_roadmap.md` §10; the three things worth carrying:
+  (a) `security definer set search_path = ''` **survived the body copy** — re-read from
+  `pg_get_functiondef` after apply, not eyeballed (Ishay's explicit demand; the project has a whole
+  migration born from that line's absence). (b) `cron.job` = **exactly 2 rows with jobid=1 preserved**
+  — proof that `cron.schedule` upserted by name rather than leaving the old unguarded job firing.
+  (c) The RPC injection needed an **entry condition**: the function checks permission → status →
+  past date → hostess lines *before* the VAT guard, so a control run first proved quote #6 gets all
+  the way through (it created project 5, rolled back); only then did the injection on quote #7 return
+  the **VAT-specific** Hebrew message. DB verified byte-identical afterwards.
+  ✅ **E2E — `e2e/quote-document.spec.js` (NEW, permanent, 2 tests).** Network interception
+  (`page.route` on `/rest/v1/params`) removes the row on the way back — **zero DB writes**, the
+  mandatory pattern here. The happy-path test is part of the proof, not an appendix: without it the
+  blocked-path test would pass on a screen that never renders a document at all.
+  📸 Screenshot-reviewed both states; direction pass measured (`dir: rtl` on banner and message).
+  ✅ **The other half of the coin, added after Ishay asked "what haven't you checked":** every guard
+  test above proves the document is **not** produced; none proved that when VAT *is* present the
+  right number is printed — a guard that accidentally froze 0% would have passed the whole suite
+  green. `collectStrings` walks the returned element tree (**props too, not just children** — the
+  totals rows receive their text as `label`/`value` props on `TotalRow`, so a children-only walk
+  missed exactly the VAT label) and asserts `מע"מ (18%)` · `5,355 ₪` · `964 ₪` · `6,319 ₪`, plus
+  `0%` printing as `0%`. **Mutation-proven:** changing the label to `${vatRate * 0}` turned it red.
+  ✅ **The two CHECK constraints were also proven to REJECT, not merely to exist** — first attempt
+  was worthless (the INSERT died on `recommended_hostess_count NOT NULL` before reaching them, so
+  "it failed" proved nothing); redone with a **control insert that succeeds**, then
+  `23514 / quotes_approved_requires_vat` and `23514 / quotes_vat_snapshot_range` by name. The RPC
+  was additionally proven to reject an **out-of-range** param (`'150'` ⇒ *"שיעור המע\"מ שבהגדרות
+  המערכת אינו חוקי (150)"*), not just a missing one. All rolled back; DB re-verified clean.
+  **Regression — final numbers, measured after every edit including the Prettier pass on
+  `quotePdf.jsx`:** `npm run gate` **exit 0** (lint · format · **345** unit tests · build · jscpd ·
+  knip · audit · check:context) · **full E2E 21/21 on the second run**.
+  ⚠️ The first full E2E run had **1 failure in `permissions.spec.js`** (matrix cell cycling) — passes
+  in isolation and on the re-run, touches none of the changed files, and the DB was verified still at
+  its baseline (`מנהלת לוגיסטיקה × פרויקטים = edit`). Recorded as a **pre-existing flake**, not a
+  regression — the spec's own comment documents an earlier race of the same shape (08/07/2026).
 - 31/07/2026 01:28 — **Step 3.7 🎨 gate — the machine half is DONE; the rulings are Ishay's (👤).**
   Method: three throwaway Playwright specs (`zz-review-37` · `zz-measure-37` · `zz-dialogs-37`),
   network-level read-only guard (0 write requests reached Supabase in any run), **all three deleted

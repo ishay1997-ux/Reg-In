@@ -467,6 +467,13 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 6. **(e)–(g) per CLAUDE.md iron rules 13/15/16 + end-of-session protocol** (new-open-question → stop+§7 · migration/DB-gap → db_roadmap same session · shared-surface change → name the affected future modules in the CHANGELOG line) — these apply automatically; not restated here (F1).
 
 ## 9. 📝 Deviations & Tech-Debt Log
+- 31/07/2026 09:05 — **One-line alignment in `CustomerDetailsPage.jsx` (M3 audit fix-round A).**
+  The page passed the **raw `param_value` string** for `אחוז_מעמ` into `vatRate`, while
+  `QuotesPage` passes `parseVatPercent(...)` — two screens feeding different types into the same
+  prop of the same dialog. Now both call `parseVatPercent`. Behaviour on the happy path is
+  unchanged (`paramNumber` in `lib/quotes.js` coerced the string anyway); what it closes is a
+  param saved as e.g. `'150'`, which used to travel to the customer document as-is.
+  Nothing else in M2 changed. Full context and the reader-trace: `module-3.md` §9 (31/07 09:05).
 - 30/07/2026 23:30 — **🐞 Cross-module fix (ruled by Ishay, before M3's 3.7 gate):
   `replaceCustomerContacts` reordered from delete-then-insert to read-old-ids → insert → delete-old-ids.**
   Why now: the identical pattern **really deleted** the 5 seed price tiers of B-REG-TAG in M3's 3.6

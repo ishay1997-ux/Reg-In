@@ -5,6 +5,7 @@ import {
   buildQuoteDocument,
   quotePdfFileName,
   QUOTE_TERMS,
+  MISSING_VAT_CODE,
 } from './quotePdf'
 
 // תרחיש-הקבלה המחייב מהאפיון (C5 §5.5.4) — אותם מספרים שמאמתים את pricing.js.
@@ -108,6 +109,30 @@ describe('QUOTE_TERMS', () => {
   })
 })
 
+// אוסף כל מחרוזת שמופיעה בעץ-האלמנטים של המסמך. ‏@react-pdf בונה עץ React רגיל, ולכן
+// אפשר לאמת **תוכן שמודפס ללקוח** בלי לרנדר PDF אמיתי ובלי לחלץ טקסט מבייטים.
+function collectStrings(node, out = []) {
+  if (node === null || node === undefined || typeof node === 'boolean') return out
+  if (typeof node === 'string' || typeof node === 'number') {
+    out.push(String(node))
+    return out
+  }
+  if (Array.isArray(node)) {
+    for (const child of node) collectStrings(child, out)
+    return out
+  }
+  // ⚠️ לא רק `children`: שורות-הסיכום מקבלות את הטקסט כ-props (`label` / `value`) לרכיב
+  // ‏`TotalRow`, שאינו מורץ בעץ הזה. סריקת children בלבד הייתה מפספסת בדיוק את תווית
+  // המע"מ — כלומר את הדבר היחיד שהבדיקה הזו קיימת בשבילו.
+  if (node.props) {
+    for (const [key, value] of Object.entries(node.props)) {
+      if (key === 'style' || key === 'src') continue
+      collectStrings(value, out)
+    }
+  }
+  return out
+}
+
 describe('buildQuoteDocument', () => {
   it('בונה מסמך לתרחיש-הקבלה בלי לזרוק', () => {
     const doc = buildQuoteDocument(WORKED_EXAMPLE)
@@ -125,5 +150,69 @@ describe('buildQuoteDocument', () => {
   it('מתעלם מסכומים שמוזרקים מבחוץ', () => {
     const tampered = { ...WORKED_EXAMPLE, total: 99999, subtotal: 1 }
     expect(() => buildQuoteDocument(tampered)).not.toThrow()
+  })
+})
+
+// ⚠️ **הבדיקות האלה קיימות כדי להיכשל, לא כדי לעבור.** עד 31/07/2026 היה כאן
+// `quote?.vatRate ?? 0`, ושתי הבדיקות שמעל מעבירות `vatRate: 18` מפורש — כלומר המסלול
+// של "מע"מ חסר" לא נבדק מעולם, ו-`not.toThrow()` היה עובר גם על קוד שמדפיס ללקוח
+// משלם "מע"מ (0%)". מסמך שגוי שנראה תקין גרוע ממסמך שלא הופק.
+describe('buildQuoteDocument — שומר המע"מ', () => {
+  // כל צורה שבה שורת `אחוז_מעמ` יכולה להיעדר בפועל: נמחקה (undefined), שונתה-שם
+  // (undefined), נשמרה ריקה (''), הוקלד בה טקסט, או ערך מחוץ לטווח חוקי.
+  it.each([
+    ['null — הפרמטר לא נטען', null],
+    ['undefined — השורה נמחקה או שונתה-שם', undefined],
+    ['מחרוזת ריקה — השורה נשמרה ריקה', ''],
+    ['טקסט שאינו מספר', 'שמונה עשרה'],
+    ['מעל 100%', 101],
+    ['שלילי', -1],
+  ])('מסרב להפיק מסמך כששיעור המע"מ %s', (_label, vatRate) => {
+    expect(() => buildQuoteDocument({ ...WORKED_EXAMPLE, vatRate })).toThrow()
+  })
+
+  it('מסרב גם כשהמפתח vatRate נעדר לגמרי מה-object', () => {
+    const withoutVat = { ...WORKED_EXAMPLE }
+    delete withoutVat.vatRate
+    expect(() => buildQuoteDocument(withoutVat)).toThrow()
+  })
+
+  // הקוד הזה הוא **חוזה** מול QuoteDocumentDialog: הוא מה שמבדיל בין ההודעה שאומרת
+  // מה לתקן לבין "הפקת המסמך נכשלה" הכללית. שינוי שמו שובר את החלון בלי שגיאת-בנייה.
+  it('נושא את קוד-השגיאה MISSING_VAT ואת ההודעה שאומרת מה לתקן', () => {
+    let caught = null
+    try {
+      buildQuoteDocument({ ...WORKED_EXAMPLE, vatRate: null })
+    } catch (err) {
+      caught = err
+    }
+    expect(caught?.code).toBe(MISSING_VAT_CODE)
+    expect(caught?.message).toContain('אחוז_מעמ')
+  })
+
+  // הצד השני של השומר: 0% הוא ערך **חוקי** ולא "חסר". פטור-ממע"מ הוא מצב אמיתי,
+  // והשומר לא אמור לחסום אותו — רק את מה שלא ידוע.
+  it('מקבל 0% כשיעור חוקי ואינו מבלבל אותו עם "חסר"', () => {
+    expect(() => buildQuoteDocument({ ...WORKED_EXAMPLE, vatRate: 0 })).not.toThrow()
+  })
+
+  // ⚠️ **הצד השני של המטבע, וזה מה שבאמת נשלח ללקוח.** כל הבדיקות שמעל מוכיחות שהמסמך
+  // **אינו** נוצר כשהמע"מ חסר. אף אחת מהן אינה מוכיחה שכשהוא כן קיים — המספר הנכון
+  // מודפס. בלי זה, שומר שהיה מקבע בטעות 0% היה עובר את כל החבילה בירוק.
+  it('מדפיס את שיעור המע"מ האמיתי בתווית ואת הסכום הנכון', () => {
+    const texts = collectStrings(buildQuoteDocument(WORKED_EXAMPLE))
+    expect(texts).toContain('מע"מ (18%)')
+    // תרחיש-הקבלה של האפיון, אותם מספרים בדיוק כמו ב-pricing.test.js:
+    // 6,300 לפני הנחה ⇒ 5,355 לפני מע"מ ⇒ 964 מע"מ ⇒ **6,319 ₪** סופי.
+    expect(texts).toContain('5,355 ₪')
+    expect(texts).toContain('964 ₪')
+    expect(texts).toContain('6,319 ₪')
+    // ולא — התווית של הבאג הישן.
+    expect(texts).not.toContain('מע"מ (0%)')
+  })
+
+  it('שיעור 0% מודפס כ-0% ולא נעלם', () => {
+    const texts = collectStrings(buildQuoteDocument({ ...WORKED_EXAMPLE, vatRate: 0 }))
+    expect(texts).toContain('מע"מ (0%)')
   })
 })

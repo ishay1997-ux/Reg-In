@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import { CUSTOMER_TYPE_LABELS, deriveCustomerMetrics } from '@/lib/customers'
+import { parseVatPercent } from '@/lib/pricing'
 import {
   deriveQuoteAmount,
   matchesQuoteFilters,
@@ -221,7 +222,10 @@ export default function CustomerDetailsPage() {
     }
   }, [numericId, reloadTick])
 
-  const vatRate = params[QUOTE_SCREEN_PARAM_NAMES.vatPercent]
+  // ‏parseVatPercent ולא ה-param_value הגולמי — אותו טיפוס בדיוק שמסך-ההצעות מעביר
+  // (`QuotesPage.jsx`). שני מסכים שמעבירים טיפוסים שונים ל-prop אחד הם באג בהמתנה,
+  // ובנוסף הפונקציה פוסלת ערך מחוץ ל-0–100 שהיה מגיע כמות-שהוא למסמך הלקוח.
+  const vatRate = parseVatPercent(params[QUOTE_SCREEN_PARAM_NAMES.vatPercent])
   const validityDays = params[QUOTE_SCREEN_PARAM_NAMES.validityDays]
   const emailTemplate = params[QUOTE_SCREEN_PARAM_NAMES.quoteEmailTemplate]
   const metrics = deriveCustomerMetrics(projects, quotes, vatRate)

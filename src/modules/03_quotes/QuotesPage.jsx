@@ -28,6 +28,7 @@ import {
   deriveQuoteMetrics,
   isEventSoon,
   matchesQuoteFilters,
+  missingPricingParamsMessage,
   sortQuotes,
 } from '@/lib/quotes'
 import { parseVatPercent } from '@/lib/pricing'
@@ -174,6 +175,7 @@ export default function QuotesPage() {
   const eventWarningDays = params[QUOTE_SCREEN_PARAM_NAMES.eventWarningDays]
   const emailTemplate = params[QUOTE_SCREEN_PARAM_NAMES.quoteEmailTemplate]
   const ctx = { todayIso, validityDays, eventWarningDays, defaultVatRate: vatRate }
+  const missingParamsMessage = missingPricingParamsMessage({ vatRate, validityDays })
 
   // בלי useMemo: הקומפיילר של React מזכר את זה לבד, ו-memoization ידני על ערך שנגזר
   // ממשתנה-רינדור מקומי (vatRate) מפיל אצלו את האופטימיזציה כולה — ‏react-hooks/preserve-manual-memoization.
@@ -306,6 +308,18 @@ export default function QuotesPage() {
           </div>
         </div>
       </div>
+
+      {/* אזהרת פרמטר-מערכת חסר (הכרעת-ישי 31/07/2026). הסגנון מועתק מבאנר-האזהרה
+          הקיים ב-CustomerFormDialog — מעבר-אחידות, לא המצאת גוון חדש. */}
+      {missingParamsMessage && (
+        <p
+          className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 mb-4"
+          role="alert"
+          data-testid="quotes-missing-params"
+        >
+          {missingParamsMessage}
+        </p>
+      )}
 
       <div className="bg-white rounded-xl shadow-sm px-4 pb-3">
         {/* לשוניות קו-תחתון — הועתקו מהמוקאפ המאושר של ניהול-הפרויקטים

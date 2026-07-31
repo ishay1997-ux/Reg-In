@@ -492,6 +492,11 @@ alter table quotes add constraint quotes_rejection_notes_required
   check (rejection_reason is distinct from 'אחר' or rejection_notes is not null);
 alter table quotes add constraint quotes_rejected_iff_reason
   check ((quote_status = 'rejected') = (rejection_reason is not null));
+-- מיגרציה 10 (20260731085335): שיעור-מע"מ ריק לא יכול יותר להיקפא בשקט על הצעה מאושרת
+alter table quotes add constraint quotes_approved_requires_vat
+  check (quote_status <> 'approved' or vat_rate_snapshot is not null);
+alter table quotes add constraint quotes_vat_snapshot_range
+  check (vat_rate_snapshot is null or (vat_rate_snapshot >= 0 and vat_rate_snapshot <= 100));
 
 -- projects: snapshot-זהות + זמני-אירוע (§7.76 + LOCAL-1/5) — ה-RPC-האישור ממלא
 alter table projects add column event_name text;                                      -- §7.76
@@ -586,6 +591,9 @@ create trigger quote_services_lock_non_in_progress before update or delete on qu
 --    • approve_quote_and_create_project(p_quote_id int) returns int  — SECURITY DEFINER, search_path=''
 --        §7.49 המרה: בדיקת-edit-פנימית → הקפאת cost(§7.28)+VAT(§7.51) → project נולד-שלם(§7.76/LOCAL-1/5, F22) → logistics.
 --        grants: revoke public,anon; grant authenticated.
+--        ⚠️ **הגוף עודכן במיגרציה 10 (20260731085335)** — הוא זה שחי היום, לא זה של 20260723115000:
+--        פרמטר `אחוז_מעמ` נקרא כטקסט ומאומת (חסר/ריק/לא-מספרי/מחוץ ל-0–100) **לפני כל כתיבה**,
+--        עם raise עברי P0001 — כך שאישור שנכשל אינו מוליד פרויקט. שאר הגוף זהה בית-בבית.
 --    • create_quote(p_header jsonb, p_lines jsonb) returns int        — SECURITY INVOKER, F17 (RLS הוא הקיר).
 --    • replace_quote_lines(p_quote_id int, p_header jsonb, p_lines jsonb) returns void — SECURITY INVOKER, F17.
 --        grants (שתיהן): revoke public,anon; grant authenticated.
@@ -594,10 +602,24 @@ create trigger quote_services_lock_non_in_progress before update or delete on qu
 -- מודול 3 — מיגרציה 5: pg_cron (expiry + login cleanup) + lock-fn revoke (20260723120500)
 -- ============================================================
 create extension if not exists pg_cron with schema pg_catalog;
+-- ⚠️ הגוף שלמטה **נדרס במיגרציה 10 (20260731085335)** — cron.schedule עם אותו שם-עבודה מעדכן
+--    במקום ליצור כפולה (אומת חי: 2 עבודות, jobid=1 נשמר). הגוף החי היום:
 select cron.schedule('module3-quote-expiry', '0 1 * * *', $job$
-  update public.quotes set quote_status='rejected', rejection_reason='פג תוקף'
-   where quote_status='in_progress'
-     and updated_at < now() - ((select param_value::int from public.params where param_name='ימי_תוקף_הצעה') * interval '1 day'); $job$);  -- §7.42/§7.56
+do $expiry$
+declare v_days_text text; v_days int;
+begin
+  select param_value into v_days_text from public.params where param_name = 'ימי_תוקף_הצעה';
+  if v_days_text is null or btrim(v_days_text) = '' or btrim(v_days_text) !~ '^[0-9]+$' then
+    raise exception 'פרמטר ימי_תוקף_הצעה חסר או אינו מספר שלם — עבודת תפוגת ההצעות לא בוצעה'
+      using errcode = 'P0001';
+  end if;
+  v_days := btrim(v_days_text)::int;
+  update public.quotes set quote_status = 'rejected', rejection_reason = 'פג תוקף'
+   where quote_status = 'in_progress'
+     and updated_at < now() - (v_days * interval '1 day');
+end
+$expiry$;
+$job$);  -- §7.42/§7.56 + שומר-הפרמטר (מיגרציה 10)
 select cron.schedule('module1-login-attempts-cleanup', '30 1 * * *', $job$
   delete from public.login_attempts where last_attempt_at < now() - interval '30 days'; $job$);  -- §7.75
 revoke execute on function public.enforce_quote_in_progress_lock() from public, anon, authenticated;  -- advisor hygiene

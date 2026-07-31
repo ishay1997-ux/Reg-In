@@ -201,6 +201,30 @@ Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
 
 ## 9. 📝 Deviations & Tech-Debt Log
 
+- 31/07/2026 09:30 — 🟡 **OPEN FLAKE (not fixed, not caused by the change that found it):**
+  `e2e/permissions.spec.js` → *"CEO משנה תא במטריצה … והשינוי נשמר אחרי רענון"* failed **once** in a
+  full-suite run during M3's audit fix-round A, then passed in isolation and on a full re-run
+  (3 consecutive greens after). Symptom: after `clickCellAndAwaitWrite`, the cell's `title` was
+  observed stuck at `אין גישה` for the whole 10 s retry window instead of the next value in
+  `TITLE_CYCLE` — i.e. the cell sat **two** cycle steps away from the computed expectation.
+  **Not a data problem:** `permissions` was re-read from the DB right after the failure and
+  `מנהלת לוגיסטיקה × פרויקטים` was at its baseline `edit`, so the test's restore-clicks were not the
+  cause and nothing was left dirty. **Not caused by the fix round:** it shares no code path with any
+  file that round touched (verified by re-running the spec alone and the suite twice).
+  **Suspected class — the same one the spec already documents:** `PermissionsMatrixPage` updates
+  `permMap` optimistically and `loadData` overwrites the whole map when it resolves; a `loadData`
+  landing after a click reverts the optimistic value. An earlier instance of exactly this was
+  "fixed" on 08/07/2026 by awaiting `networkidle` before the click — **that mitigation is evidently
+  not sufficient**, since StrictMode's second effect run is not guaranteed to be inside that window.
+  ⚠️ **Note this is a dev-only amplifier** (StrictMode double-invoke), but the underlying shape —
+  a refetch clobbering an in-flight optimistic write — is real in production too if any future code
+  refetches on focus/interval.
+  **Not attempted here on purpose:** it is outside fix-round A, it did not reproduce in two real
+  attempts, and the project rule is to stop after two rather than thrash. **Direction when picked up:**
+  assert on the value **after a reload** (the DB is the truth) instead of on the optimistic title, or
+  make `loadData` merge rather than replace while a write is in flight. Related but NOT covering it:
+  `docs/audit_2026-07-31_fix_plan.md` §F (permission testing layers) — F is about *where* permissions
+  are asserted, not about this race; if F is done first, this line still stands.
 - 12/07/2026 02:40 — **Format-alignment pass (no code/DB; fresh-context agent audit + fixes):** capabilities table gained literal `🚧 מN` tokens + the §6 byte-match Rule (was prose "→ M9/M10/M12"); RLS row marked ✅ discharged-by-M2 and "12-scenario"→"14-scenario"; 5.4-handoff marked ✅ superseded (M2 built by Ishay — §7.21 instantiated on `customers`; the planned Amit message became moot); DoD anon-EXECUTE line fixed to match §4's 07/07 correction; PR checkbox converted to a Post-merge note (template rule 7); §8 gained items 5–6 (phase-entry sweep (h) + (e)–(g) rule citations); backlog wording softened (only notifications carries §6 tokens). Guide format now matches module-2.md + the current template.
 - 03/07 — CAPTCHA (spec 5.6.1) cancelled → Google Sign-In + lockout (§7.8). Frozen spec untouched.
 - 02/07 — `frozen` → `inactive`; one-way freeze → bidirectional toggle (binding pattern for M2 `customers.status`, M4 `hostesses.status`).

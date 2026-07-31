@@ -285,6 +285,34 @@ function paramNumber(value) {
   return Number.isFinite(n) ? n : null
 }
 
+// שורת-האזהרה שמסך-ההצעות מציג כששורת-פרמטר תמחור חסרה מ-`params` (הכרעת-ישי 31/07/2026).
+// ⚠️ **למה בכלל צריך אותה:** שני הפרמטרים האלה נכשלים בשקט כשהם חסרים, כל אחד בדרכו —
+// המע"מ חוסם הפקת מסמך (המשתמש כן יראה זאת בחלון), אבל `ימי_תוקף_הצעה` חסר מפיל את
+// **עבודת-הלילה** שמסמנת הצעות שפג תוקפן. העבודה זורקת שגיאה ורצה נכשלת, אך היומן
+// שלה (`cron.job_run_details`) הוא מקום שאיש אינו פותח — ובלי סימן במסך, "נכשל ברעש"
+// שקול ל"נכשל בשקט". כאן זה נאמר במקום שבו המשתמש ממילא נמצא.
+// מחזירה '' כשהכול תקין, כדי שהקורא יוכל לכתוב `{message && <banner/>}`.
+export function missingPricingParamsMessage({ vatRate, validityDays } = {}) {
+  const missing = []
+  if (paramNumber(vatRate) === null) missing.push(QUOTE_SCREEN_PARAM_NAMES.vatPercent)
+  if (paramNumber(validityDays) === null) missing.push(QUOTE_SCREEN_PARAM_NAMES.validityDays)
+  if (missing.length === 0) return ''
+
+  // ההשלכה נאמרת פר-פרמטר ולא כמשפט כללי: המשתמש צריך לדעת מה **לא עובד עכשיו**,
+  // לא רק שחסרה שורה. שם-הפרמטר מודפס כלשונו — זה מה שמחפשים ב-Table Editor.
+  const effects = []
+  if (missing.includes(QUOTE_SCREEN_PARAM_NAMES.vatPercent)) {
+    effects.push('לא ניתן להפיק מסמכים ללקוחות')
+  }
+  if (missing.includes(QUOTE_SCREEN_PARAM_NAMES.validityDays)) {
+    effects.push('הצעות אינן פגות אוטומטית')
+  }
+  // התאמת מין ומספר — תווית שאומרת "השורות" על שורה אחת נקראת כמו טקסט מתורגם.
+  const label = missing.length === 1 ? 'חסר פרמטר מערכת' : 'חסרים פרמטרי מערכת'
+  const action = missing.length === 1 ? 'יש להוסיף את השורה' : 'יש להוסיף את השורות'
+  return `${label}: ${missing.join(', ')} — ${effects.join(', ')}. ${action} בהגדרות המערכת.`
+}
+
 // 'YYYY-MM-DD' ⇒ חותמת UTC. עבודה בחלקי-תאריך של UTC (ולא בשעון המקומי) היא מכוונת:
 // היא היחידה שנותנת אותו מספר-ימים בכל אזור-זמן, וכך בדיקה שעברה כאן תעבור גם אצל ישי.
 function toUtcDayStart(dateLike) {
@@ -375,10 +403,14 @@ export function deriveQuoteMetrics(
     (q) => q.quote_status === 'rejected' && !nonLossReasons.includes(q.rejection_reason),
   )
 
-  const openValue = open.reduce(
-    (sum, q) => sum + (deriveQuoteAmount(q, defaultVatRate).total ?? 0),
-    0,
-  )
+  // ⚠️ **"ריק אינו 0" חל גם על אריח-מדד** (תוקן 31/07/2026, סבב-התיקונים A). קודם עמד כאן
+  // ‏`?? 0`, ולכן מע"מ שלא נטען הציג **"שווי הצעות פתוחות: 0 ₪"** — מספר אמין-למראה ושקרי,
+  // ובדיוק מתחת לשורת-האזהרה שאומרת שאי-אפשר לתמחר. סכום שאינו ידוע מוצג "—"
+  // (‏`formatShekelWhole(null)`), אותה מוסכמה כמו `approvalRate` שמתחת.
+  const openTotals = open.map((q) => deriveQuoteAmount(q, defaultVatRate).total)
+  const openValue = openTotals.some((t) => t === null)
+    ? null
+    : openTotals.reduce((sum, t) => sum + t, 0)
   const closedCount = approved.length + lost.length
 
   return {
