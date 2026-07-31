@@ -55,8 +55,11 @@ export function sumHostessQty(lines) {
 }
 
 // ── רווחיות (§7.28 + הכרעת-ישי 29/07: מוצג לבעלי הרשאת-עריכה, לעולם לא ב-PDF ללקוח) ──
-// לפני האישור העלות עדיין לא קפואה, ולכן מחושבת מ-products.cost החי; ברגע האישור ה-RPC
-// מקפיא אותה ב-closing_unit_cost. לכן זו **הערכה** ולא מספר סופי, וכך היא גם מוצגת.
+// לפני האישור העלות עדיין לא קפואה, ולכן מחושבת מהעלות החיה — מאז סבב G (31/07) היא יושבת
+// ב-`product_costs` ולא ב-`products` (§7.83↳), ומגיעה לכאן שטוחה כ-`line.unitCost`. ברגע
+// האישור ה-RPC מקפיא אותה ב-closing_unit_cost. לכן זו **הערכה** ולא מספר סופי, וכך גם מוצגת.
+// ⚠️ מי שאין לו הרשאת-עלות מקבל `null` מהצירוף — והוא ממילא אינו רואה את הפאנל (הוא נשען
+// על `canEdit` על 'הצעות מחיר', בדיוק קבוצת-הקוראים של הטבלה החדשה).
 export function computeLinesCost(lines) {
   return (lines ?? []).reduce((sum, line) => sum + computeLineTotal(line?.qty, line?.unitCost), 0)
 }
@@ -100,7 +103,7 @@ export function buildQuoteHeader(form) {
   }
 }
 
-// line_number ו-closing_unit_cost נקבעים בשרת (ordinality + products.cost) — שליחתם מכאן
+// line_number ו-closing_unit_cost נקבעים בשרת (ordinality + `product_costs.cost`) — שליחתם מכאן
 // היא no-op, ולכן הן לא נכללות: שדה שנשלח ונזרק מטעה את מי שקורא את הקוד.
 export function buildQuoteLines(lines) {
   return (lines ?? []).map((line) => ({
@@ -236,6 +239,10 @@ const SERVER_MESSAGE_RULES = [
   // עוברות כמו-שהן. זה **כן** מיפוי מפורש ולא "נפילה ל-else": כך שינוי ניסוח שם ייתפס כאן.
   { prefix: 'שיעור המע"מ אינו מוגדר בהגדרות המערכת', build: (raw) => raw },
   { prefix: 'שיעור המע"מ שבהגדרות המערכת אינו חוקי', build: (raw) => raw },
+  // סבב G (31/07): `products.cost` עבר ל-`product_costs`, ומק"ט בלי שורת-עלות היה נוחת
+  // כ-23502 גולמי על `closing_unit_cost` (NOT NULL). ה-RPCs זורקים במקום זה הודעה שנוקבת
+  // ב**שם-המוצר** (לא במק"ט — §7.34: המק"ט אינו מוצג במסך), והיא עוברת כמות-שהיא.
+  { prefix: 'לא מוגדרת עלות למוצר', build: (raw) => raw },
 ]
 
 // מחזירה ניסוח-מסך לשגיאת-מסד מוכרת, או `null` כשהיא אינה מוכרת — ואז הקורא נשאר עם

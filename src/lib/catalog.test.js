@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  flattenProductCost,
   LINE_COLORS,
   NO_COLOR_LABEL,
   PRODUCT_CATEGORY_LABELS,
@@ -53,5 +54,43 @@ describe('LINE_COLORS — צבעי שורת-הצעה (§7.41)', () => {
   it('‏"ללא" אינו אחד מהצבעים — הוא מייצג NULL ב-DB, לא ערך חוקי ב-CHECK', () => {
     expect(LINE_COLORS).not.toContain(NO_COLOR_LABEL)
     expect(NO_COLOR_LABEL).toBe('ללא')
+  })
+})
+
+// ⚠️ הצורות שנבדקות כאן **נמדדו מול ה-REST החי** ב-31/07/2026 אחרי החלת סבב G, ולא נוחשו:
+// למנכ"ל ולמנהלת-הפרויקטים חוזר `product_costs: {cost: 1200}` (אובייקט), ולמנהלת-הגיוס
+// חוזר `product_costs: null` **על אותה שורת-מוצר עצמה** — כלומר ה-LEFT join שומר את המוצר
+// בקטלוג. זו הסיבה שהפונקציה הזו חייבת להבדיל בין "אין הרשאה" לבין "עלות 0".
+describe('flattenProductCost — שיטוח הצירוף ל-product_costs (§7.83↳, סבב G)', () => {
+  it('אובייקט-עלות ⇒ ‏cost שטוח, ומפתח-הצירוף נעלם מהשורה', () => {
+    const row = flattenProductCost({
+      sku: '01WEB',
+      item_name: 'אתר',
+      product_costs: { cost: 1200 },
+    })
+    expect(row.cost).toBe(1200)
+    expect(row).not.toHaveProperty('product_costs')
+    expect(row.item_name).toBe('אתר')
+  })
+
+  it('🔒 בלי הרשאת-עלות (‏null) ⇒ ‏cost הוא null ולא 0 — "לא ידוע" ולא "לא עולה כלום"', () => {
+    // זה הלב: `cost: 0` היה גורם ל-computeLinesCost להחזיר 0 ⇒ רווח גולמי = כל ההכנסה,
+    // בלי שום שגיאה. אותה משפחה בדיוק כמו שומר-המע"מ (‏vatRate ?? 0).
+    const row = flattenProductCost({ sku: '01WEB', product_costs: null })
+    expect(row.cost).toBeNull()
+    expect(row.cost).not.toBe(0)
+  })
+
+  it('עלות 0 אמיתית נשמרת כ-0 — מוצר בעלות אפס הוא מצב חוקי (‏CHECK מתיר >= 0)', () => {
+    expect(flattenProductCost({ sku: 'X', product_costs: { cost: 0 } }).cost).toBe(0)
+  })
+
+  it('שורה חסרה מוחזרת כמות-שהיא ואינה מתפוצצת', () => {
+    expect(flattenProductCost(null)).toBeNull()
+    expect(flattenProductCost(undefined)).toBeUndefined()
+  })
+
+  it('מוצר בלי שורת-עלות כלל (מפתח-הצירוף חסר) ⇒ ‏null, ולא קריסה', () => {
+    expect(flattenProductCost({ sku: 'X', item_name: 'ללא עלות' }).cost).toBeNull()
   })
 })

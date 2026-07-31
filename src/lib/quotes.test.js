@@ -1114,6 +1114,15 @@ describe('quoteServerErrorMessage — שישה מסלולי-כשל, שש הוד�
     expect(quoteServerErrorMessage({ code: 'P0001', message: RAW.vatIllegal })).toBe(RAW.vatIllegal)
   })
 
+  it('סבב G — "לא מוגדרת עלות למוצר" עוברת כמו-שהיא ונוקבת בשם-המוצר, לא במק"ט', () => {
+    // ⚠️ בלי הכלל הזה ההודעה נופלת ל-fallback הגנרי ("שמירת ההצעה נכשלה") ואף בדיקה לא
+    // נכשלת — בדיוק הכשל שהחוזה הזה נועד למנוע. הנוסח מועתק מילולית מהמיגרציה.
+    const raw = 'לא מוגדרת עלות למוצר תג שם מודפס — יש לפנות למנכ"ל להשלמת קטלוג המחירים'
+    expect(quoteServerErrorMessage({ code: 'P0001', message: raw })).toBe(raw)
+    // המק"ט לא מופיע בהודעה: §7.34 — המק"ט אינו מוצג במסך, רק במסמך ללקוח.
+    expect(quoteServerErrorMessage({ code: 'P0001', message: raw })).not.toMatch(/[A-Z]{2,}-/)
+  })
+
   it('שני הקודים שמזוהים ללא טקסט: 42501 (הרשאה) ו-P0002 (לא נמצאה)', () => {
     expect(quoteServerErrorMessage({ code: '42501', message: 'anything' })).toContain('הרשאת עריכה')
     expect(quoteServerErrorMessage({ code: 'P0002', message: 'הצעה 6 לא נמצאה' })).toContain(

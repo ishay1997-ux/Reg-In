@@ -124,14 +124,18 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
     try {
       const payload = {
         item_name: form.item_name.trim(),
-        // ⚠️ '' ולא null: products.description הוא NOT NULL בלי ברירת-מחדל. שליחת null על
-        // תיאור ריק נכשלה ב-23502 עוד לפני בדיקת-הכפילות — כלומר "מוצר חדש בלי תיאור"
-        // לא היה נוצר לעולם, עם הודעה גנרית (נתפס בסבב-הפערים 30/07, אותה משפחה כמו
-        // באג-הפרמטרים: הנחה על המסד במקום בדיקה מולו).
+        // ⚠️ '' ולא null: products.description הוא NOT NULL. שליחת null על תיאור ריק נכשלה
+        // ב-23502 עוד לפני בדיקת-הכפילות — כלומר "מוצר חדש בלי תיאור" לא היה נוצר לעולם,
+        // עם הודעה גנרית (נתפס בסבב-הפערים 30/07, אותה משפחה כמו באג-הפרמטרים: הנחה על
+        // המסד במקום בדיקה מולו). ✅ סבב G הוסיף `default ''` בצד-המסד כרשת-ביטחון לכותב
+        // הבא — השורה כאן נשארת כי היא זו שהופכת "מחק את התיאור" לפעולה שמתבצעת בפועל.
         description: form.description.trim(),
         category: form.category,
         unit: form.unit,
         base_price: Number(form.base_price),
+        // ⚠️ `cost` אינו עמודה של `products` מאז סבב G — שכבת-ה-API מפצלת אותו לטבלת
+        // `product_costs`. הוא נשאר ב-payload **במכוון**: הטופס מדבר במושגי-מוצר, ופיצול
+        // הכתיבה הוא פרט-מימוש של ה-API (כלל 14).
         cost: Number(form.cost),
         image_url: form.image_url.trim() || null,
       }

@@ -24,3 +24,18 @@ export const PRODUCT_UNITS = ['יחידה', 'פרויקט', 'משמרת', 'מט�
 // NULL ("ללא צבע") — NO_COLOR_LABEL מייצג את זה ב-UI ואינו חלק מרשימת-הערכים החוקיים.
 export const LINE_COLORS = ['לבן', 'שחור', 'אפור', 'טורקיז', 'כחול']
 export const NO_COLOR_LABEL = 'ללא'
+
+// ── שיטוח שורת-מוצר שהגיעה עם הצירוף ל-product_costs (§7.83↳, סבב G 31/07/2026) ──
+// העלות עברה לטבלת-בת כדי שההרשאה תהיה ברמת-טבלה, אבל **כל צרכני-העלות בקוד קוראים
+// `product.cost` שטוח** — `QuoteLineEditor.unitCost`, `computeLinesCost`, `quoteToFormState`,
+// `computeMarginPercent`, `validateTierRows`. השיטוח נעשה בשתי שכבות-ה-API בלבד (`getPricingCatalog`
+// ו-`listProducts`), ולכן הוא כתוב פעם אחת כאן ולא משוכפל ביניהן (כלל 14).
+//
+// ⚠️ **`null` ולא `0`.** קורא בלי הרשאת-עלות (מנהלת גיוס/לוגיסטיקה) מקבל `product_costs: null`
+// מה-LEFT join — ו-`cost: 0` היה אומר למסך "המוצר הזה לא עולה כלום", כלומר רווח = כל ההכנסה.
+// `null` נשאר "לא ידוע", וזו אותה הבחנה שנשמרת ב-§7.28 ובשומר-המע"מ.
+export function flattenProductCost(row) {
+  if (!row) return row
+  const { product_costs: costRow, ...rest } = row
+  return { ...rest, cost: costRow?.cost ?? null }
+}

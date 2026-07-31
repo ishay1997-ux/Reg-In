@@ -10,6 +10,7 @@
 
 import { supabase } from '@/supabaseClient'
 import { PRICING_PARAM_NAMES } from '@/lib/pricing'
+import { flattenProductCost } from '@/lib/catalog'
 import { QUOTE_SCREEN_PARAM_NAMES, quoteServerErrorMessage } from '@/lib/quotes'
 
 function toError(error, fallbackMessage) {
@@ -145,11 +146,18 @@ export async function getSentQuoteIds(quoteIds) {
 // (`QuoteLineEditor`), שם הוא נשאר "מוצר מושבת אינו אופציה להצעה חדשה" — ההכרעה מ-12/07 —
 // ואילו שורה קיימת מסומנת ונשמרת (הכרעת-ישי 31/07, תקן Salesforce CPQ).
 // ⛔ החזרת הסינון לכאן מחזירה את שני הכשלים במלואם.
-// ℹ️ סבב G עתיד לגעת באותה שאילתה (פיצול `products.cost` לטבלת-בת, הכרעת-ישי 31/07) —
-// ה-`select('*')` כאן יצטרך אז צירוף מפורש לעמודת-העלות.
+// ✅ סבב G בוצע 31/07/2026: `products.cost` עבר לטבלת-בת `product_costs` (§7.83↳), ולכן
+// ה-`select` נושא צירוף מפורש. **הצירוף חייב להישאר LEFT** — כלומר `product_costs(cost)`
+// בלי `!inner`: מוצר בלי שורת-עלות, או קורא בלי הרשאת-עלות, חייב להישאר בקטלוג עם
+// `cost: null`. ‏`!inner` היה מפיל אותו מהרשימה ומחזיר בדיוק את שני הכשלים שלמעלה.
+// ⚠️ הנירמול ל-`cost` שטוח אינו קוסמטי: כל הצרכנים במורד (`QuoteLineEditor.unitCost` →
+// `computeLinesCost` → פאנל-הרווחיות, וגם `quoteToFormState`) קוראים `product.cost`.
+// **נמדד חי 31/07 לפני שנכתב:** ‏PostgREST מחזיר כאן **אובייקט או null**, לא מערך (היחס
+// אחד-לאחד כי `product_costs.sku` הוא גם PK וגם FK) — מערך היה הופך כל עלות ל-null **בלי
+// שום שגיאה**, כלומר רווח = כל ההכנסה.
 export async function getPricingCatalog() {
   const [productsRes, tiersRes, paramsRes] = await Promise.all([
-    supabase.from('products').select('*').order('category').order('item_name'),
+    supabase.from('products').select('*, product_costs(cost)').order('category').order('item_name'),
     supabase.from('price_tiers').select('*'),
     supabase
       .from('params')
@@ -160,7 +168,7 @@ export async function getPricingCatalog() {
   if (tiersRes.error) throw toError(tiersRes.error, 'שגיאה בטעינת מדרגות המחיר.')
   if (paramsRes.error) throw toError(paramsRes.error, 'שגיאה בטעינת פרמטרי התמחור.')
   return {
-    products: productsRes.data ?? [],
+    products: (productsRes.data ?? []).map(flattenProductCost),
     tiers: tiersRes.data ?? [],
     params: paramsRes.data ?? [],
   }
@@ -173,7 +181,8 @@ export async function getPricingCatalog() {
 //          estimated_event_date, estimated_location, estimated_start_time, estimated_end_time,
 //          applied_customer_discount, manual_discount, notes}
 // lines: [{sku, qty, closing_unit_price, color, notes}] — line_number/closing_unit_cost
-// נקבעים בשרת (ordinality + products.cost), הלקוח לא שולח אותם.
+// נקבעים בשרת (ordinality + `product_costs.cost` — הטבלה שאליה עברה העלות בסבב G), הלקוח
+// לא שולח אותם.
 // מחזיר את quote_id החדש.
 export async function createQuote(header, lines) {
   const { data, error } = await supabase.rpc('create_quote', {

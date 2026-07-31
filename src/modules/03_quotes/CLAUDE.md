@@ -157,8 +157,11 @@
   estimated_start_time, estimated_end_time, applied_customer_discount, manual_discount, notes`
   (header) ו-`sku, qty, closing_unit_price, color, notes` (כל אובייקט ב-lines).
 - **`line_number` ו-`closing_unit_cost` נקבעים בשרת ולא נשלחים מהלקוח** — ה-RPC ממספר לפי סדר
-  ה-array (`with ordinality`) ומקפיא עלות מ-`products.cost` באותו רגע. שליחת שדות האלה מה-UI
-  היא no-op (השרת מתעלם מהם).
+  ה-array (`with ordinality`) ומקפיא עלות מ-**`product_costs.cost`** באותו רגע (העלות עברה
+  לשם בסבב G, 31/07 — §7.83↳). שליחת שדות האלה מה-UI היא no-op (השרת מתעלם מהם).
+  ⚠️ **ומק"ט בלי שורת-עלות חוסם יצירה/עריכה בקול:** ‏`create_quote`/`replace_quote_lines`
+  זורקים `לא מוגדרת עלות למוצר <שם>` (‏P0001) במקום 23502 גולמי — והתחילית הזו **ממופה
+  ב-`SERVER_MESSAGE_RULES`**. זה יכול לקרות רק אם מוצר נוצר וכתיבת-העלות שלו נכשלה.
 - **`rejectQuote` הוא היחיד שכותב ישירות ל-`quotes.update()`, לא דרך RPC** — מותר כי טריגר-הנעילה
   (§7.50) מתיר UPDATE כל עוד ה-status **הישן** הוא `in_progress`, וזה בדיוק התנאי היחיד שממנו
   מותר לדחות. שינוי סטטוס אחר (למשל "לבטל דחייה") **לא** יעבוד באותה צורה — ינחת על טריגר-הנעילה.
