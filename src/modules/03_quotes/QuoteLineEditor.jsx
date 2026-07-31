@@ -133,6 +133,12 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
               const product = products.find((p) => p.sku === line.sku)
               const tier = product ? findMatchingTier(product, tiers, line.qty) : null
               const colorAllowed = isColorApplicable(product)
+              // ⚠️ תג-ההשבתה **נקשר לבורר ב-`aria-describedby`** ולא רק מוצג לידו: בלי זה
+              // מי שמשתמש בקורא-מסך שומע "שירותי דיילת (4 שעות)" ולא יודע כלל שהמוצר הושבת —
+              // כלומר המידע קיים רק למי שמסתכל. אותו עיקרון כמו `Field` ב-QuoteBuilderPage,
+              // שמזריק `aria-describedby` לשדה במקום להשאיר את הטקסט תלוי לידו.
+              const isInactiveProduct = Boolean(product) && product.status !== 'active'
+              const inactiveNoticeId = `quote-line-inactive-${line.key}`
               return (
                 <tr key={line.key} className="border-b border-slate-100">
                   <td className="py-2 pl-2">
@@ -145,6 +151,7 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
                         dir="rtl"
                         className="h-9 w-full rounded-lg border-slate-300"
                         data-testid={`quote-line-product-${line.key}`}
+                        aria-describedby={isInactiveProduct ? inactiveNoticeId : undefined}
                       >
                         <SelectValue placeholder="בחירת מוצר..." />
                       </SelectTrigger>
@@ -175,8 +182,9 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
                         וממשיכים — המחיר השמור נשמר וההצעה ניתנת לשמירה. הכיתוב מסביר למה
                         המוצר לא יופיע בהצעה הבאה, אחרת ההיעלמות הזו נראית כתקלה.
                         amber = אותו גוון-רמז של "האירוע נמשך אל תוך הלילה" במסך הזה (כלל 8). */}
-                    {product && product.status !== 'active' && (
+                    {isInactiveProduct && (
                       <span
+                        id={inactiveNoticeId}
                         className="mt-1 inline-block rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-700"
                         data-testid={`quote-line-inactive-${line.key}`}
                       >

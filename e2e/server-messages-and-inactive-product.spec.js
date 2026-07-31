@@ -151,6 +151,58 @@ test.describe('הודעות-הכשל של המסד מגיעות למסך (סבב
     await expect(toast).not.toContainText('עדכון ההצעה נכשל')
   })
 
+  // שתי המחלקות שה-SQLSTATE מזהה לבדו, בלי תלות בטקסט — ולכן הן היחידות שישרדו גם
+  // ניסוח-מחדש של הודעה במסד. נבדקו כאן על המסך, ולא רק ביחידה.
+  test('חוסר-הרשאה (42501) והצעה-שנעלמה (P0002) — שתי הודעות שונות ומובנות', async ({ page }) => {
+    await failRpc(page, 'approve_quote_and_create_project', {
+      message: 'אין הרשאה: נדרשת עריכה על הצעות מחיר לאישור הצעה',
+      code: '42501',
+    })
+    await confirmFirstApproval(page)
+    await expect(page.getByRole('alert')).toContainText('הרשאת עריכה')
+
+    await page.unroute('**/rest/v1/rpc/approve_quote_and_create_project*')
+    await failRpc(page, 'approve_quote_and_create_project', {
+      message: 'הצעה 7 לא נמצאה',
+      code: 'P0002',
+    })
+    await page.reload()
+    await confirmFirstApproval(page)
+    await expect(page.getByRole('alert')).toContainText('לא נמצאה')
+  })
+
+  // ⚠️ **מסלול שלישי, ושונה מבנית מהשניים:** דחייה היא `UPDATE` ישיר על `quotes` ולא RPC
+  // (‏`rejectQuote` — מותר כי טריגר-הנעילה מתיר עדכון כל עוד הסטטוס הישן הוא in_progress).
+  // לכן ההודעה שתיפגש כאן היא של **טריגר-הנעילה**, ולא של פונקציית-שרת — ניסוח נפרד לגמרי
+  // שעד עכשיו נבדק ביחידה בלבד.
+  test('דחייה על הצעה שננעלה בינתיים — הודעת טריגר-הנעילה מגיעה מובנת', async ({ page }) => {
+    await page.route('**/rest/v1/quotes?*', async (route) => {
+      if (route.request().method() !== 'PATCH') return route.fallback()
+      return route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          message: 'הצעה נעולה: עריכה/מחיקה מותרת רק בסטטוס in_progress (נמצא: approved)',
+          code: 'P0001',
+        }),
+      })
+    })
+
+    await page.goto('/quotes')
+    const reject = page.getByTestId(/^quote-reject-/).first()
+    await expect(reject).toBeVisible({ timeout: 30_000 })
+    await reject.click()
+    await expect(page.getByTestId('reject-dialog-title')).toBeVisible()
+    await page.getByRole('radio', { name: 'מחיר' }).check()
+    await page.getByTestId('reject-confirm').click()
+
+    const alert = page.getByRole('alert')
+    await expect(alert).toBeVisible()
+    await expect(alert).toContainText('נעולה לשינויים')
+    await expect(alert).not.toContainText('in_progress')
+    await expect(alert).not.toContainText('דחיית ההצעה נכשלה')
+  })
+
   test('רגרסיה — בלי יירוט, חלון-האישור נפתח נקי ובלי שגיאה', async ({ page }) => {
     // ⚠️ **לא לוחצים "אישור"**: אישור הוא בלתי-הפיך (יוצר פרויקט אמיתי). מה שנבדק כאן
     // הוא שהמסלול התקין לא נשבר מהשינוי — החלון נפתח, ואין הודעת-שגיאה תלויה בו.
@@ -195,7 +247,19 @@ test.describe('מוצר שהושבת אינו מפיל שורה קיימת ל-0 
     //     `sumHostessQty` עדיין רואה שורת-דיילות. **לא לוחצים שמור** (כתיבה למסד חי):
     //     נבדק שהוולידציה עצמה לא מסמנת את הטבלה, וזה בדיוק אותו כלל שחוסם את השמירה.
     await expect(page.getByTestId('quote-lines-error')).toHaveCount(0)
+
+    // (5) נגישות: התג **מקושר** לבורר, ולא רק מוצג לידו — אחרת המידע קיים רק למי שמסתכל,
+    //     ומי שמשתמש בקורא-מסך שומע שם-מוצר רגיל ולא יודע שהוא הושבת.
+    const picker = page.getByTestId(/^quote-line-product-/).first()
+    const describedBy = await picker.getAttribute('aria-describedby')
+    expect(describedBy).toBeTruthy()
+    await expect(page.locator(`#${describedBy}`)).toContainText('מוצר מושבת')
   })
+
+  // ⏸️ **מה שלא נבנה כאן, בכוונה (הכרעת-ישי 31/07):** בדיקת-פריסה למסך צר על התג הזה.
+  // המערכת היא כלי-עבודה שולחני, השבתת-מוצר היא אירוע נדיר, והצירוף "מוצר מושבת + מסך
+  // צר" הוא מקרה-קצה של מקרה-קצה. הבדיקה הייתה עולה זמן-ריצה בכל סבב עתידי בלי להגן על
+  // תרחיש אמיתי. ⛔ לא להוסיף אותה "ליתר ביטחון" בלי שישי יבקש.
 
   // ⚠️ **הפער שנתפס בצילום ולא בקוד** (31/07 14:55, אחרי ששאל ישי "מה לא בדקת"): הגרסה
   // הראשונה חישבה את רשימת-המוצרים **פעם אחת לכל הטבלה** עם קבוצת כל המק"טים שבשימוש,

@@ -361,6 +361,19 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 31/07/2026 15:20 — **⏸️ Ishay called the gold-plating, correctly — scope closed on round D.**
+  His words: *"אתה מתאר מקרה קצה ממש, אולי פעם בחצי שנה משביתים מוצר ומה הסיכוי שבדיוק רוצים
+  להשתמש בו"*. Applied his own reality filter and he is right about the **dropdown leak**
+  (needs: disabled product × sitting on a quote × someone adding a line to that same quote ×
+  picking it). Dropped: a viewport-layout test for the tag — an edge case of an edge case on a
+  desktop-only internal tool; a `⏸️` comment in the spec says so and forbids re-adding it silently.
+  **Kept** (already written, all passing, no extra design cost): the 3 error-path tests
+  (42501 / P0002 / lock-trigger-on-reject) and the `aria-describedby` link — those are not the
+  same probability class: the lock message fires on a stale tab or two people acting, which is
+  ordinary. ⚠️ **And one honest disagreement recorded:** the *core* round-D bug is NOT rare —
+  a disabled sku doesn't need anyone to "want to use it", it silently breaks **every existing
+  quote already holding it** (measured: disabling `04ST` would have broken 2 open quotes on the
+  spot). Rare trigger × certain damage ≠ edge case. Final: gate 0 · 360 unit · E2E **36/36**.
 - 31/07/2026 15:00 — **🐞 Round-D follow-up: a §7.34 hole I introduced, caught by Ishay asking
   "what didn't you check" — not by any test.** The picker list was computed **once for the whole
   table** from the set of all in-use skus, so the disabled product showed up as a normal option in
