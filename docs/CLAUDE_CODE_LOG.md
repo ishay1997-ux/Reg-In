@@ -74,6 +74,30 @@
   **byte-identical by md5** — that is what "E changed no screen" rests on, not on looking similar.
   ⚠️ Baselines had to be captured with `git stash`, because Playwright wipes `test-results/` per run.
 
+### 31/07/2026 18:15 — **Two silent debts given a home, after the manager review of rounds E+F** (docs only)
+- **Round E+F reviewed — no findings.** Verified by running, not reading: 376 unit tests green,
+  lint clean, temp baseline spec deleted. Checked the two spots that could have broken quietly:
+  the validator swap in `validateTierRows` is **equivalent across ten hand-checked edge cases**
+  (`''`/`null`/`undefined`/`'abc'`/`'5.5'`/`'0'`/`'-3'`/whitespace/`Infinity`), and the
+  `LoadingOrError` extraction kept its outer `loading || loadError` guard — the builder went
+  further and verified all eight consumers, calling it a house convention. F2 asserts the
+  injected 99,999 is absent in **both** formatted and raw form (one was asked for).
+- **Debt 1 — the pointer this session owed.** When round F was absorbed into phase 4 on Ishay's
+  "no harm to the result" condition, I claimed phase 4 covered what F gave up. Measured after:
+  **`send-email` appears zero times in the phase-4 step bodies.** The two 3.4 debts (no permanent
+  E2E for the email path · no test proving the Edge Function itself refuses a `view` user) live
+  in the DoD table — a place nobody reads mid-step. Now repeated inside step 4.3 itself.
+- **Debt 2 — a precondition that expired today.** `STATUS.md` line 383 (written 30/07) said *"on
+  deploy day, rotate the 5 test passwords — §7.24 assumed a local system"*, while another line in
+  the same file said they never would be. **Today was that day** (Vercel is live, Google sign-in
+  confirmed). Ishay's ruling: **rotate before submission (19/09), not now** — rotating today
+  breaks all five `E2E_*` pairs, the E2E suite and `smoke` mid-flight, for a risk that is still
+  theoretical (private repo). Booked to `§6` with an early trigger (repo goes public / anyone
+  else gets access) and the contradiction in STATUS resolved in both directions.
+- **Note:** today's §7.24 re-confirmation (`67b22c6`) asked the right question about *git history*
+  and answered it correctly — the deploy opened a **different** exposure (a public front door),
+  which that pass wasn't looking for.
+
 ### 31/07/2026 17:45 — **`work-manager` absorbs three cross-project inputs from gedood-710** (skill file only)
 - **Taken (2/3).** ① *Push is not deploy* — a push can succeed while the host keeps serving the
   previous build, silently. Landed as a Job-B rule with their sharp detail: **count the assets**,
