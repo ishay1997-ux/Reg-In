@@ -47,6 +47,28 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 31/07/2026 20:05 — **Skill prune measured and declined; growth-control added instead** (skill + docs)
+- **Measured, not felt.** `work-manager` is 237 lines — ~2.9× the next-largest repo skill, and it
+  grew 150 → 237 in six hours with nothing ever removed. Two prunes were drafted (170 and 136
+  lines) and three role-based evals run against both — sequencing/absorption · decision-guarding ·
+  knowing-when-*not*-to-act. **Both prunes scored identically on all three.**
+- **Ishay's ruling: do not prune.** The cost was never measured before assuming it: 237 lines is
+  ~3–4K tokens loaded once per management conversation. No measurable harm, the skill demonstrably
+  works, and module 3's deadline is 7 days out. Both drafts kept in the session scratchpad so a
+  later prune starts from measured ground.
+- 🔑 **The epistemics Ishay supplied, now written into the skill:** *"a prune that leaves the evals
+  green proves only that the evals do not look there — absence of evidence is not evidence of
+  absence."* Evals can **falsify** a prune, never authorise one; every deletion needs its own
+  reason. Two cuts flagged as especially costly: removing the **why** and keeping the rule, and
+  removing a **rare** rule (nothing catches its absence until the day it mattered).
+- **What went in instead of a prune** — two questions that stop the growth rather than reverse it:
+  *"is this true almost always, or am I patching a single incident?"* before adding, and
+  *"which paragraph here has never once changed a decision?"* occasionally, in reverse.
+- **Byproduct worth more than the experiment:** the eval agents, working on unrelated questions,
+  surfaced four real repo defects — the lost warning-3 (above), the `19:2x` placeholder, the
+  future-dated STATUS header, and **E2E never running in CI while 81 selectors match literal
+  Hebrew strings**. The last one is unresolved and needs Ishay.
+
 ### 31/07/2026 19:55 — **A rule that guarded us all day had lost its home — caught by the skill's own eval agents**
 - **The failure, and it is the exact one the rule warns about.** "אזהרה 3 — שומר שלא נצפה נכשל
   אינו שומר" lived only inside `docs/audit_2026-07-31_fix_plan.md`. When that file was compacted

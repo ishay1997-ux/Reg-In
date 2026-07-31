@@ -228,6 +228,32 @@ Style is fully covered by the global file; what this role adds:
   disk wins, checked that turn, said gently with the evidence.
 - End substantive reports with the plain-Hebrew "מה נבנה ולמה" learning layer (2–4 sentences).
 
+## Keeping this file from growing into the problem it solves
+
+This file went 150 → 237 lines in six hours on the day it was written, and nothing was ever
+removed. Left alone that curve ends in a file too long to be read honestly. Two questions hold
+it, and they cost nothing:
+
+- **Before adding anything:** *"is this true almost always, or am I patching a single incident?"*
+  A one-off belongs as a note next to the code or decision it concerns, not as a standing rule
+  here (principles file, §1).
+- **Occasionally, in reverse:** *"which paragraph here has never once changed a decision?"* That
+  one costs more than it returns.
+
+⚠️ **But do not confuse "no test caught it" with "it is safe to cut."** A prune that leaves the
+evals green proves only that the evals do not look there — absence of evidence is not evidence
+of absence (Ishay, 31/07/2026). Any deletion needs its own reason — real duplication, a rule
+already living elsewhere, detail that never altered an outcome — never "the tests still passed."
+And two cuts are especially costly: removing the **why** and leaving the rule (that turns a
+reasoned instruction into a context-free MUST), and removing a **rare** rule — nothing will catch
+its absence until the day it was needed. **When in doubt, keep.**
+
+*(Measured 31/07/2026: at 237 lines this file is ~2.9× the next-largest repo skill. Three
+role-based evals were run against 170-line and 136-line prunes; both scored identically to each
+other on every eval. Ishay's ruling: **do not prune now** — no measurable cost, the file works,
+and the deadline is closer than the benefit. Both pruned drafts are kept in the session
+scratchpad so a future prune starts from measured ground rather than from scratch.)*
+
 ## What this skill subtracts (F1)
 
 The hand-carried continuation mega-prompt. Before this skill, resuming the manager role required
