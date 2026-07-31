@@ -47,6 +47,27 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 31/07/2026 17:45 — **`work-manager` absorbs three cross-project inputs from gedood-710** (skill file only)
+- **Taken (2/3).** ① *Push is not deploy* — a push can succeed while the host keeps serving the
+  previous build, silently. Landed as a Job-B rule with their sharp detail: **count the assets**,
+  because a broken extraction returns zero results and reads exactly like success. Timely: REG-IN
+  had **no deploy at all** until today, so the first one sets the habit instead of inheriting
+  trust from `git push`. Also folded into the Vercel 🧩 prompt before Ishay ran it.
+  ② *Closed sections hide live warnings* — generalized into Job C as **archiving and
+  self-deletion are the same risk in different clothes**; scan before either, and confirm each
+  still-binding instruction lives in the directory `CLAUDE.md` beside its code. We hit this same
+  failure today (the `listQuotes` §6 line).
+- **Declined (1/3): a separate merge-review skill.** Verified `module-close` already emits a
+  formal merge verdict and `post-merge` verifies after — no gap. But their framing exposed
+  something real: **`module-close` is run by the session that built the module**, i.e. it is a
+  self-audit. Recorded in Job B as "re-verify the closing audit's load-bearing claims yourself"
+  rather than as a new skill (F1 — the role already existed, it just wasn't written down).
+- **Measured while checking their rolling-window idea, and NOT acted on (needs Ishay):**
+  `STATUS.md` is **472 lines with ~30 dated history blocks**, while line 223 of that same file
+  declares it "now-only, not an archive". The rule exists and is unenforced. The LOG got an
+  owner for compaction today (`module-close`); STATUS has none — that is the actual gap, not a
+  missing mechanism. Open question put to Ishay; **not** decided here.
+
 ### 31/07/2026 17:00 — **Fix-plan registry consolidated: 7 rounds → 2** (manager session, docs only)
 - **§C deleted** — all three rulings executed: (1) rate-limit and (3) cost-split were built inside
   round G itself (`b3470f2`, §7.8↳/§7.83↳); (2) the email engine lives in `PROJECT_MASTER §6:275↳`

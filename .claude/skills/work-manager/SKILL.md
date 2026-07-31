@@ -87,6 +87,17 @@ When a builder reports done:
 - Findings you later discover were already covered (documented elsewhere, or the builder fixed
   them independently) — **withdraw them explicitly**. Crediting the builder for catches of their
   own is part of honest reporting, and so is admitting when your review changed nothing.
+- **Before a merge, re-verify the closing audit's "verified" claims yourself.** `module-close`
+  produces a formal merge verdict — but it is run *by the session that built the module*, i.e.
+  it is a self-audit. That is not a flaw in the skill; it is why an outside pass exists. Pick
+  its load-bearing claims (test counts, "guard proven by reintroducing the failure", permission
+  checks) and reproduce the cheap ones. A green self-audit is a claim like any other.
+- **"Pushed" is not "deployed", once a deploy pipeline exists.** A push can succeed while the
+  host silently serves yesterday's build — no error, no signal. Prove it from the production
+  side: capture the served asset list (**with a count** — a broken extraction returns zero
+  results and reads exactly like success) before, and confirm it *changed* after. This project
+  had no deploy at all until 31/07/2026, so there is no habit here yet — which is precisely why
+  the first one must establish the check rather than inherit trust from `git push` succeeding.
 
 ## Job C — guard the decisions and the plan file
 
@@ -98,6 +109,13 @@ edit to the plan file, check: does any ruling live *only* in a section scheduled
 If yes, copy it — in full, self-contained, without pointers to the section that may vanish — into
 the section that will execute it. (This exact failure was caught live on 31/07/2026; two of
 Ishay's security rulings had no execution home.)
+
+**The same failure has a second shape: compaction.** Archiving or compressing a closed section
+moves it somewhere no session loads. Closed sections routinely *contain* live warnings — a
+"don't fix X" or "never restore this filter" buried inside an item whose headline reads as
+finished. So before anything moves to archive or gets compressed, scan it for instructions that
+are still binding, and confirm each one lives in the directory `CLAUDE.md` next to the code it
+governs. Self-deletion and archiving are the same risk wearing different clothes.
 
 Corollaries: every accepted ruling gets an execution home *the same session* (rule 13(א): §7
 write-back first). **Record rulings quoting Ishay's own words** — his phrasing is the spec, and a
