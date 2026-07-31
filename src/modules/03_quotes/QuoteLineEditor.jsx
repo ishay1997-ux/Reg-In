@@ -34,11 +34,19 @@ const COLOR_SWATCH = {
 }
 
 export default function QuoteLineEditor({ lines, products, tiers, onChange, disabled, error }) {
-  // מקובץ לפי קטגוריה — חיפוש בקטלוג לפי קבוצה מהיר מרשימה שטוחה של 11 פריטים.
+  // §7.34 (הכרעת-ישי 12/07): מוצר שאינו `active` **אינו אופציה** בבורר. הסינון חי כאן ולא
+  // בשאילתה (הועבר 31/07/2026, סבב D) — הקטלוג מביא הכול כדי שמוצר מושבת שכבר יושב על
+  // שורה קיימת ימשיך להיפתר לשם/קטגוריה/מחיר, ורק ההוספה-מחדש חסומה.
+  // ⚠️ **חריג מכוון:** המק"ט שכבר נבחר בשורה נשאר ברשימה גם כשהוא מושבת — Radix מרנדר
+  // ‏`SelectValue` מהפריט התואם, וסינון גורף היה מציג את השורה כ"בחירת מוצר..." ריקה,
+  // כלומר מוחק ויזואלית מוצר ששמור במסד.
+  const selectedSkus = new Set((lines ?? []).map((line) => line.sku).filter(Boolean))
   const grouped = ['hostess', 'site', 'product'].map((category) => ({
     category,
     label: PRODUCT_CATEGORY_LABELS[category],
-    items: products.filter((p) => p.category === category),
+    items: products.filter(
+      (p) => p.category === category && (p.status === 'active' || selectedSkus.has(p.sku)),
+    ),
   }))
 
   function updateLine(key, patch) {
@@ -47,18 +55,28 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
 
   // בחירת מוצר / שינוי כמות מחייבים תמחור-מחדש: המדרגה נקבעת לפי הכמות, ולכן 200→201
   // יחידות משנה את המחיר. המחיר מגיע תמיד מ-pricing.js, לעולם לא מחושב כאן.
+  //
+  // ⚠️ **מוצר שלא נמצא בקטלוג אינו מאפס את השורה** (תוקן 31/07/2026, סבב D). קודם עמד כאן
+  // ‏`product ? resolveUnitPrice(...) : 0` ו-`product?.category ?? null`, ולכן מק"ט שלא נפתר
+  // הפיל את השורה ל-**0 ₪ בשקט** ומחק את הקטגוריה (⇒ ספירת-הדיילות 0 ⇒ שמירה חסומה בהודעה
+  // שאי-אפשר לפעול לפיה). היום הקטלוג כולל גם מושבתים, ולכן המסלול הזה נדיר — אבל הוא עדיין
+  // אפשרי (מק"ט שנמחק מהמסד), ו**מחיר-אפס שנשמר בשקט הוא בדיוק הכשל שהמודול הזה בנוי למנוע**.
+  // הנפילה-לאחור: שומרים על ערכי-השורה הקיימים. ⛔ לא להחזיר `: 0`.
   function repriceLine(line, patch) {
     const nextSku = patch.sku ?? line.sku
     const nextQty = patch.qty ?? line.qty
     const product = products.find((p) => p.sku === nextSku)
+    if (!product) {
+      return { ...patch, itemName: line.itemName ?? '', category: line.category ?? null }
+    }
     return {
       ...patch,
-      itemName: product?.item_name ?? '',
-      category: product?.category ?? null,
-      unitCost: Number(product?.cost ?? 0),
-      unitPrice: product ? resolveUnitPrice(product, tiers, nextQty) : 0,
+      itemName: product.item_name ?? '',
+      category: product.category ?? null,
+      unitCost: Number(product.cost ?? 0),
+      unitPrice: resolveUnitPrice(product, tiers, nextQty),
       // מוצר שאין לו צבע (דיילות/אתר) — מנקים צבע שנבחר קודם, אחרת הוא היה נשמר בשקט.
-      color: product && isColorApplicable(product) ? (patch.color ?? line.color) : '',
+      color: isColorApplicable(product) ? (patch.color ?? line.color) : '',
     }
   }
 
@@ -132,6 +150,10 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
                               <p className="bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-500">
                                 {group.label}
                               </p>
+                              {/* ⚠️ **בלי סיומת "(מושבת)" על הפריט** (מעבר-המלאי, `src/CLAUDE.md`):
+                                  ‏Radix מרנדר את תוכן-הפריט גם ב-trigger הסגור, ולכן היא הייתה
+                                  אומרת בדיוק את מה שהתג שמתחת כבר אומר — ובנוסף מייצרת
+                                  "שירותי דיילת (4 שעות) (מושבת)", שני זוגות-סוגריים ברצף. */}
                               {group.items.map((p) => (
                                 <SelectItem key={p.sku} value={p.sku}>
                                   {p.item_name}
@@ -144,6 +166,18 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
                     </Select>
                     {/* המק"ט אינו מוצג (הכרעת-ישי 29/07): הוא קוד-מלאי פנימי שאינו אומר דבר
                         למי שבונה הצעה. הוא כן מודפס ב-PDF ללקוח, שם הוא חלק ממסמך רשמי. */}
+                    {/* מוצר שהושבת אחרי שכבר נכנס להצעה (§7.34, הכרעת-ישי 31/07): מסמנים
+                        וממשיכים — המחיר השמור נשמר וההצעה ניתנת לשמירה. הכיתוב מסביר למה
+                        המוצר לא יופיע בהצעה הבאה, אחרת ההיעלמות הזו נראית כתקלה.
+                        amber = אותו גוון-רמז של "האירוע נמשך אל תוך הלילה" במסך הזה (כלל 8). */}
+                    {product && product.status !== 'active' && (
+                      <span
+                        className="mt-1 inline-block rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-700"
+                        data-testid={`quote-line-inactive-${line.key}`}
+                      >
+                        מוצר מושבת — לא יוצע בהצעות חדשות
+                      </span>
+                    )}
                   </td>
 
                   <td className="py-2 pl-2">

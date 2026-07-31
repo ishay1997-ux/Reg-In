@@ -211,8 +211,18 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
     // ⚠️ ההודעה השגויה חייבת **לא** להופיע: היא מאשימה את המשתמש בתקלה שאינה שלו.
     await expect(page.getByText(/אינו מורשה במערכת/)).toHaveCount(0)
 
-    // ── הכשל מוסר: כניסה רגילה ─────────────────────────────────────────────
+    // ── הכשל מוסר: כניסה רגילה — **מעמוד טרי, לא מהטופס הקיים** ─────────────
+    // ⚠️ תוקן 31/07/2026 (סבב D, כשל-לסירוגין שנחשף בריצה המלאה): אחרי "תקלה זמנית"
+    // המסך מריץ `signOut`, וזה מצית את `loadUser` של AuthContext — שמדליק `loading`
+    // **ומפרק את מסך-הכניסה** (מוקש מתועד ב-`01_auth/CLAUDE.md`). ה-remount מרוקן את
+    // הקלטים המבוקרים, ואם הוא נוחת בין `fill` ל-`click` נשלח טופס ריק ("יש להזין
+    // כתובת דוא״ל"). המרוץ תלוי-עומס — עבר כשהקובץ רץ לבדו, נפל בחבילה המלאה.
+    // ‏`goto` פותח עץ-React טרי שבו האירוע האסינכרוני היחיד הוא הלחיצה של הבדיקה עצמה.
     await page.unroute('**/rest/v1/users*')
+    await page.goto('/login')
+    await expect(page.getByPlaceholder('כתובת דוא״ל')).toBeVisible()
+    await page.getByPlaceholder('כתובת דוא״ל').fill(CEO_EMAIL)
+    await page.getByPlaceholder('סיסמה').fill(CEO_PASSWORD)
     await page.getByRole('button', { name: 'התחברות', exact: true }).click()
     await expect(page).toHaveURL('/', { timeout: 30_000 })
   })

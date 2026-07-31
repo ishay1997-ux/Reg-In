@@ -361,6 +361,35 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 31/07/2026 14:20 — **Audit fix-round D LANDED (server messages + inactive product).** Source:
+  `docs/audit_2026-07-31_fix_plan.md` §D. Plan: `~/.claude/plans/memoized-splashing-pearl.md`.
+  **(1) DB failure messages now reach the screen.** New pure mapper `quoteServerErrorMessage`
+  (`src/lib/quotes.js`): code-classes 42501/P0002 + Hebrew-prefix rules for the P0001 family
+  (11 RAISE sites across 2 migrations; prefixes are a **byte-exact contract** with the RAISE
+  strings — bidirectional contract comments at the mapper and `db_roadmap.md` §6). `api.js` writes
+  (`approveQuote`/`saveQuoteEdit`/`rejectQuote`) route through `toWriteError`; reads deliberately
+  keep the old fallbacks. `ApproveQuoteDialog`'s lying header comment ("displayed as-is") fixed.
+  English enum values are translated, never displayed; unknown errors → `null` → old fallback.
+  **(2) Inactive product no longer zeroes a line.** `getPricingCatalog` fetches ALL products;
+  §7.34 filtering moved into `QuoteLineEditor` (active + the line's own sku); existing line gets
+  an amber "מוצר מושבת — לא יוצע בהצעות חדשות" tag; `repriceLine` keeps prior values when the
+  product is truly absent (never `: 0`). §7.34 PROJECT_MASTER updated first (rule 13a) — ruling
+  delegated by Ishay to market standard, verified: Salesforce CPQ keeps deactivated products on
+  existing quotes (help.salesforce.com id=000381969). Side effect flagged to Ishay: `productsBySku`
+  in QuotesPage/CustomerDetailsPage now resolves inactive skus, so an old quote's PDF will show
+  the product NAME instead of the raw sku — **zero documents affected today** (all 11 products
+  active, measured live).
+  **Verification per warning 3 (failure returned on purpose, all watched failing):** unit — mapper
+  broken → 5/128 fail; E2E — all 3 guards reverted → mapped-message tests fail with the old generic
+  text, and the inactive-product test fails only after the interceptor was taught to mimic the
+  server-side `status=eq.active` filter (first interceptor version passed against the broken code —
+  itself a warning-3 catch). Gate exit 0 (360 unit tests) · full E2E **32/32 twice**.
+  **↳ Bonus fix, pre-existing flake (NOT mine, NOT the documented module-1 flake):**
+  `load-failure-guards.spec.js` "תקלה רגעית בשליפתו" failed 2/3 full-suite runs (passed alone and
+  passed on a clean tree — isolated by stashing). Root cause: after "תקלה זמנית" the screen runs
+  `signOut` → `AuthContext.loadUser` remounts LoginPage (documented mine in `01_auth/CLAUDE.md`),
+  wiping the controlled inputs between the test's `fill` and `click` under load → empty form
+  submitted. Fix in the TEST (recovery from a fresh `goto('/login')`); screen code untouched.
 - 31/07/2026 09:05 — **Audit fix-round A (VAT guard) — app code LANDED, migration WRITTEN BUT NOT
   APPLIED.** Source: `docs/audit_2026-07-31_fix_plan.md` §A. Plan: `~/.claude/plans/temporal-greeting-torvalds.md`.
   **Root cause, one family:** a `params` row that is deleted/renamed/blank turns into `0` or `NULL`

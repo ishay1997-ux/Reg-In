@@ -10,13 +10,22 @@
 
 import { supabase } from '@/supabaseClient'
 import { PRICING_PARAM_NAMES } from '@/lib/pricing'
-import { QUOTE_SCREEN_PARAM_NAMES } from '@/lib/quotes'
+import { QUOTE_SCREEN_PARAM_NAMES, quoteServerErrorMessage } from '@/lib/quotes'
 
 function toError(error, fallbackMessage) {
   const e = new Error(fallbackMessage)
   e.code = error?.code
   e.cause = error
   return e
+}
+
+// כתיבות בלבד: ההודעה המדויקת של המסד גוברת על ה-fallback הכללי כשהיא מוכרת (סבב D).
+// למה רק בכתיבות: מסלולי-הכשל של המסד (נעילה/סטטוס/תאריך/מע"מ/הרשאה) נולדים ב-RPCs
+// ובטריגר-הנעילה, ורק הם נושאים הודעה שאומרת למשתמשת מה לעשות. שגיאת-קריאה היא כמעט
+// תמיד רשת/RLS — שם למחרוזת-המסד אין ערך למשתמשת, וה-fallback הקיים מדויק יותר.
+// ⚠️ ‏`quoteServerErrorMessage` מחזירה null לשגיאה לא-מוכרת ⇒ ה-fallback נשמר כלשונו.
+function toWriteError(error, fallbackMessage) {
+  return toError(error, quoteServerErrorMessage(error) ?? fallbackMessage)
 }
 
 // ---- קריאות (Reads) ----
@@ -124,17 +133,23 @@ export async function getSentQuoteIds(quoteIds) {
   return new Set((data ?? []).map((row) => row.entity_id))
 }
 
-// קטלוג-התמחור לבניית הצעה: מוצרים **פעילים בלבד** (§7.34), כל מדרגות-המחיר, ו-2 פרמטרי-
-// התמחור (מע"מ + יחס-אורחים-לדיילת — לא כל params, בדומה ל-pricesApi). מבוצע ב-Promise.all
+// קטלוג-התמחור לבניית הצעה: **כל** המוצרים, כל מדרגות-המחיר, ו-2 פרמטרי-התמחור
+// (מע"מ + יחס-אורחים-לדיילת — לא כל params, בדומה ל-pricesApi). מבוצע ב-Promise.all
 // כי שלוש השאילתות בלתי-תלויות זו בזו.
+//
+// ⚠️ **עד 31/07/2026 היה כאן `.eq('status','active')` — והוא נשבר בשקט על הצעה קיימת**
+// (סבב-תיקונים D): מוצר שהמנכ"ל השבית **אחרי** שכבר נכנס להצעה פשוט נעלם מהקטלוג, ואז
+// (א) השורה איבדה `category` ⇒ `sumHostessQty` החזירה 0 ⇒ השמירה נחסמה ב"הצעה חייבת
+// לכלול לפחות שורת דיילות אחת" **בזמן ששורת-דיילות מוצגת על המסך**, ו-(ב) נגיעה בכמות
+// תמחרה מחדש ל-**0 ₪ ונשמרה כך**. §7.34 **לא נחלש**: הסינון עבר לשכבת-בורר-המוצרים
+// (`QuoteLineEditor`), שם הוא נשאר "מוצר מושבת אינו אופציה להצעה חדשה" — ההכרעה מ-12/07 —
+// ואילו שורה קיימת מסומנת ונשמרת (הכרעת-ישי 31/07, תקן Salesforce CPQ).
+// ⛔ החזרת הסינון לכאן מחזירה את שני הכשלים במלואם.
+// ℹ️ סבב G עתיד לגעת באותה שאילתה (פיצול `products.cost` לטבלת-בת, הכרעת-ישי 31/07) —
+// ה-`select('*')` כאן יצטרך אז צירוף מפורש לעמודת-העלות.
 export async function getPricingCatalog() {
   const [productsRes, tiersRes, paramsRes] = await Promise.all([
-    supabase
-      .from('products')
-      .select('*')
-      .eq('status', 'active')
-      .order('category')
-      .order('item_name'),
+    supabase.from('products').select('*').order('category').order('item_name'),
     supabase.from('price_tiers').select('*'),
     supabase
       .from('params')
@@ -165,7 +180,7 @@ export async function createQuote(header, lines) {
     p_header: header,
     p_lines: lines,
   })
-  if (error) throw toError(error, 'שמירת ההצעה נכשלה.')
+  if (error) throw toWriteError(error, 'שמירת ההצעה נכשלה.')
   return data
 }
 
@@ -178,7 +193,7 @@ export async function saveQuoteEdit(quoteId, header, lines) {
     p_header: header,
     p_lines: lines,
   })
-  if (error) throw toError(error, 'עדכון ההצעה נכשל.')
+  if (error) throw toWriteError(error, 'עדכון ההצעה נכשל.')
 }
 
 // אישור הצעה → הפיכתה לפרויקט שלם (§7.49, SECURITY DEFINER). ה-RPC בעצמו בודק הרשאת-עריכה,
@@ -188,7 +203,7 @@ export async function approveQuote(quoteId) {
   const { data, error } = await supabase.rpc('approve_quote_and_create_project', {
     p_quote_id: quoteId,
   })
-  if (error) throw toError(error, 'אישור ההצעה נכשל.')
+  if (error) throw toWriteError(error, 'אישור ההצעה נכשל.')
   return data
 }
 
@@ -202,7 +217,7 @@ export async function rejectQuote(quoteId, reason, notes) {
     .update({ quote_status: 'rejected', rejection_reason: reason, rejection_notes: notes ?? null })
     .eq('quote_id', quoteId)
     .select()
-  if (error) throw toError(error, 'דחיית ההצעה נכשלה.')
+  if (error) throw toWriteError(error, 'דחיית ההצעה נכשלה.')
   if (!data || data.length === 0) throw toError({ code: 'RLS_DENIED' }, 'אין הרשאה לדחות הצעה זו.')
   return data[0]
 }

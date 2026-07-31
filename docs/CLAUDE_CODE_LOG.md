@@ -47,6 +47,25 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 31/07/2026 14:25 — **Audit fix-round D: DB messages reach the screen · inactive product never zeroes a line**
+- **What changed:** (1) `quoteServerErrorMessage` mapper in `src/lib/quotes.js` — 11 P0001 RAISE
+  sites distinguished by Hebrew prefix (SQLSTATE only separates 42501/P0002/rest); wired via
+  `toWriteError` into the 3 write paths of `03_quotes/api.js`. English enums translated, unknown →
+  fallback. (2) `getPricingCatalog` now fetches ALL products; §7.34 filter moved into
+  `QuoteLineEditor` (+ amber "מוצר מושבת" tag, reprice keeps prior values — never `: 0`).
+  §7.34 write-back done FIRST (ruling delegated to market standard — Salesforce CPQ keeps
+  deactivated products on existing quotes). Details + evidence: `module-3.md` §9 (14:20).
+- **Why:** six different approval/edit failures all surfaced as one "אישור ההצעה נכשל."
+  (`e.cause` nobody rendered); a product disabled after entering a quote silently repriced its
+  line to 0 ₪ and blocked save with an unactionable message.
+- **Proven by returning the failure** (warning 3): mapper broken → 5 unit tests fail; guards
+  reverted → E2E fails on the generic text; the first inactive-product interceptor **passed
+  against the broken code** and was rewritten to mimic the server-side `active` filter. Gate
+  exit 0 · 360 unit · E2E 32/32 ×2.
+- **Bonus:** fixed a pre-existing intermittent E2E failure in `load-failure-guards.spec.js`
+  (signOut→loadUser remount wipes login inputs mid-test under load; recovery now starts from a
+  fresh `goto`). Not the documented module-1 matrix flake — a different one.
+
 ### 31/07/2026 12:01 — **Two of Ishay's rulings had no build site; moved into round G** (`d7e71bd`, docs only)
 - **The failure mode, and it is structural — worth remembering:** `docs/audit_2026-07-31_fix_plan.md` is self-deleting by design (round closes ⇒ its prompt is deleted). Round **C was a rulings round**, so Ishay's two DB rulings — rate-limit `register_failed_login` to **15/IP/hour**, and **split `products.cost`** into a child table — lived *only inside the prompt scheduled for deletion*. Neither D/E/F/G referenced them (verified: `register_failed_login` appears only under §C). Had the seven rounds run to completion, both rulings would have evaporated with their own prompt. **Generalized: a self-deleting plan must never be the only home of a decision** — rulings belong in a section that outlives the work item.
 - **Fix:** both copied **in full** into §G — self-contained, with sources (OWASP · Auth0 10/IP default) and the "why 15, not 10" reasoning (five test users share one Wi-Fi; 20 calls/hr is what perpetual lockout needs, so 15 breaks the chain). Explicitly *no* pointer back to §C, since §C may no longer exist when G runs. §G's title and task line now say "decision + execution"; all four DB items land in one migration = one typed approval.

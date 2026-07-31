@@ -35,6 +35,7 @@ import {
   approvedQuotesLabel,
   pendingQuotesLabel,
   missingPricingParamsMessage,
+  quoteServerErrorMessage,
 } from '@/lib/quotes'
 
 // תרחיש-האפיון המחייב (C5 §5.5.4) — אותו תרחיש שמאמת את מנוע-הכסף, כאן בצורת-המסך.
@@ -1049,5 +1050,83 @@ describe('תוויות-כמות עבריות — התאמת מין ומספר (�
 
   it('אפס ממתינות — עדיין רבים, כי "0 הצעה" שגוי', () => {
     expect(pendingQuotesLabel(0)).toBe('אין הצעות שממתינות להחלטה')
+  })
+})
+
+// ── הודעות-הכשל של המסד (סבב-תיקונים D, 31/07/2026) ─────────────────────────
+// ⚠️ **כל מחרוזת כאן הועתקה מילולית מקובץ-המיגרציה**, אחרי הצבת הערך שה-`%` מקבל בזמן ריצה.
+// זו הנקודה שבה החוזה נבדק: אם מיגרציה עתידית תשנה ניסוח בלי לעדכן את `SERVER_MESSAGE_RULES`,
+// הבדיקות כאן **עדיין יעברו** (הן מזינות את הנוסח הישן) — ולכן הן אינן תחליף להערת-החוזה
+// שבשני הצדדים. מה שהן כן מוכיחות: שכל אחד מששת המסלולים מקבל ניסוח **שונה** ובר-פעולה.
+describe('quoteServerErrorMessage — שישה מסלולי-כשל, שש הודעות (סבב D)', () => {
+  const RAW = {
+    // 20260731085335 — approve_quote_and_create_project
+    alreadyHandled: 'ההצעה כבר טופלה (סטטוס approved) — לא ניתן לאשר שוב',
+    pastEventDate: 'לא ניתן לאשר הצעה שתאריך-האירוע שלה עבר (2026-07-01)',
+    noHostessLines: 'לא ניתן לאשר הצעה ללא שורות-דיילות (אין אירוע בלי דיילות)',
+    vatMissing: 'שיעור המע"מ אינו מוגדר בהגדרות המערכת (פרמטר אחוז_מעמ) — לא ניתן לאשר הצעה',
+    vatIllegal: 'שיעור המע"מ שבהגדרות המערכת אינו חוקי (150) — לא ניתן לאשר הצעה',
+    // 20260723115000 — replace_quote_lines + טריגר-הנעילה
+    notInProgress: 'לא ניתן לערוך הצעה שאינה בתהליך (סטטוס approved)',
+    locked: 'הצעה נעולה: עריכה/מחיקה מותרת רק בסטטוס in_progress (נמצא: rejected)',
+  }
+
+  it('כל שבעת המסלולים מחזירים הודעות שונות זו מזו', () => {
+    const messages = Object.values(RAW).map((message) =>
+      quoteServerErrorMessage({ code: 'P0001', message }),
+    )
+    expect(messages.every(Boolean)).toBe(true)
+    expect(new Set(messages).size).toBe(messages.length)
+  })
+
+  it('ערך-enum באנגלית אינו דולף למסך — הסטטוס מתורגם', () => {
+    const message = quoteServerErrorMessage({ code: 'P0001', message: RAW.alreadyHandled })
+    expect(message).toContain('אושרה')
+    expect(message).not.toContain('approved')
+    expect(
+      quoteServerErrorMessage({
+        code: 'P0001',
+        message: 'ההצעה כבר טופלה (סטטוס rejected) — לא ניתן לאשר שוב',
+      }),
+    ).toContain('נדחתה')
+  })
+
+  it('סטטוס לא-מוכר במחרוזת ⇒ נוסח כללי, לעולם לא המחרוזת הגולמית', () => {
+    const message = quoteServerErrorMessage({
+      code: 'P0001',
+      message: 'ההצעה כבר טופלה (סטטוס archived) — לא ניתן לאשר שוב',
+    })
+    expect(message).toBe('ההצעה כבר טופלה בינתיים — יש לרענן את המסך כדי לראות את מצבה העדכני.')
+    expect(message).not.toContain('archived')
+  })
+
+  it('תאריך-עבר וחוסר-דיילות אומרים מה לעשות, ולא רק מה נכשל', () => {
+    expect(quoteServerErrorMessage({ code: 'P0001', message: RAW.pastEventDate })).toContain(
+      'לעדכן את התאריך',
+    )
+    expect(quoteServerErrorMessage({ code: 'P0001', message: RAW.noHostessLines })).toContain(
+      'להוסיף שורת דיילות',
+    )
+  })
+
+  it('שתי הודעות-המע"מ עוברות כמו-שהן — הן כבר נוקבות בשם-הפרמטר לחיפוש', () => {
+    expect(quoteServerErrorMessage({ code: 'P0001', message: RAW.vatMissing })).toBe(RAW.vatMissing)
+    expect(quoteServerErrorMessage({ code: 'P0001', message: RAW.vatIllegal })).toBe(RAW.vatIllegal)
+  })
+
+  it('שני הקודים שמזוהים ללא טקסט: 42501 (הרשאה) ו-P0002 (לא נמצאה)', () => {
+    expect(quoteServerErrorMessage({ code: '42501', message: 'anything' })).toContain('הרשאת עריכה')
+    expect(quoteServerErrorMessage({ code: 'P0002', message: 'הצעה 6 לא נמצאה' })).toContain(
+      'לא נמצאה',
+    )
+  })
+
+  it('שגיאה לא-מוכרת ⇒ null, כדי שה-fallback של הקורא יישאר', () => {
+    // ⚠️ null ולא ניחוש: מחרוזת-מסד שלא מופתה עלולה לשאת אנגלית/שמות-עמודות, וזה גרוע
+    // יותר מ"אישור ההצעה נכשל." הכללי. כולל את מקרה ה-RLS הסינתטי של api.js.
+    expect(quoteServerErrorMessage({ code: 'P0001', message: 'duplicate key value' })).toBeNull()
+    expect(quoteServerErrorMessage({ code: 'RLS_DENIED' })).toBeNull()
+    expect(quoteServerErrorMessage(null)).toBeNull()
+    expect(quoteServerErrorMessage({ code: '23505', message: '' })).toBeNull()
   })
 })
