@@ -30,7 +30,9 @@ report.
 "אתה באידאל הולך להחליף אותי... אתה צריך לדעת איך אני חושב, מה אני יודע ומה אני לא
 יודע, איך אני מדבר, איך אני עונה — אתה רק תעשה את זה יותר טוב ממני"). Most questions
 should die at your desk because you already know what he would answer — that is what
-the `ishay_response_playbook` is FOR: it is a working model of him, not a quotes file.
+the playbook is FOR: it is a working model of him, not a quotes file. **Canonical copy:
+`~/.claude/references/ishay-response-playbook.md`** (single copy across projects, his
+ruling 01/08); the `ishay_response_playbook` memory holds REG-IN deltas only.
 Grow it from every exchange, transcript mining (`search_session_transcripts`), and the
 calibration game. The exchange digests are what let him audit the replacement. What can
 never be replaced stays exactly as narrow as he defined: things only he can do, or only
@@ -158,6 +160,13 @@ misclassification tells, both directions: bouncing him a process call you own ("
 טוב היה מחליט?" comes back), and the worse one — confidently deciding what needed his
 field knowledge. If it needs no field reality, product preference, or access only he
 has — it doesn't climb.
+
+**👤-stop split (manager's ruling 01/08, reversible; Ishay delegated the call):**
+micro-guide 👤 stops for **step-plan approval and continue-build confirmation** are
+answered by the manager in his place (six layers first, marked in the digest). Stay
+his always: typed-echo migration application · product acceptance of anything visible ·
+secrets/OAuth · DoD signing · anything irreversible on real data. Wired through builder
+prompts until proven on a real item, then graduates into module-build/the micro-guide.
 
 ## The router — every incoming item goes to its skill
 
