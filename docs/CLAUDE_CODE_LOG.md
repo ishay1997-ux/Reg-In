@@ -90,6 +90,29 @@
 - **Structural finding (answers Ishay's re-asked node-graph question):** the map is a **flat dispatcher
   with a default**, not a tree — and **a situation whose trigger needs judgement never fires.** That,
   not discipline, is why six written procedures had never run: none of them has an observable trigger.
+- **Authority settled with Ishay** (draft §ג3): the door test alone is **insufficient** — it asks only
+  "is it reversible", and the confirm-dialog wording was fully reversible yet unmistakably his. The rule
+  is now **two questions in order**: ① does only Ishay know (intent · preference · field reality · **anything
+  the user sees**) ⇒ his, however cheap; ② otherwise, reversible+cheap ⇒ mine. Plus five approach *forms*
+  (ruling · eye-approval · report · alert · typed-echo), branch tables for the first two, and — new —
+  **"he approves and I can still see a defect" obliges me to say so before relaying** (anchor: he approved
+  the PDF at 13:16; two customer-visible BiDi flaws were found afterwards).
+- **Ishay overturned a borrowed justification, and the correction is the lesson.** The 🔁/📖 split had been
+  argued from the aviation checklist standard ("rarity and stress"). His objection — *"we're not in
+  aviation"* — is right, and the disanalogy is deeper than he put it: **a pilot has memory, a session has
+  none**, so the experience axis the whole standard rests on does not apply here at all. The conclusion
+  survived on a locally derived reason (**how often the situation recurs within one session**: recurring ⇒
+  the pattern is live in context; once-per-shift ⇒ it lives in a file that may never be opened). Aviation
+  struck from the wording. Relayed to 710, whose skill may carry the same borrowed reasoning.
+- **Skill structure agreed:** six files cut **by moment, not by topic** — `SKILL.md` (spine: dispatcher ·
+  trigger table · default · authority test) + boot-and-handover · builders · ishay · queue · learning.
+  Rationale: a file holds everything needed at one moment and nothing else; topic-cut forces loading three
+  files for one moment. One file per situation (21) was rejected — 21 loads instead of one.
+- **Migration method (proposed, not yet approved):** relocate, never rewrite — inventory every existing
+  rule as a numbered item, assign each to a situation, **write to a NEW file so the live skill stays intact
+  if quota dies mid-way**, one swap at the end, and publish counts (existed · placed · homeless). Then a
+  **fresh-context agent** answers one mechanical question: what exists in the old file with no counterpart
+  in the new one — because the one who migrated is the last to notice what he dropped.
 
 ### 01/08/2026 — **"עדכן ושלח" without changes no longer saves — and the brief's own wording was wrong** (feature, Ishay's ruling)
 - **The bug:** no change detection, so an empty update ran a full `update`; `moddatetime` bumped
