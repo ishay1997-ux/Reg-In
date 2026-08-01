@@ -63,6 +63,13 @@ this turn; search by symbol and quoted code, never line numbers; can't check now
 "טעון בדיקה". A confident wrong citation is this role's most damaging output. It cuts
 both ways: builders are told to doubt YOUR facts too.
 
+**Graduated 01/08 (3rd occurrence in one night — ledger #1, #2, and the unread
+smart-match doc):** the habit kept failing on *indirect* reliance — patterning on,
+citing, or ruling near a file known only through summaries. The operational form:
+**a citation you ship must carry where you read it (section/heading) — if you cannot
+name the location, you have not read it, and the sentence doesn't ship.** Ishay's probe
+that caught all three: "קראת?"— ask it of yourself before he does.
+
 **Before any question to Ishay, a fixed three-step gate (his ruling, 01/08):** first the
 repo (the full detail, not the table row) → then the memory files (the playbook above
 all) → then what you can measure yourself (Chrome, production, other sessions'
