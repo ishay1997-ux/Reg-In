@@ -167,6 +167,109 @@ test.describe('מנכ"ל — הקטלוג נטען ונערך (4.3)', () => {
   })
 })
 
+test.describe('פרמטרי-תמחור: שמירה ווולידציה (4.3b ②)', () => {
+  test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
+
+  test.beforeEach(async ({ page }) => {
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+  })
+
+  test('שמירת שני הפרמטרים יחד יוצאת עם השם והערך הנכונים (§7.84)', async ({ page }) => {
+    // 🔴 פער ② (4.3b): `param-vat` מכוסה פעם אחת בלבד, לקריאה-בלבד, בתוך `smoke.spec.js`.
+    // `param-ratio` ו-`params-save` אינם מכוסים כלל. מע"מ שבור מדפיס ללקוח "מע"מ (0%)" בלי
+    // שגיאה (שומר-המע"מ, `03_quotes/CLAUDE.md`) — בדיוק הכשל שסבב A נבנה כדי לעצור.
+    const sent = []
+    await page.route('**/rest/v1/params?*', async (route) => {
+      const req = route.request()
+      if (req.method() !== 'PATCH') return route.continue()
+      sent.push({ url: decodeURIComponent(req.url()), body: req.postDataJSON() })
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{ param_id: 1, param_value: req.postDataJSON().param_value }]),
+      })
+    })
+
+    await page.goto('/system/prices')
+    await expect(page.getByTestId('param-vat')).toBeVisible({ timeout: 30_000 })
+
+    await page.getByTestId('param-vat').fill('17')
+    await page.getByTestId('param-ratio').fill('60')
+    await page.getByTestId('params-save').click()
+
+    await expect(page.getByTestId('params-save-success')).toBeVisible()
+    expect(sent).toHaveLength(2)
+    // שני ה-upsert רצים ברצף (לא מקבילית — ר' `PricingParamsCard.jsx`), ולכן שני מזהי-השם
+    // ב-URL, לא בגוף (‏`updatePricingParam` שולח רק `param_value`, השם הוא ה-`.eq()` שבשאילתה).
+    const vatWrite = sent.find((s) => s.url.includes('אחוז_מעמ'))
+    const ratioWrite = sent.find((s) => s.url.includes('יחס_אורחים_לדיילת'))
+    expect(vatWrite?.body.param_value).toBe('17')
+    expect(ratioWrite?.body.param_value).toBe('60')
+  })
+
+  test('יחס-אורחים לא-תקין (0) חוסם שמירה — ואף כתיבה לא יוצאת', async ({ page }) => {
+    const sent = []
+    await page.route('**/rest/v1/params?*', async (route) => {
+      const req = route.request()
+      if (req.method() !== 'PATCH') return route.continue()
+      sent.push({ url: decodeURIComponent(req.url()), body: req.postDataJSON() })
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+    })
+
+    await page.goto('/system/prices')
+    await expect(page.getByTestId('param-ratio')).toBeVisible({ timeout: 30_000 })
+
+    // `isValidGuestsRatio` (`src/lib/validators.js`) דורש `n > 0` בדיוק — 0 הוא ערך-הגבול
+    // האמיתי שנכשל (`0 מחלק-באפס ב-recommendHostessCount`), לא ערך-שרירותי שנראה לא-תקין.
+    await page.getByTestId('param-ratio').fill('0')
+    await page.getByTestId('params-save').click()
+
+    await expect(page.getByTestId('param-ratio-error')).toBeVisible()
+    await expect(page.getByTestId('params-save-success')).toHaveCount(0)
+    expect(sent).toHaveLength(0)
+  })
+})
+
+test.describe('קטלוג: toggle סטטוס-מוצר (4.3b ④)', () => {
+  test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
+
+  test.beforeEach(async ({ page }) => {
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+  })
+
+  test('שינוי סטטוס-מוצר שולח PATCH עם המק"ט והערך הנכונים', async ({ page }) => {
+    // 🟡 פער ④ (4.3b, תוקן מ-"item ④" השגוי שבקופסה מעל 4.3b ל-item ①, ✅ אושר ע"י המנהל
+    // 01/08 — ר' הערת ↳ as-built בטבלת-הצעדים). `prices-status-select` לא מופיע באף בדיקה.
+    // **מה שכבר מכוסה** (סבב D, `server-messages-and-inactive-product.spec.js`): התוצאה של
+    // מוצר-מושבת (לא נופל ל-0 ₪, לא מוצע בשורה חדשה). **מה שחסר כאן:** שהפעולה עצמה —
+    // הבחירה במסך — יוצאת כ-PATCH עם המק"ט והערך הנכונים.
+    // ⚠️ `interceptCatalogWrites` (למעלה) לא שומר את ה-URL, רק table/method/body — ולכן
+    // כאן יירוט ייעודי, כדי שאפשר יהיה לאמת גם **על איזה מק"ט** בדיוק יצא ה-PATCH.
+    const sent = []
+    await page.route('**/rest/v1/products?*', async (route) => {
+      const req = route.request()
+      if (req.method() === 'GET' || req.method() === 'HEAD') return route.continue()
+      sent.push({ url: req.url(), body: req.postDataJSON() })
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{ ok: true }]),
+      })
+    })
+
+    await page.goto('/system/prices')
+    await expect(page.getByTestId('prices-table')).toBeVisible({ timeout: 30_000 })
+
+    const row = page.getByTestId('prices-row').filter({ hasText: TIER_SKU })
+    await row.getByTestId('prices-status-select').click()
+    await page.getByRole('option', { name: 'לא פעיל' }).click()
+
+    await expect.poll(() => sent.length).toBeGreaterThan(0)
+    expect(sent[0].body.status).toBe('inactive')
+    expect(sent[0].url).toContain(`sku=eq.${TIER_SKU}`)
+  })
+})
+
 test.describe('קיר-ההרשאות: המסך CEO-בלבד, והמסד אוכף בעצמו (4.3)', () => {
   test.skip(
     !PROJECTS_EMAIL || !PROJECTS_PASSWORD,

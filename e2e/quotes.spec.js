@@ -122,6 +122,35 @@ test.describe('חלון הדחייה חוסם לפני שהמסד נשמע (4.2)
     expect(sent.rejection_notes).toBeNull()
     expect(targetUrl).toContain('quote_id=eq.')
   })
+
+  test('סיבה "אחר" עם פירוט — הטקסט מגיע בפועל לעמודה (4.3b ③)', async ({ page }) => {
+    // 🟡 פער ③ (4.3b): הבדיקה שממעל מוכיחה רק את חצי-השלילה (סיבה רגילה ⇒ notes=null).
+    // אף בדיקה לא הוכיחה שפירוט **שכן** מולא באמת מגיע לעמודה — ועליה נשען פילוח-הסיבות
+    // בלשונית "נדחו".
+    let sent = null
+    const NOTES_TEXT = 'הלקוח ביקש להקטין את התקציב וסירב להצעה המתוקנת'
+
+    await page.route('**/rest/v1/quotes?*', async (route) => {
+      const req = route.request()
+      if (req.method() !== 'PATCH') return route.continue()
+      sent = req.postDataJSON()
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{ quote_id: 0, quote_status: 'rejected' }]),
+      })
+    })
+
+    await openRejectDialog(page)
+    await page.locator('input[name="rejection-reason"][value="אחר"]').check()
+    await page.getByTestId('reject-notes').fill(NOTES_TEXT)
+    await page.getByTestId('reject-confirm').click()
+
+    await expect(page.getByTestId('toast-success')).toBeVisible()
+    expect(sent).not.toBeNull()
+    expect(sent.rejection_reason).toBe('אחר')
+    expect(sent.rejection_notes).toBe(NOTES_TEXT)
+  })
 })
 
 test.describe('הצעה שנדחתה נעולה — והנעילה בשרת, לא בכפתור שהוסתר (4.2)', () => {
@@ -168,6 +197,67 @@ test.describe('הצעה שנדחתה נעולה — והנעילה בשרת, ל�
     // 🔒 חוזה: תחילית ה-RAISE של `enforce_quote_in_progress_lock`, שממנה גם
     // `SERVER_MESSAGE_RULES` מזהה את המקרה. שינוי הניסוח במסד שובר את שניהם.
     expect(denied.body?.message).toContain('הצעה נעולה')
+  })
+
+  test('טריגר-הנעילה על quote_services (הענף שמעולם לא רץ) חוסם UPDATE וגם DELETE (4.3b ①)', async ({
+    page,
+  }) => {
+    // 🔴 פער ① (4.3b): `enforce_quote_in_progress_lock` מותקן פעמיים — על `quotes` הוא קורא
+    // OLD.quote_status ישירות, ועל `quote_services` הוא רץ תת-שאילתה (ענף נפרד לגמרי,
+    // מיגרציה 20260723115000 שורות 40-41 + טריגר `quote_services_lock_non_in_progress`
+    // שורות 53-55, `before update or delete`). זה הענף ששומר על הקפאת-שורות של הצעה
+    // מאושרת/דחויה — ומעולם לא נבדק ישירות. line_id=19 = השורה הראשונה (04ST) של הצעה #11
+    // (נדחתה, 'תקציב לקוח').
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await page.goto('/quotes')
+    await expect(page.getByTestId('quotes-table')).toBeVisible({ timeout: 30_000 })
+
+    const LOCKED_LINE_ID = 19
+
+    async function callRest(method) {
+      return page.evaluate(
+        async ({ url, anon, id, method }) => {
+          const key = Object.keys(sessionStorage).find((k) => k.startsWith('sb-'))
+          const token = JSON.parse(sessionStorage.getItem(key)).access_token
+          const res = await fetch(`${url}/rest/v1/quote_services?line_id=eq.${id}`, {
+            method,
+            headers: {
+              apikey: anon,
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              Prefer: 'return=representation',
+            },
+            ...(method === 'PATCH' ? { body: JSON.stringify({ notes: null }) } : {}),
+          })
+          return { status: res.status, body: await res.json() }
+        },
+        { url: SUPABASE_URL, anon: SUPABASE_ANON, id: LOCKED_LINE_ID, method },
+      )
+    }
+
+    // 🔒 תנאי-קדם שלא סומך על מדידת-לילה (הכרעת-מנהל 01/08/2026): קוראים את השורה קודם
+    // ונכשלים ברעש אם ההנחה לא מחזיקה — אחרת ה-PATCH למטה לא היה באמת no-op.
+    const before = await callRest('GET')
+    expect(before.status).toBe(200)
+    expect(before.body).toHaveLength(1)
+    expect(before.body[0].notes, 'תנאי-הקדם נשבר: השורה כבר לא notes=null').toBeNull()
+
+    // UPDATE — ערך זהה-לקיים: גם אילו הטריגר היה שבור, שום דבר לא היה נכתב מחדש.
+    const patchDenied = await callRest('PATCH')
+    expect(patchDenied.status).toBeGreaterThanOrEqual(400)
+    expect(patchDenied.body?.code).toBe('P0001')
+    expect(patchDenied.body?.message).toContain('הצעה נעולה')
+
+    // DELETE — הענף השני שאותו טריגר מגן עליו (`before update or delete`).
+    const deleteDenied = await callRest('DELETE')
+    expect(deleteDenied.status).toBeGreaterThanOrEqual(400)
+    expect(deleteDenied.body?.code).toBe('P0001')
+    expect(deleteDenied.body?.message).toContain('הצעה נעולה')
+
+    // קריאה-חזרה: השורה עדיין קיימת ובלתי-משתנה — לא רק "קיבלנו שגיאה".
+    const after = await callRest('GET')
+    expect(after.body).toHaveLength(1)
+    expect(after.body[0]).toEqual(before.body[0])
   })
 })
 

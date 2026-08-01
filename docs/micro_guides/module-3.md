@@ -42,7 +42,7 @@ Step table (⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred · �
 | 4.1 | Approval flow E2E (date guard §7.32, RPC, project born complete, locks) 🔻👤 ⬅️ **re-tagged 31/07: a successful approval is irreversible** | ✅ (rolled-back SQL battery: all 7 guards **returned their failure** · `e2e/quote-approval.spec.js` NEW, 6 tests, 3 of them mutation-proven · **zero net DB change, verified after**) |
 | 4.2 | Rejection + expiry flows E2E (7 reasons, notes, cron simulation) 🔻🤖 — 🔗 **ONE ROUND with 4.3** | ✅ (rolled-back SQL battery: both rejection CHECKs + the lock trigger on `update` **and** `delete` + the **expiry job body run verbatim** [param 30⇒1 ⇒ exactly 4 rows flip] + the param guard returning its failure; zero net DB change, read back outside the transaction. Screen side in `quotes.spec.js`, coverage map below the step) |
 | 4.3 | e2e/quotes.spec.js + e2e/prices.spec.js suites 🔻🤖 — 🔗 **ONE ROUND with 4.2** (+ the two 3.4 debts below) | ✅ (**22 new tests, suite 44 ⇒ 66, all green, 0 skips**: `quotes.spec.js` 9 · `prices.spec.js` 7 · **`quote-email.spec.js` 6 — the two 3.4 debts, both paid**. 4 mutations watched failing before any green was reported. Every write intercepted — the live DB was read back byte-identical after the full run) |
-| 4.3b | Coverage residue: `quote_services` lock branch 🔴 · both pricing params 🔴 · 'אחר' notes delivered 🟡 · product-status toggle 🟡 — ⛔ **BEFORE 4.4** | ⬜ |
+| 4.3b | Coverage residue: `quote_services` lock branch 🔴 · both pricing params 🔴 · 'אחר' notes delivered 🟡 · product-status toggle 🟡 — ⛔ **BEFORE 4.4** | 🔨 (5 new tests built + green, 71/71 E2E; **not ✅ until `npm run gate` is fully green incl. `knip`** — env-blocked, see §9) |
 | 4.4 | Regression: full verify + existing E2E + M1/M2 screens 🔻🤖 — **runs only after 4.3b** | ⬜ |
 | 4.5 | Phase-4 gate 🔻👤 | ⬜ |
 | 5.1 | Acceptance scenario from spec (6,319 in live UI) 🔻🤖 screenshot | ⬜ |
@@ -402,7 +402,15 @@ Goal: prove the conversion's integrity edges. Files: none new (SQL + live UI). W
 **Step 4.3b — Coverage residue 🔻🤖. ⛔ RUNS BEFORE 4.4 — Ishay approved 31/07/2026 22:18.**
 Files: none new (extends `e2e/prices.spec.js`, `e2e/quotes.spec.js`, and the §9 rolled-back battery).
 Additive only: **no product-code change, no DB writes** — every write path via `page.route`
-interception, item ④ inside a transaction that rolls itself back.
+interception, item ① inside a transaction that rolls itself back.
+↳ as-built (01/08/2026): the line above named "item ④" — an editing slip caught by the build
+session and confirmed by the manager. It is item **①** (the `quote_services` lock-trigger branch)
+that inherently needs a real DB call: `page.route` mocks the browser's network layer and never
+reaches Postgres, so it cannot prove anything about trigger behavior. Item ④ (status toggle) is a
+pure UI-payload check and route interception is exactly right for it. Built as: item ① = one real
+REST call per operation (PATCH + DELETE) against a no-op value, mirroring the existing pattern in
+`quotes.spec.js:147-171` — not the heavier `do $$ … raise$$` battery, since a single guaranteed-fail
+REST call already IS "a transaction that rolls itself back" once the trigger raises.
 
 > 🔎 **Why this step exists.** 4.2+4.3 closed with a coverage map that said *"nothing is uncovered"*.
 > Ishay then asked the build session *"what didn't you check"*, and four gaps surfaced **inside the
@@ -422,6 +430,29 @@ interception, item ④ inside a transaction that rolls itself back.
 > ✅ **Deliberately NOT built** (build session's call, manager concurs): duplicate tier · duplicate SKU
 > in-screen · rendering all reasons in the dialog — the array is already checked value-by-value
 > against the DB CHECK at unit level. ⚠️ They are **8** reasons, not 7 ('נפתחה בטעות' included).
+
+> ✅ **Built 01/08/2026 — 5 new tests, coverage map.** All four gaps closed, `e2e/quotes.spec.js` +2 /
+> `e2e/prices.spec.js` +3, no new files (as the step's `Files:` line required).
+>
+> | Gap | Covered by |
+> |---|---|
+> | ① `quote_services` lock branch, never exercised | `quotes.spec.js` "טריגר-הנעילה על quote_services … חוסם UPDATE וגם DELETE" — real REST PATCH+DELETE on line_id=19 (quote #11), precondition-read first (no trusting last night's measurement — manager's plan-gate condition), both P0001, read-back byte-identical |
+> | ② both pricing params untested | `prices.spec.js` "שמירת שני הפרמטרים יחד…" (happy path, both upserts asserted by URL+body) + "יחס-אורחים לא-תקין (0) חוסם שמירה" (real `isValidGuestsRatio` boundary, not a guessed value) |
+> | ③ 'אחר' notes proven blocked, never delivered | `quotes.spec.js` "סיבה 'אחר' עם פירוט — הטקסט מגיע בפועל לעמודה" |
+> | ④ product-status toggle bare | `prices.spec.js` "שינוי סטטוס-מוצר שולח PATCH עם המק"ט והערך הנכונים" |
+>
+> **Evidence:** baseline measured fresh (not assumed): 376 unit / 66 E2E, 0 skips — matches this
+> guide's own numbers. After: 376 unit (unchanged — E2E-only work) / **71 E2E, 0 skips** on a clean
+> run. ⚠️ **First run had 1 failure** in `quote-email.spec.js` (pre-existing test, untouched by this
+> step — login-redirect timeout); **second full run: 71/71 green**, confirmed flake not regression
+> (manager's condition: name it, don't disappear it). Post-battery read-back via Supabase MCP:
+> `quote_services` lines 19/20, quote #11 (`rejected`/`תקציב לקוח`/`notes=null`), both pricing params
+> (18/50), `products.B-REG-TAG.status=active` — all byte-identical to pre-run. `npm run gate`:
+> lint/format/376-unit/build/jscpd (0.43%, 3 pre-existing clones, none in `e2e/`) all green.
+> **`knip` blocked 4× by `RangeError: Array buffer allocation failed`** — measured 1.4GB/15.73GB
+> system RAM free (concurrent sessions on the machine), not a parsing issue in the touched files (no
+> `src/` exports added/removed, only `e2e/*.spec.js`). Per manager's ruling: **step stays 🔨, not ✅,
+> until `knip` runs clean** — a "green except knip" verdict is a partial verdict.
 
 **Step 4.4 — Regression 🔻🤖.** Goal: nothing existing broke. Files: none. What: `npm run verify` green; manual smoke M1 (login/permissions matrix) + M2 (customers list/card). Verify: command output + screenshots.
 
