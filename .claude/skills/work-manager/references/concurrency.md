@@ -12,8 +12,12 @@ be) alive. Rule 16 operationalized for the manager role.
   head** — a queue held in narration dies with the session; a scratchpad file
   survives a crash. Say you're queuing, and land the queue the moment the arena
   clears.
-- Stage and commit **by explicit pathspec only** (`git add <paths>`), never
-  `git add -A`. And the sharper trap behind it: on 31/07/2026 rounds got mixed
+- Stage and commit **by explicit pathspec — and the pathspec must be on the
+  `commit`, not only the `add`:** `git commit -- <paths>`, never `git add -A`.
+  **The index is shared:** another session's earlier `git add` rides along on
+  *your* `git commit`. *(710's ledger 6: a manager's own one-file commit swept in
+  nine builder files, including a migration.)*
+  And the sharper trap behind it: on 31/07/2026 rounds got mixed
   *without* -A, because `STATUS.md` carried both sessions' uncommitted edits and
   one session committed it by name. Committing a shared file commits *everyone's*
   pending lines in it — check `git diff` of that file before staging.

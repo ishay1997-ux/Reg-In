@@ -337,3 +337,57 @@ a standing rule firing on every round and every handover, forever. **His words: 
 לא הייתי מאשר אותם."** Graduates on recurrence.
 **Second candidate, 1 occurrence:** *"no source at all" is itself a stop* — before writing a rule,
 check whether it already exists anywhere; a rule with no origin in Ishay and none in a file is invented.
+
+## 10 · 01/08/2026 — the close procedure was written for a shift that ENDS, never one that is INTERRUPTED
+
+**How this surfaced.** Ishay refused to accept reviewed *text* and demanded a *scenario*: "23:00, two
+builders mid-round, dirty tree, nothing committed — you say close the shift." Four managers across two
+arenas ran it independently against their own files, each sent the scenario **alone** with the findings
+withheld until they answered. **Four runs, and the four ordering bugs found were four DIFFERENT bugs** —
+no two reviewers found the same one. *(The method is the reusable part: had the findings been sent with
+the scenario, all four would have returned agreement instead of evidence.)*
+
+**The root, in 710's outgoing manager's words:** *"הנוהל נכתב למשמרת שנגמרת — לא למשמרת שנקטעת."*
+Every defect below is a symptom of that one assumption. **And it survived because it was never tested:
+every handover that has ever happened, in BOTH arenas, ran against a near-empty arena.** Both 710
+sessions volunteered this unprompted — *"עבד, אבל בזירה קלה — זה מצב-המערכת ולא הישג."*
+
+**The findings, with who found what.**
+- **Steps 6 and 9 are not executable with a live builder** (§17 writes the micro-guide, LOG and STATUS;
+  `concurrency.md:10` forbids exactly those three). 3 of 4. 🔴 **It already fired tonight and nobody
+  named it as a procedure failure:** the Stop hook demanded a STATUS+LOG write while manager-4 was
+  writing, and manager-3 refused. **The fallback already exists** — `concurrency.md:11`, queue in the
+  scratchpad outside the repo — **and §17 never cites it.** 710's outgoing manager did exactly that by
+  instinct and it worked.
+- **Four distinct ordering defects.** ① the growth ratio runs at step 1, before steps 2/5/9 write most
+  of the shift's evidence ⇒ **the metric is guaranteed to under-report, systematically** (this is the
+  real cause of entry 8's wrong number — not an author's slip) · ② step 11's board precedes step 12's
+  clock-stamped snapshot ⇒ two snapshots, Ishay reads the older · ③ **step 8 is a forward reference:
+  it orders the outgoing manager to record the successor's ADDRESS, which is the new session's name and
+  does not exist until step 10 creates it** · ④ the retro measures a shift that has not ended.
+- **No source maps a file to a builder.** 4 of 4, both arenas: one git identity, one working tree,
+  `list_sessions` gives titles not paths. **The only source is asking each builder explicitly, and no
+  line requires it.**
+- **The address problem is not solved — it is inverted.** 710's production answer: the successor note
+  carries **identity only**, and the incoming manager **announces himself**; the outgoing one never
+  records an address that cannot exist. REG-IN's manager-2 proposed the identical fix independently.
+  **Two arenas, no coordination, same answer.**
+
+**What was already right.** `docs/current_manager.md`, built here tonight on Ishay's ruling, **is the
+candidate 710 has recorded and not built** — they call it their shared hole. And the scratchpad queue
+above. **The gap is almost never a missing mechanism; it is a mechanism nobody cites at the moment it
+is needed.**
+
+**A new trigger for an existing fallback** (710's outgoing manager, from our archiving incident): the
+"no reply in ~10 min ⇒ the document is authoritative" fallback was written for *doesn't answer*, not
+for *archived and gone*. ⇒ **The handover document must stand alone even when the outgoing manager is
+unreachable** — never "ask him".
+
+**What it cost.** Nothing yet — no handover with live work has ever occurred. **That is the whole
+finding: this is a defect discovered before its first firing, which is the only cheap kind.**
+
+**Rule change — one line only, approved by Ishay tonight** (`concurrency.md`): the pathspec must be on
+the **commit**, not only the `add` — the index is shared, and 710's ledger 6 records a manager's
+one-file commit sweeping in nine builder files including a migration. **Chosen because it is the only
+finding that fires on the next commit rather than the next handover.**
+**Everything else is a candidate for the next shift's edit pass, with these four runs as its spec.**
