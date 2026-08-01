@@ -125,3 +125,27 @@ push identity to every live builder; handover: forward by name, route-only). (a)
 new rule yet; **candidate: the timestamps rule must live where builders read (prompts.md
 template line / builder-prompt boilerplate), not only in the manager skill.** Graduates
 on next builder-side stamp drift.
+
+## 4 · 01/08/2026 — asserted an E2E blast-radius in a builder prompt without measuring it
+
+**What happened.** The save⇄send round's prompt told the builder the change "touches exactly
+the path the E2E suite crosses (save ⇒ navigate to list)", and used that to justify bundling
+the fixture repair into the same round. The builder measured: `grep quote-save|quote-cancel
+e2e/` returns **zero** — no E2E test clicks save on the builder page at all. Reproduced
+myself: zero. The bundling was still right *as timing*, but the stated reason was false.
+Not self-caught — the builder caught it, and volunteered the correction unprompted.
+
+**Why it was a miss.** Textbook violation of this role's one habit, in its most dangerous
+shape: a confident causal claim inside a **prompt**, where it carries the manager's authority
+and the worker is likelier to build on it than to check it. Same family as ledger #1 and #3a —
+asserting what the repo could have answered in the same turn. The grep cost one call.
+
+**What it cost.** Nothing material — the builder verified instead of trusting, which is the
+mutual-doubt contract working. The real cost is the ratio: **fourth entry, third in this
+family.**
+
+**Rule change — none; the rule already exists and is graduated.** What this argues for is not
+a new rule but a **mechanism**: the habit keeps failing specifically when the claim is
+*supporting* a decision already made (bundling, patterning, stamping) rather than *being* the
+decision. Candidate mechanism, needs one more occurrence: before sending any prompt, re-read
+own factual claims and mark each as measured-this-turn or delete it.
