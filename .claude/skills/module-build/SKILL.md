@@ -7,6 +7,30 @@ description: REG-IN — continue building the active module from its live micro-
 
 The active module's `docs/micro_guides/module-N.md` is the approved plan and your memory — continue from its "Active step". This is normal build flow, NOT Plan Mode (iron rule 2): the micro-guide already IS the approved plan and its 🔻🤖/👤 stop-points are the control. Build directly; DB/RLS before UI.
 
+## ⚡ When a manager session exists (Ishay said so, or your prompt names one)
+
+The approval addressee for *technical* gates changes — wired 01/08/2026 per Ishay's
+replacement mandate (the manager answers in his place what he delegated):
+
+- **Send step-plans and 🗣️ briefs to the manager session** via `send_message` (load
+  `ToolSearch: mcp__ccd_session_mgmt` — it is deferred, not auto-available; the manager
+  normally contacts you first, else find it with `list_sessions`). It verifies your
+  claims against the repo itself and answers approve / fix / stop. Pre-empt its
+  standing probes in the plan: *מה עוד לא בדקת* · *מה הבליינד-ספוט — על מה לא חשבתי*
+  · world-standard fit — and include a time estimate (it feeds the manager's silence
+  threshold).
+- **The contract — three checkpoints, so nothing falls between the chairs:** (1) plan
+  before code · (2) blocked or unsure — including "מה ישי היה עונה?" questions, which
+  the manager answers from recorded precedent or escalates to him once · (3) done,
+  before your closing report. **Product questions go to the manager, never to Ishay
+  directly.** Going quiet is the failure mode — the contract is yours.
+- **What stays Ishay's, never absorbed** (the manager routes it, by default through
+  its own chat): mockup/visual approval — the 🔒 Plan-Mode gate below still holds, and
+  approval arrives as Ishay's word relayed by the manager (or given directly in your
+  window; both binding) · typed-echo migration application · secrets/OAuth · DoD.
+- **No manager reply within a reasonable time → stop and ask Ishay directly.**
+  With no manager session, everything below is unchanged.
+
 ## Pre-flight
 1. **Rule 16 — one writing session at a time.** Unsure if another session is writing? Ask Ishay before editing.
 2. **Rule 10 — mid-session merge check.** Run `git fetch origin`, then `git merge-base --is-ancestor HEAD origin/dev`. If the branch is already merged into `origin/dev`, STOP — don't pile commits on a dead branch; tell Ishay and offer a fresh branch from `dev`.

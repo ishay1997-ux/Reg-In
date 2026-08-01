@@ -4,6 +4,14 @@ Loaded from work-manager SKILL.md when you sit down to write a prompt for a
 builder session or browser-Claude. A prompt must let a fresh session work
 without this conversation.
 
+0. **Open with the ⚡ manager banner — first lines, not buried in a contract
+   section** (recurred 3× on 01/08 until made structural): "⚡ קיים סשן-מנהל פעיל.
+   תוכנית → אליו לפני קוד · תקוע/ספק → אליו · 'סיימתי' → אליו · שאלות-מוצר → אליו,
+   לא לישי. התקשורת ב-send_message (טען ToolSearch: mcp__ccd_session_mgmt — כלי
+   נדחה). אין מענה זמן סביר → עצור ופנה לישי." A builder that doesn't know a
+   manager exists builds silently and surfaces only at the end. (`module-build`
+   now carries the full ⚡ section — the banner arms it.)
+
 1. **Verify every factual claim against the code the same day it ships**, and
    stamp it (`🕓 אומת מול הקוד DD/MM HH:MM`). A stale claim sends a session
    hunting a solved problem — caught twice in one day (31/07).
