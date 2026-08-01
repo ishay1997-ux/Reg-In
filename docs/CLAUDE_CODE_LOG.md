@@ -113,6 +113,32 @@
   if quota dies mid-way**, one swap at the end, and publish counts (existed · placed · homeless). Then a
   **fresh-context agent** answers one mechanical question: what exists in the old file with no counterpart
   in the new one — because the one who migrated is the last to notice what he dropped.
+- **Role redefined, and the rename question settled by measurement.** Ishay pushed back on a cost claim
+  the manager had asserted without measuring ("isn't that a simple fix?") — he was right to. Measured:
+  the role *definition* is one file (and is the entire failure), while `מנהל-N` stamps are 20 occurrences
+  mostly inside dated records we never rewrite, and `work-manager` is ~52 including `toolbox.md`, which a
+  blocking CI check validates. Two reasons surfaced only by measuring: changing stamps going forward
+  creates a **mixed corpus**, worse than either option; and the skill's trigger is **what Ishay types** —
+  renaming the directory means changing how he speaks. Handle and directory stay; the definition changes:
+  **"מנהל-העבודה ומבקר-האיכות"**, opening line *"אתה מוביל את העבודה ואינך כותב קוד — ואתה שער-האיכות
+  היחיד: כל דבר שנכנס, אתה בדקת בעצמך."*
+- **Gate scope stated, with its boundary.** The gate covers everything — code, tests, migrations, docs,
+  prompts, mockups, reports. But three things the manager *cannot* judge (product intent/field reality ·
+  visual taste · beyond his technical reach) are **routed, never approved**: to Ishay, to Ishay, to a
+  specialist. 🔴 **A gate that approves what it cannot judge is worse than no gate** — it manufactures
+  confidence instead of verification. Anchor: two recommendations shipped today on an unmeasured date;
+  the failure was not the missing judgement but the missing disclosure of it.
+- **Contact direction reversed (adopted from 710, whose ledger #9 is the evidence).** "The manager
+  contacts you first" put the locating burden on the party who knows least and forced the manager to
+  guess which new session was his. 710 does the opposite — the checkpoint contract makes the **builder**
+  reach out first, carrying the manager's exact session name. Their own miss: they sent a shift-handover
+  battery to the wrong session today, matched by title; what saved it was the recipient identifying
+  himself, not a mechanism. ⚠️ Open dependency: a manager **cannot see its own session name**
+  (`list_sessions` excludes the caller) — asked Ishay once, to be recorded permanently.
+- **Graduated rule (2 occurrences, 2 arenas, same day): import the practice, not the justification.**
+  Ishay struck the aviation rationale here; 710 independently found they had justified read-back with
+  "this is how aviation and medicine do it" and replaced it with a local reason. A borrowed rationale
+  collapses the moment someone asks "but we are not them."
 
 ### 01/08/2026 — **"עדכן ושלח" without changes no longer saves — and the brief's own wording was wrong** (feature, Ishay's ruling)
 - **The bug:** no change detection, so an empty update ran a full `update`; `moddatetime` bumped
