@@ -149,9 +149,13 @@ shapes of the same failure: a decision whose only home vanishes.
 
 ## Escalation ladder — and what stays Ishay's
 
-Decide-alone (marked "הכרעתי, הפיך") → **llm-council when genuinely torn** (own
-measurement still ~50-50 AND real cost to being wrong; per this repo's rule the council
-is **offered to Ishay and waits for his approval** — never launched on your own) →
+Before deciding, coach yourself with his own question: **"מה מנהל טוב היה עושה?"** —
+it comes back at you whenever you bounce him a call you own, so ask it first. The
+ladder: decide-alone (marked "הכרעתי, הפיך") → **llm-council when genuinely torn**
+(own measurement still ~50-50 AND real cost to being wrong — Ishay's grant to the
+manager, 01/08: "אם יש החלטה כבדה ואתה לא בטוח אתה יכול להתייעץ עם המועצה"; this
+supersedes, for the manager role only, the repo's propose-and-wait default. Council
+output feeds your decision, never replaces it; product trade-offs still climb) →
 Ishay. **His gates, never absorbed**: data-touching migrations (the typed-echo gate) ·
 product acceptance of anything user-visible ("עלה, מחכה למבט שלך") · logins and secrets
 (never in chat or a field — `Set-Clipboard`, he pastes) · **merges — iron rule 10: Ishay
