@@ -1,5 +1,34 @@
 # The miss-ledger — what the manager got wrong, in its own words (REG-IN)
 
+## End-of-shift retro — the question battery (Ishay's request, 01/08/2026)
+
+Run at every shift close, BEFORE writing the shift summary. Two meta-rules: every
+answer must cite a concrete event from THIS shift (an answer with no anchor is a vibe);
+and the retro's output lands here / in `manager_evidence_regin` as **candidates only** —
+never straight into the skill (the graduation bar is the overfitting guard).
+
+**Self-improvement (margins-style, aimed at the manager):**
+1. **מי תפס את הטעויות שלי — אני או המערכת?** יחס נמדד. הכל-המערכת ⇒ הבקרה-העצמית
+   שלי לא שווה כלום; הכל-אני ⇒ כנראה תת-דיווח.
+2. **אילו מהאישורים שלי היו "אישור-עייף"** — נשלחו על תחושת-קפדנות של שכבה אחת בלי
+   שכל השכבות רצו? (משפחת 710-#5.)
+3. **על מה סמכתי כי עבד קודם — בלי למדוד שוב?** תקדים הוא לא ראיה טרייה.
+4. **איזו שאלה מהארכיון לא שאלתי אף פעם המשמרת — ולמה?** פער-כיסוי של הסוללה עצמה.
+5. **מי לא תיקן אותי?** אפס-דחיפות-נגד מהבנאים ≠ שהייתי צודק — אולי חוזה-הספק-ההדדי
+   מת. בדוק: כמה פעמים בנאי חלק עליי בפועל?
+6. **איפה הייתי צוואר-בקבוק?** כמה זמן בנאים חיכו לי, והאם ה-fallback היה צריך לירות?
+
+**Anti-bias · anti-overfit · anti-leakage (ישי: "היזהר מהטיה, דאטה-ליקז, התאמת-יתר"):**
+7. **הטיה:** באילו "אומת ✓" חיפשתי אישוש במקום הפרכה — כולל: האם אימתתי בשיטת-המדווח
+   במקום בשיטת-המקור? (עוגן-הקבע: ה-grep הכפול של §7.86.)
+8. **התאמת-יתר:** כמה כללים נולדו המשמרת מול כמה תקריות? יחס קרוב ל-1:1 = מפעל-טלאים.
+   ולכל כלל חדש — מבחן-הפוך: האם היה *מזיק* במשמרת קודמת כלשהי?
+9. **דאטה-ליקז:** (א) האם בניתי את רשימת-הבדיקה שלי *לפני* שקראתי את דוח-הבנאי — או
+   שבדקתי רק את מה שהוא הצהיר, וכך העיוורון שלו נהיה שלי? (ב) האם מסרתי לבודק את
+   התשובה הצפויה ("אמורות להיות 71") — מספר-מצופה מטה ספירה לאישוש במקום למדידה?
+10. **שרידות:** הפספוסים הרשומים הם רק שנתפסו. אילו סוגי-פעולה שלי לא עברו *שום*
+    בדיקה המשמרת? — שם גרים הפספוסים שלא נראו.
+
 The skill body says use is the only validation instrument this role has (the
 fresh-agent test was deliberately dropped — Ishay's ruling, 710, 1.8). This file
 is that instrument. **Append-only, newest last.** One entry per miss, written
