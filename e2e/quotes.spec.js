@@ -541,6 +541,62 @@ test.describe('שמירה פותחת את חלון-השליחה (C5 §5.5.4 "ש�
     await page.getByTestId('quote-document-title').press('Escape')
     await expect(page).toHaveURL(/\/quotes$/, { timeout: 15_000 })
   })
+
+  // 🛡️ **השומר שכל הפיצ'ר נשען עליו — וזו הצפייה בו נכשל.**
+  // ‏`handleSave` מפוצל לשני `try` בדיוק בשביל המסלול הזה: כשהשמירה הצליחה אך השליפה
+  // החוזרת נכשלה, ה-`catch` של השמירה היה מכריז **"שמירת ההצעה נכשלה"** על הצעה שכבר
+  // יושבת במסד — ומשתמש שיאמין להודעה ישמור שוב ויקבל **הצעה כפולה**.
+  // עד עכשיו הפיצול היה **כתוב ולא נצפה**; כאן הוא נצפה.
+  test('השליפה-החוזרת נכשלת אחרי שמירה מוצלחת — נאמר שההצעה נשמרה, ולא שנכשלה', async ({
+    page,
+  }) => {
+    let rpcCalled = 0
+    await page.route('**/functions/v1/send-email', (route) => route.abort())
+
+    await page.route('**/rest/v1/rpc/create_quote', async (route) => {
+      rpcCalled += 1
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(FAKE_ID),
+      })
+    })
+
+    // ⚠️ היירוט ממוקד ל-**מזהה המומצא בלבד**, ולכן אינו נוגע בטעינת-המסך הרגילה:
+    // הוא יורה רק על השליפה שאחרי השמירה.
+    await page.route(`**/rest/v1/quotes?*quote_id=eq.${FAKE_ID}*`, (route) =>
+      route.fulfill({ status: 500, contentType: 'application/json', body: '{}' }),
+    )
+
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await page.goto('/quotes/new')
+    await expect(page.getByTestId('quote-summary')).toBeVisible({ timeout: 30_000 })
+
+    await page.getByTestId('quote-customer-search').fill('מדיטק')
+    await page.locator('[data-testid^="quote-customer-option-"]').first().click()
+    await page.getByTestId('quote-event-name').fill('בדיקת כשל-שליפה')
+    await page.getByTestId('quote-event-date').fill('2026-12-01')
+    await page.getByTestId('quote-location').fill('אולם בדיקה')
+    await page.locator('#quote-start-time').fill('10:00')
+    await page.locator('#quote-end-time').fill('14:00')
+    await page.locator('#quote-guests').fill('100')
+    await page.getByTestId('quote-line-add').click()
+    await page.locator('[data-testid^="quote-line-product-"]').last().click()
+    await page.getByRole('option').filter({ hasText: 'שירותי דיילת (4 שעות)' }).first().click()
+
+    await page.getByTestId('quote-save').click()
+
+    // 🎯 הטענה: ההודעה אומרת שההצעה **נשמרה** — ומפנה לשלוח אותה ממסך ההצעות.
+    const errorToast = page.getByTestId('toast-error')
+    await expect(errorToast).toBeVisible({ timeout: 30_000 })
+    await expect(errorToast).toContainText('ההצעה נשמרה')
+    // ⛔ ובשום אופן לא ההודעה שהייתה מופיעה לפני הפיצול — זו שגורמת לשמירה כפולה.
+    await expect(errorToast).not.toContainText('שמירת ההצעה נכשלה')
+
+    // ולא נשארים תקועים בטופס: המשתמש מוחזר לרשימה, שם ההצעה קיימת.
+    await expect(page).toHaveURL(/\/quotes$/, { timeout: 15_000 })
+    expect(rpcCalled).toBe(1)
+  })
 })
 
 test.describe('עלות-רכש לא-ידועה — מקפים, לא רווחיות 100% (סבב-התיקון פריט 2, 01/08)', () => {
