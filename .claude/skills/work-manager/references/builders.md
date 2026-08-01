@@ -115,13 +115,9 @@ question creates closure-feel while nobody digs. **"מה עוד יש לך לבד
 - 🆕 **Record when a builder refutes you** — it is a measurement of your own reliability, and you have
   no other.
 
-**8. Close the session.** Round verified and closed ⇒ **propose archiving that builder** (`archive_session`
-— Ishay taps, reversible from the Archived list). 🔴 **The next round opens a FRESH session — Ishay's
-ruling 01/08: "בנאי ישן — לא רוצה שתיתן לו משימות."** *(Two things this buys: he stops having to
-remember which of five windows are done, and `isArchived` becomes a real live/dead signal — today it is
-`false` for every session ever opened, so nobody can tell who is alive.)*
-**Before archiving, measure — never assume:** clean tree · nothing in flight · **and everything he found
-is on disk, verified by opening the commit, not by his say-so.**
+**8. The next round opens a FRESH session** — Ishay's ruling 01/08: *"בנאי ישן — לא רוצה שתיתן לו
+משימות."* **And do not wake a session you do not need right now** — every message wakes it and spends
+his quota. 🚫 **Closing sessions is his, not yours.**
 
 ---
 

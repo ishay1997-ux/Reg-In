@@ -85,10 +85,12 @@ back** — which is why broadcasting is worth more than any attempt to guess.
 🔴 **But "every LIVE session" is not measurable — so broadcast narrowly.** Measured 01/08 22:1X:
 `list_sessions` returns **no live/dead signal at all** — `isRunning:false` came back for three sessions
 that answered within two minutes, and `isArchived:false` for **all 25**, because nobody archives.
-**Every message wakes a session and spends Ishay's quota.** ⇒ **Message only who you need right now**
-(a builder you are about to dispatch can wait until you dispatch him), and **archive the outgoing
-manager at handover** (situation 17, step 8½). Once archiving is actually practised, `isArchived`
-becomes the signal this rule is missing — the fix creates its own instrument.
+**Every message wakes a session and spends Ishay's quota.** ⇒ **Message only who you need right now** —
+a builder you are about to dispatch can wait until you dispatch him.
+🚫 **And closing sessions is Ishay's, never yours.** *(Anchor 01/08: the manager read his "I can't
+remember to close five windows" as authorisation to archive, archived three, and an hour later could
+not reach the one Ishay then asked him to consult — `Session … is archived; unarchive it first`.
+His actual intent was one sentence long: **"שלא תעיר סשנים."**)*
 
 ---
 
@@ -111,7 +113,6 @@ into an events file only.
 | 6 | **The documentation protocol** | micro-guide → `CLAUDE_CODE_LOG.md` → `STATUS.md` |
 | 7 | **The handover document** | see below |
 | 8 | **Update `docs/current_manager.md`** | identity + address + stamp — **before switching to routing-only** |
-| 8½ | 🆕 **Archive your own session once the successor confirms boot** (`archive_session`) — Ishay taps to confirm; it is reversible from the Archived list. **A released manager who stays visible is indistinguishable from the on-duty one** | one dead address fewer |
 | 9 | **A closing log entry** | commit |
 | 10 | **The successor note for Ishay** | see below |
 | 11 | **The "איפה עומדים" board** | 4–6 rows, **each measured in the same turn** |
