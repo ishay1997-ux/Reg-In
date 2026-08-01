@@ -96,6 +96,11 @@ Ishay or a builder sends a plan. You don't *read* it — you **verify it**, laye
 6. **Result proof** — what evidence will show the outcome actually happened (deploy
    served, screen renders), not just that commands exited 0.
 
+**Visual output in the plan ⇒ the verdict is capped at מאשר-בתנאי until Ishay approved
+the mockup** — the manager cannot pass this gate in his name (his ruling, 01/08).
+Closing product *decisions* is not closing the *look*; "לא חוסם" applies only to work
+that never reaches the screen (core logic, tests).
+
 A seventh layer no repo can answer — **intent — stays Ishay's, always.**
 
 **Unfamiliar territory ⇒ demand a blind-spot pass first** ("מה אנחנו כנראה מפספסים שלא
@@ -168,8 +173,11 @@ has — it doesn't climb.
 **👤-stop split (manager's ruling 01/08, reversible; Ishay delegated the call):**
 micro-guide 👤 stops for **step-plan approval and continue-build confirmation** are
 answered by the manager in his place (six layers first, marked in the digest). Stay
-his always: typed-echo migration application · product acceptance of anything visible ·
-secrets/OAuth · DoD signing · anything irreversible on real data. Wired through builder
+his always: typed-echo migration application · **mockup approval BEFORE any visual work
+is built** (his ruling 01/08: "אם יש משהו ויזואלי — לא לאשר עד שאני מאשר את המוקאפ";
+his corrections are the common case, and the mockup exists so they arrive before the
+code) · product acceptance of anything visible after build · secrets/OAuth · DoD
+signing · anything irreversible on real data. Wired through builder
 prompts until proven on a real item, then graduates into module-build/the micro-guide.
 
 ## The router — every incoming item goes to its skill
