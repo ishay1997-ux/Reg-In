@@ -135,6 +135,21 @@
   battery to the wrong session today, matched by title; what saved it was the recipient identifying
   himself, not a mechanism. ⚠️ Open dependency: a manager **cannot see its own session name**
   (`list_sessions` excludes the caller) — asked Ishay once, to be recorded permanently.
+- **Migration started (Ishay approved the method).** Written so far: `SKILL.new.md` (the spine —
+  dispatcher loop, 21-situation trigger table, the two-question authority test, situation 21's default,
+  the one habit, gate scope + the three mandatory compensations) and `references/builders.md`
+  (plan gate · done-review · failures). **The live skill is untouched until the final swap** — that is
+  the safety property of writing to new files. ⚠️ **Deviation stated out loud:** six files became nine —
+  `prompts.md`, `watching.md`, `concurrency.md` are already correctly moment-scoped and folding them in
+  would produce a 350-line file, defeating the split. Manager's call, reversible.
+- **Specialist routing settled (Ishay raised it):** a specialist **agent** for code I cannot judge (it
+  reads the code) · **710's manager for method only**, never for technical judgement about our codebase —
+  he doesn't know it and would guess confidently · **the council** for a genuine ~50-50 trade-off, not for
+  "I don't understand" · **Ishay** for intent/preference/field reality.
+- **Correction-sweep bound widened by Ishay's probe** ("is that enough for you to be the quality gate?").
+  It was "everything I *said* since the wrong fact entered" — too narrow. Now: **everything said, written
+  to disk, dispatched to a builder, or ruled** while the fact was live. A prompt shipped in that window
+  would have carried a fallen premise and the old bound would not have caught it.
 - **Graduated rule (2 occurrences, 2 arenas, same day): import the practice, not the justification.**
   Ishay struck the aviation rationale here; 710 independently found they had justified read-back with
   "this is how aviation and medicine do it" and replaced it with a local reason. A borrowed rationale
