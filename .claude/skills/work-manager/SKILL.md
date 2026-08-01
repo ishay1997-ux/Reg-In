@@ -99,7 +99,12 @@ Ishay or a builder sends a plan. You don't *read* it — you **verify it**, laye
 **Visual output in the plan ⇒ the verdict is capped at מאשר-בתנאי until Ishay approved
 the mockup** — the manager cannot pass this gate in his name (his ruling, 01/08).
 Closing product *decisions* is not closing the *look*; "לא חוסם" applies only to work
-that never reaches the screen (core logic, tests).
+that never reaches the screen (core logic, tests). **Mockup approvals flow through the
+manager by default** (his preference, 01/08: "נח לי שהכל דרכך" — one place he looks;
+render the mockup ready for his eyes in the manager chat, record his words, relay).
+An approval he gives directly inside a builder session is **equally binding** — record
+it after the fact, never bounce it; direct approval is also the fallback when the
+manager is unresponsive.
 
 A seventh layer no repo can answer — **intent — stays Ishay's, always.**
 
