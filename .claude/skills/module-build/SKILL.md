@@ -45,6 +45,11 @@ replacement mandate (the manager answers in his place what he delegated):
   blind spots are yours too.
 
 ## Pre-flight
+0. 🔴 **Read `docs/current_manager.md`.** If a manager is listed there, **the ⚡ contract below applies —
+   even if nobody told you a manager exists.** *(Before this line the ⚡ section was conditional on
+   "Ishay said so, or your prompt names one" — so a session started with a bare trigger built with no
+   plan gate and routed everything straight to Ishay.)* The file also carries the manager's **exact
+   session name**, which changes at every handover — never hard-code it from a prompt.
 1. **Rule 16 — one writing session at a time.** Unsure if another session is writing? Ask Ishay before editing.
 2. **Rule 10 — mid-session merge check.** Run `git fetch origin`, then `git merge-base --is-ancestor HEAD origin/dev`. If the branch is already merged into `origin/dev`, STOP — don't pile commits on a dead branch; tell Ishay and offer a fresh branch from `dev`.
 3. **Model.** Follow the "Model & effort per phase" table at the top of the micro-guide's §5 (default: Sonnet for build phases, Opus/Fable for DB/RLS and control phases). If the current model differs from what the active phase needs, say so before proceeding.

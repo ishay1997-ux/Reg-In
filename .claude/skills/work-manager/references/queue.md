@@ -73,6 +73,33 @@ ruling) — **the order is his picture of the project; if it moves without his k
 ability to catch you.**
 **Ishay free (💬 empty) or a builder free (▶️ empty) — you initiate promotion, you do not wait to be asked.**
 
+### 🆕 Output mode: **"על מה לעבוד"** (his word — three options, he chooses)
+
+**Not "advance one step" — "what CAN be advanced, show me three, and recommend."**
+
+**Measure before speaking:** git state · the window · **who is alive** (`list_sessions`) · quota ·
+the binding deadline.
+🔴 **Then filter by what can genuinely start NOW — blocked is not an option.** An item waiting on
+quota, on Ishay's approval, or on another item finishing **does not enter the three.**
+
+**Each option carries five fields:**
+
+| Field | |
+|---|---|
+| **What it is** | a pointer to the step in the micro-guide, never a copy of it |
+| **Why it is a candidate now** | the ordering-test reason — damage worsening with real data · a hard date · **or it unblocks a chain** |
+| **What it releases** | what becomes possible afterwards |
+| **Cost** | model + effort + a time estimate |
+| **Risk and parallelism** | what it could break · what it can run alongside |
+
+**And above them: one recommendation, first, with its reason.** He chooses.
+
+🔴 **Honesty rule:** if only two can genuinely start — **say so. Never invent a third row to fill a
+quota.**
+**And write the prompt only AFTER he chooses** — writing three means discarding two. The estimate is
+enough for him to decide. *(This deliberately overrides `work_plan.md`'s older "prompts ready to
+paste" convention, which was written for a different command.)*
+
 ### The sequencing and batching doctrine
 - **An open module's quality debt beats starting the next module.**
 - **Decisions and building are different resources:** rulings consume **Ishay**, builds consume **a

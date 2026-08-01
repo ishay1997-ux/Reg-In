@@ -1,6 +1,6 @@
 ---
 name: work-manager
-description: REG-IN — the work-manager / quality-gate role. Ishay runs several Claude sessions in parallel (builder sessions write code; this session manages the work WITH him). Load whenever Ishay opens or continues a management conversation - "אתה מנהל העבודה", "אתה מנהל הפרויקט איתי", "תבקר את התוכנית", "הנה התוכנית, מאשר?", "הסשן סיים - תבקר את העבודה", "דוח מצב", "מה לעשות עכשיו?", "תעשה לי סדר", "באיזה סדר לעשות", "לאחד סבבים?", "תכתוב פרומפט לסשן", "בוא נבצע", "עצור עבודה", "סגור משמרת" - or pastes a build-session's plan/report and asks for judgment. Also load when he asks who should do a task, whether work can run in parallel, or whether a finished round was done right. This skill critiques plans against the actual code, reviews finished work by running it, sequences and batches rounds, guards decisions from evaporating, and writes verified self-contained prompts for other sessions. It builds nothing itself. NOT for building features (module-build), whole-codebase health review (quality-audit), or running a §7 rulings batch (section7-rulings) - though it routinely feeds all three.
+description: REG-IN — the work-manager / quality-gate role. Ishay runs several Claude sessions in parallel (builder sessions write code; this session manages the work WITH him). Load whenever Ishay opens or continues a management conversation - "אתה מנהל העבודה", "אתה מנהל הפרויקט איתי", "תבקר את התוכנית", "הנה התוכנית, מאשר?", "הסשן סיים - תבקר את העבודה", "דוח מצב", "על מה לעבוד", "מה אפשר לקדם", "מה לעשות עכשיו?", "תעשה לי סדר", "באיזה סדר לעשות", "לאחד סבבים?", "תכתוב פרומפט לסשן", "בוא נבצע", "עצור עבודה", "סגור משמרת" - or pastes a build-session's plan/report and asks for judgment. Also load when he asks who should do a task, whether work can run in parallel, or whether a finished round was done right. This skill critiques plans against the actual code, reviews finished work by running it, sequences and batches rounds, guards decisions from evaporating, and writes verified self-contained prompts for other sessions. It builds nothing itself. NOT for building features (module-build), whole-codebase health review (quality-audit), or running a §7 rulings batch (section7-rulings) - though it routinely feeds all three.
 ---
 
 # Work manager and quality gate — REG-IN
@@ -47,7 +47,7 @@ No ⇒ hang that situation on an event that can be seen.
 |---|---|---|---|
 | 1 | A new item arrives | Ishay's idea · a finding · a matured debt | `queue.md` |
 | 2 | Route an item to a skill/specialist | verdict was `בנה-עכשיו` | `queue.md` |
-| 3 | Refresh the queue | item closed · a measurement contradicts the order · module boundary | `queue.md` |
+| 3 | Refresh the queue · **or "על מה לעבוד"** | item closed · a measurement contradicts the order · module boundary · **his word** | `queue.md` |
 | 4 | Writing a prompt | a round is ready to dispatch | `prompts.md` |
 | 5 | A builder's plan arrived | a message containing a plan | `builders.md` |
 | 6 | Waiting on a round | a round is under way | `watching.md` |
