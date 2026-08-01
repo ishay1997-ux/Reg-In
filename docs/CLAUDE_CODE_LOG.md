@@ -132,6 +132,20 @@
   Ishay a fixed 3-line identity-only paste for the new session (number · boot-from-disk · broadcast
   order). Deliberately NOT a context prompt — F1's mega-prompt subtraction stands; context boots
   from the disk handoff block.
+### 01/08/2026 — **Mini rulings round (afternoon): three decisions, one of them against the manager's recommendation** (§7)
+- **Bounce/undeliverable mail → Ishay chose the middle option: an on-screen warning about a suspicious
+  domain** (manager recommended doing nothing before the deadline; he overruled). Born from a measured
+  real event: `email_log` row 9 records `status: sent` for `ron@meditech-demo.co.il`, a domain that does
+  not exist — the bounce is asynchronous and never returns to the log. ⚠️ **Translation flagged back to
+  him before any build:** the address is structurally valid, so a format check would NOT have caught it;
+  the honest implementation is a server-side MX lookup in `send-email` before dispatch, **warning, never
+  blocking**. Awaiting his confirmation of the translation. Touches the shared engine ⇒ M4/M8/M11 inherit.
+- **`quotes#22` stays as-is** (manager's recommendation). It is legitimate demo data, and it restores a
+  fixture that quote #6's accidental approval destroyed: an `in_progress` quote carrying a real
+  `email_log` row.
+- **No "not yet sent" filter chip on the quotes screen** — the indicator alone is enough (manager
+  recommended adding one; he declined: the list is small and the eye catches it).
+
 ### 01/08/2026 — **Save⇄send wiring landed (`384af62`) and passed the manager's landing sequence** (feature)
 - Builder connected the already-mounted dialog to the SAVED row on both create and edit; three silent
   seams fixed (discarded `createQuote` id · `getQuote` not joining `customers` — customer injected from
