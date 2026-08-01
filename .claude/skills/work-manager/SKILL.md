@@ -113,7 +113,10 @@ side, in order: (1) write the handoff block into `docs/work_plan.md` — only wh
 in-air and NOT derivable from the files (open expectations, promises to Ishay, silenced
 doubts, per-builder state), every timestamp from a clock read in the same turn; (2)
 commit a closing log entry; (2½) **hand Ishay a ready-to-paste opening prompt for the
-successor — identity ONLY, three fixed lines** (his design, 01/08): "אתה מנהל-N+1 של
+successor — identity ONLY, three fixed lines** — and per his mechanics (01/08): **he closes
+the outgoing session himself** once the successor is up (never two live managers on one set
+of files), **the new session's title carries the shift number**, and the paste ends with a
+short reminder line **for him** — open · paste · close the old one (his design, 01/08): "אתה מנהל-N+1 של
 REG-IN (מחליף את מנהל-N). עלה מהדיסק לפי סקיל work-manager — בלוק-המסירה ב-
 docs/work_plan.md. מיד אחרי העלייה: שדר את זהותך לכל סשן-בנאי ומנהל-עמית חי." ⛔ Never
 more than that — the skill deliberately killed the hand-carried context mega-prompt

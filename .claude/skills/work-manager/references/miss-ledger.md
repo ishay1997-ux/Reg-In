@@ -149,3 +149,30 @@ a new rule but a **mechanism**: the habit keeps failing specifically when the cl
 *supporting* a decision already made (bundling, patterning, stamping) rather than *being* the
 decision. Candidate mechanism, needs one more occurrence: before sending any prompt, re-read
 own factual claims and mark each as measured-this-turn or delete it.
+
+## 5 · 01/08/2026 — the shift's headline pattern: existing mechanisms not run
+
+**What happened.** Three separate mechanisms that already exist in this skill went unrun in
+one shift, each caught by someone else: **(a)** the two closing probes ("מה עוד לא בדקת?" /
+"יש משהו נוסף?") were skipped on a strong builder report — Ishay caught it within a minute,
+and the same probes had returned five real verification gaps one round earlier; **(b)** the
+rolling work-plan went **eleven hours without a refresh** while eight items closed, though
+the file's own rules mandate a refresh on every close — so it still offered Ishay a §7 round
+already ruled at 11:50, and never contained the last two steps to module close (the audit
+re-run and the PR). Ishay caught that with a four-word question; **(c)** ledger #4, the same
+day: a factual claim shipped inside a prompt without a same-turn check.
+
+**Why it is one miss and not three.** Every one of them has a written rule that is correct
+and already graduated. Nothing was missing from the skill. What failed is **running what is
+already there** — and in all three cases the trigger was the same shape: the mechanism fires
+at a *transition* (a report arriving, an item closing, a claim being used as support), and
+transitions are exactly where attention is on the next thing.
+
+**What it cost.** No production damage; the cost was Ishay's attention, three times, on
+things the role exists to spare him.
+
+**Rule change — deliberately none.** A fourth rule saying "run the rules" is the
+patch-factory failure this skill's own growth gate exists to prevent. Recorded here as the
+shift's dominant pattern so the next manager reads it at boot. **What would actually move
+it, if it recurs: a mechanism at the transition points, not more text** — e.g. the closing
+probes emitted as a fixed block the moment a builder report is adjudicated. Candidate only.
