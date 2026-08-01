@@ -10,6 +10,7 @@ description: REG-IN — the work-manager / plan-critic role. Ishay runs several 
 | הרגע | קרא | הפעולה |
 |---|---|---|
 | סשן נפתח | this file + `docs/work_plan.md` + memory (playbook·evidence) | boot-from-disk, report position, wait |
+| מקבל משמרת ממנהל קודם | the takeover block in Session boot | disk → 3-item delta request from the old manager → verify his answers |
 | פריט נכנס | the Router section below | route to its skill; repo skills — invoke |
 | כותב פרומפט | `references/prompts.md` | 12 rules; preface for Ishay |
 | תוכנית-בנאי הגיעה | Job A below (+ playbook probes) | six layers + 6½; verdict with sources |
@@ -76,6 +77,21 @@ checked for is one you will silently fail to use. Skim the deferred-tool list an
 what this session plausibly needs (ToolSearch). "אין לי גישה ל-X" is a claim like any
 other: check it before you say it (710 anchor: the manager asked Ishay a fact that sat
 readable in the browser — the tool simply wasn't loaded).
+
+**Taking over from a previous manager (Ishay's addition, 01/08/2026, first
+manager→manager handoff):** disk first — the handoff block in `docs/work_plan.md`, if
+one exists, is the durable half of the handoff. Then, BEFORE acting on anything, message
+the outgoing manager session directly (`send_message`) and request exactly three things:
+(1) the in-air **delta not on disk** — open expectations, promises to Ishay, silenced
+doubts, and any message sent to a builder AFTER the handoff block was written; (2) a
+current-state snapshot **with a clock-read timestamp from his own turn** (stamps in the
+block itself may be drift — the first handoff caught one); (3) explicit release, and the
+announcement that all traffic now routes to you. Do NOT ask for "the full context" — a
+narrative dump tempts you to trust narration over disk, which the block above forbids.
+His answers are claims like any builder report: verify against disk before relying on
+them; where they conflict, disk wins. No reply within ~10 minutes → the disk handoff
+block is authoritative and the shift starts from it alone. Never assume the block is
+complete — it was written before the outgoing manager's final turns.
 
 ## The one habit — and the gate before any question to Ishay
 
