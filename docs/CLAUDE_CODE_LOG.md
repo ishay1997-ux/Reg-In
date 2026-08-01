@@ -47,6 +47,30 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 01/08/2026 — **manager-3 shift: the 8 E2E failures got names, and six adopted mechanisms were found dead** (docs only)
+- Took over from manager-2 (`e3243ab`). **No code, no test runs, no DB writes** — Ishay is near his
+  weekly quota cap, so the whole shift was read/measure/record.
+- **`d008092`** — the named list of the 8 pre-existing E2E failures, which lived only inside a live
+  builder session (the guide recorded the count, not the names). Two of them are not what the count
+  implied: `quote-email:54` is **not** caused by quote #6 (uses `CLEAN_QUOTE_ID=7`, zero `email_log`
+  rows; passes alone, fails when the file runs whole ⇒ intra-file state bleed, own diagnosis needed),
+  and `server-messages:145` hides a **second** failure (label changed in `9f28336`) that only surfaces
+  once the #6 fixture is repaired. Manager challenge, confirmed by the builder against his own runs.
+- **`b0393a0`** — miss-ledger entries 6+7. **7 is the load-bearing one:** six mechanisms adjudicated
+  ADOPT on 01/08 ~11:30 carried the execution slot "at fix-round close"; that round closed and
+  **zero of the six reached `prompts.md`** (verified by reading it and `concurrency.md` in full).
+  Root cause named: a **slot-conditioned decision has no owner** ⇒ now `work_plan.md` row 18.
+- ⚠️ **Two stale-source corrections by the manager, same shift.** Told Ishay twice "the 19/09 deadline
+  is far"; the operative one is module 3's **07/08 merge date** (`00_roadmap.md` §3) — a tier-4 guide
+  with no freshness stamp, contradicted by nobody and corroborated by nobody, whose 2-week allocation
+  was already exceeded (M3 work started 10/07; `origin/dev` last merged 22/07). **Whether 07/08 still
+  binds is Ishay's ruling, not a measurable fact.** Recorded because the velocity-check process that
+  exists to catch exactly this has never once run.
+- Process work with Ishay (his direction: reorganize, do **not** add rules) → draft at
+  `docs/work_manager_situations_draft.md` — 21 situations keyed by *the situation I am in*, each with
+  what-I-read / what-comes-out, tagged 🔁 routine vs 📖 rare. Trigger for shift close fixed by Ishay:
+  the words "סגור/סיום/סוף משמרת" — all three equivalent. **Nothing written to the skill this shift.**
+
 ### 01/08/2026 — **"עדכן ושלח" without changes no longer saves — and the brief's own wording was wrong** (feature, Ishay's ruling)
 - **The bug:** no change detection, so an empty update ran a full `update`; `moddatetime` bumped
   `updated_at`; **expiry derives from `updated_at`** ⇒ a quote with two days left silently went
