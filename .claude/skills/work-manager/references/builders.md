@@ -116,8 +116,7 @@ question creates closure-feel while nobody digs. **"מה עוד יש לך לבד
   no other.
 
 **8. The next round opens a FRESH session** — Ishay's ruling 01/08: *"בנאי ישן — לא רוצה שתיתן לו
-משימות."* **And do not wake a session you do not need right now** — every message wakes it and spends
-his quota. 🚫 **Closing sessions is his, not yours.**
+משימות."* **Never wake a session you do not need right now; closing them is his, not yours.** *(ledger 9)*
 
 ---
 

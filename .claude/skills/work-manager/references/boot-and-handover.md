@@ -20,9 +20,8 @@ manager failures happened at moments like these, all run from memory.)*
 6. **Both memory files:** `manager_evidence_regin` · `ishay_response_playbook`
 7. **`~/.claude/references/ishay-response-playbook.md`** — the full playbook
 
-*(The measurement was item 7 until 01/08 22:3X — i.e. the numbered order prescribed exactly what the
-rule below forbids, in a file marked READ-DO, where the numbering is what actually wins. Found by 710's
-manager reviewing this file; **it had already fired on them that same morning.**)*
+*(Measurement was item 7 until 01/08 — the numbered order prescribed exactly what the rule below
+forbids, in a READ-DO file where the numbering wins. Found by 710's manager.)*
 
 🔴 **Measure git yourself *before* you believe the document.** Reading a narrative before measuring
 means entering with a model, and the later measurement only **confirms** it. *(Both arenas confirmed
@@ -82,15 +81,10 @@ a report crossed to a dead shift on day one; and cross-project traffic landed on
 🔴 **The only mechanism that held in both arenas is that the recipient identifies himself and pushes
 back** — which is why broadcasting is worth more than any attempt to guess.
 
-🔴 **But "every LIVE session" is not measurable — so broadcast narrowly.** Measured 01/08 22:1X:
-`list_sessions` returns **no live/dead signal at all** — `isRunning:false` came back for three sessions
-that answered within two minutes, and `isArchived:false` for **all 25**, because nobody archives.
-**Every message wakes a session and spends Ishay's quota.** ⇒ **Message only who you need right now** —
-a builder you are about to dispatch can wait until you dispatch him.
-🚫 **And closing sessions is Ishay's, never yours.** *(Anchor 01/08: the manager read his "I can't
-remember to close five windows" as authorisation to archive, archived three, and an hour later could
-not reach the one Ishay then asked him to consult — `Session … is archived; unarchive it first`.
-His actual intent was one sentence long: **"שלא תעיר סשנים."**)*
+🔴 **"Every LIVE session" is not measurable.** Measured 01/08: `list_sessions` returns no live/dead
+signal — `isRunning:false` came back for three sessions that answered within two minutes. **Every
+message wakes a session and spends Ishay's quota** ⇒ **message only who you need right now.**
+🚫 **Closing sessions is Ishay's, never yours.** *(ledger 9)*
 
 ---
 
