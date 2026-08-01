@@ -178,7 +178,8 @@ playbook. The same hole was found in 710 the same day.)*
 התחל מ-docs/handoff_manager_N-1.md — הוא מכיל את רשימת-הקריאה המלאה שלך.
 עלה לפי סקיל work-manager. מדוד git בעצמך לפני שאתה מאמין למסמך.
 
-מיד אחרי העלייה: שדר את זהותך לכל סשן-בנאי ולכל מנהל-עמית חי,
+מיד אחרי העלייה: מדוד מי באמת עובד עכשיו — אין אות אמין לזה, ואם לא ברור תשאל אותי.
+שדר את זהותך רק למי שעובד. אל תעיר סשנים סתם, וסגירת סשנים היא שלי בלבד.
 ומחק את מסמך-המסירה ברגע שסיימת לקרוא אותו.
 ```
 **And if anything in the skill is incomplete at that moment — a fifth line saying so.** *(Anchor
