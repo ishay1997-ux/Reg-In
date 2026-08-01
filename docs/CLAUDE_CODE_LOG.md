@@ -114,6 +114,16 @@
 - Denominator caveat stated in both directions: REG-IN has **0 merges** vs 710's 11, so part of the 4-vs-10
   ledger gap is failure opportunities we never had, not superiority. Ishay-turn counts: **not measured**,
   not guessed.
+- **Anchor audit run on SKILL.md (710's method, with their warning honoured):** 17 sections · 14 carry a
+  dated anchor · the 3 without were opened manually and are all 3-line pointer sections (Job C ·
+  Concurrency · Writing prompts) whose anchors live in the referenced file ⇒ **zero unanchored rule
+  sections.** The automated pass said 3 gaps, manual inspection said 0 — reproducing their 5-of-8 result.
+- **The audit surfaced a worse one: a claim without its mechanism.** `SKILL.md:84` asserts builders are told
+  to doubt the manager's facts; `references/prompts.md` carried no such rule (searched in the source's
+  phrasings, not only mine). Only rule 4ב existed — a counted verification of ONE mine — and **both of
+  today's builder catches landed outside it.** Fixed as prompts rule 1ב (`7844b46`): every prompt states
+  explicitly that any fact in it may be challenged with a measurement. Third independent convergence with
+  710 in one day (identity broadcast · "the judge is whoever's work rests on the claim" · this).
 
 ### 01/08/2026 — **Ishay surfaced a real process gap: save and send were never connected** (finding, manager-verified)
 - His words: a new quote should open a summary/send screen after saving — same on edit. **Frozen spec agrees**
