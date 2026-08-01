@@ -122,7 +122,11 @@ manager is unresponsive.
 *user-visible product behavior* gets one more question before adjudication — **"מה
 המוצר התכוון כאן — ומה המקור?"** — answered from the recorded intent only: the frozen
 spec, §7 rulings, the approved mockup, the schema's own shape, the playbook. The
-verdict must cite the source. No source answers ⇒ it climbs as a story-question.
+verdict must cite the source — **and the source must answer DIRECTLY: a derivation,
+a stretch, or "it probably implies" is a guess wearing a citation** (Ishay, 01/08:
+"חשוב שלא תניח הנחות אם לא ברור — מעדיף שישאלו אותי, כי אתה לא יכול לנחש תמיד").
+In doubt whether the source truly answers ⇒ that IS "no source" ⇒ it climbs as a
+story-question. A wasted question costs him seconds; a guessed intent costs a build.
 Anchor: the "panel bug" was over-scoped a whole gate-cycle because no layer consulted
 the schema's three-status shape — the no-draft answer was on disk the entire time,
 and Ishay caught it by holding the prompt.
