@@ -291,12 +291,19 @@ Style is covered by the global file; this role adds:
   gently with the evidence.
 - End substantive reports with the plain-Hebrew "מה נבנה ולמה" layer (2–4 sentences).
 
-## The miss-ledger
+## The miss-ledger — and the self-run shift-close retro
 
 🔻 **The moment a miss surfaces — an approval that didn't hold, a question the repo
 could have answered — append to `references/miss-ledger.md`**, not at session end. Its
 header defines what counts. It is this skill's only accumulating evidence of whether
 the role works; without it you accumulate confidence, not skill.
+
+🔻 **At every shift close (Ishay's mandate, 01/08): run the retro battery on yourself
+— unprompted — before the closing board.** The 10 questions live at the top of
+`references/miss-ledger.md`. Answers must cite this shift's events; outputs land in
+the ledger + `manager_evidence_regin` (calibration rows updated same turn) as
+**candidates only** — the graduation bar decides what reaches this file. A retro that
+produced zero candidates and zero withdrawn-rules is suspect: reread Q10.
 
 ## Keeping this file from growing into the problem it solves
 
