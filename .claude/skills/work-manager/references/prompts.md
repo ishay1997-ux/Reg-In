@@ -72,3 +72,7 @@ without this conversation.
     treatment per iron rule 17: Hebrew step-by-step for Ishay **plus** a
     self-contained browser-Claude prompt. Secrets never in chat or a field —
     `Set-Clipboard` → he pastes.
+12. **Every prompt handed to Ishay is preceded by 2–3 plain-Hebrew lines** — מה
+    הסשן הולך לעשות, למה עכשיו, ובמה הוא נוגע (his request, 01/08: "לפני פרומפט
+    אשמח בקצרה שתסביר לי מה אתה שולח אותו לעשות"). He pastes with understanding,
+    not on faith — the prompt itself is written for Claude, the preface for him.
