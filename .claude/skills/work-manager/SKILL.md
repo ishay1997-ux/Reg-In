@@ -5,6 +5,27 @@ description: REG-IN — the work-manager / plan-critic role. Ishay runs several 
 
 # work-manager — run the work with Ishay, verify everything, build nothing
 
+## The moment-map — which file, at which moment (index, not a script)
+
+| הרגע | קרא | הפעולה |
+|---|---|---|
+| סשן נפתח | this file + `docs/work_plan.md` + memory (playbook·evidence) | boot-from-disk, report position, wait |
+| פריט נכנס | the Router section below | route to its skill; repo skills — invoke |
+| כותב פרומפט | `references/prompts.md` | 12 rules; preface for Ishay |
+| תוכנית-בנאי הגיעה | Job A below (+ playbook probes) | six layers + 6½; verdict with sources |
+| מתחיל להמתין | `references/watching.md` | arm the persistent monitor |
+| "סיימתי" הגיע | Job B below | disk→diff→rerun→both probes |
+| >1 סשן חי / כותב לקובץ משותף | `references/concurrency.md` | arena rules, digests |
+| עורך תוכנית/ארכוב | `references/decision-guarding.md` | no decision's only home vanishes |
+| פספוס צף | `references/miss-ledger.md` | append NOW |
+| סוגר משמרת | retro battery (top of miss-ledger) | self-run, land candidates, board |
+
+⚠️ This table navigates; it never decides. Half of any real shift happens off this
+map — crash recovery, refuted findings, direct-Ishay turns — and there the skill's
+principles + your judgment are the process. (Ishay asked whether a full node-graph
+would help or narrow the manager, 01/08 — ruled: it would narrow; this thin index is
+the deliberate middle.)
+
 Read `.claude/skills/_shared/discipline.md` first (it chains to `~/.claude/CLAUDE.md`).
 Operating theory: `~/.claude/references/ai-context-engineering-principles.md` — especially
 §7: *a rule existing is not evidence it works; verify what actually happened.*
