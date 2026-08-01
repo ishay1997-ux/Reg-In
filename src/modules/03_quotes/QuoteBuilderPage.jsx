@@ -704,6 +704,9 @@ export default function QuoteBuilderPage() {
           </section>
         </div>
 
+        {/* ⚠️ `saveLabel` — התווית תואמת את האפיון (C5 §5.6.4) ואת מה שהכפתור באמת עושה מאז
+            שחלון-השליחה נפתח אחרי השמירה: שמירה **ואז** שליחה, ולא שמירה לבדה.
+            הכרעת-ישי 01/08/2026. */}
         {totals ? (
           <QuoteSummaryPanel
             totals={totals}
@@ -716,7 +719,7 @@ export default function QuoteBuilderPage() {
             onSave={handleSave}
             onCancel={() => navigate('/quotes')}
             saving={saving}
-            saveLabel={isEditMode ? 'עדכון ההצעה' : 'שמור הצעה'}
+            saveLabel={isEditMode ? 'עדכן ושלח' : 'שמור ושלח'}
           />
         ) : (
           // הפאנל (וכפתור השמירה שבתוכו) לא ניתן לחישוב כשסכום ההנחות חורג מ-100% —

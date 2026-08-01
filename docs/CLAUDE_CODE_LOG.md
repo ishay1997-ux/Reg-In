@@ -47,6 +47,35 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 01/08/2026 — **"שמור ושלח": the connection the spec always had and the build never wired** (feature, manager-approved)
+- **Ishay surfaced it and was right about the shape:** the dialog was *already mounted* on the
+  builder page, just fed the live form (no status ⇒ `isQuoteSendable` false ⇒ no send button).
+  Save navigated straight to the list. A connection problem, not a missing feature.
+- **Three silent seams:** `createQuote`'s returned id was discarded · `getQuote` doesn't join
+  `customers` (no recipient ⇒ button born disabled) · `emailTemplate`/`canEdit` never passed.
+  None throws. Injected the customer from the page rather than widening `getQuote`, whose contract
+  is documented **and locked by a unit test**.
+- **Two `try` blocks now, and it is a requirement:** the old single `catch` says "שמירת ההצעה
+  נכשלה", so a document failure after a successful save would have claimed the save failed — and a
+  user who believes it saves again and gets a duplicate.
+- **Re-fetch needed in EDIT too:** `savedQuote` is load-time only, and the document's validity
+  window derives from `updated_at` — stale would print the previous version's expiry to a customer.
+- **E2E, with a mine the brief missed:** a real save test would add a quote row **every gate run**
+  to the live DB. Intercepted `create_quote` + the re-fetch ⇒ zero writes, plus an RPC counter so it
+  can't pass on nothing. Watched failing on the old behaviour. Caught a bug in my own assertion
+  (`toHaveAttribute('title','')` vs an *absent* attribute).
+- **Also landed (Ishay's rulings):** label → `שמור ושלח`/`עדכן ושלח`; and **"טרם נשלחה" brought to
+  `QuotesPage`** — from a finding I raised unprompted: `getSentQuoteIds` had a single call site, so
+  the indicator existed on the customer card but not where quotes are managed. One batched query,
+  identical vocabulary, `in_progress` only, three-state (failed log = "unknown", never "not sent").
+  All four branches verified live, incl. the positive one the real data cannot show (proven by
+  interception, not assumed).
+- **Regression measured, not assumed:** 384 unit · build green · full E2E has **8 pre-existing
+  failures from quote #6's accidental approval** — proven by stashing this work and re-running.
+  **Wider than the 3 previously measured.** A 9th varies per run, green in isolation (load-flake).
+- **Demo delta:** `quotes#22` — the live create-path check cannot be done without one real save.
+- Full narrative: `docs/micro_guides/module-3.md` §9 (01/08).
+
 ### 01/08/2026 — **Panel-lock guard: closing the hole I reported against my own item-2 work** (manager-approved)
 - **The gap:** reinstating `?? 0` in `repriceLine` (`QuoteLineEditor.jsx`) failed **no test** — the four
   item-2 unit tests cover `src/lib/quotes.js`, but that fourth site sits inside a component, unexported

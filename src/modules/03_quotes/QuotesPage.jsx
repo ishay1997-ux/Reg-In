@@ -41,6 +41,7 @@ import {
   approveQuote,
   getPricingCatalog,
   getQuoteScreenParams,
+  getSentQuoteIds,
   listQuotes,
   rejectQuote,
 } from '@/modules/03_quotes/api'
@@ -140,6 +141,11 @@ export default function QuotesPage() {
   const [expiringSoon, setExpiringSoon] = useState(false)
   const [eventSoon, setEventSoon] = useState(false)
 
+  // ⚠️ שלושה מצבים ולא שניים (LOCAL-16 + חוזה-שלושת-המצבים של `email.js`):
+  // `Set` = היומן נטען · `null` = **השאילתה נכשלה ⇒ "לא ידוע"**, ואז שני החיוויים נעלמים
+  // ובמקומם נאמר שאי-אפשר לדעת. ⛔ כשל-יומן לעולם אינו "טרם נשלחה" — זו הטענה ההפוכה,
+  // והיא הייתה שולחת את המשתמש לשלוח מייל שהלקוח אולי כבר קיבל.
+  const [sentIds, setSentIds] = useState(null)
   const [documentQuote, setDocumentQuote] = useState(null)
   const [approveTarget, setApproveTarget] = useState(null)
   const [rejectTarget, setRejectTarget] = useState(null)
@@ -157,6 +163,17 @@ export default function QuotesPage() {
         setQuotes(rows)
         setParams(Object.fromEntries(paramRows.map((p) => [p.param_name, p.param_value])))
         setProductsBySku(Object.fromEntries(catalog.products.map((p) => [p.sku, p])))
+
+        // יומן-השליחות נטען **אחרי** ההצעות כי הוא צריך את המזהים שלהן, ובשאילתה
+        // **אחת מרוכזת** — ‏LOCAL-16 אוסר במפורש `getLastSuccessfulSend` פר-שורה (N+1:
+        // 30 הצעות = 30 שאילתות). כשל בו **אינו מפיל את המסך** אבל גם אינו נבלע: הוא
+        // מחזיר את המצב ל-null ("לא ידוע"), בדיוק כמו בכרטיס-הלקוח.
+        try {
+          const ids = await getSentQuoteIds(rows.map((row) => row.quote_id))
+          if (!cancelled) setSentIds(ids)
+        } catch {
+          if (!cancelled) setSentIds(null)
+        }
         // תאריך-היום מהלוח **המקומי** ולא מ-toISOString (שהוא UTC): בין חצות ל-03:00
         // שעון ישראל ה-UTC עדיין באתמול, ו"פג בעוד N יום" היה מוצג ביום שלם בהפרש.
         const now = new Date()
@@ -326,6 +343,20 @@ export default function QuotesPage() {
           data-testid="quotes-missing-params"
         >
           {missingParamsMessage}
+        </p>
+      )}
+
+      {/* ⚠️ המצב השלישי: יומן-השליחות לא נטען. **שני** החיוויים בשורות נעלמים, וזה נאמר
+          במקומם — בלי זה היעלמותם נקראת כ"אין מידע כזה בכלל", והמשתמש מסיק בטעות שאף
+          הצעה לא נשלחה. הנוסח **זהה בית-בבית** לזה שבכרטיס-הלקוח (`customer-sent-history-error`),
+          כי זו אותה עובדה בדיוק — לא ניסוח חדש. */}
+      {sentIds === null && !loadError && (
+        <p
+          className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 mb-4"
+          role="alert"
+          data-testid="quotes-sent-history-error"
+        >
+          לא ניתן היה לבדוק אילו הצעות כבר נשלחו ללקוח — בדקו בחלון המסמך לפני שליחה.
         </p>
       )}
 
@@ -647,6 +678,28 @@ export default function QuotesPage() {
                         {quote.quote_status === 'rejected' && quote.rejection_reason && (
                           <div className="text-[11.5px] text-slate-500">
                             {quote.rejection_reason}
+                          </div>
+                        )}
+                        {/* חיווי "נשלחה / טרם נשלחה" (LOCAL-16, הכרעת-ישי 01/08/2026 להביאו
+                            גם לכאן). ⚠️ **רק על הצעה פתוחה** — על הצעה סגורה זו כבר לא פעולה
+                            שאפשר לעשות, ולכן זה היה רעש. הניסוח והצבעים **זהים בית-בבית**
+                            לכרטיס-הלקוח: מסך אחד = אוצר-מילים אחד.
+                            ⚠️ ‏`sentIds &&` בשני התנאים ולא `sentIds?.has(...)` בלבד — כשהיומן
+                            לא נטען (null) **שני** החיוויים נעלמים, ובמקומם הבאנר שמעל הטבלה. */}
+                        {sentIds && isOpen && !sentIds.has(quote.quote_id) && (
+                          <div
+                            className="text-[11.5px] text-amber-600"
+                            data-testid={`quote-unsent-${quote.quote_id}`}
+                          >
+                            טרם נשלחה ללקוח
+                          </div>
+                        )}
+                        {sentIds?.has(quote.quote_id) && (
+                          <div
+                            className="text-[11.5px] text-teal-700"
+                            data-testid={`quote-sent-${quote.quote_id}`}
+                          >
+                            נשלחה ללקוח
                           </div>
                         )}
                       </td>

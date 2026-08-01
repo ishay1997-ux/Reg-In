@@ -540,6 +540,53 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 01/08/2026 — **"שמור ושלח": the save⇄send connection that the spec always had and the build
+  never wired** (Ishay surfaced the gap; manager-approved plan).
+  **(1) What was actually wrong.** C5 §5.5.4/§5.6.4 specify **"שמור ושלח"**; the built screen
+  saved and navigated straight to the list. The dialog was *already mounted* on the builder page —
+  but fed `formToPreviewQuote` (the live form), which has no status, so `isQuoteSendable` was
+  false and no send button existed. **A connection problem, not a missing feature** — exactly as
+  Ishay guessed.
+  **(2) Three seams, each silent on its own.** `createQuote`'s return (the new `quote_id`) was
+  discarded · `getQuote` does **not** join `customers`, so the recipient would be missing and the
+  button born disabled · `emailTemplate`/`canEdit` were never passed by this page. **None throws** —
+  the button just sits grey. Chose to inject the customer from the page rather than widen
+  `getQuote`, whose contract is documented *and locked by a unit test*: matching an existing
+  pattern beats the change that merely "works".
+  **(3) The trap that would have shipped a duplicate-quote bug.** `handleSave`'s single `catch`
+  says "שמירת ההצעה נכשלה". Putting document code inside it means a render failure after a
+  **successful** save tells the user the save failed — and a user who believes it saves again.
+  Split into two blocks; everything after the first runs only if the save succeeded.
+  **(4) Re-fetch is required in EDIT too**, not only create: `savedQuote` is set at page load and
+  never refreshed, and the document's validity window derives from `updated_at` — so reusing it
+  would print the *previous* version's expiry on a customer-facing document.
+  **(5) E2E — and a mine the round's brief did not account for.** A save-path test that really
+  saves adds a quote row **on every gate run** to the live DB and breaks every count assertion
+  (the exact coupling that bit three times today). So `create_quote` and the re-fetch are
+  intercepted: the wiring is asserted with **zero writes**, plus an RPC-called counter so it
+  cannot "pass" because nothing happened. Watched failing on the old navigate-immediately code.
+  ⚠️ Caught a bug **in my own test**: asserted `toHaveAttribute('title','')` while the code writes
+  `title={disabledReason || undefined}` — the attribute is *absent*, not empty.
+  **(6) Demo-data delta:** `quotes#22` ("אימות שמור-ושלח", מדיטק/46, `in_progress`) — created by
+  the live create-path verification, which cannot be done without a real save. One row.
+  **(7) Label → `שמור ושלח` / `עדכן ושלח`** (Ishay, 01/08 ~14:12), matching C5 §5.6.4 and what the
+  button now actually does.
+  **(8) "טרם נשלחה" brought to `QuotesPage`** (Ishay's ruling, from a finding I raised unprompted):
+  `getSentQuoteIds` existed with a **single** call site, so the indicator lived on the customer card
+  and was absent from the screen where quotes are managed — plausibly the source of Ishay's sense
+  that unsent quotes pile up. One batched query (LOCAL-16 forbids per-row), identical wording and
+  colours to the customer card, `in_progress` only, and the **three-state** rule: a failed log query
+  is "unknown" (banner, both indicators hidden), never "not sent".
+  **All four branches verified live**, including the one the real data cannot show: normal (4 unsent),
+  log-fails (banner, zero indicators), **positive via interception** (#7 "נשלחה ללקוח", 3 unsent),
+  and closed-quote (zero). The positive branch is invisible on current data because the only
+  `email_log` row belongs to #6, which is no longer `in_progress` — so it was proven by interception
+  rather than assumed.
+  **(9) Regression, measured not assumed:** 384 unit green · `vite build` green · full E2E carries
+  **8 pre-existing failures, all from quote #6's accidental approval** — established by stashing this
+  work and re-running: the same 8 fail without it. That is **wider than the 3 previously measured**.
+  A 9th varies between runs (`auth:23` / `quote-email:179`), each green in isolation — the documented
+  load-flake, whose victim moves.
 - 01/08/2026 (fix-round item 2 ↳ **panel-lock guard, manager-approved**) — closes the hole I
   reported against my own work: reinstating `?? 0` in `repriceLine` (`QuoteLineEditor.jsx`) failed
   **no test at all**, because the four lib-level unit tests cover `src/lib/quotes.js` while that
