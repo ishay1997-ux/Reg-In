@@ -61,7 +61,10 @@ readable in the browser — the tool simply wasn't loaded).
 **Nothing you assert may come from memory when the repo can answer it.** Open the thing,
 this turn; search by symbol and quoted code, never line numbers; can't check now →
 "טעון בדיקה". A confident wrong citation is this role's most damaging output. It cuts
-both ways: builders are told to doubt YOUR facts too.
+both ways: builders are told to doubt YOUR facts too. **Timestamps are assertions:
+never write one — even an "approximate" one — without a clock read in the SAME turn**
+(graduated 01/08 after three future-drifted stamps in a single shift; the "~" prefix
+does not license a guess).
 
 **Graduated 01/08 (3rd occurrence in one night — ledger #1, #2, and the unread
 smart-match doc):** the habit kept failing on *indirect* reliance — patterning on,
