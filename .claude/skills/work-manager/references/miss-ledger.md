@@ -176,3 +176,65 @@ patch-factory failure this skill's own growth gate exists to prevent. Recorded h
 shift's dominant pattern so the next manager reads it at boot. **What would actually move
 it, if it recurs: a mechanism at the transition points, not more text** — e.g. the closing
 probes emitted as a fixed block the moment a builder report is adjudicated. Candidate only.
+
+## 6 · 01/08/2026 — booted and acted for ~40 minutes without opening the two memory files
+
+**What happened.** Manager-3 ran the whole takeover — challenged a builder's diagnosis, wrote
+to two repo docs, committed, issued three recommendations to Ishay — with `manager_evidence_regin`
+and `ishay_response_playbook` **unread**. The MEMORY.md index one-liners were treated as if they
+were the files. Same for four of the five `references/` files (`prompts.md`, `concurrency.md`,
+`watching.md`, `decision-guarding.md`): concurrency discipline was executed correctly *from the
+skill body's summary of it*, not from the reference. Also acted on a board position derived from
+`STATUS.md` while ~396 of its 752 lines were never read (the Read tool truncated and said so).
+**Not self-caught** — surfaced by 710's manager asking "what did you read, and what did you act
+on from memory?"
+
+**Why it was a miss.** This is the **fourth shape** of ledger #1's family: asserting (#1),
+patterning (#1), supporting-a-decision (#4), and now **booting**. The skill's own operational
+form — *"a citation you ship must carry where you read it; if you cannot name the location, you
+have not read it"* — was never applied to the boot procedure itself, because at boot nothing is
+being cited yet. The gap is structural: the boot section lists what to *measure* (git, mtimes,
+clock, tools) and names the memory files as "part of this skill", but has no read-receipt.
+
+**What it cost.** Nothing material — everything asserted happened to hold. The real cost is
+what it proves: the triple gate's second rung (memory files) cannot have been honestly run this
+shift, because the files were not open. A gate you pass without opening the door isn't a gate.
+⚠️ And it nearly cost more: the first check of the finding below was grepped in **Hebrew**
+against skill files that are written in **English** — the §7.86 pattern-trap exactly, caught
+only because the language rule surfaced before the "not found" was reported.
+
+**Rule change — none yet; candidate with a named shape.** 2nd occurrence graduates it:
+*the boot procedure ends with a one-line read-receipt naming every file actually opened* —
+memory files, references, and any file read partially (with the unread range stated). Cheap,
+falsifiable, and it converts "I know what's in them" into a claim someone can check.
+
+## 7 · 01/08/2026 — six adopted mechanisms died in the evidence file; their execution slot passed
+
+**What happened.** `manager_evidence_regin` records a batch of mechanisms adjudicated on
+01/08 ~11:30 as **ADOPT** — not proposals, decisions, each weighed against local evidence:
+item-IDs + state-in-file opening convention · heartbeat + explicit receipt-ack · per-claim
+verification status in builder reports (`אומת-על-ידי` vs `דווח-לי`) · the builder's standing
+pull-question to the manager ("על אילו מוקשים לא חשבתי?") **and the manager's duty to answer
+it explicitly** · the prompt-closing comprehension check · the gap-protocol (never silent-fill
+an under-specified spot). Their stated execution slot: **"at fix-round close"**, targeting
+`prompts.md` + one SKILL.md line + the work_plan header. The fix round closed on 01/08.
+Measured by manager-3 at 16:1X by reading `prompts.md` (92 lines) and `concurrency.md` (65)
+in full: **zero of the six are present.** Rule 9א covers the builder's own blind-spot section —
+a different item (Ishay's 01/08 request) — and is not the pull-question aimed at the manager.
+
+**Why it is a miss.** Job C exists for exactly this: *no decision's only home may vanish.* A
+decision parked in an evidence file behind a slot-condition has one home and no owner once the
+slot passes silently. The handoff block carried no mention of it, so it would have died at the
+shift boundary. And the shape is precisely what 710's manager independently named hours
+earlier — *"prose accumulates in the skill while the working artifact lags"* — with the audit
+they proposed ("and what exactly does the builder read?") firing on its first accidental run.
+
+**What it cost.** Nothing yet — nothing was dispatched between adoption and now, so no builder
+worked without them. Caught before the first prompt of this shift, which is the only reason
+it's cheap.
+
+**Rule change — none written now** (the once-per-shift edit gate holds; this is collection).
+**Re-slotted to manager-3's shift close**, where the six get one edit pass into `prompts.md`
+together with the four entry questions. Candidate rule, 1 occurrence: **a slot-conditioned
+decision ("execute at X") is not durable — it needs a row in `work_plan.md`, which has an owner
+and a refresh trigger, not only a line in the evidence file.** Graduates on recurrence.
