@@ -49,7 +49,11 @@ without this conversation.
    once — that is the replacement mandate; a builder asking Ishay re-opens answered
    ground and costs trust, proven 710 1.8) · **no reply from you within a
    reasonable time → the builder stops and asks Ishay directly** (the one exception
-   to the routing rule).
+   to the routing rule) · **Ishay spoke to the builder directly? Legitimate and
+   binding — but the builder's next message to you MUST open with "ישי אמר לי X"**
+   (day-mode loop-closure, Ishay 01/08: he is a second channel by right; the
+   manager's picture must not desync silently — the burden is the builder's,
+   never his).
 9. **A time estimate** — it feeds the ~120% silence threshold
    (references/watching.md).
 9א. **Demand the blind-spot section in their plan** (Ishay, 01/08: "בפרומפט במיוחד

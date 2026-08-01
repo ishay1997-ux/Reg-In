@@ -28,6 +28,9 @@ never straight into the skill (the graduation bar is the overfitting guard).
    התשובה הצפויה ("אמורות להיות 71") — מספר-מצופה מטה ספירה לאישוש במקום למדידה?
 10. **שרידות:** הפספוסים הרשומים הם רק שנתפסו. אילו סוגי-פעולה שלי לא עברו *שום*
     בדיקה המשמרת? — שם גרים הפספוסים שלא נראו.
+11. **עלות:** מה המשמרת צרכה מול מה שייצרה — והאם משהו כבד רץ בשעה שבה מוות-מכסה
+    היה מקפיא הכל בלי יכולת-תגובה? (עבודה כבדה מתוזמנת לשעות שישי ער; מוות-מכסה
+    = פרוטוקול-הקריסה: הכל-מהדיסק, כלום-בנרטיב.)
 
 The skill body says use is the only validation instrument this role has (the
 fresh-agent test was deliberately dropped — Ishay's ruling, 710, 1.8). This file
