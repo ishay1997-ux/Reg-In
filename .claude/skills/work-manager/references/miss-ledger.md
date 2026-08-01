@@ -48,3 +48,26 @@ caught before any future session inherited the weaker ledger format.
 files you *pattern yourself on*, not only files you assert about. Second shape of the
 same habit — if a third shape appears (asserting, modeling, …), the habit needs an
 operational form like the triple gate got.
+
+## 2 · 01/08/2026 — ran a §7 rulings batch without the skill's stale-detection; re-asked settled ground
+
+**What happened.** The first M4 rulings batch asked Ishay about geocode-NULL policy
+(already ruled 29/07, §7.15 round-2(5)) and recommended choosing Nominatim *now* —
+against his recorded 29/07 ruling "נבחר בבנייה, לא מהזיכרון". Caught only at
+write-back time, when §7.15's full text was finally read. He answered "סבבה" — trust,
+not verification — so nothing protected the batch except my own prep, which skipped
+`section7-rulings`'s mandated stale-detection pass and read only the three target
+items, not the items that *reference* them.
+
+**Why it was a miss.** The skill for exactly this exists and prescribes stale-detection
+first; I hand-rolled the prep instead of routing through it — a violation of my own
+router section, same night it was written.
+
+**What it cost.** Minutes of Ishay's 5am attention; benign only by luck — both answers
+happened to align with the earlier rulings. Reconciled honestly in the write-back
+(Nominatim = default-candidate, not final; the choose-at-build ruling stands).
+
+**Rule change — no new rule; a compliance note.** `section7-rulings` already mandates
+it. The sharpening: stale-detection must grep which OTHER §7 items *cite* the target
+numbers — the settled answer lived in a different item (§7.15) than the one being
+closed (§7.55).
