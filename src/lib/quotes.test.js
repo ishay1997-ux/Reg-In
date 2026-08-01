@@ -9,6 +9,7 @@ import {
   linesToPricingShape,
   sumHostessQty,
   computeLinesCost,
+  hasQuoteChanged,
   linesMissingCost,
   deriveProfitability,
   buildQuoteHeader,
@@ -1228,5 +1229,100 @@ describe('quoteServerErrorMessage — שישה מסלולי-כשל, שש הוד�
     expect(quoteServerErrorMessage({ code: 'RLS_DENIED' })).toBeNull()
     expect(quoteServerErrorMessage(null)).toBeNull()
     expect(quoteServerErrorMessage({ code: '23505', message: '' })).toBeNull()
+  })
+})
+
+// ── hasQuoteChanged (הכרעת-ישי 01/08/2026) ──────────────────────────────────
+// 🔴 **הבדיקות האלה קיימות בשביל כיוון אחד.** טעות ל"כן השתנה" = שמירה מיותרת (מה שקורה
+// היום ממילא). טעות ל"לא השתנה" = **בליעת עבודה של המשתמש**. לכן רוב הבדיקות כאן מוכיחות
+// שהפונקציה אומרת "השתנה" — כולל במקרים שבהם *אפשר היה* לטעון שלא.
+describe('hasQuoteChanged — עדכון בלי שינוי', () => {
+  const FORM = {
+    customerId: 46,
+    eventName: 'כנס',
+    eventDate: '2026-12-01',
+    location: 'אולם',
+    startTime: '10:00',
+    endTime: '14:00',
+    guests: 100,
+    ratio: 50,
+    hostessCount: 2,
+    appliedDiscount: 5,
+    manualDiscount: 10,
+    notes: 'הערה',
+  }
+  const LINES = [{ sku: '04ST', qty: 2, unitPrice: 500, color: '', notes: '' }]
+  const clone = (o) => JSON.parse(JSON.stringify(o))
+
+  it('אין שינוי ⇒ false', () => {
+    expect(hasQuoteChanged(clone(FORM), clone(LINES), FORM, LINES)).toBe(false)
+  })
+
+  // ⚠️ הלב: אותם ערכים בייצוגים שונים **אינם** שינוי. בלי הנרמול הזה כל פתיחת-טופס
+  // הייתה נראית כעריכה, והחלון לא היה מופיע לעולם — כלומר הפיצ'ר מת בשקט.
+  it('אותם ערכים בטיפוס/ייצוג שונה ⇒ false', () => {
+    const asStrings = {
+      ...FORM,
+      guests: '100',
+      ratio: '50',
+      hostessCount: '2',
+      appliedDiscount: '5',
+      manualDiscount: '10',
+      startTime: '10:00:00', // כפי שמגיע מה-DB
+      endTime: '14:00:00',
+      eventName: '  כנס  ', // רווחים מיותרים
+    }
+    const linesAsStrings = [{ sku: '04ST', qty: '2', unitPrice: '500', color: null, notes: null }]
+    expect(hasQuoteChanged(asStrings, linesAsStrings, FORM, LINES)).toBe(false)
+  })
+
+  it.each([
+    ['שם אירוע', { eventName: 'כנס אחר' }],
+    ['תאריך', { eventDate: '2026-12-02' }],
+    ['מיקום', { location: 'אולם אחר' }],
+    ['שעת התחלה', { startTime: '11:00' }],
+    ['אורחים', { guests: 101 }],
+    ['יחס', { ratio: 40 }],
+    ['כמות דיילות', { hostessCount: 3 }],
+    ['הנחה ידנית', { manualDiscount: 11 }],
+    ['הערות', { notes: 'אחרת' }],
+    ['לקוח', { customerId: 47 }],
+  ])('שינוי ב%s ⇒ true', (_label, patch) => {
+    expect(hasQuoteChanged({ ...FORM, ...patch }, clone(LINES), FORM, LINES)).toBe(true)
+  })
+
+  it.each([
+    ['מק"ט', [{ ...LINES[0], sku: '06ST' }]],
+    ['כמות', [{ ...LINES[0], qty: 3 }]],
+    ['מחיר', [{ ...LINES[0], unitPrice: 600 }]],
+    ['צבע', [{ ...LINES[0], color: 'לבן' }]],
+    ['הערת שורה', [{ ...LINES[0], notes: 'משהו' }]],
+    ['שורה נוספה', [LINES[0], { sku: '06ST', qty: 1, unitPrice: 800, color: '', notes: '' }]],
+    ['שורה נמחקה', []],
+  ])('שינוי בשורות — %s ⇒ true', (_label, nextLines) => {
+    expect(hasQuoteChanged(clone(FORM), nextLines, FORM, LINES)).toBe(true)
+  })
+
+  // שדות נגזרים-מהקטלוג אינם עריכה של המשתמש: שינוי-מחירון בין טעינות היה נספר כעריכה.
+  it('שדות נגזרים (itemName/category/unitCost/key) אינם נחשבים שינוי', () => {
+    const derived = [
+      { ...LINES[0], key: 'other', itemName: 'שם אחר', category: 'product', unitCost: 999 },
+    ]
+    expect(hasQuoteChanged(clone(FORM), derived, FORM, LINES)).toBe(false)
+  })
+
+  // 🔴 ההטיה. כל אחד מאלה *יכול* היה להיחשב "לא השתנה" — ובכוונה אינו.
+  it.each([
+    ['צילום-מצב חסר', () => hasQuoteChanged(FORM, LINES, null, LINES)],
+    ['טופס חסר', () => hasQuoteChanged(null, LINES, FORM, LINES)],
+    ['שורות שאינן מערך', () => hasQuoteChanged(FORM, null, FORM, LINES)],
+    [
+      'מספר שאינו ניתן לפרסור',
+      () => hasQuoteChanged({ ...FORM, guests: 'הרבה' }, LINES, FORM, LINES),
+    ],
+    ['כמות פסולה בשורה', () => hasQuoteChanged(FORM, [{ ...LINES[0], qty: 'שתיים' }], FORM, LINES)],
+    ['שדה שרוקן', () => hasQuoteChanged({ ...FORM, manualDiscount: '' }, LINES, FORM, LINES)],
+  ])('בספק — %s ⇒ true (לעולם לא בולעים עריכה)', (_label, run) => {
+    expect(run()).toBe(true)
   })
 })

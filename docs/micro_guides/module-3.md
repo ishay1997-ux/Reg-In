@@ -540,6 +540,38 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 01/08/2026 — **"עדכן ושלח" without changes no longer saves — and the brief's own wording had
+  to be corrected first** (Ishay's ruling; manager ruled (א) after market check).
+  **(1) The bug:** `handleSave` had no change detection, so an empty update ran a full `update`,
+  `moddatetime` bumped `updated_at`, and **expiry derives from `updated_at`** — a quote with two
+  days left silently returned to 30. Lines were also deleted-and-rewritten and costs re-frozen.
+  **(2) 🔴 A contradiction in the brief, raised before writing code.** It asked for a confirm
+  saying *"sending resets the validity"* — but with the save skipped, **nothing resets it**:
+  expiry comes from `updated_at`, and the send path never writes to `quotes` (verified:
+  `grep "from('quotes')"` on the dialog and `lib/email.js` ⇒ zero). The requested sentence would
+  have been **false information the user decides on**. Manager ruled (א) — validity is preserved —
+  citing the code's own rationale beside `deriveQuoteExpiry` (*"עריכה = מחיר חדש = 30 יום חדשים"*:
+  the clock renews because of the **price**, not the send) plus a market check where validity is a
+  stored field and extending it is always an explicit action.
+  **(3) The asymmetry is the whole design.** Erring toward "changed" costs a redundant save — what
+  already happened daily. Erring toward "unchanged" **swallows the user's work.** So every doubt
+  resolves to "changed": unparseable value, unexpected shape, missing snapshot, any throw. Locked
+  by 6 dedicated tests, each asserting `true` on a case that could plausibly have been read as
+  "unchanged".
+  **(4) Compare form-to-loaded-snapshot, not form-to-DB-row** — both sides pass through the same
+  `quoteToFormState`, so no conversion asymmetry (`'10:00:00'` vs `'10:00'`, `null` vs `''`).
+  Derived fields (`itemName`/`category`/`unitCost`/`key`) are excluded: including them would count
+  a **price-list change between two page loads** as a user edit. `unitPrice` is included — it is
+  what gets stored as `closing_unit_price`.
+  **(5) Verified live in both directions, and the claim checked in the DB:** no-change ⇒ the exact
+  approved sentence, **0 write requests**, dialog opens with send enabled; with a change ⇒ no
+  confirm, **1 write**, normal flow. Then read `quotes#7.updated_at` back — still `11:13:14Z` from
+  an *earlier* run, i.e. this round wrote nothing. E2E guard added with a positive control (without
+  it, code that *never* saves would pass), **watched failing** with the branch disabled.
+  **(6) Manager rulings recorded:** the `hostessCount` auto-overwrite stays un-neutralised (noise in
+  the safe direction, documented beside the function); the two sequential confirms stay two, not
+  merged — they answer different questions, and merging would hide one.
+  **410 unit** (was 384) · `vite build` green · `quotes.spec.js` 18/18 · zero DB writes.
 - 01/08/2026 — **"שמור ושלח": the save⇄send connection that the spec always had and the build
   never wired** (Ishay surfaced the gap; manager-approved plan).
   **(1) What was actually wrong.** C5 §5.5.4/§5.6.4 specify **"שמור ושלח"**; the built screen

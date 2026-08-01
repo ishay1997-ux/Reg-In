@@ -29,7 +29,9 @@ import {
   computeLinesCost,
   crossesMidnight,
   deriveProfitability,
+  hasQuoteChanged,
   linesMissingCost,
+  NO_CHANGES_SEND_CONFIRM,
   formToPreviewQuote,
   linesToPricingShape,
   quoteToFormState,
@@ -136,6 +138,9 @@ export default function QuoteBuilderPage() {
   // ‏`sendQuote` הוא ההיפך: השורה **השמורה**, שממנה כן שולחים. שימוש באותו state לשניהם
   // היה הופך את התצוגה-המקדימה לניתנת-לשליחה — היפוך גמור של אותה הכרעה, בלי שום שגיאה.
   const [sendQuote, setSendQuote] = useState(null)
+  // צילום-מצב-הטעינה, לזיהוי "עדכן ושלח בלי שינוי" (הכרעת-ישי 01/08/2026). `null` במצב-יצירה
+  // ובכל טעינה שלא הושלמה — ואז `hasQuoteChanged` מחזירה "השתנה", כלומר הזרימה הרגילה.
+  const [initialSnapshot, setInitialSnapshot] = useState(null)
   const [screenParams, setScreenParams] = useState({})
   const [documentOpen, setDocumentOpen] = useState(false)
 
@@ -177,6 +182,9 @@ export default function QuoteBuilderPage() {
             const state = quoteToFormState(quote, productsBySku, defaultRatio)
             setForm(state.form)
             setLines(state.lines)
+            // צילום-המצב שנגדו נמדד "האם המשתמש שינה משהו". נשמר **מאותו מקור** של הטופס
+            // (`quoteToFormState`) ולא משורת-ה-DB, כדי שלא תהיה אסימטריית-המרה בהשוואה.
+            setInitialSnapshot({ form: state.form, lines: state.lines })
           }
         } else {
           // ↳ 30/07/2026: הגעה מ"+ הצעה חדשה" בעמוד-הלקוח מביאה `?customerId=` בכתובת,
@@ -296,6 +304,24 @@ export default function QuoteBuilderPage() {
     const found = validateQuoteForm(form, lines, freshToday)
     if (Object.keys(found).length > 0) {
       toast.error('יש שדות שדורשים תיקון לפני השמירה.')
+      return
+    }
+
+    // ── "עדכן ושלח" בלי שינוי (הכרעת-ישי 01/08/2026) ─────────────────────────
+    // עדכון-ריק הריץ `update` מלא, וטריגר `moddatetime` הקפיץ את `updated_at` — שממנו
+    // נגזרת התפוגה. כלומר הצעה שנותרו לה יומיים חזרה בשקט ל-30 יום, בלי ששום דבר בה השתנה.
+    // ⚠️ **הוולידציה למעלה רצה קודם גם במסלול הזה, במכוון:** הצעה שנטענה תקינה יכולה
+    // להיות פסולה עכשיו (תאריך-האירוע חלף בינתיים), ואסור לשלוח אותה בלי להבחין.
+    // ⚠️ ‏`hasQuoteChanged` מוטה ל"השתנה" בכל ספק — כולל `initialSnapshot === null` —
+    // ולכן המסלול הזה נבחר **רק** כשידוע בוודאות ששום דבר לא זז.
+    if (
+      isEditMode &&
+      !hasQuoteChanged(form, lines, initialSnapshot?.form, initialSnapshot?.lines)
+    ) {
+      if (!window.confirm(NO_CHANGES_SEND_CONFIRM)) return
+      // בלי `saveQuoteEdit` — וזו כל הנקודה: אין כתיבה, ולכן `updated_at` והתפוגה נשמרים.
+      // השורה השמורה כבר בידינו מהטעינה, ומכיוון שלא השתנה דבר היא עדיין מייצגת את המסד.
+      setSendQuote({ ...savedQuote, customers: selectedCustomer })
       return
     }
 

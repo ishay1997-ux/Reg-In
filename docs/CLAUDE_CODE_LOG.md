@@ -47,6 +47,28 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 01/08/2026 — **"עדכן ושלח" without changes no longer saves — and the brief's own wording was wrong** (feature, Ishay's ruling)
+- **The bug:** no change detection, so an empty update ran a full `update`; `moddatetime` bumped
+  `updated_at`; **expiry derives from `updated_at`** ⇒ a quote with two days left silently went
+  back to 30.
+- **🔴 Contradiction raised before code:** the brief wanted a confirm saying *"sending resets the
+  validity"* — but with the save skipped nothing resets it (the send path never writes to
+  `quotes`; verified by grep). The requested sentence would have been **false information the
+  user decides on.** Manager ruled (א) — validity preserved — citing the code's own rationale
+  (*the clock renews because of the price, not the send*) and a market check.
+- **The asymmetry is the design:** erring "changed" = a redundant save; erring "unchanged" =
+  **swallowing the user's work**. Every doubt resolves to "changed" (unparseable value, unexpected
+  shape, missing snapshot, any throw), locked by 6 tests that each assert `true` on a case that
+  could plausibly have read as "unchanged".
+- **Compares form to the loaded snapshot, not to the DB row** — same `quoteToFormState` on both
+  sides, so no conversion asymmetry. Catalog-derived fields excluded, or a **price-list change
+  between two page loads** would count as a user edit.
+- **Verified live both ways and checked in the DB:** no-change ⇒ exact sentence, **0 writes**,
+  dialog opens; with a change ⇒ no confirm, 1 write. `quotes#7.updated_at` read back unchanged.
+  E2E guard has a positive control and was **watched failing** with the branch disabled.
+- 410 unit · build green · `quotes.spec.js` 18/18 · zero DB writes.
+- Full narrative: `docs/micro_guides/module-3.md` §9 (01/08).
+
 ### 01/08/2026 — **"שמור ושלח": the connection the spec always had and the build never wired** (feature, manager-approved)
 - **Ishay surfaced it and was right about the shape:** the dialog was *already mounted* on the
   builder page, just fed the live form (no status ⇒ `isQuoteSendable` false ⇒ no send button).

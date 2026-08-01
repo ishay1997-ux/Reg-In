@@ -123,6 +123,84 @@ export function deriveProfitability(preVat, cost) {
   }
 }
 
+// ── השוואת-שינוי ל"עדכן ושלח" (הכרעת-ישי 01/08/2026) ────────────────────────
+// **הבעיה:** ל-`handleSave` לא הייתה בדיקת-שינוי, ולכן לחיצה על "עדכן ושלח" בלי לגעת בכלום
+// הריצה `update` מלא — וטריגר `moddatetime` הקפיץ את `updated_at`. **והתפוגה נגזרת מ-
+// `updated_at`** ⇒ הצעה שנותרו לה יומיים חזרה בשקט ל-30 יום. (הרציונל המקורי, `quotes.js`
+// למטה: "עריכה = מחיר חדש = 30 יום חדשים" — כלומר השעון מתחדש בגלל **המחיר**. לא נגעת
+// במחיר ⇒ אין עילה לשעון חדש.)
+//
+// 🔴 **כיוון-הטעות אינו סימטרי, וזה מה שמכתיב את כל המימוש כאן.** טעות לכיוון "כן השתנה"
+// עולה שמירה מיותרת — בדיוק מה שקורה היום ממילא. טעות לכיוון "לא השתנה" **בולעת עבודה
+// אמיתית של המשתמש.** לכן: **כל ספק ⇒ "השתנה"** — ערך שלא ניתן לפרסר, מבנה לא-צפוי,
+// צילום-מצב חסר, או חריגה כלשהי. אין ולו מסלול-ספק אחד שמוביל ל"לא השתנה".
+//
+// ⚠️ משווים **טופס מול צילום-הטופס שנטען**, ולא טופס מול שורת-DB: שני הצדדים עוברים דרך
+// אותה `quoteToFormState`, ולכן אין אסימטריית-המרה. השוואה מול ה-DB הייתה מחזירה בדיוק את
+// הפערים ('10:00:00' מול '10:00', null מול '') שהנרמול כאן קיים כדי לנטרל.
+
+// זורקת על ערך שאינו מספר תקין — הקורא תופס והופך ל"השתנה". ריק נשאר '' ולא 0, כדי
+// ששדה שרוקן ייחשב שינוי (הכיוון הבטוח) ולא ישווה בטעות ל-0 השמור.
+function numOrEmpty(value) {
+  if (value === '' || value === null || value === undefined) return ''
+  const n = Number(value)
+  if (!Number.isFinite(n)) throw new Error('unparseable number')
+  return n
+}
+
+// ⚠️ **מה מוחרג במכוון:** `key` (מזהה-רינדור בלבד) · `itemName`/`category`/`unitCost` —
+// נגזרים מהקטלוג ולא נערכים ע"י המשתמש; אילו נכללו, שינוי-מחירון בין שתי טעינות היה
+// נספר כ"המשתמש ערך". ‏`unitPrice` **כן** נכלל — הוא מה שנשמר כ-`closing_unit_price`.
+function normalizeQuoteForCompare(form, lines) {
+  return JSON.stringify({
+    customerId: form.customerId ?? null,
+    eventName: String(form.eventName ?? '').trim(),
+    eventDate: String(form.eventDate ?? '').trim(),
+    location: String(form.location ?? '').trim(),
+    // '10:00:00' מה-DB מול '10:00' מהטופס — אותו רגע, ייצוג אחר.
+    startTime: String(form.startTime ?? '').slice(0, 5),
+    endTime: String(form.endTime ?? '').slice(0, 5),
+    guests: numOrEmpty(form.guests),
+    ratio: numOrEmpty(form.ratio),
+    hostessCount: numOrEmpty(form.hostessCount),
+    appliedDiscount: numOrEmpty(form.appliedDiscount),
+    manualDiscount: numOrEmpty(form.manualDiscount),
+    notes: String(form.notes ?? '').trim(),
+    // סדר-השורות משמעותי: אין ממשק לשינוי-סדר, ולכן סדר שונה = הוספה/מחיקה = שינוי.
+    lines: lines.map((line) => [
+      String(line.sku ?? ''),
+      numOrEmpty(line.qty),
+      numOrEmpty(line.unitPrice),
+      String(line.color ?? ''),
+      String(line.notes ?? '').trim(),
+    ]),
+  })
+}
+
+// ⚠️ **מקור-רעש ידוע ומקובל:** `hostessCount` נדרס אוטומטית מ-`recommendHostessCount` בכל
+// שינוי אורחים/יחס. אם פרמטר `יחס_אורחים_לדיילת` השתנה מאז השמירה, הטופס עלול להיפתח עם
+// ערך שונה מהשמור ⇒ "השתנה" בלי שהמשתמש נגע. התוצאה היא **שמירה מיותרת בלבד** — הכיוון
+// הבטוח — ולכן לא מנוטרל במכוון (הכרעת-מנהל 01/08/2026).
+// ⚠️ הנוסח אומר **שני** דברים, ושניהם נדרשים כדי שההחלטה תהיה מיודעת: שלא בוצע שינוי,
+// ו**שהתוקף לא יתאפס**. הכרעת-ישי 01/08/2026 (אחרי שהועלה שהניסוח ההפוך — "השליחה מאפסת
+// את התוקף" — היה נעשה **שקרי** ברגע שמדלגים על השמירה: התוקף נגזר מ-`updated_at`,
+// והשליחה אינה כותבת ל-`quotes` כלל).
+export const NO_CHANGES_SEND_CONFIRM =
+  'לא בוצע שינוי בהצעה. היא תישלח שוב כפי שהיא, והתוקף לא יתאפס. להמשיך לשליחה?'
+
+export function hasQuoteChanged(form, lines, initialForm, initialLines) {
+  if (!form || !initialForm) return true
+  if (!Array.isArray(lines) || !Array.isArray(initialLines)) return true
+  try {
+    return (
+      normalizeQuoteForCompare(form, lines) !== normalizeQuoteForCompare(initialForm, initialLines)
+    )
+  } catch {
+    // ערך שלא ניתן לנרמל — לא מנחשים. "השתנה" עולה שמירה, "לא השתנה" עולה עבודה.
+    return true
+  }
+}
+
 // ── מפתחות ה-jsonb ל-RPC — SSOT יחיד ──────────────────────────────────────────
 // ⚠️ ה-RPC קורא את ה-header/lines עם ->>'key'. מפתח שהוקלד לא-נכון **אינו נכשל**: הוא
 // הופך ל-NULL בשרת, ולעמודות עם coalesce(...,0) — כמו manual_discount — הוא הופך בשקט

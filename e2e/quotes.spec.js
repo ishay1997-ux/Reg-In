@@ -599,6 +599,76 @@ test.describe('שמירה פותחת את חלון-השליחה (C5 §5.5.4 "ש�
   })
 })
 
+test.describe('"עדכן ושלח" בלי שינוי — לא שומרים, והתוקף לא מתאפס (הכרעת-ישי 01/08)', () => {
+  test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
+
+  // ⚠️ **מה זה מגן עליו:** עדכון-ריק הריץ `update` מלא, וטריגר `moddatetime` הקפיץ את
+  // `updated_at` — שממנו נגזרת התפוגה. כלומר הצעה שנותרו לה יומיים חזרה בשקט ל-30 יום.
+  // ⚠️ **אפס כתיבות אמיתיות:** ה-RPC של העריכה מיורט. הבדיקה מודדת **האם הבקשה נשלחה**,
+  // ולא משנה את המסד — כי `quotes#7` היא שורת-זרע אמיתית.
+  const EDITABLE_QUOTE_ID = 7
+
+  function countEditRpc(page) {
+    const calls = []
+    page.on('request', (req) => {
+      if (req.url().includes('/rest/v1/rpc/replace_quote_lines')) calls.push(req.url())
+    })
+    return calls
+  }
+
+  async function openEdit(page, { blockWrites = true } = {}) {
+    await page.route('**/functions/v1/send-email', (route) => route.abort())
+    if (blockWrites) {
+      await page.route('**/rest/v1/rpc/replace_quote_lines', (route) =>
+        route.fulfill({ status: 200, contentType: 'application/json', body: 'null' }),
+      )
+    }
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await page.goto(`/quotes/${EDITABLE_QUOTE_ID}/edit`)
+    await expect(page.getByTestId('quote-summary')).toBeVisible({ timeout: 30_000 })
+  }
+
+  test('בלי שינוי ⇒ אישור שאומר שהתוקף לא יתאפס, אפס כתיבות, וחלון-שליחה נפתח', async ({
+    page,
+  }) => {
+    const edits = countEditRpc(page)
+    let confirmText = null
+    page.on('dialog', async (d) => {
+      confirmText = d.message()
+      await d.accept()
+    })
+
+    await openEdit(page)
+    await page.getByTestId('quote-save').click()
+
+    await expect(page.getByTestId('quote-document-title')).toBeVisible({ timeout: 30_000 })
+    // 🔒 חוזה-נוסח: שני הדברים שההודעה **חייבת** לומר כדי שההחלטה תהיה מיודעת.
+    expect(confirmText).toContain('לא בוצע שינוי')
+    expect(confirmText).toContain('התוקף לא יתאפס')
+    // 🎯 הטענה האמיתית — לא "נראתה הודעה" אלא **שהמסד לא נגע**.
+    expect(edits).toHaveLength(0)
+    await expect(page.getByTestId('quote-document-send')).toBeEnabled()
+  })
+
+  // בקרת-חיוב: בלי הכיוון הזה, קוד ש**לעולם** אינו שומר היה עובר את הבדיקה שמעל בירוק.
+  test('בקרת-חיוב — עם שינוי אמיתי הזרימה הרגילה נשמרת (כן נכתב, בלי אישור)', async ({ page }) => {
+    const edits = countEditRpc(page)
+    let dialogOpened = false
+    page.on('dialog', async (d) => {
+      dialogOpened = true
+      await d.accept()
+    })
+
+    await openEdit(page)
+    await page.getByTestId('quote-location').fill('מיקום ששונה לבדיקה')
+    await page.getByTestId('quote-save').click()
+
+    await expect(page.getByTestId('quote-document-title')).toBeVisible({ timeout: 30_000 })
+    expect(edits).toHaveLength(1)
+    expect(dialogOpened).toBe(false)
+  })
+})
+
 test.describe('עלות-רכש לא-ידועה — מקפים, לא רווחיות 100% (סבב-התיקון פריט 2, 01/08)', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
 
