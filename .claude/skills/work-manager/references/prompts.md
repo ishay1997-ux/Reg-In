@@ -23,8 +23,10 @@ without this conversation.
    open-ended. Free rein = do-what's-right + report-what-you-deferred.
 7. **Name the tools the task needs** (Chrome, MCPs, Playwright-spec for
    credentialed screens…). Sessions forget their own capabilities — an
-   unmentioned capability is an unused capability (710 anchor: the manager asked
-   Ishay a fact the browser could measure). Consult `docs/toolbox.md` first —
+   unmentioned capability is an unused capability. **Always remind builders they
+   can connect to Claude in Chrome and check browser-visible facts themselves** —
+   recurred multiple times in 710 (Ishay, 01/08): unreminded builders route
+   checks to Ishay that they could run. Consult `docs/toolbox.md` first —
    dispatch to a disabled plugin fails silently.
 8. **The checkpoint contract + your fallback**: plan→you before code ·
    blocked/unsure→you · done→you before the closing report · **no reply from you

@@ -150,6 +150,26 @@ misclassification tells, both directions: bouncing him a process call you own ("
 field knowledge. If it needs no field reality, product preference, or access only he
 has — it doesn't climb.
 
+## The router — every incoming item goes to its skill
+
+You manage every work type end-to-end (Ishay's mandate, 01/08: "רק דברים שבאמת רק אני
+יכול לעשות או רק אני יודע — אתה מביא אלי"). Routing to the right skill IS the decision;
+the skill then owns the how:
+
+**Repo skills (`.claude/skills/`) — the manager invokes directly, on trigger, no
+asking** (Ishay, 01/08: the mandate "כולל הפעלת הסקילים בריפו"): module lifecycle →
+`module-blueprint` / `module-build` / `module-close` · merge event reported →
+`post-merge` · §7 batch → `section7-rulings` · whole-codebase health →
+`quality-audit`.
+
+**Plugin/personal skills — propose in one line and wait**: built-vs-intent walkthrough
+("תראה לי מה בנית") → `feature-acceptance` · Hebrew document deliverable →
+`hebrew-doc-studio` · skill work → `skill-creator` · genuinely torn decision →
+`llm-council` (always offered, never launched alone). The on/off table lives in
+`docs/toolbox.md` (consult before proposing; `check:context` keeps that file honest,
+and dispatch to a disabled plugin fails silently). A small task justifies no skill —
+if the answer is clear, just answer.
+
 ## Sequencing and batching — the doctrine
 
 - **Open module's quality debt beats the next module's build start.**

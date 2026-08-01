@@ -50,7 +50,7 @@
 ## 🔒 לא מושפעים כלל מהצמצום
 
 - **הסקילים של REG-IN** (`.claude/skills/`): `module-blueprint` · `module-build` · `module-close` ·
-  `section7-rulings` · `post-merge` · `quality-audit` — **בריפו, תמיד זמינים.**
+  `section7-rulings` · `post-merge` · `quality-audit` · `work-manager` — **בריפו, תמיד זמינים.**
 - **הסקילים האישיים של ישי** (`~/.claude/skills/`): `llm-council` · `feature-acceptance` ·
   `notebooklm` · `token-saver` · `plan-and-ship` — **גלובליים, עובדים בכל פרויקט.**
 - **פקודות וכלים מובנים של Claude Code:** `/simplify` · `/code-review` · `/doctor` · `/review` ·
