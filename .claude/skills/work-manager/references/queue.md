@@ -1,150 +1,168 @@
-# התור — פריט נכנס · ניתוב · סדר · החלטות · מחזור-חיים של מודול
+# The queue — an item arrives · routing · order · decisions · a module's lifecycle
 
-נטען ממצבים 1 · 2 · 3 · 15 · 18 · 19.
-
----
-
-## מצב 1 — פריט חדש נכנס
-
-**טריגר:** רעיון של ישי · ממצא-ביקורת · חוב-§6 שהבשיל · בקשה מבנאי.
-**קורא:** החלון ב-`docs/work_plan.md` · מדריך-המיקרו של המודול הפעיל · `§7` אם זו שאלה פתוחה.
-**מוציא:** **ורדיקט גלוי** — `בנה-עכשיו` / `דחה-ל-X` / `לא-נדרש-כי-Y` + נימוק-שורה,
-**כדי שישי יוכל לתפוס דילוג.**
-
-**ברירת-מחדל:** מודול בפיגור מול הדדליין ⇒ `דחה-ל-אחרי-הדדליין`.
-🔴 **ודוחים מודולים שלמים, לא מקצצים תוכן** — מודול חצי-בנוי הוא חוב-שכתוב; מודול שנדחה נקי.
+Loaded from situations 1 · 2 · 3 · 15 · 18 · 19.
 
 ---
 
-## מצב 2 — מנתב פריט לסקיל או למומחה
+## Situation 1 — a new item arrives
 
-**קורא:** `docs/toolbox.md` **לפני שמציעים כלי** — שיגור לפלאגין כבוי **נכשל בשקט**.
+**Trigger:** an idea of Ishay's · a review finding · a matured `🚧` debt · a builder's request.
+**Read:** the window in `docs/work_plan.md` · the active module's micro-guide · `§7` if it is an open
+question.
+**Output: a visible verdict** — `בנה-עכשיו` / `דחה-ל-X` / `לא-נדרש-כי-Y` plus a one-line reason,
+**so Ishay can catch a skip.**
 
-**סקילי-ריפו — מפעילים ישירות, לפי טריגר, בלי לשאול** (מנדט-ישי 01/08):
-מחזור-מודול → `module-blueprint` / `module-build` / `module-close` · דווח מיזוג → `post-merge` ·
-סבב §7 → `section7-rulings` · בריאות כלל-הקוד → `quality-audit`.
-⚠️ **עוגן: מנהל שהכין סבב-§7 ביד במקום דרך הסקיל דילג על זיהוי-הכרעות-שהתיישנו — ושאל את
-ישי שאלה שהוא כבר הכריע יומיים קודם.**
+**Default:** a module behind its deadline ⇒ `דחה-ל-אחרי-הדדליין`.
+🔴 **And whole modules get deferred, never trimmed** — a half-built module is rewrite debt; a deferred
+one is clean.
 
-**סקילי-פלאגין/אישיים — מציעים בשורה אחת וממתינים:** סיור בנוי-מול-כוונה → `feature-acceptance` ·
-מסמך עברי → `hebrew-doc-studio` · עבודת-סקילים → `skill-creator` · **מועצה** → `llm-council`
-(מוצעת תמיד; **המנהל בלבד רשאי להריץ אותה לבד**, בהחלטה כבדה שהוא באמת קרוע בה).
-**משימה קטנה לא מצדיקה סקיל.** התשובה ברורה ⇒ פשוט לענות.
+---
 
-### ספסל-המומחים — מי, ומתי מזמנים
+## Situation 2 — routing an item to a skill or a specialist
 
-| המומחה | הטריגר |
+**Read `docs/toolbox.md` before proposing any tool** — dispatch to a disabled plugin **fails silently.**
+
+**Repo skills — invoke directly, on trigger, without asking** (Ishay's mandate 01/08):
+module lifecycle → `module-blueprint` / `module-build` / `module-close` · a merge reported →
+`post-merge` · a §7 round → `section7-rulings` · whole-codebase health → `quality-audit`.
+⚠️ **Anchor: a manager who hand-rolled a §7 round instead of routing through the skill skipped its
+stale-detection pass — and asked Ishay a question he had ruled two days earlier.**
+
+**Plugin/personal skills — propose in one line and wait:** built-vs-intent walkthrough →
+`feature-acceptance` · a Hebrew document → `hebrew-doc-studio` · skill work → `skill-creator` ·
+**the council** → `llm-council` (always offered; **the manager alone may launch it**, on a heavy
+decision he is genuinely torn on).
+**A small task justifies no skill.** If the answer is clear, just answer.
+
+### The specialist bench — who, and when to summon
+
+| Specialist | Trigger |
 |---|---|
-| **מבקר-תוכנית בהקשר טרי** | 🔴 **כל תוכנית שאתה עצמך עיצבת** |
-| צייד-כשלים-שקטים | סבב שנוגע בטיפול-שגיאות ובנפילה-אחורה |
-| מנתח-כיסוי-בדיקות | סבב שהתוצר שלו הוא בדיקות |
-| מבקר-אבטחה | הרשאות · RLS · פונקציית-שרת |
-| מומחה-ספריות (`context7`) | כל טענה על התנהגות React/Tailwind/Supabase |
-| מומחה-עיצוב (`frontend-design`) | כל מוקאפ **לפני** שישי רואה |
-| אימות מסך-מחובר (`playwright`) | כל טענה ויזואלית |
+| **Fresh-context plan critic** | 🔴 **any plan you yourself shaped** |
+| Silent-failure hunter | a round touching error handling or fallbacks |
+| Test-coverage analyst | a round whose deliverable is tests |
+| Security reviewer | permissions · RLS · server functions |
+| Library expert (`context7`) | any claim about React/Tailwind/Supabase behaviour |
+| Design expert (`frontend-design`) | every mockup **before** Ishay sees it |
+| Credentialed-screen verification (`playwright`) | any visual claim |
 
-🔴 **הטריגר הכללי לזימון: "אני לא יכול לאמת את זה בעצמי."** לא "נראה לי מסובך".
-**ומודיעים לישי שזומן** — ר' `ishay.md`, ומצב 20 ב-`builders.md` לאדג'ודיקציה של ממצאיו.
-
----
-
-## מצב 3 — רענון-התור
-
-**טריגר (ארבעה, כולם נצפים):** פריט נסגר · פריט חדש נכנס · **מדידה שסותרת את הסדר** ·
-גבול-מודול (פתיחה/סגירה).
-
-**שלושת חוקי `work_plan.md`:** **אינדקס, לא עותק** (שורה מצביעה על צעד במדריך; פירוט שנכתב
-לכאן = ממצא) · **מבחן-קיבולת** (מקדמים רק מה שיתחיל בפועל בחלון — **חלון מנופח הוא שקר-תחזית**) ·
-**מבחן-הסידור** (הנזק מחמיר עם נתוני-אמת / תאריך קשיח — **לא "חשיבות" מופשטת**).
-
-**בכל רענון:** מוציא סגורים · מקדם לפי קיבולת · **מריץ מחדש את מבחן-הסידור על כל החלון, לא רק
-על השורה החדשה** — הסדר הוא השערה שנבדקת, לא החלטה שנחקקה.
-🔴 **וכל שינוי-סדר מוצע לישי עם נימוק-שורה, לעולם לא בשקט** (הכרעת-ישי) — **הסדר הוא התמונה
-שלו על הפרויקט; אם הוא זז בלי שידע, איבד את היכולת לתפוס אותך.**
-**התפנה ישי (💬 ריק) או בנאי (▶️ ריק) — אתה יוזם קידום, לא מחכה שיבקשו.**
-
-### דוקטרינת הסדר והאיחוד
-- **חוב-איכות של מודול פתוח קודם לתחילת המודול הבא.**
-- **הכרעות ובנייה הם משאבים שונים:** הכרעות צורכות **את ישי**, בנייה צורכת **סשן** ⇒ רצים במקביל.
-  *(ולכן מותר לפתוח עבודת-הכרעות למודול הבא בזמן שהקודם נבנה — המלצת-מנהל, אושרה 01/08.)*
-- **לעולם לא לאחד** סבב שנעצר על ישי באמצע עם סבב שלא, ולא סבב שיכול לשבור מסך בשקט
-  (מסד/הרשאות) — **אלה רצים לבד, תוכניתם מבוקרת קודם.**
-- **מאחדים בחופשיות** סבבים מוסיפי-תוכן ומשלימים. שתי עדשות: חבילה **יורשת את הדחיפות של
-  האיבר הכי פחות דחוף** (מפצלים אופקים מעורבים), ו**אותו קובץ ⇒ אותו סשן.**
-- **משווים כל סבב מול מפת-הצעדים שנותרה** לפני שמתזמנים — חפיפה ⇒ **מכווצים לשארית**.
-  ובאיחוד "בלי פגיעה בתוצאה": **נוקבים במה שלא מכוסה ואיפה הוא חי עכשיו.**
+🔴 **The general trigger for summoning: "I cannot verify this myself."** Not "this looks complicated."
+**And tell Ishay you summoned one** — see `ishay.md`, and situation 20 in `builders.md` for
+adjudicating what it returns.
 
 ---
 
-## מצב 15 — התקבלה החלטה
+## Situation 3 — refreshing the queue
 
-**טריגר:** ישי הכריע · או שאתה הכרעת הכרעה הפיכה.
-**מוציא: בית-ביצוע עם בעלים — באותו סשן.** ורושמים את הכרעות ישי **בציטוט מילולי** — הניסוח
-שלו הוא המפרט; פרפרזה מאבדת כוונה.
+**Trigger (four, all observable):** an item closed · a new item arrived · **a measurement that
+contradicts the order** · a module boundary (open/close).
 
-🔴 **ארטיפקט מוחק-עצמו או נדחס לא יהיה לעולם הבית היחיד של החלטה.** רשם-הסבבים מוחק סעיפים
-שנסגרו; פרומפט של סבב-הכרעות מוחזק בקובץ שנמחק. **בכל עריכה לקובץ-התוכנית בדוק: יש כאן הכרעה
-שחיה *רק* בסעיף שמתוזמן למחיקה?** יש ⇒ העתק אותה **במלואה ועצמאית** לסעיף שיבצע אותה.
-**אותו כשל בצורה שנייה — ארכוב ודחיסה:** סעיף סגור מכיל לעיתים אזהרה חיה ("אל תתקן X"). **לפני
-שמשהו עובר לארכיון — סרוק אותו להוראות שעדיין מחייבות, וּוַדא שכל אחת חיה ב-`CLAUDE.md` שליד
-הקוד שהיא מושלת בו.**
+**The three rules of `work_plan.md`:** **index, not copy** (a row points at a step in the micro-guide;
+detail written here instead of there is a finding) · **capacity test** (promote only what would
+actually start inside the window — **an inflated window is a forecast lie**) · **ordering test**
+(damage that worsens with real data or a hard date — **not abstract "importance"**).
 
-🔴 **והצורה השלישית, שנתפסה 01/08: החלטה תלוית-חלון.** "בצע כשיקרה X" — **לחלון אין בעלים ואין
-טריגר-רענון, והוא חולף בשקט.** ⇒ **החלטה כזו חייבת שורה ב-`work_plan.md`**, לא רק בקובץ-ראיות.
-*(עוגן: שש החלטות שאומצו רשמית מתו כך תוך יום.)*
+**On every refresh:** drop what closed · promote by capacity · **re-run the ordering test on the whole
+window, not just the new row** — the order is a hypothesis under test, not a decision carved in stone.
+🔴 **And every order change is proposed to Ishay with a one-line reason, never done silently** (his
+ruling) — **the order is his picture of the project; if it moves without his knowing, he has lost the
+ability to catch you.**
+**Ishay free (💬 empty) or a builder free (▶️ empty) — you initiate promotion, you do not wait to be asked.**
 
----
-
-## מצב 18 — מודול נפתח / נסגר
-
-### נפתח
-**טריגר:** ישי אומר "פתח מודול N".
-**קורא:** `grep '🚧 מN'` ב-`PROJECT_MASTER §6` — **הרשם היחיד שפתיחה קוראת** · מדריך-המודול · §7 שלו.
-**מוציא:** `module-blueprint` · חובות שהבשילו נכנסים לחלון.
-
-### נסגר
-**טריגר:** הצעד האחרון סומן ✅, או שישי אומר.
-**מריץ — מד-קצב:**
-🔴 **מודדים ימי-עבודה, לא טווח-לוח.** `git log --format=%ad --date=short <ענף> | sort -u | wc -l`
-מחזיר את מספר הימים שבהם באמת עבדו.
-*(עוגן 01/08: מודול 3 נראה חורג בשבוע לפי הלוח — ובפועל 15 ימי-עבודה מתוך טווח של 24, כי ישי
-למד למבחן. **המנהל הציף חריגה שלא הייתה קיימת**, כי מדד את הדבר הלא-נכון.)*
-**מוציא:** מד-קצב מול `00_roadmap.md §3` · **תחזית-דחייה למודולי-העלה (מ10→מ11→מ7)** ·
-סריקת רשם-החובות.
-**מציפים לישי כשהפער עובר ~4 ימי-עבודה** — לא מחכים לשער-האמצע.
-⚠️ **`00_roadmap.md` הוא דרגה 4 בהיררכיית-האמת ואין לו חותמת-עדכון** — קרא אותו **וגם** מדוד
-בגיט, והשווה.
+### The sequencing and batching doctrine
+- **An open module's quality debt beats starting the next module.**
+- **Decisions and building are different resources:** rulings consume **Ishay**, builds consume **a
+  session** ⇒ they run in parallel. *(Hence decision work for the next module may open while the
+  current one is still building — manager's recommendation, approved 01/08. **And the rulings prep
+  itself goes to a dedicated session, not to the manager** — Ishay's preference: a manager consumed
+  by a reading pass is a manager he cannot use.)*
+- **Never batch** a round that stops on Ishay mid-way with one that does not, nor a round that can
+  silently break a screen (DB/permissions) — **those run alone, with their plan gated first.**
+- **Batch freely** additive, complementary rounds. Two lenses: a bundle **inherits the urgency of its
+  least urgent member** (split mixed horizons), and **same file ⇒ same session**.
+- **Diff every round against the micro-guide's remaining steps** before scheduling — overlap ⇒
+  **shrink to the residue**. When absorbing under "no harm to the result": **name what is NOT covered
+  and where it now lives.**
 
 ---
 
-## מצב 19 — לפני מיזוג · "מיזגתי"
+## Situation 15 — a decision was taken
 
-### לפני מיזוג
-**טריגר:** אודיט-הסגירה דיווח שסיים.
-**למה זה קיים:** `module-close` **מורץ ע"י הסשן שבנה** — ביקורת-עצמית. **וישי אינו מאשר עצמאי
-כי אינו קורא קוד ⇒ אתה המאשר העצמאי היחיד.** *(תקן-התעשייה: מי שכתב לא ממזג לבד.)*
+**Trigger:** Ishay ruled · or you took a reversible decision.
+**Output: an execution home with an owner — in the same session.** And record his rulings **as
+verbatim quotes** — his phrasing is the spec; a paraphrase loses intent.
 
-**מה מריצים — לא "קוראים":**
+🔴 **A self-deleting or compacted artifact must never be the only home of a decision.** The fix-round
+registry deletes its own closed sections; a rulings round's prompt lives in a file that gets deleted.
+**On every edit to the plan file, check: does a ruling live *only* in a section scheduled for
+deletion?** If so, copy it **in full and self-contained** into the section that will execute it.
+**The same failure in a second shape — archiving and compaction:** a closed section often *contains*
+a live warning ("never restore this filter"). **Before anything is archived, scan it for instructions
+that are still binding, and confirm each one lives in the `CLAUDE.md` beside the code it governs.**
+
+🔴 **And the third shape, caught 01/08: the window-conditioned decision.** "Execute when X happens" —
+**the window has no owner and no refresh trigger, and it passes silently.** ⇒ **such a decision needs
+a row in `work_plan.md`**, not just a line in an evidence file. *(Anchor: six formally adopted
+decisions died this way inside one day.)*
+
+---
+
+## Situation 18 — a module opens / closes
+
+### Opens
+**Trigger:** Ishay says "פתח מודול N".
+**Read:** `grep '🚧 מN'` in `PROJECT_MASTER §6` — **the only registry an opening reads** · the module
+guide · its §7 items.
+**Output:** `module-blueprint` · matured debts enter the window.
+
+### Closes
+**Trigger:** the last step marked ✅, or Ishay says so.
+**Run — the velocity check:**
+🔴 **Measure work-days, not calendar span.**
+`git log --format=%ad --date=short <branch> | sort -u | wc -l` returns the days actually worked.
+*(Anchor 01/08: module 3 looked a week over by the calendar — in fact 15 working days inside a 24-day
+span, because Ishay was studying for an exam. **The manager escalated an overrun that did not exist**,
+because he measured the wrong thing.)*
+**Output:** velocity against `00_roadmap.md` §3 · **a defer forecast for the leaf modules
+(M10→M11→M7)** · a debt-registry scan.
+**Escalate to Ishay once the gap passes ~4 work-days** — do not wait for the mid-gate.
+⚠️ **`00_roadmap.md` is tier 4 in the truth hierarchy and carries no freshness stamp** — read it
+**and** measure in git, then compare.
+
+---
+
+## Situation 19 — before a merge · "מיזגתי"
+
+### Before a merge
+**Trigger:** the closing audit reported done.
+**Why this exists:** `module-close` **is run by the session that built the module** — a self-audit.
+**And Ishay is not an independent approver, because he does not read code ⇒ you are the only
+independent approver.** *(Industry standard: the author does not merge alone.)*
+
+**What you run — not "read":**
 
 | | |
 |---|---|
-| `npm run gate` | **קוד-יציאה נמדד**, לא מוסק מהיעדר-שגיאות |
-| E2E מלאה | **שלושה מספרים: רשומים · רצו · דולגו.** דילוג שקט = כשל שנראה כהצלחה |
-| כל שומר שהאודיט טוען שהוכח | **שוברים מחדש ורואים את הבדיקה נופלת.** "עבר" אינו הוכחה |
-| כל שינוי-הרשאות | **שני הכיוונים** |
-| כל דבר נראה | **מסתכלים עליו** |
+| `npm run gate` | **exit code measured**, never inferred from an absence of errors |
+| the full E2E suite | **three numbers: registered · ran · skipped.** A silent skip is a failure that reads as success |
+| every guard the audit claims is proven | **break it again and watch the test fall.** "It passed" is not proof |
+| every permission change | **both directions** |
+| anything visible | **look at it** |
 
-**"נושא-משקל" =** טענה ש**אם היא שקרית, משהו שבור ייכנס** — ספירות · שומרים · הרשאות · מספר-הכסף.
-🔴 **אי-אפשר לשחזר (מכסה/סביבה):** אומרים **"השער רץ חלקית"**, נוקבים **באיזו טענה בדיוק**,
-**וממליצים לא למזג.** *(בעולם לא ממזגים על שער חלקי — חוסמים.)* **לא שותקים ולא מעגלים.**
-**מוציא:** ורדיקט — **מאשר-למיזוג / לא** — **עם רשימה של מה ששוחזר ומה שלא.**
-🚫 **המיזוג עצמו — ישי בלבד, כלל ברזל 10, בשום תרחיש. והוא אינו שער שני.**
+**"Load-bearing" =** a claim which, **if false, lets something broken merge** — counts · guards ·
+permissions · the money figure.
+🔴 **Cannot reproduce it (quota, environment):** say **"השער רץ חלקית"**, name **exactly which claim**
+was not reproduced, **and recommend not merging.** *(In industry you do not merge on a partial gate —
+you block. Ishay approved this.)* **Do not stay silent and do not round a corner.**
+**Output:** a verdict — **מאשר-למיזוג / לא** — **with the list of what you reproduced and what you did not.**
+🚫 **The merge itself — Ishay only, iron rule 10, in no scenario. And he is not a second gate.**
 
 ### "מיזגתי"
-**טריגר:** ישי מדווח או מדביק קישור-PR.
-**קורא:** `git fetch origin` + `merge-base` — **ראיה טרייה בלבד, לעולם לא זיכרון.**
-**מוציא:** `post-merge` · היפוך שורות-מצב **עם ציטוט-הראיה** · סימון ענפים מתים · הצעד הבא של ישי.
-🆕 **ואחרי מיזוג הענף מת — סורקים את הסשנים החיים ומודיעים לכל אחד**, כי כלל 10 אוסר לערום
-על ענף-מת ואיש לא יידע לבד.
-**⚠️ "דחיפה אינה פריסה":** מוכיחים מצד הייצור — **רשימת-נכסים עם ספירה** לפני (חילוץ שבור
-מחזיר אפס ונקרא כהצלחה), ומאשרים שהיא השתנתה אחרי.
+**Trigger:** Ishay reports it or pastes a PR link.
+**Read:** `git fetch origin` + `merge-base` — **fresh evidence only, never memory.**
+**Output:** `post-merge` · flip the status rows **quoting the evidence** · mark dead branches · his
+next step.
+🆕 **And after a merge the branch is dead — sweep the live sessions and tell each one**, because iron
+rule 10 forbids piling onto a dead branch and nobody will know on their own.
+**⚠️ "Pushed is not deployed":** prove it from the production side — **an asset list with a count**
+before (a broken extraction returns zero and reads as success), then confirm it changed.
