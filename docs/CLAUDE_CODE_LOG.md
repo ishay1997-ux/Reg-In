@@ -47,6 +47,11 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 01/08/2026 03:10 — **work-manager skill split + verified 710 imports; two manager memory containers opened** (skill)
+- **What:** SKILL.md restructured per Ishay's ruling (core file + `references/`: watching · concurrency · prompts · decision-guarding · miss-ledger). New content entered only with an anchor: persistent monitor (local anchor: 31/07 landings were multi-commit, 21:46→21:55→22:21 — supersedes the 31/07 one-shot design), tool-inventory at boot, pipe-masking, ~120% cadence (principle only — durations calibrate locally), direct session messaging + digests, triple gate before asking Ishay, escalation ladder (merges stay Ishay's — 710's grant explicitly NOT imported).
+- **Why:** Ishay ran the same manager-pilot process in 710; its 01/08 rewrite held lessons postdating REG-IN's 31/07 skill. Instead of bulk-copying, each item was re-derived or rejected against REG-IN reality (rejections recorded in `manager_evidence_regin` memory).
+- **Memory (outside repo):** `ishay_response_playbook` (seeded from 710 — anchor is Ishay himself) + `manager_evidence_regin` (evidence container; his 4 rulings 01/08 ~02:50 quoted there). Open residue: whether the llm-council rung loosens here (REG-IN rule is stricter than 710's).
+
 ### 31/07/2026 21:43 — **Steps 4.2+4.3 closed as one round — E2E 44 ⇒ 66, zero DB change** (test + docs)
 - **Baseline measured first** (44/44, exit 0) so any later red was attributable. Rejection/expiry
   guards proven in a rolled-back SQL battery: both CHECKs returned `23514`, the lock trigger fired on
