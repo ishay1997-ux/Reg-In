@@ -95,21 +95,31 @@ message wakes a session and spends Ishay's quota** ⇒ **message only who you ne
 **This is also the only moment anything is written to the skill.** During the shift you **collect**
 into an events file only.
 
+### 🔴 Step 0 — is the arena live? *(the whole procedure below assumes a shift that ENDS; this is the half that assumes one INTERRUPTED)*
+
+**Any builder mid-round ⇒ freeze the arena FIRST** — run `builders.md` situation 20's **"עצור עבודה"**
+(stop at a safe point · commit what is safe by pathspec · **a state report to disk**), and **ask each
+builder outright which files he is holding**: git has one identity and one working tree, so **nothing
+on disk can tell the successor whose file is whose.**
+**While a builder lives, steps 6 and 9 are blocked** (`concurrency.md:10` forbids the very three files
+step 6 writes) ⇒ **queue them in the session scratchpad, outside the repo** (`concurrency.md:11`) and
+land them the moment the arena clears. *(Four managers, two arenas, 01/08 — ledger 10.)*
+
 ### The twelve steps
 
 | # | Step | Output |
 |---|---|---|
-| 1 | **Measure the growth ratio** — `wc -l` on the skill and references against the boot commit | how much rules grew vs how much evidence grew |
+| 1 | **Measure the growth ratio** — `wc -l` on the skill and references against the boot commit. 🔴 **Runs TWICE: here, and again after step 11** — steps 2·5·9 write most of the shift's evidence, so a single reading at the top is guaranteed to under-report | what the shift produced · and what the close itself added |
 | 2 | **Run the retro on yourself** — the 11 questions atop `miss-ledger.md` | answers **anchored to a real event** |
 | 3 | **Collect the pile** — the ledger + the evidence file | one candidate list |
 | 4 | **Filter through the four entry questions** | in / dropped / stays a candidate |
 | 5 | 🔴 **One editing pass** | **one write. Not two.** |
 | 6 | **The documentation protocol** | micro-guide → `CLAUDE_CODE_LOG.md` → `STATUS.md` |
 | 7 | **The handover document** | see below |
-| 8 | **Update `docs/current_manager.md`** | identity + address + stamp — **before switching to routing-only** |
+| 8 | **Update `docs/current_manager.md`** — 🔴 **identity only. You CANNOT write the address: it is the successor's session name, which does not exist until step 10 creates him.** Mark the old row superseded, address = ⏳TBD; **the successor fills it in situation 16 after asking Ishay** | one row that never points at a dead manager |
 | 9 | **A closing log entry** | commit |
 | 10 | **The successor note for Ishay** | see below |
-| 11 | **The "איפה עומדים" board** | 4–6 rows, **each measured in the same turn** |
+| 11 | **The "איפה עומדים" board** | 4–6 rows, **each measured in the same turn** — ⚠️ **and the same clock read step 12 gives the successor**, or Ishay reads one snapshot while the successor holds a newer one |
 | 12 | **Answer the successor's three delta questions when they arrive**, then **identity broadcast**, then **routing only** | — |
 
 🔴 **Step 12's first half is an obligation, not a courtesy.** The incoming manager is required to ask
@@ -143,7 +153,12 @@ playbook. The same hole was found in 710 the same day.)*
 ### The handover document's structure
 - **At the top: the full read list** + the demand for a **read receipt** before the first turn to Ishay.
 - **⏳ The volatile half — with an explicit expiry:** *"תקף רק אם אתה עולה תוך ~4 שעות; אחרת התעלם
-  וגזור מהדיסק."* (Which builders are alive · what you instructed them · the quota state.)
+  וגזור מהדיסק."* (Which builders are alive · what you instructed them · the quota state · 🆕 **which
+  paths each one is holding — obtained by asking him, the only source that exists.**)
+- 🆕 **It must stand alone even if you are unreachable.** Never "ask the outgoing manager": an archived
+  session cannot receive messages at all (`Session … is archived; unarchive it first`), and Ishay
+  archives by hand. *(710's outgoing manager, 01/08: their "no reply in ~10 min ⇒ the disk is
+  authoritative" fallback was written for* doesn't answer*, not for* gone*.)*
 - **🧱 The durable half:** where the module stands · the next step · what is undecided.
 - 🆕 **A "monitor: armed on X / none" field.** If it says "none" **and there was live work** ⇒ the
   successor **must re-arm before doing anything else.** *(A dead monitor looks exactly like a builder
