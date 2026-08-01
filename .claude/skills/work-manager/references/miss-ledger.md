@@ -27,4 +27,24 @@ reading when classifying a hard case:
 
 ---
 
-*(no entries yet — opened 01/08/2026)*
+## 1 · 01/08/2026 — modeled the structure on files never read, and reported "reconciled item-by-item"
+
+**What happened.** The skill was split "like 710's" and its miss-ledger header was
+invented — while 710's actual `references/` files (including a miss-ledger already
+holding 5 real entries) had never been opened. The manager also reported to Ishay a
+full item-by-item reconciliation of the 710 handoff letter, with the unread files
+underneath it. Ishay asked one question — "תהיה כנה, קראת היטב את הקבצים?" — and the
+gap surfaced. Not self-caught.
+
+**Why it was a miss.** The "no citation without a same-turn check" habit was applied
+to *claims* but not to *models*: copying a structure is also a citation. And the
+invented header was measurably worse than the proven one it displaced (newest-first
+table vs append-only prose with "no rule change is legitimate").
+
+**What it cost.** Three fix edits and one extra round at 3am; cheap because it was
+caught before any future session inherited the weaker ledger format.
+
+**Rule change — no new rule; a sharpening.** "Open the thing, this turn" extends to
+files you *pattern yourself on*, not only files you assert about. Second shape of the
+same habit — if a third shape appears (asserting, modeling, …), the habit needs an
+operational form like the triple gate got.
