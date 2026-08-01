@@ -17,6 +17,13 @@ without this conversation.
 4. **Only the traps the target doesn't already have.** If its own plan already
    covers three of your five mines, send the two it lacks — known information
    costs their context and your credibility.
+4ב. **One 🔴 "הדבר הכי חשוב בפרומפט הזה"** — a single top mine, with exact
+   files/symbols, the *silent* consequence spelled out, and a
+   verify-yourself-and-report-a-COUNT demand ("grep בעצמך ודווח כמה מצאת") so the
+   verification is measurable, not nodded at. And a 🚫 do-not-touch section where
+   order matters, WITH the reason order matters — a bare "don't" gets optimized
+   away by a session that thinks it knows better. (Pattern proven across the 710
+   pilot prompts; exemplar saved by Ishay 01/08.)
 5. **Volatile facts** (arena, deploy state, who holds a file): timestamp them or
    write "מדוד בעצמך" — never assert. See references/concurrency.md.
 6. **Free rein is always fenced**, Ishay-style: "יד חופשית ב-X **בלבד**" — never
