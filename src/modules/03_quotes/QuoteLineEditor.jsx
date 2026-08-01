@@ -78,7 +78,10 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
       ...patch,
       itemName: product.item_name ?? '',
       category: product.category ?? null,
-      unitCost: Number(product.cost ?? 0),
+      // ⚠️ **בלי `?? 0`** — `flattenProductCost` מחזיר null כשאין הרשאת-עלות או כשלמוצר
+      // אין שורה ב-`product_costs`, ואיפוסו כאן היה מציג רווחיות של 100%. null נשאר null
+      // ופאנל-הרווחיות מציג מקפים (הכרעת-ישי 01/08/2026).
+      unitCost: product.cost === null || product.cost === undefined ? null : Number(product.cost),
       unitPrice: resolveUnitPrice(product, tiers, nextQty),
       // מוצר שאין לו צבע (דיילות/אתר) — מנקים צבע שנבחר קודם, אחרת הוא היה נשמר בשקט.
       color: isColorApplicable(product) ? (patch.color ?? line.color) : '',

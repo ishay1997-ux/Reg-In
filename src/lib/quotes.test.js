@@ -9,6 +9,7 @@ import {
   linesToPricingShape,
   sumHostessQty,
   computeLinesCost,
+  linesMissingCost,
   deriveProfitability,
   buildQuoteHeader,
   buildQuoteLines,
@@ -138,6 +139,49 @@ describe('רווחיות (§7.28 + הכרעת-ישי 29/07)', () => {
     const loss = deriveProfitability(1000, 1500)
     expect(loss.grossProfit).toBe(-500)
     expect(loss.marginPercent).toBe(-50)
+  })
+
+  // ── עלות לא-ידועה ≠ עלות אפס (הכרעת-ישי 01/08/2026, סבב-התיקון פריט 2) ──────
+  // ⚠️ `flattenProductCost` מחזיר `cost: null` בכוונה כשאין הרשאת-עלות או כשלמוצר אין
+  // שורת-עלות — ו-`?? 0` במורד הזרם היה מחזיר את ההבחנה הזו לאחור ואומר למסך "המוצר
+  // לא עולה כלום", כלומר **רווח = כל ההכנסה**, בלי שום שגיאה. הכרעת-ישי: מקפים בכל
+  // שדות-הרווחיות, בלי רווחיות-חלקית — מיושר ל-`deriveQuoteMetrics.openValue`.
+  describe('עלות לא-ידועה', () => {
+    const LINES_WITH_UNKNOWN = [
+      { sku: '04ST', itemName: 'שירותי דיילת (4 שעות)', qty: 6, unitCost: 300 },
+      { sku: 'B-REG-TAG', itemName: 'תג שם רגיל - ממותג', qty: 300, unitCost: null },
+    ]
+
+    it('שורה אחת בלי עלות ידועה ⇒ הסכום כולו null, לא סכום חלקי', () => {
+      expect(computeLinesCost(LINES_WITH_UNKNOWN)).toBeNull()
+    })
+
+    it('כל השורות ידועות ⇒ מספר רגיל (רגרסיה: לא שברנו את המסלול התקין)', () => {
+      expect(computeLinesCost(WORKED_LINES)).toBe(3450)
+    })
+
+    // שורה ריקה שטרם נבחר בה מוצר אינה "עלות לא ידועה" — היא פשוט לא תורמת כלום,
+    // בדיוק כמו שהיא לא תורמת להכנסה. אחרת כל טופס חדש היה נפתח עם מקפים.
+    it('שורה בלי מק"ט אינה הופכת את הסכום ללא-ידוע', () => {
+      expect(computeLinesCost([{ sku: '', qty: 1, unitCost: 0 }])).toBe(0)
+    })
+
+    it('עלות null ⇒ כל שלושת שדות-הרווחיות מקפים, בלי רווח מנופח', () => {
+      expect(deriveProfitability(5355, null)).toEqual({
+        cost: null,
+        grossProfit: null,
+        marginPercent: null,
+      })
+    })
+
+    // הודעת-המסך צריכה לומר **איזה** מוצר חסר, אחרת המנכ"ל רואה מקפים בלי דרך לתקן.
+    it('מדווחת אילו מוצרים חסרי-עלות — לפי שם, לא לפי מק"ט', () => {
+      expect(linesMissingCost(LINES_WITH_UNKNOWN)).toEqual(['תג שם רגיל - ממותג'])
+    })
+
+    it('הכל ידוע ⇒ רשימה ריקה', () => {
+      expect(linesMissingCost(WORKED_LINES)).toEqual([])
+    })
   })
 })
 

@@ -82,13 +82,36 @@ export function sumHostessQty(lines) {
 // האישור ה-RPC מקפיא אותה ב-closing_unit_cost. לכן זו **הערכה** ולא מספר סופי, וכך גם מוצגת.
 // ⚠️ מי שאין לו הרשאת-עלות מקבל `null` מהצירוף — והוא ממילא אינו רואה את הפאנל (הוא נשען
 // על `canEdit` על 'הצעות מחיר', בדיוק קבוצת-הקוראים של הטבלה החדשה).
+// ⚠️ **עלות לא-ידועה מחזירה `null`, לא 0** (הכרעת-ישי 01/08/2026, סבב-התיקון פריט 2).
+// ‏`flattenProductCost` מקפיד להחזיר `cost: null` כשאין הרשאת-עלות או כשלמוצר אין שורה
+// ב-`product_costs` — ו-`?? 0` כאן היה מבטל את ההקפדה הזו ואומר למסך "המוצר לא עולה
+// כלום": רווח = **כל** ההכנסה, שיעור 100%, בלי שום שגיאה. שורה **בלי מק"ט** (שורה חדשה
+// שטרם נבחר בה מוצר) אינה "לא ידועה" — היא פשוט לא תורמת, בדיוק כמו שאינה תורמת להכנסה.
+function hasUnknownCost(line) {
+  return Boolean(line?.sku) && (line.unitCost === null || line.unitCost === undefined)
+}
+
 export function computeLinesCost(lines) {
-  return (lines ?? []).reduce((sum, line) => sum + computeLineTotal(line?.qty, line?.unitCost), 0)
+  const list = lines ?? []
+  if (list.some(hasUnknownCost)) return null
+  return list.reduce((sum, line) => sum + computeLineTotal(line?.qty, line?.unitCost), 0)
+}
+
+// שמות המוצרים שאין להם עלות ידועה. המסך מציג אותם בהודעה — מקפים בלי לומר **איזה**
+// מוצר אשם משאירים את המנכ"ל בלי דרך לתקן. נופל למק"ט כשאין שם (מוצר שנעלם מהקטלוג).
+export function linesMissingCost(lines) {
+  return (lines ?? []).filter(hasUnknownCost).map((line) => line.itemName || line.sku)
 }
 
 // רווח גולמי מחושב מול הסכום **לפני מע"מ** — המע"מ אינו הכנסה של החברה אלא כסף שעובר
 // לרשויות, וכלילתו הייתה מנפחת את שיעור-הרווח בכ-18% מלאכותיים.
+// ⚠️ ‏`cost === null` ⇒ **שלושת השדות null**, ולא רווחיות חלקית (הכרעת-ישי 01/08/2026):
+// רווח שחושב מעלות חלקית הוא מספר שקרי בדיוק כמו "0% רווח" על הצעה ריקה. אותה דוקטרינה
+// כמו `deriveQuoteMetrics.openValue` שמחזיר null כשהמע"מ אינו ידוע.
 export function deriveProfitability(preVat, cost) {
+  if (cost === null || cost === undefined) {
+    return { cost: null, grossProfit: null, marginPercent: null }
+  }
   const revenue = Number(preVat) || 0
   const totalCost = Number(cost) || 0
   const grossProfit = revenue - totalCost
@@ -304,7 +327,9 @@ export function quoteToFormState(quote, productsBySku, defaultRatio) {
         category: product?.category ?? null,
         qty: Number(row.qty),
         unitPrice: Number(row.closing_unit_price),
-        unitCost: Number(product?.cost ?? row.closing_unit_cost ?? 0),
+        // ⚠️ **בלי `?? 0`** — עלות שאינה ידועה (אין הרשאה / אין שורת-עלות) נשארת null
+        // ומגיעה ככזו לפאנל-הרווחיות. ‏0 כאן היה מציג רווח = כל ההכנסה, בלי שגיאה.
+        unitCost: paramNumber(product?.cost ?? row.closing_unit_cost),
         color: row.color ?? '',
         notes: row.notes ?? '',
       }
@@ -385,10 +410,12 @@ export const MANUAL_REJECTION_REASONS = REJECTION_REASONS.filter((r) => r !== '�
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
-// ⚠️ ‏Number(null) הוא 0, וגם Number(''). פרמטר-מערכת שלא נטען חייב להיפסל **לפני** ההמרה,
-// אחרת "לא נטען" הופך בשקט ל-0 — כלומר "פג היום" או "מע"מ 0%". מספרים אמינים למראה הם
-// הכשל המסוכן ביותר במודול הזה. (הבחנה: שדה-קלט אופציונלי שנשאר ריק **כן** מתנרמל ל-0 —
-// ר' validateQuoteForm; שם ריק פירושו "בלי הנחה", כאן פירושו "לא ידוע".)
+// ההמרה המשותפת של "לא ידוע ≠ אפס" בקובץ הזה — משמשת גם פרמטרי-מערכת וגם **עלות-רכש**
+// (‏01/08/2026: אוחדה במקום עותק שני זהה, `sonarjs/no-identical-functions` תפס).
+// ⚠️ ‏Number(null) הוא 0, וגם Number(''). ערך שלא נטען חייב להיפסל **לפני** ההמרה,
+// אחרת "לא נטען" הופך בשקט ל-0 — כלומר "פג היום", "מע"מ 0%", או "המוצר לא עולה כלום".
+// מספרים אמינים למראה הם הכשל המסוכן ביותר במודול הזה. (הבחנה: שדה-קלט אופציונלי
+// שנשאר ריק **כן** מתנרמל ל-0 — ר' validateQuoteForm; שם ריק פירושו "בלי הנחה".)
 function paramNumber(value) {
   if (value === null || value === undefined || value === '') return null
   const n = Number(value)

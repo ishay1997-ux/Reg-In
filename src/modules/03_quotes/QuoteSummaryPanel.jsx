@@ -32,6 +32,7 @@ export default function QuoteSummaryPanel({
   manualDiscount,
   vatRate,
   profitability,
+  missingCostProducts = [],
   showProfitability,
   onSave,
   onCancel,
@@ -83,6 +84,22 @@ export default function QuoteSummaryPanel({
               {profitability.marginPercent === null ? '—' : `${profitability.marginPercent}%`}
             </span>
           </div>
+          {/* הכרעת-ישי 01/08/2026: כשעלות חסרה — מקפים בכל השדות **ולצידם שם המוצר האשם**.
+              בלי השם המנכ"ל רואה שלושה מקפים ואין לו דרך לדעת מה לתקן; רווחיות-חלקית
+              נפסלה במפורש, כי מספר שחושב מעלות חלקית שקרי בדיוק כמו רווח מנופח. */}
+          {missingCostProducts.length > 0 && (
+            <p
+              className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700"
+              data-testid="quote-cost-unknown"
+            >
+              {/* נוסח עם נקודתיים ולא תחילית "ל-": שמות-המוצרים עצמם מכילים מקף
+                  ("תג שם רגיל - ממותג"), ו"ל-תג שם רגיל - ממותג" נקרא כשני מקפים
+                  שעושים דברים שונים. נתפס בצילום-מסך, לא בבדיקה. */}
+              לא ניתן לחשב רווחיות — חסרה עלות רכש{' '}
+              {missingCostProducts.length > 1 ? 'למוצרים' : 'למוצר'}:{' '}
+              {missingCostProducts.join(' · ')}
+            </p>
+          )}
           <p className="mt-2 text-xs text-slate-400">פנימי — לא מופיע בהצעה ללקוח.</p>
         </div>
       )}

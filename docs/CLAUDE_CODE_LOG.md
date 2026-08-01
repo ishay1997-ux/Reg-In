@@ -47,6 +47,28 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 01/08/2026 — **Fix-round item 2: `cost ?? 0` — four sites that undid the source's own "unknown ≠ zero" discipline** (fix, Ishay's delegated ruling)
+- **Reported as a DORMANT guard before building, not oversold as a live bug.** Live DB: 0 products
+  lack a cost row, 0 of 23 quote_services lack a frozen cost, and the panel is gated on the same
+  group the cost policy admits. Recommended fixing anyway — asymmetric failure cost, and both
+  protecting facts are fragile (`createProduct` is two writes without a transaction; M8 will hold
+  `edit` on 'כספים' without 'הצעות מחיר').
+- **Ruling (Ishay, delegated → option ב'):** dashes on all three profitability fields when cost is
+  unknown, **plus the offending product named**; no partial profitability. Aligned to the existing
+  `deriveQuoteMetrics.openValue` precedent.
+- **TDD — the failing output was the argument:** pre-fix, `deriveProfitability(5355, null)` returned
+  `{cost: 0, grossProfit: 5355, marginPercent: 100}`. Four tests written first, all watched failing.
+- **`sonarjs` caught me duplicating an existing helper** (`numberOrNull` ≡ `paramNumber`); reused the
+  existing one and generalised its comment rather than suppressing the rule.
+- **First live probe proved NOTHING and was not reported as a pass:** intercepting the catalog on a
+  saved quote's *edit* screen showed identical numbers in both arms, because `quoteToFormState`
+  correctly falls back to the frozen `closing_unit_cost`. The unknown path exists only on a **new**
+  quote — re-run there with a positive control (2 requests intercepted vs 0).
+- **A copy defect surfaced only in the screenshot:** `ל-תג שם רגיל - ממותג` put two hyphens in
+  different roles; reworded to `למוצר:`/`למוצרים:` with `·` separators.
+- **384 unit · 73/73 E2E · lint+format clean · zero DB writes.**
+- Full narrative: `docs/micro_guides/module-3.md` §9 (01/08, fix-round item 2).
+
 ### 01/08/2026 — **Fix-round item 3: PDF BiDi — three reported defects, one root cause, and a planned fix that would have been a no-op** (fix, work-manager-approved plan)
 - **The plan's own hypothesis was half-wrong, and reading the library caught it before any code.**
   Plan said "add `direction:'rtl'` to `styles.page`". `@react-pdf/layout`'s

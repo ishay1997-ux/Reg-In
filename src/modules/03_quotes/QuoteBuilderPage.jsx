@@ -29,6 +29,7 @@ import {
   computeLinesCost,
   crossesMidnight,
   deriveProfitability,
+  linesMissingCost,
   formToPreviewQuote,
   linesToPricingShape,
   quoteToFormState,
@@ -235,6 +236,9 @@ export default function QuoteBuilderPage() {
     () => deriveProfitability(totals?.preVat ?? 0, computeLinesCost(lines)),
     [totals?.preVat, lines],
   )
+
+  // אילו מוצרים חסרי-עלות — כדי שהפאנל יאמר **מה** לתקן ולא רק יציג מקפים (הכרעת-ישי 01/08).
+  const missingCostProducts = useMemo(() => linesMissingCost(lines), [lines])
 
   const recommendedHostesses = recommendHostessCount(form.guests, form.ratio)
   const actualHostesses = sumHostessQty(lines)
@@ -676,6 +680,7 @@ export default function QuoteBuilderPage() {
             manualDiscount={form.manualDiscount}
             vatRate={vatRate}
             profitability={profitability}
+            missingCostProducts={missingCostProducts}
             showProfitability={canEdit}
             onSave={handleSave}
             onCancel={() => navigate('/quotes')}
