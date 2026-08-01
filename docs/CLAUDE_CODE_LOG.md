@@ -70,6 +70,11 @@
   by successor's name, incoming manager pushes identity to every live builder. Ledger entry #3
   records the first handoff's two misses; 710 exchange rerouted to their new manager mid-flight —
   the mechanism worked on its first live test.
+- **710 contact-card consult adjudicated (Ishay-directed):** adopted same-day (2nd routing
+  occurrence — REG-IN↔710 traffic landed on their released manager): the incoming manager's
+  identity broadcast covers peer managers, not only builders. `current-manager.txt` + the builder
+  dead-manager clock stay candidates in `manager_evidence_regin` with the evidence against urgency
+  (fresh prompts per shift; platform queues across session death).
 - The work-manager's document-pass on the PDF I supplied showed dropped glyphs and a near-blank
   visual render, and proposed reverting `8506720`. **Two variables isolated instead of arguing:**
 - **Code:** re-rendered quote #21 from the **pre-fix** commit `73f6f25`, same path, same reader ⇒

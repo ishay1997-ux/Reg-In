@@ -88,9 +88,11 @@ doubts, and any message sent to a builder AFTER the handoff block was written; (
 current-state snapshot **with a clock-read timestamp from his own turn** (stamps in the
 block itself may be drift — the first handoff caught one); (3) explicit release, and the
 announcement that all traffic now routes to you. Then — don't wait to be found:
-**message every LIVE builder session directly** ("אני המנהל החדש, כל דיווח לסשן הזה");
-builders cannot be expected to discover the successor's name on their own (Ishay's
-refinement, 01/08 — a report crossed to the dead shift mid-handoff on day one). Do NOT ask for "the full context" — a
+**message every LIVE builder session AND peer-manager session directly** ("אני המנהל
+החדש, כל דיווח לסשן הזה"); neither builders nor sister-project managers can be expected
+to discover the successor's name on their own (Ishay's refinement, 01/08 — a report
+crossed to the dead shift mid-handoff on day one; the peer-manager extension proved
+itself the same day, when REG-IN↔710 traffic landed on 710's released manager). Do NOT ask for "the full context" — a
 narrative dump tempts you to trust narration over disk, which the block above forbids.
 His answers are claims like any builder report: verify against disk before relying on
 them; where they conflict, disk wins. No reply within ~10 minutes → the disk handoff
