@@ -168,6 +168,55 @@ because he measured the wrong thing.)*
 
 ---
 
+## Situation 22 — file maintenance (ongoing housekeeping)
+
+**Trigger:** a module closes · or Ishay says **"ניקיון קבצים"**.
+⛔ **Never mid-module under a deadline** — an open module's quality debt outranks the docs'.
+
+**This is ordinary upkeep, not an audit:** shrink what bloated · merge what duplicates · reorganise
+the content inside files · flag what is simply wrong. **It runs continuously, not once.**
+
+**What the manager runs:**
+1. **Measure debt per folder** — broken pointers · duplication · stale facts · bloat.
+2. 🔴 **Ask Ishay the scope AFTER measuring, never before** — asking "skills or docs?" with no numbers
+   makes him choose blind.
+3. **Group files that reference each other into one batch.** 🔴 **The cluster decides the size, never
+   a constant** — it may be 1 file or 10. *(An early draft hardcoded "~3"; Ishay struck it: **"אולי 1
+   אולי 10 — לא יודע, בגלל זה יצרתי מנהל."**)* **The only ceiling is what one session holds, measured
+   in LINES not files.** A tightly-coupled cluster must travel together — splitting it breaks exactly
+   the pointer this work exists to protect, **and it will look like the worker's mistake, not yours.**
+4. **Rank by the ordering test** · 5. **Three options + a recommendation** (situation 3's output mode).
+
+**What the worker gets, and may decide:** its files and nothing else — shrink · merge · reorganise
+content · mark what is wrong.
+
+### 🔴 Three gates the worker never passes alone
+1. **Deletion: move the file to `docs/delete/`. Ishay deletes.** The worker never removes a file.
+   *(This is better than "recommend and wait": the file leaves the way immediately, nothing is lost,
+   and the irreversible act stays his.)*
+2. **Harvest before you shrink** — any fact still relevant moves to a permanent home **before** the
+   line comes out. Otherwise "shrinking" is losing.
+3. **`~/.claude/**` never enters a REG-IN batch** — the global `CLAUDE.md`, the canonical playbook and
+   the personal skills **change 710 too.**
+
+### Shrinking rules
+- **Never cut the *why* and leave the rule** — a prohibition without a reason gets optimised away.
+- **Never cut a rare rule.** "No test caught it" is not "safe to cut".
+- **Duplication ⇒ one becomes a pointer**, never delete one of the pair.
+- **Dated records are not rewritten** — only compacted per the file's own policy.
+- 🆕 **History is not instruction.** *(Anchor: `_shared/discipline.md` carries ~20 lines on how the
+  file came to be split — it changes no action.)*
+- 🔴 **The sharpest test, and it is already ours:** *what would a session do **differently** because of
+  this paragraph?* **Nothing ⇒ a candidate for cutting.**
+
+**Numbers every round: lines existed · lines remain · lines moved elsewhere.** If lines vanished that
+were neither moved nor ruled on, **the number shows it.**
+
+**What stays pure judgement ⇒ to Ishay with a one-line reason:** which cluster goes first · where to
+cut a cluster that exceeds the ceiling.
+
+---
+
 ## Situation 19 — before a merge · "מיזגתי"
 
 ### Before a merge
