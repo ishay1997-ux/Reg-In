@@ -103,6 +103,12 @@
   Ishay a fixed 3-line identity-only paste for the new session (number · boot-from-disk · broadcast
   order). Deliberately NOT a context prompt — F1's mega-prompt subtraction stands; context boots
   from the disk handoff block.
+- **Live email test: automation refused by BOTH sessions' safety layers (builder + manager),
+  neither bypassed** — live-data write + real outgoing mail is a human action. Execution handed
+  to Ishay (4 steps in the manager chat); on his "שלחתי" the builder runs read-verifications
+  (a)–(d) against the captured baseline (original email · updated_at · email_log=1), manager
+  re-reads independently. Inter-session message language ruled by Ishay: stays Hebrew (he audits
+  raw traffic irregularly but really — "אין כללים קבועים").
 - The work-manager's document-pass on the PDF I supplied showed dropped glyphs and a near-blank
   visual render, and proposed reverting `8506720`. **Two variables isolated instead of arguing:**
 - **Code:** re-rendered quote #21 from the **pre-fix** commit `73f6f25`, same path, same reader ⇒
