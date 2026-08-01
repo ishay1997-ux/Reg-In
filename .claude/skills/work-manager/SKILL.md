@@ -64,18 +64,12 @@ field-reality** — things no file holds.
 Ishay or a builder sends a plan. You don't *read* it — you **verify it**, layer by layer:
 
 1. **Claims against the repo yourself** — open every file the plan names. If the builder
-   is mid-work, verify against the commit they branched from. ⚠️ Verify against the file
-   that **defines** the thing (its latest definition — all files touching the symbol,
-   newest last), not whichever file the citation happens to point to: confirming an
-   expected absence in the cited file is confirmation bias with a green checkmark (710
-   ledger entry 4 — a "✅ אומת בקוד" stamp on a claim the defining file disproved).
+   is mid-work, verify against the commit they branched from.
 2. **Hunt what the plan does NOT say** — Ishay's probes from the playbook: "מה עוד לא
    בדקת?" · "על מה עוד לא חשבת?" · doubt with a counter-hypothesis attached ("בדוק
-   שוב — אולי X?"). Priority: claims that would **fail silently** > fail loudly >
-   cosmetic. ⚠️ **The plan's own "מה לא בדקתי" section is not this layer** — it was
-   written by the same mind that wrote the plan; its blind spots are correlated. Run
-   the probes yourself (710 ledger entry 5: two plans approved on layer 1 alone —
-   Ishay caught it; ten minutes of real probing then surfaced a data-loss hole).
+   שוב — אולי X?"). Run the probes yourself — the plan's own "מה לא בדקתי" section is
+   written by the same mind that wrote the plan. Priority: claims that would **fail
+   silently** > fail loudly > cosmetic.
 3. **Against decisions already made and documented traps** — grep `PROJECT_MASTER §7`
    and module `CLAUDE.md` files. A plan can be internally perfect and still contradict
    a ruling from last week — or re-ask a question he already answered (both happened).
@@ -99,11 +93,8 @@ A seventh layer no repo can answer — **intent — stays Ishay's, always.**
 Deliver: verdict first (מאשר / מאשר-בתנאי / לא), findings ranked by severity, and
 **credit what the plan got right that was non-obvious** — that is what makes your מאשר
 mean something. Nothing wrong ⇒ "אין הערות", plainly. A manufactured finding is worse
-than a blank page. **The verdict message is the checkpoint: each layer produces either
-written finds or an honest "אין הערות" — a verdict citing only layer-1 verification is
-a partial verdict shipped as a full one** (710 ledger entry 5; layer 1 feels rigorous
-precisely when it catches something, and that rigor buys false confidence that the
-whole gate ran).
+than a blank page. Each layer produces either written finds or an honest "אין הערות" —
+so the verdict message itself shows the whole gate ran.
 
 ## Job B — review finished work (בקרה)
 
@@ -223,10 +214,12 @@ the role works; without it you accumulate confidence, not skill.
 Split 01/08/2026 by Ishay's ruling (core here, depth in references — each read at its
 moment). The guards still hold:
 
-- **Before adding anything:** *is this true almost always, or am I patching a single
-  incident?* One anchor incident per rule — not zero (unfalsifiable dogma), not a case
-  library. New evidence lands in `manager_evidence_regin` first; it graduates to this
-  file only when it proves recurring.
+- **A mistake earns a skill rule only on its 2nd–3rd occurrence** (Ishay's ruling,
+  01/08: "רק אם טעות קוראת פעמיים-שלוש תוסיף תיקון בסקיל"). First occurrence lives in
+  the miss-ledger / `manager_evidence_regin` as a **candidate** — the ledger is where
+  it waits, not a lesser home. When a rule does graduate, its anchor here is a **short
+  dated pointer, not a told story** (he doubts long examples help; the story stays in
+  the ledger where a hard case can consult it).
 - **Occasionally, in reverse:** *which paragraph has never once changed a decision?*
 - ⚠️ **"No test caught it" is not "safe to cut"** — absence of evidence is not evidence
   of absence (Ishay, 31/07). Never cut the **why** and leave the rule, and never cut a
