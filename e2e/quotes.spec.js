@@ -435,6 +435,114 @@ test.describe('הנחות חורגות מ-100% במסך-הבנייה — הפא�
   })
 })
 
+test.describe('שמירה פותחת את חלון-השליחה (C5 §5.5.4 "שמור ושלח", 01/08)', () => {
+  test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
+
+  // ⚠️ **הבדיקה הזו חייבת לרוץ בלי לשמור הצעה אמיתית, וזו לא קפדנות — זו נכונות.**
+  // מסלול-השמירה יוצר שורה; בדיקה שרצה בכל gate הייתה מוסיפה הצעה **בכל ריצה** למסד
+  // החי (אין סביבת-בדיקה נפרדת), מנפחת את דאטת-הדמו, ושוברת כל אסרטה שסופרת שורות —
+  // בדיוק הצימוד שכבר נשך שלוש פעמים היום. לכן `create_quote` ו-`getQuote` מיורטים,
+  // והמסך מרנדר שורה מומצאת. **אפס כתיבות.**
+  const FAKE_ID = 9101
+
+  test('שמירה ⇒ חלון-השליחה נפתח על ההצעה השמורה, והכפתור פעיל — בלי כתיבה ובלי מייל', async ({
+    page,
+  }) => {
+    const writes = countQuoteWrites(page)
+    let rpcCalled = 0
+
+    // ⛔ שום מייל לא יוצא, בשום מקרה.
+    await page.route('**/functions/v1/send-email', (route) => route.abort())
+
+    // ה-RPC מחזיר את המזהה החדש — זה בדיוק התפר שהיה מנותק (ערך-ההחזרה נזרק).
+    await page.route('**/rest/v1/rpc/create_quote', async (route) => {
+      rpcCalled += 1
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(FAKE_ID),
+      })
+    })
+
+    // השליפה החוזרת של השורה השמורה. `in_progress` הוא מה שהופך את הכפתור לפעיל
+    // (`isQuoteSendable`), ו-`customers` **לא** מוחזר כאן במכוון — העמוד מזריק אותו
+    // מהלקוח שנבחר, וזו בדיוק ההתנהגות שהבדיקה נועלת.
+    await page.route(`**/rest/v1/quotes?*quote_id=eq.${FAKE_ID}*`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          quote_id: FAKE_ID,
+          quote_status: 'in_progress',
+          customer_id: 46,
+          event_name: 'בדיקת שמור-ושלח',
+          issue_date: '2026-08-01',
+          updated_at: new Date().toISOString(),
+          estimated_event_date: '2026-12-01',
+          estimated_location: 'אולם בדיקה',
+          estimated_start_time: '10:00:00',
+          estimated_end_time: '14:00:00',
+          estimated_guests: 100,
+          recommended_hostess_count: 2,
+          applied_customer_discount: 0,
+          manual_discount: 0,
+          vat_rate_snapshot: null,
+          notes: null,
+          quote_services: [
+            {
+              line_id: 1,
+              line_number: 1,
+              sku: '04ST',
+              qty: 1,
+              closing_unit_price: 500,
+              closing_unit_cost: 300,
+              color: null,
+              notes: null,
+            },
+          ],
+        }),
+      })
+    })
+
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await page.goto('/quotes/new')
+    await expect(page.getByTestId('quote-summary')).toBeVisible({ timeout: 30_000 })
+
+    await page.getByTestId('quote-customer-search').fill('מדיטק')
+    await page.locator('[data-testid^="quote-customer-option-"]').first().click()
+    await page.getByTestId('quote-event-name').fill('בדיקת שמור-ושלח')
+    await page.getByTestId('quote-event-date').fill('2026-12-01')
+    await page.getByTestId('quote-location').fill('אולם בדיקה')
+    await page.locator('#quote-start-time').fill('10:00')
+    await page.locator('#quote-end-time').fill('14:00')
+    await page.locator('#quote-guests').fill('100')
+    await page.getByTestId('quote-line-add').click()
+    await page.locator('[data-testid^="quote-line-product-"]').last().click()
+    await page.getByRole('option').filter({ hasText: 'שירותי דיילת (4 שעות)' }).first().click()
+
+    await page.getByTestId('quote-save').click()
+
+    // 🎯 הטענה: החלון נפתח **על ההצעה השמורה** והכפתור פעיל — לא תצוגה-מקדימה חסרת-שליחה.
+    await expect(page.getByTestId('quote-document-title')).toBeVisible({ timeout: 30_000 })
+    const send = page.getByTestId('quote-document-send')
+    await expect(send).toBeVisible()
+    await expect(send).toBeEnabled()
+    // ובלי סיבת-השבתה. ⚠️ הקוד כותב `title={disabledReason || undefined}`, כלומר כשאין
+    // סיבה **התכונה נעדרת** ואינה מחרוזת ריקה — לכן `toHaveAttribute('title','')` נכשל
+    // (נתפס בהרצה). זו האסרטה הנכונה, והיא זו שתתפוס "אין תבנית מייל"/"אין כתובת".
+    expect(await send.getAttribute('title')).toBeNull()
+
+    // ה-RPC אכן נקרא — אחרת הבדיקה "עוברת" כי כלום לא קרה.
+    expect(rpcCalled).toBe(1)
+    // ובקרת-הכתיבות: אף בקשה אמיתית לא הגיעה לטבלת ההצעות (ה-RPC יורט).
+    expect(writes).toHaveLength(0)
+
+    // סגירת החלון מחזירה לרשימה — ההתנהגות שהחליפה את הניווט-המיידי.
+    await page.getByTestId('quote-document-title').press('Escape')
+    await expect(page).toHaveURL(/\/quotes$/, { timeout: 15_000 })
+  })
+})
+
 test.describe('עלות-רכש לא-ידועה — מקפים, לא רווחיות 100% (סבב-התיקון פריט 2, 01/08)', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
 

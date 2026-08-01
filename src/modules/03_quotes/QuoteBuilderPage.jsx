@@ -131,6 +131,11 @@ export default function QuoteBuilderPage() {
   // ⚠️ השורה השמורה נשמרת **בנוסף** לטופס, ולא רק מומרת אליו: המסמך צריך ממנה שלושה
   // שדות שאין להם מקור בטופס — מספר-ההצעה, תאריך-ההנפקה, ו-updated_at (שממנו נגזר התוקף).
   const [savedQuote, setSavedQuote] = useState(null)
+  // ⚠️ **state נפרד מ-`documentOpen`, במכוון.** `documentOpen` הוא התצוגה-המקדימה שנבנית
+  // מהטופס החי — ולה **אין** כפתור-שליחה, וזו הכרעה מתועדת (אסור לשלוח גרסה שלא נשמרה).
+  // ‏`sendQuote` הוא ההיפך: השורה **השמורה**, שממנה כן שולחים. שימוש באותו state לשניהם
+  // היה הופך את התצוגה-המקדימה לניתנת-לשליחה — היפוך גמור של אותה הכרעה, בלי שום שגיאה.
+  const [sendQuote, setSendQuote] = useState(null)
   const [screenParams, setScreenParams] = useState({})
   const [documentOpen, setDocumentOpen] = useState(false)
 
@@ -294,22 +299,48 @@ export default function QuoteBuilderPage() {
       return
     }
 
+    // ⚠️ **שני try נפרדים, וזה לא סגנון אלא הבאג שהם מונעים.** עד 01/08/2026 היה כאן try
+    // אחד שעטף גם את השמירה וגם את הניווט, וה-catch שלו מציג "שמירת ההצעה נכשלה". ברגע
+    // שנוספה הפקת-מסמך אחרי השמירה, כשל-הפקה היה נופל לאותו catch ומכריז שהשמירה נכשלה —
+    // בעוד שההצעה **כבר במסד**. משתמש שיאמין להודעה ישמור שוב ויקבל הצעה כפולה.
+    // מכאן והלאה: כל מה שאחרי ה-try הראשון רץ **רק אם השמירה הצליחה**, וכשל בו לעולם
+    // אינו מתחזה לכשל-שמירה.
     setSaving(true)
+    let savedId
     try {
       const header = buildQuoteHeader(form)
       const payload = buildQuoteLines(lines)
       if (isEditMode) {
         await saveQuoteEdit(Number(quoteId), header, payload)
+        savedId = Number(quoteId)
         toast.success('ההצעה עודכנה.')
       } else {
-        await createQuote(header, payload)
+        // ⚠️ ערך-ההחזרה של createQuote הוא ה-quote_id החדש (api.js) — עד היום הוא נזרק,
+        // ובלעדיו אין דרך לשלוף את השורה שזה עתה נוצרה.
+        savedId = await createQuote(header, payload)
         toast.success('ההצעה נשמרה.')
       }
-      navigate('/quotes')
     } catch (err) {
       toast.error(err.message || 'שמירת ההצעה נכשלה.')
+      return
     } finally {
       setSaving(false)
+    }
+
+    // ── מכאן: ההצעה שמורה בוודאות. פותחים את חלון-השליחה על השורה **השמורה** ──
+    // למה שליפה חוזרת ולא ה-state שבטופס: לחלון דרושים שדות שאין להם מקור בטופס —
+    // מספר-ההצעה, תאריך-ההנפקה, וה-`updated_at` שממנו נגזר חלון-התוקף. בעריכה `savedQuote`
+    // נקבע בטעינת-המסך בלבד ואינו מרוענן, ולכן שימוש בו היה מציג תוקף של הגרסה **הקודמת**.
+    // ⚠️ הלקוח מוזרם מבחוץ: `getQuote()` אינה מצרפת `customers` (מתועד ונעול בבדיקה
+    // ב-`src/lib/quotes.js`), ובלעדיו אין נמען — הכפתור היה נולד מושבת.
+    try {
+      const row = await getQuote(savedId)
+      if (!row) throw new Error('missing row')
+      setSendQuote({ ...row, customers: selectedCustomer })
+    } catch {
+      // כשל-תצוגה בלבד. אומרים במפורש שההצעה **כן** נשמרה, ולא משאירים את המשתמש תקוע.
+      toast.error('ההצעה נשמרה, אך לא ניתן לפתוח את חלון השליחה — ניתן לשלוח אותה ממסך ההצעות.')
+      navigate('/quotes')
     }
   }
 
@@ -714,6 +745,31 @@ export default function QuoteBuilderPage() {
           productsBySku={productsBySku}
           vatRate={vatRate}
           validityDays={screenParams[QUOTE_SCREEN_PARAM_NAMES.validityDays]}
+        />
+      )}
+
+      {/* חלון-השליחה שאחרי השמירה (C5 §5.5.4 "שמור ושלח"). **אותו רכיב** של מסך-הניהול,
+          בלי עיצוב חדש — ההבדל היחיד מהתצוגה-המקדימה שמעל הוא שההצעה כאן **שמורה**, ולכן
+          `isQuoteSendable` מחזיר true והכפתור פעיל.
+          ⚠️ `emailTemplate` ו-`canEdit` הם שני ה-props שעמוד-הבנייה לא העביר מעולם — בלעדיהם
+          הכפתור נראה, אך `emailSendDisabledReason` מחזיר "תבנית המייל אינה מוגדרת" והוא מושבת.
+          ⛔ אין שליחה אוטומטית: החלון נפתח, האדם לוחץ (LOCAL-17). סגירה = חזרה לרשימה. */}
+      {sendQuote && (
+        <QuoteDocumentDialog
+          key={`send-${sendQuote.quote_id}`}
+          open
+          onOpenChange={(next) => {
+            if (!next) {
+              setSendQuote(null)
+              navigate('/quotes')
+            }
+          }}
+          quote={sendQuote}
+          productsBySku={productsBySku}
+          vatRate={vatRate}
+          validityDays={screenParams[QUOTE_SCREEN_PARAM_NAMES.validityDays]}
+          emailTemplate={screenParams[QUOTE_SCREEN_PARAM_NAMES.quoteEmailTemplate]}
+          canEdit={canEdit}
         />
       )}
 
