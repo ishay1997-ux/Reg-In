@@ -103,6 +103,30 @@
   Ishay a fixed 3-line identity-only paste for the new session (number · boot-from-disk · broadcast
   order). Deliberately NOT a context prompt — F1's mega-prompt subtraction stands; context boots
   from the disk handoff block.
+### 01/08/2026 — **Ishay surfaced a real process gap: save and send were never connected** (finding, manager-verified)
+- His words: a new quote should open a summary/send screen after saving — same on edit. **Frozen spec agrees**
+  (C5 §5.5.4 L230 + §5.6.4 L478/L480: one button `שמור ושלח`, saves → produces PDF → sends), and the
+  blueprint copied it (`micro_guides/module-3.md` step 3.2). **Built reality:** `QuoteBuilderPage.jsx:688`
+  labels it `שמור הצעה`; `handleSave` (285-308) saves then `navigate('/quotes')`. No deviation note exists
+  anywhere in the repo — the gap fell between step 3.2 (screen) and 3.4 (email, built later). Ishay named the
+  cause himself: the label was chosen before email automation existed.
+- **His product model, corrected in this session:** `in_progress` means **sent, awaiting the customer's reply** —
+  not "draft"; and quotes are built in ~10 minutes off a phone call or a spec email, so **no save-without-send
+  case exists in the field**. Market check (Salesforce CPQ · DealHub · Xero · HubSpot — all carry a draft state)
+  cited to him with the honest verdict: the market has drafts because quotes span days and approvals there;
+  his scale doesn't, and today's system has an **unnamed** de-facto draft, which is strictly worse.
+  Recommendation: no draft status — unify save+send.
+- **His hypothesis "the screens are built, something in the wiring is stuck" — verified true.**
+  `QuoteDocumentDialog` is ALREADY mounted on the builder page (`:709-717`) but fed `formToPreviewQuote`
+  (no status ⇒ `isQuoteSendable` false) and never opened after save.
+- **Builder's read-only investigation (manager-verified) found three more disconnects:** `getQuote` doesn't join
+  `customers` (documented+test-locked — inject from outside, don't widen) · the builder page omits
+  `emailTemplate`/`canEdit` though `emailTemplate` is already loaded there · `createQuote`'s returned id is
+  discarded at `:306`. Plus the one nobody asked for: **`getSentQuoteIds` has exactly one call site**
+  (`CustomerDetailsPage.jsx:221`) — the "טרם נשלחה" marker does not exist on the main quotes screen at all.
+- Manager rulings (reversible, logged): URL stays `/quotes/new` after create (a replace-navigate would unmount
+  and kill the dialog just opened) — behavior to be documented · document-render code must sit OUTSIDE the
+  save `try`, or a render failure reports as "save failed" on a quote that did save.
 - **Live email test: automation refused by BOTH sessions' safety layers (builder + manager),
   neither bypassed** — live-data write + real outgoing mail is a human action. Execution handed
   to Ishay (4 steps in the manager chat); on his "שלחתי" the builder runs read-verifications
