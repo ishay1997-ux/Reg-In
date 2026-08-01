@@ -124,6 +124,12 @@
   `emailTemplate`/`canEdit` though `emailTemplate` is already loaded there · `createQuote`'s returned id is
   discarded at `:306`. Plus the one nobody asked for: **`getSentQuoteIds` has exactly one call site**
   (`CustomerDetailsPage.jsx:221`) — the "טרם נשלחה" marker does not exist on the main quotes screen at all.
+- **Make "filtered bundle" screenshot Ishay pasted — measured, NOT ours.** REG-IN's team (2049106) holds
+  exactly one scenario (6759079): **8 executions, 24 operations, 0 errors**, latest `2026-07-30T23:12:06Z`,
+  every run 3 operations / ~46 KB (webhook → Gmail → respond). The screenshot shows **1 operation, 149 B,
+  31/07 23:41**, and the current blueprint carries **no filter on the Gmail module at all** (its id is 4;
+  the screenshot shows 3). Conclusion: a different Make scenario/account — 710's is the likely owner.
+  Recorded so nobody re-opens this as a REG-IN email defect.
 - Manager rulings (reversible, logged): URL stays `/quotes/new` after create (a replace-navigate would unmount
   and kill the dialog just opened) — behavior to be documented · document-render code must sit OUTSIDE the
   save `try`, or a render failure reports as "save failed" on a quote that did save.
