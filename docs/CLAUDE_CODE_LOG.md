@@ -103,6 +103,18 @@
   Ishay a fixed 3-line identity-only paste for the new session (number · boot-from-disk · broadcast
   order). Deliberately NOT a context prompt — F1's mega-prompt subtraction stands; context boots
   from the disk handoff block.
+### 01/08/2026 — **Cross-project skill comparison (Ishay-directed): the unflattering numbers, measured** (management)
+- Ledger entry #4 added first, so the figure wouldn't flatter: the manager asserted an E2E blast-radius
+  inside a builder prompt; the builder measured `grep quote-save e2e/` ⇒ **zero**, reproduced by the manager.
+  **Fourth miss, third in the same family** (assert-without-a-same-turn-check) — a rule that already exists
+  and graduated. Recurrence rate here ≈75% vs 710's ≈50%.
+- **Real-time self-catch rate: 0** — matching 710's 0 across three shifts. Treated as a finding about the
+  ROLE, not about either skill: the manager is caught by builders and by Ishay, not by himself. Both arenas'
+  earlier self-catch figures were withdrawn as non-comparable (they never recorded real-time vs pre-write).
+- Denominator caveat stated in both directions: REG-IN has **0 merges** vs 710's 11, so part of the 4-vs-10
+  ledger gap is failure opportunities we never had, not superiority. Ishay-turn counts: **not measured**,
+  not guessed.
+
 ### 01/08/2026 — **Ishay surfaced a real process gap: save and send were never connected** (finding, manager-verified)
 - His words: a new quote should open a summary/send screen after saving — same on edit. **Frozen spec agrees**
   (C5 §5.5.4 L230 + §5.6.4 L478/L480: one button `שמור ושלח`, saves → produces PDF → sends), and the
