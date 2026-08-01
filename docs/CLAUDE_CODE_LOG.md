@@ -59,9 +59,17 @@
   manager — **byte-identical 34,808** to the builder's figure; all six glyph-drop symptoms absent at
   text level. Pixel rendering unavailable in this env (pdftoppm absent, toolkit canvas broken) —
   the visual look remains Ishay's open eye-check, PDF delivered to his preview pane.
-- Open: Ishay's PDF eye · his tap on the live email-path test (temp מדיטק email swap → send #6 →
-  restore) · builder's proposed panel-lock test (repriceLine/`?? 0` has no automated guard) awaiting
-  manager approval.
+- **13:16 — Ishay closed the PDF eye: "אני מאשר את ה-PDF"** (browser-render of #21, the one the
+  manager reproduced byte-identical). DoD "PDF RTL" box → closable; micro-guide flip assigned to
+  the fix-builder with its current round.
+- **Email-path live test approved by Ishay ("מאשר מייל") and released to the builder:** temp swap of
+  the מדיטק contact email → send quote #6 → restore + read-back; event name untouched (ruled).
+  Panel-lock test approved (must be watched failing on a reintroduced `?? 0`); builder editing
+  `e2e/quotes.spec.js` at write time.
+- Handoff protocol gained Ishay's anti-confusion refinements (`87dab3b`): outgoing manager forwards
+  by successor's name, incoming manager pushes identity to every live builder. Ledger entry #3
+  records the first handoff's two misses; 710 exchange rerouted to their new manager mid-flight —
+  the mechanism worked on its first live test.
 - The work-manager's document-pass on the PDF I supplied showed dropped glyphs and a near-blank
   visual render, and proposed reverting `8506720`. **Two variables isolated instead of arguing:**
 - **Code:** re-rendered quote #21 from the **pre-fix** commit `73f6f25`, same path, same reader ⇒
