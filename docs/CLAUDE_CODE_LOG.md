@@ -76,6 +76,20 @@
   that **opens with the successor's full read-list** and is **deleted by the successor**. Safe to delete
   only under the stated condition: everything durable moved to the repo *before* the doc was written.
   Both arenas had the same missing-read-list bug; 710 found theirs by checking after we compared.
+- **Seven more rulings landed in the draft** (`work_manager_situations_draft.md` §ג2): boot ends when
+  the read-receipt line is spoken (a completion criterion, not a report) · shift-close trigger is the
+  words "סגור/סיום/סוף משמרת", near-variants ⇒ ask · handoff block carries a **"monitor: armed on X /
+  none"** field, and "none" + live work obliges the successor to re-arm first · prompt structure =
+  8 generative questions + 6 fixed elements + a routing step that precedes writing.
+- 🚫 **Considered and REJECTED after research** — per-task personas in builder prompts (Ishay's idea).
+  Evidence: the main paper was revised in 2024 from "improves" to "does not improve", and expert
+  personas measurably *damage* factual accuracy (the model optimises for sounding right). Our work is
+  accuracy work ⇒ banned. What survives is the strong half of the same idea: **switch the workflow and
+  dispatch a real specialist** (separate context), and **task framing** — "the deliverable is tests;
+  coverage loss is worse than a moved number" — which is not a persona.
+- **Structural finding (answers Ishay's re-asked node-graph question):** the map is a **flat dispatcher
+  with a default**, not a tree — and **a situation whose trigger needs judgement never fires.** That,
+  not discipline, is why six written procedures had never run: none of them has an observable trigger.
 
 ### 01/08/2026 — **"עדכן ושלח" without changes no longer saves — and the brief's own wording was wrong** (feature, Ishay's ruling)
 - **The bug:** no change detection, so an empty update ran a full `update`; `moddatetime` bumped
