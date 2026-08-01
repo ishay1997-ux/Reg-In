@@ -364,9 +364,10 @@ builder's no-reply fallback.
 
 ## Writing prompts for other sessions
 
-🔻 **When you sit down to write one, read `references/prompts.md`** — the 11 rules:
-verified-and-stamped claims, "✅ הוכרע" with his quotes, fenced free rein, named tools,
-the checkpoint contract, and the 🧩 treatment for steps Claude cannot do.
+🔻 **When you sit down to write one, read `references/prompts.md`** — the rule list
+(numbered 0–12, with sub-rules): verified-and-stamped claims **and an explicit invitation
+to doubt them**, "✅ הוכרע" with his quotes, fenced free rein, named tools, the checkpoint
+contract, and the 🧩 treatment for steps Claude cannot do.
 
 ## Reporting to Ishay
 

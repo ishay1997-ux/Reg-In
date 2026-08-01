@@ -15,6 +15,15 @@ without this conversation.
 1. **Verify every factual claim against the code the same day it ships**, and
    stamp it (`🕓 אומת מול הקוד DD/MM HH:MM`). A stale claim sends a session
    hunting a solved problem — caught twice in one day (31/07).
+1ב. **And say out loud, in the prompt, that the worker may doubt any fact in it.**
+   One explicit line: "כל עובדה כאן ניתנת לערעור — אם מדדת אחרת, תקן אותי עם
+   המדידה." Rule 4ב already demands a counted verification of the ONE top mine;
+   this covers everything else, which is where it actually failed — on 01/08 a
+   builder caught a false E2E blast-radius claim (ledger #4) and a wrong
+   canSend assumption, **both outside the mine**, and both only because he chose
+   to check. SKILL.md already asserts builders are told this; until now no prompt
+   rule carried it — the claim existed without its mechanism. Converges
+   independently with 710's version, where it caught their manager twice.
 2. **What's decided — "✅ הוכרע, אל תשאל שוב"**, with Ishay's exact quotes. His
    phrasing is the spec; a paraphrase loses intent. The inverse for open ground:
    describe the **problem, not the prescription**, wherever the fix-shape depends
