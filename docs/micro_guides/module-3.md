@@ -619,6 +619,48 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
   work and re-running: the same 8 fail without it. That is **wider than the 3 previously measured**.
   A 9th varies between runs (`auth:23` / `quote-email:179`), each green in isolation — the documented
   load-flake, whose victim moves.
+- 01/08/2026 16:02 (**manager-3**) — **the 8 failures, named; two of them are NOT what the count above
+  implies.** The list existed only inside a live builder session; the entry above records the *number*
+  but never the *names*, so a dead session would have cost a full ~7-min E2E re-run to rediscover it.
+  Captured here on the builder's read-only reply (no runs) + manager reads of the source:
+
+  | # | file:line | test |
+  |---|---|---|
+  | 1 | `customer-page.spec.js:41` | רשימת הלקוחות: עמודת הכנסות, מיון, והסינון שורד ניווט-חזרה |
+  | 2 | `customer-page.spec.js:65` | העמוד: מדדים חיים, לשוניות, סיבת-דחייה על השורה, ופעולות לפי סטטוס |
+  | 3 | `load-failure-guards.spec.js:116` | חלון המסמך: כשל בשאילתת היומן ⇒ חיווי + שאלה לפני שליחה |
+  | 4 | `quote-email.spec.js:54` | שמונה השדות יוצאים — והמצורף הוא PDF אמיתי |
+  | 5 | `quote-email.spec.js:133` | חיווי "כבר נשלח" מגיע מהיומן במסד — ולכן שורד רענון-דף |
+  | 6 | `server-messages-and-inactive-product.spec.js:138` | כשל שמירת-עריכה: הטוסט מציג את ההודעה הממופה |
+  | 7 | `server-messages-and-inactive-product.spec.js:225` | השורה מסומנת, המחיר שורד שינוי-כמות, והשמירה אינה נחסמת |
+  | 8 | `server-messages-and-inactive-product.spec.js:268` | §7.34 — המוצר המושבת מוצע רק בשורה שלו |
+
+  ⚠️ **#4 is misattributed to quote #6 — do NOT "fix" it with a fixture swap.** Manager challenge,
+  confirmed by the builder against his own runs: it uses `CLEAN_QUOTE_ID = 7` (`quote-email.spec.js:27`),
+  and #7 is `in_progress` with **zero** `email_log` rows — #6's approval cannot touch it. Measured
+  behaviour: **passes alone** (`-g "שמונה השדות יוצאים"` ⇒ 1 passed), **fails when the whole 6-test file
+  runs**, even as the only file. ⇒ intra-file order-dependence / state bleed, needs its own diagnosis
+  (first suspects: `email_log`/`login_attempts` accumulation between tests, or unreset session/blob state).
+  The builder's own words: *"classification by position, not by cause"* — it was in the failure list of
+  the full run, so it was filed under the same cause as the rest.
+
+  ⚠️ **#6 carries a SECOND failure, currently masked by the first.** `server-messages…:145` asserts
+  `getByRole('button', { name: 'עדכון ההצעה' })`, but that label became **`עדכן ושלח`** in commit
+  `9f28336`. Today the test dies earlier, at :144 (`quote-lines-table` not visible, because #6 is
+  edit-locked) and never reaches :145. **The moment the #6 fixture is repaired this test fails again,
+  on a button that no longer exists** — that is stale wording, *not* a new regression by whoever does
+  the repair. Fix both in the same round.
+
+  ↳ **Supersedes the "(8)" note above (lines ~614-616), which is now stale.** It states *"the only
+  `email_log` row belongs to #6, which is no longer `in_progress`"* — true when written, false now.
+  Measured live by manager-3, 01/08 16:00: **`quotes#22` is `in_progress` with 2 `sent` `email_log`
+  rows** ⇒ a real-data fixture for the positive branch now exists. **But split by function before using
+  it:** `getSentQuoteIds` (`api.js:124-134`) selects `entity_id` **only** ⇒ #22 is completely safe for
+  boolean "was it sent?" assertions, no interception needed. `getLastSuccessfulSend` (`api.js:78-90`)
+  selects `recipient` and orders `created_at` **desc limit 1** ⇒ on #22 the newest row is **Ishay's
+  private address** (the older one is `ron@meditech-demo.co.il`). Any test that renders a *recipient*
+  must stay on interception — committing #22 there would put his personal email in the repo. This is
+  the measured basis for manager-2's "intercept, don't swap IDs" ruling, which stands.
 - 01/08/2026 (fix-round item 2 ↳ **panel-lock guard, manager-approved**) — closes the hole I
   reported against my own work: reinstating `?? 0` in `repriceLine` (`QuoteLineEditor.jsx`) failed
   **no test at all**, because the four lib-level unit tests cover `src/lib/quotes.js` while that
