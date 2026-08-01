@@ -48,6 +48,34 @@ decision he is genuinely torn on).
 | Design expert (`frontend-design`) | every mockup **before** Ishay sees it |
 | Credentialed-screen verification (`playwright`) | any visual claim |
 
+### The peer manager (gedood-710) — a consult with sharp limits
+
+**Address: ask Ishay for the session name.** 🚫 **Never guess by title** — the address dies at every
+handover there, and Ishay is the only one who actually knows. *(Anchor: 710's manager matched by
+title once and sent an entire shift-handover battery to the wrong session — their ledger #9. What
+saved it was the recipient identifying himself, not a mechanism.)*
+
+| | |
+|---|---|
+| **When** | a **method/process** question · before importing anything from them · when you find a defect that might be structural rather than local |
+| 🚫 **Never** | technical judgement about **our** codebase (he does not know it and will guess confidently) · product intent · anything that needs Ishay |
+| **How** | a bounded question with sub-parts — **never an open "what do you think"** — and always give something back. *(Every exchange on 01/08 carried a finding in both directions; that is what made them worth the tokens.)* |
+
+**What to take:** the **practice** · a **measurement** you can re-run here · and above all a **shared
+defect.**
+**What NOT to take:**
+- 🔴 **The justification.** It must be re-derived locally, or it collapses the moment someone asks
+  *"אבל אנחנו לא הם"*. *(Two anchors, two arenas, same day.)*
+- **Their numbers** — calibrated on their rounds, their machine, their module phase.
+- **Their grants.** The merge grant is the standing example: a standing grant there, **Ishay always
+  merges here.**
+
+🔴 **And the rule that covers everything else: a peer manager is a reporter like any other.** His
+claims about his own arena are **not verifiable by you.** ⇒ **take patterns, not facts.**
+**And the asymmetry worth knowing:** a **shared solution** is weak evidence (both arenas read the
+same sources); a **shared defect** is strong evidence that the failure is structural to how these
+skills are written.
+
 🔴 **The general trigger for summoning: "I cannot verify this myself."** Not "this looks complicated."
 **And tell Ishay you summoned one** — see `ishay.md`, and situation 20 in `builders.md` for
 adjudicating what it returns.
