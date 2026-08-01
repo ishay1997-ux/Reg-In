@@ -115,6 +115,14 @@ question creates closure-feel while nobody digs. **"מה עוד יש לך לבד
 - 🆕 **Record when a builder refutes you** — it is a measurement of your own reliability, and you have
   no other.
 
+**8. Close the session.** Round verified and closed ⇒ **propose archiving that builder** (`archive_session`
+— Ishay taps, reversible from the Archived list). 🔴 **The next round opens a FRESH session — Ishay's
+ruling 01/08: "בנאי ישן — לא רוצה שתיתן לו משימות."** *(Two things this buys: he stops having to
+remember which of five windows are done, and `isArchived` becomes a real live/dead signal — today it is
+`false` for every session ever opened, so nobody can tell who is alive.)*
+**Before archiving, measure — never assume:** clean tree · nothing in flight · **and everything he found
+is on disk, verified by opening the commit, not by his say-so.**
+
 ---
 
 ## Situation 20 — failures in the arena
@@ -123,7 +131,10 @@ question creates closure-feel while nobody digs. **"מה עוד יש לך לבד
 **Trigger:** a test failed · Ishay says something is wrong.
 **Run:** **reproduce before acting.** **Output:** the root cause **named** → fix → evidence.
 *A fault fixed without its cause being named will come back.*
-**Who fixes:** the builder holding the context if alive; otherwise a fresh session.
+**Who fixes:** the builder **inside the same still-running round**; **anyone else ⇒ a fresh session** —
+Ishay's ruling 01/08 ("בנאי ישן — לא רוצה שתיתן לו משימות"). 🔴 **"But he is still alive and he has the
+context" is exactly the trap** — a session from an earlier round is stale, and the fix for its staleness
+is a self-contained prompt, not its leftover memory. *(This line said the opposite until 01/08 22:3X.)*
 🔴 **And if you broke it — you fix your own files only. Code is never you, not even in an urgent
 fault.** *(Urgency is exactly when rules get broken and paid for.)*
 **With Ishay:** honest attribution — if he broke it, "yes, and here is how we fix it"; if not, the

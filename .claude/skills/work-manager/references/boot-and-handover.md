@@ -11,13 +11,18 @@ manager failures happened at moments like these, all run from memory.)*
 
 ### The read list — in this order, before a word of substance
 
-1. **The handover document** if one exists (`docs/handoff_manager_N.md`) — it carries the full read list
-2. `STATUS.md` — the top block
-3. `docs/work_plan.md` — the window
-4. `references/miss-ledger.md` — **including the newest entries**
-5. **Both memory files:** `manager_evidence_regin` · `ishay_response_playbook`
-6. **`~/.claude/references/ishay-response-playbook.md`** — the full playbook
-7. **Measure independently:** `git status` + `git log --oneline -5` + mtimes of the shared files + **the clock**
+1. 🔴 **Measure independently — FIRST, before any narrative:** `git status` + `git log --oneline -5` +
+   mtimes of the shared files + **the clock**
+2. **The handover document** if one exists (`docs/handoff_manager_N.md`) — it carries the full read list
+3. `STATUS.md` — the top block
+4. `docs/work_plan.md` — the window
+5. `references/miss-ledger.md` — **including the newest entries**
+6. **Both memory files:** `manager_evidence_regin` · `ishay_response_playbook`
+7. **`~/.claude/references/ishay-response-playbook.md`** — the full playbook
+
+*(The measurement was item 7 until 01/08 22:3X — i.e. the numbered order prescribed exactly what the
+rule below forbids, in a file marked READ-DO, where the numbering is what actually wins. Found by 710's
+manager reviewing this file; **it had already fired on them that same morning.**)*
 
 🔴 **Measure git yourself *before* you believe the document.** Reading a narrative before measuring
 means entering with a model, and the later measurement only **confirms** it. *(Both arenas confirmed
@@ -77,6 +82,14 @@ a report crossed to a dead shift on day one; and cross-project traffic landed on
 🔴 **The only mechanism that held in both arenas is that the recipient identifies himself and pushes
 back** — which is why broadcasting is worth more than any attempt to guess.
 
+🔴 **But "every LIVE session" is not measurable — so broadcast narrowly.** Measured 01/08 22:1X:
+`list_sessions` returns **no live/dead signal at all** — `isRunning:false` came back for three sessions
+that answered within two minutes, and `isArchived:false` for **all 25**, because nobody archives.
+**Every message wakes a session and spends Ishay's quota.** ⇒ **Message only who you need right now**
+(a builder you are about to dispatch can wait until you dispatch him), and **archive the outgoing
+manager at handover** (situation 17, step 8½). Once archiving is actually practised, `isArchived`
+becomes the signal this rule is missing — the fix creates its own instrument.
+
 ---
 
 ## Situation 17 — closing a shift
@@ -98,6 +111,7 @@ into an events file only.
 | 6 | **The documentation protocol** | micro-guide → `CLAUDE_CODE_LOG.md` → `STATUS.md` |
 | 7 | **The handover document** | see below |
 | 8 | **Update `docs/current_manager.md`** | identity + address + stamp — **before switching to routing-only** |
+| 8½ | 🆕 **Archive your own session once the successor confirms boot** (`archive_session`) — Ishay taps to confirm; it is reversible from the Archived list. **A released manager who stays visible is indistinguishable from the on-duty one** | one dead address fewer |
 | 9 | **A closing log entry** | commit |
 | 10 | **The successor note for Ishay** | see below |
 | 11 | **The "איפה עומדים" board** | 4–6 rows, **each measured in the same turn** |
