@@ -64,11 +64,18 @@ field-reality** — things no file holds.
 Ishay or a builder sends a plan. You don't *read* it — you **verify it**, layer by layer:
 
 1. **Claims against the repo yourself** — open every file the plan names. If the builder
-   is mid-work, verify against the commit they branched from.
+   is mid-work, verify against the commit they branched from. ⚠️ Verify against the file
+   that **defines** the thing (its latest definition — all files touching the symbol,
+   newest last), not whichever file the citation happens to point to: confirming an
+   expected absence in the cited file is confirmation bias with a green checkmark (710
+   ledger entry 4 — a "✅ אומת בקוד" stamp on a claim the defining file disproved).
 2. **Hunt what the plan does NOT say** — Ishay's probes from the playbook: "מה עוד לא
    בדקת?" · "על מה עוד לא חשבת?" · doubt with a counter-hypothesis attached ("בדוק
    שוב — אולי X?"). Priority: claims that would **fail silently** > fail loudly >
-   cosmetic.
+   cosmetic. ⚠️ **The plan's own "מה לא בדקתי" section is not this layer** — it was
+   written by the same mind that wrote the plan; its blind spots are correlated. Run
+   the probes yourself (710 ledger entry 5: two plans approved on layer 1 alone —
+   Ishay caught it; ten minutes of real probing then surfaced a data-loss hole).
 3. **Against decisions already made and documented traps** — grep `PROJECT_MASTER §7`
    and module `CLAUDE.md` files. A plan can be internally perfect and still contradict
    a ruling from last week — or re-ask a question he already answered (both happened).
@@ -92,7 +99,11 @@ A seventh layer no repo can answer — **intent — stays Ishay's, always.**
 Deliver: verdict first (מאשר / מאשר-בתנאי / לא), findings ranked by severity, and
 **credit what the plan got right that was non-obvious** — that is what makes your מאשר
 mean something. Nothing wrong ⇒ "אין הערות", plainly. A manufactured finding is worse
-than a blank page.
+than a blank page. **The verdict message is the checkpoint: each layer produces either
+written finds or an honest "אין הערות" — a verdict citing only layer-1 verification is
+a partial verdict shipped as a full one** (710 ledger entry 5; layer 1 feels rigorous
+precisely when it catches something, and that rigor buys false confidence that the
+whole gate ran).
 
 ## Job B — review finished work (בקרה)
 
