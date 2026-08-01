@@ -669,7 +669,7 @@ export default function QuoteBuilderPage() {
           </section>
         </div>
 
-        {totals && (
+        {totals ? (
           <QuoteSummaryPanel
             totals={totals}
             appliedDiscount={form.appliedDiscount}
@@ -682,6 +682,20 @@ export default function QuoteBuilderPage() {
             saving={saving}
             saveLabel={isEditMode ? 'עדכון ההצעה' : 'שמור הצעה'}
           />
+        ) : (
+          // הפאנל (וכפתור השמירה שבתוכו) לא ניתן לחישוב כשסכום ההנחות חורג מ-100% —
+          // computeQuoteTotals זורק (pricing.js) ולכן אין מה להציג. בלי ההודעה הזו הפאנל
+          // פשוט נעלם בלי הסבר, ואין דרך להגיע לכפתור-שמירה כדי לגלות למה (ממצא-אודיט).
+          <div
+            className="sticky top-4 rounded-2xl border border-red-300 bg-red-50 p-5 shadow-md"
+            data-testid="quote-totals-blocked"
+          >
+            <p className="text-sm font-medium text-red-800">
+              ההנחות חורגות מ-100% ({Number(form.appliedDiscount)}% +{' '}
+              {Number(form.manualDiscount) || 0}
+              %) — לא ניתן לחשב סיכום ולא ניתן לשמור. תקנו את ההנחה הנוספת.
+            </p>
+          </div>
         )}
       </div>
 

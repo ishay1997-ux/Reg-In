@@ -47,6 +47,23 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 01/08/2026 — **Quote builder: fix-round item 1, silent-panel bug on discount>100%** (fix, work-manager-scoped)
+- **What:** audit finding, scoped down by Ishay before the fix ("no-draft is intentional, the
+  save-block on illegal discount numbers is correct and stays — only the missing explanation was
+  the bug"). `computeQuoteTotals` (`pricing.js`) throws when the two discounts sum past 100% (a
+  typo like 100 instead of 10). `QuoteBuilderPage.jsx`'s catch turned that into `totals=null`, and
+  `{totals && <QuoteSummaryPanel/>}` made the **whole panel — including the Save button — vanish
+  with zero explanation**, and the existing `errors.manualDiscount` message could never reach the
+  screen either (it's gated on `submitAttempted`, only set by the Save button that had just
+  disappeared).
+- **Fix:** render a red explanatory box (`data-testid="quote-totals-blocked"`) in the panel's slot
+  instead of nothing; Save stays unreachable in that state (unchanged, was already correct).
+- **Proof:** new `e2e/quotes.spec.js` test — watched it **fail on the pre-fix code** (`git stash`
+  of the one-line-scoped diff, re-run, confirmed red), then pass after restoring the fix. Full
+  `quotes.spec.js` suite (12 tests) green. Live-verified logged in as CEO in the browser: message
+  renders in RTL, panel/Save return once the discount is corrected. `eslint` clean.
+- Full narrative: `docs/micro_guides/module-3.md` §9 (01/08, fix-round item 1).
+
 ### 01/08/2026 06:4X — **Steps 5.2+5.3 closed: migration recount, security-doc update, QA/DoD honest fill** (build)
 - **What:** work-manager's combined task list for 5.2+5.3. Closed the two items 5.1 left open first (quote #6 confirmed untouched via SQL; grepped E2E for count/id assertions the 5.1 delta broke — found and fixed 3 real ones in `customer-page.spec.js` + `smoke-anchors.json`'s revenue anchor, all values read from the live screen not hand-computed, commit `be00744`).
 - **Migration recount surfaced something bigger than a stale number:** the `schema_migrations` registry doesn't 1:1 match files on disk. Before treating it as new, checked `PROJECT_MASTER.md`/`db_roadmap.md` — already ruled (§7.86, 31/07) as `apply_migration`'s own version-stamping behavior. Independently re-verified the two "missing" migrations are genuinely applied (`customer_contacts` table exists, `quote_services.line_id` exists) rather than trusting the old note blind. Declared definition adopted: `module3_`-prefixed files on disk = **10**, reconciled across 3 docs.

@@ -398,3 +398,39 @@ test.describe('מנהלת פרויקטים: אותו מסך, אותן שלוש �
     await expect(page.getByTestId(/^quote-reject-/).first()).toBeVisible()
   })
 })
+
+test.describe('הנחות חורגות מ-100% במסך-הבנייה — הפאנל לא נעלם בלי הסבר (ממצא-אודיט 01/08)', () => {
+  test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
+
+  // ⚠️ computeQuoteTotals (pricing.js) זורק כשסכום ההנחות >100% — טעות-הקלדה קלאסית
+  // (100 במקום 10). לפני התיקון `totals` היה הופך `null` וה-`{totals && <QuoteSummaryPanel/>}`
+  // היה גורם לפאנל **כולו** (כולל כפתור השמירה) להיעלם בלי שום הודעה — ואין דרך להגיע
+  // ל-`errors.manualDiscount` כי הוא תלוי ב-`submitAttempted`, שנקבע רק בלחיצה על אותו
+  // כפתור שנעלם. הבדיקה מוכיחה: (1) ההודעה מופיעה, (2) שום בקשת-כתיבה לא יוצאת, (3) תיקון
+  // ההנחה מחזיר את הפאנל.
+  test('הנחה ידנית 150% — הודעה מוסברת במקום פאנל נעלם, ואפס כתיבות', async ({ page }) => {
+    const writes = countQuoteWrites(page)
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await page.goto('/quotes/new')
+
+    await expect(page.getByTestId('quote-summary')).toBeVisible({ timeout: 30_000 })
+
+    const manualDiscount = page.locator('#quote-manual-discount')
+    await manualDiscount.fill('150')
+    await manualDiscount.blur()
+
+    // הפאנל (וכפתור השמירה שבתוכו) נעלם, וההודעה המוסברת תופסת את מקומו.
+    await expect(page.getByTestId('quote-summary')).toHaveCount(0)
+    const blocked = page.getByTestId('quote-totals-blocked')
+    await expect(blocked).toBeVisible()
+    await expect(blocked).toContainText('חורגות מ-100%')
+
+    // תיקון ההנחה — הפאנל חוזר.
+    await manualDiscount.fill('10')
+    await manualDiscount.blur()
+    await expect(page.getByTestId('quote-totals-blocked')).toHaveCount(0)
+    await expect(page.getByTestId('quote-summary')).toBeVisible()
+
+    expect(writes).toHaveLength(0)
+  })
+})
