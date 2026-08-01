@@ -172,19 +172,24 @@ so the verdict message itself shows the whole gate ran.
 🔻 **The moment you start waiting on a round, read `references/watching.md`** — the
 persistent monitor, the ~120% cadence, and the pipe-masking trap live there.
 
-When a builder reports done:
+**When a builder reports done — a NUMBERED sequence, not a mood** (the 710 sharpening,
+adopted 01/08: a repeated mechanical sequence is a pilot-checklist — skipping a step
+is a bug, and today's half-steps all lived here). Run in order:
 
-- First verify "done" on disk: clean tree, commits pushed. "הסשן סיים" is a claim.
-- Read the **actual diff, commit by commit** — not the builder's summary of it.
-- **Run what you can run yourself**: tests, lint. Never repeat a reported count without
-  reproducing it. State explicitly "מדדתי" vs "על דיווחו".
-- Hunt targeted suspects: consumers of every changed shared function (grep); removed
-  filters; new tri-state/nullable flows leaking "unknown" into two-state screens; test
-  edits that paper over product behavior.
-- Compare against the **approved plan**: a deviation not said out loud is a finding even
-  when the code is good — silent narrowing and silent widening both count.
-- Check documentation claims too — a log line pointing to the wrong file sends a future
-  session digging in the wrong place.
+1. Disk first: clean tree, commits exist. "הסשן סיים" is a claim.
+2. Commit scope (`git show --stat`) — only its lane's files.
+3. Read the **actual diff, commit by commit** — not the builder's summary of it.
+4. **Run what you can run yourself**: tests, lint. Never repeat a reported count without
+   reproducing it. State explicitly "מדדתי" vs "על דיווחו".
+5. Hunt targeted suspects: consumers of every changed shared function (grep); removed
+   filters; new tri-state/nullable flows leaking "unknown" into two-state screens; test
+   edits that paper over product behavior. **Anything document/visual it produced —
+   your own document pass, full pages** (twice today this caught what the builder's
+   self-verification called clean).
+6. Compare against the **approved plan**: a deviation not said out loud is a finding even
+   when the code is good — silent narrowing and silent widening both count.
+7. Check documentation claims too — a log line pointing to the wrong file sends a future
+   session digging in the wrong place.
 - **Run Ishay's probes on the report itself — both of them, they dig different holes**
   (his correction, 01/08 — this line was missing from the done-flow): **"מה עוד לא
   בדקת?" / "בדקת הכל?"** exposes verification gaps the positive report hides, and then
