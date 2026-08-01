@@ -528,6 +528,32 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 01/08/2026 (fix-round item 3 — **post-landing correction: my verification method was wrong,
+  the code was not**). The work-manager's document-pass on the PDF I sent showed dropped glyphs
+  (`הנחת לקוח`⇒`נחת לקוח`, `מע"מ`⇒`ע"מ`, `עמוד 1 מתוך 2`⇒`מוד 1 תוך 2`, qty `6` missing) and a
+  near-blank visual render, and correctly proposed reverting `8506720`. **Measured instead of
+  argued, two isolated variables:**
+  **(1) Code.** Re-rendered quote #21 from the **pre-fix** commit (`73f6f25`), same render path,
+  same reader ⇒ **five of the six symptoms are already present there**, including the missing
+  qty `6`. So they predate the BiDi change. The sixth (`אישור`⇒`ישור`) is the same
+  first-glyph-of-a-Hebrew-run drop, newly exposed because the fix moved the period off the line start.
+  **(2) Render path — the actual root cause.** The file I sent was produced under **vitest/node**.
+  Re-rendered the same quote **through the running app in a real browser** (production path):
+  **34,808 bytes vs 32,978** under vitest — and the historical 5.1 file the manager read cleanly is
+  **34,836**, i.e. it too was a browser render. The browser output is **completely clean**:
+  `הנחת לקוח (5%)` · `מע"מ (18%)` · `עמוד 1 מתוך 2` · `אישור הצעה זו` · qty `6` all intact, the
+  document renders visually in full, **bullets sit on the right and every terms line ends with its
+  period**, and the waterfall reads 6,300→-315→-630→5,355→964→**6,319 ₪**. The BiDi fix works.
+  **(3) What I got wrong, plainly:** I claimed "measured before→after on a real PDF". It was a real
+  PDF but **not the production render path**, and I did not know that or say it. The manager received
+  a defective artefact from me and reasoned correctly from it. **Rule added to
+  `03_quotes/CLAUDE.md`:** any PDF a human will look at is verified through the browser blob, never
+  through a vitest render; unit tests may assert on the element tree, not on bytes.
+  **(4) Environment limit now known and recorded:** `pdftoppm` is not installed here, so this session
+  has **no PDF page→image rendering** — the "empty skeleton" images seen earlier were that limitation,
+  not the document. Text extraction and the browser path are the tools that do work.
+  **Outcome: no revert.** Still open: the pathological event name wraps with `(5.1` on a second line
+  (visible in the browser render too) — reported, not engineered around.
 - 01/08/2026 (fix-round item 2) — **`cost ?? 0`: the four sites that undid `flattenProductCost`'s
   own discipline. Ishay's ruling (delegated, option ב'): dashes everywhere + name the product;
   no partial profitability.**

@@ -47,6 +47,22 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 01/08/2026 — **Correction: the BiDi "regression" was my verification method, not the code** (measurement, no revert)
+- The work-manager's document-pass on the PDF I supplied showed dropped glyphs and a near-blank
+  visual render, and proposed reverting `8506720`. **Two variables isolated instead of arguing:**
+- **Code:** re-rendered quote #21 from the **pre-fix** commit `73f6f25`, same path, same reader ⇒
+  **5 of 6 symptoms already present**, incl. the missing qty `6`. Not caused by the change.
+- **Render path (root cause):** my file was rendered under **vitest/node**; re-rendered through the
+  **real browser** (production path) ⇒ **34,808 B vs 32,978 B**, and the historical clean 5.1 file is
+  **34,836 B** — also a browser render. The browser output is fully clean and fully renders; bullets
+  right-aligned, every terms line ends with its period, waterfall reads **6,319 ₪**. The fix works.
+- **My error, stated plainly:** I reported "measured on a real PDF" without knowing it was not the
+  production render path. The manager reasoned correctly from a defective artefact I gave him.
+- **New rule in `03_quotes/CLAUDE.md`:** any PDF a human will look at is verified via the browser
+  blob, never a vitest render; unit tests assert on the element tree, not bytes. Also recorded:
+  `pdftoppm` is absent here, so this environment has no PDF page→image rendering.
+- Outcome: **no revert**; corrected PDF re-sent for Ishay's eye.
+
 ### 01/08/2026 — **Fix-round item 2: `cost ?? 0` — four sites that undid the source's own "unknown ≠ zero" discipline** (fix, Ishay's delegated ruling)
 - **Reported as a DORMANT guard before building, not oversold as a live bug.** Live DB: 0 products
   lack a cost row, 0 of 23 quote_services lack a frozen cost, and the panel is gated on the same
