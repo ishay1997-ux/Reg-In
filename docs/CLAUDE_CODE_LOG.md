@@ -132,6 +132,22 @@
   Ishay a fixed 3-line identity-only paste for the new session (number · boot-from-disk · broadcast
   order). Deliberately NOT a context prompt — F1's mega-prompt subtraction stands; context boots
   from the disk handoff block.
+### 01/08/2026 — **Work plan refreshed: the last two closing steps had never been written down** (management)
+- Ishay asked whether the closing-audit re-run and the PR were in the plan. **They were not** — and the
+  window had not been refreshed in eleven hours despite eight items closing, though the file's own rules
+  require a refresh on every close. The M4 rulings row still read "awaiting Ishay" after being ruled at
+  11:50; landed and cancelled rows still read as pending.
+- Window now carries rows 13–17: change-comparison → extended fixture round → full green gate →
+  **`module-close` re-run in a FRESH session** → PR (Ishay merges, iron rule 10). The re-run is justified
+  by measurement, not ritual: the 06:59 audit predates every afternoon change, so its evidence is stale.
+  Manager independently re-verifies its load-bearing claims before the PR — it is a self-audit by the
+  session that built the module.
+- Deferred with reasons recorded rather than "no time": expiry-as-stored-column (~2-3h + a live-data
+  migration; the row-13 fix removes the observed scenario and the remaining one has zero measured
+  occurrences) · quote versioning (**the frozen spec explicitly rules it out**, C5 §5.5.5: every edit
+  overwrites its predecessor) · M4 §7 prep (real material exists, needs a fresh head — handed to the
+  next manager).
+
 ### 01/08/2026 — **Mini rulings round (afternoon): three decisions, one of them against the manager's recommendation** (§7)
 - **Bounce/undeliverable mail → Ishay chose the middle option: an on-screen warning about a suspicious
   domain** (manager recommended doing nothing before the deadline; he overruled). Born from a measured
