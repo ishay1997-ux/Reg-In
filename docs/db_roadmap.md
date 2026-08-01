@@ -34,6 +34,18 @@ vs **18** rows in `supabase_migrations.schema_migrations`.
   `apply_migration` stamps its own UTC version (e.g. round A's `20260731085335` is registered as
   `20260731060107`). This gap **re-opens on every future MCP apply** — it is structural, not drift.
 
+**↳ Re-measured live 01/08/2026 (step 5.3, explicit-definition sweep across a work-manager finding
+of 4 different live migration-count numbers — 9/11/8/22 — across this file, the guide, and the
+folder itself):** **22** files vs **21** rows now. Same two files still unregistered-but-live
+(re-confirmed directly: `customer_contacts` table exists, `quote_services.line_id` column exists);
+one file was added since 31/07 and round G's single file registered as 3 rows, so the gap **grew by
+exactly the expected amount** — this is the ruled pattern continuing, not a new incident. **The
+declared definition adopted this round for "module-3 migration count" specifically** (used in
+`module-3.md` and its DoD): **filename-prefix `module3_` on disk = 10** (documentation-folder count,
+consistent with this section's own framing that the folder is the record). `round_g_db_hardening`
+touches module-3-owned objects (`product_costs`) but is a cross-module hardening pass, not
+`module3_`-named — tracked separately, not folded into the 10.
+
 **Consequence:** `supabase db push` would try to re-run already-applied migrations, and the two
 unregistered ones are **not idempotent** (`create table` · `drop constraint` · `add constraint`
 without `if not exists`) — so it halts on `customer_contacts`. **There is no automatic way to rebuild
@@ -53,7 +65,7 @@ only) · the typed-echo gate before every apply · `docs/schema.sql` refreshed a
 - Schema SSOT (reads): `docs/schema.sql` (snapshot). Changes SSOT: `supabase/migrations/` (8 files:
   local-only baseline + 7 applied remote migrations, latest `20260707163709_module1_users_rls_initplan_select_wrap`).
   ⚠️ **This file-count line is a 08/07 snapshot and is stale by design** — the authoritative live
-  count is in §0.0 above (21/18 as of 31/07). Do not "fix" one without re-measuring both.
+  count is in §0.0 above (22/21 as of 01/08). Do not "fix" one without re-measuring both.
 - **16 tables**: roles, modules, permissions, users, login_attempts (Module-1 infra, RLS+policies live) ·
   customers, products, price_tiers, params, quotes, quote_services, projects, hostesses,
   salary_reports, assignments, logistics (11 business tables — live RLS **on** with 0 policies =
