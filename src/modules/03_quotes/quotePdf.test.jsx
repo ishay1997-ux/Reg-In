@@ -229,3 +229,77 @@ describe('buildQuoteDocument — שומר המע"מ', () => {
     expect(texts).toContain('מע"מ (0%)')
   })
 })
+
+// ── כיוון-בסיס (BiDi) ────────────────────────────────────────────────────────
+// ⚠️ **מה הבדיקות האלה כן מוכיחות ומה לא — נאמר במפורש כדי שלא ייקראו כיותר ממה שהן.**
+// הן מאמתות את ה**מנגנון** (לכל טקסט עברי יש `direction:'rtl'` משלו), לא את התוצאה
+// הוויזואלית. סדר-הגליפים בעמוד אינו נגיש מכאן, ובדיקה שהייתה מתיימרת למדוד אותו
+// מתוך שכבת-הטקסט הייתה "שומר שאינו שומר" — עוברת על מסמך שבור. האימות הוויזואלי
+// נעשה בעין על PDF אמיתי ומתועד ב-`module-3.md` §9 (01/08/2026).
+// **הכשל שהן כן תופסות, והוא הכשל שקרה בפועל:** `<Text>` עברי חדש שנוסף בלי `RTL`,
+// או `<Ltr>` שאתר-קריאה הופך בשקט דרך `style`.
+
+// מריץ רכיבי-פונקציה (Pair/TotalRow/Ltr/LinesTable) כדי להגיע ל-<Text> האמיתיים —
+// `buildQuoteDocument` מחזיר אלמנטים שטרם הורצו, ו-`collectStrings` שמעל קורא רק props.
+function resolveTree(node) {
+  if (node === null || node === undefined || typeof node !== 'object') return node
+  if (Array.isArray(node)) return node.map(resolveTree)
+  if (typeof node.type === 'function') return resolveTree(node.type(node.props))
+  const children = node.props?.children
+  if (children === undefined) return node
+  return { ...node, props: { ...node.props, children: resolveTree(children) } }
+}
+
+// מאחד `style` שיכול להיות object או מערך (react-pdf מקבל את שניהם), לפי סדר-הקדימות
+// האמיתי: אחרון גובר — בדיוק מה שהופך את מיקום `direction` ב-<Ltr> למשמעותי.
+function flattenStyle(style) {
+  if (!style) return {}
+  return Array.isArray(style) ? Object.assign({}, ...style.map(flattenStyle)) : style
+}
+
+const HEBREW = /[֐-׿]/
+
+// אוסף { text, direction } לכל צומת-טקסט עלה בעץ המורץ.
+function collectTextNodes(node, out = []) {
+  if (node === null || node === undefined || typeof node !== 'object') return out
+  if (Array.isArray(node)) {
+    for (const child of node) collectTextNodes(child, out)
+    return out
+  }
+  const children = node.props?.children
+  const isLeafText =
+    typeof children === 'string' ||
+    typeof children === 'number' ||
+    (Array.isArray(children) && children.every((c) => typeof c !== 'object' || c === null))
+
+  if (children !== undefined && isLeafText) {
+    const text = (Array.isArray(children) ? children : [children])
+      .filter((c) => c !== null && c !== undefined && typeof c !== 'boolean')
+      .join('')
+    out.push({ text, direction: flattenStyle(node.props.style).direction })
+  }
+  if (children !== undefined) collectTextNodes(children, out)
+  return out
+}
+
+describe('buildQuoteDocument — כיוון-בסיס עברי', () => {
+  const nodes = () => collectTextNodes(resolveTree(buildQuoteDocument(WORKED_EXAMPLE)))
+
+  // ⚠️ הבדיקה קיימת כי `direction` **אינו** תכונה יורשת ב-react-pdf: הגדרתה על
+  // `styles.page` היא no-op שקט, וכל `<Text>` עברי חייב אותה על עצמו. בלעדיה הנייטרלים
+  // (נקודה, סוגריים, ספרות) נודדים לקצה הלא-נכון — שלושת פגמי-ה-BiDi של 01/08/2026.
+  it('לכל טקסט עברי במסמך יש direction:"rtl" משלו', () => {
+    const hebrewWithoutRtl = nodes().filter((n) => HEBREW.test(n.text) && n.direction !== 'rtl')
+    expect(hebrewWithoutRtl.map((n) => n.text)).toEqual([])
+  })
+
+  // הצד ההפוך, ובדיוק הבאג שנוצר בעת התיקון עצמו: `<Ltr style={styles.pairVal}>` —
+  // שימוש אמיתי בקובץ — קיבל את ה-rtl של pairVal והפך את הערך הלטיני. `<Ltr>` חייב
+  // לגבור על כל סגנון חיצוני, אחרת ח"פ/טלפון/תאריך/שעות מתהפכים בבת-אחת ובשקט.
+  it('ערכים לטיניים/מספריים נשארים ltr גם כשהסגנון שהועבר להם הוא rtl', () => {
+    const ltrValues = nodes().filter((n) => !HEBREW.test(n.text) && n.text.trim() !== '')
+    // ביקורת-שפיות: אם אף ערך לטיני לא נאסף, הבדיקה ריקה ומשקרת.
+    expect(ltrValues.length).toBeGreaterThan(5)
+    expect(ltrValues.filter((n) => n.direction === 'rtl').map((n) => n.text)).toEqual([])
+  })
+})

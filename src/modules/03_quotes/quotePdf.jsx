@@ -31,6 +31,21 @@ const MUTED = '#64748B'
 const LINE = '#E2E8F0'
 const RULE = '#CBD5E1'
 
+// ── מוקש 4: כיוון-הבסיס אינו נורש ─────────────────────────────────────────────
+// ⚠️ ‏`direction` **אינו** ברשימת התכונות שהיורשות של react-pdf
+// (`BASE_INHERITABLE_PROPERTIES` ב-`@react-pdf/layout`), וברירת-המחדל שלו ב-`getFragments`
+// היא `'ltr'` קשיח. המשמעות: הגדרת `direction:'rtl'` על `styles.page` היא **no-op שקט** —
+// היא לא מגיעה לאף `<Text>`. לכן כל טקסט עברי חייב אותה **על עצמו**.
+//
+// למה זה משנה בכלל, כשהעברית ממילא נראית תקינה: ‏`textAlign:'right'` הוא **יישור, לא כיוון**.
+// בלי כיוון-בסיס RTL כל פסקה עברית מטופלת כרצף מושתל בתוך פסקה לטינית, ואז **הנייטרלים**
+// (נקודה, סוגריים, ספרות) נודדים לקצה הלא-נכון: `.IN-REG ...מול` במקום `...מול REG-IN.`,
+// ושדה-"הנדון" עם תוכן מעורב מתפרק לגמרי. שלושת פגמי-ה-BiDi שנמצאו במסמך 01/08/2026
+// הם מופע אחד של הכשל הזה, לא שלושה שונים.
+//
+// ⛔ אל תמירו את זה ל-`direction` על ה-`View` העוטף או על ה-`Page` — נבדק, לא עובד.
+const RTL = { direction: 'rtl' }
+
 const styles = StyleSheet.create({
   page: {
     fontFamily: 'Heebo',
@@ -43,7 +58,14 @@ const styles = StyleSheet.create({
   },
   head: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-start' },
   logo: { width: 120, height: 43.7, objectFit: 'contain' },
-  docTitle: { fontSize: 20, fontWeight: 700, color: TEAL, marginBottom: 7, textAlign: 'left' },
+  docTitle: {
+    ...RTL,
+    fontSize: 20,
+    fontWeight: 700,
+    color: TEAL,
+    marginBottom: 7,
+    textAlign: 'left',
+  },
   metaBox: { borderWidth: 1, borderColor: RULE, borderRadius: 4, minWidth: 175 },
   metaRow: {
     flexDirection: 'row-reverse',
@@ -54,11 +76,12 @@ const styles = StyleSheet.create({
     borderBottomColor: LINE,
   },
   metaRowLast: { borderBottomWidth: 0 },
-  metaKey: { color: MUTED, fontSize: 8.5 },
+  metaKey: { ...RTL, color: MUTED, fontSize: 8.5 },
   rule: { height: 2.5, backgroundColor: TEAL, borderRadius: 1, marginTop: 9, marginBottom: 11 },
 
   section: { marginBottom: 12 },
   sectionTitle: {
+    ...RTL,
     fontSize: 11,
     fontWeight: 700,
     color: TEAL,
@@ -70,8 +93,8 @@ const styles = StyleSheet.create({
   },
   pairs: { flexDirection: 'row-reverse', flexWrap: 'wrap' },
   pair: { flexDirection: 'row-reverse', width: '50%', paddingVertical: 3.5, paddingLeft: 16 },
-  pairKey: { color: MUTED, width: 80, textAlign: 'right' },
-  pairVal: { fontWeight: 700, flex: 1 },
+  pairKey: { ...RTL, color: MUTED, width: 80, textAlign: 'right' },
+  pairVal: { ...RTL, fontWeight: 700, flex: 1 },
 
   th: {
     flexDirection: 'row-reverse',
@@ -112,6 +135,7 @@ const styles = StyleSheet.create({
   },
 
   notesBox: {
+    ...RTL,
     backgroundColor: '#F8FAFC',
     borderRightWidth: 2.5,
     borderRightColor: TEAL,
@@ -120,7 +144,7 @@ const styles = StyleSheet.create({
     lineHeight: 1.5,
   },
   term: { flexDirection: 'row-reverse', color: '#475569', marginBottom: 4, lineHeight: 1.5 },
-  termText: { flex: 1, textAlign: 'right' },
+  termText: { ...RTL, flex: 1, textAlign: 'right' },
   bullet: { width: 9, textAlign: 'right' },
   footer: {
     position: 'absolute',
@@ -138,6 +162,9 @@ const styles = StyleSheet.create({
 })
 
 // רוחבי עמודות הטבלה — סכומם 100%. מוגדרים פעם אחת כדי שהכותרת והשורות לא יוכלו להיפרד.
+// ⚠️ **בלי `...RTL` כאן, במכוון.** ‏`CELL_GAP` נפרש גם לתאי-<Ltr> (מק"ט, מחיר, סה"כ),
+// ו-`Ltr` בונה `style={[{direction:'ltr'}, style]}` — כלומר הסגנון שמועבר **גובר**.
+// הוספת `direction:'rtl'` כאן הייתה הופכת בשקט את כל הערכים הלטיניים בטבלה.
 const CELL_GAP = { paddingHorizontal: 5 }
 const COLS = {
   sku: '13%',
@@ -156,8 +183,13 @@ const COLS = {
 // מתקן את זה (נבדק), וגם לא תווי-הבידוד LRI/PDI — הם מודפסים כג'יבריש.
 // מה שכן עובד: הערך יושב ב-<Text> **משלו** עם direction:'ltr'. לכן כל ערך לטיני/מספרי
 // במסמך הזה עובר דרך <Ltr>, ולעולם לא משורשר לתווית עברית באותה מחרוזת.
+// ⚠️ ‏`direction:'ltr'` נכתב **אחרון** במערך, ולכן הוא גובר על כל סגנון שמועבר מבחוץ.
+// זה לא סגנון-כתיבה אלא הגנה: `<Ltr style={styles.pairVal}>` — שימוש אמיתי בקובץ הזה —
+// היה מקבל את `direction:'rtl'` של `pairVal` ו**הופך בשקט את הערך הלטיני**. הכיוון של
+// `<Ltr>` הוא כל תפקידו; אסור שאתר-קריאה יוכל לבטל אותו בלי לשים לב. (נתפס 01/08/2026
+// בעת הוספת בסיס-ה-RTL: ח"פ, טלפון, תאריך ושעות התהפכו כולם בבת-אחת.)
 function Ltr({ children, style }) {
-  return <Text style={[{ direction: 'ltr' }, style]}>{children}</Text>
+  return <Text style={[style, { direction: 'ltr' }]}>{children}</Text>
 }
 
 function Pair({ label, value, ltr }) {
@@ -173,10 +205,12 @@ function Pair({ label, value, ltr }) {
   )
 }
 
+// ⚠️ התווית מקבלת RTL מפורש: היא **מעורבת** — `הנחת לקוח (5%)` נושאת ספרות, אחוז וסוגריים,
+// וללא כיוון-בסיס הם נודדים לקצה הלא-נכון וגוררים איתם את האות הראשונה של המילה.
 function TotalRow({ label, value, style }) {
   return (
     <View style={[styles.totalRow, style]}>
-      <Text>{label}</Text>
+      <Text style={RTL}>{label}</Text>
       <Ltr>{value}</Ltr>
     </View>
   )
@@ -220,27 +254,31 @@ function LinesTable({ lines }) {
   return (
     <View>
       <View style={styles.th} fixed>
-        <Text style={{ ...CELL_GAP, width: COLS.sku }}>קוד פריט</Text>
-        <Text style={{ ...CELL_GAP, width: COLS.name }}>תיאור השירות</Text>
-        <Text style={{ ...CELL_GAP, width: COLS.qty }}>כמות</Text>
-        <Text style={{ ...CELL_GAP, width: COLS.color }}>צבע</Text>
-        <Text style={{ ...CELL_GAP, width: COLS.notes }}>הערות</Text>
-        <Text style={{ ...CELL_GAP, width: COLS.unit, textAlign: 'left' }}>מחיר יחידה</Text>
-        <Text style={{ ...CELL_GAP, width: COLS.total, textAlign: 'left' }}>סה&quot;כ</Text>
+        <Text style={{ ...CELL_GAP, ...RTL, width: COLS.sku }}>קוד פריט</Text>
+        <Text style={{ ...CELL_GAP, ...RTL, width: COLS.name }}>תיאור השירות</Text>
+        <Text style={{ ...CELL_GAP, ...RTL, width: COLS.qty }}>כמות</Text>
+        <Text style={{ ...CELL_GAP, ...RTL, width: COLS.color }}>צבע</Text>
+        <Text style={{ ...CELL_GAP, ...RTL, width: COLS.notes }}>הערות</Text>
+        <Text style={{ ...CELL_GAP, ...RTL, width: COLS.unit, textAlign: 'left' }}>מחיר יחידה</Text>
+        <Text style={{ ...CELL_GAP, ...RTL, width: COLS.total, textAlign: 'left' }}>סה&quot;כ</Text>
       </View>
       {lines.map((line, i) => (
         <View key={line.sku ?? i} style={[styles.tr, i % 2 === 1 && styles.trAlt]} wrap={false}>
           <Ltr style={{ ...CELL_GAP, width: COLS.sku, textAlign: 'right', color: '#475569' }}>
             {line.sku ?? '—'}
           </Ltr>
-          <Text style={{ ...CELL_GAP, width: COLS.name }}>{line.itemName ?? '—'}</Text>
+          <Text style={{ ...CELL_GAP, ...RTL, width: COLS.name }}>{line.itemName ?? '—'}</Text>
           <Ltr style={{ ...CELL_GAP, width: COLS.qty, textAlign: 'right' }}>
             {String(line.qty ?? 0)}
           </Ltr>
-          <Text style={{ ...CELL_GAP, width: COLS.color, color: line.color ? INK : '#94A3B8' }}>
+          <Text
+            style={{ ...CELL_GAP, ...RTL, width: COLS.color, color: line.color ? INK : '#94A3B8' }}
+          >
             {line.color || NO_COLOR_LABEL}
           </Text>
-          <Text style={{ ...CELL_GAP, width: COLS.notes, color: MUTED }}>{line.notes ?? ''}</Text>
+          <Text style={{ ...CELL_GAP, ...RTL, width: COLS.notes, color: MUTED }}>
+            {line.notes ?? ''}
+          </Text>
           <Ltr style={{ ...CELL_GAP, width: COLS.unit, textAlign: 'left' }}>
             {formatShekelWhole(line.unitPrice)}
           </Ltr>
@@ -368,7 +406,7 @@ export function buildQuoteDocument(quote) {
             />
             <TotalRow label={`מע"מ (${vatRate}%)`} value={formatShekelWhole(totals.vatAmount)} />
             <View style={styles.grand}>
-              <Text>סה&quot;כ סופי לתשלום</Text>
+              <Text style={RTL}>סה&quot;כ סופי לתשלום</Text>
               <Ltr>{formatShekelWhole(totals.total)}</Ltr>
             </View>
           </View>
@@ -397,7 +435,11 @@ export function buildQuoteDocument(quote) {
 
         <View style={styles.footer} fixed>
           <Ltr>REG-IN · Events | Registration | Solutions</Ltr>
-          <Text render={({ pageNumber, totalPages }) => `עמוד ${pageNumber} מתוך ${totalPages}`} />
+          {/* מעורב (עברית + שתי ספרות) — ולכן RTL מפורש, אחרת יוצא "2 תוך 1 מוד". */}
+          <Text
+            style={RTL}
+            render={({ pageNumber, totalPages }) => `עמוד ${pageNumber} מתוך ${totalPages}`}
+          />
         </View>
       </Page>
     </Document>

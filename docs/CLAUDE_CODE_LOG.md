@@ -47,6 +47,29 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 01/08/2026 — **Fix-round item 3: PDF BiDi — three reported defects, one root cause, and a planned fix that would have been a no-op** (fix, work-manager-approved plan)
+- **The plan's own hypothesis was half-wrong, and reading the library caught it before any code.**
+  Plan said "add `direction:'rtl'` to `styles.page`". `@react-pdf/layout`'s
+  `BASE_INHERITABLE_PROPERTIES` contains `textAlign` but **not** `direction`, and `getFragments`
+  reads it off each `<Text>`'s own style with a hard `'ltr'` default ⇒ the Page-level fix would
+  have changed **nothing, silently**, and the visual check afterwards could easily have been
+  read as "partly worked". Correct fix: a `RTL` const spread into every Hebrew text style.
+- **All three defects were one mechanism.** `textAlign:'right'` is alignment, not direction;
+  with no RTL base, neutrals (period, parens, digits) migrate to the wrong edge. Measured
+  before→after: terms periods moved line-start→line-end, "הנדון" reordered, "30 יום" clean.
+- **The fix introduced a real bug, caught by measurement.** `<Ltr>` built `[{direction:'ltr'},
+  style]` — so `styles.pairVal`'s new `rtl` **won**, flipping ח"פ/טלפון/תאריך/שעות at once (the
+  double-flip the work-manager predicted). `<Ltr>` now writes its direction last; `CELL_GAP`
+  deliberately excluded from `RTL` for the same reason.
+- **2 new unit guards, both watched failing on mutations** (7 texts flagged / the 4 latin values
+  flagged by name). They verify the **mechanism**, not glyph order — stated in the test file, because
+  an assertion pretending to measure visual order from the text layer would pass on a broken document.
+- **Money re-verified per the manager's condition:** real quote #21 re-rendered read-only —
+  6,300→-315→-630→5,355→964→**6,319 ₪** verbatim. **378 unit · 73/73 E2E** · lint/format clean.
+  A `quote-email` flake was **not** waved away (that test asserts on real PDF bytes) — re-run twice, both green.
+- **DoD "PDF RTL" box deliberately left UNCHECKED** — closes only on Ishay's own eye, per the standing condition.
+- Full narrative: `docs/micro_guides/module-3.md` §9 (01/08, fix-round item 3).
+
 ### 01/08/2026 — **Quote builder: fix-round item 1, silent-panel bug on discount>100%** (fix, work-manager-scoped)
 - **What:** audit finding, scoped down by Ishay before the fix ("no-draft is intentional, the
   save-block on illegal discount numbers is correct and stays — only the missing explanation was
