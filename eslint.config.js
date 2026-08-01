@@ -7,7 +7,9 @@ import prettier from 'eslint-config-prettier'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // dist = תוצר build; playwright-report/test-results = תוצרי-ריצה של Playwright (מגניזה-git),
+  // כולל bundle-ים ממוזערים של ה-trace viewer שנכשלים על no-undef/no-cond-assign כשנסרקים כקוד-מקור.
+  globalIgnores(['dist', 'playwright-report', 'test-results']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
