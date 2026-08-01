@@ -65,6 +65,7 @@ No ⇒ hang that situation on an event that can be seen.
 | 18 | A module opens / closes | his word · the last step marked ✅ | `queue.md` |
 | 19 | Before a merge · "מיזגתי" | the audit finished · he reports | `queue.md` |
 | 20 | Something broke · a session died · **"עצור עבודה"** | a test failed · no reply + dirty tree · his word | `builders.md` |
+| 22 | File maintenance (the doc corpus) | a module closes · his word — **never mid-module** | `queue.md` |
 | 21 | **None of these** | — | **here, below** |
 | — | A miss surfaces | an approval that didn't hold · a claim the repo contradicted | `learning.md` |
 
