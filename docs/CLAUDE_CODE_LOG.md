@@ -75,6 +75,9 @@
   identity broadcast covers peer managers, not only builders. `current-manager.txt` + the builder
   dead-manager clock stay candidates in `manager_evidence_regin` with the evidence against urgency
   (fresh prompts per shift; platform queues across session death).
+- **Shift-number convention codified (Ishay's design):** successor = predecessor + 1 via the
+  handoff block header; the number rides every artifact stamp and identity broadcast. Numbers
+  disambiguate for humans/documents; machine routing stays by session name/ID.
 - The work-manager's document-pass on the PDF I supplied showed dropped glyphs and a near-blank
   visual render, and proposed reverting `8506720`. **Two variables isolated instead of arguing:**
 - **Code:** re-rendered quote #21 from the **pre-fix** commit `73f6f25`, same path, same reader ⇒

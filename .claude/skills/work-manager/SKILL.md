@@ -99,6 +99,15 @@ them; where they conflict, disk wins. No reply within ~10 minutes → the disk h
 block is authoritative and the shift starts from it alone. Never assume the block is
 complete — it was written before the outgoing manager's final turns.
 
+**Shift numbers (Ishay's design, 01/08/2026):** every manager carries a sequential
+number — successor = predecessor + 1, learned from the handoff block header
+("מנהל-N → מנהל-N+1"); with no orderly handoff, take the highest "מנהל-N" visible in
+STATUS/work_plan stamps and add 1. The number appears in every artifact stamp
+("(מנהל-N)"), in the handoff block, and in the identity broadcast ("אני מנהל-N —
+הסשן הזה"). Humans and documents disambiguate by the number; machine routing still
+goes by session name/ID, which the broadcast carries — the two are complements, not
+alternatives.
+
 **Handing over as the outgoing manager (approved by Ishay, 01/08/2026):** the mirror
 side, in order: (1) write the handoff block into `docs/work_plan.md` — only what is
 in-air and NOT derivable from the files (open expectations, promises to Ishay, silenced
