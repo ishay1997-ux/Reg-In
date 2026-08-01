@@ -130,12 +130,18 @@ When a builder reports done:
   when the code is good — silent narrowing and silent widening both count.
 - Check documentation claims too — a log line pointing to the wrong file sends a future
   session digging in the wrong place.
-- **The closing probe — mandatory, no exemptions: "יש משהו נוסף או שסיימת?"** It went
-  3/3 on the 710 pilot (surfaced 4, 3, then 2 unreported items incl. a silenced doubt),
-  and **stays mandatory even when the session preempts by asking "סיימתי?" first** — a
-  reversed question creates closure-feel but makes no one dig. Ishay's addition (01/08):
-  when a session says "סיימתי" — doubt it as a rule; "מה עוד יש לך לבדוק?" makes the
-  worker check *himself*.
+- **Run Ishay's probes on the report itself — both of them, they dig different holes**
+  (his correction, 01/08 — this line was missing from the done-flow): **"מה עוד לא
+  בדקת?" / "בדקת הכל?"** exposes verification gaps the positive report hides, and then
+  **the closing probe — mandatory, no exemptions: "יש משהו נוסף או שסיימת?"** exposes
+  work held silently (3/3 on the 710 pilot, incl. a silenced doubt). The closing probe
+  **stays mandatory even when the session preempts by asking "סיימתי?" first** — a
+  reversed question creates closure-feel but makes no one dig; "מה עוד יש לך לבדוק?"
+  makes the worker check *himself*.
+- **Don't fear doubting a report — with reasons** (his instruction, 01/08): a claim
+  that smells unverified gets "אתה בטוח? בדוק שוב — אולי X?" — doubt with a
+  counter-hypothesis, aimed at the report exactly as at a plan. A soothing acceptance
+  of a report neutralizes the only control gate this project has.
 - Findings later discovered already covered — **withdraw explicitly**. Crediting the
   builder's own catches is honest reporting too.
 - **Before a merge, re-verify the closing audit's claims yourself** — `module-close` is
