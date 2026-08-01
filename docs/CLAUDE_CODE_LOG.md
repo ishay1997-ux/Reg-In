@@ -47,6 +47,27 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 01/08/2026 — **Panel-lock guard: closing the hole I reported against my own item-2 work** (manager-approved)
+- **The gap:** reinstating `?? 0` in `repriceLine` (`QuoteLineEditor.jsx`) failed **no test** — the four
+  item-2 unit tests cover `src/lib/quotes.js`, but that fourth site sits inside a component, unexported
+  and unrendered by any test.
+- **E2E chosen over unit deliberately**, despite E2E not running in CI: the gap is in the *composition*
+  (catalog → repriceLine → computeLinesCost → panel); only a rendered-panel assertion sees it.
+- Two tests: stripped-cost ⇒ 3 dashes + product named + `not.toContainText('₪')` (a panel showing
+  "0 ₪" beside the notice would otherwise pass — that *is* the bug) + an interception-counter sanity
+  check; plus a **positive control** so "always dashes" cannot pass. **Watched failing on a restored
+  `?? 0`**, green after restore.
+- ⚠️ **Two measurement notes:** a failure in the seconds right after restoring a file was **HMR serving
+  stale code**, not a verdict — re-check in isolation before concluding. And the full suite flaked once
+  on two consecutive runs on a *different* rejection test each time (`:96`, then `:71`), each green in
+  isolation, third full run **75/75 clean** — the documented load-flake, now with a "victim moves
+  between runs" signature.
+- 📌 **Doc-drift noted, no action needed:** `cf6db70` (manager) dropped my 01/08 journal entry on the
+  vitest-vs-browser render trap. Verified before flagging that every evergreen fact from it survives in
+  its durable home — `03_quotes/CLAUDE.md` (the rule + the 32,978/34,808/34,836 byte evidence),
+  `module-3.md` §9, and `STATUS.md`. So "harvest before you delete" held; recording it so the removal
+  reads as a deliberate call rather than an accident.
+
 ### 01/08/2026 — **Manager-2 shift open: handoff protocol landed, item-2 landing judged, item-3 no-revert independently confirmed** (management)
 - Manager→manager takeover+handover protocol added to `work-manager` skill (`42f94a8` + follow-up;
   Ishay's addition, both directions) and recommended to 710's manager by cross-session message.

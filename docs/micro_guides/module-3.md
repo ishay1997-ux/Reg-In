@@ -500,7 +500,19 @@ Module-specific:
 - [ ] Lock: UPDATE/DELETE on non-in_progress errors (SQL evidence).
 - [x] RPC: born-complete project + logistics rows + freezes + double-click safe + permission-checked. **(4.1, 31/07 — rolled-back battery, every guard returned its failure; `closing_unit_cost` freeze proven in both directions, not by equality.)**
 - [x] pg_cron: 2 jobs scheduled (fixed UTC hour per §7.56 nod) + simulated-run evidence. **(4.2, 31/07 — the expiry job body was run verbatim inside a rolled-back transaction, driven by the real param: 30⇒1 flipped exactly the 4 open quotes to `rejected`+'פג תוקף'; emptying the param made it raise instead of silently updating 0 rows. Both jobs' scheduling was already evidenced in 1.5.)**
-- [ ] PDF: Hebrew RTL + embedded font screenshot (§7.41 — real verification, no rubber-stamp). **❌ NOT checked, 01/08/2026 — two real BiDi defects found by the work-manager's own visual document-pass of the 5.1 PDF** (both pages, methodically — a pass the build session's own review missed, having verified content/numbers but not character-order): **(1)** the "הנדון" (subject) field scrambles mixed Hebrew/Latin/punctuation content — an event name containing English text + parentheses (`תרחיש-קבלה 5.1 (מדריך-מיקרו §Step 5.1)`) reorders unreadably; **(2)** the bullet points on the terms page (`QUOTE_TERMS`) sit at the start of the line rather than the RTL-correct position. Font-embedding itself is fine (3.1 already verified TTF/Heebo rendering). **Both are pending Ishay's ruling — explicitly NOT fixed this round** (out of scope for 5.2/5.3, a documentation-only round). This box stays open until he rules and a fix (if any) is verified.
+- [x] PDF: Hebrew RTL + embedded font screenshot (§7.41 — real verification, no rubber-stamp).
+  **✅ CLOSED 01/08/2026 13:16 — by Ishay's own eye on the corrected document, exactly as this box
+  required.** He was sent the **browser-rendered** quote #21 (the production path — the earlier file
+  he was sent had been rendered under vitest and was defective in its *production*, not its code; see
+  §9) and ruled: *"אני מאשר את ה-PDF"*. Manager-2 independently reproduced the same render to the byte
+  (34,808) with all six glyph symptoms absent. What the fix delivers, visible in that document:
+  bullets on the RTL-correct side, every terms line ending with its period, `REG-IN.` intact, the
+  mixed-content "הנדון" field in logical order, and the waterfall reading
+  6,300→-315→-630→5,355→964→**6,319 ₪**. *(Box flipped by the fix-round builder per manager-2's
+  assignment — **not** on the strength of my own tests, which was the standing condition.)*
+  ⚠️ Still open and deliberately NOT folded into this box: a pathological event name wraps with `(5.1`
+  onto a second line in the "הנדון" field — a separate product call for Ishay.
+  *(Historical record of why this box stayed open — kept, not rewritten:)* **❌ NOT checked, 01/08/2026 — two real BiDi defects found by the work-manager's own visual document-pass of the 5.1 PDF** (both pages, methodically — a pass the build session's own review missed, having verified content/numbers but not character-order): **(1)** the "הנדון" (subject) field scrambles mixed Hebrew/Latin/punctuation content — an event name containing English text + parentheses (`תרחיש-קבלה 5.1 (מדריך-מיקרו §Step 5.1)`) reorders unreadably; **(2)** the bullet points on the terms page (`QUOTE_TERMS`) sit at the start of the line rather than the RTL-correct position. Font-embedding itself is fine (3.1 already verified TTF/Heebo rendering). **Both are pending Ishay's ruling — explicitly NOT fixed this round** (out of scope for 5.2/5.3, a documentation-only round). This box stays open until he rules and a fix (if any) is verified.
   **↳ 01/08/2026 (fix-round item 3) — Ishay ruled "fix now"; the code fix has LANDED and is
   measured, but this box DELIBERATELY STAYS OPEN.** Root cause turned out to be one mechanism
   behind all three reported defects (`direction` is not an inheritable style in react-pdf, so
@@ -528,6 +540,26 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 01/08/2026 (fix-round item 2 ↳ **panel-lock guard, manager-approved**) — closes the hole I
+  reported against my own work: reinstating `?? 0` in `repriceLine` (`QuoteLineEditor.jsx`) failed
+  **no test at all**, because the four lib-level unit tests cover `src/lib/quotes.js` while that
+  fourth `?? 0` site lives inside a component and is neither exported nor rendered by any test.
+  **Chose E2E over a unit test deliberately**, despite E2E not running in CI: the gap is in the
+  *composition* (catalog → `repriceLine` → `computeLinesCost` → panel), and only an assertion on
+  the **rendered** panel observes it. Two tests in `e2e/quotes.spec.js`: cost-stripped-by-interception
+  ⇒ three dashes + the product named + **`not.toContainText('₪')`** (without that, a panel showing
+  "0 ₪" beside the notice would still pass — i.e. the bug), plus an interception-counter sanity check;
+  and a **positive control** proving the same screen shows real numbers when cost is known (without
+  it, "always dashes" would pass). **Watched failing on a deliberately restored `?? 0`** — the notice
+  never appears — then green after restore, per the manager's binding condition.
+  ⚠️ **Two measurement notes worth keeping:** (a) immediately after restoring the file, the run still
+  failed — that was **HMR serving stale code mid-run**, not a real failure; isolated re-run was green.
+  Don't read a failure in the seconds after an edit as a verdict. (b) The full suite produced **one
+  flake on two consecutive runs, on a *different* rejection test each time** (`:96` then `:71`), each
+  passing in isolation, and a third full run came back **75/75 clean** — the documented load-flake
+  family again, now with the extra signature that the *victim moves between runs*. Reported, not
+  auto-retried away. **Counts, measured this session: 75 listed E2E** (the manager measures 72 running
+  under `test:e2e`, smoke-1 excluded — his figure is the authoritative one for the gate).
 - 01/08/2026 (fix-round item 3 — **post-landing correction: my verification method was wrong,
   the code was not**). The work-manager's document-pass on the PDF I sent showed dropped glyphs
   (`הנחת לקוח`⇒`נחת לקוח`, `מע"מ`⇒`ע"מ`, `עמוד 1 מתוך 2`⇒`מוד 1 תוך 2`, qty `6` missing) and a

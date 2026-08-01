@@ -434,3 +434,78 @@ test.describe('הנחות חורגות מ-100% במסך-הבנייה — הפא�
     expect(writes).toHaveLength(0)
   })
 })
+
+test.describe('עלות-רכש לא-ידועה — מקפים, לא רווחיות 100% (סבב-התיקון פריט 2, 01/08)', () => {
+  test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
+
+  // ⚠️ **למה דווקא E2E ולא בדיקת-יחידה, למרות ש-E2E אינו רץ ב-CI:** הפער שהבדיקה הזו סוגרת
+  // אינו ב-`src/lib/quotes.js` (שם יש כבר 4 בדיקות-יחידה חוסמות-gate) אלא ב-`repriceLine`
+  // שבתוך `QuoteLineEditor.jsx` — אחד מארבעת אתרי-ה-`?? 0` המקוריים. מי שיחזיר שם `?? 0`
+  // **לא יפיל אף בדיקת-יחידה**, כי הפונקציה אינה מיוצאת ואינה נבדקת. רק אסרטה על הפאנל
+  // **המרונדר** רואה את ההרכבה בפועל. נצפתה נכשלת על `?? 0` שהוחזר בכוונה (תנאי-המנהל).
+  //
+  // ⚠️ אפס כתיבות: מדמים "מוצר בלי שורת-עלות" ביירוט-רשת בלבד — הסרת `product_costs`
+  // מתשובת-הקטלוג היא בדיוק מה שה-LEFT join מחזיר למי שאין לו הרשאת-עלות. אסור להזריק
+  // שורות למסד (אין סביבת-בדיקה נפרדת — `src/CLAUDE.md`).
+  async function stripProductCosts(page) {
+    const counter = { intercepted: 0 }
+    await page.route('**/rest/v1/products**', async (route) => {
+      const res = await route.fetch()
+      let body
+      try {
+        body = await res.json()
+      } catch {
+        return route.fulfill({ response: res })
+      }
+      if (Array.isArray(body) && body.some((r) => 'product_costs' in r)) {
+        counter.intercepted += 1
+        body = body.map((r) => ({ ...r, product_costs: null }))
+      }
+      await route.fulfill({ response: res, body: JSON.stringify(body) })
+    })
+    return counter
+  }
+
+  async function addProductLine(page, productText) {
+    await page.getByTestId('quote-line-add').click()
+    await page.locator('[data-testid^="quote-line-product-"]').last().click()
+    await page.getByRole('option').filter({ hasText: productText }).first().click()
+  }
+
+  test('מוצר בלי עלות ⇒ שלושת השדות מקפים + שם המוצר, ואפס כתיבות', async ({ page }) => {
+    const writes = countQuoteWrites(page)
+    const counter = await stripProductCosts(page)
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await page.goto('/quotes/new')
+    await expect(page.getByTestId('quote-profitability')).toBeVisible({ timeout: 30_000 })
+
+    await addProductLine(page, 'תג שם רגיל')
+
+    const notice = page.getByTestId('quote-cost-unknown')
+    await expect(notice).toBeVisible()
+    await expect(notice).toContainText('תג שם רגיל')
+
+    // ⚠️ האסרטה האמיתית: **אין מספר** בשדות-הרווחיות. בלי זה, בדיקה שרואה רק את ההודעה
+    // הייתה עוברת גם על פאנל שמציג "0 ₪" לצידה — כלומר בדיוק הבאג.
+    const panel = page.getByTestId('quote-profitability')
+    await expect(panel).toContainText('—')
+    await expect(panel).not.toContainText('₪')
+
+    // ביקורת-שפיות: היירוט באמת פעל. בלעדיה הבדיקה יכולה "לעבור" כי כלום לא קרה.
+    expect(counter.intercepted).toBeGreaterThan(0)
+    expect(writes).toHaveLength(0)
+  })
+
+  // בקרת-חיוב: בלי היירוט אותו מסך **חייב** להציג מספרים. בלי הכיוון הזה, "מקפים תמיד"
+  // היה עובר את הבדיקה שמעל בירוק מלא.
+  test('בקרת-חיוב — עם עלות ידועה מוצגים מספרים ואין הודעה', async ({ page }) => {
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await page.goto('/quotes/new')
+    await expect(page.getByTestId('quote-profitability')).toBeVisible({ timeout: 30_000 })
+
+    await addProductLine(page, 'תג שם רגיל')
+
+    await expect(page.getByTestId('quote-cost-unknown')).toHaveCount(0)
+    await expect(page.getByTestId('quote-profitability')).toContainText('₪')
+  })
+})
