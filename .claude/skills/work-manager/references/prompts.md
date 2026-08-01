@@ -33,6 +33,10 @@ without this conversation.
    within a reasonable time → the builder stops and asks Ishay directly**.
 9. **A time estimate** — it feeds the ~120% silence threshold
    (references/watching.md).
+9ב. **A model + effort recommendation, with the reason** — per the work-type table in
+   `docs/guides/reference/claude_code_setup.md` §⑨ (Ishay's request, 01/08: "לכתוב לי
+   גם איזה מודל להשתמש"). Routine guide-driven build → Sonnet/high; DB-schema,
+   complex business logic, module open/close → Opus/Fable high–xhigh.
 10. **Route deliberately**: follow-up fixes to the session that owns the context;
     fresh rounds to fresh sessions; hold a prompt while in-flight work could
     invalidate it — and re-verify it when the hold lifts.

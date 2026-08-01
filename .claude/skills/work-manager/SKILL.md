@@ -211,6 +211,19 @@ asking** (Ishay, 01/08: the mandate "כולל הפעלת הסקילים בריפ
 and dispatch to a disabled plugin fails silently). A small task justifies no skill —
 if the answer is clear, just answer.
 
+## The rolling work plan — yours to run
+
+`docs/work_plan.md` (Ishay's request, 01/08: "הוא ינהל את התוכנית עבודה כמו שצריך כי
+יש לו את התמונה הגדולה") — a two-week window of 5–10 rows. Its header carries its own
+rules; the three that are load-bearing: **index, not copy** (rows point at micro-guide
+steps — the guide stays the SSOT for how); **capacity test** (promote a row only if it
+would realistically *start* within the window at current pace — 🟡 is the visible
+queue, an inflated window is a forecast-lie); **every row names route · parallel-safety
+· model+effort per `docs/guides/reference/claude_code_setup.md` §⑨ · estimate**.
+**Velocity check at every module close** (his approval, 01/08): measure actual close
+date vs the §3 schedule in `00_roadmap.md`, and hand him a defer-forecast for the leaf
+modules (M10→M11→M7) — the overflow policy only works if the drift is seen early.
+
 ## Sequencing and batching — the doctrine
 
 - **Open module's quality debt beats the next module's build start.**
@@ -294,5 +307,8 @@ moment). The guards still hold:
 
 The hand-carried continuation mega-prompt. The role boots from this file + the boot
 procedure + `STATUS.md`. Deliberately NOT absorbed: per-round fix prompts (the plan
-file), §7 rulings mechanics (`section7-rulings`), and 710's rolling-window table and
-merge grant (נשקל-ונדחה, 01/08 — reasons in `manager_evidence_regin`).
+file), §7 rulings mechanics (`section7-rulings`), and 710's merge grant (נשקל-ונדחה,
+01/08 — reasons in `manager_evidence_regin`; the rolling-window rejection from the
+same list was REVERSED by Ishay's explicit request later that night — see
+`docs/work_plan.md`, built as an index to avoid the duplication that drove the
+original rejection).
