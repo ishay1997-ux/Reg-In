@@ -70,6 +70,12 @@
   `docs/work_manager_situations_draft.md` — 21 situations keyed by *the situation I am in*, each with
   what-I-read / what-comes-out, tagged 🔁 routine vs 📖 rare. Trigger for shift close fixed by Ishay:
   the words "סגור/סיום/סוף משמרת" — all three equivalent. **Nothing written to the skill this shift.**
+- **Baton-pass designed and ruled** (Ishay: *"סבבה שהיורש ימחק"*): three artifacts with one job each —
+  Hebrew preface stays **in chat**, the paste block carries **identity + path + a distrust line only**
+  (710's wording: *"מדוד git בעצמך לפני שאתה מאמין למסמך"*), and the load moves to a repo handoff doc
+  that **opens with the successor's full read-list** and is **deleted by the successor**. Safe to delete
+  only under the stated condition: everything durable moved to the repo *before* the doc was written.
+  Both arenas had the same missing-read-list bug; 710 found theirs by checking after we compared.
 
 ### 01/08/2026 — **"עדכן ושלח" without changes no longer saves — and the brief's own wording was wrong** (feature, Ishay's ruling)
 - **The bug:** no change detection, so an empty update ran a full `update`; `moddatetime` bumped
