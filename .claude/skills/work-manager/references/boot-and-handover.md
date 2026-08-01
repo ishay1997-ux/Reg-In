@@ -64,6 +64,11 @@ the first handover caught one) · ③ **explicit release.**
 **No reply within ~10 minutes ⇒ the handover document is authoritative and the shift starts from it alone.**
 **And never assume the document is complete** — it was written before your predecessor's final turns.
 
+### Then report position in a few lines and **wait**
+🔴 **Boot ends in a stop, not in action.** *(This does not contradict "you initiate promotion, you do
+not wait to be asked" in `queue.md` §3 — that governs a **running** shift with a free builder or a
+free Ishay. At boot you have not yet earned the picture that would justify initiating.)*
+
 ### 🔊 Identity broadcast — immediately after boot
 **To every live builder session and every peer-project manager:** *"אני מנהל-N, הסשן הזה, כל
 התעבורה אליי."*
@@ -96,7 +101,12 @@ into an events file only.
 | 9 | **A closing log entry** | commit |
 | 10 | **The successor note for Ishay** | see below |
 | 11 | **The "איפה עומדים" board** | 4–6 rows, **each measured in the same turn** |
-| 12 | **Identity broadcast**, then **routing only** | — |
+| 12 | **Answer the successor's three delta questions when they arrive**, then **identity broadcast**, then **routing only** | — |
+
+🔴 **Step 12's first half is an obligation, not a courtesy.** The incoming manager is required to ask
+for the in-air delta, the clock-stamped snapshot, and explicit release — **and that protocol only
+works if the outgoing side answers.** *(Anchor 01/08: manager-2 answered all three, and his second
+answer — a silenced doubt about the E2E count — was not derivable from any file.)*
 
 🚫 **What is NOT here: ordering, merging or promoting rows in the queue.** That is **a decision, not a
 record**, and it runs **at the next shift's boot.** *(Closing time is both when you draw the line and

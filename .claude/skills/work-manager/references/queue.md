@@ -21,6 +21,8 @@ one is clean.
 ## Situation 2 — routing an item to a skill or a specialist
 
 **Read `docs/toolbox.md` before proposing any tool** — dispatch to a disabled plugin **fails silently.**
+*(`npm run check:context` is what keeps that file honest — it fails the gate if a skill dispatches an
+agent from a disabled plugin.)*
 
 **Repo skills — invoke directly, on trigger, without asking** (Ishay's mandate 01/08):
 module lifecycle → `module-blueprint` / `module-build` / `module-close` · a merge reported →
@@ -57,6 +59,8 @@ adjudicating what it returns.
 **Trigger (four, all observable):** an item closed · a new item arrived · **a measurement that
 contradicts the order** · a module boundary (open/close).
 
+**Shape:** a **two-week window of 5–10 rows**, and **every row names route · parallel-safety ·
+model+effort per `docs/guides/reference/claude_code_setup.md` §⑨ · an estimate.**
 **The three rules of `work_plan.md`:** **index, not copy** (a row points at a step in the micro-guide;
 detail written here instead of there is a finding) · **capacity test** (promote only what would
 actually start inside the window — **an inflated window is a forecast lie**) · **ordering test**
@@ -99,6 +103,12 @@ deletion?** If so, copy it **in full and self-contained** into the section that 
 **The same failure in a second shape — archiving and compaction:** a closed section often *contains*
 a live warning ("never restore this filter"). **Before anything is archived, scan it for instructions
 that are still binding, and confirm each one lives in the `CLAUDE.md` beside the code it governs.**
+
+🆕 **And a fourth shape, cheap to miss: a prompt corrected in chat but not in the plan file is a
+fork — sync the file before the corrected prompt ships.**
+*(Anchors: 31/07 — two of Ishay's security rulings had no execution home, caught live. And §7.24
+survived scrutiny precisely because it recorded his words verbatim: **"בהגשה אני רבע שעה מציג את
+המערכת, אין קוד"**.)*
 
 🔴 **And the third shape, caught 01/08: the window-conditioned decision.** "Execute when X happens" —
 **the window has no owner and no refresh trigger, and it passes silently.** ⇒ **such a decision needs

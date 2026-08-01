@@ -45,6 +45,10 @@ intent only: the frozen spec · §7 rulings · the approved mockup · the schema
 wearing a citation.** In doubt whether the source truly answers ⇒ **that IS "no source"** ⇒ it climbs
 to Ishay as a story-question. *(A wasted question costs him seconds; a guessed intent costs a build.)*
 
+*Anchor: the "panel bug" was over-scoped for a whole gate-cycle because no layer consulted the
+schema's own three-status shape — the no-draft answer sat on disk the entire time, and **Ishay caught
+it by holding the prompt.***
+
 **A seventh layer — intent the sources do not hold — stays Ishay's, always.**
 
 ### Caps on the verdict

@@ -135,6 +135,34 @@
   battery to the wrong session today, matched by title; what saved it was the recipient identifying
   himself, not a mechanism. ⚠️ Open dependency: a manager **cannot see its own session name**
   (`list_sessions` excludes the caller) — asked Ishay once, to be recorded permanently.
+- ✅ **MIGRATION COMPLETE — the manager skill is now organised by situation, not by topic.**
+  `SKILL.md` 467 → **158** (a spine: the dispatcher loop · a 21-situation trigger table · the
+  two-question authority test · situation 21's default · the one habit · gate scope and its three
+  mandatory compensations). Five new moment-scoped references (`boot-and-handover` · `builders` ·
+  `ishay` · `queue` · `learning`); `prompts` · `watching` · `concurrency` retained unchanged;
+  `decision-guarding.md` absorbed into `queue.md` §15 and deleted. **`npm run check:context` green.**
+  **Size, stated plainly: rule text 701 → 926 lines (+32%)** — 8 situations had no source content and
+  were written from scratch, plus ~25 rulings from this shift.
+- 🔴 **The fresh-context comparison agent earned its keep: 11 items had been lost in the move**, 7 at
+  HIGH confidence, **none of which the migrator would have caught** — he was the one who dropped them.
+  All 11 restored. The load-bearing ones: *"a prompt corrected in chat but not in the plan file is a
+  fork"* · **the outgoing manager's duty to answer the successor's three delta questions** · *council
+  output feeds the decision, never replaces it; product trade-offs still climb* · **the delegated half
+  of the 👤-stop split** (the "stays his" half had survived, the delegated half had not).
+- **Situation 21 now carries a procedure for building a new situation** — the 8 steps this shift
+  actually used, including the one the manager had omitted from his own description (*read what is
+  written and measure it*, distinct from *describe what you do*), a **conflict check** against the
+  authority test, the playbook consulted inside step ⑤, and landing only at shift close.
+  🔴 **With the honest admission in the text: the trigger for this is mostly Ishay** — on 01/08 nearly
+  every "this is new" was his recognition, not the manager's.
+- **`module-build` repaired** (approved earlier, executed now): the gap protocol · per-claim
+  verification tagging · the two investigation questions aimed at the manager's prompt · **an internal
+  contradiction fixed** (line 26 routed product questions to the manager, line 44 sent the phase-entry
+  ledger sweep straight to Ishay) · **and a pointer that led nowhere** — it told builders to find the
+  deadline in `STATUS.md`, where there isn't one.
+- **New for Ishay: `docs/manager_triggers.md`** — a dictionary of which words trigger what, what each
+  costs, **what is NOT a trigger** (so the manager asks instead of guessing), and the gates no word
+  ever opens.
 - **Migration started (Ishay approved the method).** Written so far: `SKILL.new.md` (the spine —
   dispatcher loop, 21-situation trigger table, the two-question authority test, situation 21's default,
   the one habit, gate scope + the three mandatory compensations) and `references/builders.md`

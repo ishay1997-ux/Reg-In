@@ -104,7 +104,12 @@ him** → record his answer **verbatim with its trigger** → answer the worker 
 directly, citing the precedent. **Every escalation happens at most once.**
 🚫 **Harvest only from real exchanges — never invent "what he would probably say".** His own
 overfitting warning applies to his sentences too.
+**Grow it proactively too, not only on escalation:** from every exchange · from **transcript mining**
+(`search_session_transcripts`) · and from the calibration game.
 **The canonical home: `~/.claude/references/ishay-response-playbook.md`** (a single copy, cross-project).
+🔴 **The `ishay_response_playbook` memory file holds REG-IN deltas ONLY** — new universal rows land in
+the canonical file, never duplicated into the memory. *(Per-project copies were drifting; that is why
+it was elevated.)*
 ⚠️ **Two managers write to that file — re-read immediately before writing and merge on top, never
 from a stale copy.**
 

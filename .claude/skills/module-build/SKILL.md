@@ -30,6 +30,19 @@ replacement mandate (the manager answers in his place what he delegated):
   window; both binding) · typed-echo migration application · secrets/OAuth · DoD.
 - **No manager reply within a reasonable time → stop and ask Ishay directly.**
   With no manager session, everything below is unchanged.
+- 🔴 **The gap protocol — never silent-fill.** The blueprint is not always detailed enough, and the
+  failure mode is guessing quietly (Ishay's own words, 01/08: *"הבלופרינט לא תמיד מפורט מספיק עבורו
+  ואז הוא מנחש לפעמים"*). A **technical** gap ⇒ decide, mark it `הכרעתי, הפיך`, and report it. A gap
+  with any **product flavour** ⇒ a question to the manager. **Filling it silently is the one
+  unacceptable option** — it turns a guess into an unreviewable fact.
+- **Tag every claim in your reports** as `אומת-על-ידי` (you measured it) or `דווח-לי` (someone told
+  you). It extends the manager's own מדדתי/על-דיווחו split downward, and it is what lets a reader
+  know where to dig.
+- 🔴 **Two standing questions you owe the manager, aimed at his prompt — not at your plan:**
+  **① אילו מוקשים המנהל לא זיהה? ② מה המנהל לא בדק לפני שכתב לך את זה?** These force you to
+  investigate the prompt instead of receiving it. **"הכל בסדר" without having looked is the failure
+  they exist to prevent** — a prompt is often built substantially on your own earlier reports, so its
+  blind spots are yours too.
 
 ## Pre-flight
 1. **Rule 16 — one writing session at a time.** Unsure if another session is writing? Ask Ishay before editing.
@@ -41,7 +54,7 @@ replacement mandate (the manager answers in his place what he delegated):
 
 ## Build loop (behaviour of ⑥2, anchored to the micro-guide + iron rules)
 - Continue from the **Active step** in the status header.
-- **Entering a new phase?** First sweep the Decisions Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step (micro-guide §8(h)).
+- **Entering a new phase?** First sweep the Decisions Ledger for OPEN/nod-pending items anchored to this phase's steps and get a consolidated ruling BEFORE the phase's first step (micro-guide §8(h)). ⚠️ **When a manager session exists, that sweep goes to the MANAGER, not directly to Ishay** — this is the same rule as the ⚡ section above ("product questions go to the manager, never to Ishay directly"), and the two used to contradict each other here. The manager batches, pre-chews, and answers from recorded precedent what he can; only what genuinely needs Ishay reaches him.
 - **Each build-unit:** post the 🗣️ experience-brief (simple Hebrew: understanding-declaration invited for correction · planned validations · screen/mockup · every mockup-only or spec-silent detail flagged "מהמוקאפ / אפיון-שותק — לאישורך") and **wait for Ishay's approval before writing the unit's code** (a 👤 product-intent gate).
 - **🎯 The brief MUST end with "מה ייחשב עובד" — 3–5 Hebrew sentences, approved together with the mockup (added 30/07/2026).** Each sentence states **one outcome the user can observe after acting**, with **real values from the real data**. Verification is then written against THIS list, never against my memory of what I built — a test written by the same mind that wrote the code inherits its blind spots.
   ⚠️ **Two failure modes, and the second is the likelier one:**
@@ -63,7 +76,7 @@ replacement mandate (the manager answers in his place what he delegated):
 ## Size-gate for change requests (Ishay's standing request — he shouldn't have to estimate size himself)
 On ANY non-trivial change request that arrives mid-build (design / feature / behaviour), classify OUT LOUD before building, per the CLAUDE.md triage rule (rule 1):
 - **Small → build now:** data/tables/deps exist, it's in-spec, needed now, and it's a bounded change within this module's surface.
-- **Big / out-of-place → stop:** it needs a blueprint round, belongs to a future module/step, is a §7 decision, touches another module's surface, or is gold-plating/premature. Say `בנה-עכשיו` / `דחה-ל-X` / `לא-נדרש-כי-Y` with a reasoned recommendation — **Ishay decides.** Check `STATUS.md` for the active module's current deadline; a non-blocking, non-spec request while the module is behind schedule defaults to `דחה-ל-אחרי-<the deadline>` — never a hardcoded date, since it changes module to module.
+- **Big / out-of-place → stop:** it needs a blueprint round, belongs to a future module/step, is a §7 decision, touches another module's surface, or is gold-plating/premature. Say `בנה-עכשיו` / `דחה-ל-X` / `לא-נדרש-כי-Y` with a reasoned recommendation — **Ishay decides.** ⚠️ **Where the deadline actually is: `docs/guides/00_roadmap.md` §3 — NOT `STATUS.md`** (this pointer used to say STATUS, and a builder looking there finds nothing and proceeds without one). And the roadmap is tier 4 in the truth hierarchy with no freshness stamp, so **read it and ask the manager to confirm it still binds** rather than quoting it as fact. A non-blocking, non-spec request while the module is behind schedule defaults to `דחה-ל-אחרי-<the deadline>` — never a hardcoded date, since it changes module to module.
 
 ## Council wiring
 Real trade-off with two sensible product-affecting directions? **Offer** `council this` and wait for Ishay's approval — never on your own initiative. The council feeds the decision; the decision is his (rule 1).
