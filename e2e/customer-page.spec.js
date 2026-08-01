@@ -43,7 +43,8 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
     await expect(page.getByTestId('customers-list-card')).toBeVisible()
 
     // ההכנסות מחושבות מהצעות מאושרות דרך ה-SSOT של התמחור.
-    await expect(page.locator('tbody tr', { hasText: MEDITECH }).first()).toContainText('9,865')
+    // ↳ 01/08/2026 (צעד 5.1): ר' ההערה המלאה בבדיקה שלמטה — הצעה #21 אושרה, ההכנסות עלו.
+    await expect(page.locator('tbody tr', { hasText: MEDITECH }).first()).toContainText('16,184')
 
     // מיון בלחיצת-כותרת נכתב לכתובת (ולא ל-state) — זה מה שמאפשר לו לשרוד חזרה.
     await page.getByRole('button', { name: /סה"כ הכנסות/ }).click()
@@ -67,14 +68,18 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
     await expect(page.getByTestId('customer-page')).toBeVisible()
 
     // שלושת המדדים החיים. 6,319 ₪ הוא תרחיש-האפיון המחייב של המודול.
-    await expect(page.getByTestId('metric-revenue')).toContainText('9,865')
+    // ↳ 01/08/2026 (צעד 5.1): הצעה #21 נבנתה ואושרה חי דרך המסך כתרחיש-הקבלה המחייב —
+    // מדיטק עברה מהצעה מאושרת אחת (#10, 9,865 ₪) לשתיים (#10+#21, 16,184 ₪), וממוצע-העסקה
+    // ירד בהתאם ((9,865+6,319)/2 = 8,092). "הצעות פתוחות" (6,319) לא זז — #21 אושרה, אינה
+    // עוד in_progress; רק #6 (אותו סכום במקרה) נשארת פתוחה. נמדד חי מהמסך, לא מחושב-ידני.
+    await expect(page.getByTestId('metric-revenue')).toContainText('16,184')
     await expect(page.getByTestId('metric-open')).toContainText('6,319')
-    await expect(page.getByTestId('metric-avg-deal')).toContainText('9,865')
+    await expect(page.getByTestId('metric-avg-deal')).toContainText('8,092')
 
-    // ⚠️ 2 ולא 4 — שתי הצעות-בדיקה של מדיטק (#14/#15) נמחקו מהמסד בסקירת 3.7
-    // (31/07/2026, הכרעת-ישי). הנתון השתנה בצדק, ולכן מעדכנים את המספר ולא מרככים
-    // את הטענה ל-"יש לשונית" (אותו כלל שכתוב בראש smoke-anchors.json).
-    await expect(page.getByTestId('customer-tab-quotes')).toContainText('2')
+    // ⚠️ 3 ולא 2 — הצעה #21 (צעד 5.1, 01/08/2026) נוספה חי דרך המסך על השתיים שנותרו אחרי
+    // ניקוי 3.7. אותו כלל כמו התיעוד הקודם כאן: הנתון השתנה בצדק, מעדכנים את המספר ולא
+    // מרככים את הטענה (אותו כלל שכתוב בראש smoke-anchors.json).
+    await expect(page.getByTestId('customer-tab-quotes')).toContainText('3')
     await expect(page.getByTestId('customer-tab-projects')).toContainText('0')
 
     // ארבע פעולות על הצעה בתהליך · צפייה בלבד על סגורה (הסגורות נעולות ב-DB ממילא).
