@@ -78,6 +78,10 @@
 - **Shift-number convention codified (Ishay's design):** successor = predecessor + 1 via the
   handoff block header; the number rides every artifact stamp and identity broadcast. Numbers
   disambiguate for humans/documents; machine routing stays by session name/ID.
+- **Successor opening prompt (Ishay's design, step 2½ of handover):** the outgoing manager hands
+  Ishay a fixed 3-line identity-only paste for the new session (number · boot-from-disk · broadcast
+  order). Deliberately NOT a context prompt — F1's mega-prompt subtraction stands; context boots
+  from the disk handoff block.
 - The work-manager's document-pass on the PDF I supplied showed dropped glyphs and a near-blank
   visual render, and proposed reverting `8506720`. **Two variables isolated instead of arguing:**
 - **Code:** re-rendered quote #21 from the **pre-fix** commit `73f6f25`, same path, same reader ⇒

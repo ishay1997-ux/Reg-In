@@ -112,7 +112,13 @@ alternatives.
 side, in order: (1) write the handoff block into `docs/work_plan.md` — only what is
 in-air and NOT derivable from the files (open expectations, promises to Ishay, silenced
 doubts, per-builder state), every timestamp from a clock read in the same turn; (2)
-commit a closing log entry; (3) answer the incoming manager's three delta questions when
+commit a closing log entry; (2½) **hand Ishay a ready-to-paste opening prompt for the
+successor — identity ONLY, three fixed lines** (his design, 01/08): "אתה מנהל-N+1 של
+REG-IN (מחליף את מנהל-N). עלה מהדיסק לפי סקיל work-manager — בלוק-המסירה ב-
+docs/work_plan.md. מיד אחרי העלייה: שדר את זהותך לכל סשן-בנאי ומנהל-עמית חי." ⛔ Never
+more than that — the skill deliberately killed the hand-carried context mega-prompt
+(F1, below); context boots from disk, the paste carries only the number and the
+marching order; (3) answer the incoming manager's three delta questions when
 they arrive; (4) from the moment a successor exists — **route only, never rule**: every message
 that still lands with you is FORWARDED to the successor **by session name/ID**, and the
 sender is told the new address in the same breath — a builder who doesn't know the new
