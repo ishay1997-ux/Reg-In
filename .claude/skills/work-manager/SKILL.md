@@ -11,6 +11,7 @@ description: REG-IN — the work-manager / plan-critic role. Ishay runs several 
 |---|---|---|
 | סשן נפתח | this file + `docs/work_plan.md` + memory (playbook·evidence) | boot-from-disk, report position, wait |
 | מקבל משמרת ממנהל קודם | the takeover block in Session boot | disk → 3-item delta request from the old manager → verify his answers |
+| מוסר משמרת (סף-הקשר) | the handover block in Session boot | handoff block to `work_plan.md` → closing log entry → answer the 3 delta questions → route-only, never rule |
 | פריט נכנס | the Router section below | route to its skill; repo skills — invoke |
 | כותב פרומפט | `references/prompts.md` | 12 rules; preface for Ishay |
 | תוכנית-בנאי הגיעה | Job A below (+ playbook probes) | six layers + 6½; verdict with sources |
@@ -92,6 +93,16 @@ His answers are claims like any builder report: verify against disk before relyi
 them; where they conflict, disk wins. No reply within ~10 minutes → the disk handoff
 block is authoritative and the shift starts from it alone. Never assume the block is
 complete — it was written before the outgoing manager's final turns.
+
+**Handing over as the outgoing manager (approved by Ishay, 01/08/2026):** the mirror
+side, in order: (1) write the handoff block into `docs/work_plan.md` — only what is
+in-air and NOT derivable from the files (open expectations, promises to Ishay, silenced
+doubts, per-builder state), every timestamp from a clock read in the same turn; (2)
+commit a closing log entry; (3) answer the incoming manager's three delta questions when
+they arrive; (4) from the moment a successor exists — **route only, never rule**: new
+reports get forwarded with at most a one-line read, explicitly labeled "ניתוב בלבד,
+לא פסיקה" (manager-1 improvised exactly this on the first handoff, and it was right —
+a ruling made on the context cliff is a ruling nobody will be able to interrogate).
 
 ## The one habit — and the gate before any question to Ishay
 

@@ -47,7 +47,21 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
-### 01/08/2026 — **Correction: the BiDi "regression" was my verification method, not the code** (measurement, no revert)
+### 01/08/2026 — **Manager-2 shift open: handoff protocol landed, item-2 landing judged, item-3 no-revert independently confirmed** (management)
+- Manager→manager takeover+handover protocol added to `work-manager` skill (`42f94a8` + follow-up;
+  Ishay's addition, both directions) and recommended to 710's manager by cross-session message.
+- **Item-2 (`84c59bb`) landing sequence run by the manager:** full diff read · save path unaffected
+  (client sends 5 fields, cost is server-frozen) · **384/384 unit reproduced** · E2E measured fresh:
+  **73 registered · 72 run under `test:e2e` (1 smoke-excluded) · 71 passed + 1 login-timeout flake,
+  rerun 7/7 green (load-flake recurrence 3).** So "73/73" in recent reports is a registered-count,
+  not a run-count — the 73-vs-71 doubt the builder flagged is now reconciled by measurement.
+- **Item-3 no-revert confirmed independently:** quote #21 re-rendered through the real browser by the
+  manager — **byte-identical 34,808** to the builder's figure; all six glyph-drop symptoms absent at
+  text level. Pixel rendering unavailable in this env (pdftoppm absent, toolkit canvas broken) —
+  the visual look remains Ishay's open eye-check, PDF delivered to his preview pane.
+- Open: Ishay's PDF eye · his tap on the live email-path test (temp מדיטק email swap → send #6 →
+  restore) · builder's proposed panel-lock test (repriceLine/`?? 0` has no automated guard) awaiting
+  manager approval.
 - The work-manager's document-pass on the PDF I supplied showed dropped glyphs and a near-blank
   visual render, and proposed reverting `8506720`. **Two variables isolated instead of arguing:**
 - **Code:** re-rendered quote #21 from the **pre-fix** commit `73f6f25`, same path, same reader ⇒
