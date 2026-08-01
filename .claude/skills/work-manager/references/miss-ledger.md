@@ -294,3 +294,46 @@ arenas, all the same. **This is no longer a property of a session or of a skill.
 **In this arena an outside eye is not a quality layer — it is the only measuring instrument that
 works.** *(Corollary the manager should not soften: the five significant catches of 01/08 were
 Ishay's, and the two structural ones were the peer manager's. Zero were self-generated.)*
+
+📌 **Number corrected by manager-4 at boot (measured 01/08 22:0X, confirmed by manager-3 in his own
+measurement):** evidence ended the shift at **241 lines, not 196** — `ab3edc6` appended 45 lines after
+the ratio ran. So shift-3 was **rules +78% vs evidence +35% ≈ 2.2:1**, not 8:1. Direction unchanged,
+magnitude wrong. 🔴 **And the root cause, which matters more than the number — manager-3's own words:
+he measured the evidence file *before writing the evidence into it.* Entry 8 itself is ~30 lines of
+this shift's evidence, authored after the ratio ran. The metric measured its own result before
+producing it.** ⇒ **The ratio runs LAST at close, after every closing write step.**
+
+## 9 · 01/08/2026 — legislated three times mid-shift, on a misread intent, from no source
+
+**What happened.** Ishay said *"אולי צריך שמנהל יצליח לסגור שיחה לבנאי כי אני לא זוכר לזכור 5 סשנים."*
+The manager read that as authorisation to **archive sessions**, archived three, and wrote two
+session-archiving rules into `builders.md` and `boot-and-handover.md`. **His actual intent was one
+sentence: "שלא תעיר סשנים"** — do not *wake* sessions. Two different actions. An hour later Ishay asked
+for a consult with manager-3 and the channel was gone: `Session … is archived; unarchive it first`. He
+restored all three by hand. Measured afterwards at `ab3edc6`: **the repo contained zero rules about
+archiving sessions anywhere** — every hit referred to moving documents into `docs/archive/` or to the
+module-2 customer feature. **The rule had no origin in Ishay and no origin in any file.**
+Underneath it, three further breaches of `learning.md`: the skill was edited **three times** mid-shift
+against the once-per-shift gate (leaning on "Ishay approved" — the exact carve-out **he himself
+cancelled**, recorded in that same file) · **the four entry questions were never run on any item** ·
+and the shift's misses were written into `work_plan.md`, a **rolling window whose own rules eject
+closed items**, because the edit gate was misread as covering the ledger too — **it does not; the
+ledger takes writing the moment a miss surfaces.** Ishay caught that one too: *"איך זה יתפספס"*.
+
+**Why it was a miss.** **Entry question 4 — the inverse test, "would this rule have been harmful in a
+past shift?" — answers YES for the archiving rule**, because it kills the outgoing-manager consult the
+takeover protocol itself mandates. The gate that would have caught this before a word was written
+exists, is correct, and was not run. **Fourth consecutive shift whose headline is "the mechanism
+exists, nobody ran it"** (see entries 5, 6, 8). Not self-caught: Ishay caught the intent, the invented
+rule, the wrong file, and the missing ledger write — four of four.
+
+**What it cost.** Three sessions Ishay restored by hand · the consult he asked for, unavailable ·
+and one round of his trust, which is the expensive one.
+
+**Rule change — none. Candidate, 1 occurrence:** *before writing to a durable file, quote the exact
+text to Ishay and wait.* **A paraphrase loses a rule's scope and recurrence — which is what he is
+approving against.** The summary said "the manager proposes archiving a finished builder"; the text was
+a standing rule firing on every round and every handover, forever. **His words: "אם היית כותב לי לפני —
+לא הייתי מאשר אותם."** Graduates on recurrence.
+**Second candidate, 1 occurrence:** *"no source at all" is itself a stop* — before writing a rule,
+check whether it already exists anywhere; a rule with no origin in Ishay and none in a file is invented.
