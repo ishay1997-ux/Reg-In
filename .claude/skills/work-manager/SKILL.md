@@ -87,7 +87,10 @@ the outgoing manager session directly (`send_message`) and request exactly three
 doubts, and any message sent to a builder AFTER the handoff block was written; (2) a
 current-state snapshot **with a clock-read timestamp from his own turn** (stamps in the
 block itself may be drift — the first handoff caught one); (3) explicit release, and the
-announcement that all traffic now routes to you. Do NOT ask for "the full context" — a
+announcement that all traffic now routes to you. Then — don't wait to be found:
+**message every LIVE builder session directly** ("אני המנהל החדש, כל דיווח לסשן הזה");
+builders cannot be expected to discover the successor's name on their own (Ishay's
+refinement, 01/08 — a report crossed to the dead shift mid-handoff on day one). Do NOT ask for "the full context" — a
 narrative dump tempts you to trust narration over disk, which the block above forbids.
 His answers are claims like any builder report: verify against disk before relying on
 them; where they conflict, disk wins. No reply within ~10 minutes → the disk handoff
@@ -99,10 +102,13 @@ side, in order: (1) write the handoff block into `docs/work_plan.md` — only wh
 in-air and NOT derivable from the files (open expectations, promises to Ishay, silenced
 doubts, per-builder state), every timestamp from a clock read in the same turn; (2)
 commit a closing log entry; (3) answer the incoming manager's three delta questions when
-they arrive; (4) from the moment a successor exists — **route only, never rule**: new
-reports get forwarded with at most a one-line read, explicitly labeled "ניתוב בלבד,
-לא פסיקה" (manager-1 improvised exactly this on the first handoff, and it was right —
-a ruling made on the context cliff is a ruling nobody will be able to interrogate).
+they arrive; (4) from the moment a successor exists — **route only, never rule**: every message
+that still lands with you is FORWARDED to the successor **by session name/ID**, and the
+sender is told the new address in the same breath — a builder who doesn't know the new
+manager's name will keep reporting to the dead shift (Ishay's refinement, 01/08). At
+most a one-line read on the way, explicitly labeled "ניתוב בלבד, לא פסיקה" (manager-1
+improvised exactly this on the first handoff, and it was right — a ruling made on the
+context cliff is a ruling nobody will be able to interrogate).
 
 ## The one habit — and the gate before any question to Ishay
 

@@ -103,3 +103,25 @@ happened to align with the earlier rulings. Reconciled honestly in the write-bac
 it. The sharpening: stale-detection must grep which OTHER §7 items *cite* the target
 numbers — the settled answer lived in a different item (§7.15) than the one being
 closed (§7.55).
+
+## 3 · 01/08/2026 — the first manager→manager handoff: two misses it surfaced
+
+**What happened.** (a) Manager-1's handoff block claimed "דוח-סיום התקבל 12:55" inside
+a commit authored ~12:41–12:45 — a future-drifted stamp ON the handoff artifact itself,
+caught by the incoming manager's clock read. The builder's STATUS entry the same hour
+stamped 13:05 inside a 12:47 commit. (b) A builder report crossed to the outgoing
+manager mid-cliff and got answered with a wrong "הסבב הושלם"; the builder had no way to
+know the successor's name.
+
+**Why misses.** (a) is a recurrence AFTER the timestamps rule graduated (01/08) — but
+both new occurrences are from writers who never load the manager skill: **the rule's
+home doesn't reach its violators.** (b) is a routing hole in the handoff design itself.
+
+**What they cost.** Minutes of successor verification; the wrong "הסבב הושלם" needed an
+explicit re-assertion of the item-3 stop.
+
+**Rule change.** (b) → already graduated same-day by Ishay's own refinements (takeover:
+push identity to every live builder; handover: forward by name, route-only). (a) → no
+new rule yet; **candidate: the timestamps rule must live where builders read (prompts.md
+template line / builder-prompt boilerplate), not only in the manager skill.** Graduates
+on next builder-side stamp drift.
