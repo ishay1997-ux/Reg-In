@@ -103,6 +103,22 @@
   Ishay a fixed 3-line identity-only paste for the new session (number · boot-from-disk · broadcast
   order). Deliberately NOT a context prompt — F1's mega-prompt subtraction stands; context boots
   from the disk handoff block.
+### 01/08/2026 — **Save⇄send wiring landed (`384af62`) and passed the manager's landing sequence** (feature)
+- Builder connected the already-mounted dialog to the SAVED row on both create and edit; three silent
+  seams fixed (discarded `createQuote` id · `getQuote` not joining `customers` — customer injected from
+  the page rather than widening a test-locked contract · `emailTemplate`/`canEdit` never passed). Save and
+  render now sit in **separate try blocks**: the old single catch would have reported "שמירת ההצעה נכשלה"
+  on a render failure over a quote that did save, and a user who believes it saves again.
+- **Manager-measured, not taken on report:** commit scope clean · full diff read · 384/384 unit ·
+  **full E2E 67 passed / 8 failed in 7.7 min — the same eight, line for line**, that the builder reported
+  after stashing his change ⇒ the feature causes zero failures. `auth.spec.js:23` passed here, consistent
+  with his order-dependence hypothesis (double measurement still owed before it is called a flake).
+- **Quote #6's accidental approval is wider than the manager first measured: 8 tests, not 3.** The builder
+  found it by running a stashed baseline. Three of the eight are **coverage loss**, not shifted numbers —
+  they need a sendable quote and #6 was the only one carrying a real `email_log` row.
+- Live-verification created `quotes#22` ("אימות שמור-ושלח", מדיטק, `in_progress`) — recorded in the demo
+  delta beside #21; the save path cannot be proven live without one real save.
+
 ### 01/08/2026 — **Skill-growth policy set by Ishay, then corrected by him an hour later** (governance)
 - **His instruction, verbatim:** *"לפני שאתה מסיים משמרת אתה אוסף את כל הדברים שאספת תובנות וכו',
   אתה שואל את עצמך את השאלות בהתאמה, ומעדכן את הסקיל"* — the why: *"כדי שהוא לא יצמח בלי גבול וכך
