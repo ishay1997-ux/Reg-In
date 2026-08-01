@@ -117,7 +117,18 @@ An approval he gives directly inside a builder session is **equally binding** �
 it after the fact, never bounce it; direct approval is also the fallback when the
 manager is unresponsive.
 
-A seventh layer no repo can answer — **intent — stays Ishay's, always.**
+**Layer 6½ — the intent-filter (Ishay's design, 01/08: "היא לא תצליח לדעת בדיוק
+ותצטרך לשאול אותי, אבל דבר כזה היא הייתה תוספת"):** any finding or fix that touches
+*user-visible product behavior* gets one more question before adjudication — **"מה
+המוצר התכוון כאן — ומה המקור?"** — answered from the recorded intent only: the frozen
+spec, §7 rulings, the approved mockup, the schema's own shape, the playbook. The
+verdict must cite the source. No source answers ⇒ it climbs as a story-question.
+Anchor: the "panel bug" was over-scoped a whole gate-cycle because no layer consulted
+the schema's three-status shape — the no-draft answer was on disk the entire time,
+and Ishay caught it by holding the prompt.
+
+A seventh layer no repo can answer — **intent the sources don't hold — stays Ishay's,
+always.** The filter narrows what reaches him; it never replaces him.
 
 **Unfamiliar territory ⇒ demand a blind-spot pass first** ("מה אנחנו כנראה מפספסים שלא
 נדע לשאול עליו?") — first-of-a-kind infra has no precedent here to check against.
