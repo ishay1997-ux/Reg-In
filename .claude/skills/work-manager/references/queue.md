@@ -168,57 +168,6 @@ because he measured the wrong thing.)*
 
 ---
 
-## Situation 22 — file maintenance (the doc corpus)
-
-**Trigger:** a module closes (alongside the debt-registry scan) · or Ishay says so.
-⛔ **Never opened mid-module under a deadline** — an open module's quality debt outranks the docs'.
-*(Inverse test: this is the one shift in which this situation would have been harmful.)*
-
-**Why it exists:** doc debt has no owner, so it accumulates silently until someone trips over it.
-*(Three confirmed instances on 01/08 alone: 20 lines of file-split archaeology in `_shared/discipline.md` ·
-a pointer in `module-build` sending builders to `STATUS.md` for a deadline that is not there · and two
-contradicting instructions inside that same file.)* **Situation 3 ranks an existing window; this one
-*produces* the rows.**
-
-**What the manager runs:**
-1. 🔴 **Compute the reference graph** — grep every file against every other. **A measurement, not a
-   judgement.** *(The manager had been treating this as judgement and never running it — which is
-   itself a concession of the gate.)*
-2. **Cluster it** — files that point at each other belong together.
-3. **The cluster decides the batch size — never a fixed number.** It may be 1 file or 10.
-   ⚠️ *(An earlier draft hardcoded "~3". Ishay struck it: **"אולי 1 אולי 10 — לא יודע, בגלל זה
-   יצרתי מנהל."** A constant sitting where judgement belongs looks precise and rests on nothing.)*
-   **A tightly-coupled cluster must travel together** — splitting it breaks exactly the pointer this
-   situation exists to protect.
-   **The only ceiling is what one session can hold — measured in LINES, not files** (ten short files
-   may fit where three long ones do not). **Splitting a cluster that exceeds it is judgement, and it
-   goes to Ishay with a one-line reason.**
-4. 🔴 **Report two numbers per batch: references INSIDE it vs references OUT of it.**
-   **Many outward references = a bad partition — and it is visible before a single prompt is sent.**
-5. **Rank by the ordering test** — which cluster does the most damage while it is wrong.
-6. **Three options + a recommendation** to Ishay (situation 3's output mode).
-
-🔴 **Why the clustering rule is load-bearing:** a worker who shrinks file X without seeing that file Y
-points at it **breaks the pointer — and it will look like the worker's mistake, not the manager's.**
-
-**What each prompt gives the worker:** its three files and nothing else · and what it may decide —
-what is redundant · how to shrink · what is simply wrong.
-**Two gates the worker does not pass alone:**
-- 🔴 **"This file is unnecessary" is a RECOMMENDATION, never an action.** Deleting a document that
-  holds a ruling **binds future sessions ⇒ hard to reverse ⇒ Ishay's** (the authority test).
-- **Harvest before you delete:** any fact still relevant moves to a permanent home **before** the line
-  comes out.
-**And numbers before/after: lines existed · lines remain · lines moved elsewhere.** If lines vanished
-that were neither moved nor ruled on, **the number shows it.**
-
-**What stays pure judgement — and therefore goes to Ishay with a one-line reason:** which cluster goes
-first, and where to cut a cluster larger than three.
-⚠️ **This is the least verifiable output the manager produces** — no specialist can judge a cluster
-map, there is nothing to re-run, and no automated gate checks a manager. **Hence step 4's numbers:
-they are what turns an opinion back into something Ishay can see.**
-
----
-
 ## Situation 19 — before a merge · "מיזגתי"
 
 ### Before a merge
