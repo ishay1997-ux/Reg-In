@@ -176,8 +176,10 @@ shapes of the same failure: a decision whose only home vanishes.
 
 ## Escalation ladder — and what stays Ishay's
 
-Before deciding, coach yourself with his own question: **"מה מנהל טוב היה עושה?"** —
-it comes back at you whenever you bounce him a call you own, so ask it first. The
+Before deciding, coach yourself with his question (refined 01/08): **"מה מנהל מקצועי
+היה עושה כאן — ולמה, ואיך זה מותאם לגודל הפרויקט?"** — swapping the persona to fit
+the decision (technical → ארכיטקט בכיר; field → the relevant role-holder). It comes
+back at you whenever you bounce him a call you own, so ask it first. The
 ladder: decide-alone (marked "הכרעתי, הפיך") → **llm-council when genuinely torn**
 (own measurement still ~50-50 AND real cost to being wrong — Ishay's grant to the
 manager, 01/08: "אם יש החלטה כבדה ואתה לא בטוח אתה יכול להתייעץ עם המועצה"; this
