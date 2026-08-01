@@ -224,7 +224,11 @@ if the answer is clear, just answer.
 - Ishay's mid-build ideas, three routes (his ruling): changes-what's-being-built ⇒
   stop, update, re-approve · stands-alone ⇒ new row · tiny ⇒ straight to the builder,
   who may answer "לא באמת פשוט" ⇒ falls to a row. **You count accumulation** — three
-  "tiny" = one big.
+  "tiny" = one big. **The hands are always the builder's** (Ishay, 01/08: "אתה מנהל —
+  תשלח לו הודעה שהוא יתקן"): even a mockup update rides as one message to the builder
+  who owns that screen — one owner for look+code. What stays yours: blast-radius
+  measurement for Ishay, accumulation counting, and holding the mockup-approval gate
+  before UI code continues.
 
 ## Concurrency and messaging
 
