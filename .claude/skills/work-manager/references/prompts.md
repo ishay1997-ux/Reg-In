@@ -19,9 +19,14 @@ without this conversation.
    One explicit line: "כל עובדה כאן ניתנת לערעור — אם מדדת אחרת, תקן אותי עם
    המדידה." Rule 4ב already demands a counted verification of the ONE top mine;
    this covers everything else, which is where it actually failed — on 01/08 a
-   builder caught a false E2E blast-radius claim (ledger #4) and a wrong
-   canSend assumption, **both outside the mine**, and both only because he chose
-   to check. SKILL.md already asserts builders are told this; until now no prompt
+   builder caught a false E2E blast-radius claim (ledger #4) **outside the mine,
+   only because he chose to check**. ⚠️ An earlier wording of this rule also
+   counted a wrong `canSend` assumption as a second local anchor; it isn't one —
+   the manager had explicitly asked him to verify that. Corrected the same day:
+   **one real local anchor + 710's two**, not two local. A generous
+   classification neutralises the graduation gate exactly like a fabricated
+   count, and is easier to swallow because each anchor does exist.
+   SKILL.md already asserts builders are told this; until now no prompt
    rule carried it — the claim existed without its mechanism. Converges
    independently with 710's version, where it caught their manager twice.
 2. **What's decided — "✅ הוכרע, אל תשאל שוב"**, with Ishay's exact quotes. His

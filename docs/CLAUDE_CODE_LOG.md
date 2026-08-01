@@ -103,6 +103,25 @@
   Ishay a fixed 3-line identity-only paste for the new session (number · boot-from-disk · broadcast
   order). Deliberately NOT a context prompt — F1's mega-prompt subtraction stands; context boots
   from the disk handoff block.
+### 01/08/2026 — **Skill-growth policy set by Ishay, then corrected by him an hour later** (governance)
+- **His instruction, verbatim:** *"לפני שאתה מסיים משמרת אתה אוסף את כל הדברים שאספת תובנות וכו',
+  אתה שואל את עצמך את השאלות בהתאמה, ומעדכן את הסקיל"* — the why: *"כדי שהוא לא יצמח בלי גבול וכך
+  נמנע מדאטה ליקז הטיה והתאמת יתר."* Trigger: six skill additions in six hours, each defensible alone;
+  the **volume** was the signal he caught.
+- **Shape landed (`161c0be`):** collect during the shift (ledger + evidence file, dated and quoted
+  immediately, so nothing dies with a context death), **legislate once at close** after the retro, with
+  four entry questions per item (covered already? · what does it subtract? · body/reference/ledger? ·
+  would it have been harmful in a past shift?).
+- **The correction is the load-bearing part:** the first version carved out an exception for rules Ishay
+  himself designs. He never asked for it, and it failed on measurement — **three of that day's six
+  additions were his designs**, so the carve-out would have permitted half the growth it exists to stop,
+  and its justification (preserving his phrasing) was already covered by capturing the quote as evidence.
+  Removed, with the failure recorded inline so a future manager doesn't reinstate it on the same reasoning.
+- **Self-audit it triggered:** prompts rule 1ב had claimed two local anchors; the second (a wrong
+  `canSend` assumption) is not one — the manager had explicitly asked the builder to verify it. Corrected
+  to one local + 710's two. Recorded because a *generous classification* neutralises the graduation gate
+  exactly like a fabricated count, and is harder to notice since each anchor really exists.
+
 ### 01/08/2026 — **Cross-project skill comparison (Ishay-directed): the unflattering numbers, measured** (management)
 - Ledger entry #4 added first, so the figure wouldn't flatter: the manager asserted an E2E blast-radius
   inside a builder prompt; the builder measured `grep quote-save e2e/` ⇒ **zero**, reproduced by the manager.
