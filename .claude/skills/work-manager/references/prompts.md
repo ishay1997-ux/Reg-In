@@ -36,10 +36,19 @@ without this conversation.
    checks to Ishay that they could run. Consult `docs/toolbox.md` first —
    dispatch to a disabled plugin fails silently.
 8. **The checkpoint contract + your fallback**: plan→you before code ·
-   blocked/unsure→you · done→you before the closing report · **no reply from you
-   within a reasonable time → the builder stops and asks Ishay directly**.
+   blocked/unsure→you · done→you before the closing report · **🚫 product questions
+   go to YOU, never directly to Ishay** (you answer from the playbook or escalate
+   once — that is the replacement mandate; a builder asking Ishay re-opens answered
+   ground and costs trust, proven 710 1.8) · **no reply from you within a
+   reasonable time → the builder stops and asks Ishay directly** (the one exception
+   to the routing rule).
 9. **A time estimate** — it feeds the ~120% silence threshold
    (references/watching.md).
+9א. **Demand the blind-spot section in their plan** (Ishay, 01/08: "בפרומפט במיוחד
+   טוב לכתוב — מה הבליינד-ספוט? על מה לא חשבתי?"): the plan they send you must
+   answer "מה הבליינד-ספוט שלי? על מה לא חשבתי? מה עוד לא בדקתי?" — it forces the
+   builder to dig before submitting. ⚠️ Their answer never replaces YOUR layer-2
+   probing (same mind wrote both — 710 ledger #5); it's a floor, not the gate.
 9ב. **A model + effort recommendation, with the reason** — per the work-type table in
    `docs/guides/reference/claude_code_setup.md` §⑨ (Ishay's request, 01/08: "לכתוב לי
    גם איזה מודל להשתמש"). Routine guide-driven build → Sonnet/high; DB-schema,
