@@ -135,6 +135,14 @@
   battery to the wrong session today, matched by title; what saved it was the recipient identifying
   himself, not a mechanism. ⚠️ Open dependency: a manager **cannot see its own session name**
   (`list_sessions` excludes the caller) — asked Ishay once, to be recorded permanently.
+- 🔚 **SHIFT 3 CLOSED 01/08 ~21:50.** Retro run (ledger #8) · handover doc written · address file
+  stamped · the migration draft moved to `docs/delete/`. **Zero code, zero test runs, zero DB writes
+  all shift.**
+  🔴 **The retro's headline is bad and is recorded as such: rules 607 → 1,079 lines (+78%) while
+  evidence grew 178 → 196 (+10%) — roughly 8:1 the wrong way against our own metric.** Restructuring
+  day, 8 situations authored from nothing — context, not exculpation. **Shift 3 is the high-water mark
+  of rule growth, not a model.** And the self-catch ratio was again **0**: Ishay caught five, the peer
+  manager two, the manager none unprompted.
 - **Situation 22 — file maintenance — added, but only on the second attempt, and the first one is the
   lesson.** The manager wrote it into the live skill **before Ishay approved the content**, while the
   rule forbidding exactly that sat in the skill he had written that same day (situation 21, step ⑧:

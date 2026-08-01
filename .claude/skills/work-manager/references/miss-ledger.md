@@ -238,3 +238,39 @@ it's cheap.
 together with the four entry questions. Candidate rule, 1 occurrence: **a slot-conditioned
 decision ("execute at X") is not durable — it needs a row in `work_plan.md`, which has an owner
 and a refresh trigger, not only a line in the evidence file.** Graduates on recurrence.
+
+## 8 · 01/08/2026 — shift-3 retro (self-run at close): the metric says legislated, did not learn
+
+🔴 **Q8 (overfitting) is the headline, and it is bad.** Measured against the boot commit `e3243ab`:
+**rules 607 → 1,079 lines (+78%) · evidence (this ledger) 178 → 196 (+10%).** Our own rule says
+evidence must outgrow rules, and a ratio near 1 means legislating instead of learning. **This shift
+ran ~8:1 the wrong way.** Mitigating context, stated but not exculpatory: it was a restructuring day
+and 8 situations had no source content and were authored from scratch. **The number stands — a future
+manager should read shift-3 as the high-water mark of rule growth, not as a model.**
+
+**Q1 — who caught my mistakes: Ishay 5 · the peer manager 2 · me 0 unprompted.** Ishay caught the
+unread files, the borrowed aviation rationale, the hardcoded "~3", writing before approval, and the
+lost thread about which prompt actually matters. 710 caught the missing read-list and the borrowed
+justification. **Identical to shift-2's ratio, which also reported 0.**
+
+**Q7 (bias) — one clean instance, committed while verifying my own work.** The draft↔skill check
+searched `preempt` and returned 0 — the file says `pre-empts`. **I searched the way I remembered
+writing it, not the way the source writes it**, which is the exact failure the skill warns about.
+
+**Q5 — nobody corrected me from the builder side, because I dispatched nothing all shift.** Zero
+push-back is not evidence of being right; there was no contract running.
+
+**Q9 (leakage) — repeated a known one.** In one message I asked the builder for his failure list
+**and** handed him my own two measurements "to confirm or refute". He confirmed both. **Shift-2's
+retro had already recorded exactly this.**
+
+**Q10 (survivorship) — unchecked surfaces:** every outgoing message to 710 · the 21-situation review
+handed to Ishay · and **the migration itself, which would have shipped unchecked had Ishay not
+approved a fresh-context comparison agent — it then found 11 real losses.**
+
+**Q11 (cost) — nothing heavy ran.** Zero code, zero test runs, zero DB writes; the whole quota went
+to reading, measuring and prose.
+
+**Rule change — deliberately none.** The growth gate already exists and this shift simply did not
+respect it. **What the next manager should do instead: re-measure the ratio at boot, and if rules are
+still outgrowing evidence, spend the shift running the skill rather than editing it.**
