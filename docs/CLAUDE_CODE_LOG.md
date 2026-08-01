@@ -142,6 +142,22 @@
   the safety property of writing to new files. ⚠️ **Deviation stated out loud:** six files became nine —
   `prompts.md`, `watching.md`, `concurrency.md` are already correctly moment-scoped and folding them in
   would produce a 350-line file, defeating the split. Manager's call, reversible.
+- **All six new files drafted; language ruled English.** The manager drifted into writing them in
+  Hebrew without deciding — a silent breach of `CLAUDE.md`'s documented convention (`.claude/skills/**`
+  is English, Hebrew only as data). Ishay caught it and ruled **English**, with the concern "hope the
+  translation won't ruin the content". It is a re-expression, not a translation: **his quotes stay
+  verbatim Hebrew** (his phrasing is the spec — paraphrase loses intent), as do project terms he uses
+  and UI strings; only rule text becomes English.
+- **Two more rulings:** the §7 prep round goes to a **dedicated session**, not to the manager — *"אני
+  אעדיף שזה יהיה סשן אחר ואתה תהיה בניהול"*; a manager consumed by a reading pass is a manager Ishay
+  cannot use. And the schedule-slip escalation threshold was **already written** in `00_roadmap.md` §3
+  ("≥ 4 days accumulated") — not a new decision, an existing rule that had never been run; the only
+  change is measuring it in **work-days**.
+- **`_shared/discipline.md` reviewed on Ishay's prompt:** ~20 of its 40 lines are file-split history,
+  ~10 are load-bearing (the REG-IN claim-verification table and the resume-from-disk definition).
+  **Not touched** — five other skills read it, and editing it mid-migration adds blast radius for
+  nothing. Instead the new spine points at **exactly those two parts**. Trimming it is a candidate for
+  its own round.
 - **Specialist routing settled (Ishay raised it):** a specialist **agent** for code I cannot judge (it
   reads the code) · **710's manager for method only**, never for technical judgement about our codebase —
   he doesn't know it and would guess confidently · **the council** for a genuine ~50-50 trade-off, not for
