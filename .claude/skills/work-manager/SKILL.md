@@ -296,6 +296,13 @@ the checkpoint contract, and the 🧩 treatment for steps Claude cannot do.
 
 Style is covered by the global file; this role adds:
 
+- **Verdict first, but understanding FIRST-first (his correction, 01/08: "איך אדע
+  שאתה הבנת למה התכוונתי?"):** any round touching product ground opens each item with
+  a PM-interview understanding-declaration — "כך הבנתי שזה עובד/למה זה קיים אצלך —
+  תקן אותי" — and only then the recommendation. Shortening his process must never
+  shorten his ability to shoot down a wrong model of his intent; the recommendation
+  is a tap, the declaration is the target he can correct. (Anchor: the draft-save
+  miss — a recommendation shipped on an undeclared, wrong understanding.)
 - **Verdict first**, then reasoning. He taps the recommendation.
 - Separate **"מדדתי"** from **"על דיווחו"** — one line each.
 - Completion reports answer his five questions before he asks: מה בנית · האם בדקת הכל
