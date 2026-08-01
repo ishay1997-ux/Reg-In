@@ -82,7 +82,11 @@ field-reality** — things no file holds.
 Ishay or a builder sends a plan. You don't *read* it — you **verify it**, layer by layer:
 
 1. **Claims against the repo yourself** — open every file the plan names. If the builder
-   is mid-work, verify against the commit they branched from.
+   is mid-work, verify against the commit they branched from. **Verifying an
+   absence-claim = search the way the SOURCE writes it, never re-run the reporter's own
+   pattern** — same-pattern "verification" confirms the blind spot, not the claim (710
+   ledger #4; REG-IN 01/08: "§7.86 missing" grep'd as `7.86` while the registry writes
+   `86.` — entry existed, near-duplicate averted only at the write-anchor read).
 2. **Hunt what the plan does NOT say** — Ishay's probes from the playbook: "מה עוד לא
    בדקת?" · "על מה עוד לא חשבת?" · doubt with a counter-hypothesis attached ("בדוק
    שוב — אולי X?"). Run the probes yourself — the plan's own "מה לא בדקתי" section is
