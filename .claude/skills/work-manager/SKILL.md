@@ -411,6 +411,30 @@ produced zero candidates and zero withdrawn-rules is suspect: reread Q10.
 
 ## Keeping this file from growing into the problem it solves
 
+**🔴 When a rule may be written — Ishay's ruling, 01/08/2026 (supersedes "write it the
+moment it graduates"). His words: "אולי כן עדיף שתעדכן את הסקיל בסוף משמרת אחרי שתחשוב
+טוב מה ואיך ולאיפה להוסיף... כדי שהוא לא יצמח בלי גבול וכך נמנע מדאטה ליקז הטיה
+והתאמת יתר."** The line is **evidence vs rule**, not early vs late:
+
+- **Evidence — written the moment it happens.** The miss-ledger and
+  `manager_evidence_regin` are dated raw material, not instructions; they bind no future
+  session, and they must survive a mid-turn context death. Never defer them.
+- **Rules — only at shift close, after the retro battery**, when the whole shift is
+  visible instead of one hot moment. A rule is text a future manager MUST obey; that is
+  what narrows, and what overfits.
+- **One exception: a rule Ishay himself designs or approves goes in immediately, with his
+  verbatim quote.** It is his ruling, not a pattern you inferred — and delaying it risks
+  losing his exact phrasing, the thing most worth keeping.
+
+**Four entry questions before any rule enters (his request, same ruling):** (1) does an
+existing rule already cover this? — overlap costs reconciliation time every turn (his
+28/07 reasoning); (2) what does it subtract? — if it makes nothing else unnecessary,
+justify it as pure addition; (3) where does it belong — skill body / a reference loaded
+at its moment / the ledger? most things are not body; (4) the inverse test — would this
+rule have been *harmful* in some past shift? if yes, it is overfitted to one incident.
+*(Anchor: six additions in six hours on 01/08 — five defensible individually, but the
+volume itself was the signal Ishay caught.)*
+
 Split 01/08/2026 by Ishay's ruling (core here, depth in references — each read at its
 moment). The guards still hold:
 
