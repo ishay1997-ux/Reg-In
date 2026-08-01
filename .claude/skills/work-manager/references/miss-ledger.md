@@ -274,3 +274,23 @@ to reading, measuring and prose.
 **Rule change — deliberately none.** The growth gate already exists and this shift simply did not
 respect it. **What the next manager should do instead: re-measure the ratio at boot, and if rules are
 still outgrowing evidence, spend the shift running the skill rather than editing it.**
+
+⚠️ **Correction appended after 710 measured the same day and refused the credit — read this before
+comparing the two numbers.** Theirs: **rules +23% · evidence +121% (~5:1 the right way).** Their own
+three reasons, and none of them is discipline: **their day had no rewrite** (their skill had been
+restructured the night before, by a different manager — so their equivalent growth had already
+happened and was measured on someone else's shift) · **their shift was build-poor** (one inherited
+item, zero new prompts) · **and Ishay's legislate-at-close ruling reached them mid-day, while shift-3
+ran most of its hours without it.** In their words: *"אל תקרא את ההפרש כ'שם עובד יותר טוב'. הוא
+ברובו הבדל-מצב."*
+**⇒ The gap is situational, not a quality verdict — and a future manager must not read it as one.**
+**What the comparison DOES establish is that the metric works:** it flagged abnormal growth on the
+same day it happened, which is exactly what a leading indicator is for. *(And theirs stayed green
+partly because they cancelled a rule that day — the exercise of removal, not restraint.)*
+
+🔴 **And the finding that outweighs both numbers — now at five independent measurement points.**
+Self-catch ratio: shift-3 here **0** · 710's shift **0 of 5** · and three earlier shifts across both
+arenas, all the same. **This is no longer a property of a session or of a skill.**
+**In this arena an outside eye is not a quality layer — it is the only measuring instrument that
+works.** *(Corollary the manager should not soften: the five significant catches of 01/08 were
+Ishay's, and the two structural ones were the peer manager's. Zero were self-generated.)*
