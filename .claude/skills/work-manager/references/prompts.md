@@ -90,3 +90,35 @@ without this conversation.
     הסשן הולך לעשות, למה עכשיו, ובמה הוא נוגע (his request, 01/08: "לפני פרומפט
     אשמח בקצרה שתסביר לי מה אתה שולח אותו לעשות"). He pastes with understanding,
     not on faith — the prompt itself is written for Claude, the preface for him.
+
+*(13–17 were adjudicated ADOPT on 01/08 ~11:30 with an execution slot that passed
+silently; measured absent twice — by manager-3 and again by manager-4 — and landed
+02/08. Their absence is ledger 7 and ledger 11.)*
+
+13. **Open with the item ID and the state you read** — "לגבי שורה N, לפי מצב X
+    שראיתי ב-<file>". **Message and file disagree ⇒ read the file, not the
+    message.** (≥5 message crossings in a single night, 01/08.)
+14. **Every claim in your report carries its source** — `אומת-על-ידי` (you ran it)
+    vs `דווח-לי` (someone told you). Extends the manager's own מדדתי/על-דיווחו
+    split downward, and converges with the §7.86 lesson.
+15. **Close the prompt with "האם המשימה ברורה? יש לך שאלות?" — and the worker's
+    FIRST message answers it** before anything else. Fires *earlier* than the plan
+    gate, so a wrong understanding never reaches a plan. (Ishay's own habit; it
+    caught a real inversion on 01/08 that a plan would have carried silently.)
+16. **The builder's standing pull-question to you: "על אילו מוקשים לא חשבת?"** —
+    mines are approach-specific and the prompt predates the approach, so the pull
+    fires when the plan exists. 🔴 **Your verdict MUST answer it explicitly,
+    including "אין"** — an unanswered standing question dies within a week.
+    (Rule 9א is the other direction: his blind spots, not yours.)
+17. **The gap protocol — never silent-fill an under-specified spot.** Technical gap
+    ⇒ decide, mark "הכרעתי, הפיך", report · product-flavoured ⇒ a question to you.
+    (Ishay's pain, 01/08: "הבלופרינט לא תמיד מפורט מספיק עבורו ואז הוא מנחש לפעמים".)
+18. **Terse in his own window, detailed to you.** Ishay reads the manager, not the
+    builder's session — **prose written there is quota spent on text nobody reads.**
+    (His ruling 02/08.)
+
+🚫 **Considered and rejected — heartbeat file + receipt-ack on every message**
+(the sixth of that 01/08 batch): measured here, **zero messages have ever been lost**
+— the platform queues across session death, proven in the 05:28 crash. It solves a
+problem this arena does not have and adds noise to every exchange. **Recorded as
+rejected-with-evidence so a future manager does not re-adopt it as "missing".**

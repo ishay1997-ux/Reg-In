@@ -420,3 +420,33 @@ removes anything.** Left alone, a future manager burns a large share of a shift'
 any work.
 **Counter: a compaction policy for this file and the evidence file — the only rule whose job is
 subtraction.**
+
+## 11 · 02/08/2026 — the dominant structural defect, now at three independent occurrences
+
+**What happened.** Reading `prompts.md` in full (the artifact a builder actually receives) turned up
+**the file documenting this defect about itself**, at rule 1ב: *"SKILL.md already asserts builders are
+told this; **until now no prompt rule carried it — the claim existed without its mechanism**."*
+That is the same failure as **(a)** the paste block still ordering the successor to broadcast to every
+session hours after the rule had been corrected in the skill — **the artifact caused the incident while
+the fix sat where the reader had not reached yet** — and **(b)** six mechanisms adjudicated ADOPT on
+01/08 ~11:30 whose execution slot passed in silence, **measured absent by manager-3 and independently
+re-measured absent by manager-4** before landing 02/08.
+
+**Why it is one finding and not three.** 710's manager named the shape on 01/08 before any of us had an
+anchor for it: *"prose accumulates in the skill while the working artifact lags."* Three occurrences in
+two days, each in a different artifact (a reference file, a paste block, a decision batch), **make it
+structural rather than incidental — it is how these skills are written, not a lapse by whoever wrote
+them.** 🔴 **And note the shape: in all three, the rule was CORRECT. Nothing had to be re-decided. The
+defect is purely one of reach.**
+
+**What it cost.** Tonight: three sessions Ishay restored by hand. Before tonight: nothing yet — the six
+were never dispatched, which is luck rather than design.
+
+**Rule change — none written for this entry itself; what it earns is the audit nobody has run.**
+710 proposed it and both arenas skipped it: **sweep every rule in the skill asking "and what exactly
+does the worker read?" — any rule whose answer is "nothing" lives only as prose.** It now has three
+anchors and costs one pass. **Row for the next shift.**
+*(Also recorded 02/08, and worth as much as the finding: the sixth adopted mechanism — heartbeat +
+receipt-ack — was **rejected** on measurement, zero messages ever lost here. It is written into
+`prompts.md` as rejected-with-evidence rather than dropped, so it is not re-adopted later as
+"missing". **Removal exercised deliberately is the growth gate actually working.**)*
