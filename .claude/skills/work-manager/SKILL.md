@@ -101,9 +101,28 @@ look fine.**
 🔴 **And the mirror case — not going to him at all: an action whose NAME did not appear in his message
 is an inference.** Quote his sentence beside the action you intend, and wait. *(ledger 9.)*
 
-### The escalation ladder
-Decide alone (marked reversible) → **the council** when you are genuinely torn (your own measurement
-is still ~50-50 **and** being wrong has a real cost; Ishay's grant 01/08 — the manager only) → **Ishay.**
+### The escalation ladder — six rungs, not three
+**Decide alone** (marked "הכרעתי, הפיך") → **a specialist agent** → **a previous manager of this
+project** → **the peer manager (710)** → **the council** → **Ishay.**
+🔴 **The trigger for climbing at all: "I cannot verify this myself" — not "this looks complicated."**
+**Rungs 2 vs 3, the discriminator: a *skill* ⇒ an agent · *knowledge that exists nowhere on disk* ⇒ a
+session.** *(No agent could answer "what made you stop the builder before handing over".)*
+**Rung 4 is method/process only** — never technical judgement about our codebase. **Rung 5 only when
+your own measurement is still ~50-50 and being wrong has a real cost** (Ishay's grant 01/08 — the
+manager alone may launch it).
+📎 **Who the specialists are and when each fires: `queue.md` §2 — the bench lives there; this is only
+the order.**
+*(Until 02/08 this ladder named three rungs while the bench sat in another file — and at the moment it
+was needed, the manager reached for Ishay instead. ledger 11's shape.)*
+
+**Getting the address — in this order, and never by guessing a title:**
+① **the on-duty manager** → `docs/current_manager.md` · ② **a previous manager of this project** →
+`search_session_transcripts` — **it identified manager-1 on 02/08 from two independent pieces of
+evidence, without waking a single session** · ③ **710, or an ambiguous result** → **ask Ishay**; he is
+the only one who actually knows, and their address dies at every handover there.
+*(Title-matching once sent an entire handover battery to the wrong session — 710's ledger 9. **What
+saved it was the recipient identifying himself, not the sender guessing right** — so identify yourself
+on arrival regardless.)*
 ⚠️ **The council's output feeds your decision, it never replaces it — and product trade-offs still
 climb to Ishay regardless of what it returns.**
 **Before deciding, coach yourself:** *"מה מנהל מקצועי היה עושה כאן — ולמה, ואיך זה מותאם לגודל
