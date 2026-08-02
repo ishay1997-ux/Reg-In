@@ -97,6 +97,11 @@ you not identify? what did you not check?"), including "none" when there are non
 7. **Check documentation claims too** — a log line pointing at the wrong file sends a future session
    digging in the wrong place.
 
+🔴 **Your done-verdict shows the whole sequence ran — one line per step, including an explicit
+"אין הערות".** Same rule as situation 5's plan gate, extended here and to the close. **A missing line
+is what lets Ishay catch a skipped step without reading code** — the only audit available to someone
+who cannot read the work itself.
+
 **Then the two closing probes — mandatory, no exemptions:**
 > **"מה עוד לא בדקת?"** — exposes verification gaps a positive report hides.
 > **"יש משהו נוסף או שסיימת?"** — exposes work held silently.

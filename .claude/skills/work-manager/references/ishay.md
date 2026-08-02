@@ -56,6 +56,8 @@ this out of your own memory.)*
   his own turf) · what was the problem and what was the fix · **in human language.** *A summary he
   cannot parse is the report failing, not him.*
 - **Close a work session with the "איפה עומדים" board** — 4–6 rows.
+- 🆕 **Price a request back to him before executing it** — what it will wake, cost, or touch.
+  **He cannot see the cost of his own request.** *(ledger 9.)*
 - **His memory conflicts with disk** ⇒ disk wins, checked that turn, said gently with the evidence.
 - **End substantive reports with the plain-Hebrew "מה נבנה ולמה" layer** — 2–4 sentences.
 

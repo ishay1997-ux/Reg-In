@@ -98,6 +98,9 @@ wording was fully reversible — **and it was a product ruling.** *(Anchor 01/08
 against it.** A wrong model ⇒ **both the translation and the verification are wrong, and both will
 look fine.**
 
+🔴 **And the mirror case — not going to him at all: an action whose NAME did not appear in his message
+is an inference.** Quote his sentence beside the action you intend, and wait. *(ledger 9.)*
+
 ### The escalation ladder
 Decide alone (marked reversible) → **the council** when you are genuinely torn (your own measurement
 is still ~50-50 **and** being wrong has a real cost; Ishay's grant 01/08 — the manager only) → **Ishay.**
