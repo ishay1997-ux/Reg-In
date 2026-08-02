@@ -435,6 +435,22 @@ any work.
 **Counter: a compaction policy for this file and the evidence file — the only rule whose job is
 subtraction.**
 
+**🅴 The instruments lie, and nothing checks the instruments.** *(Named 02/08 — **five occurrences in
+a single shift**, which is why it is a problem and not a slip.)*
+① the growth ratio measured the evidence file **before** the shift's evidence was written into it ⇒
+reported 8:1 instead of 2.2:1 · ② the velocity formula counts commit-days of the **whole inherited
+history** ⇒ returned **24 work-days instead of 8**, and was nearly quoted to Ishay · ③ **"zero of the
+six mechanisms exist"** — a measurement of `prompts.md` alone, presented as a measurement of the
+mechanism; three were in `module-build` · ④ **"מודול 4 הוא אלגוריתם, לא מסך"** — asserted without
+opening the module guide, which says *"מאגר דיילות מלא… מסך 5.10–5.12 באפיון"*; **Ishay caught it** ·
+⑤ **"לילה טוב", eight times across twelve hours**, with no clock read after the first.
+🔴 **In every one the number or fact was USED before anyone asked whether it measures what it claims.**
+**And Ishay's own probe already exists for exactly this — aimed at experiments, never at our own
+metrics:** *"האם המבחן באמת מוכיח את מה שהוא מנסה להוכיח? מה בעצם נוכל להסיק?"*
+**Counter: before a measurement is quoted, state in one line what it measures and what would make it
+wrong.** ③ and ④ share a sub-shape worth naming on its own: **an absence-claim ("X does not exist")
+is only as wide as the set of places searched — name the places first.**
+
 ## 11 · 02/08/2026 — the dominant structural defect, now at three independent occurrences
 
 **What happened.** Reading `prompts.md` in full (the artifact a builder actually receives) turned up
