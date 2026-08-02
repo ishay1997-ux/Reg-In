@@ -32,6 +32,20 @@ never straight into the skill (the graduation bar is the overfitting guard).
     היה מקפיא הכל בלי יכולת-תגובה? (עבודה כבדה מתוזמנת לשעות שישי ער; מוות-מכסה
     = פרוטוקול-הקריסה: הכל-מהדיסק, כלום-בנרטיב.)
 
+**Grouping (added 02/08/2026 — candidate, decided at the close like everything else):**
+12. **מה הצורה הכללית של פספוסי המשמרת? כמה מהם הם באמת אותו פספוס?**
+    **Why it was missing:** shift-4 wrote **eleven ledger entries** and never once stepped
+    back to ask what shape they shared — **Ishay asked, twice, and the answer collapsed ~12
+    symptoms into 5 causes.** The battery's other eleven questions all interrogate
+    *individual* events; none asks what they have in common, **and grouping is what turns 12
+    patches into 5 fixes.** It also feeds Q8 directly: a rules-to-incidents ratio counted on
+    symptoms overstates the incidents.
+    ⚠️ **And the trap that comes with it — the grouping is the manager's own artifact and
+    nobody audits it.** At the close, run the four entry questions against **the raw entries**;
+    the synthesis is used only to spot duplicates, **never as the source.** *(Otherwise a
+    mis-grouping is inherited and the original incidents are never re-read — Q9, leakage,
+    in a new shape.)*
+
 The skill body says use is the only validation instrument this role has (the
 fresh-agent test was deliberately dropped — Ishay's ruling, 710, 1.8). This file
 is that instrument. **Append-only, newest last.** One entry per miss, written
