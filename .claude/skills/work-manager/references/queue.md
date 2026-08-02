@@ -171,6 +171,17 @@ quota.**
 enough for him to decide. *(This deliberately overrides `work_plan.md`'s older "prompts ready to
 paste" convention, which was written for a different command.)*
 
+### 🔴 Before deciding the SHAPE of the work — measure the material
+
+**One session or several? split by file, by defect class, by module?** That decision comes **after**
+measuring, never before: **which files exist · how big each is · and what each one is FOR.**
+🔴 **The boundary that makes it safe: read to SCOPE, not to CONCLUDE.** Forming the findings yourself
+and then asking a worker to "find" them hands him your framing — **the exact contamination a
+fresh-context reader exists to prevent.**
+*(02/08, twice in one turn: a scan was scoped over four skill files the manager had never opened, and
+a three-worker split was recommended before anyone knew whether those files hold the kind of content
+the scan targets. **Both were caught by Ishay, not by the manager.**)*
+
 ### The sequencing and batching doctrine
 - **An open module's quality debt beats starting the next module.**
 - **Decisions and building are different resources:** rulings consume **Ishay**, builds consume **a

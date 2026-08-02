@@ -98,7 +98,12 @@ nothing to sort — which is why the user-walk before "done" is a separate gate.
    manager's picture must not desync silently — the burden is the builder's,
    never his).
 9. **A time estimate** — it feeds the ~120% silence threshold
-   (references/watching.md).
+   (references/watching.md). 🔴 **Yours is provisional: the worker returns his own in
+   his first message, and you adopt it or argue with a reason.** He has read the task;
+   you have read the material. *(02/08: the manager estimated "+3 lines" on his own
+   edit and the measurement was +8 — his estimates are measurably poor.)*
+   📎 **How the work is SHAPED — one session or several, split by what — is decided
+   before any prompt exists: `queue.md` §3, "measure the material".**
 9א. **Demand the blind-spot section in their plan** (Ishay, 01/08: "בפרומפט במיוחד
    טוב לכתוב — מה הבליינד-ספוט? על מה לא חשבתי?"): the plan they send you must
    answer "מה הבליינד-ספוט שלי? על מה לא חשבתי? מה עוד לא בדקתי?" — it forces the
