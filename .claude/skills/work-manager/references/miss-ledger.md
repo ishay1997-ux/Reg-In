@@ -509,6 +509,43 @@ only because Ishay sent him to the builder's file.
 **Candidate rule: "does X exist?" is answered by first naming every artifact that could hold X, and
 only then searching them.** Graduates on recurrence.
 
+## 12 · 02/08/2026 — the wrong-home class: a rule filed where its reader never goes
+
+**Three occurrences in one day, two caught by Ishay.** ① the four-part pre-build shape written into a
+memory file that is **not on the boot read list** ② "what makes a consult honest" — written to apply to
+*anyone on the ladder* and filed under the peer-manager block ③ "measure the material before deciding
+the shape" — a **manager-behaviour** rule filed in `prompts.md`, which is about prompt *contents*.
+**Why it is its own class, distinct from "a gate placed after the work":** that one is about *order
+within* a file; this is about *which file at all*. **Entry question 3 ("where does it belong") exists
+precisely for this and the manager answers it badly** — so it is now something the scan hunts
+explicitly rather than something the entry questions are trusted to catch.
+**Cost:** none of the three shipped wrong; all were relocated. **The cost is the ratio again — two of
+three found by the person who does not read the files.**
+
+## 📌 Convergence, measured (02/08) — the scan does not inflate, and here is why
+
+Ishay asked what happens if a situation is scanned thirty times. **Measured on situation 11: run 1 =
+6 findings, run 2 = 1.** *(Prediction stated before the run was "0–1, and it will come from the
+mini-walk"; the count was right, **the source was wrong** — it came from a lens.)*
+**The reason it converges: four of the five lenses are BINARY.** "Does it let Ishay catch a skip" ·
+"is the trigger observable" · "does it earn its lines" · "does the measurement know when it lies" —
+once fixed, the answer is yes forever and **no finding can be generated.**
+🔴 **The one that does not converge is "what is missing"** — you can always imagine another scenario.
+**Three brakes hold it:** the filter (it rejected a finding on run 2 — it works) · the subtraction
+quota · the stop condition.
+**⇒ A situation reaches zero in ~2–3 passes. The danger was never inflation — it is someone removing
+a brake.**
+
+## 📌 🅴 again: line counts lie, including in our own headline metric (02/08)
+
+`module-blueprint/template.md` is **66 lines — and line 14 alone is a ~600-word paragraph carrying
+about eight distinct rules and two gates.** The manager scoped a scan and sized a three-session split
+on `wc -l`, calling 222 lines "cheap"; **the real reading cost is several times that.**
+⚠️ **And the caveat this forces on the growth ratio itself:** it is a line count. As a *relative*
+measure over the same files it holds — density bias stays roughly constant — **but a single dense line
+under-reports, and a "shrink" achieved by joining lines is not a shrink at all.**
+**⇒ When line count drives a decision (scope, split, estimate), sample the density before trusting it.**
+
 **📌 Candidate, 1 occurrence (02/08): every scan finding carries "how will we know the fix worked?"**
 The whole of shift-4 is theory — **not one line written today has run.** The six fixes to situation 11
 cannot be verified until Ishay actually says "דוח מצב", and nothing marks them as unverified. Proposed
