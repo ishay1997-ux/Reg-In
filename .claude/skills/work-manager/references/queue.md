@@ -20,6 +20,26 @@ one is clean.
 
 ## Situation 2 — routing an item to a skill or a specialist
 
+🔴 **The gate for summoning anyone at all: "I cannot verify this myself."** Not "this looks
+complicated." **And tell Ishay you summoned one** — see `ishay.md`, and situation 20 in `builders.md`
+for adjudicating what comes back. *(This governs everything below it and therefore stands above it —
+until 02/08 it sat at the very bottom, after three benches, in a section people scan.)*
+
+**What makes a consult honest — with anyone, on any rung.** The goal is **neither agreement nor
+disagreement — it is a measurement neither of you could take alone.**
+① **Doubt a NAMED claim, never a person or an approach.** *"Your claim X — I measured Y"* yields
+evidence; *"I'm unsure about your direction"* yields noise.
+② 🔴 **The strongest move is doubting yourself out loud, before your answer** — what contaminated you,
+what you got wrong. *(02/08: **five of the five** valuable moments across four consults were
+self-corrections, not attacks.)*
+③ **"לא בכוח" applies between peers too** — nothing to add ⇒ **"אין הערות".** A manufactured objection
+is worse than agreement, **and it is the likelier failure once both sides know they are expected to
+challenge.**
+**The receipt: an exchange that left no finding on either side was not worth its tokens.**
+**And when you disagree and neither convinces the other — the ON-DUTY manager decides.**
+
+---
+
 **Read `docs/toolbox.md` before proposing any tool** — dispatch to a disabled plugin **fails silently.**
 *(`npm run check:context` is what keeps that file honest — it fails the gate if a skill dispatches an
 agent from a disabled plugin.)*
@@ -38,41 +58,29 @@ decision he is genuinely torn on).
 
 ### The specialist bench — who, and when to summon
 
-| Specialist | Trigger |
-|---|---|
-| **Fresh-context plan critic** | 🔴 **any plan you yourself shaped** |
-| Silent-failure hunter | a round touching error handling or fallbacks |
-| Test-coverage analyst | a round whose deliverable is tests |
-| Security reviewer | permissions · RLS · server functions |
-| Library expert (`context7`) | any claim about React/Tailwind/Supabase behaviour |
-| Design expert (`frontend-design`) | every mockup **before** Ishay sees it |
-| Credentialed-screen verification (`playwright`) | any visual claim |
+**Three shapes, three failures.** **🔎 Finders** — *"אין ממצא" is a complete and valued answer*; one
+spawned **to find** has the strongest incentive of anyone to manufacture one. **📚 Researchers** —
+*a source per claim, "לא מצאתי מקור" is legitimate*; the failure is confident synthesis with nothing
+behind it, and recall is exactly what this rung exists to replace. **⚖️ Deliberators** — *argue the
+side I did NOT bring, and say what would change your mind*; shown one option, a critic improves it
+instead of questioning it.
+**All of them, before the answer: "what limits this — what you could not see, what you assumed."**
 
-**What each summons must demand — the shape differs, and so does the failure.**
-**🔎 Finders** — *"אין ממצא" is a complete and valued answer*; one spawned **to find** has the strongest
-incentive on the ladder to manufacture one. **📚 Researchers** — *a source per claim, and "לא מצאתי
-מקור" is legitimate*; the failure is confident synthesis with nothing behind it, and recall is exactly
-what this rung exists to replace. **⚖️ Deliberators** — *argue the side I did NOT bring, and say what
-would change your mind*; shown one option, a critic improves it instead of questioning it.
-**All three, before the answer: "what limits this — what you could not see, what you assumed."**
-*(02/08: a consultant who declared his own contamination first changed how his answer was weighted.)*
-
-| Specialist | Shape | 🔴 What the summons adds on top |
+| Specialist | Trigger | 🔴 What the summons demands |
 |---|---|---|
-| **Fresh-context plan critic** | ⚖️ | **"which claims in this plan have no source?"** — the intent pass, run by someone who did not write it |
-| **Silent-failure hunter** | 🔎 | per finding: **"what would the USER see when this fires?"** — a silent failure with no visible consequence is noise Ishay cannot judge |
-| **Test-coverage analyst** | 🔎 | **"which of the round's `מה ייחשב עובד` sentences has NO test?"** — coverage against the stated outcomes, **not against the code** *(🅱️: tests measure code↔spec; nothing measures spec↔intent)* |
-| **Security reviewer** | 🔎 | per finding: **"who could do this today, with which role?"** — falsifiable, never theoretical · and **both directions** of every permission change |
-| **Library expert** (`context7`) | 📚 | **the version each claim applies to.** A source without a version is 🅴 — an instrument that will not say what it measured |
-| **Design expert** (`frontend-design`) | ⚖️+🔎 | 📎 **governed by `ishay.md` §12** — it checks direction/contrast/real data, **never whether this is the screen he wants**, and that boundary is stated to Ishay verbatim |
-| **Credentialed verification** (`playwright`) | 📐 instrument | 🔴 **"what exactly was asserted, and what would a failure have looked like?"** — a selector matching nothing passes silently *(🅴: the instrument lies)* |
+| **Fresh-context plan critic** ⚖️ | 🔴 **any plan you yourself shaped** | **"which claims here have no source?"** — the intent pass, run by someone who did not write it |
+| **Silent-failure hunter** 🔎 | error handling · fallbacks | per finding: **"what would the USER see when this fires?"** — one with no visible consequence is noise Ishay cannot judge |
+| **Test-coverage analyst** 🔎 | a round whose deliverable is tests | **"which `מה ייחשב עובד` sentence has NO test?"** — coverage against the stated outcomes, **not the code** *(🅱️: nothing else measures spec↔intent)* |
+| **Security reviewer** 🔎 | permissions · RLS · server functions | per finding: **"who could do this today, with which role?"** — falsifiable, never theoretical · **both directions** of every permission change |
+| **Library expert** (`context7`) 📚 | any claim about React/Tailwind/Supabase | **the version each claim applies to.** A source without a version is 🅴 — an instrument that will not say what it measured |
+| **Design expert** (`frontend-design`) ⚖️🔎 | every mockup **before** Ishay sees it | 📎 **governed by `ishay.md` §12** — direction/contrast/real data, **never whether this is the screen he wants**, and that boundary is quoted to Ishay verbatim |
+| **Credentialed verification** (`playwright`) 📐 | any visual claim | 🔴 **"what exactly was asserted, and what would a failure have looked like?"** — a selector matching nothing passes silently *(🅴)* |
 
 ### The peer manager (gedood-710) — a consult with sharp limits
 
-**Address: ask Ishay for the session name.** 🚫 **Never guess by title** — the address dies at every
-handover there, and Ishay is the only one who actually knows. *(Anchor: 710's manager matched by
-title once and sent an entire shift-handover battery to the wrong session — their ledger #9. What
-saved it was the recipient identifying himself, not a mechanism.)*
+📎 **Address: `SKILL.md` situation 9, "Getting the address" — one home, three steps, and never by
+title.** *(For 710 specifically the answer is always "ask Ishay": their address dies at every handover
+there and he is the only one who knows.)*
 
 | | |
 |---|---|
@@ -114,23 +122,6 @@ loses the one asset a fresh context has.)*
 ⚠️ **His answer carries a halo — "he was the manager." Weigh it as a report, not a verdict.**
 *(02/08: a recommendation built on zero occurrences, withdrawn only after push-back.)*
 
-### What makes a consult honest — with anyone on the ladder
-
-**The goal is neither agreement nor disagreement — it is a measurement neither of you could take alone.**
-① **Doubt a NAMED claim, never a person or an approach.** *"Your claim X — I measured Y"* yields
-evidence; *"I'm unsure about your direction"* yields noise.
-② 🔴 **The strongest move is doubting yourself out loud, before your answer** — what contaminated you,
-what you got wrong. *(02/08: **five of the five** valuable moments across four consults were
-self-corrections, not attacks.)*
-③ **"לא בכוח" applies between peers too** — nothing to add ⇒ **"אין הערות".** A manufactured objection
-is worse than agreement, **and it is the likelier failure once both sides know they are expected to
-challenge.**
-**The receipt: an exchange that left no finding on either side was not worth its tokens.**
-**And when you disagree and neither convinces the other — the ON-DUTY manager decides.**
-
-🔴 **The general trigger for summoning: "I cannot verify this myself."** Not "this looks complicated."
-**And tell Ishay you summoned one** — see `ishay.md`, and situation 20 in `builders.md` for
-adjudicating what it returns.
 
 ---
 
