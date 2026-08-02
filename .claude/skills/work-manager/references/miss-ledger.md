@@ -478,3 +478,30 @@ as the Hebrew-grep-over-an-English-corpus anchor. **Not self-caught** — the co
 only because Ishay sent him to the builder's file.
 **Candidate rule: "does X exist?" is answered by first naming every artifact that could hold X, and
 only then searching them.** Graduates on recurrence.
+
+## 📌 CANDIDATE — a compaction policy for this file and `manager_evidence_regin`
+
+*(Drafted 02/08. **Ishay's ruling: it lives here, and the shift close decides whether it enters
+`learning.md`.** Kept as a full draft rather than a note, so the close weighs the actual text.)*
+
+**Why it is needed — measured, not felt.** These two are the only boot-read-list files that grow every
+shift and never shrink. **This shift alone: 241 → 394 lines (+63%); the boot read list went from 1,324
+to ~1,477.** 🔴 **The manager who diagnosed 🅳 made it 12% worse in the same night.** And
+`queue.md:234` already says dated records are "compacted per the file's own policy" — **a pointer at a
+policy that does not exist.**
+
+**The draft:**
+- **Trigger: at shift close — after the last write, before the growth ratio runs** (same reason the
+  ratio runs last: there is nothing to compact until the shift's evidence is complete).
+- **The newest 3 entries stay in full.** Everything older collapses to **one line each**: date · what
+  was missed · the rule change, or "none".
+- 🔴 **Harvest before you shrink.** Any lesson still binding moves into the skill **first** — otherwise
+  "compacting" is simply losing.
+- **Archive the pre-compaction copy** under `docs/archive/`, exactly as `CLAUDE_CODE_LOG` does.
+- 🚫 **Never compacted:** the retro question battery at the top · **and any entry whose candidate rule
+  has not yet graduated or been rejected** — an open candidate compressed to one line dies.
+
+**What the close must weigh:** this is the **only** rule in the skill whose job is subtraction, which
+argues for it — against the graduation bar, which says a first-occurrence rule stays a candidate.
+**The tie-breaker to apply then: does the cost it prevents grow on its own?** *(🅳 says yes; nothing
+else in the pile does.)*
