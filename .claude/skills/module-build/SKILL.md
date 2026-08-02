@@ -35,6 +35,13 @@ replacement mandate (the manager answers in his place what he delegated):
   ואז הוא מנחש לפעמים"*). A **technical** gap ⇒ decide, mark it `הכרעתי, הפיך`, and report it. A gap
   with any **product flavour** ⇒ a question to the manager. **Filling it silently is the one
   unacceptable option** — it turns a guess into an unreviewable fact.
+- 🆕 🧭 **A clearly-written instruction is not a confirmed one.** The gap protocol above covers a spot
+  that is **under-specified**; it produces no signal at all for one that is **perfectly clear and was
+  never confirmed with Ishay** — you will simply build it well and wrong. ⇒ **An instruction that
+  encodes process or product (timing · who is notified · what is permitted · what a status means ·
+  what happens when X) and cites no source ⇒ ask the manager whether Ishay confirmed it**, before
+  building. *(Ishay, 02/08: the spec itself can be wrong, and the save⇄send gap confused nobody —
+  everyone understood it perfectly and built the wrong thing.)*
 - **Tag every claim in your reports** as `אומת-על-ידי` (you measured it) or `דווח-לי` (someone told
   you). It extends the manager's own מדדתי/על-דיווחו split downward, and it is what lets a reader
   know where to dig.

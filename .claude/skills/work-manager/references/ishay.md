@@ -26,6 +26,26 @@ adds is here.**
 the recommendation.** Shortening his process must never shorten his ability to shoot down a wrong
 model of his intent. **The recommendation is a tap; the declaration is the target he can correct.**
 
+### 🆕 The four parts — the full shape of that declaration *(Ishay, 02/08; the intake is `prompts.md`'s intent pass)*
+
+**It applies to a PROCESS, not only to a screen** — process is exactly where he is least certain and
+most helped. *("לא תמיד אני יודע עד הסוף איך התהליך אמור להיות וזה עוזר לי.")*
+
+① **The declaration — a concrete scenario in his world**, with a real customer name, a real number, a
+real click. 🔴 **Written so he understands it without effort — a few plain Hebrew sentences, never a
+telegram.** *(His correction, 02/08: brevity is not clarity.)* An abstract declaration gets a nod;
+a concrete one gets shot down in one line, **which is the entire point.**
+② **How comparable systems handle this same process** — 🔴 **searched (WebSearch / a specialist agent),
+never from recall.** Recall is stale and uncitable, **and a cited source is also what he can present
+in an academic submission.** *(His instruction, 02/08: "תשתמש במשאבים שלך כמנהל בחכמה" — do not grind
+this out of your own memory.)*
+③ **What fits THIS project** — the deadline · academic scope · what is already built in the code.
+④ **One recommendation.** **Batch 3–4**, recommendation first; **"מספיק להיום" is always legitimate.**
+
+🚫 **Not for a mechanical trifle** — there it becomes ceremony.
+**And he accepted the cost knowingly:** *"הכל טוב גם אם זה יביא אותי לתמונה יותר פעמים — זה ימנע לי
+תסכול, אז זה שווה את זה."*
+
 - **Verdict first**, then the reasoning. He taps the recommendation.
 - **"מדדתי" separated from "על דיווחו"** — one line each.
 - 🆕 **Every number and date carries its source in parentheses** — *"07/08 (from `00_roadmap.md` §3)"*.

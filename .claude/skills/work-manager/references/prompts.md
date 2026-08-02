@@ -4,6 +4,35 @@ Loaded from work-manager SKILL.md when you sit down to write a prompt for a
 builder session or browser-Claude. A prompt must let a fresh session work
 without this conversation.
 
+## 🔴 Before a single line of the prompt is written — the intent pass over the step
+
+**Sort every instruction in the step. The boundary is NOT "is it on screen" — it is
+"does this encode how his business actually works?"** *(Ishay, 02/08: a process is
+often invisible — timing, who is notified, what a status means — and getting it wrong
+costs exactly as much.)*
+
+- **🔧 Truly mechanical** — a rename · a test for behaviour that already exists · a
+  refactor. Nothing about the business ⇒ **proceed.**
+- **🧭 Process or product, on screen OR behind it** ⇒ **stop, and take it to him in the
+  four-part shape — `ishay.md` situation 10.**
+
+🔴 **A recorded source does not exempt it — it only shortens it.** A source proves a
+decision was **made**; not that it is still right, and not that he understood what he
+approved (*"אני זהיר כי אין לי יכולת בקרה באמת"*; and the mockup anchor — **a verbal
+description of his is a spec, not an approval**).
+**In doubt whether something counts ⇒ it goes to him.**
+🔴 **The output is not a nod — it is a written, confirmed process statement, quoted
+verbatim into the prompt.** That is what stops the builder guessing where the guide is
+silent: he builds from a confirmed model, not from an absence. **Neither of you guesses.**
+**He is unavailable?** Queue the declaration, dispatch the 🔧 parts meanwhile, and for a
+**small and reversible** item decide, mark `הכרעתי, הפיך`, and bring it to him after.
+**No answer within ~5 minutes ⇒ proceed on that basis** (his calibration, 02/08) —
+🚫 **never for a migration, a merge, or a look: there "no answer" is not approval.**
+⚠️ **This catches only what the step SAYS.** A guide silent about a process leaves
+nothing to sort — which is why the user-walk before "done" is a separate gate.
+**And the prompt carries one line showing the pass ran:** *"מעבר-כוונה: N מכניים · M הובאו
+לישי"* — a prompt without it shows Ishay the pass was skipped.
+
 0. **Open with the ⚡ manager banner — first lines, not buried in a contract
    section** (recurred 3× on 01/08 until made structural): "⚡ קיים סשן-מנהל פעיל.
    תוכנית → אליו לפני קוד · תקוע/ספק → אליו · 'סיימתי' → אליו · שאלות-מוצר → אליו,
@@ -98,21 +127,23 @@ silently; measured absent twice — by manager-3 and again by manager-4 — and 
 13. **Open with the item ID and the state you read** — "לגבי שורה N, לפי מצב X
     שראיתי ב-<file>". **Message and file disagree ⇒ read the file, not the
     message.** (≥5 message crossings in a single night, 01/08.)
-14. **Every claim in your report carries its source** — `אומת-על-ידי` (you ran it)
-    vs `דווח-לי` (someone told you). Extends the manager's own מדדתי/על-דיווחו
-    split downward, and converges with the §7.86 lesson.
+14. **Claim-source tagging** (`אומת-על-ידי` vs `דווח-לי`) — 📎 **already lives in
+    `module-build` (⚡ section); point at it, do not restate.** Two copies of one
+    rule drift apart within weeks. *(Measured 02/08: three of the six mechanisms
+    adjudicated on 01/08 had already landed there — a manager who measured only
+    `prompts.md` reported "zero of six" and was wrong.)*
 15. **Close the prompt with "האם המשימה ברורה? יש לך שאלות?" — and the worker's
     FIRST message answers it** before anything else. Fires *earlier* than the plan
     gate, so a wrong understanding never reaches a plan. (Ishay's own habit; it
     caught a real inversion on 01/08 that a plan would have carried silently.)
-16. **The builder's standing pull-question to you: "על אילו מוקשים לא חשבת?"** —
-    mines are approach-specific and the prompt predates the approach, so the pull
-    fires when the plan exists. 🔴 **Your verdict MUST answer it explicitly,
-    including "אין"** — an unanswered standing question dies within a week.
-    (Rule 9א is the other direction: his blind spots, not yours.)
-17. **The gap protocol — never silent-fill an under-specified spot.** Technical gap
-    ⇒ decide, mark "הכרעתי, הפיך", report · product-flavoured ⇒ a question to you.
-    (Ishay's pain, 01/08: "הבלופרינט לא תמיד מפורט מספיק עבורו ואז הוא מנחש לפעמים".)
+16. **The builder's two standing questions aimed at YOUR prompt** — 📎 **already in
+    `module-build`; point at it.** 🔴 **What is NOT there and is yours: your verdict
+    must answer them explicitly, including "אין".** An unanswered standing question
+    dies within a week. (Rule 9א is the other direction — his blind spots, not yours.)
+17. **The gap protocol** (never silent-fill) — 📎 **already in `module-build`; point
+    at it.** 🔴 **The half that is yours: it covers a spot that is under-specified,
+    not one that is clearly written and never confirmed with Ishay.** The second kind
+    produces no question at all — that is what the intent pass above exists for.
 18. **Terse in his own window, detailed to you.** Ishay reads the manager, not the
     builder's session — **prose written there is quota spent on text nobody reads.**
     (His ruling 02/08.)
