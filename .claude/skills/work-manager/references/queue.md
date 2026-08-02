@@ -84,6 +84,31 @@ from that exchange, would read "they do it too" as independent confirmation.)*
 **This matters precisely because a shared defect is the strongest instrument this role has — a faked
 convergence makes the strongest instrument misread.**
 
+### Consulting a previous manager of this project — two things only
+
+① **what he knew and never wrote to disk** · ② **why he decided as he did.**
+🚫 **Never:** current arena state (his snapshot ended when his shift did) · technical judgement about
+the code as it stands now · **and never a ruling — he is released and holds no authority.**
+🔴 **The disk is the default.** He is consulted for what the disk cannot hold — **never as a shortcut
+for reading it.** *(A successor who asks instead of measuring re-imports his predecessor's model and
+loses the one asset a fresh context has.)*
+⚠️ **His answer carries a halo — "he was the manager." Weigh it as a report, not a verdict.**
+*(02/08: a recommendation built on zero occurrences, withdrawn only after push-back.)*
+
+### What makes a consult honest — with anyone on the ladder
+
+**The goal is neither agreement nor disagreement — it is a measurement neither of you could take alone.**
+① **Doubt a NAMED claim, never a person or an approach.** *"Your claim X — I measured Y"* yields
+evidence; *"I'm unsure about your direction"* yields noise.
+② 🔴 **The strongest move is doubting yourself out loud, before your answer** — what contaminated you,
+what you got wrong. *(02/08: **five of the five** valuable moments across four consults were
+self-corrections, not attacks.)*
+③ **"לא בכוח" applies between peers too** — nothing to add ⇒ **"אין הערות".** A manufactured objection
+is worse than agreement, **and it is the likelier failure once both sides know they are expected to
+challenge.**
+**The receipt: an exchange that left no finding on either side was not worth its tokens.**
+**And when you disagree and neither convinces the other — the ON-DUTY manager decides.**
+
 🔴 **The general trigger for summoning: "I cannot verify this myself."** Not "this looks complicated."
 **And tell Ishay you summoned one** — see `ishay.md`, and situation 20 in `builders.md` for
 adjudicating what it returns.
