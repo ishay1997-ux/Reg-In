@@ -50,6 +50,30 @@ survivorship question.
   that; **he cancelled it the same hour** — three of that day's six rules were his, so the carve-out
   would have permitted half the growth it existed to stop.)*
 
+### 🔴 What may be written during a shift — Ishay's ruling, 02/08/2026
+
+**Free mid-shift, no approval:** `references/miss-ledger.md` · `docs/work_plan.md` · the
+`manager_evidence_regin` memory file. **These three are evidence and index — they bind no future
+session on their own, and delaying them loses his exact phrasing.**
+
+**Everything else — `SKILL.md`, every reference, `prompts.md`, other skills, every memory file and
+every doc — needs his approval FIRST, and the request carries five fields:**
+① **the exact text**, verbatim, never a summary · ② **the exact file and section** · ③ **why** ·
+④ 🔴 **that the four entry questions were run BEFORE the text was drafted — said explicitly** ·
+⑤ 🔴 **the ripple: which other artifact must change with it, or explicitly "none".**
+
+**Why ④ carries the weight:** drafting first and justifying after turns the questions into theatre.
+*(Anchor 02/08: the archiving rule was written, and then explained to its own author.)*
+**Why ⑤ exists:** ledger 11 — **three occurrences in two days** of a rule landing in one file while the
+artifact the worker actually reads stayed stale. The entry questions do not cover it; question 3 asks
+where a rule belongs, never what else must move with it.
+**Order is deliberate — the text comes first.** Opening with "why" starts with persuasion, and he would
+then be judging the justification instead of what will actually be written. *(His own ordering:
+"כתוב בדיוק מה אתה רוצה לכתוב ואיפה ולמה".)*
+⚠️ **This does not replace the close-pass — it stands beside it.** The default remains collect-now,
+legislate-at-close, because **seeing the whole shift at once is what catches that three items are
+really one.** This path is for what genuinely cannot wait.
+
 ### The four entry questions — per item, at close
 1. **Does an existing rule already cover this?** — overlap costs reconciliation time **every turn**
    (his 28/07 reasoning).
