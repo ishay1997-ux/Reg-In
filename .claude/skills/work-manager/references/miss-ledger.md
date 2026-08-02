@@ -391,3 +391,32 @@ the **commit**, not only the `add` — the index is shared, and 710's ledger 6 r
 one-file commit sweeping in nine builder files including a migration. **Chosen because it is the only
 finding that fires on the next commit rather than the next handover.**
 **Everything else is a candidate for the next shift's edit pass, with these four runs as its spec.**
+
+## 📌 The general form of entries 5–10 *(02/08, after Ishay asked for the problem and not the symptom)*
+
+Four structural problems. **Every miss in this file is one of them wearing a costume** — which is why
+patching symptoms one at a time has never reduced the rate.
+
+**🅰️ No layer can audit the layer above it.** Ishay cannot read code · the manager does not write it ·
+the builder does not know the field. Each trusts upward and can verify only downward.
+**Counter — not trust, but outputs shaped so a skip is VISIBLE:** a line per check including an
+explicit "אין הערות", so a missing line is caught by someone who cannot read the work itself.
+
+**🅱️ Intent degrades at every handoff and only the last link is measured.** Ishay's intent → the
+manager's prompt → the builder's plan → code → tests. Tests compare code to spec; **nothing compares
+spec to what he meant.** 🔴 **The save⇄send gap was not a bug — it was the architecture working as
+designed, and he found it only by sending a real email.**
+**Counter: close both ends** — the four-part shape before building (story · what comparable systems do ·
+what fits THIS project · one recommendation) and a real user walk before "done".
+
+**🅲 A mechanism triggered by "someone notices" never fires** — and the one who should notice is
+precisely the one whose attention is on the next thing. 🔴 **Proven twice inside one hour on 02/08 —
+the second time by the manager who had just named the problem out loud.**
+**Counter: hang the trigger on an artifact** (a commit, a required output shape, an outside reader).
+
+**🅳 The system slows down as it learns.** Every lesson becomes text, and text is read at every boot:
+**643 of the boot read list's 1,324 lines are two files that only ever grow.** **Nothing in this skill
+removes anything.** Left alone, a future manager burns a large share of a shift's quota before doing
+any work.
+**Counter: a compaction policy for this file and the evidence file — the only rule whose job is
+subtraction.**
