@@ -76,6 +76,14 @@ claims about his own arena are **not verifiable by you.** ⇒ **take patterns, n
 same sources); a **shared defect** is strong evidence that the failure is structural to how these
 skills are written.
 
+🔴 **The trap inside that asymmetry — an echo that sounds like corroboration.** Before treating a
+convergence as evidence, ask **"מאיפה זה הגיע אליכם?"** If the answer is "from you", it is not a second
+arena agreeing — **it is your own finding returning through another door.** *(02/08: the
+archived-session finding was relayed to 710 and adopted there within the hour. A future manager, absent
+from that exchange, would read "they do it too" as independent confirmation.)*
+**This matters precisely because a shared defect is the strongest instrument this role has — a faked
+convergence makes the strongest instrument misread.**
+
 🔴 **The general trigger for summoning: "I cannot verify this myself."** Not "this looks complicated."
 **And tell Ishay you summoned one** — see `ishay.md`, and situation 20 in `builders.md` for
 adjudicating what it returns.
