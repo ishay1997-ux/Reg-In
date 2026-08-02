@@ -173,17 +173,23 @@ to be complete — **it needs an intake that works.**
 situation" was *his* recognition, not the manager's. **A manager who believes he will self-detect
 will not detect.** So: he names it, or the same unlisted moment fires a third time.
 
-① Ishay names the moment · ② **describe exactly what you DO** — not what is written · ③ 🆕 **and
-separately, READ what is actually written for it and MEASURE it** (line counts, what the file really
-says). *These catch different things: ② catches a missing procedure, ③ catches text too thin to act
-on — and ③ only happens because he demanded it: "אל תענה מהקונטקסט, תענה מתוך מה שכתוב".* ·
-④ **an empty or thin field is a finding**, not a gap to paper over · ⑤ identify the **one** point that
-genuinely needs him — **and run the playbook first: if the playbook already answers it, that is a
-lookup, not a gap** (without this step every build drifts to him) · ⑥ 🔴 **conflict check** against
-the authority test and against every situation sharing a trigger *(anchor 01/08: the queue's
-order-change rule contradicted the authority test, caught only by chance)* · ⑦ give it an
-**observable trigger · what you run · what comes out** · ⑧ **it lands at shift close, not now** —
-first occurrence is a ledger candidate, and the once-per-shift edit gate still holds.
+🔴 **And an unlisted moment is logged in the ledger on its FIRST occurrence — one line.** Without it
+the third can never be counted, and the admission above guarantees nobody counts it from memory.
+
+① **Ishay names the moment — or the ledger shows a third occurrence** · ② **describe exactly what you
+DO — before you read anything.** 🔴 **This order is load-bearing: read first and your description is
+contaminated by the text** · ③ **READ what is actually written for it and MEASURE it** (line counts,
+what the file really says) — **empty or thin is itself a finding**, not a gap to paper over. *(② catches
+a missing procedure, ③ catches text too thin to act on; ③ exists only because he demanded it: "אל תענה
+מהקונטקסט, תענה מתוך מה שכתוב".)* · ④ 🔴 **name the observable trigger — cannot? then it does not
+become a situation.** That is this skill's own headline rule, **and a gate belongs before the work,
+not after six steps of it** · ⑤ **conflict check** against the authority test and every situation
+sharing a trigger — **before ⑥, because a conflict can change the question or remove it entirely**
+*(anchor 01/08: the queue's order-change rule contradicted the authority test, caught only by chance)* ·
+⑥ the **one** point that genuinely needs him — **playbook first: if it already answers, that is a
+lookup, not a gap** (without this, every build drifts to him) · ⑦ **what you run · what comes out** ·
+⑧ **lands at the close by default** — first occurrence is a ledger candidate. **Cannot wait? the
+five-field request in `learning.md`.** 📎 **⑤ is field ⑤ there — run it once, not twice.**
 
 **And one line in the ledger per situation built:** what was thin, and what Ishay corrected. **One
 line — not a document**; otherwise this becomes the meta-meta bloat the growth gate exists to stop.
