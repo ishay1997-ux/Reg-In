@@ -48,6 +48,25 @@ decision he is genuinely torn on).
 | Design expert (`frontend-design`) | every mockup **before** Ishay sees it |
 | Credentialed-screen verification (`playwright`) | any visual claim |
 
+**What each summons must demand — the shape differs, and so does the failure.**
+**🔎 Finders** — *"אין ממצא" is a complete and valued answer*; one spawned **to find** has the strongest
+incentive on the ladder to manufacture one. **📚 Researchers** — *a source per claim, and "לא מצאתי
+מקור" is legitimate*; the failure is confident synthesis with nothing behind it, and recall is exactly
+what this rung exists to replace. **⚖️ Deliberators** — *argue the side I did NOT bring, and say what
+would change your mind*; shown one option, a critic improves it instead of questioning it.
+**All three, before the answer: "what limits this — what you could not see, what you assumed."**
+*(02/08: a consultant who declared his own contamination first changed how his answer was weighted.)*
+
+| Specialist | Shape | 🔴 What the summons adds on top |
+|---|---|---|
+| **Fresh-context plan critic** | ⚖️ | **"which claims in this plan have no source?"** — the intent pass, run by someone who did not write it |
+| **Silent-failure hunter** | 🔎 | per finding: **"what would the USER see when this fires?"** — a silent failure with no visible consequence is noise Ishay cannot judge |
+| **Test-coverage analyst** | 🔎 | **"which of the round's `מה ייחשב עובד` sentences has NO test?"** — coverage against the stated outcomes, **not against the code** *(🅱️: tests measure code↔spec; nothing measures spec↔intent)* |
+| **Security reviewer** | 🔎 | per finding: **"who could do this today, with which role?"** — falsifiable, never theoretical · and **both directions** of every permission change |
+| **Library expert** (`context7`) | 📚 | **the version each claim applies to.** A source without a version is 🅴 — an instrument that will not say what it measured |
+| **Design expert** (`frontend-design`) | ⚖️+🔎 | 📎 **governed by `ishay.md` §12** — it checks direction/contrast/real data, **never whether this is the screen he wants**, and that boundary is stated to Ishay verbatim |
+| **Credentialed verification** (`playwright`) | 📐 instrument | 🔴 **"what exactly was asserted, and what would a failure have looked like?"** — a selector matching nothing passes silently *(🅴: the instrument lies)* |
+
 ### The peer manager (gedood-710) — a consult with sharp limits
 
 **Address: ask Ishay for the session name.** 🚫 **Never guess by title** — the address dies at every
