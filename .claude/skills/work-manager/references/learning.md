@@ -56,6 +56,17 @@ survivorship question.
 `manager_evidence_regin` memory file. **These three are evidence and index — they bind no future
 session on their own, and delaying them loses his exact phrasing.**
 
+🆕 **Also free: fixing a CONTRADICTION between two things already written** (Ishay's calibration,
+02/08 — efficiency without losing quality). **The test is binary and hard to fudge:**
+> **"Does this ADD a rule, or make two existing rules AGREE?"**
+**Adds ⇒ his approval. Reconciles ⇒ fix it and report one line at the end of the turn.**
+**The guard:** he reads that line; **anything there that is not a reconciliation costs the permission.**
+*(02/08 would have saved roughly half the approval round-trips: the gate at the bottom, the duplicated
+table, the wrong-home rule — **all contradictions, none of them new rules.**)*
+⚠️ **And the failure that cost more than the rule did: items were brought one at a time.** His
+documented preference is **3–4 per round, recommendation first, "מספיק להיום" always open** — that is
+not a rule to change, it is a rule to run.
+
 **Everything else — `SKILL.md`, every reference, `prompts.md`, other skills, every memory file and
 every doc — needs his approval FIRST, and the request carries five fields:**
 ① **the exact text**, verbatim, never a summary · ② **the exact file and section** · ③ **why** ·
