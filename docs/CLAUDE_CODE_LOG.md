@@ -47,6 +47,25 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 02/08/2026 — **manager-4 shift: the intent pass, and five structural problems named** (docs only, in progress)
+- Took over from manager-3 (`ab3edc6`). **No code, no test runs, no DB writes** — quota near zero all
+  shift. The handover doc was read and deleted; its two open debts moved to `work_plan` rows first.
+- **Ledger 9–11 + "the general form of entries 5–10":** the misses collapse into **five** structural
+  problems — no layer audits the one above it · intent degrades at every handoff while only the last
+  link is measured · a mechanism triggered by "someone notices" never fires · the system slows as it
+  learns · **and 🅴, the instruments lie** (five occurrences in one shift: the growth ratio, the
+  velocity formula, a one-file measurement reported as the mechanism, a module-4 claim, the clock).
+- **The intent pass** (`prompts.md` pre-flight + `ishay.md` situation 10 + `module-build`): every
+  instruction is sorted by whether it encodes how the business works — **not** by whether it is on
+  screen — and anything that does goes to Ishay as a concrete scenario **before the prompt is written**.
+  Born from the save⇄send gap, which confused nobody: everyone understood it and built the wrong thing.
+- **Five of six adopted builder mechanisms landed in `prompts.md`; the sixth was rejected on evidence**
+  (zero messages ever lost here) and recorded as rejected-with-evidence so it is not re-adopted later.
+- **Ishay's rulings:** what may be written mid-shift (ledger · `work_plan` · evidence file are free;
+  everything else is a five-field request) · exact text before writing, never a paraphrase · a stale
+  builder session never gets new work · closing sessions is his alone. **`work_plan` 19–30** hold
+  everything not done, including the six-pass **"סריקת סקיל"**.
+
 ### 01/08/2026 — **manager-3 shift: the 8 E2E failures got names, and six adopted mechanisms were found dead** (docs only)
 - Took over from manager-2 (`e3243ab`). **No code, no test runs, no DB writes** — Ishay is near his
   weekly quota cap, so the whole shift was read/measure/record.
