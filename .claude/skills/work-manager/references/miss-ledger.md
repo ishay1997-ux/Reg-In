@@ -450,3 +450,31 @@ anchors and costs one pass. **Row for the next shift.**
 receipt-ack — was **rejected** on measurement, zero messages ever lost here. It is written into
 `prompts.md` as rejected-with-evidence rather than dropped, so it is not re-adopted later as
 "missing". **Removal exercised deliberately is the growth gate actually working.**)*
+
+## 📌 Why the intent pass exists — the four roots
+
+*(02/08, from Ishay's push-back: "מה אם המשימה שנתת לא מספיק ברורה? אולי לא כתוב מספיק טוב
+בבלופרינט?" — the manager's first answer covered only one of the four.)*
+
+A builder's **"לא הבנתי"** can come from four places: **① the prompt is written badly · ② the guide
+step is thin · ③ the guide is perfectly clear and simply WRONG · ④ he lacks context that exists
+somewhere and nobody pointed at it.**
+
+🔴 **Only ① produces a signal. The other three are silent — and ③, the most expensive, is the most
+silent of all: nobody is confused, so nobody asks.**
+**Anchor: the save⇄send gap.** Every testing phase passed, no one was puzzled, the gate was green —
+and it surfaced only because Ishay happened to send a real email.
+
+⇒ **This is why the pass sorts by "does this encode how his business works" rather than by "is it on
+screen", and why a recorded source does not exempt an item** — a source proves a decision was made,
+not that it is still right nor that he understood what he approved.
+**Anyone tempted to trim this pass should first name which of the four roots they intend to leave
+uncovered.**
+
+**📌 And a candidate — 2nd occurrence of a known family (02/08).** The manager reported **"zero of the
+six adopted mechanisms exist"** having measured `prompts.md` alone; **three of them were already in
+`module-build`.** *A measurement of one file, reported as a measurement of the mechanism.* Same family
+as the Hebrew-grep-over-an-English-corpus anchor. **Not self-caught** — the correcting read happened
+only because Ishay sent him to the builder's file.
+**Candidate rule: "does X exist?" is answered by first naming every artifact that could hold X, and
+only then searching them.** Graduates on recurrence.
