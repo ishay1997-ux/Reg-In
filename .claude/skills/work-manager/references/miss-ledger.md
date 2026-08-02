@@ -509,6 +509,14 @@ only because Ishay sent him to the builder's file.
 **Candidate rule: "does X exist?" is answered by first naming every artifact that could hold X, and
 only then searching them.** Graduates on recurrence.
 
+**📌 Candidate, 1 occurrence (02/08): every scan finding carries "how will we know the fix worked?"**
+The whole of shift-4 is theory — **not one line written today has run.** The six fixes to situation 11
+cannot be verified until Ishay actually says "דוח מצב", and nothing marks them as unverified. Proposed
+shape: each finding states its verification, or is **explicitly flagged unverifiable**, so a future
+manager can tell a proven fix from a plausible one. **Held as a candidate rather than written into the
+scan** — one occurrence, and the scan already carries three output rules. Graduates if a scan fix is
+later found to have silently failed.
+
 ## 📌 CANDIDATE — a compaction policy for this file and `manager_evidence_regin`
 
 *(Drafted 02/08. **Ishay's ruling: it lives here, and the shift close decides whether it enters
