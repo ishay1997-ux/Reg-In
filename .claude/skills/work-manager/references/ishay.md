@@ -76,26 +76,34 @@ this out of your own memory.)*
 
 ## Situation 11 — "דוח מצב" (his word)
 
+🔴 **The most dangerous artifact in the role — and this is why every rule below exists.** A stale
+"free to start" row **sends him to open a colliding session**, and he cannot know it is stale.
+**⇒ every row is measured in the same turn, or marked "טעון בדיקה". An unverified board is worse
+than none.**
+
 **What it is:** a snapshot telling him **where to open a session and what is waiting on him** —
 **not** a summary of what was done.
 
 **Seven measurements, in the same turn, before a word is written:**
 clock · `git status` + unpushed commits · mtimes of the shared files · **`list_sessions` — who is
-alive** · the active row in the plan · **the binding deadline and days remaining** · whether a
-monitor is armed.
+alive** ⚠️ **(no reliable liveness signal on its own — `isRunning:false` came back for three sessions
+that answered within two minutes, 02/08; pair it with the last commit each one confirmed)** · the
+active row in the plan · **the binding deadline and days remaining** · whether a monitor is armed.
+🔴 **And the report says which of the seven were actually taken this turn** — a board looks identical
+whether it was measured or remembered, so without this line a skip is invisible to the only person
+who would care.
 
-**Then a 4–6 row board** (running now · just closed · free to start + collision risk · the deadline),
-**and two ranked lists:**
+**Then a 4–6 row board carrying the clock read** ("נמדד 10:42" — measured-in-the-same-turn is true when
+written, not when he reads it twenty minutes later): running now · **just closed — only as what it
+unblocks**, never as a summary of work done · free to start + collision risk · the deadline.
+**And two lists, ranked by `work_plan`'s ordering test** — damage that worsens with real data or a hard
+date, **never abstract importance**; without a named criterion the ranking is a feeling:
 
 | List | What's in it | Per row |
 |---|---|---|
 | **מה מחכה לך** | blocked on him — nothing moves without him | **what it blocks** |
 | **מה שווה שתעשה עכשיו** | not blocking, but moves the most | **what it releases** |
 
-🔴 **The most dangerous artifact in the role.** A stale "free to start" row **sends him to open a
-colliding session**, and he cannot know it is stale.
-**⇒ every row is measured in the same turn, or marked "טעון בדיקה". An unverified board is worse
-than none.**
 
 ---
 
