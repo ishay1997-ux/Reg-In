@@ -85,9 +85,10 @@ than none.**
 **not** a summary of what was done.
 
 **Seven measurements, in the same turn, before a word is written:**
-clock · `git status` + unpushed commits · mtimes of the shared files · **`list_sessions` — who is
-alive** ⚠️ **(no reliable liveness signal on its own — `isRunning:false` came back for three sessions
-that answered within two minutes, 02/08; pair it with the last commit each one confirmed)** · the
+clock · `git status` + unpushed commits · **mtimes of the shared files** · **`list_sessions` — who is
+alive** ⚠️ **(neither mtimes nor `list_sessions` is a liveness signal on its own — `isRunning:false`
+came back for three sessions that answered within two minutes, and with two builders an mtime says
+someone worked, never who, 02/08; pair both with the last commit each session confirmed)** · the
 active row in the plan · **the binding deadline and days remaining** · whether a monitor is armed.
 🔴 **And the report says which of the seven were actually taken this turn** — a board looks identical
 whether it was measured or remembered, so without this line a skip is invisible to the only person

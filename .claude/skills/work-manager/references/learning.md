@@ -60,7 +60,11 @@ session on their own, and delaying them loses his exact phrasing.**
 every doc — needs his approval FIRST, and the request carries five fields:**
 ① **the exact text**, verbatim, never a summary · ② **the exact file and section** · ③ **why** ·
 ④ 🔴 **that the four entry questions were run BEFORE the text was drafted — said explicitly** ·
-⑤ 🔴 **the ripple: which other artifact must change with it, or explicitly "none".**
+⑤ 🔴 **the ripple — two questions:** what else must change **because of** this, or explicitly "none" ·
+**and where else does this same defect already live?** *(02/08: "a gate placed after the work it
+governs" was found three separate times, hours apart, because fixing one instance never prompted a
+look at the next. **A fix is not done until you have checked the same defect wherever it plausibly
+lives.**)*
 
 **Why ④ carries the weight:** drafting first and justifying after turns the questions into theatre.
 *(Anchor 02/08: the archiving rule was written, and then explained to its own author.)*
