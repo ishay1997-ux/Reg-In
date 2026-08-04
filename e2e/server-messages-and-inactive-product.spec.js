@@ -19,10 +19,14 @@ import { test, expect } from '@playwright/test'
 const CEO_EMAIL = process.env.E2E_CEO_EMAIL
 const CEO_PASSWORD = process.env.E2E_CEO_PASSWORD
 
-// מק"ט שיושב על שורת-דיילות בהצעה פתוחה אמיתית (אומת במסד 31/07/2026: הצעה 6,
-// "כנס לקוחות שנתי" של מדיטק, 6 × 500 ₪). זה בדיוק התרחיש שהתיקון נועד לו.
+// מק"ט שיושב על שורת-דיילות בהצעה פתוחה אמיתית. זה בדיוק התרחיש שהתיקון נועד לו.
+// ⚠️ **עברה מ-#6 ל-#8 (אומת במסד 04/08/2026).** ‏#6 אושרה מאז, ומסך-העריכה שלה אינו
+// המקרה שנבדק כאן. ‏#8 ("יום גיבוש חברה", הייטק גרופ) עומדת באותם שלושה תנאים ש-#6
+// עמדה בהם, ו**כל השלושה נחוצים**: `in_progress` (אחרת אין מסך-עריכה) · שורת-`04ST`
+// ראשונה (הבדיקות פונות ל-`.first()`) · שורה שנייה שאינה דיילות (‏`B-ECO-TAG`) —
+// היא זו שמוכיחה ש-§7.34 מסתיר את המוצר המושבת **בשורה אחרת**.
 const HOSTESS_SKU = '04ST'
-const QUOTE_WITH_HOSTESS_LINE = 6
+const QUOTE_WITH_HOSTESS_LINE = 8
 
 async function login(page, email, password) {
   await page.goto('/login')
@@ -142,12 +146,27 @@ test.describe('הודעות-הכשל של המסד מגיעות למסך (סבב
     })
     await page.goto(`/quotes/${QUOTE_WITH_HOSTESS_LINE}/edit`)
     await expect(page.getByTestId('quote-lines-table')).toBeVisible({ timeout: 30_000 })
-    await page.getByRole('button', { name: 'עדכון ההצעה' }).click()
+
+    // ⚠️ **חייבים לשנות משהו לפני הלחיצה** (הכרעת-ישי 01/08): "עדכן ושלח" בלי שינוי אינו
+    // שומר כלל — הוא פותח `window.confirm`, ש-Playwright דוחה כברירת-מחדל ⇒ הקוד חוזר
+    // בלי לגעת ב-RPC, והטוסט שהבדיקה מחפשת לעולם לא ייווצר. שינוי-כמות הוא הדרך הזולה
+    // ביותר להכריח את המסלול האמיתי. **אפס כתיבות** — ה-RPC מיורט ונופל ב-400.
+    const qty = page.getByTestId(/^quote-line-qty-/).first()
+    await qty.click()
+    await qty.fill('9')
+    await qty.blur()
+
+    // ⚠️ התווית היא **'עדכן ושלח'** (‏`QuoteBuilderPage.jsx:748`, אותה הכרעה —
+    // השמירה פותחת את חלון-השליחה). עד 04/08 עמד כאן 'עדכון ההצעה', שם שכבר לא קיים
+    // במוצר, והבדיקה נפלה ב-timeout על כפתור שאינו — כלומר לא בדקה דבר.
+    await page.getByRole('button', { name: 'עדכן ושלח' }).click()
 
     const toast = page.getByTestId('toast-error')
     await expect(toast).toBeVisible()
     await expect(toast).toContainText('אינה בסטטוס')
     await expect(toast).not.toContainText('approved')
+    // 🔒 ‏`'עדכון ההצעה נכשל'` **נשאר כאן במכוון ואינו שריד** — זו מחרוזת-ה-fallback החיה
+    // ב-`03_quotes/api.js:204`, וכל העניין הוא שההודעה הממופה גברה עליה.
     await expect(toast).not.toContainText('עדכון ההצעה נכשל')
   })
 

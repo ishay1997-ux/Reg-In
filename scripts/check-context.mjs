@@ -203,7 +203,9 @@ if (existsSync(join(ROOT, 'src/modules'))) {
   if (cm) {
     const stamp = /\*\*עודכן\*\*\s*\|\s*([0-9/]{10})/.exec(cm)?.[1]
     if (!stamp) {
-      problems.push('docs/current_manager.md — אין חותמת "עודכן" שניתן לקרוא; הכתובת אינה בת-אימות.')
+      problems.push(
+        'docs/current_manager.md — אין חותמת "עודכן" שניתן לקרוא; הכתובת אינה בת-אימות.',
+      )
     } else {
       const [d, m, y] = stamp.split('/').map(Number)
       const ageDays = Math.floor((Date.now() - new Date(y, m - 1, d)) / 86_400_000)

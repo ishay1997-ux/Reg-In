@@ -488,16 +488,56 @@ eye verification against the live app (dev server raised for him by the manager)
 ### 7. ✅ Definition of Done
 Canonical (architecture_and_qa_roadmap.md:32-41) instantiated:
 - [ ] `npm run verify` green.
-- [ ] Unit tests exist for all new `src/lib` logic (pricing/catalog/validators/**email**).
+- [x] Unit tests exist for all new `src/lib` logic (pricing/catalog/validators/**email**). **(measured
+  04/08/2026: all four have a `.test.js` beside them — `pricing.test.js` · `catalog.test.js` ·
+  `validators.test.js` · `email.test.js`; `npm run test:run` ⇒ **11 files / 410 tests green**. The
+  only two `src/lib` files without a test are `constants.js` and `utils.js` — data and shadcn's
+  `cn()`, no logic to cover.)**
 - [x] ~~5~~ **10** `module3_` migrations applied via MCP after typed-echo; `docs/schema.sql` snapshot refreshed; committed together. **(re-counted 01/08/2026, step 5.3, explicit definition — see §2 "Files to create" note above and `db_roadmap.md` §0.0)**
 - [ ] CLAUDE_CODE_LOG + STATUS updated (end-of-session protocol each session; `CHANGELOG` retired 23/07/2026).
-- [ ] No secrets in code (CI gitleaks green locally).
+- [x] No secrets in code (CI gitleaks green locally). **(measured 04/08/2026 by repo-wide grep:
+  zero JWTs — the one `eyJ`-shaped hit is an npm `sha512` integrity hash in `package-lock.json`;
+  zero Make webhook URLs; the single `service_role` occurrence is
+  `Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')` in `supabase/functions/send-email/index.ts:120`, i.e. an
+  env read, not a committed key. `git ls-files` shows **only `.env.example`** tracked. `gitleaks` is a
+  **blocking** CI job — `gitleaks/gitleaks-action@v2` at `ci.yml:103`, and `continue-on-error` appears
+  **nowhere** in the workflow. ⚠️ Honest boundary: gitleaks itself was not executed locally — it is not
+  installed here; the evidence is the grep sweep plus the blocking CI step.)**
 
 Module-specific:
-- [ ] Seed counts exactly 11/40/20 + name-match audit (20 param names = code strings).
+- [x] Seed counts exactly 11/40/20 + name-match audit (20 param names = code strings). **(measured
+  live 04/08/2026: `products` **11** · `price_tiers` **40** · `params` **20**, exact. Name-match: the
+  **5** param names M3 actually consumes appear byte-for-byte in code — `אחוז_מעמ` +
+  `יחס_אורחים_לדיילת` (`PRICING_PARAM_NAMES`, `pricing.js:21-22`, pinned by `pricing.test.js:220-221`)
+  and `ימי_תוקף_הצעה` + `ימי_אזהרה_קדם_אירוע` + `תבנית_מייל_הצעת_מחיר`
+  (`QUOTE_SCREEN_PARAM_NAMES`, `quotes.js:473-477`, pinned by `quotes.test.js:834`).
+  ⚠️ **The other 15 are deliberately absent from `src/`** — they belong to M4 (`משקולת_*W_*`,
+  `שעות_תזכורת_לדיילת`), M8/M9 (`שכר_מינימום_שעתי`, `מייל_משרד_רואי_חשבון`,
+  `קישור_בסיס_סקר_לקוחות`) and the 5 unbuilt mail templates. Spot-checked: `שכר_מינימום_שעתי`,
+  `משקולת_1W_דירוג`, `תבנית_זימון_משמרת` ⇒ **zero** hits in `src/`. Their audit belongs to the module
+  that consumes them; this box covers M3's five.)**
 - [x] 6,319 ₪ EXACT in unit test AND live UI AND PDF. **(unit: `pricing.test.js` since 2.1. Live UI + PDF both closed together 01/08/2026, step 5.1 — the binding acceptance scenario built through the real screen, `6,319 ₪` read from the live `quote-total` DOM element before saving, and the same figure verbatim in the fetched real PDF bytes, both pages visually reviewed.)**
-- [ ] Policies: quotes 2 · quote_services 2 · catalog 3×2; impersonation matrix evidence.
-- [ ] Lock: UPDATE/DELETE on non-in_progress errors (SQL evidence).
+- [x] Policies: quotes 2 · quote_services 2 · catalog 3×2; impersonation matrix evidence. **(measured
+  live 04/08/2026 against `pg_policies`: `quotes` **2** (`quotes_select_by_permission` +
+  `quotes_write_by_permission`) · `quote_services` **2** (same pair) · catalog **3×2**
+  (`products` 2 · `price_tiers` 2 · `params` 2) — exactly as specified. All gated on the Hebrew
+  `module_name = 'הצעות מחיר'` sub-select, SELECT at `edit|view` and writes at `edit`.
+  `get_advisors(security)`: **zero ERROR**. The 7 `rls_enabled_no_policy` INFOs are all non-M3 tables
+  (`assignments` · `hostesses` · `logistics` · `projects` · `salary_reports` · `login_attempts` ·
+  `login_rpc_calls`) — deliberate deny-all per `src/CLAUDE.md`. Impersonation evidence is the E2E
+  matrix: finance ⇒ 403 from `send-email`, מנהלת פרויקטים ⇒ 0 rows PATCHing `products`, view-role ⇒
+  42501 from the approve RPC.
+  ⚠️ **One WARN does touch M3 and is not silently passed over:** `approve_quote_and_create_project`
+  is a `SECURITY DEFINER` function executable by `authenticated`. That is **by design** — it is the
+  approval RPC, and it checks the caller's permission internally (proven by the 42501 E2E, with a
+  CEO control returning P0002). Not an open finding; recorded so nobody re-discovers it as one.)**
+- [x] Lock: UPDATE/DELETE on non-in_progress errors (SQL evidence). **(measured live 04/08/2026:
+  `enforce_quote_in_progress_lock()` is wired as **`BEFORE DELETE OR UPDATE ... FOR EACH ROW`** on
+  **both** tables — `quotes_lock_non_in_progress` and `quote_services_lock_non_in_progress` (read
+  from `pg_get_triggerdef`). The function body resolves the status from `OLD` on `quotes` and via a
+  lookup on `quote_services`, then raises `P0001` with the Hebrew message unless it is `in_progress`.
+  Both branches are exercised green by E2E `quotes.spec.js:162` (quotes) and `:205` (quote_services,
+  UPDATE **and** DELETE — the branch that had never actually run before 4.3b).)**
 - [x] RPC: born-complete project + logistics rows + freezes + double-click safe + permission-checked. **(4.1, 31/07 — rolled-back battery, every guard returned its failure; `closing_unit_cost` freeze proven in both directions, not by equality.)**
 - [x] pg_cron: 2 jobs scheduled (fixed UTC hour per §7.56 nod) + simulated-run evidence. **(4.2, 31/07 — the expiry job body was run verbatim inside a rolled-back transaction, driven by the real param: 30⇒1 flipped exactly the 4 open quotes to `rejected`+'פג תוקף'; emptying the param made it raise instead of silently updating 0 rows. Both jobs' scheduling was already evidenced in 1.5.)**
 - [x] PDF: Hebrew RTL + embedded font screenshot (§7.41 — real verification, no rubber-stamp).
@@ -531,7 +571,16 @@ Module-specific:
   - [x] `email_log` gets a row per send (**including failures**), and the dialog's "נשלח כבר" indicator **survives a page refresh**; **(3.4 proved the row is written by real sends; 4.3 made the refresh-survival permanent — `quote-email.spec.js` reads the REAL journal row of quote #6, reloads the page, and finds the indicator again, with quote #7 as the negative control. The `log_failed` path — mail out, journal write dead — is asserted as its own state.)**
   - [x] the Edge Function refuses a `view`-level user **server-side** (not just a hidden button); **(4.3, 31/07 — finance's own JWT ⇒ 403 `אין לך הרשאה`; CEO control with the identical empty body ⇒ 400 `חסרים נתונים`, which is what proves the 403 came from the role and not from the payload. Permanent test: `e2e/quote-email.spec.js`.)**
   - [ ] the Make scenario answers 200 **only after** the mail module succeeded, and carries a Skip error handler so one bad recipient cannot disable it.
-- [ ] §6 מ3 debts closed (history/metrics/filter/contacts-note) + module-1.md correction + db_roadmap updated.
+- [x] §6 מ3 debts closed (history/metrics/filter/contacts-note) + module-1.md correction + db_roadmap
+  updated. **(re-verified 04/08/2026 by direct read of `PROJECT_MASTER.md` §6, not taken on trust from
+  step 5.3: every inbound `🚧 מ3` line is struck through and dated — quote-history closed 30/07 (§6
+  l.273-274) · customer metrics closed 30/07 (l.265-266) · leaderboard-by-revenue ruled *not needed*
+  31/07 21:17 (l.269) · extra-contacts ruled *not needed* 31/07 22:18 (l.271) · PDF-engine-as-pure-
+  function delivered 31/07 21:12 (l.275). **Zero open `🚧 מ3` remain**; the surviving 🚧 lines are
+  outbound (מ3 → מ4/מ8/מ11 shared mail engine, מ3 → מ10 auto-send) and correctly name their target
+  modules. The `module-1.md` params-UI note was checked at 5.3 and found **accurate** — left alone
+  deliberately, since editing a note that is not wrong would be a false fix. `db_roadmap.md` §0.0
+  carries the re-measured migration counts.)**
 - [ ] UX-&-validation checkbox: 🎨 review passed (design/states/RTL/keyboard) + validation-completeness (spec'd implemented, spec-silent confirmed).
 
 Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
@@ -540,6 +589,94 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+- 04/08/2026 — **The 8 E2E failures were all stale fixtures, not bugs — and the diagnosis recorded
+  for one of them (`quote-email.spec.js:54`) was WRONG. Zero product files changed.**
+  Measured baseline before touching anything: **78 run · 70 passed · 8 failed** (`smoke` excluded by
+  `--grep-invert`), matching manager-3's list at line ~627 exactly. Root causes, measured:
+  **(a) quote #6's approval** — 6 of the 8. `isQuoteSendable` is `in_progress`-only, so #6 lost its
+  send button *and* its edit screen; every spec pinned to it died on a locator timeout, not an
+  assertion. Fixtures moved to quotes that still satisfy the ORIGINAL preconditions:
+  `customer-page` open-quote assertions #6 ⇒ **#22** · `load-failure-guards:116` (needs
+  `in_progress` **and** a real `email_log` row) #6 ⇒ **#22** · `server-messages` hostess-line
+  fixture (needs `in_progress` + a first `04ST` line + a second non-hostess line) #6 ⇒ **#8**.
+  **(b) customer 47's email became Ishay's private address** (01/08 ruling) — that is
+  `quote-email:54`, see the correction below. **(c) revenue drift** — Meditech's approved quotes
+  went 2 ⇒ 3 (#10 + #21 + #6), so 16,184 ⇒ **22,503 ₪**, avg 8,092 ⇒ **7,501**, open 6,319 ⇒
+  **561** (only #22 left open), quotes tab 3 ⇒ **4**. ⚠️ **All four numbers were recomputed from
+  the DB rows through `computeQuoteTotals`' own agorot arithmetic and only then cross-checked
+  against the screen** — deliberately not copied out of the failure message, which would have been
+  fitting the test to whatever the code happened to render.
+
+  🔴 **The correction — `quote-email.spec.js:54` was NOT order-dependence.** The manager-3 entry at
+  line ~638 records it as *"passes alone, fails when the whole file runs ⇒ intra-file
+  order-dependence / state bleed"*, and explicitly warns *"do NOT fix it with a fixture swap"*.
+  **Measured 04/08: it is a plain stale constant.** The failure is
+  `Expected: "sarit@hadera-demo.muni.il" / Received: "ishay1997@gmail.com"` — customer 47's address
+  was changed on 01/08 and the test still memorised the old one. Nothing about run order is
+  involved; it fails identically in isolation today. The earlier reading was taken before that
+  address change had propagated, and the "passes alone" observation was true then and misleading now.
+  **Lesson worth keeping: a failure that reproduces only under one run shape invites a mechanism
+  story (bleed, ordering, accumulation) before anyone has read the assertion diff.** Reading it took
+  ten seconds and named the cause outright.
+
+  🔒 **And the fix could NOT be the obvious one, for a reason that outlives this round: an E2E file
+  is committed to git forever, so a real personal address must never be written into one.** Two
+  routes were used, per assertion:
+  - `CLEAN_QUOTE_ID` #7 ⇒ **#8** (הייטק גרופ, `tal@hitechgroup-demo.co.il`) — still `in_progress`,
+    still journal-free, and back on a demo domain. The recipient stays a hard-coded constant because
+    that is exactly what the wire contract needs to pin.
+  - `SENT_RECIPIENT` **stopped being a constant** — it is read from `email_log` at run time in a
+    `beforeAll`, with a truthiness guard so a missing row fails loudly instead of asserting on
+    `null`. ⚠️ **This deviates from the standing "intercept, don't swap IDs" ruling recorded at
+    line ~654**, and knowingly: that ruling was written when the only alternative on the table was
+    *committing* #22's recipient, which is indeed forbidden. Reading it live satisfies the ruling's
+    actual purpose (no private address in the repo) while keeping what interception would have
+    destroyed — the claim that a **real** journal row drives the indicator across a reload.
+    **Honestly stated in the test itself:** on #22 the journal recipient and the customer's address
+    are identical, so that assertion alone cannot distinguish "read the journal" from "showed the
+    customer"; the negative control (#8, no indicator at all) is what does. Both are needed.
+
+  ⚠️ **Two masked failures surfaced only after the first layer was repaired** — both were called in
+  advance and neither is a new regression:
+  1. `server-messages…:145` asserted a button named `'עדכון ההצעה'`; the live label has been
+     **`'עדכן ושלח'`** since commit `9f28336` (`QuoteBuilderPage.jsx:748`). Exactly as manager-3
+     predicted at line ~647. The sibling assertion on `:151` (`not.toContainText('עדכון ההצעה נכשל')`)
+     is **not** stale — that string is the live fallback in `03_quotes/api.js:204` — and was left alone.
+  2. That same test then still failed: with the fixture repaired to an `in_progress` quote, pressing
+     "עדכן ושלח" **without editing anything** hits the 01/08 no-change path, which opens a
+     `window.confirm` (auto-dismissed by Playwright) and returns *without calling the RPC* — so the
+     toast under test could never appear. A quantity edit was added before the click. **This one was
+     not predicted by anyone**; it is the price of a fixture that had been frozen since before the
+     no-change ruling existed.
+
+  **Result: 8 test files' fixtures/labels corrected, 0 product files touched.**
+  `git diff --stat` on `src/modules/03_quotes/quotePdf.jsx`, `supabase/functions/` and
+  `src/lib/email.js` is **empty**, so Ishay's eye-approval of the PDF and the live mail still holds.
+  DB row counts identical before and after (`quotes` 10 · `quote_services` 24 · `projects` 3 ·
+  `email_log` 3).
+
+- 04/08/2026 — **4 `npm audit` waivers added (Ishay's ruling), and the measurement was redone from
+  zero because the old one could not be trusted.** The `node_modules` tree carried `extraneous` and
+  `invalid` markers, so `npm ci` was run first; the picture came back **identical** to the reported
+  one — `brace-expansion` (GHSA-rgw5-rvv9-x895) · `fast-uri` (GHSA-7p8r-x3mc-p8w7) · `ip-address`
+  (GHSA-mwp4-54f8-5fhr) · `undici` (GHSA-8xcm-r25x-g524), all `high`.
+  **Two independent proofs, not one:** ① `npm ls <pkg> --all` puts every one of them under
+  `eslint-plugin-sonarjs`, `jsdom`, or the **shadcn CLI** (`@modelcontextprotocol/sdk`,
+  `@dotenvx/dotenvx`); ② `npm run build` then a text search of the real
+  `dist/assets/index-*.js` (2.4 MB) — **zero** occurrences of `undici`, `fast-uri`,
+  `Address4`/`Address6`, `braceExpand`, `express-rate-limit`, `dotenvx`, `modelcontextprotocol`.
+  (The lone "ajv" hit is a base64 run inside an embedded font.)
+  ⚠️ **Proof ② was not redundant.** `shadcn` sits under `dependencies`, not `devDependencies` —
+  `src/index.css:3` does `@import 'shadcn/tailwind.css'` — so the dependency graph alone would have
+  left the claim arguable. Only the built artefact settles it.
+  ⚠️ **Wording is deliberate: we accept the risk because it cannot reach the user — NOT "there is no
+  problem".** All four are real, and the vulnerable code does run on the dev machine and in CI.
+  ⛔ **What voids these waivers:** a real Node server, or any import from `shadcn` beyond that one
+  stylesheet. `reviewTrigger` on all four: next module close, or the 19/09/2026 submission —
+  whichever comes first. Gate proven **in both directions in the same session**: `exit=1` with the
+  four unwaived, `exit=0` after. Also recorded in `STATUS.md`, as `audit-gate.mjs`'s own error
+  message demands.
+
 - 01/08/2026 — **"עדכן ושלח" without changes no longer saves — and the brief's own wording had
   to be corrected first** (Ishay's ruling; manager ruled (א) after market check).
   **(1) The bug:** `handleSave` had no change detection, so an empty update ran a full `update`,
@@ -635,6 +772,11 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
   | 7 | `server-messages-and-inactive-product.spec.js:225` | השורה מסומנת, המחיר שורד שינוי-כמות, והשמירה אינה נחסמת |
   | 8 | `server-messages-and-inactive-product.spec.js:268` | §7.34 — המוצר המושבת מוצע רק בשורה שלו |
 
+  🔴 **↳ SUPERSEDED 04/08/2026 — the paragraph immediately below is wrong, see the 04/08 entry at
+  the top of §9.** `quote-email.spec.js:54` is not order-dependence and not state bleed: customer
+  47's email was changed to a private address on 01/08 and the test memorised the old one. It fails
+  identically in isolation today. *(Kept, not rewritten — dated log entries are never edited.)*
+
   ⚠️ **#4 is misattributed to quote #6 — do NOT "fix" it with a fixture swap.** Manager challenge,
   confirmed by the builder against his own runs: it uses `CLEAN_QUOTE_ID = 7` (`quote-email.spec.js:27`),
   and #7 is `in_progress` with **zero** `email_log` rows — #6's approval cannot touch it. Measured
@@ -661,6 +803,12 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
   private address** (the older one is `ron@meditech-demo.co.il`). Any test that renders a *recipient*
   must stay on interception — committing #22 there would put his personal email in the repo. This is
   the measured basis for manager-2's "intercept, don't swap IDs" ruling, which stands.
+  ↳ **04/08/2026 — the measurement above is exact and still holds; the CONCLUSION was narrowed.**
+  The ruling assumed two options (commit the address, or intercept) and rejected the first, rightly.
+  A third exists: **read the recipient from `email_log` at run time.** No address enters the repo —
+  the ruling's actual purpose — and the "real journal row" property that interception would have
+  destroyed is kept. Applied to `quote-email.spec.js:133` only; everything else stands. See the
+  04/08 entry at the top of §9 for what that assertion does and does not prove on its own.
 - 01/08/2026 (fix-round item 2 ↳ **panel-lock guard, manager-approved**) — closes the hole I
   reported against my own work: reinstating `?? 0` in `repriceLine` (`QuoteLineEditor.jsx`) failed
   **no test at all**, because the four lib-level unit tests cover `src/lib/quotes.js` while that

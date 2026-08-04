@@ -44,7 +44,8 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
 
     // ההכנסות מחושבות מהצעות מאושרות דרך ה-SSOT של התמחור.
     // ↳ 01/08/2026 (צעד 5.1): ר' ההערה המלאה בבדיקה שלמטה — הצעה #21 אושרה, ההכנסות עלו.
-    await expect(page.locator('tbody tr', { hasText: MEDITECH }).first()).toContainText('16,184')
+    // ↳ 04/08/2026: **גם #6 אושרה מאז**, וההכנסות עלו שוב ל-22,503 ₪ (ר' ההערה שלמטה).
+    await expect(page.locator('tbody tr', { hasText: MEDITECH }).first()).toContainText('22,503')
 
     // מיון בלחיצת-כותרת נכתב לכתובת (ולא ל-state) — זה מה שמאפשר לו לשרוד חזרה.
     await page.getByRole('button', { name: /סה"כ הכנסות/ }).click()
@@ -69,23 +70,33 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
 
     // שלושת המדדים החיים. 6,319 ₪ הוא תרחיש-האפיון המחייב של המודול.
     // ↳ 01/08/2026 (צעד 5.1): הצעה #21 נבנתה ואושרה חי דרך המסך כתרחיש-הקבלה המחייב —
-    // מדיטק עברה מהצעה מאושרת אחת (#10, 9,865 ₪) לשתיים (#10+#21, 16,184 ₪), וממוצע-העסקה
-    // ירד בהתאם ((9,865+6,319)/2 = 8,092). "הצעות פתוחות" (6,319) לא זז — #21 אושרה, אינה
-    // עוד in_progress; רק #6 (אותו סכום במקרה) נשארת פתוחה. נמדד חי מהמסך, לא מחושב-ידני.
-    await expect(page.getByTestId('metric-revenue')).toContainText('16,184')
-    await expect(page.getByTestId('metric-open')).toContainText('6,319')
-    await expect(page.getByTestId('metric-avg-deal')).toContainText('8,092')
+    // מדיטק עברה מהצעה מאושרת אחת (#10, 9,865 ₪) לשתיים (#10+#21, 16,184 ₪).
+    // ↳ 04/08/2026: **גם #6 אושרה מאז** (6,319 ₪) ⇒ שלוש מאושרות, 22,503 ₪, ממוצע 7,501.
+    // ההצעה הפתוחה היחידה שנותרה למדיטק היא #22 ("אימות שמור-ושלח", שורת-דיילות אחת
+    // ב-500 ₪ ⇒ 5% הנחת-לקוח ⇒ 475 ⇒ 18% מע"מ ⇒ **561 ₪** בעיגול-לשלם).
+    // ⚠️ שלושת המספרים חושבו כאן **מהשורות שבמסד דרך נוסחת `computeQuoteTotals`** ואז
+    // הוצלבו מול המסך — לא הועתקו מתוך הכשל. אותו כלל כמו הפעם הקודמת: הנתון השתנה
+    // בצדק, מעדכנים את המספר ולא מרככים את הטענה.
+    await expect(page.getByTestId('metric-revenue')).toContainText('22,503')
+    await expect(page.getByTestId('metric-open')).toContainText('561')
+    await expect(page.getByTestId('metric-avg-deal')).toContainText('7,501')
 
     // ⚠️ 3 ולא 2 — הצעה #21 (צעד 5.1, 01/08/2026) נוספה חי דרך המסך על השתיים שנותרו אחרי
     // ניקוי 3.7. אותו כלל כמו התיעוד הקודם כאן: הנתון השתנה בצדק, מעדכנים את המספר ולא
     // מרככים את הטענה (אותו כלל שכתוב בראש smoke-anchors.json).
-    await expect(page.getByTestId('customer-tab-quotes')).toContainText('3')
+    // ↳ 04/08/2026: 4 — הצעה #22 ("אימות שמור-ושלח") נוספה ב-01/08.
+    // ‏"פרויקטים" נשאר 0 **לא כי אין** (‏#10/#21/#6 ילדו פרויקטים) אלא כי `projects` היא
+    // deny-all ב-RLS — אפס policies, ולכן הלקוח מקבל רשימה ריקה בלי שגיאה (`src/CLAUDE.md`).
+    await expect(page.getByTestId('customer-tab-quotes')).toContainText('4')
     await expect(page.getByTestId('customer-tab-projects')).toContainText('0')
 
     // ארבע פעולות על הצעה בתהליך · צפייה בלבד על סגורה (הסגורות נעולות ב-DB ממילא).
-    await expect(page.getByTestId('customer-quote-edit-6')).toBeVisible()
-    await expect(page.getByTestId('customer-quote-approve-6')).toBeVisible()
-    await expect(page.getByTestId('customer-quote-reject-6')).toBeVisible()
+    // ⚠️ ההצעה-הפתוחה עברה מ-#6 ל-#22 (‏04/08/2026): #6 אושרה, ולכן היא כבר אינה המקרה
+    // שהטענה הזו בודקת. **חובה שזו תהיה הצעה `in_progress` אמיתית** — על סגורה שלוש
+    // האסרציות היו עוברות ריקות מתוכן, וזה בדיוק "שומר שלא נצפה נכשל".
+    await expect(page.getByTestId('customer-quote-edit-22')).toBeVisible()
+    await expect(page.getByTestId('customer-quote-approve-22')).toBeVisible()
+    await expect(page.getByTestId('customer-quote-reject-22')).toBeVisible()
     await expect(page.getByTestId('customer-quote-approve-10')).toHaveCount(0)
 
     // סיבת-הדחייה **חייבת** לשבת על השורה: כפתור-העין פותח את ה-PDF שהלקוח מקבל,
@@ -178,10 +189,13 @@ test.describe('עמוד הלקוח — מנהלת כספים (edit על לקוח
     // 'לקוחות' = edit ⇒ עריכת פרטים מותרת לה.
     await expect(page.getByTestId('customer-edit')).toBeVisible()
     // 'הצעות מחיר' = view ⇒ צפייה במסמך כן, פעולות-כתיבה לא.
+    // ⚠️ ‏#22 ולא #6 (‏04/08/2026): #6 אושרה, ועל הצעה סגורה **לאיש** אין שלוש הפעולות
+    // האלה — כלומר שלושת ה-`toHaveCount(0)` היו עוברים גם אילו שער-ההרשאה נשבר לגמרי.
+    // הטענה כאן היא על ההרשאה, ולכן היא חייבת לרוץ על הצעה שלמנכ"ל **כן** יש בה פעולות.
     await expect(page.getByTestId('customer-quote-document-10')).toBeVisible()
-    await expect(page.getByTestId('customer-quote-approve-6')).toHaveCount(0)
-    await expect(page.getByTestId('customer-quote-reject-6')).toHaveCount(0)
-    await expect(page.getByTestId('customer-quote-edit-6')).toHaveCount(0)
+    await expect(page.getByTestId('customer-quote-approve-22')).toHaveCount(0)
+    await expect(page.getByTestId('customer-quote-reject-22')).toHaveCount(0)
+    await expect(page.getByTestId('customer-quote-edit-22')).toHaveCount(0)
     await expect(page.getByTestId('customer-new-quote')).toHaveCount(0)
   })
 })

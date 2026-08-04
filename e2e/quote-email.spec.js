@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { createClient } from '@supabase/supabase-js'
 
 // ══════════════════════════════════════════════════════════════════════════════════════
 // צעד 4.3 (31/07/2026) — **החוב מ-3.4: מסלול-המייל מקבל סוף-סוף בדיקה קבועה.**
@@ -19,13 +20,26 @@ const FINANCE_PASSWORD = process.env.E2E_FINANCE_PASSWORD
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL
 const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY
 
-// ⚠️ נמדד חי 31/07/2026. #6 היא **ההצעה היחידה שיש לה שורת-שליחה אמיתית ב-`email_log`**
-// (נשלחה 30/07 ל-ron@meditech-demo.co.il) — ולכן היא זו שמוכיחה את חיווי "כבר נשלח".
-// #7 (עיריית חדרה, sarit@hadera-demo.muni.il) נקייה מיומן ⇒ מסלול-שליחה בלחיצה אחת.
-const SENT_QUOTE_ID = 6
-const SENT_RECIPIENT = 'ron@meditech-demo.co.il'
-const CLEAN_QUOTE_ID = 7
-const CLEAN_RECIPIENT = 'sarit@hadera-demo.muni.il'
+// ⚠️ **נמדד מחדש חי 04/08/2026 — שתי ההצעות שהיו כאן חדלו להתאים, וכל אחת מסיבה אחרת.**
+//
+// (א) ‏#6 הייתה "ההצעה עם שורת-היומן"; מאז היא **אושרה**, ו-`isQuoteSendable` מחזיר
+//     ‏`in_progress` בלבד ⇒ אין בחלון שלה כפתור-שליחה כלל. ‏**#22** ירשה אותה: `in_progress`
+//     ויש לה שורות-`email_log` אמיתיות מ-01/08.
+// (ב) ‏#7 (עיריית חדרה) עדיין פתוחה ונקייה מיומן — אבל **כתובת הלקוח שלה הוחלפה
+//     ב-01/08 לכתובת פרטית אמיתית** (הכרעת-ישי, כדי לקבל את המיילים לתיבה שלו).
+//     ‏**קובץ-בדיקה נכנס לגיט לצמיתות ⇒ אסור שתופיע בו כתובת אמיתית.** לכן הנמען-הקבוע
+//     עבר להצעה **#8** (הייטק גרופ), שנשארה על דומיין-דמו.
+//
+// 🔒 ו-`SENT_RECIPIENT` **אינו קבוע יותר** — הוא נקרא מ-`email_log` בזמן ריצה, ולכן הכתובת
+// אינה נכנסת לגיט וגם לא תתיישן שוב.
+// ⚠️ **ומה שהוא לא מוכיח, במפורש:** אצל #22 נמען-היומן וכתובת-הלקוח **זהים**, ולכן
+// האסרציה הזו לבדה אינה מבחינה בין "החיווי קרא את היומן" ל"החיווי הציג את כתובת הלקוח".
+// מה שכן מבחין הוא **בקרת-החיוב שבסוף הבדיקה**: על הצעה שלא נשלחה (#8) — ללקוח שלה יש
+// כתובת בדיוק כמו לכל אחד — החיווי **אינו** מוצג כלל. מסך שהיה מציג את כתובת-הלקוח היה
+// מציג אותו גם שם. שתי הטענות ביחד הן ההוכחה; אף אחת מהן לבדה איננה.
+const SENT_QUOTE_ID = 22
+const CLEAN_QUOTE_ID = 8
+const CLEAN_RECIPIENT = 'tal@hitechgroup-demo.co.il'
 
 async function login(page, email, password) {
   await page.goto('/login')
@@ -46,6 +60,31 @@ async function openDocumentDialog(page, quoteId) {
 
 test.describe('שליחת ההצעה במייל — החוזה מול השרת (חוב 3.4)', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
+
+  // 🔒 הנמען של החיווי "כבר נשלח" נקרא מהיומן החי — לא מקודד. אותה תבנית-חיבור כמו
+  // ‏`load-failure-guards.spec.js`, ומאותה סיבה: הקריאה כאן היא **הכנה** ולא מה שנבדק.
+  // ⚠️ ולידציית-שפיות על הקריאה עצמה: בלי שורה, שלוש הטענות שלמטה היו עוברות על מחרוזת
+  // ריקה. אין שורה ⇒ הבדיקה נופלת כאן ואומרת מה נשבר, ולא מדווחת ירוק על כלום.
+  let sentRecipient = null
+  test.beforeAll(async () => {
+    if (!SUPABASE_URL || !SUPABASE_ANON || !CEO_EMAIL || !CEO_PASSWORD) return
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON)
+    try {
+      await sb.auth.signInWithPassword({ email: CEO_EMAIL, password: CEO_PASSWORD })
+      const { data } = await sb
+        .from('email_log')
+        .select('recipient')
+        .eq('entity_type', 'quote')
+        .eq('entity_id', SENT_QUOTE_ID)
+        .eq('status', 'sent')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      sentRecipient = data?.recipient ?? null
+    } finally {
+      await sb.auth.signOut()
+    }
+  })
 
   test.beforeEach(async ({ page }) => {
     await login(page, CEO_EMAIL, CEO_PASSWORD)
@@ -131,15 +170,17 @@ test.describe('שליחת ההצעה במייל — החוזה מול השרת (
   })
 
   test('חיווי "כבר נשלח" מגיע מהיומן במסד — ולכן שורד רענון-דף', async ({ page }) => {
-    // ⚠️ אין כאן שום יירוט: זו שורת-`email_log` **אמיתית** מ-30/07. שלוש שכבות-ההגנה
+    // ⚠️ אין כאן שום יירוט: זו שורת-`email_log` **אמיתית** (‏#22, 01/08). שלוש שכבות-ההגנה
     // האחרות חיות ב-state של הקומפוננטה ומתות ברענון; זו היחידה ששורדת — וגם מגיעה
     // למשתמש שני שפותח את אותה הצעה במחשב אחר.
+    expect(sentRecipient, `אין שורת email_log מוצלחת להצעה ${SENT_QUOTE_ID}`).toBeTruthy()
+
     await openDocumentDialog(page, SENT_QUOTE_ID)
-    await expect(page.getByTestId('quote-previous-send')).toContainText(SENT_RECIPIENT)
+    await expect(page.getByTestId('quote-previous-send')).toContainText(sentRecipient)
 
     await page.reload()
     await openDocumentDialog(page, SENT_QUOTE_ID)
-    await expect(page.getByTestId('quote-previous-send')).toContainText(SENT_RECIPIENT)
+    await expect(page.getByTestId('quote-previous-send')).toContainText(sentRecipient)
 
     // ובקרת-חיוב: על הצעה שלא נשלחה, אותו חיווי **אינו** מוצג — אחרת הבדיקה עוברת
     // גם על מסך שמציג "כבר נשלח" לכולם.

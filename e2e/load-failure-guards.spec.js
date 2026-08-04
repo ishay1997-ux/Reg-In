@@ -132,9 +132,12 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
       route.fulfill({ status: 500, contentType: 'application/json', body: '{"message":"forced"}' }),
     )
     await page.goto('/quotes')
-    // הצעה 6 — "בתהליך" ולכן כפתור-השליחה קיים, וגם **נשלחה כבר** בפועל: כלומר במסלול
+    // הצעה 22 — "בתהליך" ולכן כפתור-השליחה קיים, וגם **נשלחה כבר** בפועל: כלומר במסלול
     // התקין היא מציגה "נשלח כבר", ובכשל היא חייבת להודות שאינה יודעת.
-    await page.getByTestId('quote-document-6').click()
+    // ⚠️ עברה מ-#6 ל-#22 ב-04/08/2026: #6 **אושרה** בינתיים, ו-`isQuoteSendable` מחזיר
+    // ‏`in_progress` בלבד ⇒ מחצית-הבדיקה (שלושת החיוויים) פשוט אינה מרונדרת עליה.
+    // שני התנאים שהצעה כאן חייבת: `in_progress` **וגם** שורת-`email_log` מוצלחת.
+    await page.getByTestId('quote-document-22').click()
     await expect(page.getByTestId('quote-send-check-notice')).toBeVisible()
     // ⚠️ הלב של הממצא: לפני התיקון החלון היה מציג בביטחון מצב "טרם נשלח".
     await expect(page.getByTestId('quote-previous-send')).toHaveCount(0)
@@ -148,7 +151,7 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
     // ── הכשל מוסר: החלון חוזר לדעת את האמת ─────────────────────────────────
     await page.unroute('**/rest/v1/email_log*')
     await page.reload()
-    await page.getByTestId('quote-document-6').click()
+    await page.getByTestId('quote-document-22').click()
     await expect(page.getByTestId('quote-previous-send')).toBeVisible()
     await expect(page.getByTestId('quote-send-check-notice')).toHaveCount(0)
   })
