@@ -47,6 +47,35 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 05/08/2026 01:01 — **Module 3 closing audit (step 5.4). Verdict [YES], typed-echo signed. Module closed, awaiting Ishay's PR.**
+- **Nothing was taken on trust.** Fresh session; every load-bearing claim re-run: gate **exit 0 / 8 stages** ·
+  **410 unit** · **78/78 E2E, 0 skips, 5.9m** · DB counted before **and** after (**10/24/3/3 both times**) ·
+  policies, both lock triggers, 2 cron jobs, seed 11/40/20, 10 `module3_` migrations, advisors **0 ERROR** —
+  all read live · 6,319 ₪ recomputed from the rows, not quoted. **Zero blockers.**
+- **The fix round's stated blind spot got a number.** It caught two green-and-empty assertions *by accident*
+  and warned of more. Audited: **138 assertions in its 4 files, 2 empty** (`quote-email.spec.js:249` implied
+  by the line above it; `customer-page.spec.js:91` asserting a 0 that deny-all RLS guarantees). All other
+  specs swept for stale row-ids — **0**. Its missing half-of-the-evidence (never re-broke a fixture) was
+  **ruled sufficient with a reason**: preconditions verified from the DB beat a re-break, which only proves
+  a locator resolves.
+- **A recorded fact was stale and got corrected, not carried:** `db_roadmap` A-9/A-11/A-17 *do* carry
+  "✅ APPLIED"; only A-14 differs and it is `⚠️ PARTIALLY APPLIED` by design.
+- **🎨 UX pass run at Ishay's request** on 5 live screens: 0px overflow ×5 · 124/124 focus stops with a ring ·
+  54 money cells consistent · 0 unforced console errors · **0 findings**. One flagged finding was **withdrawn**
+  after re-measurement — the probe had read the style before the CSS transition finished. 390px excluded by
+  his own 31/07 ruling.
+- **Ishay closed the last three DoD boxes himself the same night:** mail + attachment (*"נשלחה נראה מעולה"*),
+  Make scenario (*"עובד"*), and authorising the UX pass. **All DoD boxes now closed.**
+- **A template step was deliberately skipped and booked, not silently dropped:** §2b's LOG compaction
+  (narrative measured at **1,141 lines** vs a 180 threshold). Ishay's instruction for this session was not to
+  clean `STATUS.md` / this file while two other sessions hold unruled lines in them — and compaction *is*
+  cleaning. **His instruction outranks the template.** Now `🚧 מ4` with the number attached.
+- **5 debts booked with target modules** (§6): fixture-rot that `pg_cron` will trigger on its own ~28/08 and
+  ~31/08 · this compaction · `03_quotes/CLAUDE.md` at 37KB vs the 8.4/3.7KB models · two one-line hardenings
+  (`mailto` unencoded where its twin encodes; a Select flipping uncontrolled→controlled) · 52 `Buffer`
+  warnings from the PDF dependency. **Declared boundaries:** `gitleaks` not run locally (blocking CI job) ·
+  `smoke.spec.js` outside every "78/78" · **CI runs no E2E at all** · PDF/live-mail rest on Ishay's eye.
+
 ### 04/08/2026 — M3 fix round: 8 stale E2E fixtures repaired, 4 audit waivers, 6 DoD boxes closed — **0 product files touched**
 - **The 8 failures were never bugs.** Baseline 70/78; now **78/78**. Causes: quote #6's approval
   (6 specs pinned to it — `isQuoteSendable` is `in_progress`-only, so they died on locator timeouts,
