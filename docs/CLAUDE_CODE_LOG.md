@@ -76,6 +76,25 @@
   warnings from the PDF dependency. **Declared boundaries:** `gitleaks` not run locally (blocking CI job) ·
   `smoke.spec.js` outside every "78/78" · **CI runs no E2E at all** · PDF/live-mail rest on Ishay's eye.
 
+### 05/08/2026 01:4X — **The new deno CI gate failed on its first run ever, and its own comment had the cause backwards**
+- `edge-function-check` (added in `c14bf32`, **this branch only** — never green) died in ~9s on
+  `Could not find a matching package for 'npm:@supabase/realtime-js@2.112.0' in the node_modules directory`.
+- **The comment above the job said skipping `npm ci` prevents exactly this.** It is inverted, and the
+  inversion caused the failure. Per the Deno 2 CLI reference, what switches Deno into node_modules
+  resolution is **the presence of `package.json` at the root**, not the presence of the directory: with a
+  `package.json` and no `deno.json` the default is `nodeModulesDir: "manual"` = *use the existing directory,
+  do not create it*. Removing `npm ci` made the failure **certain**, not impossible.
+- Fixed with the documented flag — `deno check --node-modules-dir=none …` (*resolve npm from the global
+  cache*), which is the behaviour the comment believed it was getting free, and the model the real Supabase
+  Edge runtime uses. Comment rewritten so the next reader does not inherit the wrong cause.
+- ⚠️ **Boundary: deno is not installed here, so the fix was not reproduced locally** — the evidence is
+  documented flag semantics matching the error text exactly. Fallback if CI stays red: pull the job out of
+  the M3 PR and re-land it separately; a permanently-red gate on `dev` trains people to ignore red.
+- 🚧 מ10 recorded in the comment: the function imports `jsr:@supabase/supabase-js@2` (open major), so a
+  future JSR publish can break this job **by itself**. Not changed now — product code, mid-merge.
+- Untouched deliberately: branch protection. The PR says "Able to merge" while the check is red, i.e. it is
+  not a required status check — Ishay's setting, not mine.
+
 ### 05/08/2026 01:2X — **Cross-session handoff absorbed: branch is pushed, and the Make DoD box now has a second, independent proof**
 - **Quoted at swallow, per the evidence rule.** The parallel ad-hoc session reported: it pushed
   `e3243ab..dc23b51` at 01:05 (branch synced with origin), `PROJECT_MASTER.md` gained its two `🚧 מ4`
