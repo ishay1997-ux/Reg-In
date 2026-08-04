@@ -65,7 +65,10 @@ it by holding the prompt.***
   he also cannot check — **you would both approve blind and he would be trusting you.**
 
 ### What comes out
-**Verdict first** (מאשר / מאשר-בתנאי / לא) · findings ranked by severity · **and credit for what the
+**Verdict first** (מאשר / מאשר-בתנאי / לא) · findings tagged by one of five tiers — **Showstopper**
+(wrong approach, security, architecture) · **Gap** (missing error-handling, unhandled edge case,
+deferred decision) · **Inconsistency** (contradicts another section) · **Underspecified** (an
+implementer could guess wrong) · **Suggestion** (simpler, less complex) — **and credit for what the
 plan got right that was not obvious** — that is what gives your מאשר meaning.
 **Nothing wrong ⇒ "אין הערות", plainly. A manufactured finding is worse than a blank page.**
 🔴 **Every layer produces a finding or an explicit "אין הערות"** — so the verdict message itself shows

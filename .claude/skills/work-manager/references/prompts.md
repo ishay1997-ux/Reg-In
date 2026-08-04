@@ -40,6 +40,7 @@ nothing to sort — which is why the user-walk before "done" is a separate gate.
    נדחה). אין מענה זמן סביר → עצור ופנה לישי." A builder that doesn't know a
    manager exists builds silently and surfaces only at the end. (`module-build`
    now carries the full ⚡ section — the banner arms it.)
+   If the task is to be performed according to the blueprint, you must tell the 'worker' and give him mines that you have identified that he may encounter. and activate the skill module-build.
 
 1. **Verify every factual claim against the code the same day it ships**, and
    stamp it (`🕓 אומת מול הקוד DD/MM HH:MM`). A stale claim sends a session
@@ -86,6 +87,10 @@ nothing to sort — which is why the user-walk before "done" is a separate gate.
    recurred multiple times in 710 (Ishay, 01/08): unreminded builders route
    checks to Ishay that they could run. Consult `docs/toolbox.md` first —
    dispatch to a disabled plugin fails silently.
+   **Recommend, don't assume he'll check.** You read `docs/toolbox.md` at boot — the builder
+   didn't. If a specific enabled skill there genuinely fits this task (a design decision, a
+   DB-heavy step, a security-sensitive change…), name it in the prompt with one line of reasoning.
+   One line, phrased as a recommendation the builder weighs — not a mandate.
 8. **The checkpoint contract + your fallback**: plan→you before code ·
    blocked/unsure→you · done→you before the closing report · **🚫 product questions
    go to YOU, never directly to Ishay** (you answer from the playbook or escalate

@@ -50,10 +50,11 @@ module lifecycle → `module-blueprint` / `module-build` / `module-close` · a m
 ⚠️ **Anchor: a manager who hand-rolled a §7 round instead of routing through the skill skipped its
 stale-detection pass — and asked Ishay a question he had ruled two days earlier.**
 
-**Plugin/personal skills — propose in one line and wait:** built-vs-intent walkthrough →
-`feature-acceptance` · a Hebrew document → `hebrew-doc-studio` · skill work → `skill-creator` ·
-**the council** → `llm-council` (always offered; **the manager alone may launch it**, on a heavy
-decision he is genuinely torn on).
+**Plugin/personal skills — propose in one line and wait:** the living list is `docs/toolbox.md`
+(read it before proposing — this line used to hardcode names and drifted the moment a new skill
+was added, e.g. `ui-ux-pro-max`, 02/08). Two standing exceptions worth naming here because they
+recur constantly: built-vs-intent walkthrough → `feature-acceptance` · **the council** → `llm-council`
+(always offered; **the manager alone may launch it**, on a heavy decision he is genuinely torn on).
 **A small task justifies no skill.** If the answer is clear, just answer.
 
 ### The specialist bench — who, and when to summon

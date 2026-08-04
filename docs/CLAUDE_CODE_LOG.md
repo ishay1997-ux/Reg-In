@@ -47,7 +47,128 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
-### 02/08/2026 — **manager-4 shift: the intent pass, and five structural problems named** (docs only, in progress)
+### 04/08/2026 — M3 fix round: 8 stale E2E fixtures repaired, 4 audit waivers, 6 DoD boxes closed — **0 product files touched**
+- **The 8 failures were never bugs.** Baseline 70/78; now **78/78**. Causes: quote #6's approval
+  (6 specs pinned to it — `isQuoteSendable` is `in_progress`-only, so they died on locator timeouts,
+  not assertions) · customer 47's email becoming a private address · Meditech's revenue drift
+  (16,184 ⇒ **22,503 ₪**). Fixtures moved to quotes still meeting the ORIGINAL preconditions
+  (#22, #8); all recomputed numbers derived from DB rows through `computeQuoteTotals`, then
+  cross-checked on screen — **not** copied out of the failure message.
+- **🔴 A recorded diagnosis was wrong.** `quote-email.spec.js:54` was filed as *"order-dependence /
+  state bleed, do NOT fix with a fixture swap"*. It is a plain stale constant — the assertion diff
+  named the cause outright. **Lesson: a failure reproducing only under one run shape invites a
+  mechanism story before anyone reads the diff.** Corrected in `module-3.md` §9 by a new dated entry
+  + pointers beside the old one; the dated record itself was not rewritten.
+- **Personal-address rule made structural:** an E2E file is in git forever, so `SENT_RECIPIENT`
+  stopped being a constant and is read from `email_log` at run time (guarded against a missing row).
+  Knowing deviation from the "intercept, don't swap IDs" ruling, argued in §9 — that ruling assumed
+  only two options, and this third one serves its actual purpose.
+- **4 `npm audit` waivers** (`brace-expansion` · `fast-uri` · `ip-address` · `undici`) after a clean
+  `npm ci` — all dev-tool-only, and proven absent from `dist/assets/index-*.js` by text search, which
+  was **not** redundant: `shadcn` sits under `dependencies`. Gate proven both ways (exit 1 → 0).
+- `npm run gate` **exit 0** on all 8 stages · 410 unit · **78/78 E2E** · DB row counts unchanged ·
+  `git diff` on `quotePdf.jsx`/`supabase/functions`/`lib/email.js` **empty**, so Ishay's eye-approval
+  of the PDF and live mail still holds.
+
+### 04/08/2026 — `skill-scan` + the failure-modes file, rescued from the manager corpus before it is archived
+- **New skill `.claude/skills/skill-scan/`** — scans an instruction artifact (a skill, `CLAUDE.md`,
+  a micro-guide) for rules that cannot fire, whose skip would be invisible, that do not earn their
+  lines, or that are filed where their reader never goes. Five lenses, three brakes, an explicit
+  wrong-home pass, a mandatory subtraction quota, and a hard rule that it never edits what it scans.
+- **New `.claude/skills/_shared/failure-modes.md`** — the five structural failure modes measured
+  across two arenas 01–02/08, plus the six self-review questions that measurably produced findings.
+  Extracted from `work-manager/references/miss-ledger.md` because nobody opens 582 archived lines.
+- **Why now:** the ledger's own dominant finding is that four consecutive shifts failed on a rule
+  nobody ran, never on a missing rule — which is exactly what lenses 1 and 2 test for.
+- **Broke nothing:** both files are new, no existing file edited, zero touches to `src/`, `e2e/`,
+  migrations or the DB. 🚧 Not yet validated against a real fix outcome — every finding the scan
+  emits carries "how will we know the fix worked" for that reason.
+- **Validated by 9 paired eval runs over 2 iterations** — the same three requests answered with the
+  skill and without it. **Round 1: won 2, lost 1. Round 2: won 3.** The wins that mattered: the
+  harvest gate caught two live rules buried inside a block the baseline recommended deleting, and a
+  genuinely dead rule (a checklist still routing writes to the CHANGELOG frozen 23/07).
+  🔴 **The loss taught more than the wins** — the baseline read the file's own `git log` and checked
+  the artifacts the file had produced; both methods were missing and are now in, together with an
+  inverse test for overfitting and a check for rules that hand a reader an expected number instead
+  of a method. **The scan then caught its own author with that second defect** (the skill carried
+  measured figures as anchors) — figures removed, method kept.
+- 🔴 **Six of those defects are now real debt, not prose** — two `🚧 מ4` lines in `PROJECT_MASTER §6`,
+  the one registry a module opening greps by itself. Ishay's point, and it was the right one: a
+  finding parked in a scratchpad is a finding that will not happen. Each line carries how we will
+  know it was fixed. **Verified the mechanism fires:** `grep '🚧 מ4'` returns 5.
+  ↳ **Two corrections the same night, both his.** (1) One registered line claimed `regin-docs-sync`
+  "does not exist" — **wrong**: it is a scheduled routine documented in `docs/claude_routines.md`
+  with a live copy under `~/.claude/scheduled-tasks/`. I searched for a skill directory and
+  concluded absence — an absence-claim narrower than its conclusion, third occurrence today and the
+  only one that reached a permanent file. **The correction is stated inside the line itself**, so a
+  future reader cannot inherit the false version. The residual defect is real but smaller: only
+  `module-blueprint` phrases it "Claude runs it" against rule 13(ז). (2) Three findings had been
+  parked as candidates under the graduation bar — **he asked who would be counting occurrences once
+  the manager is archived. Nobody.** The bar presupposes the miss-ledger, so "candidate" now means
+  "gone"; applying a rule without checking its precondition still holds is the instrument defect
+  🅴 names. All three registered on their own merit; a fourth (unverifiable relayed approval) was
+  deliberately **not** registered — it exists only while a manager relays, and dies with the role.
+- **`docs/toolbox.md`:** `skill-scan` registered (the catalogue a session is told to read before
+  proposing a tool did not list it — a dead catalogue), plus a new section giving the exact sentences
+  for scanning, paired-eval testing and improving a skill, with the measured numbers behind them.
+- 🔴 **`skill-scan` was then run against `CLAUDE.md` itself, by a fresh agent, with my prediction
+  written down first — and the prediction was wrong 4 times out of 5**, which is the point of the
+  tool. Two findings matter and await Ishay: **(a) `gitleaks` never runs on the branch he works on**
+  — `ci.yml` fires it only on PR/push to `dev`/`main`, and the local pre-commit runs eslint+prettier
+  only, so a secret committed to a personal branch reaches GitHub and stays in history; the DoD box
+  is still sound because it asks about *merge*, but `CLAUDE.md`'s claim that the mechanism replaced
+  the old "never commit secrets" rule is **narrower than what it replaced**. **(b) "a repeated
+  question ⇒ fix the source document" cannot ever fire** — a fresh session has no cross-session
+  memory and cannot know a question repeated; only Ishay can. Also recorded: a live contradiction on
+  journal-entry length between this file and `CLAUDE.md`, and a wrong rule count in its header.
+  **What the scan verified positively:** the 28/07 pruning cut 69% in one commit, the archive is
+  byte-identical to the pre-pruning version, and 8 of 10 relocation claims resolve in their target
+  file. The pruning is now measured, not asserted.
+- 🔴 **Live defects surfaced and re-verified here, queued not fixed:** `regin-docs-sync` is cited as
+  mandatory in 5 places and does not exist · the `🚧 מN` debt check greps all of `PROJECT_MASTER.md`
+  while the rule requires §6 (line 512 carries `🚧 מ9` inside §7, so it passes green on an empty
+  registry) · the Stop hook covers only `src/modules/NN_*/`, so work living in `e2e/` or `scripts/`
+  can end without the micro-guide moving · and `module-blueprint/template.md` still carries the
+  pre-29/07 wording of a gate that was breached and hardened only in `module-build` — **the next
+  blueprint (module 4, 21/08) would write the broken version into the new guide.**
+
+### 02/08/2026 16:27 — ad hoc session: global `ui-ux-pro-max` skill install + toolbox registration (docs only)
+- Ishay asked for the stack of every project (REG-IN + 710), then asked how to import the
+  `ui-ux-pro-max` GitHub skill (nextlevelbuilder/ui-ux-pro-max-skill) so it's available in every
+  project, not just this one — not a work-manager shift, a plain ad hoc request.
+- Inspected the repo (marketplace.json/plugin.json vs. the CLI installer) and recommended the CLI
+  route over `/plugin marketplace add` (the README itself flags a symlink bug on old marketplace
+  installs; the CLI is what the authors call "Recommended" and is update/uninstall-able). Asked
+  Ishay first since it's a global machine-level install — he confirmed.
+- Ran `npm install -g ui-ux-pro-max-cli` then `uipro init --ai claude --global` — installed 7
+  skills under `~/.claude/skills/` (`ui-ux-pro-max` + `banner-design`/`brand`/`design`/
+  `design-system`/`slides`/`ui-styling`), confirmed picked up by the skill listing.
+- Registered the new global skills in `docs/toolbox.md` (what they are, when to suggest them, and
+  an explicit "don't confuse with `frontend-design`" note).
+- First pass added a `ui-ux-pro-max`-specific line to `work-manager`'s `references/prompts.md` rule
+  7 — Ishay flagged it as redundant (the manager already reads `docs/toolbox.md` at boot). Correct
+  fix, per his follow-up: not the list, the *behavior* — rule 7 now also says to actually **name a
+  recommended skill in the builder prompt** (general, no skill named), since the builder never reads
+  the toolbox itself and won't know to check it unprompted. Verbatim wording confirmed with Ishay
+  before writing.
+- Ishay then asked repeatedly whether any public "AI project manager" / multi-agent orchestrator
+  skill would strengthen `work-manager` (~8 targeted searches across engineering-manager agents,
+  plan-critique skills, fact-checking skills, sub-agent orchestrators, HITL escalation frameworks).
+  Every external candidate checked out thinner, less mature, or structurally wrong-fit (e.g.
+  `OneWave-AI/sub-agent-orchestrator` has zero human-escalation mechanism — the opposite of this
+  role's value). Mapped a generic "pre-execution contract" HITL checklist (8 fields) point-by-point
+  against `prompts.md` — full coverage, no gap. Recommended against an escalation-rate metric Ishay
+  floated (no natural denominator; would be exactly the 🅴 failure-shape the ledger already
+  documents 5x). Read all 7 skill files in full this session (SKILL.md + all `references/*.md`).
+- Found one genuine **internal** (not imported) finding while reading `queue.md`: its
+  "Plugin/personal skills" line hardcoded specific skill names and had already drifted out of sync
+  with `docs/toolbox.md` (missing `ui-ux-pro-max`) — the exact "prose accumulates while the working
+  artifact lags" shape miss-ledger entry 11 names. Fixed: the line now points at `docs/toolbox.md`
+  as the living list, keeping only the two highest-frequency examples inline.
+  Also adopted (Ishay approved) `claude-skill-critique`'s severity-tier vocabulary
+  (Showstopper/Gap/Inconsistency/Underspecified/Suggestion) into `builders.md` situation 5's
+  "what comes out", replacing the generic "findings ranked by severity". **No code, no migrations,
+  no test runs.**
 - Took over from manager-3 (`ab3edc6`). **No code, no test runs, no DB writes** — quota near zero all
   shift. The handover doc was read and deleted; its two open debts moved to `work_plan` rows first.
 - **Ledger 9–11 + "the general form of entries 5–10":** the misses collapse into **five** structural
