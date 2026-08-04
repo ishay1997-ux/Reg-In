@@ -76,6 +76,23 @@
   warnings from the PDF dependency. **Declared boundaries:** `gitleaks` not run locally (blocking CI job) ·
   `smoke.spec.js` outside every "78/78" · **CI runs no E2E at all** · PDF/live-mail rest on Ishay's eye.
 
+### 05/08/2026 01:2X — **Cross-session handoff absorbed: branch is pushed, and the Make DoD box now has a second, independent proof**
+- **Quoted at swallow, per the evidence rule.** The parallel ad-hoc session reported: it pushed
+  `e3243ab..dc23b51` at 01:05 (branch synced with origin), `PROJECT_MASTER.md` gained its two `🚧 מ4`
+  lines in `c3af7dc`, and `module-blueprint/template.md` + the two `??` skill folders are **deliberately**
+  left dirty pending Ishay.
+- **Re-measured rather than accepted** — its own instruction was "your measurement wins". Its `ahead 0`
+  was true when written and is now **1 unpushed commit (mine, `7c7c9e1`)**; 0 behind remote; 300 ahead of
+  `origin/dev`; its two `🚧 מ4` lines verified **intact** under my §6 append — nothing was clobbered in
+  either direction.
+- **Its one substantive finding was worth having:** it read Make scenario 6759079 through the MCP and
+  reported *structure*, not outcome — the 200-response module sits **after** the mail module, and the
+  error branch is `502 {"ok":false}` → `builtin:Ignore` (that `Ignore` **is** the Skip handler); active,
+  `immediately`, `dlqCount: 0`. Folded into the DoD box as a second leg beside Ishay's *"עובד"*. One box,
+  two independent confirmations — a human click and the scenario definition.
+- Its `npm run gate` note was **not** adopted as evidence: it ran only `prettier --check` + `check:context`.
+  The full 8-stage chain was run here three times, exit 0 each time, including after every doc write.
+
 ### 04/08/2026 — M3 fix round: 8 stale E2E fixtures repaired, 4 audit waivers, 6 DoD boxes closed — **0 product files touched**
 - **The 8 failures were never bugs.** Baseline 70/78; now **78/78**. Causes: quote #6's approval
   (6 specs pinned to it — `isQuoteSendable` is `in_progress`-only, so they died on locator timeouts,
