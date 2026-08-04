@@ -67,10 +67,17 @@ jobs:
   # ‏Prettier כן בודק אותו — כלומר **הפורמט** נשמר אבל **הטיפוסים** לא. וזהו הקובץ שמחזיק
   # את כתובת ה-webhook הסודית ואת השער שמפריד בין משתמשת-צפייה לשליחת מסמך ללקוח.
   #
-  # ⚠️ **job נפרד ובלי `npm ci` במכוון.** ‏deno מזהה `node_modules` של הריפו ואז דורש
-  # שכל תלות npm תהיה מותקנת שם (‏"Could not find a matching package for
-  # npm:@supabase/realtime-js") — כשל-שווא. בלי node_modules הוא פותר `jsr:`/`npm:`
-  # בעצמו, בדיוק כמו סביבת-הריצה האמיתית של Supabase Edge Functions.
+  # ⚠️ **job נפרד ובלי `npm ci` במכוון — אבל זה לבדו לא מספיק, וההנחה הקודמת כאן הייתה שגויה.**
+  # הנוסח הקודם אמר ש"בלי node_modules deno פותר jsr:/npm: בעצמו". **זה לא נכון, וזה מה שהפיל
+  # את ה-job בהרצתו הראשונה אי-פעם (05/08/2026):** לפי תיעוד Deno 2, מה שמפעיל את מצב-ה-node_modules
+  # הוא **עצם קיומו של `package.json` בשורש** — לא קיומה של התיקייה. עם package.json ובלי `deno.json`
+  # ברירת-המחדל היא `nodeModulesDir: "manual"` = "השתמש בתיקייה קיימת ואל תיצור אותה", ולכן deno
+  # דרש `npm:@supabase/realtime-js` מתוך node_modules שלא הותקנה — "Could not find a matching package".
+  # ‏`--node-modules-dir=none` הוא הדגל המתועד שמכריח פתירה **מהמטמון הגלובלי** — כלומר בדיוק
+  # ההתנהגות שההערה הקודמת חשבה שהיא מקבלת בחינם, ובדיוק כמו סביבת-הריצה של Supabase Edge Functions.
+  # 🚧 מ10 — הייבוא בפונקציה הוא `jsr:@supabase/supabase-js@2` (מייג'ור פתוח). היום הוא נפתר ל-2.112.0;
+  # כשגרסה חדשה תעלה ל-JSR ה-job הזה עלול להישבר **מעצמו, בלי שאיש נגע בקוד**. לנעול לגרסה מדויקת
+  # כשנוגעים בפונקציה בפעם הבאה — לא הוחלף עכשיו כדי לא לשנות קוד-מוצר בזמן מיזוג מודול 3.
   #
   # ‏`deno check` (טיפוסים) ולא `deno fmt`: Prettier כבר מפרמט את הקובץ הזה
   # (‏`.prettierignore` מחריג רק את `supabase/migrations`), ושני מפרמטים היו נלחמים.
@@ -83,7 +90,7 @@ jobs:
         with:
           deno-version: v2.x
       - name: Type-check send-email
-        run: deno check supabase/functions/send-email/index.ts
+        run: deno check --node-modules-dir=none supabase/functions/send-email/index.ts
 
   secret-scan:
     name: Secret scan (gitleaks)
