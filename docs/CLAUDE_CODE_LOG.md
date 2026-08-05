@@ -165,6 +165,18 @@
   `🚧 מ4`. `skill-scan` gained step 2 — findings become a fix prompt only after Ishay picks which
   ones, because generating it in the same pass smuggles content decisions past him and biases the
   scan toward findings that are easy to prompt rather than true.
+- **The five open items were then ruled and executed** (Ishay: *"בצע לפי המלצתך"*). Three dead
+  branches deleted — **each verified an ancestor of `origin/dev` first, and removed with `-d` so git
+  itself was the second check.** `regin-docs-sync` stays his click. **`gitleaks`: ruled to keep
+  merge-time protection only** — it does block before anything reaches `dev`, the practice is already
+  clean by measurement, and a single developer under a 19/09 deadline pays daily friction for a
+  threat CI catches; the residual risk is stated rather than waved away (a secret pushed to a personal
+  branch stays in GitHub history), with a reopen trigger. **`module-close` gained a four-question
+  self-review** — the four that measurably produced findings, down from six, each requiring an anchor
+  from that audit, placed before the verdict because question 4 changes what gets registered as debt.
+  The instruction-file contradiction was left **unruled on purpose**: one instance existed, it was
+  fixed, and building a precedence hierarchy for two files that disagreed once is governance bought
+  ahead of need.
 - **And one rule left the repo entirely:** the fresh-eyes review of any prompt that asserts repo
   facts or authorises something irreversible now lives in `~/.claude/CLAUDE.md` (cross-project, by
   Ishay's ruling) — with the two questions that make it work, and the measurement that earned it:
