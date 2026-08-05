@@ -881,7 +881,7 @@
 | 0 | תשתית | ✅ | — | — |
 | 1 | משתמשים והרשאות | ✅ מוזג ל-`dev` (PR [#2](https://github.com/ishay1997-ux/Reg-In/pull/2)) | — | [module_01](docs/guides/modules/module_01_close.md) |
 | 2 | לקוחות | ✅ מוזג ל-`dev` (PR [#6](https://github.com/ishay1997-ux/Reg-In/pull/6), `e69383a`) | — | [module_02](docs/guides/modules/module_02_customers.md) |
-| 3 | **הצעות מחיר** | 🔒 **סגור — ממתין ל-PR/מיזוג.** אודיט-הסגירה עבר 05/08 01:01, ורדיקט [YES], חתימת-DoD ניתנה. ‏`gate` exit 0 · **78/78 E2E** · דלתת-מסד אפס · כל תיבות ה-DoD סגורות | **07/08** | [module_03](docs/guides/modules/module_03_quotes.md) |
+| 3 | **הצעות מחיר** | ✅ **מוזג ל-`dev` 05/08/2026 08:03** (PR #10, merge `792456f`, אומת בארבע ראיות טריות). אודיט-הסגירה 05/08 01:01, ורדיקט [YES], חתימת-DoD ניתנה. ‏`gate` exit 0 · **78/78 E2E** · דלתת-מסד אפס. *(השורה אמרה "ממתין ל-PR/מיזוג" עד 05/08 11:5X — סתירה מול ראש הקובץ שכבר תיעד את המיזוג; תוקנה.)* | **07/08** ✅ | [module_03](docs/guides/modules/module_03_quotes.md) |
 | 4 | דיילות + Smart Match | ⬜ (🔬 **מחקר-קדם + כתיבה-רשמית הושלמו 29–30/07** — כל שאלות-המוצר סגורות פרט לאחת (אירוע דו-תפקידי, חסום §7.67, לא דחוף); הכל ב-`PROJECT_MASTER §7.15↳` (סבבים 1–6) + [מסמך-המחקר §11](docs/module4_smart_match_research.md#11--מפרט-בנייה--הסעיף-היחיד-שסשן-בנייה-צריך-לקרוא) למפרט-הבנייה המלא. §7.29/§7.54 עודכנו (אוחדו ל"אירוע-אחד-ביום") · §6 עודכן (`🚧 מ6`)) | 21/08 | [module_04](docs/guides/modules/module_04_hostesses.md) |
 | 5 | לוגיסטיקה | ⬜ | 04/09 (משולב עם 6) | [module_05](docs/guides/modules/module_05_logistics.md) |
 | 6 | פרויקטים (המחבר) | ⬜ | 04/09 (משולב עם 5) | [module_06](docs/guides/modules/module_06_projects.md) |
