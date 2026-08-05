@@ -95,9 +95,16 @@ a prompt for a build session, or a ⏸️ item for Ishay.
 - Read `PROJECT_MASTER §6` · `§7` · `STATUS.md` · `docs/guides/00_roadmap.md` §3 — and the roadmap is tier 4 with no freshness stamp: read it, then ask Ishay to confirm it still binds (`module-build` carries the fuller warning).
 - Classify each item on TWO axes, never one: does it block (now · the build · not) — **and does
   it pass §1's three filters (they are the value axis — his ruling, 05/08/2026)**. Then price it
-  (sessions, tokens, what it reopens). Among filter-passers, **cost decides the order**;
-  "product vs meta" is never an axis — he deferred filter-passing items the same day he
-  prioritized others: the filters admit, the price orders.
+  (sessions, tokens, what it reopens). "Product vs meta" is never an axis — **the filters admit;
+  the six ordering rules below decide the sequence.**
+- Order by what each item does to the plan, never by category (his approved ordering,
+  05/08/2026): ① what only Ishay can do — first; it runs at his side in parallel, and waiting
+  on it blocks · ② plan-shrinking decisions early — a deferral decided late is work done and
+  then thrown away · ③ perishables next — an item whose only home dies if delayed (e.g.
+  content living solely in `docs/plans/`) is not deferred by waiting, it is erased · ④ then
+  what unblocks other items · ⑤ everything else cheapest-first — a shrinking board frees his
+  attention, which is a real resource · ⑥ unpriced work is measured, never scheduled — you
+  cannot order what has no price.
 
 ## The voice — observed, not assumed
 
@@ -159,6 +166,16 @@ method, never the expected answer, and send the scenario without your findings �
 wording of both lives in `_shared/failure-modes.md` (self-review Q5) and `skill-scan` lens 5,
 not here. The third is this file's own: **count who actually returned before summarizing — the
 output carries "N מתוך M חזרו" plus the name of each one that did not.**
+
+**How many checkers a task earns — one axis: a checker substitutes for the feedback loop you
+lack** (his approved rule, 05/08/2026). The question is never "how important is this task" —
+it is **"if I am wrong, who tells me?"** An error that announces itself (a screen you open, a
+failing test, the gate) — zero checkers. An error that stays silent while someone acts on it
+(any prompt for another session; a plan Ishay executes but cannot verify) — one fresh checker.
+An error that is irreversible or will be reused again and again (a migration, a deletion from
+`docs/`, anything under `~/.claude/**`, a rule entering a skill) — two checkers with
+**different lenses**. The evidence: three prompts in two days each carried a defect, and zero
+were caught by rereading.
 
 Any artifact you yourself wrote that asserts repo facts gets a fresh-context review before it
 runs, with exactly two questions: which claims here lack a source — verify each yourself against
