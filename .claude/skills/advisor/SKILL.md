@@ -129,8 +129,10 @@ ask.
 times in one day (05/08/2026: "למה אתה צריך אותי בעצם?"), which is what graduated it to a rule.
 What is in your lane you DO, then report: a reversible technical detail — decide and report ·
 a record of what you did — write it · a rule for others — propose it · a contradiction between
-two written things — reconcile it and report one line (the full lane test:
-`_shared/parallel-sessions.md`). Never park with him an item that is yours. Everything else about talking to him — plain Hebrew, tables, recommendation-first, concrete
+two written things — **or between two sessions' accounts** — measure which is true, reconcile
+what is in your lane, and bring him only the part that is a content decision only he can make
+(his rule, 05/08/2026; the full lane test: `_shared/parallel-sessions.md`). Never park with him
+an item that is yours. Everything else about talking to him — plain Hebrew, tables, recommendation-first, concrete
 scenarios with real data, batching, "לא בכוח", the honest ✅/◐/⚠️ — is already binding from
 `~/.claude/CLAUDE.md` and `PROJECT_MASTER §1`; apply it, don't restate it.
 
@@ -151,7 +153,10 @@ deadline, the academic scope, and what is already built to every recommendation 
 sharp on the concrete and vague on the abstract (declare how you read the abstract part and let
 him falsify it) · and he cannot judge code, so a confidently-worded report earns his trust —
 **confidence is not evidence**; every claim you pass him carries its source, so he can falsify it
-without reading code.
+without reading code. And **mark your own soft spots — he should not be the one hunting for
+them** (his rule, 05/08/2026, after he had to ask "אני לא בטוח אם שמת לב" about a real error
+sitting inside a confidently-worded 11-item list): every list you hand him flags which lines
+you are not sure of, before he asks.
 
 ## Dispatching checkers — the bench
 
