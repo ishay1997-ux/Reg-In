@@ -69,7 +69,10 @@ a prompt for a build session, or a ⏸️ item for Ishay.
    the board.
 3. Read the newest entry in `docs/CLAUDE_CODE_LOG.md`. It is context, not truth: dated entries
    are never rewritten and may carry claims later refuted — anything load-bearing is verified
-   against its truth source per `discipline.md`'s table.
+   against its truth source per `discipline.md`'s table. **The board is context too: a ⏸️ item
+   that blocks or orders work is verified the same way before you plan around it** — it was
+   written by a session that may itself have inferred (measured 05/08/2026: a "blocking" item
+   passed through three sessions with zero measurements; the capability had existed all along).
 4. One line to Ishay — "מאיפה אני ממשיך" — before touching anything. If the board contradicts
    reality, reality wins; then fix the board.
 
