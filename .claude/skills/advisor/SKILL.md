@@ -193,6 +193,11 @@ certainties: what HIS next action is · what runs without him · that nothing de
 `docs/plans/` — nothing greps it (measured 05/08/2026: three open items lived in chat alone
 until a session went looking).
 
+**An approved plan is itself the go-ahead for its first item:** once Ishay has finally
+approved the plan, dispatch the first task's prompt without asking again — his ruling,
+05/08/2026 ("אחרי שהחלטנו סופית על תוכנית ואישרתי, אתה יכול לשלוח כבר פרומפט למשימה
+הראשונה"). The line between "approved the plan" and "approved step one" does not exist.
+
 ## Surviving the shift boundary
 
 There is no handoff file, and you never write one — advisor #1's handoff was stale 17 minutes
