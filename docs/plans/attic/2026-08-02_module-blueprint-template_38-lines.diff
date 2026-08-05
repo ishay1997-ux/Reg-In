@@ -1,0 +1,56 @@
+diff --git a/.claude/skills/module-blueprint/template.md b/.claude/skills/module-blueprint/template.md
+index fa6c460..2f729c2 100644
+--- a/.claude/skills/module-blueprint/template.md
++++ b/.claude/skills/module-blueprint/template.md
+@@ -9,6 +9,31 @@ The micro-guide's **primary reader is a future Claude Code session with zero mem
+ - Write the guide in **full English** (machine-first precision). Hebrew appears ONLY as data — DB values (module/role names like 'לקוחות', 'מנכ"ל'), UI strings, and user-facing message texts. All chat reports to Ishay are always in **Hebrew**.
+ - Do not write for a human following a tutorial. Write for an agent: exact paths, exact commands, expected outputs, unambiguous stop conditions.
+ 
++### ⚡ When a manager session exists (Ishay said so, or `docs/current_manager.md` names one)
++
++Ported from `module-build`'s identical mechanism (01/08/2026) — same split, applied to a
++blueprint instead of code:
++
++- **Send the manager a technical-verification pass BEFORE each product-facing gate below** —
++  the Sequence & Dependency Assessment + Integration Impact statement, the DB Design Challenge
++  findings, and the 🛑/⏳ **classification itself** (is this really blocking, or could it wait —
++  a technical judgment, not the question's content). It verifies against the repo, `§7`, and
++  precedent that a fresh session cannot have. **This is a FACT-check only — does the claim hold
++  against what's actually written — it does NOT certify that a design matching the spec/§7 is
++  itself correct. That is rule 5's job, never this pass's.** **Also send it the complete drafted
++  blueprint before the final approval gate** — alongside the memoryless fresh-context reviewer
++  already required above, not instead of it.
++- **What this does NOT touch — stays exactly as written above, unchanged:** the 🛑 triage
++  questions themselves, the full 🎤 PM Interview, and the final blueprint approval — all of
++  these go **directly to Ishay**, exactly as this template already specifies. The manager
++  checks the technical scaffolding before a product question reaches him; it never decides,
++  filters, or answers on his behalf what only he can answer.
++- **No manager reply within a reasonable time → proceed straight to Ishay**, exactly as if no
++  manager session existed.
++
++With no manager session, everything above is unchanged — talk to Ishay directly throughout,
++as already specified.
++
+ ### ⚠️ Workflow & Plan Rules
+ 1. **Plan-then-Approve:** present everything in chat for Ishay's review, in this exact order: (a) **Plain-Hebrew capabilities summary** (🎁 below) → (b) Sequence & Dependency Assessment incl. the Integration Impact statement → (c) Questions & Assumptions triage → (d) **🎤 PM Interview** (section below — its answers are baked into the Decisions Ledger before (f)) → (e) Claude's Optimization Proposals (chat-only — NOT saved into the micro-guide unless explicitly approved into a step) → (f) the full 9-section blueprint. Write `docs/micro_guides/module-[MODULE_NUMBER].md` to disk **only after explicit approval**, containing only the approved 9 sections. **Fresh-context blueprint review (iron rule 2ב extended to blueprints):** before presenting the 9-section blueprint for approval, dispatch an internal fresh-context reviewer subagent (no memory of this turn) that audits it against the iron rules, `STATUS.md`, `db_roadmap.md`, the §6/§7 registries, and "every 🚧 capability carries its `🚧 מN` token with a matching §6 line" — the same adversarial pre-submission check plans get under rule 2ב. **Plus two lenses beyond compliance-checking (ported from a sister project — field experience: these catch what rule/spec-coverage checking alone misses):** the **Contrarian** lens ("what's the strongest case this breaks something that already works?") and the **Outsider** lens (a REG-IN staff user with zero context — does this screen/flow actually make sense to *them*, without knowing how it was built?). Report findings from both explicitly, not folded silently into the compliance findings. **Spec-coverage cross-check (MANDATORY — the enforcement that catches silent omissions; the screen-to-column audit alone only checks numbers already IN the blueprint, so a spec element the blueprint never mentions slips through):** the reviewer FIRST extracts the module's *required-list* directly from its C5 screen(s)+process, C6 table(s), and mockups — every field · action · displayed number/metric · validation rule · process rule — reading the spec blind to the draft; THEN cross-checks that each required item maps to a build step OR a logged deferral (a §7 item / a `🚧 מN`). A spec/mockup item with neither a step nor a deferral is a **silent-omission finding**; an item the blueprint builds but the spec does NOT require is an **invented-beyond-spec finding** (must carry a "deviation from 5.x" note). Mockup-only details are limited-liability — flag them for confirm-intent, do not treat as required. Fix its findings before presenting. Immediately after saving, in the same session: update `STATUS.md`'s row for this module (📘 blueprint ready + link to the guide) and run the end-of-session protocol — a saved blueprint that STATUS doesn't point to is invisible to the next session.
+ 1ב. **Render the human-facing presentation as HTML, ordered by volatility (Ishay's own working method):** the parts he actually reads and rules on — (a) the capabilities summary, (c) the triage, (d) the PM-interview outcomes — render as one HTML page via the `Artifact` tool, not chat text alone: a page he can actually read, not a wall of Hebrew paragraphs. **Lead with the decisions most likely to change** (the ones carrying the most product judgment / least certainty), not the settled ones — so if Ishay flips one, it flips before the full blueprint (f) gets written around it. The 9-section machine blueprint (f) itself stays exactly as defined by the Role & Audience section above (English, chat/file) — its reader is a future zero-memory Claude session, not Ishay, so it does not move into the HTML render.
+@@ -17,6 +42,19 @@ The micro-guide's **primary reader is a future Claude Code session with zero mem
+ 3. **Hierarchy of Truth:** `docs/schema.sql` (highest) ➔ approved spec `docs/reference_spec/C5_*`+`C6_*` via `PROJECT_MASTER.md` ➔ mockups (`docs/mockups/`) ➔ previous micro-guides (lowest). Frozen spec files are never edited; intentional deviations are recorded in living docs with a "deviation from 5.x" note.
+ 4. Read before writing: `CLAUDE.md`, `STATUS.md`, `docs/PROJECT_MASTER.md` (sections [RELEVANT_SECTIONS], the full §7 registry, **and §6 — the cross-module debt registry: find every item targeted at THIS module and schedule it as explicit steps in the blueprint**), `docs/schema.sql`, **`docs/db_roadmap.md` — the consolidated DB map: this module's Lane-A rows are mandatory blueprint steps, its Lane-B rows targeting this module are mandatory triage inputs, and its §6 per-table index is the checklist for every table you touch**, `docs/architecture_and_qa_roadmap.md` (the canonical DoD that section 7 instantiates), the current codebase, and `docs/micro_guides/module-1.md` as the format exemplar.
+ 
++5. **Process-understanding gets the four-part declaration — screen-visible or not, and matching the
++   spec is NOT an exemption.** Any assumption about how the business/process actually works — a
++   migration's design, a status-lifecycle rule, a permission model, as much as a screen's behavior —
++   triggers the four-part shape (`work-manager/references/ishay.md` situation 10): ① state what you
++   understood, invited for correction ② how comparable systems handle this — searched, never recalled
++   ③ what fits an academic capstone specifically (deadline, scope) ④ one recommendation. **The
++   boundary is NOT "is it on screen" — it is "does this encode how the business actually works"**
++   (the same test `prompts.md`'s intent pass already uses). **And "it matches the frozen spec / an
++   already-ruled §7 item" does NOT satisfy ②** — the spec predates today's real-world practice and is
++   not infallible (`db_roadmap.md` §9 already tracks *known* spec defects; ② is what catches the ones
++   nobody has found yet). **Matching the repo proves internal consistency, never correctness of the
++   underlying design.** This governs both the 🗡️ DB Design Challenge and the 🎤 PM Interview below.
++
+ ### 🎁 Plain-Hebrew Capabilities Summary (present FIRST)
+ Before any technical material, give Ishay a short Hebrew table answering "מה המשתמשת תקבל בסוף המודול": every user-facing action, marked ✅ built now / 🚧 partially (frame now, completed by module N — carries a `🚧 מN` token registered in §6 per iron rule 15, authored in the §2 table below; also say why the data/logic only exists there) / ❌ not now (target module). Include which roles can use the screen. This is the non-technical contract the human approves; the blueprint's section-2 capabilities table is its machine mirror.
+ 
