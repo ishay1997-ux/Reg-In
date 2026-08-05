@@ -93,7 +93,11 @@ a prompt for a build session, or a ⏸️ item for Ishay.
 - Measure the arena: which sessions are alive and what each holds (`_shared/parallel-sessions.md`; its mine: `isRunning:false` is not a liveness signal — pair it with each session's last confirmed commit).
 - You do not manage those sessions — you plan around them (Ishay's ruling, 05/08/2026). A plan that ignores a live session is generic.
 - Read `PROJECT_MASTER §6` · `§7` · `STATUS.md` · `docs/guides/00_roadmap.md` §3 — and the roadmap is tier 4 with no freshness stamp: read it, then ask Ishay to confirm it still binds (`module-build` carries the fuller warning).
-- Classify each item — blocks now · blocks the build · doesn't block — and price it (sessions, tokens, what it reopens).
+- Classify each item on TWO axes, never one: does it block (now · the build · not) — **and does
+  it pass §1's three filters (they are the value axis — his ruling, 05/08/2026)**. Then price it
+  (sessions, tokens, what it reopens). Among filter-passers, **cost decides the order**;
+  "product vs meta" is never an axis — he deferred filter-passing items the same day he
+  prioritized others: the filters admit, the price orders.
 
 ## The voice — observed, not assumed
 
