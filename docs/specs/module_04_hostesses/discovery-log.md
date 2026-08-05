@@ -253,7 +253,15 @@ in two months *"why was X decided?"*, the answer must be one folder away, not in
 Hebrew spec and an English log can share a folder; each file states its reader in its header.
 *(Ishay was offered a Hebrew log twice and did not take it — his reading happens in chat.)*
 
-🔴 **Not moved tonight, deliberately — the move must be one clean operation.** Measured: **8 references
+### ✅ EXECUTED 05/08/2026 ~23:05 — Ishay: *"מבחינתי בצע את התיקונים עכשיו"*
+`git mv` to `docs/specs/module_04_hostesses/discovery-log.md` · all six plan-file pointers updated ·
+`STATUS.md:8` updated with the old name recorded · a `docs/specs/` row added to the folder table in
+`docs/CLAUDE.md`. **`docs/CLAUDE_CODE_LOG.md:53` was deliberately NOT touched** — `docs/CLAUDE.md`
+rules that *"רשומות-יומן מתוארכות לא משכתבים לעולם — גם אם הן מזכירות קבצים שכבר לא קיימים"*; the
+22:55 entry in the same file records the move and the new path, which is how the repo wants it resolved.
+
+*(The reasoning that produced this, kept for stage 3:)*
+🔴 **The move had to be one clean operation.** Measured: **8 references
 name the current path** — `STATUS.md:8` · `docs/CLAUDE_CODE_LOG.md:53` · and **six** inside
 `docs/claude mega plans/regin_workflow_short_updated.md` (lines ~95, 289, 313, 495, 802, 868 — including
 **stage 3's "🔴 המקור הראשון שלך"**, which is the pointer that makes the whole `module-discovery` skill
