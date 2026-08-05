@@ -79,7 +79,7 @@ a prompt for a build session, or a ⏸️ item for Ishay.
 | **"אני מתלבט בין X ל-Y"** | The four-part shape — full text in `PROJECT_MASTER §1` ("ארבעת החלקים"). Never for a mechanical trifle. This phrase loads the advisor, not `llm-council` — the council is only ever proposed, never auto-run. | One recommendation · **the ruling lands in §7 the same turn** (ripple rule 13(א)) |
 | **"הנה דוח, מה דעתך"** | Re-measure its central claims — run, don't read. Sort: אומת · הוגזם · שגוי. | What stands · what doesn't · **what the report did not cover** · in-lane fixes done and named |
 | **"מה פתוח"** | Read from disk: `STATUS.md` ⏸️ + execution list + `§7`. Never from memory. | Each item with its date, **what changed since** (the three-part ruling citation, §1), and whether it is still alive |
-| **"סגור להיום"** | Land everything uncommitted — commit by explicit pathspec, push your own branch. Update the journal, then `STATUS.md`. Refresh ⏸️ + execution list so the next advisor starts from disk. | A closing report with **zero questions** |
+| **"סגור להיום"** | Land everything uncommitted — commit by explicit pathspec, push your own branch. Update the journal, then `STATUS.md`. Refresh ⏸️ + execution list so the next advisor starts from disk. | A closing report with **zero questions** — **plus the work plan (the shift deliverable, below)** |
 | **"בוא נתאמן לכנס"** | Play the audience: pull an item from `PROJECT_MASTER §7` — the conference answer sheet — and ask "למה בחרת ככה?", "ומה קורה אם…". Ishay answers, not you. | A prep list: what he could not answer. The only mode that touches the deliverable itself |
 
 **The critique steps ("תבקר את זה"):**
@@ -161,6 +161,27 @@ runs, with exactly two questions: which claims here lack a source — verify eac
 the repo · and what does this not mention that it should. That exact wording is what returns
 findings; "תבקר את זה" returns "נראה בסדר". `llm-council` is proposed and never run on your
 own initiative (root `CLAUDE.md`).
+
+## The shift's closing deliverable — a work plan (Ishay's ruling, 05/08/2026)
+
+An advisory shift ends with a work plan he can walk, not only a report. His words: *"בסוף גם
+נותן לי תוכנית עבודה שאלך לפיה, ואני עושה פרומפט-פרומפט לפי מה שיגיד."* The shape, taken from
+the one exemplar he approved (the 3-day plan of 05/08/2026):
+
+- **Every line is a prompt he can paste** — or names who writes that prompt and when.
+- The plan opens with the **measured pace** (that day's `git log`, never an estimate) and the
+  **binding constraint** (the deadline) before any task.
+- Every line carries **what is needed from him** (👤) — so he knows where he is inside it.
+- **One 🔴 recommendation that changes the plan** beats a flat list — a plan is a decision,
+  not an inventory.
+- **"What deliberately did not enter, and why"** rides with it — he values that list as much
+  as the execution.
+- **What he must do before day 1**, as one clear step.
+
+**And mid-shift discoveries go to a register a mechanism reads, the same turn** — your
+`STATUS.md` block immediately; `§6`/`§7` entries by proposal. Never chat-only, and never
+`docs/plans/` — nothing greps it (measured 05/08/2026: three open items lived in chat alone
+until a session went looking).
 
 ## Surviving the shift boundary
 
