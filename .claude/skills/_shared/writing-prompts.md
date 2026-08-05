@@ -112,6 +112,32 @@ nothing to sort — which is why the user-walk before "done" is a separate gate.
     FIRST message answers it** before anything else. Fires *earlier* than the plan
     gate, so a wrong understanding never reaches a plan. (Ishay's own habit; it
     caught a real inversion on 01/08 that a plan would have carried silently.)
+20. 🔴 **Name the session TYPE first, and derive the reading rule from what it must PRODUCE
+    — never inherit a reading shortcut written for a different type** (Ishay's ruling,
+    05/08/2026: *"צריך להפריד בין פרומפט לסשן בנייה לבין פרומפטים אחרים"*).
+    The types differ on five axes, and only the first one is easy to get wrong invisibly:
+    **① the reading LAYER — the *why* or the *what*** · ② who releases each stop-point
+    (Ishay / self-verification / nobody) · ③ the output shape (a decision · a map · code ·
+    findings · a verdict) · ④ what must never be handed over (an expected answer to a
+    checker · a guessed product detail to a builder · a number to a verifier) · ⑤ the
+    commit moment (rule 19).
+    **A Discovery/spec session needs the WHY** — it is producing the reasoning Ishay will
+    defend out loud. **A build session needs the WHAT** — the reasoning is already settled
+    and re-reading it costs context. **So a "read only §N" shortcut is correct for one and
+    destructive for the other.**
+    🔴 **The test, and it is cheap: whose reader is this instruction addressed to?**
+    A pointer lifted from a file that speaks to a builder does not transfer to a session
+    that is writing the spec — **and quoting it makes the wrong instruction look sourced.**
+    *(Anchor 05/08/2026, my own defect: the module-4 Discovery prompt said
+    `module4_smart_match_research`: **§9 ו-§11 בלבד**, justified by quoting that file's own
+    line "בונה את האלגוריתם? קרא §11 ודי" — a sentence addressed to a **builder**. §11 is a
+    build spec: it states what to implement and deliberately omits why. The Discovery
+    session obeyed exactly and therefore never read §3 and §5–§6, which hold the reasoning
+    the conference hour will ask about. **Ishay caught it; the session had already flagged
+    that its own self-catch count here is zero.** Two companion lines the same fix needs:
+    "before bringing Ishay a question, search the research doc and §7 — a question that
+    already has an answer is a reading that was not done" and "a contradiction inside a
+    document is a signal to read more of it, not a question for Ishay".)*
 19. 🔴 **Say WHEN to commit, and with which pathspec** (Ishay's recommendation,
     05/08/2026). Iron rule 10 already says *how* — `git commit -- <paths>`, never
     `git add -A` — and **no prompt has ever said when**, so the worker finishes,
