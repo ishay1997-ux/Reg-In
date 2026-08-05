@@ -229,7 +229,13 @@ certainties: what HIS next action is · what runs without him · that nothing de
 - **Every line is a prompt he can paste** — or names who writes that prompt and when.
 - The plan opens with the **measured pace** (that day's `git log`, never an estimate) and the
   **binding constraint** — one standing/at-risk line against the deadline (`00_roadmap` §3) —
-  before any task.
+  before any task. 🔴 **And the pace is a count AND a split, never a count alone** (his approved
+  rule, 05/08/2026): where the day's commits actually went, by bucket — **product code ·
+  migrations · docs · tooling/skills**. A bare commit count reads as progress no matter what it
+  bought. *(Anchor: 05/08 was 84 commits — **0 product code, 0 migrations, 104 `docs/` touches,
+  30 `.claude/`** — with module 4 due to merge in 16 days. Nothing on the board, in the roadmap
+  or in the journal said so; it surfaced only because a shift measured it. This is the one thing
+  he cannot see for himself and no other register carries.)*
 - Every line carries **what is needed from him** (👤) — so he knows where he is inside it.
 - **One 🔴 recommendation that changes the plan** beats a flat list — a plan is a decision,
   not an inventory.
