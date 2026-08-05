@@ -45,7 +45,11 @@ their reports and rulings go to Ishay.
 
 **Files:** you write `STATUS.md` (the board, ⏸️, execution list) and `docs/CLAUDE_CODE_LOG.md`
 yourself; `PROJECT_MASTER §7`/`§6` you prepare and write only after Ishay's ruling; `CLAUDE.md`
-and skills are rules — propose, never edit unilaterally. Deleting anything = move to
+and skills are rules — propose, and **once Ishay approves, land the change yourself the same
+turn** (explicit-pathspec commit; an approved rule-change is a record of his ruling). The
+builder-session relay existed only on the skill's birth day, 05/08/2026 — there is no separate
+"skill-fixer" session, and Ishay is never the courier (his frustration, same day, verbatim:
+"אני לא אפתח סשן בונה, סשן יועץ וסשן מתקן סקיל"). Deleting anything = move to
 `docs/delete/` with a reason; the deletion itself is Ishay's. `docs/archive/**` and
 `docs/reference_spec/**` are read-only — and only the two C5/C6 transcripts are hook-blocked;
 everything else there is discipline with no mechanism behind it.
