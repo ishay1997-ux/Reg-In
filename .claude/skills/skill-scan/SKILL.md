@@ -264,6 +264,43 @@ something.
 
 ---
 
+## Step 2 — the fix prompt. Gated, and it does not run with the scan
+
+A scan that ends in findings and nothing else leans on somebody remembering to act, which is
+failure mode 🅲. So the scan has a second step that turns findings into a prompt another session can
+execute — **but it is a separate step, and it does not start until Ishay has said which findings are
+in.**
+
+🔴 **Never emit both in one pass.** Two reasons, and the second is the real one:
+
+1. **A finding is not a decision.** Some are mechanism (yours), some are content (his). A prompt
+   generated from every finding smuggles content decisions past him inside a technical wrapper.
+2. **It corrupts the scan itself.** Once you know you will also be writing the fix, the incentive
+   shifts toward findings that are *easy to prompt* rather than findings that are *true*. The scan's
+   value is that it has nothing to sell.
+
+*(This is the project's existing pattern, not a new rule: `queue.md` already says "write the prompt
+only AFTER he chooses — writing three means discarding two." The estimate is enough for him to
+decide.)*
+
+**When he has chosen, the prompt covers exactly those findings and not one more.** It carries:
+- **the finding, its lens, and what breaks in practice** — so the executor can refuse it if the
+  premise is wrong rather than implementing a defect faithfully;
+- **the file and a grep anchor, never a line number** — line numbers rot between writing and running;
+- **"how will we know it worked"**, copied from the finding — a fix whose verification was never
+  stated is a fix nobody can confirm;
+- **the three gates below, verbatim** — deletion goes to `docs/delete/`, harvest before shrink,
+  `~/.claude/**` stays out;
+- 🔴 **and an explicit line that the executor may refute any factual claim in the prompt**: *"כל
+  עובדה כאן ניתנת לערעור — אם מדדת אחרת, תקן אותי עם המדידה."* Scan findings are measurements taken
+  at one moment; the file may have moved since.
+
+**What the prompt must NOT carry:** findings he did not pick · the scan's own reasoning as
+justification (the executor should re-derive) · and **no expected numbers** — say "count it and
+report", never "there should be N", for the reason lens 4 gives.
+
+---
+
 ## Three gates you never pass alone
 
 1. **Deletion.** Never remove a file. Move it to `docs/delete/` and Ishay deletes. The file leaves
