@@ -167,9 +167,12 @@ A protocol that drifted back into root, or a directory file contradicting root, 
 
 The repo-local skills under `.claude/skills/`: the module-flow three (`module-blueprint`,
 `module-build`, `module-close` — templates beside them since 23/07/2026), the two helpers
-(`section7-rulings`, `post-merge`), and `quality-audit`. All import `_shared/discipline.md`;
-verify trigger phrasings, routing, and that the shared-kernel paragraph matches what the kernels
-promise. `docs/templates/` no longer exists — a doc pointing there is drift.
+(`section7-rulings`, `post-merge`), `quality-audit`, `skill-scan` (added 04/08/2026), and
+`advisor` (added 05/08/2026). All point at `_shared/discipline.md` — except `quality-audit`
+(documented opt-out in its own line 10) and `skill-scan` (short-form pointer); verify trigger
+phrasings, routing, and that the shared-kernel paragraph matches what the kernels promise.
+`docs/templates/` no longer exists — a doc pointing there is drift. *(🕓 list refreshed
+05/08/2026 — it had gone stale by two skills; the live copy was updated the same day.)*
 
 ⚠️ `feature-acceptance` moved OUT to `~/.claude/skills/` (23/07, project-agnostic) — out of scope
 here; verify only that no REG-IN doc still claims it lives under this repo.
