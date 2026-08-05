@@ -26,6 +26,11 @@ Supabase (Auth + Postgres 17) · react-router-dom 7 · עברית RTL מלאה.
 - **חותמת-זמן — לא לערבב בין הכלים:** ב-PowerShell `Get-Date`; ב-Bash `date +"%d/%m/%Y %H:%M"`.
   ‏`Get-Date` **אינו קיים** בכלי Bash ויחזיר `command not found`. פורמט: **`DD/MM/YYYY HH:MM`**,
   מהשעון — לא מנוחש.
+- **ספירת שורות — `(Get-Content -LiteralPath X).Count`. ⚠️ לא `Measure-Object -Line`:** הוא
+  **מדלג בשקט על שורות ריקות** ומחזיר מספר קטן יותר בלי להתלונן. *(נמדד 05/08/2026 בבקרה: קובץ
+  עם 3 שורות טקסט ו-3 ריקות → `.Count`=6 · `Measure-Object -Line`=3. **שני סשנים נפרדים דיווחו
+  1,387 ו-1,838 על קובץ בן 1,839.**)* ‏`git show HEAD:file | Measure-Object` הוא אימות-צולב טוב.
+  ⚠️ ו-`wc -l` מחזיר **אחד פחות** כשהקובץ אינו מסתיים בשורה חדשה — זה מקור לפער-של-1, לא באג.
 - **קבצים חדשים — שמות באנגלית בלבד** (עברית בשמות קבצים נשברת ב-Git/Windows). תוכן עברי בתוך
   `<div dir="rtl">`.
 - **חלוקת שפות:** `docs/guides/` + `STATUS.md` בעברית (לבני אדם) · `docs/micro_guides/`,
