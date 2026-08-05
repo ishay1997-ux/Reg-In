@@ -162,7 +162,7 @@ if [ -n "$HG_MISS" ]; then
   REASON="${REASON}חוב 🚧 בלי רישום ב-PROJECT_MASTER §6 —$HG_MISS. הוסף שורה '🚧 מN ← מ<מקור> · מה · מקור: micro_guides/module-<מקור>.md'. "
 fi
 if [ -n "$MISS" ]; then
-  REASON="${REASON}עדכן לפני סיום: $MISS. (רשומת-יומן = 3–8 שורות; אם אין שינוי-סטטוס — ב-STATUS רק שורת 'עודכן לאחרונה', אחרי שווידאת שהלוח נכון.)"
+  REASON="${REASON}עדכן לפני סיום: $MISS. (אורך רשומת-היומן — לפי המדיניות שבראש CLAUDE_CODE_LOG.md עצמו, שם היא נקבעת; אם אין שינוי-סטטוס — ב-STATUS רק שורת 'עודכן לאחרונה', אחרי שווידאת שהלוח נכון.)"
 fi
 
 if [ -n "$REASON" ]; then

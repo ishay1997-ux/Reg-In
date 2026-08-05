@@ -467,6 +467,11 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 6. **(e)–(g) per CLAUDE.md iron rules 13/15/16 + end-of-session protocol** (new-open-question → stop+§7 · migration/DB-gap → db_roadmap same session · shared-surface change → name the affected future modules in the CHANGELOG line) — these apply automatically; not restated here (F1).
 
 ## 9. 📝 Deviations & Tech-Debt Log
+
+> ℹ️ **Checked 05/08/2026 during the `work-manager` removal — historical only, nothing to change.**
+> The manager-N mentions in the entries below are dated records of who ruled what at the time.
+> They are **not** live routing: no entry here instructs a session to contact anyone. Dated
+> journal entries are never rewritten (`docs/CLAUDE.md`).
 - 31/07/2026 09:05 — **One-line alignment in `CustomerDetailsPage.jsx` (M3 audit fix-round A).**
   The page passed the **raw `param_value` string** for `אחוז_מעמ` into `vatRate`, while
   `QuotesPage` passes `parseVatPercent(...)` — two screens feeding different types into the same

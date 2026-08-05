@@ -50,7 +50,7 @@
 ## 🔒 לא מושפעים כלל מהצמצום
 
 - **הסקילים של REG-IN** (`.claude/skills/`): `module-blueprint` · `module-build` · `module-close` ·
-  `section7-rulings` · `post-merge` · `quality-audit` · `work-manager` · **`skill-scan`** —
+  `section7-rulings` · `post-merge` · `quality-audit` · **`skill-scan`** —
   **בריפו, תמיד זמינים.**
   ↳ **`skill-scan` (נוסף 05/08/2026):** סורק **קובץ-הוראות** — סקיל, `CLAUDE.md`, מדריך-מיקרו —
   ומחפש כללים ש**אינם יכולים לרוץ**, שדילוג עליהם **בלתי-נראה**, שאינם מצדיקים את שורותיהם, או

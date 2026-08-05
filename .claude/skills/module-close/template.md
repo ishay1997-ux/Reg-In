@@ -121,6 +121,29 @@ At the bottom of the artifact, ask Ishay **three questions in plain Hebrew** abo
 
 **Rules:** exactly three, one per riskiest behaviour of this module · each must have a definite answer that is visible in the artifact above it · **this is a signal, not a gate** — a wrong answer means "stop and walk him through it", never "merge blocked". Record in the micro-guide §9 anything the quiz revealed as a genuine intent gap.
 
+### 🪞 Self-review — four questions, answered before the verdict (added 05/08/2026)
+
+**Why here and nowhere else:** a module close is the only moment in this project that fires on an
+artifact rather than on someone remembering. These four are the questions that **measurably produced
+findings** when they were run; the two that never did were dropped. Full set and evidence:
+`.claude/skills/_shared/failure-modes.md`.
+
+🔴 **Every answer names a concrete event from THIS audit. An answer with no anchor is a vibe, and a
+vibe here is worse than skipping the question** — it manufactures the feeling that the check ran.
+
+1. **Who caught the mistakes in this module — me, or someone else?** *(Measured across five shifts in
+   two arenas, self-catch was **zero** every time. Zero is the expected answer. If you report that you
+   caught your own, say exactly how, because that would be the first time.)*
+2. **Which of my own actions in this audit got no check at all?** Not "what did I find" — **what did
+   I never look at.** That is where the misses that were never caught still live.
+3. **Where did I look for confirmation instead of refutation?** Including: did I verify a claim the
+   way the *reporter* searched, or the way the **source** writes it?
+4. **What is the general shape of what I found — how many of these are really the same defect?**
+   *(This is the question that collapses a list of symptoms into causes; run it before writing the
+   tech-debt section, because it changes what gets registered.)*
+
+**Output: four short answers, each with its anchor. "אין" is a complete answer where it is true.**
+
 ### 💾 Persistence (mandatory — the audit is not done until these are written)
 0. **§6 debt registration check (iron rule 15):** verify every Section-7 item (the audit report's tech-debt section — NOT `PROJECT_MASTER.md` §7) AND every 🚧 row of the micro-guide's "Capabilities delivered vs deferred" table has its byte-matching `🚧 מN` line in `docs/PROJECT_MASTER.md` §6 (`grep '🚧 מN' docs/PROJECT_MASTER.md` per target module N) — add any missing line now. This is the closing audit's belt-and-suspenders re-check of the rule-15 mechanism the Stop hook (`check-docs-updated.sh` 0ג) already enforces.
 0b. **§7 ripple check — run iron rule 13(א)-(ג) explicitly (not just 13(ז)) for every `PROJECT_MASTER.md` §7 item this module ruled or implemented.** The load-bearing audit action: the §7 item itself marked ruled (date+owner, batch note updated if it was the cluster's last open item); the ruled value reflected in the code/DB where it lives; and `grep '§7.N'` AND `'מראת §7.N'` across `docs/guides/**` + `docs/micro_guides/**` — every citation current and every tagged mirror (🔗) matching §7 verbatim. Fix what doesn't.
