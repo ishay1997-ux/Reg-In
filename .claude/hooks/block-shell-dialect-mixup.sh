@@ -72,4 +72,31 @@ printf '%s' "$CMD" | grep -Eq '(^|[;|&]|\\n)[[:space:]]*(Get-Date|Set-Content|Ad
 # משתני-סביבה בסגנון PowerShell.
 printf '%s' "$CMD" | grep -q '\$env:' && block
 
+# ── מיסוך קוד-יציאה: שער או ריצת-בדיקות שנשפכת לצינור ────────────────────────
+# ‏`cmd | tail` מחזיר ב-bash את קוד-היציאה של **tail**, לא של הפקודה. ריצת-בדיקות
+# שנכשלה נקראה כירוקה פעמיים כך (710, ‏31/07). זו התנהגות-מעטפת, לא של הפרויקט —
+# ולכן ההוק הוא הבית הנכון לה ולא עוד שורת-פרוזה שאיש לא יקרא ברגע הנכון.
+# ⚠️ **בכוונה צר:** רק פקודות שקוד-היציאה שלהן *הוא* הממצא. ‏`git log | head` או
+# `cat x | grep y` — צינורות לגיטימיים לחלוטין, ואינם נבדקים כאן.
+# ‏(ב-PowerShell אין את הבעיה: `$LASTEXITCODE` שורד את הצינור.)
+block_pipe() {
+  cat >&2 <<'MSG'
+🎭 קוד-היציאה מוסתר — הפקודה לא הורצה.
+
+שפכת שער או ריצת-בדיקות לתוך `head`/`tail`/`grep`/`less`.
+ב-bash קוד-היציאה של צינור הוא של **הפקודה האחרונה** — כלומר של `tail`,
+שכמעט תמיד מצליח. **ריצה אדומה תיראה לך ירוקה.**
+
+שלוש דרכים נכונות, לפי הסדר:
+  1. בלי צינור:            npm run gate
+  2. לשמור ואז לקרוא:      npm run gate > /tmp/gate.log 2>&1; echo "exit=$?"; tail -30 /tmp/gate.log
+  3. אם חייבים צינור:      set -o pipefail; npm run gate | tail -30
+
+🔴 והכלל שמאחורי זה: שער שלא ראית את קוד-היציאה שלו — לא רץ.
+MSG
+  exit 2
+}
+printf '%s' "$CMD" | grep -Eq '(npm|pnpm|yarn)[[:space:]]+(run[[:space:]]+)?(gate|test|test:run|test:e2e|lint|build|verify|dup|deadcode|audit|check:context|smoke)\b[^|]*\|[[:space:]]*(head|tail|grep|less|more)\b' && block_pipe
+printf '%s' "$CMD" | grep -Eq '\b(vitest|playwright|eslint|tsc|prettier)\b[^|]*\|[[:space:]]*(head|tail|grep|less|more)\b' && block_pipe
+
 exit 0

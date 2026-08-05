@@ -37,6 +37,29 @@ Prefer a grep anchor (function name / string) over a line number — line number
 - **An absence-claim is verified the way the SOURCE writes it, not the way the reporter searched.**
 - **Never hand a checker an expected number — only a measurement method.**
 - **A fix is not done until you have checked where else the same defect lives.**
+- 🔴 **The source must answer DIRECTLY. A derivation, a stretch, or "it probably implies" is a
+  guess wearing a citation.** In doubt whether the source truly answers ⇒ **that IS "no source"**,
+  and it goes to Ishay as a story-question. *(A wasted question costs him seconds; a guessed
+  intent costs a build.)* **The table above checks whether a citation is ACCURATE; this checks
+  whether it ANSWERS** — a citation can be perfectly accurate and still not support the claim
+  resting on it. *(Anchor 05/08/2026: a removal report stated "steps 1–3 live **almost verbatim**
+  in `module-blueprint/template.md`" carrying a `[מדדתי בעצמי]` tag. Measured string by string:
+  **zero shared strings between the two files.** The overlap was real and conceptual; the wording
+  was an inference wearing a measurement's tag.)*
+
+### 🔴 When Ishay corrects a fact you gave him — the correction is not the point, the SWEEP is
+
+**Trigger:** he says something you told him is wrong.
+**Fix the sentence — then sweep.**
+
+> **Sweep boundary: everything you SAID · WROTE to disk · DISPATCHED to another session · or
+> RULED — from the moment the wrong fact entered.**
+
+**Name what you swept, out loud.** A sweep nobody can see is indistinguishable from no sweep.
+*(Anchor 01/08/2026: corrected twice on dates. The sentences were fixed — **and nobody ever swept
+what rested on them.** Two recommendations stayed standing on a base that had collapsed. Repeated
+05/08: a wrong line count was corrected in the sentence, and the ranking built on top of it was
+not re-derived until Ishay supplied the missing criterion himself.)*
 
 **Resume-after-interruption, in THIS repo (the 23/07 migration-5 incident):** on any resume ("המשך מאיפה שעצרת", a fresh session picking up mid-flow, continuing after a visible cut) — re-derive position from disk before advancing: `git status` + the active micro-guide's status header/step table + the current step's own verification command. A step whose verification hasn't passed is NOT done, no matter what the previous turn narrated; the typical loss is a half-step (file saved, its doc-ripple lost) — finish the missing half before starting the next step. *(What actually happened: "saving migration 5 + updating docs" was cut mid-turn — the file survived, the db_roadmap update didn't, and the resumed turn jumped to step 1.6; Ishay caught it. The general principle this taught is now stated in the global file — this paragraph is just REG-IN's answer to "what counts as disk here.")*
 

@@ -58,6 +58,31 @@ area agreed in the prompt.
   a session with no reply within a reasonable time **stops and asks Ishay
   directly**, never proceeds alone.
 
+- 🔴 **Exchange digests to Ishay — always** *(his ruling, restored 05/08/2026 after the rescue pruned it)*.
+  Every session⇄session exchange gets him **2–3 lines: "הוא אמר X / עניתי Y"** — never the full
+  messages. **Kill-switch: he says "בלי תקצירים" and it stops.**
+  **Why it is not optional:** the block above tells you to message other sessions directly. Without
+  the digest, **two sessions decide things between themselves and Ishay sees nothing** — a whole layer
+  with no audit, and he is the only gate (`_shared/failure-modes.md` 🅰️: *no layer can audit the layer
+  above it*). It also teaches him the flow, which is what he needs in order to audit **you**.
+
+### 🧨 Two measured mines on the session tools themselves *(rescued 05/08/2026)*
+
+- 🚫 **NEVER archive a session.** `mcp__ccd_session_mgmt__archive_session` is reachable from here
+  and **closing or archiving a session is Ishay's alone.** *(01/08: he said "אולי צריך שמנהל
+  יצליח לסגור שיחה לבנאי כי אני לא זוכר לזכור 5 סשנים". That was read as authorisation to
+  archive; three sessions were archived. **His actual intent was one sentence: "שלא תעיר סשנים"**
+  — do not WAKE sessions. An hour later he asked for a consult and the channel was gone —
+  `Session … is archived; unarchive it first`. **He restored all three by hand.**)*
+  ⚠️ **And the "no reply ⇒ proceed on the document" fallback above was written for a session that
+  DOESN'T ANSWER, not for one that is archived and gone** — silence from a live session and
+  silence from a vanished one look identical.
+- ⚠️ **`list_sessions` is NOT a liveness signal, and neither is an mtime.** Measured 01–02/08:
+  **`isRunning:false` came back for three sessions that answered within two minutes**, and with two
+  sessions alive an mtime says *someone* worked, never *who*. ⇒ **Pair both with the last commit
+  each session actually confirmed.** *(This matters here specifically because the block above
+  points you at `list_sessions` — the tool is right, the field is misleading.)*
+
 ## Documentation boundary — depth vs breadth (Ishay's ruling, 710, 01/08)
 
 A session WRITES only code-adjacent trap docs for files it changed itself — it holds the
@@ -88,3 +113,16 @@ different evidence:**
 
 **The test, in one line:** *is this a record of what I did, or a rule for what others must do?*
 **A record — write it. A rule — propose it.**
+
+#### And the third case the test above returns "unknown" for *(Ishay's ruling, 05/08/2026)*
+
+A **contradiction between two things already written** is neither a record nor a new rule.
+
+> **The test is binary and hard to fudge: does this ADD a rule, or make two existing rules AGREE?**
+> **Adds ⇒ his approval. Reconciles ⇒ fix it and report one line at the end of the turn.**
+
+**The guard: he reads that line. Anything in it that is not a reconciliation costs the permission.**
+*(This was already being exercised before it was written: on 05/08 a session deleted `CLAUDE.md`'s
+"3–8 lines" journal rule because it contradicted the journal's own policy — a correct call that no
+written rule authorised. And on the same day `STATUS.md` carried module 3 as "awaiting merge" in one
+line and merged in another. Both are reconciliations; neither needed to cost Ishay a round.)*
