@@ -7,56 +7,33 @@ description: REG-IN — continue building the active module from its live micro-
 
 The active module's `docs/micro_guides/module-N.md` is the approved plan and your memory — continue from its "Active step". This is normal build flow, NOT Plan Mode (iron rule 2): the micro-guide already IS the approved plan and its 🔻🤖/👤 stop-points are the control. Build directly; DB/RLS before UI.
 
-## ⚡ When a manager session exists (Ishay said so, or your prompt names one)
+## Gaps, unconfirmed instructions, and claim discipline
 
-The approval addressee for *technical* gates changes — wired 01/08/2026 per Ishay's
-replacement mandate (the manager answers in his place what he delegated):
+Four standing rules on what to do when the plan under you is incomplete, unverified, or
+merely *clear*. **Everything here reports to Ishay** — there is no intermediate session.
 
-- **Send step-plans and 🗣️ briefs to the manager session** via `send_message` (load
-  `ToolSearch: mcp__ccd_session_mgmt` — it is deferred, not auto-available; the manager
-  normally contacts you first, else find it with `list_sessions`). It verifies your
-  claims against the repo itself and answers approve / fix / stop. Pre-empt its
-  standing probes in the plan: *מה עוד לא בדקת* · *מה הבליינד-ספוט — על מה לא חשבתי*
-  · world-standard fit — and include a time estimate (it feeds the manager's silence
-  threshold).
-- **The contract — three checkpoints, so nothing falls between the chairs:** (1) plan
-  before code · (2) blocked or unsure — including "מה ישי היה עונה?" questions, which
-  the manager answers from recorded precedent or escalates to him once · (3) done,
-  before your closing report. **Product questions go to the manager, never to Ishay
-  directly.** Going quiet is the failure mode — the contract is yours.
-- **What stays Ishay's, never absorbed** (the manager routes it, by default through
-  its own chat): mockup/visual approval — the 🔒 Plan-Mode gate below still holds, and
-  approval arrives as Ishay's word relayed by the manager (or given directly in your
-  window; both binding) · typed-echo migration application · secrets/OAuth · DoD.
-- **No manager reply within a reasonable time → stop and ask Ishay directly.**
-  With no manager session, everything below is unchanged.
 - 🔴 **The gap protocol — never silent-fill.** The blueprint is not always detailed enough, and the
   failure mode is guessing quietly (Ishay's own words, 01/08: *"הבלופרינט לא תמיד מפורט מספיק עבורו
   ואז הוא מנחש לפעמים"*). A **technical** gap ⇒ decide, mark it `הכרעתי, הפיך`, and report it. A gap
-  with any **product flavour** ⇒ a question to the manager. **Filling it silently is the one
+  with any **product flavour** ⇒ a question to Ishay. **Filling it silently is the one
   unacceptable option** — it turns a guess into an unreviewable fact.
 - 🆕 🧭 **A clearly-written instruction is not a confirmed one.** The gap protocol above covers a spot
   that is **under-specified**; it produces no signal at all for one that is **perfectly clear and was
   never confirmed with Ishay** — you will simply build it well and wrong. ⇒ **An instruction that
   encodes process or product (timing · who is notified · what is permitted · what a status means ·
-  what happens when X) and cites no source ⇒ ask the manager whether Ishay confirmed it**, before
+  what happens when X) and cites no source ⇒ ask Ishay whether he actually confirmed it**, before
   building. *(Ishay, 02/08: the spec itself can be wrong, and the save⇄send gap confused nobody —
   everyone understood it perfectly and built the wrong thing.)*
 - **Tag every claim in your reports** as `אומת-על-ידי` (you measured it) or `דווח-לי` (someone told
-  you). It extends the manager's own מדדתי/על-דיווחו split downward, and it is what lets a reader
+  you). It is the מדדתי/על-דיווחו split Ishay expects in every report, and it is what lets a reader
   know where to dig.
-- 🔴 **Two standing questions you owe the manager, aimed at his prompt — not at your plan:**
-  **① אילו מוקשים המנהל לא זיהה? ② מה המנהל לא בדק לפני שכתב לך את זה?** These force you to
+- 🔴 **Two standing questions you owe Ishay, aimed at the prompt you were handed — not at your plan:**
+  **① אילו מוקשים הפרומפט הזה לא זיהה? ② מה לא נבדק לפני שהפרומפט הזה נכתב?** These force you to
   investigate the prompt instead of receiving it. **"הכל בסדר" without having looked is the failure
   they exist to prevent** — a prompt is often built substantially on your own earlier reports, so its
   blind spots are yours too.
 
 ## Pre-flight
-0. 🔴 **Read `docs/current_manager.md`.** If a manager is listed there, **the ⚡ contract below applies —
-   even if nobody told you a manager exists.** *(Before this line the ⚡ section was conditional on
-   "Ishay said so, or your prompt names one" — so a session started with a bare trigger built with no
-   plan gate and routed everything straight to Ishay.)* The file also carries the manager's **exact
-   session name**, which changes at every handover — never hard-code it from a prompt.
 1. **Rule 16 — one writing session at a time.** Unsure if another session is writing? Ask Ishay before editing.
 2. **Rule 10 — mid-session merge check.** Run `git fetch origin`, then `git merge-base --is-ancestor HEAD origin/dev`. If the branch is already merged into `origin/dev`, STOP — don't pile commits on a dead branch; tell Ishay and offer a fresh branch from `dev`.
 3. **Model.** Follow the "Model & effort per phase" table at the top of the micro-guide's §5 (default: Sonnet for build phases, Opus/Fable for DB/RLS and control phases). If the current model differs from what the active phase needs, say so before proceeding.
@@ -66,7 +43,7 @@ replacement mandate (the manager answers in his place what he delegated):
 
 ## Build loop (behaviour of ⑥2, anchored to the micro-guide + iron rules)
 - Continue from the **Active step** in the status header.
-- **Entering a new phase?** First sweep the Decisions Ledger for OPEN/nod-pending items anchored to this phase's steps and get a consolidated ruling BEFORE the phase's first step (micro-guide §8(h)). ⚠️ **When a manager session exists, that sweep goes to the MANAGER, not directly to Ishay** — this is the same rule as the ⚡ section above ("product questions go to the manager, never to Ishay directly"), and the two used to contradict each other here. The manager batches, pre-chews, and answers from recorded precedent what he can; only what genuinely needs Ishay reaches him.
+- **Entering a new phase?** First sweep the Decisions Ledger for OPEN/nod-pending items anchored to this phase's steps and get a consolidated ruling BEFORE the phase's first step (micro-guide §8(h)). ⚠️ **Batch and pre-chew before you take it to him** — one consolidated round, recommendation-first, one line of background per item, full detail only on "פרט לי". A trickle of separate questions across the phase is the failure mode; a long list of decisions tires him, and that is exactly what the sweep exists to prevent.
 - **Each build-unit:** post the 🗣️ experience-brief (simple Hebrew: understanding-declaration invited for correction · planned validations · screen/mockup · every mockup-only or spec-silent detail flagged "מהמוקאפ / אפיון-שותק — לאישורך") and **wait for Ishay's approval before writing the unit's code** (a 👤 product-intent gate).
 - **🎯 The brief MUST end with "מה ייחשב עובד" — 3–5 Hebrew sentences, approved together with the mockup (added 30/07/2026).** Each sentence states **one outcome the user can observe after acting**, with **real values from the real data**. Verification is then written against THIS list, never against my memory of what I built — a test written by the same mind that wrote the code inherits its blind spots.
   ⚠️ **Two failure modes, and the second is the likelier one:**
@@ -88,7 +65,7 @@ replacement mandate (the manager answers in his place what he delegated):
 ## Size-gate for change requests (Ishay's standing request — he shouldn't have to estimate size himself)
 On ANY non-trivial change request that arrives mid-build (design / feature / behaviour), classify OUT LOUD before building, per the CLAUDE.md triage rule (rule 1):
 - **Small → build now:** data/tables/deps exist, it's in-spec, needed now, and it's a bounded change within this module's surface.
-- **Big / out-of-place → stop:** it needs a blueprint round, belongs to a future module/step, is a §7 decision, touches another module's surface, or is gold-plating/premature. Say `בנה-עכשיו` / `דחה-ל-X` / `לא-נדרש-כי-Y` with a reasoned recommendation — **Ishay decides.** ⚠️ **Where the deadline actually is: `docs/guides/00_roadmap.md` §3 — NOT `STATUS.md`** (this pointer used to say STATUS, and a builder looking there finds nothing and proceeds without one). And the roadmap is tier 4 in the truth hierarchy with no freshness stamp, so **read it and ask the manager to confirm it still binds** rather than quoting it as fact. A non-blocking, non-spec request while the module is behind schedule defaults to `דחה-ל-אחרי-<the deadline>` — never a hardcoded date, since it changes module to module.
+- **Big / out-of-place → stop:** it needs a blueprint round, belongs to a future module/step, is a §7 decision, touches another module's surface, or is gold-plating/premature. Say `בנה-עכשיו` / `דחה-ל-X` / `לא-נדרש-כי-Y` with a reasoned recommendation — **Ishay decides.** ⚠️ **Where the deadline actually is: `docs/guides/00_roadmap.md` §3 — NOT `STATUS.md`** (this pointer used to say STATUS, and a builder looking there finds nothing and proceeds without one). And the roadmap is tier 4 in the truth hierarchy with no freshness stamp, so **read it and ask Ishay to confirm it still binds** rather than quoting it as fact. A non-blocking, non-spec request while the module is behind schedule defaults to `דחה-ל-אחרי-<the deadline>` — never a hardcoded date, since it changes module to module.
 
 ## Council wiring
 Real trade-off with two sensible product-affecting directions? **Offer** `council this` and wait for Ishay's approval — never on your own initiative. The council feeds the decision; the decision is his (rule 1).

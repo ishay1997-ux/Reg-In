@@ -30,10 +30,22 @@ Read **`~/.claude/CLAUDE.md`** (loads every session, every project) for the univ
 | "already done" / "still open" | full read/grep of the file — not tail, not partial offset, not memory |
 | "merged" / "it's on dev" | fresh `git fetch origin` + `git merge-base --is-ancestor` (iron rule 10) — a local branch lies |
 | "column/policy/index exists" | live query via Supabase MCP (read-only) |
+| "it works" / "the tests are green" / "this is what the screen looks like" | run it through the **production path** — `npm run test:e2e`, the real browser, the served asset — and **say which path produced the artifact you are judging**. *(Anchor `ba2d41e`: the quote PDF was defective in its **production**, not its code — rendered under vitest instead of fetched from the browser blob, so the verification method lied while the code was fine.)* |
 
 Prefer a grep anchor (function name / string) over a line number — line numbers rot between writing and executing.
 
+- **An absence-claim is verified the way the SOURCE writes it, not the way the reporter searched.**
+- **Never hand a checker an expected number — only a measurement method.**
+- **A fix is not done until you have checked where else the same defect lives.**
+
 **Resume-after-interruption, in THIS repo (the 23/07 migration-5 incident):** on any resume ("המשך מאיפה שעצרת", a fresh session picking up mid-flow, continuing after a visible cut) — re-derive position from disk before advancing: `git status` + the active micro-guide's status header/step table + the current step's own verification command. A step whose verification hasn't passed is NOT done, no matter what the previous turn narrated; the typical loss is a half-step (file saved, its doc-ripple lost) — finish the missing half before starting the next step. *(What actually happened: "saving migration 5 + updating docs" was cut mid-turn — the file survived, the db_roadmap update didn't, and the resumed turn jumped to step 1.6; Ishay caught it. The general principle this taught is now stated in the global file — this paragraph is just REG-IN's answer to "what counts as disk here.")*
+
+## Two companion files beside this one (read when they apply)
+
+- **`_shared/parallel-sessions.md`** — more than one session alive: pathspec commits, the shared
+  index, stale arena facts, direct session-to-session messaging. Iron rule 16, operationalized.
+- **`_shared/writing-prompts.md`** — writing a prompt for another session: the intent pass, the
+  ONE top mine, self-containment, the model/effort recommendation, the closing clarity question.
 
 ## How to talk to Ishay
 Fully covered by `~/.claude/CLAUDE.md` — no REG-IN-specific override remains (the old "rulings-rounds recommendation-first" carve-out is now the global default too). The one place the style becomes a concrete *procedure* rather than a rule of thumb is the batching mechanics (3–4 per round, "מספיק להיום", recommendation-first, reality filter before designing for an edge case) — see `section7-rulings` (repo-local) and `feature-acceptance` (now global, `~/.claude/skills/`), which operationalize it end-to-end.
