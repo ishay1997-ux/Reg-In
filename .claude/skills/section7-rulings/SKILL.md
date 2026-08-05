@@ -12,6 +12,7 @@ description: REG-IN — run a batched §7 open-questions rulings session with Is
 2. For EVERY candidate item, verify live before it reaches him (block-A discipline): is it already resolved in code/schema/docs? Obsolete? Duplicated? A stale-open item gets a **proposed closure with evidence** — not a question.
 3. Classify the survivors into four buckets:
    - **(a) stale** → closure proposal with the evidence line.
+- 🔴 **And after any ruling: if the item was the LAST open one in its §7 cluster, update the cluster's batch note in the same turn.** *(Iron rule 13(א) requires this and `docs/CLAUDE.md` dropped the clause in the 28/07 pruning — measured 05/08. It survives only in `module-close/template.md` and in the `regin-docs-sync` routine, i.e. it fires a month later or when Ishay clicks Run. **This skill is where §7 is actually ruled, so a cluster header reading "3 open" can outlive the closing of all three — and the next reader trusts it.**)*
    - **(b) reality-unknown edge case** → an existence question (Step 2), NOT a decision card.
    - **(c) engineering call with an existing parent policy** (e.g. a §7.64-style precedent) → the nod list (Step 4).
    - **(d) genuine business fork** → a decision card (Step 3) with a drafted one-line background + a reasoned recommendation.

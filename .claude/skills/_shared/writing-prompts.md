@@ -20,8 +20,10 @@ costs exactly as much.)*
   refactor. Nothing about the business ⇒ **proceed.**
 - **🧭 Process or product, on screen OR behind it** ⇒ **stop, and take it to Ishay in the
   four-part shape** (declaration in his world · what comparable systems do · what fits
-  THIS project · one recommendation) — the full text is
-  `docs/archive/work-manager/skill/references/ishay.md`, situation 10.
+  THIS project · one recommendation) — **the full text is `docs/PROJECT_MASTER.md` §1,
+  "ארבעת החלקים"** *(rescued there 05/08/2026; this line used to point into
+  `docs/archive/**`, which the repo counts as a finding — and the archived copy is
+  pre-rescue, i.e. missing Ishay's 02/08 correction "brevity is not clarity")*.
 
 🔴 **A recorded source does not exempt it — it only shortens it.** A source proves a
 decision was **made**; not that it is still right, and not that he understood what he
