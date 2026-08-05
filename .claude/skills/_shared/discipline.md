@@ -1,4 +1,4 @@
-# Shared discipline doctrine — read by all six repo-local REG-IN skills
+# Shared discipline doctrine — read by every repo-local REG-IN skill
 
 > **SSOT split (23/07/2026, after Ishay wrote `~/.claude/CLAUDE.md`):** the *universal*
 > doctrine — language, talk style, PM authority, citation/resume discipline — now lives

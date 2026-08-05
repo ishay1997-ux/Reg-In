@@ -108,7 +108,9 @@ Supabase (Auth + Postgres 17) · react-router-dom 7 · עברית RTL מלאה.
 לכל מודול שלושה פרומפטים ב-`docs/guides/modules/module_NN_*.md` §⑥, ולכל אחד סקיל תואם שנטען
 לפי ניסוח-הטריגר: **"פתח מודול N"** → `module-blueprint` · **"תמשיך לבנות"** → `module-build` ·
 **"סגור את המודול"** → `module-close`. ‏+`section7-rulings` ("בוא נסגור שאלות פתוחות") ·
-`post-merge` ("מיזגתי") · `quality-audit` ("עשה סקירת קוד").
+`post-merge` ("מיזגתי") · `quality-audit` ("עשה סקירת קוד") · `skill-scan` ("תסרוק לי את X").
+**הרשימה המלאה והמעודכנת — `docs/toolbox.md`.** *(שם, ולא כאן: רשימה קשיחה בשני מקומות נסחפת,
+וזה כבר קרה — `skill-scan` נוצר 04/08 ולא הופיע באף אחד מהם עד 05/08.)*
 
 ## סוף סשן
 

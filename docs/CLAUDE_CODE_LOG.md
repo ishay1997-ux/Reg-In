@@ -154,6 +154,22 @@
   `mergeStateStatus: CLEAN`. **Nothing merged red.**
 - ⛔ **`ishay/module-3-quotes-build` is dead from here (iron rule 10).** The next branch is cut from a
   fresh `dev`. Local branch deletion offered, not executed.
+- **Same morning, on `ishay/post-m3-followups` (`27147eb`): three `CLAUDE.md` corrections and
+  `skill-scan`'s second step.** The header's rule count was wrong (five formulated + four pointers,
+  not seven) · the journal-length rule contradicted this file's own policy and defined "lines"
+  nowhere, so ownership moved here · and the pruned-rules table claimed `gitleaks` replaced "never
+  commit secrets" as a mechanism, when it guards **merge**, not **commit** — 🔴 **measured: gitleaks
+  is not installed on this machine at all**, so a secret committed to a personal branch reaches
+  GitHub and stays. I had recommended wiring it into pre-commit *before* checking the binary exists;
+  the check came first this time and reversed the recommendation. The real choice is registered as
+  `🚧 מ4`. `skill-scan` gained step 2 — findings become a fix prompt only after Ishay picks which
+  ones, because generating it in the same pass smuggles content decisions past him and biases the
+  scan toward findings that are easy to prompt rather than true.
+- **And one rule left the repo entirely:** the fresh-eyes review of any prompt that asserts repo
+  facts or authorises something irreversible now lives in `~/.claude/CLAUDE.md` (cross-project, by
+  Ishay's ruling) — with the two questions that make it work, and the measurement that earned it:
+  its first run found five false claims and thirteen missing surfaces in a prompt already revised
+  four times.
 
 ### 04/08/2026 — `skill-scan` + the failure-modes file, rescued from the manager corpus before it is archived
 - **New skill `.claude/skills/skill-scan/`** — scans an instruction artifact (a skill, `CLAUDE.md`,
