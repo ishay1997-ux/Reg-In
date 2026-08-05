@@ -135,6 +135,26 @@
   `git diff` on `quotePdf.jsx`/`supabase/functions`/`lib/email.js` **empty**, so Ishay's eye-approval
   of the PDF and live mail still holds.
 
+### 05/08/2026 08:04 — **module 3 merged into `dev`** (PR #10, 303 commits)
+- **Ishay's report, quoted at absorption before any interpretation:** *"מיזתי"*.
+- **Verified the same turn, four independent ways — none of them his report and none of them memory:**
+  `git fetch` returned `a35c92f..792456f  dev -> origin/dev` · `git log --oneline origin/dev -1` →
+  `792456f Merge pull request #10 from ishay1997-ux/ishay/module-3-quotes-build` ·
+  `git merge-base --is-ancestor ishay/module-3-quotes-build origin/dev` → **true** ·
+  `gh pr view 10` → `state: MERGED`, `mergedAt 2026-08-05T05:03:31Z`, `mergeCommit 792456f32`,
+  `mergedBy ishay1997-ux`, `base dev`. **No contradiction between his report and git.**
+- **The CI story is the one worth keeping.** The first run went red on `edge-function-check`, and the
+  closing session found the cause was **its own comment inverted**: skipping `npm ci` was documented
+  as *preventing* the deno resolution error, when what puts deno in node_modules mode is the mere
+  presence of `package.json` at the root — so the skip made the failure certain. Fix: `--node-modules-dir=none`.
+  🔴 **It shipped that fix with an explicit boundary — deno is not installed on this machine, so it
+  had verified the flag's semantics against the docs but never reproduced the failure or proved the
+  fix.** CI then proved it: **pass in 8s.** That boundary is why we knew exactly what to watch.
+- **All five checks green before the merge** (deno 8s · Lint·Test·Build 56s · gitleaks 13s · Vercel ×2),
+  `mergeStateStatus: CLEAN`. **Nothing merged red.**
+- ⛔ **`ishay/module-3-quotes-build` is dead from here (iron rule 10).** The next branch is cut from a
+  fresh `dev`. Local branch deletion offered, not executed.
+
 ### 04/08/2026 — `skill-scan` + the failure-modes file, rescued from the manager corpus before it is archived
 - **New skill `.claude/skills/skill-scan/`** — scans an instruction artifact (a skill, `CLAUDE.md`,
   a micro-guide) for rules that cannot fire, whose skip would be invisible, that do not earn their
