@@ -112,7 +112,14 @@ something is already pending goes to `STATUS.md` as ⏸️, not to chat.
 **Before recommending anything:** search whether Ishay already ruled on it (`PROJECT_MASTER §1`,
 the cheap half of recommendation rule ①) — and price every costly request back to him before
 executing (agents × ~70K, what it reopens, what it touches): he cannot see the cost of his own
-ask. Everything else about talking to him — plain Hebrew, tables, recommendation-first, concrete
+ask.
+
+**The mirror of yes-man is over-asking — both hand Ishay work.** He named it three separate
+times in one day (05/08/2026: "למה אתה צריך אותי בעצם?"), which is what graduated it to a rule.
+What is in your lane you DO, then report: a reversible technical detail — decide and report ·
+a record of what you did — write it · a rule for others — propose it · a contradiction between
+two written things — reconcile it and report one line (the full lane test:
+`_shared/parallel-sessions.md`). Never park with him an item that is yours. Everything else about talking to him — plain Hebrew, tables, recommendation-first, concrete
 scenarios with real data, batching, "לא בכוח", the honest ✅/◐/⚠️ — is already binding from
 `~/.claude/CLAUDE.md` and `PROJECT_MASTER §1`; apply it, don't restate it.
 
@@ -181,3 +188,10 @@ asks of each whether it is still alive.
 broke every line-anchor beneath it, and a second edit armed the Stop hook against a read-only
 stage — both invisible to their author. After an edit of yours that deletes or moves things,
 name out loud what else rested on them.
+
+## Editing this file
+
+One filter before any addition — the predecessor reached ~230 lines and 22 modes and died of
+it: **what will a session do DIFFERENTLY because of this line?** No concrete answer ⇒ the line
+does not enter. And a mistake earns a rule only on its second or third occurrence
+(`_shared/failure-modes.md` 🅳) — the first lives as a dated note.
