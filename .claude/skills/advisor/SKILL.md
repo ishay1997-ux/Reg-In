@@ -197,6 +197,24 @@ the repo · and what does this not mention that it should. That exact wording is
 findings; "תבקר את זה" returns "נראה בסדר". `llm-council` is proposed and never run on your
 own initiative (root `CLAUDE.md`).
 
+🔴 **And a THIRD lens for any artifact Ishay will personally walk through** — a prompt he will
+paste, a plan he will execute, a rulings round: **"walk this as Ishay would experience it, turn
+by turn, and find where the CONVERSATION fails him."** Not facts, not omissions — those are the
+two above. This one asks: where is he made to invent an answer instead of correcting a
+declaration · where does a round exceed his capacity · where would he say "לא הבנתי" · where is
+approving the path of least resistance · where does an idea of his get absorbed as a decision ·
+where is he handed certainty with no source. **What makes it work, and both halves are required:**
+hand the checker **Ishay's own expectations as the STANDARD** (§1's filters, the seven points, his
+verbatim quotes) and **none of your own findings**, so it cannot grade you instead of the artifact.
+*(Measured 05/08/2026 on the module-4 Discovery prompt: **five** fresh reviewers had already run
+facts · feasibility · cross-stage contradictions · what-is-missing · exaggeration, and this one
+lens returned **nine** findings none of them saw — three of them severe, including that the
+"≤3 questions" ceiling caps quantity but not TYPE, so three process questions comply fully while
+forcing a non-expert to invent answers. Ishay's own verdict: "זו הבדיקה הכי טובה שראיתי לפרומפט".
+It is the only lens that catches "he will approve without understanding", which is the failure
+mode nothing else in this project detects.)* **Cost: one agent.** It earns its place by the
+dosing rule above — an artifact he walks through personally is reused, and its errors are silent.
+
 ## The shift's closing deliverable — a work plan (Ishay's ruling, 05/08/2026)
 
 An advisory shift ends with a work plan he can walk, not only a report. His words: *"בסוף גם
