@@ -34,6 +34,13 @@ TOOL=$(printf '%s' "$INPUT" | grep -o '"tool_name"[[:space:]]*:[[:space:]]*"[^"]
 CMD=$(printf '%s' "$INPUT" | grep -o '"command"[[:space:]]*:[[:space:]]*"\(\\.\|[^"\\]\)*"' | head -1)
 [ -n "$CMD" ] || exit 0   # fail-open
 
+# ⚠️ הסרת עטיפת-ה-JSON חובה, לא ניקיון. החילוץ למעלה מחזיר `"command": "Get-Date …"`
+# **כולל שם-השדה** — ולכן עוגן ה-`^` שבבדיקת-ה-cmdlets נמדד מול `"command`, לא מול הפקודה.
+# בלי זה נתפסת רק פקודה שנייה-ואילך (אחרי `;`/`|`), ו-cmdlet **בתחילת** הפקודה — הצורה
+# הנפוצה ביותר, ובדיוק זו ש-`CLAUDE.md` נוקבת בשמה (`Get-Date`) — חומקת.
+# נמדד 05/08/2026: 6 מקרי-בדיקה, `Get-Date` בתחילת פקודה עבר בשקט לפני התיקון.
+CMD=$(printf '%s' "$CMD" | sed 's/^"command"[[:space:]]*:[[:space:]]*"//; s/"$//')
+
 block() {
   cat >&2 <<'MSG'
 🔀 תחביר PowerShell בכלי Bash — הפקודה לא הורצה.
