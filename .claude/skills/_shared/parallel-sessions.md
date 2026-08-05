@@ -66,9 +66,25 @@ files — is **proposed to Ishay as a recommendation, not written unilaterally**
 evidence: 710's 300-line skill bloat was born from local-context sessions each adding
 "their" paragraph.
 
-> ⚠️ **This bullet was re-targeted 05/08/2026 and needs Ishay's confirmation.** It
-> originally read *"builders REPORT and **you** filter and write"* — the filter was the
-> manager session. With that role gone, a blanket swap would have produced *"Ishay filters
-> and writes"*, which is false: he does not write docs. The principle preserved above is
-> the anti-bloat half (don't let every session append its own paragraph to shared files);
-> **who now performs the filtering is an open question for Ishay, not a settled fact.**
+### ✅ Resolved 05/08/2026 (Ishay's ruling) — and the answer is a distinction, not one rule
+
+The bullet originally read *"builders REPORT and **you** filter and write"*, where the filter
+was the manager session. A blanket swap would have produced *"Ishay filters and writes"* —
+false; he does not write docs. **What replaces it splits into two, because the two halves have
+different evidence:**
+
+- **Your own session's record — `STATUS.md` and `CLAUDE_CODE_LOG.md`: you write it yourself.
+  No filter, no intermediary.** *(Measured 05/08/2026: **8 commits to those two files between
+  10:09 and 11:19 from two different sessions**, zero clobbering, zero loss.)* **The guard is
+  mechanical, not a person** — the three rules under "Before every write" above: explicit
+  pathspec on the `commit`, `git status` on the file re-measured that same turn, and the Stop
+  hook forcing each session to land its own entry. ⚠️ **The honest limit of that evidence: one
+  day, two sessions. It does not prove five concurrent.** It was preferred over inventing an
+  authority that had none.
+- **Cross-cutting content — iron rules, skills, memory, the plan, lessons spanning files:
+  still PROPOSED to Ishay, never written unilaterally. Unchanged.** The anti-bloat evidence
+  stands on its own and has nothing to do with who managed whom: 710's 300-line skill bloat
+  was born from local-context sessions each appending "their" paragraph.
+
+**The test, in one line:** *is this a record of what I did, or a rule for what others must do?*
+**A record — write it. A rule — propose it.**
