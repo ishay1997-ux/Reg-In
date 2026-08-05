@@ -168,9 +168,15 @@ An advisory shift ends with a work plan he can walk, not only a report. His word
 נותן לי תוכנית עבודה שאלך לפיה, ואני עושה פרומפט-פרומפט לפי מה שיגיד."* The shape, taken from
 the one exemplar he approved (the 3-day plan of 05/08/2026):
 
+The plan is Ishay's attention interface, not project bookkeeping — its test is three
+certainties: what HIS next action is · what runs without him · that nothing deferred was lost
+(his correction, 05/08/2026: "שאל את עצמך מה המטרה").
+
+- **The first line is always "הפעולה הבאה שלך"** — one paste or one click — before any table.
 - **Every line is a prompt he can paste** — or names who writes that prompt and when.
 - The plan opens with the **measured pace** (that day's `git log`, never an estimate) and the
-  **binding constraint** (the deadline) before any task.
+  **binding constraint** — one standing/at-risk line against the deadline (`00_roadmap` §3) —
+  before any task.
 - Every line carries **what is needed from him** (👤) — so he knows where he is inside it.
 - **One 🔴 recommendation that changes the plan** beats a flat list — a plan is a decision,
   not an inventory.
