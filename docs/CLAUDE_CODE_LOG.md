@@ -177,6 +177,13 @@
   The instruction-file contradiction was left **unruled on purpose**: one instance existed, it was
   fixed, and building a precedence hierarchy for two files that disagreed once is governance bought
   ahead of need.
+- **The removal plan moved from a conversation into the repo** — `docs/plans/manager-removal.md`,
+  rewritten against its own fresh-eyes review (5 false claims, 13 missing surfaces) and carrying the
+  one question left deliberately unanswered rather than guessed: is this cleanup, or step one of the
+  migration to Discovery→…→Close. **Written to the repo and not a scratchpad on purpose** — those
+  findings existed in one conversation only, and by Ishay's own rule a finding with no durable home
+  does not happen. `docs/plans/attic/` holds the 38 lines cut from `module-blueprint/template.md`,
+  harvested before shrinking.
 - **And one rule left the repo entirely:** the fresh-eyes review of any prompt that asserts repo
   facts or authorises something irreversible now lives in `~/.claude/CLAUDE.md` (cross-project, by
   Ishay's ruling) — with the two questions that make it work, and the measurement that earned it:
