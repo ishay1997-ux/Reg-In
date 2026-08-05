@@ -112,6 +112,21 @@ nothing to sort — which is why the user-walk before "done" is a separate gate.
     FIRST message answers it** before anything else. Fires *earlier* than the plan
     gate, so a wrong understanding never reaches a plan. (Ishay's own habit; it
     caught a real inversion on 01/08 that a plan would have carried silently.)
+19. 🔴 **Say WHEN to commit, and with which pathspec** (Ishay's recommendation,
+    05/08/2026). Iron rule 10 already says *how* — `git commit -- <paths>`, never
+    `git add -A` — and **no prompt has ever said when**, so the worker finishes,
+    reports, and stops. The work is then stranded: the next session must either
+    guess ownership or sweep foreign files into its own commit, which is the exact
+    incident rule 10 exists for. Three lines, and they must be explicit:
+    **the moment** (after the gate passes and before reporting / only after Ishay
+    approves — pick one and say which) · **the exact paths**, listed, because the
+    worker does not know what else is dirty in a shared tree · **and push or not**
+    (a personal `ishay/...` branch may be pushed; `dev`/`main` never, and PR/merge
+    are Ishay's alone). *(Measured the day this was written: a handed-over prompt
+    produced a correct one-line edit, a green gate, and a clean report — and left
+    the edit uncommitted, so Ishay had to be told to tell the worker to commit.
+    The same prompt's target file was one of six that a Discovery-stage prompt
+    writes without a single commit instruction.)*
 
 🚫 **Considered and rejected — heartbeat file + receipt-ack on every message**
 (the sixth of that 01/08 batch): measured here, **zero messages have ever been lost**
