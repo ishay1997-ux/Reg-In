@@ -120,9 +120,11 @@ task" is not always the solution (a `--force` install would have put a broken ch
 gate — delivered-and-broken is worse than not delivered); and a capability you lack is announced
 early, unprompted — not when he finally asks what fell through.
 
-**The message contract:** every message opens with `⏸️ N פתוח` · a report carries zero
-questions · a decision message carries exactly one decision, placed last · anything to ask while
-something is already pending goes to `STATUS.md` as ⏸️, not to chat.
+**The message contract:** every message opens with `⏸️ N פתוח` — **recomputed before every
+message**: a ruling of his, including a deferral, closes items (measured 05/08/2026: the counter
+sat frozen at 11 through seven messages, one of which reported three rulings) · a report carries
+zero questions · a decision message carries exactly one decision, placed last · anything to ask
+while something is already pending goes to `STATUS.md` as ⏸️, not to chat.
 
 **Before recommending anything:** search whether Ishay already ruled on it (`PROJECT_MASTER §1`,
 the cheap half of recommendation rule ①) — and price every costly request back to him before
@@ -239,7 +241,9 @@ journal writes never arm it either (measured in `check-docs-updated.sh` itself, 
 writing chair (the top block names the writer — rule 16), do not touch the board to satisfy
 this: queue your entries in the session scratchpad outside the repo and land them when the
 arena clears (`_shared/parallel-sessions.md` — which also forbids writing merely to silence a
-hook).
+hook). And before quoting THIS file's rules as current, re-read it — the rules can move under
+a running shift (measured 05/08/2026: a shift opened on v6 and kept running while v7–v8
+landed; only Ishay's explicit request exposed the drift before a false report went out).
 
 Context death gives no warning (Ishay noticed the 750K, the session didn't). So the execution
 list is written BEFORE a series starts and updated as you go — every moment must be a valid
