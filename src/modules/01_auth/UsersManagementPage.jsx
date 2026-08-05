@@ -1,6 +1,7 @@
-// מסך ניהול משתמשים - טאב ראשון בתוך "ניהול מערכת" (SystemManagementPage), נגיש למנכ"ל בלבד.
-// ה-Route כבר מוגן ב-ProtectedRoute allow={CEO_ROLE_NAME} (App.jsx) ו-RLS אוכף גם ברמת ה-DB,
-// לכן אין כאן יותר בדיקת session/role עצמאית כפולה - רק טעינת הדאטה בפועל דרך useAuth().
+// מסך ניהול משתמשים - טאב ראשון בתוך "ניהול מערכת" (SystemManagementPage); בפועל מנכ"ל בלבד.
+// ה-Route כבר מוגן ב-ProtectedRoute allow={SYSTEM_MODULES} (App.jsx - permission-driven, לא role
+// קשיח) ו-RLS אוכף גם ברמת ה-DB, לכן אין כאן בדיקת session/role עצמאית כפולה - רק טעינת הדאטה
+// בפועל דרך useAuth().
 // טבלת עובדים, הוספת משתמש חדש, ומצב פעיל/לא-פעיל דו-כיווני (status='active'/'inactive').
 // ⚠️ בכוונה אין כאן שום מסגור של "מחיקה": אין טקסט/אייקון "מחק", ואין הסתרה חד-כיוונית -
 // שורות inactive מוצגות בטבלה עם תג סטטוס, וניתן להחזיר אותן ל-active מאותו כפתור בדיוק.
@@ -15,6 +16,7 @@ import { supabase } from '@/supabaseClient'
 import { useAuth } from '@/contexts/AuthContext'
 import { useConfirm } from '@/components/ConfirmDialog'
 import { useToast } from '@/components/ToastProvider'
+import LoadingOrError from '@/components/LoadingOrError'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -210,24 +212,16 @@ export default function UsersManagementPage() {
   }
 
   if (loading) {
-    return <p className="text-slate-500">טוען...</p>
+    return <LoadingOrError loading />
   }
 
   if (loadError) {
-    // מסלול-שגיאה עם "נסה שוב" (תיקון 11/07): קודם החלפת-כל-המסך אילצה רענון-דפדפן כדי להתאושש.
     return (
-      <div className="flex flex-col items-center gap-3 py-12 text-center" role="alert">
-        <p className="text-red-600 font-semibold">{loadError}</p>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={loadUsersAndRoles}
-          className="h-auto py-2 px-4 rounded-lg border-slate-300 text-slate-700"
-          data-testid="users-load-retry"
-        >
-          נסה שוב
-        </Button>
-      </div>
+      <LoadingOrError
+        error={loadError}
+        onRetry={loadUsersAndRoles}
+        retryTestId="users-load-retry"
+      />
     )
   }
 

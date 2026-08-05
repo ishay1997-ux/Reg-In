@@ -36,14 +36,18 @@
 
 ## איך עובדים עם Claude — בקצרה
 - **מדריך אחד = פגישת עבודה אחת.** כל מדריך ב-`docs/guides/modules/` בנוי מ-8 סעיפים קבועים, כולל **שלושת הפרומפטים להדבקה** (פתיחה / המשך-בנייה / סגירה) ו"בדיקת קבלה".
-- **מודול חדש** נפתח עם פרומפט הפתיחה (Claude קורא את `docs/templates/create_micro_guide_template.md` בעצמו ומייצר **מדריך מיקרו** — בלופרינט חי באנגלית, כתוב ל-Claude → אתה מאשר → Claude בונה, מאמת עצירות 🔻 טכניות לבד ועוצר לאישורך בסוף כל פזה) ונסגר עם פרומפט הסגירה (אודיט + עדכון כל התיעוד + הוראות PR מודפסות לך). מדריך המיקרו מתעדכן תוך כדי העבודה — hook חוסם סיום סשן אם קוד מודול השתנה בלי עדכונו. הפרטים: [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) §5.
+- **אפשר גם בלי הדבקה (מ-23/07/2026):** לשלושת הפרומפטים יש **סקילים** בריפו (`.claude/skills/module-blueprint` · `module-build` · `module-close`) שנטענים אוטומטית לפי מה שאתה אומר — "פתח מודול 4" / "תמשיך לבנות" / "סגור את המודול". הדבקת הפרומפט מהמדריך עדיין עובדת (הוא חבילת-ההקשר וה-fallback). **ומאותו יום גם 3 סקילי-עזר לתהליכים החוזרים:** ‏"בוא נסגור שאלות פתוחות" (`section7-rulings` — סבב-הכרעות שקל לעבור) · "מיזגתי" (`post-merge` — אימות-בראיות + היפוך-STATUS) · "בוא נעבור על מה שבנית" (`feature-acceptance` — סיור-קבלה מודרך מול מה שהתכוונת).
+- **מודול חדש** נפתח עם פרומפט הפתיחה או הסקיל `module-blueprint` (Claude קורא את טמפלט-הבלופרינט `.claude/skills/module-blueprint/template.md` בעצמו ומייצר **מדריך מיקרו** — בלופרינט חי באנגלית, כתוב ל-Claude → אתה מאשר → Claude בונה, מאמת עצירות 🔻 טכניות לבד ועוצר לאישורך בסוף כל פזה) ונסגר עם פרומפט הסגירה / הסקיל `module-close` (אודיט + עדכון כל התיעוד + הוראות PR מודפסות לך). מדריך המיקרו מתעדכן תוך כדי העבודה — hook חוסם סיום סשן אם קוד מודול השתנה בלי עדכונו. הפרטים: [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) §5.
 - **בסוף כל סשן** Claude מעדכן את היומנים ואת STATUS.md — יש hook שלא נותן לו לסיים בלי זה.
 - **סודות** (`.env.local`, סיסמאות) נשארים מקומיים בלבד — לעולם לא בריפו, בצ'אט או במדריכים.
 
 ## מפת כל התיעוד
 | מסמך | תפקיד |
 |------|-------|
-| [CLAUDE.md](CLAUDE.md) | כללי הברזל של Claude — נטען אוטומטית בכל סשן |
+| [CLAUDE.md](CLAUDE.md) | **מוקשים + שערים + אינדקס 17 כללי-הברזל** — נטען אוטומטית בכל סשן. דק בכוונה (שופץ 28/07/2026) |
+| `supabase/migrations/CLAUDE.md` · `src/CLAUDE.md` · `docs/CLAUDE.md` | **הפרוטוקולים המלאים, נטענים רק כשנוגעים בתיקייה** — פרוטוקול-DB (כולל שער ה-typed-echo) · מוקשי-קוד ומודל-אבטחה · פרוטוקול-תיעוד. זהו "מפת-הקוד" של הפרויקט: יושבת ליד הקוד ולכן לא מתיישנת |
+| [docs/toolbox.md](docs/toolbox.md) | 🧰 **ארגז הכלים** — אילו פלאגינים דלוקים/כבויים ב-REG-IN ומתי לבקש להדליק |
+| [docs/archive/](docs/archive/) | 🗄️ גרסאות-עבר מלאות (CLAUDE.md · STATUS · יומן-סשנים · מדריך-מ3) — קריאה בלבד, שום דבר לא נמחק |
 | [STATUS.md](STATUS.md) | **לוח המצב היחיד** — סטטוס מודולים + הצעד הנוכחי |
 | [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) | מפת הדרכים: מודולים, תלויות, אבני דרך, **לוח-הדדליינים ל-19/09**, שיטת העבודה |
 | [docs/guides/modules/](docs/guides/modules/) | מדריך שלב לכל מודול, בעברית (8 סעיפים + 3 פרומפטים בכל אחד) |
@@ -56,17 +60,18 @@
 | [docs/architecture_and_qa_roadmap.md](docs/architecture_and_qa_roadmap.md) | סטנדרט הנדסי + Definition of Done + QA |
 | [docs/claude_routines.md](docs/claude_routines.md) | 4 הרוטינות של Claude — הגדרות קנוניות + פרוטוקול עדכון |
 | [docs/code_review_2026-07.md](docs/code_review_2026-07.md) | בקרת קוד מודול 1 + המלצות להמשך |
-| [docs/CHANGELOG.md](docs/CHANGELOG.md) | יומן שינויים מתוארך (DB+קוד) — ציר-הזמן של הפרויקט |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | ⛔ **הוקפא 23/07/2026 — ארכיון בלבד** (ציר-הזמן החי: `git log` + CLAUDE_CODE_LOG · DB: db_roadmap+migrations · חובות: PROJECT_MASTER §6) |
 | [docs/CLAUDE_CODE_LOG.md](docs/CLAUDE_CODE_LOG.md) | יומן הסשנים של Claude (נרטיב, החלטות, tech-debt) |
 | [supabase/README.md](supabase/README.md) | ניהול מיגרציות DB |
 | [docs/micro_guides/](docs/micro_guides/) | מדריכי מיקרו — בלופרינטים חיים **באנגלית, כתובים ל-Claude** (module-1.md ✅ · module-2.md ✅ מוזג · השאר ייווצרו בפתיחת כל מודול) |
-| [docs/templates/](docs/templates/) | התבניות (אנגלית) לפתיחת מודול ולסגירתו — Claude קורא אותן בעצמו |
+| [.claude/skills/](.claude/skills/) | סקילי-זרימת-המודול (`module-blueprint`/`module-build`/`module-close`; טמפלטי הפתיחה/סגירה חיים בתוכם כ-`template.md`) + סקילי-עזר רפו-מקומיים (`section7-rulings`/`post-merge` + `quality-audit` — סקירת-איכות מקיפה של כל הקוד) — נטענים לפי טריגר. Claude קורא בעצמו. **`feature-acceptance` עבר לתיקיית-הסקילים הגלובלית `~/.claude/skills/` (23/07 לילה)** — פרויקט-אגנוסטי (סגנון-העבודה של ישי, לא מבנה-הקבצים של REG-IN), משמש בכל פרויקט שלו |
+| **בקרת-איכות אוטומטית (23/07 לילה)** | `npm run dup` = jscpd (כפילות בין-קבצים) · `eslint-plugin-sonarjs` ב-`eslint.config.js` (כפילויות/מורכבות-יתר, כרגע `warn`, מוקשה ל-`error` אחרי מ3) · CI מריץ שניהם לא-חוסם בשלב-האזהרות. הסקירה העמוקה היזומה = הסקיל `quality-audit` |
 | [docs/mockups/](docs/mockups/) | 44 צילומי מוקאפ + [תיאורים](docs/mockups/mockup_descriptions.md) — רפרנס ויזואלי בלבד |
 | `docs/reference_spec/` | האפיון המאושר (פרקים 5–6) — **קפוא, לא לערוך**; + `products_and_params.md` (החלטות Seed) |
 
 ## היררכיית מקורות אמת (בסתירה — הגבוה קובע)
 `docs/schema.sql` ← האפיון המאושר (פרקים 5–6, `reference_spec/`) ← המוקאפים ← המדריכים.
 
-> ⚠️ קבצי `reference_spec/*.md` הם ייצוא קפוא של האפיון המאושר — לא לערוך ידנית. סטיות מהאפיון נרשמות בתיעוד החי בלבד (PROJECT_MASTER / מדריך המודול / CHANGELOG).
+> ⚠️ קבצי `reference_spec/*.md` הם ייצוא קפוא של האפיון המאושר — לא לערוך ידנית. סטיות מהאפיון נרשמות בתיעוד החי בלבד (PROJECT_MASTER / מדריך המודול / CLAUDE_CODE_LOG).
 
 </div>

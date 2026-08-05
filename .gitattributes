@@ -1,3 +1,7 @@
-# סקריפטי bash חייבים סופי-שורה LF — עם CRLF של Windows הם נשברים ב-Git Bash
-# (שגיאות '\r': command not found). בלי זה, core.autocrlf=true היה ממיר אותם ב-checkout.
-*.sh text eol=lf
+# כלל-על: כל קובץ-טקסט נשמר ב-Git עם סוף-שורה LF (Git מזהה בעצמו טקסט מול בינארי —
+# תמונות/פונטים לא נגעים). זה מתקן בעיה קיימת: קבצים שנוצרו/נערכו ב-Windows נשמרו
+# עם CRLF, ו-Prettier (שמצפה ל-LF כברירת-מחדל) נכשל עליהם ב-`npm run format:check` —
+# למרות שהתוכן עצמו תקין ו-Git תמיד שמר LF במאגר (ה-CI, שרץ על Linux, מעולם לא נפגע).
+# מכליל את הכלל הספציפי של *.sh שהיה כאן (סקריפטי bash חייבים LF — CRLF שובר אותם
+# ב-Git Bash עם שגיאת '\r': command not found).
+* text=auto eol=lf

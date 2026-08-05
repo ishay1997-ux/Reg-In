@@ -16,10 +16,36 @@ import { supabase } from '@/supabaseClient'
 // לזהות קריאה מחוץ ל-<AuthProvider>.
 const AuthContext = createContext(null)
 
+// שליפת מפת ההרשאות של תפקיד + השטחה ל-{ module_name: level } לגישה O(1) מהרכיבים
+// (Sidebar/ProtectedRoute). מחוץ לקומפוננטה כי היא יחידת-עבודה שלמה בלי תלות ב-state.
+// ⚠️ **מחזירה `failed` ולא זורקת, ולא מחזירה מפה ריקה בכשל** — הבחנה שהיא כל התיקון של
+// 31/07/2026: מפה ריקה נקראת אצל הקוראים כ"אין לך שום הרשאה", וכשל-רשת אינו זה.
+async function fetchPermissionMap(roleId) {
+  const { data, error } = await supabase
+    .from('permissions')
+    .select('permission_level, modules(module_name)')
+    .eq('role_id', roleId)
+  if (error) return { map: null, failed: true }
+
+  const map = {}
+  for (const row of data || []) {
+    if (row.modules?.module_name) {
+      map[row.modules.module_name] = row.permission_level
+    }
+  }
+  return { map, failed: false }
+}
+
 export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true) // true עד לסיום הטעינה הראשונה — מונע הבהוב/ניתוב לפני שידוע מי המשתמש
   const [user, setUser] = useState(null) // { email, fullName, phone, status, roleId, roleName } או null (אורח)
   const [permissions, setPermissions] = useState({}) // { [module_name]: 'edit' | 'view' | 'blocked' }
+  // ⚠️ **"לא הצלחנו לטעון הרשאות" אינו "אין לך הרשאה"** (סבב-תיקון 31/07/2026). עד לתאריך
+  // הזה שגיאת השאילתה למטה לא נלכדה כלל: תקלה רגעית ⇒ מפה ריקה ⇒ ProtectedRoute דחה כל
+  // מסך עם "אין לך הרשאה לצפות במסך זה" — מסך שנראה **בדיוק** כמו שלילת-הרשאות אמיתית.
+  // וזה לא תרחיש-קצה: `loadUser` רץ מחדש בכל אירוע-אימות כולל רענון-טוקן, כלומר תקלת-רשת
+  // בת-שנייה באמצע יום-עבודה מנתקת משתמש עובד. הדגל הוא המצב-השלישי המוצהר.
+  const [permissionsError, setPermissionsError] = useState(false)
 
   // authError — הודעת שער-הרשאה שנקבעת כשיש session תקין ב-Auth אך המשתמש אינו מורשה
   // במערכת (אין שורת users). קריטי בעיקר לזרימת Google OAuth: היא חוזרת ל-app (לא ל-LoginPage),
@@ -50,6 +76,7 @@ export function AuthProvider({ children }) {
     if (!email) {
       setUser(null)
       setPermissions({})
+      setPermissionsError(false)
       setLoading(false)
       return
     }
@@ -63,16 +90,31 @@ export function AuthProvider({ children }) {
       .single()
     if (!mountedRef.current) return
 
-    // שורה חסרה/שגיאה: יש session תקין ב-Auth אך אין שורת users תואמת — למשל התחברות Google
+    // ⚠️ **שגיאה רגעית אינה "אין שורת users"** (סבב-תיקון 31/07/2026, אותה משפחת-כשל של
+    // ההרשאות למטה — וחמורה ממנה): כל שגיאה כאן גררה signOut מלא + "החשבון אינו מורשה",
+    // כלומר תקלת-רשת בת-שנייה **זרקה מהמערכת** משתמש עובד והאשימה אותו. `.single()` מחזיר
+    // `PGRST116` כשאין שורה — זה המצב היחיד שבו "אינך מורשה" הוא אמת, ורק הוא מנתק.
+    if (myRowError && myRowError.code !== 'PGRST116') {
+      // לא מנתקים: אם כבר יש משתמש טעון, הוא ממשיך לעבוד עם המפה שבידו. אם זו טעינה
+      // ראשונה (user עדיין null), MainLayout ינווט ל-/login — ולכן authError, שאחרת
+      // המשתמש היה מגיע למסך-כניסה בלי מילת-הסבר אחת.
+      setPermissionsError(true)
+      setAuthError('תקלה זמנית בטעינת פרטי החשבון. נסה שוב בעוד רגע.')
+      setLoading(false)
+      return
+    }
+
+    // שורה חסרה: יש session תקין ב-Auth אך אין שורת users תואמת — למשל התחברות Google
     // עם חשבון שאינו מורשה במערכת. מנתקים את ה-session היתום ומדליקים authError, כדי שמסך
     // ההתחברות (שאליו MainLayout יפנה כש-user=null) יסביר למשתמש למה נחסם. בלי ה-signOut היה
     // נשאר session מיותם שמנווט בלולאה ל-/login בלי הודעה.
-    if (myRowError || !myRow) {
+    if (!myRow) {
       await supabase.auth.signOut()
       if (!mountedRef.current) return
       setAuthError('החשבון שאיתו התחברת אינו מורשה במערכת. פנה למנכ"ל.')
       setUser(null)
       setPermissions({})
+      setPermissionsError(false)
       setLoading(false)
       return
     }
@@ -92,22 +134,24 @@ export function AuthProvider({ children }) {
     // 3) הרשאות נטענות רק למשתמש 'active'. משתמש שעבר "מחיקה רכה" (status='inactive')
     //    מקבל מפת הרשאות ריקה — כך גם אם מסך כלשהו יטעה ויציג אותו, אין לו מודול מותר.
     if (myRow.status === 'active') {
-      const { data: permRows } = await supabase
-        .from('permissions')
-        .select('permission_level, modules(module_name)')
-        .eq('role_id', myRow.role_id)
+      const { map, failed } = await fetchPermissionMap(myRow.role_id)
       if (!mountedRef.current) return
 
-      // משטחים לרשומה { module_name: level } לגישה O(1) מהרכיבים (Sidebar/ProtectedRoute).
-      const map = {}
-      for (const row of permRows || []) {
-        if (row.modules?.module_name) {
-          map[row.modules.module_name] = row.permission_level
-        }
+      if (failed) {
+        // ⚠️ **לא מאפסים את המפה.** זה לב התיקון: ברענון-טוקן באמצע סשן למשתמש כבר יש
+        // מפה תקפה, ואיפוסה היה מוציא אותו מהמסך שהוא עובד בו בגלל תקלה בת-שנייה. הישנה
+        // עדיין נכונה (הרשאות אינן משתנות תוך כדי), ואם היא שגויה — ה-RLS חוסם ממילא
+        // (כלל 9: ה-UI נוחות, ה-DB החומה). בטעינה ראשונה המפה ריקה, ואז הדגל הוא מה
+        // שגורם ל-ProtectedRoute לומר "לא הצלחנו לטעון" במקום "אין לך הרשאה".
+        setPermissionsError(true)
+      } else {
+        setPermissions(map)
+        setPermissionsError(false)
       }
-      setPermissions(map)
     } else {
+      // משתמש לא-active: מפה ריקה היא **אמת** ולא כשל, ולכן הדגל מכובה.
       setPermissions({})
+      setPermissionsError(false)
     }
 
     setLoading(false)
@@ -144,6 +188,7 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut()
     setUser(null)
     setPermissions({})
+    setPermissionsError(false)
   }, [])
 
   // ניקוי ידני של authError — מסך ההתחברות קורא לזה כשהמשתמש מתחיל להקליד/מנסה מחדש,
@@ -152,7 +197,16 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ loading, user, permissions, authError, clearAuthError, reload: loadUser, signOut }}
+      value={{
+        loading,
+        user,
+        permissions,
+        permissionsError,
+        authError,
+        clearAuthError,
+        reload: loadUser,
+        signOut,
+      }}
     >
       {children}
     </AuthContext.Provider>

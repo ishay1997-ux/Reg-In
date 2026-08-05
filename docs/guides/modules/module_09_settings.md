@@ -41,7 +41,7 @@
 ואת docs/PROJECT_MASTER.md (סעיף 5.16).
 אנחנו פותחים את מודול 9 — הגדרות מערכת, על ענף ishay/module-9-settings.
 
-קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
+קרא בעצמך את התבנית .claude/skills/module-blueprint/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=9 · MODULE_NAME=הגדרות מערכת · RELEVANT_SECTIONS=§5.16 · BRANCH_NAME=ishay/module-9-settings
 
 הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-9.md.
@@ -60,7 +60,7 @@ MODULE_NUMBER=9 · MODULE_NAME=הגדרות מערכת · RELEVANT_SECTIONS=§5.
 **3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-9.md.
-קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+קרא בעצמך את התבנית .claude/skills/module-close/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=9 · MODULE_NAME=הגדרות מערכת · BRANCH_NAME=ishay/module-9-settings
 בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
 בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.

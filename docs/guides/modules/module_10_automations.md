@@ -14,7 +14,7 @@
 ## ② תנאי כניסה
 
 - [ ] מודולים 3, 6, 8, 9 מוזגו (אוטומציות תלויות בהצעות, פרויקטים, כספים, פרמטרים).
-- ⏳ **חוב מפורש ממודול 1** (מ-[docs/CHANGELOG.md](../../CHANGELOG.md) "חובות עתידיים"): הפעלת Leaked Password Protection + זרימת "שכחתי סיסמה" מלאה — היו מתוכננים למודול 10 מהתחלה.
+- ⏳ **חוב מפורש ממודול 1** ([PROJECT_MASTER §6](../../PROJECT_MASTER.md) + db_roadmap A-23): הפעלת Leaked Password Protection + זרימת "שכחתי סיסמה" מלאה — היו מתוכננים למודול 10 מהתחלה.
 - 🛑 **§7.60 (07/07 ערב)** — למודול 10 אין סעיף-אפיון: הבלופרינט מסנתז את היקפו מ-§1.8 (התבניות) + טריגרי T1–T3 + חצאי §7.36/42/45/57, ומאושר ע"י ישי כסטייה-מתועדת.
 - 🛑 **§7.36** — טיפול בכשלי-שליחה (bounce/SMTP/PDF): ‏retry? חיווי? — זו ליבת המודול הזה, פתוח מהאודיט.
 - ⏳ **§7.57** — אם יוכרע "דו"ח-שכר מתוזמן" (מודול 8) — המנגנון נבנה כאן.
@@ -43,11 +43,11 @@
 **1) פתיחת מודול (פעם אחת):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/modules/module_10_automations.md,
-docs/CHANGELOG.md (חלק "חובות עתידיים") ו-docs/PROJECT_MASTER.md.
+ו-docs/PROJECT_MASTER.md §6 (רשם-החובות — כל שורת '🚧 מ10') + db_roadmap.
 אנחנו פותחים את מודול 10 — אוטומציות, על ענף ishay/module-10-automations.
 
-קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
-MODULE_NUMBER=10 · MODULE_NAME=אוטומציות · RELEVANT_SECTIONS=חובות עתידיים ב-CHANGELOG · BRANCH_NAME=ishay/module-10-automations
+קרא בעצמך את התבנית .claude/skills/module-blueprint/template.md ובצע אותה כלשונה עם:
+MODULE_NUMBER=10 · MODULE_NAME=אוטומציות · RELEVANT_SECTIONS=PROJECT_MASTER §6 (חובות '🚧 מ10') + db_roadmap · BRANCH_NAME=ishay/module-10-automations
 
 הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-10.md.
 ```
@@ -65,7 +65,7 @@ MODULE_NUMBER=10 · MODULE_NAME=אוטומציות · RELEVANT_SECTIONS=חובו
 **3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-10.md.
-קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+קרא בעצמך את התבנית .claude/skills/module-close/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=10 · MODULE_NAME=אוטומציות · BRANCH_NAME=ishay/module-10-automations
 בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
 בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.

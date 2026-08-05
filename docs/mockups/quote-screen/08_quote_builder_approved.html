@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מוקאפ 3.2 — מסך בניית הצעת מחיר</title>
+<style>
+  :root{
+    --primary:#0D9488; --bg:#F8FAFC;
+    --s100:#F1F5F9; --s200:#E2E8F0; --s300:#CBD5E1;
+    --s400:#94A3B8; --s500:#64748B; --s600:#475569; --s700:#334155; --s800:#1E293B;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:"Segoe UI",Arial,sans-serif;color:var(--s800);font-size:14px}
+  .wrap{max-width:1320px;margin:0 auto;padding:16px 18px 28px}
+  .note{background:#FEF3C7;border:1px solid #FCD34D;color:#92400E;border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:12px;line-height:1.5}
+  h1{font-size:19px;margin:0}
+  .sub{color:var(--s500);font-size:12px;margin-top:2px}
+  .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:12px}
+  .btn{border:0;border-radius:8px;padding:8px 15px;font-size:13.5px;font-weight:600;cursor:default;display:inline-block}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-ghost{background:#fff;color:var(--s700);border:1px solid var(--s300)}
+  .btn-w{width:100%;text-align:center}
+  .grid{display:grid;grid-template-columns:1fr 296px;gap:14px;align-items:start}
+  .card{background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);padding:14px 16px;margin-bottom:12px}
+  .card h2{font-size:13px;margin:0 0 10px;color:var(--s700);display:flex;align-items:center;gap:7px}
+  .card h2 .n{background:var(--s100);color:var(--s500);border-radius:5px;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:11px}
+  .fields{display:grid;grid-template-columns:repeat(12,1fr);gap:9px 12px}
+  .f{display:flex;flex-direction:column;gap:3px;min-width:0}
+  /* קבוצה סגורה: כמה ערכים קצרים במסגרת אחת, במקום משבצת ענקית לכל מספר.
+     ⚠️ התווית והערך יושבים באותו אלמנט ובאותו כיוון — כך הם לא יכולים "להתפצל"
+     (הבאג שישי תפס: שורת-תוויות RTL מעל שורת-ערכים LTR). */
+  /* מכל-כיוון אחד (dir=ltr) שמכיל גם את שורת-התוויות וגם את שורת-הערכים, מיושרות באותן עמודות-גריד.
+     התווית מעל הקופסה — אבל אי-אפשר שהיא תשב מעל הערך הלא-נכון, כי שתי השורות נגזרות מאותה רשימה. */
+  .group{display:grid;align-items:end}
+  .glbl{font-size:11.5px;color:var(--s500);white-space:nowrap;text-align:center;padding-bottom:3px;overflow:hidden;text-overflow:ellipsis}
+  .gval{height:34px;display:flex;align-items:center;justify-content:center;background:#fff;
+        border-top:1px solid var(--s300);border-bottom:1px solid var(--s300);font-size:13.5px;direction:ltr}
+  .gval.first{border-left:1px solid var(--s300);border-radius:7px 0 0 7px}
+  .gval.last{border-right:1px solid var(--s300);border-radius:0 7px 7px 0}
+  .gval.ro{background:var(--s100);color:var(--s600)}
+  .gop{height:34px;display:flex;align-items:center;justify-content:center;padding:0 7px;color:var(--s400);font-size:12px;
+       background:var(--s100);border-top:1px solid var(--s300);border-bottom:1px solid var(--s300)}
+  .f label{font-size:11.5px;color:var(--s500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .inp{border:1px solid var(--s300);border-radius:7px;padding:6px 9px;font-size:13.5px;background:#fff;height:34px;display:flex;align-items:center;justify-content:space-between;overflow:hidden;white-space:nowrap}
+  .inp.locked{background:var(--s100);color:var(--s600);border-style:dashed}
+  .ltr{direction:ltr;text-align:right}
+  /* כל סכום כסף — כיוון שמאל-לימין ובידוד, כדי שסימן ה-₪ יישאר תמיד מימין לספרות.
+     בלי זה אותו טקסט "500 ₪" מוצג עם ה-₪ בצד ההפוך בהקשר עברי. */
+  .money{direction:ltr;unicode-bidi:isolate;display:inline-block}
+  /* בוחר-המוצר בשורה חדשה */
+  .pickcell{position:relative}
+  .pickbox{border:1px solid var(--primary);border-radius:7px;height:32px;display:flex;align-items:center;gap:7px;padding:0 9px;background:#fff;font-size:13px}
+  .pickpanel{position:absolute;top:calc(100% + 4px);right:0;width:330px;background:#fff;border:1px solid var(--s300);
+             border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.13);overflow:hidden;z-index:30}
+  .grp{font-size:10.5px;color:var(--s500);background:var(--s100);padding:4px 11px;font-weight:600}
+  .pitem{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 11px;border-bottom:1px solid var(--s100);font-size:13px}
+  .pitem.on{background:#F0FDFA}
+  .pitem .pn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pitem .pp{color:var(--s500);font-size:11.5px;white-space:nowrap}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;align-items:center}
+  .chip{background:var(--s100);color:var(--s600);border:1px solid var(--s200);border-radius:999px;padding:3px 10px;font-size:11.5px}
+  .chip.teal{background:#F0FDFA;color:#0F766E;border-color:#99F6E4;font-weight:600}
+  .mini{font-size:11.5px;color:var(--s500);margin-top:7px;line-height:1.5}
+  .mini b{color:var(--s600)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:right;font-weight:500;color:var(--s500);font-size:11.5px;padding:5px 6px;border-bottom:1px solid var(--s200)}
+  th.num,td.num{text-align:left}
+  td{padding:7px 6px;border-bottom:1px solid var(--s100);vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  .sku{color:var(--s400);font-size:11px;direction:ltr;display:inline-block;margin-right:6px}
+  .cell-inp{border:1px solid var(--s300);border-radius:6px;padding:4px 8px;background:#fff;display:inline-block;min-width:56px;text-align:left;direction:ltr}
+  .tier{display:block;font-size:10.5px;color:var(--s400)}
+  .dot{width:13px;height:13px;border-radius:50%;display:inline-block;vertical-align:-2px;border:1px solid var(--s300);margin-left:5px}
+  .del{color:#EF4444;text-align:center}
+  .addrow{margin-top:9px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .ok{font-size:11.5px;color:#0F766E;background:#F0FDFA;border:1px solid #CCFBF1;border-radius:6px;padding:4px 9px}
+  .sum{position:sticky;top:12px}
+  .sum .row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;padding:5px 0;color:var(--s600)}
+  /* עמודת-סכומים ברוחב קבוע ומיושרת לקצה — כך סימני ה-₪ מסתדרים אחד מתחת לשני,
+     כמו בכל מסמך כספי. בלי זה 964 ו-6,300 מתחילים באותה נקודה ונגמרים במקומות שונים. */
+  .sum .row b{direction:ltr;text-align:right;min-width:86px;color:var(--s700)}
+  .sum .row.neg b{color:#B91C1C}
+  .div{height:1px;background:var(--s200);margin:5px 0}
+  .total{display:flex;justify-content:space-between;align-items:center;background:var(--s100);border-radius:8px;padding:9px 11px;margin-top:7px}
+  .total b{font-size:21px;direction:ltr}
+  .profit{background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);padding:14px 16px;margin-bottom:12px}
+  .profit h3{margin:0 0 8px;font-size:13px;color:var(--s700);display:flex;justify-content:space-between;align-items:center}
+  .profit .prow{color:var(--s600);font-size:13px;padding:5px 0;display:flex;justify-content:space-between}
+  .profit .prow b{direction:ltr;color:var(--s700)}
+  .profit .prow.hi{border-top:1px solid var(--s200);margin-top:4px;padding-top:8px}
+  .profit .prow.hi b{color:#0F766E;font-size:15px}
+  .textarea{border:1px solid var(--s300);border-radius:7px;padding:7px 9px;font-size:13.5px;background:#fff;height:52px}
+  /* בוחר-הלקוח במצב פתוח */
+  .combo{position:relative;z-index:20}
+  .panel{position:absolute;top:calc(100% + 4px);right:0;left:0;background:#fff;border:1px solid var(--s300);
+         border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.13);overflow:hidden}
+  .opt{display:flex;align-items:center;gap:10px;padding:8px 11px;border-bottom:1px solid var(--s100);cursor:default}
+  .opt.on{background:#F0FDFA}
+  .opt .nm{font-weight:600;font-size:13.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .opt .meta{font-size:11.5px;color:var(--s500);white-space:nowrap}
+  .opt .disc{font-size:11px;background:#F0FDFA;color:#0F766E;border:1px solid #99F6E4;border-radius:999px;padding:1px 8px;white-space:nowrap}
+  .opt .disc.zero{background:var(--s100);color:var(--s500);border-color:var(--s200)}
+  .hit{background:#FEF08A;border-radius:2px}
+  .panel .foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 11px;background:var(--s50,#F8FAFC);border-top:1px solid var(--s200)}
+  .panel .foot .add{color:var(--primary);font-weight:600;font-size:13px}
+  .panel .cnt{font-size:11px;color:var(--s400);padding:5px 11px;background:var(--s100)}
+  @media(max-width:1000px){.grid{grid-template-columns:1fr}.fields{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="note">
+    <b>מוקאפ — לא קוד.</b> הנתונים = <b>דוגמת-האפיון המחייבת</b> (300 אורחים · 4 שעות · 5%+10% הנחה ⇒ <b>6,319 ₪</b>).
+    שמות המוצרים והמחירים נשלפו מהקטלוג האמיתי ב-DB. שמות הלקוחות ואנשי הקשר הם דוגמה — טבלת הלקוחות ריקה כרגע (0 שורות, נבדק היום).
+    <b>בוחר-הלקוח מוצג פתוח בכוונה</b> (הוקלד "הפק") כדי להראות את החיפוש; הוא מכסה חלק מהשדות שמתחתיו, וזה מה שיקרה גם באמת.
+  </div>
+
+  <div class="topbar">
+    <div>
+      <h1>הצעת מחיר חדשה</h1>
+      <div class="sub">תוקף ההצעה: 30 יום ממועד השליחה</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+
+      <!-- לקוח + אירוע בכרטיס אחד -->
+      <div class="card">
+        <h2><span class="n">1</span> לקוח ופרטי האירוע</h2>
+        <div class="fields">
+          <div class="f combo" style="grid-column:span 6">
+            <label>לקוח * <span style="color:var(--s400)">(מחפש בשם החברה, בשם איש הקשר ובתחילית הח"פ)</span></label>
+            <div class="inp" style="border-color:var(--primary);justify-content:flex-start;gap:8px">
+              <span style="color:var(--s400)">🔍</span>
+              <span>הפק<span style="color:var(--s400)">|</span></span>
+            </div>
+            <div class="panel">
+              <div class="opt on">
+                <span class="nm">חברת <span class="hit">הפק</span>ות בע"מ</span>
+                <span class="meta">· ח"פ <span class="ltr">514789234</span></span>
+                <span class="meta">· דנה לוי</span>
+              </div>
+              <div class="opt">
+                <span class="nm"><span class="hit">הפק</span>ות אור בע"מ</span>
+                <span class="meta">· ח"פ <span class="ltr">512300987</span></span>
+                <span class="meta">· רון שפירא</span>
+              </div>
+              <div class="opt">
+                <span class="nm">אולמי הנשיא</span>
+                <span class="meta">· ח"פ <span class="ltr">515664201</span></span>
+                <span class="meta">· שירה <span class="hit">הפק</span>ות</span>
+              </div>
+              <div class="foot">
+                <span class="add">+ לקוח חדש</span>
+              </div>
+            </div>
+          </div>
+          <div class="f" style="grid-column:span 3"><label>שם האירוע *</label><div class="inp">כנס טכנולוגיה שנתי</div></div>
+          <div class="f" style="grid-column:span 3"><label>תאריך משוער *</label><div class="inp ltr">15/09/2026</div></div>
+
+          <div class="f" style="grid-column:span 4"><label>מיקום *</label><div class="inp">אקספו תל אביב, ביתן 2</div></div>
+
+          <!-- שעות = פקד-טווח אחד ב-LTR: התחלה משמאל, סיום מימין (כמו שקוראים טווח-שעות, וכמו שזה מודפס ב-PDF) -->
+          <div class="f" style="grid-column:span 3">
+            <div class="group" dir="ltr" style="grid-template-columns:1fr auto 1fr">
+              <div class="glbl">שעת התחלה *</div><div></div><div class="glbl">שעת סיום *</div>
+              <div class="gval first">18:00</div><div class="gop">→</div><div class="gval last">22:00</div>
+            </div>
+          </div>
+
+          <div class="f" style="grid-column:span 2"><label>משך האירוע</label><div class="inp locked ltr">4 שעות</div></div>
+
+          <!-- כוח אדם: 300 ÷ 50 = 6 — נקרא כנוסחה, במקום שלוש משבצות ענקיות למספר דו-ספרתי -->
+          <div class="f" style="grid-column:span 3">
+            <div class="group" dir="ltr" style="grid-template-columns:1fr auto 1fr auto 1fr">
+              <div class="glbl">אורחים *</div><div></div><div class="glbl">יחס</div><div></div><div class="glbl">דיילות</div>
+              <div class="gval first">300</div><div class="gop">÷</div><div class="gval">50</div><div class="gop">=</div><div class="gval last ro">6</div>
+            </div>
+          </div>
+        </div>
+        <div class="chips">
+          <span class="chip">ח"פ <span class="ltr">514789234</span></span>
+          <span class="chip">איש קשר: דנה לוי</span>
+          <span class="chip">טלפון <span class="ltr">052-4471180</span></span>
+          <span class="chip teal">הנחה קבועה 5%</span>
+        </div>
+      </div>
+
+      <!-- מפרט -->
+      <div class="card">
+        <h2><span class="n">2</span> מפרט השירותים</h2>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36%">שירות / מוצר</th>
+              <th style="width:11%">צבע</th>
+              <th style="width:9%" class="num">כמות</th>
+              <th style="width:14%" class="num">מחיר ליחידה</th>
+              <th style="width:13%" class="num">סה"כ שורה</th>
+              <th style="width:13%">הערה</th>
+              <th style="width:4%"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>שירותי דיילת (4 שעות)<span class="sku">04ST</span></td>
+              <td style="color:var(--s400)">—</td>
+              <td class="num"><span class="cell-inp">6</span></td>
+              <td class="num"><span class="money">500 ₪</span></td>
+              <td class="num"><b class="money">3,000 ₪</b></td>
+              <td style="color:var(--s400)">—</td>
+              <td class="del">🗑</td>
+            </tr>
+            <tr>
+              <td>תג שם רגיל - ממותג<span class="sku">B-REG-TAG</span></td>
+              <td><span class="dot" style="background:#fff"></span>לבן</td>
+              <td class="num"><span class="cell-inp">300</span></td>
+              <td class="num"><span class="money">5 ₪</span><span class="tier">מדרגה <span class="ltr">201–400</span></span></td>
+              <td class="num"><b class="money">1,500 ₪</b></td>
+              <td style="color:var(--s400)">—</td>
+              <td class="del">🗑</td>
+            </tr>
+            <tr>
+              <td>שרוך בד - ממותג<span class="sku">B-FAB-LAN</span></td>
+              <td><span class="dot" style="background:#1D4ED8"></span>כחול</td>
+              <td class="num"><span class="cell-inp">300</span></td>
+              <td class="num"><span class="money">6 ₪</span><span class="tier">מדרגה <span class="ltr">201–400</span></span></td>
+              <td class="num"><b class="money">1,800 ₪</b></td>
+              <td>לוגו לבן</td>
+              <td class="del">🗑</td>
+            </tr>
+            <!-- שורה חדשה אחרי לחיצה על "+ הוספת פריט": הפוקוס נכנס ישר לבוחר-המוצר -->
+            <tr>
+              <td class="pickcell">
+                <div class="pickbox"><span style="color:var(--s400)">🔍</span><span>בחר מוצר…</span></div>
+                <div class="pickpanel">
+                  <div class="grp">דיילות</div>
+                  <div class="pitem on"><span class="pn">שירותי דיילת (4 שעות)</span><span class="pp"><span class="ltr">04ST</span> · <span class="money">500 ₪</span></span></div>
+                  <div class="pitem"><span class="pn">שירותי דיילת (6 שעות)</span><span class="pp"><span class="ltr">06ST</span> · <span class="money">800 ₪</span></span></div>
+                  <div class="grp">אתר</div>
+                  <div class="pitem"><span class="pn">הקמת אתר רישום</span><span class="pp"><span class="ltr">01WEB</span> · <span class="money">2,500 ₪</span></span></div>
+                  <div class="grp">מוצרים</div>
+                  <div class="pitem"><span class="pn">תג שם רגיל (חלק)</span><span class="pp"><span class="ltr">REG-TAG</span> · <span class="money">3 ₪</span></span></div>
+                  <div class="pitem"><span class="pn">תג שם רגיל - ממותג</span><span class="pp"><span class="ltr">B-REG-TAG</span> · <span class="money">6 ₪</span></span></div>
+                  <div class="pitem"><span class="pn">תג שם אקולוגי (חלק)</span><span class="pp"><span class="ltr">ECO-TAG</span> · <span class="money">5 ₪</span></span></div>
+                  <div class="pitem"><span class="pn">שרוך בד - ממותג</span><span class="pp"><span class="ltr">B-FAB-LAN</span> · <span class="money">7 ₪</span></span></div>
+                  <div class="pitem"><span class="pn">שרוך סאטן יוקרתי</span><span class="pp"><span class="ltr">SAT-LAN</span> · <span class="money">6 ₪</span></span></div>
+                </div>
+              </td>
+              <td colspan="5"></td>
+              <td class="del">🗑</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="addrow">
+          <span class="btn btn-ghost">+ הוספת פריט</span>
+        </div>
+      </div>
+
+      <!-- הנחות והערות -->
+      <div class="card">
+        <h2><span class="n">3</span> הנחות והערות</h2>
+        <div class="fields">
+          <div class="f" style="grid-column:span 3">
+            <div class="group" dir="ltr" style="grid-template-columns:1fr auto 1fr auto 1fr">
+              <div class="glbl">קבועה</div><div></div><div class="glbl">נוספת</div><div></div><div class="glbl">סה"כ</div>
+              <div class="gval first ro">5%</div><div class="gop">+</div><div class="gval">10%</div><div class="gop">=</div><div class="gval last ro">15%</div>
+            </div>
+          </div>
+          <div class="f" style="grid-column:span 9">
+            <label>הערות להצעה — מופיעות במסמך שנשלח ללקוח</label>
+            <div class="textarea">כולל הקמה ופירוק. חניה לצוות באחריות הלקוח.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- טור הסיכום -->
+    <div class="sum">
+      <div class="card">
+        <h2>סיכום פיננסי</h2>
+        <div class="row"><span>סכום ביניים</span><b>6,300 ₪</b></div>
+        <div class="row neg"><span>הנחת לקוח (5%)</span><b>-315 ₪</b></div>
+        <div class="row neg"><span>הנחה ידנית (10%)</span><b>-630 ₪</b></div>
+        <div class="div"></div>
+        <div class="row"><span>לפני מע"מ</span><b>5,355 ₪</b></div>
+        <div class="row"><span>מע"מ (18%)</span><b>964 ₪</b></div>
+        <div class="total"><span style="font-weight:600">סה"כ לתשלום</span><b>6,319 ₪</b></div>
+      </div>
+
+      <div class="profit">
+        <h3><span>רווחיות ההצעה</span></h3>
+        <div class="prow"><span>עלות משוערת</span><b>3,450 ₪</b></div>
+        <div class="prow"><span>רווח גולמי</span><b>1,905 ₪</b></div>
+        <div class="prow hi"><span>שיעור רווח</span><b>35.6%</b></div>
+        <div style="font-size:11px;color:var(--s400);margin-top:8px">פנימי — לא מופיע בהצעה ללקוח.</div>
+      </div>
+
+      <div class="card">
+        <span class="btn btn-primary btn-w" style="margin-bottom:8px">שמור הצעה</span>
+        <span class="btn btn-ghost btn-w">ביטול</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

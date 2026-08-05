@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <title>מוקאפ 3.5 — עמוד לקוח (עמוד-רשומה עם לשוניות) · ✅ אושר ע"י ישי 30/07/2026</title>
+    <style>
+      /* מוקאפ צעד 3.5 (מודול 3), 30/07/2026.
+         הנתונים אמיתיים מהמסד. הסכומים חושבו דרך src/lib/pricing.js עצמו.
+         מה שמודמה מסומן במפורש: תצוגת 30-ההצעות, ושורת "נשלח ב-" (email_log ריקה, 0 שורות). */
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; padding: 24px 20px 60px; background: #f8fafc; color: #1e293b;
+        font-family: 'Segoe UI', 'Heebo', Arial, sans-serif; font-size: 14px;
+      }
+      .wrap { max-width: 1040px; margin: 0 auto; }
+      h1 { font-size: 19px; margin: 0 0 4px; }
+      .sub { color: #64748b; font-size: 13px; margin: 0 0 24px; }
+      .sect { margin: 0 0 36px; }
+      .sect > h2 {
+        font-size: 13.5px; color: #0f172a; margin: 0 0 10px;
+        border-right: 3px solid #0d9488; padding-right: 9px;
+      }
+      .note {
+        background: #f0fdfa; border: 1px solid #99f6e4; color: #115e59;
+        border-radius: 9px; padding: 9px 12px; font-size: 12.5px; margin: 0 0 12px;
+      }
+      .sim {
+        background: #fffbeb; border: 1px solid #fde68a; color: #92400e;
+        border-radius: 9px; padding: 9px 12px; font-size: 12.5px; margin: 0 0 12px;
+      }
+      /* ---------- עמוד ---------- */
+      .page { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
+      .back {
+        display: inline-flex; align-items: center; gap: 6px;
+        color: #0f766e; font-size: 12.5px; margin: 0 0 12px;
+      }
+      .phead { padding: 18px 22px 0; }
+      .ptitle { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      .ptitle h3 { font-size: 19px; margin: 0; font-weight: 700; color: #0f172a; }
+      .chip-s { background: #dcfce7; color: #15803d; border-radius: 999px; padding: 2px 10px; font-size: 11.5px; font-weight: 600; }
+      .chip-t { background: #f1f5f9; color: #475569; border-radius: 999px; padding: 2px 10px; font-size: 11.5px; font-weight: 600; }
+      /* רצועת הדגשים */
+      .hl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 16px 22px 0; }
+      .hl-c { border: 1px solid #99f6e4; background: #f0fdfa; border-radius: 11px; padding: 13px 15px; }
+      .hl-l { font-size: 11.5px; color: #64748b; display: block; margin-bottom: 3px; }
+      .hl-v { font-size: 22px; font-weight: 700; color: #0f172a; display: block; }
+      .hl-s { font-size: 11px; color: #64748b; display: block; margin-top: 2px; }
+      .hl-e { font-size: 14px; color: #94a3b8; display: block; }
+      .pending {
+        margin: 10px 22px 0; padding: 7px 12px; background: #f8fafc;
+        border: 1px dashed #cbd5e1; border-radius: 8px; color: #64748b; font-size: 11.5px;
+      }
+      /* פרטים מקובצים */
+      .details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 18px 22px 20px; }
+      .grp h4 {
+        font-size: 11.5px; color: #94a3b8; margin: 0 0 8px; font-weight: 600;
+        letter-spacing: .02em;
+      }
+      .row-d { margin-bottom: 9px; }
+      .d-l { font-size: 11.5px; color: #64748b; display: block; }
+      .d-v { font-size: 13px; color: #334155; display: block; text-align: right; }
+      /* לשוניות */
+      .tabs { display: flex; gap: 0; border-bottom: 1px solid #e2e8f0; padding: 0 22px; }
+      .tab {
+        display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+        font-size: 13.5px; border-bottom: 2px solid transparent; margin-bottom: -1px;
+        color: #64748b; font-weight: 500; cursor: pointer;
+      }
+      .tab.on { border-bottom-color: #0d9488; color: #0f766e; font-weight: 700; }
+      .cnt { border-radius: 999px; padding: 1px 8px; font-size: 11.5px; font-weight: 700; direction: ltr; }
+      .tab.on .cnt { background: #ccfbf1; color: #0f766e; }
+      .tab:not(.on) .cnt { background: #f1f5f9; color: #64748b; }
+      .tabbody { padding: 16px 22px 22px; }
+      /* שורת פקדים */
+      .ctl { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+      .search {
+        position: relative; flex: 0 0 260px;
+      }
+      .search input {
+        width: 100%; height: 34px; border: 1px solid #e2e8f0; border-radius: 8px;
+        padding: 0 32px 0 10px; font-size: 13px; font-family: inherit; color: #334155;
+      }
+      .search span { position: absolute; right: 10px; top: 8px; color: #94a3b8; font-size: 13px; }
+      .fchip {
+        border: 1px solid #e2e8f0; background: #fff; color: #475569;
+        border-radius: 999px; padding: 5px 12px; font-size: 12.5px; cursor: pointer;
+      }
+      .fchip.on { border-color: #5eead4; background: #f0fdfa; color: #0f766e; font-weight: 600; }
+      .fchip b { font-weight: 700; margin-right: 5px; }
+      /* טבלה */
+      .scroll { max-height: 330px; overflow-y: auto; border: 1px solid #f1f5f9; border-radius: 10px; }
+      table.q { width: 100%; border-collapse: collapse; }
+      table.q thead th {
+        position: sticky; top: 0; background: #fff; text-align: right; font-size: 11.5px;
+        font-weight: 500; color: #64748b; padding: 9px 12px; border-bottom: 1px solid #e2e8f0;
+      }
+      table.q td { padding: 10px 12px; border-bottom: 1px solid #f8fafc; font-size: 13px; }
+      table.q tr:hover td { background: #f8fafc; cursor: pointer; }
+      .ev { color: #334155; font-weight: 500; }
+      .why { font-size: 11.5px; color: #64748b; margin-top: 2px; }
+      .sent { font-size: 11.5px; color: #0f766e; margin-top: 2px; }
+      .notsent { font-size: 11.5px; color: #b45309; margin-top: 2px; }
+      .pill { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+      .p-open { background: #fef3c7; color: #b45309; }
+      .p-ok { background: #dcfce7; color: #15803d; }
+      .p-no { background: #fee2e2; color: #b91c1c; }
+      .p-exp { background: #f1f5f9; color: #475569; }
+      .money { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+      .eye, .act {
+        border: 1px solid #e2e8f0; background: #fff; border-radius: 7px; width: 30px; height: 30px;
+        display: inline-flex; align-items: center; justify-content: center; color: #475569; font-size: 13px;
+      }
+      .acts { display: flex; gap: 6px; }
+      .act.ok { border-color: #bbf7d0; background: #f0fdf4; color: #15803d; }
+      .act.no { border-color: #fecaca; background: #fef2f2; color: #b91c1c; }
+      /* פעולות ראש-העמוד */
+      .phead-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+      .hactions { display: flex; gap: 8px; flex-shrink: 0; }
+      .btn {
+        border: 1px solid #e2e8f0; background: #fff; color: #334155; border-radius: 8px;
+        padding: 7px 13px; font-size: 13px; white-space: nowrap;
+      }
+      .btn.primary { background: #0d9488; border-color: #0d9488; color: #fff; font-weight: 600; }
+      .btn.prop { border-style: dashed; border-color: #f59e0b; color: #92400e; background: #fffbeb; }
+      .empty { color: #94a3b8; font-size: 13px; padding: 26px 0; text-align: center; }
+      /* רשימת לקוחות */
+      table.c { width: 100%; border-collapse: collapse; background: #fff; }
+      table.c th {
+        text-align: right; font-size: 12px; font-weight: 500; color: #64748b;
+        padding: 10px 12px; border-bottom: 1px solid #e2e8f0; white-space: nowrap;
+      }
+      table.c td { padding: 11px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155; }
+      th.sorted { color: #0f766e; font-weight: 700; }
+      .tagnew { background: #0d9488; color: #fff; border-radius: 5px; font-size: 10px; padding: 1px 6px; margin-right: 6px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>צעד 3.5 — כרטיס הלקוח הופך לעמוד־רשומה</h1>
+      <p class="sub">
+        מבנה לפי התבנית המקובלת: רצועת־הדגשים ← פרטים מקובצים ← לשוניות של רשימות־קשורות.
+        הנתונים אמיתיים מהמסד (30/07/2026); הסכומים חושבו דרך מנוע התמחור עצמו.
+      </p>
+
+      <!-- ========== א' ========== -->
+      <div class="sect">
+        <h2>א׳ · המצב הרגיל — לקוח עם 4 הצעות ("מדיטק פתרונות")</h2>
+        <div class="note">
+          עד 8 הצעות אין חיפוש ואין צ׳יפים — פקד שאין לו מה לסנן הוא רעש. הם מופיעים לבד כשצריך (ר׳ ב׳).
+        </div>
+
+        <div class="back">← חזרה לרשימת הלקוחות</div>
+        <div class="page">
+          <div class="phead">
+            <div class="phead-row">
+              <div class="ptitle">
+                <h3>מדיטק פתרונות בע״מ [דמו]</h3>
+                <span class="chip-s">פעיל</span>
+                <span class="chip-t">חברה פרטית</span>
+              </div>
+              <div class="hactions">
+                <span class="btn primary">+ הצעה חדשה</span>
+                <span class="btn">✎ עריכת פרטים</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hl">
+            <div class="hl-c">
+              <span class="hl-l">סה״כ הכנסות</span>
+              <span class="hl-v"><span class="money">9,865 ₪</span></span>
+              <span class="hl-s">מהצעה אחת שאושרה</span>
+            </div>
+            <div class="hl-c">
+              <span class="hl-l">שווי הצעות פתוחות</span>
+              <span class="hl-v"><span class="money">6,319 ₪</span></span>
+              <span class="hl-s">הצעה אחת ממתינה להחלטה</span>
+            </div>
+            <div class="hl-c">
+              <span class="hl-l">גודל עסקה ממוצע</span>
+              <span class="hl-v"><span class="money">9,865 ₪</span></span>
+              <span class="hl-s">ממוצע על עסקה אחת</span>
+            </div>
+          </div>
+          <div class="pending">
+            ממתינים למודולים הבאים — מספר אירועים ואירוע אחרון (מודול 6) · ממוצע משוב (מודול 8)
+          </div>
+
+          <div class="details">
+            <div class="grp">
+              <h4>פרטי חברה</h4>
+              <div class="row-d"><span class="d-l">ח״פ</span><span class="d-v" dir="ltr">514992001</span></div>
+              <div class="row-d"><span class="d-l">סוג לקוח</span><span class="d-v">חברה פרטית</span></div>
+              <div class="row-d"><span class="d-l">נוסף בתאריך</span><span class="d-v" dir="ltr">29/07/2026</span></div>
+            </div>
+            <div class="grp">
+              <h4>איש קשר</h4>
+              <div class="row-d"><span class="d-l">שם</span><span class="d-v">רון גל</span></div>
+              <div class="row-d"><span class="d-l">טלפון</span><span class="d-v" dir="ltr">052-4471180</span></div>
+              <div class="row-d"><span class="d-l">אימייל</span><span class="d-v" dir="ltr">ron@meditech-demo.co.il</span></div>
+            </div>
+            <div class="grp">
+              <h4>מסחרי</h4>
+              <div class="row-d"><span class="d-l">אחוז הנחה קבוע</span><span class="d-v">5%</span></div>
+              <div class="row-d"><span class="d-l">מאושר לדיוור</span><span class="d-v">לא</span></div>
+            </div>
+          </div>
+
+          <div class="tabs">
+            <div class="tab on">הצעות מחיר <span class="cnt">4</span></div>
+            <div class="tab">פרויקטים <span class="cnt">0</span></div>
+          </div>
+          <div class="tabbody">
+            <div class="scroll">
+              <table class="q">
+                <thead>
+                  <tr><th>תאריך אירוע</th><th>שם האירוע</th><th>סכום</th><th>סטטוס</th><th></th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td dir="ltr" style="text-align:right">27/09/2026</td>
+                    <td>
+                      <span class="ev">כנס רפואה 2026</span>
+                      <div class="sent">✉ נשלחה ללקוח</div>
+                    </td>
+                    <td><span class="money">9,865 ₪</span></td>
+                    <td><span class="pill p-ok">מאושרת</span></td>
+                    <td><span class="eye">👁</span></td>
+                  </tr>
+                  <tr>
+                    <td dir="ltr" style="text-align:right">22/08/2026</td>
+                    <td>
+                      <span class="ev">כנס לקוחות שנתי</span>
+                      <div class="why">אחרי 15% הנחה</div>
+                      <div class="notsent">⚠ טרם נשלחה ללקוח</div>
+                    </td>
+                    <td><span class="money">6,319 ₪</span></td>
+                    <td><span class="pill p-open">בתהליך</span></td>
+                    <td>
+                      <div class="acts">
+                        <span class="act" title="עריכת ההצעה">✎</span>
+                        <span class="act" title="צפייה במסמך">👁</span>
+                        <span class="act ok" title="אישור ההצעה">✓</span>
+                        <span class="act no" title="דחיית ההצעה">✕</span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td dir="ltr" style="text-align:right">25/10/2026</td>
+                    <td>
+                      <span class="ev">בדיקת דיילות ידנית 1785332918430</span>
+                      <div class="why">סיבת דחייה: נפתחה בטעות</div>
+                    </td>
+                    <td><span class="money">3,924 ₪</span></td>
+                    <td><span class="pill p-no">נדחתה</span></td>
+                    <td><span class="eye">👁</span></td>
+                  </tr>
+                  <tr>
+                    <td dir="ltr" style="text-align:right">20/10/2026</td>
+                    <td>
+                      <span class="ev">בדיקת שמירה 1785332141457</span>
+                      <div class="why">סיבת דחייה: נפתחה בטעות</div>
+                    </td>
+                    <td><span class="money">7,322 ₪</span></td>
+                    <td><span class="pill p-no">נדחתה</span></td>
+                    <td><span class="eye">👁</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="sim" style="margin-top:12px">
+          <strong>⚠ שתי הרשאות נפרדות בעמוד הזה, לא אחת:</strong> "✎ עריכת פרטים" נשען על ההרשאה
+          ל<strong>לקוחות</strong>, ואילו ✎/✓/✕ שעל שורת ההצעה נשענים על ההרשאה ל<strong>הצעות מחיר</strong>.
+          אצלך זה נפרד בפועל — <strong>מנהלת הכספים</strong> היא edit על לקוחות אבל <strong>view בלבד</strong>
+          על הצעות מחיר, ולכן היא תראה את כפתור עריכת־הפרטים ו<strong>לא</strong> תראה אישור/דחייה.
+          שורות סגורות (מאושרת/נדחתה) נושאות 👁 בלבד — הן נעולות ב־DB ממילא.
+        </div>
+        <div class="sim" style="margin-top:12px">
+          <strong>סימון השליחה — כן/לא, בלי תאריך</strong> (בעקבות הערתך): תאריך השליחה יהיה ברוב המקרים
+          זהה לתאריך ההצעה, ולכן הוא מספר מיותר. מה ששווה לדעת הוא אם ההצעה בכלל יצאה ללקוח.
+          <br />‏"⚠ טרם נשלחה" מוצג <strong>רק על הצעות בתהליך</strong> — על הצעה שכבר אושרה או נדחתה זו
+          כבר לא פעולה פתוחה. השורה הזו אצל מדיטק היא <strong>נתון אמיתי</strong>: יומן-השליחות ריק (0 שורות).
+          ‏"✉ נשלחה ללקוח" על ההצעה המאושרת הוא היחיד שמודמה כאן.
+        </div>
+      </div>
+
+      <!-- ========== ב' ========== -->
+      <div class="sect">
+        <h2>ב׳ · השאלה ששאלת — איך זה נראה עם 30 הצעות</h2>
+        <div class="sim">
+          <strong>30 השורות כאן מודמות</strong> (למדיטק יש 4 באמת). זו התשובה לשאלה שלך, לא נתון.
+          החיפוש והצ׳יפים <strong>הופיעו מעצמם</strong> כי עברנו 8 הצעות, והרשימה גוללת בפנים.
+        </div>
+
+        <div class="page">
+          <div class="tabs">
+            <div class="tab on">הצעות מחיר <span class="cnt">30</span></div>
+            <div class="tab">פרויקטים <span class="cnt">0</span></div>
+          </div>
+          <div class="tabbody">
+            <div class="ctl">
+              <div class="search"><span>🔍</span><input placeholder="חיפוש לפי שם אירוע" /></div>
+              <div class="fchip on">הכל <b>30</b></div>
+              <div class="fchip">בתהליך <b>11</b></div>
+              <div class="fchip">מאושרות <b>12</b></div>
+              <div class="fchip">נדחו <b>7</b></div>
+            </div>
+            <div class="scroll" id="many"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== ג' ========== -->
+      <div class="sect">
+        <h2>ג׳ · לשונית "פרויקטים" — ריקה בכוונה עד מודול 6</h2>
+        <div class="note">
+          אין לה עדיין הרשאות-קריאה ולא שורות במסד. בלי חיפוש ובלי סינון — פקדים מעל אפס שורות
+          הם פקדים בלי תפקיד. מודול 6 מוסיף אותם יחד עם הנתונים.
+        </div>
+        <div class="page">
+          <div class="tabs">
+            <div class="tab">הצעות מחיר <span class="cnt">4</span></div>
+            <div class="tab on">פרויקטים <span class="cnt">0</span></div>
+          </div>
+          <div class="tabbody">
+            <div class="empty">אין פרויקטים עדיין — יתמלא במודול 6</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== ד' ========== -->
+      <div class="sect">
+        <h2>ד׳ · רשימת הלקוחות — עמודת הכנסות עם מיון בלחיצה</h2>
+        <div class="page">
+          <table class="c">
+            <thead>
+              <tr>
+                <th>שם הלקוח</th><th>סוג לקוח</th><th>איש קשר</th><th>אחוז הנחה</th>
+                <th class="sorted">סה״כ הכנסות ▼<span class="tagnew">חדש</span></th>
+                <th>שביעות רצון</th><th>סטטוס</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background:#f0fdfa">
+                <td>מדיטק פתרונות בע״מ [דמו]</td><td>חברה פרטית</td><td>רון גל</td><td>5%</td>
+                <td><span class="money">9,865 ₪</span></td><td style="color:#94a3b8">—</td><td>פעיל</td>
+              </tr>
+              <tr>
+                <td>עיריית חדרה [דמו]</td><td>חברה ממשלתית</td><td>שרית מזרחי</td><td>0%</td>
+                <td><span class="money">0 ₪</span></td><td style="color:#94a3b8">—</td><td>פעיל</td>
+              </tr>
+              <tr>
+                <td>הייטק גרופ בע״מ [דמו]</td><td>חברה פרטית</td><td>טל אבידן</td><td>12%</td>
+                <td><span class="money">0 ₪</span></td><td style="color:#94a3b8">—</td><td>פעיל</td>
+              </tr>
+              <tr>
+                <td>אולמי הנשיא הפקות [דמו]</td><td>חברת הפקה</td><td>מאיה רון</td><td>3%</td>
+                <td><span class="money">0 ₪</span></td><td style="color:#94a3b8">—</td><td>פעיל</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note" style="margin-top:12px">
+          שלושת האפסים אמיתיים — רק למדיטק יש הצעה שאושרה. לעיריית חדרה יש הצעה פתוחה של
+          16,520 ₪, אבל היא עדיין לא הכנסה.
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const names = ['כנס רפואה', 'ערב גאלה', 'יום עיון', 'השקת מוצר', 'טקס פרסים', 'מפגש משקיעים',
+        'יום גיבוש', 'כנס לקוחות', 'ערב הוקרה', 'חנוכת מתחם'];
+      const states = [
+        ['מאושרת', 'p-ok'], ['בתהליך', 'p-open'], ['נדחתה', 'p-no'], ['פגה', 'p-exp'],
+      ];
+      let html = '<table class="q"><thead><tr><th>תאריך אירוע</th><th>שם האירוע</th>' +
+        '<th>סכום</th><th>סטטוס</th><th></th></tr></thead><tbody>';
+      for (let i = 0; i < 30; i++) {
+        const s = states[i % 4];
+        const amount = (3200 + i * 617) % 19000 + 1800;
+        const d = String((i % 27) + 1).padStart(2, '0') + '/' + String((i % 11) + 1).padStart(2, '0') + '/2026';
+        html += '<tr><td dir="ltr" style="text-align:right">' + d + '</td>' +
+          '<td><span class="ev">' + names[i % 10] + ' ' + (2026 + (i % 2)) + '</span></td>' +
+          '<td><span class="money">' + amount.toLocaleString('en-US') + ' ₪</span></td>' +
+          '<td><span class="pill ' + s[1] + '">' + s[0] + '</span></td>' +
+          '<td><span class="eye">👁</span></td></tr>';
+      }
+      document.getElementById('many').innerHTML = html + '</tbody></table>';
+    </script>
+  </body>
+</html>

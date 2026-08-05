@@ -52,7 +52,7 @@
 הכרעת ישי ב-§7.17 (שינוי תכולה): ___
 הכרעת ישי ב-§7.7 (תצוגת stepper): ___
 
-קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
+קרא בעצמך את התבנית .claude/skills/module-blueprint/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=6 · MODULE_NAME=פרויקטים · RELEVANT_SECTIONS=§5.6-5.7, §7.7/17 · BRANCH_NAME=ishay/module-6-projects
 
 הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-6.md.
@@ -72,7 +72,7 @@ MODULE_NUMBER=6 · MODULE_NAME=פרויקטים · RELEVANT_SECTIONS=§5.6-5.7, 
 **3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-6.md.
-קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+קרא בעצמך את התבנית .claude/skills/module-close/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=6 · MODULE_NAME=פרויקטים · BRANCH_NAME=ishay/module-6-projects
 בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
 בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.

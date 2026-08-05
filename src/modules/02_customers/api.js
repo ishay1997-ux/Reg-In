@@ -4,17 +4,9 @@
 // לוגיקה עסקית (תוויות, סינון, מיון, מדדים) חיה ב-src/lib/customers.js — כאן רק קלט/פלט מול ה-DB.
 
 import { supabase } from '@/supabaseClient'
-
-// עוטף שגיאת-Supabase כ-Error עם שדה code משומר, כדי שה-UI יוכל להבחין במקרים ידועים
-// (למשל 23505 = הפרת-unique על ח"פ, שמניע את זרימת-הכפילות §7.11 ב-step 3.2) בלי לחשוף את מבנה
-// אובייקט-השגיאה של supabase לכל הקוראים. why-first: זריקה (ולא החזרת {error}) מאפשרת ל-UI
-// לעטוף ב-try/catch נקי; קריאות-קריאה שנכשלות הן חריגות אמיתיות, לא זרימה רגילה.
-function toError(error, fallbackMessage) {
-  const e = new Error(fallbackMessage)
-  e.code = error?.code
-  e.cause = error
-  return e
-}
+// עוטף-השגיאות המשותף (חולץ 31/07/2026 — היה משוכפל זהה-בייט בשלושה api.js). הקוד המשומר
+// הוא מה שמניע כאן את זרימת-הכפילות §7.11 (‏23505 = הפרת-unique על ח"פ) ב-step 3.2.
+import { toError, assertRowsAffected } from '@/lib/apiError'
 
 // ---- קריאות (Reads) ----
 
@@ -100,7 +92,7 @@ export async function updateCustomer(customerId, patch) {
     .eq('customer_id', customerId)
     .select()
   if (error) throw toError(error, 'שמירת השינויים נכשלה.')
-  if (!data || data.length === 0) throw toError({ code: 'RLS_DENIED' }, 'אין הרשאה לעדכן לקוח זה.')
+  assertRowsAffected(data, 'אין הרשאה לעדכן לקוח זה.')
   return data[0]
 }
 
@@ -113,8 +105,7 @@ export async function setCustomerStatus(customerId, status) {
     .eq('customer_id', customerId)
     .select()
   if (error) throw toError(error, 'שינוי סטטוס הלקוח נכשל.')
-  if (!data || data.length === 0)
-    throw toError({ code: 'RLS_DENIED' }, 'אין הרשאה לשנות את סטטוס הלקוח.')
+  assertRowsAffected(data, 'אין הרשאה לשנות את סטטוס הלקוח.')
   return data[0]
 }
 
@@ -132,15 +123,25 @@ export async function listCustomerContacts(customerId) {
   return data ?? []
 }
 
-// שמירת קבוצת אנשי-הקשר הנוספים של לקוח = replace (מחיקה + הכנסה). why: הטופס עורך את כל הקבוצה
-// כיחידה, ו-replace פשוט ואמין מ-diff לרשימה קטנה; ה-contact_id מתחדש בכל שמירה — מקובל כי אנשי-הקשר
-// אינם מפתח-זר לשום דבר. שורות בלי שם מסוננות (שם = חובה ב-DB). מחזיר את השורות שנשמרו.
+// שמירת קבוצת אנשי-הקשר הנוספים של לקוח = replace. הטופס עורך את כל הקבוצה כיחידה;
+// ה-contact_id מתחדש בכל שמירה — מקובל כי אנשי-הקשר אינם מפתח-זר לשום דבר. שורות בלי שם
+// מסוננות (שם = חובה ב-DB). מחזיר את השורות שנשמרו.
+//
+// 🐞 סדר-הפעולות תוקן 30/07/2026 (בהכרעת-ישי, אחרי שאותה חולשה בדיוק מחקה בפועל את 5
+// מדרגות-המחיר של B-REG-TAG במודול 3): הגרסה הקודמת הייתה מחיקה-ואז-הכנסה, ושתי בקשות
+// HTTP אינן טרנזקציה — סגירת-דפדפן/רענון בין המחיקה להכנסה משאירה את הלקוח **בלי אנשי-קשר
+// בכלל**, בלי שגיאה. הסדר החדש: קריאת המזהים הישנים ← הכנסת החדשים ← מחיקת הישנים בלבד.
+// קטיעה באמצע משאירה לכל היותר כפילות **גלויה** (ישן+חדש זה לצד זה) שנעלמת בשמירה הבאה —
+// לעולם לא אובדן. ‏upsert (הפתרון של price_tiers) לא ישים כאן: המפתח היחיד הוא contact_id
+// מתחולל, ואין לשורה מפתח טבעי לעגון בו.
 export async function replaceCustomerContacts(customerId, contacts) {
-  const { error: delError } = await supabase
+  const { data: existing, error: listError } = await supabase
     .from('customer_contacts')
-    .delete()
+    .select('contact_id')
     .eq('customer_id', customerId)
-  if (delError) throw toError(delError, 'שמירת אנשי הקשר נכשלה.')
+  if (listError) throw toError(listError, 'שמירת אנשי הקשר נכשלה.')
+  const oldIds = (existing ?? []).map((r) => r.contact_id)
+
   const rows = (contacts ?? [])
     .filter((c) => (c.contact_name ?? '').trim() !== '')
     .map((c) => ({
@@ -149,10 +150,24 @@ export async function replaceCustomerContacts(customerId, contacts) {
       phone: (c.phone ?? '').trim() || null,
       email: (c.email ?? '').trim() || null,
     }))
-  if (rows.length === 0) return []
-  const { data, error } = await supabase.from('customer_contacts').insert(rows).select()
-  if (error) throw toError(error, 'שמירת אנשי הקשר נכשלה.')
-  return data ?? []
+
+  let saved = []
+  if (rows.length > 0) {
+    const { data, error } = await supabase.from('customer_contacts').insert(rows).select()
+    if (error) throw toError(error, 'שמירת אנשי הקשר נכשלה.')
+    saved = data ?? []
+  }
+
+  // מחיקת הישנים לפי המזהים שנקראו למעלה — לא לפי customer_id, שהיה מוחק גם את שזה-עתה הוכנסו.
+  if (oldIds.length > 0) {
+    const { error: delError } = await supabase
+      .from('customer_contacts')
+      .delete()
+      .in('contact_id', oldIds)
+    if (delError) throw toError(delError, 'שמירת אנשי הקשר נכשלה.')
+  }
+
+  return saved
 }
 
 // ---- אחסון שיווקי (Storage) ----

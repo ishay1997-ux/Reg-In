@@ -67,8 +67,8 @@
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-1.md.
 זו הרצת סגירה חוזרת של מודול 1 (האודיט המקורי עבר 06/07; מאז עודכן מדריך המיקרו לטמפלט החדש).
 1) ודא שמדריך המיקרו docs/micro_guides/module-1.md תואם במלואו ל-9 הסעיפים של
-   docs/templates/create_micro_guide_template.md — אם חסר משהו, השלם לפני שתמשיך.
-2) קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+   .claude/skills/module-blueprint/template.md — אם חסר משהו, השלם לפני שתמשיך.
+2) קרא בעצמך את התבנית .claude/skills/module-close/template.md ובצע אותה כלשונה עם:
    MODULE_NUMBER=1 · MODULE_NAME=משתמשים והרשאות · BRANCH_NAME=ishay/module-1-permissions
 3) אם git status מציג קבצים פתוחים — קבץ אותם לקומיט docs אחד. בכל מקרה (גם אם העץ נקי):
    הרץ npm run verify, ואם ירוק — git push (הענף צפוי להיות ahead; ודא סנכרון מלא מול origin).

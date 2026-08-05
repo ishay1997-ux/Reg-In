@@ -26,6 +26,7 @@
 | גרסון DB | ✅ | `supabase/migrations/` — baseline + 6 מיגרציות מגורסנות (ראה `supabase/README.md`) |
 | פריסה ל-Staging | 🟡 מוכן, לא-מופעל | `vercel.json` (SPA rewrite) + `.env.example`; חיבור Vercel = צעד ידני |
 | E2E | 🟡 פרוסה ראשונה | Playwright — `e2e/auth.spec.js` + `e2e/permissions.spec.js` (מודול 1 בלבד: login, route guards, מטריצת הרשאות). `npm run test:e2e`. כיסוי מלא לכל המודולים — מודול 12 |
+| בדיקת-עשן | ✅ (30/07/2026) | `npm run smoke` — מסע-קריאה-בלבד (נאכף ברשת) על כל המסכים הראשיים מול ערכי-עוגן אמיתיים (`e2e/smoke-anchors.json`); ~13 שניות; קודי-יציאה מובחנים (0 תקין · 1 באג · 2 סיסמה/משתמש · 3 אין שרת); **בנפרד מ-gate/CI בכוונה** — קרטוע-רשת לא חוסם פריסה. ארבעת הקודים הוכחו בשבירה-מכוונת. מודול חדש = מסך+עוגן ב-`e2e/smoke.spec.js` |
 | Load / UAT | ⬜ מתוכנן | נדחה למודול 12 (Integration & Handoff) לפי מפת המודולים |
 | Audit log / Error Boundary גלובלי | ⬜ backlog | לא חוסם; יתווסף עם הצמיחה |
 
@@ -36,7 +37,7 @@
 1. `npm run verify` ירוק (lint + format:check + בדיקות + build).
 2. אם נגעת בלוגיקה טהורה — יש/עודכנה בדיקת יחידה (`*.test.js`).
 3. אם שינית DB — יש קובץ מיגרציה חדש ב-`supabase/migrations/`, הוחל, ו-`docs/schema.sql` עודכן כ-snapshot.
-4. תועד: שורה ב-`docs/CHANGELOG.md` (מה השתנה) ו/או `docs/CLAUDE_CODE_LOG.md` (למה/החלטות); אם השתנה סטטוס מודול/שלב — עדכן גם `../STATUS.md`.
+4. תועד: רשומת-סשן ב-`docs/CLAUDE_CODE_LOG.md` (מה+למה/החלטות) + שינוי-DB גם ב-`docs/db_roadmap.md` §10; אם השתנה סטטוס מודול/שלב — עדכן גם `../STATUS.md`. *(‏`CHANGELOG.md` הוקפא 23/07/2026 — ארכיון בלבד.)*
 5. אין סודות/מפתחות בקוד (ה-CI חוסם אוטומטית).
 6. מוזג ל-`dev` דרך PR (ה-CI ירוק חוסם מיזוג שבור).
 
@@ -47,8 +48,8 @@
 | verify לפני PR | `npm run verify` | לפני כל פתיחת PR |
 | עיצוב קוד | `npm run format` | לפי הצורך |
 | בדיקות בזמן פיתוח | `npm run test` (watch) | תוך כדי כתיבת לוגיקה |
-| מודול חדש | צ'קליסט `docs/templates/` + ה-DoD למעלה | בתחילת כל מודול |
-| שינוי DB | מיגרציה חדשה → apply → עדכן schema.sql → CHANGELOG (ראה `supabase/README.md`) | בכל שינוי סכימה |
+| מודול חדש | סקילי-זרימת-המודול (`.claude/skills/module-blueprint`/`module-close` + הטמפלטים שבתוכם) + ה-DoD למעלה | בתחילת כל מודול |
+| שינוי DB | מיגרציה חדשה → apply → עדכן schema.sql → db_roadmap §10 (ראה `supabase/README.md`) | בכל שינוי סכימה |
 | סריקת אבטחה | `npm audit` + Supabase advisors (MCP) | שבועי / לפני מיזוג גדול |
 | עדכון תלויות | `npm outdated` → עדכון מבוקר → `npm run verify` | חודשי |
 

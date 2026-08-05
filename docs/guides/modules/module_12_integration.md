@@ -31,6 +31,7 @@
    - הגדר משתני סביבה (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) בהגדרות הפרויקט ב-Vercel (Settings → Environment Variables) — **לא** בקוד.
    - Deploy. `vercel.json` הקיים כבר מגדיר SPA rewrite לראוטר.
 4. **UAT:** תן למישהו שלא בנה את המערכת (או תסריט "עיוור") לעבור על תסריטי השימוש המרכזיים ולדווח בעיות.
+4ב. **תסריט-דמו של רבע שעה + חזרה גנרלית** *(נוסף 01/08/2026 בהכרעת ישי — "בהגשה אני רבע שעה מציג את המערכת, אין קוד")*: מה מציגים, באיזה סדר, מתוזמן; חזרה גנרלית מלאה יומיים-שלושה לפני 19/09 מול הסביבה הפרוסה; ותוכנית-גיבוי לכל צעד שנשען על שירות חי (מייל/PDF) — מה מראים אם הוא נופל בשידור חי.
 
 ## ⑤ החלק של Claude
 
@@ -45,7 +46,7 @@
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/modules/module_12_integration.md
 ו-docs/claude_routines.md. אנחנו במודול 12 — אינטגרציה והגשה, על ענף ishay/module-12-integration.
 
-קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
+קרא בעצמך את התבנית .claude/skills/module-blueprint/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=12 · MODULE_NAME=אינטגרציה והגשה · RELEVANT_SECTIONS=כלל האפיון + ⑦ בכל מדריכי המודולים · BRANCH_NAME=ishay/module-12-integration
 
 בבלופרינט כלול במפורש: (1) מיפוי מודולים חסרי E2E + specs חדשים, (2) סקריפט Seed ריאליסטי,
@@ -67,7 +68,7 @@ MODULE_NUMBER=12 · MODULE_NAME=אינטגרציה והגשה · RELEVANT_SECTIO
 **3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-12.md.
-קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
+קרא בעצמך את התבנית .claude/skills/module-close/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=12 · MODULE_NAME=אינטגרציה והגשה · BRANCH_NAME=ishay/module-12-integration
 כאן ה-DoD כולל גם "פרוס ועובד ב-Vercel" (נבדק מהטלפון ומהמחשב), לא רק merge.
 בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR

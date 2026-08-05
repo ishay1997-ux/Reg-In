@@ -50,7 +50,7 @@
 ## ④ החלק שלך
 
 1. **כל הכרעות-מ3 סגורות** (§7 + §7.82 — סבבי-הכרעה-קדם 11–12/07/2026, ר' ②); הבלופרינט **מיישם, לא שואל מחדש**. אם בכל-זאת תצוץ שאלה עסקית *חדשה* בבנייה — היא של **ישי** (§7=ישי, כלל 1), נרשמת ב-§7 ולא מוכרעת ע"י Claude לבד.
-2. `git checkout ishay/module-3-quotes` (הענף **כבר קיים** — נפתח 12/07 מ-dev טרי, מכיל את הכרעות-הקדם; **לא** `-b`, שייכשל).
+2. `git checkout ishay/module-3-quotes-build` (הענף **כבר קיים** — נפתח 22/07 מ-dev טרי אחרי מיזוג PR #9; **לא** `-b`, שייכשל. הענף הישן `ishay/module-3-quotes` מוזג ומת — כלל 10).
 3. הדבק פרומפט, אשר בלופרינט, בנה.
 
 ## ⑤ החלק של Claude
@@ -69,7 +69,7 @@
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/modules/module_03_quotes.md,
 docs/reference_spec/products_and_params.md, docs/module3_prices_tab_design_notes.md ו-docs/PROJECT_MASTER.md — **כל פריטי-§7 המתויגים ·מ3·** (`grep '·מ3' docs/PROJECT_MASTER.md`), ובמיוחד §7.1/12/13/25/26/27/28/42/49/50/51/52/53/70/76 + §7.32/34/41/57/62/74/75 + **§7.82 (חבילת-הכרעות-מ3, סבב-טריאז' 12/07)** + **§7.83/84/85 (הכרעות 14/07: RLS-3-טבלאות · טאב-מחירים-חדש · מבנה-מפתח-quote_services)**.
-אנחנו פותחים את מודול 3 — הצעות מחיר, על ענף ishay/module-3-quotes (מ-dev טרי).
+אנחנו פותחים את מודול 3 — הצעות מחיר, על ענף ishay/module-3-quotes-build (מ-dev טרי).
 
 הכרעות ישי (07/07/2026): מע"מ=18% · עיגול לאגורות בחישוב/שקל בתצוגה · הנחות בחיבור עם CHECK ≤100% ·
 מדרגות tie-break בקוד · הקפאת עלות-רכש (closing_unit_cost) · פקיעת-הצעה ב-pg_cron. פרטים ב-§7.1/25/26/27/28/42.
@@ -80,8 +80,8 @@ docs/reference_spec/products_and_params.md, docs/module3_prices_tab_design_notes
 (ה) §7.82/F26 — **מודל-תמחור = חבילות (הוכרע ב-llm-council). אינווריאנט מחייב ל-Phase 2: `src/lib/pricing.js` לעולם לא מקודד "משמרת" — רק פריט×כמות×מחיר** (המנוע כבר גנרי; חבילות/שעתי = אותה שורת-מוצר). המחירים מכווננים דרך מסך-המחירים, לא בקוד.
 (ו) Seed: בלוק "הבהרות-Seed משלימות" (החלטות 10–14) ב-products_and_params.md — רפאים-#4 לא-נזרע · הרכב-20-שורות · אי-זריעת-מדרגות-שירות/מקפים · מק"טי-תגים-קנוניים · URL-סקר #14. + אינדקס db_roadmap C-6 (quote_status,updated_at).
 
-קרא בעצמך את התבנית docs/templates/create_micro_guide_template.md ובצע אותה כלשונה עם:
-MODULE_NUMBER=3 · MODULE_NAME=הצעות מחיר · RELEVANT_SECTIONS=§5.2-5.6 (תהליך+מסכי-הצעה+תמחור), §7 כל ·מ3· + §7.82/83/84/85 · BRANCH_NAME=ishay/module-3-quotes
+קרא בעצמך את התבנית .claude/skills/module-blueprint/template.md ובצע אותה כלשונה עם:
+MODULE_NUMBER=3 · MODULE_NAME=הצעות מחיר · RELEVANT_SECTIONS=§5.2-5.6 (תהליך+מסכי-הצעה+תמחור), §7 כל ·מ3· + §7.82/83/84/85 · BRANCH_NAME=ishay/module-3-quotes-build
 
 חובה: "שאלות פתוחות" מסעיף ② במדריך שלי = פריטי §7, מנותבות לישי להכרעה (§7 = ישי, כלל 1) — אל תכריע בהן לבד.
 הצג את הבלופרינט לאישורי; רק אחרי שאאשר — שמור אותו כ-docs/micro_guides/module-3.md.
@@ -100,8 +100,8 @@ MODULE_NUMBER=3 · MODULE_NAME=הצעות מחיר · RELEVANT_SECTIONS=§5.2-5.
 **3) סגירת מודול (פעם אחת, כשכל הצעדים ✅):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-3.md.
-קרא בעצמך את התבנית docs/templates/create_module_final_test_template.md ובצע אותה כלשונה עם:
-MODULE_NUMBER=3 · MODULE_NAME=הצעות מחיר · BRANCH_NAME=ishay/module-3-quotes
+קרא בעצמך את התבנית .claude/skills/module-close/template.md ובצע אותה כלשונה עם:
+MODULE_NUMBER=3 · MODULE_NAME=הצעות מחיר · BRANCH_NAME=ishay/module-3-quotes-build
 חובה באודיט: הרצה מפורשת של תרחיש הבדיקה מהאפיון — התוצאה חייבת להיות 6,319 ₪ בדיוק.
 בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
 בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.

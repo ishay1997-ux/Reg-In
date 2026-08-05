@@ -1,0 +1,15 @@
+{
+  "_comment": "ערכי-העוגן של בדיקת-העשן (npm run smoke). כל ערך כאן חייב להופיע על המסך — 'יש שורות' אינו עוגן. כשנתון משתנה בצדק (הצעה אושרה, מחיר עודכן) מעדכנים כאן, לא מרככים את הבדיקה. מודול חדש = בלוק חדש + מסך אחד ב-smoke.spec.js.",
+  "sidebarModule": "הצעות מחיר",
+  "customers": { "name": "מדיטק", "revenues": "16,184 ₪" },
+  "quotes": { "knownAmount": "6,319 ₪" },
+  "builder": { "ratioDefault": "50" },
+  "prices": {
+    "productCount": 11,
+    "sku": "B-REG-TAG",
+    "basePrice": "6 ₪",
+    "cost": "2.50 ₪",
+    "tiersButton": "5 מדרגות",
+    "vat": "18"
+  }
+}

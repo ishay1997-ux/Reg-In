@@ -7,9 +7,10 @@ import { createClient } from '@supabase/supabase-js'
 // היא הזרימה של מודול 2 מעל אותו מנגנון.
 //
 // creds: כמו שאר הספים — נקראים מ-.env.local דרך process.env (playwright.config טוען אותם).
-// יש לנו בפועל CEO (=מנכ"ל, edit על 'לקוחות') + STAFF (=מנהלת לוגיסטיקה, blocked). ספים בשם
-// finance/logistics ירוצו אוטומטית אם יתווספו creds תואמים, ו-test.skip בחן כשהם חסרים
-// (מוסכמת הפרויקט — ר' permissions.spec.js).
+// שלוש הזהויות בשימוש: CEO (=מנכ"ל, edit) · STAFF (=מנהלת לוגיסטיקה, blocked) ·
+// FINANCE (=מנהלת כספים, edit על 'לקוחות' אך view על 'הצעות מחיר' — שכבת-edit שאינה מנכ"ל).
+// ⚠️ **זהות אחת = זוג-משתנים אחד.** שם שני לאותה משתמשת אינו כיסוי נוסף — ר' ההערה למטה
+// על הווריאנט שנמחק. creds נקראים מ-.env.local דרך process.env; חסרים ⇒ test.skip בחן.
 
 const CEO_EMAIL = process.env.E2E_CEO_EMAIL
 const CEO_PASSWORD = process.env.E2E_CEO_PASSWORD
@@ -18,8 +19,6 @@ const STAFF_PASSWORD = process.env.E2E_STAFF_PASSWORD
 // אופציונליים — אם קיימים ב-.env.local, הווריאנטים בשמם ירוצו; אחרת ידולגו בחן.
 const FINANCE_EMAIL = process.env.E2E_FINANCE_EMAIL
 const FINANCE_PASSWORD = process.env.E2E_FINANCE_PASSWORD
-const LOGISTICS_EMAIL = process.env.E2E_LOGISTICS_EMAIL
-const LOGISTICS_PASSWORD = process.env.E2E_LOGISTICS_PASSWORD
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL
 const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY
@@ -64,9 +63,8 @@ test.describe('לקוחות (מודול 2) — קבלה E2E (guide ⑦)', () => 
       !SUPABASE_URL || !SUPABASE_ANON,
       'VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY חסרים — אין ניקוי-DB, מדלגים כדי לא ללכלך את ה-DB המשותף',
     )
-    // ארכוב מפעיל window.confirm — מאשרים אוטומטית לאורך הבדיקה.
-    page.on('dialog', (dialog) => dialog.accept())
-
+    // הערה: לארכוב אין חלון-וידוא (הכרעת-ישי 11/07 — הפעולה הפיכה; CustomersPage.jsx). אין להוסיף
+    // כאן מטפל-dialog "ליתר ביטחון": הוא יאשר בשקט חלון לא-מכוון במקום שהבדיקה תיפול עליו.
     await login(page, CEO_EMAIL, CEO_PASSWORD)
     await page.goto('/customers')
     await expect(page.getByRole('heading', { name: 'רשימת לקוחות' })).toBeVisible()
@@ -151,15 +149,9 @@ test.describe('לקוחות (מודול 2) — קבלה E2E (guide ⑦)', () => 
     await expect(page.getByTestId('customer-add-button')).toBeVisible()
   })
 
-  // וריאנט בשם logistics (blocked) — ירוץ רק אם E2E_LOGISTICS_* הוגדרו; אחרת מדולג בחן.
-  test('logistics-role (blocked): אין מודול לקוחות וגישה ישירה חסומה', async ({ page }) => {
-    test.skip(
-      !LOGISTICS_EMAIL || !LOGISTICS_PASSWORD,
-      'E2E_LOGISTICS_EMAIL/E2E_LOGISTICS_PASSWORD לא הוגדרו — מדלגים (STAFF מכסה את שכבת ה-blocked)',
-    )
-    await login(page, LOGISTICS_EMAIL, LOGISTICS_PASSWORD)
-    await expect(page.getByRole('link', { name: 'לקוחות' })).toHaveCount(0)
-    await page.goto('/customers')
-    await expect(page.getByText('אין לך הרשאה לצפות במסך זה')).toBeVisible()
-  })
+  // ⚠️ נמחק 30/07/2026: וריאנט 'logistics-role (blocked)' שדרש `E2E_LOGISTICS_*`.
+  // הוא היה **תת-קבוצה מדויקת** של בדיקת ה-STAFF שמעליו — אותה משתמשת בדיוק
+  // (`logistics.test@regin.co.il`, שאליה מצביע `E2E_STAFF_EMAIL`) ואותן טענות פחות אחת;
+  // הערת-הדילוג שלו אף הודתה בכך ("STAFF מכסה את שכבת ה-blocked"). התוצאה בפועל הייתה
+  // דילוג-קבוע שדרש זוג-משתנים שני לאותה משתמשת. שם נוסף לאותה ישות אינו כיסוי נוסף.
 })

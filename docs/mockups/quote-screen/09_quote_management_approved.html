@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מוקאפ 3.3 — מסך ניהול הצעות מחיר</title>
+<style>
+  :root{--primary:#0D9488;--teal100:#CCFBF1;--teal700:#0F766E;--bg:#F8FAFC;
+        --s100:#F1F5F9;--s200:#E2E8F0;--s300:#CBD5E1;--s400:#94A3B8;--s500:#64748B;--s600:#475569;--s700:#334155;--s800:#1E293B}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:"Segoe UI",Arial,sans-serif;color:var(--s800);font-size:14px}
+  .wrap{max-width:1180px;margin:0 auto;padding:16px 18px 30px}
+  .note{background:#FEF3C7;border:1px solid #FCD34D;color:#92400E;border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:12px;line-height:1.5}
+  h1{font-size:19px;margin:0}
+  .sub{color:var(--s500);font-size:12px;margin-top:2px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:16px;flex-wrap:wrap}
+  .btn{border:0;border-radius:8px;padding:8px 15px;font-size:13.5px;font-weight:600;display:inline-block}
+  .btn-primary{background:var(--primary);color:#fff}
+  .money{direction:ltr;unicode-bidi:isolate;display:inline-block}
+
+  /* שני מדדים בלבד — רצועה ברוחב-מלא הייתה נשארת כמעט ריקה. במקומה: הם יושבים בשורת
+     הכותרת, מולה, בגודל התוכן שלהם. אין באנר ריק, ולשורת-הכותרת יש תפקיד. */
+  .kpis{display:flex;gap:0;background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);overflow:hidden}
+  .kpi{padding:10px 18px;border-left:1px solid var(--s200)}
+  .kpi:last-child{border-left:0}
+  .kpi .v{font-size:22px;font-weight:700;line-height:1.15;direction:ltr;unicode-bidi:isolate;display:inline-block}
+  .kpi .l{font-size:12px;color:var(--s500)}
+  .kpi .s{font-size:11px;color:var(--s400);margin-top:1px}
+
+  .card{background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);padding:0 16px 12px}
+  /* טאבים בסגנון קו-תחתון — כמו במוקאפ ניהול-הפרויקטים המאושר, ולא כפתורים שנראים כמו סינון */
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--s200);margin:0 -16px 12px;padding:0 16px;align-items:center}
+  .tab{padding:11px 16px;font-size:14px;font-weight:500;color:var(--s500);border-bottom:2px solid transparent;
+       display:flex;align-items:center;gap:8px}
+  .tab .cnt{background:var(--s100);color:var(--s500);border-radius:20px;padding:1px 8px;font-size:12px;font-weight:600;direction:ltr}
+  .tab.active{color:var(--teal700);border-bottom-color:var(--primary);font-weight:600}
+  .tab.active .cnt{background:var(--teal100);color:var(--teal700)}
+  .chip{margin-right:auto;display:flex;align-items:center;gap:7px;background:#FFFBEB;border:1px solid #FDE68A;
+        color:#B45309;border-radius:999px;padding:5px 13px;font-size:12.5px}
+  .chip .c{background:#FDE68A;border-radius:999px;padding:0 7px;font-size:11.5px;direction:ltr}
+  /* המסננים-המהירים הם **כפתורים**: לחיצה מסננת, לחיצה שנייה מבטלת. הצורה הזהה לצ'יפ
+     "קהל דיוור" שכבר קיים במסך הלקוחות — אותה שפה, בלי להמציא פקד חדש. */
+  .chip{cursor:pointer}
+  /* מסנן פעיל = **מצב**, לא פעולה. טורקיז מלא שמור לפעולה הראשית היחידה במסך
+     ("+ הצעה חדשה"); מסנן נבחר מקבל גוון-רקע בהיר ומסגרת, ו-✕ לניקוי. */
+  .chip.on{background:#F0FDFA;border-color:#5EEAD4;color:var(--teal700);font-weight:600}
+  .chip.on .c{background:#CCFBF1;color:var(--teal700)}
+  .chip .x{color:var(--s400);font-size:11px;margin-right:2px}
+  /* אפס תוצאות ⇒ מושבת, כי אין למה לסנן. זו הסיבה שהוא נראה חיוור. */
+  .chip.zero{background:#fff;border-color:var(--s200);color:var(--s400);cursor:not-allowed}
+  .chip.zero .c{background:var(--s100);color:var(--s400)}
+
+  .bar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .inp{border:1px solid var(--s300);border-radius:8px;height:34px;display:flex;align-items:center;
+       gap:8px;padding:0 11px;background:#fff;font-size:13px;color:var(--s500)}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  /* ריווח-עמודות אחיד: 14px בין עמודה לעמודה (padding זהה בכותרת ובתא), ובלי padding
+     בקצה הראשון והאחרון — כך התוכן מיושר לקצוות הכרטיס ולא "צף" בתוכו. */
+  th{text-align:right;font-weight:500;color:var(--s500);font-size:11.5px;padding:9px 14px 9px 0;border-bottom:1px solid var(--s200)}
+  td{padding:11px 14px 11px 0;border-bottom:1px solid var(--s100);vertical-align:middle}
+  th:last-child,td:last-child{padding-left:0}
+  th:first-child,td:first-child{padding-right:0}
+  tr:last-child td{border-bottom:0}
+  .t1{font-weight:600;color:var(--s800)}
+  .t2{font-size:11.5px;color:var(--s500);margin-top:1px}
+  .ltr{direction:ltr;unicode-bidi:isolate;display:inline-block}
+  /* ⚠️ ‏.ltr נושא display:inline-block; על <td> זה מוציא את התא מפריסת-הטבלה והעמודה
+     מאבדת יישור מול הכותרת (נמדד: סטייה של 10.4px). על תא — נשארים table-cell. */
+  /* ‏direction:ltr לבדו דוחף את התוכן לקצה שמאל בעוד הכותרת מיושרת לימין — 15px סטייה.
+     המספר נשאר LTR (כדי ש-"#7" ייקרא נכון) אבל מיושר לימין, בדיוק כמו הכותרת שמעליו. */
+  td.ltr{display:table-cell;text-align:right}
+  /* עמודת-כסף: הכותרת והמספרים חולקים אותו רוחב ואותו יישור, ולכן נופלים על אותו קו */
+  .col-money{text-align:left}
+  .amt{font-weight:700;direction:ltr;unicode-bidi:isolate;display:inline-block;min-width:5.5rem;text-align:right}
+  th.col-money span{display:inline-block;min-width:5.5rem;text-align:right}
+  .pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:600;white-space:nowrap}
+  .p-prog{background:#FEF3C7;color:#B45309}
+  .p-ok{background:#DCFCE7;color:#15803D}
+  .p-no{background:#FEE2E2;color:#B91C1C}
+  .acts{display:flex;gap:6px;justify-content:flex-start}
+  .ic{width:30px;height:30px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;
+      border:1px solid var(--s200);background:#fff;font-size:13px;color:var(--s600)}
+  .ic.ok{color:#15803D;border-color:#BBF7D0;background:#F0FDF4}
+  .ic.no{color:#B91C1C;border-color:#FECACA;background:#FEF2F2}
+  .tel{color:var(--s500);font-size:11.5px;direction:ltr;unicode-bidi:isolate;display:inline-block}
+  /* פעולות-קשר בשורה: לחיצה פותחת מייל ללקוח עם נושא שכבר ממולא, או חיוג.
+     בדיוק המנגנון שכבר עובד בפאנל השיווק של מודול 2 — בלי תשתית חדשה. */
+  .cacts{display:flex;gap:6px;margin-top:3px}
+  .mini{font-size:11px;color:var(--teal700);background:#F0FDFA;border:1px solid #99F6E4;
+        border-radius:6px;padding:1px 7px;white-space:nowrap}
+  .breakdown{display:flex;gap:14px;font-size:12px;color:var(--s500);padding:8px 2px 2px}
+  .breakdown b{color:var(--s700)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="note">
+    <b>מוקאפ — לא קוד.</b> כל ההצעות והלקוחות הם <b>הנתונים האמיתיים שבמסד</b>.
+    ⚠️ כולן נוצרו היום, ולכן כולן "פג בעוד 30 יום" והמסנן "פג בקרוב" מציג 0 ולכן <b>מושבת</b> —
+    אין למה לסנן. בשימוש אמיתי הוא יידלק מעצמו.
+  </div>
+
+  <div class="topbar">
+    <div>
+      <h1>ניהול הצעות מחיר</h1>
+      <div class="sub">מעקב אחר הצעות שנשלחו, ואישור או דחייה שלהן</div>
+    </div>
+    <div class="kpis">
+      <div class="kpi">
+        <div class="v money">30,445 ₪</div>
+        <div class="l">שווי הצעות פתוחות</div>
+        <div class="s">4 ממתינות לתשובת הלקוח</div>
+      </div>
+      <div class="kpi">
+        <div class="v">25%</div>
+        <div class="l">שיעור אישור</div>
+        <div class="s">1 מתוך 4 שנסגרו</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <div class="tab">הכל <span class="cnt">8</span></div>
+      <div class="tab active">בתהליך <span class="cnt">4</span></div>
+      <div class="tab">מאושרות <span class="cnt">1</span></div>
+      <div class="tab">נדחו <span class="cnt">3</span></div>
+      <span class="btn btn-primary" style="margin-right:auto;align-self:center">+ הצעה חדשה</span>
+    </div>
+
+    <div class="bar">
+      <div class="inp" style="min-width:230px">🔍 חיפוש לפי לקוח או שם אירוע…</div>
+      <div class="inp">כל הלקוחות ▾</div>
+      <div class="inp">תאריך האירוע ▾</div>
+      <div class="inp">מיון: הקרוב לפוג ראשון ▾</div>
+      <span style="flex:1"></span>
+      <!-- שני מסננים-מהירים: תוקף שנגמר, ואירוע שמתקרב. שניהם "סיבה להרים טלפון". -->
+      <span class="chip zero">פג בקרוב <span class="c">0</span></span>
+      <!-- 14 יום — נגזר מהפרמטר הקיים `ימי_אזהרה_קדם_אירוע`, לא ממספר שהומצא כאן -->
+      <span class="chip on">אירועים קרובים <span class="c">1</span></span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:6%">מס׳</th>
+          <th style="width:26%">ההצעה</th>
+          <th style="width:16%">איש קשר</th>
+          <th style="width:15%">תאריך האירוע</th>
+          <th style="width:14%" class="col-money"><span>סכום כולל</span></th>
+          <th style="width:13%">סטטוס</th>
+          <th style="width:10%">פעולות</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="ltr" style="color:var(--s500)">#7</td>
+          <td><div class="t1">טקס פרסים עירוני</div><div class="t2">עיריית חדרה</div></td>
+          <td><div>שרית מזרחי</div><div class="tel">054-8123390</div><div class="cacts"><span class="mini">✉ שליחת מייל</span></div></td>
+          <td><div class="ltr">05/09/2026</div></td>
+          <td class="col-money"><span class="amt">16,520 ₪</span></td>
+          <td><span class="pill p-prog">בתהליך</span><div class="t2">פג בעוד 30 יום</div></td>
+          <td><div class="acts"><span class="ic">✎</span><span class="ic">⭳</span><span class="ic ok">✓</span><span class="ic no">✕</span></div></td>
+        </tr>
+        <tr>
+          <td class="ltr" style="color:var(--s500)">#6</td>
+          <td><div class="t1">כנס לקוחות שנתי</div><div class="t2">מדיטק פתרונות בע״מ</div></td>
+          <td><div>רון גל</div><div class="tel">052-4471180</div><div class="cacts"><span class="mini">✉ שליחת מייל</span></div></td>
+          <td><div class="ltr">22/08/2026</div></td>
+          <td class="col-money"><span class="amt">6,319 ₪</span><div class="t2">אחרי 15% הנחה</div></td>
+          <td><span class="pill p-prog">בתהליך</span><div class="t2">פג בעוד 30 יום</div></td>
+          <td><div class="acts"><span class="ic">✎</span><span class="ic">⭳</span><span class="ic ok">✓</span><span class="ic no">✕</span></div></td>
+        </tr>
+        <tr>
+          <td class="ltr" style="color:var(--s500)">#9</td>
+          <td><div class="t1">השקת סבב גיוס</div><div class="t2">אולמי הנשיא הפקות</div></td>
+          <td><div>מאיה רון</div><div class="tel">050-9903318</div><div class="cacts"><span class="mini">✉ שליחת מייל</span></div></td>
+          <td><div class="ltr">10/08/2026</div></td>
+          <td class="col-money"><span class="amt">6,039 ₪</span><div class="t2">אחרי 3% הנחה</div></td>
+          <td><span class="pill p-prog">בתהליך</span><div class="t2">פג בעוד 30 יום</div></td>
+          <td><div class="acts"><span class="ic">✎</span><span class="ic">⭳</span><span class="ic ok">✓</span><span class="ic no">✕</span></div></td>
+        </tr>
+        <tr>
+          <td class="ltr" style="color:var(--s500)">#8</td>
+          <td><div class="t1">יום גיבוש חברה</div><div class="t2">הייטק גרופ בע״מ</div></td>
+          <td><div>טל אבידן</div><div class="tel">053-7712045</div><div class="cacts"><span class="mini">✉ שליחת מייל</span></div></td>
+          <td><div class="ltr">12/09/2026</div></td>
+          <td class="col-money"><span class="amt">1,567 ₪</span><div class="t2">אחרי 17% הנחה</div></td>
+          <td><span class="pill p-prog">בתהליך</span><div class="t2">פג בעוד 30 יום</div></td>
+          <td><div class="acts"><span class="ic">✎</span><span class="ic">⭳</span><span class="ic ok">✓</span><span class="ic no">✕</span></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:12px;color:var(--s500);margin:16px 0 6px">↓ לשונית "נדחו" — להמחשה (במסך האמיתי מוצגת לשונית אחת בכל פעם)</p>
+
+  <div class="card">
+    <div class="tabs">
+      <div class="tab">בתהליך <span class="cnt">4</span></div>
+      <div class="tab">מאושרות <span class="cnt">1</span></div>
+      <div class="tab active">נדחו <span class="cnt">3</span></div>
+    </div>
+    <div class="breakdown">
+      <span>סיבות דחייה:</span>
+      <span><b>1</b> תקציב לקוח</span>
+      <span><b>1</b> נבחר מתחרה</span>
+      <span><b>1</b> פג תוקף</span>
+    </div>
+    <table>
+      <tbody>
+        <tr>
+          <td class="ltr" style="width:6%;color:var(--s500)">#11</td>
+          <td style="width:26%"><div class="t1">ערב הוקרה למתנדבים</div><div class="t2">עיריית חדרה</div></td>
+          <td style="width:16%"><div>שרית מזרחי</div><div class="tel">054-8123390</div><div class="cacts"><span class="mini">✉ שליחת מייל</span></div></td>
+          <td style="width:15%"><div class="ltr">18/08/2026</div></td>
+          <td style="width:14%" class="col-money"><span class="amt">2,266 ₪</span></td>
+          <td style="width:13%"><span class="pill p-no">נדחתה</span><div class="t2">תקציב לקוח</div></td>
+          <td style="width:10%"><div class="acts"><span class="ic">👁</span><span class="ic">⭳</span></div></td>
+        </tr>
+        <tr>
+          <td class="ltr" style="color:var(--s500)">#12</td>
+          <td><div class="t1">מפגש משקיעים רבעוני</div><div class="t2">הייטק גרופ בע״מ</div></td>
+          <td><div>טל אבידן</div><div class="tel">053-7712045</div><div class="cacts"><span class="mini">✉ שליחת מייל</span></div></td>
+          <td><div class="ltr">13/08/2026</div></td>
+          <td class="col-money"><span class="amt">2,604 ₪</span><div class="t2">אחרי 12% הנחה</div></td>
+          <td><span class="pill p-no">נדחתה</span><div class="t2">נבחר מתחרה</div></td>
+          <td><div class="acts"><span class="ic">👁</span><span class="ic">⭳</span></div></td>
+        </tr>
+        <tr>
+          <td class="ltr" style="color:var(--s500)">#13</td>
+          <td><div class="t1">אירוע חנוכת מתחם</div><div class="t2">אולמי הנשיא הפקות</div></td>
+          <td><div>מאיה רון</div><div class="tel">050-9903318</div><div class="cacts"><span class="mini">✉ שליחת מייל</span></div></td>
+          <td><div class="ltr">28/08/2026</div></td>
+          <td class="col-money"><span class="amt">3,365 ₪</span><div class="t2">אחרי 3% הנחה</div></td>
+          <td><span class="pill p-no">נדחתה</span><div class="t2">פג תוקף</div></td>
+          <td><div class="acts"><span class="ic">👁</span><span class="ic">⭳</span></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

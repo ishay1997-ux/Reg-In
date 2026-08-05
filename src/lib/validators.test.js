@@ -4,7 +4,14 @@ import {
   ISRAELI_MOBILE_REGEX,
   MIN_PASSWORD_LENGTH,
   COMPANY_ID_REGEX,
+  SKU_REGEX,
   isValidDiscountPercent,
+  isValidSku,
+  isValidNonNegativePrice,
+  isValidPositivePrice,
+  isValidPositiveInt,
+  isValidVatPercent,
+  isValidGuestsRatio,
 } from './validators'
 
 describe('EMAIL_REGEX', () => {
@@ -68,5 +75,85 @@ describe('isValidDiscountPercent', () => {
     expect(isValidDiscountPercent(-1)).toBe(false)
     expect(isValidDiscountPercent(101)).toBe(false)
     expect(isValidDiscountPercent('abc')).toBe(false)
+  })
+})
+
+// ---- מודול 3 (הצעות מחיר / מחירים) — נוספו 29/07/2026, צעד 2.2 ----
+
+describe('SKU_REGEX (מק"ט — מודול 3)', () => {
+  it('מקבל אותיות-גדולות/ספרות/מקף, בלי מקף מוביל', () => {
+    expect(SKU_REGEX.test('B-REG-TAG')).toBe(true)
+    expect(SKU_REGEX.test('04ST')).toBe(true)
+    expect(SKU_REGEX.test('A')).toBe(true)
+  })
+
+  it('פוסל מקף-מוביל (עקבי עם החלטת-ה-Seed, C6 §9 פגם ידוע #2) ותווים לא-חוקיים', () => {
+    expect(SKU_REGEX.test('-06ST')).toBe(false)
+    expect(SKU_REGEX.test('b-reg-tag')).toBe(false) // אותיות קטנות
+    expect(SKU_REGEX.test('SKU WITH SPACE')).toBe(false)
+    expect(SKU_REGEX.test('')).toBe(false)
+  })
+})
+
+describe('isValidSku', () => {
+  it('עוטף את SKU_REGEX', () => {
+    expect(isValidSku('B-FAB-LAN')).toBe(true)
+    expect(isValidSku('-bad')).toBe(false)
+  })
+})
+
+describe('isValidNonNegativePrice (products.base_price/cost)', () => {
+  it('מקבל 0 וחיובי', () => {
+    expect(isValidNonNegativePrice(0)).toBe(true)
+    expect(isValidNonNegativePrice(500)).toBe(true)
+    expect(isValidNonNegativePrice(5.5)).toBe(true)
+  })
+
+  it('פוסל שלילי ולא-מספר', () => {
+    expect(isValidNonNegativePrice(-0.01)).toBe(false)
+    expect(isValidNonNegativePrice('abc')).toBe(false)
+  })
+
+  it('פוסל ריק/null — Number(null)===0 לא אמור להתחזות ל"0 חוקי"', () => {
+    expect(isValidNonNegativePrice(null)).toBe(false)
+    expect(isValidNonNegativePrice(undefined)).toBe(false)
+    expect(isValidNonNegativePrice('')).toBe(false)
+  })
+})
+
+describe('isValidPositivePrice (price_tiers.special_price — CHECK > 0 ב-DB)', () => {
+  it('מקבל חיובי, פוסל 0 ושלילי', () => {
+    expect(isValidPositivePrice(0.01)).toBe(true)
+    expect(isValidPositivePrice(0)).toBe(false)
+    expect(isValidPositivePrice(-5)).toBe(false)
+  })
+})
+
+describe('isValidPositiveInt (min_qty/max_qty)', () => {
+  it('מקבל מספר שלם חיובי, פוסל 0/שלילי/שבר', () => {
+    expect(isValidPositiveInt(1)).toBe(true)
+    expect(isValidPositiveInt(1000)).toBe(true)
+    expect(isValidPositiveInt(0)).toBe(false)
+    expect(isValidPositiveInt(-1)).toBe(false)
+    expect(isValidPositiveInt(1.5)).toBe(false)
+  })
+})
+
+describe('isValidVatPercent / isValidGuestsRatio (params — מודול 3)', () => {
+  it('מע"מ: 0–100 מותר (כמו isValidDiscountPercent — לא מאוחדים, ר\' הערת-design-notes §5)', () => {
+    expect(isValidVatPercent(18)).toBe(true)
+    expect(isValidVatPercent(0)).toBe(true)
+    expect(isValidVatPercent(101)).toBe(false)
+  })
+
+  it('מע"מ ריק אינו מע"מ 0% (אותה מלכודת blank)', () => {
+    expect(isValidVatPercent(null)).toBe(false)
+    expect(isValidVatPercent('')).toBe(false)
+  })
+
+  it('יחס-אורחים-לדיילת: חייב חיובי-ממש (0 היה מחלק באפס ב-recommendHostessCount)', () => {
+    expect(isValidGuestsRatio(50)).toBe(true)
+    expect(isValidGuestsRatio(0)).toBe(false)
+    expect(isValidGuestsRatio(-1)).toBe(false)
   })
 })
