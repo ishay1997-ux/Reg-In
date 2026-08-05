@@ -91,6 +91,12 @@ Critical bugs, failed matrix scenarios, RLS gaps that must be resolved before th
 ### 7. ⏳ Tech Debt — HANDLE LATER
 Deferred improvements, each with the future module/stage where it must be reopened. These get appended to the micro-guide's Deviations & Tech-Debt Log (section 9) **AND registered as lines in `docs/PROJECT_MASTER.md` §6 with their target module** — §6 is mandatory reading in every module's opening prompt; a debt that lives only in this module's own log will never be found by the module that must repay it.
 
+🔴 **And the reverse sweep, which must PRINT its count — closing module N pays debts other modules are still advertising** (Ishay's approved rule, 05/08/2026). Iron rule 15 enforces one direction only (a guide's token must have a §6 line); it catches a *silent* debt and cannot catch a *paid* one. So grep `🚧 מN` across **all four surfaces where the token lives** — `PROJECT_MASTER §6` · `docs/micro_guides/**` · **`src/**` comments** · `docs/*design_notes*` — and emit one mandatory line:
+
+> `🚧 מN swept — K tokens found across §6 · micro-guides · src comments · design notes; each struck-with-date or justified as still open. (K may be 0 — say so.)`
+
+**Why an output line and not a hook:** a sweep with no output is indistinguishable from a sweep that never ran, and Ishay is the only gate. *(Measured 05/08/2026: module 3's close swept §6 correctly and left live `🚧 מ3` tokens in `micro_guides/module-2.md:45` and `src/lib/customers.js:219` — the same class the journal already recorded at `CLAUDE_CODE_LOG:1007` and §6:393/394. Fourth occurrence. A blocking hook was considered and rejected: it would have to parse STATUS.md's prose module table to learn which modules are closed, and a false block teaches sessions to route around hooks — the principle `block-shell-dialect-mixup.sh` states about itself.)*
+
 ### 👑 Final Merge Verdict
 Binary: **[YES]** — stable, secure, DoD-compliant, mergeable into `dev` now / **[NO]** — at least one Section-6 blocker. Two-sentence justification.
 **Typed-echo DoD sign-off (irreversible-gate safeguard):** a **[YES]** verdict is an irreversible gate — before it stands, print a 👤 gate where the human (Ishay) types the module name + `DoD` (NOT just "yes"/"approve") to confirm they reviewed the DoD checklist. This is one of only two typed-echo gates (the other = applying a migration, DB protocol in `CLAUDE.md`); every other 👤 gate takes an ordinary approval.

@@ -42,7 +42,7 @@
 | Marketing upload + `mailto:` send to consented | ✅ full (interim send model) | M10: real server-side email + tracking | PROJECT_MASTER §6 |
 | Customer card — details | ✅ full | — | — |
 | Customer card — project history | 🚧 מ6 · frame + empty state | M6 (projects data + policies) | PROJECT_MASTER §6 |
-| Customer card — totalRevenue + avgFeedback metrics | 🚧 מ3 · 🚧 מ8 · placeholder ("אין נתונים עדיין") | M3 (pricing SSOT) + M8 (feedback) | PROJECT_MASTER §6 |
+| Customer card — totalRevenue + avgFeedback metrics | ~~🚧 מ3~~ **paid 30/07/2026 (M3 step 3.5)** · 🚧 מ8 · placeholder for the feedback half only | ~~M3 (pricing SSOT)~~ ✅ + M8 (feedback) | PROJECT_MASTER §6 |
 | Customer card — cumulative gross-profit metric (C6 §2.4.1 derived attr; distinct from the M7 monthly-KPI §7-item) | 🚧 מ8 · placeholder ("אין נתונים עדיין") | M8 (owns the gross-profit formula — spec 5.14; retargeted from M7 10/07 evening, reviewer finding — M7 is the display-only dashboard; see §7.79) | PROJECT_MASTER §6 |
 | Satisfaction stars in list + satisfaction filter | 🚧 מ8 · present-but-inert | M8 | PROJECT_MASTER §6 |
 
