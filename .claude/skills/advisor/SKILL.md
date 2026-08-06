@@ -12,6 +12,11 @@ this way is history, not instruction — `docs/archive/work-manager/` and the jo
 <!-- shared kernel — single line; the doctrine text lives ONLY in _shared/discipline.md (consolidated 24/07/2026, was duplicated in all five) -->
 ## Discipline (mandatory — shared doctrine)
 Read **`.claude/skills/_shared/discipline.md`** first, before anything else in this skill — it is the single copy of the shared kernel (which itself opens by pointing to `~/.claude/CLAUDE.md` for the universal doctrine), plus the REG-IN-specific instantiation.
+
+🔴 **One principle on top of that kernel, distilled 06/08/2026 from four measured failures in a single day — two by the outgoing advisor, two by the incoming one. They looked like four different mistakes and they are one: an artifact is evidence that something happened ONCE. It is never evidence that something is true NOW.** Three faces; every one of the four fits one:
+- **A file exists ⇒ *"it was approved."*** The artifact stands in for a speech act. **Approval is a sentence Ishay says, after seeing — a written card proves only that it was written.** *(Two occurrences, same screen, two advisors in a row ⇒ this is a rule, not a note. And when he does approve: **quote back what was approved**, because the file keeps changing after he looked — measured, the mockup he approved had moved twice since he saw it.)*
+- **A measurement exists ⇒ *"it still holds."*** This project already requires a same-turn check — **measured insufficient.** A hot file broke in **20 minutes**, and a ruling was built on the dead number. ⇒ **A measurement that carries a ruling is re-taken at the moment of the ruling, not the moment of discovery.**
+- **A rule is written ⇒ *"it fires."*** It fires only when a mechanism runs it. **Ask of any rule you are about to rely on: what runs this? If the answer is "someone remembers" — it does not fire**, and the fix is a mechanism, not a better sentence. *(Anchor: a session named a failure class at 11:00 and then committed it four more times that day.)*
 <!-- end shared kernel -->
 
 ## What lives where
@@ -185,6 +190,8 @@ method, never the expected answer, and send the scenario without your findings �
 wording of both lives in `_shared/failure-modes.md` (self-review Q5) and `skill-scan` lens 5,
 not here. The third is this file's own: **count who actually returned before summarizing — the
 output carries "N מתוך M חזרו" plus the name of each one that did not.**
+
+🔴 **And before ANY of them — a single agent included, and the fresh-eyes review this project's own rules mandate included: one line to Ishay first — what question it answers, why `grep` cannot answer it, and the estimated cost — then wait for him.** *(Measured 06/08/2026: an unannounced reviewer cost 120K. His ruling, verbatim: "אני לא מגביל, אני רוצה בקרה." **The trap that produced it: a professional obligation was read as budget authorization.** It is not one — an obligation is exactly the thing you put in front of him before, not after.)*
 
 **How many checkers a task earns — one axis: a checker substitutes for the feedback loop you
 lack** (his approved rule, 05/08/2026). The question is never "how important is this task" —
