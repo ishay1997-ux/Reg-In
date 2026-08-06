@@ -55,6 +55,13 @@
 - **Also measured, for the record:** every conversation in this project persists as a transcript file under `~/.claude/projects/` (**103 files**; the Discovery session is `7bd6ee7a…jsonl`, 3.5 MB). Compaction does not delete them — but at that size they are **an archive to mine, not context to inherit**, which is why the on-disk spec files remain the only real handoff.
 - **Broke: nothing.** One file touched all stretch, committed by explicit pathspec while four files belonging to the Discovery session sat modified in the shared working tree — none were swept.
 
+### 06/08/2026 — **Ishay's colour question, and a rule-8 violation Claude had just committed.**
+
+- **He asked whether `אושרו` should be green and `סירבו` red — and answered himself in the same breath:** *"אני כן רוצה שיהיה בוגר אז אולי מיותר, מה מקובל בדרך כלל"*. **His instinct is right, and the reason is specific to this screen: colour here is ACTION, not decoration.** Red already carries two sharp meanings — *"short, inside 24 hours"* and *"the link is dead"*. **Make refusals red too and the manager learns to ignore red**, which is the one thing a triage screen cannot afford. **And a refusal is not a fault**: a hostess who said "can't" is a healthy outcome and nobody erred.
+- **Nor green for approved:** the system **already has** a colour meaning *"this is the good thing"* — teal (rule 8, `PROJECT_MASTER §4`). A second green would be a third colour that means nothing else anywhere. ⇒ **the teal family becomes "progress toward filled"**: solid = arrived, light + **"אשר →"** = one click away.
+- 🔴 **And checking it surfaced Claude's own violation: the mockup used `#0369A1` — a blue that is not in the approved palette.** Iron rule 8 forbids inventing colours. **Replaced with teal.** *(Caught only because he asked about colour at all; a palette check is not currently part of the mockup step — candidate for the harvest register.)*
+- ⚠️ **Honesty marker per §5:** the claim about what mature dashboards conventionally do is **"מהידע שלי, לא אומת"** — no search was run. **The internal-consistency argument is the one that carries the decision**, and it stands on its own.
+
 ### 06/08/2026 — 🔴 **Stage ד and stage ה merge: mockup first, verbal card second. Ishay proposed it, and two rules already on disk had been saying so all along.**
 
 - **His words, after two verbal screen cards:** *"מודה שלא כל כך הבנתי… אתה רוצה אולי תמיד לעשות מוקאפ כפי שאתה מבין, ואז מקסימום אתקן אותך? או שזה יהיה תהליך שגוי."* **Answer: not wrong — and the miss is Claude's.** `~/.claude/CLAUDE.md` states *"For anything visual — show a mockup with his real data, not a verbal description"*, and `ishay_calibration.md §1` repeats it. **Both were violated on two consecutive screens.**
