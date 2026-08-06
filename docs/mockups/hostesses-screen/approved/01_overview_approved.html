@@ -80,6 +80,9 @@
   .act{border:1px solid var(--amber200);background:var(--amber50);color:var(--amber700);
        border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;white-space:nowrap}
   .act.off{border-color:var(--s200);background:var(--s100);color:var(--s400);font-weight:500}
+  /* 🔴 ניווט, לא ביצוע — ולכן אינו נראה ככפתור: בלי מסגרת, בלי רקע, ובצבע-המותג.
+     ההבחנה אינה קוסמטית: כל מה שממוסגר במסך הזה *מבצע*, וזה מנתב פנימה. */
+  .goto{color:var(--teal700);font-size:12.5px;font-weight:600;white-space:nowrap}
   .alarmicon{color:var(--red600);font-size:15px;margin-left:5px}
   .legend{margin-top:12px;font-size:11.5px;color:var(--s500);line-height:1.9}
   .legend b{color:var(--s700)}
@@ -160,7 +163,7 @@
                 <span class="expired">1 פג תוקף</span></span>
             </div>
           </td>
-          <td><button class="act">סגירה טלפונית</button></td>
+          <td><span class="goto">לשיבוץ →</span></td>
         </tr>
 
         <tr>
