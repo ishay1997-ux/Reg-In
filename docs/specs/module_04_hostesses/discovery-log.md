@@ -305,8 +305,74 @@ buildable). Moving the file without those eight is how a plan silently loses its
 `grep -rn 'module-4-discovery-log'` returning only the new path. Then add a `docs/specs/` row to the
 folder table in `docs/CLAUDE.md`.
 
+---
+
+## Stage ד — screen by screen — 06/08/2026 (post-compact)
+
+> ⚠️ **Written late, and that is itself a finding.** This log went **un-updated for the entire
+> post-compact block** while rulings landed in `processes-approved.md` and `CLAUDE_CODE_LOG.md`.
+> The Discovery prompt says *"עדכן את discovery-log.md תוך כדי"*. **Ishay caught it** —
+> *"אתה לא כותב בדיסקברי לוג?"* — Claude did not. **Nothing was lost (all of it went to disk
+> elsewhere), but the file a future session is told to read as "the why behind every ruling"
+> was the one file missing them.**
+
+### Screen 1 of 8 — **מאגר דיילות** — presented, awaiting Ishay
+
+Card delivered with the screen's single decision stated first: **"which hostess am I opening
+now, and what is her state before I touch her."** Three columns/filters fail that test and were
+proposed for removal (ת"ז · salary-range filter · rating filter — all three are Smart Match
+tools, not locate-a-person tools). Four decisions are with Ishay.
+
+### Rulings that landed in this block
+
+| # | Ruling | Basis |
+|:-:|---|---|
+| ⑤↻ | **`אישרה זמינות` is NOT a deviation** — the frozen spec contradicts itself: `C5:305` says `אושרה זמנית`, **`C6:372` (the data dictionary) says `אישרה זמינות`**, and both mockups side with C6. **But the deciding argument is not the citation count — it is that the label names WHO ACTS.** | Claude, corrected after Ishay pushed back on the framing |
+| — | **"No delete" is an ICON-level departure only.** C5 §5.6.12 draws a trash can but its logic section rules *"מחיקה לוגית: שינוי סטטוס ל'לא פעילה' במקום מחיקה פיזית"* ⇒ the ruled behaviour **is** what the frozen spec demands | Claude, from reading C5 §5.6.12 in full |
+| — | **Surfaces 1 and 3 are two tabs of one page ⇒ `3א` is not a separate surface. Eight, not nine.** | Both mockups + C5 §5.6.12's component list |
+| ⑥ | **The fairness lever measures when she last WORKED** (`max(projects.final_event_date)`), not when last invited. §11.2's `שבועות_מאז_הזמנה_אחרונה` is a slip — **do not implement it as written.** Keyed on invitation, a hostess invited four times and never chosen **resets to "fresh" and loses the bonus — exactly whom the lever exists for.** ✅ **§6.7 confirms independently: Connecteam, Deputy, Skedulo and Nowsta all measure WORK; none measures invitations.** | Claude, on Ishay's delegation, after searching 102 transcripts + the research doc |
+| ⑦ | **The pool-hygiene chip's threshold lives in `params`** (default 4). ⚠️ **Its first stated reason was wrong** ("we'll learn from use") — **§9.7 forbids that: there is no client and no use to learn from.** Correct reason: nine other thresholds are already parameters and the cost is zero. ➕ **And below the threshold, show `לא ענתה מעולם (N זימונים)`** — a hostess with two unanswered invitations is equally dead and currently invisible | Claude, on Ishay's delegation |
+| ⑨ | **Chapter 12 item: `responded_at` does not exist ⇒ the default sort for events under 72h is unbuildable today.** Plus two traps: never derive it from `updated_at` (a trigger overwrites it, and M8 stamps `salary_report_id` months later), and it is written **once**, on first answer — resend refreshes `invite_sent_at` only | **Ishay** — *"חשוב להתייחס לזה באפיון"* |
+
+### 🛑 Two items the research document addressed to Ishay that nobody ever delivered
+
+*(Found by reading `module4_smart_match_research.md` §1–§9 in full — sections never read this
+session. **Zero mentions across all five files in this folder, measured.**)*
+
+1. **Languages.** §7's missing-data table, item 8, is tagged **⚪ "לשאול את ישי"** and notes the
+   mockup itself shows *"כנס בינלאומי"* (`01.png`: `כנס בינלאומי · חברת הייטק גלובל`).
+   **Never asked.** If some events require English it is a **gate** — like the no-car-over-40km
+   rule — and no such field exists. *(The same §7 explicitly rejects certifications and
+   appearance attributes; languages were left open, not rejected.)*
+2. **The headcount cap — Ishay's own insight, dropped.** §9.7 records him (29/07 23:58):
+   *"תמורה עלות-שולית ליותר מ-6 דיילות נראה לי מיותר"* ⇒ `min(ceil(guests ÷ ratio), cap)`.
+   🔴 **And the document names the hole itself: the cap belongs to the ROLE, not the event** —
+   six at a registration desk is sane, but a large event also needs ushers, cloakroom and
+   multi-entrance direction, which are different positions ⇒ **a per-event cap blocks
+   legitimate staffing.** Touches **§7.67** and already-built module-3 code. Parked there as
+   *"פריט להכרעה בסבב-קדם-מ4"* — **which is this session.**
+
+### 🔴 And what a targeted transcript re-read found — Ishay's own words, never recorded
+
+Ishay asked whether re-reading the whole conversation would help. Instead of a full re-read,
+**all 31 of his real messages were extracted from the 5.9 MB session transcript** (41 entries
+minus 9 Stop-hook notices and the compact summary). Two things surfaced:
+
+1. 🔴 **His FIRST message ordered a read that never happened:** *"לפני כל דבר אחר — קרא את §0
+   בקובץ שממנו הפרומפט הזה הועתק… הוא מחזיק תיקונים לפרומפט הזה שאינם כתובים בתוכו, ואת 'מה
+   שאף אחד לא בדק'."* Now read. It holds nine cross-stage findings, **two of which are
+   unresolved and belong to Ishay**: there is **no branch instruction for stages 2–9** (iron
+   rule 10 requires `ishay/module-N-…`; eight sessions including all of module 4's code would
+   stack onto one branch and arrive as one PR), and **no commit/return-point in eight of the
+   nine stages**.
+2. 🔑 **He already answered screen 2's "one decision" — in message 9, and it was never
+   recorded:** *"מסך מבט על של המנהלת… יכול להיות תהליך מאחורי זה מבחינתה של **על איזה פרויקט
+   להיכנס ראשון**… שזה יהיה עבורה **מסך שמקל עליה בקבלת החלטות**."* ⇒ **the overview screen's
+   single decision is his, not Claude's to derive.** It goes straight into that screen's card.
+
 ### Where it stuck
-*(nothing — both processes closed. Next: stage 3, screen by screen.)*
+*(Screen 1 of 8 presented; four decisions with Ishay. Two research items above are open and
+were never asked.)*
 
 ## /רעיונות-לבדיקה
 > These are ideas that came up — **do not assume they are correct.** Each gets checked like any
