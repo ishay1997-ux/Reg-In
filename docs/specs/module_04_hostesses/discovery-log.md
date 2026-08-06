@@ -103,6 +103,41 @@ judgement against the three §1 filters, presented to Ishay recommendation-first
 | ③ | **`assignments.personal_bonus` is filled by the recruitment manager at assignment time**, as a fill lever; M8 only reads it into payroll. **Correction Ishay accepted:** his own idea (an event-wide bonus split among all who attended) is **not an alternative — it already exists** as `projects.project_bonus` + the C5 salary formula. Two different tools, both already in the schema. Boundary flagged, not ruled: who fills `project_bonus` (it sits on `projects` ⇒ M6). | new spec + §7-adjacent |
 | ④ | **§7.34 (M4 half) — allow deactivation, never silently.** Full wording written back to `PROJECT_MASTER §7.34` this same session (iron rule 13א). Also settled: **no extra status field is needed** — "don't book her again" is already the per-client three-state marking (which matches the industry standard exactly), and "temporarily unavailable" is solved by ①. | ✅ `PROJECT_MASTER §7.34` |
 
+### 🔴 The full 18-row keep/drop table — the filter itself, not only its output
+
+*(Written to disk 06/08/2026. It had lived only in chat, and it is the single artefact Ishay
+singled out as the thing he could not otherwise govern: **a wrong question he catches, a wrong
+filter he cannot.** Sources are agent 1's cited vendor help-centre pages.)*
+
+| # | What the world has | Verdict |
+|:-:|---|---|
+| 1 | **Declared availability / blackout dates** as an object, plus an "availability check" round separate from the invitation (Ubeya · Nowsta · Deputy · Quickstaff · Connecteam) | ✅ **KEPT** — ruling ①. The *availability-check round* was dropped with it: no worker channel |
+| 2 | **Invitation with a clock** — expiry, auto-close on fill, an explicit `Expired` state (When I Work · foundU · Ubeya resend) | **ALREADY OURS** (§7.45 · §7.33). Only the *displayed* expired state was missing ⇒ became ruling #4 |
+| 3 | **Tiered release to widening circles** (Instawork auto-assign · Wonolo 1-hour head start · Indeed Flex) | ❌ **DROPPED** — contradicts Ishay's ruled manual selection every round (C5:311) |
+| 4 | **Pre-shift confirmation gate with automatic removal** (Instawork removes non-confirmers 24h out) | ❌ **DROPPED** — at a scale where the manager knows everyone by name, that is a phone call, not an automation |
+| 5 | **Worker withdraws after final confirmation → auto re-open, ownership stays until replaced** (Sidekicker · Instawork · When I Work · Connecteam · Coople) | ✅ **KEPT** — ruling ② |
+| 6 | **Worker-initiated claim / swap / drop / release-request** (When I Work · Connecteam · Ubeya · Deputy) | ❌ **DROPPED** — requires a worker app; our only channel is an email link. The one real slice (she wants out) is covered manually by ruling #8 |
+| 7 | **Eligibility + conflict gate at booking — warn + allow override** (Ubeya's three named warnings · Connecteam · Deputy) | **ALREADY OURS — BUT WE DELIBERATELY DEVIATE:** Ishay ruled a **hard DB constraint**. Surfaced to him; correct here because an override costs double pay for one person for one day |
+| 8 | **Onboarding/compliance as a state machine with document expiry** (Workstaff · Coople · Wonolo · Avionté · Deputy) | ❌ **DROPPED, documented** — no real workers in an academic project; a compliance gate would be theatre |
+| 9 | **Post-shift outcome recording feeding future invitations** (Instawork ratings · Sidekicker reliability score · Coople strikes) | **ALREADY OURS** — attendance fields (§7.16א) + the three-state marking (`🚧 מ6`) |
+| 10 | **Pool segmentation: rosters/favourites + per-client DNR** (Instawork · Wonolo · Sidekicker · ESHYFT) | **ALREADY OURS**, and our per-client three-state marking matches the industry standard exactly |
+| 11 | **Deactivate-not-delete + a reactivation path** (Ubeya · TempWorks) | ✅ **KEPT** — ruling ④ (§7.34) |
+| 12 | **Briefing attached to the shift** — address, call time, dress code, on-site contact + per-shift channel (Quickstaff · Zelos · Workstaff · Nowsta · Ubeya) | **ALREADY OURS** — it is inside `תבנית_אישור_סופי_שיבוץ`. Chat channel dropped. ⚠️ **But surfaced: the template promises `[כתובת_אירוע_מלאה]`/`[שם_מנהלת_פרויקט]`/`[טלפון_מנהלת_פרויקט]` and the live schema has only `final_location` + `owner_email`** |
+| 13 | **Over-invite / waitlist buffer** (Quickstaff "Automagic Waitlists" · Ubeya Autobook · Instawork backups) | **ALREADY OURS** — C5:311 over-invitation + §7.33 auto-release |
+| 14 | **Automatic backfill via a rules engine** (Shiftboard) | ❌ **DROPPED** — enterprise scale; here the manager picks |
+| 15 | **Re-engagement of dormant workers** (Bullhorn, ATS-side) | **PARTLY OURS** — the fairness lever + the "worked last X weeks ago" column do this passively |
+| 16 | **Shift-attached bonus as a fill lever** (Instawork Top Pro Booster) | ✅ **KEPT** — ruling ③. **The column `assignments.personal_bonus` already existed with no owner** |
+| 17 | **Compensation rules when the CLIENT cancels or shrinks** (Instawork) | **ALREADY OURS** — §7.16ב (0/50/100% by notice) |
+| 18 | **The worker's own "when am I working" surface** (foundU · Ubeya · Nowsta read-only) | ❌ **DROPPED as an app** — kept a micro-version: **upcoming shifts on the hostess card**, because she phones and the manager must answer |
+
+**And agent 1's negative findings — what it searched for and found in NO product:** configurable
+timed multi-wave escalation *(→ ruling #5: a button, not a timer)* · a shift-attached bonus in
+agency-side event tools · a named standby/reserve status · a modelled client-side headcount-reduction
+flow · **pool-hygiene reporting ("these 40 have not answered in 6 months")** *(→ ruling #3's chip)* ·
+an appeal flow for automatic penalties.
+🏆 **And the one that became a conference asset: no product ranks a worker by *responsiveness to
+invitations*.** In REG-IN that is 40% of the score.
+
 ### Three things Claude filtered out and then surfaced anyway (Ishay's question forced this — it was the right question)
 
 - **(א) We deviate from the world on double-booking and it was never written down.** Every product checked treats a scheduling conflict as a **warn + allow override**; Ishay ruled a **hard DB constraint** (30/07, "אסור שזה יקרה"). The deviation is correct here — elsewhere an override costs a swap, here it costs **double pay to one person for one day** — but it must be documented as a deliberate deviation, because it is a good conference question.
