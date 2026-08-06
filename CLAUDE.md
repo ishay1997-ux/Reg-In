@@ -31,7 +31,9 @@ Supabase (Auth + Postgres 17) · react-router-dom 7 · עברית RTL מלאה.
 - alias `@/` → `src/` · שרת פיתוח `npm run dev` על פורט **5173**.
 - **חותמת-זמן — לא לערבב בין הכלים:** ב-PowerShell `Get-Date`; ב-Bash `date +"%d/%m/%Y %H:%M"`.
   ‏`Get-Date` **אינו קיים** בכלי Bash ויחזיר `command not found`. פורמט: **`DD/MM/YYYY HH:MM`**,
-  מהשעון — לא מנוחש.
+  מהשעון — לא מנוחש. ⚠️ **ומוקש-משנה: גם *חיפוש* אחרי שמות ה-cmdlets האלה ייחסם** — ההוק
+  קורא `|` שלפני השם כמיקום-פועל *(`block-shell-dialect-mixup.sh:71`; קרה 07/08/2026)*.
+  לחפש דרך הכלים `Read`/`Grep`, לא דרך `grep` בכלי Bash.
 - **ספירת שורות — `(Get-Content -LiteralPath X).Count`. ⚠️ לא `Measure-Object -Line`:** הוא
   **מדלג בשקט על שורות ריקות** ומחזיר מספר קטן יותר בלי להתלונן. *(נמדד 05/08/2026 בבקרה: קובץ
   עם 3 שורות טקסט ו-3 ריקות → `.Count`=6 · `Measure-Object -Line`=3. **שני סשנים נפרדים דיווחו
@@ -43,6 +45,13 @@ Supabase (Auth + Postgres 17) · react-router-dom 7 · עברית RTL מלאה.
   לפני כל פעולה)*. **המדריך המלא, ואל תגזור אותו מחדש — המספרים מדודים:**
   `~/.claude/references/session-handoff-guide.md`. *(נכתב כאן 06/08/2026 כי נמדד שהוא לא היה
   מוזכר באף קובץ שסשן-בנייה טוען — ובנייה היא בדיוק המקום שקומפקט-באמצע עולה בו הכי יקר.)*
+- 🔴 **`npm run gate` אינו מה ש-CI מריץ.** ‏`.github/workflows/ci.yml` מריץ את השלבים בנפרד
+  ואינו קורא ל-`gate` כלל ⇒ **`check:docs-structure` אינו רץ בשום מקום אוטומטי** (מוזכר רק
+  ב-`package.json`), ו-`check:context` רץ רק כהוק-פתיחת-סשן **פתוח-לכישלון** — הקשר, לא שער.
+  ההרכב המדויק: `package.json` §scripts מול `ci.yml`. *(נמדד 07/08/2026.)*
+- ⚠️ **`npm run test:e2e` מדלג בשתיקה על בדיקות-העשן** — הסקריפט הוא
+  `playwright test --grep-invert בדיקת-עשן`. ‏**ו-E2E אינו רץ ב-CI כלל.** בדיקות-העשן הן
+  `npm run smoke` (`e2e/smoke.spec.js`) — גם היא אינה ב-`gate` ואינה ב-CI. *(נמדד 07/08/2026.)*
 - **קבצים חדשים — שמות באנגלית בלבד** (עברית בשמות קבצים נשברת ב-Git/Windows). תוכן עברי בתוך
   `<div dir="rtl">`.
 - **חלוקת שפות:** `docs/guides/` + `STATUS.md` בעברית (לבני אדם) · `docs/micro_guides/`,
