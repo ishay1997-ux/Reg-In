@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מוקאפ מ4 · מסך 3 — שיבוץ חכם (Smart Match) · טיוטה</title>
+<style>
+  /* צבעים וגופן מ-src/index.css ומסריקה על src/ — לא מהמוקאפ הישן ולא מהעין.
+     green=פעיל/אושר · teal=מותג ופעולה · slate=ניטרלי · amber=ממתין/אזהרה · red=שגיאה/דחוף */
+  :root{
+    --primary:#0D9488;--teal50:#F0FDFA;--teal100:#CCFBF1;--teal600:#0D9488;--teal700:#0F766E;
+    --green50:#F0FDF4;--green100:#DCFCE7;--green200:#BBF7D0;--green700:#15803D;
+    --amber50:#FFFBEB;--amber200:#FDE68A;--amber700:#B45309;
+    --red50:#FEF2F2;--red600:#DC2626;
+    --bg:#F8FAFC;--s50:#F8FAFC;--s100:#F1F5F9;--s200:#E2E8F0;--s300:#CBD5E1;
+    --s400:#94A3B8;--s500:#64748B;--s600:#475569;--s700:#334155;--s800:#1E293B;--r:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--s800);font-size:14px;
+       font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif}
+  .wrap{max-width:1240px;margin:0 auto;padding:16px 18px 30px}
+  .note{background:var(--amber50);border:1px solid var(--amber200);color:#92400E;border-radius:var(--r);
+        padding:9px 12px;font-size:12px;margin-bottom:12px;line-height:1.6}
+  h1{font-size:19px;margin:0}
+  .sub{color:var(--s500);font-size:12px;margin-top:2px}
+  .back{color:var(--teal700);font-size:12.5px;font-weight:600}
+  .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin:8px 0 12px;gap:16px;flex-wrap:wrap}
+
+  .kpis{display:flex;background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);overflow:hidden}
+  .kpi{padding:9px 15px;border-left:1px solid var(--s200);text-align:center}
+  .kpi:last-child{border-left:0}
+  .kpi .v{font-size:20px;font-weight:700;direction:ltr;unicode-bidi:isolate;display:block;line-height:1.2}
+  .kpi .l{font-size:11px;color:var(--s500)}
+  .kpi.need .v{color:var(--s800)} .kpi.ok .v{color:var(--green700)}
+  .kpi.avail .v{color:var(--teal700)} .kpi.wait .v{color:var(--amber700)}
+  .kpi .x{display:block;font-size:10px;color:var(--red600);text-decoration:underline;font-weight:600;margin-top:1px}
+
+  .off{background:var(--s100);border:1px dashed var(--s300);color:var(--s600);border-radius:8px;
+       padding:7px 11px;font-size:11.5px;margin-bottom:10px;line-height:1.5}
+
+  .cols{display:flex;gap:14px;align-items:flex-start}
+  .col{flex:1;background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);padding:12px 14px}
+  .col h2{font-size:14.5px;margin:0 0 2px}
+  .col .cs{font-size:11.5px;color:var(--s500);margin-bottom:10px}
+
+  .sorts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+  .sort{border:1px solid var(--s200);background:#fff;color:var(--s600);border-radius:999px;padding:4px 11px;font-size:12px}
+  .sort.on{background:var(--teal50);border-color:#99F6E4;color:var(--teal700);font-weight:600}
+  .sortnote{font-size:11px;color:var(--s400);margin:-4px 0 9px}
+
+  .cand{border:1px solid var(--s200);border-radius:var(--r);padding:9px 11px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
+  .cand.pick{border-color:var(--primary);background:var(--teal50)}
+  .cbx{width:15px;height:15px;border:1.5px solid var(--s300);border-radius:4px;margin-top:2px;flex:none}
+  .cand.pick .cbx{background:var(--primary);border-color:var(--primary)}
+  .cname{font-weight:600;font-size:13.5px}
+  .cmeta{font-size:11.5px;color:var(--s500);margin-top:1px}
+  .chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+  .chip{border-radius:999px;padding:2px 9px;font-size:11px;font-weight:500;
+        background:var(--s100);color:var(--s600);border:1px solid var(--s200)}
+  .chip.good{background:var(--teal50);color:var(--teal700);border-color:#99F6E4}
+  .chip.warn{background:var(--amber50);color:var(--amber700);border-color:var(--amber200)}
+  .chip.grey{background:var(--s100);color:var(--s500)}
+  .chip.pin{background:var(--green100);color:var(--green700);border-color:var(--green200);font-weight:700}
+
+  .arow{border:1px solid var(--s200);border-radius:var(--r);padding:9px 11px;margin-bottom:8px}
+  .arow.done{border-color:var(--green200);background:var(--green50)}
+  .arow.said{border-color:#99F6E4;background:var(--teal50)}
+  .arow.pend{border-color:var(--s200)}
+  .arow.exp{border-color:var(--amber200);background:var(--amber50)}
+  .ahead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .st{font-size:11px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap}
+  .st.done{background:var(--green100);color:var(--green700)}
+  .st.said{background:var(--teal100);color:var(--teal700)}
+  .st.pend{background:var(--s100);color:var(--s500)}
+  .st.exp{background:var(--amber200);color:#92400E}
+  .atime{font-size:11px;color:var(--s500);margin-top:3px}
+  .lead{font-size:11px;color:var(--green700);font-weight:600;margin-top:3px}
+
+  .btn{border:0;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;width:100%;margin-top:6px}
+  .btn-p{background:var(--primary);color:#fff}
+  .btn-g{background:var(--green700);color:#fff}
+  .btn-o{background:#fff;border:1px solid var(--s200);color:var(--s600);width:auto;padding:5px 11px;font-size:12px;font-weight:500;margin:0}
+  .warnbox{background:var(--amber50);border:1px solid var(--amber200);color:#92400E;border-radius:8px;
+           padding:8px 11px;font-size:11.5px;margin-top:8px;line-height:1.6}
+  .legend{margin-top:14px;font-size:11.5px;color:var(--s500);line-height:1.9;background:#fff;
+          border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);padding:12px 14px}
+  .legend b{color:var(--s700)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="note">
+    <b>טיוטה — מסך 3 מתוך 8 · שיבוץ חכם.</b> זה <b>לב המודול ותערוכת-הכנס</b>.
+    <b>ארבעה דברים שהמוקאפ הישן עשה ואנחנו לא:</b>
+    ① אין תגית <b>"התאמה 87%"</b> — הציון נשאר סמוי, ובמקומו <b>צ'יפי-הנמקה שאומרים למה</b> ·
+    ② אין עמודת דירוג עשרוני — <code>rating</code> הוא <code>int</code> ואינו רכיב בציון כלל ·
+    ③ <b>ארבע זוויות-מיון</b> במקום כפתור "סדר לפי התאמה" יחיד ·
+    ④ <b>המסך מודיע שמרכיב אמינות-ההגעה כבוי</b> — ולא מעמיד פנים שהציון מלא.
+  </div>
+
+  <div class="back">← חזרה למבט-על</div>
+  <div class="topbar">
+    <div>
+      <h1>שיבוץ חכם — כנס לקוחות שנתי</h1>
+      <div class="sub">מדיטק בע"מ · 22/08/2026 · 18:00–22:00 · אקספו תל אביב · בעוד 16 ימים</div>
+    </div>
+    <div class="kpis">
+      <div class="kpi need"><span class="v">6</span><span class="l">נדרשות</span></div>
+      <div class="kpi ok"><span class="v">2</span><span class="l">אושרו סופית</span></div>
+      <div class="kpi avail"><span class="v">3</span><span class="l">אישרו זמינות</span></div>
+      <div class="kpi wait"><span class="v">4</span><span class="l">ממתינות</span><span class="x">2 פג תוקפן</span></div>
+    </div>
+  </div>
+
+  <div class="off">
+    ⓘ <b>מרכיב "אמינות הגעה" כבוי</b> — הוא נשען על סימוני-נוכחות שנוצרים בסגירת האירוע (מודול 6),
+    ואין עדיין נתונים. <b>הדירוג כרגע מבוסס על שיעור-היענות ועל קרבה בלבד.</b>
+    <b>וגם תגית "מצוינת אצל הלקוח" עוד לא קיימת</b> — הסימון נוצר באותה סגירה.
+  </div>
+
+  <div class="cols">
+
+    <!-- עמודה ימנית = הראשית ב-RTL: מי כבר בפנים -->
+    <div class="col">
+      <h2>דיילות באירוע</h2>
+      <div class="cs">2 מתוך 6 אושרו סופית · 3 אישרו זמינות וממתינות לאישורך</div>
+
+      <div class="arow done">
+        <div class="ahead"><b>שרה כהן</b><span class="st done">אושרה סופית</span></div>
+        <div class="atime">נשלח 25/04 10:30 · ענתה 25/04 14:20</div>
+        <div class="lead">★ אחראית משמרת</div>
+      </div>
+
+      <div class="arow done">
+        <div class="ahead"><b>רחל לוי</b><span class="st done">אושרה סופית</span></div>
+        <div class="atime">נשלח 25/04 10:30 · ענתה 25/04 16:45</div>
+      </div>
+
+      <div class="arow said">
+        <div class="ahead"><b>יעל דוד</b><span class="st said">אישרה זמינות</span></div>
+        <div class="atime">נשלח 26/04 09:15 · ענתה 26/04 15:20</div>
+      </div>
+
+      <div class="arow said">
+        <div class="ahead"><b>מיכל אברהם</b><span class="st said">אישרה זמינות</span></div>
+        <div class="atime">נשלח 26/04 09:15 · ענתה 26/04 18:02</div>
+      </div>
+
+      <div class="arow exp">
+        <div class="ahead"><b>נועה מזרחי</b><span class="st exp">פג תוקף</span></div>
+        <div class="atime">נשלח 27/04 08:00 · לא ענתה · הקישור פג אחרי 48 שעות</div>
+        <button class="btn-o" style="margin-top:6px">שלח שוב</button>
+      </div>
+
+      <div class="arow pend">
+        <div class="ahead"><b>דנה ברק</b><span class="st pend">ממתינה למענה</span></div>
+        <div class="atime">נשלח 28/04 11:40 · נותרו 31 שעות</div>
+      </div>
+
+      <button class="btn btn-g">שלח אישור סופי לכל מי שאישרה זמינות (3)</button>
+      <div class="warnbox">
+        ⚠️ <b>אישור 3 יביא ל-5 מתוך 6.</b> אישור מעבר ל-6 <b>אפשרי ואינו חסום</b> — תופיע אזהרה:
+        <i>"ההצעה תומחרה ל-6 דיילות; דיילת נוספת היא עלות שהלקוח לא משלם עליה."</i>
+      </div>
+    </div>
+
+    <!-- עמודה שמאלית: המאגר הזמין -->
+    <div class="col">
+      <h2>מועמדות מתאימות</h2>
+      <div class="cs">8 ראשונות מתוך 23 שעברו את הסינון · השאר בגלילה</div>
+
+      <div class="sorts">
+        <button class="sort on">קרבה</button>
+        <button class="sort">עבדה אצל הלקוח הזה</button>
+        <button class="sort">תענה הכי מהר</button>
+        <button class="sort">הזולה ביותר</button>
+      </div>
+      <div class="sortnote">
+        ברירת-המחדל היא <b>קרבה</b>; מ-72 שעות לפני האירוע היא מתחלפת אוטומטית ל<b>"תענה הכי מהר"</b>.
+        הזווית משנה רק את הסדר — <b>מי נכנסת לרשימה ומה כתוב על כל כרטיס אינם משתנים</b>.
+      </div>
+
+      <div class="cand pick">
+        <span class="cbx"></span>
+        <div style="flex:1">
+          <div class="cname">ליאת רוזנברג</div>
+          <div class="cmeta">052-1234567 · רמת גן</div>
+          <div class="chips">
+            <span class="chip good">עבדה אצל מדיטק 3×</span>
+            <span class="chip good">אישרה 9 מ-10</span>
+            <span class="chip">2.5 ק"מ</span>
+            <span class="chip grey">יש רכב</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cand pick">
+        <span class="cbx"></span>
+        <div style="flex:1">
+          <div class="cname">גלי שפירא</div>
+          <div class="cmeta">050-5551234 · תל אביב</div>
+          <div class="chips">
+            <span class="chip good">אישרה 7 מ-8</span>
+            <span class="chip">4.2 ק"מ</span>
+            <span class="chip warn">עבדה לאחרונה לפני 9 שבועות</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cand">
+        <span class="cbx"></span>
+        <div style="flex:1">
+          <div class="cname">תמר נבון</div>
+          <div class="cmeta">054-8887766 · גבעתיים</div>
+          <div class="chips">
+            <span class="chip grey">טרם נצבר מידע</span>
+            <span class="chip">3.1 ק"מ</span>
+            <span class="chip grey">2 אירועים בסך הכול</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cand">
+        <span class="cbx"></span>
+        <div style="flex:1">
+          <div class="cname">אורית בן-דוד</div>
+          <div class="cmeta">053-2223344 · פתח תקווה</div>
+          <div class="chips">
+            <span class="chip good">עבדה אצל מדיטק 1×</span>
+            <span class="chip warn">לא ענתה ל-4 הזימונים האחרונים</span>
+            <span class="chip">11 ק"מ</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cand">
+        <span class="cbx"></span>
+        <div style="flex:1">
+          <div class="cname">שירה כהן-אלון</div>
+          <div class="cmeta">052-4445566 · חולון</div>
+          <div class="chips">
+            <span class="chip good">אישרה 5 מ-6</span>
+            <span class="chip grey">אין קואורדינטות</span>
+            <span class="chip grey">יש רכב</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-p">שלח מייל תיאום (2 נבחרו)</button>
+      <div class="warnbox" style="background:var(--s50);border-color:var(--s200);color:var(--s600)">
+        <b>אין מספר שהמערכת מציעה.</b> המנהלת מסמנת ושולחת <b>בסבבים</b>, ומחליטה בכל סבב מחדש כמה —
+        <b>שיקול דעת אנושי, במכוון.</b> כל זימון עודף שנסגר שולח "המשרה כבר אוישה", ושליחה נדיבה מדי
+        <b>שוחקת את שיעור-ההיענות</b>, שהוא 40% מהדירוג.
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <b>🔴 למה אין כאן "התאמה 87%" — וזו ההכרעה החשובה במסך:</b>
+    מספר בודד <b>לא אומר למה</b>. שתי הפרסונות שנבדקו במחקר אמרו שיפסיקו לסמוך על כלי אטום.
+    <b>צ'יפי-ההנמקה פותרים את שני הצדדים בבת אחת:</b> הסדר נשאר סמוי (כפי שהאפיון דורש),
+    ההנמקה גלויה, <b>והמנהלת יכולה לחלוק על הדירוג במקום לציית לו.</b>
+    <b>הצ'יפים הם חלק מהמפרט, לא קישוט.</b><br>
+    <b>🔴 מה לחיץ ולאן:</b> <b>תיבת-סימון</b> — בוחרת מועמדת, ומעדכנת את המונה בכפתור ·
+    <b>"שלח מייל תיאום"</b> — <b>מבצע</b>: יוצר שורות זימון עם קישור אישי ·
+    <b>"שלח שוב"</b> — <b>מבצע</b>: מרענן את הקישור <b>על אותה שורה</b>, בלי שורה חדשה ובלי סטטוס חדש ·
+    <b>"שלח אישור סופי"</b> — <b>מבצע</b>: מעביר את מי שאישרה זמינות ל"אושרה סופית" ושולח את פרטי האירוע ·
+    <b>ארבע הזוויות</b> — <b>מסדרות בלבד</b>, לא מסננות · <b>"2 פג תוקפן" בראש</b> — מגלגל לשורות הרלוונטיות.<br>
+    <b>🔴 ומה שהמסך אומר בקול ולא מסתיר:</b> מרכיב <b>אמינות ההגעה כבוי</b> עד מודול 6,
+    ו<b>"טרם נצבר מידע"</b> מוצג לדיילת עם פחות מ-3 תשובות — <b>במקום ציון נמוך שנראה כמו שיפוט.</b>
+    <b>ומרכיב בלי דאטה נאמר בקול ולעולם לא נשאר אפס שקט</b> — אפס מעניש דיילת על תקלה של המערכת.
+  </div>
+
+</div>
+</body>
+</html>
