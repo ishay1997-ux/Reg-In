@@ -147,7 +147,7 @@ deactivation), validations, permissions, failure modes, connections. **Ishay: "�
   signal) **but the column is NOT labelled "דירוג"** — that reads as the system's verdict when it is
   the manager's impression. **And the mockup's 4.9/4.7 decimals go — the column is `int`.**
 
-### Process ב׳ · Assignment to an event — ⏸️ PRESENTED, AWAITING ISHAY
+### Process ב׳ · Assignment to an event — presented *(⚠️ this header recorded the mid-round state; **the process was APPROVED later the same evening — see "Process ב׳ — ✅ CLOSED" below**. Corrected 06/08 after a handoff measurement found the file asserting two contradictory states for the same process.)*
 
 Full narrative delivered against live data (כנס לקוחות שנתי · מדיטק · 22/08/2026 · אקספו ת"א ·
 18:00–22:00 · 6 needed · 17 days out): the four layers running behind the screen · reasoning chips
