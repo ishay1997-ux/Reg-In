@@ -66,10 +66,20 @@ only) · the typed-echo gate before every apply · `docs/schema.sql` refreshed a
   local-only baseline + 7 applied remote migrations, latest `20260707163709_module1_users_rls_initplan_select_wrap`).
   ⚠️ **This file-count line is a 08/07 snapshot and is stale by design** — the authoritative live
   count is in §0.0 above (22/21 as of 01/08). Do not "fix" one without re-measuring both.
-- **16 tables**: roles, modules, permissions, users, login_attempts (Module-1 infra, RLS+policies live) ·
-  customers, products, price_tiers, params, quotes, quote_services, projects, hostesses,
-  salary_reports, assignments, logistics (11 business tables — live RLS **on** with 0 policies =
-  intended deny-all; the enable-RLS exists in NO migration → restore-gap, §7.48).
+- **20 tables** (re-counted from `docs/schema.sql` 06/08/2026; this line said **16** — a 08/07 snapshot
+  taken before `customer_contacts`, `email_log`, `login_rpc_calls` and `product_costs` shipped):
+  roles, modules, permissions, users, login_attempts, login_rpc_calls (Module-1 infra, RLS+policies live
+  except the two deny-all-by-design logs) · customers, customer_contacts, products, product_costs,
+  price_tiers, params, quotes, quote_services, email_log, projects, hostesses, salary_reports,
+  assignments, logistics.
+  ⚠️ **Corrected 06/08/2026 — this line also claimed the "11 business tables" are all "RLS on with
+  0 policies = intended deny-all". That was true on 08/07 and broke when M2/M3 shipped policies.**
+  Measured against `docs/schema.sql`: **6 of the original 11 now HAVE policies** (customers, quotes,
+  quote_services, products, price_tiers, params — plus the newer customer_contacts, email_log,
+  product_costs) · **5 are still deny-all**: **projects, hostesses, salary_reports, assignments,
+  logistics** (this is the set behind the `🚧 מ4` line in `PROJECT_MASTER §6`). The Hebrew-side twin of
+  this fact lives in `src/CLAUDE.md` §RLS, which counted it correctly all along.
+  The enable-RLS itself still exists in NO migration → restore-gap, §7.48 (unchanged).
 - No triggers, no views, no enums (text+CHECK pattern), no installed extensions beyond platform
   defaults (`pg_cron` available, not installed — §7.42).
 - Advisors snapshot (08/07/2026 08:34): **security** — 12× `rls_enabled_no_policy` INFO (by design,
@@ -118,6 +128,13 @@ only) · the typed-echo gate before every apply · `docs/schema.sql` refreshed a
 | `assignments` | `responded_at` (timestamptz) — **אינו קיים ולא תוכנן בשום מקום**; חוסם את זווית-המיון "תענה הכי מהר", **שהיא ברירת-המחדל לאירוע קרוב מ-72 שעות**. ⚠️ **לא לגזור מ-`updated_at`** — טריגר דורס אותו, ומ8 יכתוב `salary_report_id` | ‏`module4_smart_match_research` §11.6#8 + Discovery מ4 | 4 |
 | `assignments` | סימון **"אחראית משמרת"** — אחת לכל אירוע; היא איש-הקשר בשטח במייל האישור של האחרות | הכרעת-ישי 05/08/2026 (‏Discovery מ4 · §ב5) | 4 |
 | `params` | **שבעה ערכי `smart_match` חדשים** — שלושת המשקלים המעודכנים (0.40 היענות · 0.35 אמינות · 0.25 קרבה) · שער-מרחק 80 · גולפוסט 40 · ריסון m=3 · חלון 12→24 חודשים · מינימום-3-תשובות. 🔴 **ושלוש השורות הקיימות במסד שגויות** (`משקולת_1W_דירוג`=0.4 · `משקולת_2W_קרבה`=0.3 · `משקולת_3W_מהימנות`=0.3) — הן שמות מרכיב (`דירוג`) שההכרעה **הוציאה מהציון**. נמדד חי 05/08/2026 | ‏§7.15↳ + `module4_smart_match_research` §11.1 | 4 |
+| `hostesses` | **`has_car` (בוליאני)** — **שער מותנה-מרחק, לא מקדם בציון**: מעל **40 ק"מ** בלי רכב = **פסילה** משכבת-המועמדות. ⚠️ **לא להטמיע אותו כמשקל** — הוא נבחן ונדחה במפורש כמקדם | הכרעת-ישי 06/08/2026 (‏Discovery מ4 · `specs/module_04_hostesses/processes-approved.md:93,439`) | 4 |
+| `assignments` | **הרחבת ה-CHECK של סטטוס-השיבוץ לששת הסטטוסים** — הרשימה הקנונית ב-`processes-approved.md §ב3ב` *(מצביע בכוונה, לא העתק: הרשימה כבר הייתה פזורה בחמישה סעיפים, ורביעי לא נחוץ)*. 🔴 **ו"פג תוקף" אינו סטטוס שביעי** — הוא **נגזר** (`ממתין` **וגם** 48 שעות מהשליחה) ⇒ **אינו נכנס לעמודה ואינו דורש מיגרציה** | הכרעת-ישי 06/08/2026 (‏Discovery מ4 · `processes-approved.md:223,353,407` — *"ששת הסטטוסים סגורים… אסור להוסיף סטטוס"*) | 4 |
+
+⚠️ **שני פריטים שהאפיון מנה כ"כבר מוכרע וממתין לביצוע" (`processes-approved.md:311-314`) ואינם כאן
+בכוונה — `travel_amount` וטבלת-ההעדפה. הם טרם הוכרעו, ולכן מקומם ב-Lane B (§3), לא בטבלה הזאת.**
+*(נבדק 06/08/2026: כל שאר הרשימה שם — ת"ז→סורוגייט · `address`/קואורדינטות · `invite_token`/`invite_sent_at` ·
+שדות-נוכחות · אילוץ-הייחודיות החלקי · ה-policies — **כן** רשום, בשורות שלמעלה וב-A-10/A-15/§6.)*
 
 Additional decided / nod-pending rows (cite-only):
 
@@ -178,7 +195,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | §7.55 | event-side coordinates + geocode service choice + NULL rule | M4 |
 | §7.65 | business-email uniqueness (hostesses UNIQUE? customers open) | M2/4 |
 | §7.66 | `hourly_rate` ≥ min-wage param — enforcement mechanism (trigger vs app) | M4 (ties 9) |
-| §7.69 | "+ נסיעות" promised in invite template vs absent from salary model | M4/8 |
+| §7.69 | "+ נסיעות" promised in invite template vs absent from salary model. **↳ Discovery M4 (06/08/2026) named the intended column: `travel_amount` — supplied by M4, consumed by M8's salary report** (`specs/module_04_hostesses/processes-approved.md:186,312,457`). ⚠️ **NAMED, NOT RULED.** That spec lists it under *"כבר מוכרע וממתין לביצוע"*, but no ruling section for it exists and this §7 item is still open. **Ishay rules it — iron rule 1 + rule 13(ו); a Discovery session naming a column is not a decision.** | M4/8 |
 | §7.70 | typed params + history (split money/templates/integration, or minimum UNIQUE+validation) | M3 seed |
 | §7.19 | bonus split + per-hostess actual-hours derivation | M8 |
 | §7.22 | logistics `actual_qty` < `planned_qty` semantics (+possible CHECK) | M5/8 |
@@ -189,6 +206,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | §7.60 | Module 10 has no spec — its tables (dispatch-log etc.) synthesized at blueprint | M10 |
 | §7.23 | full audit trail (who-changed-what) — deliberately deferred | reconsider at M12 |
 | §7.71 | DROP timing for deprecated `quotes.pdf_url` | M12 cleanup (or never) |
+| 🆕 **no §7 number yet — needs one from Ishay** | **customer↔hostess preference table `(לקוח, דיילת, שלושה-מצבים)`** — surfaced by Discovery M4 (`specs/module_04_hostesses/processes-approved.md:313`) inside a list headed *"כבר מוכרע וממתין לביצוע"*. ⚠️ **Measured 06/08/2026: no ruling section for it exists anywhere in the spec** — not the entity name, not what the three states are, not who writes to it. Recorded here so it is not lost; **it cannot be executed until it has a §7 number and a ruling** (this file never decides — §10.4) | M4 |
 
 ## 4. Lane C — Engineering hygiene (no product decision; execution discipline)
 
