@@ -96,7 +96,10 @@ block_pipe() {
 MSG
   exit 2
 }
-printf '%s' "$CMD" | grep -Eq '(npm|pnpm|yarn)[[:space:]]+(run[[:space:]]+)?(gate|test|test:run|test:e2e|lint|build|verify|dup|deadcode|audit|check:context|smoke)\b[^|]*\|[[:space:]]*(head|tail|grep|less|more)\b' && block_pipe
+# ‏`check:[a-z-]+` ולא `check:context` מפורש — הרשימה הזו נשאה הַמְנָיָה קשיחה ש**התיישנה
+# בשקט**: ‏`check:docs-structure` נוסף ל-`gate` ולא לכאן, ולכן הוא היה **הפקודה היחידה בשער
+# שצינור אליה לא נחסם**. מחלקת-תווים מכסה גם כל `check:*` עתידי. *(נמדד ותוקן 07/08/2026.)*
+printf '%s' "$CMD" | grep -Eq '(npm|pnpm|yarn)[[:space:]]+(run[[:space:]]+)?(gate|test|test:run|test:e2e|lint|build|verify|dup|deadcode|audit|check:[a-z-]+|smoke)\b[^|]*\|[[:space:]]*(head|tail|grep|less|more)\b' && block_pipe
 printf '%s' "$CMD" | grep -Eq '\b(vitest|playwright|eslint|tsc|prettier)\b[^|]*\|[[:space:]]*(head|tail|grep|less|more)\b' && block_pipe
 
 exit 0
