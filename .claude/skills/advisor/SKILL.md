@@ -24,7 +24,12 @@ both recommendation rules) · `_shared/discipline.md` (which claim is verified w
 (before-every-write rules; the record/rule/reconcile lane test) · `_shared/failure-modes.md`
 (the five failure modes + self-review questions) · `docs/CLAUDE.md` (ripple rule 13, file gates,
 the frozen emoji legend) · `~/.claude/references/ishay-response-playbook.md` (the full model of
-how Ishay responds; the four rows below are only the ones that change a message you are writing).
+how Ishay responds; the four rows below are only the ones that change a message you are writing) ·
+🔴 `~/.claude/references/session-handoff-guide.md` (**session boundaries: when to rotate, compact vs
+fresh session, the acceptance test, what a handoff must carry. Sourced 06/08/2026 from Anthropic, the
+Claude Code team and published handoff specs — a new advisor will NOT re-derive this and must not try;
+the numbers are measured, not estimated. Operative: rotate before 60% · auto-compact is never a usable
+warning · an incoming session answers an acceptance test before acting.**).
 
 ## Boundaries
 
