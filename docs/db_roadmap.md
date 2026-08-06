@@ -66,10 +66,20 @@ only) · the typed-echo gate before every apply · `docs/schema.sql` refreshed a
   local-only baseline + 7 applied remote migrations, latest `20260707163709_module1_users_rls_initplan_select_wrap`).
   ⚠️ **This file-count line is a 08/07 snapshot and is stale by design** — the authoritative live
   count is in §0.0 above (22/21 as of 01/08). Do not "fix" one without re-measuring both.
-- **16 tables**: roles, modules, permissions, users, login_attempts (Module-1 infra, RLS+policies live) ·
-  customers, products, price_tiers, params, quotes, quote_services, projects, hostesses,
-  salary_reports, assignments, logistics (11 business tables — live RLS **on** with 0 policies =
-  intended deny-all; the enable-RLS exists in NO migration → restore-gap, §7.48).
+- **20 tables** (re-counted from `docs/schema.sql` 06/08/2026; this line said **16** — a 08/07 snapshot
+  taken before `customer_contacts`, `email_log`, `login_rpc_calls` and `product_costs` shipped):
+  roles, modules, permissions, users, login_attempts, login_rpc_calls (Module-1 infra, RLS+policies live
+  except the two deny-all-by-design logs) · customers, customer_contacts, products, product_costs,
+  price_tiers, params, quotes, quote_services, email_log, projects, hostesses, salary_reports,
+  assignments, logistics.
+  ⚠️ **Corrected 06/08/2026 — this line also claimed the "11 business tables" are all "RLS on with
+  0 policies = intended deny-all". That was true on 08/07 and broke when M2/M3 shipped policies.**
+  Measured against `docs/schema.sql`: **6 of the original 11 now HAVE policies** (customers, quotes,
+  quote_services, products, price_tiers, params — plus the newer customer_contacts, email_log,
+  product_costs) · **5 are still deny-all**: **projects, hostesses, salary_reports, assignments,
+  logistics** (this is the set behind the `🚧 מ4` line in `PROJECT_MASTER §6`). The Hebrew-side twin of
+  this fact lives in `src/CLAUDE.md` §RLS, which counted it correctly all along.
+  The enable-RLS itself still exists in NO migration → restore-gap, §7.48 (unchanged).
 - No triggers, no views, no enums (text+CHECK pattern), no installed extensions beyond platform
   defaults (`pg_cron` available, not installed — §7.42).
 - Advisors snapshot (08/07/2026 08:34): **security** — 12× `rls_enabled_no_policy` INFO (by design,
@@ -113,6 +123,27 @@ only) · the typed-echo gate before every apply · `docs/schema.sql` refreshed a
 | `quote_services` | `closing_unit_cost` (הקפאת עלות) | §7.28 | 3 |
 | `quotes` | `estimated_start_time` + `estimated_end_time` (time); `estimated_hours` נגזר-מההפרש | §7.82/F23 | 3 |
 | `params` / `roles` / `modules` / `salary_reports` | אילוצי-ייחודיות | §7.40 | 2/3/8 |
+| `hostesses` | `languages text[] not null default '{}'` ⚠️ **(שונה מ-`speaks_english boolean` בהכרעת-ישי 06/08/2026 — *"הגיוני שיהיה שפות"*, כפי שניסח מלכתחילה. עלות-בנייה זהה — רב-בחירה במקום תיבה — וחוסך מיגרציה אם יידרשו רוסית/ערבית. **המיגרציה טרם נכתבה, ולכן השינוי הוא טקסט בלבד.**)** — **שדה-מידע בכרטיס הדיילת בלבד.** 🚫 **אינו תנאי בשער של שכבה 1 ואינו עמודה בטבלת-המאגר** *(הכרעת-ישי 06/08/2026)*: לאירוע אחד יש **תפקידים שונים** — *"אולי סבבה מישהי שתהיה עם המדפסת ולא צריכה את השפה"* — ושער ברמת-האירוע מניח שכל העמדות זהות. **השדה מיידע; המנהלת בוחרת ידנית ממילא (C5:311).** ‏🚧 הצעד הבא אם יידרש: **צ'יפ-הקשר** בכרטיס-המועמדת, לא שער | הכרעת-ישי 06/08/2026 (‏Discovery מ4 · `research §7` פריט 8, שהיה ⚪ "לשאול את ישי") | 4 |
+| **טבלה חדשה — אי-זמינות דיילת** | `(hostess_id, מ-תאריך, עד-תאריך, הערה)` — הצהרת חופשה/היעדרות; **תנאי חמישי בשער של שכבה 1** | הכרעת-ישי 05/08/2026 (‏Discovery מ4 · `specs/module_04_hostesses/processes-approved.md` §א3) | 4 |
+| `assignments` | `responded_at` (timestamptz) — **אינו קיים ולא תוכנן בשום מקום**; חוסם את זווית-המיון "תענה הכי מהר", **שהיא ברירת-המחדל לאירוע קרוב מ-72 שעות**. ⚠️ **לא לגזור מ-`updated_at`** — טריגר דורס אותו, ומ8 יכתוב `salary_report_id` | ‏`module4_smart_match_research` §11.6#8 + Discovery מ4 | 4 |
+| `assignments` | סימון **"אחראית משמרת"** — אחת לכל אירוע; היא איש-הקשר בשטח במייל האישור של האחרות | הכרעת-ישי 05/08/2026 (‏Discovery מ4 · §ב5) | 4 |
+| `params` | **שבעה ערכי `smart_match` חדשים** — שלושת המשקלים המעודכנים (0.40 היענות · 0.35 אמינות · 0.25 קרבה) · שער-מרחק 80 · גולפוסט 40 · ריסון m=3 · חלון 12→24 חודשים · מינימום-3-תשובות. 🔴 **ושלוש השורות הקיימות במסד שגויות** (`משקולת_1W_דירוג`=0.4 · `משקולת_2W_קרבה`=0.3 · `משקולת_3W_מהימנות`=0.3) — הן שמות מרכיב (`דירוג`) שההכרעה **הוציאה מהציון**. נמדד חי 05/08/2026 | ‏§7.15↳ + `module4_smart_match_research` §11.1 | 4 |
+| `hostesses` | **`has_car` (בוליאני)** — **שער מותנה-מרחק, לא מקדם בציון**: מעל **40 ק"מ** בלי רכב = **פסילה** משכבת-המועמדות. ⚠️ **לא להטמיע אותו כמשקל** — הוא נבחן ונדחה במפורש כמקדם | הכרעת-ישי 06/08/2026 (‏Discovery מ4 · `specs/module_04_hostesses/processes-approved.md:93,439`) | 4 |
+| `assignments` | **הרחבת ה-CHECK של סטטוס-השיבוץ לששת הסטטוסים** — הרשימה הקנונית ב-`processes-approved.md §ב3ב` *(מצביע בכוונה, לא העתק: הרשימה כבר הייתה פזורה בחמישה סעיפים, ורביעי לא נחוץ)*. 🔴 **ו"פג תוקף" אינו סטטוס שביעי** — הוא **נגזר** (`ממתין` **וגם** 48 שעות מהשליחה) ⇒ **אינו נכנס לעמודה ואינו דורש מיגרציה** | הכרעת-ישי 06/08/2026 (‏Discovery מ4 · `processes-approved.md:223,353,407` — *"ששת הסטטוסים סגורים… אסור להוסיף סטטוס"*) | 4 |
+
+| **טבלה חדשה — העדפת-לקוח** | **`(customer_id, hostess_id, preference)` — תלת-מצבית.** נולדת מהסימון *מצוינת / בסדר / לא-לשלוח-ללקוח-הזה-שוב* שמ6 מזין בסגירה התפעולית. 🔑 **והמצב השלילי נצמד ללקוח ולא לדיילת** — דיילת יכולה להתאים ללקוח א' ולא לב' בלי להיענש גלובלית; **זו הסיבה היחידה שהטבלה קיימת** ולא עמודה על `hostesses`. ➕ **וסימון שלילי מחייב סיבה רשומה** (‏TempWorks/Avionté; תביעות-אפליה נסבו על דגלים בלי נימוק). ⚠️ **החוב הכתיבה הוא של מ6** — ‏`🚧 מ6 ← מ4` ב-`PROJECT_MASTER §6`; **מ4 קוראת ממנה בשכבות 1–2 של Smart Match** | הכרעת-ישי 29/07/2026 22:20 (‏§7.15↳ · `PROJECT_MASTER:379` · `module4_smart_match_research` §8, §9.4, §11 טבלה שורה 2) | 4 (קריאה) · 6 (כתיבה) |
+
+⚠️ **תיקון שנכתב 06/08/2026 22:4X, ובמקום שבו הטעות נעשתה.** קודם עמד כאן שהפריטים `travel_amount`
+וטבלת-ההעדפה **"טרם הוכרעו"** והם הועברו ל-Lane B. **זה היה שגוי — שניהם מוכרעים**, ומצאתי זאת רק
+כשישי שאל "מה להכריע": ‏`travel_amount` — **§7.69, הכרעת-ישי 01/08/2026** (סכום קבוע למשמרת;
+`PROJECT_MASTER:294,308,395`) · טבלת-ההעדפה — **§7.15↳, הכרעת-ישי 29/07/2026** (`PROJECT_MASTER:379`).
+🔑 **ולמה זה קרה, כי זה הלקח:** חיפשתי את ההכרעה בתיקיית-האפיון של מודול 4 וב-Lane B של הקובץ הזה,
+**ולא ב-`PROJECT_MASTER §7` — שהוא ה-SSOT היחיד לשאלות פתוחות** (`docs/CLAUDE.md`). ‏**Lane B כאן היה
+מיושן בעצמו** (נכתב 08/07 ולא עודכן כשההכרעה ניתנה ב-01/08) — כלומר **מראה מיושנת אישרה לי מסקנה
+שגויה.** ⇒ **"לא מצאתי הכרעה" אינו "אין הכרעה", אלא אם חיפשת ב-§7.**
+
+*(ושאר הרשימה ב-`processes-approved.md:311-314` נבדקה ו**כן** רשומה: ת"ז→סורוגייט · `address`/קואורדינטות ·
+`invite_token`/`invite_sent_at` · שדות-נוכחות · אילוץ-הייחודיות החלקי · ה-policies.)*
 
 Additional decided / nod-pending rows (cite-only):
 
@@ -173,7 +204,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | §7.55 | event-side coordinates + geocode service choice + NULL rule | M4 |
 | §7.65 | business-email uniqueness (hostesses UNIQUE? customers open) | M2/4 |
 | §7.66 | `hourly_rate` ≥ min-wage param — enforcement mechanism (trigger vs app) | M4 (ties 9) |
-| §7.69 | "+ נסיעות" promised in invite template vs absent from salary model | M4/8 |
+| §7.69 | "+ נסיעות" promised in invite template vs absent from salary model — **✅ RULED (Ishay, 01/08/2026): fixed sum per shift.** Salary formula becomes `Σ(hours × rate-snapshot) + bonuses + (travel-param × shifts that month)`, and **travel is a SEPARATE column in the accountant's Excel, never folded into pay** (expense reimbursement is taxed differently). Gross-profit gets the mirror direct-expense line `travel-param × shifts per event` — omitting it **inflates reported profit**. ⇒ **column `assignments.travel_amount`, supplied by M4** (`PROJECT_MASTER:294,308,395`). ⏳ **The only thing still open is the AMOUNT** — it is verified with the accountant before M10 sends real mail; the column and the mechanism are not waiting on anything. ⚠️ *(This row said "open" until 06/08/2026 — it was written 08/07 and never updated when §7.69 was ruled on 01/08. `PROJECT_MASTER §7` is the SSOT; this file mirrors it.)* | M4/8 |
 | §7.70 | typed params + history (split money/templates/integration, or minimum UNIQUE+validation) | M3 seed |
 | §7.19 | bonus split + per-hostess actual-hours derivation | M8 |
 | §7.22 | logistics `actual_qty` < `planned_qty` semantics (+possible CHECK) | M5/8 |

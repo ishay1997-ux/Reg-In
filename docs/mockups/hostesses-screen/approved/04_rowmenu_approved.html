@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מוקאפ מ4 · מסך 4 — תפריט פעולות פר-שורה · טיוטה</title>
+<style>
+  /* פלטה וגופן נשאבו מ-src/ באותו תור (grep על bg|text|border), לא מהמוקאפ הקודם ולא מהעין.
+     נמדד: slate מופיע ~5× מכל צבע אחר · teal=מותג ופעולה · green=אושר · amber=ממתין/אזהרה ·
+     red=דחוף/שלילי. הקובץ הזה יורש את אותם משתנים מ-02_smartmatch_approved.html. */
+  :root{
+    --primary:#0D9488;--teal50:#F0FDFA;--teal100:#CCFBF1;--teal700:#0F766E;
+    --green50:#F0FDF4;--green100:#DCFCE7;--green200:#BBF7D0;--green700:#15803D;
+    --amber50:#FFFBEB;--amber200:#FDE68A;--amber700:#B45309;
+    --red50:#FEF2F2;--red200:#FECACA;--red600:#DC2626;--red700:#B91C1C;
+    --bg:#F8FAFC;--s50:#F8FAFC;--s100:#F1F5F9;--s200:#E2E8F0;--s300:#CBD5E1;
+    --s400:#94A3B8;--s500:#64748B;--s600:#475569;--s700:#334155;--s800:#1E293B;--r:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--s800);font-size:14px;
+       font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:16px 18px 30px}
+  .note{background:var(--amber50);border:1px solid var(--amber200);color:#92400E;border-radius:var(--r);
+        padding:9px 12px;font-size:12px;margin-bottom:14px;line-height:1.65}
+  h1{font-size:19px;margin:0}
+  .sub{color:var(--s500);font-size:12px;margin-top:2px}
+  .back{color:var(--teal700);font-size:12.5px;font-weight:600;margin-bottom:6px}
+
+  .cols{display:flex;gap:14px;align-items:flex-start}
+  .col{flex:1;background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);padding:12px 14px}
+  .col h2{font-size:14.5px;margin:0 0 2px}
+  .col .cs{font-size:11.5px;color:var(--s500);margin-bottom:10px}
+
+  /* שורת-זימון: זהה לזו שאושרה במסך 2. אלמנט צבוע אחד לשורה — תג-הסטטוס. */
+  .arow{border:1px solid var(--s200);border-radius:var(--r);padding:9px 11px;margin-bottom:8px;position:relative}
+  .arow.focus{border-color:var(--primary);border-width:1.5px}
+  .ahead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .nm{font-weight:600}
+  .right{display:flex;align-items:center;gap:7px}
+  .st{font-size:11px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap}
+  .st.done{background:var(--green100);color:var(--green700)}
+  .st.said{background:var(--teal100);color:var(--teal700)}
+  .st.pend{background:var(--s100);color:var(--s500)}
+  .st.exp{background:var(--amber200);color:#92400E}
+  .st.no{background:var(--s100);color:var(--s600);border:1px solid var(--s200)}
+  .st.rel{background:var(--s100);color:var(--s500);border:1px dashed var(--s300)}
+  .atime{font-size:11px;color:var(--s500);margin-top:3px}
+  .lead{font-size:11px;color:var(--green700);font-weight:600;margin-top:3px}
+
+  /* ⋯ — כפתור-אייקון בשורה. 30px ממוסגר, בדיוק כמו src/components/RowAction.jsx (tone=neutral):
+     border-slate-200 · bg-white · text-slate-600. לא ממציאים כפתור חדש למודול חדש. */
+  .dots{width:30px;height:30px;border-radius:6px;border:1px solid var(--s200);background:#fff;
+        color:var(--s600);font-size:15px;line-height:1;display:inline-flex;align-items:center;
+        justify-content:center;flex:none;font-weight:700}
+  .dots.on{border-color:var(--primary);color:var(--teal700);background:var(--teal50)}
+
+  /* התפריט מצויר פתוח מתחת לשורה שלו — במסך האמיתי הוא צף מעליה. */
+  .menu{width:250px;background:#fff;border:1px solid var(--s200);border-radius:var(--r);
+        box-shadow:0 8px 24px rgba(15,23,42,.13);padding:5px;margin:6px 0 4px 0}
+  .mi{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:7px;font-size:12.5px;color:var(--s700)}
+  .mi .ic{width:17px;text-align:center;flex:none;font-size:12.5px}
+  .mi.primary{background:var(--teal50);color:var(--teal700);font-weight:600}
+  .mi.good .ic{color:var(--green700)} .mi.bad .ic{color:var(--red600)}
+  .mi.bad{color:var(--red700)}
+  .mi.mut{color:var(--s500)}
+  .msep{height:1px;background:var(--s200);margin:4px 6px}
+  .mcap{font-size:10.5px;color:var(--s400);padding:2px 9px 5px;line-height:1.5}
+
+  .why{font-size:11px;color:var(--s500);margin:2px 0 10px;line-height:1.6;padding-right:2px}
+  .why b{color:var(--s700)}
+
+  .panel{background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);padding:12px 14px;margin-top:14px}
+  .panel h3{font-size:13.5px;margin:0 0 8px}
+  .t24{border:1px solid var(--red200);background:var(--red50);border-radius:var(--r);padding:10px 12px}
+  .t24 .hd{font-size:12px;color:var(--red700);font-weight:700;margin-bottom:7px}
+  .btn-o{background:#fff;border:1px solid var(--primary);color:var(--teal700);
+         border-radius:8px;padding:6px 13px;font-size:12.5px;font-weight:600}
+  .tel{color:var(--teal700);font-weight:600}
+
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--s200);vertical-align:top}
+  th{color:var(--s500);font-weight:600;font-size:11.5px;background:var(--s50)}
+  code{background:var(--s100);border-radius:4px;padding:1px 5px;font-size:11px;direction:ltr;
+       unicode-bidi:isolate;display:inline-block}
+  .legend{margin-top:14px;font-size:11.5px;color:var(--s500);line-height:1.9;background:#fff;
+          border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);padding:12px 14px}
+  .legend b{color:var(--s700)}
+  .demo{margin-top:12px;font-size:11px;color:var(--s500);background:var(--s50);
+        border:1px dashed var(--s300);border-radius:8px;padding:8px 11px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="note">
+    <b>טיוטה — מסך 4 מתוך 8 · תפריט הפעולות פר-שורה.</b>
+    זה <b>אינו מסך בפני עצמו</b> אלא המשטח שנפתח על שורה בטור "דיילות באירוע" של מסך ה-Smart Match.
+    🔴 <b>והדבר האחד שהוא צריך להגיד:</b> התפריט <b>אינו קבוע — הוא נגזר מהסטטוס של השורה</b>.
+    לכן הוא מצויר כאן <b>פתוח על שלוש שורות שונות</b>: אותו כפתור, שלושה תכנים.
+    <b>‏C5 §5.6.11 מונה שלוש פעולות</b> (סירבה · אישרה · אושרה סופית) <b>ברשימה שטוחה אחת</b> —
+    ורשימה שטוחה מציעה למנהלת "אישור סופי" על דיילת שעוד לא ענתה, ו"סמן שסירבה" על מי שכבר שוחררה.
+  </div>
+
+  <div class="back">← חזרה לשיבוץ חכם</div>
+  <h1>שיבוץ חכם — כנס לקוחות שנתי</h1>
+  <div class="sub">מדיטק בע"מ · 22/08/2026 · 18:00–22:00 · אקספו תל אביב · בעוד 16 ימים</div>
+
+  <div class="cols" style="margin-top:12px">
+
+    <div class="col">
+      <h2>דיילות באירוע</h2>
+      <div class="cs">התפריט נפתח מכפתור ⋯ בקצה כל שורה</div>
+
+      <!-- ① ממתינה למענה -->
+      <div class="arow focus">
+        <div class="ahead">
+          <span class="nm">דנה ברק</span>
+          <span class="right"><span class="st pend">ממתינה למענה</span><button class="dots on">⋯</button></span>
+        </div>
+        <div class="atime">נשלח 05/08 11:40 · נותרו 24 שעות · <span class="tel">052-7778899</span></div>
+      </div>
+      <div class="menu">
+        <div class="mcap">① ממתינה למענה — הקישור חי</div>
+        <div class="mi"><span class="ic">✉</span>שלח את הקישור שוב</div>
+        <div class="msep"></div>
+        <div class="mi good"><span class="ic">✓</span>סמן: אישרה זמינות</div>
+        <div class="mi bad"><span class="ic">✕</span>סמן: סירבה</div>
+        <div class="mi good"><span class="ic">✓✓</span>אושרה סופית — סוכם בטלפון</div>
+        <div class="mcap">שלושתן = <b>סוכם בטלפון</b>, וקיימות רק כי לדיילת אין אפליקציה.
+          ⚠️ <b>אבל האחרונה אינה "סימון": היא מוציאה לדיילת את פרטי האירוע</b> — מייל האישור
+          הסופי נשלח <b>בכל מסלול</b>, ולכן היא נקראת בשמה המלא ולא "סמן:".</div>
+      </div>
+      <div class="why">
+        <b>למה "אושרה סופית" מופיעה כאן ולא רק אחרי "אישרה זמינות":</b> שיחת טלפון אחת יכולה
+        להסתיים ב"אני בפנים, סגור" — <b>וחסימת-קפיצה הייתה מכריחה שתי לחיצות על אירוע אחד.</b>
+        מייל האישור הסופי נשלח בשני המסלולים.
+      </div>
+
+      <!-- ② פג תוקף -->
+      <div class="arow focus">
+        <div class="ahead">
+          <span class="nm">נועה מזרחי</span>
+          <span class="right"><span class="st exp">פג תוקף</span><button class="dots on">⋯</button></span>
+        </div>
+        <div class="atime">נשלח 03/08 08:00 · לא ענתה · הקישור פג אחרי 48 שעות</div>
+      </div>
+      <div class="menu">
+        <div class="mcap">② פג תוקף — <b>אותו סטטוס</b> (<code>pending</code>), פעולה אחרת</div>
+        <div class="mi primary"><span class="ic">✉</span>שלח את הקישור שוב</div>
+        <div class="msep"></div>
+        <div class="mi good"><span class="ic">✓</span>סמן: אישרה זמינות</div>
+        <div class="mi bad"><span class="ic">✕</span>סמן: סירבה</div>
+        <div class="mi good"><span class="ic">✓✓</span>אושרה סופית — סוכם בטלפון</div>
+      </div>
+      <div class="why">
+        <b>אותם ארבעה פריטים כמו ①</b> — <b>מה שמשתנה הוא איזה מהם ראשי.</b>
+        "פג תוקף" אינו סטטוס שביעי אלא מצב נגזר, <b>ולכן אסור שיהיה לו תפריט אחר</b> —
+        רק הדגשה אחרת.
+      </div>
+    </div>
+
+    <div class="col">
+      <h2>דיילות באירוע — המשך</h2>
+      <div class="cs">אותו טור, ארבעת הסטטוסים הנותרים</div>
+
+      <!-- ③ אישרה זמינות -->
+      <div class="arow focus">
+        <div class="ahead">
+          <span class="nm">יעל דוד</span>
+          <span class="right"><span class="st said">אישרה זמינות</span><button class="dots on">⋯</button></span>
+        </div>
+        <div class="atime">נשלח 03/08 09:15 · ענתה 03/08 15:20</div>
+      </div>
+      <div class="menu">
+        <div class="mcap">③ אישרה זמינות — היא בפנים, ההחלטה אצל המנהלת</div>
+        <div class="mi primary"><span class="ic">✓✓</span>אשר סופית ושלח פרטים</div>
+        <div class="msep"></div>
+        <div class="mi bad"><span class="ic">✕</span>סמן: סירבה <span style="color:var(--s400);font-size:11px">(חזרה בה)</span></div>
+        <div class="mi mut"><span class="ic">⤺</span>שחרר — המשרה אוישה</div>
+        <div class="mcap">🚫 <b>אין כאן "שלח שוב"</b> — היא כבר ענתה.</div>
+      </div>
+      <div class="why">
+        <b>"סירבה" כאן היא הכרעה שכבר ניתנה</b> (תהליך ב8): דיילת שחוזרת בה <b>לפני</b> האישור
+        הסופי מתקשרת, והמנהלת מעבירה אותה ל"סירבה". <b>אין מסלול-קישור ואין סטטוס חדש.</b>
+      </div>
+
+      <!-- ④ אושרה סופית -->
+      <div class="arow focus">
+        <div class="ahead">
+          <span class="nm">שרה כהן</span>
+          <span class="right"><span class="st done">אושרה סופית</span><button class="dots on">⋯</button></span>
+        </div>
+        <div class="atime">נשלח 31/07 10:30 · ענתה 31/07 14:20</div>
+        <div class="lead">★ אחראית משמרת</div>
+      </div>
+      <div class="menu">
+        <div class="mcap">④ אושרה סופית — <b>שלוש פעולות שאין לאף שורה אחרת</b></div>
+        <div class="mi"><span class="ic">★</span>בטל סימון אחראית משמרת</div>
+        <div class="msep"></div>
+        <div class="mi mut"><span class="ic">⤺</span>שחרר מהאירוע <span style="color:var(--s400);font-size:11px">(צמצום תקנים)</span></div>
+        <div class="mi bad"><span class="ic">⊘</span>סמן: ביטלה אחרי אישור</div>
+        <div class="mcap">⚠️ שתי האחרונות <b>שולחות מייל</b> ומחזירות את הפרויקט ל"בתהליך".</div>
+      </div>
+      <div class="why">
+        🔴 <b>ושתיהן אינן אותו דבר, אף שהתוצאה על המסך נראית זהה:</b>
+        <b>"שחרר"</b> = <b>אנחנו</b> ויתרנו עליה — <b>לא נספרת בשום צד של הציון.</b>
+        <b>"ביטלה אחרי אישור"</b> = <b>היא</b> חזרה בה — נספרת במרכיב האמינות בערך <code>0.5</code>.
+        <b>כפתור אחד שעושה את שניהם היה מזייף את הדירוג של דיילת חפה.</b>
+      </div>
+
+      <!-- ⑤ סירבה -->
+      <div class="arow">
+        <div class="ahead">
+          <span class="nm">מיכל אברהם</span>
+          <span class="right"><span class="st no">סירבה</span><button class="dots">⋯</button></span>
+        </div>
+        <div class="atime">נשלח 03/08 09:15 · סירבה 03/08 18:02</div>
+      </div>
+      <div class="menu">
+        <div class="mcap">⑤ סירבה — והמנהלת שכנעה אותה בטלפון</div>
+        <div class="mi"><span class="ic">✉</span>פתח זימון חדש</div>
+        <div class="mcap">🔴 <b>ולא "שלח שוב"</b> — זו <b>שורה שנייה</b> (<code>assignment_number+1</code>),
+          והישנה נשארת כהיסטוריה.</div>
+      </div>
+
+      <!-- ⑥ שוחררה -->
+      <div class="arow">
+        <div class="ahead">
+          <span class="nm">רחל לוי</span>
+          <span class="right"><span class="st rel">שוחררה</span><button class="dots">⋯</button></span>
+        </div>
+        <div class="atime">אישרה זמינות · שוחררה אוטומטית כשהמשרה אוישה</div>
+      </div>
+      <div class="menu">
+        <div class="mcap">⑥ שוחררה — פעולת מערכת</div>
+        <div class="mi"><span class="ic">✉</span>פתח זימון חדש</div>
+        <div class="mcap">נדרש כשתקן נפתח מחדש (הלקוח הגדיל, או מישהי ביטלה).</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>🔴 ובתוך 24 השעות האחרונות — אותו תפריט, סדר הפוך</h3>
+    <div class="t24">
+      <div class="hd">⏰ האירוע בעוד 19 שעות · הקישור האישי כבר אינו נוצר</div>
+      <div class="arow" style="background:#fff;margin-bottom:0">
+        <div class="ahead">
+          <span class="nm">דנה ברק</span>
+          <span class="right"><span class="st pend">ממתינה למענה</span><button class="dots on">⋯</button></span>
+        </div>
+        <div class="atime">☎ <span class="tel" style="font-size:13px">052-7778899</span> — לחיצה מחייגת</div>
+      </div>
+      <div class="menu" style="margin-top:8px">
+        <div class="mi primary"><span class="ic">✓✓</span>אושרה סופית — סוכם בטלפון</div>
+        <div class="msep"></div>
+        <div class="mi bad"><span class="ic">✕</span>סמן: סירבה</div>
+        <div class="mi mut" style="opacity:.5"><span class="ic">✉</span>שלח את הקישור שוב <span style="font-size:10.5px">— כבוי</span></div>
+        <div class="mcap">הקישור פג 24 שעות לפני האירוע ⇒ <b>זימון שנשלח עכשיו נולד מת.</b>
+          הוא <b>מוצג מכובה ומנומק</b>, לא נעלם.</div>
+      </div>
+    </div>
+    <div class="why" style="margin-top:9px">
+      <b>למה לא פשוט לבטל את הפקיעה:</b> בשעות האלה המנהלת חייבת לדעת <b>מיד</b>, ומייל
+      א-סינכרוני. <b>הקישור נכון לזמן שיש בו זמן; הטלפון נכון כשאין.</b>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>מפת הפעולות המלאה — ששת הסטטוסים</h3>
+    <table>
+      <tr><th style="width:130px">סטטוס השורה</th><th>מה בתפריט</th><th style="width:150px">מה <u>אינו</u> בתפריט, ולמה</th></tr>
+      <tr><td><b>ממתינה</b> <code>pending</code></td><td>שלח קישור שוב · אישרה זמינות · סירבה · אושרה סופית</td><td>שחרור — אין מה לשחרר</td></tr>
+      <tr><td><b>פג תוקף</b> <i>(נגזר)</i></td><td>זהה לממתינה — <b>"שלח שוב" הופך לראשי</b></td><td>אותו הדבר</td></tr>
+      <tr><td><b>אישרה זמינות</b></td><td>אשר סופית · סירבה (חזרה בה) · שחרר</td><td>"שלח שוב" — כבר ענתה</td></tr>
+      <tr><td><b>אושרה סופית</b></td><td>אחראית משמרת · שחרר · ביטלה אחרי אישור</td><td>אישור סופי — כבר בוצע</td></tr>
+      <tr><td><b>סירבה</b></td><td>פתח זימון חדש</td><td>עדכוני-סטטוס — השורה סגורה</td></tr>
+      <tr><td><b>שוחררה</b></td><td>פתח זימון חדש</td><td>הכול — פעולת מערכת</td></tr>
+      <tr><td><b>ביטלה אחרי אישור</b></td><td><b>אין פעולות</b> — שורת היסטוריה</td><td>המחליפה נבחרת ב-Smart Match</td></tr>
+    </table>
+  </div>
+
+  <div class="legend">
+    <b>🔴 שתי מילים שנשמעות זהות ואינן — וזה הממצא של המסך הזה:</b>
+    <b>"שלח את הקישור שוב"</b> מרענן טוקן על <b>אותה שורה</b>, בלי סטטוס חדש ובלי השפעה על הציון ·
+    <b>"פתח זימון חדש"</b> יוצר <b>שורה שנייה</b> והישנה נשארת. <b>אילו שתיהן היו נקראות "שלח שוב",
+    המנהלת הייתה מוחקת היסטוריה בלי לדעת</b> — וההיענות היא 40% מהדירוג.<br>
+    <b>🔴 מה מבצע ומה רק רושם:</b> <b>מבצעות ושולחות מייל</b> — אשר סופית · שחרר · פתח זימון חדש ·
+    שלח קישור שוב · <b>רק רושמות</b> — אישרה זמינות · סירבה · ביטלה אחרי אישור · אחראית משמרת.
+    <b>המסך חייב להבדיל ביניהן, כי אחת מהן מגיעה לדיילת.</b><br>
+    <b>🔴 ואין כאן מחיקה.</b> אף פריט בתפריט אינו מסיר שורה — בשום סטטוס.<br>
+    <b>🔴 ו"שלח את הקישור שוב" מכובה בשלושה מצבים, לא באחד:</b> הקישור מת ב<b>מוקדם מבין
+    שלושה</b> — <b>המשרה אוישה</b> · 48 שעות מהשליחה · 24 שעות לפני האירוע.
+    <b>בכל אחד מהם הוא מוצג מכובה ומנומק, לא נעלם.</b>
+    ⚠️ <b>ואין בכך חסימה של "עודף-אישורים כאזהרה"</b> — שביעית כגיבוי עדיין אפשרית,
+    דרך <b>"אושרה סופית — סוכם בטלפון"</b>. <b>נסגר ערוץ הקישור, לא היכולת.</b>
+  </div>
+
+  <div class="demo">
+    <b>🏷️ דאטת-הדגמה מול נגזר-ממודל — כדי שבכנס תהיה תשובה ל"מאיפה המספר הזה":</b><br>
+    <b>🌱 מהמסד החי</b> (שתול ב-<code>scripts/demo-seed.mjs</code>, נמדד בקובץ) — כנס לקוחות שנתי ·
+    מדיטק פתרונות בע"מ · אקספו תל אביב, ביתן 2 · 18:00–22:00 · 6 דיילות.<br>
+    <b>🎭 דמו מומצא</b> — שמות הדיילות (דנה ברק · נועה מזרחי · יעל דוד · שרה כהן · מיכל אברהם ·
+    רחל לוי), הטלפונים, שעות השליחה והמענה — <b>המאגר החי ריק, 0 שורות</b> ⇒ אין ממי לשאוב.
+    <b>וגם התאריך 22/08/2026</b>: ה-seed שותל "היום + 24 יום", לא תאריך קבוע.<br>
+    <b>📐 נגזר ממודל</b> — ששת הסטטוסים ומפת-הפעולות (הרשימה הקנונית) · חלון 48 השעות ·
+    מצב 24 השעות · ערך <code>0.5</code> לביטול-אחרי-אישור.
+  </div>
+
+</div>
+</body>
+</html>

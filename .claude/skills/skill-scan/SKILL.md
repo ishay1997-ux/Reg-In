@@ -222,6 +222,13 @@ true, it is true forever and no further finding can be generated.
    be clearer" is not a finding. *(On the measured second pass, the filter rejected one — it works.)*
 2. **The subtraction quota.** Every scan proposes at least one thing to **remove or merge**, or says
    in one line why nothing qualifies. A scan that only adds is failure mode 🅳 with extra steps.
+   ⚠️ **But the quota is never a licence to merge on suspicion** *(measured 06/08/2026: merges proposed
+   as duplicates turned out to guard different things)*. A proposed merge is a citation like any other
+   (`discipline.md`) — verify against the source that the "duplicate" guards the **same** thing before it
+   enters the report. **Carry the proof in the finding's row: what the duplicate protects, and the
+   `file:anchor` where the survivor covers it — a merge without that line reads as unverified, because it
+   is.** Cannot verify this session (no MCP, a contested file)? It is not a candidate: mark it
+   טעון-בדיקה and keep both.
 3. **The stop condition.** Two consecutive passes producing nothing new ⇒ the file is done. Say so
    and stop. Do not go looking for a third.
 

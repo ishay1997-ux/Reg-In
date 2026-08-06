@@ -45,20 +45,25 @@ Refactoring/perf/state-management proposals; messy spots that accumulated during
 Findings route like §4b: a swallowed error on a live user-facing path is a **§6 blocker**; a defensive-but-noisy pattern worth tightening later is a **§7 tech-debt** line.
 
 ### 4. 🧹 Housekeeping Check
-- **`npm run gate`** — must exit 0. This is the project's blocking gate since 29/07/2026:
-  `verify` (lint + format:check + unit tests + build) **plus** `dup` (jscpd), `deadcode` (knip),
-  `audit`, and `check:context`. ⚠️ Closing a module on `verify` alone would certify it on a **weaker
-  bar than every individual build step already passes** — duplication, dead code and a broken
-  context tree would all slip through the most important gate in the project.
+- **`npm run gate`** — must exit 0. This is the **module-close** gate since 29/07/2026; its exact
+  composition is `package.json` §scripts. 🔑 **Do not re-list the steps here** — this line carried a
+  hard-coded enumeration that silently went stale (it omitted `check:docs-structure` entirely).
+  ⚠️ **And `gate` is a SUPERSET of CI, not a synonym for it** *(measured 07/08/2026)*:
+  `.github/workflows/ci.yml` runs the steps separately and **never invokes `gate`**, so
+  `check:docs-structure` runs nowhere except here. ⇒ Closing a module on `verify` alone — **or on
+  "CI was green"** — would certify it on a **weaker bar than every individual build step already
+  passes**: duplication, dead code, a broken context tree and a broken docs structure would all slip
+  through the most important gate in the project.
 - `npm run test:e2e` — run and report pass/fail/skipped (env-var skips are OK, say so).
 - `npm run audit` — different from §2c (that's this module's own code; this is third-party package CVEs, project-wide). If this module added any new dependency, confirm it introduced no new high/critical finding. Pre-existing findings (not caused by this module) are not this module's blocker — note them and move on.
 - `git status` clean of debug/temp files; no stray `console.log`/commented-out blocks in the diff.
 - **No loose ends in the micro-guide:** no step left 🔨 without an explanatory note; status header current.
 - migrations committed together with an updated `docs/schema.sql`; every DB change has its `db_roadmap §10` Done-row. *(The `docs/CHANGELOG.md` DB+code line is no longer required — the file was retired 23/07/2026.)*
 - **DB health:** run Supabase advisors (MCP, read-only — security + performance): zero findings introduced by this module, or a written triage note per finding. Verify no drift between the live DB and `docs/schema.sql` for the tables this module touched (spot-check via `list_tables`).
+  🔴 **ONE finding class is exempt from "introduced by this module" — `rls_enabled_no_policy` is judged whole-DB, never filtered to this module's tables** (added 06/08/2026, Ishay's ruling; this is where the rejected gate-check idea 1.7 actually lands — the advisor already runs this check across the whole database, so the fix is here, in what the reviewer is told to do with the result, not a new script). Do **not** wave such a hit through as "pre-existing / not mine." **Why the per-module filter is wrong for this class specifically:** a table with RLS on and zero policies returns `error:null` + empty rows — a silent blank screen for whatever module reads it — and the 5 tables that carried exactly this defect for weeks (`projects · hostesses · salary_reports · assignments · logistics`) were created in **module 2's** migration yet belong to modules **4/5/6/8**, so every per-module reviewer correctly saw "not mine" and moved on. A deliberate DEFINER-only deny-all (`login_attempts`, `login_rpc_calls`) is fine — note it and move on. Any other `rls_enabled_no_policy` table blocks close until it has a policy or a written, reasoned triage note.
 - Live preview smoke test of the module's key flows (per the verification workflow) with proof (screenshot/log/network).
 - Explicit list of every file changed in this module (code, DB, docs).
-- **`npm run gate`** — the composite (verify + dup + deadcode + audit + check:context). Run it once and report its output rather than reasoning about which checks apply; it also covers the context-integrity check, so there is no separate step for that. Run it once and report the output rather than reasoning about which checks apply. *(It is expected to fail on `deadcode`/`audit` until the quality-gate hardening task lands — see STATUS. **`npm run gate` green is that task's definition of done.**)*
+- **`npm run gate`** — the composite defined in `package.json` §scripts *(not re-listed here on purpose — the enumeration that used to sit here had gone stale)*. Run it once and report its output rather than reasoning about which checks apply; it also covers the context-integrity check, so there is no separate step for that. *(It is expected to fail on `deadcode`/`audit` until the quality-gate hardening task lands — see STATUS. **`npm run gate` green is that task's definition of done.**)*
 
 ### 4c. 🧨 Module Gotchas File (binding — added 28/07/2026)
 **Write or refresh `src/modules/NN_name/CLAUDE.md`** — a short Hebrew file that loads automatically only when a future session touches this module's directory. This is REG-IN's living code map: it sits next to the code, so it cannot drift far, and it costs nothing until it is needed.
@@ -90,6 +95,12 @@ Critical bugs, failed matrix scenarios, RLS gaps that must be resolved before th
 
 ### 7. ⏳ Tech Debt — HANDLE LATER
 Deferred improvements, each with the future module/stage where it must be reopened. These get appended to the micro-guide's Deviations & Tech-Debt Log (section 9) **AND registered as lines in `docs/PROJECT_MASTER.md` §6 with their target module** — §6 is mandatory reading in every module's opening prompt; a debt that lives only in this module's own log will never be found by the module that must repay it.
+
+🔴 **And the reverse sweep, which must PRINT its count — closing module N pays debts other modules are still advertising** (Ishay's approved rule, 05/08/2026). Iron rule 15 enforces one direction only (a guide's token must have a §6 line); it catches a *silent* debt and cannot catch a *paid* one. So grep `🚧 מN` across **all four surfaces where the token lives** — `PROJECT_MASTER §6` · `docs/micro_guides/**` · **`src/**` comments** · `docs/*design_notes*` — and emit one mandatory line:
+
+> `🚧 מN swept — K tokens found across §6 · micro-guides · src comments · design notes; each struck-with-date or justified as still open. (K may be 0 — say so.)`
+
+**Why an output line and not a hook:** a sweep with no output is indistinguishable from a sweep that never ran, and Ishay is the only gate. *(Measured 05/08/2026: module 3's close swept §6 correctly and left live `🚧 מ3` tokens in `micro_guides/module-2.md:45` and `src/lib/customers.js:219` — the same class the journal already recorded at `CLAUDE_CODE_LOG:1007` and §6:393/394. Fourth occurrence. A blocking hook was considered and rejected: it would have to parse STATUS.md's prose module table to learn which modules are closed, and a false block teaches sessions to route around hooks — the principle `block-shell-dialect-mixup.sh` states about itself.)*
 
 ### 👑 Final Merge Verdict
 Binary: **[YES]** — stable, secure, DoD-compliant, mergeable into `dev` now / **[NO]** — at least one Section-6 blocker. Two-sentence justification.
