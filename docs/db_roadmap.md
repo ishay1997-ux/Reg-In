@@ -131,10 +131,19 @@ only) · the typed-echo gate before every apply · `docs/schema.sql` refreshed a
 | `hostesses` | **`has_car` (בוליאני)** — **שער מותנה-מרחק, לא מקדם בציון**: מעל **40 ק"מ** בלי רכב = **פסילה** משכבת-המועמדות. ⚠️ **לא להטמיע אותו כמשקל** — הוא נבחן ונדחה במפורש כמקדם | הכרעת-ישי 06/08/2026 (‏Discovery מ4 · `specs/module_04_hostesses/processes-approved.md:93,439`) | 4 |
 | `assignments` | **הרחבת ה-CHECK של סטטוס-השיבוץ לששת הסטטוסים** — הרשימה הקנונית ב-`processes-approved.md §ב3ב` *(מצביע בכוונה, לא העתק: הרשימה כבר הייתה פזורה בחמישה סעיפים, ורביעי לא נחוץ)*. 🔴 **ו"פג תוקף" אינו סטטוס שביעי** — הוא **נגזר** (`ממתין` **וגם** 48 שעות מהשליחה) ⇒ **אינו נכנס לעמודה ואינו דורש מיגרציה** | הכרעת-ישי 06/08/2026 (‏Discovery מ4 · `processes-approved.md:223,353,407` — *"ששת הסטטוסים סגורים… אסור להוסיף סטטוס"*) | 4 |
 
-⚠️ **שני פריטים שהאפיון מנה כ"כבר מוכרע וממתין לביצוע" (`processes-approved.md:311-314`) ואינם כאן
-בכוונה — `travel_amount` וטבלת-ההעדפה. הם טרם הוכרעו, ולכן מקומם ב-Lane B (§3), לא בטבלה הזאת.**
-*(נבדק 06/08/2026: כל שאר הרשימה שם — ת"ז→סורוגייט · `address`/קואורדינטות · `invite_token`/`invite_sent_at` ·
-שדות-נוכחות · אילוץ-הייחודיות החלקי · ה-policies — **כן** רשום, בשורות שלמעלה וב-A-10/A-15/§6.)*
+| **טבלה חדשה — העדפת-לקוח** | **`(customer_id, hostess_id, preference)` — תלת-מצבית.** נולדת מהסימון *מצוינת / בסדר / לא-לשלוח-ללקוח-הזה-שוב* שמ6 מזין בסגירה התפעולית. 🔑 **והמצב השלילי נצמד ללקוח ולא לדיילת** — דיילת יכולה להתאים ללקוח א' ולא לב' בלי להיענש גלובלית; **זו הסיבה היחידה שהטבלה קיימת** ולא עמודה על `hostesses`. ➕ **וסימון שלילי מחייב סיבה רשומה** (‏TempWorks/Avionté; תביעות-אפליה נסבו על דגלים בלי נימוק). ⚠️ **החוב הכתיבה הוא של מ6** — ‏`🚧 מ6 ← מ4` ב-`PROJECT_MASTER §6`; **מ4 קוראת ממנה בשכבות 1–2 של Smart Match** | הכרעת-ישי 29/07/2026 22:20 (‏§7.15↳ · `PROJECT_MASTER:379` · `module4_smart_match_research` §8, §9.4, §11 טבלה שורה 2) | 4 (קריאה) · 6 (כתיבה) |
+
+⚠️ **תיקון שנכתב 06/08/2026 22:4X, ובמקום שבו הטעות נעשתה.** קודם עמד כאן שהפריטים `travel_amount`
+וטבלת-ההעדפה **"טרם הוכרעו"** והם הועברו ל-Lane B. **זה היה שגוי — שניהם מוכרעים**, ומצאתי זאת רק
+כשישי שאל "מה להכריע": ‏`travel_amount` — **§7.69, הכרעת-ישי 01/08/2026** (סכום קבוע למשמרת;
+`PROJECT_MASTER:294,308,395`) · טבלת-ההעדפה — **§7.15↳, הכרעת-ישי 29/07/2026** (`PROJECT_MASTER:379`).
+🔑 **ולמה זה קרה, כי זה הלקח:** חיפשתי את ההכרעה בתיקיית-האפיון של מודול 4 וב-Lane B של הקובץ הזה,
+**ולא ב-`PROJECT_MASTER §7` — שהוא ה-SSOT היחיד לשאלות פתוחות** (`docs/CLAUDE.md`). ‏**Lane B כאן היה
+מיושן בעצמו** (נכתב 08/07 ולא עודכן כשההכרעה ניתנה ב-01/08) — כלומר **מראה מיושנת אישרה לי מסקנה
+שגויה.** ⇒ **"לא מצאתי הכרעה" אינו "אין הכרעה", אלא אם חיפשת ב-§7.**
+
+*(ושאר הרשימה ב-`processes-approved.md:311-314` נבדקה ו**כן** רשומה: ת"ז→סורוגייט · `address`/קואורדינטות ·
+`invite_token`/`invite_sent_at` · שדות-נוכחות · אילוץ-הייחודיות החלקי · ה-policies.)*
 
 Additional decided / nod-pending rows (cite-only):
 
@@ -195,7 +204,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | §7.55 | event-side coordinates + geocode service choice + NULL rule | M4 |
 | §7.65 | business-email uniqueness (hostesses UNIQUE? customers open) | M2/4 |
 | §7.66 | `hourly_rate` ≥ min-wage param — enforcement mechanism (trigger vs app) | M4 (ties 9) |
-| §7.69 | "+ נסיעות" promised in invite template vs absent from salary model. **↳ Discovery M4 (06/08/2026) named the intended column: `travel_amount` — supplied by M4, consumed by M8's salary report** (`specs/module_04_hostesses/processes-approved.md:186,312,457`). ⚠️ **NAMED, NOT RULED.** That spec lists it under *"כבר מוכרע וממתין לביצוע"*, but no ruling section for it exists and this §7 item is still open. **Ishay rules it — iron rule 1 + rule 13(ו); a Discovery session naming a column is not a decision.** | M4/8 |
+| §7.69 | "+ נסיעות" promised in invite template vs absent from salary model — **✅ RULED (Ishay, 01/08/2026): fixed sum per shift.** Salary formula becomes `Σ(hours × rate-snapshot) + bonuses + (travel-param × shifts that month)`, and **travel is a SEPARATE column in the accountant's Excel, never folded into pay** (expense reimbursement is taxed differently). Gross-profit gets the mirror direct-expense line `travel-param × shifts per event` — omitting it **inflates reported profit**. ⇒ **column `assignments.travel_amount`, supplied by M4** (`PROJECT_MASTER:294,308,395`). ⏳ **The only thing still open is the AMOUNT** — it is verified with the accountant before M10 sends real mail; the column and the mechanism are not waiting on anything. ⚠️ *(This row said "open" until 06/08/2026 — it was written 08/07 and never updated when §7.69 was ruled on 01/08. `PROJECT_MASTER §7` is the SSOT; this file mirrors it.)* | M4/8 |
 | §7.70 | typed params + history (split money/templates/integration, or minimum UNIQUE+validation) | M3 seed |
 | §7.19 | bonus split + per-hostess actual-hours derivation | M8 |
 | §7.22 | logistics `actual_qty` < `planned_qty` semantics (+possible CHECK) | M5/8 |
@@ -206,7 +215,6 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | §7.60 | Module 10 has no spec — its tables (dispatch-log etc.) synthesized at blueprint | M10 |
 | §7.23 | full audit trail (who-changed-what) — deliberately deferred | reconsider at M12 |
 | §7.71 | DROP timing for deprecated `quotes.pdf_url` | M12 cleanup (or never) |
-| 🆕 **no §7 number yet — needs one from Ishay** | **customer↔hostess preference table `(לקוח, דיילת, שלושה-מצבים)`** — surfaced by Discovery M4 (`specs/module_04_hostesses/processes-approved.md:313`) inside a list headed *"כבר מוכרע וממתין לביצוע"*. ⚠️ **Measured 06/08/2026: no ruling section for it exists anywhere in the spec** — not the entity name, not what the three states are, not who writes to it. Recorded here so it is not lost; **it cannot be executed until it has a §7 number and a ruling** (this file never decides — §10.4) | M4 |
 
 ## 4. Lane C — Engineering hygiene (no product decision; execution discipline)
 
