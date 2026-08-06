@@ -113,6 +113,7 @@ only) · the typed-echo gate before every apply · `docs/schema.sql` refreshed a
 | `quote_services` | `closing_unit_cost` (הקפאת עלות) | §7.28 | 3 |
 | `quotes` | `estimated_start_time` + `estimated_end_time` (time); `estimated_hours` נגזר-מההפרש | §7.82/F23 | 3 |
 | `params` / `roles` / `modules` / `salary_reports` | אילוצי-ייחודיות | §7.40 | 2/3/8 |
+| `hostesses` | `speaks_english boolean not null default false` — **שדה-מידע בכרטיס הדיילת בלבד.** 🚫 **אינו תנאי בשער של שכבה 1 ואינו עמודה בטבלת-המאגר** *(הכרעת-ישי 06/08/2026)*: לאירוע אחד יש **תפקידים שונים** — *"אולי סבבה מישהי שתהיה עם המדפסת ולא צריכה את השפה"* — ושער ברמת-האירוע מניח שכל העמדות זהות. **השדה מיידע; המנהלת בוחרת ידנית ממילא (C5:311).** ‏🚧 הצעד הבא אם יידרש: **צ'יפ-הקשר** בכרטיס-המועמדת, לא שער | הכרעת-ישי 06/08/2026 (‏Discovery מ4 · `research §7` פריט 8, שהיה ⚪ "לשאול את ישי") | 4 |
 | **טבלה חדשה — אי-זמינות דיילת** | `(hostess_id, מ-תאריך, עד-תאריך, הערה)` — הצהרת חופשה/היעדרות; **תנאי חמישי בשער של שכבה 1** | הכרעת-ישי 05/08/2026 (‏Discovery מ4 · `specs/module_04_hostesses/processes-approved.md` §א3) | 4 |
 | `assignments` | `responded_at` (timestamptz) — **אינו קיים ולא תוכנן בשום מקום**; חוסם את זווית-המיון "תענה הכי מהר", **שהיא ברירת-המחדל לאירוע קרוב מ-72 שעות**. ⚠️ **לא לגזור מ-`updated_at`** — טריגר דורס אותו, ומ8 יכתוב `salary_report_id` | ‏`module4_smart_match_research` §11.6#8 + Discovery מ4 | 4 |
 | `assignments` | סימון **"אחראית משמרת"** — אחת לכל אירוע; היא איש-הקשר בשטח במייל האישור של האחרות | הכרעת-ישי 05/08/2026 (‏Discovery מ4 · §ב5) | 4 |
