@@ -4,16 +4,28 @@
 <meta charset="utf-8">
 <title>מוקאפ מ4 · מסך 2 — מבט-על שיבוץ (טיוטה לאישור ישי)</title>
 <style>
-  :root{--primary:#0D9488;--teal100:#CCFBF1;--teal700:#0F766E;--bg:#F8FAFC;
-        --s100:#F1F5F9;--s200:#E2E8F0;--s300:#CBD5E1;--s400:#94A3B8;--s500:#64748B;--s600:#475569;--s700:#334155;--s800:#1E293B}
+  /* 🔴 כל הצבעים כאן נלקחו מהקוד האמיתי (src/index.css + grep על src/), לא מהעין:
+     --primary:#0d9488 (index.css) · slate = הסקאלה הדומיננטית · teal-600/700/50 = מותג ופעולה ·
+     green-100/700 = "פעיל/אושר" (UsersManagementPage.jsx:360 · RowAction.jsx tone='approve') ·
+     amber-50/700 = אזהרה · red-600 = שגיאה/דחוף. גופן: Geist Variable (index.css). */
+  :root{
+    --primary:#0D9488; --teal50:#F0FDFA; --teal100:#CCFBF1; --teal600:#0D9488; --teal700:#0F766E;
+    --green50:#F0FDF4; --green100:#DCFCE7; --green200:#BBF7D0; --green700:#15803D;
+    --amber50:#FFFBEB; --amber200:#FDE68A; --amber700:#B45309;
+    --red50:#FEF2F2; --red600:#DC2626;
+    --bg:#F8FAFC; --s50:#F8FAFC;--s100:#F1F5F9;--s200:#E2E8F0;--s300:#CBD5E1;
+    --s400:#94A3B8;--s500:#64748B;--s600:#475569;--s700:#334155;--s800:#1E293B;
+    --r:10px; /* --radius:0.625rem מ-index.css */
+  }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);font-family:"Segoe UI",Arial,sans-serif;color:var(--s800);font-size:14px}
+  body{margin:0;background:var(--bg);color:var(--s800);font-size:14px;
+       font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif}
   .wrap{max-width:1180px;margin:0 auto;padding:16px 18px 30px}
-  .note{background:#FEF3C7;border:1px solid #FCD34D;color:#92400E;border-radius:8px;padding:9px 12px;font-size:12px;margin-bottom:12px;line-height:1.6}
+  .note{background:var(--amber50);border:1px solid var(--amber200);color:#92400E;border-radius:var(--r);
+        padding:9px 12px;font-size:12px;margin-bottom:12px;line-height:1.6}
   h1{font-size:19px;margin:0}
   .sub{color:var(--s500);font-size:12px;margin-top:2px}
   .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:16px;flex-wrap:wrap}
-  .num{direction:ltr;unicode-bidi:isolate;display:inline-block}
 
   .kpis{display:flex;background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);overflow:hidden}
   .kpi{padding:10px 18px;border-left:1px solid var(--s200)}
@@ -21,7 +33,7 @@
   .kpi .v{font-size:22px;font-weight:700;line-height:1.15;direction:ltr;unicode-bidi:isolate;display:inline-block}
   .kpi .l{font-size:12px;color:var(--s500)}
   .kpi .s{font-size:11px;color:var(--s400);margin-top:1px}
-  .kpi.alarm .v{color:#B91C1C}
+  .kpi.alarm .v{color:var(--red600)}
 
   .card{background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);padding:0 16px 12px}
   .tabs{display:flex;gap:4px;border-bottom:1px solid var(--s200);margin:0 -16px 12px;padding:0 16px;align-items:center}
@@ -30,45 +42,45 @@
 
   .filters{display:flex;gap:8px;align-items:center;padding:2px 0 10px;flex-wrap:wrap}
   .fbtn{border:1px solid var(--s200);background:#fff;color:var(--s600);border-radius:999px;padding:5px 13px;font-size:12.5px}
-  .fbtn.on{background:var(--teal100);border-color:#99F6E4;color:var(--teal700);font-weight:600}
+  .fbtn.on{background:var(--teal50);border-color:#99F6E4;color:var(--teal700);font-weight:600}
   .fspacer{margin-right:auto;color:var(--s400);font-size:12px}
 
   table{width:100%;border-collapse:collapse}
   th{font-size:12px;color:var(--s500);font-weight:600;text-align:right;padding:7px 10px;border-bottom:1px solid var(--s200);white-space:nowrap}
   td{padding:11px 10px;border-bottom:1px solid var(--s100);vertical-align:middle}
-  tr.filled td{background:#FCFDFD;color:var(--s500)}
-  tr.crit td{background:#FEF2F2}
+  tr.filled td{background:var(--s50);color:var(--s500)}
+  tr.crit td{background:var(--red50)}
   .pname{font-weight:600}
   .pcust{font-size:11.5px;color:var(--s500);margin-top:1px}
   .when{font-size:13px}
-  .when .soon{color:#B91C1C;font-weight:600;font-size:11.5px;display:block;margin-top:1px}
+  .when .soon{color:var(--red600);font-weight:600;font-size:11.5px;display:block;margin-top:1px}
   .when .later{color:var(--s400);font-size:11.5px;display:block;margin-top:1px}
 
   .fill{display:flex;align-items:center;gap:8px}
   .bar{width:78px;height:7px;background:var(--s200);border-radius:999px;overflow:hidden}
-  .bar i{display:block;height:100%;background:var(--primary)}
-  .bar.red i{background:#DC2626}
+  .bar i{display:block;height:100%;background:var(--green700)}
+  .bar.red i{background:var(--red600)}
   .fill b{font-size:13px;direction:ltr;unicode-bidi:isolate}
-  .gap{color:#B91C1C;font-size:11.5px;font-weight:600}
+  .gap{color:var(--red600);font-size:11.5px;font-weight:600}
 
-  .counters{display:flex;gap:12px}
-  .c{text-align:center;min-width:44px}
+  /* חמשת המונים. הצבעים אינם קישוט — כל אחד כבר קיים בקוד ומשמעותו נקבעה שם:
+     green = פעיל/אושר · teal = פעולה/מותג · slate = ניטרלי · amber = ממתין · red = שגיאה/דחוף. */
+  .counters{display:flex;gap:9px;align-items:flex-start}
+  .c{text-align:center;min-width:46px}
   .c .n{font-size:15px;font-weight:700;direction:ltr;unicode-bidi:isolate;display:block;line-height:1.2}
   .c .t{font-size:10.5px;color:var(--s500);display:block}
-  /* צבע = פעולה, לא קישוט. משפחת-הטיל היא "התקדמות לעבר איוש": מלא = הגיע, בהיר = צעד ממנו.
-     סירוב נשאר אפור — הוא תוצאה תקינה ולא תקלה. אדום שמור לשני דברים בלבד: חסר-בתוך-24, וקישור מת. */
-  .c.ok .n{color:var(--teal700)}
-  .c.avail .n{color:var(--primary)}
-  .c.avail{background:var(--teal100);border-radius:8px;padding:2px 6px;margin:-2px -2px}
+  .c.ok .n{color:var(--green700)}
+  .c.avail .n{color:var(--teal700)}
   .c.avail .t{color:var(--teal700)}
-  .c.avail .go{display:block;font-size:10.5px;color:var(--teal700);font-weight:700;margin-top:1px}
   .c.no .n{color:var(--s400)}
-  .c.wait .n{color:#B45309}
-  .expired{display:block;font-size:10.5px;color:#B91C1C;text-decoration:underline;margin-top:2px;font-weight:600}
+  .c.wait .n{color:var(--amber700)}
+  .hint{display:block;font-size:10px;color:var(--teal700);margin-top:2px;font-weight:600}
+  .expired{display:block;font-size:10px;color:var(--red600);text-decoration:underline;margin-top:2px;font-weight:600}
 
-  .act{border:1px solid #FDE68A;background:#FFFBEB;color:#B45309;border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;white-space:nowrap}
+  .act{border:1px solid var(--amber200);background:var(--amber50);color:var(--amber700);
+       border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;white-space:nowrap}
   .act.off{border-color:var(--s200);background:var(--s100);color:var(--s400);font-weight:500}
-  .alarmicon{color:#B91C1C;font-size:15px;margin-left:5px}
+  .alarmicon{color:var(--red600);font-size:15px;margin-left:5px}
   .legend{margin-top:12px;font-size:11.5px;color:var(--s500);line-height:1.9}
   .legend b{color:var(--s700)}
 </style>
@@ -77,12 +89,10 @@
 <div class="wrap">
 
   <div class="note">
-    <b>טיוטה לאישורך — מסך 2 מתוך 8 · מבט-על שיבוץ.</b> דאטת-הדגמה בקנה-המידה שלך (2–10 דיילות לאירוע).
-    <b>ארבעה שינויים מהמוקאפ הישן, וכל אחד מסומן במסך:</b>
-    ① מונה חמישי <b>"אישרו זמינות"</b> ·
-    ② <b>"ממתינות"</b> מתפצל ל"מתוכן N פג תוקפן", והחלק הזה לחיץ ·
-    ③ <b>"חוסרים קריטיים"</b> = עדיין חסר בתוך 24 שעות (ולא "ללא דיילות מאושרות") ·
-    ④ הכפתור בשורה הוא <b>"שלח שוב"</b>, והכפתור הגלובלי "לניהול שיבוץ חכם" ירד — נכנסים בלחיצה על שורה.
+    <b>טיוטה לאישורך — מסך 2 מתוך 8 · מבט-על שיבוץ.</b> דאטת-הדגמה בקנה-המידה שלך (2–10 דיילות לאירוע).<br>
+    <b>🎨 והפעם הצבעים נלקחו מהקוד האמיתי ולא מהעין</b> — <code>src/index.css</code> + סריקה על <code>src/</code>:
+    ירוק = "פעיל/אושר" (כמו תג המשתמש-הפעיל ב-<code>UsersManagementPage</code> וכמו <code>RowAction tone='approve'</code>) ·
+    טורקיז = מותג ופעולה · אפור = ניטרלי · ענבר = ממתין · אדום = שגיאה/דחוף. <b>וגם הגופן: Geist.</b>
   </div>
 
   <div class="topbar">
@@ -120,11 +130,11 @@
     <table>
       <thead>
         <tr>
-          <th style="width:26%">אירוע</th>
-          <th style="width:13%">מתי</th>
-          <th style="width:15%">מיקום</th>
-          <th style="width:16%">איוש</th>
-          <th style="width:20%">מצב הזימונים</th>
+          <th style="width:25%">אירוע</th>
+          <th style="width:12%">מתי</th>
+          <th style="width:14%">מיקום</th>
+          <th style="width:15%">איוש</th>
+          <th style="width:24%">מצב הזימונים</th>
           <th style="width:10%">פעולה</th>
         </tr>
       </thead>
@@ -138,10 +148,7 @@
           <td class="when">07/08/2026<span class="soon">מחר · בתוך 24 שעות</span></td>
           <td>היכל התרבות, ת"א</td>
           <td>
-            <div class="fill">
-              <span class="bar red"><i style="width:75%"></i></span>
-              <b>3/4</b>
-            </div>
+            <div class="fill"><span class="bar red"><i style="width:75%"></i></span><b>3/4</b></div>
             <span class="gap">חסרה 1</span>
           </td>
           <td>
@@ -164,17 +171,14 @@
           <td class="when">22/08/2026<span class="later">בעוד 16 ימים</span></td>
           <td>אקספו תל אביב</td>
           <td>
-            <div class="fill">
-              <span class="bar"><i style="width:33%"></i></span>
-              <b>2/6</b>
-            </div>
+            <div class="fill"><span class="bar"><i style="width:33%"></i></span><b>2/6</b></div>
             <span class="gap">חסרות 4</span>
           </td>
           <td>
             <div class="counters">
               <span class="c ok"><span class="n">2</span><span class="t">אושרו סופית</span></span>
               <span class="c avail"><span class="n">3</span><span class="t">אישרו זמינות</span>
-                <span class="go">אשר →</span></span>
+                <span class="hint">מחכות לאישורך</span></span>
               <span class="c no"><span class="n">1</span><span class="t">סירבו</span></span>
               <span class="c wait"><span class="n">4</span><span class="t">ממתינות</span>
                 <span class="expired">2 פג תוקפן</span></span>
@@ -191,10 +195,7 @@
           <td class="when">05/09/2026<span class="later">בעוד 30 ימים</span></td>
           <td>מלון דן, הרצליה</td>
           <td>
-            <div class="fill">
-              <span class="bar"><i style="width:100%"></i></span>
-              <b>5/5</b>
-            </div>
+            <div class="fill"><span class="bar"><i style="width:100%"></i></span><b>5/5</b></div>
           </td>
           <td>
             <div class="counters">
@@ -211,23 +212,24 @@
     </table>
 
     <div class="legend">
-      <b>ולמה "אושרו" אינו ירוק ו"סירבו" אינו אדום — למרות שזה מתבקש:</b>
-      במסך הזה <b>צבע הוא פעולה, לא קישוט.</b> אדום כבר נושא שתי משמעויות חדות —
-      <b>"חסר, ובתוך 24 שעות"</b> ו<b>"הקישור מת"</b>. אם גם סירוב יהיה אדום,
-      <b>המנהלת תתרגל להתעלם מאדום</b> — וזה בדיוק מה שהמסך לא יכול להרשות לעצמו.
-      <b>וסירוב אינו תקלה:</b> דיילת שאמרה "לא יכולה" היא תוצאה תקינה, ואיש לא עשה טעות.<br>
-      <b>ולמה לא ירוק ל"אושרו":</b> למערכת <b>יש כבר</b> צבע ל"זה הדבר הטוב" — הטיל.
-      ירוק נוסף היה צבע שלישי שאינו אומר שום דבר אחר במערכת.
-      <b>לכן משפחת-הטיל היא "התקדמות לעבר איוש":</b> מלא = הגיעה, בהיר עם <b>"אשר →"</b> = צעד אחד ממנה.<br>
+      <b>🔴 מה כאן לחיץ ומה לא — כלל אחד:</b>
+      <b>הדבר היחיד שמבצע פעולה מהמסך הזה הוא "שלח שוב".</b> הוא לא דורש שיקול דעת —
+      הקישורים מתו, רענון לא יכול להזיק, ואי-מענה ממילא אינו נספר בציון.
+      <b>כל השאר הוא חיווי שמנתב פנימה:</b> לחיצה על השורה פותחת את השיבוץ החכם של אותו אירוע.
+      <b>ולמה "מחכות לאישורך" הוא טקסט ולא כפתור:</b> אם 3 אישרו זמינות ונשארו 2 מקומות —
+      <b>המנהלת צריכה לבחור מי</b>, וזו החלטה. <b>החלטה נעשית במסך שיש בו את המידע להחליט.</b>
+      <b>ומאותה סיבה אין כאן "שלח לעוד דיילות":</b> זו בחירת-מועמדות ⇒ שייכת לשיבוץ החכם בלבד.<br>
+      <b>🎨 ולמה "אושרו" כן ירוק ו"סירבו" לא אדום — והפעם מהקוד ולא מהטעם:</b>
+      בקוד האמיתי <b>ירוק כבר אומר "פעיל/אושר"</b> — תג המשתמש-הפעיל, וכפתור-האישור המשותף.
+      <b>ואדום אומר שגיאה</b> — גישה-נדחתה, כשל-טעינה. <b>סירוב אינו שגיאה:</b> דיילת שאמרה
+      "לא יכולה" היא תוצאה תקינה, ואיש לא עשה טעות. ובמסך הזה אדום כבר נושא
+      <b>"חסר בתוך 24 שעות"</b> ו<b>"הקישור מת"</b> — <b>עוד אדום, והמנהלת תתרגל להתעלם ממנו.</b><br>
       <b>איך קוראים את השורה השנייה, ולמה זה השינוי החשוב:</b>
       כנס-הלקוחות מציג <b>"אושרו סופית 2"</b> — ובמוקאפ הישן זה כל מה שהיה רואים.
-      אבל <b>3 דיילות כבר אמרו "אני פנויה"</b> וממתינות שהמנהלת תאשר אותן.
-      <b>לחיצה אחת מביאה אותה מ-2/6 ל-5/6.</b>
-      במוקאפ הישן האירוע הזה נראה זהה לאירוע שאיש לא ענה בו — <b>ושתי הפעולות הפוכות:</b>
-      שם צריך <b>לאשר</b>, כאן צריך <b>לשלוח לעוד</b>.<br>
-      <b>ולמה "1 פג תוקף" באדום ולחיץ:</b> "ממתינה" אומר <i>תני לה זמן</i>; "פג תוקף" אומר <i>הקישור שלה מת, שלחי שוב עכשיו</i>.
-      <b>אותו מספר, שתי משמעויות.</b><br>
-      <b>והשורה העליונה:</b> בתוך 24 שעות הקישור ממילא פג — ולכן הפעולה מתחלפת ל<b>"סגירה טלפונית"</b>, שהיא מה שהמנהלת עושה בפועל.
+      אבל <b>3 דיילות כבר אמרו "אני פנויה"</b> וממתינות שתאשר אותן. <b>זה מביא את האירוע מ-2/6 ל-5/6.</b>
+      במוקאפ הישן האירוע הזה נראה זהה לאירוע שאיש לא ענה בו — <b>ושתי הפעולות הפוכות.</b><br>
+      <b>ולמה "2 פג תוקפן" באדום ולחיץ:</b> "ממתינה" אומר <i>תני לה זמן</i>;
+      "פג תוקף" אומר <i>הקישור שלה מת, שלחי שוב עכשיו</i>. <b>אותו מספר, שתי משמעויות.</b>
     </div>
   </div>
 
