@@ -55,6 +55,17 @@
 - **Also measured, for the record:** every conversation in this project persists as a transcript file under `~/.claude/projects/` (**103 files**; the Discovery session is `7bd6ee7a…jsonl`, 3.5 MB). Compaction does not delete them — but at that size they are **an archive to mine, not context to inherit**, which is why the on-disk spec files remain the only real handoff.
 - **Broke: nothing.** One file touched all stretch, committed by explicit pathspec while four files belonging to the Discovery session sat modified in the shared working tree — none were swept.
 
+### 06/08/2026 (turn close) — **Handover prompt refreshed to 3/8, and the CORRECTED PROCESS written as a chapter at Ishay's request.**
+
+- **Handover fixed:** `0/9` → **`3/8`** · nine surfaces → **eight** (1 and 3 are two tabs of one page) · the recommended order for the five that remain · **the new screen procedure written out in full** (draw first · HTML · the palette-grep command · the six sections · and the precedence rule) · **and the four acceptance questions replaced** with four whose answers live in the files written this turn.
+- **The corrected process, written as `discovery_lessons.md §7` — and it is deliberately not the process that was planned, but the one left standing after measuring what worked:**
+  **One process:** turn raw spec + raw mockups into **the single source of truth for the build**.
+  **Six sub-processes, not seven** — *screen* and *mockup* merged.
+  🔁 **And three loops that run ACROSS all of them rather than after them:** **write** (every ruling to disk the moment it is said; commit after every approved card) · **harvest** (rounds · **which prompt section never fired, by name** · where the prompt was wrong, quoted) · **verify** (every claim same-turn; every filter shown in full; an advisor or agent is **a recommendation to examine, never a conclusion**).
+  🚪 **Four gates that do not move:** product/UX rulings are Ishay's · **never decide on a citation alone** (the test: *if all sources said the opposite, would my answer change? if yes — I quoted, I did not decide*) · **never manufacture openness and never close in silence** · no agent without approval.
+- 🔑 **And the structural insight the whole turn produced: the process was assumed LINEAR and it is LOOPED — the three loops are what make it survive interruption.** *(Evidence: this session survived one compaction and ~15 commits without losing anything — not because anything was remembered, but because there was nothing left to remember.)*
+- **Five measured lessons recorded:** ① **a rule Claude wrote itself is the rule Claude most often breaks** (three instances today) · ② **a blind spot is inherited through a reading list** — its author cannot list what they never read · ③ *"not built" ≠ "not decided"*, **and inverted: never manufacture openness** · ④ **`grep` does not read prose** — a debt inside another debt is unregistered · ⑤ **a picture beats text for BOTH readers** — Ishay understands it, and Claude reads HTML.
+
 ### 06/08/2026 — 🔴 **"אז אין חורים?" — there was one, and it sat on the single largest missing piece of the score.**
 
 - **Ishay refused the reassurance and demanded the spec list every debt in detail** (*"אני יודע שזה מודול 6 אבל זה מאוד קשור — האפיון צריך לציין את כל החובות ולפרט מה בדיוק"*). **A registry scan found it.**
