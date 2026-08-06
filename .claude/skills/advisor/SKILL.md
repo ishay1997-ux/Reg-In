@@ -271,6 +271,12 @@ arena clears (`_shared/parallel-sessions.md` — which also forbids writing mere
 hook). And before quoting THIS file's rules as current, re-read it — the rules can move under
 a running shift (measured 05/08/2026: a shift opened on v6 and kept running while v7–v8
 landed; only Ishay's explicit request exposed the drift before a false report went out).
+🔴 **And re-read after every compaction — what you hold is then a summary of this file, not
+this file.** Same outcome, new cause (measured 06/08/2026: a shift crossed two compactions and
+kept advising; the ⏸️ counter, "what was explicitly NOT checked", and same-turn register writes
+all stopped silently — and again only Ishay's question exposed it). **What needs judgement
+survives a compaction; what needs remembering a detail does not — suspect the mechanism rules
+here first.**
 
 Context death gives no warning (Ishay noticed the 750K, the session didn't). So the execution
 list is written BEFORE a series starts and updated as you go — every moment must be a valid
