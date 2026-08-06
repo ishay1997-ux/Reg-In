@@ -59,9 +59,14 @@
   .chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
   .chip{border-radius:999px;padding:2px 9px;font-size:11px;font-weight:500;
         background:var(--s100);color:var(--s600);border:1px solid var(--s200)}
-  /* צ'יפ שאומר עובדה טובה לא צריך צבע — הטקסט שלו כבר אומר אותה.
-     צבע נשמר לצ'יפ שמבקש תשומת-לב, ולתגית-הנעיצה שעוקפת את הדירוג. */
+  /* 🔴 שתי משפחות-צ'יפים, וההפרדה מהותית ולא ויזואלית:
+     .score = הציון עצמו במילים (היענות · קרבה · מנוף-ההוגנות) — אלה *סיבות הדירוג*.
+     .ctx   = הקשר וזוויות-מיון (עבדה-אצל-הלקוח · יש-רכב) — *אינם בציון כלל*.
+     בלי ההפרדה, צ'יפ-הקשר נראה כמו סיבת-דירוג, והמסך משקר במשתמע. */
+  .chip.score{background:#fff;color:var(--s800);border-color:var(--s400);font-weight:600}
+  .chip.ctx{background:var(--s100);color:var(--s500);border-color:var(--s200);font-weight:500}
   .chip.good{background:#fff;color:var(--s700);border-color:var(--s300);font-weight:600}
+  .csep{color:var(--s300);font-size:12px;align-self:center;padding:0 1px}
   .chip.warn{background:var(--amber50);color:var(--amber700);border-color:var(--amber200)}
   .chip.grey{background:var(--s100);color:var(--s500)}
   .chip.pin{background:var(--green100);color:var(--green700);border-color:var(--green200);font-weight:700}
