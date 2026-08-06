@@ -47,8 +47,11 @@
   .sort.on{background:var(--teal50);border-color:#99F6E4;color:var(--teal700);font-weight:600}
   .sortnote{font-size:11px;color:var(--s400);margin:-4px 0 9px}
 
+  /* 🎨 נמדד בקוד האמיתי: slate מופיע ~5 פעמים יותר מכל צבע אחר. האפליקציה היא אפורה עם
+     דגש טורקיז וצבעי-סטטוס נדירים. הגרסה הראשונה כאן הפכה את היחס — תוקן:
+     רקע-שורה נשאר לבן, וצבע יושב רק על תג-הסטטוס. אלמנט צבוע אחד לשורה, לא שניים. */
   .cand{border:1px solid var(--s200);border-radius:var(--r);padding:9px 11px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
-  .cand.pick{border-color:var(--primary);background:var(--teal50)}
+  .cand.pick{border-color:var(--primary);border-width:1.5px}
   .cbx{width:15px;height:15px;border:1.5px solid var(--s300);border-radius:4px;margin-top:2px;flex:none}
   .cand.pick .cbx{background:var(--primary);border-color:var(--primary)}
   .cname{font-weight:600;font-size:13.5px}
@@ -56,16 +59,18 @@
   .chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
   .chip{border-radius:999px;padding:2px 9px;font-size:11px;font-weight:500;
         background:var(--s100);color:var(--s600);border:1px solid var(--s200)}
-  .chip.good{background:var(--teal50);color:var(--teal700);border-color:#99F6E4}
+  /* צ'יפ שאומר עובדה טובה לא צריך צבע — הטקסט שלו כבר אומר אותה.
+     צבע נשמר לצ'יפ שמבקש תשומת-לב, ולתגית-הנעיצה שעוקפת את הדירוג. */
+  .chip.good{background:#fff;color:var(--s700);border-color:var(--s300);font-weight:600}
   .chip.warn{background:var(--amber50);color:var(--amber700);border-color:var(--amber200)}
   .chip.grey{background:var(--s100);color:var(--s500)}
   .chip.pin{background:var(--green100);color:var(--green700);border-color:var(--green200);font-weight:700}
 
   .arow{border:1px solid var(--s200);border-radius:var(--r);padding:9px 11px;margin-bottom:8px}
-  .arow.done{border-color:var(--green200);background:var(--green50)}
-  .arow.said{border-color:#99F6E4;background:var(--teal50)}
+  .arow.done{border-color:var(--s200)}
+  .arow.said{border-color:var(--s200)}
   .arow.pend{border-color:var(--s200)}
-  .arow.exp{border-color:var(--amber200);background:var(--amber50)}
+  .arow.exp{border-color:var(--amber200)}
   .ahead{display:flex;justify-content:space-between;align-items:center;gap:8px}
   .st{font-size:11px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap}
   .st.done{background:var(--green100);color:var(--green700)}
@@ -78,7 +83,9 @@
   .btn{border:0;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;width:100%;margin-top:6px}
   .btn-p{background:var(--primary);color:#fff}
   .btn-g{background:var(--green700);color:#fff}
-  .btn-o{background:#fff;border:1px solid var(--s200);color:var(--s600);width:auto;padding:5px 11px;font-size:12px;font-weight:500;margin:0}
+  /* פעולה משנית = אותו כפתור, בקו-מתאר. אותו radius, אותו משקל, אותו צבע-מותג. */
+  .btn-o{background:#fff;border:1px solid var(--primary);color:var(--teal700);width:auto;
+         border-radius:8px;padding:6px 13px;font-size:12.5px;font-weight:600;margin:0}
   .warnbox{background:var(--amber50);border:1px solid var(--amber200);color:#92400E;border-radius:8px;
            padding:8px 11px;font-size:11.5px;margin-top:8px;line-height:1.6}
   .legend{margin-top:14px;font-size:11.5px;color:var(--s500);line-height:1.9;background:#fff;
