@@ -15,8 +15,8 @@
 > being project-agnostic; it now carries its own self-contained discipline section instead
 > of pointing here. **Consolidated further 24/07/2026 (skill-creator structural review):**
 > the repo-local skills used to each carry their own copy of the kernel paragraph
-> below, with a comment asking whoever edits it to keep all five + this file in sync by
-> hand — a real drift risk with no single source of truth. Now each of the five carries
+> below, with a comment asking whoever edits it to keep every one of them + this file in sync
+> by hand — a real drift risk with no single source of truth. Now each of them carries
 > only a one-line pointer to this file; the kernel paragraph itself lives HERE ONCE.)
 
 ## The shared kernel (every repo-local skill reads this first)
@@ -34,6 +34,7 @@ Read **`~/.claude/CLAUDE.md`** (loads every session, every project) for the univ
 
 Prefer a grep anchor (function name / string) over a line number — line numbers rot between writing and executing.
 
+- 🔴 **A claim about anything OUTSIDE this file is written as a measurement method, not as a value.** Counts · paths · line numbers · status · "this was done" — **all go stale silently, because a file cannot see the world move.** Must state a value? It carries a date and the command that produced it. ⛔ **And when it rots — REMOVE the number, do not update it** (updating reproduces the defect in two weeks). **The highest-risk form is "moved / registered / done"** — it reads as a completed action, and nobody re-checks a completed action ⇒ **grep in the same turn, or write "טעון בדיקה". There is no third option.** ⚠️ **And a file is not audited by re-reading it — it is audited by RUNNING it:** the two rules below survived a full coherence pass and broke the moment someone executed them. *(06/08/2026: 20+ contradictions found across four independent scans and one external tool; **zero** caught by re-reading. A line number written that evening was already wrong within hours. The two rules that follow are instances of this one.)*
 - **An absence-claim is verified the way the SOURCE writes it, not the way the reporter searched.**
 - **Never hand a checker an expected number — only a measurement method.**
 - **A fix is not done until you have checked where else the same defect lives.**
@@ -63,12 +64,18 @@ not re-derived until Ishay supplied the missing criterion himself.)*
 
 **Resume-after-interruption, in THIS repo (the 23/07 migration-5 incident):** on any resume ("המשך מאיפה שעצרת", a fresh session picking up mid-flow, continuing after a visible cut) — re-derive position from disk before advancing: `git status` + the active micro-guide's status header/step table + the current step's own verification command. A step whose verification hasn't passed is NOT done, no matter what the previous turn narrated; the typical loss is a half-step (file saved, its doc-ripple lost) — finish the missing half before starting the next step. *(What actually happened: "saving migration 5 + updating docs" was cut mid-turn — the file survived, the db_roadmap update didn't, and the resumed turn jumped to step 1.6; Ishay caught it. The general principle this taught is now stated in the global file — this paragraph is just REG-IN's answer to "what counts as disk here.")*
 
-## Two companion files beside this one (read when they apply)
+## The other files beside this one in `_shared/` (read when they apply)
 
 - **`_shared/parallel-sessions.md`** — more than one session alive: pathspec commits, the shared
   index, stale arena facts, direct session-to-session messaging. Iron rule 16, operationalized.
 - **`_shared/writing-prompts.md`** — writing a prompt for another session: the intent pass, the
   ONE top mine, self-containment, the model/effort recommendation, the closing clarity question.
+- **`_shared/ishay-calibration.md`** — before you present decisions to Ishay or write him a
+  spec/advisory message: how he works, what "מעולה" means (understanding, **not** verification),
+  present-the-basis-before-he-asks (§7), the four over-asking categories (§9). ⚠️ **§1–§6 are
+  calibration from a *Discovery* session** — apply them on the spec/Discovery path, NOT to a
+  build/close session, where he DOES stop on visual and UX. *(Pointer added 06/08/2026 — the file
+  had zero load path from any skill; this list is loaded by 9/10 repo-local skills.)*
 
 ## How to talk to Ishay
 Fully covered by `~/.claude/CLAUDE.md` — no REG-IN-specific override remains (the old "rulings-rounds recommendation-first" carve-out is now the global default too). The one place the style becomes a concrete *procedure* rather than a rule of thumb is the batching mechanics (3–4 per round, "מספיק להיום", recommendation-first, reality filter before designing for an edge case) — see `section7-rulings` (repo-local) and `feature-acceptance` (now global, `~/.claude/skills/`), which operationalize it end-to-end.
