@@ -32,7 +32,8 @@
 1. docs/specs/module_04_hostesses/processes-approved.md — התהליכים המאושרים ותשעת
    המשטחים. זה הבסיס. 🔴 וקרא עד הסוף — הטבלה שם מחזיקה חמש הכרעות-ממשק
    הפיכות שנסגרו לפני הקומפקט, ואת הנימוק לכל אחת.
-2. docs/specs/module_04_hostesses/ishay-calibration.md — איך ישי עובד. לפני שאתה כותב לו.
+2. docs/guides/ishay_calibration.md — איך ישי עובד. לפני שאתה כותב לו.
+   (הועבר לשם 06/08/2026 — הוא על ישי, לא על מודול 4.)
 3. docs/specs/module_04_hostesses/discovery-log.md — ה"למה" מאחורי כל הכרעה,
    וטבלת הסינון המלאה (18 שורות) של מה שנדחה — כדי שלא תציע מחדש מה שכבר נדחה.
 4. docs/specs/module_04_hostesses/world-sources.md — המקורות, מזוקק.
