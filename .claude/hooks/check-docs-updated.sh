@@ -136,6 +136,38 @@ if [ -f "$PM" ]; then
   done <<< "$CHANGED"
 fi
 
+# --- אכיפה 0ד: תוכנית ב-docs/plans/ בלי מצביע (נוסף 07/08/2026) ---
+# תוכנית שנערכה/נוצרה *בסשן הזה* חייבת אזכור-שם-קובץ באחד מהקבצים ש-Discovery/
+# בלופרינט/בנייה/סגירה בפועל קוראים — אחרת היא בדיוק המחלה שנמצאה 07/08: "תוכנית
+# מתה עם המיזוג" הפך ל"תוכנית מתה בלי שהתוכן שלה עבר לשום מקום שנקרא שוב".
+# בכוונה לא בודקים את כל docs/plans/* בכל סשן (זה היה false-positive מובנה — רוב
+# התוכניות הישנות כבר מתו כמו-שצריך, וזה בדיוק מה שהתיקייה נועדה לעשות) — רק
+# תוכנית שנגעו בה *עכשיו*, כי זה מצמצם את הבדיקה ל"תוכנית פעילה שנשכחת", לא
+# "כל היסטוריית-הפרויקט". STATUS.md בכוונה לא ברשימת-התקן: הוא יומן-נרטיב שמזכיר
+# כמעט כל קובץ אי-פעם — אזכור שם שם אינו הוכחה שמישהו יקרא וייפעל, ובדיקה נגד זה
+# הייתה מחזירה false-negative בדיוק על התקרית שהולידה את האכיפה הזאת (נבדק בפועל
+# לפני הכתיבה: two-weeks-2026-08-06.md כן הופיע ב-STATUS.md כהיסטוריה, ועדיין
+# 3.1 בתוכו מעולם לא רץ). escape hatch: תוכנית שמכריזה "תוכנית סגורה" בתוכה —
+# כל תוכנה כבר עבר למקום קבוע — אינה נחסמת.
+PLAN_STD="docs/guides/prompt_module_discovery.md docs/PROJECT_MASTER.md .claude/skills/module-blueprint/template.md .claude/skills/module-build/SKILL.md .claude/skills/module-close/template.md"
+PLAN_MISS=""
+while IFS= read -r line; do
+  f=$(printf '%s' "$line" | cut -c4-)
+  case "$f" in
+    docs/plans/*.md)
+      [ -f "$f" ] || continue
+      grep -qF "תוכנית סגורה" "$f" 2>/dev/null && continue
+      bn=$(basename "$f")
+      found=0
+      for std in $PLAN_STD; do
+        [ -f "$std" ] || continue
+        grep -qF "$bn" "$std" 2>/dev/null && { found=1; break; }
+      done
+      [ "$found" -eq 0 ] && PLAN_MISS="$PLAN_MISS $bn"
+      ;;
+  esac
+done <<< "$CHANGED"
+
 # --- אכיפה 1-3: יומן ולוח מצב ---
 # משווים מול זמן העריכה של *הסשן הזה* (mtime של הסימון), לא מול NEWEST הגלובלי —
 # כך שינויים לא-מקומיטים של סשן מקביל לא נספרים. בלי session_id → נשארים על NEWEST.
@@ -160,6 +192,9 @@ if [ -n "$RM_STALE" ]; then
 fi
 if [ -n "$HG_MISS" ]; then
   REASON="${REASON}חוב 🚧 בלי רישום ב-PROJECT_MASTER §6 —$HG_MISS. הוסף שורה '🚧 מN ← מ<מקור> · מה · מקור: micro_guides/module-<מקור>.md'. "
+fi
+if [ -n "$PLAN_MISS" ]; then
+  REASON="${REASON}תוכנית ב-docs/plans/ בלי מצביע משום קובץ-תקן —$PLAN_MISS. הוסף אזכור-שם-קובץ ב-prompt_module_discovery.md / PROJECT_MASTER.md / module-blueprint/module-build/module-close, או סמן בתוכנית עצמה 'תוכנית סגורה' אם כל תוכנה כבר עבר למקום קבוע. "
 fi
 if [ -n "$MISS" ]; then
   REASON="${REASON}עדכן לפני סיום: $MISS. (אורך רשומת-היומן — לפי המדיניות שבראש CLAUDE_CODE_LOG.md עצמו, שם היא נקבעת; אם אין שינוי-סטטוס — ב-STATUS רק שורת 'עודכן לאחרונה', אחרי שווידאת שהלוח נכון.)"
