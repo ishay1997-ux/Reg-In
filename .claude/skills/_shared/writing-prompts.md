@@ -9,6 +9,51 @@ browser-Claude. A prompt must let a fresh session work without this conversation
 > rotted every citation elsewhere in the repo that names a rule by number. The pre-removal
 > original is preserved verbatim under `docs/archive/work-manager/`.)*
 
+## The shape of a prompt — read this before the rules
+
+A good prompt is not "more detail". It **turns every place the target session would guess into a
+place where it must measure, declare, or stop.** Its reader has no memory and no access to this
+conversation: what is not written does not exist, and what is written ambiguously gets filled in
+**silently** — which is the failure mode that matters, because Ishay cannot read code to catch it.
+
+### 1 · Name the session TYPE first — it changes what you give and what you demand back
+
+| Type | What you give it | What you demand back | 🚫 Never hand over |
+|---|---|---|---|
+| **Discovery / spec** | the **why** · sources · the open questions | understanding-declarations · assumptions · gaps | an expected answer |
+| **Build** | the **what** · the approved plan · fenced scope | evidence per step · what it deferred | a guessed product detail |
+| **Review / audit** | the requirements + the artifact + the axes to check | ranked findings + one verdict | the number you expect to see |
+
+*(Rule 20 below carries the five axes this splits on, and the anchor incident.)*
+
+### 2 · The skeleton — the order is measured, not taste
+
+```
+1. Session type, and what it produces
+2. 🔴 The one top mine — exactly one
+3. The tools it has          ← BEFORE the stages, not after
+4. What is already decided   — Ishay's words, verbatim
+5. 🚫 What it must not touch or assume — each with its reason
+6. The stages · the stop-points · and what each stage WRITES TO DISK
+7. The exact output shape
+8. "האם המשימה ברורה? יש לך שאלות?" — the first reply answers it
+```
+
+### 3 · Six lessons, each with its anchor — not theory
+
+| Lesson | Anchor |
+|---|---|
+| **Declare, don't ask.** Uncertainty about a *process* is a concrete declaration inviting correction; a question is reserved for a real product fork. | 🌐 *External, not measured here:* an agent instructed to ask whenever unsure raised its ask-rate to 72% and dropped Pass@1 on clean tasks **65.6% ⇒ 27.5%** (HumanEvalComm). Declaring has no measured cost. |
+| **Content outside the pasted block does not exist.** | `prompt_module_discovery.md` carries ~80 lines *after* its closing ``` fence — among them a 🔴-marked "three lines at the end of every stage" mandate that no pasting session has ever seen. Check it yourself: `grep -n '^\`\`\`$'` for the fence, then read past it. *(07/08/2026 — line numbers deliberately omitted per rule 3 below; they rotted within the hour.)* |
+| **An instruction pointing at a stage that no longer exists never fires.** | The same file told sessions to raise the design skill "at stage ה" after ד+ה merged — **its own harvest table recorded the non-firing twice.** |
+| **A mechanism with no consumer is debt, not protection.** Before adding one, name who reads its output. | That harvest register existed to feed a skill; when the skill was cancelled the register kept its cost and lost its purpose. *(07/08/2026)* |
+| **A number that rotted gets REMOVED, not updated.** Updating reproduces the defect in two weeks. | "The four contract items" — there were five. |
+| **The reviewer must not be the builder, and the cross-check anchor must be external.** | Self-catch rate on a self-authored artifact: **0 of 5 — measured in the sister project (710), recorded in `docs/archive/work-manager/skill/references/miss-ledger.md`, not here.** Directionally confirmed in REG-IN (04–05/08: three prompts each carried a defect; none was caught by re-reading — root `CLAUDE.md`), but that run was never counted. |
+
+**That is the skeleton. The rules below are the checks you run against it.**
+
+---
+
 ## 🔴 Before a single line of the prompt is written — the intent pass over the step
 
 **Sort every instruction in the step. The boundary is NOT "is it on screen" — it is

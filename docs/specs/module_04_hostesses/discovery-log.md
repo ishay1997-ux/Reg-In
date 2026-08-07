@@ -2,8 +2,16 @@
 
 > **What this is:** a running record of the Module-4 Discovery session (stage 2 of
 > `docs/claude mega plans/regin_workflow_short_updated.md`). Written **as things happen**, not
-> reconstructed at the end. Stage 3 builds the `module-discovery` skill from this file.
-> **Not** a spec. Nothing here is approved unless it says "Ishay ruled".
+> reconstructed at the end. **Not** a spec. Nothing here is approved unless it says "Ishay ruled".
+>
+> **Who reads it, corrected 07/08/2026 — it has two consumers, and the original one is gone:**
+> **(1)** the *why* behind every ruling — `processes-approved.md` and `screens-approved.md` carry
+> the *what* and delegate the *why* here (`processes-approved.md:14` points at this file).
+> **(2)** *where the prompt was wrong, quoted in Ishay's words* — the input for revising
+> `docs/guides/prompt_module_discovery.md` between modules.
+> 🔴 **What this line used to say and no longer does:** *"Stage 3 builds the `module-discovery`
+> skill from this file."* **Ishay cancelled that skill on 07/08/2026** — only 2–3 modules remain,
+> so Discovery stays a prompt. Consumer (2) replaces it.
 >
 > Format per entry: **what was covered · what Ishay corrected · where it stuck · what surprised us.**
 
