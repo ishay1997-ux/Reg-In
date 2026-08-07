@@ -382,6 +382,130 @@ minus 9 Stop-hook notices and the compact summary). Two things surfaced:
 *(Screen 1 of 8 presented; four decisions with Ishay. Two research items above are open and
 were never asked.)*
 
+## 3.1 audit — 08/08/2026 (two-weeks plan §③, block 3.1)
+
+**What was covered:** column-vs-`schema.sql`, label-vs-mockup, number-source, click-map-vs-mockup,
+and DB-registration checks across screens 1/2/3/4 (`screens-approved.md`).
+
+**What Ishay corrected:** nothing yet — mid-review, going through confirmed findings one at a time.
+First fix landed: screen 4's click-map (①) was missing the row for "אושרה סופית — סוכם בטלפון"
+(present in the mockup 3× and in the card's own §⑧① prose, but never in the locked table) — added,
+see `screens-approved.md` note dated 08/08/2026 next to the table.
+
+**Update, same session:** Ishay redirected the scope explicitly — not just the original 8 findings,
+a full consistency sweep against `processes-approved.md` before locking anything into a card. One
+real catch from that: the tab label "מעקב פניות ושיבוצים" (screen 1) had its meaning declared by an
+old Claude session and marked in `processes-approved.md:49-51` as "approved by silence, never
+confirmed" — surfaced to Ishay before writing it into the now-locked click-map table, he confirmed
+it explicitly this time. Fixed and closed, same file: the "① מפת-לחיצות" numbering/presence across
+screens 1/2/3 (screen 1's click-map was unnumbered prose missing the 2 tabs + 3 filter buttons;
+screen 2's header had no number and was missing the "← חזרה" back-link row; screen 3 genuinely has
+no mockup yet, so a dated note was added explaining the section is deferred, not silently missing —
+no renumbering there, its own §⑤ cross-reference stays valid untouched). Also closed: screen 1's two
+un-sourced KPI numbers and screen 2's four un-sourced chip types, both in their `④/⑤ מקור לכל מספר`
+sections. Two internal cross-references (`ר' ②`→`③` in screen 1, `סעיף ⑤`→`④` in screen 2) updated
+to match the renumbering — checked first via `grep` for every `ר' <symbol>` in the whole file so no
+reference silently broke.
+
+**Closed, same session:** the bulk-resend finding. Ishay handed over decision criteria instead of
+ruling directly ("logical · workable · connects with the processes/logic/other screens · would
+impress an engineer reading the code · defensible at the conference"), applied against
+`processes-approved.md:227` (already rules both the per-row and bulk forms of "שלח שוב" together) —
+decided to build the button into the mockup, not retract the card. Added to `01_overview_
+approved.html` (filters row, `.act` style matching the per-row buttons), verified visually in the
+Browser pane, sent to Ishay for sign-off. Ishay then floated an alternative (a pre-send review
+window: which hostesses, which events, how many missing) — checked against what the card already
+rules and found it contradicts the card's own "אפס שיקול-דעת" (zero-judgment) framing for this exact
+action; a review window on the bulk form but not the per-row form would be the same inconsistency
+the card fights everywhere else. Proposed a lighter middle ground (name the affected events in the
+post-send toast) — **Ishay declined even that: "no reason to add work even if it's a nice
+improvement."** Final, simplest form shipped: no navigation, no confirmation dialog, generic
+post-send toast. Documented in the card's `①` click-map as its own row.
+
+**3.1 is now fully closed** — all four approved screens (1/2/3/4) checked against `schema.sql`, the
+mockups, and `db_roadmap.md`; every real finding fixed and write-backed (`screens-approved.md` +
+`discovery-log.md`, plus the one mockup edit); the false positives (#1/#2/#7) retracted with the
+methodology lesson preserved above. Ready for 3.2 (the four remaining surfaces) in a future session.
+
+**What surprised us — a methodology bug, not a data bug:** two findings that looked
+high-confidence (`approval_withdrawn` CHECK-extension and the Smart-Match "layer-2 preference"
+table both "missing from `db_roadmap.md`") were **false positives**. Both are actually registered
+there (`db_roadmap.md:136,138`) — my `grep` used the wording from *other* files
+(`approval_withdrawn`, "נעיצה") instead of `db_roadmap.md`'s own phrasing ("ששת הסטטוסים",
+"העדפת-לקוח"). Caught only by opening the file and reading it, not by re-running the same grep
+harder. 🔑 **Lesson for the next audit: a clean `grep -c 0` is not proof of absence — read the
+target file's own vocabulary before trusting a zero.**
+
+## 3.2 (first sub-item) — Screen 3 mockup drawn and approved — 07/08/2026 15:25
+
+Read `next-session-prompt.md` in full, the two-weeks plan §③ (3.2 block), `prompt_module_discovery.md`
+§6 stage 2(ד) in full, the whole approved Screen 3 card, and mockups 01/04 in full before drawing.
+Palette pulled fresh via `grep -rhoE "(bg|text|border)-[a-z]+-[0-9]{2,3}" src/` — matched 01/04's
+five-family palette exactly (teal/green/slate/amber/red), no new colors introduced.
+
+Drew `docs/mockups/hostesses-screen/03_repository_DRAFT.html`: search+city+"active only"+"didn't
+answer last 4" filter chips, "+ add hostess" button, an 8-column table (name/city/phone/rating/
+hourly-rate/status/quarter-events/actions with an edit-pencil + enable/disable toggle switch,
+replacing the trash-can per the card's own §②), 4 compact state boxes (loading/empty-real/
+empty-filtered/error), and a "projects manager" permission-blocked variant. All 12 rows marked as
+invented demo data — the live `hostesses` table is genuinely empty (0 rows, unchanged since
+Session 1's Stage א measurement). Verified visually in the Browser pane before sending; caught and
+fixed a stray-markdown-in-HTML bug (`**bold**` instead of `<b>`) during self-review.
+
+One open product question flagged before sending: the card says the "didn't answer last N invites"
+chip is a "filter that becomes an action" without saying what the action does. Assumed a plain
+filter toggle (same pattern as "show missing only" on Screen 1), marked the assumption in the
+mockup itself, and asked Ishay directly. **Ishay confirmed: exactly that — a plain filter, not a
+report or bulk message.**
+
+Sent the draft to Ishay directly (rendered inline), not just described. Ishay approved it
+("אהה הבנתי המסך הזה זה הבא הכל טוב") after a clarifying exchange about where an unavailability
+date gets *entered* (answered: nowhere on this screen — this is a list/filter surface only; entry
+belongs to the not-yet-drawn edit screen 3ג).
+
+### 🔴 Self-caught after "approval" — the mockup didn't match an already-ruled process, and the card didn't say so either
+
+Ishay then asked directly: *"was there something unclear in the processes worth adding, or was it
+easy to build?"* Honest answer, checked against `processes-approved.md` (which the card's own
+build-time promise says should never need a second read at mockup time, but does here): **it was
+easy because I only used the screen card, and didn't re-check `processes-approved.md` before
+drawing — and the card itself has a real gap, not just my drawing.**
+
+Two concrete mismatches, both citable:
+1. **`processes-approved.md:116-129` (§א4, ruled 05/08/2026):** disabling a hostess with an active
+   future assignment must open a confirmation window naming the assignment(s), with two
+   intent-worded options ("release her" / "she'll complete what she committed to") — not the
+   instant zero-judgment toggle the mockup drew for every row.
+2. **`processes-approved.md:106-114` (§א3, ruled 05/08/2026):** unavailability is a **date range +
+   short note**, not the single end-date (`"לא זמינה עד DD/MM"`) the mockup showed.
+
+Neither fact was in the Screen 3 card at all before this — not a card-vs-mockup mismatch caused by
+sloppy drawing alone, but a genuine card-completeness gap that would have hit whoever builds from
+the card next, exactly as it hit this mockup.
+
+**Fixed same session, both files:**
+- `03_repository_approved.html` (moved from draft to `approved/` on Ishay's ok, then corrected
+  in place before final sign-off): unavailability badges now show a range + a short note line;
+  added a confirm-dialog panel mirroring §א4's own worked example (reused its exact wording,
+  attached to a row with a plausible active assignment rather than inventing new copy); corrected
+  the click-map legend text to state the conditional behavior instead of a blanket
+  "zero-judgment."
+- `screens-approved.md`: added the missing `🔴 מפת-לחיצות` section for Screen 3 (deliberately
+  **not** given a circled number — renumbering ②–⑦ below it would have broken existing
+  cross-references elsewhere in the file, so it's an addition, not a renumbering); corrected the
+  toggle's click-map row to the conditional behavior; added a new row to `③ מה נכנס` documenting
+  both §א3/§א4 facts with citations, and fixed the `"לא זמינה עד 14/09"` example text to read as a
+  range.
+
+**Lesson, stated plainly because it will recur:** the Discovery prompt's own table (§6 stage 2, "מה
+קלוד צריך / מאיפה") says the mockup gets its "story" from `processes-approved.md` so it isn't
+duplicated on every card — but that only holds if the card-writer (or mockup-drawer) actually goes
+back and reads the relevant process section before drawing, not just the screen card. Screen 3's
+card was written before §א3/§א4 existed as approved process items (both dated 05/08, same day as
+the card's own approval stamp) and was never reconciled against them afterward. **Next screens
+(3ב/3ג/3ד) should explicitly re-check `processes-approved.md §א` in full before drawing, not rely
+on the card alone being complete.**
+
 ## /רעיונות-לבדיקה
 > These are ideas that came up — **do not assume they are correct.** Each gets checked like any
 > other option; an idea is not a ruling.

@@ -34,10 +34,48 @@ Read **`~/.claude/CLAUDE.md`** (loads every session, every project) for the univ
 
 Prefer a grep anchor (function name / string) over a line number — line numbers rot between writing and executing.
 
+## Adopting a world practice — the fit check and the price tag
+
+> **When this fires:** root `CLAUDE.md` iron rule 1 says that with **no internal anchor** you go fetch an
+> external one — world practice + business sense — and come back with a recommendation. **This is what
+> "fit" concretely means.** Ishay, 08/08/2026: *"להתאים למערכת שלנו זה עמום"* — so it is decomposed here,
+> each part with a place to check it, not a feeling. **Not a closed list** — the full project profile is
+> the 🎓 block at the top of root `CLAUDE.md` and `PROJECT_MASTER §1`.
+
+**Four fit questions, each with a verification target:**
+
+| # | Question | Where to check it |
+|:-:|---|---|
+| **1 · ערוץ** | Does it assume a channel we do not have? | **There is no hostess app** — every path runs through the manager (`specs/module_04_hostesses/processes-approved.md §א3`). What exists: email, and the manager's phone |
+| **2 · דאטה** | Does it assume data nobody collects? | `docs/schema.sql` + `docs/db_roadmap.md` — **read, don't recall.** *(Anchor: the `0.35` reliability component is switched off for exactly this reason — the attendance marks it needs are created by M6.)* |
+| **3 · תפקיד** | Does it assume a person who is not in the matrix? | `PROJECT_MASTER §3` — five roles, one person per domain, no ops team |
+| **4 · נפח** | Does its rationale rest on a different order of magnitude? | 50 hostesses · 2–5 per shift ⇒ **you re-sort, you don't filter** — already the documented rationale for the four sort-angles |
+
+**Then, and only then:** *what does it solve that we don't have?* Complexity built for a problem that is
+not here is a **loss** — it will have to be defended at the conference.
+
+🔴 **And the answer is always two-part** — *"this is the convention **and it fits here because X**"* or,
+stronger, *"this is the convention, **and I deliberately deviated, because X**"*. A convention adopted
+without a fit check is copying, not deciding. *(Full research protocol — when to dispatch, sourcing rules:
+`docs/guides/prompt_module_discovery.md` §5. Not duplicated here.)*
+
+➕ **Every world proposal ships with its implementation price here, not just its source:** what actually
+changes — column · table · screen · migration · existing code — **and how complex.**
+🔴 **This is a gate, not a courtesy.** Ishay, 08/08/2026: *"אם לא מורכב סיכוי גבוה שפשוט אסכים למה
+שימליץ כי לי אין ידע מספיק רחב בנושא"* ⇒ **the complexity estimate is what actually decides, not him.**
+⚠️ **So an understated estimate is a silent ruling** — it must also state what it does **not** cover
+*(tests · ripples to other screens · what could break)*, and **"simple" may only be said after checking,
+never after guessing.**
+
 🆕 **Three provenance tags on every claim you report — `אומת-על-ידי` · `דווח-לי` · `הנחתי`** *(added 07/08/2026 on Ishay's request; the canonical wording and the reasoning live in `module-build/SKILL.md`)*. The third exists because two tags cannot express a filled gap: **an untagged claim reads as verified, so an assumption is indistinguishable from a measurement.** 🚫 **Provenance only — never a confidence percentage**; verbalized confidence is measurably overconfident and would hand Ishay the feeling of control instead of control.
 
 - 🔴 **A claim about anything OUTSIDE this file is written as a measurement method, not as a value.** Counts · paths · line numbers · status · "this was done" — **all go stale silently, because a file cannot see the world move.** Must state a value? It carries a date and the command that produced it. ⛔ **And when it rots — REMOVE the number, do not update it** (updating reproduces the defect in two weeks). **The highest-risk form is "moved / registered / done"** — it reads as a completed action, and nobody re-checks a completed action ⇒ **grep in the same turn, or write "טעון בדיקה". There is no third option.** ⚠️ **And a file is not audited by re-reading it — it is audited by RUNNING it:** the two rules below survived a full coherence pass and broke the moment someone executed them. *(06/08/2026: 20+ contradictions found across four independent scans and one external tool; **zero** caught by re-reading. A line number written that evening was already wrong within hours. The two rules that follow are instances of this one.)*
 - **An absence-claim is verified the way the SOURCE writes it, not the way the reporter searched.**
+  *(Anchor 08/08/2026: searched `db_roadmap.md` for `approval_withdrawn` and "נעיצה" — words borrowed
+  from two OTHER files — got zero hits, reported "not registered." Both were registered, three lines
+  apart, just in `db_roadmap.md`'s own Hebrew phrasing ("ששת הסטטוסים", "העדפת-לקוח"). Caught only by
+  reading the file, not by re-running the same `grep`. ⇒ Before reporting an absence, search the
+  TARGET file's own vocabulary — words already sitting in it — not the vocabulary you arrived with.)*
 - **Never hand a checker an expected number — only a measurement method.**
 - **A fix is not done until you have checked where else the same defect lives.**
 - 🔴 **The source must answer DIRECTLY. A derivation, a stretch, or "it probably implies" is a

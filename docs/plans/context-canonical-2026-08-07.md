@@ -190,7 +190,7 @@
 | `docs/guides/prompt_module_discovery.md` | **כללי-העבודה מול ישי חיים בו** — לקרוא גם בלי להריץ Discovery | על נוהג |
 | `docs/PROJECT_MASTER.md` §6 + §7 | חובות ושאלות פתוחות | ‏§7 הוא הרשם **היחיד** |
 | `docs/specs/module_04_hostesses/**` | האפיון המאושר | **על C5/C6 פר-פריט** |
-| `docs/module4_smart_match_research.md` | ‏**§11 מספרים · §9 הכרעות · §6 נימוקים** | **§11.1 הוא ה-SSOT למשקולות** |
+| `docs/specs/module_04_hostesses/module4_smart_match_research.md` | ‏**§11 מספרים · §9 הכרעות · §6 נימוקים** | **§11.1 הוא ה-SSOT למשקולות** |
 | `docs/schema.sql` + `docs/db_roadmap.md` | סכמה ומפת-שינויים | **המסד החי גובר על ה-snapshot** |
 | `.claude/skills/module-blueprint/template.md` | מה הבלופרינט דורש מהאפיון | על הנחה |
 

@@ -216,7 +216,7 @@ npm run check:docs-structure
 | **הכרעות מ4 + הראיות** | `docs/specs/module_04_hostesses/discovery-log.md` *(אנגלית)* |
 | **התהליכים המאושרים + פרק 12 הנצבר** | `docs/specs/module_04_hostesses/processes-approved.md` |
 | **מקורות-הכנס** | `docs/specs/module_04_hostesses/world-sources.md` |
-| **האלגוריתם — SSOT** | `docs/module4_smart_match_research.md` §11 למספרים · §3/§5/§6 ל"למה" |
+| **האלגוריתם — SSOT** | `docs/specs/module_04_hostesses/module4_smart_match_research.md` §11 למספרים · §3/§5/§6 ל"למה" |
 | **מפת-השלבים ופרומפט-ההמשך** | `docs/specs/module_04_hostesses/next-session-prompt.md` |
 
 ---

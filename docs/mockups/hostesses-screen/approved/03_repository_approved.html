@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מוקאפ מ4 · מסך 3 — מאגר דיילות (טיוטה לאישור ישי)</title>
+<style>
+  /* פלטה וגופן נשאבו מ-src/ (grep על bg|text|border), לא מהמוקאפים הקודמים ולא מהעין —
+     אותם משתנים בדיוק כמו 01_overview/04_rowmenu, כדי שמסך 1 ומסך 3 (שתי לשוניות של אותו עמוד)
+     יראו זהים. green=פעיל/אושר · teal=מותג/פעולה · slate=ניטרלי · amber=אזהרה/ממתין · red=דחוף/שגיאה. */
+  :root{
+    --primary:#0D9488; --teal50:#F0FDFA; --teal100:#CCFBF1; --teal600:#0D9488; --teal700:#0F766E;
+    --green50:#F0FDF4; --green100:#DCFCE7; --green200:#BBF7D0; --green700:#15803D;
+    --amber50:#FFFBEB; --amber100:#FEF3C7; --amber200:#FDE68A; --amber700:#B45309;
+    --red50:#FEF2F2; --red200:#FECACA; --red600:#DC2626; --red700:#B91C1C;
+    --bg:#F8FAFC; --s50:#F8FAFC;--s100:#F1F5F9;--s200:#E2E8F0;--s300:#CBD5E1;
+    --s400:#94A3B8;--s500:#64748B;--s600:#475569;--s700:#334155;--s800:#1E293B;
+    --r:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--s800);font-size:14px;
+       font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:16px 18px 30px}
+  .note{background:var(--amber50);border:1px solid var(--amber200);color:#92400E;border-radius:var(--r);
+        padding:9px 12px;font-size:12px;margin-bottom:12px;line-height:1.65}
+  h1{font-size:19px;margin:0}
+  .sub{color:var(--s500);font-size:12px;margin-top:2px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:16px;flex-wrap:wrap}
+
+  .card{background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);padding:0 16px 14px}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--s200);margin:0 -16px 12px;padding:0 16px;align-items:center}
+  .tab{padding:11px 16px;font-size:14px;font-weight:500;color:var(--s500);border-bottom:2px solid transparent}
+  .tab.active{color:var(--teal700);border-bottom-color:var(--primary);font-weight:600}
+
+  .filters{display:flex;gap:8px;align-items:center;padding:2px 0 12px;flex-wrap:wrap}
+  .search{border:1px solid var(--s200);border-radius:8px;padding:6px 11px;font-size:13px;color:var(--s700);
+          min-width:200px;background:#fff}
+  .search::placeholder{color:var(--s400)}
+  select.fsel{border:1px solid var(--s200);background:#fff;color:var(--s600);border-radius:8px;
+              padding:6px 9px;font-size:12.5px}
+  .fbtn{border:1px solid var(--s200);background:#fff;color:var(--s600);border-radius:999px;padding:5px 13px;font-size:12.5px}
+  .fbtn.on{background:var(--teal50);border-color:#99F6E4;color:var(--teal700);font-weight:600}
+  .fbtn.warn{border:1px solid var(--amber200);background:var(--amber50);color:var(--amber700);font-weight:600}
+  .fspacer{margin-right:auto}
+  .addbtn{background:var(--primary);color:#fff;border:0;border-radius:8px;padding:7px 15px;
+          font-size:13px;font-weight:600;white-space:nowrap}
+
+  table{width:100%;border-collapse:collapse}
+  th{font-size:12px;color:var(--s500);font-weight:600;text-align:right;padding:7px 10px;
+     border-bottom:1px solid var(--s200);white-space:nowrap}
+  th .sc{display:block;font-weight:400;font-size:10px;color:var(--s400)}
+  td{padding:10px 10px;border-bottom:1px solid var(--s100);vertical-align:middle}
+  tr.dis td{background:var(--s50)}
+  tr.dis .rname{color:var(--s500)}
+  .rname{font-weight:600;cursor:pointer}
+  .rname:hover{text-decoration:underline;color:var(--teal700)}
+  .tag{display:block;font-size:10.5px;color:var(--amber700);margin-top:2px}
+  .num{direction:ltr;unicode-bidi:isolate;display:inline-block}
+  .star{color:var(--s700)}
+  .nostar{color:var(--s400)}
+
+  .st{font-size:11px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap;display:inline-block}
+  .st.active{background:var(--green100);color:var(--green700)}
+  .st.disabled{background:var(--s100);color:var(--s500);border:1px dashed var(--s300)}
+  .st.unavail{background:var(--amber200);color:#92400E}
+  .stnote{display:block;font-size:10px;color:var(--s500);margin-top:2px}
+
+  .confirm{margin-top:14px;background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);
+           padding:12px 14px;border:1px solid var(--amber200)}
+  .confirm h3{font-size:12.5px;margin:0 0 8px;color:var(--amber700)}
+  .cbox{background:var(--amber50);border:1px solid var(--amber200);border-radius:var(--r);padding:10px 12px}
+  .cbox .lead{font-weight:600;margin-bottom:8px}
+  .copt{display:block;border:1px solid var(--s200);background:#fff;border-radius:8px;padding:7px 11px;
+        font-size:12.5px;margin-bottom:6px}
+  .copt.rec{border-color:var(--primary);color:var(--teal700);font-weight:600}
+
+  .actions{display:flex;align-items:center;gap:8px}
+  .iconbtn{width:28px;height:28px;border-radius:6px;border:1px solid var(--s200);background:#fff;
+           color:var(--s600);font-size:13px;line-height:1;display:inline-flex;align-items:center;
+           justify-content:center;flex:none}
+  .tgl{position:relative;display:inline-block;width:34px;height:19px;flex:none}
+  .tgl input{opacity:0;width:0;height:0;position:absolute}
+  .tgl-track{position:absolute;inset:0;background:var(--s300);border-radius:999px;transition:.15s}
+  .tgl-thumb{position:absolute;top:2px;right:2px;width:15px;height:15px;border-radius:50%;background:#fff;
+             box-shadow:0 1px 2px rgba(0,0,0,.25);transition:.15s}
+  .tgl input:checked + .tgl-track{background:var(--teal600)}
+  .tgl input:checked + .tgl-track .tgl-thumb{right:auto;left:2px}
+
+  .legend{margin-top:14px;font-size:11.5px;color:var(--s500);line-height:1.9}
+  .legend b{color:var(--s700)}
+
+  .states{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
+  .sbox{flex:1;min-width:220px;background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);
+        padding:12px 13px}
+  .sbox h3{font-size:12.5px;margin:0 0 8px;color:var(--s700)}
+  .sbox .real{color:var(--red600);font-weight:700}
+  .skel{height:11px;background:var(--s100);border-radius:5px;margin-bottom:7px}
+  .skel:nth-child(2){width:85%} .skel:nth-child(3){width:70%}
+  .emptymsg{text-align:center;padding:14px 4px;color:var(--s500);font-size:12.5px}
+  .emptymsg .big{display:block;font-size:22px;margin-bottom:4px}
+  .emptymsg .linkbtn{display:inline-block;margin-top:8px;color:var(--teal700);font-weight:600;font-size:12px}
+  .emptymsg .primarybtn{display:inline-block;margin-top:8px;background:var(--primary);color:#fff;
+                        border-radius:8px;padding:6px 13px;font-size:12.5px;font-weight:600}
+  .errmsg{text-align:center;padding:14px 4px;color:var(--red700);font-size:12.5px}
+  .errmsg .retry{display:inline-block;margin-top:8px;border:1px solid var(--s200);border-radius:8px;
+                 padding:5px 12px;font-size:12px;color:var(--s700);background:#fff}
+
+  .blocked{margin-top:14px;background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);
+           padding:12px 14px}
+  .blocked h3{font-size:12.5px;margin:0 0 8px;color:var(--s700)}
+  .blocked table{font-size:12.5px}
+  .blocked th,.blocked td{padding:7px 8px}
+
+  .demo{margin-top:14px;font-size:11px;color:var(--s500);background:#fff;
+        border:1px dashed var(--s300);border-radius:8px;padding:8px 11px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="note">
+    <b>טיוטה לאישורך — מסך 3 מתוך 8 · מאגר דיילות</b> (הלשונית השנייה של אותו עמוד כמו מסך 2 —
+    "מעקב פניות ושיבוצים"). <b>🎨 אותה פלטה בדיוק כמו במסכים 2+4</b> — <code>src/index.css</code>
+    + סריקה על <code>src/</code>, לא מהעין.<br>
+    🔴 <b>המאגר האמיתי היום ריק — 0 שורות (נמדד).</b> כל 12 השורות שלמטה הן <b>דמו מומצא</b>
+    כדי להראות את העמודות, המסננים והמצבים; ר' תיבת 🏷️ בתחתית ואת תיבת "ריק-אמיתי" בפאנל-המצבים.
+  </div>
+
+  <div class="topbar">
+    <div>
+      <h1>דיילות</h1>
+      <div class="sub">מנהלת גיוס ושיבוץ · רותי לוי</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <div class="tab">מעקב פניות ושיבוצים</div>
+      <div class="tab active">מאגר דיילות</div>
+    </div>
+
+    <div class="filters">
+      <input class="search" placeholder="חיפוש לפי שם או טלפון">
+      <select class="fsel"><option>כל הערים</option><option>תל אביב</option><option>חיפה</option></select>
+      <button class="fbtn on">פעילות בלבד</button>
+      <button class="fbtn warn">לא ענתה ל-4 האחרונים (2)</button>
+      <span class="fspacer"></span>
+      <button class="addbtn">+ הוספת דיילת</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:16%">שם</th>
+          <th style="width:10%">עיר</th>
+          <th style="width:11%">טלפון</th>
+          <th style="width:9%">התרשמות</th>
+          <th style="width:9%">שכר שעתי</th>
+          <th style="width:14%">מצב</th>
+          <th style="width:11%">אירועים<span class="sc">רבעון אחרון</span></th>
+          <th style="width:9%">פעולה</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <tr>
+          <td><div class="rname">שרה כהן</div><span class="stnote">משובצת לאירוע עתידי — ר' חלון-האישור למטה</span></td>
+          <td>תל אביב</td>
+          <td class="num">052-1112233</td>
+          <td><span class="star">5 ★</span></td>
+          <td class="num">₪45</td>
+          <td><span class="st active">פעילה</span></td>
+          <td class="num">6</td>
+          <td><div class="actions">
+            <button class="iconbtn" title="עריכה">✎</button>
+            <label class="tgl"><input type="checkbox" checked><span class="tgl-track"><span class="tgl-thumb"></span></span></label>
+          </div></td>
+        </tr>
+
+        <tr>
+          <td class="rname">דנה ברק</td>
+          <td>חיפה</td>
+          <td class="num">052-7778899</td>
+          <td><span class="star">4 ★</span></td>
+          <td class="num">₪42</td>
+          <td><span class="st active">פעילה</span></td>
+          <td class="num">3</td>
+          <td><div class="actions">
+            <button class="iconbtn" title="עריכה">✎</button>
+            <label class="tgl"><input type="checkbox" checked><span class="tgl-track"><span class="tgl-thumb"></span></span></label>
+          </div></td>
+        </tr>
+
+        <tr>
+          <td>
+            <div class="rname">נועה מזרחי</div>
+            <span class="tag">לא ענתה מעולם (2 זימונים)</span>
+          </td>
+          <td>תל אביב</td>
+          <td class="num">053-4455667</td>
+          <td><span class="nostar">—</span></td>
+          <td class="num">₪40</td>
+          <td><span class="st active">פעילה</span></td>
+          <td class="num">0</td>
+          <td><div class="actions">
+            <button class="iconbtn" title="עריכה">✎</button>
+            <label class="tgl"><input type="checkbox" checked><span class="tgl-track"><span class="tgl-thumb"></span></span></label>
+          </div></td>
+        </tr>
+
+        <tr>
+          <td class="rname">יעל דוד</td>
+          <td>רמת גן</td>
+          <td class="num">054-2223344</td>
+          <td><span class="star">5 ★</span></td>
+          <td class="num">₪48</td>
+          <td><span class="st unavail">לא זמינה 07/09–14/09</span><span class="stnote">הערה: אירוע משפחתי</span></td>
+          <td class="num">2</td>
+          <td><div class="actions">
+            <button class="iconbtn" title="עריכה">✎</button>
+            <label class="tgl"><input type="checkbox" checked><span class="tgl-track"><span class="tgl-thumb"></span></span></label>
+          </div></td>
+        </tr>
+
+        <tr class="dis">
+          <td class="rname">מיכל אברהם</td>
+          <td>חיפה</td>
+          <td class="num">050-9988776</td>
+          <td><span class="nostar">—</span></td>
+          <td class="num">₪40</td>
+          <td><span class="st disabled">מושבתת</span></td>
+          <td class="num">0</td>
+          <td><div class="actions">
+            <button class="iconbtn" title="עריכה">✎</button>
+            <label class="tgl"><input type="checkbox"><span class="tgl-track"><span class="tgl-thumb"></span></span></label>
+          </div></td>
+        </tr>
+
+        <tr>
+          <td>
+            <div class="rname">רחל לוי</div>
+            <span class="tag">לא ענתה ל-4 האחרונים</span>
+          </td>
+          <td>אשדוד</td>
+          <td class="num">052-3334455</td>
+          <td><span class="star">4 ★</span></td>
+          <td class="num">₪43</td>
+          <td><span class="st active">פעילה</span></td>
+          <td class="num">5</td>
+          <td><div class="actions">
+            <button class="iconbtn" title="עריכה">✎</button>
+            <label class="tgl"><input type="checkbox" checked><span class="tgl-track"><span class="tgl-thumb"></span></span></label>
+          </div></td>
+        </tr>
+
+        <tr>
+          <td class="rname">אורלי שני</td>
+          <td>נתניה</td>
+          <td class="num">054-6667788</td>
+          <td><span class="nostar">—</span></td>
+          <td class="num">₪46</td>
+          <td><span class="st active">פעילה</span></td>
+          <td class="num">1</td>
+          <td><div class="actions">
+            <button class="iconbtn" title="עריכה">✎</button>
+            <label class="tgl"><input type="checkbox" checked><span class="tgl-track"><span class="tgl-thumb"></span></span></label>
+          </div></td>
+        </tr>
+
+        <tr>
+          <td class="rname">תמר גולן</td>
+          <td>תל אביב</td>
+          <td class="num">053-1231234</td>
+          <td><span class="star">5 ★</span></td>
+          <td class="num">₪44</td>
+          <td><span class="st active">פעילה</span></td>
+          <td class="num">8</td>
+          <td><div class="actions">
+            <button class="iconbtn" title="עריכה">✎</button>
+            <label class="tgl"><input type="checkbox" checked><span class="tgl-track"><span class="tgl-thumb"></span></span></label>
+          </div></td>
+        </tr>
+
+        <tr>
+          <td class="rname">ליאת פרץ</td>
+          <td>באר שבע</td>
+          <td class="num">050-5556677</td>
+          <td><span class="star">4 ★</span></td>
+          <td class="num">₪41</td>
+          <td><span class="st active">פעילה</span></td>
+          <td class="num">2</td>
+          <td><div class="actions">
+            <button class="iconbtn" title="עריכה">✎</button>
+            <label class="tgl"><input type="checkbox" checked><span class="tgl-track"><span class="tgl-thumb"></span></span></label>
+          </div></td>
+        </tr>
+
+        <tr>
+          <td class="rname">שירה אזולאי</td>
+          <td>רחובות</td>
+          <td class="num">052-8889900</td>
+          <td><span class="nostar">—</span></td>
+          <td class="num">₪47</td>
+          <td><span class="st unavail">לא זמינה 15/08–20/08</span><span class="stnote">הערה: בחו"ל</span></td>
+          <td class="num">0</td>
+          <td><div class="actions">
+            <button class="iconbtn" title="עריכה">✎</button>
+            <label class="tgl"><input type="checkbox" checked><span class="tgl-track"><span class="tgl-thumb"></span></span></label>
+          </div></td>
+        </tr>
+
+        <tr class="dis">
+          <td class="rname">גלית מור</td>
+          <td>חולון</td>
+          <td class="num">054-3345678</td>
+          <td><span class="nostar">—</span></td>
+          <td class="num">₪39</td>
+          <td><span class="st disabled">מושבתת</span></td>
+          <td class="num">0</td>
+          <td><div class="actions">
+            <button class="iconbtn" title="עריכה">✎</button>
+            <label class="tgl"><input type="checkbox"><span class="tgl-track"><span class="tgl-thumb"></span></span></label>
+          </div></td>
+        </tr>
+
+        <tr>
+          <td class="rname">אפרת דהן</td>
+          <td>פתח תקווה</td>
+          <td class="num">053-7789012</td>
+          <td><span class="star">5 ★</span></td>
+          <td class="num">₪45</td>
+          <td><span class="st active">פעילה</span></td>
+          <td class="num">4</td>
+          <td><div class="actions">
+            <button class="iconbtn" title="עריכה">✎</button>
+            <label class="tgl"><input type="checkbox" checked><span class="tgl-track"><span class="tgl-thumb"></span></span></label>
+          </div></td>
+        </tr>
+
+      </tbody>
+    </table>
+
+    <div class="legend">
+      <b>🔴 מה לחיץ ומה זה עושה — ולמה, בכוונת-אב-הטיפוס:</b>
+      <b>לחיצה על השם</b> פותחת את כרטיס-הדיילת לצפייה (מסך 3ד, ⬜ טרם צויר) — זו בדיוק ההחלטה
+      שהמסך קיים בשבילה: "איזו דיילת אני פותחת עכשיו, ומה מצבה, לפני שאני נוגעת בה".
+      <b>עיפרון ✎</b> פותח את חלון העריכה (מסך 3ג, ⬜ טרם צויר) ישירות, בלי לעבור דרך הצפייה.
+      <b>המתג — תוקן 07/08/2026 15:25, אחרי שנמצא לא מדויק:</b> <b>כשאין לדיילת שיבוצים עתידיים
+      פעילים</b> — משבית/מפעיל מיד, אפס שיקול-דעת, אותו עיקרון כמו "שלח שוב" במסך 1.
+      🔴 <b>אבל כשיש לה שיבוץ עתידי פעיל</b> — לחיצת "השבת" <b>חייבת</b> לפתוח קודם חלון-אישור
+      ששמו אותם בשם ובתאריך (`processes-approved.md §א4`, הוכרע 05/08/2026) — ר' הדוגמה בפאנל
+      למטה. <b>זו לא בחירת-עיצוב — זו התנהגות כבר-מוכרעת שהמוקאפ המקורי החמיץ.</b>
+      <b>+ הוספת דיילת</b> פותח את הפופ-אפ (מסך 3ב, ⬜ טרם צויר).
+      🔶 <b>אלה שלושת היעדים עדיין לא צוירו — מוקאפ המסך הזה בלבד הוא מה שמאושר כאן.</b><br>
+      <b>🔴 ומה אפיון-שותק לגביו, לאישורך:</b> הכרטיס קובע ש"לא ענתה ל-N האחרונים" הוא <b>מסנן</b>
+      שהופך את הצ'יפ לפעולה, אבל אינו אומר מה בדיוק קורה בלחיצה. <b>ההנחה כאן: זהו צ'יפ-סינון</b>
+      (כמו "הצג חסרים בלבד" במסך 1) — לוחצים, הטבלה מסתננת לשתיים שתואמות, לוחצים שוב, חוזרת.
+      <b>לא בדוח נפרד ולא בהודעה קבוצתית.</b> אם התכוונת לפעולה אחרת (למשל שליחת תזכורת
+      מרוכזת) — זו הכרעה נפרדת, טרם קיימת ב-`params`.<br>
+      <b>🎨 ולמה "לא ענתה" באדום-ענבר ולא בירוק/אדום כמו סטטוסים אחרים:</b> זו לא הצלחה (ירוק) ולא
+      שגיאה (אדום) — היא אזהרת-היגיינה, אותה משפחה בדיוק כמו "פג תוקף" במסך 1 ו-4.
+    </div>
+  </div>
+
+  <div class="states">
+    <div class="sbox">
+      <h3>טעינה</h3>
+      <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+    </div>
+    <div class="sbox">
+      <h3>ריק אמיתי — <span class="real">המצב היום בפועל</span></h3>
+      <div class="emptymsg">
+        <span class="big">🗂️</span>
+        עדיין אין דיילות במאגר
+        <span class="primarybtn">+ הוספת דיילת</span>
+      </div>
+    </div>
+    <div class="sbox">
+      <h3>ריק אחרי סינון</h3>
+      <div class="emptymsg">
+        <span class="big">🔍</span>
+        לא נמצאו דיילות התואמות לסינון
+        <span class="linkbtn">נקה סינון</span>
+      </div>
+    </div>
+    <div class="sbox">
+      <h3>שגיאה</h3>
+      <div class="errmsg">
+        לא הצלחנו לטעון את המאגר
+        <span class="retry">נסה שוב</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="confirm">
+    <h3>⚠️ חלון-אישור — לחיצת "השבת" על דיילת עם שיבוץ עתידי פעיל (`processes-approved.md §א4`)</h3>
+    <div class="cbox">
+      <div class="lead">שרה כהן משובצת ל-1 אירוע עתידי: כנס לקוחות שנתי · 22/08/2026 · אושרה סופית</div>
+      <span class="copt rec">▸ היא לא תגיע — שחרר אותה מהאירועים <span style="font-weight:400;color:var(--s500);font-size:11px">(מומלץ)</span></span>
+      <span class="copt">▸ היא תשלים את מה שהתחייבה אליו ⚠️</span>
+    </div>
+    <div class="legend" style="margin-top:8px">
+      <b>שתי האפשרויות מנוסחות לפי כוונה, לא לפי מכניקה</b> — שתיהן לגיטימיות (§א4): שחרור מריץ
+      את תהליך-השחרור הקיים (מייל ביטול, הפרויקט חוזר ל"בתהליך"); "תשלים את מה שהתחייבה" משאיר
+      את השיבוץ במלואו, והדיילת רק מפסיקה לקבל הזמנות <b>חדשות</b>. <b>דיילת בלי שיבוץ עתידי
+      פעיל (כמו כל שאר השורות בטבלה) מקבלת את המתג המיידי הרגיל — בלי החלון הזה.</b>
+    </div>
+  </div>
+
+  <div class="blocked">
+    <h3>👤 פעולה חסומה — תפקיד "מנהלת פרויקטים" (צפייה בלבד, לפי ⑥ בכרטיס)</h3>
+    <table>
+      <thead><tr><th>שם</th><th>עיר</th><th>התרשמות</th><th>מצב</th></tr></thead>
+      <tbody>
+        <tr><td>שרה כהן</td><td>תל אביב</td><td>5 ★</td><td><span class="st active">פעילה</span></td></tr>
+        <tr><td>דנה ברק</td><td>חיפה</td><td>4 ★</td><td><span class="st active">פעילה</span></td></tr>
+      </tbody>
+    </table>
+    <div class="legend" style="margin-top:8px">
+      <b>בלי "+ הוספת דיילת", בלי עמודת "פעולה" (עריכה/מתג) — ובלי עמודת שכר-שעתי</b>, שהיא נתון
+      עלות ולא רלוונטי לתפקיד-צפייה. שאר העמודות זהות.<br>
+      ⚠️ <b>ומה שהמצב הזה מסתיר, ולא מציג בכוונה:</b> ה-RLS על `hostesses` היום הוא
+      `deny-all` עם אפס policies (נמדד) — כלומר <b>כל</b> התפקידים, כולל גיוס ומנכ"ל, מקבלים היום
+      טבלה ריקה <b>בלי שגיאה</b>, לא רק מנהלת-פרויקטים. זה חוב רשום (`🚧 מ4`), לא חלק מהעיצוב
+      המאושר של המסך — הבאתי אותו כאן כדי שהפער בין "מה שהכרטיס מתאר" ל"מה שקורה היום בפועל"
+      לא ייעלם בין הסעיפים.
+    </div>
+  </div>
+
+  <div class="demo">
+    <b>🏷️ דאטת-הדגמה מול נגזר-ממודל:</b><br>
+    <b>🌱 מהמסד:</b> אין — המאגר ריק, 0 שורות (נמדד ב-`hostesses`, ר' כרטיס §🏷️).<br>
+    <b>🎭 דמו מומצא — וזה כל 12 השורות:</b> השמות, הערים, הטלפונים, השכר-השעתי, ההתרשמות,
+    המצב ומספרי-האירועים. אין להם מקור במסד.<br>
+    <b>📐 נגזר ממודל:</b> הכלל "דיילת שלא דורגה מציגה `—`" (מ-`hostesses.rating int not null
+    default 3`) · חלון "אירועים ברבעון האחרון" · סף ה-4 בצ'יפ ההיגיינה (`params`, ברירת-מחדל) ·
+    תג "לא ענתה מעולם" למי שמתחת לסף · <b>טווח-תאריכים+הערה לאי-זמינות ותנאי חלון-האישור
+    בהשבתה, שניהם מ-`processes-approved.md §א3/§א4`</b> — תוקן 07/08/2026 15:25 אחרי שהמוקאפ
+    הראשוני ציין תאריך-סיום יחיד ומתג-ללא-תנאי, בסתירה לשניהם.
+  </div>
+
+</div>
+</body>
+</html>

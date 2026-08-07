@@ -54,6 +54,12 @@
 ואת docs/PROJECT_MASTER.md (סעיפים 5.10–5.12, §7 פריטים 6, 14, 15, 16).
 אנחנו פותחים את מודול 4 — דיילות + Smart Match, על ענף ishay/module-4-hostesses.
 
+🔴 ולפני הכל — קרא את docs/specs/module_04_hostesses/spec.md.
+זהו האפיון המאושר של המודול (הופק בשיחת Discovery עם ישי, 05–08/08/2026), והוא
+גובר על C5/C6 בכל מה שהוא מכסה בפועל — פר-פריט, לא פר-תיקייה.
+בתוכו, בסעיף ①, יושבת רשימת-הקריאה המלאה שלך: מה עוד לפתוח ובאיזה סדר.
+⚠️ ובפרט: ממסמך-האלגוריתם קרא §11 בלבד — הוא נכתב במפורש בשביל סשן-בנייה.
+
 קרא בעצמך את התבנית .claude/skills/module-blueprint/template.md ובצע אותה כלשונה עם:
 MODULE_NUMBER=4 · MODULE_NAME=דיילות + Smart Match · RELEVANT_SECTIONS=§5.10-5.12, §7.6/14/15/16/29/33/43/44/45/47 · BRANCH_NAME=ishay/module-4-hostesses
 

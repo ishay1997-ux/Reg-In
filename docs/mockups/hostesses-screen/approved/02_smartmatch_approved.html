@@ -184,11 +184,13 @@
       <div class="sorts">
         <button class="sort on">קרבה</button>
         <button class="sort">עבדה אצל הלקוח הזה</button>
-        <button class="sort">תענה הכי מהר</button>
+        <button class="sort" style="opacity:.5" disabled>תענה הכי מהר <span style="font-size:10.5px">— כבוי</span></button>
         <button class="sort">הזולה ביותר</button>
       </div>
       <div class="sortnote">
-        ברירת-המחדל היא <b>קרבה</b>; מ-72 שעות לפני האירוע היא מתחלפת אוטומטית ל<b>"תענה הכי מהר"</b>.
+        ברירת-המחדל היא <b>קרבה</b>; מ-72 שעות לפני האירוע היא הייתה אמורה להתחלף אוטומטית
+        ל<b>"תענה הכי מהר"</b>, אבל הזווית כבויה כרגע — <b>עדיין אין נתוני-זמן-תגובה במסד</b>
+        (`responded_at` טרם נבנה). כשהעמודה תיכתב, הזווית תופעל ותחזור לברירת-המחדל האוטומטית.
         הזווית משנה רק את הסדר — <b>מי נכנסת לרשימה ומה כתוב על כל כרטיס אינם משתנים</b>.
       </div>
 
@@ -198,9 +200,9 @@
           <div class="cname">ליאת רוזנברג</div>
           <div class="cmeta">052-1234567 · רמת גן</div>
           <div class="chips">
-            <span class="chip good">עבדה אצל מדיטק 3×</span>
-            <span class="chip good">אישרה 9 מ-10</span>
-            <span class="chip">2.5 ק"מ</span>
+            <span class="chip ctx">עבדה אצל מדיטק 3×</span>
+            <span class="chip score">אישרה 9 מ-10</span>
+            <span class="chip score">2.5 ק"מ</span>
             <span class="chip grey">יש רכב</span>
           </div>
         </div>
@@ -212,8 +214,8 @@
           <div class="cname">גלי שפירא</div>
           <div class="cmeta">050-5551234 · תל אביב</div>
           <div class="chips">
-            <span class="chip good">אישרה 7 מ-8</span>
-            <span class="chip">4.2 ק"מ</span>
+            <span class="chip score">אישרה 7 מ-8</span>
+            <span class="chip score">4.2 ק"מ</span>
             <span class="chip warn">עבדה לאחרונה לפני 9 שבועות</span>
           </div>
         </div>
@@ -226,7 +228,7 @@
           <div class="cmeta">054-8887766 · גבעתיים</div>
           <div class="chips">
             <span class="chip grey">טרם נצבר מידע</span>
-            <span class="chip">3.1 ק"מ</span>
+            <span class="chip score">3.1 ק"מ</span>
             <span class="chip grey">2 אירועים בסך הכול</span>
           </div>
         </div>
@@ -238,9 +240,9 @@
           <div class="cname">אורית בן-דוד</div>
           <div class="cmeta">053-2223344 · פתח תקווה</div>
           <div class="chips">
-            <span class="chip good">עבדה אצל מדיטק 1×</span>
+            <span class="chip ctx">עבדה אצל מדיטק 1×</span>
             <span class="chip warn">לא ענתה ל-4 הזימונים האחרונים</span>
-            <span class="chip">11 ק"מ</span>
+            <span class="chip score">11 ק"מ</span>
           </div>
         </div>
       </div>
@@ -251,7 +253,7 @@
           <div class="cname">שירה כהן-אלון</div>
           <div class="cmeta">052-4445566 · חולון</div>
           <div class="chips">
-            <span class="chip good">אישרה 5 מ-6</span>
+            <span class="chip score">אישרה 5 מ-6</span>
             <span class="chip grey">אין קואורדינטות</span>
             <span class="chip grey">יש רכב</span>
           </div>

@@ -632,6 +632,23 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 
 ### 9. 📝 Deviations & Tech-Debt Log
 
+**↳ as-built 07/08/2026 — `QuotesPage.jsx`'s two inline stat tiles replaced by the shared
+`@/components/StatTile`. 🔴 This module changed visually, unlike module 2.** Three things moved:
+the value now sits **below** its label (it was above), value size went 22px → 20px, and the pair
+split from one divider-separated card into two separately bordered tiles. **Why module 3 was the one
+realigned:** the tile was defined twice in the repo and the two implementations had drifted;
+`02_customers` is the designated conventions-reference module, and its form (label above value) is
+also the form in all eight module-4 mockups Ishay approved the same day — so module 3 was the sole
+outlier. Ruling was Ishay's, with that anchor stated. **Behaviour preserved exactly**: `openValue`
+still routes through `Money`, and `approvalRate === null` still renders `—` (never `0%`) via
+`StatTile`'s `emptyText` — the "no sample is not a low number" rule documented in this module is
+untouched. ➕ Both tiles **gained** `data-testid`s they never had (`quotes-metric-open-value` /
+`quotes-metric-approval-rate`); no existing E2E selector was touched. Verified: `eslint` 0 ·
+`vite build` 0 · 413 unit tests green. ⚠️ **Not verified visually in a browser** — needs an
+authenticated screen, and since this module's tiles genuinely changed shape, that check matters more
+here than in module 2. ⛔ Do not write a tile inline again — `src/CLAUDE.md` lists `StatTile` as
+mandatory-shared (the mechanical `gate` check for it is recommended but **not built yet**).
+
 > ℹ️ **Checked 05/08/2026 during the `work-manager` removal — historical only, nothing to change.**
 > The ~66 manager-N mentions in the entries below are dated records of who measured or ruled what
 > at the time. They are **not** live routing: no entry here instructs a session to contact anyone.

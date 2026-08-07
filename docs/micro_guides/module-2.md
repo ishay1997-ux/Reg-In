@@ -468,6 +468,38 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 
 ## 9. 📝 Deviations & Tech-Debt Log
 
+**↳ as-built 08/08/2026 — `CustomerDetailsPage.jsx`'s stat-tile wrapper changed `grid
+grid-cols-1 sm:grid-cols-3` → `flex flex-wrap`, closing the open verification item left by the
+07/08 `StatTile` extraction below.** Same family of gap as that entry (two screens using the shared
+`StatTile` component but drifting in the *wrapper*, not the tile): a full-width grid on only 3
+short-value tiles left visible empty space inside each tile, while `QuotesPage.jsx`'s 2-tile strip
+already used content-sized `flex` (Ishay's 29/07 ruling, quoted in that file: "a strip with only
+two numbers measured near-empty at 100% width"). Market research (Ishay's explicit instruction,
+before any mockup): Salesforce Lightning's Highlights Panel — the same UI slot, a key-field strip
+atop a record page — documents fields that "wrap and stay visible" rather than stretch to fill the
+row (4–6 field guideline). Presented both options as an HTML mockup (visualize tool, real values
+from this page) before touching code, per the task's explicit no-code-before-approval instruction
+on two closed/merged modules. **Ishay approved option A and ruled it canonical for every future
+module**, not a one-off — recorded in `StatTile.jsx`'s own doc comment so it doesn't depend on
+session memory. `data-testid`s unchanged (`metric-revenue`/`metric-open`/`metric-avg-deal` live on
+`StatTile` itself). `npm run build` exit 0. ⚠️ **Still not verified visually in a browser** — the
+Browser pane did not render on Ishay's side this session either (`viewport: 0x0`); reported as open
+rather than assumed fine a second time.
+
+**↳ as-built 07/08/2026 — `Highlight` removed from `CustomerDetailsPage.jsx`; stat tiles now come
+from the shared `@/components/StatTile`.** Ishay's ruling, made while reviewing module 4's mockups:
+the metric tile was defined twice in the repo (here, and inline in `QuotesPage.jsx`) and the two had
+**drifted** — opposite label/value order, different value size, different sub-label shade, and a teal
+fill here that violates the fill rule now written into `PROJECT_MASTER §4` (fill is reserved for the
+one primary action or a real warning; a metric is a fact). **Module 2's form won as canonical**
+(label above value) precisely because this module is the designated conventions reference. Visual
+delta here is fill-color only — layout, order, and all three `data-testid`s (`metric-revenue` /
+`metric-open` / `metric-avg-deal`, which `e2e/customer-page.spec.js` binds to) are unchanged.
+Verified: `eslint` 0 · `vite build` 0 · 413 unit tests green · 8 new `StatTile` tests seen failing
+under mutation before being accepted. ⚠️ **Not verified visually in a browser** — needs an
+authenticated screen; recorded as the session's one open verification item. ⛔ Do not reintroduce a
+local tile component here — `src/CLAUDE.md` now lists `StatTile` as mandatory-shared.
+
 > ℹ️ **Checked 05/08/2026 during the `work-manager` removal — historical only, nothing to change.**
 > The manager-N mentions in the entries below are dated records of who ruled what at the time.
 > They are **not** live routing: no entry here instructs a session to contact anyone. Dated
