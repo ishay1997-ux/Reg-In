@@ -24,9 +24,15 @@ merely *clear*. **Everything here reports to Ishay** — there is no intermediat
   what happens when X) and cites no source ⇒ ask Ishay whether he actually confirmed it**, before
   building. *(Ishay, 02/08: the spec itself can be wrong, and the save⇄send gap confused nobody —
   everyone understood it perfectly and built the wrong thing.)*
-- **Tag every claim in your reports** as `אומת-על-ידי` (you measured it) or `דווח-לי` (someone told
-  you). It is the מדדתי/על-דיווחו split Ishay expects in every report, and it is what lets a reader
-  know where to dig.
+- **Tag every claim in your reports** as `אומת-על-ידי` (you measured it) · `דווח-לי` (someone told
+  you) · or 🆕 **`הנחתי`** (you filled a gap yourself — nobody said it and you did not measure it).
+  It is the מדדתי/על-דיווחו split Ishay expects in every report, and it is what lets a reader
+  know where to dig. 🔴 **The third tag is the one he actually asked for** (07/08/2026, his words:
+  *"לא תמיד ברור לי מה Claude הבין, מה הוא הניח, ואיפה הוא השלים פערים בעצמו"*). **Two tags cannot
+  express an assumption** — an unmarked claim reads as verified, so a gap you filled silently is
+  indistinguishable from a fact you measured. ⚠️ **And this is provenance, not confidence: state
+  *where it came from*, never a percentage** — verbalized confidence is measurably overconfident,
+  and a number would give him the feeling of control without the control.
 - 🔴 **Two standing questions you owe Ishay, aimed at the prompt you were handed — not at your plan:**
   **① אילו מוקשים הפרומפט הזה לא זיהה? ② מה לא נבדק לפני שהפרומפט הזה נכתב?** These force you to
   investigate the prompt instead of receiving it. **"הכל בסדר" without having looked is the failure
