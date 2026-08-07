@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/supabaseClient'
 import { useAuth } from '@/contexts/AuthContext'
+import reginLogo from '@/assets/reg-in-logo.png'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -79,7 +80,19 @@ export default function LoginPage() {
       .eq('email', cleanEmail)
       .single()
 
-    if (dbError || !userData) {
+    // ⚠️ **תקלה רגעית אינה "אינך מורשה"** (סבב-תיקון 31/07/2026 — אותה הבחנה שנעשתה
+    // ב-`AuthContext`, וכאן היא נחוצה **קודם**: המסך הזה שולף את `users` בעצמו, ולכן הוא
+    // זה שנתקל בכשל ראשון). `.single()` מחזיר `PGRST116` כשאין שורה — אומת מול המסד החי,
+    // וזה המצב היחיד שבו ההודעה המאשימה נכונה. כל שגיאה אחרת (רשת/500) אמרה למשתמש
+    // לגיטימי שהוא אינו מורשה, וניתקה אותו — האשמה על תקלה שאינה שלו.
+    if (dbError && dbError.code !== 'PGRST116') {
+      setErrorMsg('תקלה זמנית בטעינת פרטי החשבון. נסה שוב בעוד רגע.')
+      await supabase.auth.signOut()
+      setLoading(false)
+      return
+    }
+
+    if (!userData) {
       setErrorMsg('משתמש זה אינו מורשה במערכת. פנה למנהל.')
       await supabase.auth.signOut()
       setLoading(false)
@@ -135,7 +148,7 @@ export default function LoginPage() {
         noValidate
         className="bg-white p-8 rounded-2xl shadow-md w-full max-w-sm flex flex-col gap-4"
       >
-        <img src="/regin-logo.png" alt="REG-IN" className="h-12 mx-auto mb-2" />
+        <img src={reginLogo} alt="REG-IN" className="h-12 mx-auto mb-2" />
 
         <h1 className="text-xl font-bold text-center text-slate-800">כניסה למערכת</h1>
 

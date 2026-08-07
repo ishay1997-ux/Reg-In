@@ -23,14 +23,74 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Lint כולל את כללי sonarjs (כפילות/מורכבות). מאז 29/07/2026 הם ברמת 'error'
+      # (eslint.config.js) — כלומר מורכבות מעל 20 או קוד כפול **מפילים את השלב הזה**
+      # וחוסמים מיזוג. עד אז הם היו 'warn' כדי לא לחסום קוד קיים באמצע בניית מודול 3.
       - name: Lint
         run: npm run lint
+
+      # פורמט (Prettier) — נוסף 23/07/2026 אחרי ש-.gitattributes תוקן ל-LF-לכל-קובץ-טקסט
+      # (הבעיה הייתה רק בעותקים-מקומיים על Windows; מה שמחובר ל-Git תמיד היה נקי, אז
+      # השלב הזה חוסם מהיום הראשון בלי הפתעות).
+      - name: Format check
+        run: npm run format:check
+
+      # שער-כפילות (jscpd) — **חוסם מאז 29/07/2026**: כפילות מעל הסף (3% ב-.jscpd.json)
+      # מפילה את השלב. הכפילות המקורית (UsersManagementPage↔CustomersPage) נפתרה 25/07
+      # בחילוץ src/components/LoadingOrError.jsx.
+      - name: Duplication scan (jscpd)
+        run: npm run dup
+
+      # שער-קוד-מת (knip) — **חוסם מאז 29/07/2026**. ארבעת הממצאים שקדמו לו נסגרו באותו יום:
+      # 3 devDependencies יתומות הוסרו, ו-MARKETING_MAX_BYTES נעשה בשימוש אמיתי בקומפוננטה.
+      - name: Dead code scan (knip)
+        run: npm run deadcode
+
+      # שער-חולשות-אבטחה בחבילות — **חוסם מאז 29/07/2026**. הפקודה מריצה את
+      # scripts/audit-gate.mjs (ולא `npm audit` ישירות): הוא חוסם על כל חולשה high/critical
+      # שאינה ברשימת-הפטורים המנומקת שבראשו, ומדפיס כל פטור בכל ריצה. 4 מ-6 החולשות
+      # ההיסטוריות נסגרו ב-`npm audit fix`; הנותרת (react-router GHSA-qwww-vcr4-c8h2)
+      # מפוטרת כי היא נוגעת רק ל-RSC APIs שהאפליקציה הזו אינה משתמשת בהם.
+      - name: Dependency vulnerability scan (audit-gate)
+        run: npm run audit
 
       - name: Test
         run: npm run test:run
 
       - name: Build
         run: npm run build
+
+  # שער-הפונקציה-בשרת — נוסף 31/07/2026 (סבב F של סקירת-הקוד).
+  # **הפער שהוא סוגר:** `supabase/functions/send-email/index.ts` היה **מחוץ לכל בדיקה
+  # אוטומטית**. ‏ESLint מדלג עליו בשקט ("File ignored because no matching configuration
+  # was supplied" — אזהרה, לא כשל), אין לו בדיקת-יחידה, והוא לא נבנה ב-`npm run build`.
+  # ‏Prettier כן בודק אותו — כלומר **הפורמט** נשמר אבל **הטיפוסים** לא. וזהו הקובץ שמחזיק
+  # את כתובת ה-webhook הסודית ואת השער שמפריד בין משתמשת-צפייה לשליחת מסמך ללקוח.
+  #
+  # ⚠️ **job נפרד ובלי `npm ci` במכוון — אבל זה לבדו לא מספיק, וההנחה הקודמת כאן הייתה שגויה.**
+  # הנוסח הקודם אמר ש"בלי node_modules deno פותר jsr:/npm: בעצמו". **זה לא נכון, וזה מה שהפיל
+  # את ה-job בהרצתו הראשונה אי-פעם (05/08/2026):** לפי תיעוד Deno 2, מה שמפעיל את מצב-ה-node_modules
+  # הוא **עצם קיומו של `package.json` בשורש** — לא קיומה של התיקייה. עם package.json ובלי `deno.json`
+  # ברירת-המחדל היא `nodeModulesDir: "manual"` = "השתמש בתיקייה קיימת ואל תיצור אותה", ולכן deno
+  # דרש `npm:@supabase/realtime-js` מתוך node_modules שלא הותקנה — "Could not find a matching package".
+  # ‏`--node-modules-dir=none` הוא הדגל המתועד שמכריח פתירה **מהמטמון הגלובלי** — כלומר בדיוק
+  # ההתנהגות שההערה הקודמת חשבה שהיא מקבלת בחינם, ובדיוק כמו סביבת-הריצה של Supabase Edge Functions.
+  # 🚧 מ10 — הייבוא בפונקציה הוא `jsr:@supabase/supabase-js@2` (מייג'ור פתוח). היום הוא נפתר ל-2.112.0;
+  # כשגרסה חדשה תעלה ל-JSR ה-job הזה עלול להישבר **מעצמו, בלי שאיש נגע בקוד**. לנעול לגרסה מדויקת
+  # כשנוגעים בפונקציה בפעם הבאה — לא הוחלף עכשיו כדי לא לשנות קוד-מוצר בזמן מיזוג מודול 3.
+  #
+  # ‏`deno check` (טיפוסים) ולא `deno fmt`: Prettier כבר מפרמט את הקובץ הזה
+  # (‏`.prettierignore` מחריג רק את `supabase/migrations`), ושני מפרמטים היו נלחמים.
+  edge-function-check:
+    name: Edge function type-check (deno)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check send-email
+        run: deno check --node-modules-dir=none supabase/functions/send-email/index.ts
 
   secret-scan:
     name: Secret scan (gitleaks)

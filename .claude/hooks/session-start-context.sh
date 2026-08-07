@@ -1,47 +1,53 @@
 #!/usr/bin/env bash
-# SessionStart hook — באנר-הקשר בפתיחת כל סשן (נוסף 07/07/2026 ערב; פרסונליזציה 08/07).
-# למה: "תמיד לדעת איפה אנחנו" היה עד עכשיו תלוי-משמעת (לקרוא STATUS ידנית);
-# הבאנר הופך את זה למכני — ענף, השלב הפעיל של כל מסלול, ותזכורת-מקביליות.
+# SessionStart hook — באנר-הקשר בפתיחת כל סשן.
+# היסטוריה: נוסף 07/07/2026 · פרסונליזציה 08/07 · קריסה למסלול-יחיד 22/07 (מפתח יחיד)
+#           · שוכתב 28/07/2026 בשיפוץ-ההקשר.
+#
+# למה השכתוב (28/07): הבאנר חילץ את הצעד-הפעיל מ-STATUS ואז הורה "קרא את CLAUDE.md + STATUS.md"
+# — כלומר עשה את העבודה ואז ביקש לעשות אותה שוב (STATUS היה 35KB). מעכשיו הוא **מזריק** את המצב
+# החי, ולא מורה לקרוא: הוראות חיות ב-CLAUDE.md, מצב חי מוזרק כאן (just-in-time context).
+# בנוסף: הכותרות ב-STATUS השתנו ("## המסלול" → "## 🫵 הצעד הנוכחי") — החילוץ עודכן בהתאם.
+#
 # פלט ל-stdout בלבד; לעולם לא חוסם (exit 0 תמיד) — זה הקשר, לא שער.
+
+INPUT=$(cat 2>/dev/null)
+SESSION_ID=$(printf '%s' "$INPUT" | grep -o '"session_id"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/')
 
 cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" || exit 0
 
 BRANCH=$(git branch --show-current 2>/dev/null)
 DIRTY=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
-
-echo "📍 REG-IN | ענף: ${BRANCH:-?} | קבצים לא-מקומטים בעץ: ${DIRTY:-?}"
-
-# --- זיהוי-מכונה (08/07/2026): לפי git config user.name — קיים ממילא לקומיטים ---
-# תצוגה בלבד! זהות להכרעות נשארת "אני [ישי/עמית]" + כלל ברזל 1 (הבאנר מזכיר זאת למטה).
-# לא-חד-משמעי/ריק ⇒ נופלים לפורמט הניטרלי, בלי לנחש. REGIN_WHOAMI_OVERRIDE = לבדיקות בלבד.
-UNAME=$(printf '%s' "${REGIN_WHOAMI_OVERRIDE:-$(git config user.name 2>/dev/null)}" | tr '[:upper:]' '[:lower:]')
-ME=""
-case "$UNAME" in
-  *amit*)  ME="עמית" ;;
-  *ishay*) ME="ישי" ;;
-esac
-
-# חילוץ שורת "השלב הנוכחי" של כל מסלול מ-STATUS.md (לוח-המצב היחיד) —
-# מציגים רק את נתיב-מדריך-השלב (לפני סוגר-הלינק), לא את כל שורת-ההסבר.
-track_line() {  # $1 = שם המסלול בכותרת ("ישי"/"עמית")
-  awk -v who="$1" 'index($0, "## המסלול של " who){f=1; next} f && /^\*\*השלב הנוכחי/{print; exit}' STATUS.md 2>/dev/null \
-    | sed 's/\](.*//; s/\[//; s/\*\*//g'
-}
+echo "📍 REG-IN | ענף: ${BRANCH:-?} | קבצים לא-מקומטים: ${DIRTY:-?}"
 
 if [ -f STATUS.md ]; then
-  ISHAY_T=$(track_line "ישי"); AMIT_T=$(track_line "עמית")
-  if [ "$ME" = "ישי" ] && [ -n "$ISHAY_T" ]; then
-    echo "🫵 המסלול שלך (ישי): ${ISHAY_T#השלב הנוכחי: }"
-    [ -n "$AMIT_T" ] && echo "👥 עמית: ${AMIT_T#השלב הנוכחי: }"
-  elif [ "$ME" = "עמית" ] && [ -n "$AMIT_T" ]; then
-    echo "🫵 המסלול שלך (עמית): ${AMIT_T#השלב הנוכחי: }"
-    [ -n "$ISHAY_T" ] && echo "👥 ישי: ${ISHAY_T#השלב הנוכחי: }"
-  else
-    # ניטרלי — זיהוי לא-חד-משמעי או ש-STATUS שינה מבנה (fail-safe לתצוגה המלאה)
-    grep '^\*\*השלב הנוכחי' STATUS.md 2>/dev/null | head -2 | sed 's/\](.*//; s/\[//; s/\*\*//g; s/^/🎯 /'
-  fi
+  # הצעד הפעיל: הסעיף "## 🫵 הצעד הנוכחי" — שורות מודגשות ושורת ה-➡️ שבתוכו.
+  # ‏fail-safe: אם הכותרת השתנתה, נופלים לחיפוש ישיר של שורת ה-➡️ בכל הקובץ.
+  STEP=$(awk '/^## .*הצעד הנוכחי/{f=1;next} f&&/^## /{exit} f' STATUS.md 2>/dev/null \
+    | grep -E '^(\*\*|➡️)' | head -2 | sed 's/\]([^)]*)//g; s/\[//g; s/\*\*//g')
+  [ -z "$STEP" ] && STEP=$(grep -m1 '➡️' STATUS.md 2>/dev/null | sed 's/\]([^)]*)//g; s/\[//g; s/\*\*//g')
+  [ -n "$STEP" ] && printf '🫵 %s\n' "$STEP"
+
   grep -o '^> עודכן לאחרונה:.*' STATUS.md 2>/dev/null | head -1
+  grep -o '⏱️ \*\*דדליין-הגשה:[^*]*\*\*' STATUS.md 2>/dev/null | head -1 | sed 's/\*\*//g'
+  # תוכנית פעילה (אם רשומה) — סשן מקביל קורא אותה לבד במקום שישי ישמש שליח (כלל 2ג)
+  grep -o '🔧 \*\*תוכנית פעילה:[^—]*' STATUS.md 2>/dev/null | head -1 | sed 's/\*\*//g'
 fi
 
-echo "ℹ️ קרא את CLAUDE.md + STATUS.md לפני עבודה. זיהוי-המכונה = תצוגה בלבד — להכרעות אומרים \"אני ישי/עמית\" (כלל 1). סשן שני במקביל לכותב? Plan Mode או P8 — כלל 16."
+# אזהרת-מקביליות מבוססת-ראיה במקום תזכורת סטטית (כלל 16): האם סשן אחר ערך קבצים לאחרונה?
+# הסימונים נכתבים ע"י protect-frozen-files.sh, קובץ לכל session_id, mtime = העריכה האחרונה שלו.
+GITDIR=$(git rev-parse --absolute-git-dir 2>/dev/null)
+MUTDIR="${GITDIR:-/tmp}/regin-session-mutations"
+if [ -d "$MUTDIR" ]; then
+  OTHERS=$(find "$MUTDIR" -type f -mmin -120 ${SESSION_ID:+! -name "$SESSION_ID"} 2>/dev/null | wc -l | tr -d ' ')
+  [ "${OTHERS:-0}" -gt 0 ] && echo "⚠️ סשן אחר ערך קבצים בשעתיים האחרונות — כלל 16: שיחה כותבת אחת בכל רגע. אם אתה לא הכותב, הישאר בקריאה/Plan Mode."
+fi
+
+# בדיקת-שלמות ההקשר (נוסף 29/07/2026) — שקטה כשהכול תקין, מדברת רק כשמשהו נשבר.
+# למה כאן: סקיל שמפעיל סוכן מפלאגין שכבוי נכשל **בשקט בזמן ריצה**, חודש אחרי שההגדרה
+# השתנתה. בדיקה בפתיחת-הסשן הופכת כשל-שקט-מאוחר לאזהרה-מיידית. עלות ~200ms.
+# fail-open: node חסר / סקריפט קרס → לא מפריעים לסשן (זה הקשר, לא שער).
+if command -v node >/dev/null 2>&1 && [ -f scripts/check-context.mjs ]; then
+  node scripts/check-context.mjs --quiet 2>&1 || true
+fi
+
 exit 0

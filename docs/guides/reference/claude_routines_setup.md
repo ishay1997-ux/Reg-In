@@ -1,0 +1,51 @@
+<div dir="rtl">
+
+# 🤖 רפרנס — הקמת 4 הרוטינות של Claude
+
+> מקומו בהיררכיית האמת: הוראות תפעוליות בלבד.
+> **מסמך ההקמה הקנוני של הרוטינות.** ההגדרות עצמן (מה כל רוטינה עושה, תוכן ה-SKILL.md, מתי מריצים) חיות ב-[docs/claude_routines.md](../../claude_routines.md) — כאן רק **איך מקימים אותן על מחשב שאין לו אותן**.
+
+## ① מה נשיג כאן
+
+4 המשימות המתוזמנות (routines) של הפרויקט — `regin-docs-sync`, `regin-health-pulse`, `regin-pr-gate`, `regin-e2e-check` — נוצרות בחשבון ה-Claude שעל המחשב הזה. הן **פר-מחשב, לא פר-ריפו** — אז `git clone` לא מביא אותן אוטומטית, וצריך ליצור אותן פעם אחת על כל מכונה.
+
+## ② תנאי כניסה
+
+- [ ] [git_workflow.md](git_workflow.md) מוכר — הריפו משוכפל ואתה יודע לעבוד בו.
+- [ ] [claude_code_setup.md](claude_code_setup.md) הושלם — Supabase MCP מחובר (כדי שבדיקת ה-advisors ברוטינות תרוץ במקום לדלג).
+
+## ③ חלוקת עבודה
+
+| אתה | Claude |
+|---|---|
+| מדביק את הפרומפט | יוצר את 4 המשימות המתוזמנות בהתאם להגדרות הקנוניות |
+
+## ④ החלק שלך
+
+1. פתח את [docs/claude_routines.md](../../claude_routines.md) — קרא לפחות את סעיף 1 (מה זה בעצם) כדי להבין למה זה מתוזמן-ידני ולא cron.
+2. **מתי מריצים כל אחת?** ר' "🗺️ מתי מריצים מה — מפה מהירה" בסעיף 1 של [claude_routines.md](../../claude_routines.md) — במיוחד הרצף לפני PR (docs-sync → e2e → pr-gate).
+3. הדבק את הפרומפט בסעיף ⑥.
+
+## ⑤ החלק של Claude
+
+קורא את `docs/claude_routines.md` ויוצר 4 משימות מתוזמנות (**Manual/Run Now בלבד — בלי cron**) בשמות המדויקים, עם תוכן ה-SKILL.md המדויק שמופיע בקובץ.
+
+## ⑥ 📋 הפרומפט להדבקה
+
+```
+היי Claude. קרא docs/claude_routines.md וצור על המחשב הזה את 4 הרוטינות
+בדיוק לפי ההגדרות הקנוניות שם (משימות מתוזמנות מסוג Manual בלבד, בלי cron):
+regin-docs-sync, regin-health-pulse, regin-pr-gate, regin-e2e-check.
+אחרי היצירה — הרץ רשימה ותציג לי שכולן קיימות ומאופשרות (enabled).
+```
+
+## ⑦ בדיקת קבלה
+
+- הרצת `regin-health-pulse` פעם אחת (Run Now) מסתיימת בשורת יומן חדשה בעברית ב-`docs/CLAUDE_CODE_LOG.md`.
+
+## ⑧ אם משהו השתבש
+
+- **המשימה לא נוצרה** — ודא שאתה בתוך תיקיית הריפו של `Reg-In` כשה-Claude Code רץ.
+- **`regin-health-pulse` מדווחת "Supabase advisors skipped — no MCP access"** — סימן שה-Supabase MCP לא מחובר. חזור ל-[claude_code_setup.md](claude_code_setup.md) ואשר/התחבר לשרת; לאחר מכן בדיקת ה-advisors תרוץ. (גם בלי זה הרוטינה עובדת — היא רק מדלגת על בדיקת ה-advisors ומדווחת על כך במפורש.)
+
+</div>

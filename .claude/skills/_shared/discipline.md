@@ -1,0 +1,81 @@
+# Shared discipline doctrine — read by every repo-local REG-IN skill
+
+> **SSOT split (23/07/2026, after Ishay wrote `~/.claude/CLAUDE.md`):** the *universal*
+> doctrine — language, talk style, PM authority, citation/resume discipline — now lives
+> in **`~/.claude/CLAUDE.md`** (cross-project, loads every session regardless of repo).
+> Read it first; it applies here unchanged. **This file now holds only the REG-IN-specific
+> instantiation on top of it** — which file/tool to check for which kind of claim, and
+> what "resume from disk" concretely means in this repo. (History: this file originally WAS
+> the doctrine in full, extracted from ×3 inline duplication on 23/07 — see the Session Log.
+> The doctrine was then generalized into the global file the same day, on Ishay's own
+> initiative, and this file narrowed to the instantiation layer — the sync tax of
+> maintaining the general principle in two places was paid once already; no reason to pay
+> it a third time. `feature-acceptance` — originally the sixth skill sharing this kernel —
+> moved OUT of the repo entirely the same night, to Ishay's global `~/.claude/skills/`,
+> being project-agnostic; it now carries its own self-contained discipline section instead
+> of pointing here. **Consolidated further 24/07/2026 (skill-creator structural review):**
+> the repo-local skills used to each carry their own copy of the kernel paragraph
+> below, with a comment asking whoever edits it to keep every one of them + this file in sync
+> by hand — a real drift risk with no single source of truth. Now each of them carries
+> only a one-line pointer to this file; the kernel paragraph itself lives HERE ONCE.)
+
+## The shared kernel (every repo-local skill reads this first)
+Read **`~/.claude/CLAUDE.md`** (loads every session, every project) for the universal doctrine: plain-Hebrew communication · Ishay is the product manager — understanding-declarations invited for correction, product/design decisions are his · no citation without a same-turn check · resume from disk, not from narration. Read and apply it. Then continue reading the rest of this file for the REG-IN-specific instantiation below — which file/tool verifies which kind of claim, and what "resume from disk" concretely means in this repo.
+
+## REG-IN's citation-check targets (instantiates the global "no citation without a same-turn check")
+
+| Claim | Where to check, in THIS repo |
+|---|---|
+| "item N in §7" / "it's written in X" | open `docs/PROJECT_MASTER.md`, find the section, confirm number and scope (grep/read) |
+| "already done" / "still open" | full read/grep of the file — not tail, not partial offset, not memory |
+| "merged" / "it's on dev" | fresh `git fetch origin` + `git merge-base --is-ancestor` (iron rule 10) — a local branch lies |
+| "column/policy/index exists" | live query via Supabase MCP (read-only) |
+| "it works" / "the tests are green" / "this is what the screen looks like" | run it through the **production path** — `npm run test:e2e`, the real browser, the served asset — and **say which path produced the artifact you are judging**. *(Anchor `ba2d41e`: the quote PDF was defective in its **production**, not its code — rendered under vitest instead of fetched from the browser blob, so the verification method lied while the code was fine.)* |
+
+Prefer a grep anchor (function name / string) over a line number — line numbers rot between writing and executing.
+
+- 🔴 **A claim about anything OUTSIDE this file is written as a measurement method, not as a value.** Counts · paths · line numbers · status · "this was done" — **all go stale silently, because a file cannot see the world move.** Must state a value? It carries a date and the command that produced it. ⛔ **And when it rots — REMOVE the number, do not update it** (updating reproduces the defect in two weeks). **The highest-risk form is "moved / registered / done"** — it reads as a completed action, and nobody re-checks a completed action ⇒ **grep in the same turn, or write "טעון בדיקה". There is no third option.** ⚠️ **And a file is not audited by re-reading it — it is audited by RUNNING it:** the two rules below survived a full coherence pass and broke the moment someone executed them. *(06/08/2026: 20+ contradictions found across four independent scans and one external tool; **zero** caught by re-reading. A line number written that evening was already wrong within hours. The two rules that follow are instances of this one.)*
+- **An absence-claim is verified the way the SOURCE writes it, not the way the reporter searched.**
+- **Never hand a checker an expected number — only a measurement method.**
+- **A fix is not done until you have checked where else the same defect lives.**
+- 🔴 **The source must answer DIRECTLY. A derivation, a stretch, or "it probably implies" is a
+  guess wearing a citation.** In doubt whether the source truly answers ⇒ **that IS "no source"**,
+  and it goes to Ishay as a story-question. *(A wasted question costs him seconds; a guessed
+  intent costs a build.)* **The table above checks whether a citation is ACCURATE; this checks
+  whether it ANSWERS** — a citation can be perfectly accurate and still not support the claim
+  resting on it. *(Anchor 05/08/2026: a removal report stated "steps 1–3 live **almost verbatim**
+  in `module-blueprint/template.md`" carrying a `[מדדתי בעצמי]` tag. Measured string by string:
+  **zero shared strings between the two files.** The overlap was real and conceptual; the wording
+  was an inference wearing a measurement's tag.)*
+
+### 🔴 When Ishay corrects a fact you gave him — the correction is not the point, the SWEEP is
+
+**Trigger:** he says something you told him is wrong.
+**Fix the sentence — then sweep.**
+
+> **Sweep boundary: everything you SAID · WROTE to disk · DISPATCHED to another session · or
+> RULED — from the moment the wrong fact entered.**
+
+**Name what you swept, out loud.** A sweep nobody can see is indistinguishable from no sweep.
+*(Anchor 01/08/2026: corrected twice on dates. The sentences were fixed — **and nobody ever swept
+what rested on them.** Two recommendations stayed standing on a base that had collapsed. Repeated
+05/08: a wrong line count was corrected in the sentence, and the ranking built on top of it was
+not re-derived until Ishay supplied the missing criterion himself.)*
+
+**Resume-after-interruption, in THIS repo (the 23/07 migration-5 incident):** on any resume ("המשך מאיפה שעצרת", a fresh session picking up mid-flow, continuing after a visible cut) — re-derive position from disk before advancing: `git status` + the active micro-guide's status header/step table + the current step's own verification command. A step whose verification hasn't passed is NOT done, no matter what the previous turn narrated; the typical loss is a half-step (file saved, its doc-ripple lost) — finish the missing half before starting the next step. *(What actually happened: "saving migration 5 + updating docs" was cut mid-turn — the file survived, the db_roadmap update didn't, and the resumed turn jumped to step 1.6; Ishay caught it. The general principle this taught is now stated in the global file — this paragraph is just REG-IN's answer to "what counts as disk here.")*
+
+## The other files beside this one in `_shared/` (read when they apply)
+
+- **`_shared/parallel-sessions.md`** — more than one session alive: pathspec commits, the shared
+  index, stale arena facts, direct session-to-session messaging. Iron rule 16, operationalized.
+- **`_shared/writing-prompts.md`** — writing a prompt for another session: the intent pass, the
+  ONE top mine, self-containment, the model/effort recommendation, the closing clarity question.
+- **`_shared/ishay-calibration.md`** — before you present decisions to Ishay or write him a
+  spec/advisory message: how he works, what "מעולה" means (understanding, **not** verification),
+  present-the-basis-before-he-asks (§7), the four over-asking categories (§9). ⚠️ **§1–§6 are
+  calibration from a *Discovery* session** — apply them on the spec/Discovery path, NOT to a
+  build/close session, where he DOES stop on visual and UX. *(Pointer added 06/08/2026 — the file
+  had zero load path from any skill; this list is loaded by 9/10 repo-local skills.)*
+
+## How to talk to Ishay
+Fully covered by `~/.claude/CLAUDE.md` — no REG-IN-specific override remains (the old "rulings-rounds recommendation-first" carve-out is now the global default too). The one place the style becomes a concrete *procedure* rather than a rule of thumb is the batching mechanics (3–4 per round, "מספיק להיום", recommendation-first, reality filter before designing for an edge case) — see `section7-rulings` (repo-local) and `feature-acceptance` (now global, `~/.claude/skills/`), which operationalize it end-to-end.

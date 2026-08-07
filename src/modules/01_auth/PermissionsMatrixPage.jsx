@@ -1,8 +1,10 @@
-// מסך מטריצת הרשאות - טאב שני בתוך "ניהול מערכת", נגיש למנכ"ל בלבד (Route+RLS).
+// מסך מטריצת הרשאות - טאב שני בתוך "ניהול מערכת"; בפועל נגיש למנכ"ל בלבד לפי ה-seed הנוכחי.
 // מציג רק את 7 המודולים העסקיים, מקובצים ל-4 קבוצות-על (לפי מבנה המוקאפ המקורי).
-// "ניהול הרשאות" ו"הגדרות מערכת" מכוונות לא נכללות ברשת: הגישה אליהן כבר קבועה בקוד
-// כ-CEO-בלבד באופן קשיח (Sidebar.jsx/ProtectedRoute בודקים roleName ישירות, לא permissions) -
-// עריכתן כאן הייתה מטעה כי לא הייתה משפיעה בפועל על שום דבר.
+// "ניהול הרשאות" ו"הגדרות מערכת" מסוננות החוצה מהרשת (מכוון, נכון להיום).
+// ⚠️ הגישה אליהן היא permission-driven ולא role קשיח (App.jsx: allow={SYSTEM_MODULES};
+// Sidebar.jsx בודק את אותם שני מודולים במפת ההרשאות) - ולכן דווקא הסינון כאן הוא מה שמונע
+// האצלת גישת-מערכת לתפקיד אחר מה-UI; מתן ההרשאה דורש UPDATE ישיר ב-DB. חשיפת שני המודולים
+// במטריצה רשומה כחוב ("admin modules exposure in matrix", docs/micro_guides/module-1.md §9).
 // עמודת המנכ"ל נעולה (תמיד "עריכה") - מניעת self-lockout, כמו במחיקת משתמש ב-UsersManagementPage.
 
 import { Fragment, useCallback, useEffect, useState } from 'react'
@@ -10,6 +12,7 @@ import { Check, Eye, Minus } from 'lucide-react'
 import { supabase } from '@/supabaseClient'
 import { CEO_ROLE_NAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
+import LoadingOrError from '@/components/LoadingOrError'
 
 const CYCLE = ['edit', 'view', 'blocked']
 
@@ -83,28 +86,33 @@ export default function PermissionsMatrixPage() {
     const next = CYCLE[(CYCLE.indexOf(current) + 1) % CYCLE.length]
 
     // עדכון אופטימי: מרעננים את ה-UI מיד (תגובה מהירה), כותבים ל-DB, ואם הכתיבה נכשלה
-    // (למשל חסימת RLS — רק מנכ"ל מורשה לכתוב ל-permissions) מגלגלים חזרה לערך הקודם.
+    // מגלגלים חזרה לערך הקודם.
     setPermMap((prev) => ({ ...prev, [key]: next }))
     setCellError('')
 
-    const { error } = await supabase
+    // ⚠️ .select() + בדיקת-שורות הם load-bearing (מוסכמת RLS-guard, src/CLAUDE.md): כתיבה שנחסמה
+    // ע"י RLS חוזרת {data: [], error: null} — בלי הבדיקה העדכון האופטימי היה נשאר על המסך כאילו
+    // נשמר. 0 שורות מכסה שני מקרים (RLS חסם · אין שורת-permissions לצמד תפקיד/מודול); בשניהם
+    // כלום לא נכתב, ולכן אותו גלגול-אחורה. התבנית: modules/02_customers/api.js.
+    const { data, error } = await supabase
       .from('permissions')
       .update({ permission_level: next })
       .eq('role_id', roleId)
       .eq('module_id', moduleId)
+      .select()
 
-    if (error) {
+    if (error || !data || data.length === 0) {
       setPermMap((prev) => ({ ...prev, [key]: current })) // rollback לערך שלפני הקליק
       setCellError('השינוי לא נשמר. נסה שוב.')
     }
   }
 
   if (loading) {
-    return <p className="text-slate-500">טוען...</p>
+    return <LoadingOrError loading />
   }
 
   if (loadError) {
-    return <p className="text-red-600 font-semibold">{loadError}</p>
+    return <LoadingOrError error={loadError} />
   }
 
   return (

@@ -2,11 +2,14 @@ import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
+import sonarjs from 'eslint-plugin-sonarjs'
 import prettier from 'eslint-config-prettier'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // dist = תוצר build; playwright-report/test-results = תוצרי-ריצה של Playwright (מגניזה-git),
+  // כולל bundle-ים ממוזערים של ה-trace viewer שנכשלים על no-undef/no-cond-assign כשנסרקים כקוד-מקור.
+  globalIgnores(['dist', 'playwright-report', 'test-results']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -40,6 +43,40 @@ export default defineConfig([
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^React$' }],
       'react-refresh/only-export-components': 'off',
+    },
+  },
+  // מנוע ה-PDF (‏`quotePdf.jsx`) בונה רכיבי `@react-pdf/renderer` — Document/Page/Text —
+  // ולא רכיבי DOM. הוא לעולם לא מרונדר למסך, ולכן Fast-Refresh (HMR של React) אינו
+  // רלוונטי לו: הכלל `only-export-components` מגן על תרחיש שלא קיים כאן, ובתמורה היה
+  // מכריח לפצל תבנית-מסמך אחת לשני קבצים. פטור ממוקד לקובץ אחד, לא הרפיה גורפת.
+  {
+    files: ['src/modules/03_quotes/quotePdf.jsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  // בקרת-איכות (sonarjs): זיהוי כפילויות ומורכבות-יתר לאורך כל הפיתוח, כדי שהקוד
+  // יעמוד בסקירה של מהנדס-תוכנה. **הוקשח ל-'error' ב-29/07/2026** (החלטת-ישי 23/07)
+  // אחרי שהממצא האחרון נסגר — `MarketingPanel` פוצל לתת-קומפוננטות והלוגיקה הטהורה
+  // עברה ל-`src/lib/marketing.js`. מכאן ואילך מורכבות מעל 20 **חוסמת** lint/CI.
+  // לא חל על src/components/ui/ (shadcn vendored) ולא על קבצי-בדיקה (מורכבות בטסטים
+  // לגיטימית). הסט מובחר במכוון — no-duplicate-string הרועש הושמט. חבר לסקיל
+  // quality-audit (סקירה עמוקה יזומה) ולכלי jscpd (כפילות בין-קבצים).
+  {
+    files: ['src/**/*.{js,jsx}'],
+    ignores: ['src/components/ui/**', 'src/**/*.{test,spec}.{js,jsx}', 'src/test/**'],
+    plugins: { sonarjs },
+    rules: {
+      'sonarjs/no-identical-functions': 'error', // ← הכי רלוונטי לשאלה: שתי פונקציות זהות
+      'sonarjs/no-identical-expressions': 'error',
+      'sonarjs/no-duplicated-branches': 'error',
+      'sonarjs/cognitive-complexity': ['error', 20], // ← גלאי-ספגטי (מורכבות פר-פונקציה)
+      'sonarjs/no-collapsible-if': 'error',
+      'sonarjs/no-redundant-boolean': 'error',
+      'sonarjs/prefer-single-boolean-return': 'error',
+      'sonarjs/no-nested-template-literals': 'error',
+      'sonarjs/no-small-switch': 'error',
+      'sonarjs/no-inverted-boolean-check': 'error',
     },
   },
   // חייב להיות אחרון: מכבה כללי-עיצוב של ESLint שמתנגשים עם Prettier.

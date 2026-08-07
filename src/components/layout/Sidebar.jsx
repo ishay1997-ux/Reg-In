@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/supabaseClient'
 import { useAuth } from '@/contexts/AuthContext'
+import reginLogo from '@/assets/reg-in-logo.png'
 import { SYSTEM_MODULES } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
@@ -76,9 +77,7 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
         )}
       >
         {!collapsed && <div aria-hidden="true" />}
-        {!collapsed && (
-          <img src="/regin-logo.png" alt="REG-IN" className="h-9 justify-self-center" />
-        )}
+        {!collapsed && <img src={reginLogo} alt="REG-IN" className="h-9 justify-self-center" />}
         <button
           type="button"
           onClick={onToggleCollapse}

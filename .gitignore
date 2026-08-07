@@ -28,3 +28,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# deno.lock — נוצר כשמריצים `deno check` על supabase/functions מתוך שורש-הריפו.
+# לא מקומטים אותו במכוון: הפונקציה מייבאת `jsr:@supabase/supabase-js@2` (טווח צף),
+# וזה בדיוק מה שסביבת-הריצה של Supabase פותרת. נעילה מקומית הייתה מייצרת פער בין
+# מה שנבדק ב-CI לבין מה שרץ בייצור. ר' job‏ edge-function-check ב-ci.yml.
+deno.lock

@@ -1,7 +1,7 @@
 # REG-IN — Micro-Guide | Module 2: Customers (לקוחות)
 
-> **Audience:** a future Claude Code session with zero memory. Humans (Ishay/Amit) only paste prompts, answer decision questions, and approve at phase boundaries.
-> **Language rule:** guide in English; Hebrew appears only as data (DB values like 'לקוחות', UI strings). All chat reports to Ishay/Amit — always in Hebrew.
+> **Audience:** a future Claude Code session with zero memory. Humans (Ishay) only paste prompts, answer decision questions, and approve at phase boundaries.
+> **Language rule:** guide in English; Hebrew appears only as data (DB values like 'לקוחות', UI strings). All chat reports to Ishay — always in Hebrew.
 > **Model rule (CLAUDE.md):** Opus for thinking steps (Phase 1 RLS, security, closing audit) · Sonnet for generation steps (Phase 3 UI, forms).
 > **Iron rule 3 (stated once):** every business rule in code gets a Hebrew why-first comment.
 
@@ -15,7 +15,7 @@
 | Owner | **ישי (started 10/07)** · Amit (may continue — writer-handover on THIS branch, not a parallel branch) |
 | Branch | `ishay/module-2-customers` (created from fresh `dev` 10/07/2026, after PR #5 merged — step 0.1 ✅) |
 | **Status** | **🔒 Closed — awaiting PR/merge (closing audit 11/07/2026 22:33, fresh session).** Verdict **[YES]**; DoD **typed-echo SIGNED by Ishay 11/07 22:39 ("לקוחות DoD")**; the 16:21/17:07 UX-rounds' 👤 visual pass **SIGNED by Ishay 22:55 ("אישרתי ויזואלית הכל מעולה")** — every human gate of the module is now closed. All phases 1–5 ✅. Test data cleaned with his approval (customers/contacts/marketing = **0/0/0**, live-verified). |
-| Last updated | 11/07/2026 22:42 (closing audit — see §9 22:33 entry; audit corrected two stale facts here: the module WAS fully committed **and pushed** before the audit — `git ls-remote` = `dce7675` = local HEAD, not merged) |
+| Last updated | **30/07/2026 14:45 — ⚠️ THE MODULE IS CLOSED AND MERGED, BUT THREE OF ITS FILES WERE REWRITTEN BY MODULE 3 (step 3.5). Read the §9 entry dated 30/07 before trusting the file list below.** In one line: `CustomerDetailsCard.jsx` **no longer exists** — the customer card is now a full record page (`CustomerDetailsPage.jsx`, route `customers/:customerId`), the list row **navigates** instead of opening a dialog, a sortable "סה"כ הכנסות" column was added, and `CustomersPage`'s search/filters/status/sort moved from `useState` into **URL query params**. Everything below this row still describes the module's own build (11/07) and is unchanged. |
 | **Active step** | **DONE — module closed. Remaining (human): Ishay's visual OK → push the audit-session doc commit → open PR base `dev` ← compare `ishay/module-2-customers` (instructions printed by the closing session, iron rule 17 🧩).** |
 
 | Phase / step | Status |
@@ -23,7 +23,7 @@
 | 0.1 Preconditions: M1 merged + branch created | ✅ done (M1 in dev `3ba5c5f`; branch `ishay/module-2-customers`; `.env.local` present) |
 | Phase 1 — DB & RLS (1.1–1.4) | ✅ done (1.1–1.4; migration applied+verified; RLS matrix 12/14 SQL, 11–12 UI→4.1; Ishay signed 1.4 10/07) |
 | Phase 2 — Business logic (2.1–2.2) | ✅ done (2.1 customers.js+validators+32 tests · 2.2 api.js — 9 queries, lint 0-err, from('customers') confined) |
-| Phase 3 — UI (3.1–3.6) | ✅ ALL (3.1 list · 3.2 add/edit+§7.11 · 3.3 search/filter/sort · 3.4 archive · 3.5 marketing · 3.6 card) — 👤 visual gate ✅ SIGNED (Ishay 11/07 02:56) |
+| Phase 3 — UI (3.1–3.6) | ✅ ALL (3.1 list · 3.2 add/edit+§7.11 · 3.3 search/filter/sort · 3.4 archive · 3.5 marketing · 3.6 card — ⚠️ **the card was replaced by a record page 30/07/2026, step 3.5 of module 3; see §9**) — 👤 visual gate ✅ SIGNED (Ishay 11/07 02:56) |
 | Phase 3 — enhancements (11/07, Ishay) | ✅ built (review fixes · +3 filters · הצג-ארכיון toggle · marketing→dialog · card 5-metrics) — gate green 36/36 · lint 0 · build ✓ |
 | Phase 3.7 — multi-contact (Option C) | ✅ **DONE** — migration applied + api CRUD (`listCustomerContacts`/`replaceCustomerContacts`) + form repeatable rows + card display + `matchesText` search; 37/37 · lint 0 · build ✓ |
 | Phase 4 — Control & integration (4.1–4.2) | ✅ DONE — 🤖-verified 11/07 02:48 (4.1 hybrid matrix walk · 4.2 regression 37/37 + 8/8 + RLS 6/9 baseline) + 👤 end-of-phase SIGNED (Ishay 11/07 02:56) |
@@ -42,7 +42,7 @@
 | Marketing upload + `mailto:` send to consented | ✅ full (interim send model) | M10: real server-side email + tracking | PROJECT_MASTER §6 |
 | Customer card — details | ✅ full | — | — |
 | Customer card — project history | 🚧 מ6 · frame + empty state | M6 (projects data + policies) | PROJECT_MASTER §6 |
-| Customer card — totalRevenue + avgFeedback metrics | 🚧 מ3 · 🚧 מ8 · placeholder ("אין נתונים עדיין") | M3 (pricing SSOT) + M8 (feedback) | PROJECT_MASTER §6 |
+| Customer card — totalRevenue + avgFeedback metrics | ~~🚧 מ3~~ **paid 30/07/2026 (M3 step 3.5)** · 🚧 מ8 · placeholder for the feedback half only | ~~M3 (pricing SSOT)~~ ✅ + M8 (feedback) | PROJECT_MASTER §6 |
 | Customer card — cumulative gross-profit metric (C6 §2.4.1 derived attr; distinct from the M7 monthly-KPI §7-item) | 🚧 מ8 · placeholder ("אין נתונים עדיין") | M8 (owns the gross-profit formula — spec 5.14; retargeted from M7 10/07 evening, reviewer finding — M7 is the display-only dashboard; see §7.79) | PROJECT_MASTER §6 |
 | Satisfaction stars in list + satisfaction filter | 🚧 מ8 · present-but-inert | M8 | PROJECT_MASTER §6 |
 
@@ -61,7 +61,7 @@ Rule (ENFORCED — iron rule 15 + Stop hook): every 🚧 row above carries a `�
 | `src/modules/01_auth/UsersManagementPage.jsx` | The as-built pattern to copy: list + dialog CRUD + **bidirectional active/inactive with dimmed rows** (binding convention, module-1.md Deviations 02/07). |
 | `e2e/auth.spec.js`, `e2e/permissions.spec.js` | Playwright patterns (env-gated creds, workers=1, Chromium). |
 
-**Files to create:** `src/modules/02_customers/` → `api.js` (ALL Supabase queries of this module — iron rule 14), `CustomersPage.jsx`, `CustomerFormDialog.jsx`, `CustomerDetailsCard.jsx`, `CustomersFilterSheet.jsx`, `MarketingPanel.jsx` · `src/lib/customers.js` + `src/lib/customers.test.js` · `e2e/customers.spec.js` · one migration (step 1.1).
+**Files to create:** `src/modules/02_customers/` → `api.js` (ALL Supabase queries of this module — iron rule 14), `CustomersPage.jsx`, `CustomerFormDialog.jsx`, `CustomerDetailsCard.jsx` (⚠️ **deleted 30/07/2026** → `CustomerDetailsPage.jsx`), `CustomersFilterSheet.jsx`, `MarketingPanel.jsx` · `src/lib/customers.js` + `src/lib/customers.test.js` · `e2e/customers.spec.js` · one migration (step 1.1).
 
 **DB:** table `customers` (docs/schema.sql:41-51): `customer_id` **bigint surrogate PK (§7.64, 10/07)** + `company_number` text unique not null (=ח"פ; renamed from the old text PK), `customer_type` check in (`private_company`,`government`,`production_company`,`nonprofit`), `company_name`, `contact_name`, `phone`, `email` (all not null), `discount_percent` numeric default 0, `marketing_consent` bool default false, `status` check (`active`,`inactive`) default `active`. **Current RLS state: enabled live with ZERO policies (deliberate deny-all; live-verified 06/07 per module-1.md §2) — NOT yet codified in any migration; step 1.1 codifies it.** Relevant existing migrations: `20260629000000_baseline_schema.sql:43` (created `customers`) · `20260702195258_harden_current_user_role_id.sql` (hardened `current_user_role_id()` — docs/schema.sql:190-196 — the helper EVERY new policy calls). Related FK: `quotes.customer_id → customers` (schema.sql:86, on delete restrict; **type→bigint in 1.1 per §7.64**) — Module 3 depends on this table. `projects`/`quotes` are ALSO deny-all until M3/M6 → customer-card history queries legitimately return empty.
 
@@ -73,7 +73,7 @@ Rule (ENFORCED — iron rule 15 + Stop hook): every 🚧 row above carries a `�
 - **The 5 seeded test users (one per role).** Resolve the live `role → email → user_id` mapping from the seed — do NOT hard-code: `select u.user_id, u.email, r.role_name from users u join roles r on u.role_id = r.role_id order by r.role_name;` (MCP `execute_sql`, read-only).
 - **Impersonation for RLS scenarios (step 1.3 — SQL, no password):** `select set_config('request.jwt.claims', json_build_object('sub', '<user_id-uuid>', 'email', '<email>', 'role', 'authenticated')::text, true); set local role authenticated;`. `current_user_role_id()` resolves the caller via `auth.uid()`←`sub` (and `auth.email()`←`email`) — **BOTH keys must be present or every RLS query silently returns 0 rows** (a broken-impersonation deny-all is indistinguishable from a working RLS deny-all).
 - **Positive control (MANDATORY in step 1.3):** מנכ"ל (edit on every module) MUST return ≥1 row on the SELECT scenario — if it returns 0, the impersonation is broken, NOT the policy. Negative control: מנהלת לוגיסטיקה (blocked) returns 0. Both are already scenarios in step 1.3's table; treat CEO=1-row as the impersonation sanity gate before trusting any deny result.
-- **UI login (steps 3.1 / 4.1 / 5.1 — needs a password):** creds live in `.env.local` as `E2E_<ROLE>_EMAIL` / `E2E_<ROLE>_PASSWORD`. ⚠️ Only `E2E_FINANCE_*` + `E2E_LOGISTICS_*` are provisioned (added at step 5.1, 👤). CEO / project-manager / recruiter UI-login (needed earlier by 3.1/4.1) is NOT provisioned by default — at the 4.1 👤 gate either reuse a same-tier provisioned role or have Ishay/Amit add the missing `E2E_*`; do NOT assume they exist.
+- **UI login (steps 3.1 / 4.1 / 5.1 — needs a password):** creds live in `.env.local` as `E2E_<ROLE>_EMAIL` / `E2E_<ROLE>_PASSWORD`. ⚠️ Only `E2E_FINANCE_*` + `E2E_LOGISTICS_*` are provisioned (added at step 5.1, 👤). CEO / project-manager / recruiter UI-login (needed earlier by 3.1/4.1) is NOT provisioned by default — at the 4.1 👤 gate either reuse a same-tier provisioned role or have Ishay add the missing `E2E_*`; do NOT assume they exist.
 
 **Spec & mockups:** PROJECT_MASTER §5.3; frozen spec C5 §1.5.3 (process + field list incl. Hebrew type labels) + §1.6.3 (screen); mockups `docs/mockups/customers-screen/01-06.png` (visual reference ONLY): 01 list+marketing area, 04 filter sheet (type/satisfaction/consent/min-discount), 05-06 add/edit dialog. Design language: PROJECT_MASTER §4 (teal `#14B8A6`, bg `#F8FAFC`, right sidebar) — approved and binding (iron rule 8).
 
@@ -262,7 +262,7 @@ create policy "marketing_delete_by_permission" on storage.objects for delete to 
 
 **Known fallback (write it into the migration header if hit):** on current Supabase projects the `storage` schema may be owned by `supabase_storage_admin` — if `create policy on storage.objects` fails with 42501 "must be owner of table objects", create the 4 policies with these exact definitions via Dashboard → Storage → Policies instead, and **comment them out** in the migration file as a documented block. ⚠️ Do NOT leave live `create policy on storage.objects` statements in the file — they will re-fail on every `db push` / clean replay and break reproducibility (the very gap §7.48 exists to close). Add an "↳ as-built" note here + a dated line in section 9. **Reproducibility note for the closing audit:** if this fallback is taken, the 4 storage policies live only in the Dashboard, so a fresh-environment replay yields `2 customers + 0 storage` policies — record this explicitly so the drift-check does not misread the legitimate difference as a defect.
 **Verify 🤖 (pre-gate):** `Test-Path supabase/migrations/<name>.sql` → True; pass criterion: the two `customers` policy bodies are textually identical to PROJECT_MASTER §7.21's template after substituting `<table_name>`=customers, `<שם-המודול-המתאים>`='לקוחות' (side-by-side diff shows zero logic differences).
-**🔻👤 gate — MANDATORY (typed-echo, DB protocol): shared Supabase project.** Ishay/Amit reviews the SQL text AND **types the migration name** (not "yes"/"approve") as the irreversible-apply confirmation — this is one of the two typed-echo gates in the project (CLAUDE.md DB protocol). That typed-echo IS the apply authorization consumed at step 1.2; a plain approval here is NOT sufficient to apply.
+**🔻👤 gate — MANDATORY (typed-echo, DB protocol): shared Supabase project.** Ishay reviews the SQL text AND **types the migration name** (not "yes"/"approve") as the irreversible-apply confirmation — this is one of the two typed-echo gates in the project (CLAUDE.md DB protocol). That typed-echo IS the apply authorization consumed at step 1.2; a plain approval here is NOT sufficient to apply.
 
 #### Step 1.2 — Apply migration + snapshot 🔻🤖
 **Goal:** policies live in the shared project; snapshot + migration committed together (DB protocol).
@@ -311,12 +311,12 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 #### Step 1.4 — Phase 1 closure 🔻👤
 **Goal:** human sign-off on the security foundation before code is built on it.
 **Files:** this guide (status header + step table updated first — protocol section 8).
-**What:** show Ishay/Amit the filled 14-row table + both pg_policies outputs.
+**What:** show Ishay the filled 14-row table + both pg_policies outputs.
 **🔻👤 end-of-phase gate.**
 
 ### Phase 2 — Business Logic (iron rule 14: SSOT in `src/lib/`, queries in `api.js`, UI only imports)
 
-> Placement note (stated reason, per template): guide amit/06 §⑤ lists "מיפוי enum" under Phase 1 — the DB side needs no work (the 4 enum values already exist as a CHECK, docs/schema.sql:43), so the mapping is deliberately implemented as code-side data here in Phase 2.
+> Placement note (stated reason, per template): guide modules/module_02_customers §⑤ lists "מיפוי enum" under Phase 1 — the DB side needs no work (the 4 enum values already exist as a CHECK, docs/schema.sql:43), so the mapping is deliberately implemented as code-side data here in Phase 2.
 
 #### Step 2.1 — Pure logic + validators + unit tests 🔻🤖
 **Goal:** every business rule of the module exists exactly once, unit-tested, before any UI.
@@ -374,7 +374,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 
 #### Step 3.6 — Customer card 🔻🤖
 **Goal:** spec 1.6.3's "כרטיס לקוח" with the ruled empty-state scope.
-**Files:** `src/modules/02_customers/CustomerDetailsCard.jsx` (new).
+**Files:** `src/modules/02_customers/CustomerDetailsCard.jsx` (new). ⚠️ **This file was deleted 30/07/2026** — module 3 step 3.5 replaced the dialog with `CustomerDetailsPage.jsx` (route `customers/:customerId`); see §9.
 **What:** row click → card: **open with a fresh `getCustomer(id)` read** (not stale list state — another user may have edited since load; also the api function's designated consumer, reviewer finding 2, 10/07) + project history (via `getCustomerProjects` — empty state "אין פרויקטים עדיין") + metrics (סה"כ הכנסות / **רווח גולמי מצטבר** / ממוצע משוב — all three "אין נתונים עדיין" placeholders via `deriveCustomerMetrics`). **Gross-profit (§7.79):** required by C6 §2.4.1 (derived customer attr; citation corrected 10/07 — C5 §5.6.3 itself names only revenue+feedback) — render it as a placeholder now (formula + population are open, wired in **M8** which owns the profit formula, spec 5.14; retargeted from M7); do NOT drop it silently as the pre-10/07 draft did.
 **Verify 🤖:** preview — card opens showing details + all three metric empty states (revenue, gross-profit, feedback).
 **🔻👤 end-of-phase gate: visual pass vs design language §4 (colors/layout untouched without approval — iron rule 8).**
@@ -401,7 +401,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 #### Step 5.1 — Module E2E 🔻🤖 (creds sub-step 👤) ✅ VERIFIED 11/07 03:07
 **Goal:** guide ⑦ acceptance automated.
 **Files:** `e2e/customers.spec.js` (new); `.env.local` (creds — human).
-**What:** Playwright specs mirroring guide ⑦: finance-role creates customer & sees it · logistics-role has no customers module (sidebar + direct URL) · filter works · archive is reversible. Needs `E2E_FINANCE_*` / `E2E_LOGISTICS_*` creds — **👤 Ishay/Amit adds them to `.env.local` (secrets gate; never committed)**; specs must `test.skip` gracefully when absent (existing convention, e2e/permissions.spec.js:20).
+**What:** Playwright specs mirroring guide ⑦: finance-role creates customer & sees it · logistics-role has no customers module (sidebar + direct URL) · filter works · archive is reversible. Needs `E2E_FINANCE_*` / `E2E_LOGISTICS_*` creds — **👤 Ishay adds them to `.env.local` (secrets gate; never committed)**; specs must `test.skip` gracefully when absent (existing convention, e2e/permissions.spec.js:20).
 **Verify 🤖:** `npm run test:e2e` → 8 old + new all pass (paste the total).
 ↳ **as-built 11/07 03:07:** `e2e/customers.spec.js` written. **Coverage mapped to the two tiers we actually hold** (Ishay 11/07: creds are fine/academic-light, but Claude does not type test passwords → the framework injects env creds): `edit-tier (CEO)` runs the full lifecycle (create → save-success strip → see-via-search → filter no-results/back → archive→hidden-by-default → הצג-ארכיון→restore) · `blocked (STAFF=לוגיסטיקה)` = no 'לקוחות' sidebar link + direct `/customers` shows "אין הרשאה". **finance/logistics-named variants** included, `test.skip` gracefully until `E2E_FINANCE_*`/`E2E_LOGISTICS_*` exist. **Self-cleaning:** `afterAll` hard-deletes the unique-ח"פ test customer via a CEO-authenticated supabase-js client (no UI delete by design; `customer_contacts` FK cascade) — verified live after the run **customers=0 / contacts=0**. **Result: `npm run test:e2e` → 10 passed / 2 skipped** (8 M1 + 2 new active + 2 finance/logistics skipped). The 👤 creds sub-step is now optional (both tiers covered by CEO+STAFF); activating the finance/logistics creds later auto-runs the 2 skipped specs.
 
@@ -421,7 +421,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 #### Step 5.4 — Closing audit + PR 🔻👤 ✅ DONE 11/07/2026 22:33–22:42
 **Goal:** formal module closure (final DoD sign-off gate).
 **Files:** none here — the closing template drives its own persistence.
-**What:** run `docs/templates/create_module_final_test_template.md` (the closing prompt in amit/06 ⑥) → DoD sign-off → PR base:`dev` ← compare:`amit/module-2-customers`.
+**What:** run `.claude/skills/module-close/template.md` (the closing prompt in modules/module_02_customers ⑥) → DoD sign-off → PR base:`dev` ← compare:`amit/module-2-customers`.
 **🔻👤 final gate.**
 ↳ **as-run 11/07 22:33 (fresh session, per Ishay's choice):** full template audit — verdict **[YES]**, **DoD typed-echo signed 22:39 ("לקוחות DoD")**. Branch name resolved from THIS header (`ishay/module-2-customers`) — the `amit/…` in What above was the blueprint-era placeholder. Full report in chat; §9 entry below. Test data cleaned with Ishay's approval (0/0/0 live). PR = after Ishay's post-signature visual pass (instructions + 🧩 printed by the audit session).
 
@@ -455,7 +455,7 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 - [x] No secrets in code/docs (CI gitleaks green); `.env.local` untouched by git. *(Audit: `git ls-files .env.local` = empty; gitleaks = CI post-push, N/A-at-audit.)*
 - [x] CHANGELOG + CLAUDE_CODE_LOG + STATUS current; this guide's header/table/deviations current. *(Finalized in the closing-audit persistence pass, 22:42 — incl. correcting the stale "uncommitted/not-pushed" claims with fresh git evidence.)*
 
-**Post-merge (verified AFTER the closing audit — NOT audit-time checkboxes, since the audit must not merge; not Section-6 blockers):** PR to `dev` opened · CI green · merged. The closing audit confirms the module is *mergeable* (green verify + no blocker); the actual PR/CI/merge happen after, by Ishay/Amit.
+**Post-merge (verified AFTER the closing audit — NOT audit-time checkboxes, since the audit must not merge; not Section-6 blockers):** PR to `dev` opened · CI green · merged. The closing audit confirms the module is *mergeable* (green verify + no blocker); the actual PR/CI/merge happen after, by Ishay.
 
 ## 8. 🔄 Self-Update Protocol (verbatim rules)
 
@@ -464,10 +464,107 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 3. The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if code under `src/modules/02_*/` changed but this guide didn't — keep this file current as you work, not as an afterthought.
 4. The `CLAUDE.md` end-of-session protocol applies on top (CHANGELOG → CLAUDE_CODE_LOG → STATUS).
 5. **On ENTERING a phase (template §8(h)):** sweep the Decisions Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling BEFORE the phase's first step — e.g. entering Phase 1, present the §7.40(א)/§7.48/§7.62/§7.73 nod bundle + the §7.63 direction; entering Phase 3, surface the §7.36/§7.79/§7.80 + confirm-intent (mockup) items. Deferred questions get settled at the phase door, not mid-step.
-6. **(e)–(g) per CLAUDE.md iron rules 13/15/16 + end-of-session protocol** (new-open-question → stop+§7 · migration/DB-gap → db_roadmap same session · other-developer change → 📣) — these apply automatically; not restated here (F1).
+6. **(e)–(g) per CLAUDE.md iron rules 13/15/16 + end-of-session protocol** (new-open-question → stop+§7 · migration/DB-gap → db_roadmap same session · shared-surface change → name the affected future modules in the CHANGELOG line) — these apply automatically; not restated here (F1).
 
 ## 9. 📝 Deviations & Tech-Debt Log
 
+> ℹ️ **Checked 05/08/2026 during the `work-manager` removal — historical only, nothing to change.**
+> The manager-N mentions in the entries below are dated records of who ruled what at the time.
+> They are **not** live routing: no entry here instructs a session to contact anyone. Dated
+> journal entries are never rewritten (`docs/CLAUDE.md`).
+- 31/07/2026 09:05 — **One-line alignment in `CustomerDetailsPage.jsx` (M3 audit fix-round A).**
+  The page passed the **raw `param_value` string** for `אחוז_מעמ` into `vatRate`, while
+  `QuotesPage` passes `parseVatPercent(...)` — two screens feeding different types into the same
+  prop of the same dialog. Now both call `parseVatPercent`. Behaviour on the happy path is
+  unchanged (`paramNumber` in `lib/quotes.js` coerced the string anyway); what it closes is a
+  param saved as e.g. `'150'`, which used to travel to the customer document as-is.
+  Nothing else in M2 changed. Full context and the reader-trace: `module-3.md` §9 (31/07 09:05).
+- 30/07/2026 23:30 — **🐞 Cross-module fix (ruled by Ishay, before M3's 3.7 gate):
+  `replaceCustomerContacts` reordered from delete-then-insert to read-old-ids → insert → delete-old-ids.**
+  Why now: the identical pattern **really deleted** the 5 seed price tiers of B-REG-TAG in M3's 3.6
+  verification (browser closed between the two HTTP requests — they are not a transaction; the DELETE
+  landed, the INSERT never fired). An interruption now leaves visible duplicates (old+new side by
+  side, gone on next save), never an empty contact list. Upsert (the price_tiers fix) is impossible
+  here — the only key is the generated `contact_id`. `contactsLoaded` guard untouched. The convention
+  is now recorded in `src/modules/02_customers/CLAUDE.md`: **every future replace-style save, any
+  module, is built insert-first.** Live-verified through the real form (add contact → fresh-read →
+  remove → restore to 0 rows; `customer_contacts` was and remains 0 rows in production data).
+- 30/07/2026 18:35 — **🐞 The §7.34 warning had a silent hole, found because my own E2E archived a
+  real customer twice.** `revenueByCustomer` is loaded by a **second, separate request** after the
+  customer list. Clicking "העבר לארכיון" in the window before it returns meant `openCount` was
+  unknown, the warning **did not appear at all**, and the customer was archived silently — the exact
+  failure class this feature exists to prevent. **Fix: "not yet known" ≠ "no open quotes"** — an
+  unloaded map now produces its own confirm ("עדיין לא ידוע… להעביר בכל זאת?"). Same doctrine as the
+  money module's "ריק אינו 0".
+  ⚠️ **A second bug inside that fix, caught before it shipped:** a customer with **no quotes at all**
+  is absent from the map, and `undefined` looked identical to "not loaded" — every clean customer
+  would have got a spurious warning, defeating Ishay's 11/07 no-friction ruling. Absence is now
+  normalised to `{openCount: 0}` explicitly.
+  The rule moved to **`archiveWarningMessage` in `src/lib/customers.js` with 4 tests** — extracted
+  rather than silenced when `sonarjs/cognitive-complexity` tripped at 21/20, because "unknown vs
+  none" is a business classification, not wording. `customer-page.spec.js` now waits for the revenue
+  column before clicking, so it exercises the intended branch instead of the unknown one.
+  **Also unified:** `logistics-role` in `customers.spec.js` was **deleted** — a strict subset of the
+  STAFF test (same user `logistics.test@regin.co.il`, same assertions minus one; its own skip note
+  admitted "STAFF מכסה את שכבת ה-blocked"). It was a permanent skip demanding a second env pair for
+  one identity. **A second name for the same identity is not extra coverage.** Result: 18/18 E2E,
+  zero skips, and `E2E_LOGISTICS_*` is no longer needed at all.
+- 30/07/2026 15:10 — **✅ §7.34 RULED AND BUILT (customers part): warn, don't block.** Ishay ruled on
+  my recommendation. Archiving a customer **who has open quotes** now opens a confirm naming the
+  count and their value ("לעיריית חדרה הצעה פתוחה אחת בשווי 16,520 ₪… להעביר לארכיון בכל זאת?").
+  ⚠️ **The confirm is conditional and appears ONLY when open quotes exist** — his 11/07 ruling
+  ("archive without confirmation, the action is reversible") still holds for the normal case, and
+  a test asserts exactly that. **Why not block:** the open quote is usually the *reason* for
+  archiving, so blocking would force rejecting a quote just to archive a customer. ⛔ **Explicitly
+  rejected: auto-closing the quotes along with the archive** — that writes to money records the
+  user never asked to touch. `openCount` was added to `deriveCustomerMetrics` (**0 is a real 0
+  here, not `null`** — `null` would read as "unknown" and fire the warning on a clean customer).
+  Costs no extra query: `CustomersPage` already loads quotes for the revenue column.
+  **Verified both directions:** the warning appears with the real numbers and **"ביטול" actually
+  leaves the customer active** (not merely displayed), and with no open quotes there is no dialog
+  at all. Market grounding: Pipeliner / OctopusPro / Dynamics all prompt on linked records.
+- 30/07/2026 14:56 — **🔔 §7.34's precondition became true, and this module owns it.** The archive
+  comment in `CustomersPage.handleToggleStatus` used to say "no guard on live commitments — there is
+  no `quotes`/`projects` data yet", and promised the guard would become a warning "once module 3
+  exists". **Module 3 now exists with real quotes.** Verified in code: `setCustomerStatus`
+  (`02_customers/api.js`) checks nothing, so a customer holding an open 16,520 ₪ quote can be
+  archived with **no warning and no indication**. The comment was rewritten to say so plainly.
+  ⚠️ **No guard was built** — §7.34 is an open §7 item and the ruling is Ishay's alone (iron rule 1);
+  presented to him 30/07, not decided. Do not build one before he rules.
+- 30/07/2026 14:30 — **⚠️ MODULE-2 SURFACE CHANGED BY MODULE 3 (step 3.5). The module is closed and
+  merged, but three of its files were rewritten — read this before trusting anything below.**
+  **`CustomerDetailsCard.jsx` NO LONGER EXISTS.** Ishay ruled (LOCAL-13 in `module-3.md`) that the
+  512px customer dialog becomes a full record page — `CustomerDetailsPage.jsx` at route
+  `customers/:customerId`. Reason: it could not hold 30 quotes, and M6 adds project cards on top.
+  Structure follows the standard CRM record page (highlights strip → grouped details → related-list
+  tabs), verified against Salesforce/ServiceNow docs rather than invented.
+  **What else moved:** `CustomersPage` row-click now **navigates** instead of opening a dialog;
+  a sortable **"סה"כ הכנסות"** column was added (values from `deriveCustomerMetrics`, which M3
+  extended with `quotes`/`vatRate` **by parameter-addition only** — every old call still returns the
+  four intentional `null`s, and the regression test for that is in `customers.test.js`).
+  **🐞 The one that cost a real bug — do not undo it:** `CustomersPage`'s search/filters/status/sort
+  moved from `useState` into **URL query params**, because a dialog preserved that state for free and
+  a page does not: without it, "back" from a customer page silently wiped 5 filter values. ⚠️ The
+  URL-backed setters **must** accept React's updater form (`set(v => …)`) — two existing call sites
+  (archive toggle · consent toggle) use it, and when they got a value-only setter the function was
+  stringified into the URL: **no error, no crash, the button simply stopped working.** Caught by the
+  `customers.spec.js` archive test, not by lint or build. `resolveNext()` in `CustomersPage` is what
+  keeps them working; removing it re-breaks both toggles silently.
+
+- 29/07/2026 17:20 — **Post-close touch on this module's files, from M3 step 3.2 (Ishay caught it in
+  the shared `CustomerFormDialog` while creating a customer from the quote screen).** The dialog's
+  **left corners rendered square**: the scrollbar was painted into the rounded corner because
+  `overflow-y-auto` sat on the same element as `rounded-xl`. Fixed **once, in the shared
+  `components/ui/dialog.jsx`** rather than per-caller, so every dialog in the app benefits:
+  `DialogContent` is now `flex flex-col max-h-[90vh] overflow-hidden` with an inner
+  `flex-1 min-h-0 overflow-y-auto p-6` scroller. The three call sites here
+  (`CustomerFormDialog:274`, `CustomerDetailsCard:89`, `CustomersPage:565`) had their
+  `max-h-[90vh] overflow-y-auto` **removed** — leaving it would re-create the bug on the outer element.
+  ⚠️ **The first attempt broke it worse and Ishay caught that too within a minute:** without `min-h-0`
+  a flex child refuses to shrink below its content height, so the dialog **clipped** its bottom
+  (the submit button disappeared) instead of scrolling. Verified after the fix: dialog inside the
+  viewport, content scrolls, corner radius non-zero, submit button fully visible at the scroll bottom.
+  **No behavioural change to this module** — visual only; its 37 tests and the full gate stayed green.
 - 11/07/2026 22:55 — **Final 👤 visual pass SIGNED (Ishay: "אישרתי ויזואלית הכל מעולה")** — the 16:21/17:07 UX-rounds' pending visual gate, the module's last open human gate. Module fully closed; remaining = push doc commits + open the PR (human, instructions printed 22:42).
 - 11/07/2026 22:33 — **Step 5.4 closing audit (fresh session) — verdict [YES]; DoD typed-echo signed by Ishay 22:39.** Independent re-verification: 13/13 DoD ✓ (evidence per checkbox above) · RLS re-probed live via rolled-back MCP impersonation (CEO/blocked/view on customers+customer_contacts + scen-6/9 ≡ baseline; policy bodies ≡ §7.21 verbatim) · gates in-session: lint 0 · 37/37 · build exit-0 · e2e 10/2-skip · format:check=CRLF-noise-only (`git ls-files --eol`) · advisors triaged (MPP=§7.21-template characteristic, accepted; `quotes` FK index→C-1/M3; 10×deny-all=deliberate) · zero schema drift · live smoke unauth→login+clean console (a11y-snapshot; pane screenshot failed technically — renderer). **Fact corrections (fresh git evidence):** the module was fully committed AND pushed pre-audit (`git ls-remote`=`dce7675`=HEAD, not merged) — the header's "uncommitted/not-yet-pushed" notes were stale, fixed. §7.81's "awaiting typed-echo" note in PROJECT_MASTER was stale (applied 11/07) — fixed. db_roadmap §10 got its missing 11/07 strike-line. **Test-data cleanup (Ishay-approved in-gate):** customers 16/17 + 2 contacts (SQL, cascade) + marketing PDF (Storage API via CEO-authenticated supabase-js client, E2E env pattern — SQL delete blocked by `protect_delete`) → 0/0/0 live-verified. **Tech-debt registered:** atomic-RPC candidate for `replaceCustomerContacts` + write-policy split (a §7.21-template question) — both flagged for M3; marketing-flow E2E → M10. **Also this session (Ishay's rulings, pre-persistence): 3 opening-template adjustments** — 🗣️→mandatory experience-brief (תקציר-חוויה) + PM approval before code · 🤖 self-verification = functional+visual with screenshots (👤 only end-of-phase/design) · new 🎤 PM-Interview section before blueprint approval — + CLAUDE.md rule-1 ripple. 📣 Amit (binds M3's blueprint; CHANGELOG line). The 16:21/17:07 👤 visual pass: Ishay verifying live post-signature.
 - 11/07/2026 17:07 — **Marketing-screen redesign (recipient list + preview) + UX/validation gates added to BOTH templates (Ishay-directed).** Follow-on to the 16:21 UX round — same session/branch, before 5.4.
@@ -555,3 +652,10 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 - 06/07 — Frozen spec 1.6.3 mentions a "delete" button; implemented as bidirectional archive per spec 1.5.3's own "ניתן להפוך ללא פעיל" + M1 binding convention. Frozen spec untouched.
 - 06/07 — "Send marketing material" implemented as `mailto:` + permanent public URL (no server-side email until Module 10; signed-URL variant explicitly rejected). Temporary, documented deviation.
 - Deferred backlog (target): revenue metric wiring (M3 pricing SSOT → M8) · satisfaction stars/filter go live with feedback data (M8) · real marketing email send (M10) · §7.23 audit trail (after M12) · merge tool for historical duplicates (only if ever needed — §7.11 says none planned). *(§7.12 quote-PDF removed from backlog — ruled 07/07: no stored file.)*
+- 25/07/2026 — **Dedup pass (`npm run dup` flagged a 15-line clone): `CustomersPage`'s loading/error/retry gate adopted the new shared `src/components/LoadingOrError.jsx`.** The 16:21-round "load-error retry" pattern (see §9 16:21 entry above) turned out byte-identical to M1's `UsersManagementPage` copy of the same fix — jscpd caught it. Extracted a single component (`{loading, error, onRetry, retryTestId}` props; when `onRetry` is omitted it renders the bare error paragraph — covers M1's `PermissionsMatrixPage`, which has the same loading-gate but no retry button). `CustomersPage`: `if (loading) return <LoadingOrError loading />` / `if (loadError) return <LoadingOrError error={loadError} onRetry={reloadCustomers} retryTestId="customers-load-retry" />` — same `data-testid`, behavior-identical. Cross-module edit: `UsersManagementPage` + `PermissionsMatrixPage` (M1) also migrated in the same pass — see `module-1.md` §9 25/07/2026. No state/logic change, no shared surface beyond the new `src/components/` file. Verified: `npm run dup` → 0 clones (was 1, 0.31% total dup); `npx eslint` clean on the 4 changed files (1 pre-existing unrelated `sonarjs/cognitive-complexity` warning at `CustomersPage.jsx:56`, not touched by this change); `e2e/customers.spec.js` 2/2 (+2 skipped, pre-existing) passed post-change.
+
+- 28/07/2026 — **Module gotchas file added: `src/modules/02_customers/CLAUDE.md`** (context-architecture overhaul). A short Hebrew file that loads automatically ONLY when a session touches this module's directory — REG-IN's living code map: it sits next to the code so it cannot drift far, and costs nothing until needed. It carries only the non-obvious traps (silent-failure paths, coupled edits, deliberate deviations that look like bugs, the module's RLS surface, E2E contract strings) — never a tour of the code. המודול הזה הוא מודול-הייחוס למוסכמות (api.js נקי, לוגיקה טהורה ב-src/lib) — הקובץ מציין זאת במפורש כדי שמודול חדש יחקה אותו ולא את מודול 1. Sourced from a verified read-only review of all 45 files under `src/` (28/07). `module-close` §4c now makes writing/refreshing this file binding for every module.
+
+- 29/07/2026 00:32 — **Open-findings session (Ishay-approved triage): dead E2E dialog handler removed + 2 of the 3 complexity hotspots cleared by moving pure logic to the SSOT.** Cross-module edits made from `ishay/module-3-quotes-build`; M2 is closed+merged, so these are expected M2 files in a future diff. **(a) `e2e/customers.spec.js:67-68`** carried `page.on('dialog', d => d.accept())` plus a comment claiming "ארכוב מפעיל window.confirm". Verified false: archiving has no confirmation at all (Ishay's 11/07 ruling — the action is reversible; `CustomersPage.jsx:201`) and `window.confirm` appears nowhere under `src/`. Both lines deleted; a replacement comment records *why no handler belongs here* — a stray one would silently accept an unintended dialog instead of letting the test fail on it. **(b) Complexity — Ishay reversed his own earlier deferral (29/07) for the two tractable spots**, keeping `MarketingPanel` (26, whole-component split) for M3 close. Both fixes are the same move, and it is the module's own convention rather than arbitrary code-shuffling: pure logic living inside components moved into `src/lib/customers.js`, where it gains unit tests (rule 14). `CustomersPage` (21 → under threshold): the 5-term `activeFilterCount` expression became `countActiveFilters(filters)`, placed beside `matchesCustomerFilters` so the badge cannot drift from the fields actually filtered. `CustomerFormDialog` (33 → under threshold): `validateField` → `validateCustomerField`, the main-field validation loop → `validateCustomerForm(form)`, and the 5-branch extra-contacts loop (§7.81, the bulk of the complexity) → `validateExtraContacts(contacts)`; `handleSubmit` keeps only the flow. **Deliberately avoided a new silent-coupling trap:** `EMPTY_FORM` was NOT moved and no separate field list was exported — `validateCustomerForm` iterates `Object.keys(form)` and relies on `validateCustomerField` returning `''` for unknown names, so behavior is byte-identical to the old `Object.keys(EMPTY_FORM)` loop while adding no list that could silently drift when a field is added. 15 new Vitest cases cover the four functions (empty contact row skipped · name without phone/email · letters in phone · `hasDiscount:false` and `minDiscount:0` both counted). **Verified:** `npm run lint` 3 warnings → **1** (`MarketingPanel` only, as ruled) · `npm run verify` green (51 Vitest tests, build ok) · `npm run test:e2e` 10 passed / 2 skipped — `customers.spec.js` edit-tier test (creates a customer through the refactored `handleSubmit`, filters, archives and restores) passed; the 2 skips are the optional `E2E_FINANCE_*`/`E2E_LOGISTICS_*` role variants, not configured and pre-existing.
+
+- 29/07/2026 08:45 — **`MarketingPanel` split (26 → 7): the last complexity holdout cleared, which unblocked flipping `sonarjs` to `'error'` repo-wide.** Cross-module edit from `ishay/module-3-quotes-build` (M2 is closed+merged). The flagged function was the whole component, so this is a component split, not a helper extraction — but it used the module's own convention for the pure part. **(a) New `src/lib/marketing.js` (SSOT, rule 14)** with six exports, all imported by the panel so `knip` — now blocking — stays green: `disabledSendReason`, `buildMarketingMailtoHref`, `isMailtoTooLong`, `marketingPreviewKind`, `selectRecipients`, `dedupeEmails`. `MAILTO_MAX_CHARS` and `SUBJECT` moved there as **module-private** consts, deliberately not exported — that is exactly how `MARKETING_MAX_BYTES` became a knip finding. 26 new Vitest cases. **(b) Two module-level, non-exported sub-components** appended to `MarketingPanel.jsx` — `MarketingPreview` (2) and `RecipientsSection` (3), matching the existing pattern in `CustomersPage.jsx:48/589/616` and `CustomerDetailsCard.jsx:19/33`. The three-way recipients ternary became early returns; DOM is unchanged. **Measured attribution** (the initial plan mis-attributed 2 points to `marketingPreviewKind` — it removes 0; those points live in the preview JSX block): `title` chain −9, recipients block −6, preview block −3, `mailtoHref` ternary −1 = −19. **Neither sub-component is optional** — dropping either lands at 10 or 13, still over. **(c) `MARKETING_MAX_BYTES` is now the single source for the "עד 10MB" label** (`MARKETING_MAX_BYTES / 1024 / 1024`), closing both the knip export finding and the two-places-to-edit trap. **Verified:** `npx eslint --rule cognitive-complexity:0` reports component **7**, subcomponents 3 and 2 · `npm run gate` **green end-to-end** · `npm run test:e2e` 10 passed / 2 skipped (same pre-existing optional-role skips) · **five before/after screenshots of the real app came out byte-identical** (sha256 match on all five: no-file · file+all-recipients · file+zero-selected · mailto-too-long · real-data-no-consented) — Ishay required paired before/after, since an "after" shot alone proves the screen looks reasonable, not that it is unchanged. The four disabled-send `title` strings were additionally asserted through the live DOM, because a `title` attribute is invisible in a screenshot — the strings were extracted from `git show HEAD:` rather than retyped, and the U+2014 em dash survives. **Still uncovered:** the panel has no unit or E2E test of its own (`marketing-flow E2E → M10`, already registered above); the screenshots were the only regression evidence and were taken with a throwaway spec that was deleted afterwards.

@@ -25,8 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { CUSTOMER_TYPE_LABELS } from '@/lib/customers'
-import { COMPANY_ID_REGEX, EMAIL_REGEX, isValidDiscountPercent } from '@/lib/validators'
+import {
+  CUSTOMER_TYPE_LABELS,
+  validateCustomerField,
+  validateCustomerForm,
+  validateExtraContacts,
+} from '@/lib/customers'
 import {
   createCustomer,
   updateCustomer,
@@ -35,9 +39,6 @@ import {
   replaceCustomerContacts,
 } from '@/modules/02_customers/api'
 import { cn } from '@/lib/utils'
-
-// מחרוזת-חובה מהאפיון (C5 §5.6.17.4) — לא לנסח מחדש: זו ההודעה המילולית שהאפיון קובע לשגיאת ח"פ.
-const COMPANY_ID_ERROR = 'שגיאה: מספר ח.פ. חייב להכיל 9 ספרות בדיוק'
 
 const EMPTY_FORM = {
   company_name: '',
@@ -53,38 +54,6 @@ const EMPTY_FORM = {
 // מפתח-שורה יציב לאנשי-הקשר הנוספים (§7.81): index-key שובר את ה-reconciliation בהסרת-שורה.
 // מוגדל ב-handler בלבד (לא ברינדור) — לכן לא מפר react-hooks/purity.
 let nextContactRowKey = 1
-
-// ולידציה פר-שדה — פונקציה אחת לשתי השכבות (blur ושמירה), כדי שלא ייווצרו שני נוסחי-כללים.
-// טלפון = חופשי-פורמט (האפיון לא קובע תבנית) עם 2 בדיקות-שפיות בלבד: ספרות+סימני-טלפון (בלי אותיות)
-// ו-≥4 ספרות (הכרעות-ישי 10–11/07). אין regex-תבנית קשיח (9/10 ספרות) — ר' ה-case למטה.
-function validateField(name, value) {
-  const v = String(value ?? '').trim()
-  switch (name) {
-    case 'company_name':
-      return v.length >= 2 ? '' : 'יש להזין שם לקוח (לפחות 2 תווים).'
-    case 'company_number':
-      return COMPANY_ID_REGEX.test(v) ? '' : COMPANY_ID_ERROR
-    case 'customer_type':
-      return v ? '' : 'יש לבחור סוג לקוח.'
-    case 'contact_name':
-      return v ? '' : 'יש להזין שם איש קשר.'
-    case 'phone': {
-      // טלפון-לקוח חופשי-פורמט (הכרעת 10/07 — האפיון לא קובע תבנית), אבל עם שתי בדיקות-שפיות:
-      // (1) תווים מותרים = ספרות + סימני-טלפון בלבד (רווח, +, -, סוגריים, נקודה) — אותיות (עברית/לטינית)
-      //     נחסמות (הכרעת-ישי 11/07: "ן9999999" נשמר). (2) לפחות 4 ספרות — מתיר מספרים קצרים לגיטימיים
-      //     (מוקד *XXXX) אך תופס קלט ריק-למחצה. בלי כפיית מבנה ספציפי (9/10 ספרות).
-      if (!v) return 'יש להזין מספר טלפון.'
-      if (!/^[\d\s+()\-.]+$/.test(v)) return 'מספר טלפון יכול להכיל ספרות וסימני-טלפון בלבד.'
-      return v.replace(/\D/g, '').length >= 4 ? '' : 'יש להזין מספר טלפון תקין.'
-    }
-    case 'email':
-      return EMAIL_REGEX.test(v) ? '' : 'יש להזין כתובת אימייל תקינה.'
-    case 'discount_percent':
-      return isValidDiscountPercent(v) ? '' : 'אחוז ההנחה חייב להיות מספר בין 0 ל-100.'
-    default:
-      return ''
-  }
-}
 
 // הודעת-שגיאה מתחת לשדה (חובת-אפיון) — קומפוננטה עליונה (כלל react-hooks/static-components:
 // קומפוננטה שמוגדרת בתוך render מאבדת state בכל רינדור).
@@ -197,7 +166,7 @@ export default function CustomerFormDialog({
 
   // שכבה 1 (C5 §5.6.17.4): ולידציה ב-blur — משוב מיידי מתחת לשדה, בלי לחכות לשמירה.
   function handleBlur(name) {
-    setFieldErrors((prev) => ({ ...prev, [name]: validateField(name, form[name]) }))
+    setFieldErrors((prev) => ({ ...prev, [name]: validateCustomerField(name, form[name]) }))
   }
 
   // §7.11: זיהוי כפילות-ח"פ מול הרשימה הטעונה (הטבלה קטנה והרשימה כבר ביד — בלי שאילתה נוספת).
@@ -212,40 +181,11 @@ export default function CustomerFormDialog({
     setDuplicate(null)
 
     // שכבה 2: ולידציה מלאה לפני כתיבה — כל השדות נבדקים, שדות תקינים נשמרים בטופס (חובת-אפיון).
-    const errors = {}
-    for (const name of Object.keys(EMPTY_FORM)) {
-      if (name === 'marketing_consent') continue
-      const msg = validateField(name, form[name])
-      if (msg) errors[name] = msg
-    }
+    // הכללים עצמם חיים ב-src/lib/customers.js (SSOT, כלל 14) ונבדקים שם; כאן רק הזרימה.
+    const errors = validateCustomerForm(form)
     setFieldErrors(errors)
 
-    // ולידציית אנשי-קשר נוספים (§7.81, הכרעת-ישי 11/07): שורה "בשימוש" (יש בה תוכן) חייבת שם +
-    // לפחות אחד מ{טלפון, אימייל}; מה שהוזן נבדק שהוא תקין דרך validateField (אותם כללי-SSOT כמו
-    // השדות הראשיים). ערך-השגיאה = {field, msg} כדי לצבוע את השדה הנכון; שורה ריקה לגמרי מדולגת
-    // (replaceCustomerContacts גם מסנן שורות בלי שם).
-    const cErrors = {}
-    for (const c of contacts) {
-      const name = (c.contact_name ?? '').trim()
-      const phone = (c.phone ?? '').trim()
-      const email = (c.email ?? '').trim()
-      if (!name && !phone && !email) continue
-      if (!name) {
-        cErrors[c._rk] = { field: 'contact_name', msg: 'יש להזין שם לאיש הקשר.' }
-        continue
-      }
-      if (!phone && !email) {
-        cErrors[c._rk] = { field: 'both', msg: 'יש להזין טלפון או אימייל לאיש הקשר.' }
-        continue
-      }
-      const phoneMsg = phone ? validateField('phone', phone) : ''
-      if (phoneMsg) {
-        cErrors[c._rk] = { field: 'phone', msg: phoneMsg }
-        continue
-      }
-      const emailMsg = email ? validateField('email', email) : ''
-      if (emailMsg) cErrors[c._rk] = { field: 'email', msg: emailMsg }
-    }
+    const cErrors = validateExtraContacts(contacts)
     setContactErrors(cErrors)
 
     if (Object.values(errors).some(Boolean) || Object.keys(cErrors).length > 0) return
@@ -331,7 +271,9 @@ export default function CustomerFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !saving && onOpenChange(o)}>
-      <DialogContent dir="rtl" className="max-h-[90vh] overflow-y-auto">
+      {/* הגלילה והגובה-המרבי חיים כעת ב-DialogContent עצמו (ר' ההערה שם — פס-הגלילה
+          על האלמנט המעוגל ריבע את הפינות). אין לשחזר כאן overflow-y-auto. */}
+      <DialogContent dir="rtl">
         <DialogHeader>
           {/* כותרת-עריכה = מחרוזת-אפיון מדויקת: "עריכת לקוח: [שם]" (C5 §5.6.17.4) */}
           <DialogTitle data-testid="customer-dialog-title">

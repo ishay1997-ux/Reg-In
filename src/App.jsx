@@ -26,7 +26,11 @@ import LoginPage from '@/modules/01_auth/LoginPage'
 import SystemManagementPage from '@/modules/01_auth/SystemManagementPage'
 import UsersManagementPage from '@/modules/01_auth/UsersManagementPage'
 import PermissionsMatrixPage from '@/modules/01_auth/PermissionsMatrixPage'
+import PricesManagementPage from '@/modules/01_auth/PricesManagementPage'
 import CustomersPage from '@/modules/02_customers/CustomersPage'
+import CustomerDetailsPage from '@/modules/02_customers/CustomerDetailsPage'
+import QuoteBuilderPage from '@/modules/03_quotes/QuoteBuilderPage'
+import QuotesPage from '@/modules/03_quotes/QuotesPage'
 import WelcomePage from '@/components/WelcomePage'
 import UnderConstruction from '@/components/UnderConstruction'
 import ProfileSettingsPage from '@/components/ProfileSettingsPage'
@@ -60,6 +64,8 @@ function App() {
                     <Route index element={<Navigate to="users" replace />} />
                     <Route path="users" element={<UsersManagementPage />} />
                     <Route path="permissions" element={<PermissionsMatrixPage />} />
+                    {/* מודול 3 §7.84 — תחזוקת קטלוג/מדרגות/2 פרמטרי-תמחור; כתיבה CEO בלבד (RLS) */}
+                    <Route path="prices" element={<PricesManagementPage />} />
                     <Route path="params" element={<UnderConstruction moduleName="פרמטרים" />} />
                   </Route>
                   <Route path="users" element={<Navigate to="/system/users" replace />} />
@@ -72,11 +78,39 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  {/* עמוד-הלקוח (צעד 3.5) — היה חלון עד 30/07/2026.
+                      ⚠️ `<ProtectedRoute>` אינו אופציונלי: מסלול תחת MainLayout בלי עטיפה גלוי
+                      לכל משתמש מחובר, בלי lint ובלי אזהרה (src/CLAUDE.md). */}
+                  <Route
+                    path="customers/:customerId"
+                    element={
+                      <ProtectedRoute allow="לקוחות">
+                        <CustomerDetailsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  {/* מודול 3 — מסך הניהול (3.3) ומסך הבנייה/עריכה (3.2). */}
                   <Route
                     path="quotes"
                     element={
                       <ProtectedRoute allow="הצעות מחיר">
-                        <UnderConstruction moduleName="הצעות מחיר" />
+                        <QuotesPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="quotes/new"
+                    element={
+                      <ProtectedRoute allow="הצעות מחיר">
+                        <QuoteBuilderPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="quotes/:quoteId/edit"
+                    element={
+                      <ProtectedRoute allow="הצעות מחיר">
+                        <QuoteBuilderPage />
                       </ProtectedRoute>
                     }
                   />

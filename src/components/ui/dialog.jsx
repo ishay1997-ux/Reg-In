@@ -40,12 +40,17 @@ function DialogContent({ className, children, showCloseButton = true, ...props }
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl border p-6 shadow-lg duration-200 sm:max-w-lg',
+          // ⚠️ ‏overflow-hidden כאן הוא load-bearing: כשהגלילה הייתה על האלמנט המעוגל עצמו,
+          // פס-הגלילה נצבע לתוך אזור הפינה והפך את שתי הפינות שבצידו לחדות (ישי תפס 29/07/2026).
+          // הגלילה עברה למכל פנימי, וכך המסגרת המעוגלת נשארת שלמה בכל דיאלוג במערכת.
+          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 flex max-h-[90vh] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] flex-col overflow-hidden rounded-xl border shadow-lg duration-200 sm:max-w-lg',
           className,
         )}
         {...props}
       >
-        {children}
+        {/* ⚠️ `min-h-0` הוא load-bearing: פריט-flex מסרב להצטמצם מתחת לגובה-התוכן שלו כברירת
+            מחדל, ולכן בלעדיו התוכן **נחתך** בתחתית החלון במקום לגלול (נתפס 29/07/2026). */}
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-6">{children}</div>
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
