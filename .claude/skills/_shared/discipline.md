@@ -30,7 +30,7 @@ Read **`~/.claude/CLAUDE.md`** (loads every session, every project) for the univ
 | "already done" / "still open" | full read/grep of the file — not tail, not partial offset, not memory |
 | "merged" / "it's on dev" | fresh `git fetch origin` + `git merge-base --is-ancestor` (iron rule 10) — a local branch lies |
 | "column/policy/index exists" | live query via Supabase MCP (read-only) |
-| "it works" / "the tests are green" / "this is what the screen looks like" | run it through the **production path** — `npm run test:e2e`, the real browser, the served asset — and **say which path produced the artifact you are judging**. *(Anchor `ba2d41e`: the quote PDF was defective in its **production**, not its code — rendered under vitest instead of fetched from the browser blob, so the verification method lied while the code was fine.)* |
+| "it works" / "the tests are green" / "this is what the screen looks like" | run it through the **production path** — the real browser, the served asset, and the E2E suites. 🔴 **And `npm run test:e2e` is NOT the whole suite: it is `playwright test --grep-invert בדיקת-עשן`, so it silently excludes the smoke journey — the excluded specs do not even appear as "skipped". The smoke suite is `npm run smoke`, and neither it nor E2E runs in CI at all** *(measured `package.json` + root `CLAUDE.md`, 07/08/2026; this row predated that measurement and was corrected 08/08)*. **Report both, by name, or say which one you did not run — and **say which path produced the artifact you are judging**. *(Anchor `ba2d41e`: the quote PDF was defective in its **production**, not its code — rendered under vitest instead of fetched from the browser blob, so the verification method lied while the code was fine.)* |
 
 Prefer a grep anchor (function name / string) over a line number — line numbers rot between writing and executing.
 
@@ -46,7 +46,7 @@ Prefer a grep anchor (function name / string) over a line number — line number
 
 | # | Question | Where to check it |
 |:-:|---|---|
-| **1 · ערוץ** | Does it assume a channel we do not have? | **There is no hostess app** — every path runs through the manager (`specs/module_04_hostesses/processes-approved.md §א3`). What exists: email, and the manager's phone |
+| **1 · ערוץ** | Does it assume a channel we do not have? | **There is no hostess app** — every path runs through the manager (`docs/specs/module_04_hostesses/processes-approved.md §א3`). What exists: email, and the manager's phone |
 | **2 · דאטה** | Does it assume data nobody collects? | `docs/schema.sql` + `docs/db_roadmap.md` — **read, don't recall.** *(Anchor: the `0.35` reliability component is switched off for exactly this reason — the attendance marks it needs are created by M6.)* |
 | **3 · תפקיד** | Does it assume a person who is not in the matrix? | `PROJECT_MASTER §3` — five roles, one person per domain, no ops team |
 | **4 · נפח** | Does its rationale rest on a different order of magnitude? | 50 hostesses · 2–5 per shift ⇒ **you re-sort, you don't filter** — already the documented rationale for the four sort-angles |
