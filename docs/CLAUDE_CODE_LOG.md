@@ -47,6 +47,32 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 09/08/2026 00:05 — **A mail template with a flow, a data source, and no sender: `§7.92` opened**
+
+**Trigger:** Ishay asked whether the quote/customer-facing mail templates were documented too. Measured
+all 9 `params` templates by placeholder rather than by memory. **Four are fully covered** — the quote
+template is the best-documented artifact in the repo (wired at `quotes.js:477`, pinned by
+`quotes.test.js:834`, seeded, and amended by **two named migrations** each carrying a C5 §5.8.1
+deviation note); invoice and salary belong to M8 per `PROJECT_MASTER §5.13/§5.14`; password-reset is
+`§6:385` + `db_roadmap` A-26.
+
+🔴 **`תבנית_מייל_משוב_לקוח` had everything except an owner.** Status machine defined (`§5:245`), screens
+specced (M8), template seeded, and the survey link is a **real** param (`קישור_בסיס_סקר_לקוחות`,
+a live Google Forms URL) — **but nothing names who performs `לא נשלח → נשלח`.** `grep "משוב_לקוח"` on
+`PROJECT_MASTER.md` returned **0**. `micro_guides/module-3.md:529` lists it among "the 5 unbuilt mail
+templates" and says their audit belongs to the consuming module — **and no module claimed it.**
+🔑 **Why it fell exactly there:** it is the **only mail sent after the event ends** — after M6's
+operational close, before M8's financial close — so **either module can assume it is the other's.**
+Opened as **`§7.92`** (🟡, `מ8/מ10`) with two options and a recommendation (M8 sends manually from the
+close dialog — no dependency on an unbuilt module, and "when to survey a client" is human judgement),
+plus a `🚧 מ8 · 🚧 מ10` line in §6 pointing at it. **Ishay's instruction: "סבבה כתוב במשהו פתוח"** —
+registered, not decided.
+
+⚠️ **Counting note worth keeping:** `grep -cE '^[0-9]+\. '` on `PROJECT_MASTER_sec7.md` returns **95**
+while there are **92** items — the three extras are the numbered list **inside the section that
+explains how to count**. The snapshot line now says so, so the next session does not "fix" a real count
+to match a broken one.
+
 ### 08/08/2026 23:45 — **Module-4 blueprint APPROVED and saved (`8ccfcbc`); and the blueprint reviewer was found to be mis-timed by the template itself**
 
 **Block ⑤ ran.** Read the full `spec.md` §① list (13 items, in order), `§11` only from the research doc,
