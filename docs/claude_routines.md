@@ -144,7 +144,16 @@ report the drift.
   Gotchas / Tech-debt / DB journal / Templates & hooks) are living knowledge that rots silently
   while dated entries stay frozen; each carries a `🕓 reviewed` stamp to refresh after verifying.
 - `STATUS.md` — current state only, Hebrew.
-- `docs/PROJECT_MASTER.md` — **§6** (the debt registry) and the full **§7** registry.
+- `docs/PROJECT_MASTER.md` — **§6** (the debt registry). ⚠️ **§6 only, since 08/08/2026.**
+- 🔀 **`docs/PROJECT_MASTER_sec7.md` — the full §7 registry** (split out 08/08/2026 by Ishay's ruling: `PROJECT_MASTER.md` hit **311KB** and crossed the Read tool's **256KB** ceiling, so a fresh session told "read PROJECT_MASTER" got a hard error; §7 was 62% of it. **Content moved verbatim — verified byte-identical, 121,563 chars both sides.**) It is still *called* `PROJECT_MASTER §7` everywhere, and `PROJECT_MASTER.md` keeps its `## 7.` heading as a one-line pointer, so prose citations still resolve. **STEP 2 must grep the new path**; the old one returns zero for every §7 query. **§6 did NOT move** — the Stop hook (`check-docs-updated.sh:122`) and `scripts/check-context.mjs:148` still read it from `PROJECT_MASTER.md`.
+  - ⚠️ **Count §7 items by `^N\. `, never by `§7.N`** — items are a plain numbered list (`88. 🟢 …`), so `grep -c '§7.88'` returns 0 for every item that exists, and a presence-check built on it reports "all clear" on an empty file.
+  - ⚠️ **A stray `U+200F` between the number and the emoji silently breaks the count** (found on §7.87, 08/08/2026 — the documented command returned 42 closed against a true 43). A count that looks one short = suspect an invisible bidi char first.
+  - ⚠️ **`⚪ ממתין-לביצוע` is NOT closed** — §7.64/65/66 are ruled-but-unbuilt and are executed by module 4. Never fold them in with 🟢.
+- `docs/architecture_and_qa_roadmap.md` — check its "חלק 0: מצב היישום" table.
+- `docs/db_roadmap.md` · `docs/toolbox.md` (on/off tables must match `.claude/settings.json`) ·
+  `README.md` (its links/doc-map must point at real files).
+- `docs/guides/**` · `docs/micro_guides/*.md` (living blueprints, English: Live Status Header,
+  step table, §9 deviations log).
 - `docs/architecture_and_qa_roadmap.md` — check its "חלק 0: מצב היישום" table.
 - `docs/db_roadmap.md` · `docs/toolbox.md` (on/off tables must match `.claude/settings.json`) ·
   `README.md` (its links/doc-map must point at real files).

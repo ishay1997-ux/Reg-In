@@ -68,7 +68,7 @@
 **1) פתיחת מודול (פעם אחת):**
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md, docs/guides/modules/module_03_quotes.md,
-docs/reference_spec/products_and_params.md, docs/module3_prices_tab_design_notes.md ו-docs/PROJECT_MASTER.md — **כל פריטי-§7 המתויגים ·מ3·** (`grep '·מ3' docs/PROJECT_MASTER.md`), ובמיוחד §7.1/12/13/25/26/27/28/42/49/50/51/52/53/70/76 + §7.32/34/41/57/62/74/75 + **§7.82 (חבילת-הכרעות-מ3, סבב-טריאז' 12/07)** + **§7.83/84/85 (הכרעות 14/07: RLS-3-טבלאות · טאב-מחירים-חדש · מבנה-מפתח-quote_services)**.
+docs/reference_spec/products_and_params.md, docs/module3_prices_tab_design_notes.md ו-docs/PROJECT_MASTER.md — **כל פריטי-§7 המתויגים ·מ3·** (`grep '·מ3' docs/PROJECT_MASTER_sec7.md` — ‏**§7 עבר לקובץ משלו 08/08/2026**), ובמיוחד §7.1/12/13/25/26/27/28/42/49/50/51/52/53/70/76 + §7.32/34/41/57/62/74/75 + **§7.82 (חבילת-הכרעות-מ3, סבב-טריאז' 12/07)** + **§7.83/84/85 (הכרעות 14/07: RLS-3-טבלאות · טאב-מחירים-חדש · מבנה-מפתח-quote_services)**.
 אנחנו פותחים את מודול 3 — הצעות מחיר, על ענף ishay/module-3-quotes-build (מ-dev טרי).
 
 הכרעות ישי (07/07/2026): מע"מ=18% · עיגול לאגורות בחישוב/שקל בתצוגה · הנחות בחיבור עם CHECK ≤100% ·

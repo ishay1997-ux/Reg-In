@@ -23,9 +23,9 @@
 | Linters (לפני Commit) | ✅ | `npm run lint` (0 שגיאות) + Prettier; נאכף ב-pre-commit דרך Husky + lint-staged |
 | בדיקות אוטומטיות | ✅ (בסיס) | Vitest — `src/lib/*.test.js`, `ProtectedRoute.test.jsx`. `npm run test:run` |
 | CI בכל PR | ✅ | `.github/workflows/ci.yml`: lint + test + build + סריקת-סודות (gitleaks) |
-| גרסון DB | ✅ | `supabase/migrations/` — baseline + 6 מיגרציות מגורסנות (ראה `supabase/README.md`) |
-| פריסה ל-Staging | 🟡 מוכן, לא-מופעל | `vercel.json` (SPA rewrite) + `.env.example`; חיבור Vercel = צעד ידני |
-| E2E | 🟡 פרוסה ראשונה | Playwright — `e2e/auth.spec.js` + `e2e/permissions.spec.js` (מודול 1 בלבד: login, route guards, מטריצת הרשאות). `npm run test:e2e`. כיסוי מלא לכל המודולים — מודול 12 |
+| גרסון DB | ✅ | `supabase/migrations/` — baseline + **22 קובצי מיגרציה** (נספר 08/08/2026; ראה `supabase/README.md`) |
+| פריסה ל-Staging | ✅ (31/07/2026) | `vercel.json` (SPA rewrite) + `.env.example`. **נפרס בפועל ל-Vercel 31/07/2026 והתחברות-Google אומתה ע"י ישי** — ‏`STATUS.md` + `PROJECT_MASTER §6` (🚧 מ12, רוטציית-הסיסמאות). *(השורה עמדה על "🟡 מוכן, לא-מופעל · חיבור Vercel = צעד ידני" עד 08/08/2026 — שמונה ימים אחרי הפריסה.)* |
+| E2E | ✅ מודולים 1–3 | Playwright — **13 קובצי-ספק** ב-`e2e/` (‏auth · permissions · customers · customer-page · quotes · quote-approval · quote-document · quote-email · prices · cost-visibility · load-failure-guards · server-messages · smoke), **71–78 בדיקות קבועות**. ⚠️ **‏`npm run test:e2e` מדלג בשתיקה על בדיקות-העשן** (`--grep-invert בדיקת-עשן`) ו-**E2E אינו רץ ב-CI כלל** — ר' `CLAUDE.md`. כיסוי מלא לכל המודולים — מודול 12 |
 | בדיקת-עשן | ✅ (30/07/2026) | `npm run smoke` — מסע-קריאה-בלבד (נאכף ברשת) על כל המסכים הראשיים מול ערכי-עוגן אמיתיים (`e2e/smoke-anchors.json`); ~13 שניות; קודי-יציאה מובחנים (0 תקין · 1 באג · 2 סיסמה/משתמש · 3 אין שרת); **בנפרד מ-gate/CI בכוונה** — קרטוע-רשת לא חוסם פריסה. ארבעת הקודים הוכחו בשבירה-מכוונת. מודול חדש = מסך+עוגן ב-`e2e/smoke.spec.js` |
 | Load / UAT | ⬜ מתוכנן | נדחה למודול 12 (Integration & Handoff) לפי מפת המודולים |
 | Audit log / Error Boundary גלובלי | ⬜ backlog | לא חוסם; יתווסף עם הצמיחה |
