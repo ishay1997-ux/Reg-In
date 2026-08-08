@@ -47,7 +47,7 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
-### 08/08/2026 23:30 — **Module-4 blueprint drafted; and the blueprint reviewer was found to be mis-timed by the template itself**
+### 08/08/2026 23:45 — **Module-4 blueprint APPROVED and saved (`8ccfcbc`); and the blueprint reviewer was found to be mis-timed by the template itself**
 
 **Block ⑤ ran.** Read the full `spec.md` §① list (13 items, in order), `§11` only from the research doc,
 17 §7 items + 7.88–7.91, and all 8 approved mockups. Then measured live via Supabase MCP rather than
@@ -86,12 +86,36 @@ different times on different artifacts**: the simulated-build agent audits the S
 blueprint reviewer audits the GUIDE (after). Re-run at the correct time, the same reviewer returned
 findings that were all real.
 
-**Guide state:** `docs/micro_guides/module-4.draft.md`, 819 lines, **awaiting Ishay's approval**;
-`grep '🗡️'` → **1** (the template's own acceptance test, which returns **0** for modules 1/2/3) ·
-**18 DoD checkboxes** (module-close had nothing to tick before) · **19 steps carry `מה ייחשב עובד`
-+ an empty `🗣️ אושר —`** (module-build re-asks Ishay for approval without them).
-**Not fixed, deliberately:** `⚠️ shared-surface` sits in the file table rather than in four step titles ·
-⏸️ used where ⏳ belongs (7×) · the `Last updated` cell is an intentional placeholder while it is a draft.
+🔴 **A §7 item was nearly handed back to Ishay as a question he had already answered — and this is the
+reusable lesson.** The fresh-context reviewer reported **§7.65 (hostess email uniqueness) as OPEN**,
+quoting `PROJECT_MASTER_sec7.md:207` — *"חלק-ה-hostesses נשאר להנהון במודול 4"*. **Line `:208`, directly
+beneath it, closes the item** (Ishay 31/07: no UNIQUE + a soft warning in the form). Revision 1 of the
+guide carried the same error. **Why the trap is structural, not careless:** the ruling **reverses the
+item's own opening direction** ("hostesses = UNIQUE"), so the stale sentence above it still reads as
+live prose. ⇒ **A §7 item is read whole, never by the first matching line.** Corrected in six places in
+the guide; the Phase-1 door is now measured **empty** — nothing blocks the build.
+
+**Approved by Ishay ("מאשר") and saved — `docs/micro_guides/module-4.md`, 825 lines, commit `8ccfcbc`**
+(6 files, explicit pathspec, `-m` before `--`; **`git diff --cached` verified empty afterwards** — the
+shared-index trap that mis-attributed 11 files on 08/08 16:0X was checked for, not assumed).
+Post-save state, measured: `grep '🗡️'` → **1** (the template's own acceptance test, which returns **0**
+for modules 1/2/3) · **18 DoD checkboxes** (module-close had nothing to tick before) · **19 steps carry
+`מה ייחשב עובד` + an empty `🗣️ אושר —`** (module-build re-asks Ishay for approval without them).
+
+**Rule-13 ripples executed the same session:** a new **`🚧 מ9 ← מ4`** line in `PROJECT_MASTER §6` — the
+Smart-Match params screen, **distinct from the existing min-wage-report row at `:427`**; it is the screen
+that flips `מרכיב_אמינות_פעיל` when M6 lands, and without it that flip is a manual Table-Editor UPDATE.
+And a **§7.67 write-back**: `project_shifts` marked **⏸️ deferred**, with the reasoning and the
+conference answer, plus the honest cost — both tables are empty today, so the later backfill is one row
+per project, mechanical rather than a redesign. Both verified by `grep` after writing.
+
+**Not fixed, deliberately:** `⚠️ shared-surface` sits in the §2 file table rather than in four step
+titles · ⏸️ used where ⏳ belongs (7×). Mechanical, no behavioural effect.
+**Open and reported to Ishay:** `regin-docs-sync` recommended (rule 13ז — a §7 item was ruled) ·
+**7 unpushed commits** on the branch · another session wrote to `STATUS.md` in the same minute and its
+record was preserved beneath, not overwritten (rule 16) · and one deliberate gap on the plan itself —
+**5 irreversible migrations with no rollback playbook**, where module-1's guide has one and module-2's
+does not.
 
 **Two facts the draft asserted wrongly and now states correctly:** the branch is **`ahead 6`**, not
 "synced"; and `Sidebar.jsx:36` · `App.jsx:126-129` · `PermissionsMatrixPage.jsx:31` **already carry
