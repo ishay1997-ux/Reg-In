@@ -47,6 +47,58 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 08/08/2026 23:30 — **Module-4 blueprint drafted; and the blueprint reviewer was found to be mis-timed by the template itself**
+
+**Block ⑤ ran.** Read the full `spec.md` §① list (13 items, in order), `§11` only from the research doc,
+17 §7 items + 7.88–7.91, and all 8 approved mockups. Then measured live via Supabase MCP rather than
+trusting the docs: `hostesses`/`assignments` **0 rows** · `projects` **3 rows, all `not_started`** ·
+`pg_policies` on hostesses/assignments/projects **0/0/0** · `hostesses.created_at` **exists** (A-13) ·
+`assignments.responded_at` **does not** · `params` 20 rows incl. **4** hostess email templates ·
+`send-email/index.ts:69` hardcodes `'הצעות מחיר'` and `:84` requires `pdf_base64`.
+
+**Four rulings from Ishay** (all in `micro_guides/module-4.draft.md` §3): `email`/`city`/`bank_*`
+**stay NOT NULL** and the form stars all five *(a deliberate deviation from approved mockups 06/07)* ·
+confirmation-mail field contact = **the shift lead if marked, else the project manager** via
+`projects.owner_email` → `users` · travel param seeded **`0`**, no number printed while `0` ·
+**`project_shifts` (§7.67) and the exposure log both DEFERRED**.
+**One Claude ruling with an anchor, accepted by Ishay:** the one-event-per-day index enforces on
+**`finally_approved` only** — §7.88 (08/08) + `processes-approved.md:242` over `research §11.6#11`
+(30/07, three statuses). 🔴 **Cost recorded in the guide's §10: §7.54's same-project bonus is lost and
+`db_roadmap` row A-15 stays open.**
+
+🔴 **The finding worth keeping — `projects` has no customer name, and מנהלת גיוס is `blocked` on
+'לקוחות'.** Measured: `customers`' SELECT policy (`schema.sql:363-367`) demands view/edit on 'לקוחות';
+her permission row says `blocked`; `projects` carries only `customer_id` (24 columns, checked).
+⇒ **three approved surfaces print a customer name she would never see, and the join returns null with
+`error: null`** — the exact `{data:null, error:null}` trap the spec calls the module's worst failure.
+Resolved as `projects.customer_name`, a snapshot written at conversion — **the same pattern `event_name`
+already uses (§7.76)**, so no policy widening. Ishay's reaction was the right one: *"מה הבעיה לסדר את זה
+במיקרו גייד"* — it was work, not a question, and it should not have been escalated to him.
+
+🔴 **Template defect found and fixed — `module-blueprint/template.md`, the fresh-context reviewer.**
+It said *"before presenting the 9-section blueprint"*, which reads as *"before writing it"*. I ran the
+reviewer against a plan-summary and it reported *"no `### 🗡️`", "no `מה ייחשב עובד`", "no
+`⚠️ shared-surface`"* — **every mandatory 9-section output, flagged missing because the artifact
+carrying them did not exist yet.** Ishay caught it: *"הסוכנים צריכים להיות אחרי שמדריך המיקרו נבנה"*.
+**The fix spells the order out** — write all 9 sections to `module-N.draft.md` → dispatch the reviewer
+**at that path** → fix → present → rename on approval — **and states that the two reviewers run at
+different times on different artifacts**: the simulated-build agent audits the SPEC (before), the
+blueprint reviewer audits the GUIDE (after). Re-run at the correct time, the same reviewer returned
+findings that were all real.
+
+**Guide state:** `docs/micro_guides/module-4.draft.md`, 819 lines, **awaiting Ishay's approval**;
+`grep '🗡️'` → **1** (the template's own acceptance test, which returns **0** for modules 1/2/3) ·
+**18 DoD checkboxes** (module-close had nothing to tick before) · **19 steps carry `מה ייחשב עובד`
++ an empty `🗣️ אושר —`** (module-build re-asks Ishay for approval without them).
+**Not fixed, deliberately:** `⚠️ shared-surface` sits in the file table rather than in four step titles ·
+⏸️ used where ⏳ belongs (7×) · the `Last updated` cell is an intentional placeholder while it is a draft.
+
+**Two facts the draft asserted wrongly and now states correctly:** the branch is **`ahead 6`**, not
+"synced"; and `Sidebar.jsx:36` · `App.jsx:126-129` · `PermissionsMatrixPage.jsx:31` **already carry
+'דיילות'** — step 4.1 would have created duplicates. Its real work is replacing `<UnderConstruction>`
+and adding the public route **outside `<MainLayout>`**, since `App.routes.test.jsx` would otherwise be
+satisfied by wrapping the page in `ProtectedRoute` — i.e. **by breaking it**.
+
 ### 08/08/2026 16:05 — **Guides 5–12 logged as an open task rather than patched: `RELEVANT_SECTIONS` points at C5 sections that do not exist in four of them**
 
 **Measured, not assumed: `C5 §5` contains only 5.2–5.8** (`grep -cE "^#{2,4} 5\.N( |\.)"` on `C5_clean_transcript.md`). Four step-guides still hand the blueprint numbers outside that range — **M8 `§5.13-5.14`** (both) · **M9 `§5.16`** · **M11 `§5.17`** · **M5 `§5.8-5.9`** (only 5.9 is bad). Module 4 carried `§5.10-5.12` and was fixed today; those numbers are **figure captions for the login, home and customers screens** — modules 1, 7 and 2 — so the blueprint would have read another module's spec and never known.
