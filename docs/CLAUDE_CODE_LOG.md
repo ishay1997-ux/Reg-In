@@ -55,6 +55,16 @@
 
 ⚠️ **Written into `STATUS.md` §מטלות פתוחות while a parallel session was writing the same file** (mtime 6 minutes old) — single surgical Edit on a section heading, verified landed. **`CLAUDE_CODE_LOG` deliberately left uncommitted** for that session, which was mid-entry.
 
+### 08/08/2026 22:0X — **`context-canonical-2026-08-07.md` cross-checked item by item: the registered debt was based on a false premise, and the real rot was somewhere else entirely**
+
+`PROJECT_MASTER`'s header had carried an open worry since 08/08: *"the rulings in it were not all verified as transferred to §7."* **Checked all 12 active decisions (§2) and the cancellations (§3). Every one has a permanent home — zero missing.** `CLAUDE.md` (specs-as-grade-2 · the source tags) · `db_roadmap` + `spec.md` (weights · terminology) · §7 (`languages` · dual-role) · `prompt_module_discovery` (three-stage Discovery). §3 holds in reality too: `.claude/skills/work-manager/` does not exist.
+
+🔑 **The premise was wrong, and that is the reusable part:** §7 is the single registry for **a question that was opened and ruled** — *not* for every decision. Most of that file's decisions are not supposed to be in §7 at all, so "not all transferred to §7" was never a defect. **Debt closable on Ishay's ruling.**
+
+🔴 **What the check actually found:** the document's **§4–§7 (state · risks · next-step) are stale and actively misleading.** §4א line 74 announces **two open §7 items for M4 (15 and 69) — both are closed** (🟢 and 🟠); the true count of open M4 items is **zero**. §5 still flags surface 5 as *"blocking spec and build"* — §7.45 closed 07/08. Also: *"`spec.md` does not exist"* ⇒ it does (74KB) · *"3 approved mockups of 8"* ⇒ **8/8** · *"next single step: review `module-build`"* ⇒ done today · and **§9 points at "`PROJECT_MASTER.md` §6 + §7" — which this session's own split invalidated hours earlier.** Only the *14 `🚧 מ4` debts* claim survived.
+
+⚠️ **Why that is not merely "old":** the file is pointed at from `PROJECT_MASTER`'s header **and nominates itself a "critical source" in its own §9** ⇒ a session reading it before the blueprint inherits **two phantom blockers and two questions Ishay already ruled**, and stalls or re-asks. **A dated staleness banner was placed at its head and the `PROJECT_MASTER` pointer rewritten with the finding.** Archiving/deletion left to Ishay (`docs/delete/` convention) — the routine does not delete.
+
 ### 08/08/2026 16:0X — **§7 split into its own file on Ishay's ruling — a verbatim move, zero content decisions, and it fixed a hook false-positive for free**
 
 **`docs/PROJECT_MASTER.md` 311KB ⇒ 120KB · new `docs/PROJECT_MASTER_sec7.md` 195KB.** Both now under the Read tool's 256KB ceiling; before this, "read PROJECT_MASTER" returned a hard error instead of the document.
