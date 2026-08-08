@@ -55,6 +55,16 @@
 
 ⚠️ **Written into `STATUS.md` §מטלות פתוחות while a parallel session was writing the same file** (mtime 6 minutes old) — single surgical Edit on a section heading, verified landed. **`CLAUDE_CODE_LOG` deliberately left uncommitted** for that session, which was mid-entry.
 
+### 08/08/2026 22:1X — **`context-canonical-2026-08-07.md` archived on Ishay's approval, after a harvest pass that closed five of its six §10 gaps**
+
+`git mv docs/plans/ → docs/archive/`. **Harvest-before-you-delete was executed, not asserted.** §10's six gaps: item 1 (*is §7.15 really open*) ⇒ **closed 🟢** · item 4 (`module-build` §0 unverified) ⇒ **reviewed 08/08** · item 5 (3 mockups vs the 8-section card) ⇒ **8/8 approved** · item 6 ⇒ ruled moot by the doc itself. **Item 2** (*"5 `דירוג` leftovers in `screens-approved.md`, never checked by a second reader"*) — **I did the second read: 7 occurrences today, and all seven are legitimate** (sort-order sense · the verb *"שלא דורגה"* · a filter being removed · and twice the ruling itself being stated). **Item 3** (*the `working-card-with-claude.docx` guide was never opened in Word to confirm Hebrew RTL*) **had no durable home anywhere — harvested here, and it is the one live remnant.**
+
+**Safe to archive because the rulings have homes, verified per item, not assumed:** the terminology ruling (*"התרשמות" not "דירוג"*) lives with its full reasoning in **`processes-approved.md:360`** and **`spec.md:160`** — the doc was the third copy, not the source. Same for all 12 §2 decisions and §3.
+
+🔑 **The reusable lesson, and it is the reason the debt existed at all:** `PROJECT_MASTER` had carried *"the rulings in it were not all verified as transferred to §7"* since 08/08. **That was never a defect — it rested on a false premise.** §7 is the single registry for **a question that was opened and ruled**, not for every decision; most of that file's decisions were never supposed to land there. Each decision type has its own home (schema → `db_roadmap` · module spec → `docs/specs/` · debt → §6 · working rule → `CLAUDE.md`), and **spreading is correct when it spreads tagged mirrors rather than sources.** The `PROJECT_MASTER` header now says this, so the same worry is not re-derived in a month.
+
+🔴 **And the archive trigger was not age — it was active misdirection:** §4א announced two open §7 items for M4 (15, 69) that are both closed, §5 still flagged surface 5 as blocking after §7.45 closed, and the file nominated itself a *"critical source"* — so a session reading it before the blueprint would have inherited two phantom blockers and two already-ruled questions.
+
 ### 08/08/2026 22:0X — **`context-canonical-2026-08-07.md` cross-checked item by item: the registered debt was based on a false premise, and the real rot was somewhere else entirely**
 
 `PROJECT_MASTER`'s header had carried an open worry since 08/08: *"the rulings in it were not all verified as transferred to §7."* **Checked all 12 active decisions (§2) and the cancellations (§3). Every one has a permanent home — zero missing.** `CLAUDE.md` (specs-as-grade-2 · the source tags) · `db_roadmap` + `spec.md` (weights · terminology) · §7 (`languages` · dual-role) · `prompt_module_discovery` (three-stage Discovery). §3 holds in reality too: `.claude/skills/work-manager/` does not exist.
