@@ -157,6 +157,14 @@ satisfied by wrapping the page in `ProtectedRoute` — i.e. **by breaking it**.
 
 ⚠️ **Written into `STATUS.md` §מטלות פתוחות while a parallel session was writing the same file** (mtime 6 minutes old) — single surgical Edit on a section heading, verified landed. **`CLAUDE_CODE_LOG` deliberately left uncommitted** for that session, which was mid-entry.
 
+### 09/08/2026 00:0X — **The 🚧-hook defect re-measured against the new `module-4.md`: still dormant, deliberately NOT fixed — and my own split had silently killed the debt's anchor**
+
+**Ishay's instruction was "targeted fix only if needed", and the measurement said it is not needed.** Re-ran the check across **all four** micro-guides now that `docs/micro_guides/module-4.md` exists: **19 guide→§6 token pairs, zero debts escaping.** Critically, **all six of module-4's tokens (מ4 · מ6 · מ8 · מ9 · מ10 · מ11) resolve to live §6 lines** — which **empirically refutes yesterday's own argument** that the M4 blueprint was the trigger to fix this before. It was not. **No fix applied** (F1: no victim, and the fix would block immediately — see below).
+
+🔴 **What DID need fixing, and I caused it.** §6's defect-(א) entry cited its evidence as *"live anchor: line ~512 carries `🚧 מ9` inside §7"* — **the 08/08 §7 split moved that line into another file, so the anchor evaluates to zero.** Anyone verifying the debt would find nothing and could reasonably conclude it was fixed. **It is not — only the proof moved.** Re-anchored to the one surviving out-of-§6 token: **`🚧 מ8` at line 330, inside §5.12.** *(Lesson worth keeping: a structural move invalidates the evidence lines of debts that cite it. The split's ripple check covered pointers and executable greps — it did not cover **anchors quoted inside debt entries**, which is a third category.)*
+
+🔔 **The wake-up condition is now recorded rather than left to be re-derived:** `🚧 מ3` appears in `module-2.md` and `module-3.md`, and **all four of its §6 lines are struck through** (M3's debts closed 30–31/07) ⇒ **any new debt registered to מ3 from now on passes green without being registered.** The same shape will recur for every module whose debts all close. The fix (`awk` to §6 + `grep -v '~~'`) and its mandatory companion (**simulation shows it blocks `module-2.md`/`module-3.md` on מ3 on day one** — the dead tokens must be cleaned in the same package) are written into the debt entry itself.
+
 ### 08/08/2026 22:3X — **Four plan files reviewed one by one: three archived, one kept — and the one unharvested fact was found in the last of them**
 
 `docs/plans/` 7 files ⇒ 4. **Each decided on evidence, not on age.**
