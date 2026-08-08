@@ -47,6 +47,14 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 08/08/2026 12:20 — **§7.44 ownership corrected on Ishay's ruling: `מ4/5/6` ⇒ `מ6`**
+
+**The two-rulings case, resolved by him after both were brought quoted and dated.** `§7.44` (07/07/2026) assigned the atomic `project_status` trigger to modules 4/5/6; his 08/08 ruling (`spec.md` ⑱ד, post-council) says **M4 never touches that column and the trigger is built in M6.** The 08/08 ripple had reached `§6` (`🚧 מ6 ← מ4`) and **never reached §7.44** — iron rule 13(א) not run — and `⑥1` sends the blueprint to read §7.44, so M4 would have built the trigger and silently overturned the newer ruling.
+
+🔑 **The argument that settled it is not recency, it is buildability:** §7.44 defines the trigger as firing on `assignments`**/`logistics`** changes — **logistics is module 5** (`00_roadmap.md`), and "zero logistics in M4" is Ishay's own ruling. **Half the trigger's input does not exist yet**, so building it in M4 yields something partial that looks correct and behaves wrong without erroring.
+
+**Rule 13 ripple run in full:** §7.44 owner tag + the reason recorded · `module_05_logistics.md:17` (its `↳§7.44` note said "נבנה במודולים 4/5/6") · §6 verified already correct, no new line needed. **Two other §7 items cite §7.44 — checked, both cite its *mechanism* (atomic trigger) and not its ownership ⇒ correctly left untouched.**
+
 ### 08/08/2026 12:10 — **Reader-test on ⑥1: the opening block pointed the blueprint at three screens belonging to other modules**
 
 **A fresh-context agent was given ⑥1 alone and asked what it could and could not do with it.** Three findings verified by hand before any edit; a fourth is Ishay's.
