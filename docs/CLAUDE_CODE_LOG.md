@@ -55,6 +55,21 @@
 
 ⚠️ **Written into `STATUS.md` §מטלות פתוחות while a parallel session was writing the same file** (mtime 6 minutes old) — single surgical Edit on a section heading, verified landed. **`CLAUDE_CODE_LOG` deliberately left uncommitted** for that session, which was mid-entry.
 
+### 08/08/2026 22:3X — **Four plan files reviewed one by one: three archived, one kept — and the one unharvested fact was found in the last of them**
+
+`docs/plans/` 7 files ⇒ 4. **Each decided on evidence, not on age.**
+
+**Archived (`git mv` → `docs/archive/`):**
+- **`manager-removal.md`** — the stage-1 prompt. **Spent: verified three ways** that the removal ran (`.claude/skills/work-manager/` gone · content at `docs/archive/work-manager/` · both rescued files present) and that all four of its advance rulings landed (`check-context.mjs` clean of `work-manager`, `_shared/discipline.md` present, the two rescues in place). Its single surviving repo mention is a **legitimate historical citation to the archive** in `module-blueprint/template.md:16`, not a live routing.
+- **`advisor-skill-raw-material.md`** — the skill it fed **is built**. Checked each of its seven modes against the live `advisor/SKILL.md`: **all seven present** (2–4 hits each) and all seven registered in `toolbox.md`. 485 lines of raw material ⇒ a 308-line skill; fully absorbed.
+- **`NEXT-SESSION-handoff.md`** — superseded by `handoff-2026-08-07.md`. **But only after a harvest** (below).
+
+**KEPT — `ideas-backlog.md`.** It is not a spent plan: its own header defines it as *"ideas Ishay raised that were deferred in time, not rejected — material that existed only in a closed session's chat."* **Archiving it would bury exactly what it was created to preserve.** It also self-warns that items in it have no mechanism surfacing them, which makes burial worse, not neutral.
+
+🔴 **The harvest that mattered, and it was the fourth check that found it.** Three of `NEXT-SESSION-handoff.md`'s durable items already had homes: the *ruling-vs-idea* distinction ⇒ **root `CLAUDE.md` rule 1** (ruled 06/08) · `/ideas_to_evaluate` + the three-bucket sort ⇒ **`ideas-backlog.md` §2** (which stays live) · the ישי→קלוד prompt-artifact gap ⇒ the `מעצב-פרומפט` idea in `ideas-backlog.md` §1א. **The fourth had none: a six-row, evidence-backed analysis of how Ishay writes when writing freely** (measured over 43K chars — zero deadline/constraint mentions in the whole thing; a bias warning placed *after* 350 lines of finished solution; comprehension-check fired at line 780). **Zero occurrences anywhere else** — verified by term and again by content. **Harvested into `_shared/ishay-calibration.md` §10** (its declared home, auto-loaded by every skill) with the two actions it implies — *ask for the constraint*, and *read his finished solution as background, not instruction* — and with his own caveat preserved verbatim: *"this is **not** a bad prompt; the only two failures are **order** and **missing constraint**."*
+
+**Pointers:** the mega-plan called `manager-removal.md` *"the single live prompt"* — rewritten to record that stage 1 **ran**, with the three pieces of evidence and a "do not run again". Two more live pointers repathed (`ideas-backlog.md`, `two-weeks-2026-08-06.md`). Dated journal references left untouched — they are historical records.
+
 ### 08/08/2026 22:1X — **`context-canonical-2026-08-07.md` archived on Ishay's approval, after a harvest pass that closed five of its six §10 gaps**
 
 `git mv docs/plans/ → docs/archive/`. **Harvest-before-you-delete was executed, not asserted.** §10's six gaps: item 1 (*is §7.15 really open*) ⇒ **closed 🟢** · item 4 (`module-build` §0 unverified) ⇒ **reviewed 08/08** · item 5 (3 mockups vs the 8-section card) ⇒ **8/8 approved** · item 6 ⇒ ruled moot by the doc itself. **Item 2** (*"5 `דירוג` leftovers in `screens-approved.md`, never checked by a second reader"*) — **I did the second read: 7 occurrences today, and all seven are legitimate** (sort-order sense · the verb *"שלא דורגה"* · a filter being removed · and twice the ruling itself being stated). **Item 3** (*the `working-card-with-claude.docx` guide was never opened in Word to confirm Hebrew RTL*) **had no durable home anywhere — harvested here, and it is the one live remnant.**
