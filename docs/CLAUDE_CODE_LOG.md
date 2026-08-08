@@ -157,6 +157,14 @@ satisfied by wrapping the page in `ProtectedRoute` — i.e. **by breaking it**.
 
 ⚠️ **Written into `STATUS.md` §מטלות פתוחות while a parallel session was writing the same file** (mtime 6 minutes old) — single surgical Edit on a section heading, verified landed. **`CLAUDE_CODE_LOG` deliberately left uncommitted** for that session, which was mid-entry.
 
+### 09/08/2026 00:2X — **Asked whether the micro-guides need fixing: they do not — and the wrong answer was already on disk, written by me an hour earlier**
+
+**Verdict: the guides are correct; do not touch them.** All four `🚧 מ3` occurrences inspected individually: `module-2.md:45` is `~~🚧 מ3~~ **paid 30/07/2026 (M3 step 3.5)**` · `:332` and `:416` are **dated as-run records** (which token was assigned at the time, and that the §6 check ran clean) · `module-3.md:595/598` is prose in the closing audit stating *"Zero open `🚧 מ3` remain"*. **Not one is a live unpaid debt. Both guides are 🔒 closed, and a dated record is never rewritten** (`docs/CLAUDE.md`).
+
+🔴 **The correction is to my own prescription.** The previous entry wrote into §6's debt record that the hook fix *"requires a companion: the dead tokens must be cleaned from the two guides."* **That instruction was wrong and would have sent a future session to destroy correct as-run history in closed modules' guides — to satisfy a naive `grep`.** The guides were never the problem. **The hook is:** it extracts raw tokens and cannot distinguish `~~struck-through~~`, prose-about-a-token, and a real debt. Rewritten in place: the guide-side extraction must ignore struck lines and prose — e.g. scope it to the capabilities table, the only place rule 15 defines a live token — and **"never clean tokens out of a guide to satisfy the hook"** is now stated explicitly beside it.
+
+🔑 **Worth keeping as a shape, not just an incident:** the reflex fix pointed at the *documents* because that is where the tool's complaint surfaces; the defect was in the *tool's* ability to read them. **A false block is evidence about the checker before it is evidence about the checked** — and here the check that caught it was simply reading all four hits instead of trusting the count.
+
 ### 09/08/2026 00:0X — **The 🚧-hook defect re-measured against the new `module-4.md`: still dormant, deliberately NOT fixed — and my own split had silently killed the debt's anchor**
 
 **Ishay's instruction was "targeted fix only if needed", and the measurement said it is not needed.** Re-ran the check across **all four** micro-guides now that `docs/micro_guides/module-4.md` exists: **19 guide→§6 token pairs, zero debts escaping.** Critically, **all six of module-4's tokens (מ4 · מ6 · מ8 · מ9 · מ10 · מ11) resolve to live §6 lines** — which **empirically refutes yesterday's own argument** that the M4 blueprint was the trigger to fix this before. It was not. **No fix applied** (F1: no victim, and the fix would block immediately — see below).
