@@ -47,6 +47,14 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 08/08/2026 12:45 — **The last four mechanism fixes: block 6.0 and everything the scans opened is now closed**
+
+**Fix 4 is the only substantive one, and it is the pattern worth keeping.** *"A clearly-written instruction is not a confirmed one"* asked the session to **notice** that something had never been ruled — a feeling, not a trigger — and **measured: zero occurrences across all three micro-guides, i.e. it has never once fired.** Replaced with a lookup anyone can run: **does this instruction trace to tier 1–3 (`docs/schema.sql` · the approved spec · frozen C5/C6), or does it exist ONLY in the micro-guide?** Micro-guide-only means nobody ruled it and Claude wrote it ⇒ ask. **And the pass now leaves a line either way in the 🗣️ brief** — without that, a session that ran the check and one that skipped it produce identical output, which is the whole reason Ishay cannot audit this class of rule.
+
+**Fix 2 — the migration protocol's second half shrank to a pointer at `supabase/migrations/CLAUDE.md`**, after verifying that the owning file actually carries every detail (the Studio steps, the joint commit, the "not approved without a snapshot" rule) — harvest before shrink, not after. 🔑 **The trigger deliberately stayed:** a session applying a migration through MCP never opens the migrations folder, so deleting the line entirely would mean it never learns the owning file exists. **Fix 3** removed a meta-paragraph explaining why a rule sits where it sits — no session acts differently for it. **Fix 1** turned out already closed by the earlier rounds (verified 0).
+
+**Integrity after a day of edits:** 117 lines, 7 sections, and the four gates deliberately protected throughout — the 🔒 Plan-Mode 🗣️ gate, the 3-attempt cap, the migration typed-echo, and the STATES rule — all still present and counted.
+
 ### 08/08/2026 12:35 — **Four rulings, one principle — and `STATUS.md` from 442KB to 41KB**
 
 **The framing Ishay approved collapsed three separate questions into one: does a FUTURE session need this, or only Ishay in the moment?** Future ⇒ disk. Him-in-the-conversation ⇒ chat, and that is a legitimate answer rather than a gap.
