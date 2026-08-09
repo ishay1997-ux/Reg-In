@@ -11,7 +11,7 @@
 | | |
 |---|---|
 | Module | **4 — דיילות + Smart Match** |
-| Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ measured `ahead 6` of origin: `git status -sb` before assuming it is pushed |
+| Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ **Nothing on this branch is pushed.** 🚫 Do not write a number here — it rotted twice already *("ahead 6" was written on 08/08 and was 93 by 09/08 evening)*. **Measure it: `git rev-list --count origin/dev..HEAD`** |
 | Owner | ישי (sole developer) |
 | Overall status | 🔨 **Phase 3 — 3.0 · 3.1 · 3.2 DONE.** Gate `exit 0` · **627 unit tests** (was 575 at the close of Phase 2) · `smoke exit 0` · 7 migrations · advisors **15**. 🆕 **The pool is LIVE: 20 real hostesses, created through the app's own path, all 20 geocoded** *(Ishay's ruling — see `local-14`)*. 🆕 **The Phase-3 door was swept and all three open items are RULED** (§7.41 · §7.33 · `local-12`). ⏳ Phase 1's 1.5 gate still owes Ishay's `regin-docs-sync` run |
 | Last updated | **09/08/2026 19:3X** *(system clock; refresh it at every step transition)* |
@@ -43,7 +43,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | 3.5 | Surface 4 — per-row action menu | ⬜ |
 | 3.6 | Surface 5 — public confirm page (no login) | ⬜ |
 | 3.7 | 🔻👤 Phase-3 gate: 🎨 UX & functional review | ⬜ |
-| 4.1 | Wiring: replace `UnderConstruction`, add the public route | ⬜ |
+| 4.1 | Wiring: **the public route only** — `UnderConstruction` was already replaced at 3.1 | ◐ **half done 09/08** — `/hostesses` renders `HostessesPage` and `App.routes.test.jsx` is green. **Still owed: the public route OUTSIDE `<MainLayout>` + its deliberate entry in the AST allow-list** |
 | 4.2 | Demo seed extension + E2E anchors + the fixture-rot ruling | ⬜ |
 | 5.1 | E2E + regression suites | ⬜ |
 | 5.2 | 🔻👤 Closing audit (`module-close`, FRESH session) | ⬜ |
