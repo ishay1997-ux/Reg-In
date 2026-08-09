@@ -1,5 +1,17 @@
 # Module 4 — דיילות + Smart Match · Build Micro-Guide
 
+> 📦 **ARCHIVE — the pre-compaction copy, taken 09/08/2026 19:53 (§9(i)).**
+> **The live guide is `docs/micro_guides/module-4.md`. Do not read this one to learn current state.**
+>
+> 🔬 **One measured caveat, so nobody chases it as a bug.** This snapshot was taken **8 lines before
+> commit `cf14d0d`**, which corrected two things in **§1**: the step-**4.1** row *(it still said
+> "replace `UnderConstruction`" after that had already been done at 3.1)* and the branch row
+> *(it carried a rotted `ahead 6`)*. ⇒ **a `diff` against the live guide returns 8 lines, and all 8
+> are in §1. That is expected, not damage.**
+> 🔑 **And why it costs nothing:** this archive exists to hold the **step text of phases 0/1/2 that
+> compaction removed** — and that text is byte-identical in both files, because §1 was never trimmed.
+> **The corrected §1 is alive in the live guide.** 🚫 Do not "restore" §1 from here; it is the older one.
+
 > ✅ **APPROVED by Ishay 08/08/2026 23:30** ("מאשר"). This is the live guide.
 > **Reader: a future Claude Code session with zero memory.** English; Hebrew only as data
 > (DB values, UI strings, §7 quotes). All chat reports to Ishay are Hebrew.
