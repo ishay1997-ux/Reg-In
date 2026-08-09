@@ -13,9 +13,9 @@
 | Module | **4 — דיילות + Smart Match** |
 | Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ measured `ahead 6` of origin: `git status -sb` before assuming it is pushed |
 | Owner | ישי (sole developer) |
-| Overall status | 🔨 **Phase 0 in progress** |
+| Overall status | ✅ **Phase 0 CLOSED (09/08/2026)** — next: Phase 1, step 1.1 |
 | Last updated | **09/08/2026 07:53** *(system clock; refresh it at every step transition)* |
-| **Active step** | **0.1** 🔨 |
+| **Active step** | **1.1** — Migration A |
 | Deadline | module 4 → `dev` by **21/08/2026**; submission **19/09/2026** |
 
 Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target module) · ❌ blocked (reason)
@@ -24,7 +24,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 |---|---|---|
 | 0.1 | Unlock the shared email engine for module 4 | ✅ 09/08 — gate 0 · unit 428 · E2E 78 · smoke 0 |
 | 0.2 | Migration 0 — `email_log` accepts `'shift'` + its own read policy | ✅ 09/08 — applied `20260809085058`, verified live |
-| 0.3 | Deploy `send-email` and re-verify live | 🔨 **half done** — deployed (v4) + gate proven live on 7 cases, zero mails. **Owed: the Make bypass + one real shift mail.** |
+| 0.3 | Deploy `send-email` and re-verify live | ✅ 09/08 — deployed v4 · gate proven live (7 cases) · Make data-structure fixed · real invitation sent, `email_log` row `sent` |
 | 1.1 | Migration A — surrogate key + module-4 columns | ⬜ |
 | 1.2 | Migration B — one-event-per-day constraint (§7.88) | ⬜ |
 | 1.3 | Migration C — new tables, params, release-message template | ⬜ |
@@ -904,7 +904,27 @@ phase, §10, or the ledger.
   **`Webhooks · Custom webhook`** module → **Edit** (beside `regin-quote-email`) → toggle
   **Advanced settings** ON → **Data structure** → **⋮ → Edit** → collapse fields until `pdf_base64` →
   set **Required: No** → Save → Save.
-  🔴 **BUT web research (09/08/2026) says the webhook fix is NOT sufficient — the two-part fix is real,
+  ✅✅ **RESOLVED 09/08/2026 — and the fix was the SMALL one. NO Router was built, and none is needed.**
+  **What was changed in Make** (scenario `REG-IN — שליחת מייל`, webhook `regin-quote-email`, data
+  structure **`regin-quote`**): **`filename` and `pdf_base64` flipped `Required: Yes → No`.**
+  🚫 **Nothing else was touched** — `to`/`subject`/`body` stay required, the Gmail module is untouched,
+  no Router, no second module, **no duplication to keep in sync.**
+  🔬 **Proven by running it, three times, in this order:**
+  1. attachment-less call → **HTTP 200**, and `email_log` carries `shift · sent · error_message NULL ·
+     recipient ishay1997@gmail.com · sent_by recruit.test@regin.co.il`.
+  2. the **real invitation body** (the `תבנית_זימון_משמרת` text with the confirmation link) → **200**.
+  3. **regression** — the same call **with** a filename and base64 → **200**, i.e. the quote path's
+     attachment still flows after the change.
+  🔑 **And note where the 200 comes from: the scenario's Webhook-response module fires only AFTER the
+  mail module succeeds** (that is how M3 built it). A 200 therefore means Gmail really sent.
+  📌 **The research prediction that Gmail would independently reject an empty attachment did NOT
+  materialise here** — documented for honesty: community reports of
+  `Missing value of required parameter 'fileName'` describe a *mapped-empty* parameter; in this
+  scenario the attachment simply resolves to nothing and the mail goes out clean. **Measured beats
+  predicted — but the prediction was reasonable, and if a future Gmail-module version starts rejecting
+  it, the Router shape is spelled out in the deleted note in `git log` for this file.**
+  <!-- superseded, kept for the reasoning trail:
+  🔴 web research (09/08/2026) said the webhook fix would NOT be sufficient — the two-part fix is real,
   and part two is bigger than hoped. Read this before touching anything.**
   *(a)* **Confirms the diagnosis:** on this engine a data-structure validation failure is documented to
   return **400 before the scenario runs**, while a *scenario* error with a Webhook-response module
@@ -925,9 +945,8 @@ phase, §10, or the ledger.
   existing Gmail (with Attachment 1) → Webhook response · **Route B** = fallback → a Gmail copy **with
   the Attachments collection deleted** → Webhook response. Use `length() > 0`, not an "is not empty"
   text operator.
-  ⚠️ **The drift cost is real and must be written into `03_quotes/CLAUDE.md` when it is built:** two
-  Gmail modules means any future change to subject/body/recipient handling has to be made twice.
-  ⚠️ **`filename` should get the same treatment** — it is empty on the same calls, and the probe proved
+  -->
+  ⚠️ **`filename` got the same treatment** — it is empty on the same calls, and the probe proved
   only that a *non-empty* filename passes. 🚫 **Do NOT touch `to`/`subject`/`body`** — they are
   genuinely required, and our own server already enforces `to`+`body`.
   🚫 **Nothing in Make was changed on 09/08** — every panel was closed with **Close/Cancel**, never Save.
