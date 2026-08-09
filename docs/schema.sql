@@ -732,3 +732,74 @@ update storage.buckets set file_size_limit = 10485760,
 -- (4) `products.description` — NOT NULL נשאר (זו הכוונה), נוספה ברירת-מחדל ריקה כרשת-ביטחון
 -- לכותב שישמיט את המפתח (הבאג שתוקן בטופס 30/07 המתין לכותב הבא).
 alter table products alter column description set default '';
+
+-- ============================================================
+-- מודול 4 — מיגרציה A (20260809122536, הוחל 09/08/2026)
+-- ============================================================
+-- ⚠️ ההגדרות בשורות 143 (hostesses) ו-165 (assignments) הן המצב ההיסטורי. המצב הנוכחי = כאן.
+-- שתי הטבלאות נמדדו ריקות (0/0) מיד לפני ההחלה ⇒ אין מיגרציית-נתונים.
+
+-- §7.64 — ת"ז יורדת מהמפתח. היא PII, והמפתח המורכב הישן שכפל אותה לכל שורת-שיבוץ במערכת;
+-- בנוסף תיקון ספרת-ביקורת אחרי שיש שיבוצים היה נחסם-FK. ת"ז נשארת `unique not null`.
+alter table assignments drop constraint assignments_id_number_fkey;
+alter table assignments drop constraint assignments_pkey;
+alter table hostesses   drop constraint hostesses_pkey;
+alter table hostesses add column hostess_id bigint generated always as identity primary key;
+alter table hostesses add constraint hostesses_id_number_key unique (id_number);
+
+-- §12⑱(ב) (הכרעת-ישי 08/08/2026) — `rating` היה `not null default 3`, כלומר כל דיילת נולדה
+-- מדורגת בלי שאיש התרשם ממנה. ‏NULL = "טרם התרשמה", והמסך מציג `—`.
+-- 🔴 **וביטול ה-DEFAULT הוא חצי הכרחי, לא ניקוי** — בלעדיו העמודה ממשיכה למלא 3 לבד.
+alter table hostesses alter column rating drop default;
+alter table hostesses alter column rating drop not null;   -- ה-CHECK 1..5 נשאר; NULL עובר אותו
+-- 🚫 אין UNIQUE על `hostesses.email` (§7.65, הכרעת-ישי 31/07) — האזהרה רכה ובטופס בלבד.
+-- 🚫 `email`/`city`/`bank_*` נשארות `not null` (local-1, הכרעת-ישי 08/08).
+alter table hostesses add column address   text;
+alter table hostesses add column lat       numeric;
+alter table hostesses add column lng       numeric;
+alter table hostesses add column has_car   boolean not null default false;
+alter table hostesses add column languages text[]  not null default '{}';
+
+alter table assignments drop column id_number;
+alter table assignments add  column hostess_id bigint not null;
+alter table assignments add constraint assignments_pkey
+  primary key (project_id, hostess_id, assignment_number);
+-- ON DELETE restrict: אין מחיקת דיילות בשום מקום (השבתה = תג-סטטוס).
+-- ON UPDATE restrict: מפתח-identity אינו זז — הצהרה מפורשת, לא ברירת-מחדל שקטה (db_roadmap §1).
+alter table assignments add constraint assignments_hostess_id_fkey
+  foreign key (hostess_id) references hostesses(hostess_id) on delete restrict on update restrict;
+
+-- 🔴 `responded_at` נכתבת **פעם אחת בלבד, במענה הראשון** (spec §12⑨). "שלח שוב" מאפס את
+-- `invite_sent_at` בלי לגעת בה, אחרת נוצר זמן-תגובה שלילי. ואסור לגזור מ-`updated_at`:
+-- מודול 8 יכתוב `salary_report_id` חודשים אחרי המענה ויזייף כל זמני-התגובה בהיסטוריה.
+alter table assignments add column responded_at   timestamptz;
+alter table assignments add column invite_token   text unique;   -- ה-UNIQUE הוא גם האינדקס של ה-RPC
+alter table assignments add column invite_sent_at timestamptz;
+alter table assignments add column travel_amount  numeric(12,2) not null default 0;  -- §7.69
+alter table assignments add column is_shift_lead  boolean not null default false;
+-- `event_date` מדונרמלת מ-`projects.final_event_date` — ‏UNIQUE אינו יכול לצרף טבלאות,
+-- וההכרעה "אילוץ במסד ולא בדיקה בקוד" (§7.88) אוסרת על הפתרון בקוד. הטריגר = מיגרציה B.
+alter table assignments add column event_date     date;
+
+-- ששת הסטטוסים של spec §1.1 — סגורים. "פג תוקף" **נגזר בתצוגה** ואינו ערך שביעי.
+alter table assignments drop constraint assignments_assignment_status_check;
+alter table assignments add  constraint assignments_assignment_status_check
+  check (assignment_status in ('pending', 'confirmed_available', 'declined',
+                               'finally_approved', 'released', 'approval_withdrawn'));
+
+-- "אחראית משמרת" — אחת לכל אירוע, נאכף במסד (תקדים §7.29).
+create unique index assignments_one_shift_lead_per_project on assignments (project_id) where is_shift_lead;
+create index assignments_hostess_id_idx on assignments (hostess_id);   -- C-1
+
+-- local-5 (עוגן §7.76) — מנהלת הגיוס **חסומה** על מודול 'לקוחות' (נמדד חי), ולכן join ל-`customers`
+-- היה מחזיר null **בשקט** בשלושה מסכים מאושרים שמדפיסים שם-לקוח. ⇒ snapshot, כמו `event_name`.
+-- lat/lng: בלעדיהן נופלים גם מרכיב-הקרבה וגם שער-ה-80 ק"מ (spec §12⑫).
+alter table projects add column lat           numeric;
+alter table projects add column lng           numeric;
+alter table projects add column customer_name text;
+update projects p set customer_name = c.company_name
+  from customers c where c.customer_id = p.customer_id and p.customer_name is null;
+-- 🔴 ו-`approve_quote_and_create_project` נכתבה מחדש (create or replace) כדי שתמלא את השדה —
+-- היא הכותב היחיד של `projects`, ובלעדיה כל פרויקט **חדש** היה נולד עם snapshot ריק: בדיוק
+-- התקלה השקטה שהעמודה באה למנוע. הגוף זהה לגרסת 20260731085335 פרט ל-`customer_name`
+-- ול-`left join customers` שמזין אותו (‏LEFT ולא INNER — `projects.customer_id` nullable).

@@ -13,9 +13,9 @@
 | Module | **4 — דיילות + Smart Match** |
 | Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ measured `ahead 6` of origin: `git status -sb` before assuming it is pushed |
 | Owner | ישי (sole developer) |
-| Overall status | ✅ **Phase 0 CLOSED 09/08/2026 — verified by opening real emails, not by status code** |
-| Last updated | **09/08/2026 07:53** *(system clock; refresh it at every step transition)* |
-| **Active step** | **1.1** — Migration A |
+| Overall status | 🔨 **Phase 1 in progress — Migration A applied and verified 09/08/2026** |
+| Last updated | **09/08/2026 12:39** *(system clock; refresh it at every step transition)* |
+| **Active step** | **1.2** — Migration B (one-event-per-day) |
 | Deadline | module 4 → `dev` by **21/08/2026**; submission **19/09/2026** |
 
 Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target module) · ❌ blocked (reason)
@@ -25,7 +25,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | 0.1 | Unlock the shared email engine for module 4 | ✅ 09/08 — gate 0 · unit 428 · E2E 78 · smoke 0 |
 | 0.2 | Migration 0 — `email_log` accepts `'shift'` + its own read policy | ✅ 09/08 — applied `20260809085058`, verified live |
 | 0.3 | Deploy `send-email` and re-verify live | ✅ 09/08 — deployed v4 · Router built in Make (Ishay) · verified by opening 3 real emails in Gmail, not by status code |
-| 1.1 | Migration A — surrogate key + module-4 columns | ⬜ |
+| 1.1 | Migration A — surrogate key + module-4 columns | ✅ 09/08 — applied `20260809122536`, verified live from the catalog · advisors 15 = baseline, zero new · quote-approval E2E 16/16 |
 | 1.2 | Migration B — one-event-per-day constraint (§7.88) | ⬜ |
 | 1.3 | Migration C — new tables, params, release-message template | ⬜ |
 | 1.4 | Migration D — RLS policies, min-wage trigger, public RPC | ⬜ |
@@ -211,6 +211,8 @@ Supabase project `Reg-In`, ref `yfeovxppnfoafmfbdfvh`.
 | local-2 | Confirmation mail: address = `projects.final_location`; field contact = **the shift lead if marked**, else the project manager (`users.full_name`/`users.phone` via `projects.owner_email`). **Applies to `תבנית_תזכורת_משמרת` too — same three placeholders** | ישי 08/08 | 1.3, 2.3 |
 | local-3 | travel param seeded `0`; while `0`, screen and mail print `+ נסיעות` with **no number** | ישי 08/08 | 1.3, 3.6 |
 | local-4 | ⏸️ **Exposure log DEFERRED** — it measures real usage, and there are no real users before the conference | ישי 08/08 | — |
+| local-6 | **Release-message template is WRAPPED like its four sisters** — `היי [שם_דיילת],` + the spec sentence verbatim + `בברכה,\nצוות הגיוס, REG-IN.` Seeded as `תבנית_מייל_שחרור_משמרת`. **Why asked at all:** `processes-approved.md:264-266` gives one exact sentence, and "seed verbatim" read literally would have shipped the only one of five templates with no greeting and no signature | ישי 09/08 | 1.3 |
+| local-7 | 🔴 **`תקרת_דיילות_מומלצת` CANCELLED — the row is NOT seeded and `src/lib/pricing.js` is not touched.** Ishay 09/08: *"אין צורך בתקרה, מיותר"*. ⚠️ **This REVERSES his own ruling of 07/08/2026** recorded at `db_roadmap:135` (*"`תקרת_דיילות_מומלצת` = 6 … `recommended_hostess_count = min(ceil(אורחים ÷ יחס), תקרה)`"*). **Both are quoted and dated at `db_roadmap:135`; the later one stands** (iron rule 1, contradiction case ②). Effect: the `params` list drops 15 → 14, and `recommendHostessCount` keeps `ceil(guests / ratio)` with no cap | ישי 09/08 | 1.3 |
 | local-5 | **`projects.customer_name` snapshot** — written at conversion, backfilled for existing rows. **Why:** מנהלת גיוס is `blocked` on 'לקוחות' (live) and `customers`' SELECT policy (`schema.sql:363-367`) demands view/edit there ⇒ an embedded customer join returns null **silently** on three approved surfaces. `projects` already snapshots `event_name` for this exact reason (§7.76, `schema.sql:502`) | קלוד, anchor §7.76 — Ishay may override | 1.1, 2.3 |
 
 🔗 **מראת §11.1 — SSOT: `module4_smart_match_research.md §11`. Do NOT copy its numbers into this guide.**
@@ -461,7 +463,26 @@ The "0 rows" reading is from 08/08/2026, and it is the one claim whose being wro
 1. *"`hostess_id` (`bigint identity`) — לא `id_number`"* — ת"ז no longer appears in any key.
 2. *"ודיילת שלא דורגה מציגה `—`, לא `3 ★`"* — the column can now hold "not rated".
 3. *"אושרה סופית · ביטלה אחרי אישור"* — all six statuses are writable.
-**🗣️ אושר —**
+**🗣️ אושר 09/08 12:25** *(plan `~/.claude/plans/compiled-rolling-hummingbird.md`, approved by Ishay;
+typed-echo `module4_hostesses_surrogate_key_and_columns` received in chat before the apply.)*
+
+↳ **as-built 09/08/2026 12:39 — applied as `20260809122536`, plus TWO additions the step text did not carry.**
+**‏(1) `assignments.id_number` is DROPPED, not merely demoted.** The step said "PK →
+`(project_id, hostess_id, assignment_number)`" without saying what happens to the old column.
+Leaving it would have preserved exactly the defect §5 names — ת"ז (PII) replicated into every
+assignment row. `spec.md:128` is the anchor: *"ת"ז היא PII, והמפתח המורכב הישן שיכפל אותה לכל
+שורת-שיבוץ במערכת"*.
+**‏(2) 🔴 `approve_quote_and_create_project` was rewritten (`create or replace`) to populate
+`projects.customer_name`.** The step listed the column and its backfill and stopped there — but that
+RPC is the table's **only** writer, so the backfill would have covered the three existing rows while
+every project created afterwards was born with an empty snapshot. Body is byte-identical to the
+`20260731085335` version apart from `customer_name` in the INSERT and a `left join public.customers`
+feeding it (LEFT, not INNER — `projects.customer_id` is nullable and INNER would swallow the row).
+**Regression proven, not assumed:** `e2e/quote-approval.spec.js` + `server-messages-and-inactive-product.spec.js`
+→ **16/16 green** after the rewrite.
+**‏(3) The `rating` DEFAULT 3 was dropped alongside the NOT NULL.** The step said `int null check
+(1..5)` only. Dropping NOT NULL without the default leaves every new hostess born rated 3 and the
+whole ruling worthless — `spec.md:169-171` is explicit that the default *is* the disease.
 
 **Step 1.2 · Migration B — `module4_one_event_per_day_constraint`** *(§7.88)*
 `assignments.event_date` synced by trigger **in both directions** — on assignment insert/update, **and
@@ -856,6 +877,30 @@ phase, §10, or the ledger.
 
 ## §10 📝 Deviations & Tech-Debt Log
 
+- 🏷️ **09/08/2026 — `הנחתי` register for Phase 1** *(the third provenance tag; it lives here and not
+  only in chat, because two weeks from now an assumption reads exactly like a fact)*.
+  **‏(1) `param_type` for `סכום_נסיעות_למשמרת` = `pricing_timing`.** Nothing names it. Anchor: its
+  nearest sibling `שכר_מינימום_שעתי` (money-per-unit) was seeded `pricing_timing` in
+  `20260723112000:57`. The CHECK accepts either, so a wrong choice fails **silently** and only
+  surfaces on M9's params screen, which groups by type.
+  **‏(2) `מרכיב_אמינות_פעיל` seeded as the literal `false`.** §7.90 rules **where** the flag lives and
+  explicitly forbids deriving it from "no attendance rows" — it never states the encoding.
+  `false`/`0`/`לא` were all available; `false` parses unambiguously in both JS and SQL. **No existing
+  boolean param exists to anchor against** — this is the weakest of the four.
+  **‏(3) Nine new `param_name` identifiers** (`משקולת_היענות` · `משקולת_אמינות` · `משקולת_קרבה` ·
+  `שער_מרחק_קמ` · `גולפוסט_מרחק_קמ` · `קבוע_ריסון_m` · `חלון_חישוב_חודשים` ·
+  `חלון_חישוב_מורחב_חודשים` · `מינימום_תשובות_להצגת_ציון`). 🔴 **`§11.1` gives Hebrew
+  *descriptions*, not identifiers — measured, none of the nine exists anywhere in the repo.** Coined
+  from the live naming convention (`משקולת_1W_דירוג` · `לא_ענתה_ל_N` · `שכר_מינימום_שעתי`), and shown
+  to Ishay in the approved plan so he could override.
+  **‏(4) Template name `תבנית_מייל_שחרור_משמרת`** — patterned on `תבנית_מייל_ביטול_משמרת`. The
+  wording inside it is Ishay's ruling (local-6), not an assumption; only the key is mine.
+- ⚠️ **09/08/2026 — advance notice, so it is not read as a regression when it appears.** Migration D
+  will add **one new advisor WARN** — `anon_security_definer_function_executable` on
+  `respond_to_shift_invite` — **by design** (§7.45: the public confirm page is the only surface in the
+  system that writes without a session). The DoD line "zero new findings" therefore closes with a
+  **written triage note**, not a zero. In the same apply **three INFO findings disappear**
+  (`rls_enabled_no_policy` on `hostesses` · `assignments` · `projects`).
 - ✅ **09/08/2026 — Phase 0 CLOSED, and closed correctly this time.** Ishay built the Router in Make
   himself (Route A: `Gmail(4)` unchanged, filtered on `pdf_base64 Exists` · Route B: cloned to
   `Gmail(9)` with the attachment deleted, marked fallback, followed by a new `Webhook response(10)`),
