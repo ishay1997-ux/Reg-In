@@ -29,7 +29,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | 1.2 | Migration B — one-event-per-day constraint (§7.88) | ✅ 09/08 — applied `20260809124327`, 5-assertion rolled-back probe · advisors 15 = baseline |
 | 1.3 | Migration C — new tables, params, release-message template | ✅ 09/08 — applied `20260809125750` · `params` 20→32, weights sum 1.00 · ⚠️ advisors 17 (+2 expected: the new tables await D's policies) |
 | 1.4 | Migration D — RLS policies, min-wage trigger, public RPC | ✅ 09/08 — applied `20260809134237` · 9 policies · impersonation verified both ways, positive control passed · advisors **14** (see §10 triage) |
-| 1.5 | 🔻👤 Phase-1 gate: advisors clean + `schema.sql` refreshed | ⬜ |
+| 1.5 | 🔻👤 Phase-1 gate: advisors clean + `schema.sql` refreshed | ◐ **Claude's side done 09/08** — `schema.sql` refreshed & committed with each migration · `db_roadmap §10` four Done-rows · every `🚧` audited against §6 (+1 new debt written) · §7.67 write-back · advisors triaged in writing. **Awaiting Ishay: run `regin-docs-sync` (rule 13ז — Claude never runs routines) and sign the gate.** |
 | 2.1 | `src/lib/hostesses.js` — ID check digit, min-wage, derived states | ⬜ |
 | 2.2 | `src/lib/smartMatch.js` — the four layers | ⬜ |
 | 2.3 | `src/modules/04_hostesses/api.js` — query-side filtering | ⬜ |
