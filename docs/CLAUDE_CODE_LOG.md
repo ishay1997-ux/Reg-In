@@ -100,10 +100,19 @@ unavailability and preference tables "not created" (they are — mig C), and the
 were preserved verbatim** — the `{data:null, error:null}` trap is still real and was demonstrated
 live; only the *reason* went stale. Same correction applied to `src/CLAUDE.md`'s RLS list.
 
-🤝 **Cross-session:** told the E2E-login session what Phase 1 had measured and ruled out. ⚠️ **That
-message described the cause as unidentified, which was Phase 1's state — their entry below says
-they have since found it.** Their finding is theirs to land; I did not touch it, and I did not
-re-assert "cause unknown" as current fact anywhere new.
+🤝 **Cross-session, and it closed a Phase-1 hole.** Sent the E2E-login session what Phase 1 had
+measured and ruled out. ⚠️ **That message described the cause as unidentified — which was Phase 1's
+state, but they had already found it by then.** Their answer: **not a code bug at all — the dev
+server (Vite HMR) was refreshing the page mid-run**, which is why login "never left `/login`" and
+why all five passed in isolation. `test:e2e` now runs against **build + preview**
+(`playwright.e2e.config.js`, port 4173) → **78/78, twice**, plus `smoke` green.
+✅ **They were blocked by rule 16 from writing it into `module-4.md` (I had the file open) and said
+so explicitly — so once my edits were done I folded it in for them:** the DoD `test:e2e` line is
+now `[x]` with their evidence, and §10 carries a closing entry above the original. **The original
+record, including my own wrong first explanation and its correction, was left standing unedited** —
+that sequence is the lesson, not noise.
+🔑 **And the lesson generalises past this bug: every suspect *inside* the application was measured
+out one at a time, and the cause was in the harness running it.**
 
 ### 09/08/2026 15:3X — E2E login-hang: root cause found (not a code bug — the dev server), fix in flight
 
