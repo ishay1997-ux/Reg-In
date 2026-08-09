@@ -14,8 +14,8 @@
 | Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ measured `ahead 6` of origin: `git status -sb` before assuming it is pushed |
 | Owner | ישי (sole developer) |
 | Overall status | 🔨 **Phase 1 in progress — Migration A applied and verified 09/08/2026** |
-| Last updated | **09/08/2026 12:39** *(system clock; refresh it at every step transition)* |
-| **Active step** | **1.2** — Migration B (one-event-per-day) |
+| Last updated | **09/08/2026 12:52** *(system clock; refresh it at every step transition)* |
+| **Active step** | **1.3** — Migration C (new tables · 14 params · release template) |
 | Deadline | module 4 → `dev` by **21/08/2026**; submission **19/09/2026** |
 
 Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target module) · ❌ blocked (reason)
@@ -26,7 +26,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | 0.2 | Migration 0 — `email_log` accepts `'shift'` + its own read policy | ✅ 09/08 — applied `20260809085058`, verified live |
 | 0.3 | Deploy `send-email` and re-verify live | ✅ 09/08 — deployed v4 · Router built in Make (Ishay) · verified by opening 3 real emails in Gmail, not by status code |
 | 1.1 | Migration A — surrogate key + module-4 columns | ✅ 09/08 — applied `20260809122536`, verified live from the catalog · advisors 15 = baseline, zero new · quote-approval E2E 16/16 |
-| 1.2 | Migration B — one-event-per-day constraint (§7.88) | ⬜ |
+| 1.2 | Migration B — one-event-per-day constraint (§7.88) | ✅ 09/08 — applied `20260809124327`, 5-assertion rolled-back probe · advisors 15 = baseline |
 | 1.3 | Migration C — new tables, params, release-message template | ⬜ |
 | 1.4 | Migration D — RLS policies, min-wage trigger, public RPC | ⬜ |
 | 1.5 | 🔻👤 Phase-1 gate: advisors clean + `schema.sql` refreshed | ⬜ |
@@ -496,7 +496,23 @@ two `pending` same day ⇒ **allowed** · change `projects.final_event_date` ⇒
 follows · re-run `approve_quote_and_create_project` ⇒ still succeeds.
 **מה ייחשב עובד** *(`spec.md §2.2(א)`, quoted)*: *"דיילת אחת בשני אירועים באותו יום ⇒ **חסימה, ואילוץ
 במסד ולא בדיקה בקוד**"* · *"והמסד חוסם, לא הקוד"* (`§ מה ייחשב עובד` #5).
-**🗣️ אושר —**
+**🗣️ אושר 09/08 12:43** *(same approved plan; typed-echo `module4_one_event_per_day_constraint` received.)*
+
+↳ **as-built 09/08/2026 — applied as `20260809124327`, with one addition the step did not carry.**
+**‏`assignments.event_date` was made `NOT NULL`.** The step specified the column and the trigger but
+not its nullability. 🔴 **In a unique index two NULLs are DISTINCT** — so two `finally_approved` rows
+with an empty `event_date` would have bypassed the constraint **without violating it**, which is the
+exact silent-hole class this migration exists to close. The `BEFORE` trigger always populates it
+(`projects.final_event_date` is itself `not null`), so `NOT NULL` is the net that fails **loudly** if
+the trigger ever stops running.
+➕ **And a design point worth not re-deriving:** the `assignments` trigger fires on **every**
+insert/update, not only when `project_id` changes, so the column is a **pure derivation** — a writer
+cannot supply their own value. Proven, not assumed: the probe deliberately sent `1999-01-01` and read
+back the project's real `2026-09-27`.
+📌 **Carry-forward to Phase 3:** the index name `assignments_one_event_per_day` is a **contract with
+the UI** — the screen maps it to the Hebrew blocking message, exactly as `SERVER_MESSAGE_RULES` in
+`src/lib/quotes.js` maps the RAISE prefixes. Renaming it without updating the map drops the screen to
+a generic error **and no test fails.**
 
 **Step 1.3 · Migration C — `module4_tables_params_and_templates`**
 - **`hostess_unavailability`** — `(unavailability_id bigint generated always as identity primary key,
@@ -513,15 +529,22 @@ follows · re-run `approve_quote_and_create_project` ⇒ still succeeds.
   written reason** (`db_roadmap:145`; TempWorks/Avionté precedent).
   🔴 **M4 CREATES and READS it (Smart Match layers 1 and 2); M6 WRITES it** — `🚧 מ6 ← מ4`.
   **Without it the gate's third condition has nothing to read.** It stays **empty** until M6.
-- **`params`.** 🔴 **Derive the list, do not trust a count** — the registries disagree
-  (`db_roadmap:135`'s header says twelve; §11.1 marks **10** rows as `params`, one as `קוד`).
+- **`params`.** 🔴 **Derive the list, do not trust a count** — four registries disagree, and none of
+  them was right (measured 09/08/2026: `db_roadmap:135`'s header said twelve while its own body
+  enumerated thirteen · `processes-approved.md:308` said ten · §11.1 marks **10** rows as `params`,
+  one as `קוד` · `PROJECT_MASTER.md:444` said "~14").
   **The list = every §11.1 row whose "חי ב־" cell reads `params`** *(the 12→24 window becomes **two**
   rows — one value per row)* **+ the ➕ rows in `db_roadmap:135`** (`לא_ענתה_ל_N`=4 ·
-  `תקרת_דיילות_מומלצת`=6 · `מרכיב_אמינות_פעיל`) **+ `סכום_נסיעות_למשמרת`=0** (local-3).
+  `מרכיב_אמינות_פעיל`) **+ `סכום_נסיעות_למשמרת`=0** (local-3).
+  ⛔ **`תקרת_דיילות_מומלצת` is NOT in the list — CANCELLED by Ishay 09/08/2026** (local-7).
+  **‏⇒ the derived list is 14 rows** *(+ the release template = 15 new `params` rows)*.
   🔴 The three existing rows `משקולת_1W_דירוג`/`2W_קרבה`/`3W_מהימנות` are **replaced, not renamed** —
-  the new algorithm has no "rating" component. **Fix `db_roadmap:135`'s header in the same session.**
-- **The release-message template** — seed **verbatim** from `processes-approved.md:264-266`
-  (the body spans **two lines**; reading only `:265` truncates it). Name it in the same Hebrew style as
+  the new algorithm has no "rating" component. `params` goes 20 → 32.
+  ↳ **as-built 09/08: `db_roadmap:135`'s header was rewritten to state the METHOD, not a number** —
+  a count there had already gone stale three times in three days.
+- **The release-message template** — the sentence is **verbatim** from `processes-approved.md:264-266`
+  (the body spans **two lines**; reading only `:265` truncates it), **wrapped in a greeting and a
+  signature like its four sisters — Ishay's ruling 09/08 (local-6)**. Name it in the same Hebrew style as
   the four existing shift templates. 🚫 Do not reuse `תבנית_מייל_ביטול_משמרת` — "your shift was
   cancelled" is a lie; she was never assigned.
 - **Placeholders (local-2):** `[כתובת_אירוע_מלאה]` and `[עיר_אירוע]` → `projects.final_location` ·
@@ -877,6 +900,20 @@ phase, §10, or the ledger.
 
 ## §10 📝 Deviations & Tech-Debt Log
 
+- 🐞 **09/08/2026 — E2E flakiness under a long serial run. PRE-EXISTING, not caused by Phase 1 —
+  and worth a line because it will otherwise be misdiagnosed as a migration regression.**
+  Running `quote-approval.spec.js` + `quotes.spec.js` together (24 tests, ~3.8 min, one worker) failed
+  **2**: `quote-approval:177` never left `/login` after filling the form, and `quotes:71` timed out
+  waiting for the reject dialog. **Both passed on an isolated re-run (2/2, 15.7s)**, and the same
+  `quote-approval.spec.js` had run **6/6 green** minutes earlier on its own.
+  🔎 **Checked, so this is a measurement and not a shrug:** `login_attempts` holds **one** row, from
+  01/08, `locked_until` NULL ⇒ **the app's own 5-strike lockout is NOT the cause.** The remaining
+  suspects are Supabase Auth's own per-IP sign-in throttle and the `login_rpc_calls` 15/hour cap
+  (§7.8↳) — each test logs in fresh, so a 24-test serial run makes ~24 sign-ins in minutes.
+  ⚠️ **Why it matters beyond today:** the failure surfaces as a *product* assertion ("the dialog did
+  not open"), never as "auth throttled you" — so the natural reading is "my change broke the screen".
+  **Do not re-diagnose this from scratch next time; re-run the failing test alone first.**
+  📌 Not fixed here — out of Phase 1's scope, and no product decision is blocked on it.
 - 🏷️ **09/08/2026 — `הנחתי` register for Phase 1** *(the third provenance tag; it lives here and not
   only in chat, because two weeks from now an assumption reads exactly like a fact)*.
   **‏(1) `param_type` for `סכום_נסיעות_למשמרת` = `pricing_timing`.** Nothing names it. Anchor: its

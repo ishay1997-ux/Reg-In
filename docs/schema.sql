@@ -803,3 +803,51 @@ update projects p set customer_name = c.company_name
 -- היא הכותב היחיד של `projects`, ובלעדיה כל פרויקט **חדש** היה נולד עם snapshot ריק: בדיוק
 -- התקלה השקטה שהעמודה באה למנוע. הגוף זהה לגרסת 20260731085335 פרט ל-`customer_name`
 -- ול-`left join customers` שמזין אותו (‏LEFT ולא INNER — `projects.customer_id` nullable).
+
+-- ============================================================
+-- מודול 4 — מיגרציה B (20260809124327, הוחל 09/08/2026): "אירוע אחד ביום" (§7.88)
+-- ============================================================
+-- ‏`UNIQUE` אינו יכול לצרף טבלאות, והתאריך יושב על `projects` ⇒ עמודה מדונרמלת + טריגר
+-- **דו-כיווני**. הכיוון השני הוא הקריטי: בלי טריגר על `projects`, דחיית-תאריך של אירוע הייתה
+-- משאירה את האילוץ תקוע על התאריך הישן — **נראה עובד, ואינו עובד.**
+create or replace function public.sync_assignment_event_date()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  select p.final_event_date into new.event_date
+    from public.projects p where p.project_id = new.project_id;
+  return new;
+end; $$;
+revoke execute on function public.sync_assignment_event_date() from public, anon, authenticated;
+-- על כל insert/update, ולא רק כששדה מסוים משתנה — כדי שאיש לא יוכל לכתוב ערך משלו לעמודה.
+-- ‏`security definer`: העמודה היא נגזרת טהורה, ואסור שתהיה תלויה בהרשאת-הקריאה של הכותב על
+-- `projects` — ‏RLS חוסם היה מחזיר NULL, כלומר אילוץ שקט שאינו אוכף.
+create trigger assignments_sync_event_date before insert or update on assignments
+  for each row execute function public.sync_assignment_event_date();
+
+create or replace function public.sync_assignments_on_project_date_change()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  update public.assignments set event_date = new.final_event_date
+   where project_id = new.project_id;
+  return null;
+end; $$;
+revoke execute on function public.sync_assignments_on_project_date_change() from public, anon, authenticated;
+-- ‏AFTER UPDATE בלבד ⇒ **אינו נדלק על INSERT**, ולכן ה-RPC של מ3 (שיוצרת פרויקט עם אפס
+-- שיבוצים) אינה מושפעת כלל. ואם הזזת-תאריך יוצרת התנגשות אמיתית — ה-UPDATE נכשל על האינדקס
+-- וכל השינוי מתגלגל אחורה. זו ההתנהגות הנכונה: עדיף להיכשל בקול מלהזיז אירוע ולהשאיר
+-- דיילת משובצת פעמיים באותו יום.
+create trigger projects_sync_assignment_dates after update of final_event_date on projects
+  for each row when (old.final_event_date is distinct from new.final_event_date)
+  execute function public.sync_assignments_on_project_date_change();
+
+-- 🔴 `not null` אינו קישוט: באינדקס-ייחודי שני NULL נחשבים **שונים זה מזה**, ולכן שתי שורות
+-- `finally_approved` עם `event_date` ריק היו עוקפות את האילוץ **בלי להפר אותו**.
+alter table assignments alter column event_date set not null;
+
+-- 🔴 נקודת-האכיפה = `finally_approved` בלבד (§7.88↳, הכרעת-ישי 08/08/2026). שני זימונים
+-- `pending` באותו יום נשארים חוקיים — המנהלת שולחת בסבבים ומחליטה מי מאושרת בסוף.
+-- ⚠️ המחיר: הבונוס של §7.54 (חסימת שתי שורות פעילות על אותו פרויקט) אבוד, ו-A-15 נשארת פתוחה.
+-- 🧩 שם האינדקס הוא **חוזה מול הממשק** (שלב 3) — המסך ימפה אותו להודעה בעברית, כמו
+-- ‏`SERVER_MESSAGE_RULES` ב-`src/lib/quotes.js`. שינוי-שם בלי עדכון המיפוי מפיל להודעה גנרית.
+create unique index assignments_one_event_per_day on assignments (hostess_id, event_date)
+  where assignment_status = 'finally_approved';

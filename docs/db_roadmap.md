@@ -167,7 +167,7 @@ Additional decided / nod-pending rows (cite-only):
 | A-12 | Seed: products (11) + price_tiers (40) + params (20 rows, #1–20 incl. `שכר_מינימום_שעתי` and 4 new template rows #17–20 added 14/07) | §7.13 + `reference_spec/products_and_params.md` (locked decisions) | **✅ APPLIED `20260723112000`, 23/07** | 3 | blocker removed (VAT=18%); **note (14/07): the A-19 RLS + M3 "prices" screen (§7.84) land alongside this seed, not instead of it — seed still runs first via migration, the screen is for post-seed maintenance only** |
 | A-13 | `created_at`/`updated_at` + `moddatetime` trigger, all business tables, one migration | §7.73 | 👍 nod | 2 (rolling) | also anchors T2 validity semantics |
 | A-14 | NOT NULL: `users.role_id` · `quotes.customer_id` · `projects.owner_email` · `projects.quote_id` | §7.62 | **⚠️ PARTIALLY APPLIED — verified live 01/08/2026:** `users.role_id` NOT NULL ✅ (M2) · `quotes.customer_id` NOT NULL ✅ (`20260723111005`, 23/07, M3). `projects.owner_email` and `projects.quote_id` are **still nullable** — that part awaits M6 (projects lifecycle isn't built yet; the M3 conversion RPC populates them but the column-level constraint was never M3's to add). Row stays open until M6 closes its part. | 2 / 3 / 6 | users → with A-8 in the M2 infra migration; **`quotes.customer_id`→bigint in M2 (§7.64 type-change; its SET NOT NULL still M3)** |
-| A-15 | partial UNIQUE on active assignment statuses (one active row per hostess+project) | §7.54 | 👍 nod | 4 | kills double-count/double-pay class |
+| A-15 | partial UNIQUE on active assignment statuses (one active row per hostess+project) | §7.54 | ◐ **PARTLY DONE 09/08/2026** — `20260809124327` shipped it as `(hostess_id, event_date) where assignment_status='finally_approved'`, which delivers the same-day/double-pay half. 🔴 **The same-project half is NOT built and stays open**: §7.88↳ narrowed the enforcement point to `finally_approved`, and §7.54's bonus (two *active* rows on one project) went with it. Reopen deliberately if the double-row-per-project case is ever observed | 4 | kills double-count/double-pay class |
 | A-16 | timestamptz + Asia/Jerusalem standard for all new time columns & jobs | §7.56 | **✅ nodded (Ishay 15/07, blueprint-M3) — with a reality note: Supabase `cron.timezone`=GMT (fixed); the date-granular expiry job runs at a fixed UTC hour ≈01:00 Israel, which delivers the ruled behavior** | 3+ | first pg_cron job (M3 step 1.5) |
 | A-17 | money columns → `numeric(12,2)` | §7.74 | **✅ APPLIED for all M3-owned money columns** (`20260723111005`, 23/07, M3 — see 23/07 entry below). Re-verified live 01/08/2026: `products.base_price` · `price_tiers.special_price` · `quote_services.closing_unit_price`/`closing_unit_cost` · `quotes.applied_customer_discount`/`manual_discount` all `numeric(12,2)`. (`quotes.vat_rate_snapshot` is `numeric(5,2)` — a percentage, not a money column, correctly out of this row's scope.) Money columns outside M3's tables (future modules) are that module's own row. | 3 | with A-9 in the pricing migrations; *(historical note: still not applied as of 14/07 — the A-19 RLS migration deliberately did not touch column types; applied 23/07 in the structure migration instead, see status column)* |
 | A-18 | `login_attempts` stale-row purge job (>30d from `last_attempt_at`) | §7.75 | 👍 nod | 3/10 | after A-11 |
@@ -336,6 +336,36 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
+- 09/08/2026 — migration `20260809124327_module4_one_event_per_day_constraint.sql`
+  **✅ APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed
+  `module4_one_event_per_day_constraint` in chat).
+  **Executes §7.88 + §7.88↳ — and CLOSES `A-15` in its narrowed form** (`(hostess_id, event_date)`
+  partial-unique). 🔴 **A-15's ORIGINAL scope stays open**: §7.54 also wanted two active rows on the
+  *same project* blocked, and narrowing the enforcement point to `finally_approved` loses that.
+  **✅ POST-APPLY VERIFICATION — one rolled-back DO-block probe, five independent assertions:**
+  *(1)* An insert that deliberately supplied a **wrong** `event_date` (`1999-01-01`) read back
+  `2026-09-27`, the project's real date ⇒ **the column is a pure derivation; a writer cannot poison it.**
+  *(2)* Same hostess, a second project moved onto the same date, `finally_approved` ⇒
+  **`unique_violation`** — blocked.
+  *(3)* Two `pending` invitations, same hostess, same day ⇒ **allowed**, as ruled.
+  *(4)* `update projects set final_event_date` ⇒ the assignment's `event_date` followed to
+  `2026-12-25` — **the second trigger direction, which is the one whose absence would have rotted the
+  constraint silently.**
+  *(5)* Inserting a project with **zero** assignments (what M3's conversion RPC does) still succeeds —
+  the `projects` trigger is `AFTER UPDATE` only and never fires on INSERT.
+  *(6)* Post-probe catalog: `assignments.event_date` `is_nullable=NO` · index def exactly
+  `(hostess_id, event_date) WHERE assignment_status = 'finally_approved'` · 4 triggers on the two
+  tables (2 pre-existing `moddatetime` + 2 new) · rows back to **0/0** and the three project dates
+  unchanged ⇒ the rollback is proven. `get_advisors(security)` → **15, zero new.**
+  **Forward notice (§10.2): M6** — it owns `project_status`, and any future re-scheduling flow it
+  builds now inherits a real failure mode: moving an event onto a date where one of its hostesses is
+  already `finally_approved` elsewhere **fails the whole UPDATE**. That is deliberate, and M6's screen
+  must show it as a conflict rather than a generic save error. **M3** — its conversion RPC is
+  unaffected (verified by assertion 5 above and by re-running `e2e/quote-approval.spec.js`).
+  🔴 **Why `not null` was added and is not tidiness, recorded so nobody "simplifies" it away:**
+  in a unique index two NULLs are **distinct**, so two `finally_approved` rows with an empty
+  `event_date` would have bypassed the constraint **without violating it** — the exact silent-hole
+  class this whole migration exists to close.
 - 09/08/2026 — migration `20260809122536_module4_hostesses_surrogate_key_and_columns.sql`
   **✅ APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed
   `module4_hostesses_surrogate_key_and_columns` in chat).
