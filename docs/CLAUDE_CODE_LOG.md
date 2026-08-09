@@ -94,9 +94,32 @@ objects and prints `—`, so unifying it would silently change a **shipped PDF**
 route is **`/shift/:token`**. `confirmUrlFor` bakes it into every invitation sent, and mail cannot be
 recalled ⇒ a different path in 3.6 does not fail loudly, it 404s a hostess holding a link we sent.
 
-⏳ **Open and blocking every real send:** the 20 hostesses carry plausible `@gmail.com` addresses.
-Ishay ruled 19 move to `@regin-demo.co.il` with נועה שגיא on his own inbox — **not executed; his
-address must be confirmed by him first.**
+✅ **Done later the same session, once Ishay confirmed the address:** 19 hostesses moved to
+`@regin-demo.co.il`, נועה שגיא to his own inbox. **Executed from a signed-in browser as מנהלת
+הגיוס — not SQL** — so RLS and the triggers applied exactly as they do from the screen, the same
+path the 20 rows were created by (`local-14`). Every PATCH asserted `1` row back: **`0 rows` is a
+silent RLS block, not a success.** Verified against the DB: 20 distinct addresses, no stranger left.
+
+### 09/08/2026 21:4X — Step 3.4 started: the Smart Match assembly layer, and a break-check that failed twice before it passed.
+
+`src/lib/smartMatchCandidates.js` — DB rows ⇒ the input `rankCandidates` demands, plus what the
+reasoning chips display. `weeksSinceLastWorked` extracted to `hostesses.js` (it was inline in
+`HostessViewCard`; this screen would have been the second copy). Gate exit 0 · **672 unit**.
+🚫 **The screen, the four sort angles and the writes are NOT built** — resume point written into
+the step itself.
+
+🔑 **The finding, and it is about my own tests rather than the code.** I broke four behaviours on
+purpose; **two of the four broke nothing.** Not because the code was right — because the tests
+could not fail: one "counts events, not rows" case is unfalsifiable at that layer (the upstream
+fold already guarantees one row per project), and both `null`-distance cases pass on the raw
+`haversineKm` too, so they never actually tested the function they named. **Rewritten into cases
+that discriminate** — *approved-then-withdrawn must not count as "worked for this customer"*, and
+*hostess-and-event resolving to the exact same point must yield `null`, not `0`* (the live
+`סיון נחום` case, where a city-level fallback would otherwise score a perfect proximity). Both
+re-broken afterwards; both bit.
+📌 **Fourth occurrence of this family in module 4** — and the first caught in the same sitting the
+tests were written, rather than a step later. **The practice that caught it is the break-check, not
+re-reading:** re-reading those two tests would never have revealed it, since both read correctly.
 
 ### 09/08/2026 19:3X — Module 4 Phase 3, steps 3.0 · 3.1 · 3.2: the hostess-pool world is built, and the pool itself is real.
 
