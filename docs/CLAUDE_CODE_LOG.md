@@ -47,6 +47,41 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 09/08/2026 17:3X — Module 4 step 2.4 (geocoding): built and tested; migration E authored, NOT applied.
+
+**Ishay's two rulings.** Service = **Nominatim (OSM)** — closing §7.55's last build-residue, with the
+ToS read live that turn (free · no key/account · **1 req/sec** · results must be cached our side ·
+end-user-triggered use permitted). And a **6th migration** for the event-side write path.
+
+**What landed.** `src/lib/geocode.js` (pure: candidate chain, parsing, locality guard) ·
+`src/api/geocode.js` (transport: throttle, timeout, `countrycodes=il`, never throws) · wiring into
+`04_hostesses/api.js` (`createHostess`/`updateHostess` re-geocode; `getSmartMatchData` lazily fills the
+event, in parallel with its five queries) · `supabase/migrations/20260809172638_module4_project_
+coordinates_rpc.sql` — **authored and NOT applied.** 31 new tests; `test:run` **566/17** (was 535/15);
+prettier + eslint + `vite build` all exit 0.
+
+**The finding worth carrying forward — measurement inverted the design twice.** The naive
+implementation fails on our own data: **both** real event addresses (`אקספו תל אביב, ביתן 2`,
+`מרכז הכנסים, ירושלים`) return **empty** from Nominatim, so a single-shot geocode would mark 100% of
+events "no coordinates" — with a fully green test suite, since no test used a real address. The obvious
+repair is worse: retrying with the leading segment resolves `מרכז הכנסים` → **אשקלון (62 km off)** and
+`הרצל 50` → **נתניה**. Those are *valid* coordinates — they pass the 80 km gate, feed a 0.25-weight
+component, and shift the ranking with nothing on screen to hint at it. ⇒ the chain runs **last segment
+first**, and every hit must pass `localityMatchesAddress`: *accept only if the locality returned appears
+in the address that was typed*. Proven by disabling the guard — **4 tests red**, including both
+wrong-city cases — then green on revert.
+🔑 **Generalizable: a missing datum announces itself; a wrong one impersonates a measured one.**
+
+**The blocker nobody had registered.** Step 2.4 assumed the client could store `projects.lat/lng`.
+It cannot: migration D left `projects` with exactly one policy, `cmd=SELECT`. Fixed with a
+`SECURITY DEFINER` RPC writing only those two columns, write-once, `authenticated`+edit-on-'דיילות'
+only — **not** a write policy, because Postgres RLS is row-level and a policy would have exposed
+`final_event_date`/`project_status` too.
+
+**State at session end.** Awaiting the typed echo `module4_project_coordinates_rpc`. Owed at apply
+time: verify via MCP · refresh `docs/schema.sql` · commit migration+snapshot together · advisors delta
+(baseline **14** measured; forecast **15**) · then the 3-event backfill and step 2.5, the Phase-2 gate.
+
 ### 09/08/2026 16:1X — Module 4 Phase 2: steps 2.1 + 2.2 done, 2.3 partial. The Smart Match anchor reproduces.
 
 **What landed.** `src/lib/hostesses.js` (+`isValidIsraeliId` appended to the shared `validators.js`),

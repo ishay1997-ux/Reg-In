@@ -18,6 +18,8 @@ import { supabase } from '@/supabaseClient'
 import { toError, assertRowsAffected } from '@/lib/apiError'
 import { HOSTESS_PARAM_NAMES, hostessServerErrorMessage } from '@/lib/hostesses'
 import { SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
+import { buildHostessAddress } from '@/lib/geocode'
+import { geocodeAddress } from '@/api/geocode'
 
 // שגיאות-מסד מתורגמות **רק בכתיבות**, כמו במודול 3: בקריאה המחרוזת הגולמית (רשת/RLS)
 // חסרת-ערך למשתמשת, ואילו בכתיבה היא נושאת מידע שאפשר לפעול לפיו — איזה אילוץ נשבר.
@@ -33,6 +35,40 @@ const ALL_PARAM_NAMES = [
 // סטטוסי-הפרויקט שהמבט-על מציג. 🔴 **`ready` ומעלה אינם ברשימה במכוון** — פרויקט
 // שאוייש יצא מרשימת-העבודה של מנהלת הגיוס; היא מסתכלת על מה שעוד חסר.
 const OPEN_PROJECT_STATUSES = ['not_started', 'in_progress']
+
+// ---- גאוקוד ----
+
+// ממיר את כתובת הדיילת לקואורדינטות. **לעולם אינו זורק ולעולם אינו חוסם שמירה** —
+// *"נכשל ⇒ נשמרת בכל מקרה ומסומנת"* (`spec.md §2.1(1)`).
+// 🔴 ומחזיר `{lat:null,lng:null}` מפורש ולא `{}`: בעדכון-כתובת זו **מחיקה מכוונת** של
+// קואורדינטה ישנה. קואורדינטה של הכתובת הקודמת גרועה מחוסר-קואורדינטה — החוסר מסומן
+// על המסך, והשגויה נראית כמו עובדה ומזיזה את הדירוג בשקט.
+async function resolveHostessCoordinates(source) {
+  const query = buildHostessAddress(source)
+  if (!query) return { lat: null, lng: null }
+  return (await geocodeAddress(query)) ?? { lat: null, lng: null }
+}
+
+// ממלא קואורדינטות לאירוע בכניסה הראשונה למסך שלו, ושומר דרך הפונקציה הייעודית.
+// 🔴 **הכתיבה אינה יכולה לעבור בטבלה עצמה:** ל-`projects` יש מדיניות **קריאה בלבד**
+// מטעם מ4 (מיגרציה D), ומדיניות-כתיבה הייתה פותחת את **כל** עמודותיה — ר' המיגרציה
+// `..._module4_project_coordinates_rpc.sql` לנימוק המלא.
+//
+// ⚠️ כשל מוחזר כ"בלי קואורדינטות" ואינו מפיל את המסך — **וזו אינה בליעה שקטה**:
+// התוצאה **נראית** על השורה כצ'יפ `אין קואורדינטות`, שהוא מצב מאושר באפיון.
+// מנהלת-פרויקטים (הרשאת-צפייה) תיפול כאן על 42501 בכוונה, ותראה בדיוק את זה.
+async function ensureProjectCoordinates(project) {
+  if (project.lat !== null && project.lng !== null) return null
+  const coordinates = await geocodeAddress(project.final_location)
+  if (!coordinates) return null
+
+  const { error } = await supabase.rpc('set_project_coordinates', {
+    p_project_id: project.project_id,
+    p_lat: coordinates.lat,
+    p_lng: coordinates.lng,
+  })
+  return error ? null : coordinates
+}
 
 // ---- קריאות (Reads) ----
 
@@ -97,24 +133,28 @@ export async function getSmartMatchData(projectId) {
 
   // ⚠️ ההעדפות נשלפות רק כשיש `customer_id`: הוא **nullable**, ו-`.eq(…, null)` היה
   // מחזיר שגיאה במקום רשימה ריקה. 🚧 מ6 — הטבלה ריקה היום, וזה תקין.
-  const [hostessesRes, assignmentsRes, sameDayRes, preferencesRes, paramsRes] = await Promise.all([
-    supabase.from('hostesses').select('*, hostess_unavailability(*)').order('hostess_id'),
-    supabase
-      .from('assignments')
-      .select('*, projects(final_event_date, project_status, customer_id)'),
-    supabase
-      .from('assignments')
-      .select('hostess_id, project_id')
-      .eq('event_date', project.final_event_date)
-      .eq('assignment_status', 'finally_approved'),
-    project.customer_id
-      ? supabase
-          .from('customer_hostess_preference')
-          .select('hostess_id, preference')
-          .eq('customer_id', project.customer_id)
-      : Promise.resolve({ data: [], error: null }),
-    supabase.from('params').select('param_name, param_value').in('param_name', ALL_PARAM_NAMES),
-  ])
+  // ⏱️ הגאוקוד רץ **במקביל** לחמש השאילתות ולא לפניהן: הוא כרוך בעד ארבע פניות
+  // לשירות חיצוני בשנייה אחת ביניהן, וסדרתית הוא היה מוסיף שניות לטעינת המסך.
+  const [coordinates, hostessesRes, assignmentsRes, sameDayRes, preferencesRes, paramsRes] =
+    await Promise.all([
+      ensureProjectCoordinates(project),
+      supabase.from('hostesses').select('*, hostess_unavailability(*)').order('hostess_id'),
+      supabase
+        .from('assignments')
+        .select('*, projects(final_event_date, project_status, customer_id)'),
+      supabase
+        .from('assignments')
+        .select('hostess_id, project_id')
+        .eq('event_date', project.final_event_date)
+        .eq('assignment_status', 'finally_approved'),
+      project.customer_id
+        ? supabase
+            .from('customer_hostess_preference')
+            .select('hostess_id, preference')
+            .eq('customer_id', project.customer_id)
+        : Promise.resolve({ data: [], error: null }),
+      supabase.from('params').select('param_name, param_value').in('param_name', ALL_PARAM_NAMES),
+    ])
 
   if (hostessesRes.error) throw toError(hostessesRes.error, 'שגיאה בטעינת מאגר הדיילות.')
   if (assignmentsRes.error) throw toError(assignmentsRes.error, 'שגיאה בטעינת היסטוריית השיבוצים.')
@@ -123,7 +163,9 @@ export async function getSmartMatchData(projectId) {
   if (paramsRes.error) throw toError(paramsRes.error, 'שגיאה בטעינת פרמטרי Smart Match.')
 
   return {
-    project,
+    // הקואורדינטות שזה-עתה נשמרו מוזגות לתוך האירוע שחוזר, כדי שהמסך הראשון
+    // כבר יראה מרחקים — ולא רק הרענון הבא.
+    project: coordinates ? { ...project, ...coordinates } : project,
     hostesses: hostessesRes.data ?? [],
     assignments: assignmentsRes.data ?? [],
     // מזהי הדיילות שכבר מאושרות סופית באותו יום — התנאי השני בשער.
@@ -166,9 +208,10 @@ export async function getHostessScreenParams() {
 // דיילת חדשה. 🔴 `status` אינו מתקבל מהקורא — בשמירה היא `פעילה` ונכנסת מיידית
 // למאגר-המועמדות (`spec.md §2.1(1)`); שינוי-מצב עובר **רק** דרך `setHostessStatus`.
 export async function createHostess(payload) {
+  const coordinates = await resolveHostessCoordinates(payload)
   const { data, error } = await supabase
     .from('hostesses')
-    .insert({ ...payload, status: 'active' })
+    .insert({ ...payload, ...coordinates, status: 'active' })
     .select()
     .single()
   if (error) throw toWriteError(error, 'שמירת הדיילת נכשלה.')
@@ -186,6 +229,13 @@ export async function updateHostess(hostessId, patch) {
   delete safePatch.hostess_id
   delete safePatch.id_number
   delete safePatch.status
+
+  // 🔴 כתובת שהשתנתה מחייבת קואורדינטה חדשה — או **אף אחת**. השארת הישנה הייתה
+  // מצמידה לדיילת את המיקום של הדירה שממנה עברה, וזה נראה תקין לחלוטין במסך.
+  // ⚠️ עדכון שאינו נוגע בכתובת (דירוג, תעריף, טלפון) אינו ממיר מחדש — "פעם אחת".
+  if ('address' in safePatch || 'city' in safePatch) {
+    Object.assign(safePatch, await resolveHostessCoordinates(safePatch))
+  }
 
   const { data, error } = await supabase
     .from('hostesses')

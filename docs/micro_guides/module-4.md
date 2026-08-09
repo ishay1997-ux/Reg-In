@@ -13,9 +13,9 @@
 | Module | **4 — דיילות + Smart Match** |
 | Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ measured `ahead 6` of origin: `git status -sb` before assuming it is pushed |
 | Owner | ישי (sole developer) |
-| Overall status | 🔨 **Phase 2 — 2.1 and 2.2 done, 2.3 partial.** Gate `exit 0` · **535 unit tests** (was 428) · smoke `exit 0`. The hand-computed anchor reproduces. Phase 1 fully landed; its 1.5 gate still owes Ishay's `regin-docs-sync` run |
-| Last updated | **09/08/2026 16:1X** *(system clock; refresh it at every step transition)* |
-| **Active step** | **2.4** — 🔻👤 geocoding service (product decision) · ⚠️ **and the 2.3 remainder rides with Phase 3** |
+| Overall status | 🔨 **Phase 2 — 2.1/2.2 done, 2.3 partial, 2.4 in progress.** Gate `exit 0` · **566 unit tests** (was 535; +31 geocode) · lint/format/build `exit 0`. The hand-computed anchor reproduces. Phase 1 fully landed; its 1.5 gate still owes Ishay's `regin-docs-sync` run |
+| Last updated | **09/08/2026 17:3X** *(system clock; refresh it at every step transition)* |
+| **Active step** | **2.4** — 🔨 **service ruled (Nominatim/OSM, Ishay 09/08) · `lib`+`api` built and tested · migration E authored and NOT applied — awaiting the typed echo `module4_project_coordinates_rpc`.** ⚠️ **and the 2.3 remainder rides with Phase 3** |
 | Deadline | module 4 → `dev` by **21/08/2026**; submission **19/09/2026** |
 
 Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target module) · ❌ blocked (reason)
@@ -33,7 +33,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | 2.1 | `src/lib/hostesses.js` — ID check digit, min-wage, derived states | ✅ 09/08 — tests written first and watched red · `validators.js` +`isValidIsraeliId` |
 | 2.2 | `src/lib/smartMatch.js` — the four layers | ✅ 09/08 — **anchor reproduces `0.67/0.66/0.64` + order + two absent** · all three §3.5 holes proven red against deliberately-broken code |
 | 2.3 | `src/modules/04_hostesses/api.js` — query-side filtering | ◐ 09/08 — **reads + hostess-pool writes done.** Assignment-lifecycle writes deferred to Phase 3: §7.33 + §7.41 are open (see §10) |
-| 2.4 | 🔻👤 Geocoding — service choice (product decision) + lazy fill + backfill | ⬜ |
+| 2.4 | 🔻👤 Geocoding — service choice (product decision) + lazy fill + backfill | 🔨 09/08 — service **ruled: Nominatim/OSM**; ToS read live · `src/lib/geocode.js` + `src/api/geocode.js` + 31 tests green, locality guard proven red · migration E **authored, NOT applied** |
 | 2.5 | 🔻👤 Phase-2 gate: the hand-computed anchor reproduces | ⬜ |
 | 3.0 | 🔧 Shared-component checkpoint (before any screen) | ⬜ |
 | 3.1 | Surface 3 — hostess repository table | ⬜ |
@@ -214,6 +214,9 @@ Supabase project `Reg-In`, ref `yfeovxppnfoafmfbdfvh`.
 | local-4 | ⏸️ **Exposure log DEFERRED** — it measures real usage, and there are no real users before the conference | ישי 08/08 | — |
 | local-6 | **Release-message template is WRAPPED like its four sisters** — `היי [שם_דיילת],` + the spec sentence verbatim + `בברכה,\nצוות הגיוס, REG-IN.` Seeded as `תבנית_מייל_שחרור_משמרת`. **Why asked at all:** `processes-approved.md:264-266` gives one exact sentence, and "seed verbatim" read literally would have shipped the only one of five templates with no greeting and no signature | ישי 09/08 | 1.3 |
 | local-7 | 🔴 **`תקרת_דיילות_מומלצת` CANCELLED — the row is NOT seeded and `src/lib/pricing.js` is not touched.** Ishay 09/08: *"אין צורך בתקרה, מיותר"*. ⚠️ **This REVERSES his own ruling of 07/08/2026** recorded at `db_roadmap:135` (*"`תקרת_דיילות_מומלצת` = 6 … `recommended_hostess_count = min(ceil(אורחים ÷ יחס), תקרה)`"*). **Both are quoted and dated at `db_roadmap:135`; the later one stands** (iron rule 1, contradiction case ②). Effect: the `params` list drops 15 → 14, and `recommendHostessCount` keeps `ceil(guests / ratio)` with no cap | ישי 09/08 | 1.3 |
+| §7.55↳ | 🟢 **Geocode service = Nominatim (OSM).** Closes §7.55's single remaining build-residue (*"נבחר בבנייה מול תנאי-שימוש עדכניים, לא מהזיכרון"*). **ToS read live 09/08/2026:** free · **no key, no account** · **max 1 req/sec** · results **must be cached our side** (which the "convert once and store" design already is) · end-user-triggered use permitted. Measured on real Hebrew addresses: house-number precision on `דיזנגוף 100, תל אביב` and `הרצל 50, ראשון לציון`; `אקספו תל אביב` resolves to the venue itself. ⚠️ **Stated deviation:** the ToS asks that switching be possible *without a software update*; the endpoint is a **code constant**. Rationale: ~60 requests ever, switching = one line, and a DB-editable URL would be a footgun on M9's params screen with no matching risk | ישי 09/08 | 2.4 |
+| local-8 | **Migration E — `set_project_coordinates` (`SECURITY DEFINER`), not a write policy on `projects`.** Ishay ruled the 6th migration after being shown that `projects` is SELECT-only for M4 and that without a write path the proximity component — **0.25 of the score** — would be neutral for every event forever | ישי 09/08 | 2.4 |
+| local-9 | **Fallback chain + locality guard** — Claude's call, shown with its measurement; Ishay may override. 🔴 **No third on-screen state ("מיקום מקורב") was added** — the approved model has exactly two. **Cost said out loud:** when the chain falls back to city level the distance is computed from the city centre, and the screen does not flag it | קלוד, anchor = live measurement | 2.4 |
 | local-5 | **`projects.customer_name` snapshot** — written at conversion, backfilled for existing rows. **Why:** מנהלת גיוס is `blocked` on 'לקוחות' (live) and `customers`' SELECT policy (`schema.sql:363-367`) demands view/edit there ⇒ an embedded customer join returns null **silently** on three approved surfaces. `projects` already snapshots `event_name` for this exact reason (§7.76, `schema.sql:502`) | קלוד, anchor §7.76 — Ishay may override | 1.1, 2.3 |
 
 🔗 **מראת §11.1 — SSOT: `module4_smart_match_research.md §11`. Do NOT copy its numbers into this guide.**
@@ -704,9 +707,35 @@ enters credentials.** Then: geocode a hostess **once on save** and an event **on
 Smart Match screen**, storing to `lat`/`lng`. 🔴 **Failure ⇒ neutral proximity score + a visible
 `אין קואורדינטות` marker — never `0`** (§7.55/§11.4). ➕ **Backfill the existing projects** — M3's
 conversion RPC does not populate coordinates, so today every event has none.
-**מה ייחשב עובד** *(`spec.md §2.1(1)`, quoted)*: *"כתובת מומרת לקואורדינטות **פעם אחת** בשמירה · **נכשל
-⇒ נשמרת בכל מקרה** ומסומנת."*
-**🗣️ אושר —**
+**מה ייחשב עובד** *(1–2 quoted; 3–4 unit-specific)*:
+1. *"כתובת מומרת לקואורדינטות **פעם אחת** בשמירה · **נכשל ⇒ נשמרת בכל מקרה** ומסומנת"* — `spec.md §2.1(1)`.
+2. *"קרבה — לדיילת או לאירוע אין קואורדינטות ⇒ ציון **ניטרלי** + סימון על השורה. **לא 0**"* — `research §11.4`.
+3. `יחידה-ספציפית` — project 8 (`כנס לקוחות שנתי`) lands Expo TA `32.105`/`34.808`, project 3 lands Jerusalem; both visible in a live DB query, not only on screen.
+4. `יחידה-ספציפית` — project 7 (`אולם דוגמה — תרחיש-קבלה`) stays coordinate-less and marked. **That is the correct outcome, not a failure.**
+**🗣️ אושר 09/08 17:1X** *(service = Nominatim/OSM · migration E approved in principle; plan `~/.claude/plans/purrfect-herding-sprout.md`. Typed-echo still owed before apply.)*
+
+↳ **as-built 09/08/2026 — three deviations from this step's own text, all measured, none silent.**
+**(1) A single-shot geocode was never viable — the step text implies it.** Measured live: **both real
+event addresses return EMPTY** (`אקספו תל אביב, ביתן 2` · `מרכז הכנסים, ירושלים`), while
+`אקספו תל אביב` and `ירושלים` each resolve. ⇒ a **candidate chain** (full → each segment, last→first,
+capped at 4) now lives in `src/lib/geocode.js`.
+**(2) The chain needed a guard, and that is the load-bearing finding.** A bare leading segment
+resolves to an **arbitrary** locality: `מרכז הכנסים` alone → **אשקלון, 62 km from the right answer**;
+`הרצל 50` alone → **נתניה**. Both are perfectly valid coordinates that would pass the 80 km gate and
+move the ranking silently. ⇒ `localityMatchesAddress` accepts a hit **only if the locality it returns
+appears in the original address**. **A wrong coordinate is worse than a missing one** — the missing one
+is marked on screen, the wrong one looks like a fact.
+**(3) `projects` had no write path at all.** This step assumed storing to `projects.lat/lng` was
+possible; it is not — migration D gave `projects` a **SELECT-only** policy for M4 (verified live:
+one policy, `cmd=SELECT`). ⇒ **migration E**, a `SECURITY DEFINER` RPC writing only those two columns.
+🚫 Deliberately **not** a write policy on `projects`: Postgres RLS is row-level, not column-level, so a
+policy would have exposed `final_event_date`/`project_status` too — the exact thing §4 forbids.
+
+🌊 **Ripple sweep for this step:** ① `↳ as-built` above · ② §10 entries + `הנחתי` register below ·
+③ DoD — migration count 5→6 *(pending apply)*, unit count 535→566 · ④ Ledger — two new rows
+(geocode service · migration E) · ⑤ `spec.md §515` "זהות שירות-הגאוקוד — בכוונה לא נחתם" and
+`research §11.6#1` (dependency #1) both now **answered**; tagged as-built pointers, no number edited.
+⏳ **Still owed at apply time:** `docs/schema.sql` refresh + `db_roadmap §10` Done-row + advisors delta.
 
 **Step 2.5 · 🔻👤 Phase-2 gate** — the anchor reproduces; `npm run test:run` green.
 
@@ -903,7 +932,7 @@ DoD typed-echo → PR instructions. 🚫 The audit never merges.
 *(Canonical DoD from `docs/architecture_and_qa_roadmap.md`, instantiated for module 4.
 The closing audit walks these one by one and ticks what it verified — so they must be checkboxes.)*
 
-- [x] All **5 migrations** applied via MCP after a typed-echo, `docs/schema.sql` refreshed, migration + snapshot committed **together** — `20260809085058` (mig 0, phase 0) · `20260809122536` (A) · `20260809124327` (B) · `20260809125750` (C) · `20260809134237` (D). **Ishay typed each name individually; no gate was batched or pre-granted.**
+- [ ] ◐ **5 of 6 migrations** applied via MCP after a typed-echo, `docs/schema.sql` refreshed, migration + snapshot committed **together** — `20260809085058` (mig 0, phase 0) · `20260809122536` (A) · `20260809124327` (B) · `20260809125750` (C) · `20260809134237` (D). **Ishay typed each name individually; no gate was batched or pre-granted.** ⏳ **`20260809172638` (E — `set_project_coordinates`) is AUTHORED AND NOT APPLIED** — awaiting the typed echo. *(The count moved 5→6 in step 2.4; the box reopens deliberately rather than being left reading "5".)*
 - [x] `get_advisors(security)` — **triage note written, 09/08/2026** *(this line closes with a triage,
       not a zero, and that is the honest outcome)*. Trajectory across phase 1: **15 → 15 → 15 → 17 → 14.**
       Migration C legitimately raised it (+2 — two new tables born RLS-on before D gave them policies);
@@ -916,7 +945,7 @@ The closing audit walks these one by one and ticks what it verified — so they 
 - [x] The deliberate policy-drop test ran — **0 rows and NO error**, both for a `view`-only role with the select policy dropped and for an `edit` role with **both** dropped. ⚠️ **And it caught a mine:** dropping only `_select_` hides nothing from an `edit` holder, because `_write_by_permission` is `FOR ALL`. ◐ **The DB half is proven; the screen half (showing an error rather than an empty list) is owed by Phase 3** — the DB cannot signal this.
 - [x] `anon` cannot read or write `assignments` directly; the public RPC is the only path — as `anon`: `count(*)` = **0**, direct UPDATE took no row; the RPC returned `ok:true` on a valid token and a **byte-identical** generic message on all four failure paths (unknown · replayed · 49h-old · event already past).
 - [x] `npm run gate` green — **exit 0**, 09/08/2026 (incl. `check:docs-structure` 29 files / 0 findings and `check:context`)
-- [x] `npm run test:run` green — **535 passed / 15 files** *(09/08/2026, after Phase 2; was 428/13 at the close of Phase 1)*
+- [x] `npm run test:run` green — **566 passed / 17 files** *(09/08/2026, after step 2.4; was 535/15 after 2.2 and 428/13 at the close of Phase 1)*
 - [x] `npm run test:e2e` — ✅ **RESOLVED 09/08/2026 ~16:0X by the parallel E2E session, and the diagnosis
       was right: it was never a code bug.** The dev server was refreshing itself mid-run (Vite HMR),
       which is why login "never left `/login`" and why every one of the five passed in isolation.
@@ -992,7 +1021,37 @@ still open.**
 
 ## §10 📝 Deviations & Tech-Debt Log
 
-- 🔴 **09/08/2026 · Phase 2 — `↳ as-built`: layers 1–2 and the tie-break run in JS, not in SQL.**
+- 🔴 **09/08/2026 · step 2.4 — the measurement that inverted the design, and it is the entry worth
+  keeping from this step.** The obvious implementation (send the address, store what comes back) is
+  **wrong twice over**, and neither fault is visible without going and measuring:
+  **(א) It returns nothing on our real data.** Both event addresses in the DB come back **empty**.
+  A session that trusted the happy path would have shipped a feature that marks 100% of events
+  "אין קואורדינטות" — and every test would have been green, because there was no test with a real address.
+  **(ב) The obvious fix makes it worse.** Retrying with the leading segment resolves
+  `מרכז הכנסים` → **אשקלון (62 km off)** and `הרצל 50` → **נתניה**. Those are *valid* coordinates:
+  they pass the 80 km gate, feed a real distance into a 0.25-weight component, and change the ranking
+  **with nothing on screen to suggest anything is wrong.**
+  🔑 **The shape worth keeping: a missing datum announces itself; a wrong one impersonates a measured
+  one.** Hence the rule the guard encodes — *accept a coordinate only if the locality it resolves to
+  appears in the address that was typed.* Verified by disabling the guard: **4 tests went red**,
+  including both wrong-city cases, and green again on revert.
+
+- 📌 **09/08/2026 · step 2.4 — `הנחתי` register** *(assumptions I filled; nobody stated them and I did
+  not measure them)*. ① **The candidate chain's shape** — full address, then each comma-segment
+  **from last to first**, capped at 4. The direction is reasoned (the last segment of a Hebrew address
+  is usually the locality) and the cap is arbitrary-but-bounded; no source states either.
+  ② **`MIN_LOCALITY_PREFIX = 4`** — the minimum name-fragment length that counts as a locality match.
+  Three would have matched `כפר` and equated כפר-סבא with כפר-ויתקין; four is a judgement call, not a
+  measurement. ③ **The Israel bounding box** (`29.0–33.5` / `34.0–36.0`) as a second, independent check
+  beside `countrycodes=il`. ④ **An address change with no `city` in the patch CLEARS the coordinates**
+  rather than keeping the old ones — chosen because a stale coordinate is the failure mode this whole
+  step exists to prevent, but nobody ruled it.
+
+- ⚠️ **09/08/2026 · step 2.4 — `src/modules/04_hostesses/api.js` gained geocoding and still has no unit
+  test, because no `api.js` in this repo has one.** The pure half is covered (31 tests across
+  `lib`+`api/geocode`); the **wiring** — create/update re-geocoding, the lazy fill, the `Promise.all`
+  merge — is covered only by live verification and, later, E2E. **Named rather than left implied:** this
+  is the same class of gap that let the `{data:null,error:null}` trap live for months.
   The step text for 2.2 said they are "the query". **Measured this session that they cannot be:**
   `supabase-js` cannot compute haversine, cannot express `NOT EXISTS`, and cannot `ORDER BY` a
   computed expression; and the DB has **no view and no ranking function** to host them (nine

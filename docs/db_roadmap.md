@@ -336,6 +336,29 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
+- ⏳ 09/08/2026 — migration `20260809172638_module4_project_coordinates_rpc.sql`
+  **AUTHORED, NOT APPLIED — awaiting Ishay's typed echo (`module4_project_coordinates_rpc`).**
+  *(Recorded here at authoring time, per protocol §10.1 "live update, same session". The row is
+  deliberately NOT written as Done: an unapplied migration recorded as applied is the single most
+  dangerous kind of drift in this file.)*
+  **What it adds:** one `SECURITY DEFINER` function, `set_project_coordinates(int, numeric, numeric)`.
+  No new table, no new column, **no existing row altered by the DDL itself.**
+  **Why it exists — a gap nobody registered:** §7.55 put `lat`/`lng` on `projects` (migration A) and
+  **no migration ever gave M4 a way to write them.** Verified live 09/08: `projects` carries exactly
+  one policy, `projects_select_by_permission`, `cmd=SELECT`. Without this function the proximity
+  component (**0.25 of the Smart Match score**, §11.4) is neutral for every event permanently.
+  🚫 **Why not a write policy on `projects`:** Postgres RLS is row-level, not column-level, so a policy
+  would have exposed `final_event_date`, `project_status` and `customer_id` to M4 — contradicting
+  §7.63 and `micro_guides/module-4.md §4` ("M4 takes SELECT only on `projects`"). Precedent for the
+  chosen shape is inside this same module: `respond_to_shift_invite` (migration D).
+  **Guards:** caller must hold **edit** on 'דיילות' (§7.21 template, `(select …)` wrapped) ·
+  `authenticated` only, `anon` explicitly revoked · coordinates range-checked server-side ·
+  `where lat is null and lng is null` enforces *"מומרת פעם אחת"* (`processes-approved.md:97`) in the
+  DB rather than in the client.
+  **Advisor forecast:** baseline **14** measured pre-apply; expect **15** (one
+  `authenticated_security_definer_function_executable`, same class as the six existing).
+  ⏳ **Owed at apply time:** verify via MCP · refresh `docs/schema.sql` · commit migration + snapshot
+  together · re-measure advisors and record the delta · flip this row to Done.
 - 09/08/2026 — migration `20260809134237_module4_rls_and_public_rpc.sql`
   **✅ APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed `module4_rls_and_public_rpc`).
   **Executes §7.21 (nine policies) · §7.66 (min-wage trigger) · §7.45 (the public RPC) · `spec.md
