@@ -13,9 +13,9 @@
 | Module | **4 — דיילות + Smart Match** |
 | Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ measured `ahead 6` of origin: `git status -sb` before assuming it is pushed |
 | Owner | ישי (sole developer) |
-| Overall status | 🔨 **Phase 0 RE-OPENED 09/08/2026** — 0.3 was wrongly closed |
+| Overall status | ✅ **Phase 0 CLOSED 09/08/2026 — verified by opening real emails, not by status code** |
 | Last updated | **09/08/2026 07:53** *(system clock; refresh it at every step transition)* |
-| **Active step** | **0.3** — Router still owed |
+| **Active step** | **1.1** — Migration A |
 | Deadline | module 4 → `dev` by **21/08/2026**; submission **19/09/2026** |
 
 Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target module) · ❌ blocked (reason)
@@ -24,7 +24,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 |---|---|---|
 | 0.1 | Unlock the shared email engine for module 4 | ✅ 09/08 — gate 0 · unit 428 · E2E 78 · smoke 0 |
 | 0.2 | Migration 0 — `email_log` accepts `'shift'` + its own read policy | ✅ 09/08 — applied `20260809085058`, verified live |
-| 0.3 | Deploy `send-email` and re-verify live | 🔨 09/08 RE-OPENED — mail arrives with a junk `undefined` attachment | ~~old~~ ✅ 09/08 — deployed v4 · gate proven live (7 cases) · Make data-structure fixed · real invitation sent, `email_log` row `sent` |
+| 0.3 | Deploy `send-email` and re-verify live | ✅ 09/08 — deployed v4 · Router built in Make (Ishay) · verified by opening 3 real emails in Gmail, not by status code |
 | 1.1 | Migration A — surrogate key + module-4 columns | ⬜ |
 | 1.2 | Migration B — one-event-per-day constraint (§7.88) | ⬜ |
 | 1.3 | Migration C — new tables, params, release-message template | ⬜ |
@@ -848,6 +848,16 @@ phase, §10, or the ledger.
 
 ## §10 📝 Deviations & Tech-Debt Log
 
+- ✅ **09/08/2026 — Phase 0 CLOSED, and closed correctly this time.** Ishay built the Router in Make
+  himself (Route A: `Gmail(4)` unchanged, filtered on `pdf_base64 Exists` · Route B: cloned to
+  `Gmail(9)` with the attachment deleted, marked fallback, followed by a new `Webhook response(10)`),
+  and reported exactly what he touched and what he verified he didn't (`Webhook(2)`, the Google
+  connection, the error branch). **I did not take that report as closure either** — re-ran the three
+  probes, then opened both resulting emails in Gmail via the browser: the real invitation shows **no
+  attachment section at all**, the regression call shows a real `regresia2.pdf` thumbnail. `gate` ·
+  `smoke` · the quote-mail E2E suite (8/8) all green after the change. See the full account below (this
+  is the entry that follows the false-closure one, in the same log, on purpose — the correction and the
+  real resolution both stay on record).
 - 🔴 **09/08/2026 — I closed 0.3 on a false claim. Ishay caught it from the actual email.** I reported
   *"a real shift mail went out **with no attachment**"* on the strength of **HTTP 200 + an `email_log`
   row reading `sent`**. Both were true. **The email was not.** It arrived carrying an **empty
@@ -930,52 +940,36 @@ phase, §10, or the ledger.
   **`Webhooks · Custom webhook`** module → **Edit** (beside `regin-quote-email`) → toggle
   **Advanced settings** ON → **Data structure** → **⋮ → Edit** → collapse fields until `pdf_base64` →
   set **Required: No** → Save → Save.
-  ✅✅ **RESOLVED 09/08/2026 — and the fix was the SMALL one. NO Router was built, and none is needed.**
-  **What was changed in Make** (scenario `REG-IN — שליחת מייל`, webhook `regin-quote-email`, data
-  structure **`regin-quote`**): **`filename` and `pdf_base64` flipped `Required: Yes → No`.**
-  🚫 **Nothing else was touched** — `to`/`subject`/`body` stay required, the Gmail module is untouched,
-  no Router, no second module, **no duplication to keep in sync.**
-  🔬 **Proven by running it, three times, in this order:**
-  1. attachment-less call → **HTTP 200**, and `email_log` carries `shift · sent · error_message NULL ·
-     recipient ishay1997@gmail.com · sent_by recruit.test@regin.co.il`.
-  2. the **real invitation body** (the `תבנית_זימון_משמרת` text with the confirmation link) → **200**.
-  3. **regression** — the same call **with** a filename and base64 → **200**, i.e. the quote path's
-     attachment still flows after the change.
-  🔑 **And note where the 200 comes from: the scenario's Webhook-response module fires only AFTER the
-  mail module succeeds** (that is how M3 built it). A 200 therefore means Gmail really sent.
-  📌 **The research prediction that Gmail would independently reject an empty attachment did NOT
-  materialise here** — documented for honesty: community reports of
-  `Missing value of required parameter 'fileName'` describe a *mapped-empty* parameter; in this
-  scenario the attachment simply resolves to nothing and the mail goes out clean. **Measured beats
-  predicted — but the prediction was reasonable, and if a future Gmail-module version starts rejecting
-  it, the Router shape is spelled out in the deleted note in `git log` for this file.**
-  <!-- superseded, kept for the reasoning trail:
-  🔴 web research (09/08/2026) said the webhook fix would NOT be sufficient — the two-part fix is real,
-  and part two is bigger than hoped. Read this before touching anything.**
-  *(a)* **Confirms the diagnosis:** on this engine a data-structure validation failure is documented to
-  return **400 before the scenario runs**, while a *scenario* error with a Webhook-response module
-  present returns **500 "Scenario failed to complete"**. We saw 400 + no execution ⇒ webhook layer.
-  *(sources: Ibexa Connect and Adobe Workfront Fusion docs — verbatim copies of the same
-  Integromat/Make engine; `help.make.com` blocks automated fetching.)*
-  *(b)* 🔴 **The Gmail module independently requires BOTH `fileName` and `data` inside an attachment
-  item, and rejects empty values rather than sending a 0-byte file** — the documented error is
-  `Missing value of required parameter 'fileName'. Missing value of required parameter 'data'.`
-  ⇒ **once the webhook accepts the call, Gmail will fail next.**
-  *(c)* **Building the attachment array conditionally inside ONE Gmail module is not viable:** Make
-  expressions have **no object-literal syntax**, so `{fileName, data}` cannot be fabricated;
-  `add(emptyarray; …)` yields a flat value array that cannot carry file names. The Iterator +
-  Array-aggregator variant is plausible but rests on two behaviours nobody could confirm (does an
-  aggregator receiving **zero** bundles still emit an empty array, and does Gmail accept one).
-  🎯 **⇒ A ROUTER IS THE ANSWER, and it is what Make's own community recommends for exactly this
-  case.** Minimal shape: Webhook → Router → **Route A** filter `{{length(2.pdf_base64)}} > 0` → the
-  existing Gmail (with Attachment 1) → Webhook response · **Route B** = fallback → a Gmail copy **with
-  the Attachments collection deleted** → Webhook response. Use `length() > 0`, not an "is not empty"
-  text operator.
-  -->
-  ⚠️ **`filename` got the same treatment** — it is empty on the same calls, and the probe proved
-  only that a *non-empty* filename passes. 🚫 **Do NOT touch `to`/`subject`/`body`** — they are
-  genuinely required, and our own server already enforces `to`+`body`.
-  🚫 **Nothing in Make was changed on 09/08** — every panel was closed with **Close/Cancel**, never Save.
+  ⚠️ **09/08/2026, first pass — closed on `200` + an `email_log` row, WITHOUT opening the mail.**
+  I claimed *"NO Router needed — the webhook fix alone is sufficient"*. **False.** The mail arrived
+  with a **silent empty attachment named `undefined`** — the webhook fix removed the rejection but
+  Gmail's static Attachment 1 still evaluated. Full account, kept as the reusable lesson (`200` proves
+  transport, never the artifact): see the `↳ as-built` entry at the top of §10.
+  ✅✅ **RESOLVED FOR REAL, same day — Ishay built the Router himself in Make; verified here by opening
+  three actual emails, not by status code.**
+  **What was built** (scenario `REG-IN — שליחת מייל`): `Router(8)` inserted between the webhook and
+  `Gmail(4)`. **Route A** → `Gmail(4)` unchanged (still has the static Attachment 1), filtered on
+  `{{2.pdf_base64}} Exists`. **Route B** → `Gmail(4)` cloned to `Gmail(9)` with its **Attachment 1
+  deleted** (To/Subject/Body untouched), marked **fallback route** (no filter — catches everything
+  Route A's filter excludes), followed by a new `Webhooks → Webhook response(10)` mirroring `(5)`'s
+  status/body. `Webhook(2)`, the Google connection, and the error branch (`6→7`) were left untouched —
+  confirmed visually before saving.
+  🔬 **Verification, done in the browser, not by status code:**
+  1. **The real shift invitation** (`תבנית_זימון_משמרת` text, sent 09/08 11:31) — opened in Gmail via
+     `get_page_text`: full body renders, thread ends after the reply/forward buttons, **zero attachment
+     section**. Not `undefined`, not empty-but-present — genuinely absent.
+  2. **Regression — same call with a real filename+base64** — opened in Gmail: **`regresia2.pdf`
+     renders as a real PDF thumbnail**, i.e. the quote-with-attachment path is provably unbroken by
+     the Router.
+  3. `email_log` — three `shift · sent · error_message NULL` rows in the same window, matching the
+     three sends above.
+  ✅ `npm run gate` exit 0 (428 unit) · `npm run smoke` exit 0 · `e2e/quote-email.spec.js` +
+  `e2e/quote-document.spec.js` green (8/8) — the quote-mail regression suite, re-run after the Router
+  landed.
+  📌 **The web research's mechanism prediction (Gmail rejects an empty attachment with a hard error)
+  did not materialize on the FIRST attempt** — it silently attached junk instead, which is arguably
+  worse — **but the research's conclusion (a Router is required) was correct**, confirmed by the
+  actual failure mode observed in production.
   ⚠️ **And the webhook URL is a secret visible in that panel — never paste it into any file or chat.**
 - **09/08/2026 — and the failed send proved MORE than it broke.** `email_log` now carries
   `shift · 999999 · failed · "Make responded 400" · recruit.test@regin.co.il · תבנית_זימון_משמרת`.

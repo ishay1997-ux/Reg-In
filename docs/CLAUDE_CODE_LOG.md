@@ -47,6 +47,44 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 09/08/2026 11:4X — Phase 0 closed for real: verified by opening real emails, not by status code
+
+**Router built by Ishay in Make** after the false-closure correction (see the 07:50 entry above):
+`Router(8)` between the webhook and Gmail. Route A → `Gmail(4)` unchanged, filtered on
+`{{2.pdf_base64}} Exists`. Route B → `Gmail(4)` cloned to `Gmail(9)` with Attachment 1 deleted
+(To/Subject/Body untouched), marked fallback route, followed by a new `Webhooks → Webhook
+response(10)` mirroring `(5)`. `Webhook(2)`, the Google connection, and the error branch (`6→7`)
+were confirmed untouched before saving.
+
+**I did not accept Ishay's report as closure — I re-verified independently, opening real emails in
+Gmail via the browser, exactly per the rule this incident produced two hours earlier:**
+1. Re-ran the three probes (attachment-less, real invitation body, regression-with-attachment) —
+   all `200`, three new `email_log` rows `shift · sent`.
+2. Opened the **real invitation** in Gmail (`get_page_text`): full body renders, thread ends after
+   reply/forward — **zero attachment section.** Not `undefined`, genuinely absent.
+3. Opened the **regression** email: **`regresia2.pdf` renders as a real PDF thumbnail** — the
+   quote-with-attachment path is provably unbroken.
+4. `npm run gate` exit 0 (428 unit) · `npm run smoke` exit 0 · `e2e/quote-email.spec.js` +
+   `e2e/quote-document.spec.js` green (8/8, re-run after the Router landed).
+
+**The research's mechanism prediction (Gmail hard-errors on empty attachment) did not hold on the
+first attempt — it silently attached junk instead, arguably worse — but its conclusion (a Router is
+required) was correct**, confirmed by the actual production failure mode.
+
+**Also closed this session, unrelated to the Router:** module-2's "marketing send" automation
+question — confirmed it is `mailto` today, not a live automation; the real automation is deferred to
+M10 and already logged (`PROJECT_MASTER.md:391`). And `module1-login-attempts-cleanup`'s pg_cron job
+living inside a `module3_`-prefixed migration file — confirmed as a real but unfixable-by-rule
+(append-only migrations) naming mismatch; **feeds the automations-registry DoD item** approved this
+session for module close, not fixed now.
+
+**Evidence:** `npm run gate` exit 0 · 428 unit · `smoke` exit 0 · quote-mail E2E 8/8 · three
+`email_log` rows `shift · sent` cross-checked against three opened emails. Commits: migration
+`6257b27`, step 0.1 `70c739e`, plus the deployment/webhook-fix/false-closure/correction/router-close
+documentation commits on `ishay/module-4-hostesses` (see `git log` for the full session chain).
+
+**Phase 0 of module 4 is CLOSED. Next: Phase 1, step 1.1 — Migration A.**
+
 ### 09/08/2026 07:50–09:2X — **Module 4 Phase 0: the shared mail engine unlocked. Steps 0.1 and 0.2 closed; 0.3 half done. And two suites were found already red before a line was written.**
 
 **What changed.** `send-email` no longer hardcodes `'הצעות מחיר'`: a **closed server-side `ENTITY_MODULE` map** (`quote`⇒'הצעות מחיר' · `shift`⇒'דיילות') derives the required module **from the resource**, and an unknown entity is denied **403, deny-by-default**. The attachment became optional **with a per-`entity_type` floor** — `quote` still requires `pdf_base64`, `shift` must not — because removing it outright deletes a live guard from the quote path *and no existing test would fail*. Two quote-specific strings (`'…לשלוח הצעות'`, `'ההצעה לא נשלחה… הורד את הקובץ'`) left `src/lib/email.js` for `src/lib/quotes.js`; the engine keeps generic defaults so a caller that forgets gets a true sentence rather than a **false** one about the document type. Migration `20260809085058` widened `email_log.entity_type` to `('quote','shift')` and added `email_log_select_shifts_module` — **a policy of its own, never a widening of the quote one** (`db_roadmap` A-20's forward notice).
