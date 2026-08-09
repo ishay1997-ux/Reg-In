@@ -39,7 +39,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | 3.1 | Surface 3 — hostess repository table | ✅ 09/08 — built as drawn · 4 new pure functions (**tests first, watched red**) · **verified live on 20 real rows**, both permission directions, all four screen states |
 | 3.2 | Surfaces 3ב/3ג/3ד — add / edit / view cards | ✅ 09/08 — one dialog serves add+edit · stars open EMPTY · **the three different validation behaviours screenshotted** (ID blocks · wage blocks · duplicate email warns-only) |
 | 3.3 | Surface 1 — assignment overview (triage) | ✅ 09/08 — built · **8 E2E green incl. both permission directions and the load-failure guard** · 4 new pure functions, each proven red against deliberately-broken code |
-| 3.4 | Surface 2 — Smart Match | ◐ **09/08 — C1 (the assembly layer) DONE and committed; the screen and its writes are NOT built.** Exact resume point in the step below |
+| 3.4 | Surface 2 — Smart Match | ◐ **09/08 — C1+C2 DONE (assembly + sort angles). ❌ C3 BLOCKED: the final-approval mail's field contact cannot be read by מנהלת גיוס — measured. Needs Ishay's ruling + an 8th migration** |
 | 3.5 | Surface 4 — per-row action menu | 🔨 09/08 — 🗣️ approved 20:4X (same unit) |
 | 3.6 | Surface 5 — public confirm page (no login) | ⬜ |
 | 3.7 | 🔻👤 Phase-3 gate: 🎨 UX & functional review | ⬜ |
@@ -225,6 +225,7 @@ Supabase project `Reg-In`, ref `yfeovxppnfoafmfbdfvh`.
 | local-13 | 🟢 **§7.33 CLOSED — the auto-release runs IN CODE, in the same action as the final approval. 🚫 Not a DB trigger.** What was already ruled 07/07: when the quota fills, everyone who confirmed availability and was not picked is released automatically. What was open: **where**. 🔑 **And it is not a technical question:** the released hostess gets **her own message** (`תבנית_מייל_שחרור_משמרת`, seeded in `20260809125750`) — *"not because it is polite: responsiveness is 40% of the score, and a hostess who said yes three times and heard nothing back stops answering."* **A DB trigger cannot send mail** ⇒ a trigger would split the release from its notice. ⇒ both leave together, from code, in step 3.5 | ישי 09/08 | 3.5 |
 | local-12↳ | 🟢 **CLOSED — the "approximate location" marker is NOT built.** `local-10` (distance shown as a WORD) removed its ground: the marker existed to warn that `18 ק"מ` claims precision we do not have, **and no number is displayed any more**. Residual risk acknowledged and accepted: in edge cases a city-level fallback can move a candidate one place in the ranking — **and the manager picks manually every round anyway**. Price if reversed: a `precision` column ⇒ an **eighth** migration. **Verdict `לא-נדרש-כי` the label already solves it; if usage shows it misleads, we come back — and that is cheap** | ישי 09/08 | — |
 | local-14 | 🆕 **The hostess pool is REAL DATA, not fixtures — 20 rows, and they stay.** Ishay 09/08: *"אפשר לשים במסד 20 דיילות רק שיהיה הגיוני, בלי לרשום את המילה דמו… באמת שידמה"*. ⚠️ **A conscious exception to `e2e/CLAUDE.md`'s "never inject rows into the DB"** — and it is not a fixture: there is one live DB, **no delete anywhere in the module**, and these rows are the module's demo content. **Created through the app's own `createHostess`** (signed-in browser, real geocode, real RLS) — 🚫 not from node (Nominatim returns `Access denied`) and not via SQL (would bypass both the geocode and the permission gate). 🔴 **Consequence for step 4.2: the seed MUST skip an `id_number` that already exists**, or it will fail on these rows | ישי 09/08 | 3.1 · 4.2 |
+| local-15 | ❌ **OPEN — BLOCKER for the final-approval mail.** `local-2` routes the field contact to `users.full_name`/`users.phone` via `projects.owner_email`; **measured live 09/08 that מנהלת גיוס gets `200` + `[]` there** (`users_select_self_or_ceo` — self or מנכ"ל only) ⇒ the mail would print an empty contact, and `fillEmailTemplate` cannot catch it because the placeholder is *known*. **Recommendation: snapshot `projects.owner_name`/`owner_phone`** — third use of a pattern already in this table (`event_name` §7.76 · `customer_name` local-5), and a snapshot is semantically right for something printed into a sent mail. Alternatives: a `users` read policy for 'דיילות', or a `SECURITY DEFINER` function | ⏸️ פתוח | 3.4 · 3.5 |
 | local-5 | **`projects.customer_name` snapshot** — written at conversion, backfilled for existing rows. **Why:** מנהלת גיוס is `blocked` on 'לקוחות' (live) and `customers`' SELECT policy (`schema.sql:363-367`) demands view/edit there ⇒ an embedded customer join returns null **silently** on three approved surfaces. `projects` already snapshots `event_name` for this exact reason (§7.76, `schema.sql:502`) | קלוד, anchor §7.76 — Ishay may override | 1.1, 2.3 |
 
 🔗 **מראת §11.1 — SSOT: `module4_smart_match_research.md §11`. Do NOT copy its numbers into this guide.**
@@ -661,12 +662,30 @@ same unit. It says so out loud rather than doing nothing.
 > 🔴 **And a hole `spec.md §12` records that "the screens phase never collected" — it lands HERE:**
 > `תבנית_אישור_סופי_שיבוץ` injects **`[כתובת_אירוע_מלאה]` · `[שם_מנהלת_פרויקט]` ·
 > `[טלפון_מנהלת_פרויקט]`**, and the schema holds only `projects.final_location` and
-> `projects.owner_email` — **no manager name, no phone.** ✅ **It is NOT open any more: Ledger
-> `local-2` (ישי 08/08) rules the address is `final_location`, and the field contact is the shift
-> lead if marked, else `users.full_name`/`users.phone` resolved via `projects.owner_email`.**
-> ⚠️ **But `spec.md` still reads as if it were open** — do not re-open it, and do not "discover" it
-> again. *(`fillEmailTemplate` refuses a template with an unknown placeholder, so a missed one is a
-> mail that never sends — loud, not silent. That is the safety net, not the answer.)*
+> `projects.owner_email` — **no manager name, no phone.** Ledger `local-2` (ישי 08/08) rules the
+> address is `final_location`, and the field contact is the shift lead if marked, else
+> `users.full_name`/`users.phone` resolved via `projects.owner_email`.
+>
+> 🔴🔴 **BLOCKER, measured live 09/08/2026 — `local-2`'s INTENT stands but its MECHANISM does not
+> work for the role that sends the mail.** ⚠️ **And this corrects a line I wrote earlier the same
+> day** in this very block, which declared the hole closed on the strength of the ruling **without
+> testing that the ruling was executable.**
+> **The measurement, from a signed-in browser as מנהלת גיוס:** she reads `projects.owner_email`
+> fine (`200`, the address comes back) — and the follow-up
+> `users?select=full_name,phone&email=eq.<owner>` returns **`200` with `[]`.**
+> **Why:** policy `users_select_self_or_ceo` allows reading `users` **only for yourself or for
+> מנכ"ל**. ⇒ **`{data:null, error:null}` — the module's signature trap**, and the mail would go out
+> reading *"איש קשר בשטח: מנהלת הפרויקט -, טלפון: "*. 🚫 `fillEmailTemplate` does NOT catch it: the
+> placeholder is known, it is merely filled with an empty string.
+> **Three ways out — Ishay's ruling, and it needs a migration either way:**
+> **(א) snapshot `projects.owner_name` + `owner_phone`** *(recommended — it is the third instance of
+> a pattern already used twice in this same table, `event_name` §7.76 and `customer_name` `local-5`;
+> and a snapshot is semantically right: the contact printed in a mail is the contact **at send
+> time**, exactly like `hourly_rate_snapshot`)* · **(ב) a read policy on `users` for holders of
+> 'דיילות'** *(widens a module-1 security surface for two fields)* · **(ג) a `SECURITY DEFINER`
+> function returning just name+phone per project** *(narrow, but a new DB function)*.
+> 🚫 **Do not build the final-approval mail until this is ruled** — it is the only mail whose body
+> depends on it.
 **What to do:** two columns · four counters · the four sort angles · candidate cards with reasoning
 chips. 🔴 **The screen SAYS OUT LOUD that the reliability component is off and that the pin tag does not
 exist yet** — 🚫 never a silent zero (§7.90). The score stays hidden; the chips explain.
@@ -710,6 +729,14 @@ cases that discriminate** — *approved-then-withdrawn must NOT count as "worked
 and *hostess-and-event on the exact same point must yield `null`, not `0`* (the live `סיון נחום`
 case). Re-broken afterwards, and each one bit. 🔑 **Fourth occurrence of this failure mode in the
 module — and the first time the break-check caught it in the same sitting it was written.**
+
+✅ **C2 DONE — `src/lib/sortAngles.js`, 12 tests.** Four angles that **re-order only**; pinned stays
+on top in every one of them (layer 2 outranks layer 4); a missing distance sinks to the bottom
+rather than posing as the nearest; `תענה הכי מהר` is **disabled-and-explained** and the urgent-event
+default **falls back** to `קרבה` when it has no data. All three behaviours broken on purpose and
+each bit. 🔑 **And one test was wrong, not the code:** my first version demanded that a caller who
+*omits* the availability flag still get `fastest` — i.e. it required sorting by an empty column.
+Inverted to safe-by-default: the angle is off until proven to have data.
 
 ⬜ **STILL TO BUILD, in this order:**
 **C2 · the four sort angles** (`§11.7`, quoted): `עבדה אצל הלקוח הזה` · `תענה הכי מהר` ·
