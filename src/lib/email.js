@@ -106,9 +106,25 @@ export function plainTextToEmailHtml(text) {
 // גוף-המשלוח שנשלח לפונקציית-השרת. `null` מוחזר כשחסר רכיב הכרחי — כדי שלא תישלח לעולם
 // הודעה בלי נמען, בלי גוף או בלי הקובץ המצורף. הבדיקה כאן היא **הרשת האחרונה**: תנאי-הסף
 // כבר נבדקו במסך (`emailSendDisabledReason`), ולכן null כאן מסמן תקלה ולא מצב-משתמש צפוי.
-export function buildEmailPayload({ to, subject, body, filename, attachmentBase64 } = {}) {
+//
+// ⚠️ **‏`requireAttachment` ברירת-מחדל `true`, וזו החלטה ולא נוחות** (09/08/2026, מודול 4):
+// חלק מהתבניות הן טקסט בלבד (זימון-משמרת · תזכורת · ביטול · משוב-לקוח), ולכן המצורף חייב
+// להיות רשות. אבל **הפיכתו לרשות באופן גורף** הייתה מוחקת שומר חי מנתיב הצעת-המחיר —
+// מסמך שיוצא ללקוח בלי הקובץ — **בלי שאף בדיקה קיימת נופלת.** לכן הרצפה נשארת דלוקה
+// כברירת-מחדל, ומי שאין לו מצורף **מכבה אותה במפורש**. אותה רצפה נאכפת שוב בשרת, פר-ישות.
+// ⚠️ וחמשת המפתחות נפלטים **תמיד** — הם חוזה מול מבנה-הנתונים של Make, ומפתח שנעלם נראה
+// שם כמו תקלת-מיפוי ולא כמו "אין מצורף". מחרוזת ריקה = אין מצורף.
+export function buildEmailPayload({
+  to,
+  subject,
+  body,
+  filename,
+  attachmentBase64,
+  requireAttachment = true,
+} = {}) {
   const recipient = to?.trim() ?? ''
-  if (!recipient || !body || !attachmentBase64) return null
+  if (!recipient || !body) return null
+  if (requireAttachment && !attachmentBase64) return null
 
   return {
     to: recipient,
@@ -117,8 +133,8 @@ export function buildEmailPayload({ to, subject, body, filename, attachmentBase6
     // הטקסט-הפשוט שבמסד לבין תעבורת-ה-HTML של מודול-הדואר. קורא שישכח אותה שולח ללקוח
     // פסקה רצה בכיווניות הפוכה — שני פגמים שנתפסו בפועל בגוף-מייל אמיתי.
     body: plainTextToEmailHtml(body),
-    filename,
-    pdf_base64: attachmentBase64,
+    filename: filename ?? '',
+    pdf_base64: attachmentBase64 ?? '',
   }
 }
 
@@ -130,8 +146,18 @@ export function buildEmailPayload({ to, subject, body, filename, attachmentBase6
 // (3) תבנית חסרה אחרונה — תקלת-הגדרות-מערכת, לא משהו שמשתמש-קצה יכול לתקן.
 // ⚠️ בדיקת-הפורמט חוסמת **לפני** היציאה: ישי דיווח (מפרויקט 710) שכתובת פגומה אחת מפילה את
 // מודול-המייל ב-Make ומשביתה את התרחיש כולו. עדיף לחסום בכפתור מלגלות מ-Make שנכשל.
-export function emailSendDisabledReason({ email, template, canEdit = true } = {}) {
-  if (!canEdit) return 'אין לך הרשאה לשלוח הצעות'
+//
+// ⚠️ **‏`noPermissionReason` — כאן ישבה עד 09/08/2026 המילה "הצעות"**, בפונקציה שמשרתת גם
+// זימון-משמרת, חשבונית ודוח-שכר. הנוסח **הספציפי** עבר למודול השולח (`src/lib/quotes.js`),
+// והמנוע מחזיק נוסח גנרי כברירת-מחדל — כדי שקורא שישכח להעביר אותו יקבל משפט נכון ולא
+// משפט **שקרי** על סוג-המסמך. שלוש הסיבות האחרות גנריות ממילא ונשארו.
+export function emailSendDisabledReason({
+  email,
+  template,
+  canEdit = true,
+  noPermissionReason = 'אין לך הרשאה לשלוח',
+} = {}) {
+  if (!canEdit) return noPermissionReason
   const trimmed = email?.trim() ?? ''
   if (!trimmed) return 'אין כתובת מייל לאיש הקשר'
   if (!EMAIL_REGEX.test(trimmed)) return 'כתובת המייל של איש הקשר אינה תקינה'
@@ -156,12 +182,16 @@ export function classifySendError(error) {
 // ההודעה שמוצגת למשתמש לכל מצב. **הודעת-כשל היא פעולה ולא דיווח** (בקשת-ישי 30/07): היא
 // אומרת מה לעשות עכשיו. הודעת "לא ידוע" מפנה לבדיקה **לפני** ניסיון חוזר, כדי שההגנה מפני
 // שליחה-כפולה לא תיפרץ בדיוק ברגע שהיא הכי נחוצה.
-export function sendResultMessage(result) {
+// ⚠️ **‏`failedMessage` — גם כאן ישבה עד 09/08/2026 מחרוזת של הצעות-מחיר** ("ההצעה לא נשלחה…
+// הורד את הקובץ"), בעוד לזימון-משמרת אין קובץ להוריד. הנוסח הספציפי עבר למודול השולח;
+// ברירת-המחדל כאן גנרית ועדיין **פעולה ולא דיווח** (בקשת-ישי 30/07). מצב "לא ידוע" נשאר
+// במנוע כמות-שהוא — הוא נכון לכל מייל, וזו בדיוק ההבחנה שהמנוע קיים כדי לשמר.
+export function sendResultMessage(result, { failedMessage } = {}) {
   switch (result) {
     case EMAIL_SEND_RESULT.UNKNOWN:
       return 'לא התקבל אישור שהמייל נשלח. בדוק בתיבת "נשלחו" שלך לפני שליחה חוזרת, כדי לא לשלוח פעמיים.'
     case EMAIL_SEND_RESULT.FAILED:
-      return 'ההצעה לא נשלחה. לחץ "שליחת ההצעה במייל" שוב, או הורד את הקובץ ושלח ידנית.'
+      return failedMessage ?? 'המייל לא נשלח. יש לנסות שוב.'
     default:
       return ''
   }

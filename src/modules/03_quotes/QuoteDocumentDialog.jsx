@@ -26,7 +26,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { supabase } from '@/supabaseClient'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
@@ -36,9 +35,10 @@ import {
   buildQuoteEmailPayload,
   findUnknownQuoteEmailPlaceholders,
   QUOTE_SCREEN_PARAM_NAMES,
+  QUOTE_SEND_FAILED_MESSAGE,
+  QUOTE_SEND_NO_PERMISSION_REASON,
 } from '@/lib/quotes'
 import {
-  EMAIL_SEND_TIMEOUT_MS,
   SEND_HISTORY_UNKNOWN_CONFIRM,
   SEND_HISTORY_UNKNOWN_NOTICE,
   SEND_LOG_FAILED_NOTICE,
@@ -54,7 +54,7 @@ import {
   MISSING_VAT_MESSAGE,
   MISSING_VAT_CODE,
 } from '@/modules/03_quotes/quotePdf'
-import { getLastSuccessfulSend } from '@/modules/03_quotes/api'
+import { getLastSuccessfulSend, sendEmail as sendEmailViaFunction } from '@/api/email'
 
 // Blob ⇒ base64 גולמי (בלי ה-prefix `data:...;base64,`) — זה הפורמט שהעברנו ל-Edge
 // Function, שמעביר אותו הלאה ל-Make בלי לגעת בו. FileReader ולא Buffer: זה קוד-דפדפן.
@@ -176,6 +176,9 @@ export default function QuoteDocumentDialog({
           email: quote?.customers?.email,
           template: emailTemplate,
           canEdit,
+          // הנוסח הספציפי להצעות-מחיר עבר ל-`src/lib/quotes.js` (פזה 0 של מודול 4):
+          // המנוע משרת גם זימון-משמרת וחשבונית, ו"לשלוח הצעות" היה שקרי שם.
+          noPermissionReason: QUOTE_SEND_NO_PERMISSION_REASON,
         })
       : ''
 
@@ -245,35 +248,21 @@ export default function QuoteDocumentDialog({
       // אמיתית, לא מצב-משתמש צפוי, ולכן הודעה כללית ולא ניסיון-ניחוש מה בדיוק חסר.
       if (!payload) throw new Error('הכנת נתוני-השליחה נכשלה.')
 
-      // ⏱️ תקרת-זמן משלנו: ל-invoke אין timeout, ובלעדיה כפתור "שולח..." יכול להישאר
-      // תקוע לנצח אם Make לא עונה — והמשתמש לא יודע אם לשלוח שוב או לא.
-      const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('TIMEOUT')), EMAIL_SEND_TIMEOUT_MS),
-      )
-      // ⚠️ שלושת שדות-המטא **חייבים** להישלח, אחרת רישום-היומן בשרת נכשל בשקט: לעמודה
-      // `entity_id` יש NOT NULL, והמייל יוצא בהצלחה בעוד `email_log` נשאר ריק — כלומר
-      // ההגנה מפני שליחה-כפולה מפסיקה להתקיים בלי שאף אחד רואה שגיאה. **נתפס באימות
-      // מקצה-לקצה 30/07** (המייל הגיע עם ה-PDF, והיומן היה ריק).
-      // הם נפרדים מ-`payload` בכוונה: `payload` הוא **חוזה חמשת-השדות מול Make**, ואלה
-      // מיועדים ליומן שלנו בלבד — הפונקציה מעבירה ל-Make את החמישה ולא אותם.
-      const { data: fnData, error: fnError } = await Promise.race([
-        supabase.functions.invoke('send-email', {
-          body: {
-            ...payload,
-            entity_type: 'quote',
-            entity_id: quote?.quote_id,
-            template_name: QUOTE_SCREEN_PARAM_NAMES.quoteEmailTemplate,
-          },
-        }),
-        timeout,
-      ])
-      if (fnError) throw fnError
+      // ⚠️ **התובלה עצמה חיה ב-`src/api/email.js`** (הוחלצה 09/08/2026, פזה 0 של מודול 4):
+      // תקרת-הזמן, שלושת שדות-המטא ליומן, וההפרדה בינם לבין חוזה-חמשת-השדות מול Make —
+      // כולן הכרעות שנשמרות שם עם ההסבר, כדי שמודול 4 יצרוך אותן ולא יעתיק אותן.
+      const { logFailed } = await sendEmailViaFunction({
+        payload,
+        entityType: 'quote',
+        entityId: quote?.quote_id,
+        templateName: QUOTE_SCREEN_PARAM_NAMES.quoteEmailTemplate,
+      })
 
       setSent(true)
       // ⚠️ המסלול השני לאותה תקלה: המייל יצא, אך כתיבת `email_log` בשרת נכשלה. הפונקציה
       // מחזירה ok:true בכוונה (המייל כבר אצל הלקוח), ועד 31/07/2026 הכשל חי רק ב-console
       // של הפונקציה — כלומר ההגנה מפני שליחה-כפולה נעלמה בלי שאיש ידע. עכשיו נאמר בקול.
-      if (fnData?.log_failed) {
+      if (logFailed) {
         setSendCheckNotice(SEND_LOG_FAILED_NOTICE)
         toast.error('המייל נשלח, אך רישום השליחה ביומן נכשל.')
       } else {
@@ -283,7 +272,9 @@ export default function QuoteDocumentDialog({
       // שלושת המצבים (כולל "לא ידוע") והניסוח שלהם חיים ב-`src/lib/email.js` ונבדקים שם —
       // הקומפוננטה רק מציגה. ההבחנה עצמה קריטית: ר' ההערה במנוע.
       const result = classifySendError(err)
-      setSendError(sendResultMessage(result))
+      // הנוסח הספציפי ("הורד את הקובץ ושלח ידנית") הוא של הצעת-מחיר בלבד — לזימון-משמרת
+      // אין קובץ להוריד. עבר ל-`src/lib/quotes.js` בפזה 0 של מודול 4.
+      setSendError(sendResultMessage(result, { failedMessage: QUOTE_SEND_FAILED_MESSAGE }))
       toast.error(
         result === 'unknown'
           ? 'לא התקבל אישור שליחה — יש לבדוק לפני שליחה חוזרת.'

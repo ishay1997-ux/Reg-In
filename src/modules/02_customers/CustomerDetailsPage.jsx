@@ -40,10 +40,10 @@ import {
   approveQuote,
   getPricingCatalog,
   getQuoteScreenParams,
-  getSentQuoteIds,
   listQuotesByCustomer,
   rejectQuote,
 } from '@/modules/03_quotes/api'
+import { getSentEntityIds } from '@/api/email'
 import { formatDate } from '@/modules/03_quotes/quotePdf'
 import CustomerFormDialog from '@/modules/02_customers/CustomerFormDialog'
 import QuoteDocumentDialog from '@/modules/03_quotes/QuoteDocumentDialog'
@@ -202,7 +202,10 @@ export default function CustomerDetailsPage() {
         // את העמוד — אבל גם **אינו נבלע**: הוא מחזיר את המצב ל"לא ידוע", שני החיוויים
         // נעלמים והמשתמש מקבל שורת-הסבר במקומם.
         try {
-          const ids = await getSentQuoteIds(qs.map((row) => row.quote_id))
+          const ids = await getSentEntityIds(
+            'quote',
+            qs.map((row) => row.quote_id),
+          )
           if (!cancelled) setSentIds(ids)
         } catch {
           if (!cancelled) setSentIds(null)

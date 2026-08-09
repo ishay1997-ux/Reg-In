@@ -104,7 +104,13 @@ test.describe('בדיקת-עשן', () => {
     await expect(page.getByText(anchors.customers.revenues).first()).toBeVisible()
 
     // הצעות: הסכום הקנוני של תרחיש-האפיון חייב להופיע ברשימה.
+    // ⚠️ **דרך לשונית "הכל", וזו תוספת-תיקון של 09/08/2026 ולא ריכוך.** לשונית-ברירת-המחדל
+    // היא `בתהליך` (`QuotesPage.jsx`, `useState('in_progress')`), והצעה #6 — נושאת הסכום
+    // הקנוני — **אושרה ב-01/08/2026** ומאז אינה מופיעה שם. הבדיקה חיפשה אותה בלשונית שבה
+    // היא כבר לא יכולה להיות. העוגן עצמו (‏6,319 ₪, שעובר דרך מנוע-התמחור האמיתי) נשמר
+    // כלשונו — רק המסך שבו מסתכלים עליו תוקן.
     await page.goto('/quotes')
+    await page.getByTestId('quotes-tab-all').click()
     await expect(page.getByText(anchors.quotes.knownAmount).first()).toBeVisible()
 
     // בניית-הצעה: שדה-היחס נטען מ-params האמיתי — ריק/שגוי = טעינת-פרמטרים שבורה.

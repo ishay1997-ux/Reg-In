@@ -37,9 +37,19 @@ const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY
 // מה שכן מבחין הוא **בקרת-החיוב שבסוף הבדיקה**: על הצעה שלא נשלחה (#8) — ללקוח שלה יש
 // כתובת בדיוק כמו לכל אחד — החיווי **אינו** מוצג כלל. מסך שהיה מציג את כתובת-הלקוח היה
 // מציג אותו גם שם. שתי הטענות ביחד הן ההוכחה; אף אחת מהן לבדה איננה.
+// ⚠️ **ורקבה שוב, 09/08/2026 — והפעם התיקון הוא מבני ולא מספר חדש.**
+// ‏#8 קיבלה שורת-`email_log` אמיתית ב-07/08/2026 (‏`tal@hitechgroup-demo.co.il`, `sent`) ⇒
+// חדלה להיות "נקייה". **ארבע בדיקות נפלו, ואף אחת מהן לא בגלל באג:** שלוש נתקעו כי החלון
+// פותח `window.confirm('ההצעה כבר נשלחה…')` ש-Playwright דוחה אוטומטית (ואז `return`
+// שקט — בלי toast, בלי שגיאה, בלי שום דבר על המסך), והרביעית ראתה חיווי "כבר נשלח"
+// במקום היעדרו.
+// 🔒 **לכן ההצעה-הנקייה נבחרת עכשיו בזמן-ריצה** — `in_progress` · יש לה כתובת · **ואין לה
+// ולו שורת-`email_log` מוצלחת אחת** — בדיוק התבנית ש-`e2e/CLAUDE.md` מורה עליה
+// ("לבחור פיקסטורה בזמן-ריצה לפי תנאי, לא מזהה קשיח"; ‏`🚧 מ4` ב-`PROJECT_MASTER §6`).
+// ⚠️ **וגם הנמען אינו נכנס לגיט** — הוא נגזר מהשורה שנבחרה. עדיפות לדומיין-דמו, כי שתי
+// הצעות פתוחות נושאות כתובת פרטית אמיתית של ישי (הכרעת-ישי 01/08, כדי לקבל את המיילים).
 const SENT_QUOTE_ID = 22
-const CLEAN_QUOTE_ID = 8
-const CLEAN_RECIPIENT = 'tal@hitechgroup-demo.co.il'
+const DEMO_DOMAIN = '-demo.'
 
 async function login(page, email, password) {
   await page.goto('/login')
@@ -66,6 +76,8 @@ test.describe('שליחת ההצעה במייל — החוזה מול השרת (
   // ⚠️ ולידציית-שפיות על הקריאה עצמה: בלי שורה, שלוש הטענות שלמטה היו עוברות על מחרוזת
   // ריקה. אין שורה ⇒ הבדיקה נופלת כאן ואומרת מה נשבר, ולא מדווחת ירוק על כלום.
   let sentRecipient = null
+  let CLEAN_QUOTE_ID = null
+  let CLEAN_RECIPIENT = null
   test.beforeAll(async () => {
     if (!SUPABASE_URL || !SUPABASE_ANON || !CEO_EMAIL || !CEO_PASSWORD) return
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON)
@@ -81,9 +93,42 @@ test.describe('שליחת ההצעה במייל — החוזה מול השרת (
         .limit(1)
         .maybeSingle()
       sentRecipient = data?.recipient ?? null
+
+      // ── בחירת ההצעה-הנקייה בזמן-ריצה ────────────────────────────────────────
+      // שתי שאילתות ולא צירוף: `email_log` פולימורפית ואין לה FK ל-`quotes`.
+      const { data: sentRows } = await sb
+        .from('email_log')
+        .select('entity_id')
+        .eq('entity_type', 'quote')
+        .eq('status', 'sent')
+      const everSent = new Set((sentRows ?? []).map((row) => row.entity_id))
+
+      const { data: openQuotes } = await sb
+        .from('quotes')
+        .select('quote_id, customers(email)')
+        .eq('quote_status', 'in_progress')
+        .order('quote_id')
+      const candidates = (openQuotes ?? []).filter(
+        (row) => row.customers?.email && !everSent.has(row.quote_id),
+      )
+      // דומיין-דמו קודם; כתובת אמיתית היא מוצא-אחרון ולא ברירת-מחדל.
+      const chosen =
+        candidates.find((row) => row.customers.email.includes(DEMO_DOMAIN)) ?? candidates[0] ?? null
+      CLEAN_QUOTE_ID = chosen?.quote_id ?? null
+      CLEAN_RECIPIENT = chosen?.customers?.email ?? null
     } finally {
       await sb.auth.signOut()
     }
+  })
+
+  // ⚠️ ולידציית-שפיות, מאותה סיבה כמו זו של `sentRecipient`: בלי הצעה נקייה כל בדיקות
+  // מסלול-ההצלחה היו רצות על `undefined` ונופלות בהודעה שאינה אומרת מה נשבר. אין מועמדת ⇒
+  // נופלים כאן ואומרים בדיוק מה חסר — ולא מדווחים ירוק על כלום.
+  test.beforeEach(() => {
+    expect(
+      CLEAN_QUOTE_ID,
+      'אין אף הצעה "בתהליך" עם כתובת שמעולם לא נשלחה — יש ליצור אחת או לנקות את היומן',
+    ).not.toBeNull()
   })
 
   test.beforeEach(async ({ page }) => {
@@ -236,10 +281,14 @@ test.describe('פונקציית-השרת דוחה בעצמה — לא הכפתו
     page,
   }) => {
     // ⚠️ בלי הבדיקה הזו, ה-403 שלמעלה יכול לנבוע מהגוף הריק ולא מהתפקיד.
-    // 🔒 **וזו הסיבה שהגוף ריק דווקא:** בפונקציה שער-ההרשאה רץ **לפני** קריאת גוף-הבקשה
-    // (`index.ts` — 403 בשורה 71, ואימות-השדות רק בשורה 84). כלומר קריאה של מנכ"ל עם גוף
-    // ריק עוברת את השער ונופלת על "חסרים נתונים" — **לפני מודול-הדואר**. אין מסלול
-    // שבו הבדיקה הזו שולחת מייל לאיש.
+    // 🔒 **וזו הסיבה שהגוף ריק דווקא:** בפונקציה שער-ההרשאה רץ **לפני** אימות-השדות. כלומר
+    // קריאה של מנכ"ל עם גוף ריק עוברת את השער ונופלת על "חסרים נתונים" — **לפני מודול-הדואר**.
+    // אין מסלול שבו הבדיקה הזו שולחת מייל לאיש.
+    // ⚠️ **מ-09/08/2026 הפונקציה כן קוראת את הגוף לפני השער** — אבל **רק כדי לדעת איזו ישות
+    // זו** (מפת `ENTITY_MODULE`), ו**אינה מחזירה ממנו שום שגיאה**. הסדר שהבדיקה נועלת נשמר.
+    // 🔑 ובמכוון בלי מספרי-שורות: הנוסח הקודם כאן נעץ "403 בשורה 71 … בשורה 84", והמספרים
+    // זזו ברגע שמישהו נגע בקובץ — הערה שאף מנגנון אינו מאמת. העוגן הוא המחרוזות:
+    // `אין לך הרשאה לשלוח.` (403) חייבת להופיע ב-`index.ts` **לפני** `חסרים נתונים לשליחה.` (400).
     await login(page, CEO_EMAIL, CEO_PASSWORD)
     await page.goto('/quotes')
     await expect(page.getByTestId('quotes-table')).toBeVisible({ timeout: 30_000 })

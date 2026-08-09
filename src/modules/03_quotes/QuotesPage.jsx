@@ -42,10 +42,10 @@ import {
   approveQuote,
   getPricingCatalog,
   getQuoteScreenParams,
-  getSentQuoteIds,
   listQuotes,
   rejectQuote,
 } from '@/modules/03_quotes/api'
+import { getSentEntityIds } from '@/api/email'
 import ApproveQuoteDialog from '@/modules/03_quotes/ApproveQuoteDialog'
 import QuoteDocumentDialog from '@/modules/03_quotes/QuoteDocumentDialog'
 import RejectQuoteDialog from '@/modules/03_quotes/RejectQuoteDialog'
@@ -170,7 +170,10 @@ export default function QuotesPage() {
         // 30 הצעות = 30 שאילתות). כשל בו **אינו מפיל את המסך** אבל גם אינו נבלע: הוא
         // מחזיר את המצב ל-null ("לא ידוע"), בדיוק כמו בכרטיס-הלקוח.
         try {
-          const ids = await getSentQuoteIds(rows.map((row) => row.quote_id))
+          const ids = await getSentEntityIds(
+            'quote',
+            rows.map((row) => row.quote_id),
+          )
           if (!cancelled) setSentIds(ids)
         } catch {
           if (!cancelled) setSentIds(null)

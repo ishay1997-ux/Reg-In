@@ -7,14 +7,36 @@
 //
 // 🔗 הזרימה: המסך ⇒ הפונקציה הזו ⇒ webhook של Make ⇒ Gmail עם ה-PDF מצורף.
 //
-// ⚠️ **גנרית ולא "שליחת הצעת-מחיר"**: ב-params יש 6 תבניות-מייל ומודולים 4/8/11 ישלחו גם הם.
-//    ר' src/CLAUDE.md §"שליחת מייל" ו-PROJECT_MASTER §6 (🚧 מ4·מ8·מ11).
+// ⚠️ **גנרית ולא "שליחת הצעת-מחיר"**: ב-params יש 9 תבניות-מייל (נמדד חי 09/08/2026) ומודולים
+//    4/8/11 ישלחו גם הם. ר' src/CLAUDE.md §"שליחת מייל" ו-PROJECT_MASTER §6 (🚧 מ4·מ8·מ11).
 
-import { createClient } from 'jsr:@supabase/supabase-js@2'
+// ⚠️ הגרסה **נעולה במדויק** ולא `@2` (מייג'ור פתוח) — ‏.github/workflows/ci.yml ביקש זאת
+// כ-🚧 מ10 "כשנוגעים בפונקציה בפעם הבאה", כי `@2` היה יכול לשבור את שער-הטיפוסים ב-CI
+// **מעצמו, בלי שאיש נגע בקוד**, ברגע שגרסה חדשה תעלה ל-JSR. מודול 4 נגע — לכן ננעל.
+import { createClient } from 'jsr:@supabase/supabase-js@2.112.0'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// ── מפת ישות ⇒ מודול-נדרש: **סגורה, ובשרת** ────────────────────────────────
+// 🚫 הלקוח לעולם אינו שולח שם-מודול — השרת מסיק את ההרשאה מהמשאב. אחרת תוקף פשוט
+// יצהיר על המודול שכן מותר לו (הכרעת-ישי 31/07/2026, PROJECT_MASTER §6, מול Curity/Auth0).
+// 🚫 **אין כאן `invoice`/`salary_report`**: ה-CHECK של `email_log.entity_type` אינו מכיר אותם
+// עדיין, וכשל בכתיבת-היומן **נבלע** (ר' למטה) — כלומר המייל היה יוצא והיומן נשאר ריק, בשקט.
+// מ8/מ11 יוסיפו את הערך שלהם **יחד עם המיגרציה שמרחיבה את ה-CHECK**, לא לפניה.
+const ENTITY_MODULE: Record<string, string> = {
+  quote: 'הצעות מחיר',
+  shift: 'דיילות',
+}
+
+// רצפת-המצורף **פר-ישות ולא גורפת**: הפיכת המצורף לרשות באופן כללי הייתה מוחקת שומר חי
+// מנתיב הצעת-המחיר (מסמך ללקוח בלי הקובץ), ואף בדיקה קיימת לא הייתה נופלת על כך.
+// זימון-משמרת הוא טקסט בלבד ואין לו קובץ.
+const ENTITY_REQUIRES_ATTACHMENT: Record<string, boolean> = {
+  quote: true,
+  shift: false,
 }
 
 function json(body: unknown, status = 200) {
@@ -43,9 +65,30 @@ Deno.serve(async (req) => {
   if (authError || !userData?.user) return json({ error: 'לא מחובר.' }, 401)
   const email = userData.user.email ?? ''
 
+  // ── הגוף נקרא כאן, ו**שום שגיאה אינה מוחזרת ממנו עדיין** ──────────────────
+  // ⚠️ **הסדר הזה הוא חוזה, לא סגנון.** שער-ההרשאה חייב לרוץ **לפני** אימות-השדות, אחרת
+  // מנהלת-כספים שתשלח בקשה פגומה תקבל 400 ("חסרים נתונים") במקום 403 — כלומר השרת יגלה
+  // לה שהיא הייתה עוברת את השער אילו רק מילאה את הגוף. `e2e/quote-email.spec.js` נועל את
+  // ההבחנה בשתי בדיקות: גוף ריק כמנהלת-כספים ⇒ 403, אותו גוף בדיוק כמנכ"ל ⇒ 400.
+  // ⇒ **קוראים כאן רק כדי לדעת איזו ישות זו**, וכל כשל-גוף נדחה לאחרי השער.
+  let payload: Record<string, string> | null = null
+  try {
+    payload = await req.json()
+  } catch {
+    payload = null
+  }
+
+  // ברירת-המחדל `quote` נשמרת מהקוד הקודם בכוונה: קורא ותיק שאינו שולח `entity_type`
+  // ממשיך להתנהג בדיוק כמו קודם, ובקשה בלי גוף כלל נשפטת מול המודול המחמיר יותר.
+  const entityType = payload?.entity_type ?? 'quote'
+  const requiredModule = ENTITY_MODULE[entityType]
+
   // ── שער 2: מותר לך? ────────────────────────────────────────────────────────
-  // כלל ברזל 9: ה-UI הוא נוחות, החומה היא בשרת. 'הצעות מחיר' + edit — שליחת מסמך
-  // ללקוח היא פעולה עסקית, לא צפייה.
+  // כלל ברזל 9: ה-UI הוא נוחות, החומה היא בשרת. שליחת מסמך/זימון היא פעולה עסקית,
+  // לא צפייה — ולכן `edit` על המודול שאליו המשאב שייך.
+  //
+  // ⚠️ ישות לא-מוכרת נדחית **כאן, ב-403 ולא ב-400**: deny-by-default. ערך שאיננו מכירים
+  // אין לו מודול, ואין לנו על מה לאשר.
   //
   // ⚠️ **שני שלבים, ולא אחד** — וזה בדיוק הבאג שנתפס באימות הראשון (30/07): ה-policy
   // ‏`permissions_select_all` הוא `using (true)`, כלומר כל משתמש מחובר רואה את **כל 45
@@ -62,29 +105,28 @@ Deno.serve(async (req) => {
     .maybeSingle()
   if (!me || me.status !== 'active') return json({ error: 'אין לך הרשאה לשלוח.' }, 403)
 
+  if (!requiredModule) return json({ error: 'אין לך הרשאה לשלוח.' }, 403)
+
   const { data: perm } = await asUser
     .from('permissions')
     .select('permission_level, modules!inner(module_name)')
     .eq('role_id', me.role_id)
-    .eq('modules.module_name', 'הצעות מחיר')
+    .eq('modules.module_name', requiredModule)
     .maybeSingle()
   if (perm?.permission_level !== 'edit') return json({ error: 'אין לך הרשאה לשלוח.' }, 403)
 
-  // ── הגוף ───────────────────────────────────────────────────────────────────
-  let payload: Record<string, string>
-  try {
-    payload = await req.json()
-  } catch {
-    return json({ error: 'גוף הבקשה אינו תקין.' }, 400)
-  }
+  // ── ורק עכשיו, אחרי השער: תקינות הגוף ──────────────────────────────────────
+  if (!payload) return json({ error: 'גוף הבקשה אינו תקין.' }, 400)
 
   // חמשת השדות הם החוזה מול מבנה-הנתונים של תרחיש ה-Make. שדה חסר כאן יגיע ל-Make
   // כ-NULL וייצור מייל פגום בשקט — לכן נבדק כאן, לפני היציאה.
-  const { to, subject, body, filename, pdf_base64 } = payload ?? {}
-  if (!to || !body || !pdf_base64) return json({ error: 'חסרים נתונים לשליחה.' }, 400)
+  const { to, subject, body, filename, pdf_base64 } = payload
+  if (!to || !body) return json({ error: 'חסרים נתונים לשליחה.' }, 400)
+  if (ENTITY_REQUIRES_ATTACHMENT[entityType] && !pdf_base64) {
+    return json({ error: 'חסרים נתונים לשליחה.' }, 400)
+  }
 
   // מטא-דאטה ליומן. אינם נשלחים ל-Make — הוא לא צריך לדעת על הצעות-מחיר.
-  const entityType = payload.entity_type ?? 'quote'
   const entityId = Number(payload.entity_id) || null
   const templateName = payload.template_name ?? null
 
@@ -97,7 +139,16 @@ Deno.serve(async (req) => {
     const res = await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to, subject, body, filename, pdf_base64 }),
+      // ⚠️ **חמשת המפתחות נשלחים תמיד, גם כשאין מצורף** — `JSON.stringify` משמיט מפתח
+      // שערכו `undefined`, ותרחיש ה-Make מפריד בין "אין מצורף" לבין "השדה נעלם" (הראשון
+      // הוא הענף שנוסף ב-09/08/2026, השני נראה שם כמו תקלת-מיפוי). מחרוזת ריקה = אין מצורף.
+      body: JSON.stringify({
+        to,
+        subject,
+        body,
+        filename: filename ?? '',
+        pdf_base64: pdf_base64 ?? '',
+      }),
     })
     ok = res.ok
     if (!ok) errorMessage = `Make responded ${res.status}`
