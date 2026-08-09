@@ -904,6 +904,29 @@ phase, §10, or the ledger.
   **`Webhooks · Custom webhook`** module → **Edit** (beside `regin-quote-email`) → toggle
   **Advanced settings** ON → **Data structure** → **⋮ → Edit** → collapse fields until `pdf_base64` →
   set **Required: No** → Save → Save.
+  🔴 **BUT web research (09/08/2026) says the webhook fix is NOT sufficient — the two-part fix is real,
+  and part two is bigger than hoped. Read this before touching anything.**
+  *(a)* **Confirms the diagnosis:** on this engine a data-structure validation failure is documented to
+  return **400 before the scenario runs**, while a *scenario* error with a Webhook-response module
+  present returns **500 "Scenario failed to complete"**. We saw 400 + no execution ⇒ webhook layer.
+  *(sources: Ibexa Connect and Adobe Workfront Fusion docs — verbatim copies of the same
+  Integromat/Make engine; `help.make.com` blocks automated fetching.)*
+  *(b)* 🔴 **The Gmail module independently requires BOTH `fileName` and `data` inside an attachment
+  item, and rejects empty values rather than sending a 0-byte file** — the documented error is
+  `Missing value of required parameter 'fileName'. Missing value of required parameter 'data'.`
+  ⇒ **once the webhook accepts the call, Gmail will fail next.**
+  *(c)* **Building the attachment array conditionally inside ONE Gmail module is not viable:** Make
+  expressions have **no object-literal syntax**, so `{fileName, data}` cannot be fabricated;
+  `add(emptyarray; …)` yields a flat value array that cannot carry file names. The Iterator +
+  Array-aggregator variant is plausible but rests on two behaviours nobody could confirm (does an
+  aggregator receiving **zero** bundles still emit an empty array, and does Gmail accept one).
+  🎯 **⇒ A ROUTER IS THE ANSWER, and it is what Make's own community recommends for exactly this
+  case.** Minimal shape: Webhook → Router → **Route A** filter `{{length(2.pdf_base64)}} > 0` → the
+  existing Gmail (with Attachment 1) → Webhook response · **Route B** = fallback → a Gmail copy **with
+  the Attachments collection deleted** → Webhook response. Use `length() > 0`, not an "is not empty"
+  text operator.
+  ⚠️ **The drift cost is real and must be written into `03_quotes/CLAUDE.md` when it is built:** two
+  Gmail modules means any future change to subject/body/recipient handling has to be made twice.
   ⚠️ **`filename` should get the same treatment** — it is empty on the same calls, and the probe proved
   only that a *non-empty* filename passes. 🚫 **Do NOT touch `to`/`subject`/`body`** — they are
   genuinely required, and our own server already enforces `to`+`body`.
