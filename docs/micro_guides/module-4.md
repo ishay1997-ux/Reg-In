@@ -849,25 +849,30 @@ phase, §10, or the ledger.
 ## §10 📝 Deviations & Tech-Debt Log
 
 - 🔴 **09/08/2026 — I closed 0.3 on a false claim. Ishay caught it from the actual email.** I reported
-  *"a real shift mail went out **with no attachment**"* on the strength of **HTTP 200 + an 
-  row reading **. Both were true. **The email was not.** It arrived carrying an **empty
-  attachment named **.
-  🔑 **The lesson, and it is the project's own rule restated:**  proves the *transport* succeeded,
+  *"a real shift mail went out **with no attachment**"* on the strength of **HTTP 200 + an `email_log`
+  row reading `sent`**. Both were true. **The email was not.** It arrived carrying an **empty
+  attachment named `undefined`**.
+  🔑 **The lesson, and it is the project's own rule restated:** `200` proves the *transport* succeeded,
   not that the *artifact* is right. **The only verification that counted here was opening the inbox** —
   and I asked Ishay to do it while already reporting the conclusion as fact.
   **What is actually true:** the webhook fix removed the **rejection** (400 → 200), but the Gmail module
   still evaluates its static Attachment 1. With the fields empty it no longer errors — **it silently
-  attaches a 0-byte file named .** ⇒ **the failure moved from loud to silent, which is
+  attaches a 0-byte file named `undefined`.** ⇒ **the failure moved from loud to silent, which is
   worse**, and **the Router IS required after all** — the web research was right about the outcome even
   though it predicted the wrong mechanism (a hard error, not junk output).
   ➡️ **Do NOT close 0.3 again on a status code.** Acceptance = **the mail is opened and has no
   attachment.**
 - 🐞 **09/08/2026 — bidi bug, 6th occurrence in this project and the 2nd inside a mail body.**
-  The real invitation rendered *"התאמת לאירוע חדש של **IREG-IN**"* — the  in the template's
-   jumped to the wrong side of the Latin token. Template text is ;
-  the wrapper  already emits , so **the per-line direction is right
-  and the problem is the Latin+punctuation run inside a Hebrew line** — the same class /
-   solve on screen. **Fix belongs with step 3.6 / the mail bodies, not here.**
+  The real invitation rendered *"התאמת לאירוע חדש של **IREG-IN**"* — the `!` in the template's
+  `REG-IN!` jumped to the wrong side of the Latin token. Template text lives in
+  `params.תבנית_זימון_משמרת`; the wrapper `plainTextToEmailHtml` already emits `dir="rtl"`, so **the
+  per-line direction is correct and the defect is the Latin+punctuation run inside a Hebrew line** —
+  the same class that `Money`/`LtrFieldGroup` solve on screen. **Fix belongs with the mail bodies
+  (step 3.6 / the invitation templates), not with Phase 0.**
+  🔑 **And the reusable lesson: an RTL wrapper is necessary but NOT sufficient.** Five earlier
+  occurrences were all fixed structurally by emitting label+value together; a plain-text template
+  pulled from `params` has no such structure, so **any Latin token followed by punctuation inside a
+  Hebrew sentence will do this again.**
 
 - **09/08/2026 · two RED suites found at step 0.1, BOTH pre-existing, neither caused by Phase 0.**
   Recorded because a future session will hit this class again, and because "the suite was already
