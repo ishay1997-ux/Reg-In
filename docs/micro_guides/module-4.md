@@ -13,9 +13,9 @@
 | Module | **4 — דיילות + Smart Match** |
 | Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ **Nothing on this branch is pushed.** 🚫 Do not write a number here — it rotted twice already *("ahead 6" was written on 08/08 and was 93 by 09/08 evening)*. **Measure it: `git rev-list --count origin/dev..HEAD`** |
 | Owner | ישי (sole developer) |
-| Overall status | 🔨 **Phase 3 — 3.0 · 3.1 · 3.2 · 3.3 · 3.4 · 3.5 DONE.** Gate `exit 0` · **733 unit tests** (was 662 after 3.3) · `smoke exit 0` · **16 module-4 E2E green** (8 new for surface 2 + menu) · 8 migrations · advisors **15**. 🆕 **`assignments` is no longer empty: 5 real rows on project 8, one per status, created through the app's own path** — the module's whole lifecycle ran end-to-end against the live DB. ⏳ Phase 1's 1.5 gate still owes Ishay's `regin-docs-sync` run |
+| Overall status | 🔨 **Phase 3 — 3.0–3.6 DONE; 4.1 DONE.** Gate `exit 0` · **750 unit tests** (was 733 after 3.5) · **22 module-4 E2E green** (6 new for surface 5) · **9 migrations** · advisors **17** *(was 15; the 9th migration adds exactly two — anon + authenticated — on one new public function)*. 🆕 **`assignments` is no longer empty: 5 real rows on project 8, one per status, created through the app's own path** — the module's whole lifecycle ran end-to-end against the live DB. ⏳ Phase 1's 1.5 gate still owes Ishay's `regin-docs-sync` run |
 | Last updated | **09/08/2026 23:5X** *(system clock; refresh it at every step transition)* |
-| **Active step** | **3.6 — the public confirm page.** 🔴 **Its route path is LOCKED to `/shift/:token`** — `confirmUrlFor` already baked it into **five invitations that have really been sent**, and a mail cannot be recalled. ⚠️ **And the tokens expire 48h after sending** *(the batch went out 09/08 23:33)*, so a link demo needs a fresh invite, not one of these |
+| **Active step** | **3.7 — the Phase-3 gate (👤 Ishay rules).** 3.6 and 4.1 are closed. ⚠️ **The tokens of the five sent invitations die 11/08 23:33** *(measured: `expires_at` 2026-08-11T20:33Z)* — a live link demo after that needs a fresh invite, not one of these |
 | Deadline | module 4 → `dev` by **21/08/2026**; submission **19/09/2026** |
 
 Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target module) · ❌ blocked (reason)
@@ -41,9 +41,9 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | 3.3 | Surface 1 — assignment overview (triage) | ✅ 09/08 — built · **8 E2E green incl. both permission directions and the load-failure guard** · 4 new pure functions, each proven red against deliberately-broken code |
 | 3.4 | Surface 2 — Smart Match | ✅ 09/08 — C1–C5 done · **the lifecycle ran live**: 5 invites sent, 1 finally approved, 1 released, 1 declined, 1 withdrawn · anchor `0.67/0.66/0.64` re-verified after wiring |
 | 3.5 | Surface 4 — per-row action menu | ✅ 09/08 — **all six statuses opened and screenshotted on real rows**; `approval_withdrawn` correctly has no `⋯` at all |
-| 3.6 | Surface 5 — public confirm page (no login) | ⬜ |
+| 3.6 | Surface 5 — public confirm page (no login) | ✅ 10/08 — built · 🔴 **a 9th migration was required and was NOT in the plan** (`get_shift_invite` — the approved screen demands fields no anon path could read) · 7 states screenshotted at 390px in a session-less browser · **6 E2E green** · the write path proven inside `begin…rollback`, demo data untouched |
 | 3.7 | 🔻👤 Phase-3 gate: 🎨 UX & functional review | ⬜ |
-| 4.1 | Wiring: **the public route only** — `UnderConstruction` was already replaced at 3.1 | ◐ **half done 09/08** — `/hostesses` renders `HostessesPage` and `App.routes.test.jsx` is green. **Still owed: the public route OUTSIDE `<MainLayout>` + its deliberate entry in the AST allow-list** |
+| 4.1 | Wiring: **the public route only** — `UnderConstruction` was already replaced at 3.1 | ✅ 10/08 — the public route landed **with 3.6** (the page is meaningless without it). 🔴 **The allow-list entry was NOT added — deliberately, against this plan's own wording:** measured that the AST guard walks **only** children of `<Route element={<MainLayout />}>`, so `/login` — and now `/shift/:token` — never reach it. An entry would only **mute** the guard if the route were later moved *inside*. Replaced by a **live** E2E: 5 internal paths still redirect when signed out |
 | 4.2 | Demo seed extension + E2E anchors + the fixture-rot ruling | ⬜ |
 | 5.1 | E2E + regression suites | ⬜ |
 | 5.2 | 🔻👤 Closing audit (`module-close`, FRESH session) | ⬜ |
@@ -228,6 +228,9 @@ Supabase project `Reg-In`, ref `yfeovxppnfoafmfbdfvh`.
 | local-15 | 🟢 **RULED 09/08 — snapshot `projects.owner_name` + `owner_phone`.** Ishay delegated the choice (*"מה שנראה לך נכון, אני לא מבין את המשמעויות"*) ⇒ **Claude owns the outcome.** **Why this one of the three:** it is the *third* use of a pattern already in this very table (`event_name` §7.76 · `customer_name` `local-5`, whose migration A even rewrote the conversion RPC to populate it — **copy that file's shape**), it opens no new security surface, and a snapshot is semantically right: **what a sent mail says must stay what it said**, exactly like `hourly_rate_snapshot`. Rejected: a `users` read policy (widens module 1 for two fields) · a `SECURITY DEFINER` function (no new columns, but the printed name could change retroactively). ✅ **APPLIED 09/08 as migration G `20260809223025_module4_project_owner_contact_snapshot`** (typed echo received). Verified: the same recruiter query that returned `[]` now returns `ישי אטיאס`/`050-1241223` · module-3 regression **17/17** · advisors **15 = baseline, zero new**. ⬇️ The original finding: |
 | local-15↳ | ❌ **The measurement that produced it.** `local-2` routes the field contact to `users.full_name`/`users.phone` via `projects.owner_email`; **measured live 09/08 that מנהלת גיוס gets `200` + `[]` there** (`users_select_self_or_ceo` — self or מנכ"ל only) ⇒ the mail would print an empty contact, and `fillEmailTemplate` cannot catch it because the placeholder is *known*. **Recommendation: snapshot `projects.owner_name`/`owner_phone`** — third use of a pattern already in this table (`event_name` §7.76 · `customer_name` local-5), and a snapshot is semantically right for something printed into a sent mail. Alternatives: a `users` read policy for 'דיילות', or a `SECURITY DEFINER` function | ⏸️ פתוח | 3.4 · 3.5 |
 | local-5 | **`projects.customer_name` snapshot** — written at conversion, backfilled for existing rows. **Why:** מנהלת גיוס is `blocked` on 'לקוחות' (live) and `customers`' SELECT policy (`schema.sql:363-367`) demands view/edit there ⇒ an embedded customer join returns null **silently** on three approved surfaces. `projects` already snapshots `event_name` for this exact reason (§7.76, `schema.sql:502`) | קלוד, anchor §7.76 — Ishay may override | 1.1, 2.3 |
+
+| local-16 | 🟢 **CLOSED without a new ruling — `approval_withdrawn` on the public page shows the GENERIC message.** I had opened this as "spec-silent" and flagged it for 3.7; Ishay replied *"ביטלה אחרי אישור — זה חשוב מאוד כי זה משנה אחר כך"* and *"כבר דיברתי על זה, לא זוכר איפה ומה היו השיקולים"*. 🔑 **He was right and the record was found:** `processes-approved.md §ב8` rules the neighbouring case in one line — *"דיילת חוזרת בה לפני האישור הסופי: מתקשרת, המנהלת מעבירה ל'סירבה'. **אין מסלול-קישור**, אין סטטוס חדש"* — and the row-menu card (`screens-approved.md §①`) marks `סמן: ביטלה אחרי אישור` as **רושם בלבד · 🚫 no mail**. ⇒ changing her mind has **no link path at all**, by decision; the generic text points to the phone, which is the ruled channel. **And "משנה אחר כך" is also on record:** the project reverts to `בתהליך`, the screen shows the hole, and it scores **0.5 in reliability** (§ב8) — 🚧 the revert itself is **M6's**, M4 never writes `project_status`. 🚫 **Not "תודה שעדכנת"** — she did not update here | ישי (§ב8, 07/08) · אותר 10/08 | 3.6 |
+| local-17 | 🟢 **RULED 10/08 — "something sensible that works" outranks 1:1 mockup fidelity.** Ishay, on being shown surface 5's deviations: *"נראלי הכי חשוב שבנינו משהו הגיוני שעובד גם אם לא אחד לאחד"*, with the reason: **the mockups were drawn AFTER the spec**, so drift between them is expected and is his to reconcile, not a build blocker. ⚠️ **Scope, deliberately narrow:** this relaxes *fidelity*, 🚫 **not** the arbitration rule (`screens-approved §⚖️`) and 🚫 **not** approved copy — the five message texts of משטח 5 are still quoted byte-for-byte, and a deviation is still **recorded**, never silent. **Deviations taken under it at 3.6:** ① `יום שלישי הקרוב` → `יום שבת · 22/08/2026` *(the event is ~2 weeks out; "הקרוב" would simply be false — the exact date-rot trap the card itself records)* · ② `+ נסיעות 30 ₪` → `+ נסיעות` with no number *(`local-3`; the mockup draws a state that cannot occur while the param is `0`)* · ③ result screens render icon + the approved sentence, **with no invented title** *(the mockup's `.tt`/`.dd` CSS is unused; its labels are review captions, not on-screen text)* | ישי 10/08 | 3.6 · 3.7 |
 
 🔗 **מראת §11.1 — SSOT: `module4_smart_match_research.md §11`. Do NOT copy its numbers into this guide.**
 *(`spec.md §12④`: duplicate the reasoning, never the number — §11 has already been corrected three times.)*
@@ -875,6 +878,36 @@ the **same generic message** as an expired one.
 2. *"אני יכולה להגיע למשמרת הזו — כן או לא, בלי להתקין שום דבר ובלי סיסמה."*
 3. *"לעולם לא 'נשמר' כשלא נשמר."*
 **🗣️ אושר —**
+
+**↳ as-built 10/08/2026.** 🔴 **The step was NOT mechanical, and the plan above said it was.**
+**What was missing and was found only at the first line of code:** §④ requires the page to print
+name · event · customer · date · hours · location · rate + travel, but `assignments` is deny-all to
+`anon` and `respond_to_shift_invite` is **write-only** ⇒ *"ממתין למענה"* would have rendered empty.
+⇒ **a 9th migration, `20260810004500_module4_public_shift_invite_read`** (typed-echo received):
+`get_shift_invite(token)`, `SECURITY DEFINER`, zero writes. 🔑 **Both source documents were
+individually correct — the hole lived in the gap between them**, in the question *"so where does the
+page read the name from?"*, which only gets asked while writing the code.
+**Second finding, resolved without touching the write RPC:** §③ mandates ONE generic string for all
+three failure modes, while §⑤/§⑦ demand a distinct *"כבר אוישה"* screen. ⇒ on a failed write the page
+**re-reads** `get_shift_invite` — the single oracle either way — instead of parsing the generic
+message. `respond_to_shift_invite` is untouched.
+**States: 8 in the card ⇒ 7 in code, and that is forced, not a shortcut** — "פג תוקף" and "לא תקין"
+both return `{"ok":false}` byte-identically, so the client *cannot* separate them; one state makes a
+future divergence impossible. Verified in E2E by comparing the two rendered screens as strings.
+**Verification actually run** *(not "green ⇒ done")*: 7 states screenshotted at **390px in a
+session-less context** · anon reaches both RPCs (HTTP 200) while `assignments?select=*` gives anon
+**0 rows vs 5 for מנהלת גיוס** — the positive control, without which `[]` proves nothing · the ₪ order
+checked by **DOM geometry**, not by eye (`תעריף: 47 ₪/שעה + נסיעות`, matching the card) · the write
+path exercised **inside `begin…rollback`** ⇒ status flipped, `responded_at` stamped, **rolled back;
+5 rows and `pending` intact**. 🚫 **The one pending demo row was never consumed** — `e2e/CLAUDE.md`
+forbids injecting or mutating live rows, and the rollback gave the same proof for free.
+**Deviations:** three, all under `local-17`, all listed there. **Ledger rows closed by this step:**
+`local-3` (travel with no number, as-built) · `local-16` (‏`approval_withdrawn` — found on record,
+not re-decided).
+⏳ **Carried to 3.7:** no rate limiting on the public endpoint — the token is `crypto.randomUUID()`
+so guessing is impractical, but a holder of one token can re-read its details indefinitely, and the
+read has **no** expiry check for already-answered rows (deliberate: she should see her own answer
+later). **This is the only open item this step created.**
 
 **Step 3.7 · 🔻👤 🎨 UX & functional review** — the five passes in `src/CLAUDE.md` (direction ·
 inventory · consistency · wording · empty-input) + loading / true-empty / empty-after-filter / error

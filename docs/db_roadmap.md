@@ -336,6 +336,37 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
+- ✅ 10/08/2026 — migration `20260810004500_module4_public_shift_invite_read.sql`
+  **APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed `module4_public_shift_invite_read`).
+  **What it does:** adds ONE function, `get_shift_invite(p_token text)` — `SECURITY DEFINER`,
+  `set search_path = ''`, executable by `anon`. Zero writes; no table, column, policy or existing
+  grant is touched. 🔴 **Why it exists, and it was MEASURED at build time, not predicted:**
+  `screens-approved.md` משטח 5 §④ requires the public page to print hostess name · event ·
+  customer · date · hours · location · rate + travel — *"exactly the fields already in the mail"*.
+  But `20260809134237` left `assignments` **deny-all to `anon`** (correct), and the only
+  anon-executable function it created, `respond_to_shift_invite`, is **write-only** — it demands
+  a choice and returns `{ok,status}`. ⇒ the "awaiting answer" state, the heart of the screen,
+  **could not be built: the page would load empty.** 🔑 **Both documents were individually
+  correct; the hole lived in the gap between them** — in the question *"so where does the page
+  read the name from?"*, which only gets asked while writing the code.
+  **Exposure model:** ① invalid token and expired token return `{"ok":false}` **byte-identical**
+  (§⑤ *"deliberately does not distinguish"* — structural identity, so network traffic does not
+  betray it either) · ② personal fields are returned **only** for an in-date `pending` row; an
+  already-answered token returns the state name alone (`confirmed`/`declined`/`filled`) — no name,
+  no customer, no address · ③ zero writes. `approval_withdrawn` ⇒ the generic answer, per
+  `processes-approved.md §ב8` (*"אין מסלול-קישור"* — changing her mind is a phone call).
+  **Verified after apply:** all five live assignment rows map to their intended state, checked
+  one by one · the write path exercised inside `begin…rollback` (status flipped, `responded_at`
+  stamped, **rolled back — 5 rows and `pending` intact**) · anon reaches both RPCs over HTTP 200,
+  while `assignments?select=*` returns **0 rows for anon vs 5 for מנהלת גיוס** (the positive
+  control, without which `[]` proves nothing) · e2e `public-confirm.spec.js` **5/5** in a
+  session-less context. 🐞 **Advisors — my written prediction was WRONG and is corrected in the
+  migration header:** predicted "one new finding, 17 ⇒ 18"; measured **15 ⇒ 17**. The baseline was
+  15 (`local-15`), and the function adds **two** findings (anon + authenticated) because the grant
+  is to both — **which `docs/schema.sql` already stated about its sister function before I
+  guessed.** ⏳ **Known limitation, recorded so it is not discovered later:** no rate limiting on
+  the endpoint; the token is `crypto.randomUUID()` so guessing is impractical, but a holder of one
+  token can re-read its details indefinitely. **Item for gate 3.7.**
 - ✅ 10/08/2026 — migration `20260810001421_module4_final_approval_contact_label.sql`
   **APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed `module4_final_approval_contact_label`).
   **What it does:** removes the two hardcoded words *"מנהלת הפרויקט -"* from inside
