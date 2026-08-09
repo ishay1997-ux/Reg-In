@@ -24,7 +24,15 @@ import {
 } from '@/lib/hostesses'
 import { classifySendError, EMAIL_SEND_RESULT } from '@/lib/email'
 import { sendEmail } from '@/api/email'
-import { SHIFT_TEMPLATE_NAMES, buildShiftInvitePayload, confirmUrlFor } from '@/lib/shiftEmails'
+import {
+  SHIFT_TEMPLATE_NAMES,
+  buildShiftInvitePayload,
+  buildFinalApprovalPayload,
+  buildReleasePayload,
+  resolveShiftContact,
+  confirmUrlFor,
+} from '@/lib/shiftEmails'
+import { nextAssignmentNumber, autoReleaseTargets } from '@/lib/assignmentActions'
 import { SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
 import { buildHostessAddress } from '@/lib/geocode'
 import { geocodeAddress } from '@/api/geocode'
@@ -261,8 +269,93 @@ async function getEmailTemplate(name) {
 // הוא בלתי-מזיק, והישן ממילא כבר מת.
 // 🚫 **פסק-זמן אינו כשל** (`src/CLAUDE.md`, שלושת מצבי-התוצאה): המייל אולי יצא, ולכן
 // אין גלגול-אחורה — הספירה מוחזרת בנפרד והמסך אומר "לא ידוע" במקום להבטיח.
+// כל שורות-השיבוץ של אירוע אחד, **עם כל מה שמייל צריך** — שם הדיילת, כתובתה, פרטי
+// האירוע ואיש-הקשר שעליו. מסך 2 ותפריט-השורה עובדים שניהם על הסט הזה.
+// ⚠️ **גם שורות-היסטוריה נשלפות** (`assignment_number` ישנים): הקיפול ל"שורה קובעת" הוא
+// של הקוד, ושליפה מסוננת-מראש הייתה מסתירה בדיוק את הסירוב שנעקף בטלפון.
+// 🔒 **פנימית בכוונה, ולא מיוצאת:** המסך מקבל את השורות מ-`getSmartMatchData` בקריאה אחת;
+// הפונקציה הזו קיימת כדי שהכתיבות יעבדו על **מצב טרי מהמסד** ולא על מה שהוחזק בזיכרון —
+// ייצואה הייתה מזמינה מסך לטעון פעמיים את אותו דבר ולהציג שני מצבים שונים.
+async function listProjectAssignments(projectId) {
+  const { data, error } = await supabase
+    .from('assignments')
+    .select(
+      '*, hostesses(hostess_id, full_name, email, phone), projects(project_id, event_name, final_event_date, final_start_time, final_end_time, final_location, required_hostess_count, owner_name, owner_phone)',
+    )
+    .eq('project_id', projectId)
+    .order('hostess_id')
+    .order('assignment_number')
+  if (error) throw toError(error, 'שגיאה בטעינת השיבוצים של האירוע.')
+  return data ?? []
+}
+
+// שלוש התוצאות של שליחה, במקום אחד. **`unknown` אינו כשל** (`src/CLAUDE.md`): המייל אולי
+// יצא, ודיווח "נכשל" היה גורם למנהלת לשלוח שוב — כלומר הדיילת מקבלת שני זימונים.
+const emptyOutcome = () => ({ sent: 0, unknown: 0, failed: 0 })
+
+// 🔴 **הליבה המשותפת ל"שלח את הקישור שוב" בשני המסכים** — הכפתור הצובר של מבט-העל,
+// והפריט בתפריט-השורה. `screens-approved` מסך 4 §➕ אומר במפורש שהן *"אותה פעולה בדיוק"*,
+// ושני עותקים היו מתפצלים בשקט ברגע שאחד מהם יתוקן.
+//
+// ⚠️ **סדר הפעולות אינו סגנון:** קודם נכתב הטוקן ורק אחר-כך נשלח המייל. בסדר ההפוך
+// הדיילת מקבלת קישור שאינו קיים במסד — כלומר קישור מת בוודאות.
+// 🔴 **ובכשל-שליחה מגלגלים את `invite_sent_at` בלבד לאחור:** בלי זה השורה מציגה שעון-48
+// שרץ מחדש **על מייל שמעולם לא יצא**, והמנהלת ממתינה לתשובה שלא תגיע. הטוקן החדש נשאר —
+// הוא בלתי-מזיק, והישן ממילא כבר מת.
+async function refreshInviteAndSend(row, { template, origin, nowIso }) {
+  const token = crypto.randomUUID()
+  const payload = buildShiftInvitePayload({
+    template,
+    hostess: row.hostesses,
+    project: row.projects,
+    hourlyRate: row.hourly_rate_snapshot,
+    confirmUrl: confirmUrlFor(origin, token),
+  })
+  // דיילת בלי כתובת-מייל אינה עוצרת את השאר — היא נספרת ככשל ונאמרת בקול.
+  if (!payload) return 'failed'
+
+  const previousSentAt = row.invite_sent_at
+  const { data: updated, error: updateError } = await supabase
+    .from('assignments')
+    .update({ invite_token: token, invite_sent_at: nowIso })
+    .eq('project_id', row.project_id)
+    .eq('hostess_id', row.hostess_id)
+    .eq('assignment_number', row.assignment_number)
+    .select()
+  if (updateError || !updated?.length) return 'failed'
+
+  try {
+    await sendEmail({
+      payload,
+      entityType: 'shift',
+      // ⚠️ `entity_id` הוא **הפרויקט** ולא השיבוץ: ל-`assignments` מפתח משולש ואין לו
+      // מזהה-עמודה-אחת, והעמודה כאן היא `integer`. מי קיבל נשמר ב-`recipient`.
+      // 🔑 ואין כאן אובדן-הגנה: שליחה חוזרת של זימון **מותרת במפורש** (`§ב4`), ולכן
+      // היומן הזה הוא תיעוד ולא שער — בשונה מהצעת-מחיר.
+      entityId: row.project_id,
+      templateName: SHIFT_TEMPLATE_NAMES.invite,
+    })
+    return 'sent'
+  } catch (sendError) {
+    // 🚫 פסק-זמן אינו כשל: אין גלגול-אחורה, כי המייל אולי כן יצא.
+    if (classifySendError(sendError) === EMAIL_SEND_RESULT.UNKNOWN) return 'unknown'
+    await supabase
+      .from('assignments')
+      .update({ invite_sent_at: previousSentAt })
+      .eq('project_id', row.project_id)
+      .eq('hostess_id', row.hostess_id)
+      .eq('assignment_number', row.assignment_number)
+    return 'failed'
+  }
+}
+
+// "שלח שוב" — **הפעולה היחידה שכותבת למסד ממסך מבט-העל**, והיא זהה לפריט
+// `שלח את הקישור שוב` שבתפריט-השורה: מרעננת טוקן ו-`invite_sent_at` **על אותה שורה** —
+// בלי שורה חדשה, בלי סטטוס חדש, ובלי השפעה על הציון (`ממתין` מחוץ למכנה).
+// 🚫 **ואינה נוגעת ב-`responded_at`** — הוא נכתב פעם אחת במענה הראשון, ורענון שהיה מאפס
+// אותו היה מייצר **זמן-תגובה שלילי** (`§ב3`).
 export async function resendExpiredInvites(projectIds, origin) {
-  if (!projectIds?.length) return { sent: 0, unknown: 0, failed: 0 }
+  if (!projectIds?.length) return emptyOutcome()
 
   const nowIso = new Date().toISOString()
   const template = await getEmailTemplate(SHIFT_TEMPLATE_NAMES.invite)
@@ -280,63 +373,293 @@ export async function resendExpiredInvites(projectIds, origin) {
 
   const targets = finalAssignmentRows(data ?? []).filter((row) => isInviteExpired(row, nowIso))
 
-  const outcome = { sent: 0, unknown: 0, failed: 0 }
+  const outcome = emptyOutcome()
   for (const row of targets) {
-    const token = crypto.randomUUID()
-    const payload = buildShiftInvitePayload({
-      template,
-      hostess: row.hostesses,
-      project: row.projects,
-      hourlyRate: row.hourly_rate_snapshot,
-      confirmUrl: confirmUrlFor(origin, token),
-    })
-    // דיילת בלי כתובת-מייל אינה עוצרת את השאר — היא נספרת ככשל ונאמרת בקול.
-    if (!payload) {
+    outcome[await refreshInviteAndSend(row, { template, origin, nowIso })] += 1
+  }
+  return outcome
+}
+
+// רענון קישור על **שורה אחת** — פריט `שלח את הקישור שוב` בתפריט-השורה.
+// 🔑 אותה פונקציה בדיוק שמפעילה את הכפתור הצובר; ההבדל היחיד הוא כמה שורות נכנסות אליה.
+export async function resendInvite(row, origin) {
+  const template = await getEmailTemplate(SHIFT_TEMPLATE_NAMES.invite)
+  const outcome = emptyOutcome()
+  outcome[
+    await refreshInviteAndSend(row, { template, origin, nowIso: new Date().toISOString() })
+  ] += 1
+  return outcome
+}
+
+// 🔴 **"שלח מייל תיאום" ו"פתח זימון חדש" הן אותה פעולה בדיוק — יצירת שורה חדשה —
+// ולכן מימוש אחד.** ⚠️ **ואל תאחד אותה עם `resendInvite`:** שם מתרענן טוקן על אותה שורה,
+// כאן נולדת **שורה שנייה** והישנה נשארת כהיסטוריה. איחוד היה מוחק סירוב שקדם, וההיענות
+// היא **40% מהציון** — כלומר הדירוג היה משתנה בלי שאף בדיקה תיפול.
+//
+// 🔴 **`hourly_rate_snapshot` מוקפא כאן ולא נקרא מאוחר יותר** (`§א2`): *"הבטחנו לה תעריף
+// במייל, ומייל הוא הבטחה"*. עדכון תעריף במאגר מחר אינו משנה זימון שכבר יצא.
+// ⚠️ **`event_date` אינו נכתב כאן** — טריגר `assignments_sync_event_date` ממלא אותו
+// מ-`projects.final_event_date` בכל insert, וכתיבה ידנית הייתה יכולה לסתור אותו.
+export async function createShiftInvites({ projectId, hostessIds, origin }) {
+  if (!hostessIds?.length) return emptyOutcome()
+
+  const nowIso = new Date().toISOString()
+  const template = await getEmailTemplate(SHIFT_TEMPLATE_NAMES.invite)
+
+  const { data: project, error: projectError } = await supabase
+    .from('projects')
+    .select(
+      'project_id, event_name, final_event_date, final_start_time, final_end_time, final_location',
+    )
+    .eq('project_id', projectId)
+    .maybeSingle()
+  if (projectError) throw toError(projectError, 'שגיאה בטעינת פרטי האירוע.')
+  if (!project) throw toError({ code: 'PGRST116' }, 'האירוע לא נמצא, או שאין לך הרשאה אליו.')
+
+  const { data: hostesses, error: hostessError } = await supabase
+    .from('hostesses')
+    .select('hostess_id, full_name, email, hourly_rate')
+    .in('hostess_id', hostessIds)
+  if (hostessError) throw toError(hostessError, 'שגיאה בטעינת פרטי הדיילות.')
+
+  const outcome = emptyOutcome()
+  for (const hostess of hostesses ?? []) {
+    const inserted = await insertInviteRow({ project, hostess, nowIso })
+    if (!inserted) {
       outcome.failed += 1
       continue
     }
+    outcome[
+      await refreshInviteAndSend(
+        { ...inserted, hostesses: hostess, projects: project },
+        { template, origin, nowIso },
+      )
+    ] += 1
+  }
+  return outcome
+}
 
-    const previousSentAt = row.invite_sent_at
-    const { data: updated, error: updateError } = await supabase
+// 🔴 **`max+1` עם ניסיון-חוזר אחד** (§7.41↳). המפתח הראשי הוא
+// `(project_id, hostess_id, assignment_number)` ⇒ שני כותבים שחישבו את אותו מספר —
+// **השני מקבל `23505` ונעצר בקול.** זה בדיוק מה שהופך את המרוץ ללא-מסוכן: אין דריסה
+// שקטה, ורק צריך לחשב מחדש ולנסות שוב. **פעם אחת** — כישלון שני אינו מרוץ אלא תקלה.
+async function insertInviteRow({ project, hostess, nowIso, attempt = 0 }) {
+  const { data: existing, error: readError } = await supabase
+    .from('assignments')
+    .select('project_id, hostess_id, assignment_number')
+    .eq('project_id', project.project_id)
+    .eq('hostess_id', hostess.hostess_id)
+  if (readError) return null
+
+  const { data, error } = await supabase
+    .from('assignments')
+    .insert({
+      project_id: project.project_id,
+      hostess_id: hostess.hostess_id,
+      assignment_number: nextAssignmentNumber(
+        existing ?? [],
+        project.project_id,
+        hostess.hostess_id,
+      ),
+      assignment_status: 'pending',
+      hourly_rate_snapshot: hostess.hourly_rate,
+      invite_sent_at: nowIso,
+    })
+    .select()
+    .maybeSingle()
+
+  if (error?.code === '23505' && attempt === 0) {
+    return insertInviteRow({ project, hostess, nowIso, attempt: 1 })
+  }
+  return error ? null : data
+}
+
+// ---- אישור סופי, והשחרור שנוסע איתו ----
+
+// 🔴 **פעולה אחת ולא שתיים** (`local-13`): האישור הסופי והשחרור-האוטומטי יוצאים יחד,
+// **מהקוד ולא מטריגר** — כי לשחרור נלווה **מייל משלו**, וטריגר במסד אינו שולח מיילים.
+// היה זה טריגר, השחרור היה קורה וההודעה עליו לא — והדיילת שאמרה "כן" לא הייתה שומעת כלום.
+//
+// ⚠️ **כפל-תאריך נחסם במסד ולא כאן** (`§ב5`, *"אסור שזה יקרה"*): האינדקס
+// `assignments_one_event_per_day` מחזיר `23505`, ‏`hostessServerErrorMessage` מתרגם לעברית,
+// **והשורה נשארת במצבה הקודם** — כי הכתיבה כלל לא עברה.
+// 🚫 **ועודף-כמות אינו נחסם כאן בכלל** — הוא אזהרה שהמסך מציג *לפני* הקריאה (`quotaNotice`).
+// 🚫 **ו-M4 לעולם אינו כותב `projects.project_status`** — המעבר ל"מוכן לביצוע" הוא של
+// מודול 6 (`🚧 מ6 ← מ4`), למרות ש-`processes-approved.md:270` עדיין אומר אחרת.
+// ⚠️ **בלי `origin`** — למייל האישור-הסופי אין קישור: ההחלטה כבר התקבלה, ואין מה לאשר.
+export async function approveFinalAndRelease({ projectId, hostessIds }) {
+  const result = { approved: [], failed: [], released: [], mail: emptyOutcome() }
+  if (!hostessIds?.length) return result
+
+  const rows = await listProjectAssignments(projectId)
+  const deciding = finalAssignmentRows(rows)
+  const project = deciding[0]?.projects ?? rows[0]?.projects ?? null
+
+  const approvedIds = []
+  for (const hostessId of hostessIds) {
+    const row = deciding.find((candidate) => candidate.hostess_id === hostessId)
+    if (!row) continue
+
+    const { data, error } = await supabase
       .from('assignments')
-      .update({ invite_token: token, invite_sent_at: nowIso })
+      .update({ assignment_status: 'finally_approved' })
       .eq('project_id', row.project_id)
       .eq('hostess_id', row.hostess_id)
       .eq('assignment_number', row.assignment_number)
       .select()
-    if (updateError || !updated?.length) {
+    // 🔴 `!data?.length` בלי `error` הוא **חסימת-RLS** — הכשל השקט של הפרויקט. שורה שלא
+    // עודכנה **אינה** מדווחת כהצלחה, אחרת המסך היה מציג "אושרה" על אירוע שנשאר חסר.
+    if (error || !data?.length) {
+      result.failed.push({
+        name: row.hostesses?.full_name ?? '',
+        message:
+          hostessServerErrorMessage(error) ??
+          (error ? 'האישור הסופי נכשל.' : 'אין הרשאה לאשר את הדיילת הזו.'),
+      })
+      continue
+    }
+    result.approved.push(row.hostesses?.full_name ?? '')
+    approvedIds.push(hostessId)
+  }
+
+  // המייל נשלח **אחרי** שכל האישורים נכתבו: איש-הקשר במייל תלוי במי שאושרה (אחראית
+  // משמרת), ושליחה תוך-כדי הייתה מדפיסה איש-קשר שונה לדיילות של אותו אירוע.
+  if (approvedIds.length) {
+    result.mail = await sendFinalApprovalMails({ projectId, hostessIds: approvedIds })
+  }
+
+  // ⚠️ נקרא **מחדש** מהמסד ולא מהסט שבזיכרון: המכסה נמדדת אחרי הכתיבות, ובדיקה על
+  // נתונים ישנים הייתה משחררת מוקדם מדי — או לא משחררת בכלל.
+  const refreshed = await listProjectAssignments(projectId)
+  const targets = autoReleaseTargets(refreshed, project?.required_hostess_count)
+  for (const target of targets) {
+    const released = await releaseAssignment(target, { silent: true })
+    if (released) result.released.push(target.hostesses?.full_name ?? '')
+  }
+
+  return result
+}
+
+// מייל האישור-הסופי — **פרטי האירוע המלאים ואיש-הקשר בשטח.**
+// 🔴 **`resolveShiftContact` מחזיר `null` כשחסר שם או טלפון, והשליחה נעצרת** — עדיף
+// שהמנהלת תראה "לא נשלח" מאשר שדיילת תקבל *"טלפון: "* ריק ותתקשר לאף אחד.
+async function sendFinalApprovalMails({ projectId, hostessIds }) {
+  const template = await getEmailTemplate(SHIFT_TEMPLATE_NAMES.finalApproval)
+  const rows = await listProjectAssignments(projectId)
+  const deciding = finalAssignmentRows(rows)
+
+  const leadRow = deciding.find((row) => row.is_shift_lead)
+  const project = deciding[0]?.projects ?? null
+  const contact = resolveShiftContact({ project, shiftLead: leadRow?.hostesses ?? null })
+
+  const outcome = emptyOutcome()
+  for (const hostessId of hostessIds) {
+    const row = deciding.find((candidate) => candidate.hostess_id === hostessId)
+    const payload = buildFinalApprovalPayload({
+      template,
+      hostess: row?.hostesses,
+      project,
+      contact,
+    })
+    if (!payload) {
       outcome.failed += 1
       continue
     }
-
     try {
       await sendEmail({
         payload,
         entityType: 'shift',
-        // ⚠️ `entity_id` הוא **הפרויקט** ולא השיבוץ: ל-`assignments` מפתח משולש ואין לו
-        // מזהה-עמודה-אחת, והעמודה כאן היא `integer`. מי קיבל נשמר ב-`recipient`.
-        // 🔑 ואין כאן אובדן-הגנה: שליחה חוזרת של זימון **מותרת במפורש** (`§ב4`), ולכן
-        // היומן הזה הוא תיעוד ולא שער — בשונה מהצעת-מחיר.
-        entityId: row.project_id,
-        templateName: SHIFT_TEMPLATE_NAMES.invite,
+        entityId: projectId,
+        templateName: SHIFT_TEMPLATE_NAMES.finalApproval,
       })
       outcome.sent += 1
     } catch (sendError) {
-      if (classifySendError(sendError) === EMAIL_SEND_RESULT.UNKNOWN) {
-        outcome.unknown += 1
-        continue
-      }
-      outcome.failed += 1
-      await supabase
-        .from('assignments')
-        .update({ invite_sent_at: previousSentAt })
-        .eq('project_id', row.project_id)
-        .eq('hostess_id', row.hostess_id)
-        .eq('assignment_number', row.assignment_number)
+      outcome[classifySendError(sendError) === EMAIL_SEND_RESULT.UNKNOWN ? 'unknown' : 'failed'] +=
+        1
     }
   }
-
   return outcome
+}
+
+// ---- כתיבות תפריט-השורה ----
+
+// עדכון-סטטוס **רושם בלבד** — `סמן: אישרה זמינות` · `סמן: סירבה` · `סמן: ביטלה אחרי אישור`.
+// 🔑 **קיימות כי לדיילת אין אפליקציה:** לכל מצב שהקישור מייצר חייב להיות מסלול-מנהלת
+// מקביל (`screens-approved` מסך 4 §②). **אף אחת מהן אינה שולחת מייל.**
+// 🚫 **ו-`responded_at` אינו נכתב כאן** — הוא מודד את זמן-התגובה של **הדיילת דרך הקישור**;
+// עדכון ידני של המנהלת אינו מענה שלה, ורישומו היה מזייף את זווית "תענה הכי מהר".
+export async function markAssignmentStatus(row, status) {
+  const { data, error } = await supabase
+    .from('assignments')
+    .update({ assignment_status: status })
+    .eq('project_id', row.project_id)
+    .eq('hostess_id', row.hostess_id)
+    .eq('assignment_number', row.assignment_number)
+    .select()
+  if (error) throw toWriteError(error, 'עדכון הסטטוס נכשל.')
+  assertRowsAffected(data, 'אין הרשאה לעדכן את השיבוץ הזה.')
+  return data[0]
+}
+
+// שחרור — `שחרר — המשרה אוישה` (ידני) וגם השחרור-האוטומטי (`§ב6`).
+// 🔴 **ושחרור אינו "ביטלה אחרי אישור", אף שעל המסך הם נראים דומים:** שחרור = **אנחנו**
+// ויתרנו עליה ⇒ **מחוץ לציון לגמרי**; ביטול = **היא** חזרה בה ⇒ נספרת באמינות ב-`0.5`.
+// פריט אחד לשתיהן היה מזייף את הדירוג של דיילת חפה-מפשע.
+export async function releaseAssignment(row, { silent = false } = {}) {
+  const { data, error } = await supabase
+    .from('assignments')
+    .update({ assignment_status: 'released' })
+    .eq('project_id', row.project_id)
+    .eq('hostess_id', row.hostess_id)
+    .eq('assignment_number', row.assignment_number)
+    .select()
+
+  if (error || !data?.length) {
+    // ⚠️ בשחרור-האוטומטי כשל אינו מפיל את האישור שכבר נכתב — הוא מדווח למסך כמספר.
+    if (silent) return null
+    if (error) throw toWriteError(error, 'השחרור נכשל.')
+    assertRowsAffected(data, 'אין הרשאה לשחרר את השיבוץ הזה.')
+  }
+
+  // 🔑 ההודעה נוסעת עם הפעולה, ולא "אחר-כך": מי שאמרה "כן" ולא שמעה כלום מפסיקה לענות,
+  // **וההיענות היא 40% מהציון** — כלומר שתיקה שלנו נרשמת כחוסר-אמינות שלה.
+  try {
+    const template = await getEmailTemplate(SHIFT_TEMPLATE_NAMES.release)
+    const payload = buildReleasePayload({
+      template,
+      hostess: row.hostesses,
+      project: row.projects,
+    })
+    if (payload) {
+      await sendEmail({
+        payload,
+        entityType: 'shift',
+        entityId: row.project_id,
+        templateName: SHIFT_TEMPLATE_NAMES.release,
+      })
+    }
+  } catch {
+    // הסטטוס כבר נכתב; כשל-מייל אינו מחזיר אותו אחורה — השורה משוחררת בפועל, והמסך
+    // מדווח על המייל בנפרד. גלגול-אחורה כאן היה מחזיר דיילת לתקן שכבר אינו קיים.
+  }
+
+  return data?.[0] ?? null
+}
+
+// ★ אחראית משמרת — **רושם בלבד, בלי מייל.** אחת לאירוע, ורק אחרי אישור סופי (`§ב5`).
+// ⚠️ **הייחוד נאכף במסד** (`assignments_one_shift_lead_per_project`), והמסך מכבה-ומנמק
+// את הפריט כשכבר יש אחת — כדי שהלחיצה לא תיפול על אילוץ במקום להסביר.
+export async function setShiftLead(row, isShiftLead) {
+  const { data, error } = await supabase
+    .from('assignments')
+    .update({ is_shift_lead: isShiftLead })
+    .eq('project_id', row.project_id)
+    .eq('hostess_id', row.hostess_id)
+    .eq('assignment_number', row.assignment_number)
+    .select()
+  if (error) throw toWriteError(error, 'סימון אחראית המשמרת נכשל.')
+  assertRowsAffected(data, 'אין הרשאה לסמן אחראית משמרת.')
+  return data[0]
 }
 
 // ---- כתיבות (Writes) ----

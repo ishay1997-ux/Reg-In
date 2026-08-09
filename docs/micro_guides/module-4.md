@@ -13,9 +13,9 @@
 | Module | **4 — דיילות + Smart Match** |
 | Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ **Nothing on this branch is pushed.** 🚫 Do not write a number here — it rotted twice already *("ahead 6" was written on 08/08 and was 93 by 09/08 evening)*. **Measure it: `git rev-list --count origin/dev..HEAD`** |
 | Owner | ישי (sole developer) |
-| Overall status | 🔨 **Phase 3 — 3.0 · 3.1 · 3.2 · 3.3 DONE.** Gate `exit 0` · **662 unit tests** (was 627 after 3.2; 575 at the close of Phase 2) · `smoke exit 0` · 7 migrations · advisors **15**. 🆕 **The pool is LIVE: 20 real hostesses, created through the app's own path, all 20 geocoded** *(Ishay's ruling — see `local-14`)*. 🆕 **The Phase-3 door was swept and all three open items are RULED** (§7.41 · §7.33 · `local-12`). ⏳ Phase 1's 1.5 gate still owes Ishay's `regin-docs-sync` run |
-| Last updated | **09/08/2026 20:50** *(system clock; refresh it at every step transition)* |
-| **Active step** | **3.3 · 3.4 · 3.5 — approved as ONE build unit** (`~/.claude/plans/wiggly-jingling-cascade.md`, Ishay 09/08 20:4X). 🔴 **Why bundled, and it is a measurement not a preference: `assignments` holds ZERO rows** ⇒ 3.3's whole content (five counters · the `ממתינות`/`פג תוקפן` split · `שלח שוב`) renders as zeros and cannot be proven; **3.4 is what creates those rows and 3.5 is what records the answers.** The 2.3 remainder (assignment-lifecycle writes) lands inside this unit |
+| Overall status | 🔨 **Phase 3 — 3.0 · 3.1 · 3.2 · 3.3 · 3.4 · 3.5 DONE.** Gate `exit 0` · **733 unit tests** (was 662 after 3.3) · `smoke exit 0` · **16 module-4 E2E green** (8 new for surface 2 + menu) · 8 migrations · advisors **15**. 🆕 **`assignments` is no longer empty: 5 real rows on project 8, one per status, created through the app's own path** — the module's whole lifecycle ran end-to-end against the live DB. ⏳ Phase 1's 1.5 gate still owes Ishay's `regin-docs-sync` run |
+| Last updated | **09/08/2026 23:5X** *(system clock; refresh it at every step transition)* |
+| **Active step** | **3.6 — the public confirm page.** 🔴 **Its route path is LOCKED to `/shift/:token`** — `confirmUrlFor` already baked it into **five invitations that have really been sent**, and a mail cannot be recalled. ⚠️ **And the tokens expire 48h after sending** *(the batch went out 09/08 23:33)*, so a link demo needs a fresh invite, not one of these |
 | Deadline | module 4 → `dev` by **21/08/2026**; submission **19/09/2026** |
 
 Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target module) · ❌ blocked (reason)
@@ -39,8 +39,8 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | 3.1 | Surface 3 — hostess repository table | ✅ 09/08 — built as drawn · 4 new pure functions (**tests first, watched red**) · **verified live on 20 real rows**, both permission directions, all four screen states |
 | 3.2 | Surfaces 3ב/3ג/3ד — add / edit / view cards | ✅ 09/08 — one dialog serves add+edit · stars open EMPTY · **the three different validation behaviours screenshotted** (ID blocks · wage blocks · duplicate email warns-only) |
 | 3.3 | Surface 1 — assignment overview (triage) | ✅ 09/08 — built · **8 E2E green incl. both permission directions and the load-failure guard** · 4 new pure functions, each proven red against deliberately-broken code |
-| 3.4 | Surface 2 — Smart Match | ◐ **09/08 — C1+C2 DONE (assembly + sort angles) · migration G applied, C3 unblocked.** C3–C5 (writes · screen · navigation) not built |
-| 3.5 | Surface 4 — per-row action menu | 🔨 09/08 — 🗣️ approved 20:4X (same unit) |
+| 3.4 | Surface 2 — Smart Match | ✅ 09/08 — C1–C5 done · **the lifecycle ran live**: 5 invites sent, 1 finally approved, 1 released, 1 declined, 1 withdrawn · anchor `0.67/0.66/0.64` re-verified after wiring |
+| 3.5 | Surface 4 — per-row action menu | ✅ 09/08 — **all six statuses opened and screenshotted on real rows**; `approval_withdrawn` correctly has no `⋯` at all |
 | 3.6 | Surface 5 — public confirm page (no login) | ⬜ |
 | 3.7 | 🔻👤 Phase-3 gate: 🎨 UX & functional review | ⬜ |
 | 4.1 | Wiring: **the public route only** — `UnderConstruction` was already replaced at 3.1 | ◐ **half done 09/08** — `/hostesses` renders `HostessesPage` and `App.routes.test.jsx` is green. **Still owed: the public route OUTSIDE `<MainLayout>` + its deliberate entry in the AST allow-list** |
@@ -759,6 +759,35 @@ DB** with the row returning to its previous state.
 **C5 · navigation** — replace the temporary toast in `HostessesPage` with the real route to this
 surface, and add `← חזרה למבט-על`.
 
+↳ **as-built 09/08/2026 — C3 · C4 · C5 landed. Step CLOSED.**
+**(1) The lifecycle writes live in `api.js`, and the pure rules in a new `src/lib/assignmentActions.js`**
+(32 tests, four behaviours broken on purpose and each bit its own guard). It carries `rowMenuItems`
+too — the menu of 3.5 is the same rule set seen from one row, and **two copies would have drifted
+in the one place the module cannot afford it.**
+**(2) 🔴 `שלח מייל תיאום` and `פתח זימון חדש` are ONE implementation, and `שלח את הקישור שוב` is a
+different one — deliberately.** The first two both *create* a row (`max+1`, one retry on `23505`
+per §7.41↳); resend *refreshes* the same row. They can never appear on the same status.
+**(3) The final approval and its auto-release travel in one call** (`approveFinalAndRelease`,
+`local-13`), and the release mail leaves with the status change. **The quota check is computed on
+rows re-read from the DB after the writes** — computing it on the in-memory set would release on
+stale counts.
+**(4) `resolveShiftContact` reads `projects.owner_name`/`owner_phone`** (migration G) and returns
+`null` when either is missing, which **refuses the send** rather than mailing `טלפון: ` empty.
+**(5) 🐞 Two defects caught by LOOKING at the screenshot, neither by a test:**
+`invite_sent_at` (a *timestamp*) was passed to `formatDate` (which expects a *date*) and rendered
+**`09T20:33:42.432+00:00/08/2026`** on screen — ⚠️ **and `dates.test.js` already knew about the trap:
+it sliced the string itself before calling.** A guard written around a caller instead of around the
+function. ⇒ new `formatTimestamp` (Israel time — the UTC date is the previous day after 21:00 UTC),
+and `formatDate` now **rejects** a timestamp instead of emitting garbage. Second: the row menu
+opened **outside the card** and was clipped at the window edge (`align="start"` aligns the RIGHT edge
+in RTL, and the trigger sits on the left) — measured after the fix: `x=61`, inside.
+**(6) 🔬 A ninth bidi occurrence, measured not eyeballed:** the reliability banner printed the two
+weights as `62% / 38%`, and `Range` rects put **`38%` to the LEFT of `62%`** — the pair splits into
+two runs that bidi orders backwards, so anyone reading the parenthetical alone gets the weights
+swapped. **Fixed by removing the sequence rather than isolating it:** each percentage now sits beside
+its own word. 🔑 **The generalizable half: a two-item numeric sequence inside Hebrew has no safe
+order — the fix is to not have a sequence.**
+
 **Step 3.5 · Surface 4 — per-row action menu**
 **Files:** `04_hostesses/AssignmentRowMenu.jsx` · mockup `04_rowmenu_approved.html`
 **What to do:** contents **derived from row status**, never a flat list. 🔴 `שלח את הקישור שוב` refreshes
@@ -780,6 +809,43 @@ other is exactly the kind of unverified claim this project's own incidents warn 
 ➕ **And 3.3's two `שלח שוב` buttons (per-row and bulk) call THIS step's resend function** — the
 screen card states they are *"אותה פעולה בדיוק"*. One implementation, never a copy.
 **🗣️ אושר 09/08 20:4X** *(same consolidated plan as 3.3.)*
+
+**מה ייחשב עובד** *(`screens-approved.md` מסך 4 §②/③, quoted — written to disk 09/08 per the
+`module-build` rule; the three sentences above are the same list, now with their sources)*
+1. *"מה קרה עם הזימון הזה — ואיך אני רושמת מידע שהגיע בטלפון ולא דרך הקישור."* (§②)
+2. *"אילו שתיהן היו נקראות 'שלח שוב', המנהלת הייתה מוחקת היסטוריית-מענה בלי לדעת."* (§③①)
+3. *"פריט-תפריט אחד לשתיהן היה מזייף את הציון של דיילת חפה-מפשע."* (§③②)
+4. `יחידה-ספציפית` — **a `declined` row offers `פתח זימון חדש` and NEVER `שלח את הקישור שוב`**,
+   while a `pending` row offers the opposite. Verified live on עדי שפירא vs רוני אלמוג.
+5. `יחידה-ספציפית` — **an `approval_withdrawn` row has no `⋯` button at all** (measured: count `0`),
+   because a history row has no actions — not an empty menu, no button.
+
+↳ **as-built 09/08/2026 — built on `rowMenuItems` (`src/lib/assignmentActions.js`). Step CLOSED.**
+**(1) 🔴 All six statuses were opened on REAL rows and screenshotted** — not modelled:
+`pending` → 4 items with resend primary · `confirmed_available` → 3, **no resend** · `declined` and
+`released` → `פתח זימון חדש` only · `finally_approved` → shift-lead / release / withdrawn ·
+`approval_withdrawn` → **no `⋯`**.
+**(2) 🔴 A contradiction INSIDE the approved mockup, and the spec settles it:** the caption under
+menu ④ says *"שתי האחרונות שולחות מייל"*, which would make `סמן: ביטלה אחרי אישור` a mail-sender —
+while the **click map** (§①) marks it 🚫 **and the mockup's own legend** lists it under *"רק רושמות"*.
+Two against one, and behaviour belongs to the spec under the arbitration rule ⇒ **it sends nothing.**
+📌 The same caption also says both return the project to `בתהליך`; **M4 never writes
+`projects.project_status`** (`🚧 מ6 ← מ4`), so that half is stale too.
+**(3) Radix `DropdownMenu`, not a hand-rolled panel** — the `onBlur`+`setTimeout` floating surface is
+a known project bug that **Playwright passes green over** (`src/CLAUDE.md`); Radix owns the focus.
+**(4) `הנחתי`** (§10): marking a second shift lead is **disabled-and-explained** rather than allowed
+to hit the DB's partial unique index.
+
+🌊 **Ripple sweep for steps 3.4+3.5 — the five targets, named:**
+① `↳ as-built` written on **both** 3.4 and 3.5 · ② §10 — five new entries (the mislabelled shift-lead
+contact ⏳ · two `הנחתי` · the bouncing demo domain · the timestamp defect · the ninth bidi) ·
+③ **DoD checkboxes moved:** `test:run` 662/22 → **733/25** · "all 8 surfaces" ◐ 4 of 8 → **◐ 7 of 8** ·
+and **the migrations line still said `7` although G was applied at the 3.4 door — corrected to 8** ·
+④ **Ledger rows implemented by these steps:** `local-13` (release travels with the approval),
+`§7.41↳` (one retry on `23505`), `local-2`+`local-15` (contact from the snapshot), `local-10`
+(distance as a word) — all four are as-built and none needed a new row · ⑤ **approved-spec sections
+that now read differently:** `screens-approved.md` מסך 4 §① — its caption contradiction is recorded
+in §10 above; 🚫 **no number in the approved spec was edited**, per the tagged-pointer rule.
 
 **Step 3.6 · Surface 5 — public confirm page** ⚠️ shared-surface *(`src/App.jsx`)*
 **Files:** `04_hostesses/PublicConfirmPage.jsx` · `src/App.jsx` · mockup `05_public_confirm_approved.html`
@@ -892,7 +958,7 @@ DoD typed-echo → PR instructions. 🚫 The audit never merges.
 *(Canonical DoD from `docs/architecture_and_qa_roadmap.md`, instantiated for module 4.
 The closing audit walks these one by one and ticks what it verified — so they must be checkboxes.)*
 
-- [x] All **7 migrations** applied via MCP after a typed-echo, `docs/schema.sql` refreshed, migration + snapshot committed **together** — `20260809085058` (mig 0, phase 0) · `20260809122536` (A) · `20260809124327` (B) · `20260809125750` (C) · `20260809134237` (D) · `20260809172638` (E — `set_project_coordinates`) · `20260809174501` (F — revoke `anon` from E). **Ishay typed each name individually; no gate was batched or pre-granted.** *(F exists because E's own revoke was incomplete — see §10. The count moved 5→7 during step 2.4.)*
+- [x] All **8 migrations** applied via MCP after a typed-echo, `docs/schema.sql` refreshed, migration + snapshot committed **together** — `20260809085058` (mig 0, phase 0) · `20260809122536` (A) · `20260809124327` (B) · `20260809125750` (C) · `20260809134237` (D) · `20260809172638` (E — `set_project_coordinates`) · `20260809174501` (F — revoke `anon` from E) · `20260809223025` (G — `projects.owner_name`/`owner_phone` snapshot). **Ishay typed each name individually; no gate was batched or pre-granted.** *(F exists because E's own revoke was incomplete — see §10. The count moved 5→7 during step 2.4, and 7→8 when `local-15` was ruled at the 3.4 door. **G's line said 7 until 09/08 23:5X — corrected while closing 3.4/3.5.**)*
 - [x] `get_advisors(security)` — **triage note written, 09/08/2026** *(this line closes with a triage,
       not a zero, and that is the honest outcome)*. Trajectory across phase 1: **15 → 15 → 15 → 17 → 14.**
       Migration C legitimately raised it (+2 — two new tables born RLS-on before D gave them policies);
@@ -905,7 +971,7 @@ The closing audit walks these one by one and ticks what it verified — so they 
 - [x] The deliberate policy-drop test ran — **0 rows and NO error**, both for a `view`-only role with the select policy dropped and for an `edit` role with **both** dropped. ⚠️ **And it caught a mine:** dropping only `_select_` hides nothing from an `edit` holder, because `_write_by_permission` is `FOR ALL`. ◐ **The DB half is proven; the screen half (showing an error rather than an empty list) is owed by Phase 3** — the DB cannot signal this.
 - [x] `anon` cannot read or write `assignments` directly; the public RPC is the only path — as `anon`: `count(*)` = **0**, direct UPDATE took no row; the RPC returned `ok:true` on a valid token and a **byte-identical** generic message on all four failure paths (unknown · replayed · 49h-old · event already past).
 - [x] `npm run gate` green — **exit 0**, 09/08/2026 (incl. `check:docs-structure` 29 files / 0 findings and `check:context`)
-- [x] `npm run test:run` green — **662 passed / 22 files** *(09/08/2026, after step 3.3; was 627/20 after 3.2, 575/17 at the close of Phase 2, 535/15 after 2.2, 428/13 at the close of Phase 1)*
+- [x] `npm run test:run` green — **733 passed / 25 files** *(09/08/2026, after steps 3.4+3.5; was 662/22 after 3.3, 627/20 after 3.2, 575/17 at the close of Phase 2, 535/15 after 2.2, 428/13 at the close of Phase 1)*
 - [x] `npm run test:e2e` — ✅ **RESOLVED 09/08/2026 ~16:0X by the parallel E2E session, and the diagnosis
       was right: it was never a code bug.** The dev server was refreshing itself mid-run (Vite HMR),
       which is why login "never left `/login`" and why every one of the five passed in isolation.
@@ -929,6 +995,9 @@ The closing audit walks these one by one and ticks what it verified — so they 
 - [x] The three §3.5 holes each fail a deliberately-wrong implementation *(hardcoded split · never-worked given the cap · mid-computation rounding)* — **all three watched red against code broken on purpose.** Hole (ג) needed its own non-round data before it bit; the first version of that test was green on a broken implementation (§10)
 - [ ] **UX & validation:** step 3.7 passed — §4 design conformance · all screen states · RTL · keyboard basics — **and** every spec'd validation implemented, every spec-silent one confirmed with Ishay
 - [ ] All 8 approved surfaces built and screenshot-verified, including the public page on a phone viewport
+      — ◐ **7 of 8 done 09/08/2026** *(3 · 3ב · 3ג · 3ד · 1 · 2 · 4 — the last two closed with steps
+      3.4/3.5, including the row menu opened on **all six statuses on real rows**. **Only משטח 5, the
+      public page, is left** — step 3.6.)* *(was: 4 of 8; the original note follows)*
       — ◐ **4 of 8 done 09/08/2026** *(3 · 3ב · 3ג · 3ד; screenshots of every state, both permission
       directions, and the §א4 window with a real name and date)*. **Remaining: 1 · 2 · 4 · 5.**
 - [ ] Every `🚧` in §2 has its **byte-matching** `🚧 מN` line in `PROJECT_MASTER §6` — **including the two authored this module** (M9 params screen · M6 attendance fields)
@@ -983,6 +1052,45 @@ still open.**
 **(e)/(f)/(g): per `CLAUDE.md` iron rules 13/15/16 + the end-of-session protocol.**
 
 ## §10 📝 Deviations & Tech-Debt Log
+
+- 🔴 **09/08/2026 · steps 3.4+3.5 — ⏳ OPEN, and it goes to Ishay: the final-approval mail
+  MISLABELS the shift lead.** `תבנית_אישור_סופי_שיבוץ` hardcodes *"איש קשר בשטח: **מנהלת הפרויקט**
+  -[שם_מנהלת_פרויקט]"*, while `local-2` (Ishay, 08/08) rules the contact is **the shift lead when one
+  is marked**. ⇒ the moment a lead is marked, the mail introduces her in a role that is not hers.
+  🔑 **This is not a new discovery — `spec.md §12` already recorded it** (*"ולתבנית אין placeholder
+  עבורה בכלל"*) and §7.89 delegated *"each placeholder ruled on its own merits"*, but nobody came back
+  to it. **Cost of the fix: a params UPDATE ⇒ a ninth migration**, so it cannot be done silently.
+  **Recommendation:** drop the two hardcoded words from the template so the line reads
+  *"איש קשר בשטח: [שם_מנהלת_פרויקט], טלפון: …"* and let the value carry the role
+  (`אחראית המשמרת נועה שגיא` / `מנהלת הפרויקט ישי אטיאס`). 🚫 **Until ruled, do not mark a shift lead
+  on a project whose approval mails have gone out.** The code side is already ready:
+  `resolveShiftContact` returns `isShiftLead`, and only the template text has to change.
+- 📌 **09/08/2026 · `הנחתי` ×2, steps 3.4+3.5** — nobody stated these and I did not measure them:
+  ① **A hostess who already has a row on this event is not listed as a candidate.** `§ב1`'s gate has
+  five conditions and this is not one of them; she is already in the right-hand column, and showing
+  her on both sides invites a duplicate invitation. **It closes no door** — `declined`/`released` come
+  back through `פתח זימון חדש`, which exists for exactly that.
+  ② **Marking a second shift lead is disabled-and-explained**, not attempted. `§ב5` says *"ביטלה ⇒
+  הסימון משתחרר, המנהלת מסמנת אחרת"* and never says what a click does while one is marked; the DB has
+  a partial unique index, so the click **would fail**. Disabled-and-explained is the pattern this
+  surface already uses for `שלח את הקישור שוב`.
+- ⚠️ **09/08/2026 · measured, and it changes what a demo can claim: the 19 `@regin-demo.co.il`
+  addresses BOUNCE.** The domain does not resolve, so every send to them returns a Gmail
+  non-delivery notice to Ishay's inbox — **while `email_log` records `sent`, because Make accepted the
+  request.** 🔑 **This is the sharpest live proof of the project's own rule that a `200` is not
+  delivery**, and it is now a fact about the demo data, not a defect: only `נועה שגיא`
+  (`ishay1997@gmail.com`) actually receives. **Decision needed from Ishay only if the bounce mail
+  bothers him**; the app behaves correctly either way.
+- 🐞 **09/08/2026 · step 3.4 — `formatDate` accepted a timestamp and emitted garbage
+  (`09T20:33:42.432+00:00/08/2026`).** ⚠️ **And the existing `dates.test.js` KNEW:** its own case sliced
+  the string to 10 chars *before* calling — a guard written around one caller instead of around the
+  function, which is the same shape as the two vacuous tests of step 3.1. ⇒ `formatDate` now rejects
+  non-date input, and `formatTimestamp` (Asia/Jerusalem) was added — **the timezone is load-bearing:
+  a mail sent 01:10 Israel time is stored as 22:10 of the previous day.**
+- 🔬 **09/08/2026 · the NINTH bidi occurrence — `62% / 38%` renders reversed.** `Range` rects put
+  `38%` LEFT of `62%`. **Fixed by deleting the sequence, not by isolating it:** each percentage moved
+  next to its own word. 🔑 **The rule this adds to the family: `Money`/`LRI…PDI` fix a single value
+  inside Hebrew; a two-value sequence has no correct order at all, and must be broken up.**
 
 - 🔴 **09/08/2026 · steps 3.1–3.2 — the SEVENTH occurrence of the bidi family, and Ishay spotted it
   from the code before it was ever rendered.**

@@ -2,7 +2,12 @@ import { describe, it, expect } from 'vitest'
 import {
   SHIFT_TEMPLATE_NAMES,
   shiftInviteSubject,
+  finalApprovalSubject,
+  releaseSubject,
   buildShiftInvitePayload,
+  buildFinalApprovalPayload,
+  buildReleasePayload,
+  resolveShiftContact,
   confirmUrlFor,
 } from './shiftEmails'
 
@@ -94,6 +99,114 @@ describe('buildShiftInvitePayload — חוזה מול מנוע-המייל', () =
 describe('shiftInviteSubject', () => {
   it('נושא נושא את שם האירוע — תיבה של דיילת מקבלת כמה זימונים', () => {
     expect(shiftInviteSubject(project)).toBe('זימון למשמרת — כנס לקוחות שנתי')
+  })
+})
+
+// ⚠️ העתקים מדויקים של הערכים שבמסד (מיגרציות `20260723112000` ו-`20260809125750`,
+// נקראו חי 09/08/2026) — כדי שבדיקה תיפול אם שם-placeholder בתבנית ישתנה.
+const FINAL_TEMPLATE = `היי [שם_דיילת],
+אנו שמחים לעדכן כי שיבוצך לאירוע '[שם_פרויקט]' אושר ונסגר סופית!
+להלן פרטי האירוע המלאים:
+תאריך: [תאריך_אירוע]
+שעות משמרת: [שעת_התחלה] עד [שעת_סיום]
+מיקום האירוע: [כתובת_אירוע_מלאה]
+איש קשר בשטח: מנהלת הפרויקט -[שם_מנהלת_פרויקט], טלפון: [טלפון_מנהלת_פרויקט]
+אנא ודאי הגעה בזמן (15 דקות לפני תחילת משמרת) והקפידי על קוד לבוש שחור-לבן קלאסי (אלא אם צוין אחרת).
+נתראה באירוע!
+צוות הגיוס, REG-IN.`
+
+const RELEASE_TEMPLATE = `היי [שם_דיילת],
+תודה שהתפנית — המשרה כבר אוישה לאירוע הזה. נשמח לפנות אלייך בפעם הבאה.
+בברכה,
+צוות הגיוס, REG-IN.`
+
+describe('resolveShiftContact — איש הקשר בשטח (local-2 · §ב5)', () => {
+  const withOwner = { ...project, owner_name: 'ישי אטיאס', owner_phone: '050-1241223' }
+
+  it('לא סומנה אחראית משמרת ⇒ מנהלת הפרויקט, מהצילום שעל הפרויקט', () => {
+    expect(resolveShiftContact({ project: withOwner, shiftLead: null })).toEqual({
+      name: 'ישי אטיאס',
+      phone: '050-1241223',
+      isShiftLead: false,
+    })
+  })
+
+  it('🔴 סומנה אחראית משמרת ⇒ היא איש-הקשר, וגוברת על מנהלת הפרויקט', () => {
+    const lead = { full_name: 'נועה שגיא', phone: '052-7778899' }
+    expect(resolveShiftContact({ project: withOwner, shiftLead: lead })).toEqual({
+      name: 'נועה שגיא',
+      phone: '052-7778899',
+      isShiftLead: true,
+    })
+  })
+
+  it('🔴 טלפון חסר ⇒ `null` — ולא "טלפון: " ריק במייל שיצא לדיילת', () => {
+    expect(resolveShiftContact({ project: { ...withOwner, owner_phone: '' } })).toBe(null)
+  })
+
+  it('🔴 שם חסר ⇒ `null` באותה מידה', () => {
+    expect(resolveShiftContact({ project: { ...withOwner, owner_name: null } })).toBe(null)
+  })
+
+  it('🔴 אחראית משמרת בלי טלפון אינה "נופלת אחורה" למנהלת — היא איש-הקשר, והמייל נעצר', () => {
+    const lead = { full_name: 'נועה שגיא', phone: null }
+    expect(resolveShiftContact({ project: withOwner, shiftLead: lead })).toBe(null)
+  })
+})
+
+describe('buildFinalApprovalPayload — מייל האישור הסופי', () => {
+  const contact = { name: 'ישי אטיאס', phone: '050-1241223', isShiftLead: false }
+  const args = { template: FINAL_TEMPLATE, hostess, project, contact }
+
+  it('כל שמונת השדות מולאו — ולא נשאר סוגר מרובע אחד', () => {
+    const payload = buildFinalApprovalPayload(args)
+    expect(payload.body).not.toMatch(/\[[^\]\n]+\]/)
+    expect(payload.body).toContain('נועה שגיא')
+    expect(payload.body).toContain('22/08/2026')
+    expect(payload.body).toContain('אקספו תל אביב, ביתן 2')
+    expect(payload.body).toContain('ישי אטיאס')
+    expect(payload.body).toContain('050-1241223')
+  })
+
+  it('🔴 `[כתובת_אירוע_מלאה]` הוא `final_location` — הכתובת המלאה, לא העיר', () => {
+    const payload = buildFinalApprovalPayload(args)
+    expect(payload.body).toContain('מיקום האירוע: אקספו תל אביב, ביתן 2')
+  })
+
+  it('🔴 בלי איש-קשר ⇒ `null`, לא מייל עם "טלפון: " ריק', () => {
+    expect(buildFinalApprovalPayload({ ...args, contact: null })).toBe(null)
+  })
+
+  it('🔴 המצורף כבוי — גם המייל הזה הוא טקסט בלבד', () => {
+    expect(buildFinalApprovalPayload(args).pdf_base64).toBe('')
+  })
+
+  it('בלי כתובת-מייל לדיילת ⇒ `null`', () => {
+    expect(buildFinalApprovalPayload({ ...args, hostess: { full_name: 'נועה' } })).toBe(null)
+  })
+})
+
+describe('buildReleasePayload — ההודעה שנוסעת עם השחרור', () => {
+  it('🔴 נוסח השחרור, ולא מייל הביטול — היא מעולם לא שובצה', () => {
+    const payload = buildReleasePayload({ template: RELEASE_TEMPLATE, hostess, project })
+    expect(payload.body).toContain('תודה שהתפנית')
+    expect(payload.body).not.toContain('בוטלה')
+    expect(payload.body).not.toMatch(/\[[^\]\n]+\]/)
+  })
+
+  it('בלי כתובת-מייל ⇒ `null`', () => {
+    expect(buildReleasePayload({ template: RELEASE_TEMPLATE, hostess: {}, project })).toBe(null)
+  })
+})
+
+describe('נושאי המיילים — תיבה של דיילת מקבלת כמה מיילים על כמה אירועים', () => {
+  it('שלושת הנושאים נושאים את שם האירוע ונבדלים זה מזה', () => {
+    expect(finalApprovalSubject(project)).toBe('אישור סופי למשמרת — כנס לקוחות שנתי')
+    expect(releaseSubject(project)).toBe('עדכון על המשמרת — כנס לקוחות שנתי')
+    expect(
+      new Set([shiftInviteSubject(project), finalApprovalSubject(project), releaseSubject(project)])
+        .size,
+    ).toBe(3)
   })
 })
 

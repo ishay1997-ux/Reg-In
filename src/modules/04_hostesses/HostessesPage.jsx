@@ -9,11 +9,11 @@
 // ולא עמודים** — `processes-approved.md` מצטט את C5 מפורשות: *"באותו מסך"*.
 
 import { useState } from 'react'
-import { useToast } from '@/components/ToastProvider'
 import RepositoryTab from './RepositoryTab'
 import OverviewTab from './OverviewTab'
 import HostessFormDialog from './HostessFormDialog'
 import HostessViewCard from './HostessViewCard'
+import SmartMatchPage from './SmartMatchPage'
 import { resendExpiredInvites } from './api'
 
 const TABS = {
@@ -22,7 +22,6 @@ const TABS = {
 }
 
 export default function HostessesPage() {
-  const toast = useToast()
   // ⚠️ **ברירת-המחדל חזרה למבט-העל** (09/08/2026, צעד 3.3): עד שהמשטח נבנה היא הוסטה
   // זמנית ל"מאגר דיילות" כדי לא לפתוח על לשונית ריקה. עכשיו הסדר הוא כמצויר במוקאפ —
   // וזה גם הסדר הנכון מוצרית: המנהלת נכנסת כדי לראות **איפה חסר**, לא כדי לדפדף במאגר.
@@ -34,9 +33,29 @@ export default function HostessesPage() {
   const [formHostessId, setFormHostessId] = useState(undefined) // undefined=סגור · null=חדשה · מספר=עריכה
   const [cardHostessId, setCardHostessId] = useState(null)
 
+  // 🔴 **מסך השיבוץ מחליף את העמוד ואינו חלון מעליו** — בשונה מ-3ב/3ג/3ד. זו החלטה
+  // שהמוקאפ המאושר קובע: הוא מצייר **מסך מלא** עם `← חזרה למבט-על` משלו, ולא פופ-אפ.
+  // 🚫 **ואינו מסלול נפרד** — המנהלת נכנסת ויוצאת עשרות פעמים ביום, ומסלול היה מאבד את
+  // מצב-הסינון של המבט-על בכל חזרה. אותו נימוק בדיוק שבגללו הלשוניות אינן ניווט.
+  const [smartMatchProjectId, setSmartMatchProjectId] = useState(null)
+
   function handleSaved() {
     setFormHostessId(undefined)
     setReloadKey((k) => k + 1)
+  }
+
+  if (smartMatchProjectId !== null) {
+    return (
+      <SmartMatchPage
+        projectId={smartMatchProjectId}
+        onBack={() => {
+          setSmartMatchProjectId(null)
+          // ⚠️ רענון בחזרה, ולא "רק כשמשהו נשמר": השיבוצים שנשלחו במסך ההוא הם בדיוק
+          // מה שמשנה את המונים במבט-על, ומסך שמראה נתון ישן אחרי פעולה נקרא כמו באג.
+          setReloadKey((k) => k + 1)
+        }}
+      />
+    )
   }
 
   return (
@@ -80,10 +99,7 @@ export default function HostessesPage() {
             onResendExpired={(projectIds) =>
               resendExpiredInvites(projectIds, window.location.origin)
             }
-            // ⏳ **זמני, ונופל בצעד 3.4 שנבנה מיד אחרי זה** (אותה יחידת-בנייה): לחיצה על
-            // שורה אמורה לפתוח את השיבוץ החכם של אותו אירוע. עד שהמסך קיים — אומרים
-            // זאת בקול, ולא מנווטים לשום מקום ולא מתנהגים כאילו כלום לא קרה.
-            onOpenSmartMatch={() => toast.info('מסך השיבוץ החכם נבנה בצעד הבא (3.4)')}
+            onOpenSmartMatch={(projectId) => setSmartMatchProjectId(projectId)}
           />
         )}
       </div>
