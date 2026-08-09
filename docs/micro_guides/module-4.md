@@ -13,9 +13,9 @@
 | Module | **4 — דיילות + Smart Match** |
 | Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ measured `ahead 6` of origin: `git status -sb` before assuming it is pushed |
 | Owner | ישי (sole developer) |
-| Overall status | ✅ **Phase 0 CLOSED (09/08/2026)** — next: Phase 1, step 1.1 |
+| Overall status | 🔨 **Phase 0 RE-OPENED 09/08/2026** — 0.3 was wrongly closed |
 | Last updated | **09/08/2026 07:53** *(system clock; refresh it at every step transition)* |
-| **Active step** | **1.1** — Migration A |
+| **Active step** | **0.3** — Router still owed |
 | Deadline | module 4 → `dev` by **21/08/2026**; submission **19/09/2026** |
 
 Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target module) · ❌ blocked (reason)
@@ -24,7 +24,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 |---|---|---|
 | 0.1 | Unlock the shared email engine for module 4 | ✅ 09/08 — gate 0 · unit 428 · E2E 78 · smoke 0 |
 | 0.2 | Migration 0 — `email_log` accepts `'shift'` + its own read policy | ✅ 09/08 — applied `20260809085058`, verified live |
-| 0.3 | Deploy `send-email` and re-verify live | ✅ 09/08 — deployed v4 · gate proven live (7 cases) · Make data-structure fixed · real invitation sent, `email_log` row `sent` |
+| 0.3 | Deploy `send-email` and re-verify live | 🔨 09/08 RE-OPENED — mail arrives with a junk `undefined` attachment | ~~old~~ ✅ 09/08 — deployed v4 · gate proven live (7 cases) · Make data-structure fixed · real invitation sent, `email_log` row `sent` |
 | 1.1 | Migration A — surrogate key + module-4 columns | ⬜ |
 | 1.2 | Migration B — one-event-per-day constraint (§7.88) | ⬜ |
 | 1.3 | Migration C — new tables, params, release-message template | ⬜ |
@@ -847,6 +847,27 @@ phase, §10, or the ledger.
 **(e)/(f)/(g): per `CLAUDE.md` iron rules 13/15/16 + the end-of-session protocol.**
 
 ## §10 📝 Deviations & Tech-Debt Log
+
+- 🔴 **09/08/2026 — I closed 0.3 on a false claim. Ishay caught it from the actual email.** I reported
+  *"a real shift mail went out **with no attachment**"* on the strength of **HTTP 200 + an 
+  row reading **. Both were true. **The email was not.** It arrived carrying an **empty
+  attachment named **.
+  🔑 **The lesson, and it is the project's own rule restated:**  proves the *transport* succeeded,
+  not that the *artifact* is right. **The only verification that counted here was opening the inbox** —
+  and I asked Ishay to do it while already reporting the conclusion as fact.
+  **What is actually true:** the webhook fix removed the **rejection** (400 → 200), but the Gmail module
+  still evaluates its static Attachment 1. With the fields empty it no longer errors — **it silently
+  attaches a 0-byte file named .** ⇒ **the failure moved from loud to silent, which is
+  worse**, and **the Router IS required after all** — the web research was right about the outcome even
+  though it predicted the wrong mechanism (a hard error, not junk output).
+  ➡️ **Do NOT close 0.3 again on a status code.** Acceptance = **the mail is opened and has no
+  attachment.**
+- 🐞 **09/08/2026 — bidi bug, 6th occurrence in this project and the 2nd inside a mail body.**
+  The real invitation rendered *"התאמת לאירוע חדש של **IREG-IN**"* — the  in the template's
+   jumped to the wrong side of the Latin token. Template text is ;
+  the wrapper  already emits , so **the per-line direction is right
+  and the problem is the Latin+punctuation run inside a Hebrew line** — the same class /
+   solve on screen. **Fix belongs with step 3.6 / the mail bodies, not here.**
 
 - **09/08/2026 · two RED suites found at step 0.1, BOTH pre-existing, neither caused by Phase 0.**
   Recorded because a future session will hit this class again, and because "the suite was already
