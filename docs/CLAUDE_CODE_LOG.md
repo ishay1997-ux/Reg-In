@@ -47,6 +47,66 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 09/08/2026 12:2X–13:0X — Module 4 Phase 1: migrations A · B · C applied, verified, committed
+
+**Three irreversible migrations on the live project, each behind its own typed-echo.** Ishay typed
+each name in chat (`module4_hostesses_surrogate_key_and_columns` · `module4_one_event_per_day_constraint`
+· `module4_tables_params_and_templates`); Claude applied via MCP `apply_migration`. Commits `1ad5467`
+· `1c320df` · `de7f382`, each carrying migration + `docs/schema.sql` + `db_roadmap` + micro-guide.
+Full per-migration evidence lives in `db_roadmap §10`'s strike-list — **not duplicated here.**
+
+**The two things that were NOT in the step text and had to be added — both are the same failure shape:
+a change that looks complete and leaves a silent hole.**
+1. **`approve_quote_and_create_project` rewritten** (mig A). The step specified
+   `projects.customer_name` + a backfill. That RPC is the table's **only** writer ⇒ the backfill would
+   have covered the 3 existing rows while every project created afterwards was born with an empty
+   snapshot. Regression proven: `quote-approval` + `server-messages` E2E **16/16**.
+2. **`assignments.event_date` set `NOT NULL`** (mig B). In a unique index **two NULLs are DISTINCT**,
+   so two `finally_approved` rows with an empty date would have bypassed the constraint **without
+   violating it** — the exact hole the migration exists to close.
+Also: dropping `rating`'s `DEFAULT 3` alongside its `NOT NULL` (spec `:169-171` says the default *is*
+the disease; dropping only NOT NULL leaves every new hostess born rated 3).
+
+**🔴 Verification method worth reusing: a `DO` block that ends in `raise exception`.** Every assertion
+runs against the real catalog, then the raise rolls the whole thing back — so a probe can insert
+hostesses, assignments, preferences, move project dates and trip constraints, and leave **zero** rows
+behind. Row counts were re-read after each probe to prove the rollback rather than assume it. Mig B's
+probe carried five assertions, including one that deliberately wrote a **wrong** `event_date`
+(`1999-01-01`) and read back the project's real date — proving the column is a pure derivation a
+writer cannot poison.
+
+**‏`params` list DERIVED, never copied from a count.** Measured: four registries, four different
+numbers, **none correct** (`db_roadmap:135` header said twelve while its own body enumerated thirteen ·
+`processes-approved.md:308` said ten · `PROJECT_MASTER.md:444` said "~14" · `research §11.1` has ten
+rows). Rule applied: every §11.1 row whose "חי ב־" cell reads `params`, window row split in two, plus
+the two ➕ rows, plus `סכום_נסיעות_למשמרת` ⇒ **14**. `params` 20 → **32**, and the three weights were
+read back from the DB summing to **1.00**. `:135`'s header was rewritten to state the **method**
+instead of a number — a count there had gone stale three times in three days.
+
+**Ishay reversed his own 07/08 ruling: `תקרת_דיילות_מומלצת` is CANCELLED** (*"אין צורך בתקרה,
+מיותר"*). Trigger for re-asking: measured that `src/lib/pricing.js` **never implemented a cap**, so
+seeding the row alone would have left a dead parameter, and wiring it would have changed a number
+shown today on module 3's quote screen (500 guests: 10 → 6). **He then asked for the sweep explicitly**
+— and he was right that it was owed: the reversal was recorded in 2 places and declared live in
+**7**. All seven fixed (`§7.14` first, per rule 13א), old ruling kept quoted and dated in each.
+Archives, `CLAUDE_CODE_LOG` and `discovery-log` deliberately untouched — dated records are never
+rewritten. **Two checks that prevented an error:** research `§11` (the only section a build session
+reads) never mentioned the cap at all ⇒ the contradiction would have waited for Ishay, not the
+builder; and `§11.1` **does** hold `תקרת_שבועות_הוגנות = 8`, a different cap that is fully live — a
+warning now sits beside it so a future "תקרה" sweep does not delete the right one.
+
+**⚠️ Advisors went 15 → 17 after mig C and that is correct**, not a regression: the two new tables are
+created RLS-on with no policies until mig D. Stated as such rather than reported as "zero new".
+
+**🐞 Pre-existing E2E flakiness, measured and NOT fixed here.** A 24-test serial run failed 2
+(`quote-approval:177` never left `/login`; `quotes:71` reject dialog never opened); **both passed on
+an isolated re-run, 2/2 in 15.7s**, and the same spec had run 6/6 green minutes earlier. Checked:
+`login_attempts` holds **one** row from 01/08 with `locked_until` NULL ⇒ **the app's own 5-strike
+lockout is not the cause**; remaining suspects are Supabase Auth's per-IP sign-in throttle and the
+`login_rpc_calls` 15/hour cap (§7.8↳). **Why it is logged rather than shrugged off:** it surfaces as a
+*product* assertion ("the dialog did not open"), so the natural reading is "my migration broke the
+screen" — the next person must re-run the failing test alone before diagnosing.
+
 ### 09/08/2026 11:4X — Phase 0 closed for real: verified by opening real emails, not by status code
 
 **Router built by Ishay in Make** after the false-closure correction (see the 07:50 entry above):

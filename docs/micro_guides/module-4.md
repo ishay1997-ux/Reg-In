@@ -91,6 +91,7 @@ caused the public-page security surface to be skipped — `spec.md:49-51`.)*
 | Scheduled T-24 reminder **email** | ❌ | 🚧 מ10 | `🚧 מ10 ← מ4` |
 | T-24 **on-screen alert** | ✅ derived at read time (§7.91) | — | — |
 | `projects.project_status` → `מוכן לביצוע` | ❌ **M4 never writes it** | 🚧 מ6 | `🚧 מ6 ← מ4` |
+| 🆕 Hebrew message for a **reschedule blocked by the same-day rule** | ⚠️ the DB constraint only | 🚧 מ6 | `🚧 מ6 ← מ4` (written 09/08, mig B) |
 | Salary report | ❌ M4 supplies raw material only | 🚧 מ8 | `🚧 מ8 ← מ4` |
 | "Who is below minimum wage" report | ❌ | 🚧 מ9 | `🚧 מ9 ← מ4` (exists, `:427`) |
 | Smart Match params **editing screen** | ❌ rows seeded, no UI | 🚧 מ9 | 🔴 **NO §6 LINE EXISTS — write it this session** |
