@@ -90,17 +90,50 @@ export function fillEmailTemplate(template, replacements) {
 // (3) **הברחת תווים:** הערכים המוזרקים מגיעים מהמסד (שם-חברה, שם-אירוע); שם עם `&` או `<`
 //     היה שובר את גוף המייל.
 //
+// (4) 🐞 **בידוד רצף לטיני — המופע השישי של הבאג, והראשון שסעיף (2) לא הציל ממנו**
+//     (09/08/2026, מייל אמיתי): הגוף נשא `dir="rtl"` כנדרש **ובכל זאת** `REG-IN!` הודפס
+//     `!REG-IN`. הכיווניות ברמת-השורה הייתה תקינה; מה שנשבר הוא **רצף לטיני ואחריו פיסוק
+//     בתוך משפט עברי** — אלגוריתם ה-bidi פותר את סימן-הקריאה לפי ההקשר העברי שסביבו,
+//     ומניח אותו בצד ההפוך. ⇒ **עטיפת-RTL הכרחית ואינה מספיקה.**
+//     🔴 **והתיקון כאן ולא בתבניות (הכרעת-ישי 09/08):** התבניות הן דאטה ב-`params`, וכל
+//     תשע התבניות שבמסד — כולל אלה שמ8 ומ11 יוסיפו — נושאות את אותה חולשה. תיקון בתבנית
+//     נשבר שוב בתבנית הבאה שמישהו יכתוב.
+//
+// ⚠️ **הפיסוק חייב להיכנס לתוך הבידוד, וזה כל הפואנטה.** בידוד `REG-IN` בלבד היה משאיר
+// את `!` בחוץ — ושם הוא עדיין נייטרלי בין הקשר עברי, כלומר משוחזר בדיוק אותו באג.
+const LTR_ISOLATE_START = '⁦' // LRI — Left-to-Right Isolate
+const LTR_ISOLATE_END = '⁩' // PDI — Pop Directional Isolate
+
+// רצף שמתחיל באות לטינית וממשיך בכל מה ששייך לאסימון אחד (כולל URL שלם: `:` `/` `?` `=`),
+// ואחריו **פיסוק-סיום אחד** שנבלע פנימה. 🚫 מכוון שהוא אינו תופס מספרים עצמאיים (`18:00`,
+// `45`) — הם weak-LTR ומוצגים נכון ממילא, וכל הרחבה כאן היא סיכון בקובץ משותף.
+const LTR_RUN_PATTERN = /[A-Za-z][A-Za-z0-9._\-'/:&?=#%+@~]*[!?.,;:]?/g
+
+function escapeHtml(text) {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
 // ⚠️ סדר הפעולות load-bearing: **מברחים את התוכן קודם, ורק אחר-כך מוסיפים תגים משלנו.**
 // בסדר ההפוך ה-`<br>` וה-`<div>` היו מוברחים בעצמם ומודפסים ללקוח כטקסט.
+// ⚠️ ולכן גם הבידוד רץ על **הטקסט הגולמי** ובאותו מעבר עם ההברחה: על טקסט מוברח,
+// ‏`&amp;` עצמו נראה כמו רצף לטיני והיה נחתך באמצע.
 export function plainTextToEmailHtml(text) {
   if (!text) return ''
-  const escaped = String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\r\n|\r|\n/g, '<br>')
+  const source = String(text)
+
+  let escaped = ''
+  let cursor = 0
+  for (const match of source.matchAll(LTR_RUN_PATTERN)) {
+    escaped += escapeHtml(source.slice(cursor, match.index))
+    escaped += LTR_ISOLATE_START + escapeHtml(match[0]) + LTR_ISOLATE_END
+    cursor = match.index + match[0].length
+  }
+  escaped += escapeHtml(source.slice(cursor))
+
   // ‏style ולא רק dir: חלק מלקוחות-הדואר מתעלמים מ-attribute ומכבדים inline-style.
-  return `<div dir="rtl" style="text-align:right">${escaped}</div>`
+  // 🔑 ומאותו טעם הבידוד הוא **תווי-יוניקוד ולא `<span dir="ltr">`**: לקוח-דואר שמפשיט
+  // סגנונות מבטל span, ואינו יכול לבטל תו. זו גם המקבילה של `minWageError` במסך.
+  return `<div dir="rtl" style="text-align:right">${escaped.replace(/\r\n|\r|\n/g, '<br>')}</div>`
 }
 
 // גוף-המשלוח שנשלח לפונקציית-השרת. `null` מוחזר כשחסר רכיב הכרחי — כדי שלא תישלח לעולם

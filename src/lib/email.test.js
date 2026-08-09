@@ -173,6 +173,51 @@ describe('plainTextToEmailHtml — התבניות טקסט, התעבורה HTML,
   })
 })
 
+// 🐞 **המופע השישי של באג-הכיווניות, והראשון שעטיפת-ה-RTL לא הצילה ממנו** (09/08/2026):
+// מייל אמיתי שנשלח בפזה 0 הדפיס `!REG-IN` במקום `REG-IN!` — הגוף כולו כבר נשא `dir="rtl"`,
+// ולכן הכיווניות **ברמת-השורה** הייתה תקינה; מה שנשבר הוא **רצף לטיני ואחריו פיסוק בתוך
+// משפט עברי**. זו בדיוק המשפחה ש-`Money`/`LtrFieldGroup` פותרים במסך, ולתבנית טקסט שטוחה
+// שנשלפת מ-`params` לא הייתה מקבילה. **הכרעת-ישי 09/08: מתקנים במנוע, לא פר-תבנית** —
+// כל 9 התבניות שבמסד נושאות את אותה חולשה, כולל אלה שמודולים 8 ו-11 יוסיפו.
+const LRI = '⁦'
+const PDI = '⁩'
+
+describe('plainTextToEmailHtml — בידוד רצף לטיני בתוך משפט עברי (באג `!REG-IN`)', () => {
+  it('🔴 הפיסוק נכנס לתוך הבידוד יחד עם הרצף — אחרת הוא קופץ לצד הלא-נכון', () => {
+    const html = plainTextToEmailHtml('התאמת לאירוע חדש של REG-IN!')
+    expect(html).toContain(`${LRI}REG-IN!${PDI}`)
+  })
+
+  it('שורה עברית נקייה אינה מקבלת סימני-בידוד כלל — הבידוד ממוקד, לא גורף', () => {
+    const html = plainTextToEmailHtml('היי נועה,\nתודה שהתפנית.')
+    expect(html).not.toContain(LRI)
+    expect(html).not.toContain(PDI)
+  })
+
+  it('כתובת-לינק מבודדת כיחידה אחת ולא מתפצלת לרסיסים', () => {
+    const html = plainTextToEmailHtml('לאישור: https://reg-in.app/confirm/a1b2c3')
+    expect(html).toContain(`${LRI}https://reg-in.app/confirm/a1b2c3${PDI}`)
+    expect(html.match(new RegExp(LRI, 'g'))).toHaveLength(1)
+  })
+
+  it('ההברחה חלה גם בתוך הבידוד — שם עם & אינו שובר את הגוף', () => {
+    expect(plainTextToEmailHtml('חברת A&B בע"מ')).toContain(`${LRI}A&amp;B${PDI}`)
+  })
+
+  it('שני רצפים נפרדים באותה שורה מקבלים שני בידודים נפרדים', () => {
+    const html = plainTextToEmailHtml('צוות REG-IN שלח דרך Make אתמול')
+    expect(html).toContain(`${LRI}REG-IN${PDI}`)
+    expect(html).toContain(`${LRI}Make${PDI}`)
+  })
+
+  it('עטיפת-ה-RTL ומעברי-השורה שורדים את הבידוד — התוספת אינה מחליפה את מה שכבר עבד', () => {
+    const html = plainTextToEmailHtml('היי נועה,\nמצורף REG-IN!')
+    expect(html.startsWith('<div dir="rtl"')).toBe(true)
+    expect(html).toContain('<br>')
+    expect(html).not.toContain('&lt;br&gt;')
+  })
+})
+
 describe('buildEmailPayload — החוזה מול תרחיש ה-Make', () => {
   const ARGS = {
     to: 'ron@meditech-demo.co.il',

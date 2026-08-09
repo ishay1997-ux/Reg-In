@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import { useConfirm } from '@/components/ConfirmDialog'
 import LoadingOrError from '@/components/LoadingOrError'
+import FilterPill from '@/components/FilterPill'
 import StatusTag from '@/components/StatusTag'
 import RatingStars from '@/components/RatingStars'
 import Money from '@/components/Money'
@@ -37,6 +38,7 @@ import {
   optionalNumber,
 } from '@/lib/hostesses'
 import { SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
+import { formatDate } from '@/lib/dates'
 import {
   listHostesses,
   listRepositoryAssignments,
@@ -429,29 +431,6 @@ function Td({ children }) {
   return <td className="border-b border-slate-100 px-2.5 py-2.5 align-middle">{children}</td>
 }
 
-// גלולת-מסנן. 🎨 טורקיז **בהיר** למצב-נבחר — הטורקיז המלא שמור לפעולה הראשית של המסך
-// ("+ הוספת דיילת"), וזה מעבר-האחידות שב-`src/CLAUDE.md`.
-function FilterPill({ on, tone, onClick, children, testId }) {
-  const off = 'border-slate-200 bg-white text-slate-600'
-  const active =
-    tone === 'warn'
-      ? 'border-amber-200 bg-amber-50 text-amber-700 font-semibold'
-      : 'border-teal-200 bg-teal-50 text-teal-700 font-semibold'
-
-  return (
-    <Button
-      type="button"
-      variant="outline"
-      onClick={onClick}
-      aria-pressed={on}
-      className={`h-auto rounded-full border px-3 py-1 text-[12.5px] ${on ? active : off}`}
-      data-testid={testId}
-    >
-      {children}
-    </Button>
-  )
-}
-
 function EmptyState({ filtered, canEdit, onAdd, onClear }) {
   if (filtered) {
     return (
@@ -496,11 +475,4 @@ function EmptyState({ filtered, canEdit, onAdd, onClear }) {
       )}
     </div>
   )
-}
-
-// תאריך-ISO ⇒ DD/MM/YYYY, כפי שמוצג בחלון-האישור ובכרטיס.
-function formatDate(isoDate) {
-  if (!isoDate) return ''
-  const [year, month, day] = String(isoDate).split('-')
-  return `${day}/${month}/${year}`
 }

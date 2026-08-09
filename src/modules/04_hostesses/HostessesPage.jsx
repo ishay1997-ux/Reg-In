@@ -9,9 +9,12 @@
 // ולא עמודים** — `processes-approved.md` מצטט את C5 מפורשות: *"באותו מסך"*.
 
 import { useState } from 'react'
+import { useToast } from '@/components/ToastProvider'
 import RepositoryTab from './RepositoryTab'
+import OverviewTab from './OverviewTab'
 import HostessFormDialog from './HostessFormDialog'
 import HostessViewCard from './HostessViewCard'
+import { resendExpiredInvites } from './api'
 
 const TABS = {
   overview: 'מעקב פניות ושיבוצים',
@@ -19,9 +22,11 @@ const TABS = {
 }
 
 export default function HostessesPage() {
-  // ⚠️ ברירת-המחדל היא **מאגר דיילות** כל עוד משטח 1 לא נבנה (צעד 3.3) — פתיחה על
-  // לשונית ריקה הייתה נראית כמו מסך שבור. הסדר החזותי נשאר כמצויר במוקאפ.
-  const [tab, setTab] = useState('repository')
+  const toast = useToast()
+  // ⚠️ **ברירת-המחדל חזרה למבט-העל** (09/08/2026, צעד 3.3): עד שהמשטח נבנה היא הוסטה
+  // זמנית ל"מאגר דיילות" כדי לא לפתוח על לשונית ריקה. עכשיו הסדר הוא כמצויר במוקאפ —
+  // וזה גם הסדר הנכון מוצרית: המנהלת נכנסת כדי לראות **איפה חסר**, לא כדי לדפדף במאגר.
+  const [tab, setTab] = useState('overview')
 
   // מפתח-רענון: כל שמירה מגדילה אותו, והטבלה טוענת מחדש. 🚫 לא state שמועבר פנימה —
   // הנתונים חיים בשכבת-ה-API, ומצב-מסך שמשכפל אותם מתיישן בשקט.
@@ -68,12 +73,18 @@ export default function HostessesPage() {
             onOpenCard={(id) => setCardHostessId(id)}
           />
         ) : (
-          <p
-            className="py-10 text-center text-sm text-slate-500"
-            data-testid="overview-placeholder"
-          >
-            מבט-על השיבוצים ייבנה בצעד הבא של המודול.
-          </p>
+          <OverviewTab
+            reloadKey={reloadKey}
+            // 🔗 ‏`window.location.origin` ולא קבוע: מייל שנשלח מסביבת-פיתוח חייב להצביע
+            // לסביבת-פיתוח, אחרת "בדקתי את הקישור" בודק את הפרודקשן ולא את מה שנבנה.
+            onResendExpired={(projectIds) =>
+              resendExpiredInvites(projectIds, window.location.origin)
+            }
+            // ⏳ **זמני, ונופל בצעד 3.4 שנבנה מיד אחרי זה** (אותה יחידת-בנייה): לחיצה על
+            // שורה אמורה לפתוח את השיבוץ החכם של אותו אירוע. עד שהמסך קיים — אומרים
+            // זאת בקול, ולא מנווטים לשום מקום ולא מתנהגים כאילו כלום לא קרה.
+            onOpenSmartMatch={() => toast.info('מסך השיבוץ החכם נבנה בצעד הבא (3.4)')}
+          />
         )}
       </div>
 

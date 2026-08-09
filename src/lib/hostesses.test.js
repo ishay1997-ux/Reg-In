@@ -20,6 +20,11 @@ import {
   assignmentDisplayStatus,
   finalAssignmentRows,
   countAssignmentStates,
+  isPastEvent,
+  eventProximityLabel,
+  overviewRow,
+  sortOverviewRows,
+  overviewKpis,
   hostessServerErrorMessage,
   hostessDisplayState,
   unansweredStreakTag,
@@ -376,12 +381,220 @@ describe('countAssignmentStates — חמשת המונים של המבט-על', (
     expect(c.declined).toBe(0)
   })
 
-  it('"ממתינות" ו"פג תוקפן" זרים זה לזה — אותו מספר, שתי פעולות הפוכות', () => {
-    // ‏spec.md:135 — "3 ממתינות" = תני להן זמן; "3 פג תוקפן" = שלחי לעוד שלוש, עכשיו.
-    // דיילת שפג תוקף זימונה כבר אינה "ממתינה", אחרת המנהלת מחכה למי שהקישור שלה מת.
+  // 🔴 **תוקן 09/08/2026 (צעד 3.3) — הסמנטיקה הייתה הפוכה, וזו הייתה הנחה שמילאתי בצעד 2.2.**
+  // הגרסה הקודמת ספרה את השניים כ**זרים** וציטטה `spec.md:135`. שתי בעיות:
+  // ‏① **מספר-השורה נרקב** — `spec.md:135` מדבר היום על מפתח-הסורוגייט. המשפט שהתכוונתי אליו
+  //    יושב ב-`spec.md:148`, **והוא אומר "אותו מספר, שתי פעולות הפוכות"** — כלומר *אותו* מספר.
+  // ‏② **שלושה מקורות מאושרים אומרים "מתוכן", כלומר תת-קבוצה:**
+  //    `screens-approved.md:464` (`ממתינות 3 · מתוכן 2 פג תוקפן`) · `processes-approved.md:374`
+  //    (`ממתינות 5 · מתוכן 2`) · `spec.md:151-152` (ה-KPI: `זימונים ממתינים` + `מתוכם M פג תוקפם`).
+  // 🔬 **והחשבון של המוקאפ המאושר מכריע:** שורותיו מציגות `ממתינות` 1+4+2 והכותרת אומרת
+  //    `זימונים ממתינים 7`; ה-`פג תוקפן` הם 1+2+0 והכותרת אומרת `מתוכם 3`. **7 ולא 10.**
+  it('🔴 "פג תוקפן" הוא תת-קבוצה של "ממתינות" ולא מונה זר — "מתוכן", לא "ובנוסף"', () => {
     const c = countAssignmentStates(rows, '2026-08-13T09:00:00.000Z')
-    expect(c.expired).toBe(1)
-    expect(c.pending).toBe(1)
+    expect(c.pending).toBe(2) // שתי שורות ממתינות בסך-הכול
+    expect(c.expired).toBe(1) // אחת מהשתיים, לא שלישית
+  })
+
+  it('התג הפר-שורה עדיין מציג "פג תוקף" ולא "ממתינה למענה" — המונה השתנה, התווית לא', () => {
+    // ⚠️ שתי שאלות שונות: **כמה ממתינות** (מונה, מכליל) מול **מה כתוב על השורה הזאת**
+    // (תווית, והנגזרת גוברת). ערבוב ביניהן היה מחזיר את הבאג מהצד השני.
+    expect(assignmentDisplayStatus(rows[3], '2026-08-13T09:00:00.000Z')).toBe('פג תוקף')
+  })
+})
+
+// ── משטח 1 · הנגזרות של מבט-העל (צעד 3.3) ────────────────────────────────────
+
+describe('מבט-על — הנגזרות של שורת-האירוע', () => {
+  const NOW = '2026-08-21T20:00:00.000Z'
+  const TODAY = '2026-08-21'
+  const EXPIRED_SENT = '2026-08-18T00:00:00.000Z' // 92 שעות לפני NOW ⇒ מת
+  const FRESH_SENT = '2026-08-21T08:00:00.000Z' // 12 שעות לפני NOW ⇒ חי
+
+  // ⚠️ נתונים **מבחינים** ולא אחידים: מונים שונים בכל שורה, ושילוב של פג-תוקף וחי באותו
+  // אירוע. נתונים אחידים היו נותנים אותה תשובה גם אם הקיפול או הסינון לא עשו כלום —
+  // זו כבר הפעם הרביעית שהמלכודת הזאת נתפסת במודול הזה.
+  let seq = 0
+  function rowsOf(spec) {
+    return Object.entries(spec).flatMap(([status, count]) =>
+      Array.from({ length: count }, () => ({
+        project_id: 1,
+        hostess_id: (seq += 1),
+        assignment_number: 1,
+        assignment_status: status === 'expired' ? 'pending' : status,
+        invite_sent_at: status === 'expired' ? EXPIRED_SENT : FRESH_SENT,
+      })),
+    )
+  }
+
+  function project(overrides) {
+    return {
+      project_id: 1,
+      event_name: 'אירוע',
+      final_event_date: '2026-08-22',
+      final_start_time: '18:00:00',
+      required_hostess_count: 6,
+      assignments: [],
+      ...overrides,
+    }
+  }
+
+  describe('isPastEvent — הגבול הוא "לפני היום", לא "לפני עכשיו"', () => {
+    it('אירוע של אתמול נחשב עבר', () => {
+      expect(isPastEvent('2026-08-20', TODAY)).toBe(true)
+    })
+
+    it('🔴 אירוע של **היום** אינו עבר — ביום האירוע היא עדיין סוגרת חורים בטלפון', () => {
+      expect(isPastEvent(TODAY, TODAY)).toBe(false)
+    })
+
+    it('אירוע עתידי אינו עבר, ותאריך חסר אינו מסתיר שורה', () => {
+      expect(isPastEvent('2026-09-27', TODAY)).toBe(false)
+      expect(isPastEvent(null, TODAY)).toBe(false)
+    })
+  })
+
+  it('החוסר נמדד מול "אושרה סופית" בלבד — לא מול מי שרק אישרה זמינות', () => {
+    // 🔑 זו כל הסיבה שהמונה החמישי קיים: אירוע שבו 3 אישרו זמינות ואיש לא אושר סופית
+    // **עדיין חסר**, והפעולה שהוא דורש שונה לגמרי מאירוע שאיש לא ענה בו.
+    const row = overviewRow(
+      project({ required_hostess_count: 6, assignments: rowsOf({ confirmed_available: 3 }) }),
+      NOW,
+      TODAY,
+    )
+    expect(row.staffed).toBe(0)
+    expect(row.gap).toBe(6)
+    expect(row.isMissing).toBe(true)
+    expect(row.counts.confirmedAvailable).toBe(3)
+  })
+
+  it('אירוע מאויש במלואו אינו חסר, והעודף אינו מייצר חוסר שלילי', () => {
+    const row = overviewRow(
+      project({ required_hostess_count: 5, assignments: rowsOf({ finally_approved: 7 }) }),
+      NOW,
+      TODAY,
+    )
+    expect(row.isMissing).toBe(false)
+    expect(row.gap).toBe(0)
+  })
+
+  it('התראת T-24 נדלקת רק על שורה שעדיין חסרה — אירוע מלא ומחר אינו התראה', () => {
+    const missing = overviewRow(
+      project({ required_hostess_count: 4, assignments: rowsOf({ finally_approved: 3 }) }),
+      NOW,
+      TODAY,
+    )
+    const full = overviewRow(
+      project({ required_hostess_count: 4, assignments: rowsOf({ finally_approved: 4 }) }),
+      NOW,
+      TODAY,
+    )
+    expect(missing.isFinalDay).toBe(true)
+    expect(missing.showsFinalDayAlert).toBe(true)
+    expect(full.isFinalDay).toBe(true)
+    expect(full.showsFinalDayAlert).toBe(false)
+  })
+
+  describe('eventProximityLabel — "מתי" בשפה של המנהלת, לא בתאריך', () => {
+    it('היום · מחר · בעוד N ימים — שלושת הנוסחים של המוקאפ', () => {
+      expect(eventProximityLabel('2026-08-21', TODAY)).toBe('היום')
+      expect(eventProximityLabel('2026-08-22', TODAY)).toBe('מחר')
+      expect(eventProximityLabel('2026-09-06', TODAY)).toBe('בעוד 16 ימים')
+    })
+
+    it('"בעוד יום" ביחיד אינו נכתב — "מחר" תופס אותו, ואין נוסח כפול לאותו יום', () => {
+      expect(eventProximityLabel('2026-08-23', TODAY)).toBe('בעוד יומיים')
+    })
+
+    it('תאריך חסר ⇒ מחרוזת ריקה, לא "Invalid Date" ולא "בעוד NaN ימים"', () => {
+      expect(eventProximityLabel(null, TODAY)).toBe('')
+    })
+  })
+
+  describe('sortOverviewRows — הסדר הוא התשובה, לא קישוט', () => {
+    function stub(id, { missing, date }) {
+      return {
+        project: { project_id: id, final_event_date: date },
+        isMissing: missing,
+        eventStartsAt: `${date}T15:00:00.000Z`,
+      }
+    }
+
+    it('🔴 אירוע חסר ורחוק עולה מעל אירוע מאויש וקרוב', () => {
+      const sorted = sortOverviewRows([
+        stub(1, { missing: false, date: '2026-08-22' }),
+        stub(2, { missing: true, date: '2026-12-01' }),
+      ])
+      expect(sorted.map((r) => r.project.project_id)).toEqual([2, 1])
+    })
+
+    it('בתוך קבוצת החסרים — לפי קרבת האירוע', () => {
+      const sorted = sortOverviewRows([
+        stub(1, { missing: true, date: '2026-12-01' }),
+        stub(2, { missing: true, date: '2026-08-22' }),
+        stub(3, { missing: true, date: '2026-09-27' }),
+      ])
+      expect(sorted.map((r) => r.project.project_id)).toEqual([2, 3, 1])
+    })
+
+    it('תאריך חסר יורד לסוף הקבוצה במקום להתחזות לאירוע הקרוב ביותר', () => {
+      const undated = { project: { project_id: 9 }, isMissing: true, eventStartsAt: null }
+      const sorted = sortOverviewRows([undated, stub(2, { missing: true, date: '2026-12-01' })])
+      expect(sorted.map((r) => r.project.project_id)).toEqual([2, 9])
+    })
+  })
+
+  // 🎯 **ארבעת המספרים כאן אינם שלי — הם של המוקאפ המאושר** (`01_overview_approved.html`):
+  // הכותרת מצהירה `אירועים חסרים 2 · מתוכם 1 בתוך 24 שעות` ו-`זימונים ממתינים 7 · מתוכם 3
+  // פג תוקפם`, ושלוש שורות-הטבלה שמתחתיה נושאות בדיוק את המונים שמרכיבים אותם.
+  // 🔑 **ולמה זו בדיקה ולא תרגיל:** `7` הוא הראיה ש"פג תוקפן" **נספר בתוך** "ממתינות" —
+  // אילו היו זרים, הסכום היה `10`.
+  it('🎯 שני ה-KPI משחזרים את החשבון של המוקאפ המאושר: 2 · 1 · 7 · 3', () => {
+    const rows = [
+      overviewRow(
+        project({
+          project_id: 1,
+          required_hostess_count: 4,
+          final_event_date: '2026-08-22',
+          assignments: rowsOf({ finally_approved: 3, declined: 2, expired: 1 }),
+        }),
+        NOW,
+        TODAY,
+      ),
+      overviewRow(
+        project({
+          project_id: 2,
+          required_hostess_count: 6,
+          final_event_date: '2026-09-06',
+          assignments: rowsOf({
+            finally_approved: 2,
+            confirmed_available: 3,
+            declined: 1,
+            expired: 2,
+            pending: 2,
+          }),
+        }),
+        NOW,
+        TODAY,
+      ),
+      overviewRow(
+        project({
+          project_id: 3,
+          required_hostess_count: 5,
+          final_event_date: '2026-09-20',
+          assignments: rowsOf({ finally_approved: 5, declined: 2, pending: 2 }),
+        }),
+        NOW,
+        TODAY,
+      ),
+    ]
+
+    expect(overviewKpis(rows)).toEqual({
+      missingEvents: 2,
+      missingWithinFinalDay: 1,
+      pendingInvites: 7,
+      expiredInvites: 3,
+    })
   })
 })
 

@@ -16,7 +16,15 @@
 
 import { supabase } from '@/supabaseClient'
 import { toError, assertRowsAffected } from '@/lib/apiError'
-import { HOSTESS_PARAM_NAMES, hostessServerErrorMessage } from '@/lib/hostesses'
+import {
+  HOSTESS_PARAM_NAMES,
+  hostessServerErrorMessage,
+  finalAssignmentRows,
+  isInviteExpired,
+} from '@/lib/hostesses'
+import { classifySendError, EMAIL_SEND_RESULT } from '@/lib/email'
+import { sendEmail } from '@/api/email'
+import { SHIFT_TEMPLATE_NAMES, buildShiftInvitePayload, confirmUrlFor } from '@/lib/shiftEmails'
 import { SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
 import { buildHostessAddress } from '@/lib/geocode'
 import { geocodeAddress } from '@/api/geocode'
@@ -219,6 +227,113 @@ export async function getHostessScreenParams() {
     .in('param_name', ALL_PARAM_NAMES)
   if (error) throw toError(error, 'שגיאה בטעינת הגדרות המערכת.')
   return Object.fromEntries((data ?? []).map((p) => [p.param_name, p.param_value]))
+}
+
+// ---- זימוני-משמרת (קריאה + כתיבה + מייל, יחד בכוונה) ----
+
+// תבנית-מייל בודדת מ-`params`. 🚫 **לא מצטרפת ל-`ALL_PARAM_NAMES`** — המסכים טוענים את
+// אלה בכל רינדור, והתבניות הן טקסט ארוך שנחוץ רק ברגע השליחה.
+async function getEmailTemplate(name) {
+  const { data, error } = await supabase
+    .from('params')
+    .select('param_value')
+    .eq('param_name', name)
+    .maybeSingle()
+  if (error) throw toError(error, 'שגיאה בטעינת תבנית המייל.')
+  // 🔴 תבנית חסרה **עוצרת** ואינה נשלחת כגוף ריק: מייל ריק לדיילת גרוע ממייל שלא נשלח.
+  if (!data?.param_value) throw toError({ code: 'PGRST116' }, `תבנית המייל "${name}" חסרה בהגדרות.`)
+  return data.param_value
+}
+
+// "שלח שוב" — **הפעולה היחידה שכותבת למסד ממסך מבט-העל**, והיא זהה לפריט
+// `שלח את הקישור שוב` שבתפריט-השורה (`screens-approved` מסך 4 §①): מרעננת טוקן
+// ו-`invite_sent_at` **על אותה שורה** — בלי שורה חדשה, בלי סטטוס חדש, ובלי השפעה על
+// הציון (`ממתין` מחוץ למכנה). 🚫 **ואינה נוגעת ב-`responded_at`** — הוא נכתב פעם אחת
+// במענה הראשון, ורענון שהיה מאפס אותו היה מייצר **זמן-תגובה שלילי** (`§ב3`).
+//
+// ⚠️ **סדר הפעולות אינו סגנון:** קודם נכתב הטוקן ורק אחר-כך נשלח המייל. בסדר ההפוך
+// הדיילת מקבלת קישור שאינו קיים במסד — כלומר קישור מת בוודאות.
+// 🔴 **ובכשל-שליחה מגלגלים את `invite_sent_at` בלבד לאחור:** בלי זה השורה מציגה שעון-48
+// שרץ מחדש **על מייל שמעולם לא יצא**, והמנהלת ממתינה לתשובה שלא תגיע. הטוקן החדש נשאר —
+// הוא בלתי-מזיק, והישן ממילא כבר מת.
+// 🚫 **פסק-זמן אינו כשל** (`src/CLAUDE.md`, שלושת מצבי-התוצאה): המייל אולי יצא, ולכן
+// אין גלגול-אחורה — הספירה מוחזרת בנפרד והמסך אומר "לא ידוע" במקום להבטיח.
+export async function resendExpiredInvites(projectIds, origin) {
+  if (!projectIds?.length) return { sent: 0, unknown: 0, failed: 0 }
+
+  const nowIso = new Date().toISOString()
+  const template = await getEmailTemplate(SHIFT_TEMPLATE_NAMES.invite)
+
+  // ⚠️ נשלפות **כל** שורות הפרויקטים ולא רק ה-`pending`: הסטטוס הקובע הוא של
+  // `MAX(assignment_number)` פר-דיילת, ושליפה מסוננת-מראש הייתה מרעננת קישור של שורה
+  // ישנה שכבר נעקפה בשורה חדשה.
+  const { data, error } = await supabase
+    .from('assignments')
+    .select(
+      'project_id, hostess_id, assignment_number, assignment_status, invite_sent_at, hourly_rate_snapshot, hostesses(full_name, email), projects(event_name, final_event_date, final_start_time, final_end_time, final_location)',
+    )
+    .in('project_id', projectIds)
+  if (error) throw toError(error, 'שגיאה בטעינת הזימונים לשליחה חוזרת.')
+
+  const targets = finalAssignmentRows(data ?? []).filter((row) => isInviteExpired(row, nowIso))
+
+  const outcome = { sent: 0, unknown: 0, failed: 0 }
+  for (const row of targets) {
+    const token = crypto.randomUUID()
+    const payload = buildShiftInvitePayload({
+      template,
+      hostess: row.hostesses,
+      project: row.projects,
+      hourlyRate: row.hourly_rate_snapshot,
+      confirmUrl: confirmUrlFor(origin, token),
+    })
+    // דיילת בלי כתובת-מייל אינה עוצרת את השאר — היא נספרת ככשל ונאמרת בקול.
+    if (!payload) {
+      outcome.failed += 1
+      continue
+    }
+
+    const previousSentAt = row.invite_sent_at
+    const { data: updated, error: updateError } = await supabase
+      .from('assignments')
+      .update({ invite_token: token, invite_sent_at: nowIso })
+      .eq('project_id', row.project_id)
+      .eq('hostess_id', row.hostess_id)
+      .eq('assignment_number', row.assignment_number)
+      .select()
+    if (updateError || !updated?.length) {
+      outcome.failed += 1
+      continue
+    }
+
+    try {
+      await sendEmail({
+        payload,
+        entityType: 'shift',
+        // ⚠️ `entity_id` הוא **הפרויקט** ולא השיבוץ: ל-`assignments` מפתח משולש ואין לו
+        // מזהה-עמודה-אחת, והעמודה כאן היא `integer`. מי קיבל נשמר ב-`recipient`.
+        // 🔑 ואין כאן אובדן-הגנה: שליחה חוזרת של זימון **מותרת במפורש** (`§ב4`), ולכן
+        // היומן הזה הוא תיעוד ולא שער — בשונה מהצעת-מחיר.
+        entityId: row.project_id,
+        templateName: SHIFT_TEMPLATE_NAMES.invite,
+      })
+      outcome.sent += 1
+    } catch (sendError) {
+      if (classifySendError(sendError) === EMAIL_SEND_RESULT.UNKNOWN) {
+        outcome.unknown += 1
+        continue
+      }
+      outcome.failed += 1
+      await supabase
+        .from('assignments')
+        .update({ invite_sent_at: previousSentAt })
+        .eq('project_id', row.project_id)
+        .eq('hostess_id', row.hostess_id)
+        .eq('assignment_number', row.assignment_number)
+    }
+  }
+
+  return outcome
 }
 
 // ---- כתיבות (Writes) ----

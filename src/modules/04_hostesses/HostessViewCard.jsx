@@ -33,6 +33,7 @@ import {
   optionalNumber,
 } from '@/lib/hostesses'
 import { responsivenessCounts, SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
+import { formatDate } from '@/lib/dates'
 import { getHostess, getHostessAssignments, getHostessScreenParams } from './api'
 
 const MS_PER_WEEK = 7 * 24 * 3_600_000
@@ -403,10 +404,4 @@ function Muted({ children }) {
       {children}
     </p>
   )
-}
-
-function formatDate(isoDate) {
-  if (!isoDate) return ''
-  const [year, month, day] = String(isoDate).split('-')
-  return `${day}/${month}/${year}`
 }

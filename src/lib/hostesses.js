@@ -272,11 +272,17 @@ export function finalAssignmentRows(rows) {
 }
 
 // המונים של המבט-על ושל מסך ה-Smart Match, כולם על השורה הקובעת בלבד.
-// 🔴 **"ממתינות" ו"פג תוקפן" זרים זה לזה, ובכוונה** (`spec.md:135`): *"3 ממתינות"*
-// אומר "תני להן זמן", *"3 פג תוקפן"* אומר "שלחי לעוד שלוש, עכשיו" — אותו מספר ושתי
-// פעולות הפוכות. ספירת זימון מת בתוך "ממתינות" הייתה משאירה את המנהלת מחכה לקישור
-// שכבר אינו עובד. *(הזרות עצמה היא הנחה שמילאתי — האפיון מונה את שני התגים ואינו
-// אומר במפורש שהם זרים; ר' §9 במדריך-המיקרו.)*
+//
+// 🔴 **`expired` הוא תת-קבוצה של `pending`, לא מונה זר — תוקן 09/08/2026 (צעד 3.3).**
+// הגרסה הראשונה ספרה אותם כזרים על סמך הנחה שמילאתי, וציטטה מספר-שורה שמאז נרקב.
+// **שלושה מקורות מאושרים אומרים "מתוכן":** `screens-approved.md:464`
+// (`ממתינות 3 · מתוכן 2 פג תוקפן`) · `processes-approved.md:374` · ו-`spec.md:151-152`
+// ל-KPI (`זימונים ממתינים` + `מתוכם M פג תוקפם`). **והמוקאפ המאושר מכריע בחשבון:**
+// שורותיו נושאות `ממתינות` 1+4+2 והכותרת אומרת **7** — לא 10.
+// 🔑 **ולמה זה לא סותר את "שתי פעולות הפוכות":** המשפט ב-`spec.md:148` אומר במפורש
+// *"**אותו מספר**, שתי פעולות הפוכות"* — הפיצול הוא בתצוגה ובפעולה, לא בספירה.
+// ⚠️ **ואל תערבב עם התווית:** על שורה בודדת `assignmentDisplayStatus` מציגה `פג תוקף`
+// ולא `ממתינה למענה` — שם הנגזרת **כן** גוברת. מונה ותווית עונים על שתי שאלות שונות.
 export function countAssignmentStates(rows, nowIso) {
   const counts = {
     pending: 0,
@@ -289,10 +295,10 @@ export function countAssignmentStates(rows, nowIso) {
   }
 
   for (const row of finalAssignmentRows(rows)) {
-    if (isInviteExpired(row, nowIso)) {
-      counts.expired += 1
-      continue
-    }
+    // ⚠️ בלי `continue`: שורה שפג תוקפה נספרת **גם** ב-`expired` **וגם** ב-`pending`.
+    // ‏`isInviteExpired` מחייבת ממילא `pending`, ולכן אין כאן סיכון לספירה כפולה בסטטוס אחר.
+    if (isInviteExpired(row, nowIso)) counts.expired += 1
+
     switch (row.assignment_status) {
       case 'pending':
         counts.pending += 1
@@ -318,6 +324,105 @@ export function countAssignmentStates(rows, nowIso) {
   }
 
   return counts
+}
+
+// ── הנגזרות של מבט-העל (משטח 1) ──────────────────────────────────────────────
+
+// 🔴 **אירוע שתאריכו לפני היום אינו מוצג במבט-העל** — הכרעת-קלוד 09/08/2026, האפיון שותק
+// (נבדק: כרטיס מסך 1 §④/⑤/⑥ · המוקאפ המאושר · תהליך ב׳), ונרשמה כ-`הנחתי` ב-§10.
+// **הנימוק:** ‏§② מגדיר את המסך כ*"על איזה אירוע אני נכנסת לטפל **עכשיו**"*, ופרויקט יוצא
+// מהרשימה רק כשהוא עובר ל-`מוכן לביצוע` — **סטטוס שמודול 4 לעולם אינו כותב** (`🚧 מ6 ← מ4`).
+// ⇒ בלי הכלל הזה אירוע שעבר יושב בראש מסך-הטריאז' **לנצח**, כי המיון הוא לפי קרבה.
+// 🔑 **והגבול הוא היום ולא הרגע:** ביום האירוע עצמו היא עדיין סוגרת חורים בטלפון
+// (`אושרה סופית — סוכם בטלפון`), ולכן שורה של היום נשארת גם אחרי שהאירוע התחיל.
+// 🚫 תאריך חסר **אינו** מסתיר שורה — הסתרה על סמך נתון חסר היא בדיוק החור השקט.
+export function isPastEvent(eventDate, todayIso) {
+  if (!eventDate || !todayIso) return false
+  return String(eventDate) < String(todayIso)
+}
+
+// "מתי" בשפה שהמנהלת חושבת בה, לא בתאריך — `היום` · `מחר` · `בעוד N ימים`, בדיוק
+// שלושת הנוסחים שהמוקאפ המאושר מצייר. 🔑 **המרחק נמדד בימי-לוח ולא בשעות:** אירוע
+// ב-08:00 מחר הוא "מחר" גם אם נותרו 12 שעות, ו"בעוד יום" על אותה שורה שכתוב בה "מחר"
+// היה שני נוסחים לאותה עובדה. ⚠️ אזהרת ה-24 שעות היא שורה **נפרדת** (`isFinalDay`),
+// כי היא עונה על שאלה אחרת — לא "מתי" אלא "כמה זמן נשאר לפעול".
+export function eventProximityLabel(eventDate, todayIso) {
+  if (!eventDate || !todayIso) return ''
+  const event = Date.parse(`${eventDate}T00:00:00Z`)
+  const today = Date.parse(`${todayIso}T00:00:00Z`)
+  if (Number.isNaN(event) || Number.isNaN(today)) return ''
+
+  const days = Math.round((event - today) / (24 * MS_PER_HOUR))
+  if (days === 0) return 'היום'
+  if (days === 1) return 'מחר'
+  if (days === 2) return 'בעוד יומיים'
+  if (days < 0) return `לפני ${Math.abs(days)} ימים`
+  return `בעוד ${days} ימים`
+}
+
+// כל מה ששורה אחת במבט-העל צריכה לדעת על עצמה, במקום אחד.
+// 🔴 **"מאויש" = `אושרה סופית` בלבד.** מי שרק אישרה זמינות **אינה** מאיישת — וזו כל הסיבה
+// שהמונה החמישי נולד: אירוע עם 3 שאישרו זמינות ואפס מאושרות **עדיין חסר**, אבל הפעולה
+// שהוא דורש (לאשר) הפוכה מזו של אירוע שאיש לא ענה בו (לשלוח לעוד).
+export function overviewRow(project, nowIso, todayIso) {
+  const counts = countAssignmentStates(project?.assignments, nowIso)
+  const required = optionalNumber(project?.required_hostess_count) ?? 0
+  const staffed = counts.finallyApproved
+  const gap = Math.max(0, required - staffed)
+  const isMissing = gap > 0
+  const eventStartsAt = eventStartInstant(project?.final_event_date, project?.final_start_time)
+  const isFinalDay = isWithinFinalDay(eventStartsAt, nowIso)
+
+  return {
+    project,
+    counts,
+    required,
+    staffed,
+    gap,
+    isMissing,
+    eventStartsAt,
+    isFinalDay,
+    isUrgent: isUrgentEvent(eventStartsAt, nowIso),
+    isPast: isPastEvent(project?.final_event_date, todayIso),
+    // ⚠️ ההתראה היא על **חוסר** בתוך T-24, לא על הקרבה עצמה (כרטיס מסך 1 §④): אירוע מלא
+    // שמתקיים מחר אינו דורש ממנה דבר, וסימון-אזהרה עליו היה מלמד אותה להתעלם מהסימן.
+    showsFinalDayAlert: isMissing && isFinalDay,
+  }
+}
+
+// 🔴 **הסדר הוא התשובה של המסך, לא קישוט** (כרטיס מסך 1 §②): חסרים תחילה, ובתוכם לפי
+// קרבת-האירוע; המאוישים אחריהם. ⚠️ ולכן אירוע **חסר ורחוק** עולה מעל **מאויש וקרוב** —
+// זה נראה הפוך לאינטואיציה של לוח-זמנים, וזו בדיוק ההבחנה בין מסך-טריאז' לדוח.
+// 🚫 שורה בלי תאריך יורדת לסוף קבוצתה ולא מתחזה לקרובה ביותר (`null` ממוין ראשון בהשוואה
+// נאיבית — הפוך בדיוק ממה שצריך).
+export function sortOverviewRows(rows) {
+  return [...(rows ?? [])].sort((a, b) => {
+    if (a.isMissing !== b.isMissing) return a.isMissing ? -1 : 1
+
+    const left = a.eventStartsAt
+    const right = b.eventStartsAt
+    if (left !== right) {
+      if (!left) return 1
+      if (!right) return -1
+      return left < right ? -1 : 1
+    }
+
+    // שובר-שוויון יציב: בלעדיו שתי שורות באותו תאריך מחליפות מקום בין רענונים.
+    return Number(a.project?.project_id ?? 0) - Number(b.project?.project_id ?? 0)
+  })
+}
+
+// שני ה-KPI העליונים. 🔴 **אינם עמודה ואינם שאילתה** — הם צירוף של מוני-השורות
+// (`screens-approved.md:484-486`), ולכן הם מתארים בדיוק את מה שמוצג ברשימה שמתחתיהם.
+export function overviewKpis(rows) {
+  const list = rows ?? []
+  return {
+    missingEvents: list.filter((row) => row.isMissing).length,
+    missingWithinFinalDay: list.filter((row) => row.showsFinalDayAlert).length,
+    // `pendingInvites` **מכיל** את `expiredInvites` — ר' ההערה על `countAssignmentStates`.
+    pendingInvites: list.reduce((sum, row) => sum + row.counts.pending, 0),
+    expiredInvites: list.reduce((sum, row) => sum + row.counts.expired, 0),
+  }
 }
 
 // ── הנגזרות של טבלת-המאגר (משטח 3) ───────────────────────────────────────────

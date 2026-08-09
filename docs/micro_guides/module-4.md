@@ -13,9 +13,9 @@
 | Module | **4 — דיילות + Smart Match** |
 | Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ **Nothing on this branch is pushed.** 🚫 Do not write a number here — it rotted twice already *("ahead 6" was written on 08/08 and was 93 by 09/08 evening)*. **Measure it: `git rev-list --count origin/dev..HEAD`** |
 | Owner | ישי (sole developer) |
-| Overall status | 🔨 **Phase 3 — 3.0 · 3.1 · 3.2 DONE.** Gate `exit 0` · **627 unit tests** (was 575 at the close of Phase 2) · `smoke exit 0` · 7 migrations · advisors **15**. 🆕 **The pool is LIVE: 20 real hostesses, created through the app's own path, all 20 geocoded** *(Ishay's ruling — see `local-14`)*. 🆕 **The Phase-3 door was swept and all three open items are RULED** (§7.41 · §7.33 · `local-12`). ⏳ Phase 1's 1.5 gate still owes Ishay's `regin-docs-sync` run |
-| Last updated | **09/08/2026 19:3X** *(system clock; refresh it at every step transition)* |
-| **Active step** | **3.3** — Surface 1, the assignment overview. ⚠️ **The 2.3 remainder (assignment-lifecycle writes) rides with 3.4/3.5 — and §7.33 is now RULED, so it is no longer blocked** |
+| Overall status | 🔨 **Phase 3 — 3.0 · 3.1 · 3.2 · 3.3 DONE.** Gate `exit 0` · **662 unit tests** (was 627 after 3.2; 575 at the close of Phase 2) · `smoke exit 0` · 7 migrations · advisors **15**. 🆕 **The pool is LIVE: 20 real hostesses, created through the app's own path, all 20 geocoded** *(Ishay's ruling — see `local-14`)*. 🆕 **The Phase-3 door was swept and all three open items are RULED** (§7.41 · §7.33 · `local-12`). ⏳ Phase 1's 1.5 gate still owes Ishay's `regin-docs-sync` run |
+| Last updated | **09/08/2026 20:50** *(system clock; refresh it at every step transition)* |
+| **Active step** | **3.3 · 3.4 · 3.5 — approved as ONE build unit** (`~/.claude/plans/wiggly-jingling-cascade.md`, Ishay 09/08 20:4X). 🔴 **Why bundled, and it is a measurement not a preference: `assignments` holds ZERO rows** ⇒ 3.3's whole content (five counters · the `ממתינות`/`פג תוקפן` split · `שלח שוב`) renders as zeros and cannot be proven; **3.4 is what creates those rows and 3.5 is what records the answers.** The 2.3 remainder (assignment-lifecycle writes) lands inside this unit |
 | Deadline | module 4 → `dev` by **21/08/2026**; submission **19/09/2026** |
 
 Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target module) · ❌ blocked (reason)
@@ -38,9 +38,9 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | 3.0 | 🔧 Shared-component checkpoint (before any screen) | ✅ 09/08 — all 8 approved mockups scanned by class-vocabulary. **3 new shared** (`StatusTag` · `RatingStars` · `ChipToggle`, 23 tests) · **4 reused** (`StatTile`/`Money`/`useConfirm`/`LoadingOrError`) · **1 deliberately local** (Smart Match reasoning chips — `spec.md §1.5` requires two separate families) |
 | 3.1 | Surface 3 — hostess repository table | ✅ 09/08 — built as drawn · 4 new pure functions (**tests first, watched red**) · **verified live on 20 real rows**, both permission directions, all four screen states |
 | 3.2 | Surfaces 3ב/3ג/3ד — add / edit / view cards | ✅ 09/08 — one dialog serves add+edit · stars open EMPTY · **the three different validation behaviours screenshotted** (ID blocks · wage blocks · duplicate email warns-only) |
-| 3.3 | Surface 1 — assignment overview (triage) | ⬜ |
-| 3.4 | Surface 2 — Smart Match | ⬜ |
-| 3.5 | Surface 4 — per-row action menu | ⬜ |
+| 3.3 | Surface 1 — assignment overview (triage) | ✅ 09/08 — built · **8 E2E green incl. both permission directions and the load-failure guard** · 4 new pure functions, each proven red against deliberately-broken code |
+| 3.4 | Surface 2 — Smart Match | 🔨 09/08 — 🗣️ approved 20:4X (same unit) |
+| 3.5 | Surface 4 — per-row action menu | 🔨 09/08 — 🗣️ approved 20:4X (same unit) |
 | 3.6 | Surface 5 — public confirm page (no login) | ⬜ |
 | 3.7 | 🔻👤 Phase-3 gate: 🎨 UX & functional review | ⬜ |
 | 4.1 | Wiring: **the public route only** — `UnderConstruction` was already replaced at 3.1 | ◐ **half done 09/08** — `/hostesses` renders `HostessesPage` and `App.routes.test.jsx` is green. **Still owed: the public route OUTSIDE `<MainLayout>` + its deliberate entry in the AST allow-list** |
@@ -590,7 +590,51 @@ is disabled at `N=0` · a load failure shows an error, **not** *"אין כרגע
 2. *"אירוע שבו 6 אישרו זמינות ואיש לא אושר סופית מציג `אושרו 0` ונראה זהה לאירוע שאיש לא ענה בו"* —
    the fifth counter closes it.
 3. *"'3 ממתינות' אומר תני להן זמן; '3 פג תוקפן' אומר שלחי לעוד שלוש, עכשיו."*
-**🗣️ אושר —**
+4. 🔴 *"מסך שלא הצליח לטעון אומר זאת. לעולם לא רשימה ריקה בשקט"* (`spec.md § מה ייחשב עובד` #4)
+   — a load failure shows the error + "נסה שוב", **never** *"אין כרגע אירועים"*. **Harvested 09/08:
+   the step's original list omitted it, while the step's own 🔻🤖 line already demanded it.**
+5. `יחידה-ספציפית` — **מנהלת פרויקטים sees the rows and has NO send button anywhere** (neither
+   per-row nor the bulk one), while מנהלת גיוס has both. **Both directions, not only the one I wanted.**
+**🗣️ אושר 09/08 20:4X** *(plan `~/.claude/plans/wiggly-jingling-cascade.md` — covers 3.3 + 3.4 + 3.5 as one unit.)*
+
+↳ **Ruled before building (both recorded in §10 as `הנחתי`, both spec-silent):**
+**(1) 🔴 An event whose `final_event_date` is BEFORE today is not listed.** Measured: project 7
+(`תרחיש-קבלה 5.1`, 01/08/2026, 6 missing) is `not_started` and **M4 never writes the status that
+would retire it** (`🚧 מ6 ← מ4`) ⇒ without a date rule it sits at the top of a triage screen
+forever, since the sort is by event proximity. Anchor: §② — *"על איזה אירוע אני נכנסת לטפל
+**עכשיו**"*. **An event dated TODAY stays** — she still closes holes by phone on the day.
+**(2) Default filter is `הכול`, not `הצג חסרים בלבד`** — the mockup draws that chip `on` **and in
+the same table draws a fully-staffed `5/5` row**, so the drawing contradicts itself; §④ settles it
+(*"והמאוישים אחריהם"*). Content of the list is BEHAVIOUR ⇒ the spec wins, the sort does the work.
+**(3) KPIs render through `StatTile`** (label above value) rather than the mockup's value-above-label
+strip — `src/CLAUDE.md` makes the component mandatory and module 4's own view-card already uses it.
+Permitted because this card records Ishay's approval of surface 1 as a **delegation** (*"נותן לך
+להחליט על זה"*). **(4) The `🔗 new-tab` element named in §⑧ is NOT in the approved mockup** — not built.
+
+↳ **as-built 09/08/2026 — built as drawn, with five things the step text did not carry.**
+**(1) 🔴 An existing helper was WRONG against the approved spec, and 3.3 is what exposed it.**
+`countAssignmentStates` (written at 2.2) counted `pending` and `expired` as **disjoint**; three
+approved sources say **`מתוכן`** — a subset — and the mockup's own arithmetic settles it (its rows
+carry `ממתינות` 1+4+2 and its header says **7**, not 10). Corrected, with the old test's rotted
+citation replaced. **Nothing consumed the function yet**, so this was a correction and not a change
+request. 🔑 The old test cited `spec.md:135`; that line now discusses the surrogate key — **the
+sentence it meant (`spec.md:148`) says "אותו מספר", i.e. it supported the opposite reading all along.**
+**(2) Four new pure functions** in `src/lib/hostesses.js` — `isPastEvent` · `eventProximityLabel` ·
+`overviewRow` · `sortOverviewRows` · `overviewKpis` — tests written first and **all four behaviours
+broken on purpose**, each turning exactly its own guard red.
+🎯 **And the KPI test's four numbers are the MOCKUP's, not mine** (`2 · 1 · 7 · 3`): it reproduces
+`01_overview_approved.html`'s own header arithmetic from its own row counters.
+**(3) Two shared extractions the 3.0 rule mandated** — `formatDate` existed in **three** copies
+(this screen would have been the fourth) ⇒ `src/lib/dates.js`; `FilterPill` reaches its third surface
+⇒ `src/components/FilterPill.jsx` (+ a `disabled` prop, for 3.4's switched-off sort angle).
+🚫 `quotePdf.jsx`'s copy deliberately stays — it takes `Date` objects and prints `—`, so unifying it
+would change a **shipped PDF**. Recorded in `dates.js` rather than left silent.
+**(4) 🐞 A defect caught by LOOKING, not by a test:** `StatTile` pipes a **numeric** `value` through
+`Money`, so `זימונים ממתינים` rendered **`0 ₪`**. The component behaves as documented; a counter is
+simply the exception. Fixed + an E2E regression asserting no `₪` in either tile. ⚠️ **3.4 has four
+counter tiles** — same trap.
+**(5) The row click is temporarily a spoken notice**, not navigation: Smart Match is 3.4, in this
+same unit. It says so out loud rather than doing nothing.
 
 **Step 3.4 · Surface 2 — Smart Match**
 **Files:** `04_hostesses/SmartMatchPage.jsx` · mockup `02_smartmatch_approved.html`
@@ -607,11 +651,21 @@ its previous state with an explicit message · screenshots of each.
 1. *"Smart Match מחזיר רשימה מדורגת שהיא יכולה להסביר לעצמה — כל שורה נושאת למה היא שם."*
 2. *"'אמינות ההגעה כבוי' = המרכיב לא מנורמל לאפס אלא מוסר מהנוסחה, והמשקלים מתחלקים מחדש."*
 3. *"ארבע הזוויות מסדרות בלבד — אינן מסננות."*
+4. **The hand-computed anchor still reproduces after this screen is wired: `נועה 0.67 · מיכל 0.66 ·
+   דנה 0.64`, in that order, two candidates absent** (`spec.md § מה ייחשב עובד` #7). 🔑 Harvested
+   09/08 — the numbers were written in the spec **before any code existed**, so the candidate-assembly
+   layer added here is exactly what could silently break them.
 🐞 **`שלח מייל תיאום` triggers `תבנית_זימון_משמרת` — see §10's 09/08/2026 bidi entry BEFORE
 building the send action.** `REG-IN!` renders `IREG-IN` in a real sent mail; likely small by the
 5-prior-occurrence precedent, unsized. Verify the fix here or at 3.5 (whichever builds the send
 first), not just visually — open a real received mail, per this session's own lesson.
-**🗣️ אושר —**
+⚠️ **Corrected 09/08: the first send point is whichever of 3.3/3.4/3.5 ships first — and they now
+ship together.** Ishay ruled the fix belongs **in the shared engine** (`plainTextToEmailHtml`,
+`src/lib/email.js`), not per template: all 9 `params` templates carry the defect, M8's and M11's
+future ones included. **Price accepted with the ruling:** a shared-surface file ⇒ unit tests **plus**
+re-running `quote-email.spec.js` + `quote-document.spec.js`, and acceptance is **opening a real
+received mail**, never a status code.
+**🗣️ אושר 09/08 20:4X** *(same consolidated plan as 3.3.)*
 
 **Step 3.5 · Surface 4 — per-row action menu**
 **Files:** `04_hostesses/AssignmentRowMenu.jsx` · mockup `04_rowmenu_approved.html`
@@ -631,7 +685,9 @@ action returns the row to its previous state with a message, never a silent "נ�
 3.4.** Fix once (it is the shared body-rendering path, not per-button), then verify from **both**
 3.4 and 3.5's send actions, not just one — a fix proven from one button and unverified from the
 other is exactly the kind of unverified claim this project's own incidents warn against.
-**🗣️ אושר —**
+➕ **And 3.3's two `שלח שוב` buttons (per-row and bulk) call THIS step's resend function** — the
+screen card states they are *"אותה פעולה בדיוק"*. One implementation, never a copy.
+**🗣️ אושר 09/08 20:4X** *(same consolidated plan as 3.3.)*
 
 **Step 3.6 · Surface 5 — public confirm page** ⚠️ shared-surface *(`src/App.jsx`)*
 **Files:** `04_hostesses/PublicConfirmPage.jsx` · `src/App.jsx` · mockup `05_public_confirm_approved.html`
@@ -748,7 +804,7 @@ The closing audit walks these one by one and ticks what it verified — so they 
 - [x] The deliberate policy-drop test ran — **0 rows and NO error**, both for a `view`-only role with the select policy dropped and for an `edit` role with **both** dropped. ⚠️ **And it caught a mine:** dropping only `_select_` hides nothing from an `edit` holder, because `_write_by_permission` is `FOR ALL`. ◐ **The DB half is proven; the screen half (showing an error rather than an empty list) is owed by Phase 3** — the DB cannot signal this.
 - [x] `anon` cannot read or write `assignments` directly; the public RPC is the only path — as `anon`: `count(*)` = **0**, direct UPDATE took no row; the RPC returned `ok:true` on a valid token and a **byte-identical** generic message on all four failure paths (unknown · replayed · 49h-old · event already past).
 - [x] `npm run gate` green — **exit 0**, 09/08/2026 (incl. `check:docs-structure` 29 files / 0 findings and `check:context`)
-- [x] `npm run test:run` green — **627 passed / 20 files** *(09/08/2026, after step 3.2; was 575/17 at the close of Phase 2, 535/15 after 2.2, 428/13 at the close of Phase 1)*
+- [x] `npm run test:run` green — **662 passed / 22 files** *(09/08/2026, after step 3.3; was 627/20 after 3.2, 575/17 at the close of Phase 2, 535/15 after 2.2, 428/13 at the close of Phase 1)*
 - [x] `npm run test:e2e` — ✅ **RESOLVED 09/08/2026 ~16:0X by the parallel E2E session, and the diagnosis
       was right: it was never a code bug.** The dev server was refreshing itself mid-run (Vite HMR),
       which is why login "never left `/login`" and why every one of the five passed in isolation.
@@ -1123,6 +1179,26 @@ still open.**
   not open"), never as "auth throttled you" — so the natural reading is "my change broke the screen".
   **Do not re-diagnose this from scratch next time; re-run the failing test alone first.**
   📌 Not fixed here — out of Phase 1's scope, and no product decision is blocked on it.
+- 🏷️ **09/08/2026 — `הנחתי` register for step 3.3** *(three assumptions I filled; nobody stated
+  them and I did not measure them)*.
+  **(1) An event dated BEFORE today is not listed on the overview.** The approved spec is silent —
+  checked screen-card מסך 1 §④/⑤/⑥, the approved mockup, and process ב׳. **Why it needed a rule at
+  all:** a project leaves the list only when it reaches `מוכן לביצוע`, and **M4 never writes that
+  status** (`🚧 מ6 ← מ4`) ⇒ with the sort being "by event proximity", a past event pins itself to
+  the top of a triage screen permanently. **Boundary: `final_event_date < today` hides; an event
+  dated TODAY stays** — she still closes holes by phone on the day, which is exactly what
+  `אושרה סופית — סוכם בטלפון` exists for. **Shown to Ishay with its consequences; he asked me to
+  decide it.** Side effect: the internal-looking `תרחיש-קבלה 5.1` row disappears from the demo
+  screen without deleting anything.
+  **(2) `[עיר_אירוע]` in the invitation mail is filled with `final_location` in full.** Measured:
+  **`projects` has no city column**, and the real addresses cannot be split reliably — in
+  `אקספו תל אביב, ביתן 2` the city sits *inside the venue name*, while in `מרכז הכנסים, ירושלים` it
+  is last. A guessing parser would emit a **wrong city silently** — the geocode lesson exactly. The
+  spec's own field list says **"מיקום"**, and the public page shows *"בדיוק אותם שדות שכבר במייל"*.
+  **(3) `email_log.entity_id` for a `shift` mail = the PROJECT id.** `assignments` has a triple key
+  and no single-column id, while the column is `integer`. **No protection is lost:** resending an
+  invitation is **explicitly permitted** (`§ב4`), so for shifts this journal is a record, not a gate —
+  unlike a quote. Who received it is preserved in `recipient`.
 - 🏷️ **09/08/2026 — `הנחתי` register for Phase 1** *(the third provenance tag; it lives here and not
   only in chat, because two weeks from now an assumption reads exactly like a fact)*.
   **‏(1) `param_type` for `סכום_נסיעות_למשמרת` = `pricing_timing`.** Nothing names it. Anchor: its
