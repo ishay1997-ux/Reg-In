@@ -47,6 +47,59 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 09/08/2026 23:5X — Module 4, steps 3.4 (C3–C5) + 3.5. The module's lifecycle ran end-to-end against the live DB for the first time.
+
+**What changed.** `src/lib/assignmentActions.js` (new, 32 tests) holds the pure lifecycle rules —
+`nextAssignmentNumber` · `autoReleaseTargets` · `quotaNotice` · `resendDisabledReason` ·
+`rowMenuItems`. `api.js` gained the writes; `SmartMatchPage.jsx` and `AssignmentRowMenu.jsx` are the
+two new surfaces; the temporary toast in `HostessesPage` became real navigation.
+
+**Why one file serves both steps.** The row menu (3.5) and the resend button of surface 1 are the
+same rule set seen from one row — `screens-approved` calls them *"אותה פעולה בדיוק"*. Two copies of
+that map is precisely the drift this module cannot afford: merging `שלח את הקישור שוב` with
+`פתח זימון חדש` erases a prior refusal, and responsiveness is **40% of the score** — the ranking
+moves and **no test fails**.
+
+**What broke, and how it was found — the pattern is the point.**
+- **Two defects were caught by LOOKING at a screenshot, not by any test.** (1) `invite_sent_at` is a
+  *timestamp* and was handed to `formatDate`, which expects a *date*; the screen printed
+  `09T20:33:42.432+00:00/08/2026`. ⚠️ **`dates.test.js` already knew about the trap — its own case
+  sliced the string to 10 chars before calling.** A guard written around one caller instead of around
+  the function; the same shape as step 3.1's two vacuous tests. Fixed with `formatTimestamp`
+  (Asia/Jerusalem — a mail sent 01:10 local is stored as 22:10 of the previous day) and by making
+  `formatDate` reject non-date input. (2) The row menu opened outside its card and was clipped at the
+  window edge: in RTL, Radix `align="start"` pins the menu's **right** edge, and the trigger sits on
+  the left. `align="end"` fixed it; measured `x=61` after.
+- **A ninth bidi occurrence, measured with `Range` rects rather than eyeballed:** the banner printed
+  `62% / 38%` and laid `38%` out to the LEFT of `62%`. 🔑 **The generalizable half, new to the family:
+  `Money` and `LRI…PDI` fix a single value inside Hebrew; a two-value sequence has no correct order
+  at all — the fix is to break the sequence up.** Each percentage now sits beside its own word.
+- **A contradiction inside an approved mockup.** Menu ④'s caption says *"שתי האחרונות שולחות מייל"*,
+  which would make `סמן: ביטלה אחרי אישור` a mail-sender; the click map (§①) marks it 🚫 and the
+  mockup's own legend lists it under *"רק רושמות"*. Two against one, and behaviour belongs to the
+  spec ⇒ it sends nothing. The same caption also claims both actions return the project to
+  `בתהליך` — M4 never writes `projects.project_status` (`🚧 מ6 ← מ4`), so that half is stale too.
+
+**Live verification, not modelled.** Five real invitations were sent as מנהלת גיוס through
+build+preview; the row menu was then opened and screenshotted on **all six statuses on real rows**
+(`approval_withdrawn` correctly has no `⋯` at all). ⚠️ **And the run produced the sharpest possible
+demonstration of the project's own rule that `200` is not delivery:** the 19 demo addresses live on
+`@regin-demo.co.il`, **a domain that does not resolve** — every send returns a Gmail non-delivery
+notice while `email_log` records `sent`, because Make accepted the request. Only `נועה שגיא`
+(`ishay1997@gmail.com`) actually receives; Ishay confirmed that mail arrived and that `REG-IN!`
+renders correctly, and the LRI/PDI characters are visible in the raw body.
+
+**⏳ Left open for Ishay, and it is a product call:** `תבנית_אישור_סופי_שיבוץ` hardcodes
+*"איש קשר בשטח: **מנהלת הפרויקט** -[שם_מנהלת_פרויקט]"*, while `local-2` routes the contact to the
+**shift lead** when one is marked ⇒ marking a lead mislabels her role in a mail already sent. Known
+and recorded since `spec.md §12`; the fix is a `params` text change ⇒ a **ninth migration**, so it
+cannot be silent. Code side is ready (`resolveShiftContact` returns `isShiftLead`).
+
+**Housekeeping:** the `knip.jsonc` waiver on `04_hostesses/api.js` was **removed at the step it
+named as its own removal date**, and `deadcode` is green without narrowing it again.
+**Gates:** `gate` exit 0 · **733 unit** (was 662) · `smoke` exit 0 · **16 module-4 E2E** (8 new) ·
+the hand-computed anchor `0.67/0.66/0.64` re-verified after the screen was wired.
+
 ### 09/08/2026 21:0X — Module 4, step 3.3 (assignment overview) + the bidi fix moved into the shared mail engine.
 
 **Why 3.3 · 3.4 · 3.5 were approved as ONE unit** (Ishay delegated the call): `assignments` holds
