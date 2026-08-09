@@ -149,7 +149,8 @@ CI `.github/workflows/ci.yml` — **runs neither E2E nor smoke.**
 | `src/modules/02_customers/api.js` · `src/modules/03_quotes/api.js` | the two existing `api.js` precedents (03 is the newer) |
 | `src/modules/02_customers/CustomerFormDialog.jsx` | dialog language for 3ב/3ג (locked ח"פ ≙ locked ת"ז; contacts-in-form ≙ unavailability ranges) |
 | `src/modules/02_customers/CustomerDetailsPage.jsx` | structure for 3ד — **as an overlay, not a page** |
-| `src/components/` | `StatTile` · `Money` · `LtrFieldGroup` · `ConfirmDialog` · `LoadingOrError` · `RowAction` · `ToastProvider` |
+| `src/components/` | `StatTile` · `Money` · `LtrFieldGroup` · `ConfirmDialog` · `LoadingOrError` · `RowAction` · `ToastProvider` · 🆕 `StatusTag` · `RatingStars` · `ChipToggle` *(3.0)* · 🆕 **`FilterPill`** *(3.3 — carries a `disabled` prop for 3.4's switched-off sort angle)* |
+| 🆕 `src/lib/dates.js` | `formatDate` · `formatTimeRange` — **extracted at 3.3 after `formatDate` was measured in three copies.** 🚫 Do not write a fourth |
 | `src/App.jsx` **⚠️ shared-surface** | `:126-129` — the route **already exists** with `<UnderConstruction>`; replace it, and add the public route |
 | `src/App.routes.test.jsx` | AST guard: any screen under `<MainLayout>` without `<ProtectedRoute>` fails |
 | `scripts/demo-seed.mjs` **⚠️ shared-surface** | extend with the 5 hostesses of `spec.md §3.1` |
@@ -638,6 +639,34 @@ same unit. It says so out loud rather than doing nothing.
 
 **Step 3.4 · Surface 2 — Smart Match**
 **Files:** `04_hostesses/SmartMatchPage.jsx` · mockup `02_smartmatch_approved.html`
+
+> 📥 **What 3.3 handed this step — five items, four of them already solved and one still open.**
+> **(1) ⏳ OPEN, and it blocks every real send: the 20 hostesses carry plausible `@gmail.com`
+> addresses** (`noa.sagi@gmail.com` …) ⇒ one click on `שלח מייל תיאום` mails a stranger.
+> **Ishay ruled 09/08: 19 move to `@regin-demo.co.il`, and נועה שגיא gets his own inbox** so a live
+> send is demonstrable at the conference. 🔴 **Not executed yet — his address must be confirmed by
+> him first, and no send action may be exercised until it is.**
+> **(2) The invitation mail is already built and tested — REUSE, do not re-author.**
+> `buildShiftInvitePayload` (`src/lib/shiftEmails.js`) + `resendExpiredInvites` (`api.js`) carry the
+> template fill, the `requireAttachment:false` floor, the token, the write-then-send order, the
+> rollback of `invite_sent_at` on failure, and the three-outcome handling. `שלח מייל תיאום` differs
+> only in that it **creates** rows instead of refreshing them.
+> **(3) 🐞 `StatTile` turns a NUMERIC value into shekels** — this screen has **four** counter tiles.
+> Pass `String(n)`. 3.3 shipped `0 ₪` on a counter before a screenshot caught it.
+> **(4) The bidi fix is DONE at engine level** (`plainTextToEmailHtml`) — do not re-fix per template.
+> Acceptance is still **opening a real received mail**, not a status code.
+> **(5) 🧹 Replace the temporary row-click notice.** `HostessesPage` currently answers a row click
+> with a toast saying this screen is next. It must become real navigation to this surface.
+>
+> 🔴 **And a hole `spec.md §12` records that "the screens phase never collected" — it lands HERE:**
+> `תבנית_אישור_סופי_שיבוץ` injects **`[כתובת_אירוע_מלאה]` · `[שם_מנהלת_פרויקט]` ·
+> `[טלפון_מנהלת_פרויקט]`**, and the schema holds only `projects.final_location` and
+> `projects.owner_email` — **no manager name, no phone.** ✅ **It is NOT open any more: Ledger
+> `local-2` (ישי 08/08) rules the address is `final_location`, and the field contact is the shift
+> lead if marked, else `users.full_name`/`users.phone` resolved via `projects.owner_email`.**
+> ⚠️ **But `spec.md` still reads as if it were open** — do not re-open it, and do not "discover" it
+> again. *(`fillEmailTemplate` refuses a template with an unknown placeholder, so a missed one is a
+> mail that never sends — loud, not silent. That is the safety net, not the answer.)*
 **What to do:** two columns · four counters · the four sort angles · candidate cards with reasoning
 chips. 🔴 **The screen SAYS OUT LOUD that the reliability component is off and that the pin tag does not
 exist yet** — 🚫 never a silent zero (§7.90). The score stays hidden; the chips explain.
@@ -691,6 +720,15 @@ screen card states they are *"אותה פעולה בדיוק"*. One implementati
 
 **Step 3.6 · Surface 5 — public confirm page** ⚠️ shared-surface *(`src/App.jsx`)*
 **Files:** `04_hostesses/PublicConfirmPage.jsx` · `src/App.jsx` · mockup `05_public_confirm_approved.html`
+
+> 🔴 **LOCKED BY 3.3 — the route path is no longer a free choice: it MUST be `/shift/:token`.**
+> `confirmUrlFor` (`src/lib/shiftEmails.js`, built 09/08) already bakes that path into **every
+> invitation that has been sent**, and a mail cannot be recalled. ⚠️ **A different path here does not
+> fail loudly — it produces a 404 for a hostess holding a link we sent her**, and the manager sees an
+> invitation that simply never gets answered. **Change the path ⇒ every outstanding token dies.**
+> *(The path itself was spec-silent; chosen at 3.3 and recorded here rather than left to be
+> rediscovered. The token sits in the PATH and never in a query string — `§7.45`: it is a
+> write-key to the DB, and query strings leak into logs and `Referer` headers.)*
 **What to do:** no sidebar, no login, no role. 🔴 **Its route lives OUTSIDE `<MainLayout>`** —
 `src/App.routes.test.jsx` fails any screen *under* `MainLayout` lacking `<ProtectedRoute>`, so wrapping
 it would satisfy the test **by breaking the page**. Eight states per `screens-approved.md §⑤`:
@@ -1190,7 +1228,7 @@ still open.**
   `אושרה סופית — סוכם בטלפון` exists for. **Shown to Ishay with its consequences; he asked me to
   decide it.** Side effect: the internal-looking `תרחיש-קבלה 5.1` row disappears from the demo
   screen without deleting anything.
-  **(2) `[עיר_אירוע]` in the invitation mail is filled with `final_location` in full.** Measured:
+  **(2) `[עיר_אירוע]` in the invitation mail is filled with `final_location` in full.** 🔴 **And this one is a RESOLUTION of a mismatch the spec itself flags, not a gap I invented into being:** `spec.md:704` records *"אי-התאמה רביעית: הזימון נושא `[עיר_אירוע]` (עיר בלבד) בעוד `§ב3` דורש 'מיקום' ו-`screens-approved` (משטח 5) מבטיח שהדף הציבורי מציג את אותם שדות כמו המייל"* — **and leaves it unruled.** My choice resolves it in the direction the spec's own sentence argues for. Measured:
   **`projects` has no city column**, and the real addresses cannot be split reliably — in
   `אקספו תל אביב, ביתן 2` the city sits *inside the venue name*, while in `מרכז הכנסים, ירושלים` it
   is last. A guessing parser would emit a **wrong city silently** — the geocode lesson exactly. The

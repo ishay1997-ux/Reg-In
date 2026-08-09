@@ -47,6 +47,57 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 09/08/2026 21:0X — Module 4, step 3.3 (assignment overview) + the bidi fix moved into the shared mail engine.
+
+**Why 3.3 · 3.4 · 3.5 were approved as ONE unit** (Ishay delegated the call): `assignments` holds
+**zero rows** — measured, not assumed. 3.3's entire content is *what happened to the invitations*
+(five counters · the `ממתינות`/`פג תוקפן` split · `שלח שוב`), so on today's data it renders all
+zeros. **3.4 is what creates those rows and 3.5 records the answers.** 3.3 alone is buildable but
+not provable.
+
+**What landed (3.3 only; 3.4/3.5 still ahead).** `OverviewTab.jsx` per the approved mockup · five
+new pure functions in `src/lib/hostesses.js` · `src/lib/shiftEmails.js` (invitation payload) ·
+`resendExpiredInvites` in `api.js` · `e2e/hostesses.spec.js` (8 tests). Gate **exit 0** · **662
+unit** (was 627) · `smoke` exit 0 · quote-mail E2E **8/8** after touching the shared engine.
+
+🔴 **The finding worth keeping: an existing helper was wrong against the approved spec, and only
+building the screen exposed it.** `countAssignmentStates` (written at 2.2) counted `pending` and
+`expired` as **disjoint**. Three approved sources say **`מתוכן`** — a subset — and the mockup's own
+arithmetic decides it: its rows carry `ממתינות` 1+4+2 while its header says **7**, not 10.
+🔑 **And the old test defended the wrong reading with a citation that had rotted:** it cited
+`spec.md:135`, which today discusses the surrogate key; the sentence it meant (`spec.md:148`) reads
+*"**אותו מספר**, שתי פעולות הפוכות"* — i.e. it argued for the subset reading all along. **Nothing
+consumed the function yet**, so this was a correction, not a change request.
+
+🐞 **A defect no test caught — a screenshot did.** `StatTile` pipes a **numeric** `value` through
+`Money`, so `זימונים ממתינים` rendered **`0 ₪`**. The component behaves exactly as documented; a
+counter is simply the exception to a default that is right for most tiles. Fixed, with an E2E
+regression asserting no `₪` in either tile. ⚠️ **3.4 has four counter tiles.**
+
+**Bidi (`IREG-IN`) — fixed in the ENGINE, by Ishay's ruling.** `plainTextToEmailHtml` now isolates
+Latin runs **including their trailing punctuation** (LRI…PDI) — isolating `REG-IN` without the `!`
+reproduces the bug exactly, which is why the run and its punctuation travel together. Unicode
+controls rather than a `<span dir=ltr>`: a mail client that strips styles cannot strip a character.
+All 9 `params` templates inherit it, M8/M11's future ones included.
+
+**Three assumptions, registered in `module-4.md` §10** — past-dated events are not listed (with the
+"today stays" boundary) · `[עיר_אירוע]` gets `final_location` in full (**a resolution of a mismatch
+`spec.md:704` itself flags and leaves unruled**, not an invented gap — `projects` has no city column
+and the real addresses cannot be split reliably) · `email_log.entity_id` for a shift = the project id.
+
+**Two extractions the 3.0 rule required:** `formatDate` was measured in **three** copies (this screen
+would have been the fourth) ⇒ `src/lib/dates.js`; `FilterPill` reached its third surface ⇒
+`src/components/FilterPill.jsx`. 🚫 `quotePdf.jsx`'s copy deliberately stays — it takes `Date`
+objects and prints `—`, so unifying it would silently change a **shipped PDF**.
+
+🔒 **A decision that is now irreversible-by-mail and is written into step 3.6:** the public confirm
+route is **`/shift/:token`**. `confirmUrlFor` bakes it into every invitation sent, and mail cannot be
+recalled ⇒ a different path in 3.6 does not fail loudly, it 404s a hostess holding a link we sent.
+
+⏳ **Open and blocking every real send:** the 20 hostesses carry plausible `@gmail.com` addresses.
+Ishay ruled 19 move to `@regin-demo.co.il` with נועה שגיא on his own inbox — **not executed; his
+address must be confirmed by him first.**
+
 ### 09/08/2026 19:3X — Module 4 Phase 3, steps 3.0 · 3.1 · 3.2: the hostess-pool world is built, and the pool itself is real.
 
 **What landed.** Three shared components (`StatusTag` · `RatingStars` · `ChipToggle`) · four new pure

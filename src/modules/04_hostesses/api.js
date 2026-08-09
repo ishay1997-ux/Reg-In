@@ -110,6 +110,9 @@ export async function getHostess(hostessId) {
 // הגיוס **חסומה** על מודול 'לקוחות', והצירוף היה מחזיר `null` **בלי שגיאה** בשלושה
 // מסכים מאושרים. זו בדיוק הסיבה שהעמודה נולדה (local-5, אותו דפוס כמו `event_name`).
 // ⚠️ הסינון ל-`OPEN_PROJECT_STATUSES` נעשה **בשאילתה**, לא בדפדפן.
+// 🔴 **אבל הוא אינו כל הסינון של המסך, ואל תסיק מכאן שהוא כן:** אירוע שתאריכו **לפני היום**
+// מסונן ב-`OverviewTab` דרך `isPastEvent`, ולא כאן. הסיבה שהוא אינו בשאילתה: "היום" הוא
+// שעון-הדפדפן, ושאילתה שמשווה ל-`now()` של המסד הייתה נחתכת בשעה אחרת מזו שהמסך מציג.
 export async function listStaffingOverview() {
   const { data, error } = await supabase
     .from('projects')
