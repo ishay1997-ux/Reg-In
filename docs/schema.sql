@@ -907,3 +907,44 @@ alter table customer_hostess_preference enable row level security;   -- policies
 -- ⛔ `תקרת_דיילות_מומלצת` **אינה קיימת** — בוטלה בהכרעת-ישי 09/08/2026 ("אין צורך בתקרה, מיותר").
 -- ⚠️ ‏`מרכיב_אמינות_פעיל` כבוי ⇒ בזמן-ריצה **מנרמלים מחדש** את שני המשקלים הנותרים ל-1.0.
 -- 🚫 אין לקודד קשיח את הפיצול הדו-כיווני (§11.1).
+
+-- ============================================================
+-- מודול 4 — מיגרציה D (20260809134237, הוחל 09/08/2026): RLS · שכר-מינימום · הפונקציה הציבורית
+-- ============================================================
+-- תשע policies לפי תבנית §7.21 (עטיפת `(select …)` חובה). ארבע טבלאות מ4 על מודול 'דיילות',
+-- ו-`projects` **SELECT בלבד** על 'פרויקטים' — 🚫 מ4 אינו כותב ל-`projects` לעולם (§12⑱ד).
+-- 🔴 בלי ה-policy על `projects` המסך הראשון חוזר ריק **לכולם, כולל למנכ"ל, ובלי שגיאה** (§12②).
+-- 🔴 ו-`hostess_unavailability` היא המסוכנת (§12⑮): deny-all שם היה **הורג בשקט את התנאי החמישי
+-- בשער** — אף דיילת לא נפסלת על אי-זמינות, ואיש לא רואה שגיאה.
+create policy "hostesses_select_by_permission"  on hostesses  for select to authenticated using (…§7.21 'דיילות' edit|view…);
+create policy "hostesses_write_by_permission"   on hostesses  for all    to authenticated using/with check (…'דיילות' edit…);
+create policy "assignments_select_by_permission" on assignments for select to authenticated using (…'דיילות' edit|view…);
+create policy "assignments_write_by_permission"  on assignments for all   to authenticated using/with check (…'דיילות' edit…);
+create policy "hostess_unavailability_select_by_permission" / "…_write_by_permission"           (…'דיילות'…);
+create policy "customer_hostess_preference_select_by_permission" / "…_write_by_permission"      (…'דיילות'…);
+create policy "projects_select_by_permission"   on projects   for select to authenticated using (…'פרויקטים' edit|view…);
+-- ⚠️ **מוקש שנמדד 09/08 ואינו ניכר מקריאת התבנית:** ה-policy של הכתיבה היא `FOR ALL`, ולכן היא
+-- **מכסה גם SELECT** לבעלי `edit`. ⇒ הפלת policy-הקריאה לבדה **אינה** מסתירה דבר ממנהלת הגיוס;
+-- רק בעלת `view`-בלבד מתעוורת. מי שבודק "מה קורה בלי policy" חייב להפיל את **שתיהן**.
+
+-- §7.66 — אכיפה בזמן-כתיבה, קריאת-פרמטר מוגנת (דפוס 20260731085335: TEXT ⇒ ולידציה ⇒ המרה).
+-- 🔴 `of hourly_rate`: הטריגר נדלק רק כשהעמודה בפועל ב-SET ⇒ עדכון שם/טלפון של דיילת ותיקה
+-- שתעריפה מתחת לרף **אינו נחסם ואינו משנה את תעריפה**. זו ההכרעה, לא פשרה.
+create function enforce_hostess_min_wage() returns trigger security definer set search_path = '';
+create trigger hostesses_enforce_min_wage before insert or update of hourly_rate on hostesses
+  for each row execute function enforce_hostess_min_wage();
+
+-- §7.45 — 🔴 **המשטח היחיד במערכת שכותב ל-DB בלי התחברות ובלי תפקיד.**
+-- ‏`assignments` נשארת deny-all ל-anon (אפס policies `to anon`); זו הדלת היחידה.
+-- מקבלת רק טוקן+בחירה · כותבת רק `assignment_status` + `responded_at` · על שורה אחת ·
+-- ורק כששלושת התנאים מתקיימים: טוקן תקף · 48 שעות מהשליחה · **24 שעות לפני האירוע**
+-- (מול `final_event_date + final_start_time` באזור-הזמן של ישראל, לא מול חצות).
+-- 🔴 **מחזירה מחרוזת גנרית זהה לשלושת מצבי-הכישלון** — אחרת הדף הופך לאורקל שמאשר לזר
+-- שטוקן מסוים קיים. הסיבה האמיתית ל-`raise log` בלבד. ‏`responded_at` נכתבת פעם אחת
+-- (`coalesce`) — §12⑨, אחרת "שלח שוב" יוצר זמן-תגובה שלילי.
+create function respond_to_shift_invite(p_token text, p_response text) returns jsonb
+  security definer set search_path = '';
+revoke execute on function respond_to_shift_invite(text, text) from public;
+grant  execute on function respond_to_shift_invite(text, text) to anon, authenticated;
+-- ⚠️ **מוענקת גם ל-`authenticated` במכוון** — מנהלת שפותחת את הקישור בדפדפן שבו היא מחוברת
+-- לאפליקציה הייתה מקבלת "אין הרשאה" אחרת. ‏⇒ **שני ממצאי-advisor** על הפונקציה הזו, לא אחד.

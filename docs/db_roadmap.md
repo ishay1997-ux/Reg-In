@@ -279,7 +279,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 |---|---|---|---|
 | 2 לקוחות | customers (+marketing bucket) | CEO, projects mgr, finance mgr | no (one module gates the table) |
 | 3 הצעות | quotes, quote_services (+seed: products/price_tiers/params) | CEO, projects mgr | quotes locked after approval (§7.50) |
-| 4 דיילות | hostesses, assignments | CEO, recruitment mgr | assignments also written by M8 (salary_report_id) |
+| 4 דיילות | hostesses, assignments, **+ hostess_unavailability, customer_hostess_preference** (both new 09/08) · **reads `projects` only** | CEO, recruitment mgr | assignments also written by M8 (salary_report_id) · ✅ **9 policies applied `20260809134237`** — four tables gated on 'דיילות' (select `edit|view`, write `edit`), `projects` **SELECT-only** on 'פרויקטים'. ➕ **and one writer with no role at all: `respond_to_shift_invite`, `anon`-executable (§7.45)** — `assignments` stays deny-all to `anon`; the function is the only door |
 | 5 לוגיסטיקה | logistics (item_status/actual_qty only) | CEO, logistics mgr | derived rows created by M3/M6 conversion |
 | 6 פרויקטים | projects (operational cols), assignments/logistics via content-change | CEO, projects mgr | ⚠️ projects shared with M8 columns — §7.63 |
 | 8 כספים | projects (invoice_sent/payment_date/feedback_*), salary_reports, assignments.salary_report_id | CEO, finance mgr | ⚠️ the §7.63 hard case |
@@ -294,7 +294,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | Bank details in-row on `hostesses` | dozens of rows, internal tool | §7.63 lands a masked view/table-split anyway; reopen if payroll export screens ship before it |
 | Composite text PKs (JOIN/PostgREST ergonomics) | scale is tiny; the real cost is key *mutability* (§7.64), not performance | table crosses ~100k rows or API latency complaints |
 | Soft-delete via `status` columns | consistent convention (users/customers/hostesses/products) | §7.34 decision demands more |
-| Hostess availability = absence of date-conflict in assignments | spec-explicit (C5:756); no calendar entity | business asks for availability preferences/vacations |
+| ~~Hostess availability = absence of date-conflict in assignments~~ 🔴 **REOPENED AND SUPERSEDED 09/08/2026 — the stated reopen trigger fired exactly as written.** Ishay's process (`spec.md §2.1(3)`) has the manager entering **declared** unavailability ranges, i.e. "availability preferences/vacations" verbatim. ⇒ `hostess_unavailability` was created in `20260809125750`, and availability is now **two** things: the declared table (the gate's fifth condition) **and** the same-day assignment conflict (`assignments_one_event_per_day`, `20260809124327`). **Neither replaces the other** | spec-explicit (C5:756); no calendar entity | ~~business asks for availability preferences/vacations~~ **fired** |
 | Single KV `params` for templates+integration | small, editable via M9 UI | §7.70 decides split; template versioning demanded |
 | `quotes.pdf_url` column stays (unused) | dropping is churn (§7.12) | §7.71 cleanup batch at M12 |
 
@@ -336,6 +336,53 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
+- 09/08/2026 — migration `20260809134237_module4_rls_and_public_rpc.sql`
+  **✅ APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed `module4_rls_and_public_rpc`).
+  **Executes §7.21 (nine policies) · §7.66 (min-wage trigger) · §7.45 (the public RPC) · `spec.md
+  §12② and §12⑮` (the two read-policies whose absence fails silently).**
+  **✅ POST-APPLY VERIFICATION — impersonation in BOTH directions, in rolled-back DO blocks.**
+  Method: `set_config('request.jwt.claims', …, true)` carrying **both `sub` and `email`**, then
+  `set local role authenticated`. *(A missing key makes every query return 0 and look like perfect
+  RLS — which is why the positive control comes first.)*
+  *(1)* **POSITIVE CONTROL PASSED:** `recruit.test@regin.co.il` → `hostesses` **1** · `projects` 3 ·
+  `hostess_unavailability` 1 · `customer_hostess_preference` 1. A zero here would have meant broken
+  impersonation, not working RLS, and every result below would have been worthless.
+  *(2)* `finance.test@regin.co.il` → `hostesses` **0** (blocked on 'דיילות') · `projects` **3**
+  (she holds `view` on 'פרויקטים' — correct per the matrix, not a leak).
+  *(3)* `projects.test@regin.co.il` → reads 1 hostess (`view`) and her UPDATE **did not take**
+  (`write_blocked = true`).
+  *(4)* `anon` → `select count(*) from assignments` = **0**, and a direct UPDATE took no row.
+  The RPC is the only path.
+  *(5)* **Min-wage:** `hourly_rate = 30` → Hebrew `P0001`, blocked · `= 40` → accepted · **an UPDATE
+  of `full_name` alone on an existing row succeeded**, proving `of hourly_rate` really does scope the
+  trigger and no existing wage is silently raised (§7.66's core requirement).
+  *(6)* **Public RPC, four cases:** valid token → `ok:true`, status `confirmed_available`,
+  `responded_at` set · replay of the same token → `ok:false` · unknown token → `ok:false` ·
+  invite sent 49h ago → `ok:false` · invite whose event is already past → `ok:false`.
+  🔴 **All four failure messages compared programmatically and found BYTE-IDENTICAL** — the property
+  that stops the page being an oracle confirming a stranger's guessed token.
+  *(7)* Post-probe: all four tables back to **0 rows**, `params` still 32, and **9 policies** present
+  (including the two the trap-probe dropped — the rollback restored them).
+  🔴 **FINDING — the advisor count came out 14, not the 13 predicted above, and the prediction was
+  wrong for a reason worth keeping.** Five `rls_enabled_no_policy` cleared as expected, but
+  `respond_to_shift_invite` raises **two** lints, not one: `anon_…` **and**
+  `authenticated_security_definer_function_executable`, because EXECUTE is granted to both roles.
+  **Granting to `authenticated` is deliberate** — a manager who opens the invite link in the browser
+  where she is signed into the app would otherwise get a permission error on a public page.
+  ⇒ 17 − 5 + 2 = **14**. **Triage note (satisfies the DoD's "zero new findings, or a written
+  triage"):** both new WARNs are on the same intended function; the remaining four
+  `rls_enabled_no_policy` are `login_attempts` · `login_rpc_calls` (deliberate deny-all, §7.8↳) ·
+  `logistics` (M5) · `salary_reports` (M8).
+  🔴 **And a mine measured here that the §7.21 template does not reveal on reading:** the
+  `*_write_by_permission` policy is `FOR ALL`, so **it also grants SELECT** to `edit` holders.
+  Dropping only the `_select_` policy therefore hides nothing from מנהלת גיוס — the first trap-probe
+  returned 1 row and looked like a failed test until this was traced. **A "what happens with no
+  policy" test must drop BOTH.** With both dropped, and separately for a `view`-only role with the
+  select policy dropped, the result was **0 rows and NO error** — the `{data:null, error:null}` trap
+  `spec.md § מה ייחשב עובד` #4 calls the module's most severe failure, now demonstrated rather than
+  asserted. **Phase 3 owes the screen that turns it into a visible error.**
+  **Forward notice (§10.2): M6** — it will add its own write policy on `projects`; the SELECT policy
+  created here is M4's and must not be widened. **M8** — same table, finance columns (§7.63).
 - 09/08/2026 — migration `20260809125750_module4_tables_params_and_templates.sql`
   **✅ APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed
   `module4_tables_params_and_templates` in chat).
