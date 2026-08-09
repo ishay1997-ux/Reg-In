@@ -693,6 +693,10 @@ its previous state with an explicit message · screenshots of each.
 1. *"Smart Match מחזיר רשימה מדורגת שהיא יכולה להסביר לעצמה — כל שורה נושאת למה היא שם."*
 2. *"'אמינות ההגעה כבוי' = המרכיב לא מנורמל לאפס אלא מוסר מהנוסחה, והמשקלים מתחלקים מחדש."*
 3. *"ארבע הזוויות מסדרות בלבד — אינן מסננות."*
+🐞 **`שלח מייל תיאום` triggers `תבנית_זימון_משמרת` — see §10's 09/08/2026 bidi entry BEFORE
+building the send action.** `REG-IN!` renders `IREG-IN` in a real sent mail; likely small by the
+5-prior-occurrence precedent, unsized. Verify the fix here or at 3.5 (whichever builds the send
+first), not just visually — open a real received mail, per this session's own lesson.
 **🗣️ אושר —**
 
 **Step 3.5 · Surface 4 — per-row action menu**
@@ -709,6 +713,10 @@ action returns the row to its previous state with a message, never a silent "נ�
 1. *"מה קרה עם הזימון הזה — ואיך אני רושמת מידע שהגיע בטלפון ולא דרך הקישור."*
 2. *"אילו שתיהן היו נקראות 'שלח שוב', המנהלת הייתה מוחקת היסטוריית-מענה בלי לדעת."*
 3. *"פריט-תפריט אחד לשתיהן היה מזייף את הציון של דיילת חפה-מפשע."*
+🐞 **`שלח את הקישור שוב` / `פתח זימון חדש` also send `תבנית_זימון_משמרת` — same §10 bidi entry as
+3.4.** Fix once (it is the shared body-rendering path, not per-button), then verify from **both**
+3.4 and 3.5's send actions, not just one — a fix proven from one button and unverified from the
+other is exactly the kind of unverified claim this project's own incidents warn against.
 **🗣️ אושר —**
 
 **Step 3.6 · Surface 5 — public confirm page** ⚠️ shared-surface *(`src/App.jsx`)*
@@ -877,8 +885,14 @@ phase, §10, or the ledger.
   `REG-IN!` jumped to the wrong side of the Latin token. Template text lives in
   `params.תבנית_זימון_משמרת`; the wrapper `plainTextToEmailHtml` already emits `dir="rtl"`, so **the
   per-line direction is correct and the defect is the Latin+punctuation run inside a Hebrew line** —
-  the same class that `Money`/`LtrFieldGroup` solve on screen. **Fix belongs with the mail bodies
-  (step 3.6 / the invitation templates), not with Phase 0.**
+  the same class that `Money`/`LtrFieldGroup` solve on screen.
+  ⚠️ **Corrected same day: the original "fix belongs with step 3.6" was wrong** — 3.6 is the public
+  confirm page (no login, no outbound mail). **The real send points are 3.4 (`שלח מייל תיאום`) and
+  3.5 (`שלח את הקישור שוב`/`פתח זימון חדש`), both pointing back here.** ⚠️ **And this is arguably not
+  module-4-only:** `plainTextToEmailHtml` lives in the shared `src/lib/email.js` engine and every
+  hostess template (`תבנית_אישור_סופי_שיבוץ`, `תבנית_מייל_ביטול_משמרת`, `תבנית_תזכורת_משמרת`) — plus
+  M8/M11's future templates — shares the same defect. **Whoever fixes it should check whether the fix
+  belongs at the engine level, not per-template**, and confirm with Ishay before scoping it small.
   🔑 **And the reusable lesson: an RTL wrapper is necessary but NOT sufficient.** Five earlier
   occurrences were all fixed structurally by emitting label+value together; a plain-text template
   pulled from `params` has no such structure, so **any Latin token followed by punctuation inside a
