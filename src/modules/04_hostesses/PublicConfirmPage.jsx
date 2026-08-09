@@ -165,14 +165,16 @@ function AwaitingAnswer({ invite, saving, onAnswer }) {
 
       <p className="text-center text-sm font-semibold">תוכלי להגיע למשמרת הזו?</p>
 
-      {/* מטרות-מגע 44px+ ו-`focus-visible` גלוי — הדף נצרך כמעט תמיד באצבע. */}
+      {/* מטרות-מגע 44px+. 🚫 **בלי טבעת-פוקוס מקומית** — `Button` הבסיסי כבר נושא
+          `focus-visible:ring-3`, וטבעת משלי הייתה הופכת את המשטח הזה ליחיד באפליקציה
+          עם פוקוס שונה. *(נמצא בסבב 3.7, בקוד שלי עצמי.)* */}
       <div className="flex flex-col gap-2.5">
         <Button
           type="button"
           disabled={saving}
           onClick={() => onAnswer(SHIFT_RESPONSE.confirm)}
           data-testid="shift-confirm"
-          className="h-auto rounded-xl bg-teal-600 py-3.5 text-[15px] font-bold text-white hover:bg-teal-700 focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-offset-2"
+          className="h-auto rounded-xl bg-teal-600 py-3.5 text-[15px] font-bold text-white hover:bg-teal-700"
         >
           ✓ אני מגיעה
         </Button>
@@ -182,7 +184,7 @@ function AwaitingAnswer({ invite, saving, onAnswer }) {
           disabled={saving}
           onClick={() => onAnswer(SHIFT_RESPONSE.decline)}
           data-testid="shift-decline"
-          className="h-auto rounded-xl border-slate-300 py-3.5 text-[15px] font-bold text-slate-700 focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
+          className="h-auto rounded-xl border-slate-300 py-3.5 text-[15px] font-bold text-slate-700"
         >
           לא אוכל הפעם
         </Button>
@@ -224,7 +226,7 @@ function Result({ state, onRetry }) {
           variant="outline"
           onClick={onRetry}
           data-testid="shift-retry"
-          className="h-auto rounded-xl border-slate-300 px-5 py-3 font-semibold text-slate-700 focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
+          className="h-auto rounded-xl border-slate-300 px-5 py-3 font-semibold text-slate-700"
         >
           נסי שוב
         </Button>
