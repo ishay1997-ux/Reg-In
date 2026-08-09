@@ -912,6 +912,18 @@ does not.
   re-create them under new ת"ז: there is **no delete in this module**, so a second run would leave 40.
   ✅ **And their 20 verified `lat`/`lng` pairs already exist** — read them from the live table
   (`select full_name, city, lat, lng from hostesses`) instead of re-deriving, since node cannot geocode.
+  🔴 **AND — new 09/08/2026, and it breaks the seed harder than the hostesses do: `assignments` is no
+  longer empty either.** Five real rows sit on **project 8**, one per status, created through the
+  screen *(נועה שגיא `finally_approved` **and shift lead** · רוני אלמוג `pending` · עדי שפירא
+  `declined` · דנה ברק `released` · הילה מזרחי `approval_withdrawn`)*. ⚠️ **The PK is
+  `(project_id, hostess_id, assignment_number)`** ⇒ a seed that inserts assignments for project 8
+  **fails on the key**, and one that "fixes" that by bumping `assignment_number` silently creates a
+  **second row per pair — which changes the deciding status** and rewrites the demo story.
+  ⇒ **The seed must treat project 8's assignments as existing content and skip them**, exactly as it
+  must skip the 20 ת"ז. **Measure first** (`select count(*) from assignments where project_id = 8`),
+  never assume the count from this line — it is a value, and values rot.
+  🔑 **And this is not a nuisance — it is the demo:** those five rows are what makes surface 1 show a
+  real split and surface 4 show six different menus. **Do not seed over them.**
   ⚠️ **`כנס לקוחות שנתי` is `in_progress` in the seed (`demo-seed.mjs:108,121`), so no project exists
   for it** — approve that quote in the seed so the module's own demo event exists as a project.
 - Add a module-4 block to `e2e/smoke-anchors.json`: **the ORDER `נועה ← מיכל ← דנה`**, not the scores —

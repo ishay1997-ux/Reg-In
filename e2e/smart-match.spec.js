@@ -26,11 +26,16 @@ async function login(page, email, password) {
 
 // 🔴 **נכנסים דרך לחיצה על שורה ולא דרך כתובת** — זה בדיוק המסלול ש-3.3 השאירה פתוח
 // (הודעה זמנית במקום ניווט), והוא מה שצעד C5 סגר.
+//
+// 🕓 **והשורה נבחרת בזמן-ריצה, לא מקודדת** — `e2e/CLAUDE.md`: *"פיקסטורות נעוצות לשורות-מסד
+// חיות מרקיבות לבד"*. **וכאן זה היה קורה בתאריך ידוע:** הגרסה הראשונה נעצה `overview-row-8`,
+// ואירוע 8 מתקיים **22/08/2026** — מבט-העל מסנן אירועים שעברו (`isPastEvent`) ⇒ **החל מ-23/08
+// כל הבדיקות בקובץ הזה היו נופלות בלי שום באג**, שלושה שבועות לפני ההגשה.
 async function openSmartMatch(page, email, password) {
   await login(page, email, password)
   await page.goto('/hostesses')
   await expect(page.getByTestId('overview-table')).toBeVisible({ timeout: 30_000 })
-  await page.getByTestId('overview-row-8').click()
+  await page.locator('[data-testid^="overview-row-"]').first().click()
   await expect(page.getByTestId('smart-match-page')).toBeVisible({ timeout: 30_000 })
 }
 

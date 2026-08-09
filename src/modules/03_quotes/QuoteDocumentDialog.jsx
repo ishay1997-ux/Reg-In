@@ -331,6 +331,12 @@ export default function QuoteDocumentDialog({
             {sendCheckNotice}
           </p>
         )}
+        {/* ⚠️ **`formatDate` בשורה הבאה היא זו של `quotePdf`, לא זו של `@/lib/dates`** —
+            ושתיהן אינן זהות: זו מפרסרת דרך `new Date()` ולכן **בולעת חותמת-זמן כמו שצריך**
+            (`email_log.created_at` הוא `timestamptz`), בעוד זו שב-`lib/dates` מקבלת
+            תאריך-בלבד ו**דוחה** חותמת. 🔴 **בדוק מאיזה קובץ מיובאת `formatDate` לפני שאתה
+            מסיק משהו על השורה הזאת** — שני שמות זהים, שתי התנהגויות הפוכות בדיוק בקלט הזה.
+            *(נבדק 10/08/2026 בסריקת-סתירות, אחרי שנחשדה כאן בטעות תקלה.)* */}
         {canSend && previousSend && !sent && !sendError && (
           <p className="text-slate-600 text-sm" data-testid="quote-previous-send">
             נשלח כבר ב-{formatDate(previousSend.created_at)} אל {previousSend.recipient}
