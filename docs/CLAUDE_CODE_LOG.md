@@ -100,6 +100,39 @@ recalled ⇒ a different path in 3.6 does not fail loudly, it 404s a hostess hol
 path the 20 rows were created by (`local-14`). Every PATCH asserted `1` row back: **`0 rows` is a
 silent RLS block, not a success.** Verified against the DB: 20 distinct addresses, no stranger left.
 
+### 09/08/2026 22:4X — Migration G: the final-approval mail had no readable contact, and the measurement is what found it.
+
+**The defect, found while building C3 and not by reading anything.** `local-2` (ישי 08/08) routes the
+mail's field contact to `users.full_name`/`users.phone` via `projects.owner_email`. From a signed-in
+browser as מנהלת גיוס: `owner_email` reads fine, and the follow-up on `users` returns **`200` with
+`[]`** — `users_select_self_or_ceo` permits self-or-CEO only. ⇒ the mail would have printed
+*"איש קשר בשטח: מנהלת הפרויקט -, טלפון: "* **with no error anywhere.** 🚫 And `fillEmailTemplate`
+cannot catch it: the placeholder is **known**, merely filled with an empty string.
+⚠️ **It also corrected a claim I had written hours earlier** in the same guide, declaring this hole
+closed on the strength of the ruling — **without testing that the ruling was executable.**
+🔑 **The reusable shape: a ruling that exists is not a ruling that works.**
+
+**And Ishay's question sharpened it rather than dissolving it.** He asked whether the shift-lead
+contact belongs to M6 — it does not, it is M4 (`is_shift_lead` exists; marking lives in 3.4/3.5),
+and when a lead **is** marked her details come from `hostesses`, which the recruiter reads fine.
+**But `spec.md:255` marks the lead only AFTER a final approval exists** ⇒ the first approval mail of
+every event always takes the fallback. The blocker sat on the common path, not an edge case.
+
+**Ruled by Claude under explicit delegation** (*"מה שנראה לך נכון, אני לא מבין את המשמעויות"*):
+snapshot `projects.owner_name`/`owner_phone`. Third use of a pattern already in this table
+(`event_name` §7.76 · `customer_name` local-5, whose migration even rewrote the same RPC), no new
+security surface, and semantically right — **a sent mail must keep saying what it said**, the
+`hourly_rate_snapshot` argument.
+
+**Applied after typed echo. Verified, not assumed:** the same recruiter query now returns
+`ישי אטיאס`/`050-1241223` · **the RPC diff was measured before applying — exactly three additive
+changes** (two columns, two values, one `left join`), nothing else in the body moved · module-3
+regression `quote-approval` + `server-messages` **17/17** · advisors **15 = baseline, zero new** ·
+`schema.sql` appended in the file's own convention · `db_roadmap §10` Done-row with a 🚧 forward
+notice for M6/M8 (**these are a snapshot at creation; whoever needs the CURRENT owner reads `users`**).
+⚠️ **One duty moved from schema to code:** both columns are nullable by design, so the send path
+must **refuse** rather than print an empty phone.
+
 ### 09/08/2026 21:4X — Step 3.4 started: the Smart Match assembly layer, and a break-check that failed twice before it passed.
 
 `src/lib/smartMatchCandidates.js` — DB rows ⇒ the input `rankCandidates` demands, plus what the
