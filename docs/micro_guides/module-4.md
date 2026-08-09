@@ -877,11 +877,23 @@ phase, §10, or the ledger.
   list is static, exactly one attachment, unconditionally.
   *(b)* **By running it** — one real attachment-less `shift` mail through the full production path
   returned **`502 · "Make responded 400"`**. ⇒ **the bypass is required; it is not optional polish.**
-  🔴 **What is NOT yet known, and is the first thing the next session must settle:** whether the 400
-  comes from the **webhook's data structure** (`pdf_base64`/`filename` declared required ⇒ a two-field
-  fix, no restructuring) or from the **Gmail module** rejecting an empty attachment (⇒ a Router with a
-  filter on `pdf_base64`, i.e. a second Gmail module and a real drift risk). **Do not pick one before
-  opening the `Webhooks · Custom webhook` module and reading its data structure.**
+  ✅ **SETTLED the same session, by two measurements — and the answer makes the fix cheap.**
+  *(i)* **Binary search on the payload:** `filename="bdika.pdf"` + a valid tiny base64 → **200, mail
+  delivered**; the same call with `pdf_base64=""` → **400**. ⇒ the empty value that breaks it is
+  **`pdf_base64`, and `filename` is innocent.**
+  *(ii)* **The scenario History is the decider:** it lists **exactly one run today** (`09:16:00 ·
+  Success · 639 B` = the passing probe). **Both 400s produced NO execution at all — not even a failed
+  one.** ⇒ the rejection happens at the **webhook layer, before the scenario starts**, i.e. the custom
+  webhook's **data structure marks `pdf_base64` as required** and an empty string fails validation.
+  🎯 **Therefore: NO Router, NO second Gmail module, no duplication.** The fix is to make that field
+  optional in the webhook's data structure.
+  ⚠️ **But it is a TWO-PART fix, and part two is unproven:** once the webhook accepts the call, the
+  Gmail module still evaluates `toBinary(""; "base64")` on an empty attachment. **Re-run the
+  attachment-less probe immediately after the data-structure change** — if the scenario now starts and
+  *then* fails, the conditional-attachment problem is real after all and only then is a Router on the
+  table. **Do not declare 0.3 closed on the webhook fix alone.**
+  📍 **How to re-measure:** `scratchpad/probe.mjs <to> <filename> <base64>` sends one mail through the
+  full production path and prints the HTTP status; History tells you whether an execution was created.
 - **09/08/2026 — and the failed send proved MORE than it broke.** `email_log` now carries
   `shift · 999999 · failed · "Make responded 400" · recruit.test@regin.co.il · תבנית_זימון_משמרת`.
   Everything on **our** side is therefore proven in production, not merely in a catalog query:
