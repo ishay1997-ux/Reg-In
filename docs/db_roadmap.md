@@ -336,6 +336,43 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
+- 09/08/2026 — migration `20260809125750_module4_tables_params_and_templates.sql`
+  **✅ APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed
+  `module4_tables_params_and_templates` in chat).
+  **Executes:** the two new M4 tables + the `params` block of the M4 row at `:135` + the release-mail
+  template (`processes-approved.md §ב6`).
+  🔴 **The `params` list was DERIVED, not copied from any count — because measured 09/08, four
+  registries gave four different numbers and none was right:** `db_roadmap:135`'s header said twelve
+  while its own body enumerated thirteen · `processes-approved.md:308` said ten ·
+  `PROJECT_MASTER.md:444` said "~14" · `research §11.1` has ten `params` rows. **The rule used:**
+  every §11.1 row whose "חי ב־" cell reads `params` (10; the `עיגול לפני מיון` row reads `קוד` and is
+  excluded), with the window row **split in two** because `param_value` is a single `text` and cannot
+  hold a pair ⇒ 11 · + the two ➕ rows here (`לא_ענתה_ל_N`, `מרכיב_אמינות_פעיל`) ⇒ 13 ·
+  + `סכום_נסיעות_למשמרת` (local-3) ⇒ **14**. `:135`'s header has been rewritten to state the METHOD
+  instead of a number.
+  **✅ POST-APPLY VERIFICATION — live reads, not the SQL I sent:**
+  *(1)* `count(*) from params` → **32**, exactly 20 − 3 + 14 + 1. `param_type='smart_match'` → 13 ·
+  templates → 10 (9 pre-existing + the new one).
+  *(2)* The three old weight rows → **0 remaining.** `תקרת_דיילות_מומלצת` → **0 rows** (cancelled).
+  *(3)* `sum(משקולת_היענות + משקולת_אמינות + משקולת_קרבה)` → **1.00** — §11.1's stated invariant,
+  checked against the DB rather than against the migration text.
+  *(4)* `מרכיב_אמינות_פעיל` → `false`. Release template read back with its four lines intact.
+  *(5)* Rolled-back DO-block probe: `end_date < start_date` → `check_violation` ·
+  `preference='לא_לשלוח'` with no reason → `check_violation` · with a reason → accepted ·
+  a second preference row for the same `(customer, hostess)` → `unique_violation`. Both tables back
+  to **0 rows** afterwards.
+  ⚠️ **‏`get_advisors(security)` → 17, i.e. TWO NEW `rls_enabled_no_policy` INFO findings** —
+  `hostess_unavailability` and `customer_hostess_preference`, both created RLS-on with no policies.
+  **This is the expected intermediate state, not a regression: migration D adds their policies**, and
+  it is stated here rather than reported as "zero new", which would have been false.
+  **Forward notice (§10.2): M6** writes `customer_hostess_preference` (`🚧 מ6 ← מ4`) and flips
+  `מרכיב_אמינות_פעיל` to `true` once attendance rows exist. **M9** owns the screen that edits all 14
+  rows (`🚧 מ9 ← מ4`) — until it exists, changing any of them means a hand-edit in the Table Editor.
+  🔴 **Why the three old weights were DELETED and not renamed, recorded so it is not re-litigated:**
+  the new algorithm has **no rating component at all** (`research §6.2` — a manual 1–5 rating
+  collapses in practice: 85% of ratings are 5★). A rename would have left a truthful-looking name
+  (`משקולת_1W_דירוג`) sitting on a value that means something else entirely — worse than a missing row,
+  because nothing would ever flag it.
 - 09/08/2026 — migration `20260809124327_module4_one_event_per_day_constraint.sql`
   **✅ APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed
   `module4_one_event_per_day_constraint` in chat).

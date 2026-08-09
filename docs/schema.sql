@@ -851,3 +851,59 @@ alter table assignments alter column event_date set not null;
 -- ‏`SERVER_MESSAGE_RULES` ב-`src/lib/quotes.js`. שינוי-שם בלי עדכון המיפוי מפיל להודעה גנרית.
 create unique index assignments_one_event_per_day on assignments (hostess_id, event_date)
   where assignment_status = 'finally_approved';
+
+-- ============================================================
+-- מודול 4 — מיגרציה C (20260809125750, הוחל 09/08/2026): שתי טבלאות + 14 params + תבנית
+-- ============================================================
+-- אי-זמינות מוצהרת (§2.1(3)) — התנאי החמישי בשער של Smart Match. בלעדיה הדיילת מקבלת זימונים
+-- בזמן שהיא בחו"ל, מסרבת לכולם, **והמערכת רושמת אותה כלא-אמינה** (ההיענות = 40% מהציון).
+-- הטווח **כולל את יום-הסיום** (הנחה 9; עקבי עם §7.30 ועם כל תוויות-הממשק).
+create table hostess_unavailability (
+  unavailability_id bigint generated always as identity primary key,
+  hostess_id bigint not null references hostesses(hostess_id) on delete cascade on update cascade,
+  start_date date not null,
+  end_date   date not null,
+  note text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint hostess_unavailability_range_valid check (end_date >= start_date)
+);
+create trigger hostess_unavailability_set_updated_at before update on hostess_unavailability
+  for each row execute function extensions.moddatetime (updated_at);
+create index hostess_unavailability_hostess_id_idx on hostess_unavailability (hostess_id);   -- C-1
+alter table hostess_unavailability enable row level security;   -- policies במיגרציה D
+
+-- הסימון התלת-מצבי — צמוד **ללקוח**, לא לדיילת (§7.15↳ · `db_roadmap:145`).
+-- 🔴 מ4 יוצר וקורא (שכבות 1–2 של Smart Match); **מ6 כותב** (`🚧 מ6 ← מ4`). נשארת ריקה עד אז,
+-- וזה תקין — אבל בלעדיה לתנאי השלישי בשער אין מה לקרוא, והוא היה מדלג בשקט.
+create table customer_hostess_preference (
+  preference_id bigint generated always as identity primary key,
+  customer_id bigint not null references customers(customer_id) on delete cascade on update cascade,
+  hostess_id  bigint not null references hostesses(hostess_id)  on delete cascade on update cascade,
+  preference text not null check (preference in ('מצוינת', 'בסדר', 'לא_לשלוח')),
+  preference_reason text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint customer_hostess_preference_unique unique (customer_id, hostess_id),
+  -- סימון שלילי מחייב נימוק כתוב — אילוץ, לא ולידציה בטופס (תקדים-שוק: TempWorks/Avionté).
+  constraint customer_hostess_preference_negative_needs_reason
+    check (preference <> 'לא_לשלוח' or preference_reason is not null)
+);
+create trigger customer_hostess_preference_set_updated_at before update on customer_hostess_preference
+  for each row execute function extensions.moddatetime (updated_at);
+-- `customer_id` מכוסה כבר ע"י ה-UNIQUE (עמודה מובילה) ⇒ אינדקס נפרד היה כפילות מתה.
+create index customer_hostess_preference_hostess_id_idx on customer_hostess_preference (hostess_id);
+alter table customer_hostess_preference enable row level security;   -- policies במיגרציה D
+
+-- ‏`params`: 20 ⇐ 32. שלוש שורות-המשקולות הישנות (`משקולת_1W_דירוג`/`2W_קרבה`/`3W_מהימנות`)
+-- **נמחקו, לא שונו שם** — לאלגוריתם החדש אין מרכיב "דירוג" כלל, ושינוי-שם היה משאיר שם שקרי
+-- על ערך חדש. נוספו 14 פרמטרים + תבנית מייל-השחרור:
+--   smart_match: משקולת_היענות 0.40 · משקולת_אמינות 0.35 · משקולת_קרבה 0.25 (**סכום = 1.00**) ·
+--     שער_מרחק_קמ 80 · גולפוסט_מרחק_קמ 40 · קבוע_ריסון_m 3 · חלון_חישוב_חודשים 12 ·
+--     חלון_חישוב_מורחב_חודשים 24 · מינימום_תשובות_להצגת_ציון 3 · שיעור_בונוס_הוגנות_לשבוע 0.02 ·
+--     תקרת_שבועות_הוגנות 8 · לא_ענתה_ל_N 4 · מרכיב_אמינות_פעיל **false** (§7.90)
+--   pricing_timing: סכום_נסיעות_למשמרת 0 (§7.69 — הסכום עצמו פתוח עד אימות מול רואה-החשבון)
+--   templates: תבנית_מייל_שחרור_משמרת
+-- ⛔ `תקרת_דיילות_מומלצת` **אינה קיימת** — בוטלה בהכרעת-ישי 09/08/2026 ("אין צורך בתקרה, מיותר").
+-- ⚠️ ‏`מרכיב_אמינות_פעיל` כבוי ⇒ בזמן-ריצה **מנרמלים מחדש** את שני המשקלים הנותרים ל-1.0.
+-- 🚫 אין לקודד קשיח את הפיצול הדו-כיווני (§11.1).

@@ -27,7 +27,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | 0.3 | Deploy `send-email` and re-verify live | ✅ 09/08 — deployed v4 · Router built in Make (Ishay) · verified by opening 3 real emails in Gmail, not by status code |
 | 1.1 | Migration A — surrogate key + module-4 columns | ✅ 09/08 — applied `20260809122536`, verified live from the catalog · advisors 15 = baseline, zero new · quote-approval E2E 16/16 |
 | 1.2 | Migration B — one-event-per-day constraint (§7.88) | ✅ 09/08 — applied `20260809124327`, 5-assertion rolled-back probe · advisors 15 = baseline |
-| 1.3 | Migration C — new tables, params, release-message template | ⬜ |
+| 1.3 | Migration C — new tables, params, release-message template | ✅ 09/08 — applied `20260809125750` · `params` 20→32, weights sum 1.00 · ⚠️ advisors 17 (+2 expected: the new tables await D's policies) |
 | 1.4 | Migration D — RLS policies, min-wage trigger, public RPC | ⬜ |
 | 1.5 | 🔻👤 Phase-1 gate: advisors clean + `schema.sql` refreshed | ⬜ |
 | 2.1 | `src/lib/hostesses.js` — ID check digit, min-wage, derived states | ⬜ |
@@ -558,7 +558,24 @@ derived list · all five hostess templates present · `insert` with `end_date < 
 **מה ייחשב עובד** *(`spec.md §2.1(3)`, quoted)*
 1. *"המנהלת מזינה **טווח תאריכים + הערה**. מאותו רגע Smart Match **פשוט לא מציע אותה** — תנאי חמישי בשער."*
 2. *(`§ב6`)* *"תודה שהתפנית — המשרה כבר אוישה לאירוע הזה"* — the wording exists in `params`, not in code.
-**🗣️ אושר —**
+**🗣️ אושר 09/08 12:58** *(same approved plan; typed-echo `module4_tables_params_and_templates` received.)*
+
+↳ **as-built 09/08/2026 — applied as `20260809125750`. The derived `params` list is 14 rows:**
+`משקולת_היענות` 0.40 · `משקולת_אמינות` 0.35 · `משקולת_קרבה` 0.25 · `שער_מרחק_קמ` 80 ·
+`גולפוסט_מרחק_קמ` 40 · `קבוע_ריסון_m` 3 · `חלון_חישוב_חודשים` 12 · `חלון_חישוב_מורחב_חודשים` 24 ·
+`מינימום_תשובות_להצגת_ציון` 3 · `שיעור_בונוס_הוגנות_לשבוע` 0.02 · `תקרת_שבועות_הוגנות` 8 ·
+`לא_ענתה_ל_N` 4 · `מרכיב_אמינות_פעיל` `false` — all `smart_match`; plus
+`סכום_נסיעות_למשמרת` 0 as `pricing_timing`. Template: `תבנית_מייל_שחרור_משמרת`.
+**Measured after the apply, not assumed:** `params` = **32** rows, and the three weights **sum to
+1.00** read back from the DB — §11.1's own stated invariant, checked against the database rather than
+against the migration text.
+⚠️ **Advisors went 15 → 17 and that is CORRECT here.** The two new tables are created RLS-on with no
+policies, so `rls_enabled_no_policy` fires for each until step 1.4 adds them. Reporting "zero new"
+at this point would have been false; the pair must be **gone** after D.
+🔒 **Consumed by later steps, so it is not re-derived:** `מרכיב_אמינות_פעיל` is seeded **off**, which
+means step 2.2 must **renormalise** the two surviving weights to 1.0 at runtime — 🚫 never hardcode a
+two-way split, and never derive the flag from "no attendance rows" (§7.90 rejected that explicitly:
+it would change the ranking **silently** the day the first attendance row lands).
 
 **Step 1.4 · Migration D — `module4_rls_and_public_rpc`**
 - §7.21 policies on `hostesses` · `assignments` · `hostess_unavailability` ·
