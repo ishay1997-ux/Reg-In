@@ -104,9 +104,42 @@ a breach). Fixed forward in migration F. The correct pattern was already in the 
 📌 **Third, separate finding:** geocoding **cannot run from node** (`Access denied` — the ToS reject
 stock library User-Agents), so `scripts/demo-seed.mjs` cannot geocode. Relevant to step 4.2.
 
-**State at session end.** Gate **exit 0**, **567 unit / 17 files**. All three events carry coordinates.
-Awaiting the typed echo `module4_revoke_anon_from_coordinates_rpc`; `docs/schema.sql` refresh is owed
-and should cover E and F in one pass. Then step 2.5, the Phase-2 gate.
+**Migration F applied, and verified in both directions rather than only the one I wanted to see.**
+`proacl` → `{postgres=X, authenticated=X, service_role=X}`; `anon` false, `authenticated` true. And the
+legitimate path re-tested: impersonating the recruit manager with deliberately invalid coordinates
+returned **`22023`** (the range check), not `42501` — i.e. F did not break the working path.
+**Advisors 16 → 15**, as forecast the second time.
+
+**Two product rulings from Ishay closed the phase, both recorded with their measurements.**
+**(1) Distance is displayed as a WORD** — `קרובה`/`בינונית`/`רחוקה` — not a number. His field reason
+(*"למנהלת לא משנה 3 ק"מ מול 5"*) plus the stronger one: **displayed precision must match data
+precision**, and we measured that an event address can resolve to a city centroid, so `18.3 ק"מ`
+claims accuracy we do not have. **Deviation from an approved mockup**, recorded as a dated ruling
+(`local-10`), mockup not redrawn. **The score is untouched** — continuous km — and the anchor was
+re-verified green afterwards. Thresholds derive from `גולפוסט_מרחק_קמ` at runtime ⇒ no new param,
+no migration. **(2) Travel-time chip DROPPED** (`local-11`) — measured first (OSRM demo: browser-OK,
+no key, 51-point matrix in one call), dropped because its policy grants no uptime and allows
+withdrawal without notice, which is a live external dependency in a project whose whole deliverable
+is a one-hour talk.
+
+**A contradiction sweep after the deviation — Ishay asked for it, and it was justified.** Three more
+places still asserted a numeric chip (`spec.md §1.5` · `processes-approved` ×2); all now carry an
+adjacent as-built pointer. The remaining `ק"מ` occurrences are formula/gate references and are
+deliberately untouched. Verified no other module displays distance.
+
+**And his "is everything documented?" check found a real gap:** the geocode-only-from-a-browser
+constraint lived in `04_hostesses/CLAUDE.md` and §10 but **not inside step 4.2**, where the seed
+builder actually stands — they would have hit `Access denied` and rediscovered it. Moved into the step
+itself, with the verified coordinates to seed literally.
+
+**State at session end — PHASES 0, 1, 2 CLOSED.** Gate **exit 0**, **575 unit / 17 files**, 7
+migrations, advisors 15, all three events geocoded. Active step is **3.0**. ⏳ Owed by Ishay:
+`regin-docs-sync` (the 1.5 gate). ⏸️ Open at the Phase-3 door: `local-12` (approximate-location
+marker) and §7.33/§7.41, which gate the 2.3 remainder.
+📌 **Outstanding and NOT done here: §9(i) compaction.** Phases 0, 1 and 2 all still carry their full
+step text and the guide is **1,464 lines**, read in full on every build turn. This is pre-existing
+(phases 0/1 were never compacted either), flagged rather than started unrequested — the natural moment
+is the opening of the Phase-3 session.
 
 ### 09/08/2026 16:1X — Module 4 Phase 2: steps 2.1 + 2.2 done, 2.3 partial. The Smart Match anchor reproduces.
 
