@@ -336,415 +336,121 @@ the defect describes.
 
 ---
 
-### Phase 0 — unlock the shared email engine ⚠️ shared-surface
+### Phase 0 — unlock the shared email engine ⚠️ shared-surface ✅ **CLOSED 09/08/2026**
 
-**Step 0.1 · Goal:** make the shared engine usable by module 4 without building a second one.
-*(§6 debt `🚧 מ4 · 🚧 מ8 · 🚧 מ11 ← מ3`; Ishay ruled 31/07 this is module 4's FIRST step.)*
+> **Compacted 09/08/2026 19:53** per §9(i). The step-by-step build instructions are spent — the
+> authoritative record of what was built is the code itself (`supabase/functions/send-email/index.ts`,
+> `src/lib/email.js`, `src/lib/quotes.js`, `src/api/emailLog.js`, `e2e/quote-email.spec.js`) plus
+> migration `20260809085058`. Full pre-compaction text — including every step's quoted
+> `מה ייחשב עובד` — is in `docs/archive/module-4_full_2026-08-09.md`; the acceptance criteria
+> themselves are quoted from `docs/specs/module_04_hostesses/spec.md`, which stays the SSOT.
+> **Deviations, the two false-closes on 0.3, and the as-built notes stay in §10 below.**
 
-**Files:** `supabase/functions/send-email/index.ts` · `src/lib/email.js` · `src/lib/quotes.js` ·
-`src/modules/03_quotes/QuoteDocumentDialog.jsx` · `src/lib/email.test.js` ·
-`e2e/quote-email.spec.js` · `src/CLAUDE.md` · `src/modules/03_quotes/CLAUDE.md`
+| Step | What landed | Evidence |
+|---|---|---|
+| 0.1 | Shared engine opened to module 4 **without a second engine**: closed server-side map `entity_type ⇒ required module` (`quote`⇒'הצעות מחיר' · `shift`⇒'דיילות'), the client never sends a module name · attachment made optional **with a per-`entity_type` floor** (`quote` still requires `pdf_base64`) · the 2 quote-specific strings moved out of `src/lib/email.js` into `src/lib/quotes.js` **with their assertions** · transport (`functions.invoke` + timeout + the 3 `email_log` metadata fields) extracted from `QuoteDocumentDialog.jsx` into the engine · same-session ripple to `src/CLAUDE.md` + `src/modules/03_quotes/CLAUDE.md`. **Approved additions beyond the step text:** shared journal reader `src/api/emailLog.js` · pinned `jsr:` import (`ci.yml`, 🚧 מ10) | gate `exit 0` · unit **428** · E2E **78** · `smoke exit 0` · `jscpd` green (no second engine) · **🗣️ אושר 09/08 07:53** (plan `~/.claude/plans/4-warm-nygaard.md`, covering 0.1–0.3 as one unit) |
+| 0.2 | Migration 0 — `module4_email_log_accepts_shift`: `email_log.entity_type` CHECK widened `('quote')`→`('quote','shift')` + a **new** module-gated SELECT policy on 'דיילות' | applied **`20260809085058`**, verified live · `pg_get_constraintdef` shows both values · `pg_policies` on `email_log` → 2 · advisors zero new · 🔻👤 typed-echo received · **🗣️ אושר 09/08 07:53** |
+| 0.3 | `send-email` deployed and re-verified **against the live function**, and the Make side closed: Ishay built the Router in `regin-quote` with a no-attachment fallback branch, so the attachment-less `shift` path has a proven end-to-end route | deployed via Supabase MCP `deploy_edge_function` → **version 4, ACTIVE, `verify_jwt: true`** · **7-case gate matrix with zero side effects** (`RECRUIT+shift→400` · `RECRUIT+quote→403` · `RECRUIT+no entity_type→403` · `RECRUIT+invoice→403` · `CEO+shift→400` · `CEO+quote→400` · `FINANCE+shift→403`) · **closed only after opening 3 real emails in Gmail**, not on a status code · **🗣️ אושר 09/08 07:53** |
 
-**What to do**
-1. **Closed server-side map** `entity_type ⇒ required module`: `quote`⇒'הצעות מחיר' · `shift`⇒'דיילות'.
-   🚫 **The client never sends a module name** — the server derives it from the resource.
-   🚫 **Do NOT add `invoice`/`salary_report`** — `email_log`'s CHECK will not accept them and
-   `index.ts` returns `{ok:true, log_failed:true}` on a journal failure ⇒ silent loss. M8/M11 add
-   their own value when they widen the CHECK themselves.
-2. **Attachment becomes optional.** 🔴 **Keep a per-`entity_type` floor:** `quote` still requires
-   `pdf_base64`; `shift` must not. *(Removing it outright deletes a live server guard from the quote
-   path, and `e2e/quote-email.spec.js:118,134` would stay green while it was gone.)*
-3. **Move the 2 quote-specific strings** out of `src/lib/email.js` (`~:134` `emailSendDisabledReason`,
-   `~:164` the failure text) into `src/lib/quotes.js` — **and move their assertions with them**.
-4. **Extract the transport** (`functions.invoke` + timeout + the 3 `email_log` metadata fields) from
-   `QuoteDocumentDialog.jsx` (`~:260`, fields `:263-265`) into the engine.
-5. **Ripple, same session:** `src/modules/03_quotes/CLAUDE.md` records the disable-reason as
-   deliberately generic — now false. `src/CLAUDE.md ~:300-304` says the disable-reason lives in the
-   engine and that `params` holds 6 templates — both become false. `e2e/quote-email.spec.js:240`
-   hardcodes *"403 בשורה 71 … אימות-השדות רק בשורה 84"* — the numbers move.
-
-🔴 **Gate-order contract — do not break it.** `e2e/quote-email.spec.js:239-242` pins that the
-**permission gate runs before body parsing**; `:229` sends `{}` as FINANCE expecting **403**, `:235`
-sends `{}` as CEO expecting **400**. ⇒ **Parse only `entity_type`, gate, then validate the rest**, and
-update the comment's line numbers.
-
-**🔻🤖 Verification** — `npm run test:run` (**this suite breaks first**) · `npm run test:e2e`
-**including the 403/400 pair** · `npm run smoke`. All three named, all three green.
-
-**מה ייחשב עובד** *(`spec.md §12③`, quoted)*
-1. *"מנוע-המייל המשותף חוסם היום את מנהלת הגיוס (מקודד קשיח למודול 'הצעות מחיר')."* — after this step
-   she is not blocked.
-2. *"⛔ לא לבנות מנוע/טבלה מקבילים"* (`§6`) — `jscpd` stays green; no second engine exists.
-3. `PROJECT_MASTER §6`: *"הלקוח לא שולח שם-מודול — השרת מסיק את ההרשאה מהמשאב."*
-
-⚠️ **Attribution correction (09/08/2026, measured):** `spec.md §12③` is **two lines** and supplies
-**only bullet 1**. Bullets 2 and 3 come from `PROJECT_MASTER §6` (`:400`, `:416`) — the header above
-over-claimed. The criteria stand; only their provenance changes.
-
-**🗣️ אושר 09/08 07:53** — Ishay approved the Phase-0 plan (`~/.claude/plans/4-warm-nygaard.md`),
-covering steps 0.1–0.3 as one unit. **Approved additions beyond the step text:** the shared journal
-reader `src/api/emailLog.js` · pinning the `jsr:` import (`ci.yml` `🚧 מ10`) · one Make scenario with
-a no-attachment bypass, **which Claude performs himself via Claude-in-Chrome** (Ishay connected it).
+**⚠️ Carry-forward into Phase 1+ (do not re-derive):**
+🔴 **The gate-order contract is pinned by tests, not by comments** — `e2e/quote-email.spec.js` sends `{}`
+as FINANCE expecting **403** and `{}` as CEO expecting **400**, i.e. the permission gate runs **before**
+body parsing. Any refactor that parses the body first stays green in unit tests and breaks exactly that
+pair. · **The `entity_type` map is closed and deny-by-default** — a missing `entity_type` falls back to
+`quote`. 🚫 **Do not add `invoice`/`salary_report`**: `email_log`'s CHECK rejects them and `index.ts`
+returns `{ok:true, log_failed:true}` on a journal failure ⇒ **silent loss**. M8/M11 widen the CHECK
+themselves (🚧 מ8 · 🚧 מ11). · **Every `shift` mail must leave an `email_log` row** — that journal is the
+only answer to *"was it already sent"*, so the anti-double-send guard does not exist without it. ·
+**A `400` from the live function, on a deliberately incomplete body, means "passed the permission gate"**
+— that test shape proves the map, the ordering contract and the role matrix with **no mail, no
+`email_log` row, no data**, and is worth reusing whenever the gate is touched. · ⚠️ **One honest limit:**
+the function was uploaded by transcribing the repo file into the MCP call ⇒ repo⇄deployment identity is
+verified **behaviourally, not byte-for-byte**. **Re-check it byte-wise at module close** with
+`get_edge_function`.
 
 ---
 
-**Step 0.2 · Migration 0 — `module4_email_log_accepts_shift`** 🔻👤 typed-echo
-Widen `email_log.entity_type` CHECK from `('quote')` (`schema.sql:637`) to `('quote','shift')` and add
-a **new** module-gated SELECT policy on 'דיילות'. 🔴 **This must land before any `shift` mail is sent** —
-otherwise the send succeeds, the journal insert fails, and `index.ts` swallows it.
-**🔻🤖 Verify:** `pg_get_constraintdef` shows both values; `select count(*) from pg_policies where
-tablename='email_log'` → 2; advisors → zero new.
-**מה ייחשב עובד** *(`src/CLAUDE.md`, quoted)*: *"'האם כבר נשלח' נענה רק מטבלת `email_log`"* — a shift
-mail must leave a journal row, or the anti-double-send guard does not exist for module 4.
-**🗣️ אושר 09/08 07:53** *(plan approval; the 🔻👤 typed-echo before `apply_migration` is still owed.)*
+### Phase 1 — DB / RLS ◐ **steps 1.1–1.4 applied and verified 09/08/2026; gate 1.5 still owes Ishay**
 
-**Step 0.3 · Deploy the Edge Function and re-verify live.**
-🔴 **Without a deploy the live checks exercise the OLD function.** CI only type-checks it.
-**🔻🤖 Verify live:** as `E2E_RECRUIT_*`, `entity_type='shift'` ⇒ **200 and a row in `email_log`**;
-`entity_type='quote'` ⇒ **403**. As `E2E_CEO_*`, both ⇒ 200.
-**🧩 handover:** if deploying needs the Supabase dashboard or a token Claude does not hold, print
-step-by-step Hebrew instructions **plus** a self-contained "🧩 פרומפט לקלוד בדפדפן" — no secrets.
-↳ **as-built 09/08/2026: no handover needed for the deploy.** Supabase MCP was measured live this
-session and exposes `deploy_edge_function` ⇒ Claude deploys it himself.
-↳ **New prerequisite the step did not carry: the Make scenario.** `regin-quote` runs
-`toBinary(pdf_base64;"base64")` and attaches on every send, so an attachment-less `shift` mail has no
-proven path. Ishay ruled 09/08: **one scenario with a bypass** (empty `pdf_base64` ⇒ send without the
-attachment module), performed by Claude in Chrome.
-**🗣️ אושר 09/08 07:53**
+> **Compacted 09/08/2026 19:53** per §9(i). The step-by-step build instructions are spent — the
+> authoritative record of what was built is the **four migration files themselves**
+> (`supabase/migrations/20260809122536` · `20260809124327` · `20260809125750` · `20260809134237`),
+> `docs/schema.sql`, and `docs/db_roadmap.md §10`. Full pre-compaction text, including each step's
+> quoted `מה ייחשב עובד` and the full Migration-Design-Checklist wording:
+> `docs/archive/module-4_full_2026-08-09.md`. Deviations and as-built notes stay in §10 below.
+> 🔴 **The phase door (§9h) was swept 08/08/2026: no OPEN ledger item is anchored to Phase 1** —
+> §7.65 was verified closed (`PROJECT_MASTER_sec7.md:208`). 🚫 Do not re-ask Ishay about hostess-email
+> uniqueness; it was ruled 31/07. Every apply carried a 🔻👤 typed-echo from Ishay.
 
-↳ **as-built 09/08/2026 — the half that IS done, with its evidence.**
-Deployed via MCP `deploy_edge_function` → **version 4, ACTIVE, `verify_jwt: true`**.
-🔬 **Gate proven against the LIVE function on 7 cases, and not one mail left the system** — every
-call carried a body missing `to`/`body`, so each stops at field-validation, **after** the permission
-gate and **before** the mail module. `400` here therefore means *"passed the gate"* and is the
-positive result:
-`RECRUIT + shift → 400` · `RECRUIT + quote → 403` · `RECRUIT + no entity_type → 403` (defaults to
-`quote`) · `RECRUIT + invoice → 403` (deny-by-default) · `CEO + shift → 400` · `CEO + quote → 400` ·
-`FINANCE + shift → 403`.
-🔑 **Why this shape of test is worth reusing:** it proves the map, the ordering contract, and the
-role matrix **without any side effect at all** — no mail, no `email_log` row, no data.
-🔴 **STILL OWED, and the step is NOT closeable without it:** the Make bypass (empty `pdf_base64` ⇒
-send without the attachment module) and **one real shift mail**, eyeballed for RTL. Until then the
-attachment-less path has never actually run end-to-end.
-⚠️ **And one honest limit on the deploy itself:** the function was uploaded by transcribing the repo
-file into the MCP call, so repo⇄deployment identity is verified **behaviourally** (the 7 cases), not
-byte-for-byte. **Re-check it byte-wise at module close** — `get_edge_function` returns the deployed
-source, and on 09/08 the pre-change comparison was clean.
+| Step | What landed | Evidence |
+|---|---|---|
+| 1.1 | Migration A — `module4_hostesses_surrogate_key_and_columns`. `hostesses`: `hostess_id bigint identity` PK · `id_number` unique not null · `rating int null check (1..5)` · +`address`/`lat`/`lng`/`has_car`/`languages`; `email`/`city`/`bank_*` stay `not null` (local-1); **no UNIQUE on `email`** (§7.65). `assignments`: PK →`(project_id,hostess_id,assignment_number)`, FK→`hostesses(hostess_id)`, +`responded_at`/`invite_token unique`/`invite_sent_at`/`travel_amount`/`is_shift_lead`/`event_date`, status CHECK widened to **six**, one shift-lead per project. `projects`: +`lat`/`lng`/**`customer_name`**+backfill (local-5). **Three additions the step text did not carry:** `assignments.id_number` **DROPPED**, not demoted (ת"ז is PII and the old composite key replicated it into every row — `spec.md:128`) · `approve_quote_and_create_project` **rewritten** (`create or replace`, LEFT join to `customers`) because it is `projects`' only writer, so a backfill alone would have left every future project with an empty snapshot · the `rating` **DEFAULT 3 dropped** alongside the NOT NULL — without that every new hostess is born rated 3 and the ruling is worthless (`spec.md:169-171`) | applied **`20260809122536`**, verified live from the catalog · advisors **15 = baseline, zero new** · **`e2e/quote-approval.spec.js` + `server-messages-and-inactive-product.spec.js` → 16/16 green** after the RPC rewrite · **🗣️ אושר 09/08 12:25** (plan `~/.claude/plans/compiled-rolling-hummingbird.md`; typed-echo received) |
+| 1.2 | Migration B — `module4_one_event_per_day_constraint` (§7.88): partial unique index **`assignments_one_event_per_day`** on `(hostess_id, event_date) where assignment_status='finally_approved'` · `event_date` synced by trigger **in both directions** (assignment insert/update **and** `projects.final_event_date` UPDATE) · **`event_date` made NOT NULL** — an addition the step did not carry, because **two NULLs are DISTINCT in a unique index**, so two `finally_approved` rows with an empty date would have bypassed the constraint **without violating it**. Two same-day *invitations* stay legal | applied **`20260809124327`** · 5-assertion **rolled-back** probe: two `finally_approved` same day ⇒ error · two `pending` ⇒ allowed · `projects.final_event_date` change ⇒ `event_date` follows · M3's conversion RPC (zero assignments) still succeeds · a writer's own `1999-01-01` read back as the project's real `2026-09-27` · advisors **15 = baseline** · **🗣️ אושר 09/08 12:43** (same approved plan; typed-echo received) |
+| 1.3 | Migration C — `module4_tables_params_and_templates`: **`hostess_unavailability`** · **`customer_hostess_preference`** (with `check (preference <> 'לא_לשלוח' or preference_reason is not null)` — a negative mark requires a written reason) · **14 `params` rows derived, not counted** (`משקולת_היענות` 0.40 · `משקולת_אמינות` 0.35 · `משקולת_קרבה` 0.25 · `שער_מרחק_קמ` 80 · `גולפוסט_מרחק_קמ` 40 · `קבוע_ריסון_m` 3 · `חלון_חישוב_חודשים` 12 · `חלון_חישוב_מורחב_חודשים` 24 · `מינימום_תשובות_להצגת_ציון` 3 · `שיעור_בונוס_הוגנות_לשבוע` 0.02 · `תקרת_שבועות_הוגנות` 8 · `לא_ענתה_ל_N` 4 · `מרכיב_אמינות_פעיל` `false` — all `smart_match`; + `סכום_נסיעות_למשמרת` 0 as `pricing_timing`), the three old rating-era weights **replaced, not renamed** · release template **`תבנית_מייל_שחרור_משמרת`**, body verbatim from `processes-approved.md:264-266` wrapped in a greeting and signature (local-6). ⛔ `תקרת_דיילות_מומלצת` **cancelled by Ishay** (local-7) | applied **`20260809125750`** · **`params` 20→32** and the three weights **sum to 1.00 read back from the DB**, not from the migration text · all five hostess templates present · `end_date < start_date` → error · `'לא_לשלוח'` with null reason → error · ⚠️ advisors **17 (+2, and that is correct)** — the two new tables are RLS-on with no policies until 1.4; the pair had to be **gone** after D · **🗣️ אושר 09/08 12:58** (same approved plan; typed-echo received) |
+| 1.4 | Migration D — `module4_rls_and_public_rpc`: §7.21 policies on `hostesses`/`assignments`/`hostess_unavailability`/`customer_hostess_preference` (module 'דיילות') · **SELECT-only** on `projects` · min-wage trigger (§7.66) `before insert or update **of hourly_rate**`, guarded TEXT read then cast, Hebrew `P0001` · public RPC `respond_to_shift_invite(token, response)` returning the **identical generic string** for wrong-token / expired / not-`pending` | applied **`20260809134237`** · **9 policies** · impersonation verified **both ways with a positive control first** (`recruit`→≥1 hostess; `finance`→0; `projects`-mgr reads, cannot write) · the deliberate policy-drop probe → **0 rows and NO error**, the `{data:null,error:null}` trap **demonstrated, not asserted** · min-wage `30`→Hebrew error, `40`→ok, name-only update on an under-paid hostess **succeeds** · `anon` blocked from `assignments` directly · advisors **14** (`17 − 5 + 2`) — **stated as a miss against the predicted 13**, triaged in writing in §10 · **🗣️ אושר 09/08 13:42** (same approved plan; typed-echo received) |
+| 1.5 | 🔻👤 **Phase-1 gate — Claude's side done, Ishay's side open.** Done: `docs/schema.sql` refreshed and **committed with each migration** · `db_roadmap §10` four Done-rows · every `🚧` audited byte-for-byte against `PROJECT_MASTER §6` (+1 new debt written) · §7.67 write-back · advisors triaged in writing | ◐ **Awaiting Ishay: run `regin-docs-sync` (rule 13ז — Claude never runs routines) and sign the gate.** This is the phase's only open item and it is also carried in §1's status header and its step row |
 
----
-
-### Phase 1 — DB / RLS
-
-> Every step embeds the Migration Design Checklist (`db_roadmap.md §1`).
-> **🔻👤 typed-echo before EVERY apply** — Ishay types the migration name; "yes" is not enough.
-> After each: `get_advisors(security)` → zero new (or a written triage note) · refresh `docs/schema.sql` ·
-> commit migration + snapshot **together** · update `db_roadmap.md §10` in the same session.
-> **🔻👤 Phase door (§9h):** sweep the ledger for OPEN items anchored to Phase 1 before step 1.1.
-> **Measured 08/08/2026: there are none** — §7.65 was verified closed (`PROJECT_MASTER_sec7.md:208`).
-> 🚫 Do not re-ask Ishay about hostess-email uniqueness; it was ruled 31/07.
-
-**Step 1.1 · Migration A — `module4_hostesses_surrogate_key_and_columns`**
-Template to copy: `20260710160735_module2_customers_surrogate_key_rls_and_marketing.sql` (it did exactly
-this to `customers`, including the RLS).
-🔴 **Re-measure emptiness immediately before applying** — `select count(*) from hostesses, assignments`.
-The "0 rows" reading is from 08/08/2026, and it is the one claim whose being wrong is irreversible.
-
-- `hostesses`: `hostess_id bigint generated always as identity` PK; `id_number` → `unique not null`;
-  `rating` → **`int null check (rating between 1 and 5)`**; add `address text`, `lat numeric`,
-  `lng numeric`, `has_car boolean not null default false`, `languages text[] not null default '{}'`.
-  🚫 `email`/`city`/`bank_*` **stay `not null`** (local-1). 🚫 **No UNIQUE on `email`** — §7.65, ruled 31/07;
-  the duplicate-email warning is a soft, non-blocking one in the form.
-- `assignments`: PK → `(project_id, hostess_id, assignment_number)`, FK → `hostesses(hostess_id)`;
-  add `responded_at timestamptz`, `invite_token text unique`, `invite_sent_at timestamptz`,
-  `travel_amount numeric(12,2) not null default 0`, `is_shift_lead boolean not null default false`,
-  `event_date date`; widen `assignment_status` CHECK to **six** values (+`approval_withdrawn`);
-  `unique index on assignments(project_id) where is_shift_lead`.
-- `projects`: `lat numeric`, `lng numeric`, **`customer_name text`** (local-5) + backfill from `customers`.
-- Indexes: `assignments(hostess_id)` (C-1) · `assignments(invite_token)`.
-- ⏸️ **Deliberately NOT here, each with a §6 line written this session:** `attendance_status`/
-  `lateness_level`/`no_show_reason` → **M6 creates them with the screen that fills them** ·
-  `projects.cancelled_at`/`cancellation_reason` → **M4/8 jointly, deferred to M8**; note
-  `schema.sql:134` already has `cancel_reason`, and `db_roadmap §9` defect #4 is exactly this collision ·
-  `projects` "סיווג קצר/ארוך" (`db_roadmap:118`, module `4`) → **deferred**: §7.29 retired the
-  classification for the double-booking gate, and no surviving module-4 requirement reads it.
-
-**🔻🤖 Verify:** `\d hostesses` shows `hostess_id` as PK · an insert omitting `rating` reads back `null` ·
-`select count(*) from projects where customer_name is null` → `0` · advisors zero new.
-**מה ייחשב עובד** *(`spec.md §1.3`/`§1.4`, quoted)*
-1. *"`hostess_id` (`bigint identity`) — לא `id_number`"* — ת"ז no longer appears in any key.
-2. *"ודיילת שלא דורגה מציגה `—`, לא `3 ★`"* — the column can now hold "not rated".
-3. *"אושרה סופית · ביטלה אחרי אישור"* — all six statuses are writable.
-**🗣️ אושר 09/08 12:25** *(plan `~/.claude/plans/compiled-rolling-hummingbird.md`, approved by Ishay;
-typed-echo `module4_hostesses_surrogate_key_and_columns` received in chat before the apply.)*
-
-↳ **as-built 09/08/2026 12:39 — applied as `20260809122536`, plus TWO additions the step text did not carry.**
-**‏(1) `assignments.id_number` is DROPPED, not merely demoted.** The step said "PK →
-`(project_id, hostess_id, assignment_number)`" without saying what happens to the old column.
-Leaving it would have preserved exactly the defect §5 names — ת"ז (PII) replicated into every
-assignment row. `spec.md:128` is the anchor: *"ת"ז היא PII, והמפתח המורכב הישן שיכפל אותה לכל
-שורת-שיבוץ במערכת"*.
-**‏(2) 🔴 `approve_quote_and_create_project` was rewritten (`create or replace`) to populate
-`projects.customer_name`.** The step listed the column and its backfill and stopped there — but that
-RPC is the table's **only** writer, so the backfill would have covered the three existing rows while
-every project created afterwards was born with an empty snapshot. Body is byte-identical to the
-`20260731085335` version apart from `customer_name` in the INSERT and a `left join public.customers`
-feeding it (LEFT, not INNER — `projects.customer_id` is nullable and INNER would swallow the row).
-**Regression proven, not assumed:** `e2e/quote-approval.spec.js` + `server-messages-and-inactive-product.spec.js`
-→ **16/16 green** after the rewrite.
-**‏(3) The `rating` DEFAULT 3 was dropped alongside the NOT NULL.** The step said `int null check
-(1..5)` only. Dropping NOT NULL without the default leaves every new hostess born rated 3 and the
-whole ruling worthless — `spec.md:169-171` is explicit that the default *is* the disease.
-
-**Step 1.2 · Migration B — `module4_one_event_per_day_constraint`** *(§7.88)*
-`assignments.event_date` synced by trigger **in both directions** — on assignment insert/update, **and
-on `projects.final_event_date` UPDATE** (else the constraint goes stale silently).
-`create unique index … on assignments(hostess_id, event_date) where assignment_status = 'finally_approved'`.
-🔴 **`finally_approved` only.** Two same-day *invitations* stay legal.
-🔴 The trigger must not error on M3's conversion RPC (`20260723115000:94-100`), which creates a project
-with **zero** assignments.
-**🔻🤖 Verify (rolled-back transaction):** two `finally_approved`, same hostess, same date ⇒ **error** ·
-two `pending` same day ⇒ **allowed** · change `projects.final_event_date` ⇒ `assignments.event_date`
-follows · re-run `approve_quote_and_create_project` ⇒ still succeeds.
-**מה ייחשב עובד** *(`spec.md §2.2(א)`, quoted)*: *"דיילת אחת בשני אירועים באותו יום ⇒ **חסימה, ואילוץ
-במסד ולא בדיקה בקוד**"* · *"והמסד חוסם, לא הקוד"* (`§ מה ייחשב עובד` #5).
-**🗣️ אושר 09/08 12:43** *(same approved plan; typed-echo `module4_one_event_per_day_constraint` received.)*
-
-↳ **as-built 09/08/2026 — applied as `20260809124327`, with one addition the step did not carry.**
-**‏`assignments.event_date` was made `NOT NULL`.** The step specified the column and the trigger but
-not its nullability. 🔴 **In a unique index two NULLs are DISTINCT** — so two `finally_approved` rows
-with an empty `event_date` would have bypassed the constraint **without violating it**, which is the
-exact silent-hole class this migration exists to close. The `BEFORE` trigger always populates it
-(`projects.final_event_date` is itself `not null`), so `NOT NULL` is the net that fails **loudly** if
-the trigger ever stops running.
-➕ **And a design point worth not re-deriving:** the `assignments` trigger fires on **every**
-insert/update, not only when `project_id` changes, so the column is a **pure derivation** — a writer
-cannot supply their own value. Proven, not assumed: the probe deliberately sent `1999-01-01` and read
-back the project's real `2026-09-27`.
-📌 **Carry-forward to Phase 3:** the index name `assignments_one_event_per_day` is a **contract with
-the UI** — the screen maps it to the Hebrew blocking message, exactly as `SERVER_MESSAGE_RULES` in
-`src/lib/quotes.js` maps the RAISE prefixes. Renaming it without updating the map drops the screen to
-a generic error **and no test fails.**
-
-**Step 1.3 · Migration C — `module4_tables_params_and_templates`**
-- **`hostess_unavailability`** — `(unavailability_id bigint generated always as identity primary key,
-  hostess_id bigint not null references hostesses(hostess_id) on delete cascade, start_date date not
-  null, end_date date not null, note text, created_at timestamptz not null default now(), updated_at
-  timestamptz not null default now())` + `check (end_date >= start_date)` +
-  `extensions.moddatetime(updated_at)` + covering index on `hostess_id`.
-- 🔴 **`customer_hostess_preference`** — `(preference_id bigint generated always as identity primary
-  key, customer_id bigint not null references customers(customer_id) on delete cascade, hostess_id
-  bigint not null references hostesses(hostess_id) on delete cascade, preference text not null check
-  (preference in ('מצוינת','בסדר','לא_לשלוח')), preference_reason text, created_at, updated_at)` +
-  `unique (customer_id, hostess_id)` + covering indexes + moddatetime +
-  `check (preference <> 'לא_לשלוח' or preference_reason is not null)` — **a negative mark requires a
-  written reason** (`db_roadmap:145`; TempWorks/Avionté precedent).
-  🔴 **M4 CREATES and READS it (Smart Match layers 1 and 2); M6 WRITES it** — `🚧 מ6 ← מ4`.
-  **Without it the gate's third condition has nothing to read.** It stays **empty** until M6.
-- **`params`.** 🔴 **Derive the list, do not trust a count** — four registries disagree, and none of
-  them was right (measured 09/08/2026: `db_roadmap:135`'s header said twelve while its own body
-  enumerated thirteen · `processes-approved.md:308` said ten · §11.1 marks **10** rows as `params`,
-  one as `קוד` · `PROJECT_MASTER.md:444` said "~14").
-  **The list = every §11.1 row whose "חי ב־" cell reads `params`** *(the 12→24 window becomes **two**
-  rows — one value per row)* **+ the ➕ rows in `db_roadmap:135`** (`לא_ענתה_ל_N`=4 ·
-  `מרכיב_אמינות_פעיל`) **+ `סכום_נסיעות_למשמרת`=0** (local-3).
-  ⛔ **`תקרת_דיילות_מומלצת` is NOT in the list — CANCELLED by Ishay 09/08/2026** (local-7).
-  **‏⇒ the derived list is 14 rows** *(+ the release template = 15 new `params` rows)*.
-  🔴 The three existing rows `משקולת_1W_דירוג`/`2W_קרבה`/`3W_מהימנות` are **replaced, not renamed** —
-  the new algorithm has no "rating" component. `params` goes 20 → 32.
-  ↳ **as-built 09/08: `db_roadmap:135`'s header was rewritten to state the METHOD, not a number** —
-  a count there had already gone stale three times in three days.
-- **The release-message template** — the sentence is **verbatim** from `processes-approved.md:264-266`
-  (the body spans **two lines**; reading only `:265` truncates it), **wrapped in a greeting and a
-  signature like its four sisters — Ishay's ruling 09/08 (local-6)**. Name it in the same Hebrew style as
-  the four existing shift templates. 🚫 Do not reuse `תבנית_מייל_ביטול_משמרת` — "your shift was
-  cancelled" is a lie; she was never assigned.
-- **Placeholders (local-2):** `[כתובת_אירוע_מלאה]` and `[עיר_אירוע]` → `projects.final_location` ·
-  `[שם_מנהלת_פרויקט]`/`[טלפון_מנהלת_פרויקט]` → `users.full_name`/`users.phone` via
-  `projects.owner_email` · **a marked shift lead replaces them.** ⚠️ Applies equally to
-  `תבנית_תזכורת_משמרת`, which carries the same three.
-
-**🔻🤖 Verify:** `select count(*) from params where param_name = any($1)` equals the length of the
-derived list · all five hostess templates present · `insert` with `end_date < start_date` → error ·
-`insert` with `preference='לא_לשלוח'` and null reason → error.
-**מה ייחשב עובד** *(`spec.md §2.1(3)`, quoted)*
-1. *"המנהלת מזינה **טווח תאריכים + הערה**. מאותו רגע Smart Match **פשוט לא מציע אותה** — תנאי חמישי בשער."*
-2. *(`§ב6`)* *"תודה שהתפנית — המשרה כבר אוישה לאירוע הזה"* — the wording exists in `params`, not in code.
-**🗣️ אושר 09/08 12:58** *(same approved plan; typed-echo `module4_tables_params_and_templates` received.)*
-
-↳ **as-built 09/08/2026 — applied as `20260809125750`. The derived `params` list is 14 rows:**
-`משקולת_היענות` 0.40 · `משקולת_אמינות` 0.35 · `משקולת_קרבה` 0.25 · `שער_מרחק_קמ` 80 ·
-`גולפוסט_מרחק_קמ` 40 · `קבוע_ריסון_m` 3 · `חלון_חישוב_חודשים` 12 · `חלון_חישוב_מורחב_חודשים` 24 ·
-`מינימום_תשובות_להצגת_ציון` 3 · `שיעור_בונוס_הוגנות_לשבוע` 0.02 · `תקרת_שבועות_הוגנות` 8 ·
-`לא_ענתה_ל_N` 4 · `מרכיב_אמינות_פעיל` `false` — all `smart_match`; plus
-`סכום_נסיעות_למשמרת` 0 as `pricing_timing`. Template: `תבנית_מייל_שחרור_משמרת`.
-**Measured after the apply, not assumed:** `params` = **32** rows, and the three weights **sum to
-1.00** read back from the DB — §11.1's own stated invariant, checked against the database rather than
-against the migration text.
-⚠️ **Advisors went 15 → 17 and that is CORRECT here.** The two new tables are created RLS-on with no
-policies, so `rls_enabled_no_policy` fires for each until step 1.4 adds them. Reporting "zero new"
-at this point would have been false; the pair must be **gone** after D.
-🔒 **Consumed by later steps, so it is not re-derived:** `מרכיב_אמינות_פעיל` is seeded **off**, which
-means step 2.2 must **renormalise** the two surviving weights to 1.0 at runtime — 🚫 never hardcode a
-two-way split, and never derive the flag from "no attendance rows" (§7.90 rejected that explicitly:
-it would change the ranking **silently** the day the first attendance row lands).
-
-**Step 1.4 · Migration D — `module4_rls_and_public_rpc`**
-- §7.21 policies on `hostesses` · `assignments` · `hostess_unavailability` ·
-  `customer_hostess_preference` (module 'דיילות'); **SELECT-only** on `projects` (module 'פרויקטים').
-- Min-wage trigger (§7.66) — `before insert or update of hourly_rate on hostesses`, reads
-  `params.שכר_מינימום_שעתי`, raises Hebrew `P0001`. **Copy the guarded read from `20260731085335`:
-  read as TEXT, validate (missing/blank/non-numeric/out-of-range), then cast** — `''::numeric` raises
-  an English cast error instead of ours. 🚫 Existing rows are never auto-raised.
-- `respond_to_shift_invite(token, response)` exactly per §4. Accept `'confirmed'|'declined'` and map to
-  the column values inside the function.
-
-**🔻🤖 Verify — prove the guard FAILS, not just that it passes**
-- **Positive control first:** `recruit.test@regin.co.il` returns ≥1 hostess. A `0` = broken
-  impersonation, **not** working RLS.
-- `finance.test@regin.co.il` → `0` hostesses; `projects.test@regin.co.il` reads but cannot write.
-- Drop the `hostesses` SELECT policy inside a rolled-back transaction, confirm the screen shows an
-  **error and not an empty list**, roll back.
-- `anon` cannot select/update `assignments` directly; the RPC works with a valid token and returns the
-  **identical generic string** for wrong-token / expired / not-`pending`.
-- Min-wage: `hourly_rate = 30` → Hebrew error; `= 40` → succeeds.
-
-**מה ייחשב עובד** *(`spec.md § מה ייחשב עובד` #4, quoted)*: *"מסך שלא הצליח לטעון אומר זאת. לעולם לא
-רשימה ריקה בשקט. (RLS-בלי-policy מחזיר `{data:null, error:null}` — 'אין אירועים' כשהשאילתה נכשלה הוא
-הכישלון החמור ביותר במודול.)"*
-**🗣️ אושר 09/08 13:42** *(same approved plan; typed-echo `module4_rls_and_public_rpc` received.)*
-
-↳ **as-built 09/08/2026 — applied as `20260809134237`. Full evidence in `db_roadmap §10`; three
-things that must not be re-derived live here.**
-
-🔴 **(1) A mine the §7.21 template does not reveal on reading: `*_write_by_permission` is `FOR ALL`,
-so it ALSO grants SELECT.** The first policy-drop probe dropped only `hostesses_select_by_permission`
-and מנהלת גיוס still saw the row — which looks like a failed test and is not one: she holds `edit`,
-so the `FOR ALL` policy covered her read. **Any future "what happens with no policy" test must drop
-BOTH policies**, or test with a `view`-only role. Once done correctly the result was **0 rows and no
-error**, in both variants — the `{data:null, error:null}` trap **demonstrated, not asserted**.
-📌 **Phase 3 owes the other half:** the DB cannot signal this; the screen must distinguish
-"query failed" from "no rows" or the module's worst failure mode ships invisible.
-
-🔴 **(2) The RPC is granted to `anon` AND `authenticated` — deliberately.** A manager opening the
-invite link in the same browser where she is signed into the app would otherwise hit a permission
-error on a public page. **Consequence, and the reason the advisor prediction missed:** the function
-raises **two** lints, not one.
-
-🔴 **(3) The min-wage trigger is scoped `of hourly_rate` and that scoping is load-bearing.**
-Verified live: updating only `full_name` on a hostess whose rate sits below the parameter **succeeds
-and leaves her rate untouched**. That is §7.66's actual requirement — *"זה יהיה שינוי-שכר של אדם
-בשקט"* — and a plain `CHECK`, or a trigger without `of`, would have broken it the day the parameter
-is raised.
-
-⚠️ **Advisors: 14, not the 13 predicted before the run — stated as a miss, not smoothed over.**
-17 − 5 (`rls_enabled_no_policy` cleared) + 2 (both lints on `respond_to_shift_invite`) = 14.
-The DoD line closes with this written triage, not with a zero.
-
-**Step 1.5 · 🔻👤 Phase-1 gate** — advisors clean · `docs/schema.sql` refreshed and committed with the
-migrations · `db_roadmap.md §10` Done rows written · every `🚧` has its byte-matching §6 line ·
-§7.67 write-back done · **recommend Ishay run `regin-docs-sync`** (rule 13ז — Claude never
-runs routines).
+**⚠️ Carry-forward into Phase 2+ (do not re-derive):**
+🔴 **The index name `assignments_one_event_per_day` is a contract with the UI** — the screen maps it to
+the Hebrew blocking message exactly as `SERVER_MESSAGE_RULES` in `src/lib/quotes.js` maps the RAISE
+prefixes. **Rename it without updating the map and the screen drops to a generic error — and no test
+fails.** · `assignments.event_date` is a **pure derivation**: the trigger fires on **every**
+insert/update, so a writer cannot supply their own value, and the `NOT NULL` is the net that fails
+**loudly** if the trigger ever stops running. · 🔴 **`*_write_by_permission` is `FOR ALL`, so it ALSO
+grants SELECT** — the §7.21 template does not reveal this on reading. **Any future "what happens with no
+policy" test must drop BOTH policies, or use a `view`-only role**, otherwise an `edit` holder still sees
+the rows and it looks like a failed test. 📌 **Phase 3 owes the other half:** the DB cannot signal the
+difference — **the screen must distinguish "query failed" from "no rows"**, or the module's worst failure
+mode ships invisible. · **`מרכיב_אמינות_פעיל` is seeded OFF** ⇒ the runtime must **renormalise** the two
+surviving weights to 1.0. 🚫 Never hardcode a two-way split, and never derive the flag from "no
+attendance rows" (§7.90 rejected that: it would change the ranking **silently** the day the first
+attendance row lands). · **`customer_hostess_preference` is created and read by M4 but WRITTEN by M6**
+(🚧 מ6 ← מ4) — it stays **empty** until then, and the gate's third condition reading an empty table is
+the designed state, not a bug. · **The min-wage trigger's `of hourly_rate` scoping is load-bearing** —
+updating only `full_name` on a hostess whose rate sits below the parameter **must keep succeeding**
+(§7.66: *"זה יהיה שינוי-שכר של אדם בשקט"*); a plain `CHECK`, or a trigger without `of`, breaks the day
+the parameter is raised. · **`respond_to_shift_invite` is granted to `anon` AND `authenticated`
+deliberately** (a signed-in manager opening the invite link would otherwise hit a permission error on a
+public page) ⇒ it raises **two** advisor lints, not one. · **`projects` is SELECT-only for module 4** —
+see Phase 2's carry-forward for the only sanctioned write path.
 
 ---
 
-### Phase 2 — business logic
+### Phase 2 — business logic ✅ **CLOSED 09/08/2026 — Ishay signed gate 2.5**
 
-**Step 2.1 · `src/lib/hostesses.js`** — Israeli ID check digit (validated **while typing**, the only
-field that does not wait for blur) · min-wage validation mirroring the DB trigger · unavailability
-overlap (inclusive both ends) · derived states: `פג תוקף`, the T-24 alert, the `הושלם` display label.
-Unit tests beside it.
-**מה ייחשב עובד** *(`spec.md §2.1(1)`, quoted)*: *"ת"ז נבדקת **תוך כדי ההקלדה** (היחיד שאינו ממתין
-ליציאה מהשדה) … שכר מתחת למינימום **חוסם** · אימייל כפול **מזהיר ולא חוסם**."*
-**🗣️ אושר 09/08 15:31** *(consolidated round for 2.1+2.2+2.3; plan `~/.claude/plans/lexical-weaving-stonebraker.md`.
-No mockup — these three units have no visual surface and no product decision in them.)*
+> **Compacted 09/08/2026 19:53** per §9(i). The step-by-step build instructions are spent — the
+> authoritative record of what was built is the files themselves (`src/lib/hostesses.js`,
+> `src/lib/smartMatch.js`, `src/lib/geocode.js`, `src/modules/04_hostesses/api.js`, `validators.js`
+> additions) **and their test suites**, plus migrations E+F. Full pre-compaction text, including each
+> step's quoted `מה ייחשב עובד`: `docs/archive/module-4_full_2026-08-09.md`. Deviations, the SQL⇄JS
+> reversal reasoning and Ishay's sign-off on it stay in §10 below.
 
-**Step 2.2 · `src/lib/smartMatch.js`** — the four layers, numbers read from `params`, **never hardcoded**.
-🔴 **Layer 1 gate — five conditions:** `status='active'` · no `finally_approved` assignment on that date ·
-**not marked `לא_לשלוח` for this event's customer** · distance within the gate · **no declared
-unavailability covering the event date**. ➕ conditional gate: beyond the goalpost distance **without a
-car ⇒ rejected**.
-🔴 **Layer 3** — three components, damped toward the company average `C`. **`C` is computed over ALL
-hostesses in the company, including those the gate rejected** (§11.3).
-🔴 **The reliability component is switched off by `params.מרכיב_אמינות_פעיל`, and the remaining weights
-RENORMALIZE to sum to 1.0** — 🚫 **never hardcode the two-component split.** *(`spec.md §3.5(א)`: a
-hardcoded split **passes the regression anchor** and is wrong the day M6 turns reliability on.)*
-🔴 **Layer 4** — leverage multiplies the **raw** score, **one rounding at the very end**; weeks measured
-from when she **WORKED** (`max(projects.final_event_date)`), not when invited; a hostess who never
-worked gets **`0` weeks, not the cap**.
-🔴 **The tie-break runs in SQL, not in JS** — there is no md5 in `package.json` and
-`crypto.subtle` does not implement it. ⇒ layers 1–2 and the tie-break ordering are the **query**;
-layers 3–4 arithmetic is the **pure module**. Say so in the file header.
-↳ **as-built 09/08/2026 — this instruction was NOT followed, and here is why in one line.**
-It is not implementable today: `supabase-js` computes no haversine (the distance gate), expresses
-no `NOT EXISTS` (the same-day gate), and cannot `ORDER BY` an expression (the tie-break) — and the
-DB has **no view and no ranking function** to host any of it, so it would take a **sixth migration**
-with a typed-echo gate. ⇒ **all four layers run in `src/lib/smartMatch.js`**, the query fetches only
-small server-filtered sets, and the tie-break is **FNV-1a** with the same inputs and direction.
-**Full reasoning, the measurement behind it, and Ishay's sign-off: §10.**
-🔴 **Reasoning chips are TWO families and must not share one CSS class** (`spec.md §1.5`):
-`chip.score` vs `chip.ctx` vs absence markers vs the pin tag `מצוינת אצל הלקוח הזה` (its own row,
-above the score chips, teal).
+| Step | What landed | Evidence |
+|---|---|---|
+| 2.1 | `src/lib/hostesses.js` + tests — Israeli ID check digit (validated **while typing**, the only field that does not wait for blur) · min-wage validation mirroring the DB trigger · unavailability overlap (inclusive both ends) · derived states `פג תוקף` / the T-24 alert / the `הושלם` display label · `validators.js` +`isValidIsraeliId` | **tests written first and watched red** · **🗣️ אושר 09/08 15:31** (consolidated round for 2.1+2.2+2.3, plan `~/.claude/plans/lexical-weaving-stonebraker.md`; no mockup — no visual surface, no product decision) |
+| 2.2 | `src/lib/smartMatch.js` — the four layers, every number read from `params`. **Layer 1 gate, five conditions:** `status='active'` · no `finally_approved` assignment that date · not marked `לא_לשלוח` for this event's customer · within the distance gate · no declared unavailability covering the date; ➕ beyond the goalpost **without a car ⇒ rejected**. **Layer 3:** three components damped toward the company average `C`, computed over **ALL** hostesses **including the gate-rejected** (§11.3). **Layer 4:** leverage multiplies the **raw** score, **one** rounding at the very end. ↳ **as-built: the step's "the tie-break runs in SQL" instruction was NOT followed** — measured: `supabase-js` computes no haversine, expresses no `NOT EXISTS`, cannot `ORDER BY` an expression, and the DB has **no view and no ranking function** to host it ⇒ SQL would have cost a **sixth migration** with its own typed-echo gate. **All four layers run in JS**; the query fetches only small server-filtered sets; the tie-break is **FNV-1a** with the same inputs and direction | **the hand-computed anchor reproduces: `0.67/0.66/0.64`, order `נועה ← מיכל ← דנה`, two candidates absent entirely** · **all three §3.5 holes proven red against deliberately-broken code** (hardcoded split · never-worked given the cap · mid-computation rounding) · tests are **date-free** (weeks/km/counts fed directly) · **🗣️ אושר 09/08 15:31** · full reasoning + sign-off in §10 |
+| 2.3 | `src/modules/04_hostesses/api.js` — **filtering in the query**, never pull-everything-and-filter-in-the-browser (🚧 מ4 · 🚧 מ6) · every write `.select()`s and checks the row count (`assertRowsAffected`) because an RLS-blocked write returns `{data:null,error:null}` · the governing status is the row with `MAX(assignment_number)` per `(project_id, hostess_id)`, not the last row created | ◐ **reads + hostess-pool writes done 09/08.** Assignment-lifecycle writes deferred to Phase 3 (they ride with 3.4/3.5) — §7.33 and §7.41 were open then and are **now RULED** (see §3) · **🗣️ אושר 09/08 15:31** |
+| 2.4 | 🔻👤 **Geocoding — the product decision Ishay made: Nominatim/OSM**, ToS read in that same turn. Lazy fill (hostess on save, event on first entry to its Smart Match screen) + backfill of existing projects. ↳ **three deviations from the step's own text, all measured:** **(1)** a single-shot geocode was never viable — **both** real event addresses return EMPTY (`אקספו תל אביב, ביתן 2` · `מרכז הכנסים, ירושלים`) ⇒ a **candidate chain** (full → each segment, last→first, capped at 4) in `src/lib/geocode.js`; **(2)** the chain needed `localityMatchesAddress`, which accepts a hit **only if the returned locality appears in the original address** — a bare `מרכז הכנסים` resolves to **אשקלון, 62 km off**, `הרצל 50` to **נתניה**, both valid coordinates that pass the 80 km gate and move the ranking silently; **(3)** `projects` had **no write path** (SELECT-only, verified live) ⇒ **migration E**, a `SECURITY DEFINER` RPC writing **only** `lat`/`lng` — 🚫 deliberately not a write policy, because Postgres RLS is row-level and would have exposed `final_event_date`/`project_status` too | **verified end-to-end in a real browser against the live DB** · migrations **E+F** applied · **all 3 events filled through the production path**: project 3 → **ירושלים, not אשקלון** · project 8 → אקספו ת"א `32.105`/`34.808` · project 7 → **correctly none, and marked** · advisors **16→15 after F, as forecast** · gate `exit 0` · **571 unit** · **🗣️ אושר 09/08 17:1X** (plan `~/.claude/plans/purrfect-herding-sprout.md`) |
+| 2.5 | 🔻👤 **Phase-2 gate** — the hand-computed anchor reproduces | ✅ **Ishay signed. PHASE 2 CLOSED.** The anchor (`0.67/0.66/0.64` + order + two absent) **re-verified after every later change**, not once at the start · `gate exit 0` · **575 unit** · 7 migrations · advisors 15 |
 
-**Unit tests** — 🎯 the hand-computed anchor from `spec.md §3.2`: **the three scores and the order
-`נועה ← מיכל ← דנה`, with two candidates absent entirely.**
-⚠️ **Date-free** — feed weeks/km/counts directly; never pin to a calendar date (`e2e/CLAUDE.md` records
-eight tests broken once by exactly that).
-➕ `§11.10` #2–#5 **and** the three holes named in `spec.md §3.5`: a hardcoded-split implementation ·
-a never-worked hostess given the cap · mid-computation rounding. **All three must FAIL a wrong
-implementation** — write them by breaking the code deliberately and watching them go red.
-**מה ייחשב עובד** *(`spec.md § מה ייחשב עובד` #7 + `§3.2`, quoted)*: *"הציון הידני שחושב באפיון תואם
-את מה שהקוד מחשב"* · *"וסדר-התצוגה: נועה ← מיכל ← דנה. שתי מועמדות אינן ברשימה כלל."*
-**🗣️ אושר 09/08 15:31** *(same consolidated round.)*
-
-**Step 2.3 · `src/modules/04_hostesses/api.js`** — 🔴 **filter in the query, never
-pull-everything-and-filter-in-the-browser** (`§6`, `🚧 מ4 · 🚧 מ6`). Every write does `.select()` and
-checks the row count (`assertRowsAffected`, `src/lib/apiError.js`) — an RLS-blocked write returns
-`{data:null, error:null}`. Counters come from the row with `MAX(assignment_number)` per
-`(project_id, hostess_id)`. Precedents: `02_customers/api.js`, `03_quotes/api.js`.
-**מה ייחשב עובד** *(`spec.md §2.2(ג)`, quoted)*: *"הסטטוס הקובע הוא של השורה עם `MAX(assignment_number)`,
-לא השורה האחרונה שנוצרה"* — otherwise a hostess who refused and was later overridden is counted
-**both as refusing and as accepting**.
-**🗣️ אושר 09/08 15:31** *(same consolidated round.)*
-
-**Step 2.4 · 🔻👤 Geocoding — a product decision, not a technical one**
-🔴 **The service is NOT chosen** (§7.55): Nominatim (OSM) is the registered *candidate*.
-**Bring Ishay:** the ToS as read **in that same turn** (not from memory), the rate limit, whether a key
-or account is needed, and a recommendation. 🧩 **If a key is required — Ishay creates it; Claude never
-enters credentials.** Then: geocode a hostess **once on save** and an event **on first entry to its
-Smart Match screen**, storing to `lat`/`lng`. 🔴 **Failure ⇒ neutral proximity score + a visible
-`אין קואורדינטות` marker — never `0`** (§7.55/§11.4). ➕ **Backfill the existing projects** — M3's
-conversion RPC does not populate coordinates, so today every event has none.
-**מה ייחשב עובד** *(1–2 quoted; 3–4 unit-specific)*:
-1. *"כתובת מומרת לקואורדינטות **פעם אחת** בשמירה · **נכשל ⇒ נשמרת בכל מקרה** ומסומנת"* — `spec.md §2.1(1)`.
-2. *"קרבה — לדיילת או לאירוע אין קואורדינטות ⇒ ציון **ניטרלי** + סימון על השורה. **לא 0**"* — `research §11.4`.
-3. `יחידה-ספציפית` — project 8 (`כנס לקוחות שנתי`) lands Expo TA `32.105`/`34.808`, project 3 lands Jerusalem; both visible in a live DB query, not only on screen.
-4. `יחידה-ספציפית` — project 7 (`אולם דוגמה — תרחיש-קבלה`) stays coordinate-less and marked. **That is the correct outcome, not a failure.**
-**🗣️ אושר 09/08 17:1X** *(service = Nominatim/OSM · migration E approved in principle; plan `~/.claude/plans/purrfect-herding-sprout.md`. Typed-echo still owed before apply.)*
-
-↳ **as-built 09/08/2026 — three deviations from this step's own text, all measured, none silent.**
-**(1) A single-shot geocode was never viable — the step text implies it.** Measured live: **both real
-event addresses return EMPTY** (`אקספו תל אביב, ביתן 2` · `מרכז הכנסים, ירושלים`), while
-`אקספו תל אביב` and `ירושלים` each resolve. ⇒ a **candidate chain** (full → each segment, last→first,
-capped at 4) now lives in `src/lib/geocode.js`.
-**(2) The chain needed a guard, and that is the load-bearing finding.** A bare leading segment
-resolves to an **arbitrary** locality: `מרכז הכנסים` alone → **אשקלון, 62 km from the right answer**;
-`הרצל 50` alone → **נתניה**. Both are perfectly valid coordinates that would pass the 80 km gate and
-move the ranking silently. ⇒ `localityMatchesAddress` accepts a hit **only if the locality it returns
-appears in the original address**. **A wrong coordinate is worse than a missing one** — the missing one
-is marked on screen, the wrong one looks like a fact.
-**(3) `projects` had no write path at all.** This step assumed storing to `projects.lat/lng` was
-possible; it is not — migration D gave `projects` a **SELECT-only** policy for M4 (verified live:
-one policy, `cmd=SELECT`). ⇒ **migration E**, a `SECURITY DEFINER` RPC writing only those two columns.
-🚫 Deliberately **not** a write policy on `projects`: Postgres RLS is row-level, not column-level, so a
-policy would have exposed `final_event_date`/`project_status` too — the exact thing §4 forbids.
-
-🌊 **Ripple sweep for this step:** ① `↳ as-built` above · ② §10 entries + `הנחתי` register below ·
-③ DoD — migration count 5→6 *(pending apply)*, unit count 535→566 · ④ Ledger — two new rows
-(geocode service · migration E) · ⑤ `spec.md §515` "זהות שירות-הגאוקוד — בכוונה לא נחתם" and
-`research §11.6#1` (dependency #1) both now **answered**; tagged as-built pointers, no number edited.
-⏳ **Still owed at apply time:** `docs/schema.sql` refresh + `db_roadmap §10` Done-row + advisors delta.
-
-**Step 2.5 · 🔻👤 Phase-2 gate** — the anchor reproduces; `npm run test:run` green.
+**⚠️ Carry-forward into Phase 3+ (do not re-derive):**
+🔴 **All four Smart Match layers run in JS** — the original "the tie-break runs in SQL" instruction is
+**superseded and must not be reinstated** without the sixth migration it implies (§10). The tie-break is
+**FNV-1a**: changing its inputs or its direction re-orders equal-scoring candidates **silently**. ·
+**A hardcoded two-component weight split PASSES the anchor and is still wrong** — renormalise from
+`params` at runtime, or the ranking changes the day M6 turns reliability on. · **Layer 4 rounds exactly
+once, at the very end**, and weeks are measured from when she **WORKED**
+(`max(projects.final_event_date)`), not from when she was invited — **a hostess who never worked gets
+`0` weeks, not the cap.** Both are deliberately-broken tests already in the suite. · 🔴 **A wrong
+coordinate is worse than a missing one** — the missing one is marked on screen, the wrong one **looks
+like a fact**. `localityMatchesAddress` is that guard; do not "simplify" the candidate chain away. ·
+**A geocode failure ⇒ a NEUTRAL proximity score + a visible `אין קואורדינטות` marker — never `0`**
+(§7.55 / `research §11.4`). · **`projects.lat`/`lng` are writable ONLY through migration E's
+`SECURITY DEFINER` RPC** — module 4 holds a SELECT-only policy on `projects`, and widening it is
+forbidden by §4. · **Money and totals**: `src/lib/hostesses.js` owns the min-wage rule that mirrors the
+DB trigger — the screen must not re-implement it, only surface its message. · **2.3's remainder
+(assignment-lifecycle writes) rides with 3.4/3.5**, and the `knip` waiver for `04_hostesses/api.js` was
+**narrowed, not removed** when 3.1 imported the file (§10).
 
 ---
 
