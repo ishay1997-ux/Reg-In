@@ -13,7 +13,7 @@
 | Module | **4 — דיילות + Smart Match** |
 | Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ measured `ahead 6` of origin: `git status -sb` before assuming it is pushed |
 | Owner | ישי (sole developer) |
-| Overall status | 🔨 **Phase 2 — 2.1/2.2/2.4 done, 2.3 partial; 2.5 (the phase gate) is next.** Gate `exit 0` · **567 unit tests** (was 535; +32 geocode) · **7 migrations applied** · advisors **15**. Anchor reproduces; all 3 events carry coordinates. Phase 1's 1.5 gate still owes Ishay's `regin-docs-sync` run |
+| Overall status | 🔨 **Phase 2 — 2.1/2.2/2.4 done, 2.3 partial; 2.5 (the phase gate) is next.** Gate `exit 0` · **571 unit tests** (was 535; +36) · **7 migrations applied** · advisors **15**. Anchor reproduces; all 3 events carry coordinates. Phase 1's 1.5 gate still owes Ishay's `regin-docs-sync` run |
 | Last updated | **09/08/2026 18:1X** *(system clock; refresh it at every step transition)* |
 | **Active step** | **2.5** — 🔻👤 Phase-2 gate. ⚠️ **and the 2.3 remainder rides with Phase 3** |
 | Deadline | module 4 → `dev` by **21/08/2026**; submission **19/09/2026** |
@@ -33,7 +33,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | 2.1 | `src/lib/hostesses.js` — ID check digit, min-wage, derived states | ✅ 09/08 — tests written first and watched red · `validators.js` +`isValidIsraeliId` |
 | 2.2 | `src/lib/smartMatch.js` — the four layers | ✅ 09/08 — **anchor reproduces `0.67/0.66/0.64` + order + two absent** · all three §3.5 holes proven red against deliberately-broken code |
 | 2.3 | `src/modules/04_hostesses/api.js` — query-side filtering | ◐ 09/08 — **reads + hostess-pool writes done.** Assignment-lifecycle writes deferred to Phase 3: §7.33 + §7.41 are open (see §10) |
-| 2.4 | 🔻👤 Geocoding — service choice (product decision) + lazy fill + backfill | ✅ 09/08 — **verified end-to-end in a real browser against the live DB.** Migrations E+F applied · **all 3 events filled through the production path** (proj 3 → ירושלים *not* אשקלון, proj 8 → אקספו ת"א, proj 7 → correctly none) · advisors **15** (16→15 after F, as forecast) · gate `exit 0`, 567 unit |
+| 2.4 | 🔻👤 Geocoding — service choice (product decision) + lazy fill + backfill | ✅ 09/08 — **verified end-to-end in a real browser against the live DB.** Migrations E+F applied · **all 3 events filled through the production path** (proj 3 → ירושלים *not* אשקלון, proj 8 → אקספו ת"א, proj 7 → correctly none) · advisors **15** (16→15 after F, as forecast) · gate `exit 0`, 571 unit |
 | 2.5 | 🔻👤 Phase-2 gate: the hand-computed anchor reproduces | ⬜ |
 | 3.0 | 🔧 Shared-component checkpoint (before any screen) | ⬜ |
 | 3.1 | Surface 3 — hostess repository table | ⬜ |
@@ -945,7 +945,7 @@ The closing audit walks these one by one and ticks what it verified — so they 
 - [x] The deliberate policy-drop test ran — **0 rows and NO error**, both for a `view`-only role with the select policy dropped and for an `edit` role with **both** dropped. ⚠️ **And it caught a mine:** dropping only `_select_` hides nothing from an `edit` holder, because `_write_by_permission` is `FOR ALL`. ◐ **The DB half is proven; the screen half (showing an error rather than an empty list) is owed by Phase 3** — the DB cannot signal this.
 - [x] `anon` cannot read or write `assignments` directly; the public RPC is the only path — as `anon`: `count(*)` = **0**, direct UPDATE took no row; the RPC returned `ok:true` on a valid token and a **byte-identical** generic message on all four failure paths (unknown · replayed · 49h-old · event already past).
 - [x] `npm run gate` green — **exit 0**, 09/08/2026 (incl. `check:docs-structure` 29 files / 0 findings and `check:context`)
-- [x] `npm run test:run` green — **567 passed / 17 files** *(09/08/2026, after step 2.4; was 535/15 after 2.2 and 428/13 at the close of Phase 1)*
+- [x] `npm run test:run` green — **571 passed / 17 files** *(09/08/2026, after step 2.4; was 535/15 after 2.2 and 428/13 at the close of Phase 1)*
 - [x] `npm run test:e2e` — ✅ **RESOLVED 09/08/2026 ~16:0X by the parallel E2E session, and the diagnosis
       was right: it was never a code bug.** The dev server was refreshing itself mid-run (Vite HMR),
       which is why login "never left `/login`" and why every one of the five passed in isolation.
@@ -1020,6 +1020,34 @@ still open.**
 **(e)/(f)/(g): per `CLAUDE.md` iron rules 13/15/16 + the end-of-session protocol.**
 
 ## §10 📝 Deviations & Tech-Debt Log
+
+- 🔴 **09/08/2026 · step 2.4 — Ishay found a scoring inversion from the product side, before it
+  existed in code. `candidateDistanceKm` exists because of it.**
+  His question, verbatim: *"אם אירוע הוא תל אביב והדיילת ירקון 5 תל אביב אז מרחק אווירי 0?"*
+  **The real mechanism is worse than the example:** when an event address falls back to city level
+  (**measured — project 3 `מרכז הכנסים, ירושלים` resolves to the Jerusalem centroid**) and a hostess
+  has only `city` and no `address`, **both sides land on the identical OSM object** ⇒ distance
+  `0.000` ⇒ proximity **1.0, the maximum possible.** ⇒ **the less we know about her, the higher she
+  ranks** — the `Number(null)===0` family again, but arriving through arithmetic that is entirely correct.
+  **The rule that decides it, and why there is no epsilon:** two *different* addresses geocoded
+  independently never land on a byte-identical point. Exact equality is therefore not "very close" —
+  it is **evidence both sides collapsed to the same fallback**, so the distance is unknown ⇒ `null` ⇒
+  neutral. ⚠️ **What it does NOT solve, said out loud:** a street-level hostess against a city-level
+  event still yields a small, wrong-ish distance (2–3 km inside Tel Aviv). Not equality, so not caught —
+  and that residue is swallowed by the aerial-vs-road gap anyway. The on-screen marker for it is an
+  open item for Ishay.
+  📌 **Timing note that matters: this was NOT a shipped bug.** Nothing computes `candidate.distanceKm`
+  yet — the wiring is Phase 3, and the tests inject the number directly. The guard was added now so the
+  Phase-3 session calls one function and cannot get it wrong.
+
+- ⏳ **09/08/2026 · step 2.4 — event-address changes will strand the coordinates. Registered as
+  `🚧 מ6 ← מ4`, not fixed here, and here is why that is the right call.**
+  `set_project_coordinates` writes **only when both columns are NULL** — that is the DB-level
+  enforcement of *"מומרת פעם אחת"*. ⇒ editing `final_location` would leave the old point in place,
+  silently. **Measured before concluding:** `final_location` is written **only** by the quote-conversion
+  RPC's `INSERT`; there is **not one `UPDATE` of it** anywhere in `supabase/migrations/**` or `src/**`.
+  ⇒ the trap **cannot fire in M4** and is born the moment M6 adds a project-edit screen. The fix there
+  is one line (null the two columns in the same UPDATE); M4's existing path then refills them.
 
 - 🔴🔴 **09/08/2026 · step 2.4 — 31 GREEN unit tests sitting on a feature that returned nothing, and
   only a real browser exposed it. The most instructive result of this step.**

@@ -12,6 +12,7 @@ import {
   reliabilityScore,
   fairnessLeverage,
   haversineKm,
+  candidateDistanceKm,
   tieBreakKey,
   rankCandidates,
 } from './smartMatch'
@@ -324,6 +325,45 @@ describe('haversineKm', () => {
   it('קואורדינטה חסרה ⇒ null, לעולם לא 0 — "0 ק"מ" הוא הציון המושלם', () => {
     expect(haversineKm({ lat: null, lng: 34 }, { lat: 32, lng: 34 })).toBeNull()
     expect(haversineKm({ lat: 32, lng: 34 }, null)).toBeNull()
+  })
+})
+
+// 🔴 המלכודת שישי זיהה במוצר לפני שהיא נכתבה בקוד (09/08/2026):
+// *"אם אירוע הוא תל אביב והדיילת ירקון 5 תל אביב — מרחק אווירי 0?"*
+//
+// היא אמיתית ומגיעה מהמסלול החוקי: כשכתובת-אירוע נופלת לרמת-עיר (`מרכז הכנסים, ירושלים`
+// ⇐ מרכז ירושלים — קרה בפועל על אירוע 3), ולדיילת יש רק `city` בלי `address`, **שני
+// הצדדים נופלים על אותו אובייקט OSM בדיוק** ⇒ מרחק `0.000` ⇒ ציון-קרבה **1.0, מושלם**.
+// 🚨 כלומר **ככל שיש לנו פחות מידע עליה, כך היא מדורגת גבוה יותר** — אותה משפחה
+// בדיוק של `Number(null)===0`, רק שהפעם היא מגיעה דרך חשבון תקין לחלוטין.
+//
+// 🔑 והכלל שמכריע: **שתי כתובות שונות שגואקדו בנפרד לעולם לא נוחתות על נקודה זהה-בדיוק.**
+// ‏⇒ שוויון מדויק אינו "קרוב", הוא **עדות ששני הצדדים קרסו לאותה נפילה-לאחור**, והמרחק
+// אינו ידוע. בלי סף שרירותי ובלי אפסילון — שוויון מדויק, ותו לא.
+describe('candidateDistanceKm — השומר מפני "0 ק"מ" מזויף', () => {
+  const jerusalem = { lat: 31.7788472, lng: 35.2257856 } // הערך האמיתי של אירוע 3
+
+  it('🔴 שני צדדים שקרסו לאותה נקודה ⇒ null, ולא 0', () => {
+    expect(candidateDistanceKm(jerusalem, jerusalem)).toBeNull()
+  })
+
+  it('🔴 ולכן הציון יוצא ניטרלי ולא מושלם — זה כל העניין', () => {
+    expect(proximityScore(candidateDistanceKm(jerusalem, jerusalem), 40)).toBe(0.5)
+    // מה שהיה קורה בלי השומר: `haversineKm` מחזיר 0 והציון הוא 1.0 — הגבוה ביותר.
+    expect(proximityScore(haversineKm(jerusalem, jerusalem), 40)).toBe(1)
+  })
+
+  it('מרחק אמיתי ממשיך לעבוד — ירקון 5 ת"א ⇄ אקספו ת"א הוא כמה ק"מ, לא 0', () => {
+    const yarkon = { lat: 32.0892, lng: 34.7751 }
+    const expo = { lat: 32.1062629, lng: 34.8101508 }
+    const km = candidateDistanceKm(yarkon, expo)
+    expect(km).toBeGreaterThan(1)
+    expect(km).toBeLessThan(6)
+  })
+
+  it('צד חסר-קואורדינטות ⇒ null, כמו קודם', () => {
+    expect(candidateDistanceKm(null, jerusalem)).toBeNull()
+    expect(candidateDistanceKm({ lat: 32, lng: null }, jerusalem)).toBeNull()
   })
 })
 
