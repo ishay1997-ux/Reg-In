@@ -39,7 +39,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | 3.1 | Surface 3 — hostess repository table | ✅ 09/08 — built as drawn · 4 new pure functions (**tests first, watched red**) · **verified live on 20 real rows**, both permission directions, all four screen states |
 | 3.2 | Surfaces 3ב/3ג/3ד — add / edit / view cards | ✅ 09/08 — one dialog serves add+edit · stars open EMPTY · **the three different validation behaviours screenshotted** (ID blocks · wage blocks · duplicate email warns-only) |
 | 3.3 | Surface 1 — assignment overview (triage) | ✅ 09/08 — built · **8 E2E green incl. both permission directions and the load-failure guard** · 4 new pure functions, each proven red against deliberately-broken code |
-| 3.4 | Surface 2 — Smart Match | 🔨 09/08 — 🗣️ approved 20:4X (same unit) |
+| 3.4 | Surface 2 — Smart Match | ◐ **09/08 — C1 (the assembly layer) DONE and committed; the screen and its writes are NOT built.** Exact resume point in the step below |
 | 3.5 | Surface 4 — per-row action menu | 🔨 09/08 — 🗣️ approved 20:4X (same unit) |
 | 3.6 | Surface 5 — public confirm page (no login) | ⬜ |
 | 3.7 | 🔻👤 Phase-3 gate: 🎨 UX & functional review | ⬜ |
@@ -695,6 +695,39 @@ future ones included. **Price accepted with the ruling:** a shared-surface file 
 re-running `quote-email.spec.js` + `quote-document.spec.js`, and acceptance is **opening a real
 received mail**, never a status code.
 **🗣️ אושר 09/08 20:4X** *(same consolidated plan as 3.3.)*
+
+↳ **partial as-built 09/08/2026 — C1 landed; C2–C5 have not started. Resume exactly here.**
+✅ **DONE:** `src/lib/smartMatchCandidates.js` — DB rows ⇒ the input `rankCandidates` demands,
+plus everything the reasoning chips display (`workedForCustomerCount` · `weeksSinceWorked` ·
+`totalAnswered` · `hasCoordinates`). 10 tests. `weeksSinceLastWorked` extracted to
+`src/lib/hostesses.js` (it was inline in `HostessViewCard`, and this screen would have been the
+second copy).
+🔴 **And the break-check is the reason to trust it — it failed twice before it passed.** Four
+behaviours were broken on purpose; **two of the four broke nothing**, i.e. two tests were vacuous:
+one "counts events not rows" case could not fail (the upstream fold already guarantees one row per
+project), and the two `null`-distance cases passed on `haversineKm` too. **Both were rewritten into
+cases that discriminate** — *approved-then-withdrawn must NOT count as "worked for this customer"*,
+and *hostess-and-event on the exact same point must yield `null`, not `0`* (the live `סיון נחום`
+case). Re-broken afterwards, and each one bit. 🔑 **Fourth occurrence of this failure mode in the
+module — and the first time the break-check caught it in the same sitting it was written.**
+
+⬜ **STILL TO BUILD, in this order:**
+**C2 · the four sort angles** (`§11.7`, quoted): `עבדה אצל הלקוח הזה` · `תענה הכי מהר` ·
+`קרבה` · `הזולה ביותר`. **They re-order ONLY — layers 1–3 run identically in every angle, and the
+chips do not change.** Default = `קרבה`; below 72h it would flip to `תענה הכי מהר`, **which is
+disabled-and-explained** while `responded_at` is empty (`opacity:.5` + `— כבוי` + the explanation
+line, exactly as the approved mockup draws it).
+**C3 · the writes** in `api.js`: `שלח מייל תיאום` (create rows, `assignment_number = max+1` with
+**one retry** on `unique_violation` per §7.41↳, freeze `hourly_rate_snapshot`, token, invite mail) ·
+`אשר סופית` + **the auto-release that travels in the same action** (`local-13`) · `אחראית משמרת`.
+🔑 **Reuse `buildShiftInvitePayload` and copy `resendExpiredInvites`'s shape** — write-then-send,
+rollback of `invite_sent_at` on a hard failure, no rollback on `unknown`.
+**C4 · `SmartMatchPage.jsx`** — two columns · four counter tiles (**`String(n)`, not numbers**) ·
+candidate cards with **two separate chip families** (`score` vs `ctx`) · the `ⓘ` banner saying the
+reliability component is off · excess approvals **warn**, same-day double approval **blocked by the
+DB** with the row returning to its previous state.
+**C5 · navigation** — replace the temporary toast in `HostessesPage` with the real route to this
+surface, and add `← חזרה למבט-על`.
 
 **Step 3.5 · Surface 4 — per-row action menu**
 **Files:** `04_hostesses/AssignmentRowMenu.jsx` · mockup `04_rowmenu_approved.html`

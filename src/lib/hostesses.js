@@ -326,6 +326,24 @@ export function countAssignmentStates(rows, nowIso) {
   return counts
 }
 
+// כמה שבועות שלמים עברו מאז האירוע האחרון שהדיילת **השלימה** — הקלט של מנוף-ההוגנות,
+// וגם הצ'יפ `עבדה לאחרונה לפני N שבועות`. `null` = טרם עבדה, ו🚫 **זה אינו 0**: אפס
+// שבועות אומר "עבדה השבוע" והיה שולל ממנה בדיוק את המנוף שנועד לחדשות.
+// ⚠️ **רק אירועים שכבר עברו** — שיבוץ עתידי מאושר אינו "עבדה לאחרונה".
+// *(חולץ 09/08/2026: אותו חישוב היה inline ב-`HostessViewCard`, ומסך 2 היה העותק השני.)*
+export function weeksSinceLastWorked(rows, todayIso) {
+  const lastWorked = (rows ?? [])
+    .filter((row) => row?.assignment_status === 'finally_approved')
+    .map((row) => row.projects?.final_event_date)
+    .filter((date) => date && String(date) < String(todayIso))
+    .sort()
+    .at(-1)
+  if (!lastWorked) return null
+
+  const elapsed = Date.parse(`${todayIso}T00:00:00Z`) - Date.parse(`${lastWorked}T00:00:00Z`)
+  return Number.isNaN(elapsed) ? null : Math.floor(elapsed / (7 * 24 * MS_PER_HOUR))
+}
+
 // ── הנגזרות של מבט-העל (משטח 1) ──────────────────────────────────────────────
 
 // 🔴 **אירוע שתאריכו לפני היום אינו מוצג במבט-העל** — הכרעת-קלוד 09/08/2026, האפיון שותק
