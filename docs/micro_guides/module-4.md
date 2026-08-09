@@ -1053,7 +1053,21 @@ still open.**
 
 ## §10 📝 Deviations & Tech-Debt Log
 
-- 🔴 **09/08/2026 · steps 3.4+3.5 — ⏳ OPEN, and it goes to Ishay: the final-approval mail
+- 🟢 **CLOSED 10/08/2026 — migration H applied (`20260810001421`), and the code half shipped with it.**
+  Ishay approved the recommendation and typed the echo. The template line is now
+  `איש קשר בשטח: [שם_מנהלת_פרויקט], טלפון: …`, and `resolveShiftContact` returns
+  `אחראית המשמרת <שם>` / `מנהלת הפרויקט <שם>` — **the role travels inside the value.**
+  🔑 **Why the two halves had to ship together:** the migration alone downgrades the line to a bare
+  name with no role; the code alone would have doubled it (*"מנהלת הפרויקט -מנהלת הפרויקט ישי"*).
+  ⚠️ **And the test's template constant was updated in the same turn** — had it stayed on the old
+  text, the suite would have gone green on exactly that doubled string, since `toContain('ישי אטיאס')`
+  cannot see it. **A pinned copy of live data is only a guard while it is re-pinned.**
+  🔬 **Verified:** the `params` row re-read from the DB · `resolveShiftContact` unit-pinned to the
+  rendered line with the role asserted **exactly once** · and נועה שגיא marked as shift lead **through
+  the screen**, confirmed in the DB (`is_shift_lead = true`) and on the row (`★ אחראית משמרת`).
+  🚫 **Not verified: a real mail sent while a lead is marked** — no send was exercised, on purpose
+  (every demo address bounces into Ishay's inbox). ⬇️ The finding that produced it:
+- 🔴 **09/08/2026 · steps 3.4+3.5 — the original finding: the final-approval mail
   MISLABELS the shift lead.** `תבנית_אישור_סופי_שיבוץ` hardcodes *"איש קשר בשטח: **מנהלת הפרויקט**
   -[שם_מנהלת_פרויקט]"*, while `local-2` (Ishay, 08/08) rules the contact is **the shift lead when one
   is marked**. ⇒ the moment a lead is marked, the mail introduces her in a role that is not hers.

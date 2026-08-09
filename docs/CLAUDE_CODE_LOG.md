@@ -95,6 +95,36 @@ renders correctly, and the LRI/PDI characters are visible in the raw body.
 and recorded since `spec.md §12`; the fix is a `params` text change ⇒ a **ninth migration**, so it
 cannot be silent. Code side is ready (`resolveShiftContact` returns `isShiftLead`).
 
+**✅ The open item was closed the same night — migration H, and it needed BOTH halves.** Ishay
+approved and typed the echo; `20260810001421_module4_final_approval_contact_label` removed the two
+hardcoded words *"מנהלת הפרויקט -"* from `תבנית_אישור_סופי_שיבוץ`, and `resolveShiftContact` now
+returns `אחראית המשמרת <שם>` / `מנהלת הפרויקט <שם>`. 🔑 **Neither half is shippable alone:** the
+migration by itself leaves a bare name with no role; the code by itself produces
+*"מנהלת הפרויקט -מנהלת הפרויקט ישי"*.
+⚠️ **And the trap inside the fix, which is the durable lesson:** `shiftEmails.test.js` keeps a
+**copy of the live template** as its constant. Had that copy not been re-pinned in the same turn, the
+suite would have gone **green on the doubled string** — `toContain('ישי אטיאס')` cannot see it.
+**A pinned copy of live data is a guard only while it is re-pinned.** The test now also asserts the
+role word appears **exactly once**.
+🚫 **Not verified: a real mail sent while a lead is marked.** No send was exercised — every demo
+address bounces into Ishay's inbox, and he had already flagged the flood. Stated rather than implied.
+
+**Contradiction sweep (Ishay asked for it explicitly), what it actually found — four live
+contradictions, three of them created by this session's own work:**
+- `src/modules/04_hostesses/api.js`'s header still said *"what is NOT here: the assignment-lifecycle
+  writes"* — **written earlier the same day, false by the end of it.**
+- `src/CLAUDE.md` still said the `IREG-IN` bidi bug was **"טרם תוקן"** and pointed at §10 for "the
+  open question whether the fix belongs to the engine or the template" — **the engine fix had already
+  shipped and was confirmed in a real mail.** The claim aged out inside 24 hours.
+- `shiftEmails.test.js`'s template constant (above).
+- `screens-approved.md` מסך 2's demo-data note still explained the mockup's invented names with
+  *"המאגר החי ריק, 0 שורות ⇒ אין ממי לשאוב"* — now false twice over (20 hostesses, 5 assignments).
+  **Left in place with a dated as-built pointer**, because the sentence explains a past drawing
+  decision; the numbers in the approved spec were **not** edited.
+🔑 **The pattern worth keeping: every one of these was a sentence that was true when written.** None
+were sloppy. The failure mode is a *dated claim with no expiry* — which is why the repo's rule is to
+write the measurement method, not the value.
+
 **Housekeeping:** the `knip.jsonc` waiver on `04_hostesses/api.js` was **removed at the step it
 named as its own removal date**, and `deadcode` is green without narrowing it again.
 **Gates:** `gate` exit 0 · **733 unit** (was 662) · `smoke` exit 0 · **16 module-4 E2E** (8 new) ·
