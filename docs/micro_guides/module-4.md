@@ -867,11 +867,29 @@ phase, §10, or the ledger.
   on its own and blocked the gate. Dev-only chain (`shadcn → postcss → nanoid`, measured single path),
   zero occurrences in `dist`. `npm audit fix` offers a fix for it (and for `js-yaml`/`undici`) —
   **deliberately deferred to module close**, not silently skipped.
-- **09/08/2026 · `הנחתי`** — that the Make scenario attaches a file on **every** send. Derived from
-  `src/modules/03_quotes/CLAUDE.md` (which records `toBinary(2.pdf_base64; "base64")` as part of the
-  scenario); **the scenario itself was not opened when the assumption was made.** It is what the
-  no-attachment bypass rests on. **To be confirmed the moment Make is opened in step 0.3** — if it is
-  wrong, the bypass is unnecessary and Ishay is told.
+- **09/08/2026 · `הנחתי` ⇒ ✅ `אומת-על-ידי` the same day — the assumption held, and the tag is kept
+  so the promotion is visible rather than silently overwritten.** The claim was: the Make scenario
+  attaches a file on **every** send (derived from `03_quotes/CLAUDE.md`, without opening the scenario).
+  **Confirmed twice over:**
+  *(a)* **By sight** — scenario `REG-IN — שליחת מייל` (`eu1`, id `6759079`), module 4 `Gmail · Send an
+  email`: `Attachments → Attachment 1` with `File name: 2.filename` and
+  `Data: toBinary( 2.pdf_base64 ; base64 )`, and **the `Map` toggle on `Attachments` is OFF** — i.e. the
+  list is static, exactly one attachment, unconditionally.
+  *(b)* **By running it** — one real attachment-less `shift` mail through the full production path
+  returned **`502 · "Make responded 400"`**. ⇒ **the bypass is required; it is not optional polish.**
+  🔴 **What is NOT yet known, and is the first thing the next session must settle:** whether the 400
+  comes from the **webhook's data structure** (`pdf_base64`/`filename` declared required ⇒ a two-field
+  fix, no restructuring) or from the **Gmail module** rejecting an empty attachment (⇒ a Router with a
+  filter on `pdf_base64`, i.e. a second Gmail module and a real drift risk). **Do not pick one before
+  opening the `Webhooks · Custom webhook` module and reading its data structure.**
+- **09/08/2026 — and the failed send proved MORE than it broke.** `email_log` now carries
+  `shift · 999999 · failed · "Make responded 400" · recruit.test@regin.co.il · תבנית_זימון_משמרת`.
+  Everything on **our** side is therefore proven in production, not merely in a catalog query:
+  the widened CHECK **accepted** `'shift'` · the service-role journal write worked · and
+  **מנהלת הגיוס passed the permission gate**, which was impossible before this session. The failure is
+  entirely inside Make. ⚠️ **`entity_id = 999999` is a deliberately synthetic id** — no project or
+  assignment will ever collide with it; it is a test row in an append-only journal, left in place
+  because this project does not delete history (§7.11).
 - **09/08/2026** — `entity_type` map narrowed to **one** new value, `shift`. Ishay's 31/07 ruling
   (`PROJECT_MASTER:416`) named four (`shift`/`assignment` ⇒ 'דיילות', `invoice`/`salary_report` ⇒
   'כספים'); `spec.md:692` and this guide say "by one value". **Claude's call, anchored, Ishay may
