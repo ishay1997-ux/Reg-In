@@ -13,9 +13,9 @@
 | Module | **4 — דיילות + Smart Match** |
 | Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ measured `ahead 6` of origin: `git status -sb` before assuming it is pushed |
 | Owner | ישי (sole developer) |
-| Overall status | ✅ **PHASES 0, 1, 2 CLOSED** *(2.3 shipped partial by design — assignment-lifecycle writes ride with Phase 3, blocked on §7.33+§7.41)*. Gate `exit 0` · **575 unit tests** (was 428 at the close of Phase 1) · **7 migrations applied** · advisors **15** · all 3 events carry coordinates. ⏳ Phase 1's 1.5 gate still owes Ishay's `regin-docs-sync` run |
-| Last updated | **09/08/2026 18:3X** *(system clock; refresh it at every step transition)* |
-| **Active step** | **3.0** — 🔧 shared-component checkpoint, before the first screen. ⚠️ **Sweep the Ledger for ⏸️ OPEN items at the Phase-3 door first (§9(h)) — `local-12` is one, and §7.33/§7.41 gate the 2.3 remainder** |
+| Overall status | 🔨 **Phase 3 — 3.0 · 3.1 · 3.2 DONE.** Gate `exit 0` · **627 unit tests** (was 575 at the close of Phase 2) · `smoke exit 0` · 7 migrations · advisors **15**. 🆕 **The pool is LIVE: 20 real hostesses, created through the app's own path, all 20 geocoded** *(Ishay's ruling — see `local-14`)*. 🆕 **The Phase-3 door was swept and all three open items are RULED** (§7.41 · §7.33 · `local-12`). ⏳ Phase 1's 1.5 gate still owes Ishay's `regin-docs-sync` run |
+| Last updated | **09/08/2026 19:3X** *(system clock; refresh it at every step transition)* |
+| **Active step** | **3.3** — Surface 1, the assignment overview. ⚠️ **The 2.3 remainder (assignment-lifecycle writes) rides with 3.4/3.5 — and §7.33 is now RULED, so it is no longer blocked** |
 | Deadline | module 4 → `dev` by **21/08/2026**; submission **19/09/2026** |
 
 Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target module) · ❌ blocked (reason)
@@ -35,9 +35,9 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | 2.3 | `src/modules/04_hostesses/api.js` — query-side filtering | ◐ 09/08 — **reads + hostess-pool writes done.** Assignment-lifecycle writes deferred to Phase 3: §7.33 + §7.41 are open (see §10) |
 | 2.4 | 🔻👤 Geocoding — service choice (product decision) + lazy fill + backfill | ✅ 09/08 — **verified end-to-end in a real browser against the live DB.** Migrations E+F applied · **all 3 events filled through the production path** (proj 3 → ירושלים *not* אשקלון, proj 8 → אקספו ת"א, proj 7 → correctly none) · advisors **15** (16→15 after F, as forecast) · gate `exit 0`, 571 unit |
 | 2.5 | 🔻👤 Phase-2 gate: the hand-computed anchor reproduces | ✅ **09/08 — Ishay signed. PHASE 2 CLOSED.** Anchor `0.67/0.66/0.64` + order + two absent, re-verified **after** every later change · `gate exit 0` · **575 unit** · 7 migrations · advisors 15 |
-| 3.0 | 🔧 Shared-component checkpoint (before any screen) | ⬜ |
-| 3.1 | Surface 3 — hostess repository table | ⬜ |
-| 3.2 | Surfaces 3ב/3ג/3ד — add / edit / view cards | ⬜ |
+| 3.0 | 🔧 Shared-component checkpoint (before any screen) | ✅ 09/08 — all 8 approved mockups scanned by class-vocabulary. **3 new shared** (`StatusTag` · `RatingStars` · `ChipToggle`, 23 tests) · **4 reused** (`StatTile`/`Money`/`useConfirm`/`LoadingOrError`) · **1 deliberately local** (Smart Match reasoning chips — `spec.md §1.5` requires two separate families) |
+| 3.1 | Surface 3 — hostess repository table | ✅ 09/08 — built as drawn · 4 new pure functions (**tests first, watched red**) · **verified live on 20 real rows**, both permission directions, all four screen states |
+| 3.2 | Surfaces 3ב/3ג/3ד — add / edit / view cards | ✅ 09/08 — one dialog serves add+edit · stars open EMPTY · **the three different validation behaviours screenshotted** (ID blocks · wage blocks · duplicate email warns-only) |
 | 3.3 | Surface 1 — assignment overview (triage) | ⬜ |
 | 3.4 | Surface 2 — Smart Match | ⬜ |
 | 3.5 | Surface 4 — per-row action menu | ⬜ |
@@ -220,6 +220,10 @@ Supabase project `Reg-In`, ref `yfeovxppnfoafmfbdfvh`.
 | local-10 | 🔴 **Distance is shown as a WORD, not a number — `קרובה` / `בינונית` / `רחוקה`.** ⚠️ **Deviation from the approved mockup**, which draws `2.5 ק"מ` · `3.1 ק"מ` · `11 ק"מ` (`02_smartmatch_approved.html`) and which `screens-approved.md §①` marks as a `score`-family chip. **The mockup is NOT redrawn** — same handling as `local-1`. **Two reasons, and the second is what decided it:** (1) Ishay's field knowledge — *"למנהלת לא משנה אם 3 ק"מ או 5 ק"מ בתכלס"*; (2) 🔑 **displayed precision must match data precision** — when an event address resolves only to city level (**measured: project 3**), `18 ק"מ` is a number *pretending* to be measured. 🚫 **The SCORE is untouched** — it keeps running on continuous km, and the hand-computed anchor `0.67/0.66/0.64` still reproduces (verified after the change). **Thresholds are derived from `גולפוסט_מרחק_קמ`, read at runtime — no new param, no migration:** `רחוקה` starts exactly at the goalpost (where the proximity score hits zero, and the no-car cutoff), `קרובה` at half of it | ישי 09/08 | 3.4 |
 | local-11 | 🚫 **Travel-TIME display (`≈35 דק'`) — DROPPED, and recorded so it does not return.** Origin: a parallel session's suggestion, relayed to Ishay; **it was never in the spec and he never asked for it.** Measured before dropping (so this is a decision, not an avoidance): the OSRM demo server works from a browser, needs no key, sends `Access-Control-Allow-Origin: *`, and returns **51 points in ONE matrix call**. **Why dropped anyway:** its published policy states there is **no uptime guarantee and access may be withdrawn at any time without reason** — a live external dependency in a project whose entire deliverable is **a one-hour conference talk**. ➕ And the information it would add is not information the manager asked for. Ishay 09/08: *"אפשר לוותר על זה?"* — **yes** | ישי 09/08 | — |
 | local-12 | ⏸️ **OPEN — an "approximate location" marker when an address resolved only to city level.** ⚠️ **Sweep this at the Phase-3 door (§9(h)) — do not build it silently.** **Why it is open rather than ruled:** the display is now a WORD (`local-10`), which already hides false precision, **so the marker may be redundant** — that is exactly the judgement call. **What is measured:** an event address CAN resolve to a city centroid (project 3), and in that state a hostess's distance is off by kilometres while the row looks normal. **Quantified:** a ~5 km error shifts the proximity sub-score by `5/40 = 0.125`, i.e. ≈`0.047` on the final score — **and the anchor's own scores are `0.01–0.03` apart**, so it CAN flip the order. 🔴 **Cost if ruled yes:** it needs to know *which* candidate resolved the address ⇒ either a `precision` column (migration) or re-deriving it at read time. **Not cheap — do not agree to it casually** | ⏸️ פתוח | 3.4 |
+| §7.41↳ | 🟢 **CLOSED at the Phase-3 door — the `max+1` race on `assignment_number` needs nothing built.** 🔬 **Measured, not assumed** (`docs/schema.sql:765-766`): `assignments`' PK is **`(project_id, hostess_id, assignment_number)`** ⇒ two concurrent writers that computed the same number **cannot both land** — the second gets `unique_violation`. 🔑 **That is exactly what the item asked for: the failure is LOUD, not silent.** What remains is implementation detail, not a decision: one retry with a refreshed number, in code. **Verdict `לא-נדרש-כי` the key already covers it.** ⚠️ Only the module-4 clause is nodded — the rest of §7.41's bundle stays open | ישי 09/08 | 3.4 · 3.5 |
+| local-13 | 🟢 **§7.33 CLOSED — the auto-release runs IN CODE, in the same action as the final approval. 🚫 Not a DB trigger.** What was already ruled 07/07: when the quota fills, everyone who confirmed availability and was not picked is released automatically. What was open: **where**. 🔑 **And it is not a technical question:** the released hostess gets **her own message** (`תבנית_מייל_שחרור_משמרת`, seeded in `20260809125750`) — *"not because it is polite: responsiveness is 40% of the score, and a hostess who said yes three times and heard nothing back stops answering."* **A DB trigger cannot send mail** ⇒ a trigger would split the release from its notice. ⇒ both leave together, from code, in step 3.5 | ישי 09/08 | 3.5 |
+| local-12↳ | 🟢 **CLOSED — the "approximate location" marker is NOT built.** `local-10` (distance shown as a WORD) removed its ground: the marker existed to warn that `18 ק"מ` claims precision we do not have, **and no number is displayed any more**. Residual risk acknowledged and accepted: in edge cases a city-level fallback can move a candidate one place in the ranking — **and the manager picks manually every round anyway**. Price if reversed: a `precision` column ⇒ an **eighth** migration. **Verdict `לא-נדרש-כי` the label already solves it; if usage shows it misleads, we come back — and that is cheap** | ישי 09/08 | — |
+| local-14 | 🆕 **The hostess pool is REAL DATA, not fixtures — 20 rows, and they stay.** Ishay 09/08: *"אפשר לשים במסד 20 דיילות רק שיהיה הגיוני, בלי לרשום את המילה דמו… באמת שידמה"*. ⚠️ **A conscious exception to `e2e/CLAUDE.md`'s "never inject rows into the DB"** — and it is not a fixture: there is one live DB, **no delete anywhere in the module**, and these rows are the module's demo content. **Created through the app's own `createHostess`** (signed-in browser, real geocode, real RLS) — 🚫 not from node (Nominatim returns `Access denied`) and not via SQL (would bypass both the geocode and the permission gate). 🔴 **Consequence for step 4.2: the seed MUST skip an `id_number` that already exists**, or it will fail on these rows | ישי 09/08 | 3.1 · 4.2 |
 | local-5 | **`projects.customer_name` snapshot** — written at conversion, backfilled for existing rows. **Why:** מנהלת גיוס is `blocked` on 'לקוחות' (live) and `customers`' SELECT policy (`schema.sql:363-367`) demands view/edit there ⇒ an embedded customer join returns null **silently** on three approved surfaces. `projects` already snapshots `event_name` for this exact reason (§7.76, `schema.sql:502`) | קלוד, anchor §7.76 — Ishay may override | 1.1, 2.3 |
 
 🔗 **מראת §11.1 — SSOT: `module4_smart_match_research.md §11`. Do NOT copy its numbers into this guide.**
@@ -753,6 +757,20 @@ surfaces ⇒ shared, in `src/components/`.** ⚠️ **Check `src/components/` fi
 is usually "reuse this". Likely new: status tag · reasoning chip (two families) · counter strip.
 🚫 Do not plan functions this way — logic already has one home in `src/lib`.
 
+**🗣️ אושר 09/08 19:0X** *(plan `~/.claude/plans/stateful-hopping-duckling.md`, approved by Ishay; covers 3.0 + 3.1 + 3.2 as one unit.)*
+
+↳ **as-built 09/08/2026 — the ruling, derived by scanning the class vocabulary of all eight approved mockups.**
+**3 new shared** (`src/components/`): **`StatusTag`** (6 surfaces — colours read out of the mockups by
+`grep`, not chosen by eye) · **`RatingStars`** (4 surfaces; read + edit) · **`ChipToggle`** (3 surfaces).
+**4 reused, nothing rebuilt:** `StatTile` · `Money` · `useConfirm` · `LoadingOrError`; the toggle is the
+existing `ui/switch` (already RTL-adjusted).
+🚫 **One deliberately NOT shared: the Smart Match reasoning chips.** `spec.md §1.5` requires **two
+separate families** (`chip.score` vs `chip.ctx` plus the pin tag); folding them into `ChipToggle` would
+have erased a ruled distinction to save one file. They stay local to 3.4.
+📌 **23 unit tests, and the load-bearing one was proven by breaking the code:** defaulting `rating` to
+`3` turned **3 tests red** — the same `default 3` that migration A removed. Guard observed failing, then
+restored.
+
 > **Every surface step below is a build-unit.** It opens with a 🗣️ experience-brief and **waits for
 > Ishay's approval before code**: (א) the business flow as understood, invited for correction ·
 > (ב) planned validations · (ג) which files · (ד) anything spec-silent.
@@ -773,7 +791,32 @@ error + retry, never an empty table · screenshots of both empty states and the 
 1. *"איזו דיילת אני פותחת עכשיו — ומה מצבה, לפני שאני נוגעת בה."*
 2. *"חור במוקאפ: יש מסנן 'פעילות בלבד' ואין עמודה שמראה מצב"* — the `מצב` column closes it.
 3. *"שתי ההודעות חייבות להיות שונות, אחרת המנהלת חושבת שהמאגר נמחק."*
-**🗣️ אושר —**
+4. **A load failure shows *"לא הצלחנו לטעון את המאגר"* + "נסה שוב" — never a silent empty table**
+   (`screens-approved` מסך 3 §⑤). 🔴 *This is the half the DB cannot signal — the `{data:null,error:null}` trap.*
+5. `יחידה-ספציפית` — **מנהלת פרויקטים sees the rows but has no "+ הוספת דיילת", no action column and
+   no hourly-rate column**, while מנהלת גיוס has all three. **Both directions, not only the one I wanted to see.**
+**🗣️ אושר 09/08 19:0X** *(same consolidated plan as 3.0.)*
+
+↳ **as-built 09/08/2026 — built as drawn, with four things the step text did not carry.**
+**(1) 🔴 The route was wired HERE, not at 4.1.** `App.jsx` still rendered `<UnderConstruction>`, while
+Phase 3 demands screenshot evidence for every step — **the plan asked for a photo of a screen nobody
+could reach.** One line moved forward; **4.1 keeps what is actually its own** (the public route + the
+`App.routes.test.jsx` allow-list). `App.routes.test.jsx` re-run green — no guard was breached.
+**(2) Four new pure functions in `src/lib/hostesses.js`**, tests written first and watched red:
+`hostessDisplayState` · `unansweredStreakTag` · `eventsInLastQuarter` · `futureActiveAssignments`.
+**(3) A new query, `listRepositoryAssignments`** — one call, not one per hostess; the table's quarter
+counter and both hygiene tags need history for **every** row.
+**(4) 🔴 The §א4 window tells the truth about what it cannot do.** §א4 offers two options; the
+release path depends on §7.33 and is built in 3.5 ⇒ the dialog **says so** and performs the
+status change only. A "release" button that merely flipped a status would have left the event
+looking staffed — the exact scenario §א4's warning exists to prevent.
+
+🔴 **And the finding worth keeping from this step: two of my own tests passed against broken code.**
+I broke three behaviours on purpose; only one test went red. The other two — "counts events, not rows"
+and "only the deciding row counts" — were written against data where folding and not-folding give the
+**same answer**, so they proved nothing. Both were rebuilt with data that discriminates, and then both
+went red on the same breaks. 🔑 **Same shape as the §3.5(ג) rounding hole: a guard written against data
+the feature already passes is not a guard — and re-reading it will never tell you that.**
 
 **Step 3.2 · Surfaces 3ב / 3ג / 3ד — add · edit · view**
 **Files:** `04_hostesses/{HostessFormDialog.jsx, HostessViewCard.jsx}` · mockups `06`/`07`/`08`
@@ -789,7 +832,43 @@ view-only role.
 1. *"כרטיס נפתח רק אחרי שהמנהלת כבר דיברה עם הדיילת. אין 'מועמדת ממתינה לאישור'."*
 2. *"בשמירה: `פעילה`, ונכנסת מיידית למאגר-המועמדות."*
 3. *"נכשל ⇒ נשמרת בכל מקרה ומסומנת"* — a geocode failure never blocks a save.
-**🗣️ אושר —**
+4. *"התרשמות" ולא "דירוג"* — **and a new hostess saves with no rating at all**, showing `—` in the table.
+5. `יחידה-ספציפית` — **saving without an email is blocked with an explicit message, while a duplicate
+   email only warns and leaves "שמור" enabled.** Two different behaviours on one field.
+**🗣️ אושר 09/08 19:0X** *(same consolidated plan as 3.0.)*
+
+↳ **as-built 09/08/2026 — one dialog serves both 3ב and 3ג.**
+The two mockups are identical field-for-field; the differences are three (locked ת"ז · read-only status
+tag · the unavailability section). **Two files would have drifted** — and the price there is a validation
+that exists on add and quietly disappears on edit.
+🔴 **Nine starred required fields, not four** (`local-1`): the five "optional" ones are `not null` in the
+DB, so a form that marks them optional produces a save that fails server-side with a message the manager
+cannot act on.
+📌 **`הנחתי` — three assumptions I filled, nobody stated them and I did not measure them:**
+① **a past unavailability range is not shown, and among the relevant ones the nearest wins** — derived
+from the approved mockup drawing *future* ranges (יעל 07/09–14/09 while "today" is 08/08), so
+"future yes, past no"; the spec fixes the label and its source but not this choice.
+② **`אירועים · רבעון אחרון` is counted by the same rule as `עבדה אצל`** — blueprint assumptions 10 and 11
+set the window and the counting rule in **two separate rows** and never say they are the same rule;
+I unified them, because two numbers called "אירועים" counted differently on one screen is precisely the
+double-story `§11.5` forbids.
+③ **"future ACTIVE assignment" = `finally_approved` **or** `confirmed_available`** — §א4 says "שיבוצים
+עתידיים פעילים" and never enumerates statuses. I chose the safe side: the risk the window exists to
+prevent is the manager **not knowing** about a commitment, so a confirmed-available row counts too.
+`ממתינה למענה` does not — an unanswered invite is not a commitment, and including it would flood the
+window into noise.
+
+🌊 **Ripple sweep for steps 3.0–3.2 — the five targets, named:**
+① `↳ as-built` written on 3.0, 3.1 and 3.2 · ② §10 — five new entries (bidi ×2 · the two tests that
+passed on broken code · the early wiring · the Phase-3 door · the live pool) · ③ **DoD checkboxes moved:**
+`test:run` 575/17 → **627/20**, and "all 8 surfaces" marked **◐ 4 of 8** instead of staying a bare ⬜ ·
+④ **Ledger rows added:** `§7.41↳` · `local-13` · `local-12↳` · `local-14` · ⑤ **approved-spec / other
+files that now read differently:** `PROJECT_MASTER §7.33` and `§7.41` got their write-back **first**
+(rule 13א) · step **4.2** carries the seed-must-skip-existing-ת"ז consequence · `knip.jsonc`'s waiver was
+**narrowed with a corrected justification** rather than left standing on a claim that had gone false ·
+`src/CLAUDE.md`'s bidi section moved from "sixth occurrence" to **eighth** · `04_hostesses/CLAUDE.md`
+gained three new mines. 🚫 **No number in the approved spec was edited** — nothing there contradicts
+what was built.
 
 **Step 3.3 · Surface 1 — assignment overview (triage)**
 **Files:** `04_hostesses/OverviewTab.jsx` · mockup `01_overview_approved.html`
@@ -899,6 +978,11 @@ does not.
   ⚠️ **And give the five demo hostesses street-level addresses in different cities** — if two of them
   end up with only a city that matches the event's city, `candidateDistanceKm` returns `null` by design
   (identical points = collapsed fallback) and they will show `אין קואורדינטות` in the demo.
+  🔴 **AND the pool is ALREADY POPULATED — 20 real rows, created 09/08/2026 (`local-14`).** ⇒ **the seed
+  MUST skip an `id_number` that already exists**, or it fails on every one of them. 🚫 It must also not
+  re-create them under new ת"ז: there is **no delete in this module**, so a second run would leave 40.
+  ✅ **And their 20 verified `lat`/`lng` pairs already exist** — read them from the live table
+  (`select full_name, city, lat, lng from hostesses`) instead of re-deriving, since node cannot geocode.
   ⚠️ **`כנס לקוחות שנתי` is `in_progress` in the seed (`demo-seed.mjs:108,121`), so no project exists
   for it** — approve that quote in the seed so the module's own demo event exists as a project.
 - Add a module-4 block to `e2e/smoke-anchors.json`: **the ORDER `נועה ← מיכל ← דנה`**, not the scores —
@@ -956,7 +1040,7 @@ The closing audit walks these one by one and ticks what it verified — so they 
 - [x] The deliberate policy-drop test ran — **0 rows and NO error**, both for a `view`-only role with the select policy dropped and for an `edit` role with **both** dropped. ⚠️ **And it caught a mine:** dropping only `_select_` hides nothing from an `edit` holder, because `_write_by_permission` is `FOR ALL`. ◐ **The DB half is proven; the screen half (showing an error rather than an empty list) is owed by Phase 3** — the DB cannot signal this.
 - [x] `anon` cannot read or write `assignments` directly; the public RPC is the only path — as `anon`: `count(*)` = **0**, direct UPDATE took no row; the RPC returned `ok:true` on a valid token and a **byte-identical** generic message on all four failure paths (unknown · replayed · 49h-old · event already past).
 - [x] `npm run gate` green — **exit 0**, 09/08/2026 (incl. `check:docs-structure` 29 files / 0 findings and `check:context`)
-- [x] `npm run test:run` green — **575 passed / 17 files** *(09/08/2026, at the close of Phase 2; was 535/15 after 2.2 and 428/13 at the close of Phase 1)*
+- [x] `npm run test:run` green — **627 passed / 20 files** *(09/08/2026, after step 3.2; was 575/17 at the close of Phase 2, 535/15 after 2.2, 428/13 at the close of Phase 1)*
 - [x] `npm run test:e2e` — ✅ **RESOLVED 09/08/2026 ~16:0X by the parallel E2E session, and the diagnosis
       was right: it was never a code bug.** The dev server was refreshing itself mid-run (Vite HMR),
       which is why login "never left `/login`" and why every one of the five passed in isolation.
@@ -980,6 +1064,8 @@ The closing audit walks these one by one and ticks what it verified — so they 
 - [x] The three §3.5 holes each fail a deliberately-wrong implementation *(hardcoded split · never-worked given the cap · mid-computation rounding)* — **all three watched red against code broken on purpose.** Hole (ג) needed its own non-round data before it bit; the first version of that test was green on a broken implementation (§10)
 - [ ] **UX & validation:** step 3.7 passed — §4 design conformance · all screen states · RTL · keyboard basics — **and** every spec'd validation implemented, every spec-silent one confirmed with Ishay
 - [ ] All 8 approved surfaces built and screenshot-verified, including the public page on a phone viewport
+      — ◐ **4 of 8 done 09/08/2026** *(3 · 3ב · 3ג · 3ד; screenshots of every state, both permission
+      directions, and the §א4 window with a real name and date)*. **Remaining: 1 · 2 · 4 · 5.**
 - [ ] Every `🚧` in §2 has its **byte-matching** `🚧 מN` line in `PROJECT_MASTER §6` — **including the two authored this module** (M9 params screen · M6 attendance fields)
 - [ ] `db_roadmap.md` rows for module 4 marked Done in §10
 - [x] `PROJECT_MASTER §7` write-back done: **§7.67** marked deferred with its reasoning *(09/08/2026 — the item's own "בלופרינט-מ4 בוחן מחדש" instruction is now answered in place: the entity is ⏸️ deferred, the main justification collapsed with "אירוע דו-תפקידי לא קורה", re-adding later is one row per project, and the practical "time inheritance" need was met differently — `assignments.event_date` synced by trigger)*
@@ -1031,6 +1117,67 @@ still open.**
 **(e)/(f)/(g): per `CLAUDE.md` iron rules 13/15/16 + the end-of-session protocol.**
 
 ## §10 📝 Deviations & Tech-Debt Log
+
+- 🔴 **09/08/2026 · steps 3.1–3.2 — the SEVENTH occurrence of the bidi family, and Ishay spotted it
+  from the code before it was ever rendered.**
+  His note: *"סכום כסף שנכתב ידנית בתוך משפט עברי… לא טענתי שזה שבור — לא ראיתי את זה מרונדר. שווה
+  מבט בעין."* **Measured in a real browser rather than eyeballed** — glyph positions via `Range` rects:
+  **both** strings put `₪` to the **LEFT** of the digits, while `Money` on the same screen showed `45 ₪`.
+  ⇒ two fixes: the JSX hint now goes through **`Money`**, and `minWageError` — a **flat string that has
+  no `Money` equivalent** — wraps its amount in `U+2066…U+2069` (LRI…PDI), the text-level twin of
+  `unicode-bidi:isolate`. Re-measured after: `shekelLeftOfDigits: false`.
+  ➕ **And looking at the built screen caught an eighth, one column over:** the rating rendered
+  **`★ 5`** while the mockup's source says `5 ★`. ⚠️ **The mockup itself would have shipped the defect** —
+  it isolates the wage column (`.num`) and not the rating column, so *"build it as drawn"* alone
+  reproduces it. Same wrapper applied.
+  🔑 **The shape worth keeping: a measurement caught what the code review would not, and the eye caught
+  what the measurement was not pointed at.** Neither alone was enough.
+  📌 **Not closed by this:** the same weakness lives in every flat `params` mail template
+  (`תבנית_זימון_משמרת` and its sisters, and M8/M11's future ones) — the `IREG-IN` entry above is the
+  same disease. `isolatedShekels` is deliberately **not exported** until one of them consumes it.
+
+- 🔴 **09/08/2026 · step 3.1 — TWO of my own new tests passed against deliberately broken code.**
+  I broke three behaviours on purpose; **only one test went red.** The two that stayed green —
+  *"counts events, not rows"* and *"only the deciding row counts"* — had been written with data where
+  folding and not-folding produce the **same answer**, so they asserted a truth that held either way.
+  Rebuilt with discriminating data (a superseded `declined` row; a final `approval_withdrawn` row), and
+  then both went red on the same breaks and green on revert.
+  🔑 **Third instance of one shape in this module** (after the §3.5(ג) rounding hole and the geocode
+  fixtures): **a guard written against data the feature already passes is not a guard — and no amount of
+  re-reading reveals it. Only breaking the code does.**
+
+- ⚠️ **09/08/2026 · step 3.1 — the route was wired here instead of at 4.1, deliberately.**
+  Phase 3 requires functional **and visual** verification of every step, while `App.jsx` rendered
+  `<UnderConstruction>` until 4.1 ⇒ **the plan asked for screenshots of an unreachable screen.**
+  One line moved forward; **4.1 still owns the public route and the `App.routes.test.jsx` allow-list**,
+  which is the part that is actually a security boundary. The AST guard was re-run green.
+  ➕ **Ripple:** the `knip` waiver for `04_hostesses/api.js` was **narrowed, not removed** — the file
+  is consumed now, but `listStaffingOverview` (3.3) and `getSmartMatchData` (3.4) still have no
+  consumer. Its removal trigger moved from 4.1 to **3.4**, and its stale justification was rewritten
+  rather than left standing on a claim that is no longer true.
+
+- 🟢 **09/08/2026 · Phase-3 door — all three open items ruled, none silently.**
+  **§7.41** closed on a measurement (`assignments` PK covers the race — the failure is loud) ·
+  **§7.33** closed on a **product** reason, not a technical one (the released hostess gets her own mail,
+  and a DB trigger cannot send mail) · **`local-12`** closed because `local-10` removed its ground.
+  📌 **Recorded because a scan would otherwise re-open them:** all three carry a `לא-נדרש-כי` / ruling
+  verdict in the Ledger, and §7.33/§7.41 got their write-back in `PROJECT_MASTER §7` **first** (rule 13א).
+
+- 🆕 **09/08/2026 · the pool is real data now — 20 hostesses, and they cannot be deleted.**
+  Ishay's ruling (`local-14`). Created through the app's own `createHostess` in a signed-in browser:
+  **20/20 succeeded, 20/20 geocoded, 0 failures.**
+  🔴 **Two findings from the run that Phase 3.4 needs:**
+  **(1) The `אין קואורדינטות` state did not occur even once** — I deliberately left one hostess with a
+  city and no street, expecting it, and Nominatim resolved the city fine. ⇒ **that on-screen state is
+  reachable only for a genuinely unresolvable address, not for a thin one.** Said out loud because
+  "I demonstrated it" would have been false.
+  **(2) 🔑 But the collapse case DID appear, in real data:** `סיון נחום` (`קינג ג׳ורג׳ 20, ירושלים`)
+  resolved to **`31.7788472 / 35.2257856` — byte-identical to project 3's coordinates**, because the
+  locality guard rejected the street and fell back to the Jerusalem centroid. ⇒ **she and event 3 are
+  the exact-equality case `candidateDistanceKm` was built for**, live and reproducible. **Step 3.4 has
+  a real specimen for the neutral-score path — it does not need a synthetic one.**
+  ⏳ **And the 20 verified `lat`/`lng` pairs are exactly what step 4.2's seed must hardcode**, since the
+  seed cannot geocode from node.
 
 - 🔴 **09/08/2026 · step 2.4 — distance is DISPLAYED as a word, not a number. Deviation from an
   approved mockup, by Ishay's dated ruling (Ledger `local-10`).**

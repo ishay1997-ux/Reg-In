@@ -116,6 +116,25 @@ export function eventStartInstant(eventDate, startTime) {
 // המטרה כאן היא שהמשתמשת תראה את זה מיד ולא אחרי סיבוב לשרת — ו**באותו נוסח**.
 // 🚫 פרמטר חסר אינו "אין מגבלה": המסד היה חוסם בכל מקרה, ולכן מסך שמתיר שמירה
 // כשהפרמטר נמחק מבטיח שמירה שתיכשל.
+// 🔴 **בידוד-כיווניות לסכום שיושב בתוך משפט עברי — המופע השביעי של אותה משפחה.**
+// ‏`Money` פותר את זה במסך דרך `dir="ltr"` + `unicode-bidi:isolate`, **ולמחרוזת שטוחה
+// אין מקבילה כזו** — היא נשלפת מכאן ומוצגת כטקסט. בלי בידוד, אלגוריתם ה-bidi מעביר את
+// ה-₪ אל **שמאל** הספרות, ואותו סכום מופיע במסך אחד משני צדדים שונים.
+// 🔬 **נמדד בדפדפן אמיתי (09/08/2026), לא הונח:** מיקום הגליף `₪` היה **שמאלה** מהספרות
+// בשתי המחרוזות של המסך — בעוד `Money` באותו מסך מציג `45 ₪`. ישי הצביע על החשד; המדידה
+// אישרה אותו. ⇒ `U+2066` (LRI) … `U+2069` (PDI) עוטפים את הסכום ומבודדים אותו, בדיוק
+// כפי ש-`isolate` עושה ב-CSS. **תווים אלה בלתי-נראים בכוונה ואינם משנים את הנוסח.**
+// ⚠️ ולכן הם **מרוכזים בפונקציה אחת עם שם**, ולא מודבקים בתוך מחרוזות — הריפו כבר נכווה
+// מ-`U+200F` נסתר שאיש לא ידע שהוא שם ושיבש ספירה.
+const LTR_ISOLATE = '⁦'
+const POP_ISOLATE = '⁩'
+
+// 🚫 **לא מיוצאת** — ‏knip תפס את הייצוא הספקולטיבי ובצדק: אין לה צרכן מחוץ לקובץ.
+// כשתידרש למחרוזת נוספת (תבניות-המייל של מ8/מ11 נושאות את אותה חולשה) — אז מייצאים.
+function isolatedShekels(amount) {
+  return `${LTR_ISOLATE}${amount} ₪${POP_ISOLATE}`
+}
+
 export function minWageError(hourlyRate, minWageParamValue) {
   const min = optionalNumber(minWageParamValue)
   if (min === null) return 'שכר המינימום אינו מוגדר בהגדרות המערכת — לא ניתן לשמור דיילת.'
@@ -123,7 +142,7 @@ export function minWageError(hourlyRate, minWageParamValue) {
   const rate = optionalNumber(hourlyRate)
   if (rate === null) return 'יש להזין תעריף שעתי.'
 
-  return rate < min ? `השכר השעתי חייב להיות לפחות ${min} ₪ (שכר מינימום)` : null
+  return rate < min ? `השכר השעתי חייב להיות לפחות ${isolatedShekels(min)} (שכר מינימום)` : null
 }
 
 // אימייל כפול — **מזהיר ולא חוסם** (§7.65, הכרעת-ישי 31/07): תיבה משפחתית משותפת היא
@@ -299,6 +318,138 @@ export function countAssignmentStates(rows, nowIso) {
   }
 
   return counts
+}
+
+// ── הנגזרות של טבלת-המאגר (משטח 3) ───────────────────────────────────────────
+
+// חלון "אירועים · רבעון אחרון" — **90 יום מתגלגלים**, ואותו חלון בדיוק בטבלה
+// ובכרטיס-הצפייה. 🔑 `§11.5` מנמק למה זה חייב להיות חלון אחד: שני חלונות לאותו שם
+// היו גורמים למסך לספר סיפור שונה מהדירוג, על אותה דיילת.
+export const QUARTER_WINDOW_DAYS = 90
+
+// מוסיף/מחסיר ימים לתאריך-ISO ומחזיר תאריך-ISO. עובר דרך UTC בכוונה: תאריכי `date`
+// חוזרים כ-'YYYY-MM-DD' בלי אזור-זמן, ופרשנות מקומית הייתה מזיזה יום שלם בקצוות.
+function shiftIsoDate(isoDate, days) {
+  const base = new Date(`${isoDate}T00:00:00Z`)
+  if (Number.isNaN(base.getTime())) return null
+  base.setUTCDate(base.getUTCDate() + days)
+  return base.toISOString().slice(0, 10)
+}
+
+// עמודת "מצב" — שלוש התוויות של כרטיס מסך 3 §③.
+//
+// 🔴 **סדר הבדיקות אינו שרירותי: `מושבתת` גוברת על אי-זמינות.** דיילת מושבתת אינה
+// מקבלת זימונים בכלל, ולכן "לא זמינה 15/08–20/08" עליה הוא מידע נכון-אך-מטעה —
+// הוא מרמז שאחרי ה-20/08 היא חוזרת, והיא לא.
+//
+// 📌 `הנחתי` (נרשם ב-§10 של מדריך-המיקרו): **טווח שכבר עבר אינו מוצג, ומבין הרלוונטיים
+// מוצג הקרוב ביותר.** האפיון קובע את התווית ואת מקורה ואינו קובע את הבחירה הזאת;
+// היא נגזרה מהמוקאפ המאושר, שמצייר טווחים **עתידיים** (יעל 07/09–14/09 בעוד היום 08/08)
+// ⇒ כלומר "עתידי כן, עבר לא". טווח שהסתיים אינו מצב — הוא היסטוריה.
+export function hostessDisplayState(hostess, ranges, todayIso) {
+  if (hostess?.status === 'inactive') {
+    return { label: HOSTESS_STATUS_LABELS.inactive, tone: 'dashed', note: null }
+  }
+
+  const relevant = (ranges ?? [])
+    .filter((range) => range?.start_date && range?.end_date && range.end_date >= todayIso)
+    .sort((a, b) => a.start_date.localeCompare(b.start_date))
+
+  // הפעיל (זה שכבר התחיל) גובר על העתידי — הוא המצב **עכשיו**, וזו השאלה שהעמודה שואלת.
+  const current = relevant.find((range) => range.start_date <= todayIso)
+  const chosen = current ?? relevant[0]
+
+  if (chosen) {
+    return { label: unavailabilityLabel(chosen), tone: 'warn', note: chosen.note ?? null }
+  }
+
+  return { label: HOSTESS_STATUS_LABELS.active, tone: 'ok', note: null }
+}
+
+// שני תגי-ההיגיינה של המאגר, ולעולם לא שניהם יחד.
+//
+// **מה נחשב "לא ענתה":** הסטטוס נשאר `pending`. ⚠️ זה כולל זימון שפג-תוקפו — הוא עדיין
+// `pending` במסד, ומבחינת המנהלת הוא בדיוק אותו דבר: היא לא קיבלה תשובה.
+//
+// 🔴 **הספירה על השורה הקובעת בלבד** (`MAX(assignment_number)` פר-צמד): דיילת שסירבה
+// ואז נעקפה בטלפון **אינה** "לא ענתה" — היא ענתה, ואז שינתה את דעתה לטובה.
+//
+// **שני תגים ולא אחד** (כרטיס מסך 3 §③): מי שקיבלה פחות מ-N זימונים ולא ענתה על אף אחד
+// **מתה באותה מידה** — אבל היא אינה נכנסת למסנן, כי המסנן שואל "מי שרפה N הזדמנויות".
+// ⇒ `isChip:false` אומר לקורא: הצג תווית, אל תכליל אותה במסנן.
+export function unansweredStreakTag(rows, streakN) {
+  const threshold = optionalNumber(streakN)
+  if (threshold === null || threshold < 1) return null
+
+  const invites = finalAssignmentRows(rows)
+    .filter((row) => row?.invite_sent_at)
+    // 🔴 מיון לפי **תאריך-השליחה**, לא לפי סדר-המערך: הקורא מקבל שורות בסדר שאילתה
+    // שרירותי, ו"ה-N האחרונים" לפי סדר-מערך היה מחזיר קבוצה אחרת לגמרי.
+    .sort((a, b) => String(b.invite_sent_at).localeCompare(String(a.invite_sent_at)))
+
+  if (invites.length === 0) return null
+
+  const isUnanswered = (row) => row.assignment_status === 'pending'
+
+  if (invites.length >= threshold) {
+    const lastN = invites.slice(0, threshold)
+    return lastN.every(isUnanswered)
+      ? { label: `לא ענתה ל-${threshold} האחרונים`, isChip: true }
+      : null
+  }
+
+  return invites.every(isUnanswered)
+    ? { label: `לא ענתה מעולם (${invites.length} זימונים)`, isChip: false }
+    : null
+}
+
+// כמה אירועים היא עבדה בפועל ב-90 הימים האחרונים.
+//
+// 🔴 **"עבדה" = `אושרה סופית` **וגם** האירוע כבר עבר.** זימון שנשלח אינו עבודה, ואירוע
+// עתידי טרם קרה — שניהם היו מנפחים את המספר שהמנהלת מסתכלת עליו כדי לדעת מי עמוסה.
+// 🔴 **וסופרים אירועים, לא שורות:** שתי שורות-שיבוץ לאותו פרויקט הן אירוע אחד.
+//
+// 📌 `הנחתי` (נרשם ב-§10): **כלל-הספירה זהה לזה של "עבדה אצל <לקוח>"** (הנחה 11
+// בבלופרינט). הבלופרינט קובע את **החלון** (הנחה 10) ואת **כלל-הספירה** (הנחה 11) בשתי
+// שורות נפרדות ואינו אומר שהם אותו כלל; אחדתי אותם, כי שני מספרים שנקראים "אירועים"
+// ונספרים אחרת על אותו מסך הם בדיוק הסיפור-הכפול ש-`§11.5` אוסר.
+export function eventsInLastQuarter(rows, todayIso) {
+  const cutoff = shiftIsoDate(todayIso, -QUARTER_WINDOW_DAYS)
+  if (!cutoff) return 0
+
+  const projects = new Set()
+  for (const row of finalAssignmentRows(rows)) {
+    if (row?.assignment_status !== 'finally_approved') continue
+    const eventDate = row?.projects?.final_event_date
+    if (!eventDate) continue
+    if (eventDate < todayIso && eventDate >= cutoff) projects.add(row.project_id)
+  }
+  return projects.size
+}
+
+// השיבוצים שחלון-ההשבתה (§א4) מונה **בשם ובתאריך** לפני שהוא מציע לשחרר אותה.
+//
+// 🔴 **"פעיל" = `אושרה סופית` או `אישרה זמינות`.** ‏`ממתינה למענה` אינה כאן במכוון:
+// זימון שנשלח ולא נענה אינו התחייבות, והצפת החלון בזימונים פתוחים הייתה הופכת אותו
+// לרעש שלוחצים דרכו. 🔑 **וזו ההנחה שבחרתי לצד הבטוח:** הסיכון שהחלון קיים למנוע הוא
+// **שהמנהלת לא תדע על התחייבות** — ולכן `אישרה זמינות` נכללת, גם אם טרם אושרה סופית.
+// 📌 `הנחתי` — §א4 כותב "שיבוצים עתידיים פעילים" ואינו מונה אילו סטטוסים. נרשם ב-§10.
+const ACTIVE_COMMITMENT_STATUSES = ['finally_approved', 'confirmed_available']
+
+export function futureActiveAssignments(rows, todayIso) {
+  return finalAssignmentRows(rows)
+    .filter((row) => {
+      if (!ACTIVE_COMMITMENT_STATUSES.includes(row?.assignment_status)) return false
+      const eventDate = row?.projects?.final_event_date
+      return Boolean(eventDate) && eventDate >= todayIso
+    })
+    .map((row) => ({
+      projectId: row.project_id,
+      eventName: row.projects?.event_name ?? null,
+      eventDate: row.projects.final_event_date,
+      statusLabel: ASSIGNMENT_STATUS_LABELS[row.assignment_status],
+    }))
+    .sort((a, b) => a.eventDate.localeCompare(b.eventDate))
 }
 
 // ── תרגום שגיאות-המסד ────────────────────────────────────────────────────────

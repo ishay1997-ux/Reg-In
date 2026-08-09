@@ -21,6 +21,11 @@ import {
   finalAssignmentRows,
   countAssignmentStates,
   hostessServerErrorMessage,
+  hostessDisplayState,
+  unansweredStreakTag,
+  eventsInLastQuarter,
+  futureActiveAssignments,
+  QUARTER_WINDOW_DAYS,
 } from './hostesses'
 
 // ── אוצר-המילים הנעול (spec.md §1.1/§1.2) ───────────────────────────────────
@@ -74,7 +79,15 @@ describe('ספי-הזמן — שלושה מספרים שונים שקל לבלב
 // ── שכר מינימום ──────────────────────────────────────────────────────────────
 describe('minWageError — חוסם, ומשקף את הטריגר במסד', () => {
   it('תעריף מתחת לרף מחזיר את הנוסח המדויק של כרטיס-המסך', () => {
-    expect(minWageError(30, '35')).toBe('השכר השעתי חייב להיות לפחות 35 ₪ (שכר מינימום)')
+    // 🔴 הסכום עטוף ב-LRI…PDI כדי שה-₪ יישאר **מימין לספרות** בתוך משפט עברי.
+    // ‏**נמדד בדפדפן 09/08/2026 שבלי הבידוד הוא נופל שמאלה** — ישי הצביע על החשד,
+    // המדידה אישרה, וזו הבדיקה שלא תיתן לזה לחזור. התווים בלתי-נראים, ולכן נכתבים
+    // כאן במפורש כ-escape ולא מודבקים — אחרת אי-אפשר לראות בקוד שהם שם.
+    expect(minWageError(30, '35')).toBe(
+      'השכר השעתי חייב להיות לפחות ⁦' + '35 ₪' + '⁩ (שכר מינימום)',
+    )
+    expect(minWageError(30, '35')).toContain('⁦')
+    expect(minWageError(30, '35')).toContain('⁩')
   })
 
   it('תעריף בדיוק על הרף עובר — הרף כולל את עצמו, כמו הטריגר', () => {
@@ -408,5 +421,251 @@ describe('hostessServerErrorMessage — שגיאת-מסד ⇒ משפט אנוש�
     // 🚫 לעולם לא להחזיר את המחרוזת הגולמית: היא עלולה לשאת שמות-עמודות ואנגלית.
     expect(hostessServerErrorMessage({ code: '08006', message: 'network error' })).toBeNull()
     expect(hostessServerErrorMessage(null)).toBeNull()
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 🧱 פזה 3 · צעד 3.1 — הנגזרות של טבלת-המאגר
+// כולן **נכתבו לפני המימוש ונצפו אדומות**. הן מכסות את מה שהמסך מציג ואי-אפשר
+// לגזור מקריאת השורה: המצב, שני תגי-ההיגיינה, מונה-הרבעון, והקלט לחלון §א4.
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('hostessDisplayState — עמודת "מצב"', () => {
+  const TODAY = '2026-08-09'
+  const active = { status: 'active' }
+
+  it('דיילת פעילה בלי אי-זמינות ⇒ "פעילה"', () => {
+    expect(hostessDisplayState(active, [], TODAY)).toEqual({
+      label: 'פעילה',
+      tone: 'ok',
+      note: null,
+    })
+  })
+
+  it('🔴 מושבתת גוברת על הכול — גם אם יש לה טווח אי-זמינות', () => {
+    const ranges = [{ start_date: '2026-08-15', end_date: '2026-08-20', note: 'בחו״ל' }]
+    expect(hostessDisplayState({ status: 'inactive' }, ranges, TODAY).label).toBe('מושבתת')
+  })
+
+  it('🔴 טווח שמכסה את היום מוצג כטווח מלא, לעולם לא כתאריך-סיום יחיד', () => {
+    const ranges = [{ start_date: '2026-08-05', end_date: '2026-08-12', note: 'מחלה' }]
+    const state = hostessDisplayState(active, ranges, TODAY)
+    // "לא זמינה עד 12/08" משתמע כאילו היא זמינה היום — וההפך נכון (spec.md §1.2).
+    expect(state.label).toBe('לא זמינה 05/08–12/08')
+    expect(state.tone).toBe('warn')
+    expect(state.note).toBe('מחלה')
+  })
+
+  it('🔴 טווח עתידי מוצג גם הוא — כך מצויר במוקאפ 03 (יעל 07/09–14/09, בעוד היום 08/08)', () => {
+    const ranges = [{ start_date: '2026-09-07', end_date: '2026-09-14', note: 'אירוע משפחתי' }]
+    expect(hostessDisplayState(active, ranges, TODAY).label).toBe('לא זמינה 07/09–14/09')
+  })
+
+  it('🔴 טווח שכבר עבר אינו מוצג — היא פעילה, וזו לא היסטוריה שהמנהלת צריכה בשורה', () => {
+    const ranges = [{ start_date: '2026-07-01', end_date: '2026-07-10', note: 'ישן' }]
+    expect(hostessDisplayState(active, ranges, TODAY).label).toBe('פעילה')
+  })
+
+  it('כמה טווחים ⇒ הקרוב ביותר, ולא הראשון במערך', () => {
+    const ranges = [
+      { start_date: '2026-10-01', end_date: '2026-10-05', note: 'רחוק' },
+      { start_date: '2026-08-20', end_date: '2026-08-25', note: 'קרוב' },
+    ]
+    expect(hostessDisplayState(active, ranges, TODAY).note).toBe('קרוב')
+  })
+
+  it('טווח פעיל **וגם** עתידי ⇒ הפעיל מנצח, כי הוא המצב עכשיו', () => {
+    const ranges = [
+      { start_date: '2026-09-01', end_date: '2026-09-03', note: 'עתידי' },
+      { start_date: '2026-08-08', end_date: '2026-08-11', note: 'עכשיו' },
+    ]
+    expect(hostessDisplayState(active, ranges, TODAY).note).toBe('עכשיו')
+  })
+})
+
+describe('unansweredStreakTag — שני תגי-ההיגיינה', () => {
+  const N = 4
+  const invite = (num, status, sentAt) => ({
+    project_id: num,
+    hostess_id: 1,
+    assignment_number: 1,
+    assignment_status: status,
+    invite_sent_at: sentAt,
+  })
+
+  it('🔴 ארבעה אחרונים ללא מענה ⇒ הצ׳יפ "לא ענתה ל-4 האחרונים"', () => {
+    const rows = [1, 2, 3, 4].map((i) => invite(i, 'pending', `2026-0${i}-01T10:00:00Z`))
+    expect(unansweredStreakTag(rows, N)).toEqual({ label: 'לא ענתה ל-4 האחרונים', isChip: true })
+  })
+
+  it('🔴 שלושה זימונים בלבד, כולם ללא מענה ⇒ "לא ענתה מעולם (3 זימונים)" — ובלי צ׳יפ', () => {
+    // מתחת לסף: היא מתה באותה מידה, אבל אינה נכנסת למסנן (כרטיס מסך 3 §③).
+    const rows = [1, 2, 3].map((i) => invite(i, 'pending', `2026-0${i}-01T10:00:00Z`))
+    expect(unansweredStreakTag(rows, N)).toEqual({
+      label: 'לא ענתה מעולם (3 זימונים)',
+      isChip: false,
+    })
+  })
+
+  it('🔴 ענתה באחד מארבעת האחרונים ⇒ אין תג בכלל', () => {
+    const rows = [
+      invite(1, 'pending', '2026-01-01T10:00:00Z'),
+      invite(2, 'declined', '2026-02-01T10:00:00Z'),
+      invite(3, 'pending', '2026-03-01T10:00:00Z'),
+      invite(4, 'pending', '2026-04-01T10:00:00Z'),
+    ]
+    expect(unansweredStreakTag(rows, N)).toBeNull()
+  })
+
+  it('🔴 הרצף נמדד על ה-N האחרונים לפי תאריך-שליחה — לא לפי סדר המערך', () => {
+    // הישן הוא זה שנענה; אילו הסדר היה לפי המערך, הבדיקה הייתה נופלת על התג.
+    const rows = [
+      invite(9, 'confirmed_available', '2025-01-01T10:00:00Z'),
+      ...[1, 2, 3, 4].map((i) => invite(i, 'pending', `2026-0${i}-01T10:00:00Z`)),
+    ]
+    expect(unansweredStreakTag(rows, N)?.label).toBe('לא ענתה ל-4 האחרונים')
+  })
+
+  it('🔴 רק השורה הקובעת נספרת — שורה שנעקפה יוצאת מהספירה לגמרי', () => {
+    // ⚠️ **הבדיקה הזאת נבנתה מחדש אחרי שהגרסה הראשונה שלה עברה על קוד שבור.**
+    // הראשונה נתנה 4 שורות-קובעות, ולכן קיפול או אי-קיפול החזירו את אותה תשובה —
+    // כלומר היא "בדקה" את הקיפול מול נתונים שהתשובה בהם זהה בשני המקרים.
+    // כאן ההפרש אמיתי: בפרויקט 1 יש **סירוב שנעקף**, והשורה הקובעת היא השנייה.
+    //   עם קיפול   ⇒ 3 זימונים, כולם ללא מענה  ⇒ "לא ענתה מעולם (3 זימונים)"
+    //   בלי קיפול ⇒ 4 זימונים, ואחד מהם סירוב ⇒ null
+    const rows = [
+      { ...invite(1, 'declined', '2026-01-01T10:00:00Z'), assignment_number: 1 },
+      { ...invite(1, 'pending', '2026-02-01T10:00:00Z'), assignment_number: 2 },
+      invite(2, 'pending', '2026-03-01T10:00:00Z'),
+      invite(3, 'pending', '2026-04-01T10:00:00Z'),
+    ]
+    expect(unansweredStreakTag(rows, N)).toEqual({
+      label: 'לא ענתה מעולם (3 זימונים)',
+      isChip: false,
+    })
+  })
+
+  it('דיילת שמעולם לא קיבלה זימון אינה מקבלת תג — אין עליה מידע, וזו לא אשמתה', () => {
+    expect(unansweredStreakTag([], N)).toBeNull()
+  })
+
+  it('סף חסר מ-params ⇒ null, ולא סף מומצא', () => {
+    const rows = [1, 2, 3, 4].map((i) => invite(i, 'pending', `2026-0${i}-01T10:00:00Z`))
+    expect(unansweredStreakTag(rows, null)).toBeNull()
+  })
+})
+
+describe('eventsInLastQuarter — "אירועים · רבעון אחרון"', () => {
+  const TODAY = '2026-08-09'
+  const worked = (projectId, eventDate) => ({
+    project_id: projectId,
+    hostess_id: 1,
+    assignment_number: 1,
+    assignment_status: 'finally_approved',
+    projects: { final_event_date: eventDate },
+  })
+
+  it('החלון הוא 90 יום מתגלגלים', () => {
+    expect(QUARTER_WINDOW_DAYS).toBe(90)
+  })
+
+  it('סופר רק אירועים שכבר עברו ובתוך החלון', () => {
+    const rows = [worked(1, '2026-08-01'), worked(2, '2026-06-20'), worked(3, '2026-07-15')]
+    expect(eventsInLastQuarter(rows, TODAY)).toBe(3)
+  })
+
+  it('🔴 אירוע עתידי אינו נספר — היא עוד לא עבדה בו', () => {
+    expect(eventsInLastQuarter([worked(1, '2026-09-20')], TODAY)).toBe(0)
+  })
+
+  it('🔴 אירוע ישן מ-90 יום נופל מהחלון', () => {
+    expect(eventsInLastQuarter([worked(1, '2026-04-01')], TODAY)).toBe(0)
+  })
+
+  it('🔴 רק "אושרה סופית" נספר — זימון שנשלח אינו עבודה שבוצעה', () => {
+    const rows = [
+      { ...worked(1, '2026-07-01'), assignment_status: 'pending' },
+      { ...worked(2, '2026-07-01'), assignment_status: 'confirmed_available' },
+      { ...worked(3, '2026-07-01'), assignment_status: 'declined' },
+    ]
+    expect(eventsInLastQuarter(rows, TODAY)).toBe(0)
+  })
+
+  it('🔴 השורה הקובעת מכריעה: שיבוץ שאושר ואז בוטל אינו נספר כעבודה', () => {
+    // ⚠️ **גם הבדיקה הזאת נבנתה מחדש.** הראשונה נתנה שתי שורות `finally_approved`
+    // לאותו פרויקט וציפתה ל-1 — אבל `finalAssignmentRows` מקפל אותן ממילא לשורה אחת,
+    // כלומר היא הייתה עוברת גם אילו הספירה הייתה על שורות ולא על אירועים.
+    // 🔑 כאן ההפרש אמיתי: השורה הקובעת (assignment_number 2) היא `ביטלה אחרי אישור`,
+    // ולכן התשובה הנכונה היא **0**. ספירה שאינה מקפלת הייתה מחזירה 1.
+    const rows = [
+      { ...worked(5, '2026-07-01'), assignment_number: 1 },
+      { ...worked(5, '2026-07-01'), assignment_number: 2, assignment_status: 'approval_withdrawn' },
+    ]
+    expect(eventsInLastQuarter(rows, TODAY)).toBe(0)
+  })
+
+  it('שורה בלי תאריך-אירוע אינה מפילה ואינה נספרת', () => {
+    expect(eventsInLastQuarter([worked(1, null)], TODAY)).toBe(0)
+  })
+})
+
+describe('futureActiveAssignments — הקלט לחלון-האישור של §א4', () => {
+  const TODAY = '2026-08-09'
+  const row = (projectId, status, eventDate, eventName) => ({
+    project_id: projectId,
+    hostess_id: 1,
+    assignment_number: 1,
+    assignment_status: status,
+    projects: { final_event_date: eventDate, event_name: eventName },
+  })
+
+  it('🔴 שיבוץ עתידי שאושר סופית — בדיוק המקרה שהאפיון מצייר', () => {
+    const found = futureActiveAssignments(
+      [row(8, 'finally_approved', '2026-08-22', 'כנס לקוחות שנתי')],
+      TODAY,
+    )
+    expect(found).toHaveLength(1)
+    expect(found[0].eventName).toBe('כנס לקוחות שנתי')
+    expect(found[0].eventDate).toBe('2026-08-22')
+    expect(found[0].statusLabel).toBe('אושרה סופית')
+  })
+
+  it('🔴 "אישרה זמינות" נספרת גם היא — היא התחייבות חיה שהמנהלת חייבת לראות', () => {
+    const rows = [row(8, 'confirmed_available', '2026-08-22', 'א')]
+    expect(futureActiveAssignments(rows, TODAY)).toHaveLength(1)
+  })
+
+  it('🔴 אירוע שעבר אינו "עתידי" — אין ממה לשחרר אותה', () => {
+    const rows = [row(8, 'finally_approved', '2026-07-01', 'א')]
+    expect(futureActiveAssignments(rows, TODAY)).toHaveLength(0)
+  })
+
+  it('🔴 סירבה · שוחררה · ביטלה-אחרי-אישור ⇒ אינן שיבוץ פעיל', () => {
+    const rows = [
+      row(1, 'declined', '2026-08-22', 'א'),
+      row(2, 'released', '2026-08-22', 'ב'),
+      row(3, 'approval_withdrawn', '2026-08-22', 'ג'),
+    ]
+    expect(futureActiveAssignments(rows, TODAY)).toHaveLength(0)
+  })
+
+  it('🔴 זימון שרק נשלח (ממתינה למענה) אינו התחייבות — ולכן אינו פותח את החלון', () => {
+    expect(futureActiveAssignments([row(1, 'pending', '2026-08-22', 'א')], TODAY)).toHaveLength(0)
+  })
+
+  it('רק השורה הקובעת — סירוב שנעקף מאוחר יותר כן נספר', () => {
+    const rows = [
+      { ...row(8, 'declined', '2026-08-22', 'כנס'), assignment_number: 1 },
+      { ...row(8, 'finally_approved', '2026-08-22', 'כנס'), assignment_number: 2 },
+    ]
+    expect(futureActiveAssignments(rows, TODAY)).toHaveLength(1)
+  })
+
+  it('ממוינות לפי תאריך — הקרוב ביותר ראשון בחלון', () => {
+    const rows = [
+      row(1, 'finally_approved', '2026-09-30', 'רחוק'),
+      row(2, 'finally_approved', '2026-08-15', 'קרוב'),
+    ]
+    expect(futureActiveAssignments(rows, TODAY).map((r) => r.eventName)).toEqual(['קרוב', 'רחוק'])
   })
 })

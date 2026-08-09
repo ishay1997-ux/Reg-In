@@ -177,6 +177,24 @@ export async function getSmartMatchData(projectId) {
   }
 }
 
+// כל שורות-השיבוץ של המאגר, לשלוש הנגזרות שטבלת מסך 3 מציגה על **כל** שורה:
+// מונה-הרבעון · תגי "לא ענתה" · והשיבוצים העתידיים שחלון-ההשבתה (§א4) מונה בשם.
+//
+// 🔴 **קריאה אחת ולא אחת-לכל-דיילת:** 50 דיילות היו הופכות ל-50 סיבובי-רשת לפני שהטבלה
+// מצטיירת. הסט כולו קטן (מאגר של עד 50 דיילות × מעט אירועים), והוא **מסונן ע"י ה-RLS**
+// בשרת בדיוק כמו כל קריאה אחרת.
+// ⚠️ שולפים גם שורות ישנות במכוון — מונה-הרבעון ותגי-ההיענות **חייבים** היסטוריה;
+// סינון לעתיד בלבד היה מרוקן את שתי העמודות בשקט.
+export async function listRepositoryAssignments() {
+  const { data, error } = await supabase
+    .from('assignments')
+    .select(
+      'project_id, hostess_id, assignment_number, assignment_status, invite_sent_at, projects(event_name, final_event_date)',
+    )
+  if (error) throw toError(error, 'שגיאה בטעינת היסטוריית השיבוצים.')
+  return data ?? []
+}
+
 // היסטוריית השיבוצים של דיילת אחת (כרטיס 3ד: "שיבוצים קרובים" + היסטוריה).
 export async function getHostessAssignments(hostessId) {
   const { data, error } = await supabase

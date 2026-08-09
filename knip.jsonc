@@ -3,11 +3,17 @@
   "project": ["src/**/*.{js,jsx}"],
   "ignore": [
     "src/components/ui/**",
-    // ⏳ 09/08/2026 — פטור זמני, צעד 2.3 של מודול 4: שכבת-השאילתות נבנתה **לפני** המסכים
-    //    שצורכים אותה (‏DB/RLS קודם, UI אחר-כך — כלל ברזל 12), ולכן knip רואה קובץ ללא
-    //    מייבאים. אותו מצב בדיוק של `01_auth/pricesApi.js` ב-29–30/07, ואותו טיפול.
-    //    🔴 **תאריך-הסרה: צעד 4.1** (‏`HostessesPage.jsx` מחליף את `UnderConstruction`
-    //    ומייבא מכאן). מי שמגיע לשם — למחוק את השורה ולוודא ש-`npm run deadcode` ירוק.
+    // ⏳ 09/08/2026 — פטור זמני, מודול 4. **צומצם בצעד 3.1 ולא הוסר, וזו המדידה:**
+    //    הקובץ **כן** נצרך היום (`RepositoryTab` → `listHostesses` · `listRepositoryAssignments`
+    //    · `getHostessScreenParams` · `setHostessStatus`; הדיאלוגים → `createHostess` ·
+    //    `updateHostess` · `getHostess` · `replaceHostessUnavailability` · `getHostessAssignments`).
+    //    🔴 **מה שנשאר בלי צרכן — שתי פונקציות בלבד:** `listStaffingOverview` (משטח 1,
+    //    צעד 3.3) ו-`getSmartMatchData` (משטח 2, צעד 3.4). הן נבנו בפזה 2 לפי כלל ברזל 12
+    //    (DB/RLS ולוגיקה קודם, UI אחר-כך), ולכן `knip` רואה אותן כמתות.
+    //    🔴 **תאריך-הסרה: צעד 3.4** — כשמסך Smart Match יצרוך את האחרונה שבהן. מי שמגיע
+    //    לשם: למחוק את השורה ולוודא ש-`npm run deadcode` ירוק **בלי** לצמצם מחדש.
+    //    ⚠️ הפטור הקודם נומק ב"הקובץ כולו טרם נצרך" — נימוק שהתיישן היום ותוקן, במקום
+    //    להישאר עומד על טענה שכבר אינה נכונה.
     //    *(הכרעת-ישי 29/07/2026: פטור נקודתי ומתועד עם תאריך-הסרה — לא השתקת-שער.)*
     "src/modules/04_hostesses/api.js",
     // ✅ 30/07/2026 — הפטור הזמני ל-`src/modules/01_auth/pricesApi.js` הוסר: צעד 3.6 בנה את

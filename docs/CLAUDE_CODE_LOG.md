@@ -47,6 +47,67 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 09/08/2026 19:3X — Module 4 Phase 3, steps 3.0 · 3.1 · 3.2: the hostess-pool world is built, and the pool itself is real.
+
+**What landed.** Three shared components (`StatusTag` · `RatingStars` · `ChipToggle`) · four new pure
+functions in `src/lib/hostesses.js` (tests first, watched red) · `HostessesPage` + `RepositoryTab` +
+`HostessFormDialog` + `HostessViewCard` · one new query (`listRepositoryAssignments`). **Gate `exit 0` ·
+627 unit / 20 files** (was 575/17) · **`smoke exit 0`**.
+
+**The Phase-3 door was swept, and all three open items are now ruled** — none silently. **§7.41** closed
+on a measurement: `assignments`' PK is `(project_id, hostess_id, assignment_number)` (`schema.sql:765`),
+so the `max+1` race **cannot** produce a silent duplicate — the second writer gets `unique_violation`,
+i.e. the failure is loud, which is exactly what the item asked for. **§7.33** closed on a *product*
+reason rather than a technical one: the released hostess gets her own message, and **a DB trigger cannot
+send mail**, so the release runs in code together with the final approval. **`local-12`** closed because
+`local-10` (distance shown as a word) removed its ground. Write-back to `PROJECT_MASTER §7` went **first**,
+per rule 13א.
+
+🔴 **The most instructive result: two of my own new tests passed against deliberately broken code.**
+I broke three behaviours on purpose and **only one test went red.** The two that survived —
+*"counts events, not rows"* and *"only the deciding row counts"* — had been written with data where
+folding and not-folding give the **same answer**. Rebuilt with discriminating data, they then went red on
+the same breaks. 🔑 **Third instance of one shape in this module** (after the §3.5(ג) rounding hole and
+the geocode fixtures): **a guard written against data the feature already passes is not a guard, and
+re-reading never reveals it — only breaking the code does.**
+
+🐞 **Ishay caught the seventh bidi occurrence from the code, before it was rendered.** His note flagged
+the hand-written `35 ₪` inside a Hebrew hint. **Measured rather than eyeballed** (glyph position via
+`Range` rects): both strings put `₪` to the **left** of the digits while `Money` on the same screen showed
+`45 ₪`. Fixed twice, because there are two kinds of site: JSX goes through **`Money`**; the flat string
+`minWageError` wraps its amount in **`U+2066…U+2069`** — which answers the question `src/CLAUDE.md` had
+left open ("does a flat template string have a `Money` equivalent?" — yes, LRI/PDI). ➕ **And looking at
+the built screen caught an eighth, one column over:** the rating rendered `★ 5`. ⚠️ **The approved mockup
+would have shipped it** — it isolates the wage column and not the rating column. 🔑 *"Build it as drawn"
+does not protect against bidi: the mockup is the same HTML and breaks the same way.*
+
+**The pool is real data now (Ishay's ruling).** *"אפשר לשים במסד 20 דיילות… בלי לרשום את המילה דמו"* ⇒
+**20 hostesses created through the app's own `createHostess`** in a signed-in browser — not from node
+(Nominatim answers `Access denied`) and not via SQL (would bypass both the geocode and the permission
+gate). **20/20 succeeded, 20/20 geocoded, 0 failures.** ⚠️ There is no delete in this module, so step 4.2's
+seed **must skip an existing `id_number`**, and the 20 verified coordinate pairs are exactly what it must
+hardcode. 🔑 **And the run produced a real test specimen for free:** `סיון נחום` resolved to coordinates
+**byte-identical to project 3's**, because the locality guard rejected her street and fell back to the
+Jerusalem centroid — i.e. the exact-equality case `candidateDistanceKm` exists for is now live.
+
+**Verification was functional and visual, both permission directions, positive control first.** Recruit
+manager sees 20 rows and all three edit controls; projects manager sees the same rows with **no** add
+button, **no** action column and **no** wage column, and her view card hides "פרטים עסקיים" and the
+pencil. Load failure shows an error + retry, never a silent empty table. The §א4 window names the event
+by name, date and status. 🔴 **And it says out loud what it cannot do:** the release path depends on
+§7.33 and is built at 3.5, so the dialog performs the status change only rather than pretending.
+
+⚠️ **Deliberate deviation: the route was wired at 3.1, not 4.1** — Phase 3 demands screenshots of every
+step while `App.jsx` still rendered `<UnderConstruction>`, i.e. the plan asked for a photo of an
+unreachable screen. 4.1 keeps the public route and the AST allow-list, which is the part that is actually
+a security boundary. The `knip` waiver was **narrowed, not removed** (two exports still have no consumer)
+and its stale justification rewritten.
+
+📌 **NOT done, and flagged rather than half-done: §9(i) compaction.** Phases 0/1/2 still carry their full
+step text and the guide has grown past 1,500 lines. It was in the approved plan; I reached the end of a
+long session with the correctness-critical updates complete and judged that a 1,500-line restructure
+started on fumes is worse than one not started. **Next session's opening move.**
+
 ### 09/08/2026 17:3X — Module 4 step 2.4 (geocoding): built and tested; migration E authored, NOT applied.
 
 **Ishay's two rulings.** Service = **Nominatim (OSM)** — closing §7.55's last build-residue, with the

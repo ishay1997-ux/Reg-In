@@ -31,6 +31,7 @@ import CustomersPage from '@/modules/02_customers/CustomersPage'
 import CustomerDetailsPage from '@/modules/02_customers/CustomerDetailsPage'
 import QuoteBuilderPage from '@/modules/03_quotes/QuoteBuilderPage'
 import QuotesPage from '@/modules/03_quotes/QuotesPage'
+import HostessesPage from '@/modules/04_hostesses/HostessesPage'
 import WelcomePage from '@/components/WelcomePage'
 import UnderConstruction from '@/components/UnderConstruction'
 import ProfileSettingsPage from '@/components/ProfileSettingsPage'
@@ -126,7 +127,7 @@ function App() {
                     path="hostesses"
                     element={
                       <ProtectedRoute allow="דיילות">
-                        <UnderConstruction moduleName="דיילות" />
+                        <HostessesPage />
                       </ProtectedRoute>
                     }
                   />
