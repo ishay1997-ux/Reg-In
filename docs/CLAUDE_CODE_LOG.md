@@ -94,13 +94,26 @@ out of the failure) and re-run isolated → passes. **Keep the shape: a green te
 the feature is broken.**
 
 **E2E overall: 72/78, and NOT reported as green.** The other five failures all pass in isolation
-(four of them together in 26.3s, having each burned a 30s timeout in the long run). **Mechanism
-identified rather than guessed:** `auth.spec.js:23` waits for `/מייל או סיסמה שגויים|החשבון ננעל/`
-after **one** deliberate bad login and sees neither — which is exactly what `register_failed_login`
-returns once the **§7.8↳ rate limit (15 calls/IP/hour)** trips. A 78-test suite logs in ~78 times in
-12 minutes. ⇒ **the suite has outgrown a security control we added on purpose** — not a bug in either.
-Fixing it means waiting out the window or reusing sessions in the fixtures; that is shared test
-infrastructure and was left alone deliberately.
+(four of them together in 26.3s, having each burned a 30s timeout in the long run).
+
+**🔴 Correction, same session — I claimed the cause and the claim did not survive measurement.**
+I first wrote that the **§7.8↳ rate limit (15 calls/IP/hour)** had tripped. When Ishay pushed for
+detail I actually checked: `login_rpc_calls` holds **1 call in the past hour**, not 15 — **and the
+reasoning was broken at the root**, because that RPC only runs on a *failed* login while the suite's
+~78 logins succeed. `login_attempts`: 1 row from 01/08, no lock. Supabase auth logs: **0 × `429`** —
+but the API serves only the **last 100 entries**, a window that postdates the failing run, so a GoTrue
+throttle is **neither confirmed nor excluded**.
+⇒ **Symptom characterised, cause unknown.** Unmeasured candidates: dev-server contention over a
+12-minute single-worker run · Playwright timeouts under local load · a session race
+(`sessionStorage` by design) · a throttle in a window the log API no longer holds.
+🚫 **Do not "fix" it with session reuse** — that targets an unestablished cause and touches all 11
+spec files. **Cheapest next diagnostic:** re-run the suite and pull `get_logs(auth)` *within minutes*
+(the 100-entry cap is what defeated this attempt), and separately re-run with >1 worker and a warm
+dev server to separate "auth refuses" from "the machine is slow".
+🔑 **The transferable lesson, and the reason this correction is in the journal rather than edited
+away:** the first explanation was *plausible, specific, and cited a real mechanism that exists in this
+repo* — which is exactly why nobody would have questioned it. **A named mechanism is not a measured
+one.** The 30 seconds of SQL that refuted it were available the whole time.
 
 ### 09/08/2026 12:2X–13:0X — Module 4 Phase 1: migrations A · B · C applied, verified, committed
 

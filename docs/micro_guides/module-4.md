@@ -911,10 +911,11 @@ The closing audit walks these one by one and ticks what it verified — so they 
 - [x] `npm run test:run` green — **428 passed / 13 files**
 - ◐ `npm run test:e2e` — **72 passed / 6 failed / 12.3 min, and NOT claimed as green.** One failure was
       a **real Phase-1 regression** (`customer-page:66`, the `projects` tab — fixed, re-verified
-      passing). The other five pass in isolation and are the **§7.8↳ login rate limit** tripping on a
-      78-login suite — mechanism identified, not guessed (see §10). ⚠️ **A clean full-suite green was
-      not achieved and is not being reported as one**; it needs the rate-limit window to clear or
-      session reuse in the fixtures — a shared-test-infrastructure change, deliberately out of Phase 1.
+      passing). The other five pass in isolation; **their cause is NOT identified** — the two
+      in-repo suspects (§7.8↳ rate limit · the 5-strike lockout) were both **measured out**, and a
+      GoTrue throttle could be neither confirmed nor excluded (see §10). ⚠️ **A clean full-suite green
+      was not achieved and is not being reported as one. This is a lost gate, not a cosmetic
+      annoyance** — and the next move is a diagnosis, not a fix.
 - [x] `npm run smoke` green — **exit 0** *(⚠️ `test:e2e` excludes it silently; neither runs in CI)*
 - [ ] The hand-computed anchor reproduces: the three scores **and** the order `נועה ← מיכל ← דנה`, two candidates absent
 - [ ] The three §3.5 holes each fail a deliberately-wrong implementation *(hardcoded split · never-worked given the cap · mid-computation rounding)*
@@ -975,15 +976,32 @@ phase, §10, or the ledger.
   `customer-page:184`, `customers:124`, `quote-email:201` (4 tests, **26.3s together**) and
   `prices:121`. In the long run each of those had burned a 30s timeout. **Their failure mode is
   uniform:** login never leaves `/login`, or a navigation never settles.
-  📌 **‏`auth.spec.js:23` is the tell, and it names the mechanism:** it waits for
-  `/מייל או סיסמה שגויים|החשבון ננעל/` and the text never appears. That test performs **one**
-  deliberate bad login — so the screen showed **neither** expected message, which is what
-  `register_failed_login` does when the **§7.8↳ rate limit (15 calls/IP/hour)** trips: a generic
-  refusal, deliberately not one of those two strings. A 78-test suite logs in ~78 times in 12 minutes.
-  ⇒ **The suite outgrew a security control we added on purpose.** Not a bug in either.
-  📌 **Consequence for the DoD:** a clean full-suite green needs either a wait for the window to
-  clear, or session reuse in the fixtures. **Not attempted here — out of Phase 1's scope**, and it is
-  a change to shared test infrastructure that deserves its own decision.
+  🔴 **CAUSE NOT IDENTIFIED — and an earlier version of this very entry claimed it was. That claim
+  was wrong and is corrected here rather than quietly edited away.**
+  **What was claimed (09/08, by me):** that the **§7.8↳ rate limit (15 calls/IP/hour)** on
+  `register_failed_login` had tripped, because `auth.spec.js:23` waits for
+  `/מייל או סיסמה שגויים|החשבון ננעל/` and saw neither.
+  **What measurement showed, when Ishay asked for detail and I finally went and checked:**
+  - `select count(*) from login_rpc_calls` → **1 call in the past hour**, not 15. The limit **cannot**
+    have fired. ⚠️ **And the reasoning was broken at the root anyway:** that RPC is called on a
+    **failed** login. The suite's ~78 logins overwhelmingly **succeed**, so they never touch it.
+  - `login_attempts` → **1 row, from 01/08, `locked_until` NULL** ⇒ the 5-strike lockout is out too.
+  - Supabase **auth logs**: **zero `429`, zero `over_request_rate`** — but the API returns only the
+    **last 100 entries** (window measured 11:00–11:31 UTC), which is **after** the failing run.
+    ⇒ a GoTrue throttle is **neither confirmed nor excluded**; it was simply not observable.
+  ⇒ **Honest state: the symptom is characterised, the cause is not.** Remaining candidates, none
+  measured: dev-server/Vite contention under a 12-minute single-worker run · Playwright timeouts under
+  local load · a session race (the app keeps its session in `sessionStorage` **by design**) · an auth
+  throttle in a window the log API no longer holds.
+  🚫 **Therefore: do NOT "fix" this by adding session reuse.** That is a fix aimed at a cause nobody
+  has established — it would reduce logins, and if the cause is contention it changes nothing while
+  touching all 11 spec files. **Diagnose first.**
+  🔬 **The cheapest next diagnostic, for whoever picks this up:** re-run the full suite and pull
+  `get_logs(auth)` **within minutes of the failure** (the 100-entry cap is what defeated this attempt);
+  in parallel, re-run with more than one worker and with the dev server already warm, to separate
+  "auth refuses" from "the machine is slow".
+  📌 **Consequence for the DoD, unchanged:** `npm run test:e2e` cannot honestly be reported green
+  until this is understood. That is a **lost gate**, not a cosmetic annoyance.
   Running `quote-approval.spec.js` + `quotes.spec.js` together (24 tests, ~3.8 min, one worker) failed
   **2**: `quote-approval:177` never left `/login` after filling the form, and `quotes:71` timed out
   waiting for the reject dialog. **Both passed on an isolated re-run (2/2, 15.7s)**, and the same
