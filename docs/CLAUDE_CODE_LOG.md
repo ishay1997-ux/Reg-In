@@ -83,6 +83,25 @@ with **byte-identical** messages, compared programmatically rather than by eye.
 is now answered in place — `project_shifts` ⏸️ deferred; the practical need it carried (time
 inheritance) was met differently by `assignments.event_date` + trigger.
 
+**🔴 The full E2E run found ONE real regression, and it is the most instructive result of the phase.**
+`e2e/customer-page.spec.js:66` asserted the projects tab shows `0`. Migration D's
+`projects_select_by_permission` means the CEO now genuinely sees מדיטק's three projects, so it reads
+`3`. **The test's own comment already documented why the 0 was there:** *"נשאר 0 **לא כי אין** … אלא
+כי `projects` היא deny-all ב-RLS — אפס policies, ולכן הלקוח מקבל רשימה ריקה בלי שגיאה."*
+⇒ **The suite had pinned a known defect as its expected value. It did not catch the hole; it preserved
+it, and only closing the hole made it fail.** Fixed to `3` (count verified against the DB, not copied
+out of the failure) and re-run isolated → passes. **Keep the shape: a green test can be green because
+the feature is broken.**
+
+**E2E overall: 72/78, and NOT reported as green.** The other five failures all pass in isolation
+(four of them together in 26.3s, having each burned a 30s timeout in the long run). **Mechanism
+identified rather than guessed:** `auth.spec.js:23` waits for `/מייל או סיסמה שגויים|החשבון ננעל/`
+after **one** deliberate bad login and sees neither — which is exactly what `register_failed_login`
+returns once the **§7.8↳ rate limit (15 calls/IP/hour)** trips. A 78-test suite logs in ~78 times in
+12 minutes. ⇒ **the suite has outgrown a security control we added on purpose** — not a bug in either.
+Fixing it means waiting out the window or reusing sessions in the fixtures; that is shared test
+infrastructure and was left alone deliberately.
+
 ### 09/08/2026 12:2X–13:0X — Module 4 Phase 1: migrations A · B · C applied, verified, committed
 
 **Three irreversible migrations on the live project, each behind its own typed-echo.** Ishay typed

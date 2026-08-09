@@ -909,7 +909,12 @@ The closing audit walks these one by one and ticks what it verified — so they 
 - [x] `anon` cannot read or write `assignments` directly; the public RPC is the only path — as `anon`: `count(*)` = **0**, direct UPDATE took no row; the RPC returned `ok:true` on a valid token and a **byte-identical** generic message on all four failure paths (unknown · replayed · 49h-old · event already past).
 - [x] `npm run gate` green — **exit 0**, 09/08/2026 (incl. `check:docs-structure` 29 files / 0 findings and `check:context`)
 - [x] `npm run test:run` green — **428 passed / 13 files**
-- [ ] `npm run test:e2e` green — **named separately** *(running at the time of writing; ⚠️ see the E2E-flakiness note in §10 — a long serial run trips auth throttling and must be re-checked per-test before being read as a regression)*
+- ◐ `npm run test:e2e` — **72 passed / 6 failed / 12.3 min, and NOT claimed as green.** One failure was
+      a **real Phase-1 regression** (`customer-page:66`, the `projects` tab — fixed, re-verified
+      passing). The other five pass in isolation and are the **§7.8↳ login rate limit** tripping on a
+      78-login suite — mechanism identified, not guessed (see §10). ⚠️ **A clean full-suite green was
+      not achieved and is not being reported as one**; it needs the rate-limit window to clear or
+      session reuse in the fixtures — a shared-test-infrastructure change, deliberately out of Phase 1.
 - [x] `npm run smoke` green — **exit 0** *(⚠️ `test:e2e` excludes it silently; neither runs in CI)*
 - [ ] The hand-computed anchor reproduces: the three scores **and** the order `נועה ← מיכל ← דנה`, two candidates absent
 - [ ] The three §3.5 holes each fail a deliberately-wrong implementation *(hardcoded split · never-worked given the cap · mid-computation rounding)*
@@ -952,8 +957,33 @@ phase, §10, or the ledger.
 
 ## §10 📝 Deviations & Tech-Debt Log
 
-- 🐞 **09/08/2026 — E2E flakiness under a long serial run. PRE-EXISTING, not caused by Phase 1 —
-  and worth a line because it will otherwise be misdiagnosed as a migration regression.**
+- 🔴 **09/08/2026 — ONE REAL REGRESSION from Phase 1, found by the full E2E run, and it is the most
+  instructive result of the phase: `e2e/customer-page.spec.js:66` asserted `customer-tab-projects`
+  contains `0`.** Migration D added `projects_select_by_permission`, so the CEO now genuinely sees
+  מדיטק's three projects (3 · 7 · 8 — verified against the DB, not copied out of the failure) and the
+  tab reads `3`. **Fixed to `3`; re-run isolated → passes.**
+  🔑 **Why this one matters far beyond the one-character fix:** the test's own comment already said
+  *"נשאר 0 **לא כי אין** … אלא כי `projects` היא deny-all ב-RLS — אפס policies, ולכן הלקוח מקבל
+  רשימה ריקה בלי שגיאה"*. **The suite had pinned a known defect as its expected value.** It did not
+  catch the hole — it *preserved* it, and only closing the hole made it fail. **A green test can be
+  green because the feature is broken.** *(This is the same `{data:null, error:null}` trap
+  `spec.md § מה ייחשב עובד` #4 names, caught from the opposite direction.)*
+- 🐞 **09/08/2026 — E2E flakiness under a long serial run — MEASURED, and now with the numbers.
+  PRE-EXISTING, not caused by Phase 1.**
+  🔬 **Full-suite evidence:** `npm run test:e2e` → **72 passed / 6 failed / 12.3 min.** Of the six,
+  **one was the real regression above**; the other **five all pass in isolation** — `auth:23`,
+  `customer-page:184`, `customers:124`, `quote-email:201` (4 tests, **26.3s together**) and
+  `prices:121`. In the long run each of those had burned a 30s timeout. **Their failure mode is
+  uniform:** login never leaves `/login`, or a navigation never settles.
+  📌 **‏`auth.spec.js:23` is the tell, and it names the mechanism:** it waits for
+  `/מייל או סיסמה שגויים|החשבון ננעל/` and the text never appears. That test performs **one**
+  deliberate bad login — so the screen showed **neither** expected message, which is what
+  `register_failed_login` does when the **§7.8↳ rate limit (15 calls/IP/hour)** trips: a generic
+  refusal, deliberately not one of those two strings. A 78-test suite logs in ~78 times in 12 minutes.
+  ⇒ **The suite outgrew a security control we added on purpose.** Not a bug in either.
+  📌 **Consequence for the DoD:** a clean full-suite green needs either a wait for the window to
+  clear, or session reuse in the fixtures. **Not attempted here — out of Phase 1's scope**, and it is
+  a change to shared test infrastructure that deserves its own decision.
   Running `quote-approval.spec.js` + `quotes.spec.js` together (24 tests, ~3.8 min, one worker) failed
   **2**: `quote-approval:177` never left `/login` after filling the form, and `quotes:71` timed out
   waiting for the reject dialog. **Both passed on an isolated re-run (2/2, 15.7s)**, and the same
