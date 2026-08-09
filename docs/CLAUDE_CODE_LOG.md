@@ -47,6 +47,122 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 09/08/2026 16:1X — Module 4 Phase 2: steps 2.1 + 2.2 done, 2.3 partial. The Smart Match anchor reproduces.
+
+**What landed.** `src/lib/hostesses.js` (+`isValidIsraeliId` appended to the shared `validators.js`),
+`src/lib/smartMatch.js`, `src/modules/04_hostesses/{api.js, CLAUDE.md}`, and their tests.
+**Gate `exit 0` · 535 unit tests (was 428, +107) · smoke `exit 0`.** Tests were written first and
+watched red in every unit — not asserted to have been.
+🎯 **The hand-computed anchor from `spec.md §3.2` reproduces exactly**: `נועה 0.67 · מיכל 0.66 ·
+דנה 0.64`, order `נועה ← מיכל ← דנה`, two candidates absent — and from **two different** gate
+reasons (יעל: past the goalpost with no car · שירה: declared unavailability covering the date).
+
+🔑 **The finding worth carrying forward, and it is about testing, not about this module: a
+hole-test can pass a broken implementation, and only breaking the code on purpose reveals it.**
+`spec.md §3.5` names three holes the anchor cannot catch. I wrote a test per hole and then broke
+the code three ways to check them. Holes (א) hardcoded weight split and (ב) never-worked-gets-the-cap
+went red immediately — **and the anchor itself stayed green through both**, exactly as the spec
+predicted. Hole (ג) mid-computation rounding **stayed green too**: my test asserted the unrounded
+score to ten digits, but *on the anchor's own data*, where every sub-score (`0.78 · 0.25 · 0.52 ·
+0.80 · 0.70 · 0.50`) is already round — so the rounding it was meant to catch was a no-op. Fixed
+with a case where **both** sub-scores are non-round (`0.4666…` / `0.575`); red under the break,
+green on revert. **Generalised: a guard written against the same data the feature already passes
+is not a guard.** This is the `שומר שלא נצפה נכשל — אינו שומר` rule, and it fired for real.
+
+🐞 **`Number(null) === 0` bit a third time in this repo — caught by two unit tests.** `haversineKm`
+on a hostess with no coordinates returned **3,558 km** (measuring her from the equator) instead of
+`null`, and the `אין קואורדינטות` chip stayed dark — i.e. she'd sink to the bottom of the ranking
+for a datum *the system* is missing. Already documented at `validators.js:30` and in `pricing.js`,
+and it recurred anyway. Structural fix: `optionalNumber` in `hostesses.js` is the single door, and
+`smartMatch.js` imports that copy (jscpd flagged the duplicate and was right).
+
+🔴 **Deviation, recorded in `module-4.md` §10: layers 1–2 and the tie-break run in JS, not SQL.**
+The step said they are "the query". Measured that they cannot be: `supabase-js` computes no
+haversine, expresses no `NOT EXISTS`, and cannot `ORDER BY` an expression; and the DB has **no view
+and no ranking function** to host them (nine functions counted). Hosting them would be a **sixth
+migration** with a typed-echo gate that Phase 2 was not planned to carry. The tie-break is
+therefore FNV-1a, not `md5` (no hashing lib in `package.json`; `crypto.subtle` lacks md5) —
+deterministic per (event, hostess) and never insertion order, which is what the requirement
+actually says. Shown to Ishay in the approved plan.
+
+⏳ **2.3 is deliberately partial and the boundary is written down.** Reads for all four approved
+surfaces + hostess-pool writes are done (unavailability uses the **insert-first / delete-stale-by-id**
+order that a real 30/07 data-loss incident produced). **Assignment-lifecycle writes are not built:**
+**§7.33** (release mechanism — *"לא נקבע"*) and **§7.41** (`max+1` race on `assignment_number`,
+tagged 🔵 "להנהון") are open in §7, and deciding either silently would have overridden a parked
+ruling. They ship in Phase 3 with their screen and the mail engine.
+
+📌 **Doc-rot fixed on Ishay's ruling (he asked for it in-session, since the context was here).**
+`docs/specs/module_04_hostesses/{spec,screens-approved,processes-approved}.md` each got a dated
+freshness banner plus inline fixes: `responded_at` "does not exist" (it does — mig A), the
+unavailability and preference tables "not created" (they are — mig C), and the four tables being
+`deny-all` (they have policies — mig D). 🔴 **The error-state requirements those sentences justify
+were preserved verbatim** — the `{data:null, error:null}` trap is still real and was demonstrated
+live; only the *reason* went stale. Same correction applied to `src/CLAUDE.md`'s RLS list.
+
+🤝 **Cross-session:** told the E2E-login session what Phase 1 had measured and ruled out. ⚠️ **That
+message described the cause as unidentified, which was Phase 1's state — their entry below says
+they have since found it.** Their finding is theirs to land; I did not touch it, and I did not
+re-assert "cause unknown" as current fact anywhere new.
+
+### 09/08/2026 15:3X — E2E login-hang: root cause found (not a code bug — the dev server), fix in flight
+
+⏳ **Written mid-verification — do not read this as "closed."** This is orthogonal to Module 4
+(pure test-infra), so it does not touch `STATUS.md`'s current block, and `docs/micro_guides/module-4.md`
+was **not touched at all**: another session had it (and `src/lib/hostesses.test.js`/`validators.test.js`)
+dirty in real time while this was written (rule 16). Follow-up: fold the finding below into
+`module-4.md` §8/§10 once that session is done — the DoD line there (`test:e2e`: 72/78, cause unknown)
+is now stale.
+
+**What was asked:** diagnose why 5 of the 6 `test:e2e` failures from the 09/08 14:05 run (documented
+in `module-4.md` §10 as "symptom mapped, cause unknown" after an earlier session's rate-limit theory
+was measured and refuted) all show the same shape — login never leaves `/login`, passes in isolation.
+
+**🔬 Opened the evidence that was already on disk and never read: the six Playwright trace zips
+(`playwright-report/data/*.zip`) from that exact failing run.** Extracted and parsed `0-trace.network`
++ `0-trace.trace` (not just the failure summary). Three of the six traces are the login-hang family
+(`customers.spec.js`, `customer-page.spec.js`, `auth.spec.js`'s wrong-password case); the other three
+are unrelated failures where login itself succeeded in ~3s.
+
+**Found, not guessed:** all three login-hang traces show **2–3 full browser page reloads** (`[vite]
+connecting…` → `connected` cycles, i.e. a fresh document load, not an SPA route change) landing while
+the test sits in its `toHaveURL('/')`/error-text wait. One trace shows the smoking gun directly: the
+in-flight `users?select=status,role_id` request (LoginPage's own post-auth check) gets
+`response.status: -1, _failureText: "net::ERR_ABORTED"` at the exact moment of a reload, and the
+console logs `TypeError: Failed to fetch … @supabase_supabase-js.js` a split-second later. **The
+reload cache-buster timestamp on `main.jsx?t=…` is identical across two *different* spec files**
+(e.g. `t=1786272857661` in both `4c9f7f43` and `b5380118`) — proof this is one shared dev-server
+process broadcasting a reload to whichever test happens to be alive at that instant, not something
+either test did.
+
+**This falsifies my own leading hypothesis going in** (that `MainLayout` was racing a freshly-logged-in
+user back to `/login`). It didn't hold: `AuthContext.loadUser()` succeeded in every one of the three
+traces — permissions loaded fully. The page just never got to render that state, because the whole
+document kept getting wiped by the reload before React could act on it. Said here plainly because I'd
+already flagged that hypothesis to Ishay before checking; direct measurement overturned it.
+
+**Why the reloads happen:** `playwright.config.js`'s `webServer` ran `npm run dev` — a live Vite
+dev server with HMR, `reuseExistingServer: true`, shared across the whole 12-minute, 78-login serial
+run (`workers: 1`). Any full-reload trigger on that one process — Vite's own dependency
+re-optimization, **or a concurrent file save under `src/` by another session** (exactly what was
+observed live while writing this entry) — resets whichever test is mid-flight back to a blank
+`/login`. This also fully clears the "GoTrue throttle, neither confirmed nor excluded" suspect from
+09/08's entry: every `/auth/v1/*` request across all six traces returned success; nothing was ever
+rejected by Supabase.
+
+**Fix, scoped to test-infra only — nothing in `src/` changed:** new `playwright.e2e.config.js` extends
+the base config and points `test:e2e` at a **build+preview** server (port **4173**, `reuseExistingServer:
+false`) instead of `npm run dev` (port 5173). A preview server has no file-watcher and cannot
+full-reload, structurally, regardless of trigger. `playwright.config.js` itself is **untouched** —
+`npm run smoke` still targets the live dev server on 5173 exactly as before (that's smoke's actual
+design intent: test what's running now, not a build). `package.json`'s `test:e2e` script gained
+`--config=playwright.e2e.config.js`.
+
+**Validation status as of this entry: first full run in progress, ~28/78 through, 0 failures, each
+login-touching test back to its normal 2–6s** (was up to 30s+ per hang before). Plan requires two
+clean runs before calling `test:e2e` green in the DoD — not yet reached. **Do not upgrade `module-4.md`
+§8's `test:e2e` line to ✅ until that's confirmed**, and confirm it against a fresh run, not this note.
+
 ### 09/08/2026 13:4X — Module 4 Phase 1: migration D — RLS, min-wage, the public RPC
 
 Commit `58a9518`. Nine §7.21 policies; `projects` **SELECT-only**; min-wage trigger scoped

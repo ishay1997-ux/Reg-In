@@ -13,9 +13,9 @@
 | Module | **4 — דיילות + Smart Match** |
 | Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ measured `ahead 6` of origin: `git status -sb` before assuming it is pushed |
 | Owner | ישי (sole developer) |
-| Overall status | 🔨 **Phase 1 — all four migrations applied and verified 09/08/2026; only the 1.5 gate remains** |
-| Last updated | **09/08/2026 13:5X** *(system clock; refresh it at every step transition)* |
-| **Active step** | **1.5** — 🔻👤 Phase-1 gate |
+| Overall status | 🔨 **Phase 2 — 2.1 and 2.2 done, 2.3 partial.** Gate `exit 0` · **535 unit tests** (was 428) · smoke `exit 0`. The hand-computed anchor reproduces. Phase 1 fully landed; its 1.5 gate still owes Ishay's `regin-docs-sync` run |
+| Last updated | **09/08/2026 16:1X** *(system clock; refresh it at every step transition)* |
+| **Active step** | **2.4** — 🔻👤 geocoding service (product decision) · ⚠️ **and the 2.3 remainder rides with Phase 3** |
 | Deadline | module 4 → `dev` by **21/08/2026**; submission **19/09/2026** |
 
 Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target module) · ❌ blocked (reason)
@@ -30,9 +30,9 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | 1.3 | Migration C — new tables, params, release-message template | ✅ 09/08 — applied `20260809125750` · `params` 20→32, weights sum 1.00 · ⚠️ advisors 17 (+2 expected: the new tables await D's policies) |
 | 1.4 | Migration D — RLS policies, min-wage trigger, public RPC | ✅ 09/08 — applied `20260809134237` · 9 policies · impersonation verified both ways, positive control passed · advisors **14** (see §10 triage) |
 | 1.5 | 🔻👤 Phase-1 gate: advisors clean + `schema.sql` refreshed | ◐ **Claude's side done 09/08** — `schema.sql` refreshed & committed with each migration · `db_roadmap §10` four Done-rows · every `🚧` audited against §6 (+1 new debt written) · §7.67 write-back · advisors triaged in writing. **Awaiting Ishay: run `regin-docs-sync` (rule 13ז — Claude never runs routines) and sign the gate.** |
-| 2.1 | `src/lib/hostesses.js` — ID check digit, min-wage, derived states | ⬜ |
-| 2.2 | `src/lib/smartMatch.js` — the four layers | ⬜ |
-| 2.3 | `src/modules/04_hostesses/api.js` — query-side filtering | ⬜ |
+| 2.1 | `src/lib/hostesses.js` — ID check digit, min-wage, derived states | ✅ 09/08 — tests written first and watched red · `validators.js` +`isValidIsraeliId` |
+| 2.2 | `src/lib/smartMatch.js` — the four layers | ✅ 09/08 — **anchor reproduces `0.67/0.66/0.64` + order + two absent** · all three §3.5 holes proven red against deliberately-broken code |
+| 2.3 | `src/modules/04_hostesses/api.js` — query-side filtering | ◐ 09/08 — **reads + hostess-pool writes done.** Assignment-lifecycle writes deferred to Phase 3: §7.33 + §7.41 are open (see §10) |
 | 2.4 | 🔻👤 Geocoding — service choice (product decision) + lazy fill + backfill | ⬜ |
 | 2.5 | 🔻👤 Phase-2 gate: the hand-computed anchor reproduces | ⬜ |
 | 3.0 | 🔧 Shared-component checkpoint (before any screen) | ⬜ |
@@ -645,7 +645,8 @@ overlap (inclusive both ends) · derived states: `פג תוקף`, the T-24 alert
 Unit tests beside it.
 **מה ייחשב עובד** *(`spec.md §2.1(1)`, quoted)*: *"ת"ז נבדקת **תוך כדי ההקלדה** (היחיד שאינו ממתין
 ליציאה מהשדה) … שכר מתחת למינימום **חוסם** · אימייל כפול **מזהיר ולא חוסם**."*
-**🗣️ אושר —**
+**🗣️ אושר 09/08 15:31** *(consolidated round for 2.1+2.2+2.3; plan `~/.claude/plans/lexical-weaving-stonebraker.md`.
+No mockup — these three units have no visual surface and no product decision in them.)*
 
 **Step 2.2 · `src/lib/smartMatch.js`** — the four layers, numbers read from `params`, **never hardcoded**.
 🔴 **Layer 1 gate — five conditions:** `status='active'` · no `finally_approved` assignment on that date ·
@@ -676,7 +677,7 @@ a never-worked hostess given the cap · mid-computation rounding. **All three mu
 implementation** — write them by breaking the code deliberately and watching them go red.
 **מה ייחשב עובד** *(`spec.md § מה ייחשב עובד` #7 + `§3.2`, quoted)*: *"הציון הידני שחושב באפיון תואם
 את מה שהקוד מחשב"* · *"וסדר-התצוגה: נועה ← מיכל ← דנה. שתי מועמדות אינן ברשימה כלל."*
-**🗣️ אושר —**
+**🗣️ אושר 09/08 15:31** *(same consolidated round.)*
 
 **Step 2.3 · `src/modules/04_hostesses/api.js`** — 🔴 **filter in the query, never
 pull-everything-and-filter-in-the-browser** (`§6`, `🚧 מ4 · 🚧 מ6`). Every write does `.select()` and
@@ -686,7 +687,7 @@ checks the row count (`assertRowsAffected`, `src/lib/apiError.js`) — an RLS-bl
 **מה ייחשב עובד** *(`spec.md §2.2(ג)`, quoted)*: *"הסטטוס הקובע הוא של השורה עם `MAX(assignment_number)`,
 לא השורה האחרונה שנוצרה"* — otherwise a hostess who refused and was later overridden is counted
 **both as refusing and as accepting**.
-**🗣️ אושר —**
+**🗣️ אושר 09/08 15:31** *(same consolidated round.)*
 
 **Step 2.4 · 🔻👤 Geocoding — a product decision, not a technical one**
 🔴 **The service is NOT chosen** (§7.55): Nominatim (OSM) is the registered *candidate*.
@@ -909,7 +910,18 @@ The closing audit walks these one by one and ticks what it verified — so they 
 - [x] `anon` cannot read or write `assignments` directly; the public RPC is the only path — as `anon`: `count(*)` = **0**, direct UPDATE took no row; the RPC returned `ok:true` on a valid token and a **byte-identical** generic message on all four failure paths (unknown · replayed · 49h-old · event already past).
 - [x] `npm run gate` green — **exit 0**, 09/08/2026 (incl. `check:docs-structure` 29 files / 0 findings and `check:context`)
 - [x] `npm run test:run` green — **428 passed / 13 files**
-- ◐ `npm run test:e2e` — **72 passed / 6 failed / 12.3 min, and NOT claimed as green.** One failure was
+- [x] `npm run test:e2e` — ✅ **RESOLVED 09/08/2026 ~16:0X by the parallel E2E session, and the diagnosis
+      was right: it was never a code bug.** The dev server was refreshing itself mid-run (Vite HMR),
+      which is why login "never left `/login`" and why every one of the five passed in isolation.
+      `test:e2e` now runs against **build + preview** (`playwright.e2e.config.js`, port 4173) and was
+      verified **78/78 twice**, plus `smoke` green. Full detail: `CLAUDE_CODE_LOG.md` (09/08 15:3X).
+      🔑 **Worth keeping: the symptom pointed at the application and the cause was in the harness
+      running it** — every in-app suspect (rate limit · lockout · GoTrue throttle) was measured out
+      first, and the honest "cause not identified" below is what kept the search alive instead of
+      shipping a fix for a guess. *(Folded in here by the Phase-2 session once the file was free —
+      the other session was blocked from writing it by rule 16.)*
+      ↳ **The original, superseded record is kept below, not rewritten:**
+- ◐ *(superseded — see the line above)* `npm run test:e2e` — **72 passed / 6 failed / 12.3 min, and NOT claimed as green.** One failure was
       a **real Phase-1 regression** (`customer-page:66`, the `projects` tab — fixed, re-verified
       passing). The other five pass in isolation; **their cause is NOT identified** — the two
       in-repo suspects (§7.8↳ rate limit · the 5-strike lockout) were both **measured out**, and a
@@ -958,6 +970,63 @@ phase, §10, or the ledger.
 
 ## §10 📝 Deviations & Tech-Debt Log
 
+- 🔴 **09/08/2026 · Phase 2 — `↳ as-built`: layers 1–2 and the tie-break run in JS, not in SQL.**
+  The step text for 2.2 said they are "the query". **Measured this session that they cannot be:**
+  `supabase-js` cannot compute haversine, cannot express `NOT EXISTS`, and cannot `ORDER BY` a
+  computed expression; and the DB has **no view and no ranking function** to host them (nine
+  functions counted in `docs/schema.sql`; module 4's four are two sync triggers, the min-wage
+  trigger and the public RPC). Adding one is a **sixth migration** with a typed-echo gate, which
+  Phase 2 was not planned to carry. ⇒ the query fetches **small, server-filtered sets** (this
+  event · this customer · this date) and the four layers run in `src/lib/smartMatch.js`.
+  **Three reasons this is the right side of the trade, not just the available one:** 50 hostesses
+  is already the project's documented rationale for re-sorting instead of filtering · **no `api.js`
+  in this repo has a single unit test**, so logic buried in SQL would not be tested at all, and the
+  de-dup test is an explicit spec requirement · and `src/lib/pricing.js` is the same shape already.
+  🔴 **And the tie-break is NOT `md5`** — no hashing library in `package.json` and `crypto.subtle`
+  does not implement it (measured). FNV-1a delivers what the requirement actually states:
+  deterministic, fixed per (event, hostess), **never insertion order**. Ishay was shown this in
+  the approved plan and may override.
+
+- 🔴 **09/08/2026 — the most instructive result of the phase: a hole-test that PASSED a broken
+  implementation, and only breaking the code on purpose revealed it.**
+  `spec.md §3.5(ג)` warns that a mid-computation rounder passes the hand-computed anchor. I wrote
+  a test for it that asserted `rawScore` to ten digits **on the anchor's own data** — and when I
+  deliberately rounded the sub-scores, **it stayed green.** The reason is exactly what §3.5 says:
+  every sub-score in that case (`0.78 · 0.25 · 0.52 · 0.80 · 0.70 · 0.50`) is already round, so the
+  rounding is a no-op. Fixed by adding a case where **both** sub-scores are non-round
+  (`0.4666…` and `0.575`); it then went red, and green again on revert.
+  🔑 **The shape worth keeping: a guard written against the same data the feature already passes
+  is not a guard.** Holes (א) and (ב) each went red on first try; only (ג) needed its own data.
+  *(All three were verified by breaking the code and watching the failure — not by assertion.)*
+
+- 🐞 **09/08/2026 — `Number(null) === 0` bit again, and two unit tests caught it.**
+  `haversineKm` on a hostess with no `lat`/`lng` returned **3,558 km** instead of `null`, and the
+  `אין קואורדינטות` chip never lit — i.e. she would have sunk to the bottom of the ranking for a
+  datum the *system* is missing. The mine is documented twice already in this repo
+  (`validators.js:30`, `pricing.js`) and still recurred. Fixed structurally: `optionalNumber`
+  (`src/lib/hostesses.js`) is now the **only** door for reading an optional number in module 4,
+  and `smartMatch.js` imports that one copy — jscpd caught the duplicate and was right.
+
+- ⏳ **09/08/2026 — step 2.3 shipped partial, deliberately, and here is exactly what is missing.**
+  Built: all four screens' reads + the hostess-pool writes (create · update · status ·
+  unavailability with the **insert-first / delete-stale-by-id** order that a real data-loss
+  incident on 30/07 produced). **Not built: assignment-lifecycle writes** — invite creation,
+  final approval + the auto-release that follows it, shift-lead marking. **Two §7 items that are
+  preconditions are open in writing:** **§7.33** (*"מנגנון-הכתיבה של השחרור לא נקבע"*) and
+  **§7.41** (the `max+1` race on `assignment_number`, tagged 🔵 "להנהון בעת הבנייה"). Deciding
+  either silently would have overridden a parked ruling. ⇒ they are built in Phase 3 with the
+  screen that drives them and the mail engine they need.
+
+- 📌 **09/08/2026 — three `הנחתי` (assumptions I filled; nobody stated them and I did not measure
+  them).** ① **`ממתינות` and `פג תוקפן` are disjoint counters** — `spec.md:135` gives the two tags
+  and their opposite meanings but never says the sets do not overlap; counting a dead invite as
+  "waiting" would leave the manager waiting on a link that no longer works. ② **the attendance
+  record's field names** (`outcome` / `projectCancelled` / `eventPassed`) in `reliabilityScore` —
+  🚧 מ6 owns the real column names; only the contract exists here, so §11.10 #2 and #5 are
+  runnable. ③ **the knip exemption's removal trigger is step 4.1** — chosen because that is where
+  `HostessesPage.jsx` first imports `api.js`; the exemption itself follows the dated precedent
+  Ishay set on 29/07 (`01_auth/pricesApi.js`).
+
 - 🔴 **09/08/2026 — ONE REAL REGRESSION from Phase 1, found by the full E2E run, and it is the most
   instructive result of the phase: `e2e/customer-page.spec.js:66` asserted `customer-tab-projects`
   contains `0`.** Migration D added `projects_select_by_permission`, so the CEO now genuinely sees
@@ -969,6 +1038,15 @@ phase, §10, or the ledger.
   catch the hole — it *preserved* it, and only closing the hole made it fail. **A green test can be
   green because the feature is broken.** *(This is the same `{data:null, error:null}` trap
   `spec.md § מה ייחשב עובד` #4 names, caught from the opposite direction.)*
+- ✅ **09/08/2026 ~16:0X — the entry below is CLOSED. Cause: the dev server, not the app.**
+  Vite's HMR was refreshing the page mid-run; `test:e2e` now runs against **build + preview**
+  (`playwright.e2e.config.js`, port 4173) → **78/78, twice**, plus `smoke` green. Diagnosed and
+  fixed by the parallel E2E session; folded in here by the Phase-2 session once rule 16 released
+  the file. 🔑 **The lesson the long hunt actually taught: every suspect inside the application was
+  measured out one by one, and the answer was in the harness that runs it.** The record below is
+  left standing unedited — including the wrong first explanation and its correction — because that
+  sequence is the point.
+
 - 🐞 **09/08/2026 — E2E flakiness under a long serial run — MEASURED, and now with the numbers.
   PRE-EXISTING, not caused by Phase 1.**
   🔬 **Full-suite evidence:** `npm run test:e2e` → **72 passed / 6 failed / 12.3 min.** Of the six,
