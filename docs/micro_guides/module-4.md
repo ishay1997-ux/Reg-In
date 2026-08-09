@@ -894,6 +894,21 @@ phase, §10, or the ledger.
   table. **Do not declare 0.3 closed on the webhook fix alone.**
   📍 **How to re-measure:** `scratchpad/probe.mjs <to> <filename> <base64>` sends one mail through the
   full production path and prints the HTTP status; History tells you whether an execution was created.
+  ✅ **Root cause CONFIRMED at the source, 09/08/2026 — the setting was found and read, not inferred.**
+  The webhook `regin-quote-email` has, under **Advanced settings → Data structure**, the structure
+  **`regin-quote`**, whose own hint reads *"Data structure to be used for **validation of incoming
+  data**"*. Its fields each carry `*` = **Required: Yes** (verified on `to` and `subject`; the rest
+  follow the same pattern). ⇒ an empty `pdf_base64` fails **validation**, which is why no execution is
+  ever created.
+  🧭 **Exact click path, so the next session does not rediscover it:** scenario → **Edit** → click the
+  **`Webhooks · Custom webhook`** module → **Edit** (beside `regin-quote-email`) → toggle
+  **Advanced settings** ON → **Data structure** → **⋮ → Edit** → collapse fields until `pdf_base64` →
+  set **Required: No** → Save → Save.
+  ⚠️ **`filename` should get the same treatment** — it is empty on the same calls, and the probe proved
+  only that a *non-empty* filename passes. 🚫 **Do NOT touch `to`/`subject`/`body`** — they are
+  genuinely required, and our own server already enforces `to`+`body`.
+  🚫 **Nothing in Make was changed on 09/08** — every panel was closed with **Close/Cancel**, never Save.
+  ⚠️ **And the webhook URL is a secret visible in that panel — never paste it into any file or chat.**
 - **09/08/2026 — and the failed send proved MORE than it broke.** `email_log` now carries
   `shift · 999999 · failed · "Make responded 400" · recruit.test@regin.co.il · תבנית_זימון_משמרת`.
   Everything on **our** side is therefore proven in production, not merely in a catalog query:
