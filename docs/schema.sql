@@ -916,21 +916,44 @@ alter table customer_hostess_preference enable row level security;   -- policies
 -- 🔴 בלי ה-policy על `projects` המסך הראשון חוזר ריק **לכולם, כולל למנכ"ל, ובלי שגיאה** (§12②).
 -- 🔴 ו-`hostess_unavailability` היא המסוכנת (§12⑮): deny-all שם היה **הורג בשקט את התנאי החמישי
 -- בשער** — אף דיילת לא נפסלת על אי-זמינות, ואיש לא רואה שגיאה.
-create policy "hostesses_select_by_permission"  on hostesses  for select to authenticated using (…§7.21 'דיילות' edit|view…);
-create policy "hostesses_write_by_permission"   on hostesses  for all    to authenticated using/with check (…'דיילות' edit…);
-create policy "assignments_select_by_permission" on assignments for select to authenticated using (…'דיילות' edit|view…);
-create policy "assignments_write_by_permission"  on assignments for all   to authenticated using/with check (…'דיילות' edit…);
-create policy "hostess_unavailability_select_by_permission" / "…_write_by_permission"           (…'דיילות'…);
-create policy "customer_hostess_preference_select_by_permission" / "…_write_by_permission"      (…'דיילות'…);
-create policy "projects_select_by_permission"   on projects   for select to authenticated using (…'פרויקטים' edit|view…);
--- ⚠️ **מוקש שנמדד 09/08 ואינו ניכר מקריאת התבנית:** ה-policy של הכתיבה היא `FOR ALL`, ולכן היא
--- **מכסה גם SELECT** לבעלי `edit`. ⇒ הפלת policy-הקריאה לבדה **אינה** מסתירה דבר ממנהלת הגיוס;
--- רק בעלת `view`-בלבד מתעוורת. מי שבודק "מה קורה בלי policy" חייב להפיל את **שתיהן**.
+-- ארבע טבלאות מ4 — אותה תבנית בדיוק, פעמיים לכל טבלה. מוצגת כאן במלואה על `hostesses`;
+-- ‏`assignments` · `hostess_unavailability` · `customer_hostess_preference` זהות לה מילה-במילה
+-- (רק שם-הטבלה ושם-ה-policy משתנים).
+create policy "hostesses_select_by_permission" on hostesses for select to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'דיילות')
+      and p.permission_level in ('edit', 'view')));
+create policy "hostesses_write_by_permission" on hostesses for all to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'דיילות')
+      and p.permission_level = 'edit'))
+  with check (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'דיילות')
+      and p.permission_level = 'edit'));
+-- ‏(×3 נוספות באותה צורה: assignments · hostess_unavailability · customer_hostess_preference)
+
+create policy "projects_select_by_permission" on projects for select to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'פרויקטים')
+      and p.permission_level in ('edit', 'view')));
+-- 🚫 ואין `projects_write_…` מטעם מ4. במכוון.
+
+-- ⚠️ **מוקש שנמדד 09/08/2026 ואינו ניכר מקריאת התבנית:** ה-policy של הכתיבה היא `FOR ALL`,
+-- ולכן היא **מכסה גם SELECT** לבעלי `edit`. ⇒ הפלת policy-הקריאה לבדה **אינה** מסתירה דבר
+-- ממנהלת הגיוס; רק בעלת `view`-בלבד מתעוורת. **מי שבודק "מה קורה בלי policy" חייב להפיל את
+-- שתיהן** — אחרת הבדיקה נראית כאילו נכשלה בעוד שהיא פשוט נכתבה לא נכון.
 
 -- §7.66 — אכיפה בזמן-כתיבה, קריאת-פרמטר מוגנת (דפוס 20260731085335: TEXT ⇒ ולידציה ⇒ המרה).
 -- 🔴 `of hourly_rate`: הטריגר נדלק רק כשהעמודה בפועל ב-SET ⇒ עדכון שם/טלפון של דיילת ותיקה
 -- שתעריפה מתחת לרף **אינו נחסם ואינו משנה את תעריפה**. זו ההכרעה, לא פשרה.
-create function enforce_hostess_min_wage() returns trigger security definer set search_path = '';
+create function enforce_hostess_min_wage() returns trigger
+  language plpgsql security definer set search_path = '';
+--   גוף: קורא `params.שכר_מינימום_שעתי` כ-TEXT · פוסל חסר/ריק/לא-מספרי ב-P0001 בעברית ·
+--   ממיר · ואם `new.hourly_rate < v_min` זורק P0001 שנוקב בשני המספרים.
 create trigger hostesses_enforce_min_wage before insert or update of hourly_rate on hostesses
   for each row execute function enforce_hostess_min_wage();
 
@@ -943,7 +966,11 @@ create trigger hostesses_enforce_min_wage before insert or update of hourly_rate
 -- שטוקן מסוים קיים. הסיבה האמיתית ל-`raise log` בלבד. ‏`responded_at` נכתבת פעם אחת
 -- (`coalesce`) — §12⑨, אחרת "שלח שוב" יוצר זמן-תגובה שלילי.
 create function respond_to_shift_invite(p_token text, p_response text) returns jsonb
-  security definer set search_path = '';
+  language plpgsql security definer set search_path = '';
+--   גוף: ממפה 'confirmed'⇒'confirmed_available' · 'declined'⇒'declined' · כל ערך אחר נדחה ·
+--   שולף שורה אחת ב-`for update of a` עם שלושת התנאים · `not found` ⇒ מחזיר את המחרוזת
+--   הגנרית · אחרת מעדכן `assignment_status` + `responded_at = coalesce(responded_at, now())`
+--   ומחזיר `{"ok":true,"status":…}`.
 revoke execute on function respond_to_shift_invite(text, text) from public;
 grant  execute on function respond_to_shift_invite(text, text) to anon, authenticated;
 -- ⚠️ **מוענקת גם ל-`authenticated` במכוון** — מנהלת שפותחת את הקישור בדפדפן שבו היא מחוברת

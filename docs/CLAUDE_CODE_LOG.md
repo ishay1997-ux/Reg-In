@@ -47,6 +47,42 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 09/08/2026 13:4X — Module 4 Phase 1: migration D — RLS, min-wage, the public RPC
+
+Commit `58a9518`. Nine §7.21 policies; `projects` **SELECT-only**; min-wage trigger scoped
+`of hourly_rate`; `respond_to_shift_invite` granted to `anon` **and** `authenticated`.
+Full evidence in `db_roadmap §10`. **Three things a future session should not re-derive:**
+
+**🔴 (1) `*_write_by_permission` is `FOR ALL`, so it also grants SELECT.** The first policy-drop probe
+dropped only `hostesses_select_by_permission` and מנהלת גיוס **still saw the row** — which reads as a
+failed security test and is not one: she holds `edit`, so the `FOR ALL` policy covered her read.
+**Any "what happens with no policy" test must drop BOTH**, or use a `view`-only role. Done correctly,
+both variants returned **0 rows and no error** — the `{data:null, error:null}` trap demonstrated
+rather than asserted. *(The template makes this invisible on reading; only running it surfaced it.)*
+
+**🔴 (2) The advisor prediction was written down before the run and came out wrong — 14, not 13.**
+`respond_to_shift_invite` raises **two** lints (`anon_…` + `authenticated_…`) because EXECUTE is
+granted to both roles, deliberately: a manager opening the invite link in the browser where she is
+signed into the app must not hit a permission error on a public page. 17 − 5 + 2 = 14. Recorded as a
+miss in both the guide and `db_roadmap`, not smoothed into the narrative.
+
+**🔴 (3) `of hourly_rate` on the trigger is load-bearing, not tidiness.** Verified live: updating only
+`full_name` on a hostess whose rate is below the parameter **succeeds and leaves her rate untouched**.
+That is exactly §7.66 (*"זה יהיה שינוי-שכר של אדם בשקט"*), and a `CHECK` — or a trigger without the
+column scope — would break it the day the parameter is raised.
+
+**RLS impersonation method that worked** (worth reusing in phase 2/3 tests): inside a `DO` block,
+`set_config('request.jwt.claims', …, true)` carrying **both `sub` and `email`**, then
+`set local role authenticated`, then `reset role` between identities; the block ends in `raise` so
+everything rolls back. Positive control first, always: recruit saw **1** hostess — a zero there would
+have meant broken impersonation, and every negative result after it would have been meaningless.
+**Public RPC:** valid token → `ok:true`; unknown / replayed / 49h-old / event-already-past → `ok:false`
+with **byte-identical** messages, compared programmatically rather than by eye.
+
+**§7.67 write-back done in the same session:** the item's own instruction ("בלופרינט-מ4 בוחן מחדש")
+is now answered in place — `project_shifts` ⏸️ deferred; the practical need it carried (time
+inheritance) was met differently by `assignments.event_date` + trigger.
+
 ### 09/08/2026 12:2X–13:0X — Module 4 Phase 1: migrations A · B · C applied, verified, committed
 
 **Three irreversible migrations on the live project, each behind its own typed-echo.** Ishay typed
