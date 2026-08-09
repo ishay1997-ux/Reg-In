@@ -24,7 +24,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 |---|---|---|
 | 0.1 | Unlock the shared email engine for module 4 | ✅ 09/08 — gate 0 · unit 428 · E2E 78 · smoke 0 |
 | 0.2 | Migration 0 — `email_log` accepts `'shift'` + its own read policy | ✅ 09/08 — applied `20260809085058`, verified live |
-| 0.3 | Deploy `send-email` and re-verify live | ⬜ |
+| 0.3 | Deploy `send-email` and re-verify live | 🔨 **half done** — deployed (v4) + gate proven live on 7 cases, zero mails. **Owed: the Make bypass + one real shift mail.** |
 | 1.1 | Migration A — surrogate key + module-4 columns | ⬜ |
 | 1.2 | Migration B — one-event-per-day constraint (§7.88) | ⬜ |
 | 1.3 | Migration C — new tables, params, release-message template | ⬜ |
@@ -398,6 +398,25 @@ session and exposes `deploy_edge_function` ⇒ Claude deploys it himself.
 proven path. Ishay ruled 09/08: **one scenario with a bypass** (empty `pdf_base64` ⇒ send without the
 attachment module), performed by Claude in Chrome.
 **🗣️ אושר 09/08 07:53**
+
+↳ **as-built 09/08/2026 — the half that IS done, with its evidence.**
+Deployed via MCP `deploy_edge_function` → **version 4, ACTIVE, `verify_jwt: true`**.
+🔬 **Gate proven against the LIVE function on 7 cases, and not one mail left the system** — every
+call carried a body missing `to`/`body`, so each stops at field-validation, **after** the permission
+gate and **before** the mail module. `400` here therefore means *"passed the gate"* and is the
+positive result:
+`RECRUIT + shift → 400` · `RECRUIT + quote → 403` · `RECRUIT + no entity_type → 403` (defaults to
+`quote`) · `RECRUIT + invoice → 403` (deny-by-default) · `CEO + shift → 400` · `CEO + quote → 400` ·
+`FINANCE + shift → 403`.
+🔑 **Why this shape of test is worth reusing:** it proves the map, the ordering contract, and the
+role matrix **without any side effect at all** — no mail, no `email_log` row, no data.
+🔴 **STILL OWED, and the step is NOT closeable without it:** the Make bypass (empty `pdf_base64` ⇒
+send without the attachment module) and **one real shift mail**, eyeballed for RTL. Until then the
+attachment-less path has never actually run end-to-end.
+⚠️ **And one honest limit on the deploy itself:** the function was uploaded by transcribing the repo
+file into the MCP call, so repo⇄deployment identity is verified **behaviourally** (the 7 cases), not
+byte-for-byte. **Re-check it byte-wise at module close** — `get_edge_function` returns the deployed
+source, and on 09/08 the pre-change comparison was clean.
 
 ---
 
