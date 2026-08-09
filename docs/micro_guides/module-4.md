@@ -217,6 +217,7 @@ Supabase project `Reg-In`, ref `yfeovxppnfoafmfbdfvh`.
 | §7.55↳ | 🟢 **Geocode service = Nominatim (OSM).** Closes §7.55's single remaining build-residue (*"נבחר בבנייה מול תנאי-שימוש עדכניים, לא מהזיכרון"*). **ToS read live 09/08/2026:** free · **no key, no account** · **max 1 req/sec** · results **must be cached our side** (which the "convert once and store" design already is) · end-user-triggered use permitted. Measured on real Hebrew addresses: house-number precision on `דיזנגוף 100, תל אביב` and `הרצל 50, ראשון לציון`; `אקספו תל אביב` resolves to the venue itself. ⚠️ **Stated deviation:** the ToS asks that switching be possible *without a software update*; the endpoint is a **code constant**. Rationale: ~60 requests ever, switching = one line, and a DB-editable URL would be a footgun on M9's params screen with no matching risk | ישי 09/08 | 2.4 |
 | local-8 | **Migration E — `set_project_coordinates` (`SECURITY DEFINER`), not a write policy on `projects`.** Ishay ruled the 6th migration after being shown that `projects` is SELECT-only for M4 and that without a write path the proximity component — **0.25 of the score** — would be neutral for every event forever | ישי 09/08 | 2.4 |
 | local-9 | **Fallback chain + locality guard** — Claude's call, shown with its measurement; Ishay may override. 🔴 **No third on-screen state ("מיקום מקורב") was added** — the approved model has exactly two. **Cost said out loud:** when the chain falls back to city level the distance is computed from the city centre, and the screen does not flag it | קלוד, anchor = live measurement | 2.4 |
+| local-10 | 🔴 **Distance is shown as a WORD, not a number — `קרובה` / `בינונית` / `רחוקה`.** ⚠️ **Deviation from the approved mockup**, which draws `2.5 ק"מ` · `3.1 ק"מ` · `11 ק"מ` (`02_smartmatch_approved.html`) and which `screens-approved.md §①` marks as a `score`-family chip. **The mockup is NOT redrawn** — same handling as `local-1`. **Two reasons, and the second is what decided it:** (1) Ishay's field knowledge — *"למנהלת לא משנה אם 3 ק"מ או 5 ק"מ בתכלס"*; (2) 🔑 **displayed precision must match data precision** — when an event address resolves only to city level (**measured: project 3**), `18 ק"מ` is a number *pretending* to be measured. 🚫 **The SCORE is untouched** — it keeps running on continuous km, and the hand-computed anchor `0.67/0.66/0.64` still reproduces (verified after the change). **Thresholds are derived from `גולפוסט_מרחק_קמ`, read at runtime — no new param, no migration:** `רחוקה` starts exactly at the goalpost (where the proximity score hits zero, and the no-car cutoff), `קרובה` at half of it | ישי 09/08 | 3.4 |
 | local-5 | **`projects.customer_name` snapshot** — written at conversion, backfilled for existing rows. **Why:** מנהלת גיוס is `blocked` on 'לקוחות' (live) and `customers`' SELECT policy (`schema.sql:363-367`) demands view/edit there ⇒ an embedded customer join returns null **silently** on three approved surfaces. `projects` already snapshots `event_name` for this exact reason (§7.76, `schema.sql:502`) | קלוד, anchor §7.76 — Ishay may override | 1.1, 2.3 |
 
 🔗 **מראת §11.1 — SSOT: `module4_smart_match_research.md §11`. Do NOT copy its numbers into this guide.**
@@ -1020,6 +1021,26 @@ still open.**
 **(e)/(f)/(g): per `CLAUDE.md` iron rules 13/15/16 + the end-of-session protocol.**
 
 ## §10 📝 Deviations & Tech-Debt Log
+
+- 🔴 **09/08/2026 · step 2.4 — distance is DISPLAYED as a word, not a number. Deviation from an
+  approved mockup, by Ishay's dated ruling (Ledger `local-10`).**
+  `distanceLabel(km, goalpost)` in `src/lib/smartMatch.js` returns `קרובה` / `בינונית` / `רחוקה`.
+  **What it does NOT change:** the score. `proximityScore` still consumes continuous km, and the
+  hand-computed anchor was re-verified green **after** the change — this is a display swap, not a
+  metric swap. **Why the thresholds needed no new param:** they are derived from
+  `גולפוסט_מרחק_קמ` at runtime (`רחוקה` = beyond the goalpost, which is already both the
+  zero-score point and the no-car cutoff; `קרובה` = half of it) ⇒ **no migration, no seed row.**
+  🔑 **The reason worth keeping, because it outlives this screen: displayed precision must match
+  data precision.** We measured that an event address can resolve only to a city centroid, so a
+  three-significant-figure `18.3 ק"מ` claims an accuracy we do not have. A word claims exactly what
+  we know. *(It is also the answer that survives a question at the conference — which is the
+  project's own §1 test.)*
+  ⚠️ **Blast radius, checked rather than assumed:** distance is displayed on **surface 2 only**
+  (`screens-approved.md:290,298`). The two other `ק"מ` mentions in that file (`:683`, `:767`) are the
+  **has-car gate**, which is unchanged. No other module displays distance. Approved-spec pointer
+  written in place; the mockup is **not** redrawn.
+  📌 `knip` caught a speculative `export` of the label set on the first attempt and was right —
+  nothing consumes it yet, so it stays module-local until Phase 3 has a real consumer.
 
 - 🔴 **09/08/2026 · step 2.4 — Ishay found a scoring inversion from the product side, before it
   existed in code. `candidateDistanceKm` exists because of it.**

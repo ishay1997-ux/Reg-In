@@ -13,6 +13,7 @@ import {
   fairnessLeverage,
   haversineKm,
   candidateDistanceKm,
+  distanceLabel,
   tieBreakKey,
   rankCandidates,
 } from './smartMatch'
@@ -340,6 +341,40 @@ describe('haversineKm', () => {
 // 🔑 והכלל שמכריע: **שתי כתובות שונות שגואקדו בנפרד לעולם לא נוחתות על נקודה זהה-בדיוק.**
 // ‏⇒ שוויון מדויק אינו "קרוב", הוא **עדות ששני הצדדים קרסו לאותה נפילה-לאחור**, והמרחק
 // אינו ידוע. בלי סף שרירותי ובלי אפסילון — שוויון מדויק, ותו לא.
+// הכרעת-ישי 09/08/2026: המסך מציג **תווית מילולית** ולא מספר ק"מ.
+// שני נימוקים, והשני הוא שהכריע: ‏(1) *"למנהלת לא משנה אם 3 ק"מ או 5"* — ידע-שטח שלו ·
+// ‏(2) כשכתובת-אירוע נפתרת רק לרמת-עיר, "18 ק"מ" הוא **מספר שמעמיד פנים שהוא מדויק**.
+// תווית אומרת בדיוק את מה שידוע, לא יותר. 🚫 **הציון עצמו ממשיך בק"מ רציפים** — העוגן
+// המחושב-ביד אינו זז. ⚠️ סטייה מהמוקאפ המאושר (שמצייר `2.5 ק"מ`), בהכרעתו המתוארכת.
+describe('distanceLabel — תווית במקום מספר (הכרעת-ישי 09/08/2026)', () => {
+  const GOALPOST = 40
+
+  it('הספים נגזרים מהגולפוסט ואינם מספרים חדשים', () => {
+    expect(distanceLabel(0, GOALPOST)).toBe('קרובה')
+    expect(distanceLabel(20, GOALPOST)).toBe('קרובה') // בדיוק חצי הגולפוסט — כולל
+    expect(distanceLabel(20.1, GOALPOST)).toBe('בינונית')
+    expect(distanceLabel(40, GOALPOST)).toBe('בינונית') // בדיוק הגולפוסט — כולל
+    expect(distanceLabel(40.1, GOALPOST)).toBe('רחוקה')
+    expect(distanceLabel(79, GOALPOST)).toBe('רחוקה')
+  })
+
+  it('🔴 בלי מרחק ⇒ null — הצ׳יפ `אין קואורדינטות` הוא שמדבר, ואין תווית רביעית', () => {
+    expect(distanceLabel(null, GOALPOST)).toBeNull()
+    expect(distanceLabel(undefined, GOALPOST)).toBeNull()
+  })
+
+  it('נגזר מהפרמטר החי ולא מ-40 מקודד — גולפוסט אחר מזיז את הספים', () => {
+    // אם הספים היו קשיחים, השורה הזאת הייתה מחזירה `קרובה`.
+    expect(distanceLabel(15, 20)).toBe('בינונית')
+    expect(distanceLabel(9, 20)).toBe('קרובה')
+  })
+
+  it('משתלב עם השומר של "0 מזויף" — שוויון מדויק אינו "קרובה"', () => {
+    const p = { lat: 31.7788472, lng: 35.2257856 }
+    expect(distanceLabel(candidateDistanceKm(p, p), GOALPOST)).toBeNull()
+  })
+})
+
 describe('candidateDistanceKm — השומר מפני "0 ק"מ" מזויף', () => {
   const jerusalem = { lat: 31.7788472, lng: 35.2257856 } // הערך האמיתי של אירוע 3
 
