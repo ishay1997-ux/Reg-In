@@ -66,6 +66,13 @@
 
 **Evidence:** `npm run gate` exit 0 · **428 unit** · **E2E 78/78** · `smoke` exit 0 · advisors zero new. Commits `70c739e` (0.1) · `6257b27` (0.2 + snapshot).
 
+🔴 **CORRECTION, same session — I closed 0.3, and it was not closed. Ishay caught it by opening the inbox.**
+The Make webhook's data structure had `filename`/`pdf_base64` marked **Required**, so an attachment-less call was rejected **at the webhook layer, before any execution existed** (proved by History showing zero runs for the failing calls, and by the documented fact that a *scenario* error would have returned 500, not 400). Flipping those two fields to **Required: No** turned 400 into 200, and I reported *"a real shift mail went out with no attachment"* on the strength of **HTTP 200 + an `email_log` row reading `sent`**.
+**Both were true and the conclusion was false.** The mail arrived carrying an **empty attachment named `undefined`** — the Gmail module still evaluates its static Attachment 1, and with empty inputs it no longer errors, it **silently attaches junk**. ⇒ **the failure moved from loud to silent, which is strictly worse, and a Router IS required after all.** Phase 0 re-opened; `module-4.md` §10 now says in terms: **do not close 0.3 on a status code — acceptance is opening the mail and seeing no attachment.**
+🔑 **The transferable lesson (this is the `ba2d41e` PDF incident again, in a new costume): a 2xx proves the TRANSPORT worked, never that the ARTIFACT is right.** I even asked Ishay to eyeball the mail — *after* stating the conclusion as fact, which makes the request decorative.
+🐞 **And the same mail exposed the bidi bug's 6th occurrence** (2nd inside a mail body): `REG-IN!` rendered as `IREG-IN`. `plainTextToEmailHtml` does emit `dir="rtl"`, so per-line direction is fine — **an RTL wrapper is necessary but not sufficient**, and a flat template string pulled from `params` has no structure to hang an isolate on. Any Latin token + punctuation inside a Hebrew sentence will repeat it. Logged against the mail bodies, not Phase 0.
+⚠️ **Also recorded because it cost real work:** a `python -c` heredoc pushed through Bash had its **backticks eaten by the shell**, silently gutting the §10 entry it was writing (`` `email_log` ``, `` `sent` ``, `` `undefined` `` all vanished). Repaired with the Edit tool. **Write documentation with Write/Edit, never through a shell string** — the repo's own hook says exactly this.
+
 ### 09/08/2026 00:05 — **A mail template with a flow, a data source, and no sender: `§7.92` opened**
 
 **Trigger:** Ishay asked whether the quote/customer-facing mail templates were documented too. Measured
