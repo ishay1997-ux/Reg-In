@@ -975,3 +975,27 @@ revoke execute on function respond_to_shift_invite(text, text) from public;
 grant  execute on function respond_to_shift_invite(text, text) to anon, authenticated;
 -- ⚠️ **מוענקת גם ל-`authenticated` במכוון** — מנהלת שפותחת את הקישור בדפדפן שבו היא מחוברת
 -- לאפליקציה הייתה מקבלת "אין הרשאה" אחרת. ‏⇒ **שני ממצאי-advisor** על הפונקציה הזו, לא אחד.
+
+-- ‏§7.55 (מיגרציות E+F, 09/08/2026) — **מסלול-הכתיבה היחיד לקואורדינטות אירוע.**
+-- 🔴 ל-`projects` יש **מדיניות קריאה בלבד** מטעם מ4, ובלי הפונקציה הזאת אין דרך לשמור
+-- ‏`lat`/`lng` — מרכיב-הקרבה (0.25 מהציון) היה ניטרלי לכל אירוע לצמיתות.
+-- 🚫 **ולמה לא מדיניות-כתיבה:** ‏RLS ב-Postgres הוא ברמת-שורה ולא ברמת-עמודה ⇒ מדיניות
+-- הייתה חושפת גם `final_event_date`, `project_status` ו-`customer_id`. פונקציה ייעודית
+-- פותחת **שתי עמודות** בלי לפתוח את הטבלה.
+create function set_project_coordinates(p_project_id integer, p_lat numeric, p_lng numeric)
+  returns boolean language plpgsql security definer set search_path = '';
+--   גוף: שער-הרשאה בתבנית §7.21 (עריכה על 'דיילות') ⇒ 42501 · בדיקת-טווח לגבולות ישראל
+--   (29.0–33.5 / 34.0–36.0) ⇒ 22023 · ‏`update … where project_id = $1 and lat is null and
+--   lng is null` ⇒ מחזיר `true` רק אם נכתבה שורה. **`and lat is null`** הוא אכיפת ה"פעם
+--   אחת" (`processes-approved.md:97`) במסד ולא בקוד: קריאה שנייה אינה דורסת ואינה שוגה.
+revoke execute on function set_project_coordinates(integer, numeric, numeric) from public;
+revoke execute on function set_project_coordinates(integer, numeric, numeric) from anon;
+grant  execute on function set_project_coordinates(integer, numeric, numeric) to authenticated;
+-- 🧨 **שתי שורות ה-revoke, ולא אחת — וזה מוקש שנמדד ולא נוחש (09/08/2026).**
+-- ‏Supabase מגדיר `alter default privileges` שמעניק EXECUTE ל-`anon`/`authenticated`/
+-- ‏`service_role` על כל פונקציה חדשה ב-`public`. ⇒ **`revoke … from public` אינו נוגע בהן.**
+-- מיגרציה E כתבה רק את הראשונה, וה-`proacl` יצא `{postgres=X,anon=X,authenticated=X,
+-- service_role=X}`; מיגרציה F הוסיפה את השנייה, ואז `{postgres=X,authenticated=X,
+-- service_role=X}`. ⚠️ לא הייתה פרצה — שער-ההרשאה שבפנים החזיר 42501 ל-anon (נמדד
+-- בהתחזות) — אבל ההגנה-לעומק הייתה שבורה ונוצר ממצא-advisor שלא הוזמן.
+-- ⇒ **ממצא advisor אחד** על הפונקציה הזו (`authenticated`), במכוון — מנהלת הגיוס חייבת להריצה.

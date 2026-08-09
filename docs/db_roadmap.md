@@ -336,8 +336,15 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
-- ⏳ 09/08/2026 — migration `20260809174501_module4_revoke_anon_from_coordinates_rpc.sql`
-  **AUTHORED, NOT APPLIED — awaiting Ishay's typed echo (`module4_revoke_anon_from_coordinates_rpc`).**
+- ✅ 09/08/2026 — migration `20260809174501_module4_revoke_anon_from_coordinates_rpc.sql`
+  **APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed `module4_revoke_anon_from_coordinates_rpc`).
+  **✅ POST-APPLY VERIFICATION, both directions:** `proacl` is now
+  `{postgres=X, authenticated=X, service_role=X}` — `has_function_privilege('anon', …)` = **false**,
+  `('authenticated', …)` = **true**. And the legitimate path was re-tested rather than assumed:
+  impersonating `recruit.test@regin.co.il` with deliberately invalid coordinates returned **`22023`**
+  (the range check), i.e. **the permission gate still passes for מנהלת הגיוס** — a `42501` there would
+  have meant F broke the working path. **Advisors: 16 → 15**, exactly as forecast; the
+  `authenticated` WARN on this function remains **deliberately**.
   **A fix-forward for E's own defect** (append-only: an applied migration is history, corrections go
   forward). E wrote `revoke execute … from public`, which does **not** remove `anon` — Supabase's
   `alter default privileges` grants `anon` **by name**. Measured post-apply: `proacl` =
