@@ -114,14 +114,13 @@ that sequence is the lesson, not noise.
 🔑 **And the lesson generalises past this bug: every suspect *inside* the application was measured
 out one at a time, and the cause was in the harness running it.**
 
-### 09/08/2026 15:3X — E2E login-hang: root cause found (not a code bug — the dev server), fix in flight
+### 09/08/2026 15:3X–16:3X — E2E login-hang: root cause found and fixed (not a code bug — the dev server)
 
-⏳ **Written mid-verification — do not read this as "closed."** This is orthogonal to Module 4
-(pure test-infra), so it does not touch `STATUS.md`'s current block, and `docs/micro_guides/module-4.md`
-was **not touched at all**: another session had it (and `src/lib/hostesses.test.js`/`validators.test.js`)
-dirty in real time while this was written (rule 16). Follow-up: fold the finding below into
-`module-4.md` §8/§10 once that session is done — the DoD line there (`test:e2e`: 72/78, cause unknown)
-is now stale.
+✅ **Closed out.** Committed `ca94451` (the fix) + `62cc64b` (rule-13 ripple to `e2e/CLAUDE.md` +
+`docs/architecture_and_qa_roadmap.md`). `module-4.md` §8/§10 folded in by the parallel Phase-2 session
+(`76634e6`/`5367a0a`) once its own file was free — verified byte-for-byte against `git show`, nothing
+lost in the cross-session hand-off. `STATUS.md` carries a short pointer note, added by me directly since
+that file was never contended.
 
 **What was asked:** diagnose why 5 of the 6 `test:e2e` failures from the 09/08 14:05 run (documented
 in `module-4.md` §10 as "symptom mapped, cause unknown" after an earlier session's rate-limit theory
@@ -167,10 +166,12 @@ full-reload, structurally, regardless of trigger. `playwright.config.js` itself 
 design intent: test what's running now, not a build). `package.json`'s `test:e2e` script gained
 `--config=playwright.e2e.config.js`.
 
-**Validation status as of this entry: first full run in progress, ~28/78 through, 0 failures, each
-login-touching test back to its normal 2–6s** (was up to 30s+ per hang before). Plan requires two
-clean runs before calling `test:e2e` green in the DoD — not yet reached. **Do not upgrade `module-4.md`
-§8's `test:e2e` line to ✅ until that's confirmed**, and confirm it against a fresh run, not this note.
+**Validation, both required runs, not just one:** run 1 = **78/78** (5.3 min, exit 0). Run 2 = **78/78**
+(4.9 min, exit 0) — same command, same config, no re-run-until-green cherry-picking. `npm run smoke`
+**1/1**, exit 0, run concurrently against the still-live dev server (proof it's genuinely unaffected).
+`npm run verify` exit 0 overall; its `format:check` step flagged two files unrelated to this change
+(`src/lib/hostesses.test.js`, `src/lib/smartMatch.test.js` — the parallel session's own in-flight work,
+already fixed there before its commit).
 
 ### 09/08/2026 13:4X — Module 4 Phase 1: migration D — RLS, min-wage, the public RPC
 
