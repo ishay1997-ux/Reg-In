@@ -146,6 +146,20 @@ describe('geocodeAddress', () => {
     expect(url.searchParams.get('q')).toBe('אקספו תל אביב')
   })
 
+  // 🔴 רגרסיה על באג אמיתי שנתפס רק באימות בדפדפן (09/08/2026): בלי הכותרת הזאת
+  // השירות מחזיר `Tel-Aviv` באנגלית לדפדפן עם `en-US`, שומר-היישוב משווה אנגלית
+  // מול כתובת עברית, **וכל כתובת נכשלת בשקט.** הבדיקות עברו בירוק על הבאג הזה,
+  // כי הן נבנו על תשובה שהתקבלה בכלי שבמקרה ביקש עברית.
+  it('🔴 שולח `Accept-Language: he` — בלעדיה שמות-המקומות חוזרים באנגלית', async () => {
+    const { geocodeAddress } = await freshModule()
+    const fetchMock = mockFetch(EXPO)
+
+    await runWithTimers(geocodeAddress('אקספו תל אביב'))
+
+    const headers = fetchMock.mock.calls[0][1].headers
+    expect(headers['Accept-Language']).toBe('he')
+  })
+
   // תנאי-השימוש של Nominatim, כפי שנקראו 09/08/2026: **בקשה אחת בשנייה לכל היותר.**
   it('מכבד את מגבלת בקשה-אחת-בשנייה בין ניסיון לניסיון', async () => {
     const { geocodeAddress, GEOCODE_MIN_INTERVAL_MS } = await freshModule()

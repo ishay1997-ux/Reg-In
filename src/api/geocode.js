@@ -53,7 +53,17 @@ async function fetchCandidate(query) {
     await throttle()
     const response = await fetch(url, {
       signal: AbortSignal.timeout(GEOCODE_TIMEOUT_MS),
-      headers: { Accept: 'application/json' },
+      headers: {
+        Accept: 'application/json',
+        // 🔴 **חובה, ולא העדפה קוסמטית.** ‏Nominatim מתרגם את שמות-המקומות לפי הכותרת
+        // הזאת. בלעדיה הדפדפן שולח את שפת-המערכת של המשתמש — ובדפדפן עם `en-US`
+        // התשובה חוזרת **`Tel-Aviv` באנגלית**, בעוד שהכתובת שהוקלדה עברית ⇒
+        // **שומר-היישוב לא מוצא התאמה לעולם, וכל כתובת נכשלת בשקט.**
+        // נמדד בדפדפן אמיתי 09/08/2026: בלי הכותרת `city` = `Tel-Aviv`; איתה
+        // `תל־אביב–יפו`. ⚠️ בדיקות-היחידה **לא** תפסו את זה — הן נבנו על תשובה
+        // שהתקבלה בכלי אחר, שבמקרה ביקש עברית.
+        'Accept-Language': 'he',
+      },
     })
     if (!response.ok) return null
     return await response.json()

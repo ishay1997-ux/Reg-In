@@ -13,9 +13,9 @@
 | Module | **4 — דיילות + Smart Match** |
 | Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ measured `ahead 6` of origin: `git status -sb` before assuming it is pushed |
 | Owner | ישי (sole developer) |
-| Overall status | 🔨 **Phase 2 — 2.1/2.2 done, 2.3 partial, 2.4 in progress.** Gate `exit 0` · **566 unit tests** (was 535; +31 geocode) · lint/format/build `exit 0`. The hand-computed anchor reproduces. Phase 1 fully landed; its 1.5 gate still owes Ishay's `regin-docs-sync` run |
-| Last updated | **09/08/2026 17:3X** *(system clock; refresh it at every step transition)* |
-| **Active step** | **2.4** — 🔨 **service ruled (Nominatim/OSM, Ishay 09/08) · `lib`+`api` built and tested · migration E authored and NOT applied — awaiting the typed echo `module4_project_coordinates_rpc`.** ⚠️ **and the 2.3 remainder rides with Phase 3** |
+| Overall status | 🔨 **Phase 2 — 2.1/2.2 done, 2.3 partial, 2.4 all but one revoke.** Gate `exit 0` · **567 unit tests** (was 535; +32 geocode) · **6 migrations applied**, a 7th (F) pending. Anchor reproduces; all 3 events now carry coordinates. Phase 1's 1.5 gate still owes Ishay's `regin-docs-sync` run |
+| Last updated | **09/08/2026 18:0X** *(system clock; refresh it at every step transition)* |
+| **Active step** | **2.4** — ◐ **verified end-to-end in a real browser; only migration F (revoke `anon`) awaits the typed echo `module4_revoke_anon_from_coordinates_rpc`.** Then 2.5. ⚠️ **and the 2.3 remainder rides with Phase 3** |
 | Deadline | module 4 → `dev` by **21/08/2026**; submission **19/09/2026** |
 
 Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target module) · ❌ blocked (reason)
@@ -33,7 +33,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | 2.1 | `src/lib/hostesses.js` — ID check digit, min-wage, derived states | ✅ 09/08 — tests written first and watched red · `validators.js` +`isValidIsraeliId` |
 | 2.2 | `src/lib/smartMatch.js` — the four layers | ✅ 09/08 — **anchor reproduces `0.67/0.66/0.64` + order + two absent** · all three §3.5 holes proven red against deliberately-broken code |
 | 2.3 | `src/modules/04_hostesses/api.js` — query-side filtering | ◐ 09/08 — **reads + hostess-pool writes done.** Assignment-lifecycle writes deferred to Phase 3: §7.33 + §7.41 are open (see §10) |
-| 2.4 | 🔻👤 Geocoding — service choice (product decision) + lazy fill + backfill | 🔨 09/08 — service **ruled: Nominatim/OSM**; ToS read live · `src/lib/geocode.js` + `src/api/geocode.js` + 31 tests green, locality guard proven red · migration E **authored, NOT applied** |
+| 2.4 | 🔻👤 Geocoding — service choice (product decision) + lazy fill + backfill | ◐ 09/08 — **built + verified end-to-end in a real browser against the live DB.** Migration E applied+verified · **all 3 events backfilled through the production path** (proj 3 → ירושלים, proj 8 → אקספו ת"א, proj 7 → correctly none) · gate `exit 0`, 567 unit. ⏳ **migration F (revoke `anon`) authored, NOT applied — awaiting typed echo** |
 | 2.5 | 🔻👤 Phase-2 gate: the hand-computed anchor reproduces | ⬜ |
 | 3.0 | 🔧 Shared-component checkpoint (before any screen) | ⬜ |
 | 3.1 | Surface 3 — hostess repository table | ⬜ |
@@ -932,7 +932,7 @@ DoD typed-echo → PR instructions. 🚫 The audit never merges.
 *(Canonical DoD from `docs/architecture_and_qa_roadmap.md`, instantiated for module 4.
 The closing audit walks these one by one and ticks what it verified — so they must be checkboxes.)*
 
-- [ ] ◐ **5 of 6 migrations** applied via MCP after a typed-echo, `docs/schema.sql` refreshed, migration + snapshot committed **together** — `20260809085058` (mig 0, phase 0) · `20260809122536` (A) · `20260809124327` (B) · `20260809125750` (C) · `20260809134237` (D). **Ishay typed each name individually; no gate was batched or pre-granted.** ⏳ **`20260809172638` (E — `set_project_coordinates`) is AUTHORED AND NOT APPLIED** — awaiting the typed echo. *(The count moved 5→6 in step 2.4; the box reopens deliberately rather than being left reading "5".)*
+- [ ] ◐ **6 of 7 migrations** applied via MCP after a typed-echo, `docs/schema.sql` refreshed, migration + snapshot committed **together** — `20260809085058` (mig 0, phase 0) · `20260809122536` (A) · `20260809124327` (B) · `20260809125750` (C) · `20260809134237` (D) · `20260809172638` (E — `set_project_coordinates`, applied and verified live). **Ishay typed each name individually; no gate was batched or pre-granted.** ⏳ **`20260809174501` (F — revoke `anon` from E's function) is AUTHORED AND NOT APPLIED** — awaiting the typed echo. *(F exists because E's own revoke was incomplete — see §10. The count moved 5→7 during step 2.4; the box reopens deliberately rather than being left reading "5".)*
 - [x] `get_advisors(security)` — **triage note written, 09/08/2026** *(this line closes with a triage,
       not a zero, and that is the honest outcome)*. Trajectory across phase 1: **15 → 15 → 15 → 17 → 14.**
       Migration C legitimately raised it (+2 — two new tables born RLS-on before D gave them policies);
@@ -945,7 +945,7 @@ The closing audit walks these one by one and ticks what it verified — so they 
 - [x] The deliberate policy-drop test ran — **0 rows and NO error**, both for a `view`-only role with the select policy dropped and for an `edit` role with **both** dropped. ⚠️ **And it caught a mine:** dropping only `_select_` hides nothing from an `edit` holder, because `_write_by_permission` is `FOR ALL`. ◐ **The DB half is proven; the screen half (showing an error rather than an empty list) is owed by Phase 3** — the DB cannot signal this.
 - [x] `anon` cannot read or write `assignments` directly; the public RPC is the only path — as `anon`: `count(*)` = **0**, direct UPDATE took no row; the RPC returned `ok:true` on a valid token and a **byte-identical** generic message on all four failure paths (unknown · replayed · 49h-old · event already past).
 - [x] `npm run gate` green — **exit 0**, 09/08/2026 (incl. `check:docs-structure` 29 files / 0 findings and `check:context`)
-- [x] `npm run test:run` green — **566 passed / 17 files** *(09/08/2026, after step 2.4; was 535/15 after 2.2 and 428/13 at the close of Phase 1)*
+- [x] `npm run test:run` green — **567 passed / 17 files** *(09/08/2026, after step 2.4; was 535/15 after 2.2 and 428/13 at the close of Phase 1)*
 - [x] `npm run test:e2e` — ✅ **RESOLVED 09/08/2026 ~16:0X by the parallel E2E session, and the diagnosis
       was right: it was never a code bug.** The dev server was refreshing itself mid-run (Vite HMR),
       which is why login "never left `/login`" and why every one of the five passed in isolation.
@@ -1020,6 +1020,41 @@ still open.**
 **(e)/(f)/(g): per `CLAUDE.md` iron rules 13/15/16 + the end-of-session protocol.**
 
 ## §10 📝 Deviations & Tech-Debt Log
+
+- 🔴🔴 **09/08/2026 · step 2.4 — 31 GREEN unit tests sitting on a feature that returned nothing, and
+  only a real browser exposed it. The most instructive result of this step.**
+  **The bug:** Nominatim localizes place names by `Accept-Language`. A real browser sends the user's
+  system locale — on `en-US` the response carries **`city: "Tel-Aviv"` in English** while the typed
+  address is Hebrew ⇒ the locality guard never matches and **every address silently ends as
+  "אין קואורדינטות"**. Measured in a real browser: without the header `Tel-Aviv`; with
+  `Accept-Language: he`, `תל־אביב–יפו` (U+05BE + U+2013 — exactly the bytes the normalizer handles).
+  🚨 **Why the tests were green:** the fixtures were built from a response fetched by a *different
+  tool*, which happened to request Hebrew. **The unit suite proved the parser correct against data the
+  browser never produces.** Fixed at the source (the header is now sent explicitly) + a regression test
+  that asserts the header itself.
+  🔑 **The shape worth keeping, and it generalizes past this module: a fixture captured with one client
+  does not represent what a different client receives.** Same family as the §3.5(ג) rounding hole — a
+  guard written against convenient data is not a guard — but one level worse, because here the data was
+  *real*, just fetched through the wrong door.
+  📌 **Second, independent finding from the same run: geocoding is IMPOSSIBLE from node** — vitest/node
+  get **`Access denied`** (the ToS reject stock library User-Agents). ⇒ **`scripts/demo-seed.mjs`
+  cannot geocode** (relevant to step 4.2): seed fixed `lat`/`lng`, or fill via the screen.
+
+- 🔴 **09/08/2026 · step 2.4 — a defect in my own migration E, caught by measuring instead of
+  assuming, and fixed forward in F.** E wrote `revoke execute … from public` and I asserted in the gate
+  briefing that this left `anon` unable to call the function. **It did not.** Measured immediately after
+  apply: `proacl` = `{postgres=X, anon=X, authenticated=X, service_role=X}` — Supabase's
+  `alter default privileges` grants `anon` **by name**, and `revoke … from public` does not touch it.
+  ⚠️ **My advisor forecast was wrong because of it** — I predicted 14→15; the actual was **16**, and the
+  extra finding was precisely this. **The prediction is recorded as wrong rather than restated.**
+  ✅ **What it was NOT, and this was measured rather than assumed:** not an exploitable hole. Impersonating
+  `anon` (no claims, `set local role anon`, deliberately invalid coordinates so nothing could be written)
+  returned **`42501` — "אין הרשאה לעדכן קואורדינטות של אירוע"**, i.e. the in-function permission gate
+  held. A `22023` would have meant a breach; it never appeared. ⇒ broken defense-in-depth + an
+  unrequested advisor WARN, not an open door.
+  📌 **The precedent was in the repo the whole time:** migration D wrote
+  `revoke … from public, anon, authenticated` on `enforce_hostess_min_wage`, and *its* `proacl` is clean.
+  **E simply failed to copy that half.** Now in `04_hostesses/CLAUDE.md` as a standing mine.
 
 - 🔴 **09/08/2026 · step 2.4 — the measurement that inverted the design, and it is the entry worth
   keeping from this step.** The obvious implementation (send the address, store what comes back) is

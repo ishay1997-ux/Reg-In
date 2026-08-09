@@ -78,9 +78,35 @@ It cannot: migration D left `projects` with exactly one policy, `cmd=SELECT`. Fi
 only — **not** a write policy, because Postgres RLS is row-level and a policy would have exposed
 `final_event_date`/`project_status` too.
 
-**State at session end.** Awaiting the typed echo `module4_project_coordinates_rpc`. Owed at apply
-time: verify via MCP · refresh `docs/schema.sql` · commit migration+snapshot together · advisors delta
-(baseline **14** measured; forecast **15**) · then the 3-event backfill and step 2.5, the Phase-2 gate.
+**Migration E applied and verified through the production path.** Not by inspection: a signed-in
+Chromium session of מנהלת הגיוס (real login form, `E2E_RECRUIT_*` injected by `playwright.config.js` so
+the secret never passed through the chat) ran the app's own `getSmartMatchData` against the live DB.
+Project 8 → Tel Aviv `32.1062629/34.8101508` · project 3 → **Jerusalem** `31.7788472/35.2257856`
+(**not** the 62 km-wrong Ashkelon hit the bare `מרכז הכנסים` candidate returns — the guard held) ·
+project 7 → stays NULL, correctly. Confirmed afterwards by direct SQL.
+
+🔴 **Two defects this step found in my own work, both invisible to the unit suite.**
+**(1) 31 green tests on a feature that returned nothing.** Nominatim localizes place names by
+`Accept-Language`. A real browser sends the user's locale, so on `en-US` it answers
+`city: "Tel-Aviv"` **in English** while the typed address is Hebrew ⇒ the locality guard never matches
+and **every address silently ends as "אין קואורדינטות"**. The fixtures had been built from a response
+fetched by a *different tool* that happened to request Hebrew — so the suite proved the parser correct
+against data the browser never produces. Fixed by sending the header explicitly, plus a regression test
+on the header itself. 🔑 **Generalizable: a fixture captured with one client does not represent what a
+different client receives.**
+**(2) My migration's `revoke … from public` did not remove `anon`.** Supabase's
+`alter default privileges` grants `anon` **by name**; measured `proacl` post-apply =
+`{postgres=X, anon=X, authenticated=X, service_role=X}`. **My advisor forecast (14→15) was therefore
+wrong — actual 16** — and the extra finding was precisely this. Verified by impersonation that it was
+**not** exploitable (`anon` → `42501` from the in-function gate, never the `22023` that would have meant
+a breach). Fixed forward in migration F. The correct pattern was already in the repo — migration D's
+`revoke … from public, anon, authenticated` — and E just failed to copy that half.
+📌 **Third, separate finding:** geocoding **cannot run from node** (`Access denied` — the ToS reject
+stock library User-Agents), so `scripts/demo-seed.mjs` cannot geocode. Relevant to step 4.2.
+
+**State at session end.** Gate **exit 0**, **567 unit / 17 files**. All three events carry coordinates.
+Awaiting the typed echo `module4_revoke_anon_from_coordinates_rpc`; `docs/schema.sql` refresh is owed
+and should cover E and F in one pass. Then step 2.5, the Phase-2 gate.
 
 ### 09/08/2026 16:1X — Module 4 Phase 2: steps 2.1 + 2.2 done, 2.3 partial. The Smart Match anchor reproduces.
 

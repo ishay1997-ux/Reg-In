@@ -336,11 +336,31 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
-- ⏳ 09/08/2026 — migration `20260809172638_module4_project_coordinates_rpc.sql`
-  **AUTHORED, NOT APPLIED — awaiting Ishay's typed echo (`module4_project_coordinates_rpc`).**
-  *(Recorded here at authoring time, per protocol §10.1 "live update, same session". The row is
-  deliberately NOT written as Done: an unapplied migration recorded as applied is the single most
-  dangerous kind of drift in this file.)*
+- ⏳ 09/08/2026 — migration `20260809174501_module4_revoke_anon_from_coordinates_rpc.sql`
+  **AUTHORED, NOT APPLIED — awaiting Ishay's typed echo (`module4_revoke_anon_from_coordinates_rpc`).**
+  **A fix-forward for E's own defect** (append-only: an applied migration is history, corrections go
+  forward). E wrote `revoke execute … from public`, which does **not** remove `anon` — Supabase's
+  `alter default privileges` grants `anon` **by name**. Measured post-apply: `proacl` =
+  `{postgres=X, anon=X, authenticated=X, service_role=X}`.
+  ⚠️ **Not an exploitable hole — measured, not assumed:** impersonating `anon` returned `42501` from the
+  in-function permission gate. Broken defense-in-depth + an unrequested advisor WARN.
+  **Advisor arithmetic:** pre-E **14** → post-E **16** *(the forecast said 15; the miss was exactly this
+  defect)* → **expect 15 after F**, keeping the `authenticated` WARN deliberately.
+
+- ✅ 09/08/2026 — migration `20260809172638_module4_project_coordinates_rpc.sql`
+  **APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed `module4_project_coordinates_rpc`).
+  **✅ POST-APPLY VERIFICATION — through the real production path, not by inspection.** A signed-in
+  session of מנהלת הגיוס (`E2E_RECRUIT_*`, real login form, Chromium) ran the app's own
+  `getSmartMatchData` against the live DB for all three projects:
+  · project **8** `אקספו תל אביב, ביתן 2` → `32.1062629 / 34.8101508` (Tel Aviv) — the full address
+    returns empty and the `אקספו תל אביב` candidate is what lands it;
+  · project **3** `מרכז הכנסים, ירושלים` → `31.7788472 / 35.2257856` (**Jerusalem, not Ashkelon** —
+    the locality guard rejected the 62 km-wrong hit that the bare `מרכז הכנסים` candidate returns);
+  · project **7** `אולם דוגמה — תרחיש-קבלה` → **stays NULL**, the correct outcome.
+  Confirmed by direct SQL afterwards, not only by what the screen returned.
+  🔴 **And the run caught a real bug the 31 unit tests could not:** without an explicit
+  `Accept-Language: he`, Nominatim answers a browser in **English** (`city: "Tel-Aviv"`), the Hebrew
+  locality guard never matches, and **every address silently fails**. Fixed + regression-tested.
   **What it adds:** one `SECURITY DEFINER` function, `set_project_coordinates(int, numeric, numeric)`.
   No new table, no new column, **no existing row altered by the DDL itself.**
   **Why it exists — a gap nobody registered:** §7.55 put `lat`/`lng` on `projects` (migration A) and
