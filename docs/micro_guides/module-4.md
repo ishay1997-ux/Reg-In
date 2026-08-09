@@ -705,7 +705,9 @@ does not.
 ### Phase 5 — QA & handoff
 
 **5.1** — `e2e/hostesses.spec.js` + `e2e/smart-match.spec.js`; regression across every existing suite.
-⚠️ **The Stop hook derives the module number from `src/modules/NN_*/` only** (`PROJECT_MASTER §6:457`),
+⚠️ **The Stop hook derives the module number from `src/modules/NN_*/` only** (measured 09/08/2026 in
+`.claude/hooks/check-docs-updated.sh`, the `src/modules/*)` case — **a line number was cited here and it
+pointed at unrelated text**),
 so work living in `e2e/`, `scripts/`, `src/lib/` and `src/components/` — i.e. most of phases 2, 4 and 5 —
 **does not trigger it.** Update this guide manually in those phases; do not rely on the hook.
 **5.2 · 🔻👤 Closing audit** — run `module-close` in a **FRESH** session: independent re-verification →
@@ -798,7 +800,8 @@ PR opened · CI green · merged. The closing verdict says the module is **mergea
 (a) update the status header + step table **at every step transition, same session**;
 (b) any deviation gets an inline `↳ as-built` note + a line in §10;
 (c) the Stop hook blocks session end if `src/modules/04_hostesses/**` changed and this guide did not —
-⚠️ **and it is blind to `e2e/`, `scripts/`, `src/lib/`, `src/components/`** (`§6:457`), so phases 2/4/5
+⚠️ **and it is blind to `e2e/`, `scripts/`, `src/lib/`, `src/components/`** (**verified 09/08/2026**:
+`.claude/hooks/check-docs-updated.sh` matches `src/modules/*` and nothing else), so phases 2/4/5
 are updated by discipline, not by the hook;
 (d) end-of-session protocol per `CLAUDE.md`;
 (h) **on ENTERING a phase** — sweep this ledger for OPEN items anchored to that phase and get a
