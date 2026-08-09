@@ -634,7 +634,7 @@ revoke execute on function public.enforce_quote_in_progress_lock() from public, 
 -- יכול לכתוב אליו אינו ראיה. הוקדם ממודול 10 (§6 🚧 מ10) בהכרעת-ישי 30/07/2026.
 create table email_log (
   email_log_id bigint generated always as identity primary key,
-  entity_type text not null check (entity_type in ('quote')),  -- מ4/מ8/מ11 מרחיבים בערך אחד כל אחד
+  entity_type text not null check (entity_type in ('quote', 'shift')),  -- 'shift' נוסף במיגרציה 20260809085058 (מ4); מ8/מ11 מרחיבים בערך אחד כל אחד
   entity_id bigint not null,
   recipient text not null,
   template_name text,
@@ -650,6 +650,15 @@ create policy "email_log_select_quotes_module" on email_log for select to authen
   using (entity_type = 'quote' and exists (select 1 from permissions p
     where p.role_id = (select current_user_role_id())
       and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+      and p.permission_level in ('edit', 'view')));
+
+-- מודול 4 — מיגרציה 0 (20260809085058, הוחל 09/08/2026): policy נפרדת ליומן-הדיילות.
+-- 🚫 **לא הרחבה של זו שמעליה** — `db_roadmap` A-20 מורה שכל מודול מוסיף policy משלו, אחרת
+-- יומן-ההצעות נפתח למנהלת הגיוס ויומן-הדיילות למנהלת הכספים, ושתיהן חסומות זו במודול של זו.
+create policy "email_log_select_shifts_module" on email_log for select to authenticated
+  using (entity_type = 'shift' and exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'דיילות')
       and p.permission_level in ('edit', 'view')));
 
 -- ============================================================

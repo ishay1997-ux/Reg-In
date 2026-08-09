@@ -23,7 +23,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | Step | Title | Status |
 |---|---|---|
 | 0.1 | Unlock the shared email engine for module 4 | ✅ 09/08 — gate 0 · unit 428 · E2E 78 · smoke 0 |
-| 0.2 | Migration 0 — `email_log` accepts `'shift'` + its own read policy | ⬜ |
+| 0.2 | Migration 0 — `email_log` accepts `'shift'` + its own read policy | ✅ 09/08 — applied `20260809085058`, verified live |
 | 0.3 | Deploy `send-email` and re-verify live | ⬜ |
 | 1.1 | Migration A — surrogate key + module-4 columns | ⬜ |
 | 1.2 | Migration B — one-event-per-day constraint (§7.88) | ⬜ |
@@ -796,6 +796,18 @@ The closing audit walks these one by one and ticks what it verified — so they 
 - [ ] `db_roadmap.md` rows for module 4 marked Done in §10
 - [ ] `PROJECT_MASTER §7` write-back done: **§7.67** marked deferred with its reasoning
 - [ ] `src/modules/04_hostesses/CLAUDE.md` written — the module's own gotchas file
+- [ ] 🆕 **Automations registry written** *(Ishay approved 09/08/2026, in answer to "should we open an
+      automations folder?")*. **A folder was rejected on measurement, and the reason must survive:**
+      three of the four automation kinds here **cannot** be moved — DB triggers and `pg_cron` jobs are
+      append-only migration files, the Edge Function's folder name **is** its deploy address, and the
+      Make scenario is not in the repo at all. A folder would have been empty and would have fought the
+      platform. **What is actually missing is the LIST**, so the deliverable is one document answering:
+      what runs by itself · where it physically lives · when it fires · which module owns it · what
+      breaks if it stops. **Write it at module close**, when M4's own triggers and public RPC are fresh.
+      📍 **Seed it with the concrete disorder already measured 09/08/2026:** the `pg_cron` job
+      `module1-login-attempts-cleanup` is defined inside `20260723120500_module3_pg_cron_...` — a
+      **module-1** automation living in a **module-3** filename, unfixable by rule (append-only) and
+      therefore exactly what a registry exists to answer.
 - [ ] `STATUS.md` points at this guide, and `CLAUDE_CODE_LOG.md` carries the session entry
 
 *(Post-merge — **not** audit checkboxes, and a truthful audit must not be forced to mark them ❌:

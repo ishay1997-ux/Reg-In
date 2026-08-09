@@ -173,7 +173,7 @@ Additional decided / nod-pending rows (cite-only):
 | A-18 | `login_attempts` stale-row purge job (>30d from `last_attempt_at`) | §7.75 | 👍 nod | 3/10 | after A-11 |
 | A-19 | RLS: `select` open to all `authenticated` + write CEO-only (module 'הגדרות מערכת') on `params`/`products`/`price_tiers` — write is now real (not deferred) since the M3 "מחירים" tab (§7.84) will write to these | §7.83 | decided | 3 | with the M3 migration; params write reuses the same 2 policies when M9 builds the full params screen. **✅ Migration `20260723113500` APPLIED 23/07 via MCP** (10 policies verified: catalog §7.83 select-all + CEO-write). Ishay's follow-up ("should params be role-editable?") → kept CEO-only for M3; the approved **per-role ownership map is recorded in §7.70** as M9 design input. |
 | A-21 | **`params` row `תבנית_מייל_הצעת_מחיר` — sender signature** (`[חתימת_שולח]` replaces the fixed "צוות REG-IN") | Ishay 30/07/2026, after asking to add the project manager's phone/email; my counter-recommendation (sign as the **actual** sender) was accepted | **✅ APPLIED `20260730123321`, 30/07 via MCP** (typed-echo given) | 3 | why: send permission belongs to **both** מנהלת פרויקטים and מנכ"ל (verified live), so fixed contact details would point the customer at someone who doesn't know the quote. **One** placeholder, not three — the code omits an empty phone line, which a text template cannot do. ⚠️ Continues migration 7's deviation from FROZEN C5 §5.8.1. |
-| A-20 | **NEW table `email_log`** — generic email send-journal `(entity_type, entity_id, recipient, template_name, subject, status, error_message, sent_by_email, created_at)` + index on `(entity_type, entity_id, created_at desc)` + one §7.21 SELECT policy gated on 'הצעות מחיר'; **no client write policy at all** (only the Edge Function writes, via service-role) | **§6 🚧 מ10 "ישות יומן-שליחות", pulled forward by Ishay's explicit ruling 30/07/2026** | **✅ APPLIED `20260730095439`, 30/07 via MCP** (typed-echo given) | 3 (was 10) | why now: it is the **only** one of the 8 blind-spot findings that client code cannot close — the anti-double-send guards all live in component state and die on a page refresh or a second user. ⚠️ **Deliberately generic** (6 email templates exist in `params`; M4/M8/M11 will send too) ⇒ polymorphic `(entity_type, entity_id)` and therefore **no real FK** — accepted, and correct for a journal: a send is history, and this project never deletes (§7.11). ⚠️ **Beyond the frozen spec** (C6 has no such table). **Forward notice (§10.2): M4/M8/M11 each widen the `entity_type` CHECK by one value and add their own module-gated SELECT policy — do NOT widen this policy to "any authenticated".** |
+| A-20 | **NEW table `email_log`** — generic email send-journal `(entity_type, entity_id, recipient, template_name, subject, status, error_message, sent_by_email, created_at)` + index on `(entity_type, entity_id, created_at desc)` + one §7.21 SELECT policy gated on 'הצעות מחיר'; **no client write policy at all** (only the Edge Function writes, via service-role) | **§6 🚧 מ10 "ישות יומן-שליחות", pulled forward by Ishay's explicit ruling 30/07/2026** | **✅ APPLIED `20260730095439`, 30/07 via MCP** (typed-echo given) | 3 (was 10) | why now: it is the **only** one of the 8 blind-spot findings that client code cannot close — the anti-double-send guards all live in component state and die on a page refresh or a second user. ⚠️ **Deliberately generic** (6 email templates exist in `params`; M4/M8/M11 will send too) ⇒ polymorphic `(entity_type, entity_id)` and therefore **no real FK** — accepted, and correct for a journal: a send is history, and this project never deletes (§7.11). ⚠️ **Beyond the frozen spec** (C6 has no such table). **Forward notice (§10.2): M4/M8/M11 each widen the `entity_type` CHECK by one value and add their own module-gated SELECT policy — do NOT widen this policy to "any authenticated".** ✅ **M4's third executed 09/08/2026** (`20260809085058`, `'shift'` + `email_log_select_shifts_module`) — see the §10 strike-list. **M8 and M11 remain owed**, and each must ship its CHECK value **in the same migration** as its code: the server's `ENTITY_MODULE` map (`supabase/functions/send-email/index.ts`) deliberately omits `invoice`/`salary_report` for exactly this reason. |
 
 ### A2. Log-registered debt with a decided direction (SSOT: the logs)
 
@@ -336,6 +336,28 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
+- 09/08/2026 — migration `20260809085058_module4_email_log_accepts_shift.sql` **✅ APPLIED via MCP
+  `apply_migration`** (typed-echo: Ishay typed `module4_email_log_accepts_shift` in chat).
+  **Executes the M4 third of A-20's forward notice** — one new `entity_type` value and a policy of its
+  own, never a widening of the existing one.
+  **✅ POST-APPLY VERIFICATION — read back from the live catalog, not from the SQL I sent:**
+  *(1)* `pg_get_constraintdef` → `CHECK ((entity_type = ANY (ARRAY['quote'::text, 'shift'::text])))`.
+  ⚠️ Note the shape change: the original was written by Postgres as an **equality** (`= 'quote'`)
+  because it had a single value, so the migration had to `drop`+`add` rather than alter — the
+  constraint name was deliberately kept identical so future greps still land.
+  *(2)* `pg_policies` on `email_log` → **2** — `email_log_select_quotes_module` (untouched) +
+  `email_log_select_shifts_module` (new, gated on module `'דיילות'`, `('edit','view')`, §7.21
+  `(select …)`-wrapped). **No write policy on either** — the Edge Function writes as service-role.
+  *(3)* `select count(*) from email_log` → **4**, identical before and after. No data touched.
+  *(4)* `get_advisors(security)` → **zero new findings.** The 7 `rls_enabled_no_policy` INFO rows are
+  the known deny-all tables (`assignments` · `hostesses` · `projects` · `logistics` ·
+  `salary_reports` + the two login logs) — **M4 phase 1 closes four of them**; the SECURITY DEFINER
+  WARNs are modules 1/3, unchanged since the 05/08 baseline recorded below.
+  🔴 **Why this had to land before the first shift mail, recorded so it is not rediscovered:**
+  `send-email` returns `{ok:true, log_failed:true}` on a journal failure **by design** (the mail is
+  already with the recipient; saying "failed" would cause a duplicate send). So with the old CHECK the
+  first invitation would have been delivered **and left no journal row** — module 4's anti-double-send
+  protection would simply not have existed, with no error anywhere.
 - 05/08/2026 — **Module-3 closing audit: the DB side re-verified live, zero writes, zero new DB work.**
   Read directly from the live project rather than from this file: **10 `module3_` migrations** on disk, all
   already struck below · policies **quotes 2 · quote_services 2 · products 2 · price_tiers 2 · params 2 ·
