@@ -336,6 +336,29 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
+- ✅ 10/08/2026 — migration `20260810001421_module4_final_approval_contact_label.sql`
+  **APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed `module4_final_approval_contact_label`).
+  **What it does:** removes the two hardcoded words *"מנהלת הפרויקט -"* from inside
+  `תבנית_אישור_סופי_שיבוץ`, so the role travels **inside the value** rather than in the template.
+  **Why:** `local-2` (Ishay 08/08) routes the field contact to the **shift lead when one is marked**;
+  the template's fixed words then labelled her as the project manager — **in the very mail the other
+  hostesses read to know whom to call on site.** Recorded as an open hole since `spec.md §12`
+  (*"ולתבנית אין placeholder עבורה בכלל"*), delegated per-placeholder by §7.89.
+  **Scope:** one `params` row. **No DDL, no RLS, no trigger** ⇒ 🚫 **`docs/schema.sql` is unchanged
+  by design** — the snapshot carries structure, and no structure moved. *(Its one match on the old
+  string is a dated rationale comment about migration G, not the template value.)*
+  **✅ POST-APPLY VERIFICATION:** `select param_value …` now returns
+  `איש קשר בשטח: [שם_מנהלת_פרויקט], טלפון: [טלפון_מנהלת_פרויקט]`.
+  🔴 **And the code half shipped WITH it, because the migration alone makes the line worse:**
+  `resolveShiftContact` now returns `אחראית המשמרת <שם>` / `מנהלת הפרויקט <שם>`; without it the mail
+  would read *"איש קשר בשטח: ישי אטיאס"* — a name with no role at all. **`shiftEmails.test.js` pins
+  the exact rendered line and asserts the role appears exactly once**, which is what would catch a
+  future template edit that re-adds it.
+  ⚠️ **What is NOT verified: a real mail sent while a shift lead is marked.** The template text and
+  the rendered body are proven by unit test against a template copied from the live DB in the same
+  turn; **no send was exercised**, deliberately — every send to the 19 demo addresses bounces into
+  Ishay's inbox. The next real final approval on project 8 will carry it.
+  **Reversible** by a forward migration; mails already sent are not, and that is correct.
 - ✅ 09/08/2026 — migration `20260809223025_module4_project_owner_contact_snapshot.sql` — **`projects.owner_name` + `owner_phone` (snapshot) + backfill + the conversion RPC rewritten to populate them.** 🔴 **Why it exists, and it was MEASURED not predicted:** the final-approval mail injects `[שם_מנהלת_פרויקט]`/`[טלפון_מנהלת_פרויקט]`; ruling `local-2` routed them to `users` via `owner_email`, and `users_select_self_or_ceo` lets a user read **only their own row or (as מנכ"ל) all** ⇒ מנהלת גיוס got `200` + `[]` from a signed-in browser, so the mail would have printed an empty contact **with no error**. `fillEmailTemplate` cannot catch it — the placeholder is *known*. **Ruled by Claude under Ishay's explicit delegation** (`micro_guides/module-4.md` `local-15`): third use of a pattern already in this table (`event_name` §7.76 · `customer_name` local-5), no new security surface, and semantically right — a sent mail must keep saying what it said. **Verified after apply:** the same recruiter query now returns `ישי אטיאס`/`050-1241223` · module-3 regression `quote-approval` + `server-messages` **17/17** · advisors **15 = baseline, zero new**. 🚧 **Forward notice — מ6/מ8:** these columns are a *snapshot at project creation*; a module that later needs the CURRENT owner must read `users` itself, not these.
 - ✅ 09/08/2026 — migration `20260809174501_module4_revoke_anon_from_coordinates_rpc.sql`
   **APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed `module4_revoke_anon_from_coordinates_rpc`).

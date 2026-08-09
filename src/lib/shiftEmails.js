@@ -70,7 +70,15 @@ export function resolveShiftContact({ project, shiftLead } = {}) {
     : { name: project?.owner_name, phone: project?.owner_phone, isShiftLead: false }
 
   if (!source.name || !source.phone) return null
-  return { name: source.name, phone: source.phone, isShiftLead: source.isShiftLead }
+
+  // 🔴 **התפקיד נוסע בתוך הערך, ולא בתבנית** — מיגרציה `20260810001421` הסירה מהתבנית את
+  // המילים הקשיחות *"מנהלת הפרויקט -"*, כי הן **שיקרו** ברגע שסומנה אחראית משמרת: הדיילות
+  // האחרות היו קוראות שמי שתתקשרנה אליה בשטח היא מנהלת הפרויקט, והיא אינה.
+  // 🔑 **ולמה כאן ולא placeholder שביעי:** שדה נוסף היה מחייב **כל** מסלול-שליחה לדעת עליו,
+  // בעוד ששני המקרים הם אותה שאלה אחת — *מי איש-הקשר, ובאיזה תפקיד*. `spec.md §12` רשם את
+  // החור, ו-§7.89 האציל *"כל placeholder מוכרע לגופו"*.
+  const role = source.isShiftLead ? 'אחראית המשמרת' : 'מנהלת הפרויקט'
+  return { name: `${role} ${source.name}`, phone: source.phone, isShiftLead: source.isShiftLead }
 }
 
 // זימון-משמרת ⇒ גוף-מייל מוכן לשליחה, או `null` אם חסר משהו שבלעדיו אין טעם לשלוח.
