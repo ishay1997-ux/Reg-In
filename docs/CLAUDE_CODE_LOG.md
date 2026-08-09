@@ -125,6 +125,40 @@ contradictions, three of them created by this session's own work:**
 were sloppy. The failure mode is a *dated claim with no expiry* — which is why the repo's rule is to
 write the measurement method, not the value.
 
+**Then Ishay asked whether anything the NEXT steps or other modules need is documented — and the
+answer was no, three times, two of them my own doing:**
+- 🔴 **`smart-match.spec.js` pinned `overview-row-8`, and project 8 is dated 22/08/2026.** The
+  overview filters past events (`isPastEvent`) ⇒ **from 23/08 all eight tests fail with no bug**,
+  three weeks before submission. The row is now chosen at runtime — which `e2e/CLAUDE.md` already
+  prescribed and I simply did not obey while writing them.
+- 🔴 **Step 4.2's seed would break on tonight's data:** `assignments` is no longer empty (five rows on
+  project 8). The PK is `(project_id, hostess_id, assignment_number)` ⇒ a seed inserting there fails
+  on the key, and "fixing" it by bumping the number **creates a second row per pair, which changes the
+  deciding status** and silently rewrites the demo story. Recorded in the step, with an instruction to
+  measure the count rather than trust the number in the line.
+- ✅ **`quote-email.spec.js` poisoned its own fixture** — `beforeAll` picks a never-sent quote, the
+  first test **really sends it**, and every later click on שלח then opens a confirm that Playwright
+  auto-dismisses ⇒ `element(s) not found`. **First recorded as out-of-scope; Ishay ruled FIX, not
+  document** — *"an intermittent red trains everyone to ignore red"*, which is the expensive habit in
+  a project whose only quality gate is Claude. One line (`page.on('dialog', d => d.accept())`), tests
+  only, **verified as stable with two consecutive full-file runs (6/6 each)** rather than one green.
+  ⚠️ Noted with it: the `accept` is blanket, so a future test that means to assert the confirm
+  **blocks** would pass on nothing — it would need its own scoping.
+
+**🔬 And the methodological lesson of the night, which cost two wrong conclusions in a row:**
+1. **A grep of call sites answers "who calls something NAMED x", not "who calls x".** I reported a bug
+   in module 3's `formatDate(previousSend.created_at)` — and that file imports `formatDate` from
+   `quotePdf`, a *different* function that parses via `new Date()` and handles timestamps correctly.
+   **The evidence was in my own grep output: two `export function formatDate` lines.** ⇒ **when
+   sweeping for "where else does this defect live", resolve the IMPORT, not the symbol.** Recorded in
+   `dates.js` beside the deliberate duplicate and as a rule in `src/CLAUDE.md`.
+   ⚠️ **Why it was seductive: I had just fixed that exact bug elsewhere, so the call site matched a
+   fresh template. Pattern-match is the signal to CHECK, not the signal to conclude.**
+2. **"My change was the only change" is not evidence of causation.** When module 3's E2E failed right
+   after I edited a comment in that file, I assumed I broke it. The decisive test was `git stash` →
+   run → restore, then three runs on identical code: **fail, pass, fail, pass.** State-dependent from
+   the start. ⇒ **before attributing an E2E failure to the last edit, run it twice on the same code.**
+
 **Housekeeping:** the `knip.jsonc` waiver on `04_hostesses/api.js` was **removed at the step it
 named as its own removal date**, and `deadcode` is green without narrowing it again.
 **Gates:** `gate` exit 0 · **733 unit** (was 662) · `smoke` exit 0 · **16 module-4 E2E** (8 new) ·
