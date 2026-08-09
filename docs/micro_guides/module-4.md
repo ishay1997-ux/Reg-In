@@ -230,7 +230,7 @@ at runtime and from §11.1 at write time.** This guide names none of them.
 | 3 | 12→24-month window — is a single answer before or after widening? | count the base window first; widen **only if <3 answers**, then recount | ⑭#5 |
 | 4 | is `C` on one fixed window or per-hostess windows? | **one fixed base window** — `C` is a company property | ⑭#6 |
 | 5 | "neutral score" with no coordinates = average **of what**? | **`0.5`** — mid-goalpost. 🚫 pool average is the sample-dependence §11.3#3 forbids | ⑭#7 |
-| 6 | tie-break inputs | `md5(project_id::text ‖ hostess_id::text) ASC`. ⚠️ **`event_id` does not exist** | ⑭#8, ⑳ |
+| 6 | tie-break inputs | `md5(project_id::text ‖ hostess_id::text) ASC`. ⚠️ **`event_id` does not exist**. ↳ **as-built 09/08: the INPUTS stand (`project_id` + `hostess_id`, ASC); the HASH is FNV-1a, not md5** — no hashing lib in `package.json`, `crypto.subtle` lacks md5, and it runs in JS. See §10 | ⑭#8, ⑳ |
 | 7 | attendance counts arrive cumulative ⇒ de-dup untested | de-dup by `MAX(assignment_number)` **in SQL**, plus a dedicated unit test | ⑭#9 |
 | 8 | shift-lead column + "one per event" | `assignments.is_shift_lead boolean not null default false` + `unique index on (project_id) where is_shift_lead` — **DB-enforced**, per §7.29's own precedent | ⑲(1) |
 | 9 | unavailability shape + is the end day included? | `hostess_unavailability(unavailability_id, hostess_id, start_date, end_date, note)`; gate test `final_event_date between start_date and end_date` — **inclusive**, consistent with §7.30 and every UI label | ⑲(2) |
@@ -664,6 +664,13 @@ worked gets **`0` weeks, not the cap**.
 🔴 **The tie-break runs in SQL, not in JS** — there is no md5 in `package.json` and
 `crypto.subtle` does not implement it. ⇒ layers 1–2 and the tie-break ordering are the **query**;
 layers 3–4 arithmetic is the **pure module**. Say so in the file header.
+↳ **as-built 09/08/2026 — this instruction was NOT followed, and here is why in one line.**
+It is not implementable today: `supabase-js` computes no haversine (the distance gate), expresses
+no `NOT EXISTS` (the same-day gate), and cannot `ORDER BY` an expression (the tie-break) — and the
+DB has **no view and no ranking function** to host any of it, so it would take a **sixth migration**
+with a typed-echo gate. ⇒ **all four layers run in `src/lib/smartMatch.js`**, the query fetches only
+small server-filtered sets, and the tie-break is **FNV-1a** with the same inputs and direction.
+**Full reasoning, the measurement behind it, and Ishay's sign-off: §10.**
 🔴 **Reasoning chips are TWO families and must not share one CSS class** (`spec.md §1.5`):
 `chip.score` vs `chip.ctx` vs absence markers vs the pin tag `מצוינת אצל הלקוח הזה` (its own row,
 above the score chips, teal).
@@ -909,7 +916,7 @@ The closing audit walks these one by one and ticks what it verified — so they 
 - [x] The deliberate policy-drop test ran — **0 rows and NO error**, both for a `view`-only role with the select policy dropped and for an `edit` role with **both** dropped. ⚠️ **And it caught a mine:** dropping only `_select_` hides nothing from an `edit` holder, because `_write_by_permission` is `FOR ALL`. ◐ **The DB half is proven; the screen half (showing an error rather than an empty list) is owed by Phase 3** — the DB cannot signal this.
 - [x] `anon` cannot read or write `assignments` directly; the public RPC is the only path — as `anon`: `count(*)` = **0**, direct UPDATE took no row; the RPC returned `ok:true` on a valid token and a **byte-identical** generic message on all four failure paths (unknown · replayed · 49h-old · event already past).
 - [x] `npm run gate` green — **exit 0**, 09/08/2026 (incl. `check:docs-structure` 29 files / 0 findings and `check:context`)
-- [x] `npm run test:run` green — **428 passed / 13 files**
+- [x] `npm run test:run` green — **535 passed / 15 files** *(09/08/2026, after Phase 2; was 428/13 at the close of Phase 1)*
 - [x] `npm run test:e2e` — ✅ **RESOLVED 09/08/2026 ~16:0X by the parallel E2E session, and the diagnosis
       was right: it was never a code bug.** The dev server was refreshing itself mid-run (Vite HMR),
       which is why login "never left `/login`" and why every one of the five passed in isolation.
@@ -966,6 +973,21 @@ are updated by discipline, not by the hook;
 consolidated ruling from Ishay **at the phase door** (measured 08/08/2026: Phase 1 has none);
 (i) **compaction** — a closed phase collapses to a done-table + evidence; never compact the active
 phase, §10, or the ledger.
+(j) 🆕 🌊 **CLOSING A STEP = SWEEPING ITS RIPPLES, and the step is not closed until the sweep is
+written down** *(Ishay's ruling 09/08/2026, in his words: "מוזר שאני צריך להגיד כל הזמן")*.
+**Why this exists next to (b) rather than inside it:** (b) covers a *deviation*; iron rule 13 covers
+a *decision*. **Neither fires when a step simply finishes** — and that is where the drift actually
+comes from. **Measured on step 2.2 the same day:** the §10 entry was written correctly and **four**
+spots still went stale — a `[x]` DoD line reading `428 passed` after the count reached 535, the
+step-2.2 instruction still saying the tie-break "runs in SQL" with no inline `↳ as-built`, ledger
+assumption #6 still naming `md5`, and `research §11.2` still carrying the SQL formula with nothing
+pointing at the as-built. **All four surfaced only because Ishay asked — the second time in one
+day.** ⇒ **at every step close, walk these five and write one line saying what you touched, or the
+word `אין`:** ① the step's own `↳ as-built` · ② §10 · ③ **every DoD checkbox whose number or claim
+this step moved** · ④ the Ledger row the step implements · ⑤ **any approved-spec or research section
+that now states differently what you actually built** — and there the fix is a **tagged as-built
+pointer, never an edit to a number** (`§11` stays the SSOT). **An empty `🌊` line means the step is
+still open.**
 **(e)/(f)/(g): per `CLAUDE.md` iron rules 13/15/16 + the end-of-session protocol.**
 
 ## §10 📝 Deviations & Tech-Debt Log
