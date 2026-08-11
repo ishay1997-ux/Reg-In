@@ -91,7 +91,9 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
   const [status, setStatus] = useState('active')
   const [peers, setPeers] = useState([])
   const [params, setParams] = useState({})
-  const [loading, setLoading] = useState(true)
+  // 🔴 **ADD ואין מצב-ביניים; EDIT יש** (`screens-approved.md:702,798` — סטייה מפורשת בין 3ב ל-3ג).
+  // הטופס הריק חייב להיפתח מיד ב-ADD; `params`/`peers` נטענים ברקע ומזינים ולידציה-רכה כשהם מגיעים.
+  const [loading, setLoading] = useState(isEdit)
   const [loadError, setLoadError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [touched, setTouched] = useState({})
@@ -99,7 +101,9 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
   useEffect(() => {
     let cancelled = false
     async function load() {
-      setLoading(true)
+      // ADD: הטופס הריק כבר על המסך (`loading` נולד `false`) — לא מכבים ומדליקים אותו כדי
+      // לא ליצור הבזק-של-מצב-ביניים שהאפיון אוסר. EDIT: `loading` כבר `true` מהאתחול.
+      if (isEdit) setLoading(true)
       setLoadError(null)
       try {
         // `peers` נדרש לאזהרת-האימייל הרכה — היא משווה מול המאגר, לא מול המסד.
@@ -180,6 +184,22 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
     setDraftRange({ start_date: '', end_date: '', note: '' })
   }
 
+  // Enter בתוך שדות-הטיוטה של טווח-אי-הזמינות מוסיף את הטווח — ולא שולח את כל טופס
+  // הדיילת (שעדיין עובד גם על מה שהוקלד בשדות למעלה). בלי זה, ה-`<form>` שנוסף כאן היה
+  // תופס Enter מכל שדה, כולל שלושת השדות המקוננים האלה.
+  function onDraftRangeKeyDown(e) {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    addRange()
+  }
+
+  // ⌨️ Enter בתוך שדה חייב לשלוח את הטופס — כמו `CustomerFormDialog`, שממנו נשאב מבנה
+  // הדיאלוג הזה (`screens-approved.md:661-663`). בלעדי זה אין דרך לשמור בלי לגעת בעכבר.
+  async function handleSubmit(e) {
+    e.preventDefault()
+    await handleSave()
+  }
+
   async function handleSave() {
     setTouched(Object.fromEntries(Object.keys(REQUIRED_FIELDS).map((f) => [f, true])))
     if (blocked) return
@@ -249,271 +269,282 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
           </DialogDescription>
         </DialogHeader>
 
-        {loading ? (
-          <LoadingOrError loading />
-        ) : loadError ? (
-          <LoadingOrError error={loadError} />
-        ) : (
-          <div className="max-h-[65vh] overflow-y-auto pl-1">
-            <Field
-              label="תעודת זהות"
-              required
-              hint={isEdit ? null : 'בדיקת ספרת-ביקורת תוך כדי ההקלדה'}
-              // 🔴 בעריכה — **נעולה**, אותו דפוס בדיוק כמו ח"פ-לקוח (§7.64: ת"ז יצאה
-              // מהמפתח, אבל היא עדיין המזהה האנושי, והחלפתה היא החלפת אדם).
-              error={isEdit ? null : errors.id_number}
-            >
-              <Input
-                value={form.id_number}
-                onChange={(e) => set('id_number')(e.target.value)}
-                disabled={isEdit}
-                placeholder="9 ספרות"
-                dir="ltr"
-                className="text-right"
-                data-testid="hostess-id-number"
-              />
-            </Field>
-
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="שם מלא" required error={showError('full_name')}>
+        <form onSubmit={handleSubmit} noValidate>
+          {loading ? (
+            // שלד-שדות — ורק ב-EDIT: ב-ADD `loading` נשאר `false` מהאתחול, אז זה כלל לא נטען כאן.
+            <LoadingOrError loading skeleton={{ variant: 'fields', rows: 5 }} />
+          ) : loadError ? (
+            <LoadingOrError error={loadError} />
+          ) : (
+            <div className="max-h-[65vh] overflow-y-auto pl-1">
+              <Field
+                label="תעודת זהות"
+                required
+                hint={isEdit ? null : 'בדיקת ספרת-ביקורת תוך כדי ההקלדה'}
+                // 🔴 בעריכה — **נעולה**, אותו דפוס בדיוק כמו ח"פ-לקוח (§7.64: ת"ז יצאה
+                // מהמפתח, אבל היא עדיין המזהה האנושי, והחלפתה היא החלפת אדם).
+                error={isEdit ? null : errors.id_number}
+              >
                 <Input
-                  value={form.full_name}
-                  onChange={(e) => set('full_name')(e.target.value)}
-                  onBlur={blur('full_name')}
-                  data-testid="hostess-full-name"
-                />
-              </Field>
-              <Field label="טלפון" required error={showError('phone')}>
-                <Input
-                  value={form.phone}
-                  onChange={(e) => set('phone')(e.target.value)}
-                  onBlur={blur('phone')}
-                  placeholder="050-0000000"
+                  value={form.id_number}
+                  onChange={(e) => set('id_number')(e.target.value)}
+                  disabled={isEdit}
+                  placeholder="9 ספרות"
                   dir="ltr"
                   className="text-right"
-                  data-testid="hostess-phone"
+                  data-testid="hostess-id-number"
                 />
               </Field>
-            </div>
 
-            <Field label="אימייל" required error={showError('email')} warning={emailWarning}>
-              <Input
-                value={form.email}
-                onChange={(e) => set('email')(e.target.value)}
-                onBlur={blur('email')}
-                placeholder="name@example.com"
-                dir="ltr"
-                className="text-right"
-                data-testid="hostess-email"
-              />
-            </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="שם מלא" required error={showError('full_name')}>
+                  <Input
+                    value={form.full_name}
+                    onChange={(e) => set('full_name')(e.target.value)}
+                    onBlur={blur('full_name')}
+                    placeholder="לדוגמה: נועה שגיא"
+                    data-testid="hostess-full-name"
+                  />
+                </Field>
+                <Field label="טלפון" required error={showError('phone')}>
+                  <Input
+                    value={form.phone}
+                    onChange={(e) => set('phone')(e.target.value)}
+                    onBlur={blur('phone')}
+                    placeholder="050-0000000"
+                    dir="ltr"
+                    className="text-right"
+                    data-testid="hostess-phone"
+                  />
+                </Field>
+              </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="עיר" required error={showError('city')}>
+              <Field label="אימייל" required error={showError('email')} warning={emailWarning}>
                 <Input
-                  value={form.city}
-                  onChange={(e) => set('city')(e.target.value)}
-                  onBlur={blur('city')}
-                  placeholder="לדוגמה: רמת גן"
-                  data-testid="hostess-city"
-                />
-              </Field>
-              <Field label="כתובת מלאה" hint="רחוב ומספר — משמש לחישוב הקרבה לאירוע">
-                <Input
-                  value={form.address}
-                  onChange={(e) => set('address')(e.target.value)}
-                  placeholder="לדוגמה: ביאליק 14"
-                  data-testid="hostess-address"
-                />
-              </Field>
-            </div>
-
-            <Field
-              label="שכר שעתי (₪)"
-              required
-              error={showError('hourly_rate')}
-              // 🔴 הסכום עובר דרך `Money` ולא נכתב ידנית בתוך המשפט. **נמדד בדפדפן
-              // 09/08/2026:** הנוסח הידני הציג את ה-₪ **משמאל** לספרות, בעוד `Money`
-              // באותו מסך מציג `45 ₪` — אותו סכום משני צדדים, המופע השביעי של המשפחה.
-              hint={
-                <>
-                  מתחת ל-
-                  <Money amount={Number(params[HOSTESS_PARAM_NAMES.minHourlyWage])} /> (שכר מינימום)
-                  חוסם שמירה
-                </>
-              }
-            >
-              <Input
-                value={form.hourly_rate}
-                onChange={(e) => set('hourly_rate')(e.target.value)}
-                onBlur={blur('hourly_rate')}
-                onFocus={(e) => e.target.select()}
-                dir="ltr"
-                className="text-right"
-                data-testid="hostess-hourly-rate"
-              />
-              {isEdit && (
-                <span className="mt-1 block text-[11px] text-amber-700">
-                  🔴 שינוי כאן <b>לא ישנה</b> תעריף של שיבוץ עתידי שכבר קיים — הוא הוקפא ברגע
-                  השיבוץ. ההעלאה תחול על השיבוץ הבא בלבד.
-                </span>
-              )}
-            </Field>
-
-            <p className="mb-2 mt-4 text-xs font-semibold text-slate-500">פרטי בנק</p>
-            <div className="grid grid-cols-3 gap-3">
-              <Field label="בנק" required error={showError('bank_name')}>
-                <Input
-                  value={form.bank_name}
-                  onChange={(e) => set('bank_name')(e.target.value)}
-                  onBlur={blur('bank_name')}
-                  data-testid="hostess-bank-name"
-                />
-              </Field>
-              <Field label="סניף" required error={showError('bank_branch')}>
-                <Input
-                  value={form.bank_branch}
-                  onChange={(e) => set('bank_branch')(e.target.value)}
-                  onBlur={blur('bank_branch')}
+                  value={form.email}
+                  onChange={(e) => set('email')(e.target.value)}
+                  onBlur={blur('email')}
+                  placeholder="name@example.com"
                   dir="ltr"
                   className="text-right"
-                  data-testid="hostess-bank-branch"
+                  data-testid="hostess-email"
                 />
               </Field>
-              <Field label="מס׳ חשבון" required error={showError('bank_account')}>
-                <Input
-                  value={form.bank_account}
-                  onChange={(e) => set('bank_account')(e.target.value)}
-                  onBlur={blur('bank_account')}
-                  dir="ltr"
-                  className="text-right"
-                  data-testid="hostess-bank-account"
-                />
-              </Field>
-            </div>
 
-            <Field
-              label="התרשמות המנהלת (1–5)"
-              hint='לא "דירוג": זו דעתך, לא ציון-מערכת. אינה חלק מ-Smart Match'
-            >
-              <RatingStars value={form.rating} onChange={set('rating')} testId="hostess-rating" />
-            </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="עיר" required error={showError('city')}>
+                  <Input
+                    value={form.city}
+                    onChange={(e) => set('city')(e.target.value)}
+                    onBlur={blur('city')}
+                    placeholder="לדוגמה: רמת גן"
+                    data-testid="hostess-city"
+                  />
+                </Field>
+                <Field label="כתובת מלאה" hint="רחוב ומספר — משמש לחישוב הקרבה לאירוע">
+                  <Input
+                    value={form.address}
+                    onChange={(e) => set('address')(e.target.value)}
+                    placeholder="לדוגמה: ביאליק 14"
+                    data-testid="hostess-address"
+                  />
+                </Field>
+              </div>
 
-            <Field label="יש רכב?" hint='מעל 40 ק"מ בלי רכב = פסילה בשיבוץ, לא ניקוד'>
-              <Switch
-                checked={form.has_car}
-                onCheckedChange={set('has_car')}
-                aria-label="יש רכב"
-                data-testid="hostess-has-car"
-              />
-            </Field>
-
-            <Field
-              label="שפות"
-              hint="שדה-מידע בלבד. לא שער ולא עמודה בטבלת-המאגר — המנהלת בוחרת ידנית מי לזמן לכל תפקיד"
-            >
-              <ChipToggle
-                options={LANGUAGES}
-                selected={form.languages}
-                onToggle={(lang) =>
-                  set('languages')(
-                    form.languages.includes(lang)
-                      ? form.languages.filter((l) => l !== lang)
-                      : [...form.languages, lang],
-                  )
+              <Field
+                label="שכר שעתי (₪)"
+                required
+                error={showError('hourly_rate')}
+                // 🔴 הסכום עובר דרך `Money` ולא נכתב ידנית בתוך המשפט. **נמדד בדפדפן
+                // 09/08/2026:** הנוסח הידני הציג את ה-₪ **משמאל** לספרות, בעוד `Money`
+                // באותו מסך מציג `45 ₪` — אותו סכום משני צדדים, המופע השביעי של המשפחה.
+                hint={
+                  <>
+                    מתחת ל-
+                    <Money amount={Number(params[HOSTESS_PARAM_NAMES.minHourlyWage])} /> (שכר
+                    מינימום) חוסם שמירה
+                  </>
                 }
-                testId="hostess-languages"
-              />
-            </Field>
+              >
+                <Input
+                  value={form.hourly_rate}
+                  onChange={(e) => set('hourly_rate')(e.target.value)}
+                  onBlur={blur('hourly_rate')}
+                  onFocus={(e) => e.target.select()}
+                  dir="ltr"
+                  className="text-right"
+                  data-testid="hostess-hourly-rate"
+                />
+                {isEdit && (
+                  <span className="mt-1 block text-[11px] text-amber-700">
+                    שינוי כאן <b>לא ישנה</b> תעריף של שיבוץ עתידי שכבר קיים — הוא הוקפא ברגע השיבוץ.
+                    ההעלאה תחול על השיבוץ הבא בלבד.
+                  </span>
+                )}
+              </Field>
 
-            {isEdit && (
-              <div className="mt-4 border-t border-slate-200 pt-3">
-                <p className="mb-2 text-xs font-semibold text-slate-500">
-                  אי-זמינות מוצהרת{' '}
-                  <span className="font-normal">— טווח תאריכים + הערה, לא תאריך יחיד</span>
-                </p>
+              <p className="mb-2 mt-4 text-xs font-semibold text-slate-500">פרטי בנק</p>
+              <div className="grid grid-cols-3 gap-3">
+                <Field label="בנק" required error={showError('bank_name')}>
+                  <Input
+                    value={form.bank_name}
+                    onChange={(e) => set('bank_name')(e.target.value)}
+                    onBlur={blur('bank_name')}
+                    placeholder="לדוגמה: הפועלים"
+                    data-testid="hostess-bank-name"
+                  />
+                </Field>
+                <Field label="סניף" required error={showError('bank_branch')}>
+                  <Input
+                    value={form.bank_branch}
+                    onChange={(e) => set('bank_branch')(e.target.value)}
+                    onBlur={blur('bank_branch')}
+                    placeholder="123"
+                    dir="ltr"
+                    className="text-right"
+                    data-testid="hostess-bank-branch"
+                  />
+                </Field>
+                <Field label="מס׳ חשבון" required error={showError('bank_account')}>
+                  <Input
+                    value={form.bank_account}
+                    onChange={(e) => set('bank_account')(e.target.value)}
+                    onBlur={blur('bank_account')}
+                    placeholder="123456"
+                    dir="ltr"
+                    className="text-right"
+                    data-testid="hostess-bank-account"
+                  />
+                </Field>
+              </div>
 
-                {ranges.map((range, index) => (
-                  <div
-                    key={`${range.start_date}-${range.end_date}-${index}`}
-                    className="mb-1.5 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-[12.5px] text-amber-800"
-                    data-testid={`hostess-range-${index}`}
-                  >
-                    <span>
-                      {unavailabilityLabel(range)?.replace('לא זמינה ', '')}
-                      {range.note ? ` · ${range.note}` : ''}
-                    </span>
+              <Field
+                label="התרשמות המנהלת (1–5)"
+                hint='לא "דירוג": זו דעתך, לא ציון-מערכת. אינה חלק מ-Smart Match'
+              >
+                <RatingStars value={form.rating} onChange={set('rating')} testId="hostess-rating" />
+              </Field>
+
+              <Field label="יש רכב?" hint='מעל 40 ק"מ בלי רכב = פסילה בשיבוץ, לא ניקוד'>
+                <Switch
+                  checked={form.has_car}
+                  onCheckedChange={set('has_car')}
+                  aria-label="יש רכב"
+                  data-testid="hostess-has-car"
+                />
+              </Field>
+
+              <Field
+                label="שפות"
+                hint="שדה-מידע בלבד. לא שער ולא עמודה בטבלת-המאגר — המנהלת בוחרת ידנית מי לזמן לכל תפקיד"
+              >
+                <ChipToggle
+                  options={LANGUAGES}
+                  selected={form.languages}
+                  onToggle={(lang) =>
+                    set('languages')(
+                      form.languages.includes(lang)
+                        ? form.languages.filter((l) => l !== lang)
+                        : [...form.languages, lang],
+                    )
+                  }
+                  testId="hostess-languages"
+                />
+              </Field>
+
+              {isEdit && (
+                <div className="mt-4 border-t border-slate-200 pt-3">
+                  <p className="mb-2 text-xs font-semibold text-slate-500">
+                    אי-זמינות מוצהרת{' '}
+                    <span className="font-normal">— טווח תאריכים + הערה, לא תאריך יחיד</span>
+                  </p>
+
+                  {ranges.map((range, index) => (
+                    <div
+                      key={`${range.start_date}-${range.end_date}-${index}`}
+                      className="mb-1.5 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-[12.5px] text-amber-800"
+                      data-testid={`hostess-range-${index}`}
+                    >
+                      <span>
+                        {unavailabilityLabel(range)?.replace('לא זמינה ', '')}
+                        {range.note ? ` · ${range.note}` : ''}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="link"
+                        onClick={() => setRanges((prev) => prev.filter((_, i) => i !== index))}
+                        className="h-auto p-0 text-xs text-slate-600"
+                      >
+                        הסר
+                      </Button>
+                    </div>
+                  ))}
+
+                  <div className="mt-2 flex flex-wrap items-end gap-2">
+                    <Field label="מ-תאריך" compact>
+                      <Input
+                        type="date"
+                        value={draftRange.start_date}
+                        onChange={(e) =>
+                          setDraftRange((p) => ({ ...p, start_date: e.target.value }))
+                        }
+                        onKeyDown={onDraftRangeKeyDown}
+                        data-testid="hostess-range-start"
+                      />
+                    </Field>
+                    <Field label="עד-תאריך" compact>
+                      <Input
+                        type="date"
+                        value={draftRange.end_date}
+                        onChange={(e) => setDraftRange((p) => ({ ...p, end_date: e.target.value }))}
+                        onKeyDown={onDraftRangeKeyDown}
+                        data-testid="hostess-range-end"
+                      />
+                    </Field>
+                    <Field label="הערה קצרה" compact grow>
+                      <Input
+                        value={draftRange.note}
+                        onChange={(e) => setDraftRange((p) => ({ ...p, note: e.target.value }))}
+                        onKeyDown={onDraftRangeKeyDown}
+                        placeholder="לדוגמה: חופשה, מחלה, לימודים"
+                        data-testid="hostess-range-note"
+                      />
+                    </Field>
                     <Button
                       type="button"
-                      variant="link"
-                      onClick={() => setRanges((prev) => prev.filter((_, i) => i !== index))}
-                      className="h-auto p-0 text-xs text-slate-600"
+                      variant="outline"
+                      onClick={addRange}
+                      className="h-auto rounded-lg border-slate-300 px-3 py-2 text-xs text-slate-700"
+                      data-testid="hostess-range-add"
                     >
-                      הסר
+                      + הוסף טווח
                     </Button>
                   </div>
-                ))}
-
-                <div className="mt-2 flex flex-wrap items-end gap-2">
-                  <Field label="מ-תאריך" compact>
-                    <Input
-                      type="date"
-                      value={draftRange.start_date}
-                      onChange={(e) => setDraftRange((p) => ({ ...p, start_date: e.target.value }))}
-                      data-testid="hostess-range-start"
-                    />
-                  </Field>
-                  <Field label="עד-תאריך" compact>
-                    <Input
-                      type="date"
-                      value={draftRange.end_date}
-                      onChange={(e) => setDraftRange((p) => ({ ...p, end_date: e.target.value }))}
-                      data-testid="hostess-range-end"
-                    />
-                  </Field>
-                  <Field label="הערה קצרה" compact grow>
-                    <Input
-                      value={draftRange.note}
-                      onChange={(e) => setDraftRange((p) => ({ ...p, note: e.target.value }))}
-                      placeholder="לדוגמה: חופשה, מחלה, לימודים"
-                      data-testid="hostess-range-note"
-                    />
-                  </Field>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addRange}
-                    className="h-auto rounded-lg border-slate-300 px-3 py-2 text-xs text-slate-700"
-                    data-testid="hostess-range-add"
-                  >
-                    + הוסף טווח
-                  </Button>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
 
-        <DialogFooter className="gap-2 sm:gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={saving}
-            className="h-auto rounded-lg border-slate-300 px-4 py-2.5 text-slate-700"
-          >
-            ביטול
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSave}
-            disabled={saving || loading || blocked}
-            className="h-auto rounded-lg bg-teal-600 px-4 py-2.5 font-semibold text-white"
-            data-testid="hostess-save"
-          >
-            {isEdit ? 'שמור שינויים' : 'שמור דיילת'}
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={saving}
+              className="h-auto rounded-lg border-slate-300 px-4 py-2.5 text-slate-700"
+            >
+              ביטול
+            </Button>
+            <Button
+              type="submit"
+              disabled={saving || loading || blocked}
+              className="h-auto rounded-lg bg-teal-600 px-4 py-2.5 font-semibold text-white"
+              data-testid="hostess-save"
+            >
+              {saving ? 'שומר...' : isEdit ? 'שמור שינויים' : 'שמור דיילת'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )

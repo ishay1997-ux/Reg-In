@@ -123,7 +123,9 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
     }
   }
 
-  if (loading) return <LoadingOrError loading />
+  // 🆕 שלד-טבלה — לא נדרש במפורש באפיון מסך 1 (§⑥ שם מגדיר רק ריק/ריק-אחרי-סינון/שגיאה),
+  // אבל עקבי עם שאר טבלאות המודול ועם הרכיב המשותף — לא סטייה, שיפור-עקביות חינמי.
+  if (loading) return <LoadingOrError loading skeleton={{ variant: 'table', rows: 5, cols: 5 }} />
   if (error) {
     return (
       <LoadingOrError
@@ -253,7 +255,17 @@ function OverviewRow({ row, today, canEdit, sending, onOpen, onResend }) {
   return (
     <tr
       onClick={onOpen}
-      className={`cursor-pointer ${showsFinalDayAlert ? 'bg-red-50' : isMissing ? '' : 'bg-slate-50 text-slate-500'}`}
+      // ⌨️ שורה לחיצה חייבת נגישות-מקלדת משלה — `<tr>` אינו בר-מיקוד מטבעו, ובלעדי זה
+      // אין שום דרך להגיע למסך השיבוץ החכם בלי עכבר (נמדד חי: ה-Tab דילג ישר מהמסננים ל-body).
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onOpen()
+        }
+      }}
+      aria-label={`${project.event_name} — לשיבוץ חכם`}
+      className={`cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500 ${showsFinalDayAlert ? 'bg-red-50' : isMissing ? '' : 'bg-slate-50 text-slate-500'}`}
       data-testid={`overview-row-${project.project_id}`}
     >
       <Td>

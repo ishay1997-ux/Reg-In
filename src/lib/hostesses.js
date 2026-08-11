@@ -568,6 +568,10 @@ export function futureActiveAssignments(rows, todayIso) {
     })
     .map((row) => ({
       projectId: row.project_id,
+      // 🆕 מזהי-השורה נוספו כדי שקורא (חלון-ההשבתה ב-RepositoryTab) יוכל לקרוא ל-`releaseAssignment`
+      // בלי לשכפל את הסינון/הקיפול שכבר קרו כאן — לא צריכים לצריכה הקיימת (eventName/eventDate/statusLabel).
+      hostessId: row.hostess_id,
+      assignmentNumber: row.assignment_number,
       eventName: row.projects?.event_name ?? null,
       eventDate: row.projects.final_event_date,
       statusLabel: ASSIGNMENT_STATUS_LABELS[row.assignment_status],

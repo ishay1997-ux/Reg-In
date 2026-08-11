@@ -128,6 +128,21 @@ test.describe('בדיקת-עשן', () => {
     )
     await expect(page.getByTestId('param-vat')).toHaveValue(anchors.prices.vat)
 
+    // דיילות: הסרגל טוען את המודול, ומסך Smart Match לאירוע האמיתי מציג רק מי שעברה
+    // את שער-הפסילה — מועמדת אחת ידועה בפנים, ושתי הנפסלות (בלי-רכב-ורחוקה /
+    // לא-זמינה-בתאריך-האירוע) בחוץ.
+    await expect(page.getByRole('link', { name: anchors.hostesses.sidebarLink })).toBeVisible()
+    await page.goto('/hostesses')
+    await expect(page.getByTestId('overview-table')).toBeVisible()
+    await page
+      .locator('[data-testid^="overview-row-"]', { hasText: anchors.hostesses.eventName })
+      .first()
+      .click()
+    await expect(page.getByTestId('smart-match-page')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByText(anchors.hostesses.availableCandidate).first()).toBeVisible()
+    await expect(page.getByText(anchors.hostesses.excludedNoCar)).toHaveCount(0)
+    await expect(page.getByText(anchors.hostesses.excludedUnavailable)).toHaveCount(0)
+
     // המנגנונים — לא הבטחות: אפס ניסיונות-כתיבה, אפס יעדים חיצוניים, אפס שגיאות-קונסול.
     expect(blockedWrites, 'מסך ניסה לכתוב למסד בזמן קריאה-בלבד').toEqual([])
     expect(externalHits, 'בקשה ליעד חיצוני שאינו האפליקציה/Supabase').toEqual([])

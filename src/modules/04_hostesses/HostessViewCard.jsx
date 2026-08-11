@@ -12,7 +12,7 @@
 // למודול 6, ולינק שמוביל לשום מקום גרוע מהיעדרו.
 
 import { useEffect, useMemo, useState } from 'react'
-import { Pencil, X } from 'lucide-react'
+import { Pencil } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import LoadingOrError from '@/components/LoadingOrError'
 import StatTile from '@/components/StatTile'
@@ -25,6 +25,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import {
   ASSIGNMENT_STATUS_LABELS,
   assignmentDisplayStatus,
+  eventStartInstant,
   finalAssignmentRows,
   eventsInLastQuarter,
   unansweredStreakTag,
@@ -48,6 +49,7 @@ export default function HostessViewCard({ hostessId, onClose, onEdit }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
+  const now = useMemo(() => new Date().toISOString(), [])
 
   useEffect(() => {
     let cancelled = false
@@ -90,7 +92,12 @@ export default function HostessViewCard({ hostessId, onClose, onEdit }) {
           <DialogHeader>
             <DialogTitle>כרטיס דיילת</DialogTitle>
           </DialogHeader>
-          <LoadingOrError loading={loading} error={error ?? 'לא הצלחנו לטעון את כרטיס הדיילת'} />
+          {/* שלד-כרטיס: רצועת-הדגשים + פרטים כקווים אפורים (`screens-approved.md:882`). */}
+          <LoadingOrError
+            loading={loading}
+            error={error ?? 'לא הצלחנו לטעון את כרטיס הדיילת'}
+            skeleton={{ variant: 'card' }}
+          />
         </DialogContent>
       </Dialog>
     )
@@ -99,22 +106,15 @@ export default function HostessViewCard({ hostessId, onClose, onEdit }) {
   return (
     <Dialog open onOpenChange={(next) => !next && onClose()}>
       <DialogContent dir="rtl" className="sm:max-w-3xl">
+        {/* אין כפתור-סגירה ידני כאן — DialogContent כבר מרנדר את זה של Radix באותה נקודה
+            בדיוק (`src/components/ui/dialog.jsx`); עותק שני יצר שני יעדי-Tab לאותה פעולה. */}
         <CardBody
           hostess={hostess}
           derived={derived}
           canEdit={canEdit}
-          today={today}
+          now={now}
           onEdit={() => onEdit(hostessId)}
         />
-        <Button
-          type="button"
-          variant="link"
-          onClick={onClose}
-          className="absolute left-4 top-4 h-auto p-0 text-slate-500"
-          aria-label="סגור"
-        >
-          <X className="size-4" />
-        </Button>
       </DialogContent>
     </Dialog>
   )
@@ -152,6 +152,20 @@ function deriveCardData(hostess, assignments, params, today) {
       .sort()
       .at(-1)
 
+    const weeksSinceWorked = lastWorked
+      ? Math.floor(
+          (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${lastWorked}T00:00:00Z`)) / MS_PER_WEEK,
+        )
+      : null
+
+    // 🔴 **אותו סף בדיוק כמו מסך 2** (`screens-approved.md` 3ד §⑦: "אותו סף/מכפיל של מנוף-ההוגנות
+    // (8 שבועות, מסך 2 §🏷️), לא ניסוח חדש") — `SmartMatchPage.jsx` מציג את הצ'יפ הזה רק מעל
+    // `תקרת_שבועות_הוגנות`, וכאן הוא הוצג ללא סף בכלל: דיילת שעבדה אתמול הייתה מקבלת
+    // "עבדה לאחרונה לפני 0 שבועות" — בדיוק ההפך מהאזהרה שהצ'יפ נועד לשאת.
+    const weeksCap = optionalNumber(params[SMART_MATCH_PARAM_NAMES.fairnessWeeksCap])
+    const weeksSinceWorkedStale =
+      weeksSinceWorked !== null && weeksCap !== null && weeksSinceWorked >= weeksCap
+
     return {
       state: hostessDisplayState(hostess, hostess.hostess_unavailability, today),
       counts: responsivenessCounts(assignments),
@@ -163,17 +177,13 @@ function deriveCardData(hostess, assignments, params, today) {
       upcoming,
       history,
       customers: [...byCustomer.entries()].sort((a, b) => b[1] - a[1]),
-      weeksSinceWorked: lastWorked
-        ? Math.floor(
-            (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${lastWorked}T00:00:00Z`)) /
-              MS_PER_WEEK,
-          )
-        : null,
+      weeksSinceWorked,
+      weeksSinceWorkedStale,
     }
   }
 }
 
-function CardBody({ hostess, derived, canEdit, today, onEdit }) {
+function CardBody({ hostess, derived, canEdit, now, onEdit }) {
   return (
     <>
       <DialogHeader>
@@ -184,7 +194,15 @@ function CardBody({ hostess, derived, canEdit, today, onEdit }) {
           </span>
         </DialogTitle>
         <p className="mt-0.5 text-xs text-slate-500">
-          {hostess.created_at ? `במאגר מ-${formatDate(hostess.created_at.slice(0, 10))} · ` : ''}
+          {hostess.created_at && (
+            <>
+              במאגר מ-
+              <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
+                {formatDate(hostess.created_at.slice(0, 10))}
+              </span>{' '}
+              ·{' '}
+            </>
+          )}
           עיר: {hostess.city}
         </p>
         {canEdit && (
@@ -221,7 +239,7 @@ function CardBody({ hostess, derived, canEdit, today, onEdit }) {
         </div>
 
         <div className="mb-4 flex flex-wrap gap-1.5">
-          {derived.weeksSinceWorked !== null && (
+          {derived.weeksSinceWorkedStale && (
             <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs text-amber-800">
               עבדה לאחרונה לפני {derived.weeksSinceWorked} שבועות
             </span>
@@ -237,7 +255,7 @@ function CardBody({ hostess, derived, canEdit, today, onEdit }) {
           {derived.upcoming.length === 0 ? (
             <Muted>אין לה כרגע שיבוץ פעיל</Muted>
           ) : (
-            <AssignmentTable rows={derived.upcoming} today={today} />
+            <AssignmentTable rows={derived.upcoming} now={now} />
           )}
         </Section>
 
@@ -251,7 +269,10 @@ function CardBody({ hostess, derived, canEdit, today, onEdit }) {
                   key={name}
                   className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs text-slate-600"
                 >
-                  {name} · {count}×
+                  {name} ·{' '}
+                  <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
+                    {count}×
+                  </span>
                 </span>
               ))}
             </div>
@@ -318,7 +339,7 @@ function CardBody({ hostess, derived, canEdit, today, onEdit }) {
           {derived.history.length === 0 ? (
             <Muted>דיילת חדשה, עדיין אין לה היסטוריית שיבוצים</Muted>
           ) : (
-            <AssignmentTable rows={derived.history} today={today} />
+            <AssignmentTable rows={derived.history} now={now} />
           )}
         </Section>
       </div>
@@ -326,7 +347,7 @@ function CardBody({ hostess, derived, canEdit, today, onEdit }) {
   )
 }
 
-function AssignmentTable({ rows, today }) {
+function AssignmentTable({ rows, now }) {
   return (
     <table className="w-full border-collapse text-[12.5px]">
       <thead>
@@ -345,10 +366,20 @@ function AssignmentTable({ rows, today }) {
         {rows.map((row) => {
           // ⚠️ התווית עוברת דרך `assignmentDisplayStatus` ולא דרך המפה הגולמית, כדי
           // ש"פג תוקף" ו"הושלם" — שתי הנגזרות — יופיעו כאן בדיוק כמו בכל מסך אחר.
+          // 🔴 `event_starts_at` חייב לעבור דרך `eventStartInstant` (שעת-האירוע האמיתית,
+          // לא חצות UTC מומצא) — `src/modules/04_hostesses/CLAUDE.md` דורש זהות מול
+          // `respond_to_shift_invite`. חצות מומצא + "עכשיו"=סוף-היום היו מתייגים כל שיבוץ
+          // שתאריכו היום כ"הושלם" מרגע פתיחת הכרטיס, גם אם האירוע רק בערב.
           const label =
             assignmentDisplayStatus(
-              { ...row, event_starts_at: `${row.projects?.final_event_date}T00:00:00Z` },
-              `${today}T23:59:59Z`,
+              {
+                ...row,
+                event_starts_at: eventStartInstant(
+                  row.projects?.final_event_date,
+                  row.projects?.final_start_time,
+                ),
+              },
+              now,
             ) ?? ASSIGNMENT_STATUS_LABELS[row.assignment_status]
           return (
             <tr key={`${row.project_id}-${row.assignment_number}`}>

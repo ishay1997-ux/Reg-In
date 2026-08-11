@@ -14,7 +14,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Pencil } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
-import { useConfirm } from '@/components/ConfirmDialog'
 import LoadingOrError from '@/components/LoadingOrError'
 import FilterPill from '@/components/FilterPill'
 import StatusTag from '@/components/StatusTag'
@@ -31,6 +30,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   hostessDisplayState,
   unansweredStreakTag,
   eventsInLastQuarter,
@@ -44,6 +51,7 @@ import {
   listRepositoryAssignments,
   getHostessScreenParams,
   setHostessStatus,
+  releaseAssignment,
 } from './api'
 
 // סנטינל ל-Select: Radix זורק על `value=""`, וזו התבנית שכבר בשימוש במודול 3.
@@ -60,7 +68,11 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
   const { permissions } = useAuth()
   const canEdit = permissions['דיילות'] === 'edit'
   const toast = useToast()
-  const confirm = useConfirm()
+  // 🆕 חלון-ההשבתה-עם-שיבוצים-עתידיים הוא תלת-ברירה (שחרר / השבת-ותשלים / ביטול), ו-`useConfirm`
+  // הוא דו-ברירתי בלבד (Provider משותף לכל האפליקציה — לא משנים את הצורה שלו בשביל מסך אחד).
+  // ⇒ דיאלוג ייעודי מקומי, על אותם primitives (`components/ui/dialog`), רק כאן.
+  const [deactivateChoice, setDeactivateChoice] = useState(null) // null | {hostess, futureActive}
+  const [releasing, setReleasing] = useState(false)
 
   const [hostesses, setHostesses] = useState([])
   const [assignments, setAssignments] = useState([])
@@ -175,62 +187,74 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
   // השבתה/הפעלה. 🔴 **תלוי-מצב, וזו התנהגות כבר-מוכרעת שהמוקאפ המקורי החמיץ** (§א4):
   // בלי שיבוץ עתידי פעיל — מתהפך מיד, אפס שיקול-דעת. **עם** שיבוץ כזה — חלון שמונה
   // אותם **בשם ובתאריך**, כי שתי האפשרויות לגיטימיות והמנהלת היא שמכריעה ביניהן.
-  async function toggleStatus(row) {
+  //
+  // ✅ **§7.33 נסגר ב-3.5 — השחרור בנוי ופעיל בקוד (`releaseAssignment`, `api.js`), עם מייל-ביטול
+  // אמיתי.** עד עכשיו החלון הזה עדיין אמר "יתווסף בהמשך" ולא הציע אותו כלל — תוקן כאן: שתי
+  // האפשרויות מוצגות כפעולות אמיתיות, ו"שחרר מהאירועים" היא המומלצת (§א4 + המוקאפ המאושר, `.copt.rec`).
+  function toggleStatus(row) {
     const { hostess, futureActive } = row
-    const goingInactive = hostess.status === 'active'
 
-    if (goingInactive && futureActive.length > 0) {
-      const count = futureActive.length
-      // ⚠️ **צמתים ולא מחרוזת עם `\n`** — `DialogDescription` מרנדר פסקה אחת, ושורות-חדשות
-      // בתוכה נבלעות. נתפס בעין על החלון הבנוי: הרשימה והפסקה נדבקו לגוש טקסט אחד.
-      // ‏`span.block` ולא `div` — ‏`<div>` בתוך `<p>` הוא HTML לא-תקין.
-      const list = (
-        <>
-          {futureActive.map((a) => (
-            <span key={a.projectId} className="block font-semibold text-slate-700">
-              • {a.eventName} · {formatDate(a.eventDate)} · {a.statusLabel}
-            </span>
-          ))}
-        </>
-      )
-
-      // 🔴 **§א4 מציע שתי אפשרויות, ורק אחת מהן ניתנת לביצוע היום — והחלון אומר זאת
-      // במפורש במקום להסתיר.** "שחרר אותה מהאירועים" גורר את תהליך-השחרור המלא (מייל
-      // הביטול · החזרת הפרויקט ל"בתהליך"), ו**מנגנון-הכתיבה שלו הוא §7.33 שעדיין פתוח**
-      // ⇒ הוא נבנה בצעד 3.5. 🚫 להציג כפתור "שחרר" שרק משנה סטטוס היה משקר למנהלת:
-      // האירוע היה נשאר מאויש-לכאורה, ואיש לא היה שם לב עד יום האירוע — בדיוק התרחיש
-      // שהאזהרה ב-§א4 קיימת בשבילו.
-      const proceed = await confirm({
-        title: `${hostess.full_name} משובצת ל-${count} ${count === 1 ? 'אירוע עתידי' : 'אירועים עתידיים'}`,
-        message: (
-          <>
-            {list}
-            <span className="mt-2 block">
-              השבתה עכשיו משאירה את השיבוצים האלה על כנם — היא תשלים את מה שהתחייבה אליו, ורק תפסיק
-              לקבל הזמנות חדשות.
-            </span>
-            <span className="mt-2 block text-amber-700">
-              שחרור מהאירועים (כולל מייל ביטול) עדיין אינו זמין מהמסך הזה ויתווסף בהמשך — עד אז יש
-              לשחרר אותה ידנית מכל אירוע.
-            </span>
-          </>
-        ),
-        confirmLabel: 'השבת — תשלים את מה שהתחייבה',
-        cancelLabel: 'ביטול',
-      })
-      if (!proceed) return
+    if (hostess.status !== 'active') {
+      activate(hostess)
+      return
     }
 
+    if (futureActive.length > 0) {
+      setDeactivateChoice({ hostess, futureActive })
+      return
+    }
+
+    applyDeactivate(hostess, { release: false })
+  }
+
+  async function applyDeactivate(hostess, { release, futureActive = [] }) {
+    setReleasing(true)
     try {
-      await setHostessStatus(hostess.hostess_id, goingInactive ? 'inactive' : 'active')
-      toast.success(goingInactive ? `${hostess.full_name} הושבתה` : `${hostess.full_name} הופעלה`)
+      if (release && futureActive.length > 0) {
+        const results = await Promise.allSettled(
+          futureActive.map((a) =>
+            releaseAssignment({
+              project_id: a.projectId,
+              hostess_id: a.hostessId,
+              assignment_number: a.assignmentNumber,
+              hostesses: hostess,
+              projects: { event_name: a.eventName },
+            }),
+          ),
+        )
+        const failed = results.filter((r) => r.status === 'rejected')
+        if (failed.length > 0) {
+          toast.error(
+            `שחרור מ-${failed.length} מתוך ${futureActive.length} אירועים נכשל — ${hostess.full_name} עדיין משובצת אליהם. נסי לשחרר ידנית מתפריט-הפעולות במסך שיבוץ חכם.`,
+          )
+        }
+      }
+
+      await setHostessStatus(hostess.hostess_id, 'inactive')
+      toast.success(
+        release ? `${hostess.full_name} שוחררה מהאירועים והושבתה` : `${hostess.full_name} הושבתה`,
+      )
+      setDeactivateChoice(null)
+      refresh()
+    } catch (err) {
+      toast.error(err.message ?? 'שינוי סטטוס הדיילת נכשל.')
+    } finally {
+      setReleasing(false)
+    }
+  }
+
+  async function activate(hostess) {
+    try {
+      await setHostessStatus(hostess.hostess_id, 'active')
+      toast.success(`${hostess.full_name} הופעלה`)
       refresh()
     } catch (err) {
       toast.error(err.message ?? 'שינוי סטטוס הדיילת נכשל.')
     }
   }
 
-  if (loading) return <LoadingOrError loading />
+  // שלד-טבלה, כפי שהאפיון קובע (`screens-approved.md:625`).
+  if (loading) return <LoadingOrError loading skeleton={{ variant: 'table', rows: 6, cols: 6 }} />
   if (error) {
     return (
       <LoadingOrError
@@ -255,6 +279,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
         <Select value={city} onValueChange={setCity}>
           <SelectTrigger
             className="h-auto w-auto py-1.5 text-[12.5px]"
+            aria-label="סינון לפי עיר"
             data-testid="repository-city"
           >
             <SelectValue />
@@ -336,27 +361,38 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
             {visible.map(({ hostess, state, streak, quarterEvents, futureActive }) => (
               <tr
                 key={hostess.hostess_id}
-                className={hostess.status === 'active' ? '' : 'bg-slate-50'}
+                onClick={() => onOpenCard(hostess.hostess_id)}
+                // ⌨️ אותו דפוס בדיוק כמו `CustomersPage` (תיקון 11/07 שם) — שורה שלמה לחיצה,
+                // לא רק השם: לחיצה בכל מקום פותחת את כרטיס הדיילת. ‏Enter/רווח עושים אותו דבר.
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onOpenCard(hostess.hostess_id)
+                  }
+                }}
+                aria-label={`פתח כרטיס דיילת: ${hostess.full_name}`}
+                className={`cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500 ${hostess.status === 'active' ? '' : 'bg-slate-50'}`}
                 data-testid={`repository-row-${hostess.hostess_id}`}
               >
                 <Td>
-                  <button
-                    type="button"
-                    onClick={() => onOpenCard(hostess.hostess_id)}
-                    className={`h-auto p-0 text-right font-semibold hover:text-teal-700 hover:underline ${
+                  <span
+                    className={`font-semibold hover:text-teal-700 hover:underline ${
                       hostess.status === 'active' ? 'text-slate-800' : 'text-slate-500'
                     }`}
                     data-testid={`repository-name-${hostess.hostess_id}`}
                   >
                     {hostess.full_name}
-                  </button>
+                  </span>
                   {streak && (
                     <span className="block text-[10.5px] text-amber-700">{streak.label}</span>
                   )}
                 </Td>
                 <Td>{hostess.city}</Td>
                 <Td>
-                  <span className="inline-block" dir="ltr">
+                  {/* בידוד-כיווניות תואם למוקאפ המאושר (`.num{direction:ltr;unicode-bidi:isolate}`,
+                      חל על ארבע העמודות המספריות בשורה) — `dir` לבדו אינו מספיק בתא עצמאי. */}
+                  <span className="inline-block" dir="ltr" style={{ unicodeBidi: 'isolate' }}>
                     {hostess.phone}
                   </span>
                 </Td>
@@ -379,12 +415,13 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                   )}
                 </Td>
                 <Td>
-                  <span className="inline-block" dir="ltr">
+                  <span className="inline-block" dir="ltr" style={{ unicodeBidi: 'isolate' }}>
                     {quarterEvents}
                   </span>
                 </Td>
                 {canEdit && (
-                  <Td>
+                  // stopPropagation: פקדי-פעולה תוך-שורה (עריכה/מתג) לא פותחים את כרטיס-הדיילת
+                  <Td onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-2">
                       <Button
                         type="button"
@@ -415,6 +452,78 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
           </tbody>
         </table>
       )}
+
+      <Dialog
+        open={deactivateChoice != null}
+        onOpenChange={(next) => !next && !releasing && setDeactivateChoice(null)}
+      >
+        <DialogContent dir="rtl" className="sm:max-w-md" data-testid="deactivate-dialog">
+          {deactivateChoice && (
+            <>
+              <DialogHeader>
+                <DialogTitle>
+                  {deactivateChoice.hostess.full_name} משובצת ל-
+                  {deactivateChoice.futureActive.length}{' '}
+                  {deactivateChoice.futureActive.length === 1 ? 'אירוע עתידי' : 'אירועים עתידיים'}
+                </DialogTitle>
+                <DialogDescription>
+                  {/* ⚠️ צמתים ולא מחרוזת עם `\n` — `DialogDescription` מרנדר פסקה אחת, ושורות-חדשות
+                      בתוכה נבלעות. `span.block` ולא `div` — `<div>` בתוך `<p>` הוא HTML לא-תקין. */}
+                  {deactivateChoice.futureActive.map((a) => (
+                    <span key={a.projectId} className="block font-semibold text-slate-700">
+                      • {a.eventName} · {formatDate(a.eventDate)} · {a.statusLabel}
+                    </span>
+                  ))}
+                  <span className="mt-2 block">
+                    <b>שחרר מהאירועים (מומלץ)</b> — כל שיבוץ יסומן כ"שוחררה" והדיילת תקבל מייל-ביטול
+                    על כל אירוע. האירוע חוזר לחסר-איוש, וזה נספר כשחרור-שלנו — לא לרעתה.
+                  </span>
+                  <span className="mt-2 block">
+                    <b>השבת — תשלים את מה שהתחייבה</b> — השיבוצים העתידיים נשארים על כנם; היא רק
+                    מפסיקה לקבל הזמנות חדשות.
+                  </span>
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2 sm:gap-2 sm:flex-col">
+                <Button
+                  type="button"
+                  disabled={releasing}
+                  onClick={() =>
+                    applyDeactivate(deactivateChoice.hostess, {
+                      release: true,
+                      futureActive: deactivateChoice.futureActive,
+                    })
+                  }
+                  className="h-auto w-full py-2.5 px-4 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700"
+                  data-testid="deactivate-release"
+                >
+                  {releasing ? 'משחרר...' : 'שחרר מהאירועים'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={releasing}
+                  onClick={() => applyDeactivate(deactivateChoice.hostess, { release: false })}
+                  className="h-auto w-full py-2.5 px-4 rounded-lg border-slate-300 text-slate-700"
+                  data-testid="deactivate-keep"
+                >
+                  השבת — תשלים את מה שהתחייבה
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  disabled={releasing}
+                  onClick={() => setDeactivateChoice(null)}
+                  className="h-auto w-full py-1 text-slate-500"
+                  data-testid="deactivate-cancel"
+                >
+                  ביטול
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -427,8 +536,12 @@ function Th({ children }) {
   )
 }
 
-function Td({ children }) {
-  return <td className="border-b border-slate-100 px-2.5 py-2.5 align-middle">{children}</td>
+function Td({ children, onClick }) {
+  return (
+    <td className="border-b border-slate-100 px-2.5 py-2.5 align-middle" onClick={onClick}>
+      {children}
+    </td>
+  )
 }
 
 function EmptyState({ filtered, canEdit, onAdd, onClear }) {

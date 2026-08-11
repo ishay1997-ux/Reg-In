@@ -117,6 +117,29 @@ test.describe('מודול 4 · מסך 2 — שיבוץ חכם', () => {
     await expect(page.getByTestId('sm-reliability-off')).toContainText('מודול 6')
   })
 
+  // 🐞 רגרסיה (נתפס 11/08/2026, צעד 4.2): עד לתיקון, `rankCandidates` קיבל
+  // `eventDate: today` במקום את תאריך-האירוע — כלומר השער בדק אם הדיילת לא-זמינה
+  // **היום**, לא אם היא לא-זמינה **בתאריך האירוע**. אף בדיקה קיימת לא תפסה זאת כי אף אחת
+  // לא הזינה דיילת עם טווח-אי-זמינות **עתידי** שחופף לאירוע. `spec.md §3.1` (שירה) ו-דיילת
+  // הדגמה `ליאת רזניק` (`scripts/demo-seed.mjs`, טווח 20/08–25/08 מול אירוע 22/08) הן
+  // בדיוק המקרה הזה.
+  test('🔴 שער אי-הזמינות בודק את תאריך האירוע — לא את תאריך היום', async ({ page }) => {
+    await login(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
+    await page.goto('/hostesses')
+    await expect(page.getByTestId('overview-table')).toBeVisible({ timeout: 30_000 })
+    // נבחר בזמן-ריצה לפי שם-האירוע, לא לפי מזהה קשיח (`e2e/CLAUDE.md`).
+    await page
+      .locator('[data-testid^="overview-row-"]', { hasText: 'כנס לקוחות שנתי' })
+      .first()
+      .click()
+    await expect(page.getByTestId('smart-match-page')).toBeVisible({ timeout: 30_000 })
+
+    // בקרה חיובית קודם: דיילת-דגמה זמינה **כן** מופיעה — אחרת הבדיקה הייתה מוכיחה רק
+    // שהרשימה כולה ריקה, לא שהשער עובד נכון.
+    await expect(page.locator('body')).toContainText('מאיה כהן')
+    await expect(page.locator('body')).not.toContainText('ליאת רזניק')
+  })
+
   test('🔴 כשל-טעינה מציג שגיאה + "נסה שוב", ולעולם לא "אין מועמדות"', async ({ page }) => {
     await login(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
 

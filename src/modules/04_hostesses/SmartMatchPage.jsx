@@ -155,11 +155,17 @@ export default function SmartMatchPage({ projectId, onBack }) {
   // ── ארבע השכבות ────────────────────────────────────────────────────────────
   // ⚠️ **המועמדות מחושבות על כל המאגר**, גם על מי שתיפסל בשער: `C` (ממוצע-החברה) מחושב
   // עליהן, וסינון מוקדם היה משנה אותו ואת כל הדירוג (`§11.3`).
+  // 🔴 **`eventDate` לשער חייב להיות תאריך-האירוע, לא "היום" — נתפס 11/08/2026 בזרע-הדגמה
+  // של צעד 4.2.** `rankCandidates` מעביר אותו ל-`isUnavailableOn` בלבד (השער האמינותי היחיד
+  // שתלוי בו); `today` נשאר הפרמטר הנכון ל-`buildSmartMatchCandidates` (שבועות-מאז-עבדה/
+  // ספירת-רבעון — אלה כן נמדדים מ"עכשיו"). ⚠️ **הבדיקות הקיימות של השכבה הטהורה
+  // (`smartMatch.test.js`) לא תפסו את זה** כי הן מזינות `eventDate` מפורש כפרמטר-בדיקה
+  // ולעולם לא "היום" — הפגם ישב רק בחיווט של המסך, לא בנוסחה עצמה.
   const ranked = useMemo(() => {
     if (!data || !params) return []
     const candidates = buildSmartMatchCandidates(data, today)
-    return rankCandidates(candidates, { params, eventDate: today, projectId })
-  }, [data, params, today, projectId])
+    return rankCandidates(candidates, { params, eventDate: project?.final_event_date, projectId })
+  }, [data, params, today, project, projectId])
 
   // 📌 `הנחתי` (§10): **מי שכבר יש לה שורה באירוע הזה אינה מועמדת.** האפיון מונה חמישה
   // תנאי-שער ואין ביניהם "כבר זומנה" — אבל היא כבר מוצגת בטור הימני, והופעתה גם משמאל
@@ -364,7 +370,8 @@ export default function SmartMatchPage({ projectId, onBack }) {
     }
   }
 
-  if (loading) return <LoadingOrError loading />
+  // שלד של 8 כרטיסי-מועמדת, לא "0 מתוך 0" (`screens-approved.md:326`).
+  if (loading) return <LoadingOrError loading skeleton={{ variant: 'cards', count: 8 }} />
   if (error) {
     return (
       <LoadingOrError
@@ -436,25 +443,30 @@ export default function SmartMatchPage({ projectId, onBack }) {
       </div>
 
       {/* 🔴 **המסך מודיע שהמרכיב כבוי, ואינו מעמיד פנים שהציון מלא** (§7.90) — כולל
-          המשקלים בפועל, שנקראים מ-`activeWeights` ולא נכתבים כמספר קשיח כאן. */}
-      <div
-        className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] leading-relaxed text-slate-600"
-        data-testid="sm-reliability-off"
-      >
-        ⓘ <b>מרכיב "אמינות הגעה" כבוי</b> — הוא נשען על סימוני-נוכחות שנוצרים בסגירת האירוע (מודול
-        6), ואין עדיין נתונים.{' '}
-        {/* 🔬 **כל אחוז צמוד למילה שלו — ולא זוג `62% / 38%`.** נמדד בדפדפן דרך `Range`
-            ש-`38%` נחת **משמאל** ל-`62%`: הצמד מתפרק לשני רצפים שה-bidi מסדר הפוך, ומי
-            שקורא את הסוגריים לבדם מקבל את המשקולות מוחלפות. זו המשפחה שנתפסה כבר שמונה
-            פעמים כאן (`src/CLAUDE.md`), **והתיקון היציב הוא להסיר את הרצף ולא לבודד אותו**:
-            לצירוף שכל איבר בו יושב ליד התווית שלו אין סדר שאפשר לטעות בו. */}
-        <b>
-          הדירוג כרגע מבוסס על שיעור-היענות
-          {weights ? ` (${Math.round(weights.responsiveness * 100)}%)` : ''} ועל קרבה
-          {weights ? ` (${Math.round(weights.proximity * 100)}%)` : ''} בלבד.
-        </b>{' '}
-        וגם תגית "מצוינת אצל הלקוח" עוד לא קיימת — הסימון נוצר באותה סגירה.
-      </div>
+          המשקלים בפועל, שנקראים מ-`activeWeights` ולא נכתבים כמספר קשיח כאן.
+          ⚠️ **ומותנה בפרמטר בפועל, לא מוצג-תמיד** — `params.reliabilityEnabled` הוא `false`
+          היום, ולכן הבאנר תמיד הופיע; בלי התנאי, ביום שמודול 6 ידליק את המרכיב הבאנר
+          היה ממשיך להכריז שהוא כבוי בעוד הציון כבר משתמש בו. */}
+      {params?.reliabilityEnabled === false && (
+        <div
+          className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] leading-relaxed text-slate-600"
+          data-testid="sm-reliability-off"
+        >
+          ⓘ <b>מרכיב "אמינות הגעה" כבוי</b> — הוא נשען על סימוני-נוכחות שנוצרים בסגירת האירוע (מודול
+          6), ואין עדיין נתונים.{' '}
+          {/* 🔬 **כל אחוז צמוד למילה שלו — ולא זוג `62% / 38%`.** נמדד בדפדפן דרך `Range`
+              ש-`38%` נחת **משמאל** ל-`62%`: הצמד מתפרק לשני רצפים שה-bidi מסדר הפוך, ומי
+              שקורא את הסוגריים לבדם מקבל את המשקולות מוחלפות. זו המשפחה שנתפסה כבר שמונה
+              פעמים כאן (`src/CLAUDE.md`), **והתיקון היציב הוא להסיר את הרצף ולא לבודד אותו**:
+              לצירוף שכל איבר בו יושב ליד התווית שלו אין סדר שאפשר לטעות בו. */}
+          <b>
+            הדירוג כרגע מבוסס על שיעור-היענות
+            {weights ? ` (${Math.round(weights.responsiveness * 100)}%)` : ''} ועל קרבה
+            {weights ? ` (${Math.round(weights.proximity * 100)}%)` : ''} בלבד.
+          </b>{' '}
+          וגם תגית "מצוינת אצל הלקוח" עוד לא קיימת — הסימון נוצר באותה סגירה.
+        </div>
+      )}
 
       <div className="flex flex-col gap-4 lg:flex-row-reverse">
         {/* ── טור ימני: מי כבר בפנים ─────────────────────────────────────── */}
@@ -509,11 +521,13 @@ export default function SmartMatchPage({ projectId, onBack }) {
         {/* ── טור שמאלי: המועמדות ────────────────────────────────────────── */}
         <section className="flex-1" data-testid="sm-candidates-column">
           <h2 className="text-sm font-bold text-slate-800">מועמדות מתאימות</h2>
-          <p className="mb-2 text-[11.5px] text-slate-500">
-            {candidates.length === 0
-              ? 'אין מועמדות שעברו את הסינון'
-              : `${Math.min(VISIBLE_CANDIDATES, candidates.length)} ראשונות מתוך ${candidates.length} שעברו את הסינון · השאר בגלילה`}
-          </p>
+          {/* 🔴 שני ניסוחים שונים לאותה עובדה לא מוצגים יחד — כשאין מועמדות, ההסבר המפורט
+              (`sm-candidates-empty` למטה) מכסה את זה לבד; שורה זו מוצגת רק כשיש מה לספור. */}
+          {candidates.length > 0 && (
+            <p className="mb-2 text-[11.5px] text-slate-500">
+              {`${Math.min(VISIBLE_CANDIDATES, candidates.length)} ראשונות מתוך ${candidates.length} שעברו את הסינון · השאר בגלילה`}
+            </p>
+          )}
 
           {/* 🔴 **ארבע הזוויות מסדרות בלבד — אינן מסננות.** שכבות 1–3 רצות זהה בכל אחת,
               והצ'יפים אינם משתנים. סינון היה מאבד למנהלת מועמדת בלי שתדע. */}
@@ -555,6 +569,9 @@ export default function SmartMatchPage({ projectId, onBack }) {
               <span className="mt-1 block text-[11.5px] text-slate-400">
                 כולן נפסלו בשער: לא פעילות · משובצות באותו תאריך · הצהירו אי-זמינות · רחוקות מ-
                 {params?.gateDistanceKm ?? '—'} ק"מ · או מסומנות "לא-לשלוח" אצל הלקוח הזה.
+              </span>
+              <span className="mt-1 block text-[11.5px] text-slate-400">
+                אפשר לבדוק במאגר הדיילות אם יש עוד מישהי שמתאימה ולא נכנסה לסינון.
               </span>
             </p>
           ) : (
@@ -632,6 +649,20 @@ function EventRow({ row, now, canEdit, busy, context, onAction }) {
           onAction={onAction}
         />
       </div>
+      {/* 🔴 **חסר עד עכשיו — גם המוקאפ המאושר וגם האפיון מציגים את הטלפון על שורת-השיבוץ**
+          (`04_rowmenu_approved.html`, `screens-approved.md` מפת-הלחיצות); הנתון כבר נשלף
+          (`row.hostesses.phone`) ופשוט לא הוצג. `tel:` כדי שהלחיצה מחייגת, לא רק מציגה. */}
+      {row.hostesses?.phone && (
+        <a
+          href={`tel:${row.hostesses.phone}`}
+          className="mt-0.5 block text-[11.5px] text-teal-700 hover:underline"
+          dir="ltr"
+          style={{ unicodeBidi: 'isolate', textAlign: 'right' }}
+          data-testid={`sm-phone-${row.hostess_id}`}
+        >
+          ☎ {row.hostesses.phone}
+        </a>
+      )}
       {/* שורת-הזמן שהמוקאפ מצייר על כל שורה: מתי נשלח, ומה מצב שעון 48 השעות.
           🔴 **"נותרו N שעות" ולא תאריך-פקיעה** — המנהלת מחליטה לפי כמה זמן נשאר, לא
           לפי מתי בדיוק הקישור ימות. ⚠️ `null` = השאלה אינה רלוונטית (הדיילת כבר ענתה),
@@ -727,7 +758,12 @@ function CandidateCard({
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {candidate.workedForCustomerCount > 0 && (
             <Chip family="ctx" testId={`sm-chip-customer-${candidate.hostess_id}`}>
-              {`עבדה אצל ${customerName ?? 'הלקוח הזה'} ${candidate.workedForCustomerCount}×`}
+              {/* בידוד-כיווניות: מספר צמוד ל-`×` בתוך משפט עברי — אותה משפחה בדיוק כמו
+                  ה-₪/★ (`src/CLAUDE.md`), שם `Money`/`RatingStars` עושים את זה במקום. */}
+              {`עבדה אצל ${customerName ?? 'הלקוח הזה'} `}
+              <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
+                {candidate.workedForCustomerCount}×
+              </span>
             </Chip>
           )}
 
