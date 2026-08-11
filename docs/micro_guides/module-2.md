@@ -15,7 +15,7 @@
 | Owner | **ישי (started 10/07)** · Amit (may continue — writer-handover on THIS branch, not a parallel branch) |
 | Branch | `ishay/module-2-customers` (created from fresh `dev` 10/07/2026, after PR #5 merged — step 0.1 ✅) |
 | **Status** | **🔒 Closed — awaiting PR/merge (closing audit 11/07/2026 22:33, fresh session).** Verdict **[YES]**; DoD **typed-echo SIGNED by Ishay 11/07 22:39 ("לקוחות DoD")**; the 16:21/17:07 UX-rounds' 👤 visual pass **SIGNED by Ishay 22:55 ("אישרתי ויזואלית הכל מעולה")** — every human gate of the module is now closed. All phases 1–5 ✅. Test data cleaned with his approval (customers/contacts/marketing = **0/0/0**, live-verified). |
-| Last updated | **30/07/2026 14:45 — ⚠️ THE MODULE IS CLOSED AND MERGED, BUT THREE OF ITS FILES WERE REWRITTEN BY MODULE 3 (step 3.5). Read the §9 entry dated 30/07 before trusting the file list below.** In one line: `CustomerDetailsCard.jsx` **no longer exists** — the customer card is now a full record page (`CustomerDetailsPage.jsx`, route `customers/:customerId`), the list row **navigates** instead of opening a dialog, a sortable "סה"כ הכנסות" column was added, and `CustomersPage`'s search/filters/status/sort moved from `useState` into **URL query params**. Everything below this row still describes the module's own build (11/07) and is unchanged. |
+| Last updated | **30/07/2026 14:45 — ⚠️ THE MODULE IS CLOSED AND MERGED, BUT THREE OF ITS FILES WERE REWRITTEN BY MODULE 3 (step 3.5). Read the §9 entry dated 30/07 before trusting the file list below.** In one line: `CustomerDetailsCard.jsx` **no longer exists** — the customer card is now a full record page (`CustomerDetailsPage.jsx`, route `customers/:customerId`), the list row **navigates** instead of opening a dialog, a sortable "סה"כ הכנסות" column was added, and `CustomersPage`'s search/filters/status/sort moved from `useState` into **URL query params**. Everything below this row still describes the module's own build (11/07) and is unchanged. ⚠️ **10/08/2026 — one more cross-module touch, this time from Module 4's accessibility pass:** `CustomersPage.jsx`'s list-card title `<h2>רשימת לקוחות</h2>` → `<h1>` (the page had no other heading; `axe-core` flagged `page-has-heading-one`). One line, no logic, no `data-testid` touched. See §9 (10/08). |
 | **Active step** | **DONE — module closed. Remaining (human): Ishay's visual OK → push the audit-session doc commit → open PR base `dev` ← compare `ishay/module-2-customers` (instructions printed by the closing session, iron rule 17 🧩).** |
 
 | Phase / step | Status |
@@ -467,6 +467,22 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 6. **(e)–(g) per CLAUDE.md iron rules 13/15/16 + end-of-session protocol** (new-open-question → stop+§7 · migration/DB-gap → db_roadmap same session · shared-surface change → name the affected future modules in the CHANGELOG line) — these apply automatically; not restated here (F1).
 
 ## 9. 📝 Deviations & Tech-Debt Log
+
+**↳ as-built 10/08/2026 — cross-module fix from Module 4's accessibility pass:
+`CustomersPage.jsx`'s only heading, `<h2>רשימת לקוחות</h2>`, promoted to `<h1>`.** Ishay asked to
+fix an `axe-core` finding surfaced while building/testing module 4's `e2e/accessibility.spec.js`
+(`landmark-one-main`/`page-has-heading-one`/`region` reported across most scanned screens). Before
+touching any code, re-ran the scan **in isolation** (no prior `page.goto()` in the same test) to
+separate signal from artifact — and most of the original finding turned out to be a **test-timing
+bug**, not a real defect: `page.goto()` between screens forces a full reload, and `axe` sometimes ran
+during `MainLayout`'s `"טוען..."` loading flash (no landmarks yet, because it isn't the page). Cross-
+checked every scanned route's source: `MainLayout.jsx` already wraps everything in one `<main>`, and
+6 of the 7 flagged pages already had a real `<h1>` inside it. **`CustomersPage` was the one genuine
+exception** — its only heading was an `<h2>`, no `<h1>` anywhere on the page — so it's fixed here.
+(The test itself was also fixed, in module 4's `e2e/accessibility.spec.js`: added a `waitForReady()`
+wait before scanning so the loading-flash false-positive can't recur — full account there and in
+`docs/CLAUDE_CODE_LOG.md`'s 10/08 "Fifth addendum" entry.) One line changed, no logic, no
+`data-testid` touched. `npm run gate` exit 0 after (750 unit tests, module 2's own tests unaffected).
 
 **↳ as-built 08/08/2026 — `CustomerDetailsPage.jsx`'s stat-tile wrapper changed `grid
 grid-cols-1 sm:grid-cols-3` → `flex flex-wrap`, closing the open verification item left by the
