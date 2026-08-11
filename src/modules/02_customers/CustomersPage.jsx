@@ -388,7 +388,7 @@ export default function CustomersPage() {
     <div className="flex flex-col gap-6">
       <div className="bg-white rounded-2xl shadow-md p-6" data-testid="customers-list-card">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-slate-800">רשימת לקוחות</h2>
+          <h1 className="text-lg font-bold text-slate-800">רשימת לקוחות</h1>
           {canEdit && (
             <div className="flex items-center gap-2">
               {/* אזור-השיווק עבר מתחתית-העמוד לדיאלוג-בכפתור (הכרעת-ישי) — כדי שלא ייקבר מתחת
