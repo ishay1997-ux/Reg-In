@@ -147,7 +147,9 @@ test.describe('מודול 4 · מסך 2 — שיבוץ חכם', () => {
     await page.route('**/rest/v1/hostesses*', (route) => route.abort())
     await page.goto('/hostesses')
     await expect(page.getByTestId('overview-table')).toBeVisible({ timeout: 30_000 })
-    await page.getByTestId('overview-row-8').click()
+    // 🕓 **נבחר בזמן-ריצה ולא `overview-row-8`** — המזהה הקשיח האחרון בקובץ, שנשאר כאן
+    // בכוונה בצעד 4.2 ותוקן ב-5.1 לפי הכרעת-דפוס-הפיקסטורות (`module-4.md` §10).
+    await page.locator('[data-testid^="overview-row-"]').first().click()
 
     await expect(page.getByTestId('smart-match-retry')).toBeVisible({ timeout: 30_000 })
     await expect(page.locator('body')).not.toContainText('אין מועמדות פנויות')
@@ -179,5 +181,102 @@ test.describe('מודול 4 · מסך 2 — שני כיווני ההרשאה', (
     await expect(page.getByTestId('sm-approve-all')).toHaveCount(0)
     await expect(page.locator('[data-testid^="sm-pick-"]')).toHaveCount(0)
     await expect(page.locator('[data-testid^="row-menu-"]')).toHaveCount(0)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// משטח 4 — תפריט-הפעולות פר-שורה (צעד 5.1)
+//
+// 🔴 **הטענה המרכזית של המשטח הזה: התוכן נגזר מהסטטוס, ולעולם אינו רשימה שטוחה**
+// (`screens-approved` מסך 4 §③). ולכן הבדיקה אינה בודקת "יש תפריט" אלא **שכל סטטוס מקבל
+// רשימה אחרת** — ובכללן `ביטלה אחרי אישור`, שאין לה תפריט בכלל.
+//
+// 🚫 **אף פריט בתפריט אינו נלחץ.** רובם שולחים מייל אמיתי לדיילת אמיתית (זימון · אישור
+// סופי · שחרור). פותחים, קוראים, ויוצאים ב-Escape.
+//
+// 🕓 **והשורות אינן מזוהות בשם-דיילת או במזהה** — אלא **לפי התווית שעל המסך**, שהיא
+// בדיוק מה שהכלל מדבר עליו. שמות דיילות-ההדגמה יכולים להשתנות; המיפוי סטטוס⇐תפריט לא.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// 🔑 **מספר הפריטים לכל תווית — מתוך `rowMenuItems`, וכולל את שתי התוויות הנגזרות.**
+// ‏`פג תוקף` הוא עדיין `pending` מתחת, ו-`הושלם` עדיין `finally_approved` — שתיהן תוויות
+// תצוגה ולא סטטוס שביעי, וזו בדיוק ההבחנה שהמודול חוזר עליה (§1.1: ששת הסטטוסים סגורים).
+const MENU_ITEMS_BY_LABEL = {
+  'ממתינה למענה': 4,
+  'פג תוקף': 4,
+  'אישרה זמינות': 3,
+  'אושרה סופית': 3,
+  הושלם: 3,
+  סירבה: 1,
+  שוחררה: 1,
+  'ביטלה אחרי אישור': 0,
+}
+
+async function eventRowsByLabel(page) {
+  const rows = page.locator('[data-testid^="sm-event-row-"]')
+  const count = await rows.count()
+  const byLabel = {}
+  for (let i = 0; i < count; i += 1) {
+    const testId = await rows.nth(i).getAttribute('data-testid')
+    const hostessId = testId.replace('sm-event-row-', '')
+    const label = (await page.getByTestId(`sm-status-${hostessId}`).textContent())?.trim()
+    byLabel[label] = [...(byLabel[label] ?? []), hostessId]
+  }
+  return byLabel
+}
+
+test.describe('מודול 4 · משטח 4 — תפריט-הפעולות פר-שורה', () => {
+  test.skip(!RECRUIT_EMAIL || !RECRUIT_PASSWORD, 'E2E_RECRUIT_* לא הוגדרו ב-.env.local')
+
+  test('🔴 כל סטטוס מקבל רשימת-פעולות משלו — ו"ביטלה אחרי אישור" אינה מקבלת תפריט כלל', async ({
+    page,
+  }) => {
+    await openSmartMatch(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
+    await expect(page.getByTestId('sm-event-column')).toBeVisible()
+
+    const byLabel = await eventRowsByLabel(page)
+    const labels = Object.keys(byLabel).filter((label) => label in MENU_ITEMS_BY_LABEL)
+
+    // 🔴 **השומר מפני בדיקה-על-כלום** (המלכודת שחזרה בפרויקט הזה שלוש פעמים): בלי זה,
+    // מסך שכל שורותיו נעלמו היה מפיק בדיקה ירוקה ומרשימה שאינה בודקת דבר.
+    expect(labels.length).toBeGreaterThanOrEqual(3)
+
+    for (const label of labels) {
+      const hostessId = byLabel[label][0]
+      const expected = MENU_ITEMS_BY_LABEL[label]
+      const trigger = page.getByTestId(`row-menu-${hostessId}`)
+
+      if (expected === 0) {
+        // שורת-היסטוריה: אין לה פעולות, ולכן גם אין לה `⋯` — לא כפתור מכובה.
+        await expect(trigger).toHaveCount(0)
+        continue
+      }
+
+      await trigger.click()
+      await expect(page.getByRole('menuitem')).toHaveCount(expected)
+      await page.keyboard.press('Escape')
+      await expect(page.getByRole('menuitem')).toHaveCount(0)
+    }
+  })
+
+  test('🔴 שתי הפעולות שנראות זהות ואינן — לעולם לא באותו תפריט', async ({ page }) => {
+    await openSmartMatch(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
+    await expect(page.getByTestId('sm-event-column')).toBeVisible()
+
+    // 🔑 `שלח את הקישור שוב` מרענן את **אותה שורה**; `פתח זימון חדש` יוצר **שורה שנייה**
+    // והישנה נשארת היסטוריה. איחודן היה מוחק סירוב שקדם — וההיענות היא 40% מהציון,
+    // כלומר הדירוג היה משתנה **ואף בדיקה לא הייתה נופלת**. לכן דווקא זו.
+    const byLabel = await eventRowsByLabel(page)
+    const openable = ['ממתינה למענה', 'פג תוקף', 'סירבה', 'שוחררה'].filter((l) => byLabel[l])
+    expect(openable.length).toBeGreaterThanOrEqual(1)
+
+    for (const label of openable) {
+      await page.getByTestId(`row-menu-${byLabel[label][0]}`).click()
+      const resend = page.getByRole('menuitem').filter({ hasText: 'שלח את הקישור שוב' })
+      const newInvite = page.getByRole('menuitem').filter({ hasText: 'פתח זימון חדש' })
+      const together = (await resend.count()) > 0 && (await newInvite.count()) > 0
+      expect(together).toBe(false)
+      await page.keyboard.press('Escape')
+    }
   })
 })
