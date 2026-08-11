@@ -11,7 +11,7 @@
 | | |
 |---|---|
 | Module | **4 — דיילות + Smart Match** |
-| Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ⚠️ **Nothing on this branch is pushed.** 🚫 Do not write a number here — it rotted twice already *("ahead 6" was written on 08/08 and was 93 by 09/08 evening)*. **Measure it: `git rev-list --count origin/dev..HEAD`** |
+| Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ✅ **PUSHED to `origin` for the first time on 12/08/2026 00:45, on Ishay's instruction** *(this row said "nothing on this branch is pushed" until then — it was true for three weeks and stopped being true here)*. **Still NOT merged** — verified the same minute with `git merge-base --is-ancestor HEAD origin/dev`. 🚫 Do not write a number here — it rotted twice already *("ahead 6" was written on 08/08 and was 93 by 09/08 evening)*. **Measure it: `git rev-list --count origin/dev..HEAD`** |
 | Owner | ישי (sole developer) |
 | Overall status | ✅ **PHASE 3 CLOSED; 4.1 · 4.2 · 5.1 DONE (12/08/2026 00:12).** Gate `exit 0` (**750 unit**, unchanged — 5.1 added E2E, not unit) · **full `npm run test:e2e` 117 passed**, module-4's own share **38** · `smoke` `exit 0` · **0 migrations since 10/08** · advisors **17** (untouched — 5.1 wrote no DB and no `src/` product code) |
 | Last updated | **12/08/2026 00:12** *(system clock; refresh it at every step transition)* |
