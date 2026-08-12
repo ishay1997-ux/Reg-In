@@ -9,18 +9,27 @@
 // וסינון מוקדם היה משנה אותו ואת כל הדירוג. נמדד כמלכודת אמיתית ב-`§11.3`.
 
 import { responsivenessCounts, candidateDistanceKm } from '@/lib/smartMatch'
-import { finalAssignmentRows, weeksSinceLastWorked } from '@/lib/hostesses'
+import { finalAssignmentRows, weeksSinceLastWorked, eventWasCancelled } from '@/lib/hostesses'
 
 // כמה אירועים **שכבר עברו** עבדה הדיילת אצל לקוח האירוע הזה.
-// 🔴 שלושה תנאים, וכל אחד מהם הוא הכרעה (הנחה 11 בבלופרינט): **אותו לקוח** ·
-// **`אושרה סופית`** בשורה הקובעת · **ותאריך-אירוע שכבר עבר** — "עבדה אצל" בלשון עבר.
+// 🔴 ארבעה תנאים, וכל אחד מהם הוא הכרעה (הנחה 11 בבלופרינט): **אותו לקוח** ·
+// **`אושרה סופית`** בשורה הקובעת · **תאריך-אירוע שכבר עבר** — "עבדה אצל" בלשון עבר ·
+// 🆕 **והאירוע לא בוטל.**
 // ⚠️ **סופרים אירועים ולא שורות:** שתי שורות באותו פרויקט (סירוב שנעקף) הן פעם אחת.
+//
+// 🆕 **התנאי הרביעי נוסף באודיט-הסגירה 12/08/2026, בהכרעת-ישי ("לתקן בסבב הזה").**
+// **הפער שהוא סגר:** ‏`processes-approved.md §ב8` מכריע שביטול-לקוח **לא נספר לרעתה**
+// *("הן לא אשמות")* — **ושותק על הכיוון ההפוך.** בלי התנאי הזה, אירוע שהלקוח ביטל
+// נספר **לזכותה**: הצ'יפ `עבדה אצל <לקוח> N×` מונה אירוע שבו לא עבדה אף שעה, וזווית
+// המיון "עבדה אצל הלקוח הזה" מעלה אותה על סמך היכרות שלא התקיימה.
+// 🔑 **הצד הזה של הכלל הוא הכרעה חדשה ולא גזירה** — ולכן הוא מתועד כאן ולא נטען כמובן-מאליו.
 function countWorkedForCustomer(finalRows, customerId, todayIso) {
   if (customerId === null || customerId === undefined) return 0
   const projects = new Set()
   for (const row of finalRows) {
     if (row.assignment_status !== 'finally_approved') continue
     if (row.projects?.customer_id !== customerId) continue
+    if (eventWasCancelled(row)) continue
     const eventDate = row.projects?.final_event_date
     if (!eventDate || String(eventDate) >= String(todayIso)) continue
     projects.add(row.project_id)

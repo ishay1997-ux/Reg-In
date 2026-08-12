@@ -331,9 +331,23 @@ export function countAssignmentStates(rows, nowIso) {
 // שבועות אומר "עבדה השבוע" והיה שולל ממנה בדיוק את המנוף שנועד לחדשות.
 // ⚠️ **רק אירועים שכבר עברו** — שיבוץ עתידי מאושר אינו "עבדה לאחרונה".
 // *(חולץ 09/08/2026: אותו חישוב היה inline ב-`HostessViewCard`, ומסך 2 היה העותק השני.)*
+// 🔴 **אירוע שהלקוח ביטל לא התקיים — ולכן אינו נספר לזכות הדיילת בשום מונה.**
+// *(הכרעת-ישי 12/08/2026 באודיט-הסגירה, והורחבה על-ידו באותו יום לכל המונים ולא רק לצ'יפ.)*
+//
+// 🔑 **למה פונקציה ולא תנאי מועתק:** הכלל הזה חי ב-**ארבעה** אתרי-קריאה — הצ'יפ בשיבוץ-החכם,
+// אותו צ'יפ בכרטיס-הדיילת, מונה-הרבעון במאגר, ו"עבדה לאחרונה לפני N שבועות". ‏**הוא יושם
+// בתחילה באחד מהם בלבד**, וסריקת דיף-התיקון תפסה את הפיצול: אותה דיילת ואותו לקוח היו
+// מציגים **מספר אחד בשיבוץ-החכם ומספר אחר בכרטיס שלה** — אותה תווית, שתי אמיתות.
+// ⛔ **תנאי מועתק חמישית יתפצל שוב.** זו הדלת היחידה.
+// ⚠️ **ודורש ש-`project_status` ייבחר בשאילתה** — `listRepositoryAssignments` לא בחרה אותו
+// עד 12/08/2026, ובלעדיו הכלל **מת בשקט** (‏`undefined !== 'cancelled'` ⇒ הכול נספר).
+export function eventWasCancelled(row) {
+  return row?.projects?.project_status === 'cancelled'
+}
+
 export function weeksSinceLastWorked(rows, todayIso) {
   const lastWorked = (rows ?? [])
-    .filter((row) => row?.assignment_status === 'finally_approved')
+    .filter((row) => row?.assignment_status === 'finally_approved' && !eventWasCancelled(row))
     .map((row) => row.projects?.final_event_date)
     .filter((date) => date && String(date) < String(todayIso))
     .sort()
@@ -543,6 +557,8 @@ export function eventsInLastQuarter(rows, todayIso) {
   const projects = new Set()
   for (const row of finalAssignmentRows(rows)) {
     if (row?.assignment_status !== 'finally_approved') continue
+    // 🆕 12/08/2026 — אירוע שבוטל אינו "עומס". ר' `eventWasCancelled` לכלל ולמה הוא משותף.
+    if (eventWasCancelled(row)) continue
     const eventDate = row?.projects?.final_event_date
     if (!eventDate) continue
     if (eventDate < todayIso && eventDate >= cutoff) projects.add(row.project_id)

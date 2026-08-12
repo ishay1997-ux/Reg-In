@@ -228,6 +228,30 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
             `שחרור מ-${failed.length} מתוך ${futureActive.length} אירועים נכשל — ${hostess.full_name} עדיין משובצת אליהם. נסי לשחרר ידנית מתפריט-הפעולות במסך שיבוץ חכם.`,
           )
         }
+
+        // 🆕 **12/08/2026 — שחרור שהצליח אך ההודעה עליו לא יצאה נאמר בקול.**
+        // חלון-ההשבתה מבטיח למנהלת *"והדיילת תקבל מייל-ביטול על כל אירוע"*; עד האודיט
+        // `Promise.allSettled` ספר כל שחרור שהסתדר כהצלחה מלאה, **גם כשאף מייל לא יצא** —
+        // הפונקציה פשוט לא החזירה את זה לאף אחד. עכשיו היא מחזירה, וזה מדווח.
+        const mail = results.reduce(
+          (acc, r) => {
+            const m = r.status === 'fulfilled' ? r.value?.mail : null
+            if (!m) return acc
+            return {
+              unknown: acc.unknown + m.unknown,
+              failed: acc.failed + m.failed,
+            }
+          },
+          { unknown: 0, failed: 0 },
+        )
+        if (mail.failed > 0 || mail.unknown > 0) {
+          const parts = []
+          if (mail.failed > 0) parts.push(`${mail.failed} לא נשלחו`)
+          if (mail.unknown > 0) parts.push(`${mail.unknown} — לא ידוע אם יצאו`)
+          toast.error(
+            `${hostess.full_name} שוחררה, אך הודעות-הביטול: ${parts.join(' · ')}. כדאי ליידע אותה טלפונית.`,
+          )
+        }
       }
 
       await setHostessStatus(hostess.hostess_id, 'inactive')

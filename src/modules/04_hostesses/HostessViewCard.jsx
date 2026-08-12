@@ -26,6 +26,7 @@ import {
   ASSIGNMENT_STATUS_LABELS,
   assignmentDisplayStatus,
   eventStartInstant,
+  eventWasCancelled,
   finalAssignmentRows,
   eventsInLastQuarter,
   unansweredStreakTag,
@@ -139,6 +140,9 @@ function deriveCardData(hostess, assignments, params, today) {
     const byCustomer = new Map()
     for (const row of finals) {
       if (row.assignment_status !== 'finally_approved') continue
+      // 🆕 12/08/2026 — אירוע שבוטל אינו נספר. **אותה פונקציה בדיוק** כמו בשיבוץ-החכם:
+      // עד היום הצ'יפ כאן והצ'יפ שם היו מציגים שני מספרים שונים לאותה דיילת ולאותו לקוח.
+      if (eventWasCancelled(row)) continue
       if ((row.projects?.final_event_date ?? '') >= today) continue
       const name = row.projects?.customer_name
       if (!name) continue

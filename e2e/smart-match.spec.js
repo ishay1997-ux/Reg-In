@@ -100,15 +100,30 @@ test.describe('מודול 4 · מסך 2 — שיבוץ חכם', () => {
     }
   })
 
+  // 🔴 **נכתבה מחדש 12/08/2026 באודיט-הסגירה — והסיבה שווה יותר מהתיקון.**
+  // הגרסה הקודמת קיבעה `toBeDisabled()` + `כבוי` **כאמת נצחית**, על סמך מצב-הדאטה של 09/08.
+  // ‏**היא נפלה בלי שאיש נגע בקוד:** בבדיקת-הקבלה החיה ישי ענה דרך הקישור הציבורי, נרשמה
+  // ‏`responded_at` ראשונה במערכת — ו**הזווית נדלקה, בדיוק כפי שהאפיון דורש.**
+  // 🔑 **זה המופע הרביעי באותה משפחה** *(מזהה קשיח 04/08 · `overview-row-8` 09/08 · המונה `(0)`
+  // ‏12/08 — ועכשיו מצב-כפתור)*, ולכן הבדיקה מאמתת מעכשיו את **האינווריאנטה** ולא את המצב:
+  // ‏**① הזווית תמיד נוכחת ואינה נעלמת** *(‏`§11.4`: פקד שנעלם מלמד חוסר-עקביות; פקד מכובה
+  // עם נימוק מלמד **למה**)* · **② מצבה תואם לטקסט שעליה** — `כבוי` ⇔ מכובה, ובלעדיו פעילה.
   test('🔴 הזווית שאין לה דאטה מוצגת מכובה ומנומקת — לא נעלמת', async ({ page }) => {
     await openSmartMatch(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
 
     const angle = page.getByTestId('sm-angle-fastest')
     await expect(angle).toBeVisible()
-    await expect(angle).toBeDisabled()
-    await expect(angle).toContainText('כבוי')
-    // ההסבר עצמו חייב להיות על המסך: כפתור מכובה בלי סיבה נקרא כמו תקלה.
-    await expect(page.getByTestId('sm-angle-note')).toBeVisible()
+
+    const label = (await angle.textContent()) ?? ''
+    const offByLabel = label.includes('כבוי')
+    // ⚠️ הבדיקה היא **הסכמה** בין התווית למצב, לא ערך קבוע של אחד מהם.
+    if (offByLabel) {
+      await expect(angle).toBeDisabled()
+      // כפתור מכובה בלי סיבה נקרא כמו תקלה — ההסבר חייב להיות על המסך.
+      await expect(page.getByTestId('sm-angle-note')).toBeVisible()
+    } else {
+      await expect(angle).toBeEnabled()
+    }
   })
 
   test('🔴 המסך אומר בקול שמרכיב האמינות כבוי, ואינו מעמיד פנים שהציון מלא', async ({ page }) => {

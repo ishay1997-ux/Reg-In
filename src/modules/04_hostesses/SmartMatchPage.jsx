@@ -205,6 +205,45 @@ export default function SmartMatchPage({ projectId, onBack }) {
     else toast.success(parts[0])
   }
 
+  // 🆕 **12/08/2026 — השחרור מדווח כמו כל שליחה אחרת במודול.** עד האודיט הוא היה הנתיב
+  // היחיד שהצהיר *"והודעה נשלחה אליה"* **ללא תנאי**, גם כשהמייל נכשל — הוכח בהזרקת-תקלה.
+  // 🔑 אותן שלוש תוצאות בדיוק כמו ב-`reportMail`, כי זו אותה הבחנה: פסק-זמן אינו כשל.
+  function reportRelease(who, { unknown, failed }) {
+    if (failed > 0) {
+      toast.error(`${who} שוחררה — אך ההודעה אליה לא נשלחה. כדאי ליידע אותה טלפונית.`)
+      return
+    }
+    if (unknown > 0) {
+      toast.error(`${who} שוחררה — לא ידוע אם ההודעה יצאה (ייתכן שכן; אל תשלחי שוב מיד).`)
+      return
+    }
+    toast.success(`${who} שוחררה, והודעה נשלחה אליה`)
+  }
+
+  // 🔴 **כשל-שחרור נאמר בשם, ולפני הכול — נוסף 12/08/2026.**
+  // המנהלת אישרה את השמות האלה בחלון שאמר *"כל אחת מהן תקבל הודעה"*; שם שנשמט מהרשימה
+  // בלי מילה פירושו **דיילת שנשארה משובצת על אירוע מלא ותגיע אליו**. זו שגיאה, לא הערה.
+  function reportReleaseFailures(names) {
+    if (!names?.length) return
+    toast.error(
+      `${names.join(' · ')} לא שוחררו — הן עדיין משובצות לאירוע. נסי לשחרר ידנית מתפריט-השורה.`,
+    )
+  }
+
+  // אותה הבחנה, לקבוצה שמשוחררת אוטומטית כשהמכסה נסגרת (`§ב6`).
+  function reportReleaseGroup(names, { unknown, failed }) {
+    if (names.length === 0) return
+    const who = `שוחררו: ${names.join(' · ')}`
+    if (failed > 0 || unknown > 0) {
+      const parts = []
+      if (failed > 0) parts.push(`${failed} לא קיבלו הודעה`)
+      if (unknown > 0) parts.push(`${unknown} — לא ידוע אם ההודעה יצאה`)
+      toast.error(`${who} — ${parts.join(' · ')}`)
+      return
+    }
+    toast.info(`${who} — כולן קיבלו הודעה`)
+  }
+
   async function sendInvites() {
     await run('שליחת הזימונים', async () => {
       const outcome = await createShiftInvites({
@@ -262,9 +301,8 @@ export default function SmartMatchPage({ projectId, onBack }) {
       for (const failure of result.failed) {
         toast.error(`${failure.name}: ${failure.message}`)
       }
-      if (result.released.length > 0) {
-        toast.info(`שוחררו: ${result.released.join(' · ')}`)
-      }
+      reportReleaseFailures(result.releaseFailed)
+      reportReleaseGroup(result.released, result.releaseMail)
     })
   }
 
@@ -301,8 +339,8 @@ export default function SmartMatchPage({ projectId, onBack }) {
         return
       }
       return run('השחרור', async () => {
-        await releaseAssignment(row)
-        toast.success(`${name} שוחררה, והודעה נשלחה אליה`)
+        const { mail } = await releaseAssignment(row)
+        reportRelease(name, mail)
       })
     }
 
@@ -354,7 +392,8 @@ export default function SmartMatchPage({ projectId, onBack }) {
         const result = await approveFinalAndRelease({ projectId, hostessIds: [row.hostess_id] })
         reportMail(result.mail, 'אישור נשלח')
         for (const failure of result.failed) toast.error(`${failure.name}: ${failure.message}`)
-        if (result.released.length > 0) toast.info(`שוחררו: ${result.released.join(' · ')}`)
+        reportReleaseFailures(result.releaseFailed)
+        reportReleaseGroup(result.released, result.releaseMail)
       })
     }
 

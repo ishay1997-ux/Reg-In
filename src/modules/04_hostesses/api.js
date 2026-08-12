@@ -73,20 +73,28 @@ async function resolveHostessCoordinates(source) {
 // מטעם מ4 (מיגרציה D), ומדיניות-כתיבה הייתה פותחת את **כל** עמודותיה — ר' המיגרציה
 // `..._module4_project_coordinates_rpc.sql` לנימוק המלא.
 //
-// ⚠️ כשל מוחזר כ"בלי קואורדינטות" ואינו מפיל את המסך — **וזו אינה בליעה שקטה**:
+// ⚠️ כשל-גאוקוד מוחזר כ"בלי קואורדינטות" ואינו מפיל את המסך — **וזו אינה בליעה שקטה**:
 // התוצאה **נראית** על השורה כצ'יפ `אין קואורדינטות`, שהוא מצב מאושר באפיון.
-// מנהלת-פרויקטים (הרשאת-צפייה) תיפול כאן על 42501 בכוונה, ותראה בדיוק את זה.
+//
+// 🔴 **תוקן באודיט-הסגירה 12/08/2026 — כשל *השמירה* אינו מוחק את התוצאה שכבר נמצאה.**
+// קודם עמד כאן `return error ? null : coordinates`, כלומר: הגאוקוד **הצליח**, ה-RPC
+// נחסם (מנהלת-פרויקטים עם הרשאת-צפייה נופלת כאן על 42501 **בכוונה**), והנקודה שנמצאה
+// **נזרקה**. התוצאה על המסך הייתה שכל המועמדות מסומנות `אין קואורדינטות` — שנקרא
+// *"למאגר הדיילות חסרות כתובות"* בעוד שהאמת היא *"לאירוע אין קואורדינטות"*, ומרכיב
+// הקרבה (**38% מהמשקלים החיים**) מפסיק לסנן בשקט.
+// 🔑 **השמירה היא מטמון, לא מקור-האמת של הרינדור הזה** ⇒ מחזירים את הנקודה בכל מקרה;
+// מי שאין לה הרשאת-כתיבה פשוט תחשב אותה מחדש בכניסה הבאה.
 async function ensureProjectCoordinates(project) {
   if (project.lat !== null && project.lng !== null) return null
   const coordinates = await geocodeAddress(project.final_location)
   if (!coordinates) return null
 
-  const { error } = await supabase.rpc('set_project_coordinates', {
+  await supabase.rpc('set_project_coordinates', {
     p_project_id: project.project_id,
     p_lat: coordinates.lat,
     p_lng: coordinates.lng,
   })
-  return error ? null : coordinates
+  return coordinates
 }
 
 // ---- קריאות (Reads) ----
@@ -211,7 +219,7 @@ export async function listRepositoryAssignments() {
   const { data, error } = await supabase
     .from('assignments')
     .select(
-      'project_id, hostess_id, assignment_number, assignment_status, invite_sent_at, projects(event_name, final_event_date)',
+      'project_id, hostess_id, assignment_number, assignment_status, invite_sent_at, projects(event_name, final_event_date, project_status)',
     )
   if (error) throw toError(error, 'שגיאה בטעינת היסטוריית השיבוצים.')
   return data ?? []
@@ -491,7 +499,17 @@ async function insertInviteRow({ project, hostess, nowIso, attempt = 0 }) {
 // מודול 6 (`🚧 מ6 ← מ4`), למרות ש-`processes-approved.md:270` עדיין אומר אחרת.
 // ⚠️ **בלי `origin`** — למייל האישור-הסופי אין קישור: ההחלטה כבר התקבלה, ואין מה לאשר.
 export async function approveFinalAndRelease({ projectId, hostessIds }) {
-  const result = { approved: [], failed: [], released: [], mail: emptyOutcome() }
+  // 🆕 `releaseMail` נפרד מ-`mail` (12/08/2026): `mail` הוא מיילי **האישור-הסופי**, ועד
+  // האודיט לא היה ערוץ כלל למיילי **השחרור-האוטומטי** שנשלחים באותה פעולה — כלומר המסך
+  // דיווח על חצי מהמיילים שיצאו ממנה. שני מונים, כי הם שני דברים שונים למנהלת.
+  const result = {
+    approved: [],
+    failed: [],
+    released: [],
+    releaseFailed: [],
+    mail: emptyOutcome(),
+    releaseMail: emptyOutcome(),
+  }
   if (!hostessIds?.length) return result
 
   const rows = await listProjectAssignments(projectId)
@@ -536,8 +554,17 @@ export async function approveFinalAndRelease({ projectId, hostessIds }) {
   const refreshed = await listProjectAssignments(projectId)
   const targets = autoReleaseTargets(refreshed, project?.required_hostess_count)
   for (const target of targets) {
-    const released = await releaseAssignment(target, { silent: true })
-    if (released) result.released.push(target.hostesses?.full_name ?? '')
+    const name = target.hostesses?.full_name ?? ''
+    const { row: released, mail } = await releaseAssignment(target, { silent: true })
+    // 🔴 **כשל-השחרור עצמו נרשם בשם — נוסף 12/08/2026 בסריקת דיף-התיקון.**
+    // הסבב הקודם הוסיף ערוץ ל**מייל** והשאיר את **השחרור** שקט: שורה שנכשלה
+    // פשוט **נעלמה מהרשימה** — והמנהלת אישרה את השמות האלה בשמם בחלון אחד לפני כן.
+    // התוצאה: דיילת נשארת משובצת על אירוע מלא, לא מקבלת הודעה, **ומגיעה לאירוע**.
+    if (released) result.released.push(name)
+    else result.releaseFailed.push(name)
+    result.releaseMail.sent += mail.sent
+    result.releaseMail.unknown += mail.unknown
+    result.releaseMail.failed += mail.failed
   }
 
   return result
@@ -608,6 +635,17 @@ export async function markAssignmentStatus(row, status) {
 // 🔴 **ושחרור אינו "ביטלה אחרי אישור", אף שעל המסך הם נראים דומים:** שחרור = **אנחנו**
 // ויתרנו עליה ⇒ **מחוץ לציון לגמרי**; ביטול = **היא** חזרה בה ⇒ נספרת באמינות ב-`0.5`.
 // פריט אחד לשתיהן היה מזייף את הדירוג של דיילת חפה-מפשע.
+// 🔴 **מחזיר `{ row, mail }` ולא שורה בלבד — תוקן באודיט-הסגירה 12/08/2026, אחרי שהוכח חי.**
+// **מה היה כאן:** ‏`catch {}` ריק סביב כל השליחה, והערה שטענה *"המסך מדווח על המייל בנפרד"* —
+// **טענה שגויה**: הפונקציה החזירה `data?.[0]` בלבד, כלומר **לשום קורא לא היה ערוץ לדעת
+// שהמייל נכשל**, ושלושת הקוראים הבטיחו למנהלת במילים שההודעה נשלחה.
+// 🔬 **איך זה הוכח, ולא נטען:** ניתוק `**/functions/v1/send-email**` ברשת ⇒ *"פתח זימון חדש"*
+// החזיר שגיאה כנה (*"לא ידוע אם יצאו"*), ובאותה רשת בדיוק *"שחרר"* החזיר
+// **`דנה לוין שוחררה, והודעה נשלחה אליה`** בזמן ש-`email_log` רשם **אפס** שורות.
+// 🔑 **למה זה חמור מעבר לניסוח:** מי שאמרה "כן" ולא שמעה כלום מפסיקה לענות,
+// **וההיענות היא 40% מהציון** — כלומר השתיקה שלנו נרשמת כחוסר-האמינות **שלה**.
+// ⚠️ **והסטטוס עדיין אינו מתגלגל אחורה בכשל-מייל** — זה נשאר כפי שהיה, ובכוונה: השורה
+// משוחררת בפועל, וגלגול-אחורה היה מחזיר דיילת לתקן שכבר אינו קיים. השינוי הוא **בדיווח**.
 export async function releaseAssignment(row, { silent = false } = {}) {
   const { data, error } = await supabase
     .from('assignments')
@@ -618,14 +656,16 @@ export async function releaseAssignment(row, { silent = false } = {}) {
     .select()
 
   if (error || !data?.length) {
-    // ⚠️ בשחרור-האוטומטי כשל אינו מפיל את האישור שכבר נכתב — הוא מדווח למסך כמספר.
-    if (silent) return null
+    // ⚠️ בשחרור-האוטומטי כשל אינו מפיל את האישור שכבר נכתב — הקורא מקבל `row: null`,
+    // ו**הוא שרושם את השם ב-`releaseFailed`**. 🔴 עד 12/08/2026 עמדה כאן הערה שהבטיחה
+    // *"הוא מדווח למסך כמספר"* — **וזה לא היה נכון**, אותה הבטחה-שאינה-נכונה
+    // שהוסרה מהפונקציה שמתחת, באותו אודיט.
+    if (silent) return { row: null, mail: emptyOutcome() }
     if (error) throw toWriteError(error, 'השחרור נכשל.')
     assertRowsAffected(data, 'אין הרשאה לשחרר את השיבוץ הזה.')
   }
 
-  // 🔑 ההודעה נוסעת עם הפעולה, ולא "אחר-כך": מי שאמרה "כן" ולא שמעה כלום מפסיקה לענות,
-  // **וההיענות היא 40% מהציון** — כלומר שתיקה שלנו נרשמת כחוסר-אמינות שלה.
+  const mail = emptyOutcome()
   try {
     const template = await getEmailTemplate(SHIFT_TEMPLATE_NAMES.release)
     const payload = buildReleasePayload({
@@ -633,20 +673,25 @@ export async function releaseAssignment(row, { silent = false } = {}) {
       hostess: row.hostesses,
       project: row.projects,
     })
-    if (payload) {
+    // דיילת בלי כתובת-מייל, או תבנית שסירבה להתמלא — כשל אמיתי, ונאמר בקול.
+    if (!payload) mail.failed += 1
+    else {
       await sendEmail({
         payload,
         entityType: 'shift',
         entityId: row.project_id,
         templateName: SHIFT_TEMPLATE_NAMES.release,
       })
+      mail.sent += 1
     }
-  } catch {
-    // הסטטוס כבר נכתב; כשל-מייל אינו מחזיר אותו אחורה — השורה משוחררת בפועל, והמסך
-    // מדווח על המייל בנפרד. גלגול-אחורה כאן היה מחזיר דיילת לתקן שכבר אינו קיים.
+  } catch (sendError) {
+    // 🚫 פסק-זמן אינו כשל — אותה הבחנה בדיוק כמו בנתיב-הזימון (`src/CLAUDE.md`):
+    // המייל אולי כן יצא, ו"נכשל" היה גורר שליחה חוזרת והצפה של הדיילת.
+    if (classifySendError(sendError) === EMAIL_SEND_RESULT.UNKNOWN) mail.unknown += 1
+    else mail.failed += 1
   }
 
-  return data?.[0] ?? null
+  return { row: data?.[0] ?? null, mail }
 }
 
 // ★ אחראית משמרת — **רושם בלבד, בלי מייל.** אחת לאירוע, ורק אחרי אישור סופי (`§ב5`).

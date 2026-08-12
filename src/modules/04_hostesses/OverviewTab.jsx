@@ -37,6 +37,8 @@ function nowIso() {
 export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpired }) {
   const { permissions } = useAuth()
   const canEdit = permissions['דיילות'] === 'edit'
+  // 🔴 המסך הזה קורא מ-`projects`, שהמדיניות עליה שייכת למודול **אחר**. ר' `EmptyState`.
+  const canReadProjects = permissions['פרויקטים'] === 'edit' || permissions['פרויקטים'] === 'view'
   const toast = useToast()
 
   const [projects, setProjects] = useState([])
@@ -209,7 +211,11 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
       </div>
 
       {visible.length === 0 ? (
-        <EmptyState filtered={filter !== 'all'} onClear={() => setFilter('all')} />
+        <EmptyState
+          filtered={filter !== 'all'}
+          onClear={() => setFilter('all')}
+          canReadProjects={canReadProjects}
+        />
       ) : (
         <table className="w-full border-collapse" data-testid="overview-table">
           <thead>
@@ -379,7 +385,36 @@ function Counter({ n, label, tone, children }) {
 // 🔴 שתי הודעות שונות, וזו לא קוסמטיקה (כרטיס §⑥): **"אין אירועים" הוא בשורה טובה**
 // ולכן מנוסח בחיוב, בעוד "ריק אחרי סינון" חייב להציע ניקוי. הודעה אחת לשניהם הייתה
 // גורמת למנהלת לחשוב שהמסך נשבר דווקא ברגע שהכול מאויש.
-function EmptyState({ filtered, onClear }) {
+function EmptyState({ filtered, onClear, canReadProjects }) {
+  // 🔴 **תוקן באודיט-הסגירה 12/08/2026 — הכשל החמור ביותר שהאפיון מגדיר, וכאן הוא היה אפשרי.**
+  // ‏`spec.md § מה ייחשב עובד` **#4**: *"מסך שלא הצליח לטעון אומר זאת. לעולם לא רשימה ריקה
+  // בשקט"* — ובדיוק זה: ‏`listStaffingOverview` קוראת מ-`projects`, שהמדיניות עליה היא של
+  // מודול **'פרויקטים'** ולא של 'דיילות'. חסימה שם מחזירה `{data:[], error:null}` — **לא
+  // שגיאה שאפשר לתפוס** — והמסך היה מצייר **✅ ירוק** ואומר "אין אירועים הממתינים לאיוש".
+  // 🔬 **מדוד ולא משוער:** אינו נורה במטריצה של היום (אין תפקיד עם 'דיילות'≠חסום ו'פרויקטים'=חסום),
+  // **והוא במרחק עריכה אחת** של המנכ"ל במסך-ההרשאות, שאינו מזהיר שקיימת התלות הזאת.
+  // 🔑 **למה בדיקת-הרשאה בלקוח ולא הבחנה בשאילתה:** ‏RLS מחזירה ריק בלי סימן, ואי-אפשר
+  // להבדיל "אין נתונים" מ"נחסמתי" **מתוך התשובה עצמה** — אבל אפשר לדעת מראש שאין הרשאה.
+  // ⚠️ **בלי תנאי-סינון, ותוקן 12/08/2026 בסריקת דיף-התיקון עצמו.** הגרסה הראשונה שלי כתבה
+  // `!filtered && !canReadProjects`, ולכן **לחיצה אחת על מסנן** החזירה את המשתמשת החסומה
+  // למסך *"לא נמצאו אירועים התואמים לסינון"* + כפתור "נקה סינון" — כלומר בדיוק אותה הטעיה
+  // שהתיקון בא למנוע, שנכנסת מהדלת האחורית. **חוסר-הרשאה יסודי יותר מריק-אחרי-סינון**, ולכן
+  // הוא הענף הראשון תמיד.
+  if (!canReadProjects) {
+    return (
+      <div
+        className="py-6 text-center text-[12.5px] text-red-700"
+        data-testid="overview-empty-no-permission"
+      >
+        <span className="mb-1 block text-[22px]">⚠️</span>
+        לא ניתן להציג את האירועים — אין לך הרשאת צפייה במודול <b>פרויקטים</b>.
+        <div className="mt-1 text-slate-500">
+          זו אינה רשימה ריקה: המסך לא הצליח לקרוא את האירועים. פני למנכ״ל להרשאה.
+        </div>
+      </div>
+    )
+  }
+
   if (filtered) {
     return (
       <div
