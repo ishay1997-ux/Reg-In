@@ -178,14 +178,102 @@ where the reliability component that touches the same question is built.
 the file's own ≤150 target. Escape hatch taken; the §6 debt line still carries the older number and
 is being refreshed rather than left.
 
-**Still open when this entry was written:** the live UAT (waiting on Ishay's login), the single fix
-round, the verdict + typed-echo gate, the report artifact, the quiz, and the remaining persistence.
+**🚗 UAT — journeys 1 and 2 RAN (09:0X), and how they had to be run is itself a finding.**
+The plan was Ishay driving in his own Chrome. Measured, in order: the **Chrome MCP tab is recreated
+empty on every turn** (three distinct ids), and the app keeps its session in **`sessionStorage`** by
+deliberate design (`src/supabaseClient.js:14`; `src/CLAUDE.md:279` — *"טאב שני — לא"*), so a login
+cannot survive to the next turn; and in the in-app pane the **viewport changed between calls**
+(1176 → 1288 → 1280), element refs went **stale inside a single turn**, and screenshots failed
+whenever the pane was hidden. Ishay asked to be spared the clicking, so both journeys were driven by
+a **headed Playwright script** against the dev server — a real browser window he could watch, signing
+in as `E2E_RECRUIT_*` read from `.env.local` (never through Claude, never printed), i.e. the real
+production path rather than a harness shortcut. 🔑 **Worth keeping for every future close:** a
+multi-turn, logged-in walkthrough is **not** achievable through either browser surface here; the
+headed-script route is.
 
-### 12/08/2026 09:15–10:0X — Advisory addendum WHILE the close was running: the closing template never read the spec set's PROCESS document — and the resolution rule written for it was wrong twice before it was right.
+**Journey 1 — a hostess arrives by phone call — PASSED with both traps proven.** Invalid ID
+`123456789` ⇒ *"מספר תעודת זהות אינו תקין"* **and** save disabled; wage `30` ⇒ *"— מתחת ל-35 ₪
+(שכר מינימום) חוסם שמירה"* **and** save disabled (threshold read from `params`, not from the script);
+save ⇒ *"דנה לוין נוספה למאגר"*, table **25 → 26**. DB: `hostess_id` 41, email
+`ishay1997@gmail.com` (deliberate), **`lat 32.063481 / lng 34.770027`** — geocoding resolved
+הרצל 1 תל אביב through the production path — `status active`.
+
+**🔴 And the UAT surfaced a real spec-vs-built divergence that the corrected §2b order settles
+cleanly.** The new row came out `rating: null` (`—` in the table) while `screens-approved.md:696-697`
+still states `int not null default 3` and explains it as *"כל דיילת נולדת עם 3 כוכבים שאיש לא נתן
+לה"*. **Case ② — a dated ruling governs:** Ishay ruled 08/08 that `rating` becomes
+`int null check (1..5)`, `NULL` = "not yet impressed" (`db_roadmap:140`, `spec.md §12⑱(ב)`), and
+`schema.sql:753-754` drops both the default and the not-null. ⇒ build correct, **the screen card
+carries the sentence the ruling reversed** ⇒ dated annotation at that line, at persistence.
+
+**Journey 2 — staffing "כנס לקוחות שנתי" — invitation SENT and verified at the source, not on screen.**
+Smart Match opened with **15 candidates** past the gate; the brand-new hostess ranked **#1 of 15**,
+correctly by design (proximity is 38% of the live weights and she is nearest; her responsiveness is
+the damped company average) and her card says so honestly — `קרובה` · `טרם נצבר מידע`. The
+"תענה הכי מהר" angle rendered **disabled with its reason**, and the reliability-off banner rendered.
+After sending: `assignments` row (project 8, hostess 41, `pending`, token present,
+`hourly_rate_snapshot` **45** — frozen as §א2 requires) and **`email_log #30`: recipient
+`ishay1997@gmail.com`, template `תבנית_זימון_משמרת`, status `sent`, no error**.
+⚠️ **The on-screen toast was NOT captured** (the screenshot came after it faded) — reported as
+"the DB says sent", never as "the screen said sent".
+
+**🔴 Ishay opened the invite on his phone and got *"לא ניתן להגיע לאתר זה"* — and the finding splits
+in two, which is why it is worth recording at all.** **Half one is the test setup, not a defect:** the
+journey ran against the dev server, so `confirmUrlFor(window.location.origin, token)`
+(`shiftEmails.js:24-27`) produced `http://localhost:5173/shift/<token>`, which on a phone resolves to
+the phone's own localhost — and origin-from-caller is **deliberate**, the comment above that function
+says a mail sent from dev must point back at dev. **Half two is real and not fixable inside this
+module:** acceptance criterion #3 has never been exercised the way a hostess would — over the internet,
+on a phone — and **cannot be today. Measured, not inferred:**
+`git show origin/dev:src/App.jsx | grep -c "shift/:token"` → **0**. The app has been live on Vercel
+since 31/07 (`PROJECT_MASTER.md:404`), but the public route was built on this branch on 10/08 and is
+unmerged, so the deployed site has no such path. ⇒ **the proof is a POST-MERGE action** (send one
+invite from the deployed origin, open it on a phone), **not an audit-time blocker — and only the merge
+can unblock it.** 🎓 **It is also a conference item:** demoing "the hostess gets a link and confirms"
+from `localhost` reproduces exactly the screen Ishay just saw.
+
+**🔬 THE BLOCKER WAS PROVEN, NOT ARGUED — fault injection, 12/08/2026.** Ishay confirmed through the
+public link on his computer (`confirmed_available`, `responded_at` recorded, **19m17s** response time —
+also the first real datum for the "תענה הכי מהר" angle that had been rendering disabled-and-explained).
+Final approval then ran for real: `email_log #31`, template `תבנית_אישור_סופי_שיבוץ`, status `sent`,
+**and Ishay confirmed it arrived in his inbox**. Then one run with
+`page.route('**/functions/v1/send-email**', abort)` — **2 calls blocked, counted** — exercised two paths
+on the same screen with the same broken network:
+**A · "פתח זימון חדש" → `toast-error`: *"1 — לא ידוע אם יצאו (ייתכן שכן; לא לשלוח שוב מיד)"*** — honest,
+and it even separates *unknown* from *failed*.
+**B · "שחרר — המשרה אוישה" → `toast-success`: *"דנה לוין שוחררה, והודעה נשלחה אליה"*** — after a confirm
+dialog that had just promised *"היא תקבל הודעה שהמשרה אוישה"*. **Ground truth: `email_log` rows since
+the final approval = 0.** No mail, no record. 🔴 **Same failure, same screen, opposite honesty — and the
+dishonest path is the one that touches a real person.** §6 routing is no longer a judgement call.
+
+**🗣️ And a product question Ishay raised from the passenger seat, worth keeping because the answer was
+"it already exists".** Revisiting his own link after the release test, he saw *"תודה שהתפנית — המשרה
+כבר אוישה"* and asked whether it should say something like *"כבר ענית"*. Verified the mapping in
+`20260810004500:89-96`: `confirmed_available`/`finally_approved` → `confirmed` → *"תודה! רשמנו שאת
+מגיעה"*; `released` → `filled` → the sentence he saw. ⇒ **the screen he wanted already exists; he saw
+the released state because the fault-injection test had just released her.** 🔑 **The narrow real point
+he did find:** *"תודה שהתפנית"* was written for the **auto-release** case (`§ב6` — said yes, did not make
+the quota, *"מעולם לא שובצה"*), and the **manual release after final approval** (`§ב8`, client cuts
+headcount) falls on the same string while that premise is false for her. Recommendation given: leave it
+— nobody is harmed (she gets a release mail), it is an approved quoted string, and the RPC already
+branches on `released` internally, so splitting it later costs one small migration plus two lines.
+
+**Still open when this entry was written:** Ishay opening the invite on his real phone and confirming
+(the only step Claude cannot do — acceptance criterion #3), then final-approval + release (where the
+`releaseAssignment` blocker gets its live test), the single fix round, the verdict + typed-echo gate,
+the report artifact, the quiz, and the remaining persistence.
+
+### 12/08/2026 09:15–10:4X — Advisory addenda WHILE the close was running: the closing template never read the spec set's PROCESS document, its resolution rule was wrong twice before it was right, and its one-fix-round rule had no floor.
 
 🔴 **The part worth keeping: this rule was corrected TWICE within two hours of being written, and Ishay caught both defects — not a review, not an agent.**
 **Defect 1 — "the later + more specific document wins":** a screen card is **always** the more specific document about a screen, so the rule silently handed every screen question to the cards, including the ones where the process document is right *precisely because it sees across surfaces*. Replaced by a jurisdiction split (flow → processes, surface → screen card), with chronology demoted to where it belongs.
 **Defect 2 — "a dated ruling governs, full stop":** Ishay asked *"sometimes I decide different things by mistake — do my rulings necessarily govern?"* **They do not**, and root `CLAUDE.md` iron rule 1 (contradiction case ②) already said so: two disagreeing rulings ⇒ bring both, quoted and dated, and ask which stands; **never obey the one found first.** The skill rule had no clause for ruling-vs-ruling at all — it only ever contemplated ruling-vs-document. Added as clause ②b, routing to iron rule 1 rather than restating it. 🔑 **Live anchor in this very module: `local-7` — Ishay cancelled the hostess-count cap on 09/08, reversing his own 07/08 ruling; both are quoted and dated at `db_roadmap:135` and the later one stands. The mechanism works — what breaks it is a session that stops at the first hit.**
+
+**Third round, same session — §6b (one fix round) audited on Ishay's question "isn't one round problematic?".** Reading it verbatim answered the surface worry: **the cap is on SWEEPS, not on fixes** — six blockers means six fixes, one regression run, six specific re-verifications, and there is no path that merges leaving a known blocker behind (that case is a NO verdict). **But two real holes were found and closed, plus one he asked for:**
+**‏(1) The escape hatch had no floor.** *"Harmful ⇒ fix it inside this same round"* can recurse indefinitely — i.e. the rule written to stop a three-day loop could reproduce it under another name. Now: a **second** harmful finding surfacing **after** the regression run ⇒ stop, bring Ishay both, he rules. The loop becomes his decision instead of an unbounded cycle or a knowingly-shipped defect.
+**‏(2) §6b leans on the regression suite as its guard — and last night measured that the suite does not reach `api.js`.** Two rules written on different nights, never crossed. Now the template requires saying so in the verdict and hand-verifying any blocker fix that touches an uncovered surface.
+**‏(3) Blockers are now written FIX-READY for a session that was not present** (Ishay: *"if there are 6 and it isn't safe to merge, I fix in a new session — will it have enough context?"*): four one-line fields — grep anchor (never a line number) · how it was observed · what to read first · what proves it fixed. ⚠️ **And this exposed a same-day contradiction between two rules:** persistence step 6 archives the working findings file at the end — correct after a clean close, **wrong while blockers are open**, since it files away the richest context exactly when the fixing session needs it. Now: a NO verdict keeps the file in place and prints a paste-ready opening instruction for the fixing session.
+🔑 **Pattern across all three rounds tonight, worth more than any single rule: every defect was caught by Ishay in conversation, none by re-reading.** The rules were written by me, reviewed by me, and read fine each time.
 
 
 **Ishay's question, asked mid-audit:** the module-4 spec was authored **processes → screens → integration between them**, so the two can disagree — what should the audit read, and how are conflicts resolved? **Measured, not recalled:** `module-close/template.md` step 2b sent the audit to `spec.md`'s acceptance chapter **and `screens-approved.md`** — and **no step in the whole template named the process document**. The spec set's own `§⚖️` arbitration rule covers **mockup vs spec** only, so a **processes-vs-screens** conflict had no written rule anywhere.
