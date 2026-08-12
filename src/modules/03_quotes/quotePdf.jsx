@@ -6,7 +6,12 @@ import { Document, Page, Text, View, Image, Font, StyleSheet, pdf } from '@react
 import heeboRegular from '@/assets/fonts/Heebo_400Regular.ttf?inline'
 import heeboBold from '@/assets/fonts/Heebo_700Bold.ttf?inline'
 import regInLogo from '@/assets/reg-in-logo.png?inline'
-import { computeQuoteTotals, formatShekelWhole, parseVatPercent } from '@/lib/pricing'
+import {
+  computeQuoteTotals,
+  formatShekelExact,
+  formatShekelWhole,
+  parseVatPercent,
+} from '@/lib/pricing'
 import { NO_COLOR_LABEL } from '@/lib/catalog'
 
 // ── מוקש 1: פורמט הגופן ────────────────────────────────────────────────────
@@ -279,8 +284,12 @@ function LinesTable({ lines }) {
           <Text style={{ ...CELL_GAP, ...RTL, width: COLS.notes, color: MUTED }}>
             {line.notes ?? ''}
           </Text>
+          {/* exact: מחיר-מדרגה יכול לצאת עשרוני (2.5, 3.3...) — עיגול כאן היה מציג מספר
+              שאינו מכפיל לסה"כ-השורה שלידו, במסמך שיוצא ללקוח בפועל (ר' אותו תיקון
+              ב-QuoteLineEditor.jsx). סה"כ-השורה נשאר formatShekelWhole במכוון — זה סכום
+              סופי-לתשלום, לא מחיר-קטלוגי. */}
           <Ltr style={{ ...CELL_GAP, width: COLS.unit, textAlign: 'left' }}>
-            {formatShekelWhole(line.unitPrice)}
+            {formatShekelExact(line.unitPrice)}
           </Ltr>
           <Ltr style={{ ...CELL_GAP, width: COLS.total, textAlign: 'left' }}>
             {formatShekelWhole(Number(line.qty ?? 0) * Number(line.unitPrice ?? 0))}
