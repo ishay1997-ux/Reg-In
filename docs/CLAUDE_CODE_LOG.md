@@ -53,6 +53,108 @@
 > file fresh immediately before each edit, to avoid clobbering that session's work — not merged or
 > reordered. If anything here looks out of chronological order, that's why.
 
+### 12/08/2026 08:1X–09:XX — Module 4, step 5.2: closing audit **IN PROGRESS** (interim entry — the audit has not reached its verdict)
+
+**Why an interim entry exists at all:** the automated half of the close is done and its measurements
+would be lost to a session death. **Resume anchor is a file, not this narrative:**
+`docs/micro_guides/module-4-close-findings.md` (audit rule 5) carries every finding with its
+evidence; a fresh session resumes from it with no hand-written prompt.
+
+**Session shape.** Fresh session (built none of module 4 — the template requires this). Ishay ruled
+two things at the door: **UAT runs live and together, now** (the QA matrix has carried it as ❌ since
+the module opened), and **all human-facing verification runs in his own Chrome**, not the in-app
+browser, with **real invitation mail to his own address pre-authorised** — so journey 1 creates a
+hostess carrying `ishay1997@gmail.com` and journey 2's invite lands in his real inbox. He types every
+password; Claude types none. Mid-audit he added: read `processes-approved.md` too, not just
+`spec.md` + `screens-approved.md`.
+
+**⚠️ Supabase MCP was pointed at the WRONG PROJECT when the session opened** — `list_projects`
+returned only `gdud-710`. Measured before assuming, and Ishay reconnected on request; every DB claim
+below is against `Reg-In`/`yfeovxppnfoafmfbdfvh`, verified to be the project the app itself uses.
+🔑 **Worth keeping: a connected MCP is not a correct MCP.** The 08/08 `regin-docs-sync` run recorded
+the opposite failure (server absent, so the DB half was skipped and said so); this one would have
+answered every query happily — about another database.
+
+**Gates, measured this session.** `npm run gate` **exit 0** (lint 0 warnings · prettier · **750 unit /
+26 files** · build · jscpd · knip · audit · bidi · context · docs-structure 29 files 0 findings).
+`npm run smoke` **exit 0** — ⚠️ but its **first** invocation returned **exit 3**: smoke needs the
+**dev** server on 5173 while `test:e2e` runs against build+preview on 4173. **`npm run test:e2e`
+did NOT come back green: 116 passed / 1 failed.**
+
+**🔴 The failing test is a harness race, diagnosed rather than waved through — and it is one cause with
+three symptoms.** `accessibility.spec.js:81` failed on **`/system/prices` (module 1/system, not module
+4)** with `button-name … (11 nodes)`. Re-run alone → **passes**, and in that run the same screen
+produced *zero* findings while the full run also produced `empty-table-header`. Cause:
+`waitForReady` (`accessibility.spec.js:51-53`) waits for `<nav>` — the layout chrome, present as soon
+as auth resolves — and **not for the screen's own data**, so axe can scan a half-rendered table. The
+11 nodes are the **11 products**' Radix `SelectTrigger` controls, whose accessible name comes only
+from the rendered `<SelectValue />`. **This is the same family the spec's own header documents as
+already fixed once on 10/08** (the `<main>`/`<h1>` false finding) — `waitForReady` was that fix, and
+it was incomplete.
+
+**DB half, all measured live.** Advisors **17 security** (unchanged from the guide's baseline) —
+4 `rls_enabled_no_policy` (two deliberate deny-all, `logistics`→M5, `salary_reports`→M8), 12
+SECURITY-DEFINER-executable WARNs, 1 leaked-password-protection. ⚠️ **The written triage predates
+`get_shift_invite`** (created by the 10th migration on 10/08) and does not cover its two WARNs.
+**22 performance findings, all pre-existing classes.** **Zero schema drift**: 22 live tables vs 22 in
+`docs/schema.sql`, identical names, every module-4 column and late-migration function present.
+**Migration count in the DoD is stale — it says 8, there are 10 files and 10 applied rows**, names
+matching 1:1 (the file/DB timestamp offset is UTC-vs-local, not a mismatch).
+
+**RLS, impersonated live in rolled-back transactions carrying both `sub` and `email`.** Positive
+control first: `recruit.test` → **25 hostesses / 6 assignments / 3 projects / 0 customers**.
+`finance.test` (blocked) → **0 on all four module-4 tables**. `projects.test` (view) → reads 25,
+`update`/`delete` take **0 rows**, and `insert into hostess_unavailability` raises an explicit
+**42501** rather than failing silently. `anon` → 0 everywhere, and its `update` takes 0 rows. Public RPCs
+return a **byte-identical** `{ok:false}` / single generic Hebrew sentence for unknown, malformed and
+empty tokens — no oracle.
+
+**🎯 Acceptance criterion #5 proven at the database, including the half nobody usually tests.**
+Inserting a second `finally_approved` row for the same hostess on the same date → `23505
+assignments_one_event_per_day`. Then the §7.88 trigger half: a legal assignment on another date, and
+**moving that project's event date onto the collision** → the same `23505`, raised from inside
+`sync_assignments_on_project_date_change()`.
+
+**🔴 The audit's sharpest finding, verified by hand and not taken from the agent's word:
+`releaseAssignment` swallows email failure and three call sites tell the user the opposite.**
+`api.js:629-647` wraps the whole send in `try{}catch{}`; the comment claims *"והמסך מדווח על המייל
+בנפרד"* — it does not, the function returns `data?.[0] ?? null`. `SmartMatchPage.jsx:303-306` then
+toasts **unconditionally** `` `${name} שוחררה, והודעה נשלחה אליה` ``. Swallowed: missing template ·
+Make 502 · missing webhook secret · edge-function 403 · **and the 30-second timeout — the only send
+path in the module that never calls `classifySendError`**, so "unknown" collapses into the same
+silence as "failed". The fix pattern already exists in the same file (`{sent,unknown,failed}` →
+`reportMail`). **Routed as a §6 blocker**, and the live UAT will exercise it against Ishay's real inbox.
+
+**Two more from the silent-failure sweep, both with their preconditions stated honestly.**
+`listStaffingOverview` (`api.js:137`) returns `data ?? []`, so an RLS denial on `projects` renders
+**`✅ אין כרגע אירועים הממתינים לאיוש`** — verbatim the failure `spec.md § מה ייחשב עובד` **#4** calls
+the module's worst; it does **not** fire on today's matrix (measured: no role holds `דיילות ≠ blocked`
+with `פרויקטים = blocked`) and becomes live one CEO edit later. And `api.js:79-90` **discards a
+successful geocode** when its save is denied, so every candidate shows `אין קואורדינטות` — which reads
+as "my hostess records lack addresses" when the truth is the **event** has none.
+
+**Built-vs-approved-spec diff: no deviation beyond what is already ruled and registered.** The
+T-24 **automatic reminder mail** is genuinely absent (zero `reminder` occurrences in module-4
+migrations or `src/`; `cron.job` holds only the M3 and M1 jobs) — **and that is correct**: it belongs
+to module 10 (`PROJECT_MASTER.md:419-435`, `🚧 מ10 ← מ4`, §7.42), and the approved screen card itself
+replaced that button (`screens-approved.md:484`). Word-for-word contract items spot-checked and
+matching (over-quota warning, `אחת מעבר לנדרש`, shift lead, `languages text[]`).
+
+**Journal compaction (persistence 2b) — measured, not started:** narrative **3,457 lines** against
+the file's own ≤150 target. Escape hatch taken; the §6 debt line still carries the older number and
+is being refreshed rather than left.
+
+**Still open when this entry was written:** the live UAT (waiting on Ishay's login), the single fix
+round, the verdict + typed-echo gate, the report artifact, the quiz, and the remaining persistence.
+
+### 12/08/2026 09:15 — Advisory addendum WHILE the close was running: the closing template never read the spec set's PROCESS document.
+
+**Ishay's question, asked mid-audit:** the module-4 spec was authored **processes → screens → integration between them**, so the two can disagree — what should the audit read, and how are conflicts resolved? **Measured, not recalled:** `module-close/template.md` step 2b sent the audit to `spec.md`'s acceptance chapter **and `screens-approved.md`** — and **no step in the whole template named the process document**. The spec set's own `§⚖️` arbitration rule covers **mockup vs spec** only, so a **processes-vs-screens** conflict had no written rule anywhere.
+
+**Added to step 2b (generic — no per-module examples, per Ishay's 11/08 styling ruling), `5f28808`:** one bounded question (a diff against what was built, **not** a re-derivation of the spec) · 🔑 **hunt omissions before contradictions** — a builder works mostly from screen cards, so *a process rule that never reached a card was simply never built and has nothing to compare against*, whereas a contradiction is at least visible · a three-step resolution order (agree ⇒ nothing · differ with one later-and-more-specific ⇒ it governs, recorded **dated** · genuine collision ⇒ 🛑 a finding for Ishay, never ruled by the audit) · and explicitly **not a blocker by default**, routed to tech-debt under §6b, since fixing a doc-vs-doc divergence inside the audit is exactly the loop §6b exists to stop.
+
+🔴 **Stated plainly to Ishay: the running audit had already read the template, so this applies from the NEXT module** — he was given the paste-block to apply it to the live run if he wants it now. ⚠️ **Rule 16 respected throughout:** the close session owns `STATUS.md`, `CLAUDE_CODE_LOG.md` and `module-4-close-findings.md` right now; this session touched **only** the skill file and its own blocks in these two, and committed with an explicit pathspec.
+
 ### 12/08/2026 00:30 — Module 4, step 5.1 CLOSED: the four surfaces that had ZERO E2E now have 15 tests, every one proven red against broken code — and a 09/08 test was found rotting on the clock, not on a bug.
 
 **Context.** `STATUS.md` said 4.2 closed at 23:21; Ishay opened this session with "תמשיך לבנות" and approved the measured scope ("מאשר הכל לפי המלצתך"). A parallel session was editing `.claude/skills/module-close/*` — **its three files were never touched here**, and every commit used an explicit pathspec (iron rule 10).
