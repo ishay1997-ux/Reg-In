@@ -140,6 +140,40 @@ to module 10 (`PROJECT_MASTER.md:419-435`, `🚧 מ10 ← מ4`, §7.42), and the
 replaced that button (`screens-approved.md:484`). Word-for-word contract items spot-checked and
 matching (over-quota warning, `אחת מעבר לנדרש`, shift lead, `languages text[]`).
 
+**🆕 Scope addition Ishay made mid-audit, and it earned its keep.** He added
+`processes-approved.md` to the read list — it is **not** in the close template's §2b — with the
+reasoning that the spec was built **processes → screens → integration**, so the three can drift. His
+focused question was not "re-read the spec" but: *per built surface, does the process doc describe
+behaviour the system does not do — and especially, is there a whole process rule with **no screen
+card**, which therefore may never have been built?* His reconciliation rule: **later + more specific
+wins for that item, recorded as a dated note** (precedent: the guide §2 declaring
+`processes-approved.md:260` superseded); **a real conflict with no later ruling is a finding for him,
+not Claude's call**; and 🚫 **none of it is to be fixed in the §6b round.**
+
+**Result: four behaviours in the process doc are not built.** Three have a registered owner and are
+correct — the T-24 reminder mail (M10, §7.42), every `projects.project_status` transition (M6), and
+`§ב8`'s "a cancelled project must not count against her" (designed in: `reliabilityScore` already
+takes a `projectCancelled` field and is deliberately not called until M6). The fourth —
+`§א1`'s *"פרטי בנק — בדיקת מבנה"* — was genuinely never built (presence-required only, zero `bank`
+matches in `validators.js`); **resolved by his rule, not by me**: `screens-approved.md §⑤` enumerates
+every blocking state for that form and does not include a bank-format check ⇒ the screen card wins,
+the build is correct, and what is missing is only the dated note saying so.
+🔑 **And the hunt also confirmed two subtleties a screens-only reading cannot reach** — `§ב4`'s
+"an overridden refusal counts once, by the latest row" **is** implemented (`smartMatch.js:161-170`
+folds to the highest `assignment_number` per project+hostess), and `§ב3`'s **third** expiry condition
+("המשרה כבר אוישה") exists as the `filled` state, not just the 48h and T-24 clocks. **This is the
+argument for reading all three files: the process doc is the only one that describes behaviour
+running *between* screens or in the background, so it is the only one that can surface that class.**
+
+**🔴 One genuine gap with no later ruling — routed to Ishay, not decided here.**
+`countWorkedForCustomer` (`smartMatchCandidates.js:19-30`) counts a past `finally_approved` row with
+**no exclusion of `project_status = 'cancelled'`** (a legal value, `schema.sql:129`) ⇒ an event the
+**client** cancelled still credits the hostess with *"עבדה אצל \<לקוח\> N×"* on the live chip and in
+the matching sort angle. `§ב8` rules only that a cancellation must not count **against** her; it is
+silent on counting **for** her, and a credit is not a penalty, so the rule does not reach it. Not
+reachable in today's data (zero cancelled projects, measured). Recommendation given: register for M6,
+where the reliability component that touches the same question is built.
+
 **Journal compaction (persistence 2b) — measured, not started:** narrative **3,457 lines** against
 the file's own ≤150 target. Escape hatch taken; the §6 debt line still carries the older number and
 is being refreshed rather than left.
@@ -147,7 +181,12 @@ is being refreshed rather than left.
 **Still open when this entry was written:** the live UAT (waiting on Ishay's login), the single fix
 round, the verdict + typed-echo gate, the report artifact, the quiz, and the remaining persistence.
 
-### 12/08/2026 09:15 — Advisory addendum WHILE the close was running: the closing template never read the spec set's PROCESS document.
+### 12/08/2026 09:15–10:0X — Advisory addendum WHILE the close was running: the closing template never read the spec set's PROCESS document — and the resolution rule written for it was wrong twice before it was right.
+
+🔴 **The part worth keeping: this rule was corrected TWICE within two hours of being written, and Ishay caught both defects — not a review, not an agent.**
+**Defect 1 — "the later + more specific document wins":** a screen card is **always** the more specific document about a screen, so the rule silently handed every screen question to the cards, including the ones where the process document is right *precisely because it sees across surfaces*. Replaced by a jurisdiction split (flow → processes, surface → screen card), with chronology demoted to where it belongs.
+**Defect 2 — "a dated ruling governs, full stop":** Ishay asked *"sometimes I decide different things by mistake — do my rulings necessarily govern?"* **They do not**, and root `CLAUDE.md` iron rule 1 (contradiction case ②) already said so: two disagreeing rulings ⇒ bring both, quoted and dated, and ask which stands; **never obey the one found first.** The skill rule had no clause for ruling-vs-ruling at all — it only ever contemplated ruling-vs-document. Added as clause ②b, routing to iron rule 1 rather than restating it. 🔑 **Live anchor in this very module: `local-7` — Ishay cancelled the hostess-count cap on 09/08, reversing his own 07/08 ruling; both are quoted and dated at `db_roadmap:135` and the later one stands. The mechanism works — what breaks it is a session that stops at the first hit.**
+
 
 **Ishay's question, asked mid-audit:** the module-4 spec was authored **processes → screens → integration between them**, so the two can disagree — what should the audit read, and how are conflicts resolved? **Measured, not recalled:** `module-close/template.md` step 2b sent the audit to `spec.md`'s acceptance chapter **and `screens-approved.md`** — and **no step in the whole template named the process document**. The spec set's own `§⚖️` arbitration rule covers **mockup vs spec** only, so a **processes-vs-screens** conflict had no written rule anywhere.
 
