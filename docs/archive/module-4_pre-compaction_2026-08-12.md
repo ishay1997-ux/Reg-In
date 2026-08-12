@@ -6,20 +6,6 @@
 > **Revision 2** — after a fresh-context adversarial review of revision 1, run against the finished
 > guide rather than a summary of it (`module-blueprint/template.md` was corrected the same session).
 
-
-> 🗜️ **COMPACTED 12/08/2026 at the closing audit** (`module-close §4c`). **1,773 → this.**
-> **What was removed:** §2's context packet, §4's security-model statement, §5's DB-design challenge and
-> **§6's 739-line phase-and-step plan** — all of it build-time instruction whose job ended when the code
-> landed. **What was kept, deliberately:** the status header and step table (the as-built record with its
-> evidence), the capabilities table (**it feeds the `🚧` debt mechanism**), the Decisions Ledger, the QA
-> matrix, the Definition of Done, and the **entire** Deviations & Tech-Debt Log — the last two are the
-> only things a future session actually needs, and the rules say the ledger and the deviations log are
-> **never** compacted.
-> 📦 **The full pre-compaction copy: `docs/archive/module-4_pre-compaction_2026-08-12.md`** — nothing was
-> lost, only moved off the read path.
-> ⚠️ **This step was measured as skipped at module 3's close and nobody could tell** — which is why the
-> template now demands it be said out loud.
-
 ## §1 🟢 Live Status Header
 
 | | |
@@ -27,9 +13,9 @@
 | Module | **4 — דיילות + Smart Match** |
 | Branch | `ishay/module-4-hostesses` — **exists; never re-create.** ✅ **PUSHED to `origin` for the first time on 12/08/2026 00:45, on Ishay's instruction** *(this row said "nothing on this branch is pushed" until then — it was true for three weeks and stopped being true here)*. **Still NOT merged** — verified the same minute with `git merge-base --is-ancestor HEAD origin/dev`. 🚫 Do not write a number here — it rotted twice already *("ahead 6" was written on 08/08 and was 93 by 09/08 evening)*. **Measure it: `git rev-list --count origin/dev..HEAD`** |
 | Owner | ישי (sole developer) |
-| Overall status | 🔒 **Closed — awaiting PR/merge.** ✅ **ישי חתם על ה-DoD בשער-ההקלדה 12/08/2026 11:2X** (`דיילות + Smart Match DoD`, מוקלד במלואו — לא "מאשר"), אחרי שעבר על דף-הדוח וענה על שלוש שאלות-ההבנה. כל שאר האודיט הושלם. **‏12 ממצאים ⇒ 6 סיבות-שורש · 7 חוסמים תוקנו, כולם בסבב אחד · 0 חוסמים פתוחים.** שערים על `067dad4`+: `gate` **exit 0** (**751 unit** / 26 files) · `test:e2e` **117 passed** · `smoke` **exit 0** · advisors **17** (ללא שינוי) · אפס פער-סכמה (22 טבלאות). **UAT רץ חי עם ישי — שני מסעות, שני מיילים אמיתיים שנחתו בתיבתו, ואישור דרך הקישור הציבורי (19מ׳17ש׳).** |
-| Last updated | **12/08/2026 11:17** *(system clock)* |
-| **Active step** | **5.2 — closing audit: SCAN + FIX ROUND COMPLETE, verdict withheld pending Ishay's typed DoD echo.** 🔬 **The blocker that mattered was proven and re-proven by fault injection, not by reading code:** with the mail path cut at the network layer, *"שחרר"* claimed `והודעה נשלחה אליה` while `email_log` gained **0** rows — and after the fix, the same cut produced *"לא ידוע אם ההודעה יצאה"*. ⚠️ **Two defects the fix round itself introduced were caught by re-scanning its own diff** (a failed auto-release reported nowhere · the permission message losing to the filter branch) — both fixed. 📌 **Verified against `067dad4`; re-check the head before merging.** |
+| Overall status | ✅ **PHASE 3 CLOSED; 4.1 · 4.2 · 5.1 DONE (12/08/2026 00:12).** Gate `exit 0` (**750 unit**, unchanged — 5.1 added E2E, not unit) · **full `npm run test:e2e` 117 passed**, module-4's own share **38** · `smoke` `exit 0` · **0 migrations since 10/08** · advisors **17** (untouched — 5.1 wrote no DB and no `src/` product code) |
+| Last updated | **12/08/2026 00:12** *(system clock; refresh it at every step transition)* |
+| **Active step** | **5.2 — 🔻👤 Closing audit (`module-close`), and it MUST run in a FRESH session.** 5.1 closed: **+15 E2E** over the four surfaces that had zero coverage (repository · the add/edit form · the row menu · T-24), the last 3 hardcoded `overview-row-N` fixtures removed, and **every new test proven red against deliberately-broken code**. 🐞 One real find along the way: a 09/08 assertion that pinned `(0)` as an eternal truth **failed two days later with no bug** — clock-rot, confirmed via `git stash` against the pre-change code, and rewritten to the invariant it always meant (§10). 🔒 **Carried into the audit, stated not buried:** no E2E clicks *save* or a row-menu item — both write to the live demo DB and some send real mail — so the write path is unit- and live-proven, never E2E-proven |
 | Deadline | module 4 → `dev` by **21/08/2026**; submission **19/09/2026** |
 
 Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target module) · ❌ blocked (reason)
@@ -64,7 +50,35 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 
 ---
 
-## §2 📦 Capabilities delivered vs deferred
+## §2 📦 Context Packet
+
+**Purpose (3 lines).** מנהלת הגיוס והשיבוץ manages a pool of up to 50 hostesses and staffs each
+event with 2–10 (usually 4–5). Smart Match ranks candidates for her; **she picks manually, every
+round anew.** Success is measured negatively: no event goes out with a staffing hole, and no
+hostess appears in two places on the same day.
+
+### Product source — tier 2, above C5/C6 and above `docs/mockups/`
+
+🔴 **`docs/specs/module_04_hostesses/` is the build source.** Its `spec.md` §① carries the mandatory
+numbered reading list; from `module4_smart_match_research.md` read **§11 only**.
+Screen cards: `screens-approved.md`. Processes: `processes-approved.md`.
+**Approved mockups: `docs/mockups/hostesses-screen/approved/*.html` — 8 files, HTML not PNG (read them).**
+
+⚖️ **Arbitration (`screens-approved.md` §⚖️):** the mockup wins on APPEARANCE (layout · order · colour ·
+label wording · emphasis); the spec wins on BEHAVIOUR · DATA · PERMISSIONS · **STATES** · **SETTINGS**.
+Neither → stop and ask Ishay.
+🚫 **These mockups are APPROVED** — do NOT re-flag their drawn details for Ishay's re-approval.
+
+⚠️ **`docs/mockups/hostesses-screen/` also holds six superseded `01–06.png` and a
+`03_sortangles_DRAFT.html`.** Only `approved/` is authoritative. *(A `_DRAFT` suffix already nearly
+caused the public-page security surface to be skipped — `spec.md:49-51`.)*
+
+🔴 **Two stale lines inside otherwise-authoritative sources — do not obey them:**
+- `processes-approved.md:260` still says the project moves to `מוכן לביצוע` **by a DB trigger in M4**.
+  **Reversed 08/08/2026** — `spec.md §12⑱(ד)` + `PROJECT_MASTER §6` `🚧 מ6 ← מ4`. **M4 never writes
+  `projects.project_status`.**
+- `module4_smart_match_research.md §11.6#11` (30/07) puts the one-event-per-day index on three
+  statuses. **§7.88 (08/08, later) narrows it to `finally_approved`.** See the ledger.
 
 ### Capabilities delivered vs deferred
 
@@ -94,6 +108,91 @@ debt) and the **M6 attendance fields** if `PROJECT_MASTER.md:437` does not alrea
 
 **Roles on every module-4 screen:** מנהלת גיוס ושיבוץ = edit · מנכ"ל = edit · מנהלת פרויקטים = view ·
 מנהלת כספים ולקוחות / מנהלת לוגיסטיקה = blocked. *(Verified live against `permissions`, 08/08/2026.)*
+
+### DB tables and the existing migrations that shaped them
+
+| Table | State entering module 4 | Migration that made it so |
+|---|---|---|
+| `hostesses` | 11 columns, ת"ז as PK, `rating int not null default 3`, RLS on, **0 policies**, **0 rows** | baseline + `20260710160735` (RLS + `created_at`/`updated_at`) |
+| `assignments` | composite PK on ת"ז, 5-value status CHECK, RLS on, **0 policies**, **0 rows** | baseline + `20260710160735` |
+| `projects` | 24 columns incl. `event_name`/`customer_id`/`final_start_time`/`final_end_time`, RLS on, **0 policies**, **3 rows, all `not_started`** | `20260723111005` (M3 structure) · `20260723115000` (the conversion RPC that writes it) |
+| `params` | 20 rows incl. 4 hostess email templates and 3 **wrong** Smart-Match weights | `20260723112000` (M3 seed) |
+| `email_log` | `entity_type check in ('quote')`, 1 SELECT policy, no client write path | `20260730095439` |
+| `customers` | SELECT policy gated on module `'לקוחות'` — **מנהלת גיוס is blocked there** | `20260710160735` |
+| **new:** `hostess_unavailability` · `customer_hostess_preference` | do not exist | authored in step 1.3 |
+
+**Lower-tier background (read only where the approved spec does not cover the item, and flag any
+conflict rather than passing both down):** frozen spec `C5 §5.6.10` (overview) · `§5.6.11` (Smart Match) ·
+`§5.6.12` (repository) · `§5.5.5`/`§5.5.7` (project status machine) · `§5.5.8` (assignment statuses) ·
+`§5.8.4`/`§5.8.5` (invite and cancellation mail bodies) · `C6 §2.4.14` (assignment data dictionary) ·
+`PROJECT_MASTER §5.10–§5.12`. Superseded mockups: `docs/mockups/hostesses-screen/01–06.png`.
+🔴 **Where they conflict with `docs/specs/module_04_hostesses/`, the approved spec wins** — it is tier 2.
+
+**Test infrastructure:** Vitest via `npm run test:run` · Playwright specs in `e2e/` via
+`npm run test:e2e` (**excludes smoke**) · smoke via `npm run smoke` · full gate `npm run gate`
+(lint · format · unit · build · jscpd · knip · audit · context · docs-structure) ·
+CI `.github/workflows/ci.yml` — **runs neither E2E nor smoke.**
+
+### Existing files to touch or reuse
+
+| Path | Why |
+|---|---|
+| `supabase/functions/send-email/index.ts` **⚠️ shared-surface** | `:69` hardcodes `'הצעות מחיר'`; `:84` requires `pdf_base64` |
+| `src/lib/email.js` **⚠️ shared-surface** | consume as-is; move the 2 quote-specific strings out (`~:134`, `~:164`) |
+| `src/lib/quotes.js` **⚠️ shared-surface** | receives those strings; `~:216` holds `recommended_hostess_count` |
+| `src/modules/03_quotes/QuoteDocumentDialog.jsx` **⚠️ shared-surface** | transport at `~:260` (+ 3 metadata fields `:263-265`) — extract to the engine |
+| `src/lib/email.test.js` **⚠️ shared-surface** | `:235`, `:240`, `:284` assert the two moved strings |
+| `e2e/quote-email.spec.js` **⚠️ shared-surface** | `:229`/`:235`/`:239-242` pin the gate order **by line number** |
+| `src/CLAUDE.md` **⚠️ shared-surface** | `~:300-304` says the disable-reason lives in the engine and that `params` holds 6 templates — both become false |
+| `src/modules/03_quotes/CLAUDE.md` **⚠️ shared-surface** | documents that the disable-reason was left generic **on purpose** |
+| `src/lib/apiError.js` | `assertRowsAffected` / `RLS_DENIED` — the post-write row-count pattern |
+| `src/modules/02_customers/api.js` · `src/modules/03_quotes/api.js` | the two existing `api.js` precedents (03 is the newer) |
+| `src/modules/02_customers/CustomerFormDialog.jsx` | dialog language for 3ב/3ג (locked ח"פ ≙ locked ת"ז; contacts-in-form ≙ unavailability ranges) |
+| `src/modules/02_customers/CustomerDetailsPage.jsx` | structure for 3ד — **as an overlay, not a page** |
+| `src/components/` | `StatTile` · `Money` · `LtrFieldGroup` · `ConfirmDialog` · `LoadingOrError` · `RowAction` · `ToastProvider` · 🆕 `StatusTag` · `RatingStars` · `ChipToggle` *(3.0)* · 🆕 **`FilterPill`** *(3.3 — carries a `disabled` prop for 3.4's switched-off sort angle)* |
+| 🆕 `src/lib/dates.js` | `formatDate` · `formatTimeRange` — **extracted at 3.3 after `formatDate` was measured in three copies.** 🚫 Do not write a fourth |
+| `src/App.jsx` **⚠️ shared-surface** | `:126-129` — the route **already exists** with `<UnderConstruction>`; replace it, and add the public route |
+| `src/App.routes.test.jsx` | AST guard: any screen under `<MainLayout>` without `<ProtectedRoute>` fails |
+| `scripts/demo-seed.mjs` **⚠️ shared-surface** | extend with the 5 hostesses of `spec.md §3.1` |
+| `docs/schema.sql` · `e2e/smoke-anchors.json` **⚠️ shared-surface** | snapshot + regression anchors |
+
+🚫 **Already wired — do NOT re-add, it would duplicate:** `Sidebar.jsx:36` (`דיילות → /hostesses`) ·
+`App.jsx:126-129` (route + `ProtectedRoute allow="דיילות"`) ·
+`PermissionsMatrixPage.jsx:31` (`GROUPS` → `'דיילות'`). **All three measured present 08/08/2026.**
+
+**Files to create:** `src/modules/04_hostesses/{api.js, HostessesPage.jsx, RepositoryTab.jsx,
+OverviewTab.jsx, SmartMatchPage.jsx, HostessFormDialog.jsx, HostessViewCard.jsx,
+AssignmentRowMenu.jsx, PublicConfirmPage.jsx}` · **`src/modules/04_hostesses/CLAUDE.md`** — the
+module's own gotchas file, **written incrementally as traps are found, not cold at the end**
+(`module-close/template.md` treats it as binding; the precedent is
+`src/modules/02_customers/CLAUDE.md`) · `src/lib/{smartMatch.js, hostesses.js}` + tests ·
+`e2e/hostesses.spec.js` · `e2e/smart-match.spec.js` · 5 migrations.
+
+### 🔑 Test Identities (MANDATORY — the recurring load-bearing gap)
+
+**Resolve `role → email → user_id` LIVE, never hard-code.** Verified 08/08/2026: 5 `E2E_*` pairs exist
+in `.env.local` — `E2E_CEO_*` · `E2E_STAFF_*` · `E2E_FINANCE_*` · `E2E_PROJECTS_*` · `E2E_RECRUIT_*`.
+**`E2E_RECRUIT_*` = `recruit.test@regin.co.il` = מנהלת גיוס ושיבוץ** — edit on 'דיילות',
+view on 'פרויקטים', **blocked on 'לקוחות'**.
+
+**RLS impersonation:** `set_config('request.jwt.claims', …)` carrying **both `sub` and `email`** —
+one missing key makes every query return 0 rows and *look* like perfect RLS.
+🔴 **Positive control, mandatory:** impersonating `recruit.test@regin.co.il` MUST return ≥1 hostess row
+after step 1.4. A `0` there means **broken impersonation, not working RLS**.
+🔴 **Before writing any policy, confirm the gate string resolves:**
+`select module_id from modules where module_name = 'דיילות'` → exactly one row. The `modules` rows are
+**not** seeded by any migration (`grep -rn "insert into modules" supabase/migrations/ docs/schema.sql`
+→ nothing), so this is not derivable from the repo. **A missing row makes every policy NULL and every
+new table silently deny-all.**
+
+### Environment facts
+
+`@/supabaseClient` (**not** `@/lib/supabaseClient`) · alias `@/` → `src/` · dev server 5173 ·
+Tailwind v4, no config file · Radix is one package `radix-ui` · full RTL, physical utilities only ·
+`moddatetime` lives in schema **`extensions`** (`20260710164420`) — qualify it ·
+Supabase project `Reg-In`, ref `yfeovxppnfoafmfbdfvh`.
+
+---
 
 ## §3 🧭 Decisions Ledger
 
@@ -156,6 +255,809 @@ at runtime and from §11.1 at write time.** This guide names none of them.
 | 12 | `לא ענתה ל-N האחרונים` definition | final row per `(project_id, hostess_id)`, ordered `invite_sent_at DESC`, take N; fires when all N are `pending` | 🆕 no spec source |
 | 13 | `הושלם` in the view-card history | **a derived display label** (`finally_approved` + past event date) — 🚫 not a seventh status | 🆕 no spec source |
 | 14 | ₪ glyph order | `<Money>` everywhere ⇒ `45 ₪`. Mockup `03` draws glyph-first 12×; `05`/`08` and `src/CLAUDE.md:117-118` say otherwise, and the code rule wins | 🆕 no spec source |
+
+---
+
+## §4 🛡️ Security & Auth Model
+
+Leans entirely on module-1 auth. **RLS is the enforcement; the UI is convenience.**
+
+| Table | Policy gate (§7.21 template, `(select …)` wrapped) |
+|---|---|
+| `hostesses` · `assignments` · `hostess_unavailability` · `customer_hostess_preference` | module **`'דיילות'`** — select on `('edit','view')`, write on `'edit'` |
+| `projects` | **SELECT only**, module **`'פרויקטים'`** — matrix §3 gives מנהלת גיוס 👁 (verified live). 🚫 M4 never writes `projects` except its own additive `customer_name` backfill |
+| `email_log` | widen `entity_type` CHECK by **one** value `'shift'` + **a NEW module-gated SELECT policy on 'דיילות'**. 🚫 Never widen the existing quote policy to "any authenticated" |
+
+**Public path — the only unauthenticated writer in the system (§7.45):**
+`assignments` stays **fully deny-all to `anon`**. The single entry point is
+`respond_to_shift_invite(token, response)` — `SECURITY DEFINER`, `anon`-executable,
+`set search_path = ''`, taking **only** token + choice, writing **only** `assignment_status` +
+`responded_at`, on **one** row, and only when all three conditions hold: token valid · token in date
+(48h from `invite_sent_at` **and** ≥24h before the event) · status still `pending`.
+**One fixed generic error string to the client**; the real reason goes to the server log only.
+🔴 `invite_token` must be **long and cryptographically random** (`gen_random_uuid()` or equivalent),
+never sequential, **`unique`, with its own index** — the RPC does `WHERE invite_token = $1` on every call.
+
+**UI permission gates — the convenience half, and it has its own failure modes.**
+Every module-4 screen sits behind `<ProtectedRoute allow="דיילות">` (`App.jsx:128`) — **except the
+public page, which sits outside `<MainLayout>` with no guard at all** (step 3.6). The `allow` string is
+a **raw Hebrew literal that must be byte-identical** to the `modules` row; a typo denies everyone
+**silently** (deny-by-default). Within a screen, edit-vs-view is read from the permission map, and
+🔴 **a blocked control is NOT RENDERED, never rendered-disabled** — the rule already set on surfaces
+2/3/4/3ב. `src/App.routes.test.jsx` is the AST guard that catches a screen left unwrapped; it must be
+extended **deliberately and with a comment** for the public route, exactly as `index`/`profile`/`*` are.
+⚠️ *"לא הצלחנו לטעון הרשאות" is not "אין לך הרשאה"* (`src/CLAUDE.md`) — on a permissions-load failure the
+map is **not** reset, and `ProtectedRoute` shows a retry **after** `isAllowed`. Do not "fix" that.
+
+**Session/OAuth:** inherited unchanged from module 1 — the session lives in `sessionStorage` and dies
+with the tab (deliberate); Google sign-in returns to `/`, so any auth error must travel through
+`authError` in `AuthContext`. Module 4 adds nothing here **except** the public route, which must work
+**with no session at all** — verify it signed out, not just in an incognito-looking tab.
+
+**Declared limitation:** bank details and ת"ז are hidden **in the UI only** (§7.63 deferred to M6/M8).
+Any role with row-read on `hostesses` can read those columns via the API. **Stated, not a hole to plug.**
+
+---
+
+## §5 🗡️ DB Design Challenge
+
+*(Mandatory adversarial pass — `template.md`. One line per sub-check, **including the ones that found
+nothing**, so a session that ran all seven is distinguishable from one that skipped them.)*
+
+| Sub-check | What was examined | Finding |
+|---|---|---|
+| **Keys & mutability** | `hostesses.id_number` as PK; `assignments`' composite PK | 🔴 **Finding:** ת"ז is PII replicated into every assignment row, and a check-digit correction after events is blocked. → surrogate `hostess_id` (§7.64). Both tables empty ⇒ no data migration |
+| **Relationships & lineage** | can every derived row be traced to its source? | 🔴 **Finding:** `assignments` points only at `project_id` — no link to a service line (§7.67). **Ruled: deferred**, because one shift per project makes the project row the shift |
+| **Lifecycle & writers** | six statuses; who writes each; time anchors | 🔴 **Finding:** `approval_withdrawn` is in the approved vocabulary and **not** in the CHECK (`schema.sql:170-171` has five). → widened in Migration A. `פג תוקף` stays **derived**, not a seventh value. `projects.project_status` has **no M4 writer** (§7.44↳, M6 owns it) |
+| **Screen-to-column audit** — every displayed number has a named source | all 8 approved surfaces + all 8 approved mockups | 🔴 **Two findings.** (1) three surfaces print the customer name; `projects` carries only `customer_id`, and מנהלת גיוס is blocked on `customers` ⇒ silent null. → `projects.customer_name` snapshot (local-5). (2) the public page prints a travel amount with no param. → local-3. ✅ Everything else resolves: `במאגר מ-DD/MM` → `hostesses.created_at` (exists, from A-13); `אירועים · רבעון אחרון` → computed, window in assumption 10; the four counters → `MAX(assignment_number)` per pair |
+| **Derived vs stored** | what freezes, what stays live | ✅ **אין ממצאים.** `hourly_rate_snapshot` already freezes at assignment (§א2); `customer_name`/`event_name` freeze at conversion; the score is **never stored** — recomputed per read, which is why the anchor test is a unit test and not a row |
+| **Permissions ↔ RLS** | does M4 write columns on a table another module owns? | 🔴 **Finding:** `projects` is shared with M6/M8 (§7.63). M4 takes **SELECT only**, plus one additive column it populates in its own migration. No write policy on `projects` from M4 |
+| **Files/Storage · temporal · migration checklist** | `timestamptz` (§7.56) · money `numeric(12,2)` (§7.74) · `created_at`/`updated_at` (§7.73) · FK covering indexes (C-1) | 🔴 **Finding:** `assignments.hostess_id` is one of the C-1 unindexed FKs and moves to the **new** surrogate column — the index goes there. ✅ No Storage impact: module 4 uploads nothing |
+
+⚠️ **Also read `db_roadmap.md §9` (known reference-spec defects) before deriving anything from C5/C6** —
+defect #4 (two overlapping cancel-reason fields) is scheduled for reconciliation at "M4/8" and is
+**deferred here**: `docs/schema.sql:134` already has `cancel_reason`, and adding a second
+near-identically-named `cancellation_reason` without M8 present would create exactly the confusion
+the defect describes.
+
+---
+
+## §6 🏗️ Phase & Step Plan
+
+### Model & effort per phase
+
+| Phase | Model | Effort | Why |
+|---|---|---|---|
+| 0 — email unlock | Opus | High | touches merged, tested module-3 code |
+| 1 — DB/RLS | Opus | High | irreversible migrations on a shared live project |
+| 2 — logic | Opus | High | the algorithm is the module; the anchor must reproduce exactly |
+| 3 — UI | Opus | Medium | 8 surfaces, all drawn and approved |
+| 4 — wiring | Sonnet | Medium | mechanical, but the public route is a security boundary |
+| 5 — closing audit | Opus | High | independent re-verification |
+
+> **Every build-unit step below carries all seven fields**: Goal · Files · What to do ·
+> Verification (command + expected output) · 🔻 stop-point 🤖/👤 · **`מה ייחשב עובד`**
+> (3–5 Hebrew sentences, **quoted from the approved spec, never re-authored**) · **`🗣️ אושר —`**
+> (empty until Ishay approves; `module-build` reads this line off disk and re-asks him without it).
+
+---
+
+### Phase 0 — unlock the shared email engine ⚠️ shared-surface ✅ **CLOSED 09/08/2026**
+
+> **Compacted 09/08/2026 19:53** per §9(i). The step-by-step build instructions are spent — the
+> authoritative record of what was built is the code itself (`supabase/functions/send-email/index.ts`,
+> `src/lib/email.js`, `src/lib/quotes.js`, `src/api/emailLog.js`, `e2e/quote-email.spec.js`) plus
+> migration `20260809085058`. Full pre-compaction text — including every step's quoted
+> `מה ייחשב עובד` — is in `docs/archive/module-4_full_2026-08-09.md`; the acceptance criteria
+> themselves are quoted from `docs/specs/module_04_hostesses/spec.md`, which stays the SSOT.
+> **Deviations, the two false-closes on 0.3, and the as-built notes stay in §10 below.**
+
+| Step | What landed | Evidence |
+|---|---|---|
+| 0.1 | Shared engine opened to module 4 **without a second engine**: closed server-side map `entity_type ⇒ required module` (`quote`⇒'הצעות מחיר' · `shift`⇒'דיילות'), the client never sends a module name · attachment made optional **with a per-`entity_type` floor** (`quote` still requires `pdf_base64`) · the 2 quote-specific strings moved out of `src/lib/email.js` into `src/lib/quotes.js` **with their assertions** · transport (`functions.invoke` + timeout + the 3 `email_log` metadata fields) extracted from `QuoteDocumentDialog.jsx` into the engine · same-session ripple to `src/CLAUDE.md` + `src/modules/03_quotes/CLAUDE.md`. **Approved additions beyond the step text:** shared journal reader `src/api/emailLog.js` · pinned `jsr:` import (`ci.yml`, 🚧 מ10) | gate `exit 0` · unit **428** · E2E **78** · `smoke exit 0` · `jscpd` green (no second engine) · **🗣️ אושר 09/08 07:53** (plan `~/.claude/plans/4-warm-nygaard.md`, covering 0.1–0.3 as one unit) |
+| 0.2 | Migration 0 — `module4_email_log_accepts_shift`: `email_log.entity_type` CHECK widened `('quote')`→`('quote','shift')` + a **new** module-gated SELECT policy on 'דיילות' | applied **`20260809085058`**, verified live · `pg_get_constraintdef` shows both values · `pg_policies` on `email_log` → 2 · advisors zero new · 🔻👤 typed-echo received · **🗣️ אושר 09/08 07:53** |
+| 0.3 | `send-email` deployed and re-verified **against the live function**, and the Make side closed: Ishay built the Router in `regin-quote` with a no-attachment fallback branch, so the attachment-less `shift` path has a proven end-to-end route | deployed via Supabase MCP `deploy_edge_function` → **version 4, ACTIVE, `verify_jwt: true`** · **7-case gate matrix with zero side effects** (`RECRUIT+shift→400` · `RECRUIT+quote→403` · `RECRUIT+no entity_type→403` · `RECRUIT+invoice→403` · `CEO+shift→400` · `CEO+quote→400` · `FINANCE+shift→403`) · **closed only after opening 3 real emails in Gmail**, not on a status code · **🗣️ אושר 09/08 07:53** |
+
+**⚠️ Carry-forward into Phase 1+ (do not re-derive):**
+🔴 **The gate-order contract is pinned by tests, not by comments** — `e2e/quote-email.spec.js` sends `{}`
+as FINANCE expecting **403** and `{}` as CEO expecting **400**, i.e. the permission gate runs **before**
+body parsing. Any refactor that parses the body first stays green in unit tests and breaks exactly that
+pair. · **The `entity_type` map is closed and deny-by-default** — a missing `entity_type` falls back to
+`quote`. 🚫 **Do not add `invoice`/`salary_report`**: `email_log`'s CHECK rejects them and `index.ts`
+returns `{ok:true, log_failed:true}` on a journal failure ⇒ **silent loss**. M8/M11 widen the CHECK
+themselves (🚧 מ8 · 🚧 מ11). · **Every `shift` mail must leave an `email_log` row** — that journal is the
+only answer to *"was it already sent"*, so the anti-double-send guard does not exist without it. ·
+**A `400` from the live function, on a deliberately incomplete body, means "passed the permission gate"**
+— that test shape proves the map, the ordering contract and the role matrix with **no mail, no
+`email_log` row, no data**, and is worth reusing whenever the gate is touched. · ⚠️ **One honest limit:**
+the function was uploaded by transcribing the repo file into the MCP call ⇒ repo⇄deployment identity is
+verified **behaviourally, not byte-for-byte**. **Re-check it byte-wise at module close** with
+`get_edge_function`.
+
+---
+
+### Phase 1 — DB / RLS ◐ **steps 1.1–1.4 applied and verified 09/08/2026; gate 1.5 still owes Ishay**
+
+> **Compacted 09/08/2026 19:53** per §9(i). The step-by-step build instructions are spent — the
+> authoritative record of what was built is the **four migration files themselves**
+> (`supabase/migrations/20260809122536` · `20260809124327` · `20260809125750` · `20260809134237`),
+> `docs/schema.sql`, and `docs/db_roadmap.md §10`. Full pre-compaction text, including each step's
+> quoted `מה ייחשב עובד` and the full Migration-Design-Checklist wording:
+> `docs/archive/module-4_full_2026-08-09.md`. Deviations and as-built notes stay in §10 below.
+> 🔴 **The phase door (§9h) was swept 08/08/2026: no OPEN ledger item is anchored to Phase 1** —
+> §7.65 was verified closed (`PROJECT_MASTER_sec7.md:208`). 🚫 Do not re-ask Ishay about hostess-email
+> uniqueness; it was ruled 31/07. Every apply carried a 🔻👤 typed-echo from Ishay.
+
+| Step | What landed | Evidence |
+|---|---|---|
+| 1.1 | Migration A — `module4_hostesses_surrogate_key_and_columns`. `hostesses`: `hostess_id bigint identity` PK · `id_number` unique not null · `rating int null check (1..5)` · +`address`/`lat`/`lng`/`has_car`/`languages`; `email`/`city`/`bank_*` stay `not null` (local-1); **no UNIQUE on `email`** (§7.65). `assignments`: PK →`(project_id,hostess_id,assignment_number)`, FK→`hostesses(hostess_id)`, +`responded_at`/`invite_token unique`/`invite_sent_at`/`travel_amount`/`is_shift_lead`/`event_date`, status CHECK widened to **six**, one shift-lead per project. `projects`: +`lat`/`lng`/**`customer_name`**+backfill (local-5). **Three additions the step text did not carry:** `assignments.id_number` **DROPPED**, not demoted (ת"ז is PII and the old composite key replicated it into every row — `spec.md:128`) · `approve_quote_and_create_project` **rewritten** (`create or replace`, LEFT join to `customers`) because it is `projects`' only writer, so a backfill alone would have left every future project with an empty snapshot · the `rating` **DEFAULT 3 dropped** alongside the NOT NULL — without that every new hostess is born rated 3 and the ruling is worthless (`spec.md:169-171`) | applied **`20260809122536`**, verified live from the catalog · advisors **15 = baseline, zero new** · **`e2e/quote-approval.spec.js` + `server-messages-and-inactive-product.spec.js` → 16/16 green** after the RPC rewrite · **🗣️ אושר 09/08 12:25** (plan `~/.claude/plans/compiled-rolling-hummingbird.md`; typed-echo received) |
+| 1.2 | Migration B — `module4_one_event_per_day_constraint` (§7.88): partial unique index **`assignments_one_event_per_day`** on `(hostess_id, event_date) where assignment_status='finally_approved'` · `event_date` synced by trigger **in both directions** (assignment insert/update **and** `projects.final_event_date` UPDATE) · **`event_date` made NOT NULL** — an addition the step did not carry, because **two NULLs are DISTINCT in a unique index**, so two `finally_approved` rows with an empty date would have bypassed the constraint **without violating it**. Two same-day *invitations* stay legal | applied **`20260809124327`** · 5-assertion **rolled-back** probe: two `finally_approved` same day ⇒ error · two `pending` ⇒ allowed · `projects.final_event_date` change ⇒ `event_date` follows · M3's conversion RPC (zero assignments) still succeeds · a writer's own `1999-01-01` read back as the project's real `2026-09-27` · advisors **15 = baseline** · **🗣️ אושר 09/08 12:43** (same approved plan; typed-echo received) |
+| 1.3 | Migration C — `module4_tables_params_and_templates`: **`hostess_unavailability`** · **`customer_hostess_preference`** (with `check (preference <> 'לא_לשלוח' or preference_reason is not null)` — a negative mark requires a written reason) · **14 `params` rows derived, not counted** (`משקולת_היענות` 0.40 · `משקולת_אמינות` 0.35 · `משקולת_קרבה` 0.25 · `שער_מרחק_קמ` 80 · `גולפוסט_מרחק_קמ` 40 · `קבוע_ריסון_m` 3 · `חלון_חישוב_חודשים` 12 · `חלון_חישוב_מורחב_חודשים` 24 · `מינימום_תשובות_להצגת_ציון` 3 · `שיעור_בונוס_הוגנות_לשבוע` 0.02 · `תקרת_שבועות_הוגנות` 8 · `לא_ענתה_ל_N` 4 · `מרכיב_אמינות_פעיל` `false` — all `smart_match`; + `סכום_נסיעות_למשמרת` 0 as `pricing_timing`), the three old rating-era weights **replaced, not renamed** · release template **`תבנית_מייל_שחרור_משמרת`**, body verbatim from `processes-approved.md:264-266` wrapped in a greeting and signature (local-6). ⛔ `תקרת_דיילות_מומלצת` **cancelled by Ishay** (local-7) | applied **`20260809125750`** · **`params` 20→32** and the three weights **sum to 1.00 read back from the DB**, not from the migration text · all five hostess templates present · `end_date < start_date` → error · `'לא_לשלוח'` with null reason → error · ⚠️ advisors **17 (+2, and that is correct)** — the two new tables are RLS-on with no policies until 1.4; the pair had to be **gone** after D · **🗣️ אושר 09/08 12:58** (same approved plan; typed-echo received) |
+| 1.4 | Migration D — `module4_rls_and_public_rpc`: §7.21 policies on `hostesses`/`assignments`/`hostess_unavailability`/`customer_hostess_preference` (module 'דיילות') · **SELECT-only** on `projects` · min-wage trigger (§7.66) `before insert or update **of hourly_rate**`, guarded TEXT read then cast, Hebrew `P0001` · public RPC `respond_to_shift_invite(token, response)` returning the **identical generic string** for wrong-token / expired / not-`pending` | applied **`20260809134237`** · **9 policies** · impersonation verified **both ways with a positive control first** (`recruit`→≥1 hostess; `finance`→0; `projects`-mgr reads, cannot write) · the deliberate policy-drop probe → **0 rows and NO error**, the `{data:null,error:null}` trap **demonstrated, not asserted** · min-wage `30`→Hebrew error, `40`→ok, name-only update on an under-paid hostess **succeeds** · `anon` blocked from `assignments` directly · advisors **14** (`17 − 5 + 2`) — **stated as a miss against the predicted 13**, triaged in writing in §10 · **🗣️ אושר 09/08 13:42** (same approved plan; typed-echo received) |
+| 1.5 | 🔻👤 **Phase-1 gate — Claude's side done, Ishay's side open.** Done: `docs/schema.sql` refreshed and **committed with each migration** · `db_roadmap §10` four Done-rows · every `🚧` audited byte-for-byte against `PROJECT_MASTER §6` (+1 new debt written) · §7.67 write-back · advisors triaged in writing | ◐ **Awaiting Ishay: run `regin-docs-sync` (rule 13ז — Claude never runs routines) and sign the gate.** This is the phase's only open item and it is also carried in §1's status header and its step row |
+
+**⚠️ Carry-forward into Phase 2+ (do not re-derive):**
+🔴 **The index name `assignments_one_event_per_day` is a contract with the UI** — the screen maps it to
+the Hebrew blocking message exactly as `SERVER_MESSAGE_RULES` in `src/lib/quotes.js` maps the RAISE
+prefixes. **Rename it without updating the map and the screen drops to a generic error — and no test
+fails.** · `assignments.event_date` is a **pure derivation**: the trigger fires on **every**
+insert/update, so a writer cannot supply their own value, and the `NOT NULL` is the net that fails
+**loudly** if the trigger ever stops running. · 🔴 **`*_write_by_permission` is `FOR ALL`, so it ALSO
+grants SELECT** — the §7.21 template does not reveal this on reading. **Any future "what happens with no
+policy" test must drop BOTH policies, or use a `view`-only role**, otherwise an `edit` holder still sees
+the rows and it looks like a failed test. 📌 **Phase 3 owes the other half:** the DB cannot signal the
+difference — **the screen must distinguish "query failed" from "no rows"**, or the module's worst failure
+mode ships invisible. · **`מרכיב_אמינות_פעיל` is seeded OFF** ⇒ the runtime must **renormalise** the two
+surviving weights to 1.0. 🚫 Never hardcode a two-way split, and never derive the flag from "no
+attendance rows" (§7.90 rejected that: it would change the ranking **silently** the day the first
+attendance row lands). · **`customer_hostess_preference` is created and read by M4 but WRITTEN by M6**
+(🚧 מ6 ← מ4) — it stays **empty** until then, and the gate's third condition reading an empty table is
+the designed state, not a bug. · **The min-wage trigger's `of hourly_rate` scoping is load-bearing** —
+updating only `full_name` on a hostess whose rate sits below the parameter **must keep succeeding**
+(§7.66: *"זה יהיה שינוי-שכר של אדם בשקט"*); a plain `CHECK`, or a trigger without `of`, breaks the day
+the parameter is raised. · **`respond_to_shift_invite` is granted to `anon` AND `authenticated`
+deliberately** (a signed-in manager opening the invite link would otherwise hit a permission error on a
+public page) ⇒ it raises **two** advisor lints, not one. · **`projects` is SELECT-only for module 4** —
+see Phase 2's carry-forward for the only sanctioned write path.
+
+---
+
+### Phase 2 — business logic ✅ **CLOSED 09/08/2026 — Ishay signed gate 2.5**
+
+> **Compacted 09/08/2026 19:53** per §9(i). The step-by-step build instructions are spent — the
+> authoritative record of what was built is the files themselves (`src/lib/hostesses.js`,
+> `src/lib/smartMatch.js`, `src/lib/geocode.js`, `src/modules/04_hostesses/api.js`, `validators.js`
+> additions) **and their test suites**, plus migrations E+F. Full pre-compaction text, including each
+> step's quoted `מה ייחשב עובד`: `docs/archive/module-4_full_2026-08-09.md`. Deviations, the SQL⇄JS
+> reversal reasoning and Ishay's sign-off on it stay in §10 below.
+
+| Step | What landed | Evidence |
+|---|---|---|
+| 2.1 | `src/lib/hostesses.js` + tests — Israeli ID check digit (validated **while typing**, the only field that does not wait for blur) · min-wage validation mirroring the DB trigger · unavailability overlap (inclusive both ends) · derived states `פג תוקף` / the T-24 alert / the `הושלם` display label · `validators.js` +`isValidIsraeliId` | **tests written first and watched red** · **🗣️ אושר 09/08 15:31** (consolidated round for 2.1+2.2+2.3, plan `~/.claude/plans/lexical-weaving-stonebraker.md`; no mockup — no visual surface, no product decision) |
+| 2.2 | `src/lib/smartMatch.js` — the four layers, every number read from `params`. **Layer 1 gate, five conditions:** `status='active'` · no `finally_approved` assignment that date · not marked `לא_לשלוח` for this event's customer · within the distance gate · no declared unavailability covering the date; ➕ beyond the goalpost **without a car ⇒ rejected**. **Layer 3:** three components damped toward the company average `C`, computed over **ALL** hostesses **including the gate-rejected** (§11.3). **Layer 4:** leverage multiplies the **raw** score, **one** rounding at the very end. ↳ **as-built: the step's "the tie-break runs in SQL" instruction was NOT followed** — measured: `supabase-js` computes no haversine, expresses no `NOT EXISTS`, cannot `ORDER BY` an expression, and the DB has **no view and no ranking function** to host it ⇒ SQL would have cost a **sixth migration** with its own typed-echo gate. **All four layers run in JS**; the query fetches only small server-filtered sets; the tie-break is **FNV-1a** with the same inputs and direction | **the hand-computed anchor reproduces: `0.67/0.66/0.64`, order `נועה ← מיכל ← דנה`, two candidates absent entirely** · **all three §3.5 holes proven red against deliberately-broken code** (hardcoded split · never-worked given the cap · mid-computation rounding) · tests are **date-free** (weeks/km/counts fed directly) · **🗣️ אושר 09/08 15:31** · full reasoning + sign-off in §10 |
+| 2.3 | `src/modules/04_hostesses/api.js` — **filtering in the query**, never pull-everything-and-filter-in-the-browser (🚧 מ4 · 🚧 מ6) · every write `.select()`s and checks the row count (`assertRowsAffected`) because an RLS-blocked write returns `{data:null,error:null}` · the governing status is the row with `MAX(assignment_number)` per `(project_id, hostess_id)`, not the last row created | ◐ **reads + hostess-pool writes done 09/08.** Assignment-lifecycle writes deferred to Phase 3 (they ride with 3.4/3.5) — §7.33 and §7.41 were open then and are **now RULED** (see §3) · **🗣️ אושר 09/08 15:31** |
+| 2.4 | 🔻👤 **Geocoding — the product decision Ishay made: Nominatim/OSM**, ToS read in that same turn. Lazy fill (hostess on save, event on first entry to its Smart Match screen) + backfill of existing projects. ↳ **three deviations from the step's own text, all measured:** **(1)** a single-shot geocode was never viable — **both** real event addresses return EMPTY (`אקספו תל אביב, ביתן 2` · `מרכז הכנסים, ירושלים`) ⇒ a **candidate chain** (full → each segment, last→first, capped at 4) in `src/lib/geocode.js`; **(2)** the chain needed `localityMatchesAddress`, which accepts a hit **only if the returned locality appears in the original address** — a bare `מרכז הכנסים` resolves to **אשקלון, 62 km off**, `הרצל 50` to **נתניה**, both valid coordinates that pass the 80 km gate and move the ranking silently; **(3)** `projects` had **no write path** (SELECT-only, verified live) ⇒ **migration E**, a `SECURITY DEFINER` RPC writing **only** `lat`/`lng` — 🚫 deliberately not a write policy, because Postgres RLS is row-level and would have exposed `final_event_date`/`project_status` too | **verified end-to-end in a real browser against the live DB** · migrations **E+F** applied · **all 3 events filled through the production path**: project 3 → **ירושלים, not אשקלון** · project 8 → אקספו ת"א `32.105`/`34.808` · project 7 → **correctly none, and marked** · advisors **16→15 after F, as forecast** · gate `exit 0` · **571 unit** · **🗣️ אושר 09/08 17:1X** (plan `~/.claude/plans/purrfect-herding-sprout.md`) |
+| 2.5 | 🔻👤 **Phase-2 gate** — the hand-computed anchor reproduces | ✅ **Ishay signed. PHASE 2 CLOSED.** The anchor (`0.67/0.66/0.64` + order + two absent) **re-verified after every later change**, not once at the start · `gate exit 0` · **575 unit** · 7 migrations · advisors 15 |
+
+**⚠️ Carry-forward into Phase 3+ (do not re-derive):**
+🔴 **All four Smart Match layers run in JS** — the original "the tie-break runs in SQL" instruction is
+**superseded and must not be reinstated** without the sixth migration it implies (§10). The tie-break is
+**FNV-1a**: changing its inputs or its direction re-orders equal-scoring candidates **silently**. ·
+**A hardcoded two-component weight split PASSES the anchor and is still wrong** — renormalise from
+`params` at runtime, or the ranking changes the day M6 turns reliability on. · **Layer 4 rounds exactly
+once, at the very end**, and weeks are measured from when she **WORKED**
+(`max(projects.final_event_date)`), not from when she was invited — **a hostess who never worked gets
+`0` weeks, not the cap.** Both are deliberately-broken tests already in the suite. · 🔴 **A wrong
+coordinate is worse than a missing one** — the missing one is marked on screen, the wrong one **looks
+like a fact**. `localityMatchesAddress` is that guard; do not "simplify" the candidate chain away. ·
+**A geocode failure ⇒ a NEUTRAL proximity score + a visible `אין קואורדינטות` marker — never `0`**
+(§7.55 / `research §11.4`). · **`projects.lat`/`lng` are writable ONLY through migration E's
+`SECURITY DEFINER` RPC** — module 4 holds a SELECT-only policy on `projects`, and widening it is
+forbidden by §4. · **Money and totals**: `src/lib/hostesses.js` owns the min-wage rule that mirrors the
+DB trigger — the screen must not re-implement it, only surface its message. · **2.3's remainder
+(assignment-lifecycle writes) rides with 3.4/3.5**, and the `knip` waiver for `04_hostesses/api.js` was
+**narrowed, not removed** when 3.1 imported the file (§10).
+
+---
+
+### Phase 3 — UI
+
+**Step 3.0 · 🔧 Shared-component checkpoint — BEFORE the first screen.**
+Read all eight approved cards, list what repeats, rule shared vs local. **Default: appears in 3+
+surfaces ⇒ shared, in `src/components/`.** ⚠️ **Check `src/components/` first — much of it exists**
+(`StatTile` · `Money` · `LtrFieldGroup` · `ConfirmDialog` · `LoadingOrError` · `RowAction`); the finding
+is usually "reuse this". Likely new: status tag · reasoning chip (two families) · counter strip.
+🚫 Do not plan functions this way — logic already has one home in `src/lib`.
+
+**🗣️ אושר 09/08 19:0X** *(plan `~/.claude/plans/stateful-hopping-duckling.md`, approved by Ishay; covers 3.0 + 3.1 + 3.2 as one unit.)*
+
+↳ **as-built 09/08/2026 — the ruling, derived by scanning the class vocabulary of all eight approved mockups.**
+**3 new shared** (`src/components/`): **`StatusTag`** (6 surfaces — colours read out of the mockups by
+`grep`, not chosen by eye) · **`RatingStars`** (4 surfaces; read + edit) · **`ChipToggle`** (3 surfaces).
+**4 reused, nothing rebuilt:** `StatTile` · `Money` · `useConfirm` · `LoadingOrError`; the toggle is the
+existing `ui/switch` (already RTL-adjusted).
+🚫 **One deliberately NOT shared: the Smart Match reasoning chips.** `spec.md §1.5` requires **two
+separate families** (`chip.score` vs `chip.ctx` plus the pin tag); folding them into `ChipToggle` would
+have erased a ruled distinction to save one file. They stay local to 3.4.
+📌 **23 unit tests, and the load-bearing one was proven by breaking the code:** defaulting `rating` to
+`3` turned **3 tests red** — the same `default 3` that migration A removed. Guard observed failing, then
+restored.
+
+> **Every surface step below is a build-unit.** It opens with a 🗣️ experience-brief and **waits for
+> Ishay's approval before code**: (א) the business flow as understood, invited for correction ·
+> (ב) planned validations · (ג) which files · (ד) anything spec-silent.
+> 🚫 **Approved mockup details are NOT re-flagged for approval** — build them as drawn.
+> **Verification for every UI step is functional AND visual** — drive the flow in the live preview and
+> attach screenshots as the evidence. 🤖, not a human wait.
+> **Mockup → surface map:** `01`→3.3 · `02`→3.4 · `03`→3.1 · `04`→3.5 · `05`→3.6 · `06`/`07`/`08`→3.2.
+
+**Step 3.1 · Surface 3 — hostess repository**
+**Files:** `04_hostesses/{HostessesPage.jsx, RepositoryTab.jsx}` · mockup `03_repository_approved.html`
+**What to do:** table + the four filters + the two tabs. `—` for an unrated hostess, **never `3 ★`** ·
+`מצב` shows a **range** `לא זמינה DD/MM–DD/MM`, never a single end date · the deactivate toggle opens
+the §א4 confirmation **only when a future active assignment exists**, naming them by name and date;
+with none, it flips immediately. No pagination (≤50 rows). No delete anywhere.
+**🔻🤖 Verify:** true-empty vs empty-after-filter show **different** messages · a load failure shows an
+error + retry, never an empty table · screenshots of both empty states and the confirmation dialog.
+**מה ייחשב עובד** *(`screens-approved.md` מסך 3 §①/§③, quoted)*
+1. *"איזו דיילת אני פותחת עכשיו — ומה מצבה, לפני שאני נוגעת בה."*
+2. *"חור במוקאפ: יש מסנן 'פעילות בלבד' ואין עמודה שמראה מצב"* — the `מצב` column closes it.
+3. *"שתי ההודעות חייבות להיות שונות, אחרת המנהלת חושבת שהמאגר נמחק."*
+4. **A load failure shows *"לא הצלחנו לטעון את המאגר"* + "נסה שוב" — never a silent empty table**
+   (`screens-approved` מסך 3 §⑤). 🔴 *This is the half the DB cannot signal — the `{data:null,error:null}` trap.*
+5. `יחידה-ספציפית` — **מנהלת פרויקטים sees the rows but has no "+ הוספת דיילת", no action column and
+   no hourly-rate column**, while מנהלת גיוס has all three. **Both directions, not only the one I wanted to see.**
+**🗣️ אושר 09/08 19:0X** *(same consolidated plan as 3.0.)*
+
+↳ **as-built 09/08/2026 — built as drawn, with four things the step text did not carry.**
+**(1) 🔴 The route was wired HERE, not at 4.1.** `App.jsx` still rendered `<UnderConstruction>`, while
+Phase 3 demands screenshot evidence for every step — **the plan asked for a photo of a screen nobody
+could reach.** One line moved forward; **4.1 keeps what is actually its own** (the public route + the
+`App.routes.test.jsx` allow-list). `App.routes.test.jsx` re-run green — no guard was breached.
+**(2) Four new pure functions in `src/lib/hostesses.js`**, tests written first and watched red:
+`hostessDisplayState` · `unansweredStreakTag` · `eventsInLastQuarter` · `futureActiveAssignments`.
+**(3) A new query, `listRepositoryAssignments`** — one call, not one per hostess; the table's quarter
+counter and both hygiene tags need history for **every** row.
+**(4) 🔴 The §א4 window tells the truth about what it cannot do.** §א4 offers two options; the
+release path depends on §7.33 and is built in 3.5 ⇒ the dialog **says so** and performs the
+status change only. A "release" button that merely flipped a status would have left the event
+looking staffed — the exact scenario §א4's warning exists to prevent.
+
+🔴 **And the finding worth keeping from this step: two of my own tests passed against broken code.**
+I broke three behaviours on purpose; only one test went red. The other two — "counts events, not rows"
+and "only the deciding row counts" — were written against data where folding and not-folding give the
+**same answer**, so they proved nothing. Both were rebuilt with data that discriminates, and then both
+went red on the same breaks. 🔑 **Same shape as the §3.5(ג) rounding hole: a guard written against data
+the feature already passes is not a guard — and re-reading it will never tell you that.**
+
+**Step 3.2 · Surfaces 3ב / 3ג / 3ד — add · edit · view**
+**Files:** `04_hostesses/{HostessFormDialog.jsx, HostessViewCard.jsx}` · mockups `06`/`07`/`08`
+**What to do:** 🔴 **the rating stars open EMPTY, not preset to 3** — mockup `06:150` draws `3 מתוך 5`;
+without this every new hostess is born rated and the `null` column change is worthless.
+All five previously-optional fields carry `*` (local-1) · ת"ז validated **while typing**, locked in edit
+mode · unavailability ranges accumulate in form memory and are written by the single "שמור שינויים" ·
+3ד is an **overlay on surface 3, not a page**, and hides "פרטים עסקיים" + the edit pencil from a
+view-only role.
+**🔻🤖 Verify:** save without email is **blocked with a clear message** (local-1) · a duplicate email
+**warns and does not block** · an ungeocodable address **still saves**, marked · screenshots of each.
+**מה ייחשב עובד** *(`processes-approved.md §א1` + `screens-approved.md` 3ב §②, quoted)*
+1. *"כרטיס נפתח רק אחרי שהמנהלת כבר דיברה עם הדיילת. אין 'מועמדת ממתינה לאישור'."*
+2. *"בשמירה: `פעילה`, ונכנסת מיידית למאגר-המועמדות."*
+3. *"נכשל ⇒ נשמרת בכל מקרה ומסומנת"* — a geocode failure never blocks a save.
+4. *"התרשמות" ולא "דירוג"* — **and a new hostess saves with no rating at all**, showing `—` in the table.
+5. `יחידה-ספציפית` — **saving without an email is blocked with an explicit message, while a duplicate
+   email only warns and leaves "שמור" enabled.** Two different behaviours on one field.
+**🗣️ אושר 09/08 19:0X** *(same consolidated plan as 3.0.)*
+
+↳ **as-built 09/08/2026 — one dialog serves both 3ב and 3ג.**
+The two mockups are identical field-for-field; the differences are three (locked ת"ז · read-only status
+tag · the unavailability section). **Two files would have drifted** — and the price there is a validation
+that exists on add and quietly disappears on edit.
+🔴 **Nine starred required fields, not four** (`local-1`): the five "optional" ones are `not null` in the
+DB, so a form that marks them optional produces a save that fails server-side with a message the manager
+cannot act on.
+📌 **`הנחתי` — three assumptions I filled, nobody stated them and I did not measure them:**
+① **a past unavailability range is not shown, and among the relevant ones the nearest wins** — derived
+from the approved mockup drawing *future* ranges (יעל 07/09–14/09 while "today" is 08/08), so
+"future yes, past no"; the spec fixes the label and its source but not this choice.
+② **`אירועים · רבעון אחרון` is counted by the same rule as `עבדה אצל`** — blueprint assumptions 10 and 11
+set the window and the counting rule in **two separate rows** and never say they are the same rule;
+I unified them, because two numbers called "אירועים" counted differently on one screen is precisely the
+double-story `§11.5` forbids.
+③ **"future ACTIVE assignment" = `finally_approved` **or** `confirmed_available`** — §א4 says "שיבוצים
+עתידיים פעילים" and never enumerates statuses. I chose the safe side: the risk the window exists to
+prevent is the manager **not knowing** about a commitment, so a confirmed-available row counts too.
+`ממתינה למענה` does not — an unanswered invite is not a commitment, and including it would flood the
+window into noise.
+
+🌊 **Ripple sweep for steps 3.0–3.2 — the five targets, named:**
+① `↳ as-built` written on 3.0, 3.1 and 3.2 · ② §10 — five new entries (bidi ×2 · the two tests that
+passed on broken code · the early wiring · the Phase-3 door · the live pool) · ③ **DoD checkboxes moved:**
+`test:run` 575/17 → **627/20**, and "all 8 surfaces" marked **◐ 4 of 8** instead of staying a bare ⬜ ·
+④ **Ledger rows added:** `§7.41↳` · `local-13` · `local-12↳` · `local-14` · ⑤ **approved-spec / other
+files that now read differently:** `PROJECT_MASTER §7.33` and `§7.41` got their write-back **first**
+(rule 13א) · step **4.2** carries the seed-must-skip-existing-ת"ז consequence · `knip.jsonc`'s waiver was
+**narrowed with a corrected justification** rather than left standing on a claim that had gone false ·
+`src/CLAUDE.md`'s bidi section moved from "sixth occurrence" to **eighth** · `04_hostesses/CLAUDE.md`
+gained three new mines. 🚫 **No number in the approved spec was edited** — nothing there contradicts
+what was built.
+
+**Step 3.3 · Surface 1 — assignment overview (triage)**
+**Files:** `04_hostesses/OverviewTab.jsx` · mockup `01_overview_approved.html`
+**What to do:** shows **`טרם החל` AND `בתהליך`** — every live project is `not_started`, so filtering to
+`in_progress` alone leaves the screen empty forever. Default order: **missing first, then by event
+proximity.** Five counters + the split `ממתינות N · מתוכן M פג תוקפן`, the expired part **clickable**.
+Two KPIs. T-24 alert **derived at read time** (§7.91). The only writing action on this screen is
+`שלח שוב`; everything else routes.
+**🔻🤖 Verify:** with the seeded data the row order matches "missing first" · `שלח שוב למי שפג תוקפן (N)`
+is disabled at `N=0` · a load failure shows an error, **not** *"אין כרגע אירועים"* · screenshots.
+**מה ייחשב עובד** *(`screens-approved.md` מסך 1 §②/③ + `spec.md § מה ייחשב עובד` #1, quoted)*
+1. *"המנהלת פותחת את המבט-על ויודעת מיד לאיזה אירוע להיכנס — הסדר עונה על זה, לא רשימה."*
+2. *"אירוע שבו 6 אישרו זמינות ואיש לא אושר סופית מציג `אושרו 0` ונראה זהה לאירוע שאיש לא ענה בו"* —
+   the fifth counter closes it.
+3. *"'3 ממתינות' אומר תני להן זמן; '3 פג תוקפן' אומר שלחי לעוד שלוש, עכשיו."*
+4. 🔴 *"מסך שלא הצליח לטעון אומר זאת. לעולם לא רשימה ריקה בשקט"* (`spec.md § מה ייחשב עובד` #4)
+   — a load failure shows the error + "נסה שוב", **never** *"אין כרגע אירועים"*. **Harvested 09/08:
+   the step's original list omitted it, while the step's own 🔻🤖 line already demanded it.**
+5. `יחידה-ספציפית` — **מנהלת פרויקטים sees the rows and has NO send button anywhere** (neither
+   per-row nor the bulk one), while מנהלת גיוס has both. **Both directions, not only the one I wanted.**
+**🗣️ אושר 09/08 20:4X** *(plan `~/.claude/plans/wiggly-jingling-cascade.md` — covers 3.3 + 3.4 + 3.5 as one unit.)*
+
+↳ **Ruled before building (both recorded in §10 as `הנחתי`, both spec-silent):**
+**(1) 🔴 An event whose `final_event_date` is BEFORE today is not listed.** Measured: project 7
+(`תרחיש-קבלה 5.1`, 01/08/2026, 6 missing) is `not_started` and **M4 never writes the status that
+would retire it** (`🚧 מ6 ← מ4`) ⇒ without a date rule it sits at the top of a triage screen
+forever, since the sort is by event proximity. Anchor: §② — *"על איזה אירוע אני נכנסת לטפל
+**עכשיו**"*. **An event dated TODAY stays** — she still closes holes by phone on the day.
+**(2) Default filter is `הכול`, not `הצג חסרים בלבד`** — the mockup draws that chip `on` **and in
+the same table draws a fully-staffed `5/5` row**, so the drawing contradicts itself; §④ settles it
+(*"והמאוישים אחריהם"*). Content of the list is BEHAVIOUR ⇒ the spec wins, the sort does the work.
+**(3) KPIs render through `StatTile`** (label above value) rather than the mockup's value-above-label
+strip — `src/CLAUDE.md` makes the component mandatory and module 4's own view-card already uses it.
+Permitted because this card records Ishay's approval of surface 1 as a **delegation** (*"נותן לך
+להחליט על זה"*). **(4) The `🔗 new-tab` element named in §⑧ is NOT in the approved mockup** — not built.
+
+↳ **as-built 09/08/2026 — built as drawn, with five things the step text did not carry.**
+**(1) 🔴 An existing helper was WRONG against the approved spec, and 3.3 is what exposed it.**
+`countAssignmentStates` (written at 2.2) counted `pending` and `expired` as **disjoint**; three
+approved sources say **`מתוכן`** — a subset — and the mockup's own arithmetic settles it (its rows
+carry `ממתינות` 1+4+2 and its header says **7**, not 10). Corrected, with the old test's rotted
+citation replaced. **Nothing consumed the function yet**, so this was a correction and not a change
+request. 🔑 The old test cited `spec.md:135`; that line now discusses the surrogate key — **the
+sentence it meant (`spec.md:148`) says "אותו מספר", i.e. it supported the opposite reading all along.**
+**(2) Four new pure functions** in `src/lib/hostesses.js` — `isPastEvent` · `eventProximityLabel` ·
+`overviewRow` · `sortOverviewRows` · `overviewKpis` — tests written first and **all four behaviours
+broken on purpose**, each turning exactly its own guard red.
+🎯 **And the KPI test's four numbers are the MOCKUP's, not mine** (`2 · 1 · 7 · 3`): it reproduces
+`01_overview_approved.html`'s own header arithmetic from its own row counters.
+**(3) Two shared extractions the 3.0 rule mandated** — `formatDate` existed in **three** copies
+(this screen would have been the fourth) ⇒ `src/lib/dates.js`; `FilterPill` reaches its third surface
+⇒ `src/components/FilterPill.jsx` (+ a `disabled` prop, for 3.4's switched-off sort angle).
+🚫 `quotePdf.jsx`'s copy deliberately stays — it takes `Date` objects and prints `—`, so unifying it
+would change a **shipped PDF**. Recorded in `dates.js` rather than left silent.
+**(4) 🐞 A defect caught by LOOKING, not by a test:** `StatTile` pipes a **numeric** `value` through
+`Money`, so `זימונים ממתינים` rendered **`0 ₪`**. The component behaves as documented; a counter is
+simply the exception. Fixed + an E2E regression asserting no `₪` in either tile. ⚠️ **3.4 has four
+counter tiles** — same trap.
+**(5) The row click is temporarily a spoken notice**, not navigation: Smart Match is 3.4, in this
+same unit. It says so out loud rather than doing nothing.
+
+**Step 3.4 · Surface 2 — Smart Match**
+**Files:** `04_hostesses/SmartMatchPage.jsx` · mockup `02_smartmatch_approved.html`
+
+> 📥 **What 3.3 handed this step — five items, four of them already solved and one still open.**
+> **(1) ⏳ OPEN, and it blocks every real send: the 20 hostesses carry plausible `@gmail.com`
+> addresses** (`noa.sagi@gmail.com` …) ⇒ one click on `שלח מייל תיאום` mails a stranger.
+> **Ishay ruled 09/08: 19 move to `@regin-demo.co.il`, and נועה שגיא gets his own inbox** so a live
+> send is demonstrable at the conference. 🔴 **Not executed yet — his address must be confirmed by
+> him first, and no send action may be exercised until it is.**
+> **(2) The invitation mail is already built and tested — REUSE, do not re-author.**
+> `buildShiftInvitePayload` (`src/lib/shiftEmails.js`) + `resendExpiredInvites` (`api.js`) carry the
+> template fill, the `requireAttachment:false` floor, the token, the write-then-send order, the
+> rollback of `invite_sent_at` on failure, and the three-outcome handling. `שלח מייל תיאום` differs
+> only in that it **creates** rows instead of refreshing them.
+> **(3) 🐞 `StatTile` turns a NUMERIC value into shekels** — this screen has **four** counter tiles.
+> Pass `String(n)`. 3.3 shipped `0 ₪` on a counter before a screenshot caught it.
+> **(4) The bidi fix is DONE at engine level** (`plainTextToEmailHtml`) — do not re-fix per template.
+> Acceptance is still **opening a real received mail**, not a status code.
+> **(5) 🧹 Replace the temporary row-click notice.** `HostessesPage` currently answers a row click
+> with a toast saying this screen is next. It must become real navigation to this surface.
+>
+> 🔴 **And a hole `spec.md §12` records that "the screens phase never collected" — it lands HERE:**
+> `תבנית_אישור_סופי_שיבוץ` injects **`[כתובת_אירוע_מלאה]` · `[שם_מנהלת_פרויקט]` ·
+> `[טלפון_מנהלת_פרויקט]`**, and the schema holds only `projects.final_location` and
+> `projects.owner_email` — **no manager name, no phone.** Ledger `local-2` (ישי 08/08) rules the
+> address is `final_location`, and the field contact is the shift lead if marked, else
+> `users.full_name`/`users.phone` resolved via `projects.owner_email`.
+>
+> 🔴🔴 **BLOCKER, measured live 09/08/2026 — `local-2`'s INTENT stands but its MECHANISM does not
+> work for the role that sends the mail.** ⚠️ **And this corrects a line I wrote earlier the same
+> day** in this very block, which declared the hole closed on the strength of the ruling **without
+> testing that the ruling was executable.**
+> **The measurement, from a signed-in browser as מנהלת גיוס:** she reads `projects.owner_email`
+> fine (`200`, the address comes back) — and the follow-up
+> `users?select=full_name,phone&email=eq.<owner>` returns **`200` with `[]`.**
+> **Why:** policy `users_select_self_or_ceo` allows reading `users` **only for yourself or for
+> מנכ"ל**. ⇒ **`{data:null, error:null}` — the module's signature trap**, and the mail would go out
+> reading *"איש קשר בשטח: מנהלת הפרויקט -, טלפון: "*. 🚫 `fillEmailTemplate` does NOT catch it: the
+> placeholder is known, it is merely filled with an empty string.
+> **Three ways out — Ishay's ruling, and it needs a migration either way:**
+> **(א) snapshot `projects.owner_name` + `owner_phone`** *(recommended — it is the third instance of
+> a pattern already used twice in this same table, `event_name` §7.76 and `customer_name` `local-5`;
+> and a snapshot is semantically right: the contact printed in a mail is the contact **at send
+> time**, exactly like `hourly_rate_snapshot`)* · **(ב) a read policy on `users` for holders of
+> 'דיילות'** *(widens a module-1 security surface for two fields)* · **(ג) a `SECURITY DEFINER`
+> function returning just name+phone per project** *(narrow, but a new DB function)*.
+> ✅ **UNBLOCKED 09/08 — migration G applied.** The mail now reads `projects.owner_name`/`owner_phone`.
+> ⚠️ **And one duty moved to the code, not the schema:** both columns are nullable on purpose
+> (`users.phone` may be empty), so **the send path must REFUSE rather than print `טלפון: ` empty** —
+> same shape as `buildShiftInvitePayload` returning `null` when the link is missing.
+**What to do:** two columns · four counters · the four sort angles · candidate cards with reasoning
+chips. 🔴 **The screen SAYS OUT LOUD that the reliability component is off and that the pin tag does not
+exist yet** — 🚫 never a silent zero (§7.90). The score stays hidden; the chips explain.
+`תענה הכי מהר` renders **disabled + explained** (`opacity:.5` + `— כבוי` + an explanation line) while
+response-time data is insufficient — 🚫 it does not vanish and does not sort wrongly.
+Excess final approvals **warn, never block**; a same-day double approval is **blocked by the DB**.
+**🔻🤖 Verify:** switching angles reorders **the same candidates** and changes neither the list nor the
+chips · the disabled-angle state is visible and explained · a blocked double approval returns the row to
+its previous state with an explicit message · screenshots of each.
+**מה ייחשב עובד** *(`spec.md § מה ייחשב עובד` #2 + `screens-approved.md` מסך 2 §⑥, quoted)*
+1. *"Smart Match מחזיר רשימה מדורגת שהיא יכולה להסביר לעצמה — כל שורה נושאת למה היא שם."*
+2. *"'אמינות ההגעה כבוי' = המרכיב לא מנורמל לאפס אלא מוסר מהנוסחה, והמשקלים מתחלקים מחדש."*
+3. *"ארבע הזוויות מסדרות בלבד — אינן מסננות."*
+4. **The hand-computed anchor still reproduces after this screen is wired: `נועה 0.67 · מיכל 0.66 ·
+   דנה 0.64`, in that order, two candidates absent** (`spec.md § מה ייחשב עובד` #7). 🔑 Harvested
+   09/08 — the numbers were written in the spec **before any code existed**, so the candidate-assembly
+   layer added here is exactly what could silently break them.
+🐞 **`שלח מייל תיאום` triggers `תבנית_זימון_משמרת` — see §10's 09/08/2026 bidi entry BEFORE
+building the send action.** `REG-IN!` renders `IREG-IN` in a real sent mail; likely small by the
+5-prior-occurrence precedent, unsized. Verify the fix here or at 3.5 (whichever builds the send
+first), not just visually — open a real received mail, per this session's own lesson.
+⚠️ **Corrected 09/08: the first send point is whichever of 3.3/3.4/3.5 ships first — and they now
+ship together.** Ishay ruled the fix belongs **in the shared engine** (`plainTextToEmailHtml`,
+`src/lib/email.js`), not per template: all 9 `params` templates carry the defect, M8's and M11's
+future ones included. **Price accepted with the ruling:** a shared-surface file ⇒ unit tests **plus**
+re-running `quote-email.spec.js` + `quote-document.spec.js`, and acceptance is **opening a real
+received mail**, never a status code.
+**🗣️ אושר 09/08 20:4X** *(same consolidated plan as 3.3.)*
+
+↳ **partial as-built 09/08/2026 — C1 landed; C2–C5 have not started. Resume exactly here.**
+✅ **DONE:** `src/lib/smartMatchCandidates.js` — DB rows ⇒ the input `rankCandidates` demands,
+plus everything the reasoning chips display (`workedForCustomerCount` · `weeksSinceWorked` ·
+`totalAnswered` · `hasCoordinates`). 10 tests. `weeksSinceLastWorked` extracted to
+`src/lib/hostesses.js` (it was inline in `HostessViewCard`, and this screen would have been the
+second copy).
+🔴 **And the break-check is the reason to trust it — it failed twice before it passed.** Four
+behaviours were broken on purpose; **two of the four broke nothing**, i.e. two tests were vacuous:
+one "counts events not rows" case could not fail (the upstream fold already guarantees one row per
+project), and the two `null`-distance cases passed on `haversineKm` too. **Both were rewritten into
+cases that discriminate** — *approved-then-withdrawn must NOT count as "worked for this customer"*,
+and *hostess-and-event on the exact same point must yield `null`, not `0`* (the live `סיון נחום`
+case). Re-broken afterwards, and each one bit. 🔑 **Fourth occurrence of this failure mode in the
+module — and the first time the break-check caught it in the same sitting it was written.**
+
+✅ **C2 DONE — `src/lib/sortAngles.js`, 12 tests.** Four angles that **re-order only**; pinned stays
+on top in every one of them (layer 2 outranks layer 4); a missing distance sinks to the bottom
+rather than posing as the nearest; `תענה הכי מהר` is **disabled-and-explained** and the urgent-event
+default **falls back** to `קרבה` when it has no data. All three behaviours broken on purpose and
+each bit. 🔑 **And one test was wrong, not the code:** my first version demanded that a caller who
+*omits* the availability flag still get `fastest` — i.e. it required sorting by an empty column.
+Inverted to safe-by-default: the angle is off until proven to have data.
+
+⬜ **STILL TO BUILD, in this order:**
+**C2 · the four sort angles** (`§11.7`, quoted): `עבדה אצל הלקוח הזה` · `תענה הכי מהר` ·
+`קרבה` · `הזולה ביותר`. **They re-order ONLY — layers 1–3 run identically in every angle, and the
+chips do not change.** Default = `קרבה`; below 72h it would flip to `תענה הכי מהר`, **which is
+disabled-and-explained** while `responded_at` is empty (`opacity:.5` + `— כבוי` + the explanation
+line, exactly as the approved mockup draws it).
+**C3 · the writes** in `api.js`: `שלח מייל תיאום` (create rows, `assignment_number = max+1` with
+**one retry** on `unique_violation` per §7.41↳, freeze `hourly_rate_snapshot`, token, invite mail) ·
+`אשר סופית` + **the auto-release that travels in the same action** (`local-13`) · `אחראית משמרת`.
+🔑 **Reuse `buildShiftInvitePayload` and copy `resendExpiredInvites`'s shape** — write-then-send,
+rollback of `invite_sent_at` on a hard failure, no rollback on `unknown`.
+**C4 · `SmartMatchPage.jsx`** — two columns · four counter tiles (**`String(n)`, not numbers**) ·
+candidate cards with **two separate chip families** (`score` vs `ctx`) · the `ⓘ` banner saying the
+reliability component is off · excess approvals **warn**, same-day double approval **blocked by the
+DB** with the row returning to its previous state.
+**C5 · navigation** — replace the temporary toast in `HostessesPage` with the real route to this
+surface, and add `← חזרה למבט-על`.
+
+↳ **as-built 09/08/2026 — C3 · C4 · C5 landed. Step CLOSED.**
+**(1) The lifecycle writes live in `api.js`, and the pure rules in a new `src/lib/assignmentActions.js`**
+(32 tests, four behaviours broken on purpose and each bit its own guard). It carries `rowMenuItems`
+too — the menu of 3.5 is the same rule set seen from one row, and **two copies would have drifted
+in the one place the module cannot afford it.**
+**(2) 🔴 `שלח מייל תיאום` and `פתח זימון חדש` are ONE implementation, and `שלח את הקישור שוב` is a
+different one — deliberately.** The first two both *create* a row (`max+1`, one retry on `23505`
+per §7.41↳); resend *refreshes* the same row. They can never appear on the same status.
+**(3) The final approval and its auto-release travel in one call** (`approveFinalAndRelease`,
+`local-13`), and the release mail leaves with the status change. **The quota check is computed on
+rows re-read from the DB after the writes** — computing it on the in-memory set would release on
+stale counts.
+**(4) `resolveShiftContact` reads `projects.owner_name`/`owner_phone`** (migration G) and returns
+`null` when either is missing, which **refuses the send** rather than mailing `טלפון: ` empty.
+**(5) 🐞 Two defects caught by LOOKING at the screenshot, neither by a test:**
+`invite_sent_at` (a *timestamp*) was passed to `formatDate` (which expects a *date*) and rendered
+**`09T20:33:42.432+00:00/08/2026`** on screen — ⚠️ **and `dates.test.js` already knew about the trap:
+it sliced the string itself before calling.** A guard written around a caller instead of around the
+function. ⇒ new `formatTimestamp` (Israel time — the UTC date is the previous day after 21:00 UTC),
+and `formatDate` now **rejects** a timestamp instead of emitting garbage. Second: the row menu
+opened **outside the card** and was clipped at the window edge (`align="start"` aligns the RIGHT edge
+in RTL, and the trigger sits on the left) — measured after the fix: `x=61`, inside.
+**(6) 🔬 A ninth bidi occurrence, measured not eyeballed:** the reliability banner printed the two
+weights as `62% / 38%`, and `Range` rects put **`38%` to the LEFT of `62%`** — the pair splits into
+two runs that bidi orders backwards, so anyone reading the parenthetical alone gets the weights
+swapped. **Fixed by removing the sequence rather than isolating it:** each percentage now sits beside
+its own word. 🔑 **The generalizable half: a two-item numeric sequence inside Hebrew has no safe
+order — the fix is to not have a sequence.**
+
+**Step 3.5 · Surface 4 — per-row action menu**
+**Files:** `04_hostesses/AssignmentRowMenu.jsx` · mockup `04_rowmenu_approved.html`
+**What to do:** contents **derived from row status**, never a flat list. 🔴 `שלח את הקישור שוב` refreshes
+**the same row**; `פתח זימון חדש` creates a **second** row — never merge them. 🔴 `שחרר — המשרה אוישה`
+(a system action, counted nowhere) vs `שחרר מהאירוע (צמצום תקנים)` (a manager action) — never one item.
+`שלח את הקישור שוב` is **disabled-and-explained in three cases**: inside T-24 · the event is already
+staffed · the row is not `pending`. For a view-only role the `⋯` button **does not exist at all**.
+No delete, in any status.
+**🔻🤖 Verify:** open the menu on all six statuses and screenshot each — the items differ · a failed
+action returns the row to its previous state with a message, never a silent "נשמר".
+**מה ייחשב עובד** *(`screens-approved.md` מסך 4 §②/③, quoted)*
+1. *"מה קרה עם הזימון הזה — ואיך אני רושמת מידע שהגיע בטלפון ולא דרך הקישור."*
+2. *"אילו שתיהן היו נקראות 'שלח שוב', המנהלת הייתה מוחקת היסטוריית-מענה בלי לדעת."*
+3. *"פריט-תפריט אחד לשתיהן היה מזייף את הציון של דיילת חפה-מפשע."*
+🐞 **`שלח את הקישור שוב` / `פתח זימון חדש` also send `תבנית_זימון_משמרת` — same §10 bidi entry as
+3.4.** Fix once (it is the shared body-rendering path, not per-button), then verify from **both**
+3.4 and 3.5's send actions, not just one — a fix proven from one button and unverified from the
+other is exactly the kind of unverified claim this project's own incidents warn against.
+➕ **And 3.3's two `שלח שוב` buttons (per-row and bulk) call THIS step's resend function** — the
+screen card states they are *"אותה פעולה בדיוק"*. One implementation, never a copy.
+**🗣️ אושר 09/08 20:4X** *(same consolidated plan as 3.3.)*
+
+**מה ייחשב עובד** *(`screens-approved.md` מסך 4 §②/③, quoted — written to disk 09/08 per the
+`module-build` rule; the three sentences above are the same list, now with their sources)*
+1. *"מה קרה עם הזימון הזה — ואיך אני רושמת מידע שהגיע בטלפון ולא דרך הקישור."* (§②)
+2. *"אילו שתיהן היו נקראות 'שלח שוב', המנהלת הייתה מוחקת היסטוריית-מענה בלי לדעת."* (§③①)
+3. *"פריט-תפריט אחד לשתיהן היה מזייף את הציון של דיילת חפה-מפשע."* (§③②)
+4. `יחידה-ספציפית` — **a `declined` row offers `פתח זימון חדש` and NEVER `שלח את הקישור שוב`**,
+   while a `pending` row offers the opposite. Verified live on עדי שפירא vs רוני אלמוג.
+5. `יחידה-ספציפית` — **an `approval_withdrawn` row has no `⋯` button at all** (measured: count `0`),
+   because a history row has no actions — not an empty menu, no button.
+
+↳ **as-built 09/08/2026 — built on `rowMenuItems` (`src/lib/assignmentActions.js`). Step CLOSED.**
+**(1) 🔴 All six statuses were opened on REAL rows and screenshotted** — not modelled:
+`pending` → 4 items with resend primary · `confirmed_available` → 3, **no resend** · `declined` and
+`released` → `פתח זימון חדש` only · `finally_approved` → shift-lead / release / withdrawn ·
+`approval_withdrawn` → **no `⋯`**.
+**(2) 🔴 A contradiction INSIDE the approved mockup, and the spec settles it:** the caption under
+menu ④ says *"שתי האחרונות שולחות מייל"*, which would make `סמן: ביטלה אחרי אישור` a mail-sender —
+while the **click map** (§①) marks it 🚫 **and the mockup's own legend** lists it under *"רק רושמות"*.
+Two against one, and behaviour belongs to the spec under the arbitration rule ⇒ **it sends nothing.**
+📌 The same caption also says both return the project to `בתהליך`; **M4 never writes
+`projects.project_status`** (`🚧 מ6 ← מ4`), so that half is stale too.
+**(3) Radix `DropdownMenu`, not a hand-rolled panel** — the `onBlur`+`setTimeout` floating surface is
+a known project bug that **Playwright passes green over** (`src/CLAUDE.md`); Radix owns the focus.
+**(4) `הנחתי`** (§10): marking a second shift lead is **disabled-and-explained** rather than allowed
+to hit the DB's partial unique index.
+
+🌊 **Ripple sweep for steps 3.4+3.5 — the five targets, named:**
+① `↳ as-built` written on **both** 3.4 and 3.5 · ② §10 — five new entries (the mislabelled shift-lead
+contact ⏳ · two `הנחתי` · the bouncing demo domain · the timestamp defect · the ninth bidi) ·
+③ **DoD checkboxes moved:** `test:run` 662/22 → **733/25** · "all 8 surfaces" ◐ 4 of 8 → **◐ 7 of 8** ·
+and **the migrations line still said `7` although G was applied at the 3.4 door — corrected to 8** ·
+④ **Ledger rows implemented by these steps:** `local-13` (release travels with the approval),
+`§7.41↳` (one retry on `23505`), `local-2`+`local-15` (contact from the snapshot), `local-10`
+(distance as a word) — all four are as-built and none needed a new row · ⑤ **approved-spec sections
+that now read differently:** `screens-approved.md` מסך 4 §① — its caption contradiction is recorded
+in §10 above; 🚫 **no number in the approved spec was edited**, per the tagged-pointer rule.
+
+**Step 3.6 · Surface 5 — public confirm page** ⚠️ shared-surface *(`src/App.jsx`)*
+**Files:** `04_hostesses/PublicConfirmPage.jsx` · `src/App.jsx` · mockup `05_public_confirm_approved.html`
+
+> 🔴 **LOCKED BY 3.3 — the route path is no longer a free choice: it MUST be `/shift/:token`.**
+> `confirmUrlFor` (`src/lib/shiftEmails.js`, built 09/08) already bakes that path into **every
+> invitation that has been sent**, and a mail cannot be recalled. ⚠️ **A different path here does not
+> fail loudly — it produces a 404 for a hostess holding a link we sent her**, and the manager sees an
+> invitation that simply never gets answered. **Change the path ⇒ every outstanding token dies.**
+> *(The path itself was spec-silent; chosen at 3.3 and recorded here rather than left to be
+> rediscovered. The token sits in the PATH and never in a query string — `§7.45`: it is a
+> write-key to the DB, and query strings leak into logs and `Referer` headers.)*
+**What to do:** no sidebar, no login, no role. 🔴 **Its route lives OUTSIDE `<MainLayout>`** —
+`src/App.routes.test.jsx` fails any screen *under* `MainLayout` lacking `<ProtectedRoute>`, so wrapping
+it would satisfy the test **by breaking the page**. Eight states per `screens-approved.md §⑤`:
+loading · awaiting-answer · thanks-accepted · thanks-declined · already-staffed · link-expired ·
+invalid-link (**identical wording to expired, deliberately**) · network error.
+Shows only facts — no score, no comparison. Travel prints without a number while the param is `0`.
+🔴 `responded_at` is written **once, on the first answer**; `שלח שוב` resets `invite_sent_at`
+**without touching it** (else negative response times), and it is 🚫 **never derived from `updated_at`**
+— a trigger overwrites that, and M8 will write `salary_report_id` months later.
+**🔻🤖 Verify:** open the link **in a signed-out browser** on a mobile viewport and screenshot all eight
+states · a second click after answering shows the thank-you, not a second write · a tampered token shows
+the **same generic message** as an expired one.
+**מה ייחשב עובד** *(`spec.md § מה ייחשב עובד` #3 + `screens-approved.md` משטח 5 §②, quoted)*
+1. *"היא שולחת זימונים, והדיילות עונות דרך הקישור בלי להתחבר — והמסך מראה מה קרה עם כל אחד."*
+2. *"אני יכולה להגיע למשמרת הזו — כן או לא, בלי להתקין שום דבר ובלי סיסמה."*
+3. *"לעולם לא 'נשמר' כשלא נשמר."*
+**🗣️ אושר —**
+
+**↳ as-built 10/08/2026.** 🔴 **The step was NOT mechanical, and the plan above said it was.**
+**What was missing and was found only at the first line of code:** §④ requires the page to print
+name · event · customer · date · hours · location · rate + travel, but `assignments` is deny-all to
+`anon` and `respond_to_shift_invite` is **write-only** ⇒ *"ממתין למענה"* would have rendered empty.
+⇒ **a 9th migration, `20260810004500_module4_public_shift_invite_read`** (typed-echo received):
+`get_shift_invite(token)`, `SECURITY DEFINER`, zero writes. 🔑 **Both source documents were
+individually correct — the hole lived in the gap between them**, in the question *"so where does the
+page read the name from?"*, which only gets asked while writing the code.
+**Second finding, resolved without touching the write RPC:** §③ mandates ONE generic string for all
+three failure modes, while §⑤/§⑦ demand a distinct *"כבר אוישה"* screen. ⇒ on a failed write the page
+**re-reads** `get_shift_invite` — the single oracle either way — instead of parsing the generic
+message. `respond_to_shift_invite` is untouched.
+**States: 8 in the card ⇒ 7 in code, and that is forced, not a shortcut** — "פג תוקף" and "לא תקין"
+both return `{"ok":false}` byte-identically, so the client *cannot* separate them; one state makes a
+future divergence impossible. Verified in E2E by comparing the two rendered screens as strings.
+**Verification actually run** *(not "green ⇒ done")*: 7 states screenshotted at **390px in a
+session-less context** · anon reaches both RPCs (HTTP 200) while `assignments?select=*` gives anon
+**0 rows vs 5 for מנהלת גיוס** — the positive control, without which `[]` proves nothing · the ₪ order
+checked by **DOM geometry**, not by eye (`תעריף: 47 ₪/שעה + נסיעות`, matching the card) · the write
+path exercised **inside `begin…rollback`** ⇒ status flipped, `responded_at` stamped, **rolled back;
+5 rows and `pending` intact**. 🚫 **The one pending demo row was never consumed** — `e2e/CLAUDE.md`
+forbids injecting or mutating live rows, and the rollback gave the same proof for free.
+**Deviations:** three, all under `local-17`, all listed there. **Ledger rows closed by this step:**
+`local-3` (travel with no number, as-built) · `local-16` (‏`approval_withdrawn` — found on record,
+not re-decided).
+⏳ **Carried to 3.7:** no rate limiting on the public endpoint — the token is `crypto.randomUUID()`
+so guessing is impractical, but a holder of one token can re-read its details indefinitely, and the
+read has **no** expiry check for already-answered rows (deliberate: she should see her own answer
+later). **This is the only open item this step created.**
+
+**Step 3.7 · 🔻👤 🎨 UX & functional review** — the five passes in `src/CLAUDE.md` (direction ·
+inventory · consistency · wording · empty-input) + loading / true-empty / empty-after-filter / error
+with retry on every surface + keyboard operability + a visible focus ring. Ishay rules on
+"should anything be redesigned / added / removed". Findings become steps now or logged deferrals.
+
+↳ **as-built 10/08/2026, CLOSED 12:33 — ran on all 7 remaining surfaces; 13 real findings fixed and
+verified; the loading-skeleton deviation got a real cross-module fix (not left open); "X פג תוקפן"
+was ruled by Ishay as closed-no-build; two cosmetic wording items on Surface 1 remain the only
+genuinely open, low-priority carry-forward. Ishay signed the gate 12:33 via a live acceptance
+walkthrough.** Full list: the 3.7 row in §1's step table (not duplicated here) + §10. 🌊 **Ripple
+sweep, the five targets:** ① this pointer · ② §10 got several new entries (the release-button
+decision, the loading-skeleton closure, "X פג תוקפן" closure, the axe-core aria-label fix) · ③ DoD
+line "UX & validation" now **checked**, with the sign-off date · ④ no Decisions-Ledger row was
+implemented by this step (the fixes were bugs against already-approved spec/mockup content, not new
+rulings — the one new ruling, the release button, is §10's own entry) · ⑤ no approved-spec section
+now reads differently — nothing here disagreed with
+the spec, code was made to match it.
+
+---
+
+### Phase 4 — wiring
+
+**Step 4.1** 🚫 **The three usual sites already exist — re-adding them duplicates.** The real work:
+- Replace `<UnderConstruction moduleName="דיילות" />` (`src/App.jsx:129`) with the module's page.
+- **Add the public route outside `<MainLayout>`** with no `ProtectedRoute` — and extend
+  `src/App.routes.test.jsx`'s allow-list for it, deliberately and with a comment, exactly as
+  `index`/`profile`/`*` are handled.
+**🔻🤖 Verify:** `npm run test:run` green **including `App.routes.test.jsx`** · the public route loads
+while signed out · every other module-4 screen still redirects when signed out.
+**מה ייחשב עובד**: the public page opens in a signed-out browser and answers; every internal screen
+does not.
+**🗣️ אושר —**
+
+**Step 4.2 · Demo seed + anchors + the fixture-rot ruling**
+- Extend `scripts/demo-seed.mjs` with the five hostesses of `spec.md §3.1` and their assignments,
+  through the real server functions.
+  🔴 **The seed CANNOT geocode — measured 09/08/2026, and it will fail silently if you assume it can.**
+  Nominatim answers **`Access denied`** to node (its ToS reject stock library User-Agents); only a real
+  browser gets a response. ⇒ **seed `lat`/`lng` as literal values**, do not call `geocodeAddress` from
+  the script. Use the ones already verified live: **project 8 `32.1062629 / 34.8101508`** ·
+  **project 3 `31.7788472 / 35.2257856`** · project 7 stays NULL on purpose.
+  ⚠️ **And give the five demo hostesses street-level addresses in different cities** — if two of them
+  end up with only a city that matches the event's city, `candidateDistanceKm` returns `null` by design
+  (identical points = collapsed fallback) and they will show `אין קואורדינטות` in the demo.
+  🔴 **AND the pool is ALREADY POPULATED — 20 real rows, created 09/08/2026 (`local-14`).** ⇒ **the seed
+  MUST skip an `id_number` that already exists**, or it fails on every one of them. 🚫 It must also not
+  re-create them under new ת"ז: there is **no delete in this module**, so a second run would leave 40.
+  ✅ **And their 20 verified `lat`/`lng` pairs already exist** — read them from the live table
+  (`select full_name, city, lat, lng from hostesses`) instead of re-deriving, since node cannot geocode.
+  🔴 **AND — new 09/08/2026, and it breaks the seed harder than the hostesses do: `assignments` is no
+  longer empty either.** Five real rows sit on **project 8**, one per status, created through the
+  screen *(נועה שגיא `finally_approved` **and shift lead** · רוני אלמוג `pending` · עדי שפירא
+  `declined` · דנה ברק `released` · הילה מזרחי `approval_withdrawn`)*. ⚠️ **The PK is
+  `(project_id, hostess_id, assignment_number)`** ⇒ a seed that inserts assignments for project 8
+  **fails on the key**, and one that "fixes" that by bumping `assignment_number` silently creates a
+  **second row per pair — which changes the deciding status** and rewrites the demo story.
+  ⇒ **The seed must treat project 8's assignments as existing content and skip them**, exactly as it
+  must skip the 20 ת"ז. **Measure first** (`select count(*) from assignments where project_id = 8`),
+  never assume the count from this line — it is a value, and values rot.
+  🔑 **And this is not a nuisance — it is the demo:** those five rows are what makes surface 1 show a
+  real split and surface 4 show six different menus. **Do not seed over them.**
+  ⚠️ **`כנס לקוחות שנתי` is `in_progress` in the seed (`demo-seed.mjs:108,121`), so no project exists
+  for it** — approve that quote in the seed so the module's own demo event exists as a project.
+  ↳ **as-built (11/08/2026):** measured live before touching anything — the quote is **already
+  `approved`** and project 8 already exists (someone approved it through the screen, matching the
+  five real assignment rows below). Nothing to build here; this line's premise was already stale.
+- Add a module-4 block to `e2e/smoke-anchors.json`: **the ORDER `נועה ← מיכל ← דנה`**, not the scores —
+  the score is deliberately never displayed, and that file requires every anchor to be visible on screen.
+- 🔴 **Rule the fixture pattern before adding fixtures** (`PROJECT_MASTER §6`, `🚧 מ4 ← מ3`): the
+  `module3-quote-expiry` cron flips `in_progress` quotes older than the validity param, and it is
+  predicted to break existing E2E specs **around 28/08 and 31/08/2026 — inside this module's window**.
+  ⇒ module-4 fixtures **create their own rows and clean up**, or pin to values the cron cannot touch.
+  Record the ruling here as an `↳ as-built` note.
+
+↳ **as-built, in full — read together with the two §10 entries dated 11/08/2026:**
+Five NEW demo hostesses were added (not `spec.md §3.1`'s five named characters, and not their
+historical response ratios) — Ishay's ruling, given the cost of literal reproduction (~20-30 fabricated
+past invite/response cycles) against the 21/08 dev-merge deadline, and given a real bug (below) was
+found from even this lighter pass. `smoke-anchors.json` anchors the gate's real behaviour (who's
+visible, who's excluded) instead of the unbuilt score. The fixture-pattern ruling is recorded in §10,
+including one pre-existing hardcoded fixture found and deliberately left for 5.1 to fix.
+🐞 **And building this surfaced a real, pre-existing bug, unrelated to the plan above:** the Smart
+Match availability gate was checking today's date instead of the event's date since step 3.4 — see §10
+for the full incident. Fixed, guard verified failing-then-passing, regression test added.
+
+**🎯 מה ייחשב עובד (harvested from `spec.md` item #2 + unit-specific):**
+1. פותחים את Smart Match על "כנס לקוחות שנתי" ורואים מועמדות חדשות מדורגות, כל אחת עם צ'יפ-הנמקה
+   (`spec.md` ✅#2 — "היא יכולה להסביר לעצמה למה כל שורה שם").
+2. מועמדת עם כתובת סבירה ורכב מופיעה ברשימה, גם אם המרחק מעל הגולפוסט (טל ברקאי, ~53 ק"מ).
+3. מועמדת באותו טווח-מרחק בלי רכב **אינה** מופיעה (קרן אשכנזי) — הניגוד בין השתיים מדגים את כלל
+   §11.5 בבידוד, בלי תלות בציון.
+4. מועמדת קרובה עם רכב **אך** מוצהרת לא-זמינה בתאריך **האירוע** (לא "היום") אינה מופיעה (ליאת רזניק).
+5. `npm run smoke` עובר עם עוגן-חדש שבודק את שלוש העובדות האלה חי, לא רק בבדיקת-יחידה.
+**🗣️ אושר — 11/08/2026, בצ'אט: "מה שנראלך הכי נכון" (ישי, אחרי שהוצג הקצה בעלות המלאה והמלצה)**
+
+---
+
+### Phase 5 — QA & handoff
+
+**5.1** — `e2e/hostesses.spec.js` + `e2e/smart-match.spec.js`; regression across every existing suite.
+
+↳ **as-built (12/08/2026):** the gap was measured before writing anything, by opening every spec
+file rather than trusting the QA matrix: surfaces **1 · 2 · 5 were covered; 3 · 3ב/3ג/3ד · 4 and
+T-24 had ZERO E2E** — half the module's surfaces lived on screenshot evidence alone. 15 tests added.
+**Two states could not be produced on live data and are forced over the network** (`page.route`,
+never row injection — `e2e/CLAUDE.md`): a genuinely empty pool (20+ rows exist and the module has no
+delete) and T-24 (no event starts within 24h, and creating one is a DB write).
+🔒 **What is deliberately NOT covered, said out loud:** no test clicks **save** in the hostess form,
+and none clicks a row-menu item. Both write to the live demo DB and several send real mail to a real
+address. ⇒ these tests prove **the screen and its blocks**; the write path stays proven by
+one hand-run on 09/08 — **not by unit tests**. 📌 **Corrected 12/08 after Ishay asked whether this had
+already been tested: it had, and my first phrasing of this line credited unit tests that do not exist.**
+Measured: **zero** `*.test.js` matches for `createHostess`/`updateHostess`/`releaseAssignment`/
+`markAssignmentStatus` — `api.js` has no automated coverage of any kind; the unit suites cover the
+**rules** (`hostesses.js` · `assignmentActions.js` · `smartMatch.js`). What does exist is a real live
+exercise: 20 hostesses created through the screen (3.1) and the full lifecycle run (3.4: 5 invites ·
+final approval · release · decline · withdrawal). ⇒ **the writes are proven once, by hand, and guarded
+by nothing.** **A green run here is not evidence that saving works** — do not read it as one.
+🛡️ **Every new test was proven to bite** (`src/CLAUDE.md`: a guard never seen failing is not a
+guard): four behaviours were broken on purpose in one pass — the city filter turned into a no-op,
+the two empty-states collapsed into one, `rowMenuItems` flattened to a status-independent list, and
+the form's `blocked` gate removed from the save button — and **exactly the 6 expected tests failed,
+zero others**. Code restored via `git checkout` and re-verified green.
+🌊 **Ripple sweep (§9(j)):** ① this `↳ as-built` · ② two §10 entries (clock-rot + the fixture-count
+correction) · ③ DoD lines for `gate`/`test:e2e`/`smoke` re-dated and re-numbered · ④ the §10
+fixture-pattern ruling of 11/08 marked carried out, including its named residual · ⑤ §7 QA matrix
+`As-run` column filled for Unit/E2E/Smoke/Regression/Security. **No approved-spec section describes
+anything differently — nothing was built here, only tested.**
+
+**🎯 מה ייחשב עובד (harvested — `spec.md ✅#4` · `✅#6` + `screens-approved` מסך 4 §③ + יחידה-ספציפית):**
+1. מנהלת פותחת את "מאגר הדיילות", בוחרת עיר מהרשימה — וכל שורה שנשארה על המסך היא מהעיר
+   שנבחרה, לא רק "פחות שורות" (`יחידה-ספציפית`).
+2. חיפוש שלא מצא כלום אומר **"לא נמצאו דיילות התואמות לסינון"** ומציע לנקות; מאגר ריק באמת
+   אומר **"עדיין אין דיילות במאגר"** — שתי הודעות שונות, ולא אחת לשתיהן (`spec.md ✅#4`).
+3. מסך-מאגר שהשאילתה שלו נכשלה מציג שגיאה ו"נסה שוב", **לעולם לא רשימה ריקה בשקט** (`spec.md ✅#4`).
+4. ת"ז לא-תקינה ושכר מתחת למינימום **מכבים את כפתור-השמירה ואומרים למה**; מייל שכבר רשום
+   **מזהיר ואינו חוסם** (`§7.65`).
+5. שורה בסטטוס `ביטלה אחרי אישור` — **אין לה `⋯` בכלל**; כל סטטוס אחר מקבל רשימת-פעולות משלו,
+   ו-`שלח את הקישור שוב` ו-`פתח זימון חדש` לעולם לא באותו תפריט (`screens-approved` מסך 4 §③).
+6. אירוע שמתחיל בתוך 24 שעות מציג `לשיבוץ →` במקום כפתור-שליחה, `⚠` על החוסר, והכפתור המרוכז
+   **מפסיק לספור אותו** (`spec.md ✅#6`).
+**🗣️ אושר — 11/08/2026 בצ'אט: "מאשר הכל לפי המלצתך" (ישי, אחרי שהוצג פער-הכיסוי המדוד וההיקף המומלץ)**
+⚠️ **The Stop hook derives the module number from `src/modules/NN_*/` only** (measured 09/08/2026 in
+`.claude/hooks/check-docs-updated.sh`, the `src/modules/*)` case — **a line number was cited here and it
+pointed at unrelated text**),
+so work living in `e2e/`, `scripts/`, `src/lib/` and `src/components/` — i.e. most of phases 2, 4 and 5 —
+**does not trigger it.** Update this guide manually in those phases; do not rely on the hook.
+**5.2 · 🔻👤 Closing audit** — run `module-close` in a **FRESH** session: independent re-verification →
+DoD typed-echo → PR instructions. 🚫 The audit never merges.
 
 ---
 

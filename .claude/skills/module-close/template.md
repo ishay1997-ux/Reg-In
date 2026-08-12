@@ -84,6 +84,13 @@ Findings route like §4b: a swallowed error on a live user-facing path is a **§
 - Live preview smoke test of the module's key flows (per the verification workflow) with proof (screenshot/log/network).
 - Explicit list of every file changed in this module (code, DB, docs).
 
+### 4d. 🔮 Answerable-later check (binding — added 12/08/2026, Ishay's ruling)
+**The catch-net for `module-blueprint`'s 🗡️ probe of the same name — and the LAST moment it is cheap to notice.** Ask the module's own three probes against what it actually shipped, not against what it planned: **(א)** what does a repeated action **overwrite** instead of accumulate · **(ב)** which state changes leave **no trace of when** (`updated_at` is overwritten ⇒ every "how long / how close to the deadline" question is uncomputable) · **(ג)** where something **is** journalled, **is it keyed so a report can join it back to the entity** — a journal keyed by an email address rather than an id is a gap that looks solved.
+🔑 **Why it is at the close and not left to the reporting module:** by M11 the fix is a migration per module, on all of them at once — **and the history is already unrecorded.** Here it is still one dated `🚧 מ11` line written while the module's shape is fresh.
+🚫 **This is NOT a licence to add columns during the audit** (§6b's one-round rule stands): the output is **registered debt with its target**, never a schema change — unless Ishay rules otherwise, with the size estimate §6b requires.
+📌 **Mandatory output, either way:** `🔮 answerable-later — N gaps registered` **or** `🔮 answerable-later — אין`. *(A silent skip is invisible to Ishay, who is the only gate — the same reason §5b and §7 carry output lines.)*
+⚠️ **And measure before asserting an absence.** *(Anchor 12/08/2026, module 4's own close: the audit reported "the system cannot tell she was invited twice" — **and a re-measurement Ishay's follow-up question forced showed `email_log` had appended every send all along.** The real gap was four times smaller and lived in the key, not in the recording. **An absence-claim about data is verified with a query, never by reading the writer.**)*
+
 ### 4c. 🧨 Module Gotchas File (binding — added 28/07/2026)
 **Write or refresh `src/modules/NN_name/CLAUDE.md`** — a short Hebrew file that loads automatically only when a future session touches this module's directory. This is REG-IN's living code map: it sits next to the code, so it cannot drift far, and it costs nothing until it is needed.
 

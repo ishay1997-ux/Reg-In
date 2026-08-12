@@ -340,6 +340,127 @@ re-exercised today (the UI blocks before the write reaches it), so it was probed
 rolled-back transaction — a 20 ₪ insert straight into the table was rejected with the full Hebrew
 message carrying both numbers.
 
+**🔴 The silent-failure re-scan of the fix diff earned its place — it found two defects the fixes had
+just introduced, both of the exact class the fixes existed to remove.**
+**(1)** the round gave the auto-release loop a channel for the **mail** and left the **release** silent:
+a target whose write failed was never pushed to `result.released`, so it **vanished from the toast** —
+after a confirm dialog had named that hostess and promised she would be told. She stays
+`confirmed_available` on a full event and **turns up to the shift**. The comment above that branch even
+promised *"הוא מדווח למסך כמספר"* — **the same false reassurance the round had removed two lines below**.
+**(2)** the new permission message was written `!filtered && !canReadProjects`, so a blocked user saw it
+**until she clicked a filter pill** — then got *"לא נמצאו אירועים התואמים לסינון"* and a *clear filter*
+button. The module's worst-defined failure, back through the side door.
+🔑 **Both were in code I had written an hour earlier, and neither was caught by me** — which is also the
+honest answer to self-review question 1.
+
+**✅ And Ishay widened his own ruling rather than take the fast close** — *"אני רוצה לעשות מה שנכון"*.
+The scan had found the cancelled-event rule implemented in **one of four** counters that share it, so the
+same hostess would read as `עבדה אצל מדיטק 2×` on Smart Match and `3×` on her own card, under the
+identical label. ⇒ the rule now lives in **one exported predicate**, `eventWasCancelled`
+(`src/lib/hostesses.js`), called by all four sites — **and `listRepositoryAssignments` had to start
+selecting `project_status`, without which the guard dies silently** (`undefined !== 'cancelled'` ⇒
+everything counts, and nothing fails).
+📌 **A product boundary surfaced while answering his walkthrough of the three release scenarios, and it
+is worth keeping:** module 4 has **no "cancel event" and no "release all"** — measured, not assumed.
+Cancelling an event is module 6's (`project_status`), so today a cancellation means releasing each
+hostess from the row menu. ⇒ **his cancelled-event ruling protects a state module 4 cannot yet
+produce** — it is waiting for M6, not dead.
+
+**✅ §7 ripple check (persistence 0b) — run, not assumed.** The five items module 4 was chartered to
+answer or implement all exist and all carry a closed status with the module tag: **§7.88** `סגור·DB·מ4`
+(one-event-per-day mechanism) · **§7.89** `סגור·DB+לוגיקה·מ4` (the fourth mail template + its
+source-less placeholders) · **§7.90** `סגור·לוגיקה·מ4` (where the reliability-off flag lives) ·
+**§7.91** `סגור·אוטומציה·מ4/10` (who lights the T-24 alert) · **§7.67** `סגור·DB·מ4` (shift-entity
+scope). ➕ **And the one citation worth checking was checked:** `§7.87` is referenced in
+`docs/guides/discovery_lessons.md` — the repo has a recorded incident of a pointer to a §7 item that
+did not exist — **it exists** (highest live item is 92). No dangling reference.
+
+**🗜️ Micro-guide compacted (§4c): 1,773 → 871 lines**, pre-compaction copy archived at
+`docs/archive/module-4_pre-compaction_2026-08-12.md`. Removed: the context packet, the security-model
+statement, the DB-design challenge, and **§6's 739-line phase-and-step plan** — build-time instruction
+whose job ended when the code landed. Kept: the status header + step table (the as-built record with
+its evidence), the capabilities table (**it feeds the `🚧` mechanism**), the Decisions Ledger, the QA
+matrix, the DoD, and the **entire** Deviations log. ⚠️ **This step was measured as skipped at module 3's
+close with nobody able to tell** — which is why the template now demands it be stated.
+
+**📊 The two mandatory output lines, printed rather than assumed:**
+`אשכול: 12 ממצאים ⇒ 6 סיבות-שורש` — and the largest cause, *"the module turns a failure into a value
+that looks normal"*, covers **five** of them **including the two the fix round itself introduced**,
+which is why those two were recognised as the same family instead of as new findings.
+`🚧 מ4 swept — 32 tokens across §6 (14) · micro-guides (18) · src comments (0) · design notes (0 — no
+such file exists)`. **Judged, not counted:** four §6 lines struck today as genuinely paid, and
+**module 3's guide was still advertising three debts to module 4** — the E2E-fixture one struck as
+paid, the LOG compaction left open **with its number corrected from 1,141 to 3,457**.
+
+**📁 Changed-file inventory vs `dev`: 152 files** — 58 `src/` · 47 `docs/` · 14 `.claude/` ·
+12 `supabase/` (incl. 10 migrations) · 9 `e2e/` · 5 `scripts/` · 2 at the root.
+
+**👑 VERDICT: [YES] — mergeable, issued against `067dad4`.** 7 blockers found, **all 7 fixed in one
+round**, 0 left open; `gate` exit 0 (751 unit / 26 files) · `test:e2e` 117 passed · `smoke` exit 0 ·
+advisors 17 unchanged · zero schema drift.
+🔴 **Two limitations stated IN the verdict, not in a footnote:** (a) `api.js` — the module's whole write
+surface — **has no automated coverage of any kind**, and the round's most important fix lives exactly
+there, so it was verified **by hand through fault injection** and "regression green" was explicitly not
+accepted as evidence over it; (b) the public page has **never** been opened from a phone over the
+internet and cannot be until the merge deploys the route.
+**artifact: published** (private report page for Ishay — verdict, plain-Hebrew capabilities, the
+evidence with its commands, what was deliberately not built and where it went, blockers vs debt, and
+the quiz). **quiz: asked** — three questions at the foot of that page, one per riskiest behaviour.
+⏸️ **The typed-echo DoD gate is printed and the verdict is held there** — it does not stand until Ishay
+types the module name + `DoD`.
+
+**🎓 The quiz was answered, and it did the job it exists for — including on the question he got wrong.**
+Q1 (what a released hostess sees on her link) and Q2 (the release mail now reporting failure —
+*"חח לפני זה זה עבר בשקט?"*) both correct. **Q3 he said plainly he did not follow**, so it was walked
+through rather than waved past: the overview screen reads from **`projects`**, whose RLS belongs to the
+**'פרויקטים'** module while the route gate requires **'דיילות'** — so a permission changed in one place
+breaks a screen in another, and before this audit it broke it into a **green ✅ "everything is staffed"**.
+📌 **What the quiz actually revealed is not an intent gap but a discoverability one:** nothing in the
+permissions screen hints at that cross-module dependency. Recorded, and the code now carries the warning.
+
+**🔴 And Ishay's three product questions found something no scanner could have.** The agents hunted
+**defects**; he asked *"will we have data worth reporting on later"* — a question about code that works
+exactly as written. Two real gaps, now registered as `🚧 מ11 ← מ4`:
+**(a)** *"שלח את הקישור שוב"* **overwrites `invite_sent_at` on the same row**, so a hostess who was
+invited, let the link expire, and was re-invited is **indistinguishable from one invited once** —
+⇒ *"how many reminders did she need"* is a question that cannot be asked. **Not a bug:** the overwrite
+was chosen so a `pending` row would not be penalised in the score (`§ב4`) — **but the score and the
+report are two different consumers, and the decision served only one.**
+**(b)** **no status-change history** (`updated_at` is overwritten), so *"was she finally approved three
+hours before the event"* — every "last minute" question — is uncomputable. ✅ What **is** clean:
+`responded_at` per row (first real datum created by this very UAT: **19m17s**) and
+`approval_withdrawn` as its own status.
+💭 **Recommendation recorded, not ruled:** his proposed *"closes at the last minute = makes an effort"*
+metric is **ambiguous** — the same behaviour reads as dedication or as answering only when pressed —
+whereas **response time is the clean signal and already exists**. M11 decides.
+➕ **And one design detail worth keeping, found while answering his shift-lead question:** when no shift
+lead is marked the contact falls back to the **project owner** (`resolveShiftContact`), labelled in the
+mail as *"מנהלת הפרויקט"* — but a shift lead **with no phone** does **not** silently fall back; the send
+is blocked, because *"החלפה שקטה בגורם אחר הייתה שולחת דיילת בשטח לטלפון של מישהי שאינה שם."*
+
+**✍️ SIGNED — Ishay typed the full echo `דיילות + Smart Match DoD` (12/08/2026), not "מאשר", after
+reading the report page and answering the quiz.** The micro-guide header is now
+`🔒 Closed — awaiting PR/merge`, the module row in `STATUS.md` reads *ממתין ל-PR/מיזוג*, and the working
+findings file was moved to `docs/archive/close-findings-module-4.md` — **only after zero blockers
+remained**, per the rule that archiving it while any is open removes the richest context exactly when a
+fixing session would need it.
+
+**⚠️ And the verdict's identity check earned its keep on the very last step.** §6b requires capturing
+the branch head with the verdict; the verdict was issued against **`067dad4`**, and by the time the PR
+instructions were written `HEAD` was **`17494ab`** — the parallel session had pushed while this audit
+ran, and **25 audit files are still uncommitted**. ⇒ the instructions say so explicitly and tell Ishay
+to re-run the gates after committing. **Without that rule this close would have handed him a green
+verdict on a tree that no longer existed.**
+
+**🔭 Generalisation Ishay asked for, and the reasoning is the durable part.** He noticed his two data
+questions had only been asked of module 4 — *"זה מאוד קשור אחד לשני"*. ⇒ `🚧 מ11 ← מ4` now says M11's
+**first** step is to walk every module asking *what does it fail to record that we will want to ask
+later*, with (a) and (b) as examples rather than the list. **Why it was deferred rather than done:**
+what is lost by not recording is **history, not effort** — and there is **no history yet** (demo data
+only, no real users, `PROJECT_MASTER §1`), so waiting costs nothing while a sweep today would have been
+work over an empty set. **The only thing that had to happen now was making sure the question gets
+asked** — which is what the line does.
+
 **Still open when this entry was written:** Ishay opening the invite on his real phone and confirming
 (the only step Claude cannot do — acceptance criterion #3), then final-approval + release (where the
 `releaseAssignment` blocker gets its live test), the single fix round, the verdict + typed-echo gate,

@@ -201,6 +201,8 @@ Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
 
 ## 9. 📝 Deviations & Tech-Debt Log
 
+- 🔧 **12/08/2026 — a one-line accessibility fix landed here from module 4's closing audit** *(cross-module; the module itself stays closed)*. `PricesManagementPage.jsx`'s product-status `SelectTrigger` had **no `aria-label`**, so its accessible name came only from the rendered `<SelectValue />` — and until that value paints, the button is nameless. `axe` reported `button-name` on **11 nodes = the 11 products**. 🔬 **Why it took two attempts to diagnose:** it **passes when its spec runs alone** and fails under the parallel full suite, which reads exactly like a timing race — and the first fix (widening `waitForReady` in `e2e/accessibility.spec.js` to `networkidle` + `h1`) **did not cure it**. That refutation is what proved it is a real missing name rather than a scan that arrives too early. **The neighbouring button in the same row already carried an `aria-label`; this one was the outlier.** ⚠️ **Do not "clean up" this attribute** — without it the gate goes red again, intermittently, in a way that reads as flakiness. *(Ishay ruled the fix at module 4's close, §6b floor rule.)*
+
 - 31/07/2026 09:30 — 🟡 **OPEN FLAKE (not fixed, not caused by the change that found it):**
   `e2e/permissions.spec.js` → *"CEO משנה תא במטריצה … והשינוי נשמר אחרי רענון"* failed **once** in a
   full-suite run during M3's audit fix-round A, then passed in isolation and on a full re-run

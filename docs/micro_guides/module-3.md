@@ -699,8 +699,17 @@ mandatory-shared (the mechanical `gate` check for it is recommended but **not bu
   rest on Ishay's own eye (01/08 and 05/08), not on anything this session rendered.
   **(g) The five debts this audit booked, each with its target module — twins live in `PROJECT_MASTER §6`
   (`grep '🚧 מ4'` · `grep '🚧 מ10'` · `grep '🚧 מ12'`):**
-  · 🚧 מ4 — E2E fixtures pinned to live rows that `pg_cron` will expire by itself (~28/08 and ~31/08).
+  · ✅ ~~🚧 מ4 — E2E fixtures pinned to live rows that `pg_cron` will expire by itself (~28/08 and ~31/08).~~
+    **PAID 12/08/2026 at module 4's close.** Module 4's specs select by a runtime condition (event by
+    name, dates read off the rendered rows, first-row-at-runtime) instead of a live id; **the last three
+    hardcoded fixtures were removed at step 5.1** — and the earlier note that said *one* remained was
+    itself measured wrong. 🔑 **And module 4 widened the rule:** a test failed on 12/08 with no code
+    change because it had pinned a live **count**, not an id ⇒ **any live-derived number is a fixture.**
   · 🚧 מ4 — the LOG compaction: measured at 1,141 lines, deliberately not executed, see (e).
+    ⚠️ **STILL OPEN, and the number rotted: re-measured 12/08/2026 at module 4's close ⇒ 3,457 lines**
+    against the file's own ≤150 target. Deliberately not executed again (`module-close §2b` escape
+    hatch — a compaction that cannot be finished in one session is worse than none); the §6 line now
+    carries the new number and a dedicated session is recommended.
   · 🚧 מ4 — `03_quotes/CLAUDE.md` at 37KB against the 8.4KB / 3.7KB files §4c names as its models.
   · 🚧 מ10 — `QuotesPage.jsx:637` `mailto` unencoded while `marketing.js:45-47` encodes the same concept;
   and `QuoteLineEditor.jsx:149` `value={line.sku || undefined}` flipping uncontrolled→controlled.
