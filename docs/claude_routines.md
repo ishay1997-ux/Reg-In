@@ -4,7 +4,20 @@
 
 > **קובץ זה הוא הגיבוי המגורסן ומקור-השחזור של הרוטינות** (מ-30/07/2026; קודם הוגדר "המקור הקנוני"). מקור-האמת הוא **העותק החי** שרץ בפועל — `~/.claude/scheduled-tasks/<name>/SKILL.md`, שנמצא מחוץ ל-git ולכן בלי היסטוריה ובלי גיבוי; כאן הוא מגורסן. אם אתה Claude וקוראים לך לעדכן, ליצור, או להבין את "4 הרוטינות" של REG-IN — **זה המקום**. הקובץ נועד לעמוד בפני עצמו: סשן טרי, או חשבון Claude על מחשב אחר, שקורא רק את הקובץ הזה בלי שום הקשר קודם — אמור להבין בדיוק מה כל רוטינה עושה, מתי מריצים אותה, ואיך יוצרים אותה מחדש בחשבון חדש.
 >
-> **מקומו בהיררכיית האמת:** זהו תיעוד תפעולי, לא ליבת המערכת — אבל הוא **המקור הראשי** לתוכן הרוטינות (עדכון תוכן קודם כאן, אחר-כך בעותקי ה-SKILL.md המקומיים; ר' "פרוטוקול עדכון" בסוף).
+> 🚫 **‏`§2` כאן נוצר מהעותק החי — לא עורכים אותו ביד. לעולם.** *(הכרעת-ישי 12/08/2026.)*
+> **הכיוון היחיד: חי ⇒ ריפו.** רוצה לשנות התנהגות של רוטינה? ערוך את
+> `~/.claude/scheduled-tasks/<name>/SKILL.md` (ואת `doc-map.md` שלצידו), ואת הריפו רק מרעננים אחריו.
+> ⚠️ **ומה שהיה כתוב כאן עד היום הוא בדיוק מה ששבר את זה:** *"הוא **המקור הראשי** לתוכן הרוטינות
+> (עדכון תוכן קודם כאן, אחר-כך בעותקי ה-SKILL.md המקומיים)"* — **הפרוטוקול הדו-כיווני מ-07/07/2026,
+> שהוחלף בחד-כיווני ב-30/07 ונשאר כאן בשורה שאיש לא מחק.** התוצאה נמדדה 12/08/2026: פסקת-הסקילים
+> ב-`doc-map` עודכנה **בגיבוי בלבד** (‏`skill-scan` ו-`advisor` נוספו), העותק החי נשאר מאחור,
+> ו"רענון" מכני היה **מוחק** את הידע. הפער הוזרם חזרה לעותק החי באותו יום.
+> ✅ **ומה שנמדד ותקין:** גוף הרוטינה עצמו (‏`STEP 0`–`STEP 6` + גבולות-הבטיחות) **זהה תו-בתו**
+> בין החי לגיבוי — הפער היה בפסקה אחת בלבד, ולא בהיגיון של אף רוטינה.
+>
+> **מקומו בהיררכיית האמת:** תיעוד תפעולי, לא ליבת המערכת. **‏§1 ו-§3–§4 הם החלק האנושי** —
+> מה זו רוטינה, מתי מריצים מה, ואיך מקימים אותן בחשבון חדש; **הם נכתבו עבור ישי ואינם קיימים
+> בעותק החי כלל**, ולכן הם כן נערכים כאן.
 
 ---
 
@@ -154,11 +167,6 @@ report the drift.
   `README.md` (its links/doc-map must point at real files).
 - `docs/guides/**` · `docs/micro_guides/*.md` (living blueprints, English: Live Status Header,
   step table, §9 deviations log).
-- `docs/architecture_and_qa_roadmap.md` — check its "חלק 0: מצב היישום" table.
-- `docs/db_roadmap.md` · `docs/toolbox.md` (on/off tables must match `.claude/settings.json`) ·
-  `README.md` (its links/doc-map must point at real files).
-- `docs/guides/**` · `docs/micro_guides/*.md` (living blueprints, English: Live Status Header,
-  step table, §9 deviations log).
 
 ## The CLAUDE.md tree
 
@@ -176,12 +184,17 @@ A protocol that drifted back into root, or a directory file contradicting root, 
 
 The repo-local skills under `.claude/skills/`: the module-flow three (`module-blueprint`,
 `module-build`, `module-close` — templates beside them since 23/07/2026), the two helpers
-(`section7-rulings`, `post-merge`), `quality-audit`, `skill-scan` (added 04/08/2026), and
-`advisor` (added 05/08/2026). All point at `_shared/discipline.md` — except `quality-audit`
-(documented opt-out in its own line 10) and `skill-scan` (short-form pointer); verify trigger
+(`section7-rulings`, `post-merge`), `quality-audit`, **`skill-scan` (added 04/08/2026)**, and
+**`advisor` (added 05/08/2026)** — **eight**. All point at `_shared/discipline.md` — except
+`quality-audit`, which **declares its own opt-out in its opening lines** ("NOT part of the
+shared-kernel set"), and `skill-scan`, which carries a short-form pointer only. Verify trigger
 phrasings, routing, and that the shared-kernel paragraph matches what the kernels promise.
-`docs/templates/` no longer exists — a doc pointing there is drift. *(🕓 list refreshed
-05/08/2026 — it had gone stale by two skills; the live copy was updated the same day.)*
+`docs/templates/` no longer exists — a doc pointing there is drift.
+*(🕓 This list was refreshed 05/08/2026 after going stale by two skills — and the refresh reached
+only the repo backup, not this live copy, so it silently regressed here. **Re-measured against
+`.claude/skills/` and restored 12/08/2026 13:2X**; that incident is exactly why the repo copy is
+now marked generated-only. Two externally-installed trial skills also sit in that directory
+(`Nate's Frontend Design`, `Skill Builder`) — deliberately uncommitted, not a finding: `docs/toolbox.md`.)*
 
 ⚠️ `feature-acceptance` moved OUT to `~/.claude/skills/` (23/07, project-agnostic) — out of scope
 here; verify only that no REG-IN doc still claims it lives under this repo.
@@ -257,7 +270,7 @@ Write your journal line in **English** — `docs/CLAUDE_CODE_LOG.md` is a Claude
 ---
 
 ### 🚦 `regin-pr-gate`
-> 🕓 עודכנה (קנוני): 23/07/2026 — הוסר `docs/CHANGELOG.md` ממקורות הודעת-הקומיט (הקובץ הוקפא) · קודם: 07/07/2026 ערב · סונכרנה: ישי ✓ (העותק החי עודכן זהה-בייט באותו סשן, 23/07/2026)
+> 🕓 סונכרן מהחי: 12/08/2026 13:06 — **`gate` גדל בשני שלבים שהעותק הקודם לא הכיר: `check:bidi` (10/08/2026) ו-`check:docs-structure`, ונחתו ב-`package.json` בלי שהרוטינה עודכנה.** נתפס באודיט-לקראת-מיזוג של מודול 4 (ישי ביקש לבדוק תיקונים שקיימים במקום אחר ולא כאן — נמצא: `package.json`'s `gate` מול הפרומפט). התיקון: STEP 2 מקבל אבחון לשני השלבים החדשים, וה-GOAL/enumeration מעודכנים לסדר-הריצה האמיתי. **תוקן בחי קודם**, כאן שני. קודם: 23/07/2026 — הוסר `docs/CHANGELOG.md` ממקורות הודעת-הקומיט (הקובץ הוקפא) · קודם: 07/07/2026 ערב
 
 **מטרה:** להריץ את שער האיכות `npm run verify` (lint+format+test+build). אם ירוק **על ענף פיצ'ר אישי** — commit+push אוטומטי. אם אדום — אבחון בעברית בלי לתקן קוד.
 
@@ -270,11 +283,11 @@ Write your journal line in **English** — `docs/CLAUDE_CODE_LOG.md` is a Claude
 
 You are running a pre-PR quality-gate check for the REG-IN project (React 19 + Vite + Supabase + Tailwind, Hebrew RTL, repo at the current working directory). You have no memory of any prior conversation — everything you need is below or in the repo itself.
 
-GOAL: wrap **`npm run gate`** — the project's blocking quality gate since 29/07/2026, defined in package.json as `verify && dup && deadcode && audit && check:context`, where `verify` is itself `lint && format:check && test:run && build` — with a human-readable Hebrew diagnosis, AND — when it passes on a safe branch — commit and push automatically so the human doesn't have to run `git add`/`commit`/`push` by hand. The value you add on a failure is NOT running the script — the user can do that themselves — it's translating a wall of terminal output into a clear "what failed, where, and why". The value you add on success is closing the loop: verified-green code should not just sit in the working tree.
+GOAL: wrap **`npm run gate`** — the project's blocking quality gate since 29/07/2026, defined in package.json as `verify && dup && deadcode && audit && check:bidi && check:context && check:docs-structure`, where `verify` is itself `lint && format:check && test:run && build` — with a human-readable Hebrew diagnosis, AND — when it passes on a safe branch — commit and push automatically so the human doesn't have to run `git add`/`commit`/`push` by hand. The value you add on a failure is NOT running the script — the user can do that themselves — it's translating a wall of terminal output into a clear "what failed, where, and why". The value you add on success is closing the loop: verified-green code should not just sit in the working tree.
 
 STEP 1 — Run `npm run gate`.
 
-STEP 2 — If it FAILS: identify exactly which stage failed (lint / format:check / test:run / build / dup / deadcode / audit / check:context) and:
+STEP 2 — If it FAILS: identify exactly which stage failed (lint / format:check / test:run / build / dup / deadcode / audit / check:bidi / check:context / check:docs-structure) and:
 - For a lint failure: name the file(s) and rule(s) that failed.
 - For a format:check failure: name the file(s) that are unformatted (tell the user `npm run format` will fix this safely — but do not run it yourself).
 - For a test failure: name the failing test file/test name, quote the actual vs. expected output, and give your best hypothesis for why (e.g. "the test expects X but the source function changed to return Y — likely the test wasn't updated after a recent edit, or vice versa").
@@ -282,7 +295,9 @@ STEP 2 — If it FAILS: identify exactly which stage failed (lint / format:check
 - For a `dup` (jscpd) failure: name the two duplicated locations and their line ranges. The usual fix is extracting the shared logic to `src/lib/` (iron rule 14) — say so, don't do it.
 - For a `deadcode` (knip) failure: name the unused export/file. ⚠️ It is often a **legitimately not-yet-wired** file awaiting a later step — `knip.jsonc` carries dated, self-removing exceptions for exactly that. Report it as "either wire it or add a dated exception", not as "delete it".
 - For an `audit` failure: name the package and severity. `scripts/audit-gate.mjs` honours documented waivers, so a failure here means a **new** finding, not a known one.
+- For a `check:bidi` failure (added 10/08/2026, `scripts/check-bidi-glyphs.mjs`): it prints one `path:line  <code>` line per hit — quote those lines verbatim. It's a heuristic scanner for a digit glued directly to `₪`/`★`/`×` with no bidi isolation inside Hebrew JSX text (the documented recurring bug class in `src/CLAUDE.md`'s "כיווניות — שני רכיבים חובה"). The fix pattern is `dir="ltr"` + `unicodeBidi:'isolate'`, or the `<Money>`/`<RatingStars>`/`<LtrFieldGroup>` components — say so, don't apply it yourself.
 - For a `check:context` failure: quote its message verbatim — it names the broken dispatch or missing CLAUDE.md file directly.
+- For a `check:docs-structure` failure (added earlier, `scripts/check-docs-structure.mjs`, scans `docs/guides/` + `docs/specs/`): quote its message verbatim — it flags either (a) a duplicate or out-of-order `## N` chapter heading, or (b) a progress phrase like "4 מתוך 8" appearing outside the single SSOT table at `docs/specs/module_04_hostesses/screens-approved.md`. Name the exact file:line it points to.
 Report this diagnosis in Hebrew as your final answer. Do NOT edit any source file, test file, or config file to fix the failure — a human (or a real coding session) decides the fix. Do not run `--fix` flags, do not run `npm run format` yourself. Do NOT proceed to Step 3 — no commit happens on a failing gate, ever.
 
 STEP 3 — If it PASSES, run the auto-commit+push flow. Follow this exactly, in order:

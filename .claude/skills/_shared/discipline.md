@@ -43,6 +43,16 @@ Prefer a grep anchor (function name / string) over a line number — line number
 > each part with a place to check it, not a feeling. **Not a closed list** — the full project profile is
 > the 🎓 block at the top of root `CLAUDE.md` and `PROJECT_MASTER §1`.
 
+🔴 **And the rule that governs what you bring back: import the PRACTICE, not the JUSTIFICATION.**
+*(Graduated 01/08/2026 — two independent occurrences in two arenas on the same day. Ishay struck an
+"this is how aviation and medicine do it" rationale here; the sister project (710) independently found
+it had justified a read-back rule the same way and replaced it with a local reason.)* **A borrowed
+rationale collapses the moment someone asks "but we are not them"** — and here the disanalogy is real:
+a pilot has continuous memory, a session has none. ⇒ **Adopt the mechanism, then state why it earns its
+place in THIS project, in this project's terms.** An outside source proves a practice **exists**; it
+never proves it fits. *(Restored 12/08/2026 by `regin-docs-sync` — this rule was deleted in the log
+compaction `bf5b3fc` and had neither text nor anchor left anywhere in the repo.)*
+
 **Four fit questions, each with a verification target:**
 
 | # | Question | Where to check it |

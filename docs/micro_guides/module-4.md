@@ -29,8 +29,8 @@
 | Owner | ישי (sole developer) |
 | Overall status | 🔒 **Closed — awaiting PR/merge.** ✅ **ישי חתם על ה-DoD בשער-ההקלדה 12/08/2026 11:2X** (`דיילות + Smart Match DoD`, מוקלד במלואו — לא "מאשר"), אחרי שעבר על דף-הדוח וענה על שלוש שאלות-ההבנה. כל שאר האודיט הושלם. **‏12 ממצאים ⇒ 6 סיבות-שורש · 7 חוסמים תוקנו, כולם בסבב אחד · 0 חוסמים פתוחים.** שערים על `067dad4`+: `gate` **exit 0** (**751 unit** / 26 files) · `test:e2e` **117 passed** · `smoke` **exit 0** · advisors **17** (ללא שינוי) · אפס פער-סכמה (22 טבלאות). **UAT רץ חי עם ישי — שני מסעות, שני מיילים אמיתיים שנחתו בתיבתו, ואישור דרך הקישור הציבורי (19מ׳17ש׳).** |
 | Last updated | **12/08/2026 11:17** *(system clock)* |
-| **Active step** | **5.2 — closing audit: SCAN + FIX ROUND COMPLETE, verdict withheld pending Ishay's typed DoD echo.** 🔬 **The blocker that mattered was proven and re-proven by fault injection, not by reading code:** with the mail path cut at the network layer, *"שחרר"* claimed `והודעה נשלחה אליה` while `email_log` gained **0** rows — and after the fix, the same cut produced *"לא ידוע אם ההודעה יצאה"*. ⚠️ **Two defects the fix round itself introduced were caught by re-scanning its own diff** (a failed auto-release reported nowhere · the permission message losing to the filter branch) — both fixed. 📌 **Verified against `067dad4`; re-check the head before merging.** |
-| Deadline | module 4 → `dev` by **21/08/2026**; submission **19/09/2026** |
+| **Active step** | **NONE — 5.2 (closing audit) is DONE.** ✅ Verdict `[YES]` released once Ishay typed the DoD echo (12/08/2026 11:2X); the module now waits only on the PR to `dev`. *(This row still read "verdict withheld pending Ishay's typed DoD echo" after the signature landed — the Overall-status row above had been updated and this one had not; corrected by `regin-docs-sync` 12/08/2026 12:56.)* **The audit record, kept:** 🔬 **The blocker that mattered was proven and re-proven by fault injection, not by reading code:** with the mail path cut at the network layer, *"שחרר"* claimed `והודעה נשלחה אליה` while `email_log` gained **0** rows — and after the fix, the same cut produced *"לא ידוע אם ההודעה יצאה"*. ⚠️ **Two defects the fix round itself introduced were caught by re-scanning its own diff** (a failed auto-release reported nowhere · the permission message losing to the filter branch) — both fixed. 📌 **Verified against `067dad4`; re-check the head before merging.** |
+| Deadline | module 4 → `dev` was due **21/08/2026** — **closed 12/08/2026, nine days early** (`00_roadmap §3`, "בפועל" column). Submission: **01/10/2026** closing conference · **20/10/2026** end. *(This row said "submission **19/09/2026**"; that date was **cancelled by Ishay's ruling 12/08/2026** — fixed by `regin-docs-sync` 12/08 12:56.)* |
 
 Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target module) · ❌ blocked (reason)
 
@@ -79,18 +79,21 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | `projects.project_status` → `מוכן לביצוע` | ❌ **M4 never writes it** | 🚧 מ6 | `🚧 מ6 ← מ4` |
 | 🆕 Hebrew message for a **reschedule blocked by the same-day rule** | ⚠️ the DB constraint only | 🚧 מ6 | `🚧 מ6 ← מ4` (written 09/08, mig B) |
 | Salary report | ❌ M4 supplies raw material only | 🚧 מ8 | `🚧 מ8 ← מ4` |
-| "Who is below minimum wage" report | ❌ | 🚧 מ9 | `🚧 מ9 ← מ4` (exists, `:427`) |
-| Smart Match params **editing screen** | ❌ rows seeded, no UI | 🚧 מ9 | 🔴 **NO §6 LINE EXISTS — write it this session** |
+| "Who is below minimum wage" report | ❌ | 🚧 מ9 | `🚧 מ9 ← מ4` ✅ exists — grep `דוח "מי מתחת לשכר-המינימום"` |
+| Smart Match params **editing screen** | ❌ rows seeded, no UI | 🚧 מ9 | `🚧 מ9 ← מ4` ✅ exists — grep `מסך-הפרמטרים של Smart Match` |
 
 🔴 **Rule (ENFORCED — iron rule 15 + Stop hook):** every 🚧 row above must have a **byte-matching**
 `🚧 מN ← מ4` line in `PROJECT_MASTER §6`, written **in this same session** — format
 `🚧 מN ← מ4 · what · why it lives only there · מקור: micro_guides/module-4.md` — then verified with
 `grep '🚧 מN' docs/PROJECT_MASTER.md`. A 🚧 with no §6 twin is a **silent debt**; the registry is read
 by `grep`, and `grep` does not read prose.
-⚠️ **Two of the rows above have no §6 line today and must be authored:** the **M9 Smart-Match params
-screen** (the one existing `🚧 מ9 ← מ4` at `PROJECT_MASTER.md:427` is the min-wage report, a different
-debt) and the **M6 attendance fields** if `PROJECT_MASTER.md:437` does not already name
-`attendance_status`/`lateness_level`/`no_show_reason` explicitly — check before writing, do not duplicate.
+✅ **RESOLVED — re-measured 12/08/2026 12:56 by `regin-docs-sync`: every 🚧 row above now has its §6 twin.**
+The two that this block once flagged as missing were both authored: the **M9 Smart-Match params screen**
+and the **M6 attendance fields** (`attendance_status` / `lateness_level` / `no_show_reason`) each have their
+own `🚧 מN ← מ4` line in `PROJECT_MASTER §6`, distinct from the M9 min-wage-report debt.
+⚠️ **The line numbers this block used to cite (`:427`, `:437`) were already wrong** — §6 has grown since.
+**Grep by the debt's Hebrew title, never by line number**; that is the whole reason the registry is
+grep-addressed.
 
 **Roles on every module-4 screen:** מנהלת גיוס ושיבוץ = edit · מנכ"ל = edit · מנהלת פרויקטים = view ·
 מנהלת כספים ולקוחות / מנהלת לוגיסטיקה = blocked. *(Verified live against `permissions`, 08/08/2026.)*
@@ -229,7 +232,9 @@ The closing audit walks these one by one and ticks what it verified — so they 
       public page, is left** — step 3.6.)* *(was: 4 of 8; the original note follows)*
       — ◐ **4 of 8 done 09/08/2026** *(3 · 3ב · 3ג · 3ד; screenshots of every state, both permission
       directions, and the §א4 window with a real name and date)*. **Remaining: 1 · 2 · 4 · 5.**
-- [x] Every `🚧` in §2 has its **byte-matching** `🚧 מN` line in `PROJECT_MASTER §6` — **including the two authored this module** (M9 params screen · M6 attendance fields). ✅ **Verified 12/08/2026 by counting both sides:** the capability table declares tokens for **M6 · M8 · M9 · M10**, and §6 carries **8 · (M8 present) · 5 · 10** matching lines respectively. ➕ **Six more were added by this audit** (M10 ×1 · M12 ×3 · M8 ×1 · M12 ×1).
+- [x] Every `🚧` in §2 has its **byte-matching** `🚧 מN` line in `PROJECT_MASTER §6` — **including the two authored this module** (M9 params screen · M6 attendance fields). ✅ **Verified 12/08/2026 by counting both sides:** the capability table declares tokens for **M6 · M8 · M9 · M10**, and §6 carries **8 · (M8 present) · 5 · 10** matching lines respectively. ➕ **NINE more were added by this audit — not six.** *(Re-counted 12/08/2026 by `regin-docs-sync` with a dedicated fresh-context agent: §6's audit block carries **nine** `← מ4` lines. The self-count written here was short by three, and — this is the part that matters — **the three it missed are the three whose subject never made it back into this guide at all**: the M6 cancelled-event one, the M11 report data-holes, and the M12 public-page wording.)*
+  🔴 **And the direction that was never checked until now: §6 → guide.** The forward direction is clean — **every 🚧 in §2 has its §6 twin, 27 tokens verified one by one**. But **seven of the nine debts this audit wrote into §6 exist ONLY in §6**; this guide's own tech-debt log never learned about them. §6 is the registry a future module greps, so **no debt is silent** — but a session reading *this file* to understand what module 4 left behind would miss them. **The seven, by §6 subject, so they are greppable from here:** `findUnknownPlaceholders` / invite-failure collapsed to a bare count (M10) · three noisy defensive patterns in `04_hostesses/api.js` incl. `createShiftInvites` (M12) · `useReloadableData` — the same 13-line block in three M4 screens + `CustomersPage` (M12) · bank-details **structure** check deliberately not built (M8) · two report data-holes + the history-strategy ruling (M11) · a **cancelled event vanishing** from the recruiter overview via `OPEN_PROJECT_STATUSES` (M6) · the public page thanking a hostess who was *released*, not one who withdrew (M12). **Two more are partial here:** the `PricesManagementPage` `SelectTrigger` `aria-label` + the dead `GHSA-qwww-vcr4-c8h2` exemption (M12), and `ensureProjectCoordinates` still swallowing real RPC errors alongside the expected `42501` (M12).
+  ⚠️ **The mechanism lesson, worth more than the list:** the Stop hook and the close template both enforce **guide ⇒ §6** and **neither enforces §6 ⇒ guide**. An audit that authors debts directly into the registry therefore leaves its own guide behind, silently, and its self-count is the only thing that would catch it — which is exactly what failed here.
 - [x] `db_roadmap.md` rows for module 4 marked Done in §10 — ✅ **verified 12/08/2026**: all ten module-4 migrations carry dated `✅ DONE` entries, and the `hostesses`/`assignments` schema rows are marked done in place.
 - [x] `PROJECT_MASTER §7` write-back done: **§7.67** marked deferred with its reasoning *(09/08/2026 — the item's own "בלופרינט-מ4 בוחן מחדש" instruction is now answered in place: the entity is ⏸️ deferred, the main justification collapsed with "אירוע דו-תפקידי לא קורה", re-adding later is one row per project, and the practical "time inheritance" need was met differently — `assignments.event_date` synced by trigger)*
 - [x] `src/modules/04_hostesses/CLAUDE.md` written — the module's own gotchas file. ✅ **Refreshed at the close** with three traps the audit itself produced: `releaseAssignment`'s new `{row, mail}` shape (a coupled edit — a caller that destructures wrongly loses the reporting again), the overview's dependence on the **'פרויקטים'** permission, and the geocode-save-is-a-cache rule.
