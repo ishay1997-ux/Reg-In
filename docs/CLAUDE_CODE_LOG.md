@@ -311,6 +311,35 @@ refreshed with its **newly measured** 3,457, and the rest justified as still ope
 coverage line corrected (module 4 tripped the growth trigger: 17 spec files now, not "modules 1–2").
 **No plan dies with this module** — the mega-plan is chartered per-module and survives.
 
+**📋 The automations registry — the last unbuilt DoD deliverable — was written: `docs/automations.md`.**
+Every count measured live at the close: **2** `pg_cron` jobs · **20** triggers, of which **5** carry
+business logic · **1** Edge Function · **2** anon-callable RPCs · **1** Make scenario that is **not in
+the repo at all**. 🔴 **And the two corrections it took to get there are the point of the exercise, not
+a footnote:** Ishay asked *"does `module3-quote-expiry` really exist?"* — it does, and it is module 3's,
+**but the filename I cited did not exist**: I had written the version `list_migrations` returns
+(`20260723122655`) where the file on disk is `20260723120500`, a two-hour clock offset that had already
+surfaced twice in this audit and finally made it into a document. Re-checking my own counts then found a
+second error — **5 business triggers and 15 infrastructure, not 6 and 14**. ⇒ the registry now opens with
+a warning that a DB version is not a filename.
+🔑 **And the registry's most valuable line is about the automation that is NOT in the repo:** if the Make
+scenario stops, `send-email` returns `ok`, `email_log` records `sent`, **and no mail reaches anyone** —
+with no screen anywhere that shows it. The measured precedent is already in the demo data (19 hostesses
+on a non-existent domain, logged `sent`, bounced by Gmail).
+
+**🔬 §6b's new requirement — re-scan the fix round's own diff — ran, and the security half came back
+clean on all seven categories.** It also answered the one question that mattered: **all three
+`releaseAssignment` callers were correctly updated**, none left performing a truthiness check on what is
+now a wrapper object. Two non-security notes came back, both routed and neither fixed: (a)
+`ensureProjectCoordinates` now discards **every** RPC error, so a genuine save failure is as invisible as
+the intended `42501` — registered `🚧 מ12 ← מ4`, because separating "deliberately blocked" from "actually
+broken" needs a new error-code distinction, i.e. **work, not a repair** (§6b); (b) the rewritten angle
+test asserts label/state *agreement*, so it would stay green if the angle were always enabled — that is
+its intent, noted so it is not mistaken for coverage of the off-state.
+➕ **And one gap closed rather than reported:** the min-wage trigger had been proven at build but not
+re-exercised today (the UI blocks before the write reaches it), so it was probed directly in a
+rolled-back transaction — a 20 ₪ insert straight into the table was rejected with the full Hebrew
+message carrying both numbers.
+
 **Still open when this entry was written:** Ishay opening the invite on his real phone and confirming
 (the only step Claude cannot do — acceptance criterion #3), then final-approval + release (where the
 `releaseAssignment` blocker gets its live test), the single fix round, the verdict + typed-echo gate,
@@ -340,6 +369,13 @@ the report artifact, the quiz, and the remaining persistence.
 ✅ **What the scan validated, and it matters as much as the defects:** agent A ran the inverse test ("would this rule have been harmful in an earlier situation?") over all six rules added tonight — **none failed.** The problems were collisions with existing text and missing output, not bad rules.
 📌 **Measured, for the record:** the template grew ×2.8 in 20 days (249 lines added, 36 removed) while `SKILL.md` went untouched for 19 days as the file it points to grew ~60 lines.
 🔴 **And the rename shipped INCONSISTENT — caught by the running audit session, not by me, minutes after I reported it clean.** Two of the three references took the new name; the third (inside the §6 blockers text I had written hours earlier) still said `module-N-close-findings.md`. **My verification searched for the placeholder form `MODULE_NUMBER]-close-findings`, got zero hits, and I reported `אין ✅`** — while the file spelled it the other way in the one place I had authored by hand. **This is verbatim the failure `_shared/discipline.md` records** (*"an absence-claim is verified the way the SOURCE writes it, not the way the reporter searched"*), whose own anchor is a search using words borrowed from other files that missed entries sitting three lines apart. **I quoted that rule earlier the same night and then broke it.** Fixed, and re-verified across both spellings; the remaining old-form strings are dated journal records of the change itself and are correctly left alone. 🔑 **Third time tonight an outside reader caught something I had verified and declared clean — the pattern is not incidental.**
+
+**Sixth round — the delivery schedule was wrong in the repo, and Ishay supplied the real one.** The institution moved the dates: **28/08** an interim 10-minute presentation with ONE end-to-end process and ~50% of the system · **01/10** the closing conference (85% required) · **20/10** final. The repo said **19/09** — in `00_roadmap.md` §3's whole table, in root `CLAUDE.md`'s banner, in `STATUS.md`, and it drives iron rule 1's triage default (*"a module behind the deadline defaults to defer"*), so **every session was planning against a dead date**. Rewritten in all three, with the old date explicitly marked cancelled rather than silently replaced.
+🔑 **Two rulings by Ishay that shape the plan, both recorded in §3 with their reasoning:**
+**(1) Target 100% at 01/10, not 20/10** — *the buffer is worth more before the conference than after it.* A bug found on 02/10 costs nothing; it already happened in front of an audience. **(2) The buffer rule:** every day a module finishes early goes to the pre-conference buffer and **is never absorbed by the next module** — a buffer inside a module disappears silently, one at the end is countable and can be spent deliberately.
+📊 **The evidence that made this credible rather than optimistic, and it is now a permanent column in §3 — planned vs ACTUAL:** module 3 planned 07/08, closed **05/08** (−2); module 4 planned 21/08, closing **12/08** (−9). **Two for two, ahead.** The estimates are generous, not tight, which is exactly why the answer to "spread the time or shorten the finish" is *shorten*.
+⚙️ **And the schedule now re-derives itself: `module-close` persistence step 2c** writes the actual close date beside the planned one and shifts the remaining modules — it runs at the exact moment the information changes, so no script and nobody's memory is involved. Also corrected there: module 11 (reports) was on the "drop it if time runs short" list; Ishay removed it (*"giving up on reports feels hard"*) and it is also the conference's payoff, so the two designated shock-absorbers are now **M10 and M7 only**.
+🚫 **Two stale Vercel lines fixed in the same pass:** §3 and the milestone table both said *"deploy to Vercel (only here — not before)"* as a module-12 task. **It was deployed 31/07/2026 and the site is live** — recorded correctly in `PROJECT_MASTER.md:404` and contradicted in the roadmap. 🔑 **And this matters beyond tidiness: the moment module 4 merges, Vercel rebuilds and `/shift/:token` goes live** — which unblocks the single acceptance criterion never exercised (opening an invite on a phone over the internet), and is the difference between demoing that step for real on 28/08 and demoing a "site can't be reached" screen.
 
 
 **Ishay's question, asked mid-audit:** the module-4 spec was authored **processes → screens → integration between them**, so the two can disagree — what should the audit read, and how are conflicts resolved? **Measured, not recalled:** `module-close/template.md` step 2b sent the audit to `spec.md`'s acceptance chapter **and `screens-approved.md`** — and **no step in the whole template named the process document**. The spec set's own `§⚖️` arbitration rule covers **mockup vs spec** only, so a **processes-vs-screens** conflict had no written rule anywhere.
