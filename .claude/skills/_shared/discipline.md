@@ -89,6 +89,23 @@ never after guessing.**
   TARGET file's own vocabulary — words already sitting in it — not the vocabulary you arrived with.)*
 - **Never hand a checker an expected number — only a measurement method.**
 - **A fix is not done until you have checked where else the same defect lives.**
+- 🔴 **When you RELOCATE an instruction — pruning a file, splitting a doc, moving a rule to where its
+  reader stands — verify the destination CONTAINS THE TEXT, not that a pointer exists.** A pointer is
+  a *claim* about another file's contents, and this repo's whole doctrine ("a rule not stated here is
+  still in force, it just lives where it loads at the right time") is exactly what makes an unlanded
+  rule invisible: it reads as relocated, so nobody looks. **The dangerous residue is the chain of
+  citations that keeps pointing at the old address and now resolves to nothing.** ⇒ **grep the
+  destination for the moved text, and grep the repo for whatever cited the old home, in the same
+  turn.** *(Anchor 28–29/07/2026: a root-`CLAUDE.md` prune moved rules 2, 13(ז) and 15 out — and
+  landed their text **only in `docs/archive/`**, which the repo counts as nowhere. **~12 live
+  citations kept pointing at them**, and rule 15 had a **three-way circular deferral**: the blueprint
+  template said "rule 15 is the SSOT, don't restate", root pointed at the hook + `module-build`, and
+  `claude_routines` said "defined in rule 15, this only audits it" — three files each deferring to
+  another, and the text in none of them. The root file's own promise was **false for exactly those
+  three**, and it took a fresh-context audit over 25 governing files to find it — a re-read did not.)*
+  ⚠️ **This is the writer's half of `skill-scan`'s "Harvest before you shrink"**: that rule states the
+  intent, this one states what proves it happened.
+  *(Restored 12/08/2026 by the compaction audit — deleted in `64d7971`, found nowhere else in the repo.)*
 - 🔴 **The source must answer DIRECTLY. A derivation, a stretch, or "it probably implies" is a
   guess wearing a citation.** In doubt whether the source truly answers ⇒ **that IS "no source"**,
   and it goes to Ishay as a story-question. *(A wasted question costs him seconds; a guessed
@@ -98,6 +115,17 @@ never after guessing.**
   in `module-blueprint/template.md`" carrying a `[מדדתי בעצמי]` tag. Measured string by string:
   **zero shared strings between the two files.** The overlap was real and conceptual; the wording
   was an inference wearing a measurement's tag.)*
+
+- 🔴 **In a council / multi-advisor run, the value is the DISSENT — never the tally.** *(Anchor
+  08/08/2026, the `ready`-ownership question: **four of five advisors reached the same conclusion by
+  pattern-matching an existing precedent** — which would have produced a *graceful-degradation* fix
+  for what was actually an *ownership* bug. **The lone dissenter forced the re-read that found the
+  real answer.**)* ⇒ read the minority opinion first, and treat agreement among advisors as an
+  **echo of shared training, not as corroboration** — the same reason a second agent given the same
+  lens returns the same thing. ⚠️ **And the omission all five reviewers flagged independently: not
+  one advisor noted that the decision was Ishay's to make, not the council's.** A council output is
+  an input to iron rule 1, never a substitute for it. *(Restored 12/08/2026 by the compaction audit
+  — deleted in `bf5b3fc`, found nowhere else in the repo.)*
 
 ### 🔴 When Ishay corrects a fact you gave him — the correction is not the point, the SWEEP is
 
@@ -130,3 +158,23 @@ not re-derived until Ishay supplied the missing criterion himself.)*
 
 ## How to talk to Ishay
 Fully covered by `~/.claude/CLAUDE.md` — no REG-IN-specific override remains (the old "rulings-rounds recommendation-first" carve-out is now the global default too). The one place the style becomes a concrete *procedure* rather than a rule of thumb is the batching mechanics (3–4 per round, "מספיק להיום", recommendation-first, reality filter before designing for an edge case) — see `section7-rulings` (repo-local) and `feature-acceptance` (now global, `~/.claude/skills/`), which operationalize it end-to-end.
+
+### 🔴 When he names a CATEGORY instead of a single fix — say what you understood, before you sweep
+
+**Trigger, and it is observable:** he answers a finding with *"סרוק עוד כאלה"* / *"תחפש עוד כאלה"* /
+*"יש עוד חורים כאלה?"* — a **class**, not the one item in front of you.
+
+**Why it matters more than it looks:** this is his highest-yield move — measured 29/07/2026 on the
+step-3.2 mockup round, **one such instruction produced six fixes**, while ~8 of the ~11 review rounds
+that day were things I should have caught alone. **But the category is mine to infer, and I can infer
+it wrong** — and a wrong inference is invisible: I go sweep the wrong class, come back with findings
+that look like work, and the class he meant is still unswept.
+
+⇒ **State the interpretation in ONE sentence before sweeping**, e.g. *"הבנתי: כל אלמנט שמאשר מצב תקין
+במקום להתריע על חריגה — סורק עכשיו."* **Right guess ⇒ he stays silent and nothing is lost. Wrong guess
+⇒ two words from him instead of a whole wasted round.** 🔑 **The point is that the guess becomes
+visible instead of hiding inside the work** — the same reason every other inference here carries a
+provenance tag. *(His own question is what produced this: "כשאני אומר 'סרוק עוד כאלה', איך תדע למה
+אני מתכוון?" — the honest answer was "I infer it, and I can be wrong", and this is the fix that costs
+him nothing.)*
+*(Restored 12/08/2026 by the compaction audit — deleted in `64d7971`, found nowhere else in the repo.)*
