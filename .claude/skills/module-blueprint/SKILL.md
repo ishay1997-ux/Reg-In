@@ -15,12 +15,15 @@ You are Lead Software Architect opening a module. Your deliverable this turn is 
 ## Read order (ground everything — rule 4, no memory)
 1. `CLAUDE.md` (iron rules) → `STATUS.md` (current state, active step).
 2. **The step guide `docs/guides/modules/module_NN_*.md` — its section ⑥1 is THIS module's context packet:** the template parameters (MODULE_NUMBER/NAME/BRANCH/RELEVANT_SECTIONS), the ruled §7 items, the scope decisions, the acceptance targets. Treat ⑥1 as if it were pasted here — it carries the per-module context this generic skill cannot.
-3. Then everything ⑥1 and the template tell you to read: `docs/PROJECT_MASTER.md` (§7 registry + §6 debt), `docs/schema.sql`, `docs/db_roadmap.md`, `docs/architecture_and_qa_roadmap.md`, the current codebase, and `docs/micro_guides/module-1.md` as the format exemplar.
+3. 🔴 **`docs/specs/module_NN_*/` — the module's APPROVED SPEC, and it outranks C5/C6 on everything it covers.** ‏`NN` is **zero-padded** (module 4 ⇒ `module_04_*`) — **resolve it by listing `docs/specs/`, never by string-substitution.** Start at its `spec.md`, which carries its own numbered reading list. **Folder genuinely absent ⇒ STOP and tell Ishay** — the module has no Discovery output, and the 🎤 PM interview then applies. *(⚠️ **Added 08/08/2026:** `docs/specs` appeared **zero** times in this file, which is the one that loads first and routes everything else. It worked only because the module-4 step guide happened to carry the pointer — per-module luck, not a mechanism.)*
+4. Then everything ⑥1 and the template tell you to read: `docs/PROJECT_MASTER.md` (§7 registry + §6 debt), `docs/schema.sql`, `docs/db_roadmap.md`, `docs/architecture_and_qa_roadmap.md`, the current codebase, and `docs/micro_guides/module-1.md` as the format exemplar.
 
 ## Execute the template verbatim
 Read **`.claude/skills/module-blueprint/template.md`** (beside this file) and perform it exactly as written. It is the SSOT for the whole procedure: the plain-Hebrew capabilities summary, the sequence/dependency + integration-impact assessment, the 🗡️ DB Design Challenge, the 🛑/⏳ triage, the 🎤 PM Interview, the fresh-context blueprint review, and the 9-section micro-guide structure. Do not restate or paraphrase any of it here — read it and follow it.
 
-## Council wiring (iron rule in CLAUDE.md — "כלי-עזר להחלטות")
+## Council wiring (root `CLAUDE.md` → `🧰 ארגז הכלים — מדיניות שיקול-דעת`)
+<!-- Citation fixed 08/08/2026: this pointed at a CLAUDE.md heading "כלי-עזר להחלטות" that was deleted in the 28/07 pruning (grep: 0 live hits, survives only in docs/archive/). The RULE is intact under the heading above — "llm-council … מציעים וממתינים לאישור, לעולם לא מריצים ביוזמה" — and it is a toolbox policy, not a numbered iron rule. -->
+
 If a real trade-off surfaces (a contested §7 ruling, a DB-design fork, a pricing/Smart-Match formula), **offer** Ishay `council this` and wait for his approval before running it. Never run the council on your own initiative. The council feeds the decision; the decision itself is Ishay's (rule 1).
 
 <!-- shared kernel — single line; the doctrine text lives ONLY in _shared/discipline.md (consolidated 24/07/2026, was duplicated in all five) -->

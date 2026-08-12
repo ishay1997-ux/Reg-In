@@ -1,11 +1,15 @@
 version: 2
 updates:
+  # target-branch: dev — בלי זה Dependabot ממקד לברירת-המחדל של הריפו (main),
+  # ועוקף את מדיניות "main מתעדכן רק באבני-דרך" (07/08/2026: 7 PRs נחתו ישירות ב-main).
   - package-ecosystem: 'npm'
     directory: '/'
+    target-branch: 'dev'
     schedule:
       interval: 'weekly'
     open-pull-requests-limit: 5
   - package-ecosystem: 'github-actions'
     directory: '/'
+    target-branch: 'dev'
     schedule:
       interval: 'weekly'

@@ -634,7 +634,7 @@ revoke execute on function public.enforce_quote_in_progress_lock() from public, 
 -- יכול לכתוב אליו אינו ראיה. הוקדם ממודול 10 (§6 🚧 מ10) בהכרעת-ישי 30/07/2026.
 create table email_log (
   email_log_id bigint generated always as identity primary key,
-  entity_type text not null check (entity_type in ('quote')),  -- מ4/מ8/מ11 מרחיבים בערך אחד כל אחד
+  entity_type text not null check (entity_type in ('quote', 'shift')),  -- 'shift' נוסף במיגרציה 20260809085058 (מ4); מ8/מ11 מרחיבים בערך אחד כל אחד
   entity_id bigint not null,
   recipient text not null,
   template_name text,
@@ -650,6 +650,15 @@ create policy "email_log_select_quotes_module" on email_log for select to authen
   using (entity_type = 'quote' and exists (select 1 from permissions p
     where p.role_id = (select current_user_role_id())
       and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+      and p.permission_level in ('edit', 'view')));
+
+-- מודול 4 — מיגרציה 0 (20260809085058, הוחל 09/08/2026): policy נפרדת ליומן-הדיילות.
+-- 🚫 **לא הרחבה של זו שמעליה** — `db_roadmap` A-20 מורה שכל מודול מוסיף policy משלו, אחרת
+-- יומן-ההצעות נפתח למנהלת הגיוס ויומן-הדיילות למנהלת הכספים, ושתיהן חסומות זו במודול של זו.
+create policy "email_log_select_shifts_module" on email_log for select to authenticated
+  using (entity_type = 'shift' and exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'דיילות')
       and p.permission_level in ('edit', 'view')));
 
 -- ============================================================
@@ -723,3 +732,315 @@ update storage.buckets set file_size_limit = 10485760,
 -- (4) `products.description` — NOT NULL נשאר (זו הכוונה), נוספה ברירת-מחדל ריקה כרשת-ביטחון
 -- לכותב שישמיט את המפתח (הבאג שתוקן בטופס 30/07 המתין לכותב הבא).
 alter table products alter column description set default '';
+
+-- ============================================================
+-- מודול 4 — מיגרציה A (20260809122536, הוחל 09/08/2026)
+-- ============================================================
+-- ⚠️ ההגדרות בשורות 143 (hostesses) ו-165 (assignments) הן המצב ההיסטורי. המצב הנוכחי = כאן.
+-- שתי הטבלאות נמדדו ריקות (0/0) מיד לפני ההחלה ⇒ אין מיגרציית-נתונים.
+
+-- §7.64 — ת"ז יורדת מהמפתח. היא PII, והמפתח המורכב הישן שכפל אותה לכל שורת-שיבוץ במערכת;
+-- בנוסף תיקון ספרת-ביקורת אחרי שיש שיבוצים היה נחסם-FK. ת"ז נשארת `unique not null`.
+alter table assignments drop constraint assignments_id_number_fkey;
+alter table assignments drop constraint assignments_pkey;
+alter table hostesses   drop constraint hostesses_pkey;
+alter table hostesses add column hostess_id bigint generated always as identity primary key;
+alter table hostesses add constraint hostesses_id_number_key unique (id_number);
+
+-- §12⑱(ב) (הכרעת-ישי 08/08/2026) — `rating` היה `not null default 3`, כלומר כל דיילת נולדה
+-- מדורגת בלי שאיש התרשם ממנה. ‏NULL = "טרם התרשמה", והמסך מציג `—`.
+-- 🔴 **וביטול ה-DEFAULT הוא חצי הכרחי, לא ניקוי** — בלעדיו העמודה ממשיכה למלא 3 לבד.
+alter table hostesses alter column rating drop default;
+alter table hostesses alter column rating drop not null;   -- ה-CHECK 1..5 נשאר; NULL עובר אותו
+-- 🚫 אין UNIQUE על `hostesses.email` (§7.65, הכרעת-ישי 31/07) — האזהרה רכה ובטופס בלבד.
+-- 🚫 `email`/`city`/`bank_*` נשארות `not null` (local-1, הכרעת-ישי 08/08).
+alter table hostesses add column address   text;
+alter table hostesses add column lat       numeric;
+alter table hostesses add column lng       numeric;
+alter table hostesses add column has_car   boolean not null default false;
+alter table hostesses add column languages text[]  not null default '{}';
+
+alter table assignments drop column id_number;
+alter table assignments add  column hostess_id bigint not null;
+alter table assignments add constraint assignments_pkey
+  primary key (project_id, hostess_id, assignment_number);
+-- ON DELETE restrict: אין מחיקת דיילות בשום מקום (השבתה = תג-סטטוס).
+-- ON UPDATE restrict: מפתח-identity אינו זז — הצהרה מפורשת, לא ברירת-מחדל שקטה (db_roadmap §1).
+alter table assignments add constraint assignments_hostess_id_fkey
+  foreign key (hostess_id) references hostesses(hostess_id) on delete restrict on update restrict;
+
+-- 🔴 `responded_at` נכתבת **פעם אחת בלבד, במענה הראשון** (spec §12⑨). "שלח שוב" מאפס את
+-- `invite_sent_at` בלי לגעת בה, אחרת נוצר זמן-תגובה שלילי. ואסור לגזור מ-`updated_at`:
+-- מודול 8 יכתוב `salary_report_id` חודשים אחרי המענה ויזייף כל זמני-התגובה בהיסטוריה.
+alter table assignments add column responded_at   timestamptz;
+alter table assignments add column invite_token   text unique;   -- ה-UNIQUE הוא גם האינדקס של ה-RPC
+alter table assignments add column invite_sent_at timestamptz;
+alter table assignments add column travel_amount  numeric(12,2) not null default 0;  -- §7.69
+alter table assignments add column is_shift_lead  boolean not null default false;
+-- `event_date` מדונרמלת מ-`projects.final_event_date` — ‏UNIQUE אינו יכול לצרף טבלאות,
+-- וההכרעה "אילוץ במסד ולא בדיקה בקוד" (§7.88) אוסרת על הפתרון בקוד. הטריגר = מיגרציה B.
+alter table assignments add column event_date     date;
+
+-- ששת הסטטוסים של spec §1.1 — סגורים. "פג תוקף" **נגזר בתצוגה** ואינו ערך שביעי.
+alter table assignments drop constraint assignments_assignment_status_check;
+alter table assignments add  constraint assignments_assignment_status_check
+  check (assignment_status in ('pending', 'confirmed_available', 'declined',
+                               'finally_approved', 'released', 'approval_withdrawn'));
+
+-- "אחראית משמרת" — אחת לכל אירוע, נאכף במסד (תקדים §7.29).
+create unique index assignments_one_shift_lead_per_project on assignments (project_id) where is_shift_lead;
+create index assignments_hostess_id_idx on assignments (hostess_id);   -- C-1
+
+-- local-5 (עוגן §7.76) — מנהלת הגיוס **חסומה** על מודול 'לקוחות' (נמדד חי), ולכן join ל-`customers`
+-- היה מחזיר null **בשקט** בשלושה מסכים מאושרים שמדפיסים שם-לקוח. ⇒ snapshot, כמו `event_name`.
+-- lat/lng: בלעדיהן נופלים גם מרכיב-הקרבה וגם שער-ה-80 ק"מ (spec §12⑫).
+alter table projects add column lat           numeric;
+alter table projects add column lng           numeric;
+alter table projects add column customer_name text;
+update projects p set customer_name = c.company_name
+  from customers c where c.customer_id = p.customer_id and p.customer_name is null;
+-- 🔴 ו-`approve_quote_and_create_project` נכתבה מחדש (create or replace) כדי שתמלא את השדה —
+-- היא הכותב היחיד של `projects`, ובלעדיה כל פרויקט **חדש** היה נולד עם snapshot ריק: בדיוק
+-- התקלה השקטה שהעמודה באה למנוע. הגוף זהה לגרסת 20260731085335 פרט ל-`customer_name`
+-- ול-`left join customers` שמזין אותו (‏LEFT ולא INNER — `projects.customer_id` nullable).
+
+-- ============================================================
+-- מודול 4 — מיגרציה B (20260809124327, הוחל 09/08/2026): "אירוע אחד ביום" (§7.88)
+-- ============================================================
+-- ‏`UNIQUE` אינו יכול לצרף טבלאות, והתאריך יושב על `projects` ⇒ עמודה מדונרמלת + טריגר
+-- **דו-כיווני**. הכיוון השני הוא הקריטי: בלי טריגר על `projects`, דחיית-תאריך של אירוע הייתה
+-- משאירה את האילוץ תקוע על התאריך הישן — **נראה עובד, ואינו עובד.**
+create or replace function public.sync_assignment_event_date()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  select p.final_event_date into new.event_date
+    from public.projects p where p.project_id = new.project_id;
+  return new;
+end; $$;
+revoke execute on function public.sync_assignment_event_date() from public, anon, authenticated;
+-- על כל insert/update, ולא רק כששדה מסוים משתנה — כדי שאיש לא יוכל לכתוב ערך משלו לעמודה.
+-- ‏`security definer`: העמודה היא נגזרת טהורה, ואסור שתהיה תלויה בהרשאת-הקריאה של הכותב על
+-- `projects` — ‏RLS חוסם היה מחזיר NULL, כלומר אילוץ שקט שאינו אוכף.
+create trigger assignments_sync_event_date before insert or update on assignments
+  for each row execute function public.sync_assignment_event_date();
+
+create or replace function public.sync_assignments_on_project_date_change()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  update public.assignments set event_date = new.final_event_date
+   where project_id = new.project_id;
+  return null;
+end; $$;
+revoke execute on function public.sync_assignments_on_project_date_change() from public, anon, authenticated;
+-- ‏AFTER UPDATE בלבד ⇒ **אינו נדלק על INSERT**, ולכן ה-RPC של מ3 (שיוצרת פרויקט עם אפס
+-- שיבוצים) אינה מושפעת כלל. ואם הזזת-תאריך יוצרת התנגשות אמיתית — ה-UPDATE נכשל על האינדקס
+-- וכל השינוי מתגלגל אחורה. זו ההתנהגות הנכונה: עדיף להיכשל בקול מלהזיז אירוע ולהשאיר
+-- דיילת משובצת פעמיים באותו יום.
+create trigger projects_sync_assignment_dates after update of final_event_date on projects
+  for each row when (old.final_event_date is distinct from new.final_event_date)
+  execute function public.sync_assignments_on_project_date_change();
+
+-- 🔴 `not null` אינו קישוט: באינדקס-ייחודי שני NULL נחשבים **שונים זה מזה**, ולכן שתי שורות
+-- `finally_approved` עם `event_date` ריק היו עוקפות את האילוץ **בלי להפר אותו**.
+alter table assignments alter column event_date set not null;
+
+-- 🔴 נקודת-האכיפה = `finally_approved` בלבד (§7.88↳, הכרעת-ישי 08/08/2026). שני זימונים
+-- `pending` באותו יום נשארים חוקיים — המנהלת שולחת בסבבים ומחליטה מי מאושרת בסוף.
+-- ⚠️ המחיר: הבונוס של §7.54 (חסימת שתי שורות פעילות על אותו פרויקט) אבוד, ו-A-15 נשארת פתוחה.
+-- 🧩 שם האינדקס הוא **חוזה מול הממשק** (שלב 3) — המסך ימפה אותו להודעה בעברית, כמו
+-- ‏`SERVER_MESSAGE_RULES` ב-`src/lib/quotes.js`. שינוי-שם בלי עדכון המיפוי מפיל להודעה גנרית.
+create unique index assignments_one_event_per_day on assignments (hostess_id, event_date)
+  where assignment_status = 'finally_approved';
+
+-- ============================================================
+-- מודול 4 — מיגרציה C (20260809125750, הוחל 09/08/2026): שתי טבלאות + 14 params + תבנית
+-- ============================================================
+-- אי-זמינות מוצהרת (§2.1(3)) — התנאי החמישי בשער של Smart Match. בלעדיה הדיילת מקבלת זימונים
+-- בזמן שהיא בחו"ל, מסרבת לכולם, **והמערכת רושמת אותה כלא-אמינה** (ההיענות = 40% מהציון).
+-- הטווח **כולל את יום-הסיום** (הנחה 9; עקבי עם §7.30 ועם כל תוויות-הממשק).
+create table hostess_unavailability (
+  unavailability_id bigint generated always as identity primary key,
+  hostess_id bigint not null references hostesses(hostess_id) on delete cascade on update cascade,
+  start_date date not null,
+  end_date   date not null,
+  note text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint hostess_unavailability_range_valid check (end_date >= start_date)
+);
+create trigger hostess_unavailability_set_updated_at before update on hostess_unavailability
+  for each row execute function extensions.moddatetime (updated_at);
+create index hostess_unavailability_hostess_id_idx on hostess_unavailability (hostess_id);   -- C-1
+alter table hostess_unavailability enable row level security;   -- policies במיגרציה D
+
+-- הסימון התלת-מצבי — צמוד **ללקוח**, לא לדיילת (§7.15↳ · `db_roadmap:145`).
+-- 🔴 מ4 יוצר וקורא (שכבות 1–2 של Smart Match); **מ6 כותב** (`🚧 מ6 ← מ4`). נשארת ריקה עד אז,
+-- וזה תקין — אבל בלעדיה לתנאי השלישי בשער אין מה לקרוא, והוא היה מדלג בשקט.
+create table customer_hostess_preference (
+  preference_id bigint generated always as identity primary key,
+  customer_id bigint not null references customers(customer_id) on delete cascade on update cascade,
+  hostess_id  bigint not null references hostesses(hostess_id)  on delete cascade on update cascade,
+  preference text not null check (preference in ('מצוינת', 'בסדר', 'לא_לשלוח')),
+  preference_reason text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint customer_hostess_preference_unique unique (customer_id, hostess_id),
+  -- סימון שלילי מחייב נימוק כתוב — אילוץ, לא ולידציה בטופס (תקדים-שוק: TempWorks/Avionté).
+  constraint customer_hostess_preference_negative_needs_reason
+    check (preference <> 'לא_לשלוח' or preference_reason is not null)
+);
+create trigger customer_hostess_preference_set_updated_at before update on customer_hostess_preference
+  for each row execute function extensions.moddatetime (updated_at);
+-- `customer_id` מכוסה כבר ע"י ה-UNIQUE (עמודה מובילה) ⇒ אינדקס נפרד היה כפילות מתה.
+create index customer_hostess_preference_hostess_id_idx on customer_hostess_preference (hostess_id);
+alter table customer_hostess_preference enable row level security;   -- policies במיגרציה D
+
+-- ‏`params`: 20 ⇐ 32. שלוש שורות-המשקולות הישנות (`משקולת_1W_דירוג`/`2W_קרבה`/`3W_מהימנות`)
+-- **נמחקו, לא שונו שם** — לאלגוריתם החדש אין מרכיב "דירוג" כלל, ושינוי-שם היה משאיר שם שקרי
+-- על ערך חדש. נוספו 14 פרמטרים + תבנית מייל-השחרור:
+--   smart_match: משקולת_היענות 0.40 · משקולת_אמינות 0.35 · משקולת_קרבה 0.25 (**סכום = 1.00**) ·
+--     שער_מרחק_קמ 80 · גולפוסט_מרחק_קמ 40 · קבוע_ריסון_m 3 · חלון_חישוב_חודשים 12 ·
+--     חלון_חישוב_מורחב_חודשים 24 · מינימום_תשובות_להצגת_ציון 3 · שיעור_בונוס_הוגנות_לשבוע 0.02 ·
+--     תקרת_שבועות_הוגנות 8 · לא_ענתה_ל_N 4 · מרכיב_אמינות_פעיל **false** (§7.90)
+--   pricing_timing: סכום_נסיעות_למשמרת 0 (§7.69 — הסכום עצמו פתוח עד אימות מול רואה-החשבון)
+--   templates: תבנית_מייל_שחרור_משמרת
+-- ⛔ `תקרת_דיילות_מומלצת` **אינה קיימת** — בוטלה בהכרעת-ישי 09/08/2026 ("אין צורך בתקרה, מיותר").
+-- ⚠️ ‏`מרכיב_אמינות_פעיל` כבוי ⇒ בזמן-ריצה **מנרמלים מחדש** את שני המשקלים הנותרים ל-1.0.
+-- 🚫 אין לקודד קשיח את הפיצול הדו-כיווני (§11.1).
+
+-- ============================================================
+-- מודול 4 — מיגרציה D (20260809134237, הוחל 09/08/2026): RLS · שכר-מינימום · הפונקציה הציבורית
+-- ============================================================
+-- תשע policies לפי תבנית §7.21 (עטיפת `(select …)` חובה). ארבע טבלאות מ4 על מודול 'דיילות',
+-- ו-`projects` **SELECT בלבד** על 'פרויקטים' — 🚫 מ4 אינו כותב ל-`projects` לעולם (§12⑱ד).
+-- 🔴 בלי ה-policy על `projects` המסך הראשון חוזר ריק **לכולם, כולל למנכ"ל, ובלי שגיאה** (§12②).
+-- 🔴 ו-`hostess_unavailability` היא המסוכנת (§12⑮): deny-all שם היה **הורג בשקט את התנאי החמישי
+-- בשער** — אף דיילת לא נפסלת על אי-זמינות, ואיש לא רואה שגיאה.
+-- ארבע טבלאות מ4 — אותה תבנית בדיוק, פעמיים לכל טבלה. מוצגת כאן במלואה על `hostesses`;
+-- ‏`assignments` · `hostess_unavailability` · `customer_hostess_preference` זהות לה מילה-במילה
+-- (רק שם-הטבלה ושם-ה-policy משתנים).
+create policy "hostesses_select_by_permission" on hostesses for select to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'דיילות')
+      and p.permission_level in ('edit', 'view')));
+create policy "hostesses_write_by_permission" on hostesses for all to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'דיילות')
+      and p.permission_level = 'edit'))
+  with check (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'דיילות')
+      and p.permission_level = 'edit'));
+-- ‏(×3 נוספות באותה צורה: assignments · hostess_unavailability · customer_hostess_preference)
+
+create policy "projects_select_by_permission" on projects for select to authenticated
+  using (exists (select 1 from permissions p
+    where p.role_id = (select current_user_role_id())
+      and p.module_id = (select module_id from modules where module_name = 'פרויקטים')
+      and p.permission_level in ('edit', 'view')));
+-- 🚫 ואין `projects_write_…` מטעם מ4. במכוון.
+
+-- ⚠️ **מוקש שנמדד 09/08/2026 ואינו ניכר מקריאת התבנית:** ה-policy של הכתיבה היא `FOR ALL`,
+-- ולכן היא **מכסה גם SELECT** לבעלי `edit`. ⇒ הפלת policy-הקריאה לבדה **אינה** מסתירה דבר
+-- ממנהלת הגיוס; רק בעלת `view`-בלבד מתעוורת. **מי שבודק "מה קורה בלי policy" חייב להפיל את
+-- שתיהן** — אחרת הבדיקה נראית כאילו נכשלה בעוד שהיא פשוט נכתבה לא נכון.
+
+-- §7.66 — אכיפה בזמן-כתיבה, קריאת-פרמטר מוגנת (דפוס 20260731085335: TEXT ⇒ ולידציה ⇒ המרה).
+-- 🔴 `of hourly_rate`: הטריגר נדלק רק כשהעמודה בפועל ב-SET ⇒ עדכון שם/טלפון של דיילת ותיקה
+-- שתעריפה מתחת לרף **אינו נחסם ואינו משנה את תעריפה**. זו ההכרעה, לא פשרה.
+create function enforce_hostess_min_wage() returns trigger
+  language plpgsql security definer set search_path = '';
+--   גוף: קורא `params.שכר_מינימום_שעתי` כ-TEXT · פוסל חסר/ריק/לא-מספרי ב-P0001 בעברית ·
+--   ממיר · ואם `new.hourly_rate < v_min` זורק P0001 שנוקב בשני המספרים.
+create trigger hostesses_enforce_min_wage before insert or update of hourly_rate on hostesses
+  for each row execute function enforce_hostess_min_wage();
+
+-- §7.45 — 🔴 **המשטח היחיד במערכת שכותב ל-DB בלי התחברות ובלי תפקיד.**
+-- ‏`assignments` נשארת deny-all ל-anon (אפס policies `to anon`); זו הדלת היחידה.
+-- מקבלת רק טוקן+בחירה · כותבת רק `assignment_status` + `responded_at` · על שורה אחת ·
+-- ורק כששלושת התנאים מתקיימים: טוקן תקף · 48 שעות מהשליחה · **24 שעות לפני האירוע**
+-- (מול `final_event_date + final_start_time` באזור-הזמן של ישראל, לא מול חצות).
+-- 🔴 **מחזירה מחרוזת גנרית זהה לשלושת מצבי-הכישלון** — אחרת הדף הופך לאורקל שמאשר לזר
+-- שטוקן מסוים קיים. הסיבה האמיתית ל-`raise log` בלבד. ‏`responded_at` נכתבת פעם אחת
+-- (`coalesce`) — §12⑨, אחרת "שלח שוב" יוצר זמן-תגובה שלילי.
+create function respond_to_shift_invite(p_token text, p_response text) returns jsonb
+  language plpgsql security definer set search_path = '';
+--   גוף: ממפה 'confirmed'⇒'confirmed_available' · 'declined'⇒'declined' · כל ערך אחר נדחה ·
+--   שולף שורה אחת ב-`for update of a` עם שלושת התנאים · `not found` ⇒ מחזיר את המחרוזת
+--   הגנרית · אחרת מעדכן `assignment_status` + `responded_at = coalesce(responded_at, now())`
+--   ומחזיר `{"ok":true,"status":…}`.
+revoke execute on function respond_to_shift_invite(text, text) from public;
+grant  execute on function respond_to_shift_invite(text, text) to anon, authenticated;
+-- ⚠️ **מוענקת גם ל-`authenticated` במכוון** — מנהלת שפותחת את הקישור בדפדפן שבו היא מחוברת
+-- לאפליקציה הייתה מקבלת "אין הרשאה" אחרת. ‏⇒ **שני ממצאי-advisor** על הפונקציה הזו, לא אחד.
+
+-- 🔴 **אחותה הקוראת של הפונקציה שמעל** (מיגרציה `20260810004500`, 10/08/2026, צעד 3.6).
+-- **הפער שהיא סוגרת:** ‏`screens-approved.md` משטח 5 §④ מחייב שהדף הציבורי יציג שם-דיילת,
+-- אירוע, לקוח, תאריך, שעות, מיקום ותעריף — אבל `assignments` deny-all ל-anon, והפונקציה
+-- הכותבת **כותבת בלבד**. ⇒ בלעדיה מצב "ממתין למענה" נטען ריק. **שני המסמכים היו נכונים
+-- כל אחד לחוד; החור היה במרווח ביניהם.**
+-- ⚖️ **מודל-החשיפה:** ① טוקן לא-תקין ו-טוקן שפג מחזירים `{"ok":false}` **זהה בייט-בבייט**
+-- (‏§⑤: "בכוונה לא מבחינה בין הסיבות" — זהות **מבנית**, כך שגם תעבורת-הרשת אינה מסגירה) ·
+-- ② פרטים אישיים מוחזרים **אך ורק** במצב `pending`-ובתוקף; טוקן שכבר נענה מחזיר את שם-המצב
+-- בלבד (`confirmed`/`declined`/`filled`) — בלי שם, בלי לקוח, בלי כתובת · ③ **אפס כתיבה**.
+-- ⚠️ `approval_withdrawn` ⇒ התשובה הגנרית, לפי `processes-approved.md §ב8`: חזרה-בה היא
+-- שיחת-טלפון, **"אין מסלול-קישור"**.
+create function get_shift_invite(p_token text) returns jsonb
+  language plpgsql security definer set search_path = '';
+--   גוף: שליפה אחת לפי `invite_token` (בלי תנאי-זמן/סטטוס) · `not found` ⇒ `{"ok":false}` ·
+--   סטטוסים סופיים ⇒ `{"ok":true,"state":…}` בלבד · `pending` ⇒ שני תנאי-הזמן **זהים
+--   בהיגיון ל-`respond_to_shift_invite`** ⇒ אחרת `{"ok":false}` · ואם עבר: הפרטים +
+--   ‏`expires_at` = **המוקדם מבין השניים** (לא 48 השעות לבדן) + `סכום_נסיעות_למשמרת` מ-`params`.
+revoke execute on function get_shift_invite(text) from public;
+grant  execute on function get_shift_invite(text) to anon, authenticated;
+
+-- ‏§7.55 (מיגרציות E+F, 09/08/2026) — **מסלול-הכתיבה היחיד לקואורדינטות אירוע.**
+-- 🔴 ל-`projects` יש **מדיניות קריאה בלבד** מטעם מ4, ובלי הפונקציה הזאת אין דרך לשמור
+-- ‏`lat`/`lng` — מרכיב-הקרבה (0.25 מהציון) היה ניטרלי לכל אירוע לצמיתות.
+-- 🚫 **ולמה לא מדיניות-כתיבה:** ‏RLS ב-Postgres הוא ברמת-שורה ולא ברמת-עמודה ⇒ מדיניות
+-- הייתה חושפת גם `final_event_date`, `project_status` ו-`customer_id`. פונקציה ייעודית
+-- פותחת **שתי עמודות** בלי לפתוח את הטבלה.
+create function set_project_coordinates(p_project_id integer, p_lat numeric, p_lng numeric)
+  returns boolean language plpgsql security definer set search_path = '';
+--   גוף: שער-הרשאה בתבנית §7.21 (עריכה על 'דיילות') ⇒ 42501 · בדיקת-טווח לגבולות ישראל
+--   (29.0–33.5 / 34.0–36.0) ⇒ 22023 · ‏`update … where project_id = $1 and lat is null and
+--   lng is null` ⇒ מחזיר `true` רק אם נכתבה שורה. **`and lat is null`** הוא אכיפת ה"פעם
+--   אחת" (`processes-approved.md:97`) במסד ולא בקוד: קריאה שנייה אינה דורסת ואינה שוגה.
+revoke execute on function set_project_coordinates(integer, numeric, numeric) from public;
+revoke execute on function set_project_coordinates(integer, numeric, numeric) from anon;
+grant  execute on function set_project_coordinates(integer, numeric, numeric) to authenticated;
+-- 🧨 **שתי שורות ה-revoke, ולא אחת — וזה מוקש שנמדד ולא נוחש (09/08/2026).**
+-- ‏Supabase מגדיר `alter default privileges` שמעניק EXECUTE ל-`anon`/`authenticated`/
+-- ‏`service_role` על כל פונקציה חדשה ב-`public`. ⇒ **`revoke … from public` אינו נוגע בהן.**
+-- מיגרציה E כתבה רק את הראשונה, וה-`proacl` יצא `{postgres=X,anon=X,authenticated=X,
+-- service_role=X}`; מיגרציה F הוסיפה את השנייה, ואז `{postgres=X,authenticated=X,
+-- service_role=X}`. ⚠️ לא הייתה פרצה — שער-ההרשאה שבפנים החזיר 42501 ל-anon (נמדד
+-- בהתחזות) — אבל ההגנה-לעומק הייתה שבורה ונוצר ממצא-advisor שלא הוזמן.
+-- ⇒ **ממצא advisor אחד** על הפונקציה הזו (`authenticated`), במכוון — מנהלת הגיוס חייבת להריצה.
+
+-- ============================================================
+-- מודול 4 — מיגרציה G (20260809223025, הוחל 09/08/2026): snapshot של איש-הקשר בשטח
+-- ============================================================
+-- 🔴 **החור שהעמודות סוגרות, ונמדד חי לפני שנכתבו:** מייל האישור-הסופי מזריק
+-- `[שם_מנהלת_פרויקט]`/`[טלפון_מנהלת_פרויקט]`, וההכרעה `local-2` הפנתה אותם ל-`users` דרך
+-- `owner_email`. ‏**policy `users_select_self_or_ceo` מתירה קריאה רק על עצמך או למנכ"ל** ⇒
+-- מנהלת הגיוס קיבלה `200` עם `[]`, והמייל היה יוצא עם *"איש קשר בשטח: מנהלת הפרויקט -,
+-- טלפון: "* — בלי שום שגיאה. 🚫 ו-`fillEmailTemplate` אינו תופס: ה-placeholder מוכר, הוא
+-- פשוט מתמלא בריק.
+-- 🔑 **snapshot ולא פתיחת-הרשאה:** מופע שלישי של דפוס שכבר בטבלה (`event_name` §7.76 ·
+-- `customer_name` local-5), אינו פותח משטח-אבטחה חדש, **ונכון מהותית — מה שנכתב במייל שיצא
+-- צריך להישאר מה שנכתב בו**, בדיוק כמו `hourly_rate_snapshot`.
+-- ⚠️ בלי NOT NULL במכוון: ל-`users.phone` מותר להיות ריק. **החובה לא-להדפיס-ריק היא של
+-- שכבת-המייל** — היא תסרב לשלוח במקום להדפיס "טלפון: ".
+alter table projects add column owner_name  text;
+alter table projects add column owner_phone text;
+update projects p set owner_name = u.full_name, owner_phone = u.phone
+  from users u where u.email = p.owner_email and p.owner_name is null;
+-- 🔴 ו-`approve_quote_and_create_project` נכתבה מחדש שוב, מאותו טעם כמו ב-A: היא הכותב
+-- היחיד של `projects`, ובלעדיה כל פרויקט **חדש** נולד עם איש-קשר ריק. **ההפרש מגרסת
+-- 20260809122536 נמדד ב-`diff`: שלוש תוספות בלבד** — שתי העמודות ב-INSERT, שני הערכים
+-- ב-SELECT, ו-`left join users ou on ou.email = v_caller_email`. שום דבר אחר בגוף לא זז.
+-- ‏LEFT ולא INNER: משתמש שנמחק היה מבליע את כל שורת-הפרויקט, כלומר אישור-הצעה היה נכשל
+-- בגלל שדה-תצוגה.

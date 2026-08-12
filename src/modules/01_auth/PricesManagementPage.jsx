@@ -210,7 +210,15 @@ export default function PricesManagementPage() {
                         disabled={!canEdit || savingStatusSku === p.sku}
                         onValueChange={(v) => handleStatusChange(p.sku, v)}
                       >
+                        {/* 🔴 `aria-label` חובה ואינו קישוט — נוסף 12/08/2026 באודיט-סגירת מ4.
+                            שמו-הנגיש של `SelectTrigger` מגיע **רק** מה-`SelectValue` שבתוכו, ולכן
+                            כל עוד הערך לא נצבע הכפתור **חסר-שם**. ‏axe דיווח `button-name` על
+                            **11 צמתים = 11 המוצרים**, והפגם התגלה דווקא כשהחבילה רצה במקביל
+                            ועומס האט את הרינדור. ⚠️ **הרחבת ההמתנה בבדיקה לא ריפאה אותו** — כי זו
+                            אינה תקלת-תזמון של הבדיקה אלא היעדר-שם אמיתי. השכן בשורה
+                            (`prices-edit-product`) כבר נשא `aria-label`; זה היה החריג. */}
                         <SelectTrigger
+                          aria-label="סטטוס המוצר"
                           className="h-auto w-32 py-1 px-2 rounded-lg border-slate-300 text-xs"
                           data-testid="prices-status-select"
                         >

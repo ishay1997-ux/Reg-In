@@ -14,8 +14,8 @@
 | Module | 2 — Customers (לקוחות) |
 | Owner | **ישי (started 10/07)** · Amit (may continue — writer-handover on THIS branch, not a parallel branch) |
 | Branch | `ishay/module-2-customers` (created from fresh `dev` 10/07/2026, after PR #5 merged — step 0.1 ✅) |
-| **Status** | **🔒 Closed — awaiting PR/merge (closing audit 11/07/2026 22:33, fresh session).** Verdict **[YES]**; DoD **typed-echo SIGNED by Ishay 11/07 22:39 ("לקוחות DoD")**; the 16:21/17:07 UX-rounds' 👤 visual pass **SIGNED by Ishay 22:55 ("אישרתי ויזואלית הכל מעולה")** — every human gate of the module is now closed. All phases 1–5 ✅. Test data cleaned with his approval (customers/contacts/marketing = **0/0/0**, live-verified). |
-| Last updated | **30/07/2026 14:45 — ⚠️ THE MODULE IS CLOSED AND MERGED, BUT THREE OF ITS FILES WERE REWRITTEN BY MODULE 3 (step 3.5). Read the §9 entry dated 30/07 before trusting the file list below.** In one line: `CustomerDetailsCard.jsx` **no longer exists** — the customer card is now a full record page (`CustomerDetailsPage.jsx`, route `customers/:customerId`), the list row **navigates** instead of opening a dialog, a sortable "סה"כ הכנסות" column was added, and `CustomersPage`'s search/filters/status/sort moved from `useState` into **URL query params**. Everything below this row still describes the module's own build (11/07) and is unchanged. |
+| **Status** | ✅ **MERGED to `dev` — PR #6, merge commit `e69383a`** *(re-verified 12/08/2026 13:5X by `regin-docs-sync`: `merge-base --is-ancestor` → true; this row still read "awaiting PR/merge" — the merge was only ever recorded in the "Last updated" row below and in `STATUS.md`)*. **The close itself, kept: 🔒 Closed (closing audit 11/07/2026 22:33, fresh session).** Verdict **[YES]**; DoD **typed-echo SIGNED by Ishay 11/07 22:39 ("לקוחות DoD")**; the 16:21/17:07 UX-rounds' 👤 visual pass **SIGNED by Ishay 22:55 ("אישרתי ויזואלית הכל מעולה")** — every human gate of the module is now closed. All phases 1–5 ✅. Test data cleaned with his approval (customers/contacts/marketing = **0/0/0**, live-verified). |
+| Last updated | **30/07/2026 14:45 — ⚠️ THE MODULE IS CLOSED AND MERGED, BUT THREE OF ITS FILES WERE REWRITTEN BY MODULE 3 (step 3.5). Read the §9 entry dated 30/07 before trusting the file list below.** In one line: `CustomerDetailsCard.jsx` **no longer exists** — the customer card is now a full record page (`CustomerDetailsPage.jsx`, route `customers/:customerId`), the list row **navigates** instead of opening a dialog, a sortable "סה"כ הכנסות" column was added, and `CustomersPage`'s search/filters/status/sort moved from `useState` into **URL query params**. Everything below this row still describes the module's own build (11/07) and is unchanged. ⚠️ **10/08/2026 — one more cross-module touch, this time from Module 4's accessibility pass:** `CustomersPage.jsx`'s list-card title `<h2>רשימת לקוחות</h2>` → `<h1>` (the page had no other heading; `axe-core` flagged `page-has-heading-one`). One line, no logic, no `data-testid` touched. See §9 (10/08). |
 | **Active step** | **DONE — module closed. Remaining (human): Ishay's visual OK → push the audit-session doc commit → open PR base `dev` ← compare `ishay/module-2-customers` (instructions printed by the closing session, iron rule 17 🧩).** |
 
 | Phase / step | Status |
@@ -467,6 +467,67 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 6. **(e)–(g) per CLAUDE.md iron rules 13/15/16 + end-of-session protocol** (new-open-question → stop+§7 · migration/DB-gap → db_roadmap same session · shared-surface change → name the affected future modules in the CHANGELOG line) — these apply automatically; not restated here (F1).
 
 ## 9. 📝 Deviations & Tech-Debt Log
+
+- 🚧 מ6 — **12/08/2026 — the M6 half of the two deferred derived customer-list filters had no live token
+  in this guide, only a trailing parenthetical.** §1's capability table carries the M8 half as a real row
+  (*"Satisfaction stars in list + satisfaction filter — 🚧 מ8 · present-but-inert"*), but its twin —
+  **`פרויקטים פעילים` / `רדומים`** (no event for X months, derived from `projects`, Ishay 11/07 *"מעוניין
+  כשניתן"*) — appears only inside the 11/07/2026 01:35 entry's closing clause *"🚧 rows registered in §6:
+  derived-filters (מ3/מ6/מ8)"*, with no `🚧 מ6` token of its own. ⚠️ **`grep '🚧 מ6'` on this guide does
+  return a hit — but it is the *project-history* debt (§1), a different item** — so the dormant-filter half
+  was invisible to a module-6 session reading this file. **What M6 owes:** extend `matchesCustomerFilters`
+  (`src/lib/customers.js`) + `CustomersFilterSheet` with the active/dormant predicate once `projects` data
+  and policies exist — **the filter is not built in M2 because there is no data**, not because it was
+  dropped. Full text: `PROJECT_MASTER §6`, the `🚧 מ6 · 🚧 מ8` line opening **`פילטרים נגזרים
+  ברשימת-הלקוחות`**. *(added 12/08/2026 — reverse-direction audit of §6, `regin-docs-sync`.)*
+
+**↳ as-built 10/08/2026 — cross-module fix from Module 4's accessibility pass:
+`CustomersPage.jsx`'s only heading, `<h2>רשימת לקוחות</h2>`, promoted to `<h1>`.** Ishay asked to
+fix an `axe-core` finding surfaced while building/testing module 4's `e2e/accessibility.spec.js`
+(`landmark-one-main`/`page-has-heading-one`/`region` reported across most scanned screens). Before
+touching any code, re-ran the scan **in isolation** (no prior `page.goto()` in the same test) to
+separate signal from artifact — and most of the original finding turned out to be a **test-timing
+bug**, not a real defect: `page.goto()` between screens forces a full reload, and `axe` sometimes ran
+during `MainLayout`'s `"טוען..."` loading flash (no landmarks yet, because it isn't the page). Cross-
+checked every scanned route's source: `MainLayout.jsx` already wraps everything in one `<main>`, and
+6 of the 7 flagged pages already had a real `<h1>` inside it. **`CustomersPage` was the one genuine
+exception** — its only heading was an `<h2>`, no `<h1>` anywhere on the page — so it's fixed here.
+(The test itself was also fixed, in module 4's `e2e/accessibility.spec.js`: added a `waitForReady()`
+wait before scanning so the loading-flash false-positive can't recur — full account there and in
+`docs/CLAUDE_CODE_LOG.md`'s 10/08 "Fifth addendum" entry.) One line changed, no logic, no
+`data-testid` touched. `npm run gate` exit 0 after (750 unit tests, module 2's own tests unaffected).
+
+**↳ as-built 08/08/2026 — `CustomerDetailsPage.jsx`'s stat-tile wrapper changed `grid
+grid-cols-1 sm:grid-cols-3` → `flex flex-wrap`, closing the open verification item left by the
+07/08 `StatTile` extraction below.** Same family of gap as that entry (two screens using the shared
+`StatTile` component but drifting in the *wrapper*, not the tile): a full-width grid on only 3
+short-value tiles left visible empty space inside each tile, while `QuotesPage.jsx`'s 2-tile strip
+already used content-sized `flex` (Ishay's 29/07 ruling, quoted in that file: "a strip with only
+two numbers measured near-empty at 100% width"). Market research (Ishay's explicit instruction,
+before any mockup): Salesforce Lightning's Highlights Panel — the same UI slot, a key-field strip
+atop a record page — documents fields that "wrap and stay visible" rather than stretch to fill the
+row (4–6 field guideline). Presented both options as an HTML mockup (visualize tool, real values
+from this page) before touching code, per the task's explicit no-code-before-approval instruction
+on two closed/merged modules. **Ishay approved option A and ruled it canonical for every future
+module**, not a one-off — recorded in `StatTile.jsx`'s own doc comment so it doesn't depend on
+session memory. `data-testid`s unchanged (`metric-revenue`/`metric-open`/`metric-avg-deal` live on
+`StatTile` itself). `npm run build` exit 0. ⚠️ **Still not verified visually in a browser** — the
+Browser pane did not render on Ishay's side this session either (`viewport: 0x0`); reported as open
+rather than assumed fine a second time.
+
+**↳ as-built 07/08/2026 — `Highlight` removed from `CustomerDetailsPage.jsx`; stat tiles now come
+from the shared `@/components/StatTile`.** Ishay's ruling, made while reviewing module 4's mockups:
+the metric tile was defined twice in the repo (here, and inline in `QuotesPage.jsx`) and the two had
+**drifted** — opposite label/value order, different value size, different sub-label shade, and a teal
+fill here that violates the fill rule now written into `PROJECT_MASTER §4` (fill is reserved for the
+one primary action or a real warning; a metric is a fact). **Module 2's form won as canonical**
+(label above value) precisely because this module is the designated conventions reference. Visual
+delta here is fill-color only — layout, order, and all three `data-testid`s (`metric-revenue` /
+`metric-open` / `metric-avg-deal`, which `e2e/customer-page.spec.js` binds to) are unchanged.
+Verified: `eslint` 0 · `vite build` 0 · 413 unit tests green · 8 new `StatTile` tests seen failing
+under mutation before being accepted. ⚠️ **Not verified visually in a browser** — needs an
+authenticated screen; recorded as the session's one open verification item. ⛔ Do not reintroduce a
+local tile component here — `src/CLAUDE.md` now lists `StatTile` as mandatory-shared.
 
 > ℹ️ **Checked 05/08/2026 during the `work-manager` removal — historical only, nothing to change.**
 > The manager-N mentions in the entries below are dated records of who ruled what at the time.

@@ -69,25 +69,10 @@ export async function getQuoteScreenParams() {
   return data ?? []
 }
 
-// השליחה המוצלחת האחרונה של ישות נתונה, מ-`email_log` (מיגרציה 20260730095439).
-// **זהו מקור-האמת היחיד ל"האם כבר נשלח"** — ההגנות שבחלון חיות ב-state של הקומפוננטה
-// ולכן מתאפסות ברענון-דף או אצל משתמש שני; רק שאילתה כאן שורדת את שניהם.
-// מסונן ל-'sent' בכוונה: ניסיון שנכשל אינו "נשלח", והצגתו כאילו נשלח הייתה מונעת מהמשתמש
-// לשלוח מייל שהלקוח מעולם לא קיבל. ‏null = אין שליחה מוצלחת (או שה-RLS חוסם קריאה).
-// ⚠️ הטבלה גנרית (entity_type/entity_id) — מודולים 4/8/11 יקראו אותה באותה צורה.
-export async function getLastSuccessfulSend(entityType, entityId) {
-  const { data, error } = await supabase
-    .from('email_log')
-    .select('recipient, subject, created_at')
-    .eq('entity_type', entityType)
-    .eq('entity_id', entityId)
-    .eq('status', 'sent')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  if (error) throw toError(error, 'שגיאה בטעינת היסטוריית השליחות.')
-  return data ?? null
-}
+// ⚠️ **‏`getLastSuccessfulSend` ו-`getSentQuoteIds` עזבו את הקובץ הזה ב-09/08/2026** (פזה 0
+// של מודול 4) אל **`src/api/email.js`**. הטבלה `email_log` גנרית ואין לה מודול-בעלים —
+// מ4/מ8/מ11 שואלים בדיוק את אותן שאלות, וקובץ-api של מודול 3 אינו בית חוקי עבורם.
+// ‏`getSentQuoteIds(ids)` הוכללה שם ל-`getSentEntityIds(entityType, ids)`.
 
 // הצעה בודדת + כל שורותיה, לצורך עריכה/צפייה/PDF. null אם אין שורה נגישה (לא-קיימת או RLS).
 export async function getQuote(quoteId) {
@@ -113,24 +98,6 @@ export async function listQuotesByCustomer(customerId) {
     .order('quote_id', { ascending: false })
   if (error) throw toError(error, 'שגיאה בטעינת היסטוריית ההצעות של הלקוח.')
   return data ?? []
-}
-
-// אילו הצעות מתוך רשימה כבר נשלחו ללקוח — **שאילתה אחת** לכל העמוד (צעד 3.5).
-// ⚠️ במכוון לא `getLastSuccessfulSend` פר-שורה: על לקוח עם 30 הצעות זה 30 שאילתות (N+1).
-// מחזיר Set של entity_id, כי המסך שואל שאלה בוליאנית ("נשלחה?") ולא מציג תאריך —
-// הכרעת-ישי 30/07 (LOCAL-16): תאריך-השליחה כמעט תמיד זהה לתאריך-ההצעה ולכן הוא רעש.
-// ⚠️ מסונן ל-'sent': ניסיון שנכשל אינו שליחה, והצגתו ככזו תמנע מהמשתמש לשלוח מייל
-// שהלקוח מעולם לא קיבל.
-export async function getSentQuoteIds(quoteIds) {
-  if (!quoteIds?.length) return new Set()
-  const { data, error } = await supabase
-    .from('email_log')
-    .select('entity_id')
-    .eq('entity_type', 'quote')
-    .eq('status', 'sent')
-    .in('entity_id', quoteIds)
-  if (error) throw toError(error, 'שגיאה בטעינת היסטוריית השליחות.')
-  return new Set((data ?? []).map((row) => row.entity_id))
 }
 
 // קטלוג-התמחור לבניית הצעה: **כל** המוצרים, כל מדרגות-המחיר, ו-2 פרמטרי-התמחור

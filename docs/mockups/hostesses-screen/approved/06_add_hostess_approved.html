@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מוקאפ מ4 · מסך 3ב — פופ-אפ הוספת דיילת (מאושר)</title>
+<style>
+  /* פלטה וגופן נשאבו מ-src/ (grep על bg|text|border) ומ-CustomerFormDialog.jsx (מבנה-הטופס
+     האמיתי היחיד שכבר קיים בקוד) — לא מהעין. אותם משתנים בדיוק כמו 01/02/03/04/05. */
+  :root{
+    --primary:#0D9488; --teal50:#F0FDFA; --teal100:#CCFBF1; --teal600:#0D9488; --teal700:#0F766E;
+    --green50:#F0FDF4; --green100:#DCFCE7; --green200:#BBF7D0; --green700:#15803D;
+    --amber50:#FFFBEB; --amber100:#FEF3C7; --amber200:#FDE68A; --amber700:#B45309;
+    --red50:#FEF2F2; --red200:#FECACA; --red600:#DC2626; --red700:#B91C1C;
+    --bg:#F8FAFC; --s50:#F8FAFC;--s100:#F1F5F9;--s200:#E2E8F0;--s300:#CBD5E1;
+    --s400:#94A3B8;--s500:#64748B;--s600:#475569;--s700:#334155;--s800:#1E293B;
+    --r:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--s800);font-size:14px;
+       font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:16px 18px 40px}
+  .note{background:var(--amber50);border:1px solid var(--amber200);color:#92400E;border-radius:var(--r);
+        padding:9px 12px;font-size:12px;margin-bottom:12px;line-height:1.65}
+  h1{font-size:19px;margin:0}
+  .sub{color:var(--s500);font-size:12px;margin-top:2px}
+
+  /* --- הדיאלוג הראשי (מבנה זהה ל-CustomerFormDialog.jsx: כותרת+תת-כותרת, שדות בעמודות,
+        שגיאה מתחת-לשדה, כפתור-שמירה מלא-רוחב) --- */
+  .backdrop{background:rgba(15,23,42,.35);border-radius:16px;padding:26px;display:flex;justify-content:center}
+  .dialog{background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(15,23,42,.18);
+          padding:20px 22px 18px;max-width:520px;width:100%}
+  .dialog h2{font-size:16px;margin:0}
+  .dialog .desc{color:var(--s500);font-size:12.5px;margin-top:3px;margin-bottom:16px;line-height:1.6}
+  .frow{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+  .frow label{font-size:12.5px;color:var(--s700);font-weight:500}
+  .frow label .req{color:var(--red600)}
+  .frow .hint{font-size:10.5px;color:var(--s400);font-weight:400}
+  .frow input, .frow select{border:1px solid var(--s300);border-radius:8px;padding:8px 10px;
+        font-size:13px;color:var(--s800);width:100%}
+  .frow input::placeholder{color:var(--s400)}
+  .frow input.err{border-color:var(--red600)}
+  .frow input.ok-num{direction:ltr;text-align:right;unicode-bidi:isolate}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1.2fr 0.8fr 1fr;gap:10px}
+  .ferr{color:var(--red600);font-size:11.5px}
+  .fbank-title{font-size:11.5px;color:var(--s500);font-weight:600;margin:2px 0 6px}
+
+  .stars{display:flex;gap:3px;align-items:center;font-size:17px}
+  .stars .on{color:var(--s700)}
+  .stars .off{color:var(--s300)}
+  .stars .n{font-size:11.5px;color:var(--s500);margin-right:6px}
+
+  .tglrow{display:flex;align-items:center;justify-content:space-between;padding:2px 0}
+  .tgl{position:relative;display:inline-block;width:34px;height:19px;flex:none}
+  .tgl input{opacity:0;width:0;height:0;position:absolute}
+  .tgl-track{position:absolute;inset:0;background:var(--s300);border-radius:999px}
+  .tgl-thumb{position:absolute;top:2px;right:2px;width:15px;height:15px;border-radius:50%;background:#fff;
+             box-shadow:0 1px 2px rgba(0,0,0,.25)}
+  .tgl input:checked + .tgl-track{background:var(--teal600)}
+  .tgl input:checked + .tgl-track .tgl-thumb{right:auto;left:2px}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .lchip{border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--s300);color:var(--s600);background:#fff}
+  .lchip.sel{background:var(--teal50);border-color:#99F6E4;color:var(--teal700);font-weight:600}
+
+  .savebar{display:flex;gap:8px;margin-top:14px}
+  .btn-cancel{flex:1;border:1px solid var(--s300);background:#fff;color:var(--s700);border-radius:8px;
+              padding:10px;font-size:13.5px;font-weight:600}
+  .btn-save{flex:2;border:0;background:var(--primary);color:#fff;border-radius:8px;
+            padding:10px;font-size:13.5px;font-weight:600}
+  .btn-save.blocked{background:var(--s300);color:var(--s500)}
+
+  /* --- פאנלי-הדגמה למצבים שהדיאלוג הראשי (במצבו התקין) לא יכול להראות --- */
+  .states{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}
+  .sbox{flex:1;min-width:280px;background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);
+        padding:12px 14px}
+  .sbox h3{font-size:12.5px;margin:0 0 9px;color:var(--s700)}
+
+  .demo{margin-top:16px;font-size:11px;color:var(--s500);background:#fff;
+        border:1px dashed var(--s300);border-radius:8px;padding:8px 11px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="note">
+    ✅ <b>מוקאפ מאושר (08/08/2026).</b> משטח 3ב · פופ-אפ הוספת דיילת · נפתח מ"מאגר דיילות" (מסך 3)
+    בלחיצה על "+ הוספת דיילת". מקור התוכן: <code>processes-approved.md §א1</code> (כל השדות
+    וההתנהגויות שם) — נקרא במלואו לפני הציור, לפי הכלל שנכתב היום ב-📐 מבנה-הכרטיס.
+  </div>
+
+  <h1>הוספת דיילת חדשה</h1>
+  <div class="sub">מסך 3ב מתוך 8 · הדיאלוג הראשי במצב תקין-לשמירה, ושני פאנלים למטה מדגימים את
+    שני המצבים המיוחדים שתמונה אחת לא יכולה להראות (ת"ז שגוי · אימייל כפול).</div>
+
+  <div class="backdrop">
+    <div class="dialog">
+      <h2>הוספת דיילת חדשה</h2>
+      <div class="desc">
+        הכרטיס נפתח <b>רק אחרי שדיברת עם הדיילת בטלפון</b> — היא לא רואה את הטופס הזה ולא ממלאת
+        אותו בעצמה. בשמירה היא נכנסת מיידית למאגר בסטטוס "פעילה".
+      </div>
+
+      <div class="frow">
+        <label>תעודת זהות <span class="req">*</span> <span class="hint">— בדיקת ספרת-ביקורת תוך כדי ההקלדה</span></label>
+        <input class="ok-num" value="204587618" placeholder="9 ספרות">
+      </div>
+
+      <div class="grid2">
+        <div class="frow">
+          <label>שם מלא <span class="req">*</span></label>
+          <input value="נועה שגיא">
+        </div>
+        <div class="frow">
+          <label>טלפון <span class="req">*</span></label>
+          <input class="ok-num" value="052-1234567">
+        </div>
+      </div>
+
+      <div class="frow">
+        <label>אימייל</label>
+        <input class="ok-num" value="noa.shagia@gmail.com">
+      </div>
+
+      <div class="grid2">
+        <div class="frow">
+          <label>עיר</label>
+          <input value="רמת גן">
+        </div>
+        <div class="frow">
+          <label>כתובת מלאה</label>
+          <input value="ביאליק 14">
+        </div>
+      </div>
+
+      <div class="frow">
+        <label>שכר שעתי (₪) <span class="req">*</span> <span class="hint">— מתחת ל-35 ₪ (שכר מינימום, פרמטר מ9) חוסם שמירה</span></label>
+        <input class="ok-num" value="42">
+      </div>
+
+      <div class="fbank-title">פרטי בנק</div>
+      <div class="grid3">
+        <div class="frow" style="margin-bottom:0"><label>בנק</label><input value="לאומי"></div>
+        <div class="frow" style="margin-bottom:0"><label>סניף</label><input class="ok-num" value="782"></div>
+        <div class="frow" style="margin-bottom:0"><label>מס' חשבון</label><input class="ok-num" value="118453"></div>
+      </div>
+
+      <div class="frow" style="margin-top:13px">
+        <label>התרשמות המנהלת (1–5) <span class="hint">— לא "דירוג": זו דעתך, לא ציון-מערכת. אינה חלק מ-Smart Match</span></label>
+        <div class="stars"><span class="on">★</span><span class="on">★</span><span class="on">★</span><span class="off">★</span><span class="off">★</span><span class="n">3 מתוך 5</span></div>
+      </div>
+
+      <div class="frow">
+        <div class="tglrow">
+          <label style="margin:0">יש רכב? <span class="hint">— מעל 40 ק"מ בלי רכב = פסילה בשיבוץ, לא ניקוד</span></label>
+          <span class="tgl"><input type="checkbox" checked><span class="tgl-track"><span class="tgl-thumb"></span></span></span>
+        </div>
+      </div>
+
+      <div class="frow">
+        <label>שפות <span class="hint">— שדה-מידע בלבד. לא שער ולא עמודה בטבלת-המאגר; המנהלת בוחרת ידנית מי לזמן לכל תפקיד</span></label>
+        <div class="chips">
+          <span class="lchip sel">עברית</span>
+          <span class="lchip sel">אנגלית</span>
+          <span class="lchip">רוסית</span>
+          <span class="lchip">ערבית</span>
+          <span class="lchip">אמהרית</span>
+        </div>
+      </div>
+
+      <div class="savebar">
+        <button class="btn-cancel">ביטול</button>
+        <button class="btn-save">שמור דיילת</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="states">
+    <div class="sbox">
+      <h3>🔴 ת"ז שגוי — "שמור" חסום</h3>
+      <div class="frow" style="margin-bottom:6px">
+        <label>תעודת זהות <span class="req">*</span></label>
+        <input class="ok-num err" value="204587611">
+        <span class="ferr">מספר תעודת זהות אינו תקין</span>
+      </div>
+      <button class="btn-save blocked" disabled>שמור דיילת</button>
+    </div>
+    <div class="sbox">
+      <h3>🟡 אימייל כבר קיים — אזהרה רכה, לא חוסמת</h3>
+      <div class="frow" style="margin-bottom:0">
+        <label>אימייל</label>
+        <input class="ok-num" value="family.mail@gmail.com">
+        <span class="ferr" style="color:var(--amber700)">כתובת זו כבר רשומה אצל דנה כהן — להמשיך?</span>
+      </div>
+      <div style="font-size:11px;color:var(--s500);margin-top:6px">אין UNIQUE על השדה — תיבה משפחתית משותפת היא מקרה לגיטימי, והת"ז כבר מונעת כפילות-אדם. "שמור" נשאר פעיל.</div>
+    </div>
+  </div>
+
+  <div class="demo">
+    🌱 <b>מהמסד:</b> אין — <code>hostesses</code> ריקה (0 שורות, נמדד). 🎭 <b>דמו מומצא:</b> כל שדה
+    בדיאלוג הראשי (השם, הטלפון, הכתובת, הבנק). מספר-הת"ז שתי הדוגמאות (התקין והשגוי) הם המצאה
+    לצורך הדגמה בלבד — לא נבדקו מתמטית מול אלגוריתם ספרת-הביקורת האמיתי; זו החלטת-מימוש
+    ל-<code>src/lib/</code>, לא למוקאפ. 📐 <b>נגזר ממודל:</b> שכר-מינימום ₪35 —
+    <code>params.שכר_מינימום_שעתי</code> (נמדד חי 31/07/2026, לא מוקלד). רשימת-השפות (עברית·
+    אנגלית·רוסית·ערבית·אמהרית) — אין enum בסכמה (השדה <code>text[]</code> חופשי) ⇒ חמש הדוגמאות
+    הן הצעת-כיווני-שוק, לא רשימה סגורה; קלט חופשי אמיתי ייקבע בבנייה.
+  </div>
+
+</div>
+</body>
+</html>

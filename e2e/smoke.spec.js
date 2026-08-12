@@ -104,7 +104,13 @@ test.describe('בדיקת-עשן', () => {
     await expect(page.getByText(anchors.customers.revenues).first()).toBeVisible()
 
     // הצעות: הסכום הקנוני של תרחיש-האפיון חייב להופיע ברשימה.
+    // ⚠️ **דרך לשונית "הכל", וזו תוספת-תיקון של 09/08/2026 ולא ריכוך.** לשונית-ברירת-המחדל
+    // היא `בתהליך` (`QuotesPage.jsx`, `useState('in_progress')`), והצעה #6 — נושאת הסכום
+    // הקנוני — **אושרה ב-01/08/2026** ומאז אינה מופיעה שם. הבדיקה חיפשה אותה בלשונית שבה
+    // היא כבר לא יכולה להיות. העוגן עצמו (‏6,319 ₪, שעובר דרך מנוע-התמחור האמיתי) נשמר
+    // כלשונו — רק המסך שבו מסתכלים עליו תוקן.
     await page.goto('/quotes')
+    await page.getByTestId('quotes-tab-all').click()
     await expect(page.getByText(anchors.quotes.knownAmount).first()).toBeVisible()
 
     // בניית-הצעה: שדה-היחס נטען מ-params האמיתי — ריק/שגוי = טעינת-פרמטרים שבורה.
@@ -121,6 +127,21 @@ test.describe('בדיקת-עשן', () => {
       anchors.prices.tiersButton,
     )
     await expect(page.getByTestId('param-vat')).toHaveValue(anchors.prices.vat)
+
+    // דיילות: הסרגל טוען את המודול, ומסך Smart Match לאירוע האמיתי מציג רק מי שעברה
+    // את שער-הפסילה — מועמדת אחת ידועה בפנים, ושתי הנפסלות (בלי-רכב-ורחוקה /
+    // לא-זמינה-בתאריך-האירוע) בחוץ.
+    await expect(page.getByRole('link', { name: anchors.hostesses.sidebarLink })).toBeVisible()
+    await page.goto('/hostesses')
+    await expect(page.getByTestId('overview-table')).toBeVisible()
+    await page
+      .locator('[data-testid^="overview-row-"]', { hasText: anchors.hostesses.eventName })
+      .first()
+      .click()
+    await expect(page.getByTestId('smart-match-page')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByText(anchors.hostesses.availableCandidate).first()).toBeVisible()
+    await expect(page.getByText(anchors.hostesses.excludedNoCar)).toHaveCount(0)
+    await expect(page.getByText(anchors.hostesses.excludedUnavailable)).toHaveCount(0)
 
     // המנגנונים — לא הבטחות: אפס ניסיונות-כתיבה, אפס יעדים חיצוניים, אפס שגיאות-קונסול.
     expect(blockedWrites, 'מסך ניסה לכתוב למסד בזמן קריאה-בלבד').toEqual([])
