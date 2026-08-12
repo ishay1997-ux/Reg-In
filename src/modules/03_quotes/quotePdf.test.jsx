@@ -164,6 +164,30 @@ describe('buildQuoteDocument', () => {
     expect(texts).not.toContain('99,999 ₪')
     expect(texts.join('|')).not.toContain('99999')
   })
+
+  // נתפס בהכנת-הדגמה 12/08/2026: מדרגת-מחיר יכולה לצאת עשרוני (2.5, 3.3...), ועיגול-תצוגה
+  // של מחיר-ליחידה מציג את אותו מספר עגול לשתי מדרגות שונות — במסמך שיוצא ללקוח בפועל.
+  // סה"כ-השורה נשאר מעוגל-לשקל במכוון (זה סכום סופי-לתשלום, לא מחיר-קטלוגי).
+  it('מציג מחיר-ליחידה עשרוני כמות שהוא, ולא מעוגל לשקל שיטעה', () => {
+    const fractional = {
+      ...WORKED_EXAMPLE,
+      lines: [
+        {
+          sku: 'REG-TAG',
+          itemName: 'תג שם רגיל',
+          qty: 220,
+          unitPrice: 2.5,
+          color: null,
+          notes: '',
+        },
+      ],
+    }
+    // collectStrings לבדו אינו מריץ רכיבי-פונקציה (כמו LinesTable) — לכן שורות-הפריטים
+    // עצמן לא נאספות בלעדיו; resolveTree מריץ אותם קודם (ר' הבדיקות למטה, "כיוון-בסיס").
+    const texts = collectStrings(resolveTree(buildQuoteDocument(fractional)))
+    expect(texts).toContain('2.50 ₪')
+    expect(texts).not.toContain('3 ₪')
+  })
 })
 
 // ⚠️ **הבדיקות האלה קיימות כדי להיכשל, לא כדי לעבור.** עד 31/07/2026 היה כאן
