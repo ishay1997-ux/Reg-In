@@ -29,6 +29,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
+import { useConfirm } from '@/components/ConfirmDialog'
 import {
   quoteToPdfModel,
   isQuoteSendable,
@@ -78,6 +79,7 @@ export default function QuoteDocumentDialog({
   canEdit = false,
 }) {
   const toast = useToast()
+  const confirm = useConfirm() // חלון-וידוא משותף (במקום window.confirm) — הגנת שליחה-כפולה
   const { user } = useAuth()
   const [blobUrl, setBlobUrl] = useState('')
   const [blob, setBlob] = useState(null)
@@ -187,7 +189,7 @@ export default function QuoteDocumentDialog({
   //     לחיצה שוב — הלקוח מקבל שני מיילים זהים);
   // (2) אחרי שליחה הכפתור **משנה תווית לְ"שליחה חוזרת"** ועובר לסגנון משני — כלומר הפעולה
   //     הראשית של החלון נגמרה, וכל לחיצה נוספת היא החלטה ולא אינרציה;
-  // (3) חלון-אישור (`window.confirm`) שנפתח **רק** כשההצעה כבר נשלחה בעבר — כדי שהמסלול
+  // (3) חלון-אישור (`useConfirm`, מעוצב — הוחלף מ-window.confirm הגולמי ב-12/08/2026) שנפתח **רק** כשההצעה כבר נשלחה בעבר — כדי שהמסלול
   //     הרגיל יישאר לחיצה אחת, וההגנה תופיע בדיוק במצב שבו יש מה למנוע.
   // ⚠️ **הכפתור נשאר פעיל בכוונה** ולא מושבת: לקוח שמדווח "לא קיבלתי" הוא מקרה אמיתי,
   //    ואילוץ לסגור-ולפתוח את החלון בשבילו הוא חיכוך בלי תמורה — ה-confirm כבר מונע תאונה.
@@ -204,11 +206,25 @@ export default function QuoteDocumentDialog({
 
   async function sendEmail() {
     if (!blob || disabledReason || sending) return
-    if (alreadySent && !window.confirm('ההצעה כבר נשלחה ללקוח. לשלוח שוב?')) return
+    if (alreadySent) {
+      const proceed = await confirm({
+        title: 'שליחה חוזרת',
+        message: 'ההצעה כבר נשלחה ללקוח. לשלוח שוב?',
+        confirmLabel: 'שלח שוב',
+      })
+      if (!proceed) return
+    }
     // (5) **"לא ידוע" מפעיל את ההגנה במקום לכבות אותה.** undefined = השאילתה נכשלה או
     //     שעדיין לא חזרה (לחיצה מהירה אחרי פתיחת החלון — אותו מרוץ בדיוק שנתפס 30/07
     //     במסך הלקוחות). במצב הזה אי-אפשר לדעת אם הלקוח כבר קיבל, ולכן שואלים.
-    if (previousSend === undefined && !window.confirm(SEND_HISTORY_UNKNOWN_CONFIRM)) return
+    if (previousSend === undefined) {
+      const proceed = await confirm({
+        title: 'סטטוס-שליחה לא ידוע',
+        message: SEND_HISTORY_UNKNOWN_CONFIRM,
+        confirmLabel: 'המשך לשליחה',
+      })
+      if (!proceed) return
+    }
 
     setSending(true)
     setSendError('')
