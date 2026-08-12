@@ -632,6 +632,50 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 
 ### 9. 📝 Deviations & Tech-Debt Log
 
+> 🔎 **Four entries added 12/08/2026 by the reverse-direction audit of `PROJECT_MASTER §6`** (`regin-docs-sync`):
+> §6 carried a debt whose statement was missing from *this* guide. Each points at §6 rather than restating it.
+
+- 🚧 מ8 · 🚧 מ11 — **12/08/2026 — this guide says in three places that the email engine "is generic"
+  (§1 read-before-3.5 note · §2 file list · Ledger `LOCAL-8`), and that was an *intent*, not a fact,
+  until 09/08/2026.** The 31/07 code review measured three blockers that made it unusable as-is by
+  another module: a hardcoded `.eq('modules.module_name', 'הצעות מחיר')` + `edit` gate (recruiting ⇒ 403,
+  finance ⇒ view-only), the attachment being **mandatory on both sides**, and the transport living inline
+  in `03_quotes/QuoteDocumentDialog.jsx`. **All three were cleared by module 4's phase 0** — re-verified
+  in code today: `ENTITY_MODULE` + `ENTITY_REQUIRES_ATTACHMENT` maps in `send-email/index.ts`,
+  `requireAttachment` in `buildEmailPayload`, transport extracted to `src/api/email.js`. 🔴 **What M8/M11
+  still owe:** `invoice`/`salary_report` are **deliberately absent** from `ENTITY_MODULE` because
+  `email_log.entity_type`'s CHECK does not know them and a journal-write failure is swallowed — add your
+  value **together with** the migration that widens the CHECK, never before. Full text: `PROJECT_MASTER §6`,
+  the `🚧 מ8 · 🚧 מ11 ← מ3` line on the shared engine.
+
+- 🚧 מ8 · 🚧 מ9 — **12/08/2026 — §4 above records round-G's `product_costs` split ("RLS is row-level, not
+  column-level") but never draws the same conclusion for the *frozen* cost.** `quote_services` carries
+  `closing_unit_cost` **and** `closing_unit_price` ⇒ per-line profitability, and this module's own select
+  policy admits `edit|view` — so a `view`-tier reader querying the DB directly receives the cost, while the
+  sibling data in `product_costs` is gated at `edit`. **Not a live leak today** (the only `view` role on
+  'הצעות מחיר' is finance, which holds `edit` on 'כספים' anyway); it becomes one the moment a role gets
+  `view` here without `edit` there. ⛔ **Not to be "fixed" by hiding a UI column** — enforcement is in the DB.
+  Full text + the trigger condition: `PROJECT_MASTER §6`, the `🚧 מ8 · 🚧 מ9` line opening
+  **`עלות-מוקפאת בשורות-הצעה נקראת ברמת-view`**.
+
+- 🚧 מ6 — **12/08/2026 — the 29/07/2026 10:30 entry below records `listQuotes()` (no parameter, no ceiling,
+  and a nested `quote_services(*)` per row) as an accepted as-built deviation, but carries no `🚧` token,
+  no target module, and no trace of the ruling that followed it.** Ishay ruled **31/07/2026** that the
+  "pull everything and filter in the browser" pattern is **not to be repeated**: a module that pulls a
+  population must filter **in the query**, not after fetching all of it. **M4 discharged its half** —
+  `04_hostesses/api.js` filters server-side, with its one deliberate exception declared in code (all
+  hostesses are loaded on purpose, because the company average `C` is computed over them). **M6 inherits
+  the rest.** Full text: `PROJECT_MASTER §6`, the line opening
+  **`לא לחזור על דפוס "משוך-הכול-וסנן-בדפדפן"`**.
+
+- 🚧 מ10 — **12/08/2026 — the 29/07/2026 14:34 entry below documents the `?inline` data-URI vendoring of
+  `heeboRegular`/`heeboBold` (and `regInLogo`) *only* as the cure for the silent woff/fontkit failure. It is
+  also the single thing standing between M10 and lifting `buildQuoteDocument` to the server.** The function
+  itself is genuinely pure (verified 31/07), but `?inline` is a **Vite** feature and a server environment has
+  no Vite ⇒ those three import lines must be swapped for a server-side asset source (file read / embedded
+  base64). Cheap to do, **discoverable only at lift time** if it is not written down. Full text:
+  `PROJECT_MASTER §6`, the `⚠️ מה שאינו "פשוט להעביר את הקובץ"` sub-bullet under `🚧 מ10 ← מ3`.
+
 **↳ as-built 07/08/2026 — `QuotesPage.jsx`'s two inline stat tiles replaced by the shared
 `@/components/StatTile`. 🔴 This module changed visually, unlike module 2.** Three things moved:
 the value now sits **below** its label (it was above), value size went 22px → 20px, and the pair

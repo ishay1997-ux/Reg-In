@@ -468,6 +468,19 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 
 ## 9. 📝 Deviations & Tech-Debt Log
 
+- 🚧 מ6 — **12/08/2026 — the M6 half of the two deferred derived customer-list filters had no live token
+  in this guide, only a trailing parenthetical.** §1's capability table carries the M8 half as a real row
+  (*"Satisfaction stars in list + satisfaction filter — 🚧 מ8 · present-but-inert"*), but its twin —
+  **`פרויקטים פעילים` / `רדומים`** (no event for X months, derived from `projects`, Ishay 11/07 *"מעוניין
+  כשניתן"*) — appears only inside the 11/07/2026 01:35 entry's closing clause *"🚧 rows registered in §6:
+  derived-filters (מ3/מ6/מ8)"*, with no `🚧 מ6` token of its own. ⚠️ **`grep '🚧 מ6'` on this guide does
+  return a hit — but it is the *project-history* debt (§1), a different item** — so the dormant-filter half
+  was invisible to a module-6 session reading this file. **What M6 owes:** extend `matchesCustomerFilters`
+  (`src/lib/customers.js`) + `CustomersFilterSheet` with the active/dormant predicate once `projects` data
+  and policies exist — **the filter is not built in M2 because there is no data**, not because it was
+  dropped. Full text: `PROJECT_MASTER §6`, the `🚧 מ6 · 🚧 מ8` line opening **`פילטרים נגזרים
+  ברשימת-הלקוחות`**. *(added 12/08/2026 — reverse-direction audit of §6, `regin-docs-sync`.)*
+
 **↳ as-built 10/08/2026 — cross-module fix from Module 4's accessibility pass:
 `CustomersPage.jsx`'s only heading, `<h2>רשימת לקוחות</h2>`, promoted to `<h1>`.** Ishay asked to
 fix an `axe-core` finding surfaced while building/testing module 4's `e2e/accessibility.spec.js`

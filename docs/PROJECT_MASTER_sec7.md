@@ -148,16 +148,16 @@ grep -cE '^[0-9]+\. 🟡' docs/PROJECT_MASTER_sec7.md   # פתוחים
 47. ⚪ `מעקב·DB·מ3/4/8` **📋 רשם תוספות-הסכמה מהכרעות האודיט (07/07/2026) — ריכוז לביצוע במיגרציות עתידיות.** *לא פריט-החלטה — טבלת מעקב לתוספות ה-DB שהוכרעו, כי ישי הדגיש "לתעד היטב כל שינוי DB, בסוף מציגים את הטבלאות החדשות". כל שורה = מיגרציה בעלת-שם עם כותרת-why עברית + עדכון `schema.sql` + שורת-Done ב-`db_roadmap` §10 (פרוטוקול DB; ‏`CHANGELOG` הוקפא 23/07/2026), במודול המצוין — לא עכשיו.*
     | טבלה | עמודות חדשות | מקור-הכרעה | מודול-ביצוע |
     |---|---|---|---|
-    | `hostesses` | `address` (טקסט), `lat`, `lng` (קואורדינטות) | §7.6, §7.14 | 4 |
+    | `hostesses` | `address` (טקסט), `lat`, `lng` (קואורדינטות) ✅ **בוצע בפועל — `20260809122536_module4_hostesses_surrogate_key_and_columns.sql`** *(נמדד 12/08/2026 ב-`regin-docs-sync`; השורה תיארה את השינוי כעתידי)* | §7.6, §7.14 | 4 |
     | `projects` | ~~זמני התחלה/סיום לאירוע~~ ✅ **עמודות-הזמן (`final_start_time`/`final_end_time`) הוקדמו למ3** (הכרעת-ישי 15/07/2026, בלופרינט-מ3: נזרעות מההצעה ב-RPC-ההמרה וניתנות-לעריכה על הפרויקט — ההצעה נעולה §7.50); **נותר למ4: סיווג "קצר/ארוך" בלבד** | §7.29, §7.45, §7.43 (קשור §7.30) | 3 (זמנים) · 4 (סיווג) |
     | `projects` | `event_name` + `customer_id` (snapshot-זהות) | §7.76 (היקף הוכרע 15/07/2026) | 3 |
     | `projects` | `cancelled_at` (timestamptz), `cancellation_reason` enum(`standard`,`force_majeure`) | §7.16(ב) | 4/8 |
-    | `assignments` | `invite_token`, `invite_sent_at` (+פקיעה) | §7.45 | 4 |
+    | `assignments` | `invite_token`, `invite_sent_at` (+פקיעה) ✅ **בוצע בפועל — `20260809122536_module4_hostesses_surrogate_key_and_columns.sql`** *(העמודות + `unique` על הטוקן; שלושת תנאי-הפקיעה נאכפים ב-`respond_to_shift_invite`, מיגרציה `20260809134237`. נמדד 12/08/2026 ב-`regin-docs-sync`; השורה תיארה את השינוי כעתידי)* | §7.45 | 4 |
     | `assignments` | `attendance_status`, `lateness_level`, `no_show_reason` | §7.16(א) | 4/8 |
     | `quote_services` | `closing_unit_cost` (הקפאת עלות) | §7.28 | 3 |
     | `params` / `roles` / `modules` / `salary_reports` | אילוצי-ייחודיות | §7.40 | 2/3/8 |
     | `customers` | `customer_id` surrogate bigint PK + `company_number`(ח"פ) unique not null | §7.64 | 2 |
-    | `hostesses` | `id_number`(ת"ז) → surrogate + ת"ז unique | §7.64 | 4 |
+    | `hostesses` | `id_number`(ת"ז) → surrogate + ת"ז unique ✅ **בוצע בפועל — `20260809122536_module4_hostesses_surrogate_key_and_columns.sql`** *(`hostess_id bigint generated always as identity primary key` + `hostesses_id_number_key unique (id_number)`. נמדד 12/08/2026 ב-`regin-docs-sync`; השורה תיארה את השינוי כעתידי)* | §7.64 | 4 |
     סטטוס: **מעקב פתוח** עד שכל השורות בוצעו במיגרציות.
     **התצוגה המבצעית המאוחדת** של רשם זה + כל פריטי-§7 הסכמתיים + חובות-היומנים + היגיינת-DB: ‏`docs/db_roadmap.md` (נוצר 08/07/2026; נקרא לפני כל תכנון מיגרציה — ה-SSOT להחלטות נשאר כאן, ב-§7).
 

@@ -201,6 +201,19 @@ Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
 
 ## 9. 📝 Deviations & Tech-Debt Log
 
+- 🚧 מ12 — 🔴 **12/08/2026 — §7.24's "the 5 test-user passwords will NOT be rotated" is SUPERSEDED, and
+  this guide never recorded the reversal.** That ruling (06/07, §3 Ledger + §4 "accepted limitations"
+  + the 06/07 backlog line) rested explicitly on *"internal closed system"* — **and the system was
+  deployed to Vercel on 31/07/2026 and is live on the internet**, which broke the premise. Ishay ruled
+  the same day: **the passwords ARE rotated — before submission, not immediately**, because rotating
+  now breaks the five `E2E_*` pairs in `.env.local`, the whole E2E suite and `npm run smoke`. Full
+  reasoning, the early-rotation trigger and the rotation-day checklist live in **`PROJECT_MASTER §6`,
+  the `🚧 מ12` line opening `רוטציית 5 סיסמאות משתמשי-הבדיקה`** — read it there, not here. ⚠️ **The
+  deadline it points at moved:** submission is **01/10/2026** (closing conference) / 20/10 (end);
+  `19/09` was cancelled on 12/08/2026 (`docs/guides/00_roadmap.md §3`). ⛔ **Do not rewrite the dated
+  06/07 records above** — they are correct as history; this entry is what makes them findable as
+  superseded. *(added 12/08/2026 — reverse-direction audit of §6, `regin-docs-sync`.)*
+
 - 🔧 **12/08/2026 — a one-line accessibility fix landed here from module 4's closing audit** *(cross-module; the module itself stays closed)*. `PricesManagementPage.jsx`'s product-status `SelectTrigger` had **no `aria-label`**, so its accessible name came only from the rendered `<SelectValue />` — and until that value paints, the button is nameless. `axe` reported `button-name` on **11 nodes = the 11 products**. 🔬 **Why it took two attempts to diagnose:** it **passes when its spec runs alone** and fails under the parallel full suite, which reads exactly like a timing race — and the first fix (widening `waitForReady` in `e2e/accessibility.spec.js` to `networkidle` + `h1`) **did not cure it**. That refutation is what proved it is a real missing name rather than a scan that arrives too early. **The neighbouring button in the same row already carried an `aria-label`; this one was the outlier.** ⚠️ **Do not "clean up" this attribute** — without it the gate goes red again, intermittently, in a way that reads as flakiness. *(Ishay ruled the fix at module 4's close, §6b floor rule.)*
 
 - 31/07/2026 09:30 — 🟡 **OPEN FLAKE (not fixed, not caused by the change that found it):**
