@@ -12,7 +12,8 @@
  * מציג מצב שלא יכול להיווצר במציאות, ומבזבזים שעה על באג שקיים רק בדאטה עצמה.
  * כאן הנתונים נוצרים בדיוק כמו שנוצרים נתוני-אמת.
  *
- * הפיך לחלוטין: `--reset` מוחק את כל מה שהסקריפט יצר (מזוהה לפי DEMO_TAG) ויוצא.
+ * הפיך לחלוטין: `--reset` מוחק את כל מה שהסקריפט יצר (מזוהה לפי company_number/ת"ז קבועים,
+ * לא לפי תג בשם — ר' ההערה ליד CUSTOMERS) ויוצא.
  *
  * שימוש:
  *   node scripts/demo-seed.mjs           יצירה (מוחק קודם דאטת-הדגמה קיימת)
@@ -49,9 +50,9 @@ if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY || !E2E_CEO_EMAIL || !E2E_CEO_
   process.exit(1)
 }
 
-// סימון-זיהוי: כל לקוח שהסקריפט יוצר נושא אותו בהערה, וכך המחיקה מוצאת בדיוק את שלו
-// ולעולם לא נוגעת בלקוח אמיתי שהוזן ידנית.
-const DEMO_TAG = '[דמו]'
+// סימון-זיהוי: company_number קבוע לכל לקוח (ר' CUSTOMERS למטה) — לא תג בשם — כך המחיקה
+// מוצאת בדיוק את שלו ולעולם לא נוגעת בלקוח אמיתי שהוזן ידנית (אין התנגשות: ח"פ אמיתי
+// לעולם לא יתאים בול לאחד מארבעת המספרים הקבועים כאן).
 
 // שמות גנריים אך אמינים (הכרעת-ישי 29/07) — לא לקוחות אמיתיים.
 const CUSTOMERS = [
@@ -61,7 +62,7 @@ const CUSTOMERS = [
     customer_type: 'private_company',
     contact_name: 'רון גל',
     phone: '052-4471180',
-    email: 'ron@meditech-demo.co.il',
+    email: 'ron@meditech-sol.co.il',
     discount_percent: 5,
   },
   {
@@ -70,7 +71,7 @@ const CUSTOMERS = [
     customer_type: 'government',
     contact_name: 'שרית מזרחי',
     phone: '054-8123390',
-    email: 'sarit@hadera-demo.muni.il',
+    email: 'sarit@hadera-city.muni.il',
     discount_percent: 0,
   },
   {
@@ -79,7 +80,7 @@ const CUSTOMERS = [
     customer_type: 'private_company',
     contact_name: 'טל אבידן',
     phone: '053-7712045',
-    email: 'tal@hitechgroup-demo.co.il',
+    email: 'tal@hitechgroup.co.il',
     discount_percent: 12,
   },
   {
@@ -88,7 +89,7 @@ const CUSTOMERS = [
     customer_type: 'production_company',
     contact_name: 'מאיה רון',
     phone: '050-9903318',
-    email: 'maya@hanasi-demo.co.il',
+    email: 'maya@hanasi-productions.co.il',
     discount_percent: 3,
   },
 ]
@@ -255,7 +256,7 @@ const HOSTESSES = [
     id_number: '44711521',
     full_name: 'מאיה כהן',
     phone: '050-2217731',
-    email: 'maya.cohen@regin-demo.co.il',
+    email: 'maya.cohen@regin-hostesses.co.il',
     city: 'הרצליה',
     address: 'סוקולוב 14, הרצליה',
     hourly_rate: 45,
@@ -270,7 +271,7 @@ const HOSTESSES = [
     id_number: '44711539',
     full_name: 'שירי לוגסי',
     phone: '052-8834410',
-    email: 'shiri.lugassi@regin-demo.co.il',
+    email: 'shiri.lugassi@regin-hostesses.co.il',
     city: 'נתניה',
     address: 'הרצל 22, נתניה',
     hourly_rate: 48,
@@ -285,7 +286,7 @@ const HOSTESSES = [
     id_number: '44711547',
     full_name: 'טל ברקאי',
     phone: '054-3395512',
-    email: 'tal.barkai@regin-demo.co.il',
+    email: 'tal.barkai@regin-hostesses.co.il',
     city: 'ירושלים',
     address: 'יפו 88, ירושלים',
     hourly_rate: 46,
@@ -302,7 +303,7 @@ const HOSTESSES = [
     id_number: '44711554',
     full_name: 'קרן אשכנזי',
     phone: '053-6621087',
-    email: 'keren.ashkenazi@regin-demo.co.il',
+    email: 'keren.ashkenazi@regin-hostesses.co.il',
     city: 'חיפה',
     address: 'העצמאות 40, חיפה',
     hourly_rate: 47,
@@ -319,7 +320,7 @@ const HOSTESSES = [
     id_number: '44711562',
     full_name: 'ליאת רזניק',
     phone: '058-7743295',
-    email: 'liat.reznik@regin-demo.co.il',
+    email: 'liat.reznik@regin-hostesses.co.il',
     city: 'רעננה',
     address: 'אחוזה 61, רעננה',
     hourly_rate: 44,
@@ -345,13 +346,17 @@ if (authError) {
   process.exit(1)
 }
 
-// מחיקה: לקוחות-הדמו בלבד. quotes → quote_services הוא cascade; quotes עצמן חייבות
-// מחיקה מפורשת לפני הלקוח (FK), ופרויקטים שנוצרו מאישור נמחקים אף הם.
+// מחיקה: לקוחות-הדמו בלבד — מזוהים לפי company_number הקבוע ברשימת CUSTOMERS, בדיוק
+// כמו שהדיילות מזוהות לפי ת"ז קבוע (resetHostesses למטה). 🚫 בלי תג-טקסט בשם החברה —
+// אותו כלל בדיוק, כדי שהשם שמוצג בהדגמה יהיה נקי (הכרעת-ישי). quotes → quote_services
+// הוא cascade; quotes עצמן חייבות מחיקה מפורשת לפני הלקוח (FK), ופרויקטים שנוצרו
+// מאישור נמחקים אף הם.
 async function reset() {
+  const companyNumbers = CUSTOMERS.map((c) => c.company_number)
   const { data: demoCustomers } = await supabase
     .from('customers')
     .select('customer_id')
-    .like('company_name', `%${DEMO_TAG}%`)
+    .in('company_number', companyNumbers)
   const ids = (demoCustomers ?? []).map((c) => c.customer_id)
   if (ids.length === 0) return 0
 
@@ -457,7 +462,7 @@ const customerIds = []
 for (const c of CUSTOMERS) {
   const { data, error } = await supabase
     .from('customers')
-    .insert({ ...c, company_name: `${c.company_name} ${DEMO_TAG}`, status: 'active' })
+    .insert({ ...c, status: 'active' })
     .select()
     .single()
   if (error) {

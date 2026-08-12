@@ -26,7 +26,7 @@
 ✅ Sync-verified: gate green end-to-end (31/07/2026 10:47 — gate exit 0 · 353 unit · E2E 24/24, 0 skips)
 ✅ אומת-סנכרון: 08/08/2026 16:0X (regin-docs-sync — 0 קונפליקטים פתוחים. §7 פוצל לקובץ משלו ואומת זהה-תו-בתו · 8 טענות מיושנות תוקנו · 91 פריטי-§7 אומתו שלמים. ⚠️ **היקף: קבצים בלבד — ה-MCP של Supabase לא מזוהה ⇒ לא נבדק RLS/policies/`params` מול המסד החי, ו-`db_roadmap.md` לא עבר אודיט מלא בריצה הזו.**)
 
-**Where we stand:** Modules **1** (users/permissions), **2** (customers) and **3** (quotes) are **closed and merged to `dev`** — 1+2 also promoted to `main` (tag `milestone-1`); 3 carries `milestone-2` / PR #13 (6,319 ₪ exact, live). **Module 4 (דיילות + Smart Match) is CLOSED AND MERGED to `dev`** — PR #24, merge commit `2b9c277` (re-derived this run: `gh pr view 24` → `state: MERGED`; `git merge-base --is-ancestor ishay/module-4-hostesses origin/dev` → exit 0). Closing audit ran 12/08/2026, verdict `[YES]`, Ishay typed the DoD echo. **`dev` is now 164 commits ahead of `main` — module 4 is NOT on `main`.** Next: the phone test of the public page (now possible — Vercel rebuilt `dev`), then module 6+5. Its micro-guide was compacted at the close (1,773 → ~900 lines; full copy in `docs/archive/module-4_pre-compaction_2026-08-12.md`), findings archived at `docs/archive/close-findings-module-4.md`. **Next module: 6+5 (projects + logistics), a combined phase.** Latest measured gates (12/08/2026, module-4 close): `npm run gate` exit 0 · **751 unit** · **`test:e2e` 117** · `smoke` exit 0 · **22 tables**, live DB matches `docs/schema.sql`. ⚠️ **Known coverage boundary, stated deliberately:** no E2E presses Save in the hostess form and none fires a row-menu action, and `src/modules/04_hostesses/api.js` has no automated coverage of any kind — the write path was proven once by hand (09/08), not pinned. ⚠️ **This file's Session Log narrative measures 1,606 lines against its ~180-line trigger** (compacted 12/08/2026 from 3,980: all entries 08/08/2026 and earlier folded into two new weekly buckets, harvest-verified against §6/§7/db_roadmap first; entries 09/08–12/08 deliberately left untouched, still inside the 3-day freshness window) — remaining debt, revisit once those age past 3 days.
+**Where we stand:** Modules **1** (users/permissions), **2** (customers) and **3** (quotes) are **closed and merged to `dev`** — 1+2 also promoted to `main` (tag `milestone-1`); 3 carries `milestone-2` / PR #13 (6,319 ₪ exact, live). **Module 4 (דיילות + Smart Match) is CLOSED AND MERGED to `dev`** — PR #24, merge commit `2b9c277` (re-derived this run: `gh pr view 24` → `state: MERGED`; `git merge-base --is-ancestor ishay/module-4-hostesses origin/dev` → exit 0). Closing audit ran 12/08/2026, verdict `[YES]`, Ishay typed the DoD echo. **Module 4 is also on `main` and LIVE in production** — PR #26 (`dev`→`main`, 166 commits, merge `6a7bde9`); Vercel's production deployment is `6a7bde9` / branch `main` / Ready. 🔴 **The fact that made this urgent, measured not assumed: `main` is Vercel's production branch** — every Production deployment in the dashboard is from `main`, and the live one had been `b095623` from **07/08**, i.e. the live site was serving a module-4-less system while `dev` was 166 commits ahead. **This corrects an assumption that was written into STATUS earlier** ("the moment module 4 merges, Vercel rebuilds and the public page goes up") — true only for a merge to `main`. Next: the phone test of the public page (**unblocked for the first time by this release**), then module 6+5. Its micro-guide was compacted at the close (1,773 → ~900 lines; full copy in `docs/archive/module-4_pre-compaction_2026-08-12.md`), findings archived at `docs/archive/close-findings-module-4.md`. **Next module: 6+5 (projects + logistics), a combined phase.** Latest measured gates (12/08/2026, module-4 close): `npm run gate` exit 0 · **751 unit** · **`test:e2e` 117** · `smoke` exit 0 · **22 tables**, live DB matches `docs/schema.sql`. ⚠️ **Known coverage boundary, stated deliberately:** no E2E presses Save in the hostess form and none fires a row-menu action, and `src/modules/04_hostesses/api.js` has no automated coverage of any kind — the write path was proven once by hand (09/08), not pinned. ⚠️ **This file's Session Log narrative measures 1,606 lines against its ~180-line trigger** (compacted 12/08/2026 from 3,980: all entries 08/08/2026 and earlier folded into two new weekly buckets, harvest-verified against §6/§7/db_roadmap first; entries 09/08–12/08 deliberately left untouched, still inside the 3-day freshness window) — remaining debt, revisit once those age past 3 days.
 
 **Hook mechanism (29/07/2026, iron rule 16):** `check-docs-updated.sh`'s module-guide check now attributes per-file to the session that actually touched it (`protect-frozen-files.sh`'s marker stores real relative paths, not a bare flag) — see tonight's Session Log entry for why and how it was verified. Two-sessions-on-one-branch is now *survivable without cross-blaming*; it does **not** prevent two sessions building the same feature concurrently (a separate, deferred idea: per-step ownership claim).
 
@@ -49,6 +49,55 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 12/08/2026 ~18:15 — advisor shift: 28/08 demo-process recommendation, module 5/6 guides fixed to Discovery format, module-6 Discovery stage 1-a opened
+
+**Two tracks Ishay asked for in one shift: get ready for 28/08, and run Discovery for modules 5+6 in parallel.**
+
+**28/08 recommendation, approved:** demo the customer → quote → approve (creates project) → Smart
+Match assigns hostess → invite sent → hostess confirms via the public link, **from a phone, live**.
+Rationale: it's the only slice that's merged, live on `main`, and already UAT-proven (12/08, two
+real emails landed in Ishay's inbox) — no need to wait on modules 5/6. Landmine restated: the invite
+link is built from `window.location.origin` (`src/lib/shiftEmails.js:24`) — rehearse and demo only
+from the live site, never localhost.
+
+**Guides fixed (the 08/08 deferred ⏸️ item — "update modules 5–12 guides before pasting from them,
+deferred because module 5 was weeks away" — no longer holds):**
+`docs/guides/modules/module_05_logistics.md` and `module_06_projects.md` now open with a "0)
+Discovery" paste-block (verbatim from `module_playbook.md`'s canonical trigger) before the
+blueprint-opening prompt, matching module 4's now-established pattern. The ambiguous `§5.8-5.9` /
+`§5.6-5.7` notation was disambiguated to `PROJECT_MASTER §N ⇒ C5 §N` — verified against the live
+C5 file (`grep '^#{2,4} 5\.[0-9]'`): the content was correct, only the citation format was ambiguous
+enough to misread as raw C5 chapter numbers (C5's own chapters only run 5.1–5.8, so a bare "§5.9"
+looks broken even though it's fine as PROJECT_MASTER's own §5.9).
+
+**Module 6 Discovery, stage 1-א (read + map) — presented to Ishay, approved.** Read C5 §5.5.1 +
+§5.5.7 (lifecycle + control/scope-change/closing processes) directly, not via agent — seven
+PROJECT_MASTER §7 items in full, `schema.sql`'s `projects`/`assignments`/`logistics` tables, and
+`db_roadmap.md`'s `🚧 מ6` rows. Findings worth carrying forward: `projects` table + 8-status
+constraint already exist and module 3 already writes a full row on quote approval — no DB build
+needed there, only the advance-trigger and screens. Two debts owed *to* M6 from M4
+(`customer_hostess_preference` write — flips the currently-disabled Smart-Match reliability
+component; and a reverse-visibility gap for "who's assigned" on the project card). ⚠️ **One debt
+carries a real deadline collision: `🚧 מ6 ← מ3` (E2E fixture rot) expires ~28/08 — the same date as
+the interim demo.** Model note: running on Sonnet; the discovery prompt itself recommends Opus/high
+effort for the judgment-heavy stages (process-by-process, stage 1/ג) — flagged to Ishay, not yet
+switched.
+
+**Near-miss on rule 16, worth recording because the detection mechanism is the reusable part.**
+Mid-shift, `git status` showed `HEAD` on `ishay/docs-permissions-crossmodule` — a branch this
+session never checked out. `git reflog` showed an external checkout+commit (`060ca7f`, 17:59) that
+happened while this session was working, with no remote copy of that branch (local-only). Rather
+than guess, queried `list_sessions`/`get_session`: session "ארגון פרויקטים" (Opus, `isRunning:
+false`, last activity 18:00 — ~80s after the commit) matches in both time and topic. Ishay confirmed
+no session is currently active. Checked out back to `ishay/prep-demo-m5-m6-discovery` cleanly — the
+two guide edits were uncommitted working-tree changes, so they carried over with zero conflict.
+**Nothing was committed while the branch was ambiguous.**
+
+**Not done yet, both Ishay's:** stage 1-ב/ג of module-6 Discovery (process-by-process, 2–3 more
+days — not a single round); the "how do we fill the system with realistic demo data before 28/08"
+question, opened this same shift and still being talked through.
+
+
 > ⚠️ **Concurrent-write note (rule 16), 10/08/2026 ~12:36:** the entry below this one (wide
 > accessibility sweep) was authored while another session was actively appending the
 > "Module 4, Phase 3 CLOSED" entry that now sits right under it. Inserted additively, re-reading the
@@ -68,6 +117,10 @@
 🔴 **The governance event worth remembering, because it was a deliberate rule break and not an accident.** `module-close/template.md` carries Ishay's dated ruling of **24/07/2026**: *"the merge decision is his alone, never Claude's"* — and `regin-pr-gate` independently forbids `gh pr create`. His instruction on 12/08 contradicted both. **Handled by iron rule 1's contradiction protocol, case ② (he ruled twice, differently): both rulings were quoted back to him with their dates, and he re-affirmed** (*"מזג"*). ⚠️ **And the process failure on my side, recorded because it is the reusable part:** he had asked me to *reduce* his load, and I answered with a two-ruling analysis — he replied *"אני מסתבך תעזור לי מה ללחוץ"*. **A contradiction still must be surfaced, but its presentation must obey the same batching discipline as everything else: recommendation first, one word to answer.** The analysis was right; its shape was wrong.
 
 ⚠️ **Boundary stated plainly: `dev` is now 164 commits ahead of `main`.** Module 4 is on `dev` only. Promotion to `main` is a separate, later, human-initiated event.
+
+**Then, same session, Ishay asked: *"בגלל המצגת ב28 נראלי נעלה למיין היום לא? מה עוד צריך לעשות לפני?"* — and the answer turned out to be stronger than his hunch.** Checked in the Vercel dashboard rather than assumed: **every Production deployment is from `main`**, the live one being `b095623` from 07/08 ⇒ the live site had no module 4 at all, and the "open the public page from a phone" acceptance item was not merely pending but **impossible**. Pre-flight before the release, all measured: **no new env vars** (swept all of `src/` and `supabase/functions/` — module 4 reuses the `VITE_SUPABASE_*` pair already in production since 31/07; this was the likeliest way to break the deploy and it was absent) · `gate` exit 0 · CI green on both constituent PRs · `origin/main...origin/dev` → `0 166` (clean). Shipped as **PR #25** (docs into `dev` first, so `main` would not receive a `STATUS.md` claiming module 4 "awaits merge" while it was live there) then **PR #26** (`dev`→`main`, merge `6a7bde9`). ⚠️ **Demo mine worth repeating: the hostess link is built from `window.location.origin`** (`src/lib/shiftEmails.js:24`) — an invite sent from a dev environment produces a dead link; **send from the live site.** 📌 **Not done, Ishay's call: no milestone tag.** `00_roadmap §4` treats every `main` merge as a tagged milestone (`milestone-1`, `milestone-2`), but the **28/08 interim presentation has no milestone row** — it entered the schedule on 12/08, after that table was written.
+
+⚠️ **A sequencing mistake of mine, recorded because the fix is the reusable part.** Ishay asked for a working branch for demo-prep + the module 5/6 spec; I created `ishay/prep-demo-m5-m6-discovery` — **and then used that same branch to carry the post-merge doc commit, and merged it.** By iron rule 10 a merged branch is dead ⇒ **his brand-new working branch was dead before he ever touched it.** Fixed by fast-forwarding it to the new `origin/dev` tip, which makes it indistinguishable from a freshly-cut branch. 🔑 **And the detail that matters for the next reader: a fresh branch off `dev` REPORTS as "merged" under `merge-base --is-ancestor`** — exactly the false positive `_shared/discipline.md` warns about; the discriminator is `git log origin/dev..HEAD` being empty. ⇒ **Don't borrow someone's working branch for an errand — cut a throwaway.**
 
 📌 **Left deliberately undone, both Ishay's call:** the merged branch `ishay/module-4-hostesses` still exists on origin (offered, not executed — rule 10 step 4), and the acceptance item *"open the public shift-approval page from a phone over the internet"* is **now unblocked for the first time** (the route only reached the live site via this merge; Vercel rebuilds `dev`).
 
