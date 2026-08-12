@@ -56,7 +56,7 @@ folder is a read-record of what was applied — not a restore script.** The trad
 explicitly and accepted: rebuilding a database from scratch would be manual work. The one-time repair
 (registering the missing rows + aligning filenames) was **rejected** — the very next MCP apply
 re-opens the gap, so the repair only holds if everything moves to the CLI, a process change nobody
-planned and which a 19/09-deadline academic project does not justify.
+planned and which a deadline-bound academic project does not justify. *(This sentence said "a `19/09`-deadline project"; that date was cancelled by Ishay's ruling 12/08/2026 — the schedule is now 28/08 interim · 01/10 conference · 20/10 end, `docs/guides/00_roadmap.md §3`. The reasoning is unaffected; only the date it named.)*
 ⚠️ **Still in full force, unchanged:** append-only (a committed migration is history; fix forward
 only) · the typed-echo gate before every apply · `docs/schema.sql` refreshed after every apply.
 

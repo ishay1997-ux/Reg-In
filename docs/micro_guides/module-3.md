@@ -750,7 +750,7 @@ mandatory-shared (the mechanical `gate` check for it is recommended but **not bu
     itself measured wrong. 🔑 **And module 4 widened the rule:** a test failed on 12/08 with no code
     change because it had pinned a live **count**, not an id ⇒ **any live-derived number is a fixture.**
   · 🚧 מ4 — the LOG compaction: measured at 1,141 lines, deliberately not executed, see (e).
-    ⚠️ **STILL OPEN, and the number rotted: re-measured 12/08/2026 at module 4's close ⇒ 3,457 lines**
+    ⚠️ **STILL OPEN, and the number rotted: re-measured 12/08/2026 at module 4's close ⇒ 1,608 *(re-measured 12/08/2026 after the `bf5b3fc` compaction; this line said 3,457 and went stale the same day)* lines**
     against the file's own ≤150 target. Deliberately not executed again (`module-close §2b` escape
     hatch — a compaction that cannot be finished in one session is worse than none); the §6 line now
     carries the new number and a dedicated session is recommended.
