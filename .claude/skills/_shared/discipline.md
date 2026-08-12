@@ -87,6 +87,15 @@ never after guessing.**
   apart, just in `db_roadmap.md`'s own Hebrew phrasing ("ששת הסטטוסים", "העדפת-לקוח"). Caught only by
   reading the file, not by re-running the same `grep`. ⇒ Before reporting an absence, search the
   TARGET file's own vocabulary — words already sitting in it — not the vocabulary you arrived with.)*
+- 🔴 **And an absence claim from a CAPPED search is not an absence claim.** Truncating your own
+  output — `head -N`, a result limit, reading only the first screen of a long match list — produces
+  the identical false *"it does not exist"*, except here the repo is innocent and **the tool did it
+  to you.** *(Anchor: a finding was published off a search deliberately cut to three results — **the
+  line was the fourth.** It was the fourth false-absence of that same day; the other three came from
+  the source's phrasing, this one came purely from the harness.)* ⇒ **a search that DECIDES something
+  runs uncapped**, and a capped one is reported as "top N of an unknown total", never as zero.
+  *(Restored 12/08/2026 by the prune audit — deleted in the 08/08 STATUS prune, found nowhere else in
+  the repo; the bullet above covers the wrong-vocabulary half of this failure, not the truncation half.)*
 - **Never hand a checker an expected number — only a measurement method.**
 - **A fix is not done until you have checked where else the same defect lives.**
 - 🔴 **When you RELOCATE an instruction — pruning a file, splitting a doc, moving a rule to where its
