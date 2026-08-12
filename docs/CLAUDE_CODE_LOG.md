@@ -49,7 +49,54 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
-### 12/08/2026 ~19:00–20:50 — live demo rehearsal caught a real production regression in quote approval; fixed, verified end-to-end, plus two UI fixes shipped to `main`
+### 12/08/2026 ~21:00–21:30 — free-rein systematic sweep after the regression fix (Ishay away ~1h); one self-caused artifact cleaned up, one pre-existing display bug found and left open, skill-handoff brief written
+
+**Scope, explicitly fenced:** free rein was granted for "go through what you can while I'm gone,
+maybe find things I missed" — read-only exploration plus cleanup of anything I myself had caused;
+no product decisions made unilaterally.
+
+**Systematic check, extending the earlier regression fix:** pulled `pg_get_functiondef` for all
+15 live functions in `public` and cross-referenced every column they touch against
+`information_schema.columns` for the tables involved — zero other instances of the
+dropped-column bug class. Also grepped migration history for every `drop column` (found one
+false alarm — `quotes.estimated_hours` was dropped and re-added as a GENERATED column in the same
+migration, not a gap) and swept `src/` for any stale `products.cost` references (none — the one
+consumer, `catalog.js`'s `flattenProductCost`, already reads `product_costs` correctly). Checked
+security advisors — no new findings beyond the known, already-accepted baseline.
+
+**Found and fixed (self-caused):** my earlier attempt to revert the rehearsal's approval on quote
+#9 (`docs/CLAUDE_CODE_LOG.md`, previous entry) reported success but had silently failed — `projects`
+has no write policy for regular authenticated roles (only the `SECURITY DEFINER` approve RPC can
+write to it), so my `.delete()` call was silently filtered by RLS and returned an empty, error-free
+result. Textbook instance of the exact trap `src/CLAUDE.md` already documents for
+INSERT/UPDATE ("`{data:null, error:null}` looks like success") — it applies to DELETE too, and I
+walked into it myself. Caught by actually looking at the live `/hostesses` screen rather than
+trusting the earlier script's own report. Confirmed via direct query (`project_id=10` still
+existed, 2 `logistics` rows, 0 `assignments` — safe), then removed via `execute_sql` (an explicit,
+narrow exception to the "execute_sql is read/verify only" rule — justified here because it was
+cleanup of my own erroneous artifact, zero product-data touched, and there was no existing RPC
+path for it). Verified gone after.
+
+**Found, NOT fixed — left for Ishay:** the same live screen showed `"מדיטק פתרונות בע"מ [דמו]"` —
+not the customer record itself (already fixed earlier today), but a **frozen snapshot**:
+`projects.customer_name` is captured at approval time and never updates retroactively. Three
+projects (#3, #7, **#8**) carry the pre-fix name. #8 matters most — its `final_event_date` is
+22/08, the same day as the demo. Deliberately not fixed solo: same RLS protection as above, but
+here on *real* project data rather than my own artifact — a materially different risk, and the fix
+method (bypassing the write-protection) deserves his sign-off rather than a second silent
+exception. Flagged to him in chat and in `STATUS.md`'s banner with a clear recommendation
+(a small dedicated `SECURITY DEFINER` fix function, mirroring `set_project_coordinates`, rather
+than another ad-hoc `execute_sql` write) — his call when he's back.
+
+**Skill-handoff brief written, per his explicit request** (background + recommendations + open
+questions for a fresh Discovery-type session to design a "synthetic monitoring" skill/routine with
+him — the idea he proposed after watching the regression get caught by a live click that no
+existing check could have performed): `docs/plans/synthetic-monitoring-skill-brief.md`. Followed
+`_shared/writing-prompts.md`'s skeleton — named the session type (Discovery/co-design, not build),
+led with the one top mine (don't rebuild this as network-intercepted E2E — that is structurally
+why E2E couldn't catch the regression in the first place), cited what already exists (the four
+`regin-*` routines and exactly what each does not cover) so the new session doesn't duplicate, and
+separated Ishay's own quoted recommendations from mine (marked, not decided).
 
 **What happened, in order.** Continuing the same shift's demo prep: fixed quote #9's data (tag-free
 customer names/emails, correct qty/price/date — see previous entry), then actually rehearsed the
