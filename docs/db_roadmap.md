@@ -343,8 +343,13 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
-- ⏳ 12/08/2026 — migration `20260812215545_refresh_stale_project_customer_name_snapshots.sql`
-  **written, awaiting typed-echo.** Data-consistency backfill (not a new feature, not schema):
+- ✅ 12/08/2026 — migration `20260812215545_refresh_stale_project_customer_name_snapshots.sql`
+  **APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed
+  `refresh_stale_project_customer_name_snapshots`). **Verified after, twice:** direct query shows
+  all three projects (#3, #7, #8) now read `"מדיטק פתרונות בע\"מ"` with no trailing tag · re-loaded
+  the live module-4 tracking screen and confirmed visually — no `[דמו]` anywhere, and the earlier
+  stray project (#10, cleaned up separately this session) stays gone. Data-consistency backfill
+  (not a new feature, not schema):
   `projects.customer_name` is a snapshot written once at approval time by
   `approve_quote_and_create_project` and never updates retroactively. Three projects (#3, #7,
   **#8** — #8 shares 22/08 with the demo) still carried the pre-fix customer name
