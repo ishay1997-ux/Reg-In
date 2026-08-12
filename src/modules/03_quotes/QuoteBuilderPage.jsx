@@ -11,6 +11,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowRight, Eye } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
+import { useConfirm } from '@/components/ConfirmDialog'
 import LoadingOrError from '@/components/LoadingOrError'
 import LtrFieldGroup from '@/components/LtrFieldGroup'
 import { Button } from '@/components/ui/button'
@@ -108,6 +109,7 @@ export default function QuoteBuilderPage() {
   // הוא אובייקט חדש בכל שינוי-כתובת — והיה גורם לטעינה מחדש של הלקוחות והקטלוג לחינם.
   const preselectCustomerId = searchParams.get('customerId')
   const toast = useToast()
+  const confirm = useConfirm() // חלון-וידוא משותף (במקום window.confirm) — "עדכן ושלח" בלי שינוי
   const { permissions } = useAuth()
   const canEdit = permissions['הצעות מחיר'] === 'edit'
   const isEditMode = Boolean(quoteId)
@@ -318,7 +320,12 @@ export default function QuoteBuilderPage() {
       isEditMode &&
       !hasQuoteChanged(form, lines, initialSnapshot?.form, initialSnapshot?.lines)
     ) {
-      if (!window.confirm(NO_CHANGES_SEND_CONFIRM)) return
+      const proceed = await confirm({
+        title: 'שליחה בלי שינוי',
+        message: NO_CHANGES_SEND_CONFIRM,
+        confirmLabel: 'המשך לשליחה',
+      })
+      if (!proceed) return
       // בלי `saveQuoteEdit` — וזו כל הנקודה: אין כתיבה, ולכן `updated_at` והתפוגה נשמרים.
       // השורה השמורה כבר בידינו מהטעינה, ומכיוון שלא השתנה דבר היא עדיין מייצגת את המסד.
       setSendQuote({ ...savedQuote, customers: selectedCustomer })
