@@ -49,6 +49,73 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 12/08/2026 ~19:00–20:50 — live demo rehearsal caught a real production regression in quote approval; fixed, verified end-to-end, plus two UI fixes shipped to `main`
+
+**What happened, in order.** Continuing the same shift's demo prep: fixed quote #9's data (tag-free
+customer names/emails, correct qty/price/date — see previous entry), then actually rehearsed the
+live flow in Ishay's real Chrome against production. Approving quote #9 failed. Diagnosed via the
+RPC directly (not the browser network panel, which doesn't expose response bodies through the tools
+available this session): `42703 column pr.cost does not exist`.
+
+**Root cause, confirmed via `pg_get_functiondef` against the live DB, not the migration files:**
+`approve_quote_and_create_project` was correctly fixed 31/07 (`round_g_fix_forward_approve_rpc_cost_source`)
+to read cost from `product_costs` instead of the dropped `products.cost` column. Migration
+`20260809193353` (`module4_project_owner_contact_snapshot`, adding `owner_name`/`owner_phone` to
+the project INSERT) did a `CREATE OR REPLACE FUNCTION` built from a version that predated that fix
+— silently reverting it. Two comments in `schema.sql` had explicitly claimed "body identical to the
+previous version except for X" — both were wrong, because "the previous version" they diffed
+against wasn't the one actually live. **Every real quote approval through the screen has failed
+since 09/08/2026**, undetected because no quote was approved through the UI in that window, and
+because E2E structurally cannot catch this class of bug — `e2e/CLAUDE.md`'s own rule is
+network-interception-only (no real DB writes, to protect the single live project), so a broken RPC
+body is invisible to the whole suite by design.
+
+**Fixed:** migration `20260812204405_fix_approve_rpc_cost_source_regression`, one line (cost source
+back to `product_costs`), rest of the body byte-identical including the 09/08 owner columns.
+Typed-echo gate followed (Ishay typed the migration name) before `apply_migration`. **Verified
+after, live, through the real screen — not just re-reading the function:** quote #9 approved →
+project #10 created with correct `required_hostess_count`/owner fields/2 logistics rows; quotes
+list flipped in-progress 4→3, approved 3→4.
+
+**Documented in three places per the DB protocol:** `docs/schema.sql` (dated addendum — the old
+"body identical except X" comments were wrong and say so), `supabase/migrations/CLAUDE.md` (new
+rule: before `CREATE OR REPLACE FUNCTION` on an existing function, pull the live definition via
+`pg_get_functiondef` and diff against it, never rebuild from an old migration file or memory),
+`docs/db_roadmap.md §10` (Done-row).
+
+**Ishay's own proposal for the structural fix, recorded but not built:** a scheduled routine that
+acts as a real user clicking through live screens — "synthetic monitoring" — biweekly plus
+triggered after any migration that does `CREATE OR REPLACE FUNCTION`. This is the only mechanism
+that could have caught this class of bug, precisely because it would NOT be network-intercepted
+like E2E. Candidate for the next planning round; not scoped or built this session.
+
+**Same shift, two more real findings from watching the actual screen, both shipped to `main`:**
+① unit-price display rounds to whole shekels while the line total stays exact — `2.5` and `3.3`
+both rendered as `"3 ₪"`, caught visually mid-rehearsal on the live quote-edit screen. Root cause:
+`<Money amount={line.unitPrice} />` used the default (`formatShekelWhole`) instead of the `exact`
+prop that already existed on the component for exactly this case (built 30/07 for the
+price-maintenance screen, never wired into the quote screens). Fixed in both
+`QuoteLineEditor.jsx` and — found by checking where else the same defect lives —
+`quotePdf.jsx`, which sends this to real customers and had the same bug via a direct
+`formatShekelWhole(line.unitPrice)` call. Added a regression test to `quotePdf.test.jsx`,
+proven red on the pre-fix code via `git stash` + re-run + restore, not just green after.
+② three raw `window.confirm()` calls in the quotes module — Ishay caught one live (native ugly
+dialog, no RTL styling, doesn't match the rest of the app). `useConfirm()` already existed
+(`ConfirmDialog.jsx`, built for exactly this, already used in `UsersManagementPage.jsx`) but
+wasn't wired into `QuoteBuilderPage.jsx` or `QuoteDocumentDialog.jsx` (×2). Fixed all three;
+swept all of `src/` for remaining `window.confirm`/`window.alert` afterward — zero left.
+**Known, deliberately deferred:** three E2E spec files (`quote-email.spec.js`, `quotes.spec.js`,
+`load-failure-guards.spec.js`) still intercept the native browser `dialog` event for these flows;
+they'll keep "passing" against a mechanism that no longer exists, since E2E doesn't run in CI.
+Flagged to Ishay explicitly, not silently left.
+
+**Gates run this session, each time before pushing:** `npm run build` + `npm run test:run`
+(752/752) after each fix; `npm run gate` (full — lint/dup/deadcode/audit/bidi/context/docs-structure)
+once, exit 0. Two PRs to `dev` (#33, #35) then two promotions `dev`→`main` (#34, #36), all with
+fresh CI verification (one transient `denoland/setup-deno` network flake on PR #36, re-run clean
+rather than merged through). All four merges verified fresh via `git fetch` + `merge-base
+--is-ancestor`, not from PR-page narration.
+
 ### 12/08/2026 ~18:15 — advisor shift: 28/08 demo-process recommendation, module 5/6 guides fixed to Discovery format, module-6 Discovery stage 1-a opened
 
 **Two tracks Ishay asked for in one shift: get ready for 28/08, and run Discovery for modules 5+6 in parallel.**

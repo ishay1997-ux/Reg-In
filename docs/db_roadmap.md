@@ -343,6 +343,22 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
+- ✅ 12/08/2026 — migration `20260812204405_fix_approve_rpc_cost_source_regression.sql`
+  **APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed
+  `fix_approve_rpc_cost_source_regression`). **Fixes a real regression, not a new feature:**
+  `20260809193353` (owner_name/owner_phone snapshot) rebuilt `approve_quote_and_create_project`
+  from a version that predates the 31/07 `product_costs` split, silently restoring
+  `products.cost` — a dropped column. Every real quote approval through the screen failed
+  (`42703`) from 09/08 until caught live during a demo rehearsal, 12/08. One line changed: cost
+  source back to `product_costs pc ... pc.cost` (byte-identical to the 31/07 fix); rest of the
+  body — including the 09/08 owner-contact columns — untouched.
+  **Verified after apply:** live `pg_get_functiondef` re-read confirms the join · re-ran the RPC
+  through the real screen (quote #9 → project #10, `required_hostess_count=5`,
+  `owner_email/name/phone` populated, 2 `logistics` rows created) · quotes list flipped
+  in-progress 4→3, approved 3→4. `docs/schema.sql` and `supabase/migrations/CLAUDE.md` updated
+  with a new rule: before any `CREATE OR REPLACE FUNCTION` on an existing function, pull the
+  live definition via `pg_get_functiondef` and diff against it — never rebuild from an old
+  migration file or memory.
 - ✅ 10/08/2026 — migration `20260810004500_module4_public_shift_invite_read.sql`
   **APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed `module4_public_shift_invite_read`).
   **What it does:** adds ONE function, `get_shift_invite(p_token text)` — `SECURITY DEFINER`,

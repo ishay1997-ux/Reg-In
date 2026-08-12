@@ -1044,3 +1044,17 @@ update projects p set owner_name = u.full_name, owner_phone = u.phone
 -- ב-SELECT, ו-`left join users ou on ou.email = v_caller_email`. שום דבר אחר בגוף לא זז.
 -- ‏LEFT ולא INNER: משתמש שנמחק היה מבליע את כל שורת-הפרויקט, כלומר אישור-הצעה היה נכשל
 -- בגלל שדה-תצוגה.
+
+-- ============================================================
+-- תיקון-רגרסיה (20260812204405, הוחל 12/08/2026): approve_quote_and_create_project
+-- ============================================================
+-- 🔴 שתי ההערות למעלה ("הגוף זהה לגרסה הקודמת פרט ל-X") טעו בפועל: מיגרציית owner_name/
+-- owner_phone (20260809193353) נבנתה על גרסה **שקדמה** לתיקון-31/07 (round_g_fix_forward_
+-- approve_rpc_cost_source), לא על הגרסה החיה אז — ולכן החזירה בשקט `products pr ... pr.cost`,
+-- עמודה שנמחקה ב-31/07 (§7.83↳). כל אישור-הצעה דרך המסך נכשל (`42703`) מ-09/08 ועד שנתפס
+-- ברהרסל-הדגמה חי 12/08. `create or replace function` נוסף: שורת מקור-העלות חוזרת ל-
+-- `product_costs pc ... pc.cost` (בדיוק כמו 31/07); שאר הגוף — כולל owner_name/owner_phone/
+-- customer_name — זהה בית-בבית. הגוף המלא-הסמכותי: `supabase/migrations/
+-- 20260812204405_fix_approve_rpc_cost_source_regression.sql`.
+-- 🔑 הלקח שנרשם ב-supabase/migrations/CLAUDE.md: לפני CREATE OR REPLACE על פונקציה קיימת —
+-- למשוך את ההגדרה החיה (`pg_get_functiondef`) ולהשוות, לא לבנות מקובץ-מיגרציה ישן/מהזיכרון.
