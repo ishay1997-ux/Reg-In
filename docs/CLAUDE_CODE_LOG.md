@@ -49,6 +49,55 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 12/08/2026 ~18:15 — advisor shift: 28/08 demo-process recommendation, module 5/6 guides fixed to Discovery format, module-6 Discovery stage 1-a opened
+
+**Two tracks Ishay asked for in one shift: get ready for 28/08, and run Discovery for modules 5+6 in parallel.**
+
+**28/08 recommendation, approved:** demo the customer → quote → approve (creates project) → Smart
+Match assigns hostess → invite sent → hostess confirms via the public link, **from a phone, live**.
+Rationale: it's the only slice that's merged, live on `main`, and already UAT-proven (12/08, two
+real emails landed in Ishay's inbox) — no need to wait on modules 5/6. Landmine restated: the invite
+link is built from `window.location.origin` (`src/lib/shiftEmails.js:24`) — rehearse and demo only
+from the live site, never localhost.
+
+**Guides fixed (the 08/08 deferred ⏸️ item — "update modules 5–12 guides before pasting from them,
+deferred because module 5 was weeks away" — no longer holds):**
+`docs/guides/modules/module_05_logistics.md` and `module_06_projects.md` now open with a "0)
+Discovery" paste-block (verbatim from `module_playbook.md`'s canonical trigger) before the
+blueprint-opening prompt, matching module 4's now-established pattern. The ambiguous `§5.8-5.9` /
+`§5.6-5.7` notation was disambiguated to `PROJECT_MASTER §N ⇒ C5 §N` — verified against the live
+C5 file (`grep '^#{2,4} 5\.[0-9]'`): the content was correct, only the citation format was ambiguous
+enough to misread as raw C5 chapter numbers (C5's own chapters only run 5.1–5.8, so a bare "§5.9"
+looks broken even though it's fine as PROJECT_MASTER's own §5.9).
+
+**Module 6 Discovery, stage 1-א (read + map) — presented to Ishay, approved.** Read C5 §5.5.1 +
+§5.5.7 (lifecycle + control/scope-change/closing processes) directly, not via agent — seven
+PROJECT_MASTER §7 items in full, `schema.sql`'s `projects`/`assignments`/`logistics` tables, and
+`db_roadmap.md`'s `🚧 מ6` rows. Findings worth carrying forward: `projects` table + 8-status
+constraint already exist and module 3 already writes a full row on quote approval — no DB build
+needed there, only the advance-trigger and screens. Two debts owed *to* M6 from M4
+(`customer_hostess_preference` write — flips the currently-disabled Smart-Match reliability
+component; and a reverse-visibility gap for "who's assigned" on the project card). ⚠️ **One debt
+carries a real deadline collision: `🚧 מ6 ← מ3` (E2E fixture rot) expires ~28/08 — the same date as
+the interim demo.** Model note: running on Sonnet; the discovery prompt itself recommends Opus/high
+effort for the judgment-heavy stages (process-by-process, stage 1/ג) — flagged to Ishay, not yet
+switched.
+
+**Near-miss on rule 16, worth recording because the detection mechanism is the reusable part.**
+Mid-shift, `git status` showed `HEAD` on `ishay/docs-permissions-crossmodule` — a branch this
+session never checked out. `git reflog` showed an external checkout+commit (`060ca7f`, 17:59) that
+happened while this session was working, with no remote copy of that branch (local-only). Rather
+than guess, queried `list_sessions`/`get_session`: session "ארגון פרויקטים" (Opus, `isRunning:
+false`, last activity 18:00 — ~80s after the commit) matches in both time and topic. Ishay confirmed
+no session is currently active. Checked out back to `ishay/prep-demo-m5-m6-discovery` cleanly — the
+two guide edits were uncommitted working-tree changes, so they carried over with zero conflict.
+**Nothing was committed while the branch was ambiguous.**
+
+**Not done yet, both Ishay's:** stage 1-ב/ג of module-6 Discovery (process-by-process, 2–3 more
+days — not a single round); the "how do we fill the system with realistic demo data before 28/08"
+question, opened this same shift and still being talked through.
+
+
 > ⚠️ **Concurrent-write note (rule 16), 10/08/2026 ~12:36:** the entry below this one (wide
 > accessibility sweep) was authored while another session was actively appending the
 > "Module 4, Phase 3 CLOSED" entry that now sits right under it. Inserted additively, re-reading the
