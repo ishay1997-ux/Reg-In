@@ -258,6 +258,59 @@ headcount) falls on the same string while that premise is false for her. Recomme
 — nobody is harmed (she gets a release mail), it is an approved quoted string, and the RPC already
 branches on `released` internally, so splitting it later costs one small migration plus two lines.
 
+**🔧 FIX ROUND — five fixes, one round, per §6b's "the cap is on sweeps, not on the number of fixes".**
+`releaseAssignment` now returns `{row, mail}` with the same three outcomes the invite path uses, and
+all three call sites report it (a separate `result.releaseMail` counter was added to
+`approveFinalAndRelease`, whose `result.mail` had only ever covered the final-approval mails) ·
+`OverviewTab` checks `permissions['פרויקטים']` and shows an explicit denial instead of the green ✅ ·
+`ensureProjectCoordinates` keeps the resolved point when its save is denied (the save is a cache) ·
+`waitForReady` in the a11y spec waits for the screen's own content · `countWorkedForCustomer` skips
+`project_status = 'cancelled'` (Ishay's ruling, overriding the recommendation to defer).
+**Two of the five were proven red→green rather than asserted:** the cancelled-project test was watched
+failing against the deliberately removed line (exactly one failure, then green on restore), and the
+release fix was re-run through the same network-level fault injection that had exposed it —
+*"דנה לוין שוחררה — לא ידוע אם ההודעה יצאה"* where it had previously claimed success.
+⚠️ **And that verification was by hand on purpose:** `api.js` is the module's write surface and **no
+suite reaches it**, so "regression green" would not have been evidence over that fix.
+
+**⚠️ Regression run: `smoke` exit 0 · `gate` failed on prettier formatting only (fixed) ·
+`test:e2e` 115 passed / 2 FAILED — and neither failure comes from the fixes.**
+**(1)** the a11y `button-name` on `/system/prices` **survived** the harness widening. 11 nodes = the
+11 products' Radix `SelectTrigger`s, whose accessible name comes only from the rendered
+`<SelectValue />`; it passes in isolation and fails under the parallel full suite ⇒ **the honest cure
+is an `aria-label`, not a longer wait — the button really has no name until its value paints.** My
+earlier routing of this to §7 as "transient only" was wrong, and the evidence is the failure itself.
+**(2)** `sm-angle-fastest` asserted the *"תענה הכי מהר"* angle is disabled for lack of response-time
+data — **and the UAT created the first `responded_at` in the system**, so the angle correctly turned
+on. Same family as 5.1's clock-rot: a test pinned to a live-data state that our own work moved.
+🛑 **Both routed to Ishay under §6b's newly added floor rule** (a second harmful finding surfacing
+after the regression run is his decision, not an unbounded audit→fix→audit loop) — **the verdict is
+deliberately withheld until he rules.**
+
+**✅ Ishay ruled on both (as recommended), and both are fixed.** The `SelectTrigger` on
+`PricesManagementPage` got `aria-label="סטטוס המוצר"` — **the honest cure**, because the button
+genuinely has no accessible name until its value paints, and no amount of waiting fixes that; its
+neighbour in the same file already carried one, so this was the outlier. The sort-angle test was
+rewritten to the **invariant** (the control is always present, and its disabled state must *agree with
+its own label*) instead of pinning the momentary data state — the same treatment 5.1 gave the rotted
+counter, and the **fifth** member of that family.
+**Re-run: `npm run gate` exit 0 — 751 unit tests / 26 files** (up one: the cancelled-project
+regression), lint clean, jscpd 6 clones unchanged, `check:bidi`/`check:context`/`check:docs-structure`
+all clean. **And the accessibility scan on `/system/prices` now reports advisory findings only — the
+blocking `button-name` is gone.**
+
+**📌 Persistence performed beyond the fixes:** seven **dated annotations written at the stale lines
+themselves** (`processes-approved.md` ×3 for the `project_status` claims, `screens-approved.md` ×3 and
+`spec.md` ×1 for `rating`), per §2b's rule that a top-of-file banner 250 lines away is not a warning
+anyone reads. ⚠️ **Re-deriving that list by `grep` at execution time was not ceremony:** the report I
+had given Ishay named **one** rating spot and **two** status spots; the greps found **four** and
+**five**. · Six new `§6` debt lines (M10 · M12 ×3 · M8 · M12) · **the `🚧 מ4` reverse sweep**: four of
+the eleven live tokens struck with dates as genuinely paid by this module (shared mail engine ·
+server-side filtering · the active/inactive convention · `projects` deny-all), the LOG-compaction line
+refreshed with its **newly measured** 3,457, and the rest justified as still open · `claude_routines.md`
+coverage line corrected (module 4 tripped the growth trigger: 17 spec files now, not "modules 1–2").
+**No plan dies with this module** — the mega-plan is chartered per-module and survives.
+
 **Still open when this entry was written:** Ishay opening the invite on his real phone and confirming
 (the only step Claude cannot do — acceptance criterion #3), then final-approval + release (where the
 `releaseAssignment` blocker gets its live test), the single fix round, the verdict + typed-echo gate,
@@ -279,6 +332,13 @@ the report artifact, the quiz, and the remaining persistence.
 🔴 **And Ishay corrected ② at the approval gate — my draft was stricter than the project's own rule.** I had written *"no precedent ⇒ stop"*; he answered: *"sometimes it is small work and I prefer to close it with that session — it already has the right context."* **He is right, and iron rule 1 already said so:** a non-trivial change request gets a verdict **with a recommendation** and *he* decides — it does not get an automatic stop. Rewritten: no precedent ⇒ **do not rule alone and do not silently defer** ⇒ state what it touches · how big · your recommendation. **The default is "ask, with a size estimate", not "defer".** 🔑 **The reasoning he supplied is worth keeping on its own: context is an asset with a price.** The session that found a defect holds the reproduction, the file map and the verification method; re-establishing those elsewhere is expensive — and this repo has measured hand-written handoffs carrying a defect three times out of three.
 ③ was a plain gap: the 3-attempt cap has been in `module-build` since 28/07/2026 and **was measured absent from the closing skill entirely** (the only `attempt` match in the file was unrelated). Added per blocker, not per round.
 ⚠️ **Residual risk stated, not smoothed:** boundary ④ leans on the regression suite, and in this repo the write path (`api.js`) is outside it — so on a fix there the only working boundary is the manual fault-injection (restore the bug, watch the check fail, fix, watch it pass). Without that step, ④ reports green over code nothing executed.
+
+**Fifth round — the skill was scanned, by two fresh agents, because I could not scan it myself.** `skill-scan` opens by forbidding a self-scan (measured self-catch rate across five prior attempts in this project: zero), and every rule added tonight was mine. Two agents, deliberately given **no numbers and none of my reasoning** — handing over an expected value is the leakage defect the scan's own lens 4 hunts. Agent A ran the five lenses + the wrong-home pass over **~94 rules**; agent B ran lens 5 alone against seven interruption scenarios.
+🔑 **They converged, independently, on one defect: the procedure has a disk state only for a clean YES.** Six blockers, four fixed, session dies ⇒ disk shows six open. Verdict NO ⇒ undefined (persistence step 1 is explicitly `(on YES)`). Awaiting a human gate ⇒ no state at all, and it collides with the 60% rotation rule. Fixed as persistence steps 7–8, with the test written into the rule: kill a session mid-round; a fresh one reading **only** the findings file must state what is fixed, what remains, and whether regression ran.
+🔬 **And the sharpest one I verified myself before amplifying it:** the working findings file was named `module-N-close-findings.md`, which falls inside the Stop hook's `docs/micro_guides/module-*.md` glob (`check-docs-updated.sh`, enforcement 0ג). That hook blocks session end on any `🚧 מN` token lacking a `§6` line — **and collecting exactly those tokens, unrouted, is the file's entire purpose.** ⇒ the moment the audit found what it was scanning for, the hook would demand a mid-scan fix, the one action audit rule 5 forbids. Renamed to `close-findings-module-N.md`, which escapes the glob; a separate directory was considered and rejected (new docs surface, folder-map ripple, archive path) with the reasoning recorded so it is not re-derived.
+**Also fixed:** §4b told the auditor to fix complexity and delete dead code **now** — contradicting rule 5 written the same day, so one document gave opposite instructions · the two scanners (`§2c`, `§3b`) are scoped to changed files and run **before** the fix round, leaving the code written last under time pressure as the only code no scan ever saw · no artifact recorded **which commit** a `[YES]` applies to · the `Proof of fix` field was unfillable precisely where it matters most (no automated check) and now names the fault-injection instead · four rules had no mandatory output line, so a skip was invisible — **already demonstrated: the micro-guide compaction never ran at the previous module's close and nobody could tell** · `SKILL.md` handed the auditor a closed module's expected figure and forbade duplication three lines above three deliberate duplicates.
+✅ **What the scan validated, and it matters as much as the defects:** agent A ran the inverse test ("would this rule have been harmful in an earlier situation?") over all six rules added tonight — **none failed.** The problems were collisions with existing text and missing output, not bad rules.
+📌 **Measured, for the record:** the template grew ×2.8 in 20 days (249 lines added, 36 removed) while `SKILL.md` went untouched for 19 days as the file it points to grew ~60 lines.
 
 
 **Ishay's question, asked mid-audit:** the module-4 spec was authored **processes → screens → integration between them**, so the two can disagree — what should the audit read, and how are conflicts resolved? **Measured, not recalled:** `module-close/template.md` step 2b sent the audit to `spec.md`'s acceptance chapter **and `screens-approved.md`** — and **no step in the whole template named the process document**. The spec set's own `§⚖️` arbitration rule covers **mockup vs spec** only, so a **processes-vs-screens** conflict had no written rule anywhere.
