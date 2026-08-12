@@ -343,6 +343,19 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
+- ⏳ 12/08/2026 — migration `20260812215545_refresh_stale_project_customer_name_snapshots.sql`
+  **written, awaiting typed-echo.** Data-consistency backfill (not a new feature, not schema):
+  `projects.customer_name` is a snapshot written once at approval time by
+  `approve_quote_and_create_project` and never updates retroactively. Three projects (#3, #7,
+  **#8** — #8 shares 22/08 with the demo) still carried the pre-fix customer name
+  ("מדיטק פתרונות בע\"מ [דמו]", fixed on `customers` earlier the same day but not on already-created
+  project snapshots), visible live on the module-4 tracking screen. Found during a free-rein sweep,
+  reported rather than fixed solo (writing to `projects` bypasses its RLS — no write policy exists
+  for authenticated roles, only the DEFINER approve RPC), Ishay ruled "תקן" 12/08/2026. The
+  migration is a single `UPDATE … FROM customers WHERE customer_name IS DISTINCT FROM
+  company_name` — general (catches any project, not just the three known IDs), fully reversible
+  (re-running it re-syncs), no DDL/RLS/function touched. Same shape as the original backfill that
+  filled this column when it was added (`docs/schema.sql`).
 - ✅ 12/08/2026 — migration `20260812204405_fix_approve_rpc_cost_source_regression.sql`
   **APPLIED via MCP `apply_migration`** (typed-echo: Ishay typed
   `fix_approve_rpc_cost_source_regression`). **Fixes a real regression, not a new feature:**
