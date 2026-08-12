@@ -17,6 +17,7 @@ import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
 import Money from '@/components/Money'
 import RowAction from '@/components/RowAction'
+import StatTile from '@/components/StatTile'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -41,10 +42,10 @@ import {
   approveQuote,
   getPricingCatalog,
   getQuoteScreenParams,
-  getSentQuoteIds,
   listQuotes,
   rejectQuote,
 } from '@/modules/03_quotes/api'
+import { getSentEntityIds } from '@/api/email'
 import ApproveQuoteDialog from '@/modules/03_quotes/ApproveQuoteDialog'
 import QuoteDocumentDialog from '@/modules/03_quotes/QuoteDocumentDialog'
 import RejectQuoteDialog from '@/modules/03_quotes/RejectQuoteDialog'
@@ -169,7 +170,10 @@ export default function QuotesPage() {
         // 30 הצעות = 30 שאילתות). כשל בו **אינו מפיל את המסך** אבל גם אינו נבלע: הוא
         // מחזיר את המצב ל-null ("לא ידוע"), בדיוק כמו בכרטיס-הלקוח.
         try {
-          const ids = await getSentQuoteIds(rows.map((row) => row.quote_id))
+          const ids = await getSentEntityIds(
+            'quote',
+            rows.map((row) => row.quote_id),
+          )
           if (!cancelled) setSentIds(ids)
         } catch {
           if (!cancelled) setSentIds(null)
@@ -312,25 +316,26 @@ export default function QuotesPage() {
             מעקב אחר הצעות שנשלחו, ואישור או דחייה שלהן
           </p>
         </div>
-        <div className="flex bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="px-4 py-2.5 border-l border-slate-200">
-            <Money amount={metrics.openValue} className="text-[22px] font-bold text-slate-800" />
-            <div className="text-xs text-slate-500">שווי הצעות פתוחות</div>
-            <div className="text-[11px] text-slate-400">
-              {metrics.openCount} ממתינות לתשובת הלקוח
-            </div>
-          </div>
-          <div className="px-4 py-2.5">
-            {/* שיעור שאין ממנו מדגם מוצג כ-"—" ולא כ-0%: 0% על אפס הצעות סגורות אינו
-                מספר נמוך אלא מספר שקרי. */}
-            <div className="text-[22px] font-bold text-slate-800" dir="ltr">
-              {metrics.approvalRate === null ? '—' : `${metrics.approvalRate}%`}
-            </div>
-            <div className="text-xs text-slate-500">שיעור אישור</div>
-            <div className="text-[11px] text-slate-400">
-              {metrics.approvedCount} מתוך {metrics.closedCount} שנסגרו
-            </div>
-          </div>
+        {/* ⚠️ סדר תווית-מעל-ערך (הפוך ממה שהיה כאן עד 07/08/2026) — הצורה הקנונית של
+            `StatTile`, לפי מודול 2 (מודול-הייחוס למוסכמות) ומוקאפי מודול 4. */}
+        <div className="flex gap-2">
+          <StatTile
+            label="שווי הצעות פתוחות"
+            value={metrics.openValue}
+            sub={`${metrics.openCount} ממתינות לתשובת הלקוח`}
+            testId="quotes-metric-open-value"
+          />
+          {/* שיעור שאין ממנו מדגם מוצג כ-"—" ולא כ-0%: 0% על אפס הצעות סגורות אינו
+              מספר נמוך אלא מספר שקרי. */}
+          <StatTile
+            label="שיעור אישור"
+            value={
+              metrics.approvalRate === null ? null : <span dir="ltr">{metrics.approvalRate}%</span>
+            }
+            emptyText="—"
+            sub={`${metrics.approvedCount} מתוך ${metrics.closedCount} שנסגרו`}
+            testId="quotes-metric-approval-rate"
+          />
         </div>
       </div>
 

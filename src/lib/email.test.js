@@ -173,6 +173,51 @@ describe('plainTextToEmailHtml — התבניות טקסט, התעבורה HTML,
   })
 })
 
+// 🐞 **המופע השישי של באג-הכיווניות, והראשון שעטיפת-ה-RTL לא הצילה ממנו** (09/08/2026):
+// מייל אמיתי שנשלח בפזה 0 הדפיס `!REG-IN` במקום `REG-IN!` — הגוף כולו כבר נשא `dir="rtl"`,
+// ולכן הכיווניות **ברמת-השורה** הייתה תקינה; מה שנשבר הוא **רצף לטיני ואחריו פיסוק בתוך
+// משפט עברי**. זו בדיוק המשפחה ש-`Money`/`LtrFieldGroup` פותרים במסך, ולתבנית טקסט שטוחה
+// שנשלפת מ-`params` לא הייתה מקבילה. **הכרעת-ישי 09/08: מתקנים במנוע, לא פר-תבנית** —
+// כל 9 התבניות שבמסד נושאות את אותה חולשה, כולל אלה שמודולים 8 ו-11 יוסיפו.
+const LRI = '⁦'
+const PDI = '⁩'
+
+describe('plainTextToEmailHtml — בידוד רצף לטיני בתוך משפט עברי (באג `!REG-IN`)', () => {
+  it('🔴 הפיסוק נכנס לתוך הבידוד יחד עם הרצף — אחרת הוא קופץ לצד הלא-נכון', () => {
+    const html = plainTextToEmailHtml('התאמת לאירוע חדש של REG-IN!')
+    expect(html).toContain(`${LRI}REG-IN!${PDI}`)
+  })
+
+  it('שורה עברית נקייה אינה מקבלת סימני-בידוד כלל — הבידוד ממוקד, לא גורף', () => {
+    const html = plainTextToEmailHtml('היי נועה,\nתודה שהתפנית.')
+    expect(html).not.toContain(LRI)
+    expect(html).not.toContain(PDI)
+  })
+
+  it('כתובת-לינק מבודדת כיחידה אחת ולא מתפצלת לרסיסים', () => {
+    const html = plainTextToEmailHtml('לאישור: https://reg-in.app/confirm/a1b2c3')
+    expect(html).toContain(`${LRI}https://reg-in.app/confirm/a1b2c3${PDI}`)
+    expect(html.match(new RegExp(LRI, 'g'))).toHaveLength(1)
+  })
+
+  it('ההברחה חלה גם בתוך הבידוד — שם עם & אינו שובר את הגוף', () => {
+    expect(plainTextToEmailHtml('חברת A&B בע"מ')).toContain(`${LRI}A&amp;B${PDI}`)
+  })
+
+  it('שני רצפים נפרדים באותה שורה מקבלים שני בידודים נפרדים', () => {
+    const html = plainTextToEmailHtml('צוות REG-IN שלח דרך Make אתמול')
+    expect(html).toContain(`${LRI}REG-IN${PDI}`)
+    expect(html).toContain(`${LRI}Make${PDI}`)
+  })
+
+  it('עטיפת-ה-RTL ומעברי-השורה שורדים את הבידוד — התוספת אינה מחליפה את מה שכבר עבד', () => {
+    const html = plainTextToEmailHtml('היי נועה,\nמצורף REG-IN!')
+    expect(html.startsWith('<div dir="rtl"')).toBe(true)
+    expect(html).toContain('<br>')
+    expect(html).not.toContain('&lt;br&gt;')
+  })
+})
+
 describe('buildEmailPayload — החוזה מול תרחיש ה-Make', () => {
   const ARGS = {
     to: 'ron@meditech-demo.co.il',
@@ -207,6 +252,34 @@ describe('buildEmailPayload — החוזה מול תרחיש ה-Make', () => {
   it('נושא חסר מותר (מייל בלי נושא נשלח) — בשונה מגוף חסר', () => {
     expect(buildEmailPayload({ ...ARGS, subject: undefined }).subject).toBe('')
   })
+
+  // ── מצורף-רשות: נוסף 09/08/2026 בפזה 0 של מודול 4 ──────────────────────────
+  // ⚠️ **הבדיקה הראשונה כאן היא השומר האמיתי**, ולא זו של המסלול החדש: הפיכת המצורף
+  // לרשות **באופן גורף** הייתה מוציאה מסמך ללקוח בלי הקובץ, ואף בדיקה קיימת לא הייתה
+  // נופלת על כך. לכן הרצפה נשארת דלוקה כברירת-מחדל, ומכובה רק במפורש.
+  it('ברירת-המחדל עדיין דורשת מצורף — הקורא חייב לכבות אותה במפורש', () => {
+    expect(buildEmailPayload({ ...ARGS, attachmentBase64: undefined })).toBeNull()
+  })
+
+  it('מייל טקסטואלי (זימון-משמרת) נבנה בלי מצורף — וחמשת המפתחות נשמרים', () => {
+    const payload = buildEmailPayload({
+      to: 'noa@example.com',
+      subject: 'זימון למשמרת',
+      body: 'היי נועה,',
+      requireAttachment: false,
+    })
+    expect(payload).not.toBeNull()
+    // ⚠️ מפתח שנעלם נראה בתרחיש ה-Make כמו תקלת-מיפוי; מחרוזת ריקה אומרת "אין מצורף".
+    expect(Object.keys(payload).sort()).toEqual([...EMAIL_PAYLOAD_FIELDS].sort())
+    expect(payload.pdf_base64).toBe('')
+    expect(payload.filename).toBe('')
+  })
+
+  it('נמען וגוף נשארים חובה גם בלי מצורף', () => {
+    const base = { to: 'noa@example.com', body: 'היי', requireAttachment: false }
+    expect(buildEmailPayload({ ...base, to: '' })).toBeNull()
+    expect(buildEmailPayload({ ...base, body: '' })).toBeNull()
+  })
 })
 
 describe('isAttachmentTooLarge — תקרת הקובץ (Make חינמי: 5MB)', () => {
@@ -231,13 +304,27 @@ describe('emailSendDisabledReason — למה כפתור-השליחה מושבת'
     expect(emailSendDisabledReason(OK)).toBe('')
   })
 
-  it('הרשאת-צפייה בלבד ⇒ אין שליחה ללקוח (שליחת מסמך היא פעולה עסקית)', () => {
-    expect(emailSendDisabledReason({ ...OK, canEdit: false })).toBe('אין לך הרשאה לשלוח הצעות')
+  it('הרשאת-צפייה בלבד ⇒ אין שליחה (שליחת מסמך היא פעולה עסקית)', () => {
+    expect(emailSendDisabledReason({ ...OK, canEdit: false })).toBe('אין לך הרשאה לשלוח')
+  })
+
+  // ⚠️ הנוסח הגנרי הוא **ברירת-מחדל ולא הנוסח שהמשתמש רואה**: כל מודול שולח מעביר את שלו
+  // (`QUOTE_SEND_NO_PERMISSION_REASON` בהצעות-מחיר). הבדיקה נועלת את שני הצדדים, כי מנוע
+  // שיחזיר את המילה "הצעות" למנהלת-הגיוס הוא בדיוק הרגרסיה שפזה 0 של מודול 4 באה למנוע.
+  it('הנוסח הספציפי מגיע מהמודול השולח, והגנרי אינו מזכיר סוג-מסמך', () => {
+    expect(
+      emailSendDisabledReason({
+        ...OK,
+        canEdit: false,
+        noPermissionReason: 'אין לך הרשאה לשלוח X',
+      }),
+    ).toBe('אין לך הרשאה לשלוח X')
+    expect(emailSendDisabledReason({ ...OK, canEdit: false })).not.toContain('הצעות')
   })
 
   it('חוסר-הרשאה קודם לכל — אין טעם להנחות לתקן דבר שלא ניתן לבצע', () => {
     expect(emailSendDisabledReason({ email: '', template: '', canEdit: false })).toBe(
-      'אין לך הרשאה לשלוח הצעות',
+      'אין לך הרשאה לשלוח',
     )
   })
 
@@ -282,6 +369,16 @@ describe('classifySendError — שלושת המצבים, וההבחנה שקל �
 
   it('ההודעה על כשל אומרת מה לעשות, לא רק שנכשל', () => {
     expect(sendResultMessage(EMAIL_SEND_RESULT.FAILED)).toContain('שוב')
+  })
+
+  // נוסף 09/08/2026 (פזה 0 של מודול 4): הנוסח הספציפי עבר למודול השולח, כי "הורד את
+  // הקובץ ושלח ידנית" מפנה לקובץ שלזימון-משמרת אין. הבדיקה נועלת את שני הצדדים.
+  it('נוסח-הכשל הספציפי מגיע מהמודול השולח, והגנרי אינו מזכיר סוג-מסמך', () => {
+    expect(
+      sendResultMessage(EMAIL_SEND_RESULT.FAILED, { failedMessage: 'ההצעה לא נשלחה. הורד ושלח.' }),
+    ).toBe('ההצעה לא נשלחה. הורד ושלח.')
+    expect(sendResultMessage(EMAIL_SEND_RESULT.FAILED)).not.toContain('הצעה')
+    expect(sendResultMessage(EMAIL_SEND_RESULT.FAILED)).not.toContain('קובץ')
   })
 
   it('הצלחה ⇒ אין הודעת-שגיאה', () => {

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מוקאפ מ4 · מסך 3ד — כרטיס דיילת לצפייה (מאושר)</title>
+<style>
+  /* פלטה וגופן מ-src/ (grep על bg|text|border) — זהים לכל שאר מוקאפי המודול.
+     מבנה-התוכן (רצועת-הדגשים + פרטים-מקובצים + רשימה-קשורה) נשאב מ-CustomerDetailsPage.jsx —
+     היחיד ב-src/ שהוא "כרטיס-צפייה מלא לישות" — אבל כאן כ-overlay על מסך 3, לא כעמוד-נפרד:
+     processes-approved.md מצטט את C5 במפורש — "הכרטיס המלא באותו מסך", לא ניווט. */
+  :root{
+    --primary:#0D9488; --teal50:#F0FDFA; --teal100:#CCFBF1; --teal600:#0D9488; --teal700:#0F766E;
+    --green50:#F0FDF4; --green100:#DCFCE7; --green200:#BBF7D0; --green700:#15803D;
+    --amber50:#FFFBEB; --amber100:#FEF3C7; --amber200:#FDE68A; --amber700:#B45309;
+    --red50:#FEF2F2; --red200:#FECACA; --red600:#DC2626; --red700:#B91C1C;
+    --bg:#F8FAFC; --s50:#F8FAFC;--s100:#F1F5F9;--s200:#E2E8F0;--s300:#CBD5E1;
+    --s400:#94A3B8;--s500:#64748B;--s600:#475569;--s700:#334155;--s800:#1E293B;
+    --r:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--s800);font-size:14px;
+       font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:16px 18px 40px}
+  .note{background:var(--amber50);border:1px solid var(--amber200);color:#92400E;border-radius:var(--r);
+        padding:9px 12px;font-size:12px;margin-bottom:12px;line-height:1.65}
+  h1{font-size:19px;margin:0}
+  .sub{color:var(--s500);font-size:12px;margin-top:2px}
+
+  .backdrop{background:rgba(15,23,42,.35);border-radius:16px;padding:26px;display:flex;justify-content:center}
+  .panel{background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(15,23,42,.18);
+          padding:20px 22px 18px;max-width:640px;width:100%}
+  .phead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+         border-bottom:1px solid var(--s100);padding-bottom:14px;margin-bottom:16px}
+  .phead h2{font-size:18px;margin:0}
+  .phead .sub2{font-size:12px;color:var(--s500);margin-top:3px}
+  .st{font-size:11px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap;display:inline-block}
+  .st.active{background:var(--green100);color:var(--green700)}
+  .pactions{display:flex;gap:6px;flex:none}
+  .iconbtn{width:30px;height:30px;border-radius:8px;border:1px solid var(--s200);background:#fff;
+           color:var(--s600);font-size:13px;line-height:1;display:inline-flex;align-items:center;
+           justify-content:center}
+  .iconbtn.edit{border-color:var(--primary);color:var(--teal700)}
+
+  .hl{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+  /* לבן+מסגרת, לא מילוי-טורקיז — כלל-המילוי (PROJECT_MASTER §4): עובדה ניטרלית/חיובית אינה
+     צבועה, גם אם היא "עובדה טובה"; טורקיז נשאר בלעדי לכפתור-הפעולה היחיד (העריכה, בכותרת). */
+  .htile{border:1px solid var(--s200);background:#fff;border-radius:10px;
+         padding:9px 10px}
+  .htile .lbl{font-size:10.5px;color:var(--s500);display:block;margin-bottom:2px}
+  .htile .val{font-size:17px;font-weight:700;color:var(--s800)}
+  .htile .val.small{font-size:13px}
+
+  .sec{margin-bottom:14px}
+  .sec h3{font-size:11.5px;color:var(--s500);font-weight:600;margin:0 0 8px;
+          text-transform:none;border-top:1px solid var(--s100);padding-top:12px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+  .kv{display:flex;flex-direction:column;gap:2px}
+  .kv .k{font-size:11px;color:var(--s500)}
+  .kv .v{font-size:13.5px;color:var(--s800)}
+  .kv .v.num{direction:ltr;text-align:right;unicode-bidi:isolate;display:block}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .lchip{border-radius:999px;padding:4px 11px;font-size:12px;border:1px solid var(--s300);color:var(--s600);background:#fff}
+
+  .unrow{background:var(--amber50);border:1px solid var(--amber200);border-radius:8px;
+         padding:7px 11px;font-size:12.5px;color:#92400E}
+
+  table.hist{width:100%;border-collapse:collapse;font-size:12.5px}
+  .hist th{text-align:right;color:var(--s500);font-weight:600;font-size:11px;padding:5px 6px;
+           border-bottom:1px solid var(--s200)}
+  .hist td{padding:7px 6px;border-bottom:1px solid var(--s100)}
+  .hist .stp{font-size:10.5px;font-weight:600;border-radius:999px;padding:1px 8px;display:inline-block}
+  .hist .stp.ok{background:var(--green100);color:var(--green700)}
+  .hist .stp.wd{background:var(--s100);color:var(--s500)}
+
+  .demo{margin-top:16px;font-size:11px;color:var(--s500);background:#fff;
+        border:1px dashed var(--s300);border-radius:8px;padding:8px 11px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="note">
+    ✅ <b>מוקאפ מאושר (08/08/2026).</b> משטח 3ד · כרטיס דיילת לצפייה · נפתח מ"מאגר דיילות" (מסך 3)
+    בלחיצה על <b>שם הדיילת בשורה</b> — לא אייקון-עין נפרד; זו ההכרעה הקיימת בכרטיס-מסך-3
+    (§①, "שם הדיילת → פותח את כרטיס הדיילת לצפייה"), שגוברת על ניסוח-C5 ("לחיצה על העין") לפי
+    היררכיית-האמת. <b>קריאה-בלבד</b> — עריכה עוברת דרך עיפרון בכותרת, שפותח את מסך 3ג.
+  </div>
+
+  <h1>כרטיס דיילת — צפייה</h1>
+  <div class="sub">מסך 3ד מתוך 8, האחרון · נפתח "באותו מסך" לפי <code>processes-approved.md</code>
+    (overlay על מסך 3, לא ניווט לעמוד נפרד).</div>
+
+  <div class="backdrop">
+    <div class="panel">
+      <div class="phead">
+        <div>
+          <h2>נועה שגיא <span class="st active" style="margin-right:6px">פעילה</span></h2>
+          <div class="sub2">במאגר מ-14/03/2026 · עיר: רמת גן</div>
+        </div>
+        <div class="pactions">
+          <button class="iconbtn edit" title="עריכה">✎</button>
+          <button class="iconbtn" title="סגור">✕</button>
+        </div>
+      </div>
+
+      <div class="hl">
+        <div class="htile"><span class="lbl">התרשמות המנהלת</span><span class="val">★★★★<span style="color:var(--s300)">★</span></span></div>
+        <div class="htile"><span class="lbl">שיעור היענות</span><span class="val">9 מ-10</span></div>
+        <div class="htile"><span class="lbl">יש רכב</span><span class="val small">כן</span></div>
+        <div class="htile"><span class="lbl">אירועים ברבעון האחרון</span><span class="val">3</span></div>
+      </div>
+      <div class="chips" style="margin:-6px 0 16px">
+        <span class="lchip" style="border-color:var(--amber200);background:var(--amber50);color:#92400E">עבדה לאחרונה לפני 3 שבועות</span>
+      </div>
+
+      <div class="sec">
+        <h3>שיבוצים קרובים <span style="font-weight:400">— מה שהיא כרגע מחויבת אליו</span></h3>
+        <table class="hist">
+          <thead><tr><th>תאריך</th><th>אירוע</th><th>לקוח</th><th>סטטוס</th></tr></thead>
+          <tbody>
+            <tr><td class="num" style="direction:ltr;text-align:right">22/08/2026</td><td>כנס לקוחות שנתי</td><td>מדיטק פתרונות</td><td><span class="stp ok">אושרה סופית</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="sec">
+        <h3>עבדה אצל <span style="font-weight:400">— לפי לקוח, לא רק ספירה שטוחה</span></h3>
+        <div class="chips">
+          <span class="lchip">מדיטק פתרונות · 3×</span>
+          <span class="lchip">עיריית חדרה · 1×</span>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h3>העדפת-לקוחות <span style="font-weight:400">— שכבה 2 של Smart Match</span></h3>
+        <div class="unrow" style="background:var(--s50);border-color:var(--s200);color:var(--s500)">
+          ⚠️ עדיין לא זמין — הטבלה נכתבת ע"י מודול 6 ותישאר ריקה עד שהוא ייבנה
+          (<code>🚧 מ6 ← מ4</code>, כבר רשום ב-<code>db_roadmap.md</code>).
+        </div>
+      </div>
+
+      <div class="sec">
+        <h3>פרטי קשר</h3>
+        <div class="grid2">
+          <div class="kv"><span class="k">טלפון</span><span class="v num">052-1234567</span></div>
+          <div class="kv"><span class="k">אימייל</span><span class="v num">noa.shagia@gmail.com</span></div>
+          <div class="kv"><span class="k">עיר</span><span class="v">רמת גן</span></div>
+          <div class="kv"><span class="k">כתובת מלאה</span><span class="v">ביאליק 14</span></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h3>פרטים עסקיים <span style="font-weight:400">— רק למי שיש לה הרשאת-עריכה (§0 בתהליכים)</span></h3>
+        <div class="grid2">
+          <div class="kv"><span class="k">תעודת זהות</span><span class="v num">204587618</span></div>
+          <div class="kv"><span class="k">שכר שעתי</span><span class="v num">45 ₪</span></div>
+          <div class="kv"><span class="k">בנק · סניף · חשבון</span><span class="v num">לאומי · 782 · 118453</span></div>
+          <div class="kv"><span class="k">שפות</span><div class="chips"><span class="lchip">עברית</span><span class="lchip">אנגלית</span></div></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h3>אי-זמינות מוצהרת</h3>
+        <div class="unrow">15/08/2026 – 22/08/2026 · חופשה בחו״ל</div>
+      </div>
+
+      <div class="sec" style="margin-bottom:0">
+        <h3>היסטוריה <span style="font-weight:400">— לא כולל את השיבוץ הפעיל שכבר מופיע למעלה</span></h3>
+        <table class="hist">
+          <thead><tr><th>תאריך</th><th>אירוע</th><th>לקוח</th><th>סטטוס</th></tr></thead>
+          <tbody>
+            <tr><td class="num" style="direction:ltr;text-align:right">03/07/2026</td><td>השקת מוצר</td><td>מדיטק פתרונות</td><td><span class="stp ok">הושלם</span></td></tr>
+            <tr><td class="num" style="direction:ltr;text-align:right">19/06/2026</td><td>טקס פרסים עירוני</td><td>עיריית חדרה</td><td><span class="stp wd">ביטלה אחרי אישור</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo">
+    🌱 <b>מהמסד:</b> אין — <code>hostesses</code> ריקה (0 שורות, נמדד); היסטוריית-שיבוצים ו"עבדה
+    אצל" דורשות שורות ב-<code>assignments</code>, שגם היא ריקה. 🎭 <b>דמו מומצא:</b> כל שדה, כולל
+    שלוש שורות ההיסטוריה/שיבוץ-פעיל (שתיים בהמשך לנתוני-הדגמה שכבר מופיעים במסכים 1/2/4; השלישית
+    להדגמת מגוון-לקוחות/סטטוסים) והצ'יפ "עבדה לאחרונה לפני 3 שבועות". <b>הצ'יפ "לא ענתה ל-4
+    האחרונים" לא מוצג בכוונה</b> — הדיילת הזו ענתה 9 מ-10, מתחת לסף (`params.לא_ענתה_ל_N=4`)
+    שמדליק אותו, בדיוק כמו שהוא לא מופיע לה במסך 2. 📐 <b>נגזר ממודל:</b> רצועת-ההדגשים + פרטים-
+    מקובצים + רשימה-קשורה — מבנה שאול במפורש מ-<code>CustomerDetailsPage.jsx</code> (ר' ⑧ בכרטיס
+    למה זה בטוח לשאול מבנה בלי לשאול "עמוד מול חלון") · שיעור-היענות + "עבדה לאחרונה" + "לא ענתה
+    ל-N" מחושבים מאותן נוסחאות כמו הצ'יפים ב-Smart Match (מסך 2 §③), רק ללא הגבלה לאירוע ספציפי ·
+    "עבדה אצל X — Nx" הוא סיכום-לפי-לקוח של אותה עמודה שכבר מונה שטוח בטבלת "היסטוריה" · פאנל
+    ההעדפה מצביע ל-`🚧 מ6 ← מ4` הקיים, לא חובה חדשה.
+  </div>
+
+</div>
+</body>
+</html>

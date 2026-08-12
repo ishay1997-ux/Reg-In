@@ -12,6 +12,7 @@ import {
   isValidPositiveInt,
   isValidVatPercent,
   isValidGuestsRatio,
+  isValidIsraeliId,
 } from './validators'
 
 describe('EMAIL_REGEX', () => {
@@ -155,5 +156,41 @@ describe('isValidVatPercent / isValidGuestsRatio (params — מודול 3)', () 
     expect(isValidGuestsRatio(50)).toBe(true)
     expect(isValidGuestsRatio(0)).toBe(false)
     expect(isValidGuestsRatio(-1)).toBe(false)
+  })
+})
+
+// ---- מודול 4 (דיילות) — נוספו 09/08/2026, צעד 2.1 ----
+
+describe('isValidIsraeliId — ספרת-ביקורת, לא "9 ספרות"', () => {
+  it('מקבל ת"ז תקינות', () => {
+    // ⚠️ מספרים מחושבים, לא ת"ז של אדם אמיתי: הסכום המשוקלל שלהם מתחלק ב-10.
+    expect(isValidIsraeliId('123456782')).toBe(true)
+    expect(isValidIsraeliId('000000018')).toBe(true)
+  })
+
+  it('פוסל מספר בעל 9 ספרות שספרת-הביקורת שלו שגויה', () => {
+    // 🔑 זו כל הנקודה: בדיקת-אורך לבדה הייתה מכשירה את שניהם.
+    expect(isValidIsraeliId('123456789')).toBe(false)
+    expect(isValidIsraeliId('123456781')).toBe(false)
+  })
+
+  it('משלים אפסים מובילים — קלט בן 8 תווים שקול ל-9 עם אפס בראש', () => {
+    expect(isValidIsraeliId('12345678')).toBe(isValidIsraeliId('012345678'))
+  })
+
+  it('פוסל ריק, לא-ספרות, ויותר מ-9 ספרות', () => {
+    for (const bad of ['', '   ', null, undefined, 'abcdefghi', '12345678a', '1234567890']) {
+      expect(isValidIsraeliId(bad)).toBe(false)
+    }
+  })
+
+  it('פוסל מחרוזת אפסים — סכום 0 מתחלק ב-10 ואינו ת"ז', () => {
+    // מלכודת אמיתית באלגוריתם: `sum % 10 === 0` לבדו מכשיר את "000000000".
+    expect(isValidIsraeliId('000000000')).toBe(false)
+  })
+
+  it('מקבל מספר עם רווחים או מקפים בקצוות/באמצע — המשתמשת מדביקה מהטלפון', () => {
+    expect(isValidIsraeliId(' 123456782 ')).toBe(true)
+    expect(isValidIsraeliId('123-456-782')).toBe(true)
   })
 })

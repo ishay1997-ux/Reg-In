@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
+// המנוע הגנרי — מיובא כאן כדי לאמת שהנוסחים הספציפיים באמת עוברים דרכו אל המסך.
+import { EMAIL_SEND_RESULT, emailSendDisabledReason, sendResultMessage } from '@/lib/email'
 import {
+  QUOTE_SEND_FAILED_MESSAGE,
+  QUOTE_SEND_NO_PERMISSION_REASON,
   QUOTE_STATUS_LABELS,
   QUOTE_ACTION_LABELS,
   QUOTE_REJECTED_TOAST,
@@ -1040,6 +1044,34 @@ describe('buildQuoteEmailPayload — החוזה מול תרחיש ה-Make', () =
     expect(
       buildQuoteEmailPayload({ ...ARGS, quote: { ...SENDABLE_QUOTE, customers: {} } }),
     ).toBeNull()
+  })
+})
+
+// ── שני הנוסחים שעברו לכאן מהמנוע הגנרי, 09/08/2026 (פזה 0 של מודול 4) ────────────
+// ⚠️ **הבדיקה החשובה כאן היא לא שהמחרוזות קיימות אלא שהן עדיין מגיעות למסך.** מחרוזת
+// שעברה קובץ ואיש לא העביר אותה לקורא נעלמת בשקט: המשתמש היה מקבל את ברירת-המחדל
+// הגנרית של המנוע במקום את הנוסח שנכתב לו, בלי שגיאה ובלי שבדיקה קיימת נופלת.
+describe('נוסחי-השליחה של הצעת-מחיר — ספציפיים למודול, לא למנוע', () => {
+  it('שני הנוסחים מדברים על הצעה, כלומר הם באמת ספציפיים למודול', () => {
+    expect(QUOTE_SEND_NO_PERMISSION_REASON).toContain('הצעות')
+    expect(QUOTE_SEND_FAILED_MESSAGE).toContain('ההצעה')
+    // "הורד את הקובץ" הוא בדיוק מה שאי-אפשר לומר לזימון-משמרת — ולכן הוא כאן ולא במנוע.
+    expect(QUOTE_SEND_FAILED_MESSAGE).toContain('הורד את הקובץ')
+  })
+
+  it('המנוע מקבל אותם ומחזיר אותם — ולא את ברירת-המחדל הגנרית', () => {
+    expect(
+      emailSendDisabledReason({
+        email: 'ron@meditech-demo.co.il',
+        template: 'שלום [שם_איש_קשר],',
+        canEdit: false,
+        noPermissionReason: QUOTE_SEND_NO_PERMISSION_REASON,
+      }),
+    ).toBe(QUOTE_SEND_NO_PERMISSION_REASON)
+
+    expect(
+      sendResultMessage(EMAIL_SEND_RESULT.FAILED, { failedMessage: QUOTE_SEND_FAILED_MESSAGE }),
+    ).toBe(QUOTE_SEND_FAILED_MESSAGE)
   })
 })
 

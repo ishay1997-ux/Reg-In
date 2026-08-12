@@ -6,7 +6,7 @@
 > נכתב כי המסקנות שרדו על הדיסק והקישורים לא, **וישי מציג בכנס** — *"ככה מקובל"* בלי מקור
 > אינה תשובה שם. **הנימוקים המלאים: `discovery-log.md`.**
 > ⚠️ **מה שאינו כאן:** המקורות של האלגוריתם עצמו (‏Nature 2025 · Uber · DoorDash · Instacart ·
-> IMDb · OECD) — **הם כבר ב-`docs/module4_smart_match_research.md` §6.**
+> IMDb · OECD) — **הם כבר ב-`docs/specs/module_04_hostesses/module4_smart_match_research.md` §6.**
 
 ---
 

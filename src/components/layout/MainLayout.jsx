@@ -15,7 +15,11 @@ export default function MainLayout() {
   // בטעות ל-/login בכל רענון (באונס התחברות/הבהוב).
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div
+        role="status"
+        aria-live="polite"
+        className="min-h-screen flex items-center justify-center bg-slate-50"
+      >
         <p className="text-slate-500">טוען...</p>
       </div>
     )

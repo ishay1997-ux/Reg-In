@@ -240,6 +240,101 @@ const QUOTES = [
   },
 ]
 
+// חמש דיילות-דגמה נוספות למאגר, למסך Smart Match (צעד 4.2). 🚫 בלי המילה "דמו" בשום שדה
+// (הכרעת-ישי, אותו כלל כמו local-14 לעשרים הקיימות) — שמות ריאליים, לא מתנגשים עם חמשת
+// הדיילות שכבר משובצות בפועל לאירוע 8 (נועה שגיא · רוני אלמוג · עדי שפירא · דנה ברק ·
+// הילה מזרחי, ר' STATUS.md).
+// 🔴 קואורדינטות קבועות בקוד ולא גאוקוד: Nominatim חוסם User-Agent של node (`Access denied`,
+// מתועד ב-`04_hostesses/CLAUDE.md`). המרחקים מחושבים מראש מול אירוע 8 (32.1062629/34.8101508,
+// אקספו ת"א) ונבחרו כדי שכל אחד מחמשת התנאים בשער (§ שכבה 1 ב-`smartMatch.js`) יודגם בבידוד —
+// לא שחזור-ליחסי-ההיענות ההיסטוריים של `spec.md §3.1` (המספר `0.67/0.66/0.64` כבר מוכח בבדיקת
+// היחידה; שחזורו החי היה דורש עשרות שיבוצי-עבר בדויים ומכניס ריקבון-פיקסטורות חדש — הכרעה
+// עם ישי, 11/08/2026).
+const HOSTESSES = [
+  {
+    id_number: '44711521',
+    full_name: 'מאיה כהן',
+    phone: '050-2217731',
+    email: 'maya.cohen@regin-demo.co.il',
+    city: 'הרצליה',
+    address: 'סוקולוב 14, הרצליה',
+    hourly_rate: 45,
+    bank_name: 'בנק הפועלים',
+    bank_branch: '612',
+    bank_account: '104223',
+    lat: 32.1624,
+    lng: 34.8447,
+    has_car: true, // קרובה (~7 ק"מ) ועם רכב — עוברת בשער בלי שהרכב נדרש כדי להסביר את זה
+  },
+  {
+    id_number: '44711539',
+    full_name: 'שירי לוגסי',
+    phone: '052-8834410',
+    email: 'shiri.lugassi@regin-demo.co.il',
+    city: 'נתניה',
+    address: 'הרצל 22, נתניה',
+    hourly_rate: 48,
+    bank_name: 'בנק לאומי',
+    bank_branch: '904',
+    bank_account: '227719',
+    lat: 32.3215,
+    lng: 34.8532,
+    has_car: true, // בינונית (~24 ק"מ, מתחת לגולפוסט) — עוברת ללא תלות ברכב
+  },
+  {
+    id_number: '44711547',
+    full_name: 'טל ברקאי',
+    phone: '054-3395512',
+    email: 'tal.barkai@regin-demo.co.il',
+    city: 'ירושלים',
+    address: 'יפו 88, ירושלים',
+    hourly_rate: 46,
+    bank_name: 'בנק דיסקונט',
+    bank_branch: '083',
+    bank_account: '551084',
+    lat: 31.7683,
+    lng: 35.2137,
+    // 🎯 רחוקה מעל הגולפוסט (~53 ק"מ, מתחת לשער 80) **עם** רכב — עוברת בזכות הרכב בלבד.
+    // הניגוד ל"קרן אשכנזי" למטה (אותו טווח-מרחק, בלי רכב, נפסלת) הוא ההדגמה החיה של §11.5.
+    has_car: true,
+  },
+  {
+    id_number: '44711554',
+    full_name: 'קרן אשכנזי',
+    phone: '053-6621087',
+    email: 'keren.ashkenazi@regin-demo.co.il',
+    city: 'חיפה',
+    address: 'העצמאות 40, חיפה',
+    hourly_rate: 47,
+    bank_name: 'מזרחי טפחות',
+    bank_branch: '457',
+    bank_account: '339061',
+    lat: 32.794,
+    lng: 34.9896,
+    // 🚫 רחוקה מעל הגולפוסט (~78 ק"מ, עדיין מתחת לשער 80) ובלי רכב ⇒ נפסלת בשער
+    // ("בלי רכב מ-40 ק"מ זו פסילה מוחלטת ולא שיפור שולי", §11.5).
+    has_car: false,
+  },
+  {
+    id_number: '44711562',
+    full_name: 'ליאת רזניק',
+    phone: '058-7743295',
+    email: 'liat.reznik@regin-demo.co.il',
+    city: 'רעננה',
+    address: 'אחוזה 61, רעננה',
+    hourly_rate: 44,
+    bank_name: 'בנק יהב',
+    bank_branch: '129',
+    bank_account: '882014',
+    lat: 32.1848,
+    lng: 34.8713,
+    // 🚫 קרובה (~10 ק"מ) ועם רכב — ועדיין נפסלת, כי היא מוצהרת לא-זמינה בתאריך האירוע
+    // (טווח 20/08–25/08/2026 חופף ל-22/08). ההדגמה: מרחק ורכב אינם התנאי היחיד בשער.
+    has_car: true,
+    unavailability: { start_date: '2026-08-20', end_date: '2026-08-25', note: 'חופשה מתוכננת' },
+  },
+]
+
 const supabase = createClient(VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
 const { error: authError } = await supabase.auth.signInWithPassword({
   email: E2E_CEO_EMAIL,
@@ -279,11 +374,63 @@ async function reset() {
   return ids.length
 }
 
+// מחיקת חמש דיילות-הדגמה (אם קיימות מריצה קודמת) — מזוהות לפי ת"ז קבועה, לא לפי תג
+// טקסטואלי (בלי המילה "דמו" בשום שדה, ר' ההערה ליד `HOSTESSES`). `hostess_unavailability`
+// נמחקת עם ה-`on delete cascade` שלה מ-`hostesses`; אין להן שיבוצים (הן לא מוזמנות
+// לאף אירוע ע"י הסקריפט) ולכן `on delete restrict` של `assignments` אינו חוסם.
+async function resetHostesses() {
+  const ids = HOSTESSES.map((h) => h.id_number)
+  const { data: existing } = await supabase
+    .from('hostesses')
+    .select('id_number')
+    .in('id_number', ids)
+  const removed = existing?.length ?? 0
+  if (removed > 0) {
+    await supabase.from('hostesses').delete().in('id_number', ids)
+  }
+  return removed
+}
+
 if (process.argv.includes('--reset')) {
   const removed = await reset()
-  console.log(`✓ נמחקו ${removed} לקוחות-דמו והצעותיהם.`)
+  const removedHostesses = await resetHostesses()
+  console.log(`✓ נמחקו ${removed} לקוחות-דמו והצעותיהם, ו-${removedHostesses} דיילות-דגמה.`)
   process.exit(0)
 }
+
+// 🔑 חמש הדיילות נזרעות **לפני** לקוחות/הצעות ובלי תלות בהן — נמצא בפועל (11/08/2026)
+// ש-`reset()` למעלה שותק על שגיאה (אין בדיקת `error` בשלוש קריאות ה-delete/update שלה)
+// ואינו יכול למחוק/לאפס הצעה שכבר אושרה **דרך המסך** (טריגר-הנעילה חוסם), כלומר
+// `node scripts/demo-seed.mjs` הרגיל נכשל היום ב-`process.exit(1)` על התנגשות
+// company_number עוד **לפני** שהוא מגיע לקטע הדיילות. תועד כממצא (`04_hostesses/CLAUDE.md`),
+// לא תוקן — תיקון-אמת ל-`reset()` היה עלול להצליח למחוק את פרויקט 8 (`on delete cascade`
+// מ-`assignments`) ולסחוף את חמשת שיבוצי-ההדגמה המאושרים מ-3.7. הרצת הדיילות בעצמאות
+// מהחלק השבור מבטיחה שהן נוצרות גם אם חלק הלקוחות/הצעות ייכשל כרגיל.
+await resetHostesses()
+for (const h of HOSTESSES) {
+  const { unavailability, ...hostessRow } = h
+  // ⚠️ הוספה ישירה ולא דרך `createHostess`: הפונקציה האמיתית מגאוקדת את הכתובת,
+  // וגאוקוד חסום מ-node (`Access denied`, מתועד ב-`04_hostesses/CLAUDE.md`).
+  const { data: created, error: hostessError } = await supabase
+    .from('hostesses')
+    .insert({ ...hostessRow, status: 'active' })
+    .select()
+    .single()
+  if (hostessError) {
+    console.error(`✗ יצירת דיילת נכשלה (${h.full_name}): ${hostessError.message}`)
+    process.exit(1)
+  }
+  if (unavailability) {
+    const { error: unavailError } = await supabase
+      .from('hostess_unavailability')
+      .insert({ hostess_id: created.hostess_id, ...unavailability })
+    if (unavailError) {
+      console.error(`✗ רישום אי-זמינות נכשל (${h.full_name}): ${unavailError.message}`)
+      process.exit(1)
+    }
+  }
+}
+console.log(`✓ נוצרו ${HOSTESSES.length} דיילות-דגמה למסך Smart Match.`)
 
 await reset()
 

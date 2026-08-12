@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מוקאפ מ4 · משטח 5 — דף ציבורי לאישור/סירוב משמרת · מאושר</title>
+<style>
+  /* אותה פלטה וגופן כמו שאר מוקאפי-מ4 (02/04 המאושרים) — לא ממציאים שפה חדשה למשטח חדש,
+     גם אם הוא היחיד שרץ מחוץ לאפליקציה הפנימית. */
+  :root{
+    --primary:#0D9488;--teal50:#F0FDFA;--teal100:#CCFBF1;--teal700:#0F766E;
+    --green50:#F0FDF4;--green100:#DCFCE7;--green200:#BBF7D0;--green700:#15803D;
+    --amber50:#FFFBEB;--amber200:#FDE68A;--amber700:#B45309;
+    --red50:#FEF2F2;--red200:#FECACA;--red600:#DC2626;--red700:#B91C1C;
+    --bg:#F8FAFC;--s50:#F8FAFC;--s100:#F1F5F9;--s200:#E2E8F0;--s300:#CBD5E1;
+    --s400:#94A3B8;--s500:#64748B;--s600:#475569;--s700:#334155;--s800:#1E293B;--r:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--s800);font-size:14px;
+       font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:16px 18px 34px}
+  .note{background:var(--amber50);border:1px solid var(--amber200);color:#92400E;border-radius:var(--r);
+        padding:9px 12px;font-size:12px;margin-bottom:16px;line-height:1.65}
+  h1{font-size:19px;margin:0}
+  .sub{color:var(--s500);font-size:12px;margin-top:2px}
+
+  .layout{display:flex;gap:22px;align-items:flex-start;margin-top:16px}
+
+  /* מסגרת-טלפון — הדיילת רואה את זה במסך שלה, לא בסייד-בר של האפליקציה */
+  .phoneframe{flex:none;width:340px;background:#111827;border-radius:34px;padding:12px;
+              box-shadow:0 10px 30px rgba(15,23,42,.25)}
+  .phonescreen{background:#fff;border-radius:24px;min-height:560px;padding:22px 18px;
+               display:flex;flex-direction:column;gap:16px}
+  .brand{display:flex;align-items:center;gap:7px;margin-bottom:2px}
+  .brand .dot{width:9px;height:9px;border-radius:999px;background:var(--primary)}
+  .brand .nm{font-size:11.5px;color:var(--s500);font-weight:600}
+
+  .hello{font-size:15.5px;font-weight:700}
+  .card{border:1px solid var(--s200);border-radius:14px;padding:14px 15px;background:var(--s50)}
+  .card .ev{font-size:15px;font-weight:700;color:var(--s800)}
+  .card .row{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:12.5px;color:var(--s600)}
+  .card .ic{width:16px;text-align:center;flex:none;color:var(--s400)}
+  .card .rate{margin-top:10px;padding-top:10px;border-top:1px dashed var(--s300);
+              font-size:13px;font-weight:600;color:var(--teal700)}
+
+  .q{font-size:14px;font-weight:600;text-align:center;margin-top:2px}
+  .btns{display:flex;flex-direction:column;gap:9px}
+  .btn{border-radius:12px;padding:13px 14px;font-size:14.5px;font-weight:700;text-align:center;
+       border:1.5px solid transparent}
+  .btn.yes{background:var(--primary);color:#fff}
+  .btn.no{background:#fff;border-color:var(--s300);color:var(--s700)}
+
+  .expire{font-size:11px;color:var(--s500);text-align:center;margin-top:auto}
+  .expire b{color:var(--amber700)}
+
+  /* מסכי-תוצאה — תודה / פג-תוקף / כבר-אוישה / שגיאה */
+  .result{display:flex;flex-direction:column;align-items:center;justify-content:center;
+          text-align:center;gap:10px;flex:1}
+  .result .ico{width:52px;height:52px;border-radius:999px;display:flex;align-items:center;
+               justify-content:center;font-size:24px}
+  .result.ok .ico{background:var(--green100);color:var(--green700)}
+  .result.no .ico{background:var(--s100);color:var(--s500)}
+  .result.filled .ico{background:var(--teal100);color:var(--teal700)}
+  .result.dead .ico{background:var(--amber50);color:var(--amber700)}
+  .result.err .ico{background:var(--red50);color:var(--red700)}
+  .result .tt{font-size:14.5px;font-weight:700}
+  .result .dd{font-size:12px;color:var(--s500);line-height:1.6;max-width:230px}
+
+  .side{flex:1;min-width:0}
+  .panel{background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);padding:12px 14px;margin-bottom:14px}
+  .panel h2{font-size:13.5px;margin:0 0 8px}
+  .panel .cs{font-size:11px;color:var(--s500);margin:-6px 0 10px}
+
+  .states{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+  .st{border:1px solid var(--s200);border-radius:var(--r);padding:9px 10px}
+  .st .lbl{font-size:11px;font-weight:700;color:var(--s700);margin-bottom:4px}
+  .st .tx{font-size:11px;color:var(--s500);line-height:1.5}
+
+  .flowlist{font-size:12px;color:var(--s600);line-height:2}
+  .flowlist b{color:var(--s800)}
+  code{background:var(--s100);border-radius:4px;padding:1px 5px;font-size:11px;direction:ltr;
+       unicode-bidi:isolate;display:inline-block}
+  .legend{font-size:11.5px;color:var(--s500);line-height:1.9}
+  .legend b{color:var(--s700)}
+  .demo{margin-top:0;font-size:11px;color:var(--s500);background:var(--s50);
+        border:1px dashed var(--s300);border-radius:8px;padding:8px 11px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="note">
+    <b>✅ מוקאפ מאושר (08/08/2026).</b> משטח 5 אינו חלק מהאפליקציה הפנימית: אין סרגל-צד, אין
+    התחברות, ומי שרואה את זה הוא דיילת בטלפון שלה. מסגרת-הטלפון משמאל מציגה את המצב הראשי
+    (<b>ממתין למענה</b>); מימין — שאר חמשת המצבים, מוצגים זה-לצד-זה **לצורך הסקירה בלבד**
+    (במציאות הדיילת רואה מצב אחד, לפי מה שקרה לשיבוץ שלה). כל תוכן הדף — 🎭 דמו, מסומן למטה.
+  </div>
+
+  <h1>משטח 5 · דף ציבורי לאישור/סירוב משמרת</h1>
+  <div class="sub">מה שהדיילת רואה כשהיא לוחצת על הקישור שקיבלה במייל</div>
+
+  <div class="layout">
+    <!-- הטלפון: המצב הראשי -->
+    <div class="phoneframe">
+      <div class="phonescreen">
+        <div class="brand"><span class="dot"></span><span class="nm">REG-IN · אישור השתתפות</span></div>
+
+        <div class="hello">שלום, נועה 👋</div>
+
+        <div class="card">
+          <div class="ev">כנס לקוחות שנתי — מדיטק פתרונות בע"מ</div>
+          <div class="row"><span class="ic">📍</span><span>אקספו תל אביב, ביתן 2</span></div>
+          <div class="row"><span class="ic">🕓</span><span>יום שלישי הקרוב · 18:00–22:00</span></div>
+          <div class="rate">תעריף: 45 ₪/שעה + נסיעות 30 ₪</div>
+        </div>
+
+        <div class="q">תוכלי להגיע למשמרת הזו?</div>
+        <div class="btns">
+          <div class="btn yes">✓ אני מגיעה</div>
+          <div class="btn no">לא אוכל הפעם</div>
+        </div>
+
+        <div class="expire">הקישור בתוקף עוד <b>42 שעות</b></div>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="panel">
+        <h2>חמשת המצבים הנוספים</h2>
+        <div class="cs">כל אחד מהם מחליף את כל תוכן הטלפון — לא נוסף עליו</div>
+        <div class="states">
+          <div class="st">
+            <div class="lbl">✓ תודה — אישרה</div>
+            <div class="tx">"תודה! רשמנו שאת מגיעה. פרטים סופיים יישלחו בקרוב."</div>
+          </div>
+          <div class="st">
+            <div class="lbl">תודה — סירבה</div>
+            <div class="tx">"תודה שעדכנת. נשמח לפנות אלייך בפעם הבאה."</div>
+          </div>
+          <div class="st">
+            <div class="lbl">🔴 המשרה כבר אוישה</div>
+            <div class="tx">"תודה שהתפנית — המשרה כבר אוישה לאירוע הזה. נשמח לפנות אלייך בפעם הבאה."</div>
+          </div>
+          <div class="st">
+            <div class="lbl">הקישור אינו בתוקף</div>
+            <div class="tx">"הקישור הזה אינו בתוקף יותר. אם עדיין מתאים לך — התקשרי למנהלת הגיוס."</div>
+          </div>
+          <div class="st">
+            <div class="lbl">קישור לא תקין</div>
+            <div class="tx">אותה הודעה גנרית כמו "לא בתוקף" — בכוונה לא מבחינה בין הסיבות</div>
+          </div>
+          <div class="st">
+            <div class="lbl">שגיאת-רשת</div>
+            <div class="tx">"לא הצלחנו לשמור את התשובה. נסי שוב, או התקשרי למנהלת."</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>③ מודל-האבטחה — מה קורה בלחיצה על "אני מגיעה"</h2>
+        <div class="flowlist">
+          1. הדפדפן קורא לפונקציית-DB <code>respond_to_shift_invite(token, 'confirmed')</code> —
+          <b>לא</b> כותב ישירות לטבלה.<br>
+          2. הפונקציה מאתרת שורה יחידה לפי הטוקן — לא לפי מזהה-דיילת ולא לפי מזהה-שיבוץ.<br>
+          3. בודקת: טוקן תקין → טוקן בתוקף (48ש׳/24ש׳-לאירוע) → סטטוס עדיין <code>pending</code>.<br>
+          4. אם הכול תקין: כותבת <b>רק</b> <code>confirmed_available</code> + <code>responded_at</code>.
+          שום שדה אחר.<br>
+          5. <code>assignments</code> עצמה נשארת <b>deny-all</b> — אין למשתמש-אנונימי גישה ישירה
+          לטבלה, בשום כיוון.
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>🏷️ דאטת-הדגמה מול נגזר-ממודל</h2>
+        <div class="demo">
+          <b>🌱 מהמסד:</b> כנס לקוחות שנתי · מדיטק פתרונות בע"מ · אקספו תל אביב, ביתן 2 · 18:00–22:00.<br>
+          <b>🎭 דמו מומצא:</b> השם "נועה שגיא" (המאגר ריק, 0 שורות) · שעת-השליחה והזמן-שנותר —
+          <b>נכתבו יחסית ("נותרו 42 שעות") ולא כתאריך-קבוע</b>, כדי לא לחזור על תקלת התאריך-הנעול
+          שנמצאה במוקאפים הקודמים.<br>
+          <b>📐 נגזר ממודל:</b> שלושת תנאי-הפקיעה · שני השדות היחידים שהפונקציה כותבת · הנוסח
+          "כבר אוישה" (מראה מ-<code>processes-approved.md §ב6</code>, לא ניסוח חדש).
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

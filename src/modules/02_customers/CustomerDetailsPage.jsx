@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import LoadingOrError from '@/components/LoadingOrError'
 import Money from '@/components/Money'
 import RowAction from '@/components/RowAction'
+import StatTile from '@/components/StatTile'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
@@ -39,10 +40,10 @@ import {
   approveQuote,
   getPricingCatalog,
   getQuoteScreenParams,
-  getSentQuoteIds,
   listQuotesByCustomer,
   rejectQuote,
 } from '@/modules/03_quotes/api'
+import { getSentEntityIds } from '@/api/email'
 import { formatDate } from '@/modules/03_quotes/quotePdf'
 import CustomerFormDialog from '@/modules/02_customers/CustomerFormDialog'
 import QuoteDocumentDialog from '@/modules/03_quotes/QuoteDocumentDialog'
@@ -85,25 +86,8 @@ function statusPill(quote) {
   return { label: QUOTE_STATUS_LABELS.rejected, className: 'bg-red-100 text-red-700' }
 }
 
-// אריח ברצועת-ההדגשים. value=null ⇒ טקסט-ריק במקום מספר, לעולם לא 0 מטעה.
-function Highlight({ label, value, sub, testId }) {
-  return (
-    <div
-      className="rounded-xl border border-teal-200 bg-teal-50/60 p-4 flex flex-col gap-0.5"
-      data-testid={testId}
-    >
-      <span className="text-xs text-slate-500">{label}</span>
-      {value == null ? (
-        <span className="text-sm text-slate-400">אין נתונים עדיין</span>
-      ) : (
-        <span className="text-xl font-bold text-slate-800">
-          <Money amount={value} />
-        </span>
-      )}
-      {sub && <span className="text-[11px] text-slate-500">{sub}</span>}
-    </div>
-  )
-}
+// אריח-המדד חולץ ל-`@/components/StatTile` (07/08/2026, הכרעת-ישי) — הוא היה מוגדר כאן
+// ובנפרד ב-QuotesPage, והשניים סטו בפועל. ⛔ לא להחזיר הגדרה מקומית.
 
 // שורת-פרט. התווית והערך נכתבים יחד בקומפוננטה אחת במכוון — שתי שורות שנכתבות בנפרד
 // מתפצלות בשקט וכל תווית נוחתת מעל ערך של מישהו אחר (קרה שלוש פעמים; src/CLAUDE.md).
@@ -218,7 +202,10 @@ export default function CustomerDetailsPage() {
         // את העמוד — אבל גם **אינו נבלע**: הוא מחזיר את המצב ל"לא ידוע", שני החיוויים
         // נעלמים והמשתמש מקבל שורת-הסבר במקומם.
         try {
-          const ids = await getSentQuoteIds(qs.map((row) => row.quote_id))
+          const ids = await getSentEntityIds(
+            'quote',
+            qs.map((row) => row.quote_id),
+          )
           if (!cancelled) setSentIds(ids)
         } catch {
           if (!cancelled) setSentIds(null)
@@ -354,8 +341,8 @@ export default function CustomerDetailsPage() {
         </div>
 
         {/* ---- רצועת-הדגשים: שלושת המספרים החיים בלבד (LOCAL-14) ---- */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-6 pb-0">
-          <Highlight
+        <div className="flex flex-wrap gap-3 p-6 pb-0">
+          <StatTile
             label={'סה"כ הכנסות'}
             value={metrics.totalRevenue}
             sub={
@@ -365,13 +352,13 @@ export default function CustomerDetailsPage() {
             }
             testId="metric-revenue"
           />
-          <Highlight
+          <StatTile
             label="שווי הצעות פתוחות"
             value={metrics.openQuotesValue}
             sub={pendingQuotesLabel(counts.in_progress)}
             testId="metric-open"
           />
-          <Highlight
+          <StatTile
             label="גודל עסקה ממוצע"
             value={metrics.avgDealSize}
             sub={metrics.avgDealSize == null ? 'אין עסקאות סגורות' : undefined}

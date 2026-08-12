@@ -3,7 +3,11 @@
 // ----------------------------------------------------------------------------
 // <AuthProvider> עוטף את כל ה-Router כך שלכל מסך יש גישה ל"מי אני ומה מותר לי".
 // מבנה הנתיבים:
-//   • /login — הנתיב הציבורי היחיד, מחוץ ל-MainLayout (בלי סרגלים, בלי הגנת session).
+//   • /login — מחוץ ל-MainLayout (בלי סרגלים, בלי הגנת session).
+//   • /shift/:token — משטח 5, הדף הציבורי לאישור משמרת. **הנתיב היחיד שנצרך ע"י אדם
+//     בלי חשבון כלל** (‏/login לפחות מוביל להתחברות; זה לא). מחוץ ל-MainLayout, בלי
+//     ProtectedRoute, והגנתו כולה בשתי פונקציות-DB. ר' ההערה המלאה בגוף הקובץ.
+//     *(השורה הזו אמרה "‏/login — הנתיב הציבורי היחיד" עד 10/08/2026, צעד 3.6.)*
 //   • כל השאר — מקוננים תחת <MainLayout> שאוכף session פעיל + status='active'.
 //       – / (WelcomePage) ו-/profile נגישים לכל משתמש מחובר.
 //       – /system/* — permission-driven (ProtectedRoute allow={SYSTEM_MODULES}): נגיש למי
@@ -31,6 +35,8 @@ import CustomersPage from '@/modules/02_customers/CustomersPage'
 import CustomerDetailsPage from '@/modules/02_customers/CustomerDetailsPage'
 import QuoteBuilderPage from '@/modules/03_quotes/QuoteBuilderPage'
 import QuotesPage from '@/modules/03_quotes/QuotesPage'
+import HostessesPage from '@/modules/04_hostesses/HostessesPage'
+import PublicConfirmPage from '@/modules/04_hostesses/PublicConfirmPage'
 import WelcomePage from '@/components/WelcomePage'
 import UnderConstruction from '@/components/UnderConstruction'
 import ProfileSettingsPage from '@/components/ProfileSettingsPage'
@@ -47,6 +53,21 @@ function App() {
             <ToastProvider>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
+
+                {/* 🔴 משטח 5 — הדף הציבורי לאישור/סירוב משמרת. **מחוץ ל-MainLayout ובלי
+                    ProtectedRoute, בכוונה מלאה**: מי שפותחת אותו היא דיילת בטלפון שלה,
+                    שקיבלה קישור במייל — **אין לה חשבון ולא יהיה לה**. עטיפה בהגנה כלשהי
+                    תשבור את הדף בדיוק עבור מי שהוא נבנה בשבילה.
+                    🔴 **הנתיב `/shift/:token` נעול ואינו בחירה** — `confirmUrlFor`
+                    (`src/lib/shiftEmails.js:26`) כבר צרב אותו לתוך זימונים שנשלחו, ומייל
+                    אי-אפשר להחזיר. שינוי-נתיב אינו נכשל בקול: הוא מייצר 404 לדיילת
+                    שמחזיקה קישור ששלחנו, והמנהלת רואה שיבוץ שפשוט לא נענה.
+                    ℹ️ **‏`App.routes.test.jsx` אינו נוגע במסלול הזה** — הוא סורק אך ורק
+                    את הצאצאים של `<Route element={<MainLayout />}>`. ‏`/login` הוא אותו
+                    תקדים בדיוק, והוא אינו ב-`ALLOWED_UNPROTECTED`. 🚫 **ולכן גם אין
+                    להוסיף אותו לשם:** רשומה כזו הייתה משתיקה את השומר אם מישהו יעביר את
+                    הדף לתוך MainLayout בעתיד — כלומר בדיוק במקרה שבו הוא נחוץ. */}
+                <Route path="/shift/:token" element={<PublicConfirmPage />} />
 
                 <Route element={<MainLayout />}>
                   <Route index element={<WelcomePage />} />
@@ -126,7 +147,7 @@ function App() {
                     path="hostesses"
                     element={
                       <ProtectedRoute allow="דיילות">
-                        <UnderConstruction moduleName="דיילות" />
+                        <HostessesPage />
                       </ProtectedRoute>
                     }
                   />

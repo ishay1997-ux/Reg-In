@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מוקאפ מ4 · מסך 3ג — חלון עריכת דיילת (מאושר)</title>
+<style>
+  /* פלטה, גופן ומבנה-הטופס — זהים ל-06_add_hostess_approved.html (אותו דיאלוג, מצב עריכה
+     במקום הוספה) ול-CustomerFormDialog.jsx (נעילת-שדה-מזהה במצב-עריכה — ר' input.locked). */
+  :root{
+    --primary:#0D9488; --teal50:#F0FDFA; --teal100:#CCFBF1; --teal600:#0D9488; --teal700:#0F766E;
+    --green50:#F0FDF4; --green100:#DCFCE7; --green200:#BBF7D0; --green700:#15803D;
+    --amber50:#FFFBEB; --amber100:#FEF3C7; --amber200:#FDE68A; --amber700:#B45309;
+    --red50:#FEF2F2; --red200:#FECACA; --red600:#DC2626; --red700:#B91C1C;
+    --bg:#F8FAFC; --s50:#F8FAFC;--s100:#F1F5F9;--s200:#E2E8F0;--s300:#CBD5E1;
+    --s400:#94A3B8;--s500:#64748B;--s600:#475569;--s700:#334155;--s800:#1E293B;
+    --r:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--s800);font-size:14px;
+       font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:16px 18px 40px}
+  .note{background:var(--amber50);border:1px solid var(--amber200);color:#92400E;border-radius:var(--r);
+        padding:9px 12px;font-size:12px;margin-bottom:12px;line-height:1.65}
+  h1{font-size:19px;margin:0}
+  .sub{color:var(--s500);font-size:12px;margin-top:2px}
+
+  .backdrop{background:rgba(15,23,42,.35);border-radius:16px;padding:26px;display:flex;justify-content:center}
+  .dialog{background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(15,23,42,.18);
+          padding:20px 22px 18px;max-width:520px;width:100%}
+  .dtitle{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .dialog h2{font-size:16px;margin:0}
+  .dialog .desc{color:var(--s500);font-size:12.5px;margin-top:3px;margin-bottom:16px;line-height:1.6}
+  .frow{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+  .frow label{font-size:12.5px;color:var(--s700);font-weight:500}
+  .frow label .req{color:var(--red600)}
+  .frow .hint{font-size:10.5px;color:var(--s400);font-weight:400}
+  .frow input, .frow select{border:1px solid var(--s300);border-radius:8px;padding:8px 10px;
+        font-size:13px;color:var(--s800);width:100%}
+  .frow input::placeholder{color:var(--s400)}
+  .frow input.err{border-color:var(--red600)}
+  .frow input.ok-num{direction:ltr;text-align:right;unicode-bidi:isolate}
+  .frow input.locked{background:var(--s50);color:var(--s500);border-color:var(--s200)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1.2fr 0.8fr 1fr;gap:10px}
+  .ferr{color:var(--red600);font-size:11.5px}
+  .fbank-title{font-size:11.5px;color:var(--s500);font-weight:600;margin:2px 0 6px}
+  .sectitle{font-size:12.5px;color:var(--s700);font-weight:600;margin:16px 0 8px;
+            border-top:1px solid var(--s100);padding-top:14px}
+
+  .stars{display:flex;gap:3px;align-items:center;font-size:17px}
+  .stars .on{color:var(--s700)}
+  .stars .off{color:var(--s300)}
+  .stars .n{font-size:11.5px;color:var(--s500);margin-right:6px}
+
+  .tglrow{display:flex;align-items:center;justify-content:space-between;padding:2px 0}
+  .tgl{position:relative;display:inline-block;width:34px;height:19px;flex:none}
+  .tgl input{opacity:0;width:0;height:0;position:absolute}
+  .tgl-track{position:absolute;inset:0;background:var(--s300);border-radius:999px}
+  .tgl-thumb{position:absolute;top:2px;right:2px;width:15px;height:15px;border-radius:50%;background:#fff;
+             box-shadow:0 1px 2px rgba(0,0,0,.25)}
+  .tgl input:checked + .tgl-track{background:var(--teal600)}
+  .tgl input:checked + .tgl-track .tgl-thumb{right:auto;left:2px}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .lchip{border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--s300);color:var(--s600);background:#fff}
+  .lchip.sel{background:var(--teal50);border-color:#99F6E4;color:var(--teal700);font-weight:600}
+
+  .st{font-size:11px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap;display:inline-block}
+  .st.active{background:var(--green100);color:var(--green700)}
+
+  .unrow{display:flex;align-items:center;justify-content:space-between;background:var(--amber50);
+         border:1px solid var(--amber200);border-radius:8px;padding:7px 11px;font-size:12.5px;
+         color:#92400E;margin-bottom:7px}
+  .unrow button{border:0;background:none;color:var(--red600);font-size:12px;cursor:pointer}
+  .addrange{display:flex;gap:8px;align-items:flex-end;margin-top:4px}
+  .addrange .frow{margin-bottom:0;flex:1}
+  .addrange button{border:1px solid var(--s300);background:#fff;color:var(--s700);border-radius:8px;
+                    padding:8px 13px;font-size:12.5px;font-weight:600;white-space:nowrap}
+
+  .savebar{display:flex;gap:8px;margin-top:16px}
+  .btn-cancel{flex:1;border:1px solid var(--s300);background:#fff;color:var(--s700);border-radius:8px;
+              padding:10px;font-size:13.5px;font-weight:600}
+  .btn-save{flex:2;border:0;background:var(--primary);color:#fff;border-radius:8px;
+            padding:10px;font-size:13.5px;font-weight:600}
+
+  .states{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}
+  .sbox{flex:1;min-width:280px;background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.07);
+        padding:12px 14px}
+  .sbox h3{font-size:12.5px;margin:0 0 9px;color:var(--s700)}
+
+  .demo{margin-top:16px;font-size:11px;color:var(--s500);background:#fff;
+        border:1px dashed var(--s300);border-radius:8px;padding:8px 11px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="note">
+    ✅ <b>מוקאפ מאושר (08/08/2026).</b> משטח 3ג · חלון עריכת דיילת · נפתח מ"מאגר דיילות" (מסך 3)
+    בלחיצה על עיפרון-העריכה. מקור התוכן: <code>processes-approved.md §א1</code> (אותם שדות
+    כמו 3ב) + <code>§א2</code> (עדכון שוטף, הקפאת-תעריף) + <code>§א3</code> (אי-זמינות) — שלושתם
+    נקראו במלואם לפני הציור, לפי הכלל שנכתב אתמול ב-📐 מבנה-הכרטיס. **לא כלל §א4 (השבתה)** —
+    ר' ③ למטה למה, ואיזו בדיקה בכל זאת בוצעה מולו.
+  </div>
+
+  <h1>עריכת דיילת</h1>
+  <div class="sub">מסך 3ג מתוך 8 · הדיאלוג הראשי במצב-עריכה, ופאנל אחד למטה מדגים הוספת טווח
+    אי-זמינות חדש.</div>
+
+  <div class="backdrop">
+    <div class="dialog">
+      <div class="dtitle">
+        <h2>עריכת דיילת: נועה שגיא</h2>
+        <span class="st active">פעילה</span>
+      </div>
+      <div class="desc">
+        עדכון פרטי הדיילת. <b>תעודת הזהות קבועה ואינה ניתנת לשינוי</b> — היא המזהה שלה במערכת.
+        הפעלה/השבתה נעשית משורת הדיילת בטבלת המאגר, לא מכאן.
+      </div>
+
+      <div class="frow">
+        <label>תעודת זהות</label>
+        <input class="ok-num locked" value="204587618" disabled>
+      </div>
+
+      <div class="grid2">
+        <div class="frow">
+          <label>שם מלא <span class="req">*</span></label>
+          <input value="נועה שגיא">
+        </div>
+        <div class="frow">
+          <label>טלפון <span class="req">*</span></label>
+          <input class="ok-num" value="052-1234567">
+        </div>
+      </div>
+
+      <div class="frow">
+        <label>אימייל</label>
+        <input class="ok-num" value="noa.shagia@gmail.com">
+      </div>
+
+      <div class="grid2">
+        <div class="frow">
+          <label>עיר</label>
+          <input value="רמת גן">
+        </div>
+        <div class="frow">
+          <label>כתובת מלאה</label>
+          <input value="ביאליק 14">
+        </div>
+      </div>
+
+      <div class="frow">
+        <label>שכר שעתי (₪) <span class="req">*</span> <span class="hint">— מתחת ל-35 ₪ (שכר מינימום) חוסם שמירה</span></label>
+        <input class="ok-num" value="45">
+        <span class="hint" style="color:var(--amber700)">🔴 שינוי כאן <b>לא ישנה</b> תעריף של שיבוץ עתידי שכבר קיים — הוא הוקפא ברגע השיבוץ (הבטחנו לה תעריף במייל). ההעלאה תחול על השיבוץ הבא בלבד.</span>
+      </div>
+
+      <div class="fbank-title">פרטי בנק</div>
+      <div class="grid3">
+        <div class="frow" style="margin-bottom:0"><label>בנק</label><input value="לאומי"></div>
+        <div class="frow" style="margin-bottom:0"><label>סניף</label><input class="ok-num" value="782"></div>
+        <div class="frow" style="margin-bottom:0"><label>מס' חשבון</label><input class="ok-num" value="118453"></div>
+      </div>
+
+      <div class="frow" style="margin-top:13px">
+        <label>התרשמות המנהלת (1–5) <span class="hint">— לא "דירוג": זו דעתך, לא ציון-מערכת</span></label>
+        <div class="stars"><span class="on">★</span><span class="on">★</span><span class="on">★</span><span class="on">★</span><span class="off">★</span><span class="n">4 מתוך 5</span></div>
+      </div>
+
+      <div class="frow">
+        <div class="tglrow">
+          <label style="margin:0">יש רכב?</label>
+          <span class="tgl"><input type="checkbox" checked><span class="tgl-track"><span class="tgl-thumb"></span></span></span>
+        </div>
+      </div>
+
+      <div class="frow">
+        <label>שפות</label>
+        <div class="chips">
+          <span class="lchip sel">עברית</span>
+          <span class="lchip sel">אנגלית</span>
+          <span class="lchip">רוסית</span>
+          <span class="lchip">ערבית</span>
+          <span class="lchip">אמהרית</span>
+        </div>
+      </div>
+
+      <div class="sectitle">אי-זמינות מוצהרת <span class="hint" style="font-weight:400">— טווח תאריכים + הערה, לא תאריך יחיד</span></div>
+      <div class="unrow">
+        <span>15/08/2026 – 22/08/2026 · חופשה בחו״ל</span>
+        <button>הסר</button>
+      </div>
+      <div class="addrange">
+        <div class="frow"><label>מ-תאריך</label><input class="ok-num" placeholder="DD/MM/YYYY" value=""></div>
+        <div class="frow"><label>עד-תאריך</label><input class="ok-num" placeholder="DD/MM/YYYY" value=""></div>
+        <div class="frow" style="flex:2"><label>הערה קצרה</label><input placeholder="לדוגמה: חופשה, מחלה, לימודים" value=""></div>
+        <button>+ הוסף טווח</button>
+      </div>
+
+      <div class="savebar">
+        <button class="btn-cancel">ביטול</button>
+        <button class="btn-save">שמור שינויים</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="states">
+    <div class="sbox">
+      <h3>🟢 טווח אי-זמינות נוסף — עדיין לא נשמר</h3>
+      <p style="font-size:12.5px;color:var(--s600);margin:0 0 8px">כך נראית השורה שמתווספת לרשימה למעלה ברגע שלוחצים "+ הוסף טווח" — <b>נוספת לטופס בזיכרון בלבד, לא נכתבת מיד ל-DB.</b> היא נשמרת בפועל רק עם "שמור שינויים" הכללי, יחד עם שאר השדות (אותו דפוס בדיוק כמו "אנשי קשר נוספים" ב-<code>CustomerFormDialog.jsx</code> — לא מיידי, כי אין עוגן בתהליכים שאומר אחרת, וזה כבר הדפוס הקיים בקוד לרשימה-בתוך-טופס):</p>
+      <div class="unrow" style="background:var(--s50);border-color:var(--s200);color:var(--s700)">
+        <span>05/09/2026 – 07/09/2026 · בדיקות רפואיות</span>
+        <button>הסר</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo">
+    🌱 <b>מהמסד:</b> אין — <code>hostesses</code> ריקה (0 שורות, נמדד); אין גם טבלת-אי-זמינות
+    חיה עדיין (רשומה כ"חדש מהיום" ב-<code>processes-approved.md</code>, טרם קיימת ב-DB).
+    🎭 <b>דמו מומצא:</b> כל שדה, כולל טווח-האי-זמינות המוצג ("חופשה בחו״ל"). 📐 <b>נגזר ממודל:</b>
+    שכר-מינימום ₪35 (<code>params.שכר_מינימום_שעתי</code>) · נעילת-שדה-הת"ז במצב-עריכה (אותו
+    דפוס בדיוק כמו נעילת ח"פ ב-<code>CustomerFormDialog.jsx</code> — לא מומצא) · תג-הסטטוס
+    הקריא-בלבד (מקור: <code>hostesses.status</code>, נכתב רק משורת-הטבלה במסך 3).
+  </div>
+
+</div>
+</body>
+</html>
