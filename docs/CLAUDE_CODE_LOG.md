@@ -49,6 +49,46 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 13/08/2026 ~08:58 — conference-prep materials moved into the repo
+
+The two artifacts built earlier in the advisor shift (the 28/08 demo script, the 47-situation
+hostess brief) lived only in a claude.ai Artifact and the session's ephemeral scratchpad — no
+repo backup. Copied both into `docs/guides/conference/` with a short README that also links the
+live Artifact URLs (kept for sharing). No content changes, no other files touched.
+
+### 13/08/2026 ~00:00–00:17 — first `human-walkthrough` run on REG-IN: smoke pass, CEO role, production
+
+**Why:** Ishay asked to run "every test possible across the whole REG-IN system." No `.human-walkthrough.md`
+config existed yet (first run in this repo), so the session ran step 0 (connection check: browser ✅,
+Supabase MCP ✅ project `yfeovxppnfoafmfbdfvh`, GitHub CLI ✅, Vercel logs ❌) + the full interview
+(mode/permissions/environment) before touching the app. Ishay chose: production only (no separate
+test env), real emails allowed (his own address as test recipient), real writes allowed, deletes of
+self-created rows only — **and explicitly reinforced mid-session: never touch or modify pre-existing
+data, only rows Claude itself creates.** Recommended mode: **smoke** first (broad/shallow, prerequisite
+before ripple/route), CEO role only this round (each of the other 4 roles needs a separate password
+login only Ishay can do — iron rule 8, never type a password).
+
+**Execution:** Ishay logged in himself in a Claude-in-Chrome tab; 16 read-only stations covering every
+route in `src/App.jsx` (home, profile, 3 system-management tabs, customers list+detail, quotes
+list+new-form+existing-edit, hostesses roster+tracking, 4 not-yet-built module placeholders). Zero
+write actions pressed (smoke discipline: confirm the primary action is reachable, don't click it).
+
+**Independent verification (iron rule 3 — screen is never its own witness):** row counts cross-checked
+directly against the DB matched the UI exactly (users 7, customers 4, quotes 11, hostesses 26). Console
++ network checked clean on the quote-edit screen (34 requests, all 200/304) — note tracking only starts
+from first tool call, so this is confirmed for one representative screen, not retroactively for all 16.
+**Bonus finding, not the original goal:** revisited the `customer_name` frozen-snapshot fix from
+12/08 (`20260812215545_refresh_stale_project_customer_name_snapshots.sql`) on the same screen
+("מעקב פניות ושיבוצים") that had shown the bug — still clean, independent re-confirmation the fix holds.
+
+**Result:** 0 failures, 0 findings. Report given to Ishay in the mandated template (א/ב/ג/ד), boundary
+section (ג) listed explicitly: 4 roles untested, `/shift/:token` untested (needs a real invite = a
+write, out of scope for smoke), no write action actually exercised end-to-end (that's route mode's job).
+**Artifact:** `.human-walkthrough.md` created at repo root (not committed) so the next run skips the
+16-question interview and only reviews what changed. Next steps offered: smoke on the remaining 4 roles,
+or ripple/route mode on the demo-critical chain (quote → approve → project → Smart Match → invite →
+hostess confirms) — Ishay chose to continue in the same session; see next entry.
+
 ### 12/08/2026 ~21:00–21:30 — free-rein systematic sweep after the regression fix (Ishay away ~1h); one self-caused artifact cleaned up, one pre-existing display bug found and left open, skill-handoff brief written
 
 **Scope, explicitly fenced:** free rein was granted for "go through what you can while I'm gone,
