@@ -43,11 +43,41 @@ async function withServiceClient(fn) {
   }
 }
 
+// 🔒 ההצעה לחלון-המסמך נבחרת **בזמן-ריצה לפי שני תנאים** ולא לפי מזהה קשיח:
+// ‏`in_progress` *(אחרת `isQuoteSendable` מחזיר false ושלושת החיוויים כלל אינם מרונדרים)*
+// **וגם** שורת-`email_log` מוצלחת *(אחרת "נשלח כבר" אינו המקרה שנבדק)*.
+// ⚠️ **למה זה שונה מ-`22` שהיה כאן:** ‏`ימי_תוקף_הצעה`=30 והעבודה `module3-quote-expiry`
+// מעבירה הצעות ישנות ל-`rejected` — ‏#22 בסביבות 31/08/2026 — ואז שתי הבדיקות בקובץ היו
+// נופלות **בלי שאיש נגע בקוד**, ומראות אדום שנראה כמו רגרסיה. *(`🚧 מ6 ← מ3`.)*
+let SENDABLE_QUOTE_ID = null
+async function resolveSendableQuote() {
+  await withServiceClient(async (sb) => {
+    const { data: logs } = await sb
+      .from('email_log')
+      .select('entity_id')
+      .eq('entity_type', 'quote')
+      .eq('status', 'sent')
+      .order('created_at', { ascending: false })
+      .limit(50)
+    const ids = [...new Set((logs ?? []).map((r) => r.entity_id))]
+    if (!ids.length) return
+    const { data: open } = await sb
+      .from('quotes')
+      .select('quote_id')
+      .eq('quote_status', 'in_progress')
+      .in('quote_id', ids)
+      .order('quote_id', { ascending: false })
+      .limit(1)
+    SENDABLE_QUOTE_ID = open?.[0]?.quote_id ?? null
+  })
+}
+
 test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רשת-ביטחון (סבב 31/07)', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
   test.skip(!SUPABASE_URL || !SUPABASE_ANON, 'VITE_SUPABASE_* חסרים — אין ניקוי-DB, מדלגים')
 
   test.beforeAll(async () => {
+    await resolveSendableQuote()
     await withServiceClient(async (sb) => {
       await sb.from('customers').insert({
         company_name: CLEAN_COMPANY_NAME,
@@ -114,18 +144,23 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
   // שאילתת-היומן — לא את ה-invoke. לכן ה-dialog **תמיד מבוטל** (dismiss), ובסוף מאומת
   // שאף בקשה ל-`functions/v1` לא יצאה. אישור בטעות = הצעה שנשלחת פעמיים ללקוח אמיתי.
   test('חלון המסמך: כשל בשאילתת היומן ⇒ חיווי + שאלה לפני שליחה', async ({ page }) => {
+    // 🔴 תנאי-קדם, ולא "אין ממצא": בלי הצעה שהיא `in_progress` **וגם** נשלחה, אין כאן מה
+    // לבדוק — ושלוש הטענות למטה היו עוברות ריקות מתוכן. נופל כאן ואומר בדיוק מה חסר.
+    expect(
+      SENDABLE_QUOTE_ID,
+      'אין במסד הצעה שהיא in_progress וגם נשלחה — זהו תנאי-הקדם של הבדיקה, לא באג בקוד',
+    ).not.toBeNull()
     await login(page, CEO_EMAIL, CEO_PASSWORD)
 
     const sendRequests = []
     page.on('request', (req) => {
       if (req.url().includes('/functions/v1/')) sendRequests.push(req.url())
     })
-    // window.confirm — מבטלים תמיד. `dismiss` ולא `accept`: ר' האזהרה למעלה.
-    const dialogMessages = []
-    page.on('dialog', async (dialog) => {
-      dialogMessages.push(dialog.message())
-      await dialog.dismiss()
-    })
+    // 🔴 **חלון-האישור אינו חלונית-דפדפן מאז 12/08/2026** (`b38d25f` — שלושה `window.confirm`
+    // גולמיים הוחלפו ב-`useConfirm` המעוצב). מאזין `page.on('dialog')` נשאר ריק לנצח מולו,
+    // והבדיקה חיכתה 10 שניות לצליל שכבר אינו מתנגן. ⚠️ **הקוד היה תקין; הבדיקה מדדה את
+    // המימוש ולא את האינווריאנט** — בדיוק אותה משפחה של פיקסטורה-שמרקיבה, מעלה אחת למעלה.
+    // ⇒ מה שנבדק כאן הוא **שדנה נשאלה, ושום מייל לא יצא לפני שאישרה** — לא איך השאלה נראית.
 
     // ── הכשל מוחזר בכוונה: שאילתת email_log נופלת ──────────────────────────
     await page.route('**/rest/v1/email_log*', (route) =>
@@ -137,21 +172,23 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
     // ⚠️ עברה מ-#6 ל-#22 ב-04/08/2026: #6 **אושרה** בינתיים, ו-`isQuoteSendable` מחזיר
     // ‏`in_progress` בלבד ⇒ מחצית-הבדיקה (שלושת החיוויים) פשוט אינה מרונדרת עליה.
     // שני התנאים שהצעה כאן חייבת: `in_progress` **וגם** שורת-`email_log` מוצלחת.
-    await page.getByTestId('quote-document-22').click()
+    await page.getByTestId(`quote-document-${SENDABLE_QUOTE_ID}`).click()
     await expect(page.getByTestId('quote-send-check-notice')).toBeVisible()
     // ⚠️ הלב של הממצא: לפני התיקון החלון היה מציג בביטחון מצב "טרם נשלח".
     await expect(page.getByTestId('quote-previous-send')).toHaveCount(0)
 
     await page.getByTestId('quote-document-send').click()
-    await expect
-      .poll(() => dialogMessages.join('|'), { timeout: 10_000 })
-      .toContain('לא ניתן לוודא')
+    await expect(page.getByTestId('confirm-dialog')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByTestId('confirm-dialog-message')).toContainText('לא ניתן לוודא')
+    // ומבטלים — `dismiss` ולא `accept`: אישור כאן = מייל אמיתי שיוצא ללקוח אמיתי.
+    await page.getByTestId('confirm-dialog-cancel').click()
+    await expect(page.getByTestId('confirm-dialog')).toHaveCount(0)
     expect(sendRequests, 'אסור שתצא בקשת-שליחה אמיתית מהבדיקה').toHaveLength(0)
 
     // ── הכשל מוסר: החלון חוזר לדעת את האמת ─────────────────────────────────
     await page.unroute('**/rest/v1/email_log*')
     await page.reload()
-    await page.getByTestId('quote-document-22').click()
+    await page.getByTestId(`quote-document-${SENDABLE_QUOTE_ID}`).click()
     await expect(page.getByTestId('quote-previous-send')).toBeVisible()
     await expect(page.getByTestId('quote-send-check-notice')).toHaveCount(0)
   })
