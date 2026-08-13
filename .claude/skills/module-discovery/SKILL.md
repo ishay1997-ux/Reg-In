@@ -5,12 +5,20 @@ description: REG-IN — run a module's Discovery end-to-end and produce its appr
 
 # module-discovery — define a REG-IN module before anything is built
 
+🔴 **Read `.claude/skills/_shared/discipline.md` first, before anything else in this skill** — it is
+the single copy of the shared kernel (per-claim-type verification targets · the four world-convention
+fit questions and the price tag that root `CLAUDE.md` rule 1 requires · the `אומת-על-ידי` / `דווח-לי` /
+`הנחתי` provenance tags), and it points at the rest of `_shared/`, including **`ishay-calibration.md`,
+which was itself born from a Discovery and holds rulings of Ishay's about the method that exist nowhere
+else.** *(Added 13/08 after a reviewer measured that this was the ONLY REG-IN skill with zero `_shared/`
+references — every sibling opens with that line.)*
+
 **The full procedure lives verbatim in [`template.md`](template.md) beside this file — read it and
 execute it.** This file carries what you must decide **before** the procedure starts: which archetype
 the module is, which outputs that implies, and the five disciplines that fire in every stage.
 
 *(Replaces the retired `docs/delete/prompt_module_discovery.md`. Written 13/08/2026 out of module 6's Discovery,
-which ran in a single session — 38 rulings · 8 surfaces · 8 mockups · 5 files · 11 §7 items ·
+which ran in a single session — 38 rulings · 8 surfaces · 8 mockups · 6 files · 10 §7 items ·
 17 DB requirements — **and equally out of the 14 after-the-fact repairs that session needed.**)*
 
 ## 🔴 Three facts that shape how this skill is built
@@ -38,12 +46,23 @@ a classification, not with a stage.**
 | **🖥️ Screens** | 5 · 6 | owns a table · has surfaces · changes data | **everything** |
 | **👁️ Read-only** | 7 · 11 | 🔴 **owns no table — reads and displays** | screens and mockups **yes** · processes **few** · 🚫 no column sweep ⇒ **source sweep** |
 | **🔀 Others' columns** | 8 | 🔴 **writes into another module's table** | **security section ⑨ fires on everything** · contracts are most of the work |
-| **⚙️ Engine** | 10 · 12 | 🔴 **may have no screens at all** | 🚫 no mockups ⇒ **work card · trigger map · rendered email template** |
+| **⚙️ Engine** | 10 *(partly)* | 🔴 **its core has no screen — it fires on time or on an event** | 🚫 no mockups **for the engine part** ⇒ **work card · trigger map · rendered email template** |
 | **🎛️ Settings** | 9 | tiny · parameter table · CEO only | sweep **row by row over the parameters** · "no numbers" is a legitimate output |
+| **🏁 Milestone** | 12 | 🔴 **not a feature at all** — E2E coverage · Seed · UI polish · deploy · UAT · the demo script | 🚫 **no Discovery in this shape.** No processes card, no mockups, no `db_roadmap` rows. **If this classification comes out, stop and say so** |
 
 🔑 **The test that decides a borderline case: what does the module *change* in the world?** Data ⇒
-screens · display ⇒ read-only · time/event ⇒ engine · configuration ⇒ settings. **A module can be two —
-then both sets apply.**
+screens · display ⇒ read-only · time/event ⇒ engine · configuration ⇒ settings · **nothing, it ships
+what already exists ⇒ milestone.** **A module can be two — then both sets apply.**
+
+🔴 **And two corrections a fresh-context reviewer made to this very table on 13/08 — read them, because
+the table was wrong on both:**
+**‏①** **Module 12 was filed as an engine.** It is `module_12_integration.md`: E2E · Seed · polish ·
+Vercel deploy · UAT · a 15-minute demo. **It has no triggers, no cron and no email** — a session obeying
+the old row would have produced a trigger map and an email template for a deployment milestone.
+**‏②** **Module 10 was filed as "may have no screens".** Its guide's scope includes the full
+*"שכחתי סיסמה"* flow, **which needs a public reset screen** ⇒ **`M ≥ 1` and Stage 2 does apply there.**
+🔑 **The lesson that outlives both: the archetype comes from reading the module's own step guide —
+never from this table's example column.**
 
 ⚠️ **And a classification is not an exemption.** **"I have no screens" does not cancel
 `processes-approved.md`** — **an engine has a process, it is simply invisible.** *(Module 6 already set

@@ -265,9 +265,11 @@ surface exposes a process error · **Stage 3 may correct both** when assembly ex
 **and a session continuing within the same stage may complete cards, not rewrite an approved card.**
 🔴 **In every case: a dated line, out loud — never silently.**
 
-**🔤 Letter-to-number mapping** *(the letters א–ז are retained as sub-stages because
-`processes-approved.md` and `screens-approved.md` cite "שלב ו" and the journal cites "Stage א";
-replacing them would break those)*:
+**🔤 Letter-to-number mapping** *(the letters א–ז are retained only because module 4's
+`processes-approved.md` cites "שלב ו" — **2 hits, and that is the whole justification.** ⚠️ Measured
+13/08: `screens-approved.md` in both modules and `processes-approved.md` in module 6 all return **0**,
+so half the reason originally given here was false. **A future Discovery may drop the letters entirely
+once those 2 hits are rewritten** — they are the only thing holding the dual scheme up)*:
 **Stage 1 = א · ב · ג** · **Stage 2 = ד** · **Stage 3 = ו · ז** · **and "ה" is no longer a stage**
 *(it became the session-budget rule)*.
 
@@ -296,10 +298,15 @@ conditional outputs apply.**
 
 **① Register sweep, in both directions. `grep`, not reading by eye** *(reading by eye missed 12 items)*:
 ```
-grep '🚧 מ[N]' docs/PROJECT_MASTER.md              # debts owed to / by this module
-grep -E 'מ[N]' docs/PROJECT_MASTER_sec7.md         # its §7 items
-grep -rn 'מ[N]' docs/micro_guides/ src/modules/*/CLAUDE.md   # debts that live only in code docs
+grep '🚧 מ6' docs/PROJECT_MASTER.md              # debts owed to / by this module
+grep -E 'מ6' docs/PROJECT_MASTER_sec7.md         # its §7 items
+grep -rn 'מ6' docs/micro_guides/ src/modules/*/CLAUDE.md   # debts that live only in code docs
 ```
+🔴 **Substitute the digits literally — do NOT write `מ[N]`, and do NOT stop at one digit.**
+*(Measured 13/08: `grep -c '🚧 מ[10]'` returns **27** because `[10]` is the character class "1 or 0";
+the correct `'🚧 מ10'` returns **10**. And bare `'🚧 מ1'` also returns 27, because it prefix-matches
+מ10 · מ11 · מ12. **Modules 10, 11 and 12 are on this skill's own target list**, so this is not
+hypothetical.)* ⇒ **For a single-digit module N, anchor the end:** `grep -E '🚧 מN([^0-9]|$)'`.
 **Output a table of every line with a verdict — covered / not covered — and report both numbers**
 (§1 applies here in full).
 
@@ -344,8 +351,13 @@ enforcement · status transition.
 | | *(short quote + exact source)* | `C5:NNN` / `🚧 מN` / column | ⬜ / ✅ covered / ✅ **reasoned rejection** / 🔴 unhandled | ruling or "—" |
 
 🔑 **Three classifications, and "reasoned rejection" is a success, not a hole:** `PROJECT_MASTER §1`
-holds that **a reasoned rejection is stronger than "I built everything"**. *(In module 6: **13 reasoned
-rejections** — all of which would have been built had `C5` been treated as a specification.)*
+holds that **a reasoned rejection is stronger than "I built everything"** *(`PROJECT_MASTER.md:65`)*.
+*(In module 6: **three** — colour-by-date · the stepper · the duplicate survey. **All three would have
+been built had `C5` been treated as a specification.**)*
+🔴 **And this number said "13" until a fresh-context reviewer checked it on 13/08. It was a
+fabrication** — a number swapped inside a sentence inherited from elsewhere. **The check that caught
+it:** `grep -rno 'נדחה מנומק' docs/specs/module_06_projects/` returns **one** hit. **A count inside an
+inherited sentence is the easiest thing in this file to get wrong; measure it or delete it.**
 
 ⚠️ **Why a ledger and not a check at the end:** module 6 had none, so coverage was only measurable at
 the end — the reverse-coverage check ran **after** `spec.md` had already been handed off, and found 2
@@ -457,9 +469,21 @@ was the amount of work in one session.** **A surface ≈ 85K tokens.**
 loop-continuation was 2.4× denser in product decisions; the compaction landed exactly at the
 transition)*
 · **Commit after every approved card** ⇒ an interruption costs half a turn
-· 🚫 **And no compaction: a fresh session + an acceptance test.** **Compaction does not filter errors —
-it replicates them faithfully** *(measured: a summary carried a wrong "deviation from C5"; what fixed
+· 🚫 **And no compaction: a fresh session + an acceptance test.**
+🔑 **And the acceptance test is defined, not a gesture** *(`discovery_lessons.md` §11)*: **four factual
+questions whose answers are in what was just written to disk** — the incoming session answers them
+**before it touches anything**, and a wrong answer means the handoff failed, not that it should improvise.
+**Module 4 shipped it as `docs/specs/module_04_hostesses/next-session-prompt.md`.** ⇒ **Write one; it is
+the named exception to "no extra file" in §ז.** ➕ **And end it with the retired procedure's own closing
+line — *"האם המשימה ברורה? ההודעה הראשונה שלך עונה על זה"*** — so a lost handoff shows up in the first
+reply rather than after half an hour of work on a wrong basis.
+**Compaction does not filter errors — it replicates them faithfully** *(measured: a summary carried a wrong "deviation from C5"; what fixed
 it was reading the source)*.
+
+🔴 **And the hard ceiling is not a card count but the context window: rotate before 60%.** Do not
+re-derive it — root `CLAUDE.md` mandates it and the measured numbers live in
+`~/.claude/references/session-handoff-guide.md`. **Above 60% is the red zone where sessions produce work
+that has to be redone.**
 
 ⚠️ **The signal that the budget broke is not the clock — it is Ishay's sentence:**
 > *"אתה קצת מציף אותי ואנחנו מאבדים דברים בשיחה."*
@@ -519,10 +543,11 @@ do not change the demo — you label it.**
 
 🔴 **Without a contract: N drawers ⇒ N designs.** **Without a data set: a project that appears in one
 screen vanishes in another.**
-⚠️ **And a working file that an approved document cites must enter the repo.** *(Measured:
-`_mockup-data.md` was cited **12 times** in approved files and **did not exist in the repo at all**.)*
-🔴 **And the design contract itself is a defect source:** *(measured — a bidi rule in §6 of the contract
-produced the same directional bug in 5 mockups; 14 occurrences fixed.)* **A contract defect multiplies
+⚠️ **And a working file that an approved document cites must enter the repo.** *(Measured: the data set was cited **11 times** across approved files
+while living only in the scratchpad; it was rescued into the spec folder as `mockup-data.md` in commit `40b1b14`. **One stale `_mockup-data` reference still survives** at `screens-approved.md:2102` — the underscore form was the scratchpad name.)*
+🔴 **And the design contract itself is a defect source:** *(measured — one bidi rule in the shared design
+contract produced the same directional bug in **4** mockups, **14** occurrences, commit `2f4f9e0`.)*
+🔴 **And the contract file itself was never persisted** — it lived only in the dispatching agent's prompt, so the defect had no source anyone could open. **⇒ Write the contract to a file in the spec folder before the production wave.** **A contract defect multiplies
 by N. Have the contract reviewed before the production wave, not after.**
 
 ### 📐 The card structure written beside the mockup — eight sections, and that is all that is written
@@ -535,7 +560,7 @@ by N. Have the contract reviewed before the production wave, not after.**
 | **4** | **States not on screen** — loading · **truly empty vs empty-after-filter** · error · blocked action · success | **A mockup draws only the happy state** |
 | **5** | **Permissions** — who sees · who edits · **and what disappears for whom** | Cannot be drawn |
 | **6** | **Definitions behind a word on screen** — "דחוף = 72 שעות" | **A word on screen does not reveal the rule behind it — and the blueprint will build the rule** |
-| **7** | **Validations, per field:** what must be valid · what happens when it is not · **and exactly what the screen says** | `module-blueprint/template.md` §7 holds a dedicated DoD box for validations ⇒ an omission here falls through at module close |
+| **7** | **Validations, per field:** what must be valid · what happens when it is not · **and exactly what the screen says** | `module-blueprint/template.md` — **item 7 of its "Required Micro-Guide Structure"** (not a `§7`: that file has no `§` numbering, and `§7` inside it always means `PROJECT_MASTER §7`) — holds a dedicated UX-and-validation checkbox ⇒ an omission here falls through at module close |
 | **8** | **Every detail whose only source is the mockup, or on which the spec is silent — marked "מהמוקאפ / אפיון-שותק — לאישורך"** | Mockups are a **limited-liability** reference: neither reproduced blindly nor dropped silently |
 | **9** | 🔴 **Conditional — only if the surface writes to the DB without normal permission/role/login: a dedicated security section — who writes · to which rows · to which fields · under what conditions** | A picture does not show a write mechanism; such a surface is usually the only path that departs from the per-role RLS model |
 
@@ -572,6 +597,14 @@ Output: a findings table, reported to Ishay, corrected only with his approval �
 
 **Locked vocabulary** *(**10 phrasing contradictions** were found this way in module 6)* · visual
 consistency · coverage against `M`.
+🔴 **➕ And two mechanical checks on the mockup FILES themselves, which no content verifier covers:**
+**‏①** every approved mockup sits in `approved/` under its approved name — **not in `drafts/`**
+*(measured 13/08: module 4 complied with 8 files; **module 6 did not — all 8 approved mockups are still
+in `drafts/` under draft names, and `screens-approved.md` carries 8 pointers into `drafts/`, while
+`module-build/SKILL.md` states flatly that approved mockups sit under `approved/`**)* ·
+**‏② no draft banner survives inside an approved file** — `grep -l 'טיוטה' docs/mockups/**/approved/`
+must return nothing *(measured: module 4 shipped this defect at **8 of 8**; module 6 at 1 of 8)*.
+⚠️ **Also sweep for an orphan** — a mockup at the parent level that nothing cites.
 *(Measured: a round covering four surfaces at once found 5 findings that each surface's own approval
 had missed — a per-surface run would have caught them more cheaply.)*
 
@@ -634,10 +667,19 @@ readability: if the build came out right, it sufficed.**
 break a build silently.** *(The sharp example: a table under deny-all returns **zero rows with
 `error: null`** ⇒ **the screen lies, it does not fail**, and no test will catch it.)*
 
-🔴 **`spec.md` must not tell the blueprint which registers to skip.** *(Measured 13/08/2026: it
+🔴 **`spec.md` must not tell the blueprint which *registers* to skip.** *(Measured 13/08/2026: it
 instructed the blueprint not to read `db_roadmap`, claiming it was "deliberately empty of this module".
 It was already wrong when written — 3 rows at 17:00 and 14 more at 18:58. **A compliant blueprint would
-have skipped 17 DB requirements.**)* ⇒ **State what to read. Never what to skip.**
+have skipped 17 DB requirements.**)*
+⇒ **A register is always read. Never tell the next session to skip one.**
+✅ **But §① DOES say what not to read, and must** — `module-build/SKILL.md` states that §① *"names what
+to open, in order, **and what NOT to read**"*, and module 6's own §① is headed *"קרא בסדר הזה, **ואל
+תקרא יותר**"* and ends with *"🚫 ומה לא לקרוא: `discovery-log.md` · המוקאפים הישנים"*.
+🔑 **The line between them: a superseded or working artefact may be excluded by name** *(the old
+mockups, the English journal, a draft)*; **a live register — `§6` · `§7` · `db_roadmap` · `schema.sql` —
+never may.** *(This distinction was missing until a fresh-context reviewer measured the contradiction
+with `module-build` on 13/08; as written, the rule would have deleted a section the next skill depends
+on.)*
 ⚠️ **And a footnote that is itself an instance of the rule: this count said "18" for a day.** The
 source line claimed *"14 in the `A-M6` block + 4 in §5"* — **but only 3 of those §5 rows were new;
 the fourth was a pre-existing `OPEN` row.** *(Recounted 13/08. The number had already propagated to
@@ -707,10 +749,14 @@ someone could go verify true or false. **"אין" is a legitimate and preferred 
 
 **The path is named, not "by convention": `docs/specs/module_[N]_[eng]/`** — the folder name identical
 to the step guide. **Inside it, and this is the complete list:** `processes-approved.md` ·
-`world-sources.md` · `screens-approved.md` *(when `M ≥ 1`)* · `discovery-log.md` · **and `spec.md`**.
-🚫 **No additional file without approval** — this folder is what the blueprint opens; a one-off handoff
-prompt, a draft or a note do not belong in it.
-⚠️ **But a working file that an approved document cites is not "additional" — it is required** (see 2א).
+`world-sources.md` · `discovery-log.md` · **`spec.md`** · **and, when `M ≥ 1`:** `screens-approved.md`
+**+ the shared data set** *(module 6 named it `mockup-data.md`)* **+ the design contract** — **the last
+two are required, not optional**, because the approved cards cite them (2א).
+⇒ **4 files for a module with no surfaces; 7 for one with surfaces.**
+🚫 **Nothing beyond that list without approval** — this folder is what the blueprint opens.
+✅ **One named exception: the handoff file** (below).
+*(Corrected 13/08 — this said "5, the complete list" while §2א made a 6th mandatory, an internal
+contradiction in the same file.)*
 
 **🛑 Handoff in two turns:** first a **key list** — one line per chapter, "what is inside and what
 differs from what you approved". Only then **three separate rulings: scope boundaries · "מה ייחשב עובד" ·
@@ -733,6 +779,9 @@ differently.**
 | **`§6`** | every `🚧 מX` created |
 | **`db_roadmap`** | **every DB requirement.** 🔴 **This is the register the blueprint reads — not the spec** |
 | **The tally line in §7** | recount and verify |
+| **The step guide §⑥1** | the pointer line at the module's spec folder |
+| 🔴 **The step guide §⑥0** | **create the Discovery launcher block if the guide has none.** *(Measured 13/08: `⑥0` exists in modules **05 and 06 only**; modules **07 · 08 · 09 · 10 · 11 · 12** carry zero occurrences of `⑥0`, of `module-discovery` and of the word "Discovery" — their §⑥ still reads "שלושת הפרומפטים להדבקה". **This skill's own trigger list names that block, so for six of its seven target modules the trigger does not exist.** Write it at the END of the Discovery, describing what actually ran)* |
+| **`docs/guides/module_playbook.md`** | 🔑 **Ishay's Hebrew door — and it holds the trigger sentence, the mid-Discovery resume prompt and the stage-3-only prompt.** *(It was written from module 4; if this Discovery changed the shape, it is now stale. Measured 13/08: zero references in either direction.)* |
 
 ⚠️ **The measured failure:** 3 items were declared closed in the spec **and remained 🟡 in the register**,
 and one was **half-closed** — the narrative said "closed", the token did not. **Caught by a
@@ -862,6 +911,16 @@ requires them to be the newest, and any edit after them returns them to "stale".
 
 ---
 
+# §10 · Stopping rule
+
+At any stage, **stop** if you are about to: complete an unapproved product detail · ask a question you
+can decide yourself · create a mockup without an approved brief · create a document with no clear use in
+the next stage · expand the module beyond what was approved · or add a skill/hook/agent without a proven
+need.
+
+**And when you finish a reply — if something is unclear to you, say so explicitly. "לא ברור לי" is a good
+answer.**
+
 # §11 · Contract items — what the spec must produce so the blueprint does not guess
 
 **The rationale, and it is not stylistic:** the next prompt **does not need to "understand" the spec — it
@@ -896,16 +955,6 @@ and it is exactly the one module 3 writes.)*
 `[a-z_]+\.[a-z_]+` against `schema.sql` · and the checkable number is a test that ran.
 
 ---
-
-# §10 · Stopping rule
-
-At any stage, **stop** if you are about to: complete an unapproved product detail · ask a question you
-can decide yourself · create a mockup without an approved brief · create a document with no clear use in
-the next stage · expand the module beyond what was approved · or add a skill/hook/agent without a proven
-need.
-
-**And when you finish a reply — if something is unclear to you, say so explicitly. "לא ברור לי" is a good
-answer.**
 
 ---
 
