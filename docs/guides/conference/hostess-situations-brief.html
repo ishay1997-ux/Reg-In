@@ -1,0 +1,687 @@
+<title>בריף — כל הסיטואציות של דיילות</title>
+<style>
+  @font-face {
+    font-family: 'Heebo';
+    font-weight: 400 900;
+    font-display: swap;
+    src: local('Heebo');
+  }
+
+  :root {
+    --teal-50: #f0fdfa;
+    --teal-100: #ccfbf1;
+    --teal-500: #14b8a6;
+    --teal-600: #0d9488;
+    --teal-700: #0f766e;
+    --teal-900: #134e4a;
+
+    --amber-50: #fffbeb;
+    --amber-100: #fef3c7;
+    --amber-600: #d97706;
+    --amber-800: #92400e;
+
+    --rose-50: #fff1f2;
+    --rose-100: #ffe4e6;
+    --rose-600: #e11d48;
+    --rose-800: #9f1239;
+
+    --slate-100: #f1f5f9;
+    --slate-600: #475569;
+
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --surface-sunken: #f1f5f9;
+    --border: #e2e8f0;
+    --ink: #0f172a;
+    --ink-soft: #475569;
+    --ink-faint: #94a3b8;
+    --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 8px rgba(15, 23, 42, 0.04);
+
+    --tag-built-bg: var(--teal-100);
+    --tag-built-ink: var(--teal-700);
+    --tag-dormant-bg: var(--amber-100);
+    --tag-dormant-ink: var(--amber-800);
+    --tag-future-bg: var(--slate-100);
+    --tag-future-ink: var(--slate-600);
+    --tag-found-bg: var(--rose-100);
+    --tag-found-ink: var(--rose-800);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --bg: #0b1120;
+      --surface: #131c2e;
+      --surface-sunken: #0f1729;
+      --border: #22304a;
+      --ink: #e8edf6;
+      --ink-soft: #aab6c9;
+      --ink-faint: #6b7893;
+      --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 12px rgba(0, 0, 0, 0.25);
+
+      --teal-50: #0c2a26;
+      --teal-100: #113a34;
+      --teal-700: #5eead4;
+      --teal-900: #ecfdf5;
+
+      --amber-100: #3a2a0c;
+      --amber-800: #ffd88a;
+
+      --rose-100: #3a1220;
+      --rose-800: #ffb3c4;
+
+      --slate-100: #1c2740;
+      --slate-600: #b7c2d6;
+
+      --tag-built-bg: var(--teal-100);
+      --tag-built-ink: var(--teal-700);
+      --tag-dormant-bg: var(--amber-100);
+      --tag-dormant-ink: var(--amber-800);
+      --tag-future-bg: var(--slate-100);
+      --tag-future-ink: var(--slate-600);
+      --tag-found-bg: var(--rose-100);
+      --tag-found-ink: var(--rose-800);
+    }
+  }
+
+  :root[data-theme='dark'] {
+    --bg: #0b1120;
+    --surface: #131c2e;
+    --surface-sunken: #0f1729;
+    --border: #22304a;
+    --ink: #e8edf6;
+    --ink-soft: #aab6c9;
+    --ink-faint: #6b7893;
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 12px rgba(0, 0, 0, 0.25);
+
+    --teal-50: #0c2a26;
+    --teal-100: #113a34;
+    --teal-700: #5eead4;
+    --teal-900: #ecfdf5;
+
+    --amber-100: #3a2a0c;
+    --amber-800: #ffd88a;
+
+    --rose-100: #3a1220;
+    --rose-800: #ffb3c4;
+
+    --slate-100: #1c2740;
+    --slate-600: #b7c2d6;
+
+    --tag-built-bg: var(--teal-100);
+    --tag-built-ink: var(--teal-700);
+    --tag-dormant-bg: var(--amber-100);
+    --tag-dormant-ink: var(--amber-800);
+    --tag-future-bg: var(--slate-100);
+    --tag-future-ink: var(--slate-600);
+    --tag-found-bg: var(--rose-100);
+    --tag-found-ink: var(--rose-800);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Heebo', 'Segoe UI', system-ui, sans-serif;
+    direction: rtl;
+    line-height: 1.55;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  header.hero { margin-bottom: 22px; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--teal-100);
+    color: var(--teal-700);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 999px;
+    margin-bottom: 14px;
+  }
+
+  h1 {
+    font-size: clamp(26px, 4vw, 34px);
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+
+  .hero-sub { font-size: 15.5px; color: var(--ink-soft); margin: 0 0 16px; max-width: 62ch; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .tag.built { background: var(--tag-built-bg); color: var(--tag-built-ink); }
+  .tag.dormant { background: var(--tag-dormant-bg); color: var(--tag-dormant-ink); }
+  .tag.future { background: var(--tag-future-bg); color: var(--tag-future-ink); }
+  .tag.found { background: var(--tag-found-bg); color: var(--tag-found-ink); }
+
+  nav.toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 28px;
+    box-shadow: var(--card-shadow);
+  }
+
+  nav.toc .toc-title {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 10px;
+  }
+
+  nav.toc ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    columns: 2;
+    column-gap: 24px;
+  }
+
+  nav.toc li { break-inside: avoid; margin-bottom: 6px; }
+
+  nav.toc a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 13.5px;
+  }
+
+  nav.toc a:hover { color: var(--teal-700); }
+
+  nav.toc .n {
+    display: inline-block;
+    width: 18px;
+    color: var(--teal-600);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  section.category {
+    margin-bottom: 30px;
+    scroll-margin-top: 20px;
+  }
+
+  .category-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--teal-600);
+  }
+
+  .category-head .icon { font-size: 20px; line-height: 1; }
+  .category-head h2 { font-size: 19px; font-weight: 800; margin: 0; }
+  .category-head .count { font-size: 12.5px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  .situations { display: flex; flex-direction: column; gap: 10px; }
+
+  .sit {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: var(--card-shadow);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 12px;
+    align-items: start;
+  }
+
+  .sit .scenario {
+    font-weight: 700;
+    font-size: 14.5px;
+    color: var(--ink);
+    grid-column: 1;
+  }
+
+  .sit .tag { grid-column: 2; justify-self: start; margin-top: 1px; }
+
+  .sit .response {
+    grid-column: 1 / -1;
+    font-size: 13.8px;
+    color: var(--ink-soft);
+  }
+
+  .sit .response b { color: var(--ink); font-weight: 700; }
+
+  .divider-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 34px 0 16px;
+    color: var(--ink-faint);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .divider-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .story-box {
+    background: var(--surface-sunken);
+    border-inline-start: 3px solid var(--rose-600);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 8px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+
+  .story-box .story-title {
+    font-weight: 800;
+    color: var(--ink);
+    font-size: 13.5px;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .num { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; display: inline-block; }
+
+  .footer-note { text-align: center; color: var(--ink-faint); font-size: 12.5px; margin-top: 36px; }
+
+  @media (max-width: 480px) {
+    nav.toc ol { columns: 1; }
+    .sit { grid-template-columns: 1fr; }
+    .sit .tag { grid-column: 1; justify-self: start; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="hero">
+    <span class="eyebrow">📚 בריף למודול 4</span>
+    <h1>כל הסיטואציות — דיילות ו-Smart Match</h1>
+    <p class="hero-sub">מה המערכת עושה, אוטומטית, בכל מצב שיכול לקרות בשטח. מבוסס על קריאה בפועל של האפיון המאושר, המסכים, והקוד החי — לא מהזיכרון.</p>
+    <div class="legend">
+      <span class="tag built">✅ בנוי ואומת</span>
+      <span class="tag dormant">🌙 בנוי, כבוי-בכוונה</span>
+      <span class="tag future">🔜 מודול עתידי</span>
+      <span class="tag found">🔴 נתפס ותוקן</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <p class="toc-title">קפיצה מהירה</p>
+    <ol>
+      <li><a href="#c1"><span class="n num">1</span>מי בכלל מועמדת (השער)</a></li>
+      <li><a href="#c2"><span class="n num">2</span>איך מדרגים בין המועמדות</a></li>
+      <li><a href="#c3"><span class="n num">3</span>מסע הדיילת — מהזמנה לסיום</a></li>
+      <li><a href="#c4"><span class="n num">4</span>התנגשויות שנחסמות לבד</a></li>
+      <li><a href="#c5"><span class="n num">5</span>תזמון וזמן-אמת</a></li>
+      <li><a href="#c6"><span class="n num">6</span>כשמישהי לא זמינה</a></li>
+      <li><a href="#c7"><span class="n num">7</span>ביטולים</a></li>
+      <li><a href="#c8"><span class="n num">8</span>הדף הציבורי (בלי התחברות)</a></li>
+      <li><a href="#c9"><span class="n num">9</span>מיילים אוטומטיים</a></li>
+      <li><a href="#c10"><span class="n num">10</span>הרשאות ותקלות שקטות</a></li>
+    </ol>
+  </nav>
+
+  <section class="category" id="c1">
+    <div class="category-head"><span class="icon">🚪</span><h2>מי בכלל מועמדת (השער)</h2><span class="count">8 מצבים</span></div>
+    <div class="situations">
+      <div class="sit">
+        <span class="scenario">דיילת מושבתת</span><span class="tag built">✅</span>
+        <span class="response">לא מוצגת בכלל ברשימה — לא "ציון אפס", פשוט לא שם.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">כבר משובצת סופית לאירוע אחר באותו יום</span><span class="tag built">✅</span>
+        <span class="response">מוסתרת מהרשימה — לא רק "לא מומלצת".</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">הלקוח סימן אותה "לא-לשלוח" ללקוח הזה</span><span class="tag dormant">🌙</span>
+        <span class="response">תיחסם — <b>אבל רק אצל אותו לקוח</b>, לא בכלל. המנגנון בנוי; הטבלה שמזינה אותו מתמלאת רק כשמודול 6 (פרויקטים) ייבנה, אז כרגע היא תמיד ריקה.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">מרחק מהאירוע מעל <span class="num">80</span> ק"מ</span><span class="tag built">✅</span>
+        <span class="response">נחסמת אוטומטית, בלי קשר לציון שהיה יוצא לה.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">הצהירה שהיא לא זמינה בתאריך הזה</span><span class="tag built">✅</span>
+        <span class="response">לא מוצגת — "היא לא מסרבת, היא פשוט לא ברשימה".</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">מרחק <span class="num">40–80</span> ק"מ <b>וגם</b> אין לה רכב</span><span class="tag built">✅</span>
+        <span class="response">נחסמת — הוכרע במפורש כחסימה, לא כניכוי-ציון (נבדק ונפסל כניכוי).</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">אין לה קואורדינטות בכלל (הכתובת מעולם לא אותרה)</span><span class="tag built">✅</span>
+        <span class="response"><b>לא נחסמת</b> — מקבלת ציון-קרבה ניטרלי ותווית "אין קואורדינטות", כדי שפער-נתונים לא יפיל אותה בשקט לתחתית.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">כתובת האירוע וכתובת הדיילת נופלות על אותה נקודה בדיוק (שתיהן נרשמו רק ברמת-עיר)</span><span class="tag found">🔴</span>
+        <span class="response">נבדק חי מול דאטה אמיתית: זיהוי "מרחק 0" מדויק מתייחס כניטרלי, לא כ"הכי קרובה שיש" — אחרת התאמה מקרית הייתה נראית כמושלמת.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="category" id="c2">
+    <div class="category-head"><span class="icon">📊</span><h2>איך מדרגים בין המועמדות</h2><span class="count">7 מצבים</span></div>
+    <div class="situations">
+      <div class="sit">
+        <span class="scenario">הלקוח סימן אותה "מצוינת" אצלו</span><span class="tag dormant">🌙</span>
+        <span class="response">קופצת לראש הרשימה עם תג-נעיצה טורקיז, בלי קשר לציון. בנוי; ממתין לאותה טבלה ריקה כמו למעלה.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">מרכיב "אמינות-הגעה" (<span class="num">35%</span> מהציון)</span><span class="tag dormant">🌙</span>
+        <span class="response">כבוי-בכוונה עד שיהיה דאטה אמיתי (דורש מודול 6). שני המרכיבים האחרים מתחלקים ביניהם את המשקל, והמסך <b>אומר את זה בפירוש</b> — לא שותק.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">צ'יפי-ההנמקה על כל שורה</span><span class="tag built">✅</span>
+        <span class="response">מחולקים לשני סוגים שאסור שייראו זהים: מה <b>שמשפיע על הציון</b> (למשל מרחק) מול מה שרק <b>נותן הקשר</b> (למשל "עבדה אצל הלקוח 2 פעמים").</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">אין לה עדיין מספיק תשובות כדי לדעת אם היא "עונה מהר"</span><span class="tag built">✅</span>
+        <span class="response">לא נעלמת ולא מקבלת אפס — מתויגת "טרם נצבר מידע" והציון נדחף לכיוון הממוצע הכללי.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">מעולם לא ענתה לאף זימון</span><span class="tag built">✅</span>
+        <span class="response">תווית נפרדת מ"לא ענתה כמה פעמים" — "לא ענתה מעולם" נאמר במפורש.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">שתי דיילות מסיימות בציון זהה בדיוק</span><span class="tag built">✅</span>
+        <span class="response">הכרעה בשיטה אקראית-אך-קבועה לאותו אירוע — <b>לעולם לא</b> "מי נרשמה קודם", כי זה היה תמיד מעדיף ותיקות.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">לא עבדה כבר כמה שבועות</span><span class="tag built">✅</span>
+        <span class="response">"מנוף-הוגנות" — הציון שלה מקבל בונוס הדרגתי (עד <span class="num">16%</span>), כדי שלא תמיד אותן דיילות ילכו הביתה עם המשמרות.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="category" id="c3">
+    <div class="category-head"><span class="icon">🚶‍♀️</span><h2>מסע הדיילת — מהזמנה לסיום</h2><span class="count">6 סטטוסים, כל המעברים ביניהם</span></div>
+    <div class="situations">
+      <div class="sit">
+        <span class="scenario">שולחים לה זימון</span><span class="tag built">✅</span>
+        <span class="response"><b>ממתין למענה.</b></span>
+      </div>
+      <div class="sit">
+        <span class="scenario">היא עונה "מגיעה" (בקישור או בטלפון)</span><span class="tag built">✅</span>
+        <span class="response"><b>אישרה זמינות.</b> אותו סטטוס משני המסלולים.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">היא עונה "לא" (בקישור או בטלפון)</span><span class="tag built">✅</span>
+        <span class="response"><b>סירבה.</b></span>
+      </div>
+      <div class="sit">
+        <span class="scenario">מנהלת נותנת אישור סופי</span><span class="tag built">✅</span>
+        <span class="response"><b>אושרה סופית</b> + נשלח מייל עם כל הפרטים.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">המכסה התמלאה, והיא עדיין רק "אישרה זמינות"</span><span class="tag built">✅</span>
+        <span class="response">המערכת <b>משחררת אותה לבד</b> ושולחת מייל-תודה נפרד — לא מייל-ביטול, כי היא מעולם לא הובטחה.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">מנהלת מצמצמת תקנים אחרי אישור סופי</span><span class="tag built">✅</span>
+        <span class="response"><b>שוחררה</b> — אותו סטטוס כמו למעלה, טריגר שונה, לעולם לא נספר לרעתה.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">חזרה בה אחרי אישור סופי (מתקשרת ומבטלת)</span><span class="tag built">✅</span>
+        <span class="response"><b>ביטלה אחרי אישור</b> — סטטוס נפרד, נספר במרכיב-האמינות (כרגע כבוי, כמו למעלה).</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">מנהלת מבטלת "אישרה סופית" בעבר ופותחת זימון חדש</span><span class="tag built">✅</span>
+        <span class="response">נוצרת <b>שורה חדשה</b> — ההיסטוריה הישנה נשארת, לא נמחקת ולא נדרסת.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">זימון שלא נענה <span class="num">48</span> שעות</span><span class="tag built">✅</span>
+        <span class="response">מוצג "פג תוקף" — תצוגה בלבד, מתחתיו זה עדיין "ממתין למענה".</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">מחיקה של שיבוץ, בכל שלב</span><span class="tag built">✅</span>
+        <span class="response">לא קיימת אופציה כזו בשום מסך — הכל מעבר-סטטוס הפיך, אף פעם לא מחיקה.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="category" id="c4">
+    <div class="category-head"><span class="icon">⛔</span><h2>התנגשויות שנחסמות לבד</h2><span class="count">4 מצבים</span></div>
+    <div class="situations">
+      <div class="sit">
+        <span class="scenario">ניסיון לאשר סופית דיילת שכבר משובצת סופית באותו יום, במקום אחר</span><span class="tag built">✅</span>
+        <span class="response"><b>חסום ברמת המסד עצמו</b>, לא רק בקוד המסך — גם אם שתי מנהלות לוחצות בו-זמנית משני מחשבים.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">אישור מעבר לכמות הנדרשת (למשל 7 כשצריך 6)</span><span class="tag built">✅</span>
+        <span class="response"><b>לא נחסם</b> — רק אזהרה + הבהרה שהעודף לא מחויב ללקוח. המונה עצמו הופך לענבר.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">שתי לחיצות-שיבוץ בו-זמנית לאותה דיילת לאותו אירוע</span><span class="tag built">✅</span>
+        <span class="response">אחת מצליחה, השנייה נכשלת <b>בקול</b> — לעולם לא דריסה שקטה.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">ניסיון לסמן שתי "אחראיות משמרת" לאותו אירוע</span><span class="tag built">✅</span>
+        <span class="response">האפשרות השנייה מוצגת <b>מכובה עם הסבר</b> מראש — לא נותנים ללחיצה להיכשל בלי הקשר.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="category" id="c5">
+    <div class="category-head"><span class="icon">⏱️</span><h2>תזמון וזמן-אמת</h2><span class="count">9 מצבים</span></div>
+    <div class="situations">
+      <div class="sit">
+        <span class="scenario">כמה זמן קישור-הזימון תקף</span><span class="tag built">✅</span>
+        <span class="response">המוקדם מבין שלושה: המשרה התמלאה · <span class="num">48</span> שעות מהשליחה · <span class="num">24</span> שעות לפני האירוע.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">נכנסים לחלון <span class="num">24</span> השעות האחרונות ועדיין אין תשובה</span><span class="tag built">✅</span>
+        <span class="response">הפעולה הראשית במסך מתחלפת — אישור-בטלפון הופך לברירת-המחדל, מספר-הטלפון עצמו הופך ללחיץ.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">אירוע בחלון <span class="num">24</span> השעות ועדיין חסר איוש</span><span class="tag built">✅</span>
+        <span class="response">אזהרה חזותית במסך מבט-העל — מחושבת <b>בזמן-אמת</b> בכל טעינה, לא תלויה בג'וב מתוזמן.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">אותו רגע — כתזכורת-מייל לדיילות שכבר אישרו</span><span class="tag future">🔜</span>
+        <span class="response">עוד לא נבנה. דורש תשתית-תזמון שקיימת רק במודול 10. התבנית-מייל כבר יושבת מוכנה במערכת, פשוט אף אחד לא קורא לה עדיין.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">אירוע בעוד פחות מ-<span class="num">72</span> שעות</span><span class="tag built">✅</span>
+        <span class="response">מסך מבט-העל עובר ברירת-מחדל ל"דחוף", וב-Smart Match המיון עובר מ"הכי קרובה" ל"הכי מהר עונה".</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">זווית "הכי מהר עונה" נבחרה אבל אין עדיין מספיק דאטה</span><span class="tag built">✅</span>
+        <span class="response">מוצגת <b>כבויה ומוסברת</b> על המסך — לא נעלמת, לא נופלת בשקט לזווית אחרת.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">אירוע שתאריכו כבר עבר</span><span class="tag built">✅</span>
+        <span class="response">מוסתר ממבט-העל — אחרת היה נשאר תקוע למעלה לנצח. <i>(כלל שקבעתי אני, האפיון שתק עליו — מסומן ככה בכוונה.)</i></span>
+      </div>
+      <div class="sit">
+        <span class="scenario">מנהלת מעלה תעריף-שעה כשלדיילת כבר יש שיבוץ עתידי</span><span class="tag built">✅</span>
+        <span class="response">השיבוץ הקיים <b>נשאר בתעריף הישן</b> — "הובטח לה מספר במייל, וזה כמו הבטחה". רק הזימון הבא מקבל את התעריף החדש.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">שער-הקרבה עצמו — מרחק לא ידוע</span><span class="tag built">✅</span>
+        <span class="response">(חוזר מקטגוריה 1 בכוונה — זו גם שאלת-תזמון: הציון מחושב "כרגע", לא נשמר קבוע.)</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="category" id="c6">
+    <div class="category-head"><span class="icon">🚫</span><h2>כשמישהי לא זמינה</h2><span class="count">7 מצבים</span></div>
+    <div class="situations">
+      <div class="sit">
+        <span class="scenario">דיילת מתקשרת ואומרת שהיא לא זמינה בטווח מסוים</span><span class="tag built">✅</span>
+        <span class="response">מנהלת מזינה <b>טווח-תאריכים + הערה</b> — מאותו רגע Smart Match מדלג עליה לאירועים בטווח, בלי לפגוע בציון-ההיענות שלה.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">אין אי-זמינות פעילה</span><span class="tag built">✅</span>
+        <span class="response">מוצג "פעילה".</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">יש אי-זמינות פעילה או עתידית</span><span class="tag built">✅</span>
+        <span class="response">מוצג "לא זמינה <span class="num">DD/MM–DD/MM</span>" — <b>טווח מלא</b>, לא רק תאריך-סיום שעלול להטעות.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">גם מושבתת וגם יש לה אי-זמינות רשומה</span><span class="tag built">✅</span>
+        <span class="response">"מושבתת" תמיד גובר — אחרת נראה כאילו היא "חוזרת" אחרי התאריך, וזה לא נכון.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">מנהלת משביתה דיילת שיש לה שיבוץ עתידי פעיל</span><span class="tag built">✅</span>
+        <span class="response">נפתח חלון-אישור <b>שנוקב באירוע ובתאריך בשמם</b> — "לא תגיע, שחררי אותה" (מומלץ) מול "תסיים את מה שהתחייבה".</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">אותה השבתה, בלי שום התחייבות פעילה</span><span class="tag built">✅</span>
+        <span class="response">מתבצעת מיד, בלי חלון-אישור.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">השבתת דיילת, בכל מסלול</span><span class="tag built">✅</span>
+        <span class="response">לעולם לא מחיקה — תג הפיך, אפשר להפעיל בחזרה מאותו כפתור.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="category" id="c7">
+    <div class="category-head"><span class="icon">❌</span><h2>ביטולים</h2><span class="count">4 מצבים, כולל תקלה אמיתית שנתפסה</span></div>
+    <div class="situations">
+      <div class="sit">
+        <span class="scenario">לקוח מבטל אירוע שלם</span><span class="tag future">🔜</span>
+        <span class="response">מודול 4 <b>אין לו כפתור "בטל אירוע"</b> — זו בכוונה סמכות של מודול 6 (פרויקטים). כרגע ביטול = מנהלת משחררת כל דיילת בנפרד.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">אירוע בוטל אחרי שדיילת כבר אושרה סופית אליו</span><span class="tag dormant">🌙</span>
+        <span class="response">היא <b>לא נענשת</b> במרכיב-האמינות — "זו לא אשמתה". בנוי, כבוי כמו כל מרכיב-האמינות.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">אותו אירוע-מבוטל — האם נספר לה כ"עבדה אצל הלקוח"</span><span class="tag built">✅</span>
+        <span class="response"><b>לא נספר</b> — הכרעתך: אירוע שבוטל לא באמת קרה.</span>
+      </div>
+    </div>
+    <div class="story-box">
+      <span class="story-title">🔴 התקלה שנתפסה ותוקנה, כדי שתדע — סיפור אמיתי לכנס</span>
+      הכלל "אירוע-מבוטל לא נספר" היה צריך להיאכף בארבעה מקומות שונים במסך (הצ'יפ ב-Smart Match, כרטיס הדיילת, מונה-הרבעון בטבלה, וצ'יפ ההוגנות) — <b>והמימוש הראשון יישם אותו רק באחד מהם.</b> התוצאה: אותה דיילת, אותו לקוח, הייתה מציגה מספר שונה בשני מסכים בו-זמנית תחת אותה תווית בדיוק — למשל "עבדה 2 פעמים" במקום אחד ו"3 פעמים" במקום אחר. נתפס ותוקן באודיט-הסגירה של המודול (<span class="num">12/08</span>), ואומת מחדש בכל ארבעת המקומות. <i>הערת-כנות: אין כרגע אף פרויקט מבוטל אמיתי במסד, אז אי-אפשר להדגים את זה חי היום — אבל הבדיקה שתפסה את זה עדיין רצה ומגנה.</i>
+    </div>
+  </section>
+
+  <section class="category" id="c8">
+    <div class="category-head"><span class="icon">🔗</span><h2>הדף הציבורי (בלי התחברות)</h2><span class="count">9 מצבים</span></div>
+    <div class="situations">
+      <div class="sit">
+        <span class="scenario">קישור תקף ופתוח נלחץ</span><span class="tag built">✅</span>
+        <span class="response">מציג שם, אירוע, לקוח, מיקום, תאריך-שעה, תעריף+נסיעות, וכמה זמן הקישור עוד תקף. שני כפתורים: "אני מגיעה" / "לא אוכל הפעם".</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">לוחצת "אני מגיעה" / "לא אוכל"</span><span class="tag built">✅</span>
+        <span class="response">נכתב במסד מיד, מסך-תודה מותאם. אין כפתור "התחרטתי" — זה נשאר טלפון למנהלת.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">קישור פגום, או פשוט פג-תוקף</span><span class="tag built">✅</span>
+        <span class="response">אותה הודעה <b>בדיוק</b> לשני המקרים — בכוונה, כדי שלא ידלוף מידע איזה מהם זה.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">המשרה התמלאה בדיוק כשהיא מחזיקה את הקישור פתוח בטלפון</span><span class="tag built">✅</span>
+        <span class="response">הודעה נפרדת ("כבר אוישה") — <b>לא</b> משתמשת בניסוח של "בוטלה", כי היא מעולם לא הייתה משובצת.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">היא לוחצת בדיוק ברגע שהמכסה מתמלאת (מרוץ אמיתי)</span><span class="tag built">✅</span>
+        <span class="response">הכתיבה נדחית, והמסך <b>בודק מחדש</b> את המצב האמיתי במקום לנחש — ומראה "כבר אוישה" אם זה נכון עכשיו.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">בעיית-רשת בזמן טעינה/שליחה</span><span class="tag built">✅</span>
+        <span class="response">מסך-שגיאה נפרד עם כפתור-נסה-שוב — לעולם לא מתבלבל עם "הקישור מת", ולעולם לא מכריז הצלחה בשקט.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">הדף עוד בטעינה</span><span class="tag built">✅</span>
+        <span class="response">שלד-טעינה בלבד — לא מציג שם-אירוע או כפתורים לפני שהקישור אומת, כדי לא "להבטיח" משהו שעוד לא נבדק.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">סכום-הנסיעות עדיין לא מוגדר (<span class="num">0</span>)</span><span class="tag built">✅</span>
+        <span class="response">מוצג "+ נסיעות" <b>בלי מספר</b> — לא "0 ₪", שהיה נשמע כמו הבטחה שנשברה.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">הדף הזה — מי מגן עליו</span><span class="tag built">✅</span>
+        <span class="response">אין התחברות ואין הרשאת-מסך רגילה — ההגנה כולה בשתי פונקציות-שרת ייעודיות; הטבלה עצמה חסומה לגמרי למי שלא מחובר.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="category" id="c9">
+    <div class="category-head"><span class="icon">✉️</span><h2>מיילים אוטומטיים</h2><span class="count">8 מצבים</span></div>
+    <div class="situations">
+      <div class="sit">
+        <span class="scenario">שולחים זימון (חדש או חוזר)</span><span class="tag built">✅</span>
+        <span class="response">מייל-זימון עם קישור אישי, פרטי האירוע, תעריף.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">אישור סופי</span><span class="tag built">✅</span>
+        <span class="response">מייל עם כל הפרטים + פרטי-קשר של אחראית-המשמרת. <b>אם חסר שם או טלפון לאחראית — השליחה נעצרת</b> במקום לצאת עם פרטי-קשר ריקים.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">שחרור (אוטומטי או ידני)</span><span class="tag built">✅</span>
+        <span class="response">תבנית-מייל <b>נפרדת</b> — לעולם לא משתמשת בניסוח-ביטול, כי מי שמעולם לא אושרה סופית לא "בוטלה".</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">"ביטול משמרת" במובן הכללי</span><span class="tag future">🔜</span>
+        <span class="response">התבנית קיימת במערכת ומוכנה, אבל <b>אף מסך לא קורא לה</b> כרגע — עקבי עם זה שאין כפתור-ביטול-אירוע במודול הזה.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">תזכורת מתוזמנת לפני המשמרת</span><span class="tag future">🔜</span>
+        <span class="response">לא נשלחת עדיין — ממתינה לתשתית-התזמון של מודול 10.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">תוצאת-שליחה כלשהי</span><span class="tag built">✅</span>
+        <span class="response"><b>שלושה מצבים תמיד, לא שניים:</b> נשלח / נכשל / <b>לא ידוע</b> (תקלת-רשת ≠ נכשל — "נכשל" היה גורם לשליחה כפולה).</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">בדיקה "האם כבר נשלח"</span><span class="tag built">✅</span>
+        <span class="response">נענית רק מיומן-השליחות במסד — לא מזיכרון-המסך, שנעלם ברענון-דף.</span>
+      </div>
+    </div>
+    <div class="story-box">
+      <span class="story-title">🔴 עוד תקלה אמיתית שנתפסה ותוקנה — שווה סיפור</span>
+      בשחרור-אוטומטי (כשהמכסה מתמלאת), כשל בכתיבת-מייל היה <b>נבלע בשקט</b> — הדיילת נעלמה מהודעת-האישור על המסך בעוד שבפועל היא נשארה "אישרה זמינות" לאירוע שכבר מלא, בלי שאף אחד ידע להודיע לה. תוקן באותו אודיט: כל כשל כזה מדווח היום בשם.
+    </div>
+  </section>
+
+  <section class="category" id="c10">
+    <div class="category-head"><span class="icon">🔐</span><h2>הרשאות ותקלות שקטות</h2><span class="count">3 מצבים</span></div>
+    <div class="situations">
+      <div class="sit">
+        <span class="scenario">משתמשת ללא הרשאת-עריכה פותחת מסך</span><span class="tag built">✅</span>
+        <span class="response">כפתורי-הפעולה <b>לא קיימים בדף בכלל</b> — לא רק מכובים, כדי לא להזמין לחיצה שתיתקל בסירוב.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">מבט-העל של מודול הדיילות</span><span class="tag built">✅</span>
+        <span class="response">תלוי בהרשאת <b>"פרויקטים"</b>, לא "דיילות" — תלות חוצת-מודולים שלא נראית בשום מקום במטריצת-ההרשאות.</span>
+      </div>
+      <div class="sit">
+        <span class="scenario">הרשאת-מסד חסרה/שגויה על אחת הטבלאות</span><span class="tag built">✅</span>
+        <span class="response">לעולם לא נראה כמו "אין נתונים" סתם — מסך-שגיאה ייעודי עם "נסה שוב". נבדק בפועל: הפלת-הרשאה בכוונה הוכיחה שהמסך תופס את זה ולא משתתק.</span>
+      </div>
+    </div>
+  </section>
+
+  <p class="footer-note">מבוסס על קריאה מלאה של spec.md · processes-approved.md · screens-approved.md · הקוד החי, 12/08/2026</p>
+
+</div>
