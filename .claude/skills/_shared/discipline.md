@@ -68,7 +68,7 @@ not here is a **loss** — it will have to be defended at the conference.
 🔴 **And the answer is always two-part** — *"this is the convention **and it fits here because X**"* or,
 stronger, *"this is the convention, **and I deliberately deviated, because X**"*. A convention adopted
 without a fit check is copying, not deciding. *(Full research protocol — when to dispatch, sourcing rules:
-`docs/guides/prompt_module_discovery.md` §5. Not duplicated here.)*
+`.claude/skills/module-discovery/template.md` §5. Not duplicated here.)*
 
 ➕ **Every world proposal ships with its implementation price here, not just its source:** what actually
 changes — column · table · screen · migration · existing code — **and how complex.**

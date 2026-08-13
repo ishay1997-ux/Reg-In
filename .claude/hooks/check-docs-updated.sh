@@ -160,7 +160,7 @@ fi
 # לפני הכתיבה: two-weeks-2026-08-06.md כן הופיע ב-STATUS.md כהיסטוריה, ועדיין
 # 3.1 בתוכו מעולם לא רץ). escape hatch: תוכנית שמכריזה "תוכנית סגורה" בתוכה —
 # כל תוכנה כבר עבר למקום קבוע — אינה נחסמת.
-PLAN_STD="docs/guides/prompt_module_discovery.md docs/PROJECT_MASTER.md .claude/skills/module-blueprint/template.md .claude/skills/module-build/SKILL.md .claude/skills/module-close/template.md"
+PLAN_STD=".claude/skills/module-discovery/template.md docs/PROJECT_MASTER.md .claude/skills/module-blueprint/template.md .claude/skills/module-build/SKILL.md .claude/skills/module-close/template.md"
 PLAN_MISS=""
 while IFS= read -r line; do
   f=$(printf '%s' "$line" | cut -c4-)
@@ -205,7 +205,7 @@ if [ -n "$HG_MISS" ]; then
   REASON="${REASON}חוב 🚧 בלי רישום ב-PROJECT_MASTER §6 —$HG_MISS. הוסף שורה '🚧 מN ← מ<מקור> · מה · מקור: micro_guides/module-<מקור>.md'. "
 fi
 if [ -n "$PLAN_MISS" ]; then
-  REASON="${REASON}תוכנית ב-docs/plans/ בלי מצביע משום קובץ-תקן —$PLAN_MISS. הוסף אזכור-שם-קובץ ב-prompt_module_discovery.md / PROJECT_MASTER.md / module-blueprint/module-build/module-close, או סמן בתוכנית עצמה 'תוכנית סגורה' אם כל תוכנה כבר עבר למקום קבוע. "
+  REASON="${REASON}תוכנית ב-docs/plans/ בלי מצביע משום קובץ-תקן —$PLAN_MISS. הוסף אזכור-שם-קובץ ב-module-discovery/template.md / PROJECT_MASTER.md / module-blueprint/module-build/module-close, או סמן בתוכנית עצמה 'תוכנית סגורה' אם כל תוכנה כבר עבר למקום קבוע. "
 fi
 if [ -n "$MISS" ]; then
   REASON="${REASON}עדכן לפני סיום: $MISS. (אורך רשומת-היומן — לפי המדיניות שבראש CLAUDE_CODE_LOG.md עצמו, שם היא נקבעת; אם אין שינוי-סטטוס — ב-STATUS רק שורת 'עודכן לאחרונה', אחרי שווידאת שהלוח נכון.)"
