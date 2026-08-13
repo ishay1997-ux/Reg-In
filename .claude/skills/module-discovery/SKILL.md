@@ -17,7 +17,7 @@ references — every sibling opens with that line.)*
 execute it.** This file carries what you must decide **before** the procedure starts: which archetype
 the module is, which outputs that implies, and the five disciplines that fire in every stage.
 
-*(Replaces the retired `docs/delete/prompt_module_discovery.md`. Written 13/08/2026 out of module 6's Discovery,
+*(Replaces the retired procedure, archived at `docs/archive/prompt_module_discovery_retired_2026-08-13.md`. Written 13/08/2026 out of module 6's Discovery,
 which ran in a single session — 38 rulings · 8 surfaces · 8 mockups · 6 files · 10 §7 items ·
 17 DB requirements — **and equally out of the 14 after-the-fact repairs that session needed.**)*
 

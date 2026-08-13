@@ -44,7 +44,7 @@
 
 ## מצב
 
-| # | המשטח | מצב | המוקאפ *(`docs/mockups/project-management-screen/drafts/`)* |
+| # | המשטח | מצב | המוקאפ *(`docs/mockups/project-management-screen/approved/`)* |
 |:-:|---|---|---|
 | **1** | **מבט-על פרויקטים** — תור-הטריאז' של מנהלת הפרויקטים | 🔶 **מוקאפ אושר ויזואלית 13/08/2026 · תוכן ממתין** | `01_overview.html` |
 | **2** | **כרטיס פרויקט** — מעטפת ואזור-זהות *(+ דיאלוג עריכת-פרטים)* | 🔶 **אושר ויזואלית 13/08/2026 · תוכן ממתין** | `02_project_card.html` |
@@ -68,7 +68,7 @@
 
 # 🔶 טיוטה · משטח 1 · מבט-על פרויקטים — כרטיס-המסך
 
-> **🖼️ המוקאפ:** `docs/mockups/project-management-screen/drafts/01_overview.html` —
+> **🖼️ המוקאפ:** `docs/mockups/project-management-screen/approved/01_overview_approved.html` —
 > **הוא חלק מהאפיון, לא איור לצידו. מה שנראה בו ואינו כתוב כאן — המוקאפ קובע**
 > *(פריסה · סדר · צבע · צפיפות · נוסח-תווית)*.
 > **וההפך: התנהגות · מקור-נתונים · הרשאות · מצבים · הגדרות — הכרטיס הזה קובע, והמוקאפ לא.**
@@ -374,7 +374,7 @@
 
 # 🔶 טיוטה · משטח 2 · כרטיס פרויקט — מעטפת ואזור-זהות
 
-> **🖼️ המוקאפ:** `docs/mockups/project-management-screen/drafts/02_project_card.html`
+> **🖼️ המוקאפ:** `docs/mockups/project-management-screen/approved/02_project_card_approved.html`
 > **נכתב 13/08/2026, שלב 2 של Discovery מודול 6.** ‏🛑 **טיוטה — ממתין לאישור-ישי.**
 >
 > **הפרויקט המצויר:** `#8` **כנס לקוחות שנתי** · מדיטק פתרונות בע"מ · 22/08/2026 · **"היום" = 13/08/2026**.
@@ -679,7 +679,7 @@
 
 # 🔶 טיוטה · משטח 3 · לשונית לוגיסטיקה ומוצרים — **ממתין לאישור-ישי**
 
-> **🖼️ המוקאפ:** `docs/mockups/project-management-screen/drafts/03_tab_logistics.html`
+> **🖼️ המוקאפ:** `docs/mockups/project-management-screen/approved/03_tab_logistics_approved.html`
 > מצויר על **פרויקט `#8` "כנס לקוחות שנתי"** (מדיטק, `22/08/2026`, בעוד 9 ימים) — אותו פרויקט
 > שכל שאר המשטחים מציגים. **"היום" במוקאפ = `13/08/2026`.**
 >
@@ -976,7 +976,7 @@ select v_project_id, qs.sku, row_number() over (order by qs.line_number), qs.qty
 
 # 🔶 טיוטה · משטח 4 · לשונית **צוות דיילות** — כרטיס-מסך
 
-> **🖼️ `docs/mockups/project-management-screen/drafts/04_tab_team.html`**
+> **🖼️ `docs/mockups/project-management-screen/approved/04_tab_team_approved.html`**
 > מצויר על **פרויקט `#8` "כנס לקוחות שנתי"**, ‏**"היום" = `13/08/2026 15:23`** *(נקוב על המסך —
 > כלל מ4 מ-06/08/2026)*, ‏**+ שני מצבים נוספים של אותה לשונית** *(טרם נשלח זימון · פרויקט שבוטל)*.
 >
@@ -1190,7 +1190,7 @@ select v_project_id, qs.sku, row_number() over (order by qs.line_number), qs.qty
 
 # 🔶 טיוטה · משטח 5 · לשונית **סגירת אירוע** — כרטיס-מסך
 
-> **🖼️ המוקאפ:** `docs/mockups/project-management-screen/drafts/05_tab_closing.html`
+> **🖼️ המוקאפ:** `docs/mockups/project-management-screen/approved/05_tab_closing_approved.html`
 > **מצויר על:** 🎭 `#102` "יום העיר חדרה", עיריית חדרה, האירוע התקיים **08/08/2026** — "היום" הוא **13/08/2026**.
 > **מקורות התוכן:** `docs/specs/module_06_projects/processes-approved.md` §🏁1–6 · §🎯 (החוזה מול Smart Match) ·
 > הכרעות ⑭ · ⑳ · ㉓ · ㉔ · ㉘ · ㉙ · ㉚ · ㉛ · ㉜ · ט4-א/ב/ג/ד.
@@ -1545,7 +1545,7 @@ hostess_id)`. ⇒ **מיכל אברהם שסומנה "מצוינת" בחדרה, 
 
 # 🔶 טיוטה · משטח 6 — דיאלוג שינוי-תכולה
 
-> **🖼️ המוקאפ:** `docs/mockups/project-management-screen/drafts/06_dialog_scope_change.html`
+> **🖼️ המוקאפ:** `docs/mockups/project-management-screen/approved/06_dialog_scope_change_approved.html`
 > **נפתח מ:** כרטיס-הפרויקט *(משטח 2)*, כפתור "שינוי תכולה".
 > **מקור התוכן:** `docs/specs/module_06_projects/processes-approved.md` — **נקרא במלואו** לפני הציור
 > *(הכרעות ①–④ · ⑯ · ⑤ · ⑫ · ⑬ · ⑳ · ㉔ · ㉗ · ㉙ · כרטיס מכונת-הסטטוס §🔄3/🔄5 · החוזה מול מ3 · החוזה מול מ5 פריט 4)*.
@@ -1752,7 +1752,7 @@ hostess_id)`. ⇒ **מיכל אברהם שסומנה "מצוינת" בחדרה, 
 
 # 🔶 טיוטה · משטח 7 — **דיאלוג ביטול פרויקט**
 
-> **🖼️ המוקאפ:** `docs/mockups/project-management-screen/drafts/07_dialog_cancel.html`
+> **🖼️ המוקאפ:** `docs/mockups/project-management-screen/approved/07_dialog_cancel_approved.html`
 > **נכתב:** 13/08/2026 16:02 · **"היום" של המוקאפ:** 13/08/2026
 > **הפרויקט המצויר:** 🎭 `#103` "ערב לקוחות VIP" — מדיטק פתרונות בע"מ, 05/09/2026, שלוש דיילות מאושרות.
 >
@@ -2015,7 +2015,7 @@ hostess_id)`. ⇒ **מיכל אברהם שסומנה "מצוינת" בחדרה, 
 
 # 🧾 משטח 8 · לשונית-הפרויקטים בכרטיס-הלקוח — כרטיס-מסך
 
-> **🖼️ המוקאפ:** `docs/mockups/project-management-screen/drafts/08_customer_projects_tab.html`
+> **🖼️ המוקאפ:** `docs/mockups/project-management-screen/approved/08_customer_projects_tab_approved.html`
 > **הוא חלק מהאפיון, לא איור לצידו.** מה שנראה בו ולא כתוב כאן — **המוקאפ קובע**
 > *(פריסה · סדר · צבע · צפיפות · נוסח-תווית)*. **מה שכתוב כאן ולא נראה בו — הכרטיס קובע**
 > *(התנהגות · נתונים · הרשאות · מצבים · הגדרות)*.

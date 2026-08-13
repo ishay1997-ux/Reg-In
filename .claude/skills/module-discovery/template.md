@@ -598,13 +598,17 @@ Output: a findings table, reported to Ishay, corrected only with his approval �
 **Locked vocabulary** *(**10 phrasing contradictions** were found this way in module 6)* · visual
 consistency · coverage against `M`.
 🔴 **➕ And two mechanical checks on the mockup FILES themselves, which no content verifier covers:**
-**‏①** every approved mockup sits in `approved/` under its approved name — **not in `drafts/`**
-*(measured 13/08: module 4 complied with 8 files; **module 6 did not — all 8 approved mockups are still
-in `drafts/` under draft names, and `screens-approved.md` carries 8 pointers into `drafts/`, while
-`module-build/SKILL.md` states flatly that approved mockups sit under `approved/`**)* ·
-**‏② no draft banner survives inside an approved file** — `grep -l 'טיוטה' docs/mockups/**/approved/`
-must return nothing *(measured: module 4 shipped this defect at **8 of 8**; module 6 at 1 of 8)*.
-⚠️ **Also sweep for an orphan** — a mockup at the parent level that nothing cites.
+**‏①** every approved mockup sits in `approved/` under its approved name — **not in `drafts/`**.
+*(Measured 13/08: module 4 complied; **module 6 did not — all 8 sat in `drafts/` under draft names for
+hours after Ishay approved them, while `module-build/SKILL.md` states flatly that approved mockups sit
+under `approved/`. Promoted the same evening on Ishay's ruling, with all pointers repointed.** 🔑 **The
+lesson is the timing: promotion is part of "he approved it", not a tidy-up afterwards** — nothing in
+the six pre-handoff cross-checks looks at where a file lives, so it fails silently.)*
+**‏② no draft banner survives inside an approved file** — `grep -rl 'טיוטה' docs/mockups/**/approved/`
+must return nothing *(measured: **module 4 shipped this defect at 8 of 8**; module 6 at 1 of 8, fixed)*.
+⚠️ **Also sweep for an orphan** — a mockup at the parent level that nothing cites. *(In module 6 that
+is `01_overview_reworked.html`, dated 14/07 — **the pre-Discovery legacy, deliberately left in place**;
+know which is which before you touch anything.)*
 *(Measured: a round covering four surfaces at once found 5 findings that each surface's own approval
 had missed — a per-surface run would have caught them more cheaply.)*
 
