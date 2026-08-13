@@ -48,7 +48,10 @@ const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY
 // ("לבחור פיקסטורה בזמן-ריצה לפי תנאי, לא מזהה קשיח"; ‏`🚧 מ4` ב-`PROJECT_MASTER §6`).
 // ⚠️ **וגם הנמען אינו נכנס לגיט** — הוא נגזר מהשורה שנבחרה. עדיפות לדומיין-דמו, כי שתי
 // הצעות פתוחות נושאות כתובת פרטית אמיתית של ישי (הכרעת-ישי 01/08, כדי לקבל את המיילים).
-const SENT_QUOTE_ID = 22
+// ⚠️ **נבחרת בזמן-ריצה, ולא `22` כפי שהיה כאן.** השימוש היחיד בה הוא שליפת נמען מ-`email_log`,
+// ולכן היא **אינה** נשברת כשההצעה פגה — אבל מזהה קשיח לשורה חיה מרקיב מעצם היותו, וזו אותה
+// משפחה שהעבירה כאן `#6`→`#22` ב-04/08. *(`🚧 מ6 ← מ3`.)*
+let SENT_QUOTE_ID = null
 const DEMO_DOMAIN = '-demo.'
 
 async function login(page, email, password) {
@@ -85,14 +88,27 @@ test.describe('שליחת ההצעה במייל — החוזה מול השרת (
       await sb.auth.signInWithPassword({ email: CEO_EMAIL, password: CEO_PASSWORD })
       const { data } = await sb
         .from('email_log')
-        .select('recipient')
+        .select('entity_id, recipient')
         .eq('entity_type', 'quote')
-        .eq('entity_id', SENT_QUOTE_ID)
         .eq('status', 'sent')
         .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      sentRecipient = data?.recipient ?? null
+        .limit(50)
+      // 🔴 שני תנאים, לא אחד: `openDocumentDialog` פותח את החלון **מטבלת-ההצעות** וממתין
+      // שכפתור-השליחה יידלק — ו-`isQuoteSendable` מחזיר `in_progress` בלבד.
+      // ⚠️ נמדד: בחירה לפי "האחרון שנשלח" בלבד החזירה הצעה **מאושרת** (#24), והבדיקה נפלה
+      // על הלחיצה. **הצעה שנשלחה אינה בהכרח הצעה שניתן לשלוח.**
+      const sentIds = [...new Set((data ?? []).map((r) => r.entity_id))]
+      if (sentIds.length) {
+        const { data: openSent } = await sb
+          .from('quotes')
+          .select('quote_id')
+          .eq('quote_status', 'in_progress')
+          .in('quote_id', sentIds)
+          .order('quote_id', { ascending: false })
+          .limit(1)
+        SENT_QUOTE_ID = openSent?.[0]?.quote_id ?? null
+        sentRecipient = (data ?? []).find((r) => r.entity_id === SENT_QUOTE_ID)?.recipient ?? null
+      }
 
       // ── בחירת ההצעה-הנקייה בזמן-ריצה ────────────────────────────────────────
       // שתי שאילתות ולא צירוף: `email_log` פולימורפית ואין לה FK ל-`quotes`.
