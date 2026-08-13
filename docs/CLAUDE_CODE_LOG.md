@@ -49,6 +49,25 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 13/08/2026 18:0X–20:4X — The Discovery prompt became a skill, and recounting it broke three numbers I had written
+
+**`docs/guides/prompt_module_discovery.md` (846 lines) retired into `.claude/skills/module-discovery/`** — `SKILL.md` (142: routing · **module classification** · outputs matrix · five disciplines) + `template.md` (917: the full procedure, §0–§11). The prompt moved to `docs/delete/` with a rationale banner (Ishay's call to delete it; the deletion itself is his). Ten live pointers updated one by one; mentions in the log, `docs/plans/`, `docs/archive/`, `docs/specs/` and the mega-plan were **deliberately left** — they are dated records of what ran, and rewriting them would falsify the record.
+
+**Three things the skill has that the prompt did not**, all derived from measuring module 6's own run: **Stage 0 · Intake** (the three sweeps + a requirements ledger, run *before* any conversation — in module 6 they ran in reaction to Ishay's questions and cost 12 items, a whole surface, 15 of 30 columns and an entire 9-agent repair wave) · **module classification into five archetypes**, so an engine module is not asked for mockups and a read-only module gets a source sweep instead of a column sweep (Ishay's ruling: *"לא בכל המודולים צריך את כל התוצרים האלו… נגיד לוגיסטיקה כספים דוחות כן אוטומציות לא"*) · and the **agent-wave playbook + ruling discipline**, which existed only in the conversation.
+
+🔴 **The first `template.md` I wrote was a compression, and it silently dropped seven standing Ishay rulings** — the closed five-item cross-check list (07/08), the separate blind-spot block, the spec-folder contents list, the session-budget rule, and more. **It was caught only because a pointer in `_shared/discipline.md` cited "§5" and the new file had no §5.** Not by re-reading. Rewritten in full in the same turn; the case is recorded in `discovery_lessons.md` as the anchor for "do not trim the template".
+
+🔴 **Then recounting broke three numbers I had written earlier the same day, and all three are the same species — a count cited rather than measured:**
+1. **`db_roadmap` rows: "18" → 17.** The source line claimed *14 in `A-M6` + 4 in §5*; only **3** §5 rows are new, the fourth is a pre-existing `OPEN` row. `spec.md` carried the arithmetic contradiction inside a single sentence (*"3 … 14 … סה"כ 18"*). The wrong number had already propagated to four files.
+2. **`PROJECT_MASTER_sec7` tally line** said *"moved exactly five — 43+5=48"* while its own numbers already read 53/18. The tally numbers were updated when the list grew from 5 to 10; **the arithmetic sentence was not.**
+3. **`§7.36` was listed as closed and is 🟡.** It is **half**-closed: §7.61's DB `check` constraint answers the atomicity half; the send-failure half (bounce / SMTP / PDF) stays open for module 10, and orphan cleanup in Storage was never ruled for any bucket. A `↳` now records exactly that. ⇒ **10 §7 items closed today, not 11.** Recounted directly: **🟢53 · 🟡18 · 🔵4 · ⚪16 · 🟠1 = 92**, no duplicate numbers.
+
+**And a fourth, in `db_roadmap` itself:** the §5 row for §7.61 still said `OPEN` a full day after §7.61 was ruled — one line above the ruling that superseded it. **The register the blueprint reads was contradicting itself.** Tagged superseded.
+
+**Language:** the skill is in **English**, unlike the Hebrew prompt it replaces — repo convention for `.claude/skills/**` (all three sibling skills are English), Hebrew kept verbatim for Ishay's quotes and product terms. **Consequence Ishay should know: he can no longer read the procedure directly.** His door stays `docs/guides/module_playbook.md` (Hebrew, updated).
+
+**Harvest ledger moved home:** it lived in the retiring prompt; its new home is `docs/guides/discovery_lessons.md`, which the skill now points at.
+
 ### 13/08/2026 09:30–11:4X — Module 6 Discovery, stage 1: the spec folder finally exists, and a register sweep found 12 missed items
 
 **Resume-from-disk caught the first problem before any work started.** `STATUS.md` and the 12/08 log entry both said module-6 Discovery stage 1-א was "presented to Ishay, approved" — but `docs/specs/module_06_projects/` **did not exist**. Nothing had been written. Stage 1-א was re-run from scratch rather than continued from narration. *(Exactly the failure `~/.claude/CLAUDE.md` describes: narration is intent, not evidence.)*

@@ -637,7 +637,11 @@ break a build silently.** *(The sharp example: a table under deny-all returns **
 🔴 **`spec.md` must not tell the blueprint which registers to skip.** *(Measured 13/08/2026: it
 instructed the blueprint not to read `db_roadmap`, claiming it was "deliberately empty of this module".
 It was already wrong when written — 3 rows at 17:00 and 14 more at 18:58. **A compliant blueprint would
-have skipped 18 DB requirements.**)* ⇒ **State what to read. Never what to skip.**
+have skipped 17 DB requirements.**)* ⇒ **State what to read. Never what to skip.**
+⚠️ **And a footnote that is itself an instance of the rule: this count said "18" for a day.** The
+source line claimed *"14 in the `A-M6` block + 4 in §5"* — **but only 3 of those §5 rows were new;
+the fourth was a pre-existing `OPEN` row.** *(Recounted 13/08. The number had already propagated to
+four files.)* 🔑 **A count is measured at the moment it is written, or it is a citation.**
 
 ➕ **And in the same turn: a line in the step guide §⑥1 pointing at the folder** — that is the file
 Ishay actually pastes from. 🔴 **Verify yourself whether the line is already there.**
@@ -782,7 +786,11 @@ module** *(§0 — do not use it at all)*.
 - **A product / process / permission / UX decision is his.**
 - 🆕 **And the third category, which was the majority in practice: a delegated ruling.** When he says
   "מה שתמליץ" — **you rule, and mark three things: ① "הכרעת-קלוד בהאצלה" ② the reasoning and the
-  anchor ③ "מותר לפתוח מחדש בלי טקס".** *(**17 of 38** rulings in module 6.)*
+  anchor ③ "מותר לפתוח מחדש בלי טקס".**
+  ⚠️ **Mark it consistently — module 6's marking was not, so its own split cannot be measured**
+  *(7 `בהאצלה` + 10 `הכרעת-קלוד` against 38 rulings; a "17 of 38" figure was written and withdrawn
+  on 13/08 for exactly this reason)*. **A category you cannot count is a category the next module
+  cannot learn from.**
 
 **③ A real edge case vs an invented one — the test:** **real** arises from the business process ·
 **invented** from imagination. 🔑 **The filter that closes an item in one line:** "קורה אצלך ש…?" —

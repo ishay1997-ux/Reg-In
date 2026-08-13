@@ -11,7 +11,7 @@ the module is, which outputs that implies, and the five disciplines that fire in
 
 *(Replaces the retired `docs/delete/prompt_module_discovery.md`. Written 13/08/2026 out of module 6's Discovery,
 which ran in a single session — 38 rulings · 8 surfaces · 8 mockups · 5 files · 11 §7 items ·
-18 DB requirements — **and equally out of the 14 after-the-fact repairs that session needed.**)*
+17 DB requirements — **and equally out of the 14 after-the-fact repairs that session needed.**)*
 
 ## 🔴 Three facts that shape how this skill is built
 
@@ -79,9 +79,15 @@ does not read it; measured that he asked about rulings that were written there)*
 **② A ruling is recorded verbatim with its date, the moment it is spoken.**
 🔴 **And an idea is not a ruling:** "אולי כדאי" / "לדעתי" ⇒ **an idea — tested like any other option.**
 *(Measured failure: "מעלה כרעיון" was recorded in a register as "הכרעת-ישי".)*
-🆕 **And a third category — a delegated ruling** *(**17 of 38** in module 6, i.e. the majority in
-practice)*: when he says "מה שתמליץ" — **you rule, and mark three things: ① "הכרעת-קלוד בהאצלה"
-② the reasoning and the anchor ③ "מותר לפתוח מחדש בלי טקס".**
+🆕 **And a third category — a delegated ruling**, which in module 6 was **a large share of the total**:
+when he says "מה שתמליץ" — **you rule, and mark three things: ① "הכרעת-קלוד בהאצלה" ② the reasoning
+and the anchor ③ "מותר לפתוח מחדש בלי טקס".**
+⚠️ **The exact ratio is deliberately not stated here, because it is not cleanly measurable** — grep on
+the delegation markers across module 6's approved set returns 7 `בהאצלה` and 10 `הכרעת-קלוד` against
+38 rulings, i.e. **the marking itself is inconsistent.** *(A "17 of 38" figure was written here on
+13/08 and withdrawn the same evening: it came from a session summary, not from a count.)*
+🔑 **⇒ The actionable rule is the marking, not the ratio: mark every delegated ruling the same way, so
+the next module can measure what this one could not.**
 
 **③ A fix that adds a line without cleaning the old one is the most repeated failure.**
 **Measured five times in one day**, including: a file declaring both "טרם נרשם" and "בוצע" on the same
