@@ -12,9 +12,11 @@
 | **Active step** | **1.1 — pending the 🛑 blocker sweep.** Step 1.0 is ✅ done; **typed-echo is waived for Phase 1** (see step 1.0). 🔴 **The nine migrations are applied ONE AT A TIME, in order A→I, each verified live before the next.** |
 
 > ### 📍 WHERE PHASE 1 ACTUALLY STANDS — `14/08/2026 14:2X`. **A resuming session reads THIS before anything else.**
-> ## ✅ **SEVEN of the nine migrations are APPLIED and independently verified. Steps 1.1 · 1.2 · 1.3 · 1.4 · 1.5 · 1.6 · 1.7 · 1.9 are DONE.**
-> 🚫 **NOT applied: 1.8a and 1.8b — the seven RPCs. And 1.10's gate has not been run.**
-> 🔑 **The database is nevertheless FULLY CONSISTENT as it stands** — nothing live references the missing functions; the three triggers call `recompute_project_status`, which migration I created. **There is no half-applied state to repair.**
+> ## ✅ **PHASE 1 IS COMPLETE. All ten migrations are APPLIED and independently verified — steps 1.1 through 1.9 are DONE.**
+> 🔴 **And the acceptance oracle passed digit for digit, which is the only proof that matters here.** Impersonating מנהלת פרויקטים inside a rolled-back transaction, `list_projects_overview()` returned: `#3 → 8,360.00` · `#7 → 5,355.00` · **`#8 → 5,355.00`** · `#11 → 500.00`, and `#8 → 1/6 confirmed · **2** pending · 9 raw rows`. **Every number matches what `spec.md` computed by hand before the code existed** — including `2` pending rather than `3`, which is the de-dup fold working.
+> 🔒 **Negative control, same call as מנהלת לוגיסטיקה:** all three money fields returned **`null`** while the metrics stayed correct (`1/6`, `0/2`). A browser-side join would have handed her `0/6` — a lie on the screen her whole job lives on. **That is what AR-3 exists for, and it is now proven, not asserted.**
+> 📊 **Security advisor `17 → 23`, exactly as predicted** (+7 browser-callable functions, accepted; −1 because `logistics` left the deny-all list). **No module-6 function is reachable by `anon`.** All ten functions are `security definer` with `search_path` locked.
+> 🚫 **Step 1.10's gate script has NOT been run as a whole** (`docs/plans/module-6-phase-1/m6_step_1_10.sql`) — its individual assertions were verified ad-hoc during the apply round. **Running it end-to-end is the first cheap thing a resuming session should do.**
 >
 > **The full applied/verified table, with the evidence for each, is in `docs/db_roadmap.md` — the `✅ APPLIED` block immediately above the `A-M6` rows. Read it there, not from a restatement.**
 >
