@@ -584,7 +584,7 @@ Unchanged from module 1: Supabase Auth (Google), session in `sessionStorage`, `c
 >
 > | | Verdict after re-triage |
 > |:--:|---|
-> | **3** · **6** · **7** · **8** · **10** · **12** | 🛑 **REAL, unchanged.** A contract two phases must agree on · a contradiction inside the plan · an expectation that is unreachable · an acceptance gate that cannot pass · names other code keys on · undeclared constraints that change behaviour. **None of these is "write my code for me".** |
+> | ~~**3**~~ ✅ *(closed — contract written into 1.8)* · **6** · **7** · **8** · **10** · **12** | 🛑 **REAL, unchanged.** A contract two phases must agree on · a contradiction inside the plan · an expectation that is unreachable · an acceptance gate that cannot pass · names other code keys on · undeclared constraints that change behaviour. **None of these is "write my code for me".** |
 > | **1** | 🛑 **REAL, but RECLASSIFIED.** The defect is **not** "the trigger function is unwritten" — it is that **the plan never declares the wrapper exists as a work item at all**, while handing over the other function complete. **An undeclared dependency ≠ "the plan didn't type it for me."** |
 > | **2** | ◐ **SPLIT.** The seven **bodies are the builder's — demoted.** ‏**But `returns setof record` stays 🛑**: it is a contract, and it is *wrong* — supabase-js cannot call that shape at all. |
 > | **5** | ◐ **SPLIT.** Writing the eight policies is the builder's — **demoted.** **The eight NAMES and the read/write permission split stay 🛑** — a name other code references, and a security decision. |
@@ -596,7 +596,7 @@ Unchanged from module 1: Supabase Auth (Google), session in `sessionStorage`, `c
 > |:-:|:--:|---|---|
 > | **1** | **1.9** | 🛑 **The migration ABORTS.** Three `create trigger` statements call **`public.trg_recompute_project_status()` — a function this guide never writes.** ⇒ `42883 function does not exist`. **Its `DELETE` branch is real work** (`OLD.project_id`, since `NEW` is null on delete). | Write the trigger function into 1.9, with the `TG_OP = 'DELETE'` split and its `revoke`. |
 > | **2** | **1.8** | 🛑 **Seven RPCs, seven prose paragraphs, ZERO bodies.** And `list_projects_overview()` is specified `returns setof record` — **PostgREST/supabase-js cannot call that**; the caller must supply a column-definition list the JS client has no way to send. All 16 column types are absent. | Rewrite as `returns table(...)` with types; write all seven bodies, signatures and eight `revoke` lines. |
-> | **3** | **1.8** | 🛑 **The two `jsonb` payload shapes are undefined** — `apply_scope_change(p_lines)` and `close_project_operationally(p_rows)`. 🔴 **This is the single highest-risk gap in the phase, because it fails LATE and QUIETLY on both sides:** an invented shape applies cleanly, passes 1.8, passes the 1.10 gate, and only surfaces in Phase 3 when the dialog is built against a *different* invented shape. ⚠️ **`logistics` has a THREE-column PK `(project_id, sku, serial_number)`** — nothing says which of the three the payload carries, so the failure mode is *updating the wrong logistics row*. | Define both element shapes verbatim in 1.8, and make Phase 3's dialog step cite them. |
+> | **3** | **1.8** | ✅ **CLOSED `14/08/2026` — the two payload contracts are now written into step 1.8, every field measured live against the DB.** *(Original finding kept below so the reason survives.)* 🛑 ~~**The two `jsonb` payload shapes are undefined**~~ — `apply_scope_change(p_lines)` and `close_project_operationally(p_rows)`. 🔴 **This is the single highest-risk gap in the phase, because it fails LATE and QUIETLY on both sides:** an invented shape applies cleanly, passes 1.8, passes the 1.10 gate, and only surfaces in Phase 3 when the dialog is built against a *different* invented shape. ⚠️ **`logistics` has a THREE-column PK `(project_id, sku, serial_number)`** — nothing says which of the three the payload carries, so the failure mode is *updating the wrong logistics row*. | Define both element shapes verbatim in 1.8, and make Phase 3's dialog step cite them. |
 > | **4** | **1.2** | 🛑 **`project_changes` ships RLS-ON with ZERO POLICIES — deny-all.** The code block ends at `enable row level security`; **the policy exists only as a trailing `--` comment.** ⇒ the exact `{data:null, error:null}` silent failure this guide quotes a whole acceptance line about for `logistics`. | Move the policy INTO the code block. |
 > | **5** | **1.5** | **8 storage policies described, 0 written** — including their **names** and the read/write permission split. ⚠️ **Not inferable:** the template it points at names its SELECT policy `marketing_read_by_permission` — ***read*, not *select***. A wrong permission level here is a leak no test catches. | Write all eight, with names and levels. |
 > | **6** | **1.8 · AR-10** | 🔴 **A design contradiction that silently disables the backstop.** AR-10 routes errors through `SERVER_CONSTRAINT_RULES`, which **keys on the constraint/index NAME**. 1.8 then says *"wrap the body in `exception when unique_violation then raise exception …`"* — **re-raising converts `23505` to `P0001` and DISCARDS the name** ⇒ the backstop can never fire. ➕ And `SERVER_CONSTRAINT_RULES` already holds an entry for `assignments_one_event_per_day` **with different wording than AR-10's**, unmentioned. | Decide: catch-and-map, or let `23505` through. Then reconcile the duplicate wording. |
@@ -1036,6 +1036,46 @@ Then read both template bodies back and **diff them character-by-character again
 
 **Step 1.8 · Migration H — the RPCs**
 **Files:** `supabase/migrations/<ts>_module6_rpcs.sql` · `docs/schema.sql` ⚠️ shared-surface · `db_roadmap` rows M6-9 · M6-10
+
+> ## 📜 PAYLOAD CONTRACTS — binding on Phase 1, Phase 2 and Phase 3 alike
+> **Added `14/08/2026` (Ishay: *"סבבה תוסיף"*). Every field below was measured live against the DB the same day — not read from `schema.sql`, which is a snapshot.**
+> 🔑 **Why this is in the plan and not left to the builder:** it is the one thing **two competent builders working alone would get incompatibly wrong.** Phase 1 writes the receiver, Phase 3 writes the sender, **and they only meet weeks later.** Both sides pass every check in the meantime, because each is internally consistent. 🚫 **And the failure is silent, not loud** — nothing throws; the wrong row is updated and the screen says *"נשמר"*.
+> ⚠️ **`p_project_id` is ALWAYS a separate scalar parameter and NEVER a field inside a line/row object.** Trusting a per-line project id lets one call write across projects, and the permission check at the top guards one project only.
+>
+> ### ① `apply_scope_change(p_project_id int, p_lines jsonb, p_reason text)`
+> *(Parameter order matches the two existing declarations in this guide — §4's RPC table and step 1.8 ③. Corrected on write: the contract was first drafted with `p_reason` second, which would have been a third variant of the same signature.)*
+> **‏`p_lines` is an ARRAY of objects. One shape, discriminated by `target`:**
+>
+> | field | type | when | meaning |
+> |---|---|---|---|
+> | `target` | `text` | always | `'logistics'` or `'hostess_count'` — matches `project_changes.change_target` |
+> | `sku` | `text` | `target='logistics'` | **measured:** `logistics_pkey = (project_id, sku, serial_number)` |
+> | `serial_number` | `int` | `target='logistics'`, existing line | the **third** PK part. 🔴 **Without it, an event holding several lines of the same `sku` gets the WRONG one updated — or all of them.** ⚠️ **Omit it for a NEW line; the RPC allocates `max(serial_number)+1` server-side.** 🚫 **The client never invents a serial number** — two concurrent adds would collide on the PK. |
+> | `target_qty` | `int` | always | 🔴 **THE TARGET, NOT THE DELTA.** The delta is derived server-side (`target_qty − planned_qty`) and stored in `project_changes.delta_qty`. **Sending a delta double-bills on retry.** For `hostess_count` this is the new `projects.required_hostess_count`. |
+>
+> 🔴 **And the constraint that shapes the whole reduction path, measured live: `logistics_planned_qty_check = CHECK (planned_qty > 0)`.** ⇒ **`target_qty = 0` means DELETE the row, never `update … set planned_qty = 0`** — the update raises `23514` and the scope change fails. **`target_qty < 0` is rejected outright.**
+> ⚠️ **`logistics` has NO `color` column** *(measured: its columns are `project_id · sku · serial_number · planned_qty · actual_qty · item_status · notes · created_at · updated_at`)* — **so a line carries no colour.** ‏`project_changes.color` is the **audit record's** copy, taken from the quote line, **not a key.**
+>
+> ### ② `close_project_operationally(p_project_id int, p_actual_hours numeric, p_actual_guests int, p_report_path text, p_rows jsonb)`
+> **‏`p_rows` is an ARRAY — one object per assigned hostess:**
+>
+> | field | type | required | measured anchor / rule |
+> |---|---|:--:|---|
+> | `hostess_id` | `bigint` | ✅ | with `assignment_number`, completes `assignments_pkey = (project_id, hostess_id, assignment_number)` |
+> | `assignment_number` | `int` | ✅ | 🔴 **the third PK part** — a hostess can hold more than one row on a project; without it the wrong row is written **and it fails silently** |
+> | `attendance_status` | `text` | ✅ | `arrived` / `late` / `no_show` (M6-4) |
+> | `lateness_level` | `text` | only when `late` | `null` otherwise — `assignments_attendance_shape` enforces it |
+> | `no_show_reason` | `text` | only when `no_show` | `null` otherwise |
+> | `actual_hours` | `numeric` | ✅ | 🔴 **forced to `0` when `no_show`** (ט4-א). **B11: the number only — 🚫 no clock times** |
+> | `preference` | `text` | ✅ | **measured `CHECK`: `מצוינת` · `בסדר` · `לא_לשלוח`** — exactly these three, `לא_לשלוח` with an underscore |
+> | `preference_reason` | `text` | **when `לא_לשלוח`** | 🔴 **measured live: `CHECK ((preference <> 'לא_לשלוח') OR (preference_reason IS NOT NULL))`.** Phase 1 never mentioned this constraint; a payload without it fails `23514` **at runtime, after the user pressed save.** |
+>
+> 🔴 **And the guard nobody declared: `projects.customer_id` is NULLABLE, while the preference upsert keys on `customer_hostess_preference_unique = (customer_id, hostess_id)`** ⇒ **if the project carries no customer, skip the preference upsert and complete the closing** — do not fail the whole transaction over an optional side-effect.
+> ✅ **The upsert target is that unique pair — which is exactly why B13 ruled overwrite-with-warning: the table is a per-pair STATE, not a log.**
+>
+> 🚫 **Neither payload carries money.** No price, no cost, no profit — M6 freezes inputs only (`§7.52`, and `AR-6`).
+> ➡️ **Phase 2's API wrappers and Phase 3's two dialogs cite THIS table. Any change here is a change to all three phases and gets a `↳ as-built` note in each.**
+
 **What to do — seven functions. Every one: `security definer`, `set search_path = public, pg_temp`, an explicit Hebrew permission check at the top, and `revoke execute … from anon`.**
 
 ```sql
@@ -1368,6 +1408,8 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 ---
 
 **Step 2.5 · `src/modules/06_projects/api.js`**
+> 📜 **BINDS TO THE PAYLOAD CONTRACTS in step 1.8** — the `p_lines` / `p_rows` field lists. 🚫 **Do not invent a field, rename one, or omit `serial_number` / `assignment_number`.** **Those two are the third part of a three-column primary key**, and dropping either writes the WRONG row **without raising anything.** ⚠️ **If this step needs a field the contract does not have, the contract changes FIRST — in 1.8 — and every other consumer gets an `↳ as-built` note in the same session.**
+
 **Files:** `src/modules/06_projects/api.js` (new)
 **What to do:** every read and every RPC call for the module. **Import from `@/supabaseClient`** — ⚠️ **not `@/lib/supabaseClient`**, which does not exist.
 - `listProjectsOverview()` → `supabase.rpc('list_projects_overview')` (AR-3). 🚫 **No browser-side join across `projects` + `assignments` + `logistics`.**
@@ -1654,6 +1696,8 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 ---
 
 **Step 3.5 · Surface 5 — event-closing tab**
+> 📜 **BINDS TO THE PAYLOAD CONTRACTS in step 1.8** — the `p_lines` / `p_rows` field lists. 🚫 **Do not invent a field, rename one, or omit `serial_number` / `assignment_number`.** **Those two are the third part of a three-column primary key**, and dropping either writes the WRONG row **without raising anything.** ⚠️ **If this step needs a field the contract does not have, the contract changes FIRST — in 1.8 — and every other consumer gets an `↳ as-built` note in the same session.**
+
 **Files:** `src/modules/06_projects/ClosingTab.jsx` · mockup `05_tab_closing_approved.html` · card `screens-approved.md:1191-1545`
 **What to do — the heaviest surface in the module, and the rule that holds the whole thing:**
 > 🔑 **Nothing on this tab is saved before `שמור ושלח`.** Every choice, keystroke and upload sits in an **in-memory draft** and is written in **one atomic action** (ט4-ד).
@@ -1698,6 +1742,8 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 ---
 
 **Step 3.6 · Surface 6 — scope-change dialog**
+> 📜 **BINDS TO THE PAYLOAD CONTRACTS in step 1.8** — the `p_lines` / `p_rows` field lists. 🚫 **Do not invent a field, rename one, or omit `serial_number` / `assignment_number`.** **Those two are the third part of a three-column primary key**, and dropping either writes the WRONG row **without raising anything.** ⚠️ **If this step needs a field the contract does not have, the contract changes FIRST — in 1.8 — and every other consumer gets an `↳ as-built` note in the same session.**
+
 **Files:** `src/modules/06_projects/ScopeChangeDialog.jsx` · mockup `06_dialog_scope_change_approved.html` · card `screens-approved.md:1546-1752`
 **What to do:** a **768px** dialog (`sm:max-w-3xl` — the measured precedent is `QuoteDocumentDialog.jsx:306` and `HostessViewCard.jsx:92`; the design contract's 520px form width does not fit a line table).
 - Lead: *"משנים כמויות בלבד. ההצעה שהלקוח אישר נשארת כפי שהיא — השינוי נרשם בשורה נפרדת ומתווסף לחיוב."*
