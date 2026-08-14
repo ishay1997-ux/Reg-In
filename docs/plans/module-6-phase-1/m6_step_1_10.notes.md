@@ -248,7 +248,9 @@ DEFINER functions from 1.8"* — צעד 1.8 יוצר **שמונה** פונקצי
 
 ```
 אני בפרויקט Supabase בשם Reg-In (ref: yfeovxppnfoafmfbdfvh).
-פתח את ה-SQL Editor, עבור ל-SQL → Snapshots → "Generate schema SQL", והעתק את כל הפלט.
+[🗑️ הפרומפט הזה בוטל 14/08/2026 — המסלול אינו קיים בממשק, והקרוב לו משמיט policies/פונקציות/טריגרים. `docs/schema.sql` יוצר מחדש בשאילתות ע"י קלוד; ר' `supabase/migrations/CLAUDE.md` צעד 3. אין כאן צעד-ישי.]
+
+~~פתח את ה-SQL Editor, עבור ל-SQL → Snapshots → "Generate schema SQL", והעתק את כל הפלט.
 
 לפני שאתה מחזיר לי אותו, ודא שהוא כולל את כל אלה — הם נוספו זה עתה,
 וחסרונם מעיד שהצילום נעשה לפני שהשינויים נקלטו:

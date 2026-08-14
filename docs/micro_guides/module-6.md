@@ -42,7 +42,7 @@
 >
 > 📌 **Queued for the apply round, decided and measured, do not re-litigate:**
 > **‏· מנהלת לוגיסטיקה drops from `edit` to `view` on `'פרויקטים'`** *(Ishay ruled `14/08/2026`)*. **Measured first: it costs her nothing today** — the only live policy naming `'פרויקטים'` is `projects_select_by_permission`, for which `view` suffices, and **zero live functions** reference the module. Her logistics work runs on `'לוגיסטיקה' = edit`, untouched.
-> **‏· `docs/schema.sql` is Ishay's manual step** (Supabase Studio → SQL → Snapshots) — there is no SQL path to it.
+> **‏· `docs/schema.sql` — ✅ REGENERATED `14/08/2026` from the live DB, by query. 🔴 It is NOT Ishay's step and there is no browser path** — the old instruction named a UI route that does not exist, and the closest real one returns tables and columns only, silently dropping 37 policies, 24 functions and 24 triggers. Protocol: `supabase/migrations/CLAUDE.md` step 3.
 
 **Legend (verbatim):** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
 **Step status set:** ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (with target module) · ❌ blocked (with reason)
