@@ -632,19 +632,20 @@ test.describe('"עדכן ושלח" בלי שינוי — לא שומרים, וה
     page,
   }) => {
     const edits = countEditRpc(page)
-    let confirmText = null
-    page.on('dialog', async (d) => {
-      confirmText = d.message()
-      await d.accept()
-    })
 
     await openEdit(page)
     await page.getByTestId('quote-save').click()
 
-    await expect(page.getByTestId('quote-document-title')).toBeVisible({ timeout: 30_000 })
+    // 🔴 מ-12/08/2026 זהו דיאלוג מעוצב (`useConfirm`), לא `window.confirm` — ר' ההערה
+    // ב-`load-failure-guards.spec.js:159`. אין עוד `page.on('dialog')`.
+    await expect(page.getByTestId('confirm-dialog')).toBeVisible({ timeout: 10_000 })
+    const confirmText = await page.getByTestId('confirm-dialog-message').innerText()
     // 🔒 חוזה-נוסח: שני הדברים שההודעה **חייבת** לומר כדי שההחלטה תהיה מיודעת.
     expect(confirmText).toContain('לא בוצע שינוי')
     expect(confirmText).toContain('התוקף לא יתאפס')
+    await page.getByTestId('confirm-dialog-confirm').click()
+
+    await expect(page.getByTestId('quote-document-title')).toBeVisible({ timeout: 30_000 })
     // 🎯 הטענה האמיתית — לא "נראתה הודעה" אלא **שהמסד לא נגע**.
     expect(edits).toHaveLength(0)
     await expect(page.getByTestId('quote-document-send')).toBeEnabled()
@@ -653,11 +654,6 @@ test.describe('"עדכן ושלח" בלי שינוי — לא שומרים, וה
   // בקרת-חיוב: בלי הכיוון הזה, קוד ש**לעולם** אינו שומר היה עובר את הבדיקה שמעל בירוק.
   test('בקרת-חיוב — עם שינוי אמיתי הזרימה הרגילה נשמרת (כן נכתב, בלי אישור)', async ({ page }) => {
     const edits = countEditRpc(page)
-    let dialogOpened = false
-    page.on('dialog', async (d) => {
-      dialogOpened = true
-      await d.accept()
-    })
 
     await openEdit(page)
     await page.getByTestId('quote-location').fill('מיקום ששונה לבדיקה')
@@ -665,7 +661,8 @@ test.describe('"עדכן ושלח" בלי שינוי — לא שומרים, וה
 
     await expect(page.getByTestId('quote-document-title')).toBeVisible({ timeout: 30_000 })
     expect(edits).toHaveLength(1)
-    expect(dialogOpened).toBe(false)
+    // אין וידוא-דיאלוג בנתיב הזה כלל — לא רק שהוא לא נפתח, הוא גם לא ממתין להיסגר.
+    await expect(page.getByTestId('confirm-dialog')).toHaveCount(0)
   })
 })
 
