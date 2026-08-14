@@ -11,6 +11,24 @@
 | **Last updated** | `14/08/2026 11:29` *(system clock, `Get-Date`)* |
 | **Active step** | **1.1 — pending the 🛑 blocker sweep.** Step 1.0 is ✅ done; **typed-echo is waived for Phase 1** (see step 1.0). 🔴 **The nine migrations are applied ONE AT A TIME, in order A→I, each verified live before the next.** |
 
+> ### 📍 WHERE PHASE 1 ACTUALLY STANDS — `14/08/2026 12:0X`. **A resuming session reads THIS before anything else.**
+> **Nothing is applied. The database is untouched by module 6** *(verified live: `project_changes` absent · zero M6 columns on `projects` · `logistics` still zero policies · one bucket `marketing` · 2 cron jobs)*.
+>
+> **What exists:** apply-ready SQL drafts for **seven** of the nine migrations, written by a 14-agent fan-out and then reviewed by **four adversarial lenses** *(sql-validity · security-rls · spec-fidelity · naming-contract)*.
+> **Review outcome: `BLOCKED` on one lens · 32 findings — 5 blockers · 16 majors · 11 minors.** 🚫 **Do NOT apply any draft until they are closed.**
+>
+> 🔴 **The single most important finding, kept here because it is the reason the oracle rule exists:** `list_projects_overview` summed the quote lines **without subtracting the discounts** ⇒ project `#8` returned **`6,300.00`** where `spec.md`'s hand-computed anchor says **`5,355.00 ₪`**. **A test written from the same wrong formula would have passed.** The anchor caught it. 🚫 **Never re-author an acceptance number.**
+>
+> 📂 **The drafts live OUTSIDE the repo**, in this session's scratchpad — **fragile by design, and the first job on resume is to move the finished SQL into `supabase/migrations/` with real timestamped filenames:**
+> `%LOCALAPPDATA%\Temp\claude\C--Users-ishay-Reg-In\2cbc7c79-09fd-4364-9ca1-7cb11905805e\scratchpad\` — `m6_step_1_*.sql` + `.notes.md` each, plus **`FINDINGS.md`** (all 32 findings with their evidence).
+> ⚠️ **If that directory is gone, the SQL is gone** — the plan in this guide survives, the drafts do not.
+>
+> **In flight at the time of writing** *(5 background agents)*: drafts for **1.4** and **1.6** *(never written — and 7 of step 1.10's assertions key on names only they create)*, plus three fixers closing the 32 findings, split one-file-per-agent so no two collide.
+>
+> 📌 **Queued for the apply round, decided and measured, do not re-litigate:**
+> **‏· מנהלת לוגיסטיקה drops from `edit` to `view` on `'פרויקטים'`** *(Ishay ruled `14/08/2026`)*. **Measured first: it costs her nothing today** — the only live policy naming `'פרויקטים'` is `projects_select_by_permission`, for which `view` suffices, and **zero live functions** reference the module. Her logistics work runs on `'לוגיסטיקה' = edit`, untouched.
+> **‏· `docs/schema.sql` is Ishay's manual step** (Supabase Studio → SQL → Snapshots) — there is no SQL path to it.
+
 **Legend (verbatim):** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
 **Step status set:** ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (with target module) · ❌ blocked (with reason)
 
