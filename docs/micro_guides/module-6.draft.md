@@ -7,8 +7,8 @@
 | **Module** | 6 — פרויקטים (Projects) |
 | **Branch** | `ishay/module-6-projects` *(cut from a fresh `dev`; carries the approved spec)* |
 | **Owner** | Ishay (sole developer) |
-| **Status** | 📘 **Blueprint DRAFT — not yet reviewed, not yet approved.** No code, no migration. |
-| **Last updated** | `14/08/2026 01:25` *(system clock, `date +"%d/%m/%Y %H:%M"`)* |
+| **Status** | 📘 **Blueprint DRAFT — reviewed and corrected `14/08/2026 03:12`; not yet approved.** No code, no migration. |
+| **Last updated** | `14/08/2026 03:12` *(system clock, `Get-Date`)* |
 | **Active step** | **0 — awaiting blueprint review + Ishay's approval of the Phase-1 gate** |
 
 **Legend (verbatim):** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -95,7 +95,13 @@ Governing principle, verbatim (`spec.md` §②): *"המערכת לא דוחפת,
 | `src/modules/02_customers/api.js` + `src/modules/02_customers/CLAUDE.md` | `getCustomerProjects` | A12 (direct `customer_id`, `LEFT` not `!inner`) + A13 (the code comment claiming it always returns `[]` is false since `20260809134237`). ⚠️ shared-surface |
 | `supabase/functions/send-email/index.ts` | `:29-32` `ENTITY_MODULE` · `:35-39` `ENTITY_REQUIRES_ATTACHMENT` · `:116` the `edit` check | Two new entity types, both mapped to `'פרויקטים'`. ⚠️ shared-surface |
 | `src/lib/shiftEmails.js` | `:72` `resolveShiftContact` | Reused unchanged by the details-changed mail; **must not** be depended on by the cancellation mail. ⚠️ shared-surface |
-| `src/components/StatusTag.jsx` | `:29-42` | Add the 8 project-status tone rows. 🔴 The map key is the **displayed Hebrew label**, and a miss falls to `muted` silently. ⚠️ shared-surface |
+| `src/components/StatusTag.jsx` | `:29-42` `TONE_BY_LABEL` · `:50` the fallback | **Owned by step 3.0.** 🔴 **Spread `PROJECT_STATUS_TONES` in from `src/lib/projects.js` — never retype the eight labels here.** The map key is the **displayed Hebrew label**, and `:50` (`?? TONES.muted`) makes a miss **silent and visually identical to `ממתינה למענה`**. ⚠️ shared-surface |
+| `src/components/StatTile.jsx` | `:29` | **Owned by step 3.0.** 🔴 **One word — add `items-start` to the column-flex container.** Without it the label and the value split apart under RTL; the approved mockup measured this in a browser and fixed it with `align-items:flex-start`. **This is live today and affects module 2 now**, so the fix ships in step 3.0, not at the Phase-3 direction pass. ⚠️ shared-surface |
+| `src/components/Money.jsx` | `:23-24` | **Owned by step 3.0.** Extract the inline LTR wrapper into a shared `<Ltr>` component and re-consume it here. **Why a component and not a lint rule:** `check:bidi`'s regex only fires on a digit touching `₪ ★ ×` — it cannot see `1/6` or `חסרות 5`, which is most of what M6 renders. ⚠️ shared-surface |
+| `src/components/LoadingOrError.jsx` | its `retryLabel`/default | **Owned by step 3.0.** M6 passes a **feminine** `retryLabel`; 🚫 **do not edit the shared default** — that is a cross-system change (`🚧 מ12`). ⚠️ shared-surface |
+| `src/lib/smartMatchCandidates.js` | `:81` | **Owned by step 2.7.** It hard-codes `attendance: []`, so the moment M9 flips the reliability flag **every hostess returns "no data"** — a silent zero, not an error. ⚠️ shared-surface |
+| `src/modules/04_hostesses/SmartMatchPage.jsx` | `:506` | **Owned by step 4.2** (iron rule 13(ח)). Its banner sentence becomes false once M6 ships, and it is gated on **M9's** flag rather than on M6's data. ⚠️ shared-surface |
+| `docs/automations.md` | the four sections | **Owned by step 4.2.** The automation register — born as module 4's DoD requirement — must gain M6's `pg_cron` job, its three triggers, its seven RPCs and its two new `entity_type` values. **A register that is not updated is worse than none**, because it reads as complete. |
 | `docs/schema.sql` | whole file | Snapshot refresh after every migration. ⚠️ shared-surface |
 | `docs/db_roadmap.md` | rows `M6-1`…`M6-14`, §5 Storage rows, `A-14` | Flip state in the same session as each migration (Stop hook enforces). |
 
@@ -113,9 +119,13 @@ src/modules/06_projects/
   CancelProjectDialog.jsx     — surface 7
   EditProjectDetailsDialog.jsx— surface 2's edit dialog
   CLAUDE.md                   — module-local mines (written at close)
+src/components/
+  Ltr.jsx                     — the shared LTR wrapper, extracted from Money.jsx:23-24
+  PermissionAwareEmpty.jsx    — the ONE component that renders the three states: empty · no-permission · load-failure
 src/lib/
   projects.js                 — status labels + tone map + readiness metrics + gap sentences + ACTIVE_PROJECT_STATUSES
   projects.test.js
+  projects.guards.test.js     — the enforcement scans (§6 step 2.1); shaped like `src/App.routes.test.jsx`
   projectChanges.js           — scope-change arithmetic
   projectChanges.test.js
   projectClosing.js           — attendance vocabulary + per-hostess cost + closing-validation summary
@@ -258,6 +268,10 @@ set local request.jwt.claims = '{"sub":"<user_id>","email":"<email>","role":"aut
 | ט4-ב | Per-hostess hours default from the event hours and are **overridable** | M6 **records** the hours; **deriving payment from them is `§7.19`, still open, and M8's** | Claude (delegated) | 13/08/2026 | 2.3 · 3.5 |
 | ט4-ג | `actual_guests` is stored and changes no billing | | Claude (delegated) | 13/08/2026 | 3.5 |
 | ט4-ד | `שמור ושלח` is **one atomic action** | A mid-way failure must roll everything back, or a project "closes" with half its data | Claude (delegated) | 13/08/2026 | 1.8 · 3.5 |
+| **R-1** | 🔴 **No draft-save on the closing screen — no table, no columns, no autosave, no navigation guard** | Asked as a field-reality question — *"does Dana ever close an event across two sittings?"* — and answered **`לא`**. ⇒ **the whole two-sitting model is deleted, not deferred.** The in-memory draft of ט4-ד is the only draft there is. 🚫 **Do not build a navigation guard "just in case"** — that is logic for a case whose existence was denied. *(This closes what was open item **B1**; B1 is removed from §3.5 rather than left dangling.)* | **Ishay** | **14/08/2026** | 3.5 |
+| **R-2** | 🔴 **`assignments.travel_amount` is not on the closing screen** | Asked as a field-reality question — *"is travel reimbursement ever agreed in the field?"* — and answered **`לא קורה`**. ⇒ **it is a fixed `params` sum, owned by M8 (§7.69)**, and M6's closing form neither shows nor writes it. *(This closes what was open item **B14**; B14 is removed from §3.5.)* | **Ishay** | **14/08/2026** | 2.3 · 3.5 |
+
+> 🔑 **Why R-1 and R-2 are recorded as rulings and not as deletions.** Both are **reality rulings** — the cheapest kind, because they close an item permanently at the cost of one question. Their danger is that they leave **no artefact**: a later session re-reads the spec, sees an unhandled two-sitting case or an unwritten `travel_amount` column, and re-opens work Ishay already killed. **The quoted `לא קורה` is the guard.** *(`CLAUDE.md` iron rule 1's reality filter: "A plain `לא קורה` **closes** the item: it's his ruling, dated and his.")*
 
 ### 3.2 Architecture rulings (14/08/2026)
 
@@ -269,7 +283,7 @@ set local request.jwt.claims = '{"sub":"<user_id>","email":"<email>","role":"aut
 | **AR-4** | Reducing a logistics item to zero | **Zero is forbidden.** `check (planned_qty > 0)` stays, the row is never deleted, the dialog blocks before submit | Claude (architecture) | ㉕ verbatim: *"השורות עצמן הן הראיה לחיוב… לשנות אותו = למחוק את ההוכחה."* Deleting the row destroys more than ㉕ already rejected. And the wording is already written and approved (`screens-approved:848`): *"הכמות חייבת להיות גדולה מאפס. להסרת פריט לגמרי — פני למנהלת הלוגיסטיקה."* | 3.6 |
 | **AR-5** | 🔴 **The atomic-vs-email boundary — the heaviest one** | **Inside the transaction: everything that is a fact about what happened. Outside, after commit, in client code: every send.** A DB transaction cannot send mail (`§7.33`: *"טריגר במסד אינו יכול לשלוח מייל"*), and `feedback_status='sent'` written inside the transaction is a **lie the moment the send fails**. ⇒ **Flow:** RPC closes the facts ⇒ commit ⇒ download the report + send it ⇒ send the survey ⇒ **only on success** a second, narrow RPC `mark_feedback_survey_sent` writes `feedback_status='sent'` **and nothing else**. **When the DB closes and the send fails: the closing stands** — it recorded facts. `feedback_status` stays `'not_sent'`, **which is now true rather than decorative**, and the screen names which mail failed. 🔴 **⇒ ㉙ must be written as a whitelist of the operational RPCs, not as "any RPC touching a closed project"** — otherwise there is no path back to retry the send | Claude (architecture) | The measured pattern: `04_hostesses/api.js:523-570` — writes first, then `sendFinalApprovalMails`, with a `{sent, unknown, failed}` counter. **Three send outcomes, not two** (`email.js:205`). ⚠️ M6 does **not** build a retry engine — that is `§7.36`, 🟡, owned by M10 | 1.8 · 3.5 · 3.7 |
 | **AR-6** | 🔴 **Final gross profit — M6 does NOT freeze it** | **M6 freezes only the inputs it owns:** `assignments.actual_hours` per hostess · the three attendance columns · `projects.actual_hours`/`actual_guests` · the operational-closing timestamp. **No `final_gross_profit` column in M6's migration, and no profit computation in M6's code.** The freeze moves to M8's closing window | **Ishay, 14/08/2026 01:17** — clarifying `§7.52`: *"בסגירת-האירוע"* means the **financial** closing (M8), not the operational one (M6). `db_roadmap` row **M6-8** was re-scoped the same day to match | 1.1 · 2.3 · 3.5 |
-| **AR-7** | Attendance → reliability mapping | **The seven values are correct byte-for-byte** between `PROJECT_MASTER:482` and `src/lib/smartMatch.js:56-63` — **but the code cannot be wired as-is**, for three measured reasons: ① `smartMatch.js:43-52` keys on **Hebrew in a single `outcome` field** while M6 defines **three English columns** (the code declares this itself at `:195`) · ② 🔴 **the seventh value is not an attendance value at all** — `WITHDREW` maps to `approval_withdrawn`, an **`assignment_status`**; a hostess who cancelled is **not on the closing list**, so her 0.5 must come from `assignment_status` · ③ two booleans must be derived: `projectCancelled`, `eventPassed`. ⚠️ **Silent-failure risk: `smartMatch.js:207` is `if (value === undefined) continue`** — a mis-mapped value drops the row silently instead of throwing | Claude (architecture) | measured 14/08/2026 | 1.3 · 2.7 |
+| **AR-7** | Attendance → reliability mapping | 📏 **The two constants, counted `14/08/2026` — and "seven" is wrong in both directions, so do not carry it:** `ATTENDANCE_OUTCOMES` (`smartMatch.js:43-52`) holds **EIGHT** members — `ARRIVED · SLIGHTLY_LATE · MODERATELY_LATE · VERY_LATE · WITHDREW · NO_SHOW · SICK · EXCUSED`; `ATTENDANCE_VALUES` (`:56-63`) holds **SIX** scored entries — `SICK` and `EXCUSED` are **deliberately unscored** (`:54-55`: excluded from numerator *and* denominator). ⇒ 🚫 **Any instruction of the form "the seven weights, byte-for-byte" is false and must not be written into a step.** **The numbers M6 must not move are the six in `ATTENDANCE_VALUES`.** ⚠️ **And `ATTENDANCE_VALUES` is `const`, not exported** — a test cannot import it; assert through the scoring function. **Why it still cannot be wired as-is, three measured reasons:** ① `:43-52` keys on **Hebrew in a single `outcome` field** while M6 defines **three English columns** (the code declares this itself at `:195`) · ② 🔴 **`WITHDREW` is not an attendance value at all** — it maps to `approval_withdrawn`, an **`assignment_status`**; a hostess who cancelled is **not on the closing list**, so her `0.5` must come from `assignment_status`, on a separate branch · ③ two booleans must be derived: `projectCancelled`, `eventPassed`. ⚠️ **Silent-failure risk: `smartMatch.js:207` is `if (value === undefined) continue`** — a mis-mapped value drops the row silently instead of throwing. ⚠️ **And a second, larger silent zero: `src/lib/smartMatchCandidates.js:81` hard-codes `attendance: []`** — see step 2.7 | Claude (architecture) | measured 14/08/2026 | 1.3 · 2.7 |
 | **AR-8** | `email_log` design | **Two new `entity_type` values: `'project'`** *(no attachment)* **and `'project_report'`** *(attachment required)*, **both mapped to `'פרויקטים'`**, covered by **one** new SELECT policy. 🔴 **Why not reuse `'shift'`: measured 403.** `index.ts:116` requires `permission_level === 'edit'` and `ENTITY_MODULE.shift = 'דיילות'` — **Dana has 👁, not V, on `'דיילות'`** ⇒ every cancellation mail she sends would be rejected 403, silently, and no hostess would hear anything. 🔴 **The CHECK ships in the same migration as the code** (`index.ts:31-34`: not before it, or *"המייל יוצא והיומן נשאר ריק"*) | Claude (architecture) | `index.ts:35` — making the attachment optional globally *"הייתה מוחקת שומר חי מנתיב הצעת-המחיר… ואף בדיקה קיימת לא הייתה נופלת על כך."* ⚠️ **`db_roadmap A-20` says only "M4/M8/M11 widen by one value each" — M6 is not on that list and widens by two. Fix the row** | 1.6 |
 | **AR-9** | `projects.quote_id` / `owner_email` `NOT NULL` | **`SET NOT NULL` on both, in M6's migration.** §7.62 was fully nodded by Ishay 13/08/2026 evening; `spec.md` was stale and is now corrected. **Preconditions, in this order:** ① live NULL count · ② **non-zero ⇒ stop and report. Do not delete, do not silently backfill.** · ③ the `SET NOT NULL` runs **after** `DROP project_bonus` and after every row-creating step | Ishay (13/08) + Claude (execution order) | The executing row is `db_roadmap` **`A-14`**, outside the `A-M6` block | 1.1 |
 | **AR-10** | The `unique_violation` message | **A pre-query is the primary mechanism; constraint-name mapping is the backstop.** 🔑 **And the correction that must not be missed: if the RPC implements ㉑ correctly the violation is unreachable in the normal flow** — ㉑ resets every final approval first, and the index is **partial** (`where assignment_status='finally_approved'`), so after the reset it no longer covers those rows. ⇒ **The pre-query is what actually warns; the error handler is the backstop.** 🔴 **And the spec cites the wrong pattern:** `spec.md:301` and `screens-approved:550` point at `SERVER_MESSAGE_RULES` (`quotes.js:334`), which keys on **message prefixes** — the wrong tool for a constraint violation. **The right one is `SERVER_CONSTRAINT_RULES` (`src/lib/hostesses.js:603-613`)**, which keys on the **index name** and already carries this index. Reason given there (`:600-602`): *"את הנוסח PostgreSQL מנסח, ואילו השם הוא חוזה שאנחנו כתבנו במיגרציה."* **Wording (extended from the approved text, with the conflicting event `spec.md:301` demands):** *"`{full_name}` כבר מאושרת סופית ל\"`{event_name}`\" בתאריך הזה. בחרי תאריך אחר, או שחררי אותה מהאירוע ההוא."* **Backstop, without a name** (at that point there is nothing to interpolate): *"אחת הדיילות המאושרות כבר משובצת סופית לאירוע אחר בתאריך היעד. בחרי תאריך אחר, או שחררי אותה מהאירוע ההוא."* ⚠️ **The statement order inside `update_project_details` is a build decision this guide states explicitly — reverse it and a legal date move becomes a hard failure** | Claude (architecture) | 1.8 · 2.5 · 3.2 |
@@ -278,7 +292,7 @@ set local request.jwt.claims = '{"sub":"<user_id>","email":"<email>","role":"aut
 
 | # | Item | Ruling | Who | Anchor |
 |:-:|---|---|---|---|
-| **S-1** | 🔴 **Status tone map — the approved mockups contradict each other in colour, on three labels** | **`בתהליך` ⇒ `muted`** *(as in surface 1)* and **`מוכן לביצוע` ⇒ `teal`** *(as in surface 1, **not** the `ok` green in surface 8's §⑥ table)*. **Net: `teal` moves from `בתהליך` to `מוכן לביצוע`.** ⬜ **And a third label the architecture round did not cover — `ממתין לסגירה` — goes to Ishay in step 1.0 with the other two** (open item A8). | Claude (architecture) | **The baseline is surface 8's §⑥ table** (`screens-approved.md:2178-2193`), which proposes: `not_started`→`muted` · `in_progress`→`teal` · `ready`→`ok` · `event_finished`→`warn` · `awaiting_invoice`/`awaiting_payment`→`muted` · `finished`→`ok` · `cancelled`→`dashed`. **Measured against all eight mockups:** `בתהליך` is `tag muted` in `01`, `04`, `06` and **`tag teal`** in `02`, `03`, `08` — **3 against 3** · `מוכן לביצוע` is `tag teal` in `01` but `ok` in the table · **`ממתין לסגירה` is `tag warn` in `01` and `08` but `tag teal` in `05`**. **Why it escaped visual approval of all eight: no single artefact shows the same status twice.** Reasons for the two ruled: `teal` means *"a positive interim state waiting for you"*, but on the overview **most rows are `בתהליך`**, and a tone that paints the majority stops separating; and §⑥ itself rules two lines later that *"מוכן לביצוע ≠ הישג — מצב רגעי והפיך"* (🔄6②) while `ok` is defined *"סגור, אין מה לעשות"* — painting a reversible state green contradicts the ruling printed beneath it. **And surface 8's card says so itself:** *"שמונת משטחי מ6 מציגים את אותם סטטוסים, ושני משטחים שיצבעו אותם אחרת הם סתירה, לא בחירה"* |
+| **S-1** | 🔴 **Status tone map — RULED, all eight labels, one home** | **The map, and it is complete — a build session copies it, it does not re-derive it:** `טרם החל`→`muted` · **`בתהליך`→`muted`** · **`מוכן לביצוע`→`teal`** · **`ממתין לסגירה`→`warn`** · `ממתין לחשבונית`→`muted` · `ממתין לתשלום`→`muted` · `פרויקט הסתיים`→`ok` · `בוטל`→`dashed`. **Home: `PROJECT_STATUS_TONES` in `src/lib/projects.js`, spread into `StatusTag.jsx` — never retyped there.** 🔑 **Why `מוכן לביצוע` is not green:** 🔄6② rules it **reversible**, and `ok` is defined *"סגור, אין מה לעשות"* — painting a reversible state green contradicts the ruling printed two lines beneath it in the card itself. 🔑 **Why `בתהליך` is not teal:** on the overview **most rows are `בתהליך`**, and a tone that paints the majority stops separating. *(This closes what was cited as open item **A8**. **A8 never existed as a §3.5 row** — it was cited in three places and had nowhere to be answered, which is exactly the routing defect this revision was run to remove.)* | Claude (architecture) | **The baseline is surface 8's §⑥ table** (`screens-approved.md:2178-2193`), which proposes: `not_started`→`muted` · `in_progress`→`teal` · `ready`→`ok` · `event_finished`→`warn` · `awaiting_invoice`/`awaiting_payment`→`muted` · `finished`→`ok` · `cancelled`→`dashed`. **Measured against all eight mockups:** `בתהליך` is `tag muted` in `01`, `04`, `06` and **`tag teal`** in `02`, `03`, `08` — **3 against 3** · `מוכן לביצוע` is `tag teal` in `01` but `ok` in the table · **`ממתין לסגירה` is `tag warn` in `01` and `08` but `tag teal` in `05`**. **Why it escaped visual approval of all eight: no single artefact shows the same status twice.** Reasons for the two ruled: `teal` means *"a positive interim state waiting for you"*, but on the overview **most rows are `בתהליך`**, and a tone that paints the majority stops separating; and §⑥ itself rules two lines later that *"מוכן לביצוע ≠ הישג — מצב רגעי והפיך"* (🔄6②) while `ok` is defined *"סגור, אין מה לעשות"* — painting a reversible state green contradicts the ruling printed beneath it. **And surface 8's card says so itself:** *"שמונת משטחי מ6 מציגים את אותם סטטוסים, ושני משטחים שיצבעו אותם אחרת הם סתירה, לא בחירה"* |
 | **S-2** | 🔴 **The `0.00 ₪` trap** | **`הכנסה מתוכננת` must distinguish three cases — no quote · no permission · genuine zero — and only the first two render `—`.** | Claude (architecture) | The figure is `Σ(quote_services.qty × closing_unit_price)` through `projects.quote_id`. `quote_services` is gated on `'הצעות מחיר'` (`20260723113500:34-38`) and **מנהלת גיוס and מנהלת לוגיסטיקה are `➖` there** (`PROJECT_MASTER:193-194`) ⇒ **the DB already hides it, no UI work needed** — 🔴 **but `Σ` over zero rows is `0`, not `null`**, so both tiles would render **`0.00 ₪`** and **`0 אורחים`** as facts. `StatTile.jsx:25` names this failure exactly: *"⚠️ `null` אינו `0` — מדד שאין לו נתון מציג טקסט ולא מספר, אחרת «0 ₪» נקרא כעובדה שקרית."* The card covered only the "no quote" case |
 | **S-3** | `set_project_coordinates` needs no permission fix | ㉒ **is** the fix and it costs nothing: M6's RPC is itself `SECURITY DEFINER` on `projects`, so nulling `lat`/`lng` in the same transaction needs no M4 permission at all. The refill happens by itself — `04_hostesses/api.js:87-99` geocodes on every Smart-Match entry when the columns are empty | Claude (architecture) | ⚠️ **The one coupling that must be written into the build:** `ensureProjectCoordinates` returns early when both are filled ⇒ **the refill happens only because M6 nulls them** |
 | **S-4** | The `0/N` victim was misidentified in the card | **מנהלת פרויקטים holds `👁` on `'דיילות'` ⇒ her metric works.** The ones who see `0/6` on every row are **מנהלת כספים ולקוחות and מנהלת לוגיסטיקה** — and logistics is the role whose whole job is on that screen | Claude (measurement) | `PROJECT_MASTER:184-196` |
@@ -301,7 +315,14 @@ set local request.jwt.claims = '{"sub":"<user_id>","email":"<email>","role":"aut
 | **S-21** | One feedback cell, not four tiles | ㉞: *"זהו **תיק-האירוע**"* — a file to read on a phone, not a form. Four tiles = four "no data yet" lines on the drawn project | Claude (delegated) | 3.2 |
 | **S-22** | Four `feedback_status` phrasings, with one correction | 🔴 **`completed` cannot be "the score itself"** — `feedback_status` and `feedback_score` are **independent in the schema**, and `completed` + `NULL` is a legal row ⇒ it needs its own wording (*"הסקר מולא"*) when there is no score | Claude (architecture) | 3.2 |
 | **S-23** | `owner_email` on its own line | `src/CLAUDE.md`, the ninth incident: *"לרצף בן שני ערכים **אין סדר נכון בכלל** ⇒ **התיקון הוא לפרק את הרצף**, לא לבודד אותו"* | Claude (architecture) | 3.2 |
-| **S-24** | The tone map lives in **one place** | `src/lib/projects.js`, tested with `describe.each` over all eight labels, and consumed by `StatusTag.jsx:29-42`. ⚠️ **Mine: the key is the displayed Hebrew label and a miss falls to `muted` silently** ⇒ **the key for `event_finished` must be `'ממתין לסגירה'`**; `'אירוע הסתיים'` yields a grey tag in silence. `StatusTag` was written for 10 keys, holds 18, and M6 nearly doubles it | Claude (architecture) | 2.1 · 3.0 |
+| **S-24** | The tone map lives in **one place**, and `StatusTag.jsx` gets an **owning step** | `src/lib/projects.js` holds `PROJECT_STATUS_TONES`; **step 3.0 owns the `StatusTag.jsx` edit** and spreads the map in. Tested with `describe.each` over all eight labels. ⚠️ **Mine: the key is the displayed Hebrew label and a miss falls to `muted` silently** (`StatusTag.jsx:50` — `?? TONES.muted`) ⇒ **the key for `event_finished` must be `'ממתין לסגירה'`**; `'אירוע הסתיים'` yields a grey tag with no error. 🔴 **And the failure is worse than "grey": `TONES.muted` is byte-identical to the tone of `ממתינה למענה`**, so an unmapped label is **visually indistinguishable from a real status.** ⇒ **the test must fail on an unmapped label, not merely assert the eight present ones.** 📏 **Measured `14/08/2026`: `TONE_BY_LABEL` holds exactly TEN entries — 2 hostess states + 6 assignment statuses + 2 derived (`פג תוקף`, `הושלם`) — and ZERO project statuses.** ⚠️ **Five of the ten keys are unquoted object keys, so a grep for `'…':` undercounts by five.** M6 adds 8 ⇒ 18 | Claude (architecture) | 2.1 · 3.0 |
+| **S-25** | **`StatTile` is missing the approved mockup's `align-items:flex-start` — align it, and measure before/after** | 📏 **What is measured and certain:** `StatTile.jsx:29`'s className is `rounded-xl border border-slate-200 bg-white p-4 flex flex-col gap-0.5` — **no `items-*` token anywhere in the file** · and the approved mockup rules `.cell, .tile{align-items:flex-start}` (`02_project_card_approved.html:227`) on the back of a **browser measurement dated 13/08/2026**, quoted: *"‏`.cell` ו-`.tile` הם `flex-direction:column` ⇒ הילדים עוברים blockification: `.ltr` מאבד את ה-`inline-block` שלו, נמתח לרוחב מלא, ו-`direction:ltr` מיישר את הטקסט לשמאל — בעוד התווית שמעליו מיושרת לימין. נמדד: התווית והערך נחתו על `right:992px` מול תיבת-ערך ברוחב `224px`."* ⇒ **add `items-start` in step 3.0 so the component matches the approved shape.** 🔴 **And what is NOT established — do not repeat it as fact:** that the *React* `StatTile` visibly splits today. The measured mechanism needs the `.ltr` element to be a **direct** flex child; in `StatTile.jsx:36-38` `<Money>` sits **one level in**, inside the value `<span>`, so the blockification does not obviously reach it. **I did not open a browser on this.** ⇒ **step 3.0 measures `getBoundingClientRect().left` of label vs value on a live module-2 tile before and after the change**, and records both numbers. *(Ishay: the brief this revision was run from asserted this as a live module-2 defect. It may well be — but it is not derivable from the code, and I will not hand a build session a measurement I did not take.)* | Claude (measurement + honest boundary) | 3.0 |
+| **S-26** | 🔴 **Three states, not two — `empty` · `no permission` · `load failure`** | **One shared component (`PermissionAwareEmpty.jsx`), used on every surface that reads a gated table.** 🔑 **Why two states are unimplementable here:** the discriminator for "legally empty" is `quote_services`, which is gated on `'הצעות מחיר'` — **and both מנהלת גיוס and מנהלת לוגיסטיקה are `➖` there** ⇒ a blocked read is **byte-identical** to zero rows (`{data:null, error:null}`), so no code can tell the two apart. **The third state is what makes the distinction expressible at all.** 🔴 **And the denied counter shows `—`, never `0`** — `0` is a lie. ⚠️ **The module already builds this shape on surface 8 and nowhere else** (`screens-approved` מסך 8's `🔒` state); **make it shared instead of building it twice** | Claude (architecture) | 3.0 · 3.1 · 3.3 · 3.4 · 3.8 |
+| **S-27** | `<Ltr>` is a **component**, not a class you remember to type | Extracted from `Money.jsx:23-24` into `src/components/Ltr.jsx`. 🔑 **Why the scanner cannot replace it:** `check:bidi`'s regex only fires on a digit adjacent to `₪ ★ ×`, so **`1/6`, `0/2` and `חסרות 5` pass green** — and those are most of what M6 renders. **A component is the only enforcement that survives a forgetful author** | Claude (architecture) | 3.0 |
+| **S-28** | 🔴 **Module 6 is entirely feminine, in every string it authors** | All five users are women and the approved cards are already written that way. ⇒ **pass a feminine `retryLabel` to `LoadingOrError`; 🚫 do not edit the shared default** — that is a cross-system change, registered as **`🚧 מ12`**, not M6's to make. *(This closes what was open item **A7**, whose recommendation — "follow the masculine system majority" — is **reversed**: the majority is an artefact of screens written before the persona was settled, and M6's own approved copy is the newer evidence.)* | Claude (architecture) | 3.0 |
+| **S-29** | `ביטול` dismisses everywhere; **`חזרה` only in the cancellation dialog** | One vocabulary for one action across the whole module. 🔑 **The single exception earns itself:** in surface 7 the word `ביטול` is also the name of the destructive action, so a `ביטול` button beside `בטל את הפרויקט` means two opposite things in one footer | Claude (architecture) | 3.2 · 3.6 · 3.7 |
+| **S-30** | **Cancellation reason gets a ninth cell in the identity area**, shown only when the project is cancelled | The dialog promises the user *"ההסבר היחיד שיישאר אחרי הביטול"* and **no screen in the module renders it.** ⇒ **a broken promise, not a design choice.** Cell label `סיבת הביטול`, with `cancel_type`'s label and the `cancelled_at`/`cancelled_by` stamp beneath it | Claude (architecture) | 3.2 |
+| **S-31** | **Shift-lead badge is `StatusTag` with `tone="outline"` — 🚫 no ★** | `★` already means **"rating"** in this system (`RatingStars.jsx`), and a glyph that means two things means neither. One component, no new primitive | Claude (architecture) | 3.4 |
 
 ### 3.4 🔗 §7 mirrors (content restated for execution)
 
@@ -315,6 +336,12 @@ set local request.jwt.claims = '{"sub":"<user_id>","email":"<email>","role":"aut
 
 ### 3.5 OPEN — still Ishay's, each anchored to the step it blocks
 
+> 🔴 **THIS TABLE IS THE ONLY ROUTE TO A RULING. Read this before adding anything to §10.**
+> A finding recorded in §10 and nowhere else **never reaches Ishay** — §10 is an append-only *log*, and no phase door, no step and no gate reads it. ⇒ **a finding that needs a decision belongs HERE (or in a named phase-door sweep list); a finding that needs an action belongs in a STEP.** 🚫 **Adding a second §10 note about a §10 note is the defect, not the fix.**
+> ⚠️ **And an id cited from a step must EXIST in this table.** *(Measured `14/08/2026`: **A8 · B4 · B7 · B10** were cited in step bodies, in §3.3 and in §3.6 while having no row here at all — four dead ends. A8 and B10 are now ruled (S-1 · AS-3), B4 was already ruled (2.3's `ATTENDANCE_OPTIONS`), and only **B7** was genuinely open — it has a row below.)*
+>
+> **Closed since the draft, and deliberately NOT left as rows: A7** → S-28 (feminine) · **A8** → S-1 (tone map) · **B1** → R-1 (*"לא"* — no draft-save) · **B4** → ט4/2.3 (flat 7-option select) · **B10** → AS-3 (2 MiB, `db_roadmap` §5) · **B14** → R-2 (*"לא קורה"* — travel is M8's).
+
 | # | Question | Recommendation carried into the ruling round | Blocks |
 |:-:|---|---|:--:|
 | **A1** | Which module gates the `logistics` read policy | **AR-2 rules `'לוגיסטיקה'` with a measured anchor. Present it as decided-with-an-anchor; he can override in one line.** | 1.4 |
@@ -322,13 +349,11 @@ set local request.jwt.claims = '{"sub":"<user_id>","email":"<email>","role":"aut
 | **A3** | How the two metrics reach the client | **AR-3: dedicated `SECURITY DEFINER` RPC.** This ruling also governs A1 and A2 | 1.8 |
 | **A5** | Does `other` need its own stored value | **AR-1 says yes — a three-value label column, money type derived.** ⬜ Confirm | 1.1 |
 | **A6** | `סף_לקוח_רדום_ימים` | Card recommends **180**; ⚠️ **the mockup draws 146 days as dormant**, i.e. a threshold ≤146. **Unresolved contradiction — needs his number** | 1.7 · 3.8 |
-| **A7** | Verb gender in UI text | Measured `נסה שוב` ×25 vs `נסי שוב` ×6; imperatives are masculine system-wide while the persona is Dana and every M6 validation string is feminine. 🔴 **Cross-system decision, not M6's alone.** **Recommendation: M6 follows the system majority (masculine) for shared strings and keeps the approved feminine validation strings verbatim, since those are already approved copy** | 3.0 |
 | **A9** | Is the `סגירת אירוע` tab **disabled** (surface 2) or **routing** (surfaces 3 and 4) | **Surface 2 owns the shell ⇒ disabled.** ⬜ Confirm | 3.2 |
 | **A10** | Scope-change RPC — one or two | **One** (`screens-approved` row 27 already merged them, and reports it as an assembly decision). ⬜ Confirm | 1.8 |
-| **B1** | Is there a "save draft" on the closing screen | **Recommendation: no.** Nothing in the approved spec models a two-sitting closing; adding it costs a table. **But this is a field-reality question only Ishay can answer:** does Dana ever close an event in two sittings? | 3.5 |
+| **B7** | The `רישום שינוי שהתגלה באירוע` control on the closing tab (㉔) — does it **open surface 6's dialog**, or is it an **inline form** in the closing tab | **Recommendation: reuse surface 6's dialog.** It already carries the mandatory reason, the frozen-price arithmetic, the zero-guard (AR-4) and the tier-crossing notice — an inline form would be a second implementation of all four, and ⑯ means there is no timing rule that would make the closing-time case behave differently. **The one honest cost:** the dialog opens over the closing draft, and R-1 rules there is no draft-save ⇒ **the draft must survive the dialog in memory**, which is a build constraint, not a product one. ⬜ **His call** | 3.5 |
 | **B11** | `שעות ביצוע בפועל` is a number, not a range | `actual_hours` is `numeric`; the dataset writes `"6.5 (16:00–22:30)"` and **`22:30` has nowhere to be stored.** **Recommendation: store the number only and drop the parenthetical from the UI**, or add two `time` columns. ⬜ His call | 1.1 · 3.5 |
 | **B13** | A repeat quality mark overwrites the previous one with no history | `unique (customer_id, hostess_id)`. Michal marked `מצוינת` in Hadera and `בסדר` at the next Hadera event — **the first disappears.** **Recommendation: keep the overwrite and warn in the UI** (*"סימון קודם: מצוינת"*), because a history table has no reader today | 3.5 |
-| **B14** | `assignments.travel_amount` — M6's screen or M8's | Exists in the schema (`schema.sql:778`), **nothing in the repo writes it** (§7.69 🟠). `personal_bonus` was already ruled M8's. **Recommendation: M8's, same reasoning** | 3.5 |
 | **E3** | Does a cancelled project's revenue count in the customer's total | **Today yes** — the metric counts approved quotes. 🔴 **Existing M3 behaviour the card did not choose; it surfaces for the first time now that projects exist** | 3.8 |
 
 ### 3.6 Assumptions (spec-silent)
@@ -337,12 +362,37 @@ set local request.jwt.claims = '{"sub":"<user_id>","email":"<email>","role":"aut
 |:-:|---|---|---|
 | **AS-1** | The status trigger fires `AFTER INSERT OR UPDATE OR DELETE` on `assignments` and `logistics`, and `AFTER UPDATE OF required_hostess_count` on `projects`, each `FOR EACH ROW`, all funnelling into one `recompute_project_status(p_project_id)` | The spec names the three sources (`🔄3`) but never the trigger shape | Ishay does not rule trigger shapes; if the advisors flag a performance finding, revisit |
 | **AS-2** | `project_changes` gets **no client write policy at all** — writes go only through the scope-change RPC, and a SELECT policy gated on `'פרויקטים'` | 🔴 **Measured gap: RLS for `project_changes` is defined nowhere in the approved spec.** This mirrors `projects` itself, which is the house pattern | If M5's screen needs to write changes, it calls the same RPC |
-| **AS-3** | `reports` bucket limits mirror `marketing`: `file_size_limit = 10485760` (10MB) and `allowed_mime_types = {application/pdf, image/jpeg, image/png}` | `screens-approved:1398` promises the user *"עד 10MB"*; B10 notes the limits were copied and never set for `reports` | 🔴 **See §10 verification #6 — the mail path cannot carry 10MB** |
+| **AS-3** | 🟢 **NO LONGER AN ASSUMPTION — RULED.** `reports` bucket: **`file_size_limit = 2097152` (2 MiB)**, and every helper text on screen reads **`עד 2MB`**. `allowed_mime_types = {application/pdf, image/jpeg, image/png}` **remains an assumption** — see the note | **Ruled in `db_roadmap` §5's `reports` row** *(Ishay delegated, 14/08/2026 — "מה שנראלך")*, quoted: *"🚫 NOT the 10 MiB copied from `marketing`, and the on-screen helper text reads `עד 2MB`, not `עד 10MB`."* 🔴 **And 3 MiB was explicitly rejected, with the arithmetic:** `src/lib/email.js:29` caps at `MAX_ATTACHMENT_BASE64_CHARS = 4_000_000`; base64 is 3 bytes → 4 chars, so **the hard binary wall is exactly 3,000,000 bytes ≈ 2.86 MiB** ⇒ a 3 MiB bucket (3,145,728) **would still admit a file that fails at send.** 2 MiB leaves ~900 KB for the JSON envelope | ⚠️ **The mime types are M6's assumption, not the register's** — `db_roadmap` §5 names `allowed_mime_types` only on the `marketing` row. **Kill it by:** ruling them explicitly at step 1.5's typed-echo. 🔴 **Client-side twin, mandatory:** a new `REPORT_MAX_BYTES = 2 * 1024 * 1024` beside the `MARKETING_MAX_BYTES` pattern (`02_customers/api.js:180`), with the helper text **derived from the constant**, never typed *(`MarketingPanel.jsx:200` is the pattern to copy)*. 🚫 **Do not reuse `MARKETING_MAX_BYTES` — it is 10 MB and belongs to a different bucket** |
 | **AS-4** | The `finance` bucket is created with policies but **zero writers in M6** | ㉛ rules three buckets; M8 is the writer | — |
 | **AS-5** | `mark_feedback_survey_sent(p_project_id)` is a separate, narrow RPC that writes `feedback_status` and nothing else, and is **exempt from ㉙'s post-closing refusal** | Follows directly from AR-5 | — |
 | **AS-6** | Every M6 UPDATE/INSERT path calls `.select()` and asserts a row count, throwing a synthetic `RLS_DENIED` when zero — the `02_customers/api.js` pattern | `src/CLAUDE.md:310-313`; **no lint rule enforces it** | — |
 | **AS-7** | The `logistics` origin columns are named `quote_service_line_id` (→ `quote_services.line_id`) and `project_change_id` (→ `project_changes.change_id`), with `check (num_nonnulls(quote_service_line_id, project_change_id) = 1)` | ⑬/㉗ rule the shape, never the names | Claude (technical) — no product meaning |
 | **AS-8** | `project_changes` PK is `change_id bigint generated always as identity`, and the delta column is **`delta_qty`** | `spec.md` §14② ruled `delta_qty` over `qty_delta`; `db_roadmap M6-1` was corrected to match on 14/08 | Claude (technical) |
+
+### 3.7 🔤 Locked UI strings — the one place a build session copies from
+
+> 🔴 **Why this table exists.** The eight approved cards disagree with each other, and with the mockups, on roughly twenty strings — three different *"reason is required"* messages, three *"cannot load"* strings, two loading-skeleton patterns, two *"no permission"* phrasings, a success toast **forbidden** on one card and **mandatory** on two, `≥0` against `>0`. **Each disagreement was recorded in §10 and resolved nowhere**, which left every one of them to be re-decided by whichever build session reached it first — i.e. **eight surfaces re-inventing the same six sentences.**
+> **The rule applied: one string per concept. Majority across the eight cards wins, unless a card gives a MEASURED reason to differ — and where it does, the reason is in the row.**
+> 🚫 **A build session does not re-derive these. It copies them.** A surface step that needs a string not listed here uses its card's verbatim text and **adds a row**.
+
+| Concept | 🔒 The one string | Why this one |
+|---|---|---|
+| Reason field empty (cancellation) | *"חובה לכתוב סיבה. היא נשמרת בכרטיס והיא ההסבר היחיד שיישאר אחרי הביטול."* | Card-verbatim, and **the promise it makes is now kept** by S-30's ninth identity cell |
+| Reason field empty (scope change) | *"חובה למלא סיבה — היא מה שיסביר את החיוב הזה בעוד חודש."* | Card-verbatim. **Deliberately different from the row above** — different consequence, not a wording drift |
+| Cannot load (any surface) | *"לא ניתן לטעון את הנתונים."* + a per-surface second line naming what is missing + **`נסי שוב`** | **Feminine (S-28).** The three competing variants differed only in the noun; the second line is where the surface-specific information belongs |
+| No permission | 🔒 + *"אין לך הרשאה לצפות ב…"* + the counter renders **`—`** | Card-verbatim from surface 8, the only card that specified it. 🔴 **`0` is a lie** |
+| Loading | `LoadingOrError` with a `skeleton` variant — **never a spinner, never a bare "טוען"** | `src/CLAUDE.md`: it is **the only shared skeleton in the project**. Two patterns appeared across the cards; the shared component is the tiebreak |
+| Retry label | **`נסי שוב`** — passed as `retryLabel`, **not** by editing the shared default | S-28 · step 3.0 ε |
+| Dismiss button | **`ביטול`** everywhere · **`חזרה`** only in surface 7 | S-29 — the single exception earns itself |
+| Empty after filtering | **`סינון`** on surfaces 1–7 · 🔴 **`חיפוש` on surface 8** | **Not a drift: surface 8 filters by a search box and the other seven by pills.** `screens-approved §נספח⑧` counted the split; the control's own name is what makes each correct |
+| Past-date phrase | **`התקיים לפני N ימים`**, in **both** overview tabs | The bare `לפני N ימים` in `הכול` was almost certainly column-width truncation, not a choice; the fuller phrase is the one that reads alone |
+| `מה חסר` sentences | The seven verbatim sentences in **step 2.1**, identical in every tab | One home, one function (`gapSentence`), iron rule 14 |
+| Success feedback | **A toast on save-and-send actions; 🚫 none on a pure navigation or filter** | Two cards mandate it, one forbids it — **and the one that forbids it is describing a read-only screen**, so the rule is per-action, not per-card |
+| Readiness comparison | 🔴 **`≥`, never `=`** | 🔗 מראת §7.43 — an over-staffed event (7 of 6) **is** ready. `=` silently excludes it |
+| Report size helper | *"‏PDF · JPG · PNG · עד 2MB…"* — the number rendered from `REPORT_MAX_BYTES` | Ruled 2 MiB (AS-3). ⚠️ Supersedes `screens-approved.md:1398`'s `עד 10MB` |
+| `event_finished` on screen | **`ממתין לסגירה`** | ⑲. 🚫 `אירוע הסתיים` appears nowhere — enforced by step 2.1's scan ② |
+
+⚠️ **`docs/mockups/**/approved/*.html` is NOT hook-protected** — an edit there succeeds with no error and no failing test. 🚫 **Resolving a contradiction by editing an approved mockup is forbidden.** Supersessions are recorded as **dated pointers in §10**, never as edits to the approved artefact.
 
 ---
 
@@ -502,12 +552,13 @@ Unchanged from module 1: Supabase Auth (Google), session in `sessionStorage`, `c
 - **A5** — cancellation dictionary: recommend AR-1's single three-value `cancel_type` column.
 - **A6** — `סף_לקוח_רדום_ימים`: 180 vs the mockup's ≤146. **This one genuinely needs his number** — say so.
 - **B11** — `שעות ביצוע בפועל` as a number vs a range: recommend number-only.
-- **A8/S-1** — the status tone map. 🔴 **Present it as one table of all eight labels × the tone each mockup drew**, because the conflict is only visible that way (see §10 verification note).
+- **S-1 — present as DECIDED, not as a question.** The tone map is ruled for all eight labels (§3.3 S-1). 🔴 **Show it as one table of all eight labels × the tone each approved mockup drew**, because the 3–3 and 2–1 splits are only visible that way — then the ruled column beside them. **He can override any row in one line.** 🚫 **Do not re-open it as an open question** — that is what "A8" was, and A8 had no row to be answered in.
 **🔻👤 Stop:** nothing is written until he rules. Record each ruling in §3 with his words and the date, **and only then** write it back to `PROJECT_MASTER §7` / `db_roadmap` per iron rule 13(א).
 **מה ייחשב עובד** *(`CLAUDE.md` iron rule 1, quoted)*
 1. *"שאל כשלא חד-משמעי — ההכרעה תמיד של ישי."*
 2. *"הפריט מגיע מעוכל, עם ראיה, ועם המלצה מנומקת — וסמן במפורש מה עוגן ומה המלצה."*
 3. *"ועוגן שהוא אינו יכול לבדוק בעצמו אינו עוגן — הוא טענה בתחפושת."* ⇒ every anchor is translated into a screen, a mockup, one of his own rulings, or a named scenario with numbers.
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -517,10 +568,20 @@ Unchanged from module 1: Supabase Auth (Google), session in `sessionStorage`, `c
 **What to do — in this exact order, because the order is load-bearing:**
 
 ```sql
--- ① measure before you touch anything. Non-zero on either ⇒ STOP and report.
-select count(*) filter (where quote_id is null)     as null_quote_id,
+-- ① measure before you touch anything. Non-zero on ANY of the five ⇒ STOP and report.
+-- 🔴 Rows 4 and 5 exist because steps ③ and ④ below add CHECKs, and a CHECK added over a
+--    violating row fails the whole migration. The Design Checklist says "count first, always"
+--    and until 14/08 this query counted only the three columns the OTHER statements touch.
+select count(*) filter (where quote_id is null)      as null_quote_id,
        count(*) filter (where owner_email is null)   as null_owner_email,
-       count(*) filter (where project_bonus <> 0)    as nonzero_bonus
+       count(*) filter (where project_bonus <> 0)    as nonzero_bonus,
+       count(*) filter (where negative_feedback_reason is not null
+                          and negative_feedback_reason not in
+                              ('איחור דיילות','תפקוד דיילות','איכות תגים','ניהול לקוי','אחר'))
+                                                     as bad_feedback_reason,   -- blocks ③
+       count(*) filter (where project_status in ('awaiting_invoice','awaiting_payment','finished')
+                          and summary_report_url is null)
+                                                     as closed_without_report  -- blocks ④
   from public.projects;
 
 -- ② new columns (⑭: exactly two timestamps, AR-1: one cancel_type column)
@@ -551,7 +612,9 @@ alter table public.projects alter column owner_email set not null;
 **Also:** ⬜ **if Ishay ruled B11 toward a range**, add `actual_start_time`/`actual_end_time time` here instead of leaving `actual_hours` alone.
 🔴 **`cancel_type` is deliberately nullable** — a live project has no cancellation type. **The NOT-NULL-ness is enforced inside `cancel_project`, not by the column**, because `not null` on a column that is empty for every existing row cannot be added without a default, and a default would be a lie.
 🚫 **Do not add a `final_gross_profit` column** (AR-6, Ishay 14/08/2026 01:17). **Do not add `ready_at`** (⑭).
-**Migration Design Checklist:** reversible except the `drop column` (say this out loud at the typed-echo — **the data is gone**) · brief `ACCESS EXCLUSIVE` on one small table · counts run first · no new FK index needed (`users(email)` is unique) · both new stamps are `timestamptz` · no Seed impact · no Storage impact · no function signature changes.
+**Migration Design Checklist:** reversible except the `drop column` (say this out loud at the typed-echo — **the data is gone**) · brief `ACCESS EXCLUSIVE` on one small table · 🔴 **counts run first, and they now cover all FIVE things this migration can trip on — the two CHECKs included** · no new FK index needed (`users(email)` is unique) · both new stamps are `timestamptz` · no Seed impact · no Storage impact · no function signature changes.
+🔴 **`bad_feedback_reason > 0` ⇒ the value set in ③ is wrong, not the data.** C6 §2.4.4's five values are a *spec* list; a live row outside them means the spec and the DB disagree ⇒ **stop, report the actual distinct values to Ishay, and do not "clean" the data to fit a constraint.**
+🔴 **`closed_without_report > 0` ⇒ ④ cannot ship as written.** Real projects already sit past `event_finished` without a report path; adding the constraint would fail. **Stop and report** — the options (backfill · `not valid` + later `validate` · narrow the constraint to rows closed after M6) are Ishay's, and none of them is a silent choice.
 **🔻👤 Verify:**
 ```sql
 select column_name, data_type, is_nullable from information_schema.columns
@@ -568,6 +631,7 @@ Then `mcp get_advisors (security + performance)` → **zero new findings**, or a
 3. *"מה שהבלופרינט בונה: `SET NOT NULL` על שתיהן, ואין מצב-ריק ל'אורחים מוערכים' ול'הכנסה מתוכננת'."*
 4. ㉟: *"לעמודה אין מקור ואין קורא"* — and `assignments.personal_bonus` stays, owned by M8.
 5. **AR-6 (Ishay, 14/08/2026 01:17):** M6 freezes only the inputs it owns. **No `final_gross_profit` column.**
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -595,8 +659,15 @@ create table public.project_changes (
     (change_target = 'hostess_count' and sku is null and color is null))
 );
 create index project_changes_project_id_idx on public.project_changes (project_id, created_at desc);
+-- 🔴 `extensions.moddatetime`, NOT `public.moddatetime`. The extension was moved out of
+--    `public` by `20260710164420_module2_moddatetime_to_extensions_schema.sql:7`, so
+--    `public.moddatetime` does not resolve and this statement would FAIL on apply.
+--    (Measured 14/08/2026: `public.moddatetime` appears exactly ONCE in the whole repo —
+--     it appeared here, in this guide, and nowhere in any migration.)
+--    ⚠️ The 11 bare-name triggers in `20260710160735` still work only because they bound
+--    to the function OID before the move; a NEW trigger cannot copy their form either.
 create trigger project_changes_set_updated_at before update on public.project_changes
-  for each row execute function public.moddatetime(updated_at);
+  for each row execute function extensions.moddatetime(updated_at);
 alter table public.project_changes enable row level security;
 -- SELECT only, gated on 'פרויקטים'. NO write policy — writes go through apply_scope_change (AS-2).
 ```
@@ -615,6 +686,7 @@ values (8, gen_random_uuid(), 'hostess_count', 0, 1, 1, 'x', '<ceo email>');
 2. ①: *"משנים כמויות בלבד. אין עריכת מחיר-יחידה בדיעבד."*
 3. *"‏`project_changes` היא הבית היחיד לשינוי, כי למקור אין דלת"* — the quote is locked by a DB trigger that throws `P0001` in Hebrew.
 4. `spec.md` §14②: the column is **`delta_qty`**, not `qty_delta`.
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -655,6 +727,7 @@ update public.assignments set attendance_status='late', lateness_level=null
 2. §12⑤: *"שמות שלוש עמודות-הנוכחות הם הכרעה של מ6 — ומודול 4 כבר הניח שמות אחרים… שם שונה ⇒ `reliabilityScore` תקבל `undefined` ותחזיר ציון שגוי, בשקט."*
 3. §12⑤ execution item: *"אחרי המיגרציה, ליישר את `smartMatch.js`"* — step 2.7.
 4. `db_roadmap M6-4`: these are *"the only source for the reliability component, weight `0.35`, the largest one currently switched off."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -709,6 +782,7 @@ Then the **role matrix check, both directions, with the positive control first**
 2. §12②: *"אין להמתין למודול 5 — זו שורה אחת בתבנית שכבר רצה על 6 טבלאות."*
 3. `screens-approved` מסך 3, the error-state text the screen must render: *"לא ניתן לטעון את נתוני הלוגיסטיקה של הפרויקט."* + *"להצעה שאושרה יש פריטי מוצר, ולכן רשימה ריקה כאן היא תקלה ולא מצב תקין."* + `נסי שוב` — **as distinct from** the legal empty state *"לא הוזמנו מוצרים לאירוע הזה — ההצעה כללה שירותי דיילות בלבד."*
 4. ⑬: *"‏`quote_services` מחזיקה `color`; `logistics` אינה ⇒ שתי שורות-לוגיסטיקה זהות, ואי-אפשר לדעת איזו עלות מוקפאת שייכת לאיזו."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -718,13 +792,16 @@ Then the **role matrix check, both directions, with the positive control first**
 **What to do:** replicate `20260710160735:117-153` exactly — **four separate policies per bucket** (select · insert · update · delete), each testing `bucket_id = '<name>'` **before** the `exists` on permissions:
 ```sql
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('reports','reports', false, 10485760,
+values ('reports','reports', false, 2097152,          -- 🔴 2 MiB — RULED, see below
         array['application/pdf','image/jpeg','image/png']),
-       ('finance','finance', false, 10485760,
+       ('finance','finance', false, 10485760,          -- 10 MiB — see the note, NOT ruled
         array['application/pdf','image/jpeg','image/png'])
 on conflict (id) do nothing;
 -- then 4 policies for 'reports' gated on 'פרויקטים', and 4 for 'finance' gated on 'כספים'
 ```
+🔴 **`reports` = `2097152` (2 MiB), and this is a ruling, not a preference** (`db_roadmap` §5's `reports` row, Ishay 14/08/2026). 🚫 **Not `10485760`** — that number was copied from `marketing` and never checked against the path the file actually travels. 🚫 **And not 3 MiB either:** `MAX_ATTACHMENT_BASE64_CHARS = 4_000_000` (`src/lib/email.js:29`) with base64's 3-bytes→4-chars ratio puts the **hard binary wall at exactly 3,000,000 bytes ≈ 2.86 MiB**, so a 3 MiB bucket still admits a file that fails at send. **2 MiB leaves ~900 KB for the JSON envelope.**
+⚠️ **`finance` was NOT ruled** — only `reports` was, because only `reports`'s files travel by mail. `finance` keeps the `marketing` precedent (10 MiB) and **has zero writers in M6** (AS-4). **Say this split out loud at the typed-echo**, so the asymmetry reads as a decision rather than a typo.
+🔴 **The on-screen text is derived from a constant, never typed:** add `export const REPORT_MAX_BYTES = 2 * 1024 * 1024` to `src/modules/06_projects/api.js` and render `עד {REPORT_MAX_BYTES / 1024 / 1024}MB` — the exact pattern of `MARKETING_MAX_BYTES` (`02_customers/api.js:180`) and `MarketingPanel.jsx:200`. 🚫 **Do not reuse `MARKETING_MAX_BYTES`** (10 MB, different bucket). ⚠️ **The SQL literal and the JS constant are TWINS with no mechanical link** — `docs/schema.sql:728` already carries that warning for `marketing`; **write the same twin comment here**, in both places.
 ⚠️ **Known failure mode** (`20260710160735:9-10`): in some projects the `storage` schema is owned by `supabase_storage_admin` and `create policy` fails with **`42501`**. **If that happens, do not work around it in SQL** — create the policies through the Supabase dashboard and record it in §10 with the exact error text.
 **Migration Design Checklist:** reversible (`delete from storage.buckets` + `drop policy`) · no lock on business tables · no existing objects in either bucket · no FK · no timestamps · **Storage impact: yes, this is the Storage lane item** · Seed impact: the `buckets` insert is a one-off configuration seed, the same exception as roles/modules/params.
 **🔻👤 Verify:**
@@ -732,13 +809,14 @@ on conflict (id) do nothing;
 select id, public, file_size_limit, allowed_mime_types from storage.buckets order by id;
 select policyname, cmd from pg_policies where schemaname='storage' and tablename='objects' order by policyname;
 ```
-**Expected:** three buckets — `finance` and `reports` with `public = false`, `file_size_limit = 10485760`, three MIME types each; `marketing` unchanged. And **twelve** policies on `storage.objects` (4 existing for `marketing` + 8 new).
+**Expected:** three buckets, all with `public = false` for the two new ones and three MIME types each — 🔴 **`reports` → `file_size_limit = 2097152`** · **`finance` → `10485760`** · `marketing` unchanged. And **twelve** policies on `storage.objects` (4 existing for `marketing` + 8 new).
 **מה ייחשב עובד** *(`processes-approved.md` ㉛, quoted)*
 1. ㉛: *"שלושה buckets, לא ארבעה ולא אחד — לפי מספר כללי-הגישה השונים, לא לפי מספר סוגי-הקבצים."*
 2. *"‏bucket ציבורי עוקף בקרת-גישה בקריאה — מי שיש לו הקישור רואה. ⇒ מתאים לשיווק בלבד. השניים החדשים פרטיים."*
 3. *"אין ערובה טרנזקציונית בין Storage ל-Postgres, וזה מתועד ⇒ הפתרון אינו לקוות אלא לאכוף במסד"* — the `project_closed_needs_report` CHECK, already added in step 1.1.
 4. `spec.md` §2.2: *"השורה קיימת מראש ⇒ מעלים את הקובץ ל-`reports/<project_id>/…` ⇒ RPC אחד כותב את הנתיב ומעביר סטטוס באותה טרנזקציה ⇒ נכשל ⇒ מוחקים את הקובץ."*
 5. §12⑬: *"`createSignedUrl` מופיע `0` פעמים בכל `src/`"* ⇒ M6 builds this path first.
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -783,6 +861,7 @@ Then `npx deno check --node-modules-dir=none supabase/functions/send-email/index
 2. *"‏`ENTITY_REQUIRES_ATTACHMENT` הוא פר-`entity_type`, ומ6 שולח את שני הסוגים ⇒ או שני `entity_type` נפרדים, או רצפת-מצורף פר-תבנית. 🚫 לא לגלוש לרשות גורפת — זה מוחק שומר חי מנתיב הצעת-המחיר."*
 3. *"‏`email_log` דורשת policy-קריאה משלה לפי שער-המודול של מ6 — 🚫 לא הרחבה של אחת הקיימות, אחרת יומן-ההצעות נפתח למנהלת הגיוס."*
 4. *"ומה ש*לא* צריך להיבנות: תבנית סקר-המשוב כבר קיימת ומאוכלסת — `תבנית_מייל_משוב_לקוח`, וגם הקישור `קישור_בסיס_סקר_לקוחות`. שתי התבניות שכן חסרות הן `'האירוע בוטל'` ו-`'פרטי האירוע השתנו'`, ותו לא."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -825,8 +904,15 @@ param_name:  תבנית_מייל_פרטי_האירוע_השתנו   param_type: 
 ⚠️ **The trigger is narrower than it reads: a *date* change never sends this mail** — ㉑ resets every final approval and re-invites instead. **Only location (㉒) and hours (㉝) send an update while her confirmation stands.**
 ⚠️ **The sources say state old→new; we state only the new**, because no old-value placeholder exists in the vocabulary. `והם הקובעים` does the override work.
 
-**Plus three more rows:**
-- `קישור_שאלון_שביעות_רצון` (`integration_tech` or `templates` — match whatever `קישור_בסיס_סקר_לקוחות` at `20260723112000:63` uses) — the Google Form URL Ishay already built. 🔴 **Ask him for the value at the typed-echo; do not invent a URL and do not hard-code it in source.**
+**Plus TWO more rows — not three.** 🔴 **The survey link is NOT seeded here. It already exists, and seeding a second row for it is the defect this line used to contain:**
+
+> 🔴 **Three names circulated for one value; only ONE is real. Measured `14/08/2026`:**
+> **‏① `קישור_בסיס_סקר_לקוחות` — the live `params` row.** Seeded at **`20260723112000_module3_seed_products_tiers_params.sql:63`**, `param_type = 'templates'`, value `https://forms.gle/YFJobqmgpBCqf1x87` — **a real URL, already on disk.**
+> **‏② `[לינק_לשאלון_שביעות_רצון]` — a PLACEHOLDER**, not a param. It is the token inside the body of `תבנית_מייל_משוב_לקוח` (`:79-81`) that `fillEmailTemplate` substitutes ① into.
+> **‏③ `קישור_שאלון_שביעות_רצון` — does not exist and must never be created.** It was this guide's own invention. **Seeding it would give the system two rows for one Google Form, and the mail builder would read whichever one it was told about.**
+> ⇒ 🚫 **Do not seed a survey-link row. Do not ask Ishay for the URL** — it is on disk, it is his, and asking implies it is missing. *(Step 1.6's acceptance item 4 already said so verbatim — *"תבנית סקר-המשוב כבר קיימת ומאוכלסת — `תבנית_מייל_משוב_לקוח`, וגם הקישור `קישור_בסיס_סקר_לקוחות`"* — and step 1.7 contradicted it two screens later.)*
+> ⚠️ **What M6 does owe:** `mark_feedback_survey_sent` runs after the send, and the send uses ① via ②. **Zero `src/` files reference either name today** — M6 is the first consumer, so the read path is new even though the data is not.
+
 - `סף_לקוח_רדום_ימים` — **⬜ the number is Ishay's (A6)**; the card recommends 180, the mockup draws 146 days as dormant. `param_type = 'control_alerts'`, following the precedent of `ימי_אזהרה_קדם_אירוע=14`.
 - **Cancellation compensation thresholds** — `שעות_פיצוי_ביטול_מלא = 24` · `שעות_פיצוי_ביטול_חלקי = 72` · `אחוז_פיצוי_ביטול_חלקי = 50`, `param_type = 'control_alerts'`. 🔗 מראת §7.16ב — SSOT: PROJECT_MASTER §7. **Why params and not code:** `spec.md` §12⑫ measured 31 distinct param names across every migration and found **not one compensation threshold**; the precedent (`ימי_אזהרה_קדם_אירוע`, `שעות_תזכורת_לדיילת`) is unambiguous. ⚠️ **Every `params` value is `text`, including booleans** (`schema.sql:79-84`) — cast on read.
 🚫 **M6 does not compute compensation** — the numbers are seeded so M8 has a source. The cancellation dialog **displays** the resulting percentage (surface 7's `₪` banner row); it does not persist it.
@@ -835,15 +921,20 @@ param_name:  תבנית_מייל_פרטי_האירוע_השתנו   param_type: 
 ```sql
 select param_name, param_type, length(param_value) from public.params
  where param_name in ('תבנית_מייל_אירוע_בוטל','תבנית_מייל_פרטי_האירוע_השתנו',
-   'קישור_שאלון_שביעות_רצון','סף_לקוח_רדום_ימים','שעות_פיצוי_ביטול_מלא',
+   'סף_לקוח_רדום_ימים','שעות_פיצוי_ביטול_מלא',
    'שעות_פיצוי_ביטול_חלקי','אחוז_פיצוי_ביטול_חלקי') order by param_name;
+
+-- 🔴 And the negative check that proves the survey link was NOT duplicated:
+select param_name, param_value from public.params where param_name like '%סקר%' or param_name like '%שאלון%';
 ```
-**Expected:** seven rows. Then read both template bodies back and **diff them character-by-character against this guide** — a template is copy that goes to real hostesses.
+**Expected:** **six** rows from the first query. From the second: **exactly one** row — `קישור_בסיס_סקר_לקוחות` → `https://forms.gle/YFJobqmgpBCqf1x87`. 🔴 **Two rows means a duplicate link was seeded; delete the new one before continuing.**
+Then read both template bodies back and **diff them character-by-character against this guide** — a template is copy that goes to real hostesses.
 **מה ייחשב עובד** *(`db_roadmap` M6-12, quoted)*
 1. *"**✅ TEXT APPROVED BY ISHAY 14/08/2026 01:2X. Seed exactly as written; this is his approved copy, not a draft.**"*
 2. *"‏`תבנית_מייל_ביטול_משמרת` הקיימת פותחת ב-'חל **שינוי בתכולת האירוע**'… ⇒ מנוסחת לצמצום-תכולה. דיילת שתקבל אותה בביטול-אירוע **תסיק שהאירוע מתקיים בלעדיה**."*
 3. *"‏`שחרור_משמרת` אומרת 'תודה שהתפנית — **המשרה כבר אוישה**' (שקר: המשרה לא אוישה, האירוע מת)."*
 4. §12⑫: *"מדרג-פיצוי-הביטול אינו קיים בשום מקום שהמערכת יכולה לקרוא ממנו… נסרקו 31 שמות-פרמטרים — אין ולו סף-פיצוי אחד. והתקדים במערכת חד-משמעי."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -881,8 +972,12 @@ select count(*) from (
 🔴 **`planned_revenue` must be `null`, not `0`, when the caller cannot read `quote_services`** (S-2). Because the function is `SECURITY DEFINER` it *can* read them — so **compute the caller's own visibility explicitly**: return the sum only when `assert`-style permission on `'הצעות מחיר'` holds for the caller, else `null`. Return `null` also when the project has no quote. **`0` is reserved for a genuine zero.**
 ⚠️ **This is the second implementation of the `MAX(assignment_number)` fold** (the first is `finalAssignmentRows`, `src/lib/hostesses.js:250-272`). `spec.md` §3.2's numbers — `#8` ⇒ `1/6`, `#11` ⇒ `0/1` — are the test that pins both to each other.
 
+> 🔴 **`ממתין לסגירה` is unguarded in BOTH directions, and neither is covered by ㉙ as written. Both fixes live in this step.**
+> **‏(א) Entry — the RPCs must refuse from `event_finished` onward, not only after the closing stamp.** ㉙ as drafted keys on `operationally_closed_at is not null`, so a project sitting in `event_finished` — **the entire window between the event and the closing** — still accepts `apply_scope_change` and `update_project_details`. ⚠️ **That contradicts two existing rulings:** ⑦'s own precondition, and **㉔, which rules that a change discovered after the event enters through the CLOSING screen** — the scope dialog is precisely the door ㉔ closed. ⇒ **the refusal predicate is `project_status in ('event_finished','awaiting_invoice','awaiting_payment','finished','cancelled') OR operationally_closed_at is not null`**, for the four operational RPCs. *(`mark_feedback_survey_sent` and `set_project_finance_fields` stay exempt — the whitelist, §4.2.)*
+> **‏(ב) Exit — a project can get STUCK in `ממתין לסגירה`, and this one has no error at all.** The `pg_cron` job only moves projects **forward** (`final_event_date < current_date` ⇒ `event_finished`), and `recompute_project_status`'s guard returns early for any status outside the three active ones. ⇒ **push an event's date into the future after it has already flipped, and nothing moves it back**: it is not active, so the trigger ignores it; its date is no longer past, so the cron ignores it. **It sits in `ממתין לסגירה` forever, showing in the `לסגירה` tab as an event awaiting closure that has not happened yet.** 🔴 **The fix, in `update_project_details`:** when the new `final_event_date >= current_date` **and** the project is `event_finished` **and** `operationally_closed_at is null`, **move it back onto the active axis and call `recompute_project_status`** so it lands on the right one of the three. 🚫 **Never from a closed or cancelled project** — those are terminal. ⚠️ **And this is why (א) must say `event_finished` and not "any non-active status": the date move is exactly the legal write that has to survive it.** *(Build (א) and (b) together, in one function, and test the pair — a guard that blocks the escape hatch is worse than no guard.)*
+
 **② `update_project_details(...)`** *(㉑ · ㉒ · ㉝ · AR-10)*
-Gate `edit` on `'פרויקטים'`; refuse if closed or cancelled (㉙).
+Gate `edit` on `'פרויקטים'`; refuse per (א) above — 🔴 **from `event_finished` onward, not only after the closing stamp** — with the one exception (ב) defines.
 🔴 **Statement order inside the function, and reversing it turns a legal date move into a hard failure:**
 1. **Pre-query first** — if the date changed, find any hostess who is `finally_approved` on the **target** date for a **different** project, and `raise exception` with AR-10's Hebrew message naming her `full_name` and the conflicting `event_name`. *(The index alone carries neither name.)*
 2. **Then reset the approvals** — `update assignments set assignment_status = 'pending' … where project_id = p and assignment_status = 'finally_approved'` (㉑). **After this the partial index no longer covers those rows**, which is why the pre-query is the real warning and the `unique_violation` handler is only the backstop.
@@ -893,6 +988,7 @@ Wrap the whole body in an `exception when unique_violation then raise exception 
 **③ `apply_scope_change(p_project_id, p_lines jsonb, p_reason text)`** *(② · ⑯ · AR-4)*
 One function, not two (A10). One `change_group_id` per call. In one transaction:
 insert a `project_changes` row per changed line **with `unit_price_snapshot`/`unit_cost_snapshot` read server-side from `quote_services`** (never from the client payload) ⇒ update `logistics.planned_qty` and/or `projects.required_hostess_count` ⇒ let the status trigger re-run.
+🔴 **`p_lines` carries the NEW QUANTITY, not the delta — and the delta is computed server-side as `new_qty − current_qty`. State this explicitly in the function's comment, because getting it wrong is silent and doubles money.** ⚠️ **The scenario, and it needs no bug to happen:** Dana clicks `שמור` twice — a slow network, a double-click, a retry after a timeout that actually succeeded. **If `p_lines` carried a delta, the second call adds it again**: `planned_qty` goes 300 → 380 → 460, a second `project_changes` row books a second `+80 × 5.00 ₪`, and **the customer is billed twice for one change.** Nothing throws; the CHECK is satisfied; the history reads as two genuine changes. **With a target quantity the second call computes `380 − 380 = 0` and is a no-op** *(and `delta_qty <> 0` from step 1.2 makes the empty row impossible to insert).* 🔑 **Idempotence here is bought by the parameter's meaning, not by a lock.**
 🔴 `raise exception` if any resulting `planned_qty <= 0` (AR-4) — the `CHECK` would catch it, but the Hebrew message is ours: *"הכמות חייבת להיות גדולה מאפס. להסרת פריט לגמרי — פני למנהלת הלוגיסטיקה."*
 🚫 **No time threshold anywhere in this function** (⑯).
 
@@ -933,6 +1029,7 @@ Then the **anchor test, run live** (`spec.md` §3.2): `select * from list_projec
 3. §3.2: *"‏`#8` הוא הבדיקה של ה-de-dup: 9 שורות ו-6 דיילות ⇒ ספירה נאיבית של `COUNT(*)` תמנה דיילת שסירבה-ואז-זומנה-שוב פעמיים. `MAX(assignment_number)` פר-דיילת הוא הנוסחה."*
 4. §3.2: *"ו-`#11` הוא הבדיקה של ⑨: לוגיסטיקה 100%, שיבוץ 0%. מיזוג לאחוז אחד היה מציג '50% מוכן' — מספר חסר-משמעות."*
 5. §2.5(א): *"דחיית תאריך *יכולה להיכשל*, וזו התנהגות נכונה… הפרדיקט שהושמט הוא ההבדל: רק שורות מאושרות-סופית מתנגשות ⇒ זימון ממתין או דיילת שאישרה זמינות בלבד אינם חוסמים הזזת-תאריך. מימוש שיניח חסימה גורפת יחסום פעולות לגיטימיות."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1023,6 +1120,7 @@ select jobname, schedule from cron.job order by jobname;
 3. §12⑨: *"מלכודת-הלידה… `C5 §5.5.7` אומר 'שורת שיבוץ **או** לוגיסטיקה' — אבל שורות-הלוגיסטיקה נולדות אוטומטית עם הפרויקט ⇒ הטריגר היה יורה בלידה, ו-`טרם החל` היה הופך לסטטוס בלתי-נגיש לחלוטין. ✅ התיקון: המדד הלוגיסטי נספר כ'פעולה' רק כשפריט *יצא* מ-`not_started`."*
 4. §12⑩: *"`מוכן לביצוע` אינו הישג ואינו נעילה — הוא מצב רגעי והפיך… 🚫 אסור לתלות בו שום פעולה חד-פעמית."*
 5. `🔄5`: over-staffed (7 of 6) reaches `ready` because the metric is `≥`; a customer increase 6→8 sends it back to `בתהליך`; an item going backwards from `ready` does too.
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1030,20 +1128,33 @@ select jobname, schedule from cron.job order by jobname;
 **Step 1.10 · 🔻👤 Phase-1 gate**
 **Files:** `docs/schema.sql` · `docs/db_roadmap.md` · this guide
 **What to do:** refresh `docs/schema.sql` from Supabase Studio; flip every `A-M6` row (M6-1…M6-14), the three §5 Storage rows, and **`A-14`** from "absent" to applied-with-timestamp; add the `db_roadmap §10` strike entries; reconcile the migration-letter counter (A–I = **nine** applied).
-**🔻👤 Verify:** `mcp get_advisors` security **and** performance → **zero new findings**, or a written triage line per finding in §10. `git status` shows `schema.sql` staged **together with** every migration file. `grep -c "🚧 מ6" docs/PROJECT_MASTER.md` still returns **17 token occurrences ⇒ 14 distinct debts** (see §10 note) — none silently dropped.
+**🔻👤 Verify:** `mcp get_advisors` security **and** performance → **zero new findings**, or a written triage line per finding in §10. `git status` shows `schema.sql` staged **together with** every migration file. **Re-measure `🚧 מ6` and compare against the count you took at the START of this phase** — the requirement is that **none was silently dropped**, not that it equals a number written in this guide (step 4.2 explains why any pinned number here is already stale).
 **מה ייחשב עובד** *(migration protocol, quoted from `supabase/migrations/CLAUDE.md`)*
 1. *"אחרי ההחלה, ארבעה צעדים: החלה ⇒ אימות בקריאה ⇒ **רענון `docs/schema.sql`** ⇒ **עדכון `db_roadmap §10` באותו סשן**."*
 2. *"מיגרציה שמגיעה ל-PR בלי `schema.sql` מעודכן אינה מאושרת."*
 3. All nine migrations are append-only history from this point; every correction is a new forward migration.
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
 
 ### Phase 2 — Business logic (`src/lib/` + `src/modules/06_projects/api.js` + unit tests)
 
-**Phase gate (§9h):** sweep §3.5 for Phase-2-anchored OPEN items (**A7** — verb gender, and it is cross-system) and settle them at the door.
-
 **Iron rule 14 applies throughout: the UI never duplicates a formula.** Every number on every screen comes from a pure function in `src/lib/` or from the overview RPC. A component that computes a ratio, a cost or a gap sentence inline is a defect.
+
+---
+
+**Step 2.0 · 🔻👤 Phase-2 door — Ledger sweep**
+**Files:** none (chat only).
+**What to do:** sweep **§3.5** for every OPEN item anchored to a Phase-2 step and bring them as one consolidated round **before step 2.1**.
+🟢 **Anchored set today: NONE.** The item that used to sit here — **A7, verb gender** — is **ruled** (S-28: module 6 is entirely feminine; `LoadingOrError` gets a new optional `retryLabel` prop and its shared default is untouched; the cross-system sweep is registered as `🚧 מ12`). ⇒ **say `אין` out loud and proceed.**
+🔴 **Do not skip the sweep because the answer is `אין`.** §9(h) exists so a deferred question is settled at the door rather than mid-step; **a door that reports `אין` and a door that was never opened are indistinguishable afterwards**, and this guide's own §3.5 gained four dead ids precisely because nobody re-read it. **Re-read §3.5 as it stands now** — a Phase-1 ruling may have moved an item into this phase.
+**🔻👤 Stop** only if the sweep finds something; otherwise this is a 🤖 confirmation and the phase starts.
+**מה ייחשב עובד** *(`module-blueprint/template.md` §8(h), quoted)*
+1. *"on ENTERING a phase: sweep the Decisions Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling BEFORE the phase's first step — deferred questions get settled at the phase door, not mid-step where they ambush the build."*
+2. §3.5's own routing rule: an id cited from a step must exist in the table; **A7 · A8 · B1 · B4 · B10 · B14 are closed and were removed, not left dangling.**
+**🌊 אדוות —**
+**🗣️ אושר —**
 
 ---
 
@@ -1062,7 +1173,19 @@ export const PROJECT_STATUS_LABELS = {
   finished:        'פרויקט הסתיים',
   cancelled:       'בוטל',
 }
-export const PROJECT_STATUS_TONES = { /* ⬜ filled from Ishay's A8 ruling — see step 1.0 */ }
+// 🔴 RULED in full (S-1). Keyed by the DISPLAYED label, because that is what StatusTag looks up.
+export const PROJECT_STATUS_TONES = {
+  'טרם החל':        'muted',
+  'בתהליך':         'muted',   // 🔴 not teal: most overview rows are בתהליך, and a tone that
+                               //    paints the majority stops separating
+  'מוכן לביצוע':    'teal',    // 🔴 not ok/green: 🔄6② rules it REVERSIBLE, and `ok` means
+                               //    "סגור, אין מה לעשות"
+  'ממתין לסגירה':   'warn',
+  'ממתין לחשבונית': 'muted',
+  'ממתין לתשלום':   'muted',
+  'פרויקט הסתיים':  'ok',
+  'בוטל':           'dashed',  // 🔴 never red — a valid terminal state, not a failure
+}
 export const ACTIVE_PROJECT_STATUSES = ['not_started', 'in_progress', 'ready']   // ⑫ — the SSOT
 export function staffingMetric(assignmentRows, requiredCount) { /* ≥, and MAX(assignment_number) per hostess */ }
 export function logisticsMetric(logisticsRows) { /* zero rows ⇒ complete */ }
@@ -1071,13 +1194,21 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 🔴 **`PROJECT_STATUS_TONES` is keyed by the *displayed Hebrew label*, because that is what `StatusTag.jsx:29-42` looks up** — and a miss falls through to `muted` **silently**. ⇒ **the key for `event_finished` must be `'ממתין לסגירה'`**; `'אירוע הסתיים'` produces a grey tag with no error. **Test with `describe.each` over all eight labels** (S-24), asserting the tone is defined and is not the fallback.
 🔴 **`gapSentence` returns one of the approved sentences verbatim** — `'לא נשלח אף זימון — איש לא נגע בפרויקט מאז שנוצר'` · `'הכול סגור — אין מה לעשות'` · `'ממתין להזנת שעות בפועל, כמות אורחים ודוח-סיכום'` · `'האירוע עבר ולא נסגר — לא נשלח בו אף זימון מעולם'` · `'אצל מנהלת הכספים — אינו דורש ממך פעולה'` · `'הדיילת היחידה אישרה זמינות וממתינה לאישור סופי ממך'` · `'2 זימונים ממתינים למענה — וגם אם שתיהן יאשרו, עדיין חסרות 3'`. ⚠️ **The mockup uses two phrasings for some of these between tabs** (e.g. `התקיים לפני N ימים` in `לסגירה` vs `לפני N ימים` in `הכול`) — that is a card-vs-mockup conflict recorded in §10; **pick one, use it in both, and note the choice**.
 🚫 **No urgency score, no numeric ranking, no `50/30/20`** (⑧, and `§7.9`'s formula was cancelled).
-**🔻🤖 Verify:** `npm run test:run` → **`Tests 752 + N passed`** with the new file green; the `describe.each` proves all eight tones resolve. Then, against live data, `staffingMetric` on `#8`'s 9 rows returns **`1/6`** and on `#11` returns **`0/1`**; `logisticsMetric` on `#11`'s zero rows returns **complete**, not `0/0`.
+
+**🔴 Three enforcement tests, in `src/lib/projects.guards.test.js` — and they must be UNIT tests, not scanner scripts.**
+> ⚠️ **Why unit tests and nothing else. Measured `14/08/2026`:** CI (`.github/workflows/ci.yml`) runs exactly **seven** npm scripts — `lint · format:check · dup · deadcode · audit · test:run · build`. **`check:bidi`, `check:docs-structure` and `check:context` are in `gate` and NOT in CI**, and `gate` itself is never invoked by CI. ⇒ **a rule enforced by a scanner is enforced only when a human remembers to run `gate` locally.** `test:run` is the only gate that fires by itself. **Shape them like `src/App.routes.test.jsx`:** a pure exported analyzer taking a **source string**, the real file read via `fs.readFileSync(path.resolve(process.cwd(), …))`, an explicit allow-list `Set`, a `throw` if the structure it depends on disappears, and `expect(violations).toEqual([])` — **plus a controlled RED case on synthetic source proving the guard actually bites** (Ishay's 29/07 requirement; a guard never observed failing is not a guard).
+> **‏① Unmapped-label guard.** `describe.each` over all eight labels asserting the tone resolves — **and one case with a label that is NOT in the map asserting it is REPORTED, not silently toned.** 🔴 **This is the whole point:** `StatusTag.jsx:50` is `TONES[tone ?? TONE_BY_LABEL[label]] ?? TONES.muted`, and `TONES.muted` is **byte-identical** to the tone of `ממתינה למענה` ⇒ a missing key is invisible on screen. **A test that only checks the eight present labels proves nothing about the failure mode.**
+> **‏② `אירוע הסתיים` source scan.** Fails if the literal `אירוע הסתיים` appears anywhere under `src/modules/06_projects/**` (⑲ — the DB value never surfaces, the label is `ממתין לסגירה`).
+> **‏③ `OPEN_PROJECT_STATUSES` scan.** Fails if that identifier survives anywhere in `src/` after step 2.6 — the constant moves to `ACTIVE_PROJECT_STATUSES` here and must not be left behind as a second definition.
+
+**🔻🤖 Verify:** `npm run test:run` → **`Tests 752 + N passed`** with the new files green; the `describe.each` proves all eight tones resolve **and the RED case proves the unmapped-label guard fails when it should.** Then, against live data, `staffingMetric` on `#8`'s 9 rows returns **`1/6`** and on `#11` returns **`0/1`**; `logisticsMetric` on `#11`'s zero rows returns **complete**, not `0/0`.
 **מה ייחשב עובד** *(`spec.md` §1.1 + §1.8 + §"מה ייחשב עובד" #1, quoted)*
 1. §1.1: *"‏`event_finished` ⇒ `ממתין לסגירה`, וזו ההכרעה שקל ביותר לשבור… 🚫 אין לכתוב 'אירוע הסתיים' בשום מקום בממשק, באף מסך."*
 2. §1.8: *"‏`מה חסר` (משטח 1) — 🚫 ולא 'דחיפות' ולא 'ציון'. ⑧ ביטלה את הציון, והעמודה נושאת **משפט במילים**. שם אחר יחזיר את הציון מהדלת האחורית."*
 3. §"מה ייחשב עובד" #1: *"דנה פותחת את מבט-העל ויודעת מיד לאיזה אירוע להיכנס — הסדר והעמודה `מה חסר` עונים על זה, **ולא ציון**."*
 4. `🔄4`: *"מדד שיבוץ = `COUNT(finally_approved) ≥ required_hostess_count` — ונספר לפי `MAX(assignment_number)` פר-דיילת"* · *"אפס שורות לוגיסטיקה ⇒ נספר כהושלם"*.
 5. ⑫: *"פעיל = `not_started` · `in_progress` · `ready`… 🔴 `cancelled` אינו פעיל."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1095,6 +1226,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 2. ④: *"לא מורידים את הרווח בשינוי-תכולה כ'מחווה של רצון טוב'."*
 3. ⑯: *"המערכת מתעדת כל שינוי, בכל זמן, עד רגע סגירת האירוע — ולעולם אינה חוסמת לפי שעון. מה שהיא כן עושה: מסמנת שהשינוי מאוחר."* And: *"🚫 אין סף-זמן במערכת. לא `T-36` ולא אחר."*
 4. `spec.md` §3.1①: *"מימוש שמשרשר הנחות (`6,300 × 0.95 × 0.90 = 5,386.50`) ייתן מספר אחר ב-`31.50 ₪` — פער קטן מספיק כדי לעבור בקריאה, וגדול מספיק לשבור דוח."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1116,6 +1248,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 3. §🏁2 / §② of the closing card: *"'הגיעה?' היא **עובדה** ⇒ ציון… 'הייתה טובה?' היא **שיפוט** ⇒ סינון ונעיצה. 🚫 אסור שאחת תיבנה בלי השנייה, ואסור למזג אותן לשדה אחד."*
 4. §1.5: *"התווית על המסך אינה הערך במסד"* — `לא לשלוח שוב` on screen, **`לא_לשלוח`** in the DB.
 5. ט4-ב, as sharpened 13/08: *"מ6 **מזין** את השעות; **גזירת התשלום מהן היא `§7.19`, שעדיין פתוח ושייך למ8**."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1131,6 +1264,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 1. `src/CLAUDE.md`'s shared-logic rule: one home per function, and a duplicate name is the failure this project already had twice.
 2. The mockup renders `שבת · בעוד 9 ימים` under the date — the weekday is *half the information* in an events company.
 3. `dates.js:61-66` already returns `22:00–02:00` with no ordering check ⇒ **cross-midnight informs, never blocks** (S-17).
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1150,6 +1284,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 1. #8: *"מסך שלא הצליח לטעון אומר זאת. לעולם לא רשימה ריקה בשקט."*
 2. §12⑧: *"‏`event_name` · `customer_id` · `final_start_time`/`final_end_time` · `lat`/`lng` · `customer_name` · `owner_name`/`owner_phone` — **כולם בו**, שורות 502 · 503 · 504-505 · 797-798 · 799 · 1037-1038, כ-`ALTER` שיושבים **אחרי** בלוק ה-`CREATE TABLE`."*
 3. `04_hostesses/api.js:128-130`, the same decision already taken once: *"שם-הלקוח נלקח מ-`projects.customer_name` ולא בצירוף ל-`customers` — מנהלת הגיוס **חסומה** על מודול 'לקוחות', והצירוף היה מחזיר `null` **בלי שגיאה** בשלושה מסכים מאושרים."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1166,26 +1301,37 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 1. *"‏`OPEN_PROJECT_STATUSES` הוא תיקון-התנהגות, לא ניקיון… לפי ⑫ זה שגוי: פרויקט ב-`ready` אינו 'פתוח' ⇒ **הוא נעלם ממסך מנהלת הגיוס**, ואם דיילת תבטל באירוע 'מוכן' שמתקיים מחר — **היא לא תראה זאת**."*
 2. *"ואחרי התיקון מ4 יציג פרויקטים שהוא לא הציג קודם — **זה הרצוי**."*
 3. *"ואותו תיקון חייב לכלול את `cancelled`: ברגע שמ6 יכתוב `cancelled`, האירוע ייעלם ממסך מנהלת הגיוס בעוד השיבוצים נשארים `finally_approved`."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
 
 **Step 2.7 · Align `smartMatch.js` to the real attendance column names** ⚠️ shared-surface *(`src/lib/smartMatch.js`)*
-**Files:** `src/lib/smartMatch.js` · `src/lib/smartMatch.test.js`
+**Files:** `src/lib/smartMatch.js` · `src/lib/smartMatch.test.js` · 🔴 **`src/lib/smartMatchCandidates.js`** *(the file this step used to omit entirely)*
 🔴 **The file lives at `src/lib/smartMatch.js`. `spec.md:527` gives a path under `src/modules/04_hostesses/` — that path is wrong.**
 **What to do (AR-7's three measured problems, each needing its own fix):**
 1. `smartMatch.js:43-52` keys on **Hebrew in a single `outcome` field**; the DB now has **three English columns**. Rewrite the mapping to read `(attendance_status, lateness_level, no_show_reason)`.
 2. 🔴 **The seventh value is not an attendance value at all** — `WITHDREW` maps to `approval_withdrawn`, which is an **`assignment_status`**, not one of the seven attendance options. **A hostess who cancelled after approval is not on the closing list at all**, so her `0.5` must be sourced from `assignment_status`, on a separate branch.
 3. Derive the two booleans `projectCancelled` (from `projects.project_status = 'cancelled'`) and `eventPassed` (from `final_event_date < today`).
 4. ⚠️ **Silent-failure risk: `smartMatch.js:207` is `if (value === undefined) continue`** — a mis-mapped value **drops the row silently** instead of throwing. **Add a test that feeds an unknown combination and asserts it throws or is counted**, not skipped.
-🔴 **The seven weights themselves are correct byte-for-byte** between `PROJECT_MASTER:482` and `smartMatch.js:56-63` — **do not touch the numbers.** The mapping is what changes.
+5. 🔴 **`src/lib/smartMatchCandidates.js:81` hard-codes `attendance: []`** — with its own comment saying so (`:79-80`: *"🚧 מ6 — סימוני-הנוכחות נוצרים בסגירת האירוע ואינם קיימים היום"*). **Wire it to the real rows M6 now writes.** ⚠️ **The failure if you skip it is the module's quietest:** the code stays green, every test passes, and the moment M9 flips `מרכיב_אמינות_פעיל` **every hostess returns "no data"** — a uniform blank, not an error. **The file appeared ZERO times in this guide until 14/08.**
+🔴 **📏 The numbers that must not move — and "seven" is wrong, so do not write it (AR-7).** `ATTENDANCE_OUTCOMES` (`:43-52`) has **EIGHT** members; `ATTENDANCE_VALUES` (`:56-63`) has **SIX** scored entries — `SICK` and `EXCUSED` are deliberately unscored (`:54-55`). **The six values are frozen. The mapping around them is what changes.** ⚠️ **`ATTENDANCE_VALUES` is `const` and NOT exported** — a test cannot import it; assert through the scoring function.
 🚫 **Do not flip `מרכיב_אמינות_פעיל` to `true`.** That is a params change owned by M9 (`🚧 מ9 ← מ4`, `PROJECT_MASTER:465`), and `reliabilityScore` is already called in every ranking with weight 0.
 **Grep before editing:** `grep -rn "smartMatch" docs/micro_guides/`.
-**🔻🤖 Verify:** `npm run test:run` → green, **and `smartMatch.test.js`'s existing assertions still pass unchanged** (the weights did not move). New tests cover all seven attendance shapes plus `approval_withdrawn` plus one unknown shape.
+
+**🔻🤖 Verify — and read this before running it, because the old wording was impossible to satisfy:**
+> 🔴 **This step CHANGES the record contract** (`outcome` → three columns), so `smartMatch.test.js`'s existing fixtures are written against the **old** shape and **cannot** all pass unchanged. The previous instruction demanded exactly that, and a build session obeying it literally would either revert the step or fake the pass. ⇒ **the correct split:**
+> **(a) MUST NOT MOVE — the six `ATTENDANCE_VALUES` numbers.** The nine existing assertions that depend on them (`smartMatch.test.js:241-270`, via `ATTENDANCE_OUTCOMES`) keep asserting the same *scores*, and their expectations are **not** to be edited.
+> **(b) MUST BE REWRITTEN — the fixtures that build a record.** Migrating a fixture from `{outcome: 'איחור_בינוני'}` to `{attendance_status:'late', lateness_level:'medium'}` is the step's whole purpose, and rewriting it is **not** a regression.
+> **(c) MUST BE ADDED — the unknown-shape test.** Feed a combination that maps to nothing and assert it is **reported**, not skipped. 🔴 **Without it the guard is untestable**, because `:207`'s `if (value === undefined) continue` swallows it: `count` never increments, the score comes out of the remaining rows, and **the number looks plausible.**
+> **(d) NOTE, not a task:** `EXCUSED` is referenced by **zero** existing tests. M6 does not owe that coverage, but say so rather than letting the closing audit rediscover it.
+
+`npm run test:run` → green, count **strictly greater than 752**. `smartMatchCandidates` returns a **non-empty** `attendance` array for a hostess with closed assignments — **assert non-empty explicitly; `[]` is the bug this step exists to kill.**
 **מה ייחשב עובד** *(`spec.md` §12⑤, quoted)*
 1. *"בלשון הקוד: 'שמות שדות-הרשומה (`outcome`/`projectCancelled`/`eventPassed`) הם **הנחה שלי** — **מ6 הוא שיקבע את שמות-העמודות בפועל**'. ⇒ שם שונה ⇒ `reliabilityScore` תקבל `undefined` ותחזיר ציון שגוי, **בשקט**."*
 2. *"⇒ פריט-ביצוע מפורש: אחרי המיגרציה, ליישר את `smartMatch.js`."*
 3. *"וההדלקה עצמה היא שינוי-פרמטר ולא שינוי-קוד: `מרכיב_אמינות_פעיל = false` ב-`params`, ו-`reliabilityScore` כבר נקראת בכל דירוג עם משקל 0."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1204,6 +1350,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 2. *"`בוטל` בלי ייחוס — סיבת-הביטול יכולה להיות לקוח/כוח-עליון/אחר… ⇒ 'בוטל על ידי הלקוח' היה **שקר** בכוח-עליון."*
 3. *"‏`אין צורך להגיע` נושאת כסף בישראל — לפי צו-ההרחבה לאולמות אירועים, עובדת ש**הגיעה** ולא עבדה זכאית לחצי יום; מי שעודכנה בזמן — לא."*
 4. *"⚠️ הטריגר צר ממה שהוא נקרא: שינוי **תאריך** אינו שולח את המייל השני — ㉑ מאפס אישורים ומזמין מחדש. רק **מיקום (㉒) ושעות (㉝)** שולחים עדכון בעוד האישור שלה עומד."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1220,13 +1367,14 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 🚫 **And do not build a regression test on a "gap" between catalogue and frozen price for quote `#6` — there is none, and it would fail forever** (§3.1, corrected 14/08).
 **מה ייחשב עובד** *(`spec.md` §"מה ייחשב עובד" #9, quoted)*
 1. *"החישוב הידני שבאפיון תואם את מה שהקוד מחשב — `5,355.00 ₪` · `6,318.90 ₪` · `1/6` · `0/1` · `1,085.00 ₪`."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
 
 ### Phase 3 — UI
 
-**Phase gate (§9h):** sweep §3.5 for Phase-3-anchored OPEN items (**A9 · B1 · B13 · B14 · E3**) and settle them at the door.
+**Phase gate (§9h):** sweep §3.5 for Phase-3-anchored OPEN items — **A9 · B7 · B13 · E3** — and settle them at the door. *(Changed 14/08: **B1** and **B14** are closed by Ishay's two reality rulings R-1 and R-2 and were removed from §3.5; **B7** was cited by step 3.5 while having no row at all and now has one.)*
 
 🔴 **The eight mockups are APPROVED.** ⇒ **appearance** — layout · order · colour · label wording · emphasis — **is built as drawn, and is not re-presented for approval.** **Behaviour, data and settings** follow the spec even against the drawing. Neither ⇒ stop and ask Ishay.
 🔴 **Every Hebrew string comes from the approved card or mockup verbatim.** The vocabulary is locked (`spec.md` §1.8) and a paraphrase is a bug.
@@ -1234,13 +1382,29 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 
 ---
 
-**Step 3.0 · 🔧 Shared-component checkpoint**
-**Files:** read-only sweep of all 8 cards + all 8 mockups; then whatever `src/components/` changes it produces.
+**Step 3.0 · 🔧 Shared-component checkpoint** ⚠️ shared-surface *(`src/components/**`)*
+**Files — 🔴 named, not "whatever it produces". This step is the OWNER of every shared-component edit in module 6, and until 14/08 no step owned any of them:**
+`src/components/StatusTag.jsx` · `src/components/StatTile.jsx` · `src/components/Money.jsx` · **`src/components/Ltr.jsx` (new)** · **`src/components/PermissionAwareEmpty.jsx` (new)** · `src/components/LoadingOrError.jsx` · plus the read-only sweep of all 8 cards + all 8 mockups.
+
+**🔴 The six shared-surface edits this step owns — each with one home and one enforcing test:**
+
+| # | Edit | Shape | Its test |
+|:-:|---|---|---|
+| **α** | `StatusTag.jsx` — **project statuses** | 🔴 **`...PROJECT_STATUS_TONES` spread in from `src/lib/projects.js`. 🚫 Never retype the eight Hebrew labels here** — a retyped label that differs by one character is invisible (`:50` falls to `TONES.muted`, byte-identical to `ממתינה למענה`) | step 2.1 guard ① — the unmapped-label RED case |
+| **β** | `StatTile.jsx:29` — add `items-start` | Align to the approved mockup's `.cell, .tile{align-items:flex-start}` (`02_project_card_approved.html:227`). 🔴 **Measure `getBoundingClientRect().left` of label vs value on a live module-2 tile BEFORE and AFTER, and record both numbers** — see S-25: the mockup's browser measurement is real, but that the React component splits **is not established from the code**, and this step settles it rather than assuming it | the two recorded measurements, in the step |
+| **γ** | `Ltr.jsx` — **new** | Extract the `dir="ltr"` + `inline-block [unicode-bidi:isolate]` pair from `Money.jsx:23-24`; re-consume it in `Money` **and** in `RatingStars.jsx:78-79`, which is a **second live copy of the same two attributes**. 🔑 **Why a component and not the scanner:** `check:bidi` fires only on a digit touching `₪ ★ ×` ⇒ **`1/6`, `0/2` and `חסרות 5` pass green**, and those are most of what M6 renders | a unit test asserting `<Ltr>` emits both attributes together — the `Money`/`LtrFieldGroup` principle: one component emits all the parts, so deviation is not expressible |
+| **δ** | `PermissionAwareEmpty.jsx` — **new** | **The three states in one component: `empty` · `noPermission` · `error`.** 🔴 **The denied counter renders `—`, never `0`.** See S-26 for why two states are literally unimplementable here | a unit test per state, and a test asserting the denied count renders `—` |
+| **ε** | `LoadingOrError.jsx` — feminine retry | 🔴 **`נסה שוב` is HARD-CODED at `:132`, not a default — there is no prop to override.** ⇒ **add an optional `retryLabel` prop whose default is the existing `נסה שוב`** (additive, zero behaviour change for the four existing callers) and have M6 pass `נסי שוב`. 🚫 **Do not change the hard-coded string itself** — that is the cross-system sweep, `🚧 מ12` | a test asserting the default is unchanged **and** that a passed label wins |
+| **ζ** | Shift-lead badge | `StatusTag` with `tone="outline"`. 🚫 **No ★** — `RatingStars.jsx:82` renders `{rating} ★` and the glyph already means "rating" *(the project's word for it is **התרשמות**, not דירוג — `RatingStars.jsx:10-11`)* | covered by α's map test |
+
+🔴 **All six are `⚠️ shared-surface`: grep every other open micro-guide for each file before editing, and shape each change additively.**
+
+**Then the ordinary checkpoint sweep:**
 **What to do:** list every element that repeats across surfaces and rule shared-vs-local per item. **Default: appears in 3+ surfaces ⇒ shared, in `src/components/`.** ⚠️ **Check `src/components/` first — most of this exists, and the finding is usually "reuse this", not "build a new one":**
 
 | Existing component | How M6 uses it | The mine |
 |---|---|---|
-| **`StatusTag`** | 8 project statuses + 6 assignment statuses + 3 logistics statuses | 🔴 **Key is the displayed Hebrew label; a miss falls to `muted` silently.** Written for 10 keys, holds 18, M6 nearly doubles it ⇒ **`describe.each` over all new labels** |
+| **`StatusTag`** | 8 project statuses + 6 assignment statuses + 3 logistics statuses | 🔴 **Key is the displayed Hebrew label; a miss falls to `muted` silently** (`:50`). 📏 **Counted 14/08: `TONE_BY_LABEL` holds exactly TEN entries — 2 hostess states + 6 assignment statuses + 2 derived (`פג תוקף`, `הושלם`) — and ZERO project statuses.** M6 adds 8 ⇒ 18. ⚠️ **Five of the ten keys are unquoted, so a grep for `'…':` undercounts by five** |
 | **`StatTile`** | 2 tiles on surface 1 · 2 on surface 2 · 3 on surface 3 · 3 on surface 4 · 2 new on surface 8 | 🔴 **A numeric `value` is auto-routed through `Money`** (`StatTile.jsx:37`) ⇒ **`value={4}` renders `"4 ₪"`.** `מספר אירועים` **must be passed as a string.** Wrapper is `flex flex-wrap`, **never a full-width `grid`** (Ishay 08/08) |
 | **`Money`** | the only way to render `₪` | — |
 | **`LoadingOrError`** | every surface; `skeleton={{variant:'table'\|'cards'\|'card'\|'fields'\|'page'}}` | **The only shared skeleton in the project.** Tiles and tabs get their own skeleton — an empty counter is worse than a loading one |
@@ -1260,6 +1424,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 1. *"premature abstraction designs a component with **no known uses**; here **every use is already written and approved before a line of code exists**, so this is counting, not predicting."*
 2. *"‏`StatTile`… the correct shape — label above value — was only visible by comparing two real implementations."*
 3. `src/CLAUDE.md`: `⛔ npx shadcn add` overwrites the hand-RTL'd primitives back to LTR **with no error and no failing test**.
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1272,6 +1437,8 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 - **Three tabs with counters, in order:** `בעבודה` · `לסגירה` · `הכול`. **The counter stays visible at `0`** (⑦).
 - **Nine status filter pills — in the `הכול` tab only**, in the order the mockup draws them: `הכול` · `טרם החל` · `בתהליך` · `מוכן לביצוע` · `ממתין לסגירה` · `ממתין לחשבונית` · `ממתין לתשלום` · `פרויקט הסתיים` · `בוטל`.
 - **Sort line, text only:** `ממוין: חסרים תחילה, ובתוכם לפי קרבת האירוע`. **Column headers are not sortable** — the order *is* the screen's answer (⑧).
+  - 🔴 **`mockup-data.md` contradicts itself on this exact ordering, and step 3.1 is where it gets settled** *(it used to be recorded in §10 with no owning step)*: `:164` says verbatim *"🚫 אל תשים אותו בראש רשימה — הוא ייראה כמו באג-עיצוב"* while **`:293-294` numbers the same two rows in the opposite order.** **S-7 rules the behaviour** — event proximity for a past date is **absolute distance both ways** — ⇒ **build S-7, and fix `mockup-data.md`'s numbering to match in the same step.** *(That file is `docs/specs/`, which is living, not frozen — editing it is allowed. 🚫 The approved **mockups** are not: `docs/mockups/**/approved/*.html` carries no hook protection, so an edit there succeeds silently — do not make one.)*
+- 🔴 **The no-location-column deviation gets a code comment, in this step** *(it used to be a §10 line saying "this sentence must appear in the code comment", with no step to put it in)*: the overview has **no location column** while module 4's *built* overview has one (`OverviewTab.jsx:225,301`). **Write the reconciling sentence into `ProjectsPage.jsx` as a why-first comment:** in M4 location **is** a ranking input (0.25 of the score); in M6 it has no consumer that separates projects. **Without it the first engineer to open both screens reads the absence as an oversight** (S-8).
 - **Columns — `בעבודה` and `הכול` (7):** `אירוע` · `מתי` · `דיילות` · `לוגיסטיקה` · `מצב` · `מה חסר` · blank. **`לסגירה` (6): the `לוגיסטיקה` column drops out.**
 - **Row link:** `לכרטיס →`, and in the `לסגירה` tab `לסגירה →`.
 - **Tab state in `useSearchParams`, not `useState`** (S-18) — ⚠️ **and swapping a setter for the URL silently breaks every `setX(v => …)`**; it happened in `CustomersPage` on 30/07.
@@ -1292,6 +1459,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 4. The mockup's own colour legend: *"🔴 אדום = לא נשלח אף זימון לדיילת… 🟠 ענבר = חסר שיש לו מענה בדרך… ⚪ אפור = עובדה, ואין בה מה לעשות. 🚫 קרבת-האירוע לעולם אינה נצבעת."*
 5. The mockup's black-and-white test: *"כל שורה כאן נקראת במלואה גם בלי צבע"* — **run it: view the screen greyscale and confirm every row still says what is missing.**
 6. **יחידה-ספציפית, both directions:** מנהלת לוגיסטיקה sees the rows and real logistics counts but **no `שינוי תכולה` and no `ביטול פרויקט` control anywhere**, and `הכנסה מתוכננת` reads `—`; מנהלת פרויקטים sees all of it. **Both, not only the one you wanted to see.**
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1302,11 +1470,16 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 - Breadcrumbs `פרויקטים | כנס לקוחות שנתי`; header = title + status tag inline + subtitle `מדיטק פתרונות בע"מ · פרויקט #8 · נוצר מהצעה #6`.
 - **Two header buttons, in DOM order:** `ביטול פרויקט` (`btn quiet`) then `שינוי תכולה` (`btn primary`). 🔴 **`ביטול פרויקט` lives on the shell, not in the closing tab** (S-14) — the closing tab only opens after the event, and cancellation is legal *"בכל שלב פעיל"*. ⚠️ **This needs a `סטייה מ-5.6.7` note in the living docs — not optional.**
 - **Identity card `פרטי האירוע`** with a `✎ עריכת פרטים` row action, and **8 cells in this order:** `תאריך האירוע` · `שעות האירוע` · `מיקום` · `איש קשר אצל הלקוח` · `אורחים מוערכים` · `הכנסה מתוכננת` · `מנהל/ת הפרויקט` · `משוב הלקוח`.
+  - 🔴 **Plus a NINTH cell, `סיבת הביטול`, rendered ONLY when `project_status = 'cancelled'`** (S-30). It shows `cancel_reason`, `cancel_type`'s label, and the `cancelled_at` / `cancelled_by` stamp. **Why this is a defect and not an addition:** surface 7's dialog tells the user, in its own approved copy, *"היא נשמרת בכרטיס והיא ההסבר היחיד שיישאר אחרי הביטול"* — **and no screen in the module renders it.** ⇒ **the system makes a promise it does not keep**; that is a broken promise, not a design choice. **The cell is where the promise is kept.**
   - 🔴 **`הכנסה מתוכננת` renders `—` for no-quote and for no-permission, and only a genuine zero renders `0.00 ₪`** (S-2). Sub-line: `לפני מע"מ, אחרי הנחה של 15%` — **it is pre-VAT**, and showing `6,318.90` there passes every schema check while being wrong (§3.1②).
   - 🔴 **Owner phone and email on two separate lines** (S-23) — *"לרצף בן שני ערכים אין סדר נכון בכלל ⇒ התיקון הוא לפרק את הרצף."*
   - 🔴 **`משוב הלקוח` is read-only** — one cell, not four tiles (S-21); no editable field, no clickable stars. Empty state `טרם התקבל משוב` with sub `הסקר יוצא בסגירת האירוע · הציון והסיבה מוזנים במסך הכספים`. Four phrasings for `feedback_status`, including S-22's correction that `completed` with a NULL score needs its own wording.
 - **Two readiness tiles:** `צוות דיילות` `1/6` sub `חסרות 5 דיילות שאושרו סופית` · `לוגיסטיקה ומוצרים` `0/2` sub `שני הפריטים טרם הוזמנו`. **Tiles are not clickable** (S-16, measured across all 15 usages). 🚫 **No stepper** (㉖).
-- **Three tabs:** `לוגיסטיקה ומוצרים` · `צוות דיילות` · `סגירת אירוע` — the third **disabled** until `event_finished`, with the visible reason `(נפתחת אחרי האירוע)` **(A9 — surface 2 owns the shell)**.
+- **Three tabs:** `לוגיסטיקה ומוצרים` · `צוות דיילות` · `סגירת אירוע` — the third **disabled** until `event_finished` **(A9 — surface 2 owns the shell)**.
+  🔴 **The closing tab has THREE states, not two, and the draft carried only one. All three are specified here so no build session has to guess:**
+  **‏① Before the event (`not_started`/`in_progress`/`ready`) — disabled**, reason text `(נפתחת אחרי האירוע)`.
+  **‏② Between the event ending and the 02:00 cron — disabled, but the sentence above is FALSE.** The DB rule is right (the status is still `ready` until `module6-event-finished` runs), **but the event already happened**, and telling Dana the tab "opens after the event" on the morning after it **reads as a broken screen.** ⇒ **when `final_event_date < current_date` and the status has not moved yet, the reason text becomes `(נפתחת בסריקה היומית — האירוע נסגר לסגירה מחר ב-02:00)`.** 🔑 **Do not "fix" this by moving the gate to the date** — the status machine is the single writer (⑳/㉚), and a second, UI-side definition of "the event passed" is exactly the drift ⑫ was written to stop. **The sentence changes; the gate does not.**
+  **‏③ After the operational closing (`awaiting_invoice` and beyond) — 🔴 the tab STAYS, read-only.** ⚠️ **By the draft's own gate it would re-disable**, because `awaiting_invoice` is not `event_finished` — i.e. Dana closes the event and the tab she just used **vanishes**, taking the record of what she entered with it. **`screens-approved.md:1309` already specifies the answer and the draft did not pick it up: the tab remains, its fields are read-only, and it carries a `נסגר ב-… על-ידי …` stamp** built from `operationally_closed_at`/`operationally_closed_by` (step 1.1's two columns — **this is their on-screen consumer, and ⑭ justified them by having one**).
 - **Edit dialog `עריכת פרטי האירוע`:** lead *"שינוי כאן משנה את הפרויקט בלבד — ההצעה שהלקוח אישר נשארת כפי שהיא."*; three fields with the mockup's exact placeholders and helper texts; footer `שמור ושלח זימון מחדש` then `ביטול`.
   - 🔴 **The amber consequence banner appears BEFORE confirmation when the date changed** (㉑), naming the affected hostesses and the metric change: *"⚠ שינית את תאריך האירוע."* / *"דיילת אחת כבר אושרה סופית לתאריך הקודם — נועה שגיא. השמירה תבטל את האישור שלה ותשלח לה זימון מחדש לתאריך החדש. מדד הצוות יחזור מ-1/6 ל-0/6."*
   - Location helper: *"שינוי מיקום אינו מבטל אישורים. הדיילות מקבלות עדכון, והנקודה על המפה נקבעת מחדש."* Hours helper: *"שינוי שעות אינו מבטל אישורים. הדיילות מקבלות עדכון שנוקב בשעות החדשות."*
@@ -1321,6 +1494,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 3. §2.5(ב): *"והמוקש השני *שקט*, ולכן חמור יותר: `set_project_coordinates` כותבת רק כשהעמודות ריקות ⇒ שינוי כתובת משאיר את הנקודה על המפה על הישנה, בלי שגיאה ובלי רמז. **קואורדינטה שגויה נראית כמו עובדה ומדרגת דיילות לפי המקום הלא-נכון.**"*
 4. §3.1②: *"`הכנסה מתוכננת` היא **לפני מע"מ**. מימוש שיציג `6,318.90` שם **עובר כל בדיקת-סכימה** ושוגה."*
 5. **יחידה-ספציפית:** מנהלת לוגיסטיקה and מנהלת גיוס see the card and its tabs but **neither header button is rendered for them**, and the `✎` row action is absent — **not present-and-disabled.**
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1333,15 +1507,19 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 - **Main table, 4 columns:** `פריט` · `כמות מתוכננת` · `כמות בפועל` · `מצב הפריט`. **Item statuses are READ-ONLY here** — the explainer under the table says so verbatim: *"שלושת מצבי הפריט, לפי הסדר: טרם החל, הוזמן, מוכן. מי שמעדכנת אותם היא מנהלת הלוגיסטיקה, במסך שלה. כאן הם לקריאה בלבד."*
 - 🔴 **Only `ready` counts toward the readiness metric.** *"הוזמן" אינו נספר* ⇒ an ordered-but-not-arrived item is **identical in the metric** to one nobody touched, **and different in its tag** — which is why the tag stays even when there is a metric (`spec.md` §1.3).
 - **History section `היסטוריית שינויי תכולה`**, 6 columns: `מתי` · `פריט` · `השינוי` · `סיבה` · `מי ביצעה` · `השפעה על ההכנסה`, plus the totals sentence. 🔴 **It lives here, in Ishay's words, because *"מנהלת הפרויקטים משנה — בלוגיסטיקה מתעדכנת הדרישה החדשה"* ⇒ history sits where its result is visible.**
-- 🔴 **Two states that look identical and must not:** the legal empty — *"לא הוזמנו מוצרים לאירוע הזה — ההצעה כללה שירותי דיילות בלבד."* / *"מצב תקין. פרויקט בלי פריטי לוגיסטיקה נספר כמוכן לוגיסטית."* — versus the failure — *"לא ניתן לטעון את נתוני הלוגיסטיקה של הפרויקט."* / *"להצעה שאושרה יש פריטי מוצר, ולכן רשימה ריקה כאן היא תקלה ולא מצב תקין."* + `נסי שוב`.
+- 🔴 **THREE states that look identical and must not — and two of them are unimplementable, so read this before coding the tab** (S-26, and `PermissionAwareEmpty.jsx` from step 3.0):
+  - **① Legal empty** — *"לא הוזמנו מוצרים לאירוע הזה — ההצעה כללה שירותי דיילות בלבד."* / *"מצב תקין. פרויקט בלי פריטי לוגיסטיקה נספר כמוכן לוגיסטית."*
+  - **② Load failure** — *"לא ניתן לטעון את נתוני הלוגיסטיקה של הפרויקט."* / *"להצעה שאושרה יש פריטי מוצר, ולכן רשימה ריקה כאן היא תקלה ולא מצב תקין."* + `נסי שוב`.
+  - **③ 🔴 NO PERMISSION — the state the draft was missing, and without it ① and ② cannot be told apart at all.** The discriminator that distinguishes ① from ② is *"does the approved quote contain product lines?"* — i.e. **a read of `quote_services`, which is gated on `'הצעות מחיר'` where מנהלת גיוס and מנהלת לוגיסטיקה are both `➖`** (`PROJECT_MASTER:193-194`). ⇒ **for exactly the two roles this distinction was written for, the discriminator itself returns `{data:null, error:null}` — byte-identical to "the quote has no products".** **Two states cannot express three situations.** ⇒ **the tab renders `PermissionAwareEmpty` with `noPermission`:** `🔒` + *"אין לך הרשאה לצפות בפריטי ההצעה, ולכן לא ניתן לקבוע אם הרשימה ריקה כדין."* 🔴 **And the readiness metric renders `—`, never `0/0` and never "מוכן"** — *"אפס שורות ⇒ הושלם"* applied to an unreadable table is the module's most dangerous lie.
 - Colour budget the mockup declares: **zero red rows in the main table; one amber row (the increase, which creates a gap); the only red on the screen sits in the error panel.** An increase is amber (it creates a shortfall); a **decrease is grey, not amber**.
 - 🚫 **No "add first item" empty-state CTA** — logistics rows are born automatically with the quote approval; adding an item **is** a scope change and goes through the button above, with a mandatory reason.
-**🔻🤖 Verify:** screenshots of the populated tab, the legal empty state, and the failure state — **side by side**, proving they read differently. Then, signed in as **מנהלת גיוס** (blocked on `'לוגיסטיקה'` under AR-2), the tab shows the **failure** state, not "no products ordered". 🔴 **This is the single most dangerous silent failure in the module** and the screenshot is the evidence.
+**🔻🤖 Verify:** screenshots of the populated tab and of **all three** states — legal-empty · no-permission · load-failure — **side by side, proving all three read differently.** Then, signed in as **מנהלת גיוס** (blocked on `'לוגיסטיקה'` under AR-2 **and** on `'הצעות מחיר'`), the tab shows the **no-permission** state — 🔴 **not "לא הוזמנו מוצרים", and not a bare error either.** 🔴 **This is the single most dangerous silent failure in the module** and the three screenshots are the evidence.
 **מה ייחשב עובד** *(`spec.md` §"מה ייחשב עובד" #8 + §1.3 + `screens-approved` מסך 3, quoted)*
 1. #8: *"‏RLS-בלי-policy מחזיר `{data:null, error:null}` — **ובמ6 זה חמור פי-כמה מאשר במ4:** רשימת-לוגיסטיקה ריקה **אינה נראית כשגיאה, היא נראית כ-100% מוכן**, כי 'אפס שורות ⇒ הושלם'."*
 2. §1.3: *"ורק `ready` נספר במדד-המוכנות. 'הוזמן' אינו נספר ⇒ פריט שהוזמן ולא הגיע **זהה במדד** לפריט שאיש לא נגע בו, **ושונה ממנו בתג**."*
 3. The mockup's own error-state comment: *"בלי ההבחנה הזאת המסך יאמר 'לא הוזמנו מוצרים' על פרויקט שיש בו 300 תגים."*
 4. **יחידה-ספציפית:** מנהלת לוגיסטיקה sees the rows and **no `שינוי תכולה` button** (that is the project manager's action); מנהלת פרויקטים sees both.
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1353,7 +1531,9 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 - **One headline sentence — the screen's only red statement**, and the words carry it without the colour: *"⚠ חסרות 5 דיילות — שני הזימונים הפתוחים פגו אחרי 48 שעות, כלומר אין קישור חי: גם דיילת שתרצה לאשר עכשיו לא תוכל. הפעולה הבאה היא זימון חדש, לא המתנה."*
 - Bar: `שנה כמות דיילות` (secondary) + `פתח שיבוץ חכם →` + sort line `ממוין: בפנים · פתוח · יצא`.
 - **Main table, 4 columns:** `דיילת` · `סטטוס` · `מתי` · **`מה זה אומר`** — the same logic as `מה חסר`, at hostess level: **a sentence, never a score.**
-- **Status labels come from `src/lib/hostesses.js:22-37` and are not re-invented:** `ממתינה למענה` · `אישרה זמינות` · `סירבה` · `אושרה סופית` · `שוחררה` · `ביטלה אחרי אישור`, plus the display-derived `פג תוקף` (`pending` **and** 48h since `invite_sent_at`). ⚠️ **There is a SECOND derived label the approved spec does not know about — `הושלם`** (`hostesses.js:35-37,244`), which lights up on every approved hostess whose event has passed, i.e. **exactly on the screens M6 builds.** 🔴 **Decide and record: either render it or suppress it, and write the choice into §10.**
+- **Status labels come from `src/lib/hostesses.js:22-37` and are not re-invented:** `ממתינה למענה` · `אישרה זמינות` · `סירבה` · `אושרה סופית` · `שוחררה` · `ביטלה אחרי אישור`, plus the display-derived `פג תוקף` (`pending` **and** 48h since `invite_sent_at`). ✅ **plus the second display-derived label, `הושלם`** (`hostesses.js:35-37,244`) — which lights up on every approved hostess whose event has passed, i.e. **exactly on the screens M6 builds.**
+  > 🔴 **CORRECTION, measured `14/08/2026` — the earlier claim here was false in three ways and a build session would have acted on it.** It said `הושלם` *"the approved spec does not know about"* and *"appears zero times in all three spec files"*. **It appears 4 × in `spec.md` · 3 × in `processes-approved.md` · 6 × in `screens-approved.md`** — thirteen times. **And `screens-approved.md:1105` already RULES it**, verbatim: *"**'פג תוקף'** ו**'הושלם'** — **נגזרות בתצוגה, ואינן סטטוס שביעי.**"* **It is also already in `StatusTag`'s `TONE_BY_LABEL` (`:41`, tone `ok`).** ⇒ 🚫 **Nothing here is open, and there is no "render or suppress" decision to take.** **Render it, as a derived label, exactly like `פג תוקף`.**
+  > ⚠️ **The one genuinely open sliver, and it is a render question only:** the six locked statuses are the DB vocabulary (`schema.sql:786`), and `הושלם` is derived at display time from `finally_approved` + a past event date — **so the rounds-history section, which shows the RAW status, must NOT show it.** *"כאן מוצג הסטטוס הגולמי כפי שנרשם — לא התווית הנגזרת שלמעלה"* is already the card's own rule; **apply it to `הושלם` as well as to `פג תוקף`.**
 - **Rounds history `היסטוריית הסבבים`** — collapsible, 6 columns, showing the **raw** status *"כאן מוצג הסטטוס הגולמי כפי שנרשם — לא התווית הנגזרת שלמעלה"*, with the footnote *"9 שורות במסד, 6 דיילות על המסך: הסטטוס הקובע לכל דיילת הוא של הסבב האחרון שלה. הסבבים הקודמים נשמרים ואינם נמחקים."*
 - **The `שינויי-תכולה בכמות הדיילות` section**, currently a fact line.
 - **Two variant states:** no invitation sent yet (with `פתח שיבוץ חכם →`) and cancelled project (tag `בוטל` + the released list + a **disabled** `שנה כמות דיילות` with the reason *"הפרויקט בוטל — לא ניתן לשנות תכולה."*).
@@ -1364,6 +1544,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 2. §3.2: *"9 שורות ו-6 דיילות ⇒ ספירה נאיבית של `COUNT(*)` תמנה דיילת שסירבה-ואז-זומנה-שוב פעמיים."*
 3. §1.8: *"`מה זה אומר` (משטח 4) — אותו היגיון"* as `מה חסר`: words, not a score.
 4. The mockup's own exclusion list, verbatim: *"🚫 ובמכוון אינו כאן: כפתור הפעולה הראשית של הכרטיס · מדד הלוגיסטיקה · פעולות-שיבוץ פר-שורה · שדות נוכחות ואיכות."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1372,11 +1553,13 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 **Files:** `src/modules/06_projects/ClosingTab.jsx` · mockup `05_tab_closing_approved.html` · card `screens-approved.md:1191-1545`
 **What to do — the heaviest surface in the module, and the rule that holds the whole thing:**
 > 🔑 **Nothing on this tab is saved before `שמור ושלח`.** Every choice, keystroke and upload sits in an **in-memory draft** and is written in **one atomic action** (ט4-ד).
+> 🔴 **And the in-memory draft is ALL there is — R-1, Ishay 14/08/2026.** Asked whether Dana ever closes an event across two sittings, he answered **`לא`**. ⇒ 🚫 **No draft table, no draft columns, no autosave, and no navigation guard.** **Do not build a "are you sure you want to leave?" prompt** — that is logic for a case whose existence was denied, and it costs a real interaction on every legitimate exit.
+> 🔴 **`assignments.travel_amount` does not appear on this tab — R-2, Ishay 14/08/2026: `לא קורה`.** Travel is never agreed in the field; it is a fixed `params` sum owned by M8 (§7.69), by the same reasoning that made `personal_bonus` M8's.
 
 - **Section 🅰️ `מה קרה בפועל — ברמת האירוע`**, lede *"שלושת השדות חובה. בלעדיהם לא ניתן לשמור ולשלוח."*, three fields:
   - `שעות ביצוע בפועל · חובה`, unit `שעות`, helpers `מתוכנן: 16:00–22:00 · 6.0 שעות` and `קובע את ברירת-המחדל בעמודת "שעות בפועל" של כל דיילת — וניתן לדרוס אותה פר-שורה`.
   - `כמות אורחים בפועל · חובה`, unit `אורחים`, helpers `מתוכנן: 200 אורחים` and `לתיעוד ולדו"חות בלבד — אינו משנה את החיוב ללקוח`.
-  - `דוח-סיכום אירוע · חובה` — file row with `הורדה` / `החלפת קובץ`, helper `PDF · JPG · PNG · עד 10MB. הקובץ נשלח ללקוח כקובץ מצורף`. ⚠️ **See §10 verification #6 before shipping this string.**
+  - `דוח-סיכום אירוע · חובה` — file row with `הורדה` / `החלפת קובץ`, helper 🔴 **`PDF · JPG · PNG · עד 2MB. הקובץ נשלח ללקוח כקובץ מצורף`** — **`2MB`, and the number is rendered from `REPORT_MAX_BYTES`, never typed** (step 1.5). 🚫 **Not `10MB`.** **Why it changed:** the mail path's hard wall is **3,000,000 bytes** (`MAX_ATTACHMENT_BASE64_CHARS = 4_000_000` at `src/lib/email.js:29`, base64 3→4), so a 6 MB PDF would upload fine, satisfy the old promise, **and then fail at send — after the closing had already committed.** Ruled 2 MiB in `db_roadmap` §5 (Ishay 14/08/2026). ⚠️ **`screens-approved.md:1398` and the approved mockup both still say `עד 10MB`** — that is a **superseded approved string**; record it as a dated pointer in §10, 🚫 **and do not edit the approved mockup file** (it carries no hook protection, so the edit would succeed silently).
   - 🔴 **`dir="ltr"` on every numeric input** — the house pattern (`PricingParamsCard.jsx:115-118`); without it the value sticks to the right edge, 120px away from the word `שעות`, and value and unit split apart.
   - 🔴 **A Hebrew filename is NOT wrapped in `.ltr`** — the wrapper tears the extension to the wrong end (measured). The three extensions `PDF · JPG · PNG` are **one atomic run**, not three separate `.ltr` spans.
 - **Section 🅱️ `מה קרה עם כל דיילת`**, lede quoted verbatim from the card: *"נוכחות היא עובדה — היא מזינה את ציון-האמינות בשיבוץ החכם. סימון-איכות הוא שיפוט — הוא קובע את מי נציע לעיריית חדרה בפעם הבאה. שתי שאלות שונות, ושתיהן חובה בכל שורה."*, counter `5 דיילות שובצו · כולן סומנו`, **5 columns:** `דיילת` · `נוכחות` · `סימון-איכות` · `שעות בפועל` · **`עלות בפועל`** *(🚫 **not `שכר`** — cost is M6's, wage is `§7.19` and M8's)*.
@@ -1384,12 +1567,16 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
   - **Three quality pills:** `מצוינת` · `בסדר` · `לא לשלוח שוב` — the last opens a mandatory reason field under the row. 🔴 **The DB value is `לא_לשלוח`.** The constraint `customer_hostess_preference_negative_needs_reason` **already exists**, so a form that misses the reason **fails loudly, and that is correct.**
   - 🔴 **A `no_show` row: quality pills DISABLED (not empty) with the on-screen reason *"לא ניתן לסמן איכות — לא הגיעה, ואי-אפשר לשפוט מי שלא ראית."*, and hours forced to `0` and disabled** (ט4-א). *"ריק נראה כמו שכחה, מושבת-ומנומק נראה כמו החלטה."*
   - Summary row `סה"כ עלות דיילות בפועל` `1,085.00 ₪`.
-- **Section `שינויי תכולה שהתגלו באירוע`** with `רישום שינוי שהתגלה באירוע` (㉔). ⬜ **B7 — whether it opens surface 6's dialog or an inline form is Ishay's; ask at the phase door.**
+- **Section `שינויי תכולה שהתגלו באירוע`** with `רישום שינוי שהתגלה באירוע` (㉔). ⬜ **B7 — dialog vs inline form is Ishay's; it is now an actual row in §3.5 and is swept at the Phase-3 door.** *(It was cited here from 14/08 while having no row anywhere — a citation with nowhere to be answered.)* **Recommendation carried into the door: reuse surface 6's dialog.**
 - **Readiness strip `מוכן לשליחה`** (white, bordered — it reports, it does not act) + the **amber irreversibility banner**: *"⚠ הלחיצה הזאת סוגרת את האירוע ואי-אפשר לבטל אותה."* with the consequence list. ⚠️ **The mockup's banner text ends with `העלות בפועל והרווח הסופי קופאים` — AR-6 removed the profit freeze from M6. Ishay's 14/08 clarification post-dates the mockup.** 🔴 **Amend that clause to name only the cost, and record the amendment in §10 as a deviation from an approved mockup with its dated reason.**
 - **Blocked save:** the button **stays on screen, disabled and explained**, with **one** summary sentence rather than seven messages: *"לא ניתן לסגור: חסרים 2 סימוני-איכות ודוח-סיכום."*
 - **The seven per-field validation strings are quoted verbatim from the card** (`screens-approved.md:1396-1402`) — do not re-word them.
 - 🔴 **The order that must not be reversed** (`spec.md` §2.2): the row exists first ⇒ upload to `reports/<project_id>/…` ⇒ **one RPC writes the path and moves the status in the same transaction** ⇒ on failure, **delete the file**. *"קובץ יתום הוא לכלוך שקוף; פרויקט סגור בלי דוח הוא שבר-נתונים."*
 - 🔴 **After commit, and only then:** download the report and send it to the customer ⇒ send the survey ⇒ **only on success** call `mark_feedback_survey_sent` (AR-5). **If a send fails, the closing still stands**, `feedback_status` stays `not_sent` — which is now true — **and the screen names which mail failed.**
+- 🔴 **AND THE RESEND CONTROL — without it the failure path is a dead end.** The draft described the failure honestly and then left the user with **no way out**: the closing has committed, the tab (per §3.2 state ③) is read-only, and the mail never went. ⇒ **the read-only closed tab renders a `שליחה חוזרת` control whenever `feedback_status = 'not_sent'` after the closing stamp exists**, with the state sentence *"הסגירה נשמרה. מייל הסקר לא יצא — אפשר לשלוח שוב."* **It calls the send path and then `mark_feedback_survey_sent`, exactly as the first attempt did.**
+  🔑 **This is precisely why ㉙ is a WHITELIST and not a blanket** (§4.2): `mark_feedback_survey_sent` is **exempt** from the post-closing refusal, so the resend has a legal write path. **Phrase ㉙ as "these four operational RPCs refuse", never as "any RPC touching a closed project refuses"** — the blanket form makes this control impossible to build. *(§7.92 was closed on 14/08 by §7.39 on exactly this mechanism.)*
+  🔴 **And fix the sentence that contradicts it:** any on-screen text saying the survey *"יוצא בסגירת האירוע"* (surface 2's `משוב הלקוח` empty state says exactly this) must read *"נשלח בסגירת האירוע"* **and, when `not_sent` after a closing, must say the send did not succeed** — otherwise the card asserts a mail went out while `feedback_status` records that it did not.
+- 🔴 **Disable the send control for the whole send phase** *(this used to live in §10 with no owning step)*. `email_log` has **no uniqueness on `(entity_type, entity_id, recipient)`**, and the closing RPC's own `operationally_closed_at is null` precondition guards the **DB** write, not the **mail** path ⇒ **a second click during sending double-logs and sends the customer two reports.** **Not guarded at DB level, deliberately** — the retry engine is `§7.36`, 🟡, owned by **M10**. **The client-side disable is M6's, and it is this line.**
 - **Legal empty:** a project can reach closing with zero approved hostesses (`#7`) ⇒ *"לא שובצו דיילות לאירוע הזה — אין מה לסמן"* **and closing stays possible.** 🔴 **The screen must not look like it failed.**
 - **Load failure:** explicit error + `נסה שוב`, **never an empty list** — a silently-empty table is indistinguishable from "no hostesses", and Dana would close an event marking nobody.
 **🔻🤖 Verify:** screenshots of — the populated form · the no-show row with its disabled controls · the blocked save with its single sentence · the legal-empty variant · the load-failure variant. Then run the full journey in the live preview against a real project and verify **through an independent channel** (SQL, not the UI) that `projects`, `assignments` and `customer_hostess_preference` all moved, and that `email_log` has one `project_report` row and one `project` row. Then **force a send failure** (bad recipient) and confirm the closing **still stands** with `feedback_status = 'not_sent'` and a named failure on screen.
@@ -1400,6 +1587,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 4. §⑦: *"וסיבת-השלילי נאכפת גם במסד, לא רק בטופס… ⇒ טופס שיפספס אותו ייכשל **בקול**, וזה נכון."*
 5. `spec.md` §"מה ייחשב עובד" #6: *"הסגירה התפעולית אינה מתאפשרת עם שדה חסר אחד — **והכפתור אומר *מה* חסר, במשפט אחד**."* And #7: *"אחרי הסגירה, המסכים התפעוליים מסרבים לכתוב — ומסכי-הכספים ממשיכים לעבוד."*
 6. **יחידה-ספציפית:** only מנהלת פרויקטים and מנכ"ל reach this tab's controls; for everyone else the tab is not rendered as an action surface at all.
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1428,6 +1616,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 2. §2.3: *"ההצעה נעולה במסד ואי-אפשר לגעת בה — טריגר זורק `P0001` בעברית על כל `UPDATE` בשורה שאינה `in_progress`. ⇒ `project_changes` היא הבית היחיד לשינוי, כי למקור אין דלת."*
 3. §2.3: *"⏱️ והזמן מודיע ולא חוסם: שינוי מאוחר **מסומן בטקסט**. 🚫 אין סף-זמן במערכת. לא `T-36` ולא אחר."*
 4. `🔄5`: increasing 6→8 sends the project back to `בתהליך` and the screen shows the gap; decreasing 6→4 leaves it `מוכן` because 6 approved ≥ 4.
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1459,12 +1648,13 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 3. §2.4: *"🚫 ופרויקט שבוטל אינו חוזר לחיים ⇒ **אין לבנות 'ביטול-ביטול'**."*
 4. ⑪: *"'כוח עליון' חייב שורת-הסבר צמודה — זו האפשרות היחידה שלוקחת כסף מהדיילות. שורה אחת, אפס עלות פיתוח, ומונעת בחירה שגויה שעולה כסף אמיתי לדיילת."*
 5. ㉕, verbatim: *"השורות עצמן הן הראיה לחיוב… **לשנות אותו = למחוק את ההוכחה**."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
 
 **Step 3.8 · Surface 8 — customer card projects tab** ⚠️ shared-surface *(`src/modules/02_customers/**`)*
-**Files:** `src/modules/02_customers/CustomerDetailsPage.jsx` (or the tab component it renders) · `src/modules/02_customers/api.js` · `src/modules/02_customers/CLAUDE.md` · mockup `08_customer_projects_tab_approved.html` · card `screens-approved.md:2016-2300`
+**Files:** `src/modules/02_customers/CustomerDetailsPage.jsx` (or the tab component it renders) · `src/modules/02_customers/api.js` · **`src/lib/customers.js`** *(A3's `matchesCustomerFilters` at `:42` — it was named in this step's body but missing from this line, so a session reading only the `Files:` line would not have touched it)* · `src/modules/02_customers/CLAUDE.md` · mockup `08_customer_projects_tab_approved.html` · card `screens-approved.md:2016-2300`
 🔴 **This is module 2's screen. The active sidebar item is `לקוחות`, not `פרויקטים`.** Shape the change as a bounded block; grep every open micro-guide for these files first.
 **What to do:**
 - **Two new stat tiles, appended to the existing three:** `מספר אירועים` (`4`, sub `אחד מהם בוטל`) and `אירוע אחרון` (`01/08/2026`, sub `לפני 12 יום`). 🔴 **`מספר אירועים` MUST be passed as a string** — `StatTile.jsx:37` routes a numeric `value` through `Money` and would render **`"4 ₪"`**.
@@ -1474,7 +1664,9 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 - **Both tables, 5 columns:** `תאריך אירוע` · `שם האירוע` · `סכום` · `מצב` · blank (`לכרטיס →`).
 - **Fix `getCustomerProjects`** (A12): filter directly on `projects.customer_id` (index `schema.sql:517` already exists — **do not create another**), join the quote as `LEFT`, not `!inner`, and list columns explicitly. 🔴 **Today a project without a quote vanishes silently.** ⚠️ **After step 1.1's `SET NOT NULL` that case becomes impossible going forward — but the `LEFT` join is still the correct shape and the migration is what makes it moot, not the query.**
 - **Fix the stale comment in `02_customers/CLAUDE.md`** (A13): it declares `getCustomerProjects` *"always returns `[]`"*, which stopped being true at `20260809134237`.
-- **Edit the waiting strip** — it currently reads *"ממתין למודול הבא"* and counts M6 among the pending. 🔴 **M6 must edit it, not leave it.** *(Iron rule 13(ח): a capability that got built leaves UI text behind that still says it does not exist.)*
+- **Replace the placeholder block — 🔴 and here is what is actually on disk, measured `14/08/2026`, because the string this step used to quote does not exist:**
+  - **The UI string is `CustomerDetailsPage.jsx:446`** — verbatim: **`אין פרויקטים עדיין — יתמלא במודול 6`**. *(🚫 It is **not** `ממתין למודול הבא`; that string is nowhere in the file. A build session grepping for the quoted text would have found nothing and either invented a replacement or skipped the item.)* **This whole `<p data-testid="customer-no-projects">` block is replaced by the real tab.** ⚠️ **`data-testid="customer-no-projects"` is an E2E contract** — check `e2e/` before removing the attribute.
+  - 🔴 **AND a THIRD stale artefact the step did not mention at all — the comment at `:440-441`:** *"ריק בכוונה: `projects` היא deny-all (RLS בלי policies) עד מודול 6"*. **That has been false since `20260809134237:126` added `projects_select_by_permission`** — five days before this guide was written. **Delete it with the block**; leaving a comment that mis-describes the security model is worse than leaving none. *(Iron rule 13(ח): a capability that got built leaves text behind that still says it does not exist — **and here there are two such texts, one of them describing RLS.**)*
 - **Add the `רדומים` filter to `matchesCustomerFilters`** (`src/lib/customers.js`, A3), reading `סף_לקוח_רדום_ימים` from `params`. ⬜ **Threshold is A6, Ishay's.**
 - **The search box placeholder is `חיפוש לפי שם אירוע` — byte-identical to the quotes tab's** (`CustomerDetailsPage.jsx:471`), deliberately, so the two tabs do not teach two vocabularies for one action. 🚫 **No minimum length, no validation, no error state** — every string is legal, including empty (= no filter). ⚠️ **And the card names a trap already documented on the quotes tab: below the threshold at which the controls appear, they also stop filtering** — reproduce the existing behaviour, do not invent a second one.
 - **Six appendix states the card mandates:** truly empty (*"עדיין לא נוצר פרויקט ללקוח הזה."* / *"פרויקט נולד מאישור הצעת מחיר."*) · **empty after *search*** (*"אין פרויקט התואם לחיפוש."* + `נקה חיפוש`; this tab says `חיפוש`, the other seven say `סינון` — the appendix counted it; **pick one and record it**) · **no permission — `🔒`, *"אין לך הרשאה לצפות בפרויקטים."*, and the tab counter shows `—`, not `0`** 🔴 (`0` would be a lie) · load failure (*"שגיאה בטעינת היסטוריית הפרויקטים."* + `נסה שוב`) · loading skeleton shaped like the content · the two extra `אירוע אחרון` variants.
@@ -1484,6 +1676,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 2. A12: *"שתי דרכים מתחרות מלקוח לפרויקטים — `quotes!inner` מול `projects.customer_id`. `quote_id` הוא nullable ⇒ **פרויקט בלי הצעה נעלם**. מ6 בוחר את הישיר ופורש את השני."*
 3. The mockup's own build landmine, verbatim: *"⚠️ מוקש למי שבונה: `StatTile` מעביר ערך מספרי דרך `Money` ⇒ `value={4}` יוצג '4 ₪'. 'מספר אירועים' חייב לעבור כמחרוזת."*
 4. The card's no-permission state: **`🔒` with *"אין לך הרשאה לצפות בפרויקטים."* and the tab counter showing `—`, not `0`** — 🔴 **`0` would be a lie.**
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1503,6 +1696,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 1. *"Green ≠ done. Verify visually yourself (a screenshot is the evidence — don't send him to check manually)."*
 2. *"ישי קורא תוצר ויזואלי כמסמך-שלם ותופס יישור/פרופורציות/כיווניות שאימות-תוכן מפספס"* ⇒ an explicit document pass before saying "נראה טוב".
 3. This is module 6's OWN UX pass and does **not** replace M12's system-wide sweep.
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1519,25 +1713,40 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 **מה ייחשב עובד** *(measured repo state, quoted)*
 1. `src/App.jsx:138-145` — the route and its guard already exist; **only the element changes.**
 2. `Sidebar.jsx` already filters blocked modules; the route guard is the second layer and both are required.
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 **Step 4.2 · Cross-module ripples** ⚠️ shared-surface
-**Files:** `src/modules/02_customers/**` · `src/modules/04_hostesses/**` · `docs/PROJECT_MASTER.md` §6 · `docs/db_roadmap.md`
-**What to do:** close the three debts M6 owes others and mark the 14 it consumed —
+**Files:** `src/modules/02_customers/**` · `src/modules/04_hostesses/**` · **`src/modules/04_hostesses/SmartMatchPage.jsx`** · **`docs/automations.md`** · `docs/PROJECT_MASTER.md` §6 · `docs/db_roadmap.md`
+
+**🔴 Two ripple targets that appeared ZERO times in this guide until 14/08 — both are rule-13 obligations, not nice-to-haves:**
+
+**‏(א) `docs/automations.md` — the automation register.** It was born as **module 4's DoD requirement** and M6 is the biggest automation-adding module so far. **M6 must add four things:**
+- the `pg_cron` job **`module6-event-finished`** to *"⏰ עבודות מתוזמנות"*, which today says **"שתיים"** and must say three *(`module3-quote-expiry` 01:00 · `module1-login-attempts-cleanup` 01:30 · **`module6-event-finished` 02:00** — and the 02:00 slot was chosen to avoid the other two, which is exactly the fact the register exists to make visible)*;
+- the **three** status-machine triggers from step 1.9 to *"🗄️ טריגרים במסד"*, which today counts **20**;
+- the **two new `entity_type` values** to the *"📧 פונקציית-קצה"* section, which today lists consumers as **"מודולים 4 · 8 · 11"** — **M6 is now a consumer and is absent**;
+- the **seven RPCs** from step 1.8.
+🔑 **Why a register that is not updated is worse than none:** it reads as complete. Its own opening argument is the module-1 cron job hiding inside a module-3 migration filename — *"מי שיחפש… לפי שם-הקובץ לא ימצא אותו לעולם"*. **An M6 job absent from the register is the same failure, one module later.**
+
+**‏(ב) `SmartMatchPage.jsx:506` — a sentence that becomes false the day M6 ships.** Verbatim: *"וגם תגית "מצוינת אצל הלקוח" עוד לא קיימת — הסימון נוצר באותה סגירה."* **M6's closing screen creates exactly that mark** (surface 5's quality pills → `customer_hostess_preference`). ⚠️ **And the reason it will NOT self-correct:** the banner is gated at `:489` on **`params?.reliabilityEnabled === false`** — the `מרכיב_אמינות_פעיל` param, whose flip is **M9's** (`🚧 מ9 ← מ4`), **not M6's** ⇒ **M6 makes the sentence false while leaving the condition that displays it true.** **Amend the sentence in this step; 🚫 do not flip the flag.** *(Rule 13(ח), verbatim: "יכולת חדשה נבנתה? לחפש טקסט-ממשק שעדיין מתאר אותה כלא-קיימת".)*
+
+**Then close the three debts M6 owes others and mark the ones it consumed —**
 - `🚧 מ8 ← מ6`: the unified `event_finished ⇒ ממתין לסגירה` label · `actual_guests` is not a billing input · §7.39 closed (M6 sends, M8 does not).
 - `🚧 מ11 ← מ6`: record that *"תכנון מול ביצוע"* is now computable **only once `logistics` origin rows are actually filled** — the column exists from step 1.4 and the **writer is M3's merged approve-RPC**, which M6 did not touch.
 - `🚧 מ5 ← מ6`: all seven contract items from `processes-approved.md §"מה מ6 מכתיב למ5"`.
 - Fix `db_roadmap A-20`'s "one value each" sentence (AR-8).
-- **Re-count**: the `🚧 מ6` register held **17 token occurrences ⇒ 14 distinct debts** on 14/08 — 🔴 **the approved spec says "nine", which was true on 13/08 and stale by the next day.** ⚠️ **And `grep` is line-based, so it returns only the first physical line of each debt; 12 of 35 §6 items span more than one line** (`§6:545`).
-**🔻🤖 Verify:** `grep -c "🚧 מ6" docs/PROJECT_MASTER.md` and read each hit in full; every one is either closed with evidence or explicitly re-targeted with a module number.
+- **Re-count `🚧 מ6` LIVE in this step. 🚫 Do not trust any number written in this guide, including the ones below.** 🔴 **The approved spec says "תשעה"; that was true on 13/08 and stale within a day. This guide then wrote "17 occurrences ⇒ 14 distinct" on 14/08 — and a spot check the same evening returned a different line count.** ⇒ **the number is not the deliverable; the sweep is.** ⚠️ **Two measurement traps, and both bite:** `grep -c` counts **lines**, `grep -o … | wc -l` counts **occurrences**, and they differ · and **`grep` is line-based, so it returns only the first physical line of each debt while many §6 items span more than one** (`§6:545`) — **read every hit in full, do not judge from the matched line.**
+**🔻🤖 Verify:** run **both** `grep -c "🚧 מ6" docs/PROJECT_MASTER.md` and `grep -o "🚧 מ6" docs/PROJECT_MASTER.md | wc -l`, report both, then read each hit in full; every one is either closed with evidence or explicitly re-targeted with a module number. **Then the push side:** every `🚧 מN` token in this guide has a byte-matching `🚧 מN` line in `PROJECT_MASTER §6` (iron rule 15; the Stop hook globs `docs/micro_guides/module-*.md`).
 **מה ייחשב עובד** *(`docs/CLAUDE.md` iron rule 13(ז)/(ח), quoted)*
 1. *"יכולת חדשה נבנתה? לחפש טקסט-ממשק שעדיין מתאר אותה כלא-קיימת"* — the M2 waiting strip and the M2 code comment.
 2. *"שורת-🚧 בלי תאום ב-§6 = חוב שקט."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 **Step 4.3 · 🔻👤 Phase-4 gate**
 **🔻👤 Verify:** `npm run gate` → **exit 0** (lint · format:check · test:run · build · dup · deadcode · audit · check:bidi · check:context · check:docs-structure). 🔴 **Run it without a pipe, or with `set -o pipefail`** — a pipeline's exit code is `tail`'s, and a red run looks green.
 **מה ייחשב עובד:** ①–③ per `docs/architecture_and_qa_roadmap.md`'s DoD (see §7). 🔴 **And `gate` is not what CI runs** — see §6.
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1554,6 +1763,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 **מה ייחשב עובד** *(`src/CLAUDE.md` + `PROJECT_MASTER §6` A10, quoted)*
 1. *"‏`E2E` אינו רץ ב-CI ומדלג על עצמו בשקט כשאין credentials — 'ירוק' עלול להיות 'הכול דולג'."*
 2. A10: *"בחירה בזמן-ריצה לפי תנאי, לעולם לא מזהה קשיח"* — M4 already applied this to itself.
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 **Step 5.2 · 🔻👤 Closing audit — in a FRESH session**
@@ -1563,6 +1773,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 **🔻👤 Stop.**
 **מה ייחשב עובד** *(`module-blueprint/template.md`, quoted)*
 1. *"a 🔻👤 closing-audit step that runs the closing-audit template in a FRESH session (independent re-verification → DoD typed-echo sign-off → PR instructions); a blueprint without this step is incomplete."*
+**🌊 אדוות —**
 **🗣️ אושר —**
 
 ---
@@ -1655,9 +1866,13 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 
 **(i) Compaction:** when a phase closes, its step-by-step instructions collapse to a `| Step | What landed | Evidence |` table plus a short carry-forward note, and the pre-compaction copy is archived under `docs/archive/` **first**. 🔴 **Never compact the active phase, §9, or §10 — those are the memory.** *(This guide's own format was recovered from `docs/archive/module-4_pre-compaction_2026-08-12.md` precisely because module 4's live guide had been compacted past the point of being a template.)*
 
-**(j) 🌊 Ripple sweep.** ⚠️ **This is NOT a per-step field** — the recovered module-4 format is explicit that 🌊 is a **block written at closing, normally covering a group of steps** (typically a whole phase). ⇒ **each phase closes with one `🌊 Ripple sweep` block appended to its done-table, and it is either filled or carries the word `אין`.**
-**Why the block is needed at all, and why iron rule 13 does not already cover it:** rule 13 fires on a decision that changes schema, a §7 item, or a work process — **it produces no signal when a build step merely finishes**, which is exactly when most drift is created.
-**The five targets:** ① the step's own `↳ as-built` note · ② a line in §10 · ③ **the DoD checkboxes this phase's evidence moved, with the numbers** · ④ the Decisions-Ledger rows the phase implemented · ⑤ **every approved-spec, mockup or research section that now reads differently** — recorded as a **tagged pointer, never as an edited number.**
+**(j) 🌊 Ripple sweep — 🔴 PER STEP, and the draft was wrong to move it.**
+> **`.claude/skills/module-blueprint/template.md:84` carries Ishay's ruling of 09/08/2026 verbatim: an empty `🌊 אדוות —` slot on every build-unit step, *"closed when the step closes with either the ripples performed or the word `אין`"*, and *"A step whose `🌊` line is empty is not closed."*** The draft replaced this with a per-phase block, citing module 4's recovered format. 🚫 **That is not a change this guide may make.** ⚠️ **The rule it overrode is his; a blueprint observing that another artefact does it differently raises the conflict — it does not resolve it in its own favour.** *(Iron rule 1: a contradiction where he ruled twice ⇒ bring both, quoted and dated, and ask which stands. Never obey the one you found first.)*
+> ⇒ **Every build-unit step carries `🌊 אדוות —`, per the template.** The per-phase blocks below are **kept as an addition**, not a replacement — they are where a ripple spanning several steps lands.
+> ⚠️ **The observation is still worth his minute, and it is recorded rather than acted on:** module 4's live guide does carry 🌊 as a closing block (`module-4.md:274,287`), so **the template and the built precedent genuinely disagree.** **His call, at the Phase-1 door.** Until he rules, **the template wins** — it is the newer ruling and it is the file this blueprint was generated from.
+>
+> **The five targets of any sweep, per-step or per-phase:** ① the step's own `↳ as-built` note · ② a line in §10 · ③ **the DoD checkboxes this step's evidence moved, with the numbers** · ④ the Decisions-Ledger rows it implemented · ⑤ **every approved-spec, mockup or research section that now reads differently** — recorded as a **tagged pointer, never as an edited number.**
+**Why the sweep is needed at all, and why iron rule 13 does not already cover it:** rule 13 fires on a decision that changes schema, a §7 item, or a work process — **it produces no signal when a build step merely finishes**, which is exactly when most drift is created.
 🚫 **No number in the approved spec is edited.** *(Measured on module 4, 09/08/2026: Phase 2 wrote its §10 deviation correctly and still left four stale spots — a DoD line reading `428 passed` after the count had moved to 535, an instruction with no `↳ as-built` beside it, an approved assumption row naming a superseded algorithm, and an SSOT section still carrying a formula the build had replaced. **All four were found only because Ishay asked for a ripple audit — the second time in one day he had to ask.**)*
 
 **🌊 Ripple sweep — Phase 1:** *(to be filled at Phase-1 close)*
@@ -1683,12 +1898,29 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 | **3** | `projects.event_name` / `projects.customer_name` — snapshot columns, or must they be joined? | **CONFIRMED** *(both are snapshot columns on `projects`)* | `docs/schema.sql:502` `alter table projects add column event_name text;` · `:799` `alter table projects add column customer_name text;` (+ the backfill at `:800-801`). Both are `ALTER`s **below** the `create table` block. | **Read both from `projects`.** 🚫 Never join to `customers` for the name — מנהלת גיוס is `➖` on `'לקוחות'` and the join returns `null` **without an error** on three approved screens (`04_hostesses/api.js:128-130` already learned this). ⇒ `screens-approved §נספח④` and surface 7 §③ are wrong on both halves. |
 | **4** | `logistics.line_id` — does that column exist at all? | **STALE** *(it does not exist; `processes-approved` claims the approve-RPC writes it)* | `logistics` is `docs/schema.sql:180-189`, PK `(project_id, sku, serial_number)`, no `line_id`. A full-file grep for `line_id` returns only `:455` and `:457`, both `quote_services`. | **M6 creates the origin columns itself** (step 1.4, AS-7). And the writer for **new** rows is M3's **merged** approve-RPC — `🚧 מ5 ← מ6` contract item 1 — which M6 does not edit in this module. Existing rows stay NULL; **no positional backfill** (the `row_number()` offset makes it unsound). |
 | **5** | `email_log.entity_type` — what does the CHECK allow **today**? | **CONFIRMED** *(two values only)* | `docs/schema.sql:637` — `check (entity_type in ('quote', 'shift'))`. Two SELECT policies at `:649-653` and `:658-662`. | **Widen by two** (`'project'`, `'project_report'`) **in the same migration as the Edge-Function change**, and add a **third** SELECT policy. 🔧 **And fix `db_roadmap A-20`**, which says only "M4/M8/M11 widen by one value each" — M6 is absent from that list and widens by two. |
-| **6** | `MAX_ATTACHMENT_BASE64_CHARS` — the real ceiling, versus the 10MB the closing screen promises | 🔴 **STALE — and this is a live contradiction, not a stale citation** | `src/lib/email.js:29` — `const MAX_ATTACHMENT_BASE64_CHARS = 4_000_000`, enforced by `isAttachmentTooLarge` at `:35-37`. Base64 inflates by ~33%, so **4M chars ≈ 3.0 MB of raw binary.** The comment at `:26-28` explains why it is deliberately below Make's 5MB free-tier limit. Meanwhile `screens-approved.md:1398` and the approved mockup both promise the user *"עד 10MB"*, and `AS-3` proposes a `reports` bucket limit of `10485760`. | 🔴 **A 6 MB PDF would upload successfully, satisfy the bucket limit, satisfy the on-screen promise — and then fail at send time, after the closing has already committed.** ⇒ **Reconcile before step 3.5 ships. Three options, and this is a product decision for Ishay:** (a) set the `reports` bucket limit to ~3 MB and change the helper text to match; (b) raise `MAX_ATTACHMENT_BASE64_CHARS` and re-verify against Make's actual plan limit; (c) keep 10MB for storage but send the customer a link instead of an attachment — 🚫 **which §12⑬(ג) explicitly rejects.** **Recommendation: (a)**, because it is the only one that makes the promise on screen true. **Raised as a new open item; do not pick silently.** |
+| **6** | `MAX_ATTACHMENT_BASE64_CHARS` — the real ceiling, versus the 10MB the closing screen promises | 🟢 **WAS a live contradiction — RULED 14/08/2026 and now CLOSED** | `src/lib/email.js:29` — `const MAX_ATTACHMENT_BASE64_CHARS = 4_000_000`, enforced by `isAttachmentTooLarge` at `:35-37`. Base64 is 3 bytes → 4 chars, so **the hard binary wall is exactly 3,000,000 bytes ≈ 2.86 MiB.** The comment at `:26-28` explains it is deliberately below Make's 5MB free-tier limit. `screens-approved.md:1398` and the approved mockup both promise *"עד 10MB"*. **The ruling: `db_roadmap` §5's `reports` row — `file_size_limit = 2097152` (2 MiB), helper text `עד 2MB`** *(Ishay delegated, 14/08/2026)*, **which also explicitly rejects 3 MiB**: 3,145,728 > 3,000,000, so a 3 MiB bucket still admits a file that fails at send. | ✅ **Owned by three steps, and it needed to be — this line previously said *"Raised as a new open item"* while §3.5 had no such row, so the decision had nowhere to be made.** **‏1.5** sets the bucket to `2097152` and adds `REPORT_MAX_BYTES`; **‏3.5** renders `עד 2MB` from that constant; **‏2.8** keeps the attachment path unchanged. **`AS-3` is updated and is no longer an assumption.** ⚠️ **`screens-approved.md:1398` and the approved mockup are now SUPERSEDED strings** — recorded as a dated pointer below; 🚫 **not edited.** |
 | **7** | `OPEN_PROJECT_STATUSES` — which statuses today? | **CONFIRMED** *(two, and `ready` is deliberately absent)* | `src/modules/04_hostesses/api.js:56` — `const OPEN_PROJECT_STATUSES = ['not_started', 'in_progress']`, used at `:141`. **And the comment at `:54-55` says the exclusion is deliberate:** *"`ready` ומעלה אינם ברשימה **במכוון** — פרויקט שאוייש יצא מרשימת-העבודה של מנהלת הגיוס."* | ⑫ and `db_roadmap M6-14` **overrule that comment**: M4 decided it unilaterally in code and it is wrong under the ruling — a `ready` project vanishes from the recruitment manager's screen, so a hostess cancelling on a "ready" event tomorrow is invisible to her. **Widen to three, move to `src/lib/projects.js`, and DELETE the stale comment** — leaving it would make the next reader think the widening was a mistake. |
-| **8** | `hostesses` name column — `full_name`, or `first_name`/`last_name`? | **CONFIRMED `full_name`** | `docs/schema.sql:145` — `full_name text not null`, inside `create table hostesses`. There is no `first_name` and no `last_name` anywhere in the schema. *(Also note the PK moved: `id_number` was dropped at `:746` and `hostess_id bigint generated always as identity` added at `:747`.)* | `screens-approved.md:1270` (surface 5 §③) says `hostesses.first_name`/`last_name` — **it is wrong.** `spec.md` §1.7 already has it right. **Use `full_name` and `hostess_id`.** |
-| **9** | `_design-contract.md` — does it exist anywhere in the repo? | 🔴 **STALE — the file does not exist** | `find . -iname "*design-contract*"` (excluding `node_modules`) ⇒ **empty**. `Glob "**/*design*contract*"` ⇒ **No files found.** The only files mentioning the name are `docs/specs/module_06_projects/spec.md`, `screens-approved.md`, three approved mockups, `docs/archive/prompt_module_discovery_retired_2026-08-13.md` and `docs/CLAUDE_CODE_LOG.md`. | **`screens-approved.md` cites it as binding at ten places** — §3.1 · §3.2 · §3.3 · §3.4 · §3.5 · §4.2③ · §4.3 · §5.1 · §5.7 · §5.8 · §6, across surfaces 3 (`:896`), 4 (`:1142`, `:1151`), 6 (`:1552`, `:1696`, `:1697`) and 8 (`:2188`, `:2286`). 🔴 **Ten citations that resolve to nothing.** ⇒ **Wherever a card's only justification is a design-contract section, treat it as unsourced and fall back to the approved mockup (appearance) or to a measured `src/` precedent (behaviour). Never invent the missing section's content.** *(By `docs/CLAUDE.md`'s placement rule — "אין מסלול-טעינה ⇒ הוא לא ייקרא" — these were dead on arrival.)* **Note: surface 6 already contradicts two of them on measured grounds (520px → 768px; amber banner → white block) and reports the contradiction itself, which is the correct handling.** |
+| **8** | `hostesses` name column — `full_name`, or `first_name`/`last_name`? | **CONFIRMED `full_name`** | `docs/schema.sql:145` — `full_name text not null`, inside `create table hostesses`. There is no `first_name` and no `last_name` anywhere in the schema. *(Also note the PK moved: `id_number` was dropped at `:746` and `hostess_id bigint generated always as identity` added at `:747`.)* | `screens-approved.md:1270` (surface 5 §③) says `hostesses.first_name`/`last_name` — **it is wrong.** `spec.md` §1.7 already has it right. ✅ **Owned by steps 2.5 and 3.5** *(added 14/08 — this finding previously had no owning step and no OPEN row, i.e. a correct measurement that no build step would ever read)*: **step 2.5's `getProjectAssignments` selects `full_name` and `hostess_id`**, and **step 3.5's `דיילת` column renders `full_name`**. 🔴 **A build session that follows `screens-approved:1270` gets `column hostesses.first_name does not exist` — which at least fails loudly** — **but the same wrong reading of surface 5 §③ would also mis-key the closing rows**, and that fails quietly. |
+| **9** | `_design-contract.md` — does it exist anywhere in the repo? | 🔴 **STALE — the file does not exist** | `find . -iname "*design-contract*"` (excluding `node_modules`) ⇒ **empty**. `Glob "**/*design*contract*"` ⇒ **No files found.** The only files mentioning the name are `docs/specs/module_06_projects/spec.md`, `screens-approved.md`, three approved mockups, `docs/archive/prompt_module_discovery_retired_2026-08-13.md` and `docs/CLAUDE_CODE_LOG.md`. | 📏 **RE-COUNTED 14/08/2026, and the earlier "ten places" was wrong — the real shape is worse, not smaller.** By **filename: TWO** (`:1151` `_design-contract §3.2` · `:1552` `_design-contract.md §5.8`). By **Hebrew name (`חוזה-העיצוב`): SEVEN more** (`:259`, `:315`, `:896`, `:1696`, `:1697`, `:2188`, `:2286`). 🔴 **And the dangerous class the "ten" list actually mislabelled:** `:1142` was listed as a citation and cites no contract at all — it cites a **bare `§3.4③`**. **A bare `§N.M` with no filename resolves to the missing file silently**, and a build session reads it as a section of the document it is already holding. ⇒ **Rule, owned by step 3.0 and applied by every surface step: a card justification that resolves to `_design-contract` — by filename, by Hebrew name, or as a bare `§N.M` that matches no section of `screens-approved.md` itself — is UNSOURCED.** **Fall back to the approved mockup (appearance) or a measured `src/` precedent (behaviour). 🚫 Never invent the missing section's content, and never treat it as binding.** *(By `docs/CLAUDE.md`'s placement rule — "אין מסלול-טעינה ⇒ הוא לא ייקרא" — these were dead on arrival. `STATUS.md:73` and `CLAUDE_CODE_LOG.md:99` already record the gap as known and deliberately unfixed.)* ✅ **Now owned by step 3.0** — it previously had no owning step and no OPEN row. **Note: surface 6 already contradicts two of them on measured grounds (520px → 768px; amber banner → white block) and reports the contradiction itself, which is the correct handling — copy that behaviour.** |
 
-**Count: nine reported. Four CONFIRMED (#3, #5, #7, #8) · five STALE (#1, #2, #4, #6, #9).** 🔴 **#6 is not merely stale — it is an unresolved contradiction that must reach Ishay before step 3.5.**
+**Count: nine reported. Four CONFIRMED (#3, #5, #7, #8) · four STALE (#1, #2, #4, #9) · one RULED-AND-CLOSED (#6).**
+
+> ### 🔴 Routing audit of this whole section — run `14/08/2026 03:12`, and it is the reason this revision exists
+> **The test applied to every finding below: does it have an OWNING STEP (named in a step body in §6) or an OPEN-TABLE ROW (§3.5)?** 🔑 **Nothing else is read at build time.** §10 is an append-only *log*; no phase door, no step and no gate opens it. ⇒ **a finding recorded only here is invisible to the build, and it looks handled.**
+> 📏 **Measured before any fix: SEVEN findings had NEITHER.**
+> | # | Finding | What it had | Now |
+> |:-:|---|---|---|
+> | 1 | **#6** — report ceiling, 10 MB promise vs ~2.86 MiB wall | Said *"raised as a new open item"* — **§3.5 had no such row**; steps 2.8 and 3.5 pointed **back at §10** | ✅ Ruled (2 MiB) · steps **1.5 · 2.8 · 3.5** · `AS-3` |
+> | 2 | **#8** — `full_name`, not `first_name`/`last_name` | Nothing. The words `full_name` appeared in no step body | ✅ Steps **2.5 · 3.5** |
+> | 3 | **#9** — `_design-contract.md` does not exist | A general instruction with no owner | ✅ Step **3.0**, as a standing rule + the bare-`§N.M` class added |
+> | 4 | **Tone map** — the three-way mockup conflict | Routed to *"open item A8"* — 🔴 **A8 never existed in §3.5** | ✅ Ruled in full (**S-1**) · steps **2.1 · 3.0** + an enforcing test |
+> | 5 | **`mockup-data.md`** self-contradiction on sort order | *"fix it when surface 1 is built"* — step 3.1's body never mentioned it | ✅ Step **3.1**, with the file named and the edit permitted (it is living, not frozen) |
+> | 6 | **`email_log` double-log** — *"the client must disable the send button"* | Step 3.5's body carried no such instruction | ✅ Step **3.5** |
+> | 7 | **No-location-column deviation** — *"this sentence must appear in the code comment"* | Step 3.1's body carried no such instruction (only S-8's anchor column pointed at it) | ✅ Step **3.1** |
+>
+> ⚠️ **Two of the seven (#5, #7) had an `Anchor` cell in §3.3 naming step 3.1.** **That is not an owning step.** §3.3 is a rulings table; the build session executes **step bodies**. An anchor column tells a reader where a ruling applies — it does not put an instruction where the builder will stand.
+> 🚫 **And the trap that makes this class self-perpetuating: the natural fix is to add another §10 note. That IS the defect.** ⇒ **a finding needing a DECISION goes to §3.5 or a named phase-door sweep; a finding needing an ACTION goes into a STEP. §10 records that it happened — it never carries it.**
+> **Four dead ids were also removed** — **A8 · B4 · B7 · B10** were cited from step bodies while having no §3.5 row. Three are now ruled (S-1 · ט4/2.3 · AS-3) and **B7 has a real row.**
 
 ---
 
@@ -1699,14 +1931,15 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 - **`14/08/2026 01:25` — AR-6 supersedes the approved spec and one approved mockup on the profit freeze.** `spec.md` §2.2 lists *"הרווח הסופי קופא"* among the closing's atomic effects, `screens-approved` row 17 requires a frozen-profit column, and the approved mockup `05_tab_closing_approved.html`'s irreversibility banner ends *"העלות בפועל והרווח הסופי קופאים"*. **Ishay's clarification of 14/08/2026 01:17 post-dates all three**: §7.52's *"בסגירת-האירוע"* means the **financial** closing (M8), not the operational one. ⇒ **M6 builds no profit computation and no `final_gross_profit` column; the banner clause is amended to name only the cost.** `db_roadmap M6-8` was already re-scoped to match. 🚫 **No number in the approved spec was edited** — this is a tagged pointer.
 - **`14/08/2026 01:25` — AR-3 requires deleting two lines from the approved spec's recommendations.** `screens-approved.md:200` and `:336` recommend widening `assignments_select_by_permission` to `'פרויקטים'` holders. **Doing so would expose hostess names, hourly rates and phone numbers to every holder of `👁` on projects.** ⇒ superseded by the `SECURITY DEFINER` overview RPC. **Flagged as a pointer; the spec's own text is not edited by this guide.**
 - **`14/08/2026 01:25` — The `🚧 מ6` count in the approved spec is stale.** `processes-approved.md` §970-998 says *"תשעה"*; **measured 14/08: 17 token occurrences ⇒ 14 distinct debts** (three of the occurrences are the document quoting its own grep command, at `:394`, `:482`, `:527`). Five were added on 12–13/08 **after** the spec counted. ⚠️ **And `grep` is line-based, so it returns only the first physical line of each debt while 12 of 35 §6 items span more than one line** (`§6:545`). ⇒ **A session trusting "nine" misses five.**
-- **`14/08/2026 01:25` — The status tone map has a three-way conflict across the approved mockups, wider than the two labels the architecture round found.** Measured across all eight files: `בתהליך` is `tag muted` in `01`, `04`, `06` and **`tag teal`** in `02`, `03`, `08` (**3–3**); `מוכן לביצוע` is `tag teal` in `01` while surface 8's §⑥ map says `ok`; **`ממתין לסגירה` is `tag warn` in `01` and `08` but `tag teal` in `05`** — a third label the earlier round did not cover. **Why it survived visual approval of all eight mockups: no single artefact shows the same status twice.** ⇒ **the ruling round (step 1.0) presents one table of all eight labels × the tone each mockup drew**, and the outcome is written **once** into `src/lib/projects.js` and tested with `describe.each`. 🔴 **`StatusTag`'s key is the displayed Hebrew label and a miss falls to `muted` silently** — the component was written for 10 keys, holds 18, and M6 nearly doubles it.
-- **`14/08/2026 01:25` — `הושלם` is a second derived assignment label the approved spec does not know about.** `src/lib/hostesses.js:35-37,244` defines **two** display-derived labels — `פג תוקף` **and** `COMPLETED_ASSIGNMENT_LABEL = 'הושלם'` — while `spec.md` §1.2 declares the vocabulary closed at six values plus `פג תוקף`. **`הושלם` appears zero times in all three spec files, and it lights up on every approved hostess whose event has passed — i.e. exactly on the screens M6 builds.** ⇒ **step 3.4 must decide render-or-suppress and record the choice here.**
-- **`14/08/2026 01:25` — `mockup-data.md` contradicts itself on sort order and was left off the spec's own reading list.** `:164` says verbatim *"🚫 אל תשים אותו בראש רשימה — הוא ייראה כמו באג-עיצוב"* while `:293-294` numbers the same two rows in the opposite order. The file is cited as an anchor by `screens-approved:279` and sits in the same directory, yet `spec.md §①`'s reading list omits it. ⇒ **read it; fix the internal contradiction when surface 1 is built.**
-- **`14/08/2026 01:25` — Two card-vs-mockup phrasing conflicts on surface 1, unresolved by either source.** ① The past-date phrase is `התקיים לפני N ימים` in the `לסגירה` tab but bare `לפני N ימים` in `הכול` — two strings for one concept, and the card locks neither. ② The same row's `מה חסר` copy differs between tabs in four instances (e.g. *"הדיילת היחידה אישרה זמינות וממתינה לאישור סופי ממך"* vs *"אישרה זמינות וממתינה לאישור סופי ממך"*), most likely column-width truncation. ⇒ **pick one string per concept, use it in both tabs, and record the choice here.** Related: the empty-after-filtering state says `סינון` on surfaces 1–7 and `חיפוש` on surface 8 (`screens-approved §נספח⑧`, counted).
+- **`14/08/2026 03:12` — The status tone map's three-way mockup conflict is RULED IN FULL, and its routing defect is recorded because it is the template case.** Measured across all eight approved files: `בתהליך` is `tag muted` in `01`, `04`, `06` and **`tag teal`** in `02`, `03`, `08` (**3–3**); `מוכן לביצוע` is `tag teal` in `01` while surface 8's §⑥ map says `ok`; **`ממתין לסגירה` is `tag warn` in `01` and `08` but `tag teal` in `05`** (**2–1**). **Why it survived visual approval of all eight: no single artefact shows the same status twice.** ⇒ **ruled in S-1, all eight labels, one home (`src/lib/projects.js`), spread into `StatusTag.jsx`, enforced by step 2.1's guard ①.** 🔴 **The routing defect, recorded deliberately:** this entry used to route the third label to *"open item A8"*, **and A8 had no row in §3.5** — a finding correctly measured, correctly written down, and pointed at a gate that did not exist. **`PROJECT_STATUS_TONES` sat as an empty `{}` in step 2.1 waiting on it.** 📏 **And one number here was wrong too: `TONE_BY_LABEL` holds TEN entries, not 18** — 2 hostess states + 6 assignment statuses + 2 derived, **zero project statuses**; five of the ten keys are unquoted, so a quote-based grep undercounts by five. M6 adds 8 ⇒ 18.
+- **`14/08/2026 03:12` — 🔴 CORRECTION: the earlier `הושלם` entry was false, and it is retained here rather than deleted so the correction is legible.** It claimed `הושלם` *"appears zero times in all three spec files"* and that the spec *"does not know about"* it. **Measured: it appears 4 × in `spec.md` · 3 × in `processes-approved.md` · 6 × in `screens-approved.md` — thirteen times — and `screens-approved.md:1105` already RULES it**, verbatim: *"**'פג תוקף'** ו**'הושלם'** — **נגזרות בתצוגה, ואינן סטטוס שביעי.**"* **It is also already in `StatusTag`'s `TONE_BY_LABEL` (`:41`, tone `ok`).** ⇒ **Nothing was open. Step 3.4 renders it as a derived label like `פג תוקף`, and suppresses it in the raw-status rounds history.** 🔑 **Why this mattered: the entry instructed step 3.4 to "decide render-or-suppress" — i.e. to re-open a question `screens-approved` had already closed**, which is exactly the "asking Ishay to re-decide what he already decided" failure the interview-skip rule condemns.
+- **`14/08/2026 03:12` — `mockup-data.md` contradicts itself on sort order, and now has an owning step.** `:164` says verbatim *"🚫 אל תשים אותו בראש רשימה — הוא ייראה כמו באג-עיצוב"* while `:293-294` numbers the same two rows in the opposite order. The file is cited as an anchor by `screens-approved:279` yet `spec.md §①`'s reading list omits it. ⇒ ✅ **Step 3.1 builds S-7's behaviour AND fixes the file's numbering in the same step.** *(It is `docs/specs/` — living, editable. 🚫 The approved mockups are not.)* **Previously it said "fix it when surface 1 is built" and step 3.1's body never mentioned it.**
+- **`14/08/2026 03:12` — The ~20 cross-card wording contradictions now have ONE home: §3.7, "Locked UI strings".** Three different *"reason is required"* messages · three *"cannot load"* strings · two loading-skeleton patterns · two *"no permission"* phrasings · a success toast forbidden on one card and mandatory on two · `≥0` vs `>0` · the past-date phrase (`התקיים לפני N ימים` vs bare `לפני N ימים`, almost certainly column-width truncation) · `מה חסר` copy differing between tabs · `סינון` on surfaces 1–7 vs `חיפוש` on surface 8. **Each is resolved to one string, majority-wins unless a card gives a measured reason.** 🔑 **Why a table and not a note:** recorded as prose here, every one of them was left to whichever build session reached it first — **eight surfaces re-inventing the same six sentences.** ⚠️ **Two of the "contradictions" turned out NOT to be drift and are documented as deliberate:** `סינון`/`חיפוש` (the control's own name differs) and the two reason-required messages (different consequences).
 - **`14/08/2026 01:25` — `spec.md:527` gives a wrong path for `smartMatch.js`.** It places the file under `src/modules/04_hostesses/`; **it is at `src/lib/smartMatch.js`** (measured). Step 2.7 uses the real path.
 - **`14/08/2026 01:25` — `db_roadmap A-14` sits outside the `A-M6` block and is easy to miss.** The `SET NOT NULL` of §7.62 was ruled for M6's migration but lives in table A1, not in the `A-M6` block that `spec.md §①` points the blueprint at. ⇒ **step 1.1 carries it; a literal reading of the block's scope would drop a ruled migration item.**
-- **`14/08/2026 01:25` — Deferred, with its return mechanism named:** the `email_log` journal has no uniqueness on `(entity_type, entity_id, recipient)`, so a re-click after a partial send failure can double-log. **Not guarded at the DB level in M6**, because the closing RPC's own precondition already refuses a second closing; **the client must disable the send button for the whole send phase.** The retry engine itself is `§7.36`, 🟡, owned by **M10** — the return path is that §7 item, not a promise to remember.
-- **`14/08/2026 01:25` — Deferred:** `assignments.travel_amount` exists (`schema.sql:778`) and **nothing in the repo writes it** (§7.69 🟠). M6's closing screen does not touch it, by the same reasoning that made `personal_bonus` M8's. **Open item B14 carries it to Ishay.**
+- **`14/08/2026 03:12` — `email_log` double-log: the DB-level deferral stands, and the client-side half now has an owning step.** The journal has no uniqueness on `(entity_type, entity_id, recipient)`, so a re-click after a partial send failure can double-log **and send the customer two reports.** **Not guarded at DB level in M6, deliberately** — the closing RPC's `operationally_closed_at is null` precondition guards the *DB* write, **not the mail path.** ⇒ ✅ **Step 3.5 disables the send control for the whole send phase.** *(Previously this sentence lived only here, and step 3.5's body carried no such instruction — the finding was right and the build would not have contained it.)* The retry engine itself is `§7.36`, 🟡, owned by **M10** — the return path is that §7 item, not a promise to remember.
+- **`14/08/2026 03:12` — 🟢 CLOSED BY ISHAY, and recorded so it is not silently re-opened: `assignments.travel_amount` is not M6's.** Asked as a field-reality question — is travel reimbursement ever agreed in the field? — he answered **`לא קורה`**. ⇒ **R-2: a fixed `params` sum, owned by M8 (§7.69). M6's closing screen neither shows nor writes it, and open item B14 is REMOVED from §3.5 rather than left dangling.** 🔑 **A reality ruling is the cheapest kind and the easiest to lose** — it leaves no artefact, so a later session re-reads `schema.sql:778`, sees a column nobody writes, and re-opens work he already killed. **The quoted `לא קורה` is the guard.**
+- **`14/08/2026 03:12` — 🟢 CLOSED BY ISHAY: no draft-save on the closing screen.** Asked whether Dana ever closes an event across two sittings, he answered **`לא`**. ⇒ **R-1: no draft table, no columns, no autosave, and 🚫 no navigation guard.** The in-memory draft of ט4-ד is the only draft there is. **Open item B1 is REMOVED from §3.5.** ⚠️ **"No navigation guard" is the load-bearing half** — a session reading only "no draft-save" would still build a *"are you sure you want to leave?"* prompt "to be safe", i.e. logic for a case whose existence was denied, at the cost of a real interaction on every legitimate exit.
 - **`14/08/2026 01:25` — Recorded as a deliberate deviation needing a note in the living docs:** `ביטול פרויקט` sits on the project-card **shell**, not in the closing tab where `C5 §5.6.7` places it. **Reason:** the closing tab is gated on `event_finished` while cancellation is legal *"בכל שלב פעיל"* ⇒ C5's placement makes the control unreachable in exactly the window it is needed. **Requires an explicit "סטייה מ-5.6.7" note — not optional** (S-14).
 - **`14/08/2026 01:25` — Recorded as a deliberate deviation from a built precedent:** the overview has **no location column**, while module 4's *built* overview shows one (`OverviewTab.jsx:225,301`). **What reconciles them:** in M4 location **is** a ranking input (0.25 of the score); in M6 it has no consumer that separates projects. **This sentence must appear in the code comment**, or the first engineer to open both screens reads it as an oversight (S-8).
 - **`14/08/2026 01:25` — Open, and it is a build-order dependency, not a DB one:** surface 8's `לכרטיס →` links to the project card (surface 2). **Either surface 8 is built after surface 2, or the link is disabled with a visible reason** (`FilterPill.jsx:14-17` — disabled stays on screen and explains itself). 🚫 **A link that 404s is not an option.** The step order in §6 already puts 3.2 before 3.8.
