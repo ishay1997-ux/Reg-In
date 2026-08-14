@@ -19,11 +19,11 @@
 >
 > 🔴 **The single most important finding, kept here because it is the reason the oracle rule exists:** `list_projects_overview` summed the quote lines **without subtracting the discounts** ⇒ project `#8` returned **`6,300.00`** where `spec.md`'s hand-computed anchor says **`5,355.00 ₪`**. **A test written from the same wrong formula would have passed.** The anchor caught it. 🚫 **Never re-author an acceptance number.**
 >
-> 📂 **The drafts live OUTSIDE the repo**, in this session's scratchpad — **fragile by design, and the first job on resume is to move the finished SQL into `supabase/migrations/` with real timestamped filenames:**
-> `%LOCALAPPDATA%\Temp\claude\C--Users-ishay-Reg-In\2cbc7c79-09fd-4364-9ca1-7cb11905805e\scratchpad\` — `m6_step_1_*.sql` + `.notes.md` each, plus **`FINDINGS.md`** (all 32 findings with their evidence).
-> ⚠️ **If that directory is gone, the SQL is gone** — the plan in this guide survives, the drafts do not.
+> 📂 **The SQL lives in the repo: [`docs/plans/module-6-phase-1/`](../plans/module-6-phase-1/) — read its `README.md` first.** All **nine** migrations are drafted, reviewed and fixed; each `.sql` has a Hebrew `.notes.md` beside it, and `FINDINGS.md` carries all 32 review findings with their evidence.
+> 🔑 **Why they are NOT yet in `supabase/migrations/`:** a committed migration is history — `protect-frozen-files.sh` blocks editing it and the protocol is append-only. **A draft that may still change is not history.** Each becomes a real timestamped migration **at apply time**.
+> 🔴 **Apply order is load-bearing and is NOT plain numeric:** `1.1 → 1.2 → 1.3 → 1.4 → 1.5 → 1.6 → 1.7 → **1.9** → 1.8a → 1.8b → 1.10`. **1.9 precedes 1.8** *(measured: `to_regprocedure('public.recompute_project_status(int)')` → `NULL`)* and **1.2 precedes 1.4** *(FK to a table that would not exist yet ⇒ `42P01`)*.
 >
-> **In flight at the time of writing** *(5 background agents)*: drafts for **1.4** and **1.6** *(never written — and 7 of step 1.10's assertions key on names only they create)*, plus three fixers closing the 32 findings, split one-file-per-agent so no two collide.
+> **Two things the review changed that a resuming session must not "fix" back:** ① **`target_qty = 0` is REJECTED, never a row delete** (㉕ + AR-4 — the payload-contract block said otherwise and was corrected) · ② **the new-line path (`+ הוספת פריט שאינו בהצעה`) EXISTS** and a new line stores the **raw tier price, pre-discount**, like every other line — baking the quote's discount into it double-discounts silently *(measured on quote 6: `5%+10%` applied, yet `closing_unit_price` stores the raw `5.00`)*.
 >
 > 📌 **Queued for the apply round, decided and measured, do not re-litigate:**
 > **‏· מנהלת לוגיסטיקה drops from `edit` to `view` on `'פרויקטים'`** *(Ishay ruled `14/08/2026`)*. **Measured first: it costs her nothing today** — the only live policy naming `'פרויקטים'` is `projects_select_by_permission`, for which `view` suffices, and **zero live functions** reference the module. Her logistics work runs on `'לוגיסטיקה' = edit`, untouched.

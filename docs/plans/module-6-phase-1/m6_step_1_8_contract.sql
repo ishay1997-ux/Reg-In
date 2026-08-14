@@ -1,0 +1,761 @@
+-- #####################################################################################
+-- ##  🚫🚫  DO NOT APPLY THIS FILE AS A MIGRATION. IT IS A DESIGN DOCUMENT.  🚫🚫    ##
+-- ##                                                                                 ##
+-- ##  This file contains ZERO executable SQL. Every one of its lines is a `--`        ##
+-- ##  comment. Applying it creates NOTHING — no function, no constraint, no grant.    ##
+-- ##  Verify for yourself:  grep -vcE '^[[:space:]]*(--|$)' <this file>   ->   0      ##
+-- ##                                                                                 ##
+-- ##  🔴 THE REAL BODIES LIVE IN TWO OTHER FILES, AND THOSE ARE THE MIGRATIONS:       ##
+-- ##     · m6_step_1_8a_reads_and_close.sql  -> <ts>_module6_rpcs_reads_and_close.sql ##
+-- ##         assert_module_permission · list_projects_overview ·                      ##
+-- ##         close_project_operationally · mark_feedback_survey_sent ·                ##
+-- ##         set_project_finance_fields                                               ##
+-- ##     · m6_step_1_8b_writes.sql           -> <ts>_module6_rpcs_writes.sql          ##
+-- ##         assert_module_permission (same helper, `create or replace`) ·            ##
+-- ##         update_project_details · apply_scope_change · cancel_project             ##
+-- ##                                                                                 ##
+-- ##  🔴 THIS FILE MUST NOT BE COPIED INTO supabase/migrations/. Its home is docs/.   ##
+-- ##  A batch manifest that credits THIS file with creating the eight functions is    ##
+-- ##  wrong: applying it succeeds, reports success, and ships an EMPTY RPC layer.     ##
+-- #####################################################################################
+--
+-- =====================================================================================
+-- מודול 6 · צעד 1.8 — **חוזה החתימות בלבד** (ללא גופים)
+-- נכתב 14/08/2026 11:34 · עודכן בסבב-הבקרה 14/08/2026
+-- כל עובדה כאן נמדדה מול המסד החי (ref yfeovxppnfoafmfbdfvh)
+-- =====================================================================================
+--
+-- why: צעד 1.8 במדריך-המיקרו מתאר שבע פונקציות בפרוזה ואפס חתימות. שורות-החסימה 🛑 #2, #3,
+--   ‏#6 ו-#12 כולן יושבות כאן. הקובץ הזה סוגר את **חצי-החוזה**: חתימה מדויקת, טיפוס לכל
+--   ארגומנט, רשימת-עמודות מלאה ל-`returns table`, ושתי צורות ה-jsonb מילה-במילה — כדי
+--   ששני הסוכנים שיכתבו את הגופים יכתבו אותם מול אותו חוזה, ולא כל אחד מול המצאה משלו.
+--
+-- 🚫 **הקובץ הזה אינו מיגרציה ואינו מוחל.** כולו הערות `--`; החלה שלו היא no-op.
+--   המיגרציה האמיתית נכתבת בידי סוכני-הגופים, מהחוזה הזה.
+--
+-- 🔴 **מה נמדד חי לפני כתיבת השורה הראשונה** (הפירוט המלא בקובץ ה-notes):
+--   · `public.logistics` PK = **(project_id, sku, serial_number)** — שלוש עמודות.
+--   · `assignments_one_event_per_day` הוא אינדקס **חלקי**: `WHERE assignment_status='finally_approved'`.
+--   · טריגר חי שאיש לא הזכיר: `projects_sync_assignment_dates` (‏AFTER UPDATE OF final_event_date).
+--   · `customer_hostess_preference_negative_needs_reason` חי, ונוסחו למטה מילה-במילה.
+--   · `projects.customer_id` **nullable** (0 NULL מתוך 4 שורות היום).
+--   · 14 הפונקציות החיות משתמשות כולן ב-`SET search_path TO ''` — **לא** `public, pg_temp`.
+--   · `assert_module_permission` **אינה קיימת** — כל שמונה השמות למטה חדשים, אפס התנגשות.
+--
+-- =====================================================================================
+-- ‏§0 · מוסכמות שנקבעות כאן, ומחייבות את שני כותבי-הגופים
+-- =====================================================================================
+--
+-- ‏(א) 🔴 **`set search_path = ''` בכל שמונה הפונקציות, וכל אובייקט מוסמך במלואו (`public.x`).**
+--     ⚠️ **זו סטייה מהמדריך**, ששורה 1004 בו כותבת `set search_path = public, pg_temp`.
+--     הנימוק הוא מדידה ולא טעם: **14 מתוך 14 הפונקציות החיות ב-`public` משתמשות ב-`''`**
+--     (‏`current_user_role_id` · `set_project_coordinates` · `enforce_quote_in_progress_lock` ·
+--     ‏`sync_assignment_event_date` · `sync_assignments_on_project_date_change` ועוד).
+--     ‏`''` חמור יותר — שום שם לא-מוסמך אינו נפתר — ושתי הצורות מספקות את יועץ-האבטחה
+--     ‏`function_search_path_mutable`. אין סיבה להכניס דפוס שני למערכת בת דפוס אחד.
+--
+-- ‏(ב) 🔴 **שני קודי-שגיאה, ולא אחד:**
+--       · **`42501`** — כשל הרשאה (‏`assert_module_permission` בלבד).
+--       · **`P0001`** — כשל כלל-עסקי (נעילה · כמות ≤ 0 · סיבה חסרה · פרויקט מבוטל).
+--     ⚠️ **גם זו סטייה מהמדריך**, ששורה 1010 מטילה `P0001` גם על ההרשאה.
+--     הנימוק: `set_project_coordinates` החי זורק `42501` על הרשאה, ו-`hostessServerErrorMessage`
+--     (`src/lib/hostesses.js:620`) **כבר מסתעף על `error.code === '42501'`**. איחוד לקוד אחד
+--     מוחק את ההבחנה בין "אין לך הרשאה" ל"הפעולה אינה חוקית עכשיו" — שתי הודעות-מסך שונות.
+--
+-- ‏(ג) **כל טקסט-שגיאה שהמשתמשת רואה — עברית, נקבה.** חמש המשתמשות כולן נשים.
+--
+-- ‏(ד) 🔴 **מלכודת-הצללה ב-`returns table`:** שמות עמודות-הפלט הם פרמטרי-OUT והם **מצלים**
+--     עמודות-טבלה בגוף. `select project_id from public.projects p` בתוך `list_projects_overview`
+--     ייכשל ב-**`42702 column reference "project_id" is ambiguous`**.
+--     ⇒ **חובה: כל טבלה בגוף מקבלת alias, וכל עמודה מוסמכת (`p.project_id`).**
+--
+-- ‏(ה) 🔴 **מלכודת-טיפוס:** `count(*)` מחזיר **bigint**. עמודת-פלט שהוכרזה `integer` וקיבלה
+--     ‏`count(*)` בלי המרה מפילה את הפונקציה ב-**`42804 structure of query does not match`**.
+--     ⇒ **כל מונה בגוף נכתב `count(*)::integer`.** הוכרז `integer` ולא `bigint` בכוונה —
+--     ‏`required_hostess_count` הוא `integer` חי, ומונה ומכנה חייבים לצאת מאותו טיפוס.
+--
+-- ‏(ו) **אין אילוץ, אינדקס או policy בצעד 1.8** — הוא יוצר פונקציות בלבד. שמונת השמות
+--     שהקוד יסתמך עליהם הם שמות-הפונקציות למטה, ואין מלבדם.
+--
+--
+-- =====================================================================================
+-- ‏§1 · עוזר-השער המשותף
+-- =====================================================================================
+--
+-- create or replace function public.assert_module_permission(
+--   p_module text,
+--   p_level  text[]
+-- ) returns void
+--   language plpgsql security definer set search_path = ''
+-- as $$ ... $$;
+--
+--  · נקרא בראש **כל שבע** ה-RPC.
+--  · זורק `42501` עם `'אין לך הרשאה לבצע פעולה זו במודול %'`.
+--  · 🔴 **המחרוזות העבריות המדויקות של `p_module`, מאומתות מול `public.modules` החי:**
+--      `'פרויקטים'` (module_id 3) · `'לוגיסטיקה'` (5) · `'כספים'` (6) · `'דיילות'` (4) ·
+--      `'הצעות מחיר'` (2). **בייט-לבייט; טעות-הקלדה הופכת את תת-השאילתה ל-NULL והשער נסגר בשקט.**
+--
+--
+-- =====================================================================================
+-- ‏§2 · שבע ה-RPC + העוזר — החתימות המלאות
+-- =====================================================================================
+--
+-- ①  create or replace function public.list_projects_overview()
+--       returns table (
+--         project_id              integer,
+--         event_name              text,
+--         customer_name           text,
+--         final_event_date        date,
+--         final_start_time        time without time zone,
+--         final_end_time          time without time zone,
+--         final_location          text,
+--         project_status          text,
+--         required_hostess_count  integer,
+--         hostesses_confirmed     integer,
+--         pending_invites         integer,
+--         assignments_row_count   integer,
+--         logistics_ready         integer,
+--         logistics_total         integer,
+--         cancelled_at            timestamptz,
+--         cancel_type             text,
+--         planned_revenue         numeric
+--       )
+--       language plpgsql stable security definer set search_path = '';
+--
+-- ②  create or replace function public.update_project_details(
+--       p_project_id  integer,
+--       p_event_date  date,
+--       p_location    text,
+--       p_start_time  time without time zone,
+--       p_end_time    time without time zone
+--     ) returns jsonb
+--       language plpgsql security definer set search_path = '';
+--
+-- ③  create or replace function public.apply_scope_change(
+--       p_project_id  integer,
+--       p_lines       jsonb,
+--       p_reason      text
+--     ) returns jsonb
+--       language plpgsql security definer set search_path = '';
+--
+-- ④  create or replace function public.cancel_project(
+--       p_project_id    integer,
+--       p_cancel_type   text,
+--       p_cancel_reason text
+--     ) returns jsonb
+--       language plpgsql security definer set search_path = '';
+--
+-- ⑤  create or replace function public.close_project_operationally(
+--       p_project_id    integer,
+--       p_actual_hours  numeric,
+--       p_actual_guests integer,
+--       p_report_path   text,
+--       p_rows          jsonb
+--     ) returns jsonb
+--       language plpgsql security definer set search_path = '';
+--
+-- ⑥  create or replace function public.mark_feedback_survey_sent(
+--       p_project_id integer
+--     ) returns boolean
+--       language plpgsql security definer set search_path = '';
+--
+-- ⑦  create or replace function public.set_project_finance_fields(
+--       p_project_id              integer,
+--       p_invoice_sent            boolean,
+--       p_payment_date            date,
+--       p_feedback_score          integer,
+--       p_negative_feedback_reason text,
+--       p_feedback_notes          text
+--     ) returns boolean
+--       language plpgsql security definer set search_path = '';
+--
+-- 🔑 **למה שלושה טיפוסי-החזרה ולא אחד — כלל, לא טעם:**
+--    · `returns table(...)` — הקורא היחיד שקורא ולא כותב.
+--    · `returns jsonb` — ארבע הפעולות שמוסרות ללקוח **משימת-המשך** (מי לזמן מחדש, למי לשלוח
+--      מייל, מה לצרף). תקדים חי: `get_shift_invite` ו-`respond_to_shift_invite` שתיהן `jsonb`.
+--    · `returns boolean` — שני הכותבים הצרים; `true` = שורה אחת עודכנה. תקדים חי:
+--      `set_project_coordinates(...) returns boolean`, ומשרת את AS-6 (לאשר שהכתיבה נחתה).
+--
+-- ⚠️ **טיפוסי-הזמן:** `final_start_time`/`final_end_time` הם `time without time zone` **במסד
+--    החי**. זו אינה הפרה של §7.56 — §7.56 עוסק ב-`timestamp` מול `timestamptz`, ושתי
+--    חותמות-הזמן החדשות (`cancelled_at`, `operationally_closed_at`) הן `timestamptz`.
+--
+-- ⚠️ **תלות בצעדים קודמים** — החתימות מזכירות עמודות שנמדדו כ**לא-קיימות** היום ונוצרות קודם:
+--    ‏`projects.cancelled_at` · `cancelled_by` · `cancel_type` · `operationally_closed_at` ·
+--    ‏`operationally_closed_by` (צעד 1.1) · `assignments.attendance_status` · `lateness_level` ·
+--    ‏`no_show_reason` (1.1/M6-4) · טבלת `project_changes` (1.2) · `logistics.quote_service_line_id`
+--    ו-`project_change_id` (1.4). **1.8 אינה יוצרת אף אחת מהן.**
+--
+--
+-- =====================================================================================
+-- ‏§3 · ① `list_projects_overview()` — מקור לכל עמודה
+-- =====================================================================================
+--
+-- שער: `assert_module_permission('פרויקטים', array['edit','view'])`.
+-- שורה אחת לכל פרויקט, בלי חיתוך-תאריכים (משטח 1 §③: *"חלון-הזמן של כל המסך: אין"*).
+--
+-- | עמודה                   | מקור                                                                  |
+-- |-------------------------|-----------------------------------------------------------------------|
+-- | project_id              | `projects.project_id`                                                 |
+-- | event_name              | `projects.event_name`                                                 |
+-- | customer_name           | `projects.customer_name` — 🔴 **מהעמודה, לא בצירוף ל-`customers`**     |
+-- | final_event_date        | `projects.final_event_date`                                           |
+-- | final_start_time        | `projects.final_start_time`                                           |
+-- | final_end_time          | `projects.final_end_time`                                             |
+-- | final_location          | `projects.final_location`                                             |
+-- | project_status          | `projects.project_status`                                             |
+-- | required_hostess_count  | `projects.required_hostess_count` — **המכנה של מדד-הדיילות**           |
+-- | hostesses_confirmed     | קיפול ה-de-dup, למטה                                                  |
+-- | pending_invites         | אותו קיפול, `assignment_status='pending'`                             |
+-- | assignments_row_count   | `count(*)` **גולמי** על `assignments` של הפרויקט                       |
+-- | logistics_ready         | `count(*) filter (where l.item_status='ready')`                       |
+-- | logistics_total         | `count(*)` על `logistics` של הפרויקט                                  |
+-- | cancelled_at            | `projects.cancelled_at` (נוצרת ב-1.1)                                 |
+-- | cancel_type             | `projects.cancel_type` (נוצרת ב-1.1)                                  |
+-- | planned_revenue         | 🔴 `Σ(qty×price) − round(Σ × (הנחת-לקוח + הנחה-ידנית)/100, 2)`, או NULL |
+--
+-- 🔴 **`hostesses_confirmed` — קיפול `MAX(assignment_number)` פר-דיילת, ב-SQL** (AR-3):
+--     select count(*)::integer from (
+--       select distinct on (a.hostess_id) a.assignment_status
+--         from public.assignments a
+--        where a.project_id = p.project_id
+--        order by a.hostess_id, a.assignment_number desc) w
+--      where w.assignment_status = 'finally_approved'
+--   ‏**המבחן החי, נמדד היום על `#8`:** ‏9 שורות `assignments`, ‏6 דיילות נבדלות.
+--   ‏`hostess_id` 11→#1 `finally_approved` · 13→#1 `released` · 21→#1 `approval_withdrawn` ·
+--   ‏23→#1 `pending` · 29→#2 `pending` (‏#1 היה `declined`) · 41→#3 `released` (‏#1,#2 `released`).
+--   ⇒ **`hostesses_confirmed = 1` · `pending_invites = 2` · `assignments_row_count = 9`.**
+--   ‏🔴 `count(*)` נאיבי היה מחזיר 1 גם כאן במקרה, אבל `pending_invites` נאיבי היה מחזיר **2**
+--   מתוך 9 שורות בעוד 29 סירבה-ואז-זומנה — כלומר הקיפול הכרחי לשני המונים, לא רק לאחד.
+--
+-- 🔴 **`pending_invites` היא עמודה שרשימת-המדריך (שורה 1017) אינה מונה — ונוספה כאן.**
+--   ‏**העוגן:** משטח 1 §③ מרנדר *"‏2 זימונים ממתינים למענה"* ומגדיר אותו *"ספירת `pending`
+--   באותה שורה-אחרונה פר-דיילת"*, ו-AR-3 אוסר צירוף בצד-הדפדפן ⇒ **אין דרך שנייה להביא אותו.**
+--   ‏`assignments_row_count` נשארת בנפרד כי היא משרתת את S-6 (שורה אדומה = **אפס** שורות)
+--   ואת שורת-המשנה של אריח 1 (*"מתוכם 1 שלא נשלח בו אף זימון"*) — שאלה אחרת מ"כמה ממתינים".
+--
+-- 🔴 **`logistics_total = 0` הוא ✅ ולא ⚠️** — הכרעת-ישי 08/08/2026: אפס שורות = הושלם.
+--   ‏`#11` הוא המקרה החי (ההצעה 24 = שורת-דיילת אחת בלבד ⇒ אפס שורות `logistics`).
+--
+-- 🔴 **`planned_revenue` — NULL ולא 0, בשלושה מצבים** (S-2):
+--   ① לפרויקט אין `quote_id` · ② לקוראת אין הרשאה על `'הצעות מחיר'` · ③ אפס שורות `quote_services`.
+--   הפונקציה היא `SECURITY DEFINER` ולכן **כן** יכולה לקרוא — ⇒ **חובה לחשב את ראות-הקוראת
+--   במפורש**: מחזירים סכום רק כאשר לקוראת יש `edit`/`view` על `'הצעות מחיר'`, אחרת NULL.
+--   ‏**נמדד חי במטריצת-ההרשאות:** `מנהלת גיוס ושיבוץ` ו-`מנהלת לוגיסטיקה` הן `blocked` על
+--   ‏`'הצעות מחיר'` ⇒ שתיהן מקבלות NULL, וזה נכון. `0` שמור לאפס אמיתי.
+--
+-- 🔴🔴 **וההנחות — תוקן בסבב-הבקרה 14/08/2026. הנוסח הקודם כאן היה `Σ(qty × price)` בלבד,**
+--   **בלי שום איבר-הנחה**, ושני כותבי-הגופים העתיקו אותו כלשונו ⇒ פרויקט `#8` היה מחזיר
+--   ‏`6,300.00` במקום `5,355.00 ₪`. **זו סתירה ספרה-בספרה לעוגן המחושב-ביד** של
+--   ‏`spec.md §3.1`, שהוא **קריטריון-הקבלה #9** (`spec.md:455`).
+--   ‏🚫 **והעוגן אינו זז כדי להתאים לקוד — הקוד זז אליו.**
+--
+--   **הנוסחה, ומקור-האמת שלה הוא `src/lib/pricing.js:105-124` ולא הקובץ הזה:**
+--     ‏`discount = round(subtotal × (applied_customer_discount + manual_discount) / 100)`
+--     ‏`preVat   = subtotal − discount`     ⇐ **וזו `planned_revenue`**
+--   ‏🔴 **ההנחות מתחברות בחיבור, לא בשרשור** (‏§7.26 · F7, הכרעת-ישי 07/07): ‏5%+10% = 15%
+--   מסכום-הביניים. **שרשור** (`6,300 × 0.95 × 0.90`) נותן `5,386.50` — פער `31.50 ₪`
+--   שעובר בקריאה ושובר דוח. 🔴 **ולפני מע"מ:** ‏`6,318.90` שם עובר כל בדיקת-סכימה ושוגה.
+--
+--   **הביטוי כפי שהוא בגוף (‏`m6_step_1_8a`), ורץ חי 14/08/2026:**
+--     select s.sub - round(s.sub * (q.applied_customer_discount + q.manual_discount)/100.0, 2)
+--       from public.quotes q
+--       cross join lateral (select sum(qs.qty * qs.closing_unit_price) as sub
+--                             from public.quote_services qs where qs.quote_id = q.quote_id) s
+--      where q.quote_id = p.quote_id
+--   ‏**התוצאה החיה:** ‏#3 → `8,360.00` · #7 → `5,355.00` · #8 → 🎯 `5,355.00` · #11 → `500.00`.
+--   ‏**נמדד:** שתי עמודות-ההנחה הן `NOT NULL` ב-`public.quotes` ⇒ ‏🚫 בלי `coalesce`, שהיה
+--   מסתיר עמודה שהתרוקנה. **ומצב ③ נשמר:** `sum` על אפס שורות הוא NULL, והחיסור מפיץ NULL —
+--   ‏**אומת חי: הביטוי על `quote_id` שאינו קיים החזיר NULL, לא `0`.**
+--
+-- ⚠️ **`final_location` מוחזרת ואינה מרונדרת** — S-8 שולל עמודת-מיקום במבט-העל. היא נשארת
+--   בחוזה כי המדריך מנה אותה; **אין להסיק ממנה שמשטח 1 מציג מיקום.**
+--
+-- **מבחן-העוגן, מריצים אחרי ההחלה:**
+--   select * from public.list_projects_overview() where project_id in (3,8,11);
+--   ‏#8 → `1/6` דיילות · `0/2` לוגיסטיקה · `pending_invites=2` · `assignments_row_count=9`
+--   ‏#11 → `0/1` דיילות · `logistics_total=0` · `assignments_row_count=1`
+--   ‏#3 → `0/6` דיילות · `0/2` לוגיסטיקה · `assignments_row_count=0`
+--
+--
+-- =====================================================================================
+-- ‏§4 · 🔴 צורת ה-jsonb הראשונה — `apply_scope_change(p_lines)`
+--        (שורת-חסימה #3 — "הפער המסוכן ביותר בפזה")
+-- =====================================================================================
+--
+-- **‏`p_lines` הוא מערך JSON. אלמנט אחד לכל שורה שהכמות שלה השתנתה.**
+--
+--   {
+--     "target":         <text>,          -- חובה: 'logistics' | 'hostess_count'
+--     "quote_line_id":  <bigint>,        -- חובה (‏↳ as-built — ר' ① למטה)
+--     "sku":            <text>,          -- חובה
+--     "serial_number":  <integer|null>,  -- חובה; `null` = שורת-דיילות
+--     "target_qty":     <integer>        -- חובה, > 0 — **הכמות החדשה, לא דלתא**
+--   }
+--
+-- 🔴 **תוקן בסבב-הבקרה 14/08/2026 — שמות-המפתחות היו מחוץ לחוזה:**
+--   ‏`new_qty` → **`target_qty`** · ושדה-המבחין **`target`** הוחזר. המקור המחייב הוא
+--   ‏`docs/micro_guides/module-6.md` §**PAYLOAD CONTRACTS**, שנוסף 14/08/2026 בבקשת-ישי
+--   (*"סבבה תוסיף"*) והוכרז **מחייב על פזות 1, 2 ו-3 כאחת.**
+--   ‏🔑 **ולמה זה חמור אף שהמסד אינו מרגיש בו:** פזה 1 כותבת את **המקבל**, פזה 3 את **השולח**,
+--   והן נפגשות **שבועות אחר-כך**. כל צד עקבי בתוך עצמו ועובר כל בדיקה עד לרגע המפגש —
+--   ואז **‏100% מהקריאות נכשלות.**
+--   ‏⚠️ **`target` מחזיר כמבחין מפורש ואינו נגזר מ-`serial_number is null`** — הגזירה עובדת
+--   ‏*היום* רק מפני ששורת-הדיילות היא היחידה בלי `serial_number`. **מבחין מפורש אינו נשען
+--   על צירוף-מקרים**, והשרת עדיין מאמת `products.category` מול מה שהוצהר (③ למטה).
+--
+-- ‏**‏↳ as-built · `quote_line_id` — שדה שאינו בטבלת-החוזה שבמדריך, ונשאר בכוונה.**
+--   ‏**הנימוק, ולא "כך יצא":** הוא **מפתח-הכסף** — ‏`quote_services_pkey PRIMARY KEY (line_id)`,
+--   אומת חי — וממנו נקראים `closing_unit_price` / `closing_unit_cost` / `color` **בשרת בלבד**.
+--   בלעדיו השרת מאתר מחיר לפי `sku` בתוך ההצעה, ו-**SKU יכול להופיע פעמיים** (⑬).
+--   ⇒ **על המדריך להוסיף אותו לטבלת-החוזה עם הנימוק הזה** — ‏`↳ as-built` בשורת צעד 1.8.
+-- ‏**‏① `quote_line_id` → `public.quote_services.line_id`** — ‏`bigint`, מפתח ראשי חד-עמודתי,
+--    אומת חי (`quote_services_pkey PRIMARY KEY (line_id)`). **זהו מפתח-הכסף:** ממנו נקראים
+--    ‏`closing_unit_price`, `closing_unit_cost`, `color` ו-`sku` **בצד-השרת בלבד**, לעולם לא
+--    מהמטען. השרת חייב לאמת ש-`qs.quote_id = (select quote_id from projects where project_id = p_project_id)`,
+--    אחרת מטען יכול לצטט שורת-מחיר של הצעה של לקוח אחר.
+--    ‏🚫 **ולא `logistics.quote_service_line_id`** — העמודה ההיא נוצרת רק ב-1.4 והיא **NULL בכל
+--    שורה קיימת** (‏§5 של המדריך שולל מילוי-לאחור לפי מיקום) ⇒ מפתח שלא היה מאתר אף שורה מהחיות.
+--
+-- ‏**‏② `sku` + `serial_number` → זנב ה-PK החי של `logistics`.**
+--    ‏🔴 `logistics_pkey PRIMARY KEY (project_id, sku, serial_number)` — **שלוש עמודות, נמדד.**
+--    ‏`project_id` מגיע מהארגומנט, ולכן המטען נושא את השתיים הנותרות ואת שתיהן בלבד.
+--    ‏🚫 **`sku` לבדו אינו מפתח** — ⑬ קיימת בדיוק מפני שאותו SKU בשני צבעים מייצר שתי שורות
+--    בלתי-נבדלות. היום `#8` נושא שני SKU שונים, **ואסור לבנות על כך.**
+--    ‏`sku` נדרש גם כשהוא נגזר מ-`quote_line_id`: **השרת מאמת שהם תואמים**, ואי-התאמה היא
+--    ‏`raise`, לא ברירה שקטה — היא מעידה על באג-לקוח, ובחירה שקטה מעדכנת את השורה הלא-נכונה.
+--
+-- ‏**‏③ `serial_number = null` ⇒ זו שורת-הדיילות**, והיעד הוא `projects.required_hostess_count`.
+--    השרת מאמת ש-`products.category = 'hostess'` עבור אותו `sku` (נמדד חי: `04ST`/`06ST` הם
+--    ‏`category='hostess'`; `B-REG-TAG`/`B-FAB-LAN` הם `'product'`). **לקוח ששכח `serial_number`
+--    על שורת-מוצר ייעצר, ולא יקפיץ בשקט את מספר-הדיילות.**
+--
+-- ‏**‏④ 🔴 `target_qty` היא הכמות **החדשה**, לעולם לא דלתא** — והדלתא נגזרת בשרת.
+--    זה מה שקונה אי-דמיות: לחיצה כפולה על `שמור` מחשבת `380 − 380 = 0`, ו-`delta_qty <> 0`
+--    (‏1.2) הופך את השורה הריקה לבלתי-ניתנת-להוספה.
+--
+-- 🔴🔴 **וזו הנקודה שהמדריך משאיר פתוחה והיא מפילה בשקט — מהי "הכמות הנוכחית":**
+--    המדריך כותב *"delta = target_qty − current_qty"* ואינו אומר מאיפה נקרא `current_qty`.
+--    ‏**הניחוש המתבקש — `quote_services.qty` — שגוי, ונמדד:** ההצעה **קפואה**. `quotes.quote_id=6`
+--    היא בסטטוס `approved`, והטריגר החי `quote_services_lock_non_in_progress` זורק `P0001` על
+--    כל `UPDATE` לשורה שהצעתה אינה `in_progress` ⇒ **`qs.qty` יישאר `300` לנצח.**
+--    ⇒ שינוי-תכולה **שני** אמיתי (‏380 → 400) היה מחשב `400 − 300 = +100` במקום `+20`,
+--    ‏**מכפיל את החיוב ולא זורק דבר.**
+--    ✅ **המקור הנכון ל-`current_qty` הוא היעד עצמו:**
+--      · שורת-מוצר  ⇒ `logistics.planned_qty` באותה שלשת-PK.
+--      · שורת-דיילות ⇒ `projects.required_hostess_count`.
+--    ‏`quote_services` נותנת **מחיר ועלות בלבד**. שתי המטרות אינן זהות, ולערבב ביניהן זה הבאג.
+--
+-- ‏**‏⑤ גבול מוצהר:** ‏`apply_scope_change` משנה **כמויות בשורות-הצעה קיימות בלבד**.
+--    ‏SKU חדש שלא היה בהצעה **אינו נתמך** — ① מילה-במילה: *"כן ברור, משנים רק כמויות"*,
+--    ואין לו מפתח במטען ואין לו משטח מאושר. ⇒ **`logistics.project_change_id` נשאר בלי כותב
+--    בפזה 1**, וה-CHECK של 1.4 חייב להתיר שלשת-NULL (כפי ש-§5 כבר קובע).
+--
+-- ‏**‏⑥ תלות שהמטען חושף וצעד 1.2 חייב לספק:** 1.8 ③ דורש *"‏`change_group_id` אחד לכל קריאה"*,
+--    ורשימת-העמודות של `db_roadmap M6-1` **ושל AS-8 אינה כוללת עמודה כזו.** ⇒ **על 1.2 להוסיף
+--    ‏`change_group_id uuid not null`**, אחרת הדרישה אינה ניתנת למימוש.
+--
+-- ────────────────────────────────────────────────────────────────────────────────────
+-- 🔬 **דוגמה עובדת, בנתונים אמיתיים מהמסד החי — פרויקט `#8`.**
+--    נמדד: `projects.project_id=8` · `quote_id=6` · `customer_id=46` · `required_hostess_count=6`.
+--    ‏`quote_services`: line_id **32** = `04ST` qty 6 @ 500.00 / cost 300.00 (category hostess) ·
+--    line_id **33** = `B-REG-TAG` qty 300 @ 5.00 / cost 2.50 · line_id **34** = `B-FAB-LAN` qty 300 @ 6.00 / 3.00.
+--    ‏`logistics`: (8,'B-REG-TAG',**1**) planned_qty 300 · (8,'B-FAB-LAN',**2**) planned_qty 300.
+--    ⚠️ שימי לב שה-`serial_number` **אינו** מספר-השורה בהצעה: `B-REG-TAG` היא שורה 2 בהצעה
+--    ו-`serial_number = 1`. **זה בדיוק המקום שבו ניחוש היה מעדכן את השורה הלא-נכונה.**
+--
+--    התרחיש של `processes-approved`: *"הלקוח מוסיף 2 דיילות ו-80 תגים חמישה ימים לפני"*.
+--
+--    select public.apply_scope_change(
+--      8,
+--      '[
+--         {"quote_line_id": 33, "sku": "B-REG-TAG", "serial_number": 1,    "target_qty": 380},
+--         {"quote_line_id": 32, "sku": "04ST",      "serial_number": null, "target_qty": 8}
+--       ]'::jsonb,
+--      'הלקוח הודיע על 80 משתתפים נוספים ועל הרחבת צוות הקבלה'
+--    );
+--
+--    מה שהשרת גוזר, שורה-שורה:
+--      · line 33 → יעד `logistics(8,'B-REG-TAG',1)`; current = **300** (‏`planned_qty`) ⇒
+--        `delta_qty = +80`; snapshot 5.00 / 2.50; `planned_qty := 380`.
+--      · line 32 → `serial_number is null` ⇒ יעד `projects.required_hostess_count`; current = **6** ⇒
+--        `delta_qty = +2`; snapshot 500.00 / 300.00; `required_hostess_count := 8`.
+--      · שתי שורות `project_changes` עם אותו `change_group_id`, אותה `reason`, ואותו `performed_by`.
+--      · הטריגר של 1.9 מריץ `recompute_project_status(8)` — `required` עלה ⇒ המדד יורד.
+--
+--    **החזרה (`jsonb`):**
+--      {
+--        "change_group_id": "<uuid>",
+--        "lines": [
+--          {"quote_line_id":33,"sku":"B-REG-TAG","serial_number":1,   "delta_qty":80,"target_qty":380,
+--           "unit_price_snapshot":5.00,  "revenue_delta":400.00},
+--          {"quote_line_id":32,"sku":"04ST",     "serial_number":null,"delta_qty":2, "target_qty":8,
+--           "unit_price_snapshot":500.00,"revenue_delta":1000.00}
+--        ],
+--        "revenue_delta_total": 1400.00,
+--        "hours_to_event": 120
+--      }
+--    ‏`hours_to_event` **מדווח ואינו חוסם** (⑯) — הלקוח מחליט אם לצייר את סימון *"שינוי מאוחר"*.
+--    ‏🚫 **אין סף-זמן בתוך הפונקציה, לא `T-36` ולא אחר.**
+--
+-- 🔴 **‏AR-4 — כמות אפס אסורה, וההודעה שלנו קודמת ל-CHECK:**
+--    ‏`logistics_planned_qty_check CHECK (planned_qty > 0)` חי ויתפוס — אבל בעברית של Postgres.
+--    ⇒ `raise exception` ידני, `P0001`, בנוסח המאושר מילה-במילה:
+--    *"הכמות חייבת להיות גדולה מאפס. להסרת פריט לגמרי — פני למנהלת הלוגיסטיקה."*
+--
+--
+-- =====================================================================================
+-- ‏§5 · 🔴 צורת ה-jsonb השנייה — `close_project_operationally(p_rows)`
+-- =====================================================================================
+--
+-- **‏`p_rows` הוא מערך JSON. אלמנט אחד לכל דיילת ברשימת-הסגירה.**
+--
+--   {
+--     "hostess_id":        <bigint>,        -- חובה — **החלק השני של ה-PK**
+--     "assignment_number": <integer>,       -- 🔴 חובה — **החלק השלישי של ה-PK**
+--     "attendance_status": <text>,          -- חובה — `arrived` | `late` | `no_show`
+--     "lateness_level":    <text|null>,     -- **רק** כאשר `late`
+--     "no_show_reason":    <text|null>,     -- **רק** כאשר `no_show`
+--     "actual_hours":      <numeric>,       -- חובה; מאולץ ל-`0` כאשר `no_show`
+--     "preference":        <text|null>,     -- `null` **רק** כשלא הגיעה
+--     "preference_reason": <text|null>      -- חובה כאשר preference = 'לא_לשלוח'
+--   }
+--
+-- 🔴 **תוקן בסבב-הבקרה 14/08/2026, שני תיקונים במטען הזה:**
+--   ‏**‏(1)** ‏`quality_mark` → **`preference`** — השם שבחוזה המחייב של המדריך
+--   (§PAYLOAD CONTRACTS, נוסף 14/08/2026 בבקשת-ישי *"סבבה תוסיף"*, **מחייב על פזות 1·2·3**).
+--   ‏**‏(2)** ‏**`assignment_number` הוחזר למטען** — הוא היה בחוזה ונשמט מכאן ומהגוף.
+--
+-- ‏**‏① 🔴 `hostess_id` הוא המפתח — ואינו מספיק לבדו לאתר את השורה.**
+--    ‏`assignments_pkey PRIMARY KEY (project_id, hostess_id, assignment_number)` — **נמדד.**
+--    ⇒ שורת-היעד היא **(p_project_id, hostess_id, MAX(assignment_number))**, ורק אם היא
+--    ‏`assignment_status='finally_approved'`. **אותו קיפול de-dup של AR-3, ומאותה סיבה:**
+--    ל-`hostess_id=41` בפרויקט 8 יש **שלוש** שורות, ל-`29` יש שתיים. כתיבה ל-`assignment_number=1`
+--    היא כתיבה לשורה היסטורית שאיש לא יקרא.
+--    ‏**השרת מאמת דו-כיוונית:** כל דיילת מאושרת-סופית מופיעה במטען **בדיוק פעם אחת**, ואין
+--    במטען `hostess_id` שאינו מאושר-סופית. חוסר ⇒ `P0001` (משטח 5: *"חסר סימון נוכחות ל-‹שם›"*).
+--
+-- ‏**‏①ב 🔴 `assignment_number` — ↳ as-built: המטען נושא אותו, והשרת ממשיך לגזור ולהשוות.**
+--    ‏**זו אינה בחירה בין השניים, ולכן היא נרשמת:** החוזה מחייב שהלקוח ישלח אותו; הטיוטה
+--    גזרה אותו בשרת ולא קראה אותו כלל. ⇒ **שניהם.**
+--    · **הגזירה (`MAX(assignment_number)`) היא זו שכותבת** — לעולם לא ערך מהמטען.
+--    · **המטען הוא הצהרה על מה שהמסך ראה**, ואי-התאמה ⇒ `P0001` בעברית-נקבה:
+--      *"רשימת-הסגירה אינה מעודכנת: הזימון של ‹שם› השתנה מאז שהמסך נטען. רענני את המסך ונסי שוב."*
+--    ‏🔑 **הנימוק:** אמון עיוור במטען כותב לשורה היסטורית כשהמסך התיישן; גזירה **שקטה** בלבד
+--    **מסתירה** את ההתיישנות ומעדכנת שורה שהמשתמשת לא התכוונה אליה. **רק הצירוף רועש.**
+--    ‏**נמדד חי 14/08/2026 על `#8`:** מטען `assignment_number=1` ל-`hostess_id=41` מול
+--    גזירה `3` ⇒ המקרה תפוס. *(ול-`hostess_id=11` המטען `1` והגזירה `1` — עובר.)*
+--    ‏🧨 **ומלכודת שנמדדה:** מפתח **חסר** ⇒ `jsonb_typeof(...)` מחזיר SQL-NULL,
+--    ואז `<> 'number'` הוא **NULL ולא TRUE, וה-`if` אינו יורה.** ⇒ **`is distinct from`.**
+--
+-- ‏**‏② אוצר-המילים של שלוש עמודות-הנוכחות אינו נקבע כאן** — הוא נקבע ב-CHECK של **צעד 1.3**
+--    (‏`db_roadmap M6-4`). 🔴 **תוקן בסבב-הבקרה 14/08/2026 — הנוסח הקודם כאן היה שגוי בשני
+--    דברים:** הוא ייחס את ה-CHECK לצעד 1.1 (הוא ב-1.3), **ומנה שמונה ערכים עבריים** מתוך
+--    ‏`ATTENDANCE_OUTCOMES` (`src/lib/smartMatch.js:43-52`) כאילו הם ערכי-המסד.
+--    ‏**מה שצעד 1.3 באמת יוצר (נקרא מהטיוטה, `m6_step_1_3.sql:66-80`):**
+--      ‏`assignments_attendance_status_check  check (attendance_status in ('arrived','late','no_show'))`
+--      ‏`assignments_lateness_level_check     check (lateness_level    in ('light','medium','heavy'))`
+--      ‏`assignments_no_show_reason_check     check (no_show_reason    in ('sick','approved_absence','ghosted'))`
+--    ⇒ **המטען נושא את שלושת אלה באנגלית**, וזה גם מה שהחוזה המחייב של המדריך כותב
+--    (*`arrived` / `late` / `no_show`*). ‏**‏`ATTENDANCE_OUTCOMES` העברי הוא אוצר-מילים של
+--    ‏Smart Match, ומיפוי בינו לבין ערכי-המסד הוא עבודת פזה 2/3 — לא של המטען הזה.**
+--    ⚠️ **‏`ביטלה_אחרי_אישור` אינו ערך-נוכחות** (‏AR-7): הוא `assignment_status='approval_withdrawn'`,
+--    ודיילת כזו **אינה על רשימת-הסגירה כלל** ⇒ **אינה מופיעה ב-`p_rows`.**
+--    🔴 **1.8 מאמתת מול ה-CHECK ואינה מגדירה אותו.** אם 1.3 טרם רץ — 1.8 נופלת בקריאה הראשונה.
+--
+-- ‏**‏③ 🔴 `preference` הוא `null` **בדיוק** כאשר הדיילת לא הגיעה — ולא במקרה אחר.**
+--    ‏`screens-approved:1410`: *"סימון-איכות (כל שורה) ✅ — **אלא אם הנוכחות היא 'לא הגיעה'**"*,
+--    ו-ט4-א: *"אי-אפשר לשפוט מי שלא ראית"* (השדה **מושבת**, לא ריק).
+--    ⇒ 🔴 **קריאה תמימה של המדריך — *"upsert customer_hostess_preference per hostess"* —
+--    שוברת את `customer_hostess_preference.preference NOT NULL` בדיוק על השורות האלה.**
+--    **הכלל:** ‏`preference is null` ⇒ **לא מבצעים upsert לאותה דיילת בכלל.**
+--    ‏`screens-approved:1424`: שורת לא-הגיעה גם **מאפסת את `actual_hours` ל-`0` ומשביתה אותו.**
+--
+-- ‏**‏④ ערכי `preference` — אילוץ **חי**, נמדד היום:**
+--    ‏`customer_hostess_preference_preference_check CHECK (preference in ('מצוינת','בסדר','לא_לשלוח'))`.
+--    ‏🔴 **`'לא_לשלוח'` עם קו-תחתון, לא רווח.** התווית על המסך היא *"לא לשלוח ללקוח הזה שוב"*
+--    והערך במסד אינו זהה לה — **המרה נעשית בלקוח, והמטען נושא את ערך-המסד.**
+--
+-- ‏**‏⑤ יעד ה-upsert:** ‏`on conflict on constraint customer_hostess_preference_unique`
+--    ‏— ‏`UNIQUE (customer_id, hostess_id)`, **אומת חי**. ‏B13: דריסה, בלי היסטוריה.
+--    ‏`customer_id` נקרא מ-`projects.customer_id` **של הפרויקט**, לא מהמטען.
+--
+-- ────────────────────────────────────────────────────────────────────────────────────
+-- 🔬 **דוגמה עובדת, בנתונים אמיתיים — פרויקט `#8`** (‏`final_start_time` 18:00, `final_end_time` 22:00
+--    ⇒ ברירת-מחדל 4 שעות; `customer_id = 46`).
+--    ⚠️ **הערה ישרה על הדוגמה:** היום רק `hostess_id=11` (נועה שגיא) היא `finally_approved`
+--    בפרויקט 8 ⇒ סגירה אמיתית *כרגע* תישא **אלמנט אחד**. ‏`hostess_id=23` (רוני אלמוג) היא
+--    ‏`pending` היום, והיא מופיעה כאן כדי להראות את צורת שורת-הלא-הגיעה. **שני ה-`hostess_id`
+--    אמיתיים ושייכים לפרויקט 8; מצב-השיבוץ של השנייה הוא היפותטי, וסומן.**
+--
+--    ⚠️ **עודכן בסבב-הבקרה 14/08/2026:** נוסף `assignment_number` לכל שורה, ושלושת
+--    ערכי-הנוכחות תוקנו מעברית לערכי-המסד באנגלית (②). ‏`assignment_number` של `11` הוא
+--    ‏**1** ושל `23` הוא **1** — **שניהם נמדדו חי היום**, ולא נוחשו.
+--
+--    select public.close_project_operationally(
+--      8, 5.0, 250, 'reports/8/summary-2026-10-15.pdf',
+--      '[
+--         {"hostess_id": 11, "assignment_number": 1,
+--          "attendance_status": "arrived", "lateness_level": null,
+--          "no_show_reason": null, "actual_hours": 5.0,
+--          "preference": "מצוינת", "preference_reason": null},
+--         {"hostess_id": 23, "assignment_number": 1,
+--          "attendance_status": "no_show", "lateness_level": null,
+--          "no_show_reason": "ghosted", "actual_hours": 0,
+--          "preference": null, "preference_reason": null}
+--       ]'::jsonb
+--    );
+--
+--    מה שהשרת עושה:
+--      · `projects`: `actual_hours=5.0` · `actual_guests=250` · `summary_report_url=<path>` ·
+--        `project_status='awaiting_invoice'` · `operationally_closed_at=now()` · `_by=auth.email()`.
+--      · `assignments(8, 11, 1)`: שלוש עמודות-הנוכחות + `actual_hours=5.0`.
+--      · `assignments(8, 23, <max>)`: `attendance_status='no_show'` + `no_show_reason='ghosted'`
+--        + `actual_hours=0` (מאולץ בשרת, ‏ט4-א).
+--      · `customer_hostess_preference`: upsert **אחד בלבד** — `(46, 11, 'מצוינת')`.
+--        🔴 **‏`hostess_id=23` אינה מקבלת שורה** — `preference is null` (③).
+--      · 🚫 **אפס חישובי-רווח ואפס עמודת-רווח** (‏AR-6).
+--      · 🚫 **אינה כותבת `feedback_status` ואינה שולחת דבר** (‏AR-5).
+--
+--    **החזרה (`jsonb`) — כל מה שהלקוח צריך לשלב-השליחה שאחרי ה-commit:**
+--      {
+--        "project_id": 8,
+--        "customer_id": 46,
+--        "customer_name": "מדיטק פתרונות בע\"מ",
+--        "event_name": "כנס לקוחות שנתי",
+--        "report_path": "reports/8/summary-2026-10-15.pdf",
+--        "feedback_status": "not_sent",
+--        "operationally_closed_at": "2026-10-16T07:00:00+00:00",
+--        "preferences_saved": true,
+--        "preferences_written": 1
+--      }
+--    ‏🔴 **שני השדות האחרונים נוספו בסבב-הבקרה 14/08/2026** ומשרתים את §6(ב) למטה:
+--      ‏`preferences_saved = false` פירושו **האירוע נסגר במלואו וסימוני-האיכות לא נשמרו**,
+--      כי לפרויקט אין לקוח. **המסך חייב לומר זאת** — הצלחה שקטה שחסר בה חצי היא בדיוק
+--      המלכודת שבגללה `planned_revenue` מחזיר NULL ולא `0`.
+--    ‏🚫 **אינה מחזירה כתובת-מייל של הלקוח** — ר' §7(ג).
+--
+--
+-- =====================================================================================
+-- ‏§6 · 🔴 שורת-חסימה #12 — שני שומרים ש-1.8 מעולם לא הזכירה
+-- =====================================================================================
+--
+-- ‏**‏(א) `customer_hostess_preference_negative_needs_reason` — אילוץ חי. נוסחו, מהמסד:**
+--     CHECK (((preference <> 'לא_לשלוח'::text) OR (preference_reason IS NOT NULL)))
+--   ⇒ מטען-סגירה עם `preference='לא_לשלוח'` ובלי `preference_reason` נופל ב-**`23514`**
+--     בזמן ריצה, אחרי שהחצי הראשון של הטרנזקציה כבר נכתב.
+--   ‏🔴 **ו-CHECK-המסד אינו מספיק, וזה הממצא:** `''` (מחרוזת ריקה) **אינה NULL** ⇒ **האילוץ
+--     מאשר סיבה ריקה.** טופס שישלח `""` יעבור את המסד ויכתוב סימון-שלילי בלי הסבר —
+--     בדיוק מה שהאילוץ קיים כדי למנוע.
+--   ⇒ **הכלל ל-RPC:** ‏`if preference = 'לא_לשלוח' and nullif(btrim(preference_reason),'') is null
+--     then raise exception ... using errcode='P0001'`.
+--   ‏**הנוסח, ולא המצאתי אותו — הוא מאושר, `screens-approved.md:1411` מילה-במילה:**
+--     *"סימון 'לא לשלוח שוב' מחייב סיבה — היא תופיע בכרטיס הדיילת."*
+--   ‏✅ **וזו אינה שאלה לישי, למרות שהמדריך (שורה 580) מסמן אותה ככזו:** משטח 5 כבר קובע
+--     גם את התנהגות-הטופס (`:1228` — שדה-סיבה נפתח מתחת לשורה, חובה, וחוסם את `שמור ושלח`)
+--     וגם את הנוסח (`:1411`). **‏`docs/specs/` הוא דרגה 2 וגובר על המדריך.**
+--
+-- ‏**‏(ב) `projects.customer_id` — נמדד `is_nullable = YES`** *(ונמדד שוב 14/08/2026:
+--   ‏**0 מתוך 4** פרויקטים עם `customer_id` ריק — שומר לתרחיש שלא קרה עדיין)*.
+--   ‏`customer_hostess_preference.customer_id` הוא `NOT NULL` עם FK ⇒ upsert על פרויקט
+--   בלי לקוח נופל ב-`23502`.
+--
+--   🔴🔴 **תוקן בסבב-הבקרה 14/08/2026 — והתיקון הוא היפוך, לא ניסוח.**
+--   ‏**מה שכתוב כאן קודם:** *"תנאי-מקדים בראש הפונקציה, `raise` לפני כל כתיבה"* — כלומר
+--   **ביטול הסגירה כולה.** שני כותבי-הגופים מימשו בדיוק את זה.
+--   ‏**ומה שהחוזה המחייב אומר, מילה-במילה** (`docs/micro_guides/module-6.md:1023`, §PAYLOAD
+--   CONTRACTS, נוסף 14/08/2026 בבקשת-ישי):
+--     *"if the project carries no customer, **skip the preference upsert and complete the
+--      closing** — do not fail the whole transaction over an optional side-effect."*
+--   ⇒ **הכלל הנכון ל-RPC:** ‏`v_can_mark := v_customer_id is not null`, **דגל ולא `raise`**;
+--     הדגל שומר **רק על ה-upsert**, והסגירה עצמה מסתיימת כרגיל.
+--   ‏🔑 **הנימוק, ולא רק הסמכות:** הסגירה התפעולית רושמת **עובדות על מה שקרה באירוע** —
+--     שעות, אורחים, נוכחות, דוח. **סימון-האיכות הוא תופעת-לוואי שיווקית ל-Smart Match.**
+--     ביטול הרישום של האירוע כולו בגלל תופעת-לוואי הוא היפוך של סדר-החשיבות.
+--   ‏**ומה שהופך את זה מ"בליעה בשקט" ל"כשל רועש":** ‏`preferences_saved: false` חוזר ב-jsonb
+--     והמסך אומר זאת. **הכשל נשאר גלוי; רק היקפו הצטמצם למה שבאמת נכשל.**
+--   ‏🚫 **ובמפורש — עדיין אין לגזור את הלקוח מ-`quotes.customer_id`**, גם אם AR-9 מבטיח שאחרי
+--   ‏1.1 לכל פרויקט יש הצעה. ‏`customer_id` הוא **מפתח האילוץ הייחודי** ⇒ גזירה שגויה נועצת
+--   את הדיילת ללקוח הלא-נכון בשכבה 2 של Smart Match, בשקט ולתמיד.
+--   ‏⚠️ **והנוסח שהוצע כאן קודם — *"לא ניתן לסגור את האירוע: לפרויקט אין לקוח משויך…"* —
+--   ‏🚫 בוטל.** הוא היה טקסט-שגיאה של פעולה שנכשלה, ואין יותר כישלון כזה. **מה שהמסך צריך
+--   עכשיו הוא הודעת-מצב, לא שגיאה** — וניסוחה הוא הכרעת-מוצר של ישי, לא של הקובץ הזה.
+--   ‏**‏⏸️ פתוח לישי:** נוסח השורה שהמסך יציג כאשר `preferences_saved = false`.
+--
+--
+-- =====================================================================================
+-- ‏§7 · 🔴 שורת-חסימה #6 — הכרעת AR-10 (‏`unique_violation`)
+-- =====================================================================================
+--
+-- **‏ההכרעה: משחררים את `23505` החוצה. 🚫 אין `exception when unique_violation` בגוף.**
+--
+-- ‏**‏(א) העובדות שנמדדו היום, ושתיים מהן אינן במדריך:**
+--   ‏① `assignments_one_event_per_day` הוא אינדקס **חלקי**:
+--      CREATE UNIQUE INDEX assignments_one_event_per_day ON public.assignments
+--        USING btree (hostess_id, event_date) WHERE (assignment_status = 'finally_approved')
+--   ‏② 🆕 **טריגר חי שאיש לא הזכיר — והוא ה-UPDATE שיכול היה להפר את האינדקס:**
+--      CREATE TRIGGER projects_sync_assignment_dates AFTER UPDATE OF final_event_date
+--        ON public.projects FOR EACH ROW WHEN (old.final_event_date IS DISTINCT FROM new.final_event_date)
+--        EXECUTE FUNCTION sync_assignments_on_project_date_change()
+--      וגופו: `update public.assignments set event_date = new.final_event_date where project_id = new.project_id`
+--      — **על כל השורות, בלי סינון-סטטוס.** ⇒ **הזזת-תאריך אינה נוגעת ב-`assignments` בעצמה;
+--      הטריגר עושה זאת עבורה**, ולכן סדר-הפקודות של המדריך אינו העדפה אלא תנאי.
+--   ‏③ ⇒ **אחרי צעד 2 של המדריך (איפוס `finally_approved` → `pending`) אף שורה של הפרויקט
+--      אינה מכוסה עוד ע"י האינדקס החלקי** ⇒ ה-UPDATE של הטריגר **אינו יכול** להפר אותו.
+--      **‏`23505` אינו נגיש בזרימה התקינה — כפי ש-AR-10 טוען, ועכשיו עם המנגנון המלא.**
+--
+-- ‏**‏(ב) למה לשחרר ולא ללכוד — ארבעה נימוקים, לפי משקל:**
+--   ‏① **‏re-raise ממיר `23505`→`P0001` ומוחק את שם-האינדקס** — ו-`SERVER_CONSTRAINT_RULES`
+--      (`src/lib/hostesses.js:603-613`) מזהה **לפי השם** (`raw.includes(r.constraint)`, `:627`).
+--      ‏**גיבוי שלא יכול לירות אינו גיבוי.** הנימוק כתוב שם בעצמו (`:600-602`): *"את הנוסח
+--      PostgreSQL מנסח, ואילו השם הוא חוזה שאנחנו כתבנו במיגרציה."*
+--   ‏② לפי (א)③ הענף אינו נגיש ⇒ **כל אפקט הבלוק הוא הנזק שב-①.**
+--   ‏③ בלוק `exception` ב-plpgsql עוטף את הגוף ב-**תת-טרנזקציה בכל קריאה** — מחיר שמשולם
+--      על כל הזזת-תאריך חוקית, עבור ענף שלא ייכנס.
+--   ‏④ ‏supabase-js מוסר `error.message` הנושא את שם-האינדקס עבור `23505` גולמי ⇒ **מסלול-הגיבוי
+--      עובד מקצה-לקצה בלי שורת-קוד חדשה** — בתנאי היחיד שלא המרנו את הקוד.
+--
+-- ‏**‏(ג) המנגנון האמיתי הוא השאילתה-המקדימה, והיא חובה** (‏AR-10):
+--   לפני האיפוס, ורק אם התאריך השתנה — לאתר דיילת של הפרויקט הזה שהיא `finally_approved`
+--   בתאריך **היעד** בפרויקט **אחר**, ולזרוק `P0001` עם הנוסח המאושר:
+--     *"{full_name} כבר מאושרת סופית ל\"{event_name}\" בתאריך הזה. בחרי תאריך אחר, או שחררי אותה מהאירוע ההוא."*
+--   ‏🔑 **האינדקס אינו נושא שם ולא שם-אירוע** — רק השאילתה-המקדימה יכולה לנסח את המשפט הזה.
+--   ‏🔴 **וסדר-הפקודות אינו ניתן להיפוך:** שאילתה-מקדימה ⇒ איפוס-אישורים ⇒ `update projects`
+--   (שמפעיל את הטריגר). היפוך של השניים האחרונים מעביר את הטריגר על שורות שעדיין
+--   ‏`finally_approved` — ואז הזזת-תאריך חוקית נופלת `23505` קשה.
+--
+-- ‏**‏(ד) יישוב הכפילות ב-`SERVER_CONSTRAINT_RULES`:**
+--   הרשומה הקיימת נושאת נוסח **אחר** מזה של AR-10:
+--     *"הדיילת כבר מאושרת סופית לאירוע אחר באותו תאריך — לא ניתן לאשר אותה לשני אירועים ביום."*
+--   ‏**‏🚫 אין לערוך אותה, ואין להרחיב את המערך של מ4.** הנוסחים שונים כי הפעולות שונות:
+--   של מ4 מדברת אל מי ש**מאשרת דיילת**; של מ6 אל מי ש**מזיזה תאריך**. מערך אחד ממופתח-לפי-שם
+--   אינו יכול לשאת שני נוסחים לאותו שם.
+--   ⇒ **מ6 מקבלת `projectServerErrorMessage` משלה ב-`src/lib/projects.js`, באותה תבנית**, נושאת
+--   את נוסח-הגיבוי של AR-10 (זה שבלי שם, כי בנקודה הזו אין מה לשבץ):
+--     *"אחת הדיילות המאושרות כבר משובצת סופית לאירוע אחר בתאריך היעד. בחרי תאריך אחר, או שחררי אותה מהאירוע ההוא."*
+--   ‏**העוגן שהופך את זה לדפוס ולא לכפילות:** ‏`hostesses.js:618` אומר זאת בעצמו —
+--   *"אותה תבנית בדיוק כמו `quoteServerErrorMessage` — ומודול חדש מחקה, לא ממציא."*
+--   ‏**שתי הפונקציות האלה כבר קיימות במקביל בקוד; מ6 היא השלישית באותו דפוס.**
+--
+--
+-- =====================================================================================
+-- ‏§8 · חוזה ההרשאות — מחרוזת-שער לכל RPC (מאומתת מול `public.modules` החי)
+-- =====================================================================================
+--
+-- | RPC                            | assert_module_permission(...)                      |
+-- |--------------------------------|-----------------------------------------------------|
+-- | list_projects_overview         | ('פרויקטים', array['edit','view'])                  |
+-- | update_project_details         | ('פרויקטים', array['edit'])                         |
+-- | apply_scope_change             | ('פרויקטים', array['edit'])                         |
+-- | cancel_project                 | ('פרויקטים', array['edit'])                         |
+-- | close_project_operationally    | ('פרויקטים', array['edit'])                         |
+-- | mark_feedback_survey_sent      | ('פרויקטים', array['edit'])                         |
+-- | set_project_finance_fields     | 🔴 ('כספים', array['edit']) — **לא** 'פרויקטים' (㉘) |
+--
+-- ‏🚫 **‏`'לוגיסטיקה'` אינה שער של אף RPC בצעד 1.8.** ‏AR-2 מחיל אותה על **policy-הקריאה של
+--   `logistics`** (צעד 1.4), ולא על פונקציה. ‏`apply_scope_change` כותבת ל-`logistics` תחת
+--   ‏`SECURITY DEFINER` ובשער `'פרויקטים'` — וזו בדיוק הסיבה שהיא DEFINER (§4.3).
+--
+-- ✅ **אימות חי של המטריצה — מי עובר בפועל:**
+--   | תפקיד                 | פרויקטים | דיילות  | לוגיסטיקה | כספים | הצעות מחיר |
+--   | מנהלת פרויקטים        | edit    | view    | view     | blocked | edit     |
+--   | מנהלת לוגיסטיקה       | **edit**| blocked | edit     | blocked | blocked  |
+--   | מנהלת גיוס ושיבוץ     | view    | edit    | blocked  | blocked | blocked  |
+--   | מנהלת כספים ולקוחות   | view    | blocked | blocked  | **edit**| view     |
+--   | מנכ"ל                 | edit    | edit    | edit     | edit    | edit     |
+--   ⇒ `set_project_finance_fields` עובד למנהלת-הכספים **בלי `edit` על 'פרויקטים'** ⇒ ㉘ מתקיים, נמדד.
+--   ⇒ 🛑 **ומנהלת הלוגיסטיקה מחזיקה `edit` על 'פרויקטים'** — ר' §7(ג) למטה ואת קובץ ה-notes.
+--
+-- ‏**‏(ג) 🔴 מה ארבע ה-RPC התפעוליות מחזירות על דיילות — והגבול שנקבע כאן:**
+--   ‏`update_project_details` ו-`cancel_project` מחזירות רשימת-דיילות ללקוח (למי לשלוח מייל).
+--   ⇒ **מחזירות `hostess_id` ו-`full_name` בלבד. 🚫 לא `email`, לא `phone`, לא `hourly_rate`.**
+--   ‏**הנימוק נמדד ולא הונח:** מנהלת הלוגיסטיקה היא `edit` על `'פרויקטים'` ו-**`blocked` על
+--   `'דיילות'`** ⇒ היום היא אינה יכולה לקרוא ולו שם של דיילת. פונקציית `SECURITY DEFINER`
+--   שתחזיר פרטי-קשר מוסרת לה בדיוק את מה ש-RLS שולל ממנה — **אותה דליפה ש-AR-3 נכתבה למנוע,
+--   דרך דלת אחרת.**
+--   ‏`full_name` **כן** מוחזר, כי הנוסח המאושר של AR-10 משבץ `{full_name}` ואי-אפשר בלעדיו.
+--   ‏**ומכאן אילוץ לפזה 3:** הלקוח שולף כתובת-מייל דרך המסלול הרגיל ה-RLS-י על `hostesses`
+--   — עובד לדנה (👁 על 'דיילות') ולמנכ"ל, **ונכשל למנהלת הלוגיסטיקה, וזה נכון.**
+--
+--
+-- =====================================================================================
+-- ‏§9 · 🔴 נעילת ㉙ — **רשימה לבנה מפורשת**, לא "כל RPC שנוגע בפרויקט סגור"
+-- =====================================================================================
+--
+-- **ארבע ה-RPC התפעוליות שמסרבות, ורק הן:**
+--   ① `update_project_details`      ② `apply_scope_change`
+--   ③ `cancel_project`              ④ `close_project_operationally`
+--
+-- **שלוש שממשיכות לעבוד אחרי הסגירה, ובמפורש:**
+--   ⑤ `mark_feedback_survey_sent`   — ‏AS-5 · AR-5: **היא קיימת כדי לרוץ אחרי הסגירה.**
+--   ⑥ `set_project_finance_fields`  — ㉘: זה חלון-העבודה של מ8.
+--   ⑦ `list_projects_overview`      — קריאה בלבד.
+--
+-- 🔑 **למה זו רשימה ולא כלל גורף:** ‏AR-5 מפרידה בין עובדות (בתוך הטרנזקציה) לשליחות (אחריה).
+--   כשהשליחה נכשלת, `feedback_status` נשאר `'not_sent'` — **וזה נכון ולא קישוט** — והמסלול
+--   היחיד חזרה הוא קריאה חוזרת ל-⑤. **נוסח גורף — *"כל RPC שנוגע בפרויקט סגור מסרב"* —
+--   הופך שליחה כושלת לבלתי-ניתנת-לתיקון לנצח.**
+--
+-- **פרדיקט-הסירוב, פר-RPC (‏🚫 לא אחיד, ולערבב אותו הוא באג):**
+--   · ① `update_project_details` — מסרב כאשר
+--       `project_status in ('event_finished','awaiting_invoice','awaiting_payment','finished','cancelled')`
+--       **או** `operationally_closed_at is not null`,
+--       🔴 **למעט מסלול-המילוט (ב) של המדריך:** מותר כאשר `project_status = 'event_finished'`
+--       **וגם** `operationally_closed_at is null` **וגם** `p_event_date >= current_date` —
+--       ואז הפונקציה מחזירה את הפרויקט לציר-הפעיל וקוראת ל-`recompute_project_status`.
+--       ‏**בלי המילוט הזה פרויקט שתאריכו נדחה תקוע ב-`ממתין לסגירה` לנצח** (הקרון מזיז קדימה בלבד).
+--   · ② `apply_scope_change` — הפרדיקט המלא, **בלי מילוט** (㉔: שינוי שהתגלה אחרי האירוע
+--       נכנס דרך מסך-הסגירה, לא דרך הדיאלוג).
+--   · ③ `cancel_project` — הפרדיקט המלא, **בלי מילוט**; ובנוסף מסרב אם כבר `cancelled`
+--       (ישי: *"בא נניח שלא"* — פרויקט מבוטל אינו קם לתחייה).
+--   · ④ `close_project_operationally` — 🔴 **פרדיקט הפוך ולא שלילת-הראשון:** דורש
+--       `project_status = 'event_finished'` **וגם** `operationally_closed_at is null`
+--       **וגם** `p_report_path is not null`. **היא זו שקובעת את הנעילה.**
+--   · ⑤/⑥ — **אפס בדיקת-נעילה.** ⑥ עדיין מסרב על `cancelled` בלבד אם מ8 יבקש זאת; לא כאן.
+--
+-- **קוד השגיאה לכל סירוב-נעילה: `P0001`**, כדפוס `enforce_quote_in_progress_lock` החי (㉙).
+--
+--
+-- =====================================================================================
+-- ‏§10 · הרשאות-הרצה — שמונה שורות `revoke`, ושבע `grant`
+-- =====================================================================================
+--
+-- 🧨 **המוקש, מתועד במיגרציה `20260809174501` מילה-במילה:** Supabase מגדיר
+--   `alter default privileges` שמעניק EXECUTE ל-`anon`/`authenticated`/`service_role` על כל
+--   פונקציה חדשה ב-`public` ⇒ **`revoke ... from public` אינו נוגע בהן. יש לשלול בשם.**
+--   אומת היום: `proacl` של `set_project_coordinates` =
+--   `{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}` — נקי מ-`anon`.
+--
+-- -- שבע ה-RPC הציבוריות (הזוג הזה, פר-פונקציה):
+-- revoke execute on function public.list_projects_overview()                                       from public, anon;
+-- grant  execute on function public.list_projects_overview()                                       to authenticated;
+-- revoke execute on function public.update_project_details(integer, date, text, time without time zone, time without time zone) from public, anon;
+-- grant  execute on function public.update_project_details(integer, date, text, time without time zone, time without time zone) to authenticated;
+-- revoke execute on function public.apply_scope_change(integer, jsonb, text)                        from public, anon;
+-- grant  execute on function public.apply_scope_change(integer, jsonb, text)                        to authenticated;
+-- revoke execute on function public.cancel_project(integer, text, text)                             from public, anon;
+-- grant  execute on function public.cancel_project(integer, text, text)                             to authenticated;
+-- revoke execute on function public.close_project_operationally(integer, numeric, integer, text, jsonb) from public, anon;
+-- grant  execute on function public.close_project_operationally(integer, numeric, integer, text, jsonb) to authenticated;
+-- revoke execute on function public.mark_feedback_survey_sent(integer)                              from public, anon;
+-- grant  execute on function public.mark_feedback_survey_sent(integer)                              to authenticated;
+-- revoke execute on function public.set_project_finance_fields(integer, boolean, date, integer, text, text) from public, anon;
+-- grant  execute on function public.set_project_finance_fields(integer, boolean, date, integer, text, text) to authenticated;
+--
+-- -- 🔴 העוזר הפנימי — **שולל משלושתם ואינו מעניק לאיש.** הקוראות הן `SECURITY DEFINER`
+-- --    ורצות כבעלים (postgres), ולכן הן קוראות לו בלי קשר. התקדים: `enforce_hostess_min_wage`
+-- --    קיבל `revoke ... from public, anon, authenticated` ו-`proacl` שלו יצא `{postgres=X, service_role=X}`.
+-- revoke execute on function public.assert_module_permission(text, text[]) from public, anon, authenticated;
+--
+-- **אימות אחרי החלה:**
+--   select p.proname, p.prosecdef, pg_get_function_identity_arguments(p.oid), p.proacl::text
+--     from pg_proc p where p.pronamespace='public'::regnamespace
+--      and p.proname in ('assert_module_permission','list_projects_overview','update_project_details',
+--        'apply_scope_change','cancel_project','close_project_operationally',
+--        'mark_feedback_survey_sent','set_project_finance_fields') order by 1;
+--   **צפוי:** ‏8 שורות · כל `prosecdef = true` · `anon` נעדר מכל `proacl` ·
+--   ‏`authenticated` נוכח ב-7 ונעדר מ-`assert_module_permission`.
+--
+-- =====================================================================================
+-- סוף חוזה 1.8. **אין כאן SQL בר-הרצה — במכוון.**
+-- =====================================================================================
