@@ -7,16 +7,16 @@
 | **Module** | 6 — פרויקטים (Projects) |
 | **Branch** | `ishay/module-6-projects` *(cut from a fresh `dev`; carries the approved spec)* |
 | **Owner** | Ishay (sole developer) |
-| **Status** | 📗 **Blueprint LIVE — the build plan of record.** Reviewed, corrected and routing-audited `14/08/2026 03:12`; renamed out of `.draft` at `10:20`. **No code and no migration yet.** |
-| **Last updated** | `14/08/2026 10:20` *(system clock, `Get-Date`)* |
-| **Active step** | **0 — the guide is ready to execute; step 1.1 opens at the Phase-1 door, which is 👤 Ishay's** |
+| **Status** | 🔨 **Phase 1 IN PROGRESS — the Phase-1 door is CLOSED and the build is approved** (`14/08/2026 11:29`). Reviewed, corrected and routing-audited `03:12`; renamed out of `.draft` at `10:20`. **Still no migration applied** — the 12 🛑 blockers below are being closed first, by a 14-agent fan-out Ishay approved at `11:2X`. |
+| **Last updated** | `14/08/2026 11:29` *(system clock, `Get-Date`)* |
+| **Active step** | **1.1 — pending the 🛑 blocker sweep.** Step 1.0 is ✅ done; **typed-echo is waived for Phase 1** (see step 1.0). 🔴 **The nine migrations are applied ONE AT A TIME, in order A→I, each verified live before the next.** |
 
 **Legend (verbatim):** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
 **Step status set:** ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (with target module) · ❌ blocked (with reason)
 
 | Step | Title | Status |
 |---|---|:--:|
-| **1.0** | 🔻👤 Phase-1 door: consolidated ruling round (Ledger OPEN items A1–A10) | ⬜ pending |
+| **1.0** | 🔻👤 Phase-1 door: consolidated ruling round (Ledger OPEN items A1–A10) | ✅ **done `14/08/2026 11:30`** — every item ruled *(A1·A5 by anchor · A6·B11·B13·E3 by Ishay 10:43 · item ד by Ishay 11:30)*; **typed-echo waived for Phase 1 by Ishay**; Phase-1 build approved |
 | **1.1** | Migration **A** — `projects` columns, `project_bonus` drop, `NOT NULL` tightening, CHECKs | ⬜ pending |
 | **1.2** | Migration **B** — `project_changes` table + RLS + index | ⬜ pending |
 | **1.3** | Migration **C** — `assignments` attendance columns + consistency CHECKs | ⬜ pending |
@@ -366,6 +366,25 @@ set local request.jwt.claims = '{"sub":"<user_id>","email":"<email>","role":"aut
 >
 > ⚠️ **A6 · B11 · E3 each carry a visible consequence — record them where they land:** A6 changes no screen *(the mockup still reproduces)* · **B11 and E3 both change what a surface shows**, so each needs its `↳ as-built` note in its step and a §10 line, per rule 15.
 
+> ### ✅ RULED `14/08/2026 11:30` by Ishay — **item ד: WHEN the `שינוי מאוחר` marking appears**
+> **The ruling, and it is the recommended option he chose:** the marking is **conditional, per changed line** —
+> **hostess quantity ⇒ marked only under 24 hours · printed goods ⇒ marked only under 3 business days ·
+> a REDUCTION is never marked, at any distance.** Everything else renders no banner at all.
+>
+> 🔑 **What it fixes, in his own scenario:** Dana adds 20 tags **45 days** before the event. Unconditional marking
+> renders *"‏⚠ שינוי 1,080 שעות לפני האירוע"* with copy telling her to phone a hostess — **false, on a screen he
+> approved.** The approved mockup draws this banner inside *"ארבעה מצבים שהדיאלוג התקין אינו יכול להראות"*, i.e. as
+> an **exceptional** state; unconditional marking makes the exception the norm and the banner stops meaning anything.
+>
+> 🚫 **This is NOT a time threshold in the ⑯ sense, and the distinction is the whole ruling.** ⑯ forbids a clock that
+> **blocks** — its words are *"ולעולם אינה חוסמת לפי שעון"*. **Nothing here blocks: every change is still recorded,
+> at any time, and the save button stays enabled in every case.** The condition governs **whether a sentence is
+> displayed**, not whether an action is permitted. ⇒ ⑯ and this ruling are consistent; a session that reads ⑯ alone
+> and concludes "no condition anywhere" ships the false banner.
+>
+> **Lands in:** step **2.2** (`isLateChange` — the pure function and its tests) · step **3.6** (surface 6's banner
+> state ①). **Both carry an `↳ as-built` note**, because the mockup draws the banner without a condition.
+
 | # | Question | Recommendation carried into the ruling round | Blocks |
 |:-:|---|---|:--:|
 | **A1** | Which module gates the `logistics` read policy | **AR-2 rules `'לוגיסטיקה'` with a measured anchor. Present it as decided-with-an-anchor; he can override in one line.** | 1.4 |
@@ -601,11 +620,17 @@ Unchanged from module 1: Supabase Auth (Google), session in `sessionStorage`, `c
 > 🚫 **Carrying a settled question to this door is the `שאלה-שיש-לי-עליה-תשובה` failure**, and `A10` already cost Ishay exactly that once — his words: *"מה בעצם אתה צריך אותי?"*
 > ⚠️ **This block exists because the ruling session updated §3.5 and did NOT update this door** — **the same routing defect §10 documents, committed one hour after documenting it.** ⇒ **Whoever rules an item updates BOTH: the §3.5 row AND every phase door that sweeps for it.** *(Doors that sweep: this one, and the Phase-3 door.)*
 >
-> **✅ What this door still does — and it is not nothing:** it is the gate at which Ishay approves **the Phase-1 migration itself** (iron rule 12 + the typed-echo protocol), and it presents **S-1 as decided**, below. **One genuinely open item remains for it: `screens-approved`'s item ד — when the "late change" marking appears** *(re-opened `14/08/2026`; see §3.5)*.
+> **✅ What this door still does — and it is not nothing:** it is the gate at which Ishay approves **the Phase-1 migration itself** (iron rule 12 + the typed-echo protocol), and it presents **S-1 as decided**, below. ~~**One genuinely open item remains for it: `screens-approved`'s item ד**~~ 🟢 **RULED `14/08/2026 11:30` — the door has NO open item left.** See §3.5's RULED block; it landed in steps 2.2 and 3.6.
+>
+> ### 🔓 Typed-echo waived for Phase 1 — `14/08/2026 11:2X`, Ishay's explicit words: *"חד פעמי שאני לא חייב להדביק לך את שם המיגרציה"*
+> **Scope: Phase 1's nine migrations only.** It does **not** carry into Phase 2–5 and it does not carry into any later module.
+> **What still happens before every apply:** Claude explains in Hebrew what the migration does and its reversibility, and applies on a plain approval. **What is given up:** the proof-of-reading that typing the name provides.
+> 🔑 **And the anchor that made it safe to grant — measured `14/08/2026 11:2X`, not assumed:** **all nine migrations are reversible** (a column, a trigger, a cron job, a bucket, a policy and a function can each be dropped), **and the one statement that truly destroys data — `alter table projects drop column project_bonus` — destroys none**, because all four live rows hold `project_bonus = 0`. ⇒ the gate's own reason (irreversibility) is absent here.
+> 🔴 **What is NOT waived and must not be read as waived:** the migration protocol's other five clauses — `pg_get_functiondef` before any `CREATE OR REPLACE`, the four post-apply steps, the pathspec commit, `append-only`, and **any step whose pre-count comes back non-zero still STOPS and reports.**
 
 **What to do:** present, recommendation-first, 3–4 per round, one line of background each, full detail only on *"פרט לי"*, with *"מספיק להיום"* offered between rounds:
 - ~~**A1** · **A5** · **A6** · **B11**~~ 🟢 **RULED 14/08/2026 — removed from this round.** Present them **only** as a one-line confirmation list he can override, not as questions.
-- 🔴 **`screens-approved` item ד — WHEN the `שינוי מאוחר` marking appears.** ⑯ *(13/08)* rules out a threshold that **BLOCKS** — its words are *"ולעולם אינה חוסמת לפי שעון"* — **it does not rule on when the marking shows.** The approved mockup draws this banner inside *"ארבעה מצבים שהדיאלוג התקין אינו יכול להראות"*, i.e. as an **exceptional** state. ⇒ **Unconditional marking makes a change 45 days out render `⚠ שינוי 1,080 שעות לפני האירוע` with copy telling her to phone a hostess — false in that case, on a screen he approved.** **Recommend the deleted proposal:** hostess `<24h` · printed goods `<3` business days · reductions never marked. **This is genuinely his.**
+- ~~🔴 **`screens-approved` item ד — WHEN the `שינוי מאוחר` marking appears.**~~ 🟢 **RULED `14/08/2026 11:30` — Ishay chose the recommended option below verbatim. Removed from this round; see §3.5's RULED block, and the `↳ as-built` notes in steps 2.2 and 3.6. The reasoning is kept here because it is what he ruled ON:** ⑯ *(13/08)* rules out a threshold that **BLOCKS** — its words are *"ולעולם אינה חוסמת לפי שעון"* — **it does not rule on when the marking shows.** The approved mockup draws this banner inside *"ארבעה מצבים שהדיאלוג התקין אינו יכול להראות"*, i.e. as an **exceptional** state. ⇒ **Unconditional marking makes a change 45 days out render `⚠ שינוי 1,080 שעות לפני האירוע` with copy telling her to phone a hostess — false in that case, on a screen he approved.** **Recommend the deleted proposal:** hostess `<24h` · printed goods `<3` business days · reductions never marked. **This is genuinely his.**
 - **S-1 — present as DECIDED, not as a question.** The tone map is ruled for all eight labels (§3.3 S-1). 🔴 **Show it as one table of all eight labels × the tone each approved mockup drew**, because the 3–3 and 2–1 splits are only visible that way — then the ruled column beside them. **He can override any row in one line.** 🚫 **Do not re-open it as an open question** — that is what "A8" was, and A8 had no row to be answered in.
 **🔻👤 Stop:** nothing is written until he rules. Record each ruling in §3 with his words and the date, **and only then** write it back to `PROJECT_MASTER §7` / `db_roadmap` per iron rule 13(א).
 **מה ייחשב עובד** *(`CLAUDE.md` iron rule 1, quoted)*
@@ -1274,6 +1299,9 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 🔴 **Reuse `src/lib/pricing.js:106-132`'s order and its integer-agorot arithmetic. Do not re-derive it.** Discounts **add, they do not chain**: `5% + 10% = 15%` off the subtotal. Chaining gives `14.5%` and **`6,313 ₪` instead of `6,319 ₪`** — small enough to pass a reading, large enough to break a report.
 🔴 **The frozen price comes from `quote_services.closing_unit_price`, the frozen cost from `closing_unit_cost` — never from today's catalogue** (③ⁿ / ③ↄ). A new item that was **not** in the quote enters at today's catalogue tier and inherits the quote's discount (mockup 06 panel ④).
 **The late-change marker** (⑯): a pure function returning the hours-until-event and the exact banner text *"⚠ שינוי 18 שעות לפני האירוע."* + *"דיילת נוספת כמעט אינה ניתנת לגיוס בטווח כזה, ותגים מודפסים דורשים ימים."* + *"הרימי טלפון — אל תסתמכי על מייל."* 🚫 **It marks; it never disables anything.**
+🔴 **↳ as-built — the marker is CONDITIONAL, and this is a deviation from the mockup, which draws it unconditionally.** *(Ishay ruled `14/08/2026 11:30`, item ד — full reasoning in §3.5's RULED block.)* **`isLateChange(line, eventDate)` returns true only for: a hostess-quantity line under 24 hours · a printed-goods line under 3 business days. A negative `delta_qty` (a reduction) is NEVER marked, at any distance.** Everything else returns false and renders no banner.
+🚫 **This does not reopen ⑯.** ⑯ forbids a clock that **blocks**; nothing here blocks — every change is still recorded at any time and the save button stays enabled in every case. The condition governs **whether a sentence is displayed**. ⚠️ **Without it, a change 45 days out renders `⚠ שינוי 1,080 שעות לפני האירוע` telling her to phone a hostess — false, on a screen Ishay approved.**
+⚠️ **"3 business days" needs a real implementation, not `days > 3`** — `weekdayOf` lands in `src/lib/dates.js` at step 2.4 and Friday/Saturday are the weekend here. **Test it across a Wednesday→Sunday boundary**, which is where a naive subtraction is wrong by two.
 **The tier-crossing notice** (③ↄ), shown only when the new total crosses into a cheaper catalogue tier: *"420 יחידות נכנסות בקטלוג למדרגת מחיר זולה יותר. התוספת מחויבת לפי המחיר שאושר בהצעה — לא לפי מחיר הקטלוג של היום."* 🚫 **No ₪ figure in that string.**
 **🔻🤖 Verify:** `npm run test:run` green, and the mockup's worked example reproduces exactly: 6→8 hostesses at `500.00 ₪` and 300→380 tags at `5.00 ₪` ⇒ `סכום השינוי = 1,400.00 ₪` ⇒ `−210.00 ₪` (15%) ⇒ `1,190.00 ₪` ⇒ `214.20 ₪` (18%) ⇒ **`1,404.20 ₪`**. A chaining implementation misses this.
 **מה ייחשב עובד** *(`processes-approved.md` ①–④ + ⑯, quoted)*
@@ -1665,7 +1693,7 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 - **Section `מה יקרה כשתשמרי` — four consequence rows** (`צוות` · `לוגיסטיקה` · `מיילים` · `חיוב`), white and bordered because they report rather than act. 🔴 **The `מיילים` row says explicitly *"לא יישלח מייל לאף דיילת"*** — recruiting the extra hostesses is the recruitment manager's screen.
 - **Reason field, mandatory:** label `מה קרה, במילים שלך`, placeholder from the mockup, helper *"חובה. בלי סיבה אי-אפשר לשמור. הסיבה נשמרת עם השינוי ומוצגת בהיסטוריה שבלשונית הלוגיסטיקה."*; auto-stamp line *"יירשם אוטומטית: דנה כהן · 13/08/2026 15:40"*.
 - **Four states the mockup draws as panels and the code must implement:**
-  - **① Late change** — the amber banner **and the save button stays enabled.** 🚫 **No time threshold** (⑯).
+  - **① Late change** — the amber banner **and the save button stays enabled.** 🚫 **No time threshold that BLOCKS** (⑯). 🔴 **↳ as-built — the banner is CONDITIONAL, a deviation from the mockup, which draws it unconditionally** *(Ishay `14/08/2026 11:30`, item ד — §3.5)*: it renders **only** for a hostess-quantity line under 24h or a printed-goods line under 3 business days, and **never for a reduction**. The condition decides whether the sentence is **shown**, never whether the save is **allowed** — the button stays enabled in every case. Predicate: `isLateChange` from step 2.2.
   - **② Reduction** — the banner states *"המערכת לא תשחרר אף דיילת מכאן — מנהלת הגיוס בוחרת את מי לשחרר במסך שלה"* (this is the ⑤-vs-scope-reduction distinction).
   - **③ Blocked save, two reasons** — empty reason ⇒ *"חובה למלא סיבה — היא מה שיסביר את החיוב הזה בעוד חודש."*; no quantity changed ⇒ button disabled with *"לא שינית אף כמות — אין מה לשמור"* (the same pattern M3 already built on 01/08).
   - **④ Item not in the quote** — priced at today's catalogue tier with the quote's discount.
