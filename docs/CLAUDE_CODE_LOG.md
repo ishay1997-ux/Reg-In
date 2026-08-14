@@ -69,7 +69,9 @@
 
 ⚠️ **Two `§7` file inconsistencies found and deliberately NOT fixed** (they are §7 status text, which is ruled with Ishay): `§7.39` carries `🟢 סגור` in its code and ends `סטטוס: פתוח`; `§7.92`'s inline code still reads `🟡 פתוח` while its closure sits in a struck-through line — **a grep for open items still returns it.**
 
-### 14/08/2026 12:10–15:50 — Phase 1 APPLIED (ten migrations + one follow-up), and two instruction defects that had nothing to do with module 6
+### 14/08/2026 12:10–16:0X — Phase 1 APPLIED (ten migrations + one follow-up), and two instruction defects that had nothing to do with module 6
+
+> ⚠️ **Open at the moment this entry was written:** a ripple-sweep agent is still editing `docs/micro_guides/module-6.md`, annotating Phase-2/3/4/5 steps where the guide assumes a database that got built differently. **Its edits are additive-only and uncommitted** — see the note at the head of `STATUS.md` for what a resuming session should do with them. *(The sweep is iron rule 13's ripple protocol, which was owed at the Phase-1 close and had not been run; Ishay asked for it after asking the sharper question — **does Phase 2 still match the DB and the business logic?** — which this entry cannot yet answer.)*
 
 **All of module 6's Phase 1 is live**, each migration verified by an independent live read rather than the tool's success flag. Ishay overrode the stop-and-hand-off recommendation (*"תמשיך עד הסוף… סמוך עלי"*), so the apply round ran in one session; the one boundary held anyway — **read the SQL in full before applying it**, which is why 1.8a/1.8b (790 + 1,121 lines) were read end-to-end first.
 
