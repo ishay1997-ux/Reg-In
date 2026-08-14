@@ -577,6 +577,21 @@ Unchanged from module 1: Supabase Auth (Google), session in `sessionStorage`, `c
 > **The test that produced this:** a fresh session was told to *actually write* Phase 1's SQL from this guide alone and report every place it had to guess. **It counted 41.** 🔑 **This is a different test from every review this guide has passed** — those checked CONSISTENCY, this checked SUFFICIENCY. **The guide is strong on *why* and weak on *what to type*.**
 > ⚠️ **Do not start Phase 1 until the 🛑 rows below are closed.** Each names its owning step, so it is fixed where the builder stands — not recorded here and forgotten.
 >
+> ## 🔴 RE-TRIAGED `14/08/2026` — Ishay's correction, and it demotes four of the twelve
+> **His words:** *"הבלופרינט לא אמור לכתוב קוד, הבנאי בונה. זו תוכנית עבודה ברורה, חוזה ברור — אבל ה'איך'? זה הבנאי. זה רק מדריך עבורו."*
+> ⇒ **The original list was written against the wrong standard** — it treated "the guide does not contain the SQL" as a defect. **It is not.** A blueprint carries **what · in what order · under which constraints · what "done" means · and every CONTRACT another phase must agree with.** The builder writes the code.
+> **The separating question: *would two competent builders working alone produce INCOMPATIBLE results?*** **Yes ⇒ contract, belongs here. No ⇒ the builder's.**
+>
+> | | Verdict after re-triage |
+> |:--:|---|
+> | **3** · **6** · **7** · **8** · **10** · **12** | 🛑 **REAL, unchanged.** A contract two phases must agree on · a contradiction inside the plan · an expectation that is unreachable · an acceptance gate that cannot pass · names other code keys on · undeclared constraints that change behaviour. **None of these is "write my code for me".** |
+> | **1** | 🛑 **REAL, but RECLASSIFIED.** The defect is **not** "the trigger function is unwritten" — it is that **the plan never declares the wrapper exists as a work item at all**, while handing over the other function complete. **An undeclared dependency ≠ "the plan didn't type it for me."** |
+> | **2** | ◐ **SPLIT.** The seven **bodies are the builder's — demoted.** ‏**But `returns setof record` stays 🛑**: it is a contract, and it is *wrong* — supabase-js cannot call that shape at all. |
+> | **5** | ◐ **SPLIT.** Writing the eight policies is the builder's — **demoted.** **The eight NAMES and the read/write permission split stay 🛑** — a name other code references, and a security decision. |
+> | **4** · **9** · **11** | ⬇️ **DEMOTED to minor.** ‏**4** — the plan *does* state the policy requirement, just in a code comment rather than in the plan text; move it, do not write the policy. **9** — the guide supplies a `Verify` snippet and it is invalid, so fix the snippet, but a builder would catch it in one run. **11** — the seed statement is the builder's; the template texts are already in `db_roadmap M6-12`. |
+>
+> ⚠️ **And a measurement RETRACTED in full:** code-block density per phase *(Phase 1 = 25 blocks, Phase 3 = 0)* was read as a risk signal for phases 2–5. **It is meaningless under the rule above** — a UI phase legitimately carries almost no literal code. **Sufficiency is measurable only by rehearsing a phase, never by counting what is in it.**
+>
 > | # | Step | What actually happens if you run it as written | Fix owed |
 > |:-:|:--:|---|---|
 > | **1** | **1.9** | 🛑 **The migration ABORTS.** Three `create trigger` statements call **`public.trg_recompute_project_status()` — a function this guide never writes.** ⇒ `42883 function does not exist`. **Its `DELETE` branch is real work** (`OLD.project_id`, since `NEW` is null on delete). | Write the trigger function into 1.9, with the `TG_OP = 'DELETE'` split and its `revoke`. |
