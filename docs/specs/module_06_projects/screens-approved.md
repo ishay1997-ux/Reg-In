@@ -1540,7 +1540,7 @@ hostess_id)`. ⇒ **מיכל אברהם שסומנה "מצוינת" בחדרה, 
 | **7** | ~~**הרווח הסופי מוקפא בשקלים בסגירה**~~ 🚫 **הוסר ממ6** | עמודה | **לא נבנית כאן** — `§7.52` הובהר 14/08/2026: ההקפאה היא בסגירה ה*כספית* של **מ8**. אין `final_gross_profit` במיגרציה של מ6 |
 | **8** | 🔴 **bucket `reports` — פרטי** + `file_size_limit` + `allowed_mime_types` | Storage | **לא קיים** — קיים רק `marketing` |
 | **9** | 🔴 **‏4 policies על `storage.objects`** ל-`reports` *(read/insert/update/delete)*, בתבנית `permissions × modules × current_user_role_id()` | policies | **לא קיימות** |
-| **10** | 🔴 **אילוץ `project_closed_needs_report`** — `check (project_status not in ('awaiting_invoice','awaiting_payment','finished') or summary_report_url is not null)` | `CHECK` | **לא קיים.** ‏`summary_report_url` **כן** קיימת |
+| **10** | 🔴 **אילוץ `projects_closed_needs_report`** — `check (project_status not in ('awaiting_invoice','awaiting_payment','finished') or summary_report_url is not null)` | `CHECK` | **לא קיים.** ‏`summary_report_url` **כן** קיימת |
 | **11** | 🔴 **RPC אטומי אחד לסגירה** — כותב `projects` + `assignments` + `customer_hostess_preference` + הסטטוס, בטרנזקציה אחת | פונקציה | **לא קיים.** ‏🔑 **ל-`projects` אין policy-כתיבה כלל ⇒ אין דרך אחרת** |
 | **12** | **תנאי-קדם ב-RPCs התפעוליים** — מסרבים אחרי הסגירה, כדפוס `enforce_quote_in_progress_lock` | פונקציות | **לא קיים** — ㉙ |
 | **13** | **policies ל-`customer_hostess_preference`** לפי הרשאת **"פרויקטים"** | policies | **🟡 טעון בדיקה** — לא נמדד בסשן הזה |
@@ -2347,7 +2347,7 @@ hostess_id)`. ⇒ **מיכל אברהם שסומנה "מצוינת" בחדרה, 
 | **20** | 🔴 **`assignments.no_show_reason`** — `sick`/`approved_absence`/`ghosted` | עמודה + check | **5** | **לא קיימת** |
 | **21** | **אילוץ-עקביות בין שלוש עמודות-הנוכחות** | check | **5** | לא קיים |
 | **22** | **אילוץ: `no_show` ⇒ `actual_hours = 0`** | check | **5** | לא קיים |
-| **23** | **אילוץ `project_closed_needs_report`** | check | **5** | לא קיים *(`summary_report_url` **כן** קיימת)* |
+| **23** | **אילוץ `projects_closed_needs_report`** | check | **5** | לא קיים *(`summary_report_url` **כן** קיימת)* |
 | **24** | **הכרעה על `CHECK (planned_qty > 0)`** — מחיקת-שורה מול הרפיית-אילוץ | הכרעה | **3 · 6** | האילוץ קיים ו**חוסם ירידה ל-0** |
 | **25** | **מחיקת `projects.project_bonus`** *(㉟)* | עמודה *(מחיקה)* | **2 · 5** | **קיימת במסד** *(`20260629000000…:124`)* **ואינה מצוירת באף מוקאפ** |
 | **26** | 🔴 **RPC `update_project_details`** — תאריך/שעות/מיקום · איפוס אישורים וזימון-מחדש *(㉑)* · `lat`/`lng`=null *(㉒)* · שער-הרשאה · מיפוי `unique_violation` לעברית | פונקציה | **2** | **לא קיים.** ‏`projects` = קריאה בלבד |

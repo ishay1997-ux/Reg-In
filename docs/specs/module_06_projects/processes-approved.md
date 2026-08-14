@@ -478,7 +478,7 @@ Security and Access Rules"* *([quickstart](https://supabase.com/docs/guides/stor
 **‏⚛️ ואטומיות (`§7.36`) — אין ערובה טרנזקציונית בין Storage ל-Postgres, וזה מתועד.**
 **⇒ הפתרון אינו לקוות אלא לאכוף במסד:**
 ```sql
-alter table projects add constraint project_closed_needs_report
+alter table projects add constraint projects_closed_needs_report
   check (project_status not in ('awaiting_invoice','awaiting_payment','finished')
          or summary_report_url is not null);
 ```
@@ -1052,7 +1052,7 @@ alter table projects add constraint project_closed_needs_report
 | 🆕 🔴 **שני buckets חדשים — `reports` (פרטי) · `finance` (פרטי)** | הכרעה ㉛ *(`§7.61`)* | **לא קיימים** — קיים רק `marketing` |
 | 🆕 🔴 **‏8 policies על `storage.objects`** *(‏4 פעולות × 2 buckets)*, **על תבנית `permissions × modules × current_user_role_id()`** — זהות למה שכבר רץ על `marketing` | הכרעה ㉛ | **לא קיימות** |
 | 🆕 **`file_size_limit` + `allowed_mime_types` לשני ה-buckets החדשים** | הכרעה ㉛ | **לא מוגדרים** |
-| 🆕 🔴 **אילוץ `project_closed_needs_report`** — ‏`check (project_status not in ('awaiting_invoice','awaiting_payment','finished') or summary_report_url is not null)` | הכרעה ㉛ *(סוגרת `§7.36`)* | **לא קיים.** ‏`summary_report_url` **כן** קיימת |
+| 🆕 🔴 **אילוץ `projects_closed_needs_report`** — ‏`check (project_status not in ('awaiting_invoice','awaiting_payment','finished') or summary_report_url is not null)` | הכרעה ㉛ *(סוגרת `§7.36`)* | **לא קיים.** ‏`summary_report_url` **כן** קיימת |
 | 🆕 **‏RPC לכתיבת שדות-הכספים** *(‏`invoice_sent`/`payment_date`/`feedback_*`)* — דורש הרשאת "כספים" | הכרעה ㉘ *(`§7.63`)* | **לא קיים** |
 | 🆕 **תנאי-קדם ב-RPCs התפעוליים** — מסרבים אחרי הסגירה, כדפוס `enforce_quote_in_progress_lock` | הכרעה ㉙ *(`§7.77`)* | **לא קיים** |
 | 🆕 **עבודת `pg_cron` יומית** — מעבר ל-`event_finished` כשחלף התאריך | הכרעה ㉚ *(`§7.32`)* | **לא קיימת.** ‏`pg_cron` מותקן ומריץ 2 עבודות |
