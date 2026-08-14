@@ -49,6 +49,12 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 14/08/2026 03:20–03:26 — The three demo-date UPDATEs landed, Ishay ran them, and the `1/6` anchor survived
+
+**Ishay pasted the verification output at 03:24** — first-class evidence, recorded at ingestion per the narrative-evidence rule: `| 3 | כנס רפואה 2026 | 2026-11-05 | 0 |` · `| 7 | תרחיש-קבלה 5.1 … | 2026-08-01 | 0 |` · `| 8 | כנס לקוחות שנתי | 2026-10-15 | 1 |` · `| 11 | כנס טכנולוגיה שנתי | 2026-10-20 | 0 |`. **Re-verified independently at 03:26 by a live read of my own** (`select … count(*) where assignment_status = 'finally_approved'`), not by trusting the paste — all four rows identical. ⇒ The 28/08 interim showing and the 01/10 conference both now open on a populated `בעבודה` tab, and `#8` still carries **exactly one** final approval, so the hand-computed `1/6` anchor in all eight mockups still holds.
+
+**He then reported *"הזנתי את 2 לפני 1"* and asked me to go fix it in his browser.** Nothing needed fixing, **and that was measured rather than assumed**: the three `update` statements touch three different rows and have no interdependency, and the fourth statement is a read-only `select`. There is no interleaving of them that leaves a partial state. ⚠️ **The reflex worth keeping:** the cheapest answer to *"did I break it?"* was a five-second read, not a reassurance and not a browser session.
+
 ### 14/08/2026 02:13–03:20 — Seven hunter agents closed ~half the open list, and the sharpest finding was in the calendar, not the code
 
 **Ishay's instruction was to stop bringing him things:** *"תכריע מה שאתה יכול… מה בעצם אתה צריך אותי?"* — and he was right. Four of the items brought to him that night (§7.62 · the tier-crossing price · one-RPC-or-two · the cancellation-reason cell) were **already ruled or self-evident**; the answer existed on disk and had simply not reached the file being read. Seven agents were sent to hunt exactly that, plus a scope filter that judged each residual item against `PROJECT_MASTER §1` — an academic project, one hour on stage, no real users.
