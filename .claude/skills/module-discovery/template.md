@@ -198,7 +198,7 @@ prevent; the old wording simply never named the registers.
 
 ---
 
-# §2 · Measurement discipline — six rules, each of which has failed in practice
+# §2 · Measurement discipline — eight rules, each of which has failed in practice
 
 **① Never accept a number from this file or from any document — measure it yourself and report what
 you found.** A number in a document is **evidence that someone once counted**, not a current fact.
@@ -257,7 +257,8 @@ one day.)* ⇒ **A fix that adds a line without cleaning the old one is the sing
 in this repo.** **A declaration in a file is not a closure — the token in the register is.**
 
 **⑧ 🔴 A claim about the repo, written into an approved file, carries its anchor — or it is an assumption wearing a fact's clothes.**
-> **Mandatory format:** `<the claim> (<file>:<line>, נמדד DD/MM)`
+> **Mandatory format:** `<the claim> (<file> · <grep-anchor>, נמדד DD/MM)`
+> 🔴 **A GREP ANCHOR, NOT A LINE NUMBER.** The project's iron rule 1 defines an anchor as *"מקום בקובץ **(עוגן-גריפ, לא מספר-שורה)**"* — and the reason is mechanical: **a line number goes stale silently on the next edit above it**, so it rots into a confident wrong citation, which is worse than none. *(Caught 14/08/2026 by a fresh reviewer: this rule's first draft mandated `file:line` and would have institutionalised the forbidden form across every future Discovery.)*
 > **Applies to:** a column existing or not existing · a file existing · the wording of a constraint, index or policy · a file path · a function or RPC name · a seeded `params` value.
 > **Without the anchor the claim is inadmissible** — and unlike an unanchored *number*, an unanchored *fact* does not look uncertain to the next reader. It looks settled.
 
