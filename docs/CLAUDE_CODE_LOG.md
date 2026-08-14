@@ -69,6 +69,18 @@
 
 ⚠️ **Two `§7` file inconsistencies found and deliberately NOT fixed** (they are §7 status text, which is ruled with Ishay): `§7.39` carries `🟢 סגור` in its code and ends `סטטוס: פתוח`; `§7.92`'s inline code still reads `🟡 פתוח` while its closure sits in a struck-through line — **a grep for open items still returns it.**
 
+### 14/08/2026 11:20–11:30 — "How did we miss 12 gaps?" — the answer became a third blueprint pass
+
+**Ishay's question was the right one, and the answer is structural: every check we ran was a READING check.** The Discovery, the blueprint writer, the fresh-context reviewer, the routing audit, two ripple audits and the scope audit **all ask the same thing — "does this contradict something?"** ⇒ **Contradictions are visible to a reader; OMISSIONS are not, because nothing contradicts them.** You can compare a 1,984-line guide against six spec files indefinitely and never notice that seven RPC bodies were never written — nothing claims they were. 🔴 **And the nastier half: the empty step did not LOOK empty.** It was seven paragraphs of good prose about why each function exists and what it guards. **A reader concludes "well specified"; only someone typing the SQL notices there is none.** *(Same class the guides warn about — "a register that is not updated reads as complete" — applied to the guide itself.)*
+
+**⚠️ A theory I tested and did NOT ship, because the measurement only half-supported it.** The hypothesis was "steps with a repo precedent came out complete; steps without one came out as prose". Measured: `jsonb` payload RPCs have **4** precedents and status-recomputing trigger functions **3** — rare, consistent with the theory. **But `SECURITY DEFINER` has 13 precedents and step 1.8 still shipped as prose.** ⇒ precedent is not the explanation, and it was not presented to Ishay as one.
+
+**🔑 And the discovery that sharpened the fix: `module-blueprint/template.md` ALREADY HAD a simulated-build agent — aimed one step upstream.** It runs on the **SPEC**, **before** the guide is drafted, and asks *"is the reading list sufficient?"* ⇒ **it is structurally incapable of finding a defect in a step that does not exist yet.** So the gap was never "we lack the idea"; it was that **nobody ever aimed one at the finished guide.**
+
+⇒ **Third pass added (Ishay: *"כן תוסיף בניה מדומה"*): EXECUTION REHEARSAL**, wired into the order as step **(3ב)** — after the reviewer's findings are fixed, before presenting. Its dispatch says **execute, do not review**: produce real apply-ready SQL, then report every place you had to guess. 🔴 **One question is mandatory because it found the deepest defect:** *"where would you have had to ask a human, and does the guide mark it 👤?"* — that is what returned **"the gates are inverted"**. 🚫 **And its output must NOT go to §10** — it goes into the owning step, with a 🛑 block at the head of the phase. **Phase 1 does not open until those rows close.**
+
+**The lesson recorded in the rule, in one line: agent COUNT is not coverage. ~80 agents ran on this blueprint, almost all readers. One doer found more than eighty readers.**
+
 ### 14/08/2026 10:45–11:20 — Two reviewers on the finished blueprint: 10 defects in my own unreviewed edits, and Phase 1 measured NOT EXECUTABLE
 
 **Ishay asked whether another review was needed. It was, and the reason was structural: the reviewed artefact was no longer the current artefact.** Three commits had changed the guide after its last review — four product rulings, a triage, a step-table fix — **all written by one session with no independent check.** Two reviewers ran: a **delta reviewer** (only what changed) and a **simulated build session** (write Phase 1's SQL for real and report every guess). **Both came back heavy.**
