@@ -190,6 +190,25 @@ Additional decided / nod-pending rows (cite-only):
 > ⚠️ **Storage-lane items (`reports`/`finance` buckets, 8 `storage.objects` policies, the
 > `project_closed_needs_report` CHECK, the survey-link `params` row) are in §5, not here.**
 
+> ### ✅ APPLIED `14/08/2026 14:0X–14:1X` — **seven of Phase 1's nine migrations are LIVE.** Each was verified by an independent live read after apply, not by the tool's success flag.
+>
+> | Migration (matched by NAME, never by version — see the timezone mine below) | Rows it closes | Verified |
+> |---|---|---|
+> | `module6_projects_columns_and_constraints` | **M6-2 · M6-3 · M6-7 · M6-13 · A-14** | 5 new columns · `project_bonus` **gone** · 29→33 cols · `quote_id`+`owner_email` `NOT NULL` · 5 constraints · 2 indexes · 4 rows intact |
+> | `module6_project_changes_table` | **M6-1** | table + **11 named constraints** · 4 indexes · 1 trigger · 1 SELECT policy |
+> | `module6_assignments_attendance` | **M6-4** | 3 columns · 5 constraints · 10 rows untouched (`attendance_status` null in all) |
+> | `module6_logistics_policy_and_origin` | **M6-5 · M6-6** | policy gated **`'לוגיסטיקה'`** (AR-2) · 2 columns · 3 constraints · 2 indexes · 6 rows intact |
+> | `module6_storage_reports_and_finance` | §5 Storage rows | 3 buckets (`reports` **private, 2 MiB**) · **12** `storage.objects` policies (4 pre-existing + 8 new) |
+> | `module6_email_log_accepts_project` | §5 / `A-20` | CHECK now **4 values** · 3 policies · 26 rows intact |
+> | `module6_params_seed` | **M6-12** + the dormant threshold + the §7.16(ב) tiers | `params` 32→**38** · `סף_לקוח_רדום_ימים = 120` · survey-link row confirmed already live (not re-seeded) |
+> | `module6_status_machine_and_cron` | **M6-11** | 2 `SECURITY DEFINER` functions · 3 triggers · **3 cron jobs** |
+>
+> 🔴 **The status machine changed VISIBLE data, deliberately, and here is the before/after:** all four projects sat on `not_started`, which was false — `#8` already had **9 assignment rows**. After: `#3 → טרם החל` (no assignments) · **`#7 → ממתין לסגירה`** (its date passed — this is the guide's own §8.2 acceptance criterion) · `#8`, `#11 → בתהליך`.
+>
+> 🚫 **STILL NOT APPLIED — steps 1.8a and 1.8b (the seven RPCs), and 1.10's verification gate.** ⚠️ **Nothing in the live database references them**, so the DB is fully consistent as it stands — the triggers call `recompute_project_status`, which migration I created. **`M6-9` · `M6-10` remain OPEN.**
+> ⏸️ **And two 👤 steps are owed the moment `module6_email_log_accepts_project` is live, which it now is:** the `send-email` Edge-Function deploy *(the exact diff is in `docs/plans/module-6-phase-1/m6_step_1_6.notes.md` — **migration first, deploy immediately after; the reverse order loses mail silently**)*, and the `docs/schema.sql` snapshot refresh via Supabase Studio.
+> ⏸️ **Open, decided-with-anchor but NOT yet built:** `project_changes_select_by_permission` exposes `unit_price_snapshot`/`unit_cost_snapshot` to every `'פרויקטים'` holder — including מנהלת לוגיסטיקה and מנהלת גיוס, whom `screens-approved.md:809`/`:810` block from financial data. **The table is empty and no screen reads it yet, so there is no live exposure** — but the reader-RPC that nulls the money must land **before step 3.3**.
+
 | # | Change | Why (ruling) | State today |
 |---|---|---|---|
 | **M6-1** | 🔴 **NEW table `project_changes`** — `change_id` PK · `project_id` · sku · color · **`delta_qty` (CHECK ≠ 0)** *(🔴 **name corrected 14/08/2026: this row said `change_qty`.** Three names were in circulation for one column — `delta_qty` (`spec.md` §14②, the ruling) · `change_qty` (here) · `qty_delta` (`screens-approved.md` surfaces 3/6). **`spec.md`'s ruling wins and is now the only one; caught by a simulated build session.**)* · **`unit_price_snapshot` + `unit_cost_snapshot`** · **`reason` NOT NULL** · `performed_by` → users · timestamps. **Must be written in ONE atomic function together with the `logistics.planned_qty` / `required_hostess_count` update** | ② (closes §7.17 + §7.72) — the approved quote is locked by a DB trigger, so a change has no other home | **absent** |
