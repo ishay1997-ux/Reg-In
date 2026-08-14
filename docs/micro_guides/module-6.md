@@ -342,6 +342,18 @@ set local request.jwt.claims = '{"sub":"<user_id>","email":"<email>","role":"aut
 >
 > **Closed since the draft, and deliberately NOT left as rows: A7** → S-28 (feminine) · **A8** → S-1 (tone map) · **B1** → R-1 (*"לא"* — no draft-save) · **B4** → ט4/2.3 (flat 7-option select) · **B10** → AS-3 (2 MiB, `db_roadmap` §5) · **B14** → R-2 (*"לא קורה"* — travel is M8's).
 
+> ### 🔑 Triaged `14/08/2026 10:29` — eleven rows, but only FOUR are actually Ishay's
+> **The test applied to each row, from iron rule 1:** *"יש עוגן ⇒ הכרע לבד, הצג את העוגן, והוא יכול לעקוף."*
+> A row whose recommendation rests on **a measured anchor, an existing precedent, or a structural fact** is **decided** — carrying it to him as a question is the `שאלה-שיש-לי-עליה-תשובה` failure. A row that needs **a business judgement or a number only he holds** is genuinely his.
+>
+> **🟢 DECIDED — build as recommended; Ishay can override any of these in one line. Do NOT open a ruling round for them:**
+> **A1 · A2 · A3** *(all three governed by `AR-2`/`AR-3`, and A2 is a security answer: widening `assignments_select_by_permission` leaks hostess names, rates and phones to every 👁-on-projects holder)* · **A5** *(`AR-1` already ruled it)* · **A9** *(structural — surface 2 owns the shell, so the tab is disabled, not routing)* · **A10** *(`screens-approved` row 27 **already merged** the two RPCs and says so)* · **B7** *(reuse surface 6's dialog — it already carries the mandatory reason, the frozen-price arithmetic, `AR-4`'s zero-guard and the tier-crossing notice; an inline form re-implements all four)*.
+> ⚠️ **The `⬜ Confirm` marks on A5, A9 and A10 are removed deliberately** — each pointed at a ruling that already existed elsewhere in this guide. **`A10` in particular was carried to Ishay on 14/08 and he pushed back with *"מה בעצם אתה צריך אותי?"* — correctly.**
+>
+> **👤 GENUINELY HIS — four, and each needs something no measurement can supply:**
+> **A6** *(the dormant-customer threshold — a real contradiction: the card says 180 days, the mockup draws a 146-day-old customer as dormant. **Both cannot hold.**)* · **B11** *(does `שעות ביצוע בפועל` keep the clock times, or only the number)* · **B13** *(does a repeat quality mark keep history, or overwrite)* · **E3** *(does a cancelled project's revenue still count toward the customer's total — a **definition**, and it surfaces existing M3 behaviour nobody chose)*.
+> 🔴 **None of the four blocks Phase 1.** A6 blocks 1.7/3.8 · B11 blocks 1.1/3.5 · B13 and E3 block 3.5/3.8 — **all inside Phase 1 and 3, not at the Phase-1 door.**
+
 | # | Question | Recommendation carried into the ruling round | Blocks |
 |:-:|---|---|:--:|
 | **A1** | Which module gates the `logistics` read policy | **AR-2 rules `'לוגיסטיקה'` with a measured anchor. Present it as decided-with-an-anchor; he can override in one line.** | 1.4 |
