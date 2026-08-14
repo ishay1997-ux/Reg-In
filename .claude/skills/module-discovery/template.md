@@ -256,6 +256,17 @@ in three other places in the same file** until a reviewer found it; five instanc
 one day.)* ⇒ **A fix that adds a line without cleaning the old one is the single most repeated failure
 in this repo.** **A declaration in a file is not a closure — the token in the register is.**
 
+**⑧ 🔴 A claim about the repo, written into an approved file, carries its anchor — or it is an assumption wearing a fact's clothes.**
+> **Mandatory format:** `<the claim> (<file>:<line>, נמדד DD/MM)`
+> **Applies to:** a column existing or not existing · a file existing · the wording of a constraint, index or policy · a file path · a function or RPC name · a seeded `params` value.
+> **Without the anchor the claim is inadmissible** — and unlike an unanchored *number*, an unanchored *fact* does not look uncertain to the next reader. It looks settled.
+
+🔑 **Why this rule is the mirror of ④, and why ④ alone was not enough.** ④ already says an *"open"* marker you write must carry its own check. **Its own text names the gap it does not close:** *"§2① forbids taking a number from a document and §3 forbids asking what was already answered — **both govern what you read. Neither governs what you write.**"* ⇒ ④ closed that asymmetry for **exactly one** marker. **⑧ closes it for the claim itself.**
+
+⟦EX⟧ *(Measured `14/08/2026` while auditing an approved spec set: **six of nine verification findings were one shape** — a repo fact asserted with no anchor. Two columns named that **exist nowhere in the schema** · a **file cited nine times that was never created** · a column **denied** while it sits in `schema.sql` · a partial unique index **quoted without its `where` predicate**, which silently converts a narrow rule into a blanket one · a column claimed to be written by an RPC **that does not exist** · and a wrong path for a real file. **Every one of them was written by someone who believed it.** The two that would have reached production silently: the phantom name columns **mis-key a closing form to the wrong hostess**, and the missing predicate **forbids legal actions.*)*
+
+⚠️ **And the honest limit of ⑧ — do not oversell it.** It catches a fact that was **wrong when written**. It does **not** catch a fact that was **right when written and went stale later** — that is rule 13's ripple protocol, a different mechanism. **Nor** does it catch two approved artefacts that disagree with *each other* while both cite correctly. ⇒ **⑧ is one of at least three defences; treating it as the whole answer recreates the "register that reads as complete" failure.**
+
 ## ⚠️ And the warning for a file whose entire enforcement layer is `grep`
 
 ⟦EX⟧ *(four times in one day a measuring tool nearly produced a false finding: PowerShell reading
