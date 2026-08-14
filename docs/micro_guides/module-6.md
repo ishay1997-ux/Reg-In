@@ -11,8 +11,21 @@
 | **Last updated** | `14/08/2026 11:29` *(system clock, `Get-Date`)* |
 | **Active step** | **1.1 — pending the 🛑 blocker sweep.** Step 1.0 is ✅ done; **typed-echo is waived for Phase 1** (see step 1.0). 🔴 **The nine migrations are applied ONE AT A TIME, in order A→I, each verified live before the next.** |
 
-> ### 📍 WHERE PHASE 1 ACTUALLY STANDS — `14/08/2026 12:0X`. **A resuming session reads THIS before anything else.**
-> **Nothing is applied. The database is untouched by module 6** *(verified live: `project_changes` absent · zero M6 columns on `projects` · `logistics` still zero policies · one bucket `marketing` · 2 cron jobs)*.
+> ### 📍 WHERE PHASE 1 ACTUALLY STANDS — `14/08/2026 14:2X`. **A resuming session reads THIS before anything else.**
+> ## ✅ **SEVEN of the nine migrations are APPLIED and independently verified. Steps 1.1 · 1.2 · 1.3 · 1.4 · 1.5 · 1.6 · 1.7 · 1.9 are DONE.**
+> 🚫 **NOT applied: 1.8a and 1.8b — the seven RPCs. And 1.10's gate has not been run.**
+> 🔑 **The database is nevertheless FULLY CONSISTENT as it stands** — nothing live references the missing functions; the three triggers call `recompute_project_status`, which migration I created. **There is no half-applied state to repair.**
+>
+> **The full applied/verified table, with the evidence for each, is in `docs/db_roadmap.md` — the `✅ APPLIED` block immediately above the `A-M6` rows. Read it there, not from a restatement.**
+>
+> 🔴 **Visible data changed, deliberately, in migration I:** all four projects sat on `not_started` and that was false (`#8` already had 9 assignment rows). Now: `#3 → טרם החל` · **`#7 → ממתין לסגירה`** *(its date passed — the §8.2 acceptance criterion)* · `#8` and `#11 → בתהליך`.
+>
+> ### ➡️ THE NEXT THREE ACTIONS, in order
+> **‏① Apply `m6_step_1_8a_reads_and_close.sql` then `m6_step_1_8b_writes.sql`** from `docs/plans/module-6-phase-1/`. ⚠️ **They are 790 and 1,121 lines. Read each in FULL before applying it** — this is the one place in the phase where the reviewers found a `BLOCKED`-grade defect, and the fixes are subtle (price-nulling per caller, the payload contract, the ㉑ reset). 🚫 **Do not apply SQL you have not read.** *(This is exactly why the previous session stopped here: it could not read 1,911 lines responsibly on the context it had left. Stopping BETWEEN migrations was deliberate.)*
+> **‏② Then run `m6_step_1_10.sql`** — read-only; it prints a verdict per assertion and now distinguishes "this step has not run" from "it ran and broke".
+> **‏③ Two 👤 steps that are owed NOW, because `module6_email_log_accepts_project` is already live:** the `send-email` Edge-Function deploy *(exact diff in `m6_step_1_6.notes.md`; **migration first, deploy immediately after — the reverse order loses mail silently**)*, and the `docs/schema.sql` snapshot refresh via Supabase Studio.
+>
+> ⏸️ **Two decided-but-unbuilt items, do not re-litigate, do not forget:** the `project_changes` money-column reader-RPC *(anchor `screens-approved.md:809`/`:810`; must land **before step 3.3**; the table is empty today so there is no live exposure)* · and **מנהלת לוגיסטיקה down to `view` on `'פרויקטים'`** *(Ishay ruled it; measured to cost her nothing — the only live policy naming the module accepts `view`, and zero live functions reference it)*.
 >
 > **What exists:** apply-ready SQL drafts for **seven** of the nine migrations, written by a 14-agent fan-out and then reviewed by **four adversarial lenses** *(sql-validity · security-rls · spec-fidelity · naming-contract)*.
 > **Review outcome: `BLOCKED` on one lens · 32 findings — 5 blockers · 16 majors · 11 minors.** 🚫 **Do NOT apply any draft until they are closed.**
