@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatDate, formatTimeRange, formatTimestamp } from './dates'
+import { formatDate, formatTimeRange, formatTimestamp, weekdayOf } from './dates'
 
 describe('formatDate — dd/mm/yyyy, והריק אינו "Invalid Date"', () => {
   it('ISO ⇒ dd/mm/yyyy', () => {
@@ -49,5 +49,39 @@ describe('formatTimeRange — טווח רק כששני הקצוות קיימים
   it('🔴 קצה אחד ⇒ רק הוא, לעולם לא "18:00–" שנראה כמו תקלת-רינדור', () => {
     expect(formatTimeRange('18:00:00', null)).toBe('18:00')
     expect(formatTimeRange(null, '22:00:00')).toBe('')
+  })
+})
+
+describe('weekdayOf — יום-בשבוע בעברית, ללא "יום " בהתחלה (Step 2.4)', () => {
+  // 22/08/2026 הוא שבת — אותו עוגן שנעל כבר את shiftInvite.eventWhenLine מול תאריך
+  // אמיתי מהמסד. שבוע מלא מסביבו מוכיח שהאינדקס (getUTCDay 0=ראשון) לא הוזז בטעות.
+  it('שבוע מלא, החל מ-16/08/2026 (ראשון) עד 22/08/2026 (שבת)', () => {
+    expect(weekdayOf('2026-08-16')).toBe('ראשון')
+    expect(weekdayOf('2026-08-17')).toBe('שני')
+    expect(weekdayOf('2026-08-18')).toBe('שלישי')
+    expect(weekdayOf('2026-08-19')).toBe('רביעי')
+    expect(weekdayOf('2026-08-20')).toBe('חמישי')
+    expect(weekdayOf('2026-08-21')).toBe('שישי')
+    expect(weekdayOf('2026-08-22')).toBe('שבת')
+  })
+
+  // 🔴 העוגן המפורש של הצעד: 22/08/2026 ⇐ שבת.
+  it('22/08/2026 ⇐ שבת', () => {
+    expect(weekdayOf('2026-08-22')).toBe('שבת')
+  })
+
+  // חוצה את גבול-שעון-הקיץ הישראלי של 2026 (מסתיים ביום ראשון האחרון של אוקטובר — 25/10/2026).
+  // 🔴 חייבת להישאר יציבה משני צדי הגבול: weekdayOf היא חשבון-לוח טהור ואינה תלויה בהיסט-אזור-זמן,
+  // ובדיוק בגלל זה `Date.UTC` ולא `new Date(iso)` מקומי — האחרון היה יכול להזיז את התאריך
+  // ליום אחר סביב חצות באזור-זמן שאינו UTC.
+  it('חוצה את גבול שעון-הקיץ (24–26/10/2026) בלי להזיז יום', () => {
+    expect(weekdayOf('2026-10-24')).toBe('שבת')
+    expect(weekdayOf('2026-10-25')).toBe('ראשון')
+    expect(weekdayOf('2026-10-26')).toBe('שני')
+  })
+
+  it('קלט לא-תקין ⇒ מחרוזת ריקה, לא קריסה', () => {
+    expect(weekdayOf(null)).toBe('')
+    expect(weekdayOf('לא-תאריך')).toBe('')
   })
 })

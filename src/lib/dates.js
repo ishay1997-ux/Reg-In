@@ -66,3 +66,24 @@ export function formatTimeRange(start, end) {
   if (!from || !to) return from ?? ''
   return `${from}–${to}`
 }
+
+// ── יום בשבוע (Step 2.4, מודול 6) ────────────────────────────────────────────
+//
+// 🔴 **קובץ יחיד למערך-שמות-הימים.** `src/lib/shiftInvite.js` כבר החזיק מערך זהה בתוכן
+// (`WEEKDAYS`) בשביל שורת "יום שלישי הקרוב · 18:00–22:00" — הפרויקט הזה כבר שילם פעמיים
+// על שתי פונקציות עם שם אחד שסטו בשקט (`StatTile`, `formatDate` — ר' תיעוד למעלה). הצורות
+// שונות (כאן "שבת" חשוף, שם "יום שבת" עם קידומת) ולכן `shiftInvite.js` עבר לייבא מכאן
+// ולהוסיף את הקידומת בעצמו, במקום להחזיק מערך שני.
+const WEEKDAY_NAMES_HE = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
+
+// שם היום בעברית (בלי קידומת "יום ") לפי תאריך `YYYY-MM-DD` — משמש למשל בקו-המשנה
+// "שבת · בעוד 9 ימים" של מבט-העל בפרויקטים (מודול 6, משטח 1).
+// 🔴 **חייב `Date.UTC(y, m-1, d)` ולא `new Date(iso)` מקומי.** הפענוח המקומי מזיז את התאריך
+// לפי אזור-הזמן של הדפדפן/הריצה **בחלק מהתאריכים בלבד** (סביב חצות) — הבאג הכי גרוע כי הוא
+// עובר את רוב הבדיקות ונופל רק סביב הגבול.
+export function weekdayOf(isoDate) {
+  const [year, month, day] = String(isoDate).split('-').map(Number)
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return ''
+  const index = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+  return WEEKDAY_NAMES_HE[index] ?? ''
+}

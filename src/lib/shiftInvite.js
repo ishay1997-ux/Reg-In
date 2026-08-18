@@ -3,7 +3,7 @@
 // 🚫 **אין כאן Supabase, אין DOM, ואין `Date.now()` מובלע** — השעון נכנס כפרמטר, כדי
 // שספירת-הזמן-שנותר תהיה ניתנת לבדיקה בלי לזייף שעון גלובלי. אותה מוסכמה כמו שאר `src/lib/`.
 
-import { formatDate, formatTimeRange } from '@/lib/dates'
+import { formatDate, formatTimeRange, weekdayOf } from '@/lib/dates'
 
 // ── שמונת המצבים, ולמה הם **שבעה** בקוד ─────────────────────────────────────
 //
@@ -114,16 +114,15 @@ export function expiryNotice(expiresAt, now) {
 // על המוקאפים הקודמים — תאריך שננעל והפך לא-נכון. ⇒ **יום-בשבוע + תאריך מלא**: שומר
 // את מה שהמוקאפ באמת נתן (הדיילת רואה איזה יום זה) בלי להמציא קרבה שאינה קיימת.
 // 🚫 ואין כאן עותק רביעי של `formatDate` — היא מיובאת (`src/lib/dates.js`).
-const WEEKDAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
+// 🔴 ואותו דבר מ-18/08/2026 על מערך-הימים: `weekdayOf` (Step 2.4 של מודול 6) עברה לגור
+// ב-`dates.js`, כי מבט-העל של פרויקטים זקוק לאותה טבלת-שמות בדיוק. הצורה כאן שונה
+// ("יום שבת", עם קידומת) — ולכן הקידומת נשארת כאן, ורק מערך-השמות עצמו אוחד.
 
 export function eventWhenLine(eventDate, startTime, endTime) {
   const date = formatDate(eventDate)
   if (!date) return ''
 
-  // ‏`YYYY-MM-DD` בלבד (‏`formatDate` כבר דחתה כל דבר אחר) ⇒ בנייה ב-UTC בטוחה כאן:
-  // אין רכיב-שעה שיכול לגלוש ליום שכן.
-  const [year, month, day] = String(eventDate).split('-').map(Number)
-  const weekday = WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()]
+  const weekday = weekdayOf(eventDate)
   const hours = formatTimeRange(startTime, endTime)
 
   const parts = [`יום ${weekday}`, date]
