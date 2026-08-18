@@ -1,0 +1,445 @@
+<title>מדריך-הכנה לעמית — הצגת 28/08</title>
+<style>
+  @font-face {
+    font-family: 'Heebo';
+    font-weight: 400 900;
+    font-display: swap;
+    src: local('Heebo');
+  }
+
+  :root {
+    --teal-50: #f0fdfa;
+    --teal-100: #ccfbf1;
+    --teal-500: #14b8a6;
+    --teal-600: #0d9488;
+    --teal-700: #0f766e;
+    --teal-900: #134e4a;
+
+    --amber-100: #fef3c7;
+    --amber-600: #d97706;
+    --amber-800: #92400e;
+
+    --rose-100: #ffe4e6;
+    --rose-600: #e11d48;
+    --rose-800: #9f1239;
+
+    --violet-100: #ede9fe;
+    --violet-600: #7c3aed;
+    --violet-800: #5b21b6;
+
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --surface-sunken: #f1f5f9;
+    --border: #e2e8f0;
+    --ink: #0f172a;
+    --ink-soft: #475569;
+    --ink-faint: #94a3b8;
+
+    --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 8px rgba(15, 23, 42, 0.04);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --bg: #0b1120;
+      --surface: #131c2e;
+      --surface-sunken: #0f1729;
+      --border: #22304a;
+      --ink: #e8edf6;
+      --ink-soft: #aab6c9;
+      --ink-faint: #6b7893;
+
+      --teal-50: #0c2a26;
+      --teal-100: #113a34;
+
+      --amber-100: #3a2a0c;
+      --amber-600: #f0a92e;
+      --amber-800: #ffd88a;
+
+      --rose-100: #3a1220;
+      --rose-600: #fb6f8e;
+      --rose-800: #ffb3c4;
+
+      --violet-100: #241a3a;
+      --violet-600: #a78bfa;
+      --violet-800: #ddd6fe;
+
+      --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 12px rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  :root[data-theme='dark'] {
+    --bg: #0b1120;
+    --surface: #131c2e;
+    --surface-sunken: #0f1729;
+    --border: #22304a;
+    --ink: #e8edf6;
+    --ink-soft: #aab6c9;
+    --ink-faint: #6b7893;
+
+    --teal-50: #0c2a26;
+    --teal-100: #113a34;
+
+    --amber-100: #3a2a0c;
+    --amber-600: #f0a92e;
+    --amber-800: #ffd88a;
+
+    --rose-100: #3a1220;
+    --rose-600: #fb6f8e;
+    --rose-800: #ffb3c4;
+
+    --violet-100: #241a3a;
+    --violet-600: #a78bfa;
+    --violet-800: #ddd6fe;
+
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 12px rgba(0, 0, 0, 0.25);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Heebo', 'Segoe UI', system-ui, sans-serif;
+    direction: rtl;
+    line-height: 1.6;
+  }
+
+  .page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  header.hero { margin-bottom: 28px; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--teal-100);
+    color: var(--teal-700);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 5px 12px;
+    border-radius: 999px;
+    margin-bottom: 14px;
+  }
+
+  h1 {
+    font-size: clamp(26px, 4vw, 34px);
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+
+  .hero-sub { font-size: 16px; color: var(--ink-soft); margin: 0; }
+
+  section.block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--card-shadow);
+  }
+
+  .block-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 800;
+    margin: 0 0 6px;
+  }
+
+  .block-sub { font-size: 13.5px; color: var(--ink-faint); margin: 0 0 16px; }
+
+  .step {
+    background: var(--surface-sunken);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+
+  .step-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .step-num {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: var(--teal-600);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 13px; flex-shrink: 0;
+  }
+
+  .step-title { font-weight: 800; font-size: 15px; }
+
+  .step p { margin: 0 0 8px; font-size: 14px; color: var(--ink-soft); }
+  .step p:last-child { margin-bottom: 0; }
+
+  .mock-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--teal-50);
+    color: var(--teal-700);
+    border: 1px solid var(--teal-500);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    margin-bottom: 8px;
+  }
+
+  .deviation {
+    border-inline-start: 4px solid var(--amber-600);
+    background: var(--amber-100);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+  .deviation .old { color: var(--ink-soft); font-size: 13.5px; }
+  .deviation .new { color: var(--amber-800); font-weight: 700; font-size: 14px; margin-top: 4px; }
+
+  .qa {
+    background: var(--surface-sunken);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .qa .q { font-weight: 800; font-size: 14.5px; margin-bottom: 6px; }
+  .qa .q::before { content: '🎤 '; }
+  .qa .a { font-size: 14px; color: var(--ink-soft); }
+
+  .tag-opinion {
+    display: inline-block;
+    background: var(--violet-100);
+    color: var(--violet-800);
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-inline-start: 6px;
+  }
+
+  .warn-box {
+    background: var(--rose-100);
+    color: var(--rose-800);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  ul.plain { margin: 8px 0 0; padding-inline-start: 20px; }
+  ul.plain li { font-size: 14px; color: var(--ink-soft); margin-bottom: 6px; }
+
+  a { color: var(--teal-700); }
+
+  .footer-note { text-align: center; color: var(--ink-faint); font-size: 12.5px; margin-top: 32px; }
+</style>
+
+<div class="page">
+
+  <header class="hero">
+    <span class="eyebrow">🎓 מדריך-הכנה — REG-IN</span>
+    <h1>אתה מציג ב-28/08 — הנה מה שאתה צריך לדעת</h1>
+    <p class="hero-sub">אתה מכיר את האפיון (C5) ולא את המערכת עצמה — היא מעולם לא נראתה לך. המדריך הזה סוגר בדיוק את הפער הזה, לפני שתפתח את <a href="demo-script-28-08.html">תסריט ההצגה</a> שאומר מה בדיוק ללחוץ ומה להגיד.</p>
+  </header>
+
+  <section class="block">
+    <p class="block-title">📖 מה אתה בעצם מציג</p>
+    <p class="block-sub">תהליך אחד מקצה לקצה, 10 דקות — בלי קפיצות בין מודולים</p>
+    <p style="font-size:14.5px; color:var(--ink-soft); margin:0;">
+      לקוח מבקש הצעת-מחיר לאירוע ← מאשרים אותה ← <b>נפתח פרויקט אוטומטית</b> ← המערכת בעצמה
+      מדרגת אילו דיילות להזמין (לא רשימה שמישהי בונה ביד) ← דיילת אחת נפסלת אוטומטית כי היא
+      כבר הצהירה שהיא לא זמינה ← משבצים עד שהמכסה מלאה ← (אם יש זמן) דיילת מאשרת הגעה
+      <b>ישירות מהטלפון שלה, בלי להתחבר לשום מערכת ובלי אפליקציה.</b>
+    </p>
+  </section>
+
+  <section class="block">
+    <p class="block-title">🖥️ מסך אחר מסך — מה תראה, ולמה זה בנוי ככה</p>
+    <p class="block-sub">לכל צעד — קישור למוקאפ המאושר שהמסך האמיתי נבנה לפיו, כדי שתפתח ותכיר לפני היום. ⚠️ המוקאפים הם רפרנס ויזואלי בלבד — חלק מהמספרים והפרטים הקטנים בהם כבר לא מדויקים למסך החי; לא לצטט מהם מספר, רק ללמוד ממנו את המבנה הכללי.</p>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">1–2</span><span class="step-title">הצעת המחיר</span></div>
+      <a class="mock-link" href="../../mockups/quote-screen/09_quote_management_approved.html">↗ מוקאפ: רשימת ההצעות</a>
+      <a class="mock-link" href="../../mockups/quote-screen/08_quote_builder_approved.html">↗ מוקאפ: עריכת הצעה ומדרגות-מחיר</a>
+      <p>לקוח קיים ("אולמי הנשיא הפקות") ביקש הצעה ל-220 אורחים. המחיר <b>לא מוקלד ביד</b> —
+      המערכת קוראת את המחירון החי ומחשבת אוטומטית לפי מדרגות-כמות (ככל שמזמינים יותר, המחיר
+      ליחידה יורד). זו הנקודה שבה אתה אומר "זה המחירון האמיתי, לא דמו מבוים".</p>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">3</span><span class="step-title">אישור ← נוצר פרויקט</span></div>
+      <p>לחיצה על ה-✓ הירוק היא <b>חד-כיוונית</b> — ההצעה עוברת ל"אושרו" ונפתח פרויקט חדש
+      אוטומטית, עם כל הנתונים. אין מסך שמחזיר הצעה מאושרת אחורה. <b>זו בדיוק הסיבה שבתסריט
+      אסור ללחוץ על ה-✓ לפני שמגיעים לצעד הזה בפועל</b> — פרטים מלאים ב-<a href="../do-not-touch.md">"מה אסור לגעת בו"</a>.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">4–5</span><span class="step-title">שיבוץ חכם (Smart Match) — הדירוג והשער</span></div>
+      <a class="mock-link" href="../../mockups/hostesses-screen/approved/02_smartmatch_approved.html">↗ מוקאפ: שיבוץ חכם</a>
+      <p>המערכת לא מציגה "כל הדיילות" — היא מציגה רק מי שבאמת <b>יכולה</b> להגיע (שער-פסילה:
+      מושבתת / כבר משובצת סופית באותו יום / מרחק מעל 80 ק"מ / הצהירה שאינה זמינה — כל אלה
+      פשוט לא ברשימה, לא "מוצגות עם ציון נמוך"). מי שעוברת את השער מדורגת לפי שלוש שכבות
+      נוספות: קרבה, סיכוי-היענות, והוגנות-בעומס (דיילת שלא עבדה כבר כמה שבועות מקבלת בונוס).
+      <b>כל שורה נושאת צ'יפ שמסביר למה היא שם</b> — לא ציון סתום.
+      <i>(זו הניסוח שגם ישי מתכנן להגיד במילה — אם ישאלו לעומק, ראה את הפירוט המדויק בסעיף הבא.)</i></p>
+      <p>הדוגמה החיה: <b>ליאת רזניק</b> לא מופיעה/מסומנת פסולה — יש לה אי-זמינות רשומה במסד
+      מסיבה אמיתית (לא הוזנה בשביל ההדגמה), והשער תפס אותה.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">6</span><span class="step-title">איוש עד מכסה מלאה</span></div>
+      <p>משבצים דיילות מהרשימה עד 5/5. ברגע שהאיוש מלא, <b>סטטוס הפרויקט מתקדם לבד</b> —
+      אין כפתור "סמן כאיוש הושלם"; המערכת מחשבת את זה מהנתונים בכל פעם שמשהו זז.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">7</span><span class="step-title">זימון ואישור מהטלפון</span></div>
+      <a class="mock-link" href="../../mockups/hostesses-screen/approved/05_public_confirm_approved.html">↗ מוקאפ: מסך האישור הציבורי</a>
+      <p>מייל אמיתי יוצא תוך שניות. הדיילת לוחצת על קישור ומגיעה לדף פשוט שמאשרת ממנו —
+      <b>בלי סיסמה, בלי חשבון, בלי אפליקציה.</b> זה בכוונה: דיילות הן עובדות-שטח מזדמנות,
+      לא משתמשות-קבועות של המערכת.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <p class="block-title">⚠️ איפה זה שונה ממה שאתה מכיר מ-C5</p>
+    <p class="block-sub">הסיכון האמיתי אצלך הוא לא "לא לדעת" — הוא לענות נכון <i>לפי C5</i> על משהו שכבר השתנה מאז. הדברים הבאים נבדקו במיוחד בשביל זה:</p>
+
+    <div class="deviation">
+      <div class="old">C5 §5.6.11: הציון מבוסס שלושה פרמטרים — דירוג-מקצועי (כוכבים), מרחק, וכמות משמרות ברבעון.</div>
+      <div class="new"><b>הציון הוחלף כליל, לא רק כוונן:</b> דירוג-הכוכבים יצא מהציון לגמרי (הפך
+      לתגית-נעיצה שהלקוח מסמן, לא משקל) · "כמות משמרות" הפכה לעמודת-מידע בלבד · והציון האמיתי
+      היום הוא <b>סיכוי-היענות (40%) + אמינות-הגעה (35%, כרגע כבוי כי מודול 6 עוד לא מייצר
+      נתונים) + קרבה (25%)</b> — כלומר בפועל כרגע ≈62% היענות / 38% קרבה. אם ישאלו "למה בחרתם
+      את זה ולא דירוג-כוכבים" — זו התשובה: כוכבים הם דעה סובייקטיבית של לקוח אחד, לא מדד שוויוני
+      לכל הדיילות.
+      <div style="font-size:12px; color:var(--ink-faint); margin-top:4px;">מקור: module4_smart_match_research.md §1/§3.1/§5/§9 — מתויג שם "סטייה מ-5.11"</div></div>
+    </div>
+
+    <div class="deviation">
+      <div class="old">C5 מזכיר רק סינון של דיילת שכבר משובצת סופית לאירוע אחר באותו תאריך.</div>
+      <div class="new">בפועל שער בן <b>חמישה</b> תנאים: פעילה · אין התנגשות-תאריך · לא מסומנת
+      "לא-לשלוח" אצל הלקוח הזה · מרחק עד 80 ק"מ · לא הצהירה אי-זמינות. שלושת התנאים הנוספים
+      נבנו בפועל מעבר למה שכתוב ב-C5.
+      <div style="font-size:12px; color:var(--ink-faint); margin-top:4px;">מקור: module_04/spec.md 399-406, מתויג שם "המצאות מעבר לאפיון"</div></div>
+    </div>
+
+    <div class="deviation">
+      <div class="old">אין ב-C5 בכלל מושג של "דיילת מצהירה מראש שהיא לא זמינה בטווח תאריכים".</div>
+      <div class="new"><b>זה בדיוק תרחיש ליאת רזניק בצעד 5 — שים לב לניסוח המדויק:</b> אם תסביר
+      לפי C5 בלבד תגיד "היא כבר משובצת" — <b>וזה לא נכון.</b> יש לה רשומת אי-זמינות ייעודית
+      (טווח-תאריכים שהמנהלת הזינה), שער נפרד לגמרי מ"כבר משובצת".
+      <div style="font-size:12px; color:var(--ink-faint); margin-top:4px;">מקור: module_04/spec.md 235-236, 516</div></div>
+    </div>
+
+    <div class="deviation">
+      <div class="old">C5:305 כותב "אושרה זמנית" — ניסוח שמרמז על פעולת-מנהלת.</div>
+      <div class="new"><b>רלוונטי בדיוק לצעד 7 — מי לוחץ על מה:</b> בפועל <b>הדיילת עצמה</b>
+      לוחצת על הקישור בטלפון ומודיעה שהיא פנויה (נקרא "אישרה זמינות"). "אישור סופי" הוא פעולה
+      נפרדת לגמרי, שרק המנהלת מבצעת <b>אחר-כך</b>. אל תגיד "המנהלת מאשרת" על צעד 7 — הדיילת
+      היא זו שמאשרת מהטלפון.
+      <div style="font-size:12px; color:var(--ink-faint); margin-top:4px;">מקור: module_04/spec.md 92-118</div></div>
+    </div>
+
+    <div class="deviation">
+      <div class="old">C5 §5.5.4 מציג גם את שירות-הדיילות עם "מדרגת-מחיר" — נראה כאילו גם היא מתומחרת לפי כמות.</div>
+      <div class="new">שירות-הדיילות הוא בפועל <b>מחיר-חבילה קבוע</b> (500/800 ₪) — מדרגות-הכמות
+      ‏(2.50/3.30 ₪ שתראה בצעד 1) שייכות <b>רק</b> לתגים ולשרוכים. C5 עצמו מסמן את זה כפגם-ידוע
+      שלא נפתר בטקסט — אז אם ישאלו "גם הדיילת מתומחרת לפי מדרגות?" התשובה היא לא.
+      <div style="font-size:12px; color:var(--ink-faint); margin-top:4px;">מקור: C5_clean_transcript.md:251, module_03_quotes.md:38 (F26)</div></div>
+    </div>
+
+    <p style="font-size:13px; color:var(--ink-faint); margin-top:4px;">
+      ✅ שאר הזרימה נבדקה ולא נמצאה בה סטייה: עריכה-ושליחה, אישור-הצעה→פתיחת-פרויקט-אוטומטית,
+      ואיוש-מלא→שינוי-סטטוס (צעדים 2/3/6) תואמים את C5 §5.6.4-5.6.6 כמעט מילה-במילה — שם אתה
+      יכול להישען על מה שאתה כבר יודע בביטחון מלא.
+    </p>
+  </section>
+
+  <section class="block">
+    <p class="block-title">🎤 שאלות שהמרצים עשויים לשאול</p>
+    <p class="block-sub">נבחרו מתוך בריף מלא של 47 מצבים (<a href="hostess-situations-brief.html">כאן, אם תרצה את כולם</a>) — אלה שהכי סביר שיישאלו על התהליך שאתה מציג</p>
+
+    <div class="qa">
+      <div class="q">מה קורה אם דיילת אומרת שהיא לא זמינה בתאריך מסוים?</div>
+      <div class="a">היא לא "מסרבת" ולא מוצגת עם ציון נמוך — היא פשוט לא ברשימה. המערכת אוכפת
+      את זה אוטומטית בכל הצעה חדשה, בלי להסתמך על שמישהי תזכור לבדוק ביד.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q">מה אם שתי דיילות מקבלות בדיוק אותו ציון?</div>
+      <div class="a">הכרעה בשיטה אקראית-אך-קבועה לאותו אירוע — <b>לא</b> "מי נרשמה קודם", כי זה
+      תמיד היה מעדיף דיילות ותיקות על פני חדשות.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q">מה אם משבצים יותר דיילות מהנדרש?</div>
+      <div class="a">זה לא נחסם — רק אזהרה שהעודף לא מחויב ללקוח. ההחלטה היא של המנהלת, לא של המערכת.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q">מה קורה אם שתי מנהלות מנסות לשבץ את אותה דיילת בו-זמנית?</div>
+      <div class="a">אחת מצליחה, השנייה נכשלת בקול — זה נאכף ברמת מסד-הנתונים עצמו, לא רק בקוד
+      המסך, כדי שזה יהיה נכון גם אם שתיים לוחצות באותו רגע ממחשבים שונים.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q">איך דיילת מאשרת הגעה בלי חשבון במערכת?</div>
+      <div class="a">קישור אישי חד-פעמי במייל, תקף עד המוקדם מבין: המשרה התמלאה / 48 שעות / 24
+      שעות לפני האירוע. אחרי זה מוצג "פג תוקף" — לא נעלם, רק מפורש.</div>
+    </div>
+
+    <div class="qa">
+      <div class="q">למה בכלל בניתם את זה עם Supabase ולא מסד-נתונים משלכם?</div>
+      <div class="a"><span class="tag-opinion">🏷️ הנחתי</span> זה פרויקט אקדמי של מפתח יחיד עם
+      דדליין — Postgres אמיתי + הרשאות ברמת-שורה (RLS) + אימות-משתמשים מוכנים "מהקופסה" חוסכים
+      בדיוק את התשתית שאין זמן לבנות לבד, בלי לפגוע באיכות. <i>(זו תשובה סבירה, לא ציטוט של ישי —
+      אם תרצה תשובה מדויקת יותר, זה שווה שאלה אליו.)</i></div>
+    </div>
+
+    <div class="qa">
+      <div class="q">מה עוד לא בנוי במערכת?</div>
+      <div class="a">נכון לאמצע אוגוסט, פרויקטים/לוגיסטיקה/כספים/דוחות עדיין תחת "בבנייה" ברמות
+      שונות — מודול הדיילות שאתה מציג (וגם לקוחות והצעות-מחיר) הם המוכנים ביותר. <i>כדאי לבדוק
+      עם ישי מה בדיוק המצב ממש לפני 28/08, כי זה משתנה מדי כמה ימים.</i></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <p class="block-title">🚫 מה אסור לגעת בו ביום עצמו</p>
+    <p style="font-size:14px; color:var(--ink-soft); margin:0 0 10px;">
+      הרשימה המלאה עם הסיבות: <a href="../do-not-touch.md">do-not-touch.md</a>. שני הכי-חשובים:
+    </p>
+    <ul class="plain">
+      <li><b>אל תאשר (✓) שום הצעה חוץ מ"השקת סבב גיוס"</b> — אישור פותח פרויקט ואי-אפשר לבטל אותו חזרה.</li>
+      <li><b>אל תדחה שום הצעה</b> — גם זה חד-כיווני.</li>
+    </ul>
+    <p style="font-size:14px; color:var(--ink-soft); margin:14px 0 0;">כלל-אצבע אחד שמכסה הכול:
+    <b>לקרוא ולהסתכל תמיד בטוח.</b> מה שמסוכן זה לחיצות שמאשרות/דוחות/מוחקות/משחררות.</p>
+  </section>
+
+  <section class="block" style="border-color: var(--teal-500);">
+    <p class="block-title">✅ ההמלצה הכי חשובה במסמך הזה</p>
+    <p style="font-size:14.5px; color:var(--ink-soft); margin:0;">
+      שום מסמך לא מחליף לראות את זה זז. אם יש אפשרות ולו לחצי-שעה — תרגול חי אחד, ולו בשיחת-וידאו,
+      שבו אתה עובר בעצמך על שבעת הצעדים באתר האמיתי לפני 28/08, שווה יותר מכל מה שכתוב כאן.
+      ישי כבר עשה רהרסל מלא ב-12/08 ומכיר כל לחיצה — הוא האדם הכי טוב לעבור איתך עליו.
+    </p>
+  </section>
+
+  <p class="footer-note">נכתב 17/08/2026 · חלק מחומרי-ההכנה להצגת 28/08/2026</p>
+
+</div>

@@ -49,6 +49,16 @@
 ## Session Log (newest first)
 <!-- 2–3 newest in full · older than 3 days and not among them → weekly bucket '### 📦 Week DD/MM–DD/MM — topic' (after migrating evergreen facts to the reference sections, "harvest before you delete") · narrative (up to '## Reference') >180 lines → compress toward 150. Reference sections are exempt. -->
 
+### 17/08/2026 — Amit prep guide built as a fallback for 28/08 (Ishay may miss it — reserve duty); no module-6 work this session
+
+**What changed.** New file `docs/guides/conference/amit-prep-guide.html` (published as an Artifact, `e9968e5f-69a4-4d81-ad7b-0ac20e0ffb78`) + a new row in `docs/guides/conference/README.md`. Docs-only — no `src/` or `supabase/migrations/` touched, so no gate run was needed; module 6 status is unchanged from the previous entry below.
+
+**Why.** Ishay may not make it to the 28/08 interim demo. Amit — who left the project 22/07/2026, before module 4 (hostesses + Smart Match, the exact module being demoed) was built — would have to present instead, and knows only the frozen spec `C5_clean_transcript.md`, not the live system at all. The existing conference kit (`demo-script-28-08.html`, `hostess-situations-brief.html`, `do-not-touch.md`) assumes the reader already understands the live system, which doesn't hold for Amit.
+
+**What's in the new guide, and the one finding that matters most.** A screen-by-screen walkthrough of the demoed flow (linked to the approved mockups — no login was attempted, per the credential-entry prohibition), a curated subset of the existing 47-situation Q&A brief, and a dedicated researched section (Explore agent over `docs/specs/module_04_hostesses/{spec.md,module4_smart_match_research.md}` + `C5_clean_transcript.md:251`) listing 5 concrete C5-vs-built deviations specific to this flow. The one most likely to trip Amit up if he reasoned from C5 alone: the Liat Reznik gate demo (script step 5) is a "declared-unavailability" feature that doesn't exist in C5 at all — C5-only reasoning would say "she's already booked elsewhere," which is false.
+
+**Known gap, left open on purpose.** The guide's mockup/`do-not-touch.md` links are relative paths — they resolve when the file is opened from inside the repo (same as the other two conference files) but not from the standalone Artifact URL, since a published Artifact can't see sibling repo files. Flagged to Ishay in-chat rather than fixed, because fixing it means inlining mockup content/screenshots — real scope he hasn't asked for.
+
 ### 14/08/2026 03:05–03:40 — The module-6 draft's real defect was **routing**, not content: 7 findings had nowhere to arrive
 
 **What changed.** `docs/micro_guides/module-6.draft.md` 1,714 → **1,976 lines** (`(Get-Content).Count`), plus one `PROJECT_MASTER §6` line. Gate green end-to-end (exit 0, unpiped, 752/26 — docs-only change, so the count is correctly unmoved).
