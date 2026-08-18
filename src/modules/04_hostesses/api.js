@@ -27,6 +27,7 @@ import {
 } from '@/lib/hostesses'
 import { classifySendError, EMAIL_SEND_RESULT } from '@/lib/email'
 import { sendEmail } from '@/api/email'
+import { ACTIVE_PROJECT_STATUSES } from '@/lib/projects'
 import {
   SHIFT_TEMPLATE_NAMES,
   buildShiftInvitePayload,
@@ -50,10 +51,6 @@ const ALL_PARAM_NAMES = [
   ...Object.values(SMART_MATCH_PARAM_NAMES),
   ...Object.values(HOSTESS_PARAM_NAMES),
 ]
-
-// סטטוסי-הפרויקט שהמבט-על מציג. 🔴 **`ready` ומעלה אינם ברשימה במכוון** — פרויקט
-// שאוייש יצא מרשימת-העבודה של מנהלת הגיוס; היא מסתכלת על מה שעוד חסר.
-const OPEN_PROJECT_STATUSES = ['not_started', 'in_progress']
 
 // ---- גאוקוד ----
 
@@ -128,17 +125,19 @@ export async function getHostess(hostessId) {
 // 🔴 **שם-הלקוח נלקח מ-`projects.customer_name` ולא בצירוף ל-`customers`** — מנהלת
 // הגיוס **חסומה** על מודול 'לקוחות', והצירוף היה מחזיר `null` **בלי שגיאה** בשלושה
 // מסכים מאושרים. זו בדיוק הסיבה שהעמודה נולדה (local-5, אותו דפוס כמו `event_name`).
-// ⚠️ הסינון ל-`OPEN_PROJECT_STATUSES` נעשה **בשאילתה**, לא בדפדפן.
+// ⚠️ הסינון ל-`ACTIVE_PROJECT_STATUSES` נעשה **בשאילתה**, לא בדפדפן.
 // 🔴 **אבל הוא אינו כל הסינון של המסך, ואל תסיק מכאן שהוא כן:** אירוע שתאריכו **לפני היום**
 // מסונן ב-`OverviewTab` דרך `isPastEvent`, ולא כאן. הסיבה שהוא אינו בשאילתה: "היום" הוא
 // שעון-הדפדפן, ושאילתה שמשווה ל-`now()` של המסד הייתה נחתכת בשעה אחרת מזו שהמסך מציג.
+// 🔴 **ומ-2.6: `ready` נכלל בכוונה (⑫, מוגדר ב-`src/lib/projects.js`)** — פרויקט `ready`
+// עדיין פעיל, ודיילת שמבטלת באירוע "מוכן" שמתקיים מחר חייבת להישאר גלויה למנהלת הגיוס.
 export async function listStaffingOverview() {
   const { data, error } = await supabase
     .from('projects')
     .select(
       'project_id, event_name, customer_name, final_event_date, final_start_time, final_end_time, final_location, required_hostess_count, project_status, assignments(*)',
     )
-    .in('project_status', OPEN_PROJECT_STATUSES)
+    .in('project_status', ACTIVE_PROJECT_STATUSES)
     .order('final_event_date')
     .order('project_id')
   if (error) throw toError(error, 'שגיאה בטעינת רשימת האירועים לאיוש.')

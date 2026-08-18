@@ -82,9 +82,9 @@ describe('שומר ② — המחרוזת "אירוע הסתיים" אסורה �
 
 describe('שומר ③ — OPEN_PROJECT_STATUSES לא ישרוד כהגדרה כפולה (⑫ · צעד 2.6)', () => {
   const IDENTIFIER = 'OPEN_PROJECT_STATUSES'
-  // עד צעד 2.6 ההגדרה הישנה חיה כדין במודול 4; צעד 2.6 מרוקן את הרשימה הזאת —
-  // ואז כל הישרדות של המזהה ב-src/ מפילה את הבדיקה.
-  const ALLOWED_UNTIL_STEP_2_6 = new Set([path.join('modules', '04_hostesses', 'api.js')])
+  // רוקן בצעד 2.6: ההגדרה הישנה עברה ל-`ACTIVE_PROJECT_STATUSES` ב-`src/lib/projects.js`,
+  // ומאותו רגע אין עוד יעד-היתר — כל הישרדות של המזהה ב-src/ מפילה את הבדיקה.
+  const ALLOWED_UNTIL_STEP_2_6 = new Set([])
 
   it('המקרה האדום: האנלייזר תופס מקור סינתטי שמפר', () => {
     expect(findForbiddenLiteral(`const ${IDENTIFIER} = []\n`, IDENTIFIER)).toEqual([1])
