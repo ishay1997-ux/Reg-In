@@ -9,7 +9,7 @@
 | **Owner** | Ishay (sole developer) |
 | **Status** | 🔒 **Phase 1 CLOSED — Ishay signed the 1.10 gate `18/08/2026 22:32` ("מאשר").** All eleven migrations applied `14/08`; gate ran end-to-end `18/08` — 97/100 PASS, 2 FAILs triaged as stale gate-expectations, advisors triaged finding-by-finding, `schema.sql` refreshed, all registry rows flipped. |
 | **Last updated** | `18/08/2026 22:32` *(system clock, `Get-Date`)* |
-| **Active step** | **2.2 + 2.3 + 2.4 — IN PROGRESS via two build agents** (Ishay approved the batch + the agent dispatch, `18/08/2026 23:3X`); the orchestrating session verifies everything itself before commit. 2.1 ✅ done `18/08` (789 tests green). ✅ The 2.1 nod (`הלוגיסטיקה טרם מוכנה`) given `18/08 23:4X`. |
+| **Active step** | **2.5 + 2.6 — dispatching via build agents** (session-B of the plan Ishay approved; orchestrator verifies before commit). 2.1–2.4 ✅ all done `18/08` — suite at **870** (752+37+33+44+4), zero regressions. ⏳ **Owed to Ishay: one nod round on 2.3's three invented validation-category strings** (§10 18/08 entry B) — collected, not blocking. |
 
 > ### 📍 PHASE 1 — 🔒 CLOSED `18/08/2026 22:32` (Ishay: *"מאשר"*). Compacted per self-update clause (i).
 > **The full pre-compaction text — step bodies, the review history, the 32-findings narrative — lives in `docs/archive/module-6_phase1_pre-compaction_2026-08-18.md`.** Evidence chain: the step table below · `db_roadmap.md` A-M6 block + its §10 entries (14/08 + 18/08) · `docs/plans/module-6-phase-1/` (the reviewed SQL drafts + `FINDINGS.md`).
@@ -33,9 +33,9 @@
 | **1.10** | 🔻👤 Phase-1 gate: advisors clean + `docs/schema.sql` refreshed + `db_roadmap` rows flipped | ✅ **done `18/08/2026 22:32`** — gate script end-to-end 97/100 PASS (2 FAILs triaged as stale expectations, `db_roadmap §10` 18/08) · advisors triaged (25/26, every delta explained) · `schema.sql` refreshed · registries flipped · **🗣️ אושר `18/08/2026 22:32` — Ishay: "מאשר". PHASE 1 CLOSED.** |
 | **2.0** | 🔻👤 Phase-2 door: Ledger sweep for phase-2-anchored OPEN items | ✅ done `18/08/2026 22:5X` — §3.5 re-read IN FULL: every row ruled, **anchored-to-Phase-2 set = אין**; 5 stale `⬜` tokens on already-ruled rows (A5·A9·A10·B7·B11) flipped to 🟢 in the same sweep |
 | **2.1** | `src/lib/projects.js` — status label + tone map, readiness metrics, gap sentences, active-status SSOT | ✅ done `18/08/2026 23:1X` — test-first (37 red→green) · full suite **789 = 752+37**, zero regressions · anchors `1/6`·`0/1`·zero-logistics-complete reproduced · 3 filled gaps logged §10 — all three now owned/ruled (the logistics-only sentence **nodded by Ishay 18/08**) |
-| **2.2** | `src/lib/projectChanges.js` — scope-change arithmetic + late-change marker | ⬜ pending |
-| **2.3** | `src/lib/projectClosing.js` — attendance vocabulary, per-hostess cost, closing validation summary | ⬜ pending |
-| **2.4** | `src/lib/dates.js` extension — `weekdayOf` ⚠️ shared-surface | ⬜ pending |
+| **2.2** | `src/lib/projectChanges.js` — scope-change arithmetic + late-change marker | ✅ done `18/08/2026 23:4X` — built by agent, verified by orchestrator (code read in full) · anchor **1,404.20 ₪** asserted + additive-vs-chained 5355≠5386.5 · `isLateChange` conditional per item ד · hours anchor = the server formula (Asia/Jerusalem + start time, floored) |
+| **2.3** | `src/lib/projectClosing.js` — attendance vocabulary, per-hostess cost, closing validation summary | ✅ done `18/08/2026 23:4X` — built by agent (self-caught test-first violation, went red-first properly), verified by orchestrator · anchor **1,085.00 ₪** with Keren at 0 · `לא_לשלוח` underscore asserted · ⏳ **3 invented validation-category strings await Ishay's nod round** (§10 18/08 entry B) |
+| **2.4** | `src/lib/dates.js` extension — `weekdayOf` ⚠️ shared-surface | ✅ done `18/08/2026 23:4X` — bare-name form; `shiftInvite.js`'s duplicate `WEEKDAYS` array consolidated into it (prefix stays local); `shiftInvite.test.js` green unchanged |
 | **2.5** | `src/modules/06_projects/api.js` — every read + every RPC call | ⬜ pending |
 | **2.6** | `OPEN_PROJECT_STATUSES` migration to shared home ⚠️ shared-surface | ⬜ pending |
 | **2.7** | `smartMatch.js` alignment to the real attendance column names ⚠️ shared-surface | ⬜ pending |
@@ -746,8 +746,8 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 2. ④: *"לא מורידים את הרווח בשינוי-תכולה כ'מחווה של רצון טוב'."*
 3. ⑯: *"המערכת מתעדת כל שינוי, בכל זמן, עד רגע סגירת האירוע — ולעולם אינה חוסמת לפי שעון. מה שהיא כן עושה: מסמנת שהשינוי מאוחר."* And: *"🚫 אין סף-זמן במערכת. לא `T-36` ולא אחר."*
 4. `spec.md` §3.1①: *"מימוש שמשרשר הנחות (`6,300 × 0.95 × 0.90 = 5,386.50`) ייתן מספר אחר ב-`31.50 ₪` — פער קטן מספיק כדי לעבור בקריאה, וגדול מספיק לשבור דוח."*
-**🌊 אדוות —**
-**🗣️ אושר —**
+**🌊 אדוות —** `18/08/2026`: step table + §10 batch entry. Files touched beyond this step's own: none (2.4's shared-surface consolidation is 2.4's row). Checked and NOT needed: no DoD pin, no §3.5 row, no spec section describes this differently.
+**🗣️ אושר —** `18/08/2026` — inside Ishay's free-rein-for-Phase-2 grant (agents build, orchestrator verifies); anchors reproduced: **1,404.20 ₪** · additive-discount contrast · ⑯ banner verbatim at 18h. Agent `הנחתי` set (4-arg `isLateChange` signature · client `deltaQty` preview shape · two-discount params mirroring `pricing.js` · local agorot helpers with the reduction rationale) — **all technical, accepted by the orchestrator at code-read.**
 
 ---
 
@@ -774,8 +774,8 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 3. §🏁2 / §② of the closing card: *"'הגיעה?' היא **עובדה** ⇒ ציון… 'הייתה טובה?' היא **שיפוט** ⇒ סינון ונעיצה. 🚫 אסור שאחת תיבנה בלי השנייה, ואסור למזג אותן לשדה אחד."*
 4. §1.5: *"התווית על המסך אינה הערך במסד"* — `לא לשלוח שוב` on screen, **`לא_לשלוח`** in the DB.
 5. ט4-ב, as sharpened 13/08: *"מ6 **מזין** את השעות; **גזירת התשלום מהן היא `§7.19`, שעדיין פתוח ושייך למ8**."*
-**🌊 אדוות —**
-**🗣️ אושר —**
+**🌊 אדוות —** `18/08/2026`: step table + §10 batch entry (incl. the pending-nod flag). Checked and NOT needed: no DoD pin, no §3.5 row.
+**🗣️ אושר —** `18/08/2026` — inside the free-rein grant; anchor **1,085.00 ₪** reproduced with Keren's row forced to 0 · `לא_לשלוח` underscore asserted · no-show disables quality per ט4-א. ⏳ **NOT yet nodded: three invented Hebrew validation-category strings** (`סימוני-נוכחות` · `סיבות ל"לא לשלוח שוב"` · `שעות בפועל שגויות` + singular forms) — user-facing wording the spec is silent on; **queued for one nod round with Ishay** (§10 18/08 entry B). The code marks them `הנחתי` in its own comments.
 
 ---
 
@@ -1611,3 +1611,9 @@ export function gapSentence(project) { /* the `מה חסר` column — words, ne
 - **`הנחתי` ② — the logistics-only-gap sentence `הלוגיסטיקה טרם מוכנה`.** When staffing is complete and only logistics is open, no approved sentence exists anywhere I searched (same three sources). **No live row produces this state today.** ✅ **NODDED by Ishay `18/08/2026 23:4X`** (*"מאשר... גם את ההנהון"*) — the sentence is now his ruling, no longer an assumption.
 - **`הנחתי` ③ — `confirmed_available` as an optional client-side field.** The live RPC returns no such count (measured — `pg_get_function_result`, 18/08); the #11 sentence needs one. **Owned by steps 2.5/3.1** (pointer added in 2.5's as-built block): derive via the `MAX(assignment_number)` fold from assignment rows. Until wired, the column falls back to `חסרות N` — degraded, never wrong.
 - ✅ **Evidence for the step itself:** 37 tests written first and seen red (module absent), then green · full suite **789 = 752 + 37, zero regressions** · eslint 0 · guards proven to bite (RED cases on synthetic source: unmapped label throws · forbidden literal caught · stale identifier caught) · guard ③ carries an allow-list of one file (`04_hostesses/api.js`) that **step 2.6 empties**.
+
+### Added `18/08/2026 23:4X` — steps 2.2+2.3+2.4 built by two parallel agents, verified by the orchestrator (entry B)
+
+- **Batch evidence (orchestrator's own runs, not agent claims):** full suite **870 = 752 + 37(2.1) + 33(2.2) + 44(2.3) + 4(2.4)**, zero regressions · eslint 0 on all seven touched files · both new lib files read in full against the guide · the shared-surface diffs (`dates.js`, `shiftInvite.js`) read in full — the `WEEKDAYS` duplicate-array consolidation is correct and keeps the `יום ` prefix local to `shiftInvite` · anchors grep-confirmed inside the test files (`1404.2` · additive `5355` · `1085.0`).
+- **Agent `הנחתי` items, triaged by the authority rule:** 2.2's four (signature/shape/params/local-helpers) and 2.3's draft-shape + `defaultHoursForRow` return contract — **technical, accepted.** ⏳ **2.3's invented user-facing validation strings — NOT accepted silently:** `סימון-נוכחות אחד`/`סימוני-נוכחות` · `סיבת "לא לשלוח שוב" אחת`/`סיבות ל"לא לשלוח שוב"` · `שעה בפועל אחת שגויה`/`שעות בפועל שגויות` (+ the list-joining grammar generalised from the one quoted sentence). Only `"2 סימוני-איכות ודוח-סיכום"` is quoted in the spec; the rest are extrapolations Dana will read on screen ⇒ **queued as ONE nod round for Ishay** (recommendation: approve as-is — they follow the quoted sentence's exact pattern).
+- **2.3 agent self-correction worth keeping:** it wrote implementation before tests, caught itself, deleted the implementation, wrote tests, observed the red (`Failed to resolve import`), then restored — the discipline held because the prompt demanded red-first *evidence*, not red-first *intent*.
