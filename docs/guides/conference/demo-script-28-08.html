@@ -1,0 +1,565 @@
+<title>תסריט ההצגה — 28/08</title>
+<style>
+  @font-face {
+    font-family: 'Heebo';
+    font-weight: 400 900;
+    font-display: swap;
+    src: local('Heebo');
+  }
+
+  :root {
+    --teal-50: #f0fdfa;
+    --teal-100: #ccfbf1;
+    --teal-500: #14b8a6;
+    --teal-600: #0d9488;
+    --teal-700: #0f766e;
+    --teal-900: #134e4a;
+
+    --amber-100: #fef3c7;
+    --amber-600: #d97706;
+    --amber-800: #92400e;
+
+    --rose-100: #ffe4e6;
+    --rose-600: #e11d48;
+    --rose-800: #9f1239;
+
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --surface-sunken: #f1f5f9;
+    --border: #e2e8f0;
+    --ink: #0f172a;
+    --ink-soft: #475569;
+    --ink-faint: #94a3b8;
+
+    --step-number-bg: var(--teal-600);
+    --step-number-ink: #ffffff;
+    --click-bg: var(--teal-50);
+    --click-border: var(--teal-500);
+    --click-ink: var(--teal-900);
+    --say-ink: var(--ink-soft);
+    --why-ink: var(--ink-faint);
+    --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 8px rgba(15, 23, 42, 0.04);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --bg: #0b1120;
+      --surface: #131c2e;
+      --surface-sunken: #0f1729;
+      --border: #22304a;
+      --ink: #e8edf6;
+      --ink-soft: #aab6c9;
+      --ink-faint: #6b7893;
+
+      --teal-50: #0c2a26;
+      --teal-100: #113a34;
+      --click-bg: #0c2a26;
+      --click-border: var(--teal-500);
+      --click-ink: #a7f3d5;
+
+      --amber-100: #3a2a0c;
+      --amber-600: #f0a92e;
+      --amber-800: #ffd88a;
+
+      --rose-100: #3a1220;
+      --rose-600: #fb6f8e;
+      --rose-800: #ffb3c4;
+
+      --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 12px rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  :root[data-theme='dark'] {
+    --bg: #0b1120;
+    --surface: #131c2e;
+    --surface-sunken: #0f1729;
+    --border: #22304a;
+    --ink: #e8edf6;
+    --ink-soft: #aab6c9;
+    --ink-faint: #6b7893;
+
+    --teal-50: #0c2a26;
+    --teal-100: #113a34;
+    --click-bg: #0c2a26;
+    --click-border: var(--teal-500);
+    --click-ink: #a7f3d5;
+
+    --amber-100: #3a2a0c;
+    --amber-600: #f0a92e;
+    --amber-800: #ffd88a;
+
+    --rose-100: #3a1220;
+    --rose-600: #fb6f8e;
+    --rose-800: #ffb3c4;
+
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 12px rgba(0, 0, 0, 0.25);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Heebo', 'Segoe UI', system-ui, sans-serif;
+    direction: rtl;
+    line-height: 1.55;
+  }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  header.hero {
+    margin-bottom: 28px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--teal-100);
+    color: var(--teal-700);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 5px 12px;
+    border-radius: 999px;
+    margin-bottom: 14px;
+  }
+
+  h1 {
+    font-size: clamp(28px, 4vw, 36px);
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+
+  .hero-sub {
+    font-size: 16px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .meta-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .meta-chip strong {
+    color: var(--ink);
+  }
+
+  section.block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--card-shadow);
+  }
+
+  .block-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0 0 14px;
+  }
+
+  .block-title .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--amber-600);
+    flex-shrink: 0;
+  }
+
+  ul.checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  ul.checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14.5px;
+    color: var(--ink-soft);
+  }
+
+  ul.checklist li::before {
+    content: '';
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--teal-500);
+    border-radius: 5px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  ul.checklist b {
+    color: var(--ink);
+  }
+
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .step {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 22px 20px 20px;
+    box-shadow: var(--card-shadow);
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 16px;
+  }
+
+  .step-num {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--step-number-bg);
+    color: var(--step-number-ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 17px;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .step-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .step-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .click-box {
+    background: var(--click-bg);
+    border-inline-start: 3px solid var(--click-border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14.5px;
+    color: var(--click-ink);
+    font-weight: 600;
+  }
+
+  .click-box .label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  .say-box {
+    font-size: 14px;
+    color: var(--say-ink);
+  }
+
+  .say-box .label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  .why-box {
+    font-size: 13px;
+    color: var(--why-ink);
+    border-top: 1px dashed var(--border);
+    padding-top: 8px;
+    margin-top: 2px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 2px 9px;
+    border-radius: 999px;
+  }
+
+  .badge.gate {
+    background: var(--rose-100);
+    color: var(--rose-800);
+  }
+
+  .badge.optional {
+    background: var(--amber-100);
+    color: var(--amber-800);
+  }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+    direction: ltr;
+    unicode-bidi: isolate;
+    display: inline-block;
+  }
+
+  .divider-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 26px 0 4px;
+    color: var(--ink-faint);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .divider-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .trouble-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .trouble-item {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 12px 14px;
+    background: var(--surface-sunken);
+    border-radius: 10px;
+    font-size: 13.5px;
+  }
+
+  .trouble-item .q {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .trouble-item .a {
+    color: var(--ink-soft);
+  }
+
+  .footer-note {
+    text-align: center;
+    color: var(--ink-faint);
+    font-size: 12.5px;
+    margin-top: 32px;
+  }
+
+  @media (max-width: 480px) {
+    .step { grid-template-columns: 32px 1fr; gap: 10px; padding: 16px; }
+    .step-num { width: 32px; height: 32px; font-size: 14px; border-radius: 9px; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="hero">
+    <span class="eyebrow">🎤 תסריט הצגה — REG-IN</span>
+    <h1>הצגת-ביניים, 28/08/2026</h1>
+    <p class="hero-sub">תהליך אחד מקצה לקצה · <span class="num">10</span> דקות · אולמי הנשיא הפקות → השקת סבב גיוס</p>
+    <div class="meta-row">
+      <span class="meta-chip">🌐 <strong>מהאתר החי בלבד</strong> — לא ממחשב מקומי</span>
+      <span class="meta-chip">📄 הצעה <strong class="num">#23</strong> — מוכנה, "בתהליך"</span>
+      <span class="meta-chip">👥 <strong class="num">5</strong> דיילות נדרשות</span>
+    </div>
+  </header>
+
+  <section class="block">
+    <p class="block-title"><span class="dot"></span>לפני שמתחילים</p>
+    <ul class="checklist">
+      <li>נכנסים ל-<b>reg-in-umber.vercel.app</b> — לא localhost (הקישורים שנשלחים חייבים לצאת מהאתר האמיתי)</li>
+      <li>מוודאים שהצעה <b class="num">#23</b> ("השקת סבב גיוס", אולמי הנשיא הפקות) עדיין בסטטוס <b>"בתהליך"</b> — אם מישהו אישר אותה בטעות, יש הצעות גיבוי: <b class="num">#7</b> או <b class="num">#8</b></li>
+      <li>מכינים את הטלפון בכיס, מחובר לאינטרנט — לשלב הסיום</li>
+    </ul>
+  </section>
+
+  <div class="steps">
+
+    <div class="step">
+      <div class="step-num num">1</div>
+      <div class="step-body">
+        <p class="step-title">פתיחת ההצעה</p>
+        <div class="click-box">
+          <span class="label">לוחצים</span>
+          תפריט-צד ← <b>הצעות מחיר</b> ← מחפשים "אולמי הנשיא" ← עיפרון-העריכה בשורת #23
+        </div>
+        <div class="say-box">
+          <span class="label">אומרים</span>
+          "לקוח קיים ביקש הצעה לאירוע השקה — 220 אורחים, מתומחר אוטומטית לפי המחירון והכמות."
+        </div>
+        <div class="why-box">מסך העריכה מציג מדרגות-מחיר בפועל (<span class="num">2.50</span> ₪ ו-<span class="num">3.30</span> ₪ לפי כמות) — לא סתם מספרים, זה המחירון האמיתי.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num num">2</div>
+      <div class="step-body">
+        <p class="step-title">עריכה קלה — מראים גמישות</p>
+        <div class="click-box">
+          <span class="label">לוחצים</span>
+          משנים שדה קטן (למשל הערה) ← <b>"עדכן ושלח"</b>
+        </div>
+        <div class="say-box">
+          <span class="label">אומרים</span>
+          "אפשר לערוך כל פרט לפני האישור — התמחור מתעדכן חי."
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num num">3</div>
+      <div class="step-body">
+        <p class="step-title">אישור ← נוצר פרויקט</p>
+        <div class="click-box">
+          <span class="label">לוחצים</span>
+          חוזרים לרשימה ← ✓ הירוק בשורת #23 ← <b>"אישור ופתיחת פרויקט"</b>
+        </div>
+        <div class="say-box">
+          <span class="label">אומרים</span>
+          "ברגע האישור נפתח פרויקט אוטומטית — כל הנתונים עוברים, המחיר ננעל."
+        </div>
+      </div>
+    </div>
+
+    <div class="divider-label">שיבוץ חכם</div>
+
+    <div class="step">
+      <div class="step-num num">4</div>
+      <div class="step-body">
+        <p class="step-title">Smart Match — הרשימה המדורגת</p>
+        <div class="click-box">
+          <span class="label">לוחצים</span>
+          תפריט-צד ← <b>דיילות</b> ← <b>שיבוץ חכם</b> ← בוחרים את הפרויקט
+        </div>
+        <div class="say-box">
+          <span class="label">אומרים</span>
+          "המערכת מדרגת את כל הדיילות הפנויות לפי ארבע שכבות: שער שפוסל, קרבה, סיכוי-היענות, והוגנות בעומס. כל שורה נושאת צ'יפ שמסביר <em>למה</em> היא שם — לא רק ציון סתום."
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num num">5</div>
+      <div class="step-body">
+        <p class="step-title">
+          שער-הפסילה <span class="badge gate">הסיטואציה</span>
+        </p>
+        <div class="click-box">
+          <span class="label">מראים</span>
+          מחפשים את <b>ליאת רזניק</b> (רעננה) — לא מופיעה / מסומנת פסולה
+        </div>
+        <div class="say-box">
+          <span class="label">אומרים</span>
+          "ליאת הצהירה מראש שהיא לא זמינה בטווח התאריכים הזה — המערכת אוכפת את זה אוטומטית, לא מסתמכת על שמישהי תזכור."
+        </div>
+        <div class="why-box">זו לא הדגמה מבוימת — אי-הזמינות שלה כבר רשומה במסד מסיבה אחרת, והשער תפס אותה אמיתי.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num num">6</div>
+      <div class="step-body">
+        <p class="step-title">שיבוץ עד איוש מלא</p>
+        <div class="click-box">
+          <span class="label">לוחצים</span>
+          משבצים דיילות מהרשימה עד <b class="num">5</b>/<span class="num">5</span>
+        </div>
+        <div class="say-box">
+          <span class="label">אומרים</span>
+          "ברגע שהאיוש מלא, סטטוס הפרויקט יתקדם אוטומטית — אין צעד ידני נוסף."
+        </div>
+      </div>
+    </div>
+
+    <div class="divider-label">סיום</div>
+
+    <div class="step">
+      <div class="step-num num">7</div>
+      <div class="step-body">
+        <p class="step-title">
+          זימון + אישור בטלפון <span class="badge optional">אופציונלי — אם הזמן מאפשר</span>
+        </p>
+        <div class="click-box">
+          <span class="label">לוחצים</span>
+          שולחים זימון לדיילת ← מוציאים טלפון ← פותחים את המייל ← לוחצים על הקישור
+        </div>
+        <div class="say-box">
+          <span class="label">אומרים</span>
+          "זה מייל אמיתי, שיוצא תוך שניות. הדיילת מאשרת מהטלפון שלה — בלי להתחבר למערכת, בלי אפליקציה."
+        </div>
+        <div class="why-box">המייל מגיע מהר (נבדק) — אין צורך לשלוח מראש. אם יש עיכוב בלתי-צפוי, אפשר לדלג ולסכם במילים.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <section class="block" style="margin-top: 28px;">
+    <p class="block-title"><span class="dot" style="background: var(--rose-600);"></span>אם משהו משתבש</p>
+    <div class="trouble-grid">
+      <div class="trouble-item">
+        <span class="q">מסך ריק / שגיאה בלתי-צפויה</span>
+        <span class="a">רענון-דף פותר כמעט תמיד. אם לא — לעבור להצעה #7 או #8 כגיבוי ולהמשיך מאותו שלב.</span>
+      </div>
+      <div class="trouble-item">
+        <span class="q">שכחת ללחוץ "עדכן ושלח" ולחצת ישר על אישור</span>
+        <span class="a">לא נורא — "אין שינוי" יפתח חלון מעוצב שמסביר ומציע להמשיך. לאשר ולהמשיך רגיל.</span>
+      </div>
+      <div class="trouble-item">
+        <span class="q">המייל לא הגיע תוך כמה שניות</span>
+        <span class="a">לדלג על שלב 7 בלי התנצלות — "האיוש המלא הוא הסיום הטבעי של התהליך" וממשיכים הלאה.</span>
+      </div>
+    </div>
+  </section>
+
+  <p class="footer-note">מוכן דרך רהרסל חי מלא ב-12/08/2026 · כל השלבים אומתו על האתר האמיתי</p>
+
+</div>

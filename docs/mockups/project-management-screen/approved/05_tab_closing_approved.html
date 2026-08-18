@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מוקאפ מ6 · משטח 5 — לשונית סגירת אירוע</title>
+<style>
+/* ═══ טוקנים — מדודים 13/08/2026. אל תשנה ערך. ═══
+   --primary : מילולי ב-src/index.css:61 (צבע-המותג, PROJECT_MASTER §4)
+   השאר      : המרת oklch→sRGB מ-node_modules/tailwindcss/theme.css @ 4.3.3
+   🔴 אלה *אינם* ערכי Tailwind-3 — ר' §1.2. אל תעתיק הקסה ממוקאפ ישן.
+   --r*      : @theme inline (radius = 0.625rem)                          */
+:root{
+  --primary:#0D9488;
+  --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4; --teal500:#00BBA7;
+  --teal600:#009689; --teal700:#00786F;
+  --green50:#F0FDF4; --green100:#DCFCE7; --green200:#B9F8CF; --green700:#008236;
+  --amber50:#FFFBEB; --amber100:#FEF3C6; --amber200:#FEE685; --amber700:#BB4D00; --amber800:#973C00;
+  --red50:#FEF2F2; --red100:#FFE2E2; --red200:#FFC9C9; --red500:#FB2C36; --red600:#E7000B;
+  --s50:#F8FAFC; --s100:#F1F5F9; --s200:#E2E8F0; --s300:#CAD5E2;
+  --s400:#90A1B9; --s500:#62748E; --s600:#45556C; --s700:#314158; --s800:#1D293D;
+  /* רדיוסים: --radius=0.625rem ⇒ sm 6 · md 8 · lg 10 · xl 14 · 2xl 18 */
+  --r-md:8px; --r-lg:10px; --r-xl:14px; --r-2xl:18px;
+  --sidebar:240px;   /* w-60  */
+  --topbar:64px;     /* h-16  */
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  background:var(--s50); color:var(--s800);
+  font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif;
+  font-size:14px; line-height:1.5;
+}
+
+/* ═══ הכלל שנשבר הכי הרבה: כל ערך שאינו עברית טהורה עובר דרך .ltr ═══
+   מקור: src/components/Money.jsx:23-24 · RatingStars.jsx:78-79            */
+.ltr{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
+
+/* ── סרגל-צד ימני (Sidebar.jsx) — מאפיינים פיזיים בלבד (right/left), לא הלוגיים ── */
+.side{position:fixed; top:0; right:0; width:var(--sidebar); height:100vh;
+      background:#fff; border-left:1px solid var(--s200); display:flex; flex-direction:column; z-index:30}
+.side .logo{height:var(--topbar); display:flex; align-items:center; justify-content:center;
+      border-bottom:1px solid var(--s100); font-weight:700; color:var(--teal700); letter-spacing:.5px}
+.side nav{padding:12px 8px; display:flex; flex-direction:column; gap:4px}
+.nav-i{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--r-lg);
+      font-size:14px; font-weight:500; color:var(--s600); text-decoration:none}
+.nav-i .ic{width:20px; text-align:center; font-size:15px; flex:none}
+.nav-i.on{background:var(--teal50); color:var(--teal700)}   /* פריט פעיל — §4 */
+
+/* ── סרגל עליון (Topbar.jsx) ── */
+.top{position:fixed; top:0; left:0; right:var(--sidebar); height:var(--topbar); background:#fff;
+     border-bottom:1px solid var(--s200); display:flex; align-items:center;
+     justify-content:space-between; padding:0 24px; z-index:20}
+/* זכוכית-מגדלת בימין + padding-right — הוכרע ב-Topbar.jsx, לא לבחור מחדש */
+.search{position:relative; width:288px; max-width:100%}
+.search .mg{position:absolute; right:12px; top:50%; transform:translateY(-50%);
+     color:var(--s400); font-size:13px}
+.search input{width:100%; height:36px; border:1px solid var(--s200); border-radius:var(--r-lg);
+     background:var(--s50); padding:0 36px 0 12px; font:inherit; font-size:14px; color:var(--s500)}
+.search input::placeholder{color:var(--s400)}
+.who{display:flex; align-items:center; gap:8px}
+.who .txt{display:flex; flex-direction:column; align-items:flex-end; line-height:1.3}
+.who .nm{font-size:14px; font-weight:500; color:var(--s800)}
+.who .rl{font-size:12px; color:var(--s500)}
+.who .av{width:36px; height:36px; border-radius:999px; background:var(--primary); color:#fff;
+     display:flex; align-items:center; justify-content:center; font-weight:600}
+
+/* ── תוכן ── */
+main{margin-right:var(--sidebar); padding:calc(var(--topbar) + 24px) 24px 40px}
+.phead{display:flex; align-items:flex-start; justify-content:space-between;
+     gap:16px; flex-wrap:wrap; margin-bottom:16px}
+h1{font-size:20px; font-weight:700; color:var(--s800)}
+.psub{font-size:12px; color:var(--s500); margin-top:2px}
+
+/* ── אריחי-מדד (StatTile.jsx) — flex-wrap, לבן+מסגרת, לעולם לא מילוי ── */
+.tiles{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px}
+.tile{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     padding:16px; display:flex; flex-direction:column; gap:2px; min-width:150px}
+.tile-l{font-size:12px; color:var(--s500)}
+.tile-v{font-size:20px; font-weight:700; color:var(--s800)}
+.tile-v.alarm{color:var(--red600)}      /* רק הספרה. הרקע נשאר לבן. */
+.tile-s{font-size:11px; color:var(--s500)}
+.tile-empty{font-size:14px; color:var(--s400)}   /* "אין נתונים עדיין" — לא 0 */
+
+/* ── כרטיס-תוכן ── */
+.card{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     box-shadow:0 1px 2px rgba(15,23,42,.06); padding:0 16px 14px}
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--s200); margin:0 -16px 12px; padding:0 16px}
+.tab{padding:11px 16px; font-size:14px; font-weight:500; color:var(--s500);
+     border-bottom:2px solid transparent}
+.tab.on{color:var(--teal700); border-bottom-color:var(--primary); font-weight:600}
+
+/* ── סרגל-מסננים (FilterPill.jsx) ── */
+.bar{display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:2px 0 12px}
+.pill{border:1px solid var(--s200); background:#fff; color:var(--s600);
+     border-radius:999px; padding:4px 12px; font:inherit; font-size:12.5px; cursor:pointer}
+.pill.on{background:var(--teal50); border-color:var(--teal200); color:var(--teal700); font-weight:600}
+.pill.warn-on{background:var(--amber50); border-color:var(--amber200); color:var(--amber700); font-weight:600}
+.pill[disabled]{opacity:.5; cursor:not-allowed}   /* נשאר ומנומק, לא נעלם */
+.spacer{margin-right:auto; color:var(--s400); font-size:12px}  /* mr-auto דוחף שמאלה */
+
+/* ── כפתורים (button.jsx + הדריסות בפועל) ── */
+.btn{border-radius:var(--r-lg); font:inherit; font-size:14px; font-weight:600;
+     padding:8px 16px; border:1px solid transparent; cursor:pointer; white-space:nowrap}
+/* 🔴 --primary ולא --teal600: שני הטורקיזים חיים במקביל, והמותג מנצח (§1.2) */
+.btn.primary{background:var(--primary); color:#fff}            /* אחד למסך */
+.btn.primary:hover{background:var(--teal700)}
+.btn.sec{background:#fff; border-color:var(--s300); color:var(--s700); font-weight:500}
+.btn.quiet{background:none; border:0; color:var(--s500); padding:4px 8px; font-weight:500}
+.btn[disabled]{opacity:.5; cursor:not-allowed}
+.link{color:var(--teal700); font-size:12.5px; font-weight:600; text-decoration:none; white-space:nowrap}
+/* פעולת-שורה (RowAction.jsx) — ריבוע 30px ממוסגר */
+.ract{width:30px; height:30px; border-radius:var(--r-md); border:1px solid var(--s200);
+     background:#fff; color:var(--s600); display:inline-flex; align-items:center;
+     justify-content:center; cursor:pointer}
+.ract.ok{border-color:var(--green200); background:var(--green50); color:var(--green700)}
+.ract.no{border-color:var(--red200); background:var(--red50); color:var(--red600)}
+
+/* ── טבלה (RepositoryTab.jsx) ── */
+table{width:100%; border-collapse:collapse}
+th{font-size:12px; font-weight:600; color:var(--s500); text-align:right;
+   padding:6px 10px; border-bottom:1px solid var(--s200); white-space:nowrap}
+td{padding:10px; border-bottom:1px solid var(--s100); vertical-align:middle}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--s50)}
+tr.muted td{background:var(--s50); color:var(--s500)}       /* הושלם / בוטל */
+tr.block td{background:var(--red50)}                         /* 1–2 למסך. §3.3 */
+.pname{font-weight:600}
+.psub2{font-size:11.5px; color:var(--s500); margin-top:1px}
+
+/* ── תגיות-סטטוס (StatusTag.jsx) — העתק את הטונים, אל תמציא ── */
+.tag{display:inline-block; white-space:nowrap; border-radius:999px;
+     padding:2px 10px; font-size:11px; font-weight:600}
+.tag.ok     {background:var(--green100); color:var(--green700)}
+.tag.teal   {background:var(--teal100);  color:var(--teal700)}
+.tag.muted  {background:var(--s100);     color:var(--s500)}
+.tag.warn   {background:var(--amber200); color:var(--amber800)}
+.tag.outline{background:var(--s100); color:var(--s600); border:1px solid var(--s200)}
+.tag.dashed {background:var(--s100); color:var(--s500); border:1px dashed var(--s300)}
+
+/* ── טקסט-חוסר: המילה נושאת את המשמעות, הצבע רק מדגיש (§3.4) ── */
+.miss{color:var(--red600); font-size:11.5px; font-weight:600}
+.hint{color:var(--amber700); font-size:11px; font-weight:600}
+.calm{color:var(--s400); font-size:11.5px}
+
+/* ── שדות-קלט (input.jsx) — placeholder חובה בכל שדה ריק ── */
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.fld{display:flex; flex-direction:column; gap:4px}   /* תווית וערך יחד. §4.3 */
+.fld label{font-size:12px; color:var(--s500)}
+.fld input,.fld select,.fld textarea{height:36px; border:1px solid var(--s200);
+     border-radius:var(--r-lg); background:#fff; padding:0 12px; font:inherit; font-size:14px;
+     color:var(--s800); width:100%}
+.fld textarea{height:auto; padding:8px 12px; resize:vertical}
+.fld input::placeholder,.fld textarea::placeholder{color:var(--s400)}
+.fld .help{font-size:11px; color:var(--s500)}
+.fld .err{font-size:11px; color:var(--red600); font-weight:600}
+.fld input.bad{border-color:var(--red600)}
+
+/* ── דיאלוג (dialog.jsx) — משטחים 6 ו-7 ── */
+.dlg{background:#fff; border-radius:var(--r-2xl); box-shadow:0 10px 30px rgba(15,23,42,.18);
+     width:520px; max-width:100%; padding:20px; position:relative}
+.dlg .x{position:absolute; left:16px; top:16px; color:var(--s400); font-size:16px;
+     background:none; border:0; cursor:pointer}   /* סגירה בשמאל — RTL */
+.dlg h2{font-size:18px; font-weight:700; color:var(--s800); text-align:right}
+.dlg .lead{font-size:12.5px; color:var(--s500); margin:4px 0 14px}
+.dlg footer{display:flex; justify-content:flex-start; gap:8px; margin-top:18px}  /* justify-start */
+/* באנר-אזהרה בתוך דיאלוג — ענבר, לא אדום: זו הודעה, לא כשל */
+.warn{background:var(--amber50); border:1px solid var(--amber200); color:var(--amber800);
+     border-radius:var(--r-lg); padding:9px 12px; font-size:12px; line-height:1.65; margin-bottom:14px}
+
+/* ── מצב-ריק ── */
+.empty{padding:24px; text-align:center; font-size:12.5px; color:var(--s500)}
+.empty .g{display:block; font-size:22px; margin-bottom:6px}
+
+/* ── שורת-מקורות (§7) — חובה בכל מוקאפ ── */
+.srcline{margin-top:16px; padding:10px 12px; background:#fff; border:1px solid var(--s200);
+     border-radius:var(--r-lg); font-size:11.5px; color:var(--s500); line-height:1.85}
+.srcline b{color:var(--s700)}
+
+/* ══════════════════════════════════════════════════════════════════════
+   ↓↓↓ תוספות של משטח 5 בלבד. מחלקות חדשות — אף ערך קיים לא שונה. ↓↓↓
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* מקטע בתוך הלשונית — כותרת + הסבר-משנה, בלי מסגרת נוספת */
+.sec{margin-top:18px}
+.sec:first-of-type{margin-top:4px}
+.sec h2{font-size:14px; font-weight:700; color:var(--s700)}
+.sec .lede{font-size:11.5px; color:var(--s500); margin-top:2px; margin-bottom:10px}
+.sechead{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap}
+
+/* שלושת שדות-החובה ברמת-האירוע */
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+.req{color:var(--s600); font-weight:600}
+.withunit{display:flex; align-items:center; gap:8px}
+.withunit input{max-width:120px}
+.unit{font-size:12px; color:var(--s500); white-space:nowrap}
+
+/* קובץ שהועלה — עובדה, ולכן לבן+מסגרת ולא מילוי (§3.1) */
+.file{display:flex; align-items:center; gap:10px; border:1px solid var(--s200);
+      border-radius:var(--r-lg); background:#fff; padding:7px 10px; min-height:36px}
+.file .fn{font-size:12.5px; color:var(--s700); font-weight:600; overflow:hidden;
+      text-overflow:ellipsis; white-space:nowrap}
+.file .fs{font-size:11px; color:var(--s500); white-space:nowrap}
+.file .acts{margin-right:auto; display:flex; gap:10px; white-space:nowrap}
+
+/* טבלת-הדיילות */
+.hrow td{padding:12px 10px}
+.hname{font-weight:600; display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.sel{height:34px; border:1px solid var(--s200); border-radius:var(--r-lg); background:#fff;
+     padding:0 10px; font:inherit; font-size:13px; color:var(--s800); width:100%; max-width:190px}
+.sel.bad{color:var(--red600); font-weight:600; border-color:var(--red200)}
+.numin{height:34px; width:74px; border:1px solid var(--s200); border-radius:var(--r-lg);
+     background:#fff; padding:0 10px; font:inherit; font-size:13px; color:var(--s800)}
+.numin[disabled],.sel[disabled]{background:var(--s50); color:var(--s500)}
+
+/* סימון-איכות תלת-מצבי — אותה שפה של FilterPill: בהיר לנבחר */
+.qual{display:flex; gap:6px; flex-wrap:wrap}
+.qp{border:1px solid var(--s200); background:#fff; color:var(--s600); border-radius:999px;
+    padding:3px 10px; font:inherit; font-size:11.5px; cursor:pointer; white-space:nowrap}
+.qp.on{background:var(--teal50); border-color:var(--teal200); color:var(--teal700); font-weight:600}
+.qp.neg.on{background:var(--amber50); border-color:var(--amber200); color:var(--amber700); font-weight:600}
+.qp[disabled]{opacity:.5; cursor:not-allowed}
+.cellnote{font-size:11px; color:var(--s500); margin-top:4px}
+
+/* שורת-סיכום של הטבלה — עובדה, בלי מילוי */
+tr.sum td{border-bottom:0; padding-top:12px; font-weight:600; color:var(--s700)}
+
+/* רצועת-המוכנות מעל הפעולה — לבן+מסגרת, כי היא מדווחת ואינה מבצעת (§3.1) */
+.ready{display:flex; align-items:center; gap:14px; flex-wrap:wrap; border:1px solid var(--s200);
+       background:#fff; border-radius:var(--r-lg); padding:9px 12px; font-size:12px; color:var(--s600)}
+.ready b{color:var(--s700)}
+.ready .g{color:var(--s600)}
+.foot{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:12px}
+.foot .note{font-size:11.5px; color:var(--s500)}
+</style>
+</head>
+<body>
+
+<!-- ═══ סרגל-צד ימני ═══ -->
+<aside class="side">
+  <div class="logo">REG-IN</div>
+  <nav>
+    <a class="nav-i"    href="#"><span class="ic">▦</span><span>מסך הבית</span></a>
+    <a class="nav-i"    href="#"><span class="ic">☰</span><span>לקוחות</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▤</span><span>הצעות מחיר</span></a>
+    <a class="nav-i on" href="#"><span class="ic">▣</span><span>פרויקטים</span></a>
+    <a class="nav-i"    href="#"><span class="ic">☺</span><span>דיילות</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▥</span><span>לוגיסטיקה</span></a>
+    <a class="nav-i"    href="#"><span class="ic">₪</span><span>כספים</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▧</span><span>דו"חות</span></a>
+  </nav>
+</aside>
+
+<!-- ═══ סרגל עליון ═══ -->
+<header class="top">
+  <div class="search">
+    <span class="mg">⌕</span>
+    <input type="text" placeholder="חיפוש...">
+  </div>
+  <div class="who">
+    <div class="txt"><span class="nm">דנה כהן</span><span class="rl">מנהלת פרויקטים</span></div>
+    <div class="av">ד</div>
+  </div>
+</header>
+
+<!-- ═══ תוכן ═══ -->
+<main>
+
+  <div class="phead">
+    <div>
+      <a class="link" href="#">← חזרה לפרויקטים</a>
+      <h1 style="margin-top:6px">יום העיר חדרה</h1>
+      <div class="psub">
+        עיריית חדרה · איש קשר: שרית מזרחי ·
+        <span class="ltr">08/08/2026</span> · <span class="ltr">16:00–22:00</span> ·
+        פארק העירוני, חדרה · התקיים לפני 5 ימים
+      </div>
+    </div>
+    <div style="text-align:left">
+      <span class="tag teal">ממתין לסגירה</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <div class="tab">לוגיסטיקה ומוצרים</div>
+      <div class="tab">צוות דיילות</div>
+      <div class="tab on">סגירת אירוע</div>
+    </div>
+
+    <!-- ═══════════ 🅰️ רמת הפרויקט — שלושה שדות, שלושתם חובה ═══════════ -->
+    <div class="sec">
+      <div class="sechead">
+        <div>
+          <h2>מה קרה בפועל — ברמת האירוע</h2>
+          <div class="lede">שלושת השדות חובה. בלעדיהם לא ניתן לשמור ולשלוח.</div>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="fld">
+          <label for="ah"><span class="req">שעות ביצוע בפועל</span> · חובה</label>
+          <!-- 🔴 dir="ltr" על שדה-מספר: כך בנוי כל שדה-מספר באפליקציה
+               (PricingParamsCard.jsx:115-118 · ProductFormDialog.jsx:299-302,319-322).
+               בלעדיו הערך נצמד לקצה הימני של התיבה, ‏120px מהמילה "שעות" — הערך והיחידה מתפצלים. -->
+          <div class="withunit">
+            <input id="ah" class="" dir="ltr" value="6.5">
+            <span class="unit">שעות</span>
+          </div>
+          <span class="help">מתוכנן: <span class="ltr">16:00–22:00</span> · <span class="ltr">6.0</span> שעות</span>
+          <span class="help">קובע את ברירת-המחדל בעמודת "שעות בפועל" של כל דיילת — וניתן לדרוס אותה פר-שורה</span>
+        </div>
+
+        <div class="fld">
+          <label for="ag"><span class="req">כמות אורחים בפועל</span> · חובה</label>
+          <div class="withunit">
+            <input id="ag" dir="ltr" value="180">
+            <span class="unit">אורחים</span>
+          </div>
+          <span class="help">מתוכנן: <span class="ltr">200</span> אורחים</span>
+          <span class="help">לתיעוד ולדו"חות בלבד — אינו משנה את החיוב ללקוח</span>
+        </div>
+
+        <div class="fld">
+          <label><span class="req">דוח-סיכום אירוע</span> · חובה</label>
+          <div class="file">
+            <!-- 🔴 שם-קובץ עברי אינו נעטף ב-.ltr: העטיפה תולשת את הסיומת לקצה הלא-נכון (נמדד) -->
+            <span class="fn">סיכום_יום_העיר_חדרה_2026.pdf</span>
+            <span class="fs ltr">1.4MB</span>
+            <span class="acts">
+              <a class="link" href="#">הורדה</a>
+              <a class="link" href="#">החלפת קובץ</a>
+            </span>
+          </div>
+          <!-- שלוש סיומות = רצף אטומי אחד. שלושה .ltr נפרדים היו מתהפכים (§4.2②) -->
+          <span class="help">‏<span class="ltr">PDF · JPG · PNG</span> · עד <span class="ltr">10MB</span>. הקובץ נשלח ללקוח כקובץ מצורף</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 🅱️ רמת הדיילת — שורה לכל אחת ═══════════ -->
+    <div class="sec">
+      <div class="sechead">
+        <div>
+          <h2>מה קרה עם כל דיילת</h2>
+          <div class="lede">
+            <b>נוכחות</b> היא עובדה — היא מזינה את ציון-האמינות בשיבוץ החכם.
+            <b>סימון-איכות</b> הוא שיפוט — הוא קובע את מי נציע לעיריית חדרה בפעם הבאה.
+            שתי שאלות שונות, ושתיהן חובה בכל שורה.
+          </div>
+        </div>
+        <div class="calm" style="padding-bottom:10px">‏5 דיילות שובצו · כולן סומנו</div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width:23%">דיילת</th>
+            <th style="width:21%">נוכחות</th>
+            <th style="width:27%">סימון-איכות</th>
+            <th style="width:13%">שעות בפועל</th>
+            <th style="width:16%">עלות בפועל</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr class="hrow">
+            <td>
+              <div class="hname">מיכל אברהם <span class="tag muted">אחראית משמרת</span></div>
+              <div class="psub2">חיפה · <span class="ltr">42 ₪</span> לשעה</div>
+            </td>
+            <td>
+              <select class="sel">
+                <option selected>הגיעה</option>
+                <option>איחרה — קל</option>
+                <option>איחרה — בינוני</option>
+                <option>איחרה — רב</option>
+                <option>לא הגיעה — חולה</option>
+                <option>לא הגיעה — אישור מראש</option>
+                <option>לא הגיעה — הבריזה</option>
+              </select>
+            </td>
+            <td>
+              <div class="qual">
+                <button class="qp on">מצוינת</button>
+                <button class="qp">בסדר</button>
+                <button class="qp neg">לא לשלוח שוב</button>
+              </div>
+            </td>
+            <td><input class="numin" dir="ltr" value="6.5"></td>
+            <td><span class="ltr">273.00 ₪</span></td>
+          </tr>
+
+          <tr class="hrow">
+            <td>
+              <div class="hname">תמר גולן</div>
+              <div class="psub2">נתניה · <span class="ltr">46 ₪</span> לשעה</div>
+            </td>
+            <td>
+              <select class="sel">
+                <option>הגיעה</option>
+                <option selected>איחרה — קל</option>
+                <option>איחרה — בינוני</option>
+                <option>איחרה — רב</option>
+                <option>לא הגיעה — חולה</option>
+                <option>לא הגיעה — אישור מראש</option>
+                <option>לא הגיעה — הבריזה</option>
+              </select>
+            </td>
+            <td>
+              <div class="qual">
+                <button class="qp">מצוינת</button>
+                <button class="qp on">בסדר</button>
+                <button class="qp neg">לא לשלוח שוב</button>
+              </div>
+            </td>
+            <td>
+              <input class="numin" dir="ltr" value="5.5">
+              <div class="cellnote">נדרס ידנית · ברירת-מחדל <span class="ltr">6.5</span></div>
+            </td>
+            <td><span class="ltr">253.00 ₪</span></td>
+          </tr>
+
+          <tr class="hrow">
+            <td>
+              <div class="hname">אביגיל רוזן</div>
+              <div class="psub2">נתניה · <span class="ltr">44 ₪</span> לשעה</div>
+            </td>
+            <td>
+              <select class="sel">
+                <option selected>הגיעה</option>
+                <option>איחרה — קל</option>
+                <option>איחרה — בינוני</option>
+                <option>איחרה — רב</option>
+                <option>לא הגיעה — חולה</option>
+                <option>לא הגיעה — אישור מראש</option>
+                <option>לא הגיעה — הבריזה</option>
+              </select>
+            </td>
+            <td>
+              <div class="qual">
+                <button class="qp on">מצוינת</button>
+                <button class="qp">בסדר</button>
+                <button class="qp neg">לא לשלוח שוב</button>
+              </div>
+            </td>
+            <td><input class="numin" dir="ltr" value="6.5"></td>
+            <td><span class="ltr">286.00 ₪</span></td>
+          </tr>
+
+          <tr class="hrow">
+            <td>
+              <div class="hname">שרון כהן</div>
+              <div class="psub2">חיפה · <span class="ltr">42 ₪</span> לשעה</div>
+            </td>
+            <td>
+              <select class="sel">
+                <option selected>הגיעה</option>
+                <option>איחרה — קל</option>
+                <option>איחרה — בינוני</option>
+                <option>איחרה — רב</option>
+                <option>לא הגיעה — חולה</option>
+                <option>לא הגיעה — אישור מראש</option>
+                <option>לא הגיעה — הבריזה</option>
+              </select>
+            </td>
+            <td>
+              <div class="qual">
+                <button class="qp">מצוינת</button>
+                <button class="qp on">בסדר</button>
+                <button class="qp neg">לא לשלוח שוב</button>
+              </div>
+            </td>
+            <td><input class="numin" dir="ltr" value="6.5"></td>
+            <td><span class="ltr">273.00 ₪</span></td>
+          </tr>
+
+          <!-- השורה היחידה שנושאת אדום במסך הזה. המילים אומרות הכל גם בלי הצבע. -->
+          <tr class="hrow">
+            <td>
+              <div class="hname">קרן אשכנזי</div>
+              <div class="psub2">חיפה · <span class="ltr">47 ₪</span> לשעה</div>
+            </td>
+            <td>
+              <select class="sel bad">
+                <option>הגיעה</option>
+                <option>איחרה — קל</option>
+                <option>איחרה — בינוני</option>
+                <option>איחרה — רב</option>
+                <option>לא הגיעה — חולה</option>
+                <option>לא הגיעה — אישור מראש</option>
+                <option selected>לא הגיעה — הבריזה</option>
+              </select>
+              <div class="cellnote">האירוע רץ עם 4 דיילות מתוך 5</div>
+            </td>
+            <td>
+              <div class="qual">
+                <button class="qp" disabled>מצוינת</button>
+                <button class="qp" disabled>בסדר</button>
+                <button class="qp neg" disabled>לא לשלוח שוב</button>
+              </div>
+              <div class="cellnote">לא ניתן לסמן איכות — לא הגיעה, ואי-אפשר לשפוט מי שלא ראית</div>
+            </td>
+            <td>
+              <input class="numin" dir="ltr" value="0" disabled>
+              <div class="cellnote">אין שעות</div>
+            </td>
+            <td><span class="ltr" style="color:var(--s400)">0.00 ₪</span></td>
+          </tr>
+
+          <tr class="sum">
+            <td colspan="4">סה"כ עלות דיילות בפועל</td>
+            <td><span class="ltr">1,085.00 ₪</span></td>
+          </tr>
+
+        </tbody>
+      </table>
+
+      <div class="calm" style="margin-top:10px; line-height:1.8">
+        בחירת <b>"לא לשלוח שוב"</b> פותחת מתחת לשורה שדה סיבה — <b>חובה</b>, ובלעדיו לא ניתן לשמור.<br>
+        הסימון נשמר מול <b>עיריית חדרה</b> ומשפיע רק על שיבוצים עתידיים אצל הלקוח הזה.
+      </div>
+    </div>
+
+    <!-- ═══════════ שינוי-תכולה שהתגלה באירוע ═══════════ -->
+    <div class="sec">
+      <h2>שינויי תכולה שהתגלו באירוע</h2>
+      <div class="lede">תוספת או הפחתה שסוכמה בשטח ולא נרשמה מראש — נרשמת כאן, ונכנסת לחיוב.</div>
+      <div class="empty" style="border:1px solid var(--s200); border-radius:var(--r-lg)">
+        <span class="g">🗂️</span>
+        לא נרשמו שינויי תכולה באירוע הזה
+        <div style="margin-top:8px"><a class="link" href="#">רישום שינוי שהתגלה באירוע</a></div>
+      </div>
+    </div>
+
+    <!-- ═══════════ מוכנות · השלכה · הפעולה הראשית ═══════════ -->
+    <div class="sec">
+      <div class="ready">
+        <span><b>מוכן לשליחה</b></span>
+        <span class="g">✓ שלושת שדות-האירוע מולאו</span>
+        <span class="g">✓ דוח-סיכום הועלה</span>
+        <span class="g">✓ 5 מתוך 5 דיילות סומנו</span>
+      </div>
+
+      <div class="warn" style="margin-top:12px">
+        <b>⚠ הלחיצה הזאת סוגרת את האירוע ואי-אפשר לבטל אותה.</b><br>
+        דוח-הסיכום נשלח לשרית מזרחי, עיריית חדרה · סקר-משוב יוצא ללקוח ·
+        הסטטוס עובר ל<b>"ממתין לחשבונית"</b> · הכרטיס ננעל לעריכה תפעולית ·
+        העלות בפועל והרווח הסופי קופאים · שעות הדיילות עוברות לדוח-השכר.
+      </div>
+
+      <div class="foot">
+        <button class="btn primary">שמור ושלח</button>
+        <span class="note">מרגע זה הפרויקט עובר לטיפול מנהלת הכספים.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- שורת-מקורות — חובה. §7 -->
+  <div class="srcline">
+    <b>🏷️ מקורות הנתונים במסך הזה</b><br>
+    <b>🌱 מהמסד:</b> חמשת שמות הדיילות, הערים והתעריפים — <span class="ltr">hostesses.first_name/last_name · city · hourly_rate</span> ·
+    הלקוח ואיש-הקשר — <span class="ltr">customers</span> (‏<span class="ltr">customer_id</span> 47, עיריית חדרה, שרית מזרחי) ·
+    שלוש תוויות סימון-האיכות ואילוץ "שלילי חייב סיבה" — <span class="ltr">customer_hostess_preference.preference / preference_reason</span> ·
+    העמודות שכבר קיימות: <span class="ltr">projects.actual_hours · projects.actual_guests · projects.summary_report_url · assignments.actual_hours · assignments.hourly_rate_snapshot · assignments.is_shift_lead</span><br>
+    <b>🎭 דמו:</b> כל הפרויקט <span class="ltr">#102</span> "יום העיר חדרה" — שם האירוע, <span class="ltr">08/08/2026</span>, <span class="ltr">16:00–22:00</span>, פארק העירוני, <span class="ltr">200</span> אורחים מתוכננים ·
+    חמש שורות-השיבוץ עצמן · כל ערכי הנוכחות והאיכות · שם וגודל קובץ הדוח · הערכים <span class="ltr">6.5</span> שעות ו-<span class="ltr">180</span> אורחים בפועל.
+    <b>אף דיילת אמיתית אינה מסומנת "לא לשלוח שוב" במסד</b><br>
+    <b>📐 נגזר:</b> עלות פר-דיילת = שעות בפועל × תעריף מוקפא (<span class="ltr">assignments.hourly_rate_snapshot</span>) ·
+    <span class="ltr">1,085.00 ₪</span> = סכום חמש השורות ·
+    <span class="ltr">6.0</span> שעות מתוכננות = <span class="ltr">final_end_time − final_start_time</span> ·
+    "התקיים לפני 5 ימים" = היום <span class="ltr">13/08/2026</span> פחות תאריך האירוע ·
+    "‏5 מתוך 5 סומנו" = ספירת שורות-שיבוץ מאושרות מול שורות שסומנו<br>
+    <b>➕ חדש (דורש db_roadmap):</b> <span class="ltr">assignments.attendance_status · assignments.lateness_level · assignments.no_show_reason</span> ·
+    חותמת-סגירה תפעולית ב-<span class="ltr">projects</span> ·
+    ‏bucket <span class="ltr">reports</span> פרטי + policies + <span class="ltr">file_size_limit</span> ו-<span class="ltr">allowed_mime_types</span> ·
+    אילוץ <span class="ltr">project_closed_needs_report</span> ·
+    ‏RPC אטומי אחד לסגירה + תנאי-קדם שנועל את ה-RPCs התפעוליים ·
+    טבלת <span class="ltr">project_changes</span> (מזינה את מקטע שינויי-התכולה)
+  </div>
+
+</main>
+</body>
+</html>

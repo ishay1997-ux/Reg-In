@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מוקאפ מ6 · משטח 2 — כרטיס פרויקט: מעטפת ואזור-זהות</title>
+<style>
+/* ═══ טוקנים — מדודים 13/08/2026. אל תשנה ערך. ═══
+   --primary : מילולי ב-src/index.css:61 (צבע-המותג, PROJECT_MASTER §4)
+   השאר      : המרת oklch→sRGB מ-node_modules/tailwindcss/theme.css @ 4.3.3
+   🔴 אלה *אינם* ערכי Tailwind-3 — ר' §1.2. אל תעתיק הקסה ממוקאפ ישן.
+   --r*      : @theme inline (radius = 0.625rem)                          */
+:root{
+  --primary:#0D9488;
+  --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4; --teal500:#00BBA7;
+  --teal600:#009689; --teal700:#00786F;
+  --green50:#F0FDF4; --green100:#DCFCE7; --green200:#B9F8CF; --green700:#008236;
+  --amber50:#FFFBEB; --amber100:#FEF3C6; --amber200:#FEE685; --amber700:#BB4D00; --amber800:#973C00;
+  --red50:#FEF2F2; --red100:#FFE2E2; --red200:#FFC9C9; --red500:#FB2C36; --red600:#E7000B;
+  --s50:#F8FAFC; --s100:#F1F5F9; --s200:#E2E8F0; --s300:#CAD5E2;
+  --s400:#90A1B9; --s500:#62748E; --s600:#45556C; --s700:#314158; --s800:#1D293D;
+  /* רדיוסים: --radius=0.625rem ⇒ sm 6 · md 8 · lg 10 · xl 14 · 2xl 18 */
+  --r-md:8px; --r-lg:10px; --r-xl:14px; --r-2xl:18px;
+  --sidebar:240px;   /* w-60  */
+  --topbar:64px;     /* h-16  */
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  background:var(--s50); color:var(--s800);
+  font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif;
+  font-size:14px; line-height:1.5;
+}
+
+/* ═══ הכלל שנשבר הכי הרבה: כל ערך שאינו עברית טהורה עובר דרך .ltr ═══
+   מקור: src/components/Money.jsx:23-24 · RatingStars.jsx:78-79            */
+.ltr{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
+
+/* ── סרגל-צד ימני (Sidebar.jsx) — מאפיינים פיזיים בלבד (right/left), לא הלוגיים ── */
+.side{position:fixed; top:0; right:0; width:var(--sidebar); height:100vh;
+      background:#fff; border-left:1px solid var(--s200); display:flex; flex-direction:column; z-index:30}
+.side .logo{height:var(--topbar); display:flex; align-items:center; justify-content:center;
+      border-bottom:1px solid var(--s100); font-weight:700; color:var(--teal700); letter-spacing:.5px}
+.side nav{padding:12px 8px; display:flex; flex-direction:column; gap:4px}
+.nav-i{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--r-lg);
+      font-size:14px; font-weight:500; color:var(--s600); text-decoration:none}
+.nav-i .ic{width:20px; text-align:center; font-size:15px; flex:none}
+.nav-i.on{background:var(--teal50); color:var(--teal700)}   /* פריט פעיל — §4 */
+
+/* ── סרגל עליון (Topbar.jsx) ── */
+.top{position:fixed; top:0; left:0; right:var(--sidebar); height:var(--topbar); background:#fff;
+     border-bottom:1px solid var(--s200); display:flex; align-items:center;
+     justify-content:space-between; padding:0 24px; z-index:20}
+/* זכוכית-מגדלת בימין + padding-right — הוכרע ב-Topbar.jsx, לא לבחור מחדש */
+.search{position:relative; width:288px; max-width:100%}
+.search .mg{position:absolute; right:12px; top:50%; transform:translateY(-50%);
+     color:var(--s400); font-size:13px}
+.search input{width:100%; height:36px; border:1px solid var(--s200); border-radius:var(--r-lg);
+     background:var(--s50); padding:0 36px 0 12px; font:inherit; font-size:14px; color:var(--s500)}
+.search input::placeholder{color:var(--s400)}
+.who{display:flex; align-items:center; gap:8px}
+.who .txt{display:flex; flex-direction:column; align-items:flex-end; line-height:1.3}
+.who .nm{font-size:14px; font-weight:500; color:var(--s800)}
+.who .rl{font-size:12px; color:var(--s500)}
+.who .av{width:36px; height:36px; border-radius:999px; background:var(--primary); color:#fff;
+     display:flex; align-items:center; justify-content:center; font-weight:600}
+
+/* ── תוכן ── */
+main{margin-right:var(--sidebar); padding:calc(var(--topbar) + 24px) 24px 40px}
+.phead{display:flex; align-items:flex-start; justify-content:space-between;
+     gap:16px; flex-wrap:wrap; margin-bottom:16px}
+h1{font-size:20px; font-weight:700; color:var(--s800)}
+.psub{font-size:12px; color:var(--s500); margin-top:2px}
+
+/* ── אריחי-מדד (StatTile.jsx) — flex-wrap, לבן+מסגרת, לעולם לא מילוי ── */
+.tiles{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px}
+.tile{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     padding:16px; display:flex; flex-direction:column; gap:2px; min-width:150px}
+.tile-l{font-size:12px; color:var(--s500)}
+.tile-v{font-size:20px; font-weight:700; color:var(--s800)}
+.tile-v.alarm{color:var(--red600)}      /* רק הספרה. הרקע נשאר לבן. */
+.tile-s{font-size:11px; color:var(--s500)}
+.tile-empty{font-size:14px; color:var(--s400)}   /* "אין נתונים עדיין" — לא 0 */
+
+/* ── כרטיס-תוכן ── */
+.card{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     box-shadow:0 1px 2px rgba(15,23,42,.06); padding:0 16px 14px}
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--s200); margin:0 -16px 12px; padding:0 16px}
+.tab{padding:11px 16px; font-size:14px; font-weight:500; color:var(--s500);
+     border-bottom:2px solid transparent}
+.tab.on{color:var(--teal700); border-bottom-color:var(--primary); font-weight:600}
+
+/* ── סרגל-מסננים (FilterPill.jsx) ── */
+.bar{display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:2px 0 12px}
+.pill{border:1px solid var(--s200); background:#fff; color:var(--s600);
+     border-radius:999px; padding:4px 12px; font:inherit; font-size:12.5px; cursor:pointer}
+.pill.on{background:var(--teal50); border-color:var(--teal200); color:var(--teal700); font-weight:600}
+.pill.warn-on{background:var(--amber50); border-color:var(--amber200); color:var(--amber700); font-weight:600}
+.pill[disabled]{opacity:.5; cursor:not-allowed}   /* נשאר ומנומק, לא נעלם */
+.spacer{margin-right:auto; color:var(--s400); font-size:12px}  /* mr-auto דוחף שמאלה */
+
+/* ── כפתורים (button.jsx + הדריסות בפועל) ── */
+.btn{border-radius:var(--r-lg); font:inherit; font-size:14px; font-weight:600;
+     padding:8px 16px; border:1px solid transparent; cursor:pointer; white-space:nowrap}
+/* 🔴 --primary ולא --teal600: שני הטורקיזים חיים במקביל, והמותג מנצח (§1.2) */
+.btn.primary{background:var(--primary); color:#fff}            /* אחד למסך */
+.btn.primary:hover{background:var(--teal700)}
+.btn.sec{background:#fff; border-color:var(--s300); color:var(--s700); font-weight:500}
+.btn.quiet{background:none; border:0; color:var(--s500); padding:4px 8px; font-weight:500}
+.btn[disabled]{opacity:.5; cursor:not-allowed}
+.link{color:var(--teal700); font-size:12.5px; font-weight:600; text-decoration:none; white-space:nowrap}
+/* פעולת-שורה (RowAction.jsx) — ריבוע 30px ממוסגר */
+.ract{width:30px; height:30px; border-radius:var(--r-md); border:1px solid var(--s200);
+     background:#fff; color:var(--s600); display:inline-flex; align-items:center;
+     justify-content:center; cursor:pointer}
+.ract.ok{border-color:var(--green200); background:var(--green50); color:var(--green700)}
+.ract.no{border-color:var(--red200); background:var(--red50); color:var(--red600)}
+
+/* ── טבלה (RepositoryTab.jsx) ── */
+table{width:100%; border-collapse:collapse}
+th{font-size:12px; font-weight:600; color:var(--s500); text-align:right;
+   padding:6px 10px; border-bottom:1px solid var(--s200); white-space:nowrap}
+td{padding:10px; border-bottom:1px solid var(--s100); vertical-align:middle}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--s50)}
+tr.muted td{background:var(--s50); color:var(--s500)}       /* הושלם / בוטל */
+tr.block td{background:var(--red50)}                         /* 1–2 למסך. §3.3 */
+.pname{font-weight:600}
+.psub2{font-size:11.5px; color:var(--s500); margin-top:1px}
+
+/* ── תגיות-סטטוס (StatusTag.jsx) — העתק את הטונים, אל תמציא ── */
+.tag{display:inline-block; white-space:nowrap; border-radius:999px;
+     padding:2px 10px; font-size:11px; font-weight:600}
+.tag.ok     {background:var(--green100); color:var(--green700)}
+.tag.teal   {background:var(--teal100);  color:var(--teal700)}
+.tag.muted  {background:var(--s100);     color:var(--s500)}
+.tag.warn   {background:var(--amber200); color:var(--amber800)}
+.tag.outline{background:var(--s100); color:var(--s600); border:1px solid var(--s200)}
+.tag.dashed {background:var(--s100); color:var(--s500); border:1px dashed var(--s300)}
+
+/* ── טקסט-חוסר: המילה נושאת את המשמעות, הצבע רק מדגיש (§3.4) ── */
+.miss{color:var(--red600); font-size:11.5px; font-weight:600}
+.hint{color:var(--amber700); font-size:11px; font-weight:600}
+.calm{color:var(--s400); font-size:11.5px}
+
+/* ── שדות-קלט (input.jsx) — placeholder חובה בכל שדה ריק ── */
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.fld{display:flex; flex-direction:column; gap:4px}   /* תווית וערך יחד. §4.3 */
+.fld label{font-size:12px; color:var(--s500)}
+.fld input,.fld select,.fld textarea{height:36px; border:1px solid var(--s200);
+     border-radius:var(--r-lg); background:#fff; padding:0 12px; font:inherit; font-size:14px;
+     color:var(--s800); width:100%}
+.fld textarea{height:auto; padding:8px 12px; resize:vertical}
+.fld input::placeholder,.fld textarea::placeholder{color:var(--s400)}
+.fld .help{font-size:11px; color:var(--s500)}
+.fld .err{font-size:11px; color:var(--red600); font-weight:600}
+.fld input.bad{border-color:var(--red600)}
+
+/* ── דיאלוג (dialog.jsx) — משטחים 6 ו-7 ── */
+.dlg{background:#fff; border-radius:var(--r-2xl); box-shadow:0 10px 30px rgba(15,23,42,.18);
+     width:520px; max-width:100%; padding:20px; position:relative}
+.dlg .x{position:absolute; left:16px; top:16px; color:var(--s400); font-size:16px;
+     background:none; border:0; cursor:pointer}   /* סגירה בשמאל — RTL */
+.dlg h2{font-size:18px; font-weight:700; color:var(--s800); text-align:right}
+.dlg .lead{font-size:12.5px; color:var(--s500); margin:4px 0 14px}
+.dlg footer{display:flex; justify-content:flex-start; gap:8px; margin-top:18px}  /* justify-start */
+/* באנר-אזהרה בתוך דיאלוג — ענבר, לא אדום: זו הודעה, לא כשל */
+.warn{background:var(--amber50); border:1px solid var(--amber200); color:var(--amber800);
+     border-radius:var(--r-lg); padding:9px 12px; font-size:12px; line-height:1.65; margin-bottom:14px}
+
+/* ── מצב-ריק ── */
+.empty{padding:24px; text-align:center; font-size:12.5px; color:var(--s500)}
+.empty .g{display:block; font-size:22px; margin-bottom:6px}
+
+/* ── שורת-מקורות (§7) — חובה בכל מוקאפ ── */
+.srcline{margin-top:16px; padding:10px 12px; background:#fff; border:1px solid var(--s200);
+     border-radius:var(--r-lg); font-size:11.5px; color:var(--s500); line-height:1.85}
+.srcline b{color:var(--s700)}
+
+/* ═════════════════════════════════════════════════════════════════════════
+   ▼▼▼ תוספות של משטח 2 בלבד. מחלקות חדשות — אף ערך קיים למעלה לא שונה. ▼▼▼
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* פירורי-לחם. flex ולא טקסט עם מפריד — כדי שסדר הפריטים ייקבע ע"י הפריסה
+   ולא ע"י אלגוריתם ה-bidi (§4.1: מאפיינים פיזיים, בלי inset-inline). */
+.crumbs{display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:12px; color:var(--s500)}
+.crumbs a{color:var(--teal700); font-weight:600; text-decoration:none}
+.crumbs .sep{color:var(--s300)}
+
+/* כותרת + תג-סטטוס באותה שורה */
+.titlerow{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+
+/* כרטיס עם ריווח עליון — .card המקורי בנוי ללשוניות צמודות-לקצה (padding-top:0) */
+.card.pad{padding-top:16px}
+
+/* כותרת אזור-הזהות: הכותרת בימין, פעולת-העריכה נדחפת שמאלה ב-mr-auto (§4.4) */
+.idhead{display:flex; align-items:center; gap:10px; margin-bottom:14px}
+.idhead h2{font-size:14px; font-weight:700; color:var(--s700)}
+.idhead .push{margin-right:auto}
+
+/* רשת-הזהות. 🔴 §4.3: תווית וערך יושבים באותו div, בסדר תווית→ערך.
+   לעולם לא שורת-תוויות מעל שורת-ערכים — הן מתפצלות בשקט ב-RTL. */
+.idgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px 18px}
+.cell{display:flex; flex-direction:column; gap:2px; min-width:0}
+.cell .lbl{font-size:12px; color:var(--s500)}
+.cell .val{font-size:14px; font-weight:600; color:var(--s800); word-break:break-word}
+/* ערך ריק בתא-זהות — אפור ולא-מודגש, ובמילים ולא ב-`—` לבדו (§5.2: "0 נקרא כעובדה שקרית") */
+.cell .val.empty{color:var(--s400); font-weight:500}
+.cell .csub{font-size:11px; color:var(--s500)}
+
+/* לשונית מושבתת — נשארת על המסך, מכובה ומנומקת (§5.1, FilterPill.jsx:14-17) */
+.tab.off{color:var(--s400); cursor:not-allowed}
+.tab-why{font-size:11px; font-weight:400; color:var(--s400)}
+
+/* טווח-שעות = פקד אחד ב-LTR (חוק-בית 4). התחלה משמאל, סיום מימין.
+   justify-content:flex-end — בתוך פקד LTR זה מצמיד את הזוג לקצה הימני, כלומר
+   מתחת לתווית העברית שלו. בלעדיו הפקד נודד לשמאל והתווית נשארת בימין (§4.3). */
+.trange{direction:ltr; display:flex; align-items:center; justify-content:flex-end; gap:8px}
+.trange input{width:110px}
+.trange .dash{color:var(--s400)}
+
+/* 🔴 תיקון-כיווניות שנמדד בדפדפן 13/08/2026, ומקורו בשלד עצמו — לא בקוד שלי.
+   ‏`.cell` ו-`.tile` הם `flex-direction:column` ⇒ **הילדים עוברים blockification**:
+   ‏`.ltr` מאבד את ה-`inline-block` שלו, נמתח לרוחב מלא, ו-`direction:ltr` מיישר את
+   הטקסט **לשמאל** — בעוד התווית שמעליו מיושרת לימין. נמדד: התווית והערך נחתו על
+   ‏`right:992px` מול תיבת-ערך ברוחב `224px` שהטקסט שלה בקצה השמאלי.
+   🔑 **זהו בדיוק פיצול תווית-מעל-ערך של §4.3 — הבאג שקרה שלוש פעמים בפרויקט הזה.**
+   ‏`align-items:flex-start` מחזיר כל ילד לרוחב-תוכן ומצמיד אותו לימין ב-RTL. */
+.cell, .tile{align-items:flex-start}
+
+/* הערת-מוקאפ — אינה חלק מהממשק. מקווקו ואפור כדי שלא תיקרא כרכיב UI. */
+.stub{border:1px dashed var(--s300); background:var(--s50); border-radius:var(--r-lg);
+      padding:14px 16px; font-size:12px; color:var(--s500); line-height:1.9}
+.stub b{color:var(--s700)}
+.statelabel{margin:26px 0 10px; font-size:12px; color:var(--s500); font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- ═══ סרגל-צד ימני ═══ -->
+<aside class="side">
+  <div class="logo">REG-IN</div>
+  <nav>
+    <a class="nav-i"    href="#"><span class="ic">▦</span><span>מסך הבית</span></a>
+    <a class="nav-i"    href="#"><span class="ic">☰</span><span>לקוחות</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▤</span><span>הצעות מחיר</span></a>
+    <a class="nav-i on" href="#"><span class="ic">▣</span><span>פרויקטים</span></a>
+    <a class="nav-i"    href="#"><span class="ic">☺</span><span>דיילות</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▥</span><span>לוגיסטיקה</span></a>
+    <a class="nav-i"    href="#"><span class="ic">₪</span><span>כספים</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▧</span><span>דו"חות</span></a>
+  </nav>
+</aside>
+
+<!-- ═══ סרגל עליון ═══ -->
+<header class="top">
+  <div class="search">
+    <span class="mg">⌕</span>
+    <input type="text" placeholder="חיפוש...">
+  </div>
+  <div class="who">
+    <div class="txt"><span class="nm">דנה כהן</span><span class="rl">מנהלת פרויקטים</span></div>
+    <div class="av">ד</div>
+  </div>
+</header>
+
+<!-- ═══ תוכן ═══ -->
+<main>
+
+  <div class="crumbs">
+    <a href="#">פרויקטים</a>
+    <span class="sep">|</span>
+    <span>כנס לקוחות שנתי</span>
+  </div>
+
+  <div class="phead">
+    <div>
+      <div class="titlerow">
+        <h1>כנס לקוחות שנתי</h1>
+        <span class="tag teal">בתהליך</span>
+      </div>
+      <div class="psub">מדיטק פתרונות בע"מ · פרויקט <span class="ltr">#8</span> · נוצר מהצעה <span class="ltr">#6</span></div>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px">
+      <button class="btn quiet">ביטול פרויקט</button>
+      <button class="btn primary">שינוי תכולה</button>
+    </div>
+  </div>
+
+  <!-- ═══ אזור-הזהות ═══ -->
+  <div class="card pad" style="margin-bottom:16px">
+    <div class="idhead">
+      <h2>פרטי האירוע</h2>
+      <span class="push"></span>
+      <button class="btn sec" style="padding:5px 12px; font-size:12.5px">✎ עריכת פרטים</button>
+    </div>
+
+    <div class="idgrid">
+      <div class="cell">
+        <span class="lbl">תאריך האירוע</span>
+        <span class="val ltr">22/08/2026</span>
+        <span class="csub">שבת · בעוד 9 ימים</span>
+      </div>
+      <div class="cell">
+        <span class="lbl">שעות האירוע</span>
+        <span class="val ltr">18:00–22:00</span>
+        <span class="csub">4 שעות</span>
+      </div>
+      <div class="cell">
+        <span class="lbl">מיקום</span>
+        <span class="val">אקספו תל אביב, ביתן 2</span>
+        <span class="csub">אותר על המפה — משמש לדירוג הקרבה בשיבוץ</span>
+      </div>
+      <div class="cell">
+        <span class="lbl">איש קשר אצל הלקוח</span>
+        <span class="val">רון גל</span>
+        <span class="csub ltr">052-4471180</span>
+      </div>
+      <div class="cell">
+        <span class="lbl">אורחים מוערכים</span>
+        <span class="val ltr">300</span>
+        <span class="csub">מההצעה — לא מספר סופי</span>
+      </div>
+      <div class="cell">
+        <span class="lbl">הכנסה מתוכננת</span>
+        <span class="val ltr">5,355.00 ₪</span>
+        <span class="csub">לפני מע"מ, אחרי הנחה של <span class="ltr">15%</span></span>
+      </div>
+      <!-- בעל-הפרויקט (㊱) — שלושת השדות, קריאה בלבד. 🔴 טלפון ואימייל בשתי שורות נפרדות
+           ולא ברצף אחד: שני ערכי-LTR צמודים בתוך משפט עברי מתהפכים בסדרם (§4.2③). -->
+      <div class="cell">
+        <span class="lbl">מנהל/ת הפרויקט</span>
+        <span class="val">ישי אטיאס</span>
+        <span class="csub ltr">050-1241223</span>
+        <span class="csub ltr">ishay1997@gmail.com</span>
+        <span class="csub">מופיע לדיילות במייל האישור</span>
+      </div>
+      <!-- ═══ משוב הלקוח (㉞) — 🔴 קריאה בלבד. הכתיבה היא של מסך-הכספים (㉘/§7.63) ═══
+           הנימוק לנוכחותו כאן: זהו תיק-האירוע, ומנהלת-הפרויקטים היא שתישאל "למה הלקוח
+           לא היה מרוצה?". 🚫 אין כאן שדה-עריכה ואין כוכבים לחיצים — במכוון. -->
+      <div class="cell">
+        <span class="lbl">משוב הלקוח</span>
+        <span class="val empty">טרם התקבל משוב</span>
+        <span class="csub">הסקר יוצא בסגירת האירוע · הציון והסיבה מוזנים במסך הכספים</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ שני מדדי-המוכנות — במקום ה-stepper (㉖). לעולם לא ממוזגים לאחוז אחד (⑨). ═══
+       אריח = עובדה ⇒ לבן + מסגרת. רק הספרה נצבעת, והמילה מתחתיה עומדת בפני עצמה (§3.1 · §3.4). -->
+  <div class="tiles">
+    <div class="tile" style="min-width:220px">
+      <span class="tile-l">צוות דיילות</span>
+      <span class="tile-v alarm"><span class="ltr">1/6</span></span>
+      <span class="tile-s">חסרות 5 דיילות שאושרו סופית</span>
+    </div>
+    <div class="tile" style="min-width:220px">
+      <span class="tile-l">לוגיסטיקה ומוצרים</span>
+      <span class="tile-v alarm"><span class="ltr">0/2</span></span>
+      <span class="tile-s">שני הפריטים טרם הוזמנו</span>
+    </div>
+  </div>
+
+  <!-- ═══ שלוש הלשוניות הפנימיות ═══ -->
+  <div class="card">
+    <div class="tabs">
+      <div class="tab on">לוגיסטיקה ומוצרים</div>
+      <div class="tab">צוות דיילות</div>
+      <div class="tab off">סגירת אירוע <span class="tab-why">(נפתחת אחרי האירוע)</span></div>
+    </div>
+
+    <div class="stub">
+      <b>תוכן הלשוניות אינו מצויר במוקאפ הזה — במכוון.</b><br>
+      לוגיסטיקה ומוצרים ⇐ <b>משטח 3</b> · צוות דיילות ⇐ <b>משטח 4</b> · סגירת אירוע ⇐ <b>משטח 5</b>.<br>
+      המשטח הזה מגדיר את <b>המעטפת</b> בלבד: אזור-הזהות, שני מדדי-המוכנות, סרגל-הלשוניות,
+      ושלוש הפעולות (שינוי תכולה · ביטול פרויקט · עריכת פרטים).
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       מצב שני של אותו משטח — דיאלוג "עריכת פרטי האירוע", נפתח מהעיפרון.
+       מצויר במצב שבו המנהלת כבר שינתה את התאריך, כי זה הרגע היחיד שבו
+       ㉑ נבדק בעין: ההשלכה מוצגת לפני האישור.
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="statelabel">מצב שני — דיאלוג "עריכת פרטי האירוע" (נפתח מ-✎ באזור-הזהות)</div>
+  <div style="display:flex; justify-content:center">
+  <div class="dlg">
+    <button class="x">✕</button>
+    <h2>עריכת פרטי האירוע</h2>
+    <div class="lead">כנס לקוחות שנתי · מדיטק פתרונות בע"מ. שינוי כאן משנה את הפרויקט בלבד — ההצעה שהלקוח אישר נשארת כפי שהיא.</div>
+
+    <div class="warn">
+      <b>⚠ שינית את תאריך האירוע.</b> דיילת אחת כבר אושרה סופית לתאריך הקודם — <b>נועה שגיא</b>.
+      השמירה תבטל את האישור שלה ותשלח לה זימון מחדש לתאריך החדש.
+      מדד הצוות יחזור מ-<span class="ltr">1/6</span> ל-<span class="ltr">0/6</span>.
+    </div>
+
+    <div class="grid2">
+      <div class="fld">
+        <label for="f_date">תאריך האירוע</label>
+        <input id="f_date" value="29/08/2026" placeholder="DD/MM/YYYY">
+        <span class="help">התאריך הנוכחי: <span class="ltr">22/08/2026</span></span>
+      </div>
+      <div class="fld">
+        <label for="f_loc">מיקום</label>
+        <input id="f_loc" value="אקספו תל אביב, ביתן 2" placeholder="למשל: היכל התרבות, תל אביב">
+        <span class="help">שינוי מיקום אינו מבטל אישורים. הדיילות מקבלות עדכון, והנקודה על המפה נקבעת מחדש.</span>
+      </div>
+      <div class="fld" style="grid-column:1/-1">
+        <label for="f_start">שעות האירוע</label>
+        <div class="trange">
+          <input id="f_start" value="18:00" placeholder="HH:MM">
+          <span class="dash">–</span>
+          <input id="f_end" value="22:00" placeholder="HH:MM">
+        </div>
+        <span class="help">שינוי שעות אינו מבטל אישורים. הדיילות מקבלות עדכון שנוקב בשעות החדשות.</span>
+      </div>
+    </div>
+
+    <footer>
+      <button class="btn primary">שמור ושלח זימון מחדש</button>
+      <button class="btn sec">ביטול</button>
+    </footer>
+  </div>
+  </div>
+
+  <!-- שורת-מקורות — חובה. §7 -->
+  <div class="srcline">
+    <b>🏷️ מקורות הנתונים במסך הזה</b> · <b>"היום" = 13/08/2026</b><br>
+
+    <b>🌱 מהמסד:</b>
+    <span class="ltr">projects.event_name</span> ("כנס לקוחות שנתי") ·
+    <span class="ltr">projects.customer_name</span> ·
+    <span class="ltr">customers.contact_name</span> + <span class="ltr">customers.phone</span> (רון גל) ·
+    <span class="ltr">projects.final_event_date</span> ·
+    <span class="ltr">projects.final_start_time</span> + <span class="ltr">final_end_time</span> ·
+    <span class="ltr">projects.final_location</span> ·
+    <span class="ltr">projects.lat</span> + <span class="ltr">lng</span> ·
+    <span class="ltr">projects.required_hostess_count</span> ·
+    <span class="ltr">projects.owner_name</span> + <span class="ltr">owner_phone</span> + <span class="ltr">owner_email</span> (ישי אטיאס) ·
+    <span class="ltr">projects.feedback_status</span> + <span class="ltr">feedback_score</span> +
+    <span class="ltr">negative_feedback_reason</span> + <span class="ltr">feedback_notes</span>
+    (<b>ריקים ⇒ "טרם התקבל משוב"</b>; ‏<span class="ltr">feedback_status</span> הוא
+    <span class="ltr">not null default 'not_sent'</span>, והשורה עצמה לא נשלפה מחדש היום) ·
+    <span class="ltr">projects.quote_id</span> ·
+    <span class="ltr">quotes.estimated_guests</span> ·
+    <span class="ltr">quote_services.qty</span> + <span class="ltr">closing_unit_price</span> ·
+    <span class="ltr">quotes.applied_customer_discount</span> + <span class="ltr">manual_discount</span> ·
+    <span class="ltr">assignments.assignment_status</span> ·
+    <span class="ltr">logistics.item_status</span>
+    <br>
+
+    <b>📐 נגזר:</b>
+    "בעוד 9 ימים" = <span class="ltr">final_event_date − 13/08/2026</span> ·
+    "שבת" = יום-בשבוע של <span class="ltr">22/08/2026</span> ·
+    "4 שעות" = <span class="ltr">final_end_time − final_start_time</span> ·
+    "<span class="ltr">1/6</span>" = <span class="ltr">COUNT(assignments = 'finally_approved')</span> על הסבב האחרון פר-דיילת,
+    מול <span class="ltr">required_hostess_count</span> ·
+    "<span class="ltr">0/2</span>" = <span class="ltr">COUNT(logistics = 'ready')</span> מתוך <span class="ltr">COUNT(logistics)</span> ·
+    "הכנסה מתוכננת <span class="ltr">5,355.00 ₪</span>" = <span class="ltr">Σ(qty × closing_unit_price) = 6,300</span>,
+    פחות הנחה מחוברת של <span class="ltr">15%</span> <span class="ltr">(= 945)</span> — <span class="ltr">src/lib/pricing.js:106-132</span>
+    <br>
+
+    <b>🎭 דמו:</b>
+    <b>הסטטוס "בתהליך"</b> — במסד הפרויקט יושב על <span class="ltr">not_started</span>, כי הטריגר שמזיז סטטוס
+    <b>עדיין לא קיים</b>. המוקאפ מצייר את מכונת-הסטטוס כפי שהאפיון מתאר אותה
+    (<span class="ltr">processes-approved.md §🔄3</span>), לא את מצב-המסד · <b>הדיאלוג</b> מצויר במצב
+    "התאריך שונה ל-<span class="ltr">29/08/2026</span>" — התאריך החדש מומצא, ההשלכה שהוא מציג אמיתית
+    (נועה שגיא היא היחידה שאושרה סופית) · תוכן הלשוניות אינו מצויר.
+    <br>
+
+    <b>➕ חדש (דורש db_roadmap):</b>
+    <span class="ltr">policy</span> קריאה ל-<span class="ltr">logistics</span> — <b>היום אפס policies, deny-all</b>
+    ⇒ מדד הלוגיסטיקה אינו ניתן לטעינה כלל ·
+    <b><span class="ltr">RPC</span> ייעודי לעריכת פרטי-הפרויקט</b> — ל-<span class="ltr">projects</span> יש
+    <span class="ltr">policy</span> קריאה בלבד, ואין דרך לכתוב ·
+    <span class="ltr">params</span>: תבנית-מייל <b>"פרטי האירוע השתנו"</b> — אינה קיימת ·
+    שדות הביטול (<span class="ltr">cancelled_at</span> + טיפוס-ביטול) וטבלת <span class="ltr">project_changes</span>
+    נדרשים ע"י שני הכפתורים שבכותרת, ונרשמים במשטחים 6 ו-7.
+  </div>
+
+</main>
+</body>
+</html>
