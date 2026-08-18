@@ -7,12 +7,12 @@
 | **Module** | 6 — פרויקטים (Projects) |
 | **Branch** | `ishay/module-6-projects` *(cut from a fresh `dev`; carries the approved spec)* |
 | **Owner** | Ishay (sole developer) |
-| **Status** | 🔨 **Phase 1 IN PROGRESS — the Phase-1 door is CLOSED and the build is approved** (`14/08/2026 11:29`). Reviewed, corrected and routing-audited `03:12`; renamed out of `.draft` at `10:20`. **Still no migration applied** — the 12 🛑 blockers below are being closed first, by a 14-agent fan-out Ishay approved at `11:2X`. |
-| **Last updated** | `14/08/2026 11:29` *(system clock, `Get-Date`)* |
-| **Active step** | **1.1 — pending the 🛑 blocker sweep.** Step 1.0 is ✅ done; **typed-echo is waived for Phase 1** (see step 1.0). 🔴 **The nine migrations are applied ONE AT A TIME, in order A→I, each verified live before the next.** |
+| **Status** | ✅ **Phase 1 COMPLETE.** All eleven migrations applied `14/08/2026`; **the 1.10 gate ran END-TO-END `18/08/2026` — 97/100 PASS · 2 FAILs triaged as stale gate-expectations (not DB defects) · advisors triaged finding-by-finding · `schema.sql` refreshed · all registry rows flipped.** Awaiting Ishay's 👤 sign-off on the gate; then Phase 2 opens at step 2.0. |
+| **Last updated** | `18/08/2026 22:18` *(system clock, `Get-Date`)* |
+| **Active step** | **1.10 — verification DONE, 👤 sign-off pending.** After sign-off: **step 2.0** (Phase-2 door — re-read §3.5 in full even though the anchored set reads NONE). 🚧 **Owed right after sign-off: Phase-1 compaction** (self-update clause (i) — archive copy to `docs/archive/` first, then fold steps 1.0–1.10 into a done-table). |
 
-> ### 📍 WHERE PHASE 1 ACTUALLY STANDS — `14/08/2026 14:2X`. **A resuming session reads THIS before anything else.**
-> ## ✅ **PHASE 1 IS COMPLETE. All ten migrations are APPLIED and independently verified — steps 1.1 through 1.9 are DONE.**
+> ### 📍 WHERE PHASE 1 ACTUALLY STANDS — updated `18/08/2026 22:18` at the 1.10 gate. **A resuming session reads THIS before anything else.**
+> ## ✅ **PHASE 1 IS COMPLETE AND GATED. Steps 1.1–1.9 applied 14/08; step 1.10 ran end-to-end 18/08 — 97/100 PASS, both FAILs triaged as stale expectations (`D-PC`: the money-gated-reader follow-up deliberately dropped the policy the gate expects; `H-MD`: the function was measured live in schema `extensions` — the gate's string-match is the false side). Full triage: `db_roadmap.md` §10, entry 18/08/2026.**
 > 🔴 **And the acceptance oracle passed digit for digit, which is the only proof that matters here.** Impersonating מנהלת פרויקטים inside a rolled-back transaction, `list_projects_overview()` returned: `#3 → 8,360.00` · `#7 → 5,355.00` · **`#8 → 5,355.00`** · `#11 → 500.00`, and `#8 → 1/6 confirmed · **2** pending · 9 raw rows`. **Every number matches what `spec.md` computed by hand before the code existed** — including `2` pending rather than `3`, which is the de-dup fold working.
 > 🔒 **Negative control, same call as מנהלת לוגיסטיקה:** all three money fields returned **`null`** while the metrics stayed correct (`1/6`, `0/2`). A browser-side join would have handed her `0/6` — a lie on the screen her whole job lives on. **That is what AR-3 exists for, and it is now proven, not asserted.**
 > 📊 **Security advisor `17 → 23`, exactly as predicted** (+7 browser-callable functions, accepted; −1 because `logistics` left the deny-all list). **No module-6 function is reachable by `anon`.** All ten functions are `security definer` with `search_path` locked.
@@ -22,10 +22,10 @@
 >
 > 🔴 **Visible data changed, deliberately, in migration I:** all four projects sat on `not_started` and that was false (`#8` already had 9 assignment rows). Now: `#3 → טרם החל` · **`#7 → ממתין לסגירה`** *(its date passed — the §8.2 acceptance criterion)* · `#8` and `#11 → בתהליך`.
 >
-> ### ➡️ THE NEXT THREE ACTIONS, in order
-> **‏① Apply `m6_step_1_8a_reads_and_close.sql` then `m6_step_1_8b_writes.sql`** from `docs/plans/module-6-phase-1/`. ⚠️ **They are 790 and 1,121 lines. Read each in FULL before applying it** — this is the one place in the phase where the reviewers found a `BLOCKED`-grade defect, and the fixes are subtle (price-nulling per caller, the payload contract, the ㉑ reset). 🚫 **Do not apply SQL you have not read.** *(This is exactly why the previous session stopped here: it could not read 1,911 lines responsibly on the context it had left. Stopping BETWEEN migrations was deliberate.)*
-> **‏② Then run `m6_step_1_10.sql`** — read-only; it prints a verdict per assertion and now distinguishes "this step has not run" from "it ran and broke".
-> **‏③ Two 👤 steps that are owed NOW, because `module6_email_log_accepts_project` is already live:** the `send-email` Edge-Function deploy *(exact diff in `m6_step_1_6.notes.md`; **migration first, deploy immediately after — the reverse order loses mail silently**)*, and the `docs/schema.sql` snapshot refresh via Supabase Studio.
+> ### ➡️ THE NEXT THREE ACTIONS, in order *(rewritten at the 1.10 gate, 18/08/2026 — the previous three ① apply 1.8a/1.8b ② run the gate ③ deploy + snapshot are ALL DONE: 1.8a/1.8b applied 14/08 after a full read, the Edge Function deployed 14/08 post-migration, `schema.sql` regenerated by query 14/08 and re-refreshed 18/08)*
+> **‏① Get Ishay's 👤 sign-off on the Phase-1 gate** — the verification is done and written up; the gate is his to close (🔻👤).
+> **‏② Compact Phase 1** per self-update clause (i): archive copy to `docs/archive/` first, then fold steps 1.0–1.10 into a done-table + carry-forward note.
+> **‏③ Open Phase 2 at step 2.0** — the Ledger sweep: re-read §3.5 in full; the anchored set reads NONE but the sweep itself is mandatory (a door that reports `אין` and a door never opened are indistinguishable afterwards).
 >
 > ⏸️ **Two decided-but-unbuilt items, do not re-litigate, do not forget:** the `project_changes` money-column reader-RPC *(anchor `screens-approved.md:809`/`:810`; must land **before step 3.3**; the table is empty today so there is no live exposure)* · and **מנהלת לוגיסטיקה down to `view` on `'פרויקטים'`** *(Ishay ruled it; measured to cost her nothing — the only live policy naming the module accepts `view`, and zero live functions reference it)*.
 >
@@ -50,16 +50,16 @@
 | Step | Title | Status |
 |---|---|:--:|
 | **1.0** | 🔻👤 Phase-1 door: consolidated ruling round (Ledger OPEN items A1–A10) | ✅ **done `14/08/2026 11:30`** — every item ruled *(A1·A5 by anchor · A6·B11·B13·E3 by Ishay 10:43 · item ד by Ishay 11:30)*; **typed-echo waived for Phase 1 by Ishay**; Phase-1 build approved |
-| **1.1** | Migration **A** — `projects` columns, `project_bonus` drop, `NOT NULL` tightening, CHECKs | ⬜ pending |
-| **1.2** | Migration **B** — `project_changes` table + RLS + index | ⬜ pending |
-| **1.3** | Migration **C** — `assignments` attendance columns + consistency CHECKs | ⬜ pending |
-| **1.4** | Migration **D** — `logistics` read policy + origin-pointer columns + CHECK | ⬜ pending |
-| **1.5** | Migration **E** — Storage: `reports` + `finance` buckets + 8 `storage.objects` policies | ⬜ pending |
-| **1.6** | Migration **F** — `email_log` CHECK widening + third SELECT policy + Edge-Function deploy | ⬜ pending |
-| **1.7** | Migration **G** — `params` seed: **2 mail templates + dormant threshold (`120`) + cancellation tiers**. 🚫 **NO survey-link row** — it is already live as `קישור_בסיס_סקר_לקוחות` | ⬜ pending |
-| **1.8** | Migration **H** — the four RPCs (`update_project_details`, `apply_scope_change`, `cancel_project`, `close_project_operationally`) + `mark_feedback_survey_sent` + `list_projects_overview` | ⬜ pending |
-| **1.9** | Migration **I** — status-machine trigger (3 sources) + daily `pg_cron` job | ⬜ pending |
-| **1.10** | 🔻👤 Phase-1 gate: advisors clean + `docs/schema.sql` refreshed + `db_roadmap` rows flipped | ⬜ pending |
+| **1.1** | Migration **A** — `projects` columns, `project_bonus` drop, `NOT NULL` tightening, CHECKs | ✅ done `14/08/2026` — `module6_projects_columns_and_constraints` |
+| **1.2** | Migration **B** — `project_changes` table + RLS + index | ✅ done `14/08/2026` — `module6_project_changes_table` *(the SELECT policy was later dropped deliberately by the money-gated-reader follow-up)* |
+| **1.3** | Migration **C** — `assignments` attendance columns + consistency CHECKs | ✅ done `14/08/2026` — `module6_assignments_attendance` |
+| **1.4** | Migration **D** — `logistics` read policy + origin-pointer columns + CHECK | ✅ done `14/08/2026` — `module6_logistics_policy_and_origin` |
+| **1.5** | Migration **E** — Storage: `reports` + `finance` buckets + 8 `storage.objects` policies | ✅ done `14/08/2026` — `module6_storage_reports_and_finance` |
+| **1.6** | Migration **F** — `email_log` CHECK widening + third SELECT policy + Edge-Function deploy | ✅ done `14/08/2026` — `module6_email_log_accepts_project` + deploy (post-migration, in that order) |
+| **1.7** | Migration **G** — `params` seed: **2 mail templates + dormant threshold (`120`) + cancellation tiers**. 🚫 **NO survey-link row** — it is already live as `קישור_בסיס_סקר_לקוחות` | ✅ done `14/08/2026` — `module6_params_seed` (32→38 rows; survey link NOT re-seeded, `I-03` PASS) |
+| **1.8** | Migration **H** — the four RPCs (`update_project_details`, `apply_scope_change`, `cancel_project`, `close_project_operationally`) + `mark_feedback_survey_sent` + `list_projects_overview` | ✅ done `14/08/2026` — split `module6_rpcs_reads_and_close` + `module6_rpcs_writes`, both read in full pre-apply; oracle passed digit-for-digit |
+| **1.9** | Migration **I** — status-machine trigger (3 sources) + daily `pg_cron` job | ✅ done `14/08/2026` — `module6_status_machine_and_cron` (`#7 → event_finished` proves it ran) |
+| **1.10** | 🔻👤 Phase-1 gate: advisors clean + `docs/schema.sql` refreshed + `db_roadmap` rows flipped | ✅ verification done `18/08/2026 22:18` — gate script end-to-end 97/100 PASS (2 FAILs triaged as stale expectations, `db_roadmap §10` 18/08) · advisors triaged (25/26, every delta explained) · `schema.sql` refreshed · registries flipped · **👤 sign-off: pending Ishay** |
 | **2.0** | 🔻👤 Phase-2 door: Ledger sweep for phase-2-anchored OPEN items | ⬜ pending |
 | **2.1** | `src/lib/projects.js` — status label + tone map, readiness metrics, gap sentences, active-status SSOT | ⬜ pending |
 | **2.2** | `src/lib/projectChanges.js` — scope-change arithmetic + late-change marker | ⬜ pending |
@@ -1259,8 +1259,8 @@ select jobname, schedule from cron.job order by jobname;
 1. *"אחרי ההחלה, ארבעה צעדים: החלה ⇒ אימות בקריאה ⇒ **רענון `docs/schema.sql`** ⇒ **עדכון `db_roadmap §10` באותו סשן**."*
 2. *"מיגרציה שמגיעה ל-PR בלי `schema.sql` מעודכן אינה מאושרת."*
 3. All nine migrations are append-only history from this point; every correction is a new forward migration.
-**🌊 אדוות —**
-**🗣️ אושר —**
+**🌊 אדוות —** `18/08/2026`: `docs/schema.sql` *(+`list_project_changes`, −the dropped policy, counts 48/25)* · `db_roadmap.md` *(A-M6 header+block, M6-1…M6-13 flipped, M6-14 deliberately not, A-14 closed, 3 §5 rows, A-20 §A1 wording fixed, §6 projects/assignments/logistics rows, two §10 strike entries incl. full advisor triage)* · this guide *(status header, step table, the stale NEXT-ACTIONS block)*. 🔎 **Also fixed in the same sweep:** `supabase/migrations/CLAUDE.md`'s "חמש טבלאות deny-all" mine-list — flagged stale on 14/08 (`m6_step_1_10.notes.md` §①), measured again 18/08 from live `get_advisors`, and **rewritten with a measurement date** (only `salary_reports` remains deny-all-by-omission; `project_changes` is deny-all **by design**).
+**🗣️ אושר —** verification ran `18/08/2026`; Ishay's 👤 sign-off pending.
 
 ---
 

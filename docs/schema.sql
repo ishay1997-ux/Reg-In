@@ -9,7 +9,7 @@
 -- ⚠️ זהו SNAPSHOT שנוצר מתוך שאילתות על המסד החי. **מקור-אמת לשינויים = `supabase/migrations/`**
 --    (ולא הקובץ הזה). כל שינוי DB נכתב כקובץ מיגרציה חדש, מוחל, ואז הקובץ הזה נוצר מחדש.
 --
--- 📅 נוצר: 14/08/2026 · פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
+-- 📅 נוצר: 14/08/2026 · רוענן: 18/08/2026 (שער 1.10 — אחרי `module6_project_changes_money_gated_reader`) · פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
 --
 -- 🔴 **לרענן את הקובץ הזה אחרי כל מיגרציה.** העותק הקודם לא רוענן חמישה חודשים והכריז על עמודה
 --    (`assignments.id_number`) שאינה קיימת במסד — מפתח ראשי שגוי לטבלה שלמה, בקובץ שהוא דרגה 1
@@ -22,7 +22,7 @@
 -- 🚫 **אין כאן סעיף "היסטוריה"/"יומן שינויים"** — הקובץ מתאר הווה בלבד. ציר השינויים חי
 --    ב-`supabase/migrations/` וב-`docs/db_roadmap.md`.
 --
--- מוסכמות: כל 23 הטבלאות ב-`public` עם RLS **מופעל**. כל 49 המדיניות (37 ב-public, 12 על
+-- מוסכמות: כל 23 הטבלאות ב-`public` עם RLS **מופעל**. כל 48 המדיניות (36 ב-public, 12 על
 -- `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`. הפונקציה `moddatetime` (טריגר
 -- `updated_at`) יושבת בסכמה `extensions`, לא ב-`public`.
 -- ============================================================
@@ -1239,16 +1239,12 @@ create trigger project_changes_set_updated_at
   for each row execute function moddatetime('updated_at');
 
 -- מדיניות RLS
-create policy project_changes_select_by_permission on project_changes
-  for select to authenticated
-  using (
-    exists (
-      select 1 from permissions p
-      where p.role_id = (select current_user_role_id())
-        and p.module_id = (select module_id from modules where module_name = 'פרויקטים')
-        and p.permission_level = any (array['edit'::text, 'view'::text])
-    )
-  );
+-- 🔴 אפס policies — **במכוון** (deny-all). המדיניות הרחבה `project_changes_select_by_permission`
+--    הוסרה ב-`20260814152647_module6_project_changes_money_gated_reader.sql`: היא חשפה את
+--    `unit_price_snapshot`/`unit_cost_snapshot` לכל מחזיקי 'פרויקטים' — בסתירה לכרטיסי-המסך
+--    המאושרים (מנהלת לוגיסטיקה ומנהלת גיוס חסומות מנתונים פיננסיים). הקריאה היחידה מהדפדפן
+--    היא דרך ה-RPC ‏`list_project_changes` (סעיף 24), שמחזיר את שדות-הכסף כ-NULL למי שאינו מורשה
+--    ודגל `money_visible` כדי שהמסך יציג `—` במקום ריק.
 
 
 -- ============================================================
@@ -1319,11 +1315,11 @@ create policy email_log_select_projects_module on email_log
 
 
 -- ============================================================
--- 24. פונקציות בסכמה public — 24 פונקציות
+-- 24. פונקציות בסכמה public — 25 פונקציות
 -- ============================================================
 -- 🚫 **הגופים אינם כאן במכוון** (ר' כותרת הקובץ). לכל פונקציה: חתימה · מצב אבטחה · search_path ·
 --    למי יש EXECUTE · ומצביע לקובץ המיגרציה שבו הגוף הנוכחי חי.
--- לכל 24 הפונקציות `search_path = ''` (שמות מלאים בגוף).
+-- לכל 25 הפונקציות `search_path = ''` (שמות מלאים בגוף).
 -- ⚠️ `moddatetime` (הטריגר של updated_at) **אינה כאן** — היא יושבת בסכמה `extensions`.
 --
 -- מקרא: SD = security definer · SI = security invoker · [רשימת התפקידים] = מי קיבל EXECUTE.
@@ -1414,6 +1410,12 @@ create policy email_log_select_projects_module on email_log
 --   p_feedback_score integer, p_negative_feedback_reason text, p_feedback_notes text) returns boolean
 --   SD · plpgsql · [authenticated, service_role]
 --   → supabase/migrations/20260814142439_module6_rpcs_reads_and_close.sql
+-- list_project_changes(p_project_id integer) returns table (change_id bigint, change_group_id uuid,
+--   change_target text, sku text, color text, delta_qty integer, unit_price_snapshot numeric,
+--   unit_cost_snapshot numeric, revenue_delta numeric, money_visible boolean, reason text,
+--   performed_by text, created_at timestamptz)
+--   SD · stable · plpgsql · [authenticated, service_role] — שדות-הכסף ממוסכים בגוף לפי הרשאת 'הצעות מחיר'
+--   → supabase/migrations/20260814152647_module6_project_changes_money_gated_reader.sql
 
 
 -- ============================================================
