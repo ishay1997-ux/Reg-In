@@ -190,20 +190,57 @@ export function responsivenessScore({ answered, confirmed }, companyAverage, dam
   return (Number(confirmed) + m * c) / (Number(answered) + m)
 }
 
-// מרכיב-האמינות. 🚧 **כבוי עד מ6** — הפונקציה קיימת כדי שהנרמול יהיה אמיתי ושבדיקות
-// הקבלה #2 ו-#5 תהיינה ניתנות להרצה, לא כדי שתיקרא היום.
-// ⚠️ שמות שדות-הרשומה (`outcome` / `projectCancelled` / `eventPassed`) הם **הנחה שלי** —
-// מ6 הוא שיקבע את שמות-העמודות בפועל. ר' §9 במדריך-המיקרו.
+// 🔴 ממפה את שלוש עמודות-הנוכחות של `assignments` (`attendance_status`/`lateness_level`/
+// `no_show_reason`) + הענף הנפרד `assignment_status === 'approval_withdrawn'` לאחד משמונת
+// חברי `ATTENDANCE_OUTCOMES`. **זורקת על צירוף לא-מוכר, לעולם לא מחזירה `undefined` בשקט** —
+// `undefined` היה נבלע בשומר `if (value === undefined) continue` שמתחת, בדיוק כמו
+// "חולה"/"אישור-מראש" המוחרגים במכוון, ואי-אפשר להבחין בין שגיאת-מיפוי להחרגה מכוונת.
+// (מודול 6, צעד 2.7 — `20260814141047_module6_assignments_attendance.sql`, אילוץ
+// `assignments_attendance_shape` מגדיר בדיוק את ארבע-הצורות שהמיפוי הזה מכיר.)
+export function resolveAttendanceOutcome(record) {
+  if (record?.assignment_status === 'approval_withdrawn') return ATTENDANCE_OUTCOMES.WITHDREW
+
+  const status = record?.attendance_status
+  const lateness = record?.lateness_level ?? null
+  const reason = record?.no_show_reason ?? null
+
+  if (status === 'arrived' && lateness === null && reason === null) {
+    return ATTENDANCE_OUTCOMES.ARRIVED
+  }
+  if (status === 'late' && reason === null) {
+    if (lateness === 'light') return ATTENDANCE_OUTCOMES.SLIGHTLY_LATE
+    if (lateness === 'medium') return ATTENDANCE_OUTCOMES.MODERATELY_LATE
+    if (lateness === 'heavy') return ATTENDANCE_OUTCOMES.VERY_LATE
+  }
+  if (status === 'no_show' && lateness === null) {
+    if (reason === 'sick') return ATTENDANCE_OUTCOMES.SICK
+    if (reason === 'approved_absence') return ATTENDANCE_OUTCOMES.EXCUSED
+    if (reason === 'ghosted') return ATTENDANCE_OUTCOMES.NO_SHOW
+  }
+
+  throw new Error(
+    `צירוף-נוכחות לא מוכר בשיבוץ: attendance_status=${status}, lateness_level=${lateness}, no_show_reason=${reason}`,
+  )
+}
+
+// מרכיב-האמינות. **המשקל שלו כבוי עד שמ9 ידליק את `מרכיב_אמינות_פעיל`** (`🚧 מ9 ← מ4`) —
+// הפונקציה נקראת כבר היום במשקל 0 כדי שהנרמול יהיה אמיתי, לא כדי שתשפיע על הציון.
+// ✅ **שמות שדות-הרשומה אושרו במיגרציה `20260814141047` (14/08/2026, צעד 2.7) ואינם עוד
+// הנחה:** `attendance_status` / `lateness_level` / `no_show_reason` / `assignment_status`
+// (לענף ה-WITHDREW) + `projectCancelled` / `eventPassed`. ההרכבה בפועל מ-שורות-מסד גולמיות
+// יושבת ב-`smartMatchCandidates.js` — כאן רק פענוח הצירוף וחישוב-הציון.
 export function reliabilityScore(records, companyAverage, dampingConstant) {
   let count = 0
   let total = 0
 
   for (const record of records ?? []) {
     // 🔴 פרויקט שהלקוח ביטל אינו נספר בשום צד — הדיילת לא אשמה (§11.10 #5),
-    // ואירוע שטרם התקיים אינו יכול להעיד על הגעה או אי-הגעה.
+    // ואירוע שטרם התקיים אינו יכול להעיד על הגעה או אי-הגעה. **לפני** פענוח-הצירוף —
+    // רשומה לא-רלוונטית לא נבדקת, גם אם עמודותיה עדיין לא נסגרו.
     if (!record || record.projectCancelled || !record.eventPassed) continue
+    const outcome = resolveAttendanceOutcome(record)
     // 🔴 "חולה"/"אישור-מראש" מוחרגים מהבסיס לגמרי — לא במונה ולא במכנה (§11.10 #2).
-    const value = ATTENDANCE_VALUES[record.outcome]
+    const value = ATTENDANCE_VALUES[outcome]
     if (value === undefined) continue
     count += 1
     total += value

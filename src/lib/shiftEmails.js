@@ -17,6 +17,16 @@ export const SHIFT_TEMPLATE_NAMES = {
   reminder: 'תבנית_תזכורת_משמרת',
 }
 
+// 🔴 תבניות **מודול 6** — ברמת-הפרויקט, לא ברמת-המשמרת. **קבוצה נפרדת מ-`SHIFT_TEMPLATE_NAMES`
+// ולא מפתח נוסף בתוכה**: `cancellation` שם כבר תפוס ע"י `תבנית_מייל_ביטול_משמרת` (מודול 4 —
+// המשרה כבר אוישה ע"י מישהי אחרת), ואילו כאן האירוע **כולו** מתבטל. שני מיילים שונים לגמרי
+// שחולקים מקרה-קצה בשם בלבד — זרעו כמפתח כפול היה מוחק אחד מהם בשקט.
+// זהים-בייט לשורות ה-`params` שנזרעו ב-`module6_params_seed` (`db_roadmap.md` M6-12).
+export const PROJECT_TEMPLATE_NAMES = {
+  cancellation: 'תבנית_מייל_אירוע_בוטל',
+  detailsChanged: 'תבנית_מייל_פרטי_האירוע_השתנו',
+}
+
 // הקישור האישי של הדיילת. **הטוקן בנתיב ולא ב-query** — פרמטרי-query נוטים להיגזר
 // בלוגים, ב-Referer ובקיצורי-קישורים, והטוקן הזה הוא **מפתח-כתיבה למסד** (`§7.45`).
 // ⚠️ הבסיס מגיע מהקורא (`window.location.origin`) ולא מקבוע: מייל שנשלח מסביבת-פיתוח
@@ -44,6 +54,16 @@ export function releaseSubject(project) {
 // נראה כמו תקלה, ו-`fillEmailTemplate` ממילא אינו יודע להשמיט שורה.
 function hhmm(value) {
   return typeof value === 'string' && value.length >= 5 ? value.slice(0, 5) : '—'
+}
+
+// נושא-הביטול. **בלי ייחוס** — כמו גוף-המייל עצמו (§ למטה) — כי `cancel_type` נושא שלושה
+// ערכים (`customer`/`force_majeure`/`other`, `schema.sql:1146`) והנושא אינו יכול לבחור ביניהם.
+export function projectCancellationSubject(project) {
+  return `ביטול האירוע — ${project?.event_name ?? ''}`.trim()
+}
+
+export function projectDetailsChangedSubject(project) {
+  return `עדכון פרטי האירוע — ${project?.event_name ?? ''}`.trim()
 }
 
 // ── איש הקשר בשטח ────────────────────────────────────────────────────────────
@@ -161,6 +181,68 @@ export function buildReleasePayload({ template, hostess, project }) {
   return buildEmailPayload({
     to: hostess.email,
     subject: releaseSubject(project),
+    body,
+    requireAttachment: false,
+  })
+}
+
+// ── מודול 6 · שלב 2.8 — ביטול-פרויקט ועדכון-פרטים ──────────────────────────
+
+// מייל ביטול-האירוע — יוצא **לכל** דיילת ששובצה, לא רק למי שיש לה איש-קשר תקין בפרויקט.
+//
+// 🔴 **בכוונה אינה קוראת ל-`resolveShiftContact`.** אותה פונקציה מחזירה `null` כששם *או*
+// טלפון של איש-הקשר חסרים (`projects.owner_phone` nullable), והקורא שלה **חייב** אז לעצור
+// את השליחה — זה בדיוק הכלל ב-`buildFinalApprovalPayload`. אבל כאן העצירה הזו הייתה שקרית:
+// המייל הזה אינו תלוי באיש-קשר בשטח בכלל (שלוש placeholders בלבד — דיילת/פרויקט/תאריך),
+// וקריאה מיותרת לפונקציה שיכולה להחזיר `null` הייתה חוסמת מייל-חובה על סמך שדה שהוא כלל
+// לא צריך. `db_roadmap.md` M6-12 §① מנמק את אותה הכרעה מפורשות.
+//
+// 🚫 **אין ייחוס-סיבה בתבנית, ולא יהיה.** `cancel_type` נושא שלושה ערכים
+// (`customer`/`force_majeure`/`other`) והתבנית היא מחרוזת קבועה אחת ש-`fillEmailTemplate`
+// אינו יודע להסתעף בה — *"בוטל על ידי הלקוח"* היה **שקר** במקרה של כוח-עליון.
+export function buildProjectCancellationPayload({ template, hostess, project } = {}) {
+  if (!hostess?.email) return null
+
+  const body = fillEmailTemplate(template, {
+    '[שם_דיילת]': hostess.full_name ?? '',
+    '[שם_פרויקט]': project?.event_name ?? '',
+    '[תאריך_אירוע]': formatDate(project?.final_event_date, '—'),
+  })
+  if (!body) return null
+
+  return buildEmailPayload({
+    to: hostess.email,
+    subject: projectCancellationSubject(project),
+    body,
+    requireAttachment: false,
+  })
+}
+
+// מייל עדכון-פרטי-האירוע — יוצא רק כששיבוצה **נשאר בתוקף** (מיקום או שעות השתנו), ולכן
+// דורש איש-קשר תקין בדיוק כמו האישור-הסופי.
+//
+// 🔴 **8 placeholders זהים-בייט לאלה של `תבנית_אישור_סופי_שיבוץ`** (`db_roadmap.md` M6-12) —
+// ולכן `resolveShiftContact` נצרך כאן **בלי שינוי**, לא בשכפול. ⚠️ **הקריאה למייל הזה עצמה
+// אינה כאן** — קביעת "האם לשלוח" (מיקום/שעות בלבד, לא תאריך — ㉑ מאפס אישורים ומזמינה מחדש
+// כשהתאריך משתנה) היא של הקוד שקורא לבונה הזה, לא של הבונה עצמו.
+export function buildProjectDetailsChangedPayload({ template, hostess, project, contact } = {}) {
+  if (!contact || !hostess?.email) return null
+
+  const body = fillEmailTemplate(template, {
+    '[שם_דיילת]': hostess.full_name ?? '',
+    '[שם_פרויקט]': project?.event_name ?? '',
+    '[תאריך_אירוע]': formatDate(project?.final_event_date, '—'),
+    '[שעת_התחלה]': hhmm(project?.final_start_time),
+    '[שעת_סיום]': hhmm(project?.final_end_time),
+    '[כתובת_אירוע_מלאה]': project?.final_location ?? '',
+    '[שם_מנהלת_פרויקט]': contact.name,
+    '[טלפון_מנהלת_פרויקט]': contact.phone,
+  })
+  if (!body) return null
+
+  return buildEmailPayload({
+    to: hostess.email,
+    subject: projectDetailsChangedSubject(project),
     body,
     requireAttachment: false,
   })

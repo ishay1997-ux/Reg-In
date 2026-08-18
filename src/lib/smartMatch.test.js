@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
   SMART_MATCH_PARAM_NAMES,
-  ATTENDANCE_OUTCOMES,
   NEUTRAL_PROXIMITY_SCORE,
   parseSmartMatchParams,
   activeWeights,
@@ -10,6 +9,7 @@ import {
   responsivenessScore,
   proximityScore,
   reliabilityScore,
+  resolveAttendanceOutcome,
   fairnessLeverage,
   haversineKm,
   candidateDistanceKm,
@@ -232,42 +232,78 @@ describe('proximityScore — גולפוסט קבוע (§11.10 #3)', () => {
   })
 })
 
-// ── מרכיב-האמינות: כבוי היום, אבל חייב להתקיים כדי שהנרמול יהיה אמיתי ───────
+// ── מרכיב-האמינות: כבוי עד שמ9 ידליק את `מרכיב_אמינות_פעיל`, אבל חייב להתקיים כדי ────
+// שהנרמול יהיה אמיתי. **מ6, צעד 2.7 (14/08/2026):** הרשומות עברו מ-`{outcome}` (הנחה-ישנה,
+// עמודה עברית בודדת שלא קיימת) ל-שלוש עמודות-הנוכחות האמיתיות של `assignments`
+// (`attendance_status`/`lateness_level`/`no_show_reason`) + ענף נפרד ל-`assignment_status
+// === 'approval_withdrawn'`. **המספרים הצפויים בכל תשעת ה-assertions לא זזו** — רק צורת
+// הקלט שמייצר אותם.
 describe('reliabilityScore — §11.10 #2 ו-#5', () => {
   const base = { projectCancelled: false, eventPassed: true }
 
   it('§11.10 #2 — "חולה" מוחרגת מהבסיס לגמרי ואינה משנה את הציון', () => {
     const without = [
-      { ...base, outcome: ATTENDANCE_OUTCOMES.ARRIVED },
-      { ...base, outcome: ATTENDANCE_OUTCOMES.ARRIVED },
+      { ...base, attendance_status: 'arrived' },
+      { ...base, attendance_status: 'arrived' },
     ]
-    const withSick = [...without, { ...base, outcome: ATTENDANCE_OUTCOMES.SICK }]
+    const withSick = [...without, { ...base, attendance_status: 'no_show', no_show_reason: 'sick' }]
     expect(reliabilityScore(withSick, 0.6, 3)).toBe(reliabilityScore(without, 0.6, 3))
   })
 
   it('§11.10 #5 — פרויקט שהלקוח ביטל אינו נספר בשום צד', () => {
-    const without = [{ ...base, outcome: ATTENDANCE_OUTCOMES.ARRIVED }]
+    const without = [{ ...base, attendance_status: 'arrived' }]
     const withCancelled = [
       ...without,
-      { ...base, projectCancelled: true, outcome: ATTENDANCE_OUTCOMES.NO_SHOW },
+      {
+        ...base,
+        projectCancelled: true,
+        attendance_status: 'no_show',
+        no_show_reason: 'ghosted',
+      },
     ]
     expect(reliabilityScore(withCancelled, 0.6, 3)).toBe(reliabilityScore(without, 0.6, 3))
   })
 
   it('אירוע שטרם התקיים אינו נספר — אי-אפשר לא-להגיע לאירוע שלא קרה', () => {
-    const only = [{ ...base, eventPassed: false, outcome: ATTENDANCE_OUTCOMES.NO_SHOW }]
+    const only = [
+      { ...base, eventPassed: false, attendance_status: 'no_show', no_show_reason: 'ghosted' },
+    ]
     expect(reliabilityScore(only, 0.6, 3)).toBeCloseTo(0.6, 10)
   })
 
   it('סולם-הערכים של §11.3(2)', () => {
-    const one = (outcome) => reliabilityScore([{ ...base, outcome }], 0.6, 3)
+    const one = (record) => reliabilityScore([{ ...base, ...record }], 0.6, 3)
     // ריסון עם m=3 ו-C=0.6 על תצפית אחת: (v + 1.8) / 4
-    expect(one(ATTENDANCE_OUTCOMES.ARRIVED)).toBeCloseTo((1 + 1.8) / 4, 10)
-    expect(one(ATTENDANCE_OUTCOMES.SLIGHTLY_LATE)).toBeCloseTo((1 + 1.8) / 4, 10)
-    expect(one(ATTENDANCE_OUTCOMES.MODERATELY_LATE)).toBeCloseTo((0.75 + 1.8) / 4, 10)
-    expect(one(ATTENDANCE_OUTCOMES.VERY_LATE)).toBeCloseTo((0.5 + 1.8) / 4, 10)
-    expect(one(ATTENDANCE_OUTCOMES.WITHDREW)).toBeCloseTo((0.5 + 1.8) / 4, 10)
-    expect(one(ATTENDANCE_OUTCOMES.NO_SHOW)).toBeCloseTo((0 + 1.8) / 4, 10)
+    expect(one({ attendance_status: 'arrived' })).toBeCloseTo((1 + 1.8) / 4, 10)
+    expect(one({ attendance_status: 'late', lateness_level: 'light' })).toBeCloseTo(
+      (1 + 1.8) / 4,
+      10,
+    )
+    expect(one({ attendance_status: 'late', lateness_level: 'medium' })).toBeCloseTo(
+      (0.75 + 1.8) / 4,
+      10,
+    )
+    expect(one({ attendance_status: 'late', lateness_level: 'heavy' })).toBeCloseTo(
+      (0.5 + 1.8) / 4,
+      10,
+    )
+    expect(one({ assignment_status: 'approval_withdrawn' })).toBeCloseTo((0.5 + 1.8) / 4, 10)
+    expect(one({ attendance_status: 'no_show', no_show_reason: 'ghosted' })).toBeCloseTo(
+      (0 + 1.8) / 4,
+      10,
+    )
+  })
+
+  // 🔑 הערה, לא משימה (Step 2.7's (d)): `EXCUSED` (`no_show`+`approved_absence`) אינו מכוסה
+  // ע"י אף בדיקה כאן — מ6 אינו חייב את הכיסוי הזה, אבל זה נאמר בקול ולא מתגלה מחדש בסגירה.
+
+  // ── (c) המוסף: צירוף-נוכחות לא-מוכר נזרק, לא נבלע כ"חולה"/"אישור-מראש" ──────────────
+  it('🔴 צירוף-נוכחות לא מוכר נזרק — סיכון-הכשל-השקט של `if (value === undefined) continue`', () => {
+    // ⚠️ בלי resolveAttendanceOutcome, `undefined` שקט היה נראה **בדיוק** כמו SICK/EXCUSED
+    // המוחרגים במכוון — אין דרך להבחין בין "שגיאת-מיפוי" ל"החרגה מכוונת".
+    const invalidShape = { ...base, attendance_status: 'late', lateness_level: null }
+    expect(() => resolveAttendanceOutcome(invalidShape)).toThrow()
+    expect(() => reliabilityScore([invalidShape], 0.6, 3)).toThrow()
   })
 })
 
