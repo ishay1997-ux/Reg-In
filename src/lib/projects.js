@@ -109,18 +109,28 @@ export function gapSentence(project) {
   if (gap === 1 && confirmedAvailable === 1 && !pending) {
     return 'הדיילת היחידה אישרה זמינות וממתינה לאישור סופי ממך'
   }
-  if (pending > 0) {
-    // הנוסח המאושר של #8 — "וגם אם" מפריד בין מה שבדרך לבין מה שעוד לא טופל.
-    const stillMissing = gap - pending
-    const answerers = pending === 2 ? 'שתיהן' : 'כולן'
-    if (stillMissing > 0) {
-      return `${pending} זימונים ממתינים למענה — וגם אם ${answerers} יאשרו, עדיין חסרות ${stillMissing}`
-    }
-    return `${pending} זימונים ממתינים למענה`
-  }
+  if (pending > 0) return pendingInvitesSentence(pending, gap)
   if (gap > 0) return `חסרות ${gap}`
   // חוסר-לוגיסטיקה בלבד (אין שורה חיה כזאת היום) — נוסח ממתין לאישור-ישי, ר' יומן-הסטיות.
   return 'הלוגיסטיקה טרם מוכנה'
+}
+
+// משפט הזימונים-הפתוחים — הנוסח המאושר של #8 ("וגם אם" מפריד בין מה שבדרך לבין מה שעוד לא
+// טופל). לשון-היחיד לזימון בודד — אותה תבנית-הרחבה שישי הנהן לה בנוסחי-הולידציה של הסגירה;
+// "1 זימונים ממתינים" הוא עברית שבורה על המסך. וכשהזימונים מכסים את החוסר — הצורה הקצרה,
+// לעולם לא "עדיין חסרות 0" (שער-2.9, מוטציה שהוכיחה שהגבול לא היה מכוסה).
+function pendingInvitesSentence(pending, gap) {
+  const stillMissing = gap - pending
+  if (pending === 1) {
+    return stillMissing > 0
+      ? `זימון אחד ממתין למענה — וגם אם תאשר, עדיין חסרות ${stillMissing}`
+      : 'זימון אחד ממתין למענה'
+  }
+  const answerers = pending === 2 ? 'שתיהן' : 'כולן'
+  if (stillMissing > 0) {
+    return `${pending} זימונים ממתינים למענה — וגם אם ${answerers} יאשרו, עדיין חסרות ${stillMissing}`
+  }
+  return `${pending} זימונים ממתינים למענה`
 }
 
 // עזרים פנימיים ל-gapSentence — הקלט שלה הוא ספירות ה-RPC, לא שורות גולמיות,

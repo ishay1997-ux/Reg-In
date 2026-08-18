@@ -253,3 +253,24 @@ describe('tierCrossingNotice — הודעת-מדרגה (③ↄ), בלי סכום
     expect(tierCrossingNotice(TAG, B_REG_TAG_TIERS, 420, 380)).toBeNull()
   })
 })
+
+// ── בדיקות-גבול שנוספו בשער 2.9 (פאנל-המוטציות, 19/08/2026): מוטציית `<`→`<=` עברה ירוק ──
+describe('isLateChange — הגבולות המדויקים: בדיוק-24 שעות ובדיוק-3 ימי-עסקים אינם "מאוחר"', () => {
+  it('שורת-דיילות בדיוק 24 שעות לפני האירוע אינה מסומנת — הכרעת ד: "מתחת ל-24"', () => {
+    // אירוע 20/08 10:00 שעון-ישראל; "עכשיו" 19/08 10:00 שעון-ישראל (UTC+3 בקיץ) ⇒ בדיוק 24.
+    const now = new Date(Date.UTC(2026, 7, 19, 7, 0))
+    expect(hoursUntilEvent('2026-08-20', '10:00', now)).toBe(24)
+    expect(isLateChange({ target: 'hostess_count', deltaQty: 2 }, '2026-08-20', '10:00', now)).toBe(
+      false,
+    )
+  })
+
+  it('שורת-לוגיסטיקה בדיוק 3 ימי-עסקים לפני האירוע אינה מסומנת', () => {
+    // משני 17/08 עד חמישי 20/08: שלישי+רביעי+חמישי = בדיוק 3 ימי-עסקים.
+    expect(businessDaysUntil('2026-08-17', '2026-08-20')).toBe(3)
+    const now = new Date(Date.UTC(2026, 7, 17, 6, 0))
+    expect(isLateChange({ target: 'logistics', deltaQty: 50 }, '2026-08-20', '10:00', now)).toBe(
+      false,
+    )
+  })
+})

@@ -238,7 +238,17 @@ export function reliabilityScore(records, companyAverage, dampingConstant) {
     // ואירוע שטרם התקיים אינו יכול להעיד על הגעה או אי-הגעה. **לפני** פענוח-הצירוף —
     // רשומה לא-רלוונטית לא נבדקת, גם אם עמודותיה עדיין לא נסגרו.
     if (!record || record.projectCancelled || !record.eventPassed) continue
-    const outcome = resolveAttendanceOutcome(record)
+    // 🛡️ גידור-קריסה (פאנל שער-2.9, 19/08/2026): הפענוח רץ בכל דירוג גם כשמשקל-האמינות 0 —
+    // המשקל מתאפס רק אחרי החישוב. רשומה משובשת אחת (מיגרציה עתידית שתרחיב CHECK בלי עדכון-קוד,
+    // תיקון-דאטה ידני ב-Studio) הייתה מפילה את **כל** מסך ה-Smart Match — "מסך ריק" הוא
+    // כשל-המודול המתועד החמור ביותר. ⇒ רשומה בלתי-מזוהה מדולגת מהממוצע; `resolveAttendanceOutcome`
+    // עצמה ממשיכה לזרוק — היא כלי-הבדיקות שמוכיח שהמיפוי שלם, והבדיקות קוראות לה ישירות.
+    let outcome
+    try {
+      outcome = resolveAttendanceOutcome(record)
+    } catch {
+      continue
+    }
     // 🔴 "חולה"/"אישור-מראש" מוחרגים מהבסיס לגמרי — לא במונה ולא במכנה (§11.10 #2).
     const value = ATTENDANCE_VALUES[outcome]
     if (value === undefined) continue

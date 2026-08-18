@@ -231,3 +231,47 @@ describe('eventPassedSentence — הנוסח הארוך, זהה בשתי הלש�
     expect(eventPassedSentence(17)).toBe('התקיים לפני 17 ימים')
   })
 })
+
+// ── תוספות שער 2.9 (19/08/2026): גבולות הזימונים-הפתוחים + לשון-היחיד (תבנית-הנהון המאושרת) ──
+describe('gapSentence — גבולות הזימונים-הפתוחים ולשון-היחיד', () => {
+  const base = {
+    project_status: 'in_progress',
+    required_hostess_count: 6,
+    hostesses_confirmed: 0,
+    pending_invites: 0,
+    assignments_row_count: 4,
+    logistics_ready: 0,
+    logistics_total: 2,
+  }
+
+  it('הזימונים מכסים בדיוק את החוסר ⇒ הצורה הקצרה, לעולם לא "עדיין חסרות 0"', () => {
+    expect(
+      gapSentence({
+        ...base,
+        required_hostess_count: 3,
+        hostesses_confirmed: 1,
+        pending_invites: 2,
+      }),
+    ).toBe('2 זימונים ממתינים למענה')
+  })
+
+  it('שלושה זימונים ⇒ "כולן"', () => {
+    expect(gapSentence({ ...base, hostesses_confirmed: 1, pending_invites: 3 })).toBe(
+      '3 זימונים ממתינים למענה — וגם אם כולן יאשרו, עדיין חסרות 2',
+    )
+  })
+
+  it('זימון בודד ⇒ לשון-יחיד, לא "1 זימונים"', () => {
+    expect(gapSentence({ ...base, hostesses_confirmed: 3, pending_invites: 1 })).toBe(
+      'זימון אחד ממתין למענה — וגם אם תאשר, עדיין חסרות 2',
+    )
+    expect(
+      gapSentence({
+        ...base,
+        required_hostess_count: 4,
+        hostesses_confirmed: 3,
+        pending_invites: 1,
+      }),
+    ).toBe('זימון אחד ממתין למענה')
+  })
+})

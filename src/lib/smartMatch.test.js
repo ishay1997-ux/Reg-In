@@ -303,7 +303,10 @@ describe('reliabilityScore — §11.10 #2 ו-#5', () => {
     // המוחרגים במכוון — אין דרך להבחין בין "שגיאת-מיפוי" ל"החרגה מכוונת".
     const invalidShape = { ...base, attendance_status: 'late', lateness_level: null }
     expect(() => resolveAttendanceOutcome(invalidShape)).toThrow()
-    expect(() => reliabilityScore([invalidShape], 0.6, 3)).toThrow()
+    // ↳ שער-2.9 (19/08/2026): `reliabilityScore` כבר **אינה** זורקת — רשומה משובשת מדולגת כדי
+    // ששורה אחת לא תפיל את כל מסך-הדירוג (גידור-הקריסה). העוקץ נשאר בזריקה הישירה שמעליי;
+    // צד-הדילוג נבדק ב-describe הייעודי בתחתית הקובץ.
+    expect(() => reliabilityScore([invalidShape], 0.6, 3)).not.toThrow()
   })
 })
 
@@ -709,5 +712,22 @@ describe('rankCandidates — עמידות בפני קלט חסר', () => {
         params: broken,
       }),
     ).toThrow()
+  })
+})
+
+// ── גידור-הקריסה משער 2.9 (19/08/2026): רשומה בלתי-מזוהה מדולגת, לא מפילה את הדירוג ──
+describe('reliabilityScore — רשומה משובשת אינה מקריסה את המסך', () => {
+  it('רשומה בצורה לא-חוקית בין תקינות: הציון מחושב מהתקינות בלבד, בלי זריקה', () => {
+    const good = {
+      assignment_status: 'finally_approved',
+      attendance_status: 'arrived',
+      lateness_level: null,
+      no_show_reason: null,
+      projectCancelled: false,
+      eventPassed: true,
+    }
+    const corrupt = { ...good, attendance_status: 'late', lateness_level: 'שיבוש' }
+    expect(() => reliabilityScore([good, corrupt], 0.8, 3)).not.toThrow()
+    expect(reliabilityScore([good, corrupt], 0.8, 3)).toBe(reliabilityScore([good], 0.8, 3))
   })
 })
