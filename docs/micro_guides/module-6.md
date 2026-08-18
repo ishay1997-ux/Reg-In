@@ -8,7 +8,7 @@
 | **Branch** | `ishay/module-6-projects` *(cut from a fresh `dev`; carries the approved spec)* |
 | **Owner** | Ishay (sole developer) |
 | **Status** | 🔒 **Phase 1 CLOSED — Ishay signed the 1.10 gate `18/08/2026 22:32` ("מאשר").** All eleven migrations applied `14/08`; gate ran end-to-end `18/08` — 97/100 PASS, 2 FAILs triaged as stale gate-expectations, advisors triaged finding-by-finding, `schema.sql` refreshed, all registry rows flipped. |
-| **Last updated** | `18/08/2026 22:32` *(system clock, `Get-Date`)* |
+| **Last updated** | `18/08/2026 23:50` *(system clock, `Get-Date`)* — 2.1–2.4 ✅ committed; 2.5 + an M4-coverage agent (Ishay's request) mid-write; 2.6 landed, uncommitted pending joint verification |
 | **Active step** | **2.5 + 2.6 — dispatching via build agents** (session-B of the plan Ishay approved; orchestrator verifies before commit). 2.1–2.4 ✅ all done `18/08` — suite at **870** (752+37+33+44+4), zero regressions. ✅ The 2.3 validation-strings nod round CLOSED — Ishay approved `18/08 23:5X`. Nothing is owed to him right now. |
 
 > ### 📍 PHASE 1 — 🔒 CLOSED `18/08/2026 22:32` (Ishay: *"מאשר"*). Compacted per self-update clause (i).
