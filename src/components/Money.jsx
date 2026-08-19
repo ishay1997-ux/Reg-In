@@ -14,17 +14,16 @@
 // בלבד, שבו המחיר עצמו הוא הנתון ועיגול של 2.50 ל-3 מסתיר אותו. **הרחבה ולא עקיפה** — כך
 // גם הטור הזה עובר דרך אותה עטיפת-כיווניות, במקום שיצוץ פורמט-כסף מקומי שני שיסטה ממנה.
 
+// עטיפת-הכיווניות עצמה חולצה ל-`Ltr` (צעד 3.0 של מודול 6) — היא הייתה חיה כאן וגם
+// ב-`RatingStars` כשני העתקים ידניים של אותם שני מאפיינים. החוזה הציבורי של Money
+// לא השתנה בבייט: אותו אלמנט, אותם מאפיינים, אותו פורמט.
+import Ltr from '@/components/Ltr'
 import { formatShekelExact, formatShekelWhole } from '@/lib/pricing'
-import { cn } from '@/lib/utils'
 
 export default function Money({ amount, exact = false, className, 'data-testid': testId }) {
   return (
-    <span
-      dir="ltr"
-      className={cn('inline-block [unicode-bidi:isolate]', className)}
-      data-testid={testId}
-    >
+    <Ltr className={className} data-testid={testId}>
       {exact ? formatShekelExact(amount) : formatShekelWhole(amount)}
-    </span>
+    </Ltr>
   )
 }

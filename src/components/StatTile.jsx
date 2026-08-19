@@ -23,10 +23,14 @@ import Money from '@/components/Money'
 // value: מספר ⇒ מוצג דרך `Money` (₪ בצד הנכון, בלי לחשוב) · צומת-React ⇒ מוצג כמות שהוא
 //        (אחוזים, טקסט) · null/undefined ⇒ `emptyText`.
 // ⚠️ null אינו 0 — מדד שאין לו נתון מציג טקסט ולא מספר, אחרת "0 ₪" נקרא כעובדה שקרית.
+// ‏`items-start` (צעד 3.0 β של מודול 6) — יישור למוקאפ המאושר (`02_project_card_approved.html`:
+// ‏`.cell, .tile{align-items:flex-start}`): בעמודת-flex בלי זה הילדים עוברים blockification,
+// אלמנט `ltr` נמתח לרוחב מלא ומיישר את ערכו שמאלה — הרחק מהתווית שמעליו, שמיושרת ימינה.
+// פיצול-RTL שנמדד בדפדפן על המוקאפ (13/08/2026); היישור כאן מצמיד את הרכיב לצורה המאושרת.
 export default function StatTile({ label, value, sub, emptyText = 'אין נתונים עדיין', testId }) {
   return (
     <div
-      className="rounded-xl border border-slate-200 bg-white p-4 flex flex-col gap-0.5"
+      className="rounded-xl border border-slate-200 bg-white p-4 flex flex-col items-start gap-0.5"
       data-testid={testId}
     >
       <span className="text-xs text-slate-500">{label}</span>
