@@ -52,7 +52,7 @@ import { sendEmail } from '@/api/email'
 
 // 🔒 נעול ב-§3.7 של מדריך-המיקרו, וזהה-בייט למה שה-RPC זורק (מיגרציה 20260814142440,
 // גוף cancel_project) — הדיאלוג והשרת אומרים את אותו משפט.
-export const EMPTY_CANCEL_REASON_MESSAGE =
+const EMPTY_CANCEL_REASON_MESSAGE =
   'חובה לכתוב סיבה. היא נשמרת בכרטיס והיא ההסבר היחיד שיישאר אחרי הביטול.'
 
 // שלוש האפשרויות — ערכי-המסד מתוך CHECK הטבלה (customer/force_majeure/other), והנוסחים

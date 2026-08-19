@@ -21,7 +21,7 @@ export const LOGISTICS_STATUS_LABELS = {
 // טונים ממופתחים לפי התווית המוצגת (הדפוס של StatusTag): "טרם החל" muted כפי שהמוקאפ
 // מצייר; "הוזמן"/"מוכן" אינם מצוירים באף מוקאפ ⇒ נגזרו מתקדים: הוזמן=teal (בתנועה,
 // כמו "אישרה זמינות"), מוכן=ok (עובדה שהושלמה, כמו "אושרה סופית"). `הנחתי` — מדווח.
-export const LOGISTICS_STATUS_TONES = {
+const LOGISTICS_STATUS_TONES = {
   'טרם החל': 'muted',
   הוזמן: 'teal',
   מוכן: 'ok',

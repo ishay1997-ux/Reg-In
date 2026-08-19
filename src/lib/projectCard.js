@@ -98,14 +98,14 @@ export function closingTabState(project, todayIso) {
 // תא אחד, קריאה בלבד. ארבעת ניסוחי feedback_status הם המלצת ⑧⑫ שאושרה עם הכרטיס,
 // והתיקון של S-22: completed עם ציון NULL הוא שורה חוקית בסכמה (העמודות בלתי-תלויות)
 // ולכן מקבל נוסח משלו במקום להציג ציון שאינו קיים.
-export const FEEDBACK_EMPTY_VALUE = 'טרם התקבל משוב'
+const FEEDBACK_EMPTY_VALUE = 'טרם התקבל משוב'
 // "נשלח" ולא "יוצא" — תיקון-הנוסח של צעד 3.5 (מדריך-המיקרו :961): הסקר נשלח מהלקוח-בדפדפן
 // אחרי ה-commit (AR-5), לא "יוצא" מעצמו מתוך הסגירה, והנוסח הישן סתר את מסלול-הכשל.
-export const FEEDBACK_EMPTY_SUB = 'הסקר נשלח בסגירת האירוע · הציון והסיבה מוזנים במסך הכספים'
+const FEEDBACK_EMPTY_SUB = 'הסקר נשלח בסגירת האירוע · הציון והסיבה מוזנים במסך הכספים'
 // not_sent אחרי שחותמת-הסגירה קיימת = השליחה לא הצליחה — והכרטיס חייב לומר זאת במקום
 // לרמוז שהסקר בדרך (אותה שורה במדריך: "must say the send did not succeed"). ההמשך —
 // בקרת "שליחה חוזרת" שבלשונית הסגירה.
-export const FEEDBACK_NOT_SENT_AFTER_CLOSE_SUB =
+const FEEDBACK_NOT_SENT_AFTER_CLOSE_SUB =
   'מייל הסקר לא יצא בסגירה — שליחה חוזרת מלשונית סגירת האירוע'
 
 export function feedbackCell(project) {
@@ -130,9 +130,12 @@ export function feedbackCell(project) {
   return { kind: 'empty', value: FEEDBACK_EMPTY_VALUE, sub: FEEDBACK_EMPTY_SUB }
 }
 
-// ── משך האירוע ("4 שעות") ───────────────────────────────────────────────────
-// נגזר מהפרש השעות; חציית-חצות (22:00–02:00) חוקית ומחושבת מודולו יממה (S-17).
-export function eventDurationText(startTime, endTime) {
+// ── פירסור טווח-שעות ("HH:MM") ───────────────────────────────────────────────
+// משותפת ל-`eventDurationText` כאן ול-`plannedEventHours` (`src/lib/projectClosing.js`,
+// אוחד 19/08/2026 — jscpd תפס את בלוק ה-parsing כפול). מחזירה דקות בין הקצוות, כולל
+// חציית-חצות (מודולו יממה) — `null` **רק** כשקצה חסר/שגוי; זמנים זהים-בדיוק מחזירים `0`
+// (לא `null`), כי "בלי קלט" ו"טווח באורך אפס" הם שני מצבים שונים שכל קורא מפרש בעצמו.
+export function minutesBetweenTimes(startTime, endTime) {
   const toMinutes = (value) => {
     const match = /^(\d{2}):(\d{2})/.exec(String(value ?? ''))
     if (!match) return null
@@ -141,8 +144,14 @@ export function eventDurationText(startTime, endTime) {
   const start = toMinutes(startTime)
   const end = toMinutes(endTime)
   if (start == null || end == null) return null
-  const minutes = (end - start + 1440) % 1440
-  if (minutes === 0) return null
+  return (end - start + 1440) % 1440
+}
+
+// ── משך האירוע ("4 שעות") ───────────────────────────────────────────────────
+// נגזר מהפרש השעות; חציית-חצות (22:00–02:00) חוקית ומחושבת מודולו יממה (S-17).
+export function eventDurationText(startTime, endTime) {
+  const minutes = minutesBetweenTimes(startTime, endTime)
+  if (minutes === null || minutes === 0) return null
   const hours = minutes / 60
   if (hours === 1) return 'שעה אחת'
   if (hours === 2) return 'שעתיים'

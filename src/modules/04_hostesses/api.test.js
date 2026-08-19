@@ -21,11 +21,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('@/supabaseClient', () => ({
   supabase: { from: vi.fn(), rpc: vi.fn() },
 }))
-vi.mock('@/api/email', () => ({ sendEmail: vi.fn() }))
+vi.mock('@/api/email', () => ({ sendEmail: vi.fn(), getEmailTemplate: vi.fn() }))
 vi.mock('@/api/geocode', () => ({ geocodeAddress: vi.fn() }))
 
 import { supabase } from '@/supabaseClient'
-import { sendEmail } from '@/api/email'
+import { sendEmail, getEmailTemplate } from '@/api/email'
 import { geocodeAddress } from '@/api/geocode'
 import {
   listStaffingOverview,
@@ -134,8 +134,10 @@ describe('releaseAssignment — {row, mail} ולעולם לא "הצלחה" שק�
       data: [{ ...row, assignment_status: 'released' }],
       error: null,
     })
-    queueTable(queues, 'params', { data: { param_value: releaseTemplate }, error: null })
     setupFrom(queues)
+    // ‏`getEmailTemplate` יובאה מ-`@/api/email` (אוחד 19/08/2026, CLONE-1) — לא עוד שאילתת
+    // `params` מקומית; ממוקקת ישירות במקום queueTable('params', …).
+    getEmailTemplate.mockResolvedValue(releaseTemplate)
   }
 
   it('כתיבה מצליחה + שליחה מצליחה ⇒ {row, mail:{sent:1}}', async () => {
@@ -255,12 +257,14 @@ describe('approveFinalAndRelease — releaseFailed', () => {
       data: [assignmentRow({ hostessId: 'dana', status: 'finally_approved' })],
       error: null,
     }) // 2. update דנה ⇒ אישור סופי — מצליח
-    queueTable(queues, 'params', { data: { param_value: finalApprovalTemplate }, error: null }) // 3. getEmailTemplate(finalApproval)
+    // 3. getEmailTemplate(finalApproval) — יובאה מ-`@/api/email` (אוחד 19/08/2026, CLONE-1),
+    // ממוקקת ישירות מתחת ולא עוד דרך תור 'params'.
     queueTable(queues, 'assignments', { data: afterApprovalRows, error: null }) // 4. listProjectAssignments בתוך sendFinalApprovalMails
     queueTable(queues, 'assignments', { data: afterApprovalRows, error: null }) // 5. refreshed = listProjectAssignments (אחרי האישורים)
     queueTable(queues, 'assignments', { data: [], error: null }) // 6. update מירה ⇒ שחרור-אוטומטי — נחסם ע"י RLS
     setupFrom(queues)
     sendEmail.mockResolvedValue({ logFailed: false })
+    getEmailTemplate.mockResolvedValue(finalApprovalTemplate)
 
     const result = await approveFinalAndRelease({ projectId: 501, hostessIds: ['dana'] })
 

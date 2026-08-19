@@ -1235,19 +1235,21 @@ function ClosedView({
 
       {/* שלושת ערכי-האירוע שנשמרו — כערכים, לא כפקדים מושבתים (הכרטיס ⑤). */}
       <div className="mt-3 grid grid-cols-1 gap-3.5 md:grid-cols-3">
-        <div className="flex flex-col gap-0.5">
+        {/* items-start בשלושת התאים (מוסכמת Cell(), ProjectCardPage.jsx) — בלעדיו הילדים
+            עוברים blockification בעמודת-flex ונמתחים לרוחב מלא, ומיישרים שמאלה ב-RTL. */}
+        <div className="flex flex-col items-start gap-0.5">
           <span className="text-xs text-slate-500">שעות ביצוע בפועל</span>
           <span className="text-sm font-semibold text-slate-800">
             {actualHours != null ? <Ltr>{String(actualHours)}</Ltr> : '—'} שעות
           </span>
         </div>
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col items-start gap-0.5">
           <span className="text-xs text-slate-500">כמות אורחים בפועל</span>
           <span className="text-sm font-semibold text-slate-800">
             {actualGuests != null ? <Ltr>{String(actualGuests)}</Ltr> : '—'} אורחים
           </span>
         </div>
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col items-start gap-0.5">
           <span className="text-xs text-slate-500">דוח-סיכום אירוע</span>
           {reportPath ? (
             <span className="text-sm">

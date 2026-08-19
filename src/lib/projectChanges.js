@@ -6,33 +6,19 @@
 // step 2.2 as-built).** ה-RPC מקבל `target_qty` (היעד) ומחשב את ה-delta בעצמו; אלה כאן
 // הן פונקציות-תצוגה שמראות למשתמשת **לפני** השליחה בדיוק את מה שהשרת יחשב, לא מקור-אמת שני.
 //
-// ⚠️ **הנחה מוצהרת (`הנחתי`):** `computeScopeChangeMoney` **אינה** מייבאת ישירות את
-// `toAgorot`/`lineAgorot` הפרטיים של `pricing.js` — הם אינם מיוצאים משם, ובכוונה: `pricing.js`
-// בונה הצעת-מחיר חדשה, וכל כמות בה חייבת להיות **חיובית** (`lineAgorot` מאפסת `qty ≤ 0` —
-// זו אינה החלטה אקראית, זו האינווריאנטה של בניית-הצעה). כאן ה-`delta_qty` חייב להיות **חתום**
-// (הפחתה = שלילי, ㉒ ב-processes-approved: *"positive = addition / negative = reduction"*),
-// ולכן לא ניתן לקרוא ל-`pricing.js` על השורות עצמן בלי לאבד הפחתות בשקט. מה שכן מיובא בפועל:
+// ⚠️ **הנחה מוצהרת (`הנחתי`):** `computeScopeChangeMoney` **אינה** מייבאת את `lineAgorot`
+// הפרטית של `pricing.js` — היא אינה מיוצאת משם, ובכוונה: `pricing.js` בונה הצעת-מחיר חדשה,
+// וכל כמות בה חייבת להיות **חיובית** (`lineAgorot` מאפסת `qty ≤ 0` — זו אינה החלטה אקראית,
+// זו האינווריאנטה של בניית-הצעה). כאן ה-`delta_qty` חייב להיות **חתום** (הפחתה = שלילי,
+// ㉒ ב-processes-approved: *"positive = addition / negative = reduction"*), ולכן לא ניתן
+// לקרוא ל-`lineAgorot` על השורות עצמן בלי לאבד הפחתות בשקט. `toAgorot`/`toShekels`/
+// `toFiniteNumber` **כן** מיובאות (אוחד 19/08/2026 — הן ממירות-מספר טהורות בלי אינווריאנטת
+// חיוביות, ולכן שכפולן היה כפילות-jscpd בלי סיבה). מה שכן מיובא גם קודם:
 // `resolveUnitPrice` ל-`tierCrossingNotice` (השוואת-מחיר בין מדרגות, לא מחייבת חתימה) ו-**אותו
 // סדר-פעולות ואותו חשבון-אגורות-שלמות** כמו `computeQuoteTotals` (`pricing.js:106-132`) —
 // סכום → הנחה → לפני-מע"מ → מע"מ → סה"כ, בעיגול-אגורה בכל שלב, לא float.
 import { weekdayOf } from '@/lib/dates'
-import { resolveUnitPrice } from '@/lib/pricing'
-
-// ── עבודה באגורות, כמו ב-pricing.js (§7.25+§7.74) ───────────────────────────
-// עותק מקומי במכוון, ולא ייבוא: `toAgorot`/`toShekels` הפרטיים של `pricing.js` אינם מיוצאים
-// (ר' ההערה למעלה) — ההכפלה כאן היא שתי שורות טריוויאליות, לא לוגיקה עסקית שיכולה לסטות.
-function toAgorot(shekels) {
-  const n = Number(shekels)
-  return Number.isFinite(n) ? Math.round(n * 100) : 0
-}
-function toShekels(agorot) {
-  return agorot / 100
-}
-function toFiniteNumber(value) {
-  if (value === null || value === undefined || value === '') return null
-  const n = Number(value)
-  return Number.isFinite(n) ? n : null
-}
+import { resolveUnitPrice, toAgorot, toShekels, toFiniteNumber } from '@/lib/pricing'
 
 // ── delta_qty וסכום-שורה ──────────────────────────────────────────────────
 

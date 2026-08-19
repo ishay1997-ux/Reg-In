@@ -9,6 +9,7 @@ import { supabase } from '@/supabaseClient'
 import { toError } from '@/lib/apiError'
 import { CANCELLATION_PARAM_NAMES } from '@/lib/projectCancellation'
 import { PROJECT_TEMPLATE_NAMES } from '@/lib/shiftEmails'
+import { getEmailTemplate } from '@/api/email'
 
 // שלוש שורות-המדרג מ-`params` (נזרעו בצעד 1.7). מוחזרות כמפה param_name⇒param_value.
 // ⚠️ פרמטר שלא חוזר אינו מקבל ברירת-מחדל כאן — הדיאלוג מציג מצב-שגיאה במקום מספר מומצא
@@ -24,17 +25,10 @@ export async function getCancellationParams() {
 
 // גוף תבנית "האירוע בוטל" — נקרא **ברגע השליחה**, לא בטעינת המסך (as-built של 2.8:
 // "Read the bodies from params at build/send time"). תבנית חסרה **עוצרת** ואינה נשלחת
-// כגוף ריק — אותו כלל כמו `getEmailTemplate` של מודול 4.
+// כגוף ריק — נאכף ע"י `getEmailTemplate` המשותף (`src/api/email.js`, אוחד 19/08/2026;
+// היה כאן עותק פרטי זהה-בייט שגם `06_projects/api.js` כבר לא מחזיק).
 export async function getCancellationEmailTemplate() {
-  const name = PROJECT_TEMPLATE_NAMES.cancellation
-  const { data, error } = await supabase
-    .from('params')
-    .select('param_value')
-    .eq('param_name', name)
-    .maybeSingle()
-  if (error) throw toError(error, 'שגיאה בטעינת תבנית המייל.')
-  if (!data?.param_value) throw toError({ code: 'PGRST116' }, `תבנית המייל "${name}" חסרה בהגדרות.`)
-  return data.param_value
+  return getEmailTemplate(PROJECT_TEMPLATE_NAMES.cancellation)
 }
 
 // כתובות-המייל של המשוחררות. `hostesses_to_notify` שה-RPC מחזיר נושא **בכוונה** רק

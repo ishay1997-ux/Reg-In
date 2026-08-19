@@ -40,7 +40,7 @@ export const NEUTRAL_PROXIMITY_SCORE = 0.5
 
 // תוצאות-הנוכחות של §11.3(2). 🚧 מ6 הוא שייצר אותן בפועל; כאן קיים החוזה בלבד,
 // כדי שהנרמול יהיה אמיתי ושבדיקות-הקבלה #2 ו-#5 יהיו ניתנות להרצה.
-export const ATTENDANCE_OUTCOMES = {
+const ATTENDANCE_OUTCOMES = {
   ARRIVED: 'הגיעה',
   SLIGHTLY_LATE: 'איחור_קצת',
   MODERATELY_LATE: 'איחור_בינוני',

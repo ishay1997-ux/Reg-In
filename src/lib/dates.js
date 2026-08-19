@@ -34,6 +34,25 @@ export function formatDate(isoDate, emptyText = '') {
   return `${day}/${month}/${year}`
 }
 
+// ליבה משותפת ל-formatTimestamp/formatTimestampFull (אוחד 19/08/2026 — jscpd תפס את בלוק
+// ה-Intl.DateTimeFormat כפול; `withYear` הוא ההבדל היחיד בין השתיים, וההרכבה הסופית של
+// כל אחת נשארת בפונקציה הציבורית שלה כי הנימוק ל"עם שנה מול בלי" שייך לקורא, לא לפירסור.
+function formatIsraelTimestampParts(iso, { withYear }) {
+  const instant = new Date(iso)
+  if (Number.isNaN(instant.getTime())) return null
+
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jerusalem',
+    day: '2-digit',
+    month: '2-digit',
+    ...(withYear ? { year: 'numeric' } : {}),
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(instant)
+  return (type) => parts.find((part) => part.type === type)?.value ?? ''
+}
+
 // חותמת-זמן ⇒ `DD/MM HH:MM` **בשעון ישראל**, כפי שהמוקאפ המאושר מצייר ("נשלח 03/08 08:00").
 // 🔴 **בלי שנה במכוון:** השורה עונה על *"מתי נשלח, וכמה זמן נשאר"* — שנה על שעון בן
 // 48 שעות היא רעש.
@@ -41,18 +60,8 @@ export function formatDate(isoDate, emptyText = '') {
 // בישראל רשום שם כ-22:10 של **אתמול**. הצגה גולמית הייתה מזיזה אותו יום אחורה.
 export function formatTimestamp(iso, emptyText = '') {
   if (!iso) return emptyText
-  const instant = new Date(iso)
-  if (Number.isNaN(instant.getTime())) return emptyText
-
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Jerusalem',
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(instant)
-  const at = (type) => parts.find((part) => part.type === type)?.value ?? ''
+  const at = formatIsraelTimestampParts(iso, { withYear: false })
+  if (!at) return emptyText
   return `${at('day')}/${at('month')} ${at('hour')}:${at('minute')}`
 }
 
@@ -62,19 +71,8 @@ export function formatTimestamp(iso, emptyText = '') {
 // ("נסגר ב-… על-ידי …", מודול 6 משטח 2), ותאריך בלי שנה שם הוא חידה ולא מידע.
 export function formatTimestampFull(iso, emptyText = '') {
   if (!iso) return emptyText
-  const instant = new Date(iso)
-  if (Number.isNaN(instant.getTime())) return emptyText
-
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Jerusalem',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(instant)
-  const at = (type) => parts.find((part) => part.type === type)?.value ?? ''
+  const at = formatIsraelTimestampParts(iso, { withYear: true })
+  if (!at) return emptyText
   return `${at('day')}/${at('month')}/${at('year')} ${at('hour')}:${at('minute')}`
 }
 

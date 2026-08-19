@@ -27,18 +27,22 @@ export const PRICING_PARAM_NAMES = {
 // ב-JavaScript ‏0.1+0.2 אינו 0.3, ובחישוב כסף זה בדיוק ההפרש בין 6,318.90 ל-6,318.89.
 // מספרים שלמים אין להם את הבעיה הזו. ההמרה חזרה לשקלים קורית רק בשורת ה-return.
 // מקביל ל-numeric(12,2) של ה-DB: שתי ספרות, לא יותר.
-function toAgorot(shekels) {
+// ‏מיוצאות (אוחד 19/08/2026) — `src/lib/projectChanges.js` החזיק עותק פרטי זהה-בייט של
+// שלושתן, כי אלה כאן לא היו מיוצאות בזמנו. `lineAgorot` שמתחת **אינה** מיוצאת ובכוונה:
+// היא מאפסת `qty ≤ 0`, וזו אינווריאנטת בניית-הצעה שאינה נכונה ל-delta_qty החתום של
+// projectChanges.js — ר' ההערה שם.
+export function toAgorot(shekels) {
   const n = Number(shekels)
   return Number.isFinite(n) ? Math.round(n * 100) : 0
 }
 
-function toShekels(agorot) {
+export function toShekels(agorot) {
   return agorot / 100
 }
 
 // ⚠️ ‏Number(null) ו-Number('') מחזירים **0**, לא NaN — לכן ריק נפסל במפורש לפני ההמרה.
 // בלי זה "מע"מ שלא נטען מה-DB" היה מתחזה בשקט למע"מ 0% ומייצר הצעה בלי מע"מ.
-function toFiniteNumber(value) {
+export function toFiniteNumber(value) {
   if (value === null || value === undefined || value === '') return null
   const n = Number(value)
   return Number.isFinite(n) ? n : null

@@ -27,6 +27,7 @@ import LoadingOrError from '@/components/LoadingOrError'
 import Money from '@/components/Money'
 import Ltr from '@/components/Ltr'
 import { cn } from '@/lib/utils'
+import { resolveProjectTone } from '@/lib/projects'
 import { formatDate, formatTimestamp, formatTimestampFull } from '@/lib/dates'
 import {
   ASSIGNMENT_STATUS_LABELS,
@@ -512,7 +513,9 @@ function CancelledVariant({ project, finalRows, canEdit, canReadHostesses }) {
         className="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-slate-600"
         data-testid="team-cancelled-fact"
       >
-        <StatusTag label="בוטל" tone="dashed" />{' '}
+        {/* הטון דרך resolveProjectTone — SSOT יחיד לתווית/צבע-סטטוס-פרויקט (כלל ברזל 14), אותו
+            דפוס כמו ProjectRow ב-CustomerDetailsPage.jsx; לא tone="dashed" מוקלד-קשיח. */}
+        <StatusTag label="בוטל" tone={resolveProjectTone('בוטל')} />{' '}
         {project?.cancelled_at && (
           <b>
             <Ltr>{formatTimestampFull(project.cancelled_at)}</Ltr>

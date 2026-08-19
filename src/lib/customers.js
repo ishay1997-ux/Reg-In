@@ -40,11 +40,24 @@ function matchesText(customer, rawText) {
 // לא-מסנן (משאיר את הרשומה). הפונקציה טהורה: הסף לתאריך "נוספו-לאחרונה" (createdAfter) מחושב ב-UI
 // ומועבר פנימה — כדי שהיא תישאר נבדקת בלי תלות בשעון.
 export function matchesCustomerFilters(customer, filters = {}) {
-  const { text, customerType, marketingConsent, minDiscount, hasDiscount, status, createdAfter } =
-    filters
+  const {
+    text,
+    customerType,
+    marketingConsent,
+    minDiscount,
+    hasDiscount,
+    status,
+    createdAfter,
+    dormantOnly,
+  } = filters
   // סטטוס: מסננים רק כשסופק ערך מפורש. toggle-הארכיון בעמוד שולח status='active' כברירת-מחדל
   // (מציג פעילים בלבד — סטיית-הכרעה מ-5.x, ר' §9 במדריך); כשמדליקים "הצג ארכיון" הוא לא נשלח כלל.
   if (status && customer.status !== status) return false
+  // "רדומים" (A3, מודול 6 · משטח 8) — `is_dormant` הוא ערך-נגזר שמוזרק לשורה **לפני** הסינון
+  // (בדיוק כמו `total_revenue`), כי הפונקציה הזו טהורה ואינה יכולה לחשב אותו בעצמה: הנוסחה
+  // (`isCustomerDormant`, src/lib/customerProjects.js) תלויה בנתוני-פרויקטים חוצי-לקוח וב"היום",
+  // ששניהם נטענים/מחושבים ברמת-העמוד. בוליאני-מפורש בלבד — כמו כל שאר הדגלים כאן.
+  if (dormantOnly === true && customer.is_dormant !== true) return false
   if (customerType && customer.customer_type !== customerType) return false
   // הסכמת-דיוור: מסננים רק כשהפילטר בוליאני מפורש; undefined/null = "לא אכפת", לא מסנן.
   if (typeof marketingConsent === 'boolean' && customer.marketing_consent !== marketingConsent) {
@@ -70,7 +83,8 @@ export function countActiveFilters(filters = {}) {
     (filters.marketingConsent === true ? 1 : 0) +
     (filters.minDiscount != null ? 1 : 0) +
     (typeof filters.hasDiscount === 'boolean' ? 1 : 0) +
-    (filters.newWithinDays ? 1 : 0)
+    (filters.newWithinDays ? 1 : 0) +
+    (filters.dormantOnly === true ? 1 : 0)
   )
 }
 

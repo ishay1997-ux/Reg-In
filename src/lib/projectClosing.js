@@ -7,6 +7,8 @@
 // 🚫 בכוונה: אין כאן שום חישוב-רווח, בונוס או נסיעות (AR-6 · ㉟ · R-2 — הכרעת-ישי).
 // מ6 מקפיא קלטים בלבד; מ8 גוזר מהם רווח ושכר בחלון שלו.
 
+import { minutesBetweenTimes } from '@/lib/projectCard'
+
 // ⚠️ ‏Number(null) ו-Number('') מחזירים 0, לא NaN — לכן ריק נפסל במפורש לפני ההמרה, בדיוק
 // כמו ב-src/lib/pricing.js. בלי זה שדה ריק היה מתחזה בשקט לערך 0 תקין.
 function toFiniteNumber(value) {
@@ -101,17 +103,14 @@ export function defaultHoursForRow(eventHours, wasManuallyOverridden) {
 // "שעות בפועל" (ט4-ב) והגבול העליון של שעות-פר-דיילת (event_hours + 2). חציית-חצות מודולו
 // יממה — 22:00–02:00 הן 4 שעות, לא ‎-20 (S-17). נוסף בצעד 3.5 — תוספת בלבד, שום ייצוא קיים
 // לא השתנה.
+// ⚠️ **הפירסור עצמו יובא מ-`src/lib/projectCard.js:minutesBetweenTimes`** (אוחד 19/08/2026,
+// jscpd) — קובץ זה phase-2-pinned ומקבל רק תוספת-import, בלי שינוי-התנהגות: `null` מ-
+// `minutesBetweenTimes` (קצה חסר) מתורגם כאן ל-24 בדיוק כמו קודם; זמנים זהים-בדיוק עדיין
+// מחזירים 0 שעות (לא 24) — ‏`minutesBetweenTimes` מחזירה 0 ולא `null` במקרה הזה.
 export function plannedEventHours(startTime, endTime) {
-  const toMinutes = (value) => {
-    const match = /^(\d{2}):(\d{2})/.exec(String(value ?? ''))
-    if (!match) return null
-    return Number(match[1]) * 60 + Number(match[2])
-  }
-  const start = toMinutes(startTime)
-  const end = toMinutes(endTime)
-  // אחת השעות חסרה ⇒ 24, בדיוק כמו ה-fallback בשרת — גבול מתירני עדיף על חסימה שגויה.
-  if (start === null || end === null) return 24
-  return ((end - start + 1440) % 1440) / 60
+  const minutes = minutesBetweenTimes(startTime, endTime)
+  if (minutes === null) return 24
+  return minutes / 60
 }
 
 // עוזר-ניסוח לרשימת "מה חסר" בעברית: יחיד כשה-count הוא 1, "N <רבים>" אחרת —

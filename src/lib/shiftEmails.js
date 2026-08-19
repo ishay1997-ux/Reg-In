@@ -56,6 +56,51 @@ function hhmm(value) {
   return typeof value === 'string' && value.length >= 5 ? value.slice(0, 5) : '—'
 }
 
+// ── placeholders משותפים ──────────────────────────────────────────────────
+// חמשת ה-placeholders שכל מייל-משמרת נושא — שם-דיילת + פרטי-האירוע (אוחד 19/08/2026,
+// jscpd: אותו בלוק חזר זהה-בייט בשלושה בונים). סדר-המפתחות באובייקט אינו משפיע על
+// `fillEmailTemplate` — הוא מחליף כל placeholder בנפרד (split/join, לא regex-מסודר).
+function shiftEventPlaceholders(hostess, project) {
+  return {
+    '[שם_דיילת]': hostess.full_name ?? '',
+    '[שם_פרויקט]': project?.event_name ?? '',
+    '[תאריך_אירוע]': formatDate(project?.final_event_date, '—'),
+    '[שעת_התחלה]': hhmm(project?.final_start_time),
+    '[שעת_סיום]': hhmm(project?.final_end_time),
+  }
+}
+
+// שלושת ה-placeholders הנוספים שמייל-עם-איש-קשר-בשטח נושא, מעל חמשת אלה — משותף בין
+// `buildFinalApprovalPayload` ו-`buildProjectDetailsChangedPayload` (8 placeholders
+// זהים-בייט, ר' ההערה על `buildProjectDetailsChangedPayload` למטה).
+function shiftContactPlaceholders(hostess, project, contact) {
+  return {
+    ...shiftEventPlaceholders(hostess, project),
+    // 🔴 **הכתובת המלאה** ולא העיר — זה מה שהדיילת מנווטת אליו בבוקר האירוע.
+    '[כתובת_אירוע_מלאה]': project?.final_location ?? '',
+    '[שם_מנהלת_פרויקט]': contact.name,
+    '[טלפון_מנהלת_פרויקט]': contact.phone,
+  }
+}
+
+// גוף+payload משותפים ל-`buildFinalApprovalPayload`/`buildProjectDetailsChangedPayload` —
+// שני מיילים "עם איש-קשר בשטח" שנבדלים רק בנושא (אוחד 19/08/2026, jscpd: אחרי איחוד
+// ה-placeholders למעלה הגופים נשארו זהים-בייט מלבד קריאת ה-subject). כל אחת מהן שומרת
+// על חתימת-הפרמטרים המקורית שלה (עם/בלי `= {}`) — ר' שתי העוטפות שמתחת.
+function buildContactPayload({ subject, template, hostess, project, contact }) {
+  if (!contact || !hostess?.email) return null
+
+  const body = fillEmailTemplate(template, shiftContactPlaceholders(hostess, project, contact))
+  if (!body) return null
+
+  return buildEmailPayload({
+    to: hostess.email,
+    subject,
+    body,
+    requireAttachment: false,
+  })
+}
+
 // נושא-הביטול. **בלי ייחוס** — כמו גוף-המייל עצמו (§ למטה) — כי `cancel_type` נושא שלושה
 // ערכים (`customer`/`force_majeure`/`other`, `schema.sql:1146`) והנושא אינו יכול לבחור ביניהם.
 export function projectCancellationSubject(project) {
@@ -116,11 +161,7 @@ export function buildShiftInvitePayload({ template, hostess, project, hourlyRate
   if (!confirmUrl || !hostess?.email) return null
 
   const body = fillEmailTemplate(template, {
-    '[שם_דיילת]': hostess.full_name ?? '',
-    '[שם_פרויקט]': project?.event_name ?? '',
-    '[תאריך_אירוע]': formatDate(project?.final_event_date, '—'),
-    '[שעת_התחלה]': hhmm(project?.final_start_time),
-    '[שעת_סיום]': hhmm(project?.final_end_time),
+    ...shiftEventPlaceholders(hostess, project),
     '[עיר_אירוע]': project?.final_location ?? '',
     '[תעריף_שעתי_דיילת]': String(hourlyRate ?? ''),
     '[לינק_אישור_משמרת]': confirmUrl,
@@ -145,26 +186,12 @@ export function buildShiftInvitePayload({ template, hostess, project, hourlyRate
 // placeholder עבורה בכלל"*), הוא **טעון הכרעת-ישי** (§7.89: כל placeholder לגופו), ותיקונו
 // הוא שינוי-טקסט ב-`params` ⇒ **מיגרציה**. עד אז: מסומנת אחראית ⇒ הערך נכון, התווית לא.
 export function buildFinalApprovalPayload({ template, hostess, project, contact }) {
-  if (!contact || !hostess?.email) return null
-
-  const body = fillEmailTemplate(template, {
-    '[שם_דיילת]': hostess.full_name ?? '',
-    '[שם_פרויקט]': project?.event_name ?? '',
-    '[תאריך_אירוע]': formatDate(project?.final_event_date, '—'),
-    '[שעת_התחלה]': hhmm(project?.final_start_time),
-    '[שעת_סיום]': hhmm(project?.final_end_time),
-    // 🔴 **הכתובת המלאה** ולא העיר — זה מה שהדיילת מנווטת אליו בבוקר האירוע.
-    '[כתובת_אירוע_מלאה]': project?.final_location ?? '',
-    '[שם_מנהלת_פרויקט]': contact.name,
-    '[טלפון_מנהלת_פרויקט]': contact.phone,
-  })
-  if (!body) return null
-
-  return buildEmailPayload({
-    to: hostess.email,
+  return buildContactPayload({
     subject: finalApprovalSubject(project),
-    body,
-    requireAttachment: false,
+    template,
+    hostess,
+    project,
+    contact,
   })
 }
 
@@ -296,24 +323,11 @@ export function buildFeedbackSurveyPayload({ template, surveyUrl, contact, proje
 // אינה כאן** — קביעת "האם לשלוח" (מיקום/שעות בלבד, לא תאריך — ㉑ מאפס אישורים ומזמינה מחדש
 // כשהתאריך משתנה) היא של הקוד שקורא לבונה הזה, לא של הבונה עצמו.
 export function buildProjectDetailsChangedPayload({ template, hostess, project, contact } = {}) {
-  if (!contact || !hostess?.email) return null
-
-  const body = fillEmailTemplate(template, {
-    '[שם_דיילת]': hostess.full_name ?? '',
-    '[שם_פרויקט]': project?.event_name ?? '',
-    '[תאריך_אירוע]': formatDate(project?.final_event_date, '—'),
-    '[שעת_התחלה]': hhmm(project?.final_start_time),
-    '[שעת_סיום]': hhmm(project?.final_end_time),
-    '[כתובת_אירוע_מלאה]': project?.final_location ?? '',
-    '[שם_מנהלת_פרויקט]': contact.name,
-    '[טלפון_מנהלת_פרויקט]': contact.phone,
-  })
-  if (!body) return null
-
-  return buildEmailPayload({
-    to: hostess.email,
+  return buildContactPayload({
     subject: projectDetailsChangedSubject(project),
-    body,
-    requireAttachment: false,
+    template,
+    hostess,
+    project,
+    contact,
   })
 }

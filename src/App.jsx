@@ -36,6 +36,8 @@ import CustomerDetailsPage from '@/modules/02_customers/CustomerDetailsPage'
 import QuoteBuilderPage from '@/modules/03_quotes/QuoteBuilderPage'
 import QuotesPage from '@/modules/03_quotes/QuotesPage'
 import HostessesPage from '@/modules/04_hostesses/HostessesPage'
+import ProjectsPage from '@/modules/06_projects/ProjectsPage'
+import ProjectCardPage from '@/modules/06_projects/ProjectCardPage'
 import PublicConfirmPage from '@/modules/04_hostesses/PublicConfirmPage'
 import WelcomePage from '@/components/WelcomePage'
 import UnderConstruction from '@/components/UnderConstruction'
@@ -135,11 +137,22 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  {/* מודול 6 (צעד 4.1) — השומר היה נכון מהיום הראשון; הוחלף רק ה-element.
+                      הוקדם מ-phase-4 בורדיקט בנה-עכשיו: קישור "לכרטיס →" ממשטח 8 היה 404 חי,
+                      והאפיון אוסר זאת במפורש (screens-approved §⑨). */}
                   <Route
                     path="projects"
                     element={
                       <ProtectedRoute allow="פרויקטים">
-                        <UnderConstruction moduleName="פרויקטים" />
+                        <ProjectsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="projects/:id"
+                    element={
+                      <ProtectedRoute allow="פרויקטים">
+                        <ProjectCardPage />
                       </ProtectedRoute>
                     }
                   />

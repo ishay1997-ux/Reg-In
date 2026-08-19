@@ -25,6 +25,9 @@ import {
   resolveShiftContact,
 } from '@/lib/shiftEmails'
 import { sendEmail, getEmailTemplate } from '@/api/email'
+// ‏`writeInviteToken` — `assignments` היא טבלת מודול 4; הכתיבה גרה שם ומיובאת מכאן (אוחד
+// 19/08/2026, jscpd: אותו בלוק Supabase חזר זהה-בייט גם ב-`sendDateChangeReinvites` שמתחת).
+import { writeInviteToken } from '@/modules/04_hostesses/api'
 
 // ---- שגיאות-כתיבה ----
 
@@ -292,14 +295,14 @@ export async function sendDateChangeReinvites(project, hostessIds, origin) {
       continue
     }
     const nowIso = new Date().toISOString()
-    const { data: updated, error: updateError } = await supabase
-      .from('assignments')
-      .update({ invite_token: token, invite_sent_at: nowIso })
-      .eq('project_id', row.project_id)
-      .eq('hostess_id', row.hostess_id)
-      .eq('assignment_number', row.assignment_number)
-      .select()
-    if (updateError || !updated?.length) {
+    const wrote = await writeInviteToken({
+      projectId: row.project_id,
+      hostessId: row.hostess_id,
+      assignmentNumber: row.assignment_number,
+      token,
+      nowIso,
+    })
+    if (!wrote) {
       outcome.failed += 1
       continue
     }
