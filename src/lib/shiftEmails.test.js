@@ -14,6 +14,10 @@ import {
   buildProjectDetailsChangedPayload,
   resolveShiftContact,
   confirmUrlFor,
+  projectReportSubject,
+  feedbackSurveySubject,
+  buildProjectReportPayload,
+  buildFeedbackSurveyPayload,
 } from './shiftEmails'
 
 // ⚠️ **העתק מדויק של הערך שבמסד** (`תבנית_זימון_משמרת`, מיגרציה `20260723112000`) — כדי
@@ -394,5 +398,88 @@ describe('buildProjectDetailsChangedPayload — עדכון בעוד האישור
     })
     expect(payload).not.toBe(null)
     expect(payload.body).not.toMatch(/\[[^\]\n]+\]/)
+  })
+})
+
+// ── מודול 6 · צעד 3.5 — שני מיילי-הסגירה ללקוח ─────────────────────────────
+
+describe('projectReportSubject / feedbackSurveySubject — נושאי מיילי-הסגירה', () => {
+  it('שני הנושאים נבנים משם-האירוע ושונים זה מזה', () => {
+    expect(projectReportSubject(project)).toBe('דוח-סיכום האירוע — כנס לקוחות שנתי')
+    expect(feedbackSurveySubject(project)).toBe('סקר שביעות רצון — כנס לקוחות שנתי')
+  })
+})
+
+describe('buildProjectReportPayload — דוח-הסיכום ללקוח (project_report · מצורף חובה)', () => {
+  const contact = { contact_name: 'שרית מזרחי', email: 'sarit@hadera.test' }
+
+  it('גוף מלא בלי placeholder שנשאר, נמען מהלקוח, והקובץ מצורף', () => {
+    const payload = buildProjectReportPayload({
+      contact,
+      project,
+      filename: 'summary.pdf',
+      attachmentBase64: 'QUJD',
+    })
+    expect(payload).not.toBe(null)
+    expect(payload.to).toBe('sarit@hadera.test')
+    expect(payload.filename).toBe('summary.pdf')
+    expect(payload.pdf_base64).toBe('QUJD')
+    expect(payload.body).toContain('שרית מזרחי')
+    expect(payload.body).toContain('כנס לקוחות שנתי')
+    expect(payload.body).not.toMatch(/\[[^\]\n]+\]/)
+  })
+
+  it('🔴 בלי מצורף אין מייל — requireAttachment נשאר ברירת-המחדל true (AR-8)', () => {
+    expect(buildProjectReportPayload({ contact, project, filename: 'summary.pdf' })).toBe(null)
+  })
+
+  it('בלי כתובת-מייל ⇒ null — הקורא מסרב לשלוח ואומר למה', () => {
+    expect(
+      buildProjectReportPayload({
+        contact: { contact_name: 'שרית מזרחי', email: '' },
+        project,
+        filename: 'x.pdf',
+        attachmentBase64: 'QUJD',
+      }),
+    ).toBe(null)
+  })
+})
+
+describe('buildFeedbackSurveyPayload — התבנית הזרועה של מודול 3, שלושת ה-placeholders שלה', () => {
+  // העתק מדויק של הערך שבמסד (`תבנית_מייל_משוב_לקוח`, 20260723112000:79) — הבדיקה נופלת
+  // אם ה-placeholders בתבנית ישתנו בלי עדכון-בונה.
+  const SURVEY_TEMPLATE = `שלום [שם_איש_קשר],
+שמחנו לקחת חלק בהפקת האירוע '[שם_פרויקט]'! כדי שנוכל להמשיך להשתפר ולהעניק לך את השירות הטוב ביותר, נודה לך אם תקדיש דקה מזמנך למילוי סקר שביעות רצון קצר:
+[לינק_לשאלון_שביעות_רצון]
+תודה רבה ולהתראות באירוע הבא,
+צוות REG-IN.`
+  const contact = { contact_name: 'שרית מזרחי', email: 'sarit@hadera.test' }
+
+  it('שלושת ה-placeholders מתמלאים, הקישור מהפרמטר הזרוע, ואין מצורף', () => {
+    const payload = buildFeedbackSurveyPayload({
+      template: SURVEY_TEMPLATE,
+      surveyUrl: 'https://forms.gle/YFJobqmgpBCqf1x87',
+      contact,
+      project,
+    })
+    expect(payload).not.toBe(null)
+    expect(payload.body).toContain('https://forms.gle/YFJobqmgpBCqf1x87')
+    expect(payload.body).toContain('שרית מזרחי')
+    expect(payload.body).not.toMatch(/\[[^\]\n]+\]/)
+    expect(payload.pdf_base64).toBe('')
+  })
+
+  it('בלי קישור-סקר או בלי כתובת ⇒ null — לא יוצא מייל עם [לינק] גולמי', () => {
+    expect(
+      buildFeedbackSurveyPayload({ template: SURVEY_TEMPLATE, surveyUrl: '', contact, project }),
+    ).toBe(null)
+    expect(
+      buildFeedbackSurveyPayload({
+        template: SURVEY_TEMPLATE,
+        surveyUrl: 'https://forms.gle/x',
+        contact: { contact_name: 'א', email: '' },
+        project,
+      }),
+    ).toBe(null)
   })
 })

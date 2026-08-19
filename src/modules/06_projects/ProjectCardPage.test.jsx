@@ -184,8 +184,9 @@ describe('ProjectCardPage — מעטפת ואזור-זהות', () => {
     expect(within(owner).getByText('ishay1997@gmail.com')).toBeInTheDocument()
     const feedback = screen.getByTestId('project-cell-feedback')
     expect(within(feedback).getByText('טרם התקבל משוב')).toBeInTheDocument()
+    // "נשלח" ולא "יוצא" — תיקון-הנוסח של צעד 3.5 (מדריך-מיקרו :961).
     expect(
-      within(feedback).getByText('הסקר יוצא בסגירת האירוע · הציון והסיבה מוזנים במסך הכספים'),
+      within(feedback).getByText('הסקר נשלח בסגירת האירוע · הציון והסיבה מוזנים במסך הכספים'),
     ).toBeInTheDocument()
   })
 
@@ -324,9 +325,9 @@ describe('ProjectCardPage — שלושת מצבי לשונית "סגירת אי�
     const tab = screen.getByTestId('project-tab-closing')
     expect(tab).toBeEnabled()
     fireEvent.click(tab)
-    const stamp = screen.getByTestId('project-panel-closing-stamp')
-    expect(stamp.textContent).toContain('נסגר ב-')
-    expect(stamp.textContent).toContain('dana@regin.co.il')
+    // מסשן ג' הלשונית מרנדרת את ClosingTab עצמו — החותמת ("נסגר ב-… על-ידי …") והתצוגה
+    // הנעולה נבדקות בבדיקות-הרכיב שלו (closing-stamp); כאן נבדק שהעמוד מרכיב אותו ולא מעלים.
+    expect(screen.getByTestId('project-panel-closing')).toBeInTheDocument()
   })
 })
 

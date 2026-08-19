@@ -55,6 +55,9 @@ import {
 import EditProjectDetailsDialog from './EditProjectDetailsDialog'
 import ScopeChangeDialog from './ScopeChangeDialog'
 import CancelProjectDialog from './CancelProjectDialog'
+import LogisticsTab from './LogisticsTab'
+import TeamTab from './TeamTab'
+import ClosingTab from './ClosingTab'
 
 // הסטטוסים שאחרי הסגירה התפעולית — "שינוי תכולה" מושבת-ומנומק עליהם (חסימת-מצב, ㉔),
 // בשונה מחסימת-הרשאה שמעלימה. ‏cancelled מטופל בנפרד (הכפתור הראשי יורד מפרויקט מת).
@@ -306,7 +309,18 @@ export default function ProjectCardPage() {
 
       <div className="rounded-xl border border-slate-200 bg-white px-4 pb-3.5 shadow-sm">
         <TabsBar tab={effectiveTab} onSelect={setTab} closing={closing} />
-        <TabPanel tab={effectiveTab} closing={closing} project={project} />
+        <TabPanel
+          tab={effectiveTab}
+          project={project}
+          overviewRow={overviewRow}
+          canEdit={canEdit}
+          canReadHostesses={canReadHostesses}
+          onScopeChange={() => {
+            setScopeSession((s) => s + 1)
+            setScopeOpen(true)
+          }}
+          onSaved={refresh}
+        />
       </div>
 
       {canEdit && (
@@ -663,43 +677,49 @@ function TabsBar({ tab, onSelect, closing }) {
   )
 }
 
-function TabPanel({ tab, closing, project }) {
+// חיווט הלשוניות (נסגר בסשן ג'): שלושת התכנים הם רכיבי 3.3/3.4/3.5; מצב-הסגירה
+// (open/closed) מוכרע בתוך ClosingTab עצמו — כולל התצוגה הנעולה עם החותמת ו"שליחה חוזרת".
+function TabPanel({
+  tab,
+  project,
+  overviewRow,
+  canEdit,
+  canReadHostesses,
+  onScopeChange,
+  onSaved,
+}) {
   if (tab === TAB_KEYS.logistics) {
-    // תוכן הלשונית — צעד 3.3 (משטח 3). עד אז: שלד — מונה ריק גרוע ממונה שטוען.
+    // הלשונית קריאה-בלבד וחתימתה ({ project }) — כפתור "שינוי תכולה" שלה הוסר בהכרעת-
+    // ישי-מואצלת 19/08 (הכותרת נושאת את הראשי היחיד), ולכן אין לה canEdit/onScopeChange.
     return (
       <div className="pt-3" data-testid="project-panel-logistics">
-        <LoadingOrError loading skeleton={{ variant: 'table', rows: 3, cols: 4 }} />
+        <LogisticsTab project={project} />
       </div>
     )
   }
   if (tab === TAB_KEYS.team) {
-    // תוכן הלשונית — צעד 3.4 (משטח 4).
     return (
       <div className="pt-3" data-testid="project-panel-team">
-        <LoadingOrError loading skeleton={{ variant: 'table', rows: 3, cols: 5 }} />
+        <TeamTab
+          project={project}
+          overviewRow={overviewRow}
+          canEdit={canEdit}
+          canReadHostesses={canReadHostesses}
+          onScopeChange={onScopeChange}
+        />
       </div>
     )
   }
-  if (closing.mode === 'closed') {
-    // אחרי הסגירה התפעולית הלשונית נשארת, קריאה-בלבד, עם חותמת מי-ומתי — היעלמותה הייתה
-    // מוחקת מהמסך את מה שדנה זה-עתה הזינה (screens-approved:1309). שדות 3.5 בקריאה-בלבד
-    // יתווספו בצעד 3.5.
-    return (
-      <div className="pt-3 text-xs text-slate-500" data-testid="project-panel-closing-stamp">
-        נסגר ב-<Ltr>{formatTimestampFull(project.operationally_closed_at)}</Ltr>
-        {project.operationally_closed_by && (
-          <>
-            {' '}
-            על-ידי <Ltr>{project.operationally_closed_by}</Ltr>
-          </>
-        )}
-      </div>
-    )
-  }
-  // ‏event_finished — הלשונית פעילה; התוכן עצמו — צעד 3.5 (משטח 5).
   return (
     <div className="pt-3" data-testid="project-panel-closing">
-      <LoadingOrError loading skeleton={{ variant: 'fields', rows: 3 }} />
+      {/* ClosingTab גוזר את מצבו (פתוח/נעול) בעצמו מ-project — אין prop של mode. */}
+      <ClosingTab
+        project={project}
+        overviewRow={overviewRow}
+        canEdit={canEdit}
+        canReadHostesses={canReadHostesses}
+        onSaved={onSaved}
+      />
     </div>
   )
 }

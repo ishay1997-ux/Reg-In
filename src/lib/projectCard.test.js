@@ -103,11 +103,21 @@ describe('המרות תאריך', () => {
 })
 
 describe('feedbackCell — ארבעה ניסוחים + S-22', () => {
-  it('not_sent — "טרם התקבל משוב" עם שורת-ההסבר', () => {
+  it('not_sent — "טרם התקבל משוב" עם שורת-ההסבר (תיקון-הנוסח של 3.5: "נשלח", לא "יוצא")', () => {
     const cell = feedbackCell({ feedback_status: 'not_sent' })
     expect(cell.kind).toBe('empty')
     expect(cell.value).toBe('טרם התקבל משוב')
-    expect(cell.sub).toBe('הסקר יוצא בסגירת האירוע · הציון והסיבה מוזנים במסך הכספים')
+    expect(cell.sub).toBe('הסקר נשלח בסגירת האירוע · הציון והסיבה מוזנים במסך הכספים')
+  })
+
+  it('not_sent אחרי חותמת-הסגירה — שורת-המשנה אומרת שהשליחה לא הצליחה (מדריך-מיקרו :961)', () => {
+    const cell = feedbackCell({
+      feedback_status: 'not_sent',
+      operationally_closed_at: '2026-08-19T10:00:00Z',
+    })
+    expect(cell.kind).toBe('empty')
+    expect(cell.value).toBe('טרם התקבל משוב')
+    expect(cell.sub).toBe('מייל הסקר לא יצא בסגירה — שליחה חוזרת מלשונית סגירת האירוע')
   })
 
   it('sent / no_response — שני מצבים שדנה מתנהגת בהם אחרת', () => {

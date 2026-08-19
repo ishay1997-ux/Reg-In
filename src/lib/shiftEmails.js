@@ -218,6 +218,76 @@ export function buildProjectCancellationPayload({ template, hostess, project } =
   })
 }
 
+// ── מודול 6 · צעד 3.5 — שני מיילי-הסגירה ללקוח (AR-5: אחרי ה-commit, לעולם לא בתוכו) ──
+
+// תבנית סקר-המשוב ופרמטר-הקישור — שניהם כבר זרועים חיים (מיגרציית מודול 3,
+// `20260723112000`), ו-db_roadmap §5 אוסר במפורש לזרוע אותם שוב: `[לינק_לשאלון_שביעות_רצון]`
+// הוא ה-placeholder שבתוך התבנית, ו-`קישור_בסיס_סקר_לקוחות` הוא שם-הפרמטר שנושא את ה-URL.
+export const FEEDBACK_TEMPLATE_NAME = 'תבנית_מייל_משוב_לקוח'
+export const SURVEY_LINK_PARAM_NAME = 'קישור_בסיס_סקר_לקוחות'
+
+export function projectReportSubject(project) {
+  return `דוח-סיכום האירוע — ${project?.event_name ?? ''}`.trim()
+}
+
+export function feedbackSurveySubject(project) {
+  return `סקר שביעות רצון — ${project?.event_name ?? ''}`.trim()
+}
+
+// גוף מייל דוח-הסיכום — 🔴 הנחתי: אין שורת-תבנית זרועה לדוח-הסיכום (מיגרציית M6-12 זרעה
+// בדיוק שתי תבניות, שתיהן לדיילות; אף מסמך אינו מגדיר תבנית לדוח), ולכן הגוף חי כאן בקוד,
+// בסגנון תבנית-החשבונית הקיימת ("מצורפת בזאת…"). placeholder-פורמט נשמר כדי שהמרה עתידית
+// לשורת-params תהיה העתקה, לא שכתוב. ההמרה ל-HTML-עם-כיווניות קורית ב-buildEmailPayload
+// (plainTextToEmailHtml) — כמו כל מייל אחר.
+const PROJECT_REPORT_BODY_TEMPLATE = `שלום [שם_איש_קשר],
+מצורף בזאת דוח-סיכום האירוע '[שם_פרויקט]' שהתקיים בתאריך [תאריך_אירוע].
+נשמח לעמוד לרשותך בכל שאלה על האירוע ועל הדוח.
+בברכה,
+צוות REG-IN.`
+
+// מייל דוח-הסיכום ללקוח: entityType 'project_report', **המצורף חובה** (AR-8) — הקובץ מורד
+// מה-bucket ומצורף כ-base64; 🚫 לעולם לא קישור חתום (spec §12⑬(ג): קישור שפג אצל הלקוח
+// נראה כמו תקלה). requireAttachment נשאר ברירת-המחדל true של המנוע — בכוונה לא מכובה.
+export function buildProjectReportPayload({ contact, project, filename, attachmentBase64 } = {}) {
+  if (!contact?.email) return null
+
+  const body = fillEmailTemplate(PROJECT_REPORT_BODY_TEMPLATE, {
+    '[שם_איש_קשר]': contact.contact_name ?? '',
+    '[שם_פרויקט]': project?.event_name ?? '',
+    '[תאריך_אירוע]': formatDate(project?.final_event_date, '—'),
+  })
+  if (!body) return null
+
+  return buildEmailPayload({
+    to: contact.email,
+    subject: projectReportSubject(project),
+    body,
+    filename,
+    attachmentBase64,
+  })
+}
+
+// מייל סקר-המשוב: התבנית הזרועה של מודול 3, שלושת ה-placeholders שלה בדיוק —
+// `[שם_איש_קשר]` · `[שם_פרויקט]` · `[לינק_לשאלון_שביעות_רצון]` (ערכו: הפרמטר הזרוע,
+// קישור קבוע — הכרעת-ישי 13/08: הטופס קיים והקישור קבוע). טקסט בלבד ⇒ requireAttachment:false.
+export function buildFeedbackSurveyPayload({ template, surveyUrl, contact, project } = {}) {
+  if (!contact?.email || !surveyUrl) return null
+
+  const body = fillEmailTemplate(template, {
+    '[שם_איש_קשר]': contact.contact_name ?? '',
+    '[שם_פרויקט]': project?.event_name ?? '',
+    '[לינק_לשאלון_שביעות_רצון]': surveyUrl,
+  })
+  if (!body) return null
+
+  return buildEmailPayload({
+    to: contact.email,
+    subject: feedbackSurveySubject(project),
+    body,
+    requireAttachment: false,
+  })
+}
+
 // מייל עדכון-פרטי-האירוע — יוצא רק כששיבוצה **נשאר בתוקף** (מיקום או שעות השתנו), ולכן
 // דורש איש-קשר תקין בדיוק כמו האישור-הסופי.
 //

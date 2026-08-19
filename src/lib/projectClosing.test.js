@@ -9,7 +9,25 @@ import {
   defaultHoursForRow,
   hostessActualCost,
   isNoShowAttendance,
+  plannedEventHours,
 } from '@/lib/projectClosing'
+
+describe('plannedEventHours — הגזירה שה-RPC מריץ בשרת (2.3 as-built ③), תוספת צעד 3.5', () => {
+  it('16:00–22:00 ⇒ 6 שעות; 18:00–22:30 ⇒ 4.5', () => {
+    expect(plannedEventHours('16:00:00', '22:00:00')).toBe(6)
+    expect(plannedEventHours('18:00:00', '22:30:00')).toBe(4.5)
+  })
+
+  it('חציית-חצות מודולו יממה — 22:00–02:00 הן 4 שעות, לא ‎-20 (S-17)', () => {
+    expect(plannedEventHours('22:00:00', '02:00:00')).toBe(4)
+  })
+
+  it('שעה חסרה ⇒ 24, בדיוק כמו ה-fallback של השרת — גבול מתירני, לא חסימה שגויה', () => {
+    expect(plannedEventHours(null, '22:00:00')).toBe(24)
+    expect(plannedEventHours('16:00:00', null)).toBe(24)
+    expect(plannedEventHours(null, null)).toBe(24)
+  })
+})
 
 describe('ATTENDANCE_OPTIONS — spec.md §1.4, סדר-המוקאפ המדויק', () => {
   it('שבע אפשרויות, בדיוק, באותו סדר כמו הטבלה המאושרת', () => {

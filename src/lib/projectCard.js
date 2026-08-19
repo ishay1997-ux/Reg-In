@@ -99,7 +99,14 @@ export function closingTabState(project, todayIso) {
 // והתיקון של S-22: completed עם ציון NULL הוא שורה חוקית בסכמה (העמודות בלתי-תלויות)
 // ולכן מקבל נוסח משלו במקום להציג ציון שאינו קיים.
 export const FEEDBACK_EMPTY_VALUE = 'טרם התקבל משוב'
-export const FEEDBACK_EMPTY_SUB = 'הסקר יוצא בסגירת האירוע · הציון והסיבה מוזנים במסך הכספים'
+// "נשלח" ולא "יוצא" — תיקון-הנוסח של צעד 3.5 (מדריך-המיקרו :961): הסקר נשלח מהלקוח-בדפדפן
+// אחרי ה-commit (AR-5), לא "יוצא" מעצמו מתוך הסגירה, והנוסח הישן סתר את מסלול-הכשל.
+export const FEEDBACK_EMPTY_SUB = 'הסקר נשלח בסגירת האירוע · הציון והסיבה מוזנים במסך הכספים'
+// not_sent אחרי שחותמת-הסגירה קיימת = השליחה לא הצליחה — והכרטיס חייב לומר זאת במקום
+// לרמוז שהסקר בדרך (אותה שורה במדריך: "must say the send did not succeed"). ההמשך —
+// בקרת "שליחה חוזרת" שבלשונית הסגירה.
+export const FEEDBACK_NOT_SENT_AFTER_CLOSE_SUB =
+  'מייל הסקר לא יצא בסגירה — שליחה חוזרת מלשונית סגירת האירוע'
 
 export function feedbackCell(project) {
   const status = project?.feedback_status ?? 'not_sent'
@@ -116,6 +123,10 @@ export function feedbackCell(project) {
     }
   }
   // not_sent — המצב המצויר: אפור, במילים, לעולם לא 0 ולא 0★ (אין ציון-רפאים).
+  // אחרי חותמת-הסגירה not_sent הוא עדות לכשל-שליחה, ושורת-המשנה אומרת זאת ביושר.
+  if (project?.operationally_closed_at) {
+    return { kind: 'empty', value: FEEDBACK_EMPTY_VALUE, sub: FEEDBACK_NOT_SENT_AFTER_CLOSE_SUB }
+  }
   return { kind: 'empty', value: FEEDBACK_EMPTY_VALUE, sub: FEEDBACK_EMPTY_SUB }
 }
 

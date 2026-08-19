@@ -95,6 +95,25 @@ export function defaultHoursForRow(eventHours, wasManuallyOverridden) {
   return toFiniteNumber(eventHours)
 }
 
+// שעות-האירוע המתוכננות מ-final_start_time/final_end_time — אותה גזירה שה-RPC מריץ בשרת
+// (↳ as-built ③ של צעד 2.3: "event hours from final_end_time − final_start_time, cross-midnight
+// handled, fallback 24 when either time is NULL"). הערך משמש פעמיים: ברירת-המחדל של עמודת
+// "שעות בפועל" (ט4-ב) והגבול העליון של שעות-פר-דיילת (event_hours + 2). חציית-חצות מודולו
+// יממה — 22:00–02:00 הן 4 שעות, לא ‎-20 (S-17). נוסף בצעד 3.5 — תוספת בלבד, שום ייצוא קיים
+// לא השתנה.
+export function plannedEventHours(startTime, endTime) {
+  const toMinutes = (value) => {
+    const match = /^(\d{2}):(\d{2})/.exec(String(value ?? ''))
+    if (!match) return null
+    return Number(match[1]) * 60 + Number(match[2])
+  }
+  const start = toMinutes(startTime)
+  const end = toMinutes(endTime)
+  // אחת השעות חסרה ⇒ 24, בדיוק כמו ה-fallback בשרת — גבול מתירני עדיף על חסימה שגויה.
+  if (start === null || end === null) return 24
+  return ((end - start + 1440) % 1440) / 60
+}
+
 // עוזר-ניסוח לרשימת "מה חסר" בעברית: יחיד כשה-count הוא 1, "N <רבים>" אחרת —
 // 🔴 הנחתי (לא מעוגן): רק הצירוף "N סימוני-איכות" מצוטט מילה-במילה ב-spec.md §3.3/
 // screens-approved.md:1415 — צורת-היחיד וכל שאר הקטגוריות למטה הן ניסוח סביר שלי,
