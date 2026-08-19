@@ -110,7 +110,9 @@ export function gapSentence(project) {
     return 'הדיילת היחידה אישרה זמינות וממתינה לאישור סופי ממך'
   }
   if (pending > 0) return pendingInvitesSentence(pending, gap)
-  if (gap > 0) return `חסרות ${gap}`
+  // לשון-יחיד לחוסר בודד — "חסרות 1" היא עברית שבורה, ובאותה שורה ממש עמודת-הדיילות
+  // אומרת "חסרה 1" (gapWord). אותה תבנית-יחיד שאושרה פעמיים (נוסחי-הולידציה · זימון בודד).
+  if (gap > 0) return gapWord(gap)
   // חוסר-לוגיסטיקה בלבד (אין שורה חיה כזאת היום) — נוסח ממתין לאישור-ישי, ר' יומן-הסטיות.
   return 'הלוגיסטיקה טרם מוכנה'
 }
@@ -142,4 +144,176 @@ function staffingMetric3(confirmed, required) {
 function logisticsComplete(project) {
   const total = project.logistics_total ?? 0
   return total === 0 || (project.logistics_ready ?? 0) === total
+}
+
+// ── נגזרות מבט-העל (משטח 1) — כל מספר, סדר ומשפט של המסך נולד כאן, לא בקומפוננטה (כלל 14) ──
+
+// הסטטוסים שיצאו מידיה של מנהלת הפרויקטים — אצל הכספים או סגורים סופית. שורה כזאת
+// במבט-העל מעומעמת ומדדי-המוכנות שלה מוצגים '—', כי מוכנות שם חסרת משמעות (הערת-המוקאפ
+// שמעל לשונית "הכול"). לא מיוצא — הצרכנים עוברים דרך overviewRowKind/staffingCell.
+const HANDED_OFF_STATUSES = ['awaiting_invoice', 'awaiting_payment', 'finished', 'cancelled']
+
+// הפרש ימי-לוח בין תאריך-האירוע להיום (שלילי = עבר). Date.parse על T00:00:00Z בשני הצדדים —
+// פענוח מקומי היה מזיז את התאריך סביב חצות בחלק מאזורי-הזמן בלבד (המוקש של weekdayOf ב-dates.js).
+export function eventDaysFromToday(isoDate, todayIso) {
+  const event = Date.parse(`${isoDate}T00:00:00Z`)
+  const today = Date.parse(`${todayIso}T00:00:00Z`)
+  if (Number.isNaN(event) || Number.isNaN(today)) return null
+  return Math.round((event - today) / 86400000)
+}
+
+// עמודת "מתי", שורת-המשנה: עתיד בנוסח המוקאפ ("בעוד N ימים"), עבר בנוסח הארוך הנעול
+// ("התקיים לפני N ימים" — §3.7, זהה בשתי הלשוניות). לשון-היחיד (היום/מחר/אתמול) לפי
+// תקדים eventProximityLabel של מודול 4 — "בעוד 1 ימים" היא עברית שבורה על המסך,
+// אותה תבנית-הרחבה שאושרה למשפט-הזימון-הבודד של gapSentence.
+export function proximitySentence(days) {
+  if (days == null) return ''
+  if (days === 0) return 'היום'
+  if (days === 1) return 'מחר'
+  if (days === 2) return 'בעוד יומיים'
+  if (days === -1) return 'התקיים אתמול'
+  if (days === -2) return 'התקיים לפני יומיים'
+  if (days < 0) return eventPassedSentence(-days)
+  return `בעוד ${days} ימים`
+}
+
+// "יש חוסר" (⑥, בינארי — אין דירוג-חומרה, זה בדיוק ה"ציון" ש-⑧ ביטלה): במצבים הפעילים —
+// מדד-דיילות או מדד-לוגיסטיקה מתחת ל-100%; ‏event_finished תמיד חסר (שלושת שדות-הסגירה
+// טרם הוזנו — סגירה מעבירה את הסטטוס הלאה, ולכן עצם הישיבה בלשונית "לסגירה" היא החוסר);
+// מה שיצא מידיה — לעולם לא חסר.
+export function overviewHasGap(project) {
+  const status = project.project_status
+  if (status === 'event_finished') return true
+  if (!ACTIVE_PROJECT_STATUSES.includes(status)) return false
+  const required = Number(project.required_hostess_count) || 0
+  const confirmed = Number(project.hostesses_confirmed) || 0
+  return confirmed < required || !logisticsComplete(project)
+}
+
+// סדר-השורות הוא התשובה של המסך (⑧, S-7): חסרים תחילה, ובתוכם לפי קרבת-האירוע —
+// כשה"קרבה" של תאריך שעבר היא המרחק המוחלט מהיום, בכל כיוון (אירוע שעבר לפני 5 ימים
+// קרוב יותר מאירוע שעבר לפני 12). שובר-שוויון יציב: project_id — סדר-הקליטה, לא אקראי.
+export function sortOverviewProjects(projects, todayIso) {
+  return [...(projects ?? [])].sort((a, b) => {
+    const gapDiff = Number(overviewHasGap(b)) - Number(overviewHasGap(a))
+    if (gapDiff !== 0) return gapDiff
+    const distA = Math.abs(eventDaysFromToday(a.final_event_date, todayIso) ?? Infinity)
+    const distB = Math.abs(eventDaysFromToday(b.final_event_date, todayIso) ?? Infinity)
+    if (distA !== distB) return distA - distB
+    return (a.project_id ?? 0) - (b.project_id ?? 0)
+  })
+}
+
+// צבע-השורה (⑥, F20): אדום = אפס שורות assignments — המימד היחיד שבו "אפס" פירושו שאיש
+// לא נגע בפרויקט (שורות לוגיסטיקה נולדות אוטומטית עם הפרויקט; שורת-שיבוץ נוצרת רק כשאדם
+// פעל). מעומעם = יצא מידיה. אדום נבחן רק על שורות שעוד דורשות טיפול — פרויקט מבוטל בלי
+// זימונים אינו קורא לפעולה, ולכן אינו אדום.
+export function overviewRowKind(project) {
+  if (HANDED_OFF_STATUSES.includes(project.project_status)) return 'muted'
+  if ((project.assignments_row_count ?? 0) === 0) return 'red'
+  return 'plain'
+}
+
+// "חסרה 1" / "חסרות N" — לשון-יחיד לחוסר בודד, הנוסח שהמוקאפ מצייר בעמודת הדיילות.
+function gapWord(gap) {
+  return gap === 1 ? 'חסרה 1' : `חסרות ${gap}`
+}
+
+// עמודת "דיילות": יחס + שורת-משנה + טון. hidden ⇒ המסך מצייר '—' (מוכנות חסרת משמעות
+// אחרי מסירה/ביטול). הטון: miss (אדום) רק כשאיש לא נגע — אפס שורות שיבוץ; hint (ענבר)
+// לחוסר שיש לו מענה בדרך; done לעובדה סגורה. ‏≥ ולא = (§7.43): ‏7/6 הוא מאויש.
+export function staffingCell(project) {
+  if (HANDED_OFF_STATUSES.includes(project.project_status)) return { hidden: true }
+  const required = Number(project.required_hostess_count) || 0
+  const confirmed = Number(project.hostesses_confirmed) || 0
+  const ratio = `${confirmed}/${required}`
+  if (confirmed >= required && required > 0) return { ratio, sub: '✓ מאויש', tone: 'done' }
+  const gap = Math.max(required - confirmed, 0)
+  if ((project.assignments_row_count ?? 0) === 0) {
+    // אחרי שהאירוע עבר, "חסרות N" כבר אינו מעשי — המוקאפ מנסח את העובדה ההיסטורית.
+    const sub = project.project_status === 'event_finished' ? 'אף אחת לא שובצה' : gapWord(gap)
+    return { ratio, sub, tone: 'miss' }
+  }
+  return { ratio, sub: gap > 0 ? gapWord(gap) : null, tone: 'hint' }
+}
+
+// עמודת "לוגיסטיקה": אפס שורות = הושלם ("✓ אין פריטים" — הכרעת-ישי 08/08, המקרה של #11).
+// ‏🔴 שורת-המשנה לחוסר היא "טרם מוכנים" ולא "טרם הוזמנו" שבמוקאפ — סטייה מודעת:
+// ‏list_projects_overview מחזירה ready/total בלבד, בלי מונה ordered, ולכן "לא הוזמן" אינו
+// ניתן לאימות מהנתונים (פריט ordered שטרם הגיע היה הופך את המשפט לשקר). degraded-never-wrong.
+// אחרי שהאירוע עבר הטון calm — הלוגיסטיקה כבר אינה עבודה (הערת-המוקאפ בלשונית "לסגירה").
+export function logisticsCell(project) {
+  if (HANDED_OFF_STATUSES.includes(project.project_status)) return { hidden: true }
+  const total = project.logistics_total ?? 0
+  const ready = project.logistics_ready ?? 0
+  if (total === 0) return { ratio: null, sub: '✓ אין פריטים', tone: 'done' }
+  if (ready >= total) return { ratio: `${ready}/${total}`, sub: '✓ מוכן', tone: 'done' }
+  const remaining = total - ready
+  return {
+    ratio: `${ready}/${total}`,
+    sub: remaining === 1 ? 'טרם מוכן' : 'טרם מוכנים',
+    tone: project.project_status === 'event_finished' ? 'calm' : 'hint',
+  }
+}
+
+// הטון של עמודת "מה חסר" — הענפים משקפים אחד-לאחד את ענפי gapSentence שמעל: אותו מצב
+// שמוליד את המשפט מוליד את צבעו. miss רק על "איש לא נגע" (אפס שורות); calm לעובדות
+// שאין בהן מה לעשות; השאר hint. שינוי ענף שם בלי שינוי כאן הוא באג — הבדיקות מצמידות.
+export function gapTone(project) {
+  const status = project.project_status
+  if (HANDED_OFF_STATUSES.includes(status)) return 'calm'
+  const untouched = (project.assignments_row_count ?? 0) === 0
+  if (status === 'event_finished') return untouched ? 'miss' : 'hint'
+  if (!overviewHasGap(project)) return 'calm'
+  return untouched ? 'miss' : 'hint'
+}
+
+// שני אריחי-המדד (③): נספרים על רשימת-הפעילים של ⑫ בלבד, ולכן אינם משתנים בין הלשוניות —
+// "מדד שמשתנה כשלוחצים על לשונית הוא מדד שאי-אפשר לצטט בפגישה". לעולם לא ממוזגים לאחוז
+// אחד (⑨): לוגיסטיקה 100% ושיבוץ 0% ממוזגים ל"50% מוכן" — מספר שאינו מוביל לשום פעולה.
+export function overviewTiles(projects) {
+  const active = (projects ?? []).filter((p) => ACTIVE_PROJECT_STATUSES.includes(p.project_status))
+  const missingStaffing = active.filter(
+    (p) => (Number(p.hostesses_confirmed) || 0) < (Number(p.required_hostess_count) || 0),
+  )
+  const missingLogistics = active.filter((p) => !logisticsComplete(p))
+  return {
+    staffing: {
+      count: missingStaffing.length,
+      noInviteCount: missingStaffing.filter((p) => (p.assignments_row_count ?? 0) === 0).length,
+    },
+    logistics: {
+      count: missingLogistics.length,
+      itemsNotReady: missingLogistics.reduce(
+        (sum, p) => sum + Math.max((p.logistics_total ?? 0) - (p.logistics_ready ?? 0), 0),
+        0,
+      ),
+    },
+  }
+}
+
+// שורת-המשנה של אריח-הדיילות — נגזרת חיה (מונה ⑫-פעילים עם אפס שורות שיבוץ), לא מספר
+// קשיח. לשון-יחיד/רבים כמו במוקאפ ("מתוכם 1 שלא נשלח בו אף זימון"); אפס ⇒ אין שורה —
+// "לא בכוח": אין ממצא, אין משפט.
+export function staffingTileSub({ count, noInviteCount }) {
+  if (count === 0 || noInviteCount === 0) return null
+  return noInviteCount === 1
+    ? 'מתוכם 1 שלא נשלח בו אף זימון'
+    : `מתוכם ${noInviteCount} שלא נשלח בהם אף זימון`
+}
+
+// שורת-המשנה של אריח-הלוגיסטיקה. 🔴 סטייה מודעת מהמוקאפ ("4 פריטים, אף אחד לא הוזמן"):
+// ה-RPC אינו מחזיר מונה ordered, ולכן "אף אחד לא הוזמן" אינו ניתן לאימות — הנגזרת הישרה
+// היא כמה פריטים טרם מוכנים (total−ready על הפרויקטים הפעילים החסרים).
+export function logisticsTileSub({ count, itemsNotReady }) {
+  if (count === 0 || itemsNotReady === 0) return null
+  return itemsNotReady === 1 ? 'פריט אחד טרם מוכן' : `${itemsNotReady} פריטים טרם מוכנים`
+}
+
+// השורה השנייה של מצב-הריק-אחרי-סינון — המונה חי ("8 פרויקטים קיימים ואינם מוצגים כרגע"),
+// לא מועתק מהמוקאפ. לשון-יחיד לפרויקט בודד — "1 פרויקטים קיימים" היא עברית שבורה.
+export function filteredOutSentence(total) {
+  return total === 1
+    ? 'פרויקט אחד קיים ואינו מוצג כרגע.'
+    : `${total} פרויקטים קיימים ואינם מוצגים כרגע.`
 }

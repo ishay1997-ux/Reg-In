@@ -7,7 +7,19 @@ import {
   staffingMetric,
   logisticsMetric,
   gapSentence,
+  gapTone,
   eventPassedSentence,
+  eventDaysFromToday,
+  proximitySentence,
+  sortOverviewProjects,
+  overviewHasGap,
+  overviewRowKind,
+  staffingCell,
+  logisticsCell,
+  overviewTiles,
+  staffingTileSub,
+  logisticsTileSub,
+  filteredOutSentence,
 } from '@/lib/projects'
 
 // אוצר-המילים נעול (spec.md §1.1) — כל סטייה כאן היא באג, לא העדפה.
@@ -273,5 +285,330 @@ describe('gapSentence — גבולות הזימונים-הפתוחים ולשו�
         pending_invites: 1,
       }),
     ).toBe('זימון אחד ממתין למענה')
+  })
+})
+
+// ── נגזרות מבט-העל (צעד 3.1) — סדר, צבע, אריחים ותאי-המדד. הנתונים מגוונים ולא-מונוטוניים
+// בכוונה (משמעת 30/07: דאטה אחידה מאשרת מיון שבור). ──
+
+// שורת-RPC מינימלית של list_projects_overview — רק העמודות שהנגזרות קוראות.
+function overviewRow(overrides) {
+  return {
+    project_id: 1,
+    event_name: 'אירוע',
+    final_event_date: '2026-08-22',
+    project_status: 'in_progress',
+    required_hostess_count: 6,
+    hostesses_confirmed: 1,
+    pending_invites: 0,
+    assignments_row_count: 3,
+    logistics_ready: 0,
+    logistics_total: 2,
+    ...overrides,
+  }
+}
+
+describe('eventDaysFromToday + proximitySentence — עמודת "מתי"', () => {
+  it('עתיד/עבר בימי-לוח, וקלט שבור מחזיר null ולא NaN', () => {
+    expect(eventDaysFromToday('2026-08-22', '2026-08-13')).toBe(9)
+    expect(eventDaysFromToday('2026-08-08', '2026-08-13')).toBe(-5)
+    expect(eventDaysFromToday('לא תאריך', '2026-08-13')).toBeNull()
+  })
+
+  it('עתיד בנוסח המוקאפ, עבר בנוסח הארוך הנעול — זהה בשתי הלשוניות (§3.7)', () => {
+    expect(proximitySentence(9)).toBe('בעוד 9 ימים')
+    expect(proximitySentence(45)).toBe('בעוד 45 ימים')
+    expect(proximitySentence(-5)).toBe('התקיים לפני 5 ימים')
+    expect(proximitySentence(-12)).toBe('התקיים לפני 12 ימים')
+  })
+
+  it('לשון-יחיד בקצוות — לא "בעוד 1 ימים"', () => {
+    expect(proximitySentence(0)).toBe('היום')
+    expect(proximitySentence(1)).toBe('מחר')
+    expect(proximitySentence(-1)).toBe('התקיים אתמול')
+  })
+})
+
+describe('sortOverviewProjects — חסרים תחילה, ובתוכם לפי קרבת האירוע (S-7)', () => {
+  const TODAY = '2026-08-13'
+
+  it('לוח-המוקאפ המלא: קבוצת-החוסר לפי מרחק מוחלט, והסגורים אחריה — האדום אינו ראשון', () => {
+    // בכוונה בסדר-קלט מעורבב, כדי שהמיון יעבוד בפועל ולא יאשר את סדר-הקליטה.
+    const rows = [
+      overviewRow({
+        project_id: 3,
+        final_event_date: '2026-09-27',
+        project_status: 'not_started',
+        hostesses_confirmed: 0,
+        assignments_row_count: 0,
+      }), // חסר · 45 · אדום
+      overviewRow({
+        project_id: 104,
+        final_event_date: '2026-03-20',
+        project_status: 'awaiting_payment',
+      }), // סגור · 146
+      overviewRow({
+        project_id: 101,
+        final_event_date: '2026-08-19',
+        project_status: 'ready',
+        hostesses_confirmed: 4,
+        required_hostess_count: 4,
+        logistics_ready: 2,
+      }), // סגור · 6
+      overviewRow({
+        project_id: 7,
+        final_event_date: '2026-08-01',
+        project_status: 'event_finished',
+        hostesses_confirmed: 0,
+        assignments_row_count: 0,
+      }), // חסר · 12
+      overviewRow({ project_id: 8, final_event_date: '2026-08-22', hostesses_confirmed: 1 }), // חסר · 9
+      overviewRow({
+        project_id: 102,
+        final_event_date: '2026-08-08',
+        project_status: 'event_finished',
+        hostesses_confirmed: 5,
+        required_hostess_count: 5,
+        assignments_row_count: 7,
+        logistics_ready: 2,
+      }), // חסר (סגירה) · 5
+    ]
+    const ids = sortOverviewProjects(rows, TODAY).map((p) => p.project_id)
+    // ‏5 < 9 < 12 < 45 בקבוצת-החוסר (עבר ועתיד באותו סרגל), ואז 6 < 146 בקבוצה הסגורה.
+    expect(ids).toEqual([102, 8, 7, 3, 101, 104])
+  })
+
+  it('S-7: תאריך שעבר ממוין לפי המרחק המוחלט — לפני 5 ימים מעל לפני 12 יום', () => {
+    const rows = [
+      overviewRow({
+        project_id: 7,
+        final_event_date: '2026-08-01',
+        project_status: 'event_finished',
+      }),
+      overviewRow({
+        project_id: 102,
+        final_event_date: '2026-08-08',
+        project_status: 'event_finished',
+      }),
+    ]
+    expect(sortOverviewProjects(rows, TODAY).map((p) => p.project_id)).toEqual([102, 7])
+  })
+
+  it('שוויון-מרחק נשבר לפי project_id — סדר יציב, לא אקראי', () => {
+    const rows = [
+      overviewRow({ project_id: 20, final_event_date: '2026-08-18' }), // בעוד 5
+      overviewRow({
+        project_id: 10,
+        final_event_date: '2026-08-08',
+        project_status: 'event_finished',
+      }), // לפני 5
+    ]
+    expect(sortOverviewProjects(rows, TODAY).map((p) => p.project_id)).toEqual([10, 20])
+  })
+})
+
+describe('overviewHasGap + overviewRowKind — "יש חוסר" בינארי, וצבע-השורה', () => {
+  it('ממתין-לסגירה תמיד חסר; סטטוס שנמסר הלאה לעולם לא', () => {
+    expect(
+      overviewHasGap(
+        overviewRow({
+          project_status: 'event_finished',
+          hostesses_confirmed: 5,
+          required_hostess_count: 5,
+          logistics_ready: 2,
+        }),
+      ),
+    ).toBe(true)
+    expect(
+      overviewHasGap(overviewRow({ project_status: 'cancelled', hostesses_confirmed: 0 })),
+    ).toBe(false)
+    expect(
+      overviewHasGap(overviewRow({ project_status: 'awaiting_invoice', hostesses_confirmed: 0 })),
+    ).toBe(false)
+  })
+
+  it('פעיל: חוסר-דיילות או חוסר-לוגיסטיקה — וכל אחד לבדו מספיק', () => {
+    expect(overviewHasGap(overviewRow({ hostesses_confirmed: 6, logistics_ready: 1 }))).toBe(true)
+    expect(overviewHasGap(overviewRow({ hostesses_confirmed: 2, logistics_ready: 2 }))).toBe(true)
+    expect(
+      overviewHasGap(
+        overviewRow({ project_status: 'ready', hostesses_confirmed: 6, logistics_ready: 2 }),
+      ),
+    ).toBe(false)
+    // ‏≥ ולא = (§7.43): עודף-אישורים 7/6 הוא מאויש, לא חוסר.
+    expect(overviewHasGap(overviewRow({ hostesses_confirmed: 7, logistics_ready: 2 }))).toBe(false)
+  })
+
+  it('אדום = אפס שורות שיבוץ, ורק על שורה שעוד דורשת טיפול (⑥)', () => {
+    expect(overviewRowKind(overviewRow({ assignments_row_count: 0 }))).toBe('red')
+    expect(
+      overviewRowKind(overviewRow({ project_status: 'event_finished', assignments_row_count: 0 })),
+    ).toBe('red')
+    expect(overviewRowKind(overviewRow({ assignments_row_count: 9 }))).toBe('plain')
+    // מבוטל בלי זימונים אינו אדום — הוא אינו קורא לפעולה; הוא מעומעם.
+    expect(
+      overviewRowKind(overviewRow({ project_status: 'cancelled', assignments_row_count: 0 })),
+    ).toBe('muted')
+    expect(overviewRowKind(overviewRow({ project_status: 'awaiting_payment' }))).toBe('muted')
+  })
+})
+
+describe('staffingCell + logisticsCell — תאי-המדד: יחס, מילה וטון', () => {
+  it('דיילות: חסר עם זימונים = ענבר "חסרות N"; אפס שורות = אדום; מאויש = ✓', () => {
+    expect(staffingCell(overviewRow({ hostesses_confirmed: 1, assignments_row_count: 9 }))).toEqual(
+      { ratio: '1/6', sub: 'חסרות 5', tone: 'hint' },
+    )
+    expect(staffingCell(overviewRow({ hostesses_confirmed: 0, assignments_row_count: 0 }))).toEqual(
+      { ratio: '0/6', sub: 'חסרות 6', tone: 'miss' },
+    )
+    expect(
+      staffingCell(
+        overviewRow({
+          required_hostess_count: 1,
+          hostesses_confirmed: 0,
+          assignments_row_count: 1,
+        }),
+      ),
+    ).toEqual({ ratio: '0/1', sub: 'חסרה 1', tone: 'hint' })
+    expect(
+      staffingCell(overviewRow({ required_hostess_count: 4, hostesses_confirmed: 4 })),
+    ).toEqual({ ratio: '4/4', sub: '✓ מאויש', tone: 'done' })
+  })
+
+  it('אחרי שהאירוע עבר, אפס-שורות מנוסח כעובדה היסטורית — "אף אחת לא שובצה"', () => {
+    expect(
+      staffingCell(
+        overviewRow({
+          project_status: 'event_finished',
+          hostesses_confirmed: 0,
+          assignments_row_count: 0,
+        }),
+      ),
+    ).toEqual({ ratio: '0/6', sub: 'אף אחת לא שובצה', tone: 'miss' })
+  })
+
+  it('לוגיסטיקה: אפס שורות = "✓ אין פריטים" בלי יחס (הכרעת-ישי 08/08, המקרה של #11)', () => {
+    expect(logisticsCell(overviewRow({ logistics_total: 0 }))).toEqual({
+      ratio: null,
+      sub: '✓ אין פריטים',
+      tone: 'done',
+    })
+    expect(logisticsCell(overviewRow({ logistics_ready: 2 }))).toEqual({
+      ratio: '2/2',
+      sub: '✓ מוכן',
+      tone: 'done',
+    })
+    expect(logisticsCell(overviewRow({ logistics_ready: 0 }))).toEqual({
+      ratio: '0/2',
+      sub: 'טרם מוכנים',
+      tone: 'hint',
+    })
+    expect(logisticsCell(overviewRow({ logistics_ready: 1 }))).toEqual({
+      ratio: '1/2',
+      sub: 'טרם מוכן',
+      tone: 'hint',
+    })
+  })
+
+  it('אחרי שהאירוע עבר הלוגיסטיקה כבר אינה עבודה — הטון calm ולא ענבר', () => {
+    expect(
+      logisticsCell(overviewRow({ project_status: 'event_finished', logistics_ready: 0 })).tone,
+    ).toBe('calm')
+  })
+
+  it('שורה שנמסרה הלאה מסתירה את שני המדדים — מוכנות שם חסרת משמעות', () => {
+    expect(staffingCell(overviewRow({ project_status: 'cancelled' }))).toEqual({ hidden: true })
+    expect(logisticsCell(overviewRow({ project_status: 'awaiting_payment' }))).toEqual({
+      hidden: true,
+    })
+  })
+})
+
+describe('gapTone — צבע עמודת "מה חסר" צמוד לענפי gapSentence', () => {
+  it('miss רק כשאיש לא נגע; calm לעובדות; hint לשאר', () => {
+    expect(gapTone(overviewRow({ assignments_row_count: 0 }))).toBe('miss')
+    expect(
+      gapTone(overviewRow({ project_status: 'event_finished', assignments_row_count: 0 })),
+    ).toBe('miss')
+    expect(
+      gapTone(overviewRow({ project_status: 'event_finished', assignments_row_count: 7 })),
+    ).toBe('hint')
+    expect(gapTone(overviewRow({ hostesses_confirmed: 1, assignments_row_count: 9 }))).toBe('hint')
+    expect(
+      gapTone(overviewRow({ project_status: 'ready', hostesses_confirmed: 6, logistics_ready: 2 })),
+    ).toBe('calm')
+    expect(gapTone(overviewRow({ project_status: 'awaiting_payment' }))).toBe('calm')
+    expect(gapTone(overviewRow({ project_status: 'cancelled' }))).toBe('calm')
+  })
+})
+
+describe('overviewTiles — שני האריחים נספרים על רשימת-הפעילים של ⑫ בלבד', () => {
+  // לוח מגוון: פעיל-חסר-בלי-זימונים · פעיל-חסר-עם-זימונים · פעיל-מאויש-בלי-לוגיסטיקה ·
+  // ממתין-לסגירה-חסר (לא נספר!) · מבוטל-חסר (לא נספר!).
+  const BOARD = [
+    overviewRow({
+      project_id: 3,
+      project_status: 'not_started',
+      hostesses_confirmed: 0,
+      assignments_row_count: 0,
+      logistics_ready: 0,
+      logistics_total: 2,
+    }),
+    overviewRow({
+      project_id: 8,
+      hostesses_confirmed: 1,
+      assignments_row_count: 9,
+      logistics_ready: 0,
+      logistics_total: 2,
+    }),
+    overviewRow({
+      project_id: 11,
+      required_hostess_count: 1,
+      hostesses_confirmed: 0,
+      assignments_row_count: 1,
+      logistics_total: 0,
+    }),
+    overviewRow({
+      project_id: 7,
+      project_status: 'event_finished',
+      hostesses_confirmed: 0,
+      assignments_row_count: 0,
+    }),
+    overviewRow({
+      project_id: 103,
+      project_status: 'cancelled',
+      hostesses_confirmed: 0,
+      assignments_row_count: 0,
+    }),
+  ]
+
+  it('אריח-הדיילות: שלושה פעילים חסרים, מתוכם אחד בלי אף זימון — הסגורים והמבוטלים בחוץ', () => {
+    const tiles = overviewTiles(BOARD)
+    expect(tiles.staffing).toEqual({ count: 3, noInviteCount: 1 })
+    expect(staffingTileSub(tiles.staffing)).toBe('מתוכם 1 שלא נשלח בו אף זימון')
+  })
+
+  it('אריח-הלוגיסטיקה: שני פעילים חסרים · 4 פריטים טרם מוכנים; אפס-שורות אינו נספר כחסר', () => {
+    const tiles = overviewTiles(BOARD)
+    expect(tiles.logistics).toEqual({ count: 2, itemsNotReady: 4 })
+    expect(logisticsTileSub(tiles.logistics)).toBe('4 פריטים טרם מוכנים')
+  })
+
+  it('אין חוסר ⇒ אין שורת-משנה ("לא בכוח" — אין ממצא, אין משפט)', () => {
+    expect(staffingTileSub({ count: 0, noInviteCount: 0 })).toBeNull()
+    expect(staffingTileSub({ count: 2, noInviteCount: 0 })).toBeNull()
+    expect(logisticsTileSub({ count: 0, itemsNotReady: 0 })).toBeNull()
+  })
+
+  it('לשון-רבים בשורות-המשנה', () => {
+    expect(staffingTileSub({ count: 3, noInviteCount: 2 })).toBe('מתוכם 2 שלא נשלח בהם אף זימון')
+    expect(logisticsTileSub({ count: 1, itemsNotReady: 1 })).toBe('פריט אחד טרם מוכן')
+  })
+})
+
+describe('filteredOutSentence — המונה של מצב-הריק-אחרי-סינון חי, לא מועתק', () => {
+  it('רבים ויחיד', () => {
+    expect(filteredOutSentence(8)).toBe('8 פרויקטים קיימים ואינם מוצגים כרגע.')
+    expect(filteredOutSentence(1)).toBe('פרויקט אחד קיים ואינו מוצג כרגע.')
   })
 })
