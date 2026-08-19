@@ -103,7 +103,8 @@ export async function getProjectAssignments(projectId) {
     // ‏email/phone נוספו לצירוף בצעד 3.2 (תוספת-שדות בלבד): מיילי ㉑/㉒/㉝ יוצאים מהלקוח
     // (AR-5) וצריכים כתובת ואיש-קשר; הצירוף כולו מגודר על 'דיילות' — מי שחסומה שם מקבלת
     // אפס שורות בלי שגיאה, וזה בדיוק הסימן שהמסך מתרגם ל"אין דרך לשלוח מכאן".
-    .select('*, hostesses(full_name, hostess_id, email, phone)')
+    // ‏city נוסף בצעד 4.2: המוקאפ המאושר (04_tab_team) מצייר תת-שורת-עיר מתחת לשם — נדחה מ-3.4 כי העמודה חסרה בצירוף.
+    .select('*, hostesses(full_name, hostess_id, email, phone, city)')
     .eq('project_id', projectId)
     .order('hostess_id')
     .order('assignment_number')

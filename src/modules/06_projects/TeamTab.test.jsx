@@ -69,7 +69,8 @@ function boardFixture() {
       assignment_status: 'finally_approved',
       is_shift_lead: true,
       responded_at: hoursAgo(90),
-      hostesses: { hostess_id: 'h1', full_name: 'נועה שגיא' },
+      // ‏city — תת-שורת-העיר מהמוקאפ המאושר (psub2), נוספה לצירוף בצעד 4.2.
+      hostesses: { hostess_id: 'h1', full_name: 'נועה שגיא', city: 'רמת גן' },
     }),
     assignmentRow({
       hostess_id: 'h2',
@@ -150,6 +151,16 @@ describe('הקיפול — 9 שורות במסד, 6 דיילות על המסך',
     expect(screen.getAllByTestId(/^team-row-/)).toHaveLength(6)
     // עדי סירבה בסבב 1 וזומנה שוב — הקובע הוא סבב 2 (פג תוקף), לא הסירוב.
     expect(screen.getByTestId('team-status-h2')).toHaveTextContent('פג תוקף')
+  })
+
+  it('תת-שורת-העיר מוצגת מתחת לשם בטבלה הקובעת בלבד (המוקאפ: psub2)', async () => {
+    await renderTab()
+    // לנועה יש city בפיקסטורה — מוצג; לשאר אין — לא נוצר אלמנט ריק.
+    const noaCell = screen.getByTestId('team-row-h1')
+    expect(noaCell).toHaveTextContent('רמת גן')
+    // ההיסטוריה מציגה שם בלבד — העיר אינה שם (המוקאפ מצייר שם חשוף).
+    fireEvent.click(screen.getByTestId('team-history-toggle'))
+    expect(screen.getByTestId('team-history-row-h1-1')).not.toHaveTextContent('רמת גן')
   })
 
   it('הערת-השוליים של ההיסטוריה נוקבת במספרים החיים', async () => {

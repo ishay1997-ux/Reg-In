@@ -362,6 +362,10 @@ function MainTable({ finalRows, now }) {
                 </span>{' '}
                 {/* ζ: תג-אחראית בלי ★ — הגליף כבר תפוס ל"התרשמות" (RatingStars). */}
                 {row.is_shift_lead && <StatusTag label={SHIFT_LEAD_LABEL} tone="outline" />}
+                {/* תת-שורת-עיר מהמוקאפ המאושר (psub2). רק בטבלה הקובעת — היסטוריית-הסבבים ורשימת-השחרור מציגות שם בלבד. */}
+                {row.hostesses?.city && (
+                  <div className="text-xs text-slate-500">{row.hostesses.city}</div>
+                )}
               </td>
               <td className="px-2.5 py-2.5">
                 <StatusTag label={displayLabel} testId={`team-status-${row.hostess_id}`} />
