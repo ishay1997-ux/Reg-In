@@ -15,6 +15,16 @@
 import { supabase } from '@/supabaseClient'
 import { toError, RLS_DENIED_CODE } from '@/lib/apiError'
 import { finalAssignmentRows } from '@/lib/hostesses'
+import { classifySendError, EMAIL_SEND_RESULT } from '@/lib/email'
+import {
+  SHIFT_TEMPLATE_NAMES,
+  PROJECT_TEMPLATE_NAMES,
+  buildShiftInvitePayload,
+  buildProjectDetailsChangedPayload,
+  confirmUrlFor,
+  resolveShiftContact,
+} from '@/lib/shiftEmails'
+import { sendEmail, getEmailTemplate } from '@/api/email'
 
 // ---- שגיאות-כתיבה ----
 
@@ -87,12 +97,45 @@ export async function getProjectChanges(projectId) {
 export async function getProjectAssignments(projectId) {
   const { data, error } = await supabase
     .from('assignments')
-    .select('*, hostesses(full_name, hostess_id)')
+    // ‏email/phone נוספו לצירוף בצעד 3.2 (תוספת-שדות בלבד): מיילי ㉑/㉒/㉝ יוצאים מהלקוח
+    // (AR-5) וצריכים כתובת ואיש-קשר; הצירוף כולו מגודר על 'דיילות' — מי שחסומה שם מקבלת
+    // אפס שורות בלי שגיאה, וזה בדיוק הסימן שהמסך מתרגם ל"אין דרך לשלוח מכאן".
+    .select('*, hostesses(full_name, hostess_id, email, phone)')
     .eq('project_id', projectId)
     .order('hostess_id')
     .order('assignment_number')
   if (error) throw toError(error, 'שגיאה בטעינת שיבוצי הפרויקט.')
   return data ?? []
+}
+
+// נתוני-ההצעה שאזור-הזהות מציג (אורחים מוערכים · שני אחוזי-ההנחה). ‏quotes מגודרת על
+// 'הצעות מחיר' (מנהלת גיוס ומנהלת לוגיסטיקה ➖ שתיהן) ⇒ קריאה חסומה חוזרת null **בלי
+// שגיאה — וזה מכוון וזה הסימן**: אותו שער בדיוק כמו planned_revenue של מבט-העל, ולכן
+// "ההנחה לא נקראה" ו"הסכום לא נקרא" קורים תמיד יחד (as-built 3.3④) והתא מציג `—` אחד.
+// 🚫 לא זורקים על null — null-חסום ו-null-אין-שורה בלתי-ניתנים-להבחנה, ושניהם ⇒ `—`.
+export async function getProjectQuoteMeta(quoteId) {
+  if (!quoteId) return null
+  const { data, error } = await supabase
+    .from('quotes')
+    .select('estimated_guests, applied_customer_discount, manual_discount')
+    .eq('quote_id', quoteId)
+    .maybeSingle()
+  if (error) throw toError(error, 'שגיאה בטעינת נתוני ההצעה.')
+  return data ?? null
+}
+
+// איש-הקשר אצל הלקוח — חי, לא snapshot (כרטיס-המסך ③: החלפת איש-קשר אצל הלקוח משתקפת
+// מיד). ‏customers מגודרת על 'לקוחות' ⇒ למנהלת גיוס/לוגיסטיקה הקריאה חוזרת null בשקט;
+// המסך בודק את ההרשאה בלקוח ומציג `—` במקום להסיק "אין איש קשר" מקריאה חסומה.
+export async function getProjectCustomerContact(customerId) {
+  if (!customerId) return null
+  const { data, error } = await supabase
+    .from('customers')
+    .select('contact_name, phone')
+    .eq('customer_id', customerId)
+    .maybeSingle()
+  if (error) throw toError(error, 'שגיאה בטעינת איש הקשר של הלקוח.')
+  return data ?? null
 }
 
 // ---- מדד-רשות ל-gapSentence: confirmed_available ----
@@ -194,6 +237,158 @@ export async function closeProjectOperationally(
 // כדי שבקרת "שליחה חוזרת" (משטח 5, אחרי סגירה) תהיה לה נתיב-כתיבה חוקי.
 // מחזירה `true` כששורה אחת זזה (as-built ⑦, צעד 2.5). `false`/לא-true בהצלחה-כביכול הוא
 // המקבילה של "0 שורות בלי שגיאה" של AS-6 — ולכן נבדק ונזרק כ-RLS_DENIED סינתטי.
+// ---- מיילי עדכון-הפרטים (AR-5: הלקוח שולח אחרי הצלחת ה-RPC, לעולם לא בתוכו) ----
+
+// שלוש התוצאות של שליחה — אותה הבחנה כמו במודול 4: פסק-זמן הוא "לא ידוע", לא "נכשל".
+const emptyMailOutcome = () => ({ sent: 0, unknown: 0, failed: 0 })
+
+// השורה הקובעת פר-דיילת מתוך תוצאת getProjectAssignments, לרשימת hostess_id נתונה.
+// למי שחסומה על 'דיילות' הצירוף חוזר ריק בלי שגיאה ⇒ המפה ריקה, וזה מזוהה בקוראים.
+function latestRowsByHostess(assignmentRows, hostessIds) {
+  const wanted = new Set(hostessIds)
+  const byHostess = new Map()
+  for (const row of finalAssignmentRows(assignmentRows)) {
+    if (wanted.has(row.hostess_id)) byHostess.set(row.hostess_id, row)
+  }
+  return byHostess
+}
+
+// זימון-מחדש אחרי שינוי-תאריך (㉑). ‏update_project_details כבר איפסה את השורות ל-pending
+// וניקתה invite_token/invite_sent_at (המיגרציה מנמקת: טוקן ישן היה קישור חי שמציג את
+// התאריך הישן ומאשר את החדש) — כאן נולד טוקן חדש, נכתב לשורה, ורק אז יוצא המייל: בסדר
+// ההפוך הדיילת מקבלת קישור שאינו קיים במסד (הכלל של refreshInviteAndSend במודול 4).
+//
+// כתיבת הטוקן דורשת edit על 'דיילות' (assignments_write_by_permission). הסתירה שהייתה
+// כאן — מנהלת הפרויקטים החזיקה view בלבד — נסגרה בהכרעת-ישי 19/08/2026 ("מאוד פשוט,
+// להרחיב לה הרשאה"): התא הוחלף ל-edit דרך מסך-המטריצה. מסלול-הכשל נשאר בכוונה —
+// תפקיד אחר עם edit על 'פרויקטים' בלי 'דיילות' (מנהלת לוגיסטיקה) עדיין נספר failed בקול.
+export async function sendDateChangeReinvites(project, hostessIds, origin) {
+  const outcome = emptyMailOutcome()
+  if (!hostessIds?.length) return outcome
+
+  const [template, assignmentRows] = await Promise.all([
+    getEmailTemplate(SHIFT_TEMPLATE_NAMES.invite),
+    getProjectAssignments(project.project_id),
+  ])
+  const byHostess = latestRowsByHostess(assignmentRows, hostessIds)
+
+  for (const hostessId of hostessIds) {
+    const row = byHostess.get(hostessId)
+    // שורה לא-קריאה (חסימת 'דיילות') או דיילת בלי מייל — כשל כן, לא שקט.
+    if (!row?.hostesses?.email) {
+      outcome.failed += 1
+      continue
+    }
+    const token = crypto.randomUUID()
+    const payload = buildShiftInvitePayload({
+      template,
+      hostess: row.hostesses,
+      project,
+      hourlyRate: row.hourly_rate_snapshot,
+      confirmUrl: confirmUrlFor(origin, token),
+    })
+    if (!payload) {
+      outcome.failed += 1
+      continue
+    }
+    const nowIso = new Date().toISOString()
+    const { data: updated, error: updateError } = await supabase
+      .from('assignments')
+      .update({ invite_token: token, invite_sent_at: nowIso })
+      .eq('project_id', row.project_id)
+      .eq('hostess_id', row.hostess_id)
+      .eq('assignment_number', row.assignment_number)
+      .select()
+    if (updateError || !updated?.length) {
+      outcome.failed += 1
+      continue
+    }
+    try {
+      await sendEmail({
+        payload,
+        entityType: 'shift',
+        // כמו במודול 4: entity_id הוא הפרויקט — ל-assignments מפתח משולש ואין מזהה-עמודה-אחת.
+        entityId: row.project_id,
+        templateName: SHIFT_TEMPLATE_NAMES.invite,
+      })
+      outcome.sent += 1
+    } catch (sendError) {
+      if (classifySendError(sendError) === EMAIL_SEND_RESULT.UNKNOWN) {
+        // פסק-זמן אינו כשל: אין גלגול-אחורה, כי המייל אולי כן יצא.
+        outcome.unknown += 1
+      } else {
+        // מגלגלים את invite_sent_at בלבד — אחרת שעון-48 רץ על מייל שמעולם לא יצא.
+        await supabase
+          .from('assignments')
+          .update({ invite_sent_at: null })
+          .eq('project_id', row.project_id)
+          .eq('hostess_id', row.hostess_id)
+          .eq('assignment_number', row.assignment_number)
+        outcome.failed += 1
+      }
+    }
+  }
+  return outcome
+}
+
+// מייל "פרטי האירוע השתנו" (㉒/㉝ — מיקום/שעות; לא תאריך, שמסלולו זימון-מחדש). הבונה
+// והתבנית של צעד 2.8; איש-הקשר דרך resolveShiftContact — אחראית-משמרת אם סומנה, אחרת
+// מנהלת הפרויקט מה-snapshot. contact חסר (שם/טלפון ריקים) עוצר את כל השליחה — זה החוזה
+// של resolveShiftContact, והתוצאה מדווחת כ-blocked ולא נבלעת.
+export async function sendDetailsChangedMails(project, hostessIds) {
+  const outcome = { ...emptyMailOutcome(), blockedReason: null }
+  if (!hostessIds?.length) return outcome
+
+  const [template, assignmentRows] = await Promise.all([
+    getEmailTemplate(PROJECT_TEMPLATE_NAMES.detailsChanged),
+    getProjectAssignments(project.project_id),
+  ])
+  const byHostess = latestRowsByHostess(assignmentRows, hostessIds)
+
+  if (byHostess.size === 0) {
+    // הצירוף חזר ריק על רשימה לא-ריקה ⇒ אין קריאת-דיילות (חסימת 'דיילות') — אין ממי
+    // לקחת כתובת מייל, והאמת הזאת נאמרת למסך במקום להיספר כ"נכשלו" סתמי.
+    outcome.failed = hostessIds.length
+    outcome.blockedReason = 'permission'
+    return outcome
+  }
+
+  const leadRow = finalAssignmentRows(assignmentRows).find((row) => row.is_shift_lead)
+  const contact = resolveShiftContact({ project, shiftLead: leadRow?.hostesses })
+  if (!contact) {
+    outcome.failed = hostessIds.length
+    outcome.blockedReason = 'contact'
+    return outcome
+  }
+
+  for (const hostessId of hostessIds) {
+    const row = byHostess.get(hostessId)
+    const payload = buildProjectDetailsChangedPayload({
+      template,
+      hostess: row?.hostesses,
+      project,
+      contact,
+    })
+    if (!payload) {
+      outcome.failed += 1
+      continue
+    }
+    try {
+      await sendEmail({
+        payload,
+        entityType: 'project',
+        entityId: project.project_id,
+        templateName: PROJECT_TEMPLATE_NAMES.detailsChanged,
+      })
+      outcome.sent += 1
+    } catch (sendError) {
+      if (classifySendError(sendError) === EMAIL_SEND_RESULT.UNKNOWN) outcome.unknown += 1
+      else outcome.failed += 1
+    }
+  }
+  return outcome
+}
+
 export async function markFeedbackSurveySent(projectId) {
   const { data, error } = await supabase.rpc('mark_feedback_survey_sent', {
     p_project_id: projectId,

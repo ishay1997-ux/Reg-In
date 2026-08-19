@@ -7,6 +7,8 @@ import {
   businessDaysUntil,
   isLateChange,
   lateChangeBanner,
+  projectTotalAfterChange,
+  staffingConsequence,
   tierCrossingNotice,
 } from './projectChanges'
 
@@ -251,6 +253,64 @@ describe('tierCrossingNotice — הודעת-מדרגה (③ↄ), בלי סכום
 
   it('הפחתה שיוצאת ממדרגה זולה למדרגה יקרה יותר ⇒ אין הודעה (ההודעה רק על מדרגה זולה יותר)', () => {
     expect(tierCrossingNotice(TAG, B_REG_TAG_TIERS, 420, 380)).toBeNull()
+  })
+})
+
+describe('staffingConsequence — שורת-הצוות של בלוק-ההשלכה (≥, §7.43)', () => {
+  it('העלאה עם פער: הפער החדש והישן מול המאושרות-סופית', () => {
+    expect(staffingConsequence({ confirmed: 1, currentTarget: 6, newTarget: 8 })).toEqual({
+      oldGap: 5,
+      newGap: 7,
+      ready: false,
+    })
+  })
+
+  it('🔴 מאושרות שוות בדיוק ליעד ⇒ מוכן — הגבול של ≥ (`===` היה עובר גם הוא כאן)', () => {
+    expect(staffingConsequence({ confirmed: 4, currentTarget: 6, newTarget: 4 })).toEqual({
+      oldGap: 2,
+      newGap: 0,
+      ready: true,
+    })
+  })
+
+  it('🔴 over-staffed: מאושרות מעל היעד ⇒ מוכן — המקרה ש-`===` היה מחריג בשקט (🔄4)', () => {
+    expect(staffingConsequence({ confirmed: 6, currentTarget: 6, newTarget: 4 })).toEqual({
+      oldGap: 0,
+      newGap: 0,
+      ready: true,
+    })
+  })
+
+  it('הפערים לעולם אינם שליליים, וקלט לא-מספרי נופל ל-0 ולא ל-NaN', () => {
+    expect(staffingConsequence({ confirmed: 8, currentTarget: 6, newTarget: 10 })).toEqual({
+      oldGap: 0,
+      newGap: 2,
+      ready: false,
+    })
+    expect(staffingConsequence({ confirmed: null, currentTarget: 6, newTarget: 8 })).toEqual({
+      oldGap: 6,
+      newGap: 8,
+      ready: false,
+    })
+  })
+})
+
+describe('projectTotalAfterChange — שורת-"חיוב": סך-ההצעה + התוספת, בחיבור-אגורות', () => {
+  it('סכום ההצעה ועוד "תוספת לחיוב" — המספרים של הדוגמה המאושרת', () => {
+    expect(projectTotalAfterChange(6318.9, 1404.2)).toBe(7723.1)
+  })
+
+  it('חשבון-אגורות ולא float: 0.1 + 0.2 יוצא 0.3 בדיוק', () => {
+    expect(projectTotalAfterChange(0.1, 0.2)).toBe(0.3)
+  })
+
+  it('הפחתה (תוספת שלילית) מקטינה את הסך', () => {
+    expect(projectTotalAfterChange(6318.9, -1003)).toBe(5315.9)
+  })
+
+  it('צד לא-קריא ⇒ null — המסך מציג "—", לעולם לא 0', () => {
+    expect(projectTotalAfterChange(null, 100)).toBeNull()
+    expect(projectTotalAfterChange(100, null)).toBeNull()
   })
 })
 

@@ -56,6 +56,28 @@ export function formatTimestamp(iso, emptyText = '') {
   return `${at('day')}/${at('month')} ${at('hour')}:${at('minute')}`
 }
 
+// חותמת-זמן ⇒ `DD/MM/YYYY HH:MM` בשעון ישראל — הצורה המלאה, **עם** שנה.
+// נפרדת מ-formatTimestamp שמעליה בכוונה: שם השנה הושמטה כי ההקשר הוא שעון בן 48 שעות,
+// וכאן ההקשר הפוך — חותמת סגירה/ביטול של פרויקט נקראת גם שנים אחרי האירוע
+// ("נסגר ב-… על-ידי …", מודול 6 משטח 2), ותאריך בלי שנה שם הוא חידה ולא מידע.
+export function formatTimestampFull(iso, emptyText = '') {
+  if (!iso) return emptyText
+  const instant = new Date(iso)
+  if (Number.isNaN(instant.getTime())) return emptyText
+
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jerusalem',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(instant)
+  const at = (type) => parts.find((part) => part.type === type)?.value ?? ''
+  return `${at('day')}/${at('month')}/${at('year')} ${at('hour')}:${at('minute')}`
+}
+
 // "18:00:00" מהמסד ⇒ "18:00". 🚫 טווח מוצג **רק כששני הקצוות קיימים** — "18:00–" נראה
 // כמו תקלת-רינדור, ואירוע בלי שעת-סיום הוא מצב לגיטימי בסכמה.
 export function formatTimeRange(start, end) {

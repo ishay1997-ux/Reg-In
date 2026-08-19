@@ -183,7 +183,7 @@ test.describe('מודול 4 · מסך 2 — שני כיווני ההרשאה', (
     await expect(page.locator('[data-testid^="sm-pick-"]').first()).toBeVisible()
   })
 
-  test('🔴 מנהלת פרויקטים רואה את הדירוג — ואין לה תיבות, כפתור-שליחה או תפריט-שורה', async ({
+  test('🔴 מנהלת פרויקטים ב-Smart Match — מ-19/08/2026 בדרגת edit: הפקדים מוצגים לה', async ({
     page,
   }) => {
     await openSmartMatch(page, PROJECTS_EMAIL, PROJECTS_PASSWORD)
@@ -191,11 +191,10 @@ test.describe('מודול 4 · מסך 2 — שני כיווני ההרשאה', (
     // בקרה חיובית: היא **כן** רואה את המסך והמועמדות — אחרת הבדיקה מוכיחה רק שהיא חסומה.
     await expect(page.locator('[data-testid^="sm-candidate-"]').first()).toBeVisible()
 
-    // 🔴 **פקד חסום אינו קיים כלל, לא פקד מכובה** — הכלל של §④/§⑥.
-    await expect(page.getByTestId('sm-send-invites')).toHaveCount(0)
-    await expect(page.getByTestId('sm-approve-all')).toHaveCount(0)
-    await expect(page.locator('[data-testid^="sm-pick-"]')).toHaveCount(0)
-    await expect(page.locator('[data-testid^="row-menu-"]')).toHaveCount(0)
+    // הכרעת-ישי 19/08/2026: דיילות×מנהלת-פרויקטים הוחלף view→edit (מיילי-㉑ של מ6) ⇒
+    // תיבות-הבחירה כן מוצגות לה. הציפייה הישנה (אפס פקדים) תיעדה את המטריצה שקדמה להכרעה;
+    // כלל "פקד חסום אינו קיים כלל" (§④/§⑥) עומד — הוא נבחן עכשיו דרך מסלול-ה-view ביחידה.
+    await expect(page.locator('[data-testid^="sm-pick-"]').first()).toBeVisible()
   })
 })
 

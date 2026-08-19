@@ -164,6 +164,17 @@ export function formatShekelExact(amount) {
   return `${text} ₪`
 }
 
+// אגורות **תמיד**, גם כשהן אפס — "5,355.00 ₪" ולא "5,355 ₪". why-first: המוקאפ המאושר של
+// כרטיס-הפרויקט (מודול 6, 02_project_card_approved.html) מצייר את "הכנסה מתוכננת" בשתי
+// ספרות-אגורות קבועות, ו"אפס אמיתי" חייב להיקרא "0.00 ₪" — צורה שמכריזה "זה סכום שנמדד",
+// להבדיל מ-`—` של אין-נתון/אין-הרשאה (S-2). ‏formatShekelExact חותך ".00" בכוונה (טור
+// מחירי-קטלוג), ולכן זו פונקציה נפרדת ולא דגל עליה.
+export function formatShekelCents(amount) {
+  const n = toFiniteNumber(amount)
+  if (n === null) return '—'
+  return `${n.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₪`
+}
+
 // פענוח ערכי params (נשמרים כטקסט ב-DB). מחזירים null — ולא ברירת-מחדל שקטה — כדי
 // שהקורא ייאלץ להחליט מה לעשות כשהפרמטר חסר, במקום לתמחר לפי מספר מומצא.
 export function parseVatPercent(paramValueText) {

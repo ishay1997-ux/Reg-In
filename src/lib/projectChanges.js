@@ -98,6 +98,33 @@ export function computeScopeChangeMoney(
   }
 }
 
+// ── בלוק-ההשלכה של הדיאלוג (משטח 6) ─────────────────────────────────────────
+
+// שורת-הצוות: הפער הישן והחדש מול המאושרות-סופית, והמוכנות לפי ≥ (§7.43 / 🔄4 —
+// over-staffed הוא "מוכן"; `===` היה מחריג אותו בשקט). חי כאן ולא ב-JSX (כלל 14):
+// המספרים האלה הם מה שהמשתמשת מאשרת לפי, וסטייה בהם היא סטיית-מוצר, לא סטיית-רינדור.
+// הפערים לעולם אינם שליליים — "יחסרו −2 דיילות" הוא משפט שקרי על המסך.
+export function staffingConsequence({ confirmed, currentTarget, newTarget }) {
+  const confirmedCount = toFiniteNumber(confirmed) ?? 0
+  const current = toFiniteNumber(currentTarget) ?? 0
+  const target = toFiniteNumber(newTarget) ?? 0
+  return {
+    oldGap: Math.max(current - confirmedCount, 0),
+    newGap: Math.max(target - confirmedCount, 0),
+    ready: confirmedCount >= target,
+  }
+}
+
+// שורת-"חיוב": סה"כ לפרויקט אחרי השינוי = סך-ההצעה המקורי + "תוספת לחיוב" — בחיבור-
+// אגורות, לא `+` על float ב-JSX (אותו חשבון-אגורות-שלמות כמו כל הקובץ). צד לא-קריא
+// (הצעה חסומה / אין שינוי) ⇒ null ⇒ המסך מציג '—', לעולם לא 0.
+export function projectTotalAfterChange(quoteTotal, changeTotal) {
+  const quote = toFiniteNumber(quoteTotal)
+  const change = toFiniteNumber(changeTotal)
+  if (quote === null || change === null) return null
+  return toShekels(toAgorot(quote) + toAgorot(change))
+}
+
 // ── המסמן "שינוי מאוחר" (⑯, as-built 14/08/2026 סעיף ד) ─────────────────────
 
 // 🔴 **ממיר "שעון-קיר" בישראל (Asia/Jerusalem) לרגע-UTC בלי ספריית-אזורי-זמן.** ישראל
