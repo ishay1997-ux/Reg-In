@@ -1,241 +1,135 @@
 -- ============================================================
--- REG-IN — סכמת מסד הנתונים (Database Schema) — SNAPSHOT מתועד
+-- REG-IN — סכמת מסד הנתונים (Database Schema)
+-- ============================================================
+-- מה הקובץ הזה: תיאור **מלא ובזמן-הווה** של המסד החי — כל טבלה, עמודה, טיפוס, ברירת-מחדל,
+-- אילוץ (בשמו האמיתי), אינדקס, מדיניות RLS, פונקציה, טריגר, עבודת cron ודלי-אחסון.
 -- מקור-אמת לקריאה: כל קוד חייב להתאים בדיוק לשמות/טיפוסים/constraints כאן,
 -- ואם יש סתירה בין האפיון/מדריך לסכמה — הסכמה גוברת.
 --
--- ⚠️ מקור-אמת לשינויים = supabase/migrations/ (ולא הקובץ הזה).
--- החל מספרינט ההקשחה, כל שינוי DB נכתב כקובץ מיגרציה חדש בתיקיית המיגרציות,
--- מוחל, ואז הקובץ הזה מתעדכן כ-snapshot של המצב הנוכחי. ראה supabase/README.md.
+-- ⚠️ זהו SNAPSHOT שנוצר מתוך שאילתות על המסד החי. **מקור-אמת לשינויים = `supabase/migrations/`**
+--    (ולא הקובץ הזה). כל שינוי DB נכתב כקובץ מיגרציה חדש, מוחל, ואז הקובץ הזה נוצר מחדש.
+--
+-- 📅 נוצר: 14/08/2026 · רוענן: 18/08/2026 (שער 1.10 — אחרי `module6_project_changes_money_gated_reader`) · פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
+--
+-- 🔴 **לרענן את הקובץ הזה אחרי כל מיגרציה.** העותק הקודם לא רוענן חמישה חודשים והכריז על עמודה
+--    (`assignments.id_number`) שאינה קיימת במסד — מפתח ראשי שגוי לטבלה שלמה, בקובץ שהוא דרגה 1
+--    בהיררכיית-האמת.
+--
+-- 🚫 **גופי פונקציות אינם כאן במכוון** — לא חוסר, אלא החלטה: הם מאות שורות, וה-SSOT שלהם הוא
+--    `supabase/migrations/`. סעיף 24 נותן לכל פונקציה חתימה מלאה, מצב אבטחה, הרשאות-הרצה
+--    ומצביע לקובץ המיגרציה שבו הגוף הנוכחי חי.
+--
+-- 🚫 **אין כאן סעיף "היסטוריה"/"יומן שינויים"** — הקובץ מתאר הווה בלבד. ציר השינויים חי
+--    ב-`supabase/migrations/` וב-`docs/db_roadmap.md`.
+--
+-- מוסכמות: כל 23 הטבלאות ב-`public` עם RLS **מופעל**. כל 48 המדיניות (36 ב-public, 12 על
+-- `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`. הפונקציה `moddatetime` (טריגר
+-- `updated_at`) יושבת בסכמה `extensions`, לא ב-`public`.
 -- ============================================================
 
--- 1. טבלת תפקידים (5 תפקידים: מנכ"ל=1, מנהלת פרויקטים, כספים, גיוס, לוגיסטיקה)
+
+-- ============================================================
+-- 1. טבלת תפקידים — public.roles (מודול 1)
+-- ============================================================
 create table roles (
-  role_id serial primary key,
-  role_name text not null
+  role_id   serial not null,
+  role_name text   not null,
+  constraint roles_pkey          primary key (role_id),
+  constraint roles_role_name_key unique (role_name)
 );
-
--- 2. טבלת מודולים (9 מודולים במטריצת ההרשאות — §7.10: מסך הבית אינו שורת מודול, נגיש לכולם)
-create table modules (
-  module_id serial primary key,
-  module_name text not null
-);
-
--- 3. טבלת הרשאות — לב מודול 1. משייכת לכל (תפקיד, מודול) רמת גישה.
-create table permissions (
-  role_id int references roles (role_id) on delete cascade,
-  module_id int references modules (module_id) on delete cascade,
-  permission_level text not null check (permission_level in ('edit', 'view', 'blocked')),
-  primary key (role_id, module_id)
-);
-
--- 4. טבלת משתמשי מערכת — המייל הוא המפתח (מקשר ל-Supabase Auth).
-create table users (
-  email text primary key,
-  role_id int references roles (role_id) on delete restrict,
-  full_name text not null,
-  status text not null default 'active' check (status in ('active', 'inactive')),
-  phone text
-);
-
--- 5. טבלת לקוחות (מודול 2) — §7.64 (10/07): מפתח surrogate; ח"פ = company_number עסקי unique (סטייה מ-C6 §2.4.1)
-create table customers (
-  customer_id bigint generated always as identity primary key,               -- §7.64: surrogate פנימי (היה ח"פ text)
-  company_number text not null unique check (company_number ~ '^[0-9]{9}$'),  -- ח"פ (9 ספרות) — המזהה העסקי הקנוני
-  customer_type text not null check (customer_type in ('private_company', 'government', 'production_company', 'nonprofit')),
-  company_name text not null,
-  contact_name text not null,
-  phone text not null,
-  email text not null,
-  discount_percent numeric not null default 0 check (discount_percent >= 0 and discount_percent <= 100),
-  marketing_consent boolean not null default false,
-  status text not null default 'active' check (status in ('active', 'inactive')),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()   -- §7.73 + טריגר moddatetime (ר' בלוק מודול 2 בתחתית)
-);
-
--- 6. טבלת מוצרים ומחירים (קטלוג: אתר / דיילת / מוצר)
-create table products (
-  sku text primary key,
-  item_name text not null,
-  description text not null,
-  category text not null check (category in ('site', 'hostess', 'product')),
-  unit text not null,
-  base_price numeric not null check (base_price >= 0),
-  cost numeric not null check (cost >= 0),  -- ⛔ נמחקה 31/07/2026 (סבב G) — ר' הבלוק בסוף הקובץ: העלות חיה ב-product_costs
-  status text not null default 'active' check (status in ('active', 'out_of_stock', 'inactive')),
-  image_url text
-);
-
--- 7. טבלת מדרגות מחיר (הנחות כמות למוצר)
-create table price_tiers (
-  sku text references products (sku) on delete cascade,
-  min_qty int not null,
-  special_price numeric not null check (special_price > 0),
-  max_qty int,
-  primary key (sku, min_qty)
-);
-
--- 8. טבלת פרמטרים גלובליים (מע"מ, יחס אורחים-דיילת, משקולות Smart Match, תבניות)
-create table params (
-  param_id serial primary key,
-  param_name text not null,
-  param_value text not null,
-  param_type text not null check (param_type in ('pricing_timing', 'control_alerts', 'smart_match', 'templates', 'integration_tech'))
-);
-
--- 9. טבלת הצעות מחיר (מודול 3)
-create table quotes (
-  quote_id serial primary key,
-  customer_id bigint references customers(customer_id) on delete restrict,   -- §7.64: bigint (עוקב אחרי ה-surrogate PK של customers)
-  event_name text not null,
-  issue_date date not null default current_date,
-  estimated_hours numeric not null check (estimated_hours > 0),
-  recommended_hostess_count int not null check (recommended_hostess_count > 0),
-  estimated_guests int not null check (estimated_guests > 0),
-  estimated_event_date date not null,
-  estimated_location text not null,
-  quote_status text not null default 'in_progress' check (quote_status in ('in_progress', 'approved', 'rejected')),
-  pdf_url text,
-  applied_customer_discount numeric not null,
-  manual_discount numeric not null default 0,
-  rejection_reason text,
-  notes text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()   -- §7.73
-);
-
--- 10. טבלת שירותי הצעה (שורות ההצעה)
-create table quote_services (
-  quote_id int references quotes (quote_id) on delete cascade,
-  sku text references products(sku) on delete restrict,
-  line_number int not null,
-  qty int not null check (qty > 0),
-  closing_unit_price numeric not null check (closing_unit_price >= 0),
-  color text,
-  notes text,
-  primary key (quote_id, sku, line_number)
-);
-
--- 11. טבלת פרויקטים (מודול 6 - המחבר המרכזי, מכונת מצבים)
-create table projects (
-  project_id serial primary key,
-  quote_id int unique references quotes(quote_id) on delete restrict,
-  owner_email text references users(email) on delete restrict,
-  final_event_date date not null,
-  final_location text not null,
-  required_hostess_count int not null check (required_hostess_count > 0),
-  project_bonus numeric not null default 0,
-  project_status text not null default 'not_started'
-    check (project_status in ('not_started', 'in_progress', 'ready', 'event_finished', 'awaiting_invoice', 'awaiting_payment', 'finished', 'cancelled')),
-  invoice_sent boolean not null default false,
-  feedback_status text not null default 'not_sent' check (feedback_status in ('not_sent', 'sent', 'completed', 'no_response')),
-  actual_guests int,
-  actual_hours numeric,
-  cancel_reason text,
-  payment_date date,
-  feedback_score int check (feedback_score between 1 and 5),
-  negative_feedback_reason text,
-  feedback_notes text,
-  summary_report_url text
-);
-
--- 12. טבלת מאגר דיילות (מודול 4)
-create table hostesses (
-  id_number text primary key,
-  full_name text not null,
-  phone text not null,
-  email text not null,
-  city text not null,
-  hourly_rate numeric not null,
-  rating int not null default 3 check (rating between 1 and 5),
-  status text not null default 'active' check (status in ('active', 'inactive')),
-  bank_name text not null,
-  bank_branch text not null,
-  bank_account text not null
-);
-
--- 13. טבלת דוחות שכר חודשיים
-create table salary_reports (
-  report_id serial primary key,
-  sent_date date not null,
-  report_file_url text not null
-);
-
--- 14. טבלת שיבוצי דיילות (מודול 4 - assignments)
-create table assignments (
-  project_id int references projects (project_id) on delete cascade,
-  id_number text references hostesses(id_number) on delete restrict,
-  assignment_number int not null,
-  salary_report_id int references salary_reports (report_id) on delete restrict,
-  assignment_status text not null default 'pending'
-    check (assignment_status in ('pending', 'confirmed_available', 'declined', 'finally_approved', 'released')),
-  hourly_rate_snapshot numeric not null,
-  actual_hours numeric not null default 0,
-  personal_bonus numeric not null default 0,
-  reminder_sent boolean not null default false,
-  primary key (project_id, id_number, assignment_number)
-);
-
--- 15. טבלת לוגיסטיקה (מודול 5)
-create table logistics (
-  project_id int references projects(project_id) on delete cascade,
-  sku text references products (sku) on delete restrict,
-  serial_number int not null,
-  planned_qty int not null check (planned_qty > 0),
-  actual_qty int not null default 0,
-  item_status text not null default 'not_started' check (item_status in ('not_started', 'ordered', 'ready')),
-  notes text,
-  primary key (project_id, sku, serial_number)
-);
-
--- ============================================================
--- RLS — מודול 1, צעדים 4-5 (בוצע בפועל ב-Supabase; מתועד כאן לשחזור/היסטוריה)
--- ============================================================
-
--- הגרסה המוקשחת (מיגרציית 20260702195258): search_path='' + שמות סכמה מלאים + revoke מ-anon/PUBLIC.
--- (07/07/2026: תוקן דריפט בקובץ הזה — הופיעה כאן בטעות הגרסה הטרום-מוקשחת.)
-create or replace function public.current_user_role_id()
-  returns integer
-  language sql
-  stable
-  security definer
-  set search_path = ''
-as $$
-  select role_id from public.users where email = auth.email() and status = 'active';
-$$;
-
-revoke execute on function public.current_user_role_id() from public, anon;
 
 alter table roles enable row level security;
-create policy "roles_select_all" on roles for select to authenticated using (true);
+
+-- אינדקסים
+-- roles_pkey — unique btree (role_id) [נוצר ע"י האילוץ roles_pkey]
+-- roles_role_name_key — unique btree (role_name) [נוצר ע"י האילוץ roles_role_name_key]
+
+-- מדיניות RLS
+create policy roles_select_all on roles
+  for select to authenticated
+  using (true);
+
+
+-- ============================================================
+-- 2. טבלת מודולים — public.modules (מודול 1; שורות המטריצה role→module)
+-- ============================================================
+create table modules (
+  module_id   serial not null,
+  module_name text   not null,
+  constraint modules_pkey            primary key (module_id),
+  constraint modules_module_name_key unique (module_name)
+);
 
 alter table modules enable row level security;
-create policy "modules_select_all" on modules for select to authenticated using (true);
+
+-- אינדקסים
+-- modules_pkey — unique btree (module_id) [נוצר ע"י האילוץ modules_pkey]
+-- modules_module_name_key — unique btree (module_name) [נוצר ע"י האילוץ modules_module_name_key]
+
+-- מדיניות RLS
+create policy modules_select_all on modules
+  for select to authenticated
+  using (true);
+
+
+-- ============================================================
+-- 3. טבלת הרשאות — public.permissions (מודול 1; רמת גישה לכל צמד תפקיד×מודול)
+-- ============================================================
+create table permissions (
+  role_id          integer not null,
+  module_id        integer not null,
+  permission_level text    not null,
+  constraint permissions_pkey                   primary key (role_id, module_id),
+  constraint permissions_role_id_fkey           foreign key (role_id)   references roles (role_id)     on delete cascade,
+  constraint permissions_module_id_fkey         foreign key (module_id) references modules (module_id) on delete cascade,
+  constraint permissions_permission_level_check check (permission_level = any (array['edit'::text, 'view'::text, 'blocked'::text]))
+);
 
 alter table permissions enable row level security;
-create policy "permissions_select_all" on permissions for select to authenticated using (true);
-create policy "permissions_write_ceo_only" on permissions for all to authenticated
-  using (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'))
+
+-- אינדקסים
+-- permissions_pkey — unique btree (role_id, module_id) [נוצר ע"י האילוץ permissions_pkey]
+
+-- מדיניות RLS
+create policy permissions_select_all on permissions
+  for select to authenticated
+  using (true);
+
+create policy permissions_write_ceo_only on permissions
+  for all to authenticated
+  using      (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'))
   with check (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'));
 
+
+-- ============================================================
+-- 4. טבלת משתמשי מערכת — public.users (מודול 1; המייל מקשר ל-Supabase Auth)
+-- ============================================================
+create table users (
+  email     text    not null,
+  role_id   integer not null,
+  full_name text    not null,
+  status    text    not null default 'active',
+  phone     text,
+  constraint users_pkey         primary key (email),
+  constraint users_role_id_fkey foreign key (role_id) references roles (role_id) on delete restrict,
+  constraint users_status_check check (status = any (array['active'::text, 'inactive'::text]))
+);
+
 alter table users enable row level security;
--- (07/07/2026, מיגרציית initplan: קריאות auth.email()/current_user_role_id() עטופות ב-(select …) —
---  חישוב פעם-לשאילתה במקום פעם-לשורה. זהות התנהגותית; ראו 20260707163709.)
-create policy "users_select_self_or_ceo" on users for select to authenticated
+
+-- אינדקסים
+-- users_pkey — unique btree (email) [נוצר ע"י האילוץ users_pkey]
+
+-- מדיניות RLS
+create policy users_select_self_or_ceo on users
+  for select to authenticated
   using (
     email = (select auth.email())
     or (select current_user_role_id()) = (select role_id from roles where role_name = 'מנכ"ל')
   );
-create policy "users_write_ceo_only" on users for all to authenticated
-  using (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'))
-  with check (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'));
 
--- עדכון-עצמי של פרופיל (מודול 1) — משתמש מעדכן את השורה שלו בלבד (phone/full_name),
--- עם הקפאת role_id ו-status כדי למנוע הסלמת-הרשאות עצמית והפעלה-מחדש עצמית.
--- הקפאת role_id דרך current_user_role_id() (SECURITY DEFINER, עוקפת RLS => חסינת רקורסיה;
--- subquery ישיר על users כאן היה גורם infinite recursion). policy זו permissive ומתווספת
--- ל-users_write_ceo_only ב-OR — המנכ"ל ממשיך לעדכן כל שורה/כל עמודה דרך אותה policy.
-create policy "users_update_self" on users for update to authenticated
+create policy users_update_self on users
+  for update to authenticated
   using (email = (select auth.email()))
   with check (
     email = (select auth.email())
@@ -243,818 +137,1481 @@ create policy "users_update_self" on users for update to authenticated
     and status = 'active'
   );
 
--- ============================================================
--- נעילת חשבון אחרי כשלונות התחברות (מודול 1 — סגירה; החליף את דרישת ה-CAPTCHA)
--- ------------------------------------------------------------
--- מונה פר-אימייל שננעל אחרי 5 כשלונות רצופים ל-15 דקות, נאכף בזרימת ההתחברות
--- (LoginPage.jsx) דרך 3 פונקציות SECURITY DEFINER. מגובה ב-rate limiting המובנה
--- (פר-IP) של Supabase. הערה: Auth Hook ("Password verification attempt") היה הפתרון
--- הרובוסטי אך הוא נעול לתוכנית Team; לכן זו אכיפה ברמת אפליקציה/DB — מספקת למערכת
--- פנימית סגורה, אך ניתנת לעקיפה בקריאת API ישירה (מתועד ב-PROJECT_MASTER §5.1).
--- ============================================================
+create policy users_write_ceo_only on users
+  for all to authenticated
+  using      (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'))
+  with check (current_user_role_id() = (select role_id from roles where role_name = 'מנכ"ל'));
 
-create table if not exists login_attempts (
-  email text primary key,
-  failed_count int not null default 0,
-  locked_until timestamptz,
-  last_attempt_at timestamptz not null default now()
+
+-- ============================================================
+-- 5. טבלת נעילת התחברות — public.login_attempts (מודול 1)
+-- ============================================================
+-- נכתבת ונקראת אך ורק דרך הפונקציות check_login_lock / register_failed_login /
+-- reset_login_attempts (סעיף 24). RLS מופעל ואין לה אף policy ⇒ גישה ישירה מהלקוח חסומה.
+create table login_attempts (
+  email           text        not null,
+  failed_count    integer     not null default 0,
+  locked_until    timestamptz,
+  last_attempt_at timestamptz not null default now(),
+  constraint login_attempts_pkey primary key (email)
 );
 
--- RLS פעיל בלי policies: אין גישה ישירה מהלקוח לטבלה; רק דרך 3 הפונקציות למטה.
 alter table login_attempts enable row level security;
 
--- check_login_lock: מחזיר את מועד שחרור הנעילה אם החשבון נעול כרגע, אחרת NULL.
--- נקרא לפני ההתחברות => זמין ל-anon.
-create or replace function check_login_lock(p_email text)
-returns timestamptz
-language sql security definer
-set search_path = ''
-as $$
-  select locked_until from public.login_attempts
-  where email = p_email and locked_until is not null and locked_until > now();
-$$;
+-- אינדקסים
+-- login_attempts_pkey — unique btree (email) [נוצר ע"י האילוץ login_attempts_pkey]
 
--- register_failed_login: מגדיל את מונה הכשלונות; בהגעה ל-5 נועל ל-15 דקות ומאפס את המונה.
--- מחזיר את מועד שחרור הנעילה אם ננעל כעת, אחרת NULL. זמין ל-anon (נקרא לפני התחברות מוצלחת).
-create or replace function register_failed_login(p_email text)
-returns timestamptz
-language plpgsql security definer
-set search_path = ''
-as $$
-declare
-  v_count int;
-  v_locked timestamptz;
-begin
-  insert into public.login_attempts (email, failed_count, last_attempt_at)
-    values (p_email, 1, now())
-  on conflict (email) do update
-    set failed_count = public.login_attempts.failed_count + 1,
-        last_attempt_at = now()
-  returning failed_count into v_count;
+-- מדיניות RLS: אין (0 policies)
 
-  if v_count >= 5 then
-    v_locked := now() + interval '15 minutes';
-    update public.login_attempts
-      set locked_until = v_locked, failed_count = 0
-      where email = p_email;
-    return v_locked;
-  end if;
-
-  return null;
-end;
-$$;
-
--- reset_login_attempts: מאפס את המונה/נעילה של המשתמש המחובר בלבד (auth.email()).
--- זמין ל-authenticated בלבד => anon לא יכול לאפס מונה של אחר כדי לעקוף נעילה.
-create or replace function reset_login_attempts()
-returns void
-language sql security definer
-set search_path = ''
-as $$
-  delete from public.login_attempts where email = auth.email();
-$$;
-
-revoke all on function check_login_lock(text) from public;
-revoke all on function register_failed_login(text) from public;
-revoke all on function reset_login_attempts() from public;
-grant execute on function check_login_lock(text) to anon, authenticated;
-grant execute on function register_failed_login(text) to anon, authenticated;
-grant execute on function reset_login_attempts() to authenticated;
--- Supabase נותן ברירת-מחדל EXECUTE ישיר ל-anon על פונקציות חדשות ב-public; מבטלים
--- אותו במפורש כדי ש-reset יהיה authenticated-בלבד (least-privilege; ממילא no-op ל-anon
--- כי auth.email() הוא NULL).
-revoke execute on function reset_login_attempts() from anon;
 
 -- ============================================================
--- מודול 2 — יסוד ה-DB (מיגרציה 20260710160735, בוצע בפועל 10/07/2026; §7.64 + חבילת-nod §7.40א/48/62/73)
+-- 6. טבלת קצב-קריאות ל-RPC של ההתחברות — public.login_rpc_calls (מודול 1)
 -- ============================================================
--- created_at/updated_at + טריגר moddatetime נוספו ל-11 הטבלאות העסקיות (customers, products, price_tiers,
--- params, quotes, quote_services, projects, hostesses, salary_reports, assignments, logistics).
--- מוצג inline ל-customers/quotes; ליתר 9 — הדפוס למטה. התוסף moddatetime הועבר ל-schema `extensions`
--- (מיגרציה 20260710164420 — מ-public לפי המלצת Supabase; 11 הטריגרים נקשרים ל-OID ונשארו תקינים).
-
--- §7.40(א): ייחודיות מפתחות-המחרוזת שכל ה-RLS משווה כמחרוזת
-alter table roles   add constraint roles_role_name_key     unique (role_name);
-alter table modules add constraint modules_module_name_key unique (module_name);
-
--- §7.62: users.role_id חובה (כל שרשרת ה-RLS נשענת עליו — NULL = מסכים ריקים)
-alter table users alter column role_id set not null;
-
--- §7.48: enable-RLS ל-10 הטבלאות העסקיות שנותרו (customers ב-RLS מאז מודול 1; deny-all מכוון עד policies)
-alter table products enable row level security;
-alter table price_tiers enable row level security;
-alter table params enable row level security;
-alter table quotes enable row level security;
-alter table quote_services enable row level security;
-alter table projects enable row level security;
-alter table hostesses enable row level security;
-alter table salary_reports enable row level security;
-alter table assignments enable row level security;
-alter table logistics enable row level security;
-
--- §7.73: הדפוס לכל אחת מ-9 הטבלאות שלא-מוצגות-inline למעלה:
-create extension if not exists moddatetime with schema extensions;   -- schema ייעודי (advisor extension_in_public)
---   alter table <t> add column created_at timestamptz not null default now();
---   alter table <t> add column updated_at timestamptz not null default now();
---   create trigger <t>_set_updated_at before update on <t> for each row execute function moddatetime(updated_at);
-
--- §7.21: ה-policies העסקיות הראשונות בפרויקט — customers (הרשאה לפי מטריצת role→module בלבד; התקדים לכל מודול)
-alter table customers enable row level security;
-create policy "customers_select_by_permission" on customers for select to authenticated
-  using (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
-      and p.permission_level in ('edit', 'view')));
-create policy "customers_write_by_permission" on customers for all to authenticated
-  using (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
-      and p.permission_level = 'edit'))
-  with check (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
-      and p.permission_level = 'edit'));
-
--- אזור השיווק (מסך 5.6.3): bucket ציבורי + 4 policies על storage.objects לפי אותה מטריצת 'לקוחות'
-insert into storage.buckets (id, name, public) values ('marketing', 'marketing', true) on conflict (id) do nothing;
-create policy "marketing_read_by_permission" on storage.objects for select to authenticated
-  using (bucket_id = 'marketing' and exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
-      and p.permission_level in ('edit', 'view')));
-create policy "marketing_insert_by_permission" on storage.objects for insert to authenticated
-  with check (bucket_id = 'marketing' and exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
-      and p.permission_level = 'edit'));
-create policy "marketing_update_by_permission" on storage.objects for update to authenticated
-  using (bucket_id = 'marketing' and exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
-      and p.permission_level = 'edit'))
-  with check (bucket_id = 'marketing' and exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
-      and p.permission_level = 'edit'));
-create policy "marketing_delete_by_permission" on storage.objects for delete to authenticated
-  using (bucket_id = 'marketing' and exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
-      and p.permission_level = 'edit'));
-
--- §7.81 (11/07/2026): ריבוי אנשי-קשר ללקוח — טבלת-ילד customer_contacts (אנשי-קשר *נוספים*; הראשי
--- נשאר inline על customers, אופציה C — סטיית-C6 §2.4.1). RLS = אותה מטריצת 'לקוחות'. הוחל 11/07.
-create table customer_contacts (
-  contact_id  bigint generated always as identity primary key,
-  customer_id bigint not null references customers(customer_id) on delete cascade on update cascade,
-  contact_name text not null,
-  phone text,
-  email text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-create index customer_contacts_customer_id_idx on customer_contacts (customer_id);
-create trigger customer_contacts_set_updated_at before update on customer_contacts for each row execute function extensions.moddatetime(updated_at);
-alter table customer_contacts enable row level security;
-create policy "customer_contacts_select_by_permission" on customer_contacts for select to authenticated
-  using (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
-      and p.permission_level in ('edit', 'view')));
-create policy "customer_contacts_write_by_permission" on customer_contacts for all to authenticated
-  using (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
-      and p.permission_level = 'edit'))
-  with check (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'לקוחות')
-      and p.permission_level = 'edit'));
-
--- ============================================================
--- מודול 3 (הצעות מחיר) — מיגרציה 1: מבנה ואילוצים (20260723111005, הוחל 23/07/2026)
--- דלתאות על הטבלאות שהוגדרו למעלה (base). הטבלאות היו ריקות בהחלה => אפס אובדן-נתונים.
--- ============================================================
-
--- params: ייחודיות שם-הפרמטר (§7.40ב) — ה-Seed מעדכן לפי-שם
-alter table params add constraint params_param_name_key unique (param_name);
-
--- products: יחידה מרשימה סגורה (§7.82/F13) + טיפוסי-כסף (§7.74)
-alter table products add constraint products_unit_check check (unit in ('יחידה', 'פרויקט', 'משמרת', 'מטר'));
-alter table products alter column base_price type numeric(12,2);
-alter table products alter column cost type numeric(12,2);  -- ⛔ העמודה נמחקה 31/07 (סבב G); הטיפוס שרד ב-product_costs.cost
-
--- price_tiers: כסף מדויק (§7.74) + היגיון (§7.41) + sku ON UPDATE CASCADE (§7.64)
-alter table price_tiers alter column special_price type numeric(12,2);
-alter table price_tiers add constraint price_tiers_min_qty_check check (min_qty > 0);
-alter table price_tiers add constraint price_tiers_max_qty_check check (max_qty is null or max_qty >= min_qty);
-alter table price_tiers drop constraint price_tiers_sku_fkey;
-alter table price_tiers add constraint price_tiers_sku_fkey
-  foreign key (sku) references products(sku) on delete cascade on update cascade;
-
--- quote_services: בנייה-מחדש (§7.85) — line_id סינתטי, עלות-קפואה (§7.28), צבע (§7.41), sku CASCADE (§7.64), כסף (§7.74)
-alter table quote_services drop constraint quote_services_pkey;
-alter table quote_services add column line_id bigint generated always as identity primary key;
-alter table quote_services add column closing_unit_cost numeric(12,2) not null check (closing_unit_cost >= 0);
-alter table quote_services alter column closing_unit_price type numeric(12,2);
-alter table quote_services add constraint quote_services_color_check
-  check (color is null or color in ('לבן', 'שחור', 'אפור', 'טורקיז', 'כחול'));
-alter table quote_services add constraint quote_services_quote_line_key unique (quote_id, line_number);
-alter table quote_services drop constraint quote_services_sku_fkey;
-alter table quote_services add constraint quote_services_sku_fkey
-  foreign key (sku) references products(sku) on delete restrict on update cascade;
-
--- quotes: snapshots/זמנים/מחזור-חיים/הנחות (§7.51/82/62/26 + LOCAL-2)
-alter table quotes add column vat_rate_snapshot numeric(5,2);       -- §7.51
-alter table quotes add column rejection_notes text;                 -- §7.82/F3
-alter table quotes add column estimated_start_time time not null;   -- §7.82/F23
-alter table quotes add column estimated_end_time time not null;     -- §7.82/F23
-alter table quotes drop column estimated_hours;                     -- מוקלד → מחושב
-alter table quotes add column estimated_hours numeric(4,2) generated always as (
-  case when estimated_end_time > estimated_start_time
-       then extract(epoch from (estimated_end_time - estimated_start_time)) / 3600
-       else extract(epoch from (estimated_end_time - estimated_start_time)) / 3600 + 24
-  end
-) stored;                                                           -- LOCAL-2: גלגול חוצה-חצות +24
-alter table quotes alter column customer_id set not null;           -- §7.62
-alter table quotes alter column applied_customer_discount type numeric(12,2);  -- §7.74
-alter table quotes alter column manual_discount type numeric(12,2);            -- §7.74
-alter table quotes add constraint quotes_applied_discount_range
-  check (applied_customer_discount >= 0 and applied_customer_discount <= 100);
-alter table quotes add constraint quotes_manual_discount_range
-  check (manual_discount >= 0 and manual_discount <= 100);
-alter table quotes add constraint quotes_combined_discount_max
-  check (applied_customer_discount + manual_discount <= 100);
-alter table quotes add constraint quotes_rejection_reason_check
-  check (rejection_reason is null or rejection_reason in
-    ('מחיר', 'חוסר זמינות/לו"ז', 'נבחר מתחרה', 'תקציב לקוח', 'האירוע בוטל אצל הלקוח', 'פג תוקף', 'נפתחה בטעות', 'אחר'));
-alter table quotes add constraint quotes_rejection_notes_required
-  check (rejection_reason is distinct from 'אחר' or rejection_notes is not null);
-alter table quotes add constraint quotes_rejected_iff_reason
-  check ((quote_status = 'rejected') = (rejection_reason is not null));
--- מיגרציה 10 (20260731085335): שיעור-מע"מ ריק לא יכול יותר להיקפא בשקט על הצעה מאושרת
-alter table quotes add constraint quotes_approved_requires_vat
-  check (quote_status <> 'approved' or vat_rate_snapshot is not null);
-alter table quotes add constraint quotes_vat_snapshot_range
-  check (vat_rate_snapshot is null or (vat_rate_snapshot >= 0 and vat_rate_snapshot <= 100));
-
--- projects: snapshot-זהות + זמני-אירוע (§7.76 + LOCAL-1/5) — ה-RPC-האישור ממלא
-alter table projects add column event_name text;                                      -- §7.76
-alter table projects add column customer_id bigint references customers(customer_id);  -- LOCAL-5 (FK חדש)
-alter table projects add column final_start_time time;                                -- LOCAL-1
-alter table projects add column final_end_time time;                                  -- LOCAL-1
-
--- logistics: sku ON UPDATE CASCADE (§7.64)
-alter table logistics drop constraint logistics_sku_fkey;
-alter table logistics add constraint logistics_sku_fkey
-  foreign key (sku) references products(sku) on delete restrict on update cascade;
-
--- אינדקסים: C-1 (עמודות-FK) + C-6 (סריקת-פקיעה יומית / "פג-בקרוב")
-create index if not exists quotes_customer_id_idx      on quotes (customer_id);
-create index if not exists quotes_status_updated_idx   on quotes (quote_status, updated_at);
-create index if not exists quote_services_sku_idx      on quote_services (sku);
-create index if not exists quote_services_quote_id_idx on quote_services (quote_id);
-create index if not exists projects_customer_id_idx    on projects (customer_id);
-create index if not exists projects_owner_email_idx    on projects (owner_email);
-create index if not exists logistics_sku_idx           on logistics (sku);
-
--- ============================================================
--- מודול 3 — מיגרציה 3: RLS policies (20260723113500) — quotes/quote_services §7.21 · catalog §7.83
--- ============================================================
-create policy "quotes_select_by_permission" on quotes for select to authenticated
-  using (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
-      and p.permission_level in ('edit', 'view')));
-create policy "quotes_write_by_permission" on quotes for all to authenticated
-  using (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
-      and p.permission_level = 'edit'))
-  with check (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
-      and p.permission_level = 'edit'));
-create policy "quote_services_select_by_permission" on quote_services for select to authenticated
-  using (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
-      and p.permission_level in ('edit', 'view')));
-create policy "quote_services_write_by_permission" on quote_services for all to authenticated
-  using (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
-      and p.permission_level = 'edit'))
-  with check (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
-      and p.permission_level = 'edit'));
--- §7.83: catalog — open read to authenticated + CEO write via 'הגדרות מערכת'
-create policy "products_select_all_authenticated"    on products    for select to authenticated using (true);
-create policy "price_tiers_select_all_authenticated" on price_tiers for select to authenticated using (true);
-create policy "params_select_all_authenticated"      on params      for select to authenticated using (true);
-create policy "products_write_ceo_only" on products for all to authenticated
-  using (exists (select 1 from permissions p where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת') and p.permission_level = 'edit'))
-  with check (exists (select 1 from permissions p where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת') and p.permission_level = 'edit'));
-create policy "price_tiers_write_ceo_only" on price_tiers for all to authenticated
-  using (exists (select 1 from permissions p where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת') and p.permission_level = 'edit'))
-  with check (exists (select 1 from permissions p where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת') and p.permission_level = 'edit'));
-create policy "params_write_ceo_only" on params for all to authenticated
-  using (exists (select 1 from permissions p where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת') and p.permission_level = 'edit'))
-  with check (exists (select 1 from permissions p where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת') and p.permission_level = 'edit'));
-
--- ============================================================
--- מודול 3 — מיגרציה 4: lock trigger + RPCs (20260723115000)
--- ============================================================
--- §7.50/F5: נועל UPDATE/DELETE על הצעה/שורה שאינה in_progress (מגן על שחזור-PDF §7.12 + רווחיות §7.28)
-create or replace function public.enforce_quote_in_progress_lock()
-returns trigger language plpgsql security definer set search_path = '' as $$
-declare v_status text;
-begin
-  if TG_TABLE_NAME = 'quotes' then v_status := OLD.quote_status;
-  else select q.quote_status into v_status from public.quotes q where q.quote_id = OLD.quote_id; end if;
-  if v_status is distinct from 'in_progress' then
-    raise exception 'הצעה נעולה: עריכה/מחיקה מותרת רק בסטטוס in_progress (נמצא: %)', coalesce(v_status,'unknown') using errcode='P0001';
-  end if;
-  return case when TG_OP = 'DELETE' then OLD else NEW end;
-end; $$;
-create trigger quotes_lock_non_in_progress         before update or delete on quotes         for each row execute function public.enforce_quote_in_progress_lock();
-create trigger quote_services_lock_non_in_progress before update or delete on quote_services for each row execute function public.enforce_quote_in_progress_lock();
--- ⚠️ 3 ה-RPCs: הגוף המלא (הסמכותי) בקובץ supabase/migrations/20260723115000_module3_lock_and_conversion_rpc.sql.
---    כאן החתימות בלבד (schema.sql הוא snapshot-רפרנס; מקור-האמת-לשחזור = המיגרציות, ר' כותרת-הקובץ):
---    • approve_quote_and_create_project(p_quote_id int) returns int  — SECURITY DEFINER, search_path=''
---        §7.49 המרה: בדיקת-edit-פנימית → הקפאת cost(§7.28)+VAT(§7.51) → project נולד-שלם(§7.76/LOCAL-1/5, F22) → logistics.
---        grants: revoke public,anon; grant authenticated.
---        ⚠️ **הגוף עודכן במיגרציה 10 (20260731085335)** — הוא זה שחי היום, לא זה של 20260723115000:
---        פרמטר `אחוז_מעמ` נקרא כטקסט ומאומת (חסר/ריק/לא-מספרי/מחוץ ל-0–100) **לפני כל כתיבה**,
---        עם raise עברי P0001 — כך שאישור שנכשל אינו מוליד פרויקט. שאר הגוף זהה בית-בבית.
---    • create_quote(p_header jsonb, p_lines jsonb) returns int        — SECURITY INVOKER, F17 (RLS הוא הקיר).
---    • replace_quote_lines(p_quote_id int, p_header jsonb, p_lines jsonb) returns void — SECURITY INVOKER, F17.
---        grants (שתיהן): revoke public,anon; grant authenticated.
-
--- ============================================================
--- מודול 3 — מיגרציה 5: pg_cron (expiry + login cleanup) + lock-fn revoke (20260723120500)
--- ============================================================
-create extension if not exists pg_cron with schema pg_catalog;
--- ⚠️ הגוף שלמטה **נדרס במיגרציה 10 (20260731085335)** — cron.schedule עם אותו שם-עבודה מעדכן
---    במקום ליצור כפולה (אומת חי: 2 עבודות, jobid=1 נשמר). הגוף החי היום:
-select cron.schedule('module3-quote-expiry', '0 1 * * *', $job$
-do $expiry$
-declare v_days_text text; v_days int;
-begin
-  select param_value into v_days_text from public.params where param_name = 'ימי_תוקף_הצעה';
-  if v_days_text is null or btrim(v_days_text) = '' or btrim(v_days_text) !~ '^[0-9]+$' then
-    raise exception 'פרמטר ימי_תוקף_הצעה חסר או אינו מספר שלם — עבודת תפוגת ההצעות לא בוצעה'
-      using errcode = 'P0001';
-  end if;
-  v_days := btrim(v_days_text)::int;
-  update public.quotes set quote_status = 'rejected', rejection_reason = 'פג תוקף'
-   where quote_status = 'in_progress'
-     and updated_at < now() - (v_days * interval '1 day');
-end
-$expiry$;
-$job$);  -- §7.42/§7.56 + שומר-הפרמטר (מיגרציה 10)
-select cron.schedule('module1-login-attempts-cleanup', '30 1 * * *', $job$
-  delete from public.login_attempts where last_attempt_at < now() - interval '30 days'; $job$);  -- §7.75
-revoke execute on function public.enforce_quote_in_progress_lock() from public, anon, authenticated;  -- advisor hygiene
-
--- ============================================================
--- מודול 3 — מיגרציה 8: email_log (20260730095439, הוחל 30/07/2026)
--- ============================================================
--- יומן שליחות מיילים — מקור-האמת ל"האם נשלח". **גנרי** לפי (entity_type, entity_id): 6 תבניות-מייל
--- קיימות ב-params ומודולים 4/8/11 ישלחו גם הם, ולכן אין כאן טבלה פר-מודול. אין FK אמיתי (הישות
--- משתנה) — מקובל ביומן: שליחה היא היסטוריה, ובפרויקט אין מחיקה (§7.11).
--- ⚠️ נכתב ע"י Edge Function בלבד (service-role); **אין policy כתיבה ללקוח** — יומן שהדפדפן
--- יכול לכתוב אליו אינו ראיה. הוקדם ממודול 10 (§6 🚧 מ10) בהכרעת-ישי 30/07/2026.
-create table email_log (
-  email_log_id bigint generated always as identity primary key,
-  entity_type text not null check (entity_type in ('quote', 'shift')),  -- 'shift' נוסף במיגרציה 20260809085058 (מ4); מ8/מ11 מרחיבים בערך אחד כל אחד
-  entity_id bigint not null,
-  recipient text not null,
-  template_name text,
-  subject text,
-  status text not null check (status in ('sent', 'failed')),   -- אין 'unknown' במכוון
-  error_message text,
-  sent_by_email text,
-  created_at timestamptz not null default now()
-);
-create index idx_email_log_entity on email_log (entity_type, entity_id, created_at desc);
-alter table email_log enable row level security;
-create policy "email_log_select_quotes_module" on email_log for select to authenticated
-  using (entity_type = 'quote' and exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
-      and p.permission_level in ('edit', 'view')));
-
--- מודול 4 — מיגרציה 0 (20260809085058, הוחל 09/08/2026): policy נפרדת ליומן-הדיילות.
--- 🚫 **לא הרחבה של זו שמעליה** — `db_roadmap` A-20 מורה שכל מודול מוסיף policy משלו, אחרת
--- יומן-ההצעות נפתח למנהלת הגיוס ויומן-הדיילות למנהלת הכספים, ושתיהן חסומות זו במודול של זו.
-create policy "email_log_select_shifts_module" on email_log for select to authenticated
-  using (entity_type = 'shift' and exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'דיילות')
-      and p.permission_level in ('edit', 'view')));
-
--- ============================================================
--- סבב-תיקונים G — הקשחת-מסד (20260731155511 + 2 מיגרציות תיקון-קדימה, הוחל 31/07/2026)
--- ============================================================
--- ארבעה פערים שבהם המסד היה מתירני יותר מההכרעה שהוא אמור לאכוף (סקירת-הקוד 31/07 §G).
-
--- (1) §7.8↳ — הגבלת-קצב לפונקציית-הכניסה: 15 קריאות לכל כתובת-IP בשעה.
--- ‏`register_failed_login` מוענקת ל-anon ומקבלת כתובת-מייל כפרמטר, ולכן כל מחזיק מפתח-anon
--- (=כל אחד; הוא בבנדל הציבורי) יכול היה לנעול כל חשבון ידוע שוב ושוב **בלי אף ניסיון-סיסמה**,
--- והנעול אינו יכול לשחרר את עצמו. ההגבלה היא לפי **מי שמתקשר** ולא לפי הפרמטר, שנשלט ע"י התוקף.
--- ⚠️ מקטינה חומרה ואינה סוגרת את הפער — הפתרון המלא (Auth Hook) דורש Team plan, נדחה בהכרעת-ישי.
+-- ⚠️ אין לטבלה הזו מפתח ראשי. RLS מופעל ואין לה אף policy.
 create table login_rpc_calls (
-  ip inet not null,
+  ip        inet        not null,
   called_at timestamptz not null default now()
 );
-create index login_rpc_calls_ip_time_idx on login_rpc_calls (ip, called_at desc);
-alter table login_rpc_calls enable row level security;   -- deny-all מכוון: 0 policies
-revoke all on login_rpc_calls from anon, authenticated;  -- הגישה רק מתוך הפונקציה (DEFINER)
--- ‏`register_failed_login` שוכתבה: בראשה שליפת IP מ-`request.headers→x-forwarded-for`, מחיקת
--- שורות מעל שעה, ספירה, ומעל 15 — `raise` בהודעה **גנרית** (לא לחשוף לתוקף שזו הגנת-קצב).
--- ‏IP חסר ⇒ מדלגים על ההגבלה ולא חוסמים (קורה רק בגישה ישירה למסד, לא דרך PostgREST).
--- הלוגיקה העסקית (5 כשלונות ⇒ נעילת 15 דק') לא שונתה.
 
--- (2) §7.83↳ — עלות-הרכש יוצאת מ-`products` לטבלת-בת, כדי שההרשאה תהיה ברמת-**טבלה**.
--- ‏`products_select_all_authenticated` (using(true)) חשפה את `cost` — כלומר את המרווח — לכל
--- משתמש מחובר, כולל מנהלת-גיוס ומנהלת-לוגיסטיקה שחסומות לגמרי על 'הצעות מחיר' (נמדד חי לפני
--- התיקון: כל חמשת התפקידים קיבלו את העלויות ב-REST). ‏RLS ב-Postgres הוא ברמת-שורה, וכל
--- המחוברים חולקים role אחד — ולכן פיצול-טבלה, לא הרשאת-עמודה; view עם security_invoker אינו פותר.
+alter table login_rpc_calls enable row level security;
+
+-- אינדקסים
+create index login_rpc_calls_ip_time_idx on login_rpc_calls using btree (ip, called_at desc);
+
+-- מדיניות RLS: אין (0 policies)
+
+
+-- ============================================================
+-- 7. טבלת לקוחות — public.customers (מודול 2)
+-- ============================================================
+-- העמודות מסודרות כאן בסדר הפיזי שלהן במסד. המפתח הראשי הוא customer_id (identity),
+-- ו-company_number (ח"פ, 9 ספרות) הוא המזהה העסקי הייחודי.
+create table customers (
+  company_number    text        not null,
+  customer_type     text        not null,
+  company_name      text        not null,
+  contact_name      text        not null,
+  phone             text        not null,
+  email             text        not null,
+  discount_percent  numeric     not null default 0,
+  marketing_consent boolean     not null default false,
+  status            text        not null default 'active',
+  customer_id       bigint      not null generated always as identity,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
+  constraint customers_pkey                   primary key (customer_id),
+  constraint customers_company_number_key     unique (company_number),
+  constraint customers_company_number_9_digits check (company_number ~ '^[0-9]{9}$'::text),
+  constraint customers_customer_type_check    check (customer_type = any (array['private_company'::text, 'government'::text, 'production_company'::text, 'nonprofit'::text])),
+  constraint customers_discount_range         check (discount_percent >= 0::numeric and discount_percent <= 100::numeric),
+  constraint customers_status_check           check (status = any (array['active'::text, 'inactive'::text]))
+);
+
+alter table customers enable row level security;
+
+-- אינדקסים
+-- customers_pkey — unique btree (customer_id) [נוצר ע"י האילוץ customers_pkey]
+-- customers_company_number_key — unique btree (company_number) [נוצר ע"י האילוץ customers_company_number_key]
+
+-- טריגרים
+create trigger customers_set_updated_at
+  before update on customers
+  for each row execute function moddatetime('updated_at');
+
+-- מדיניות RLS
+create policy customers_select_by_permission on customers
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+create policy customers_write_by_permission on customers
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+        and p.permission_level = 'edit'
+    )
+  );
+
+
+-- ============================================================
+-- 8. טבלת אנשי-קשר נוספים ללקוח — public.customer_contacts (מודול 2)
+-- ============================================================
+-- איש-הקשר הראשי יושב inline על customers (contact_name/phone/email); כאן ה*נוספים* בלבד.
+create table customer_contacts (
+  contact_id   bigint      not null generated always as identity,
+  customer_id  bigint      not null,
+  contact_name text        not null,
+  phone        text,
+  email        text,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  constraint customer_contacts_pkey             primary key (contact_id),
+  constraint customer_contacts_customer_id_fkey foreign key (customer_id) references customers (customer_id) on update cascade on delete cascade
+);
+
+alter table customer_contacts enable row level security;
+
+-- אינדקסים
+create index customer_contacts_customer_id_idx on customer_contacts using btree (customer_id);
+-- customer_contacts_pkey — unique btree (contact_id) [נוצר ע"י האילוץ customer_contacts_pkey]
+
+-- טריגרים
+create trigger customer_contacts_set_updated_at
+  before update on customer_contacts
+  for each row execute function moddatetime('updated_at');
+
+-- מדיניות RLS
+create policy customer_contacts_select_by_permission on customer_contacts
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+create policy customer_contacts_write_by_permission on customer_contacts
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+        and p.permission_level = 'edit'
+    )
+  );
+
+
+-- ============================================================
+-- 9. קטלוג מוצרים — public.products (אתר / דיילת / מוצר)
+-- ============================================================
+-- מחיר-המכירה כאן; **העלות חיה בטבלה נפרדת — product_costs (סעיף 10)**.
+create table products (
+  sku        text        not null,
+  item_name  text        not null,
+  description text        not null default '',
+  category   text        not null,
+  unit       text        not null,
+  base_price numeric(12,2) not null,
+  status     text        not null default 'active',
+  image_url  text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint products_pkey             primary key (sku),
+  constraint products_base_price_check check (base_price >= 0::numeric),
+  constraint products_category_check   check (category = any (array['site'::text, 'hostess'::text, 'product'::text])),
+  constraint products_status_check     check (status = any (array['active'::text, 'out_of_stock'::text, 'inactive'::text])),
+  constraint products_unit_check       check (unit = any (array['יחידה'::text, 'פרויקט'::text, 'משמרת'::text, 'מטר'::text]))
+);
+
+alter table products enable row level security;
+
+-- אינדקסים
+-- products_pkey — unique btree (sku) [נוצר ע"י האילוץ products_pkey]
+
+-- טריגרים
+create trigger products_set_updated_at
+  before update on products
+  for each row execute function moddatetime('updated_at');
+
+-- מדיניות RLS
+create policy products_select_all_authenticated on products
+  for select to authenticated
+  using (true);
+
+create policy products_write_ceo_only on products
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת')
+        and p.permission_level = 'edit'
+    )
+  );
+
+
+-- ============================================================
+-- 10. עלויות מוצרים — public.product_costs
+-- ============================================================
+-- טבלה נפרדת מ-products כי הקריאה שלה מוגבלת: רק בעלי הרשאת edit ב'הצעות מחיר' או ב'כספים'.
 create table product_costs (
-  sku text primary key references products (sku) on update cascade on delete cascade,
-  cost numeric(12,2) not null check (cost >= 0),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  sku        text          not null,
+  cost       numeric(12,2) not null,
+  created_at timestamptz   not null default now(),
+  updated_at timestamptz   not null default now(),
+  constraint product_costs_pkey      primary key (sku),
+  constraint product_costs_sku_fkey  foreign key (sku) references products (sku) on update cascade on delete cascade,
+  constraint product_costs_cost_check check (cost >= 0::numeric)
 );
-create trigger product_costs_set_updated_at before update on product_costs
-  for each row execute function extensions.moddatetime (updated_at);
+
 alter table product_costs enable row level security;
--- קריאה: בעלי edit על 'הצעות מחיר' (רואי-הרווחיות, §7.28) **או** על 'כספים' (מ8, §7.79)
--- ⟵ אומת חי: מנכ"ל · מנהלת פרויקטים · מנהלת כספים ולקוחות. כתיבה: מנכ"ל, כמו products.
-create policy "product_costs_select_by_permission" on product_costs for select to authenticated
-  using (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id in (select module_id from modules where module_name in ('הצעות מחיר', 'כספים'))
-      and p.permission_level = 'edit'));
-create policy "product_costs_write_ceo_only" on product_costs for all to authenticated
-  using (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת')
-      and p.permission_level = 'edit'))
-  with check (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת')
-      and p.permission_level = 'edit'));
-insert into product_costs (sku, cost) select sku, cost from products;  -- העתקה לפני המחיקה
-alter table products drop column cost;   -- ⚠️ העמודה בשורה 64 ובשורה 445 אינה קיימת יותר
--- שלוש הפונקציות שקראו `products.cost` שוכתבו לקרוא מ-`product_costs`:
---   • approve_quote_and_create_project (DEFINER — עוקף RLS, ההקפאה עובדת לכל מאשר מורשה)
---   • create_quote · replace_quote_lines (INVOKER — בטוח: כל מי שרשאי לכתוב הצעה רשאי לקרוא עלות)
--- ⚠️ שתי האחרונות זורקות `P0001` בעברית **הנוקבת בשם-המוצר** כשלמק"ט אין שורת-עלות, במקום
--- ‏23502 גולמי על closing_unit_cost. התחילית "לא מוגדרת עלות למוצר" היא **חוזה** מול
--- ‏`SERVER_MESSAGE_RULES` ב-`src/lib/quotes.js` — שינוי-ניסוח כאן בלי שם מפיל את המסך ל-fallback.
--- ⚠️ צד-הלקוח קורא `select('*, product_costs(cost)')` — **LEFT במכוון**; inner join היה מפיל
--- מוצר מושבת מהקטלוג ומחזיר את באג-ה-0 ₪ של §7.34.
 
--- (3) תקרות-שרת ל-bucket `marketing` (היו null — הוולידציה חיה ב-JS בלבד, כלומר עקיפה ב-REST).
--- ⚠️ תאומים של MARKETING_MAX_BYTES / MARKETING_ALLOWED_MIME ב-`src/modules/02_customers/api.js`.
-update storage.buckets set file_size_limit = 10485760,
-  allowed_mime_types = array['application/pdf', 'image/jpeg', 'image/png'] where id = 'marketing';
+-- אינדקסים
+-- product_costs_pkey — unique btree (sku) [נוצר ע"י האילוץ product_costs_pkey]
 
--- (4) `products.description` — NOT NULL נשאר (זו הכוונה), נוספה ברירת-מחדל ריקה כרשת-ביטחון
--- לכותב שישמיט את המפתח (הבאג שתוקן בטופס 30/07 המתין לכותב הבא).
-alter table products alter column description set default '';
+-- טריגרים
+create trigger product_costs_set_updated_at
+  before update on product_costs
+  for each row execute function moddatetime('updated_at');
 
--- ============================================================
--- מודול 4 — מיגרציה A (20260809122536, הוחל 09/08/2026)
--- ============================================================
--- ⚠️ ההגדרות בשורות 143 (hostesses) ו-165 (assignments) הן המצב ההיסטורי. המצב הנוכחי = כאן.
--- שתי הטבלאות נמדדו ריקות (0/0) מיד לפני ההחלה ⇒ אין מיגרציית-נתונים.
+-- מדיניות RLS
+create policy product_costs_select_by_permission on product_costs
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id in (select module_id from modules where module_name = any (array['הצעות מחיר'::text, 'כספים'::text]))
+        and p.permission_level = 'edit'
+    )
+  );
 
--- §7.64 — ת"ז יורדת מהמפתח. היא PII, והמפתח המורכב הישן שכפל אותה לכל שורת-שיבוץ במערכת;
--- בנוסף תיקון ספרת-ביקורת אחרי שיש שיבוצים היה נחסם-FK. ת"ז נשארת `unique not null`.
-alter table assignments drop constraint assignments_id_number_fkey;
-alter table assignments drop constraint assignments_pkey;
-alter table hostesses   drop constraint hostesses_pkey;
-alter table hostesses add column hostess_id bigint generated always as identity primary key;
-alter table hostesses add constraint hostesses_id_number_key unique (id_number);
+create policy product_costs_write_ceo_only on product_costs
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת')
+        and p.permission_level = 'edit'
+    )
+  );
 
--- §12⑱(ב) (הכרעת-ישי 08/08/2026) — `rating` היה `not null default 3`, כלומר כל דיילת נולדה
--- מדורגת בלי שאיש התרשם ממנה. ‏NULL = "טרם התרשמה", והמסך מציג `—`.
--- 🔴 **וביטול ה-DEFAULT הוא חצי הכרחי, לא ניקוי** — בלעדיו העמודה ממשיכה למלא 3 לבד.
-alter table hostesses alter column rating drop default;
-alter table hostesses alter column rating drop not null;   -- ה-CHECK 1..5 נשאר; NULL עובר אותו
--- 🚫 אין UNIQUE על `hostesses.email` (§7.65, הכרעת-ישי 31/07) — האזהרה רכה ובטופס בלבד.
--- 🚫 `email`/`city`/`bank_*` נשארות `not null` (local-1, הכרעת-ישי 08/08).
-alter table hostesses add column address   text;
-alter table hostesses add column lat       numeric;
-alter table hostesses add column lng       numeric;
-alter table hostesses add column has_car   boolean not null default false;
-alter table hostesses add column languages text[]  not null default '{}';
-
-alter table assignments drop column id_number;
-alter table assignments add  column hostess_id bigint not null;
-alter table assignments add constraint assignments_pkey
-  primary key (project_id, hostess_id, assignment_number);
--- ON DELETE restrict: אין מחיקת דיילות בשום מקום (השבתה = תג-סטטוס).
--- ON UPDATE restrict: מפתח-identity אינו זז — הצהרה מפורשת, לא ברירת-מחדל שקטה (db_roadmap §1).
-alter table assignments add constraint assignments_hostess_id_fkey
-  foreign key (hostess_id) references hostesses(hostess_id) on delete restrict on update restrict;
-
--- 🔴 `responded_at` נכתבת **פעם אחת בלבד, במענה הראשון** (spec §12⑨). "שלח שוב" מאפס את
--- `invite_sent_at` בלי לגעת בה, אחרת נוצר זמן-תגובה שלילי. ואסור לגזור מ-`updated_at`:
--- מודול 8 יכתוב `salary_report_id` חודשים אחרי המענה ויזייף כל זמני-התגובה בהיסטוריה.
-alter table assignments add column responded_at   timestamptz;
-alter table assignments add column invite_token   text unique;   -- ה-UNIQUE הוא גם האינדקס של ה-RPC
-alter table assignments add column invite_sent_at timestamptz;
-alter table assignments add column travel_amount  numeric(12,2) not null default 0;  -- §7.69
-alter table assignments add column is_shift_lead  boolean not null default false;
--- `event_date` מדונרמלת מ-`projects.final_event_date` — ‏UNIQUE אינו יכול לצרף טבלאות,
--- וההכרעה "אילוץ במסד ולא בדיקה בקוד" (§7.88) אוסרת על הפתרון בקוד. הטריגר = מיגרציה B.
-alter table assignments add column event_date     date;
-
--- ששת הסטטוסים של spec §1.1 — סגורים. "פג תוקף" **נגזר בתצוגה** ואינו ערך שביעי.
-alter table assignments drop constraint assignments_assignment_status_check;
-alter table assignments add  constraint assignments_assignment_status_check
-  check (assignment_status in ('pending', 'confirmed_available', 'declined',
-                               'finally_approved', 'released', 'approval_withdrawn'));
-
--- "אחראית משמרת" — אחת לכל אירוע, נאכף במסד (תקדים §7.29).
-create unique index assignments_one_shift_lead_per_project on assignments (project_id) where is_shift_lead;
-create index assignments_hostess_id_idx on assignments (hostess_id);   -- C-1
-
--- local-5 (עוגן §7.76) — מנהלת הגיוס **חסומה** על מודול 'לקוחות' (נמדד חי), ולכן join ל-`customers`
--- היה מחזיר null **בשקט** בשלושה מסכים מאושרים שמדפיסים שם-לקוח. ⇒ snapshot, כמו `event_name`.
--- lat/lng: בלעדיהן נופלים גם מרכיב-הקרבה וגם שער-ה-80 ק"מ (spec §12⑫).
-alter table projects add column lat           numeric;
-alter table projects add column lng           numeric;
-alter table projects add column customer_name text;
-update projects p set customer_name = c.company_name
-  from customers c where c.customer_id = p.customer_id and p.customer_name is null;
--- 🔴 ו-`approve_quote_and_create_project` נכתבה מחדש (create or replace) כדי שתמלא את השדה —
--- היא הכותב היחיד של `projects`, ובלעדיה כל פרויקט **חדש** היה נולד עם snapshot ריק: בדיוק
--- התקלה השקטה שהעמודה באה למנוע. הגוף זהה לגרסת 20260731085335 פרט ל-`customer_name`
--- ול-`left join customers` שמזין אותו (‏LEFT ולא INNER — `projects.customer_id` nullable).
 
 -- ============================================================
--- מודול 4 — מיגרציה B (20260809124327, הוחל 09/08/2026): "אירוע אחד ביום" (§7.88)
+-- 11. מדרגות מחיר — public.price_tiers (הנחות כמות למוצר)
 -- ============================================================
--- ‏`UNIQUE` אינו יכול לצרף טבלאות, והתאריך יושב על `projects` ⇒ עמודה מדונרמלת + טריגר
--- **דו-כיווני**. הכיוון השני הוא הקריטי: בלי טריגר על `projects`, דחיית-תאריך של אירוע הייתה
--- משאירה את האילוץ תקוע על התאריך הישן — **נראה עובד, ואינו עובד.**
-create or replace function public.sync_assignment_event_date()
-returns trigger language plpgsql security definer set search_path = '' as $$
-begin
-  select p.final_event_date into new.event_date
-    from public.projects p where p.project_id = new.project_id;
-  return new;
-end; $$;
-revoke execute on function public.sync_assignment_event_date() from public, anon, authenticated;
--- על כל insert/update, ולא רק כששדה מסוים משתנה — כדי שאיש לא יוכל לכתוב ערך משלו לעמודה.
--- ‏`security definer`: העמודה היא נגזרת טהורה, ואסור שתהיה תלויה בהרשאת-הקריאה של הכותב על
--- `projects` — ‏RLS חוסם היה מחזיר NULL, כלומר אילוץ שקט שאינו אוכף.
-create trigger assignments_sync_event_date before insert or update on assignments
-  for each row execute function public.sync_assignment_event_date();
-
-create or replace function public.sync_assignments_on_project_date_change()
-returns trigger language plpgsql security definer set search_path = '' as $$
-begin
-  update public.assignments set event_date = new.final_event_date
-   where project_id = new.project_id;
-  return null;
-end; $$;
-revoke execute on function public.sync_assignments_on_project_date_change() from public, anon, authenticated;
--- ‏AFTER UPDATE בלבד ⇒ **אינו נדלק על INSERT**, ולכן ה-RPC של מ3 (שיוצרת פרויקט עם אפס
--- שיבוצים) אינה מושפעת כלל. ואם הזזת-תאריך יוצרת התנגשות אמיתית — ה-UPDATE נכשל על האינדקס
--- וכל השינוי מתגלגל אחורה. זו ההתנהגות הנכונה: עדיף להיכשל בקול מלהזיז אירוע ולהשאיר
--- דיילת משובצת פעמיים באותו יום.
-create trigger projects_sync_assignment_dates after update of final_event_date on projects
-  for each row when (old.final_event_date is distinct from new.final_event_date)
-  execute function public.sync_assignments_on_project_date_change();
-
--- 🔴 `not null` אינו קישוט: באינדקס-ייחודי שני NULL נחשבים **שונים זה מזה**, ולכן שתי שורות
--- `finally_approved` עם `event_date` ריק היו עוקפות את האילוץ **בלי להפר אותו**.
-alter table assignments alter column event_date set not null;
-
--- 🔴 נקודת-האכיפה = `finally_approved` בלבד (§7.88↳, הכרעת-ישי 08/08/2026). שני זימונים
--- `pending` באותו יום נשארים חוקיים — המנהלת שולחת בסבבים ומחליטה מי מאושרת בסוף.
--- ⚠️ המחיר: הבונוס של §7.54 (חסימת שתי שורות פעילות על אותו פרויקט) אבוד, ו-A-15 נשארת פתוחה.
--- 🧩 שם האינדקס הוא **חוזה מול הממשק** (שלב 3) — המסך ימפה אותו להודעה בעברית, כמו
--- ‏`SERVER_MESSAGE_RULES` ב-`src/lib/quotes.js`. שינוי-שם בלי עדכון המיפוי מפיל להודעה גנרית.
-create unique index assignments_one_event_per_day on assignments (hostess_id, event_date)
-  where assignment_status = 'finally_approved';
-
--- ============================================================
--- מודול 4 — מיגרציה C (20260809125750, הוחל 09/08/2026): שתי טבלאות + 14 params + תבנית
--- ============================================================
--- אי-זמינות מוצהרת (§2.1(3)) — התנאי החמישי בשער של Smart Match. בלעדיה הדיילת מקבלת זימונים
--- בזמן שהיא בחו"ל, מסרבת לכולם, **והמערכת רושמת אותה כלא-אמינה** (ההיענות = 40% מהציון).
--- הטווח **כולל את יום-הסיום** (הנחה 9; עקבי עם §7.30 ועם כל תוויות-הממשק).
-create table hostess_unavailability (
-  unavailability_id bigint generated always as identity primary key,
-  hostess_id bigint not null references hostesses(hostess_id) on delete cascade on update cascade,
-  start_date date not null,
-  end_date   date not null,
-  note text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint hostess_unavailability_range_valid check (end_date >= start_date)
+create table price_tiers (
+  sku           text          not null,
+  min_qty       integer       not null,
+  special_price numeric(12,2) not null,
+  max_qty       integer,
+  created_at    timestamptz   not null default now(),
+  updated_at    timestamptz   not null default now(),
+  constraint price_tiers_pkey                primary key (sku, min_qty),
+  constraint price_tiers_sku_fkey            foreign key (sku) references products (sku) on update cascade on delete cascade,
+  constraint price_tiers_min_qty_check       check (min_qty > 0),
+  constraint price_tiers_max_qty_check       check (max_qty is null or max_qty >= min_qty),
+  constraint price_tiers_special_price_check check (special_price > 0::numeric)
 );
-create trigger hostess_unavailability_set_updated_at before update on hostess_unavailability
-  for each row execute function extensions.moddatetime (updated_at);
-create index hostess_unavailability_hostess_id_idx on hostess_unavailability (hostess_id);   -- C-1
-alter table hostess_unavailability enable row level security;   -- policies במיגרציה D
 
--- הסימון התלת-מצבי — צמוד **ללקוח**, לא לדיילת (§7.15↳ · `db_roadmap:145`).
--- 🔴 מ4 יוצר וקורא (שכבות 1–2 של Smart Match); **מ6 כותב** (`🚧 מ6 ← מ4`). נשארת ריקה עד אז,
--- וזה תקין — אבל בלעדיה לתנאי השלישי בשער אין מה לקרוא, והוא היה מדלג בשקט.
-create table customer_hostess_preference (
-  preference_id bigint generated always as identity primary key,
-  customer_id bigint not null references customers(customer_id) on delete cascade on update cascade,
-  hostess_id  bigint not null references hostesses(hostess_id)  on delete cascade on update cascade,
-  preference text not null check (preference in ('מצוינת', 'בסדר', 'לא_לשלוח')),
-  preference_reason text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint customer_hostess_preference_unique unique (customer_id, hostess_id),
-  -- סימון שלילי מחייב נימוק כתוב — אילוץ, לא ולידציה בטופס (תקדים-שוק: TempWorks/Avionté).
-  constraint customer_hostess_preference_negative_needs_reason
-    check (preference <> 'לא_לשלוח' or preference_reason is not null)
+alter table price_tiers enable row level security;
+
+-- אינדקסים
+-- price_tiers_pkey — unique btree (sku, min_qty) [נוצר ע"י האילוץ price_tiers_pkey]
+
+-- טריגרים
+create trigger price_tiers_set_updated_at
+  before update on price_tiers
+  for each row execute function moddatetime('updated_at');
+
+-- מדיניות RLS
+create policy price_tiers_select_all_authenticated on price_tiers
+  for select to authenticated
+  using (true);
+
+create policy price_tiers_write_ceo_only on price_tiers
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת')
+        and p.permission_level = 'edit'
+    )
+  );
+
+
+-- ============================================================
+-- 12. פרמטרים גלובליים — public.params (מע"מ, יחסי-תכנון, משקולות Smart Match, תבניות)
+-- ============================================================
+create table params (
+  param_id    serial      not null,
+  param_name  text        not null,
+  param_value text        not null,
+  param_type  text        not null,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  constraint params_pkey            primary key (param_id),
+  constraint params_param_name_key  unique (param_name),
+  constraint params_param_type_check check (param_type = any (array['pricing_timing'::text, 'control_alerts'::text, 'smart_match'::text, 'templates'::text, 'integration_tech'::text]))
 );
-create trigger customer_hostess_preference_set_updated_at before update on customer_hostess_preference
-  for each row execute function extensions.moddatetime (updated_at);
--- `customer_id` מכוסה כבר ע"י ה-UNIQUE (עמודה מובילה) ⇒ אינדקס נפרד היה כפילות מתה.
-create index customer_hostess_preference_hostess_id_idx on customer_hostess_preference (hostess_id);
-alter table customer_hostess_preference enable row level security;   -- policies במיגרציה D
 
--- ‏`params`: 20 ⇐ 32. שלוש שורות-המשקולות הישנות (`משקולת_1W_דירוג`/`2W_קרבה`/`3W_מהימנות`)
--- **נמחקו, לא שונו שם** — לאלגוריתם החדש אין מרכיב "דירוג" כלל, ושינוי-שם היה משאיר שם שקרי
--- על ערך חדש. נוספו 14 פרמטרים + תבנית מייל-השחרור:
---   smart_match: משקולת_היענות 0.40 · משקולת_אמינות 0.35 · משקולת_קרבה 0.25 (**סכום = 1.00**) ·
---     שער_מרחק_קמ 80 · גולפוסט_מרחק_קמ 40 · קבוע_ריסון_m 3 · חלון_חישוב_חודשים 12 ·
---     חלון_חישוב_מורחב_חודשים 24 · מינימום_תשובות_להצגת_ציון 3 · שיעור_בונוס_הוגנות_לשבוע 0.02 ·
---     תקרת_שבועות_הוגנות 8 · לא_ענתה_ל_N 4 · מרכיב_אמינות_פעיל **false** (§7.90)
---   pricing_timing: סכום_נסיעות_למשמרת 0 (§7.69 — הסכום עצמו פתוח עד אימות מול רואה-החשבון)
---   templates: תבנית_מייל_שחרור_משמרת
--- ⛔ `תקרת_דיילות_מומלצת` **אינה קיימת** — בוטלה בהכרעת-ישי 09/08/2026 ("אין צורך בתקרה, מיותר").
--- ⚠️ ‏`מרכיב_אמינות_פעיל` כבוי ⇒ בזמן-ריצה **מנרמלים מחדש** את שני המשקלים הנותרים ל-1.0.
--- 🚫 אין לקודד קשיח את הפיצול הדו-כיווני (§11.1).
+alter table params enable row level security;
+
+-- אינדקסים
+-- params_pkey — unique btree (param_id) [נוצר ע"י האילוץ params_pkey]
+-- params_param_name_key — unique btree (param_name) [נוצר ע"י האילוץ params_param_name_key]
+
+-- טריגרים
+create trigger params_set_updated_at
+  before update on params
+  for each row execute function moddatetime('updated_at');
+
+-- מדיניות RLS
+create policy params_select_all_authenticated on params
+  for select to authenticated
+  using (true);
+
+create policy params_write_ceo_only on params
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת')
+        and p.permission_level = 'edit'
+    )
+  );
+
 
 -- ============================================================
--- מודול 4 — מיגרציה D (20260809134237, הוחל 09/08/2026): RLS · שכר-מינימום · הפונקציה הציבורית
+-- 13. הצעות מחיר — public.quotes (מודול 3)
 -- ============================================================
--- תשע policies לפי תבנית §7.21 (עטיפת `(select …)` חובה). ארבע טבלאות מ4 על מודול 'דיילות',
--- ו-`projects` **SELECT בלבד** על 'פרויקטים' — 🚫 מ4 אינו כותב ל-`projects` לעולם (§12⑱ד).
--- 🔴 בלי ה-policy על `projects` המסך הראשון חוזר ריק **לכולם, כולל למנכ"ל, ובלי שגיאה** (§12②).
--- 🔴 ו-`hostess_unavailability` היא המסוכנת (§12⑮): deny-all שם היה **הורג בשקט את התנאי החמישי
--- בשער** — אף דיילת לא נפסלת על אי-זמינות, ואיש לא רואה שגיאה.
--- ארבע טבלאות מ4 — אותה תבנית בדיוק, פעמיים לכל טבלה. מוצגת כאן במלואה על `hostesses`;
--- ‏`assignments` · `hostess_unavailability` · `customer_hostess_preference` זהות לה מילה-במילה
--- (רק שם-הטבלה ושם-ה-policy משתנים).
-create policy "hostesses_select_by_permission" on hostesses for select to authenticated
-  using (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'דיילות')
-      and p.permission_level in ('edit', 'view')));
-create policy "hostesses_write_by_permission" on hostesses for all to authenticated
-  using (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'דיילות')
-      and p.permission_level = 'edit'))
-  with check (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'דיילות')
-      and p.permission_level = 'edit'));
--- ‏(×3 נוספות באותה צורה: assignments · hostess_unavailability · customer_hostess_preference)
+create table quotes (
+  quote_id                  serial      not null,
+  customer_id               bigint      not null,
+  event_name                text        not null,
+  issue_date                date        not null default current_date,
+  recommended_hostess_count integer     not null,
+  estimated_guests          integer     not null,
+  estimated_event_date      date        not null,
+  estimated_location        text        not null,
+  quote_status              text        not null default 'in_progress',
+  pdf_url                   text,
+  applied_customer_discount numeric(12,2) not null,
+  manual_discount           numeric(12,2) not null default 0,
+  rejection_reason          text,
+  notes                     text,
+  created_at                timestamptz not null default now(),
+  updated_at                timestamptz not null default now(),
+  vat_rate_snapshot         numeric(5,2),
+  rejection_notes           text,
+  estimated_start_time      time        not null,
+  estimated_end_time        time        not null,
+  -- עמודה מחושבת ומאוחסנת: משך ההצעה בשעות; חוצה חצות ⇒ מוסיפה 24
+  estimated_hours           numeric(4,2) generated always as (
+    case
+      when estimated_end_time > estimated_start_time
+        then extract(epoch from (estimated_end_time - estimated_start_time)) / 3600::numeric
+      else extract(epoch from (estimated_end_time - estimated_start_time)) / 3600::numeric + 24::numeric
+    end
+  ) stored,
+  constraint quotes_pkey                        primary key (quote_id),
+  constraint quotes_customer_id_fkey            foreign key (customer_id) references customers (customer_id) on delete restrict,
+  constraint quotes_quote_status_check          check (quote_status = any (array['in_progress'::text, 'approved'::text, 'rejected'::text])),
+  constraint quotes_estimated_guests_check      check (estimated_guests > 0),
+  constraint quotes_recommended_hostess_count_check check (recommended_hostess_count > 0),
+  constraint quotes_applied_discount_range      check (applied_customer_discount >= 0::numeric and applied_customer_discount <= 100::numeric),
+  constraint quotes_manual_discount_range       check (manual_discount >= 0::numeric and manual_discount <= 100::numeric),
+  constraint quotes_combined_discount_max       check (applied_customer_discount + manual_discount <= 100::numeric),
+  constraint quotes_approved_requires_vat       check (quote_status <> 'approved'::text or vat_rate_snapshot is not null),
+  constraint quotes_vat_snapshot_range          check (vat_rate_snapshot is null or (vat_rate_snapshot >= 0::numeric and vat_rate_snapshot <= 100::numeric)),
+  constraint quotes_rejected_iff_reason         check ((quote_status = 'rejected'::text) = (rejection_reason is not null)),
+  constraint quotes_rejection_reason_check      check (rejection_reason is null or rejection_reason = any (array['מחיר'::text, 'חוסר זמינות/לו"ז'::text, 'נבחר מתחרה'::text, 'תקציב לקוח'::text, 'האירוע בוטל אצל הלקוח'::text, 'פג תוקף'::text, 'נפתחה בטעות'::text, 'אחר'::text])),
+  constraint quotes_rejection_notes_required    check (rejection_reason is distinct from 'אחר'::text or rejection_notes is not null)
+);
 
-create policy "projects_select_by_permission" on projects for select to authenticated
-  using (exists (select 1 from permissions p
-    where p.role_id = (select current_user_role_id())
-      and p.module_id = (select module_id from modules where module_name = 'פרויקטים')
-      and p.permission_level in ('edit', 'view')));
--- 🚫 ואין `projects_write_…` מטעם מ4. במכוון.
+alter table quotes enable row level security;
 
--- ⚠️ **מוקש שנמדד 09/08/2026 ואינו ניכר מקריאת התבנית:** ה-policy של הכתיבה היא `FOR ALL`,
--- ולכן היא **מכסה גם SELECT** לבעלי `edit`. ⇒ הפלת policy-הקריאה לבדה **אינה** מסתירה דבר
--- ממנהלת הגיוס; רק בעלת `view`-בלבד מתעוורת. **מי שבודק "מה קורה בלי policy" חייב להפיל את
--- שתיהן** — אחרת הבדיקה נראית כאילו נכשלה בעוד שהיא פשוט נכתבה לא נכון.
+-- אינדקסים
+create index quotes_customer_id_idx     on quotes using btree (customer_id);
+create index quotes_status_updated_idx  on quotes using btree (quote_status, updated_at);
+-- quotes_pkey — unique btree (quote_id) [נוצר ע"י האילוץ quotes_pkey]
 
--- §7.66 — אכיפה בזמן-כתיבה, קריאת-פרמטר מוגנת (דפוס 20260731085335: TEXT ⇒ ולידציה ⇒ המרה).
--- 🔴 `of hourly_rate`: הטריגר נדלק רק כשהעמודה בפועל ב-SET ⇒ עדכון שם/טלפון של דיילת ותיקה
--- שתעריפה מתחת לרף **אינו נחסם ואינו משנה את תעריפה**. זו ההכרעה, לא פשרה.
-create function enforce_hostess_min_wage() returns trigger
-  language plpgsql security definer set search_path = '';
---   גוף: קורא `params.שכר_מינימום_שעתי` כ-TEXT · פוסל חסר/ריק/לא-מספרי ב-P0001 בעברית ·
---   ממיר · ואם `new.hourly_rate < v_min` זורק P0001 שנוקב בשני המספרים.
-create trigger hostesses_enforce_min_wage before insert or update of hourly_rate on hostesses
+-- טריגרים
+create trigger quotes_lock_non_in_progress
+  before delete or update on quotes
+  for each row execute function enforce_quote_in_progress_lock();
+
+create trigger quotes_set_updated_at
+  before update on quotes
+  for each row execute function moddatetime('updated_at');
+
+-- מדיניות RLS
+create policy quotes_select_by_permission on quotes
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+create policy quotes_write_by_permission on quotes
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+        and p.permission_level = 'edit'
+    )
+  );
+
+
+-- ============================================================
+-- 14. שורות ההצעה — public.quote_services (מודול 3)
+-- ============================================================
+-- המפתח הראשי הוא line_id (identity); (quote_id, line_number) הוא מפתח עסקי ייחודי.
+-- line_id הוא גם היעד של logistics.quote_service_line_id (סעיף 20).
+create table quote_services (
+  quote_id           integer       not null,
+  sku                text          not null,
+  line_number        integer       not null,
+  qty                integer       not null,
+  closing_unit_price numeric(12,2) not null,
+  color              text,
+  notes              text,
+  created_at         timestamptz   not null default now(),
+  updated_at         timestamptz   not null default now(),
+  line_id            bigint        not null generated always as identity,
+  closing_unit_cost  numeric(12,2) not null,
+  constraint quote_services_pkey                     primary key (line_id),
+  constraint quote_services_quote_line_key           unique (quote_id, line_number),
+  constraint quote_services_quote_id_fkey            foreign key (quote_id) references quotes (quote_id) on delete cascade,
+  constraint quote_services_sku_fkey                 foreign key (sku)      references products (sku)    on update cascade on delete restrict,
+  constraint quote_services_qty_check                check (qty > 0),
+  constraint quote_services_closing_unit_price_check check (closing_unit_price >= 0::numeric),
+  constraint quote_services_closing_unit_cost_check  check (closing_unit_cost >= 0::numeric),
+  constraint quote_services_color_check              check (color is null or color = any (array['לבן'::text, 'שחור'::text, 'אפור'::text, 'טורקיז'::text, 'כחול'::text]))
+);
+
+alter table quote_services enable row level security;
+
+-- אינדקסים
+create index quote_services_quote_id_idx on quote_services using btree (quote_id);
+create index quote_services_sku_idx      on quote_services using btree (sku);
+-- quote_services_pkey — unique btree (line_id) [נוצר ע"י האילוץ quote_services_pkey]
+-- quote_services_quote_line_key — unique btree (quote_id, line_number) [נוצר ע"י האילוץ quote_services_quote_line_key]
+
+-- טריגרים
+create trigger quote_services_lock_non_in_progress
+  before delete or update on quote_services
+  for each row execute function enforce_quote_in_progress_lock();
+
+create trigger quote_services_set_updated_at
+  before update on quote_services
+  for each row execute function moddatetime('updated_at');
+
+-- מדיניות RLS
+create policy quote_services_select_by_permission on quote_services
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+create policy quote_services_write_by_permission on quote_services
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+        and p.permission_level = 'edit'
+    )
+  );
+
+
+-- ============================================================
+-- 15. מאגר דיילות — public.hostesses (מודול 4)
+-- ============================================================
+-- המפתח הראשי הוא hostess_id (identity); id_number (ת"ז) הוא מפתח עסקי ייחודי בלבד.
+create table hostesses (
+  id_number    text        not null,
+  full_name    text        not null,
+  phone        text        not null,
+  email        text        not null,
+  city         text        not null,
+  hourly_rate  numeric     not null,
+  rating       integer,
+  status       text        not null default 'active',
+  bank_name    text        not null,
+  bank_branch  text        not null,
+  bank_account text        not null,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  hostess_id   bigint      not null generated always as identity,
+  address      text,
+  lat          numeric,
+  lng          numeric,
+  has_car      boolean     not null default false,
+  languages    text[]      not null default '{}'::text[],
+  constraint hostesses_pkey          primary key (hostess_id),
+  constraint hostesses_id_number_key unique (id_number),
+  constraint hostesses_rating_check  check (rating >= 1 and rating <= 5),
+  constraint hostesses_status_check  check (status = any (array['active'::text, 'inactive'::text]))
+);
+
+alter table hostesses enable row level security;
+
+-- אינדקסים
+-- hostesses_pkey — unique btree (hostess_id) [נוצר ע"י האילוץ hostesses_pkey]
+-- hostesses_id_number_key — unique btree (id_number) [נוצר ע"י האילוץ hostesses_id_number_key]
+
+-- טריגרים
+create trigger hostesses_enforce_min_wage
+  before insert or update of hourly_rate on hostesses
   for each row execute function enforce_hostess_min_wage();
 
--- §7.45 — 🔴 **המשטח היחיד במערכת שכותב ל-DB בלי התחברות ובלי תפקיד.**
--- ‏`assignments` נשארת deny-all ל-anon (אפס policies `to anon`); זו הדלת היחידה.
--- מקבלת רק טוקן+בחירה · כותבת רק `assignment_status` + `responded_at` · על שורה אחת ·
--- ורק כששלושת התנאים מתקיימים: טוקן תקף · 48 שעות מהשליחה · **24 שעות לפני האירוע**
--- (מול `final_event_date + final_start_time` באזור-הזמן של ישראל, לא מול חצות).
--- 🔴 **מחזירה מחרוזת גנרית זהה לשלושת מצבי-הכישלון** — אחרת הדף הופך לאורקל שמאשר לזר
--- שטוקן מסוים קיים. הסיבה האמיתית ל-`raise log` בלבד. ‏`responded_at` נכתבת פעם אחת
--- (`coalesce`) — §12⑨, אחרת "שלח שוב" יוצר זמן-תגובה שלילי.
-create function respond_to_shift_invite(p_token text, p_response text) returns jsonb
-  language plpgsql security definer set search_path = '';
---   גוף: ממפה 'confirmed'⇒'confirmed_available' · 'declined'⇒'declined' · כל ערך אחר נדחה ·
---   שולף שורה אחת ב-`for update of a` עם שלושת התנאים · `not found` ⇒ מחזיר את המחרוזת
---   הגנרית · אחרת מעדכן `assignment_status` + `responded_at = coalesce(responded_at, now())`
---   ומחזיר `{"ok":true,"status":…}`.
-revoke execute on function respond_to_shift_invite(text, text) from public;
-grant  execute on function respond_to_shift_invite(text, text) to anon, authenticated;
--- ⚠️ **מוענקת גם ל-`authenticated` במכוון** — מנהלת שפותחת את הקישור בדפדפן שבו היא מחוברת
--- לאפליקציה הייתה מקבלת "אין הרשאה" אחרת. ‏⇒ **שני ממצאי-advisor** על הפונקציה הזו, לא אחד.
+create trigger hostesses_set_updated_at
+  before update on hostesses
+  for each row execute function moddatetime('updated_at');
 
--- 🔴 **אחותה הקוראת של הפונקציה שמעל** (מיגרציה `20260810004500`, 10/08/2026, צעד 3.6).
--- **הפער שהיא סוגרת:** ‏`screens-approved.md` משטח 5 §④ מחייב שהדף הציבורי יציג שם-דיילת,
--- אירוע, לקוח, תאריך, שעות, מיקום ותעריף — אבל `assignments` deny-all ל-anon, והפונקציה
--- הכותבת **כותבת בלבד**. ⇒ בלעדיה מצב "ממתין למענה" נטען ריק. **שני המסמכים היו נכונים
--- כל אחד לחוד; החור היה במרווח ביניהם.**
--- ⚖️ **מודל-החשיפה:** ① טוקן לא-תקין ו-טוקן שפג מחזירים `{"ok":false}` **זהה בייט-בבייט**
--- (‏§⑤: "בכוונה לא מבחינה בין הסיבות" — זהות **מבנית**, כך שגם תעבורת-הרשת אינה מסגירה) ·
--- ② פרטים אישיים מוחזרים **אך ורק** במצב `pending`-ובתוקף; טוקן שכבר נענה מחזיר את שם-המצב
--- בלבד (`confirmed`/`declined`/`filled`) — בלי שם, בלי לקוח, בלי כתובת · ③ **אפס כתיבה**.
--- ⚠️ `approval_withdrawn` ⇒ התשובה הגנרית, לפי `processes-approved.md §ב8`: חזרה-בה היא
--- שיחת-טלפון, **"אין מסלול-קישור"**.
-create function get_shift_invite(p_token text) returns jsonb
-  language plpgsql security definer set search_path = '';
---   גוף: שליפה אחת לפי `invite_token` (בלי תנאי-זמן/סטטוס) · `not found` ⇒ `{"ok":false}` ·
---   סטטוסים סופיים ⇒ `{"ok":true,"state":…}` בלבד · `pending` ⇒ שני תנאי-הזמן **זהים
---   בהיגיון ל-`respond_to_shift_invite`** ⇒ אחרת `{"ok":false}` · ואם עבר: הפרטים +
---   ‏`expires_at` = **המוקדם מבין השניים** (לא 48 השעות לבדן) + `סכום_נסיעות_למשמרת` מ-`params`.
-revoke execute on function get_shift_invite(text) from public;
-grant  execute on function get_shift_invite(text) to anon, authenticated;
+-- מדיניות RLS
+create policy hostesses_select_by_permission on hostesses
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
 
--- ‏§7.55 (מיגרציות E+F, 09/08/2026) — **מסלול-הכתיבה היחיד לקואורדינטות אירוע.**
--- 🔴 ל-`projects` יש **מדיניות קריאה בלבד** מטעם מ4, ובלי הפונקציה הזאת אין דרך לשמור
--- ‏`lat`/`lng` — מרכיב-הקרבה (0.25 מהציון) היה ניטרלי לכל אירוע לצמיתות.
--- 🚫 **ולמה לא מדיניות-כתיבה:** ‏RLS ב-Postgres הוא ברמת-שורה ולא ברמת-עמודה ⇒ מדיניות
--- הייתה חושפת גם `final_event_date`, `project_status` ו-`customer_id`. פונקציה ייעודית
--- פותחת **שתי עמודות** בלי לפתוח את הטבלה.
-create function set_project_coordinates(p_project_id integer, p_lat numeric, p_lng numeric)
-  returns boolean language plpgsql security definer set search_path = '';
---   גוף: שער-הרשאה בתבנית §7.21 (עריכה על 'דיילות') ⇒ 42501 · בדיקת-טווח לגבולות ישראל
---   (29.0–33.5 / 34.0–36.0) ⇒ 22023 · ‏`update … where project_id = $1 and lat is null and
---   lng is null` ⇒ מחזיר `true` רק אם נכתבה שורה. **`and lat is null`** הוא אכיפת ה"פעם
---   אחת" (`processes-approved.md:97`) במסד ולא בקוד: קריאה שנייה אינה דורסת ואינה שוגה.
-revoke execute on function set_project_coordinates(integer, numeric, numeric) from public;
-revoke execute on function set_project_coordinates(integer, numeric, numeric) from anon;
-grant  execute on function set_project_coordinates(integer, numeric, numeric) to authenticated;
--- 🧨 **שתי שורות ה-revoke, ולא אחת — וזה מוקש שנמדד ולא נוחש (09/08/2026).**
--- ‏Supabase מגדיר `alter default privileges` שמעניק EXECUTE ל-`anon`/`authenticated`/
--- ‏`service_role` על כל פונקציה חדשה ב-`public`. ⇒ **`revoke … from public` אינו נוגע בהן.**
--- מיגרציה E כתבה רק את הראשונה, וה-`proacl` יצא `{postgres=X,anon=X,authenticated=X,
--- service_role=X}`; מיגרציה F הוסיפה את השנייה, ואז `{postgres=X,authenticated=X,
--- service_role=X}`. ⚠️ לא הייתה פרצה — שער-ההרשאה שבפנים החזיר 42501 ל-anon (נמדד
--- בהתחזות) — אבל ההגנה-לעומק הייתה שבורה ונוצר ממצא-advisor שלא הוזמן.
--- ⇒ **ממצא advisor אחד** על הפונקציה הזו (`authenticated`), במכוון — מנהלת הגיוס חייבת להריצה.
+create policy hostesses_write_by_permission on hostesses
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = 'edit'
+    )
+  );
+
 
 -- ============================================================
--- מודול 4 — מיגרציה G (20260809223025, הוחל 09/08/2026): snapshot של איש-הקשר בשטח
+-- 16. אי-זמינות מוצהרת של דיילת — public.hostess_unavailability (מודול 4)
 -- ============================================================
--- 🔴 **החור שהעמודות סוגרות, ונמדד חי לפני שנכתבו:** מייל האישור-הסופי מזריק
--- `[שם_מנהלת_פרויקט]`/`[טלפון_מנהלת_פרויקט]`, וההכרעה `local-2` הפנתה אותם ל-`users` דרך
--- `owner_email`. ‏**policy `users_select_self_or_ceo` מתירה קריאה רק על עצמך או למנכ"ל** ⇒
--- מנהלת הגיוס קיבלה `200` עם `[]`, והמייל היה יוצא עם *"איש קשר בשטח: מנהלת הפרויקט -,
--- טלפון: "* — בלי שום שגיאה. 🚫 ו-`fillEmailTemplate` אינו תופס: ה-placeholder מוכר, הוא
--- פשוט מתמלא בריק.
--- 🔑 **snapshot ולא פתיחת-הרשאה:** מופע שלישי של דפוס שכבר בטבלה (`event_name` §7.76 ·
--- `customer_name` local-5), אינו פותח משטח-אבטחה חדש, **ונכון מהותית — מה שנכתב במייל שיצא
--- צריך להישאר מה שנכתב בו**, בדיוק כמו `hourly_rate_snapshot`.
--- ⚠️ בלי NOT NULL במכוון: ל-`users.phone` מותר להיות ריק. **החובה לא-להדפיס-ריק היא של
--- שכבת-המייל** — היא תסרב לשלוח במקום להדפיס "טלפון: ".
-alter table projects add column owner_name  text;
-alter table projects add column owner_phone text;
-update projects p set owner_name = u.full_name, owner_phone = u.phone
-  from users u where u.email = p.owner_email and p.owner_name is null;
--- 🔴 ו-`approve_quote_and_create_project` נכתבה מחדש שוב, מאותו טעם כמו ב-A: היא הכותב
--- היחיד של `projects`, ובלעדיה כל פרויקט **חדש** נולד עם איש-קשר ריק. **ההפרש מגרסת
--- 20260809122536 נמדד ב-`diff`: שלוש תוספות בלבד** — שתי העמודות ב-INSERT, שני הערכים
--- ב-SELECT, ו-`left join users ou on ou.email = v_caller_email`. שום דבר אחר בגוף לא זז.
--- ‏LEFT ולא INNER: משתמש שנמחק היה מבליע את כל שורת-הפרויקט, כלומר אישור-הצעה היה נכשל
--- בגלל שדה-תצוגה.
+create table hostess_unavailability (
+  unavailability_id bigint      not null generated always as identity,
+  hostess_id        bigint      not null,
+  start_date        date        not null,
+  end_date          date        not null,
+  note              text,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
+  constraint hostess_unavailability_pkey            primary key (unavailability_id),
+  constraint hostess_unavailability_hostess_id_fkey foreign key (hostess_id) references hostesses (hostess_id) on update cascade on delete cascade,
+  constraint hostess_unavailability_range_valid     check (end_date >= start_date)
+);
+
+alter table hostess_unavailability enable row level security;
+
+-- אינדקסים
+create index hostess_unavailability_hostess_id_idx on hostess_unavailability using btree (hostess_id);
+-- hostess_unavailability_pkey — unique btree (unavailability_id) [נוצר ע"י האילוץ hostess_unavailability_pkey]
+
+-- טריגרים
+create trigger hostess_unavailability_set_updated_at
+  before update on hostess_unavailability
+  for each row execute function moddatetime('updated_at');
+
+-- מדיניות RLS
+create policy hostess_unavailability_select_by_permission on hostess_unavailability
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+create policy hostess_unavailability_write_by_permission on hostess_unavailability
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = 'edit'
+    )
+  );
+
 
 -- ============================================================
--- תיקון-רגרסיה (20260812204405, הוחל 12/08/2026): approve_quote_and_create_project
+-- 17. העדפת לקוח לגבי דיילת — public.customer_hostess_preference (מודול 4)
 -- ============================================================
--- 🔴 שתי ההערות למעלה ("הגוף זהה לגרסה הקודמת פרט ל-X") טעו בפועל: מיגרציית owner_name/
--- owner_phone (20260809193353) נבנתה על גרסה **שקדמה** לתיקון-31/07 (round_g_fix_forward_
--- approve_rpc_cost_source), לא על הגרסה החיה אז — ולכן החזירה בשקט `products pr ... pr.cost`,
--- עמודה שנמחקה ב-31/07 (§7.83↳). כל אישור-הצעה דרך המסך נכשל (`42703`) מ-09/08 ועד שנתפס
--- ברהרסל-הדגמה חי 12/08. `create or replace function` נוסף: שורת מקור-העלות חוזרת ל-
--- `product_costs pc ... pc.cost` (בדיוק כמו 31/07); שאר הגוף — כולל owner_name/owner_phone/
--- customer_name — זהה בית-בבית. הגוף המלא-הסמכותי: `supabase/migrations/
--- 20260812204405_fix_approve_rpc_cost_source_regression.sql`.
--- 🔑 הלקח שנרשם ב-supabase/migrations/CLAUDE.md: לפני CREATE OR REPLACE על פונקציה קיימת —
--- למשוך את ההגדרה החיה (`pg_get_functiondef`) ולהשוות, לא לבנות מקובץ-מיגרציה ישן/מהזיכרון.
+-- הסימון צמוד ל**צמד** (לקוח, דיילת) — שורה אחת לכל צמד.
+create table customer_hostess_preference (
+  preference_id     bigint      not null generated always as identity,
+  customer_id       bigint      not null,
+  hostess_id        bigint      not null,
+  preference        text        not null,
+  preference_reason text,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
+  constraint customer_hostess_preference_pkey             primary key (preference_id),
+  constraint customer_hostess_preference_unique           unique (customer_id, hostess_id),
+  constraint customer_hostess_preference_customer_id_fkey foreign key (customer_id) references customers (customer_id) on update cascade on delete cascade,
+  constraint customer_hostess_preference_hostess_id_fkey  foreign key (hostess_id)  references hostesses (hostess_id)  on update cascade on delete cascade,
+  constraint customer_hostess_preference_preference_check check (preference = any (array['מצוינת'::text, 'בסדר'::text, 'לא_לשלוח'::text])),
+  constraint customer_hostess_preference_negative_needs_reason check (preference <> 'לא_לשלוח'::text or preference_reason is not null)
+);
+
+alter table customer_hostess_preference enable row level security;
+
+-- אינדקסים
+create index customer_hostess_preference_hostess_id_idx on customer_hostess_preference using btree (hostess_id);
+-- customer_hostess_preference_pkey — unique btree (preference_id) [נוצר ע"י האילוץ customer_hostess_preference_pkey]
+-- customer_hostess_preference_unique — unique btree (customer_id, hostess_id) [נוצר ע"י האילוץ customer_hostess_preference_unique]
+
+-- טריגרים
+create trigger customer_hostess_preference_set_updated_at
+  before update on customer_hostess_preference
+  for each row execute function moddatetime('updated_at');
+
+-- מדיניות RLS
+create policy customer_hostess_preference_select_by_permission on customer_hostess_preference
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+create policy customer_hostess_preference_write_by_permission on customer_hostess_preference
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = 'edit'
+    )
+  );
+
+
+-- ============================================================
+-- 18. שיבוצי דיילות — public.assignments (מודול 4; נוכחות נוספה במודול 6)
+-- ============================================================
+-- 🔴 המפתח הראשי הוא (project_id, hostess_id, assignment_number). **אין כאן עמודת id_number** —
+--    הקישור לדיילת הוא hostess_id bigint → hostesses(hostess_id).
+-- event_date נכתב אוטומטית מהפרויקט ע"י הטריגר assignments_sync_event_date.
+create table assignments (
+  project_id           integer       not null,
+  assignment_number    integer       not null,
+  salary_report_id     integer,
+  assignment_status    text          not null default 'pending',
+  hourly_rate_snapshot numeric       not null,
+  actual_hours         numeric       not null default 0,
+  personal_bonus       numeric       not null default 0,
+  reminder_sent        boolean       not null default false,
+  created_at           timestamptz   not null default now(),
+  updated_at           timestamptz   not null default now(),
+  hostess_id           bigint        not null,
+  responded_at         timestamptz,
+  invite_token         text,
+  invite_sent_at       timestamptz,
+  travel_amount        numeric(12,2) not null default 0,
+  is_shift_lead        boolean       not null default false,
+  event_date           date          not null,
+  attendance_status    text,
+  lateness_level       text,
+  no_show_reason       text,
+  constraint assignments_pkey                 primary key (project_id, hostess_id, assignment_number),
+  constraint assignments_invite_token_key     unique (invite_token),
+  constraint assignments_project_id_fkey      foreign key (project_id)       references projects (project_id)      on delete cascade,
+  constraint assignments_hostess_id_fkey      foreign key (hostess_id)       references hostesses (hostess_id)     on update restrict on delete restrict,
+  constraint assignments_salary_report_id_fkey foreign key (salary_report_id) references salary_reports (report_id) on delete restrict,
+  constraint assignments_assignment_status_check check (assignment_status = any (array['pending'::text, 'confirmed_available'::text, 'declined'::text, 'finally_approved'::text, 'released'::text, 'approval_withdrawn'::text])),
+  constraint assignments_attendance_status_check check (attendance_status = any (array['arrived'::text, 'late'::text, 'no_show'::text])),
+  constraint assignments_lateness_level_check    check (lateness_level = any (array['light'::text, 'medium'::text, 'heavy'::text])),
+  constraint assignments_no_show_reason_check    check (no_show_reason = any (array['sick'::text, 'approved_absence'::text, 'ghosted'::text])),
+  -- צורת רשומת-הנוכחות: כל שילוב לגיטימי מנוי במפורש
+  constraint assignments_attendance_shape check (
+       (attendance_status is null      and lateness_level is null     and no_show_reason is null)
+    or (attendance_status = 'arrived'::text and lateness_level is null     and no_show_reason is null)
+    or (attendance_status = 'late'::text    and lateness_level is not null and no_show_reason is null)
+    or (attendance_status = 'no_show'::text and lateness_level is null     and no_show_reason is not null)
+  ),
+  constraint assignments_no_show_zero_hours check (attendance_status is distinct from 'no_show'::text or actual_hours = 0::numeric)
+);
+
+alter table assignments enable row level security;
+
+-- אינדקסים
+create index assignments_hostess_id_idx on assignments using btree (hostess_id);
+-- דיילת מאושרת סופית לאירוע אחד ביום
+create unique index assignments_one_event_per_day on assignments using btree (hostess_id, event_date)
+  where (assignment_status = 'finally_approved'::text);
+-- אחראית משמרת אחת לכל פרויקט
+create unique index assignments_one_shift_lead_per_project on assignments using btree (project_id)
+  where is_shift_lead;
+-- assignments_pkey — unique btree (project_id, hostess_id, assignment_number) [נוצר ע"י האילוץ assignments_pkey]
+-- assignments_invite_token_key — unique btree (invite_token) [נוצר ע"י האילוץ assignments_invite_token_key]
+
+-- טריגרים
+create trigger assignments_sync_event_date
+  before insert or update on assignments
+  for each row execute function sync_assignment_event_date();
+
+create trigger assignments_set_updated_at
+  before update on assignments
+  for each row execute function moddatetime('updated_at');
+
+create trigger assignments_recompute_project_status
+  after insert or delete or update on assignments
+  for each row execute function trg_recompute_project_status();
+
+-- מדיניות RLS
+create policy assignments_select_by_permission on assignments
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+create policy assignments_write_by_permission on assignments
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = 'edit'
+    )
+  );
+
+
+-- ============================================================
+-- 19. דוחות שכר חודשיים — public.salary_reports
+-- ============================================================
+-- RLS מופעל ואין לטבלה אף policy ⇒ גישה ישירה מהלקוח חסומה.
+create table salary_reports (
+  report_id       serial      not null,
+  sent_date       date        not null,
+  report_file_url text        not null,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  constraint salary_reports_pkey primary key (report_id)
+);
+
+alter table salary_reports enable row level security;
+
+-- אינדקסים
+-- salary_reports_pkey — unique btree (report_id) [נוצר ע"י האילוץ salary_reports_pkey]
+
+-- טריגרים
+create trigger salary_reports_set_updated_at
+  before update on salary_reports
+  for each row execute function moddatetime('updated_at');
+
+-- מדיניות RLS: אין (0 policies)
+
+
+-- ============================================================
+-- 20. לוגיסטיקה — public.logistics (מודול 5)
+-- ============================================================
+-- כתיבה מתבצעת דרך פונקציות בלבד (סעיף 24); ללקוח יש policy קריאה בלבד.
+create table logistics (
+  project_id            integer     not null,
+  sku                   text        not null,
+  serial_number         integer     not null,
+  planned_qty           integer     not null,
+  actual_qty            integer     not null default 0,
+  item_status           text        not null default 'not_started',
+  notes                 text,
+  created_at            timestamptz not null default now(),
+  updated_at            timestamptz not null default now(),
+  quote_service_line_id bigint,
+  project_change_id     bigint,
+  constraint logistics_pkey                     primary key (project_id, sku, serial_number),
+  constraint logistics_project_id_fkey          foreign key (project_id)            references projects (project_id)            on delete cascade,
+  constraint logistics_sku_fkey                 foreign key (sku)                   references products (sku)                   on update cascade on delete restrict,
+  constraint logistics_quote_service_line_id_fkey foreign key (quote_service_line_id) references quote_services (line_id)        on delete restrict,
+  constraint logistics_project_change_id_fkey   foreign key (project_change_id)     references project_changes (change_id)      on delete restrict,
+  constraint logistics_item_status_check        check (item_status = any (array['not_started'::text, 'ordered'::text, 'ready'::text])),
+  constraint logistics_planned_qty_check        check (planned_qty > 0),
+  -- לכל היותר אחת משתי עמודות-המקור מלאה
+  constraint logistics_origin_exactly_one check (
+       (quote_service_line_id is null and project_change_id is null)
+    or num_nonnulls(quote_service_line_id, project_change_id) = 1
+  )
+);
+
+alter table logistics enable row level security;
+
+comment on column logistics.quote_service_line_id is
+  'מקור השורה: שורת ההצעה שהולידה אותה. NULL בשורות שנולדו לפני מ6 ובשורות שה-RPC של מ3 כותב עד תיקונו — מ5 פריט 1.';
+comment on column logistics.project_change_id is
+  'מקור השורה: שורת שינוי-התכולה שהולידה אותה. בדיוק אחת משתי עמודות-המקור מלאה, או שתיהן NULL.';
+
+-- אינדקסים
+create index logistics_sku_idx                   on logistics using btree (sku);
+create index logistics_quote_service_line_id_idx on logistics using btree (quote_service_line_id);
+create index logistics_project_change_id_idx     on logistics using btree (project_change_id);
+-- logistics_pkey — unique btree (project_id, sku, serial_number) [נוצר ע"י האילוץ logistics_pkey]
+
+-- טריגרים
+create trigger logistics_set_updated_at
+  before update on logistics
+  for each row execute function moddatetime('updated_at');
+
+create trigger logistics_recompute_project_status
+  after insert or delete or update on logistics
+  for each row execute function trg_recompute_project_status();
+
+-- מדיניות RLS
+create policy logistics_select_by_permission on logistics
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'לוגיסטיקה')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+
+-- ============================================================
+-- 21. פרויקטים — public.projects (מודול 6; המחבר המרכזי, מכונת מצבים)
+-- ============================================================
+-- כתיבה מתבצעת דרך פונקציות בלבד (סעיף 24); ללקוח יש policy קריאה בלבד.
+-- 🔴 **אין כאן עמודת project_bonus.**
+create table projects (
+  project_id               serial      not null,
+  quote_id                 integer     not null,
+  owner_email              text        not null,
+  final_event_date         date        not null,
+  final_location           text        not null,
+  required_hostess_count   integer     not null,
+  project_status           text        not null default 'not_started',
+  invoice_sent             boolean     not null default false,
+  feedback_status          text        not null default 'not_sent',
+  actual_guests            integer,
+  actual_hours             numeric,
+  cancel_reason            text,
+  payment_date             date,
+  feedback_score           integer,
+  negative_feedback_reason text,
+  feedback_notes           text,
+  summary_report_url       text,
+  created_at               timestamptz not null default now(),
+  updated_at               timestamptz not null default now(),
+  event_name               text,
+  customer_id              bigint,
+  final_start_time         time,
+  final_end_time           time,
+  lat                      numeric,
+  lng                      numeric,
+  customer_name            text,
+  owner_name               text,
+  owner_phone              text,
+  -- חמש עמודות מודול 6: ביטול פרויקט וסגירה תפעולית
+  cancelled_at             timestamptz,
+  cancelled_by             text,
+  cancel_type              text,
+  operationally_closed_at  timestamptz,
+  operationally_closed_by  text,
+  constraint projects_pkey                        primary key (project_id),
+  constraint projects_quote_id_key                unique (quote_id),
+  constraint projects_quote_id_fkey               foreign key (quote_id)                references quotes (quote_id)       on delete restrict,
+  constraint projects_customer_id_fkey            foreign key (customer_id)             references customers (customer_id),
+  constraint projects_owner_email_fkey            foreign key (owner_email)             references users (email)           on delete restrict,
+  constraint projects_cancelled_by_fkey           foreign key (cancelled_by)            references users (email)           on delete restrict,
+  constraint projects_operationally_closed_by_fkey foreign key (operationally_closed_by) references users (email)          on delete restrict,
+  constraint projects_project_status_check        check (project_status = any (array['not_started'::text, 'in_progress'::text, 'ready'::text, 'event_finished'::text, 'awaiting_invoice'::text, 'awaiting_payment'::text, 'finished'::text, 'cancelled'::text])),
+  constraint projects_required_hostess_count_check check (required_hostess_count > 0),
+  constraint projects_feedback_status_check       check (feedback_status = any (array['not_sent'::text, 'sent'::text, 'completed'::text, 'no_response'::text])),
+  constraint projects_feedback_score_check        check (feedback_score >= 1 and feedback_score <= 5),
+  constraint projects_negative_feedback_reason_check check (negative_feedback_reason is null or negative_feedback_reason = any (array['איחור דיילות'::text, 'תפקוד דיילות'::text, 'איכות תגים'::text, 'ניהול לקוי'::text, 'אחר'::text])),
+  constraint projects_cancel_type_check           check (cancel_type is null or cancel_type = any (array['customer'::text, 'force_majeure'::text, 'other'::text])),
+  -- שלושת הסטטוסים שאחרי הסגירה התפעולית מחייבים דוח-סיכום
+  constraint projects_closed_needs_report check (
+    project_status <> all (array['awaiting_invoice'::text, 'awaiting_payment'::text, 'finished'::text])
+    or summary_report_url is not null
+  )
+);
+
+alter table projects enable row level security;
+
+-- אינדקסים
+create index projects_customer_id_idx             on projects using btree (customer_id);
+create index projects_owner_email_idx             on projects using btree (owner_email);
+create index projects_cancelled_by_idx            on projects using btree (cancelled_by);
+create index projects_operationally_closed_by_idx on projects using btree (operationally_closed_by);
+-- projects_pkey — unique btree (project_id) [נוצר ע"י האילוץ projects_pkey]
+-- projects_quote_id_key — unique btree (quote_id) [נוצר ע"י האילוץ projects_quote_id_key]
+
+-- טריגרים
+create trigger projects_set_updated_at
+  before update on projects
+  for each row execute function moddatetime('updated_at');
+
+create trigger projects_recompute_on_required_count
+  after update of required_hostess_count on projects
+  for each row when (old.required_hostess_count is distinct from new.required_hostess_count)
+  execute function trg_recompute_project_status();
+
+create trigger projects_sync_assignment_dates
+  after update of final_event_date on projects
+  for each row when (old.final_event_date is distinct from new.final_event_date)
+  execute function sync_assignments_on_project_date_change();
+
+-- מדיניות RLS
+create policy projects_select_by_permission on projects
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'פרויקטים')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+
+-- ============================================================
+-- 22. שינויי תכולה בפרויקט — public.project_changes (מודול 6)
+-- ============================================================
+-- כתיבה מתבצעת דרך הפונקציה apply_scope_change בלבד (סעיף 24); ללקוח יש policy קריאה בלבד.
+-- change_group_id מקבץ שורות שנשמרו יחד בפעולה אחת.
+create table project_changes (
+  change_id           bigint        not null generated always as identity,
+  project_id          integer       not null,
+  change_group_id     uuid          not null,
+  sku                 text,
+  color               text,
+  change_target       text          not null,
+  delta_qty           integer       not null,
+  unit_price_snapshot numeric(12,2) not null,
+  unit_cost_snapshot  numeric(12,2) not null,
+  reason              text          not null,
+  performed_by        text          not null,
+  created_at          timestamptz   not null default now(),
+  updated_at          timestamptz   not null default now(),
+  constraint project_changes_pkey              primary key (change_id),
+  constraint project_changes_project_id_fkey   foreign key (project_id)   references projects (project_id) on delete cascade,
+  constraint project_changes_sku_fkey          foreign key (sku)          references products (sku)        on update cascade on delete restrict,
+  constraint project_changes_performed_by_fkey foreign key (performed_by) references users (email)         on delete restrict,
+  constraint project_changes_change_target_check check (change_target = any (array['logistics'::text, 'hostess_count'::text])),
+  constraint project_changes_delta_qty_check   check (delta_qty <> 0),
+  constraint project_changes_reason_check      check (length(btrim(reason)) > 0),
+  constraint project_changes_color_check       check (color is null or color = any (array['לבן'::text, 'שחור'::text, 'אפור'::text, 'טורקיז'::text, 'כחול'::text])),
+  constraint project_changes_unit_price_snapshot_check check (unit_price_snapshot >= 0::numeric),
+  constraint project_changes_unit_cost_snapshot_check  check (unit_cost_snapshot >= 0::numeric),
+  -- שינוי לוגיסטי מחייב sku; שינוי כמות-דיילות אוסר sku וצבע
+  constraint project_changes_target_shape check (
+       (change_target = 'logistics'::text     and sku is not null)
+    or (change_target = 'hostess_count'::text and sku is null and color is null)
+  )
+);
+
+alter table project_changes enable row level security;
+
+-- אינדקסים
+create index project_changes_project_id_idx   on project_changes using btree (project_id, created_at desc);
+create index project_changes_sku_idx          on project_changes using btree (sku);
+create index project_changes_performed_by_idx on project_changes using btree (performed_by);
+-- project_changes_pkey — unique btree (change_id) [נוצר ע"י האילוץ project_changes_pkey]
+
+-- טריגרים
+create trigger project_changes_set_updated_at
+  before update on project_changes
+  for each row execute function moddatetime('updated_at');
+
+-- מדיניות RLS
+-- 🔴 אפס policies — **במכוון** (deny-all). המדיניות הרחבה `project_changes_select_by_permission`
+--    הוסרה ב-`20260814152647_module6_project_changes_money_gated_reader.sql`: היא חשפה את
+--    `unit_price_snapshot`/`unit_cost_snapshot` לכל מחזיקי 'פרויקטים' — בסתירה לכרטיסי-המסך
+--    המאושרים (מנהלת לוגיסטיקה ומנהלת גיוס חסומות מנתונים פיננסיים). הקריאה היחידה מהדפדפן
+--    היא דרך ה-RPC ‏`list_project_changes` (סעיף 24), שמחזיר את שדות-הכסף כ-NULL למי שאינו מורשה
+--    ודגל `money_visible` כדי שהמסך יציג `—` במקום ריק.
+
+
+-- ============================================================
+-- 23. יומן שליחות מיילים — public.email_log (חוצה מודולים)
+-- ============================================================
+-- קריאה בלבד ללקוח, ומפוצלת לשלוש policies לפי entity_type ⇒ לפי המודול שבו הישות חיה.
+create table email_log (
+  email_log_id  bigint      not null generated always as identity,
+  entity_type   text        not null,
+  entity_id     bigint      not null,
+  recipient     text        not null,
+  template_name text,
+  subject       text,
+  status        text        not null,
+  error_message text,
+  sent_by_email text,
+  created_at    timestamptz not null default now(),
+  constraint email_log_pkey              primary key (email_log_id),
+  constraint email_log_entity_type_check check (entity_type = any (array['quote'::text, 'shift'::text, 'project'::text, 'project_report'::text])),
+  constraint email_log_status_check      check (status = any (array['sent'::text, 'failed'::text]))
+);
+
+alter table email_log enable row level security;
+
+comment on table email_log is
+  'יומן שליחות מיילים — מקור-האמת ל"האם נשלח". גנרי לפי (entity_type, entity_id). נכתב ע"י Edge Function בלבד (service-role); הלקוח קורא ולא כותב. הוקדם ממודול 10 בהכרעת-ישי 30/07/2026.';
+
+-- אינדקסים
+create index idx_email_log_entity on email_log using btree (entity_type, entity_id, created_at desc);
+-- email_log_pkey — unique btree (email_log_id) [נוצר ע"י האילוץ email_log_pkey]
+
+-- מדיניות RLS
+create policy email_log_select_quotes_module on email_log
+  for select to authenticated
+  using (
+    entity_type = 'quote'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+create policy email_log_select_shifts_module on email_log
+  for select to authenticated
+  using (
+    entity_type = 'shift'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+create policy email_log_select_projects_module on email_log
+  for select to authenticated
+  using (
+    entity_type = any (array['project'::text, 'project_report'::text])
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'פרויקטים')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+
+-- ============================================================
+-- 24. פונקציות בסכמה public — 25 פונקציות
+-- ============================================================
+-- 🚫 **הגופים אינם כאן במכוון** (ר' כותרת הקובץ). לכל פונקציה: חתימה · מצב אבטחה · search_path ·
+--    למי יש EXECUTE · ומצביע לקובץ המיגרציה שבו הגוף הנוכחי חי.
+-- לכל 25 הפונקציות `search_path = ''` (שמות מלאים בגוף).
+-- ⚠️ `moddatetime` (הטריגר של updated_at) **אינה כאן** — היא יושבת בסכמה `extensions`.
+--
+-- מקרא: SD = security definer · SI = security invoker · [רשימת התפקידים] = מי קיבל EXECUTE.
+
+-- ── מודול 1 — הרשאות והתחברות ──────────────────────────────
+-- current_user_role_id() returns integer
+--   SD · stable · [authenticated, service_role]
+--   → supabase/migrations/20260702195258_harden_current_user_role_id.sql
+-- check_login_lock(p_email text) returns timestamptz
+--   SD · sql · [anon, authenticated, service_role]
+--   → supabase/migrations/20260703071534_module1_login_attempts_lockout.sql
+-- register_failed_login(p_email text) returns timestamptz
+--   SD · plpgsql · [anon, authenticated, service_role]
+--   → supabase/migrations/20260731155511_round_g_db_hardening.sql
+-- reset_login_attempts() returns void
+--   SD · sql · [authenticated, service_role]
+--   → supabase/migrations/20260703071534_module1_login_attempts_lockout.sql
+
+-- ── מודול 3 — הצעות מחיר ───────────────────────────────────
+-- create_quote(p_header jsonb, p_lines jsonb) returns integer
+--   SI · plpgsql · [authenticated, service_role]
+--   → supabase/migrations/20260731155511_round_g_db_hardening.sql
+-- replace_quote_lines(p_quote_id integer, p_header jsonb, p_lines jsonb) returns void
+--   SI · plpgsql · [authenticated, service_role]
+--   → supabase/migrations/20260731155511_round_g_db_hardening.sql
+-- approve_quote_and_create_project(p_quote_id integer) returns integer
+--   SD · plpgsql · [authenticated, service_role]
+--   → supabase/migrations/20260812204405_fix_approve_rpc_cost_source_regression.sql
+-- enforce_quote_in_progress_lock() returns trigger
+--   SD · plpgsql · [service_role]
+--   → supabase/migrations/20260723115000_module3_lock_and_conversion_rpc.sql
+
+-- ── מודול 4 — דיילות ומשמרות ───────────────────────────────
+-- enforce_hostess_min_wage() returns trigger
+--   SD · plpgsql · [service_role]
+--   → supabase/migrations/20260809134237_module4_rls_and_public_rpc.sql
+-- sync_assignment_event_date() returns trigger
+--   SD · plpgsql · [service_role]
+--   → supabase/migrations/20260809124327_module4_one_event_per_day_constraint.sql
+-- sync_assignments_on_project_date_change() returns trigger
+--   SD · plpgsql · [service_role]
+--   → supabase/migrations/20260809124327_module4_one_event_per_day_constraint.sql
+-- get_shift_invite(p_token text) returns jsonb
+--   SD · plpgsql · [anon, authenticated, service_role]
+--   → supabase/migrations/20260810004500_module4_public_shift_invite_read.sql
+-- respond_to_shift_invite(p_token text, p_response text) returns jsonb
+--   SD · plpgsql · [anon, authenticated, service_role]
+--   → supabase/migrations/20260809134237_module4_rls_and_public_rpc.sql
+-- set_project_coordinates(p_project_id integer, p_lat numeric, p_lng numeric) returns boolean
+--   SD · plpgsql · [authenticated, service_role]
+--   → supabase/migrations/20260809172638_module4_project_coordinates_rpc.sql
+
+-- ── מודול 6 — פרויקטים ─────────────────────────────────────
+-- assert_module_permission(p_module text, p_level text[]) returns void
+--   SD · plpgsql · [service_role]
+--   → supabase/migrations/20260814142440_module6_rpcs_writes.sql
+-- recompute_project_status(p_project_id integer) returns void
+--   SD · plpgsql · [service_role]
+--   → supabase/migrations/20260814141052_module6_status_machine_and_cron.sql
+-- trg_recompute_project_status() returns trigger
+--   SD · plpgsql · [service_role]
+--   → supabase/migrations/20260814141052_module6_status_machine_and_cron.sql
+-- list_projects_overview() returns table (project_id integer, event_name text, customer_name text,
+--   final_event_date date, final_start_time time, final_end_time time, final_location text,
+--   project_status text, required_hostess_count integer, hostesses_confirmed integer,
+--   pending_invites integer, assignments_row_count integer, logistics_ready integer,
+--   logistics_total integer, cancelled_at timestamptz, cancel_type text, planned_revenue numeric)
+--   SD · stable · plpgsql · [authenticated, service_role]
+--   → supabase/migrations/20260814142439_module6_rpcs_reads_and_close.sql
+-- update_project_details(p_project_id integer, p_event_date date, p_location text,
+--   p_start_time time, p_end_time time) returns jsonb
+--   SD · plpgsql · [authenticated, service_role]
+--   → supabase/migrations/20260814142440_module6_rpcs_writes.sql
+-- apply_scope_change(p_project_id integer, p_lines jsonb, p_reason text) returns jsonb
+--   SD · plpgsql · [authenticated, service_role]
+--   → supabase/migrations/20260814142440_module6_rpcs_writes.sql
+-- cancel_project(p_project_id integer, p_cancel_type text, p_cancel_reason text) returns jsonb
+--   SD · plpgsql · [authenticated, service_role]
+--   → supabase/migrations/20260814142440_module6_rpcs_writes.sql
+-- close_project_operationally(p_project_id integer, p_actual_hours numeric, p_actual_guests integer,
+--   p_report_path text, p_rows jsonb) returns jsonb
+--   SD · plpgsql · [authenticated, service_role]
+--   → supabase/migrations/20260814142439_module6_rpcs_reads_and_close.sql
+-- mark_feedback_survey_sent(p_project_id integer) returns boolean
+--   SD · plpgsql · [authenticated, service_role]
+--   → supabase/migrations/20260814142439_module6_rpcs_reads_and_close.sql
+-- set_project_finance_fields(p_project_id integer, p_invoice_sent boolean, p_payment_date date,
+--   p_feedback_score integer, p_negative_feedback_reason text, p_feedback_notes text) returns boolean
+--   SD · plpgsql · [authenticated, service_role]
+--   → supabase/migrations/20260814142439_module6_rpcs_reads_and_close.sql
+-- list_project_changes(p_project_id integer) returns table (change_id bigint, change_group_id uuid,
+--   change_target text, sku text, color text, delta_qty integer, unit_price_snapshot numeric,
+--   unit_cost_snapshot numeric, revenue_delta numeric, money_visible boolean, reason text,
+--   performed_by text, created_at timestamptz)
+--   SD · stable · plpgsql · [authenticated, service_role] — שדות-הכסף ממוסכים בגוף לפי הרשאת 'הצעות מחיר'
+--   → supabase/migrations/20260814152647_module6_project_changes_money_gated_reader.sql
+
+
+-- ============================================================
+-- 25. עבודות מתוזמנות — cron.job (3 עבודות, כולן active)
+-- ============================================================
+-- הגוף המלא של כל עבודה חי במיגרציה, כמו גופי הפונקציות.
+--
+-- module3-quote-expiry           · '0 1 * * *'  · פוסלת הצעות in_progress שעברו את ימי-התוקף
+--   → supabase/migrations/20260731085335_module3_vat_and_expiry_param_guards.sql
+-- module1-login-attempts-cleanup · '30 1 * * *' · מוחקת רשומות login_attempts ישנות מ-30 יום
+--   → supabase/migrations/20260723120500_module3_pg_cron_expiry_and_cleanup.sql
+-- module6-event-finished         · '0 2 * * *'  · מעבירה פרויקטים שתאריכם עבר ל-event_finished
+--   → supabase/migrations/20260814141052_module6_status_machine_and_cron.sql
+
+
+-- ============================================================
+-- 26. אחסון — storage.buckets (3 דליים) ו-storage.objects (12 policies)
+-- ============================================================
+-- דלי       · public · תקרת-גודל  · סוגי-קובץ מותרים
+-- marketing · true   · 10485760 B · application/pdf, image/jpeg, image/png
+-- finance   · false  · 10485760 B · application/pdf, image/jpeg, image/png
+-- reports   · false  ·  2097152 B · application/pdf, image/jpeg, image/png
+
+-- 12 policies על storage.objects — ארבע לכל דלי (select/insert/update/delete), כולן
+-- to authenticated, וכולן מסננות לפי bucket_id + מטריצת ההרשאות של המודול הבעלים.
+
+-- ── marketing (מודול 'לקוחות') ──────────────────────────────
+create policy marketing_read_by_permission on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'marketing'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+create policy marketing_insert_by_permission on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'marketing'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+        and p.permission_level = 'edit'
+    )
+  );
+
+create policy marketing_update_by_permission on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'marketing'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    bucket_id = 'marketing'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+        and p.permission_level = 'edit'
+    )
+  );
+
+create policy marketing_delete_by_permission on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'marketing'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'לקוחות')
+        and p.permission_level = 'edit'
+    )
+  );
+
+-- ── finance (מודול 'כספים') ─────────────────────────────────
+create policy finance_read_by_permission on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'finance'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'כספים')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+create policy finance_insert_by_permission on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'finance'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'כספים')
+        and p.permission_level = 'edit'
+    )
+  );
+
+create policy finance_update_by_permission on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'finance'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'כספים')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    bucket_id = 'finance'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'כספים')
+        and p.permission_level = 'edit'
+    )
+  );
+
+create policy finance_delete_by_permission on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'finance'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'כספים')
+        and p.permission_level = 'edit'
+    )
+  );
+
+-- ── reports (מודול 'פרויקטים') ──────────────────────────────
+create policy reports_read_by_permission on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'reports'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'פרויקטים')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+create policy reports_insert_by_permission on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'reports'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'פרויקטים')
+        and p.permission_level = 'edit'
+    )
+  );
+
+create policy reports_update_by_permission on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'reports'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'פרויקטים')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    bucket_id = 'reports'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'פרויקטים')
+        and p.permission_level = 'edit'
+    )
+  );
+
+create policy reports_delete_by_permission on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'reports'::text
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'פרויקטים')
+        and p.permission_level = 'edit'
+    )
+  );

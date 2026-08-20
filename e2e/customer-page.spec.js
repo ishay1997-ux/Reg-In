@@ -48,7 +48,9 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
     await expect(page.locator('tbody tr', { hasText: MEDITECH }).first()).toContainText('22,503')
 
     // מיון בלחיצת-כותרת נכתב לכתובת (ולא ל-state) — זה מה שמאפשר לו לשרוד חזרה.
-    await page.getByRole('button', { name: /סה"כ הכנסות/ }).click()
+    // ⚠️ 19/08/2026 (מודול 6 · משטח 8, E3 🟢 RULED): התווית שונתה מ"סה"כ הכנסות" ל"סה"כ
+    // הצעות מאושרות" — החישוב לא זז, רק המילה. עודכן כאן כדי שלא לחפש עמודה שכבר לא קיימת.
+    await page.getByRole('button', { name: /סה"כ הצעות מאושרות/ }).click()
     await expect(page).toHaveURL(/sort=total_revenue/)
 
     // 🐞 רגרסיה אמיתית: כשהכרטיס היה חלון, הסינון שרד מעצמו; כעמוד הוא נמחק בכל "חזור".

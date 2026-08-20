@@ -17,6 +17,9 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.js'],
     css: false,
     // e2e/ הוא Playwright (runner נפרד, npm run test:e2e) - לא בדיקות Vitest.
-    exclude: ['node_modules/**', 'e2e/**'],
+    // .claude/** — worktrees של סוכני-רקע מכילים עותק מלא של הריפו; בלי ההחרגה vitest
+    // סורק גם אותם, סופר כל בדיקה פעמיים ומריץ ספקי-Playwright כ-Vitest (נצפה 19/08/2026:
+    // worktree יתום הפיל את test:run עם 17 כשלי-קובץ שאינם של הריפו עצמו).
+    exclude: ['node_modules/**', 'e2e/**', '.claude/**'],
   },
 })

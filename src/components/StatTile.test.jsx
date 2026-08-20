@@ -47,6 +47,12 @@ describe('StatTile', () => {
     expect(screen.queryByText('3 מתוך 6')).not.toBeInTheDocument()
   })
 
+  it('🔤 העמודה מיושרת flex-start — בלעדיו ערך `ltr` נמתח ומתיישר שמאלה, הרחק מהתווית', () => {
+    // צעד 3.0 β של מודול 6: יישור למוקאפ המאושר `.cell, .tile{align-items:flex-start}`.
+    render(<StatTile label="ל" value={1} testId="t" />)
+    expect(screen.getByTestId('t').className).toContain('items-start')
+  })
+
   it('🎨 כלל-המילוי: לבן+מסגרת, בלי מילוי-צבע (PROJECT_MASTER §4)', () => {
     render(<StatTile label="ל" value={1} testId="t" />)
     const cls = screen.getByTestId('t').className

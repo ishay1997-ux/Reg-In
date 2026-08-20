@@ -27,6 +27,10 @@ const ALLOWED_WRITE_PATHS = [
   '/auth/v1/',
   '/rest/v1/rpc/check_login_lock',
   '/rest/v1/rpc/reset_login_attempts',
+  // ‏קריאת-RPC היא POST בפרוטוקול של Supabase — אלה קריאות-בלבד (SELECT בגוף הפונקציה),
+  // והחוסם הפיל את מסך-הפרויקטים כולו כשנחסמו. אין כאן ריכוך: כתיבות אמיתיות עדיין נחסמות.
+  '/rest/v1/rpc/list_projects_overview',
+  '/rest/v1/rpc/list_project_changes',
 ]
 
 test.describe('בדיקת-עשן', () => {
@@ -127,6 +131,21 @@ test.describe('בדיקת-עשן', () => {
       anchors.prices.tiersButton,
     )
     await expect(page.getByTestId('param-vat')).toHaveValue(anchors.prices.vat)
+
+    // פרויקטים (מודול 6, נוסף 19/08/2026): מבט-העל עולה עם הלוח האמיתי. שני עוגנים:
+    // האירוע הידוע מופיע בלשונית "הכול" (שם-אירוע הוא snapshot, עמיד-ריקבון — הסטטוס
+    // שלו ינוע ולכן לא נועצים לשונית-סטטוס), ומונה-הלשונית שווה לספירת השורות שרונדרו —
+    // אינווריאנט עצמי שאינו נועץ מספר ללוח שעוד יגדל.
+    await page.goto('/projects')
+    // הלשוניות מרונדרות רק אחרי שה-RPC חזר (עד אז — שלד) ⇒ ממתינים לטבלה לפני הלחיצה.
+    await expect(page.getByTestId('projects-table')).toBeVisible({ timeout: 30_000 })
+    await page.getByTestId('projects-tab-all').click()
+    await expect(
+      page.locator('[data-testid^="projects-row-"]', { hasText: anchors.projects.knownEvent }),
+    ).toHaveCount(1)
+    const allTabText = await page.getByTestId('projects-tab-all').innerText()
+    const allTabCount = Number(allTabText.replace(/[^0-9]/g, ''))
+    await expect(page.locator('[data-testid^="projects-row-"]')).toHaveCount(allTabCount)
 
     // דיילות: הסרגל טוען את המודול, ומסך Smart Match לאירוע האמיתי מציג רק מי שעברה
     // את שער-הפסילה — מועמדת אחת ידועה בפנים, ושתי הנפסלות (בלי-רכב-ורחוקה /

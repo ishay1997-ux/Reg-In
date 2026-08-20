@@ -17,6 +17,16 @@ export const SHIFT_TEMPLATE_NAMES = {
   reminder: 'תבנית_תזכורת_משמרת',
 }
 
+// 🔴 תבניות **מודול 6** — ברמת-הפרויקט, לא ברמת-המשמרת. **קבוצה נפרדת מ-`SHIFT_TEMPLATE_NAMES`
+// ולא מפתח נוסף בתוכה**: `cancellation` שם כבר תפוס ע"י `תבנית_מייל_ביטול_משמרת` (מודול 4 —
+// המשרה כבר אוישה ע"י מישהי אחרת), ואילו כאן האירוע **כולו** מתבטל. שני מיילים שונים לגמרי
+// שחולקים מקרה-קצה בשם בלבד — זרעו כמפתח כפול היה מוחק אחד מהם בשקט.
+// זהים-בייט לשורות ה-`params` שנזרעו ב-`module6_params_seed` (`db_roadmap.md` M6-12).
+export const PROJECT_TEMPLATE_NAMES = {
+  cancellation: 'תבנית_מייל_אירוע_בוטל',
+  detailsChanged: 'תבנית_מייל_פרטי_האירוע_השתנו',
+}
+
 // הקישור האישי של הדיילת. **הטוקן בנתיב ולא ב-query** — פרמטרי-query נוטים להיגזר
 // בלוגים, ב-Referer ובקיצורי-קישורים, והטוקן הזה הוא **מפתח-כתיבה למסד** (`§7.45`).
 // ⚠️ הבסיס מגיע מהקורא (`window.location.origin`) ולא מקבוע: מייל שנשלח מסביבת-פיתוח
@@ -44,6 +54,61 @@ export function releaseSubject(project) {
 // נראה כמו תקלה, ו-`fillEmailTemplate` ממילא אינו יודע להשמיט שורה.
 function hhmm(value) {
   return typeof value === 'string' && value.length >= 5 ? value.slice(0, 5) : '—'
+}
+
+// ── placeholders משותפים ──────────────────────────────────────────────────
+// חמשת ה-placeholders שכל מייל-משמרת נושא — שם-דיילת + פרטי-האירוע (אוחד 19/08/2026,
+// jscpd: אותו בלוק חזר זהה-בייט בשלושה בונים). סדר-המפתחות באובייקט אינו משפיע על
+// `fillEmailTemplate` — הוא מחליף כל placeholder בנפרד (split/join, לא regex-מסודר).
+function shiftEventPlaceholders(hostess, project) {
+  return {
+    '[שם_דיילת]': hostess.full_name ?? '',
+    '[שם_פרויקט]': project?.event_name ?? '',
+    '[תאריך_אירוע]': formatDate(project?.final_event_date, '—'),
+    '[שעת_התחלה]': hhmm(project?.final_start_time),
+    '[שעת_סיום]': hhmm(project?.final_end_time),
+  }
+}
+
+// שלושת ה-placeholders הנוספים שמייל-עם-איש-קשר-בשטח נושא, מעל חמשת אלה — משותף בין
+// `buildFinalApprovalPayload` ו-`buildProjectDetailsChangedPayload` (8 placeholders
+// זהים-בייט, ר' ההערה על `buildProjectDetailsChangedPayload` למטה).
+function shiftContactPlaceholders(hostess, project, contact) {
+  return {
+    ...shiftEventPlaceholders(hostess, project),
+    // 🔴 **הכתובת המלאה** ולא העיר — זה מה שהדיילת מנווטת אליו בבוקר האירוע.
+    '[כתובת_אירוע_מלאה]': project?.final_location ?? '',
+    '[שם_מנהלת_פרויקט]': contact.name,
+    '[טלפון_מנהלת_פרויקט]': contact.phone,
+  }
+}
+
+// גוף+payload משותפים ל-`buildFinalApprovalPayload`/`buildProjectDetailsChangedPayload` —
+// שני מיילים "עם איש-קשר בשטח" שנבדלים רק בנושא (אוחד 19/08/2026, jscpd: אחרי איחוד
+// ה-placeholders למעלה הגופים נשארו זהים-בייט מלבד קריאת ה-subject). כל אחת מהן שומרת
+// על חתימת-הפרמטרים המקורית שלה (עם/בלי `= {}`) — ר' שתי העוטפות שמתחת.
+function buildContactPayload({ subject, template, hostess, project, contact }) {
+  if (!contact || !hostess?.email) return null
+
+  const body = fillEmailTemplate(template, shiftContactPlaceholders(hostess, project, contact))
+  if (!body) return null
+
+  return buildEmailPayload({
+    to: hostess.email,
+    subject,
+    body,
+    requireAttachment: false,
+  })
+}
+
+// נושא-הביטול. **בלי ייחוס** — כמו גוף-המייל עצמו (§ למטה) — כי `cancel_type` נושא שלושה
+// ערכים (`customer`/`force_majeure`/`other`, `schema.sql:1146`) והנושא אינו יכול לבחור ביניהם.
+export function projectCancellationSubject(project) {
+  return `ביטול האירוע — ${project?.event_name ?? ''}`.trim()
+}
+
+export function projectDetailsChangedSubject(project) {
+  return `עדכון פרטי האירוע — ${project?.event_name ?? ''}`.trim()
 }
 
 // ── איש הקשר בשטח ────────────────────────────────────────────────────────────
@@ -96,11 +161,7 @@ export function buildShiftInvitePayload({ template, hostess, project, hourlyRate
   if (!confirmUrl || !hostess?.email) return null
 
   const body = fillEmailTemplate(template, {
-    '[שם_דיילת]': hostess.full_name ?? '',
-    '[שם_פרויקט]': project?.event_name ?? '',
-    '[תאריך_אירוע]': formatDate(project?.final_event_date, '—'),
-    '[שעת_התחלה]': hhmm(project?.final_start_time),
-    '[שעת_סיום]': hhmm(project?.final_end_time),
+    ...shiftEventPlaceholders(hostess, project),
     '[עיר_אירוע]': project?.final_location ?? '',
     '[תעריף_שעתי_דיילת]': String(hourlyRate ?? ''),
     '[לינק_אישור_משמרת]': confirmUrl,
@@ -125,26 +186,12 @@ export function buildShiftInvitePayload({ template, hostess, project, hourlyRate
 // placeholder עבורה בכלל"*), הוא **טעון הכרעת-ישי** (§7.89: כל placeholder לגופו), ותיקונו
 // הוא שינוי-טקסט ב-`params` ⇒ **מיגרציה**. עד אז: מסומנת אחראית ⇒ הערך נכון, התווית לא.
 export function buildFinalApprovalPayload({ template, hostess, project, contact }) {
-  if (!contact || !hostess?.email) return null
-
-  const body = fillEmailTemplate(template, {
-    '[שם_דיילת]': hostess.full_name ?? '',
-    '[שם_פרויקט]': project?.event_name ?? '',
-    '[תאריך_אירוע]': formatDate(project?.final_event_date, '—'),
-    '[שעת_התחלה]': hhmm(project?.final_start_time),
-    '[שעת_סיום]': hhmm(project?.final_end_time),
-    // 🔴 **הכתובת המלאה** ולא העיר — זה מה שהדיילת מנווטת אליו בבוקר האירוע.
-    '[כתובת_אירוע_מלאה]': project?.final_location ?? '',
-    '[שם_מנהלת_פרויקט]': contact.name,
-    '[טלפון_מנהלת_פרויקט]': contact.phone,
-  })
-  if (!body) return null
-
-  return buildEmailPayload({
-    to: hostess.email,
+  return buildContactPayload({
     subject: finalApprovalSubject(project),
-    body,
-    requireAttachment: false,
+    template,
+    hostess,
+    project,
+    contact,
   })
 }
 
@@ -163,5 +210,124 @@ export function buildReleasePayload({ template, hostess, project }) {
     subject: releaseSubject(project),
     body,
     requireAttachment: false,
+  })
+}
+
+// ── מודול 6 · שלב 2.8 — ביטול-פרויקט ועדכון-פרטים ──────────────────────────
+
+// מייל ביטול-האירוע — יוצא **לכל** דיילת ששובצה, לא רק למי שיש לה איש-קשר תקין בפרויקט.
+//
+// 🔴 **בכוונה אינה קוראת ל-`resolveShiftContact`.** אותה פונקציה מחזירה `null` כששם *או*
+// טלפון של איש-הקשר חסרים (`projects.owner_phone` nullable), והקורא שלה **חייב** אז לעצור
+// את השליחה — זה בדיוק הכלל ב-`buildFinalApprovalPayload`. אבל כאן העצירה הזו הייתה שקרית:
+// המייל הזה אינו תלוי באיש-קשר בשטח בכלל (שלוש placeholders בלבד — דיילת/פרויקט/תאריך),
+// וקריאה מיותרת לפונקציה שיכולה להחזיר `null` הייתה חוסמת מייל-חובה על סמך שדה שהוא כלל
+// לא צריך. `db_roadmap.md` M6-12 §① מנמק את אותה הכרעה מפורשות.
+//
+// 🚫 **אין ייחוס-סיבה בתבנית, ולא יהיה.** `cancel_type` נושא שלושה ערכים
+// (`customer`/`force_majeure`/`other`) והתבנית היא מחרוזת קבועה אחת ש-`fillEmailTemplate`
+// אינו יודע להסתעף בה — *"בוטל על ידי הלקוח"* היה **שקר** במקרה של כוח-עליון.
+export function buildProjectCancellationPayload({ template, hostess, project } = {}) {
+  if (!hostess?.email) return null
+
+  const body = fillEmailTemplate(template, {
+    '[שם_דיילת]': hostess.full_name ?? '',
+    '[שם_פרויקט]': project?.event_name ?? '',
+    '[תאריך_אירוע]': formatDate(project?.final_event_date, '—'),
+  })
+  if (!body) return null
+
+  return buildEmailPayload({
+    to: hostess.email,
+    subject: projectCancellationSubject(project),
+    body,
+    requireAttachment: false,
+  })
+}
+
+// ── מודול 6 · צעד 3.5 — שני מיילי-הסגירה ללקוח (AR-5: אחרי ה-commit, לעולם לא בתוכו) ──
+
+// תבנית סקר-המשוב ופרמטר-הקישור — שניהם כבר זרועים חיים (מיגרציית מודול 3,
+// `20260723112000`), ו-db_roadmap §5 אוסר במפורש לזרוע אותם שוב: `[לינק_לשאלון_שביעות_רצון]`
+// הוא ה-placeholder שבתוך התבנית, ו-`קישור_בסיס_סקר_לקוחות` הוא שם-הפרמטר שנושא את ה-URL.
+export const FEEDBACK_TEMPLATE_NAME = 'תבנית_מייל_משוב_לקוח'
+export const SURVEY_LINK_PARAM_NAME = 'קישור_בסיס_סקר_לקוחות'
+
+export function projectReportSubject(project) {
+  return `דוח-סיכום האירוע — ${project?.event_name ?? ''}`.trim()
+}
+
+export function feedbackSurveySubject(project) {
+  return `סקר שביעות רצון — ${project?.event_name ?? ''}`.trim()
+}
+
+// גוף מייל דוח-הסיכום — 🔴 הנחתי: אין שורת-תבנית זרועה לדוח-הסיכום (מיגרציית M6-12 זרעה
+// בדיוק שתי תבניות, שתיהן לדיילות; אף מסמך אינו מגדיר תבנית לדוח), ולכן הגוף חי כאן בקוד,
+// בסגנון תבנית-החשבונית הקיימת ("מצורפת בזאת…"). placeholder-פורמט נשמר כדי שהמרה עתידית
+// לשורת-params תהיה העתקה, לא שכתוב. ההמרה ל-HTML-עם-כיווניות קורית ב-buildEmailPayload
+// (plainTextToEmailHtml) — כמו כל מייל אחר.
+const PROJECT_REPORT_BODY_TEMPLATE = `שלום [שם_איש_קשר],
+מצורף בזאת דוח-סיכום האירוע '[שם_פרויקט]' שהתקיים בתאריך [תאריך_אירוע].
+נשמח לעמוד לרשותך בכל שאלה על האירוע ועל הדוח.
+בברכה,
+צוות REG-IN.`
+
+// מייל דוח-הסיכום ללקוח: entityType 'project_report', **המצורף חובה** (AR-8) — הקובץ מורד
+// מה-bucket ומצורף כ-base64; 🚫 לעולם לא קישור חתום (spec §12⑬(ג): קישור שפג אצל הלקוח
+// נראה כמו תקלה). requireAttachment נשאר ברירת-המחדל true של המנוע — בכוונה לא מכובה.
+export function buildProjectReportPayload({ contact, project, filename, attachmentBase64 } = {}) {
+  if (!contact?.email) return null
+
+  const body = fillEmailTemplate(PROJECT_REPORT_BODY_TEMPLATE, {
+    '[שם_איש_קשר]': contact.contact_name ?? '',
+    '[שם_פרויקט]': project?.event_name ?? '',
+    '[תאריך_אירוע]': formatDate(project?.final_event_date, '—'),
+  })
+  if (!body) return null
+
+  return buildEmailPayload({
+    to: contact.email,
+    subject: projectReportSubject(project),
+    body,
+    filename,
+    attachmentBase64,
+  })
+}
+
+// מייל סקר-המשוב: התבנית הזרועה של מודול 3, שלושת ה-placeholders שלה בדיוק —
+// `[שם_איש_קשר]` · `[שם_פרויקט]` · `[לינק_לשאלון_שביעות_רצון]` (ערכו: הפרמטר הזרוע,
+// קישור קבוע — הכרעת-ישי 13/08: הטופס קיים והקישור קבוע). טקסט בלבד ⇒ requireAttachment:false.
+export function buildFeedbackSurveyPayload({ template, surveyUrl, contact, project } = {}) {
+  if (!contact?.email || !surveyUrl) return null
+
+  const body = fillEmailTemplate(template, {
+    '[שם_איש_קשר]': contact.contact_name ?? '',
+    '[שם_פרויקט]': project?.event_name ?? '',
+    '[לינק_לשאלון_שביעות_רצון]': surveyUrl,
+  })
+  if (!body) return null
+
+  return buildEmailPayload({
+    to: contact.email,
+    subject: feedbackSurveySubject(project),
+    body,
+    requireAttachment: false,
+  })
+}
+
+// מייל עדכון-פרטי-האירוע — יוצא רק כששיבוצה **נשאר בתוקף** (מיקום או שעות השתנו), ולכן
+// דורש איש-קשר תקין בדיוק כמו האישור-הסופי.
+//
+// 🔴 **8 placeholders זהים-בייט לאלה של `תבנית_אישור_סופי_שיבוץ`** (`db_roadmap.md` M6-12) —
+// ולכן `resolveShiftContact` נצרך כאן **בלי שינוי**, לא בשכפול. ⚠️ **הקריאה למייל הזה עצמה
+// אינה כאן** — קביעת "האם לשלוח" (מיקום/שעות בלבד, לא תאריך — ㉑ מאפס אישורים ומזמינה מחדש
+// כשהתאריך משתנה) היא של הקוד שקורא לבונה הזה, לא של הבונה עצמו.
+export function buildProjectDetailsChangedPayload({ template, hostess, project, contact } = {}) {
+  return buildContactPayload({
+    subject: projectDetailsChangedSubject(project),
+    template,
+    hostess,
+    project,
+    contact,
   })
 }

@@ -93,6 +93,16 @@ describe('matchesCustomerFilters — פילטרים חדשים (ב/ג)', () => {
       matchesCustomerFilters(c({ created_at: '2026-01-01T00:00:00Z' }), { createdAfter: cutoff }),
     ).toBe(false)
   })
+
+  // A3 (מודול 6 · משטח 8): `is_dormant` מוזרק לשורה מבחוץ (CustomersPage, כמו total_revenue) —
+  // הפונקציה רק קוראת אותו, בוליאני-מפורש בלבד (אותה מוסכמה כמו marketingConsent/hasDiscount).
+  it('dormantOnly: מסנן לפי is_dormant המוזרק, בוליאני-מפורש בלבד', () => {
+    expect(matchesCustomerFilters(c({ is_dormant: true }), { dormantOnly: true })).toBe(true)
+    expect(matchesCustomerFilters(c({ is_dormant: false }), { dormantOnly: true })).toBe(false)
+    expect(matchesCustomerFilters(c({ is_dormant: null }), { dormantOnly: true })).toBe(false)
+    // כבוי (undefined) = לא מסנן, גם אם הלקוח רדום
+    expect(matchesCustomerFilters(c({ is_dormant: true }), {})).toBe(true)
+  })
 })
 
 describe('sortCustomers', () => {
@@ -306,6 +316,11 @@ describe('countActiveFilters — תג ספירת-המסננים', () => {
   it('hasDiscount=false הוא מסנן פעיל ("בלי הנחה"), ו-minDiscount=0 נספר גם הוא', () => {
     expect(countActiveFilters({ hasDiscount: false })).toBe(1)
     expect(countActiveFilters({ minDiscount: 0 })).toBe(1)
+  })
+
+  it('dormantOnly נספר רק כשהוא true (A3, מודול 6 · משטח 8)', () => {
+    expect(countActiveFilters({ dormantOnly: true })).toBe(1)
+    expect(countActiveFilters({ dormantOnly: false })).toBe(0)
   })
 })
 

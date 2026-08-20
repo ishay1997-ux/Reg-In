@@ -50,7 +50,7 @@
 | [docs/toolbox.md](docs/toolbox.md) | 🧰 **ארגז הכלים** — אילו פלאגינים דלוקים/כבויים ב-REG-IN ומתי לבקש להדליק |
 | [docs/archive/](docs/archive/) | 🗄️ גרסאות-עבר מלאות (CLAUDE.md · STATUS · יומן-סשנים · מדריך-מ3) — קריאה בלבד, שום דבר לא נמחק |
 | [STATUS.md](STATUS.md) | **לוח המצב היחיד** — סטטוס מודולים + הצעד הנוכחי |
-| [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) | מפת הדרכים: מודולים, תלויות, אבני דרך, **לוח-הדדליינים ל-19/09**, שיטת העבודה |
+| [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) | מפת הדרכים: מודולים, תלויות, אבני דרך, **לוח-הדדליינים** (28/08·01/10·20/10 — §3), שיטת העבודה |
 | [docs/guides/modules/](docs/guides/modules/) | מדריך שלב לכל מודול, בעברית (8 סעיפים + 3 פרומפטים בכל אחד) |
 | [docs/guides/reference/](docs/guides/reference/) | מדריכי-רפרנס קבועים: ‏Git · עבודה-עם-Claude · כיוונון-Claude-Code · רוטינות · התקנת-כלים |
 | [docs/guides/reference/working_with_claude.md](docs/guides/reference/working_with_claude.md) | **המדריך לעבודה עם Claude**: פרומפטים, חיסכון בטוקנים, Plan Mode, קיצורי מקלדת, "איזה כלי למה" |

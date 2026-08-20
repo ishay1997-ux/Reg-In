@@ -1,14 +1,23 @@
 import { describe, it, expect } from 'vitest'
 import {
   SHIFT_TEMPLATE_NAMES,
+  PROJECT_TEMPLATE_NAMES,
   shiftInviteSubject,
   finalApprovalSubject,
   releaseSubject,
+  projectCancellationSubject,
+  projectDetailsChangedSubject,
   buildShiftInvitePayload,
   buildFinalApprovalPayload,
   buildReleasePayload,
+  buildProjectCancellationPayload,
+  buildProjectDetailsChangedPayload,
   resolveShiftContact,
   confirmUrlFor,
+  projectReportSubject,
+  feedbackSurveySubject,
+  buildProjectReportPayload,
+  buildFeedbackSurveyPayload,
 } from './shiftEmails'
 
 // ⚠️ **העתק מדויק של הערך שבמסד** (`תבנית_זימון_משמרת`, מיגרציה `20260723112000`) — כדי
@@ -245,5 +254,232 @@ describe('SHIFT_TEMPLATE_NAMES — זהים-בייט לשורות ה-Seed', () =
       release: 'תבנית_מייל_שחרור_משמרת',
       reminder: 'תבנית_תזכורת_משמרת',
     })
+  })
+})
+
+// ── מודול 6 · שלב 2.8 — ביטול-פרויקט ועדכון-פרטים ──────────────────────────
+
+describe('PROJECT_TEMPLATE_NAMES — זהים-בייט לשורות ה-Seed (`module6_params_seed`, M6-12)', () => {
+  it('שתי התבניות של מודול 6', () => {
+    expect(PROJECT_TEMPLATE_NAMES).toEqual({
+      cancellation: 'תבנית_מייל_אירוע_בוטל',
+      detailsChanged: 'תבנית_מייל_פרטי_האירוע_השתנו',
+    })
+  })
+})
+
+// ⚠️ **העתק מדויק של הערך המאושר שנזרע ב-`module6_params_seed`** (`db_roadmap.md` M6-12,
+// מצוטט כלשונו) — כדי שבדיקה תיפול אם שמות-ה-placeholders בתבנית ישתנו. 🔴 **בכוונה בלי
+// placeholder של איש-קשר** — `resolveShiftContact` לא נקרא כאן, והמייל חייב להגיע לכל דיילת
+// גם כש-`projects.owner_phone` ריק.
+const PROJECT_CANCELLATION_TEMPLATE = `היי [שם_דיילת],
+האירוע '[שם_פרויקט]' בתאריך [תאריך_אירוע] בוטל, והמשמרת שלך מבוטלת יחד איתו.
+האירוע כולו לא יתקיים — כל הדיילות ששובצו אליו שוחררו. אין צורך להגיע.
+הזכאות לתשלום על משמרת שבוטלה נקבעת לפי מועד הביטול. מחלקת הכספים תבדוק ותעדכן אותך בהמשך.
+נשמח לשבץ אותך לאירוע הבא. לשאלות ניתן להשיב למייל זה.
+בברכה,
+צוות הגיוס, REG-IN.`
+
+// ⚠️ **8 placeholders, זהים-בייט לאלה של `תבנית_אישור_סופי_שיבוץ`** — ולכן הבונה מוכרח
+// להשתמש ב-`resolveShiftContact` כמו שהוא, בלי לשכפל אותו.
+const PROJECT_DETAILS_CHANGED_TEMPLATE = `היי [שם_דיילת],
+חל שינוי בפרטי האירוע '[שם_פרויקט]'. השיבוץ שלך בתוקף ואנחנו מצפים לראותך.
+אלה הפרטים המעודכנים, והם הקובעים:
+תאריך: [תאריך_אירוע]
+שעות: [שעת_התחלה] עד [שעת_סיום]
+מיקום: [כתובת_אירוע_מלאה]
+אם הפרטים החדשים אינם מתאימים לך, עדכני אותנו בהקדם.
+איש קשר: [שם_מנהלת_פרויקט], טלפון: [טלפון_מנהלת_פרויקט]
+בברכה,
+צוות הגיוס, REG-IN.`
+
+describe('projectCancellationSubject / projectDetailsChangedSubject', () => {
+  it('נושא-הביטול נושא את שם האירוע, בלי ייחוס-סיבה', () => {
+    expect(projectCancellationSubject(project)).toBe('ביטול האירוע — כנס לקוחות שנתי')
+  })
+
+  it('נושא עדכון-הפרטים נושא את שם האירוע ונבדל מנושא-הביטול', () => {
+    expect(projectDetailsChangedSubject(project)).toBe('עדכון פרטי האירוע — כנס לקוחות שנתי')
+    expect(projectDetailsChangedSubject(project)).not.toBe(projectCancellationSubject(project))
+  })
+})
+
+describe('buildProjectCancellationPayload — מייל-הביטול חייב להגיע לכל דיילת', () => {
+  const args = { template: PROJECT_CANCELLATION_TEMPLATE, hostess, project }
+
+  it('כל שלושת השדות מולאו — ולא נשאר סוגר מרובע אחד בגוף', () => {
+    const payload = buildProjectCancellationPayload(args)
+    expect(payload.body).not.toMatch(/\[[^\]\n]+\]/)
+    expect(payload.body).toContain('נועה שגיא')
+    expect(payload.body).toContain('כנס לקוחות שנתי')
+    expect(payload.body).toContain('22/08/2026')
+  })
+
+  it('🔴 בלי ייחוס — אין "בוטל על ידי" בשום נוסח, כי הסיבה יכולה להיות כוח-עליון', () => {
+    const payload = buildProjectCancellationPayload(args)
+    expect(payload.body).not.toContain('בוטל על ידי')
+  })
+
+  it('🔴 "אין צורך להגיע" מופיע — משפט טעון-כסף לפי צו-ההרחבה', () => {
+    expect(buildProjectCancellationPayload(args).body).toContain('אין צורך להגיע')
+  })
+
+  it('🔴 המצורף כבוי — גם המייל הזה טקסט בלבד', () => {
+    expect(buildProjectCancellationPayload(args).pdf_base64).toBe('')
+    expect(buildProjectCancellationPayload(args).filename).toBe('')
+  })
+
+  it('נושא-המייל נכון', () => {
+    expect(buildProjectCancellationPayload(args).subject).toBe('ביטול האירוע — כנס לקוחות שנתי')
+  })
+
+  it('בלי כתובת-מייל לדיילת ⇒ `null`', () => {
+    expect(buildProjectCancellationPayload({ ...args, hostess: { full_name: 'נועה' } })).toBe(null)
+  })
+
+  it('🔴 תבנית שנוסף לה שדה לא-מוכר ⇒ `null`, לא מייל עם `[שדה]` גולמי', () => {
+    const payload = buildProjectCancellationPayload({
+      ...args,
+      template: `${PROJECT_CANCELLATION_TEMPLATE}\nעוד: [שדה_שלא_קיים]`,
+    })
+    expect(payload).toBe(null)
+  })
+
+  it('🔴 אינו קורא ל-resolveShiftContact — אין placeholder של איש-קשר בתבנית', () => {
+    expect(PROJECT_CANCELLATION_TEMPLATE).not.toMatch(/שם_מנהלת_פרויקט|טלפון_מנהלת_פרויקט/)
+  })
+})
+
+describe('buildProjectDetailsChangedPayload — עדכון בעוד האישור שלה עומד', () => {
+  const contact = { name: 'ישי אטיאס', phone: '050-1241223', isShiftLead: false }
+  const args = { template: PROJECT_DETAILS_CHANGED_TEMPLATE, hostess, project, contact }
+
+  it('כל שמונת השדות מולאו — ולא נשאר סוגר מרובע אחד', () => {
+    const payload = buildProjectDetailsChangedPayload(args)
+    expect(payload.body).not.toMatch(/\[[^\]\n]+\]/)
+    expect(payload.body).toContain('נועה שגיא')
+    expect(payload.body).toContain('כנס לקוחות שנתי')
+    expect(payload.body).toContain('22/08/2026')
+    expect(payload.body).toContain('18:00')
+    expect(payload.body).toContain('22:00')
+    expect(payload.body).toContain('אקספו תל אביב, ביתן 2')
+    expect(payload.body).toContain('ישי אטיאס')
+    expect(payload.body).toContain('050-1241223')
+  })
+
+  it('🔴 "והם הקובעים" — אין old→new, רק הערך החדש (אין placeholder כזה בתבנית)', () => {
+    expect(buildProjectDetailsChangedPayload(args).body).toContain('והם הקובעים')
+  })
+
+  it('🔴 בלי איש-קשר ⇒ `null` — reuse מדויק של resolveShiftContact', () => {
+    expect(buildProjectDetailsChangedPayload({ ...args, contact: null })).toBe(null)
+  })
+
+  it('בלי כתובת-מייל לדיילת ⇒ `null`', () => {
+    expect(buildProjectDetailsChangedPayload({ ...args, hostess: { full_name: 'נועה' } })).toBe(
+      null,
+    )
+  })
+
+  it('🔴 המצורף כבוי — גם מייל-העדכון הוא טקסט בלבד', () => {
+    expect(buildProjectDetailsChangedPayload(args).pdf_base64).toBe('')
+  })
+
+  it('נושא-המייל נכון ושונה מנושא-הביטול', () => {
+    expect(buildProjectDetailsChangedPayload(args).subject).toBe(
+      'עדכון פרטי האירוע — כנס לקוחות שנתי',
+    )
+  })
+
+  it('🔴 שעת-סיום חסרה אינה מפילה את המייל', () => {
+    const payload = buildProjectDetailsChangedPayload({
+      ...args,
+      project: { ...project, final_end_time: null },
+    })
+    expect(payload).not.toBe(null)
+    expect(payload.body).not.toMatch(/\[[^\]\n]+\]/)
+  })
+})
+
+// ── מודול 6 · צעד 3.5 — שני מיילי-הסגירה ללקוח ─────────────────────────────
+
+describe('projectReportSubject / feedbackSurveySubject — נושאי מיילי-הסגירה', () => {
+  it('שני הנושאים נבנים משם-האירוע ושונים זה מזה', () => {
+    expect(projectReportSubject(project)).toBe('דוח-סיכום האירוע — כנס לקוחות שנתי')
+    expect(feedbackSurveySubject(project)).toBe('סקר שביעות רצון — כנס לקוחות שנתי')
+  })
+})
+
+describe('buildProjectReportPayload — דוח-הסיכום ללקוח (project_report · מצורף חובה)', () => {
+  const contact = { contact_name: 'שרית מזרחי', email: 'sarit@hadera.test' }
+
+  it('גוף מלא בלי placeholder שנשאר, נמען מהלקוח, והקובץ מצורף', () => {
+    const payload = buildProjectReportPayload({
+      contact,
+      project,
+      filename: 'summary.pdf',
+      attachmentBase64: 'QUJD',
+    })
+    expect(payload).not.toBe(null)
+    expect(payload.to).toBe('sarit@hadera.test')
+    expect(payload.filename).toBe('summary.pdf')
+    expect(payload.pdf_base64).toBe('QUJD')
+    expect(payload.body).toContain('שרית מזרחי')
+    expect(payload.body).toContain('כנס לקוחות שנתי')
+    expect(payload.body).not.toMatch(/\[[^\]\n]+\]/)
+  })
+
+  it('🔴 בלי מצורף אין מייל — requireAttachment נשאר ברירת-המחדל true (AR-8)', () => {
+    expect(buildProjectReportPayload({ contact, project, filename: 'summary.pdf' })).toBe(null)
+  })
+
+  it('בלי כתובת-מייל ⇒ null — הקורא מסרב לשלוח ואומר למה', () => {
+    expect(
+      buildProjectReportPayload({
+        contact: { contact_name: 'שרית מזרחי', email: '' },
+        project,
+        filename: 'x.pdf',
+        attachmentBase64: 'QUJD',
+      }),
+    ).toBe(null)
+  })
+})
+
+describe('buildFeedbackSurveyPayload — התבנית הזרועה של מודול 3, שלושת ה-placeholders שלה', () => {
+  // העתק מדויק של הערך שבמסד (`תבנית_מייל_משוב_לקוח`, 20260723112000:79) — הבדיקה נופלת
+  // אם ה-placeholders בתבנית ישתנו בלי עדכון-בונה.
+  const SURVEY_TEMPLATE = `שלום [שם_איש_קשר],
+שמחנו לקחת חלק בהפקת האירוע '[שם_פרויקט]'! כדי שנוכל להמשיך להשתפר ולהעניק לך את השירות הטוב ביותר, נודה לך אם תקדיש דקה מזמנך למילוי סקר שביעות רצון קצר:
+[לינק_לשאלון_שביעות_רצון]
+תודה רבה ולהתראות באירוע הבא,
+צוות REG-IN.`
+  const contact = { contact_name: 'שרית מזרחי', email: 'sarit@hadera.test' }
+
+  it('שלושת ה-placeholders מתמלאים, הקישור מהפרמטר הזרוע, ואין מצורף', () => {
+    const payload = buildFeedbackSurveyPayload({
+      template: SURVEY_TEMPLATE,
+      surveyUrl: 'https://forms.gle/YFJobqmgpBCqf1x87',
+      contact,
+      project,
+    })
+    expect(payload).not.toBe(null)
+    expect(payload.body).toContain('https://forms.gle/YFJobqmgpBCqf1x87')
+    expect(payload.body).toContain('שרית מזרחי')
+    expect(payload.body).not.toMatch(/\[[^\]\n]+\]/)
+    expect(payload.pdf_base64).toBe('')
+  })
+
+  it('בלי קישור-סקר או בלי כתובת ⇒ null — לא יוצא מייל עם [לינק] גולמי', () => {
+    expect(
+      buildFeedbackSurveyPayload({ template: SURVEY_TEMPLATE, surveyUrl: '', contact, project }),
+    ).toBe(null)
+    expect(
+      buildFeedbackSurveyPayload({
+        template: SURVEY_TEMPLATE,
+        surveyUrl: 'https://forms.gle/x',
+        contact: { contact_name: 'א', email: '' },
+        project,
+      }),
+    ).toBe(null)
   })
 })

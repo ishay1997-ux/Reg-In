@@ -71,6 +71,19 @@ async function openDocumentDialog(page, quoteId) {
   await expect(page.getByTestId('quote-document-send')).toBeEnabled({ timeout: 30_000 })
 }
 
+// 🔴 מ-12/08/2026 "כבר נשלחה — לשלוח שוב?" הוא דיאלוג מעוצב (`useConfirm`), לא
+// `window.confirm` — ר' ההערה ב-`load-failure-guards.spec.js:159`. הוא נפתח רק על שליחה
+// שנייה+ לאותה הצעה בתוך הריצה, ולכן זה תנאי ולא שלב-קבוע.
+async function confirmSendIfAsked(page) {
+  const dialog = page.getByTestId('confirm-dialog')
+  try {
+    await dialog.waitFor({ state: 'visible', timeout: 3_000 })
+  } catch {
+    return
+  }
+  await page.getByTestId('confirm-dialog-confirm').click()
+}
+
 test.describe('שליחת ההצעה במייל — החוזה מול השרת (חוב 3.4)', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
 
@@ -158,7 +171,8 @@ test.describe('שליחת ההצעה במייל — החוזה מול השרת (
     // וכל בדיקה כאן שלוחצת "שלח" מתכוונת באמת לשלוח.
     // 🚫 **ואין כאן החלשה של שומר:** אף בדיקה בקובץ אינה מאמתת שהחלון **חוסם** — הוולידציה
     // של החלון עצמו חיה בבדיקות-היחידה של `hasQuoteChanged`/`getLastSuccessfulSend`.
-    page.on('dialog', (dialog) => dialog.accept())
+    // 🔒 האישור עצמו מטופל ב-`confirmSendIfAsked` אחרי כל לחיצת-שליחה (הדיאלוג מעוצב, לא
+    // `window.confirm` — ר' `openDocumentDialog` שמעל).
     await login(page, CEO_EMAIL, CEO_PASSWORD)
   })
 
@@ -177,6 +191,7 @@ test.describe('שליחת ההצעה במייל — החוזה מול השרת (
 
     await openDocumentDialog(page, CLEAN_QUOTE_ID)
     await page.getByTestId('quote-document-send').click()
+    await confirmSendIfAsked(page)
     await expect(page.getByTestId('toast-success')).toBeVisible()
 
     // חמשת שדות-החוזה מול מבנה-הנתונים `regin-quote` ב-Make. שדה שישתנה כאן בלי שינוי
@@ -220,6 +235,7 @@ test.describe('שליחת ההצעה במייל — החוזה מול השרת (
 
     await openDocumentDialog(page, CLEAN_QUOTE_ID)
     await page.getByTestId('quote-document-send').click()
+    await confirmSendIfAsked(page)
 
     await expect(page.getByTestId('quote-send-check-notice')).toBeVisible()
     await expect(page.getByTestId('toast-error')).toBeVisible()
@@ -232,6 +248,7 @@ test.describe('שליחת ההצעה במייל — החוזה מול השרת (
 
     await openDocumentDialog(page, CLEAN_QUOTE_ID)
     await page.getByTestId('quote-document-send').click()
+    await confirmSendIfAsked(page)
 
     const err = page.getByTestId('quote-send-error')
     await expect(err).toBeVisible()

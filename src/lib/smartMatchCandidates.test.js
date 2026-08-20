@@ -21,13 +21,16 @@ const project = {
 }
 
 // עוזר: שורת-שיבוץ. `n` = `assignment_number` (ברירת-מחדל 1).
-function row(projectId, hostessId, status, eventDate, n = 1, customerId = 99) {
+// `attendance` — פרמטר-רשות, שלוש עמודות-הנוכחות של §2.7 (`{attendance_status,
+// lateness_level, no_show_reason}`); ברירת-המחדל היא שיבוץ שטרם נסגר (שלושתן `null`).
+function row(projectId, hostessId, status, eventDate, n = 1, customerId = 99, attendance = {}) {
   return {
     project_id: projectId,
     hostess_id: hostessId,
     assignment_number: n,
     assignment_status: status,
     projects: { final_event_date: eventDate, customer_id: customerId, project_status: 'ready' },
+    ...attendance,
   }
 }
 
@@ -253,5 +256,135 @@ describe('buildSmartMatchCandidates — ההרכבה שמזינה את הדיר�
       TODAY,
     )
     expect(built[0].distanceKm).toBe(null)
+  })
+})
+
+// ── attendance — §2.7: הקלט הגולמי ל-reliabilityScore, לא עוד `[]` מקודד ────────────────
+describe('buildSmartMatchCandidates — attendance מוזנת משורות אמיתיות (§2.7)', () => {
+  it('🔴 שיבוץ `finally_approved` שנסגר מזין רשומת-נוכחות אמיתית — לא [] עוד', () => {
+    const built = buildSmartMatchCandidates(
+      {
+        project,
+        hostesses: [{ hostess_id: 1, status: 'active' }],
+        assignments: [
+          row(10, 1, 'finally_approved', '2026-01-01', 1, 55, {
+            attendance_status: 'late',
+            lateness_level: 'medium',
+          }),
+        ],
+        sameDayHostessIds: [],
+        preferences: [],
+      },
+      TODAY,
+    )
+    expect(built[0].attendance).toHaveLength(1)
+    expect(built[0].attendance[0]).toMatchObject({
+      attendance_status: 'late',
+      lateness_level: 'medium',
+      projectCancelled: false,
+      eventPassed: true,
+    })
+  })
+
+  it('🔴 "ביטלה אחרי אישור" — הענף הנפרד: אין עמודות-נוכחות בכלל, ועדיין נכנסת לרשימה', () => {
+    // ‏§2.7#2: WITHDREW אינו ערך-נוכחות — מגיע מ-assignment_status, לא מהעמודות.
+    const built = buildSmartMatchCandidates(
+      {
+        project,
+        hostesses: [{ hostess_id: 1, status: 'active' }],
+        assignments: [row(10, 1, 'approval_withdrawn', '2026-01-01', 1, 55)],
+        sameDayHostessIds: [],
+        preferences: [],
+      },
+      TODAY,
+    )
+    expect(built[0].attendance).toHaveLength(1)
+    expect(built[0].attendance[0]).toMatchObject({
+      assignment_status: 'approval_withdrawn',
+      projectCancelled: false,
+      eventPassed: true,
+    })
+  })
+
+  it('שיבוץ `finally_approved` שטרם נסגר (שלוש העמודות null) אינו עובדה — לא נכנס לרשימה', () => {
+    const built = buildSmartMatchCandidates(
+      {
+        project,
+        hostesses: [{ hostess_id: 1, status: 'active' }],
+        assignments: [row(10, 1, 'finally_approved', '2026-01-01', 1, 55)],
+        sameDayHostessIds: [],
+        preferences: [],
+      },
+      TODAY,
+    )
+    expect(built[0].attendance).toEqual([])
+  })
+
+  it('סטטוסים לא-רלוונטיים לאמינות (pending·declined) אינם מייצרים רשומה', () => {
+    const built = buildSmartMatchCandidates(
+      {
+        project,
+        hostesses: [{ hostess_id: 1, status: 'active' }],
+        assignments: [row(10, 1, 'declined', '2026-01-01'), row(11, 1, 'pending', '2026-01-01')],
+        sameDayHostessIds: [],
+        preferences: [],
+      },
+      TODAY,
+    )
+    expect(built[0].attendance).toEqual([])
+  })
+
+  it('`projectCancelled` ו-`eventPassed` נגזרים נכון לכל שורה בנפרד — נתונים לא-אחידים', () => {
+    // ⚠️ CLAUDE.md: בדיקת-קיבוץ/סינון על נתונים אחידים "עוברת תמיד, גם כשהקוד לא עשה כלום" —
+    // כאן שתי שורות **שונות** של אותה דיילת: פרויקט מבוטל, ופרויקט עתידי.
+    const cancelledRow = row(10, 1, 'finally_approved', '2026-01-01', 1, 55, {
+      attendance_status: 'no_show',
+      no_show_reason: 'ghosted',
+    })
+    cancelledRow.projects.project_status = 'cancelled'
+    const futureRow = row(11, 1, 'finally_approved', '2026-12-01', 1, 55, {
+      attendance_status: 'arrived',
+    })
+
+    const built = buildSmartMatchCandidates(
+      {
+        project,
+        hostesses: [{ hostess_id: 1, status: 'active' }],
+        assignments: [cancelledRow, futureRow],
+        sameDayHostessIds: [],
+        preferences: [],
+      },
+      TODAY,
+    )
+
+    expect(built[0].attendance).toHaveLength(2)
+    const cancelledRecord = built[0].attendance.find((r) => r.no_show_reason === 'ghosted')
+    const futureRecord = built[0].attendance.find((r) => r.attendance_status === 'arrived')
+    expect(cancelledRecord.projectCancelled).toBe(true)
+    expect(cancelledRecord.eventPassed).toBe(true)
+    expect(futureRecord.projectCancelled).toBe(false)
+    expect(futureRecord.eventPassed).toBe(false)
+  })
+
+  it('שתי דיילות שונות — אחת עם היסטוריה סגורה, אחת בלי — אינן מתערבבות', () => {
+    const built = buildSmartMatchCandidates(
+      {
+        project,
+        hostesses: [
+          { hostess_id: 1, status: 'active' },
+          { hostess_id: 2, status: 'active' },
+        ],
+        assignments: [
+          row(10, 1, 'finally_approved', '2026-01-01', 1, 55, { attendance_status: 'arrived' }),
+          row(20, 2, 'confirmed_available', '2026-01-01'),
+        ],
+        sameDayHostessIds: [],
+        preferences: [],
+      },
+      TODAY,
+    )
+    const byId = Object.fromEntries(built.map((c) => [c.hostess_id, c]))
+    expect(byId[1].attendance).toHaveLength(1)
+    expect(byId[2].attendance).toEqual([])
   })
 })

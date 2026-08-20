@@ -303,9 +303,49 @@ test.describe('התפוגה מגיעה למסך כמו כל דחייה אחרת 
 test.describe('מסנן "פג בקרוב" — 7 הימים שאי-אפשר להוכיח על הדאטה האמיתית (4.2)', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
 
-  test('על הנתונים האמיתיים הצ׳יפ קיים ומושבת — כי אין אף הצעה שפגה בקרוב', async ({ page }) => {
-    // נמדד 31/07: כל 8 ההצעות עודכנו 29/07 וימי-התוקף=30 ⇒ נותרו 28 ימים לכולן.
-    // הצ'יפ מושבת ב-0 בכוונה (הכרעת-ישי) — אין למה לסנן.
+  test('אין הצעה שפגה בקרוב ⇒ הצ׳יפ מושבת (דטרמיניסטי ביירוט-רשת — לא תלוי בדריפט-תאריך)', async ({
+    page,
+  }) => {
+    // 🔴 שוכתב 21/08/2026: הגרסה הקודמת קיבעה "אין הצעה שפגה בקרוב" על הדאטה החיה (נמדד
+    // 31/07: הכול עודכן 29/07 ⇒ 28 ימים לכולן). ברגע שהתאריך התגלגל, הצעה #8 נכנסה לחלון
+    // 7-הימים והבדיקה נפלה — "מספר חי הוא פיקסטורה" (`e2e/CLAUDE.md`). התבנית הנכונה,
+    // כמו בבדיקה-האחות: סט-הצעות טרי ביירוט-רשת, כך שהמצב-הריק של המסנן נבדק דטרמיניסטית.
+    const day = 24 * 60 * 60 * 1000
+    const iso = (msAgo) => new Date(Date.now() - msAgo).toISOString()
+    const fresh = {
+      quote_status: 'in_progress',
+      customer_id: 46,
+      estimated_event_date: '2026-12-01',
+      estimated_guests: 100,
+      recommended_hostess_count: 2,
+      applied_customer_discount: 0,
+      manual_discount: 0,
+      vat_rate_snapshot: null,
+      rejection_reason: null,
+      rejection_notes: null,
+      notes: null,
+      issue_date: '2026-07-01',
+      quote_services: [],
+      customers: {
+        customer_id: 46,
+        company_name: 'לקוח בדיקה',
+        contact_name: 'א',
+        phone: '',
+        email: '',
+      },
+    }
+    await page.route('**/rest/v1/quotes?select=*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        // שתי הצעות טריות (1 ו-2 ימי-הזדקנות) ⇒ 28–29 ימים לתוקף ⇒ אף אחת אינה "פג בקרוב".
+        body: JSON.stringify([
+          { ...fresh, quote_id: 9101, event_name: 'טרייה 1', updated_at: iso(1 * day) },
+          { ...fresh, quote_id: 9102, event_name: 'טרייה 2', updated_at: iso(2 * day) },
+        ]),
+      })
+    })
+
     await login(page, CEO_EMAIL, CEO_PASSWORD)
     await page.goto('/quotes')
     await expect(page.getByTestId('quotes-table')).toBeVisible({ timeout: 30_000 })
@@ -632,19 +672,20 @@ test.describe('"עדכן ושלח" בלי שינוי — לא שומרים, וה
     page,
   }) => {
     const edits = countEditRpc(page)
-    let confirmText = null
-    page.on('dialog', async (d) => {
-      confirmText = d.message()
-      await d.accept()
-    })
 
     await openEdit(page)
     await page.getByTestId('quote-save').click()
 
-    await expect(page.getByTestId('quote-document-title')).toBeVisible({ timeout: 30_000 })
+    // 🔴 מ-12/08/2026 זהו דיאלוג מעוצב (`useConfirm`), לא `window.confirm` — ר' ההערה
+    // ב-`load-failure-guards.spec.js:159`. אין עוד `page.on('dialog')`.
+    await expect(page.getByTestId('confirm-dialog')).toBeVisible({ timeout: 10_000 })
+    const confirmText = await page.getByTestId('confirm-dialog-message').innerText()
     // 🔒 חוזה-נוסח: שני הדברים שההודעה **חייבת** לומר כדי שההחלטה תהיה מיודעת.
     expect(confirmText).toContain('לא בוצע שינוי')
     expect(confirmText).toContain('התוקף לא יתאפס')
+    await page.getByTestId('confirm-dialog-confirm').click()
+
+    await expect(page.getByTestId('quote-document-title')).toBeVisible({ timeout: 30_000 })
     // 🎯 הטענה האמיתית — לא "נראתה הודעה" אלא **שהמסד לא נגע**.
     expect(edits).toHaveLength(0)
     await expect(page.getByTestId('quote-document-send')).toBeEnabled()
@@ -653,11 +694,6 @@ test.describe('"עדכן ושלח" בלי שינוי — לא שומרים, וה
   // בקרת-חיוב: בלי הכיוון הזה, קוד ש**לעולם** אינו שומר היה עובר את הבדיקה שמעל בירוק.
   test('בקרת-חיוב — עם שינוי אמיתי הזרימה הרגילה נשמרת (כן נכתב, בלי אישור)', async ({ page }) => {
     const edits = countEditRpc(page)
-    let dialogOpened = false
-    page.on('dialog', async (d) => {
-      dialogOpened = true
-      await d.accept()
-    })
 
     await openEdit(page)
     await page.getByTestId('quote-location').fill('מיקום ששונה לבדיקה')
@@ -665,7 +701,8 @@ test.describe('"עדכן ושלח" בלי שינוי — לא שומרים, וה
 
     await expect(page.getByTestId('quote-document-title')).toBeVisible({ timeout: 30_000 })
     expect(edits).toHaveLength(1)
-    expect(dialogOpened).toBe(false)
+    // אין וידוא-דיאלוג בנתיב הזה כלל — לא רק שהוא לא נפתח, הוא גם לא ממתין להיסגר.
+    await expect(page.getByTestId('confirm-dialog')).toHaveCount(0)
   })
 })
 
