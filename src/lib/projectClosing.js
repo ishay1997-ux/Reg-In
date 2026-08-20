@@ -142,6 +142,12 @@ export function closingValidationSummary(draft) {
   const rows = draft?.rows ?? []
   const missing = []
 
+  // אירוע ללא דיילות אינו קורה (הכרעת-מציאות ישי 20/08/2026) ⇒ אין מסלול-סגירה למערך
+  // ריק. הכפתור מכובה, המסך מיושר עם השרת (שממילא מסרב), ואין הודעת-ריק ייעודית.
+  if (rows.length === 0) {
+    return 'לא ניתן לסגור: לא שובצו דיילות לאירוע.'
+  }
+
   const eventHours = toFiniteNumber(draft?.actualHours)
   if (eventHours === null || eventHours < 0.5 || eventHours > 24) {
     missing.push('שעות ביצוע בפועל')

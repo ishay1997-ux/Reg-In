@@ -93,10 +93,6 @@ import {
 } from './closingApi'
 import ScopeChangeDialog from './ScopeChangeDialog'
 
-// המחרוזת של המצב-הריק החוקי (#7) — אירוע יכול להגיע לסגירה עם אפס דיילות מאושרות,
-// והמסך אסור שייראה כאילו נכשל: הסגירה נשארת אפשרית משלושת שדות-האירוע לבדם.
-const LEGAL_EMPTY_SENTENCE = 'לא שובצו דיילות לאירוע הזה — אין מה לסמן'
-
 // ההשלכה של ㉔ (as-built ⑥): הדיאלוג כותב למסד מיד, בעוד טיוטת-הסגירה רק בזיכרון — בלי
 // המשפט הזה, נטישת הסגירה אחרי רישום-שינוי נקראת כ"השינוי אבד". (הנחתי — נוסח שלי.)
 const SCOPE_COMMITS_NOW_NOTE =
@@ -271,7 +267,10 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
   const guestsInvalid = eventGuestsInvalid(eventGuestsNum)
   const fieldsOk = !hoursInvalid && !guestsInvalid
   const marked = markedRowsCount(rows)
-  const allMarked = rows.length === 0 || marked === rows.length
+  // סגירה דורשת לפחות דיילת אחת מסומנת — אירוע ללא דיילות אינו קורה (הכרעת-מציאות
+  // ישי 20/08/2026), ולכן אין מסלול-סגירה למערך ריק; זה גם מיישר את המסך עם השרת,
+  // שממילא מסרב לסגירה ריקה.
+  const allMarked = rows.length > 0 && marked === rows.length
   const ready = fieldsOk && Boolean(reportFile) && allMarked
 
   // ── שלב-השליחה המשותף לשמירה ולשליחה-החוזרת ───────────────────────────────
@@ -700,13 +699,6 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
             detail="טבלת-הסגירה דורשת הרשאת צפייה במודול הדיילות."
             testId="closing-no-permission"
           />
-        ) : rows.length === 0 ? (
-          <div
-            className="rounded-lg border border-slate-200 p-6 text-center text-[12.5px] text-slate-500"
-            data-testid="closing-legal-empty"
-          >
-            {LEGAL_EMPTY_SENTENCE}
-          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
@@ -1279,10 +1271,6 @@ function ClosedView({
             title="אין לך הרשאה לצפות בדיילות המשובצות."
             testId="closing-closed-no-permission"
           />
-        ) : displayRows.length === 0 ? (
-          <div className="rounded-lg border border-slate-200 p-6 text-center text-[12.5px] text-slate-500">
-            {LEGAL_EMPTY_SENTENCE}
-          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">

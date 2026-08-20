@@ -315,9 +315,9 @@ describe('closingValidationSummary — משפט-החסימה היחיד ליד "
     expect(closingValidationSummary(draft)).toBeNull()
   })
 
-  it('רשימת-שורות ריקה ⇒ אין מה לסמן ברמת-שורה, ושדות-האירוע התקינים מספיקים', () => {
+  it('רשימת-שורות ריקה ⇒ אין מסלול-סגירה (אירוע ללא דיילות אינו קורה — ישי 20/08/2026)', () => {
     const draft = { actualHours: 6.5, actualGuests: 180, hasReport: true, rows: [] }
-    expect(closingValidationSummary(draft)).toBeNull()
+    expect(closingValidationSummary(draft)).toBe('לא ניתן לסגור: לא שובצו דיילות לאירוע.')
   })
 
   it('draft ריק לגמרי ⇒ לא זורק, מחזיר משפט', () => {

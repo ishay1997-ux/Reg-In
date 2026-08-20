@@ -89,32 +89,9 @@ test.describe('מודול 6 · לשונית-הסגירה — עד סף-השלי�
     await login(page, PROJECTS_EMAIL, PROJECTS_PASSWORD)
   })
 
-  test('אירוע שהסתיים בלי שיבוצים: "לא שובצו דיילות" + כפתור-השמירה קיים (ולא נלחץ)', async ({
-    page,
-  }) => {
-    // הנושא בזמן-ריצה: השורה הראשונה בלשונית "לסגירה" (event_finished בהגדרה).
-    const found = await openFirstCard(page, '?tab=closing')
-    test.skip(!found, 'אין פרויקט שממתין לסגירה בלוח החי — לשונית "לסגירה" ריקה')
-
-    const mode = await openClosingTab(page)
-    test.skip(mode === 'closed', 'הפרויקט שממתין-לסגירה היחיד כבר נסגר תפעולית — אין טיוטה לבדוק')
-
-    // 0 שיבוצים ⇒ המצב-הריק החוקי; יש שיבוצים ⇒ הטענה הזאת שייכת ללוח אחר.
-    // מונה-השורות נכנס לסיבת-הדילוג — כדי שדוח-ריצה יגיד *כמה* שיבוצים חסמו, לא רק "יש".
-    const legalEmpty = page.getByTestId('closing-legal-empty')
-    const assignedRows = await page.locator('[data-testid^="closing-row-"]').count()
-    test.skip(
-      (await legalEmpty.count()) === 0,
-      `לפרויקט שממתין לסגירה יש ${assignedRows} שורות-שיבוץ — המצב-הריק החוקי אינו בר-השגה היום`,
-    )
-    // האירוע נסגר משלושת שדות-האירוע לבדם — המסך אסור שייראה כאילו נכשל.
-    await expect(legalEmpty).toContainText('לא שובצו דיילות')
-
-    // כפתור-השמירה קיים — הסגירה אפשרית גם בלי דיילות. 🚫 לא נלחץ: חד-פעמי על מסד חי.
-    const save = page.getByTestId('closing-save')
-    await expect(save).toBeVisible()
-    await expect(save).toHaveText('שמור ושלח')
-  })
+  // 🚫 בדיקת ה"מצב-הריק החוקי" (אירוע שהסתיים בלי דיילות) הוסרה 20/08/2026 — הכרעת-מציאות
+  // של ישי: אירוע ללא דיילות אינו קורה, ולכן אין מסלול-סגירה למערך ריק (המסך והשרת מסכימים
+  // לסרב). ההתנהגות החדשה מכוסה ב-ClosingTab.test.jsx ("אין מסלול-סגירה למערך ריק").
 
   test('שדות-חובה ריקים: הכפתור מושבת ומשפט-הסיכום נוקב במה שחסר — בלי לחיצה', async ({ page }) => {
     const found = await openFirstCard(page, '?tab=closing')

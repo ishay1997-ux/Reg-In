@@ -282,17 +282,16 @@ describe('שמירה חסומה — הכפתור נשאר, מכובה, עם מש
   })
 })
 
-describe('המצב-הריק החוקי (#7) — אפס דיילות, והסגירה נשארת אפשרית', () => {
-  it('המשפט המדויק מוצג, והמסך אינו נראה ככשל: מילוי שלושת השדות מדליק את הכפתור', async () => {
+describe('אירוע ללא דיילות אינו קורה (הכרעת-מציאות ישי 20/08/2026) — אין מסלול-סגירה למערך ריק', () => {
+  it('אפס דיילות ⇒ אין הודעת-ריק ייעודית, והכפתור נשאר מושבת גם עם שלושת השדות מלאים (המסך מסכים עם השרת)', async () => {
     getProjectAssignments.mockResolvedValue([])
     renderTab()
-    expect(await screen.findByTestId('closing-legal-empty')).toHaveTextContent(
-      'לא שובצו דיילות לאירוע הזה — אין מה לסמן',
-    )
+    await screen.findByTestId('closing-hours')
+    expect(screen.queryByTestId('closing-legal-empty')).not.toBeInTheDocument()
     fireEvent.change(screen.getByTestId('closing-hours'), { target: { value: '6.5' } })
     fireEvent.change(screen.getByTestId('closing-guests'), { target: { value: '0' } })
     fireEvent.change(screen.getByTestId('closing-file-input'), { target: { files: [pdfFile()] } })
-    await waitFor(() => expect(screen.getByTestId('closing-save')).toBeEnabled())
+    await waitFor(() => expect(screen.getByTestId('closing-save')).toBeDisabled())
   })
 })
 

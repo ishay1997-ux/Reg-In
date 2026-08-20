@@ -532,8 +532,10 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
       try {
         // ההצעה נקראת דרך ה-api של מודול 3 (תקדים: CustomerDetailsPage) — היא מקור המחיר
         // הקפוא. קורא בלי 'הצעות מחיר' מקבל null בלי שגיאה ⇒ עמודות-הכסף מציגות '—', לא 0.
+        // 🚫 בלי .catch כאן: getQuote כבר מחזיר null על קריאה-חסומה (maybeSingle) וזורק רק על
+        // כשל אמיתי — בליעתו הייתה מציגה תקלת-רשת כ"אין הרשאה" (מקפים) בעוד המסך נשאר שמיש.
         const [quote, catalog, logisticsRows, assignments] = await Promise.all([
-          getQuote(project.quote_id).catch(() => null),
+          getQuote(project.quote_id),
           getPricingCatalog(),
           getProjectLogistics(projectId),
           getProjectAssignments(projectId),

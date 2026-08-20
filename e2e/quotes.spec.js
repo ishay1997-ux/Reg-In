@@ -303,9 +303,49 @@ test.describe('התפוגה מגיעה למסך כמו כל דחייה אחרת 
 test.describe('מסנן "פג בקרוב" — 7 הימים שאי-אפשר להוכיח על הדאטה האמיתית (4.2)', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
 
-  test('על הנתונים האמיתיים הצ׳יפ קיים ומושבת — כי אין אף הצעה שפגה בקרוב', async ({ page }) => {
-    // נמדד 31/07: כל 8 ההצעות עודכנו 29/07 וימי-התוקף=30 ⇒ נותרו 28 ימים לכולן.
-    // הצ'יפ מושבת ב-0 בכוונה (הכרעת-ישי) — אין למה לסנן.
+  test('אין הצעה שפגה בקרוב ⇒ הצ׳יפ מושבת (דטרמיניסטי ביירוט-רשת — לא תלוי בדריפט-תאריך)', async ({
+    page,
+  }) => {
+    // 🔴 שוכתב 21/08/2026: הגרסה הקודמת קיבעה "אין הצעה שפגה בקרוב" על הדאטה החיה (נמדד
+    // 31/07: הכול עודכן 29/07 ⇒ 28 ימים לכולן). ברגע שהתאריך התגלגל, הצעה #8 נכנסה לחלון
+    // 7-הימים והבדיקה נפלה — "מספר חי הוא פיקסטורה" (`e2e/CLAUDE.md`). התבנית הנכונה,
+    // כמו בבדיקה-האחות: סט-הצעות טרי ביירוט-רשת, כך שהמצב-הריק של המסנן נבדק דטרמיניסטית.
+    const day = 24 * 60 * 60 * 1000
+    const iso = (msAgo) => new Date(Date.now() - msAgo).toISOString()
+    const fresh = {
+      quote_status: 'in_progress',
+      customer_id: 46,
+      estimated_event_date: '2026-12-01',
+      estimated_guests: 100,
+      recommended_hostess_count: 2,
+      applied_customer_discount: 0,
+      manual_discount: 0,
+      vat_rate_snapshot: null,
+      rejection_reason: null,
+      rejection_notes: null,
+      notes: null,
+      issue_date: '2026-07-01',
+      quote_services: [],
+      customers: {
+        customer_id: 46,
+        company_name: 'לקוח בדיקה',
+        contact_name: 'א',
+        phone: '',
+        email: '',
+      },
+    }
+    await page.route('**/rest/v1/quotes?select=*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        // שתי הצעות טריות (1 ו-2 ימי-הזדקנות) ⇒ 28–29 ימים לתוקף ⇒ אף אחת אינה "פג בקרוב".
+        body: JSON.stringify([
+          { ...fresh, quote_id: 9101, event_name: 'טרייה 1', updated_at: iso(1 * day) },
+          { ...fresh, quote_id: 9102, event_name: 'טרייה 2', updated_at: iso(2 * day) },
+        ]),
+      })
+    })
+
     await login(page, CEO_EMAIL, CEO_PASSWORD)
     await page.goto('/quotes')
     await expect(page.getByTestId('quotes-table')).toBeVisible({ timeout: 30_000 })
