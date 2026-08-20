@@ -19,6 +19,14 @@ import {
   sendDetailsChangedMails,
 } from './api'
 
+// 🔴 מוק ל-`@/supabaseClient` — הקומפוננטה מושכת טרנזיטיבית (דרך דיאלוג-שינוי-התכולה)
+// את `03_quotes/api`, ש-`./api` הממוקק אינו מכסה; בלי זה `supabaseClient.js` קורא ל-
+// `createClient(undefined, …)` בזמן-טעינה כשאין `.env.local` (CI) וזורק "supabaseUrl is required".
+// (מ6-close 21/08/2026, אחרי ש-CI תפס את התלות ב-.env.local.)
+vi.mock('@/supabaseClient', () => ({
+  supabase: { from: vi.fn(), rpc: vi.fn() },
+}))
+
 vi.mock('./api', () => ({
   getProject: vi.fn(),
   listProjectsOverview: vi.fn(),

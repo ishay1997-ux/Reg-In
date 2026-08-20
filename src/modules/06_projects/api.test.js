@@ -2,11 +2,22 @@
 // (02_customers · 03_quotes · 04_hostesses), אינו נבדק ביחידה מקצה-לקצה** — עוטפי-Supabase
 // דקים מאומתים חי בדפדפן מחובר (הדפוס המתועד ב-`src/modules/04_hostesses/CLAUDE.md`
 // §"מה חבילות ה-E2E של המודול אינן מכסות": "grep על כל *.test.js מחזיר אפס התאמות ל-api
-// functions", ואין מנגנון-mock ל-supabase-client בפרויקט). מה שכן נבדק כאן: שתי הפונקציות
+// functions"). מה שכן נבדק כאן: שתי הפונקציות
 // הטהורות שהצעד 2.5 מגדיר כלוגיקה בדוקה — confirmedAvailableCount ו-rpcErrorMessage —
 // כל אחת נשברה בכוונה ונראתה נכשלת לפני שתוקנה (ראו דוח-הסשן להוכחת red/green).
+//
+// 🔴 מוק ל-`@/supabaseClient` חובה כאן — לא כדי לבדוק supabase, אלא כי `./api` מייבא אותו,
+// ו-`supabaseClient.js` קורא ל-`createClient(import.meta.env.VITE_SUPABASE_URL, …)` בזמן-טעינה.
+// בלי `.env.local` (למשל ב-CI) ה-URL undefined ו-`createClient` זורק "supabaseUrl is required",
+// והקובץ נכשל-בטעינה עוד לפני שבדיקה רצה. אותו דפוס בדיוק ב-`04_hostesses/api.test.js`.
+// (התיקון: מ6-close 21/08/2026, אחרי ש-CI תפס את התלות ב-.env.local שהרצה מקומית הסתירה.)
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+vi.mock('@/supabaseClient', () => ({
+  supabase: { from: vi.fn(), rpc: vi.fn() },
+}))
+
 import { confirmedAvailableCount, rpcErrorMessage } from './api'
 
 describe('confirmedAvailableCount', () => {
