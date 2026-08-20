@@ -48,6 +48,12 @@
 
 ## Session Log (newest first)
 
+### 21/08/2026 01:2X — MODULE 6 MERGED to dev + post-merge verified (Ishay-delegated merge)
+- **Ishay delegated the merge** ("בצע מיזוג לפי הנוהל"; then, going to sleep, "עצור, חקור ונתח… תקן ופתור… מצפה בבוקר שהכל פיקס") — precedent PR #24/#39. Executed per the procedure, CI-gated, autonomously.
+- **dev had advanced 8 commits** (PR #40 Stop-hook fix + earlier merges) → merged `origin/dev` into the branch, resolved STATUS (ours) + CLAUDE_CODE_LOG (union — both journals kept) conflicts, pushed, opened **PR #41**.
+- **CI caught a real env-dependency the local gate hid** ("green locally, red in CI"): `06/api.test.js` + `ProjectCardPage.test.jsx` call `createClient(import.meta.env.VITE_SUPABASE_URL,…)` at module-load, and CI has no `.env.local`. Fixed with `vi.mock('@/supabaseClient')` (the `04_hostesses` pattern); **verified red→green by reproducing CI locally** (moved `.env.local` aside → fail → after fix 1,271 pass → restored). Durable trap now in `module-6.md` §10 P.
+- **Merged: PR #41, merge-commit `40fb973`.** Post-merge verified with FRESH git evidence: `merge-base --is-ancestor origin/ishay/module-6-projects origin/dev` = 0; `40fb973` is `origin/dev` HEAD; the migration + `06_projects/api.js` present on dev. **Branch `ishay/module-6-projects` merged ⇒ DEAD (rule 10).** STATUS flipped ✅ + roadmap §3 via a small `ishay/post-merge-m6` PR (rule 10 — no direct dev push). Next: module 5 (logistics) can open; recommend `regin-docs-sync`. The `#12` test mails (1-px report + survey) in Ishay's inbox are artifacts, deletable.
+
 ### 21/08/2026 00:47 — regin-docs-sync audit (partial coverage, disclosed)
 STEP 0 confirmed as given (not re-derived): `ishay/module-6-projects` is not an ancestor of `origin/dev`, 101 commits ahead, module 6 closed `[YES]` awaiting PR — genuine unmerged state. STEPS 1-6 ran with **partial file coverage** (effort-bounded; full read-vs-grep-only list is in the dispatched research agent's report, not duplicated here) — flagging this honestly rather than claiming an exhaustive pass. No Supabase MCP access this run — all DB-shaped claims are file-only.
 
