@@ -120,6 +120,8 @@ The system was built with an AI coding assistant (Anthropic's Claude Code), so t
 - **"How do you know it matches the spec?"** — Each module is accepted, screen by screen, against its approved Discovery spec before it counts as done. Nothing is "finished" because it compiles — only because it does what was specified.
 - **"How did control stay with the developer?"** — The AI implements; the developer decides. Every requirement, every product and design decision, and **every irreversible action** — database schema changes, merges, module sign-offs — required explicit human approval before it happened. That approval is deliberately comprehension-forcing: applying a database migration, for example, requires the developer to **type the migration's name by hand** — a confirmation that cannot be given without first reading what the change actually does. The `docs/` tree records who decided what, and why.
 
+> 📄 **The full method, with links to the real artifacts behind it:** [**How REG-IN Was Built**](docs/BUILD_METHOD.md) — the four-stage module loop, the quality and control mechanisms, and the specs, build plans and audit records that prove them.
+
 ## Getting Started
 
 ```bash
