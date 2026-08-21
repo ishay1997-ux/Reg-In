@@ -18,13 +18,6 @@ Instead of an Excel file per stage and a WhatsApp group per event, everything li
 
 > Final-year academic software-engineering project: thirteen vertically-sliced modules, a live PostgreSQL database with Row-Level Security, and a full Hebrew right-to-left interface.
 
-## Screenshots
-
-<!-- Add 3–4 screenshots of the running app here — the overview board, a quote, the Smart Match screen, a project card. A picture here is worth more than any paragraph. -->
-| Overview board | Smart Match | Project card |
-|---|---|---|
-| _(screenshot)_ | _(screenshot)_ | _(screenshot)_ |
-
 ## Key Features
 
 - **Database-enforced access control.** A per-module permission matrix across the company's management roles, enforced by PostgreSQL Row-Level Security — so the UI physically cannot show data the database wouldn't return. Security lives in the data layer, not just the front end.
@@ -51,7 +44,26 @@ Instead of an Excel file per stage and a WhatsApp group per event, everything li
 - **Security model:** every screen's data is gated by RLS policies evaluated against a central `permissions` table. A missing permission returns *no rows*, never leaked data.
 - **The Projects module is the hub:** an eight-state machine that ties quotes, staffing, logistics and finance together and drives status transitions automatically.
 
-<!-- Optional: embed an architecture diagram (a simple modules-and-dependencies diagram reads very well here). -->
+```mermaid
+flowchart TB
+    U["User · one of the company's management roles"]
+    subgraph FE["Frontend — React 19 · Vite · Tailwind · Hebrew RTL"]
+        M["13 feature modules<br/>customers → quotes → Smart Match → projects → logistics → finance → reports"]
+    end
+    subgraph BE["Supabase — PostgreSQL 17"]
+        A["Auth"]
+        R["Row-Level Security<br/>per-role permission matrix"]
+        D[("Database<br/>tables · state-machine triggers · RPCs · scheduled jobs")]
+        E["Edge Functions"]
+    end
+    U --> M
+    M -->|sign in| A
+    M -->|every query passes through| R
+    R -->|only the rows this role may see| D
+    M -->|transactional business logic| D
+    D --> E
+    E -->|emails and staffing invites| U
+```
 
 ## Engineering Process
 
@@ -84,7 +96,7 @@ The system was built with an AI coding assistant (Anthropic's Claude Code), so t
 
 - **"How do you know it works?"** — Correctness is never taken on trust. Beyond the automated regression gate above, new tests are proven to *fail* against intentionally-broken code before they are trusted, and features are verified **live against the real database** through end-to-end user journeys — including confirming that each role is actually blocked from data it shouldn't see. Significant changes are independently reviewed before merge.
 - **"How do you know it matches the spec?"** — Each module is accepted, screen by screen, against its approved Discovery spec before it counts as done. Nothing is "finished" because it compiles — only because it does what was specified.
-- **"How did control stay with the developer?"** — The AI implements; the developer decides. Every requirement, every product and design decision, and **every irreversible action** — database schema changes, merges, module sign-offs — required explicit human approval before it happened. The `docs/` tree records who decided what, and why.
+- **"How did control stay with the developer?"** — The AI implements; the developer decides. Every requirement, every product and design decision, and **every irreversible action** — database schema changes, merges, module sign-offs — required explicit human approval before it happened. That approval is deliberately comprehension-forcing: applying a database migration, for example, requires the developer to **type the migration's name by hand** — a confirmation that cannot be given without first reading what the change actually does. The `docs/` tree records who decided what, and why.
 
 ## Getting Started
 
