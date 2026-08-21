@@ -95,6 +95,28 @@ These run across all four stages, and are the direct answer to *"it was built wi
 
 ---
 
+## The method was learned, not handed down
+
+This four-stage loop was not designed up front — it was earned, module by module.
+
+The first modules (authentication, customers) laid the foundation before the process was formalized. **Module 3** was built from the developer's own up-front specification and mockups — and the lesson that emerged from it is the origin of everything after it: a single specification, written before the domain is fully understood, is not enough. Parts of that early spec turned out to be wrong, and the mockups aged.
+
+That realization is exactly why **Discovery** was engineered. In **Module 4** it first appeared as a long, manual process — run across roughly seven sessions, the blueprint alone taking about five days. It worked: it replaced the original spec with grounded, approved artifacts. But it was slow.
+
+By **Module 6**, Discovery had been codified into a reusable skill and parallelized across many agents — the full approved specification, screens, processes and mockups were produced in a single day. The method had matured from *manual → a prompt → a codified, parallelized skill*, each step a deliberate improvement drawn from the one before.
+
+## A tool that was retired — and the lesson under it
+
+Not every idea survived. An early skill, `work-manager` (now archived at [`docs/archive/work-manager/`](docs/archive/work-manager/)), made one session the "on-duty manager" that coordinated the parallel sessions, held the work plan, and dispatched and approved their work. The ambition was to automate the coordinating role — to let the system, in effect, run itself.
+
+It was retired, because it kept hitting the same wall: the sessions still needed to report to a *person*, and the manager-session could not supply the one thing that actually mattered — independent judgment and final authority. The clearest evidence is measured in this very project: across five separate shifts, an AI session's rate of catching the flaws in *its own* work was **zero** every time; the mistakes were caught by the human, or by a fresh independent session — never by the author re-reading itself.
+
+So `work-manager` became the [`advisor`](.claude/skills/advisor) skill, whose first and overriding rule is the exact opposite of its predecessor's: **sessions report to the developer, never to the tool. It advises; it never commands, never rules on the product, and never answers in his place.**
+
+This is the through-line of the whole method, and the honest answer to *"you built it with AI — so what did you do?"*: **the AI accelerates the work, but it cannot judge its own work.** The critical review, the product authority, the final sign-off — the parts a machine cannot supply for itself — stayed human throughout. That is precisely why the developer could not be replaced.
+
+---
+
 ## A note on precision
 
 A few things are stated exactly, because accuracy is part of the point:
