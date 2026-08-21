@@ -93,7 +93,7 @@ flowchart TB
 
 > This section is deliberate. The repository keeps the artifacts of *how* the system was built — not as clutter, but as evidence of the engineering discipline behind the app.
 
-Every module runs through the same repeatable three-stage loop:
+Every module runs through the same repeatable loop, shown here in three grouped stages for brevity (Discovery and Blueprint share the "Open" box below — see [`BUILD_METHOD.md`](docs/BUILD_METHOD.md) for why they're counted as four distinct stages there):
 
 ```mermaid
 flowchart LR
