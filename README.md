@@ -18,6 +18,28 @@ Instead of an Excel file per stage and a WhatsApp group per event, everything li
 
 > Final-year academic software-engineering project: thirteen vertically-sliced modules, a live PostgreSQL database with Row-Level Security, and a full Hebrew right-to-left interface.
 
+## Screenshots
+
+**Projects — the central hub.** Every event's staffing and logistics readiness at a glance, driven by an eight-status state machine.
+
+![Projects overview](docs/screenshots/projects-overview.png)
+
+**Smart Match — the staff-assignment engine.** Candidates scored by availability, reliability and proximity, with one-click assignment.
+
+![Smart Match](docs/screenshots/smart-match.png)
+
+**The pricing engine.** Automatic tiered pricing, customer and manual discounts, VAT, and a live profit calculation the client never sees.
+
+![Quote editor with live pricing and profit](docs/screenshots/quote-editor.png)
+
+**Customer directory.** Per-customer discounts, marketing segmentation, and quote history.
+
+![Customers](docs/screenshots/customers.png)
+
+**Product & service catalog.** Per-item costs and margins, managed in system settings.
+
+![Pricing catalog](docs/screenshots/pricing-catalog.png)
+
 ## Key Features
 
 - **Database-enforced access control.** A per-module permission matrix across the company's management roles, enforced by PostgreSQL Row-Level Security — so the UI physically cannot show data the database wouldn't return. Security lives in the data layer, not just the front end.
