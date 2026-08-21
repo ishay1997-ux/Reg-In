@@ -535,7 +535,7 @@ main{margin-right:var(--sidebar); padding:calc(var(--topbar) + 24px) 24px 40px}
 .tile .lb{font-size:12px; color:var(--s500)}
 .tile .vl{font-size:20px; font-weight:700; color:var(--s800)}
 .tile .sub{font-size:11px; color:var(--s500)}
-.tile .empty{font-size:14px; color:var(--s400)}
+.tile-empty{font-size:14px; color:var(--s400)}  /* 🔴 שם נפרד בכוונה — `.empty` הכללי (למטה) הוא flex+padding ומנפח את האריח ב-70px. אותו שם בדיוק כמו במוקאפים המאושרים של מ6. */
 
 /* ── תג-סטטוס (StatusTag.jsx) — הטון הוא משמעות, לא קישוט ── */
 .st{display:inline-block; white-space:nowrap; border-radius:9999px; padding:2px 10px;
@@ -621,7 +621,7 @@ td{padding:10px}
     </div>
     <div class="tile">
       <span class="lb">שינויי תכולה</span>
-      <span class="empty">אין נתונים עדיין</span>
+      <span class="tile-empty">אין נתונים עדיין</span>
     </div>
   </section>
 
@@ -669,7 +669,8 @@ td{padding:10px}
           <td><div class="num"><span class="ltr">300</span></div></td>
           <td><span class="ltr">300</span></td>
           <td><span class="st teal">הוזמן</span></td>
-          <td><button class="rowact" title="הסרת פריט" aria-label="הסרת פריט">🗑</button></td>
+          <!-- 🚫 אין 🗑 — הסרה מותרת רק ב`טרם החל` (processes-approved.md, עוגן `🔄 ה · הסרת פריט`): הכסף כבר יצא -->
+          <td></td>
         </tr>
         <tr>
           <td>
@@ -679,7 +680,8 @@ td{padding:10px}
           <td><div class="num"><span class="ltr">2</span></div></td>
           <td><span class="ltr">2</span></td>
           <td><span class="st ok">מוכן</span></td>
-          <td><button class="rowact" title="הסרת פריט" aria-label="הסרת פריט">🗑</button></td>
+          <!-- 🚫 אין 🗑 — כנ"ל -->
+          <td></td>
         </tr>
       </tbody>
     </table>
@@ -722,7 +724,28 @@ td{padding:10px}
 
 ---
 
+## ⑦½ 🔗 הקובץ השני שכל צייר חייב — **מערך-הנתונים**
+
+🔴 **החוזה הזה קובע איך זה נראה. הוא אינו קובע *אילו שורות* מצוירות.**
+זה נקבע ב-**`docs/specs/module_05_logistics/data-set.md`** — נמדד חי מהמסד, עם "היום" אחד משותף
+לכל שלושת המוקאפים והקצאה פר-משטח.
+🚫 **צייר שיקבל רק את החוזה יבחר דאטה משלו** ⇒ פרויקט שמופיע במסך אחד ייעלם באחר — **בדיוק הכשל
+ששני הקבצים האלה קיימים כדי למנוע.** ‏**פרומפט-הצייר חייב להצביע לשניהם.**
+*(נוסף 21/08/2026 אחרי בקרת-חוזה בהקשר-טרי: החוזה נכתב לפני שמערך-הנתונים נולד ולא הזכיר אותו כלל.)*
+
+---
+
 ## ⑧ מה חיפשתי — כולל מה שלא נמצא
+
+> ⚠️ **תוקן 21/08/2026 (בקרת-הקשר-טרי) — סעיף זה נכתב ב-23:26 ותיאר מצב שהשתנה ב-23:37:**
+> ‏**‏(א)** הוא ציטט את כותרת `processes-approved.md` כ*"שלב 0 · הקובץ עדיין ריק מתוכן-מוצרי"* —
+> **הכותרת הוחלפה מאז**, והמצב הנכון הוא: **שלב 1 סגור · שבעה כרטיסי-תהליך מאושרים · `M = 3` ·
+> ‏`screens-approved.md` טרם נוצר, וזה הצעד הבא.** 🔴 **הציטוט הישן היה מספר לשלושה ציירים ששום
+> דבר אינו מאושר.**
+> ‏**‏(ב)** הוא כתב שבתיקייה יש שני קבצים בלבד — יש בה גם `world-sources.md` ו-`data-set.md`.
+> ‏**‏(ג)** סיכומי-משפחות-הצבע בסעיף ① היו נמוכים מדי בארבע מתוך חמש *(‏teal נספר על ארבע שורות
+> במקום שתים-עשרה)*. **ההקסה עצמם — כל 29 — אומתו נכונים בהמרה עצמאית.** הספירות: slate 900 ·
+> teal 206 · amber 139 · red 132 · green 46.
 
 **גריפים ופקודות שרצו (‏21/08/2026), לפי סדר:**
 
