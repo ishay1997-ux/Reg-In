@@ -64,7 +64,7 @@
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | ⛔ **הוקפא 23/07/2026 — ארכיון בלבד** (ציר-הזמן החי: `git log` + CLAUDE_CODE_LOG · DB: db_roadmap+migrations · חובות: PROJECT_MASTER §6) |
 | [docs/CLAUDE_CODE_LOG.md](docs/CLAUDE_CODE_LOG.md) | יומן הסשנים של Claude (נרטיב, החלטות, tech-debt) |
 | [supabase/README.md](supabase/README.md) | ניהול מיגרציות DB |
-| [docs/micro_guides/](docs/micro_guides/) | מדריכי מיקרו — בלופרינטים חיים **באנגלית, כתובים ל-Claude** (module-1.md ✅ · module-2.md ✅ מוזג · השאר ייווצרו בפתיחת כל מודול) |
+| [docs/micro_guides/](docs/micro_guides/) | מדריכי מיקרו — בלופרינטים חיים **באנגלית, כתובים ל-Claude** (module-1/2/3/4/6 ✅ קיימים ומוזגו · module-5 בעבודה · השאר ייווצרו בפתיחת כל מודול) |
 | [.claude/skills/](.claude/skills/) | סקילי-זרימת-המודול (`module-blueprint`/`module-build`/`module-close`; טמפלטי הפתיחה/סגירה חיים בתוכם כ-`template.md`) + סקילי-עזר רפו-מקומיים (`section7-rulings`/`post-merge` + `quality-audit` — סקירת-איכות מקיפה של כל הקוד) — נטענים לפי טריגר. Claude קורא בעצמו. **`feature-acceptance` עבר לתיקיית-הסקילים הגלובלית `~/.claude/skills/` (23/07 לילה)** — פרויקט-אגנוסטי (סגנון-העבודה של ישי, לא מבנה-הקבצים של REG-IN), משמש בכל פרויקט שלו |
 | **בקרת-איכות אוטומטית (23/07 לילה)** | `npm run dup` = jscpd (כפילות בין-קבצים) · `eslint-plugin-sonarjs` ב-`eslint.config.js` (כפילויות/מורכבות-יתר, כרגע `warn`, מוקשה ל-`error` אחרי מ3) · CI מריץ שניהם לא-חוסם בשלב-האזהרות. הסקירה העמוקה היזומה = הסקיל `quality-audit` |
 | [docs/mockups/](docs/mockups/) | 44 צילומי מוקאפ + [תיאורים](docs/mockups/mockup_descriptions.md) — רפרנס ויזואלי בלבד |
