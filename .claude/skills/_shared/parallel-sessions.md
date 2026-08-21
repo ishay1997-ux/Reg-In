@@ -38,6 +38,23 @@ parallel regardless of who is in them.
 - Stop-hook demands while another session works: judge whose debt it is. Yours ⇒
   comply. Another session's ⇒ explain to Ishay and wait. Never write merely to
   silence the hook.
+- **A dispatched background agent counts as "another session" for the mtime/Stop-hook rules above —
+  it writes under YOUR session_id but still advances the shared mutation marker.** Fixed 19/08/2026:
+  `check-docs-updated.sh` now detects a live background agent (via the harness transcript) and skips
+  only the doc-freshness enforcements while one is mid-write; it does not exempt you from the
+  concurrent-write discipline itself. **Prefer dispatching agents that write files into an isolated
+  worktree** (`EnterWorktree`/`isolation: "worktree"`) over ones writing into the shared tree when the
+  work doesn't need to land immediately — it sidesteps this whole class of collision rather than
+  relying on the hook to paper over it. *(Anchor: the recurring ×4–×6 false-fire loop this fixed was
+  first hit and worked around by hand on 14/08/2026, then fixed at the mechanism on 19/08/2026 —
+  module 6's build.)*
+- **Fan-out cost is not linear across agent roles — a verifying/measuring agent runs ~3× a reading
+  agent's tokens.** *(Measured twice in module 6's build: a 14-agent blueprint wave was quoted at
+  ~70K/agent (~850K total) and measured at ~217K/agent (~3.04M total) — the agents that queried the
+  live DB to verify every identifier spent most of their budget there. A later 3-lens review panel was
+  quoted 300–600K and measured ~712K.)* ⇒ when estimating a fan-out before asking Ishay to approve it,
+  price a reading/drafting agent at ~70K and a verifying/measuring agent (one that queries a live
+  system per claim) at ~200K+, not a flat per-agent number.
 
 ## Direct session-to-session communication (Ishay's ruling, 01/08/2026)
 

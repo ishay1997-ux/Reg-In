@@ -7,37 +7,20 @@
 
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import {
-  LayoutDashboard,
-  Users,
-  FileText,
-  Briefcase,
-  UserRound,
-  Package,
-  Wallet,
-  BarChart3,
-  Settings,
-  ChevronsLeft,
-  ChevronsRight,
-} from 'lucide-react'
+import { LayoutDashboard, Settings, ChevronsLeft, ChevronsRight } from 'lucide-react'
 import { supabase } from '@/supabaseClient'
 import { useAuth } from '@/contexts/AuthContext'
 import reginLogo from '@/assets/reg-in-logo.png'
-import { SYSTEM_MODULES } from '@/lib/constants'
+import { SYSTEM_MODULES, BUSINESS_MODULES } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 // מיפוי הצגה (אייקון + נתיב) לכל module_name בפועל מהסכמה - הטקסט עצמו תמיד נשלף מה-DB.
 // "ניהול הרשאות" ו"הגדרות מערכת" מכוונות לא נעדרות מכאן - הן מוצגות דרך פריט "ניהול מערכת"
-// הקשיח למטה, לא כקישורים בודדים.
-const MODULE_META = {
-  לקוחות: { path: '/customers', icon: Users },
-  'הצעות מחיר': { path: '/quotes', icon: FileText },
-  פרויקטים: { path: '/projects', icon: Briefcase },
-  דיילות: { path: '/hostesses', icon: UserRound },
-  לוגיסטיקה: { path: '/logistics', icon: Package },
-  כספים: { path: '/finance', icon: Wallet },
-  'דו"חות': { path: '/reports', icon: BarChart3 },
-}
+// הקשיח למטה, לא כקישורים בודדים. נגזר מ-BUSINESS_MODULES (src/lib/constants.js) - מקור
+// יחיד למחרוזות-השם, משותף עם PermissionsMatrixPage.jsx.
+const MODULE_META = Object.fromEntries(
+  BUSINESS_MODULES.map((m) => [m.name, { path: m.path, icon: m.icon }]),
+)
 
 export default function Sidebar({ collapsed, onToggleCollapse }) {
   const { permissions } = useAuth()

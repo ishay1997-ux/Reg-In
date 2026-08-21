@@ -10,7 +10,7 @@
 import { Fragment, useCallback, useEffect, useState } from 'react'
 import { Check, Eye, Minus } from 'lucide-react'
 import { supabase } from '@/supabaseClient'
-import { CEO_ROLE_NAME } from '@/lib/constants'
+import { CEO_ROLE_NAME, BUSINESS_MODULES } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import LoadingOrError from '@/components/LoadingOrError'
 
@@ -26,12 +26,13 @@ const LEVEL_STYLE = {
   },
 }
 
-const GROUPS = [
-  { label: 'לקוחות ומכירות', modules: ['לקוחות', 'הצעות מחיר'] },
-  { label: 'תפעול ופרויקטים', modules: ['פרויקטים', 'דיילות'] },
-  { label: 'לוגיסטיקה', modules: ['לוגיסטיקה'] },
-  { label: 'כספים ודוחות', modules: ['כספים', 'דו"חות'] },
-]
+// קיבוץ ל-4 קבוצות-על (לפי מבנה המוקאפ המקורי) - סדר-הקבוצות ורשימת-החברים בכל אחת נגזרים
+// מ-BUSINESS_MODULES (src/lib/constants.js), מקור יחיד לשמות המשותף עם Sidebar.jsx.
+const GROUP_ORDER = ['לקוחות ומכירות', 'תפעול ופרויקטים', 'לוגיסטיקה', 'כספים ודוחות']
+const GROUPS = GROUP_ORDER.map((label) => ({
+  label,
+  modules: BUSINESS_MODULES.filter((m) => m.group === label).map((m) => m.name),
+}))
 
 export default function PermissionsMatrixPage() {
   const [loading, setLoading] = useState(true)

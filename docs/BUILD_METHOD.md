@@ -39,11 +39,11 @@ The evidence, for module 6:
 | [`discovery-log.md`](specs/module_06_projects/discovery-log.md) | The **evidence trail** behind every ruling — written as the work happened. |
 | [`world-sources.md`](specs/module_06_projects/world-sources.md) | The external references each design choice was grounded in — a ready answer to *"why did you choose it this way?"* |
 
-> When an approved spec already exists (the normal case), the product-manager interview is deliberately **skipped** — re-asking the owner to re-decide what he already decided is not thoroughness. What survives is a fresh-eyes blind-spot pass over the plan.
-
 ## 2 · Blueprint — architect before you code
 
 The blueprint turns the approved spec into a **living build plan** — the module's *micro-guide*. Again, **no code is written in this stage.** The architect validates the module's place in the dependency graph, runs a database-design challenge for anything touching the schema, and triages every open gap into *must-decide-now* (brought to the owner) versus *decide-later* — and never resolves an open product question on its own.
+
+The blueprint stage has its own product-manager interview — a full walkthrough of the module's user journey, screen by screen. **When an approved Discovery spec already exists (the normal case), that interview is deliberately skipped** — re-asking the owner to re-decide what he already decided is not thoroughness; it was already extracted, over several days, in Discovery. What survives is a fresh-eyes blind-spot pass over the *blueprint itself* ("what would a senior engineer check about this build plan that the owner didn't think to ask?").
 
 The output is the nine-section micro-guide that the build stage executes: [`docs/micro_guides/module-6.md`](micro_guides/module-6.md). Its most telling sections:
 
@@ -58,7 +58,7 @@ Only now is code written — following the micro-guide, **database and permissio
 
 > **permissions (RLS) → list screen → form → business logic → tests**
 
-and the thirteen modules themselves are built in dependency order (`3 → 4 → 6+5 → 8 → 9 → 7 → 11 → 10 → 12`), with the secure foundation (authentication + permissions) first because every other module's security checks against it.
+and the thirteen modules themselves are built in dependency order (`3 → 4 → 6 → 5 → 8 → 9 → 7 → 11 → 10 → 12`), with the secure foundation (authentication + permissions) first because every other module's security checks against it. *(Module 6 does not depend on module 5 — the reverse is true: module 6 dictates requirements to logistics, tracked as debt `🚧 מ5 ← מ6` in `PROJECT_MASTER.md`.)*
 
 Discipline during the build:
 - **No silent gap-filling.** If something is unclear, the approved spec is consulted; a genuine gap goes to the owner, it is never guessed.
@@ -70,7 +70,7 @@ Discipline during the build:
 
 Closing a module is run by an independent audit — ideally in a **fresh session**, so it re-verifies from scratch rather than trusting the session that did the building. It stress-tests the row-level-security rules, audits UX and validation, builds a test-coverage matrix, and issues a formal **merge verdict**. Crucially, the audit **does not merge, push, or open a pull request** — it only certifies the module is *ready* to merge; the human does the actual merge.
 
-**Honest evidence that the gate is real, not a rubber stamp:** module 6's closing audit returned **[NO] — with three blockers** (two of them needing a database fix). They were fixed, re-verified end-to-end, and only then was the module signed off. The full audit record: [`docs/archive/close-findings-module-6.md`](archive/close-findings-module-6.md). A process that *catches* problems is stronger evidence than a claim of perfection.
+**Honest evidence that the gate is real, not a rubber stamp:** module 6's closing audit returned **[NO] — with three blockers.** Two were genuine bugs, fixed with a database migration and re-verified end-to-end; the third was re-examined and ruled a non-issue — the scenario it guarded against ("an event with zero staff assigned") doesn't occur in practice, so the guard was removed rather than built around. Only then was the module signed off. The full audit record: [`docs/archive/close-findings-module-6.md`](archive/close-findings-module-6.md). A process that *catches* problems — and is willing to say "not a real problem" as often as "fixed" — is stronger evidence than a claim of perfection.
 
 ---
 
@@ -112,7 +112,7 @@ By **Module 6**, Discovery had been codified into a reusable skill and paralleli
 
 Not every idea survived. An early skill, `work-manager` (now archived at [`docs/archive/work-manager/`](archive/work-manager/)), made one session the "on-duty manager" that coordinated the parallel sessions, held the work plan, and dispatched and approved their work. The ambition was to automate the coordinating role — to let the system, in effect, run itself.
 
-It was retired, because it kept hitting the same wall: the sessions still needed to report to a *person*, and the manager-session could not supply the one thing that actually mattered — independent judgment and final authority. The clearest evidence is measured in this very project: across five separate shifts, an AI session's rate of catching the flaws in *its own* work was **zero** every time; the mistakes were caught by the human, or by a fresh independent session — never by the author re-reading itself.
+It was retired, because it kept hitting the same wall: the sessions still needed to report to a *person*, and the manager-session could not supply the one thing that actually mattered — independent judgment and final authority. The clearest evidence: measured across five separate shifts (this project and a sister project together), an AI session's rate of catching the flaws in *its own* work was **zero** every time; the mistakes were caught by the human, or by a fresh independent session — never by the author re-reading itself.
 
 So `work-manager` became the [`advisor`](../.claude/skills/advisor) skill, whose first and overriding rule is the exact opposite of its predecessor's: **sessions report to the developer, never to the tool. It advises; it never commands, never rules on the product, and never answers in his place.**
 
@@ -125,6 +125,6 @@ This is the through-line of the whole method, and the honest answer to *"you bui
 A few things are stated exactly, because accuracy is part of the point:
 - The loop is **four** stages — Discovery is a distinct step from Blueprint, and produces the approved spec *before* any plan is drawn.
 - The closing audit **certifies** a module as mergeable; it never performs the merge — that decision stays with the human.
-- The smoke / end-to-end suites and the documentation-sync check are enforced **locally** (git hooks and the quality gate), not by cloud CI — so the enforcement is real, but it lives on the developer's machine.
+- The documentation-sync check is enforced **locally** by a Stop hook that blocks a session from ending until the docs are updated — not by cloud CI. The smoke and end-to-end suites are **not** part of the local quality gate or of CI either; they are run, and must pass, as a required part of the closing audit before a module is certified mergeable — so their enforcement is procedural (built into the Close stage), not mechanical, and none of these three checks live in cloud CI.
 
 For the day-to-day working guide (for anyone developing REG-IN), see [`docs/DEV_HOME.md`](DEV_HOME.md).

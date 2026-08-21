@@ -14,7 +14,7 @@ REG-IN manages the full operational lifecycle of an events company as one connec
 
 > **Client → auto-priced Quote → approved Project → smart staff matching → Logistics checklist → Event → Financial closing → Management reports**
 
-Instead of an Excel file per stage and a WhatsApp group per event, everything lives in one system with **real, database-enforced permissions**. Each of the six company roles sees exactly what its job requires — and nothing else.
+Instead of an Excel file per stage and a WhatsApp group per event, everything lives in one system with **real, database-enforced permissions**. Each of the five company roles sees exactly what its job requires — and nothing else.
 
 > Final-year academic software-engineering project: thirteen vertically-sliced modules, a live PostgreSQL database with Row-Level Security, and a full Hebrew right-to-left interface.
 
@@ -93,7 +93,7 @@ flowchart TB
 
 > This section is deliberate. The repository keeps the artifacts of *how* the system was built — not as clutter, but as evidence of the engineering discipline behind the app.
 
-Every module runs through the same repeatable three-stage loop:
+Every module runs through the same repeatable loop, shown here in three grouped stages for brevity (Discovery and Blueprint share the "Open" box below — see [`BUILD_METHOD.md`](docs/BUILD_METHOD.md) for why they're counted as four distinct stages there):
 
 ```mermaid
 flowchart LR

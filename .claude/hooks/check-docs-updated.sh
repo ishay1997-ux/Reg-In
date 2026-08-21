@@ -133,14 +133,18 @@ done <<< "$CHANGED"
 PM="docs/PROJECT_MASTER.md"
 HG_MISS=""
 if [ -f "$PM" ]; then
+  # מסירים טווחי ~~...~~ (טוקן-מת שנפתר, למשל "~~🚧 מ6~~") לפני הבדיקה — אחרת
+  # grep -qF "🚧 מN" מוצא גם את הטוקן החתוך-בקו ומדווח בשקט "כבר יש" למרות
+  # שאין שורת-חוב חיה. מחושב פעם אחת מחוץ ללולאה (יעילות; אין תלות ב-tgt).
+  PM_LIVE=$(sed -E 's/~~[^~]*~~//g' "$PM" 2>/dev/null)
   while IFS= read -r line; do
     f=$(printf '%s' "$line" | cut -c4-)
     case "$f" in
-      docs/micro_guides/module-*.md)
+      docs/micro_guides/module-*.md | docs/specs/module_*/*.md)
         [ -f "$f" ] || continue
-        # כל טוקן "🚧 מN" ייחודי במדריך → חייב "🚧 מN" תואם ב-§6.
+        # כל טוקן "🚧 מN" ייחודי במדריך/באפיון-המאושר → חייב "🚧 מN" חי (לא חתוך-בקו) ב-§6.
         for tgt in $(grep -oE '🚧 מ[0-9]+' "$f" 2>/dev/null | grep -oE '[0-9]+' | sort -u); do
-          grep -qF "🚧 מ$tgt" "$PM" 2>/dev/null || HG_MISS="$HG_MISS ${f##*/}→מ$tgt"
+          printf '%s' "$PM_LIVE" | grep -qF "🚧 מ$tgt" || HG_MISS="$HG_MISS ${f}→מ$tgt"
         done
         ;;
     esac
