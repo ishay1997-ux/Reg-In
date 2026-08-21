@@ -96,7 +96,11 @@ export default function LtrFieldGroup({ items, className, errorId, 'data-testid'
               onFocus={(event) => event.target.select()}
               aria-invalid={item.invalid ? true : undefined}
               aria-describedby={item.invalid ? errorId : undefined}
-              className="h-full w-full bg-transparent text-center outline-none focus-visible:ring-2 focus-visible:ring-teal-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              // שדה-שעה: אייקון-השעון של הדפדפן (‏picker-indicator) יושב בצל-DOM נפרד
+              // ואינו נענה ל-text-center של התוכן — בלי flex+justify-center על ה-input
+              // עצמו הוא נדבק לקצה ומשאיר רווח ריק בין האייקון לערך. ‏mx-1 מאזן את
+              // הריפוד המובנה שלו כדי שהצמד "אייקון+שעה" יֵרָאה ממורכז כיחידה אחת.
+              className="flex h-full w-full items-center justify-center bg-transparent text-center outline-none focus-visible:ring-2 focus-visible:ring-teal-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-calendar-picker-indicator]:mx-1"
               {...item.inputProps}
             />
           </span>
