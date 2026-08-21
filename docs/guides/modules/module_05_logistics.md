@@ -50,7 +50,8 @@ Checklist לוגיסטי לכל פרויקט: כל פריט (`site`/`product`) �
 **0) Discovery (פעם אחת, לפני הכל — ‏3–4 ימים, לא סשן אחד):**
 ```
 אנחנו עושים Discovery מלא למודול 5 — לוגיסטיקה.
-קרא את docs/guides/prompt_module_discovery.md ובצע אותו כלשונו, משלב 1.
+הרץ את הסקיל module-discovery: קרא את .claude/skills/module-discovery/SKILL.md
+ואת template.md שלידו, ובצע אותם כלשונם — משלב 0 (סיווג + שלוש הסריקות), לא משלב 1.
 ```
 
 **1) פתיחת מודול — רק אחרי שה-Discovery אושר (פעם אחת):**

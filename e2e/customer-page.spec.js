@@ -48,7 +48,9 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
     await expect(page.locator('tbody tr', { hasText: MEDITECH }).first()).toContainText('22,503')
 
     // מיון בלחיצת-כותרת נכתב לכתובת (ולא ל-state) — זה מה שמאפשר לו לשרוד חזרה.
-    await page.getByRole('button', { name: /סה"כ הכנסות/ }).click()
+    // ⚠️ 19/08/2026 (מודול 6 · משטח 8, E3 🟢 RULED): התווית שונתה מ"סה"כ הכנסות" ל"סה"כ
+    // הצעות מאושרות" — החישוב לא זז, רק המילה. עודכן כאן כדי שלא לחפש עמודה שכבר לא קיימת.
+    await page.getByRole('button', { name: /סה"כ הצעות מאושרות/ }).click()
     await expect(page).toHaveURL(/sort=total_revenue/)
 
     // 🐞 רגרסיה אמיתית: כשהכרטיס היה חלון, הסינון שרד מעצמו; כעמוד הוא נמחק בכל "חזור".
@@ -102,9 +104,23 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
     // ⚠️ ההצעה-הפתוחה עברה מ-#6 ל-#22 (‏04/08/2026): #6 אושרה, ולכן היא כבר אינה המקרה
     // שהטענה הזו בודקת. **חובה שזו תהיה הצעה `in_progress` אמיתית** — על סגורה שלוש
     // האסרציות היו עוברות ריקות מתוכן, וזה בדיוק "שומר שלא נצפה נכשל".
-    await expect(page.getByTestId('customer-quote-edit-22')).toBeVisible()
-    await expect(page.getByTestId('customer-quote-approve-22')).toBeVisible()
-    await expect(page.getByTestId('customer-quote-reject-22')).toBeVisible()
+    // 🔒 ההצעה-הפתוחה נבחרת **בזמן-ריצה מהמסך עצמו** ולא לפי מזהה קשיח: כפתור-האישור
+    // מרונדר **רק** על `in_progress`, ולכן הופעתו היא ההגדרה המדויקת של "פתוחה".
+    // ⚠️ **למה זה שונה מ-`22` שהיה כאן:** ‏`ימי_תוקף_הצעה`=30 והעבודה `module3-quote-expiry`
+    // מעבירה הצעות ישנות ל-`rejected` — ‏#22 בסביבות 31/08/2026 — ואז שלוש הטענות היו
+    // נופלות **בלי שאיש נגע בקוד**. *(`🚧 מ6 ← מ3`.)*
+    const openApprove = page.getByTestId(/^customer-quote-approve-/).first()
+    await expect(
+      openApprove,
+      'למדיטק אין הצעה in_progress — זהו תנאי-הקדם של הטענה, לא באג בקוד',
+    ).toBeVisible()
+    const openId = (await openApprove.getAttribute('data-testid')).replace(
+      'customer-quote-approve-',
+      '',
+    )
+    await expect(page.getByTestId(`customer-quote-edit-${openId}`)).toBeVisible()
+    await expect(page.getByTestId(`customer-quote-reject-${openId}`)).toBeVisible()
+    // ‏#10 סגורה — וסגורה נשארת סגורה, ולכן טענת-ההיעדר הזאת אינה מרקיבה.
     await expect(page.getByTestId('customer-quote-approve-10')).toHaveCount(0)
 
     // סיבת-הדחייה **חייבת** לשבת על השורה: כפתור-העין פותח את ה-PDF שהלקוח מקבל,

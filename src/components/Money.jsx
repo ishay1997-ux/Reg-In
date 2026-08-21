@@ -14,17 +14,31 @@
 // בלבד, שבו המחיר עצמו הוא הנתון ועיגול של 2.50 ל-3 מסתיר אותו. **הרחבה ולא עקיפה** — כך
 // גם הטור הזה עובר דרך אותה עטיפת-כיווניות, במקום שיצוץ פורמט-כסף מקומי שני שיסטה ממנה.
 
-import { formatShekelExact, formatShekelWhole } from '@/lib/pricing'
-import { cn } from '@/lib/utils'
+// עטיפת-הכיווניות עצמה חולצה ל-`Ltr` (צעד 3.0 של מודול 6) — היא הייתה חיה כאן וגם
+// ב-`RatingStars` כשני העתקים ידניים של אותם שני מאפיינים. החוזה הציבורי של Money
+// לא השתנה בבייט: אותו אלמנט, אותם מאפיינים, אותו פורמט.
+import Ltr from '@/components/Ltr'
+import { formatShekelCents, formatShekelExact, formatShekelWhole } from '@/lib/pricing'
 
-export default function Money({ amount, exact = false, className, 'data-testid': testId }) {
+// ‏`cents` (נוסף בצעד 3.2 של מודול 6, תוספת-בלבד — ברירת-המחדל לא השתנתה בבייט): אגורות
+// תמיד, גם כשהן .00 — הצורה שהמוקאפ המאושר של כרטיס-הפרויקט מצייר ל"הכנסה מתוכננת",
+// ושבה "0.00 ₪" נבדל בעין מ-`—` של אין-נתון (S-2). הנימוק המלא: formatShekelCents.
+function formatAmount(amount, exact, cents) {
+  if (cents) return formatShekelCents(amount)
+  if (exact) return formatShekelExact(amount)
+  return formatShekelWhole(amount)
+}
+
+export default function Money({
+  amount,
+  exact = false,
+  cents = false,
+  className,
+  'data-testid': testId,
+}) {
   return (
-    <span
-      dir="ltr"
-      className={cn('inline-block [unicode-bidi:isolate]', className)}
-      data-testid={testId}
-    >
-      {exact ? formatShekelExact(amount) : formatShekelWhole(amount)}
-    </span>
+    <Ltr className={className} data-testid={testId}>
+      {formatAmount(amount, exact, cents)}
+    </Ltr>
   )
 }

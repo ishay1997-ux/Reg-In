@@ -24,6 +24,8 @@ const TONES = {
   dashed: 'bg-slate-100 text-slate-500 border border-dashed border-slate-300',
 }
 
+import { PROJECT_STATUS_TONES } from '@/lib/projects'
+
 // ⚠️ `לא זמינה DD/MM–DD/MM` **אינו כאן במכוון** — התווית שלו דינמית (היא נושאת תאריכים),
 // ולכן הקורא מעביר `tone="warn"` במפורש. מפתח קבוע היה מחייב אותה להיות מחרוזת קבועה.
 const TONE_BY_LABEL = {
@@ -39,6 +41,11 @@ const TONE_BY_LABEL = {
   'ביטלה אחרי אישור': 'muted',
   'פג תוקף': 'warn',
   הושלם: 'ok',
+  // 🔴 שמונת סטטוסי-הפרויקט (מודול 6) — ב-spread מ-`src/lib/projects.js`, לא בהקלדה
+  // מחדש: מקור-אמת אחד לתווית-וטון, כי תווית שהוקלדה כאן שוב ונבדלת בתו אחד נופלת
+  // בשקט ל-`muted` (למטה, `?? TONES.muted`) — אפור שזהה-בייט לטון של סטטוס אמיתי,
+  // כלומר בלתי-נראה על המסך. שם השומר שצועק במקום להאפיר: `resolveProjectTone`.
+  ...PROJECT_STATUS_TONES,
 }
 
 // label: התווית **כפי שהיא נכתבת על המסך** · tone: דריסה, נדרשת רק לתוויות דינמיות.

@@ -160,7 +160,7 @@ fi
 # לפני הכתיבה: two-weeks-2026-08-06.md כן הופיע ב-STATUS.md כהיסטוריה, ועדיין
 # 3.1 בתוכו מעולם לא רץ). escape hatch: תוכנית שמכריזה "תוכנית סגורה" בתוכה —
 # כל תוכנה כבר עבר למקום קבוע — אינה נחסמת.
-PLAN_STD="docs/guides/prompt_module_discovery.md docs/PROJECT_MASTER.md .claude/skills/module-blueprint/template.md .claude/skills/module-build/SKILL.md .claude/skills/module-close/template.md"
+PLAN_STD=".claude/skills/module-discovery/template.md docs/PROJECT_MASTER.md .claude/skills/module-blueprint/template.md .claude/skills/module-build/SKILL.md .claude/skills/module-close/template.md"
 PLAN_MISS=""
 while IFS= read -r line; do
   f=$(printf '%s' "$line" | cut -c4-)
@@ -179,6 +179,31 @@ while IFS= read -r line; do
   esac
 done <<< "$CHANGED"
 
+# --- זיהוי סוכני-רקע חיים (נוסף 19/08/2026, הכרעת-ישי — תקריות 14/08 ו-18/08 ביומן) ---
+# קריאות-הכלים של סוכן-רקע עוברות דרך ה-hooks עם ה-session_id של סשן-האב (נמדד חי
+# 19/08/2026: עריכת סוכן נרשמה לקובץ-הסימון של האב), ולכן כל כתיבה שלו מקפיצה את
+# mtime של הסימון — ואכיפה 1-3 חוזרת ונורית כל תור בלי שיש מה לתעד (נורתה ×6 ב-14/08
+# ו-×4 ב-18/08, והתשובה "רענון-חותמות בלי תוכן" היא בדיוק padding שהמדיניות אוסרת).
+# האות נגזר מה-harness, לא מדגל שקלוד כותב: תמליל-הסשן (transcript_path, נכתב ע"י
+# ה-harness בלבד) מכיל רשומת tool_result של "Async agent launched successfully" עם
+# agentId לכל שיגור-רקע, ורשומת <task-notification><task-id> לכל סיום. שוגר ולא
+# הסתיים ⇒ סוכן חי עכשיו. אימות-צולב: subagents/agent-<id>.meta.json (שרק ה-harness
+# יוצר, ליד התמליל) חייב להתקיים — כך ציטוט מקרי של טקסט-שיגור בתוך תוצאת-כלי (למשל
+# דף-אינטרנט שנשלף) אינו מייצר "סוכן חי" פיקטיבי שמכבה את האכיפה.
+# כיוון-הכשל שמרני בכוונה: כל כשל-חילוץ/קריאה ⇒ LIVE_BG=0 ⇒ ההתנהגות הישנה בדיוק.
+# סוכן שקיבל notification וחודש (SendMessage) ייקרא "הסתיים" — גם זה לכיוון המחמיר.
+# גבול ידוע: סוכני Workflow אינם מזוהים (מנגנון שיגור אחר) — אם תימדד שם תקרית, זו
+# הרחבה נפרדת, לא תיקון של הבלוק הזה.
+TRANSCRIPT=$(printf '%s' "$INPUT" | grep -o '"transcript_path"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/' | sed 's|\\\\|/|g')
+LIVE_BG=0
+if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
+  SUBAG_DIR="${TRANSCRIPT%.jsonl}/subagents"
+  for aid in $(grep -F '"type":"tool_result"' -- "$TRANSCRIPT" 2>/dev/null | grep -F 'Async agent launched successfully' | grep -oE 'agentId: [a-f0-9]+' | awk '{print $2}' | sort -u); do
+    [ -f "$SUBAG_DIR/agent-$aid.meta.json" ] || continue
+    grep -qF "<task-id>$aid</task-id>" -- "$TRANSCRIPT" 2>/dev/null || { LIVE_BG=1; break; }
+  done
+fi
+
 # --- אכיפה 1-3: יומן ולוח מצב ---
 # משווים מול זמן העריכה של *הסשן הזה* (mtime של הסימון), לא מול NEWEST הגלובלי —
 # כך שינויים לא-מקומיטים של סשן מקביל לא נספרים. בלי session_id → נשארים על NEWEST.
@@ -189,8 +214,15 @@ else
 fi
 
 MISS=""
-[ "$EDIT_TS" -gt "$LOG_M" ] && MISS="docs/CLAUDE_CODE_LOG.md"
-[ "$EDIT_TS" -gt "$ST_M" ] && MISS="$MISS STATUS.md"
+# סוכן-רקע חי ⇒ מדלגים על אכיפה 1-3 *בלבד* לתור הזה: ה-mtime של הסימון נע כל עוד
+# הסוכן כותב, ואי-אפשר לתעד עבודה שעוד נכתבת. החוב אינו נמחק — הסימון שומר את
+# ה-mtime, ובעצירה הראשונה בלי סוכנים חיים (וכל סשן מגיע לכזו: ה-notification מעיר
+# את הסשן לתור נוסף) האכיפה נורית כרגיל. אכיפות 0/0ב/0ג/0ד נשארות פעילות גם עכשיו —
+# ב-18/08 ירייה של אכיפה 0 באמצע ריצת-סוכנים הייתה נכונה (module-4.md) ותועדה ככזו.
+if [ "$LIVE_BG" -eq 0 ]; then
+  [ "$EDIT_TS" -gt "$LOG_M" ] && MISS="docs/CLAUDE_CODE_LOG.md"
+  [ "$EDIT_TS" -gt "$ST_M" ] && MISS="$MISS STATUS.md"
+fi
 
 # הודעות קצרות ופעולתיות (קוצרו 28/07/2026 בשיפוץ-ההקשר): שורת-פעולה + הפניה, לא פסקת-הסבר.
 # הנימוקים המלאים חיים ב-CLAUDE.md (כלל 15) וב-docs/CLAUDE.md — לא צריך לשכפל אותם בכל חסימה.
@@ -205,7 +237,7 @@ if [ -n "$HG_MISS" ]; then
   REASON="${REASON}חוב 🚧 בלי רישום ב-PROJECT_MASTER §6 —$HG_MISS. הוסף שורה '🚧 מN ← מ<מקור> · מה · מקור: micro_guides/module-<מקור>.md'. "
 fi
 if [ -n "$PLAN_MISS" ]; then
-  REASON="${REASON}תוכנית ב-docs/plans/ בלי מצביע משום קובץ-תקן —$PLAN_MISS. הוסף אזכור-שם-קובץ ב-prompt_module_discovery.md / PROJECT_MASTER.md / module-blueprint/module-build/module-close, או סמן בתוכנית עצמה 'תוכנית סגורה' אם כל תוכנה כבר עבר למקום קבוע. "
+  REASON="${REASON}תוכנית ב-docs/plans/ בלי מצביע משום קובץ-תקן —$PLAN_MISS. הוסף אזכור-שם-קובץ ב-module-discovery/template.md / PROJECT_MASTER.md / module-blueprint/module-build/module-close, או סמן בתוכנית עצמה 'תוכנית סגורה' אם כל תוכנה כבר עבר למקום קבוע. "
 fi
 if [ -n "$MISS" ]; then
   REASON="${REASON}עדכן לפני סיום: $MISS. (אורך רשומת-היומן — לפי המדיניות שבראש CLAUDE_CODE_LOG.md עצמו, שם היא נקבעת; אם אין שינוי-סטטוס — ב-STATUS רק שורת 'עודכן לאחרונה', אחרי שווידאת שהלוח נכון.)"

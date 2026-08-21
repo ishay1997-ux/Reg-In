@@ -56,6 +56,23 @@ export async function sendEmail({ payload, entityType, entityId, templateName } 
   return { logFailed: Boolean(data?.log_failed) }
 }
 
+// תבנית-מייל בודדת מ-`params`, לפי שמה המדויק (זהה-בייט לשורת ה-seed). גרה כאן ולא
+// במודול כלשהו כי תבניות-מייל הן משאב חוצה-מודולים בדיוק כמו email_log — מ4 (זימונים),
+// מ6 (ביטול/עדכון-פרטים), ובהמשך מ8/מ11 — ועותק פר-מודול היה מתפצל בשקט ביום שהטיפול
+// בתבנית-חסרה משתנה. ⚠️ למודול 4 יש עותק פרטי קודם ב-api.js שלו (מודול סגור ומוזג —
+// לא נגענו); איחודו לכאן הוא ניקיון עתידי, לא חובה של מודול 6.
+// 🔴 תבנית חסרה **עוצרת** ואינה נשלחת כגוף ריק: מייל ריק לדיילת גרוע ממייל שלא נשלח.
+export async function getEmailTemplate(name) {
+  const { data, error } = await supabase
+    .from('params')
+    .select('param_value')
+    .eq('param_name', name)
+    .maybeSingle()
+  if (error) throw toError(error, 'שגיאה בטעינת תבנית המייל.')
+  if (!data?.param_value) throw toError({ code: 'PGRST116' }, `תבנית המייל "${name}" חסרה בהגדרות.`)
+  return data.param_value
+}
+
 // השליחה המוצלחת האחרונה של ישות נתונה, מ-`email_log` (מיגרציה 20260730095439).
 // **זהו מקור-האמת היחיד ל"האם כבר נשלח"** — ההגנות שבחלון חיות ב-state של הקומפוננטה
 // ולכן מתאפסות ברענון-דף או אצל משתמש שני; רק שאילתה כאן שורדת את שניהם.

@@ -7,6 +7,7 @@ import { supabase } from '@/supabaseClient'
 // עוטף-השגיאות המשותף (חולץ 31/07/2026 — היה משוכפל זהה-בייט בשלושה api.js). הקוד המשומר
 // הוא מה שמניע כאן את זרימת-הכפילות §7.11 (‏23505 = הפרת-unique על ח"פ) ב-step 3.2.
 import { toError, assertRowsAffected } from '@/lib/apiError'
+import { DORMANT_THRESHOLD_PARAM_NAME } from '@/lib/customerProjects'
 
 // ---- קריאות (Reads) ----
 
@@ -34,19 +35,49 @@ export async function getCustomer(customerId) {
   return data ?? null
 }
 
-// היסטוריית הפרויקטים של לקוח, דרך שרשרת ה-FK customers→quotes→projects.
-// quotes/projects עדיין deny-all (אין policies עד מודול 3/6) ולכן זה מחזיר [] כחוק — לא שגיאה;
-// כרטיס-הלקוח (step 3.6) מציג "אין פרויקטים עדיין" עד שהמודולים האלה יוסיפו policies+דאטה.
-// !inner על quotes = צירוף-פנימי כדי שאפשר לסנן לפי quotes.customer_id דרך המשאב המקונן.
-// 🚧 מ6 — חוב חוצה-מודולים רשום ב-PROJECT_MASTER §6 (שורת "השלמות כרטיס לקוח"): מודול 6 מוסיף
-// SELECT policy+דאטה ל-projects, מודול 3 ל-quotes; רק אז ה-join יחזיר שורות. הרשם הזה הוא מה
-// שפרומפט-הפתיחה של מודול 6 גורף (`grep '🚧 מ6' §6`) כדי לחזור ולחבר את המסך הזה — כלל ברזל 15.
+// היסטוריית הפרויקטים של לקוח (משטח 8, מודול 6 על מסך מודול 2) — SELECT בלבד, פרויקטים
+// גדלים ב-projects_select_by_permission ('פרויקטים') כמו כל שדה-פרויקט אחר.
+// 🔴 A12 — תוקן 19/08/2026: הסינון עובר ישירות דרך projects.customer_id (ה-FK הישיר,
+// index projects_customer_id_idx כבר קיים — schema.sql:517, לא נוצר אינדקס נוסף) ולא דרך
+// quotes!inner. `projects.quote_id` הוא nullable ⇒ !inner היה מעלים בשקט כל פרויקט בלי
+// הצעה. הצירוף להצעה נשאר, אבל כ-LEFT (ברירת-המחדל של Supabase כשאין !inner) — פרויקט בלי
+// הצעה נגיש מוצג עם `quotes: null` והמסך מציג '—' בעמודת הסכום, לא נעלם משורה.
+// עמודות מפורשות — לא `select('*')`: projects נושאת שדות-כספים (payment_date, invoice_sent,
+// feedback_*) שאין להם מקום בלשונית-הלקוח. quotes(...) נושא בדיוק את מה ש-deriveQuoteAmount
+// (src/lib/quotes.js, ה-SSOT) צורך; project.quotes יהיה null גם "אין הצעה" וגם "RLS חסם את
+// 'הצעות מחיר'" — projectAmount (src/lib/customerProjects.js) מטפל בשני המקרים כ-null ולא 0.
 export async function getCustomerProjects(customerId) {
   const { data, error } = await supabase
     .from('projects')
-    .select('*, quotes!inner(customer_id)')
-    .eq('quotes.customer_id', customerId)
+    .select(
+      'project_id, event_name, final_event_date, project_status, customer_id, quote_id, ' +
+        'cancelled_at, cancel_type, cancelled_by, cancel_reason, ' +
+        'quotes(applied_customer_discount, manual_discount, vat_rate_snapshot, quote_services(qty, closing_unit_price))',
+    )
+    .eq('customer_id', customerId)
   if (error) throw toError(error, 'שגיאה בטעינת היסטוריית הפרויקטים.')
+  return data ?? []
+}
+
+// בתפזורת עבור רשימת-הלקוחות (CustomersPage) — עמודות מזעריות לחישוב "רדומים" (A3) פר-לקוח,
+// בלי N+1 קריאות. אותה מדיניות-קריאה כמו getCustomerProjects (SELECT בלבד, מגודר 'פרויקטים').
+export async function listProjectsForCustomerMetrics() {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('customer_id, final_event_date, project_status')
+  if (error) throw toError(error, 'שגיאה בטעינת נתוני הפרויקטים.')
+  return data ?? []
+}
+
+// הפרמטר היחיד שמשטח-8 ולשונית-הלקוחות (A3) צריכים מ-params ואינו בין שלושת פרמטרי-מסך-
+// ההצעות של getQuoteScreenParams (03_quotes/api.js) — לכן שאילתה נפרדת, לא הרחבת הקיימת
+// (שם היא מוגדרת-במפורש לשלושת השדות של מסך-ההצעות, ולא בית חוקי לפרמטר של מודול 2/6).
+export async function getCustomerScreenParams() {
+  const { data, error } = await supabase
+    .from('params')
+    .select('param_name, param_value')
+    .in('param_name', [DORMANT_THRESHOLD_PARAM_NAME])
+  if (error) throw toError(error, 'שגיאה בטעינת הגדרות המסך.')
   return data ?? []
 }
 

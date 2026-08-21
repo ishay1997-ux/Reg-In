@@ -32,8 +32,15 @@ import {
 } from '@/lib/customers'
 import { QUOTE_SCREEN_PARAM_NAMES } from '@/lib/quotes'
 import { formatShekelWhole } from '@/lib/pricing'
+import { DORMANT_THRESHOLD_PARAM_NAME, isCustomerDormant } from '@/lib/customerProjects'
 import Money from '@/components/Money'
-import { listCustomers, setCustomerStatus, updateCustomer } from '@/modules/02_customers/api'
+import {
+  getCustomerScreenParams,
+  listCustomers,
+  listProjectsForCustomerMetrics,
+  setCustomerStatus,
+  updateCustomer,
+} from '@/modules/02_customers/api'
 import { getQuoteScreenParams, listQuotes } from '@/modules/03_quotes/api'
 import CustomerFormDialog from '@/modules/02_customers/CustomerFormDialog'
 import CustomersFilterSheet from '@/modules/02_customers/CustomersFilterSheet'
@@ -77,6 +84,19 @@ function boolParam(value) {
   return value === null ? undefined : value === 'true'
 }
 
+// 🆕 A3 (מודול 6 · משטח 8) — קיבוץ צד-לקוח של שורות-הפרויקטים בתפזורת, אותה תבנית בדיוק
+// כמו קיבוץ-ההצעות שמעל (`byCustomer`), כדי ש-isCustomerDormant תקבל בדיוק את הצורה
+// שהיא בנויה עליה: מערך-פרויקטים פר-לקוח.
+function groupProjectsByCustomer(rows) {
+  const map = {}
+  for (const row of rows) {
+    const list = map[row.customer_id] ?? []
+    list.push(row)
+    map[row.customer_id] = list
+  }
+  return map
+}
+
 export default function CustomersPage() {
   const navigate = useNavigate()
   const { permissions } = useAuth()
@@ -100,6 +120,14 @@ export default function CustomersPage() {
   // הגיע לארכיון בלי שאלה. הדגל הזה הוא המצב-השלישי המוצהר: המשתמש רואה שהנתונים לא נטענו
   // ויכול לנסות שוב, ובינתיים כל ארכוב שואל וידוא. אותה דוקטרינת "ריק אינו 0" של מודול-הכסף.
   const [revenueLoadFailed, setRevenueLoadFailed] = useState(false)
+  // 🆕 מסננת "רדומים" (A3, מודול 6 · משטח 8) — פר-לקוח: מערך שורות-הפרויקטים המזעריות
+  // (customer_id, final_event_date, project_status) שממנו isCustomerDormant נגזרת, בדיוק
+  // כמו revenueByCustomer. `{}` = טרם נטען/כשל — אז אף לקוח לא רדום, ולא נופלים ("לא בכוח").
+  const [projectsByCustomer, setProjectsByCustomer] = useState({})
+  const [dormantThresholdDays, setDormantThresholdDays] = useState(NaN)
+  // "היום" מחושב פעם אחת (אתחול-עצל, לא ב-render — react-hooks/purity), אותו דפוס כמו
+  // CustomerDetailsPage.jsx/ProjectCardPage.jsx.
+  const [today] = useState(() => new Date().toISOString().slice(0, 10))
   const [consentSavingId, setConsentSavingId] = useState(null)
   // רענון הרשימה נעשה דרך "טיק" — העלאת המונה מריצה מחדש את effect-הטעינה. הדפוס הקנוני של
   // react-hooks/set-state-in-effect: ה-setState קורה רק בתגובה לתשובת ה-DB (אחרי await), לא סינכרונית,
@@ -155,6 +183,27 @@ export default function CustomersPage() {
         if (!cancelled) {
           setRevenueByCustomer(null)
           setRevenueLoadFailed(true)
+        }
+      }
+
+      // 🆕 A3 (מודול 6 · משטח 8) — פרויקטים בתפזורת + סף-הרדימות, לצורך מסננת "רדומים".
+      // בלוק try נפרד ומכוון: כשל כאן לא נוגע בעמודת-ההכנסות ולא בטבלה עצמה — רק במסננת
+      // (מפה ריקה ⇒ isCustomerDormant מחזירה false לכולם, "לא בכוח" ולא קורס).
+      try {
+        const [projectRows, customerParamRows] = await Promise.all([
+          listProjectsForCustomerMetrics(),
+          getCustomerScreenParams(),
+        ])
+        if (cancelled) return
+        setProjectsByCustomer(groupProjectsByCustomer(projectRows))
+        const threshold = customerParamRows.find(
+          (row) => row.param_name === DORMANT_THRESHOLD_PARAM_NAME,
+        )?.param_value
+        setDormantThresholdDays(Number(threshold))
+      } catch {
+        if (!cancelled) {
+          setProjectsByCustomer({})
+          setDormantThresholdDays(NaN)
         }
       }
     })()
@@ -255,6 +304,8 @@ export default function CustomersPage() {
       // הסף עצמו נשמר בכתובת ולא מחושב כאן: Date בגוף-רינדור הוא שגיאת react-hooks/purity,
       // והוא ממילא מחושב בהאנדלר של המסננת (שם מותר לקרוא לשעון).
       createdAfter: searchParams.get('createdAfter') ?? undefined,
+      // 🆕 A3 — צ'יפ עליון כמו "קהל דיוור" (לא בפאנל-המתקדם): בוליאני-חד-כיווני.
+      dormantOnly: boolParam(searchParams.get('dormant')),
     }),
     [searchParams],
   )
@@ -268,6 +319,7 @@ export default function CustomersPage() {
       hasDiscount: next.hasDiscount,
       newDays: next.newWithinDays,
       createdAfter: next.createdAfter,
+      dormant: next.dormantOnly,
     })
   }
 
@@ -282,25 +334,39 @@ export default function CustomersPage() {
   const activeFilterCount = countActiveFilters(filters)
 
   const visibleCustomers = useMemo(() => {
+    // total_revenue ו-is_dormant ממוזגים לשורה **לפני** הסינון (בניגוד ל-total_revenue
+    // הישן שהוזרק אחרי) — כי `dormantOnly` צריך לסנן לפיו, ומשווה-המיון של total_revenue
+    // (ב-sortCustomers) ממילא לא אכפת לו מתי הוא הגיע. null = עדיין נטען / אין הרשאה —
+    // התא מציג "—"; is_dormant נגזר פעם אחת (isCustomerDormant, src/lib/customerProjects.js)
+    // כדי שהאריח בכרטיס-הלקוח והמסננת כאן לא יוכלו לסטות זה מזה (⑨).
+    const withDerived = customers.map((c) => ({
+      ...c,
+      total_revenue: revenueByCustomer?.[c.customer_id]?.totalRevenue ?? null,
+      is_dormant: isCustomerDormant(projectsByCustomer[c.customer_id], today, dormantThresholdDays),
+    }))
     // מסנן-הסטטוס: 'active'/'inactive' מסננים לסטטוס יחיד, 'all' מסיר את ההגבלה (status=undefined).
     // createdAfter ("נוספו לאחרונה") מחושב במסננת (event handler) ומגיע דרך ...filters — לא כאן,
     // כדי לא לקרוא Date.now בזמן רינדור (react-hooks/purity).
-    const filtered = customers
-      .filter((c) =>
-        matchesCustomerFilters(c, {
-          text: searchText,
-          ...filters,
-          status: statusView, // 'active' או 'inactive' — תמיד רשימה אחת, לא שתיהן
-        }),
-      )
-      // ההכנסות ממוזגות לשורה **לפני** המיון, כדי שהמשווה של total_revenue יחיה ב-sortCustomers
-      // (מקום אחד, בדוק) ולא יישכפל כאן. null = עדיין נטען / אין הרשאה — התא יציג "—".
-      .map((c) => ({
-        ...c,
-        total_revenue: revenueByCustomer?.[c.customer_id]?.totalRevenue ?? null,
-      }))
+    const filtered = withDerived.filter((c) =>
+      matchesCustomerFilters(c, {
+        text: searchText,
+        ...filters,
+        status: statusView, // 'active' או 'inactive' — תמיד רשימה אחת, לא שתיהן
+      }),
+    )
     return sortKey ? sortCustomers(filtered, sortKey, sortDir) : filtered
-  }, [customers, revenueByCustomer, searchText, filters, statusView, sortKey, sortDir])
+  }, [
+    customers,
+    revenueByCustomer,
+    projectsByCustomer,
+    dormantThresholdDays,
+    today,
+    searchText,
+    filters,
+    statusView,
+    sortKey,
+    sortDir,
+  ])
 
   // מפתח-רענון לאזור-השיווק: משתנה בדיוק כשקבוצת המאושרים-הפעילים משתנה (מתג-הסכמה/ארכוב/עריכה),
   // כדי שהפאנל יביא-מחדש את רשימת-הנמענים מ-getConsentedCustomers ולא יפגר. מפתח-מטמון בלבד,
@@ -510,6 +576,30 @@ export default function CustomersPage() {
               >
                 קהל דיוור
               </Button>
+              {/* 🆕 A3 (מודול 6 · משטח 8): "רדומים" — אותה תבנית-צ'יפ כמו "קהל דיוור" (בוליאני
+                  חד-כיווני, לא בפאנל-המתקדם — תקדים 11/07: "מאושר לדיוור בלבד" הוסר מהפאנל
+                  לטובת הצ'יפ, כי מסננת חשובה וקצרה עדיפה על שדה בפאנל). גוון ענבר, לא טורקיז —
+                  אותו שפת-צבע כמו "רדום" בכל מקום אחר במודול (StatusTag/הרמז באריח). */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  setFilters((f) => ({
+                    ...f,
+                    dormantOnly: f.dormantOnly !== true ? true : undefined,
+                  }))
+                }
+                aria-pressed={filters.dormantOnly === true}
+                className={cn(
+                  'h-auto py-2.5 px-4 rounded-lg gap-2',
+                  filters.dormantOnly === true
+                    ? 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100'
+                    : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
+                )}
+                data-testid="customers-preset-dormant"
+              >
+                רדומים
+              </Button>
               {/* כפתור-יחיד לתצוגת-הארכיון (הכרעת-ישי 11/07): בתצוגת הפעילים הוא מוביל לארכיון;
                   בתצוגת הארכיון הוא חוזר לפעילים. אף פעם לא מציג את שתי הרשימות יחד. */}
               <Button
@@ -598,9 +688,12 @@ export default function CustomersPage() {
                       <th className="py-2 font-medium">תוכן שיווקי</th>
                       {/* צעד 3.5 — "מי הלקוחות הגדולים שלי?". הכרעת-ישי: עמודה עם מיון ולא
                           מסננת, כי מסננת מחייבת להמציא סף שרירותי ("מעל כמה ₪?") ומיון עונה
-                          ישירות. הערך נגזר מההצעות המאושרות דרך ה-SSOT של התמחור. */}
+                          ישירות. הערך נגזר מההצעות המאושרות דרך ה-SSOT של התמחור.
+                          🔴 E3 (🟢 RULED 14/08, מודול 6 · משטח 8): התווית "סה"כ הכנסות" שיקרה —
+                          המדד סופר הצעות מאושרות גם כשהפרויקט שנולד מהן בוטל. שני מקומות
+                          מציגים את אותו מספר (כאן ובכרטיס-הלקוח) ושניהם עברו לתווית המדויקת. */}
                       <SortableHeader
-                        label={'סה"כ הכנסות'}
+                        label={'סה"כ הצעות מאושרות'}
                         colKey="total_revenue"
                         sortKey={sortKey}
                         sortDir={sortDir}

@@ -48,7 +48,10 @@ const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY
 // ("לבחור פיקסטורה בזמן-ריצה לפי תנאי, לא מזהה קשיח"; ‏`🚧 מ4` ב-`PROJECT_MASTER §6`).
 // ⚠️ **וגם הנמען אינו נכנס לגיט** — הוא נגזר מהשורה שנבחרה. עדיפות לדומיין-דמו, כי שתי
 // הצעות פתוחות נושאות כתובת פרטית אמיתית של ישי (הכרעת-ישי 01/08, כדי לקבל את המיילים).
-const SENT_QUOTE_ID = 22
+// ⚠️ **נבחרת בזמן-ריצה, ולא `22` כפי שהיה כאן.** השימוש היחיד בה הוא שליפת נמען מ-`email_log`,
+// ולכן היא **אינה** נשברת כשההצעה פגה — אבל מזהה קשיח לשורה חיה מרקיב מעצם היותו, וזו אותה
+// משפחה שהעבירה כאן `#6`→`#22` ב-04/08. *(`🚧 מ6 ← מ3`.)*
+let SENT_QUOTE_ID = null
 const DEMO_DOMAIN = '-demo.'
 
 async function login(page, email, password) {
@@ -68,6 +71,19 @@ async function openDocumentDialog(page, quoteId) {
   await expect(page.getByTestId('quote-document-send')).toBeEnabled({ timeout: 30_000 })
 }
 
+// 🔴 מ-12/08/2026 "כבר נשלחה — לשלוח שוב?" הוא דיאלוג מעוצב (`useConfirm`), לא
+// `window.confirm` — ר' ההערה ב-`load-failure-guards.spec.js:159`. הוא נפתח רק על שליחה
+// שנייה+ לאותה הצעה בתוך הריצה, ולכן זה תנאי ולא שלב-קבוע.
+async function confirmSendIfAsked(page) {
+  const dialog = page.getByTestId('confirm-dialog')
+  try {
+    await dialog.waitFor({ state: 'visible', timeout: 3_000 })
+  } catch {
+    return
+  }
+  await page.getByTestId('confirm-dialog-confirm').click()
+}
+
 test.describe('שליחת ההצעה במייל — החוזה מול השרת (חוב 3.4)', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
 
@@ -85,14 +101,27 @@ test.describe('שליחת ההצעה במייל — החוזה מול השרת (
       await sb.auth.signInWithPassword({ email: CEO_EMAIL, password: CEO_PASSWORD })
       const { data } = await sb
         .from('email_log')
-        .select('recipient')
+        .select('entity_id, recipient')
         .eq('entity_type', 'quote')
-        .eq('entity_id', SENT_QUOTE_ID)
         .eq('status', 'sent')
         .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      sentRecipient = data?.recipient ?? null
+        .limit(50)
+      // 🔴 שני תנאים, לא אחד: `openDocumentDialog` פותח את החלון **מטבלת-ההצעות** וממתין
+      // שכפתור-השליחה יידלק — ו-`isQuoteSendable` מחזיר `in_progress` בלבד.
+      // ⚠️ נמדד: בחירה לפי "האחרון שנשלח" בלבד החזירה הצעה **מאושרת** (#24), והבדיקה נפלה
+      // על הלחיצה. **הצעה שנשלחה אינה בהכרח הצעה שניתן לשלוח.**
+      const sentIds = [...new Set((data ?? []).map((r) => r.entity_id))]
+      if (sentIds.length) {
+        const { data: openSent } = await sb
+          .from('quotes')
+          .select('quote_id')
+          .eq('quote_status', 'in_progress')
+          .in('quote_id', sentIds)
+          .order('quote_id', { ascending: false })
+          .limit(1)
+        SENT_QUOTE_ID = openSent?.[0]?.quote_id ?? null
+        sentRecipient = (data ?? []).find((r) => r.entity_id === SENT_QUOTE_ID)?.recipient ?? null
+      }
 
       // ── בחירת ההצעה-הנקייה בזמן-ריצה ────────────────────────────────────────
       // שתי שאילתות ולא צירוף: `email_log` פולימורפית ואין לה FK ל-`quotes`.
@@ -142,7 +171,8 @@ test.describe('שליחת ההצעה במייל — החוזה מול השרת (
     // וכל בדיקה כאן שלוחצת "שלח" מתכוונת באמת לשלוח.
     // 🚫 **ואין כאן החלשה של שומר:** אף בדיקה בקובץ אינה מאמתת שהחלון **חוסם** — הוולידציה
     // של החלון עצמו חיה בבדיקות-היחידה של `hasQuoteChanged`/`getLastSuccessfulSend`.
-    page.on('dialog', (dialog) => dialog.accept())
+    // 🔒 האישור עצמו מטופל ב-`confirmSendIfAsked` אחרי כל לחיצת-שליחה (הדיאלוג מעוצב, לא
+    // `window.confirm` — ר' `openDocumentDialog` שמעל).
     await login(page, CEO_EMAIL, CEO_PASSWORD)
   })
 
@@ -161,6 +191,7 @@ test.describe('שליחת ההצעה במייל — החוזה מול השרת (
 
     await openDocumentDialog(page, CLEAN_QUOTE_ID)
     await page.getByTestId('quote-document-send').click()
+    await confirmSendIfAsked(page)
     await expect(page.getByTestId('toast-success')).toBeVisible()
 
     // חמשת שדות-החוזה מול מבנה-הנתונים `regin-quote` ב-Make. שדה שישתנה כאן בלי שינוי
@@ -204,6 +235,7 @@ test.describe('שליחת ההצעה במייל — החוזה מול השרת (
 
     await openDocumentDialog(page, CLEAN_QUOTE_ID)
     await page.getByTestId('quote-document-send').click()
+    await confirmSendIfAsked(page)
 
     await expect(page.getByTestId('quote-send-check-notice')).toBeVisible()
     await expect(page.getByTestId('toast-error')).toBeVisible()
@@ -216,6 +248,7 @@ test.describe('שליחת ההצעה במייל — החוזה מול השרת (
 
     await openDocumentDialog(page, CLEAN_QUOTE_ID)
     await page.getByTestId('quote-document-send').click()
+    await confirmSendIfAsked(page)
 
     const err = page.getByTestId('quote-send-error')
     await expect(err).toBeVisible()

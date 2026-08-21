@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מוקאפ מ6 · משטח 1 — מבט-על פרויקטים</title>
+<style>
+/* ═══ טוקנים — מדודים 13/08/2026. אל תשנה ערך. ═══
+   --primary : מילולי ב-src/index.css:61 (צבע-המותג, PROJECT_MASTER §4)
+   השאר      : המרת oklch→sRGB מ-node_modules/tailwindcss/theme.css @ 4.3.3
+   🔴 אלה *אינם* ערכי Tailwind-3 — ר' §1.2. אל תעתיק הקסה ממוקאפ ישן.
+   --r*      : @theme inline (radius = 0.625rem)                          */
+:root{
+  --primary:#0D9488;
+  --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4; --teal500:#00BBA7;
+  --teal600:#009689; --teal700:#00786F;
+  --green50:#F0FDF4; --green100:#DCFCE7; --green200:#B9F8CF; --green700:#008236;
+  --amber50:#FFFBEB; --amber100:#FEF3C6; --amber200:#FEE685; --amber700:#BB4D00; --amber800:#973C00;
+  --red50:#FEF2F2; --red100:#FFE2E2; --red200:#FFC9C9; --red500:#FB2C36; --red600:#E7000B;
+  --s50:#F8FAFC; --s100:#F1F5F9; --s200:#E2E8F0; --s300:#CAD5E2;
+  --s400:#90A1B9; --s500:#62748E; --s600:#45556C; --s700:#314158; --s800:#1D293D;
+  /* רדיוסים: --radius=0.625rem ⇒ sm 6 · md 8 · lg 10 · xl 14 · 2xl 18 */
+  --r-md:8px; --r-lg:10px; --r-xl:14px; --r-2xl:18px;
+  --sidebar:240px;   /* w-60  */
+  --topbar:64px;     /* h-16  */
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  background:var(--s50); color:var(--s800);
+  font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif;
+  font-size:14px; line-height:1.5;
+}
+
+/* ═══ הכלל שנשבר הכי הרבה: כל ערך שאינו עברית טהורה עובר דרך .ltr ═══
+   מקור: src/components/Money.jsx:23-24 · RatingStars.jsx:78-79            */
+.ltr{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
+
+/* ── סרגל-צד ימני (Sidebar.jsx) — מאפיינים פיזיים בלבד (right/left), לא הלוגיים ── */
+.side{position:fixed; top:0; right:0; width:var(--sidebar); height:100vh;
+      background:#fff; border-left:1px solid var(--s200); display:flex; flex-direction:column; z-index:30}
+.side .logo{height:var(--topbar); display:flex; align-items:center; justify-content:center;
+      border-bottom:1px solid var(--s100); font-weight:700; color:var(--teal700); letter-spacing:.5px}
+.side nav{padding:12px 8px; display:flex; flex-direction:column; gap:4px}
+.nav-i{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--r-lg);
+      font-size:14px; font-weight:500; color:var(--s600); text-decoration:none}
+.nav-i .ic{width:20px; text-align:center; font-size:15px; flex:none}
+.nav-i.on{background:var(--teal50); color:var(--teal700)}   /* פריט פעיל — §4 */
+
+/* ── סרגל עליון (Topbar.jsx) ── */
+.top{position:fixed; top:0; left:0; right:var(--sidebar); height:var(--topbar); background:#fff;
+     border-bottom:1px solid var(--s200); display:flex; align-items:center;
+     justify-content:space-between; padding:0 24px; z-index:20}
+/* זכוכית-מגדלת בימין + padding-right — הוכרע ב-Topbar.jsx, לא לבחור מחדש */
+.search{position:relative; width:288px; max-width:100%}
+.search .mg{position:absolute; right:12px; top:50%; transform:translateY(-50%);
+     color:var(--s400); font-size:13px}
+.search input{width:100%; height:36px; border:1px solid var(--s200); border-radius:var(--r-lg);
+     background:var(--s50); padding:0 36px 0 12px; font:inherit; font-size:14px; color:var(--s500)}
+.search input::placeholder{color:var(--s400)}
+.who{display:flex; align-items:center; gap:8px}
+.who .txt{display:flex; flex-direction:column; align-items:flex-end; line-height:1.3}
+.who .nm{font-size:14px; font-weight:500; color:var(--s800)}
+.who .rl{font-size:12px; color:var(--s500)}
+.who .av{width:36px; height:36px; border-radius:999px; background:var(--primary); color:#fff;
+     display:flex; align-items:center; justify-content:center; font-weight:600}
+
+/* ── תוכן ── */
+main{margin-right:var(--sidebar); padding:calc(var(--topbar) + 24px) 24px 40px}
+.phead{display:flex; align-items:flex-start; justify-content:space-between;
+     gap:16px; flex-wrap:wrap; margin-bottom:16px}
+h1{font-size:20px; font-weight:700; color:var(--s800)}
+.psub{font-size:12px; color:var(--s500); margin-top:2px}
+
+/* ── אריחי-מדד (StatTile.jsx) — flex-wrap, לבן+מסגרת, לעולם לא מילוי ── */
+.tiles{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px}
+.tile{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     padding:16px; display:flex; flex-direction:column; gap:2px; min-width:150px}
+.tile-l{font-size:12px; color:var(--s500)}
+.tile-v{font-size:20px; font-weight:700; color:var(--s800)}
+.tile-v.alarm{color:var(--red600)}      /* רק הספרה. הרקע נשאר לבן. */
+.tile-s{font-size:11px; color:var(--s500)}
+.tile-empty{font-size:14px; color:var(--s400)}   /* "אין נתונים עדיין" — לא 0 */
+
+/* ── כרטיס-תוכן ── */
+.card{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     box-shadow:0 1px 2px rgba(15,23,42,.06); padding:0 16px 14px}
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--s200); margin:0 -16px 12px; padding:0 16px}
+.tab{padding:11px 16px; font-size:14px; font-weight:500; color:var(--s500);
+     border-bottom:2px solid transparent}
+.tab.on{color:var(--teal700); border-bottom-color:var(--primary); font-weight:600}
+
+/* ── סרגל-מסננים (FilterPill.jsx) ── */
+.bar{display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:2px 0 12px}
+.pill{border:1px solid var(--s200); background:#fff; color:var(--s600);
+     border-radius:999px; padding:4px 12px; font:inherit; font-size:12.5px; cursor:pointer}
+.pill.on{background:var(--teal50); border-color:var(--teal200); color:var(--teal700); font-weight:600}
+.pill.warn-on{background:var(--amber50); border-color:var(--amber200); color:var(--amber700); font-weight:600}
+.pill[disabled]{opacity:.5; cursor:not-allowed}   /* נשאר ומנומק, לא נעלם */
+.spacer{margin-right:auto; color:var(--s400); font-size:12px}  /* mr-auto דוחף שמאלה */
+
+/* ── כפתורים (button.jsx + הדריסות בפועל) ── */
+.btn{border-radius:var(--r-lg); font:inherit; font-size:14px; font-weight:600;
+     padding:8px 16px; border:1px solid transparent; cursor:pointer; white-space:nowrap}
+/* 🔴 --primary ולא --teal600: שני הטורקיזים חיים במקביל, והמותג מנצח (§1.2) */
+.btn.primary{background:var(--primary); color:#fff}            /* אחד למסך */
+.btn.primary:hover{background:var(--teal700)}
+.btn.sec{background:#fff; border-color:var(--s300); color:var(--s700); font-weight:500}
+.btn.quiet{background:none; border:0; color:var(--s500); padding:4px 8px; font-weight:500}
+.btn[disabled]{opacity:.5; cursor:not-allowed}
+.link{color:var(--teal700); font-size:12.5px; font-weight:600; text-decoration:none; white-space:nowrap}
+/* פעולת-שורה (RowAction.jsx) — ריבוע 30px ממוסגר */
+.ract{width:30px; height:30px; border-radius:var(--r-md); border:1px solid var(--s200);
+     background:#fff; color:var(--s600); display:inline-flex; align-items:center;
+     justify-content:center; cursor:pointer}
+.ract.ok{border-color:var(--green200); background:var(--green50); color:var(--green700)}
+.ract.no{border-color:var(--red200); background:var(--red50); color:var(--red600)}
+
+/* ── טבלה (RepositoryTab.jsx) ── */
+table{width:100%; border-collapse:collapse}
+th{font-size:12px; font-weight:600; color:var(--s500); text-align:right;
+   padding:6px 10px; border-bottom:1px solid var(--s200); white-space:nowrap}
+td{padding:10px; border-bottom:1px solid var(--s100); vertical-align:middle}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--s50)}
+tr.muted td{background:var(--s50); color:var(--s500)}       /* הושלם / בוטל */
+tr.block td{background:var(--red50)}                         /* 1–2 למסך. §3.3 */
+.pname{font-weight:600}
+.psub2{font-size:11.5px; color:var(--s500); margin-top:1px}
+
+/* ── תגיות-סטטוס (StatusTag.jsx) — העתק את הטונים, אל תמציא ── */
+.tag{display:inline-block; white-space:nowrap; border-radius:999px;
+     padding:2px 10px; font-size:11px; font-weight:600}
+.tag.ok     {background:var(--green100); color:var(--green700)}
+.tag.teal   {background:var(--teal100);  color:var(--teal700)}
+.tag.muted  {background:var(--s100);     color:var(--s500)}
+.tag.warn   {background:var(--amber200); color:var(--amber800)}
+.tag.outline{background:var(--s100); color:var(--s600); border:1px solid var(--s200)}
+.tag.dashed {background:var(--s100); color:var(--s500); border:1px dashed var(--s300)}
+
+/* ── טקסט-חוסר: המילה נושאת את המשמעות, הצבע רק מדגיש (§3.4) ── */
+.miss{color:var(--red600); font-size:11.5px; font-weight:600}
+.hint{color:var(--amber700); font-size:11px; font-weight:600}
+.calm{color:var(--s400); font-size:11.5px}
+
+/* ── שדות-קלט (input.jsx) — placeholder חובה בכל שדה ריק ── */
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.fld{display:flex; flex-direction:column; gap:4px}   /* תווית וערך יחד. §4.3 */
+.fld label{font-size:12px; color:var(--s500)}
+.fld input,.fld select,.fld textarea{height:36px; border:1px solid var(--s200);
+     border-radius:var(--r-lg); background:#fff; padding:0 12px; font:inherit; font-size:14px;
+     color:var(--s800); width:100%}
+.fld textarea{height:auto; padding:8px 12px; resize:vertical}
+.fld input::placeholder,.fld textarea::placeholder{color:var(--s400)}
+.fld .help{font-size:11px; color:var(--s500)}
+.fld .err{font-size:11px; color:var(--red600); font-weight:600}
+.fld input.bad{border-color:var(--red600)}
+
+/* ── דיאלוג (dialog.jsx) — משטחים 6 ו-7 ── */
+.dlg{background:#fff; border-radius:var(--r-2xl); box-shadow:0 10px 30px rgba(15,23,42,.18);
+     width:520px; max-width:100%; padding:20px; position:relative}
+.dlg .x{position:absolute; left:16px; top:16px; color:var(--s400); font-size:16px;
+     background:none; border:0; cursor:pointer}   /* סגירה בשמאל — RTL */
+.dlg h2{font-size:18px; font-weight:700; color:var(--s800); text-align:right}
+.dlg .lead{font-size:12.5px; color:var(--s500); margin:4px 0 14px}
+.dlg footer{display:flex; justify-content:flex-start; gap:8px; margin-top:18px}  /* justify-start */
+/* באנר-אזהרה בתוך דיאלוג — ענבר, לא אדום: זו הודעה, לא כשל */
+.warn{background:var(--amber50); border:1px solid var(--amber200); color:var(--amber800);
+     border-radius:var(--r-lg); padding:9px 12px; font-size:12px; line-height:1.65; margin-bottom:14px}
+
+/* ── מצב-ריק ── */
+.empty{padding:24px; text-align:center; font-size:12.5px; color:var(--s500)}
+.empty .g{display:block; font-size:22px; margin-bottom:6px}
+
+/* ── שורת-מקורות (§7) — חובה בכל מוקאפ ── */
+.srcline{margin-top:16px; padding:10px 12px; background:#fff; border:1px solid var(--s200);
+     border-radius:var(--r-lg); font-size:11.5px; color:var(--s500); line-height:1.85}
+.srcline b{color:var(--s700)}
+
+/* ═════════════════════════════════════════════════════════════════════════
+   תוספות-מוקאפ בלבד. 🔴 אף אחת מהן אינה דורסת ערך מ-§6 של חוזה-העיצוב —
+   כולן מחלקות חדשות שלא קיימות שם. (חוזה §0, כלל 1: מותר להוסיף, אסור לשנות.)
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* מונה בתוך לשונית — הכרעה ⑦: מצב שדורש טיפול לא מסתתר מאחורי לשונית סגורה */
+.tab-n{display:inline-block; margin-right:6px; font-size:12px; font-weight:600; color:var(--s400)}
+.tab.on .tab-n{color:var(--teal700)}
+/* מונה בתוך גלולת-מסנן */
+.pill-n{display:inline-block; margin-right:6px; font-weight:600; opacity:.7}
+/* סימן "מימד סגור" — גליף אפור, לא צבע: עובדה טובה אינה צבועה (חוזה §3.1) */
+.done{color:var(--s500); font-size:11.5px}
+/* פס-הערה של המוקאפ — 🔴 אינו חלק מהמסך. מקווקו ואפור כדי שלא יתבלבל ברכיב */
+.ann{margin:26px 0 8px; padding:8px 12px; border:1px dashed var(--s300); background:var(--s100);
+     border-radius:var(--r-lg); color:var(--s600); font-size:12px; font-weight:600; line-height:1.7}
+.ann span{font-weight:400; color:var(--s500)}
+/* שני מצבי-הריק זה לצד זה (חוזה §5.7 — 🚫 אל תאחד אותם) */
+.emptywrap{display:flex; gap:12px; flex-wrap:wrap}
+.emptywrap .card{flex:1 1 320px; padding:0 16px 8px}
+/* 🔴 כותרת-הבחנה בין שני מצבי-הריק — הערת-מוקאפ, לא טקסט שנבנה. מקווקו כמו .ann */
+.emptycap{margin:10px 0 0; padding:4px 10px; border:1px dashed var(--s300); background:var(--s100);
+     border-radius:var(--r-md); font-size:11px; color:var(--s600); font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- ═══ סרגל-צד ימני ═══ -->
+<aside class="side">
+  <div class="logo">REG-IN</div>
+  <nav>
+    <a class="nav-i"    href="#"><span class="ic">▦</span><span>מסך הבית</span></a>
+    <a class="nav-i"    href="#"><span class="ic">☰</span><span>לקוחות</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▤</span><span>הצעות מחיר</span></a>
+    <a class="nav-i on" href="#"><span class="ic">▣</span><span>פרויקטים</span></a>
+    <a class="nav-i"    href="#"><span class="ic">☺</span><span>דיילות</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▥</span><span>לוגיסטיקה</span></a>
+    <a class="nav-i"    href="#"><span class="ic">₪</span><span>כספים</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▧</span><span>דו"חות</span></a>
+  </nav>
+</aside>
+
+<!-- ═══ סרגל עליון ═══ -->
+<header class="top">
+  <div class="search">
+    <span class="mg">⌕</span>
+    <input type="text" placeholder="חיפוש...">
+  </div>
+  <div class="who">
+    <div class="txt"><span class="nm">דנה כהן</span><span class="rl">מנהלת פרויקטים</span></div>
+    <div class="av">ד</div>
+  </div>
+</header>
+
+<!-- ═══ תוכן ═══ -->
+<main>
+
+  <!-- 🔴 אין כפתור-פעולה ראשי בכותרת, וזו הכרעה ולא השמטה:
+       פרויקט נולד אך ורק מאישור הצעת-מחיר (ה-RPC approve_quote_and_create_project),
+       ולכן "+ פרויקט חדש" היה כפתור משקר. כל שאר פעולות המודול יושבות בכרטיס-הפרויקט.
+       הפירוט וההנמקה: כרטיס-המסך §⑧. -->
+  <div class="phead">
+    <div>
+      <h1>פרויקטים</h1>
+    </div>
+  </div>
+
+  <!-- שני אריחי-מדד. לבן+מסגרת, flex-wrap, תווית מעל ערך.
+       שניהם נספרים על רשימת-הפעילים של הכרעה ⑫ (טרם החל · בתהליך · מוכן לביצוע),
+       ולכן אינם משתנים כשמחליפים לשונית. 🚫 ולעולם אינם ממוזגים לאחוז אחד (⑨). -->
+  <div class="tiles">
+    <div class="tile">
+      <span class="tile-l">אירועים שחסרות בהם דיילות</span>
+      <!-- 🔴 ‏.ltr יושב על *הספרה*, לא על השורה: כילד-flex הוא הופך ל-block, ו-direction:ltr
+           היה מיישר את המספר לשמאל בעוד התווית מימין — בדיוק פיצול תווית-מעל-ערך (חוזה §4.3). -->
+      <span class="tile-v alarm"><span class="ltr">3</span></span>   <!-- רק הספרה אדומה. הרקע לבן. -->
+      <span class="tile-s">מתוכם 1 שלא נשלח בו אף זימון</span>
+    </div>
+    <div class="tile">
+      <span class="tile-l">אירועים שהלוגיסטיקה בהם טרם מוכנה</span>
+      <span class="tile-v"><span class="ltr">2</span></span>
+      <span class="tile-s">‏4 פריטים, אף אחד לא הוזמן</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <!-- שלוש לשוניות על שם *מה שדנה עושה*, לא על שם סטטוס (⑰).
+         המונה בכל לשונית הוא היישום של ⑦ — עבודה שממתינה בלשונית אחרת אינה נעלמת. -->
+    <div class="tabs">
+      <div class="tab on">בעבודה<span class="tab-n ltr">4</span></div>
+      <div class="tab">לסגירה<span class="tab-n ltr">2</span></div>
+      <div class="tab">הכול<span class="tab-n ltr">8</span></div>
+    </div>
+
+    <div class="bar">
+      <span class="spacer">ממוין: חסרים תחילה, ובתוכם לפי קרבת האירוע</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:25%">אירוע</th>
+          <th style="width:13%">מתי</th>
+          <th style="width:11%">דיילות</th>
+          <th style="width:12%">לוגיסטיקה</th>
+          <th style="width:13%">מצב</th>
+          <th style="width:20%">מה חסר</th>
+          <th style="width:6%"></th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- 1 · בעוד 9 ימים · חסרות 5 דיילות, אך יצאו זימונים ⇒ ענבר ולא אדום -->
+        <tr class="click">
+          <td>
+            <div class="pname">כנס לקוחות שנתי</div>
+            <div class="psub2">מדיטק פתרונות בע"מ</div>
+          </td>
+          <td><span class="ltr">22/08/2026</span><span class="calm" style="display:block">בעוד 9 ימים</span></td>
+          <td><span class="ltr">1/6</span><span class="hint" style="display:block">חסרות 5</span></td>
+          <td><span class="ltr">0/2</span><span class="hint" style="display:block">טרם הוזמנו</span></td>
+          <td><span class="tag muted">בתהליך</span></td>
+          <td><span class="hint">‏2 זימונים ממתינים למענה — וגם אם שתיהן יאשרו, עדיין חסרות 3</span></td>
+          <td><a class="link" href="#">לכרטיס →</a></td>
+        </tr>
+
+        <!-- 2 · בעוד 33 יום · חסרה הדיילת היחידה, אבל היא אישרה זמינות ⇒ לחיצה אחת -->
+        <tr class="click">
+          <td>
+            <div class="pname">כנס טכנולוגיה שנתי</div>
+            <div class="psub2">קמפוס טכנולוגי צפון בע"מ</div>
+          </td>
+          <td><span class="ltr">15/09/2026</span><span class="calm" style="display:block">בעוד 33 ימים</span></td>
+          <td><span class="ltr">0/1</span><span class="hint" style="display:block">חסרה 1</span></td>
+          <td><span class="done">✓ אין פריטים</span></td>
+          <td><span class="tag muted">בתהליך</span></td>
+          <td><span class="hint">הדיילת היחידה אישרה זמינות וממתינה לאישור סופי ממך</span></td>
+          <td><a class="link" href="#">לכרטיס →</a></td>
+        </tr>
+
+        <!-- 3 · 🔴 השורה האדומה היחידה בלשונית הזאת.
+             בעוד 45 יום — הרחוקה ביותר — ובכל זאת אדומה, כי לא נשלח בה אף זימון.
+             זו ההוכחה של ⑧: מיקום אומר "כמה קרוב", צבע אומר "כמה חסר". -->
+        <tr class="click block">
+          <td>
+            <div class="pname">⚠ כנס רפואה 2026</div>
+            <div class="psub2">מדיטק פתרונות בע"מ</div>
+          </td>
+          <td><span class="ltr">27/09/2026</span><span class="calm" style="display:block">בעוד 45 ימים</span></td>
+          <td><span class="ltr">0/6</span><span class="miss" style="display:block">חסרות 6</span></td>
+          <td><span class="ltr">0/2</span><span class="hint" style="display:block">טרם הוזמנו</span></td>
+          <td><span class="tag muted">טרם החל</span></td>
+          <td><span class="miss">לא נשלח אף זימון — איש לא נגע בפרויקט מאז שנוצר</span></td>
+          <td><a class="link" href="#">לכרטיס →</a></td>
+        </tr>
+
+        <!-- 4 · האירוע הכי קרוב בכל המסך (בעוד 6 ימים) — ויושב אחרון, כי אין בו חוסר.
+             🔴 זה בדיוק מה ש-F20 קובע: צובעים וממיינים לפי מה חסר, לא לפי כמה זמן נשאר. -->
+        <tr class="click">
+          <td>
+            <div class="pname">השקת מוצר Q3</div>
+            <div class="psub2">הייטק גרופ בע"מ</div>
+          </td>
+          <td><span class="ltr">19/08/2026</span><span class="calm" style="display:block">בעוד 6 ימים</span></td>
+          <td><span class="ltr">4/4</span><span class="done" style="display:block">✓ מאויש</span></td>
+          <td><span class="ltr">2/2</span><span class="done" style="display:block">✓ מוכן</span></td>
+          <td><span class="tag teal">מוכן לביצוע</span></td>
+          <td><span class="calm">הכול סגור — אין מה לעשות</span></td>
+          <td><a class="link" href="#">לכרטיס →</a></td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div class="ann">
+    ▸ מצב 2 מתוך 4 של אותו מסך — לשונית «לסגירה»
+    <span>· הסרגל, הסרגל-העליון והאריחים זהים ואינם מצוירים שוב · שתי עמודות מתחלפות: אחרי
+    שהאירוע התקיים, "לוגיסטיקה" כבר אינה עבודה ו"מה חסר" הוא נתוני-הסגירה</span>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <div class="tab">בעבודה<span class="tab-n ltr">4</span></div>
+      <div class="tab on">לסגירה<span class="tab-n ltr">2</span></div>
+      <div class="tab">הכול<span class="tab-n ltr">8</span></div>
+    </div>
+
+    <div class="bar">
+      <span class="spacer">ממוין: חסרים תחילה, ובתוכם לפי קרבת האירוע</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:25%">אירוע</th>
+          <th style="width:15%">מתי</th>
+          <th style="width:11%">דיילות</th>
+          <th style="width:14%">מצב</th>
+          <th style="width:29%">מה חסר</th>
+          <th style="width:6%"></th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <tr class="click">
+          <td>
+            <div class="pname">יום העיר חדרה</div>
+            <div class="psub2">עיריית חדרה</div>
+          </td>
+          <td><span class="ltr">08/08/2026</span><span class="calm" style="display:block">התקיים לפני 5 ימים</span></td>
+          <td><span class="ltr">5/5</span><span class="done" style="display:block">✓ מאויש</span></td>
+          <td><span class="tag warn">ממתין לסגירה</span></td>
+          <td><span class="hint">ממתין להזנת שעות בפועל, כמות אורחים ודוח-סיכום</span></td>
+          <td><a class="link" href="#">לסגירה →</a></td>
+        </tr>
+
+        <!-- 🔴 השורה האדומה היחידה בלשונית הזאת. זהו פרויקט אמיתי במסד:
+             תאריכו עבר לפני 12 יום, אף זימון לא יצא, ואיש לא שם לב (§7.32). -->
+        <tr class="click block">
+          <td>
+            <div class="pname">⚠ תרחיש-קבלה 5.1</div>
+            <div class="psub2">מדיטק פתרונות בע"מ</div>
+          </td>
+          <td><span class="ltr">01/08/2026</span><span class="calm" style="display:block">התקיים לפני 12 יום</span></td>
+          <td><span class="ltr">0/6</span><span class="miss" style="display:block">אף אחת לא שובצה</span></td>
+          <td><span class="tag warn">ממתין לסגירה</span></td>
+          <td><span class="miss">האירוע עבר ולא נסגר — לא נשלח בו אף זימון מעולם</span></td>
+          <td><a class="link" href="#">לסגירה →</a></td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div class="ann">
+    ▸ מצב 3 מתוך 4 של אותו מסך — לשונית «הכול» עם מסנן-הסטטוס
+    <span>· זה הבית של "בוטל" (⑱) ושל הסטטוסים הכספיים · מדדי-המוכנות מוצגים כ-<b>—</b>
+    לפרויקט מבוטל ולפרויקט שכבר עבר לכספים, כי מוכנות שם חסרת משמעות</span>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <div class="tab">בעבודה<span class="tab-n ltr">4</span></div>
+      <div class="tab">לסגירה<span class="tab-n ltr">2</span></div>
+      <div class="tab on">הכול<span class="tab-n ltr">8</span></div>
+    </div>
+
+    <!-- גלולה מכובה נשארת על המסך ומנמקת את עצמה — לא נעלמת (FilterPill.jsx) -->
+    <div class="bar">
+      <button class="pill on">הכול<span class="pill-n ltr">8</span></button>
+      <button class="pill">טרם החל<span class="pill-n ltr">1</span></button>
+      <button class="pill">בתהליך<span class="pill-n ltr">2</span></button>
+      <button class="pill">מוכן לביצוע<span class="pill-n ltr">1</span></button>
+      <button class="pill">ממתין לסגירה<span class="pill-n ltr">2</span></button>
+      <button class="pill" disabled title="אין כרגע פרויקט בסטטוס הזה">ממתין לחשבונית<span class="pill-n ltr">0</span></button>
+      <button class="pill">ממתין לתשלום<span class="pill-n ltr">1</span></button>
+      <button class="pill" disabled title="אין כרגע פרויקט בסטטוס הזה">פרויקט הסתיים<span class="pill-n ltr">0</span></button>
+      <button class="pill">בוטל<span class="pill-n ltr">1</span></button>
+      <span class="spacer">ממוין: חסרים תחילה, ובתוכם לפי קרבת האירוע</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:25%">אירוע</th>
+          <th style="width:13%">מתי</th>
+          <th style="width:11%">דיילות</th>
+          <th style="width:12%">לוגיסטיקה</th>
+          <th style="width:13%">מצב</th>
+          <th style="width:20%">מה חסר</th>
+          <th style="width:6%"></th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <tr class="click">
+          <td>
+            <div class="pname">יום העיר חדרה</div>
+            <div class="psub2">עיריית חדרה</div>
+          </td>
+          <td><span class="ltr">08/08/2026</span><span class="calm" style="display:block">לפני 5 ימים</span></td>
+          <td><span class="ltr">5/5</span><span class="done" style="display:block">✓ מאויש</span></td>
+          <td><span class="ltr">2/2</span><span class="done" style="display:block">✓ מוכן</span></td>
+          <td><span class="tag warn">ממתין לסגירה</span></td>
+          <td><span class="hint">ממתין להזנת שעות, אורחים ודוח-סיכום</span></td>
+          <td><a class="link" href="#">לכרטיס →</a></td>
+        </tr>
+
+        <tr class="click">
+          <td>
+            <div class="pname">כנס לקוחות שנתי</div>
+            <div class="psub2">מדיטק פתרונות בע"מ</div>
+          </td>
+          <td><span class="ltr">22/08/2026</span><span class="calm" style="display:block">בעוד 9 ימים</span></td>
+          <td><span class="ltr">1/6</span><span class="hint" style="display:block">חסרות 5</span></td>
+          <td><span class="ltr">0/2</span><span class="hint" style="display:block">טרם הוזמנו</span></td>
+          <td><span class="tag muted">בתהליך</span></td>
+          <td><span class="hint">‏2 זימונים ממתינים למענה — וגם אם שתיהן יאשרו, עדיין חסרות 3</span></td>
+          <td><a class="link" href="#">לכרטיס →</a></td>
+        </tr>
+
+        <tr class="click block">
+          <td>
+            <div class="pname">⚠ תרחיש-קבלה 5.1</div>
+            <div class="psub2">מדיטק פתרונות בע"מ</div>
+          </td>
+          <td><span class="ltr">01/08/2026</span><span class="calm" style="display:block">לפני 12 יום</span></td>
+          <td><span class="ltr">0/6</span><span class="miss" style="display:block">אף אחת לא שובצה</span></td>
+          <td><span class="ltr">0/2</span><span class="calm" style="display:block">טרם הוזמנו</span></td>
+          <td><span class="tag warn">ממתין לסגירה</span></td>
+          <td><span class="miss">האירוע עבר ולא נסגר — לא נשלח בו אף זימון</span></td>
+          <td><a class="link" href="#">לכרטיס →</a></td>
+        </tr>
+
+        <tr class="click">
+          <td>
+            <div class="pname">כנס טכנולוגיה שנתי</div>
+            <div class="psub2">קמפוס טכנולוגי צפון בע"מ</div>
+          </td>
+          <td><span class="ltr">15/09/2026</span><span class="calm" style="display:block">בעוד 33 ימים</span></td>
+          <td><span class="ltr">0/1</span><span class="hint" style="display:block">חסרה 1</span></td>
+          <td><span class="done">✓ אין פריטים</span></td>
+          <td><span class="tag muted">בתהליך</span></td>
+          <td><span class="hint">אישרה זמינות וממתינה לאישור סופי ממך</span></td>
+          <td><a class="link" href="#">לכרטיס →</a></td>
+        </tr>
+
+        <tr class="click block">
+          <td>
+            <div class="pname">⚠ כנס רפואה 2026</div>
+            <div class="psub2">מדיטק פתרונות בע"מ</div>
+          </td>
+          <td><span class="ltr">27/09/2026</span><span class="calm" style="display:block">בעוד 45 ימים</span></td>
+          <td><span class="ltr">0/6</span><span class="miss" style="display:block">חסרות 6</span></td>
+          <td><span class="ltr">0/2</span><span class="calm" style="display:block">טרם הוזמנו</span></td>
+          <td><span class="tag muted">טרם החל</span></td>
+          <td><span class="miss">לא נשלח אף זימון — איש לא נגע בפרויקט</span></td>
+          <td><a class="link" href="#">לכרטיס →</a></td>
+        </tr>
+
+        <tr class="click">
+          <td>
+            <div class="pname">השקת מוצר Q3</div>
+            <div class="psub2">הייטק גרופ בע"מ</div>
+          </td>
+          <td><span class="ltr">19/08/2026</span><span class="calm" style="display:block">בעוד 6 ימים</span></td>
+          <td><span class="ltr">4/4</span><span class="done" style="display:block">✓ מאויש</span></td>
+          <td><span class="ltr">2/2</span><span class="done" style="display:block">✓ מוכן</span></td>
+          <td><span class="tag teal">מוכן לביצוע</span></td>
+          <td><span class="calm">הכול סגור — אין מה לעשות</span></td>
+          <td><a class="link" href="#">לכרטיס →</a></td>
+        </tr>
+
+        <!-- 🔴 "בוטל" אינו אדום — ביטול הוא מצב-סיום תקין, לא כשל (חוזה §3.5) -->
+        <tr class="click muted">
+          <td>
+            <div class="pname">ערב לקוחות VIP</div>
+            <div class="psub2">מדיטק פתרונות בע"מ</div>
+          </td>
+          <td><span class="ltr">05/09/2026</span><span class="calm" style="display:block">בעוד 23 ימים</span></td>
+          <td><span class="calm">—</span></td>
+          <td><span class="calm">—</span></td>
+          <td><span class="tag dashed">בוטל</span></td>
+          <td><span class="calm">בוטל <span class="ltr">11/08/2026</span> · ביטול ע"י הלקוח · ‏3 דיילות שוחררו</span></td>
+          <td><a class="link" href="#">לכרטיס →</a></td>
+        </tr>
+
+        <tr class="click muted">
+          <td>
+            <div class="pname">כנס מפיקים ארצי</div>
+            <div class="psub2">אולמי הנשיא הפקות</div>
+          </td>
+          <td><span class="ltr">20/03/2026</span><span class="calm" style="display:block">לפני 146 ימים</span></td>
+          <td><span class="calm">—</span></td>
+          <td><span class="calm">—</span></td>
+          <td><span class="tag muted">ממתין לתשלום</span></td>
+          <td><span class="calm">אצל מנהלת הכספים — אינו דורש ממך פעולה</span></td>
+          <td><a class="link" href="#">לכרטיס →</a></td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div class="ann">
+    ▸ מצב 4 מתוך 4 — שני מצבי-הריק, ו-🚫 <b>אינם אותו מסך</b>
+    <span>· הפעולה הנכונה הפוכה בכל אחד מהם, ולכן אסור לאחד אותם (חוזה §5.7)</span>
+  </div>
+
+  <div class="emptywrap">
+    <div class="card">
+      <div class="emptycap">▸ מצב א׳ — אין נתונים בכלל <span style="font-weight:400">(הערת-מוקאפ)</span></div>
+      <div class="empty">
+        <span class="g">🗂️</span>
+        עדיין אין פרויקטים במערכת.<br>
+        פרויקט נוצר מעצמו ברגע שהצעת מחיר מאושרת — אין כאן יצירה ידנית.
+        <div style="margin-top:10px"><a class="link" href="#">למסך הצעות מחיר →</a></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="emptycap">▸ מצב ב׳ — אין תוצאות לסינון <span style="font-weight:400">(הערת-מוקאפ)</span></div>
+      <div class="empty">
+        <span class="g">🔍</span>
+        אין פרויקט התואם למסנן שבחרת.<br>
+        <span class="calm">‏8 פרויקטים קיימים ואינם מוצגים כרגע.</span>
+        <div style="margin-top:10px"><a class="link" href="#">נקה סינון</a></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div class="ann">
+    ▸ הערת-מוקאפ — <b>אינה חלק מהמסך</b>, ונכתבה כדי שאפשר יהיה לשפוט את הצבע
+    <span><br>
+    🔴 <b>אדום</b> = לא נשלח אף זימון לדיילת. זה המימד היחיד שבו "אפס" פירושו שאיש לא נגע בפרויקט —
+    שורות הלוגיסטיקה נולדות אוטומטית עם הפרויקט, ולכן "טרם הוזמן" אינו סימן שמישהו הזניח.
+    <br>🟠 <b>ענבר</b> = חסר שיש לו מענה בדרך, או שממתין ללחיצה שלך.
+    <br>⚪ <b>אפור</b> = עובדה, ואין בה מה לעשות.
+    <br>🚫 <b>קרבת-האירוע לעולם אינה נצבעת</b> — היא מופיעה כטקסט ומשפיעה על סדר-המיון בלבד (F20 · ⑯).
+    <br>✅ <b>מבחן שחור-לבן:</b> כל שורה כאן נקראת במלואה גם בלי צבע — המילים "חסרות 5" · "לא נשלח אף זימון" ·
+    "אין מה לעשות" נושאות את כל המשמעות, והצבע רק מדגיש.</span>
+  </div>
+
+  <!-- שורת-מקורות — חובה. §7 -->
+  <div class="srcline">
+    <b>🏷️ מקורות הנתונים במסך הזה</b> · <b>"היום" במוקאפ = <span class="ltr">13/08/2026</span></b><br>
+
+    <b>🌱 מהמסד</b> (נשלף חי ב-<span class="ltr">13/08/2026</span>, מרוכז ב-<code>_mockup-data.md</code>):
+    <code>projects.event_name</code> · <code>projects.customer_name</code> ·
+    <code>projects.final_event_date</code> · <code>projects.required_hostess_count</code> ·
+    <code>projects.project_status</code> · <code>assignments.assignment_status</code> +
+    <code>assignments.assignment_number</code> · <code>logistics.item_status</code> ·
+    <code>customers.company_name</code>.
+    <b>ארבעת האירועים האמיתיים:</b> כנס לקוחות שנתי · כנס רפואה 2026 · כנס טכנולוגיה שנתי ·
+    תרחיש-קבלה 5.1. <b>הלקוחות:</b> כל חמשת השמות במסך אמיתיים.<br>
+
+    <b>🎭 דמו</b> (מומצא ומסומן ב-<code>_mockup-data.md §2️⃣</code> — <b>האירוע מומצא, הלקוח אמיתי</b>):
+    השקת מוצר Q3 · יום העיר חדרה · ערב לקוחות VIP (כולל חותמת-הביטול <span class="ltr">11/08/2026</span>
+    וסוג הביטול) · כנס מפיקים ארצי. ➕ <b>וגם ארבעת הסטטוסים שבמסך</b> — במסד כל ארבעת הפרויקטים
+    האמיתיים יושבים על <code>not_started</code>, כי אין טריגר שכותב <code>project_status</code>;
+    המוקאפ מצייר את מכונת-הסטטוס של האפיון ולא את הבאג. ➕ <b>"דנה כהן"</b> — הפרסונה "דנה" מהאפיון,
+    שם-המשפחה מהשלד בחוזה-העיצוב.<br>
+
+    <b>📐 נגזר</b> (מחושב בזמן-קריאה; 🚫 אין לו עמודות ואין לו טריגר):
+    <b>מדד דיילות</b> = ספירת <code>finally_approved</code> בשורה האחרונה פר-דיילת
+    (<code>MAX(assignment_number)</code>) חלקי <code>required_hostess_count</code> ·
+    <b>מדד לוגיסטיקה</b> = <code>COUNT(item_status='ready') / COUNT(*)</code>, <b>ואפס שורות נספר כהושלם</b> ·
+    <b>"בעוד N ימים"</b> = <code>final_event_date</code> פחות <span class="ltr">13/08/2026</span> ·
+    <b>מוני-הלשוניות</b> (‏4 · 2 · 8) = קיבוץ הסטטוסים לפי ⑰ ·
+    <b>שני האריחים</b> = ספירה על רשימת-הפעילים של ⑫ ·
+    <b>"‏2 זימונים ממתינים למענה"</b> = ספירת <code>pending</code> באותה שורה-אחרונה.<br>
+
+    <b>➕ חדש — דורש שורה ב-<code>db_roadmap</code>, ואינו קיים היום:</b>
+    <b>(א)</b> <code>projects.cancelled_at</code> ועמודת <b>סוג-ביטול</b> — בלעדיהן שורת "בוטל"
+    שבלשונית "הכול" אינה ניתנת לציור (יש רק <code>cancel_reason</code> טקסט חופשי) ·
+    <b>(ב)</b> <b>עבודת <code>pg_cron</code> יומית</b> שכותבת <code>event_finished</code> — בלעדיה
+    לשונית "לסגירה" תמיד ריקה, כי איש אינו כותב את הסטטוס ·
+    <b>(ג)</b> <b><code>policy</code> קריאה על <code>logistics</code></b> — הטבלה היום
+    <code>deny-all</code> (אפס policies), ועמודת הלוגיסטיקה אינה ניתנת לטעינה כלל ·
+    <b>(ד)</b> <b>קריאת <code>assignments</code> לבעלי הרשאת "פרויקטים"</b> — ה-policy הקיימת
+    דורשת הרשאה על "דיילות". הפירוט המלא: כרטיס-המסך, סעיף "מה המשטח דורש מהמסד".
+  </div>
+
+</main>
+</body>
+</html>

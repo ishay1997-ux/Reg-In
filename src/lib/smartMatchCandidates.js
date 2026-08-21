@@ -23,6 +23,47 @@ import { finalAssignmentRows, weeksSinceLastWorked, eventWasCancelled } from '@/
 // נספר **לזכותה**: הצ'יפ `עבדה אצל <לקוח> N×` מונה אירוע שבו לא עבדה אף שעה, וזווית
 // המיון "עבדה אצל הלקוח הזה" מעלה אותה על סמך היכרות שלא התקיימה.
 // 🔑 **הצד הזה של הכלל הוא הכרעה חדשה ולא גזירה** — ולכן הוא מתועד כאן ולא נטען כמובן-מאליו.
+// עברה תאריך-האירוע? "היום" ← מ-`todayIso`, בדיוק כמו `countWorkedForCustomer`/
+// `weeksSinceLastWorked` שמעליי — אותו מבחן `String(date) < String(todayIso)`.
+function eventHasPassed(row, todayIso) {
+  const eventDate = row?.projects?.final_event_date
+  return Boolean(eventDate) && String(eventDate) < String(todayIso)
+}
+
+// 🔴 §2.7 — התרגום מ-שורות-מסד גולמיות לקלט ש-`reliabilityScore` (`smartMatch.js`) יודעת
+// לפענח. **רק שתי המשפחות שנחשבות עובדה** נכנסות לרשימה:
+// ‏① `finally_approved` **שנסגר בפועל** (`attendance_status` אינו `null` — האירוע נסגר
+//    במשטח-הסגירה של מודול 6) · ② `assignment_status === 'approval_withdrawn'` — הענף
+//    הנפרד של §2.7#2, שאינו נושא עמודות-נוכחות בכלל.
+// 🚫 **שיבוץ `finally_approved` שטרם נסגר (שלוש העמודות `null` — צורה חוקית לגמרי לפי
+// `assignments_attendance_shape`) אינו נכנס לרשימה** — הוא "עדיין אין עובדה", לא "צירוף
+// לא-מוכר"; ההבחנה בין השניים חייבת לקרות **כאן**, לפני `resolveAttendanceOutcome`, אחרת
+// כל שיבוץ פתוח היה נזרק כשגיאת-מיפוי. שאר הסטטוסים (`pending`/`declined`/`released`/
+// `confirmed_available`) אינם רלוונטיים לאמינות-הגעה כלל ואינם מייצרים רשומה.
+function buildAttendanceRecords(finalRows, todayIso) {
+  const records = []
+  for (const row of finalRows ?? []) {
+    if (!row) continue
+
+    const isWithdrawn = row.assignment_status === 'approval_withdrawn'
+    const isClosedApproval =
+      row.assignment_status === 'finally_approved' &&
+      row.attendance_status !== null &&
+      row.attendance_status !== undefined
+    if (!isWithdrawn && !isClosedApproval) continue
+
+    records.push({
+      assignment_status: row.assignment_status,
+      attendance_status: row.attendance_status ?? null,
+      lateness_level: row.lateness_level ?? null,
+      no_show_reason: row.no_show_reason ?? null,
+      projectCancelled: eventWasCancelled(row),
+      eventPassed: eventHasPassed(row, todayIso),
+    })
+  }
+  return records
+}
+
 function countWorkedForCustomer(finalRows, customerId, todayIso) {
   if (customerId === null || customerId === undefined) return 0
   const projects = new Set()
@@ -76,9 +117,11 @@ export function buildSmartMatchCandidates(
       unavailability: hostess.hostess_unavailability ?? [],
       hasSameDayFinalAssignment: sameDay.has(hostess.hostess_id),
       preference: preferenceByHostess.get(hostess.hostess_id) ?? null,
-      // 🚧 מ6 — סימוני-הנוכחות נוצרים בסגירת האירוע ואינם קיימים היום. מערך ריק ולא
-      // אפס: `reliabilityScore` על מערך ריק הוא "אין נתונים", בעוד אפס הוא "נכשלה".
-      attendance: [],
+      // ✅ §2.7 (14/08/2026) — מוזנת משורות-`assignments` אמיתיות דרך `buildAttendanceRecords`
+      // (למעלה בקובץ). מערך ריק ולא אפס: `reliabilityScore` על מערך ריק הוא "אין נתונים",
+      // בעוד אפס הוא "נכשלה". ⚠️ המרכיב עצמו נשאר במשקל 0 עד ש-מ9 ידליק את
+      // `מרכיב_אמינות_פעיל` — הצינור-הזה כבר עובד כדי שההדלקה תהיה שינוי-פרמטר בלבד.
+      attendance: buildAttendanceRecords(finalRows, todayIso),
 
       // ── מה שצ'יפי-ההנמקה מציגים (אינם משפיעים על הציון) ──
       workedForCustomerCount: countWorkedForCustomer(finalRows, project?.customer_id, todayIso),

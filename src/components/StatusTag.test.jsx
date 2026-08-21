@@ -3,6 +3,7 @@
 // מסכים היה גורם למנהלת לפעול על שורה שלא צריכה אותה — ולכן המיפוי נבדק ולא רק נכתב.
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { PROJECT_STATUS_TONES } from '@/lib/projects'
 import StatusTag from './StatusTag'
 
 const classOf = (label, props = {}) => {
@@ -38,6 +39,24 @@ describe('StatusTag', () => {
 
   it('תווית לא-מוכרת אינה מפילה את המסך — נופלת ל-muted', () => {
     expect(classOf('משהו שלא קיים')).toContain('bg-slate-100')
+  })
+
+  it('🔴 שמונת סטטוסי-הפרויקט (מודול 6) הגיעו ב-spread וכל אחד פותר את הטון שנקבע לו', () => {
+    // התוויות מיובאות מ-`src/lib/projects.js` ולא מוקלדות כאן מחדש — בדיוק הכלל
+    // שהרכיב עצמו מקיים: תווית שהוקלדה שוב ונבדלת בתו אחד נופלת ל-muted בלי שגיאה.
+    // המקרה האדום (תווית לא-ממופה) חי בשומר ① של `projects.guards.test.js` — לא משוכפל.
+    const CLASS_BY_TONE = {
+      ok: 'bg-green-100',
+      teal: 'bg-teal-100',
+      muted: 'bg-slate-100',
+      warn: 'bg-amber-200',
+      dashed: 'border-dashed',
+    }
+    const entries = Object.entries(PROJECT_STATUS_TONES)
+    expect(entries).toHaveLength(8)
+    for (const [label, tone] of entries) {
+      expect(classOf(label), label).toContain(CLASS_BY_TONE[tone])
+    }
   })
 
   it('בלי תווית — לא מרונדר דבר (שורה בלי סטטוס לא מקבלת גלולה ריקה)', () => {

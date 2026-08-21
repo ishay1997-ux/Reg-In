@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מוקאפ מ6 · משטח 3 — לשונית לוגיסטיקה ומוצרים</title>
+<style>
+/* ═══ טוקנים — מדודים 13/08/2026. אל תשנה ערך. ═══
+   --primary : מילולי ב-src/index.css:61 (צבע-המותג, PROJECT_MASTER §4)
+   השאר      : המרת oklch→sRGB מ-node_modules/tailwindcss/theme.css @ 4.3.3
+   🔴 אלה *אינם* ערכי Tailwind-3 — ר' §1.2. אל תעתיק הקסה ממוקאפ ישן.
+   --r*      : @theme inline (radius = 0.625rem)                          */
+:root{
+  --primary:#0D9488;
+  --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4; --teal500:#00BBA7;
+  --teal600:#009689; --teal700:#00786F;
+  --green50:#F0FDF4; --green100:#DCFCE7; --green200:#B9F8CF; --green700:#008236;
+  --amber50:#FFFBEB; --amber100:#FEF3C6; --amber200:#FEE685; --amber700:#BB4D00; --amber800:#973C00;
+  --red50:#FEF2F2; --red100:#FFE2E2; --red200:#FFC9C9; --red500:#FB2C36; --red600:#E7000B;
+  --s50:#F8FAFC; --s100:#F1F5F9; --s200:#E2E8F0; --s300:#CAD5E2;
+  --s400:#90A1B9; --s500:#62748E; --s600:#45556C; --s700:#314158; --s800:#1D293D;
+  /* רדיוסים: --radius=0.625rem ⇒ sm 6 · md 8 · lg 10 · xl 14 · 2xl 18 */
+  --r-md:8px; --r-lg:10px; --r-xl:14px; --r-2xl:18px;
+  --sidebar:240px;   /* w-60  */
+  --topbar:64px;     /* h-16  */
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  background:var(--s50); color:var(--s800);
+  font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif;
+  font-size:14px; line-height:1.5;
+}
+
+/* ═══ הכלל שנשבר הכי הרבה: כל ערך שאינו עברית טהורה עובר דרך .ltr ═══
+   מקור: src/components/Money.jsx:23-24 · RatingStars.jsx:78-79            */
+.ltr{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
+
+/* ── סרגל-צד ימני (Sidebar.jsx) — מאפיינים פיזיים בלבד (right/left), לא הלוגיים ── */
+.side{position:fixed; top:0; right:0; width:var(--sidebar); height:100vh;
+      background:#fff; border-left:1px solid var(--s200); display:flex; flex-direction:column; z-index:30}
+.side .logo{height:var(--topbar); display:flex; align-items:center; justify-content:center;
+      border-bottom:1px solid var(--s100); font-weight:700; color:var(--teal700); letter-spacing:.5px}
+.side nav{padding:12px 8px; display:flex; flex-direction:column; gap:4px}
+.nav-i{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--r-lg);
+      font-size:14px; font-weight:500; color:var(--s600); text-decoration:none}
+.nav-i .ic{width:20px; text-align:center; font-size:15px; flex:none}
+.nav-i.on{background:var(--teal50); color:var(--teal700)}   /* פריט פעיל — §4 */
+
+/* ── סרגל עליון (Topbar.jsx) ── */
+.top{position:fixed; top:0; left:0; right:var(--sidebar); height:var(--topbar); background:#fff;
+     border-bottom:1px solid var(--s200); display:flex; align-items:center;
+     justify-content:space-between; padding:0 24px; z-index:20}
+/* זכוכית-מגדלת בימין + padding-right — הוכרע ב-Topbar.jsx, לא לבחור מחדש */
+.search{position:relative; width:288px; max-width:100%}
+.search .mg{position:absolute; right:12px; top:50%; transform:translateY(-50%);
+     color:var(--s400); font-size:13px}
+.search input{width:100%; height:36px; border:1px solid var(--s200); border-radius:var(--r-lg);
+     background:var(--s50); padding:0 36px 0 12px; font:inherit; font-size:14px; color:var(--s500)}
+.search input::placeholder{color:var(--s400)}
+.who{display:flex; align-items:center; gap:8px}
+.who .txt{display:flex; flex-direction:column; align-items:flex-end; line-height:1.3}
+.who .nm{font-size:14px; font-weight:500; color:var(--s800)}
+.who .rl{font-size:12px; color:var(--s500)}
+.who .av{width:36px; height:36px; border-radius:999px; background:var(--primary); color:#fff;
+     display:flex; align-items:center; justify-content:center; font-weight:600}
+
+/* ── תוכן ── */
+main{margin-right:var(--sidebar); padding:calc(var(--topbar) + 24px) 24px 40px}
+.phead{display:flex; align-items:flex-start; justify-content:space-between;
+     gap:16px; flex-wrap:wrap; margin-bottom:16px}
+h1{font-size:20px; font-weight:700; color:var(--s800)}
+.psub{font-size:12px; color:var(--s500); margin-top:2px}
+
+/* ── אריחי-מדד (StatTile.jsx) — flex-wrap, לבן+מסגרת, לעולם לא מילוי ── */
+.tiles{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px}
+.tile{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     padding:16px; display:flex; flex-direction:column; gap:2px; min-width:150px}
+.tile-l{font-size:12px; color:var(--s500)}
+.tile-v{font-size:20px; font-weight:700; color:var(--s800)}
+.tile-v.alarm{color:var(--red600)}      /* רק הספרה. הרקע נשאר לבן. */
+.tile-s{font-size:11px; color:var(--s500)}
+.tile-empty{font-size:14px; color:var(--s400)}   /* "אין נתונים עדיין" — לא 0 */
+
+/* ── כרטיס-תוכן ── */
+.card{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     box-shadow:0 1px 2px rgba(15,23,42,.06); padding:0 16px 14px}
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--s200); margin:0 -16px 12px; padding:0 16px}
+.tab{padding:11px 16px; font-size:14px; font-weight:500; color:var(--s500);
+     border-bottom:2px solid transparent}
+.tab.on{color:var(--teal700); border-bottom-color:var(--primary); font-weight:600}
+
+/* ── סרגל-מסננים (FilterPill.jsx) ── */
+.bar{display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:2px 0 12px}
+.pill{border:1px solid var(--s200); background:#fff; color:var(--s600);
+     border-radius:999px; padding:4px 12px; font:inherit; font-size:12.5px; cursor:pointer}
+.pill.on{background:var(--teal50); border-color:var(--teal200); color:var(--teal700); font-weight:600}
+.pill.warn-on{background:var(--amber50); border-color:var(--amber200); color:var(--amber700); font-weight:600}
+.pill[disabled]{opacity:.5; cursor:not-allowed}   /* נשאר ומנומק, לא נעלם */
+.spacer{margin-right:auto; color:var(--s400); font-size:12px}  /* mr-auto דוחף שמאלה */
+
+/* ── כפתורים (button.jsx + הדריסות בפועל) ── */
+.btn{border-radius:var(--r-lg); font:inherit; font-size:14px; font-weight:600;
+     padding:8px 16px; border:1px solid transparent; cursor:pointer; white-space:nowrap}
+/* 🔴 --primary ולא --teal600: שני הטורקיזים חיים במקביל, והמותג מנצח (§1.2) */
+.btn.primary{background:var(--primary); color:#fff}            /* אחד למסך */
+.btn.primary:hover{background:var(--teal700)}
+.btn.sec{background:#fff; border-color:var(--s300); color:var(--s700); font-weight:500}
+.btn.quiet{background:none; border:0; color:var(--s500); padding:4px 8px; font-weight:500}
+.btn[disabled]{opacity:.5; cursor:not-allowed}
+.link{color:var(--teal700); font-size:12.5px; font-weight:600; text-decoration:none; white-space:nowrap}
+/* פעולת-שורה (RowAction.jsx) — ריבוע 30px ממוסגר */
+.ract{width:30px; height:30px; border-radius:var(--r-md); border:1px solid var(--s200);
+     background:#fff; color:var(--s600); display:inline-flex; align-items:center;
+     justify-content:center; cursor:pointer}
+.ract.ok{border-color:var(--green200); background:var(--green50); color:var(--green700)}
+.ract.no{border-color:var(--red200); background:var(--red50); color:var(--red600)}
+
+/* ── טבלה (RepositoryTab.jsx) ── */
+table{width:100%; border-collapse:collapse}
+th{font-size:12px; font-weight:600; color:var(--s500); text-align:right;
+   padding:6px 10px; border-bottom:1px solid var(--s200); white-space:nowrap}
+td{padding:10px; border-bottom:1px solid var(--s100); vertical-align:middle}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--s50)}
+tr.muted td{background:var(--s50); color:var(--s500)}       /* הושלם / בוטל */
+tr.block td{background:var(--red50)}                         /* 1–2 למסך. §3.3 */
+.pname{font-weight:600}
+.psub2{font-size:11.5px; color:var(--s500); margin-top:1px}
+
+/* ── תגיות-סטטוס (StatusTag.jsx) — העתק את הטונים, אל תמציא ── */
+.tag{display:inline-block; white-space:nowrap; border-radius:999px;
+     padding:2px 10px; font-size:11px; font-weight:600}
+.tag.ok     {background:var(--green100); color:var(--green700)}
+.tag.teal   {background:var(--teal100);  color:var(--teal700)}
+.tag.muted  {background:var(--s100);     color:var(--s500)}
+.tag.warn   {background:var(--amber200); color:var(--amber800)}
+.tag.outline{background:var(--s100); color:var(--s600); border:1px solid var(--s200)}
+.tag.dashed {background:var(--s100); color:var(--s500); border:1px dashed var(--s300)}
+
+/* ── טקסט-חוסר: המילה נושאת את המשמעות, הצבע רק מדגיש (§3.4) ── */
+.miss{color:var(--red600); font-size:11.5px; font-weight:600}
+.hint{color:var(--amber700); font-size:11px; font-weight:600}
+.calm{color:var(--s400); font-size:11.5px}
+
+/* ── שדות-קלט (input.jsx) — placeholder חובה בכל שדה ריק ── */
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.fld{display:flex; flex-direction:column; gap:4px}   /* תווית וערך יחד. §4.3 */
+.fld label{font-size:12px; color:var(--s500)}
+.fld input,.fld select,.fld textarea{height:36px; border:1px solid var(--s200);
+     border-radius:var(--r-lg); background:#fff; padding:0 12px; font:inherit; font-size:14px;
+     color:var(--s800); width:100%}
+.fld textarea{height:auto; padding:8px 12px; resize:vertical}
+.fld input::placeholder,.fld textarea::placeholder{color:var(--s400)}
+.fld .help{font-size:11px; color:var(--s500)}
+.fld .err{font-size:11px; color:var(--red600); font-weight:600}
+.fld input.bad{border-color:var(--red600)}
+
+/* ── דיאלוג (dialog.jsx) — משטחים 6 ו-7 ── */
+.dlg{background:#fff; border-radius:var(--r-2xl); box-shadow:0 10px 30px rgba(15,23,42,.18);
+     width:520px; max-width:100%; padding:20px; position:relative}
+.dlg .x{position:absolute; left:16px; top:16px; color:var(--s400); font-size:16px;
+     background:none; border:0; cursor:pointer}   /* סגירה בשמאל — RTL */
+.dlg h2{font-size:18px; font-weight:700; color:var(--s800); text-align:right}
+.dlg .lead{font-size:12.5px; color:var(--s500); margin:4px 0 14px}
+.dlg footer{display:flex; justify-content:flex-start; gap:8px; margin-top:18px}  /* justify-start */
+/* באנר-אזהרה בתוך דיאלוג — ענבר, לא אדום: זו הודעה, לא כשל */
+.warn{background:var(--amber50); border:1px solid var(--amber200); color:var(--amber800);
+     border-radius:var(--r-lg); padding:9px 12px; font-size:12px; line-height:1.65; margin-bottom:14px}
+
+/* ── מצב-ריק ── */
+.empty{padding:24px; text-align:center; font-size:12.5px; color:var(--s500)}
+.empty .g{display:block; font-size:22px; margin-bottom:6px}
+
+/* ── שורת-מקורות (§7) — חובה בכל מוקאפ ── */
+.srcline{margin-top:16px; padding:10px 12px; background:#fff; border:1px solid var(--s200);
+     border-radius:var(--r-lg); font-size:11.5px; color:var(--s500); line-height:1.85}
+.srcline b{color:var(--s700)}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   מחלקות שנוספו למשטח 3 בלבד. 🔴 אף ערך למעלה לא שונה — רק תוספות.
+   (חוזה-העיצוב §0 כלל 1: "מותר להוסיף מחלקות; אסור לשנות ערך קיים".)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* אזור-הזהות של כרטיס-הפרויקט — שייך למשטח 2 ומצויר כאן כהקשר בלבד.
+   תווית וערך באותו div, בסדר תווית→ערך (חוזה §4.3 — הבאג שקרה שלוש פעמים). */
+.ident{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     padding:12px 16px; margin-bottom:12px; display:flex; flex-wrap:wrap; gap:10px 28px}
+.cell{display:flex; flex-direction:column; gap:1px}
+.lbl{font-size:11px; color:var(--s500)}
+.val{font-size:13.5px; font-weight:600; color:var(--s800)}
+
+/* כותרת-מקטע בתוך הכרטיס (text-lg font-bold slate-800 — חוזה §2.1) */
+.sec{margin-top:22px}
+.sec h2{font-size:18px; font-weight:700; color:var(--s800)}
+.sec .lead2{font-size:12px; color:var(--s500); margin:2px 0 10px}
+
+/* דלתא של שינוי-תכולה — עובדה, לכן לבן+טקסט ולא מילוי (חוזה §3.1) */
+.delta{font-weight:700; font-size:13.5px; color:var(--s800)}
+.money{font-weight:600; color:var(--s700)}
+.totrow{margin-top:10px; padding-top:10px; border-top:1px solid var(--s200);
+     font-size:12.5px; color:var(--s600)}
+
+/* שני מצבי-הריק, זה לצד זה — 🚫 אסור לאחד אותם (חוזה §5.7) */
+.states{display:flex; flex-wrap:wrap; gap:12px}
+.state{flex:1 1 320px; background:#fff; border:1px solid var(--s200);
+     border-radius:var(--r-xl); box-shadow:0 1px 2px rgba(15,23,42,.06)}
+.state .cap{font-size:11px; color:var(--s500); border-bottom:1px solid var(--s100);
+     padding:8px 12px}
+.demoband{margin-top:28px; padding:8px 12px; background:var(--s100); border:1px dashed var(--s300);
+     border-radius:var(--r-lg); font-size:11.5px; color:var(--s600)}
+.errline{color:var(--red600); font-size:12.5px; font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- ═══ סרגל-צד ימני ═══ -->
+<aside class="side">
+  <div class="logo">REG-IN</div>
+  <nav>
+    <a class="nav-i"    href="#"><span class="ic">▦</span><span>מסך הבית</span></a>
+    <a class="nav-i"    href="#"><span class="ic">☰</span><span>לקוחות</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▤</span><span>הצעות מחיר</span></a>
+    <a class="nav-i on" href="#"><span class="ic">▣</span><span>פרויקטים</span></a>
+    <a class="nav-i"    href="#"><span class="ic">☺</span><span>דיילות</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▥</span><span>לוגיסטיקה</span></a>
+    <a class="nav-i"    href="#"><span class="ic">₪</span><span>כספים</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▧</span><span>דו"חות</span></a>
+  </nav>
+</aside>
+
+<!-- ═══ סרגל עליון ═══ -->
+<header class="top">
+  <div class="search">
+    <span class="mg">⌕</span>
+    <input type="text" placeholder="חיפוש...">
+  </div>
+  <div class="who">
+    <div class="txt"><span class="nm">דנה כהן</span><span class="rl">מנהלת פרויקטים</span></div>
+    <div class="av">ד</div>
+  </div>
+</header>
+
+<!-- ═══ תוכן ═══ -->
+<main>
+
+  <!-- כותרת + אזור-הזהות: מעטפת של משטח 2. מצוירים כאן מוקטנים כדי שהלשונית
+       תהיה קריאה לבדה, ו-🚫 אינם מגדירים את משטח 2 — הוא הבעלים שלהם. -->
+  <div class="phead">
+    <div>
+      <h1>כנס לקוחות שנתי</h1>
+      <div class="psub">מדיטק פתרונות בע"מ · <a class="link" href="#">חזרה לרשימת הפרויקטים</a></div>
+    </div>
+  </div>
+
+  <div class="ident">
+    <div class="cell"><span class="lbl">תאריך האירוע</span><span class="val ltr">22/08/2026</span></div>
+    <div class="cell"><span class="lbl">שעות</span><span class="val ltr">18:00–22:00</span></div>
+    <div class="cell"><span class="lbl">מיקום</span><span class="val">אקספו תל אביב, ביתן 2</span></div>
+    <div class="cell"><span class="lbl">אורחים מוערכים</span><span class="val ltr">300</span></div>
+    <div class="cell"><span class="lbl">מצב הפרויקט</span><span class="val"><span class="tag teal">בתהליך</span></span></div>
+    <div class="cell"><span class="lbl">מתי</span><span class="val">בעוד 9 ימים</span></div>
+  </div>
+
+  <div class="card">
+
+    <!-- שלוש הלשוניות של כרטיס-הפרויקט (C5 §5.6.7). אזור-הזהות אינו לשונית. -->
+    <div class="tabs">
+      <div class="tab on">לוגיסטיקה ומוצרים</div>
+      <div class="tab">צוות דיילות</div>
+      <div class="tab">סגירת אירוע</div>
+    </div>
+
+    <!-- שלושת האריחים עונים על שלוש שאלות הלשונית: מה מוכן · מה השתנה · כמה זה עלה.
+         לבן + מסגרת, לעולם לא מילוי-צבע (StatTile.jsx) · flex-wrap ולא grid. -->
+    <div class="tiles" style="margin-bottom:12px">
+      <div class="tile">
+        <span class="tile-l">פריטים מוכנים</span>
+        <span class="tile-v"><span class="ltr">0</span> מתוך <span class="ltr">2</span></span>
+        <span class="hint" style="margin-top:2px">טרם הוזמן אף פריט</span>
+      </div>
+      <div class="tile">
+        <span class="tile-l">שינויי תכולה</span>
+        <span class="tile-v"><span class="ltr">2</span></span>
+        <span class="tile-s">האחרון היום, <span class="ltr">09:15</span></span>
+      </div>
+      <div class="tile">
+        <span class="tile-l">השפעת השינויים על ההכנסה</span>
+        <span class="tile-v"><span class="ltr">+85.00 ₪</span></span>
+        <span class="tile-s">אחרי הנחת הלקוח</span>
+      </div>
+    </div>
+
+    <!-- סרגל: שורת-המיון נדחפת שמאלה ב-mr-auto · הפעולה הראשית האחת של הלשונית -->
+    <div class="bar">
+      <span class="spacer">ממוין: מה שרחוק ביותר ממוכן — תחילה</span>
+      <button class="btn primary" style="padding:6px 16px;font-size:13px">שינוי תכולה</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:46%">פריט</th>
+          <th style="width:17%">כמות מתוכננת</th>
+          <th style="width:15%">כמות בפועל</th>
+          <th style="width:22%">מצב הפריט</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- שורה שהתכולה שלה גדלה: ההגדלה יוצרת חוסר ⇒ ענבר.
+             🔑 הצבע כאן הוא "מה חסר", לא "כמה זמן נשאר" (F20). -->
+        <tr>
+          <td>
+            <div class="pname">תג שם רגיל - ממותג</div>
+            <div class="psub2"><span class="ltr">B-REG-TAG</span> · ללא צבע מוגדר · מקור: שורה <span class="ltr">2</span> בהצעה <span class="ltr">#6</span></div>
+          </td>
+          <td>
+            <div class="delta ltr">380</div>
+            <div class="hint">⚠ הוגדל מ-<span class="ltr">300</span> · <span class="ltr">11/08</span></div>
+          </td>
+          <td><span class="ltr">0</span></td>
+          <td><span class="tag muted">טרם החל</span></td>
+        </tr>
+
+        <!-- שורה שהתכולה שלה קטנה: הקטנה אינה יוצרת חוסר ⇒ אפור, לא ענבר. -->
+        <tr>
+          <td>
+            <div class="pname">שרוך בד - ממותג</div>
+            <div class="psub2"><span class="ltr">B-FAB-LAN</span> · ללא צבע מוגדר · מקור: שורה <span class="ltr">3</span> בהצעה <span class="ltr">#6</span></div>
+          </td>
+          <td>
+            <div class="delta ltr">250</div>
+            <div class="calm">הוקטן מ-<span class="ltr">300</span> · <span class="ltr">13/08</span></div>
+          </td>
+          <td><span class="ltr">0</span></td>
+          <td><span class="tag muted">טרם החל</span></td>
+        </tr>
+
+      </tbody>
+    </table>
+
+    <!-- מסביר למה אי-אפשר ללחוץ על המצב מכאן. לא קישוט: זו התשובה לשאלה
+         "למה זה לא לחיץ" שאחרת נשאלת מול המסך. -->
+    <div class="calm" style="margin-top:8px">
+      שלושת מצבי הפריט, לפי הסדר: <b>טרם החל</b>, <b>הוזמן</b>, <b>מוכן</b>.
+      מי שמעדכנת אותם היא מנהלת הלוגיסטיקה, במסך שלה. כאן הם לקריאה בלבד.
+    </div>
+
+    <!-- ═══ היסטוריית שינויי-התכולה — יושבת כאן בהכרעת-ישי:
+         "מנהלת הפרויקטים משנה, בלוגיסטיקה מתעדכנת הדרישה" ═══ -->
+    <div class="sec">
+      <h2>היסטוריית שינויי תכולה</h2>
+      <div class="lead2">ההצעה עצמה נעולה ואינה משתנה. כל שינוי נרשם כאן עם סיבה, ומעדכן את הכמות המתוכננת בטבלה שלמעלה.</div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width:15%">מתי</th>
+            <th style="width:22%">פריט</th>
+            <th style="width:14%">השינוי</th>
+            <th style="width:27%">סיבה</th>
+            <th style="width:12%">מי ביצעה</th>
+            <th style="width:10%">השפעה על ההכנסה</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="ltr">13/08/2026 09:15</span></td>
+            <td>שרוך בד - ממותג</td>
+            <td>
+              <div class="delta ltr">−50</div>
+              <div class="calm ltr">300 → 250</div>
+            </td>
+            <td>הלקוח צמצם — שרוכים למרצים ולצוות בלבד</td>
+            <td>דנה כהן</td>
+            <td><span class="money ltr">−300.00 ₪</span></td>
+          </tr>
+          <tr>
+            <td><span class="ltr">11/08/2026 14:22</span></td>
+            <td>תג שם רגיל - ממותג</td>
+            <td>
+              <div class="delta ltr">+80</div>
+              <div class="calm ltr">300 → 380</div>
+            </td>
+            <td>הלקוח הגדיל את רשימת המוזמנים ל-<span class="ltr">380</span> משתתפים</td>
+            <td>דנה כהן</td>
+            <td><span class="money ltr">+400.00 ₪</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- שני מספרים במשפט עברי אחד ⇒ מפורקים, לכל אחד מילה משלו (חוזה §4.2③) -->
+      <div class="totrow">
+        סך שינויי התכולה: <b class="ltr">+100.00 ₪</b> לפני הנחה.
+        אחרי הנחת הלקוח שנקבעה בהצעה (<span class="ltr">15%</span>): <b class="ltr">+85.00 ₪</b>.
+        המחיר ליחידה נלקח מההצעה המקורית ואינו מחושב מחדש.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ שני מצבים שאינם המצב שלמעלה, ו-🚫 אסור לאחד אותם:
+       הפעולה הנכונה בכל אחד מהם הפוכה. ═══ -->
+  <div class="demoband">
+    ⬇ שני מצבים נוספים שהמסך חייב לדעת לצייר. הם <b>אינם</b> חלק מהמסך שלמעלה — מוצגים כאן כדי שייבנו נכון.
+  </div>
+
+  <div class="states" style="margin-top:12px">
+
+    <div class="state">
+      <div class="cap">מצב א׳ · פרויקט שלא הוזמנו בו מוצרים — <b>תקין</b> (למשל "כנס טכנולוגיה שנתי")</div>
+      <div class="empty">
+        <span class="g">🗂️</span>
+        לא הוזמנו מוצרים לאירוע הזה — ההצעה כללה שירותי דיילות בלבד.<br>
+        <span class="calm">מצב תקין. פרויקט בלי פריטי לוגיסטיקה נספר כמוכן לוגיסטית.</span>
+        <!-- 🚫 בכוונה אין כאן "הוסף פריט ראשון": שורות הלוגיסטיקה נולדות
+             אוטומטית עם אישור ההצעה, ואיש אינו "פותח" אותן ידנית.
+             הוספת פריט = שינוי תכולה, והיא עוברת בכפתור שלמעלה עם סיבת-חובה. -->
+      </div>
+    </div>
+
+    <div class="state">
+      <div class="cap">מצב ב׳ · הנתונים לא נטענו — <b>תקלה</b>, ולא "אין פריטים"</div>
+      <div class="empty">
+        <span class="g">⚠</span>
+        <span class="errline">לא ניתן לטעון את נתוני הלוגיסטיקה של הפרויקט.</span><br>
+        <span class="calm">להצעה שאושרה יש פריטי מוצר, ולכן רשימה ריקה כאן היא תקלה ולא מצב תקין.</span><br>
+        <a class="link" href="#">נסי שוב</a>
+        <!-- 🔴 המצב הזה קיים כי טבלת logistics חסומה לקריאה היום (deny-all).
+             שאילתה חסומה מחזירה רשימה ריקה בלי שגיאה — ובלי ההבחנה הזאת
+             המסך יאמר "לא הוזמנו מוצרים" על פרויקט שיש בו 300 תגים. -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- שורת-מקורות — חובה. §7 -->
+  <div class="srcline">
+    <b>🏷️ מקורות הנתונים במסך הזה</b><br>
+    <b>🌱 מהמסד:</b> <span class="ltr">projects</span> (‏<span class="ltr">project_id 8</span> — שם האירוע · <span class="ltr">final_event_date 22/08/2026</span> · שעות · מיקום · <span class="ltr">estimated_guests 300</span> · הלקוח <span class="ltr">customer_id 46</span> "מדיטק פתרונות בע"מ") · <span class="ltr">logistics</span> (שתי שורות של <span class="ltr">#8</span>: <span class="ltr">sku</span> · <span class="ltr">actual_qty 0</span> · <span class="ltr">item_status not_started</span>) · <span class="ltr">products</span> (שמות הפריטים) · <span class="ltr">quote_services</span> (הצעה <span class="ltr">#6</span>: <span class="ltr">closing_unit_price</span> ‏<span class="ltr">5.00 ₪</span> לתג ו-<span class="ltr">6.00 ₪</span> לשרוך · <span class="ltr">color = NULL</span> בשלוש השורות ⇐ מכאן "ללא צבע מוגדר") · הנחות ההצעה (‏<span class="ltr">5%</span> לקוח ועוד <span class="ltr">10%</span> ידנית)<br>
+    <b>🎭 דמו:</b> <b>כל היסטוריית שינויי-התכולה</b> — התאריכים, הסיבות, ושם המבצעת (הטבלה שאמורה לאחסן אותה טרם נוצרה) · הכמויות המתוכננות <span class="ltr">380</span> ו-<span class="ltr">250</span> (במסד היום: <span class="ltr">300</span> ו-<span class="ltr">300</span>) · המשתמשת המחוברת "דנה כהן" (‏🌱 מנהל הפרויקט האמיתי במסד הוא ישי אטיאס)<br>
+    <b>📐 נגזר:</b> "בעוד 9 ימים" = <span class="ltr">final_event_date − 13/08/2026</span> · "מוכנים <span class="ltr">0</span> מתוך <span class="ltr">2</span>" = מספר השורות ב-<span class="ltr">item_status='ready'</span> מתוך סך השורות · <span class="ltr">+400.00 ₪</span> = <span class="ltr">80 × 5.00 ₪</span> במחיר הקפוא מההצעה · <span class="ltr">−300.00 ₪</span> = <span class="ltr">50 × 6.00 ₪</span> · <span class="ltr">+85.00 ₪</span> = <span class="ltr">100.00 ₪</span> פחות <span class="ltr">15%</span> (ההנחות מתחברות, לא משתרשרות)<br>
+    <b>➕ חדש (דורש רישום ב-<span class="ltr">db_roadmap</span>):</b> טבלת <span class="ltr">project_changes</span> כולה · שדה צבע על שורת-השינוי · עמודות המקור על <span class="ltr">logistics</span> (מצביע לשורת-הצעה או לשורת-שינוי) · <span class="ltr">policy</span> קריאה ל-<span class="ltr">logistics</span> (היום אפס policies) · <span class="ltr">RPC</span> אטומי לשינוי-תכולה<br>
+    <b>🎨 תקציב-צבע:</b> אפס שורות אדומות בטבלה הראשית · שורת-ענבר אחת (ההגדלה, שיוצרת חוסר) · האדום היחיד במסך יושב בפאנל-התקלה שהוא הדגמת-מצב ולא נתון.
+  </div>
+
+</main>
+</body>
+</html>

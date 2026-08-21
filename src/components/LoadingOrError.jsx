@@ -99,7 +99,18 @@ const VARIANTS = {
   fields: FieldsSkeleton,
 }
 
-export default function LoadingOrError({ loading, error, onRetry, retryTestId, skeleton }) {
+// 🆕 `retryLabel` (19/08/2026, צעד 3.0 ε של מודול 6) — פרמטר-רשות שברירת-המחדל שלו היא
+// המחרוזת הקיימת "נסה שוב", כלומר אפס שינוי-התנהגות לארבעת אתרי-הקריאה הקיימים.
+// למה prop ולא עריכת המחרוזת: מודול 6 כולו בלשון-נקבה ("נסי שוב" — S-28), אבל החלפת
+// ברירת-המחדל היא שינוי חוצה-מערכת שרשום כ-`🚧 מ12` — לא של מודול 6 לעשות.
+export default function LoadingOrError({
+  loading,
+  error,
+  onRetry,
+  retryTestId,
+  skeleton,
+  retryLabel = 'נסה שוב',
+}) {
   if (loading) {
     if (skeleton) {
       const Variant = VARIANTS[skeleton.variant] ?? PageSkeleton
@@ -129,7 +140,7 @@ export default function LoadingOrError({ loading, error, onRetry, retryTestId, s
           className="h-auto py-2 px-4 rounded-lg border-slate-300 text-slate-700"
           data-testid={retryTestId}
         >
-          נסה שוב
+          {retryLabel}
         </Button>
       </div>
     )

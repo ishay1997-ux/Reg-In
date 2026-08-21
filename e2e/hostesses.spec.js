@@ -162,16 +162,20 @@ test.describe('מודול 4 · משטח 1 — מבט-על השיבוצים', () 
     await expect(page.getByTestId('overview-table')).toBeVisible({ timeout: 30_000 })
   })
 
-  test('🔒 מנהלת פרויקטים רואה את הרשימה — ואין לה אף כפתור-שליחה', async ({ page }) => {
+  test('🔒 מנהלת פרויקטים רואה את הרשימה — ומ-19/08/2026 גם את פקדי-השליחה (edit)', async ({
+    page,
+  }) => {
     test.skip(!PROJECTS_EMAIL || !PROJECTS_PASSWORD, 'E2E_PROJECTS_* לא הוגדרו ב-.env.local')
     await login(page, PROJECTS_EMAIL, PROJECTS_PASSWORD)
     await page.goto('/hostesses')
 
-    // 🔑 **בקרה חיובית קודם:** אם ההתחזות שבורה, "אין כפתורים" נראה כמו הרשאות מושלמות
-    // בעוד שבפועל המסך פשוט ריק. לכן קודם מאמתים שהיא **כן** רואה את הטבלה.
+    // 🔑 **בקרה חיובית קודם:** אם ההתחזות שבורה, המסך ריק והבדיקה מוכיחה כלום.
     await expect(page.getByTestId('overview-table')).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByTestId('overview-resend-all')).toHaveCount(0)
-    await expect(page.locator('[data-testid^="overview-resend-"]')).toHaveCount(0)
+    // הכרעת-ישי 19/08/2026 ("מאוד פשוט, להרחיב לה הרשאה"): התא דיילות×מנהלת-פרויקטים
+    // הוחלף view→edit כדי שמיילי-הזימון-מחדש של שינוי-תאריך (מ6, ㉑) ייכתבו מהלקוח.
+    // ⇒ הציפייה התהפכה: פקדי-השליחה כן מוצגים לה. ⚠️ לתפקיד-view על 'דיילות' אין עוד
+    // נושא חי במטריצה — מסלול-ה-view בקוד נותר מכוסה בבדיקות-יחידה בלבד.
+    await expect(page.locator('[data-testid^="overview-resend-"]').first()).toBeVisible()
   })
 
   // 🔴 **מצב T-24 — המצב היחיד במשטח 1 שאי-אפשר להעמיד על דאטה חיה** (`spec.md ✅#6`):
@@ -362,7 +366,9 @@ test.describe('מודול 4 · משטח 3 — מאגר הדיילות', () => {
     await expect(page.getByTestId('hostess-card-title')).toBeVisible({ timeout: 15_000 })
   })
 
-  test('🔒 מנהלת פרויקטים רואה את המאגר — בלי עמודת-שכר ובלי אף פקד-עריכה', async ({ page }) => {
+  test('🔒 מנהלת פרויקטים במאגר — מ-19/08/2026 בדרגת edit: שכר ופקדי-עריכה מוצגים', async ({
+    page,
+  }) => {
     test.skip(!PROJECTS_EMAIL || !PROJECTS_PASSWORD, 'E2E_PROJECTS_* לא הוגדרו ב-.env.local')
     await openRepository(page, PROJECTS_EMAIL, PROJECTS_PASSWORD)
 
@@ -370,12 +376,11 @@ test.describe('מודול 4 · משטח 3 — מאגר הדיילות', () => {
     await expect(page.getByTestId('repository-table')).toBeVisible({ timeout: 30_000 })
     await expect(page.locator('[data-testid^="repository-row-"]').first()).toBeVisible()
 
-    // 🔴 עמודת השכר אינה קיימת לתפקיד-צפייה — נתון עלות שאינו רלוונטי לה (מצויר במפורש
-    // בפאנל "פעולה חסומה" של המוקאפ המאושר). **הסתרה של תוכן, לא רק של כפתורים.**
-    await expect(page.getByRole('columnheader', { name: 'שכר שעתי' })).toHaveCount(0)
-    await expect(page.getByTestId('repository-add')).toHaveCount(0)
-    await expect(page.locator('[data-testid^="repository-edit-"]')).toHaveCount(0)
-    await expect(page.locator('[data-testid^="repository-toggle-"]')).toHaveCount(0)
+    // הכרעת-ישי 19/08/2026: התא דיילות×מנהלת-פרויקטים הוחלף view→edit (מיילי-㉑ של מ6).
+    // ⇒ עמודת-השכר ופקדי-העריכה כן מוצגים לה — הציפייה הישנה ("בלי שכר, בלי עריכה")
+    // תיעדה את המטריצה שלפני ההכרעה. מסלול-ה-view בקוד נותר מכוסה בבדיקות-יחידה.
+    await expect(page.getByRole('columnheader', { name: 'שכר שעתי' })).toBeVisible()
+    await expect(page.getByTestId('repository-add')).toBeVisible()
   })
 })
 

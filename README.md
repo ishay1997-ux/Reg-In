@@ -1,78 +1,132 @@
-<div dir="rtl">
+# REG-IN
 
-# REG-IN — דף הבית של הפרויקט
+**An integrated business-management system for an events & conference staffing company** — replacing scattered spreadsheets and WhatsApp groups with a single, role-secured platform that carries a job from the first client call all the way to financial close.
 
-מערכת ניהול עסקית לחברת אירועים וכנסים: לקוחות → הצעת מחיר → פרויקט → שיבוץ דיילות חכם (Smart Match) → לוגיסטיקה → סגירה פיננסית → דו"חות. מחליפה אקסלים וקבוצות וואטסאפ במערכת אחת עם הרשאות אמיתיות (RLS ב-Supabase).
+<!-- Tech badges — optional, add when ready:
+![React](https://img.shields.io/badge/React-19-61dafb) ![Supabase](https://img.shields.io/badge/Supabase-Postgres%2017-3ecf8e) ![Vite](https://img.shields.io/badge/Vite-8-646cff)
+-->
 
-## מי זה מי
-| מי | תפקיד |
+---
+
+## Overview
+
+REG-IN manages the full operational lifecycle of an events company as one connected flow:
+
+> **Client → auto-priced Quote → approved Project → smart staff matching → Logistics checklist → Event → Financial closing → Management reports**
+
+Instead of an Excel file per stage and a WhatsApp group per event, everything lives in one system with **real, database-enforced permissions**. Each of the six company roles sees exactly what its job requires — and nothing else.
+
+> Final-year academic software-engineering project: thirteen vertically-sliced modules, a live PostgreSQL database with Row-Level Security, and a full Hebrew right-to-left interface.
+
+## Key Features
+
+- **Database-enforced access control.** A per-module permission matrix across the company's management roles, enforced by PostgreSQL Row-Level Security — so the UI physically cannot show data the database wouldn't return. Security lives in the data layer, not just the front end.
+- **Automatic quote-pricing engine.** Tiered pricing, VAT snapshots, customer and manual discount rules, and PDF generation.
+- **Smart Match** — a multi-factor staff-assignment algorithm scoring candidates on availability, reliability and proximity, with weights configurable from the database rather than hard-coded.
+- **Project state machine** — an eight-status lifecycle from creation to financial close, advanced by database triggers and scheduled jobs, not by hand.
+- **Audit-safe by design** — no hard deletes anywhere, snapshot-frozen financials, and transactional operational closing.
+- **Hebrew RTL** across every screen.
+
+## Tech Stack
+
+| Layer | Technology |
 |---|---|
-| **ישי** | בעל הריפו · **המפתח היחיד** · כל המודולים 0–12 · הסדר ולוח-הדדליינים: [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) |
-| **Claude** | כותב את הקוד, מריץ את הפקודות, מתקן תקלות, מעדכן את התיעוד · הכללים שלו: [CLAUDE.md](CLAUDE.md) |
+| Frontend | React 19 · Vite 8 · JavaScript |
+| UI / styling | Tailwind CSS 4 · shadcn/ui · Radix |
+| Backend | Supabase — PostgreSQL 17 · Auth · Row-Level Security · Edge Functions |
+| Routing | react-router-dom 7 |
+| Testing | Vitest (unit) · Playwright (E2E + smoke) |
+| CI / hosting | GitHub Actions · Vercel |
 
-> *עד 07/2026 היו שני מפתחים; **עמית פרש 22/07/2026** ומודוליו (2, 3, 7, 8, 11) עברו לישי. אזכוריו ביומנים המתוארכים הם היסטוריה קפואה ולא מצב-נוכחי. ⚠️ "עמית מילר" בדאטת-המערכת הוא משתמש/לקוח — לא המפתח.*
+## Architecture
 
-⏱️ **לוח-ההגשה:** ‏**28/08/2026** הצגת-ביניים *(‏10 דק' · תהליך אחד · ~50%)* · **01/10/2026** כנס-הסיום *(היעד: **100%**)* · **20/10/2026** סיום.
-*(‏🔴 עודכן 12/08/2026 — כאן היה כתוב **`19/09/2026`**, לוח שהמוסד ביטל. הלוח המלא: [`docs/guides/00_roadmap.md`](docs/guides/00_roadmap.md) §3, והוא ה-SSOT. ‏**זה היה המקום התשיעי והציבורי ביותר שנשאר על התאריך המבוטל**, ונתפס בסריקת-אימות ולא בסריקה שסרקה שמונה אחרים.)*
+- **Thirteen modules (0–12)**, each built as a *vertical slice* — permissions (RLS) → list screen → form → business logic → tests — and delivered in strict dependency order.
+- **Security model:** every screen's data is gated by RLS policies evaluated against a central `permissions` table. A missing permission returns *no rows*, never leaked data.
+- **The Projects module is the hub:** an eight-state machine that ties quotes, staffing, logistics and finance together and drives status transitions automatically.
 
-## איפה אני? → פתח את…
-| מצב | פתח את |
-|---|---|
-| לא זוכר איפה עצרנו | [STATUS.md](STATUS.md) — לוח המצב, ואז המדריך שהוא מפנה אליו |
-| רוצה להבין את התמונה הגדולה | [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) — מפת הדרכים + לוח-הדדליינים |
-| מתחיל מודול חדש | [docs/guides/modules/](docs/guides/modules/) — מדריך לכל מודול |
-| מקים מחדש סביבה במחשב חדש | [docs/guides/reference/install_tools.md](docs/guides/reference/install_tools.md) |
-| רוצה לדעת מה המערכת אמורה לעשות | [docs/PROJECT_MASTER.md](docs/PROJECT_MASTER.md) |
-| משהו השתבש / סיטואציה מיוחדת | [ספריית הפרומפטים המצביים](docs/guides/prompt_library.md) |
-
-## הפרומפט שכדאי לדעת בעל-פה + ספריית המצבים
-
-**הפרומפט האוניברסלי (P1)** — כשלא זוכרים איפה עצרנו:
+```mermaid
+flowchart TB
+    U["User · one of the company's management roles"]
+    subgraph FE["Frontend — React 19 · Vite · Tailwind · Hebrew RTL"]
+        M["13 feature modules<br/>customers → quotes → Smart Match → projects → logistics → finance → reports"]
+    end
+    subgraph BE["Supabase — PostgreSQL 17"]
+        A["Auth"]
+        R["Row-Level Security<br/>per-role permission matrix"]
+        D[("Database<br/>tables · state-machine triggers · RPCs · scheduled jobs")]
+        E["Edge Functions"]
+    end
+    U --> M
+    M -->|sign in| A
+    M -->|every query passes through| R
+    R -->|only the rows this role may see| D
+    M -->|transactional business logic| D
+    D --> E
+    E -->|emails and staffing invites| U
 ```
-אני ישי. קרא את CLAUDE.md ואת STATUS.md והמשך מאיפה שעצרנו.
-לפני שאתה עושה משהו — הסבר לי במילים פשוטות איפה אנחנו עומדים ומה השלב הבא.
+
+## Engineering Process
+
+> This section is deliberate. The repository keeps the artifacts of *how* the system was built — not as clutter, but as evidence of the engineering discipline behind the app.
+
+Every module runs through the same repeatable three-stage loop:
+
+```mermaid
+flowchart LR
+    A["1 · OPEN<br/>Discovery + Blueprint<br/>→ approved spec + build guide"]
+    B["2 · BUILD<br/>RLS → list → form → logic → tests<br/>→ working, tested module"]
+    C["3 · CLOSE<br/>audit → sign-off → merge<br/>→ merged + docs synced"]
+    A --> B --> C
+    C -->|next module · open debts carried forward| A
 ```
 
-**לכל שאר הסיטואציות** — 📚 **[ספריית הפרומפטים המצביים](docs/guides/prompt_library.md)** (המקור הקנוני, כולל P1; ‏P1–P25): חילוץ, סטייה מהתוכנית, undo, ‏merge conflict, רגרסיה אחרי משיכה, שיחת קריאה-בלבד מקבילה, "עשיתי ידנית", שאלה פתוחה ל-§7, למידה, אודיט-סנכרון בתוך-סשן, סשן-הכרעות, המשכת-עבודת-השני, תקרית-מיגרציה, אודיט-ערעור-DB, סקירת-סשן-אחר, המשכת-תוכנית-שנקטעה, סנכרון-טרום-merge, סקירה-סמנטית-עמוקה-לפני-אבן-דרך (מועצה), בדיקת-עיצוב-UI, בחינה-מחדש-בביקורת, סקירת-PR, ודחיסת-תיעוד/סיכום-יום. מוצאים את הסיטואציה בטבלה שם ומדביקים.
+- **Built in dependency order, one vertical slice at a time.** The secure foundation (authentication + permissions) was built first, because every other module's security checks against it; leaf modules (dashboard, automations) come last, so that if time runs short, what's deferred is the least critical. Each module is a complete slice — permissions (RLS) → list → form → business logic → tests — finished before the next begins.
+- **Discovery before code — real requirements engineering, not a coding sprint.** Every module opens with a structured *Discovery* session:
+  - the real-world process is mapped from the product owner's field knowledge — stated for correction, never assumed, so the system models how the work *actually* happens;
+  - each open design question is checked against how comparable industry systems solve it ([`docs/specs/**/world-sources.md`](docs/specs/)), so decisions are grounded in practice, not guesswork;
+  - screens are mocked, and **every ruling is logged with its rationale** ([`docs/specs/**/discovery-log.md`](docs/specs/)).
 
-## איך עובדים עם Claude — בקצרה
-- **מדריך אחד = פגישת עבודה אחת.** כל מדריך ב-`docs/guides/modules/` בנוי מ-8 סעיפים קבועים, כולל **שלושת הפרומפטים להדבקה** (פתיחה / המשך-בנייה / סגירה) ו"בדיקת קבלה".
-- **אפשר גם בלי הדבקה (מ-23/07/2026):** לשלושת הפרומפטים יש **סקילים** בריפו (`.claude/skills/module-blueprint` · `module-build` · `module-close`) שנטענים אוטומטית לפי מה שאתה אומר — "פתח מודול 4" / "תמשיך לבנות" / "סגור את המודול". הדבקת הפרומפט מהמדריך עדיין עובדת (הוא חבילת-ההקשר וה-fallback). **ומאותו יום גם 3 סקילי-עזר לתהליכים החוזרים:** ‏"בוא נסגור שאלות פתוחות" (`section7-rulings` — סבב-הכרעות שקל לעבור) · "מיזגתי" (`post-merge` — אימות-בראיות + היפוך-STATUS) · "בוא נעבור על מה שבנית" (`feature-acceptance` — סיור-קבלה מודרך מול מה שהתכוונת).
-- **מודול חדש** נפתח עם פרומפט הפתיחה או הסקיל `module-blueprint` (Claude קורא את טמפלט-הבלופרינט `.claude/skills/module-blueprint/template.md` בעצמו ומייצר **מדריך מיקרו** — בלופרינט חי באנגלית, כתוב ל-Claude → אתה מאשר → Claude בונה, מאמת עצירות 🔻 טכניות לבד ועוצר לאישורך בסוף כל פזה) ונסגר עם פרומפט הסגירה / הסקיל `module-close` (אודיט + עדכון כל התיעוד + הוראות PR מודפסות לך). מדריך המיקרו מתעדכן תוך כדי העבודה — hook חוסם סיום סשן אם קוד מודול השתנה בלי עדכונו. הפרטים: [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) §5.
-- **בסוף כל סשן** Claude מעדכן את היומנים ואת STATUS.md — יש hook שלא נותן לו לסיים בלי זה.
-- **סודות** (`.env.local`, סיסמאות) נשארים מקומיים בלבד — לעולם לא בריפו, בצ'אט או במדריכים.
+  Only once processes, screens and decisions are approved is a build guide generated — and only then does code begin. The result: **no line of code exists without a documented *why* behind it** ([`docs/PROJECT_MASTER.md`](docs/PROJECT_MASTER.md)).
+- **Nothing ships unverified.** Every change runs a regression gate (lint · unit tests · duplication · dead-code · dependency audit); new tests are first proven to *fail* against intentionally-broken code before they are trusted; and an automated hook blocks a work session from ending if module code changed without its build guide and status board updated in the same session.
+- **A test strategy chosen deliberately — and honest about its limits.** Unit tests pin the business logic (pricing math, Smart Match scoring); end-to-end tests exercise whole user flows; smoke tests guard the critical paths. And what automation *cannot* reach — real database writes, Hebrew RTL rendering, visual correctness — is covered by deliberate manual verification, so the gaps are closed on purpose rather than assumed away.
+- **Nothing falls through the cracks.** Cross-module dependencies are tracked in an explicit *debt registry*: when building one module surfaces work that belongs to a **future** module, it is recorded with a tag (`🚧 →Module N`) and mechanically re-surfaced the moment that module is opened — so across a months-long, thirteen-module build, no requirement is silently dropped in the gap between modules.
+### Working with AI — how correctness and control stayed with the developer
 
-## מפת כל התיעוד
-| מסמך | תפקיד |
-|------|-------|
-| [CLAUDE.md](CLAUDE.md) | **מוקשים + שערים + אינדקס 17 כללי-הברזל** — נטען אוטומטית בכל סשן. דק בכוונה (שופץ 28/07/2026) |
-| `supabase/migrations/CLAUDE.md` · `src/CLAUDE.md` · `docs/CLAUDE.md` | **הפרוטוקולים המלאים, נטענים רק כשנוגעים בתיקייה** — פרוטוקול-DB (כולל שער ה-typed-echo) · מוקשי-קוד ומודל-אבטחה · פרוטוקול-תיעוד. זהו "מפת-הקוד" של הפרויקט: יושבת ליד הקוד ולכן לא מתיישנת |
-| [docs/toolbox.md](docs/toolbox.md) | 🧰 **ארגז הכלים** — אילו פלאגינים דלוקים/כבויים ב-REG-IN ומתי לבקש להדליק |
-| [docs/archive/](docs/archive/) | 🗄️ גרסאות-עבר מלאות (CLAUDE.md · STATUS · יומן-סשנים · מדריך-מ3) — קריאה בלבד, שום דבר לא נמחק |
-| [STATUS.md](STATUS.md) | **לוח המצב היחיד** — סטטוס מודולים + הצעד הנוכחי |
-| [docs/guides/00_roadmap.md](docs/guides/00_roadmap.md) | מפת הדרכים: מודולים, תלויות, אבני דרך, **לוח-הדדליינים ל-19/09**, שיטת העבודה |
-| [docs/guides/modules/](docs/guides/modules/) | מדריך שלב לכל מודול, בעברית (8 סעיפים + 3 פרומפטים בכל אחד) |
-| [docs/guides/reference/](docs/guides/reference/) | מדריכי-רפרנס קבועים: ‏Git · עבודה-עם-Claude · כיוונון-Claude-Code · רוטינות · התקנת-כלים |
-| [docs/guides/reference/working_with_claude.md](docs/guides/reference/working_with_claude.md) | **המדריך לעבודה עם Claude**: פרומפטים, חיסכון בטוקנים, Plan Mode, קיצורי מקלדת, "איזה כלי למה" |
-| [docs/guides/prompt_library.md](docs/guides/prompt_library.md) | 📚 **ספריית הפרומפטים המצביים** (P1–P25): חילוץ, סטייה, undo, קונפליקט, רגרסיה, "עשיתי ידנית", אודיט-סנכרון, סשן-הכרעות, המשכת-עבודת-השני, תקרית-מיגרציה, אודיט-ערעור-DB, סקירת-סשן-אחר, המשכת-תוכנית, סנכרון-טרום-merge, דחיסת-תיעוד ועוד — לפי סיטואציה |
-| [docs/PROJECT_MASTER.md](docs/PROJECT_MASTER.md) | האפיון המסונתז: סכמה, הרשאות, 17 מסכים + **§7 שאלות פתוחות** |
-| [docs/schema.sql](docs/schema.sql) | סכמת DB בפועל (snapshot; מקור-אמת לשינויים = `supabase/migrations/`) |
-| [docs/db_roadmap.md](docs/db_roadmap.md) | 🗺️ **מפת שינויי-ה-DB העתידיים** (אנגלית, ל-Claude) — צבר לפי ודאות + צ'קליסט-מיגרציה; נקראת לפני כל תכנון מיגרציה ובכל בלופרינט |
-| [docs/architecture_and_qa_roadmap.md](docs/architecture_and_qa_roadmap.md) | סטנדרט הנדסי + Definition of Done + QA |
-| [docs/claude_routines.md](docs/claude_routines.md) | 4 הרוטינות של Claude — הגדרות קנוניות + פרוטוקול עדכון |
-| [docs/code_review_2026-07.md](docs/code_review_2026-07.md) | בקרת קוד מודול 1 + המלצות להמשך |
-| [docs/CHANGELOG.md](docs/CHANGELOG.md) | ⛔ **הוקפא 23/07/2026 — ארכיון בלבד** (ציר-הזמן החי: `git log` + CLAUDE_CODE_LOG · DB: db_roadmap+migrations · חובות: PROJECT_MASTER §6) |
-| [docs/CLAUDE_CODE_LOG.md](docs/CLAUDE_CODE_LOG.md) | יומן הסשנים של Claude (נרטיב, החלטות, tech-debt) |
-| [supabase/README.md](supabase/README.md) | ניהול מיגרציות DB |
-| [docs/micro_guides/](docs/micro_guides/) | מדריכי מיקרו — בלופרינטים חיים **באנגלית, כתובים ל-Claude** (module-1.md ✅ · module-2.md ✅ מוזג · השאר ייווצרו בפתיחת כל מודול) |
-| [.claude/skills/](.claude/skills/) | סקילי-זרימת-המודול (`module-blueprint`/`module-build`/`module-close`; טמפלטי הפתיחה/סגירה חיים בתוכם כ-`template.md`) + סקילי-עזר רפו-מקומיים (`section7-rulings`/`post-merge` + `quality-audit` — סקירת-איכות מקיפה של כל הקוד) — נטענים לפי טריגר. Claude קורא בעצמו. **`feature-acceptance` עבר לתיקיית-הסקילים הגלובלית `~/.claude/skills/` (23/07 לילה)** — פרויקט-אגנוסטי (סגנון-העבודה של ישי, לא מבנה-הקבצים של REG-IN), משמש בכל פרויקט שלו |
-| **בקרת-איכות אוטומטית (23/07 לילה)** | `npm run dup` = jscpd (כפילות בין-קבצים) · `eslint-plugin-sonarjs` ב-`eslint.config.js` (כפילויות/מורכבות-יתר, כרגע `warn`, מוקשה ל-`error` אחרי מ3) · CI מריץ שניהם לא-חוסם בשלב-האזהרות. הסקירה העמוקה היזומה = הסקיל `quality-audit` |
-| [docs/mockups/](docs/mockups/) | 44 צילומי מוקאפ + [תיאורים](docs/mockups/mockup_descriptions.md) — רפרנס ויזואלי בלבד |
-| `docs/reference_spec/` | האפיון המאושר (פרקים 5–6) — **קפוא, לא לערוך**; + `products_and_params.md` (החלטות Seed) |
+The system was built with an AI coding assistant (Anthropic's Claude Code), so three questions matter more than usual — and each has a concrete answer:
 
-## היררכיית מקורות אמת (בסתירה — הגבוה קובע)
-`docs/schema.sql` ← האפיון המאושר (פרקים 5–6, `reference_spec/`) ← המוקאפים ← המדריכים.
+- **"How do you know it works?"** — Correctness is never taken on trust. Beyond the automated regression gate above, new tests are proven to *fail* against intentionally-broken code before they are trusted, and features are verified **live against the real database** through end-to-end user journeys — including confirming that each role is actually blocked from data it shouldn't see. Significant changes are independently reviewed before merge.
+- **"How do you know it matches the spec?"** — Each module is accepted, screen by screen, against its approved Discovery spec before it counts as done. Nothing is "finished" because it compiles — only because it does what was specified.
+- **"How did control stay with the developer?"** — The AI implements; the developer decides. Every requirement, every product and design decision, and **every irreversible action** — database schema changes, merges, module sign-offs — required explicit human approval before it happened. That approval is deliberately comprehension-forcing: applying a database migration, for example, requires the developer to **type the migration's name by hand** — a confirmation that cannot be given without first reading what the change actually does. The `docs/` tree records who decided what, and why.
 
-> ⚠️ קבצי `reference_spec/*.md` הם ייצוא קפוא של האפיון המאושר — לא לערוך ידנית. סטיות מהאפיון נרשמות בתיעוד החי בלבד (PROJECT_MASTER / מדריך המודול / CLAUDE_CODE_LOG).
+## Getting Started
 
-</div>
+```bash
+npm install
+cp .env.example .env.local    # fill in your Supabase project URL and keys
+npm run dev                   # http://localhost:5173
+```
+
+Quality gates:
+
+```bash
+npm run gate                  # lint + unit tests + duplication + dead-code + audit
+npm run smoke                 # smoke end-to-end run
+```
+
+## Project Status
+
+Built module by module toward a conference presentation. Completed and merged: the secure foundation (auth + permissions), customers, quotes, hostess Smart Match, and the projects hub. Remaining: logistics, finance & event closing, dashboard, settings, reports, automations, and final integration.
+
+_The authoritative, always-current status board lives in [`STATUS.md`](STATUS.md), and the full roadmap in [`docs/guides/00_roadmap.md`](docs/guides/00_roadmap.md)._
+
+## Academic Note
+
+REG-IN is a final-year academic software-engineering project, built for a real events-and-conference company. AI (Claude Code) was used as a coding assistant throughout, under the team's direction and product ownership; the `docs/` tree documents the process end to end.
+
+## License
+
+© 2026 Ishay. All rights reserved. <!-- Or choose an open-source license if you prefer others to reuse the code. -->
+
+---
+
+<sub>Working on REG-IN day to day? The internal development guide lives in [`docs/DEV_HOME.md`](docs/DEV_HOME.md).</sub>

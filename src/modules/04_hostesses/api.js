@@ -26,7 +26,8 @@ import {
   isInviteExpired,
 } from '@/lib/hostesses'
 import { classifySendError, EMAIL_SEND_RESULT } from '@/lib/email'
-import { sendEmail } from '@/api/email'
+import { sendEmail, getEmailTemplate } from '@/api/email'
+import { ACTIVE_PROJECT_STATUSES } from '@/lib/projects'
 import {
   SHIFT_TEMPLATE_NAMES,
   buildShiftInvitePayload,
@@ -50,10 +51,6 @@ const ALL_PARAM_NAMES = [
   ...Object.values(SMART_MATCH_PARAM_NAMES),
   ...Object.values(HOSTESS_PARAM_NAMES),
 ]
-
-// סטטוסי-הפרויקט שהמבט-על מציג. 🔴 **`ready` ומעלה אינם ברשימה במכוון** — פרויקט
-// שאוייש יצא מרשימת-העבודה של מנהלת הגיוס; היא מסתכלת על מה שעוד חסר.
-const OPEN_PROJECT_STATUSES = ['not_started', 'in_progress']
 
 // ---- גאוקוד ----
 
@@ -128,17 +125,19 @@ export async function getHostess(hostessId) {
 // 🔴 **שם-הלקוח נלקח מ-`projects.customer_name` ולא בצירוף ל-`customers`** — מנהלת
 // הגיוס **חסומה** על מודול 'לקוחות', והצירוף היה מחזיר `null` **בלי שגיאה** בשלושה
 // מסכים מאושרים. זו בדיוק הסיבה שהעמודה נולדה (local-5, אותו דפוס כמו `event_name`).
-// ⚠️ הסינון ל-`OPEN_PROJECT_STATUSES` נעשה **בשאילתה**, לא בדפדפן.
+// ⚠️ הסינון ל-`ACTIVE_PROJECT_STATUSES` נעשה **בשאילתה**, לא בדפדפן.
 // 🔴 **אבל הוא אינו כל הסינון של המסך, ואל תסיק מכאן שהוא כן:** אירוע שתאריכו **לפני היום**
 // מסונן ב-`OverviewTab` דרך `isPastEvent`, ולא כאן. הסיבה שהוא אינו בשאילתה: "היום" הוא
 // שעון-הדפדפן, ושאילתה שמשווה ל-`now()` של המסד הייתה נחתכת בשעה אחרת מזו שהמסך מציג.
+// 🔴 **ומ-2.6: `ready` נכלל בכוונה (⑫, מוגדר ב-`src/lib/projects.js`)** — פרויקט `ready`
+// עדיין פעיל, ודיילת שמבטלת באירוע "מוכן" שמתקיים מחר חייבת להישאר גלויה למנהלת הגיוס.
 export async function listStaffingOverview() {
   const { data, error } = await supabase
     .from('projects')
     .select(
       'project_id, event_name, customer_name, final_event_date, final_start_time, final_end_time, final_location, required_hostess_count, project_status, assignments(*)',
     )
-    .in('project_status', OPEN_PROJECT_STATUSES)
+    .in('project_status', ACTIVE_PROJECT_STATUSES)
     .order('final_event_date')
     .order('project_id')
   if (error) throw toError(error, 'שגיאה בטעינת רשימת האירועים לאיוש.')
@@ -255,17 +254,9 @@ export async function getHostessScreenParams() {
 
 // תבנית-מייל בודדת מ-`params`. 🚫 **לא מצטרפת ל-`ALL_PARAM_NAMES`** — המסכים טוענים את
 // אלה בכל רינדור, והתבניות הן טקסט ארוך שנחוץ רק ברגע השליחה.
-async function getEmailTemplate(name) {
-  const { data, error } = await supabase
-    .from('params')
-    .select('param_value')
-    .eq('param_name', name)
-    .maybeSingle()
-  if (error) throw toError(error, 'שגיאה בטעינת תבנית המייל.')
-  // 🔴 תבנית חסרה **עוצרת** ואינה נשלחת כגוף ריק: מייל ריק לדיילת גרוע ממייל שלא נשלח.
-  if (!data?.param_value) throw toError({ code: 'PGRST116' }, `תבנית המייל "${name}" חסרה בהגדרות.`)
-  return data.param_value
-}
+// ‏`getEmailTemplate` עצמה יובאה מ-`@/api/email` (אוחד 19/08/2026) — מודול 4 היה סגור
+// עם עותק פרטי זהה-בייט; jscpd תפס את הכפילות, וההתנהגות (עטיפת-שגיאה + תבנית-חסרה-עוצרת)
+// זהה, כך שהחלפה ל-import אינה משנה כלום מלבד המקום שבו הקוד גר.
 
 // "שלח שוב" — **הפעולה היחידה שכותבת למסד ממסך מבט-העל**, והיא זהה לפריט
 // `שלח את הקישור שוב` שבתפריט-השורה (`screens-approved` מסך 4 §①): מרעננת טוקן
@@ -313,6 +304,22 @@ const emptyOutcome = () => ({ sent: 0, unknown: 0, failed: 0 })
 // 🔴 **ובכשל-שליחה מגלגלים את `invite_sent_at` בלבד לאחור:** בלי זה השורה מציגה שעון-48
 // שרץ מחדש **על מייל שמעולם לא יצא**, והמנהלת ממתינה לתשובה שלא תגיע. הטוקן החדש נשאר —
 // הוא בלתי-מזיק, והישן ממילא כבר מת.
+// כתיבת טוקן-זימון חדש (+ `invite_sent_at`) על שורת-שיבוץ אחת, לפי המפתח המשולש. משותפת
+// בין "שלח שוב"/"פתח זימון חדש" כאן ל-`sendDateChangeReinvites` שב-`06_projects/api.js`
+// (אוחד 19/08/2026 — jscpd תפס בלוק זהה-בייט בשני הקבצים). `assignments` היא טבלת מודול 4
+// (ר' ראש הקובץ), ולכן הכתיבה עצמה נשארת כאן ומיוצאת — מודול 6 מייבא, לא משכפל. מחזירה
+// בוליאני בלבד: שני הקוראים בודקים רק "האם נכתב", ואף אחד מהם לא צריך את השורה שחזרה.
+export async function writeInviteToken({ projectId, hostessId, assignmentNumber, token, nowIso }) {
+  const { data: updated, error: updateError } = await supabase
+    .from('assignments')
+    .update({ invite_token: token, invite_sent_at: nowIso })
+    .eq('project_id', projectId)
+    .eq('hostess_id', hostessId)
+    .eq('assignment_number', assignmentNumber)
+    .select()
+  return !updateError && Boolean(updated?.length)
+}
+
 async function refreshInviteAndSend(row, { template, origin, nowIso }) {
   const token = crypto.randomUUID()
   const payload = buildShiftInvitePayload({
@@ -326,14 +333,14 @@ async function refreshInviteAndSend(row, { template, origin, nowIso }) {
   if (!payload) return 'failed'
 
   const previousSentAt = row.invite_sent_at
-  const { data: updated, error: updateError } = await supabase
-    .from('assignments')
-    .update({ invite_token: token, invite_sent_at: nowIso })
-    .eq('project_id', row.project_id)
-    .eq('hostess_id', row.hostess_id)
-    .eq('assignment_number', row.assignment_number)
-    .select()
-  if (updateError || !updated?.length) return 'failed'
+  const wrote = await writeInviteToken({
+    projectId: row.project_id,
+    hostessId: row.hostess_id,
+    assignmentNumber: row.assignment_number,
+    token,
+    nowIso,
+  })
+  if (!wrote) return 'failed'
 
   try {
     await sendEmail({

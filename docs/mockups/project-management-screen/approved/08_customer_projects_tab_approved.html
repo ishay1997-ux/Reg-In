@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מוקאפ מ6 · משטח 8 — לשונית הפרויקטים בכרטיס הלקוח</title>
+<style>
+/* ═══ טוקנים — מדודים 13/08/2026. אל תשנה ערך. ═══
+   --primary : מילולי ב-src/index.css:61 (צבע-המותג, PROJECT_MASTER §4)
+   השאר      : המרת oklch→sRGB מ-node_modules/tailwindcss/theme.css @ 4.3.3
+   🔴 אלה *אינם* ערכי Tailwind-3 — ר' §1.2. אל תעתיק הקסה ממוקאפ ישן.
+   --r*      : @theme inline (radius = 0.625rem)                          */
+:root{
+  --primary:#0D9488;
+  --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4; --teal500:#00BBA7;
+  --teal600:#009689; --teal700:#00786F;
+  --green50:#F0FDF4; --green100:#DCFCE7; --green200:#B9F8CF; --green700:#008236;
+  --amber50:#FFFBEB; --amber100:#FEF3C6; --amber200:#FEE685; --amber700:#BB4D00; --amber800:#973C00;
+  --red50:#FEF2F2; --red100:#FFE2E2; --red200:#FFC9C9; --red500:#FB2C36; --red600:#E7000B;
+  --s50:#F8FAFC; --s100:#F1F5F9; --s200:#E2E8F0; --s300:#CAD5E2;
+  --s400:#90A1B9; --s500:#62748E; --s600:#45556C; --s700:#314158; --s800:#1D293D;
+  /* רדיוסים: --radius=0.625rem ⇒ sm 6 · md 8 · lg 10 · xl 14 · 2xl 18 */
+  --r-md:8px; --r-lg:10px; --r-xl:14px; --r-2xl:18px;
+  --sidebar:240px;   /* w-60  */
+  --topbar:64px;     /* h-16  */
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  background:var(--s50); color:var(--s800);
+  font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif;
+  font-size:14px; line-height:1.5;
+}
+
+/* ═══ הכלל שנשבר הכי הרבה: כל ערך שאינו עברית טהורה עובר דרך .ltr ═══
+   מקור: src/components/Money.jsx:23-24 · RatingStars.jsx:78-79            */
+.ltr{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
+
+/* ── סרגל-צד ימני (Sidebar.jsx) — מאפיינים פיזיים בלבד (right/left), לא הלוגיים ── */
+.side{position:fixed; top:0; right:0; width:var(--sidebar); height:100vh;
+      background:#fff; border-left:1px solid var(--s200); display:flex; flex-direction:column; z-index:30}
+.side .logo{height:var(--topbar); display:flex; align-items:center; justify-content:center;
+      border-bottom:1px solid var(--s100); font-weight:700; color:var(--teal700); letter-spacing:.5px}
+.side nav{padding:12px 8px; display:flex; flex-direction:column; gap:4px}
+.nav-i{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--r-lg);
+      font-size:14px; font-weight:500; color:var(--s600); text-decoration:none}
+.nav-i .ic{width:20px; text-align:center; font-size:15px; flex:none}
+.nav-i.on{background:var(--teal50); color:var(--teal700)}   /* פריט פעיל — §4 */
+
+/* ── סרגל עליון (Topbar.jsx) ── */
+.top{position:fixed; top:0; left:0; right:var(--sidebar); height:var(--topbar); background:#fff;
+     border-bottom:1px solid var(--s200); display:flex; align-items:center;
+     justify-content:space-between; padding:0 24px; z-index:20}
+/* זכוכית-מגדלת בימין + padding-right — הוכרע ב-Topbar.jsx, לא לבחור מחדש */
+.search{position:relative; width:288px; max-width:100%}
+.search .mg{position:absolute; right:12px; top:50%; transform:translateY(-50%);
+     color:var(--s400); font-size:13px}
+.search input{width:100%; height:36px; border:1px solid var(--s200); border-radius:var(--r-lg);
+     background:var(--s50); padding:0 36px 0 12px; font:inherit; font-size:14px; color:var(--s500)}
+.search input::placeholder{color:var(--s400)}
+.who{display:flex; align-items:center; gap:8px}
+.who .txt{display:flex; flex-direction:column; align-items:flex-end; line-height:1.3}
+.who .nm{font-size:14px; font-weight:500; color:var(--s800)}
+.who .rl{font-size:12px; color:var(--s500)}
+.who .av{width:36px; height:36px; border-radius:999px; background:var(--primary); color:#fff;
+     display:flex; align-items:center; justify-content:center; font-weight:600}
+
+/* ── תוכן ── */
+main{margin-right:var(--sidebar); padding:calc(var(--topbar) + 24px) 24px 40px}
+.phead{display:flex; align-items:flex-start; justify-content:space-between;
+     gap:16px; flex-wrap:wrap; margin-bottom:16px}
+h1{font-size:20px; font-weight:700; color:var(--s800)}
+.psub{font-size:12px; color:var(--s500); margin-top:2px}
+
+/* ── אריחי-מדד (StatTile.jsx) — flex-wrap, לבן+מסגרת, לעולם לא מילוי ── */
+.tiles{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px}
+.tile{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     padding:16px; display:flex; flex-direction:column; gap:2px; min-width:150px}
+.tile-l{font-size:12px; color:var(--s500)}
+.tile-v{font-size:20px; font-weight:700; color:var(--s800)}
+.tile-v.alarm{color:var(--red600)}      /* רק הספרה. הרקע נשאר לבן. */
+.tile-s{font-size:11px; color:var(--s500)}
+.tile-empty{font-size:14px; color:var(--s400)}   /* "אין נתונים עדיין" — לא 0 */
+
+/* ── כרטיס-תוכן ── */
+.card{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     box-shadow:0 1px 2px rgba(15,23,42,.06); padding:0 16px 14px}
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--s200); margin:0 -16px 12px; padding:0 16px}
+.tab{padding:11px 16px; font-size:14px; font-weight:500; color:var(--s500);
+     border-bottom:2px solid transparent}
+.tab.on{color:var(--teal700); border-bottom-color:var(--primary); font-weight:600}
+
+/* ── סרגל-מסננים (FilterPill.jsx) ── */
+.bar{display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:2px 0 12px}
+.pill{border:1px solid var(--s200); background:#fff; color:var(--s600);
+     border-radius:999px; padding:4px 12px; font:inherit; font-size:12.5px; cursor:pointer}
+.pill.on{background:var(--teal50); border-color:var(--teal200); color:var(--teal700); font-weight:600}
+.pill.warn-on{background:var(--amber50); border-color:var(--amber200); color:var(--amber700); font-weight:600}
+.pill[disabled]{opacity:.5; cursor:not-allowed}   /* נשאר ומנומק, לא נעלם */
+.spacer{margin-right:auto; color:var(--s400); font-size:12px}  /* mr-auto דוחף שמאלה */
+
+/* ── כפתורים (button.jsx + הדריסות בפועל) ── */
+.btn{border-radius:var(--r-lg); font:inherit; font-size:14px; font-weight:600;
+     padding:8px 16px; border:1px solid transparent; cursor:pointer; white-space:nowrap}
+/* 🔴 --primary ולא --teal600: שני הטורקיזים חיים במקביל, והמותג מנצח (§1.2) */
+.btn.primary{background:var(--primary); color:#fff}            /* אחד למסך */
+.btn.primary:hover{background:var(--teal700)}
+.btn.sec{background:#fff; border-color:var(--s300); color:var(--s700); font-weight:500}
+.btn.quiet{background:none; border:0; color:var(--s500); padding:4px 8px; font-weight:500}
+.btn[disabled]{opacity:.5; cursor:not-allowed}
+.link{color:var(--teal700); font-size:12.5px; font-weight:600; text-decoration:none; white-space:nowrap}
+/* פעולת-שורה (RowAction.jsx) — ריבוע 30px ממוסגר */
+.ract{width:30px; height:30px; border-radius:var(--r-md); border:1px solid var(--s200);
+     background:#fff; color:var(--s600); display:inline-flex; align-items:center;
+     justify-content:center; cursor:pointer}
+.ract.ok{border-color:var(--green200); background:var(--green50); color:var(--green700)}
+.ract.no{border-color:var(--red200); background:var(--red50); color:var(--red600)}
+
+/* ── טבלה (RepositoryTab.jsx) ── */
+table{width:100%; border-collapse:collapse}
+th{font-size:12px; font-weight:600; color:var(--s500); text-align:right;
+   padding:6px 10px; border-bottom:1px solid var(--s200); white-space:nowrap}
+td{padding:10px; border-bottom:1px solid var(--s100); vertical-align:middle}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--s50)}
+tr.muted td{background:var(--s50); color:var(--s500)}       /* הושלם / בוטל */
+tr.block td{background:var(--red50)}                         /* 1–2 למסך. §3.3 */
+.pname{font-weight:600}
+.psub2{font-size:11.5px; color:var(--s500); margin-top:1px}
+
+/* ── תגיות-סטטוס (StatusTag.jsx) — העתק את הטונים, אל תמציא ── */
+.tag{display:inline-block; white-space:nowrap; border-radius:999px;
+     padding:2px 10px; font-size:11px; font-weight:600}
+.tag.ok     {background:var(--green100); color:var(--green700)}
+.tag.teal   {background:var(--teal100);  color:var(--teal700)}
+.tag.muted  {background:var(--s100);     color:var(--s500)}
+.tag.warn   {background:var(--amber200); color:var(--amber800)}
+.tag.outline{background:var(--s100); color:var(--s600); border:1px solid var(--s200)}
+.tag.dashed {background:var(--s100); color:var(--s500); border:1px dashed var(--s300)}
+
+/* ── טקסט-חוסר: המילה נושאת את המשמעות, הצבע רק מדגיש (§3.4) ── */
+.miss{color:var(--red600); font-size:11.5px; font-weight:600}
+.hint{color:var(--amber700); font-size:11px; font-weight:600}
+.calm{color:var(--s400); font-size:11.5px}
+
+/* ── שדות-קלט (input.jsx) — placeholder חובה בכל שדה ריק ── */
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.fld{display:flex; flex-direction:column; gap:4px}   /* תווית וערך יחד. §4.3 */
+.fld label{font-size:12px; color:var(--s500)}
+.fld input,.fld select,.fld textarea{height:36px; border:1px solid var(--s200);
+     border-radius:var(--r-lg); background:#fff; padding:0 12px; font:inherit; font-size:14px;
+     color:var(--s800); width:100%}
+.fld textarea{height:auto; padding:8px 12px; resize:vertical}
+.fld input::placeholder,.fld textarea::placeholder{color:var(--s400)}
+.fld .help{font-size:11px; color:var(--s500)}
+.fld .err{font-size:11px; color:var(--red600); font-weight:600}
+.fld input.bad{border-color:var(--red600)}
+
+/* ── דיאלוג (dialog.jsx) — משטחים 6 ו-7 ── */
+.dlg{background:#fff; border-radius:var(--r-2xl); box-shadow:0 10px 30px rgba(15,23,42,.18);
+     width:520px; max-width:100%; padding:20px; position:relative}
+.dlg .x{position:absolute; left:16px; top:16px; color:var(--s400); font-size:16px;
+     background:none; border:0; cursor:pointer}   /* סגירה בשמאל — RTL */
+.dlg h2{font-size:18px; font-weight:700; color:var(--s800); text-align:right}
+.dlg .lead{font-size:12.5px; color:var(--s500); margin:4px 0 14px}
+.dlg footer{display:flex; justify-content:flex-start; gap:8px; margin-top:18px}  /* justify-start */
+/* באנר-אזהרה בתוך דיאלוג — ענבר, לא אדום: זו הודעה, לא כשל */
+.warn{background:var(--amber50); border:1px solid var(--amber200); color:var(--amber800);
+     border-radius:var(--r-lg); padding:9px 12px; font-size:12px; line-height:1.65; margin-bottom:14px}
+
+/* ── מצב-ריק ── */
+.empty{padding:24px; text-align:center; font-size:12.5px; color:var(--s500)}
+.empty .g{display:block; font-size:22px; margin-bottom:6px}
+
+/* ── שורת-מקורות (§7) — חובה בכל מוקאפ ── */
+.srcline{margin-top:16px; padding:10px 12px; background:#fff; border:1px solid var(--s200);
+     border-radius:var(--r-lg); font-size:11.5px; color:var(--s500); line-height:1.85}
+.srcline b{color:var(--s700)}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   מחלקות שנוספו למשטח 8 בלבד. 🔴 אף ערך מלמעלה לא שונה (כלל 1 של §0).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* קישור-חזרה — קיים בעמוד הבנוי (CustomerDetailsPage.jsx:287-295) */
+.crumb{display:inline-flex; align-items:center; gap:6px; color:var(--teal700);
+     font-size:14px; text-decoration:none; margin-bottom:12px}
+
+/* ריפוד עליון לכרטיס: .card מוגדר padding:0 16px 14px, ולכן הכותרת צריכה משלה */
+.ctop{padding-top:16px}
+.chead{display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap}
+.cname{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.cacts{display:flex; align-items:center; gap:8px}
+
+/* שורת-ההמתנה למודולים הבאים — קיימת היום בעמוד (CustomerDetailsPage.jsx:370-372) */
+.wait{border:1px dashed var(--s300); background:var(--s50); border-radius:var(--r-lg);
+     padding:6px 12px; font-size:11.5px; color:var(--s500); margin-bottom:16px}
+
+/* אזור-הפרטים המקובץ (קיים בעמוד) */
+.dgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:4px 0 18px}
+.dcol{display:flex; flex-direction:column; gap:9px}
+.dcol h3{font-size:12px; font-weight:600; color:var(--s400)}
+.dcell{display:flex; flex-direction:column; gap:1px}   /* תווית וערך יחד — §4.3 */
+.dcell .l{font-size:12px; color:var(--s500)}
+.dcell .v{font-size:14px; color:var(--s700)}
+
+/* מונה בתוך לשונית (CustomerDetailsPage.jsx:119-127) */
+.tab .n{display:inline-block; border-radius:999px; padding:0 8px; margin-right:8px;
+     font-size:12px; font-weight:600; background:var(--s100); color:var(--s500)}
+.tab.on .n{background:var(--teal100); color:var(--teal700)}
+
+/* שני קטעי ציר-הזמן בתוך הלשונית */
+.sec{margin-bottom:18px}
+.sec:last-of-type{margin-bottom:4px}
+.sec-h{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; padding:2px 0 6px}
+.sec-h h2{font-size:14px; font-weight:700; color:var(--s700)}
+.sec-h .cnt{font-size:12px; font-weight:600; color:var(--s500)}
+.sec-h .def{font-size:11.5px; color:var(--s400)}
+
+/* הערת "טעון הכרעה" בתוך המוקאפ — אינה חלק מהמסך */
+.ask{border:1px dashed var(--amber200); background:var(--amber50); color:var(--amber800);
+     border-radius:var(--r-lg); padding:8px 12px; font-size:11.5px; line-height:1.7; margin:8px 0 10px}
+
+/* נספח-המצבים — מסומן במפורש כנספח-אפיון ולא כחלק מהמסך */
+.annex{margin-top:20px; border:1px dashed var(--s300); border-radius:var(--r-xl);
+     background:#fff; padding:14px 16px}
+.annex > h2{font-size:14px; font-weight:700; color:var(--s700); margin-bottom:2px}
+.annex > .sub{font-size:11.5px; color:var(--s500); margin-bottom:12px}
+.states{display:flex; flex-wrap:wrap; gap:12px}
+.st{border:1px solid var(--s200); border-radius:var(--r-lg); background:#fff;
+     padding:12px; width:262px; display:flex; flex-direction:column; gap:6px}
+.st .cap{font-size:11px; font-weight:600; color:var(--s500)}
+.st .body{border:1px solid var(--s100); border-radius:var(--r-md); background:var(--s50); padding:12px;
+     text-align:center; font-size:12.5px; color:var(--s500)}
+.st .body .g{display:block; font-size:20px; margin-bottom:4px}
+.st .err-body{border:1px solid var(--red200); background:var(--red50); border-radius:var(--r-md);
+     padding:10px 12px; font-size:12px; color:var(--red600); font-weight:600; line-height:1.6}
+.sk{background:var(--s100); border-radius:6px; height:12px; margin-bottom:8px}
+</style>
+</head>
+<body>
+
+<!-- ═══ סרגל-צד ימני — 🔴 הפריט הפעיל הוא "לקוחות": זהו מסך של מודול 2 ═══ -->
+<aside class="side">
+  <div class="logo">REG-IN</div>
+  <nav>
+    <a class="nav-i"    href="#"><span class="ic">▦</span><span>מסך הבית</span></a>
+    <a class="nav-i on" href="#"><span class="ic">☰</span><span>לקוחות</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▤</span><span>הצעות מחיר</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▣</span><span>פרויקטים</span></a>
+    <a class="nav-i"    href="#"><span class="ic">☺</span><span>דיילות</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▥</span><span>לוגיסטיקה</span></a>
+    <a class="nav-i"    href="#"><span class="ic">₪</span><span>כספים</span></a>
+    <a class="nav-i"    href="#"><span class="ic">▧</span><span>דו"חות</span></a>
+  </nav>
+</aside>
+
+<!-- ═══ סרגל עליון ═══ -->
+<header class="top">
+  <div class="search">
+    <span class="mg">⌕</span>
+    <input type="text" placeholder="חיפוש...">
+  </div>
+  <div class="who">
+    <div class="txt"><span class="nm">דנה כהן</span><span class="rl">מנהלת פרויקטים</span></div>
+    <div class="av">ד</div>
+  </div>
+</header>
+
+<!-- ═══ תוכן ═══ -->
+<main>
+
+  <a class="crumb" href="#">→ חזרה לרשימת הלקוחות</a>
+
+  <div class="card">
+
+    <!-- ── כותרת הכרטיס + הפעולות (קיימות בעמוד הבנוי; מ6 אינו מוסיף כאן דבר) ── -->
+    <div class="ctop chead">
+      <div>
+        <div class="cname">
+          <h1>מדיטק פתרונות בע"מ</h1>
+          <span class="tag ok">פעיל</span>
+          <span class="tag muted">חברה פרטית</span>
+        </div>
+        <div class="psub">היום: <span class="ltr">13/08/2026</span></div>
+      </div>
+      <div class="cacts">
+        <!-- 🔴 הכפתור הטורקיז היחיד במסך. מ6 אינו מוסיף כפתור-פעולה משלו ללשונית —
+             פרויקט נולד רק מאישור הצעת-מחיר, ולכן "פרויקט חדש" אינו קיים כאן. -->
+        <button class="btn primary">+ הצעה חדשה</button>
+        <button class="btn sec">עריכת פרטים</button>
+      </div>
+    </div>
+
+    <!-- ── רצועת-המדדים: 3 קיימים (מ2/מ3) + 2 שמ6 מחבר ── -->
+    <div class="tiles" style="margin-top:16px">
+      <div class="tile">
+        <span class="tile-l">סה"כ הכנסות</span>
+        <span class="tile-v"><span class="ltr">25,024.85 ₪</span></span>
+        <span class="tile-s">מ-4 הצעות שאושרו</span>
+      </div>
+      <div class="tile">
+        <span class="tile-l">שווי הצעות פתוחות</span>
+        <span class="tile-v"><span class="ltr">0 ₪</span></span>
+        <span class="tile-s">אין הצעות שממתינות להחלטה</span>
+      </div>
+      <div class="tile">
+        <span class="tile-l">גודל עסקה ממוצע</span>
+        <span class="tile-v"><span class="ltr">6,256.21 ₪</span></span>
+      </div>
+      <!-- 🆕 מ6 · מדד 1 מתוך 2. ⚠️ הערך נמסר כמחרוזת ולא כמספר — ר' שורת-המקורות -->
+      <div class="tile">
+        <span class="tile-l">מספר אירועים</span>
+        <span class="tile-v">4</span>
+        <span class="tile-s">אחד מהם בוטל</span>
+      </div>
+      <!-- 🆕 מ6 · מדד 2 מתוך 2. ללא צבע: הלקוח אינו רדום, ואין כאן מה לטפל -->
+      <div class="tile">
+        <span class="tile-l">אירוע אחרון</span>
+        <span class="tile-v"><span class="ltr">01/08/2026</span></span>
+        <span class="tile-s">לפני 12 יום</span>
+      </div>
+    </div>
+
+    <!-- קיימת היום בעמוד ומונה גם את מ6. 🔴 מ6 חייב לערוך אותה, לא להשאיר -->
+    <div class="wait">ממתין למודול הבא — ממוצע משוב (מודול 8)</div>
+
+    <!-- ── פרטים מקובצים (קיימים בעמוד הבנוי) ── -->
+    <div class="dgrid">
+      <div class="dcol">
+        <h3>פרטי חברה</h3>
+        <div class="dcell"><span class="l">ח"פ</span><span class="v ltr">514736219</span></div>
+        <div class="dcell"><span class="l">סוג לקוח</span><span class="v">חברה פרטית</span></div>
+      </div>
+      <div class="dcol">
+        <h3>איש קשר</h3>
+        <div class="dcell"><span class="l">שם</span><span class="v">רון גל</span></div>
+        <div class="dcell"><span class="l">טלפון</span><span class="v ltr">052-4471180</span></div>
+      </div>
+      <div class="dcol">
+        <h3>מסחרי</h3>
+        <div class="dcell"><span class="l">אחוז הנחה קבוע</span><span class="v ltr">5%</span></div>
+        <div class="dcell"><span class="l">מאושר לדיוור</span><span class="v">כן</span></div>
+      </div>
+    </div>
+
+    <!-- ── הלשוניות ── -->
+    <div class="tabs">
+      <div class="tab">הצעות מחיר<span class="n ltr">4</span></div>
+      <div class="tab on">פרויקטים<span class="n ltr">4</span></div>
+    </div>
+
+    <!-- ══════════ תוכן לשונית הפרויקטים — זהו המשטח ══════════ -->
+
+    <!-- קטע 1 · מתקרבים -->
+    <div class="sec">
+      <div class="sec-h">
+        <h2>מתקרבים</h2>
+        <span class="cnt ltr">2</span>
+        <span class="def">· תאריך האירוע טרם עבר · הקרוב ראשון</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:16%">תאריך אירוע</th>
+            <th style="width:40%">שם האירוע</th>
+            <th style="width:16%">סכום</th>
+            <th style="width:17%">מצב</th>
+            <th style="width:11%"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="click">
+            <td>
+              <span class="ltr">22/08/2026</span>
+              <span class="calm" style="display:block">בעוד 9 ימים</span>
+            </td>
+            <td><div class="pname">כנס לקוחות שנתי</div></td>
+            <td><span class="ltr">6,318.90 ₪</span></td>
+            <td><span class="tag teal">בתהליך</span></td>
+            <td><a class="link" href="#">לכרטיס →</a></td>
+          </tr>
+          <tr class="click">
+            <td>
+              <span class="ltr">27/09/2026</span>
+              <span class="calm" style="display:block">בעוד 45 ימים</span>
+            </td>
+            <td><div class="pname">כנס רפואה 2026</div></td>
+            <td><span class="ltr">9,864.80 ₪</span></td>
+            <td><span class="tag muted">טרם החל</span></td>
+            <td><a class="link" href="#">לכרטיס →</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- קטע 2 · התקיימו — 🔴 ㊲ (13/08/2026): פרויקט מבוטל יושב כאן בלי קשר ללוח-השנה,
+         כי הפיצול הוא "מה מולי" מול "מה מאחוריי" — ומבוטל הוא מאחוריך. -->
+    <div class="sec">
+      <div class="sec-h">
+        <h2>התקיימו</h2>
+        <span class="cnt ltr">2</span>
+        <span class="def">· תאריך האירוע עבר, או שהפרויקט בוטל · האחרון ראשון · המבוטלים בסוף</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:16%">תאריך אירוע</th>
+            <th style="width:40%">שם האירוע</th>
+            <th style="width:16%">סכום</th>
+            <th style="width:17%">מצב</th>
+            <th style="width:11%"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- ענבר ולא אדום: חסר קלט-סגירה — זו היגיינה, לא חוסם.
+               הטיפול עצמו נעשה בלשונית "לסגירה" של מבט-העל, לא כאן. -->
+          <tr class="click">
+            <td>
+              <span class="ltr">01/08/2026</span>
+              <span class="calm" style="display:block">לפני 12 יום</span>
+            </td>
+            <td>
+              <div class="pname">תרחיש-קבלה 5.1</div>
+              <div class="hint">טרם הוזנו שעות ביצוע, מספר אורחים ודוח-סיכום</div>
+            </td>
+            <td><span class="ltr">6,318.90 ₪</span></td>
+            <td><span class="tag warn">ממתין לסגירה</span></td>
+            <td><a class="link" href="#">לכרטיס →</a></td>
+          </tr>
+          <!-- 🆕 ㊲ · מבוטל שתאריכו בעתיד. שתי ההגנות שמונעות את הבלבול "אבל התאריך לא עבר":
+               ① תג "בוטל" מקווקו — 🔴 לא אדום, ביטול הוא מצב-סיום תקין (חוזה-העיצוב §3.5) ·
+               ② שורת-משנה "היה אמור להתקיים" מתחת לתאריך. השורה מושתקת ויושבת אחרונה. -->
+          <tr class="click muted">
+            <td>
+              <span class="ltr">05/09/2026</span>
+              <span class="calm" style="display:block">היה אמור להתקיים</span>
+            </td>
+            <td>
+              <div class="pname">ערב לקוחות VIP</div>
+              <div class="psub2">בוטל <span class="ltr">11/08/2026</span> · הלקוח ביטל · "הלקוח דחה את האירוע לרבעון הבא"</div>
+            </td>
+            <td><span class="ltr">2,522.25 ₪</span></td>
+            <td><span class="tag dashed">בוטל</span></td>
+            <td><a class="link" href="#">לכרטיס →</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══════════ נספח: מצבים שאינם על המסך המוצלח ══════════ -->
+  <div class="annex">
+    <h2>נספח-אפיון · המצבים שאינם על המסך למעלה</h2>
+    <div class="sub">אינו חלק מהמסך — שישה מצבים שהמוקאפ הראשי אינו יכול להראות בו-זמנית.</div>
+    <div class="states">
+
+      <div class="st">
+        <span class="cap">① ריק אמיתי — אין ולו פרויקט אחד</span>
+        <div class="body">
+          <span class="g">🗂️</span>
+          עדיין לא נוצר פרויקט ללקוח הזה.<br>
+          פרויקט נולד מאישור הצעת מחיר.
+        </div>
+      </div>
+
+      <div class="st">
+        <span class="cap">② ריק אחרי חיפוש — פעולה הפוכה</span>
+        <div class="body">
+          <span class="g">🔍</span>
+          אין פרויקט התואם לחיפוש.<br>
+          <a class="link" href="#">נקה חיפוש</a>
+        </div>
+      </div>
+
+      <div class="st">
+        <span class="cap">③ אין הרשאה — 🔴 לא "אין פרויקטים"</span>
+        <div class="body">
+          <span class="g">🔒</span>
+          אין לך הרשאה לצפות בפרויקטים.<br>
+          המונה בלשונית מציג "—" ולא <span class="ltr">0</span>.
+        </div>
+      </div>
+
+      <div class="st">
+        <span class="cap">④ שגיאת טעינה</span>
+        <div class="err-body">
+          שגיאה בטעינת היסטוריית הפרויקטים. <a class="link" href="#">נסה שוב</a>
+        </div>
+      </div>
+
+      <div class="st">
+        <span class="cap">⑤ טעינה — שלד בצורת התוכן</span>
+        <div style="border:1px solid var(--s100); border-radius:var(--r-md); padding:12px">
+          <div class="sk" style="width:40%"></div>
+          <div class="sk" style="width:100%"></div>
+          <div class="sk" style="width:100%; margin-bottom:0"></div>
+        </div>
+      </div>
+
+      <div class="st">
+        <span class="cap">⑥ אריח "אירוע אחרון" — שני מצביו האחרים</span>
+        <div class="tiles" style="margin:0; gap:8px">
+          <div class="tile" style="padding:12px; min-width:118px">
+            <span class="tile-l">אירוע אחרון</span>
+            <span class="tile-v"><span class="ltr">20/03/2026</span></span>
+            <span class="hint">רדום · לפני 146 ימים</span>
+          </div>
+          <div class="tile" style="padding:12px; min-width:118px">
+            <span class="tile-l">אירוע אחרון</span>
+            <span class="tile-empty">טרם התקיים אירוע</span>
+            <span class="tile-s">הראשון מתוכנן ל-<span class="ltr">19/08/2026</span></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- שורת-מקורות — חובה. §7 -->
+  <div class="srcline">
+    <b>🏷️ מקורות הנתונים במסך הזה</b> · <b>"היום" = <span class="ltr">13/08/2026</span></b><br>
+
+    <b>🌱 מהמסד</b> (נשלף חי <span class="ltr">13/08/2026</span>):
+    <code>customers.company_name · contact_name · phone · discount_percent · customer_type · status</code> ·
+    <code>projects.project_id · event_name · final_event_date · project_status · customer_id · quote_id</code> ·
+    שלושת הפרויקטים <b>כנס לקוחות שנתי</b> (<span class="ltr">#8</span>) · <b>כנס רפואה 2026</b>
+    (<span class="ltr">#3</span>) · <b>תרחיש-קבלה 5.1</b> (<span class="ltr">#7</span>) ·
+    וסכומיהם מ-<code>quote_services.closing_unit_price</code> הקפואות.<br>
+
+    <b>🎭 דמו:</b> הפרויקט <b>ערב לקוחות VIP</b> (<span class="ltr">#103</span>) <b>וההצעה שמאחוריו</b> —
+    שניהם אינם במסד; ההצעה מזוהה עם ההצעה הרביעית של מדיטק כדי שמונה-הלשונית יישאר
+    <span class="ltr">4</span> · פרטי הביטול (תאריך · סוג · סיבה · מבטל) · ה-ח"פ
+    <span class="ltr">514736219</span> · <b>דנה כהן</b> בסרגל העליון (נשמרת זהה בכל שמונת המוקאפים).<br>
+
+    <b>📐 נגזר:</b>
+    <b>סה"כ הכנסות</b> = Σ סכום-כולל-מע"מ של ההצעות המאושרות
+    (<span class="ltr">6,318.90 + 9,864.80 + 6,318.90 + 2,522.25</span>) ·
+    <b>גודל עסקה ממוצע</b> = הכנסות ÷ מספר ההצעות שאושרו ·
+    <b>מספר אירועים</b> = <code>COUNT(projects WHERE customer_id = 46)</code> ·
+    <b>אירוע אחרון</b> = <code>MAX(final_event_date)</code> מבין אלה שכבר עברו ואינם מבוטלים ·
+    <b>"בעוד N ימים" / "לפני N ימים"</b> = <code>final_event_date − היום</code> ·
+    <b>הפיצול מתקרבים/התקיימו</b> = <b>㊲:</b> <code>project_status='cancelled'</code> ⇒
+    <b>התקיימו</b> תמיד; אחרת השוואת <code>final_event_date</code> להיום.<br>
+
+    <b>➕ חדש — דורש שורה ב-<code>db_roadmap</code>, ואינו קיים בסכמה היום:</b>
+    <code>projects.cancelled_at</code> · <code>projects.cancel_type</code> ·
+    <code>projects.cancelled_by</code> (שורת-הביטול מציגה את שלושתם; היום קיים
+    <code>cancel_reason</code> טקסט בלבד) ·
+    <code>params['סף_לקוח_רדום_ימים']</code> (אין פרמטר כזה — ולכן המסך אינו נוקב במספר-סף).<br>
+
+    <b>✅ ומה שנבדק וכבר קיים, כדי שלא ייבנה פעמיים:</b> האינדקס
+    <code>projects_customer_id_idx</code> (<code>schema.sql:517</code>) · מדיניות-הקריאה
+    <code>projects_select_by_permission</code> (<code>schema.sql:938</code>) — המשטח קורא בלבד
+    ואינו דורש policy-כתיבה.<br>
+
+    <b>⚠️ מוקש למי שבונה:</b> <code>StatTile</code> מעביר ערך <b>מספרי</b> דרך
+    <code>Money</code> (<code>StatTile.jsx:37</code>) ⇒ <code>value={4}</code> יוצג
+    <span class="ltr">"4 ₪"</span>. <b>"מספר אירועים" חייב לעבור כמחרוזת.</b>
+  </div>
+
+</main>
+</body>
+</html>

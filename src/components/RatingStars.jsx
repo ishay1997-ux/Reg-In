@@ -14,6 +14,8 @@
 // (מוקאפ 03), הכרטיס מציג חמישה גליפים (מוקאפ 08), והטופס מציג חמישה גליפים לחיצים
 // + `N מתוך 5` (מוקאפים 06/07).
 
+import Ltr from '@/components/Ltr'
+
 const STAR_COUNT = 5
 const EMPTY_LABEL = '—'
 
@@ -72,15 +74,12 @@ export default function RatingStars({ value, variant = 'glyphs', onChange, testI
     // המוקאפ כותב `5 ★` (ספרה ואז כוכב), אבל בתא RTL בלי בידוד ה-bidi מעביר את הכוכב
     // אל **שמאל** הספרה ומוצג `★ 5`. ⚠️ **וגם המוקאפ עצמו היה נשבר כך** — הוא מבודד את
     // עמודת-השכר (`.num`) ולא את עמודת-ההתרשמות, ולכן "כמו שצויר" לבדו היה משכפל את הפגם.
-    // ⇒ אותה עטיפה בדיוק של `Money`: `dir="ltr"` + `unicode-bidi:isolate`.
+    // ⇒ העטיפה עברה לרכיב `Ltr` (צעד 3.0 של מודול 6) — זה היה ההעתק הידני השני של הזוג
+    // `dir="ltr"` + `unicode-bidi:isolate`, ורכיב אחד שפולט את שניהם הוא מה שמונע סטייה.
     return (
-      <span
-        dir="ltr"
-        className="inline-block text-slate-700 [unicode-bidi:isolate]"
-        data-testid={testId}
-      >
+      <Ltr className="text-slate-700" data-testid={testId}>
         {rating} ★
-      </span>
+      </Ltr>
     )
   }
 

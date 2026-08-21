@@ -15,14 +15,28 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowRight, Check, Eye, Pencil, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import LoadingOrError from '@/components/LoadingOrError'
+import Ltr from '@/components/Ltr'
 import Money from '@/components/Money'
 import RowAction from '@/components/RowAction'
 import StatTile from '@/components/StatTile'
+import StatusTag from '@/components/StatusTag'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import { CUSTOMER_TYPE_LABELS, deriveCustomerMetrics } from '@/lib/customers'
 import { parseVatPercent } from '@/lib/pricing'
+import { eventDaysFromToday, PROJECT_STATUS_LABELS, resolveProjectTone } from '@/lib/projects'
+import {
+  DORMANT_THRESHOLD_PARAM_NAME,
+  cancellationSubLabel,
+  cancelledCountNote,
+  eventCountSummary,
+  lastEventTileState,
+  matchesProjectSearch,
+  projectAmount,
+  projectDaySentence,
+  splitCustomerProjectsByTimeline,
+} from '@/lib/customerProjects'
 import {
   deriveQuoteAmount,
   matchesQuoteFilters,
@@ -35,7 +49,12 @@ import {
   pendingQuotesLabel,
   quoteApprovedToast,
 } from '@/lib/quotes'
-import { getCustomer, getCustomerProjects, listCustomerContacts } from '@/modules/02_customers/api'
+import {
+  getCustomer,
+  getCustomerProjects,
+  getCustomerScreenParams,
+  listCustomerContacts,
+} from '@/modules/02_customers/api'
 import {
   approveQuote,
   getPricingCatalog,
@@ -102,6 +121,80 @@ function Detail({ label, value, ltr }) {
   )
 }
 
+// 🆕 שני חישובי-תצוגה של אריחי-מ6 (③.2), מחוץ לקומפוננטה בכוונה: הם מכניסים if/else-if
+// ו-JSX-מותנה שהיו מנפחים את המורכבות-הקוגניטיבית של CustomerDetailsPage מעבר לסף (sonarjs).
+
+// שלושת מצבי אריח "אירוע אחרון" (נספח ⑥ של המוקאפ) → {value, emptyText, sub} של StatTile.
+// StatTile עצמו לא יודע להבחין בין "עדיין לא ידוע" ל"טרם התקיים אירוע" (שניהם value=null) —
+// לכן ה-emptyText נקבע כאן, לפי ה-kind, לא לפי ברירת-המחדל הגנרית של הרכיב.
+function lastEventTileDisplay(state) {
+  if (!state) return { value: null }
+  if (state.kind === 'neverHeld') {
+    return {
+      value: null,
+      emptyText: 'טרם התקיים אירוע',
+      sub: state.nextDate ? (
+        <>
+          הראשון מתוכנן ל-<Ltr>{formatDate(state.nextDate)}</Ltr>
+        </>
+      ) : undefined,
+    }
+  }
+  return {
+    value: <Ltr>{formatDate(state.date)}</Ltr>,
+    sub: state.dormant ? (
+      <span className="text-amber-700 font-semibold">{`רדום · לפני ${state.daysAgo} ימים`}</span>
+    ) : (
+      projectDaySentence(-state.daysAgo)
+    ),
+  }
+}
+
+// E3 (🟢 RULED 14/08): התווית משתנה ("סה"כ הצעות מאושרות"), החישוב לא — ומונה-הביטולים
+// מצטרף לשורת-המשנה הקיימת כשיש כאלה. "לא בכוח": אין הרשאת-פרויקטים/עדיין נטען
+// (`cancelledCount` undefined) ⇒ מציגים את מה שכן ידוע בלי מונה-הביטולים, לא מסתירים הכול.
+function revenueTileSub(metrics, cancelledCount) {
+  if (metrics.approvedCount <= 0) return 'טרם נסגרה עסקה'
+  return [approvedQuotesLabel(metrics.approvedCount), cancelledCountNote(cancelledCount)]
+    .filter(Boolean)
+    .join(' · ')
+}
+
+// 🆕 מכנס את כל ה"מה ידוע על הפרויקטים כרגע" (③.2) למקום אחד מחוץ לקומפוננטה — שוב,
+// מורכבות-קוגניטיבית: בלי זה שלושה תנאים-זהים (canView && !loading && !error) היו חוזרים
+// בגוף-הרינדור עצמו במקום ליפול פעם אחת כאן.
+function deriveProjectsTileData({
+  canView,
+  loading,
+  error,
+  projects,
+  today,
+  dormantThresholdDays,
+}) {
+  const known = canView && !loading && !error
+  const eventStats = known ? eventCountSummary(projects) : null
+  const lastEventState = known ? lastEventTileState(projects, today, dormantThresholdDays) : null
+  return {
+    tabCount: canView ? projects.length : '—',
+    eventStats,
+    lastEvent: lastEventTileDisplay(lastEventState),
+  }
+}
+
+// 🆕 טעינת לשונית-הפרויקטים — מחוץ לקומפוננטה (מורכבות-קוגניטיבית, sonarjs) ומחוץ ל-effect
+// (כך שהיא לא זקוקה לגישה ל-state; הקורא מחליט מה לעשות עם התוצאה). `projects: null`
+// מסמן כשל (השאירי את הרשימה הישנה כמות שהיא; מסך-השגיאה מכסה אותה ממילא) ולעולם לא
+// "אין הרשאה" ⇒ בקשה בכלל (screens-approved ⑤).
+async function fetchProjectsTabState(canView, customerId) {
+  if (!canView) return { projects: [], error: '' }
+  try {
+    const rows = await getCustomerProjects(customerId)
+    return { projects: rows, error: '' }
+  } catch (err) {
+    return { projects: null, error: err.message || 'שגיאה בטעינת היסטוריית הפרויקטים.' }
+  }
+}
+
 function Tab({ label, count, active, onClick, testId }) {
   return (
     <button
@@ -137,11 +230,15 @@ export default function CustomerDetailsPage() {
   // ⚠️ שני שערים, לא אחד — ר' הערת-הפתיחה. מנהלת-כספים: edit כאן, view שם.
   const canEditCustomer = permissions['לקוחות'] === 'edit'
   const canEditQuotes = permissions['הצעות מחיר'] === 'edit'
+  // 🆕 משטח 8 (מודול 6): הרשאה נקראת מ-AuthContext **לפני** מצב-ריק (screens-approved ⑤) —
+  // אותו דפוס בדיוק כמו canReadHostesses/canReadCustomers ב-ProjectCardPage.jsx (מודול 6
+  // עצמו). projects_select_by_permission מחזירה אפס-שורות-בלי-שגיאה למי שאין לו הרשאה, ובלי
+  // הבדיקה הזו "אין הרשאה" היה נראה זהה ל"ריק כדין" — בדיוק המלכודת ש-⑤ אוסרת.
+  const canViewProjects = ['edit', 'view'].includes(permissions['פרויקטים'])
 
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [customer, setCustomer] = useState(null)
-  const [projects, setProjects] = useState([])
   const [contacts, setContacts] = useState([])
   const [quotes, setQuotes] = useState([])
   // ⚠️ **`null` = טרם ידוע, Set = נטען** (31/07/2026, אותה משפחה כמו חלון-המסמך). קבוצה ריקה
@@ -151,6 +248,17 @@ export default function CustomerDetailsPage() {
   const [productsBySku, setProductsBySku] = useState({})
   const [params, setParams] = useState({})
   const [reloadTick, setReloadTick] = useState(0)
+
+  // 🆕 היסטוריית-הפרויקטים (משטח 8) — state+טעינה נפרדים משאר העמוד, ר' ה-effect השני
+  // למטה. אותו דפוס כמו sentIds: כשל/הרשאה כאן לא מפילים את שאר הכרטיס.
+  const [projects, setProjects] = useState([])
+  const [projectsLoading, setProjectsLoading] = useState(true)
+  const [projectsError, setProjectsError] = useState('')
+  const [projectsReloadTick, setProjectsReloadTick] = useState(0)
+  const [projectSearchText, setProjectSearchText] = useState('')
+  // "היום" מחושב פעם אחת (אתחול-עצל של useState, לא ב-render/useMemo — react-hooks/purity),
+  // אותו דפוס כמו ProjectCardPage.jsx של מודול 6.
+  const [today] = useState(() => new Date().toISOString().slice(0, 10))
 
   const [tab, setTab] = useState('quotes')
   const [searchText, setSearchText] = useState('')
@@ -183,20 +291,24 @@ export default function CustomerDetailsPage() {
     ;(async () => {
       try {
         setLoading(true)
-        const [c, p, cc, qs, paramRows, catalog] = await Promise.all([
+        const [c, cc, qs, paramRows, catalog, customerParamRows] = await Promise.all([
           getCustomer(numericId),
-          getCustomerProjects(numericId),
           listCustomerContacts(numericId),
           listQuotesByCustomer(numericId),
           getQuoteScreenParams(),
           getPricingCatalog(),
+          // 🆕 סף-הרדימות (משטח 8) — לא בין שלושת פרמטרי-מסך-ההצעות, לכן שאילתה נפרדת.
+          getCustomerScreenParams(),
         ])
         if (cancelled) return
         setCustomer(c)
-        setProjects(p)
         setContacts(cc)
         setQuotes(qs)
-        setParams(Object.fromEntries(paramRows.map((row) => [row.param_name, row.param_value])))
+        setParams(
+          Object.fromEntries(
+            [...paramRows, ...customerParamRows].map((row) => [row.param_name, row.param_value]),
+          ),
+        )
         setProductsBySku(Object.fromEntries(catalog.products.map((prod) => [prod.sku, prod])))
         // יומן-השליחות נטען **אחרי** ההצעות כי הוא צריך את המזהים שלהן, וכשלון בו לא מפיל
         // את העמוד — אבל גם **אינו נבלע**: הוא מחזיר את המצב ל"לא ידוע", שני החיוויים
@@ -221,6 +333,26 @@ export default function CustomerDetailsPage() {
       cancelled = true
     }
   }, [numericId, reloadTick])
+
+  // 🆕 היסטוריית-הפרויקטים (משטח 8) — נפרדת מה-effect שמעל: כשל בה לא מפיל את כל הכרטיס
+  // (לשונית 'הצעות' ממשיכה לעבוד), ולשונית 'פרויקטים' מקבלת שגיאה+'נסה שוב' משלה
+  // (screens-approved §④). אין הרשאה נבדק **לפני** השליחה — לא רק לא-מציגים את התוצאה:
+  // 0 שורות עם error:null הוא מצב-RLS תקין (⑨), ומיותר לבקש רק כדי לזרוק את התשובה.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      setProjectsLoading(true)
+      const result = await fetchProjectsTabState(canViewProjects, numericId)
+      if (cancelled) return
+      // projects=null ⇒ כשל; משאירים את הרשימה הקודמת ב-state, מסך-השגיאה מכסה אותה ממילא.
+      if (result.projects !== null) setProjects(result.projects)
+      setProjectsError(result.error)
+      setProjectsLoading(false)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [numericId, canViewProjects, projectsReloadTick])
 
   // ‏parseVatPercent ולא ה-param_value הגולמי — אותו טיפוס בדיוק שמסך-ההצעות מעביר
   // (`QuotesPage.jsx`). שני מסכים שמעבירים טיפוסים שונים ל-prop אחד הם באג בהמתנה,
@@ -268,6 +400,23 @@ export default function CustomerDetailsPage() {
     rejected: quotes.filter((q) => q.quote_status === 'rejected').length,
   }
   const showControls = quotes.length > CONTROLS_THRESHOLD
+
+  // 🆕 שני אריחי-המדד שמ6 מחבר (③.2) — `null` (ולא 0/תאריך מזויף) כל עוד הנתון אינו ידוע
+  // בביטחון: אין הרשאה · עדיין נטען · טעינה נכשלה. "אין נתונים עדיין" עדיף על שקר.
+  const dormantThresholdDays = Number(params[DORMANT_THRESHOLD_PARAM_NAME])
+  const {
+    tabCount: projectsTabCount,
+    eventStats,
+    lastEvent: lastEventDisplay,
+  } = deriveProjectsTileData({
+    canView: canViewProjects,
+    loading: projectsLoading,
+    error: projectsError,
+    projects,
+    today,
+    dormantThresholdDays,
+  })
+  const revenueSub = revenueTileSub(metrics, eventStats?.cancelledCount)
   // ⚠️ כשהפקדים מוסתרים הם גם **לא מסננים** — מסנן דלוק בלי פקד נראה שמסביר אותו מעלים
   // שורות בלי סיבה גלויה (אותה מלכודת שתועדה במסך-הניהול).
   const filteredQuotes = quotes.filter((q) => {
@@ -340,16 +489,15 @@ export default function CustomerDetailsPage() {
           </div>
         </div>
 
-        {/* ---- רצועת-הדגשים: שלושת המספרים החיים בלבד (LOCAL-14) ---- */}
+        {/* ---- רצועת-הדגשים: שלושת הקיימים (מ2/מ3) + שני שמ6 מחבר (LOCAL-14, ③.2) ---- */}
         <div className="flex flex-wrap gap-3 p-6 pb-0">
+          {/* E3 (🟢 RULED 14/08): התווית משתנה מ"סה"כ הכנסות" ל"סה"כ הצעות מאושרות" בשני
+              המקומות שהיא מוצגת (כאן וב-CustomersPage) — החישוב עצמו לא זז. הצעה מאושרת
+              נספרת גם כשהפרויקט שנולד ממנה בוטל, ומונה-הביטולים מסביר את זה בשורת-המשנה. */}
           <StatTile
-            label={'סה"כ הכנסות'}
+            label={'סה"כ הצעות מאושרות'}
             value={metrics.totalRevenue}
-            sub={
-              metrics.approvedCount > 0
-                ? approvedQuotesLabel(metrics.approvedCount)
-                : 'טרם נסגרה עסקה'
-            }
+            sub={revenueSub}
             testId="metric-revenue"
           />
           <StatTile
@@ -364,11 +512,28 @@ export default function CustomerDetailsPage() {
             sub={metrics.avgDealSize == null ? 'אין עסקאות סגורות' : undefined}
             testId="metric-avg-deal"
           />
+          {/* 🆕 מ6 · מדד 1 מתוך 2. 🔴 מוקש-מוקאפ: StatTile מעביר ערך מספרי דרך Money —
+              value={4} היה מוצג "4 ₪". "מספר אירועים" עובר כמחרוזת. */}
+          <StatTile
+            label="מספר אירועים"
+            value={eventStats ? String(eventStats.count) : null}
+            sub={eventStats ? cancelledCountNote(eventStats.cancelledCount) : undefined}
+            testId="metric-event-count"
+          />
+          {/* 🆕 מ6 · מדד 2 מתוך 2 — שלושת מצביו (נספח ⑥ של המוקאפ) ב-lastEventTileDisplay. */}
+          <StatTile
+            label="אירוע אחרון"
+            value={lastEventDisplay.value}
+            emptyText={lastEventDisplay.emptyText}
+            sub={lastEventDisplay.sub}
+            testId="metric-last-event"
+          />
         </div>
-        {/* המדדים שטרם חוברו יורדים לשורה אחת שקטה: הם לא נמחקים (לא מסתירים יכולת עתידית),
-            אך גם לא תופסים שליש מרצועת-ההדגשים בשלושה ריבועי "אין נתונים עדיין". */}
+        {/* המדד שטרם חובר יורד לשורה אחת שקטה: לא נמחק (לא מסתיר יכולת עתידית), אך גם לא
+            תופס שליש מרצועת-ההדגשים בריבוע "אין נתונים עדיין". 🔴 מ6 עורכת אותה — "מספר
+            אירועים"/"אירוע אחרון" כבר מוצגים למעלה, והמשפט הישן עליהם היה שקר (כלל 13(ח)). */}
         <p className="mx-6 mt-2.5 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-1.5 text-[11.5px] text-slate-500">
-          ממתינים למודולים הבאים — מספר אירועים ואירוע אחרון (מודול 6) · ממוצע משוב (מודול 8)
+          ממתין למודול הבא — ממוצע משוב (מודול 8)
         </p>
 
         {/* ---- פרטים מקובצים ---- */}
@@ -427,8 +592,9 @@ export default function CustomerDetailsPage() {
             testId="customer-tab-quotes"
           />
           <Tab
+            // 🔴 המונה מציג '—' ולא 0 כשאין הרשאה — 0 הוא שקר על הדאטה (screens-approved ④/⑤).
             label="פרויקטים"
-            count={projects.length}
+            count={projectsTabCount}
             active={tab === 'projects'}
             onClick={() => setTab('projects')}
             testId="customer-tab-projects"
@@ -437,14 +603,17 @@ export default function CustomerDetailsPage() {
 
         <div className="p-6">
           {tab === 'projects' ? (
-            // ריק בכוונה: `projects` היא deny-all (RLS בלי policies) עד מודול 6. בלי חיפוש
-            // ובלי סינון — פקדים מעל אפס שורות הם פקדים בלי תפקיד. 🚧 מ6 מוסיף אותם עם הנתונים.
-            <p
-              className="text-center text-sm text-slate-400 py-8"
-              data-testid="customer-no-projects"
-            >
-              אין פרויקטים עדיין — יתמלא במודול 6
-            </p>
+            <ProjectsTabContent
+              canView={canViewProjects}
+              loading={projectsLoading}
+              error={projectsError}
+              onRetry={() => setProjectsReloadTick((t) => t + 1)}
+              projects={projects}
+              today={today}
+              vatRate={vatRate}
+              searchText={projectSearchText}
+              onSearchTextChange={setProjectSearchText}
+            />
           ) : quotes.length === 0 ? (
             <p className="text-center text-sm text-slate-400 py-8" data-testid="customer-no-quotes">
               אין הצעות מחיר ללקוח הזה
@@ -692,5 +861,249 @@ export default function CustomerDetailsPage() {
         onConfirm={handleReject}
       />
     </div>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// לשונית-הפרויקטים (משטח 8, מודול 6 על מסך מודול 2) — קומפוננטות-משנה, אותה מוסכמה
+// כמו Detail/Tab למעלה: קטנות, מקומיות לקובץ הזה, לא מיוצאות.
+// ══════════════════════════════════════════════════════════════════════════
+
+// שישה מצבים (screens-approved §④ + נספח-המוקאפ): אין-הרשאה · טעינה · שגיאה · ריק-אמיתי ·
+// ריק-אחרי-חיפוש · תוכן (שני קטעים). הסדר כאן *הוא* סדר-העדיפות — הרשאה נבדקת ראשונה.
+function ProjectsTabContent({
+  canView,
+  loading,
+  error,
+  onRetry,
+  projects,
+  today,
+  vatRate,
+  searchText,
+  onSearchTextChange,
+}) {
+  // 🔒 אין הרשאה — לא "אין פרויקטים". נבדק ראשון, לפני טעינה/שגיאה: מי שחסום לא ממתין
+  // לתשובת-רשת כדי לגלות שאין לו הרשאה (screens-approved ⑤).
+  if (!canView) {
+    return (
+      <div
+        className="flex flex-col items-center gap-2 py-8 text-center"
+        data-testid="customer-projects-no-permission"
+      >
+        <span aria-hidden="true" className="text-2xl">
+          🔒
+        </span>
+        <p className="text-sm text-slate-500">אין לך הרשאה לצפות בפרויקטים.</p>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return <LoadingOrError loading skeleton={{ variant: 'table' }} />
+  }
+
+  if (error) {
+    return (
+      <div
+        className="flex flex-col items-center gap-3 py-8 text-center"
+        role="alert"
+        data-testid="customer-projects-error"
+      >
+        {/* הנוסח כבר קיים מילולית ב-02_customers/api.js (הודעת getCustomerProjects) —
+            לא מנוסח מחדש (screens-approved §④). */}
+        <p className="text-red-600 font-semibold">שגיאה בטעינת היסטוריית הפרויקטים.</p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onRetry}
+          className="h-auto py-2 px-4 rounded-lg border-slate-300 text-slate-700"
+          data-testid="customer-projects-retry"
+        >
+          נסה שוב
+        </Button>
+      </div>
+    )
+  }
+
+  if (projects.length === 0) {
+    return (
+      <p className="text-center text-sm text-slate-400 py-8" data-testid="customer-no-projects">
+        עדיין לא נוצר פרויקט ללקוח הזה.
+        <br />
+        פרויקט נולד מאישור הצעת מחיר.
+      </p>
+    )
+  }
+
+  // מעל 8 פרויקטים בלבד (⑥, אותו CONTROLS_THRESHOLD שהלשונית-השכנה כבר משתמשת בו) —
+  // ומתחת לסף החיפוש גם **לא מסנן** (אותה מלכודת המתועדת בלשונית-ההצעות).
+  const showControls = projects.length > CONTROLS_THRESHOLD
+  const filtered = showControls
+    ? projects.filter((proj) => matchesProjectSearch(proj, searchText))
+    : projects
+  const { upcoming, happened } = splitCustomerProjectsByTimeline(filtered, today)
+
+  return (
+    <div className="flex flex-col gap-4">
+      {showControls && (
+        <input
+          type="search"
+          value={searchText}
+          onChange={(e) => onSearchTextChange(e.target.value)}
+          placeholder="חיפוש לפי שם אירוע"
+          data-testid="customer-projects-search"
+          className="h-9 w-64 rounded-lg border border-slate-200 px-3 text-sm text-slate-700"
+        />
+      )}
+
+      {showControls && filtered.length === 0 ? (
+        // ריק-אחרי-חיפוש — הפוך מריק-אמיתי: יש נתונים, אין התאמה. 🔴 "חיפוש" ולא "סינון"
+        // (§3.7): המשטח הזה מסנן בתיבת-טקסט, לא בגלולות, כמו שאר שבעת המשטחים.
+        <p
+          className="text-center text-sm text-slate-400 py-8"
+          data-testid="customer-projects-no-results"
+        >
+          אין פרויקט התואם לחיפוש.{' '}
+          <button
+            type="button"
+            onClick={() => onSearchTextChange('')}
+            className="text-teal-700 hover:text-teal-800 font-semibold"
+            data-testid="customer-projects-clear-search"
+          >
+            נקה חיפוש
+          </button>
+        </p>
+      ) : (
+        <>
+          {/* קטע ריק אינו מוצג כלל (④) — כותרת מעל אפס שורות היא רעש; אם הפילטר-אחר-חיפוש
+              הותיר קטע אחד ריק, הוא פשוט נעלם, לא "0 תוצאות". */}
+          {upcoming.length > 0 && (
+            <ProjectsSection
+              title="מתקרבים"
+              definition="תאריך האירוע טרם עבר · הקרוב ראשון"
+              rows={upcoming}
+              today={today}
+              vatRate={vatRate}
+            />
+          )}
+          {happened.length > 0 && (
+            <ProjectsSection
+              title="התקיימו"
+              definition="תאריך האירוע עבר, או שהפרויקט בוטל · האחרון ראשון · המבוטלים בסוף"
+              rows={happened}
+              today={today}
+              vatRate={vatRate}
+            />
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+function ProjectsSection({ title, definition, rows, today, vatRate }) {
+  return (
+    <div>
+      <div className="flex items-baseline gap-2 flex-wrap pb-1.5">
+        <h3 className="text-sm font-bold text-slate-700">{title}</h3>
+        {/* דרך <Ltr> ולא dir="ltr" גולמי — אותה מוסכמת-בידוד כמו בכל מונה-מספר במערכת. */}
+        <Ltr className="text-xs font-semibold text-slate-500">{rows.length}</Ltr>
+        <span className="text-[11.5px] text-slate-400">· {definition}</span>
+      </div>
+      <div className="rounded-xl border border-slate-100 overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="text-xs text-slate-500">
+              <th className="text-right font-medium py-2.5 px-3">תאריך אירוע</th>
+              <th className="text-right font-medium py-2.5 px-3">שם האירוע</th>
+              <th className="text-right font-medium py-2.5 px-3">סכום</th>
+              <th className="text-right font-medium py-2.5 px-3">מצב</th>
+              <th className="py-2.5 px-3" />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((project) => (
+              <ProjectRow
+                key={project.project_id}
+                project={project}
+                today={today}
+                vatRate={vatRate}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+// שורה לחיצה כולה (①) — "לכרטיס →" הוא אותו יעד בדיוק, החיווי הגלוי שהשורה לחיצה.
+// 🔴 היעד קיים כבר כקומפוננטה (ProjectCardPage.jsx, מ6 בנתה אותה בצעדים 3.0-3.7) — רק
+// ניתוב-הכתובת חסר עד צעד 4.1. הקישור מרונדר כבר עכשיו לפי הנחיית-הבנייה של הצעד הזה;
+// ר' דוח-המסירה לניגוד מול screens-approved ⑨ ("קישור ל-404 אינו אפשרות").
+function ProjectRow({ project, today, vatRate }) {
+  const navigate = useNavigate()
+  const isCancelled = project.project_status === 'cancelled'
+  const amount = projectAmount(project, vatRate)
+  const label = PROJECT_STATUS_LABELS[project.project_status]
+  const days = eventDaysFromToday(project.final_event_date, today)
+  const href = `/projects/${project.project_id}`
+
+  function goToCard() {
+    navigate(href)
+  }
+
+  return (
+    <tr
+      className="border-t border-slate-100 cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+      onClick={goToCard}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          goToCard()
+        }
+      }}
+      aria-label={`פתח כרטיס פרויקט: ${project.event_name}`}
+      data-testid={`customer-project-${project.project_id}`}
+    >
+      <td className="py-2.5 px-3 text-sm text-slate-600">
+        <div className="text-right">
+          <Ltr>{formatDate(project.final_event_date)}</Ltr>
+        </div>
+        <div className="text-[11.5px] text-slate-400">
+          {/* 🔴 ㊲: מבוטל תמיד מציג "היה אמור להתקיים" — לא ספירת-ימים, גם אם תאריכו עתידי. */}
+          {isCancelled ? 'היה אמור להתקיים' : projectDaySentence(days)}
+        </div>
+      </td>
+      <td className="py-2.5 px-3">
+        <div className="text-sm font-medium text-slate-700">{project.event_name}</div>
+        {isCancelled && (
+          <div className="text-[11.5px] text-slate-500">{cancellationSubLabel(project)}</div>
+        )}
+      </td>
+      <td className="py-2.5 px-3 text-sm text-slate-700">
+        {amount == null ? '—' : <Money amount={amount} />}
+      </td>
+      <td className="py-2.5 px-3">
+        {/* הטון דרך resolveProjectTone — שצועק על תווית לא-ממופה במקום להאפיר בשקט
+            (אותו דפוס כמו ProjectsPage.jsx של מודול 6 עצמו). */}
+        <StatusTag label={label} tone={resolveProjectTone(label)} />
+      </td>
+      <td className="py-2.5 px-3">
+        <a
+          href={href}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            goToCard()
+          }}
+          className="text-teal-700 hover:text-teal-800 text-[12.5px] font-semibold whitespace-nowrap"
+          data-testid={`customer-project-link-${project.project_id}`}
+        >
+          לכרטיס →
+        </a>
+      </td>
+    </tr>
   )
 }
