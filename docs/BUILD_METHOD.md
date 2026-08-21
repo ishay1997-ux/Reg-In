@@ -100,11 +100,13 @@ These run across all four stages, and are the direct answer to *"it was built wi
 
 This four-stage loop was not designed up front — it was earned, module by module.
 
-The first modules (authentication, customers) laid the foundation before the process was formalized. **Module 3** was built from the developer's own up-front specification and mockups — and the lesson that emerged from it is the origin of everything after it: a single specification, written before the domain is fully understood, is not enough. Parts of that early spec turned out to be wrong, and the mockups aged.
+**Module 1** (authentication and permissions) was built as free exploration: a single large first pass, then a week of hardening, with no formal method at all. The method was, in fact, born the moment module 1 *closed* — the "living build guide" format was created at that exact point, so module 1's own guide is an honest reconstruction *after the fact*. **Module 2** (customers) was then the first module built from a written blueprint — a full plan, with the database migrations written out before a line of code. Neither used the Discovery → Blueprint → Build → Close skill flow that exists today; those skills were codified about two weeks later, after both modules were already merged.
+
+**Module 3** was still built from the developer's own up-front specification and mockups — and the lesson that emerged from it is the origin of everything after: a single specification, written before the domain is fully understood, is not enough. Parts of that early spec turned out to be wrong, and the mockups aged.
 
 That realization is exactly why **Discovery** was engineered. In **Module 4** it first appeared as a long, manual process — run across roughly seven sessions, the blueprint alone taking about five days. It worked: it replaced the original spec with grounded, approved artifacts. But it was slow.
 
-By **Module 6**, Discovery had been codified into a reusable skill and parallelized across many agents — the full approved specification, screens, processes and mockups were produced in a single day. The method had matured from *manual → a prompt → a codified, parallelized skill*, each step a deliberate improvement drawn from the one before.
+By **Module 6**, Discovery had been codified into a reusable skill and parallelized across many agents — the full approved specification, screens, processes and mockups were produced in a single day. The method had matured from *no method at all, to a written plan, to a prompt, to a codified and parallelized skill* — each step a deliberate improvement drawn from the one before.
 
 ## A tool that was retired — and the lesson under it
 
