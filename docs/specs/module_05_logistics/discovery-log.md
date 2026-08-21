@@ -18,9 +18,9 @@ Reader: Claude (English). The Hebrew ruling record is `processes-approved.md`.
   table). Confirmed order-of-build note: module 6 was built before module 5 despite the guide's original
   intent (5 before 6) — explicitly acknowledged and reasoned in module 6's own processes-approved.md
   ("6-core → 5 → 6-integration", no Discovery dependency).
-- Read `docs/specs/module_06_projects/processes-approved.md:601-690` in full — the mandatory "what
+- Read `docs/specs/module_06_projects/processes-approved.md` in full (grep anchor: `מה מודול 6 מכתיב למודול 5`) — the mandatory "what
   module 6 dictates to module 5" section (7 items) plus the status-machine process card. Cross-checked
-  against `PROJECT_MASTER §6`'s `🚧 מ5 ← מ6` transcription (lines 627-629) — content matches, except
+  against `PROJECT_MASTER §6`'s `🚧 מ5 ← מ6` transcription (grep anchor: `שבעת הפריטים שמ6 מכתיב`) — content matches, except
   item 5 (cancellation cascade / §7.31): the source doc (written 13/08 same day) still says "open",
   but `PROJECT_MASTER §7` item 31 (also 13/08, later same day) shows it was resolved: no cascade,
   logistics rows are left untouched as billing evidence. Flagged this staleness to Ishay directly when
@@ -89,9 +89,36 @@ Reader: Claude (English). The Hebrew ruling record is `processes-approved.md`.
   process debate without ever presenting the surface list, which the template makes a **blocking** Stage
   1-א approval (no `M` without it). Surface list drafted in `processes-approved.md` and presented.
 
+## Session 1, continued — 21–22/08/2026 — stage 1 closed, then rebuilt after a fresh-eyes verdict
+
+- Stage 1 closed: 7 process cards approved, `M = 3` surfaces approved, and a scope cut made through the
+  conference lens rather than by feature count (3 built / 3 rejected-with-reasons).
+- Ishay released the frozen spec as the authority — *"אל תגביל את עצמך בגלל האפיון… מה צריך להוביל
+  אותנו באמת כשמחליטים? (לא האפיון)"* — and seven open items were ruled on the order: live code >
+  business logic > consistency with an existing pattern > world practice > C5 as evidence. **C5 changed
+  the outcome in zero of the seven.**
+- Three fresh-context reviewers then read the result from three deliberately different angles (a drawer
+  who may read only the spec set, a truth auditor who leaves the document, a coherence checker who only
+  asks whether it agrees with itself). **45 of 53 factual claims confirmed against the live DB — the
+  measured layer was clean. Every defect was document-to-document**, and all four cross-file
+  contradictions had one shape: a companion file RESTATED a ruling instead of pointing at it, then went
+  stale when the ruling moved. Root cause: rulings ㉓–㉙ were made AFTER agents wrote `data-set.md` and
+  `design-contract.md`, and the ripple never ran — iron rule 13, unexecuted.
+- The file was rewritten from scratch rather than patched, because the correction-layering WAS the
+  defect: five claims the file itself declared false were still present, one in three places.
+- Two rules added to the skill as a result: **one file rules and the rest point** (the repo's 🔗 mirror
+  convention, which existed and had never been applied to `docs/specs/`), and **the reader test for a
+  `🚧` debt** — who will grep this, and when? A debt filed against a closed, merged module has no reader.
+  Ishay caught that one directly: *"הוא כבר נוצר ומוזג לייצור אז נראלי זה צריך להיות באפיון שלך לא?"*
+- Ruling count ended at **34** (15 Ishay · 17 Claude-delegated · 1 Ishay-corrected-Claude · 1 derived).
+
 ## Open for next session / next turn
 
-- Stop 1 not yet reached — need to present classification + sweep tables + ledger to Ishay and ask
+- **Stage 2 — the three mockups + their screen cards.** `screens-approved.md` does not exist yet; that is
+  the next step, not an omission. The drawer-reviewer's guess log is the input: it lists every string and
+  state the cards must pin down.
+- Nothing is waiting on Ishay.
+- *(historical, from the first round:)* Stop 1 — present classification + sweep tables + ledger and ask
   "מה מהרשימה הזאת מפתיע אותך?"
 - STATUS.md's stale line about the safeguards PR blocking module 5 — needs a write-back fix (not done
   yet, flagged only in chat).
