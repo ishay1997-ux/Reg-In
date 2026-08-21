@@ -58,7 +58,7 @@ Only now is code written — following the micro-guide, **database and permissio
 
 > **permissions (RLS) → list screen → form → business logic → tests**
 
-and the thirteen modules themselves are built in dependency order (`3 → 4 → 6+5 → 8 → 9 → 7 → 11 → 10 → 12`), with the secure foundation (authentication + permissions) first because every other module's security checks against it.
+and the thirteen modules themselves are built in dependency order (`3 → 4 → 6 → 5 → 8 → 9 → 7 → 11 → 10 → 12`), with the secure foundation (authentication + permissions) first because every other module's security checks against it. *(Module 6 does not depend on module 5 — the reverse is true: module 6 dictates requirements to logistics, tracked as debt `🚧 מ5 ← מ6` in `PROJECT_MASTER.md`.)*
 
 Discipline during the build:
 - **No silent gap-filling.** If something is unclear, the approved spec is consulted; a genuine gap goes to the owner, it is never guessed.
@@ -70,7 +70,7 @@ Discipline during the build:
 
 Closing a module is run by an independent audit — ideally in a **fresh session**, so it re-verifies from scratch rather than trusting the session that did the building. It stress-tests the row-level-security rules, audits UX and validation, builds a test-coverage matrix, and issues a formal **merge verdict**. Crucially, the audit **does not merge, push, or open a pull request** — it only certifies the module is *ready* to merge; the human does the actual merge.
 
-**Honest evidence that the gate is real, not a rubber stamp:** module 6's closing audit returned **[NO] — with three blockers** (two of them needing a database fix). They were fixed, re-verified end-to-end, and only then was the module signed off. The full audit record: [`docs/archive/close-findings-module-6.md`](archive/close-findings-module-6.md). A process that *catches* problems is stronger evidence than a claim of perfection.
+**Honest evidence that the gate is real, not a rubber stamp:** module 6's closing audit returned **[NO] — with three blockers.** Two were genuine bugs, fixed with a database migration and re-verified end-to-end; the third was re-examined and ruled a non-issue — the scenario it guarded against ("an event with zero staff assigned") doesn't occur in practice, so the guard was removed rather than built around. Only then was the module signed off. The full audit record: [`docs/archive/close-findings-module-6.md`](archive/close-findings-module-6.md). A process that *catches* problems — and is willing to say "not a real problem" as often as "fixed" — is stronger evidence than a claim of perfection.
 
 ---
 

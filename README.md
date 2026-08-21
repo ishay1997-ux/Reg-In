@@ -14,7 +14,7 @@ REG-IN manages the full operational lifecycle of an events company as one connec
 
 > **Client → auto-priced Quote → approved Project → smart staff matching → Logistics checklist → Event → Financial closing → Management reports**
 
-Instead of an Excel file per stage and a WhatsApp group per event, everything lives in one system with **real, database-enforced permissions**. Each of the six company roles sees exactly what its job requires — and nothing else.
+Instead of an Excel file per stage and a WhatsApp group per event, everything lives in one system with **real, database-enforced permissions**. Each of the five company roles sees exactly what its job requires — and nothing else.
 
 > Final-year academic software-engineering project: thirteen vertically-sliced modules, a live PostgreSQL database with Row-Level Security, and a full Hebrew right-to-left interface.
 
