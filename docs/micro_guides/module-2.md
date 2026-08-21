@@ -41,7 +41,7 @@
 | Add/edit/archive customer, forgiving search, filters, permission gates | ✅ full | — | — |
 | Marketing upload + `mailto:` send to consented | ✅ full (interim send model) | M10: real server-side email + tracking | PROJECT_MASTER §6 |
 | Customer card — details | ✅ full | — | — |
-| Customer card — project history | 🚧 מ6 · frame + empty state | M6 (projects data + policies) | PROJECT_MASTER §6 |
+| Customer card — project history | ~~🚧 מ6~~ **paid 19/08/2026 (M6 step 3.8)** — real "מתקרבים"/"התקיימו" tabs render actual project data, not an empty-state placeholder | ~~M6 (projects data + policies)~~ ✅ | PROJECT_MASTER §6 |
 | Customer card — totalRevenue + avgFeedback metrics | ~~🚧 מ3~~ **paid 30/07/2026 (M3 step 3.5)** · 🚧 מ8 · placeholder for the feedback half only | ~~M3 (pricing SSOT)~~ ✅ + M8 (feedback) | PROJECT_MASTER §6 |
 | Customer card — cumulative gross-profit metric (C6 §2.4.1 derived attr; distinct from the M7 monthly-KPI §7-item) | 🚧 מ8 · placeholder ("אין נתונים עדיין") | M8 (owns the gross-profit formula — spec 5.14; retargeted from M7 10/07 evening, reviewer finding — M7 is the display-only dashboard; see §7.79) | PROJECT_MASTER §6 |
 | Satisfaction stars in list + satisfaction filter | 🚧 מ8 · present-but-inert | M8 | PROJECT_MASTER §6 |
@@ -480,6 +480,14 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
   and policies exist — **the filter is not built in M2 because there is no data**, not because it was
   dropped. Full text: `PROJECT_MASTER §6`, the `🚧 מ6 · 🚧 מ8` line opening **`פילטרים נגזרים
   ברשימת-הלקוחות`**. *(added 12/08/2026 — reverse-direction audit of §6, `regin-docs-sync`.)*
+
+**↳ ✅ resolved 19/08/2026 (M6 step 3.8) — the M6 half only.** The dormant/active-projects filter is
+live: `matchesCustomerFilters` (`src/lib/customers.js`) takes a `dormantOnly` filter key (line ~51)
+and applies `if (dormantOnly === true && customer.is_dormant !== true) return false` (line ~60),
+reading the derived `is_dormant` flag injected onto the row before filtering — same pattern as
+`total_revenue`. `PROJECT_MASTER.md:399` already shows the central registry line struck through with
+matching evidence (`סף_לקוח_רדום_ימים` param, seeded 120, not hardcoded). **The מ8 half — the
+satisfaction filter — stays open; module 8 is not built.**
 
 **↳ as-built 10/08/2026 — cross-module fix from Module 4's accessibility pass:
 `CustomersPage.jsx`'s only heading, `<h2>רשימת לקוחות</h2>`, promoted to `<h1>`.** Ishay asked to

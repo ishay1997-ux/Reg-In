@@ -112,6 +112,25 @@ git commit -m "db: [שם המיגרציה] + עדכון schema snapshot"
 *(נרשם כאן ולא ביומן כי הקורא שלו הוא מי שנוגע בתיקייה הזאת. **המוקש קדם למודול 4** — הוא קיים
 בכל מיגרציה שהוחלה דרך ה-MCP.)*
 
+## מוקש: `public.moddatetime` — הפונקציה זזה ל-`extensions`
+
+**נמדד 14/08/2026 (בלופרינט מ6) וחזר 18/08/2026 (שער 1.10 של מ6, `H-MD`).** ה-extension עבר
+`public`→`extensions` במיגרציה `20260710164420`. ⇒ טריגר חדש חייב `execute function
+extensions.moddatetime('updated_at')` — **לא** `public.moddatetime`, שהוא SQL שבור על סכמה נוכחית
+(11 הטריגרים הישנים ב-`20260710160735` עובדים רק כי הם נקשרו ל-OID של הפונקציה **לפני** המעבר —
+להעתיק את הצורה שלהם ייכשל גם כן). ⚠️ **ומוקש-משנה שיטעה בדיקה אוטומטית:** `pg_get_triggerdef`
+מדפיס את שם הפונקציה **בלי** קידומת-סכמה, אז grep אחר `extensions.moddatetime` בהגדרת-הטריגר
+מחזיר "לא נמצא" גם כשהטריגר תקין — לאמת דרך `pg_trigger→pg_proc→pg_namespace`, לא grep.
+
+## מוקש: `revoke … from public` אינו מבטל הרשאת-`anon` על פונקציה חדשה
+
+**נמדד 09/08/2026 (מיגרציית מ4 E→F).** ב-Supabase, `alter default privileges` מעניק EXECUTE ל-`anon`
+**בשם, לא דרך `public`** — כך ש-`revoke execute on function X from public` בלבד **משאיר את `anon`
+עם גישה**, ותחזית-ה-advisor על כמות ה-WARNs תהיה שגויה (נמדד: תחזית 14/15, בפועל 16 — הפער הוא
+בדיוק ה-`anon`-grant שנשאר). ⇒ **תמיד לכתוב `revoke … from public, anon, authenticated`** (הדפוס
+שכבר קיים במיגרציית מ4-D) ולוודא בפועל דרך `select proacl from pg_proc where …` שאין `anon=X` ברשימה,
+לא להסתפק בכתיבת ה-`revoke` ולהניח שהוא תפס.
+
 ## מוקש: טבלה חדשה בשימוש ראשון
 
 🔴 **נמדד מחדש 18/08/2026 (שער 1.10 של מ6, מתוך `get_advisors` חי) — הרשימה זזה שוב:** טבלה עסקית

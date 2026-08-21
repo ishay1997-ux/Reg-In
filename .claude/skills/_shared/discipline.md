@@ -35,6 +35,16 @@ Read **`~/.claude/CLAUDE.md`** (loads every session, every project) for the univ
 
 Prefer a grep anchor (function name / string) over a line number — line numbers rot between writing and executing.
 
+🔑 **The acceptance-oracle rule: never re-author an acceptance number.** A unit test written by the same
+session that wrote the formula will encode the same wrong formula and pass green — it proves internal
+consistency, not correctness. *(Anchor 14/08/2026, module 6, hit twice on the same defect: `list_projects_overview`
+summed `qty × price` with no discount term ⇒ project `#8` returned `6,300.00` where `spec.md`'s
+**hand-computed** anchor said `5,355.00 ₪`. Caught only because a human had computed the number by hand
+**before the code existed**, and an agent ran the live query instead of reading the code.)* ⇒ for any
+screen showing a computed total/count that matters (money, a ratio, a status count), get the number
+**by hand, from the spec/data, before the code is written** — and verify the built screen against that
+number, never against a test the same session authored.
+
 ## Adopting a world practice — the fit check and the price tag
 
 > **When this fires:** root `CLAUDE.md` iron rule 1 says that with **no internal anchor** you go fetch an
