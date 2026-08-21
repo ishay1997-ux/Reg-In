@@ -18,6 +18,8 @@ Instead of an Excel file per stage and a WhatsApp group per event, everything li
 
 > Final-year academic software-engineering project: thirteen vertically-sliced modules, a live PostgreSQL database with Row-Level Security, and a full Hebrew right-to-left interface.
 
+> 📖 **See also — [How REG-IN Was Built](docs/BUILD_METHOD.md):** the engineering method behind the app, with links to the specs, build plans and audit records that prove it.
+
 ## Screenshots
 
 **Projects — the central hub.** Every event's staffing and logistics readiness at a glance, driven by an eight-status state machine.
