@@ -20,7 +20,7 @@ flowchart LR
     D -->|next module · open debts carried forward| A
 ```
 
-Each stage is codified as a reusable **skill** (an automation the assistant runs), so every module gets the same treatment: [`.claude/skills/module-discovery`](.claude/skills/module-discovery), [`module-blueprint`](.claude/skills/module-blueprint), [`module-build`](.claude/skills/module-build), [`module-close`](.claude/skills/module-close). Module 6 (Projects) is used below as the worked example, because its artifacts are the most complete.
+Each stage is codified as a reusable **skill** (an automation the assistant runs), so every module gets the same treatment: [`.claude/skills/module-discovery`](../.claude/skills/module-discovery), [`module-blueprint`](../.claude/skills/module-blueprint), [`module-build`](../.claude/skills/module-build), [`module-close`](../.claude/skills/module-close). Module 6 (Projects) is used below as the worked example, because its artifacts are the most complete.
 
 ---
 
@@ -32,11 +32,12 @@ The evidence, for module 6:
 
 | Artifact | What it is |
 |---|---|
-| [`docs/specs/module_06_projects/spec.md`](docs/specs/module_06_projects/spec.md) | The approved specification: locked vocabulary, the ordered reading list, the **"what counts as working"** acceptance criteria, the testable numbers, and an explicit list of what the blueprint is *not* allowed to guess. |
-| [`screens-approved.md`](docs/specs/module_06_projects/screens-approved.md) | The **approved screen designs** — one card per screen: every click, the source of every number on screen, permissions, states, and validations. |
-| [`processes-approved.md`](docs/specs/module_06_projects/processes-approved.md) | The **rulings** — 38 numbered decisions, the process flows, the project state machine, and the formulas. |
-| [`discovery-log.md`](docs/specs/module_06_projects/discovery-log.md) | The **evidence trail** behind every ruling — written as the work happened. |
-| [`world-sources.md`](docs/specs/module_06_projects/world-sources.md) | The external references each design choice was grounded in — a ready answer to *"why did you choose it this way?"* |
+| [`docs/specs/module_06_projects/spec.md`](specs/module_06_projects/spec.md) | The approved specification: locked vocabulary, the ordered reading list, the **"what counts as working"** acceptance criteria, the testable numbers, and an explicit list of what the blueprint is *not* allowed to guess. |
+| [`screens-approved.md`](specs/module_06_projects/screens-approved.md) | The **approved screen designs** — one card per screen: every click, the source of every number on screen, permissions, states, and validations. |
+| [approved visual mockups](mockups/project-management-screen/approved) | The eight **approved HTML mockups** — one per screen — the visual design the finished UI was built and checked against. |
+| [`processes-approved.md`](specs/module_06_projects/processes-approved.md) | The **rulings** — 38 numbered decisions, the process flows, the project state machine, and the formulas. |
+| [`discovery-log.md`](specs/module_06_projects/discovery-log.md) | The **evidence trail** behind every ruling — written as the work happened. |
+| [`world-sources.md`](specs/module_06_projects/world-sources.md) | The external references each design choice was grounded in — a ready answer to *"why did you choose it this way?"* |
 
 > When an approved spec already exists (the normal case), the product-manager interview is deliberately **skipped** — re-asking the owner to re-decide what he already decided is not thoroughness. What survives is a fresh-eyes blind-spot pass over the plan.
 
@@ -44,7 +45,7 @@ The evidence, for module 6:
 
 The blueprint turns the approved spec into a **living build plan** — the module's *micro-guide*. Again, **no code is written in this stage.** The architect validates the module's place in the dependency graph, runs a database-design challenge for anything touching the schema, and triages every open gap into *must-decide-now* (brought to the owner) versus *decide-later* — and never resolves an open product question on its own.
 
-The output is the nine-section micro-guide that the build stage executes: [`docs/micro_guides/module-6.md`](docs/micro_guides/module-6.md). Its most telling sections:
+The output is the nine-section micro-guide that the build stage executes: [`docs/micro_guides/module-6.md`](micro_guides/module-6.md). Its most telling sections:
 
 - a **Decisions Ledger** — product, architecture and screen rulings, each traceable, plus the items still open and owned by the human;
 - a **Security & Auth model** naming the exact row-level-security policy for every table;
@@ -53,7 +54,7 @@ The output is the nine-section micro-guide that the build stage executes: [`docs
 
 ## 3 · Build — vertical slices, database-first, test-first
 
-Only now is code written — following the micro-guide, **database and permissions (RLS) before any UI**. Each module is built as a *vertical slice*, in this order (from [`docs/guides/00_roadmap.md`](docs/guides/00_roadmap.md)):
+Only now is code written — following the micro-guide, **database and permissions (RLS) before any UI**. Each module is built as a *vertical slice*, in this order (from [`docs/guides/00_roadmap.md`](guides/00_roadmap.md)):
 
 > **permissions (RLS) → list screen → form → business logic → tests**
 
@@ -69,7 +70,7 @@ Discipline during the build:
 
 Closing a module is run by an independent audit — ideally in a **fresh session**, so it re-verifies from scratch rather than trusting the session that did the building. It stress-tests the row-level-security rules, audits UX and validation, builds a test-coverage matrix, and issues a formal **merge verdict**. Crucially, the audit **does not merge, push, or open a pull request** — it only certifies the module is *ready* to merge; the human does the actual merge.
 
-**Honest evidence that the gate is real, not a rubber stamp:** module 6's closing audit returned **[NO] — with three blockers** (two of them needing a database fix). They were fixed, re-verified end-to-end, and only then was the module signed off. The full audit record: [`docs/archive/close-findings-module-6.md`](docs/archive/close-findings-module-6.md). A process that *catches* problems is stronger evidence than a claim of perfection.
+**Honest evidence that the gate is real, not a rubber stamp:** module 6's closing audit returned **[NO] — with three blockers** (two of them needing a database fix). They were fixed, re-verified end-to-end, and only then was the module signed off. The full audit record: [`docs/archive/close-findings-module-6.md`](archive/close-findings-module-6.md). A process that *catches* problems is stronger evidence than a claim of perfection.
 
 ---
 
@@ -79,7 +80,7 @@ These run across all four stages, and are the direct answer to *"it was built wi
 
 **Correctness is verified, not assumed.** Every change runs a regression gate (lint · unit tests · duplication · dead-code · dependency audit); new tests must first fail against broken code; and features are verified **live against the real database**, including confirming that each role is actually blocked from data it shouldn't see.
 
-**Two irreversible actions are gated by a typed confirmation you cannot give without reading.** To apply a database migration, the developer must **type the migration's name by hand** — not "yes", not "approve" ([`supabase/migrations/CLAUDE.md`](supabase/migrations/CLAUDE.md)). To sign off a module, the developer types the module name plus `DoD`. Typing the exact name is only possible after reading what is being approved. These are the only two such gates in the project, by design.
+**Two irreversible actions are gated by a typed confirmation you cannot give without reading.** To apply a database migration, the developer must **type the migration's name by hand** — not "yes", not "approve" ([`supabase/migrations/CLAUDE.md`](../supabase/migrations/CLAUDE.md)). To sign off a module, the developer types the module name plus `DoD`. Typing the exact name is only possible after reading what is being approved. These are the only two such gates in the project, by design.
 
 **A comprehension check at every close.** The closing artifact ends with three plain-language questions about behaviour the owner will have to live with (*"a hostess cancels two days before the event — what happens now, and what must you do by hand?"*). It is a **signal, not a gate**: a wrong answer means "stop and walk through it", because a question the owner cannot answer is the cheapest possible sign that the built behaviour and his intent have diverged.
 
@@ -89,9 +90,9 @@ These run across all four stages, and are the direct answer to *"it was built wi
 3. **An engineer would be impressed** — one consistent system, not a pile of special cases.
 4. **Explainable in one sentence** — without citing a document. If the whole answer is "because the spec says so", that's copying, not deciding.
 
-**The documentation cannot silently rot.** A session that changes module code cannot end until the matching build guide, the status board, and the work log are updated in the same session — enforced mechanically by a local Stop hook ([`.claude/hooks/check-docs-updated.sh`](.claude/hooks/check-docs-updated.sh)). *(This is a local enforcement, not a cloud CI check.)*
+**The documentation cannot silently rot.** A session that changes module code cannot end until the matching build guide, the status board, and the work log are updated in the same session — enforced mechanically by a local Stop hook ([`.claude/hooks/check-docs-updated.sh`](../.claude/hooks/check-docs-updated.sh)). *(This is a local enforcement, not a cloud CI check.)*
 
-**Nothing falls through the cracks between modules.** When building one module surfaces work that belongs to a future module, it is recorded as a tagged debt in a central registry — schema changes in [`docs/db_roadmap.md`](docs/db_roadmap.md), cross-module debts and still-open product decisions in [`docs/PROJECT_MASTER.md`](docs/PROJECT_MASTER.md) (§6 debts, §7 open questions) — and mechanically re-surfaced the moment that module opens. So across a months-long, thirteen-module build, no requirement is quietly dropped, and no open product question is decided without the owner.
+**Nothing falls through the cracks between modules.** When building one module surfaces work that belongs to a future module, it is recorded as a tagged debt in a central registry — schema changes in [`docs/db_roadmap.md`](db_roadmap.md), cross-module debts and still-open product decisions in [`docs/PROJECT_MASTER.md`](PROJECT_MASTER.md) (§6 debts, §7 open questions) — and mechanically re-surfaced the moment that module opens. So across a months-long, thirteen-module build, no requirement is quietly dropped, and no open product question is decided without the owner.
 
 ---
 
@@ -107,11 +108,11 @@ By **Module 6**, Discovery had been codified into a reusable skill and paralleli
 
 ## A tool that was retired — and the lesson under it
 
-Not every idea survived. An early skill, `work-manager` (now archived at [`docs/archive/work-manager/`](docs/archive/work-manager/)), made one session the "on-duty manager" that coordinated the parallel sessions, held the work plan, and dispatched and approved their work. The ambition was to automate the coordinating role — to let the system, in effect, run itself.
+Not every idea survived. An early skill, `work-manager` (now archived at [`docs/archive/work-manager/`](archive/work-manager/)), made one session the "on-duty manager" that coordinated the parallel sessions, held the work plan, and dispatched and approved their work. The ambition was to automate the coordinating role — to let the system, in effect, run itself.
 
 It was retired, because it kept hitting the same wall: the sessions still needed to report to a *person*, and the manager-session could not supply the one thing that actually mattered — independent judgment and final authority. The clearest evidence is measured in this very project: across five separate shifts, an AI session's rate of catching the flaws in *its own* work was **zero** every time; the mistakes were caught by the human, or by a fresh independent session — never by the author re-reading itself.
 
-So `work-manager` became the [`advisor`](.claude/skills/advisor) skill, whose first and overriding rule is the exact opposite of its predecessor's: **sessions report to the developer, never to the tool. It advises; it never commands, never rules on the product, and never answers in his place.**
+So `work-manager` became the [`advisor`](../.claude/skills/advisor) skill, whose first and overriding rule is the exact opposite of its predecessor's: **sessions report to the developer, never to the tool. It advises; it never commands, never rules on the product, and never answers in his place.**
 
 This is the through-line of the whole method, and the honest answer to *"you built it with AI — so what did you do?"*: **the AI accelerates the work, but it cannot judge its own work.** The critical review, the product authority, the final sign-off — the parts a machine cannot supply for itself — stayed human throughout. That is precisely why the developer could not be replaced.
 
@@ -124,4 +125,4 @@ A few things are stated exactly, because accuracy is part of the point:
 - The closing audit **certifies** a module as mergeable; it never performs the merge — that decision stays with the human.
 - The smoke / end-to-end suites and the documentation-sync check are enforced **locally** (git hooks and the quality gate), not by cloud CI — so the enforcement is real, but it lives on the developer's machine.
 
-For the day-to-day working guide (for anyone developing REG-IN), see [`docs/DEV_HOME.md`](docs/DEV_HOME.md).
+For the day-to-day working guide (for anyone developing REG-IN), see [`docs/DEV_HOME.md`](DEV_HOME.md).
