@@ -642,6 +642,20 @@ place he does not read.)*
 ⇒ **The Hebrew file is the conversation's memory, not its summary.** Without it the conversation is the
 only memory, and it gets erased.
 
+🔴 **Reality rulings ("לא קורה") get their OWN register — because they are the one ruling that leaves no
+other trace, and the build re-asks them otherwise.** When Ishay KILLS a path — *"לא קורה"* · *"אין דבר
+כזה"* · *"זה לא קורה אצלי"* — a normal ruling produces a column, a string, a screen; **a killed path
+produces nothing to grep**, so the file that posed the question keeps posing it and a build session
+**rebuilds the dead path.** ⇒ Record every killing ruling in a **dedicated, fixed-heading section of
+`processes-approved.md`** — the heading is exactly **`## מסלולים שנשללו כ"לא-קורה" (הכרעות-מציאות)`** so it
+is greppable by name — one row each: **the scenario · his words verbatim · the date · "אין לבנות מסלול
+לזה; אין לשאול שוב."** The blueprint's decision-coverage back-check reads this section by name and counts a
+killed row as covered, so the path is neither built nor re-surfaced. ⟦EX⟧ *(a real kill, `processes-approved.md:737`:
+*"פרויקט שבוטל חוזר לחיים? — לא קורה ⇒ אין לבנות ביטול-ביטול"* — but it sits in a lone table row, not a
+register the build reads as one set. And the inverse cost, when the reality-filter question is not asked at
+all: module 6 built a legal "close an event with zero hostesses" path that Ishay had to reject only at
+CLOSING, as an already-built screen — *"אין דבר כזה במציאות אירוע ללא דיילות"*.)*
+
 **🛑 Stop 1 — the first, and short:** present the classification · the three sweeps as tables · and the
 requirements ledger. **Ask exactly one question: "מה מהרשימה הזאת מפתיע אותך?"** — that is the question
 that returns the most.
@@ -980,7 +994,7 @@ guide and not the skill. 🔴 **Verify yourself whether the line is already ther
 **becomes code.** ⚠️ **Therefore the check is defined and not left to interpretation.** In his words:
 > *"זה נתון לפרשנות, כל אחד יעשה בקרה מסוג אחר וככה דברים יתפספסו."*
 
-**Six cross-checks. Each produces "found / not found", not a feeling. Do them as written; do not invent
+**Seven cross-checks. Each produces "found / not found", not a feeling. Do them as written; do not invent
 your own.**
 
 1. **Label vs label** — a term appearing in two files with different wording *(`processes-approved` vs
@@ -997,10 +1011,23 @@ your own.**
 6. **Reverse coverage — against the requirements ledger.** Every ledger row must map to a ruling or to a
    recorded rejection. **A row with neither is a silent omission.** *(With the ledger in place from Stage
    0 this is a lookup rather than an excavation.)*
+7. **Cross-surface reconciliation matrix — the check parallel authorship needs, and #1–#6 do not cover it.**
+   🔴 **#1 (label vs label) compares across FILES; this one compares the surface cards to EACH OTHER**,
+   because surfaces are drawn 2–3 per session (the budget rule) and **never see one another**. Build ONE
+   sheet: **rows = every status · every shared label · every repeated affordance** (a success toast, a
+   "cannot load" string, a loading skeleton, a permission cell, an error wording) · **columns = every
+   surface.** A cell that differs across surfaces is a finding — a status `muted` on one card and `teal` on
+   another, a "reason required" string worded three ways, a `qty_delta`/`delta_qty` split. 🔴 **Present the
+   FILLED sheet to Ishay, not the cards one at a time** — visual approval of N cards cannot catch a
+   cross-card inconsistency, because **no single card shows the same value twice**, so the eye has nothing
+   to compare. ⟦EX⟧ *(module 6: eight cards drawn across parallel sessions produced **10 cross-card
+   contradictions** catalogued only in an appendix — cancel-type in three wordings, a close-tab disabled on
+   one card and absent on another, a "נסי/נסה" gender split — none visible on a normal per-card read; measured to be, more than any
+   card-vs-process gap, what re-asked Ishay questions he had already answered.)*
 
 🚫 **What you do with a finding: report it to Ishay and fix it with his approval. Do not fix silently and
 do not decide alone.**
-⚠️ **And "zero findings" is a legitimate output** — but only after all six ran in fact, and you said they
+⚠️ **And "zero findings" is a legitimate output** — but only after all seven ran in fact, and you said they
 ran.
 
 ## 🔴 Fresh-context reviewers — mandatory, and three distinct angles
