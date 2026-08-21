@@ -638,6 +638,27 @@ measurable at the end — the reverse-coverage check ran **after** `spec.md` had
 `module-blueprint` mandates it explicitly. **A rejection without a §6 line is a silent debt** — it lives
 only in your draft, and module N will never find it.
 
+🔴 **But before you write the line — the reader test, one question: who will grep this, and when?**
+The register is read by **the session that OPENS module N**. That is its only reader. So:
+
+| The target | Will it be opened? | ⇒ |
+|---|:-:|---|
+| A module not yet built | ✅ | **A real debt. Write the line.** |
+| A module **closed and merged** | ❌ | 🔴 **A debt with no reader.** It is work for the module you are speccing NOW — file it as a ripple in its own plan |
+| A module that does not exist | ❌ | Same, and already rejected once in this repo for exactly this reason |
+
+⟦EX⟧ *(the repo's own precedent, in `PROJECT_MASTER §6`: a module-4 debt was nearly filed to `🚧 מ13`
+and was moved to `🚧 מ12`, with the reason recorded — «**הרשם נקרא ב-`grep`, ואף סשן לא יפתח מודול שאינו
+קיים**». Module 5 then hit the same shape from the other side: an obligation on module 6 — **closed,
+merged and live** — was about to be filed as `🚧 מ6 ← מ5`. **Ishay caught it:** *"הוא כבר נוצר ומוזג
+לייצור אז נראלי זה צריך להיות באפיון שלך לא?"* It became a module-5 build item instead, beside the two
+ripples into merged code that were **already** filed that way — the inconsistency had no reason behind
+it. **The debt that stayed** was `🚧 מ11 ← מ5`, because module 11 has not been built and will genuinely
+grep for it.)*
+
+🔑 **And note this is the same disease as the mirror rule above, wearing different clothes: "I wrote it
+down, so it is handled." It is not handled until someone whose path crosses it will actually read it.**
+
 ## 0ד · Create the skeleton now
 
 Create `docs/specs/module_[NN]_<slug>/processes-approved.md` containing **the requirements ledger · an
