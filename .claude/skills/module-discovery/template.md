@@ -378,6 +378,16 @@ at the end of the process.** **The test: a fresh session, with no context whatso
 stage's draft and continues from the next item without asking anything.** *(Ishay's ruling
 07/08/2026.)*
 
+🔴 **And one file OWNS each fact; the rest point at it — the spec folder needs this as much as the repo does.**
+`processes-approved.md` is the only file in the folder that may state a product rule. **A companion file that
+needs the ruling's text carries the mirror tag** *(`docs/CLAUDE.md`, anchor `קונבנציית מראה`)*, never a bare copy.
+🔑 **Why this belongs to the persistence law and not only to the agent brief:** the failure is not that a copy
+is *wrong when written* — it is right when written, and **goes stale the moment the ruling moves**, which in a
+Discovery is constantly. ⟦EX⟧ *(module 5: **every** cross-file contradiction three independent reviewers found
+was an untagged restatement, and none of them was wrong on the day it was written.)*
+⚠️ **The test, and it is one question: if this ruling changes tomorrow, how many files must I edit?**
+**More than one ⇒ the extras must be pointers.**
+
 **🏷️ Each draft carries one tracking table, maintained at every stop — not only when the stage ends:**
 **item (process / surface / chapter) · state (✅ approved / 🔶 draft / ⬜ not yet) · pointer (mockup or
 section).** 🔴 **In `screens-approved.md` this table sits at the head of the file and its heading is
@@ -845,6 +855,29 @@ reason · the stages, the stop points and what each writes to disk · the exact 
 - ⚠️ **Verify what an agent returns.** Ishay, 13/08/2026: > *"שים לב שלפעמים סוכן לא מכיר כל מה שדיברנו
   או ראית אז בדוק היטב מה שהוא אומר."*
 - 🔴 **Before every wave, tell Ishay how many agents and the rough cost.** He pays and waits in real time.
+- 🔴 **ONE file rules. Every other file in the spec folder POINTS.** `processes-approved.md` is the only
+  file in the folder allowed to state a product rule; `data-set.md`, `design-contract.md` and
+  `world-sources.md` carry measurements, palettes and data. **Say this inside every agent prompt that
+  writes into the folder, and say it again at the top of each file the agent produces** — otherwise the
+  next agent to open that file inherits the wrong idea about what it is for.
+- 🔴 **And when a companion file genuinely needs the text of a ruling in front of the reader, it carries
+  the repo's mirror tag** *(`docs/CLAUDE.md`, anchor `קונבנציית מראה`)*: `🔗 מראת <ruling> — SSOT: <file>
+  (לא לערוך כאן)`. **An untagged restatement is a finding, not a convenience.**
+  ⟦EX⟧ *(module 5, 21–22/08/2026: three fresh-context reviewers, given three deliberately different
+  angles, each independently surfaced the same four cross-file contradictions — the dispatch-window rule,
+  drill-in-as-dialog-vs-page, the primary teal, and the spec's own status. **All four had one shape: a
+  companion file **restated** a ruling instead of pointing at it, and went stale the moment the ruling
+  moved.** Every one would have been impossible under the mirror tag. **The convention already existed in
+  the repo and had simply never been applied to `docs/specs/`.**)*
+- 🔴 **Never let an agent write a decision-bearing file while decisions are still moving — and this is the
+  mechanism behind the previous two bullets, not a separate rule.** ⟦EX⟧ *(same session: the data set and
+  the design contract were written by agents at 23:24–23:32; rulings ㉓ and ㉔ were made **after** that, in
+  the conversation, and the ripple into those two files never ran — iron rule 13, unexecuted. Neither file
+  was wrong when written.)* ⇒ **Either freeze the relevant rulings before dispatching, or brief the agent
+  to write measurements ONLY.** ⚠️ **And the brief must say so explicitly, because an agent asked for
+  "data" will still editorialise into rules if you do not forbid it** — that same data set grew a
+  "house rules" section that ruled on dialog-vs-page and on the primary colour, neither of which it was
+  asked about, and both of which then contradicted the conversation.
 
 ## 📐 The card written beside the mockup — nine sections, and that is all that is written
 
