@@ -91,7 +91,7 @@ These run across all four stages, and are the direct answer to *"it was built wi
 
 **The documentation cannot silently rot.** A session that changes module code cannot end until the matching build guide, the status board, and the work log are updated in the same session — enforced mechanically by a local Stop hook ([`.claude/hooks/check-docs-updated.sh`](.claude/hooks/check-docs-updated.sh)). *(This is a local enforcement, not a cloud CI check.)*
 
-**Nothing falls through the cracks between modules.** When building one module surfaces work that belongs to a future module, it is recorded as a tagged debt and mechanically re-surfaced the moment that module opens — so across a months-long, thirteen-module build, no requirement is quietly dropped.
+**Nothing falls through the cracks between modules.** When building one module surfaces work that belongs to a future module, it is recorded as a tagged debt in a central registry — schema changes in [`docs/db_roadmap.md`](docs/db_roadmap.md), cross-module debts and still-open product decisions in [`docs/PROJECT_MASTER.md`](docs/PROJECT_MASTER.md) (§6 debts, §7 open questions) — and mechanically re-surfaced the moment that module opens. So across a months-long, thirteen-module build, no requirement is quietly dropped, and no open product question is decided without the owner.
 
 ---
 
