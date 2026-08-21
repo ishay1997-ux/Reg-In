@@ -555,7 +555,6 @@ export default function QuoteBuilderPage() {
               <Field id="quote-hours" label="משך האירוע" className="md:col-span-2">
                 <output
                   id="quote-hours"
-                  dir="ltr"
                   className="flex h-9 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-100 text-sm text-slate-600"
                   data-testid="quote-hours"
                 >
