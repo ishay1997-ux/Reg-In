@@ -232,8 +232,8 @@ Additional decided / nod-pending rows (cite-only):
 
 #### Module 5 (logistics) — born in its Discovery, 21/08/2026
 
-> **Source:** `docs/specs/module_05_logistics/processes-approved.md`. **All four are Ishay-approved.**
-> 🔴 **Two of them are ripples into ALREADY-MERGED code** (M3 and M6) — say so out loud when building.
+> **Source:** `docs/specs/module_05_logistics/processes-approved.md`. **All eight are Ishay-approved.**
+> 🔴 **Three of them are ripples into ALREADY-MERGED code** — `M5-3` (M3's RPC), `M5-4` and `M5-7` (M6's) — **say so out loud when building.** *(Header corrected 22/08/2026: it still read "all four … two ripples", written when the block held four rows.)*
 
 | # | Change | Why (ruling) | State today |
 |---|---|---|---|
