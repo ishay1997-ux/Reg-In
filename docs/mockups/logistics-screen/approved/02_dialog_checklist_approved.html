@@ -277,11 +277,14 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
       <table>
         <thead>
           <tr>
-            <th style="width:39%">פריט</th>
-            <th style="width:11%">כמות מתוכננת</th>
-            <th style="width:14%">כמות בפועל</th>
-            <th style="width:11%">מצב הפריט</th>
-            <th style="width:25%">עדכון מצב</th>
+            <th style="width:30%">פריט</th>
+            <th style="width:10%">כמות מתוכננת</th>
+            <th style="width:13%">כמות בפועל</th>
+            <!-- 🆕 ㊶ (הכרעת-ישי 22/08/2026) — היא ממלאת אותו בהזמנה, וזה מה שהופך
+                 "מתעכב" למדיד: עד היום המערכת לא ידעה מתי הובטח שיגיע. -->
+            <th style="width:13%">הגעה משוערת</th>
+            <th style="width:10%">מצב הפריט</th>
+            <th style="width:24%">עדכון מצב</th>
           </tr>
         </thead>
         <tbody>
@@ -311,6 +314,7 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
                      aria-label="כמות בפועל — הקמת אתר רישום — לא זמינה: הפריט טרם הוזמן">
               <span class="unit">פרויקט</span>
             </td>
+            <td><span class="note-mute">-</span></td>
             <td><span class="st muted">טרם החל</span></td>
             <td>
               <div class="seg" role="group" aria-label="עדכון מצב — הקמת אתר רישום">
@@ -321,7 +325,7 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
             </td>
           </tr>
           <tr class="note">
-            <td colspan="5">
+            <td colspan="6">
               <div class="note-wrap">
                 <span class="note-lbl">הערה</span>
                 <input class="note-in" type="text"
@@ -345,6 +349,7 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
                      aria-label="כמות בפועל — שרוך סאטן - ממותג — לא זמינה: הפריט טרם הוזמן">
               <span class="unit">יחידה</span>
             </td>
+            <td><span class="note-mute">—</span></td>
             <td><span class="st muted">טרם החל</span></td>
             <td>
               <div class="seg" role="group" aria-label="עדכון מצב — שרוך סאטן - ממותג">
@@ -355,7 +360,7 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
             </td>
           </tr>
           <tr class="note">
-            <td colspan="5">
+            <td colspan="6">
               <div class="note-wrap">
                 <span class="note-lbl">הערה</span>
                 <input class="note-in" type="text"
@@ -378,6 +383,8 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
                      aria-label="כמות בפועל — תג שם רגיל - ממותג">
               <span class="unit">יחידה</span>
             </td>
+            <td><input class="qty ltr" type="date" dir="ltr" value="2026-09-02"
+                     aria-label="תאריך הגעה משוער — תג שם רגיל - ממותג"></td>
             <td><span class="st teal">הוזמן</span></td>
             <td>
               <div class="seg" role="group" aria-label="עדכון מצב — תג שם רגיל - ממותג">
@@ -388,7 +395,7 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
             </td>
           </tr>
           <tr class="note">
-            <td colspan="5">
+            <td colspan="6">
               <div class="note-wrap">
                 <span class="note-lbl">הערה</span>
                 <input class="note-in" type="text"
@@ -406,10 +413,13 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
             </td>
             <td><div class="num"><span class="ltr">50</span></div></td>
             <td>
+              <span class="hint-auto">מולא אוטומטית</span>
               <input class="qty ltr" type="text" dir="ltr" value="50"
                      aria-label="כמות בפועל — תג שם אקולוגי - ממותג">
               <span class="unit">יחידה</span>
             </td>
+            <td><span class="ltr">02/09/2026</span>
+                <span class="unit">הגיע בפועל</span></td>
             <td><span class="st ok">מוכן</span></td>
             <td>
               <div class="seg" role="group" aria-label="עדכון מצב — תג שם אקולוגי - ממותג">
@@ -420,7 +430,7 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
             </td>
           </tr>
           <tr class="note">
-            <td colspan="5">
+            <td colspan="6">
               <div class="note-wrap">
                 <span class="note-lbl">הערה</span>
                 <input class="note-in" type="text"
@@ -550,11 +560,14 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
       <table>
         <thead>
           <tr>
-            <th style="width:39%">פריט</th>
-            <th style="width:11%">כמות מתוכננת</th>
-            <th style="width:14%">כמות בפועל</th>
-            <th style="width:11%">מצב הפריט</th>
-            <th style="width:25%">עדכון מצב</th>
+            <th style="width:30%">פריט</th>
+            <th style="width:10%">כמות מתוכננת</th>
+            <th style="width:13%">כמות בפועל</th>
+            <!-- 🆕 ㊶ (הכרעת-ישי 22/08/2026) — היא ממלאת אותו בהזמנה, וזה מה שהופך
+                 "מתעכב" למדיד: עד היום המערכת לא ידעה מתי הובטח שיגיע. -->
+            <th style="width:13%">הגעה משוערת</th>
+            <th style="width:10%">מצב הפריט</th>
+            <th style="width:24%">עדכון מצב</th>
           </tr>
         </thead>
         <tbody>
@@ -574,6 +587,8 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
               <span class="unit">יחידה</span>
             </td>
             <!-- 🚫 הפריט נשאר "הוזמן". אין מצב-פריט רביעי, וגם לא לפרויקט מבוטל (§7.31). -->
+            <td><input class="qty ltr" type="date" dir="ltr" value="2026-09-02"
+                     aria-label="תאריך הגעה משוער - תג שם רגיל - ממותג"></td>
             <td><span class="st teal">הוזמן</span></td>
             <td>
               <div class="seg" role="group" aria-label="עדכון מצב — תג שם רגיל - ממותג">
@@ -587,7 +602,7 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
             </td>
           </tr>
           <tr class="note">
-            <td colspan="5">
+            <td colspan="6">
               <div class="note-wrap">
                 <span class="note-lbl">הערה</span>
                 <input class="note-in" type="text" disabled
