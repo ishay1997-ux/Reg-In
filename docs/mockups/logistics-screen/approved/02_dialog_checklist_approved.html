@@ -126,6 +126,8 @@ tr.note td{border-bottom:1px solid var(--s100); padding:0 10px 10px}
 .num{font-size:13.5px; font-weight:700; color:var(--s800)}
 .unit{display:block; margin-top:3px; font-size:11px; color:var(--s500)}
 .note-warn{font-size:11px; font-weight:600; color:var(--amber700)}
+.hint-auto{font-size:10.5px; color:var(--s500); background:var(--s100);
+     border-radius:9999px; padding:1px 7px; white-space:nowrap}
 .note-mute{font-size:11px; color:var(--s400)}
 
 /* ── תג-סטטוס (StatusTag.jsx) — הטון הוא משמעות, לא קישוט ── */
@@ -436,6 +438,9 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
       <div class="note-mute" style="margin-top:10px; line-height:1.9">
         כל שינוי נשמר מיד — אין כפתור שמירה במסך.<br>
         סימון <b>מוכן</b> ממלא את הכמות בפועל אוטומטית, <b>רק אם עדיין לא הוקלד בה ערך</b>.
+        <b>וערך שמולא כך נושא לידו את הכיתוב <span class="hint-auto">מולא אוטומטית</span></b> —
+        שנעלם ברגע שהיא מקלידה (㊵). <span class="sm">מספר שנרשם כאילו נמדד, ולא נמדד, יזלוג
+        לחישוב הרווחיות של מודול 8 בלי שאיש ידע.</span>
         מספר שהקלדת לעולם אינו נדרס.
       </div>
     </div>
