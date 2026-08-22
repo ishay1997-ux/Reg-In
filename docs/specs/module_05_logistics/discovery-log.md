@@ -207,7 +207,7 @@ Reader: Claude (English). The Hebrew ruling record is `processes-approved.md`.
   superseded artefacts it actually meant.
 - **Also surfaced: the `seed` build item had no register row anywhere** — not `db_roadmap` (data rows,
   not schema), not `🚧`. It lived only inside a ripple table. Now named in `spec.md §④`, flagged as the
-  only build item with no register of its own.
+  **second** build item with no register of its own — the `notes` tab (㉒) is the other, and it was already listed four rows above in the same table. **The repair round wrote the claim and the source that justified it in the same pass, so the source verified nothing.**
 - **Ishay's second question, and it is the sharper one:** *"אם האפיון בטוח בעצמו ושגוי — ואין לנו דרך
   לטפל בזה?"* The honest answer given: a blind-reader test finds **ambiguity and gaps, never a wrong
   premise** — ㊳ proves it, six agents passed over a spec set that was perfectly consistent around a
