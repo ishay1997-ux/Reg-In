@@ -129,7 +129,17 @@ test.describe('מודול 4 · מסך 2 — שיבוץ חכם', () => {
   test('🔴 המסך אומר בקול שמרכיב האמינות כבוי, ואינו מעמיד פנים שהציון מלא', async ({ page }) => {
     await openSmartMatch(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
     await expect(page.getByTestId('sm-reliability-off')).toContainText('אמינות')
-    await expect(page.getByTestId('sm-reliability-off')).toContainText('מודול 6')
+    // 🔴 **עודכן 22/08/2026 — והבדיקה הקודמת היא דוגמה למה שהקובץ הזה מזהיר מפניו.**
+    // היא אימתה `toContainText('מודול 6')`, כלומר **ניסוח-ההסבר** ("אין עדיין נתונים
+    // מסגירת-האירוע של מודול 6") ולא את האינווריאנט. ההסבר היה שגוי מלכתחילה — המרכיב
+    // כבוי כי `מרכיב_אמינות_פעיל` כבוי, והדלקתו היא של מ9 — **והוא גם התיישן ברגע שמ6 מוזג.**
+    // ⇒ הבדיקה הייתה נועלת דווקא את החלק שצריך היה להשתנות, ואף שער לא היה מתריע
+    // (`test:e2e` אינו רץ ב-CI).
+    // 🔑 **האינווריאנט האמיתי, לפי שם-הבדיקה עצמה — "אינו מעמיד פנים שהציון מלא":**
+    // המסך אומר במפורש על מה הציון **כן** מבוסס, עם המשקלים בפועל.
+    await expect(page.getByTestId('sm-reliability-off')).toContainText('שיעור-היענות')
+    await expect(page.getByTestId('sm-reliability-off')).toContainText('קרבה')
+    await expect(page.getByTestId('sm-reliability-off')).toContainText('%')
   })
 
   // 🐞 רגרסיה (נתפס 11/08/2026, צעד 4.2): עד לתיקון, `rankCandidates` קיבל
