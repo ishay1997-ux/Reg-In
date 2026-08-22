@@ -182,10 +182,55 @@ Reader: Claude (English). The Hebrew ruling record is `processes-approved.md`.
   **project cancellation**) into an absolute. ⑰+㊱ and ㉕ share one principle: protect a row money was
   spent on. **Bringing him a false "you contradicted yourself" would have cost a decision he does not owe.**
 
+## Session 1, continued — 22/08/2026 — Stage 3: `spec.md`, written behind a gate Ishay set
+
+- **שער-האפס-טענות — Ishay's ruling, 22/08/2026.** He asked the question this whole Discovery had been
+  circling: *"כל הזמן יש לך מלא תיקונים איך אני יכול להיות עם ביטחון שאפשר באמת להתקדם לאפיון והוא יכתב
+  בלי בעיות?"* **The answer offered was not "I will be careful" but a pass/fail test:**
+  > 🔴 **`spec.md` may contain ZERO factual claims not already stated in an approved source. Every
+  > factual line resolves to a grep-able anchor. A claim with no source is a finding, not a wording
+  > preference — and the check runs before he sees the file.**
+  He chose it (*"בצע לפי המלצתך"*). **Grep anchor for this ruling: `שער-האפס-טענות`.**
+- **The gate ran on a fresh context and returned 2, not 0** — and the two are instructive:
+  **(1)** the one unsourced claim in the file was **the header sentence attributing the gate itself to
+  Ishay** — self-certifying, and recorded nowhere else. **That is what this entry fixes.**
+  **(2)** *"tests lock all five empty-state sentences"* — faithfully copied from `screens-approved.md`,
+  **and the code disagrees**: `projectLogistics.test.js` locks **three**; `LEGAL_EMPTY_DETAIL` and
+  `LOAD_FAILURE_DETAIL` are guarded by nothing. Fixed at the root, not only in `spec.md`.
+  🔑 **The second is the more useful shape: a claim can be perfectly sourced and still false.** A
+  provenance check alone would have passed it — it took opening the test file.
+- **And the gate's sharpest finding was not a claim at all but an instruction.** `§①`'s heading read
+  *"קרא בסדר הזה, **ואל תקרא יותר**"*, which in practice excluded `PROJECT_MASTER §7` and
+  `docs/schema.sql`. The skill forbids exactly this (*"a live register is always read"*) and records the
+  precedent: a spec that told a blueprint to skip `db_roadmap` would have cost **17 skipped DB
+  requirements**. ⇒ the three live registers are now rows 8–10, and the exclusion is scoped to the two
+  superseded artefacts it actually meant.
+- **Also surfaced: the `seed` build item had no register row anywhere** — not `db_roadmap` (data rows,
+  not schema), not `🚧`. It lived only inside a ripple table. Now named in `spec.md §④`, flagged as the
+  only build item with no register of its own.
+- **Ishay's second question, and it is the sharper one:** *"אם האפיון בטוח בעצמו ושגוי — ואין לנו דרך
+  לטפל בזה?"* The honest answer given: a blind-reader test finds **ambiguity and gaps, never a wrong
+  premise** — ㊳ proves it, six agents passed over a spec set that was perfectly consistent around a
+  false premise. **What can be done is shrink the surface and make it visible:** the measured layer has
+  a near-zero error rate (45/53 confirmed, **zero errors in measured claims**), Ishay's own quoted
+  rulings are safe by definition, and the risk concentrates in *derived* and *inherited-from-another-
+  module* claims — which the register's "מי" column already labels. **Proposed and not yet run:** a
+  provenance triage of the 38 rulings down to the 5–8 that would change if his business works
+  differently, plus a mechanical sweep for *"where did we declare an exception to a frozen-spec
+  statement without a ruling"* — the shape that would have caught ㊳ on the day.
+
 ## Open for next session / next turn
 
-- 🛑 **Ishay's visual approval of the three mockups.** Nothing else in Stage 3 can start: `spec.md`
-  consolidates them, so writing it before approval means writing it twice.
+- ✅ **Stages 0–3 are complete.** `spec.md` exists; the zero-claims gate ran, returned **2**, both were
+  fixed at the root, and **a second run is pending** — do not record it as passed until it has.
+  **The next skill is `module-blueprint`, not this one.**
+- ⬜ **Proposed to Ishay and not yet run — the answer to "what if the spec is confidently wrong":**
+  a **provenance triage** of the 38 rulings down to the 5–8 whose truth depends on how his business
+  actually works, and a **mechanical exception sweep** — *"where did we declare an exception to a
+  frozen-spec statement without a ruling permitting it"*, which is the exact shape ㊳ had. Also
+  proposed: **two blind readers** on `spec.md` with a guess log, scored, with divergence between them
+  as the ambiguity detector. 🔑 **And the stated limit, which is why the triage matters more than the
+  blind test: a blind reader finds ambiguity and gaps, never a wrong premise.**
 - **Each card's §⑧ "לאישורך" list** — the details whose only source is the mockup, or that the spec is
   silent on. These are per-card and are his to rule.
 - Two items he may want to overrule, both decided here with anchors and both flagged to him: the
