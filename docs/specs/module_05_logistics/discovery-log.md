@@ -112,13 +112,52 @@ Reader: Claude (English). The Hebrew ruling record is `processes-approved.md`.
   Ishay caught that one directly: *"הוא כבר נוצר ומוזג לייצור אז נראלי זה צריך להיות באפיון שלך לא?"*
 - Ruling count ended at **34** (15 Ishay · 17 Claude-delegated · 1 Ishay-corrected-Claude · 1 derived).
 
+## Session 1, continued — 22/08/2026 — the repair audit, then Stage 2 drawn
+
+- **A fresh reviewer audited the previous repair round.** It confirmed all 11 checklist items, all 20
+  mirror tags and all 6 recounted totals — and found **one false claim plus eight smaller defects**. The
+  false one is the instructive one: `processes-approved.md` stated the `🚧 מ11 ← מ5` debt was still
+  unregistered *and printed a measurement showing the grep returned zero*. The row had landed 15 minutes
+  earlier, in the commit immediately before. **A measurement copied forward past its own expiry reads as
+  harder evidence than a plain claim** — that is exactly why it survived a repair round.
+- **Ishay ruled Friday and Saturday are not working days** (*"שישי שבת לא עובדים"*). The data set had
+  pinned the mockups' "today" to Friday 21/08 and drawn the logistics manager at her desk on a day
+  `businessDaysUntil` does not count as a business day. Moved to **Thursday 27/08/2026** — the only
+  weekday on which ruling ㉓ is visible at all, since only then is the next business day three days out.
+  The four invented projects moved with it; every 🌱 measured fact stayed put.
+- **He also pushed back on the whole apparatus** — *"אתה רוצה לא לשים נתונים במוקאפ בכלל? … מה התסביך"*
+  — and he was right that the date arithmetic was over-built. His alternative (put the demo data in the
+  database so the conference opens a real screen) is better and is now registered as a build item. **The
+  one thing the data set genuinely buys, and the only reason it survives, is cross-screen consistency:**
+  three agents drawing three screens blind to each other must show the same project the same way.
+- **Three rulings were born after the drawers had already been briefed**, which is worth recording as a
+  process fact: ㉟ (a `טרם החל` row may carry `actual_qty > 0`), ㊱ (removal needs **both**
+  `not_started` **and** `actual_qty = 0`), ㊲ (the dialog re-reads project status on open). **㊱ closed a
+  hole ㉟ itself had opened** — the sharpest finding of the night, and it came from a *drawer*, not a
+  reviewer: implementing a rule surfaced a contradiction that reading it had not.
+- **Convergence as evidence:** two independent drawers flagged the same `#107` name inconsistency, and
+  two flagged the missing `db_roadmap` row for the write RPC. **Neither had been caught by three prior
+  reviewers.** Drawing exercises a document in a way reviewing does not.
+- Two `db_roadmap` rows added: `M5-6` (checklist write RPC) and `M5-7` (removal RPC). Before tonight
+  `M5-1`…`M5-5` were a policy, a CHECK, two ripples and a column — **not one function**, while ruling ㉑
+  requires every write to go through an RPC.
+- `proximitySentence` (merged, three live callers, unit-tested) returns `בעוד N ימים`; `data-set.md` had
+  written `בעוד N יום`. **The document was aligned to the code, not the reverse** — the grammatically
+  better form would have meant rippling merged code six weeks before the conference, and module 5 does
+  not get a second wording for a thing the system already says one way.
+- Stage 2 delivered: **3 mockups + 3 screen cards**, assembled into `screens-approved.md` on module 6's
+  nine-section card template. All three mockups verified in a browser programmatically rather than by
+  eye — zero horizontal overflow, pills and row counts matching the data set, zero red backgrounds on
+  the amber ⑳ marker.
+
 ## Open for next session / next turn
 
-- **Stage 2 — the three mockups + their screen cards.** `screens-approved.md` does not exist yet; that is
-  the next step, not an omission. The drawer-reviewer's guess log is the input: it lists every string and
-  state the cards must pin down.
-- Nothing is waiting on Ishay.
+- 🛑 **Ishay's visual approval of the three mockups.** Nothing else in Stage 3 can start: `spec.md`
+  consolidates them, so writing it before approval means writing it twice.
+- **Each card's §⑧ "לאישורך" list** — the details whose only source is the mockup, or that the spec is
+  silent on. These are per-card and are his to rule.
+- Two items he may want to overrule, both decided here with anchors and both flagged to him: the
+  `#103` event date kept at `05/09` to preserve the module-6 mirror (its "one day outside the window"
+  role was decorative — a cancelled project never reaches surface 1), and the `בעוד N ימים` alignment.
 - *(historical, from the first round:)* Stop 1 — present classification + sweep tables + ledger and ask
   "מה מהרשימה הזאת מפתיע אותך?"
-- STATUS.md's stale line about the safeguards PR blocking module 5 — needs a write-back fix (not done
-  yet, flagged only in chat).
