@@ -275,12 +275,11 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
       <table>
         <thead>
           <tr>
-            <th style="width:34%">פריט</th>
+            <th style="width:39%">פריט</th>
             <th style="width:11%">כמות מתוכננת</th>
             <th style="width:14%">כמות בפועל</th>
             <th style="width:11%">מצב הפריט</th>
             <th style="width:25%">עדכון מצב</th>
-            <th style="width:5%"></th>
           </tr>
         </thead>
         <tbody>
@@ -318,17 +317,9 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
                 <button aria-pressed="false">מוכן</button>
               </div>
             </td>
-            <td>
-              <!-- ⑰ + ㊱ — הסרה מותרת רק כששני התנאים מתקיימים: item_status = 'not_started'
-                   *וגם* actual_qty = 0. שורה שלא הוזמנה ולא הגיע ממנה דבר אינה ראיה לכלום.
-                   🔴 הסטטוס לבדו אינו מספיק מאז ㉟: הגדלת-כמות מחזירה פריט ל`טרם החל` בעוד
-                   הסחורה שכבר הגיעה נשארת רשומה — וזו בדיוק ראיית-החיוב ש-§7.31 מגן עליה.
-                   שתי השורות שבהן הפח פעיל כאן נושאות actual_qty = 0. -->
-              <button class="rowact" title="הסרת פריט" aria-label="הסרת פריט">🗑</button>
-            </td>
           </tr>
           <tr class="note">
-            <td colspan="6">
+            <td colspan="5">
               <div class="note-wrap">
                 <span class="note-lbl">הערה</span>
                 <input class="note-in" type="text"
@@ -360,12 +351,9 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
                 <button aria-pressed="false">מוכן</button>
               </div>
             </td>
-            <td>
-              <button class="rowact" title="הסרת פריט" aria-label="הסרת פריט">🗑</button>
-            </td>
           </tr>
           <tr class="note">
-            <td colspan="6">
+            <td colspan="5">
               <div class="note-wrap">
                 <span class="note-lbl">הערה</span>
                 <input class="note-in" type="text"
@@ -396,16 +384,9 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
                 <button aria-pressed="false">מוכן</button>
               </div>
             </td>
-            <td>
-              <!-- ㉚ — הפקד נשאר, מושבת ומנומק. לעולם לא מוסתר:
-                   "כפתור שנעלם מלמד את המשתמשת שהמערכת לא עקבית; כפתור מושבת מלמד אותה את החוק." -->
-              <button class="rowact" disabled
-                      title="הפריט כבר הוזמן — לא ניתן להסירו"
-                      aria-label="הסרת פריט — לא זמינה: הפריט כבר הוזמן">🗑</button>
-            </td>
           </tr>
           <tr class="note">
-            <td colspan="6">
+            <td colspan="5">
               <div class="note-wrap">
                 <span class="note-lbl">הערה</span>
                 <input class="note-in" type="text"
@@ -435,14 +416,9 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
                 <button class="on" aria-pressed="true">מוכן</button>
               </div>
             </td>
-            <td>
-              <button class="rowact" disabled
-                      title="הפריט כבר הוזמן — לא ניתן להסירו"
-                      aria-label="הסרת פריט — לא זמינה: הפריט כבר הוזמן">🗑</button>
-            </td>
           </tr>
           <tr class="note">
-            <td colspan="6">
+            <td colspan="5">
               <div class="note-wrap">
                 <span class="note-lbl">הערה</span>
                 <input class="note-in" type="text"
@@ -478,19 +454,17 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
         שורה. בלי הבלוק הזה סשן-בנייה שקורא את הקובץ מממש שער חד-תנאי.
      ══════════════════════════════════════════════════════════════════════ -->
 <div class="demoband">
-  🔐 <b>מתי פקד-ההסרה 🗑 פעיל — שני תנאים, תמיד</b> (㊱ · <code>processes-approved.md §🔄ה</code>):
-  <b><span class="ltr">item_status = 'not_started'</span></b> <b>וגם</b>
-  <b><span class="ltr">actual_qty = 0</span></b>. הסטטוס לבדו אינו מספיק מאז ㉟ — הגדלת-כמות
-  מחזירה פריט ל<b>טרם החל</b> בעוד הסחורה שכבר הגיעה נשארת רשומה, וזו בדיוק ראיית-החיוב
-  ש-<span class="ltr">§7.31</span> מגן עליה.<br>
-  <b>ולכל תנאי שנכשל נוסח משלו — שונה בכוונה, כדי שהיא תדע איזה משני החוקים חסם אותה:</b><br>
-  ① מצב <b>הוזמן</b> או <b>מוכן</b> ⇒ <i>"הפריט כבר הוזמן — לא ניתן להסירו"</i>
-  <span>(הנוסח המצויר על שורות <span class="ltr">B-REG-TAG</span> ו-<span class="ltr">B-ECO-TAG</span> למעלה).</span><br>
-  ② מצב <b>טרם החל</b> אך <b><span class="ltr">actual_qty &gt; 0</span></b> ⇒
-  <i>"הגיעו כבר פריטים — לא ניתן להסיר"</i>
-  <span>— <b>אין במערך שורה במצב הזה</b>, ולכן הנוסח רשום כאן ולא מצויר על שורה.</span><br>
-  ③ ובפרויקט מבוטל גובר נימוק-הפרויקט על שניהם (㉝) — ר' תצוגה ב׳.
-  <b>בכל המקרים הפקד נשאר על המסך, מושבת ומנומק</b> (㉚).
+  🚫 <b>ובמסך הזה אין פקד-הסרה כלל — לא פעיל ולא מושבת</b> (㊳ · <code>processes-approved.md §🎓㊳</code>).<br>
+  <b>הסרת פריט היא שינוי-תכולה</b>, ולכן היא שייכת ל<b>מנהלת הפרויקטים</b> — בדיוק כמו הוספת פריט
+  והגדלת כמות — ומתבצעת ב<b>דיאלוג "שינוי תכולה" הקיים של מודול 6</b>, על-ידי הקלדת
+  <b><span class="ltr">0</span></b> בעמודת "כמות חדשה". <b>אין מסך חדש.</b><br>
+  📖 וזה גם מה שהאפיון הקפוא אמר מלכתחילה — <code>C5 §5.6.9</code>:
+  <i>"מנהלת הלוגיסטיקה אינה מורשית לערוך, למחוק או להוסיף פריטים למפרט, אלא רק לשנות את סטטוס
+  ההכנה שלהם."</i><br>
+  🔐 <b>והחוק עצמו לא השתנה — רק המסך שבו הוא נאכף</b> (⑰ · ㊱): הסרה מותרת רק כששני התנאים
+  מתקיימים יחד — <b><span class="ltr">item_status = 'not_started'</span></b> <b>וגם</b>
+  <b><span class="ltr">actual_qty = 0</span></b>. <b>ובדיאלוג של מ6 המשמעות היא שרצפת-הספינר
+  נשארת <span class="ltr">1</span> עם הסבר</b>, ולא שהפקד נעלם (㉚).
 </div>
 
 
@@ -499,8 +473,8 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
      ══════════════════════════════════════════════════════════════════════ -->
 <div class="viewcap">
   <b>תצוגה ב׳ · אותו דיאלוג על פרויקט <u>מבוטל</u> — ‏<span class="ltr">#103</span> "ערב לקוחות <span class="ltr">VIP</span>"</b>
-  <span class="sm">🚫 <b>אינו משטח רביעי</b> — זהו <b>מצב</b> של אותו דיאלוג (‏<span class="ltr">M = 3</span>).
-    ㉝: אזהרה בולטת <b>וכל פקדי-הכתיבה מושבתים</b> — כפתורי-המצב, הכמות בפועל, ההערה, וההסרה.
+  <span class="sm">🚫 <b>אינו משטח רביעי</b> — זהו <b>מצב</b> של אותו דיאלוג (‏<span class="ltr">M = 2</span>).
+    ㉝: אזהרה בולטת <b>וכל פקדי-הכתיבה מושבתים</b> — כפתורי-המצב, הכמות בפועל, וההערה.
     🔴 זו התנהגות שחייבת להיבנות במסך: נמדד שכתיבה ללוגיסטיקה של פרויקט מבוטל
     <b>מצליחה בשקט, בלי שגיאה ובלי אפקט</b> (‏<span class="ltr">🧱④</span>) — המסד אינו אוכף את כללי מ6.</span>
 </div>
@@ -571,12 +545,11 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
       <table>
         <thead>
           <tr>
-            <th style="width:34%">פריט</th>
+            <th style="width:39%">פריט</th>
             <th style="width:11%">כמות מתוכננת</th>
             <th style="width:14%">כמות בפועל</th>
             <th style="width:11%">מצב הפריט</th>
             <th style="width:25%">עדכון מצב</th>
-            <th style="width:5%"></th>
           </tr>
         </thead>
         <tbody>
@@ -604,16 +577,9 @@ input:disabled{background:var(--s50); color:var(--s500); cursor:not-allowed}
                         title="הפרויקט בוטל — לא ניתן לעדכן">מוכן</button>
               </div>
             </td>
-            <td>
-              <!-- שני טעמי-חסימה נפגשים בשורה הזאת: הפריט `הוזמן` (⑰) והפרויקט מבוטל (㉝).
-                   הנימוק המוצג הוא של הפרויקט — הוא הרחב מבין השניים וחל על כל השורות. -->
-              <button class="rowact" disabled
-                      title="הפרויקט בוטל — לא ניתן להסיר פריטים"
-                      aria-label="הסרת פריט — לא זמינה: הפרויקט בוטל">🗑</button>
-            </td>
           </tr>
           <tr class="note">
-            <td colspan="6">
+            <td colspan="5">
               <div class="note-wrap">
                 <span class="note-lbl">הערה</span>
                 <input class="note-in" type="text" disabled
