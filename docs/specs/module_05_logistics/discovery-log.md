@@ -150,6 +150,38 @@ Reader: Claude (English). The Hebrew ruling record is `processes-approved.md`.
   eye — zero horizontal overflow, pills and row counts matching the data set, zero red backgrounds on
   the amber ⑳ marker.
 
+## Session 1, continued — 22/08/2026 — Ishay deleted a surface with one question, then approved the rest
+
+- **He asked: "why would the logistics manager remove an item? isn't that only the projects manager?"**
+  He was right, and the evidence was stronger than the question. The surface had been derived from an
+  error string in merged module-6 code, which turned out to be a **validation message for
+  `CHECK (planned_qty > 0)`** — not a product decision. Module 6's own Discovery had escalated the real
+  question to Ishay on 13/08 and **never got an answer**; module 5 then inherited the string as settled.
+  🔴 **And the frozen spec forbids it outright** — `C5 §5.6.9`: *"מנהלת הלוגיסטיקה אינה מורשית לערוך,
+  למחוק או להוסיף פריטים למפרט"*. Module 5's own `world-sources.md` **quoted that line and then declared
+  removal "the only exception"** — an exception nobody had ruled. She cannot even reach the path:
+  `apply_scope_change` asserts `'פרויקטים' + edit`, and Ishay demoted her to `view` there on 14/08.
+- **His second question settled the design: "or should it actually be the same dialog?"** Yes — and it is
+  already built for it. Module 6's approved mockup renders `<input type="number" min="0">`;
+  `ScopeChangeDialog.jsx` already fetches logistics rows with `select('*')`. **The only blocker is one
+  line in the RPC.** ⇒ ruling ㊳, `M = 3` → **`M = 2`**, and removal is *typing `0`* — no new screen.
+  🔑 **The rules survived intact** (⑰ when · ㉖ reason · ㊱ both conditions); only who, where and `M` moved.
+- **Approval, in his words: *"מעולה מאשר הכל"*** — but note **the condition he set first**, which is worth
+  keeping as a pattern: *"אני מאשר את המוקאפים אם תצליח לכתוב לי את התהליכים השונים של מנהלת הלוגיסטיקה
+  ושזה תואם למסך."* **The acceptance test was the process→screen walkthrough, not the pictures.** Result:
+  7 actions · 2 screens · 0 actions without a screen · 0 screens without an action. Both mockups promoted
+  to `approved/`. **Appearance is final; content (each card's §⑧) is still his.**
+- **End-of-stage audit — six things had fallen between the chairs**, four of which would have gone into
+  `spec.md` as-is: (1) this log had no ㊳ entry; (2) the journal still said 3 mockups / 37 rulings;
+  (3) 🔴 **module 6's ruling ⑳ — the answer to Ishay's own billing question — was referenced nowhere in
+  module 5**, so `actual_qty` looked like it might be a billing input; (4) 🔴 **`AR-4` in module 6's
+  micro-guide says the logistics row is *never* deleted, while `M5-7` deletes it**; (5) the cost-basis
+  debt that `§7.22` explicitly asked to register had never been registered; (6) skill lessons unwritten.
+  🔑 **On (4), the check mattered more than the finding:** it first read as *two Ishay rulings in
+  conflict*. It is not — `AR-4` is a **Claude** architecture note that generalised his ㉕ (which is about
+  **project cancellation**) into an absolute. ⑰+㊱ and ㉕ share one principle: protect a row money was
+  spent on. **Bringing him a false "you contradicted yourself" would have cost a decision he does not owe.**
+
 ## Open for next session / next turn
 
 - 🛑 **Ishay's visual approval of the three mockups.** Nothing else in Stage 3 can start: `spec.md`

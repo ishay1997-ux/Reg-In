@@ -99,6 +99,32 @@ like a world convention adopted without a fit check (§5).
 🔑 **The test: if all three sources said the opposite, would my answer change? If yes — I did not
 decide, I quoted.**
 
+### 🔴 And the same trap wearing different clothes: a surface derived from a **string in merged code**
+
+*(Added 22/08/2026, module 5. Cost: a whole surface was designed, drawn, cross-checked and reviewed
+by **six** agents before Ishay deleted it with one question.)*
+
+An error message in merged code said *"for full removal, contact the logistics manager"*. A surface was
+derived from that sentence and treated as an inherited requirement. **It was a validation string for a
+`CHECK` constraint** — nobody had ever decided who owns removal. Worse, the frozen spec **forbade** that
+owner outright, and the spec set **quoted the prohibition and then declared the surface "the only
+exception" to it** — an exception with no ruling behind it. The role could not even reach the code path:
+the RPC gates on a module she holds `view` on.
+
+🔴 **Why no reviewer caught it, and this is the part that generalises:** all six checked **internal
+consistency**, and the document set was **perfectly consistent around a false premise**. **A consistency
+check cannot find a wrong premise.** Only someone who knows how the work actually happens can — which
+means it reaches Ishay or it is never caught.
+
+⇒ **The rule: a string in code is evidence that something was once written, exactly like `C5`.** Before
+building a surface on one, answer in the file, at the point of derivation:
+**① who decided this, and where is it written as a decision?** ② **if the answer is "only this string" —
+say so out loud, in the spec, as an open premise** — never as an inherited requirement.
+**③ And check the frozen spec for the opposite claim before you write the exception.**
+🔑 **The cheap test that would have caught it in a minute: does this actor's *other* work of the same
+kind flow the same way?** Removal was the only scope change starting somewhere else. **An asymmetry is
+either deliberate with a stated reason, or an accident — and "no reason found" is the finding.**
+
 ### 🔴 Two triages, and they are different — do not merge them
 
 **(a) `C5` itself sorts into three drawers:** what is **still correct** *(cite it)* · what is **wrong**
