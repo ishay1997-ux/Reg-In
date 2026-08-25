@@ -44,6 +44,41 @@
 
 ## Session Log (newest first)
 
+### 26/08/2026 00:12 — `regin-docs-sync` audit: 13 fixes; the current-step line had rotted through two whole modules
+
+**Merge status (STEP 0):** branch `ishay/module-5-logistics` is **NOT merged** — `merge-base
+--is-ancestor HEAD origin/dev` fails and `git log origin/dev..HEAD` returns 21+ commits (the
+discriminator from iron rule 10). Pre-merge audit, fixes land on this branch.
+
+**The one that mattered most:** `STATUS.md` §"🫵 הצעד הנוכחי" still read *"12/08/2026 — module 4,
+phase 5, active step 5.2, not started"* — module 4 closed and merged 12/08, module 6 was built,
+closed and merged 21/08, and module 5's blueprint was approved 25/08 with active step **1.0**.
+That line is printed by `session-start-context.sh`, so **every fresh session was handed a wrong
+position as fact**. Fourth time this line has rotted; the section documents the previous three.
+
+**Class 1+2 fixed (13):**
+- `STATUS.md` — current-step block rewritten to module 5 / step 1.0 (source: `micro_guides/module-5.md` §1 Live Status Header) · module-table row **6 flipped ⬜ → ✅ merged** (PR #41, merge `40fb973`; verified `is-ancestor` of both `origin/dev` and `origin/main`, `src/modules/06_projects/` present) · live-branch block re-derived (named the deleted `ishay/module-4-hostesses` as active, plus a dependabot branch that no longer exists) · §7 snapshot 91 → **92** · `PROJECT_MASTER §7` link repointed to `PROJECT_MASTER_sec7.md` (pre-08/08 address, two paragraphs below the note announcing the split).
+- `PROJECT_MASTER_sec7.md` — **§7.32 · §7.61 · §7.63 · §7.77**: 🟢 token + dated 13/08 ruling at the head, but the original question's trailing `סטטוס: **פתוח**` was never updated. Struck and synced using §7.39's own 14/08 repair as the precedent. Token counts unchanged (🟢55 🟡16 🔵3 ⚪17 🟠1 = 92, matching the file's own header snapshot).
+- `docs/toolbox.md` — repo-local skill list **8 → 9** (`module-discovery`, added 13/08 in `e6c2655`, was missing) · the "two trial skills are deliberately uncommitted / will show as `??`" note corrected: `git ls-files` shows both committed in `3003f40` (08/08 23:52).
+- root `CLAUDE.md` — module-flow list gained `module-discovery` (it said "three prompts per module"; there are four skills now, and Discovery runs first).
+- `CLAUDE_CODE_LOG.md` §Templates & hooks — skills line 8 → 9; stamp refreshed after re-measuring skills/hooks/plugins/`docs/templates/`.
+- `docs/guides/00_roadmap.md` §3 — the 21/08 correction ("m5 not opened, zero commits") was true then and false now; superseded with a dated line, original kept.
+- `docs/architecture_and_qa_roadmap.md` — migrations **22 → 47** (48 `.sql` incl. baseline) · E2E scope `1–4` → `1–4 + 6`, spec files **17 → 19**.
+- `docs/db_roadmap.md` — the "Last verified vs live DB … `list_migrations` (still 7)" header flagged stale (48 on disk).
+
+**Not checked / not done, explicitly:**
+- 🔴 **Supabase MCP was unauthenticated this run** — no live DB, RLS, function or `params` check. Every DB claim here is file-derived only.
+- ⚠️ **LOG over budget — needs compression in a human session** (not done here; STEP 5 forbids rewriting dated entries): narrative **282 lines** vs the ~180 trigger · Current State **18** vs target ~15 · **20 `###` session headers older than 3 days that are not yet `📦 Week` buckets**.
+- ⚠️ **The live routine copy is itself stale**: `~/.claude/scheduled-tasks/regin-docs-sync/doc-map.md` says "**eight**" repo-local skills. Sync is one-way (live ⇒ repo), so `docs/claude_routines.md:188` must NOT be hand-edited — fix the live copy first, then re-sync. Otherwise the repo backup was verified **in sync** with the live copy.
+- Broken-dispatch check: **clean** — `pr-review-toolkit:*` and `supabase:*` dispatches all resolve to enabled plugins; `toolbox.md`'s 9-on/10-off tables match `enabledPlugins` exactly.
+- 🚧/§6: **clean** — every debt token in the new `module-5.md` (`🚧 מ11 ← מ5` ×2, `🚧 מ5 ← מ6`, `🚧 מ12`) has a matching §6 line. The two `🚧 מ13` hits are historical prose about a debt that was *moved* to מ12, not a live debt.
+- `CHANGELOG.md` retirement banner intact, nothing written to it. No broken internal links anywhere in the audited set.
+- 🚫 **No freshness stamps this run** — the conflict ledger is non-empty (see below), and the stamp means "verified consistent", not "was visited".
+
+**⚠️ CONFLICT LEDGER — 2 items, both awaiting Ishay:**
+1. **⚠️ ממתין להחלטת ישי — the §7.47 tagged mirror has drifted, and syncing it would DELETE content.** `docs/db_roadmap.md:118` carries `🔗 מראת §7.47` over a table that has **three things §7.47 itself does not**: a `projects` `lat`/`lng` row, the `respond_to_shift_invite` RPC row, and the two 07/08/2026 additions (UNIQUE on `invite_token`, the RAISE-message contract). Iron rule 13 says sync **from** §7 — which here means deleting real, later, measured content from the operational aggregator. **Recommendation: sync the other way for once** — copy the three missing rows **into** §7.47 (it is a `⚪ מעקב` execution register, not a narrative ruling), then re-tag. Not done: that is a direction reversal of an iron rule and belongs to Ishay. Fixing nothing on either side meanwhile.
+2. **⚠️ ממתין להחלטת ישי — `STATUS.md` §"שאלות פתוחות" still asserts `חוסמי-מודול-3 = 0`.** Module 3 merged 05/08; the active module is 5. The line is a live claim naming a dead module, but computing "module-5 blockers = N" is a §7 judgement call, and rulings are yours (iron rule 1). **Recommendation:** replace with `חוסמי-מודול-5 = 0` **if** the module-5 blueprint's own 🛑 blocker table is genuinely all-closed (it says so — "all closed"); confirm and I will sync it as Class 2.
+
 ### 25/08/2026 — Module 5 blueprint written, triple-reviewed, and APPROVED ("מאשר", 23:35)
 
 **What changed:** `docs/micro_guides/module-5.md` exists and is the approved build map — 10
@@ -93,6 +128,18 @@ idempotency), not a value-copying script — budget it like one.
 **Boundaries declared:** no code/migrations were run — docs only; the rehearsal's SQL lives in
 its report, nothing applied. Not re-verified this pass: module-6's own doc tallies. Recommended
 to Ishay (13ז): run `regin-docs-sync`.
+
+**Post-approval tail (same evening, commits `b55ec41` + `4315e53`):** ⑥2 rewritten in the M4/M6
+shape (unique addresses + the four measured mines + the model line INSIDE the fence); prompts
+0/1 restored verbatim per Ishay (they template future modules) and prompt 1 then gained the
+five-questions acceptance block + the count-drift caveat (his approval); a fresh-eyes pass on ⑥2
+found 0 false claims but 3 stale "content pending" lines inside the approved cards (fixed) and
+`module-build/SKILL.md`'s stale "§5" model-table pointer (fixed to locate-by-heading). Build
+plan agreed in chat, mapped to the guide's §6 batching note: **4 sessions** (Phase 1 · Phases
+2–3 · Phase 4+5.1 · close) — model rec: **Fable for the DB session, Opus+ultracode for the two
+build sessions, Opus for the close**; Sonnet ruled out for this module (the guide's table).
+Ishay ran `regin-docs-sync` in parallel — this session then touched only single files with
+loud-fail edits, pathspec commits.
 
 ### 22/08/2026 — Module 5 Discovery closed: three measuring tests, and what each one caught that the others could not
 
@@ -389,10 +436,10 @@ Sessions up to and including 15/07/2026 (M3 blueprint, milestone-1 promotion, mo
 - **Central migrations:** soft-delete (frozen→inactive) · `users_update_self` · `harden_current_user_role_id` · `module1_login_attempts_lockout` · `module1_reset_login_attempts_revoke_anon`.
 - ✅ **The initplan debt closed (07/07/2026):** the `(select …)` wrap was applied in migration `20260707163709_module1_users_rls_initplan_select_wrap` — advisors clean. *(The original record's wording, folded here from the old macro-guide 06/07, described the debt as open — updated in the 07/07 open-items audit.)*
 
-## Reference: Templates & hooks · 🕓 reviewed 08/08/2026 15:33 (regin-docs-sync — skill count, kernel-readers and hook count re-measured against `.claude/`; two stale claims corrected)
+## Reference: Templates & hooks · 🕓 reviewed 26/08/2026 00:0X (regin-docs-sync — re-measured against `.claude/`: skill count **8 → 9** (`module-discovery` was missing), hook count **4 confirmed**, `enabledPlugins` **9 on / 10 off confirmed**, `docs/templates/` **confirmed absent**. Prior: 08/08/2026 15:33)
 
 **Templates** — **relocated 23/07/2026** from `docs/templates/` into the module-flow skills (`git mv`, byte-identical): the blueprint template is now `.claude/skills/module-blueprint/template.md` and the closing-audit template `.claude/skills/module-close/template.md`, each invoked by its skill (`module-blueprint`/`module-close`; `module-build` has no template — the micro-guide is its engine). `docs/templates/` no longer exists. Output = a micro-guide **in English, written for Claude** (9 sections, 🤖/👤 tags, self-update). **Substantially hardened 07–08/07** (over the 06/07 version): cross-module blueprint cross-check (was cross-dev until 22/07/2026) · question-anchored-to-step + phase scan · DB-Design-Challenge + mandatory db_roadmap read · shared-surface marker · §7-ripple-check + forward-notice at close (the 📣 cross-developer convention and the two-owner shared-module header were retired 22/07/2026 — single developer). **+ 09/07:** the 🚧 mechanism (mandatory `🚧 מN`↔§6 pairing as a 🔻🤖 ripple) · typed-echo for DoD signing and migration apply · fresh-context reviewer for the blueprint (rule 2b). **+ 17:07 (Ishay's ruling, M2):** a mandatory "🎨 UX & functional review" gate at end-of-Phase-3 (opening) + a mandatory "§2b UX & Validation Audit" section (closing) — the infra freeze was deliberately opened before M3. **+ 11/07 22:33–22:42 (Ishay's rulings, in the M2 close — 3 opening-template changes):** (1) 🗣️ went from "narrate-and-continue" to a **mandatory "experience brief" + wait-for-PM-approval-before-code** (invited-correction understanding statement · validations · screen/mockup description · "for-your-approval" flags); (2) 🤖 gates = functional+visual self-verification **with screenshots**, full 👤 only at phase-end/design (not mid-build); (3) a new **🎤 "PM interview" section** before blueprint approval — a full user journey + focused questions + "what didn't I ask about?". Ripple: CLAUDE.md rule 1 updated accordingly.
-**Skills (re-measured 08/08/2026) — 8 repo-local:** `module-blueprint` · `module-build` · `module-close` · `section7-rulings` · `post-merge` · `quality-audit` · **`skill-scan`** · **`advisor`** (the last two added 05/08/2026; registry + triggers in `docs/toolbox.md`). **All eight `SKILL.md` files read `.claude/skills/_shared/discipline.md` first** (the kernel was consolidated there 24/07 — each skill carries only a one-line pointer, no duplicated paragraph). *(This line said "6 repo-local" and "the first five read it — `quality-audit` deliberately opts out" until 08/08/2026; both halves were stale — measured `grep -rl 'discipline.md' .claude/skills/`, which returns all eight including `quality-audit`. `quality-audit` still keeps its own verify-the-recommendation doctrine on top of the kernel — that part was never wrong.)* `feature-acceptance` moved OUT to Ishay's global `~/.claude/skills/` (23/07 — project-agnostic).
+**Skills (re-measured 26/08/2026) — 9 repo-local:** **`module-discovery`** · `module-blueprint` · `module-build` · `module-close` · `section7-rulings` · `post-merge` · `quality-audit` · **`skill-scan`** · **`advisor`** (`skill-scan`/`advisor` added 05/08/2026; **`module-discovery` added 13/08/2026, commit `e6c2655`, and this line kept saying "8" for thirteen days** — corrected by `regin-docs-sync` 26/08/2026, measured with `git ls-files .claude/skills/`; registry + triggers in `docs/toolbox.md`). **All nine `SKILL.md` files read `.claude/skills/_shared/discipline.md` first** (the kernel was consolidated there 24/07 — each skill carries only a one-line pointer, no duplicated paragraph). *(This line said "6 repo-local" and "the first five read it — `quality-audit` deliberately opts out" until 08/08/2026; both halves were stale — measured `grep -rl 'discipline.md' .claude/skills/`, which returns all eight including `quality-audit`. `quality-audit` still keeps its own verify-the-recommendation doctrine on top of the kernel — that part was never wrong.)* `feature-acceptance` moved OUT to Ishay's global `~/.claude/skills/` (23/07 — project-agnostic).
 
 **Code-quality tooling (built 23/07, extended 25/07, hardened 29/07)** — `npm run dup` (jscpd, `.jscpd.json`) · `eslint-plugin-sonarjs` curated set in `eslint.config.js` · `npm run deadcode` (knip, `knip.jsonc`) · `npm run audit` (npm audit, `scripts/audit-gate.mjs`) · Dependabot (`.github/dependabot.yml`) · a duplication/should-be-shared step in `module-close` §4b. **The gates are now BLOCKING** — hardening completed 29/07/2026 08:45 (`sonarjs`→error · `continue-on-error` removed from jscpd/knip/audit); `npm run gate` = verify+dup+knip+audit+check:context, all blocking. `gitleaks` and `format:check` were already blocking. Sole accepted-risk waiver: `react-router` GHSA (RSC-only, unused) in `scripts/audit-gate.mjs`.
 
