@@ -1,6 +1,7 @@
 <div dir="ltr">
 
 # CLAUDE_CODE_LOG — Claude Code's internal work journal
+✅ אומת-סנכרון: 26/08/2026 00:2X (regin-docs-sync — 15 תיקונים, 0 קונפליקטים פתוחים. 🔴 **גבול החותמת:** נגזר מקבצים + git בלבד — **Supabase MCP היה ללא-אימות בהרצה הזו, ואף טענה לא נבדקה מול המסד החי**)
 
 > This file is **not** for Ishay to maintain — it is for my (Claude Code) own creation and self-update between sessions, so context isn't lost. Ishay may read it, but keeping it current is my responsibility. Update it at the end of every meaningful session.
 > Language: **English** (this is a Claude-facing file, like `micro_guides/` and the templates; Hebrew appears only as data — role/module names, UI strings, §7 refs, migration names). Other truth-sources not duplicated here: `docs/PROJECT_MASTER.md` (schema/permissions/screens + §7 open questions), `../CLAUDE.md` + the directory-scoped `CLAUDE.md` files (iron rules; the DB protocol lives in `supabase/migrations/CLAUDE.md`), `../STATUS.md` (module status board, Hebrew), `docs/guides/00_roadmap.md` (operational roadmap), `docs/archive/` (pre-28/07 full versions). *(`docs/CHANGELOG.md` was frozen 23/07/2026 — archive only, never written to.)*
@@ -75,9 +76,19 @@ position as fact**. Fourth time this line has rotted; the section documents the 
 - `CHANGELOG.md` retirement banner intact, nothing written to it. No broken internal links anywhere in the audited set.
 - 🚫 **No freshness stamps this run** — the conflict ledger is non-empty (see below), and the stamp means "verified consistent", not "was visited".
 
-**⚠️ CONFLICT LEDGER — 2 items, both awaiting Ishay:**
-1. **⚠️ ממתין להחלטת ישי — the §7.47 tagged mirror has drifted, and syncing it would DELETE content.** `docs/db_roadmap.md:118` carries `🔗 מראת §7.47` over a table that has **three things §7.47 itself does not**: a `projects` `lat`/`lng` row, the `respond_to_shift_invite` RPC row, and the two 07/08/2026 additions (UNIQUE on `invite_token`, the RAISE-message contract). Iron rule 13 says sync **from** §7 — which here means deleting real, later, measured content from the operational aggregator. **Recommendation: sync the other way for once** — copy the three missing rows **into** §7.47 (it is a `⚪ מעקב` execution register, not a narrative ruling), then re-tag. Not done: that is a direction reversal of an iron rule and belongs to Ishay. Fixing nothing on either side meanwhile.
-2. **⚠️ ממתין להחלטת ישי — `STATUS.md` §"שאלות פתוחות" still asserts `חוסמי-מודול-3 = 0`.** Module 3 merged 05/08; the active module is 5. The line is a live claim naming a dead module, but computing "module-5 blockers = N" is a §7 judgement call, and rulings are yours (iron rule 1). **Recommendation:** replace with `חוסמי-מודול-5 = 0` **if** the module-5 blueprint's own 🛑 blocker table is genuinely all-closed (it says so — "all closed"); confirm and I will sync it as Class 2.
+**Round 2 — Ishay said "לא בכוח, תקן מה שנראה לך נכון" (00:15), so both ledger items were closed by judgement rather than escalated:**
+
+1. **§7.47 mirror — the fix was the tag, not the rows.** Re-measuring first changed the answer: `db_roadmap §A1` has **21 rows vs §7.47's 10**, not the "three extras" I reported an hour earlier — the extra 11 (+ the 07/08 `invite_token` block) are `✅ בוצע בפועל` as-built rows from modules 3–4. So **neither direction of "sync the mirror" was right**: syncing from §7 deletes 11 rows of completed work; syncing into §7 pollutes a *dated 07/07/2026 audit register* with rows that were never part of that audit. **The false statement was the claim of identity.** Replaced the `🔗 מראת §7.47` tag with an explicit "this is a SUPERSET of §7.47, 21 vs 10, here's why" note, fixed the header's "the single verbatim copy here is the §7.47 mirror", and added a matching scope note under §7.47 so nobody reads the gap as loss. **Zero rows deleted on either side**, and this stops being a false-positive on every future run.
+2. **`חוסמי-מודול-3 = 0` → module 5, honestly.** Read the blueprint's own 🛑 table (line 463): 15 rehearsal gaps, **all closed**, including the single BLOCKER. But O-1 and O-4 are still open at the **Phase-3 door**, so the line now says "0 blockers for opening Phase 1" **and names both pending nods** rather than a clean "0". Derived from the blueprint, not ruled here.
+
+**Also done in round 2:**
+- **`~/.claude/scheduled-tasks/regin-docs-sync/doc-map.md` (the LIVE routine) fixed first, then copied to `docs/claude_routines.md`** — correct direction per the one-way protocol (§4). Skill count 8 → 9; the trial-skills note corrected (committed since `3003f40`). The count is now told to re-derive itself via `git ls-files` instead of being remembered — this is the *second* time that number silently regressed. Routine 🕓 stamp refreshed.
+- `Current State` snapshot **checked and left alone**: 18 lines vs target ~15, but its content is accurate (it already knew module 6 was merged — which is how STATUS's ⬜ row stood out as wrong). Not worth churn.
+- **LOG narrative compression still NOT done, deliberately.** Now ~340 lines. STEP 5 forbids this routine from rewriting dated entries, and the reason is real: a headless 00:30 run compressing history is exactly how reference facts get lost. Still a job for a human session.
+
+**⚠️ CONFLICT LEDGER — 0 open items.**
+
+**Freshness stamps applied** (ledger empty) to `STATUS.md`, `CLAUDE_CODE_LOG.md`, `PROJECT_MASTER.md`, `db_roadmap.md` — 🔴 **each stamp states its own limit: file-derived only, Supabase MCP was unauthenticated, so nothing here was checked against the live database.**
 
 ### 25/08/2026 — Module 5 blueprint written, triple-reviewed, and APPROVED ("מאשר", 23:35)
 

@@ -1,9 +1,10 @@
 # DB Roadmap — Future Schema Changes (REG-IN)
+✅ אומת-סנכרון: 26/08/2026 00:2X (regin-docs-sync — 15 תיקונים, 0 קונפליקטים פתוחים. 🔴 **גבול החותמת:** נגזר מקבצים + git בלבד — **Supabase MCP היה ללא-אימות בהרצה הזו, ואף טענה לא נבדקה מול המסד החי**)
 
 > **Machine-first (English; Hebrew only as data).** This file is the single consolidated MAP of all
 > pending/future database work — it is an **execution aggregator, NOT a decision registry**.
 > Open questions live ONLY in `PROJECT_MASTER.md` §7 (iron rule; `docs/CLAUDE.md`). Decided rows
-> cite `§7.N`; the single verbatim copy here is the §7.47 mirror (tagged per iron rule 13).
+> cite `§7.N`. ⚠️ **Corrected 26/08/2026 (`regin-docs-sync`) — there is NO verbatim copy here.** This line used to claim "the single verbatim copy here is the §7.47 mirror (tagged per iron rule 13)", and it stopped being true during module 4: the A1 table below is a **superset** of §7.47 — **21 rows vs §7.47's 10**, the extra 11 (+ the 07/08 `invite_token` additions block) being **as-built rows recorded here as work landed**, which were never part of the 07/07/2026 audit register that §7.47 *is*. See the note above the A1 table.
 > Log-sourced debt cites `PROJECT_MASTER.md §6` (the single debt registry) / `CLAUDE_CODE_LOG.md §tech-debt`. *(The old `CHANGELOG.md §TODO` home was retired 23/07/2026 — CHANGELOG is now a frozen archive; its §TODO debts moved to §6.)*
 >
 > **Read triggers:** before designing ANY migration · at every module blueprint
@@ -17,7 +18,7 @@
 > **Last verified vs live DB:** 08/07/2026 18:54 via Supabase MCP (read-only): `get_advisors`
 > (security — same 12 accepted `rls_enabled_no_policy` INFOs + accepted SECURITY DEFINER/leaked-password
 > WARNs, zero new findings), `list_migrations` (still 7 — no new migration since creation). Prior: 08:34.
-> ✅ אומת-סנכרון: 15/07/2026 23:25 (regin-docs-sync — אודיט פוסט-בלופרינט-מ3: §7 85 פריטים סונכרן בכל המקומות, 4 חותמות-רפרנס רועננו, 0 קונפליקטים)
+> 🔴 **STALE — flagged 26/08/2026 by `regin-docs-sync`.** The "still 7 migrations" claim is off by 41: `ls supabase/migrations/*.sql` returns **48** files today (baseline + 47). The **live** DB was **NOT** re-checked this run — the Supabase MCP server was **unauthenticated** in this session, so `get_advisors`/`list_migrations` could not run. ⚠️ **Treat the whole "Last verified vs live DB" line as a 08/07/2026 snapshot with a known-wrong migration count, not as current truth.** The next session with a live MCP connection should re-run both calls and rewrite this line.
 
 ---
 
@@ -115,7 +116,9 @@ only) · the typed-echo gate before every apply · `docs/schema.sql` refreshed a
 
 ### A1. Decided (or nod-pending 👍) — awaiting a named migration
 
-🔗 מראת §7.47 — SSOT: PROJECT_MASTER §7 (לא לערוך כאן ידנית)
+🔺 **הטבלה הזו אינה מראה של §7.47 — היא על-קבוצה שלו** *(תוקן 26/08/2026 ב-`regin-docs-sync`; קודם עמד כאן `🔗 מראת §7.47`, תג שמבטיח זהות-מילה-במילה)*.
+‏**מה ש§7.47 הוא:** רשם קפוא של **תוספות-ההסכמה מאודיט 07/07/2026** — **10 שורות**. **מה שהטבלה הזו היא:** התצוגה המבצעית — **21 שורות**, כלול אחד-עשר שנולדו אחרי האודיט ונרשמו כאן כשהעבודה נחתה (רובם מודול 4).
+🔴 **ולמה לא סונכרן במקום להימחק התג:** סנכרון *מ-*§7 (כפי שכלל 13 מורה) היה **מוחק 11 שורות אמיתיות של עבודה שבוצעה**, וסנכרון *אל* §7.47 היה מערבב לתוך רשם-אודיט מתוארך שורות שמעולם לא היו בו. **שני הקבצים נכונים — מה שהיה שגוי הוא הטענה שהם זהים.**
 
 | טבלה | עמודות חדשות | מקור-הכרעה | מודול-ביצוע |
 |---|---|---|---|
