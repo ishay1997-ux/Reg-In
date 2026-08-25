@@ -24,7 +24,7 @@
 ## Current State (snapshot — rewritten, not appended)
 <!-- target ~15 lines · no internal dates (F4) · over budget? compress / move to journal -->
 
-**Where we stand:** Modules **1** (users/permissions), **2** (customers), **3** (quotes) and **4** (hostesses + Smart Match) are closed, merged to `dev`, and promoted to `main` (module 4 is live in production — PR #26, merge `6a7bde9`). **Module 6 (projects) is CLOSED [YES] and MERGED to `dev`** — typed DoD echo signed, PR #41, merge `40fb973` (verified: branch `ishay/module-6-projects` is a strict ancestor of `origin/dev`, module 6's migration + `06_projects/api.js` present on `dev`). Branch `ishay/module-6-projects` is now dead (rule 10). **Next module: 5 (logistics) — Discovery stages 0, 1 and 2 are DONE; branch `ishay/module-5-logistics` carries docs-only commits, zero build commits.** `docs/specs/module_05_logistics/` holds six files: `processes-approved.md` (the only file allowed to state a product rule — **38 rulings ①–㊳**, 7 process cards, a 30-row ledger), `screens-approved.md` (**2 screen cards**, module-6's nine-section template), `design-contract.md`, `data-set.md`, `world-sources.md`, `discovery-log.md`. Two mockups live in `docs/mockups/logistics-screen/approved/` — **Ishay approved them visually 22/08/2026** (*"מעולה מאשר הכל"*), so appearance is final; each card's §⑧ "לאישורך" list is still his. `db_roadmap` carries **`M5-1`…`M5-7`**. **Discovery is COMPLETE — stages 0–3.** `spec.md` written and gated, both mockups approved, **41 rulings (18 Ishay's)**, `M5-1`…`M5-8` in `db_roadmap`, **4 ripples into merged code** (M3's RPC, M6's RPC, M6's notes tab, M6's `AR-4`). **The next skill is `module-blueprint`.** Nothing is waiting on Ishay. A third surface — the removal dialog — was **deleted** by ruling ㊳: removal is a scope change, belongs to the projects manager, and is *typing `0`* in module 6's existing dialog. `M = 3` → **`M = 2`**.
+**Where we stand:** Modules **1** (users/permissions), **2** (customers), **3** (quotes) and **4** (hostesses + Smart Match) are closed, merged to `dev`, and promoted to `main` (module 4 is live in production — PR #26, merge `6a7bde9`). **Module 6 (projects) is CLOSED [YES] and MERGED to `dev`** — typed DoD echo signed, PR #41, merge `40fb973` (verified: branch `ishay/module-6-projects` is a strict ancestor of `origin/dev`, module 6's migration + `06_projects/api.js` present on `dev`). Branch `ishay/module-6-projects` is now dead (rule 10). **Active module: 5 (logistics) — Discovery COMPLETE and the BLUEPRINT IS APPROVED; branch `ishay/module-5-logistics` carries docs-only commits, zero build commits.** The build map is **`docs/micro_guides/module-5.md`** (approved, Active step 1.0 — the next "תמשיך לבנות" session opens Phase 1: four migrations + the two-mode demo seed). The approved spec set lives in `docs/specs/module_05_logistics/` (`processes-approved.md` is the only file allowed to state a product rule — **42 rulings ①–㊷**; `screens-approved.md` — 2 cards, **content-approved**, incl. the arrival-column contract; `design-contract` · `data-set` (+§9 seed additions) · `world-sources` · `discovery-log`). Mockups: `docs/mockups/logistics-screen/approved/` — appearance final. `db_roadmap` carries **`M5-1`…`M5-8`** (M5-6 widened to four columns + the arrival stamp; M5-8 carries the `actual_qty_autofilled` flag). **4 ripples into merged code** (M3's RPC, M6's RPC, M6's notes tab, M6's dialog/`AR-4`). 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes (the §7.50 quote lock makes delete-recreate impossible — two-mode design, Ishay-approved). Removal is *typing `0`* in module 6's existing dialog (㊳); `M = 2`.
 ⚠️ **Not independently re-verified this pass** (module-6's own docs, `PROJECT_MASTER §6/§7` tallies, `STATUS.md`) — re-check before citing an exact count from any of them; don't assume this line has already done it.
 `docs/schema.sql` freshly measured: **23 tables** (`grep -c '^create table' docs/schema.sql`).
 
@@ -43,6 +43,56 @@
 ---
 
 ## Session Log (newest first)
+
+### 25/08/2026 — Module 5 blueprint written, triple-reviewed, and APPROVED ("מאשר", 23:35)
+
+**What changed:** `docs/micro_guides/module-5.md` exists and is the approved build map — 10
+sections in module-6's evolved shape, plus two firsts: a 🛑 blocker table at the Phase-1 head and
+a §3.8 ruling-coverage ledger walking all **42** rulings (denominator = the registry, per the
+template's decision-coverage back-check). Five phases; Phase 1 = 4 migrations (A `logistics`
+hardening M5-1/2/5/8+flag · B approve-RPC origin+color fill & 6/6 backfill · C the checklist RPC
+M5-6 · D `apply_scope_change` reset+zero-as-removal M5-4/M5-7) + the demo seed.
+
+**Why the shape it has — three review passes, all folded before Ishay saw it:** simulated-build
+(caught: M5-6 scoped to three columns while ㊶ needs four; reading-list holes → spec §① rows
+15–17) · fresh-context reviewer, **19 findings** (the `הכול`-pill population rule — `#11` active
+with 0 rows would make the counter 6 vs the hand-computed 5; `parseQtyInput` is the real client
+zero-guard, `min=` is only a hint — M5-7 would have shipped dead; the seed's quote preconditions
+incl. the hostess-line-derives-`required_hostess_count` fact) · Phase-1 execution rehearsal, **15
+gaps, one true BLOCKER**: delete-recreate seeding is impossible against the §7.50 quote-lock
+triggers (measured: no legal bypass — and good) ⇒ **two-mode seed** (create-once + date-refresh
+via `update_project_details`'s reactivation branch; nothing ever deleted), Ishay-approved, plus
+the standing **refresh-every-demo-morning** routine (the 02:00 cron closes the "today" project;
+28/08 is a Friday and the screen will honestly say so).
+
+**Ishay's rulings this session:** content-approval for both screen cards (scope recorded in the
+cards' header) · **㊷** outbound-section rows are clickable (his catch — my strict reading of 🔄ו
+reversed; registry now 42/19) · no StatTiles (delegated, with the "decision-changing number"
+test) · **seven verbatim UI strings** (queue no-permission · empty outbound · write-failure ·
+closed-event raise · hostess-qty raise · new-item-zero raise · the one demo note) · the two-mode
+seed · ㊴ locks the arrival-date field in a cancelled project (mockup drew it enabled — drawn
+glitch). Kept OPEN deliberately, anchored to the Phase-3 door: the second-amber reason line (O-1)
+and a visible ㊴ sentence in the cancel banner (O-4).
+
+**Write-backs (rule 13, same session):** registry ㊷ + counts 41→42 · both cards (approval
+stamps, the `הכול` precision note, the arrival-column contract block, the approved write-failure
+wording replacing its ⬜) · `spec.md` (38→42 fix — the entry-doc understated the registry by
+three Ishay rulings; reading-list addendum) · `data-set.md` §9 (seed additions incl. the note) ·
+`db_roadmap` (M5-6 widened · M5-8 flag · M5-3 backfill) · step guide `module_05_logistics.md`
+(stale "Discovery not yet run" banner replaced; §7.22 marked ruled) · `STATUS.md` (twice: counts
+41/18→42/19 drift found by the reviewer, then the approval banner).
+
+**How-we-work lessons (the category compaction loses — flagging now):** ‏(1) **an agent-count is
+not coverage — one rehearsal that DOES found the seed blocker that three reading passes missed**
+(the M6 lesson reproduced exactly). ‏(2) **the MCP connection is `postgres` with `rolbypassrls`
+— an RLS negative-control without `set local role authenticated` silently passes in the wrong
+direction**; the impersonation recipe in every future guide needs the third line (now in
+module-5.md §2.7). ‏(3) a demo-data seed against production is a DESIGN problem (locks, crons,
+idempotency), not a value-copying script — budget it like one.
+
+**Boundaries declared:** no code/migrations were run — docs only; the rehearsal's SQL lives in
+its report, nothing applied. Not re-verified this pass: module-6's own doc tallies. Recommended
+to Ishay (13ז): run `regin-docs-sync`.
 
 ### 22/08/2026 — Module 5 Discovery closed: three measuring tests, and what each one caught that the others could not
 
