@@ -11,9 +11,9 @@
 | **Module** | 5 — לוגיסטיקה (Logistics) |
 | **Branch** | `ishay/module-5-logistics` *(exists — carries the whole Discovery + this blueprint; verified live 25/08/2026, ahead of `origin/dev`, NOT merged — `git log origin/dev..HEAD` non-empty)* |
 | **Owner** | Ishay (sole developer) |
-| **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `25/08/2026 23:35` ("מאשר").** Discovery closed 22/08/2026; 42 rulings ①–㊷; 2 approved mockups; content-approval round 25/08; three review passes run and folded (simulated build · fresh-context review 19 findings · Phase-1 execution rehearsal 15 gaps — all closed, see the 🛑 table and §10). Build not started. |
-| **Last updated** | `25/08/2026 23:35` *(system clock)* — approved & saved as the official guide. *(Earlier stamp:)* `22:33` — draft written |
-| **Active step** | **1.0** — Phase-1 door (next "תמשיך לבנות" session starts there) |
+| **Status** | 🔨 **BUILD — Phase 1: steps 1.0–1.5 ✅ DONE (26/08/2026 01:2X).** All four migrations APPLIED via MCP (typed-echo waived one-time by Ishay, §10; the tool-permission block was cleared by Ishay adding an allow rule) and verified live; the two-mode seed EXECUTED (create + refresh idempotency proof, delta 0) — demo projects `#13/#14/#15` live with derived statuses. Advisors: security 25→26, performance 26→27 — both deltas are the new module-5 objects, triaged accepted (db_roadmap strike entry). Remaining: **1.6 gate package** (gate run · commit · present to Ishay). *(Earlier:)* 📘 BLUEPRINT APPROVED — Ishay, `25/08/2026 23:35`. |
+| **Last updated** | `26/08/2026 01:2X` *(system clock)* — migrations applied + seed live; 1.6 in progress. |
+| **Active step** | **1.6** — Phase-1 gate (schema.sql refreshed ✓ · db_roadmap flipped ✓ · gate+commit pending) |
 | **Deadline** | interim presentation **28/08 — a FRIDAY** (module 5 demo-ready is the stretch goal Ishay named; 🔄 **run the seed REFRESH that morning** — the 02:00 cron closes the "today" demo project overnight, step 1.5) · conference **01/10** (target: 100%) |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -21,13 +21,13 @@
 
 | Step | Title | Status |
 |---|---|:--:|
-| **1.0** | Phase-1 door — ledger sweep + live-state re-measurement | ⬜ |
-| **1.1** | Migration A — `logistics` hardening (M5-1 · M5-2 · M5-5 · M5-8 + `actual_qty_autofilled`) | ⬜ |
-| **1.2** | Migration B — approve-RPC origin+color fill & backfill (M5-3) | ⬜ |
-| **1.3** | Migration C — checklist write RPC (M5-6) | ⬜ |
-| **1.4** | Migration D — `apply_scope_change`: status reset + zero-as-removal (M5-4 · M5-7) | ⬜ |
-| **1.5** | Demo-data seed (Ishay's 22/08 ruling) | ⬜ |
-| **1.6** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | ⬜ |
+| **1.0** | Phase-1 door — ledger sweep + live-state re-measurement | ✅ 26/08 |
+| **1.1** | Migration A — `logistics` hardening (M5-1 · M5-2 · M5-5 · M5-8 + `actual_qty_autofilled`) | ✅ 26/08 |
+| **1.2** | Migration B — approve-RPC origin+color fill & backfill (M5-3) | ✅ 26/08 |
+| **1.3** | Migration C — checklist write RPC (M5-6) | ✅ 26/08 |
+| **1.4** | Migration D — `apply_scope_change`: status reset + zero-as-removal (M5-4 · M5-7) | ✅ 26/08 |
+| **1.5** | Demo-data seed (Ishay's 22/08 ruling) | ✅ 26/08 |
+| **1.6** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | 🔨 |
 | **2.0** | Phase-2 door — ledger sweep | ⬜ |
 | **2.1** | Queue derivations in `src/lib/projectLogistics.js` + tests ⚠️ shared-surface | ⬜ |
 | **2.2** | `src/modules/05_logistics/api.js` — reads + RPC call + tests | ⬜ |
@@ -487,7 +487,7 @@ agents (4.1+4.2 · 4.4) + 4.3 in the main session. Phase 5 = fresh session.
 (expect 1), `pg_constraint` on `logistics` (no actual_qty CHECK), origin pointers (0/6), the five
 demo-relevant projects' statuses — **if anything moved since 25/08, update this guide first.**
 Record the unit-test baseline count.
-**🔻🤖 Verify:** the measurements above, reported. **🌊 אדוות —** **🗣️ אושר —**
+**🔻🤖 Verify:** the measurements above, reported. **🌊 אדוות —** אין (nothing moved since 25/08; baseline 1,271 recorded in §10). **🗣️ אושר —** covered by Ishay's session-opening scope approval (26/08).
 
 **Step 1.1 · Migration A — `module5_logistics_hardening`**
 **Files:** `supabase/migrations/<ts>_module5_logistics_hardening.sql`
@@ -516,8 +516,7 @@ CHECKs · columns exist with right types · **negative control** (with the FULL 
 (then revert) · advisors: no new findings.
 **מה ייחשב עובד** *(spec §"מה אסור לנחש" #1, quoted)*: ‏1. *"כל כתיבה חייבת `.select()` ובדיקת
 מספר-שורות"* — הבסיס שהמדיניות הזאת נותנת לו משמעות. ‏2. ‏`C6 §2.4.13`: *"כמות בפועל … ≥ 0"* נאכף
-במסד. **🌊 אדוות —** *(db_roadmap M5-1/2/5/8 rows → ✅ with migration name; schema.sql at 1.6)*
-**🗣️ אושר —**
+במסד. **🌊 אדוות —** done 26/08: db_roadmap M5-1/2/5/8 → ✅ · schema.sql refreshed (logistics block + policy). **🗣️ אושר —** Ishay 26/08, one-time blanket typed-echo (§10).
 
 **Step 1.2 · Migration B — `module5_approve_rpc_origin_backfill` (M5-3) ⚠️ merged-M3 code**
 **Files:** migration only.
@@ -540,7 +539,7 @@ the function whose rewrite already broke quote-approval once, 12/08)* · run
 forward-fill is proven live by the seed's approvals in 1.5 — check pointers ≠ NULL there.)*
 **מה ייחשב עובד** *(processes 🔗-table row 1 + `M5-3`, quoted)*: ‏1. *"`approve_quote_and_create_project`
 ימלא `quote_service_line_id`"*. ‏2. *"העמודה בפועל היא `quote_service_line_id` והיא קיימת. אין
-ליצור עמודה שנייה."* **🌊 אדוות —** **🗣️ אושר —**
+ליצור עמודה שנייה."* **🌊 אדוות —** done 26/08: db_roadmap M5-3 → ✅ · schema.sql function pointer moved to the new migration · quote-approval E2E re-run (6 passed). **🗣️ אושר —** Ishay 26/08 (blanket, §10).
 
 **Step 1.3 · Migration C — `module5_checklist_rpc` (M5-6)**
 **Files:** migration only.
@@ -583,7 +582,7 @@ qty=300, arrival stamped · revert → arrival cleared · נועה (view) ⇒ ra
 qty ⇒ the S-5 Hebrew raise · **leave `#3` exactly as found (revert everything).** Advisors clean.
 **מה ייחשב עובד** *(spec ✅-chapter, quoted)*: ‏1. *"היא נכנסת לפרויקט, מסמנת `הוזמן`, מקלידה כמות
 שהגיעה, וכותבת הערה"*. ‏2. *"כתיבה שנחסמה אינה מדווחת 'נשמר'"*. ‏3. ㉕: *"ערך שהיא הקלידה לעולם
-אינו נדרס"*. **🌊 אדוות —** **🗣️ אושר —**
+אינו נדרס"*. **🌊 אדוות —** done 26/08: db_roadmap M5-6 → ✅ · schema.sql §24 gained the module-5 function block. **🗣️ אושר —** Ishay 26/08 (blanket, §10).
 
 **Step 1.4 · Migration D — `module5_scope_change_reset_removal` (M5-4 + M5-7) ⚠️ merged-M6 code**
 **Files:** migration only.
@@ -621,7 +620,7 @@ there.
 **מה ייחשב עובד** *(processes 🔄ה, quoted)*: ‏1. *"מותר להסיר אך ורק שורה שגם `item_status =
 'not_started'` וגם `actual_qty = 0`. שני התנאים, תמיד."* ‏2. ‏`C5 §5.6.8` (via M5-4): *"הלוגיקה
 משנה את הסטטוס שלו חזרה ל'בתהליך'"*. ‏3. *"ההסרה נרשמת בהיסטוריה כמו כל שינוי-תכולה."*
-**🌊 אדוות —** **🗣️ אושר —**
+**🌊 אדוות —** done 26/08: db_roadmap M5-4+M5-7 → ✅ · schema.sql pointer moved · behaviour round-trips ran in 1.5's rider as planned (stated in 1.4's report and confirmed there). The 4.2/4.3 client-string + doc ripples stay owned by Phase 4 (unchanged). **🗣️ אושר —** Ishay 26/08 (blanket, §10).
 
 **Step 1.5 · Demo-data seed — TWO-MODE (Ishay approved 25/08/2026, after the rehearsal's G1)**
 **Files:** `supabase/seed/module5_demo_data.sql` (new; committed to the repo).
@@ -690,7 +689,7 @@ new rows carry origin pointers · the removal round-trip above · **run the scri
 nothing deleted, nothing duplicated).
 **מה ייחשב עובד** *(Ishay 22/08, quoted)*: *"בסוף צריך מה שיראה טוב והגיוני ביום ההצגה ב-28.8"* —
 המבחן אינו "הסקריפט רץ" אלא "המסך נראה נכון בכל יום שפותחים אותו".
-**🌊 אדוות —** **🗣️ אושר —**
+**🌊 אדוות —** done 26/08: seed committed to `supabase/seed/` · §10 entry (timezone fix — Israel-local "today") · demo IDs are `#13/#14/#15` (allocated by the DB per AS-4; the `#105/#106/#107` labels in all docs remain narrative names). **🗣️ אושר —** Ishay approved the write-plan in chat ("מאשר הכל לפי המלצתך", conditional on the migrations — condition met and stated).
 
 **Step 1.6 · 🔻👤 Phase-1 gate**
 **Files:** `docs/schema.sql` · `docs/db_roadmap.md` §10 + M5 rows
@@ -979,3 +978,68 @@ pointer, never an edited number).
 
 ### Dated entries
 *(Append-only. Starts at build.)*
+
+**26/08/2026 00:15–00:4X — Phase-1 build session (steps 1.0–1.4 drafting + 1.5 script).**
+- **Step 1.0 measurements (all live via Supabase MCP; nothing moved since 25/08):** policies
+  on `logistics` = 1 (`logistics_select_by_permission`) · `pg_constraint` shows NO
+  `actual_qty` CHECK (only planned/status/origin/PK/FKs) · origin pointers **0/6**,
+  `project_change_id` 0/6 · project statuses: `#3 not_started` · `#7 event_finished` ·
+  `#8 in_progress` · `#11 ready` · `#12 awaiting_invoice` (no cancelled project — AS-3
+  consistent) · **unit-test baseline: 1,271 tests / 50 files, exit 0** (recorded from a full
+  `npm run test:run`). §3.5 sweep: nothing anchored to Phase 1 (O-1/O-4 → Phase-3 door,
+  O-2 → M12, O-3 → dormant).
+- **↳ RULING (Ishay, session opener, quoted): one-time blanket typed-echo for all four
+  migrations.** His words: *"חד פעמי כי 12 בלילה מאשר לך להריץ את כולם בלי אישור אחד אחד
+  אלה עכשיו הנה קיבלת אישור על כולם"*. This waives the per-apply typed-echo gate for
+  migrations A–D **this session only**; the seed (1.5) explicitly keeps its gate
+  (*"הצג לי קודם את תוכנית-הכתיבה למסד החי, המתן לאישורי, ורק אז הרץ"*). Deviation from
+  `supabase/migrations/CLAUDE.md`'s gate recorded here per the honesty rule — the gate's
+  owner waived it, it was not skipped.
+- 🔴 **BLOCKER (tool layer, not Ishay): MCP `apply_migration` denied by the Claude Code
+  auto-mode permission classifier.** `execute_sql` (reads) works. Not worked around —
+  DDL via `execute_sql` is forbidden by the DB protocol (unregistered migration). All four
+  migration files + the seed script were drafted to disk instead; applies wait for Ishay
+  to unblock (approve the tool / add a permission rule).
+- **Function bodies for B and D pulled live via `pg_get_functiondef`** (the 12/08 lesson):
+  `approve_quote_and_create_project(integer)` (signature confirmed integer, per the
+  rehearsal) · `apply_scope_change(integer, jsonb, text)`. B's only delta: the logistics
+  INSERT gains `quote_service_line_id` + `color`; D's deltas: the four marked M5-4/M5-7
+  changes. Full-body diff scheduled as part of each apply's verification.
+- **`הנחתי` (technical, no product meaning — server-only raise strings the UI never
+  surfaces, invented because no locked string exists):** M5-6's unknown-key / not-a-number /
+  not-an-integer / not-a-date / row-not-found / empty-payload raises; M5-6's
+  expected-date-only-on-ordered raise text; M5-6's qty-on-not_started raise reuses the ㉚
+  explanation sentence from `processes-approved` (*"הפריט טרם הוזמן — הכמות בפועל נפתחת
+  לעריכה אחרי סימון 'הוזמן'"*); D's negative-qty-on-existing-row raise
+  (*"הכמות אינה יכולה להיות שלילית. השינוי לא בוצע."*). Also `הנחתי`: the seed's amber
+  assertion uses a **14-calendar-day proxy** for the 10-business-day threshold (DB-side
+  sanity only; the exact `businessDaysUntil` check is client-side, step 2.3), and the seed's
+  demo-hostess picks (12·14·15·16 / 17·18·19·22 / 24) — active, outside the smoke-anchor
+  names, no future `finally_approved` rows (avoids the one-event-per-day collision as
+  `#107` drifts toward 15/10–20/10).
+- **`update_project_details` measured live:** its reactivation branch accepts
+  `p_event_date >= current_date` ⇒ **same-day refresh works in ONE step**; the guide's
+  1.5 two-step fallback ("tomorrow → today") is unnecessary — kept in the guide text as
+  dead caution, behaviour confirmed from the live body.
+
+**26/08/2026 01:0X–01:3X — Phase 1 EXECUTED end-to-end (after Ishay cleared the tool block by
+adding the `apply_migration` allow rule to `.claude/settings.local.json` — his edit, his consent).**
+- **Applies A→B→C→D, serial, each verified before the next** (evidence in the db_roadmap strike
+  entry, not restated here): A — 2 policies · 2 new CHECKs · 4 new columns; impersonated controls
+  with the FULL §2.7 recipe (positive first: דנה update→1 row, read→6; negative: נועה→0 rows).
+  B — pointers 6/6, color 0/6 (G14); **full-body diff vs the pre-edit live def: delta = the two
+  INSERT columns only**; `quote-approval.spec.js` → 6 passed. C — the 7-assert behavioural
+  round-trip inside a rolled-back transaction (`#3` left untouched); נועה→42501. D — old raise
+  string absent, all four new strings present in the live def.
+- **Seed:** create-run OK (demo `#13/#14/#15` born via the real quote→approve path; removal rider:
+  both refusals raised with the exact ㊱ strings, row deleted, history row written); second run =
+  refresh, **count delta 0** (8/16/27/14/1). **↳ as-built (1.5):** seed's "today" is now
+  `(now() at time zone 'Asia/Jerusalem')::date`, NOT `current_date` — measured live: the 01:00
+  run seeded 25/08 because `current_date` is UTC; the AR-5 wording ("derives from current_date")
+  is satisfied in spirit, corrected in mechanism (§7.56). A refresh realigned all dates
+  (26/08 · 27/08 · 07/09) and re-proved the ㉑-reset + re-assert path with a real date change.
+- **Advisors triage:** security 26 (= 25 baseline + `update_logistics_item`, the accepted
+  browser-RPC class) · performance 27 (= 26 baseline + `multiple_permissive_policies` on
+  `logistics`, the accepted house pattern — C-2/M12). Zero unexpected findings.
+- **`docs/schema.sql` refreshed** (delta edits, cross-checked live: 23 tables · 224 columns ·
+  37+12 policies · 26 functions · 3 cron jobs). db_roadmap: all 8 M5 rows → ✅ + strike entry.
