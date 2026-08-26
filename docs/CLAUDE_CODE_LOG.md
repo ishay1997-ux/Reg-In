@@ -45,6 +45,23 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 27/08/2026 01:0X–01:2X — MODULE 5 MERGED to dev (PR #64) + post-merge flip + three debts paid
+
+- **Merge executed via Ishay's real Chrome on his explicit ask** (*"מזג לפי הנוהל בבקשה עבורי"* —
+  the PR #62/#41 precedent): PR #64, 74 commits / 124 files, ALL checks green **by name**
+  (Lint·Test·Build · Deno type-check · gitleaks · Vercel ×2). **Verified with fresh git evidence,
+  never the browser banner:** `git merge-base --is-ancestor 3822a47 origin/dev` ⇒ yes; dev head =
+  merge commit `0eb42a4`. Branch is merged ⇒ dead (rule 10); deletion is Ishay's click.
+- 🔴 **CI gotcha caught en route:** `gh pr checks --watch` exited GREEN while the Actions run was
+  still **queued** — at that moment only the two Vercel checks existed. Green-that-means-not-yet-run;
+  the merge waited for `gh run watch` on the run itself. (Same family as the wrapper-exit gotcha.)
+- **This flip branch (`ishay/post-merge-m5-flip`, cut from fresh dev) also pays three debts** under
+  the standing "בצע הכל לפי המלצה שלך": the two `🚧 מ10 ← מ3` one-liners (mailto
+  `encodeURIComponent` per the marketing.js house pattern · `QuoteLineEditor` controlled-from-birth
+  `value={sku || ''}`) — deliberately AFTER the merge so the certified tree stayed untouched — and
+  `🚧 מ12 ← מ4`(א) measured ALREADY-paid (the live SelectTrigger carries the aria-label with a
+  12/08 dated comment; struck with evidence). STATUS row → ✅ merged; roadmap → merged.
+
 ### 26/08/2026 23:1X – 27/08/2026 00:3X — module-5 CLOSING AUDIT: blocker fixed · three rulings landed and executed · verdict [YES] pending the typed echo
 
 **Round 2 (00:2X–00:3X) — Ishay ruled all three per the recommendations (*"בצע הכל לפי המלצה שלך

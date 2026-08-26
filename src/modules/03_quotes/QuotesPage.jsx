@@ -639,7 +639,10 @@ export default function QuotesPage() {
                             tel: ירד בהכרעת-ישי: במחשב הוא לרוב לא מחייג. */}
                         {email && (
                           <a
-                            href={`mailto:${email}`}
+                            // encodeURIComponent — דפוס-הבית של marketing.js (מ2): כתובת עם
+                            // `?`/`&` (ש-EMAIL_REGEX מתיר) הייתה מוזרקת ככותרות-mailto.
+                            // נפרע 27/08/2026 — חצי (א) של `🚧 מ10 ← מ3` ברשם-החובות.
+                            href={`mailto:${encodeURIComponent(email)}`}
                             title="מייל לאיש הקשר"
                             className="inline-block mt-1 text-[11px] text-teal-700 bg-teal-50 border border-teal-200 rounded-md px-1.5 py-0.5"
                             data-testid={`quote-mailto-${quote.quote_id}`}
