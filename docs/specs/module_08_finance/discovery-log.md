@@ -31,3 +31,11 @@
 4. Who caught structural findings: sweeps were agent+self work; Ishay's steering note "מה מודול 8 צריך להשלים לאחרים ומה אחרים לו" pre-empted the reverse-direction sweep (already planned per template — tie). Ratio to date: no Ishay-caught misses yet (stage had no human-facing output before Stop 1).
 
 **Next:** Stop 1 presented in chat. Then Stage 1-א: process map + surface list (M) for approval. Boundary question queued first: salary-report screen M8 vs M11.
+
+### Session 1 — CLOSED 26/08/2026 evening. The whole Discovery ran start-to-finish in one continuous session.
+
+**The arc:** Stage 0 sweeps (4 agents) → Stop 1 ("כיסית הכל") → delegation ("את הרוב אתה יכול להחליט לבד") → 30 delegated rulings + Ishay's own (feedback auto-capture · the cancellation fee, twice widened by his questions · list-price affirmed · bad-debt path from his "מסובך לבנות?") → world research (4 domains, cited) → all §7 items closed (62🟢/8🟡 from the day's opening 16🟡) → P1–P4 cards approved → stage-1 review wave (42 findings, 3 silent-breakers) → foundations + contract review (2 HIGH multipliers caught pre-drawing) → production wave (6 surfaces drawn, all approved: "מאשר את כולם") → reconciliation 6/6 → spec.md → pre-handoff review (READY-WITH-FIXES, 4 applied) → the debt-completeness audit Ishay demanded (3 missing supply contracts found and written: מ11·מ10·מ7 + ruling ה30) → handoff conditions met, his conditional "אחרי זה מבחינתי מאושר" satisfied.
+
+**What the next Discovery should copy:** the review-before-drawing gate (5 findings × 4 mockups averted) · the reconciliation sheet (6 cross-file contradictions no per-surface eye saw) · the debt audit's reader-test pass in BOTH directions (zero ← tokens existed) · hand-computed anchors reused verbatim downstream (never recomputed). **What it should watch:** the parallel-build arena (Stop-hook races a writing agent — touch-after-quiet) · the git untracked-vs-pathspec trap (×3) · Ishay's field-reality questions are the one category no mechanism caught — front-load them deliberately.
+
+**Deferred/open at close:** none product-side. PROJECT_MASTER.md commit queued (m5 session holds uncommitted lines — rule 16); the three §6 supply lines + ה30 update are ON DISK, riding the next clean commit window.
