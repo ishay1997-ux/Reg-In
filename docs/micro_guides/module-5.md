@@ -13,7 +13,7 @@
 | **Owner** | Ishay (sole developer) |
 | **Status** | 🖥️ **BUILD — Phases 1+2+3-build ✅ COMPLETE; standing at the 3.4 🎨 gate (Ishay's stop).** Phase 1: migrations A–D + two-mode seed live (`eb17b19`). Phase 2: queue brain + api layer, panel-verified (`40a978b`). **Phase 3: both screens built (workflow `wf_fc693d3e`) + panel-verified + cleanup-agent 7/7 fixed with red-first proofs · route `/logistics` LIVE (guard proven red then restored) · Q1–Q4 conflict triage APPROVED by Ishay ("מאשר לפי המלצתך" — all four confirmed) and Q1's legend clause implemented + test-locked · final suite 1,405/54 green (= phase-2 baseline 1,341 + 64, zero regressions) · live-browser evidence: contract-3 numbers on the real screen, dialog Range audit 6/0, keyboard date-typing = exactly 1 RPC call (the triple-write fear REFUTED in real Chrome), recruit blocked live.** *(Earlier:)* 📘 BLUEPRINT APPROVED — Ishay, `25/08/2026 23:35`. |
 | **Last updated** | `26/08/2026 13:2X` *(system clock)* — phase-3 close-out: measurements done, temp specs deleted, phase-3 commit next, then the 🎨 package. |
-| **Active step** | **Phase 3 CLOSED (3.4 ✅ approved "חוץ מזה מאשר") — next: Phase 4 (4.1), fresh session recommended.** One pending nod: the two house-component items' disposition (Phase-4 small fix · M12 deferral). This session's scope (Ishay's opener: phases 2+3, stop at the 🎨 gate) is COMPLETE. |
+| **Active step** | **4.1 — Phase 4 opens in a FRESH session ("תמשיך לבנות").** Phase 3 CLOSED (3.4 ✅ "חוץ מזה מאשר"); the house-items disposition NODDED (Ishay 13:4X, "הבנתי מעולה, מאשר") — the tooltip fix now lives inside step 4.2, the ⚠ glyph deferral is O-6. **Zero pending nods; nothing waits on Ishay.** 🔄 Demo-morning reminder stands: run the seed REFRESH on 28/08 morning (step 1.5's standing routine). |
 | **Deadline** | interim presentation **28/08 — a FRIDAY** (module 5 demo-ready is the stretch goal Ishay named; 🔄 **run the seed REFRESH that morning** — the 02:00 cron closes the "today" demo project overnight, step 1.5) · conference **01/10** (target: 100%) |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -275,6 +275,7 @@ a log nobody reads for rulings.
 | ~~O-1~~ | ✅ **CLOSED — Ishay 26/08/2026 10:29 ("מאשר את הכל", Phase-3-door round).** Approved wording: *"ההגעה מתעכבת — הובטח ל-`DD/MM` וטרם הגיע"* (date from `expected_arrival_date`; wired as one const in 2.1) | — | done |
 | O-2 | The two teals (`--primary #0D9488` vs `bg-teal-600 #009689`) — system-wide color call, rule 8 | none (build imitates the existing screen per design-contract) | M12 / whenever Ishay wants |
 | O-3 | ⏸️ ⑨ "יצא" checkbox · ⑤ suppliers — closed with `הנחתי`, reopen without ceremony when the missing fact lands | — | — |
+| O-6 | ✅ **CLOSED — deferred to M12 (Ishay 26/08/2026 13:4X, "הבנתי מעולה, מאשר"):** the ⚠ glyph the mockup draws above the load-failure title — the shared `PermissionAwareEmpty` error branch renders no glyph, system-wide; cosmetic, identical to every merged screen's error panel today. Fix belongs to the M12 system-wide UX sweep (the O-2 pattern) | — | M12 |
 | ~~O-4~~ | ✅ **CLOSED — Ishay 26/08/2026 10:29 (same round).** Approved: banner body corrected to *"אין לעדכן מצב או הערה בפרויקט מבוטל."* (the drawn *"מצב, כמות או הערה"* contradicted ㊴) **plus** the visible sentence *"אפשר עדיין לרשום כמות שהגיעה — שאר הפקדים נעולים."* | — | done |
 | ~~O-5~~ | ✅ **CLOSED — Ishay 26/08/2026 10:29 (same round; born from the mockup-vs-data gap found 26/08).** Undrawn count-forms approved: in-transit reason **`{N} יחידות עדיין בדרך`** / `יחידה אחת עדיין בדרך` (the drawn `80 שרוכים` is not data-derivable — "יחידות" replaces it) · `פריט אחד טרם הוזמן` (1) · numeral `N פריטים טרם הוזמנו` (N≥3; the dual `שני פריטים טרם הוזמנו` stays as drawn) · `✓ מוכן` for a fully-ready row in `הכול` | — | done |
 
@@ -923,6 +924,13 @@ Read-only display (she writes in M5; the tab shows). Update `LogisticsTab.test.j
 **מה ייחשב עובד** *(㉒, quoted)*: *"ההערה נראית למנהלת-הפרויקטים"*. **🌊 אדוות —** **🗣️ אושר —**
 
 **Step 4.2 · `ScopeChangeDialog.jsx` ripples (㊳ items ②④ + AR-9) ⚠️ shared-surface**
+➕ **Added 26/08/2026 (🎨-gate disposition, Ishay: "הבנתי מעולה, מאשר"): the disabled-pill
+tooltip house fix.** The shared `Button` carries `disabled:pointer-events-none` ⇒ a disabled
+`FilterPill`'s `title` never shows on hover — ㉚'s "מושבת ומנומק" is half-delivered, house-wide
+(module 6's pills share it today). Fix in the SHARED component layer (e.g. wrap the disabled
+pill in a `span` carrying the `title`, or swap to `aria-disabled` + guard), verify on BOTH
+module-5 and module-6 pills, prove-red once. Small, but it touches merged screens — that is
+why it waited for this step's shared-surface batch rather than being patched mid-module.
 Show `item_status` (as `StatusTag`) on logistics rows (data already fetched — measured) · refusal
 explanation line per row (the two §3.7 strings, matching the server's raise byte-for-byte) · the
 "מה יקרה כשתשמרי" block gains the removal line · client validation strings synced with 1.4's

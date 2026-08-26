@@ -155,6 +155,14 @@ the two house-component items, given the same minute).** Phase 3 fully closed (c
 small Phase-4 house fix, pre-existing across merged screens · error-panel ⚠ glyph — M12).
 Session scope (his opener: phases 2+3, stop at the 🎨 gate) COMPLETE. Next: Phase 4 in a
 fresh session ("תמשיך לבנות").
+**13:4X — SESSION CLOSED at Ishay's word ("תעדכן שסיימת וסגרנו והכל מתועד… ואני ממשיך בסשן
+חדש").** The final nod landed ("הבנתי מעולה, מאשר"): the tooltip house-fix written INTO step
+4.2 (its action home), the ⚠-glyph deferral registered as §3.5 O-6 (M12, the O-2 pattern).
+Zero pending nods. Day balance: phases 2+3 end-to-end · 5 commits (`40a978b` · `edfade4` ·
+`19ecae5` + this close) · 1,271→1,405 tests, zero regressions · two agent workflows with
+adversarial panels + a cleanup agent, everything re-verified by the orchestrator (mutations ·
+live SQL · real-browser evidence). Standing reminders for the next session: the 28/08
+demo-morning seed refresh; the M8 sweep-file's 3 docs-structure findings (that session's own).
 
 ### 26/08/2026 — M8 step guide gets the prompt template; parallel-Discovery question answered (advisory session)
 
