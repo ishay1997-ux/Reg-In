@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ מ8 · S4 · דף-משוב ציבורי</title>
+<style>
+/* ═══ טוקנים — מ-design-contract.md §⑤ (:root המקורי, ערכים לא שונו). ═══ */
+:root{
+  --primary:#0D9488;
+  --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4;
+  --teal500:#00BBA7; --teal600:#009689; --teal700:#00786F;
+  --green50:#F0FDF4; --green100:#DCFCE7; --green200:#B9F8CF; --green700:#008236;
+  --amber50:#FFFBEB; --amber100:#FEF3C6; --amber200:#FEE685;
+  --amber700:#BB4D00; --amber800:#973C00;
+  --red50:#FEF2F2; --red100:#FFE2E2; --red200:#FFC9C9; --red600:#E7000B; --red700:#C10007;
+  --s50:#F8FAFC; --s100:#F1F5F9; --s200:#E2E8F0; --s300:#CAD5E2;
+  --s400:#90A1B9; --s500:#62748E; --s600:#45556C; --s700:#314158; --s800:#1D293D;
+  --r-md:8px; --r-lg:10px; --r-xl:14px; --r-2xl:18px;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  background:var(--s50); color:var(--s800);
+  font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif;
+  font-size:14px; line-height:1.5;
+}
+
+/* כל ערך שאינו עברית טהורה עובר דרך .ltr (§3.1–3.3 בחוזה-העיצוב). */
+.ltr{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
+
+/* ── באנר-דראפט-עבר — קבוע-למעלה ── */
+.draftbar{position:sticky; top:0; z-index:40; background:var(--amber100); color:var(--amber800);
+  border-bottom:1px solid var(--amber200); padding:8px 16px; text-align:center;
+  font-size:12.5px; font-weight:700}
+
+/* ── רצועת-מטא (היום המשותף + מקורות) ── */
+.metabar{background:#fff; border-bottom:1px solid var(--s200); padding:10px 16px;
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px 18px;
+  font-size:12px; color:var(--s500)}
+.metabar b{color:var(--s700); font-weight:700}
+.metabar .sep{color:var(--s300)}
+
+/* ── כותרת-העמוד ── */
+.pagehead{max-width:920px; margin:0 auto; padding:28px 20px 8px; text-align:center}
+.pagehead h1{font-size:19px; font-weight:700; color:var(--s800)}
+.pagehead p{font-size:12.5px; color:var(--s500); margin-top:6px; line-height:1.6}
+.pagehead code{background:var(--s100); border-radius:6px; padding:1px 6px; font-size:11.5px}
+
+/* ── כל בלוק-מצב: תווית-סקירה + מסגרת-הדף-הציבורי ── */
+.states{max-width:520px; margin:0 auto; padding:8px 20px 56px; display:flex; flex-direction:column; gap:44px}
+.state{display:flex; flex-direction:column; gap:10px}
+.state-label{display:flex; align-items:flex-start; gap:10px; padding:0 4px}
+.state-tag{flex:none; width:26px; height:26px; border-radius:999px; background:var(--s700); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:700}
+.state-title{font-size:13.5px; font-weight:700; color:var(--s800)}
+.state-sub{font-size:11.5px; color:var(--s500); margin-top:1px}
+
+/* ── מסגרת "טלפון" — כדי שהדף הציבורי ייקרא בהקשר, לא חלק מה-UI האמיתי ── */
+.pub-frame{background:var(--s100); border:1px dashed var(--s300); border-radius:24px; padding:24px 14px}
+.pub-card{width:100%; max-width:360px; margin:0 auto; min-height:420px; display:flex; flex-direction:column;
+  gap:16px; border-radius:24px; background:#fff; padding:22px 20px; box-shadow:0 1px 2px rgba(15,23,42,.08)}
+
+/* ── תקדים PublicConfirmPage.jsx — כותרת-מיתוג ── */
+.pub-kicker{display:flex; align-items:center; gap:8px}
+.pub-kicker .dot{width:8px; height:8px; border-radius:999px; background:var(--teal600); flex:none}
+.pub-kicker span:last-child{font-size:12px; font-weight:600; color:var(--s500)}
+
+/* ── כרטיס-פרטי-האירוע (מקביל למבנה slate-50 של AwaitingAnswer) ── */
+.pub-event{border-radius:var(--r-xl); background:var(--s50); border:1px solid var(--s200); padding:14px}
+.pub-event .nm{font-size:14.5px; font-weight:700; color:var(--s800)}
+.pub-event .cu{font-size:12px; color:var(--s600); margin-top:2px}
+.pub-event .dt{font-size:12px; color:var(--s500); margin-top:8px; border-top:1px dashed var(--s300); padding-top:8px}
+
+/* ── שאלת-הדירוג (P2: שאלה אחת, 1–5 כוכבים) ── */
+.pub-question{font-size:14px; font-weight:700; text-align:center; color:var(--s800)}
+.star-row{display:flex; justify-content:center; gap:4px}
+.star-btn{width:44px; height:44px; border:none; background:none; cursor:pointer;
+  font-size:26px; line-height:1; color:var(--s300); display:flex; align-items:center; justify-content:center;
+  border-radius:var(--r-md)}
+.star-btn:hover, .star-btn:focus-visible{color:var(--teal600); outline:2px solid var(--teal200)}
+.star-hint{text-align:center; font-size:11px; color:var(--s400)}
+
+/* ── שדה-הטקסט-החופשי (רשות) ── */
+.field{display:flex; flex-direction:column; gap:5px}
+.field label{font-size:12px; font-weight:600; color:var(--s600)}
+.field textarea{border:1px solid var(--s200); border-radius:var(--r-lg); padding:9px 11px;
+  font:inherit; font-size:13.5px; color:var(--s800); resize:none; background:#fff}
+.field textarea::placeholder{color:var(--s400)}
+
+/* ── כפתור-שליחה — פעולה ראשית יחידה של המסך (כלל-המילוי, §④) ── */
+.btn-submit{margin-top:auto; height:auto; border-radius:var(--r-lg); border:none;
+  background:var(--teal600); color:#fff; font:inherit; font-size:15px; font-weight:700;
+  padding:13px 16px; cursor:pointer}
+.btn-submit:hover{background:var(--teal700)}
+
+/* ── מסך-תוצאה — מחליף את כל תוכן הכרטיס, לא נוסף עליו (תקדים PublicConfirmPage/Result) ── */
+.pub-result{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:12px; text-align:center; padding:36px 8px}
+.result-icon{width:52px; height:52px; border-radius:999px; display:flex; align-items:center;
+  justify-content:center; font-size:24px}
+.tone-ok{background:var(--green100); color:var(--green700)}
+.tone-teal{background:var(--teal100); color:var(--teal700)}
+.tone-dead{background:var(--amber50); color:var(--amber700)}
+.result-msg{font-size:14px; font-weight:700; color:var(--s700); max-width:230px; line-height:1.6}
+.result-sub{font-size:12px; color:var(--s500); max-width:230px; line-height:1.6}
+
+/* ── נספח ── */
+.appendix{max-width:760px; margin:0 auto 60px; padding:0 20px}
+.appendix h2{font-size:14px; font-weight:700; color:var(--s800); margin-bottom:8px}
+.appendix .box{border:1px solid var(--s200); border-radius:var(--r-xl); background:#fff; padding:14px 16px;
+  font-size:12.5px; color:var(--s600); line-height:1.8}
+</style>
+</head>
+<body>
+
+<div class="draftbar">🚧 מאושר — הכרעת-ישי 26/08/2026 ("מאשר את כולם הם נראים מעולה")</div>
+
+<div class="metabar">
+  <span>"היום" המשותף לכל מוקאפי מודול 8: <b class="ltr">15/10/2026</b></span>
+  <span class="sep">·</span>
+  <span>מקורות: 🌱 מהמסד החי · 🎭 דמו-מתויג · 📐 נגזר-בנוסחה-מאושרת</span>
+</div>
+
+<div class="pagehead">
+  <h1>מודול 8 — S4 · דף-משוב ציבורי <span class="ltr">/feedback/:token</span></h1>
+  <p>
+    תקדים מדויק: <code>src/modules/04_hostesses/PublicConfirmPage.jsx</code> (<span class="ltr">/shift/:token</span>) —
+    דף יחיד, בלי סרגל-צד ובלי התחברות, מבנה זהה. ארבעת המצבים למטה הם אותו קובץ-דף, בארבע נקודות-זמן שונות
+    (design-contract.md §⑥/S4).
+  </p>
+</div>
+
+<div class="states">
+
+  <!-- (א) הטופס החי -->
+  <div class="state">
+    <div class="state-label">
+      <span class="state-tag">א</span>
+      <div>
+        <p class="state-title">הטופס החי — עדיין לא הוגש</p>
+        <p class="state-sub">פרויקט #15 · ערב השקה — קמפוס צפון (🌱) · נסגר תפעולית <span class="ltr">08/09</span>,
+          עדיין לא אורכב ⇒ הטוקן פעיל (ה"לא ענה"-הידני מ-<span class="ltr">20/09</span> אינו סוגר את הקישור, P2)</p>
+      </div>
+    </div>
+    <div class="pub-frame">
+      <div class="pub-card">
+        <div class="pub-kicker">
+          <span class="dot" aria-hidden="true"></span>
+          <span>REG-IN · משוב על האירוע</span>
+        </div>
+
+        <div class="pub-event">
+          <p class="nm">ערב השקה — קמפוס צפון</p>
+          <p class="cu">קמפוס טכנולוגי צפון בע"מ</p>
+          <p class="dt">🕓 <span class="ltr">07/09/2026</span>, <span class="ltr">19:00–23:00</span></p>
+        </div>
+
+        <p class="pub-question">איך היה האירוע?</p>
+        <div class="star-row" role="group" aria-label="דירוג בין כוכב אחד לחמישה">
+          <button class="star-btn" type="button" aria-label="כוכב 1">★</button>
+          <button class="star-btn" type="button" aria-label="כוכב 2">★</button>
+          <button class="star-btn" type="button" aria-label="כוכב 3">★</button>
+          <button class="star-btn" type="button" aria-label="כוכב 4">★</button>
+          <button class="star-btn" type="button" aria-label="כוכב 5">★</button>
+        </div>
+        <p class="star-hint">געו בכוכב כדי לדרג</p>
+
+        <div class="field">
+          <label for="fb-notes-a">רוצים לספר לנו עוד? (רשות)</label>
+          <textarea id="fb-notes-a" rows="3" placeholder="לדוגמה: מה אהבתם, ומה כדאי לשפר בפעם הבאה"></textarea>
+        </div>
+
+        <button class="btn-submit" type="button">שלח</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- (ב) מסך-תודה -->
+  <div class="state">
+    <div class="state-label">
+      <span class="state-tag">ב</span>
+      <div>
+        <p class="state-title">מסך-תודה — מיד אחרי לחיצה על "שלח"</p>
+        <p class="state-sub">המשך-רגעי של אותו טוקן כמו (א) — לא רשומה נפרדת ב-data-set.md, כי זו תוצאת-פעולה
+          שעוד לא קרתה בציר-הזמן של הסט. מחליף את כל תוכן הכרטיס (תקדים: <code>Result</code>).</p>
+      </div>
+    </div>
+    <div class="pub-frame">
+      <div class="pub-card">
+        <div class="pub-kicker">
+          <span class="dot" aria-hidden="true"></span>
+          <span>REG-IN · משוב על האירוע</span>
+        </div>
+        <div class="pub-result">
+          <span class="result-icon tone-ok" aria-hidden="true">✓</span>
+          <p class="result-msg">תודה שלקחתם רגע לספר לנו איך היה!</p>
+          <p class="result-sub">המשוב שלכם נשמר ועוזר לנו להשתפר באירוע הבא.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- (ג) המשוב כבר התקבל -->
+  <div class="state">
+    <div class="state-label">
+      <span class="state-tag">ג</span>
+      <div>
+        <p class="state-title">"המשוב כבר התקבל, תודה" — הגשה שנייה</p>
+        <p class="state-sub">פרויקט #12 · כנס משקיעים שנתי (🌱) · <span class="ltr">feedback_status='completed'</span>
+          מ-<span class="ltr">25/08</span> (🎭) — עדיין "ממתין לחשבונית", טרם אורכב, ולכן הטוקן קיים אך כבר-נוצל.</p>
+      </div>
+    </div>
+    <div class="pub-frame">
+      <div class="pub-card">
+        <div class="pub-kicker">
+          <span class="dot" aria-hidden="true"></span>
+          <span>REG-IN · משוב על האירוע</span>
+        </div>
+        <div class="pub-result">
+          <span class="result-icon tone-teal" aria-hidden="true">✓</span>
+          <p class="result-msg">המשוב כבר התקבל, תודה</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- (ד) הקישור אינו בתוקף -->
+  <div class="state">
+    <div class="state-label">
+      <span class="state-tag">ד</span>
+      <div>
+        <p class="state-title">"הקישור אינו בתוקף" — טוקן מת</p>
+        <p class="state-sub">פרויקט #13 · פסטיבל קיץ עירוני (🌱) · הועבר לארכיון <span class="ltr">06/09</span>
+          (🎭) ⇒ טוקן-המשוב הומת בארכוב (כרטיס-P3, "המתת טוקן-המשוב").</p>
+      </div>
+    </div>
+    <div class="pub-frame">
+      <div class="pub-card">
+        <div class="pub-kicker">
+          <span class="dot" aria-hidden="true"></span>
+          <span>REG-IN · משוב על האירוע</span>
+        </div>
+        <div class="pub-result">
+          <span class="result-icon tone-dead" aria-hidden="true">⏳</span>
+          <p class="result-msg">הקישור אינו בתוקף</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="appendix">
+  <h2>נספח</h2>
+  <div class="box">
+    אין נתונים מומצאים במוקאפ הזה — כל שם-אירוע/לקוח/תאריך/סטטוס המוצג הוא מ-<code>data-set.md</code>,
+    על תגיו (🌱/🎭/📐). שיוך כל מצב לפרויקט (א=#15 · ב=המשך-רגעי-של-#15 · ג=#12 · ד=#13) הוא גזירה שלי
+    מתאריכי-הארכוב/ההגשה שכבר רשומים בסט מול כללי P2/P3 — לא הכרעת-מוצר חדשה. הנוסחים החדשים (כותרת-קיקר,
+    שאלת-הדירוג, פלייסהולדר-הטקסט-החופשי, מסך-התודה) טרם הוכרעו ב-<code>processes-approved.md</code>
+    ("הנוסחים המדויקים — בשלב-המסכים") — הפירוט המלא בהערת-ה-HTML בסוף הקובץ.
+  </div>
+</div>
+
+</body>
+</html>
+<!-- מה הכרעתי לבד —
+
+① מבנה-העמוד: התעלמתי מהמשפט בחוזה-העיצוב §⑤ ("סרגל-צד/סרגל-עליון/טוקנים... S1/S4") ובניתי S4
+בלי סרגל-צד/סרגל-עליון בכלל — לקחתי מ-§⑤ רק את בלוק :root+.ltr. הנימוק: הבריף המפורש אומר "no
+sidebar, public single-card layout", וטבלת §⑥/S4 המפורטת בחוזה עצמו מתעדת explicit את מבנה
+PublicConfirmPage.jsx (בלי MainLayout, בלי ProtectedRoute, כרטיס ממורכז) — סותר את הקריאה
+המילולית של §⑤ ומכריע לטובתה, כי הוא הפירוט הספציפי למשטח הזה.
+
+② שיוך מצב→פרויקט: לא נתון מפורש ב-data-set.md ("היום שאם תפתחו את הקישור של פרויקט X, תקבלו
+מצב Y" לא כתוב שם). גזרתי מצירוף תאריכי-הארכוב/ההגשה שכן רשומים בסט עם כללי P2/P3:
+#15 עדיין פעיל (לא אורכב, "לא ענה" ידני לא סוגר טוקן) → (א); #12 הושלם אך לא אורכב → (ג);
+#13 אורכב 06/09 → (ד, טוקן מת). מצב (ב) הוא רגע-מעבר היפותטי (התוצאה המיידית של לחיצה על "שלח"
+בתרחיש א) ולכן אינו רשום בסט כלל — לא בדאתי נתון, רק המחשתי פעולה.
+
+③ נוסחים חדשים (processes-approved.md מצהיר "הנוסחים המדויקים — בשלב-המסכים", כלומר כאן):
+- קיקר "REG-IN · משוב על האירוע" — מקביל-במבנה ל"REG-IN · אישור השתתפות" של התקדים.
+- שאלת-הדירוג "איך היה האירוע?" + הכיתוב "געו בכוכב כדי לדרג".
+- פלייסהולדר-הטקסט-החופשי "לדוגמה: מה אהבתם, ומה כדאי לשפר בפעם הבאה" (עומד בכלל "שדה-קלט-ריק
+  חייב placeholder/עזר", src/CLAUDE.md מעבר 5).
+- הודעת-מסך-התודה ("תודה שלקחתם רגע לספר לנו איך היה!" + שורת-משנה) — "המשוב כבר התקבל, תודה"
+  ו"הקישור אינו בתוקף" הם ציטוט-מדויק מ-processes-approved.md ולא הומצאו.
+- כפתור "שלח" מפורש בבריף עצמו, לא הכרעה שלי.
+
+④ צבע-הכוכבים: טורקיז (לא ענבר) — כלל-המילוי (§④) שומר מילוי לפעולה-הראשית של המסך; הדירוג
+*הוא* הפעולה הראשית כאן (לפני "שלח"), ואילו ענבר בפלטה הזו שמור לאזהרה. בחרתי שלא לחרוג לצבע
+שישי (ענבר-זהב) כדי לא להפר את כלל-הברזל 8. סדר הכוכבים 1→5 מימין-לשמאל-קורא (לא מוארך): אין
+תקדים בקוד לווידג'ט-כוכבים, ובחרתי בסדר-העולה הרגיל (לא הפוך) כי זה המוסכם-עולמית והכי פחות
+מפתיע לקוראת עברית שכבר מכירה כוכבי-דירוג מאתרים אחרים.
+
+⑤ טונים למסכי-התוצאה: (ב) ירוק — הצלחה חיובית, כמו `confirmed` בתקדים. (ג) טורקיז — "כבר טופל",
+מקביל ל-`filled` בתקדים (משהו כבר קרה, לא שגיאה ולא הצלחה-טרייה). (ד) ענבר + ⏳ — זהה-בייט לטון
+ולאייקון של `dead` בתקדים, כי זו אותה משמעות-בדיוק ("המצב שאתה מחפש כבר לא קיים").
+
+⑥ ציון<3 אינו משנה את מסך-התודה הציבורי: כרטיס-P2 קובע ש"נדרש בירור טלפוני" נדלק בחלון-הסגירה
+הפנימי של מנהלת-הכספים, לא בעמוד הציבורי — ולכן מסך (ב) זהה לכל ציון, ולא הצגתי ניסוח-שני
+מותנה-ציון. באותו האופן, "‏<3 בלי סיבה — השמירה נחסמת" (P2) הוא ולידציה על טופס-ההזנה-הידנית
+הפנימי של מנהלת-הכספים (שם היא בוחרת סיבה מהמילון), לא על טופס-הלקוח הציבורי — ולכן שדה-הטקסט
+כאן נשאר "רשות" תמיד, גם לציון נמוך.
+
+⑦ מה לא נכלל, במכוון: מצב-כשל-רשת ("saveFailed"/"נסי שוב") שקיים בתקדים ומוזכר בחוזה-העיצוב
+(§⑥/S4, "כשל-רשת ≠ 'לא בתוקף'") — הבריף ביקש בדיוק ארבעה מצבים (א–ד) ולא כלל אותו; לא הוספתי
+מצב חמישי משלי.
+-->

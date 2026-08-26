@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ מ8 · S1 — מסך הכספים מבט-על</title>
+<style>
+/* ═══ טוקנים — הועתקו מילולית מ-design-contract.md §⑤ (עוגן-גריפ `--primary:#0D9488` +
+   `font-family:'Geist Variable'`). אל תשנה ערך כאן — הם נמדדו ב-§①. ═══ */
+:root{
+  --primary:#0D9488;
+  --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4;
+  --teal500:#00BBA7; --teal600:#009689; --teal700:#00786F;
+  --green50:#F0FDF4; --green100:#DCFCE7; --green200:#B9F8CF; --green700:#008236;
+  --amber50:#FFFBEB; --amber100:#FEF3C6; --amber200:#FEE685;
+  --amber700:#BB4D00; --amber800:#973C00;
+  --red50:#FEF2F2; --red100:#FFE2E2; --red200:#FFC9C9; --red600:#E7000B; --red700:#C10007;
+  --s50:#F8FAFC; --s100:#F1F5F9; --s200:#E2E8F0; --s300:#CAD5E2;
+  --s400:#90A1B9; --s500:#62748E; --s600:#45556C; --s700:#314158; --s800:#1D293D;
+  --r-md:8px; --r-lg:10px; --r-xl:14px; --r-2xl:18px;
+  --sidebar:240px;   /* w-60 */
+  --topbar:64px;     /* h-16 */
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  background:var(--s50); color:var(--s800);
+  font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif;
+  font-size:14px; line-height:1.5;
+}
+
+/* כל ערך שאינו עברית טהורה עובר דרך .ltr. שני מספרים ברצף: מפרקים (§3.3), לא מבודדים יחד. */
+.ltr{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
+
+/* ── מעטפת: סרגל ימני + סרגל עליון. מאפיינים פיזיים בלבד (right/left, §3.1) ── */
+.side{position:fixed; top:0; right:0; width:var(--sidebar); height:100vh; background:#fff;
+      border-left:1px solid var(--s200); display:flex; flex-direction:column; z-index:30}
+.side .logo{height:var(--topbar); display:flex; align-items:center; justify-content:center;
+      border-bottom:1px solid var(--s100); font-weight:700; color:var(--teal700); letter-spacing:.5px}
+.side nav{padding:12px 8px; display:flex; flex-direction:column; gap:4px}
+.nav-i{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--r-lg);
+      font-size:14px; font-weight:500; color:var(--s600); text-decoration:none}
+.nav-i .ic{width:20px; text-align:center; font-size:15px; flex:none}
+.nav-i.on{background:var(--teal50); color:var(--teal700)}
+
+.top{position:fixed; top:0; left:0; right:var(--sidebar); height:var(--topbar); background:#fff;
+     border-bottom:1px solid var(--s200); display:flex; align-items:center;
+     justify-content:space-between; padding:0 24px; z-index:20}
+.search{position:relative; width:288px; max-width:100%}
+.search .mg{position:absolute; right:12px; top:50%; transform:translateY(-50%);
+     color:var(--s400); font-size:13px}
+.search input{width:100%; height:36px; border:1px solid var(--s200); border-radius:var(--r-lg);
+     background:var(--s50); padding:0 36px 0 12px; font:inherit; font-size:14px; color:var(--s500)}
+.who{display:flex; align-items:center; gap:8px}
+.who .av{width:36px; height:36px; border-radius:999px; background:var(--teal600); color:#fff;
+     display:flex; align-items:center; justify-content:center; font-weight:600}
+
+main{margin-right:var(--sidebar); padding:calc(var(--topbar) + 24px) 24px 40px}
+h1{font-size:20px; font-weight:700; color:var(--s800)}
+.psub{font-size:12px; color:var(--s500); margin-top:2px}
+
+/* ── כרטיס-תוכן ── */
+.card{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     box-shadow:0 1px 2px rgba(15,23,42,.06); padding:16px}
+
+/* ── אריח-מדד (StatTile.jsx, §2.2): לבן+מסגרת, לעולם לא מילוי (§④) — לא נעשה בו שימוש
+     במשטח הזה (החלטה שקטה, ר' <!-- מה הכרעתי לבד --> בתחתית הקובץ), אבל נשאר במחלקות
+     הבסיס כי הוא חלק מהשלד המשותף ואסור לגעת בו. ── */
+.tiles{display:flex; flex-wrap:wrap; gap:12px}
+.tile{border:1px solid var(--s200); background:#fff; border-radius:var(--r-xl); padding:16px;
+      display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:180px}
+.tile .lb{font-size:12px; color:var(--s500)}
+.tile .vl{font-size:20px; font-weight:700; color:var(--s800)}
+.tile .sub{font-size:11px; color:var(--s500)}
+
+/* ── סרגל-לשוניות (§2.4) ── */
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--s200); margin:0 -16px 0; padding:0 16px}
+.tab{border:none; background:none; border-bottom:2px solid transparent; margin-bottom:-1px;
+     padding:10px 16px; font-size:14px; font-weight:500; color:var(--s500); cursor:pointer}
+.tab.on{border-color:var(--teal600); font-weight:600; color:var(--teal700)}
+
+/* ── תג-סטטוס (StatusTag.jsx, §2.4) ── */
+.tag{display:inline-block; white-space:nowrap; border-radius:999px;
+     padding:2px 10px; font-size:11px; font-weight:600}
+.tag.ok{background:var(--green100); color:var(--green700)}
+.tag.teal{background:var(--teal100); color:var(--teal700)}
+.tag.muted{background:var(--s100); color:var(--s500)}
+.tag.warn{background:var(--amber200); color:var(--amber800)}
+.tag.dashed{background:var(--s100); color:var(--s500); border:1px dashed var(--s300)}
+
+/* ── גלולת-מסנן (FilterPill.jsx, §2.4) ── */
+.pill{border:1px solid var(--s200); background:#fff; color:var(--s600);
+     border-radius:999px; padding:4px 12px; font:inherit; font-size:12.5px; cursor:pointer}
+.pill.on{background:var(--teal50); border-color:var(--teal200); color:var(--teal700); font-weight:600}
+.pill[disabled]{opacity:.5; cursor:not-allowed}
+
+/* ── כפתורים (button.jsx + הדריסות בפועל) ── */
+.btn{border-radius:var(--r-lg); font:inherit; font-size:14px; font-weight:600;
+     padding:8px 16px; border:1px solid transparent; cursor:pointer; white-space:nowrap}
+.btn-primary{background:var(--teal600); color:#fff}
+.btn-primary:hover{background:var(--teal700)}
+.btn-outline{background:#fff; border-color:var(--s300); color:var(--s700); font-weight:500}
+.btn-danger-outline{background:var(--red50); border-color:var(--red200); color:var(--red600)}
+
+/* ── טבלה (§2.6) ── */
+table{width:100%; border-collapse:collapse}
+th{font-size:12px; font-weight:600; color:var(--s500); text-align:right;
+   padding:6px 10px; border-bottom:1px solid var(--s200); white-space:nowrap}
+td{padding:10px; border-bottom:1px solid var(--s100); vertical-align:middle}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--s50)}
+tr.amber td{background:var(--amber50)}   /* התרעה — ענבר, לעולם לא אדום */
+
+/* ── כרטיס-זהות (Cell/Val/Sub, §2.6) ── */
+.cell{display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0}
+.cell .lb{font-size:12px; color:var(--s500)}
+.cell .val{font-size:14px; font-weight:600; color:var(--s800)}
+.cell .val.empty{font-weight:500; color:var(--s400)}
+.cell .sub{font-size:11px; color:var(--s500)}
+
+/* ── מצב-ריק / חסום / שגיאה (PermissionAwareEmpty.jsx, §2.7) ── */
+.empty{display:flex; flex-direction:column; align-items:center; gap:8px;
+     padding:48px 0; text-align:center}
+.empty .ttl{color:var(--s600); font-weight:500}
+.empty .dtl{font-size:14px; color:var(--s500)}
+.empty .err{color:var(--red600); font-weight:600}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   מחלקות שנוספו למשטח הזה בלבד. 🔴 אף ערך למעלה לא שונה — רק תוספות,
+   באותה רוח כמו docs/mockups/logistics-screen/approved/01_overview_approved.html.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* דראפט-עבר — חובה לפי בריף-המשימה. ענבר, לא אדום: זו הודעה מיידעת על מצב-המסמך,
+   לא חסימה/שגיאה במסך עצמו. */
+.draftban{margin-bottom:14px; padding:10px 16px; background:var(--amber50);
+     border:1px solid var(--amber200); border-radius:var(--r-lg); color:var(--amber800);
+     font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px}
+
+/* רצועת-מטא — "היום" המשותף + מקרא-תגי-המקור. קומפקטית, לבן+מסגרת (עובדה, לא אזהרה). */
+.metastrip{margin:0 0 16px; padding:9px 14px; background:#fff; border:1px solid var(--s200);
+     border-radius:var(--r-lg); font-size:12px; color:var(--s500); display:flex;
+     flex-wrap:wrap; gap:6px 20px; align-items:center; line-height:1.6}
+.metastrip b{color:var(--s700)}
+
+.phead{display:flex; align-items:flex-start; justify-content:space-between;
+     gap:16px; flex-wrap:wrap; margin-bottom:2px}
+
+/* סרגל-חיפוש/סינון (C5 §5.6.13: תאריכים · שם חברה · מספר פרויקט) */
+.bar{display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:12px 0 14px}
+.bar label{font-size:11.5px; color:var(--s500); margin-left:5px}
+.bar input[type="date"], .bar input[type="text"]{
+     height:32px; border:1px solid var(--s200); border-radius:var(--r-lg);
+     background:#fff; padding:0 10px; font:inherit; font-size:12.5px; color:var(--s700)}
+.bar input[type="date"]{direction:ltr; width:130px}
+.bar input[type="text"]{width:190px}
+.bar .to{font-size:12px; color:var(--s400)}
+.link{color:var(--teal700); font-size:12.5px; font-weight:600; text-decoration:none; white-space:nowrap}
+.spacer{margin-right:auto}
+
+/* פרטי-שורת-פרויקט (שם + לקוח) — אותו דפוס בשלוש הטבלאות */
+.pname{font-weight:600; font-size:13.5px; color:var(--s800); display:flex; align-items:center; gap:5px}
+.psub2{font-size:11.5px; color:var(--s500); margin-top:1px}
+.hint{color:var(--amber700); font-size:11.5px; font-weight:600; margin-top:3px}
+.calm{color:var(--s500); font-size:11.5px}
+.num{font-size:13.5px; font-weight:700; color:var(--s800)}
+.miss{color:var(--red600); font-size:13px; font-weight:700}
+.amt{font-size:13.5px; font-weight:700; color:var(--s800)}
+.amtsub{font-size:11px; color:var(--s500); margin-top:1px}
+.amtsub.warn{color:var(--amber700); font-weight:600}
+
+/* פס-הפרדה בין הלשונית-הפעילה לשתי הלשוניות המשניות שמוצגות מתחתיה על אותו עמוד */
+.ann{margin:24px 0 8px; padding:8px 12px; border:1px dashed var(--s300); background:var(--s100);
+     border-radius:var(--r-lg); color:var(--s600); font-size:12px; font-weight:600; line-height:1.7}
+.ann span{font-weight:400; color:var(--s500)}
+
+/* כוכבי-משוב (ה16) */
+.stars{color:var(--s300); font-size:14px; letter-spacing:1px}
+.stars .on{color:var(--amber700)}
+
+/* שלושת מצבי-הריק — כמו במוקאפ המאושר של מ5, זה-לצד-זה ולא מאוחדים */
+.states{display:flex; flex-wrap:wrap; gap:12px}
+.state{flex:1 1 300px; background:#fff; border:1px solid var(--s200);
+     border-radius:var(--r-xl); box-shadow:0 1px 2px rgba(15,23,42,.06)}
+.state .cap{font-size:11px; color:var(--s600); border-bottom:1px solid var(--s100);
+     padding:8px 12px; background:var(--s50); border-radius:var(--r-xl) var(--r-xl) 0 0}
+.state .cap b{color:var(--s700)}
+.unsourced{display:inline-block; border:1px dashed var(--s300); background:#fff;
+     border-radius:var(--r-md); padding:0 5px; font-size:10px; color:var(--s500); font-weight:600}
+
+/* שורת-מקורות — חובה בכל מוקאפ (עקבי עם docs/mockups/logistics-screen/approved) */
+.srcline{margin-top:20px; padding:10px 12px; background:#fff; border:1px solid var(--s200);
+     border-radius:var(--r-lg); font-size:11.5px; color:var(--s500); line-height:1.9}
+.srcline b{color:var(--s700)}
+</style>
+</head>
+<body>
+
+<!-- ═══ סרגל-צד ימני — זהה-בייט לשלד ב-design-contract.md §⑤ (BUSINESS_MODULES) ═══ -->
+<aside class="side">
+  <div class="logo">REG-IN</div>
+  <nav>
+    <a class="nav-i" href="#"><span class="ic">🏠</span>מסך הבית</a>
+    <a class="nav-i" href="#"><span class="ic">👥</span>לקוחות</a>
+    <a class="nav-i" href="#"><span class="ic">📄</span>הצעות מחיר</a>
+    <a class="nav-i" href="#"><span class="ic">📁</span>פרויקטים</a>
+    <a class="nav-i" href="#"><span class="ic">👤</span>דיילות</a>
+    <a class="nav-i" href="#"><span class="ic">📦</span>לוגיסטיקה</a>
+    <a class="nav-i on" href="#"><span class="ic">💰</span>כספים</a>
+    <a class="nav-i" href="#"><span class="ic">📊</span>דו"חות</a>
+  </nav>
+</aside>
+
+<header class="top">
+  <h1 style="font-size:17px">כספים</h1>
+  <div class="search"><span class="mg">🔍</span><input placeholder="חיפוש…"></div>
+  <div class="who">
+    <span class="av">מ</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ═══ באנר-דראפט-עבר — דרישת-משימה קשיחה. ענבר (הודעה מיידעת על המסמך, לא אזהרת-מסך). ═══ -->
+  <div class="draftban">🛠 <span>מאושר — הכרעת-ישי 26/08/2026 ("מאשר את כולם הם נראים מעולה")</span></div>
+
+  <div class="phead">
+    <div>
+      <h1>כספים</h1>
+      <p class="psub">בקרת גבייה, סגירת-תיקים ודו"ח-שכר — C5 §5.6.13</p>
+    </div>
+  </div>
+
+  <!-- ═══ רצועת-מטא — "היום" המשותף + מקרא-תגי-המקור (דרישת-משימה) ═══ -->
+  <div class="metastrip">
+    <span>📅 <b>"היום" המשותף לכל מוקאפי מ8 (להדגמה בלבד):</b> <span class="ltr">15/10/2026</span></span>
+    <span>🏷️ <b>מקורות:</b> 🌱 מהמסד החי · 🎭 דמו-מומצא (מתויג בגוף הטבלאות ומפורט למטה) · 📐 נגזר-בנוסחה-מאושרת</span>
+    <span>מקור-הדאטה המלא: <span class="ltr">docs/specs/module_08_finance/data-set.md</span></span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       הלשונית הפעילה — "ממתין לתשלום". לפי בריף-המשימה: #15 עם ימי-איחור מודגשים.
+       #14 (בוטל-עם-דמי-ביטול) אינו כאן — data-set.md §3 קובע במפורש "מופיע מיד
+       ב'ממתין לחשבונית'" (סטטוס-דמי-הביטול "טרם-נפתרו" = אין חשבונית-ביטול שנשלחה
+       עדיין), ו-processes-approved.md מכריע (הכרעת-ישי, ✅ שאלת-מוצר 1): "הלשוניות:
+       מבוטל ב-1/2 לפי מצב-הפה" — לא בשתיהן. זו "כלל-שיוך-הלשונית-לבוטל" שהבריף ביקש
+       לקרוא לפני הציור; #14 מוצג למטה, בלשונית הנכונה לו. ר' גם הערת "מה הכרעתי לבד" בתחתית הקובץ.
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="card">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="false" type="button">
+        ממתין לחשבונית<span class="ltr" style="margin-right:6px; opacity:.7">2</span>
+      </button>
+      <button class="tab on" role="tab" aria-selected="true" type="button">
+        ממתין לתשלום<span class="ltr" style="margin-right:6px; opacity:.7">1</span>
+      </button>
+      <button class="tab" role="tab" aria-selected="false" type="button">
+        פרויקטים שהסתיימו<span class="ltr" style="margin-right:6px; opacity:.7">1</span>
+      </button>
+    </div>
+
+    <!-- סרגל-חיפוש/סינון — C5 §5.6.13: תאריכים · שם חברה · מספר פרויקט -->
+    <div class="bar">
+      <span><label>מ-</label><input type="date"></span>
+      <span class="to">עד</span>
+      <input type="date">
+      <input type="text" placeholder="שם חברה, לדוגמה: קמפוס טכנולוגי צפון">
+      <input type="text" placeholder="מס׳ פרויקט, לדוגמה: 15">
+      <span class="spacer"></span>
+      <a class="link" href="#">נקי סינון</a>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:30%">פרויקט</th>
+          <th style="width:15%">חשבונית נשלחה</th>
+          <th style="width:15%">מועד פירעון</th>
+          <th style="width:14%">ימי איחור</th>
+          <th style="width:16%">סכום לתשלום</th>
+          <th style="width:10%">סטטוס</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- #15 · 🌱 פרויקט/לקוח מהמסד · 🎭 ציר-הזמן (תרחיש-א', data-set §4) · 📐 מועד-פירעון+ימי-איחור.
+             שורה בענבר: זו בדיוק הדגמת-המטרה של המשטח — "בשקיפות מלאה על מי מאחר" (כרטיס P1). -->
+        <tr class="click amber" tabindex="0" aria-label="ערב השקה — קמפוס צפון, פתיחת חלון סגירת-תיק">
+          <td>
+            <div class="pname">ערב השקה — קמפוס צפון</div>
+            <div class="psub2">קמפוס טכנולוגי צפון בע"מ</div>
+          </td>
+          <td><span class="ltr">10/09/2026</span></td>
+          <td>
+            <span class="ltr">10/10/2026</span>
+            <div class="calm">שוטף+<span class="ltr">30</span></div>
+          </td>
+          <td><span class="miss ltr">5</span> <span style="font-size:11.5px;color:var(--s500)">ימים</span></td>
+          <td>
+            <div class="amt"><span class="ltr">5,985.00 ₪</span></div>
+            <div class="amtsub"><span class="ltr">7,062.30 ₪</span> כולל מע"מ</div>
+          </td>
+          <td><span class="tag muted">ממתין לתשלום</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       שתי הלשוניות הנותרות — מוצגות כאן כסעיפים משניים על אותו עמוד, באותה שיטה
+       שה-01_overview_approved.html המאושר של מ5 השתמש בה (מספר סעיפי-כרטיס נפרדים
+       באותו עמוד במקום מסך אחד). 🚫 אינן חלק מהלשונית הפתוחה — להדגמה בלבד.
+       ═══════════════════════════════════════════════════════════════════════ -->
+
+  <div class="ann">
+    ⬇ <b>לשונית "ממתין לחשבונית"</b> — <span>שני פרויקטים: #12 (טבעי — נסגר תפעולית וממתין
+    להכנת-חשבונית) ו-#14 (בוטל — דמי-הביטול טרם-נפתרו; ר' הערה למעלה על שיוך-הלשונית).</span>
+  </div>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:44%">פרויקט</th>
+          <th style="width:18%">תאריך</th>
+          <th style="width:20%">סכום</th>
+          <th style="width:18%">סטטוס</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- #12 · 🌱 מהמסד (project_status='awaiting_invoice') · 🎭 ציון-משוב 2 (data-set §1) —
+             מדגים ששער-הבירור-הטלפוני (P2) פועל בו-זמנית עם הישיבה בלשונית הזו (שני שערים
+             בלתי-תלויים, לפי כרטיס-P1/P2). -->
+        <tr class="click amber" tabindex="0" aria-label="כנס משקיעים שנתי, פתיחת חלון סגירת-תיק">
+          <td>
+            <div class="pname">כנס משקיעים שנתי</div>
+            <div class="psub2">קבוצת אחזקות דנוך בע"מ</div>
+            <div class="hint">⚠ ציון-משוב <span class="ltr">2</span> — נדרש בירור טלפוני</div>
+          </td>
+          <td>
+            <span class="ltr">21/08/2026</span>
+            <div class="calm">נסגר תפעולית</div>
+          </td>
+          <td>
+            <div class="amt"><span class="ltr">500.00 ₪</span></div>
+            <div class="amtsub"><span class="ltr">590.00 ₪</span> כולל מע"מ</div>
+          </td>
+          <td><span class="tag muted">ממתין לחשבונית</span></td>
+        </tr>
+
+        <!-- #14 · 🌱 פרויקט/לקוח מהמסד · 🎭 כל תרחיש-הביטול (data-set §3, "מיובא מדויק
+             מ-stage1-review") · 📐 3,508.00 — עוגן מדויק, לא לשנות (ה23+ה24). "תג בוטל" +
+             "דגל דמי-ביטול" — שתי הדרישות המפורשות של המשימה. -->
+        <tr class="click amber" tabindex="0" aria-label="כנס פתיחת שנה, פתיחת חלון סגירת-תיק">
+          <td>
+            <div class="pname">כנס פתיחת שנה</div>
+            <div class="psub2">הייטק גרופ בע"מ</div>
+            <div class="calm">בוטל ע"י הלקוח — <span class="ltr">30</span> שעות לפני האירוע</div>
+          </td>
+          <td>
+            <span class="ltr">26/08/2026</span>
+            <div class="calm">בוטל</div>
+          </td>
+          <td>
+            <div class="amt"><span class="ltr">3,508.00 ₪</span></div>
+            <div class="amtsub warn">דמי-ביטול — טרם נפתרו</div>
+          </td>
+          <td>
+            <span class="tag dashed">בוטל</span>
+            <span class="tag warn" style="margin-right:4px">דמי-ביטול</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="ann">
+    ⬇ <b>לשונית "פרויקטים שהסתיימו"</b> — <span>פרויקט אחד: #13, רווח-קפוא מדויק ומשוב שהתקבל.
+    שימו לב: רווח חיובי מוצג לבן+מסגרת ולא בירוק — כלל-המילוי (design-contract.md §④) — הצבע
+    היחיד כאן הוא תג-הציון (ה16), לא הסכום עצמו.</span>
+  </div>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:36%">פרויקט</th>
+          <th style="width:18%">הועבר לארכיון</th>
+          <th style="width:18%">רווח סופי</th>
+          <th style="width:16%">שביעות רצון</th>
+          <th style="width:12%">סטטוס</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- #13 · 🌱 מהמסד · 📐 3,650.00 — עוגן מדויק, לא לשנות (data-set §2, "רווח-קפוא") ·
+             🎭 ארכוב 06/09 + ציון-משוב 4 (data-set §2). ה16: ציון 4 = "טוב", ירוק. -->
+        <tr class="click" tabindex="0" aria-label="פסטיבל קיץ עירוני, פתיחת כרטיס-פרויקט (לקריאה)">
+          <td>
+            <div class="pname">פסטיבל קיץ עירוני</div>
+            <div class="psub2">עיריית חדרה</div>
+          </td>
+          <td><span class="ltr">06/09/2026</span></td>
+          <td><div class="amt"><span class="ltr">69%</span></div><div style="font-size:11px;color:#64748B"><span class="ltr">3,650.00 ₪</span> 📐</div></td>
+          <!-- 🔧 תיקון-בקרה 26/08 (הסשן הראשי): §7.52 + C5 §5.6.13 — ברשימות מציגים % (נגזר: 3,650/5,300≈69%); ה-₪ ירד לשורת-משנה. הערת-הצייר בנספח (שקרא ₪ כעדיפות) — נדחתה: §7.52 קובע במפורש "% תמיד נגזר לתצוגה" ברשימות -->
+          <td>
+            <span class="stars"><span class="on">★★★★</span>☆</span>
+            <span class="tag ok" style="margin-right:4px">טוב</span>
+          </td>
+          <td><span class="tag ok">הסתיים</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       שלושת מצבי-הריק/חסום/שגיאה — S1 row בטבלת §⑥ של design-contract.md מחייבת
+       את PermissionAwareEmpty (§2.7). כמו במוקאפ המאושר של מ5: גלריה נפרדת, לא
+       חלק מהטבלאות שלמעלה. חוסר-הרשאה ראשון (תקדים-מ4/מ5).
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="ann">
+    ⬇ <b>שלושת המצבים שהמסך חייב לדעת לצייר</b> — <span>אינם חלק מהמסך שלמעלה; מוצגים כדי
+    שייבנו נכון (§2.7). הנוסח הנעול: "לא ניתן לטעון את הנתונים." + "נסי שוב" (לשון-נקבה, S-28).
+    שאר הנוסחים — <span class="unsourced">⬜ ניסוח-מוקאפ, לא נעול</span>.</span>
+  </div>
+  <div class="states">
+    <div class="state">
+      <div class="cap"><b>① חוסר-הרשאה</b> — נבדק ראשון</div>
+      <div class="empty">
+        <span aria-hidden="true" style="font-size:22px">🔒</span>
+        <div class="ttl">אין לך הרשאה לצפות בנתוני הכספים.</div>
+        <div class="dtl">המונים מציגים <span class="ltr">—</span>, לא <span class="ltr">0</span>.</div>
+      </div>
+    </div>
+    <div class="state">
+      <div class="cap"><b>② תקלת-טעינה</b> — הקריאה נכשלה</div>
+      <div class="empty">
+        <span aria-hidden="true" style="font-size:22px">⚠</span>
+        <div class="err">לא ניתן לטעון את הנתונים.</div>
+        <button class="btn btn-outline">נסי שוב</button>
+      </div>
+    </div>
+    <div class="state">
+      <div class="cap"><b>③ ריק אחרי סינון</b> — אין מסנן, יש פעולה הפוכה</div>
+      <div class="empty">
+        <div class="ttl">אין פרויקט התואם לסינון שבחרת.</div>
+        <div class="dtl"><span class="ltr">3</span> פרויקטים קיימים בלשונית ואינם מוצגים כרגע. <span class="unsourced">🎭 מספר-דוגמה</span></div>
+        <a class="link" href="#">נקי סינון</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ שורת-מקורות — כל מספר על העמוד הזה, בפירוט ═══ -->
+  <div class="srcline">
+    <b>🏷️ מקורות הנתונים במסך הזה</b> — כולם מ-<span class="ltr">docs/specs/module_08_finance/data-set.md</span>,
+    ורק ממנו.<br>
+
+    <b>📅 "היום" של המוקאפ:</b> <span class="ltr">15/10/2026</span> — נבחר ב-data-set.md §0 כדי
+    ש-#15 (המאוחר מבין ארבעת הפרויקטים החיים) יספיק לעבור את חלון שוטף+<span class="ltr">30</span>
+    המלא ולהיות בפיגור אמיתי.<br>
+
+    <b>🌱 מהמסד (26/08/2026, פרויקט-Supabase <span class="ltr">yfeovxppnfoafmfbdfvh</span>):</b>
+    ארבעת הפרויקטים עצמם ושדותיהם הבסיסיים — <span class="ltr">#12</span> "כנס משקיעים שנתי"
+    (קבוצת אחזקות דנוך בע"מ) · <span class="ltr">#13</span> "פסטיבל קיץ עירוני" (עיריית חדרה) ·
+    <span class="ltr">#14</span> "כנס פתיחת שנה" (הייטק גרופ בע"מ) · <span class="ltr">#15</span>
+    "ערב השקה — קמפוס צפון" (קמפוס טכנולוגי צפון בע"מ); סטטוסי-הפרויקט הגולמיים
+    (<span class="ltr">awaiting_invoice / in_progress</span> וכו') וסכומי-ההצעה שמהם נגזרה כל הכנסה.<br>
+
+    <b>🎭 דמו (אינו במסד, מתויג ומפורש ב-data-set.md):</b> ציוני-המשוב ותוכנם (<span class="ltr">2</span>
+    ל-#12, <span class="ltr">4</span> ל-#13) · כל תרחיש-הביטול של #14 (תאריך, שעתיים, שלושת רכיבי
+    דמי-הביטול) · תאריכי חשבונית/תשלום/ארכוב (28/08–06/09 ל-#13; 10/09 ל-#15) — אף אחד מהם אינו
+    נכתב למסד; הם ציר-זמן להדגמה בלבד, כלשון data-set.md §0.<br>
+
+    <b>📐 נגזר (מהפורמולות המאושרות בכרטיסי-התהליכים):</b> <span class="ltr">590.00 ₪</span>
+    ו-<span class="ltr">7,062.30 ₪</span> — הכנסה כולל מע"מ (<span class="ltr">18%</span>, פרמטר
+    חי) · מועד-הפירעון <span class="ltr">10/10/2026</span> וימי-האיחור <span class="ltr">5</span>
+    (שוטף+<span class="ltr">30</span> מ-<span class="ltr">10/09</span>, §7.20א) ·
+    <span class="ltr">3,508.00 ₪</span> דמי-הביטול של #14 (ה23+ה24 — עוגן מדויק) ·
+    <span class="ltr">3,650.00 ₪</span> הרווח-הקפוא של #13 (ה2+ה17 — עוגן מדויק, "לא לשנות").<br>
+
+    <b>🚫 מי שאינו כאן, ולמה:</b> תרחיש 4ב' של #15 ("הסתיים — לא שולם", <span class="ltr">20/12/2026</span>)
+    — data-set.md §4ב מגדיר אותו כתרחיש-חלופי, לא-בו-זמני עם תרחיש-א' שכן מוצג כאן; שני התרחישים
+    אינם קיימים יחד תחת אותו "היום". שורות-השכר (S3) ותבניות-המייל (M1/M2) — משטחים נפרדים.<br>
+
+    <b>🎨 תקציב-צבע:</b> אפס מילוי-ירוק על מספר-רווח (כלל-המילוי, §④) — הרווח של #13 לבן+מסגרת
+    בדיוק כמו כל מדד אחר; הירוק היחיד הוא תג-הציון "טוב" (ה16), שמבדיל בין מצבי-משוב אמיתיים.
+    שלוש שורות בענבר (#15, #12, #14) — כל אחת נושאת פריט שדורש טיפול בפועל (איחור-תשלום ·
+    בירור-משוב · דמי-ביטול פתוחים), לא קישוט. אפס אדום על נתון — האדום היחיד יושב בטקסט
+    "<span class="ltr">5</span> ימים" (עובדה שלילית אמיתית, לא מילוי) ובכותרת-מצב-השגיאה.<br>
+
+    <b>⬜ מחרוזות ללא מקור נעול</b> (מסומנות בעמוד): משפט חוסר-ההרשאה של המשטח · "אין פרויקט
+    התואם לסינון שבחרת" · תוויות סרגל-הסינון · "נקי סינון" (לשון-נקבה, בעקבות אותה מוסכמה
+    שנקבעה במ5 — §3.6).<br>
+
+    <b>🎭 מספר-דוגמה יחיד (לא מ-data-set.md):</b> "<span class="ltr">3</span> פרויקטים קיימים
+    בלשונית ואינם מוצגים כרגע" במצב-הריק ③ — דוגמה להמחשת-מבנה בלבד (מונה שבמסך האמיתי יהיה חי,
+    בדיוק כמו במוקאפ המאושר המקביל של מ5), לא ספירה של הדאטה שבעמוד הזה.
+  </div>
+
+</main>
+
+</body>
+</html>
+
+<!-- מה הכרעתי לבד —
+
+1. שיוך #14 ללשונית "ממתין לחשבונית" ולא "ממתין לתשלום": data-set.md §3 קובע במפורש "מופיע מיד
+   ב'ממתין לחשבונית' עם דגל 'בוטל'" (אין invoice_sent עבורו, ודמי-הביטול "טרם-נפתרו" — כלומר
+   מצב-הפה הוא "לפני חשבונית", לא "אחרי"). processes-approved.md, ✅ שאלת-מוצר 1 (26/08): "הלשוניות:
+   מבוטל ב-1/2 לפי מצב-הפה... לעולם לא ב-3" — כלל ברור שקובע איזו משתי הלשוניות, לא שתיהן. הבריף
+   שהזמין את המוקאפ ניסח את זה בעמימות ("הלשונית הפעילה = ממתין לתשלום, מציגה את #15... ואת #14
+   כשורת-הביטול") — קראתי זאת כ"שני פריטים מוצגים על העמוד", לא "שניהם באותה טבלה", כי הנתון
+   המפורש בקובץ-המקור סותר את הפרשנות המילולית. #14 מוצג במלואו, בלשונית הנכונה לו.
+
+2. אין אריחי-KPI (StatTile) מעל הטבלה: השורה ב-design-contract.md §⑥/S1 מסמנת אותם "אם ייבחרו" —
+   רשות, לא חובה — ובריף-המשימה לא ביקש אותם. עם ארבעה פרויקטים בלבד בסט-הנתונים, כל מדד-סיכום
+   (למשל "סה"כ ממתין לגבייה") היה חוזר על אותו מספר שכבר מופיע בטבלה היחידה של הלשונית, בלי להוסיף
+   מידע — ולא רציתי להמציא מדד מצטבר שלא התבקש רק כדי למלא שורה.
+
+3. עמודות הטבלה בכל לשונית: C5 §5.6.13 נותן רשימה כללית אחת לכל המסך ("שם לקוח, תאריך סיום, רווח
+   סופי (%), ציון שביעות רצון, סטטוס") שמתאימה בעיקר ל"הסתיים". התאמתי אותה לכל לשונית לפי מה
+   שבאמת רלוונטי בה (עמודת ימי-איחור בלשונית ב', עמודת-סכום-לחיוב בלשונית א') — הבריף עצמו ביקש
+   זאת במפורש ("columns per C5 §5.6.13 + the days-overdue column").
+
+4. "רווח סופי" מוצג בשקלים (₪) ולא כאחוז, למרות ש-C5 §5.6.13 כתוב "(%)": processes-approved.md
+   כרטיס-P3 עצמו כותב "שורה תחתונה מודגשת: רווח גולמי בשקלים", data-set.md מחשב ומעגן ₪ בלבד
+   (3,650.00 ₪ "עוגן מדויק, לא לשנות"), והבריף חוזר על אותו מספר-₪ במפורש. לפי היררכיית-האמת
+   (CLAUDE.md), האפיון-המאושר-החי גובר על C5 הקפוא בכל מה שהוא מכסה בפועל — וזה מכוסה.
+
+5. שורות #15/#12/#14 מסומנות tr.amber (רקע-ענבר) — כולן נושאות פריט-פעולה אמיתי וממתין (איחור-
+   תשלום · בירור-משוב-חובה · דמי-ביטול פתוחים), בדיוק כמו מוסכמת ⑳ שכבר קיימת בקוד/במוקאפ המאושר
+   של מ5 ("שורה עם התרעה = ענבר, לעולם לא אדום"). שורת #13 (הסתיים, ללא פעולה פתוחה) — רגילה.
+
+6. כפתור-פעולה ראשי בכותרת הושמט במכוון: כמו במוקאפ המאושר של מ5 (שאין בו "+ פריט חדש" מאותה
+   סיבה), הפעולה של המסך הזה היא פתיחת שורה — כל הכתיבה קורית בחלון-הסגירה (S2), לא בכותרת S1.
+   טבלת §⑥/S1 בחוזה-העיצוב עצמה לא מונה כפתור-פעולה בין רכיבי-S1.
+
+7. שם-המשתמשת בסרגל-העליון הושאר גנרי ("מ") ולא הוחלף בשם אישי: לא נמצא שם-פרסונה למנהלת-הכספים
+   באף קובץ בתיקיית-האפיון (רק תפקיד: "מנהלת כספים ולקוחות") — להמציא שם היה בדיוק סוג הפרט שאסור
+   להמציא בלי סימון. השארתי את מה שהשלד עצמו נותן (design-contract.md §⑤).
+
+8. ניסוחי-עזר שאינם נעולים בקוד (כותרת חוסר-הרשאה, "אין פרויקט התואם לסינון", תוויות-הסינון, "נקי
+   סינון") מסומנים ⬜ בעמוד ומפורטים כאן — כולם בלשון-נקבה (§3.6), לפי אותה מוסכמה שנקבעה במפורש
+   במוקאפ המאושר של מ5 עבור אותה מחרוזת בדיוק ("נקי" ולא "נקה").
+-->
