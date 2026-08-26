@@ -257,7 +257,7 @@ invalid` צובע תא אדום + `aria-invalid` לשדה-קלט שגוי בתו
 
 **גלולת-מסנן** — `src/components/FilterPill.jsx`: כבוי `border-slate-200 bg-white text-slate-
 600`; דלוק `border-teal-200 bg-teal-50 text-teal-700 font-semibold` (טורקיז **בהיר** — הטורקיז
-המלא שמור לפעולה הראשית); `tone="warn"` דלוק = `border-amber-200 bg-amber-50 text-amber-700`;
+המלא שמור לפעולה הראשית); `tone="warn"` דלוק = `border-amber-200 bg-amber-50 text-amber-700 font-semibold`;
 מושבת = `opacity-50` **בלי להיעלם** (עוגן-גריפ: `disabled` אינו "להעלים"`). צורה:
 `h-auto rounded-full border px-3 py-1 text-[12.5px]` + `aria-pressed`.
 
@@ -390,7 +390,7 @@ Sidebar.jsx` + `Topbar.jsx` + `MainLayout.jsx`, עוגני-גריפ `'w-16' : 'w
 | מה | הרכיב | הצורה | העוגן |
 |---|---|---|---|
 | סכום ב-₪ | `<Money amount={n}/>` | מספר, ואז ₪ מימינו | §2.1 למעלה |
-| כל ערך לא-עברי-טהור (מספר, תאריך, שעה, אחוז, קוד) | `<Ltr>…</Ltr>` | `direction:ltr; unicode-bidi:isolate; display:inline-block` | `src/components/Ltr.jsx` |
+| כל ערך לא-עברי-טהור (מספר, תאריך, שעה, אחוז, קוד, **כתובת-מייל**) | `<Ltr>…</Ltr>` | `direction:ltr; unicode-bidi:isolate; display:inline-block` | `src/components/Ltr.jsx` — תקדים לכתובת-מייל: `ProjectCardPage.jsx`, עוגן-גריפ `<Ltr>{project.owner_email}</Ltr>` |
 | טווח/נוסחה (שדות בכיוון-הפוך) | `<LtrFieldGroup items={…}/>` | תוויות+ערכים מ**אותו** מערך | §2.3 למעלה |
 
 ### 3.3 🔴 שני מספרים ברצף — אין להם סדר נכון בכלל
@@ -446,9 +446,13 @@ Sidebar.jsx` + `Topbar.jsx` + `MainLayout.jsx`, עוגני-גריפ `'w-16' : 'w
 > 🔑 **כלל-מילוי — מתי צובעים רקע, ומתי לא (הכרעת-ישי 07/08/2026, ולא רק למודול 4):**
 > **מילוי-צבע (טורקיז/ירוק/ענבר/אדום) שמור למשמעות אמיתית** — פעולה ראשית אחת של המסך, אזהרה
 > ממשית, או תג-סטטוס שמבדיל בין מצבים אמיתיים. **עובדה חיובית או מידע ניטרלי מוצג בלי מילוי**
-> (מסגרת בהירה על רקע לבן), **גם אם היא "עובדה טובה."** במילותיו, על צ'יפ: *"עובדה טובה אינה
-> צבועה."* **הבדיקה:** אם הרכיב אינו הפעולה-האחת-של-המסך ואינו נושא אזהרה/הבחנת-מצב — הוא
-> לבן+מסגרת, לא מילוי.
+> (מסגרת בהירה על רקע לבן — כמו `.chip.score` לעומת `.chip.good` שתוקן במסך 2 של מודול 4), **גם
+> אם היא "עובדה טובה."** *(במילותיו, על צ'יפ: "עובדה טובה אינה צבועה"; מוכלל כאן מרצועת-הדגשים
+> שהייתה כולה טורקיז-מלא בכרטיס-דיילת-לצפייה — כוכבים/יש-רכב/מספר-אירועים אינם פעולה ואינם
+> אזהרה, ולא היו אמורים להיצבע כמו הכפתור הראשי.)* **הבדיקה:** אם הרכיב אינו הפעולה-האחת-של-המסך
+> ואינו נושא אזהרה/הבחנת-מצב — הוא לבן+מסגרת, לא מילוי. **וזה כבר היה כתוב חלקית** ב-`src/CLAUDE.md`
+> ("טורקיז מלא שמור לפעולה הראשית האחת של המסך") — הסעיף הזה מכליל אותו לכל צבעי-המילוי, לא רק
+> טורקיז, ומעביר אותו לשפת-העיצוב הכללית כדי שכל מודול עתידי יראה אותו, לא רק `src/`.
 
 **אותו כלל, בניסוח-קוד, ב-`StatTile.jsx` עצמו** (עוגן-גריפ: `כלל-המילוי`):
 
@@ -470,9 +474,18 @@ Sidebar.jsx` + `Topbar.jsx` + `MainLayout.jsx`, עוגני-גריפ `'w-16' : 'w
 
 ## ⑤ שלד-HTML להעתקה — מבנה בלבד, מהמוקאפים המאושרים הכי טריים
 
-**מקור:** `docs/mockups/logistics-screen/approved/01_overview_approved.html` — נבדק מול תאריכי-
-קובץ בפועל (`git log -1 --format=%ai`): מודול 5 `22/08/2026 12:17` מול מודול 6
-`13/08/2026 21:28`. **מודול 5 הוא המוקאפ המאושר הטרי ביותר בריפו**, ולכן השלד ממנו, לא ממודול 6.
+**מקור — שני קבצים, לא אחד:** מבנה-העמוד (סרגל-צד/סרגל-עליון/טוקנים, למשטחי-העמוד-המלא S1/S4) —
+`docs/mockups/logistics-screen/approved/01_overview_approved.html`. **דפוס-הדיאלוג** (`.dlg`/
+`.dlg-head`/`.meta`/`.dlg-body`/`.dlg-foot` למטה, למשטחי-הדיאלוג S2/S3) — `docs/mockups/
+logistics-screen/approved/02_dialog_checklist_approved.html`.
+
+נבדק מול תאריכי-קובץ בפועל (`git log -1 --format=%ai`): `01_overview_approved.html`
+`22/08/2026 12:17:50` · `02_dialog_checklist_approved.html` `22/08/2026 23:40:03` **— מעל 11 שעות
+טרי יותר, באותה תיקיית-אישור של מודול 5** · מודול 6 `13/08/2026 21:28` (הישן מבין השלושה). *(תיקון:
+הגרסה הקודמת של הסעיף הזה טענה "מודול 5 הוא המוקאפ המאושר הטרי ביותר בריפו" והשוותה רק מול מודול 6
+— בלי לבדוק מול שאר תיקיית-האישור של מודול 5 עצמו, ולכן פספסה ש-`02` טרי יותר מ-`01`. `02` כבר נושא
+דפוס-דיאלוג מלא ומאושר לאותו תקדים ש-S2/S3 מצטטים בעצמם [§2.5: `sm:max-w-3xl`/`ScopeChangeDialog.jsx`]
+— ולכן דפוס-הדיאלוג נבנה עליו, ולא מומצא מחדש מקריאת `dialog.jsx`.)*
 
 🚫 **מה שלא נכלל כאן במכוון:** תוכן ספציפי-למודול 5 (שורות-לוגיסטיקה, מק"טים, מספרי-דגמה) — הבקשה
 היא "מבנה בלבד". גוף-התוכן של כל אחד מ-S1–S4 שייך למוקאפ עצמו, לא לשלד.
@@ -597,14 +610,30 @@ tr.amber td{background:var(--amber50)}   /* התרעה — ענבר, לעולם 
 .cell .val.empty{font-weight:500; color:var(--s400)}
 .cell .sub{font-size:11px; color:var(--s500)}
 
-/* ── דיאלוג (dialog.jsx §2.5) ── */
-.dlg-mask{position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:50}
-.dlg{position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:50;
-     width:calc(100% - 2rem); max-width:512px; max-height:90vh; overflow-y:auto;
-     background:#fff; border-radius:var(--r-xl); border:1px solid var(--s200);
-     box-shadow:0 10px 30px rgba(15,23,42,.15); padding:24px; display:flex;
-     flex-direction:column; gap:16px}
-.dlg-wide{max-width:768px}         /* ScopeChangeDialog — טבלת-שורות, לא טופס */
+/* ── דיאלוג (dialog.jsx §2.5) — דפוס head/body/foot מועתק מ-
+   docs/mockups/logistics-screen/approved/02_dialog_checklist_approved.html (המוקאפ המאושר-
+   וטרי-יותר לאותו תקדים sm:max-w-3xl/ScopeChangeDialog.jsx), לא מומצא מחדש. .dlg-head .meta
+   (זוגות מפתח/ערך) הוא הצורה הקיימת לשדות-הזהות-הנעולים של S2; .dlg-head .sub (שורת-אזהרה
+   ענבר) הוא הצורה הקיימת לבאנר-ההשלכה של S2. ── */
+.scrim{position:fixed; inset:0; background:rgba(2,6,23,.45); z-index:50}
+.dlg{position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:51;
+     width:calc(100% - 2rem); max-width:512px; max-height:90vh;
+     display:flex; flex-direction:column; overflow:hidden;
+     background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     box-shadow:0 10px 30px rgba(15,23,42,.20)}
+.dlg-wide{max-width:768px}         /* ScopeChangeDialog / S3 — טבלת-שורות, לא טופס */
+.dlg-head{padding:18px 20px 12px; border-bottom:1px solid var(--s100); position:relative}
+.dlg-head h2{font-size:18px; font-weight:700; color:var(--s800); text-align:right; padding-left:28px}
+.dlg-head .lead{font-size:12.5px; color:var(--s500); margin-top:3px}
+.dlg-head .meta{display:flex; flex-wrap:wrap; align-items:center; gap:8px 18px; margin-top:10px}
+.dlg-head .meta .k{font-size:11.5px; color:var(--s500)}
+.dlg-head .meta .v{font-size:13px; font-weight:600; color:var(--s800)}
+.dlg-head .sub{display:block; margin-top:6px; font-size:11.5px; color:var(--amber700); font-weight:600}
+.x{position:absolute; left:16px; top:16px; width:26px; height:26px; border:0; background:none;
+   color:var(--s400); font-size:16px; cursor:pointer; border-radius:var(--r-md)}
+.dlg-body{padding:14px 20px 4px; overflow:auto}
+.dlg-foot{display:flex; justify-content:flex-start; gap:8px;
+     padding:12px 20px 16px; border-top:1px solid var(--s100)}
 
 /* ── מצב-ריק / חסום / שגיאה (PermissionAwareEmpty.jsx, §2.7) ── */
 .empty{display:flex; flex-direction:column; align-items:center; gap:8px;

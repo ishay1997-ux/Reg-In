@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ מ8 · S3 — הפקת דוח-השכר (טיוטה)</title>
+<style>
+/* ═══ טוקנים — הועתקו מילולית מ-design-contract.md §① / §⑤. אל תשנה ערך. ═══
+   --primary : מילולי ב-src/index.css (--primary: #0d9488) — הטוקן של <Button> ברירת-מחדל
+   --teal600 : המרת oklch→sRGB מ-node_modules/tailwindcss/theme.css — זה מה ש-bg-teal-600 מצייר
+   🔴 השניים אינם אותו צבע (design-contract §1.5) — לחקות את הקיים, לא לאחד. */
+:root{
+  --primary:#0D9488;
+  --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4;
+  --teal500:#00BBA7; --teal600:#009689; --teal700:#00786F;
+  --green50:#F0FDF4; --green100:#DCFCE7; --green200:#B9F8CF; --green700:#008236;
+  --amber50:#FFFBEB; --amber100:#FEF3C6; --amber200:#FEE685;
+  --amber700:#BB4D00; --amber800:#973C00;
+  --red50:#FEF2F2; --red100:#FFE2E2; --red200:#FFC9C9; --red600:#E7000B; --red700:#C10007;
+  --s50:#F8FAFC; --s100:#F1F5F9; --s200:#E2E8F0; --s300:#CAD5E2;
+  --s400:#90A1B9; --s500:#62748E; --s600:#45556C; --s700:#314158; --s800:#1D293D;
+  --r-md:8px; --r-lg:10px; --r-xl:14px; --r-2xl:18px;
+  --sidebar:240px; --topbar:64px;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  background:var(--s50); color:var(--s800);
+  font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif;
+  font-size:14px; line-height:1.5;
+}
+
+/* כל ערך שאינו עברית טהורה עובר דרך .ltr (design-contract §3.2). שני מספרים ברצף: מפרקים (§3.3). */
+.ltr{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
+
+/* ── מעטפת-הדף של המוקאפ עצמו (אינה חלק מהמסך) ── */
+.sheet{max-width:1280px; margin:0 auto; padding:20px 24px 56px}
+
+/* באנר-טיוטה — מסגרת-המוקאפ, לא חלק מהאפליקציה המדומה. אדום מותר כאן דווקא כי זה שלט "עצור,
+   לא מאושר" על הקובץ עצמו — לא תג-סטטוס בתוך האפליקציה (שם אדום שמור לכשל/הרס, כלל-המילוי §④). */
+.draftbar{background:var(--red50); border:1px solid var(--red200); color:var(--red700);
+     border-radius:var(--r-lg); padding:10px 14px; font-size:13px; font-weight:700;
+     text-align:center; margin-bottom:12px}
+
+.metastrip{display:flex; flex-wrap:wrap; gap:8px 24px; background:#fff; border:1px solid var(--s200);
+     border-radius:var(--r-lg); padding:9px 14px; font-size:12.5px; color:var(--s600); margin-bottom:22px}
+.metastrip b{color:var(--s800)}
+
+.viewcap{margin:28px 0 10px; padding:9px 14px; background:#fff; border:1px solid var(--s200);
+     border-right:4px solid var(--primary); border-radius:var(--r-lg);
+     font-size:13px; color:var(--s700); line-height:1.7}
+.viewcap b{color:var(--s800)}
+.viewcap .sm{display:block; font-size:11.5px; color:var(--s500); margin-top:2px}
+
+/* ── הבמה: רקע-האפליקציה + חשכה + הדיאלוג מעליו (מועתק מ-02_dialog_checklist_approved.html) ── */
+.stage{position:relative; overflow:hidden; border:1px solid var(--s200);
+     border-radius:var(--r-xl); background:var(--s50)}
+.side{position:absolute; top:0; right:0; width:var(--sidebar); height:100%; background:#fff;
+      border-left:1px solid var(--s200); z-index:1}
+.side .logo{height:var(--topbar); display:flex; align-items:center; justify-content:center;
+      border-bottom:1px solid var(--s100); font-weight:700; color:var(--teal700); letter-spacing:.5px}
+.side nav{padding:12px 8px; display:flex; flex-direction:column; gap:4px}
+.nav-i{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--r-lg);
+      font-size:14px; font-weight:500; color:var(--s600); text-decoration:none}
+.nav-i .ic{width:20px; text-align:center; flex:none}
+.nav-i.on{background:var(--teal50); color:var(--teal700)}
+.top{position:absolute; top:0; left:0; right:var(--sidebar); height:var(--topbar); background:#fff;
+     border-bottom:1px solid var(--s200); display:flex; align-items:center;
+     justify-content:space-between; padding:0 24px; z-index:1}
+.top h1{font-size:17px; font-weight:700; color:var(--s800)}
+.who{display:flex; align-items:center; gap:8px}
+.who .txt{display:flex; flex-direction:column; align-items:flex-end; line-height:1.3}
+.who .nm{font-size:14px; font-weight:500; color:var(--s800)}
+.who .rl{font-size:12px; color:var(--s500)}
+.who .av{width:36px; height:36px; border-radius:999px; background:var(--teal600); color:#fff;
+     display:flex; align-items:center; justify-content:center; font-weight:600}
+.behind{position:absolute; top:var(--topbar); right:var(--sidebar); left:0; bottom:0;
+     padding:12px 24px; overflow:hidden}
+.scrim{position:absolute; inset:0; background:rgba(2,6,23,.45); z-index:5}
+
+/* ── הדיאלוג (dialog.jsx §2.5) ── */
+.dlg{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:10;
+     width:512px; max-width:calc(100% - 32px); max-height:calc(100% - 32px);
+     display:flex; flex-direction:column; overflow:hidden;
+     background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     box-shadow:0 10px 30px rgba(15,23,42,.20)}
+.dlg-wide{width:768px}   /* sm:max-w-3xl — S3 הוא טבלת-שורות, לא טופס-שדות (§2.5) */
+.dlg-head{padding:18px 20px 12px; border-bottom:1px solid var(--s100); position:relative}
+.dlg-head h2{font-size:18px; font-weight:700; color:var(--s800); text-align:right; padding-left:28px}
+.dlg-head .lead{font-size:12.5px; color:var(--s500); margin-top:3px}
+.dlg-head .meta{display:flex; flex-wrap:wrap; align-items:center; gap:8px 20px; margin-top:12px}
+.dlg-head .meta .k{font-size:11.5px; color:var(--s500); margin-left:4px}
+.dlg-head .meta .v{font-size:13px; font-weight:600; color:var(--s800)}
+.dlg-head .sub{display:block; margin-top:8px; font-size:11.5px; color:var(--amber700); font-weight:600}
+.x{position:absolute; left:16px; top:16px; width:26px; height:26px; border:0; background:none;
+   color:var(--s400); font-size:16px; cursor:pointer; border-radius:var(--r-md)}
+.dlg-body{padding:14px 20px 6px; overflow:auto}
+.dlg-foot{display:flex; justify-content:flex-start; gap:8px;
+     padding:12px 20px 16px; border-top:1px solid var(--s100)}
+
+/* בורר-חודש — 🔑 אין תקדים לרכיב הזה בפרויקט (design-contract §⑥/S3, נבדק: 0 <input type="month">
+   ב-src/). הכרעה-שקטה: כפתור מותאם, לא <input type="month"> גולמי — הרינדור-הילידי של דפדפן
+   תלוי-לוקאל-מערכת ועלול להציג "August 2026" באנגלית בתוך מוקאפ עברי כולו (ר' "מה הכרעתי לבד"
+   בתחתית). מוצג כטקסט-קבוע, בלי חצי-ניווט קודם/הבא — כדי לא לפתוח שאלת-כיווניות (RTL) שאין לה
+   הכרעה. גובה/מסגרת/רדיוס זהים ל-input[type=date] הקיים (ChecklistDialog.jsx). */
+.monthpick{display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 12px;
+     border:1px solid var(--s200); border-radius:var(--r-lg); background:#fff; font:inherit;
+     font-size:13px; font-weight:600; color:var(--s800); cursor:pointer}
+.monthpick .ic{font-size:13px}
+
+/* ── כפתורים ── */
+.btn{border:1px solid transparent; border-radius:var(--r-lg); padding:8px 16px;
+     font:inherit; font-size:14px; font-weight:600; cursor:pointer}
+.btn-primary{background:var(--teal600); color:#fff}
+.btn-primary:hover{background:var(--teal700)}
+.btn-outline{background:#fff; border-color:var(--s300); color:var(--s700); font-weight:500}
+.btn-sm{padding:5px 10px; font-size:12.5px; border-radius:var(--r-md)}
+
+/* ── טבלה (LogisticsPage.jsx §2.6 / checklist-precedent) ── */
+/* table-layout:fixed — חובה כאן: ל-auto-layout הרגיל יש 8 עמודות, ושתיים ארוכות-תוכן (פרטי-בנק ·
+   שם+מקור) "גונבות" רוחב מהעמודות המספריות-הקצרות (נמדד: סה"כ קרס ל-58px בפועל, וכוכבית-ההערה
+   נשברה לשורה נפרדת). עם fixed, אחוזי-ה-th למטה נאכפים במדויק. */
+table{width:100%; border-collapse:collapse; font-size:13.5px; table-layout:fixed}
+thead tr{border-bottom:1px solid var(--s200); text-align:right;
+     font-size:11.5px; font-weight:600; color:var(--s500)}
+th{padding:6px 8px; font-weight:600; vertical-align:bottom; white-space:nowrap}
+td{padding:9px 8px; border-bottom:1px solid var(--s100); vertical-align:middle}
+tr.total td{border-bottom:0; border-top:2px solid var(--s300); background:var(--s50);
+     font-weight:700; padding-top:10px}
+.item-name{font-weight:600; color:var(--s800); font-size:13.5px}
+.item-sub{margin-top:2px; font-size:11px; color:var(--s500)}
+.num{font-weight:700; color:var(--s800)}
+.unit{display:block; margin-top:2px; font-size:10.5px; color:var(--s500)}
+.dash{color:var(--s400)}
+.star{color:var(--amber700); font-weight:700}
+
+/* ── הערת-שוליים תחת טבלה ── */
+.foot-note{margin-top:12px; padding:10px 12px; background:var(--s50); border:1px solid var(--s200);
+     border-radius:var(--r-lg); font-size:11.5px; color:var(--s600); line-height:1.8}
+.foot-note b{color:var(--s700)}
+
+/* ── כרטיס-תוכן רגיל (למסך שמאחורי הדיאלוג — §⑤) ── */
+.card{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     box-shadow:0 1px 2px rgba(15,23,42,.06); padding:16px}
+.card h3{font-size:14px; font-weight:700; color:var(--s800); margin-bottom:10px}
+
+/* ── מצב-ריק (PermissionAwareEmpty.jsx §2.7) ── */
+.empty{display:flex; flex-direction:column; align-items:center; gap:6px;
+     padding:34px 0; text-align:center}
+.empty .ttl{color:var(--s600); font-weight:500; font-size:13.5px}
+.empty .dtl{font-size:12px; color:var(--s500)}
+
+/* ── באנר (§2.5, CancelProjectDialog.jsx) — ענבר=אזהרה/מידע, לעולם לא כשל ── */
+.banner{border-radius:var(--r-lg); padding:11px 14px; font-size:12.5px; line-height:1.75}
+.banner > b:first-child{display:block; font-size:13.5px; margin-bottom:2px}
+.banner.warn{background:var(--amber50); border:1px solid var(--amber200); color:var(--amber800)}
+
+/* ── רצועת-הסבר להכרעות-שקטות (דפוס .demoband מהתקדים) ── */
+.demoband{margin-top:10px; padding:9px 12px; background:var(--s100); border:1px dashed var(--s300);
+     border-radius:var(--r-lg); font-size:11.5px; color:var(--s600); line-height:1.7}
+
+/* ── שורת-מקורות (§7) — חובה בכל מוקאפ ── */
+.srcline{margin-top:30px; padding:10px 12px; background:#fff; border:1px solid var(--s200);
+     border-radius:var(--r-lg); font-size:11.5px; color:var(--s500); line-height:1.9}
+.srcline b{color:var(--s700)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<div class="draftbar">🚧 טיוטה — טרם אושר. לא לבנייה בלי אישור ישי.</div>
+
+<div class="metastrip">
+  <span><b>"היום" המשותף לארבעת המוקאפים:</b> <span class="ltr">15/10/2026</span> <span style="opacity:.65">🎭 data-set.md §0</span></span>
+  <span><b>מקורות:</b> 🌱 מהמסד החי · 🎭 דמו-מומצא (מסומן) · 📐 נגזר-בנוסחה מאושרת</span>
+  <span><b>משטח:</b> S3 — הפקת דוח-השכר (P4, אושר 26/08/2026)</span>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     תצוגה א׳ — דיאלוג-ההפקה: בחירת-חודש + תצוגה-מקדימה + ייצא-ושלח
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="viewcap">
+  <b>תצוגה א׳ · דיאלוג-ההפקה — תצוגה-מקדימה לפני "ייצא ושלח"</b>
+  <span class="sm">⚠️ להדגמה בלבד: להלן <b>תוכן הדוח כפי שהיה נראה לפני ההפקה</b>. בעולם-הדמו החודש הזה
+    כבר הופק ונשלח בפועל ב-<span class="ltr">01/09/2026</span> (ר' תצוגה ב׳ למטה) — הנתונים
+    כאן זהים לדוח שנשלח בפועל (data-set.md §5), כדי שהתצוגה-המקדימה תישאר עקבית עם ההיסטוריה.</span>
+</div>
+
+<div class="stage" style="height:900px">
+
+  <aside class="side">
+    <div class="logo">REG-IN</div>
+    <!-- שבעת המודולים העסקיים + "מסך הבית" — src/lib/constants.js, BUSINESS_MODULES.
+         "כספים" מסומן .on — זה המסך שממנו נפתח דיאלוג-ההפקה. -->
+    <nav>
+      <a class="nav-i"    href="#"><span class="ic">▦</span><span>מסך הבית</span></a>
+      <a class="nav-i"    href="#"><span class="ic">☰</span><span>לקוחות</span></a>
+      <a class="nav-i"    href="#"><span class="ic">▤</span><span>הצעות מחיר</span></a>
+      <a class="nav-i"    href="#"><span class="ic">▣</span><span>פרויקטים</span></a>
+      <a class="nav-i"    href="#"><span class="ic">☺</span><span>דיילות</span></a>
+      <a class="nav-i"    href="#"><span class="ic">▥</span><span>לוגיסטיקה</span></a>
+      <a class="nav-i on" href="#"><span class="ic">₪</span><span>כספים</span></a>
+      <a class="nav-i"    href="#"><span class="ic">▧</span><span>דו"חות</span></a>
+    </nav>
+  </aside>
+
+  <header class="top">
+    <h1>כספים</h1>
+    <div class="who">
+      <div class="txt"><span class="nm">מיכל אורן</span><span class="rl">מנהלת כספים</span></div>
+      <div class="av">מ</div>
+    </div>
+  </header>
+
+  <!-- 🚫 הרקע ריק בכוונה: "מסך-ההפקה" עצמו (מה שמאחורי הדיאלוג, לפני הפתיחה) לא צויר —
+       מחוץ להיקף S3 (הדיאלוג הוא המשטח שהוזמן). אותו עיקרון כמו תצוגה-ב׳ בתקדים
+       (02_dialog_checklist_approved.html): רקע ריק ומוסבר, לא ממולא בניחוש. -->
+  <div class="behind"></div>
+
+  <div class="scrim"></div>
+
+  <div class="dlg dlg-wide" role="dialog" aria-modal="true" aria-labelledby="t-salary">
+    <div class="dlg-head">
+      <button class="x" title="סגירה" aria-label="סגירה">✕</button>
+      <h2 id="t-salary">הפקת דוח-שכר חודשי</h2>
+      <div class="lead">אוספת את כל שורות-השכר שטרם שולמו עד סוף החודש שנבחר — פרויקטים שנסגרו
+        תפעולית ופרויקטים שבוטלו-בדמי-ביטול (ה15).</div>
+      <div class="meta">
+        <span><span class="k">חודש להפקה:</span>
+          <button type="button" class="monthpick" aria-haspopup="true">
+            <span class="ic" aria-hidden="true">📅</span>
+            <span>אוגוסט <span class="ltr">2026</span></span>
+          </button>
+        </span>
+        <span><span class="k">שורות בדוח:</span> <span class="v"><span class="ltr">5</span></span></span>
+        <span><span class="k">סה"כ לתשלום:</span> <span class="v"><span class="ltr">620.60 ₪</span></span></span>
+      </div>
+      <span class="sub">⚠ החודש הזה כבר הופק בפועל — לחיצה על "ייצא ושלח" במסך האמיתי הייתה נחסמת
+        (ר' תצוגה ג׳ למטה). תצוגה זו ממחישה רק את מסך-הבחירה עצמו.</span>
+    </div>
+
+    <div class="dlg-body">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:21%">דיילת</th>
+            <th style="width:12%">ת"ז</th>
+            <th style="width:15%">פרטי-בנק</th>
+            <th style="width:9%">שעות</th>
+            <th style="width:8%">תעריף</th>
+            <th style="width:9%">בונוס</th>
+            <th style="width:12%">נסיעות</th>
+            <th style="width:14%">סה"כ</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <!-- מקור (א) — פרויקט #12, שעות-בפועל × תעריף-קפוא + בונוס (ה7) -->
+          <tr>
+            <td>
+              <div class="item-name">אפרת דהן</div>
+              <div class="item-sub">פרויקט <span class="ltr">#12</span> · שעות בפועל</div>
+            </td>
+            <td><span class="ltr">301554333</span></td>
+            <td>הפועלים <span class="ltr">601-2047199</span></td>
+            <td><div class="num"><span class="ltr">6.00</span></div><span class="unit">בפועל</span></td>
+            <td><span class="ltr">45 ₪</span></td>
+            <td><span class="ltr">0.00 ₪</span></td>
+            <td><span class="ltr">22.60 ₪</span> <span class="star" title="לפי ה20">*</span></td>
+            <td><div class="num"><span class="ltr">292.60 ₪</span> <span class="star" title="לפי ה20">*</span></div></td>
+          </tr>
+
+          <!-- מקור (ב) — ארבע שורות פיצוי-ביטול, פרויקט #14, סולם-ה24: 24–72ש→50% -->
+          <tr>
+            <td>
+              <div class="item-name">אורלי שני</div>
+              <div class="item-sub">פרויקט <span class="ltr">#14</span> · פיצוי-ביטול <span class="ltr">50%</span></div>
+            </td>
+            <td><span class="ltr">301550224</span></td>
+            <td>דיסקונט <span class="ltr">045-8732016</span></td>
+            <td><div class="num"><span class="ltr">4.00</span></div><span class="unit">מתוכנן</span></td>
+            <td><span class="ltr">43 ₪</span></td>
+            <td><span class="dash">—</span></td>
+            <td><span class="dash">—</span></td>
+            <td><div class="num"><span class="ltr">86.00 ₪</span></div></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="item-name">רחל לוי</div>
+              <div class="item-sub">פרויקט <span class="ltr">#14</span> · פיצוי-ביטול <span class="ltr">50%</span></div>
+            </td>
+            <td><span class="ltr">301551594</span></td>
+            <td>מזרחי-טפחות <span class="ltr">512-4491067</span></td>
+            <td><div class="num"><span class="ltr">4.00</span></div><span class="unit">מתוכנן</span></td>
+            <td><span class="ltr">40 ₪</span></td>
+            <td><span class="dash">—</span></td>
+            <td><span class="dash">—</span></td>
+            <td><div class="num"><span class="ltr">80.00 ₪</span></div></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="item-name">ליאת פרץ</div>
+              <div class="item-sub">פרויקט <span class="ltr">#14</span> · פיצוי-ביטול <span class="ltr">50%</span></div>
+            </td>
+            <td><span class="ltr">301552964</span></td>
+            <td>לאומי <span class="ltr">782-1184538</span></td>
+            <td><div class="num"><span class="ltr">4.00</span></div><span class="unit">מתוכנן</span></td>
+            <td><span class="ltr">39 ₪</span></td>
+            <td><span class="dash">—</span></td>
+            <td><span class="dash">—</span></td>
+            <td><div class="num"><span class="ltr">78.00 ₪</span></div></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="item-name">שרון כהן</div>
+              <div class="item-sub">פרויקט <span class="ltr">#14</span> · פיצוי-ביטול <span class="ltr">50%</span></div>
+            </td>
+            <td><span class="ltr">301557070</span></td>
+            <td>מזרחי-טפחות <span class="ltr">512-44910611</span></td>
+            <td><div class="num"><span class="ltr">4.00</span></div><span class="unit">מתוכנן</span></td>
+            <td><span class="ltr">42 ₪</span></td>
+            <td><span class="dash">—</span></td>
+            <td><span class="dash">—</span></td>
+            <td><div class="num"><span class="ltr">84.00 ₪</span></div></td>
+          </tr>
+
+          <tr class="total">
+            <td>סה"כ</td>
+            <td><span class="dash">—</span></td>
+            <td><span class="dash">—</span></td>
+            <td><span class="dash">—</span></td>
+            <td><span class="dash">—</span></td>
+            <td><span class="ltr">0.00 ₪</span></td>
+            <td><span class="ltr">22.60 ₪</span></td>
+            <td><span class="ltr">620.60 ₪</span></td>
+          </tr>
+
+        </tbody>
+      </table>
+
+      <div class="foot-note">
+        <b>*</b> נסיעות אפרת דהן מוצגות לפי <b>ה20</b> — המלצה שטרם נזרעה (<span class="ltr">22.60 ₪</span>
+        ליום, תקרת-החוק; <span class="ltr">3</span> מקורות ב-<span class="ltr">world-sources.md</span>).
+        הפרמטר החי היום במסד הוא <span class="ltr">0</span> — אם יישאר כך, השורה תציג
+        <span class="ltr">270.00 ₪</span> ולא <span class="ltr">292.60 ₪</span>, וסה"כ-הדוח
+        <span class="ltr">598.00 ₪</span> ולא <span class="ltr">620.60 ₪</span>. אימות-הסכום מול
+        רו"ח נשאר פתוח (§7.69).<br>
+        <b>בונוס/נסיעות בשורות-פיצוי-ביטול:</b> "—" ולא <span class="ltr">0.00 ₪</span> — נוסחת-ה24
+        (הפיצוי) אינה כוללת רכיב-בונוס, ו-ה29 קובע במפורש שאין נסיעות למשמרת שבוטלה (לא נסעה בפועל).<br>
+        <b>🔒 פרטי-הבנק</b> מוצגים מהטבלה המוגנת (<code>hostess_bank_details</code>, ה19) — קריאה
+        בהרשאת 'כספים' בלבד; טופס-מ4 אינו רואה עמודה זו.
+      </div>
+    </div>
+
+    <div class="dlg-foot">
+      <button class="btn btn-primary">ייצא ושלח</button>
+      <button class="btn btn-outline">ביטול</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="demoband">
+  🔑 <b>בורר-החודש אין לו תקדים ברכיבי הפרויקט</b> (design-contract §⑥/S3 — נבדק: <span class="ltr">0</span>
+  מופעי <code>&lt;input type="month"&gt;</code> ב-<code>src/</code>). ההכרעה-השקטה: כפתור מותאם המציג
+  טקסט-קבוע ("אוגוסט <span class="ltr">2026</span>"), לא <code>&lt;input type="month"&gt;</code> ילידי —
+  הרינדור-הילידי תלוי-לוקאל-מערכת ועלול להציג טקסט לועזי בתוך מוקאפ עברי כולו. אין חצי-ניווט
+  קודם/הבא, כדי לא לפתוח שאלת-כיווניות-RTL שאין לה הכרעה קיימת. פירוט מלא ב"מה הכרעתי לבד" בתחתית.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     תצוגה ב׳ — היסטוריית ההפקות (מסך-הכספים, לא בתוך הדיאלוג)
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="viewcap">
+  <b>תצוגה ב׳ · היסטוריית-ההפקות</b>
+  <span class="sm">"היסטוריית-הדוחות מציגה כל מה שנשלח, עם הורדה" (כרטיס P4). בעולם-הדמו יש דוח אחד
+    בלבד עד "היום" (<span class="ltr">15/10/2026</span>) — דוח-ספטמבר טרם הופק, כי הוא כולל את שורת
+    גלית מור מפרויקט <span class="ltr">#15</span> שעדיין ב"ממתין לתשלום" (data-set.md §5).</span>
+</div>
+
+<div class="card" style="max-width:820px">
+  <h3>היסטוריית דוחות-שכר</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:22%">תקופה</th>
+        <th style="width:20%">נשלח בתאריך</th>
+        <th style="width:28%">נשלח אל</th>
+        <th style="width:16%">סה"כ ששולם</th>
+        <th style="width:14%">קובץ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><div class="item-name">אוגוסט <span class="ltr">2026</span></div></td>
+        <td><span class="ltr">01/09/2026</span></td>
+        <td><span class="ltr">office@cpa-firm.co.il</span></td>
+        <td><span class="ltr">620.60 ₪</span></td>
+        <td>
+          <button class="btn btn-outline btn-sm" title="אוגוסט_2026_Payroll_Report.xlsx">
+            ⬇ הורדה
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="viewcap" style="margin-top:18px">
+  <b>לפני ההפקה הראשונה</b> <span style="font-weight:400">(להמחשה בלבד — <u>לא</u> המצב היום; היום כבר
+    יש שורה אחת, כמו למעלה)</span>
+</div>
+<div class="card" style="max-width:820px">
+  <h3>היסטוריית דוחות-שכר</h3>
+  <div class="empty">
+    <p class="ttl">עדיין לא הופקו דוחות</p>
+    <p class="dtl">דוחות שיופקו ויישלחו יופיעו כאן</p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     תצוגה ג׳ — מצב חסום: ניסיון להפיק שוב את אותו חודש
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="viewcap" style="margin-top:22px">
+  <b>תצוגה ג׳ · מצב חסום — "חודש שכבר הופק — נחסם + קישור לדוח הקיים"</b>
+  <span class="sm">כרטיס P4, "מה נשבר ומה רואים". קטע קטן ומתויג — לא משטח נפרד — הממחיש מה קורה אם
+    מנהלת-הכספים תבחר שוב <span class="ltr">08/2026</span> בבורר-החודש של תצוגה א׳.</span>
+</div>
+<div class="card" style="max-width:520px">
+  <div class="banner warn">
+    <b>דוח לחודש אוגוסט 2026 כבר הופק.</b>
+    נשלח ב-<span class="ltr">01/09/2026</span> אל <span class="ltr">office@cpa-firm.co.il</span>.
+    לא ניתן להפיק פעמיים אותו חודש (ה-<span class="ltr">UNIQUE</span> על <code>period</code> חוסם גם
+    לחיצה-כפולה, ה9).
+  </div>
+  <div style="margin-top:12px">
+    <button class="btn btn-outline btn-sm">צפייה בדוח הקיים ↑ (תצוגה ב׳)</button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="srcline">
+  <b>🏷️ מקורות הנתונים במוקאפ הזה</b><br>
+  <b>🌱 מהמסד (data-set.md §5/§7):</b> חמש הדיילות ותעריפי-קפאה שלהן · ת"ז ופרטי-בנק (מהטבלה המוגנת,
+  ה19) · שם/מספר שני הפרויקטים <span class="ltr">#12</span> ו-<span class="ltr">#14</span> · שעות-בפועל
+  <span class="ltr">6.00</span> של אפרת דהן · שעות-מתוכננות <span class="ltr">4.00</span> של ארבע
+  המבוטלות · תאריך-ההפקה-ונשלח <span class="ltr">01/09/2026</span> (מהכרטיס המאושר עצמו, P4) ·
+  נמען-הדוח <span class="ltr">office@cpa-firm.co.il</span> (<code>params.מייל_משרד_רואי_חשבון</code>) ·
+  הפרמטר החי <span class="ltr">סכום_נסיעות_למשמרת=0</span>.<br>
+  <b>📐 נגזר (נוסחאות מאושרות):</b> סכום-השכר <span class="ltr">שעות×תעריף</span> (ה7) · פיצוי-הביטול
+  <span class="ltr">50%×4.00ש×תעריף</span> (ה24, סולם-§7.16) · נסיעות-אפרת <span class="ltr">22.60 ₪</span>
+  (ה20, טרם נזרע) · שם-הקובץ <span class="ltr">אוגוסט_2026_Payroll_Report.xlsx</span> (תבנית
+  <span class="ltr">[חודש_שנה]_Payroll_Report.xlsx</span>) · שורת-הסה"כ (<span class="ltr">598.00</span> /
+  <span class="ltr">620.60 ₪</span>, תלוי-גרסת-נסיעות).<br>
+  <b>🎭 דמו:</b> "מיכל אורן · מנהלת כספים" בסרגל-העליון — שם-משתמשת דוגמה, לא מדאטה-סט (אין שם-מנהלת-
+  כספים בסט; מוסכמת-מיתוג בלבד, כמו "דנה ברק" בתקדים-הלוגיסטיקה).<br>
+  <b>⚠️ שני ההיפוכים המתועדים בכוונה:</b> ① בונוס/נסיעות בשורות-הביטול = "—" מנוסחה (ה24/ה29), לא
+  "0.00 ₪" — כלל-הריק (§2.6/§2.7: 0 נקרא כעובדה, "—" נקרא כ"לא רלוונטי"). ② תצוגה א׳ מציגה את
+  אוגוסט כאילו טרם הופק (להדגמת מנגנון-התצוגה-המקדימה), בעוד תצוגה ב׳+ג׳ מראות שהוא כבר הופק
+  בפועל — הפער מוסבר בכתובית של תצוגה א׳ ובקו-ה-<span class="ltr">.sub</span> הענבר בדיאלוג עצמו.<br>
+  <b>🎨 תקציב-צבע:</b> אפס אדום במסך (כלל-המילוי §④ — הענבר היחיד הוא באנר-מידע/אזהרה, לא כשל);
+  הטורקיז-המלא היחיד הוא כפתור "ייצא ושלח" — הפעולה-הראשית האחת של הדיאלוג.
+</div>
+
+</div>
+</body>
+</html>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     מה הכרעתי לבד — כל פרט ויזואלי שהאפיון שתק עליו, ואיך הוכרע
+     ══════════════════════════════════════════════════════════════════════
+
+1. בורר-החודש (S3, §⑥ בחוזה-העיצוב מציין מפורשות: "אין תקדים — צייר שיקבל רק את השלד יבחר דאטה
+   משלו"). הכרעתי: כפתור מותאם (.monthpick) בגובה/מסגרת/רדיוס זהים ל-input[type=date] הקיים
+   (ChecklistDialog.jsx), מציג טקסט-קבוע "אוגוסט 2026" בלי חצי-ניווט קודם/הבא. שתי סיבות: (א)
+   <input type="month"> ילידי מרונדר טקסט תלוי-לוקאל-מערכת של הדפדפן — סיכון לטקסט לועזי בתוך
+   מוקאפ שכולו עברית; (ב) חצי-ניווט "קודם/הבא" דורשים הכרעת-כיוון ב-RTL (איזה צד = "לחודש הבא")
+   שאין לה תקדים ואין טעם להמציא כאן.
+
+2. מיקום היסטוריית-ההפקות: כ-card עצמאי מתחת לדיאלוג, לא בתוך dlg-body של הדיאלוג עצמו. הכרעתי
+   כך כי כרטיס-P4 מנסח זאת כתכונה נפרדת ("היסטוריית-הדוחות מציגה...") ולא כחלק מתיאור-הדיאלוג
+   עצמו, ואין תקדים לטבלת-היסטוריה בפרויקט (design-contract §⑥/S3 מציין זאת מפורשות — "יישום-
+   ראשון לתוכן מסוג יומן-הפקות").
+
+3. מצב-הריק של ההיסטוריה מוצג כתצוגה שנייה מתויגת ("לפני ההפקה הראשונה... לא המצב היום"), לא
+   כמצב בפועל של "היום" — כי ב"היום" המשותף (15/10/2026) כבר קיים דוח-אוגוסט אחד. שני הרינדורים
+   של אותו card (עם שורה / .empty) הם אותה טכניקה כמו "תצוגה א׳/ב׳" בתקדים.
+
+4. בונוס ונסיעות בארבע שורות-הביטול מוצגים "—" ולא "0.00 ₪": בונוס אינו מופיע כלל בנוסחת-ה24
+   (הפיצוי = %×שעות-מתוכננות×תעריף בלבד, ללא רכיב-בונוס), ונסיעות נשללו במפורש ע"י ה29. "—" נבחר
+   על "0.00 ₪" לפי כלל-הריק הקיים (Cell/Val §2.6, DENIED_MARK §2.7): 0 נקרא כעובדה-שנמדדה, "—"
+   נקרא כ"אינו רלוונטי לשורה הזו" — וזה המצב העובדתי כאן.
+
+5. גרסת-הנסיעות המוצגת לאפרת דהן: לפי ה20 (22.60 ₪, המלצה שטרם נזרעה), לא הפרמטר החי (0) — לפי
+   הנחיית-המשימה המפורשת ("292.60 with travel 22.60 as its own column"). סומן בכוכבית + הערת-
+   שוליים שמסבירה את שתי הגרסאות ומצטטת את §7.69 הפתוח.
+
+6. הרקע מאחורי הדיאלוג (.behind) נשאר ריק בכוונה, עם הערת-קוד — "מסך-ההפקה" עצמו (מה שמאחורי
+   הדיאלוג לפני שנפתח) לא הוזמן לציור ואין לו כרטיס-מסך; מילויו בניחוש היה סוטה מ"רק מה שהוזמן".
+
+7. עמודות "שעות"/"תעריף" בשורת-הסה"כ הושארו "—": סיכום שעות-בפועל (יחידה אחת: 6.00) עם שעות-
+   מתוכננות (ארבע שורות של 4.00) לא נותן מספר בעל-משמעות עסקית; אותו דין לתעריפים (חמישה תעריפים
+   שונים — ממוצע/סכום לא ביקש אף כרטיס-תהליך).
+
+8. שם-המנהלת בסרגל-העליון ("מיכל אורן") מתויג 🎭 בשורת-המקורות בתחתית — אין שם-מנהלת-כספים בסט-
+   הנתונים; זו מוסכמת-מיתוג בלבד (כמו "דנה ברק" בתקדים-הלוגיסטיקה המאושר), לא נתון-לאישור.
+-->
