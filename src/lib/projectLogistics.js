@@ -5,9 +5,10 @@
 // 🔴 קובץ חדש בכוונה, לא הרחבה של projects.js — שני סשנים בונים במקביל על אותו ענף,
 // ו-projects.js הוא שטח משותף שהצד השני עלול לגעת בו (הנחיית-הסשן: lib חדש, לא קיים).
 
-import { logisticsTileSub } from '@/lib/projects'
+import { ACTIVE_PROJECT_STATUSES, eventDaysFromToday, logisticsTileSub } from '@/lib/projects'
 import { computeScopeChangeMoney } from '@/lib/projectChanges'
 import { formatShekelCents } from '@/lib/pricing'
+import { weekdayOf } from '@/lib/dates'
 
 // ── אוצר-המילים של שלושת מצבי-הפריט (schema.sql: CHECK על שלושה ערכים בלבד) ──
 // התוויות מילוליות מהמוקאפ המאושר; "טרם החל" הוא ברירת-המחדל שבה השורה נולדה —
@@ -249,4 +250,264 @@ export function countProductLines(quote, products) {
     const category = bySku.get(line.sku)?.category
     return category !== 'hostess'
   }).length
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// משטח 1 — תור-העבודה של מנהלת הלוגיסטיקה (מודול 5, צעד 2.1)
+//
+// 🔴 **הכול טהור, וה"היום" מוזרק כ-`todayIso`** — כמו בכל הקובץ. גם `businessDaysUntil`
+// מוזרקת כפרמטר ולא מיובאת כאן: היא לוח-שנה, והזרקתה היא מה שמונע לוח-שנה שני
+// (⑳/㉓ מורות מפורשות *"אין להמציא חישוב שני"*).
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ── המחרוזות הנעולות של המשטח (S-2 · S-3 · S-5, מדריך-המיקרו §3.7) ──────────
+// מועתקות בייט-בבייט מהאישור. 🚫 לא לנסח מחדש ולא "לשפר".
+export const QUEUE_NO_PERMISSION_SENTENCE =
+  'אין לך הרשאה לצפות בפריטי הלוגיסטיקה, ולכן לא ניתן לקבוע אם התור ריק כדין.'
+export const EMPTY_OUTBOUND_SENTENCE = 'אין אירוע שיוצא עד יום העסקים הבא.'
+export const WRITE_FAILURE_SENTENCE = 'העדכון לא נשמר — הערך הוחזר לקודם. נסי שוב.'
+// 🔴 **העתק-בייט של ה-`raise` בשרת** — `supabase/migrations/20260826002447_module5_checklist_rpc.sql`
+// (עוגן-גריפ: `אינה יכולה להיות שלילית`). כלל-הבית AR-9: שני הצדדים משתנים יחד, אחרת
+// המשתמשת רואה נוסח אחד לפני השליחה ונוסח אחר אחריה. כאן זהו **שומר טרום-שליחה**;
+// העברת ה-`raise` עצמו למסך היא של צעד 2.2.
+export const NEGATIVE_QTY_SENTENCE = 'כמות בפועל אינה יכולה להיות שלילית.'
+// ‏S-3. 🚫 **לא `SORT_LINE`** — זה ממיין *פריטים* בצ'קליסט, וזה מסך של *פרויקטים*.
+export const QUEUE_SORT_LINE = 'ממוין: לפי קרבת האירוע'
+// שורת-הנימוק של פרויקט שהכול בו מוכן בסעיף-היציאה — מצוירת מילה-במילה במוקאפ המאושר
+// (שורת `#105`). טון רגוע: עובדה טובה אינה צבועה.
+export const OUTBOUND_READY_REASON = 'הכול מוכן — לוודא שהסחורה יוצאת'
+// ✅ **O-1 — אושר על-ידי ישי 26/08/2026 10:29 ("מאשר את הכל", סבב דלת-פזה-3;
+// מדריך-המיקרו §3.5/§3.7).** מוגדר כתבנית אחת כדי ששינוי-נוסח ישנה שורה אחת
+// ולא שבעה אתרי-קריאה.
+const LATE_ARRIVAL_TEMPLATE = { prefix: 'ההגעה מתעכבת — הובטח ל-', suffix: ' וטרם הגיע' }
+
+// ── כלל-האוכלוסייה: פעיל *וגם* בעל שורות ────────────────────────────────────
+// 🔴 **זה הכלל שאם שוברים אותו כל מונה במסך זז בשקט.** פרויקט פעיל בלי ולו שורת-לוגיסטיקה
+// אחת (המקרה של `#11`) **נספר מוכן לוגיסטית מרגע היווצרותו ולכן אינו מגיע אליה לעולם —
+// לא לתור ולא לאף גלולה, כולל `הכול`** (`data-set.md`, עוגן-גריפ `לא מגיע אליה לעולם`).
+// בלי הסייג הזה `הכול` היה 6 במקום 5, ואף בדיקה לא הייתה נופלת.
+// ‏`ACTIVE_PROJECT_STATUSES` מיובא ממודול 6 ולעולם לא מוגדר כאן מחדש (`🚧 מ5 ← מ6` #3).
+export function queueBaseProjects(projects, logisticsRows) {
+  const rowsByProject = new Map()
+  for (const row of logisticsRows ?? []) {
+    const list = rowsByProject.get(row?.project_id)
+    if (list) list.push(row)
+    else rowsByProject.set(row?.project_id, [row])
+  }
+  return (projects ?? [])
+    .filter((project) => ACTIVE_PROJECT_STATUSES.includes(project?.project_status))
+    .map((project) => ({ project, rows: rowsByProject.get(project.project_id) ?? [] }))
+    .filter((entry) => entry.rows.length > 0)
+}
+
+// ── שלוש הגלולות (㉙ · ㉛ · ⑲) ───────────────────────────────────────────────
+// מצב-העבודה של פרויקט, לא סטטוס-פרויקט: `דורש טיפול` = יש מה להזמין ·
+// `ממתין למשלוח` = **לא נשאר מה להזמין ולא הכול הגיע** (㉛ — הנוסח הזה, ולא "כלום עוד
+// לא הגיע", הוא שסוגר את החור ש-`#106` נפל לתוכו: יש בו פריט שכבר הגיע) ·
+// `ready` = הכול הגיע, ונראה רק תחת `הכול` (⑲).
+export function pillOf(rows) {
+  const list = rows ?? []
+  if (list.length === 0) return null
+  if (list.some((row) => row.item_status === 'not_started')) return 'needsAction'
+  if (list.some((row) => row.item_status === 'ordered')) return 'awaitingDelivery'
+  return 'ready'
+}
+
+// `all` אינה מצב אלא **הבסיס כולו** — ולכן היא נבדקת כאן ולא ב-pillOf.
+export function filterQueueByPill(entries, pill) {
+  const list = entries ?? []
+  if (pill === 'all') return [...list]
+  return list.filter((entry) => pillOf(entry.rows) === pill)
+}
+
+// המונים שבתוך הגלולות. 🔴 **נספרים על אותה רשימה שנשלפה** — לא שאילתה שנייה
+// (כרטיס-המסך §③), אחרת המונה והטבלה יכולים לסתור זה את זה בין רענונים.
+export function queuePillCounts(entries) {
+  const list = entries ?? []
+  return {
+    needsAction: filterQueueByPill(list, 'needsAction').length,
+    awaitingDelivery: filterQueueByPill(list, 'awaitingDelivery').length,
+    all: list.length,
+  }
+}
+
+// ── סימון-הענבר (⑳ + הטריגר השני של ㊶) ─────────────────────────────────────
+// **פריט פיזי** = כל מק"ט פרט לקטגוריית `site` (`01WEB` — הקמת אתר רישום). הסף נגזר
+// מזמן-ייצור של דפוס, ואתר אינו מודפס (⑧ · `🎓⑳`). 🔴 **מק"ט שאינו בקטלוג נספר כפיזי** —
+// אותו כיוון-טעות בדיוק כמו ב-countProductLines: מוטב אזעקת-שווא מאשר שקט שקרי.
+function isPhysical(row, bySku) {
+  return bySku.get(row?.sku)?.category !== 'site'
+}
+
+// ‏⑳ — 10 ימי-עסקים, לא "שבועיים קלנדריים": היחידה שבה הקוד כבר מודד (`businessDaysUntil`),
+// וכך שני הספים של המערכת (3 ימי-עסקים ב-isLateChange · 10 כאן) ברי-השוואה במקום סותרים.
+const AMBER_BUSINESS_DAYS = 10
+
+// 🔴 **שומר-העבר, והוא נושא-משקל:** `businessDaysUntil` מחזירה **0** על תאריך שעבר
+// (הלולאה שלה פשוט אינה רצה) ⇒ בלי הבדיקה הזאת פרויקט פעיל שתאריכו חלף היה נדלק בענבר
+// לנצח, ו-`0 ≤ 10` היה נראה כמו "האירוע מחר". מחזירה את מספר ימי-העסקים, או `null`
+// כשהאירוע בעבר / התאריך אינו נקרא.
+function businessDaysToEvent(eventDate, todayIso, businessDaysUntil) {
+  const daysFromToday = eventDaysFromToday(eventDate, todayIso)
+  if (daysFromToday === null || daysFromToday < 0) return null
+  const businessDays = businessDaysUntil(todayIso, eventDate)
+  return businessDays === null ? null : businessDays
+}
+
+// ‏㊶'s טריגר שני: פריט `הוזמן` שהתאריך שהובטח לו כבר עבר והוא טרם הגיע. **עומד בפני
+// עצמו** — אינו תלוי בקרבת-האירוע, כי איחור-ספק הוא עובדה גם כשהאירוע רחוק.
+// השוואת-מחרוזות על `YYYY-MM-DD` תקפה לקסיקוגרפית ואינה מפרסרת תאריך (הימנעות ממלכודת
+// ה-`new Date` המקומי שב-`dates.js`).
+function findLateArrivalRow(rows, todayIso) {
+  return (
+    (rows ?? []).find(
+      (row) =>
+        row?.item_status === 'ordered' &&
+        typeof row?.expected_arrival_date === 'string' &&
+        row.expected_arrival_date < todayIso &&
+        !row?.actual_arrival_date,
+    ) ?? null
+  )
+}
+
+// מחזירה **גם את הטריגרים שנדלקו** — המסך צריך לדעת איזו שורת-נימוק לכתוב (⑳ מול O-1),
+// ובלי זה הקורא היה מחשב את אותו תנאי פעם שנייה בעצמו.
+export function amberMark(rows, products, eventDate, todayIso, businessDaysUntil) {
+  const list = rows ?? []
+  const bySku = new Map((products ?? []).map((product) => [product.sku, product]))
+  const businessDays = businessDaysToEvent(eventDate, todayIso, businessDaysUntil)
+  const triggers = []
+  if (
+    businessDays !== null &&
+    businessDays <= AMBER_BUSINESS_DAYS &&
+    list.some((row) => row.item_status === 'not_started' && isPhysical(row, bySku))
+  ) {
+    triggers.push('physicalNotStarted')
+  }
+  const lateRow = findLateArrivalRow(list, todayIso)
+  if (lateRow) triggers.push('lateArrival')
+  return { amber: triggers.length > 0, triggers, businessDays, lateRow }
+}
+
+// ── חלון-היציאה (㉓) ────────────────────────────────────────────────────────
+// *"מהיום ועד יום-העסקים הבא **בכלל**"* — ‏🚫 לא "היום ומחר". ביום חמישי החלון מגיע עד
+// ראשון, כי שישי-שבת אינם ימי-עבודה (הכרעת-ישי: *"שישי שבת לא עובדים"*) — וזה בדיוק
+// היום שבו הכלל הנפסל היה מפספס סחורה שצריכה לצאת לפני סוף-השבוע.
+// 🔴 **אותו שומר-עבר של הענבר** — בלעדיו אירוע שחלף היה נכנס לחלון עם 0 ימי-עסקים.
+export function outboundMembership(eventDate, todayIso, businessDaysUntil) {
+  const daysFromToday = eventDaysFromToday(eventDate, todayIso)
+  if (daysFromToday === null || daysFromToday < 0) return false
+  const businessDays = businessDaysUntil(todayIso, eventDate)
+  return businessDays !== null && businessDays <= 1
+}
+
+// ── מיון-התור (S-3) ─────────────────────────────────────────────────────────
+// **מרחק מוחלט מהיום** — אותה נגזרת בדיוק כמו sortOverviewProjects (מודול 6): אירוע
+// שעבר לפני 5 ימים קרוב יותר מאירוע בעוד 12. 🚫 **אין מימד-מיון שני** — הגלולה כבר עשתה
+// את מה ש"חסרים תחילה" עושה שם. שובר-שוויון יציב: `project_id`, סדר-הקליטה ולא אקראי.
+export function sortQueueProjects(entries, todayIso) {
+  return [...(entries ?? [])].sort((a, b) => {
+    const distA = Math.abs(eventDaysFromToday(a.project?.final_event_date, todayIso) ?? Infinity)
+    const distB = Math.abs(eventDaysFromToday(b.project?.final_event_date, todayIso) ?? Infinity)
+    if (distA !== distB) return distA - distB
+    return (a.project?.project_id ?? 0) - (b.project?.project_id ?? 0)
+  })
+}
+
+// ── המבחין של ענף-הריק (AR-3) ───────────────────────────────────────────────
+// 🔴 **`logistics` נושאת RLS פעיל, וקריאה שנחסמה מחזירה אפס שורות עם `error: null`** —
+// זהה-בייט ל"התור ריק". המסך אינו נכשל; הוא משקר. **המבחין הזמין הוא שני השערים:**
+// ‏`projects` (שער `'פרויקטים'`) מול `logistics` (שער `'לוגיסטיקה'`).
+// ⚠️ **שני המקרים שהכרטיס מונה מתלכדים לתנאי אחד:** *"projects החזירה שורות ולוגיסטיקה
+// אפס"* ו*"שתיהן ריקות"* שניהם ⇒ `noPermission` — הענף הבטוח הוא "אולי חסומה" ולא
+// "הכול תקין" (כרטיס §④). ⇒ אפס שורות-לוגיסטיקה = חסימה, נקודה. חוסר-הרשאה **תמיד
+// הענף הראשון** (תקדים מודול 4).
+export function resolveQueueBranch(projectsRows, logisticsRows) {
+  return (logisticsRows ?? []).length === 0 ? 'noPermission' : 'normal'
+}
+
+// ── שורות-הנימוק ────────────────────────────────────────────────────────────
+// 🔤 **הצורה היא חלקים, לא מחרוזת שטוחה** — כל משפט חוזר כ-`{prefix, value, suffix, tone}`
+// כשה-`value` הוא הערך היחיד שחייב בידוד-כיווניות (`<Ltr>`), ו-`null` כשאין ערך כזה.
+// זה התאום של `changesTileSub` שבקובץ הזה, וזו המשפחה עם תשעה מופעים מדודים
+// (`src/CLAUDE.md §🔤`): מספר שנכתב בתוך עברית בלי בידוד נוחת בצד הלא-נכון.
+const plainReason = (text, tone) => ({ prefix: text, value: null, suffix: '', tone })
+
+// לשון-יחיד · הצורה הכפולה המצוירת · ספרה מבודדת מ-3 ומעלה. הכפולה ("שני פריטים")
+// מצוירת מילה-במילה בשורת `#107` שבמוקאפ; היחיד והרבים נגזרו בדפוס של logisticsTileSub.
+function notOrderedReason(count) {
+  if (count === 1) return plainReason('פריט אחד טרם הוזמן', 'hint')
+  if (count === 2) return plainReason('שני פריטים טרם הוזמנו', 'hint')
+  return { prefix: '', value: String(count), suffix: ' פריטים טרם הוזמנו', tone: 'hint' }
+}
+
+// כמה יחידות עדיין בדרך = Σ(מתוכנן − בפועל) על שורות `הוזמן` בלבד. **הקיזוז פר-שורה
+// לא-שלילי**: שורה שהגיעה בעודף אינה "מינוס בדרך" (‏`actual_qty > planned_qty` חוקי —
+// ה-RPC מתיר אותו במפורש). סכום 0 ⇒ **אין משפט**: היא כבר רשמה שהכול הגיע וטרם סימנה
+// `מוכן`, ו-"0 יחידות עדיין בדרך" היה שקר קטן על המסך ("לא בכוח").
+function inTransitReason(rows) {
+  const missing = rows
+    .filter((row) => row.item_status === 'ordered')
+    .reduce(
+      (sum, row) =>
+        sum + Math.max((Number(row.planned_qty) || 0) - (Number(row.actual_qty) || 0), 0),
+      0,
+    )
+  if (missing <= 0) return null
+  if (missing === 1) return plainReason('יחידה אחת עדיין בדרך', 'hint')
+  return { prefix: '', value: String(missing), suffix: ' יחידות עדיין בדרך', tone: 'hint' }
+}
+
+// שורת-הנימוק של שורת-התור. שני קצוות-הסקאלה — *"טרם הוזמן אף פריט"* ו-*"✓ מוכן"* —
+// **נלקחים מ-readinessTileSub ולא נכתבים כאן שוב**: הם כבר נעולים שם, וליטרל שני היה
+// סוטה ממנו בשקט ביום שבו מישהו יערוך אחד מהם (התקדים המדוד: `formatDate` · `StatTile`).
+export function queueReason(rows) {
+  const list = rows ?? []
+  if (list.length === 0) return null
+  const notStarted = list.filter((row) => row.item_status === 'not_started').length
+  if (notStarted === list.length || readyItemsCount(list) === list.length) {
+    const sub = readinessTileSub(list)
+    return plainReason(sub.text, sub.tone)
+  }
+  if (notStarted > 0) return notOrderedReason(notStarted)
+  return inTransitReason(list)
+}
+
+// "יוצא היום" / "יוצא ביום ראשון" — שם-היום דרך `weekdayOf` מ-`dates.js`, שהוא
+// **מקור-האמת היחיד למערך שמות-הימים**; חישוב-יום מקומי אסור שם בהערה של הקובץ עצמו.
+function outboundLead(eventDate, todayIso) {
+  return eventDaysFromToday(eventDate, todayIso) === 0
+    ? 'יוצא היום — '
+    : `יוצא ביום ${weekdayOf(eventDate)} — `
+}
+
+// שורת-הנימוק של סעיף-היציאה. פרויקט שהכול בו מוכן מקבל את הנוסח הרגוע הנעול; כל השאר
+// מקבלים את אותו נימוק של התור, בקידומת "מתי הוא יוצא" ובטון ענבר — כי שם זה **חוסר
+// לפני יציאה**, לא סטטוס שקט (כרטיס §⑧-12: ⑳ צובע רקע-שורה, הסעיף צובע טקסט בלבד).
+export function outboundReason(rows, eventDate, todayIso) {
+  const list = rows ?? []
+  if (list.length > 0 && readyItemsCount(list) === list.length) {
+    return plainReason(OUTBOUND_READY_REASON, 'calm')
+  }
+  const base = queueReason(list)
+  if (!base) return null
+  return { ...base, prefix: `${outboundLead(eventDate, todayIso)}${base.prefix}`, tone: 'hint' }
+}
+
+// ‏DD/MM מתאריך-בלבד. 🚫 **לא `formatDate`** (היא מחזירה גם שנה) ו🚫 **לא `new Date`** —
+// הפענוח המקומי מזיז את התאריך סביב חצות בחלק מהתאריכים בלבד (המוקש המתועד ב-`dates.js`).
+function dayMonthOf(isoDate) {
+  const [year, month, day] = String(isoDate ?? '').split('-')
+  if (!/^\d{4}$/.test(year ?? '') || !/^\d{2}$/.test(month ?? '') || !/^\d{2}$/.test(day ?? '')) {
+    return null
+  }
+  return `${day}/${month}`
+}
+
+// ✅ **O-1** (אושר 26/08/2026) — שורת-הנימוק של הטריגר השני (㊶). התאריך מבודד כ-`value`, כי DD/MM בתוך
+// עברית הוא בדיוק המשפחה של תשעת המופעים.
+export function lateArrivalReason(expectedArrivalDate) {
+  const dayMonth = dayMonthOf(expectedArrivalDate)
+  if (!dayMonth) return null
+  return { ...LATE_ARRIVAL_TEMPLATE, value: dayMonth, tone: 'hint' }
 }

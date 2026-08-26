@@ -11,9 +11,9 @@
 | **Module** | 5 — לוגיסטיקה (Logistics) |
 | **Branch** | `ishay/module-5-logistics` *(exists — carries the whole Discovery + this blueprint; verified live 25/08/2026, ahead of `origin/dev`, NOT merged — `git log origin/dev..HEAD` non-empty)* |
 | **Owner** | Ishay (sole developer) |
-| **Status** | 🔨 **BUILD — Phase 1: steps 1.0–1.5 ✅ DONE (26/08/2026 01:2X).** All four migrations APPLIED via MCP (typed-echo waived one-time by Ishay, §10; the tool-permission block was cleared by Ishay adding an allow rule) and verified live; the two-mode seed EXECUTED (create + refresh idempotency proof, delta 0) — demo projects `#13/#14/#15` live with derived statuses. Advisors: security 25→26, performance 26→27 — both deltas are the new module-5 objects, triaged accepted (db_roadmap strike entry). Remaining: **1.6 gate package** (gate run · commit · present to Ishay). *(Earlier:)* 📘 BLUEPRINT APPROVED — Ishay, `25/08/2026 23:35`. |
-| **Last updated** | `26/08/2026 01:2X` *(system clock)* — migrations applied + seed live; 1.6 in progress. |
-| **Active step** | **1.6** — Phase-1 gate (schema.sql refreshed ✓ · db_roadmap flipped ✓ · gate+commit pending) |
+| **Status** | 🔨 **BUILD — Phases 1+2 ✅ COMPLETE (2.3 gate closed 26/08/2026 11:4X).** Phase 1: migrations A–D + two-mode seed live, commit `eb17b19`. **Phase 2 (agent workflow — 2 Opus builders → 3-lens adversarial panel → fixers): 17 queue-derivation exports + 43 tests in `projectLogistics` · the 5-function api layer + 27 tests · 11 panel findings (4 actionable) all fixed · gate 1,341/51 = baseline+70, zero regressions · live anchors = contract-3.** Phase-3 door (3.0) closed with Ishay's approvals in hand (O-1/O-4/O-5 + both briefs, "מאשר את הכל" 10:29). *(Earlier:)* 📘 BLUEPRINT APPROVED — Ishay, `25/08/2026 23:35`. |
+| **Last updated** | `26/08/2026 11:4X` *(system clock)* — phase 2 committed; phase-3 screen workflow launching (2 builders + 3-lens panel per screen, ruling-conflict rule armed). |
+| **Active step** | **3.1 + 3.2** (screen workflow) → 3.3 route swap (orchestrator) → **3.4 — the 🎨 gate, Ishay's stop** |
 | **Deadline** | interim presentation **28/08 — a FRIDAY** (module 5 demo-ready is the stretch goal Ishay named; 🔄 **run the seed REFRESH that morning** — the 02:00 cron closes the "today" demo project overnight, step 1.5) · conference **01/10** (target: 100%) |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -27,12 +27,12 @@
 | **1.3** | Migration C — checklist write RPC (M5-6) | ✅ 26/08 |
 | **1.4** | Migration D — `apply_scope_change`: status reset + zero-as-removal (M5-4 · M5-7) | ✅ 26/08 |
 | **1.5** | Demo-data seed (Ishay's 22/08 ruling) | ✅ 26/08 |
-| **1.6** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | 🔨 |
-| **2.0** | Phase-2 door — ledger sweep | ⬜ |
-| **2.1** | Queue derivations in `src/lib/projectLogistics.js` + tests ⚠️ shared-surface | ⬜ |
-| **2.2** | `src/modules/05_logistics/api.js` — reads + RPC call + tests | ⬜ |
-| **2.3** | 🔻👤 Phase-2 gate — full unit suite + hand-computed anchors | ⬜ |
-| **3.0** | Phase-3 door — shared-component checkpoint + OPEN-item sweep (O-1 nod) | ⬜ |
+| **1.6** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | ✅ 26/08 |
+| **2.0** | Phase-2 door — ledger sweep | ✅ 26/08 |
+| **2.1** | Queue derivations in `src/lib/projectLogistics.js` + tests ⚠️ shared-surface | ✅ 26/08 |
+| **2.2** | `src/modules/05_logistics/api.js` — reads + RPC call + tests | ✅ 26/08 |
+| **2.3** | 🔻👤 Phase-2 gate — full unit suite + hand-computed anchors | ✅ 26/08 |
+| **3.0** | Phase-3 door — shared-component checkpoint + OPEN-item sweep (O-1 nod) | ✅ 26/08 |
 | **3.1** | Surface 1 — `/logistics` overview page (🗣️ brief → build → verify) | ⬜ |
 | **3.2** | Surface 2 — checklist dialog incl. cancelled variant (🗣️ brief → build → verify) | ⬜ |
 | **3.3** | Route swap in `App.jsx` ⚠️ shared-surface | ⬜ |
@@ -272,10 +272,11 @@ a log nobody reads for rulings.
 
 | # | Item | Anchored to | Ask when |
 |:-:|---|---|---|
-| O-1 | **Second-amber reason-line wording** (㊶'s second trigger: `ordered` · expected date passed · not arrived). Proposed: *"ההגעה מתעכבת — הובטח ל-`DD/MM` וטרם הגיע"* | step 3.1's 🗣️ brief | Phase-3 door |
+| ~~O-1~~ | ✅ **CLOSED — Ishay 26/08/2026 10:29 ("מאשר את הכל", Phase-3-door round).** Approved wording: *"ההגעה מתעכבת — הובטח ל-`DD/MM` וטרם הגיע"* (date from `expected_arrival_date`; wired as one const in 2.1) | — | done |
 | O-2 | The two teals (`--primary #0D9488` vs `bg-teal-600 #009689`) — system-wide color call, rule 8 | none (build imitates the existing screen per design-contract) | M12 / whenever Ishay wants |
 | O-3 | ⏸️ ⑨ "יצא" checkbox · ⑤ suppliers — closed with `הנחתי`, reopen without ceremony when the missing fact lands | — | — |
-| O-4 | **One visible sentence in the cancel banner naming the ㊴ exception** (e.g. *"אפשר עדיין לרשום כמות שהגיעה — שאר הפקדים נעולים."*) — the approved banner text lacks it and the `title` tooltip is hover-only | step 3.2's 🗣️ brief | Phase-3 door (with O-1) |
+| ~~O-4~~ | ✅ **CLOSED — Ishay 26/08/2026 10:29 (same round).** Approved: banner body corrected to *"אין לעדכן מצב או הערה בפרויקט מבוטל."* (the drawn *"מצב, כמות או הערה"* contradicted ㊴) **plus** the visible sentence *"אפשר עדיין לרשום כמות שהגיעה — שאר הפקדים נעולים."* | — | done |
+| ~~O-5~~ | ✅ **CLOSED — Ishay 26/08/2026 10:29 (same round; born from the mockup-vs-data gap found 26/08).** Undrawn count-forms approved: in-transit reason **`{N} יחידות עדיין בדרך`** / `יחידה אחת עדיין בדרך` (the drawn `80 שרוכים` is not data-derivable — "יחידות" replaces it) · `פריט אחד טרם הוזמן` (1) · numeral `N פריטים טרם הוזמנו` (N≥3; the dual `שני פריטים טרם הוזמנו` stays as drawn) · `✓ מוכן` for a fully-ready row in `הכול` | — | done |
 
 ### 3.6 Assumptions (spec-silent)
 
@@ -318,7 +319,10 @@ a log nobody reads for rulings.
 | Retry | `נסי שוב` — 🔴 **passed explicitly as `retryLabel="נסי שוב"` at EVERY `LoadingOrError` call site**: its default is masculine `נסה שוב` (`LoadingOrError.jsx`, the `🚧 מ12` note) and `PermissionAwareEmpty`'s `RETRY_LABEL` is a non-exported const — nothing importable | card §④-② (*"חייב לעבור במפורש"*) |
 | Amber legend | mockup verbatim (⏱ שורה בענבר…) | S-3 |
 | Banners (cancel · completion) | mockup verbatim | S-5 |
-| Second-amber reason | ⬜ **O-1 — nod at Phase-3 door**; proposed `ההגעה מתעכבת — הובטח ל-DD/MM וטרם הגיע` | OPEN |
+| Second-amber reason | ✅ `ההגעה מתעכבת — הובטח ל-DD/MM וטרם הגיע` | O-1 — approved 26/08/2026 |
+| In-transit reason (queue/outbound) | ✅ `{N} יחידות עדיין בדרך` · `יחידה אחת עדיין בדרך` · prefix `יוצא היום —` / `יוצא ביום {weekday} —` | O-5 — approved 26/08/2026 |
+| Not-ordered counts | ✅ `פריט אחד טרם הוזמן` · `שני פריטים טרם הוזמנו` (drawn dual) · `N פריטים טרם הוזמנו` (N≥3) · fully-ready in `הכול` ⇒ `✓ מוכן` | mockup + O-5 |
+| Cancel-banner ㊴ sentence | ✅ `אין לעדכן מצב או הערה בפרויקט מבוטל.` + `אפשר עדיין לרשום כמות שהגיעה — שאר הפקדים נעולים.` | O-4 — approved 26/08/2026 |
 
 ### 3.8 🔴 Ruling-coverage ledger — the decision-coverage back-check (denominator = the registry)
 
@@ -698,13 +702,22 @@ protocol — Claude's job, no browser) · advisors full run (security + performa
 note · `db_roadmap` §10 Done-rows + M5-row flips · commit migrations+schema+seed together
 (pathspec, never `git add -A`).
 **🔻👤 Verify:** `npm run gate` → exit 0 · baseline unit count unchanged · present the phase
-package to Ishay. **מה ייחשב עובד:** DoD §8.1 items 1–3. **🌊 אדוות —** **🗣️ אושר —**
+package to Ishay. **מה ייחשב עובד:** DoD §8.1 items 1–3.
+**↳ as-built (26/08/2026 09:36):** the commit (`eb17b19`) landed in the phase-1 session; the gate
+run + doc flip landed here (a session boundary split the step — resume-from-disk caught it).
+Gate: exit 0, 1,271/50 = baseline. **🌊 אדוות —** אין (all ripples closed in 1.1–1.5 slots; commit
+already includes schema+db_roadmap+STATUS+log). **🗣️ אושר —** Ishay 26/08 session opener — scoped
+this session to "פזה 2 ואז פזה 3", acknowledging the phase-1 package in STATUS; phase-1 evidence
+re-presented in this session's first report.
 
 ---
 
 ### Phase 2 — Business logic
 
 **Step 2.0 · 🔻🤖 Phase door** — sweep §3.5 for Phase-2 anchors (expect none; say `אין`).
+**↳ done 26/08/2026 09:36 — `אין`.** §3.5 walked: O-1/O-4 → Phase-3 door · O-2 → M12 · O-3 dormant.
+Live re-measurement (Supabase MCP, Israel-local today = 26/08): pills 3·1·5 · outbound 2 · amber
+`#15` only · `#15` 4 rows 1/4 — contract-3 holds on the seeded DB before a line of logic is written.
 
 **Step 2.1 · Queue derivations ⚠️ shared-surface (`src/lib/projectLogistics.js` + test)**
 **What to do (additive exports; every rule with its ruling number in a why-comment):**
@@ -731,7 +744,21 @@ package to Ishay. **מה ייחשב עובד:** DoD §8.1 items 1–3. **🌊 א
 positive+negative; `#106`-shaped fixture proves ㉛.
 **🔻🤖 Verify:** `npm run test:run` → baseline + new, all green; **prove one new test red** by
 inverting a rule locally, then restore.
-**מה ייחשב עובד** *(processes ㉙/㉛/⑳/㉓ quoted in the step's why-comments)*. **🌊 אדוות —** **🗣️ אושר —**
+**מה ייחשב עובד** *(processes ㉙/㉛/⑳/㉓ quoted in the step's why-comments)*.
+**↳ as-built (26/08, Opus builder + 3-lens panel + fixer):** 17 additive exports, +43 tests
+(32→75 after the fix round). Deviations from this guide's sketch, each reasoned: ‏(a)
+`amberMark(rows, products, eventDate, todayIso, businessDaysUntil)` — the sketch omitted
+`eventDate`, without which trigger ② is unwritable · ‏(b) reason lines return **split parts**
+`{prefix, value, suffix, tone}` (the `changesTileSub` bidi precedent), never flat strings ·
+‏(c) a PAST-date guard on amber + outbound (`businessDaysUntil` returns 0 for past dates —
+locked by an explicit test). Panel caught + fixer fixed: the Σ/clamp fixture gap in
+`inTransitReason` (both mutations run live, each killed as the sole failure). Orchestrator's
+own mutation probe: breaking the `#11` base-set rule ⇒ 4 tests red, restore ⇒ green.
+📌 **Product corner flagged for the 🎨 gate (not locked by test on purpose):** an outbound row
+whose rows are all `ordered` with gap 0 renders NO reason sentence ("לא בכוח" — nothing false,
+nothing invented). **🌊 אדוות —** done 26/08: O-1 comments synced to approved status ·
+`knip.jsonc` untouched (2.1's exports are test-consumed, knip green). **🗣️ אושר —** 🤖 step;
+covered by the session-scope approval + the approved 3.1 acceptance list it feeds.
 
 **Step 2.2 · `src/modules/05_logistics/api.js`**
 **Files:** `src/modules/05_logistics/api.js` (+ a pure-mapper test file)
@@ -743,11 +770,40 @@ never `.update()`. Failure ⇒ throw so the UI reverts + shows the S-2 string.
 **🔻🤖 Verify:** unit tests for the pure mappers; `npm run build` (the lint-isn't-compile rule).
 **מה ייחשב עובד** *(spec §"מה אסור לנחש" #1/#3, quoted)*: ‏1. *"כל כתיבה חייבת… בדיקת מספר-שורות"*
 (here: the RPC raises and the client surfaces it — never a silent "נשמר"). ‏2. *"הדיאלוג קורא
-סטטוס מחדש בפתיחה"* (㊲). **🌊 אדוות —** **🗣️ אושר —**
+סטטוס מחדש בפתיחה"* (㊲).
+**↳ as-built (26/08, Opus builder + 3-lens panel + fixer):** zero direct writes measured
+(grep = 0 in code). Deviations, each reasoned: ‏(a) `toRpcError` EXPORTED (the task file said
+local) — exporting is what gives the mapping a unit test; single definition repo-wide verified ·
+‏(b) `listActiveProjects` orders by `project_id` deliberately NOT by event date — a DB order
+resembling the display sort would mask a screen that forgot to sort (the 30/07 uniform-data
+trap) · ‏(c) 🔴 **`getChecklist` envelope WIDENED to `{project, rows, quoteProductLines}`** —
+the panel's spec lens caught that surface-2's three empty branches (card §④/§⑨) had NO data
+source in module 5; fixed per the LogisticsTab precedent (`getQuote`+`countProductLines`),
+lazy (fires only when rows are empty), three-state (`undefined`/`null`/number — the email_log
+pattern). **Step 3.2 consumes this field — its task file was updated the same hour.** Panel
+also caught: an invented second write-failure sentence (now the locked `WRITE_FAILURE_SENTENCE`
+import) · a false repo-convention claim in the test header + the unobserved write-path mine —
+fixed with 12 wrapper tests via 04's chain harness (15→27). **🌊 אדוות —** done 26/08: dated
+knip exemption for the five consumer-less exports added to `knip.jsonc` (removal at 3.3, the
+09/08 M4 precedent) · `prompt_step_3_2.md` updated to the new envelope. **🗣️ אושר —** 🤖 step;
+covered by the session-scope approval.
 
 **Step 2.3 · 🔻👤 Phase-2 gate** — full suite green; walk the hand-computed anchors (pills 3/1/5,
 amber `#107` only, outbound 2) against the SEEDED DB via a live SQL spot-check — the numbers were
 hand-derived in Discovery (acceptance-oracle rule: never re-author them from the code being tested).
+**↳ CLOSED 26/08/2026 11:4X.** Evidence: `npm run gate` — **all module-5-relevant steps green;
+1,341 unit / 51 files = baseline 1,271 + 70 new (43 in 2.1 · 27 in 2.2), zero regressions.**
+⚠️ The gate's exit code was 1 on `check:docs-structure` alone — its 3 findings sit EXCLUSIVELY
+in `docs/specs/module_08_finance/stage0-sweeps/m8-sec7-items.md`, an uncommitted file of the
+PARALLEL M8 advisory session (rule 16: not touched; flagged to Ishay/that session; this step
+does not run in CI at all — root CLAUDE.md measured fact). Live SQL anchor walk (Israel-local
+today): pills **3·1·5** · outbound **2** · amber candidates **1** (`#15` only) · `#15` = 4 rows,
+1 ready — the spec's hand-computed contract-3, from the DB, not from the code under test.
+Orchestrator's mutation probe: `#11` rule inverted ⇒ 4 tests red ⇒ restored ⇒ green.
+**🌊 אדוות —** done: knip exemption (dated) · module CLAUDE.md born · §10 entry · commit follows
+as the step's last act. **🗣️ אושר —** Ishay's session opener scoped phases 2+3 explicitly
+("מבחינתי אם אין לך שאלות אמיתיות… תמשיך עד הסוף") — the 👤 gate rides on that standing
+approval; the full phase-2 package is in the session report he reads.
 
 ---
 
@@ -757,6 +813,13 @@ hand-derived in Discovery (acceptance-oracle rule: never re-author them from the
 Expected outcome (verify, don't assume): reuse `PermissionAwareEmpty` · `LoadingOrError`
 (`skeleton={{variant:'table'}}`) · `StatusTag` · `FilterPill` · `Ltr` · dialog primitives; new
 LOCAL `SegmentedControl` (AS-9). Present O-1 + O-4 for Ishay's nod (P13 style, one round).
+**↳ done 26/08/2026 10:29.** Components measured present: `FilterPill` · `LoadingOrError` ·
+`Ltr` · `Money` · `PermissionAwareEmpty` · `StatusTag` (+tests) and `ui/dialog.jsx`; zero
+"segmented" hits in `src/` ⇒ AS-9 confirmed (local build). **Nod round: Ishay approved ALL
+("מאשר את הכל") — O-1 · O-4 · O-5 (see §3.5) — AND both experience-briefs for 3.1/3.2** in the
+same message. ↳ Sequencing note: the door ran BEFORE the 2.3 gate (phase-2 workflow still
+running) at Ishay's explicit direction ("את צבא הסוכנים למסכים אפשר במקביל?") — approval was
+front-loaded; the build itself still waits for the phase-2 gate.
 
 **Step 3.1 · Surface 1 — `LogisticsPage.jsx`** *(🗣️ experience-brief → build → verify)*
 **What to do:** build exactly per `01_overview_approved.html` + card §①–§⑨ + S-3/S-4: header with
@@ -770,9 +833,15 @@ call-site override (AS-6) · em-dash for denied counters. The approved mockup wi
 **🔻🤖 Verify:** functional AND visual — drive the seeded screen in the preview as דנה
 (`E2E_STAFF_*`), screenshot vs mockup; state screenshots (block the network for the error state);
 bidi Range-measurement on numbers; `npm run check:bidi`.
-**מה ייחשב עובד** *(spec ✅-chapter, quoted)*: ‏1. *"פותחת `/logistics` ורואה מיד מה יוצא לפני
-שהיא שוב במשרד — ובלי ללחוץ דבר"*. ‏2. card §④: branch ① before "empty". ‏3. ⑳ amber on `#107`
-only. **🌊 אדוות —** **🗣️ אושר —**
+**מה ייחשב עובד** *(the APPROVED list, presented in the 26/08 brief and approved with it;
+sources per sentence)*: ‏1. דנה פותחת `/logistics` ורואה **בלי ללחוץ דבר** מה יוצא לפני שהיא
+שוב במשרד — שתי שורות בסעיף-היציאה (spec ✅#1). ‏2. הגלולות מציגות **3 · 1 · 5** מהמסד המזורע
+(פריט-חוזה 3 — hand-computed, never re-derived); גלולה עם 0 מושבתת-ומנומקת (㉚/S-3). ‏3. ענבר
+על "ערב השקה — קמפוס צפון" בלבד — `01WEB` לא נספר (⑳/⑧). ‏4. חוסר-הרשאה נבדק ראשון:
+projects-בלי-logistics מציג את משפט-החוסר-הרשאה, לא "התור ריק" (AR-3 · card §④-①). ‏5. לחיצה
+על כל שורה — כולל בסעיף-היציאה — פותחת את דיאלוג-הצ'קליסט (㊷).
+**🌊 אדוות —** **🗣️ אושר —** Ishay 26/08/2026 10:29 — *"מאשר את הכל"* (brief + the O-1/O-4/O-5
+nod round, one consolidated message).
 
 **Step 3.2 · Surface 2 — `ChecklistDialog.jsx`** *(🗣️ brief → build → verify)*
 **What to do:** per `02_dialog_checklist_approved.html` + card + the 25/08 arrival-column contract:
@@ -792,8 +861,15 @@ tooltip alone is invisible until hover and keyboard-inaccessible.
 **🔻🤖 Verify:** drive seeded `#107` (mark/unmark, type qty, note) — **revert every write**;
 screenshots of both variants + the banner (banner via interception if no seeded project is one
 click from ready — `#106` IS one click away: use interception, not a real write) · bidi pass.
-**מה ייחשב עובד** *(spec ✅-chapter #2–#5, quoted)*: the four sentences incl. *"פרויקט שבוטל בזמן
-שהדיאלוג פתוח — ננעל, והיא רואה למה"*. **🌊 אדוות —** **🗣️ אושר —**
+**מה ייחשב עובד** *(the APPROVED list, presented in the 26/08 brief and approved with it)*:
+‏1. על "ערב השקה": מסמנת `הוזמן`, מקלידה כמות, כותבת הערה — נשמר מיד, בלי כפתור (spec ✅#2).
+‏2. כשל-כתיבה מציג *"העדכון לא נשמר — הערך הוחזר לקודם. נסי שוב."* והערך חוזר — לעולם לא "נשמר"
+כוזב (spec ✅#4 · S-2). ‏3. פרויקט שבוטל בזמן שהדיאלוג פתוח — ננעל והיא רואה למה; `actual_qty`
+לבדו נשאר פתוח (spec ✅#5 · ㊲·㉝·㊴). ‏4. `מולא אוטומטית` רק על מספר שהמערכת מילאה; מספר מוקלד
+לעולם אינו נדרס (㉕·㊵·G8). ‏5. סימון הפריט האחרון ב"כנס פתיחת שנה" מציג את באנר-ההשלמה הירוק —
+הודעה, לא שער — מוכח ביירוט (spec ✅#3 · ⑬).
+**🌊 אדוות —** **🗣️ אושר —** Ishay 26/08/2026 10:29 — *"מאשר את הכל"* (same consolidated round;
+incl. the O-4 banner amendment this step renders).
 
 **Step 3.3 · Route swap ⚠️ shared-surface (`src/App.jsx`)**
 **Files:** `src/App.jsx`
@@ -1043,3 +1119,42 @@ adding the `apply_migration` allow rule to `.claude/settings.local.json` — his
   `logistics`, the accepted house pattern — C-2/M12). Zero unexpected findings.
 - **`docs/schema.sql` refreshed** (delta edits, cross-checked live: 23 tables · 224 columns ·
   37+12 policies · 26 functions · 3 cron jobs). db_roadmap: all 8 M5 rows → ✅ + strike entry.
+
+**26/08/2026 09:36–10:3X — Phase-2 orchestration session (Fable main + Opus agents).**
+- **1.6 closed** (gate exit 0 · 1,271/50 · anchors re-verified live) — the commit had landed in
+  the phase-1 session but the gate run + doc flip had not (session boundary split the step;
+  resume-from-disk caught it). **2.0 door: `אין`.**
+- **Ishay's mid-session directives (quoted):** agents must get explicit reading lists ("צריך
+  לכתוב מה עליהם לקרוא למשימה ומה אתה לא בטוח אם הם צריכים") · orchestrate via Workflow with
+  an agent army + adversarial verification + main-session control ("למה אתה בכלל עושה פרומטים
+  ולא וורקפלואו… עם צבא סוכנים ואימותים ובקרה שלך") · phase-3 screen agents run AFTER approval,
+  approval itself front-loaded. All three implemented.
+- **Fresh-eyes reviewer over the two 2.1/2.2 task files caught 14 real findings before dispatch**
+  (worst: `toRpcError` not exported from 06's api · outbound window missing its lower bound —
+  past-date active projects would enter · knip dead-code gate would fail on consumer-less
+  exports · flat number-in-Hebrew strings vs the split-parts bidi law). Task files fixed, THEN
+  the phase-2 workflow launched (2 Opus builders → 3 read-only adversarial lenses each → fix
+  agents). Verifiers are barred from mutating source and from trusting builder reports; empty
+  findings declared legitimate. Main session re-verifies everything at the 2.3 gate (mutation
+  probe, full gate, live SQL anchors) before commit.
+- **Phase-3 door (3.0) ran EARLY at Ishay's direction, and he approved the full package
+  ("מאשר את הכל"):** O-1 · O-4 (incl. banner-body correction — the drawn text contradicted ㊴) ·
+  O-5 (the units-form family — "שרוכים" is not data-derivable) · both experience-briefs. The
+  approved acceptance lists were written into steps 3.1/3.2 above. **`הנחתי` register:** the
+  undrawn count-forms were proposed as `הנחתי` and are now Ishay-approved (O-5) — no open
+  assumptions from this session.
+- **Phase-2 workflow landed (10 agents, 0 errors): 11 panel findings — 4 actionable, all fixed;
+  7 minor, all addressed or triaged.** The real catches: `inTransitReason`'s Σ/clamp had no
+  locking fixture (fixer ran BOTH mutations live — each killed as the sole failure) · api.js
+  invented a second write-failure sentence (→ the locked S-2 import) · surface-2's three empty
+  branches had NO data source (→ `getChecklist` widened per the spec, the LogisticsTab
+  precedent) · a false repo-convention claim left the write-path mine unobserved (→ 12 wrapper
+  tests via 04's chain harness). Verifier discipline held: zero findings contradicted a
+  recorded ruling; one product corner was correctly ESCALATED instead of test-frozen (an
+  outbound row with all rows `ordered` and gap 0 shows no reason line — flagged to the 🎨
+  gate). Orchestrator adds: own mutation probe on the `#11` base-set rule (4 tests red →
+  restored green) · dated knip exemption for api.js's five consumer-less exports (removal at
+  3.3) · `src/modules/05_logistics/CLAUDE.md` written NOW rather than at close —
+  `check:context` demands it the moment the folder exists, and it auto-loads for the phase-3
+  builders. Two premature 3.2 stubs tripped knip's unused-files check and were deleted until
+  the phase-3 launch (lesson: scaffolding follows the commit, not the build).

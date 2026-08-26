@@ -25,7 +25,7 @@
 ## Current State (snapshot — rewritten, not appended)
 <!-- target ~15 lines · no internal dates (F4) · over budget? compress / move to journal -->
 
-**Where we stand:** Modules **1** (users/permissions), **2** (customers), **3** (quotes) and **4** (hostesses + Smart Match) are closed, merged to `dev`, and promoted to `main` (module 4 is live in production — PR #26, merge `6a7bde9`). **Module 6 (projects) is CLOSED [YES] and MERGED to `dev`** — typed DoD echo signed, PR #41, merge `40fb973` (verified: branch `ishay/module-6-projects` is a strict ancestor of `origin/dev`, module 6's migration + `06_projects/api.js` present on `dev`). Branch `ishay/module-6-projects` is now dead (rule 10). **Active module: 5 (logistics) — Discovery COMPLETE and the BLUEPRINT IS APPROVED; branch `ishay/module-5-logistics` carries docs-only commits, zero build commits.** The build map is **`docs/micro_guides/module-5.md`** (approved, Active step 1.0 — the next "תמשיך לבנות" session opens Phase 1: four migrations + the two-mode demo seed). The approved spec set lives in `docs/specs/module_05_logistics/` (`processes-approved.md` is the only file allowed to state a product rule — **42 rulings ①–㊷**; `screens-approved.md` — 2 cards, **content-approved**, incl. the arrival-column contract; `design-contract` · `data-set` (+§9 seed additions) · `world-sources` · `discovery-log`). Mockups: `docs/mockups/logistics-screen/approved/` — appearance final. `db_roadmap` carries **`M5-1`…`M5-8`** (M5-6 widened to four columns + the arrival stamp; M5-8 carries the `actual_qty_autofilled` flag). **4 ripples into merged code** (M3's RPC, M6's RPC, M6's notes tab, M6's dialog/`AR-4`). 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes (the §7.50 quote lock makes delete-recreate impossible — two-mode design, Ishay-approved). Removal is *typing `0`* in module 6's existing dialog (㊳); `M = 2`.
+**Where we stand:** Modules **1** (users/permissions), **2** (customers), **3** (quotes) and **4** (hostesses + Smart Match) are closed, merged to `dev`, and promoted to `main` (module 4 is live in production — PR #26, merge `6a7bde9`). **Module 6 (projects) is CLOSED [YES] and MERGED to `dev`** — typed DoD echo signed, PR #41, merge `40fb973` (verified: branch `ishay/module-6-projects` is a strict ancestor of `origin/dev`, module 6's migration + `06_projects/api.js` present on `dev`). Branch `ishay/module-6-projects` is now dead (rule 10). **Active module: 5 (logistics) — Phase 1 EXECUTED AND COMMITTED** (`eb17b19`: four migrations live + verified, two-mode demo seed live — projects `#13/#14/#15` born via the real quote→approve path, refresh delta 0; phase-1 gate closed: `npm run gate` exit 0, **1,271 unit baseline**; live anchors match the spec's hand-computed contract-3 — pills 3·1·5 · outbound 2 · amber on the third demo project only). **Phase 2 (queue logic + api) is IN FLIGHT via an agent workflow** — 2 Opus builders (disk task-files with must/unsure reading lists) → 3 read-only adversarial lenses each → fix agents; the main session re-verifies at the 2.3 gate (mutation probe · full gate · live SQL) before committing. **Phase-3 door already CLOSED with Ishay's approvals in hand** (O-1/O-4/O-5 wordings + both experience-briefs, "מאשר את הכל") — the screen army launches the moment phase 2 passes the gate; its task files are ready in the session scratchpad. The build map + active step: **`docs/micro_guides/module-5.md`** (§1 header). The approved spec set lives in `docs/specs/module_05_logistics/` (`processes-approved.md` is the only file allowed to state a product rule — **42 rulings ①–㊷**; `screens-approved.md` — 2 cards, **content-approved**, incl. the arrival-column contract; `design-contract` · `data-set` (+§9 seed additions) · `world-sources` · `discovery-log`). Mockups: `docs/mockups/logistics-screen/approved/` — appearance final. `db_roadmap` carries **`M5-1`…`M5-8`** (M5-6 widened to four columns + the arrival stamp; M5-8 carries the `actual_qty_autofilled` flag). **4 ripples into merged code** (M3's RPC, M6's RPC, M6's notes tab, M6's dialog/`AR-4`). 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes (the §7.50 quote lock makes delete-recreate impossible — two-mode design, Ishay-approved). Removal is *typing `0`* in module 6's existing dialog (㊳); `M = 2`.
 ⚠️ **Not independently re-verified this pass** (module-6's own docs, `PROJECT_MASTER §6/§7` tallies, `STATUS.md`) — re-check before citing an exact count from any of them; don't assume this line has already done it.
 `docs/schema.sql` freshly measured: **23 tables** (`grep -c '^create table' docs/schema.sql`).
 
@@ -44,6 +44,67 @@
 ---
 
 ## Session Log (newest first)
+
+### 26/08/2026 10:5X–11:2X — Module 8 Discovery opened: Stage 0 complete (runs parallel to the m5 build)
+- **What:** `module-discovery` executed from Stage 0 for module 8 (finance & event closing), on Ishay's ⑥0 prompt. Produced `docs/specs/module_08_finance/`: `processes-approved.md` (requirements ledger — 141 rows: 97 C5/C6 after declared merges + 28 contracts + 16 live-DB findings; 20 open items distilled for rulings), `discovery-log.md`, and `stage0-sweeps/` (6 raw evidence files). Four parallel read-only sweep agents (Workflow `wf_5a4e86d7-5a9`, 921K tokens, 4/4 landed). Live DB verified via MCP (project `yfeovxppnfoafmfbdfvh`) — unlike the 26/08 00:12 docs-sync which ran unauthenticated.
+- **Why it matters:** m8's server side turned out ALREADY BUILT and 100% unused (`set_project_finance_fields` gated 'כספים' — 0 callers; `finance` bucket + 4 policies — 0 objects; invoice/salary mail templates — 0 sends ever). Core gaps: no RPC moves projects out of `awaiting_invoice`/`awaiting_payment`; `feedback_status` values `completed`/`no_response` have no writer; ghost columns `assignments.personal_bonus`/`salary_report_id` (0 touches, 27/27 rows at defaults); live PII gap — hostess bank columns readable at 'דיילות' view (open half of §7.63); `deriveCustomerMetrics` averages ALL scored projects and the finance RPC has no status gate, so the defect is live-reachable.
+- **Guide staleness fixed:** `module_08_finance.md` §② listed §7.57 as open — the register closed it 12/07/2026 (manual salary report; reconciliation, register wins). Also found beyond the launch prompt's §7 list: §7.79/§7.80 open, §7.92 closed (m8 sends the feedback MAIL manually from the closing window; the SURVEY send is m6's, §7.39).
+- **Broke:** nothing — read-only session except the new spec folder; no DB writes, no migrations. Rule-16: STATUS/LOG entries were briefly queued in the session scratchpad while the m5 session's mtimes were fresh; landed once mtimes aged past the 10-min window, files left UNCOMMITTED (m5 holds pending lines in both — a by-name commit would sweep them).
+- **Next:** Ishay's Stop-1 answer → Stage 1-א (process map + surface list M; first boundary question: salary-report screen m8 vs m11).
+
+### 26/08/2026 09:3X–10:4X — M5 phase-2 orchestration: 1.6 closed from disk, agent-army workflow launched, phase-3 approvals front-loaded
+
+**Resume-from-disk catch:** STATUS said "1.6 pending (gate+commit)" while commit `eb17b19` already
+existed — the phase-1 session died between committing and flipping the docs. Closed 1.6 with fresh
+evidence (`npm run gate` exit 0 · 1,271/50 = baseline · anchors re-verified live against the seeded
+DB: pills 3·1·5, outbound 2 = `#13` today + `#14` next business day, amber `#15` only, checklist
+4 rows 1/4). 2.0 door swept — `אין`.
+
+**Ishay's three mid-session directives, all implemented:** ‏(1) every agent task-file opens with an
+explicit reading list — MUST-read in order + "probably not needed, open only on a gap" ·
+‏(2) orchestration via the Workflow tool ("צבא סוכנים ואימותים ובקרה שלך") — phase-2 workflow =
+2 Opus builders → 3 read-only adversarial lenses per step (spec-conformance · test-adequacy ·
+repo-gates) → fix agents; verifiers barred from mutating source and from trusting builder reports,
+empty-findings declared legitimate · ‏(3) phase-3 screen agents run AFTER approval (his own 🗣️
+gate + they build on phase-2 exports), but the approval itself was front-loaded: the O-1/O-4/O-5
+nod round + both experience-briefs presented mid-flight and approved in one word ("מאשר את הכל",
+10:29) — recorded in the guide §3.5/§3.7 + steps 3.1/3.2 (approved acceptance lists written beside
+the steps) + a dated note in `screens-approved.md`'s header. **O-5 is new:** the drawn
+*"80 שרוכים עדיין בדרך"* is not data-derivable ("שרוכים" exists nowhere in the data) — approved
+units-form family replaces it; O-4 also CORRECTED the drawn banner body (*"מצב, כמות או הערה"*
+contradicted ㊴).
+
+**Fresh-eyes reviewer over the two build task-files caught 14 real findings pre-dispatch** (the
+worst: `toRpcError` not exported from 06's api — the prompt ordered importing it · outbound window
+had no lower bound — `businessDaysUntil` returns 0 for past dates, stale active projects would
+enter · knip dead-code gate fails on consumer-less exports (house pattern: dated `knip.jsonc`
+exemption, orchestrator's job at the gate, NOT the builders') · flat number-in-Hebrew strings vs
+the split-parts bidi law). All folded into the task files BEFORE dispatch. Phase-3 task files
+(3.1/3.2) written and ready — incl. the ownership split that avoids tree races (3.2 owns
+ChecklistDialog+SegmentedControl; stubs to be created at launch so 3.1's import resolves) and the
+"a finding contradicting a recorded ruling is a CONFLICT question, not a fix" verifier rule
+(Ishay's own concern, the AR-4 class).
+
+**Phase 2 LANDED and gated (11:4X).** Workflow: 10 agents, 0 errors, ~2.1M subagent tokens.
+Builders' honest deviations all accepted with reasons (amberMark signature gained `eventDate` —
+the guide's sketch was unwritable · `toRpcError` exported for testability · `listActiveProjects`
+ordered by `project_id` to avoid masking a screen that forgot to sort). Panel: 11 findings,
+4 actionable — all fixed with LIVE mutation proofs (the fixer ran both `inTransitReason`
+mutations; each died as the sole failure): the invented write-failure sentence → the locked S-2
+import · the missing empty-branch discriminator → `getChecklist` widened to
+`{project, rows, quoteProductLines}` (three-state, lazy — step 3.2's task file updated same
+hour) · the false test-header convention + unobserved write mine → 12 chain-harness wrapper
+tests. Zero findings contradicted a recorded ruling; one product corner escalated to the 🎨 gate
+instead of being frozen by test (outbound row, all `ordered`, gap 0 ⇒ no reason sentence).
+Orchestrator's own gate: mutation probe on the `#11` rule (4 red → restored green) ·
+`src/modules/05_logistics/CLAUDE.md` written now (check:context demands it at folder-creation,
+and it auto-loads for phase-3 builders) · dated knip exemption (removal at 3.3) · **gate:
+1,341/51 green = baseline 1,271 + 70 new, zero regressions** — exit 1 came ONLY from
+`check:docs-structure` on the parallel M8 session's uncommitted sweep file (3 findings, all in
+`docs/specs/module_08_finance/stage0-sweeps/m8-sec7-items.md`; rule 16 — untouched, flagged to
+Ishay; that step runs nowhere in CI). Live 2.3 anchors re-walked: 3·1·5 · 2 · amber-`#15` ·
+4 rows 1/4. Lesson banked: scaffolding stubs follow the commit, not the build (two premature
+stubs tripped knip's unused-files check and were deleted until launch).
 
 ### 26/08/2026 — M8 step guide gets the prompt template; parallel-Discovery question answered (advisory session)
 
