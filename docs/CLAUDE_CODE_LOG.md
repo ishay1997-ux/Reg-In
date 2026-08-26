@@ -56,6 +56,9 @@ module guides (`2)` in modules 2–4/7–12 · `⑥2)` in 5–6), but the phrase
 on the PHRASE, never the number, so one edit serves all current and future modules. Also updated
 the "What ⑥2 is" paragraph so it no longer describes pasting as the delivery mechanism (a pasted
 copy still wins on freshness stamps). File: `.claude/skills/module-build/SKILL.md` (2 edits).
+**↳ Follow-up (his ask): the `⑥1)/⑥2)/⑥3)` prefix standardized in the REMAINING module guides**
+(7–12 — six files, three labels each, verified 3/3 in every file); closed modules 2–4 left as
+history, which is why the skill's anchor stays the phrase, not the number.
 
 ### 26/08/2026 00:15–01:3X — Module-5 Phase 1 EXECUTED: 1.0–1.5 done and verified, 1.6 gate in flight
 
