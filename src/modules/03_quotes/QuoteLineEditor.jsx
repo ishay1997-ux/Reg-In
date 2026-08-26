@@ -146,7 +146,11 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
                 <tr key={line.key} className="border-b border-slate-100">
                   <td className="py-2 pl-2">
                     <Select
-                      value={line.sku || undefined}
+                      // `''` ולא `undefined` — שורה חדשה נולדה uncontrolled והפכה controlled
+                      // ברגע הבחירה (4 אזהרות-React בכל ריצת-בדיקות). ערך-שורש ריק ב-Radix =
+                      // "אין בחירה" (placeholder), והפקד controlled מהרגע הראשון.
+                      // נפרע 27/08/2026 — חצי (ב) של `🚧 מ10 ← מ3` ברשם-החובות.
+                      value={line.sku || ''}
                       disabled={disabled}
                       onValueChange={(sku) => updateLine(line.key, repriceLine(line, { sku }))}
                     >
