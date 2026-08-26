@@ -14,10 +14,16 @@
 //   על ההכנסה" מחיל את הנחת-ההצעה בצד-הלקוח (computeScopeChangeMoney דרך changesMoneySummary),
 //   והשורה "אחרי הנחת הלקוח" מוצגת רק כשההנחה הוחלה בפועל.
 //
-// עמודות-המקור (quote_service_line_id / project_change_id) — NULL בכל השורות היום ושום דבר
-// אינו ממלא אותן (as-built 3.3⑥) ⇒ מקור-השורה אינו מוצג, NULL הוא המצב הרגיל, ואין אזהרה.
+// עמודות-המקור (quote_service_line_id / project_change_id) — מקור-השורה אינו מוצג כאן.
+// 🔶 עודכן 26/08/2026 (מודול 5, צעד 4.3): הנימוק "NULL בכל השורות" **כבר אינו נכון לשתיהן**.
+// · quote_service_line_id — M5-3 נתן לה כותב (approve_quote_and_create_project נכתבה מחדש)
+//   ומילא למפרע את הישנות. **נמדד חי: 16/16 שורות מלאות** (היה 0/6 כשההערה נכתבה).
+// · project_change_id — עדיין NULL בכל השורות, **ובכוונה**: הכרעה ㉗ קובעת ששורה שנולדה
+//   משינוי-תכולה אינה נושאת מצביע, וזה חוב-דיווח מוצהר (`🚧 מ11 ← מ5`).
+// ⇒ ההחלטה התצוגתית לא השתנתה — מקור-השורה עדיין אינו מוצג ואין אזהרה — אבל **הסיבה כן**:
+//   זו בחירה מוצרית (מ6 אינו מציג מקור), ולא "אין מה להציג".
 
-import { useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useState } from 'react'
 import StatTile from '@/components/StatTile'
 import StatusTag from '@/components/StatusTag'
 import PermissionAwareEmpty from '@/components/PermissionAwareEmpty'
@@ -44,6 +50,7 @@ import {
   LEGAL_EMPTY_TITLE,
   LEGAL_EMPTY_DETAIL,
   NO_PERMISSION_SENTENCE,
+  TAB_NO_PERMISSION_SENTENCE,
   BROKEN_EMPTY_DETAIL,
   LOAD_FAILURE_DETAIL,
   MONEY_HIDDEN_SENTENCE,
@@ -51,6 +58,7 @@ import {
   HISTORY_LEAD,
   FROZEN_PRICE_SENTENCE,
 } from '@/lib/projectLogistics'
+import { useAuth } from '@/contexts/AuthContext'
 import { getProjectLogistics, getProjectChanges, getProjectQuoteMeta } from './api'
 import { getQuote, getPricingCatalog } from '@/modules/03_quotes/api'
 
@@ -59,6 +67,11 @@ import { getQuote, getPricingCatalog } from '@/modules/03_quotes/api'
 // עניינו של המאחד (מדווח בדוח-הסשן).
 export default function LogisticsTab({ project }) {
   const projectId = project?.project_id
+  // 🔴 המבחין הראשון — **ההרשאה שלה ללוגיסטיקה**, ולא ההצעה. `logistics` חסומה מחזירה
+  // אפס שורות עם `error: null`, זהה-בייט ל"ריק כדין"; מפת-ההרשאות היא הדרך היחידה
+  // להבדיל. בלעדיה חסימה תקינה הוצגה כ**תקלה במערכת**.
+  const { permissions } = useAuth()
+  const canReadLogistics = ['view', 'edit'].includes(permissions?.['לוגיסטיקה'])
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -91,7 +104,11 @@ export default function LogisticsTab({ project }) {
 
         let kind = null
         if (logisticsRows.length === 0) {
-          if (!project?.quote_id) {
+          if (!canReadLogistics) {
+            // חסומה על לוגיסטיקה ⇒ אפס שורות אינו "ריק" ואינו "תקלה" — הוא חוסר-הרשאה,
+            // וזה נכון **בלי קשר** למה שההצעה מכילה. השער הזה קודם לכל האחרים.
+            kind = 'noPermissionLogistics'
+          } else if (!project?.quote_id) {
             // אין הצעה מקושרת ⇒ אין שורות-מוצר שיכלו להוליד לוגיסטיקה — ריק כדין (`הנחתי`).
             kind = 'legal'
           } else {
@@ -171,6 +188,12 @@ export default function LogisticsTab({ project }) {
           detail={error}
           onRetry={refresh}
           testId="logistics-state-error"
+        />
+      ) : emptyKind === 'noPermissionLogistics' ? (
+        <PermissionAwareEmpty
+          state="noPermission"
+          title={TAB_NO_PERMISSION_SENTENCE}
+          testId="logistics-state-no-permission-logistics"
         />
       ) : emptyKind === 'noPermission' ? (
         <PermissionAwareEmpty
@@ -309,6 +332,10 @@ function ImpactTile({ error, hasChanges, hidden, money }) {
   )
 }
 
+// 🔒 תווית תת-שורת-ההערה (㉒). הקבוע יושב כאן ולא ב-`src/lib/projectLogistics.js` כי
+// האדווה הזאת מצומצמת לקובץ הזה; אתר-קריאה שני יעביר אותו לספרייה (כלל 14).
+const NOTE_LABEL = 'הערת הלוגיסטיקה:'
+
 // טבלת-הפריטים: 4 עמודות, קריאה בלבד. תקציב-הצבע: אפס שורות אדומות; ענבר רק על
 // "הוגדל מ-…" (הגדלה יוצרת חוסר); הקטנה אפורה (עובדה).
 function MainTable({ rows, changes, productName }) {
@@ -330,51 +357,72 @@ function MainTable({ rows, changes, productName }) {
           {sorted.map((row) => {
             const note = plannedChangeNote(row.planned_qty, lastBySku.get(row.sku))
             const statusLabel = LOGISTICS_STATUS_LABELS[row.item_status]
+            // ㉒ — ההערה שמנהלת הלוגיסטיקה כתבה במסך שלה (מ5), כאן לקריאה בלבד.
+            // הצורה שהוכרעה 26/08/2026: **תת-שורה ברוחב מלא מתחת לשורת-הפריט**, ולא
+            // עמודה חמישית — עמודה הייתה מצרה את ארבע הקיימות ומציגה "—" ברוב השורות.
+            // 🔴 ושורה בלי הערה אינה מייצרת תת-שורה כלל: לא מקף, לא תא ריק.
+            const noteText = String(row.notes ?? '').trim()
             return (
-              <tr
-                key={`${row.sku}-${row.serial_number}`}
-                className="border-b border-slate-100"
-                data-testid={`logistics-row-${row.sku}-${row.serial_number}`}
-              >
-                <td className="px-2.5 py-2.5">
-                  <div className="font-semibold text-slate-800">{productName(row.sku)}</div>
-                  {/* מקור-השורה אינו מוצג — עמודות-המקור NULL בכל השורות היום (as-built ⑥). */}
-                  <div className="mt-0.5 text-[11.5px] text-slate-500">
-                    <Ltr>{row.sku}</Ltr>
-                  </div>
-                </td>
-                <td className="px-2.5 py-2.5">
-                  <div className="text-[13.5px] font-bold text-slate-800">
-                    <Ltr>{String(row.planned_qty)}</Ltr>
-                  </div>
-                  {note && (
-                    <div
-                      className={cn(
-                        'text-[11px]',
-                        note.tone === 'hint' ? 'font-semibold text-amber-700' : 'text-slate-400',
-                      )}
-                      data-testid={`logistics-change-note-${row.sku}-${row.serial_number}`}
-                    >
-                      {note.tone === 'hint' && '⚠ '}
-                      {note.text}
-                      <Ltr>{String(note.previous)}</Ltr>
-                      {note.dayMonth && (
-                        <>
-                          {' · '}
-                          <Ltr>{note.dayMonth}</Ltr>
-                        </>
-                      )}
+              <Fragment key={`${row.sku}-${row.serial_number}`}>
+                <tr
+                  // הקו התחתון עובר לתת-שורה כשהיא קיימת — אחרת קו היה מפריד את ההערה
+                  // מהפריט שהיא שייכת לו, וההצמדה היא כל העניין בצורה שהוכרעה.
+                  className={noteText ? '' : 'border-b border-slate-100'}
+                  data-testid={`logistics-row-${row.sku}-${row.serial_number}`}
+                >
+                  <td className="px-2.5 py-2.5">
+                    <div className="font-semibold text-slate-800">{productName(row.sku)}</div>
+                    {/* מקור-השורה אינו מוצג — בחירה מוצרית, לא היעדר דאטה. ר' הערת-הראש. */}
+                    <div className="mt-0.5 text-[11.5px] text-slate-500">
+                      <Ltr>{row.sku}</Ltr>
                     </div>
-                  )}
-                </td>
-                <td className="px-2.5 py-2.5">
-                  <Ltr>{String(row.actual_qty ?? 0)}</Ltr>
-                </td>
-                <td className="px-2.5 py-2.5">
-                  {/* קריאה בלבד — מי שמעדכנת היא מנהלת הלוגיסטיקה, במסך שלה (מ5). */}
-                  <StatusTag label={statusLabel} tone={resolveLogisticsTone(statusLabel)} />
-                </td>
-              </tr>
+                  </td>
+                  <td className="px-2.5 py-2.5">
+                    <div className="text-[13.5px] font-bold text-slate-800">
+                      <Ltr>{String(row.planned_qty)}</Ltr>
+                    </div>
+                    {note && (
+                      <div
+                        className={cn(
+                          'text-[11px]',
+                          note.tone === 'hint' ? 'font-semibold text-amber-700' : 'text-slate-400',
+                        )}
+                        data-testid={`logistics-change-note-${row.sku}-${row.serial_number}`}
+                      >
+                        {note.tone === 'hint' && '⚠ '}
+                        {note.text}
+                        <Ltr>{String(note.previous)}</Ltr>
+                        {note.dayMonth && (
+                          <>
+                            {' · '}
+                            <Ltr>{note.dayMonth}</Ltr>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-2.5 py-2.5">
+                    <Ltr>{String(row.actual_qty ?? 0)}</Ltr>
+                  </td>
+                  <td className="px-2.5 py-2.5">
+                    {/* קריאה בלבד — מי שמעדכנת היא מנהלת הלוגיסטיקה, במסך שלה (מ5). */}
+                    <StatusTag label={statusLabel} tone={resolveLogisticsTone(statusLabel)} />
+                  </td>
+                </tr>
+                {noteText ? (
+                  <tr
+                    className="border-b border-slate-100"
+                    data-testid={`logistics-note-${row.sku}-${row.serial_number}`}
+                  >
+                    <td
+                      colSpan={4}
+                      className="px-2.5 pb-2.5 text-[11.5px] leading-relaxed text-slate-500"
+                    >
+                      <span className="font-semibold text-slate-600">{NOTE_LABEL}</span> {noteText}
+                    </td>
+                  </tr>
+                ) : null}
+              </Fragment>
             )
           })}
         </tbody>

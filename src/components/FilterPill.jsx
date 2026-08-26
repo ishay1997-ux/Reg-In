@@ -22,7 +22,7 @@ export default function FilterPill({ on, tone, onClick, disabled, title, childre
       ? 'border-amber-200 bg-amber-50 text-amber-700 font-semibold'
       : 'border-teal-200 bg-teal-50 text-teal-700 font-semibold'
 
-  return (
+  const pill = (
     <Button
       type="button"
       variant="outline"
@@ -38,4 +38,25 @@ export default function FilterPill({ on, tone, onClick, disabled, title, childre
       {children}
     </Button>
   )
+
+  // 🔴 **גלולה מושבתת: ה-`title` על הכפתור לבדו לעולם לא יופיע בהינף-עכבר.**
+  // ‏`Button` המשותף נושא `disabled:pointer-events-none` במחלקות-הבסיס שלו
+  // (`src/components/ui/button.jsx`), ואלמנט שאינו ניתן-לפגיעה אינו מקבל hit-test —
+  // ולכן הדפדפן אינו מרנדר לו tooltip **בכלל**. ⇒ ㉚ *("מושבת ומנומק, לא מוסתר")*
+  // הייתה מסופקת חצי בכל המערכת: הפקד נשאר על המסך, והנימוק לא היה נגיש לאיש.
+  //
+  // התיקון בשכבה המשותפת ולא באתר-קריאה: **עטיפת-`span` שנושאת את אותו `title`**
+  // ומקבלת את ההינף במקום הכפתור. למה דווקא זה ולא `aria-disabled` + שומר-לחיצה:
+  // ‏`aria-disabled` היה מוציא את הכפתור מ-`disabled` אמיתי, מחזיר אותו לסדר-הטאבים
+  // ומשנה את מה שקורא-מסך מכריז — שינוי-סמנטיקה חוצה-מערכת בשביל tooltip.
+  // ה-`span` אינו מוקד, אינו נושא role, ואינו נושא סגנון ⇒ **המראה, סדר-הטאבים
+  // והסמנטיקה נשארים בדיוק כפי שהיו**; ה-`title` נשאר גם על הכפתור עצמו.
+  if (disabled && title) {
+    return (
+      <span className="inline-flex" title={title}>
+        {pill}
+      </span>
+    )
+  }
+  return pill
 }
