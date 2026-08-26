@@ -1281,3 +1281,20 @@ Unchanged from module 1: Supabase Auth (Google), session in `sessionStorage`, `c
   `RemovalButton` sub-component, matching this file's existing habit).
 - ⏸️ **Owed:** the live visual pass on the real screen. DOM, semantics and behaviour are proven;
   **how it looks has not been seen.** Recorded rather than glossed.
+
+### Entry S — `27/08/2026 00:3X` · module-5 closing audit: the LogisticsTab permission gate RATIFIED, its loose threads closed
+
+- **Context:** commit `bde057a` (26/08 22:56) gave `LogisticsTab` a permissions-map FIRST
+  discriminator (`canReadLogistics` → `noPermissionLogistics` branch, testid
+  `logistics-state-no-permission-logistics`, sentence `TAB_NO_PERMISSION_SENTENCE`) — landed
+  after the last recorded approval and documented nowhere. The module-5 closing audit surfaced
+  it as its C-2 finding; **Ishay ratified 27/08/2026 ("בצע הכל לפי המלצה שלך")**.
+- **Closed with the ratification:** ‏(a) `e2e/projects.spec.js:122` updated — it pinned the OLD
+  testid/sentence and was the suite's one red; now asserts the new honest branch AND the old
+  branch's absence (full e2e re-run: 143 passed / 0 failed) · ‏(b) the `react-hooks/exhaustive-deps`
+  warning the commit left (`canReadLogistics` missing from the load-effect deps) — fixed with a
+  why-comment · ‏(c) this entry is the write-back the commit lacked.
+- **Behaviour note for future readers:** a role blocked on 'לוגיסטיקה' now sees the logistics-
+  specific no-permission sentence; the quote-discriminator branch (`logistics-state-no-permission`,
+  the *"פריטי ההצעה"* sentence) still exists and fires only for quote-blocked-but-logistics-readable
+  readers. Two branches, two sentences, both honest — do not "unify" them.

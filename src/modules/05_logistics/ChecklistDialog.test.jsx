@@ -19,6 +19,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import ChecklistDialog from './ChecklistDialog'
+// הדיאלוג צורך useToast (ערוץ-הכשל של שמירת-הסגירה) ⇒ כל רינדור עטוף ב-Provider האמיתי.
+import { ToastProvider } from '@/components/ToastProvider'
 import { getChecklist, listProducts, updateLogisticsItem } from './api'
 import {
   LEGAL_EMPTY_TITLE,
@@ -106,7 +108,11 @@ async function renderDialog({ envelope = checklist(), permissions } = {}) {
   authState.permissions = permissions ?? { לוגיסטיקה: 'edit' }
   getChecklist.mockResolvedValue(envelope)
   listProducts.mockResolvedValue(PRODUCTS)
-  render(<ChecklistDialog projectId={15} open onOpenChange={vi.fn()} />)
+  render(
+    <ToastProvider>
+      <ChecklistDialog projectId={15} open onOpenChange={vi.fn()} />
+    </ToastProvider>,
+  )
   await waitFor(() => expect(getChecklist).toHaveBeenCalledWith(15))
 }
 
@@ -309,7 +315,11 @@ describe('ChecklistDialog — הבטחת "נשמר מיד" מול סגירת ה�
     getChecklist.mockResolvedValue(checklist())
     listProducts.mockResolvedValue(PRODUCTS)
     updateLogisticsItem.mockResolvedValue({ row: row({ notes: 'נשלח לבית-הדפוס' }) })
-    render(<ChecklistDialog projectId={15} open onOpenChange={onOpenChange} />)
+    render(
+      <ToastProvider>
+        <ChecklistDialog projectId={15} open onOpenChange={onOpenChange} />
+      </ToastProvider>,
+    )
     await screen.findByTestId('checklist-row-B-SAT-LAN-1')
 
     const note = screen.getByTestId('checklist-note-B-SAT-LAN-1')
@@ -324,6 +334,97 @@ describe('ChecklistDialog — הבטחת "נשמר מיד" מול סגירת ה�
     expect(updateLogisticsItem).toHaveBeenCalledWith(
       expect.objectContaining({ sku: 'B-SAT-LAN', changes: { notes: 'נשלח לבית-הדפוס' } }),
     )
+  })
+
+  // 🔴 הענף השני של אותה הבטחה (ממצא אודיט-הסגירה 26/08/2026): שמירת-הסגירה **נכשלת** אחרי
+  // שהדיאלוג פורק ⇒ שורת-השגיאה של השורה כבר לא קיימת, ובלי ערוץ חלופי הכשל נבלע והערך
+  // אובד בשקט — בדיוק ה"נשמר" הכוזב שהמודול נבנה נגדו. הערוץ: טוסט-שגיאה מתמיד.
+  it('שמירת-סגירה שנכשלה אחרי הפירוק — מדווחת בטוסט-שגיאה, לא נבלעת', async () => {
+    authState.permissions = { לוגיסטיקה: 'edit' }
+    getChecklist.mockResolvedValue(checklist())
+    listProducts.mockResolvedValue(PRODUCTS)
+    let rejectSave
+    updateLogisticsItem.mockImplementation(
+      () =>
+        new Promise((_, reject) => {
+          rejectSave = reject
+        }),
+    )
+    const { rerender } = render(
+      <ToastProvider>
+        <ChecklistDialog projectId={15} open onOpenChange={vi.fn()} />
+      </ToastProvider>,
+    )
+    await screen.findByTestId('checklist-row-B-SAT-LAN-1')
+
+    const note = screen.getByTestId('checklist-note-B-SAT-LAN-1')
+    fireEvent.change(note, { target: { value: 'הערה שתאבד' } })
+    fireEvent.blur(note)
+    await waitFor(() => expect(updateLogisticsItem).toHaveBeenCalled())
+
+    // הדיאלוג נסגר בזמן שהשמירה עוד באוויר — הגוף פורק, aliveRef כבה.
+    rerender(
+      <ToastProvider>
+        <ChecklistDialog projectId={15} open={false} onOpenChange={vi.fn()} />
+      </ToastProvider>,
+    )
+    // ועכשיו השמירה נכשלת. בלי התיקון: אין שום זכר לכשל על המסך.
+    rejectSave(new Error('network down'))
+    // תקלת-רשת בלי code ⇒ המשפט הנעול S-2, עם שם-הפריט כזיהוי.
+    expect(await screen.findByText(/שרוך סאטן.*העדכון לא נשמר/)).toBeInTheDocument()
+  })
+
+  // כרטיס §② (שורת "מדד השיבוץ"): *"בלעדיו סימון הפריט האחרון לא יקדם את הפרויקט; זה נאמר
+  // בהודעה ברגע שזה קורה"* — ההשמטה שנתפסה באודיט-הסגירה (C-3) ונבנתה בהכרעת-ישי 27/08/2026.
+  it('סימון הפריט האחרון כשחסרה דיילת — באנר-ענבר "לא עבר למוכן לביצוע", ולא הבאנר הירוק', async () => {
+    const almostReady = [
+      row({
+        sku: 'B-ECO-TAG',
+        planned_qty: 50,
+        actual_qty: 50,
+        item_status: 'ready',
+        actual_arrival_date: '2026-08-24',
+      }),
+      row({ sku: 'B-SAT-LAN', planned_qty: 150, actual_qty: 20, item_status: 'ordered' }),
+    ]
+    await renderDialog({ envelope: checklist({ rows: almostReady }) })
+    await screen.findByTestId('checklist-row-B-SAT-LAN-1')
+
+    // ה-RPC מחזיר את השורה מוכנה — אבל הפרויקט נשאר `in_progress` (האיוש חסר; הטריגר דורש שניהם).
+    updateLogisticsItem.mockResolvedValue({
+      row: row({
+        sku: 'B-SAT-LAN',
+        planned_qty: 150,
+        actual_qty: 150,
+        item_status: 'ready',
+        actual_qty_autofilled: true,
+      }),
+      project_status: 'in_progress',
+    })
+    fireEvent.click(screen.getByTestId('checklist-status-B-SAT-LAN-1-ready'))
+
+    const hold = await screen.findByTestId('checklist-banner-staffing-hold')
+    expect(hold).toHaveTextContent(
+      'כל הפריטים מוכנים — אך הפרויקט לא עבר ל"מוכן לביצוע": צוות הדיילות טרם הושלם.',
+    )
+    // ולא הבאנר הירוק — הפרויקט באמת לא התקדם.
+    expect(screen.queryByTestId('checklist-banner-complete')).toBeNull()
+
+    // הודעת-רגע, לא מדד קבוע: שמירת הערה רגילה אחריה מכבה את הבאנר.
+    updateLogisticsItem.mockResolvedValue({
+      row: row({
+        sku: 'B-SAT-LAN',
+        planned_qty: 150,
+        actual_qty: 150,
+        item_status: 'ready',
+        notes: 'הערה',
+      }),
+      project_status: 'in_progress',
+    })
+    const note = screen.getByTestId('checklist-note-B-SAT-LAN-1')
+    fireEvent.change(note, { target: { value: 'הערה' } })
+    fireEvent.blur(note)
+    await waitFor(() => expect(screen.queryByTestId('checklist-banner-staffing-hold')).toBeNull())
   })
 })
 
@@ -718,7 +819,11 @@ describe('ChecklistDialog — מצבי ריק, חסימה וכשל-טעינה', 
     // הבטחה שלעולם אינה נפתרת ⇒ ‏`Promise.all` שבטעינה תקוע, והמסך נשאר בענף-הטעינה.
     getChecklist.mockReturnValue(new Promise(() => {}))
     listProducts.mockResolvedValue(PRODUCTS)
-    render(<ChecklistDialog projectId={15} open onOpenChange={vi.fn()} />)
+    render(
+      <ToastProvider>
+        <ChecklistDialog projectId={15} open onOpenChange={vi.fn()} />
+      </ToastProvider>,
+    )
 
     // 🔴 השלד מגיע מ-`LoadingOrError` — **הרכיב-המשותף היחיד** לשלד-טעינה בפרויקט
     // (`src/CLAUDE.md`), ולא שלד מקומי של המודול. הצורה שנעולה: `variant:'table'`, 4×5.
@@ -743,7 +848,11 @@ describe('ChecklistDialog — מצבי ריק, חסימה וכשל-טעינה', 
     getChecklist.mockRejectedValueOnce(new Error('boom'))
     listProducts.mockResolvedValue(PRODUCTS)
     authState.permissions = { לוגיסטיקה: 'edit' }
-    render(<ChecklistDialog projectId={15} open onOpenChange={vi.fn()} />)
+    render(
+      <ToastProvider>
+        <ChecklistDialog projectId={15} open onOpenChange={vi.fn()} />
+      </ToastProvider>,
+    )
     const state = await screen.findByTestId('checklist-state-error')
     expect(state).toHaveTextContent('לא ניתן לטעון את הנתונים.')
     expect(state).toHaveTextContent(LOAD_FAILURE_DETAIL)

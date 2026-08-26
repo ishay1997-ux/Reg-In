@@ -28,7 +28,7 @@
 | **11** | 🔴 **`supabase/migrations/`** — **התיקייה, לא קובץ בודד** | **גופי-הפונקציות.** ‏`M5-3` · `M5-4` · `M5-7` הם **עריכות לגוף פונקציה קיימת**, ו-`schema.sql` מצהיר בעצמו שהגופים אינם בו ⇒ **‏3 מתוך 8 עוגני `M5` בלתי-ניתנים לביצוע בלעדיה** | **חובה** |
 | **12** | **`src/lib/projectLogistics.js` · `projects.js` · `projectChanges.js`** | **המחרוזות והפונקציות שאסור להמציא מחדש** *(פריט-חוזה 1 מצביע אליהן בשמן)* | **חובה** |
 | **13** | **`src/lib/projectLogistics.test.js`** | **הדרך היחידה לדעת *אילו* שלושה מתוך חמשת משפטי-הריק באמת נעולים** | לפני ניסוח-מחדש |
-| **14** | **`src/modules/06_projects/`** — ‏`ScopeChangeDialog.jsx` · `LogisticsTab.jsx` · `api.js` | **שלוש האדוות למ6 חיות שם**, ובפרט ה-`min="1"` הקשיח שפריט ④ של ㊳ משנה | לפני האדוות |
+| **14** | **`src/modules/06_projects/`** — ‏`ScopeChangeDialog.jsx` · `LogisticsTab.jsx` · `api.js` | **שלוש האדוות למ6 חיות שם**, ובפרט ה-`min="1"` הקשיח שפריט ④ של ㊳ משנה 🔴 גובר: ה-`min` כבר דינמי — `removable ? 0 : 1` · 27/08/2026 · `ScopeChangeDialog.jsx` (צעד 4.2) | לפני האדוות |
 
 🚫 **ומה לא לקרוא — *בשמו*, ורק אלה:** ‏`docs/mockups/logistics-screen/01.png` ו-`02.png`
 *(קדם-Discovery, אפס אמינות — הכרעה ①)*. **המוקאפים המחייבים הם שני קובצי ה-`approved/` בלבד.**
@@ -74,7 +74,7 @@
 | הטונים | 🔴 **`LOGISTICS_STATUS_TONES` אינו מיוצא** — הדלת היחידה היא `resolveLogisticsTone()` | ‏`טרם החל` muted · `הוזמן` teal · `מוכן` ok |
 | סדר-השורות בצ'קליסט | ‏`sortLogisticsRows` | ‏`not_started` → `ordered` → `ready`, ואז `sku`, ואז `serial_number` |
 | חמשת משפטי מצב-הריק | ‏`LEGAL_EMPTY_TITLE` · `LEGAL_EMPTY_DETAIL` · `NO_PERMISSION_SENTENCE` · `BROKEN_EMPTY_DETAIL` · `LOAD_FAILURE_DETAIL` | **מנוסחים שונה בכוונה** — ⚠️ **אך רק שלושה נעולים בבדיקה** *(‏`TITLE` · `NO_PERMISSION` · `BROKEN`)*; 🔴 **`LEGAL_EMPTY_DETAIL` ו-`LOAD_FAILURE_DETAIL` אינם מוגנים** |
-| מונה-המוכנות | ‏`logisticsMetric()` *(`src/lib/projects.js`)* | **נכתבה למ5, ואפס קוראים בייצור** ⇒ **בשני משטחי מ5 משתמשים בה.** ⚠️ **ומונה שני כבר קיים:** `readyItemsCount` *(`projectLogistics.js`, קורא חי ב-`LogisticsTab`)* — **אין לכתוב שלישי** |
+| מונה-המוכנות | ‏`logisticsMetric()` *(`src/lib/projects.js`)* | **נכתבה למ5, ואפס קוראים בייצור** ⇒ **בשני משטחי מ5 משתמשים בה.** ⚠️ **ומונה שני כבר קיים:** `readyItemsCount` *(`projectLogistics.js`, קורא חי ב-`LogisticsTab`)* — **אין לכתוב שלישי** 🔴 גובר: שני קוראים חיים — `LogisticsPage` · `ChecklistDialog` · 27/08/2026 · `src/modules/05_logistics/` |
 | שורת-משנה · ריק-אחרי-סינון · אירוע-שעבר · קרבה | ‏`logisticsTileSub` · `filteredOutSentence` · `eventPassedSentence` · `proximitySentence` | ‏`proximitySentence` מחזירה **`בעוד N ימים`** — המסמכים יושרו אליה, לא הפוך |
 
 🔴 **וההבחנה שנשברת הכי בקלות** *(㉘)*: ‏`טרם החל` הוא **גם** סטטוס-פריט **וגם** סטטוס-פרויקט,
@@ -107,6 +107,7 @@
 קבוצתית מסתדרת בתור** ⇒ **שמירה פר-שורה, לא טופס עם כפתור אחד.**
 **‏`🧱⑥`** **אין policy-כתיבה על `logistics`** ⇒ היום `UPDATE`/`DELETE` מחזירים **0 שורות עם
 `error: null`**.
+🔴 גובר: policy-הכתיבה חיה — `logistics_write_by_permission` (‏`M5-1`) · 27/08/2026 · מיגרציה `20260826002445`
 
 ---
 
@@ -207,6 +208,7 @@
 1. 🔴 **ש"מסך ריק" פירושו "אין נתונים".** ‏`logistics` היא RLS-on בלי policy-כתיבה ⇒ ‏`UPDATE`
    מחזיר **0 שורות עם `error: null`**. ‏**המסך אינו נכשל — הוא משקר.** ⇒ **כל כתיבה חייבת
    `.select()` ובדיקת מספר-שורות** *(`🧱⑥`)*.
+   🔴 גובר: policy-הכתיבה חיה (‏`M5-1` נבנתה); משמעת ה-`.select()` נשארת · 27/08/2026 · מיגרציה `20260826002445`
 2. 🔴 **שהמסד יעצור כתיבה לפרויקט מבוטל.** הוא לא — **הכתיבה "מצליחה" בשקט** *(`🧱④`)*.
    הנעילה **חייבת להיבנות במסך**.
 3. 🔴 **שאפשר לסמוך על שורת-התור לסטטוס-הפרויקט.** התור הוא תצלום-רגע ⇒ **הדיאלוג קורא סטטוס
@@ -224,5 +226,6 @@
 9. 🔴 **שאפשר להמציא תווית-מצב רביעית.** ‏`item_status` הוא `CHECK` תלת-ערכי, ו-`resolveLogisticsTone`
    **זורקת**.
 10. 🔴 **ש-`logisticsMetric` צריכה להיכתב.** **היא כתובה, בדוקה, ואפס קוראים בייצור.**
+    🔴 גובר: יש לה שני קוראים חיים — `LogisticsPage` · `ChecklistDialog` · 27/08/2026 · `src/modules/05_logistics/`
 
 </div>

@@ -41,6 +41,7 @@ import LoadingOrError from '@/components/LoadingOrError'
 import PermissionAwareEmpty, { DENIED_MARK } from '@/components/PermissionAwareEmpty'
 import SegmentedControl from './SegmentedControl'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/components/ToastProvider'
 import { getChecklist, listProducts, updateLogisticsItem } from './api'
 import {
   ACTIVE_PROJECT_STATUSES,
@@ -108,6 +109,13 @@ const SHORTFALL = {
   period: '.',
 }
 
+// כרטיס משטח-2 §② (שורת "מדד השיבוץ"): מדד-האיוש הוצא מהמסך בכוונה — אבל *"בלעדיו סימון
+// הפריט האחרון לא יקדם את הפרויקט; זה נאמר בהודעה ברגע שזה קורה, ולא כמדד קבוע"*. ההודעה
+// נבנתה באודיט-הסגירה (27/08/2026, הכרעת-ישי 2 — "בצע הכל לפי המלצה שלך"); הנוסח `הנחתי`
+// בהאצלה, עקבי עם באנר-ההשלמה הירוק — ישי רשאי לעקוף.
+const STAFFING_HOLD_SENTENCE =
+  'כל הפריטים מוכנים — אך הפרויקט לא עבר ל"מוכן לביצוע": צוות הדיילות טרם הושלם.'
+
 const rowKey = (row) => `${row.sku}-${row.serial_number}`
 
 // שלושת הערכים של הפקד המקוטע — נגזרים מ-`LOGISTICS_STATUS_LABELS` (המילון המוזג), לעולם
@@ -145,7 +153,12 @@ function failureMessage(error) {
   return error?.code && message ? message : WRITE_FAILURE_SENTENCE
 }
 
-export default function ChecklistDialog({ projectId, open, onOpenChange }) {
+export default function ChecklistDialog({
+  projectId,
+  open,
+  onOpenChange,
+  onSaveSettledAfterClose,
+}) {
   // 🔴 **המסך מבטיח "כל שינוי נשמר מיד" — והשמירה תלויה ב-`onBlur`.** נמדד 26/08/2026:
   // הקלדת הערה ואז סגירת הדיאלוג **בלי לצאת מהשדה** אינה שומרת כלום — `updateLogisticsItem`
   // נקרא **אפס פעמים**, כי React אינו יורה `blur` על אלמנט ממוקד שמפורק מה-DOM.
@@ -166,7 +179,11 @@ export default function ChecklistDialog({ projectId, open, onOpenChange }) {
           אין `DirectionProvider`, וכל משטח שנפתח ב-portal מקבל את התכונה ידנית. */}
       <DialogContent dir="rtl" className="sm:max-w-3xl">
         {open && projectId ? (
-          <ChecklistBody projectId={projectId} onOpenChange={closeAfterFlush} />
+          <ChecklistBody
+            projectId={projectId}
+            onOpenChange={closeAfterFlush}
+            onSaveSettledAfterClose={onSaveSettledAfterClose}
+          />
         ) : (
           <DialogTitle className="sr-only">צ׳קליסט הפרויקט</DialogTitle>
         )}
@@ -175,8 +192,11 @@ export default function ChecklistDialog({ projectId, open, onOpenChange }) {
   )
 }
 
-function ChecklistBody({ projectId, onOpenChange }) {
+function ChecklistBody({ projectId, onOpenChange, onSaveSettledAfterClose }) {
   const { permissions } = useAuth()
+  // הטוסט חי ב-Provider שמעל העץ, ולכן ה-API שלו יציב גם אחרי שהגוף הזה פורק —
+  // זה בדיוק מה שמאפשר לשמירת-הסגירה לדווח על כשל שקרה אחרי הפירוק (ר' save).
+  const toast = useToast()
   // ㉞/§⑤ — התפקיד נקרא מ-`AuthContext` בדיוק כמו ב-`ProjectCardPage`, ולעולם לא כ-prop
   // שמישהו עלול לשכוח להעביר. **השער הוא `'לוגיסטיקה'`, לעולם לא `'פרויקטים'`** — מנהלת
   // הלוגיסטיקה היא `view` שם, ושער-פרויקטים היה נועל אותה מחוץ למודול שלה.
@@ -190,6 +210,8 @@ function ChecklistBody({ projectId, onOpenChange }) {
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState({})
   const [completion, setCompletion] = useState(null)
+  // הרגע-שנאמר-בהודעה של כרטיס §② — סימון הפריט האחרון כשצוות-הדיילות חסר (C-3 של האודיט).
+  const [staffingHold, setStaffingHold] = useState(false)
 
   // מראה-הכתיבה של `data`: כתיבה מגיעה מתוך `await`, ולכן היא לעולם אינה נשענת על ה-state
   // שנתפס בסגירה של הרנדר שהתחיל אותה (שתי שמירות רצופות היו דורסות זו את זו).
@@ -292,7 +314,12 @@ function ChecklistBody({ projectId, onOpenChange }) {
         serialNumber: row.serial_number,
         changes,
       })
-      if (!aliveRef.current) return
+      if (!aliveRef.current) {
+        // שמירת-הסגירה נחתה אחרי שהדיאלוג פורק — התור שמאחור כבר רוענן ברגע-הסגירה,
+        // כלומר לפני שהכתיבה הזאת נחתה, והוא מציג מצב ישן. מרעננים שוב עכשיו.
+        onSaveSettledAfterClose?.()
+        return
+      }
       const prev = dataRef.current
       const rows = prev.rows.map((current) => (rowKey(current) === key ? result.row : current))
       const wasReady = prev.project?.project_status === 'ready'
@@ -305,11 +332,30 @@ function ChecklistBody({ projectId, onOpenChange }) {
       // (‏`project_status` שחזר מה-RPC), ונכבה ביציאה משם — סימון שבוטל אינו משאיר בשורה הודעה.
       if (result.project_status === 'ready') {
         setCompletion(wasReady ? null : buildCompletion(rows, productName))
+        setStaffingHold(false)
       } else {
         setCompletion(null)
+        // כרטיס §② — "נאמר בהודעה ברגע שזה קורה": רק כשהשמירה הזאת סימנה `מוכן`, כל
+        // השורות מוכנות עכשיו, והפרויקט בכל-זאת לא התקדם ⇒ האיוש הוא מה שחסר (הטריגר
+        // דורש את שניהם). כל שמירה אחרת מכבה — הודעת-רגע, לא מדד קבוע.
+        setStaffingHold(
+          changes?.item_status === 'ready' &&
+            rows.length > 0 &&
+            rows.every((current) => current.item_status === 'ready'),
+        )
       }
     } catch (error) {
-      if (!aliveRef.current) return
+      if (!aliveRef.current) {
+        // 🔴 שמירת-הסגירה נכשלה אחרי שהדיאלוג פורק — שורת-השגיאה של השורה כבר אינה קיימת,
+        // והמסך הבטיח "כל שינוי נשמר מיד". בלי הערוץ הזה הכשל נבלע והערך אובד בשקט
+        // (ממצא אודיט-הסגירה 26/08/2026). טוסט-שגיאה נשאר עד סגירה ידנית (הכרעת 26/08),
+        // והנוסח הוא S-2 הנעול / הודעת-השרת — לא נוסח חדש. שם הפריט מזהה על מה מדובר.
+        const itemName =
+          dataRef.current?.products?.find((product) => product.sku === row.sku)?.item_name ??
+          row.sku
+        toast.error(`${itemName}: ${failureMessage(error)}`)
+        return
+      }
       setErrors((prev) => ({ ...prev, [key]: failureMessage(error) }))
     } finally {
       if (aliveRef.current) {
@@ -421,6 +467,16 @@ function ChecklistBody({ projectId, onOpenChange }) {
         </div>
       )}
       {completion && <CompletionBanner completion={completion} />}
+      {staffingHold && (
+        // C-3 — ענבר ולא ירוק (יש פער) ולא אדום (אין שגיאה — תקציב-הצבע חל על נתונים).
+        <div
+          role="status"
+          className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-[12.5px] leading-relaxed text-amber-800"
+          data-testid="checklist-banner-staffing-hold"
+        >
+          {STAFFING_HOLD_SENTENCE}
+        </div>
+      )}
 
       {emptyKind === 'noPermission' ? (
         <PermissionAwareEmpty

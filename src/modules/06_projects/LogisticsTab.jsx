@@ -140,7 +140,9 @@ export default function LogisticsTab({ project }) {
     return () => {
       cancelled = true
     }
-  }, [projectId, project?.quote_id, reloadTick])
+    // canReadLogistics בתלויות: נגזר מהקשר-ההרשאות; אם ישתנה תוך-כדי (התחברות-מחדש) —
+    // הענף שנבחר חייב להיגזר מחדש (תוקן באודיט-סגירת-מ5 — היה אזהרת exhaustive-deps).
+  }, [projectId, project?.quote_id, reloadTick, canReadLogistics])
 
   if (loading) {
     return (

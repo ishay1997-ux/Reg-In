@@ -25,9 +25,9 @@
 ## Current State (snapshot — rewritten, not appended)
 <!-- target ~15 lines · no internal dates (F4) · over budget? compress / move to journal -->
 
-**Where we stand:** Modules **1**, **2**, **3**, **4** and **6** are closed and merged to `dev` (module 4 also live on `main`). **Active module: 5 (logistics) — Phases 1+2+3+4 EXECUTED; standing at the 4.5 👤 gate, then 5.1.** Phase 1: four migrations + the two-mode demo seed (`eb17b19`). Phase 2: queue derivations + api (`40a978b`). Phase 3: both screens live at `/logistics`, 🎨 gate approved. **Phase 4: the two M6 ripples (notes sub-row · dialog `item_status` + dynamic zero-floor + byte-exact refusals), the shared `FilterPill` tooltip fix, the doc/debt sweep, and the E2E/smoke/a11y suites.** Removal is *typing `0`* in module 6's existing dialog (㊳), guarded by **both** `item_status='not_started'` and `actual_qty=0` (㊱); `M = 2` surfaces. **Suite: 1,420 unit / 55 files, exit 0.** `npm run gate` and `npm run test:e2e` are RED for reasons **outside module 5** — 3 `check:docs-structure` findings in M8's committed sweep file, and 5 module-4 E2E fixtures pinned to live values (proven pre-existing by a clean-tree re-run, not argued). The build map + active step: **`docs/micro_guides/module-5.md`** (§1 header). Approved spec set: `docs/specs/module_05_logistics/` (`processes-approved.md` is the only file allowed to state a product rule — **42 rulings ①–㊷**). Mockups: `docs/mockups/logistics-screen/approved/` — appearance final. `db_roadmap` `M5-1`…`M5-8` **all ✅**. **Module 8's Discovery is COMPLETE and its BLUEPRINT is APPROVED and saved — `docs/micro_guides/module-8.md` (all 5 questions + 6 nods ruled per recommendations); build opens only after the m5 merge, via the rewritten ⑥2 — the guide's own step 1.0 verifies the merge and cuts the branch.** 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is being exercised in production before the 28/08 demo, so any test pinned to a live count/date/id will keep rotting** — that is what broke the five M4 specs, and the documented fix is invariants, not new pinned numbers.
-⚠️ **Not independently re-verified this pass** (module-6's own docs, `PROJECT_MASTER §6/§7` tallies beyond the two `🚧 מ5 ← מ6` items consumed, `STATUS.md`) — re-check before citing an exact count from any of them.
-`docs/schema.sql` freshly measured: **23 tables** (`grep -c '^create table' docs/schema.sql`).
+**Where we stand:** Modules **1**, **2**, **3**, **4** and **6** are closed and merged to `dev` (3/4/6 also live on `main`). **Module 5 (logistics): built in full, closing audit COMPLETE, verdict [YES] — awaiting the typed DoD echo, then commit → PR → merge** (branch `ishay/module-5-logistics`; the merge itself is Ishay's, executed via his real Chrome on his explicit ask — the PR #62 precedent). Full battery green: **gate exit 0 · 1,440 unit / 56 files · e2e 143/0/6 · smoke 0.** The audit's resume contract + all findings: `docs/micro_guides/close-findings-module-5.md` (archived at the YES-finalization). The as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log). Approved spec set: `docs/specs/module_05_logistics/` (42 rulings ①–㊷ in `processes-approved.md`); mockups appearance-final; `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8: Discovery complete + blueprint APPROVED** (`docs/micro_guides/module-8.md`); its build opens only after the m5 merge via the rewritten ⑥2 — the guide's own step 1.0 verifies the merge and cuts `ishay/module-8-finance`. 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
+Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-encode in QuotesPage · Select-uncontrolled in QuoteLineEditor — §6 line `🚧 מ10 ← מ3`): touching src after the certified regression would have voided the verdict's identity.
+`docs/schema.sql` measure command: `grep -c '^create table' docs/schema.sql` (23 at the last audit).
 
 **Governance:** single developer (Ishay). Schedule (re-ruled 12/08/2026, old `19/09` deadline cancelled everywhere): **28/08** interim presentation (10 min · one end-to-end process · ~50%) · **01/10** closing conference (target **100%**) · **20/10** end. Per-module schedule + dates SSOT: `00_roadmap.md` §3. Overflow policy: whole modules defer, nothing is trimmed — shock-absorbers are **M10 and M7 only**; the 3→4→6→5 core, M8 and M12 never defer.
 
@@ -44,6 +44,86 @@
 ---
 
 ## Session Log (newest first)
+
+### 26/08/2026 23:1X – 27/08/2026 00:3X — module-5 CLOSING AUDIT: blocker fixed · three rulings landed and executed · verdict [YES] pending the typed echo
+
+**Round 2 (00:2X–00:3X) — Ishay ruled all three per the recommendations (*"בצע הכל לפי המלצה שלך
+בלי לחסוך בעבודה"*), then asked the cross-module debts question; everything executed:**
+- **C-2 ratified** → `projects.spec.js:122` now asserts the honest branch (new testid + byte-copied
+  `TAB_NO_PERMISSION_SENTENCE`, old branch asserted absent) · the commit's leftover
+  `exhaustive-deps` warning fixed · **write-back the 22:5X commits lacked = module-6.md entry S.**
+- **C-3 built:** `STAFFING_HOLD_SENTENCE` amber banner in ChecklistDialog — fires exactly at the
+  card's "נאמר בהודעה ברגע שזה קורה" moment (this save marked ready + all rows ready + project not
+  ready), clears on any other save; wording `הנחתי`-delegated (§3.7 row). Red-proved (stash → 1
+  failed → pop → green).
+- **C-4 registered:** one `🚧 מ12 ← מ5` §6 line (glyphs · notes length-cap · irreversible-lens rerun)
+  + O-7 guide row.
+- **Carried items:** `customer-page.spec.js` pinned negatives → runtime invariant with a denominator
+  assert (loud fixture-refresh failure, never vacuous green) · `.first()` conflict answered — the
+  rule is runtime-condition selection; `.first()` AFTER a condition is fine, module-4's dated
+  approval stands · dead GHSA waivers removed from `audit-gate.mjs` (pays `🚧 מ12 ← מ4`(ב), struck).
+- **The debts sweep Ishay asked for (all §6, all modules):** THREE stale-open מ4 lines measured
+  ALREADY-PAID and struck with evidence — the false-reassurance sentence (0 occurrences), 3 of the
+  4 hook-enforcement failures (PM_LIVE strike-stripping · specs glob · awk doc all live), and the
+  §2 table-count (fixed 21/08; last TOC remnant fixed now). The register was OVER-reporting open
+  debt; nothing payable was found unpaid except two 1-line src fixes deliberately left for
+  post-merge (mailto-encode · Select-uncontrolled — touching src would void the regression the
+  verdict rests on) and the twice-registered LOG compaction this close's persistence pays.
+- **Full battery after all fixes: gate exit 0 (1,440/56) · `test:e2e` 143 passed / 0 failed / 6
+  skipped · smoke exit 0.** §6b re-scan of the round-2 diff (both lenses): clean — notable proof:
+  the staffing sentence cannot lie (all-ready + active + not-ready ⇒ staffing-missing by the
+  trigger's own formula). **Verdict [YES] pending the literal "לוגיסטיקה DoD" echo.**
+- **The docs pass (his "תעבור על תיעוד הקבצים") COMPLETED 01:0X:** LOG narrative compacted
+  **747→244** (archive first; 3 working-lessons harvested to Gotchas; Current State rewritten;
+  2b′ fast-read ranges declared: the m8-day sub-bullets + the m6-arc one-liners) · guide compacted
+  **1,716→1,005** (phases → as-built table; both carry-forward contracts verbatim; §3/§10/DoD/QA
+  intact; archive `module-5_pre-compaction_2026-08-27.md`) · **40 dated `🔴 גובר` annotations**
+  landed on the stale spec anchors by a dispatched agent and VERIFIED (original text preserved —
+  mechanical per-cell diff; spot-checks; `check:docs-structure` 66 files / 0 findings) · roadmap 2c
+  line (−15 days → the buffer, later modules NOT moved) · module gotchas file +3 close-mines ·
+  routines coverage → 20 specs/modules 1–6 (the `E2E_LOGISTICS_*` myth corrected) · two-weeks plan
+  → attic · debts sweep: 3 stale-open מ4 §6 lines struck as already-paid. **Awaiting only the echo,
+  then: findings-file archive → STATUS row flip → pathspec commit (+`git add` for new files) → push
+  → PR+merge via his Chrome (his explicit ask; PR #62 precedent) → post-merge flip.**
+- **00:5X — the typed DoD echo received: Ishay typed `DoD5`** (module number + DoD — read as the
+  module-5 signature; the interpretation was stated back to him, overridable). Recorded verbatim
+  here + guide §1. Findings file archived (`docs/archive/close-findings-module-5_2026-08-27.md`);
+  STATUS row flipped to 🔒 awaiting-PR/merge; closing commit follows (its hash = the verdict's
+  identity), then push → PR → CI → merge via claude-in-chrome.
+
+*(Round 1, original entry:)*
+### 🅿️ round-1 record — audit ran end-to-end; one blocker fixed; frozen on three rulings
+
+`module-close` in a fresh session, template executed in full. **Working file (NOT archived — audit
+open): `docs/micro_guides/close-findings-module-5.md` — it IS the resume contract**, with the three
+questions verbatim, per-blocker state and the completed-work ledger.
+**artifact: published** (`claude.ai/code/artifact/17872adf-2da2-4e53-b570-87e79560c4a3`) ·
+**quiz: asked** (3 questions at its foot, two of them doubling as decisions 1–2).
+- **Green, all named:** gate ×2 exit 0 (1,438 → **1,439/56** with the audit's one new test) · smoke 0 ·
+  RLS live stress-test (Dana 16-read/1-write · Noa 16/0 · Recruit 0/0, full recipe incl. role switch) ·
+  advisors security 26 = baseline exactly · §2c security agent 0 exploits · spec-diff agent: zero
+  deviations beyond one omission · live screenshots of both surfaces + M6 notes tab (pills on screen
+  4·1·6 = the audit's own SQL derivation; values drifted from 3·1·5 with real usage, as ⑥3 warned).
+- 🔴 **Blocker found AND fixed in the one round (C-1):** flush-on-close save failure was swallowed —
+  RPC fails after the dialog unmounted ⇒ `aliveRef` early-return dropped the error; no toast, no
+  console; the note evaporates under "כל שינוי נשמר מיד". The failure branch of the 26/08 Esc fix.
+  Repair per the approved toast precedent: persistent error toast naming the item + S-2/server
+  sentence; `onSaveSettledAfterClose` re-syncs the queue after late-landing saves. **Red-proved**
+  (stash-fix → test fails → pop → green), full gate re-run exit 0. Changes UNCOMMITTED (frozen state).
+- 🅿️ **The freeze (C-2, the load-bearing finding):** commits `030bee4`+`bde057a` (22:55–22:56) landed
+  AFTER STATUS's 22:2X entry that lists both indication fixes as `⏸️ פתוח אליך` — no recorded nod, the
+  LogisticsTab permission-gate documented nowhere, full e2e never re-run after them ⇒
+  `projects.spec.js:122` red (pins the OLD testid/sentence; the screen now shows the MORE honest
+  state). To Ishay as a record-gap question with a ratify recommendation, not an accusation.
+  Plus **C-3** (card-promised understaffed-completion message unbuilt — spec-diff agent's omission
+  hunt) and **C-4** (internal glyphs user-visible — flag, M12).
+- **Self-review recorded in the findings file**; its headline: the dominant root cause is
+  post-gate-window work missing its process tail (nod-record · e2e re-run · write-back) — C-2 wholly,
+  and C-1's defect was born inside a post-gate fix no scan ever saw.
+- **Deferred to the YES-completion of this close (numbered):** LOG compaction (narrative measured
+  **685** lines vs ≤150 — archive-first + 2b′) · dated annotations on **19** stale spec anchors ·
+  `src/CLAUDE.md` deny-all += `project_changes` · roadmap 2c line · STATUS row flip · findings-file
+  archive · pathspec commit · PR instructions + 🧩.
 
 ### 26/08/2026 20:1X–22:5X — module 8 BLUEPRINT drafted, triple-verified, APPROVED & SAVED
 
@@ -108,549 +188,44 @@ Presentation package (Hebrew, HTML artifact) delivered with **5 🛑 questions (
   lines). **Next:** m5 close (⑥3) → merge → m8 build opens via the rewritten ⑥2; its step 1.0
   verifies the merge and cuts `ishay/module-8-finance` itself.
 
-### 26/08/2026 19:3X–21:4X — post-gate: removal becomes a CONTROL, four documents corrected, the gate turns green
+### 26/08/2026 19:3X–21:4X — post-gate on Ishay's word: removal becomes a CONTROL, the gate turns green *(compacted 27/08 — full text: guide §10 POST-GATE sections + the pre-compaction archive)*
+All after the approved 4.5 gate, each on his word: ‏① removal moved from "type 0" to an explicit `הסר פריט` control (his question; ㊳ ruled ownership not mechanism; every destructive action here has a named control; derived state, 18 mutations red-proved) · ‏② the Esc-close note-loss found and fixed (input-device dependent: mouse saved, Esc lost — focus flushed before close propagates) · ‏③ the five module-4 fixtures rewritten as invariants (32 passed; three now stricter) · ‏④ `check:docs-structure` sharpened with three lookbehinds — gate green first time in two days; M8's correct file NOT rewritten · ‏⑤ two doc corrections owned out loud (Amit-guide "live" claim was MY false correction of a true sentence; do-not-touch's reversibility promise bounded by §7.44's own guard) · ‏⑥ error toasts no longer auto-dismiss (his approval; success still does).
 
-Ishay approved the 4.5 gate and then kept going. Everything here is **after** the gate, on his word.
+### 26/08/2026 19:5X–20:2X — Q&A on `api.js` + M8's ⑥1 prompt fixed (`8df8e4c`) *(compacted 27/08)*
+Teaching turn: the three-layer picture (api.js = DB I/O · lib = rules · components = render; ㉑ is enforceable because there is exactly one door; what api.js does NOT contain is evidence too). M8's ⑥1 carried a 9-vs-16 §7 list that drifted within two days — the list is gone, the prompt points at the register; M5's three paying practices folded in (🛑 table · coverage ledger · phase-1 SQL dry-run). The SessionStart-banner gotcha harvested to Reference: Operational Gotchas.
 
-- 🔴 **He questioned the removal mechanism and was right.** *"אולי צריך להיות אלרט של ביטול פריט במקום הזנה 0?"* Analysis, not deference: `㊳` ruled **ownership + no new screen**; *"removal = quantity 0"* is the **how**, so changing it does not touch his ruling. **Measured house precedent: every destructive action here has a named control** (`העבר לארכיון`/`השבת`/`ביטול פרויקט`) — *"type a magic value to delete"* was the codebase's only exception. 🔑 **And it is what finally makes `㉚` literal:** *"a disabled control teaches her the rule"* could not hold when there was **no removal control at all**. Built with derived state (`marked === (target === 0)`, writing into the same field she would type into ⇒ the two routes cannot drift); server contract untouched. **18 mutations red-proved.** 🚫 No confirmation modal, and his follow-up — should quantity changes be confirmed too — answered **no**: quantity is reversible, removal is not, and a fourth gate trains the user through the one that matters.
-- 🔴 **A promise module 5's own screen made and broke, found by the feedback audit and confirmed by my own probe.** The checklist prints *"כל שינוי נשמר מיד"* and saves on `onBlur`; typing a note and closing without leaving the field called the RPC **zero times**. **And it was INPUT-DEVICE DEPENDENT** — mouse-close moves focus ⇒ saved; **Esc** unmounts ⇒ lost. Same intent, two outcomes, silent either way. Fixed by flushing focus before the close propagates; red-proved (*"expected vi.fn() to be called at least once"*).
-- **The five module-4 fixtures rewritten as invariants** — verified independently: **exit 0, 32 passed** (was 27/5). No guard weakened, three now stricter. The twin-action test had asserted *"never both"* and so **passed green when neither appeared**; it now demands exactly one. 🔎 A worse sibling was surfaced and left alone: `customer-page.spec.js:218-222` pins quote `#22` in three **negative** assertions that the expiry cron will make **vacuously green around 31/08** — a silent pass that never reddens.
-- ✅ **`npm run gate` exit 0 — first time in two days.** The surface-count rule was matching `מ3/8` **module-pair tags**. 🔑 **The checker's own header already listed module pairs as a known false-positive class** and tried to exclude them via a closure-word requirement, which a Discovery status tag (`סגור·לוגיקה·מ3/8`) satisfies anyway. Measured **3 findings, 3 false — 100%**, exactly what that header calls *"בדיקה שמכבים"*. Narrowed with three lookbehinds, seven forms verified one by one (`8/8`, `4 מתוך 8`, `3/8 נסגרו` all still caught), then a planted violation proved it still bites. 🚫 **Module 8's committed file was NOT rewritten** — it is correct and uses the project's own tagging convention; editing it would have punished the victim and left the defect to catch every future `מN/8`.
+### 26/08/2026 16:4X–19:2X — M5 PHASE 4 COMPLETE (4.1–4.4) *(compacted 27/08)*
+The three ruled forms built (notes full-width sub-row · `StatusTag` in the existing sub-line · dynamic zero-floor with byte-copied refusal strings, machine-verified 6/6) + the shared `FilterPill` tooltip fix. AR-4 amended in three sites; `🚧 מ5 ← מ6` items 1+7 consumed (pointer 16/16). `e2e/logistics.spec.js` (12) + smoke + a11y — 59 assertions red-proved; regression 1,420/55; the 5 e2e fails proven pre-existing (module-4 pinned fixtures) by a 27-file stash re-run. Wrapper-exit gotcha + the `1 יחידות` singular fix recorded in guide §10. Full as-built: guide §10 + `docs/archive/CLAUDE_CODE_LOG_pre-compaction_2026-08-27.md`.
 
-🔴 **Two corrections to documents Ishay relies on — the first is a mistake I made and shipped into a guide he was about to forward.** I "corrected" Amit's presentation guide to say the logistics screen is live. **It is not:** `git ls-tree origin/main -- src/modules/` returns no `05_logistics`, nor does `dev`. **The sentence I replaced was true.** I conflated *built* with *deployed* — I had built the screen that day and read my own branch as the world. ✅ Mitigating measurement: `demo-script-28-08.html` never mentions logistics, so nothing was urgent. Second: `do-not-touch.md` promised that marking an item `מוכן` is reversible — true only until the event date passes; after it, the live `recompute_project_status` writes `event_finished` and its first guard makes un-marking a no-op. **That guard is Ishay's own `§7.44`; only the promise was wrong.**
+### 26/08/2026 10:5X–20:0X — the parallel M8 Discovery: Stage 0 → CLOSE in one day *(compacted 27/08)*
+`docs/specs/module_08_finance/` born complete (7 files + 3 evidence dirs) · 6 mockups approved ("מאשר את כולם") · 30 delegated rulings ה1–ה30 (each anchored+dated) · §7 register 16🟡→8🟡 with live re-counts · a 4-agent stage-1 review wave (42 findings, 42/42 landed after Ishay's "והכל סידרת?" audit caught 3 chat-only) · hand-computed acceptance anchors (3,650 · 3,508 · 292.60) · the outgoing-debt audit wrote the three ` ← מ8` supply contracts (מ11 · מ10 · **מ7**, the unsuspected third). Ishay's six field-reality catches are credited in the files (the §7.16-cancellation hole among them); the who-caught harvest went to `discovery_lessons.md`. Commits `1caa8b3`…`a2c6333`. Working-lesson harvested to Gotchas: untracked files never ride a pathspec commit.
 
-📌 **Demo-day facts now measured rather than assumed:** `#13` (26/08) and `#14` (27/08) both satisfy `final_event_date < 28/08` ⇒ **without the morning refresh two of three logistics demo projects leave the queue on their own, `#14` at 05:00 on presentation morning.** A dispatched check confirmed the refresh **will** succeed — every `finally_approved` row in the database was examined, and the one hostess with future approvals outside the demo set is in no demo project — **and the refresh already ran successfully today**, which is stronger evidence than any code reading.
+### 26/08/2026 09:3X–12:3X — M5 phases 2+3 orchestration *(compacted 27/08)*
+1.6 closed from disk (the phase-1 session died between commit and doc-flip — resume-from-disk caught the half-step). Ishay's three directives implemented: explicit per-agent reading lists · Workflow agent-army with adversarial read-only lenses (verifiers barred from mutating source and from trusting builder reports) · approvals front-loaded (O-1/O-4/O-5 + both experience-briefs, "מאשר את הכל" 10:29). Fresh-eyes reviewer caught 14 task-file defects pre-dispatch. Phase 2 landed (1,341 = 1,271+70, zero regressions, `40a978b`); phase 3 launched (`wf_fc693d3e`) and landed — both screens faithful, 4 conflict questions escalated not patched, Q1–Q4 triaged with Ishay ("מאשר לפי המלצתך"). Prompt-craft ruling → `_shared/writing-prompts.md`. Full detail: guide §10.
 
-🗣️ **Ishay's product instinct beat the plan twice today:** *"למה לדחות ל-12 ולא לסדר עכשיו?"* on the a11y fix (the deferral recommendation was weak — O-2/O-6 are *design rulings needing him*; that one needed nobody), and the removal-control question above.
+### 26/08/2026 — M8 step guide got the m5 prompt template (advisory session) *(compacted 27/08)*
+⑥0 added (did not exist) · ⑥1 modernized (`d4dd9e9`) · parallel-Discovery timing recommended post-28/08; Ishay chose to run it same-day.
 
-➕ **Then one more, on his word: error toasts stop auto-dismissing.** `ToastProvider` deleted every toast after 4s regardless of kind. The case that decided it is a sentence that exists, not a principle: releasing a hostess prints *"הודעות-הביטול: 2 לא נשלחו · 1 — לא ידוע אם יצאו. כדאי ליידע אותה טלפונית"* — **and nothing anywhere records that a hostess was never told her event was cancelled.** 🔑 It **applies** a ruling the house already made twice (the closing tab skips a refresh *"כי הוא היה מוחק את הודעת-הכשל"*; the quote-send dialog keeps a persistent message beside its toast) — the knowledge existed and had simply never reached the toast. One condition, 63 call sites, success still dismisses. Red-proved. 🐞 **And my own first test was the defect:** it searched for a close control by `aria-label` containing `סגור`, while the real label is `סגירת ההתראה` — which does not contain it. **The test failed; the code was fine.** *Search the target's own vocabulary* — the rule I preach, missed by me, now noted inline in that test.
+### 26/08/2026 02:0X — Ishay's ruling: `module-build` reads the ⑥2 block ITSELF at every activation *(compacted 27/08)*
+A bare "תמשיך לבנות" had silently lost every address in the block. The ruling + the grep-anchor discipline live in the skill's Read order (`module-build/SKILL.md`); this line is a pointer.
 
-✅ **And step 5.1 — the live acceptance journey — RAN and passed**, announced before the first write. As דנה on the real DB: mark `הוזמן` → expected date → partial quantity → note → **re-authenticated as the projects manager and saw the note in M6's tab** (`㉒` end-to-end on live data, no interception) → then every field restored through the same screen.
-🔴 **And this is exactly why 5.1 exists as its own step: the Playwright run was GREEN and the database was NOT back.** The restore returned **6 of 7 fields**; `notes` came back `''` instead of `NULL`. **Structural, not a slip — the UI cannot produce `NULL`** (a cleared `<textarea>` yields `''`), so **once anyone writes and clears a note that column can never return to its seeded state through the screen.** Visually and functionally identical to every reader; not byte-identical to the seed. Completed with one targeted update and disclosed in the same message. Restore then proved programmatically with `is not distinct from` (so `NULL` and `''` cannot pass as equal): **all six demo rows `identical_to_snapshot = true`**, `logistics` 16, `project_changes` 1, `#15` still `in_progress`. Temp provider deleted before commit.
-✅ **The removal control was also seen on the real screen** — the visual debt recorded earlier is now paid: 4 buttons, 2 enabled, 2 disabled-and-reasoned, zero writes leaked. An unplanned bonus the mechanism gave for free: the marked row shows `-150` and **`-1,260 ₪`**, so the projects manager sees the money impact of a removal *before* saving.
+### 26/08/2026 00:15–01:3X — M5 Phase 1 EXECUTED (1.0–1.5, then 1.6 next session) *(compacted 27/08)*
+Migrations A–D applied serially under Ishay's one-time blanket typed-echo (quoted in guide §10) after he cleared the `apply_migration` tool block himself. Two-mode seed ran via the real quote→approve path (demo `#13/#14/#15` born with pointers+color; refresh = delta 0; removal rider proved both ㊱ refusals live). Israel-timezone "today" fix (`current_date` is UTC — measured; §7.56). Advisors 26/27 triaged; `schema.sql` refreshed. Full detail: guide §10 + db_roadmap strike entry.
 
-**Suite: 1,436 / 55, exit 0** (phase-4 start: 1,405 / 54). `gate` 0 · `smoke` 0 · module-4 E2E 0. **Module 5: phases 1-4 + 5.1 complete; only the 5.2 closing audit remains, and it belongs to a FRESH session.**
-⏸️ **Owed and stated, not glossed:** no live visual pass on the new removal control · one of five audit lenses (irreversible actions) **died mid-run** and its ground is uncovered · three confirmed feedback defects await Ishay's word (error toasts auto-dismissing at 4s — including *"2 cancellation emails did not go out"* · a permission block rendered as a system fault in the project card · success and failure shown together on the pricing screen) · **step 5.1 not started.**
+### 26/08/2026 00:12 — `regin-docs-sync`: 13 fixes *(compacted 27/08)*
+Loudest: the current-step line had rotted two whole modules behind (it feeds every fresh session's opening banner) · M6's board row flipped to merged (PR #41, git-verified). Supabase MCP unauthenticated — zero live-DB claims checked that run.
 
+### 25/08/2026 — Module-5 blueprint written, triple-reviewed, APPROVED ("מאשר", 23:35) *(compacted 27/08)*
+Triage round → simulated builder → fresh-context reviewer (19 findings) → execution rehearsal (15 gaps; the seed-idempotency BLOCKER ⇒ the Ishay-approved two-mode seed). 42 rulings · `M5-1`…`M5-8` · 4 ripples into merged code. The 🛑 gap table lives at the head of the guide's Phase 1; the seed-refresh demo-morning routine was set here.
 
-### 26/08/2026 19:5X–20:2X — Q&A on the `api.js` layer, then M8's ⑥1 blueprint prompt fixed (`8df8e4c`)
+### 📦 21–22/08/2026 — Module 5 Discovery: opened → approved spec set *(bucketed 27/08)*
+Stage 0 measured live (no write policy · pointers 0/6 · no `actual_qty` CHECK · silent write to cancelled projects) → surface list M=3→**M=2** (removal moved to M6's dialog, ㊳; scope cut through the conference lens) → mockups approved against a five-process walk (7 actions · 2 screens · 0 orphans; three rulings ㉟㊱㊲ born from DRAWING, not reading) → `spec.md` behind Ishay's zero-unapproved-claims gate (96 claims audited → 2 → 0). The day's real products were three measuring tests: the zero-claims gate · source triage (6 of 41 questions actually his) · the simulated builder (38 guesses caught). Rulings ①–㊷ + 🧱 facts: `processes-approved.md`; evidence: `discovery-log.md`. Ishay's corrections en route: mockups=zero credibility · "מיגרציות זה לא פער" · the skipped surface-list approval.
 
-**No code touched.** Two things happened, both starting from Ishay's questions.
+### 📦 21/08/2026 — freshness sweep · post-close M3 fixes · discovery safeguards *(bucketed 27/08)*
+Docs-freshness sweep (`ishay/docs-freshness-sweep`, later PR #62 → main): `DEV_HOME.md` rebuilt (32 broken links) · stale "מ5 בעבודה" corrected against git (branch existed, zero commits) · live-DB demo-data fixes (locked quotes deliberately left). Two real post-close M3 bugs fixed (`ishay/quote-time-bidi-fix`). M6's Discovery→build decision-loss root-caused → 3 safeguards into the skills (`ishay/discovery-blueprint-safeguards`). M6 ㊲ "latent bug" re-measured: correctly built all along.
 
-- **Teaching turn on `api.js`.** He asked why every module has one. Answered from his own files (five modules; M5's nine exports: four reads, **one** write, four helpers that never touch the DB) with the three-layer picture — `api.js` = DB I/O · `src/lib/` = business rules · components = render. The two points worth keeping: **what the file does NOT contain is evidence too** (no `delete`/`insert` in M5 is a design statement — rows are born from the approved quote), and the RPC-only ruling ㉑ is *enforceable* precisely because there is exactly one door.
-- **M8's ⑥1 carried a real defect, found by verifying rather than re-reading.** `RELEVANT_SECTIONS` enumerated **9** §7 items; `spec.md` §① row 5 lists **16** (adds 37·38·61·78·79·80·92). The prompt had been written 26/08 and the spec finished the same day — **it drifted within two days.** Fix: the line is gone; the prompt now points at the register instead of copying it. Also folded in the three things M5's micro-guide did first and that paid off: the 🛑 blocker table, the ruling-coverage ledger, and **a dry-run over Phase-1 SQL before presenting** (the pass that caught M5's impossible seed pre-build).
-
-🔴 **OPERATIONAL GOTCHA — the SessionStart hook's "active step" line can be stale, and it reads as authoritative.** This session opened on a hook banner saying M5's active step was **1.0, build not started**; the journal's own Current State said **Phases 1–4 executed, standing at 4.5**. The banner is generated from the micro-guide's §1 header, so it is only as fresh as the last write to that header — a parallel builder that lands work without touching §1 leaves the banner behind. **It was quoted to Ishay twice in "what's open" lines before the journal exposed it.** ⇒ **a hook banner is a pointer, not evidence**; re-derive the active step from the micro-guide §1 *and* Current State before citing it — the same "resume from disk, not from narration" rule, applied to a narration that happens to be machine-generated.
-
-### 26/08/2026 16:4X–19:2X — M5 **PHASE 4 COMPLETE** (4.1–4.4), standing at the 4.5 gate
-
-**Scope Ishay set:** one agent for the two M6 ripples (4.1+4.2), one for E2E/smoke/a11y (4.4), 4.3 in the main session; full regression by name; then 5.1 if green.
-
-- **Gate discipline held before any code.** 4.1/4.2 are 🗣️ units, so a batched decision round went to Ishay **first**, as a rendered HTML comparison on the real seeded rows. **Three of the four decisions had NO source in any layer** — measured, not assumed: the approved M6 tab mockup draws four columns and **zero** `הער*` hits; the approved scope-dialog mockup draws six columns and no item status. Approved in one message (*"מאשר לפי ההמלצות"*), and **the approval line was written to disk before the build agents launched** (a session boundary dissolves an in-chat approval).
-- **4.1** notes as a full-width sub-row (no sub-row at all when empty). **4.2** `parseQtyInput(raw, rules)` with `allowZero` scoped to `not_started && actual_qty===0` (㊱ both conditions), dynamic `min`, `StatusTag` in the existing sub-line, Ishay's removal wording in the consequence block, and **all six refusal strings byte-copied from the live migration — never retyped**. Plus the shared `FilterPill` tooltip fix (span wrapper; `aria-disabled` rejected on the record because it would change tab order + screen-reader semantics house-wide).
-- **4.3** AR-4 amended additively in **three** sites in `module-6.md` + M6's `screens-approved.md`; `🚧 מ5 ← מ6` items **1** and **7** consumed with live evidence (pointer **16/16**; `pg_policies` = M6's SELECT untouched + M5-1's new write policy). Item **(2)** checked though not mandated — `update_logistics_item` **never writes** `project_status` (seven mentions, all reads/guards/return-field).
-- **4.4** `e2e/logistics.spec.js` (12 tests) + smoke `/logistics` + a11y; **59 assertions individually red-proved**.
-
-🔴 **OPERATIONAL GOTCHA — a background-task notification reported `exit code 0` for an E2E run whose own captured exit was `1`.** The notification reports the **wrapper's** exit, not the command's. Had it been trusted, "all green" would have been reported over **5 failures**. ⇒ **always read the captured exit code**; this is the same family as the repo's no-pipe rule, wearing a different hat.
-
-🔬 **Five E2E failures PROVEN not ours rather than argued.** All five sit in module 4, and the suspicion was legitimate — phase 4 changed **`FilterPill`, a shared component**, and all three failing areas render pills. Executed `e2e/CLAUDE.md`'s own rule: **stashed the entire 27-file phase-4 tree, re-ran both specs against a tree with zero phase-4 changes — the identical five failed with byte-identical messages.** Restored, no conflicts, suite re-verified. Root cause: pinned live values (`overview-kpi-missing` expects `3`, screen says `4`) — a production quote was approved the same day and its project has no staffing, i.e. exactly one more "event missing staff". **Module 4's fixtures; will keep drifting while the system is used before the demo.**
-
-📌 **Two defects found by the verification itself, not by review:** the completion banner printed **`נרשם חוסר של 1 יחידות`** (branch on `items`, word describes `units`; the mockup only ever drew `80`) — fixed to `יחידה אחת` on the anchor of Ishay's own `O-5`, red-proved. And the a11y `aria-describedby` fix Ishay ordered built now rather than deferred (*"למה לדחות ל-12 ולא לסדר עכשיו"*) **carried a defect in its own first version** — the id was derived from a Hebrew `aria-label` containing spaces, and `aria-describedby` is a space-separated token list ⇒ the association would have broken **silently**. Caught before it shipped; the test now asserts the id is whitespace-free.
-
-**Regression, all four by name:** `test:run` **1,420 / 55, exit 0** (from 1,405 / 54 — **+15, zero regressions**) · `smoke` **exit 0** · `test:e2e` **exit 1** (138 pass / 5 pre-existing M4 fails) · `gate` **exit 1** — every stage green except `check:docs-structure`, whose 3 findings are all in M8's committed file (`1caa8b3`), untouched here.
-
-**Live evidence (credentialed read-only provider, deleted before commit):** the note sub-row on the real tab — **1 note row over 4 item rows**, denominators asserted · the dialog's status tags and both refusal lines on the live screen · **zero writes escaped**. ⏸️ **Not obtainable today: a live disabled-pill tooltip — no pill is currently disabled on live data** (0 of 3 on `/logistics`); the fix stands on component-level red/green across **both** modules' real pill components.
-
-**Open for Ishay:** the green *"אפשר להקליד 0"* affordance drawn in the approval mockup but absent from the spec and not built · whether to re-express module 4's five fixtures as invariants now · `STATUS.md`/journal were held most of the session under rule 16 and written only after the parallel M8 session's own commit declared its Discovery CLOSED and its files sat idle 45+ min.
-
-
-### 26/08/2026 10:5X–11:2X — Module 8 Discovery opened: Stage 0 complete (runs parallel to the m5 build)
-- **What:** `module-discovery` executed from Stage 0 for module 8 (finance & event closing), on Ishay's ⑥0 prompt. Produced `docs/specs/module_08_finance/`: `processes-approved.md` (requirements ledger — 141 rows: 97 C5/C6 after declared merges + 28 contracts + 16 live-DB findings; 20 open items distilled for rulings), `discovery-log.md`, and `stage0-sweeps/` (6 raw evidence files). Four parallel read-only sweep agents (Workflow `wf_5a4e86d7-5a9`, 921K tokens, 4/4 landed). Live DB verified via MCP (project `yfeovxppnfoafmfbdfvh`) — unlike the 26/08 00:12 docs-sync which ran unauthenticated.
-- **Why it matters:** m8's server side turned out ALREADY BUILT and 100% unused (`set_project_finance_fields` gated 'כספים' — 0 callers; `finance` bucket + 4 policies — 0 objects; invoice/salary mail templates — 0 sends ever). Core gaps: no RPC moves projects out of `awaiting_invoice`/`awaiting_payment`; `feedback_status` values `completed`/`no_response` have no writer; ghost columns `assignments.personal_bonus`/`salary_report_id` (0 touches, 27/27 rows at defaults); live PII gap — hostess bank columns readable at 'דיילות' view (open half of §7.63); `deriveCustomerMetrics` averages ALL scored projects and the finance RPC has no status gate, so the defect is live-reachable.
-- **Guide staleness fixed:** `module_08_finance.md` §② listed §7.57 as open — the register closed it 12/07/2026 (manual salary report; reconciliation, register wins). Also found beyond the launch prompt's §7 list: §7.79/§7.80 open, §7.92 closed BY §7.39 — m6 sends the survey mail at operational close (live in DB); m8 sends nothing, only enters the returned score *(first reading in this session wrongly said "m8 sends manually"; corrected same session across processes-approved + this entry; the stale §6 "ownership open" line is queued for fix)*.
-- **Broke:** nothing — read-only session except the new spec folder; no DB writes, no migrations. Rule-16: STATUS/LOG entries were briefly queued in the session scratchpad while the m5 session's mtimes were fresh; landed once mtimes aged past the 10-min window, files left UNCOMMITTED (m5 holds pending lines in both — a by-name commit would sweep them).
-- **Stop-1 answered + delegation round (11:3X–11:5X):** Ishay — "מעולה נראה שכיסת הכל… את הרוב אתה יכול להחליט לבד" ⇒ **13 Claude-by-delegation rulings** written to `processes-approved.md` §ה (salary flow lives in m8 / revenue includes scope changes / no-response passes the archive gate / xlsx-only / feedback-loop closure / no in-system weighting / per-row pay derivation / finished-only customer metrics / period+snapshot salary model / the m8 status transitions / no survey resend / status gate on the finance RPC / 10MB bucket stays). **Register write-backs landed (rule 13א) and re-counted live:** §7.19+§7.79 🟡→🟢 · §7.68 🟡→⚪ · §7.37 half-closed (KPI window stays with m7) — snapshot 57/13/3/18/1=92 verified by the documented grep. Ripples: db_roadmap (2 rows) · m6/m7 guides · module-2 micro-guide. **Truth-fix swept:** §7.92 was closed BY §7.39 (m6 sends the survey — live in prod; m8 never sends); the stale §6 "ownership open" line marked. Commit `1caa8b3` (explicit pathspec, 15 files; STATUS/LOG excluded — m5 held pending lines), pushed. World-research wave dispatched (4 web agents: IL invoicing/collections · payroll-to-CPA · post-event feedback · job-costing).
-- **Stage 1-א prep (12:0X–12:2X):** research wave landed 4/4 (~496K, within estimate) — IL invoicing/collections · payroll-to-CPA · feedback · job-costing, all cited, gaps declared. Files committed under `research/`; `world-sources.md` written (organized by-ruling, one conscious deviation recorded: the archive gate vs the world's decoupled default, with reasons). Corroborated en route: §7.39 timing · the <3 threshold = the CSAT top-box line · §7.52 freeze-at-financial-close · §7.69 travel-as-separate-line (legally load-bearing: folding travel into wage shrinks the severance base). Commit `08d0c66`. **Stage 1-א presented** as an artifact (process map P1–P4 + surface list, M=3 screens + 2 mail templates + the 🔮 public-feedback-page candidate recommended IN). Ishay mid-flight: regulatory alignment ≈ coherence (follow IL practice where cheap — "יכולים לשאול למה עשיתם ככה") + "לא להיבהל מקצת עבודה, דיסקברי קיים לעשות דבר אחד טוב" — both absorbed into the recommendations.
-- **Stage 1-א APPROVED (12:3X–12:5X):** Ishay — surface list approved · **the public feedback page adopted** ("דף משוב לפי המלצה שלך"; its recorded origin is his own 13/08 question in §6) ⇒ **M=4 screens + 2 mail templates** · processes P1–P4 approved. Both approved lists written into `processes-approved.md` as status tables. **ה14 ruled by delegation** (his "אחיד ולא יסבך"): travel = uniform param stamped per-shift at report GENERATION — no m4 ripple, split-shift days self-handle at 2×, regulated-allowance-not-frozen-promise is the deliberate contrast with `hourly_rate_snapshot`. db_roadmap gained the S4 rows (token column · public RPC pair + the rate-limit precedent · the m6 mail-link ripple into merged code); the §6 🔮 candidate line marked adopted. **Presented and awaiting his nod:** auto-capture P2 redesign (score flows in via the token page; the manager reviews instead of typing; NO separate "reviewed" checkbox — the archive gate is the acknowledgment; manual entry stays as the phone fallback). Also answered in chat: what the accountant customarily receives (gross components; bureau computes deductions; no official checklist exists — declared gap) and the honest "not immune, but every ruling carries a dated reason + source, and the rejection list answers 'למה לא X'". Commits `1fb77ff` (+ `08d0c66` earlier), pushed.
-- **The closing sweep (12:5X–13:1X):** auto-capture P2 got Ishay's "מאשר" (now a ruling in the spec). Then his "הייתי רוצה לסגור" → **seven more delegated rulings ה15–ה21**, each anchored: month-attribution = unsigned-rows model (closes §7.46's edge; retro-line = recognized IL practice) · score-to-label ladder + traffic lights (§7.80) · goods cost basis = ordered qty (B12, by m6's ⑳ logic — also neutralizes m5's declared origin-pointer limitation) · budget deviation = one ILS number, labor side, flex-the-plan bridge (§7.58) · bank details → `hostess_bank_details` child table on the `product_costs` precedent (the last open half of §7.63) · travel demo seed = the legal ₪22.60 cap · freeze-rule framework affirmed (§7.78). **Register: §7.46/58/78/80 🟡→🟢, snapshot re-counted live 61/9/3/18/1=92** (the day opened at 🟡16). db_roadmap ripples written (bank split · travel seed). Commit `1092f74`, pushed. **The only open item left for Ishay: §7.20** (late-payment/refund reality — "לא קורה" closes it out of scope).
-- **§7.20 CLOSED + Ishay's question catches a real hole (13:2X):** he had no field source to ask ("אין לי באמת מי לשאול") → world-grounded recommendation, his "מאשר": late payment IN scope minimal (`invoice_sent_at` + `תנאי_תשלום_ימים`=30 param + derived days-overdue; no reminders/interest) · cancellation refund OUT, reasoned (money moves only post-event — a cancelled project was never billed; credit-note display flag for the theoretical case). Register 62/8/3/18/1=92 verified live. 🔴 **His "לא הבנתי איך הפיצוי מתנהל מול ביטול" caught that ה15's first wording (op-closed projects only) would have silently dropped §7.16 cancellation compensation from every salary report forever** — a cancelled project never closes operationally. Amended same-session: eligibility spans op-closed rows (actual hours) AND cancelled rows (0/50/100% × planned hours × frozen rate). Harvest ④: Ishay-caught, recorded in the file itself. Commit `f4012dc`, pushed. **Zero open questions remain for module 8.**
-- **Cancellation fee ruled, then widened by Ishay's second catch (13:3X–13:5X):** he reopened §7.20's out-of-scope half ("יש פה אלמנט של מודול כספים לא?") → ruling ("מעולה מאשר"): a cancellation fee built on cost pass-through. His follow-up ("מה אם הזמנו כבר את התגים? ואתר רישום?") widened it to **three components**: crew compensation (the §7.16 ladder, both sides) + logistics rows at `ordered`/`ready` billed at full line price (anchor: m5's own spec calls the ordered transition "רגע התחייבות-הכסף"; verified live — `logistics_item_status_check` = not_started/ordered/ready) + already-performed services added manually (no status tracking — declared automation boundary). Billing starts immediately at cancellation through the normal P1 flow; adjustable/waivable. Register §7.20 carries the full 3-part ruling; commits `f4012dc`+`8934109` pushed. Harvest ④: two Ishay-caught widenings in a row (coverage-at-all · not-just-hostesses), both credited in the files.
-- **P1+P3 landed + the stage-1 review wave (14:0X–14:4X):** all four process cards approved and in the spec (P1 collection incl. the 3-component cancellation fee with m6's status machine untouched; P3 the freeze incl. the bad-debt path born from Ishay's "ארכוב בלי תשלום מסובך?"). Then the mandated end-of-stage-1 review — 4 fresh-context agents (3 Sonnet angles + the Opus infra auditor Ishay demanded), 955K (over the 600–700K estimate), **42 findings triaged** (`stage1-review/`, commit `d886028`). Silent-breakage catches: finance role BLOCKED on logistics+hostesses at RLS level (client reads return [] — all finance reads/writes go DEFINER, `list_projects_overview` precedent) · `cancel_project` destroys `finally_approved` (compensation uncomputable — preserving column joins m8's migration) · spec claimed "no CHECK" on feedback reasons while the live DB has one (inherited from m6's B4 — corrected). New delegated rulings **ה22–ה27** (RPC splits into 4 gated actions — 0 callers measured · full-price=closing_unit_price · §7.16 ladder in prose · cancel_type mapping customer/fm/other · goods cost reads commercial lines (neutralizes m5's B13) · expected-profit formula). Calculator produced the hand-computed acceptance anchors (#13 profit 3,650.00 · #14 fee 3,508.00 · אפרת דהן 292.60 post-seed). **3 product questions isolated for Ishay w/ recommendations:** cancelled-in-reports · new money columns' visibility (project_finance child) · scope-change discount policy.
-- **The three forks close + the did-you-land-it-ALL audit (14:5X–15:1X):** Ishay's answers — cancelled-in-reports delegated ("מה שנכון והגיוני… סומך עליך" → YES, frozen at fee-resolution, §7.79's population widened in the register same turn) · money columns → `project_finance` child table read-gated 'כספים' ("סבבה לפי המלצתך") · scope changes stay at list price (reviewer's opposite read recorded considered-and-rejected). His "והכל סידרת? מה שנשאר בצ'אט יחזור אלי" forced a self-audit: **3 of 42 findings lived only in chat** — landed (ה28 fee persistence = final amount + note, components re-derived · signed delta_qty summing · PM-reports question parked explicitly for the screens stage). 42/42 now on disk. Commits `b44d0f4`, pushed. **Stage-2 foundations wave dispatched** (2 Sonnet agents: design-contract measured from live src + shared data-set reusing the calculator anchors 3,650/3,508/292.60 — measurements only, mirror-tag discipline in the brief).
-- **Foundations landed + contract review dispatched (15:2X–15:5X):** design-contract.md (831 lines — full 51-row palette census, 5 families verified-no-sixth; components quoted from source; RTL rules; skeleton from the freshest approved mockups (m5 22/08, checked via git log); each surface mapped to a living precedent, S4→PublicConfirmPage row-by-row; the agent caught its own two-row palette transcription slip with a same-turn diff and declared it in-file) + data-set.md (one cast over live #12–#15, shared today 15/10/2026, 🌱/🎭/📐 tags, calculator anchors reused verbatim; written-off staged as an alternate ending on #15). **Ruling ה29** born from the agent's honest flag: no travel component on a cancelled shift's compensation line (reimbursement covers an expense incurred; nobody travelled). Commits `c5ad672`+`7a9a38e`, pushed. Wave cost 619K (over estimate again — measuring agents priced at ~300K each from here on). **Contract-review agent running** (fresh-context, multiply-risk lens — the measured 4×14 bidi precedent) before any drawing.
-- **Contract review → fix → production wave → S1 presented (16:0X–16:5X):** the review caught 2 HIGH multipliers before drawing (the skeleton based on the not-freshest approved mockup — the newer approved dialog pattern existed and S2/S3 would have reinvented a divergent one; two data-set timestamps in raw UTC vs the app's Asia/Jerusalem SSOT — systematic, twice) + email-in-<Ltr> gap + 2 LOW. Fix agent applied exactly those five. **Production wave 7/7 (1.69M, within the recalibrated quote): four surface drafts + two rendered mails** in docs/mockups/finance-screen/drafts/, every datum source-tagged, silent-decision blocks per file; drawers self-caught real bugs (leaking nested comment · 58px-squeezed totals column · dialog stage width). **Main-session control fix before presenting: S1's list profit showed ₪ where §7.52+C5 rule %-on-lists** — fixed, drawer's contrary appendix reasoning rejected. Commit `1e14bfc`, pushed. **S1 sent to Ishay (rendered) with 3 flagged points** (#14's tab placement per ruling · no-KPI-tiles decision · the % fix).
-- **All six approved + the cross-surface pass earns its keep (17:0X–17:4X):** Ishay — "מאשר את כולם הם נראים מעולה" ⇒ all six promoted to `approved/` (draft banners → dated approval stamps; the mechanical no-draft-residue grep returns 0; commit `c9ad76b`), the five unsent files rendered to him for real eyes. His two scope-change questions answered: 300→250-before-order already works (signed deltas, full credit — the world's keep-the-margin convention recorded as rejected); additions-at-list-price re-presented as the open policy fork (מחירון vs עם-הנחה — awaiting his word; applying the discount would also touch m6's merged dialog display for coherence). **screens-approved.md written (607 lines)** — מצב table, nine-section cards read off the actual HTML, 50 §⑧ mockup-only items tagged as part of the approval package, S4 security section. **The reconciliation sheet caught 6 cross-file contradictions** no per-surface eye could (severe: S1's finished-row click target contradicted S2 — C5 §5.6.13 rules it explicitly, the closing window wins). Fix agent dispatched for the 4 real ones + 2 recorded meta-declarations.
-- **spec.md assembled + list-price re-affirmed (18:0X–18:3X):** Ishay's "סבבה לפי המלצתך" closed the scope-change pricing fork for good (re-affirmation recorded with both clarifications: pre-order reduction = full credit already built; the world's keep-the-margin convention rejected in writing). **spec.md written the blueprint-consumable way** on his explicit reminder ("להרכיב אותו נכון... לפי גרפים סימונים"): counted ordered reading list (8 in / 3 excluded-by-name, never a live register) · locked vocabulary as byte-exact UI strings · a mermaid status-flow with named transition writers · the four hand-computed acceptance anchors with arithmetic (tests written TO them) · the ten silently-breaking do-not-guess facts, frozen-legend markers + 🔗 mirrors throughout. **Operational honesty note: the pathspec-vs-untracked git trap bit three times today** (spec.md, screens-approved.md, stage1-review/ each needed explicit `git add` in follow-up commits `e6b2043`+`2ef0642`) — new files never ride `git commit -- <path>` alone; worth a discipline line if it recurs. All pushed; the spec folder is complete (7 required files + 3 evidence dirs).
-- **Reconciliation fixes + pre-handoff review + the handoff (18:4X–19:1X):** fix-agent applied all six resolutions surgically (S1's click target per C5 §5.6.13 verified same-turn · S3 icons · M2 filename with the honest pattern-vs-digits nuance · 2 meta-declarations), commit `3efbeaa`. **Pre-handoff simulated-blueprint reviewer (constrained to spec §①'s list): READY-WITH-FIXES** — 10/10 sampled cross-file checks held byte-for-byte; four fixes found (the fossilized "waiting for Stop-1" preamble = three contradictory snapshots in one file · data-set's unsynced payroll filename · the travel flag not pointing at ה29 · the mandatory change-list living in an excluded dir) — **all four applied**, commit `b941f71`, review report joined the evidence folder. **The handoff presented to Ishay:** the key list + the three born-inside sign-offs quoted in full (scope boundaries · what-counts-as-working · the ten do-not-guess).
-- **The debt audit + CLOSE (19:2X–20:0X):** Ishay's condition ("שכל החובות חוצי-המודולים יהיו ברורים... אולי יש חובות שלא שמנו לב... אחרי זה מבחינתי מאושר") → the completeness audit: incoming 8 lines/11 sub-items — 8 paid-in-plan, 3 made-explicit, 0 unaddressed; **outgoing: ZERO '← מ8' lines existed — three supply contracts written to §6** (מ11: the three report numbers + read-only salary tables + an honest unchecked-RLS caveat · מ10: reminders + the CPA travel gate + the PDF candidate · **מ7: the §7.37 quarter-window half — the unsuspected third**); the punted quote_services cost-read became **ה30** (product_costs-pattern tightening in m8's migrations — the twin token paid-by-plan); RC-6 got its file-mapping. **His conditional approval is thereby satisfied — the three handoff signatures stand.** Close-out done: ⑥0 flipped to ✅-done in the guide · harvest → discovery_lessons (the who-caught ratio FLIPPED: ~90% mechanism-caught vs the 5/6-Ishay baseline; his six catches were all field-reality — the one uncovered category) · journal closed with the full arc. Commits `476e6bb`+`a2c6333` pushed. ⚠️ **PROJECT_MASTER.md commit deferred** — its three new §6 lines + the ה30 update are ON DISK but the m5 session holds uncommitted step-4.3 lines in the same file (rule 16); queued for the next clean window.
-- **DISCOVERY MODULE 8: COMPLETE.** Next for Ishay: run `regin-docs-sync` (recommended — a day this dense deserves the deep sync pass) · then "פתח מודול 8" (⑥1) in a fresh session when m5's build merges. The m8 build itself waits on m5 (the 5→8 order) — the spec set is frozen-ready either way.
-
-### 26/08/2026 09:3X–10:4X — M5 phase-2 orchestration: 1.6 closed from disk, agent-army workflow launched, phase-3 approvals front-loaded
-
-**Resume-from-disk catch:** STATUS said "1.6 pending (gate+commit)" while commit `eb17b19` already
-existed — the phase-1 session died between committing and flipping the docs. Closed 1.6 with fresh
-evidence (`npm run gate` exit 0 · 1,271/50 = baseline · anchors re-verified live against the seeded
-DB: pills 3·1·5, outbound 2 = `#13` today + `#14` next business day, amber `#15` only, checklist
-4 rows 1/4). 2.0 door swept — `אין`.
-
-**Ishay's three mid-session directives, all implemented:** ‏(1) every agent task-file opens with an
-explicit reading list — MUST-read in order + "probably not needed, open only on a gap" ·
-‏(2) orchestration via the Workflow tool ("צבא סוכנים ואימותים ובקרה שלך") — phase-2 workflow =
-2 Opus builders → 3 read-only adversarial lenses per step (spec-conformance · test-adequacy ·
-repo-gates) → fix agents; verifiers barred from mutating source and from trusting builder reports,
-empty-findings declared legitimate · ‏(3) phase-3 screen agents run AFTER approval (his own 🗣️
-gate + they build on phase-2 exports), but the approval itself was front-loaded: the O-1/O-4/O-5
-nod round + both experience-briefs presented mid-flight and approved in one word ("מאשר את הכל",
-10:29) — recorded in the guide §3.5/§3.7 + steps 3.1/3.2 (approved acceptance lists written beside
-the steps) + a dated note in `screens-approved.md`'s header. **O-5 is new:** the drawn
-*"80 שרוכים עדיין בדרך"* is not data-derivable ("שרוכים" exists nowhere in the data) — approved
-units-form family replaces it; O-4 also CORRECTED the drawn banner body (*"מצב, כמות או הערה"*
-contradicted ㊴).
-
-**Fresh-eyes reviewer over the two build task-files caught 14 real findings pre-dispatch** (the
-worst: `toRpcError` not exported from 06's api — the prompt ordered importing it · outbound window
-had no lower bound — `businessDaysUntil` returns 0 for past dates, stale active projects would
-enter · knip dead-code gate fails on consumer-less exports (house pattern: dated `knip.jsonc`
-exemption, orchestrator's job at the gate, NOT the builders') · flat number-in-Hebrew strings vs
-the split-parts bidi law). All folded into the task files BEFORE dispatch. Phase-3 task files
-(3.1/3.2) written and ready — incl. the ownership split that avoids tree races (3.2 owns
-ChecklistDialog+SegmentedControl; stubs to be created at launch so 3.1's import resolves) and the
-"a finding contradicting a recorded ruling is a CONFLICT question, not a fix" verifier rule
-(Ishay's own concern, the AR-4 class).
-
-**Phase 2 LANDED and gated (11:4X).** Workflow: 10 agents, 0 errors, ~2.1M subagent tokens.
-Builders' honest deviations all accepted with reasons (amberMark signature gained `eventDate` —
-the guide's sketch was unwritable · `toRpcError` exported for testability · `listActiveProjects`
-ordered by `project_id` to avoid masking a screen that forgot to sort). Panel: 11 findings,
-4 actionable — all fixed with LIVE mutation proofs (the fixer ran both `inTransitReason`
-mutations; each died as the sole failure): the invented write-failure sentence → the locked S-2
-import · the missing empty-branch discriminator → `getChecklist` widened to
-`{project, rows, quoteProductLines}` (three-state, lazy — step 3.2's task file updated same
-hour) · the false test-header convention + unobserved write mine → 12 chain-harness wrapper
-tests. Zero findings contradicted a recorded ruling; one product corner escalated to the 🎨 gate
-instead of being frozen by test (outbound row, all `ordered`, gap 0 ⇒ no reason sentence).
-Orchestrator's own gate: mutation probe on the `#11` rule (4 red → restored green) ·
-`src/modules/05_logistics/CLAUDE.md` written now (check:context demands it at folder-creation,
-and it auto-loads for phase-3 builders) · dated knip exemption (removal at 3.3) · **gate:
-1,341/51 green = baseline 1,271 + 70 new, zero regressions** — exit 1 came ONLY from
-`check:docs-structure` on the parallel M8 session's uncommitted sweep file (3 findings, all in
-`docs/specs/module_08_finance/stage0-sweeps/m8-sec7-items.md`; rule 16 — untouched, flagged to
-Ishay; that step runs nowhere in CI). Live 2.3 anchors re-walked: 3·1·5 · 2 · amber-`#15` ·
-4 rows 1/4. Lesson banked: scaffolding stubs follow the commit, not the build (two premature
-stubs tripped knip's unused-files check and were deleted until launch).
-
-**Phase 2 committed (`40a978b`, 10 files, pathspec — the M8 session's uncommitted files
-untouched) and phase 3 LAUNCHED (workflow `wf_fc693d3e`).** Ishay's prompt-craft ruling landed
-as a permanent lesson in `_shared/writing-prompts.md` (a prompt POINTS at contract content —
-addresses/rules/boundaries/one-mine only; paraphrase is a lossy copy, anchor: the lost
-outbound lower bound) and both phase-3 task files were injected with the "navigation aid,
-source wins, open the cited source before building" order. Stubs recreated post-commit.
-
-**Phase-3 workflow LANDED (12:1X — 9 agents, 0 errors, ~2.3M subagent tokens): both screens
-built faithful-to-mockup with honest deviation registers (full text: guide §10).** Panel: 15
-findings — 1 major (ruling-③'s same-SKU fixture) fixed with a live mutation proof; **4
-CONFLICT QUESTIONS correctly escalated instead of patched** (the ruling-conflict rule Ishay
-asked about — it fired in production). **3.3 done by the orchestrator + live-verified:** route
-swapped inside the untouched guard · guard proven red (naming exactly `logistics`) then
-restored · knip exemption removed at its own named date (deadcode green without it) ·
-**read-only credentialed Playwright evidence** (temp spec, deleted after): דנה's live queue =
-contract-3 numbers + the approved O-5 wording live, checklist dialog with all states, bidi
-Range audit zero failures, recruit blocked live — 3 screenshots in the session scratchpad.
-**The 4 conflict questions triaged WITH Ishay at his explicit ask ("רק להסביר ולא להעביר
-בשקט"):** Q1 (legend clause for ㊶'s trigger — amends approved-drawn text) + Q2 (red
-write-failure line — rule-8 color call) put to him with recommendations; Q3 (card's
-branch-order wording) + Q4 (`נקי סינון` target) closed as anchored decisions with dated ✏️
-notes in `screens-approved.md` §④/§①. A 7-item cleanup agent (panel test-minors + one real
-tooltip bug) in flight; then final gate → phase-3 commit → the 🎨 package.
-**13:0X — Ishay approved the full 4-question triage ("מאשר לפי המלצתך"; confirmed on ask:
-all four).** Q1: ⏱ stays + the legend gains the approved clause *"או: משלוח שתאריכו המובטח
-עבר וטרם הגיע."* (code edit lands after the cleanup agent releases the folder — the legend's
-locking test lives in its file). Q2: write-failure stays RED (the zero-red budget governs
-data, not failure notices). Q3+Q4: the anchored closures ratified (dated ✏️ notes already in
-`screens-approved.md`). Recorded in guide §10 + STATUS the same minute.
-
-**13:2X — phase-3 CLOSED, standing at the 🎨 gate.** Cleanup agent 7/7 red-first (its rule-16
-flag was this session's own 3.3 edits — verified, no incident). Q1 legend clause implemented +
-byte-locked by a new test. The two measurement debts closed in real Chrome: dialog Range audit
-6/0 · keyboard date-typing = exactly ONE RPC call (3.2's per-segment fear REFUTED — no change
-needed; method trap logged: the first audit measured the loading skeleton). Final suite
-**1,405/54 green**; gate exit-1 only from the M8 session's uncommitted sweep file (second
-flag). Phase-3 commit with pathspec; the 🎨 package presented in chat — Ishay's stop.
-**13:3X — the 🎨 gate APPROVED ("חוץ מזה מאשר"; the "חוץ מזה" was a plain-Hebrew re-explain of
-the two house-component items, given the same minute).** Phase 3 fully closed (commit
-`edfade4`). Pending one word from Ishay: the house-items disposition (disabled-pill tooltip —
-small Phase-4 house fix, pre-existing across merged screens · error-panel ⚠ glyph — M12).
-Session scope (his opener: phases 2+3, stop at the 🎨 gate) COMPLETE. Next: Phase 4 in a
-fresh session ("תמשיך לבנות").
-**14:0X — the insights round (Ishay: analyze, beware bias/overfit, then add).** Six drafted
-lessons went through a fresh-context adversarial reviewer BEFORE landing (self-catch is
-measured zero) — it killed real defects in MY drafts: a mis-anchored "standing ruling" claim
-(the army pattern is M6-born, and Ishay's directive was session-scoped — he then RULED the real
-scope: *"שישאל אם לעשות צבא סוכנים… אם בא לי יעיל או חסכוני"* — per-task ask with a
-recommendation, never a default) · a WRONG hook-mechanism description (the reviewer measured
-`block_pipe` live: token-triggered, a filename glob counts) · a wrong home for the
-conflict-question rule (subagents don't load `discipline.md` — measured; fixed via
-task-file-verbatim + dual home) · two near-duplicates of root rule 1 (cut) · a three-file
-consistency trap on the live-write exception (landed in all three together, phrased to
-PRESERVE the no-new-rows absolute). Landed: `module-build/SKILL.md` (army-is-a-question +
-proven shape · early-gate offer · overridable-const) · `discipline.md` (conflict-question +
-ask-first boundary, both with load-path caveats) · `writing-prompts.md` (reading-lists rule) ·
-`e2e/CLAUDE.md` (denominator rule + evidence-spec pattern) · `src/CLAUDE.md` (one-line
-exception pointer) · `docs/CLAUDE.md` (approved-text amendment disclosure rule) · this file's
-Gotchas (`block_pipe` + `cp1255`). Cut as not-worth-lines: the 1.6 half-step (doctrine
-exists), the agent's rule-16 false-flag (system worked), panel statistics (evidence, not rule).
-
-**13:4X — SESSION CLOSED at Ishay's word ("תעדכן שסיימת וסגרנו והכל מתועד… ואני ממשיך בסשן
-חדש").** The final nod landed ("הבנתי מעולה, מאשר"): the tooltip house-fix written INTO step
-4.2 (its action home), the ⚠-glyph deferral registered as §3.5 O-6 (M12, the O-2 pattern).
-Zero pending nods. Day balance: phases 2+3 end-to-end · 5 commits (`40a978b` · `edfade4` ·
-`19ecae5` + this close) · 1,271→1,405 tests, zero regressions · two agent workflows with
-adversarial panels + a cleanup agent, everything re-verified by the orchestrator (mutations ·
-live SQL · real-browser evidence). Standing reminders for the next session: the 28/08
-demo-morning seed refresh; the M8 sweep-file's 3 docs-structure findings (that session's own).
-
-### 26/08/2026 — M8 step guide gets the prompt template; parallel-Discovery question answered (advisory session)
-
-Ishay asked about opening M8's Discovery in parallel to the M5 build. Answered: structurally fine
-(no Discovery dependency — the 5/6 precedent; friction only on the shared registries), timing
-recommendation: **after Friday's presentation**, or stage-0 only now. `module_08_finance.md`
-updated to the M5-approved prompt template (commit `d4dd9e9`): ⑥0 Discovery prompt ADDED (never
-existed — the guide predated `docs/specs/`), ⑥1 modernized (spec §① + acceptance-questions block +
-count caveat + skill-load line), ⑥2/⑥3 left generic on purpose (rewritten at blueprint approval,
-the M5/M6 practice), parallelism note baked into both new prompts. Rule-16 discipline held: the
-build session's uncommitted `module-5.md` untouched; single-file pathspec commits only. No code,
-no DB.
-
-### 26/08/2026 02:0X — Ishay's ruling: `module-build` reads the ⑥2 block ITSELF at every activation
-
-His ask, verbatim: *"אפשר שסקיל הבנייה יקרא את פרומט הבנייה כל פעם שהוא מופעל בהתחלה? … ושזה יעשה
-לכל המודולים בהמשך"* — plus a follow-up worry: will the skill find the right block in EVERY guide,
-given labeling consistency? **Measured before writing:** the block prefix VARIES across the 11
-module guides (`2)` in modules 2–4/7–12 · `⑥2)` in 5–6), but the phrase
-`המשך בנייה (בכל סשן עבודה` occurs **exactly once** in every guide with a build phase (0 in
-`module_01_close.md` — module 1 closed, no build block). ⇒ the skill's new Read-order line anchors
-on the PHRASE, never the number, so one edit serves all current and future modules. Also updated
-the "What ⑥2 is" paragraph so it no longer describes pasting as the delivery mechanism (a pasted
-copy still wins on freshness stamps). File: `.claude/skills/module-build/SKILL.md` (2 edits).
-**↳ Follow-up (his ask): the `⑥1)/⑥2)/⑥3)` prefix standardized in the REMAINING module guides**
-(7–12 — six files, three labels each, verified 3/3 in every file); closed modules 2–4 left as
-history, which is why the skill's anchor stays the phrase, not the number.
-
-### 26/08/2026 00:15–01:3X — Module-5 Phase 1 EXECUTED: 1.0–1.5 done and verified, 1.6 gate in flight
-
-**Update (01:3X), superseding the blocker paragraph below:** Ishay cleared the tool block himself
-(added the `apply_migration` allow rule to `.claude/settings.local.json` per step-by-step
-instructions) and approved the seed plan ("מאשר הכל לפי המלצתך"). All four migrations were then
-**applied serially and verified** (A: policies/CHECKs/columns + impersonated positive→negative
-controls · B: pointers 6/6, full-body diff clean, quote-approval E2E 6 passed · C: 7-assert
-rolled-back behavioural round-trip + נועה→42501 · D: old raise string gone, four new strings
-live). **Seed executed:** demo projects `#13/#14/#15` born via the real quote→approve path,
-removal rider proved M5-7 live (both refusal strings + history row), statuses DERIVED; second run
-= refresh with **count delta 0**. 🕐 **Real find:** `current_date` is UTC — the 01:00 run seeded
-"today" a day back; the seed now uses `(now() at time zone 'Asia/Jerusalem')::date` (§7.56) and a
-refresh realigned dates. Advisors: security 25→26, performance 26→27 — both deltas are the new
-module-5 objects, accepted classes. `docs/schema.sql` delta-refreshed and cross-checked live
-(23/224/37+12/26/3). db_roadmap: 8 M5 rows → ✅ + dated strike entry. Full evidence:
-`micro_guides/module-5.md` §10 + the strike entry.
-
-*(Original entry, kept for the record of the blocker and its handling:)*
-Module-5 Phase 1 opened: step 1.0 done, four migrations + two-mode seed DRAFTED; applies hard-blocked by the tool-layer permission classifier
-
-**Scope (Ishay's opener):** Phase 1 only (1.0–1.6), serial applies by the main session, one-time
-blanket typed-echo for the four migrations (his quote in `micro_guides/module-5.md` §10); the seed
-keeps its 👤 gate — its write-plan was presented and **Ishay approved it conditionally on the
-migrations** ("מאשר הכל לפי המלצתך").
-
-**Step 1.0 (✅, all live via Supabase MCP — the sync session an hour earlier had NO live access;
-this session does, for reads):** every 25/08 blueprint measurement still true — 1 policy on
-`logistics`, no `actual_qty` CHECK, origin pointers 0/6, project statuses unchanged, no cancelled
-project. Unit baseline recorded: **1,271 tests / 50 files, exit 0**.
-
-**Drafted to disk (not applied):** `20260826002445_module5_logistics_hardening` ·
-`…2446_module5_approve_rpc_origin_backfill` · `…2447_module5_checklist_rpc` ·
-`…2448_module5_scope_change_reset_removal` — B and D built on **live `pg_get_functiondef` bodies**
-(the 12/08 lesson), minimal marked diffs. Plus `supabase/seed/module5_demo_data.sql` — two-mode
-(create/refresh), single self-asserting transaction, rolls back on any contract-number mismatch;
-removal round-trip + both refusal raises exercised in create mode. Useful live measurements made
-on the way: `update_project_details` reactivation accepts **same-day** (`>= current_date`) — the
-guide's two-step fallback is unnecessary; `create_quote` prices lines from the CLIENT payload
-(the seed computes tier-or-base price in SQL); assignments PK confirmed
-`(project_id, hostess_id, assignment_number)`.
-
-**🔴 The blocker (tool layer, NOT Ishay, NOT Supabase):** the Claude Code auto-mode permission
-classifier **hard-denies `apply_migration`** in this session. Retried once after Ishay's explicit
-in-chat approval — still denied ⇒ not intent-clearable here. Editing
-`.claude/settings.local.json` to self-grant the permission was also denied (correct behaviour —
-self-granting is exactly what that boundary exists for). **Not worked around** via `execute_sql`
-(unregistered DDL — DB-protocol violation). Handed Ishay three unblock paths (permission line /
-mode change / Studio-fallback per the DB protocol); DB unchanged, everything resumable from disk.
-
-**Write-backs this session:** `micro_guides/module-5.md` (header, step table, §10 with the
-typed-echo waiver ruling + `הנחתי` list — invented server-only raise strings, the seed's
-14-calendar-day amber proxy, demo-hostess picks) · `db_roadmap.md` strike-list (drafted-not-applied
-entry; register rows deliberately stay ⬜) · `STATUS.md` banner. Docs-sync session's 782f1a9
-landed mid-session; no collision (STATUS re-read from disk before writing).
-
-### 26/08/2026 00:12 — `regin-docs-sync` audit: 13 fixes; the current-step line had rotted through two whole modules
-
-**Merge status (STEP 0):** branch `ishay/module-5-logistics` is **NOT merged** — `merge-base
---is-ancestor HEAD origin/dev` fails and `git log origin/dev..HEAD` returns 21+ commits (the
-discriminator from iron rule 10). Pre-merge audit, fixes land on this branch.
-
-**The one that mattered most:** `STATUS.md` §"🫵 הצעד הנוכחי" still read *"12/08/2026 — module 4,
-phase 5, active step 5.2, not started"* — module 4 closed and merged 12/08, module 6 was built,
-closed and merged 21/08, and module 5's blueprint was approved 25/08 with active step **1.0**.
-That line is printed by `session-start-context.sh`, so **every fresh session was handed a wrong
-position as fact**. Fourth time this line has rotted; the section documents the previous three.
-
-**Class 1+2 fixed (13):**
-- `STATUS.md` — current-step block rewritten to module 5 / step 1.0 (source: `micro_guides/module-5.md` §1 Live Status Header) · module-table row **6 flipped ⬜ → ✅ merged** (PR #41, merge `40fb973`; verified `is-ancestor` of both `origin/dev` and `origin/main`, `src/modules/06_projects/` present) · live-branch block re-derived (named the deleted `ishay/module-4-hostesses` as active, plus a dependabot branch that no longer exists) · §7 snapshot 91 → **92** · `PROJECT_MASTER §7` link repointed to `PROJECT_MASTER_sec7.md` (pre-08/08 address, two paragraphs below the note announcing the split).
-- `PROJECT_MASTER_sec7.md` — **§7.32 · §7.61 · §7.63 · §7.77**: 🟢 token + dated 13/08 ruling at the head, but the original question's trailing `סטטוס: **פתוח**` was never updated. Struck and synced using §7.39's own 14/08 repair as the precedent. Token counts unchanged (🟢55 🟡16 🔵3 ⚪17 🟠1 = 92, matching the file's own header snapshot).
-- `docs/toolbox.md` — repo-local skill list **8 → 9** (`module-discovery`, added 13/08 in `e6c2655`, was missing) · the "two trial skills are deliberately uncommitted / will show as `??`" note corrected: `git ls-files` shows both committed in `3003f40` (08/08 23:52).
-- root `CLAUDE.md` — module-flow list gained `module-discovery` (it said "three prompts per module"; there are four skills now, and Discovery runs first).
-- `CLAUDE_CODE_LOG.md` §Templates & hooks — skills line 8 → 9; stamp refreshed after re-measuring skills/hooks/plugins/`docs/templates/`.
-- `docs/guides/00_roadmap.md` §3 — the 21/08 correction ("m5 not opened, zero commits") was true then and false now; superseded with a dated line, original kept.
-- `docs/architecture_and_qa_roadmap.md` — migrations **22 → 47** (48 `.sql` incl. baseline) · E2E scope `1–4` → `1–4 + 6`, spec files **17 → 19**.
-- `docs/db_roadmap.md` — the "Last verified vs live DB … `list_migrations` (still 7)" header flagged stale (48 on disk).
-
-**Not checked / not done, explicitly:**
-- 🔴 **Supabase MCP was unauthenticated this run** — no live DB, RLS, function or `params` check. Every DB claim here is file-derived only.
-- ⚠️ **LOG over budget — needs compression in a human session** (not done here; STEP 5 forbids rewriting dated entries): narrative **282 lines** vs the ~180 trigger · Current State **18** vs target ~15 · **20 `###` session headers older than 3 days that are not yet `📦 Week` buckets**.
-- ⚠️ **The live routine copy is itself stale**: `~/.claude/scheduled-tasks/regin-docs-sync/doc-map.md` says "**eight**" repo-local skills. Sync is one-way (live ⇒ repo), so `docs/claude_routines.md:188` must NOT be hand-edited — fix the live copy first, then re-sync. Otherwise the repo backup was verified **in sync** with the live copy.
-- Broken-dispatch check: **clean** — `pr-review-toolkit:*` and `supabase:*` dispatches all resolve to enabled plugins; `toolbox.md`'s 9-on/10-off tables match `enabledPlugins` exactly.
-- 🚧/§6: **clean** — every debt token in the new `module-5.md` (`🚧 מ11 ← מ5` ×2, `🚧 מ5 ← מ6`, `🚧 מ12`) has a matching §6 line. The two `🚧 מ13` hits are historical prose about a debt that was *moved* to מ12, not a live debt.
-- `CHANGELOG.md` retirement banner intact, nothing written to it. No broken internal links anywhere in the audited set.
-- 🚫 **No freshness stamps this run** — the conflict ledger is non-empty (see below), and the stamp means "verified consistent", not "was visited".
-
-**Round 2 — Ishay said "לא בכוח, תקן מה שנראה לך נכון" (00:15), so both ledger items were closed by judgement rather than escalated:**
-
-1. **§7.47 mirror — the fix was the tag, not the rows.** Re-measuring first changed the answer: `db_roadmap §A1` has **21 rows vs §7.47's 10**, not the "three extras" I reported an hour earlier — the extra 11 (+ the 07/08 `invite_token` block) are `✅ בוצע בפועל` as-built rows from modules 3–4. So **neither direction of "sync the mirror" was right**: syncing from §7 deletes 11 rows of completed work; syncing into §7 pollutes a *dated 07/07/2026 audit register* with rows that were never part of that audit. **The false statement was the claim of identity.** Replaced the `🔗 מראת §7.47` tag with an explicit "this is a SUPERSET of §7.47, 21 vs 10, here's why" note, fixed the header's "the single verbatim copy here is the §7.47 mirror", and added a matching scope note under §7.47 so nobody reads the gap as loss. **Zero rows deleted on either side**, and this stops being a false-positive on every future run.
-2. **`חוסמי-מודול-3 = 0` → module 5, honestly.** Read the blueprint's own 🛑 table (line 463): 15 rehearsal gaps, **all closed**, including the single BLOCKER. But O-1 and O-4 are still open at the **Phase-3 door**, so the line now says "0 blockers for opening Phase 1" **and names both pending nods** rather than a clean "0". Derived from the blueprint, not ruled here.
-
-**Also done in round 2:**
-- **`~/.claude/scheduled-tasks/regin-docs-sync/doc-map.md` (the LIVE routine) fixed first, then copied to `docs/claude_routines.md`** — correct direction per the one-way protocol (§4). Skill count 8 → 9; the trial-skills note corrected (committed since `3003f40`). The count is now told to re-derive itself via `git ls-files` instead of being remembered — this is the *second* time that number silently regressed. Routine 🕓 stamp refreshed.
-- `Current State` snapshot **checked and left alone**: 18 lines vs target ~15, but its content is accurate (it already knew module 6 was merged — which is how STATUS's ⬜ row stood out as wrong). Not worth churn.
-- **LOG narrative compression still NOT done, deliberately.** Now ~340 lines. STEP 5 forbids this routine from rewriting dated entries, and the reason is real: a headless 00:30 run compressing history is exactly how reference facts get lost. Still a job for a human session.
-
-**⚠️ CONFLICT LEDGER — 0 open items.**
-
-**Freshness stamps applied** (ledger empty) to `STATUS.md`, `CLAUDE_CODE_LOG.md`, `PROJECT_MASTER.md`, `db_roadmap.md` — 🔴 **each stamp states its own limit: file-derived only, Supabase MCP was unauthenticated, so nothing here was checked against the live database.**
-
-### 25/08/2026 — Module 5 blueprint written, triple-reviewed, and APPROVED ("מאשר", 23:35)
-
-**What changed:** `docs/micro_guides/module-5.md` exists and is the approved build map — 10
-sections in module-6's evolved shape, plus two firsts: a 🛑 blocker table at the Phase-1 head and
-a §3.8 ruling-coverage ledger walking all **42** rulings (denominator = the registry, per the
-template's decision-coverage back-check). Five phases; Phase 1 = 4 migrations (A `logistics`
-hardening M5-1/2/5/8+flag · B approve-RPC origin+color fill & 6/6 backfill · C the checklist RPC
-M5-6 · D `apply_scope_change` reset+zero-as-removal M5-4/M5-7) + the demo seed.
-
-**Why the shape it has — three review passes, all folded before Ishay saw it:** simulated-build
-(caught: M5-6 scoped to three columns while ㊶ needs four; reading-list holes → spec §① rows
-15–17) · fresh-context reviewer, **19 findings** (the `הכול`-pill population rule — `#11` active
-with 0 rows would make the counter 6 vs the hand-computed 5; `parseQtyInput` is the real client
-zero-guard, `min=` is only a hint — M5-7 would have shipped dead; the seed's quote preconditions
-incl. the hostess-line-derives-`required_hostess_count` fact) · Phase-1 execution rehearsal, **15
-gaps, one true BLOCKER**: delete-recreate seeding is impossible against the §7.50 quote-lock
-triggers (measured: no legal bypass — and good) ⇒ **two-mode seed** (create-once + date-refresh
-via `update_project_details`'s reactivation branch; nothing ever deleted), Ishay-approved, plus
-the standing **refresh-every-demo-morning** routine (the 02:00 cron closes the "today" project;
-28/08 is a Friday and the screen will honestly say so).
-
-**Ishay's rulings this session:** content-approval for both screen cards (scope recorded in the
-cards' header) · **㊷** outbound-section rows are clickable (his catch — my strict reading of 🔄ו
-reversed; registry now 42/19) · no StatTiles (delegated, with the "decision-changing number"
-test) · **seven verbatim UI strings** (queue no-permission · empty outbound · write-failure ·
-closed-event raise · hostess-qty raise · new-item-zero raise · the one demo note) · the two-mode
-seed · ㊴ locks the arrival-date field in a cancelled project (mockup drew it enabled — drawn
-glitch). Kept OPEN deliberately, anchored to the Phase-3 door: the second-amber reason line (O-1)
-and a visible ㊴ sentence in the cancel banner (O-4).
-
-**Write-backs (rule 13, same session):** registry ㊷ + counts 41→42 · both cards (approval
-stamps, the `הכול` precision note, the arrival-column contract block, the approved write-failure
-wording replacing its ⬜) · `spec.md` (38→42 fix — the entry-doc understated the registry by
-three Ishay rulings; reading-list addendum) · `data-set.md` §9 (seed additions incl. the note) ·
-`db_roadmap` (M5-6 widened · M5-8 flag · M5-3 backfill) · step guide `module_05_logistics.md`
-(stale "Discovery not yet run" banner replaced; §7.22 marked ruled) · `STATUS.md` (twice: counts
-41/18→42/19 drift found by the reviewer, then the approval banner).
-
-**How-we-work lessons (the category compaction loses — flagging now):** ‏(1) **an agent-count is
-not coverage — one rehearsal that DOES found the seed blocker that three reading passes missed**
-(the M6 lesson reproduced exactly). ‏(2) **the MCP connection is `postgres` with `rolbypassrls`
-— an RLS negative-control without `set local role authenticated` silently passes in the wrong
-direction**; the impersonation recipe in every future guide needs the third line (now in
-module-5.md §2.7). ‏(3) a demo-data seed against production is a DESIGN problem (locks, crons,
-idempotency), not a value-copying script — budget it like one.
-
-**Boundaries declared:** no code/migrations were run — docs only; the rehearsal's SQL lives in
-its report, nothing applied. Not re-verified this pass: module-6's own doc tallies. Recommended
-to Ishay (13ז): run `regin-docs-sync`.
-
-**Post-approval tail (same evening, commits `b55ec41` + `4315e53`):** ⑥2 rewritten in the M4/M6
-shape (unique addresses + the four measured mines + the model line INSIDE the fence); prompts
-0/1 restored verbatim per Ishay (they template future modules) and prompt 1 then gained the
-five-questions acceptance block + the count-drift caveat (his approval); a fresh-eyes pass on ⑥2
-found 0 false claims but 3 stale "content pending" lines inside the approved cards (fixed) and
-`module-build/SKILL.md`'s stale "§5" model-table pointer (fixed to locate-by-heading). Build
-plan agreed in chat, mapped to the guide's §6 batching note: **4 sessions** (Phase 1 · Phases
-2–3 · Phase 4+5.1 · close) — model rec: **Fable for the DB session, Opus+ultracode for the two
-build sessions, Opus for the close**; Sonnet ruled out for this module (the guide's table).
-Ishay ran `regin-docs-sync` in parallel — this session then touched only single files with
-loud-fail edits, pathspec commits.
-
-### 22/08/2026 — Module 5 Discovery closed: three measuring tests, and what each one caught that the others could not
-
-**The day's real product is not `spec.md` — it is that "is this good enough to build?" stopped being an opinion.** Ishay asked it directly (*"איך אני יכול להיות עם ביטחון שאפשר באמת להתקדם לאפיון"*), and three tests were built instead of an answer. **Each caught a class the other two structurally cannot**, which is the part worth carrying to the next module:
-
-| test | what it measures | what it caught | what it is blind to |
-|---|---|---|---|
-| **Zero-claims gate** | every factual line resolves to a source that says it | 2, then 1 — and the second run's finding **was written by the first repair, together with the source justifying it** | a claim whose source is a document that is itself wrong |
-| **Provenance triage** | *who decided this, and would it change if the business works differently* | **6 of 41** — Ishay answered all six | anything already measured or already his |
-| **Simulated build** | can a session build from `§①` alone | **38 guesses · 11 false claims · 4 missing reading-list rows** | a premise that is wrong but consistently applied |
-
-🔴 **And the finding that justified the whole exercise: the demo dataset expired before the presentation.** `cron module6-event-finished` moves any past-dated project to `event_finished`, which is not an active status — so `#105` would vanish from `/logistics` at **02:00 on 28/08, the morning of the interim presentation**, and by 01/10 the screen would show two empty projects with no exit section and no checklist. **Nothing would have failed; the screen would just have been empty.** Ishay ruled the seed derives its dates from `current_date`, and gave the acceptance criterion in his own words: *"מה שיראה טוב והגיוני ביום ההצגה"*.
-
-⚠️ **Also corrected, and it is the kind that stays dangerous longest:** `🧱④` claimed writing logistics on a cancelled project *"succeeds silently with no effect"* — repeated across the set. Measured: the guard is **inside** `recompute_project_status` and returns early, so the `UPDATE` that fired the trigger has already landed. **The row changes permanently; only the recompute is skipped** — worse than what we wrote, on a row `§7.31` designates as billing evidence.
-
-**Five rulings came out of the triage round** (㊴ actual_qty stays open on a cancelled project · ㊱ confirmed · ㊵ an auto-filled quantity is labelled as auto-filled · ㊶ expected arrival date, actual one stamped not typed · plus §7.41's module-5 half nodded, which unblocked `M5-2`). 🔑 **㊶ is the one to remember as a pattern: it was Ishay's idea, and half of it was wrong** — the actual-arrival field duplicated a fact the `ready` transition already carries. **An idea of his is not a ruling of his; it gets checked like any other, and comes back with a recommendation.**
-
-📌 **And a process fact he caught himself, twice in one day:** a ruling recorded in the spec folder alone does not reach the work plan — the blueprint pulls DB steps from `db_roadmap`, and it pulls nothing at all from an artifact he cannot see. Both ㊶ and ㊵ had to be chased into `db_roadmap` and into the mockup after the fact.
-
-### 22/08/2026 — Module 5 Discovery stage 3: `spec.md` written behind a gate Ishay set, and the gate caught two
-
-**The question that produced the gate is the durable part.** After a long run of corrections Ishay asked plainly: *"כל הזמן יש לך מלא תיקונים איך אני יכול להיות עם ביטחון שאפשר באמת להתקדם לאפיון והוא יכתב בלי בעיות?"* **The answer offered was not "I will be careful" — it was a pass/fail test:** `spec.md` may contain **zero** factual claims not already stated in an approved source; every factual line resolves to a grep-able anchor; a claim with no source is a finding, not a wording preference; **and the check runs before he sees the file.** He chose it. Grep anchor for the ruling: `שער-האפס-טענות` in `discovery-log.md`.
-
-**The gate ran on a fresh context, checked 96 claims one by one, and returned 2 — not 0.** Both were fixed at their root, not only in `spec.md`:
-- The single **unsourced** claim was **the header sentence attributing the gate itself to Ishay** — self-certifying, recorded nowhere else. It is now written into `discovery-log.md`, and `spec.md` points there.
-- 🔑 **The more useful one: *"tests lock all five empty-state sentences"* — faithfully copied from `screens-approved.md`, and the code disagrees.** `projectLogistics.test.js` locks **three**; `LEGAL_EMPTY_DETAIL` and `LOAD_FAILURE_DETAIL` are guarded by nothing. **A claim can be perfectly sourced and still false** — a provenance check alone passes it; it took opening the test file. ⇒ **verify against the artefact the claim is about, not only against the document that states it.**
-
-🔴 **And the sharpest finding was not a claim at all but an instruction.** `§①`'s heading read *"קרא בסדר הזה, **ואל תקרא יותר**"*, which in practice excluded `PROJECT_MASTER §7` and `docs/schema.sql`. The skill forbids exactly this and records what it cost last time — a spec that told a blueprint to skip `db_roadmap` would have meant **17 skipped DB requirements**. ⇒ **a gate aimed at claims caught a defect in an instruction, because it read the file as a build session would.** The three live registers are now rows 8–10, and the exclusion is scoped to the two superseded artefacts it actually meant.
-
-**Ishay's follow-up is the one still open, and it is the right question:** *"אם האפיון בטוח בעצמו ושגוי — ואין לנו דרך לטפל בזה?"* Honest answer: a blind-reader test finds **ambiguity and gaps, never a wrong premise** — ㊳ is the proof, six agents passed over a spec set that was perfectly consistent around a false premise. **What can be done is shrink the surface and make it visible.** The measured layer has a near-zero error rate (45/53 confirmed, **zero errors among measured claims**); his own quoted rulings are safe by definition; **the risk concentrates in *derived* and *inherited-from-another-module* claims — which the register's "מי" column already labels and nobody had used for triage.** Proposed, not yet run: a provenance triage of the 38 rulings down to the 5–8 whose truth depends on how his business works, plus a mechanical sweep for *"where did we declare an exception to a frozen-spec statement without a ruling"* — the exact shape ㊳ had.
-
-### 22/08/2026 — Module 5 Discovery stage 2: mockups approved, and three rulings that reading could not find
-
-**Delivered and APPROVED** (Ishay, *"מעולה מאשר הכל"*): `01_overview_approved.html` · `02_dialog_checklist_approved.html` (two views — normal `#107`, cancelled `#103`), plus `screens-approved.md` with two cards on module 6's nine-section template. Drawn by three parallel agents blind to each other, then a cross-surface checker and a fresh-context reviewer. **A third surface was drawn and then deleted** — see ㊳ below. Commits `a5c17ac` · `c124a68` · `45f1e0e` · `00dcca2`.
-
-**🔴 The finding worth carrying forward, and it is about method, not the product: *drawing* a document exercises it in a way *reviewing* it does not.** Three reviewers had passed over this spec set. Then three drawers implemented it, and **two of them independently flagged the same two defects the reviewers had all missed** (an event name written two ways; no `db_roadmap` row for the write RPCs). More sharply, **the single deepest defect of the night came from a drawer, not a reviewer**: ruling ㉟ (added hours earlier — a raised quantity returns an item to `טרם החל` while goods already received stay recorded) had silently opened a hole in ⑰, because such a row *looks* never-ordered and was therefore deletable while being exactly the expenditure evidence `§7.31` protects. ⇒ **㊱: removal requires BOTH `not_started` AND `actual_qty = 0`.** It does not contradict ⑰; it says what ⑰'s rationale always meant — the boundary was never the status but the moment money left, and `הוזמן` was a good proxy for that until ㉟ and an insufficient one after. **Operational consequence: when a ruling lands late, schedule an implementation pass over it, not another read-through.**
-
-**🔴 The recurrence, and the mechanism that caused it — same root cause as the repair round earlier the same night.** ㉟, ㊱ and ㊲ were all ruled *after* the cards and the HTML skeleton had been written, and **iron rule 13's ripple never ran**. The reviewer named the propagating agent precisely: the stale **"35 rulings"** count left in the cards. A reader who trusts a count stops at the number it gives and never discovers what came after it. ⇒ **A count is not a summary — it is a navigation instruction, and a stale one silently truncates every future reader.** Treat any quoted total as a ripple target with the same weight as the content it counts.
-
-**㊲ — the lock with no entry path.** ㉝ (cancelled project ⇒ every write control disabled) looked like dead code: a cancelled project never appears in the queue under any pill, so nothing could open its checklist. The answer was in Ishay's own scope-cut wording — *"she sees immediately and stops ordering"* — which describes someone **already standing there when the cancellation lands**, not someone browsing to it. ⇒ the queue is a snapshot, and **the dialog re-reads project status on open, never trusting the row that launched it**. Without it the build passes status through from the clicked row, she marks `מוכן` on a cancelled project, the write **succeeds silently with no effect** (`🧱④`), and she goes home believing she marked it. **General shape: when a documented state appears unreachable, the reachability question is usually the missing requirement — do not delete the state.**
-
-**Ishay's two interventions, both of which improved the work:** (a) *"שישי שבת לא עובדים"* — the data set had drawn the logistics manager at her desk on a Friday, a day the system's own `businessDaysUntil` does not count. "Today" moved to **Thursday 27/08/2026**, the only weekday on which ㉓'s dispatch window is visible at all. (b) *"אתה רוצה לא לשים נתונים במוקאפ בכלל… מה התסביך"* — correct, the date arithmetic was over-built; his alternative (seed the demo data into the DB so the conference opens a real screen) is better and is registered as a build item. **The one thing the data set genuinely buys, and the only reason it survives: cross-screen consistency for agents drawing blind.**
-
-**Also:** `data-set.md` was aligned to `proximitySentence` (merged, unit-tested, three live callers) rather than the reverse — the grammatically better `בעוד N יום` would have meant rippling merged code six weeks before the conference, the same trade already refused in `🎓⑱`. `M5-6`/`M5-7` opened (before tonight `M5-1`…`M5-5` were a policy, a CHECK, two ripples and a column — **not one function**, while ㉑ requires every write to go through an RPC). `#103`'s event date kept at `05/09` to preserve the module-6 mirror: its "one day outside the two-week window" role was decorative, since a cancelled project never reaches surface 1 at all.
-
-**Verified, not asserted:** all three mockups render with zero horizontal overflow, byte-identical `:root` blocks (same md5), zero external references, pill counts matching the data set row for row, and no red background behind the amber ⑳ marker. *(Three at the time of writing; the third was deleted hours later by ㊳ — see below.)*
-
-**🔴 ㊳ — and this is the lesson of the day, above the three rulings: Ishay deleted a whole surface with one question, and none of six reviewers had touched it.** He asked *"why would the logistics manager remove an item? isn't that only the projects manager?"* The removal surface had been derived from an error string in merged module-6 code — which turned out to be a **validation message for `CHECK (planned_qty > 0)`**, not a product decision. Module 6's own Discovery had escalated the real question to him on 13/08 and **never received an answer**; module 5 inherited the string as settled. **And `C5 §5.6.9` forbids it outright** — *"מנהלת הלוגיסטיקה אינה מורשית לערוך, למחוק או להוסיף פריטים למפרט"* — a line module 5's own `world-sources.md` **quoted, and then declared removal "the only exception" to.** She cannot even reach the path (`apply_scope_change` gates on `'פרויקטים' + edit`; he demoted her to `view` there on 14/08). ⇒ `M = 3` → **`M = 2`**; removal is *typing `0`* in module 6's existing dialog, which already renders `min="0"` and already fetches the logistics rows.
-
-🔑 **Why six reviewers missed it, and this generalises:** every one of them checked **internal consistency**, and the spec set was **perfectly consistent around a false premise**. A consistency check cannot find a wrong premise — only someone who knows how the work actually happens can. ⇒ **When a surface is derived from a string in code rather than from a stated decision, treat that as an unverified premise and say so out loud, at the point of derivation.**
-
-⚠️ **And a near-miss worth more than the finding:** the end-of-stage audit surfaced `AR-4` in module 6's micro-guide (*"the row is never deleted"*) against `M5-7` (which deletes it), and it first read as **two of Ishay's own rulings in conflict**. Checking before reporting showed it is not: `AR-4` is a **Claude** architecture note that generalised his ㉕ — which is about **project cancellation** — into an absolute. ⑰+㊱ and ㉕ share one principle. **Bringing him a false "you contradicted yourself" would have cost a decision he does not owe** — iron rule 1's contradiction protocol says bring both quoted and dated, and doing that is what showed there was nothing to bring.
-
-### 21/08/2026 — Module 5 Discovery, round 3: surface list approved (M=3), scope cut through the conference lens
-- **Ishay reframed the scope question** — *"מה ירשים יותר ויצמצם את השאלות אליי בכנס"* — which is a better filter than "what's missing". Applied `PROJECT_MASTER §1`'s own rule (a reasoned rejection beats "I built everything") and cut on question-surface rather than feature count. He approved.
-- **`M = 3`:** logistics overview · project checklist drill-down · item-removal dialog. The new "יוצא היום/מחר" capability was deliberately placed **as a section inside surface 1, not as a fourth surface** — a whole screen invites "why does this need a screen?", a section invites "nice, you thought of that".
-- **Built (3), each closing a question that will be asked:** cancelled-event warning (she stops ordering — real money) · removal writes to the change history (otherwise an item vanishes from the PM with no trace) · the dispatch view. All three cost nothing — display rules and a filter over existing data.
-- **Rejected with a written reason (3):** an "ordered at" timestamp (1–3 items per event and a two-week horizon ⇒ a column that changes no decision) · a lead-time threshold for the registration site (the two-week number is derived from *print* production, so it applies to physical goods only — a condition fix, not a feature) · **the "dispatched" checkbox — rejected precisely because Ishay answered "אין לי מושג" about who physically carries the boxes.** A tick with no clear owner gets ticked sometimes and not others, which is worse than absent because it teaches everyone to ignore it. Marked `הנחתי`, reopenable without ceremony once he knows who does it.
-- 🔴 **Ishay corrected me on a fourth item and he was right.** I had rejected "partial arrival, rest in transit" with the reasoning *"a temporary state that resolves itself"*. His counter: *"'עוד בדרך' מציין שהמנהלת הזמינה… שהיא טיפלה בזה."* Correct — **the case was never a gap; `הוזמן` already means exactly "she handled it, goods are in transit"**, which is the right status during a partial arrival. The real consequence is a design detail I had not stated: **`actual_qty` must be editable while the status is still `הוזמן`**, not only at the moment of marking `מוכן`. Recorded in the spec with the full three-state model.
-- **Two-week red threshold** grounded in world practice rather than invented: printed badges 3–8 business days, custom lanyards 5–12 — lanyards are the bottleneck, ≈2 calendar weeks. Notably this **matches C5's own "אירועים בשבועיים הקרובים"**, i.e. Ishay's old spec had the number right. Caveat recorded: sources are US commercial printers; a local Israeli supplier may be faster, and it is one constant to change.
-
-### 21/08/2026 — Module 5 Discovery, round 2: four agents, three Ishay rulings, one sequencing error he caught
-- **Ishay killed the unapproved mockups as evidence** — *"חארטה… רק רעיון כללי עם 0 אמינות"*; approved mockups exist only after Discovery (module 6 is the pattern). I had already spent a round analysing `docs/mockups/logistics-screen/{01,02}.png` and surfacing "suppliers" and a "fixed equipment checklist" as product decisions. Both were artefacts of a throwaway file, not his intent. **Skill gap worth noting:** the outputs matrix calls mockups a limited-liability reference, but nothing tells a Discovery to exclude *unapproved, pre-Discovery* mockups from the requirement sweep outright — which is what should have happened.
-- **He also corrected my framing** — "מיגרציות זה לא פער זה פשוט העבודה". The "9 gaps" count conflated work-to-do with holes-in-the-thinking; recounted to 4 work / 3 real gaps. Separately I found two of my own ledger rows (#4, #12) marked `unhandled` for a mechanism that demonstrably works, and corrected them.
-- **Four agents** (authorised at session open, count stated before dispatch): duplication scan · module 3→logistics producer · module 4 as structural precedent · module 6 DB contract. Highest-consequence findings, all anchored in `docs/specs/module_05_logistics/processes-approved.md`:
-  - `apply_scope_change` refuses `qty <= 0` with *"להסרת פריט לגמרי — פני למנהלת הלוגיסטיקה"* ⇒ **module 6 promised the user a surface that does not exist.** Module 5 inherits it; it is absent from C5 entirely.
-  - **Writing logistics on a `cancelled`/`event_finished` project succeeds silently** — `recompute_project_status`'s guard returns with no error and no effect. The table enforces nothing; only module 6's RPC bodies do, and a new screen bypasses them. Module 5 must add its own guard.
-  - The recompute trigger has **no `WHEN`/`OF` clause** ⇒ every row write (including `notes`-only) runs a full recompute holding `FOR UPDATE` on the parent project row. Bulk saves serialize ⇒ prefer per-row instant save.
-  - Readiness counts **only `ready`**; `ordered` counts as not-ready; **zero rows counts as complete**. So the project's metric and the logistics manager's work metric are genuinely different questions.
-  - `logisticsMetric()` (`src/lib/projects.js`) is written, unit-tested, and has **zero production callers** — built for module 5 and left waiting.
-  - `db_roadmap` M6-5 created `quote_service_line_id` explicitly for "same SKU in two colours ⇒ indistinguishable rows", calling it *a fulfilment problem, not a money one*. Column exists, **no writer**. This is exactly the yellow-vs-red-tags case Ishay raised independently — the design already exists, unwired.
-  - Module 4's drill-down **replaces the page** (not a dialog, not a route) for a documented reason; `C5 §5.6.9` specifies "חלון". A real precedent-vs-spec conflict.
-  - Gender: module 4 is mixed (feminine sentences, masculine buttons, `נסה שוב`); module 6 ruled S-28 all-feminine. Module 5 follows module 6.
-- **§7.22 ruled** (Claude, delegated — Ishay: *"שאלה שאתה יכול לחקור ולענות עליה לבד"*): a shortfall in `actual_qty` does **not** block "ready". Anchors: `C5 §5.5.9` L340 makes readiness depend only on `item_status`; `C5:554` makes `actual_qty` a billing record, not a quality gate; consistent with rule ⑯ and §7.31. Sharpened by module 6's ruling ⑳ — **goods are billed by what was ordered, not by what arrived** — so `actual_qty` is an internal cost fact with no live consumer. Written back to `PROJECT_MASTER_sec7.md` with the tally recount (🟡17→16, 🟢54→55).
-- **Sequencing error Ishay caught:** *"לא צריך להתחיל מהגדרת המשטחים?"* — yes. I went from Stage 0 straight into process debate without presenting the surface list, which the template makes a **blocking** Stage 1-א approval (no `M` exists without it). Drafted 3 surfaces (overview · checklist drill-down · item-removal dialog) and presented for approval. Surface 3 is new — derived from the scope-change error message, absent from C5.
-
-### 21/08/2026 — Module 5 (logistics) Discovery opened, Stage 0 complete, stopped at Stop 1
-- **Trigger:** Ishay asked to open Discovery for module 5, noting (unverified at the time) that it's "relatively small and mostly ready," inviting judgment on what to skip, and explicitly authorizing subagent use since the whole thing would run in one session.
-- **Model disclosure and Ishay's ruling.** Both the `module-discovery` skill's pre-flight and the module's own step guide (`module_05_logistics.md:45-48`) explicitly call for Opus/high-effort on a Discovery session. Disclosed running on Sonnet before doing any judgment-heavy synthesis. Ishay's call, after trying both live via `/model`: stay on Sonnet as the conversational driver (he finds Opus over-pedantic in back-and-forth), but dispatch Opus subagents specifically at the skill's mandatory fresh-context-reviewer checkpoints (end of Stage 1, before handoff) rather than switching models wholesale. Recorded in `discovery-log.md` so a resuming session doesn't re-litigate it.
-- **Reality-checked Ishay's "mostly ready" framing rather than accepting it.** `ls docs/specs/` showed no module 5 folder — zero Discovery work existed. `git log origin/dev..origin/ishay/module-5-logistics --oneline` — empty, the branch is a fresh cut with 0 commits. What actually is mostly done: the `logistics` DB table, a read-only display tab already built inside module 6 (`LogisticsTab.jsx`, 505 lines), and the project-status auto-advance trigger — all built as module 6 prerequisites, not module 5's own deliverable (the checklist-management screen itself doesn't exist and has no write RLS policy).
-- **Read module 6's mandatory hand-off in full**, not just its `PROJECT_MASTER §6` transcription: `docs/specs/module_06_projects/processes-approved.md:601-690`, the "what module 6 dictates to module 5" section (7 items) plus the project status-machine process card. Content matched the §6 transcription with one exception: item 5 (cancellation cascade, tied to §7.31) — the source doc, written 13/08 same day, still says "open," but `PROJECT_MASTER_sec7.md` item 31 (also 13/08, later same day) shows it was resolved that same session: no cascade, logistics rows are left untouched as billing evidence for "expenses incurred before cancellation," and `item_status` deliberately stays 3-valued (no "cancelled" state added). This is exactly the "stale open-marker" failure mode the skill warns about — caught it live when Ishay asked what the options were for that exact question, and corrected course instead of re-litigating an already-answered ruling.
-- **Live-verified the DB rather than trusting `schema.sql` or the debt register's claims** (Supabase MCP, project `yfeovxppnfoafmfbdfvh`): `logistics` has 11 columns, exactly one RLS policy (`logistics_select_by_permission`, SELECT-only — no write policy exists at all), 6 real rows (`item_status` only `not_started`/`ready` in use, no `ordered` rows yet). Confirmed `line_id` does not exist as a column (module 6's debt item said this on 14/08 — still true a week later). Confirmed `quote_service_line_id`/`project_change_id` are 0/6 filled — no writer exists for either. Confirmed via `pg_constraint` that there is no CHECK on `actual_qty ≥ 0` (only `planned_qty > 0` is enforced) — the `§7` "bundle of technical rulings" (item 41) flagged this omission and it's still unfixed.
-- **Extracted a 30-row requirements ledger** from C5 §5.6.8 (overview screen) + §5.6.9 (checklist screen) + C6 §2.4.13 (data model) + the module-6 contract + the two live `§7` items (`§7.22` open, `§7.41`'s actual_qty CHECK gap). Coverage: 14 already ✅ covered (mostly inherited rulings from module 6, not new work) · 9 🔴 real unhandled gaps (line_id, no writer for item_status/actual_qty, missing write RLS, `§7.22` open) · 7 ⬜ not yet discussed (mostly the overview screen's own UX).
-- **Wrote the Stage 0 skeleton** (`docs/specs/module_05_logistics/processes-approved.md` + `discovery-log.md`) per the skill's §0ד — pre-approval content only (a transcription of what the sweeps returned, not a proposal). Fixed two stale STATUS.md claims found along the way: the "3 Discovery/blueprint safeguards" branch STATUS.md said was blocking module 5's opening had actually already been merged a week earlier (PR #43, `d0d99f1` — verified ancestor of `dev`/`main`/HEAD); corrected in place with a dated `⚠️ תוקן` note, not silently.
-- **Not yet done:** Stage 0's exhaustive two-variation name-sweep across all of `docs/`/`src/` (only did the token-anchored sweep so far); Ishay's answer to the Stop-1 question ("what surprises you") is still pending — Stage 1 (process mapping) hasn't started.
-
-### 21/08/2026 — Docs-freshness sweep on branch `ishay/docs-freshness-sweep`: `docs/DEV_HOME.md` was missing (32 broken relative links traced to it), STATUS.md and `00_roadmap.md` had stale claims
-- **Trigger:** Ishay asked to check docs linked from README (and their own links) for accuracy — separately, in the same conversation, from a `PROJECT_MASTER` §6 debt audit of modules 1/2/3/4/6 (see that entry below/forthcoming).
-- **Session started on a stale branch.** The working tree was on `ishay/quote-time-bidi-fix`, which predates 10 docs-only PRs already merged to `main` (#50–#61: a new English `README.md`, a new `docs/BUILD_METHOD.md`, screenshots). Confirmed safe before switching: `git merge-base --is-ancestor HEAD origin/main` → exit 0 (old branch is a strict ancestor, its one commit `03e5468` already merged via PR #52). Checked out `main`, pulled, branched `ishay/docs-freshness-sweep` from it.
-- **Root cause found: `docs/DEV_HOME.md` was created in the same commit (`9f640c9`) that rewrote the old Hebrew `README.md` into the new English public-facing one — the old content was moved to `docs/DEV_HOME.md` verbatim, but its ~30 internal links were never updated for the new location.** Every link written as `docs/guides/00_roadmap.md`-style (correct when the file lived at repo root) resolved, from inside `docs/`, to `docs/docs/guides/00_roadmap.md` — a 404. Verified mechanically: wrote a link-checker one-liner, ran it against the pre-edit file (`git show HEAD:docs/DEV_HOME.md`), got 32 broken-link hits, all doubled-`docs/` or repo-root-relative paths one level off (one, `[CLAUDE.md](CLAUDE.md)`, was worse — it silently resolved to the *wrong existing file*, `docs/CLAUDE.md`, instead of 404ing). Both `README.md:158` and `docs/BUILD_METHOD.md:130` link to this file publicly. Rewrote `docs/DEV_HOME.md` with corrected relative paths (`../CLAUDE.md`, `../STATUS.md`, `guides/00_roadmap.md`, etc.); same link-checker now returns zero hits against both README.md, BUILD_METHOD.md, and DEV_HOME.md itself.
-- **`STATUS.md`'s live banner was stale in place.** The current (not archived) top entry still read "לא קומט, לא נפתח PR" for the quote-time-bidi fix, even though that exact commit (`03e5468`) was merged via PR #52 (`52a700d`, 21/08 15:46) — `git show 52a700d --stat` confirms `STATUS.md` itself was touched in that merge without this specific claim being corrected. Fixed in place with a dated `⚠️ תוקן` correction (not a silent rewrite, per iron rule against rewriting dated records) — item ① (BiDi) is confirmed merged; item ② (icon centering) is explicitly still unverified visually, that part of the old claim stands.
-- **`docs/guides/00_roadmap.md` (the declared SSOT for module status) claimed module 5 "בעבודה" (in progress) in three places.** Measured: `git log origin/dev..origin/ishay/module-5-logistics --oneline` is empty — the branch exists but carries zero commits ahead of `dev`. Not started, contrary to the roadmap's own wording. Corrected all three occurrences to "הבא בתור" (next up) with the measurement cited inline.
-- **Also fixed:** README.md's "three-stage loop" section contradicted BUILD_METHOD.md's explicit "the loop is four stages, stated exactly, because accuracy is part of the point" — added one clarifying clause rather than restructuring the diagram (a design call left for Ishay if he wants the diagram itself split to four boxes).
-- **Flagged, not touched (needs Ishay, not a doc-accuracy bug):** README.md's Academic Note says "under the **team's** direction" — worth a look given the sole-developer/retired-co-developer history (`README.md`'s own "מי זה מי" note in `DEV_HOME.md`), but rewriting self-representation language is his call, not a mechanical fix.
-- **Not yet done:** commit + push this branch; Ishay has not yet been asked to open a PR.
-
-### 21/08/2026 — Two real bugs found in module-3's quote builder (post-close), fixed on branch `ishay/quote-time-bidi-fix`
-- **Trigger:** Ishay eyeballing the live quote-edit screen ("שעת סיום" range field), then separately flagging "משך האירוע" reading `שעות 8` instead of `8 שעות`.
-- **Bug 1 — BiDi reversal, `QuoteBuilderPage.jsx` duration output.** The `<output id="quote-hours">` forced `dir="ltr"` on a primarily-Hebrew string (`` `${eventHours} שעות` ``) — wrong direction for a Hebrew word + one embedded digit (that pattern is what `dir="ltr"`/`<Ltr>`/`Money` are for, not this). **Measured, not guessed:** `Range.getBoundingClientRect()` on the digit vs. the word glyph, same technique `src/CLAUDE.md`'s BiDi section already prescribes. With `dir="ltr"`: digit left of word → a right-to-left scan reads "שעות 8". Removed the `dir="ltr"` (inherits page `dir="rtl"`); re-measured: digit right of word → reads "8 שעות" correctly. `grep`-checked for the same pattern elsewhere (`OverviewTab.jsx`, `SmartMatchPage.jsx`, `projectCard.js`, `shiftInvite.js`) — all four already omit `dir` and are fine; this was an isolated single-site defect, not a systemic one.
-- **Bug 2 — native time-input picker icon visually off-center.** `<input type="time">` inside `LtrFieldGroup` renders the browser's own picker-indicator (clock icon) as a separate shadow-DOM part that doesn't respond to the input's own `text-center`; it pins to one edge and leaves a visible gap against the centered digits. Fixed in the shared component (`src/components/LtrFieldGroup.jsx`) — `display:flex; justify-content:center` on the `<input>` itself plus `[&::-webkit-calendar-picker-indicator]:mx-1`, so icon+digits render as one centered unit. **Not visually screenshotted** — the Browser pane would not composite frames in this session (pane-not-displayed error); the fix is a standard, narrowly-scoped CSS technique, and Ishay was asked to eyeball the real screen before treating it as closed.
-- **Scope:** both fixes are shared/UI-only, no schema, no RPC, no `params` change. `npx vite build` exit 0. No dedicated unit test exists for `QuoteBuilderPage` or `LtrFieldGroup` (E2E-only coverage on this screen, per module-3's own `CLAUDE.md`).
-- **Process note:** the edits were first made directly on `dev`'s working tree (uncommitted) while answering an unrelated question in the same conversation — caught before committing and moved to a fresh branch (`git checkout -b`, preserves uncommitted changes) per iron rule 10. Nothing was ever committed to `dev`.
-- **Not yet done:** commit + PR (Ishay hasn't asked for either yet) · Ishay's live-screen eyeball on Bug 2.
-- **Follow-up, same session — Ishay asked for actual proof, not a claim.** Re-verified Bug 1 on the **real running app**, not the isolated scratch file: logged in as CEO (`E2E_CEO_*` from `.env.local`), opened a real `/quotes/new`, typed 09:00→17:00 through the actual inputs, then re-ran the `Range.getBoundingClientRect()` measurement on the live DOM node (`[data-testid="quote-hours"]`): `computedDir: "rtl"`, digit right of word → confirmed "8 שעות" reads correctly on the actual screen. **Bug 2 (icon centering) still has zero visual confirmation — tried again (`screenshot` and `zoom`), both failed with "Browser pane is not displayed, so the page is not compositing frames."** This is an environment limitation in this session, not something a retry fixes, and it cannot be substituted with DOM measurement — the picker-indicator lives in closed shadow DOM with no exposed `::part()`. Told Ishay explicitly: fix 1 proven, fix 2 not, offered a handoff prompt for him to eyeball it himself.
-
-### 21/08/2026 11:01 — Root-caused module-6's Discovery→build decision-loss; added 3 safeguards to the skills (branch `ishay/discovery-blueprint-safeguards`)
-- **Ishay's report:** "many decisions I made didn't reach the blueprint; screens re-asked what I'd already decided about the processes." Investigated with 3 parallel agents (spec→blueprint · screens-vs-processes · pipeline mechanism) cross-read against the 13–14/08 log.
-- **Measured finding — honest, and it corrected my own first framing:** the final blueprint actually carried the large majority of rulings (its Decisions Ledger restates all 38 + architecture + surface rulings). **Only ㊲ (cancelled future-dated project → "התקיימו") is genuinely dropped from the blueprint.** ⚠️ **A second candidate was a FALSE POSITIVE, caught by a concurrent session:** the `negative_feedback_reason` CHECK already exists on `dev` and the live DB (applied migration `20260814140015`, 14/08) — agent 1 read the blueprint's migration *description*, not the applied migration. **Lesson: agent 1's findings are blueprint-text-based, so ㊲ too may already be handled in the built code — the fix session Ishay started will confirm/close it.** The felt "many" came from the **process**, in three mechanisms: (a) **parallel authorship** — 8 screen cards drawn in different sessions → 10 cross-card contradictions (appendix `screens-approved.md:2393`); (b) **reality rulings ("לא קורה") leave no findable artifact** → docs/build re-ask/re-build (anchor `processes-approved.md:737`); (c) **no decision-coverage back-check for spec modules** — the `template.md:54` check lives only in the no-spec branch; `:17` replaced it with a sufficiency check structurally blind to a ruling present-in-spec-but-dropped-from-steps (per the mechanism agent).
-- **Three safeguards added:** ① cross-surface **reconciliation matrix** (discovery Stage-3 cross-check **#7**, count six→seven); ② **reality-ruling register** (discovery §0ד — a fixed-heading `## מסלולים שנשללו כ"לא-קורה"` section in `processes-approved.md`, greppable, read by ③); ③ **decision-coverage back-check** for spec modules (blueprint UNCONDITIONAL **(3)** — walk every ruling ①…㊳ + reality register → step / `🚧 מN` / kill-row).
-- **Fresh-context reviewer caught 3 defects in my own edits (the rule earning its cost):** a stale "all six ran" left after the six→seven change, a **fabricated** "two loading patterns" appendix example (only 2 of the 3 were real), and an **inverted causal claim** on the zero-hostess case. All three fixed against grep-verified evidence before commit.
-- **Goal:** module 5 — the first module to run these clean — does not repeat the frustration. **Must merge to `dev` before module 5's Discovery opens**, else it has no effect. Touches only the 2 skill files (no schema/db_roadmap/migrations — coordinated with the concurrent neg-feedback session).
-
-
-### 21/08/2026 10:5X — M6 ㊲ ledger gap closed (a reported "latent bug" that was already correctly built)
-Investigated a reported cancelled-future-project sorting bug in the customer-card projects tab against the merged code — it does not exist (`customerProjects.js` gates on `cancelled` before date; a dedicated test pins it; 33/33 pass). The only real gap was the decision-ledger table itself skipping ㉲ — fixed doc-only, no code change. Full detail: `docs/micro_guides/module-6.md` §3/§10.
-
-### 21/08/2026 01:2X — MODULE 6 MERGED to dev (PR #41, merge `40fb973`) + post-merge verified
-Ishay delegated the merge. CI caught a real env-dependency the local gate hid (two test files created a Supabase client at module-load with no `.env.local` in CI) — fixed via `vi.mock`, reproduced red→green locally before trusting it. Branch `ishay/module-6-projects` now dead (rule 10); STATUS + roadmap flipped via a small follow-up PR. Full detail: `docs/db_roadmap.md`, `docs/micro_guides/module-6.md` §10.
-
-### 21/08/2026 00:47 — regin-docs-sync audit (partial coverage, explicitly disclosed)
-Fixed two stale claims (a doc-map row citing the cancelled 19/09 date; §7's counting-header snapshot one item stale). Several large files (full `STATUS.md`, §7 items 22–95, `db_roadmap.md`, the module-6 guide body) were deliberately NOT read this pass — flagged as partial coverage rather than claimed exhaustive, and freshness stamps were NOT bumped. Recommends a dedicated full-coverage follow-up.
-
-### 21/08/2026 00:30 — MODULE 6 CLOSED: verdict [YES] + typed DoD echo
-Full persistence written: 8 dated spec annotations (annotate-not-rewrite), 2 new §6 debts (`🚧 מ11 ← מ6`, `🚧 מ10 ← מ6`) + `🚧 מ8` for the surface-8 amount gap, `db_roadmap` M6-14 flipped Done, roadmap §3 updated, 3 closing gotchas added to the module's own `CLAUDE.md`. Quiz asked and answered (3/3). Next: Ishay opens the PR to `dev`. Full detail: `docs/micro_guides/module-6.md`.
-
-### 20/08–21/08/2026 — Module-6 fix round: all 3 blockers fixed, empty-close path removed, gate green
-Blocker 1 reclassified as not-a-real-case (Ishay's reality ruling). Blocker 2: migration applied fixing the closing RPC's hours-bound to derive from entered (not planned) hours. Blocker 3: a swallowed real-failure `.catch()` removed. While fixing, the empty-close path was removed from the client entirely — a signed Phase-3 UI had been offering an empty close the server had always refused. Gate exit 0, 1,271 unit, full E2E green including the first live closing journey (project `#12`, red→green proof). Verdict: [YES] pending typed-echo. Full detail: `docs/micro_guides/module-6.md` §10.
-
-### 20/08/2026 23:5X — Module-6 closing audit (5.2): verdict [NO] — 3 fix-ready blockers
-The first live closing journey (project `#12`) caught a real contract drift between the closing RPC's hours-bound (planned times) and the client/spec (entered hours), plus a legal-empty-close rejection and a swallowed-failure `.catch()`. ~24 findings clustered into 9 root causes, persisted to `docs/micro_guides/close-findings-module-6.md` for the fix session. LOG-compaction escape-hatch invoked (narrative already over budget) — dedicated debt line added to §6.
-
-### 19/08/2026 18:3X — Session E part 3: Ishay's delegated round executed; E2E demo project `#12` created live
-Matrix ratified, smoke anchor proven red→green (2 read-only RPCs allowlisted), and project `#12` ("E2E-תרחיש-סגירה") built end-to-end through the real app flows as the module's closing-journey test fixture — customer, quote, approval, a real hostess final-approval via the T-24 phone path.
-
-### 19/08/2026 17:2X — Session E: Phase-3 compacted, §6 sweep closed 12 module-6 debts, gate green, E2E built
-Phase-3 micro-guide compacted 1,466→1,090 lines. `automations.md` and `§6` fully re-measured (zero live `🚧 מ6` bullets left). `npm run gate` exit 0, suite 1271; 5.1's E2E built (129 passed, write journeys self-skip until an `E2E-*` demo project exists). One drift found and ratified: a permission-matrix cell had rotated during an earlier interrupted E2E run.
-
-### 19/08/2026 15:1X — Session D: steps 3.8 + 4.0/4.1 pulled forward, full regression green
-Module-2 customer page's real projects tab (3.8); surface-8's live-404 fix pulled forward to 4.1 (`/projects` wired permanently, 5-role render proof). 6 jscpd clones consolidated, 10 dead exports removed. Gate exit 0, full E2E 116 + smoke 0, suite 1270.
-
-### 19/08/2026 12:5X — Session C: the three closing/logistics/team tabs (3.3–3.5) built and panel-verified
-Adversarial panel caught and fixed a stale readiness-tile lie and a shift-lead display bug. Ishay ruled the duplicate primary action (card-header wins over an in-tab button). Suite 1235; live closing journey deliberately deferred to 5.1.
-
-### 19/08/2026 10:2X — Session B: steps 3.2+3.6+3.7 built, 7-finding adversarial fix batch, permission ruling rippled
-Ishay widened the project manager's permission on 'דיילות' view→edit; the ripple flipped 3 E2E specs + the live matrix + docs, all re-verified red→green. Suite 1094.
-
-### 19/08/2026 08:5X — Module-6 Phase 3 session A: Phase-2 compacted, steps 3.0+3.1 built, ⑫ proven live
-A visual-regression fear settled by live before/after measurement: no live module-2 split from a shared-component edit. An inherited dead agent-worktree was found poisoning `test:run` with 17 phantom failures — permanently excluded in `vite.config.js`. Two browser-only defects fixed (a raw English error string; a broken Hebrew plural). The live status board was proven via a real trigger firing a real email to Ishay's inbox.
-
-### 18/08/2026 22:1X–19/08/2026 00:4X — Module-6 Phase-1 gate run and closed; Phase 2 built end-to-end and closed in the same session
-Phase-1's end-to-end SQL gate ran for the first time (100 checks — 97 pass, 2 stale-gate-expectation fails, both explained against the live DB, not the script's word). Ishay signed Phase 1, then approved continuing into Phase 2 in the same session: 8 build-agent rounds (steps 2.1–2.8), each independently orchestrator-verified against the actual diff and a full suite re-run, plus a 3-lens adversarial panel at the phase gate (regression / spec-fidelity / test-quality-by-mutation) that found and fixed one real reliability-score crash risk. Suite grew 752→923. One new cross-module debt registered (`🚧 מ9 ← מ4/מ6`). Ishay signed the Phase-2 report. Full blow-by-blow: `docs/micro_guides/module-6.md` §9/§10 and `docs/db_roadmap.md`.
-
-### 19/08/2026 00:4X–01:1X — Stop hook's single-writer assumption FIXED: LOG/STATUS enforcement defers while background agents are mid-write
-`check-docs-updated.sh` now detects live background agents via the harness-written session transcript and skips only the doc-freshness enforcements (1-3) while one is running — enforcements 0/0b/0c/0d stay fully active. Fail-direction is strict (any detection failure ⇒ old behavior). Verified via a 5-scenario bench; approved by Ishay in-chat before applying. Fixes the recurring ×4–×6 false-fire loop from concurrent agent writes documented earlier in this file's history.
+### 📦 18–21/08/2026 — Module 6 build → close → merge arc *(bucketed 27/08)*
+Phases 1–3 built across sessions A–E (panel-verified; ⑫ proven live: `#11 → ready` via M4's real UI + Noa's mail receipt) → closing audit **[NO]** with 3 fix-ready blockers → fix round → **[YES] + typed DoD echo** (21/08 00:30) → **PR #41 merged to dev** + post-merge verified with fresh git evidence. Same window: the Stop hook's single-writer assumption fixed (LOG/STATUS enforcement defers while background agents are mid-write). Full arc: `micro_guides/module-6.md` + its archives.
 
 ### 📦 Week 13/08–17/08/2026 — Module 6 Discovery finished and ruled (38 rulings, 8 approved surfaces); `module-discovery` skill built from the retiring prompt; module-6 blueprint drafted and rehearsed through 3 review passes before approval; Amit conference-prep guide built as a 28/08 fallback
 
@@ -743,6 +318,9 @@ Sessions up to and including 15/07/2026 (M3 blueprint, milestone-1 promotion, mo
   - 🔴 **And the mirror-image variant, measured 08/08/2026 — the dangerous one, because it defeats the protection people think they have.** The trap is **not** `-A`; it is **leaving the shared index loaded at all.** I ran `git add -- <11 explicit paths>` (no `-A`), my `git commit` then failed on a syntax error, and in that window the *other* session's **ordinary** `git commit` swept all 11 of my files into **its** commit under **its** subject line (`cfd8e82`) — while its own work stayed uncommitted. **Reading rule 10 as "avoid `git add -A`" is not enough: any separate `git add` step is the exposure.** ⇒ **Stage and commit in ONE atomic call — `git commit -m "…" -- <paths>` — and note the flag order: `-m` must come BEFORE `--`, or git reads the message as a pathspec and the commit fails**, which is exactly what left the index loaded here. *(Damage was label-only: content verified intact and reachable via `git log -- <file>` / `git log -S`; no history was rewritten — the wrong subject line was judged not worth an empty marker commit.)*
 - **Network-dependent npm hangs (up to 17 min)** — a TLS failure against the registry (proxy/AV injecting a root CA). Verified fix: `NODE_OPTIONS="--use-system-ca"` before every `npm install`/`update`/`outdated`.
 - **E2E on a slow network:** a matrix cell click must wait for the PATCH response before `reload()`, otherwise the write is cancelled in flight (`clickCellAndAwaitWrite`); login flows = up to 8 network calls → 30s timeout.
+- 🔴 **The SessionStart hook banner's "active step" is a POINTER, not evidence** *(measured 26/08/2026; harvested here at the 27/08 compaction)*. The banner is generated from the micro-guide's §1 header, so it is only as fresh as the last write to that header — a parallel builder that lands work without touching §1 leaves the banner behind. It opened a session saying "step 1.0, build not started" while phases 1–4 were done, **and was quoted to Ishay twice** before the journal exposed it. ⇒ re-derive the active step from the guide §1 *and* Current State before citing it — "resume from disk", applied to machine-generated narration.
+- 🔴 **New (untracked) files never ride `git commit -- <paths>` alone** *(bit three times in one day, 26/08/2026, m8 Discovery session)*: a pathspec commit picks up MODIFIED tracked files but silently skips untracked ones even when named — each new file needs an explicit `git add <file>` first (then the atomic-commit rule above still applies). The symptom: a commit that "landed the spec" while the spec file stayed untracked.
+- 🔴 **An Edit whose old_string spans up to a NEIGHBOR's heading deletes that heading silently** *(nearly lost the m8-blueprint journal heading, 27/08/2026 — caught only by a headings-listing pass before compaction)*. When inserting a new entry above an existing one, the old_string should END at the boundary line, and the new_string must RE-INCLUDE any neighbor text it consumed. After any multi-entry edit in an append-only log: `grep '^### '` and count.
 - **react-hooks (new, caught in module 2 — 10–11/07):** `set-state-in-effect`/`static-components` reject module-1's open-in-dialog effect pattern — use `useState(initializer)` + `key`-remount on the parent, and error/header components as top-of-file components (not defined inside render) · `react-hooks/purity` forbids `Date.now()`/an impure call inside a `useMemo`/render body — breaks `lint` (and thus `npm run verify`) but **not** `vite build`/dev-server (no React Compiler, plain `@vitejs/plugin-react`) — compute a time-dependent value in an event handler and pass it as a prop.
 - **Prettier `printWidth` in CI:** long lines (tests/JSX) pass `lint` but fail `format:check`; run `prettier --write --end-of-line auto <file>` on new files before commit (`--end-of-line auto` preserves local CRLF without causing git noise).
 - **A migration with Hebrew comments + the browser SQL editor = corruption risk:** typing/pasting directly garbles RTL/bidi (chars interpreted as keyboard shortcuts, policy names break). The MCP `apply_migration` (after typed-echo) avoids the problem entirely — fallback to browser/CLI only if the MCP is unavailable, and then hand over SQL clean of Hebrew comments (keep only load-bearing strings like `'לקוחות'`).

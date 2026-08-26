@@ -122,9 +122,11 @@ test.describe('מודול 6 · הכרטיס — מנהלת גיוס ושיבוץ
   test('לשונית הלוגיסטיקה מציגה מצב-חסימה (🔒) — לא "לא הוזמנו מוצרים" ולא שגיאה', async ({
     page,
   }) => {
-    // היא ➖ גם על 'לוגיסטיקה' וגם על 'הצעות מחיר' ⇒ רשימת-הפריטים חוזרת ריקה בלי
-    // שגיאה, והמבחין (פריטי-ההצעה) חסום גם הוא ⇒ המצב היחיד הכן הוא noPermission.
-    // "ריק כדין" אצלה היה שקר ("אפס שורות ⇒ הושלם" על טבלה לא-קריאה — S-26).
+    // היא ➖ גם על 'לוגיסטיקה' וגם על 'הצעות מחיר' ⇒ רשימת-הפריטים חוזרת ריקה בלי שגיאה.
+    // 🔄 עודכן 27/08/2026 (אודיט-סגירת-מ5, אשרור-ישי "בצע הכל לפי המלצה שלך"): מאז
+    // `bde057a` המבחין **הראשון** הוא מפת-ההרשאות שלה על 'לוגיסטיקה' — לא ההצעה — ולכן
+    // הענף, ה-testid והנוסח חדשים: `TAB_NO_PERMISSION_SENTENCE` (הגרסה המדויקת-יותר, על
+    // *הלוגיסטיקה* ולא על *ההצעה*). הבדיקה הקודמת הכירה את המסך הישן ונפלה בצדק.
     await login(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
     await gotoProjects(page, '?tab=all')
 
@@ -135,10 +137,14 @@ test.describe('מודול 6 · הכרטיס — מנהלת גיוס ושיבוץ
     await expect(page.getByTestId('project-card-page')).toBeVisible({ timeout: 15_000 })
 
     // לשונית-הלוגיסטיקה היא ברירת-המחדל של הכרטיס.
-    const blocked = page.getByTestId('logistics-state-no-permission')
+    const blocked = page.getByTestId('logistics-state-no-permission-logistics')
     await expect(blocked).toBeVisible({ timeout: 15_000 })
-    await expect(blocked).toContainText('אין לך הרשאה לצפות בפריטי ההצעה')
-    // ולא אחד משני המצבים האחרים — ההבחנה היא הטענה, לא הנוכחות.
+    await expect(blocked).toContainText(
+      'אין לך הרשאה לצפות בפריטי הלוגיסטיקה, ולכן לא ניתן לקבוע אם הרשימה ריקה כדין.',
+    )
+    // ולא אחד מהמצבים האחרים — ההבחנה היא הטענה, לא הנוכחות (כולל הענף הישן, שאסור
+    // שיופיע אצל חסומת-לוגיסטיקה).
+    await expect(page.getByTestId('logistics-state-no-permission')).toHaveCount(0)
     await expect(page.getByTestId('logistics-state-legal-empty')).toHaveCount(0)
     await expect(page.getByTestId('logistics-state-error')).toHaveCount(0)
     await expect(page.getByTestId('logistics-state-broken')).toHaveCount(0)

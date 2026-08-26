@@ -213,13 +213,26 @@ test.describe('עמוד הלקוח — מנהלת כספים (edit על לקוח
     // 'לקוחות' = edit ⇒ עריכת פרטים מותרת לה.
     await expect(page.getByTestId('customer-edit')).toBeVisible()
     // 'הצעות מחיר' = view ⇒ צפייה במסמך כן, פעולות-כתיבה לא.
-    // ⚠️ ‏#22 ולא #6 (‏04/08/2026): #6 אושרה, ועל הצעה סגורה **לאיש** אין שלוש הפעולות
-    // האלה — כלומר שלושת ה-`toHaveCount(0)` היו עוברים גם אילו שער-ההרשאה נשבר לגמרי.
-    // הטענה כאן היא על ההרשאה, ולכן היא חייבת לרוץ על הצעה שלמנכ"ל **כן** יש בה פעולות.
+    // 🔄 שוכתב 27/08/2026 (אודיט-סגירת-מ5, אשרור-ישי): הגרסה הקודמת ננעצה ל-#22, וקרון-
+    // התפוגה היה הופך את שלושת ה-toHaveCount(0) לירוקים-על-כלום סביב 31/08 — על הצעה
+    // סגורה *לאיש* אין פעולות (בדיוק הפח של #6 שההערה כאן תיארה, חוזר). האינווריאנט:
+    // הנושא נבחר בזמן-ריצה — כל הצעה *פתוחה* ("בתהליך"), שאצל בעלת-edit כן נושאת פעולות —
+    // ואסרשן-המכנה מבטיח שהמדידה רצה (מכנה-0 אינו ירוק — e2e/CLAUDE.md). אם ייפול על
+    // "אין הצעה פתוחה" — זו קריאה לרענן פיקסטורה, לא רגרסיה.
     await expect(page.getByTestId('customer-quote-document-10')).toBeVisible()
-    await expect(page.getByTestId('customer-quote-approve-22')).toHaveCount(0)
-    await expect(page.getByTestId('customer-quote-reject-22')).toHaveCount(0)
-    await expect(page.getByTestId('customer-quote-edit-22')).toHaveCount(0)
+    const openRows = page.locator('tr[data-testid^="customer-quote-"]', { hasText: 'בתהליך' })
+    const openCount = await openRows.count()
+    expect(
+      openCount,
+      'אין הצעה פתוחה על עמוד הלקוח — האינווריאנט לא נמדד; יש לרענן את הפיקסטורה (הצעה בתהליך ללקוח 46)',
+    ).toBeGreaterThan(0)
+    for (let i = 0; i < openCount; i++) {
+      const rowTestId = await openRows.nth(i).getAttribute('data-testid')
+      const quoteId = rowTestId.replace('customer-quote-', '')
+      await expect(page.getByTestId(`customer-quote-approve-${quoteId}`)).toHaveCount(0)
+      await expect(page.getByTestId(`customer-quote-reject-${quoteId}`)).toHaveCount(0)
+      await expect(page.getByTestId(`customer-quote-edit-${quoteId}`)).toHaveCount(0)
+    }
     await expect(page.getByTestId('customer-new-quote')).toHaveCount(0)
   })
 })

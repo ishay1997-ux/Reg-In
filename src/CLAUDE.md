@@ -289,7 +289,10 @@ lint ולא רק בדיקות-יחידה (שמייבאות רק את מה שהן
 **טבלה עם RLS מופעל ואפס policies מחזירה תוצאה ריקה עם `error: null`.** הלקוח מדווח "אין שורות",
 לעולם לא "נדחה". **מסך ריק = לחשוד ב-policies לפני שמחפשים באג ב-UI.**
 
-- **כרגע deny-all (RLS פעיל, אפס policies):** `salary_reports` (מ8).
+- **כרגע deny-all (RLS פעיל, אפס policies):** `salary_reports` (מ8) · **`project_changes`** *(מכוון,
+  של מ6 — קריאה רק דרך `rpc('list_project_changes')` וכתיבה רק בתוך `apply_scope_change`, שתיהן
+  DEFINER; ‏`.from('project_changes')` מחזיר `[]` בשקט לכל תפקיד. נוסף לרשימה הזו 27/08/2026 —
+  אודיט-סגירת-מ5 מדד שהטבלה חיה ב-advisors כ-deny-all אך נעדרה מכאן)*.
   ✅ **עודכן 26/08/2026 — ‏`logistics` יצאה מהרשימה הזאת** *(מודול 5, צעד 4.3)*. **נמדד חי
   ב-`pg_policies`: שתי policies** — `logistics_select_by_permission [SELECT]` *(של מ6, מ-14/08)* +
   `logistics_write_by_permission [ALL]` *(‏`M5-1`, מ-26/08, מגודרת ב-`'לוגיסטיקה'`)*.

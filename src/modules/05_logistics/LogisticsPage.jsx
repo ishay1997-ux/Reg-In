@@ -326,7 +326,13 @@ export default function LogisticsPage() {
       {/* משטח 2 הוא **דיאלוג ואינו ראוט** (㉔) — התור נשאר גלוי מאחוריו. הדיאלוג שולף את
           הדאטה של עצמו בפתיחה (㊲) ואינו מקבל אותה מכאן. */}
       {openProjectId !== null && (
-        <ChecklistDialog projectId={openProjectId} open onOpenChange={closeChecklist} />
+        <ChecklistDialog
+          projectId={openProjectId}
+          open
+          onOpenChange={closeChecklist}
+          // שמירת-סגירה שנחתה אחרי הרענון של closeChecklist מיישרת את התור מחדש (ממצא 26/08)
+          onSaveSettledAfterClose={refetch}
+        />
       )}
     </div>
   )
