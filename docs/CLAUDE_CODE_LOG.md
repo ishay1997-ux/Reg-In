@@ -45,6 +45,18 @@
 
 ## Session Log (newest first)
 
+### 26/08/2026 02:0X — Ishay's ruling: `module-build` reads the ⑥2 block ITSELF at every activation
+
+His ask, verbatim: *"אפשר שסקיל הבנייה יקרא את פרומט הבנייה כל פעם שהוא מופעל בהתחלה? … ושזה יעשה
+לכל המודולים בהמשך"* — plus a follow-up worry: will the skill find the right block in EVERY guide,
+given labeling consistency? **Measured before writing:** the block prefix VARIES across the 11
+module guides (`2)` in modules 2–4/7–12 · `⑥2)` in 5–6), but the phrase
+`המשך בנייה (בכל סשן עבודה` occurs **exactly once** in every guide with a build phase (0 in
+`module_01_close.md` — module 1 closed, no build block). ⇒ the skill's new Read-order line anchors
+on the PHRASE, never the number, so one edit serves all current and future modules. Also updated
+the "What ⑥2 is" paragraph so it no longer describes pasting as the delivery mechanism (a pasted
+copy still wins on freshness stamps). File: `.claude/skills/module-build/SKILL.md` (2 edits).
+
 ### 26/08/2026 00:15–01:3X — Module-5 Phase 1 EXECUTED: 1.0–1.5 done and verified, 1.6 gate in flight
 
 **Update (01:3X), superseding the blocker paragraph below:** Ishay cleared the tool block himself
