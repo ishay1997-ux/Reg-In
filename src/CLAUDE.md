@@ -289,7 +289,12 @@ lint ולא רק בדיקות-יחידה (שמייבאות רק את מה שהן
 **טבלה עם RLS מופעל ואפס policies מחזירה תוצאה ריקה עם `error: null`.** הלקוח מדווח "אין שורות",
 לעולם לא "נדחה". **מסך ריק = לחשוד ב-policies לפני שמחפשים באג ב-UI.**
 
-- **כרגע deny-all (RLS פעיל, אפס policies):** `salary_reports` (מ8) · `logistics` (מ5).
+- **כרגע deny-all (RLS פעיל, אפס policies):** `salary_reports` (מ8).
+  ✅ **עודכן 26/08/2026 — ‏`logistics` יצאה מהרשימה הזאת** *(מודול 5, צעד 4.3)*. **נמדד חי
+  ב-`pg_policies`: שתי policies** — `logistics_select_by_permission [SELECT]` *(של מ6, מ-14/08)* +
+  `logistics_write_by_permission [ALL]` *(‏`M5-1`, מ-26/08, מגודרת ב-`'לוגיסטיקה'`)*.
+  ⚠️ **והמלכודת של policy-כתיבה `FOR ALL` חלה גם כאן** — היא מכסה גם SELECT לבעל `edit`, ולכן
+  מי שבודק "מה קורה בלי policy" חייב להפיל את **שתיהן** *(אותו מוקש שכבר רשום שתי שורות מתחת)*.
   *(‏`login_attempts` ו-`login_rpc_calls` — deny-all **מכוון**, הגישה רק דרך פונקציות ה-DEFINER
   של הכניסה.)*
   ✅ **עודכן 09/08/2026:** ‏`hostesses` · `assignments` · `hostess_unavailability` ·

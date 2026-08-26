@@ -37,12 +37,12 @@
 | **3.2** | Surface 2 — checklist dialog incl. cancelled variant (🗣️ brief → build → verify) | ✅ 26/08 |
 | **3.3** | Route swap in `App.jsx` ⚠️ shared-surface | ✅ 26/08 |
 | **3.4** | 🔻👤 Phase-3 gate — 🎨 UX & functional review | ✅ 26/08 |
-| **4.1** | M6 ripple — `LogisticsTab` notes column (㉒) ⚠️ shared-surface | ⬜ |
-| **4.2** | M6 ripple — `ScopeChangeDialog`: item_status display · dynamic floor · strings (㊳②③④) ⚠️ | ⬜ |
-| **4.3** | Doc ripples — AR-4 fix · §6 debt consumption · automations register · ripple sweep | ⬜ |
-| **4.4** | E2E + smoke + accessibility for both surfaces; full regression | ⬜ |
-| **4.5** | 🔻👤 Phase-4 gate | ⬜ |
-| **5.1** | Live acceptance journey on seeded data (credentialed, screenshots) | ⬜ |
+| **4.1** | M6 ripple — `LogisticsTab` notes column (㉒) ⚠️ shared-surface | ✅ 26/08 |
+| **4.2** | M6 ripple — `ScopeChangeDialog`: item_status display · dynamic floor · strings (㊳②③④) ⚠️ *(+ the shared `FilterPill` tooltip fix)* | ✅ 26/08 |
+| **4.3** | Doc ripples — AR-4 fix · §6 debt consumption · automations register · ripple sweep | ✅ 26/08 *(STATUS.md held — rule 16)* |
+| **4.4** | E2E + smoke + accessibility for both surfaces; full regression | ✅ 26/08 *(unit+smoke green; `test:e2e` red on 5 PRE-EXISTING module-4 fixtures — proven by clean-tree re-run)* |
+| **4.5** | 🔻👤 Phase-4 gate | ✅ 26/08 *("בוצע לפי המלצתך")* |
+| **5.1** | Live acceptance journey on seeded data (credentialed, screenshots) | ✅ 26/08 *(restore verified field-by-field against the pre-journey snapshot)* |
 | **5.2** | 🔻👤 Closing audit — `module-close` in a FRESH session | ⬜ |
 
 ---
@@ -315,7 +315,7 @@ a log nobody reads for rulings.
 | Hostess-qty raise (server + client, byte-identical) | `כמות הדיילות חייבת להיות גדולה מאפס.` | Ishay 25/08 (G5 · AR-9) |
 | New-item-zero raise (server + client) | `כמות של פריט חדש חייבת להיות גדולה מאפס.` | Ishay 25/08 (G11b) |
 | The seeded demo note (`#107`/1; also written into `data-set.md`) | `הוזמן בבית-הדפוס — הובטחה אספקה בתחילת השבוע הבא.` | Ishay 25/08 (G6) |
-| Unresolvable-price removal raise (㉗-class corner; no demo path) | `לפריט אין שורת-מחיר מקושרת — לא ניתן להסירו מהמסך.` | Claude (delegated) — nod batched at the 4.2 🗣️ gate |
+| Unresolvable-price removal raise (㉗-class corner; no demo path) | `לפריט אין שורת-מחיר מקושרת — לא ניתן להסירו מהמסך.` | Claude (delegated) — ✅ **NODDED, Ishay 26/08/2026 16:5X** (*"מאשר לפי ההמלצות"*, decision ד of the phase-4 brief). The batched 4.2 nod is discharged; this table has no open row left |
 | Disabled pill title | `אין כרגע פרויקט במצב הזה` | S-3 |
 | Retry | `נסי שוב` — 🔴 **passed explicitly as `retryLabel="נסי שוב"` at EVERY `LoadingOrError` call site**: its default is masculine `נסה שוב` (`LoadingOrError.jsx`, the `🚧 מ12` note) and `PermissionAwareEmpty`'s `RETRY_LABEL` is a non-exported const — nothing importable | card §④-② (*"חייב לעבור במפורש"*) |
 | Amber legend | mockup verbatim (⏱ שורה בענבר…) | S-3 |
@@ -920,8 +920,39 @@ in the package (live screen · screenshots · measured evidence).**
 
 **Step 4.1 · `LogisticsTab.jsx` notes column (㉒) ⚠️ shared-surface**
 Read-only display (she writes in M5; the tab shows). Update `LogisticsTab.test.jsx`.
+🔴 **FORM — Ishay's ruling 26/08/2026 16:5X, decision א of the phase-4 brief ("מאשר לפי
+ההמלצות"): a FULL-WIDTH sub-row beneath the item's row**, label `הערת הלוגיסטיקה:` + the note
+text; **a row with no note renders no sub-row at all** (no `—`, no empty cell). **Why it needed
+his word:** measured 26/08 — `03_tab_logistics_approved.html` draws **four** columns
+(`פריט · כמות מתוכננת · כמות בפועל · מצב הפריט`) and **zero** hits for `הער*` ⇒ the notes
+display is **undrawn in the approved mockup**; ㉒ approves the capability, not a form.
+The rejected alternative (a 5th column) squeezes the four existing ones and renders `—` on most
+rows. *(Presented as a live HTML comparison on the real seeded row.)*
 **🔻🤖 Verify:** seeded note visible in M6's tab (screenshot); M6 tests green.
-**מה ייחשב עובד** *(㉒, quoted)*: *"ההערה נראית למנהלת-הפרויקטים"*. **🌊 אדוות —** **🗣️ אושר —**
+**מה ייחשב עובד** *(㉒, quoted)*: *"ההערה נראית למנהלת-הפרויקטים"* — concretely, on the live
+`ערב השקה — קמפוס צפון` tab, the row `תג שם רגיל - ממותג` (`B-REG-TAG`) carries
+*"הוזמן בבית-הדפוס — הובטחה אספקה בתחילת השבוע הבא."*, and the other three rows carry no note
+element (spec ✅#2's second half — *"וההערה נראית למנהלת-הפרויקטים"*).
+**↳ done 26/08/2026 (agent-built; every claim below RE-VERIFIED by the orchestrator against the
+code and the DB, not taken from the agent's report).** `MainTable` emits a `<Fragment>` per row:
+the item `<tr>` (four columns, widths untouched) plus — **only when `notes` is non-blank after
+trim** — a second `<tr>` with `colSpan={4}` carrying `NOTE_LABEL = 'הערת הלוגיסטיקה:'` + the text.
+**A row without a note emits no second `<tr>` at all** — no `—`, no empty cell, exactly as ruled.
+➕ **One detail the agent reasoned out rather than being told:** the bottom border moves from the
+item row to the note row when a note exists, so a rule never separates a note from the item it
+belongs to. Correct, and consistent with the ruling's intent.
+**Measured:** `LogisticsTab.test.jsx` **14/14 green** (was 13; the new assertion was watched RED
+first — it failed alone in the suite run at 17:09 before the component change landed).
+**🌊 אדוות —** ⚠️ **one this step did NOT fix, and it is the orchestrator's, not the agent's:**
+`LogisticsTab.jsx`'s header comment and an inline comment still say the origin columns are
+*"NULL בכל השורות היום ושום דבר אינו ממלא אותן (as-built 3.3⑥)"* — **false since `M5-3`; measured
+16/16 filled.** Out of the agent's scope by design. ⏳ **OPEN — orchestrator's, closes before the
+4.5 gate.** Deliberately NOT edited while the build agent still holds the file (rule 16 applies to
+agents sharing a tree, not only to sessions): a concurrent edit to a file an agent is mid-write on
+is the collision the rule exists to prevent. *(Stated as open rather than written as done — the
+half-step where a file is saved and its doc-ripple is lost is exactly what this guide warns about.)*
+**🗣️ אושר —** Ishay 26/08/2026 16:5X — *"מאשר לפי ההמלצות"* (decisions א–ד, one
+consolidated round).
 
 **Step 4.2 · `ScopeChangeDialog.jsx` ripples (㊳ items ②④ + AR-9) ⚠️ shared-surface**
 ➕ **Added 26/08/2026 (🎨-gate disposition, Ishay: "הבנתי מעולה, מאשר"): the disabled-pill
@@ -948,8 +979,66 @@ never reaches the payload and M5-7 would be DEAD code)*. Contract:
 Update `ScopeChangeDialog.test.jsx` (the old error-string assertion goes RED first — prove it,
 then update; add allowZero-scope tests: hostess `0` still refused client-side).
 **Files:** `src/modules/06_projects/ScopeChangeDialog.jsx` · `ScopeChangeDialog.test.jsx`
+🔴 **THREE forms ruled by Ishay 26/08/2026 16:5X (decisions ב–ד of the phase-4 brief,
+"מאשר לפי ההמלצות") — all three were undrawn/unsourced, which is why they went to him:**
+- **‏ב · `item_status` placement = a `StatusTag` inside the item's EXISTING sub-line** (the one
+  rendering `model.subLabel`, today the unit — becomes `יחידה · <tag>`). **No new column.**
+  *(Measured 26/08: `06_dialog_scope_change_approved.html` draws six columns and no status at
+  all ⇒ undrawn. The rejected alternative — a 7th column — squeezes the two money columns,
+  which are what the projects manager opens the dialog to read.)*
+- **‏ג · the `מה יקרה כשתשמרי` removal line** *(this line had NO tier-1–3 source — micro-guide
+  only, hence the ask)*: **`"{שם הפריט}" — השורה תוסר ממסך הלוגיסטיקה, וההסרה תירשם בהיסטוריית
+  שינויי-התכולה.`** — sits in the existing `לוגיסטיקה` consequence row, beside the update line.
+- **‏ד · the delegated ㉗-corner raise NODDED** (§3.7's batched nod, discharged here):
+  **`לפריט אין שורת-מחיר מקושרת — לא ניתן להסירו מהמסך.`** — already live in the DB (1.4);
+  the nod closes §3.7's only open row. **No demo path reaches it.**
+🔴 **And the mockup's own `min="0"` is NOT a licence** (measured: all three drawn rows carry it,
+**including the hostess row**). That is BEHAVIOUR ⇒ the spec wins over the drawing: the hostess
+row and the new-row path stay `allowZero:false` (AR-10; the DB `CHECK required_hostess_count > 0`
+backs it). Only an existing logistics row with `not_started` + `actual_qty = 0` gets `0`.
 **🔻🤖 Verify:** interception-driven dialog states; unit/E2E of M6 green.
-**מה ייחשב עובד** *(🔄ה item ④, quoted)*: *"רצפת-הספינר דינמית, עם הסבר צמוד"*. **🌊 אדוות —** **🗣️ אושר —**
+**מה ייחשב עובד** *(🔄ה item ④, quoted)*: *"רצפת-הספינר דינמית, עם הסבר צמוד"* — concretely, on
+the live `ערב השקה — קמפוס צפון` dialog: `שרוך סאטן - ממותג` (`not_started`, `actual_qty=0`)
+accepts `0` · `תג שם רגיל - ממותג` (`ordered`) refuses it with *"הפריט כבר הוזמן — לא ניתן
+להסירו"* beside the field · `תג שם אקולוגי - ממותג` (`ready`) likewise · the hostess row refuses
+`0` client-side with *"כמות הדיילות חייבת להיות גדולה מאפס."* **The third refusal case
+(`not_started` + `actual_qty > 0` ⇒ *"הגיעו כבר פריטים — לא ניתן להסיר"*) has ZERO live rows —
+measured 26/08 — and is proven by unit/E2E only.**
+**↳ done 26/08/2026 (agent-built; orchestrator-verified line by line — see the measurements).**
+· **The guard is `parseQtyInput`, as the step demanded** — it now takes a rules object
+(`allowZero` · `zeroMessage` · `negativeMessage`); `isRemovableLine(model)` is
+`itemStatus === 'not_started' && Number(actualQty) === 0` — **both conditions (㊱)**, and
+`removalBlockReason(model)` returns the string naming *which* rule blocked.
+· **`allowZero:false` is hardwired for the hostess row and for `deriveNewRowStates`** (AR-10),
+with a why-comment stating it stays so permanently.
+· **`QtyInput` gained `min`** and the existing-row call site passes `min={removable ? 0 : 1}` —
+the dynamic floor, with the reason rendered beside the field via a new `hint` prop.
+· **`item_status` renders as a `StatusTag` inside the EXISTING sub-line** (`{subLabel} · <tag>`) —
+**no seventh column**, exactly as ruled; hostess rows get no tag (they have no item status).
+· **The consequence block's removal line is Ishay's wording, byte-for-byte**, branched on
+`s.target === 0`, with a comment recording that it had no source layer and was therefore asked.
+🔬 **Byte contract — machine-verified, not eyeballed.** A checker parsed all **30** `raise
+exception` strings from the live migration and compared them to the file after normalising the
+server's deliberately-omitted ` השינוי לא בוצע.` suffix: **6/6 contract strings identical, 0
+failures.** ⚠️ **And it caught something a read-through would have missed:** mid-build the file
+carried placeholder sentinels (`@@SRV_HOSTESS_ZERO@@` …) in place of the Hebrew — had they
+survived, the projects manager would have seen that literal text on screen. **Zero remain.**
+📌 **The retired blanket string survives ONLY inside a why-comment explaining its removal** — kept
+deliberately (it is what stops a future session re-introducing a blanket refusal), and the DoD line
+was sharpened from *"zero hits"* to *"zero LIVE hits"* to match. Technical call, disclosed.
+· **Shared-component tooltip fix (the 🎨-gate rider): DONE in `FilterPill.jsx`** — a `span`
+wrapper carrying the same `title` receives the hover, because the shared `Button`'s
+`disabled:pointer-events-none` denies the button itself a hit-test. **Route chosen over
+`aria-disabled` + click-guard on purpose**, and the reason is in the file: `aria-disabled` would
+return the control to the tab order and change what a screen reader announces — a cross-system
+semantics change bought for a tooltip. **Appearance, tab order and semantics all unchanged.**
+**Measured:** `src/modules/06_projects/` **151/151 green across 9 files, exit 0** (was 143 with 1
+red — and that red was the OLD error-string assertion, watched failing at 17:18 before it was
+updated, exactly the prove-red the step required).
+**🌊 אדוות —** `FilterPill` is shared with module 6's pills ⇒ its behaviour change is verified on
+both modules' screens at the 4.5 gate (live browser), not on module 5's alone.
+**🗣️ אושר —** Ishay 26/08/2026 16:5X — *"מאשר לפי ההמלצות"* (same consolidated
+round as 4.1).
 
 **Step 4.3 · Doc ripples & debt sweep**
 **Files:** `docs/micro_guides/module-6.md` · `docs/specs/module_06_projects/screens-approved.md` ·
@@ -965,7 +1054,53 @@ re-count `🚧 מ5` live · `db_roadmap` M5-rows → ✅ · STATUS ruling-count 
 **🔻🤖 Verify:** `grep -c 'להסרת פריט לגמרי' docs/ src/` — every remaining hit sits next to a
 dated ㊳-note; §6 items carry closure evidence.
 **מה ייחשב עובד** *(iron rule 13(ח), quoted)*: *"יכולת חדשה נבנתה? לחפש טקסט-ממשק שעדיין מתאר
-אותה כלא-קיימת."* **🌊 אדוות —** **🗣️ אושר —**
+אותה כלא-קיימת."*
+**↳ done 26/08/2026 (orchestrator, main session).** All three `AR-4` sites in `module-6.md`
+amended **additively** (ruling row · header guard · payload-contract block) — the original text is
+preserved in every one and a dated `🔶` note states the new boundary, citing ㊳/㊱/`M5-7`. Dated
+notes also landed in M6's `screens-approved.md` (the `הכמות החדשה` validation row, which quoted
+the deleted string as live on-screen text) and in M5's `data-set.md` + `world-sources.md` (both
+already carried a ㊳ correction predicting the deletion — each now carries a `✅ בוצע` stamp).
+🔎 **THREE more sites this step's own file-list did not name, found by running the greps instead of
+trusting the list** — all the same class (text still describing a now-built capability as absent,
+which is literally this step's `מה ייחשב עובד`):
+· **`processes-approved.md` `🧱②`** still read *"🔴 לעולם לא DELETE … `qty<=0` נדחה בהודעה"* — a
+measured-22/08 statement that `M5-7` deliberately falsified. Dated note added; the fact preserved
+(it records the state we came from).
+· **`processes-approved.md`'s column-scan table** listed `actual_qty`/`item_status`/`notes` as
+**`אין כותב`** and `quote_service_line_id` as **`נמדד 0/6`**. Re-measured live: all three have a
+writer (`update_logistics_item`), and the pointer is **16/16**. Dated re-measurement block added
+below the table.
+· 🔴 **`src/CLAUDE.md` — the highest-cost one, because it loads in EVERY code session:** it listed
+`logistics` under *"כרגע deny-all (RLS פעיל, אפס policies)"*. **Measured live: two policies**
+(`logistics_select_by_permission` + `M5-1`'s `logistics_write_by_permission`). Corrected, with the
+`FOR ALL`-covers-SELECT caveat carried into the same note.
+**Live-measured, not inferred** — `pg_get_functiondef` on the running `apply_scope_change`:
+`להסרת פריט לגמרי` **absent**; all five replacement raises present; the `delete from
+public.logistics` branch present.
+**`automations.md`:** the `logistics_recompute_project_status` row said the blast radius was
+*"מ5 העתידי"* — updated, module 5 is live. **And a deliberate deviation from this step's
+instruction, stated rather than done silently:** the step said *"+M5-6 RPC"*, but this register's
+charter is *"מה רץ במערכת בלי שאף אחד לוחץ"* and `update_logistics_item` is UI-called ⇒ filing it
+as an automation would be a category error. Instead: a measured **zero-automations** entry for
+module 5 (`cron.job` = 3 unchanged · 24 unique public triggers unchanged · `logistics` carries the
+same two triggers), naming the one new RPC and the three function rewrites and saying where they
+ARE registered (`db_roadmap`). **Raised to Ishay in the same report as a guide-vs-charter conflict.**
+**`PROJECT_MASTER §6`:** items **(1)** and **(7)** consumed with live evidence — pointer column
+filled **16/16 rows**; `pg_policies` shows exactly `logistics_select_by_permission [SELECT]` (M6's,
+untouched) + `logistics_write_by_permission [ALL]` (M5-1's, new) ⇒ inherited, not recreated.
+➕ **Item (2) checked though not mandated** (it is the one that fails silently): every one of the
+seven `project_status` mentions in the live `update_logistics_item` body is a `select … into`, a
+guard, or a return field — **zero writes.** M6's trigger remains the sole writer.
+**`db_roadmap` M5 rows:** re-read live — **all eight `M5-1`…`M5-8` were already ✅** at phase-1
+close. Nothing to flip; saying so rather than claiming work.
+**`🚧 מ5` live re-count:** **one** `🚧 מ5 ← מ6` line (seven items inside it) + **two**
+`🚧 מ11 ← מ5` lines — matches the expectation in §2.2; **no new debt added by module 5.**
+⏸️ **`STATUS.md` NOT touched** — another session holds it modified in the working tree right now
+(iron rule 16); carried to the 4.5 gate pending Ishay's word.
+**🌊 אדוות —** this step IS the ripple sweep; its own ripples: `spec.md`'s cross-module table
+gained a dated execution-status block, and `module-6.md` + M6's `screens-approved.md` now point at
+㊳. Nothing else touched. **🗣️ אושר —** 🤖 step (documentation only; no product decision).
 
 **Step 4.4 · E2E + smoke + accessibility**
 **Files:** `e2e/logistics.spec.js` (new) · `e2e/smoke.spec.js` + `smoke-anchors.json` ·
@@ -982,9 +1117,54 @@ surfaces (incl. the cancelled variant's lone open field). Full regression: `npm 
 4.1's notes-column assertion (nothing locked guards it otherwise).
 **מה ייחשב עובד** *(spec ✅-chapter, quoted)*: ‏1. *"כתיבה שנחסמה אינה מדווחת 'נשמר'"* (the
 intercepted-failure path shows the S-2 string). ‏2. card §④ branch order holds under E2E.
-**🌊 אדוות —** **🗣️ אושר —**
+**↳ done 26/08/2026 (agent-built; orchestrator ran the three named regressions itself).**
+`e2e/logistics.spec.js` — **new, 12 tests**: queue + 3 pills on real reads · the §④ branch that
+matters most (**zero logistics rows reads as BLOCKED, never "the queue is empty"**, and the same
+endpoint *aborted* reads as a load failure — two different sentences, asserted as different) ·
+㉚/㉛/㊷ via interception · **㊲+㉝+㊴** (cancelled lock with `actual_qty` as the lone open field) ·
+**S-2** (a blocked write shows the failure string **and the value reverts**) · ⑬ banner-not-a-gate ·
+STAFF/RECRUIT/PROJECTS permission branches. Every test ends with a network-level guard asserting
+**zero non-GET requests left the browser**. `smoke.spec.js` +31 / `smoke-anchors.json` +7 —
+CEO-anchored, **no id, count, date or status pinned** (the block's comment says why).
+`accessibility.spec.js` +72 — axe over all three module-5 surfaces, each with a content wait.
+**59 assertions individually inverted, seen red, restored.**
+🔴 **And the red-proof found a hole in the spec itself, which is the point of doing it:** two loops
+in the cancelled-variant test ran on **empty collections** and stayed green when inverted — the
+runtime-chosen subject happened to be a project whose rows are all `מוכן`. Fixed by preferring a
+subject carrying all three row kinds and asserting each denominator first. **This is the
+zero-denominator rule (`e2e/CLAUDE.md`) catching itself.**
+📌 **A defect the E2E work surfaced in module 5's OWN screen, fixed here** *(see the deviations log
+entry for the anchor)*: the completion banner printed **`נרשם חוסר של 1 יחידות`** — the branch was
+on `items` while the word describes `units`, and the mockup only ever drew `80`. Now `יחידה אחת`,
+per Ishay's `O-5` which gave the twin sentence that exact form. Red-proved and locked by a test.
+**🌊 אדוות —** `ChecklistDialog.jsx` (the singular fix) + its test; `docs/` this guide + §7.
+**🗣️ אושר —** 🤖 step for the spec authoring; the singular-wording fix is an anchored ruling
+disclosed to Ishay in the same message, **overridable**.
 
 **Step 4.5 · 🔻👤 Phase-4 gate** — package: regression counts, screenshots, ripple evidence.
+**↳ ✅ APPROVED — Ishay 26/08/2026 19:3X: *"בוצע לפי המלצתך"*** (same message that opened the
+open-items investigation). **PHASE 4 CLOSED.**
+**The package as presented:** live screenshots of BOTH ruled surfaces from the real DB (not
+mockups) — the note sub-row with **1 note row over 4 item rows, denominators asserted**, and the
+dialog's status tags + both refusal lines · the four-command regression **by name** with the two
+red ones explained and their causes located OUTSIDE module 5 · and an honest open-items list rather
+than a clean-sounding summary.
+🔴 **The gate package deliberately carried a self-reported gap, not only successes:** the green
+*"אפשר להקליד 0"* affordance that the approval mockup drew but the spec never required and the
+build never produced. **Ishay approved the mockup, so the discrepancy is disclosed to him rather
+than quietly resolved in the build's favour** — it is now open-item #1 of the investigation.
+⏸️ **What the gate could NOT evidence, stated rather than glossed:** a live disabled-pill tooltip.
+**Measured: zero of three logistics pills are disabled on live data right now** (the demo data grew
+during the day), so the state is unreachable without manufacturing it. The shared-component fix
+rests on component-level red→green across **both** modules' real pill components.
+**מה ייחשב עובד** — the acceptance lists of 4.1/4.2/4.4, each demonstrated: the note is visible to
+the projects manager on the live tab (㉒ / spec ✅#2) · the dynamic floor with its adjacent
+explanation is on the live dialog (🔄ה item ④) · a blocked write shows the S-2 string and reverts,
+never "נשמר" (spec ✅#4).
+**🌊 אדוות —** the gate closes the phase; `STATUS.md` + `CLAUDE_CODE_LOG.md` written at close
+(released under rule 16 only after the parallel M8 session's own commit declared its Discovery
+CLOSED and its files sat idle 45+ minutes — the wait, and the reason it ended, are both recorded).
+**🗣️ אושר —** the quote above.
 
 ---
 
@@ -1044,7 +1224,12 @@ once in 5.1.
 - [ ] `#105` reached `ready` **via the trigger** (derived, never hand-set)
 - [ ] removal round-trip: `0` on clean row ⇒ row gone + history row with reason+snapshots; both refusal strings raise
 - [ ] `🧱⑥` falsified: the checklist writes land (RPC) and a blocked write shows the S-2 message, never "נשמר"
-- [ ] old error string `להסרת פריט לגמרי` — zero hits in DB functions AND in `src/`
+- [ ] old error string `להסרת פריט לגמרי` — zero hits in DB functions AND **zero LIVE hits in `src/`**
+  *(wording sharpened 26/08/2026, step 4.3 — technical-execution call, disclosed to Ishay, overridable:
+  the original said "zero hits in `src/`" flat. A mention inside a **why-comment explaining the removal**
+  is not a violation — it is the thing that stops a future session re-introducing a blanket refusal, and
+  iron rule 3 asks for exactly that comment. What must be zero is a **live string constant or rendered
+  text**. Checked by a comment-aware scan, not a flat `grep -c`.)*
 - [ ] notes visible in M6 tab; `item_status` visible in scope dialog; dynamic floor works both ways
 - [ ] `מוכנות לביצוע` transition shown as message, no gate (⑬); cancelled variant locks all but `actual_qty` (㊴)
 - [ ] every `🌊 אדוות` slot in §6 closed (ripples or `אין`) — count live
@@ -1268,3 +1453,235 @@ adding the `apply_migration` allow rule to `.claude/settings.local.json` — his
   `check:docs-structure` on the parallel M8 session's uncommitted sweep file (same 3 findings;
   flagged to Ishay twice — that session should fix its own file). Temp evidence/measure specs
   deleted; phase-3 commit follows as this entry's last act.
+
+### Added `26/08/2026 17:3X` — Phase 4, steps 4.1+4.2: the build agent's five `הנחתי` items
+
+🔴 **Why these are on disk and the other two provenance tags are not** (Ishay's ruling 08/08/2026):
+`אומת-על-ידי` and `דווח-לי` describe **how something was learned** — their reader is Ishay while the
+conversation is live. **`הנחתי` describes something that was INVENTED**, and two weeks from now it
+reads exactly like a fact. This log is the only place a future session can tell them apart.
+**All five were disclosed by the agent, and all five are reversible.**
+
+| # | The assumption | What was actually checked before calling the source silent | Verdict |
+|:-:|---|---|---|
+| **1** | A **negative** qty on an existing logistics row mirrors `הכמות אינה יכולה להיות שלילית.` | The step's own instruction named only three mirrors and is silent on negatives. §3.7's `Negative qty` row is `כמות בפועל אינה יכולה להיות שלילית.` — a **different field** (module 5's `actual_qty`) and a different string. Opened: the step text, §3.7, §3.3, `🔄ה`, `🎓㊳` | ✅ **Sound, and barely an assumption** — the string was byte-copied from the server's own `(not v_is_new) and v_new_qty < 0` raise. The instruction was silent; the DB was not |
+| **2** | A **hostess negative** shows the hostess-zero message | Measured, not guessed: the server's condition is `v_new_qty <= 0`, so that raise covers negatives byte-exactly | ✅ **Not really an assumption** — a measurement. Kept here because the agent tagged it |
+| **3** | The refusal reason shows **always while blocked**, not only after she types `0` | The ruling said *"שורת-הסבר לצד השדה"* and did not say when it appears | ✅ **Keep.** `🎓㉚` is explicit: *"כפתור מושבת מלמד אותה את החוק"* — teaching happens **before** the attempt. And typing `0` turns the same sentence red rather than adding a second one, so she never sees it twice |
+| **4** | A line model with **no matching logistics row** falls back to the new-item zero message | Unreachable today (that input is disabled and its error nulled) | ✅ **Keep, and the reasoning is right:** such a line, if ever sent, goes without `serial_number` — which the server reads as "new row". The fallback matches what the server would actually say |
+| **5** | The note sub-row **takes over the item row's bottom border** | Purely visual; nothing in the ruling or the card covers it | ✅ **Keep.** A rule between an item and its own note would fight the whole point of the form Ishay chose |
+
+⏸️ **And one thing the agent deliberately did NOT build, recorded so it is not lost:**
+**`aria-describedby` linking the refusal hint to the qty input**, so a screen-reader user hears the
+rule on focus. **It is a real gap** — the hint is a plain `<div>` today, and only the red error
+carries `role="alert"`. Not asked for, touches merged-screen markup, and `e2e/accessibility.spec.js`
+was being edited by another agent at that moment. ⇒ **candidate for the 4.5 gate's decision, or M12
+with the other system-wide a11y items** (O-2/O-6 pattern). **Ishay's call, not Claude's.**
+
+📌 **One scope call, disclosed rather than buried:** the agent **created**
+`src/components/FilterPill.test.jsx` (76 lines, 4 tests) where its task said *"(+ its test, if one
+exists)"* and none existed. Justified: the task required the tooltip fix be proven red once, and a
+throwaway probe would have left a shared-component fix permanently unguarded. **New file, new
+coverage on a component three modules use — accepted.**
+🔎 **Orchestrator's independent re-checks of this agent's report (it was not taken at face value):**
+`git status` confirms `LogisticsPage.test.jsx` and `ProjectsPage.test.jsx` are **unmodified** (its
+tooltip probes really were copies, and really were deleted — zero probe files remain anywhere) ·
+the byte-contract verifier re-run **6/6, 0 failures** · full suite re-run independently:
+**1,418 / 55, exit 0**, matching its claim exactly.
+
+### Added `26/08/2026 19:0X` — Phase-4 full regression: the three named runs, and the one that is RED
+
+**Run by the orchestrator, not delegated** (the gate never delegates).
+
+| Command | Exit | Result |
+|---|:--:|---|
+| `npm run test:run` | **0** | **1,420 / 55 files** — baseline before phase 4 was 1,405 / 54 ⇒ **+15 tests, +1 file, zero regressions** |
+| `npm run test:e2e` | 🔴 **1** | **138 passed · 5 failed · 6 skipped** — **all five in MODULE 4**, none in module 5 |
+| `npm run smoke` | **0** | 1 passed (37.6s) — needed the dev server up first (`exit 3` without it, which is the wrapper working correctly) |
+| `npm run gate` | 🔴 **1** | Every stage green — lint · format · **1,420 unit** · build · `dup` · `deadcode` · `audit` · `check:bidi` · `check:context` — **except `check:docs-structure`: 3 findings, all in `docs/specs/module_08_finance/stage0-sweeps/m8-sec7-items.md`**, a file committed by the parallel M8 session (`1caa8b3`) and **never touched here** |
+
+🔬 **The five E2E failures were PROVEN not to be ours, not argued.** `e2e/CLAUDE.md`'s own rule —
+*"before attributing an E2E failure to your last change: `git stash`, run, restore"* — was executed:
+**the whole phase-4 tree was stashed (27 files) and the two specs re-run against a tree carrying
+zero phase-4 changes. The identical five failed, with byte-identical messages.** Restored with
+`git stash pop`, no conflicts, suite re-verified **1,420 / 55, exit 0**.
+⚠️ **Why the suspicion was legitimate and had to be tested rather than waved off:** phase 4 changed
+**`FilterPill`, a SHARED component**, and all three failing areas (repository · overview ·
+smart-match) render filter pills. The clean-tree run is what ruled it out.
+🔴 **And a trap worth recording: the background-task notification reported `exit code 0` for that
+E2E run while the command's own captured `E2E_EXIT` was `1`.** The notification reports the
+*wrapper's* exit, not the command's. **Read the captured exit code, never the notification's.**
+
+> 🔴 **CORRECTED `26/08/2026 20:0X` — the root cause written below was WRONG, and the correction
+> matters because it reassigns blame from an outsider to us.** The paragraph that follows attributed
+> the `overview-kpi-missing` break to *"a new project with no staffing created in production the same
+> day"* (a quote approved by another person). **Measured live, project-by-project:** the KPI counts
+> **4** projects with a staffing gap (`#16` gap 10 · `#3` gap 6 · `#8` gap 5 · `#15` gap **1**), while
+> the test's row matcher is `{ hasText: 'חסרות' }` — and `OverviewTab.jsx:319` renders
+> **`gap === 1 ? 'חסרה 1' : \`חסרות ${gap}\`'`**. ⇒ **The plural matcher is structurally blind to the
+> singular branch.** A 0-of-10 project renders the PLURAL form and is counted fine — so the outsider's
+> project **cannot** be the cause. **The one row the matcher cannot see is `#15` — `ערב השקה — קמפוס
+> צפון`, gap 1 — which is MODULE 5's OWN phase-1 demo seed.**
+> ⇒ **The test defect is module 4's and is old** (it never handled the singular). **The trigger is
+> ours.** And it was already failing before the outsider's project existed (KPI 3 vs rows 2).
+> ⚠️ **And this exposes the limit of the clean-tree proof recorded below:** `git stash` removes
+> **phase-4 code** — it does not remove **phase-1 seed rows**. The proof was sound for the question
+> "did phase 4 break this"; it was silently read as "is module 5 involved at all", which it cannot
+> answer. **Two different questions, one experiment.**
+
+**What the five actually are — live-data fixture rot, the class `e2e/CLAUDE.md` already documents**
+(*"פיקסטורות נעוצות לשורות-מסד חיות מרקיבות לבד"*, and its sibling *"וגם מספר חי הוא פיקסטורה"*):
+`overview-kpi-missing` expected `3`, live screen says **`4`** — and a new project **with no staffing**
+was created in production earlier the same day (quote → project via the real approval path), which is
+exactly one more "event missing staff". The other four are the same family (a filtered-empty state
+that no longer empties, an invite row with no `נשלח` line, and two action-menu label counts).
+⇒ **They are module 4's fixtures, they will keep drifting while the system is used before the demo,
+and the documented fix is to re-express them as invariants rather than pinned values.**
+**Not done here — out of phase-4 scope, and a triage call that is Ishay's.**
+
+### Added `26/08/2026 21:4X` — POST-GATE work, all of it on Ishay's word after 4.5 closed
+
+⚠️ **This section is deliberately after the phase-4 gate.** Every item here was ruled by Ishay
+*after* he approved 4.5, so none of it retro-changes what the gate certified. Recorded separately
+so a later reader can tell the gate's contents from what followed it.
+
+**‏① 🔴 Item removal moved from "type `0`" to an EXPLICIT `הסר פריט` control** *(Ishay, "אשמח שתבנה
+כן. מה שהכי נכון")*. **His question was the right one and the analysis backed it:**
+· `㊳` ruled **ownership + no new screen** — *"הסרה = כמות חדשה 0"* is the **how**, derived from
+  *"the same screen where she already reduces quantities"*. ⇒ **changing the mechanism does not touch
+  his ruling.**
+· **Measured house precedent:** every destructive action in this system has an explicitly named
+  control (`העבר לארכיון` · `השבת` · `ביטול פרויקט`). **"Type a magic value to delete" was the only
+  exception in the codebase.**
+· 🔑 **And it is what finally makes `㉚` literal.** `㉚` says *"פקד מושבת מלמד אותה את החוק"* — but
+  there was **no removal control at all**, so nothing taught. Blocked rows now render the button
+  **present, disabled, and reasoned**.
+**As built:** the marked state is **derived** (`target === 0`), not parallel state — the button
+writes into the same `qtyInputs` field she would type into, so the two routes cannot drift. Marked
+row: name struck through, the qty input **replaced** by `יוסר`, button flips to `בטל הסרה`. The
+server contract is **untouched** — `target_qty: 0` and the two-condition `㊱` guard are exactly as
+before, and typing `0` by hand still works identically.
+🚫 **No modal confirmation, deliberately** — the dialog already gates with a mandatory reason + the
+consequence block + an explicit Save. Ishay asked whether quantity changes should also be confirmed;
+**answer: no** — a quantity change is *reversible*, a removal is not, and a fourth gate would train
+her to click through the one that matters (`⑯`: *"הזמן מודיע ולא חוסם"*).
+🚫 **The positive hint line under discussion is DROPPED** — the button supersedes it.
+**Verified:** 18 mutations, each watched failing and reverted · suite **1,433 / 55, exit 0** ·
+`vite build` 0 · eslint 0 · prettier 0 · `check:bidi` 0.
+⏸️ **Owed and NOT done: the live visual pass.** The DOM, semantics and behaviour are proven; **how
+the button and the strikethrough actually look in the row has not been seen by anyone.**
+
+**‏② 🔴 A real defect in MODULE 5's OWN screen, found by the feedback audit and confirmed by
+measurement — a promise the screen made and broke.** `ChecklistDialog` prints
+*"כל שינוי נשמר מיד — אין כפתור שמירה במסך."* and saves on `onBlur`. **Measured with a throwaway
+probe: type a note, close the dialog without leaving the field ⇒ `updateLogisticsItem` called ZERO
+times.** The note is gone.
+🔴 **And it was INPUT-DEVICE DEPENDENT, which is what made it dangerous:** closing with the mouse
+moves focus to the button ⇒ `blur` fires ⇒ saved. Closing with **Esc** unmounts directly ⇒ lost.
+**Same intent, two outcomes, no error either way.**
+**Fix:** blur the active element before the close propagates — this triggers the existing, already
+validated blur-save. No new control, no confirmation, no change to the save path.
+**Red-proved:** fix removed ⇒ *"expected vi.fn() to be called at least once"*; restored ⇒ green.
+
+**‏③ The five module-4 E2E fixtures rewritten as invariants** *(Ishay's ② — "לתקן")*. **Verified by
+the orchestrator, not taken from the report: exit 0, 32 passed** (was 27 passed / 5 failed).
+**No guard was weakened and three are now STRICTER** — most notably the twin-action test, which
+asserted *"never both"* and therefore **passed green when NEITHER appeared**; it now demands exactly
+one. 🔎 **And the agent surfaced a worse sibling it was told not to fix:**
+`e2e/customer-page.spec.js:218-222` pins quote `#22` in three **negative** assertions, and the
+`module3-quote-expiry` cron flips `#22` to `rejected` around **31/08** ⇒ the testids vanish and all
+three **pass vacuously — a silent pass that never goes red.** Out of scope here; flagged.
+
+**‏④ `check:docs-structure` sharpened — the gate is GREEN for the first time in two days.**
+The rule matched `מ3/8`-style **module-pair tags** as surface counts. 🔑 **The checker's own header
+already documented module pairs as a known false-positive class and tried to exclude them with a
+closure-word requirement — which a Discovery status tag (`סגור·לוגיקה·מ3/8`) satisfies anyway.**
+**Measured: 3 findings in the scanned set, 3 of them false — 100%**, which is precisely the state
+the checker's own comment calls *"בדיקה שמכבים"*. Added `(?<!מ)(?<!מודול )(?<!מודולים )`; verified
+seven forms one by one — **`8/8` (the line the checker was born for), `4 מתוך 8` and `3/8 נסגרו`
+are all still caught** — then proved it still bites by planting a real violation and watching it fail.
+🚫 **Module 8's committed file was NOT edited.** It is correct; it uses the project's own tagging
+convention. Rewriting a sound document to appease a broken tool would have punished the victim and
+left the defect to catch every future `מN/8` tag — and module 8 is the module that carries the 8.
+
+**‏⑤ Two corrections to documents Ishay relies on, both of them mine to own:**
+· 🔴 **I had written into Amit's presentation guide that the logistics screen is live. It is not.**
+  Measured: `git ls-tree origin/main -- src/modules/` returns **no `05_logistics`** — nor does `dev`;
+  the module lives only on this branch, 67 commits ahead. **The original sentence I "corrected" was
+  true, and I replaced it with a false one** by conflating *built* with *deployed*. Both guides now
+  say so, marked as a same-day correction-of-a-correction. ✅ **And the mitigating measurement:**
+  `demo-script-28-08.html` **never mentions logistics** — the screen is not in the presentation, so
+  nothing is urgent.
+· 🔴 **`do-not-touch.md` promised that marking an item `מוכן` is reversible.** True only while the
+  event date has not passed. Measured in the **live** `recompute_project_status`: once
+  `final_event_date < current_date` the same formula writes **`event_finished`**, and the guard
+  `if v_status not in ('not_started','in_progress','ready') then return` means un-marking recomputes
+  nothing — and the dialog locks entirely. **This is Ishay's own deliberate guard (`§7.44`); only the
+  promise was wrong.** Corrected in place.
+· 📌 **Demo-day measurement worth keeping:** `#13` (event 26/08) and `#14` (27/08) both satisfy
+  `final_event_date < 28/08` ⇒ **without the morning seed refresh, two of the three logistics demo
+  projects leave the queue on their own, `#14` at 05:00 on presentation morning.** A dispatched check
+  confirmed the refresh **will** succeed (every `finally_approved` row in the DB was examined; the one
+  hostess with future approvals outside the demo set is not in any demo project) — and the refresh
+  **already ran successfully today**, which is the strongest evidence available.
+
+### Added `26/08/2026 22:0X` — the system-wide feedback fix Ishay approved (⑥ of the post-gate list)
+
+**🔴 Error toasts no longer auto-dismiss.** `ToastProvider` deleted **every** toast after 4s,
+regardless of kind. **The concrete case that decided it** (not a principle — a sentence that exists):
+releasing a hostess prints *"…אך הודעות-הביטול: 2 לא נשלחו · 1 — לא ידוע אם יצאו. כדאי ליידע אותה
+טלפונית."* — **and no screen anywhere records that a hostess was never told her event was cancelled.**
+Four seconds was the entire window to read it, while the table simultaneously swapped to a loading
+skeleton and pulled the eye.
+🔑 **This APPLIES an existing house ruling rather than inventing one:** the closing tab already
+avoids a refresh on purpose *"כי הוא היה מוחק את הודעת-הכשל"*, and the quote-send dialog keeps a
+persistent message **in addition to** its toast. The knowledge existed; it had never been applied to
+the toast itself. **Success/info still dismiss at 4s — a success is reproducible, a failure is not.**
+**Scope: one condition.** Covers all 63 call sites at once; the `✕` control already existed.
+**New file `src/components/ToastProvider.test.jsx`** (it had none): success dismisses · an error
+survives **5× the window** · and the error is closable, so it cannot become trapped on screen.
+**Red-proved:** auto-dismiss restored ⇒ two of the three fail, the first on the hostess sentence
+verbatim; reverted ⇒ green.
+🐞 **And a defect in my own first test, worth recording because it is the rule I preach:** it looked
+for a close control by `aria-label` containing **`סגור`**, while the real label is **`סגירת ההתראה`** —
+which does not contain that string. **The test failed and the code was fine.** *Search the target's
+own vocabulary, not the words you arrived with* — noted inline in the test.
+
+**Suite after this round: 1,436 / 55, exit 0** · eslint 0 · prettier 0 (`src` clean).
+⏸️ **Still owed, unchanged:** the live visual pass on the removal control · step **5.1** ·
+two feedback findings awaiting Ishay's word (the permission-block rendered as a system fault in the
+project card; success-and-failure shown together on the pricing-parameters screen).
+
+### Step 5.1 — ✅ DONE `26/08/2026 22:2X` · live acceptance journey, and what the verification caught
+
+**Announced to Ishay before a single write, as he required.** Ran through a temporary credentialed
+provider in `e2e/` (the house evidence-provider pattern) — **deleted before commit; `git status`
+confirms `e2e/` holds only the real specs.**
+
+**The journey, as דנה on the live DB** — subject `ערב השקה — קמפוס צפון` / `B-SAT-LAN`, chosen
+because **every field it touches starts empty**, so the restore is unambiguous:
+mark `הוזמן` → expected arrival date → partial `actual_qty` → note → **then re-authenticated as the
+projects manager and confirmed the note is visible in M6's tab** (`㉒` end-to-end on real data, not
+interception) → then every field restored through the same screen.
+
+🔴 **What the verification caught, and a green test would have hidden.** The restore came back
+**6 of 7 fields correct**: `notes` was `''`, not `NULL`. **Cause is structural, not a slip — the UI
+can never produce `NULL`:** a cleared `<textarea>` yields `''`. ⇒ **once anyone writes and clears a
+note, that column cannot return to its seeded state through the screen, ever.** Visually identical
+(both render no note row), and functionally equivalent to every reader — but not byte-identical to
+the seed, and the promise made was exact restoration. Completed with one targeted `notes = ''` →
+`NULL` update, disclosed in the same message.
+🔑 **This is the whole reason 5.1 exists as a separate step:** the Playwright run was **green**, and
+the database was **not** back.
+
+**Restore proof — programmatic, not eyeballed.** All six logistics rows of both demo projects
+compared field-by-field against the pre-journey snapshot with `is not distinct from` (so `NULL` and
+`''` cannot pass as equal): **`identical_to_snapshot = true` on all six.** Counters unchanged:
+`logistics` = **16** · `project_changes` = **1** (the journey performs no scope change) ·
+project `#15` still `in_progress` · demo rows **6**.
+
+**מה ייחשב עובד** *(spec ✅-chapter, walked on the real screen)*: she marks `הוזמן`, types a quantity
+and writes a note — saved instantly, no save button (✅#2) · **and the note is visible to the
+projects manager** (✅#2's second half, `㉒`) · nothing reported "נשמר" that did not happen (✅#4).
+**🌊 אדוות —** this guide (step table + this entry) · `CLAUDE_CODE_LOG` · `STATUS`. The temp provider
+was deleted rather than committed.
+**🗣️ אושר —** 🤖 step; the live-write announcement was given and acknowledged before running.
