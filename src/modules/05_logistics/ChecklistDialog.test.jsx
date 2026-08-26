@@ -299,6 +299,34 @@ describe('ChecklistDialog — ㊵ תג המילוי האוטומטי', () => {
   })
 })
 
+// 🔴 **המסך מבטיח "כל שינוי נשמר מיד" — והבדיקה הזאת היא מה שמחזיק את ההבטחה.**
+// נמדד 26/08/2026 שהיא הופרה: הערה שהוקלדה ולא יצאו מהשדה **אבדה** בסגירת הדיאלוג, כי
+// React אינו יורה `blur` על אלמנט ממוקד שמפורק. והכי מסוכן — זה היה **תלוי-אמצעי-קלט**:
+// סגירה בעכבר הזיזה מיקוד ⇒ נשמר · סגירה במקלדת פירקה ישירות ⇒ אבד. אותה כוונה, שתי תוצאות.
+describe('ChecklistDialog — הבטחת "נשמר מיד" מול סגירת הדיאלוג', () => {
+  it('הערה שהוקלדה ולא יצאו ממנה — נשמרת כשהדיאלוג נסגר, ולא נעלמת', async () => {
+    const onOpenChange = vi.fn()
+    getChecklist.mockResolvedValue(checklist())
+    listProducts.mockResolvedValue(PRODUCTS)
+    updateLogisticsItem.mockResolvedValue({ row: row({ notes: 'נשלח לבית-הדפוס' }) })
+    render(<ChecklistDialog projectId={15} open onOpenChange={onOpenChange} />)
+    await screen.findByTestId('checklist-row-B-SAT-LAN-1')
+
+    const note = screen.getByTestId('checklist-note-B-SAT-LAN-1')
+    fireEvent.change(note, { target: { value: 'נשלח לבית-הדפוס' } })
+    note.focus()
+    expect(updateLogisticsItem).not.toHaveBeenCalled()
+
+    // הסגירה שהמשתמשת עושה — בלי לגעת בשום שדה אחר קודם.
+    fireEvent.click(screen.getByTestId('checklist-close'))
+
+    await waitFor(() => expect(updateLogisticsItem).toHaveBeenCalled())
+    expect(updateLogisticsItem).toHaveBeenCalledWith(
+      expect.objectContaining({ sku: 'B-SAT-LAN', changes: { notes: 'נשלח לבית-הדפוס' } }),
+    )
+  })
+})
+
 describe('ChecklistDialog — מסלול-הכתיבה', () => {
   it('כרטיס §① — לחיצה על המצב הנוכחי אינה כותבת דבר; לחיצה על מצב אחר כותבת', async () => {
     await renderDialog()
@@ -488,6 +516,18 @@ describe('ChecklistDialog — ⑬ באנר ההשלמה', () => {
     expect(banner).toHaveTextContent('כל הפריטים סומנו מוכנים והאיוש מלא.')
     expect(screen.getByTestId('checklist-shortfall').textContent).toBe(
       'נרשם חוסר של 80 יחידות ב"שרוך סאטן - ממותג" — הוא מתועד ואינו עוצר את הפרויקט.',
+    )
+  })
+
+  // 🔴 חוסר של **יחידה אחת** — הצורה שלא צוירה מעולם (המוקאפ צייר 80) ולכן הודפסה
+  // "‏1 יחידות". נעולה כאן לפי העוגן של ישי `O-5`, שנתן לאח-התאום את אותה צורה בדיוק
+  // (`יחידה אחת עדיין בדרך`). ⚠️ הענף חייב להיגזר מ-`units` ולא מ-`items`.
+  it('חוסר של יחידה אחת — "יחידה אחת", לעולם לא "1 יחידות" (עוגן O-5)', async () => {
+    await markLastReady(
+      row({ sku: 'B-SAT-LAN', planned_qty: 200, actual_qty: 199, item_status: 'ready' }),
+    )
+    expect(screen.getByTestId('checklist-shortfall').textContent).toBe(
+      'נרשם חוסר של יחידה אחת ב"שרוך סאטן - ממותג" — הוא מתועד ואינו עוצר את הפרויקט.',
     )
   })
 

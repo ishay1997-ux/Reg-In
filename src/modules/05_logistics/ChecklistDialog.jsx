@@ -90,8 +90,16 @@ const AUTOFILL_TAG = 'מולא אוטומטית'
 // המוקאפ צייר *"נרשם חוסר של 80 יחידות **בשרוך הסאטן**"* — צורה מוטה שאין קוד שיכול לגזור
 // משם-הקטלוג (`שרוך סאטן - ממותג`). עקרון-O-5 (*"'יחידות' מחליף את 'שרוכים'"*) מוחל כאן על
 // שם-הפריט: הוא מובא **במרכאות כפי שהוא בקטלוג**. וכשהחוסר פרוס על כמה פריטים — מונה במקום שם.
+// 🔴 **תיקון 26/08/2026 (צעד 4.4, נמצא באימות ה-E2E): חוסר של יחידה אחת הודפס "‏1 יחידות".**
+// הענף היה על `items` (כמה פריטים חסרים) בעוד שהמילה שאחריו מתארת את `units` (כמה יחידות) —
+// ומכיוון שהמוקאפ צייר `80`, צורת-היחיד מעולם לא צוירה ולא הוכרעה.
+// **העוגן שלפיו הוכרע:** הכרעת-ישי `O-5` (26/08/2026) נתנה בדיוק לאח-התאום של המשפט הזה
+// צורת-יחיד — `יחידה אחת עדיין בדרך` (`projectLogistics.js`, `plainReason`) — ולכן אותה
+// צורה בדיוק מוחלת כאן. ⚠️ **מדווח כהכרעה-על-עוגן, הפיכה: ישי רשאי לעקוף בנוסח אחר.**
 const SHORTFALL = {
   lead: 'נרשם חוסר של ',
+  oneUnit: 'יחידה אחת',
+  inOne: ' ב',
   inSingle: ' יחידות ב',
   inMany: ' יחידות ב-',
   itemsWord: ' פריטים',
@@ -138,15 +146,27 @@ function failureMessage(error) {
 }
 
 export default function ChecklistDialog({ projectId, open, onOpenChange }) {
+  // 🔴 **המסך מבטיח "כל שינוי נשמר מיד" — והשמירה תלויה ב-`onBlur`.** נמדד 26/08/2026:
+  // הקלדת הערה ואז סגירת הדיאלוג **בלי לצאת מהשדה** אינה שומרת כלום — `updateLogisticsItem`
+  // נקרא **אפס פעמים**, כי React אינו יורה `blur` על אלמנט ממוקד שמפורק מה-DOM.
+  // ⚠️ והפער היה **תלוי-אמצעי-קלט**, וזה מה שהופך אותו למסוכן: סגירה בעכבר מזיזה את המיקוד
+  // לכפתור ⇒ `blur` יורה ⇒ נשמר. סגירה ב-Esc מפרקת ישירות ⇒ אובד. אותה כוונה, שתי תוצאות.
+  // ⇒ מוציאים את המיקוד **לפני** שהסגירה עוברת הלאה: זה מפעיל את שמירת-ה-blur הקיימת
+  // והמוולדת, בלי פקד חדש, בלי חלון-אישור, ובלי לגעת במסלול-השמירה עצמו.
+  const closeAfterFlush = (next) => {
+    if (!next) document.activeElement?.blur?.()
+    onOpenChange?.(next)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={closeAfterFlush}>
       {/* ‏`sm:max-w-3xl` = 768px — הדריסה **חובה**: ברירת-המחדל `sm:max-w-lg` היא 512px וטבלה
           בת שש עמודות נשברת בה. זה הרוחב הרחב-ביותר שכבר חי בפרויקט (‏`ScopeChangeDialog`,
           הדיאלוג הקרוב-ביותר לזה — ועל אותן שורות-לוגיסטיקה בדיוק). ‏`dir="rtl"` מפורש:
           אין `DirectionProvider`, וכל משטח שנפתח ב-portal מקבל את התכונה ידנית. */}
       <DialogContent dir="rtl" className="sm:max-w-3xl">
         {open && projectId ? (
-          <ChecklistBody projectId={projectId} onOpenChange={onOpenChange} />
+          <ChecklistBody projectId={projectId} onOpenChange={closeAfterFlush} />
         ) : (
           <DialogTitle className="sr-only">צ׳קליסט הפרויקט</DialogTitle>
         )}
@@ -552,13 +572,21 @@ function CompletionBanner({ completion }) {
       {completion.items > 0 && (
         <span data-testid="checklist-shortfall">
           {SHORTFALL.lead}
-          <Ltr>{String(completion.units)}</Ltr>
-          {completion.items === 1 ? (
+          {/* 🔴 היחיד נגזר מ-`units`, לא מ-`items` — המילה שאחרי המספר מתארת **יחידות**.
+              חוסר של יחידה אחת נמצא תמיד בפריט אחד, ולכן הענף הזה מכסה גם את שם-הפריט. */}
+          {completion.units === 1 ? (
             <>
+              {SHORTFALL.oneUnit}
+              {SHORTFALL.inOne}&quot;{completion.name}&quot;
+            </>
+          ) : completion.items === 1 ? (
+            <>
+              <Ltr>{String(completion.units)}</Ltr>
               {SHORTFALL.inSingle}&quot;{completion.name}&quot;
             </>
           ) : (
             <>
+              <Ltr>{String(completion.units)}</Ltr>
               {SHORTFALL.inMany}
               <Ltr>{String(completion.items)}</Ltr>
               {SHORTFALL.itemsWord}
