@@ -9,6 +9,7 @@
 // ולא עמודים** — `processes-approved.md` מצטט את C5 מפורשות: *"באותו מסך"*.
 
 import { useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import RepositoryTab from './RepositoryTab'
 import OverviewTab from './OverviewTab'
 import HostessFormDialog from './HostessFormDialog'
@@ -37,7 +38,17 @@ export default function HostessesPage() {
   // שהמוקאפ המאושר קובע: הוא מצייר **מסך מלא** עם `← חזרה למבט-על` משלו, ולא פופ-אפ.
   // 🚫 **ואינו מסלול נפרד** — המנהלת נכנסת ויוצאת עשרות פעמים ביום, ומסלול היה מאבד את
   // מצב-הסינון של המבט-על בכל חזרה. אותו נימוק בדיוק שבגללו הלשוניות אינן ניווט.
-  const [smartMatchProjectId, setSmartMatchProjectId] = useState(null)
+  // 🔗 **וכניסה מכרטיס-פרויקט נוחתת ישר על השיבוץ של אותו פרויקט** (ישי, 22/08/2026):
+  // ‏`TeamTab` מעביר `state={{ smartMatchProjectId }}`, ואנחנו קוראים אותו **פעם אחת, באתחול**.
+  // 🚫 **וזה במכוון אינו מסלול ואינו פרמטר-שאילתה** — ר' ההערה שמעל: מסלול היה מאבד את
+  // מצב-הסינון של המבט-על בכל חזרה, וזו בדיוק הסיבה שהמסך הזה אינו כתובת מלכתחילה.
+  // ⚠️ **וה-`state` נמחק ב-`onBack`** (`replace: true`), אחרת רענון-דף אחרי חזרה למבט-על
+  // היה פותח את השיבוץ מחדש — היסטוריה ששומרת כוונה שהמשתמשת כבר ביטלה.
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [smartMatchProjectId, setSmartMatchProjectId] = useState(
+    () => location.state?.smartMatchProjectId ?? null,
+  )
 
   function handleSaved() {
     setFormHostessId(undefined)
@@ -50,6 +61,10 @@ export default function HostessesPage() {
         projectId={smartMatchProjectId}
         onBack={() => {
           setSmartMatchProjectId(null)
+          // מוחק את כוונת-הכניסה מההיסטוריה — אחרת רענון היה פותח את השיבוץ מחדש.
+          if (location.state?.smartMatchProjectId != null) {
+            navigate(location.pathname, { replace: true, state: null })
+          }
           // ⚠️ רענון בחזרה, ולא "רק כשמשהו נשמר": השיבוצים שנשלחו במסך ההוא הם בדיוק
           // מה שמשנה את המונים במבט-על, ומסך שמראה נתון ישן אחרי פעולה נקרא כמו באג.
           setReloadKey((k) => k + 1)

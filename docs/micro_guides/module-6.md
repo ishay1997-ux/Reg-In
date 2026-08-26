@@ -9,11 +9,17 @@
 | **Owner** | Ishay (sole developer) |
 | **Status** | 🔒 **CLOSED — awaiting PR/merge `21/08/2026 00:30`.** Verdict **[YES]**, Ishay typed the DoD echo ("מודול 6 DoD"). All 5 phases done. The 5.2 audit ran end-to-end (fresh session), returned [NO] with 3 blockers, and **the ONE fix round closed all three**: ① empty-close reclassified as not-a-blocker by Ishay's reality ruling ("אין דבר כזה במציאות אירוע ללא דיילות") + the empty-close path removed from the client · ② the per-hostess hours bound now derives from the ENTERED hours (`p_actual_hours + 2`) not the planned times — migration `module6_closing_rpc_hours_bound` applied · ③ ScopeChangeDialog no longer swallows real quote-load failures into `—`. **The first live run of the closing journey on `#12` caught blocker 2; after the fix it PASSED (red→green).** Regression at close: **gate exit 0 · 1,271 unit · full E2E (incl. `#12`) green · smoke 0** (a module-3 fixture-rot from the date rolling to 21/08 was fixed en route). Fix-round commit `3308d56`. |
 | **Last updated** | `21/08/2026 00:30` *(system clock)* — **module CLOSED, [YES] + DoD echo.** The 5.2 audit's one fix round closed all 3 blockers; full regression green; commit `3308d56`. Awaiting Ishay's PR/merge. *(Earlier stamp:)* `20/08/2026 23:5X` — the 5.2 closing audit ran end-to-end and returned **[NO] — 3 fix-ready blockers**. *(Earlier stamp:)* `19/08/2026 18:4X` — Session E CLOSED end-to-end; header rows above reflect its final state. *(Earlier stamp:)* `19/08/2026 15:5X` — Session E opened; Phase-3 compacted (1,466→1,090 lines, archive verified byte-identical pre-edit); active step 4.2. *(Session D's stamp follows for history:)* `19/08/2026 14:4X` *(system clock)* — Session D: 3.8 ✅ (M2 ripple entry in `module-2.md`) · 4.0 door אין · 4.1 WIRED permanently · 3.9 review agent returned (5-role route proof, states inventory, keyboard clean, 2 direction misses + 1 tone literal — FIXED, + a new projects-tab component-test file) · **`npm run gate` exit 0 end-to-end** after: prettier fixes, 6 dead exports removed, 6 jscpd clones consolidated (M4 ripple entry in `module-4.md`), and `src/modules/06_projects/CLAUDE.md` CREATED (check:context now green — the session-start warning finally discharged) · full E2E suite running in background; smoke queued; then commits+push and the 3.9 🎨 gate package to Ishay |
+| **Cross-module edits since close** | 🔶 **`26/08/2026 17:2X` — module 5 phase 4 amended `AR-4` here, in three places, additively (entry Q in the Deviations Log).** ‏`target_qty = 0` on an existing logistics row is now a **removal** under a two-condition guard (Ishay's `㊳`+`㊱`; shipped as `M5-7`), and the old *"להסרת פריט לגמרי"* refusal string is gone from the server (verified live). 🚫 **No step was reopened and no step-table row changed — the module's status is untouched.** Read entry Q before acting on anything `AR-4` says. |
 | **Active step** | **NONE — module closed.** 5.2 audit + its one fix round complete; verdict [YES] + DoD echo `21/08/2026 00:30`. Next is Ishay's: open the PR (`ishay/module-6-projects` → `dev`), watch CI, merge, then `post-merge` flips the STATUS row to ✅. *(Superseded:)* **5.2 — fix round, gated on Ishay** (all 3 blockers now closed). *(Superseded:)* **5.2 — Closing audit. NOT this session's: open FRESH with the updated ⑥3 prompt (`docs/guides/modules/module_06_projects.md`), tomorrow morning after the 05:00 cron.** Session E closed `19/08/2026 18:3X` having delivered everything else: compaction · 4.2 · 4.3 · 5.1 · the delegated 4-item round (entry L) · subject `#12` live at `ready`. Phase-5 door sweep (§9h) was run `16:2X`: §3.5 — אין. *(Superseded mid-session text:)* ‏4.2 ✅ (see its as-built) · 4.3 verification ✅ — `npm run gate` exit 0, suite 1271 · Remaining: 5.1 verify → ⑥3 prompt update (reviewer + shown verbatim) → end-of-session docs. **5.2 stays for a FRESH session — deliberately not this one.** *(Superseded session-E opening text:)* Session E opened `19/08/2026 15:5X` with "תמשיך לבנות"; Phase-3 compaction performed first (archive: `module-6_phase3_pre-compaction_2026-08-19.md`). Remaining in this session per Ishay's instruction: 4.2 → 4.3 gate → Phase-5 door → 5.1 → update the ⑥3 closing prompt in `docs/guides/modules/module_06_projects.md` → end-of-session docs. *(Superseded session-A text follows for history:)* **3.0 — Shared-component checkpoint (session A, 🔨 in progress).** Session A opened `19/08/2026 00:45`. The three owed items: ① Phase-2 compaction ✅ **done `00:45`** · ② step 3.0's checkpoint + the `_design-contract` UNSOURCED rule — **in progress, brief with Ishay** · ③ the ⑫ screen before/after — owed at 3.1's first live screen run. **Phase-3 door sweep (§9h) run `00:45`: full §3.5 re-read — אין** *(no OPEN item anchored to Phase 3; A6·B13·E3 rows still carried open-looking wording though ruled 14/08 — flipped 🟢 in the same sweep)*. **Phase-3 session plan, recommended `19/08/2026` and liked by Ishay (same agent-build + orchestrator-verify + his visual sign-off per surface):** **A** compaction + 3.0 + 3.1 (overview, the demo flagship; includes the ⑫ screenshot) · **B** 3.2 shell + dialogs 3.6/3.7 · **C** tabs 3.3/3.4/3.5 (closing screen last — it births the attendance data) · **D** 3.8 (LAST — shared surface with M2/M3, the E3 label rename) + full regression + the end-of-phase 🎨 UX/a11y pass + a small panel. ⚠️ Every manufactured DB state (a `ready`/`cancelled` project for screenshots) is checked against `docs/guides/do-not-touch.md` FIRST — the 28/08 demo data is live. |
 
 > ### 📍 PHASE 1 — 🔒 CLOSED `18/08/2026 22:32` (Ishay: *"מאשר"*). Compacted per self-update clause (i).
 > **The full pre-compaction text — step bodies, the review history, the 32-findings narrative — lives in `docs/archive/module-6_phase1_pre-compaction_2026-08-18.md`.** Evidence chain: the step table below · `db_roadmap.md` A-M6 block + its §10 entries (14/08 + 18/08) · `docs/plans/module-6-phase-1/` (the reviewed SQL drafts + `FINDINGS.md`).
 > 🔴 **Two review corrections a later session must not "fix" back** *(each deliberately contradicts an earlier draft or the mockup)*: **① `target_qty = 0` is REJECTED, never a row delete** (㉕ + AR-4 — the payload-contract block in the Phase-1 done-section below carries the approved refusal string) · **② the new-line path (`+ הוספת פריט שאינו בהצעה`) EXISTS**, and a new line stores the **raw tier price, pre-discount**, like every other line *(measured on quote 6: `5%+10%` applied, yet `closing_unit_price` stores the raw `5.00`)*.
+>
+> 🔶 **AMENDED `26/08/2026` — correction ① is SUPERSEDED, by Ishay's ruling, not by a session's judgement.** The guard above stays in force for correction ②, and its *reason* was always right — but its **scope** was too wide, and module 5 is what narrowed it.
+> **‏`㊳` (Ishay, 22/08/2026, `docs/specs/module_05_logistics/processes-approved.md` — grep `🔄ה · הסרת פריט`): removing an item IS a scope change, it belongs to the projects manager, and it is done by typing `0` in THIS dialog.** Shipped as `M5-7` in `supabase/migrations/20260826002448_module5_scope_change_reset_removal.sql`.
+> **The true boundary — and it is exactly what ㉕ always meant:** ⇒ **`target_qty = 0` on an EXISTING logistics row is a REMOVAL** *(row deleted + a `project_changes` row written, atomically)* — **but only when `item_status = 'not_started'` AND `actual_qty = 0`. Both conditions, always** *(`㊱`)*. Otherwise it is refused, with the rule that blocked it named: `הפריט כבר הוזמן — לא ניתן להסירו` · `הגיעו כבר פריטים — לא ניתן להסיר`. **A hostess row and a NEW row still reject `0` outright** (`AR-10`).
+> 🔑 **Why this is not two contradicting Ishay rulings:** ‏`㉕` protects a row **money already went out on**; `⑰`+`㊱` permit deletion **only when it did not**. Same principle, sharper line. `AR-4` was *Claude's* architecture note generalising ㉕ into a blanket ban — that generalisation is what ㊳ corrected. **See the AR-4 row in §3.2 and the payload-contract block below, both amended the same day.**
 > ⚠️ **The typed-echo waiver was Phase 1 only** — it does NOT carry into Phases 2–5 or into any later module.
 **Legend (verbatim):** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
 **Step status set:** ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (with target module) · ❌ blocked (with reason)
@@ -285,7 +291,13 @@ set local request.jwt.claims = '{"sub":"<user_id>","email":"<email>","role":"aut
 | **AR-1** | Cancellation-type column | **`projects.cancel_type text not null check (cancel_type in ('customer','force_majeure','other'))`** — **one column**, alongside the existing `cancel_reason`. **The money type is derived in code, never stored** (`other` behaves as `customer`) | Claude (architecture) | `grep "create type"` across the repo ⇒ **zero**; `check (… in (…))` appears **19 times** in `schema.sql`. And the precedent for a value that is a pure function of a stored value is *derive, don't store* — `src/lib/hostesses.js:36-37`. ⚠️ Overrides `spec.md:474`'s two-column suggestion; its motive (that `other` survives into reports) is fully served by a three-value label column | 1.1 · 2.1 · 3.7 |
 | **AR-2** | `logistics` read policy gate | **`'לוגיסטיקה'`, not `'פרויקטים'`** | The measured rule: a policy hangs on the module that **owns the table**, not on the module whose screen reads it. M4 proved it on the same shape — `20260809134237` hangs its four tables on `'דיילות'` and, when it needed `projects`, hung that on `'פרויקטים'` (`schema.sql:938`). **Dana reads under either choice; a `'פרויקטים'` gate would additionally leak logistics to מנהלת כספים and מנהלת גיוס, whom the matrix blocks from `'לוגיסטיקה'`** | 1.4 |
 | **AR-3** | How the two overview metrics reach the client | **A dedicated `SECURITY DEFINER` RPC `list_projects_overview()`**, gate `'פרויקטים'` at the top of the function, returning one row per project with the metrics **already counted** (~~`hostesses_confirmed`/`hostesses_required`~~, `logistics_ready`/`logistics_total`). 🚫 **Not a browser-side join, not a `view`.** ↳ **as-built `14/08/2026`, measured from `pg_get_function_result`: the required-count column is named `required_hostess_count`, NOT `hostesses_required`, and the function returns SEVENTEEN typed columns — the sixteen listed at step 1.8 PLUS `pending_invites`** *(the de-dup fold counted on `assignment_status='pending'`)*. **Full live signature in step 2.5's as-built block.** 🔴 **And therefore: DELETE `screens-approved:200,336`'s "widen `assignments_select_by_permission` to `'פרויקטים'` holders" — widening would hand hostess names, rates and phone numbers to every 👁-on-projects holder** | Claude (architecture) | `grep "create view"` ⇒ **zero across the repo**; `src/lib/hostesses.js:255` says so in code. And the browser-join is exactly what `listStaffingOverview()` does (`04_hostesses/api.js:135-146`) — which works only because *its* user has view on `'דיילות'`. ⚠️ Cost: the `MAX(assignment_number)` fold gets a **second implementation** (`DISTINCT ON` in SQL beside the JS); §3.2's numbers (`1/6`, `0/1`) are the test that pins both | 1.8 · 2.5 · 3.1 |
-| **AR-4** | Reducing a logistics item to zero | **Zero is forbidden.** `check (planned_qty > 0)` stays, the row is never deleted, the dialog blocks before submit | Claude (architecture) | ㉕ verbatim: *"השורות עצמן הן הראיה לחיוב… לשנות אותו = למחוק את ההוכחה."* Deleting the row destroys more than ㉕ already rejected. And the wording is already written and approved (`screens-approved:848`): *"הכמות חייבת להיות גדולה מאפס. להסרת פריט לגמרי — פני למנהלת הלוגיסטיקה."* | 3.6 |
+| **AR-4** | Reducing a logistics item to zero | 🔶 **SUPERSEDED `26/08/2026` by Ishay's `㊳` — see the amendment note below this table.** *(Original text, kept for the record:)* **Zero is forbidden.** `check (planned_qty > 0)` stays, the row is never deleted, the dialog blocks before submit | Claude (architecture) | ㉕ verbatim: *"השורות עצמן הן הראיה לחיוב… לשנות אותו = למחוק את ההוכחה."* Deleting the row destroys more than ㉕ already rejected. And the wording is already written and approved (`screens-approved:848`): *"הכמות חייבת להיות גדולה מאפס. להסרת פריט לגמרי — פני למנהלת הלוגיסטיקה."* | 3.6 |
+
+> 🔶 **`AR-4` — amendment, `26/08/2026`** *(module 5, step 4.3; additive — the row above is not rewritten)*.
+> **What changed and by whose authority:** `AR-4` was **Claude's** architecture note. It generalised **Ishay's `㉕`** — which is about **project cancellation** (`§7.31`: cancellation does not touch logistics rows) — into a blanket "never delete a logistics row". **Ishay's `㊳` (22/08/2026) narrowed it**, and `M5-7` shipped that narrowing.
+> **The rule as it now stands:** on an EXISTING logistics row, `target_qty = 0` **removes** it — the row is deleted **and** a `project_changes` row is written, atomically — **only if `item_status = 'not_started'` AND `actual_qty = 0`; both conditions, always** (`㊱`). Otherwise the RPC refuses and names the blocking rule: `הפריט כבר הוזמן — לא ניתן להסירו` (ordered/ready) · `הגיעו כבר פריטים — לא ניתן להסיר` (not_started with goods in). Hostess rows and NEW rows still reject `0` (`AR-10`).
+> **The old refusal string `הכמות חייבת להיות גדולה מאפס. להסרת פריט לגמרי — פני למנהלת הלוגיסטיקה.` is GONE from the server** — it promised the user a surface that never existed (module 5 has no removal screen), which is precisely why `㊳` deleted it.
+> **Sources:** `docs/specs/module_05_logistics/processes-approved.md` (card `🔄ה`, teaching `🎓㊳` items ①–④) · `supabase/migrations/20260826002448_module5_scope_change_reset_removal.sql` · `docs/micro_guides/module-5.md` steps 1.4 / 4.2. **`check (planned_qty > 0)` itself is unchanged** — removal deletes the row rather than zeroing it, so the CHECK is never violated.
 | **AR-5** | 🔴 **The atomic-vs-email boundary — the heaviest one** | **Inside the transaction: everything that is a fact about what happened. Outside, after commit, in client code: every send.** A DB transaction cannot send mail (`§7.33`: *"טריגר במסד אינו יכול לשלוח מייל"*), and `feedback_status='sent'` written inside the transaction is a **lie the moment the send fails**. ⇒ **Flow:** RPC closes the facts ⇒ commit ⇒ download the report + send it ⇒ send the survey ⇒ **only on success** a second, narrow RPC `mark_feedback_survey_sent` writes `feedback_status='sent'` **and nothing else**. **When the DB closes and the send fails: the closing stands** — it recorded facts. `feedback_status` stays `'not_sent'`, **which is now true rather than decorative**, and the screen names which mail failed. 🔴 **⇒ ㉙ must be written as a whitelist of the operational RPCs, not as "any RPC touching a closed project"** — otherwise there is no path back to retry the send | Claude (architecture) | The measured pattern: `04_hostesses/api.js:523-570` — writes first, then `sendFinalApprovalMails`, with a `{sent, unknown, failed}` counter. **Three send outcomes, not two** (`email.js:205`). ⚠️ M6 does **not** build a retry engine — that is `§7.36`, 🟡, owned by M10 | 1.8 · 3.5 · 3.7 |
 | **AR-6** | 🔴 **Final gross profit — M6 does NOT freeze it** | **M6 freezes only the inputs it owns:** `assignments.actual_hours` per hostess · the three attendance columns · `projects.actual_hours`/`actual_guests` · the operational-closing timestamp. **No `final_gross_profit` column in M6's migration, and no profit computation in M6's code.** The freeze moves to M8's closing window | **Ishay, 14/08/2026 01:17** — clarifying `§7.52`: *"בסגירת-האירוע"* means the **financial** closing (M8), not the operational one (M6). `db_roadmap` row **M6-8** was re-scoped the same day to match | 1.1 · 2.3 · 3.5 |
 | **AR-7** | Attendance → reliability mapping | 📏 **The two constants, counted `14/08/2026` — and "seven" is wrong in both directions, so do not carry it:** `ATTENDANCE_OUTCOMES` (`smartMatch.js:43-52`) holds **EIGHT** members — `ARRIVED · SLIGHTLY_LATE · MODERATELY_LATE · VERY_LATE · WITHDREW · NO_SHOW · SICK · EXCUSED`; `ATTENDANCE_VALUES` (`:56-63`) holds **SIX** scored entries — `SICK` and `EXCUSED` are **deliberately unscored** (`:54-55`: excluded from numerator *and* denominator). ⇒ 🚫 **Any instruction of the form "the seven weights, byte-for-byte" is false and must not be written into a step.** **The numbers M6 must not move are the six in `ATTENDANCE_VALUES`.** ⚠️ **And `ATTENDANCE_VALUES` is `const`, not exported** — a test cannot import it; assert through the scoring function. **Why it still cannot be wired as-is, three measured reasons:** ① `:43-52` keys on **Hebrew in a single `outcome` field** while M6 defines **three English columns** (the code declares this itself at `:195`) · ② 🔴 **`WITHDREW` is not an attendance value at all** — it maps to `approval_withdrawn`, an **`assignment_status`**; a hostess who cancelled is **not on the closing list**, so her `0.5` must come from `assignment_status`, on a separate branch · ③ two booleans must be derived: `projectCancelled`, `eventPassed`. ⚠️ **Silent-failure risk: `smartMatch.js:207` is `if (value === undefined) continue`** — a mis-mapped value drops the row silently instead of throwing. ⚠️ **And a second, larger silent zero: `src/lib/smartMatchCandidates.js:81` hard-codes `attendance: []`** — see step 2.7 | Claude (architecture) | measured 14/08/2026 | 1.3 · 2.7 |
@@ -616,6 +628,9 @@ Unchanged from module 1: Supabase Auth (Google), session in `sessionStorage`, `c
 >
 > 🔴 **And the constraint that shapes the whole reduction path, measured live: `logistics_planned_qty_check = CHECK (planned_qty > 0)`.** ⇒ an `update … set planned_qty = 0` raises `23514`. 🔴 **CORRECTED `14/08/2026 12:5X` — this line used to conclude "so `target_qty = 0` means DELETE the row", and that conclusion contradicts TWO of Ishay's own rulings written elsewhere in this same guide.** **‏㉕, his words:** *"השורות עצמן הן הראיה לחיוב… לשנות אותו = למחוק את ההוכחה."* **‏AR-4, built on it:** *"Zero is forbidden. `check (planned_qty > 0)` stays, **the row is never deleted**, the dialog blocks before submit."* **Deleting the row destroys more than ㉕ already refused to change.**
 > ⇒ **The rule: `target_qty = 0` is REJECTED, like `target_qty < 0`.** The dialog blocks before submit with the approved string *"הכמות חייבת להיות גדולה מאפס. להסרת פריט לגמרי — פני למנהלת הלוגיסטיקה."* (`screens-approved:848`), and the RPC's guard is the backstop.
+>
+> 🔶 **AMENDED `26/08/2026` — this paragraph describes the state of the world up to `M5-7`, and is no longer the live behaviour.** `target_qty < 0` is still rejected. **`target_qty = 0` on an existing logistics row is now a REMOVAL** (row deleted + `project_changes` written, atomically) **when `item_status = 'not_started'` AND `actual_qty = 0` — both, always** (Ishay's `㊳`+`㊱`, 22/08/2026; shipped in `20260826002448_module5_scope_change_reset_removal.sql`). When either condition fails the RPC refuses and says which rule blocked: `הפריט כבר הוזמן — לא ניתן להסירו` · `הגיעו כבר פריטים — לא ניתן להסיר`. **Hostess rows** raise `כמות הדיילות חייבת להיות גדולה מאפס.` and **NEW rows** raise `כמות של פריט חדש חייבת להיות גדולה מאפס.` (`AR-10`).
+> 🔴 **And the quoted string above no longer exists on the server.** It also stopped being the client's message: the dialog's own guard is `parseQtyInput`, and as of module 5 step 4.2 it takes an `allowZero` scope rather than a blanket `<= 0` refusal — **`min` on the input was never the guard** (a typed `0` passes `min`). Full reconciliation: the `AR-4` amendment note under §3.2, and the header-guard note at the top of this file.
 > ⚠️ **Why this survived into a block carrying Ishay's approval:** he approved *"סבבה תוסיף"* to **adding a payload contract**, not to each field's semantics — the delete conclusion was Claude-authored inside it. **A wholesale approval is not a per-line ruling**, and where such a line contradicts his verbatim words, **his words win.** *(Caught by the agent implementing the RPC, which refused to write the delete and escalated instead.)*
 > **Colour is not part of a line, and that is correct by design — not an omission.** *(Ishay, `14/08/2026`: *"לא צריך עמודת צבע בלוגיסטיקה כי מחוברת"*.)* **Measured:** colour lives once, on `quote_services.color`, and `logistics` reaches it through the link — via `quote_service_line_id`. 🚫 **Duplicating it into `logistics` would be the actual defect.** ‏`project_changes.color` is a different thing: a **frozen audit copy** on the change record, alongside the frozen price and cost — **a record of what was changed, never a key to find it by.**
 >
@@ -1150,3 +1165,136 @@ Unchanged from module 1: Supabase Auth (Google), session in `sessionStorage`, `c
 - **PR #41's `Lint · Test · Build` FAILED** (deno + gitleaks + Vercel green): `Error: supabaseUrl is required` in `06_projects/api.test.js` + `ProjectCardPage.test.jsx`. Root cause: both import the real `./api` chain, `supabaseClient.js` calls `createClient(import.meta.env.VITE_SUPABASE_URL, …)` at module-load, and **CI has no `.env.local`** ⇒ undefined URL ⇒ throw-at-load. **The local gate passed only because `.env.local` exists** — the classic "green locally, red in CI" trap. (ProjectCardPage pulls `03_quotes/api` transitively via the scope-change dialog — the `03` in the stack.)
 - **Fix (the repo's own pattern, `04_hostesses/api.test.js`):** `vi.mock('@/supabaseClient', () => ({ supabase: { from: vi.fn(), rpc: vi.fn() } }))` in both files — intercepts the single module that calls `createClient`, so no module (03/04/06) throws at load. The stale comment in `api.test.js` claiming "אין מנגנון-mock ל-supabase-client בפרויקט" was corrected (04 has exactly that).
 - **Verified red→green by reproducing CI locally:** moved `.env.local` aside → before-fix 2 files fail; after-fix **50 files / 1,271 pass, exit 0** → restored `.env.local`. Full gate re-run in progress. Next: commit → push (updates PR #41) → CI green → merge (Ishay's delegation) → `post-merge`.
+
+### Added `26/08/2026 17:2X` — cross-module amendment from **module 5, phase 4** (entry Q) ⚠️ this guide edited while CLOSED
+
+- **Who and why:** module 5's step 4.3 (doc ripples). Module 6 is closed and merged; this entry
+  exists because rule 15 requires a touched guide to say what moved in it, and a later reader must
+  not mistake the edit for a reopening of module 6.
+- **What changed — `AR-4`, in THREE places, all ADDITIVELY** *(original text preserved verbatim in
+  every one; a dated `🔶` note added beside it)*: the `AR-4` ruling row in §3 · the **header guard**
+  at the top of §1 (*"Two review corrections a later session must not 'fix' back"*, correction ①) ·
+  the payload-contract block in the Phase-1 done-section (grep `target_qty = 0`).
+- **The substance:** `AR-4` was **Claude's** architecture note, which generalised **Ishay's ㉕**
+  (about project *cancellation* — `§7.31`) into a blanket "a logistics row is never deleted".
+  **Ishay's `㊳` (22/08/2026) narrowed that**, and `M5-7` shipped it
+  (`20260826002448_module5_scope_change_reset_removal.sql`). ⇒ `target_qty = 0` on an **existing
+  logistics row** is a **removal** (row deleted + `project_changes` written, atomically) **only when
+  `item_status = 'not_started'` AND `actual_qty = 0` — both, always (`㊱`)**; otherwise refused, naming
+  the blocking rule. Hostess rows and NEW rows still reject `0` (`AR-10`).
+- 🔑 **The two Ishay rulings never conflicted:** ㉕ protects a row *money already went out on*;
+  ⑰+㊱ permit deletion *only when it did not*. Same principle, sharper line.
+- **The old refusal string** *"…להסרת פריט לגמרי — פני למנהלת הלוגיסטיקה."* **is gone from the server** —
+  verified live via `pg_get_functiondef` on the running `apply_scope_change` (absent), with all five
+  replacement raises present. It promised a removal screen module 5 never had, which is why ㊳ deleted it.
+- **Ripples of this ripple, same session:** `docs/specs/module_06_projects/screens-approved.md` (the
+  `הכמות החדשה` validation row quoted the deleted string as live on-screen text — dated note added),
+  plus M5-side notes in `processes-approved.md` / `data-set.md` / `world-sources.md` and a correction
+  in `src/CLAUDE.md` (it still listed `logistics` as deny-all; live `pg_policies` shows two).
+- 🚫 **Module 6's status is unchanged — still CLOSED, still merged.** No step reopened, no step-table
+  row touched, no phase re-entered. The Live Status Header carries a pointer line to this entry only.
+
+### Added `26/08/2026 17:2X` — a SHARED-component behaviour change reaches this module's pills (entry R)
+
+- **What changed, and where:** `src/components/FilterPill.jsx`. A disabled pill's `title` never
+  appeared on hover **anywhere in the system**, because the shared `Button` carries
+  `disabled:pointer-events-none` in its base classes — an element with no hit-test gets no tooltip.
+  ⇒ the house rule *"a blocked control stays and is REASONED"* was **half-delivered system-wide**:
+  the control stayed, the reason was unreachable.
+- **The fix:** when a pill is both `disabled` and has a `title`, it is wrapped in a `span` carrying
+  the same `title`; the span receives the hover. **Chosen over `aria-disabled` + a click guard on
+  purpose** — that route would drop real `disabled`, return the control to the tab order, and change
+  what a screen reader announces: a cross-system semantics change bought for a tooltip.
+- 🔴 **Why module 6 gets a log entry for a module-5 step:** **module 6's filter pills use this same
+  component**, so their disabled tooltips change behaviour today. **Appearance, tab order and
+  ARIA semantics are unchanged** — only reachability of the existing `title`.
+- **Origin:** module 5's 🎨 gate (26/08, Ishay: *"הבנתי מעולה, מאשר"*) folded it into step 4.2 rather
+  than patching it mid-module, precisely because it touches merged screens.
+- **Regression at the time of writing:** full unit suite **1,418 / 55 files, exit 0** (baseline
+  before phase 4: 1,405 / 54). Module-6 files specifically: **151 / 9, exit 0.**
+  🔻 **Live-browser confirmation on module 6's OWN pills is owed at module 5's 4.5 gate** — not yet
+  done at the time of this entry, and deliberately not claimed.
+
+### Added `26/08/2026 17:3X` — a stale `as-built` comment in `LogisticsTab.jsx` corrected (entry S)
+
+- **The comment** (file header + one inline) said the origin columns *"NULL בכל השורות היום ושום דבר
+  אינו ממלא אותן (as-built 3.3⑥)"*. **It was true when written and is now half false.**
+- **Measured live 26/08/2026:** `quote_service_line_id` is **16/16 filled** — `M5-3` rewrote M3's
+  `approve_quote_and_create_project` to fill it and backfilled the legacy rows (it read **0/6** when
+  the comment was written). `project_change_id` **is still NULL on every row, deliberately** — ruling
+  `㉗` says a scope-change-born row carries no pointer, and that is a declared reporting debt
+  (`🚧 מ11 ← מ5`), not an omission.
+- **What did NOT change: the display decision.** Row origin is still not shown and there is still no
+  warning. **Only the REASON changed** — from *"there is nothing to show"* to *"we choose not to show
+  it"*. That distinction matters: the old wording invited a future session to "fix" the tab by
+  surfacing an origin column the moment it noticed the data had arrived.
+- **Verified after the edit:** `LogisticsTab.test.jsx` **14/14, exit 0**; `eslint` on the file exit 0.
+  Comment-only change — no behaviour touched.
+- **Why it is logged here and not only in module 5's guide:** the file belongs to module 6, and this
+  is the register a future module-6 reader opens.
+
+### Added `26/08/2026 18:0X` — `aria-describedby` on the scope-dialog qty field (entry T) 👤 Ishay's call
+
+- **Ishay overruled a deferral, and he was right.** Claude recommended pushing this to M12 with the
+  other a11y items; his answer: *"למה לדחות ל-12 ולא לסדר עכשיו וזהו?"* **The recommendation was
+  weak** — O-2/O-6 are deferred because they are *design rulings that need him* (brand teal, warning
+  glyph). This needed no product decision, changes nothing visually, and sat in a file open and
+  under test at that moment. Deferring would have re-paid the whole context load in two months.
+- **What changed:** `QtyInput` now emits an `id` on whichever explanatory `<div>` it renders (the
+  muted `hint` **or** the red `role="alert"` error) and points the `<input>` at it with
+  `aria-describedby`. A keyboard/screen-reader user now hears **which** rule blocked removal on
+  focus, instead of meeting a field that refuses `0` with no stated reason (`㉚` in audio, not only
+  in pixels).
+- 🐞 **A defect in the first version of this fix, caught before it shipped:** the id was derived from
+  the field's `aria-label`, which is Hebrew **and contains spaces** (`כמות חדשה — תג שם רגיל`).
+  `aria-describedby` is a **space-separated token list**, so that id parses as several non-existent
+  ids and the association breaks **silently** — no error, and nothing a visual pass would reveal.
+  Whitespace is now collapsed to `-`, and the test asserts the id contains no whitespace.
+- **Red-proof (the fix, not just the test):** `aria-describedby` deleted from the input ⇒
+  `ScopeChangeDialog.test.jsx` failed on the new test with `AssertionError: expected null to be
+  truthy`; restored ⇒ **24/24, exit 0**.
+- **Scope:** `ScopeChangeDialog.jsx` + its test only. Markup addition, zero behaviour change, zero
+  visual change; every pre-existing assertion in the file still passes untouched.
+
+### Added `26/08/2026 21:4X` — item removal gets an EXPLICIT control in this dialog (entry U) 👤 Ishay's call
+
+- **What changed on this screen:** `ScopeChangeDialog` now renders a **`הסר פריט`** button per
+  existing logistics row. Removal is no longer discoverable only by typing `0`.
+- **Whose decision:** Ishay's, today — he asked *"אולי צריך להיות אלרט של ביטול פריט במקום הזנה 0?"*
+  and then ruled *"אשמח שתבנה כן"*. **It does not disturb `㊳`:** that ruling fixed **ownership and
+  no-new-screen**; the *"removal = new quantity 0"* sentence is the mechanism it was implemented
+  with, not the ruling itself. Ownership, permissions and surface count are unchanged.
+- 🔑 **And it is what makes `㉚` literal on this screen.** `㉚` says a blocked control stays and is
+  reasoned — but there was no removal control at all, so nothing taught the rule. Blocked rows now
+  render the button **present, disabled, and reasoned** with the same byte-exact refusal strings.
+- **Mechanically it is derived state, not parallel state:** `marked === (target === 0)`, and the
+  button writes into the same `qtyInputs` field the user would type into. **The two routes cannot
+  drift**, and typing `0` by hand behaves identically. `parseQtyInput`, the dynamic `min`,
+  `isRemovableLine` and `allowZero` are untouched — and **`apply_scope_change` was not touched at
+  all**: the payload is still `target_qty: 0` under the two-condition `㊱` guard.
+- 🚫 **No confirmation modal, deliberately.** The dialog already gates with a mandatory reason, the
+  `מה יקרה כשתשמרי` block, and an explicit Save. Ishay asked whether **quantity** changes should be
+  confirmed too — **answer: no.** A quantity change is reversible; a removal is not. A fourth gate
+  would be over-confirmation, which this house treats as a defect in its own right (`⑯`).
+- **Verified:** 18 mutations watched failing and reverted · full suite **1,433 / 55, exit 0** ·
+  `vite build` 0 · eslint 0 (a `sonarjs/cognitive-complexity` trip was resolved by extracting a
+  `RemovalButton` sub-component, matching this file's existing habit).
+- ⏸️ **Owed:** the live visual pass on the real screen. DOM, semantics and behaviour are proven;
+  **how it looks has not been seen.** Recorded rather than glossed.
+
+### Entry S — `27/08/2026 00:3X` · module-5 closing audit: the LogisticsTab permission gate RATIFIED, its loose threads closed
+
+- **Context:** commit `bde057a` (26/08 22:56) gave `LogisticsTab` a permissions-map FIRST
+  discriminator (`canReadLogistics` → `noPermissionLogistics` branch, testid
+  `logistics-state-no-permission-logistics`, sentence `TAB_NO_PERMISSION_SENTENCE`) — landed
+  after the last recorded approval and documented nowhere. The module-5 closing audit surfaced
+  it as its C-2 finding; **Ishay ratified 27/08/2026 ("בצע הכל לפי המלצה שלך")**.
+- **Closed with the ratification:** ‏(a) `e2e/projects.spec.js:122` updated — it pinned the OLD
+  testid/sentence and was the suite's one red; now asserts the new honest branch AND the old
+  branch's absence (full e2e re-run: 143 passed / 0 failed) · ‏(b) the `react-hooks/exhaustive-deps`
+  warning the commit left (`canReadLogistics` missing from the load-effect deps) — fixed with a
+  why-comment · ‏(c) this entry is the write-back the commit lacked.
+- **Behaviour note for future readers:** a role blocked on 'לוגיסטיקה' now sees the logistics-
+  specific no-permission sentence; the quote-discriminator branch (`logistics-state-no-permission`,
+  the *"פריטי ההצעה"* sentence) still exists and fires only for quote-blocked-but-logistics-readable
+  readers. Two branches, two sentences, both honest — do not "unify" them.

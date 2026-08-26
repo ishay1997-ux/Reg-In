@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ מ8 · M1 — מייל-החשבונית ללקוח (דראפט-עבר)</title>
+<style>
+/* ═══ טוקנים — אל תשנה ערך. מקור: design-contract.md §① + docs/mockups/logistics-screen/approved/. ═══ */
+:root{
+  --primary:#0D9488;
+  --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4;
+  --teal500:#00BBA7; --teal600:#009689; --teal700:#00786F;
+  --green50:#F0FDF4; --green100:#DCFCE7; --green200:#B9F8CF; --green700:#008236;
+  --amber50:#FFFBEB; --amber100:#FEF3C6; --amber200:#FEE685;
+  --amber700:#BB4D00; --amber800:#973C00;
+  --red50:#FEF2F2; --red100:#FFE2E2; --red200:#FFC9C9; --red600:#E7000B; --red700:#C10007;
+  --s50:#F8FAFC; --s100:#F1F5F9; --s200:#E2E8F0; --s300:#CAD5E2;
+  --s400:#90A1B9; --s500:#62748E; --s600:#45556C; --s700:#314158; --s800:#1D293D;
+  --r-md:8px; --r-lg:10px; --r-xl:14px; --r-2xl:18px;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  background:var(--s50); color:var(--s800);
+  font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif;
+  font-size:14px; line-height:1.5;
+}
+
+/* כל ערך שאינו עברית טהורה עובר דרך .ltr — design-contract.md §3.2/§⑤ */
+.ltr{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
+
+.page{ max-width:640px; margin:0 auto; padding:28px 20px 60px; }
+
+/* ── באנר-דראפט-עבר: בכוונה בסגנון-toast "info" (bg-slate-50/border-slate-200/text-slate-700,
+     §2.8) ולא "warn" — זה סטטוס-מסמך ניטרלי, לא אזהרת-עסק ממשית (כלל-המילוי, §④). ── */
+.draft-banner{
+  background:var(--s50); border:1px solid var(--s200); color:var(--s700);
+  border-radius:var(--r-lg); padding:9px 14px; font-size:12.5px; font-weight:700;
+  text-align:center; margin-bottom:14px;
+}
+
+/* ── שורת-מטא: "היום" המשותף + מקרא-מקורות (חובה על כל משטח, לפי בריף-המשימה) ── */
+.meta-strip{
+  display:flex; flex-wrap:wrap; align-items:center; gap:5px 16px;
+  font-size:11.5px; color:var(--s500); margin-bottom:6px;
+}
+.meta-strip b{ color:var(--s700); font-weight:600; }
+
+.crumb{ font-size:11.5px; color:var(--s500); margin:2px 0 18px; }
+
+/* ── תג-מקור קטן ליד כל ערך ממולא — 🌱/🎭/📐 (בקשת-הבריף: "Mark every filled value") ── */
+.src{ display:inline-block; font-size:11px; margin:0 3px; vertical-align:middle; }
+
+/* ── תג "לאישור" — reuse מדויק של StatusTag.warn (§2.4), כי זה סימון-אמת: משהו כאן
+     באמת דורש אישור-ישי, לא רק סטטוס ניטרלי. ── */
+.tag{ display:inline-block; white-space:nowrap; border-radius:999px;
+      padding:2px 10px; font-size:11px; font-weight:600; }
+.tag.warn{ background:var(--amber200); color:var(--amber800); }
+
+/* ── מסגרת-המייל: אין רכיב-תקדים ל"מייל" בקוד — נבנה מאפס משפת-הטוקנים בלבד.
+     תבנית ה-key/value בראש שאולה מילולית מ-`.dlg-head .meta .k/.v` (design-contract §⑤),
+     התקדים המדויק ל"שדות-זהות נעולים-לעיון" (S2, §2.6). ── */
+.mail-frame{
+  background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+  box-shadow:0 1px 2px rgba(15,23,42,.06); overflow:hidden;
+}
+.mail-head{ padding:16px 20px; border-bottom:1px solid var(--s100);
+            display:flex; flex-direction:column; gap:9px; }
+.meta{ display:flex; flex-wrap:wrap; align-items:baseline; gap:8px; }
+.meta .k{ font-size:11.5px; color:var(--s500); min-width:78px; flex:none; }
+.meta .v{ font-size:13.5px; font-weight:600; color:var(--s800); }
+
+/* ── צ'יפ-צרופה — מותאם משפת ה-`.pill` (§2.4): מסגרת+לבן, לא מילוי (עובדה, לא פעולה/אזהרה) ── */
+.chip{
+  display:inline-flex; align-items:center; gap:6px;
+  border:1px solid var(--s200); background:var(--s50); color:var(--s700);
+  border-radius:999px; padding:4px 12px; font-size:12.5px;
+}
+
+.mail-body{ padding:22px 20px 20px; }
+.mail-body .sub-label{ font-size:11px; color:var(--s500); margin-bottom:10px; }
+
+/* ── ערך שמולא מ-placeholder בתוך גוף-המייל — קו-מקווקו טורקיז, לא מילוי (כלל-המילוי §④) ── */
+.filled{ border-bottom:1.5px dotted var(--teal500); padding-bottom:1px; }
+
+.note-card{
+  margin-top:16px; background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+  padding:14px 18px; font-size:12px; color:var(--s600); line-height:1.7;
+}
+.note-card h3{ font-size:12.5px; color:var(--s700); margin-bottom:6px; }
+.note-card b{ color:var(--s800); }
+
+.deviation{
+  margin-top:12px; background:var(--amber50); border:1px solid var(--amber200);
+  border-radius:var(--r-lg); padding:10px 14px; font-size:12px; color:var(--amber800); line-height:1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="draft-banner">מאושר — הכרעת-ישי 26/08/2026 ("מאשר את כולם הם נראים מעולה")</div>
+
+  <div class="meta-strip">
+    <span>"היום" בהדגמה: <b class="ltr">15/10/2026</b> <span class="src" title="תאריך-הדגמה משותף לכל משטחי מודול 8">🎭</span></span>
+    <span>מקורות: 🌱 מהמסד · 🎭 דמו · 📐 נגזר</span>
+  </div>
+  <div class="crumb">כספים ▸ P1 — הגבייה: חשבונית ← תשלום ▸ M1 מייל-החשבונית ללקוח</div>
+
+  <div class="mail-frame">
+    <div class="mail-head">
+      <div class="meta">
+        <span class="k">אל</span>
+        <span class="v ltr">ishay1997@gmail.com</span>
+        <span class="src" title="מייל-לחיוב, פרויקט #13 (עיריית חדרה) — data-set.md §2">🌱</span>
+      </div>
+      <div class="meta">
+        <span class="k">נושא</span>
+        <span class="v">חשבונית מס/קבלה מ-<span class="ltr">REG-IN</span> — פסטיבל קיץ עירוני</span>
+        <span class="tag warn">🎭 מהמוקאפ — לאישור</span>
+      </div>
+      <div class="meta">
+        <span class="k">קובץ מצורף</span>
+        <span class="chip">📎 <span class="ltr">Invoice_4127.pdf</span></span>
+        <span class="src" title="מספר-חשבונית מומצא-להדגמה בלבד; המערכת אינה מנפיקה/עוקבת מספרי-חשבונית — §7.38, data-set.md §6">🎭</span>
+      </div>
+      <div class="meta">
+        <span class="k">נשלח</span>
+        <span class="v ltr" style="font-weight:500; color:var(--s600); font-size:12.5px;">28/08/2026</span>
+        <span class="src" title="ציר-הזמן המודגם — data-set.md §0/§2">🎭</span>
+      </div>
+    </div>
+
+    <div class="mail-body">
+      <div class="sub-label">גוף-המייל — תבנית <span class="ltr">params.תבנית_מייל_חשבונית_מס</span> <span class="src" title="גוף-התבנית המלא — data-set.md §6">🌱</span>, שני placeholders ממולאים (מסומנים בקו מקווקו):</div>
+      <div dir="rtl" style="text-align:right; font-size:14px; color:var(--s800);">
+        שלום <span class="filled" title="[שם_לקוח_חברה] ← company_name">עיריית חדרה</span><span class="src">🌱</span> בע"מ,<br>
+        מצורפת בזאת חשבונית מס/קבלה עבור השירותים שסופקו באירוע '<span class="filled" title="[שם_פרויקט] ← שם-האירוע">פסטיבל קיץ עירוני</span><span class="src">🌱</span>'.<br>
+        אנו מודים לכם על שיתוף הפעולה.<br>
+        בברכה,<br>
+        מחלקת כספים, ⁦REG-IN.⁩
+      </div>
+    </div>
+  </div>
+
+  <div class="deviation">
+    <b>⚠️ סטייה מודעת מבריף-המשימה, לא ממצא לתיקון:</b> הבריף ביקש "דאטה-הקאסט של #12" וצרופה
+    <span class="ltr">Invoice_12.pdf</span>. <b>שני אלה לא קיימים ב-<span class="ltr">data-set.md</span></b> —
+    לפרויקט #12 <span class="ltr">invoice_sent=false</span> (חשבונית עדיין לא נשלחה בציר-הזמן שלו),
+    ו-<span class="ltr">Invoice_12.pdf</span> אינו שם-קובץ שמופיע בשום מקום בסט. <b>data-set.md §6 מגדיר
+    את M1 במפורש כממולא עבור פרויקט #13</b> ("הדוגמה היחידה בסט שכבר נשלחה בפועל בציר-הזמן") עם הצרופה
+    <span class="ltr">Invoice_4127.pdf</span>. לפי כלל-הברזל של המשימה — "real data … ONLY, no invented
+    names/numbers" — ציירתי לפי #13, לא לפי #12/Invoice_12.pdf שהיו מחייבים המצאה.
+  </div>
+
+  <div class="note-card">
+    <h3>מקרא-תגים על המסך הזה</h3>
+    כל ערך ממולא נושא תג צמוד: 🌱 = ישירות מ-<span class="ltr">data-set.md</span> (מסד/params) ·
+    🎭 = דמו מתויג (בסט או שהוצג כאן) · <span class="tag warn" style="margin:0 2px;">🎭 מהמוקאפ — לאישור</span>
+    = ניסוח שהמצאתי כי הוא נדרש ואינו קיים באף מקום — שורת-הנושא בלבד. אין היום פונקציית
+    <span class="ltr">invoiceEmailSubject</span> בקוד (מודול 8 טרם נבנה); הלכתי לפי הדפוס הקיים הקרוב
+    ביותר, <span class="ltr">quoteEmailSubject</span> (<span class="ltr">src/lib/quotes.js</span>):
+    "&lt;פעולה&gt; מ-REG-IN — &lt;שם-אירוע&gt;" — כי חשבונית, כמו הצעת-מחיר, היא מסמך רשמי היוצא
+    ללקוח-חוץ (לא מייל-פנים כמו זימון-משמרת).
+  </div>
+
+</div>
+
+</body>
+</html>
+<!-- מה הכרעתי לבד (לא הכרעת-מוצר — פרטי-ציור בלבד, לפי כלל "אתה לא מכריע כלום"):
+
+1. #13 במקום #12, Invoice_4127.pdf במקום Invoice_12.pdf — מוסבר בבאנר הכתום על-גבי הדף עצמו
+   (לא רק כאן), כי data-set.md §6 הוא המקור-היחיד-הרשאי ומגדיר M1 במפורש על #13.
+
+2. באנר-הדראפט-עבר בסגנון toast "info" (bg-slate-50/border-slate-200/text-slate-700, §2.8) ולא
+   "warn" (ענבר) — סטטוס-מסמך ניטרלי ("לפני-האישור") אינו אזהרת-עסק ממשית, וכלל-המילוי (§④) שומר
+   ענבר לזה בלבד.
+
+3. אין רכיב-מייל קיים בקוד (Money/StatTile/LtrFieldGroup/StatusTag/דיאלוג/טבלה/ריק — אף אחד
+   אינו "מסגרת-מייל"). בניתי את .mail-head/.meta/.k/.v כשאילה מילולית של `.dlg-head .meta .k/.v`
+   מ-design-contract.md §⑤ — התקדים המדויק ביותר לזוג "תווית קבועה + ערך נעול-לעיון" (S2, §2.6).
+   הצ'יפ-הצרופה שאול משפת ה-.pill (§2.4): מסגרת+לבן, לא מילוי, כי זו עובדה (יש קובץ) לא פעולה.
+
+4. גוף-המייל בודד בפועל בתווי LRI/PDI (U+2066/U+2069) סביב "REG-IN." בשורת-החתימה — לא ב-class
+   .ltr — כי זו בדיוק ההבחנה התיעודית ב-src/lib/email.js (plainTextToEmailHtml): לקוח-דואר
+   שמפשיט סגנונות מבטל <span> אבל לא יכול לבטל תו-יוניקוד. שאר המסך (שדות-מטא) הוא UI של
+   המוקאפ עצמו, לא HTML-מייל-יוצא — שם .ltr נכון ומספיק (design-contract §3.2).
+
+5. שורת-הנושא: "REG-IN" עטוף ב-.ltr כדי שהמוקאפ יוצג נכון — הערה-לתשומת-לב, לא תיקון: הקוד
+   הקיים (quoteEmailSubject וכל משפחת ה-subject ב-shiftEmails.js) בפועל *אינו* עובר שום בידוד —
+   רק `body` עובר plainTextToEmailHtml, לא `subject`. ייתכן שזה פער קיים במוצר האמיתי; לא בטווח
+   המשימה הזו לתקן, רק צוין כאן כדי שלא יובן כאילו המוקאפ "מתעד" בידוד שקיים בקוד.
+
+6. אין שדה "מאת" (From) — אין כתובת-שולח בשום מקום בדאטה-סט/params (התובלה עוברת Make→Gmail,
+   בלי זהות-שולח מתועדת), והבריף ביקש "minimal mail-frame" — השארתי את זה מחוץ למסך במקום
+   להמציא כתובת.
+
+7. ספני "filled" (קו-מקווקו טורקיז) על שני ה-placeholders בגוף — סימון מקומי, אין לו תקדים
+   קיים ("מיזוג-דיוור" לא צויר במערכת עד כה); צבע טורקיז-500 בלבד (מהפלטה הקיימת), לא מילוי.
+-->

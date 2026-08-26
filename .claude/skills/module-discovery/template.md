@@ -99,6 +99,32 @@ like a world convention adopted without a fit check (§5).
 🔑 **The test: if all three sources said the opposite, would my answer change? If yes — I did not
 decide, I quoted.**
 
+### 🔴 And the same trap wearing different clothes: a surface derived from a **string in merged code**
+
+*(Added 22/08/2026, module 5. Cost: a whole surface was designed, drawn, cross-checked and reviewed
+by **six** agents before Ishay deleted it with one question.)*
+
+An error message in merged code said *"for full removal, contact the logistics manager"*. A surface was
+derived from that sentence and treated as an inherited requirement. **It was a validation string for a
+`CHECK` constraint** — nobody had ever decided who owns removal. Worse, the frozen spec **forbade** that
+owner outright, and the spec set **quoted the prohibition and then declared the surface "the only
+exception" to it** — an exception with no ruling behind it. The role could not even reach the code path:
+the RPC gates on a module she holds `view` on.
+
+🔴 **Why no reviewer caught it, and this is the part that generalises:** all six checked **internal
+consistency**, and the document set was **perfectly consistent around a false premise**. **A consistency
+check cannot find a wrong premise.** Only someone who knows how the work actually happens can — which
+means it reaches Ishay or it is never caught.
+
+⇒ **The rule: a string in code is evidence that something was once written, exactly like `C5`.** Before
+building a surface on one, answer in the file, at the point of derivation:
+**① who decided this, and where is it written as a decision?** ② **if the answer is "only this string" —
+say so out loud, in the spec, as an open premise** — never as an inherited requirement.
+**③ And check the frozen spec for the opposite claim before you write the exception.**
+🔑 **The cheap test that would have caught it in a minute: does this actor's *other* work of the same
+kind flow the same way?** Removal was the only scope change starting somewhere else. **An asymmetry is
+either deliberate with a stated reason, or an accident — and "no reason found" is the finding.**
+
 ### 🔴 Two triages, and they are different — do not merge them
 
 **(a) `C5` itself sorts into three drawers:** what is **still correct** *(cite it)* · what is **wrong**
@@ -378,6 +404,16 @@ at the end of the process.** **The test: a fresh session, with no context whatso
 stage's draft and continues from the next item without asking anything.** *(Ishay's ruling
 07/08/2026.)*
 
+🔴 **And one file OWNS each fact; the rest point at it — the spec folder needs this as much as the repo does.**
+`processes-approved.md` is the only file in the folder that may state a product rule. **A companion file that
+needs the ruling's text carries the mirror tag** *(`docs/CLAUDE.md`, anchor `קונבנציית מראה`)*, never a bare copy.
+🔑 **Why this belongs to the persistence law and not only to the agent brief:** the failure is not that a copy
+is *wrong when written* — it is right when written, and **goes stale the moment the ruling moves**, which in a
+Discovery is constantly. ⟦EX⟧ *(module 5: **every** cross-file contradiction three independent reviewers found
+was an untagged restatement, and none of them was wrong on the day it was written.)*
+⚠️ **The test, and it is one question: if this ruling changes tomorrow, how many files must I edit?**
+**More than one ⇒ the extras must be pointers.**
+
 **🏷️ Each draft carries one tracking table, maintained at every stop — not only when the stage ends:**
 **item (process / surface / chapter) · state (✅ approved / 🔶 draft / ⬜ not yet) · pointer (mockup or
 section).** 🔴 **In `screens-approved.md` this table sits at the head of the file and its heading is
@@ -628,6 +664,27 @@ measurable at the end — the reverse-coverage check ran **after** `spec.md` had
 `module-blueprint` mandates it explicitly. **A rejection without a §6 line is a silent debt** — it lives
 only in your draft, and module N will never find it.
 
+🔴 **But before you write the line — the reader test, one question: who will grep this, and when?**
+The register is read by **the session that OPENS module N**. That is its only reader. So:
+
+| The target | Will it be opened? | ⇒ |
+|---|:-:|---|
+| A module not yet built | ✅ | **A real debt. Write the line.** |
+| A module **closed and merged** | ❌ | 🔴 **A debt with no reader.** It is work for the module you are speccing NOW — file it as a ripple in its own plan |
+| A module that does not exist | ❌ | Same, and already rejected once in this repo for exactly this reason |
+
+⟦EX⟧ *(the repo's own precedent, in `PROJECT_MASTER §6`: a module-4 debt was nearly filed to `🚧 מ13`
+and was moved to `🚧 מ12`, with the reason recorded — «**הרשם נקרא ב-`grep`, ואף סשן לא יפתח מודול שאינו
+קיים**». Module 5 then hit the same shape from the other side: an obligation on module 6 — **closed,
+merged and live** — was about to be filed as `🚧 מ6 ← מ5`. **Ishay caught it:** *"הוא כבר נוצר ומוזג
+לייצור אז נראלי זה צריך להיות באפיון שלך לא?"* It became a module-5 build item instead, beside the two
+ripples into merged code that were **already** filed that way — the inconsistency had no reason behind
+it. **The debt that stayed** was `🚧 מ11 ← מ5`, because module 11 has not been built and will genuinely
+grep for it.)*
+
+🔑 **And note this is the same disease as the mirror rule above, wearing different clothes: "I wrote it
+down, so it is handled." It is not handled until someone whose path crosses it will actually read it.**
+
 ## 0ד · Create the skeleton now
 
 Create `docs/specs/module_[NN]_<slug>/processes-approved.md` containing **the requirements ledger · an
@@ -845,6 +902,29 @@ reason · the stages, the stop points and what each writes to disk · the exact 
 - ⚠️ **Verify what an agent returns.** Ishay, 13/08/2026: > *"שים לב שלפעמים סוכן לא מכיר כל מה שדיברנו
   או ראית אז בדוק היטב מה שהוא אומר."*
 - 🔴 **Before every wave, tell Ishay how many agents and the rough cost.** He pays and waits in real time.
+- 🔴 **ONE file rules. Every other file in the spec folder POINTS.** `processes-approved.md` is the only
+  file in the folder allowed to state a product rule; `data-set.md`, `design-contract.md` and
+  `world-sources.md` carry measurements, palettes and data. **Say this inside every agent prompt that
+  writes into the folder, and say it again at the top of each file the agent produces** — otherwise the
+  next agent to open that file inherits the wrong idea about what it is for.
+- 🔴 **And when a companion file genuinely needs the text of a ruling in front of the reader, it carries
+  the repo's mirror tag** *(`docs/CLAUDE.md`, anchor `קונבנציית מראה`)*: `🔗 מראת <ruling> — SSOT: <file>
+  (לא לערוך כאן)`. **An untagged restatement is a finding, not a convenience.**
+  ⟦EX⟧ *(module 5, 21–22/08/2026: three fresh-context reviewers, given three deliberately different
+  angles, each independently surfaced the same four cross-file contradictions — the dispatch-window rule,
+  drill-in-as-dialog-vs-page, the primary teal, and the spec's own status. **All four had one shape: a
+  companion file **restated** a ruling instead of pointing at it, and went stale the moment the ruling
+  moved.** Every one would have been impossible under the mirror tag. **The convention already existed in
+  the repo and had simply never been applied to `docs/specs/`.**)*
+- 🔴 **Never let an agent write a decision-bearing file while decisions are still moving — and this is the
+  mechanism behind the previous two bullets, not a separate rule.** ⟦EX⟧ *(same session: the data set and
+  the design contract were written by agents at 23:24–23:32; rulings ㉓ and ㉔ were made **after** that, in
+  the conversation, and the ripple into those two files never ran — iron rule 13, unexecuted. Neither file
+  was wrong when written.)* ⇒ **Either freeze the relevant rulings before dispatching, or brief the agent
+  to write measurements ONLY.** ⚠️ **And the brief must say so explicitly, because an agent asked for
+  "data" will still editorialise into rules if you do not forbid it** — that same data set grew a
+  "house rules" section that ruled on dialog-vs-page and on the primary colour, neither of which it was
+  asked about, and both of which then contradicted the conversation.
 
 ## 📐 The card written beside the mockup — nine sections, and that is all that is written
 

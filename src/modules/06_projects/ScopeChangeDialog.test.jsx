@@ -109,6 +109,8 @@ function catalogFixture() {
   }
 }
 
+// `actual_qty` מפורש בשתי השורות — הוא חצי מכלל-ההסרה (㊱), ושורה שאינה נוקבת בו
+// קוראת כאילו הכלל אינו רלוונטי לה.
 function logisticsFixture() {
   return [
     {
@@ -116,6 +118,7 @@ function logisticsFixture() {
       sku: 'B-REG-TAG',
       serial_number: 1,
       planned_qty: 300,
+      actual_qty: 0,
       item_status: 'not_started',
       quote_service_line_id: 2,
       project_change_id: null,
@@ -125,6 +128,7 @@ function logisticsFixture() {
       sku: 'B-LAN',
       serial_number: 2,
       planned_qty: 300,
+      actual_qty: 0,
       item_status: 'not_started',
       quote_service_line_id: 3,
       project_change_id: null,
@@ -240,16 +244,34 @@ describe('ScopeChangeDialog — מצב ③: שמירה חסומה', () => {
     )
   })
 
-  it('כמות אפס נחסמת לפני שליחה, במשפט הזהה-בייט לשרת', async () => {
+  // 🔴 ההודעה הגורפת הישנה ("להסרת פריט לגמרי — פני למנהלת הלוגיסטיקה") נמחקה מהשרת
+  // ב-M5-7 ⇒ אין לה יותר מקור, ובמקומה שתי מראות ממוקדות-יעד.
+  it('אפס בשורת-הדיילות נחסם לפני שליחה, במשפט הזהה-בייט לשרת (AR-10)', async () => {
     const hostessInput = await renderDialog()
-    fireEvent.change(screen.getByLabelText(TAGS_INPUT), { target: { value: '0' } })
-    // 🔒 עותק מילולי של raise-השרת — supabase/migrations/20260814142440_module6_rpcs_writes.sql,
-    // גוף apply_scope_change (AR-4). לא מיובא מהקומפוננטה, כדי שהבדיקה תתפוס סטייה שלה.
-    expect(
-      screen.getByText('הכמות חייבת להיות גדולה מאפס. להסרת פריט לגמרי — פני למנהלת הלוגיסטיקה.'),
-    ).toBeInTheDocument()
+    fireEvent.change(hostessInput, { target: { value: '0' } })
+    // 🔒 עותק מילולי של raise-השרת — supabase/migrations/
+    // 20260826002448_module5_scope_change_reset_removal.sql, גוף apply_scope_change.
+    // לא מיובא מהקומפוננטה, כדי שהבדיקה תתפוס סטייה שלה.
+    expect(screen.getByText('כמות הדיילות חייבת להיות גדולה מאפס.')).toBeInTheDocument()
+    // 🔴 והרצפה של שורת-הדיילות נשארת 1. המוקאפ המאושר צייר `min="0"` בשלוש השורות
+    // כולל זו — אבל `min` הוא התנהגות, והאפיון גובר על הציור (AR-10 + ה-CHECK במסד).
+    expect(hostessInput).toHaveAttribute('min', '1')
     expect(screen.getByTestId('scope-save')).toBeDisabled()
-    fireEvent.change(hostessInput, { target: { value: '8' } })
+    // שגיאה בשורה אחת חוסמת שמירה גם כששורה אחרת שונתה כדין ויש סיבה.
+    fireEvent.change(screen.getByLabelText(TAGS_INPUT), { target: { value: '380' } })
+    fireEvent.change(screen.getByTestId('scope-reason'), { target: { value: 'סיבה' } })
+    expect(screen.getByTestId('scope-save')).toBeDisabled()
+  })
+
+  it('אפס בשורת פריט חדש נחסם — אין "הסרה" של מה שטרם קיים (G11b)', async () => {
+    await renderDialog()
+    fireEvent.click(screen.getByTestId('scope-add-item'))
+    fireEvent.change(screen.getByTestId('scope-new-row-select-0'), {
+      target: { value: 'B-SAT-LAN' },
+    })
+    fireEvent.change(screen.getByTestId('scope-new-row-qty-0'), { target: { value: '0' } })
+    expect(screen.getByText('כמות של פריט חדש חייבת להיות גדולה מאפס.')).toBeInTheDocument()
+    expect(screen.getByTestId('scope-new-row-qty-0')).toHaveAttribute('min', '1')
     expect(screen.getByTestId('scope-save')).toBeDisabled()
   })
 
@@ -362,6 +384,421 @@ describe('ScopeChangeDialog — כשל-טעינה (הצורה הנעולה של 
     expect(within(box).getByText('לא ניתן לטעון את הנתונים.')).toBeInTheDocument()
     expect(within(box).getByText('שגיאה בטעינת קטלוג המחירים.')).toBeInTheDocument()
     expect(within(box).getByRole('button', { name: 'נסי שוב' })).toBeInTheDocument()
+  })
+})
+
+// 🔄ה · ㊳ · ㊱ · ㉚ — הסרת פריט אינה מסך חדש: היא נעשית כאן, ורצפת-הספינר דינמית לפי שני
+// התנאים. **שני מסלולים לאותו יעד:** פקד "הסר פריט" מפורש (המסלול שהמשתמשת מוצאת), והקלדת
+// `0` ביד (המסלול הישן, שלא נגרע — הבדיקות שלו נשארו כלשונן). המערך מצטט את `#107` החי
+// (`docs/specs/module_05_logistics/data-set.md`): שלושת מצבי-הפריט על מסך אחד, ושני צדי
+// כלל-ההסרה.
+describe('ScopeChangeDialog — הסרה = הקלדת 0 (M5-7 · ㊱ · ㉚)', () => {
+  const SAT_INPUT = 'כמות חדשה — שרוך סאטן - ממותג'
+  const ECO_INPUT = 'כמות חדשה — תג שם אקולוגי - ממותג'
+
+  // satActualQty > 0 מייצר את המקרה השני של ㊱ — שאין לו אף שורה חיה במסד (נמדד 26/08),
+  // ולכן הוא מוכח כאן ורק כאן.
+  function removalScene({ satActualQty = 0 } = {}) {
+    const catalog = catalogFixture()
+    catalog.products.push({
+      sku: 'B-ECO-TAG',
+      item_name: 'תג שם אקולוגי - ממותג',
+      category: 'product',
+      unit: 'יחידה',
+      status: 'active',
+      base_price: 7,
+    })
+    getPricingCatalog.mockResolvedValue(catalog)
+    getQuote.mockResolvedValue({
+      quote_id: 21,
+      applied_customer_discount: 5,
+      manual_discount: 10,
+      vat_rate_snapshot: 18,
+      quote_services: [
+        { line_id: 1, sku: 'H-SRV', line_number: 1, qty: 2, closing_unit_price: 500, color: null },
+        {
+          line_id: 2,
+          sku: 'B-REG-TAG',
+          line_number: 2,
+          qty: 150,
+          closing_unit_price: 5,
+          color: null,
+        },
+        {
+          line_id: 3,
+          sku: 'B-SAT-LAN',
+          line_number: 3,
+          qty: 150,
+          closing_unit_price: 9,
+          color: null,
+        },
+        {
+          line_id: 4,
+          sku: 'B-ECO-TAG',
+          line_number: 4,
+          qty: 50,
+          closing_unit_price: 7,
+          color: null,
+        },
+      ],
+    })
+    getProjectLogistics.mockResolvedValue([
+      {
+        project_id: 8,
+        sku: 'B-REG-TAG',
+        serial_number: 1,
+        planned_qty: 150,
+        actual_qty: 0,
+        item_status: 'ordered',
+        quote_service_line_id: 2,
+        project_change_id: null,
+      },
+      {
+        project_id: 8,
+        sku: 'B-SAT-LAN',
+        serial_number: 2,
+        planned_qty: 150,
+        actual_qty: satActualQty,
+        item_status: 'not_started',
+        quote_service_line_id: 3,
+        project_change_id: null,
+      },
+      {
+        project_id: 8,
+        sku: 'B-ECO-TAG',
+        serial_number: 3,
+        planned_qty: 50,
+        actual_qty: 50,
+        item_status: 'ready',
+        quote_service_line_id: 4,
+        project_change_id: null,
+      },
+    ])
+  }
+
+  const rowOf = (label) => screen.getByLabelText(label).closest('tr')
+
+  it('מצב-הפריט מוצג בשורת-המשנה הקיימת — ולא כעמודה שביעית, ולא על שורת-הדיילות (㊳②)', async () => {
+    removalScene()
+    await renderDialog()
+    expect(within(rowOf(TAGS_INPUT)).getByText('הוזמן')).toBeInTheDocument()
+    expect(within(rowOf(SAT_INPUT)).getByText('טרם החל')).toBeInTheDocument()
+    expect(within(rowOf(ECO_INPUT)).getByText('מוכן')).toBeInTheDocument()
+    // שורת-הדיילות אינה שורת-לוגיסטיקה ⇒ אין לה מצב-פריט ואין לה תג.
+    const hostessRow = rowOf(HOSTESS_INPUT)
+    for (const label of ['טרם החל', 'הוזמן', 'מוכן']) {
+      expect(within(hostessRow).queryByText(label)).toBeNull()
+    }
+    // ושש העמודות נשארו שש — עמודה שביעית הייתה מצרה את שתי עמודות-הכסף.
+    expect(screen.getAllByRole('columnheader')).toHaveLength(6)
+  })
+
+  it('`טרם החל` + אפס שהגיע ⇒ הרצפה 0, האפס מתקבל, ונשלח כ-target_qty 0', async () => {
+    removalScene()
+    await renderDialog()
+    const sat = screen.getByLabelText(SAT_INPUT)
+    // ⚠️ השורה נתפסת **לפני** ההקלדה: משסומנה להסרה, שדה-הכמות מתחלף ב"יוסר" ואין יותר
+    // תווית לחפש לפיה. ה-`<tr>` עצמו נשמר (אותו `key`) ⇒ ההפניה נשארת חיה.
+    const satRow = rowOf(SAT_INPUT)
+    expect(sat).toHaveAttribute('min', '0')
+    // אין שורת-הסבר על שורה שמותר להסיר — ההסבר שמור לחסימה (㉚).
+    expect(within(satRow).queryByRole('alert')).toBeNull()
+
+    fireEvent.change(sat, { target: { value: '0' } })
+    expect(within(satRow).queryByRole('alert')).toBeNull()
+    fireEvent.change(screen.getByTestId('scope-reason'), {
+      target: { value: 'הלקוח ויתר על השרוכים' },
+    })
+    expect(screen.getByTestId('scope-save')).not.toBeDisabled()
+
+    fireEvent.click(screen.getByTestId('scope-save'))
+    await waitFor(() => expect(applyScopeChange).toHaveBeenCalledTimes(1))
+    const [, pLines] = applyScopeChange.mock.calls[0]
+    expect(pLines).toEqual([
+      { target: 'logistics', sku: 'B-SAT-LAN', serial_number: 2, target_qty: 0 },
+    ])
+  })
+
+  it('`הוזמן` ⇒ הרצפה 1, ההסבר על המסך עוד לפני שהיא ניסתה, ואפס נחסם באותו משפט (㉚)', async () => {
+    removalScene()
+    await renderDialog()
+    const tags = screen.getByLabelText(TAGS_INPUT)
+    expect(tags).toHaveAttribute('min', '1')
+    // 🔒 עותק מילולי של raise-השרת (M5-7) — לא מיובא מהקומפוננטה.
+    expect(
+      within(rowOf(TAGS_INPUT)).getByText('הפריט כבר הוזמן — לא ניתן להסירו'),
+    ).toBeInTheDocument()
+
+    fireEvent.change(tags, { target: { value: '0' } })
+    expect(within(rowOf(TAGS_INPUT)).getByRole('alert').textContent).toBe(
+      'הפריט כבר הוזמן — לא ניתן להסירו',
+    )
+    expect(screen.getByTestId('scope-save')).toBeDisabled()
+  })
+
+  it('`מוכן` ⇒ אותו חוק ואותו נוסח — הכסף כבר יצא (§7.31)', async () => {
+    removalScene()
+    await renderDialog()
+    const eco = screen.getByLabelText(ECO_INPUT)
+    expect(eco).toHaveAttribute('min', '1')
+    expect(
+      within(rowOf(ECO_INPUT)).getByText('הפריט כבר הוזמן — לא ניתן להסירו'),
+    ).toBeInTheDocument()
+    fireEvent.change(eco, { target: { value: '0' } })
+    expect(within(rowOf(ECO_INPUT)).getByRole('alert').textContent).toBe(
+      'הפריט כבר הוזמן — לא ניתן להסירו',
+    )
+  })
+
+  it('`טרם החל` עם סחורה שהגיעה ⇒ הנוסח השני — היא צריכה לדעת איזה חוק חסם (㊱)', async () => {
+    // התרחיש של ㊱ מילה-במילה: הגיעו 8 מתוך 150, והשורה אינה ניתנת להסרה לעולם.
+    removalScene({ satActualQty: 8 })
+    await renderDialog()
+    const sat = screen.getByLabelText(SAT_INPUT)
+    expect(sat).toHaveAttribute('min', '1')
+    expect(
+      within(rowOf(SAT_INPUT)).getByText('הגיעו כבר פריטים — לא ניתן להסיר'),
+    ).toBeInTheDocument()
+    fireEvent.change(sat, { target: { value: '0' } })
+    expect(within(rowOf(SAT_INPUT)).getByRole('alert').textContent).toBe(
+      'הגיעו כבר פריטים — לא ניתן להסיר',
+    )
+    // ושני הנוסחים אינם זהים — זו כל הנקודה של ההפרדה.
+    expect(
+      within(rowOf(TAGS_INPUT)).getByText('הפריט כבר הוזמן — לא ניתן להסירו'),
+    ).toBeInTheDocument()
+  })
+
+  // 🔴 ㉚ בקורא-מסך (הכרעת-ישי 26/08/2026 — "למה לדחות ל-12 ולא לסדר עכשיו"): הסיבה
+  // שחסמה אותה חייבת להישמע כשהמיקוד נכנס לשדה, לא רק להיראות לידו. בלי הקישור, מי
+  // שמנווט במקלדת פוגש שדה שאינו מקבל אפס ולא שומע למה.
+  it('㉚ — שורת-ההסבר מקושרת לשדה ב-aria-describedby, וגם נוסח-השגיאה אחרי הקלדה', async () => {
+    removalScene()
+    await renderDialog()
+    const tags = screen.getByLabelText(TAGS_INPUT)
+
+    // (א) מצב-ההסבר: הקישור קיים, מצביע לאלמנט קיים, וזה האלמנט שנושא את הסיבה.
+    const hintId = tags.getAttribute('aria-describedby')
+    expect(hintId).toBeTruthy()
+    // מזהה חוקי — אין רווחים. `aria-describedby` היא רשימת-טוקנים מופרדת-ברווח, ולכן
+    // מזהה עם רווח היה נקרא כמה מזהים שאינם קיימים והקישור היה נשבר בשקט.
+    expect(hintId).not.toMatch(/\s/)
+    expect(document.getElementById(hintId).textContent).toBe('הפריט כבר הוזמן — לא ניתן להסירו')
+
+    // (ב) ואחרי שהיא מקלידה 0 — אותו קישור מצביע לנוסח-השגיאה, לא לאלמנט מת.
+    fireEvent.change(tags, { target: { value: '0' } })
+    const errId = tags.getAttribute('aria-describedby')
+    expect(errId).toBeTruthy()
+    expect(document.getElementById(errId).textContent).toBe('הפריט כבר הוזמן — לא ניתן להסירו')
+    expect(document.getElementById(errId)).toHaveAttribute('role', 'alert')
+  })
+
+  it('שלילי בשורת-לוגיסטיקה קיימת אינו הסרה — ונחסם בנוסח נפרד משלו', async () => {
+    removalScene()
+    await renderDialog()
+    fireEvent.change(screen.getByLabelText(SAT_INPUT), { target: { value: '-5' } })
+    expect(within(rowOf(SAT_INPUT)).getByRole('alert').textContent).toBe(
+      'הכמות אינה יכולה להיות שלילית.',
+    )
+  })
+
+  it('בלוק "מה יקרה כשתשמרי" מקבל את שורת-ההסרה בנוסח שהוכרע (26/08/2026)', async () => {
+    removalScene()
+    await renderDialog()
+    fireEvent.change(screen.getByLabelText(SAT_INPUT), { target: { value: '0' } })
+    expect(
+      screen.getByText(
+        '"שרוך סאטן - ממותג" — השורה תוסר ממסך הלוגיסטיקה, וההסרה תירשם בהיסטוריית שינויי-התכולה.',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  // ── הפקד המפורש: "הסר פריט" ────────────────────────────────────────────────────────
+  // עד כה הדרך היחידה להסיר פריט הייתה להקליד `0` — ואין במערכת אף פעולה הרסנית אחרת
+  // בלי פקד ששמו נקוב ("העבר לארכיון", "השבת", "ביטול פרויקט"). ההכרעה (㊳) לא השתנתה
+  // בגרם: ההסרה עדיין שינוי-תכולה, עדיין של מנהלת הפרויקטים, ועדיין בדיאלוג הזה. מה
+  // שהשתנה הוא **איך היא מבצעת אותה**.
+  describe('פקד "הסר פריט" — המסלול המפורש', () => {
+    const SAT_NAME = 'שרוך סאטן - ממותג'
+    const TAGS_NAME = 'תג שם רגיל - ממותג'
+    const ECO_NAME = 'תג שם אקולוגי - ממותג'
+    const HOSTESS_NAME = 'שירותי דיילת (4 שעות)'
+    // הפקד נשאל לפי **שמו הנגיש** ולא לפי testid: זה בדיוק מה שקורא-מסך מכריז, וזה גם
+    // מה שמתהפך בסימון — כך שהשאילתה עצמה מאמתת את היפוך-התווית.
+    const removeBtn = (name) => screen.getByRole('button', { name })
+
+    it('שורה שעומדת בשני תנאי ㊱ מקבלת "הסר פריט" פעיל, ו"הוזמן"/"מוכן" מקבלות אותו מושבת ומנומק (㉚)', async () => {
+      removalScene()
+      await renderDialog()
+      expect(removeBtn(`הסר פריט — ${SAT_NAME}`)).not.toBeDisabled()
+
+      const tagsBtn = removeBtn(`הסר פריט — ${TAGS_NAME}`)
+      expect(tagsBtn).toBeDisabled()
+      // 🔒 עותק מילולי של raise-השרת — והסיבה **גלויה** על המסך ליד הפקד.
+      // 🔴 ולא `title`: לכפתור מושבת אין hit-test, ולכן tooltip עליו לעולם אינו נפתח.
+      expect(
+        within(rowOf(TAGS_INPUT)).getByText('הפריט כבר הוזמן — לא ניתן להסירו'),
+      ).toBeInTheDocument()
+      expect(tagsBtn).not.toHaveAttribute('title')
+
+      const ecoBtn = removeBtn(`הסר פריט — ${ECO_NAME}`)
+      expect(ecoBtn).toBeDisabled()
+      expect(
+        within(rowOf(ECO_INPUT)).getByText('הפריט כבר הוזמן — לא ניתן להסירו'),
+      ).toBeInTheDocument()
+    })
+
+    it('"טרם החל" עם סחורה שהגיעה ⇒ הכפתור מושבת בנוסח השני של ㊱, לא בראשון', async () => {
+      removalScene({ satActualQty: 8 })
+      await renderDialog()
+      expect(removeBtn(`הסר פריט — ${SAT_NAME}`)).toBeDisabled()
+      expect(
+        within(rowOf(SAT_INPUT)).getByText('הגיעו כבר פריטים — לא ניתן להסיר'),
+      ).toBeInTheDocument()
+    })
+
+    it('שורת-הדיילות ושורת "פריט חדש" אינן מקבלות פקד-הסרה, ואינן מתבלבלות עם "הסרה" שכבר קיים שם', async () => {
+      removalScene()
+      await renderDialog()
+      // AR-10 — אין "הסרה" של כמות-דיילות (מקטינים אותה), ואין "הסרה" של מה שטרם קיים.
+      expect(screen.queryByRole('button', { name: `הסר פריט — ${HOSTESS_NAME}` })).toBeNull()
+      expect(within(rowOf(HOSTESS_INPUT)).queryByRole('button')).toBeNull()
+
+      fireEvent.click(screen.getByTestId('scope-add-item'))
+      const newRow = screen.getByTestId('scope-new-row-select-0').closest('tr')
+      // הקישור שכבר קיים בשורה החדשה נשאר כלשונו — **"הסרה"**, והוא מוחק שורת-טופס שלא
+      // נשמרה. הפקד החדש הוא **"הסר פריט"**, והוא מסיר פריט מהאירוע. שני נוסחים שונים
+      // בכוונה, כי טעות ביניהם היא בדיוק ההבחנה פח-מול-ארכיון של `src/CLAUDE.md`.
+      expect(within(newRow).getByText('הסרה')).toBeInTheDocument()
+      expect(within(newRow).queryByRole('button', { name: /^הסר פריט/ })).toBeNull()
+    })
+
+    it('לחיצה **מסמנת בלבד** — "יוסר" מחליף את שדה-הכמות, הכפתור מתהפך, ושום דבר לא נשלח', async () => {
+      removalScene()
+      await renderDialog()
+      const satRow = rowOf(SAT_INPUT)
+      fireEvent.click(removeBtn(`הסר פריט — ${SAT_NAME}`))
+
+      expect(within(satRow).getByText('יוסר')).toBeInTheDocument()
+      // הוחלף, לא רק הושבת — שדה-מספר שנשאר היה מזמין אותה לערוך כמות של פריט שלא יהיה.
+      expect(within(satRow).queryByRole('spinbutton')).toBeNull()
+      // הפקד **מתהפך** ואינו מתווסף: הישן נעלם קודם, ורק אז נבדק החדש.
+      expect(screen.queryByRole('button', { name: `הסר פריט — ${SAT_NAME}` })).toBeNull()
+      expect(removeBtn(`בטל הסרה — ${SAT_NAME}`)).toBeInTheDocument()
+      // 🔴 סימון אינו שמירה ואינו מחיקה: אין קריאת-שרת עד "שמור שינוי תכולה".
+      expect(applyScopeChange).not.toHaveBeenCalled()
+    })
+
+    it('"בטל הסרה" מחזיר את השורה — שדה-הכמות חוזר עם הכמות שבתוקף, והשורה שוב "ללא שינוי"', async () => {
+      removalScene()
+      await renderDialog()
+      const satRow = rowOf(SAT_INPUT)
+      // הסיבה ממולאת מראש בכוונה: אחרת השמירה מושבתת ממילא בגלל ㉖, והבדיקה האחרונה כאן
+      // הייתה עוברת גם אילו הביטול לא היה מחזיר את השורה למצב "ללא שינוי".
+      fireEvent.change(screen.getByTestId('scope-reason'), { target: { value: 'הלקוח ויתר' } })
+      fireEvent.click(removeBtn(`הסר פריט — ${SAT_NAME}`))
+      fireEvent.click(removeBtn(`בטל הסרה — ${SAT_NAME}`))
+
+      expect(screen.getByLabelText(SAT_INPUT)).toHaveValue(150)
+      expect(within(satRow).queryByText('יוסר')).toBeNull()
+      expect(within(satRow).getByText('ללא שינוי')).toBeInTheDocument()
+      expect(screen.getByTestId('scope-save')).toBeDisabled()
+    })
+
+    it('שמירה של שורה מסומנת שולחת target_qty 0 — לאותה שורה בלבד, ובאותו חוזה-פיילוד', async () => {
+      removalScene()
+      await renderDialog()
+      fireEvent.click(removeBtn(`הסר פריט — ${SAT_NAME}`))
+      fireEvent.change(screen.getByTestId('scope-reason'), {
+        target: { value: 'הלקוח ויתר על השרוכים' },
+      })
+      fireEvent.click(screen.getByTestId('scope-save'))
+
+      await waitFor(() => expect(applyScopeChange).toHaveBeenCalledTimes(1))
+      const [, pLines] = applyScopeChange.mock.calls[0]
+      // 🔴 חוזה-השרת לא השתנה בגרם — הפקד הוא מסלול נוסף אל אותו `target_qty: 0`.
+      expect(pLines).toEqual([
+        { target: 'logistics', sku: 'B-SAT-LAN', serial_number: 2, target_qty: 0 },
+      ])
+    })
+
+    it('בלוק "מה יקרה כשתשמרי" אומר את משפט-ההסרה עוד לפני השמירה', async () => {
+      removalScene()
+      await renderDialog()
+      fireEvent.click(removeBtn(`הסר פריט — ${SAT_NAME}`))
+      expect(
+        screen.getByText(
+          '"שרוך סאטן - ממותג" — השורה תוסר ממסך הלוגיסטיקה, וההסרה תירשם בהיסטוריית שינויי-התכולה.',
+        ),
+      ).toBeInTheDocument()
+      expect(applyScopeChange).not.toHaveBeenCalled()
+    })
+
+    // 🪤 המלכודת שהסעיף הזה שומר עליה: היא מסמנת הסרה, ו"לא שינית אף כמות" נשאר על המסך
+    // עם כפתור-שמירה מושבת. שתי בדיקות ולא אחת — כדי שכל צד ייכשל בנפרד ולא ייחבא מאחורי
+    // חברו.
+    it('סימון-הסרה לבדו הוא שינוי — "לא שינית אף כמות" נעלם', async () => {
+      removalScene()
+      await renderDialog()
+      expect(screen.getByTestId('scope-no-change')).toBeInTheDocument()
+      fireEvent.click(removeBtn(`הסר פריט — ${SAT_NAME}`))
+      expect(screen.queryByTestId('scope-no-change')).toBeNull()
+    })
+
+    it('סימון-הסרה לבדו פותח את השמירה — אחרי סיבה, ולא לפניה (㉖)', async () => {
+      removalScene()
+      await renderDialog()
+      fireEvent.click(removeBtn(`הסר פריט — ${SAT_NAME}`))
+      // הסיבה נשארת חובה — ההסרה אינה פותחת עוקף.
+      expect(screen.getByTestId('scope-save')).toBeDisabled()
+
+      fireEvent.change(screen.getByTestId('scope-reason'), { target: { value: 'הלקוח ויתר' } })
+      expect(screen.getByTestId('scope-save')).not.toBeDisabled()
+    })
+
+    it('㉚ — סיבת-החסימה של הכפתור מקושרת ב-aria-describedby, המזהה בלי רווחים, וזה **אותו** אלמנט של השדה', async () => {
+      removalScene()
+      await renderDialog()
+      const tagsBtn = removeBtn(`הסר פריט — ${TAGS_NAME}`)
+      const describedBy = tagsBtn.getAttribute('aria-describedby')
+      expect(describedBy).toBeTruthy()
+      // מזהה חוקי — אין רווחים. `aria-describedby` היא רשימת-טוקנים מופרדת-ברווח, ולכן
+      // מזהה עם רווח היה נקרא כמה מזהים שאינם קיימים והקישור היה נשבר בשקט.
+      expect(describedBy).not.toMatch(/\s/)
+      // המזהה מצביע לאלמנט **קיים** — קישור למזהה שאינו קיים נשבר בשקט בדיוק כמו רווח.
+      expect(document.getElementById(describedBy)).not.toBeNull()
+      expect(document.getElementById(describedBy).textContent).toBe(
+        'הפריט כבר הוזמן — לא ניתן להסירו',
+      )
+      // אלמנט אחד, שני פקדים: המשפט אינו נכתב פעמיים באותה שורת-טבלה.
+      expect(screen.getByLabelText(TAGS_INPUT).getAttribute('aria-describedby')).toBe(describedBy)
+      expect(
+        within(rowOf(TAGS_INPUT)).getAllByText('הפריט כבר הוזמן — לא ניתן להסירו'),
+      ).toHaveLength(1)
+    })
+
+    it('הקלדת 0 ביד נוחתת באותו מצב בדיוק — המצב נגזר מהיעד, לא מלחיצה על הכפתור', async () => {
+      removalScene()
+      await renderDialog()
+      const satRow = rowOf(SAT_INPUT)
+      fireEvent.change(screen.getByLabelText(SAT_INPUT), { target: { value: '0' } })
+      expect(within(satRow).getByText('יוסר')).toBeInTheDocument()
+      expect(removeBtn(`בטל הסרה — ${SAT_NAME}`)).toBeInTheDocument()
+    })
+
+    it('בזמן שמירה הפקד מושבת יחד עם שאר הפקדים', async () => {
+      removalScene()
+      let release
+      applyScopeChange.mockImplementation(() => new Promise((resolve) => (release = resolve)))
+      await renderDialog()
+      fireEvent.click(removeBtn(`הסר פריט — ${SAT_NAME}`))
+      fireEvent.change(screen.getByTestId('scope-reason'), { target: { value: 'הלקוח ויתר' } })
+      fireEvent.click(screen.getByTestId('scope-save'))
+
+      await waitFor(() => expect(removeBtn(`בטל הסרה — ${SAT_NAME}`)).toBeDisabled())
+      release({ change_group_id: 1, lines: [] })
+      await waitFor(() => expect(removeBtn(`בטל הסרה — ${SAT_NAME}`)).not.toBeDisabled())
+    })
   })
 })
 

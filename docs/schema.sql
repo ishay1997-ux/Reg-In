@@ -9,7 +9,9 @@
 -- ⚠️ זהו SNAPSHOT שנוצר מתוך שאילתות על המסד החי. **מקור-אמת לשינויים = `supabase/migrations/`**
 --    (ולא הקובץ הזה). כל שינוי DB נכתב כקובץ מיגרציה חדש, מוחל, ואז הקובץ הזה נוצר מחדש.
 --
--- 📅 נוצר: 14/08/2026 · רוענן: 18/08/2026 (שער 1.10 — אחרי `module6_project_changes_money_gated_reader`) · פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
+-- 📅 נוצר: 14/08/2026 · רוענן: 26/08/2026 (שער 1.6 של מודול 5 — אחרי ארבע מיגרציות
+--    `module5_*`; הדלתא: 5 עמודות + 2 אילוצים + policy-כתיבה על `logistics`, פונקציה חדשה
+--    `update_logistics_item`, ושני מצביעי-גוף שהוסטו) · פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
 --
 -- 🔴 **לרענן את הקובץ הזה אחרי כל מיגרציה.** העותק הקודם לא רוענן חמישה חודשים והכריז על עמודה
 --    (`assignments.id_number`) שאינה קיימת במסד — מפתח ראשי שגוי לטבלה שלמה, בקובץ שהוא דרגה 1
@@ -22,7 +24,7 @@
 -- 🚫 **אין כאן סעיף "היסטוריה"/"יומן שינויים"** — הקובץ מתאר הווה בלבד. ציר השינויים חי
 --    ב-`supabase/migrations/` וב-`docs/db_roadmap.md`.
 --
--- מוסכמות: כל 23 הטבלאות ב-`public` עם RLS **מופעל**. כל 48 המדיניות (36 ב-public, 12 על
+-- מוסכמות: כל 23 הטבלאות ב-`public` עם RLS **מופעל**. כל 49 המדיניות (37 ב-public, 12 על
 -- `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`. הפונקציה `moddatetime` (טריגר
 -- `updated_at`) יושבת בסכמה `extensions`, לא ב-`public`.
 -- ============================================================
@@ -1029,7 +1031,8 @@ create trigger salary_reports_set_updated_at
 -- ============================================================
 -- 20. לוגיסטיקה — public.logistics (מודול 5)
 -- ============================================================
--- כתיבה מתבצעת דרך פונקציות בלבד (סעיף 24); ללקוח יש policy קריאה בלבד.
+-- כתיבה מתבצעת דרך פונקציות בלבד (סעיף 24 — מ-26/08 הכותב הוא `update_logistics_item`);
+-- ללקוח יש policy קריאה + policy-כתיבה מגודרת edit (M5-1).
 create table logistics (
   project_id            integer     not null,
   sku                   text        not null,
@@ -1042,6 +1045,10 @@ create table logistics (
   updated_at            timestamptz not null default now(),
   quote_service_line_id bigint,
   project_change_id     bigint,
+  color                 text,
+  expected_arrival_date date,
+  actual_arrival_date   date,
+  actual_qty_autofilled boolean     not null default false,
   constraint logistics_pkey                     primary key (project_id, sku, serial_number),
   constraint logistics_project_id_fkey          foreign key (project_id)            references projects (project_id)            on delete cascade,
   constraint logistics_sku_fkey                 foreign key (sku)                   references products (sku)                   on update cascade on delete restrict,
@@ -1049,6 +1056,10 @@ create table logistics (
   constraint logistics_project_change_id_fkey   foreign key (project_change_id)     references project_changes (change_id)      on delete restrict,
   constraint logistics_item_status_check        check (item_status = any (array['not_started'::text, 'ordered'::text, 'ready'::text])),
   constraint logistics_planned_qty_check        check (planned_qty > 0),
+  -- M5-2 — הרצפה של C6 §2.4.13
+  constraint logistics_actual_qty_check         check (actual_qty >= 0),
+  -- M5-5 — העתק-בייט של quote_services_color_check (⑱: הצבע נוסע עם השורה)
+  constraint logistics_color_check              check (color is null or color = any (array['לבן'::text, 'שחור'::text, 'אפור'::text, 'טורקיז'::text, 'כחול'::text])),
   -- לכל היותר אחת משתי עמודות-המקור מלאה
   constraint logistics_origin_exactly_one check (
        (quote_service_line_id is null and project_change_id is null)
@@ -1059,7 +1070,13 @@ create table logistics (
 alter table logistics enable row level security;
 
 comment on column logistics.quote_service_line_id is
-  'מקור השורה: שורת ההצעה שהולידה אותה. NULL בשורות שנולדו לפני מ6 ובשורות שה-RPC של מ3 כותב עד תיקונו — מ5 פריט 1.';
+  'מקור השורה: שורת ההצעה שהולידה אותה. מ-26/08/2026 (M5-3) ה-RPC של אישור-הצעה ממלא אותה, וה-backfill מילא את כל השורות הישנות החד-משמעיות.';
+comment on column logistics.expected_arrival_date is
+  'מתי הובטח שיגיע — היא ממלאת בהזמנה (㊶). הטריגר השני של סימון-הענבר ⑳ נשען עליו.';
+comment on column logistics.actual_arrival_date is
+  'מתי הגיע בפועל — נחתם ע"י update_logistics_item במעבר ל-ready, לעולם לא ידנית (M5-8).';
+comment on column logistics.actual_qty_autofilled is
+  'true כשהכמות-בפועל מולאה אוטומטית בסימון מוכן (㊵) — מספר שאיש לא ספר, והמסך מסמן זאת.';
 comment on column logistics.project_change_id is
   'מקור השורה: שורת שינוי-התכולה שהולידה אותה. בדיוק אחת משתי עמודות-המקור מלאה, או שתיהן NULL.';
 
@@ -1087,6 +1104,26 @@ create policy logistics_select_by_permission on logistics
       where p.role_id = (select current_user_role_id())
         and p.module_id = (select module_id from modules where module_name = 'לוגיסטיקה')
         and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+-- M5-1 (26/08/2026) — שער 'לוגיסטיקה', לעולם לא 'פרויקטים' (㉞)
+create policy logistics_write_by_permission on logistics
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'לוגיסטיקה')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'לוגיסטיקה')
+        and p.permission_level = 'edit'
     )
   );
 
@@ -1347,7 +1384,7 @@ create policy email_log_select_projects_module on email_log
 --   → supabase/migrations/20260731155511_round_g_db_hardening.sql
 -- approve_quote_and_create_project(p_quote_id integer) returns integer
 --   SD · plpgsql · [authenticated, service_role]
---   → supabase/migrations/20260812204405_fix_approve_rpc_cost_source_regression.sql
+--   → supabase/migrations/20260826002446_module5_approve_rpc_origin_backfill.sql
 -- enforce_quote_in_progress_lock() returns trigger
 --   SD · plpgsql · [service_role]
 --   → supabase/migrations/20260723115000_module3_lock_and_conversion_rpc.sql
@@ -1395,7 +1432,7 @@ create policy email_log_select_projects_module on email_log
 --   → supabase/migrations/20260814142440_module6_rpcs_writes.sql
 -- apply_scope_change(p_project_id integer, p_lines jsonb, p_reason text) returns jsonb
 --   SD · plpgsql · [authenticated, service_role]
---   → supabase/migrations/20260814142440_module6_rpcs_writes.sql
+--   → supabase/migrations/20260826002448_module5_scope_change_reset_removal.sql
 -- cancel_project(p_project_id integer, p_cancel_type text, p_cancel_reason text) returns jsonb
 --   SD · plpgsql · [authenticated, service_role]
 --   → supabase/migrations/20260814142440_module6_rpcs_writes.sql
@@ -1416,6 +1453,14 @@ create policy email_log_select_projects_module on email_log
 --   performed_by text, created_at timestamptz)
 --   SD · stable · plpgsql · [authenticated, service_role] — שדות-הכסף ממוסכים בגוף לפי הרשאת 'הצעות מחיר'
 --   → supabase/migrations/20260814152647_module6_project_changes_money_gated_reader.sql
+
+-- ── מודול 5 — לוגיסטיקה ────────────────────────────────────
+-- update_logistics_item(p_project_id integer, p_sku text, p_serial_number integer, p_changes jsonb)
+--   returns jsonb — {row, project_status}; מפתח-נוכח: item_status · actual_qty · notes ·
+--   expected_arrival_date; שער פנימי edit על 'לוגיסטיקה' (㉞); שומר-סטטוס עם חריג ㊴;
+--   מילוי-אוטומטי ㉕/㊵ + חתימת actual_arrival_date במעבר ל-ready (㊶)
+--   SD · plpgsql · [authenticated, service_role]
+--   → supabase/migrations/20260826002447_module5_checklist_rpc.sql
 
 
 -- ============================================================

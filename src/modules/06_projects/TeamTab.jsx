@@ -242,8 +242,16 @@ export default function TeamTab({
           state="empty"
           title={NO_INVITES_TITLE}
           action={
+            // 🔗 **הקישור נושא את הפרויקט איתו** (ישי, 22/08/2026 — "יותר נכון שיוביל
+            // לשיבוץ של אותו פרויקט"). עד אז הוא נחת על מבט-העל של הגיוס, והמנהלת נאלצה
+            // לאתר את הפרויקט שממנו בדיוק יצאה.
+            // 🚫 **ולמה `state` ולא מסלול/פרמטר-שאילתה:** `HostessesPage` מצהיר במפורש
+            // ששיבוץ-חכם **אינו מסלול** — "המנהלת נכנסת ויוצאת עשרות פעמים ביום, ומסלול
+            // היה מאבד את מצב-הסינון של המבט-על בכל חזרה". `state` נושא הקשר לכניסה
+            // **הזאת בלבד** ואינו הופך את המסך לכתובת.
             <Link
               to="/hostesses"
+              state={{ smartMatchProjectId: projectId }}
               className="text-xs font-semibold text-teal-700"
               data-testid="team-empty-smart-match-link"
             >
@@ -273,6 +281,9 @@ export default function TeamTab({
 }
 
 function ActionsBar({ project, canEdit, canReadHostesses, onScopeChange, showSortLine }) {
+  // ⚠️ נגזר כאן ולא מיובא מ-`TeamTab`: זו קומפוננטה נפרדת, ו-`projectId` של `TeamTab`
+  // אינו בהיקף שלה. (נתפס בבדיקות 22/08 — ה-build עבר, הרינדור זרק.)
+  const projectId = project?.project_id
   const status = project?.project_status
   const closedStamp = project?.operationally_closed_at
   const blocked = POST_EVENT_STATUSES.includes(status)
@@ -300,9 +311,11 @@ function ActionsBar({ project, canEdit, canReadHostesses, onScopeChange, showSor
             שנה כמות דיילות
           </button>
         )}
+        {/* 🔗 נושא את הפרויקט איתו — ר' ההערה על הקישור התאום למעלה. */}
         {canReadHostesses && (
           <Link
             to="/hostesses"
+            state={{ smartMatchProjectId: projectId }}
             className="text-xs font-semibold text-teal-700"
             data-testid="team-smart-match-link"
           >
