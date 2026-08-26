@@ -22,6 +22,7 @@
 | 8 | `docs/specs/module_08_finance/world-sources.md` | ה"למה" לכנס — מקורות, דחיות, סטיות-מודעות |
 
 **🚫 מוחרג במפורש (חומר-עבודה, לא רשם):** ‏`stage0-sweeps/` + `stage1-review/` (ראיות-גלם — פתח רק כשמשהו סותר) · ‏`research/` (הגלם מאחורי world-sources) · ‏`discovery-log.md` (באנגלית — הקורא שלו הוא ה-Discovery הבא, לא אתה).
+**➕ חריג-אחד להחרגה, מחייב:** ‏`stage1-review/m8-review-infra-ripples.md` — **סעיף "THE COMPLETE CHANGE-LIST TO MERGED CODE" (16 שורות) הוא רשימת-האדוות המחייבת** לקוד הממוזג ונקרא במלואו; שאר הקובץ = ראיות. ‏*(ושם-הפרמטר, שלא יחפש:* ‏`תנאי_תשלום_ימים`‏=30 — כלשון §7.20 ו-db_roadmap.)*
 
 ## ② מה המודול, בשלוש שורות
 
