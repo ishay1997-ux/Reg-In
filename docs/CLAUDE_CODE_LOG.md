@@ -149,6 +149,12 @@ byte-locked by a new test. The two measurement debts closed in real Chrome: dial
 needed; method trap logged: the first audit measured the loading skeleton). Final suite
 **1,405/54 green**; gate exit-1 only from the M8 session's uncommitted sweep file (second
 flag). Phase-3 commit with pathspec; the 🎨 package presented in chat — Ishay's stop.
+**13:3X — the 🎨 gate APPROVED ("חוץ מזה מאשר"; the "חוץ מזה" was a plain-Hebrew re-explain of
+the two house-component items, given the same minute).** Phase 3 fully closed (commit
+`edfade4`). Pending one word from Ishay: the house-items disposition (disabled-pill tooltip —
+small Phase-4 house fix, pre-existing across merged screens · error-panel ⚠ glyph — M12).
+Session scope (his opener: phases 2+3, stop at the 🎨 gate) COMPLETE. Next: Phase 4 in a
+fresh session ("תמשיך לבנות").
 
 ### 26/08/2026 — M8 step guide gets the prompt template; parallel-Discovery question answered (advisory session)
 

@@ -13,7 +13,7 @@
 | **Owner** | Ishay (sole developer) |
 | **Status** | 🖥️ **BUILD — Phases 1+2+3-build ✅ COMPLETE; standing at the 3.4 🎨 gate (Ishay's stop).** Phase 1: migrations A–D + two-mode seed live (`eb17b19`). Phase 2: queue brain + api layer, panel-verified (`40a978b`). **Phase 3: both screens built (workflow `wf_fc693d3e`) + panel-verified + cleanup-agent 7/7 fixed with red-first proofs · route `/logistics` LIVE (guard proven red then restored) · Q1–Q4 conflict triage APPROVED by Ishay ("מאשר לפי המלצתך" — all four confirmed) and Q1's legend clause implemented + test-locked · final suite 1,405/54 green (= phase-2 baseline 1,341 + 64, zero regressions) · live-browser evidence: contract-3 numbers on the real screen, dialog Range audit 6/0, keyboard date-typing = exactly 1 RPC call (the triple-write fear REFUTED in real Chrome), recruit blocked live.** *(Earlier:)* 📘 BLUEPRINT APPROVED — Ishay, `25/08/2026 23:35`. |
 | **Last updated** | `26/08/2026 13:2X` *(system clock)* — phase-3 close-out: measurements done, temp specs deleted, phase-3 commit next, then the 🎨 package. |
-| **Active step** | **3.4 — the 🎨 UX & functional review — WAITING FOR ISHAY** (package presented in chat; findings → steps or logged deferrals) |
+| **Active step** | **Phase 3 CLOSED (3.4 ✅ approved "חוץ מזה מאשר") — next: Phase 4 (4.1), fresh session recommended.** One pending nod: the two house-component items' disposition (Phase-4 small fix · M12 deferral). This session's scope (Ishay's opener: phases 2+3, stop at the 🎨 gate) is COMPLETE. |
 | **Deadline** | interim presentation **28/08 — a FRIDAY** (module 5 demo-ready is the stretch goal Ishay named; 🔄 **run the seed REFRESH that morning** — the 02:00 cron closes the "today" demo project overnight, step 1.5) · conference **01/10** (target: 100%) |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -36,7 +36,7 @@
 | **3.1** | Surface 1 — `/logistics` overview page (🗣️ brief → build → verify) | ✅ 26/08 |
 | **3.2** | Surface 2 — checklist dialog incl. cancelled variant (🗣️ brief → build → verify) | ✅ 26/08 |
 | **3.3** | Route swap in `App.jsx` ⚠️ shared-surface | ✅ 26/08 |
-| **3.4** | 🔻👤 Phase-3 gate — 🎨 UX & functional review | ⬜ |
+| **3.4** | 🔻👤 Phase-3 gate — 🎨 UX & functional review | ✅ 26/08 |
 | **4.1** | M6 ripple — `LogisticsTab` notes column (㉒) ⚠️ shared-surface | ⬜ |
 | **4.2** | M6 ripple — `ScopeChangeDialog`: item_status display · dynamic floor · strings (㊳②③④) ⚠️ | ⬜ |
 | **4.3** | Doc ripples — AR-4 fix · §6 debt consumption · automations register · ripple sweep | ⬜ |
@@ -899,6 +899,19 @@ no queue in DOM). Screenshots in the session scratchpad (attached to the 🎨 pa
 Present to Ishay: §4 conformance · states on every screen · keyboard operability + focus ring
 (SegmentedControl!) · validation completeness · the real question — "should anything be
 redesigned?" Findings → steps or logged deferrals.
+**↳ APPROVED — Ishay 26/08/2026 13:3X: "חוץ מזה מאשר"** (the package: 3 live screenshots ·
+behavior walkthrough · the honest open-items list; the one "חוץ מזה" was a request to EXPLAIN
+item 3, re-explained in plain Hebrew the same minute). **Open-items disposition:** ‏(1) the
+no-sentence outbound corner — accepted as-is ("לא בכוח") · ‏(2) the weekend-clause verbosity —
+kept, revisit only if it bothers him on the live screen · ‏(3) TWO HOUSE-COMPONENT items
+pending his one-word nod on the recommendation: disabled-pill tooltip unreachable
+(`disabled:pointer-events-none` in the shared Button — pre-existing house-wide, module 6's
+pills share it) → small house fix in Phase 4; missing ⚠ glyph in the shared error panel →
+defer to M12 · ‏(4) the undrawn `event_finished` full-lock — approved within the package.
+**מה ייחשב עובד: the two approved acceptance lists of 3.1/3.2 — every sentence demonstrated
+in the package (live screen · screenshots · measured evidence).**
+**🌊 אדוות —** the gate closes the phase; Phase-4 ripples are its own steps (4.1–4.5).
+**🗣️ אושר —** the quote above.
 
 ---
 
