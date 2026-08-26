@@ -11,9 +11,9 @@
 | **Module** | 5 — לוגיסטיקה (Logistics) |
 | **Branch** | `ishay/module-5-logistics` *(exists — carries the whole Discovery + this blueprint; verified live 25/08/2026, ahead of `origin/dev`, NOT merged — `git log origin/dev..HEAD` non-empty)* |
 | **Owner** | Ishay (sole developer) |
-| **Status** | 🔨 **BUILD — Phases 1+2 ✅ COMPLETE (2.3 gate closed 26/08/2026 11:4X).** Phase 1: migrations A–D + two-mode seed live, commit `eb17b19`. **Phase 2 (agent workflow — 2 Opus builders → 3-lens adversarial panel → fixers): 17 queue-derivation exports + 43 tests in `projectLogistics` · the 5-function api layer + 27 tests · 11 panel findings (4 actionable) all fixed · gate 1,341/51 = baseline+70, zero regressions · live anchors = contract-3.** Phase-3 door (3.0) closed with Ishay's approvals in hand (O-1/O-4/O-5 + both briefs, "מאשר את הכל" 10:29). *(Earlier:)* 📘 BLUEPRINT APPROVED — Ishay, `25/08/2026 23:35`. |
-| **Last updated** | `26/08/2026 11:4X` *(system clock)* — phase 2 committed; phase-3 screen workflow launching (2 builders + 3-lens panel per screen, ruling-conflict rule armed). |
-| **Active step** | **3.1 + 3.2** (screen workflow) → 3.3 route swap (orchestrator) → **3.4 — the 🎨 gate, Ishay's stop** |
+| **Status** | 🖥️ **BUILD — Phases 1+2+3-build ✅ COMPLETE; standing at the 3.4 🎨 gate (Ishay's stop).** Phase 1: migrations A–D + two-mode seed live (`eb17b19`). Phase 2: queue brain + api layer, panel-verified (`40a978b`). **Phase 3: both screens built (workflow `wf_fc693d3e`) + panel-verified + cleanup-agent 7/7 fixed with red-first proofs · route `/logistics` LIVE (guard proven red then restored) · Q1–Q4 conflict triage APPROVED by Ishay ("מאשר לפי המלצתך" — all four confirmed) and Q1's legend clause implemented + test-locked · final suite 1,405/54 green (= phase-2 baseline 1,341 + 64, zero regressions) · live-browser evidence: contract-3 numbers on the real screen, dialog Range audit 6/0, keyboard date-typing = exactly 1 RPC call (the triple-write fear REFUTED in real Chrome), recruit blocked live.** *(Earlier:)* 📘 BLUEPRINT APPROVED — Ishay, `25/08/2026 23:35`. |
+| **Last updated** | `26/08/2026 13:2X` *(system clock)* — phase-3 close-out: measurements done, temp specs deleted, phase-3 commit next, then the 🎨 package. |
+| **Active step** | **3.4 — the 🎨 UX & functional review — WAITING FOR ISHAY** (package presented in chat; findings → steps or logged deferrals) |
 | **Deadline** | interim presentation **28/08 — a FRIDAY** (module 5 demo-ready is the stretch goal Ishay named; 🔄 **run the seed REFRESH that morning** — the 02:00 cron closes the "today" demo project overnight, step 1.5) · conference **01/10** (target: 100%) |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -33,9 +33,9 @@
 | **2.2** | `src/modules/05_logistics/api.js` — reads + RPC call + tests | ✅ 26/08 |
 | **2.3** | 🔻👤 Phase-2 gate — full unit suite + hand-computed anchors | ✅ 26/08 |
 | **3.0** | Phase-3 door — shared-component checkpoint + OPEN-item sweep (O-1 nod) | ✅ 26/08 |
-| **3.1** | Surface 1 — `/logistics` overview page (🗣️ brief → build → verify) | ⬜ |
-| **3.2** | Surface 2 — checklist dialog incl. cancelled variant (🗣️ brief → build → verify) | ⬜ |
-| **3.3** | Route swap in `App.jsx` ⚠️ shared-surface | ⬜ |
+| **3.1** | Surface 1 — `/logistics` overview page (🗣️ brief → build → verify) | ✅ 26/08 |
+| **3.2** | Surface 2 — checklist dialog incl. cancelled variant (🗣️ brief → build → verify) | ✅ 26/08 |
+| **3.3** | Route swap in `App.jsx` ⚠️ shared-surface | ✅ 26/08 |
 | **3.4** | 🔻👤 Phase-3 gate — 🎨 UX & functional review | ⬜ |
 | **4.1** | M6 ripple — `LogisticsTab` notes column (㉒) ⚠️ shared-surface | ⬜ |
 | **4.2** | M6 ripple — `ScopeChangeDialog`: item_status display · dynamic floor · strings (㊳②③④) ⚠️ | ⬜ |
@@ -878,7 +878,22 @@ incl. the O-4 banner amendment this step renders).
 **🔻🤖 Verify:** `App.routes.test.jsx` green **after proving it still fails on a guard-less route**
 (the 06/08 pattern — invert once, restore) · recruit-role blocked live (screenshot).
 **מה ייחשב עובד** *(card §⑨ req 1–2, quoted)*: ‏`allow` זהה-בייט ל-`'לוגיסטיקה'`; מסך בלי שומר
-נופל בבדיקה. **🌊 אדוות —** **🗣️ אושר —**
+נופל בבדיקה.
+**↳ done 26/08/2026 (orchestrator, main session).** `UnderConstruction` → `LogisticsPage` inside
+the untouched `<ProtectedRoute allow="לוגיסטיקה">`. **Guard proven red:** wrapper removed ⇒
+`App.routes.test.jsx` failed naming exactly `logistics` ("expected ['logistics'] to deeply equal
+[]"); restored ⇒ green. **knip's dated exemption for `api.js` REMOVED at its own named removal
+date** — `npm run deadcode` exit 0 without it (both screens consume all five exports).
+**Live browser evidence (read-only credentialed Playwright spec, deleted after the run — the
+house pattern; secrets never through chat):** דנה sees the live queue — pills **3·1·5**, outbound
+**2 rows** ("יוצא ביום חמישי — 80 יחידות עדיין בדרך" — the approved O-5 form live), amber row on
+"ערב השקה" with ⏱ + "8 ימי עסקים" · the checklist dialog opens with all four rows in
+`sortLogisticsRows` order, the `מולא אוטומטית` tag, the three arrival-column states, and the
+seeded note · **bidi Range audit: >5 LTR values measured, zero failures; the "N מתוך M" split
+pair sits in correct RTL order** · מנהלת-הגיוס blocked live ("אין לך הרשאה לצפות במסך זה.",
+no queue in DOM). Screenshots in the session scratchpad (attached to the 🎨 package).
+**🌊 אדוות —** done: `knip.jsonc` exemption closed with a dated note · this guide. **🗣️ אושר —**
+🤖 step (shared-surface swap only; the 🎨 gate 3.4 is where Ishay rules).
 
 **Step 3.4 · 🔻👤 Phase-3 gate — 🎨 UX & functional review**
 Present to Ishay: §4 conformance · states on every screen · keyboard operability + focus ring
@@ -1158,3 +1173,77 @@ adding the `apply_migration` allow rule to `.claude/settings.local.json` — his
   `check:context` demands it the moment the folder exists, and it auto-loads for the phase-3
   builders. Two premature 3.2 stubs tripped knip's unused-files check and were deleted until
   the phase-3 launch (lesson: scaffolding follows the commit, not the build).
+
+**26/08/2026 12:3X — Phase-3 workflow landed: the builders' deviation/`הנחתי` registers
+(written here per rule 15; the nod round itself is the 🎨 gate).**
+- **3.1's four `הנחתי` assembly decisions (user-visible, Ishay's at 3.4):** ‏(a) the outbound
+  section is HIDDEN on the no-permission branch — its content derives from unreadable rows and
+  the empty-section sentence there would be the silent lie; pills stay with `—` · ‏(b)
+  `נקי סינון` selects the `הכול` pill, not the default — a zero-count default pill is DISABLED
+  (㉚), so "return to default" would be a no-op in the only state that shows the button (the
+  merged `ProjectsPage` does the same; card §① wording queued for ratification) · ‏(c)
+  reason-line precedence: O-1's late-arrival wording renders only when nothing is left to
+  order — `not_started` work wins · ‏(d) the drawn ⏱ `title` shows only when trigger-⑳ fired —
+  on a late-arrival-only row the drawn tooltip would be FALSE, and no second wording was
+  invented (glyph-vs-legend queued for Ishay).
+- **3.2's deviations beyond the five pre-approved:** locked-§3.7 explainer wording (the
+  mockup's inline `(㊵)` marker not reproduced — §3.7 is the later approved source) · view-role
+  drops the `עדכון מצב` column entirely (card §⑤ "מוסרים לגמרי") · date input `w-full` (a
+  native date field cannot fit 64px) · the undrawn `event_finished` state built with ZERO
+  invented text — the locked G4 sentence + full lock incl. qty (㊴ is cancelled-only by its own
+  wording). **3.2's four `הנחתי`:** failure-message mapping by `code` (server raise as-is ·
+  no-code network failure ⇒ the locked S-2) · `undefined`-discriminator on an empty list ⇒
+  fail-toward-blocked · unchanged-value writes skipped (`🧱⑤`) EXCEPT typing over an autofilled
+  value (㊵'s tag must clear — test-locked) · focus ring `teal-700`.
+- **Panel: 15 findings.** 1 major (the ruling-③ same-SKU fixture) — FIXED with a live mutation
+  proof (`serialNumber: 1` slip ⇒ exactly 1 failed/27; the fixer also REFUTED part of the
+  finding's own evidence by measurement). **4 CONFLICT QUESTIONS correctly escalated, not
+  patched** (⏱-glyph vs legend · the red write-failure line vs the zero-red color budget ·
+  the card's branch-order wording · the card's `נקי סינון` wording) — queued for the 🎨 gate.
+  Shared-component items (no ⚠ glyph in the error state · disabled-pill `title` unreachable
+  through `disabled:pointer-events-none`) — house-level, NOT patched from module files. Test
+  minors → the 7-item cleanup agent (incl. one real tooltip bug: the closed-event sentence
+  surfacing during a routine busy-save on an active project).
+- **Two measurement debts carried to the pre-🎨 verification (from 3.2's blind-spot section —
+  its jsdom tests cannot see either):** ‏(a) a real-Chrome `type="date"` field may fire `change`
+  per SEGMENT ⇒ triple RPC writes each holding `FOR UPDATE` (`🧱⑤`) — measure via the network
+  tab while typing a date by keyboard on `#15`'s ordered row (two announced-and-reverted live
+  writes); >1 call per date ⇒ one-line blur-save fix · ‏(b) the orchestrator's live Range audit
+  was scoped to `[data-testid="logistics-page"]` — the DIALOG lives in a portal OUTSIDE it and
+  was NOT measured; extend the audit to the open dialog before the package.
+- **12:5X — the four CONFLICT QUESTIONS triaged with Ishay (he asked to see them, not have
+  them passed silently):** ‏Q1 (⏱ glyph vs legend — amends approved-drawn text) + Q2 (red
+  write-failure line — a rule-8 color call) ⇒ **his, presented with recommendations (extend
+  the legend by one clause · keep red).** ‏Q3 (card's branch-order wording) + Q4
+  (`נקי סינון` target) ⇒ **closed as anchored decisions** (measured impossibility + the merged
+  `ProjectsPage` precedent) — dated ✏️ notes written into `screens-approved.md` §④/§① the same
+  hour; he can override.
+- ✅ **13:0X — Ishay approved the triage: "מאשר לפי המלצתך".** ‏**Q1 CLOSED:** the ⏱ glyph stays
+  on every amber row and the legend gains ONE clause — **approved wording:**
+  *"או: משלוח שתאריכו המובטח עבר וטרם הגיע."* (implemented in `LogisticsPage.jsx`'s legend +
+  its locking test, right after the cleanup agent releases the folder). **Q2 CLOSED:** the
+  write-failure line STAYS RED — a failed save is an error, consistent with the red
+  `ERROR_TITLE`; the zero-red budget governs DATA, not failure notices (recorded as a dated
+  note beside the color-budget lines at the next card touch). Q3/Q4's anchored closures stand
+  ratified under the same approval.
+
+**26/08/2026 13:1X — phase-3 close-out (all measured, nothing narrated):**
+- **Cleanup agent: 7/7 fixed, none rejected, each red-first** (the false busy-tooltip repro'd
+  then fixed one-line · refresh-on-close now asserts LANDED data, proven against the exact
+  thrown-away-refetch mutation · fan-out array asserted incl. `#11` · controlled inversion
+  pair · loading-skeleton test · explainer full-textContent lock (killing the silent-line-loss
+  family) · re-sort test now locks all 3 card effects). Restorations md5-proven;
+  `SegmentedControl.jsx` untouched. Its rule-16 flag (foreign App.jsx/knip edits) was THIS
+  session's own 3.3 work — verified, no incident.
+- **Q1's approved legend clause implemented + locked by a new test** (the exact approved bytes
+  asserted).
+- **The two §10 measurement debts CLOSED in real Chrome:** dialog-portal Range audit —
+  **6 measured, 0 failures** · keyboard date-typing — **exactly 1 RPC call per completed date**
+  (3.2's per-segment triple-write fear REFUTED; no blur-save change needed). Two announced
+  live writes on `#15`'s ordered row, value restored to `2026-09-01` and verified. ⚠️ Method
+  note: the first audit run measured the dialog's LOADING skeleton (0 spans) — measuring
+  before content is the trap; the fixed spec waits for the dialog's own text first.
+- **Final gate: 1,405 unit / 54 files, everything module-5 green.** Exit-1 again ONLY from
+  `check:docs-structure` on the parallel M8 session's uncommitted sweep file (same 3 findings;
+  flagged to Ishay twice — that session should fix its own file). Temp evidence/measure specs
+  deleted; phase-3 commit follows as this entry's last act.
