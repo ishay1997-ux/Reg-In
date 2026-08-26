@@ -45,6 +45,18 @@
 
 ## Session Log (newest first)
 
+### 26/08/2026 — M8 step guide gets the prompt template; parallel-Discovery question answered (advisory session)
+
+Ishay asked about opening M8's Discovery in parallel to the M5 build. Answered: structurally fine
+(no Discovery dependency — the 5/6 precedent; friction only on the shared registries), timing
+recommendation: **after Friday's presentation**, or stage-0 only now. `module_08_finance.md`
+updated to the M5-approved prompt template (commit `d4dd9e9`): ⑥0 Discovery prompt ADDED (never
+existed — the guide predated `docs/specs/`), ⑥1 modernized (spec §① + acceptance-questions block +
+count caveat + skill-load line), ⑥2/⑥3 left generic on purpose (rewritten at blueprint approval,
+the M5/M6 practice), parallelism note baked into both new prompts. Rule-16 discipline held: the
+build session's uncommitted `module-5.md` untouched; single-file pathspec commits only. No code,
+no DB.
+
 ### 26/08/2026 02:0X — Ishay's ruling: `module-build` reads the ⑥2 block ITSELF at every activation
 
 His ask, verbatim: *"אפשר שסקיל הבנייה יקרא את פרומט הבנייה כל פעם שהוא מופעל בהתחלה? … ושזה יעשה
