@@ -119,4 +119,76 @@ test.describe('נגישות (axe-core) — מסכים ראשיים על פני �
     await page.getByTestId('hostesses-tab-repository').click()
     await scan(page, 'דיילות · מאגר (מודול 4)')
   })
+
+  // ── מודול 5 (נוסף 26/08/2026, צעד 4.4) — **שני המשטחים, ושלושתם עם המתנה-לתוכן** ──────
+  // 🔴 ההמתנה כאן אינה `waitForReady` לבדה, וזה לא ייתור: `waitForReady` ממתין ל-`h1` של
+  // **העמוד**, והדיאלוג הוא portal שנפתח אחריו. סריקה שרצה על שלד-הדיאלוג מחזירה אפס
+  // ממצאים ונראית ירוקה בעוד היא מדדה כלום — וזה בדיוק הכשל שנרשם ב-`e2e/CLAUDE.md`
+  // (26/08/2026) על **דיאלוג של המודול הזה**. ⇒ לפני כל סריקת-דיאלוג: המתנה לשורות
+  // עצמן **ואסרשן שהמכנה אינו 0**.
+  async function openChecklistAndAssertContent(page) {
+    await expect(page.getByTestId('logistics-pill-all')).toBeEnabled({ timeout: 30_000 })
+    await page.getByTestId('logistics-pill-all').click()
+    await page.locator('[data-testid^="logistics-row-"]').first().click()
+    const rows = page.locator('[data-testid^="checklist-row-"]')
+    await expect(rows.first()).toBeVisible({ timeout: 30_000 })
+    expect(await rows.count(), 'הדיאלוג נסרק בלי שורות — הסריקה רצה על מכנה 0').toBeGreaterThan(0)
+  }
+
+  test('סריקה על שני משטחי מודול 5, כולל הווריאנט המבוטל', async ({ page }) => {
+    await login(page)
+
+    // משטח 1 — תור-העבודה.
+    await page.goto('/logistics')
+    await expect(page.getByTestId('logistics-queue-table')).toBeVisible({ timeout: 30_000 })
+    await scan(page, 'לוגיסטיקה · תור-העבודה (מודול 5, משטח 1)')
+
+    // משטח 2 — דיאלוג-הצ'קליסט במצבו הרגיל (פקדי-כתיבה פעילים).
+    await openChecklistAndAssertContent(page)
+    await scan(page, 'לוגיסטיקה · דיאלוג-הצ׳קליסט (מודול 5, משטח 2)')
+    await page.getByTestId('checklist-close').click()
+    await expect(page.locator('[data-testid^="checklist-row-"]')).toHaveCount(0)
+
+    // 🔒 הווריאנט המבוטל (㉝ כפי שצומצמה ב-㊴) — **המצב שבו כל הפקדים מושבתים ושדה אחד
+    // נשאר פתוח**, וזה בדיוק המצב שבו `aria-label`/`title` של פקד נעול נבדקים. אינו קיים
+    // בדאטה החיה (פרויקט מבוטל אינו מגיע למשטח 1) ⇒ מיוצר ביירוט-רשת בלבד, אפס כתיבות:
+    // רק הקריאה-מחדש של הדיאלוג מיורטת (היא המובחנת ב-`quote_id` שב-`select`), והתשובה
+    // האמיתית נמשכת ומומרת — כך שאף מזהה ואף ערך אינם מומצאים.
+    await page.route(
+      (url) =>
+        url.pathname === '/rest/v1/projects' &&
+        (url.searchParams.get('select') ?? '').includes('quote_id'),
+      async (route) => {
+        const response = await route.fetch()
+        const payload = await response.json()
+        // 🔴 **התשובה היא מערך, גם על `maybeSingle`** (נמדד 26/08/2026: `route.fetch()`
+        // מחזיר `[{…}]`). פריסת-אובייקט על מערך מייצרת `{0:{…}}` — פרויקט בלי `event_name`,
+        // כלומר כותרת-דיאלוג ריקה, ואז axe מדווח `aria-dialog-name`+`empty-heading` על
+        // **פגם של הבדיקה** ולא של המסך. ⇒ ממפים, ולא פורסים.
+        const cancel = (project) => ({
+          ...project,
+          project_status: 'cancelled',
+          cancelled_at: '2026-08-11',
+          cancel_reason: 'הלקוח ביטל',
+        })
+        return route.fulfill({
+          status: response.status(),
+          contentType: 'application/json',
+          body: JSON.stringify(Array.isArray(payload) ? payload.map(cancel) : cancel(payload)),
+        })
+      },
+    )
+    await page.reload()
+    await openChecklistAndAssertContent(page)
+    // המכנה של המצב עצמו: הבאנר על המסך ⇒ זהו באמת הווריאנט המבוטל ולא הדיאלוג הרגיל.
+    await expect(page.getByTestId('checklist-banner-cancelled')).toBeVisible()
+    // ⚠️ ושהכותרת אינה ריקה — אחרת הסריקה מודדת דיאלוג שהיירוט עצמו שיבש.
+    await expect(page.getByRole('dialog').getByRole('heading').first()).not.toBeEmpty()
+    const openField = page.locator('[data-testid^="checklist-qty-"]:not([disabled])')
+    expect(
+      await openField.count(),
+      'אין שדה פתוח בווריאנט המבוטל — חריג ㊴ לא נסרק',
+    ).toBeGreaterThan(0)
+    await scan(page, 'לוגיסטיקה · דיאלוג-הצ׳קליסט — וריאנט מבוטל (מודול 5, משטח 2)')
+  })
 })

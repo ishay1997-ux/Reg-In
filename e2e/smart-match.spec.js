@@ -39,6 +39,72 @@ async function openSmartMatch(page, email, password) {
   await expect(page.getByTestId('smart-match-page')).toBeVisible({ timeout: 30_000 })
 }
 
+// הטקסט שמופיע על שורה שמעולם לא זומנה. **קבוע ולא תבנית** — הוא חצי מחלוקה חדה,
+// והחצי השני הוא חותמת-הזמן הקריאה. ר' הבדיקה של שורת "נשלח" למטה.
+const NEVER_INVITED = 'טרם נשלח זימון'
+
+// צילום-מצב של הטור "דיילות באירוע": מזהה-דיילת · תווית-הסטטוס שעל השורה · הטקסט המלא.
+// 🔑 שלושתם נקראים **בסריקה אחת**, כדי שכל בדיקה תוכל להחליט על נושא-המדידה שלה
+// מהמסך עצמו ולא מהנחה על הדאטה.
+async function eventRowsSnapshot(page) {
+  const rows = page.locator('[data-testid^="sm-event-row-"]')
+  const count = await rows.count()
+  const snapshot = []
+  for (let i = 0; i < count; i += 1) {
+    const testId = await rows.nth(i).getAttribute('data-testid')
+    const hostessId = testId.replace('sm-event-row-', '')
+    const label = (await page.getByTestId(`sm-status-${hostessId}`).textContent())?.trim()
+    snapshot.push({ hostessId, label, text: await rows.nth(i).innerText() })
+  }
+  return snapshot
+}
+
+function groupByLabel(rows) {
+  const byLabel = {}
+  for (const row of rows) byLabel[row.label] = [...(byLabel[row.label] ?? []), row.hostessId]
+  return byLabel
+}
+
+// 🕓 **נושא-הבדיקה נבחר בזמן-ריצה לפי התנאי שהבדיקה עצמה צריכה — לא מזהה, לא שם-אירוע,
+// ולא "השורה הראשונה".** ‏`e2e/CLAUDE.md` אוסר פיקסטורה נעוצה לשורת-מסד חיה; **וגם
+// "הראשונה" היא פיקסטורה** ברגע שהבדיקה צריכה תוכן מסוים ולא סתם מסך.
+// 🔬 **נמדד 26/08/2026 ולא משוער:** השורה הראשונה בלוח נשאה **שורת-שיבוץ אחת בסטטוס
+// יחיד ובלי זימון שנשלח** ⇒ שלוש בדיקות מדדו עליה כלום (אחת נפלה על *"expected >= 3,
+// received 1"*, אחת על *"expected >= 1, received 0"*, ואחת ניסתה להתאים תבנית-חותמת
+// לשורה שמעולם לא זומנה).
+// ⇒ סורקים את שורות מבט-העל בסדר שבו הן מוצגות, פותחים אחת-אחת, ועוצרים באירוע
+// **הראשון שעונה על התנאי**. מה שנראה בדרך מוחזר ב-`seen`, כדי שדילוג יסביר את עצמו
+// במקום להיעלם בשקט.
+async function openEventWhere(page, predicate) {
+  await page.goto('/hostesses')
+  await expect(page.getByTestId('overview-table')).toBeVisible({ timeout: 30_000 })
+  const testIds = await page
+    .locator('[data-testid^="overview-row-"]')
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-testid')))
+  // 🔴 אסרשן-מכנה: לוח בלי שורות אינו "אין מה לבדוק" — הוא כשל, ונופל כאן ולא מדלג.
+  expect(testIds.length).toBeGreaterThan(0)
+
+  const seen = []
+  for (const testId of testIds) {
+    if (seen.length > 0) {
+      await page.goto('/hostesses')
+      await expect(page.getByTestId('overview-table')).toBeVisible({ timeout: 30_000 })
+    }
+    await page.getByTestId(testId).click()
+    await expect(page.getByTestId('smart-match-page')).toBeVisible({ timeout: 30_000 })
+    // ⚠️ **ממתינים לתוכן הנמדד עצמו, לא למעטפת** (`e2e/CLAUDE.md`: מדידה על שלד-טעינה
+    // מחזירה `measured=0, failures=[]` ונראית ירוקה). הטור מצויר לפני שורותיו.
+    await expect(
+      page.locator('[data-testid^="sm-event-row-"], [data-testid="sm-event-empty"]').first(),
+    ).toBeVisible({ timeout: 30_000 })
+
+    const rows = await eventRowsSnapshot(page)
+    seen.push(`${testId} → ${rows.map((row) => row.label).join(' · ') || 'אין שורות שיבוץ'}`)
+    if (predicate(rows)) return { rows, seen }
+  }
+  return { rows: null, seen }
+}
+
 test.describe('מודול 4 · מסך 2 — שיבוץ חכם', () => {
   test.skip(!RECRUIT_EMAIL || !RECRUIT_PASSWORD, 'E2E_RECRUIT_* לא הוגדרו ב-.env.local')
 
@@ -85,18 +151,35 @@ test.describe('מודול 4 · מסך 2 — שיבוץ חכם', () => {
     expect(byPrice).not.toEqual(byProximity)
   })
 
+  // 🐞 **נכתבה מחדש 26/08/2026 — והשער שלה עצמו היה הבאג.** הגרסה הקודמת דילגה על שורה
+  // שאין בה `'נשלח'` — אבל `'טרם נשלח זימון'` **מכיל** `'נשלח'`, ולכן שורה שמעולם לא זומנה
+  // **לא דולגה**, ונפלה על תבנית-החותמת (*"Received: גלית מור … טרם נשלח זימון"*).
+  // 🔑 **החלוקה עכשיו חדה ובלי חפיפה, והיא גם מרחיבה את הטענה:** שורת-הזמן של **כל** שורה
+  // חייבת ליפול על אחת משתי הצורות החוקיות — `טרם נשלח זימון` **או** `נשלח DD/MM HH:MM`.
+  // שורה שאיבדה את שתיהן (בדיוק מה שקרה כשחותמת עברה דרך `formatDate`) נופלת עכשיו,
+  // במקום להישאר מחוץ ללולאה.
   test('🐞 שורת "נשלח" מציגה תאריך ושעה קריאים — לא חותמת-זמן גולמית', async ({ page }) => {
-    await openSmartMatch(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
+    await login(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
 
-    // רגרסיה לפגם שנתפס **בצילום-מסך ולא בבדיקה**: `invite_sent_at` הוא חותמת-זמן,
-    // ו-`formatDate` (שמצפה לתאריך-בלבד) הפיק `09T20:33:42.432+00:00/08/2026`.
-    const rows = page.locator('[data-testid^="sm-event-row-"]')
-    const count = await rows.count()
-    for (let i = 0; i < count; i += 1) {
-      const text = await rows.nth(i).innerText()
-      if (!text.includes('נשלח')) continue
-      expect(text).not.toContain('+00:00')
-      expect(text).toMatch(/נשלח \d{2}\/\d{2} \d{2}:\d{2}/)
+    // 🕓 האירוע נבחר לפי מה שהבדיקה **צריכה**: שורה שזימון כן נשלח בה. בלי זה המדידה
+    // רצה על אירוע שכל שורותיו "טרם נשלח זימון" — מכנה 0 שנראה ירוק.
+    const { rows, seen } = await openEventWhere(page, (eventRows) =>
+      eventRows.some((row) => !row.text.includes(NEVER_INVITED)),
+    )
+    test.skip(
+      rows === null,
+      `אין באף אירוע בלוח שורה שנשלח בה זימון — אין חותמת-זמן למדוד. מה שנסרק: ${seen.join(' | ')}`,
+    )
+
+    // 🔴 אסרשן-מכנה: המדידה שהבדיקה קיימת בשבילה רצה על לפחות שורה אחת שנשלחה.
+    const sent = rows.filter((row) => !row.text.includes(NEVER_INVITED))
+    expect(sent.length).toBeGreaterThan(0)
+
+    for (const row of rows) {
+      // רגרסיה לפגם שנתפס **בצילום-מסך ולא בבדיקה**: `invite_sent_at` הוא חותמת-זמן,
+      // ו-`formatDate` (שמצפה לתאריך-בלבד) הפיק `09T20:33:42.432+00:00/08/2026`.
+      expect(row.text).not.toContain('+00:00')
+      expect(row.text).toMatch(new RegExp(`(${NEVER_INVITED}|נשלח \\d{2}\\/\\d{2} \\d{2}:\\d{2})`))
     }
   })
 
@@ -236,34 +319,52 @@ const MENU_ITEMS_BY_LABEL = {
   'ביטלה אחרי אישור': 0,
 }
 
-async function eventRowsByLabel(page) {
-  const rows = page.locator('[data-testid^="sm-event-row-"]')
-  const count = await rows.count()
-  const byLabel = {}
-  for (let i = 0; i < count; i += 1) {
-    const testId = await rows.nth(i).getAttribute('data-testid')
-    const hostessId = testId.replace('sm-event-row-', '')
-    const label = (await page.getByTestId(`sm-status-${hostessId}`).textContent())?.trim()
-    byLabel[label] = [...(byLabel[label] ?? []), hostessId]
-  }
-  return byLabel
+// התוויות שהמיפוי מכיר, מתוך צילום-המצב. **מוגדר על הצילום ולא על המסך** כדי שאותה
+// סריקה תשמש גם לבחירת-הנושא (`openEventWhere`) וגם לטענה עצמה.
+function knownLabels(rows) {
+  return [...new Set(rows.map((row) => row.label))].filter((label) => label in MENU_ITEMS_BY_LABEL)
+}
+
+// 🔑 ארבעת הסטטוסים שאחת משתי הפעולות-התאומות **יכולה** להופיע בהם: `ממתינה למענה`/`פג תוקף`
+// מקבלים `שלח את הקישור שוב`, ו-`סירבה`/`שוחררה` מקבלים `פתח זימון חדש`. מחוץ להם אין
+// לטענה על מה לרוץ, וזה **תנאי-מקדים** — לא הטענה.
+const TWIN_ACTION_LABELS = ['ממתינה למענה', 'פג תוקף', 'סירבה', 'שוחררה']
+
+function twinActionLabels(rows) {
+  return TWIN_ACTION_LABELS.filter((label) => rows.some((row) => row.label === label))
 }
 
 test.describe('מודול 4 · משטח 4 — תפריט-הפעולות פר-שורה', () => {
   test.skip(!RECRUIT_EMAIL || !RECRUIT_PASSWORD, 'E2E_RECRUIT_* לא הוגדרו ב-.env.local')
 
+  // 🔴 **נכתבה מחדש 26/08/2026 — התנאי-המקדים הופרד מהטענה.** ‏`labels.length >= 3` היה
+  // שומר-מכנה שהתחזה לטענה: כשהאירוע שנפתח נשא שורה אחת בסטטוס אחד, הבדיקה נפלה על
+  // *"expected >= 3, received 1"* — הודעה שאינה מלמדת דבר על המיפוי, ואינה באג במסך.
+  // 🔑 **שלושה חלקים נפרדים מעכשיו:** ‏① **הנושא** נבחר בזמן-ריצה — האירוע הראשון שחיות
+  // בו לפחות **שתי** תוויות-סטטוס מוכרות (בלי שתיים, "לכל סטטוס רשימה **משלו**" אינה
+  // טענה השוואתית) · ② **הטענה** היא המיפוי, לכל תווית שנמצאה בפועל, ובכללה
+  // `ביטלה אחרי אישור` שאין לה `⋯` כלל · ③ **חוסר-יכולת** נאמר בקול כדילוג מנומק
+  // שמונה מה נסרק — לעולם לא ירוק שקט.
   test('🔴 כל סטטוס מקבל רשימת-פעולות משלו — ו"ביטלה אחרי אישור" אינה מקבלת תפריט כלל', async ({
     page,
   }) => {
-    await openSmartMatch(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
+    await login(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
+
+    const { rows, seen } = await openEventWhere(
+      page,
+      (eventRows) => knownLabels(eventRows).length >= 2,
+    )
+    test.skip(
+      rows === null,
+      `אין בלוח אירוע שחיות בו שתי תוויות-סטטוס מוכרות ומעלה — מיפוי סטטוס⇐תפריט לא נבדק. מה שנסרק: ${seen.join(' | ')}`,
+    )
+
     await expect(page.getByTestId('sm-event-column')).toBeVisible()
+    const byLabel = groupByLabel(rows)
+    const labels = knownLabels(rows)
 
-    const byLabel = await eventRowsByLabel(page)
-    const labels = Object.keys(byLabel).filter((label) => label in MENU_ITEMS_BY_LABEL)
-
-    // 🔴 **השומר מפני בדיקה-על-כלום** (המלכודת שחזרה בפרויקט הזה שלוש פעמים): בלי זה,
-    // מסך שכל שורותיו נעלמו היה מפיק בדיקה ירוקה ומרשימה שאינה בודקת דבר.
-    expect(labels.length).toBeGreaterThanOrEqual(3)
+    // 🔴 **אסרשן-מכנה** (`e2e/CLAUDE.md`): הלולאה שמתחת רצה על אוסף שאינו ריק.
+    expect(labels.length).toBeGreaterThan(0)
 
     for (const label of labels) {
       const hostessId = byLabel[label][0]
@@ -283,24 +384,47 @@ test.describe('מודול 4 · משטח 4 — תפריט-הפעולות פר-ש�
     }
   })
 
+  // 🔴 **נכתבה מחדש 26/08/2026, אותו טיפול כמו זו שמעליה:** ‏`openable.length >= 1` היה
+  // תנאי-מקדים שנכתב כטענה, ונפל על *"expected >= 1, received 0"* כשהאירוע שנפתח לא נשא
+  // אף סטטוס משלושת אלה — כלומר הודעת-כשל שמתארת את הלוח, לא את המוצר.
   test('🔴 שתי הפעולות שנראות זהות ואינן — לעולם לא באותו תפריט', async ({ page }) => {
-    await openSmartMatch(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
-    await expect(page.getByTestId('sm-event-column')).toBeVisible()
+    await login(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
 
     // 🔑 `שלח את הקישור שוב` מרענן את **אותה שורה**; `פתח זימון חדש` יוצר **שורה שנייה**
     // והישנה נשארת היסטוריה. איחודן היה מוחק סירוב שקדם — וההיענות היא 40% מהציון,
     // כלומר הדירוג היה משתנה **ואף בדיקה לא הייתה נופלת**. לכן דווקא זו.
-    const byLabel = await eventRowsByLabel(page)
-    const openable = ['ממתינה למענה', 'פג תוקף', 'סירבה', 'שוחררה'].filter((l) => byLabel[l])
-    expect(openable.length).toBeGreaterThanOrEqual(1)
+    const { rows, seen } = await openEventWhere(
+      page,
+      (eventRows) => twinActionLabels(eventRows).length > 0,
+    )
+    test.skip(
+      rows === null,
+      `אין בלוח שורה באחד מהסטטוסים ${TWIN_ACTION_LABELS.join(' · ')} — אף תפריט אינו יכול להכיל אף אחת מהשתיים, והטענה לא נבדקה. מה שנסרק: ${seen.join(' | ')}`,
+    )
+
+    await expect(page.getByTestId('sm-event-column')).toBeVisible()
+    const byLabel = groupByLabel(rows)
+    const openable = twinActionLabels(rows)
+    // 🔴 אסרשן-מכנה.
+    expect(openable.length).toBeGreaterThan(0)
 
     for (const label of openable) {
       await page.getByTestId(`row-menu-${byLabel[label][0]}`).click()
+      await expect(page.getByRole('menuitem').first()).toBeVisible()
+
       const resend = page.getByRole('menuitem').filter({ hasText: 'שלח את הקישור שוב' })
       const newInvite = page.getByRole('menuitem').filter({ hasText: 'פתח זימון חדש' })
-      const together = (await resend.count()) > 0 && (await newInvite.count()) > 0
-      expect(together).toBe(false)
+      const resendCount = await resend.count()
+      const newInviteCount = await newInvite.count()
+
+      // ① השתיים לעולם לא יחד — זו הטענה המקורית.
+      expect(resendCount > 0 && newInviteCount > 0).toBe(false)
+      // ② **ובדיוק אחת מהן כן שם.** בלי החצי הזה, תפריט שאיבד את שתיהן היה עובר בירוק
+      //    על `false && false` — כלומר הטענה הייתה מתאמתת על כלום.
+      expect(resendCount + newInviteCount).toBe(1)
+
       await page.keyboard.press('Escape')
+      await expect(page.getByRole('menuitem')).toHaveCount(0)
     }
   })
 })
