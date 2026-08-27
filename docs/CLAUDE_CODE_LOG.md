@@ -25,7 +25,7 @@
 ## Current State (snapshot — rewritten, not appended)
 <!-- target ~15 lines · no internal dates (F4) · over budget? compress / move to journal -->
 
-**Where we stand:** Modules **1**, **2**, **3**, **4**, **5** and **6** are closed and merged to `dev`; `dev` has been promoted to `main` and tagged `milestone-2.5`, so 1–6 are all live. The m5 as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log); its spec set `docs/specs/module_05_logistics/` (42 rulings ①–㊷); `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8 (finance) is the ACTIVE build** — branch `ishay/module-8-finance`, cut from fresh `dev`. Step **1.0 (Phase-1 door) is ✅ closed**: all 8 live re-measurements held with zero drift, MCP verified live, baseline **1,440 unit / 56 files exit 0**, `E2E_FINANCE_*` confirmed present. Standing at **step 1.1 — migration A written on disk and awaiting Ishay's typed-echo; NOTHING applied to the live project yet.** The plan: `docs/micro_guides/module-8.md`; the approved spec: `docs/specs/module_08_finance/` (its `spec.md §①` is the binding reading list, and the four hand-computed acceptance anchors in `§③3` are never recomputed from code). 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
+**Where we stand:** Modules **1**, **2**, **3**, **4**, **5** and **6** are closed and merged to `dev`; `dev` has been promoted to `main` and tagged `milestone-2.5`, so 1–6 are all live. The m5 as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log); its spec set `docs/specs/module_05_logistics/` (42 rulings ①–㊷); `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8 (finance) is the ACTIVE build** — branch `ishay/module-8-phase-2`, cut from fresh `dev`. **Phase 1 is COMPLETE and in production** (ten migrations, the 1.8 gate, `C2`+`N1`+`N1b` all shipped). **Phase 2 (business logic) has opened: step 2.0's door is ✅ closed, baseline re-measured 1,454 unit / 56 files exit 0, and the ledger sweep found nothing new for Ishay.** Standing at **step 2.1 — awaiting Ishay's ruling on the agent-army shape and his 🗣️ approval of the three phase-2 briefs; NOT ONE LINE of `src/` written yet.** The plan: `docs/micro_guides/module-8.md`; the approved spec: `docs/specs/module_08_finance/` (its `spec.md §①` is the binding reading list, and the four hand-computed acceptance anchors in `§③3` are never recomputed from code). 🔴 **And two of those four do not reproduce from a plain read of the live DB — no project in the seed is `cancelled`, and travel is stamped only at salary-report generation** (measured 27/08; full finding in `module-8.md` §10). Their live cross-check needs a live-DB WRITE and is deferred to step 5.1. 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
 Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-encode in QuotesPage · Select-uncontrolled in QuoteLineEditor — §6 line `🚧 מ10 ← מ3`): touching src after the certified regression would have voided the verdict's identity.
 `docs/schema.sql` measure command: `grep -c '^create table' docs/schema.sql` (23 at the last audit).
 
@@ -44,6 +44,61 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 ---
 
 ## Session Log (newest first)
+
+### 27/08/2026 20:3X–20:4X — phase-2 door opened; the guide would have sent a builder to rebuild the money calculator
+
+- ✅ **Step 2.0 (phase-2 door) closed.** Pre-flight held: `ishay/module-8-phase-2` is **3 commits
+  ahead of `origin/dev` and not merged** (`merge-base --is-ancestor` ⇒ yes, but
+  `git log origin/dev..HEAD` ⇒ **non-empty** — iron rule 10's discriminator, so "fresh branch" is
+  ruled out and so is "dead branch"). Baseline **1,454 tests / 56 files, exit 0** — identical to the
+  phase-1 hand-off figure. **Ledger sweep: nothing new for Ishay** (Q-1…Q-5 ruled 26/08 22:40,
+  N-1…N-6 approved 22:43, A-1…A-10 recorded) — the door's "settle with Ishay" branch legitimately
+  did not fire, which is a measured `אין`, not a skipped step.
+- 🔴 **THE FINDING — the guide's step 2.1 was internally contradictory, and the losing side was the
+  one a builder reads first.** Step 2.1's function list (`deriveRevenue`, `deriveGoodsCost`,
+  `deriveLaborCost`, `deriveCancellationFee`…) was written **26/08 at blueprint, before the DB
+  existed**. Phase 1 then built `finance_project_money` on **27/08**, which computes every one of
+  them. The phase-2 preamble added the same day says *"do not re-derive the money formulas in
+  JavaScript"* — **but the step's own text was never updated to match**, and a build session reads
+  the step, not the preamble, when it starts typing. **Obeying the literal step would have produced
+  a second profit number for the same project — precisely the F16/R1-4 failure the whole design
+  exists to forbid — and it would have passed its own unit tests**, because a JS test written
+  beside a JS formula proves internal consistency and nothing else. Corrected in place with a boxed
+  dated note (`הכרעתי, הפיך`; technical execution, no product-visible meaning, disclosed to Ishay
+  in the same message).
+  🔑 **The evidence that settled it was written by the migration's own author:**
+  `20260827144459_…_finance_money_ssot_and_readers.sql` states the division of labour in its header
+  — *"מחזיר **עובדות**; הגזירות לתצוגה … חיות ב-`src/lib/projectFinance.js`"*. **The contract was
+  never ambiguous; it just lived in a file the step didn't point at.**
+- 🆕 **Derived and verified: expected profit = `gross_profit + budget_deviation`.** The DB's
+  `gross_profit` uses ACTUAL labor; ה27's expected uses PLANNED; `budget_deviation` is exactly that
+  difference. Checked against all three hand anchors and all three land digit-for-digit — #13
+  `3650+(−692)=2,958.00` · #15 `3635+(−164)=3,471.00` · #12 `207.40+202.50=409.90`. **A null
+  deviation (T7) must propagate to a null expected profit**, never silently fall back to
+  `gross_profit`.
+- 🔴 **Two of the four acceptance anchors are NOT live-readable, and the guide claimed they were.**
+  `finance_cancellation_fee_proposal(14)` returns `proposed_fee = NULL` because **no project in the
+  seed is `cancelled`** (#14 is `in_progress`); only its goods half `3,180.00` reproduces. Efrat's
+  row totals `270.00`, not `292.60`, because `travel_amount = 0.00` until `generate_salary_report`
+  stamps it (ה14 — correct behaviour). **Neither is a defect** — `data-set.md §0` tags the whole #14
+  cancellation 🎭 — but the phase-2 preamble's *"three of the four … already produced by the
+  database itself"* is **not reproducible as written**. Verifying them live requires a **live-DB
+  write** (a cancellation; a generation that signs rows irreversibly), which is on the ask-first
+  boundary — and with the **28/08 interim presentation the next morning** it was not run.
+  Recommended to Ishay: defer both probes to step 5.1.
+- 📦 **Dependency finding for step 2.2:** the npm `xlsx` package is stuck at **0.18.5** carrying two
+  known advisories; SheetJS ships the fixed line **only from its own CDN**, not npm. §2.6's
+  "SheetJS `xlsx` **or equivalent**" is doing real work. Recommended `exceljs` 4.4.0 (maintained on
+  npm; writes AND reads, which step 2.2's re-parse test needs). Also measured in passing and
+  triaged `דחה-ל-אחרי-הכנס`: **6 pre-existing advisories in the transitive `undici`**, not ours.
+- 🏛️ **Architecture answer given to Ishay's "can an army do phases 2 and 3 together?": no, and the
+  blocker is not the agents.** Phase 3's screens consume phase 2's `api.js`; building them against
+  an imagined interface buys one rebuild. **And a workflow cannot pause at a 👤 gate** — every one
+  of the seven build-units carries an empty `🗣️ אושר —` slot, so batch size follows the GATES, not
+  the phase boundary. **What IS parallelizable, and it is the expensive half: his approvals.**
+  Phase 3's inputs are already frozen (6 approved mockups · screen cards · locked strings ·
+  Q/N rulings), so the phase-3 brief package can be put to him *while* the phase-2 army runs — the
+  gate blocks building, not reading.
 
 ### 27/08/2026 19:4X–19:5X — everything in production; dead branches cleared; phase-2 branch cut
 

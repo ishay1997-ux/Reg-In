@@ -12,8 +12,8 @@
 | **Branch** | `ishay/module-8-phase-2` — ✅ **CUT `27/08/2026 19:5X` from fresh `origin/dev` (`ed353bc`)**, after phase 1 shipped to production. Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ **empty** *(fresh, NOT merged-and-dead — iron rule 10's caveat)*. 🧹 **Seven merged branches were deleted the same minute** (remote + local), SHAs recorded in `CLAUDE_CODE_LOG` before deletion: `module-8-finance` `e41be2b` · `module-8-c2-and-n1` `3593bf9` · `module-8-n1b` `5e0bf45` · `fix-flaky-checklist-focus` `c3b2eaf` · `module-5-logistics` `3822a47` · `post-merge-m5-flip` `89f830b` · `reconcile-main-into-dev` `8e63da9`. **Remote now holds `dev` and `main` only.** *(Was: `ishay/module-8-finance`, cut 12:4X from `585ad27` — merged to production 17:4X and deleted.)* |
 | **Owner** | Ishay (sole developer) |
 | **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X.** ✅ **PHASE 1 COMPLETE 27/08/2026 16:5X — all ten migrations applied and verified, and the 1.8 gate passed.** *(This row read "Zero migrations applied" until the gate; corrected there.)* |
-| **Last updated** | `27/08/2026 19:5X` *(system clock)* |
-| **Active step** | **2.0 — the Phase-2 door: ledger sweep, then `src/lib/projectFinance.js`.** 🎉 **PHASE 1 IS DONE AND IN PRODUCTION**, and so is every debt it created. **Shipped 27/08/2026:** ten migrations (A–G) · the 1.8 gate · **`C2` — ה19 CLOSED** (the three bank columns are gone; bank details live only in `hostess_bank_details`) · **`N1`+`N1b` — the languages normalization COMPLETE** *(🔑 `data_type='ARRAY'` across `public` now returns **zero** columns — the single 1NF violation is gone)* · plus a flaky m5 test fixed with proof. **Production is `c1a3306`, deploy verified by fetching the live bundle and asserting its contents** — not by trusting the pipeline's word. **Battery at hand-off: `gate` exit 0 / 1,454 tests · `smoke` exit 0 · m4 suites 32/32.** ⏸️ **ONE debt remains and it is NOT m8's to build: `N2`** (`customer_contacts` consolidation — 46 occurrences / 16 production files across `src/lib` and modules 2·3·6, **plus a screen**). **Ishay approved it 27/08; the measured recommendation is a fresh branch AFTER the 28/08 interim presentation**, because it runs through the quote→project→email chain. Registered in `db_roadmap` §9א · `PROJECT_MASTER §6` · the session-start banner. 🔄 **Seed refresh 28/08 morning, before the presentation.** |
+| **Last updated** | `27/08/2026 20:45` *(system clock)* |
+| **Active step** | **3.0 — the Phase-3 door. ✅ PHASE 2 COMPLETE `27/08/2026 22:1X`: six new files, 117 new tests, suite 1,572/59 exit 0, `gate` exit 0, zero regressions.** Built by a 9-agent workflow (3 builders · 3 adversarial lenses · 3 fixers, 0 errors, 2.06M tokens, 64 min) and then re-verified independently by the orchestrator. 🔴 **Two REAL defects in already-shipped Phase-1 work were found by the lenses and are NOT fixed — both need Ishay's typed echo and both are recorded in §10 under `27/08 22:1X`: (a) the `finance` bucket rejects xlsx ⇒ the salary file can never be stored; (b) the cancellation-fee band pays 0% instead of 50% at exactly 72.0h.** ⏸️ Neither was applied — the 28/08 interim presentation runs on this same Supabase project. *(Previous: `2.1`. Door 2.0 closed `27/08/2026 20:45`* (baseline re-measured **1,454 tests / 56 files, exit 0** — identical to hand-off; ledger sweep found **nothing new for Ishay**: Q-1…Q-5 ruled 26/08 22:40, N-1…N-6 approved 26/08 22:43, A-1…A-10 recorded — but **two measured findings did land, both in §10 under `27/08/2026 20:4X`**: step 2.1's function list is superseded by what Phase 1 actually built, and two of the four acceptance anchors do not reproduce from a plain read of the live DB). 🎉 **PHASE 1 IS DONE AND IN PRODUCTION**, and so is every debt it created. **Shipped 27/08/2026:** ten migrations (A–G) · the 1.8 gate · **`C2` — ה19 CLOSED** (the three bank columns are gone; bank details live only in `hostess_bank_details`) · **`N1`+`N1b` — the languages normalization COMPLETE** *(🔑 `data_type='ARRAY'` across `public` now returns **zero** columns — the single 1NF violation is gone)* · plus a flaky m5 test fixed with proof. **Production is `c1a3306`, deploy verified by fetching the live bundle and asserting its contents** — not by trusting the pipeline's word. **Battery at hand-off: `gate` exit 0 / 1,454 tests · `smoke` exit 0 · m4 suites 32/32.** ⏸️ **ONE debt remains and it is NOT m8's to build: `N2`** (`customer_contacts` consolidation — 46 occurrences / 16 production files across `src/lib` and modules 2·3·6, **plus a screen**). **Ishay approved it 27/08; the measured recommendation is a fresh branch AFTER the 28/08 interim presentation**, because it runs through the quote→project→email chain. Registered in `db_roadmap` §9א · `PROJECT_MASTER §6` · the session-start banner. 🔄 **Seed refresh 28/08 morning, before the presentation.** |
 | **Deadline** | conference **01/10** (target: 100%) · end 20/10. m8 is the last *process* module before reports — the conference's "closing the loop" story leans on it. |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -31,11 +31,11 @@
 | **1.7** | Migration G — `cancel_project` extension (live-body pull) + params seeds | ✅ |
 | **1.8** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | ✅ |
 | **1.9** | 👤 **Ishay: merge → promote → deploy → then the drops.** ✅ **ALL DONE 27/08/2026.** PR [#68](https://github.com/ishay1997-ux/Reg-In/pull/68)→`dev`, [#69](https://github.com/ishay1997-ux/Reg-In/pull/69)→`main` ⇒ **`C2` applied 18:0X, ה19 CLOSED**. Then [#70](https://github.com/ishay1997-ux/Reg-In/pull/70)/[#71](https://github.com/ishay1997-ux/Reg-In/pull/71) ⇒ **`N1` + rewire**, and [#73](https://github.com/ishay1997-ux/Reg-In/pull/73)/[#74](https://github.com/ishay1997-ux/Reg-In/pull/74) ⇒ **`N1b`, normalization complete**. Production **`c1a3306`**, live bundle asserted. *(Also merged on the way: [#72](https://github.com/ishay1997-ux/Reg-In/pull/72) — the flaky m5 test.)* | ✅ |
-| **2.0** | Phase-2 door — ledger sweep | 🔨 **NEXT** |
-| **2.1** | `src/lib/projectFinance.js` — revenue/cost/profit/fee/deviation/overdue SSOT + tests vs hand anchors ⚠️ shared-surface | ⬜ |
-| **2.2** | `src/lib/salaryReport.js` — aggregation model + line building + xlsx assembly + tests ⚠️ shared-surface | ⬜ |
-| **2.3** | `src/modules/08_finance/api.js` — reads, RPC calls, mail sends + tests | ⬜ |
-| **2.4** | 🔻👤 Phase-2 gate — full unit suite + anchors reproduced | ⬜ |
+| **2.0** | Phase-2 door — ledger sweep | ✅ *(`27/08 20:45`; findings → §10)* |
+| **2.1** | `src/lib/projectFinance.js` — display derivations + shape guards + tests vs hand anchors ⚠️ shared-surface | ✅ *(38 tests)* |
+| **2.2** | `src/lib/salaryReport.js` — aggregation model + line building + xlsx assembly + tests ⚠️ shared-surface | ✅ *(30 tests)* |
+| **2.3** | `src/modules/08_finance/api.js` — reads, RPC calls, mail sends + tests | ✅ *(49 tests)* |
+| **2.4** | 🔻👤 Phase-2 gate — full unit suite + anchors reproduced | ✅ *(`27/08 22:1X` — suite **1,572/59 exit 0** vs baseline 1,454/56, **zero regressions** · `npm run gate` **exit 0** · orchestrator cross-check 8/8 · sign-flip mutation reddened **7** tests across two files, file restored byte-identical)* |
 | **3.0** | Phase-3 door — shared-component checkpoint + OPEN-item sweep | ⬜ |
 | **3.1** | S1 — `/finance` overview page (🗣️ brief → build → verify) | ⬜ |
 | **3.2** | S2 — closing-window dialog, 3 states (🗣️ brief → build → verify) | ⬜ |
@@ -1303,6 +1303,34 @@ it already names `תנאי_תשלום_ימים` default 30, exactly what G seede
 re-read the return-shape contracts from 1.5's migration headers.
 
 **Step 2.1 · `src/lib/projectFinance.js` + tests** ⚠️ shared-surface (new file in shared lib)
+
+> 🔴 **↳ SCOPE CORRECTED `27/08/2026 20:45` at the 2.0 door — read this before the list below, which
+> was written 26/08 (blueprint) and is now partly superseded by what Phase 1 actually shipped on 27/08.**
+> **The measurement:** `finance_project_money` — read live from `pg_proc` and from its own migration
+> header (`20260827144459_…_finance_money_ssot_and_readers.sql`) — **already computes revenue ·
+> goods_cost · labor_cost · travel_cost · gross_profit · budget_deviation · planned_hours**, and
+> `finance_cancellation_fee_proposal` already computes the fee's three components. That migration's
+> own header states the division of labour in writing: *"מחזיר **עובדות**; הגזירות לתצוגה
+> (מועד-פירעון, ימי-איחור, %, תגית-ציון) חיות ב-`src/lib/projectFinance.js`"*.
+> ⇒ **`deriveRevenue` / `deriveGoodsCost` / `deriveLaborCost` / `deriveTravelCost` /
+> `deriveBudgetDeviation` / `deriveCancellationFee` are NOT re-implemented in JS.** Building them
+> would create the second profit number F16/R1-4 exist to forbid — and the phase preamble above
+> already says so; only this step's own list had not been updated to match.
+> **What 2.1 genuinely owns (all of it invisible to the DB):**
+> `deriveDaysOverdue(invoiceSentAt, termsDays, today)` · `deriveExpectedProfit` — **and its formula
+> is `gross_profit + budget_deviation`**, because the DB's `gross_profit` uses ACTUAL labor while
+> ה27's expected uses PLANNED, and `budget_deviation = actual_labor − planned_labor` is exactly that
+> difference (verified live 27/08 against all three hand anchors: #13 `3650 + (−692) = 2,958.00` ·
+> #15 `3635 + (−164) = 3,471.00` · #12 `207.40 + 202.50 = 409.90`) · `scoreTag(score)` (ה16) ·
+> percent display incl. the zero-denominator ⇒ `—` rule · the `—`-vs-`0` discipline · fail-loud
+> shape guards (R4-F9) · **and a null `budget_deviation` (T7) must propagate to a null expected
+> profit — never to `gross_profit` alone**, or a project with no final hours silently reports the
+> actual-labor number as its forecast.
+> 🔑 **The anchor tests do not shrink** — they now assert that the JS agrees with numbers the DB
+> already produces, which is a STRONGER oracle than a JS-only test, not a weaker one.
+> *(`הכרעתי, הפיך` — technical execution with no product-visible meaning; disclosed to Ishay in the
+> same message, overridable.)*
+
 **What to do:** pure functions, no Supabase: `deriveRevenue(quoteTotals, changes)` (ה2) ·
 `deriveGoodsCost(lines, changes)` (ה17/ה26) · `deriveLaborCost(assignments)` (§7.19) ·
 `deriveTravelCost(param, shiftCount)` · `deriveExpectedProfit(...)` (ה27 incl. "טרם שובצו" marker) ·
@@ -1680,6 +1708,39 @@ anchored to it and settle them with Ishay at the phase door, not mid-step.
   writes the code (Ishay's 14/08 rule).
 
 ### Dated entries
+- `27/08/2026 20:45` — **PHASE-2 DOOR (step 2.0) CLOSED. Baseline re-measured: 1,454 tests / 56
+  files, exit 0** — byte-identical to the Phase-1 hand-off figure, so Phase 2 starts from a clean,
+  re-verified floor. **Ledger sweep result: nothing new for Ishay** — every §3.4 item (Q-1…Q-5,
+  N-1…N-6) was ruled 26/08 and every §3.5 assumption (A-1…A-10) is recorded; the door's "settle with
+  Ishay" branch legitimately did not fire. **Two measured findings did land:**
+  **① `הכרעתי, הפיך` — step 2.1's function list was superseded by Phase 1** and has been corrected
+  in place above (see the boxed `↳ SCOPE CORRECTED` note on step 2.1). The list was written 26/08 at
+  blueprint, *before* the DB existed; `finance_project_money` now owns every money formula it names.
+  A builder obeying the step's literal text would have re-implemented the calculator in JavaScript —
+  **the exact second-profit-number failure F16/R1-4 forbid**, and it would have passed its own tests.
+  The phase preamble (added 27/08) already forbade it; only the step's own text still contradicted
+  it. Technical execution, no product-visible meaning ⇒ decided, logged, disclosed, overridable.
+  **② `אומת-על-ידי` — two of the four acceptance anchors DO NOT reproduce from a plain read of the
+  live DB, and the phase preamble's claim that three of four are "already produced by the database
+  itself" is therefore not reproducible as written.** Measured 27/08 20:4X:
+  · **#13 `3,650.00` ✅ reproduces** on a plain read (`finance_project_money(13)`), and so do
+    `−692.00` deviation, `#15 5,985.00` revenue, and all three expected-profit anchors.
+  · **#14 `3,508.00` ❌ does not.** `finance_cancellation_fee_proposal(14)` returns
+    `proposed_fee = NULL` — because **no project in the live seed is `cancelled`**: #14 is
+    `in_progress` with `cancelled_at IS NULL`. Only the goods half (`goods_at_price = 3,180.00`)
+    reproduces. **This is not a defect** — `data-set.md §0` tags the whole #14 cancellation 🎭
+    (demo scenario, "26/08 11:00 🎭 #14 מבוטל … בדיוק 30 שעות לפני"); the seed was never meant to
+    carry it. But the fee's compensation half is unverifiable against the live DB **without first
+    writing a cancellation**.
+  · **Efrat's `292.60` ❌ does not** either. Her `assignments.travel_amount` is `0.00`, so her row
+    totals `270.00` today. That is CORRECT per ה14 — travel is *stamped at generation* — so 292.60
+    only exists after `generate_salary_report` runs, and that call **signs rows irreversibly**.
+  🔴 **The consequence for Phase 2, and it changes nothing about the test values:** the acceptance
+  numbers are typed from the registers either way (§4.3: "tests are written TO these numbers, never
+  re-derived from code"), so the unit tests are unaffected. What IS affected is any plan to
+  *cross-check* those two anchors live — that needs a **live-DB write**, which is on the ask-first
+  boundary (`_shared/discipline.md` (ג)) and, with the **28/08 interim presentation tomorrow**, was
+  NOT run. Recommended: defer both probes to after the presentation, as part of 5.1's live journeys.
 - 🔴 `27/08/2026 13:2X` — **DEVIATION FROM THE APPROVED PLAN: migration C split into C (safe half,
   now) + C2 (the column drop, post-merge). Presented to Ishay at the gate; nothing applied before
   his ruling.**
