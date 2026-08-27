@@ -1708,6 +1708,65 @@ anchored to it and settle them with Ishay at the phase door, not mid-step.
   writes the code (Ishay's 14/08 rule).
 
 ### Dated entries
+- 🔴 `27/08/2026 22:1X` — **PHASE 2 COMPLETE — and the adversarial panel found TWO REAL DEFECTS IN
+  ALREADY-SHIPPED PHASE-1 WORK. Neither is fixed; both have a migration written and NOT applied.**
+  **Built by a 9-agent workflow** (3 builders · 3 read-only adversarial lenses · 3 fixers; 0 errors,
+  2.06M tokens, 64 min), then re-verified independently by the orchestrator.
+  **Evidence, by name:** suite **1,572 / 59 files exit 0** (baseline 1,454 / 56 ⇒ **+118, zero
+  regressions**) · `npm run gate` **exit 0** · orchestrator cross-check **8/8** · a sign-flip mutation
+  on the deviation term reddened **7 tests across two files**, then the file was restored
+  **byte-identical** (`sha256sum -c` OK).
+  🔑 **The cross-check is the part worth keeping:** it fed the LIVE DATABASE's measured outputs
+  through the AGENT-written functions and compared against the SPEC's hand-computed anchors. Three
+  sources, none of which saw the other two — a strictly stronger oracle than any test the same
+  session could author.
+  **‏🐛 DEFECT H1 — the `finance` bucket rejects xlsx, so the salary file can never be stored.**
+  Measured live: `allowed_mime_types = {application/pdf, image/jpeg, image/png}`. ⇒
+  `uploadSalaryReportFile` cannot succeed, `report_file_url` stays NULL, and **three explicit P4
+  promises die silently** — history-with-download, resend, and §7.68's proof-of-what-was-sent.
+  **Not a recorded decision that anyone made:** the m6 migration that created the bucket carries
+  *"לא הוכרע (M8 יחליט)"* on the `finance` row — the MIME list was a declared placeholder and m8 is
+  the module that owes the ruling. ה13 fixed only the SIZE; ה4 mandates xlsx. Migration written:
+  `20260827221902_module8_h1_finance_bucket_allow_xlsx.sql`.
+  **‏🐛 DEFECT H2 — the cancellation-fee band pays 0% instead of 50% at exactly 72.0 hours.**
+  ה24 reads *">72 = 0% · **24–72 = 50%** · <24 = 100%"* ⇒ 72.0 sits INSIDE the 50% band. The shipped
+  body evaluates `when v_hours >= v_part_h then 0` first, so exactly 72.0 falls to 0%. (24.0 is
+  correct.) Verified three independent ways: the approved ה24 · step 2.1's own wording · the live
+  params (24/72/50). **Severity, honestly: only fires at exactly 72.000000h**, which a
+  microsecond timestamp makes near-impossible in real use — but it is a money error against the
+  customer, on a boundary the spec defines explicitly. One operator. Migration written:
+  `20260827221903_module8_h2_fix_cancellation_band_72h.sql` (body pulled live from
+  `pg_get_functiondef`, per the migrations rule; the only diff is `>=` ⇒ `>`).
+  ⏸️ **Why neither was applied:** applying needs Ishay's typed echo, and the **28/08 interim
+  presentation runs on this same Supabase project**. **Proven not applied, not merely asserted:**
+  `list_migrations` ends at `20260827163737_module8_n1b_drop_hostesses_languages`; neither new
+  version appears.
+  **‏🔧 Two more things the lenses caught, both fixed inside phase 2:** `scoreTagText`'s `withScore`
+  option reproduced a tag format that cross-surface resolution #4 had **retired** — deleted, and the
+  test now BLOCKS the retired shape · `deriveDueDate` swallowed `undefined` (shape drift) into a
+  measured `—`, contradicting the file's own header — now throws, matching `deriveExpectedProfit`.
+  **‏🛡️ And one fixer REFUSED its instruction, correctly:** a verifier's suggested fix would have
+  rewritten Efrat's fixture to bonus 250 / total 542.60 — **overwriting the recorded acceptance
+  anchor 292.60**. The fixer applied the finding's INTENT additively (a separate
+  `efratWithPersonalBonus` variant) and left all three anchors byte-identical. This is the
+  conflict-question rule working in the direction nobody tests for: a review being wrong.
+  **‏🎨 Shared-component change made serially by the orchestrator** (four parallel phase-3 agents
+  would collide on it): `StatusTag` gains the `danger` tone. Colours read from the approved mockup's
+  own declaration (`.tag.danger{background:var(--red100); color:var(--red700)}`), not chosen by eye.
+  Without it `scoreTag()`'s `danger` fell through `?? TONES.muted` and rendered **grey with no
+  error** — "טעון בירור" would have looked like a neutral status.
+  **‏📦 Dependency, decided and de-risked before three agents were sent to depend on it:**
+  `write-excel-file` (runtime) + `read-excel-file` (dev). The npm `xlsx` package is stuck at 0.18.5
+  with known advisories and its fixed line is CDN-only. A round trip was PROVEN before use — Hebrew
+  survives, decimals survive, and **a ת"ז written as a String type comes back a string**, which is
+  the one that matters: an ID silently converted to a number loses a leading zero on a document that
+  goes to the accountant. Its browser entry graph was traced and reaches no Node builtins.
+  **‏⏭️ Two open items carried into phase 3:** `assertFinanceShape` has ZERO production call sites ⇒
+  **orchestrator ruling: every screen calls it on an RPC row before deriving** (one shape gate at the
+  boundary is the design; that is why the leaf derivations stay simple) · an empty payroll month
+  still mails a header-only xlsx to the CPA — P4 calls that case *"תקין"*, and the only clean guard
+  lives inside `generate_salary_report`, i.e. a phase-1 migration **and a product question for
+  Ishay**, so it was escalated rather than patched.
 - `27/08/2026 20:45` — **PHASE-2 DOOR (step 2.0) CLOSED. Baseline re-measured: 1,454 tests / 56
   files, exit 0** — byte-identical to the Phase-1 hand-off figure, so Phase 2 starts from a clean,
   re-verified floor. **Ledger sweep result: nothing new for Ishay** — every §3.4 item (Q-1…Q-5,
