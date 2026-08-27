@@ -458,6 +458,30 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
+- ⏳ 27/08/2026 — **module-8 E3 FIX-FORWARD · WRITTEN, NOT APPLIED — typed-echo gate OPEN.**
+  `20260827153725_module8_salary_report_temp_table_fix.sql`.
+  🐞 **A bug in E3 that MY OWN verification caught, minutes after E3 was applied.**
+  `generate_salary_report` creates a temp table `_collect` with `on commit drop`; that flag fires at
+  COMMIT, so a **second call inside the same transaction** dies on
+  `relation "_collect" already exists`.
+  **Production would not have exploded:** each Supabase RPC call runs in its own transaction, so the
+  table is gone between calls. The bug would have sat silent until someone batched two calls — a
+  `finalize` then a `generate`, or any future grouping.
+  🔑 **What DID break immediately, and it is the real reason this is being fixed rather than
+  noted:** this project verifies write functions by running them on real data **inside a transaction
+  that is then rolled back**. A bug of this shape makes the function **unverifiable by that method**
+  — it is not merely a silent defect, it **disables the checker**. Caught on the first attempt to
+  generate August and then September in sequence, i.e. by the very test meant to prove the signature
+  prevents double payment. **A salary function I could not verify is one that must not ship.**
+  **The fix:** an explicit `drop table if exists _collect;` before the create. `on commit drop` stays
+  as the end-of-transaction net; the explicit drop handles a table surviving from an earlier call in
+  the SAME transaction.
+  🚫 **The original migration was NOT edited** — applied and committed means history
+  (`supabase/migrations/CLAUDE.md`, append-only; fixes go forward).
+  ✅ **The delta was proven mechanically, not asserted:** the new body was extracted from the
+  original file programmatically rather than retyped, and a line-by-line comparison excluding the
+  added lines reports **141 lines before, 141 after, identical**. Zero change to logic, formula or
+  grants.
 - ⏳ 27/08/2026 — **module-8 migration E3 · WRITTEN ON DISK, NOT APPLIED — typed-echo gate OPEN.**
   `20260827152840_module8_salary_report_transaction.sql`. **Check live before assuming it landed:**
   `select count(*) from pg_proc where proname='generate_salary_report'` ⇒ **0 means it did not**.
