@@ -30,7 +30,7 @@
 | **1.6** | Migration F — public feedback RPC pair `/feedback/:token` + rate limit | ✅ |
 | **1.7** | Migration G — `cancel_project` extension (live-body pull) + params seeds | ✅ |
 | **1.8** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | ✅ |
-| **1.9** | 👤 **Ishay: PR → merge `dev` → promote `main` → confirm deploy live** → **then C2** (ה19 closes only here) | ⬜ |
+| **1.9** | 👤 **Ishay: merge [PR #68](https://github.com/ishay1997-ux/Reg-In/pull/68) → promote `main` → confirm deploy live** → **then C2** (ה19 closes only here). **PR opened `27/08/2026 17:0X`, branch pushed at `fd49f9c`; all 5 checks PASS** — Lint·Test·Build 1m16s · Deno type-check · gitleaks · **Vercel preview deployment completed** · Vercel comments. *(Checked with `gh pr checks`/`gh run watch` on the run itself — not `--watch` on the queue, which reports green while still queued: the 12/08 mine.)* | 🔨 |
 | **2.0** | Phase-2 door — ledger sweep *(does not start before 1.9)* | ⬜ |
 | **2.1** | `src/lib/projectFinance.js` — revenue/cost/profit/fee/deviation/overdue SSOT + tests vs hand anchors ⚠️ shared-surface | ⬜ |
 | **2.2** | `src/lib/salaryReport.js` — aggregation model + line building + xlsx assembly + tests ⚠️ shared-surface | ⬜ |
