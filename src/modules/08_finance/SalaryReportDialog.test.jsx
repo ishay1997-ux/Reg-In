@@ -4,7 +4,9 @@
 // מצד-לקוח נגד `listSalaryReports()` חוסמת "ייצא ושלח" ומציגה את הבאנר · "ייצא ושלח" קורא
 // ל-`generateAndSendSalaryReport` עם `accountantName: null` (חור-מוצר מוצהר, לא מומצא כאן) ·
 // אחרי הצלחה מוצגת אותה טבלת-8-עמודות **כתוצאה**, לא כתצוגה-מקדימה (אין RPC לתצוגה-מקדימה —
-// ר' הערת-הראש של הקובץ הנבדק) · "אין שעות לתשלום החודש" על 0 שורות · שלושת מצבי-השליחה
+// ר' הערת-הראש של הקובץ הנבדק) · **פאנל-הקדם-הפקה**: מה שידוע בוודאות לפני הלחיצה
+// (נמען · שם-קובץ · גבול-איסוף · חודשים שטרם הופקו), ההצהרה שהשורות עצמן אינן ניתנות להצגה,
+// ואזהרת חוסר-נמען · "אין שעות לתשלום החודש" על 0 שורות · שלושת מצבי-השליחה
 // (sent/failed/unknown) מדווחים נכון · כרטיס-ההיסטוריה מציג ריק/שורות, הורדה, ושליחה-חוזרת
 // רק על שורות `failed` עם קובץ שמור.
 //
@@ -181,6 +183,139 @@ describe('SalaryReportDialog — בחירת-חודש וברירת-מחדל', () 
   })
 })
 
+describe('SalaryReportDialog — פאנל-הקדם-הפקה (הכרעת-ישי 28/08/2026)', () => {
+  it('נושא את הנמען, את שם-הקובץ ואת גבול-האיסוף — שלושתם ידועים בוודאות לפני הכתיבה', async () => {
+    renderDialog()
+
+    const panel = await screen.findByTestId('salary-report-preflight')
+    expect(panel).toHaveTextContent('מה ייכלל בדוח של ספטמבר 2026')
+    await waitFor(() => expect(panel).toHaveTextContent(ACCOUNTANT_EMAIL))
+    // שם-הקובץ נגזר מ-`salaryReportFileName` — אותה פונקציה שמייצרת את הקובץ בפועל.
+    expect(panel).toHaveTextContent('09_2026_Payroll_Report.xlsx')
+    // גבול-האיסוף = היום האחרון של החודש הנבחר, כפי ש-`generate_salary_report` אוספת.
+    expect(panel).toHaveTextContent('30/09/2026')
+  })
+
+  it('אומר במפורש ששורות-הדוח אינן מוצגות ושהפעולה אינה הפיכה — ואינו מציג ולו סכום אחד', async () => {
+    renderDialog()
+
+    const limit = await screen.findByTestId('salary-report-preflight-limit')
+    expect(limit).toHaveTextContent('שורות הדוח עצמן אינן מוצגות כאן')
+    expect(limit).toHaveTextContent('אינה הפיכה')
+
+    // 🛡️ העוגן שמונע רגרסיה לכיוון "תצוגה-מקדימה מומצאת": אין ₪ בפאנל כולו. מספר-כסף כאן
+    // היה בהכרח אומדן — אין במסד קורא שמחזיר את השורות בלי לכתוב אותן.
+    expect(screen.getByTestId('salary-report-preflight').textContent).not.toContain('₪')
+  })
+
+  it('אינו מוצג כשהחודש כבר הופק — שם הבאנר החסום הוא המסר', async () => {
+    listSalaryReports.mockResolvedValue([reportRow({ period: '2026-09-01' })])
+    renderDialog()
+
+    await screen.findByTestId('salary-report-blocked-banner')
+    expect(screen.queryByTestId('salary-report-preflight')).not.toBeInTheDocument()
+  })
+
+  it('נעלם אחרי ההפקה ובמקומו מוצגת הטבלה האמיתית', async () => {
+    generateAndSendSalaryReport.mockResolvedValue(generateResult())
+    renderDialog()
+
+    await screen.findByTestId('salary-report-preflight')
+    fireEvent.click(screen.getByTestId('salary-report-generate'))
+
+    await screen.findByTestId('salary-report-result-table')
+    expect(screen.queryByTestId('salary-report-preflight')).not.toBeInTheDocument()
+  })
+
+  it('פער-חודשים: דילוג על חודש מגלגל את שורותיו לדוח הזה — והפאנל נוקב בחודשים בשמם', async () => {
+    // האחרון שהופק הוא יוני 2026; הנבחר (ברירת-המחדל) ספטמבר 2026 ⇒ יולי ואוגוסט חסרים.
+    listSalaryReports.mockResolvedValue([reportRow({ period: '2026-06-01' })])
+    renderDialog()
+
+    const gap = await screen.findByTestId('salary-report-gap-note')
+    expect(gap).toHaveTextContent('יולי 2026')
+    expect(gap).toHaveTextContent('אוגוסט 2026')
+    // 🛡️ מפלה: החודש הנבחר עצמו והחודש שכן הופק אינם ברשימת-החסרים.
+    expect(gap).not.toHaveTextContent('יוני 2026')
+    expect(gap).not.toHaveTextContent('ספטמבר 2026')
+    expect(screen.getByTestId('salary-report-last-report')).toHaveTextContent('יוני 2026')
+  })
+
+  it('אין היסטוריה כלל ⇒ "זהו דוח-השכר הראשון", ובלי הערת-פער', async () => {
+    listSalaryReports.mockResolvedValue([])
+    renderDialog()
+
+    expect(await screen.findByTestId('salary-report-last-report')).toHaveTextContent(
+      'זהו דוח-השכר הראשון במערכת',
+    )
+    expect(screen.queryByTestId('salary-report-gap-note')).not.toBeInTheDocument()
+  })
+
+  // 🔴 הבדיקה הזו נועלת **תיקון** ולא רק קיום-אזהרה. עד 28/08/2026 היא אימתה את המחרוזת
+  // "לא יישלח", כלומר נעלה משפט שאמר את ההפך ממה שקורה: `generateAndSendSalaryReport`
+  // שולפת נמען+תבנית ב-`Promise.all` **לפני** `generate_salary_report`, ולכן חוסר-נמען
+  // עוצר את ההפקה כולה — אין דוח, אין חתימה, ואין שורת-היסטוריה לשלוח ממנה
+  // (`api.test.js`: "חוסר-תבנית או חוסר-נמען עוצר **לפני** ההפקה הבלתי-הפיכה" מאמת
+  // `rpc` שלא נקרא). שתי הבדיקות סתרו זו את זו; זו התיישרה לפי המנגנון.
+  it('כתובת רואה-החשבון לא נטענה ⇒ אזהרה שההפקה תיעצר לפני שנכתב משהו (ולא שהדוח ייחתם)', async () => {
+    // `getParamValue` **זורקת** כשהפרמטר חסר (closingApi.js) — וזה בדיוק המסלול שנבדק כאן.
+    getParamValue.mockRejectedValue(new Error('הפרמטר "מייל_משרד_רואי_חשבון" חסר בהגדרות המערכת.'))
+    renderDialog()
+
+    const warn = await screen.findByTestId('salary-report-no-recipient')
+    expect(warn).toHaveTextContent('ההפקה תיעצר לפני שנכתב משהו')
+    expect(warn).toHaveTextContent('לא תיחתם אף שורה')
+    // 🛡️ מפלה: המשפט הישן — ההבטחה שהדוח כן יופק ורק המייל לא ייצא — אסור שיחזור.
+    expect(warn).not.toHaveTextContent('המייל לא יישלח')
+    expect(warn).not.toHaveTextContent('אפשר יהיה לשלוח אותו מההיסטוריה')
+  })
+
+  it('כתובת שנטענה בהצלחה אינה מדליקה את אזהרת-חוסר-הנמען (מפלה בין "טוען" ל"אין")', async () => {
+    renderDialog()
+
+    await screen.findByTestId('salary-report-preflight')
+    await waitFor(() =>
+      expect(screen.getByTestId('salary-report-preflight')).toHaveTextContent(ACCOUNTANT_EMAIL),
+    )
+    expect(screen.queryByTestId('salary-report-no-recipient')).not.toBeInTheDocument()
+  })
+})
+
+describe('SalaryReportDialog — שער-הקריסה של בורר-החודש', () => {
+  // 🐞 המנגנון שנמדד: שדה-השנה הוא `<input type="number">`; מחיקת תוכנו מחזירה `''`,
+  // ‏`Number('')` הוא 0, ו-`periodOf(0, 9)` הוא `"0-09-01"` — שאינו עובר את פירוק-התקופה
+  // (ארבע ספרות). בלי השער, השורה שמציגה את הכפתור הסגור קוראת `selectedParts.year` על
+  // `null` וזורקת **בגוף-הרינדור** ⇒ מסך לבן. הבדיקה מפלה: אם השער יוסר, ה-render יזרוק
+  // כאן והבדיקה תאדים.
+  it('שנה ריקה: "אישור" אינו מפיל את המסך, מציג הנחיה, ומשאיר את החודש הקודם', async () => {
+    renderDialog()
+    fireEvent.click(await screen.findByTestId('salary-report-month-button'))
+    fireEvent.change(screen.getByTestId('salary-report-year-input'), { target: { value: '' } })
+    fireEvent.click(screen.getByTestId('salary-report-month-apply'))
+
+    expect(screen.getByTestId('salary-report-month-error')).toHaveTextContent(
+      'יש להזין שנה בת ארבע ספרות',
+    )
+    // הבורר נשאר פתוח והבחירה לא הוחלה — הדיאלוג חי.
+    expect(screen.getByTestId('salary-report-dialog')).toBeInTheDocument()
+    expect(screen.getByTestId('salary-report-month-select')).toBeInTheDocument()
+
+    // תיקון השנה מחיל כרגיל ומנקה את ההנחיה.
+    fireEvent.change(screen.getByTestId('salary-report-year-input'), { target: { value: '2025' } })
+    expect(screen.queryByTestId('salary-report-month-error')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('salary-report-month-apply'))
+    expect(screen.getByTestId('salary-report-month-button')).toHaveTextContent('2025')
+  })
+
+  it('הכפתור הסגור מכריז על תפריט (aria-haspopup) — כפי שהמוקאפ המאושר מסמן אותו', async () => {
+    renderDialog()
+    expect(await screen.findByTestId('salary-report-month-button')).toHaveAttribute(
+      'aria-haspopup',
+      'true',
+    )
+  })
+})
+
 describe('SalaryReportDialog — חסימת-כפילות מצד-לקוח (תצוגה ג׳ של המוקאפ)', () => {
   it('חודש שכבר הופק (send_status=sent) מציג את הבאנר החסום ומשבית "ייצא ושלח"', async () => {
     listSalaryReports.mockResolvedValue([reportRow({ period: '2026-09-01' })])
@@ -239,6 +374,81 @@ describe('SalaryReportDialog — "ייצא ושלח" (המסלול הבלתי-ה
       'אין שעות לתשלום החודש',
     )
     expect(screen.queryByTestId('salary-report-result-table')).not.toBeInTheDocument()
+  })
+
+  // 🔴 **המסלול שהפך חודש חתום לחודש "ריק ותקין".** שומר-הרכבה שנופל ב-`salaryReport.js`
+  // נתפס ב-`catch` של `generateAndSendSalaryReport`, והיא **חוזרת כרגיל** עם
+  // `totals: null` / `lines: []` — בעוד במסד כבר יש שורת-דוח וכל שיבוץ שנאסף כבר נחתם.
+  // הצורה שנבדקת כאן היא בדיוק זו שה-API מחזירה (api.js: `doc?.totals ?? null`).
+  const assemblyFailureResult = () =>
+    generateResult({
+      periodLabel: null,
+      fileName: null,
+      lines: [],
+      totals: null,
+      filePath: null,
+      sendResult: 'failed',
+      sendStatus: 'failed',
+      mailError: new Error('סכום שורות הדוח אינו תואם את הסכום שנרשם במסד — הדוח לא הורכב.'),
+    })
+
+  it('נפילת-הרכבה: מוצג מצב-כשל אדום עם הודעת-השומר — ולא "אין שעות לתשלום החודש"', async () => {
+    generateAndSendSalaryReport.mockResolvedValue(assemblyFailureResult())
+    renderDialog()
+
+    await screen.findByTestId('salary-report-month-button')
+    fireEvent.click(screen.getByTestId('salary-report-generate'))
+
+    const panel = await screen.findByTestId('salary-report-assembly-failure')
+    expect(panel).toHaveTextContent('הדוח לא הורכב — אך השורות כבר נחתמו')
+    // ההודעה של השומר מגיעה למסך מילה-במילה — `api.js` שומרת אותה ב-`mailError` בדיוק לשם כך.
+    expect(panel).toHaveTextContent('סכום שורות הדוח אינו תואם את הסכום שנרשם במסד')
+    expect(panel).toHaveTextContent('לא ייאספו שוב')
+    expect(panel).toHaveTextContent('לא ניתן לשלוח את הדוח מההיסטוריה')
+    // 🛡️ מפלה: אלה בדיוק שני הפריטים שהמסך הציג לפני התיקון — חודש חתום שנקרא כחודש ריק.
+    expect(screen.queryByTestId('salary-report-empty-note')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('salary-report-result-table')).not.toBeInTheDocument()
+  })
+
+  it('נפילת-הרכבה: ספירת-השורות מוצגת "—" ולא 0, והחודש נגזר מהתקופה שחזרה מהמסד', async () => {
+    generateAndSendSalaryReport.mockResolvedValue(assemblyFailureResult())
+    renderDialog()
+
+    await screen.findByTestId('salary-report-month-button')
+    fireEvent.click(screen.getByTestId('salary-report-generate'))
+
+    const result = await screen.findByTestId('salary-report-result')
+    const countLabel = within(result).getByText('שורות בדוח:').parentElement
+    expect(countLabel).toHaveTextContent('—')
+    expect(countLabel).not.toHaveTextContent('0')
+    // `periodLabel` הוא null במסלול הזה; התקופה עצמה (`2026-09-01`) כן חזרה מהמסד.
+    expect(within(result).getByText('ספטמבר 2026')).toBeInTheDocument()
+  })
+
+  it('נפילת-הרכבה: הטוסט אינו מבטיח שליחה-חוזרת מההיסטוריה כשאין קובץ שמור', async () => {
+    generateAndSendSalaryReport.mockResolvedValue(assemblyFailureResult())
+    renderDialog()
+
+    await screen.findByTestId('salary-report-month-button')
+    fireEvent.click(screen.getByTestId('salary-report-generate'))
+
+    const toast = await screen.findByTestId('toast-error')
+    expect(toast).toHaveTextContent('לא ניתן לשלוח אותו שוב מההיסטוריה')
+    // 🛡️ מפלה: הנוסח הישן היה גורף ("הדוח נשמר; ניתן לשלוח…") — והוא בדיוק ההבטחה השקרית.
+    expect(toast).not.toHaveTextContent('הדוח נשמר')
+  })
+
+  it('כשל-שליחה עם קובץ שנשמר: הטוסט כן מפנה להיסטוריה (הענף השני של אותו תנאי)', async () => {
+    generateAndSendSalaryReport.mockResolvedValue(
+      generateResult({ sendResult: 'failed', sendStatus: 'failed' }),
+    )
+    renderDialog()
+
+    await screen.findByTestId('salary-report-month-button')
+    fireEvent.click(screen.getByTestId('salary-report-generate'))
+
+    const toast = await screen.findByTestId('toast-error')
+    expect(toast).toHaveTextContent('הדוח נשמר; ניתן לשלוח אותו שוב מההיסטוריה.')
   })
 
   it('כשל-RPC (למשל P0001 מהמסד) מציג את הודעת-השרת כפי-שהיא, בלי לסגור את הדיאלוג', async () => {

@@ -191,4 +191,113 @@ test.describe('נגישות (axe-core) — מסכים ראשיים על פני �
     ).toBeGreaterThan(0)
     await scan(page, 'לוגיסטיקה · דיאלוג-הצ׳קליסט — וריאנט מבוטל (מודול 5, משטח 2)')
   })
+
+  // ── מודול 8 (נוסף 28/08/2026, צעד 4.4) — S1 (מבט-על) + הדיאלוג שהיא פותחת (S2) ─────────
+  // 🔴 קריאה-בלבד: אף כפתור-כותב לא נלחץ באף בדיקה בקובץ הזה (אותו איסור כמו
+  // `finance.spec.js`/`public-feedback.spec.js` — 28/08/2026, יום ההצגה-הביניים על אותו
+  // Supabase). הדיאלוג נסרק ואז נסגר ב-`Escape`, לא בכפתור עסקי.
+  test('סריקה על מודול 8 — מבט-העל (S1) ודיאלוג-סגירת-תיק (S2)', async ({ page }) => {
+    await login(page)
+
+    await page.goto('/finance')
+    await scan(page, 'כספים · מבט-העל (מודול 8, משטח S1)')
+
+    // הלשונית הראשונה שיש בה שורה — לא נועצים 'awaiting_invoice': ר' הערת-הריקבון
+    // ב-`finance.spec.js` (הפרויקט הידוע יתקדם ללשונית הבאה ברגע ש-5.1 ישלח חשבונית).
+    let opened = false
+    for (const tabKey of ['awaiting_invoice', 'awaiting_payment', 'finished']) {
+      const tab = page.getByTestId(`finance-tab-${tabKey}`)
+      await expect(tab).not.toContainText('—', { timeout: 30_000 })
+      await tab.click()
+      const count = Number((await tab.innerText()).replace(/[^0-9]/g, ''))
+      if (count > 0) {
+        await page.locator('[data-testid^="finance-row-"]').first().click()
+        opened = true
+        break
+      }
+    }
+    expect(opened, 'אין אף שורה בשלוש הלשוניות כרגע — אין דיאלוג-S2 לסרוק').toBe(true)
+
+    const dialog = page.getByTestId('closing-dialog')
+    await expect(dialog).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByTestId('closing-meta')).toBeVisible({ timeout: 15_000 })
+    await scan(page, 'כספים · דיאלוג-סגירת-תיק (מודול 8, משטח S2)')
+    await page.keyboard.press('Escape')
+    await expect(dialog).toBeHidden()
+  })
+})
+
+// ── מודול 8 — S4, הדף הציבורי למשוב-לקוח (נוסף 28/08/2026, צעד 4.4) ────────────────────
+// 🔴 **אינו דורש session** (אותו תקדים בדיוק כמו `/shift/:token`) ⇒ describe נפרד, בלי
+// ‏`E2E_CEO_*` ובלי `login()`. `scan()` שמעל דורשת `<nav>` (סרגל-הצד) — והדף הציבורי
+// **בכוונה** יושב מחוץ ל-`MainLayout` ולכן אין לו סרגל בכלל; `scanPublic` להלן ממתין
+// לתוכן-המסך עצמו (בדיוק כמו `waitForReady`, בלי דרישת-`nav` שלעולם לא תתקיים כאן).
+test.describe('נגישות (axe-core) — מודול 8, משטח S4 (ציבורי, בלי session)', () => {
+  test.use({ storageState: { cookies: [], origins: [] } })
+
+  async function scanPublic(page, label) {
+    await page.waitForLoadState('networkidle')
+    const results = await new AxeBuilder({ page }).analyze()
+    const blocking = results.violations.filter(
+      (v) => ['critical', 'serious'].includes(v.impact) && !CONTRAST_IS_ADVISORY.has(v.id),
+    )
+    const advisory = results.violations.filter(
+      (v) => !['critical', 'serious'].includes(v.impact) || CONTRAST_IS_ADVISORY.has(v.id),
+    )
+    if (advisory.length > 0) {
+      console.log(
+        `⚠️ ${label}: ${advisory.length} advisory finding(s) — ${advisory
+          .map((v) => v.id)
+          .join(', ')}`,
+      )
+    }
+    expect(
+      blocking.map((v) => `${v.id}: ${v.description} (${v.nodes.length} nodes)`),
+      `${label} — critical/serious accessibility violations`,
+    ).toEqual([])
+  }
+
+  // ① מסך-התוצאה (dead) — **מיורט, ולא אמיתי. תיקון-עובדה 28/08/2026:** עד היום נכתב כאן
+  // ש-`get_feedback_page` היא "קריאה טהורה וטוקן-שווא לא כותב דבר" — **וזה שגוי.** גוף
+  // הפונקציה פותח ב-`perform public.feedback_rate_limit()`, שמוחקת-ומכניסה שורה ל-
+  // `feedback_rpc_calls` (`20260827155303_module8_public_feedback_rpc.sql`) ⇒ כל קריאה כותבת
+  // למסד החי, בניגוד לחוזה-הריצה של 28/08 (יום ההצגה על אותו פרויקט Supabase).
+  // ‏🔬 אומת חי: הטבלה כבר מחזיקה 10 שורות מ-IP אחד ⇒ ה-`insert` אכן מתבצע כאן.
+  // ‏🚫 **ואין כאן שום אובדן-כיסוי:** מטרת הבדיקה היא סריקת-DOM של מסך-התוצאה, וה-DOM
+  // שנוצר מתשובת-`not_found` מזויפת זהה לזה שנוצר מהתשובה החיה — אותו `state` בדיוק.
+  // ההנמקה המלאה, כולל למה התקדים `public-confirm` כן קורא חי: `e2e/public-feedback.spec.js`.
+  test('סריקה על מסך-התוצאה (dead)', async ({ page }) => {
+    await page.route('**/rest/v1/rpc/get_feedback_page', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ state: 'not_found' }),
+      }),
+    )
+    await page.goto('/feedback/00000000-0000-4000-8000-000000000002')
+    await expect(page.getByTestId('feedback-result-dead')).toBeVisible({ timeout: 15_000 })
+    await scanPublic(page, 'משוב-לקוח · מסך-תוצאה (מודול 8, משטח S4)')
+  })
+
+  // ② הטופס הפתוח — יירוט-רשת ולא סמיכות על שורת-`ok` חיה שעלולה שלא להיות קיימת
+  // ברגע שהבדיקה רצה (אותה מדיניות בדיוק כמו `public-feedback.spec.js`).
+  test('סריקה על הטופס הפתוח (form, עם כוכב נבחר)', async ({ page }) => {
+    await page.route('**/rest/v1/rpc/get_feedback_page', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          state: 'ok',
+          event_name: 'כנס E2E לבדיקת-נגישות',
+          event_date: '2026-09-01',
+        }),
+      }),
+    )
+    await page.goto('/feedback/00000000-0000-4000-8000-000000000003')
+    await expect(page.getByTestId('feedback-form')).toBeVisible({ timeout: 15_000 })
+    // כוכב נבחר לפני הסריקה: כפתור-השליחה עובר מ-`disabled` ל-`enabled`, ואלמנט-מושבת
+    // עלול להסתיר ממצאי-נגישות שרק ב-state הפעיל שלו נחשפים.
+    await page.getByTestId('feedback-stars').getByRole('button', { name: '5 מתוך 5' }).click()
+    await scanPublic(page, 'משוב-לקוח · טופס פתוח (מודול 8, משטח S4)')
+  })
 })

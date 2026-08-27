@@ -18,6 +18,7 @@ import LoadingOrError from '@/components/LoadingOrError'
 import Ltr from '@/components/Ltr'
 import Money from '@/components/Money'
 import RowAction from '@/components/RowAction'
+import RatingStars from '@/components/RatingStars'
 import StatTile from '@/components/StatTile'
 import StatusTag from '@/components/StatusTag'
 import { cn } from '@/lib/utils'
@@ -158,6 +159,15 @@ function revenueTileSub(metrics, cancelledCount) {
   return [approvedQuotesLabel(metrics.approvedCount), cancelledCountNote(cancelledCount)]
     .filter(Boolean)
     .join(' · ')
+}
+
+// 🆕 שורת-המשנה של אריח-המשוב (מ8 · 4.2): **כמה** משובים עומדים מאחורי הממוצע. בלעדיה
+// "5 ★" של משוב בודד נראה זהה ל-"5 ★" של שנים-עשר, וזו בדיוק ההטעיה ש-C6 §2.4.1 ("מאלה
+// שענו") בא למנוע. 0 ⇒ אין שורה כלל — האריח ממילא מציג "אין נתונים עדיין" ("לא בכוח").
+// לשון-יחיד/רבים כמו בכל המערכת (`cancelledCountNote`).
+function feedbackCountNote(count) {
+  if (!count) return undefined
+  return count === 1 ? 'ממשוב אחד שהתקבל' : `מ-${count} משובים שהתקבלו`
 }
 
 // 🆕 מכנס את כל ה"מה ידוע על הפרויקטים כרגע" (③.2) למקום אחד מחוץ לקומפוננטה — שוב,
@@ -528,13 +538,27 @@ export default function CustomerDetailsPage() {
             sub={lastEventDisplay.sub}
             testId="metric-last-event"
           />
+          {/* 🆕 מ8 · צעד 4.2 — האריח החמישי, זה שהיה "ממתין למודול הבא". ה8/§7.79:
+              הממוצע רץ על בעלי `feedback_status='completed'` **בלבד** ("מאלה שענו"), והסינון
+              עצמו חי ב-`deriveCustomerMetrics` (כלל 14) ולא כאן.
+              🔴 `variant="compact"` ולא הגליפים: הערך הוא **ממוצע** (4.5), וחמישה גליפים
+              יודעים לצייר רק מספר שלם — 4.5 היה נצבע כחמישה כוכבים מלאים, כלומר "מצוין"
+              על לקוח שאינו. הצורה הדחוסה `4.5 ★` מבודדת-כיווניות דרך `Ltr` (RatingStars). */}
+          <StatTile
+            label="ממוצע משוב"
+            value={
+              metrics.avgFeedback == null ? null : (
+                <RatingStars
+                  value={metrics.avgFeedback}
+                  variant="compact"
+                  testId="metric-feedback-stars"
+                />
+              )
+            }
+            sub={feedbackCountNote(metrics.feedbackCount)}
+            testId="metric-feedback"
+          />
         </div>
-        {/* המדד שטרם חובר יורד לשורה אחת שקטה: לא נמחק (לא מסתיר יכולת עתידית), אך גם לא
-            תופס שליש מרצועת-ההדגשים בריבוע "אין נתונים עדיין". 🔴 מ6 עורכת אותה — "מספר
-            אירועים"/"אירוע אחרון" כבר מוצגים למעלה, והמשפט הישן עליהם היה שקר (כלל 13(ח)). */}
-        <p className="mx-6 mt-2.5 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-1.5 text-[11.5px] text-slate-500">
-          ממתין למודול הבא — ממוצע משוב (מודול 8)
-        </p>
 
         {/* ---- פרטים מקובצים ---- */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 p-6">

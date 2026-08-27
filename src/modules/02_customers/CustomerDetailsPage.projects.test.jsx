@@ -86,6 +86,14 @@ function projectRow(overrides) {
     cancelled_by: null,
     cancel_reason: null,
     quotes: null,
+    // 🆕 מ8 · 4.2 — `getCustomerProjects` מצרפת לכל שורה את שינויי-התכולה שלה
+    // (‏`attachProjectChanges`, RC-6). מערך ריק = "נבדק, אין שינויים"; `null` = לא ידוע.
+    // הפיקסצ'ר נושא את השדה כי בלעדיו העמודה "סכום" מציגה '—' בכוונה — ובדיקה שעובדת על
+    // שורה שהמסך לעולם לא יקבל היא בדיקה שמאשרת את הדבר הלא-נכון.
+    project_changes: [],
+    // 🆕 מ8 · 4.2 — שני שדות-המשוב שה-select הורחב אליהם (ה8): הממוצע נגזר מהם.
+    feedback_status: 'not_sent',
+    feedback_score: null,
     ...overrides,
   }
 }
@@ -260,5 +268,57 @@ describe('לשונית-פרויקטים — רדום + מבוטל-עתידי + "
 
     // מונה-הלשונית מציג את המספר האמיתי (יש הרשאה) — לא '—'.
     expect(within(screen.getByTestId('customer-tab-projects')).getByText('2')).toBeInTheDocument()
+  })
+})
+
+// 🆕 מודול 8 · צעד 4.2 — האריח החמישי בכרטיס-הלקוח (ה8 / §7.79), והמשפט הישן שנעלם.
+describe('אריח "ממוצע משוב" (מ8 · ה8) — האוכלוסייה, ושורת-ההסבר שפרשה', () => {
+  const answered = (id, score) =>
+    projectRow({
+      project_id: id,
+      event_name: `אירוע ${id}`,
+      final_event_date: offsetIso(-30),
+      project_status: 'finished',
+      feedback_status: 'completed',
+      feedback_score: score,
+    })
+
+  it('מציג את הממוצע של **המשיבים בלבד**, עם מונה-המשיבים בשורת-המשנה', async () => {
+    const projects = [
+      answered(401, 5),
+      answered(402, 4),
+      // 🔴 שלושת אלה **אינם** באוכלוסייה: הסקר נשלח ולא נענה / לא נשלח / אין ציון.
+      // בלי מסנן ה8 הממוצע היה 3.5 במקום 4.5 — זה בדיוק הפגם ש-§7.79 מנה.
+      projectRow({ project_id: 403, feedback_status: 'sent', feedback_score: 1 }),
+      projectRow({ project_id: 404, feedback_status: 'no_response', feedback_score: 2 }),
+      projectRow({ project_id: 405 }),
+    ]
+    mockPageApi({ projects })
+    renderCustomerPage()
+    await screen.findByTestId('customer-page')
+
+    const tile = await screen.findByTestId('metric-feedback')
+    expect(tile).toHaveTextContent('ממוצע משוב')
+    expect(tile).toHaveTextContent('4.5')
+    expect(tile).toHaveTextContent('מ-2 משובים שהתקבלו')
+  })
+
+  it('אין ולו משוב אחד שהושלם ⇒ "אין נתונים עדיין", לא "0 ★"', async () => {
+    mockPageApi({ projects: [projectRow({ project_id: 411 })] })
+    renderCustomerPage()
+    await screen.findByTestId('customer-page')
+
+    const tile = await screen.findByTestId('metric-feedback')
+    expect(tile).toHaveTextContent('אין נתונים עדיין')
+    expect(tile.textContent).not.toContain('★')
+  })
+
+  // כלל 13(ח): יכולת שנבנתה ⇒ הטקסט שמתאר אותה כלא-קיימת חייב להיעלם באותו סשן.
+  it('🔴 שורת "ממתין למודול הבא — ממוצע משוב (מודול 8)" אינה על המסך יותר', async () => {
+    mockPageApi({ projects: [] })
+    renderCustomerPage()
+    await screen.findByTestId('customer-page')
+
+    expect(screen.queryByText(/ממתין למודול הבא/)).not.toBeInTheDocument()
   })
 })

@@ -6,6 +6,9 @@
 // פעמיים היא תסטה").
 
 import { deriveQuoteAmount } from '@/lib/quotes'
+// חשבון "התוספת לחיוב" של שינוי-תכולה — אותו קובץ שדיאלוג-שינוי-התכולה של מ6 משתמש בו,
+// כדי שכרטיס-הלקוח והדיאלוג לא יוכלו להציג שני מספרים לאותו שינוי (כלל 14 · RC-6).
+import { computeScopeChangeMoney, projectTotalAfterChange } from '@/lib/projectChanges'
 import { eventDaysFromToday } from '@/lib/projects'
 import { formatTimestampFull } from '@/lib/dates'
 import { CANCEL_TYPE_LABELS } from '@/lib/projectCard'
@@ -135,14 +138,52 @@ export function cancellationSubLabel(project) {
   return [dateLabel && `בוטל ${dateLabel}`, typeLabel, reason].filter(Boolean).join(' · ')
 }
 
-// סכום-השורה (③.3): ההצעה הקפואה דרך ה-SSOT (`deriveQuoteAmount`, src/lib/quotes.js).
+// סכום-השורה (③.3): ההצעה הקפואה דרך ה-SSOT (`deriveQuoteAmount`, src/lib/quotes.js)
+// **ועוד "התוספת לחיוב" של שינויי-התכולה** (RC-6 / ה2, מודול 8 · צעד 4.2, 28/08/2026).
+//
 // 🔴 מגן על מלכודת-ה"0 ₪" (S-2): `project.quotes` (ה-embed) הוא `null` גם כש"אין הצעה"
 // וגם כש-RLS חוסם את 'הצעות מחיר' — ובשני המקרים total חייב להיות `null` (⇒ '—' על
 // המסך), לא 0 מחושב על `quote_services=[]`. בלי השומר הזה `deriveQuoteAmount(null, vat)`
 // היה מחזיר total=0 (שורות ריקות ⇒ סכום-ביניים 0), שקר-בביטחון על עמודת-כסף.
+//
+// 🆕 **למה שינויי-התכולה חייבים להיכנס** (‏`screens-approved.md` של מ6, ③.3): *"ברגע
+// ש-`project_changes` תיווצר, 'סכום' חייב להיות `הצעה + Σ שינויי-תכולה` — אחרת פרויקט
+// שגדל ב-2,000 ₪ יוצג בכרטיס-הלקוח בסכום הישן"*. הטבלה קיימת מ-14/08 ⇒ התנאי התקיים.
+//
+// 🔑 **ואיזו נוסחה — לא נכתבה כאן שנייה:** ‏`computeScopeChangeMoney` + `projectTotalAfterChange`
+// (‏`src/lib/projectChanges.js`) הן **בדיוק** החשבון שדיאלוג-שינוי-התכולה של מ6 מציג למנהלת
+// לפני שהיא מאשרת ("התוספת לחיוב": סכום-השינוי ⇒ הנחת-ההצעה ⇒ לפני-מע"מ ⇒ מע"מ). העמודה
+// הזו היא עמודת-**חיוב** ("הסכום הקפוא של ההצעה, **כולל מע"מ**"), ולכן היא חייבת להראות
+// את אותו מספר שהוצג ואושר — לא חשבון שני. ⚠️ **וזה שונה מ-`revenue_delta` הגולמי של ה-RPC**,
+// שהוא טרום-הנחה וטרום-מע"מ (‏`list_project_changes`) — ר' האזהרה ב-`ScopeChangeDialog.jsx:633`.
+//
+// ⚠️ **חוזה-הקלט של `project.project_changes` — שלושה מצבים, ואף אחד מהם אינו 0 שקט:**
+//   מערך  ⇒ שורות `list_project_changes` (ריק = אין שינויים ⇒ סכום-ההצעה כמות-שהוא)
+//   `null` ⇒ **לא ידוע** (קריאת-ה-RPC נכשלה) ⇒ הסכום כולו `null` ⇒ '—' על המסך
+//   חסר    ⇒ אותו דין כמו `null`. **במכוון**: שורה שלא עברה דרך `getCustomerProjects`
+//            אינה יודעת אם יש שינויים, וסכום-הצעה-בלבד היה נראה נכון לחלוטין ושקרי.
 export function projectAmount(project, vatRate) {
   if (!project?.quotes) return null
-  return deriveQuoteAmount(project.quotes, vatRate).total
+  const { total } = deriveQuoteAmount(project.quotes, vatRate)
+  const changes = project.project_changes
+  if (!Array.isArray(changes)) return null
+  if (changes.length === 0) return total
+  // כסף ממוסך (‏`money_visible=false`) מגיע כ-null. זה **אמור** להיות בלתי-אפשרי כאן —
+  // אותו שער 'הצעות מחיר' בדיוק חוסם גם את ה-embed `quotes` ⇒ יצאנו כבר למעלה — אבל
+  // בלי הבדיקה הזו `computeScopeChangeMoney` הייתה **מדלגת** על השורה ומחזירה תוספת 0.
+  if (changes.some((row) => row?.unit_price_snapshot == null || row?.delta_qty == null)) return null
+  const money = computeScopeChangeMoney(
+    changes.map((row) => ({
+      deltaQty: row.delta_qty,
+      unitPriceSnapshot: row.unit_price_snapshot,
+    })),
+    // ההנחות מגיעות מההצעה הקפואה עצמה — אותו מקור שהדיאלוג של מ6 קורא ממנו.
+    project.quotes.applied_customer_discount,
+    project.quotes.manual_discount,
+    // המע"מ הקפוא גובר על החי — אותה קדימות בדיוק כמו ב-`deriveQuoteAmount` (§7.51).
+    project.quotes.vat_rate_snapshot ?? vatRate,
+  )
+  return projectTotalAfterChange(total, money.total)
 }
 
 // חיפוש-הטבלה (⑦): שם-אירוע בלבד, סלחני, בלי אורך-מינימום ובלי ולידציה — כל מחרוזת

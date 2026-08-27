@@ -309,9 +309,18 @@ function SectionTitle({ children }) {
 
 // ‏`id` הוא רשות ומשמש **רק** ל-`aria-describedby`: משתמשת-מקלדת שמגיעה לפקד חסום שומעת
 // את התווית בלבד, והסיבה שכתובה לידה נשארת בלתי-נשמעת (התקדים המדוד: `ScopeChangeDialog`).
-function GateNote({ children, testId, id }) {
+// ‏`fullWidth` (ברירת-מחדל כבויה) מוסיף `w-full` — בדיוק כמו `.gate-note{width:100%}` במוקאפ
+// המאושר — שגורם לפתק לתפוס שורה שלמה משלו כשהוא יושב לצד כפתור בתוך שורת-flex עם flex-wrap.
+// בלעדיו, בתוך flex-row בלי wrap, הדפדפן מכווץ את הטקסט לעמודה צרה במקום לשבור שורה — בדיוק
+// התקלה שנמדדה בשורת-הכפתורים התחתונה של ClosingFooter. נשאר כבוי בברירת-מחדל כדי לא לשנות
+// אתרי-קריאה אחרים (למשל הפתק שליד "שמור ושלח") שהמוקאפ מצייר אותם כטקסט-שורה רגיל.
+function GateNote({ children, testId, id, fullWidth = false }) {
   return (
-    <span className="text-[11px] leading-relaxed text-amber-800" data-testid={testId} id={id}>
+    <span
+      className={cn('text-[11px] leading-relaxed text-amber-800', fullWidth && 'w-full')}
+      data-testid={testId}
+      id={id}
+    >
       {children}
     </span>
   )
@@ -1127,7 +1136,7 @@ function ClosingFooter({
   }
 
   return (
-    <DialogFooter className="flex-col items-start gap-2 sm:flex-row sm:items-center">
+    <DialogFooter className="flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center">
       {phase.showFeedbackBlock ? (
         <>
           <Button
@@ -1143,7 +1152,7 @@ function ClosingFooter({
             {busy === 'feedback' ? 'שומר...' : 'שמור סטטוס'}
           </Button>
           {feedbackGate ? (
-            <GateNote testId="closing-feedback-gate" id={FEEDBACK_GATE_ID}>
+            <GateNote testId="closing-feedback-gate" id={FEEDBACK_GATE_ID} fullWidth>
               {feedbackGate}
             </GateNote>
           ) : null}
@@ -1165,7 +1174,7 @@ function ClosingFooter({
             {busy === 'archive' ? 'מארכב...' : 'העבר לארכיון'}
           </Button>
           {gateNote ? (
-            <GateNote testId="closing-archive-gate" id={ARCHIVE_GATE_ID}>
+            <GateNote testId="closing-archive-gate" id={ARCHIVE_GATE_ID} fullWidth>
               {gateNote}
             </GateNote>
           ) : null}

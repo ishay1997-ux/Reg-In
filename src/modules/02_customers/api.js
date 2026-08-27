@@ -8,6 +8,10 @@ import { supabase } from '@/supabaseClient'
 // הוא מה שמניע כאן את זרימת-הכפילות §7.11 (‏23505 = הפרת-unique על ח"פ) ב-step 3.2.
 import { toError, assertRowsAffected } from '@/lib/apiError'
 import { DORMANT_THRESHOLD_PARAM_NAME } from '@/lib/customerProjects'
+// 🔁 אתר-הקריאה היחיד ל-`list_project_changes` במערכת חי במודול 6 (‏`src/modules/06_projects/CLAUDE.md`:
+// *"הקריאה היחידה: `rpc('list_project_changes')`"*). מודול 2 **צורך** אותו ולא משכפל אותו —
+// שכפול היה מייצר שתי גרסאות של שער-הכסף המסוכך (`money_visible`). ר' `attachProjectChanges`.
+import { getProjectChanges } from '@/modules/06_projects/api'
 
 // ---- קריאות (Reads) ----
 
@@ -42,29 +46,69 @@ export async function getCustomer(customerId) {
 // quotes!inner. `projects.quote_id` הוא nullable ⇒ !inner היה מעלים בשקט כל פרויקט בלי
 // הצעה. הצירוף להצעה נשאר, אבל כ-LEFT (ברירת-המחדל של Supabase כשאין !inner) — פרויקט בלי
 // הצעה נגיש מוצג עם `quotes: null` והמסך מציג '—' בעמודת הסכום, לא נעלם משורה.
-// עמודות מפורשות — לא `select('*')`: projects נושאת שדות-כספים (payment_date, invoice_sent,
-// feedback_*) שאין להם מקום בלשונית-הלקוח. quotes(...) נושא בדיוק את מה ש-deriveQuoteAmount
-// (src/lib/quotes.js, ה-SSOT) צורך; project.quotes יהיה null גם "אין הצעה" וגם "RLS חסם את
-// 'הצעות מחיר'" — projectAmount (src/lib/customerProjects.js) מטפל בשני המקרים כ-null ולא 0.
+// עמודות מפורשות — לא `select('*')`.
+//
+// 🔴 **ההערה כאן התהפכה במכוון ב-28/08/2026 (מודול 8 · צעד 4.2), ואינה עריכה שקטה.**
+// עד היום עמד כאן: *"projects נושאת שדות-כספים (payment_date, invoice_sent, feedback_*)
+// שאין להם מקום בלשונית-הלקוח"* — ה-select היה **צר בכוונה**, מטעמי צנעה. **מה שהשתנה:**
+// ‏ה8 (‏§7.79, הכרעת-קלוד-בהאצלה בהרשאת-ישי 26/08/2026) קובע שממוצע-המשוב של כרטיס-הלקוח
+// מחושב על **בעלי `feedback_status='completed'` בלבד** — כלומר האריח שהאפיון (‏C5 5.7.3 ·
+// ‏C6 §2.4.1 "מאלה שענו") דורש **אינו ניתן לחישוב** בלי שני שדות-המשוב האלה.
+// ⇒ **ההרחבה מכוונת ומצומצמת: `feedback_score` + `feedback_status` בלבד.**
+// 🚫 ‏`payment_date` · `invoice_sent` · `feedback_notes` · `negative_feedback_reason` **נשארו
+//    בחוץ** — לאף אחד מהם אין צרכן בלשונית-הלקוח, וההיגיון של ההערה המקורית עומד לגביהם
+//    במלואו. 🚫 וגם `project_finance` (רווח קפוא / דמי-ביטול) **אינה מצורפת כאן**: היא
+//    מגודרת ב'כספים' והרווח ירד מכרטיס-הלקוח בהחלטת-פרסונה (11/07) — יעדו מסך-הכספים ומ11.
+//
+// quotes(...) נושא בדיוק את מה ש-deriveQuoteAmount (src/lib/quotes.js, ה-SSOT) צורך;
+// project.quotes יהיה null גם "אין הצעה" וגם "RLS חסם את 'הצעות מחיר'" — projectAmount
+// (src/lib/customerProjects.js) מטפל בשני המקרים כ-null ולא 0.
 export async function getCustomerProjects(customerId) {
   const { data, error } = await supabase
     .from('projects')
     .select(
       'project_id, event_name, final_event_date, project_status, customer_id, quote_id, ' +
         'cancelled_at, cancel_type, cancelled_by, cancel_reason, ' +
+        'feedback_status, feedback_score, ' +
         'quotes(applied_customer_discount, manual_discount, vat_rate_snapshot, quote_services(qty, closing_unit_price))',
     )
     .eq('customer_id', customerId)
   if (error) throw toError(error, 'שגיאה בטעינת היסטוריית הפרויקטים.')
-  return data ?? []
+  return attachProjectChanges(data ?? [])
 }
 
-// בתפזורת עבור רשימת-הלקוחות (CustomersPage) — עמודות מזעריות לחישוב "רדומים" (A3) פר-לקוח,
-// בלי N+1 קריאות. אותה מדיניות-קריאה כמו getCustomerProjects (SELECT בלבד, מגודר 'פרויקטים').
+// 🆕 RC-6 (מ8 · צעד 4.2) — שינויי-התכולה של כל פרויקט, לעמודת "סכום".
+//
+// 🔴 **למה N קריאות ולא ג'וין אחד, ולמה זו "עבודה ולא תיקון" כפי שהחוב עצמו ניבא:**
+// ‏`project_changes` היא **deny-all מוחלט** (‏RLS פעיל, אפס policies) — `.from('project_changes')`
+// מחזירה `[]` **בלי שגיאה** לכל תפקיד כולל מנכ"ל, וצירוף PostgREST היה נותן בדיוק את
+// השקר הזה. הנתיב היחיד הוא ה-RPC `list_project_changes(p_project_id)`, שהוא **פר-פרויקט**
+// וממסך את שדות-הכסף למי שאין לו 'הצעות מחיר' (מסלול-§7.21 נשמר במסד, לא במסך).
+// הקריאות יוצאות **במקביל** ו-N הוא מספר הפרויקטים של לקוח **אחד** (בודדים) — לא כל המערכת.
+//
+// ⚠️ **כשל בקריאה אחת אינו מפיל את הלשונית ואינו מתחזה ל"אין שינויים":** הפרויקט מקבל
+// ‏`project_changes: null` = **לא ידוע**, ו-`projectAmount` מתרגם זאת ל-'—'. סכום-הצעה-בלבד
+// היה נראה תקין לחלוטין וזו בדיוק הסכנה. ‏🔁 קריאת ה-RPC עצמה אינה משוכפלת כאן —
+// ‏`getProjectChanges` של מודול 6 היא אתר-הקריאה היחיד במערכת (כלל 14).
+async function attachProjectChanges(rows) {
+  const results = await Promise.all(
+    rows.map((row) => getProjectChanges(row.project_id).catch(() => null)),
+  )
+  return rows.map((row, index) => ({ ...row, project_changes: results[index] }))
+}
+
+// בתפזורת עבור רשימת-הלקוחות (CustomersPage) — עמודות מזעריות לחישוב "רדומים" (A3) ולממוצע-
+// המשוב פר-לקוח, בלי N+1 קריאות. אותה מדיניות-קריאה כמו getCustomerProjects (SELECT בלבד,
+// מגודר 'פרויקטים').
+// 🆕 **הורחב ב-28/08/2026 (מ8 · צעד 4.2) בשני שדות בלבד** — `feedback_status`+`feedback_score`:
+// עמודת-הכוכבים ומסנן-"טעון בירור" ברשימה נשענים על **אותה** `deriveCustomerMetrics` שהכרטיס
+// קורא לה, ולכן הם צריכים בדיוק את אותם שני השדות. ‏🚫 שאר שדות-הכספים נשארו בחוץ (ר' ההערה
+// המורחבת שמעל `getCustomerProjects`). 🚫 **ואין כאן קריאת שינויי-תכולה** — הרשימה אינה מציגה
+// סכום פר-פרויקט, ו-N-קריאות-RPC על **כל** הפרויקטים במערכת היו מחיר בלי צרכן.
 export async function listProjectsForCustomerMetrics() {
   const { data, error } = await supabase
     .from('projects')
-    .select('customer_id, final_event_date, project_status')
+    .select('customer_id, final_event_date, project_status, feedback_status, feedback_score')
   if (error) throw toError(error, 'שגיאה בטעינת נתוני הפרויקטים.')
   return data ?? []
 }

@@ -14,6 +14,7 @@ import {
   buildProjectDetailsChangedPayload,
   resolveShiftContact,
   confirmUrlFor,
+  feedbackUrlFor,
   projectReportSubject,
   feedbackSurveySubject,
   buildProjectReportPayload,
@@ -48,6 +49,27 @@ describe('confirmUrlFor — הקישור האישי', () => {
 
   it('בלי טוקן אין קישור — עדיף בלי מייל מאשר מייל עם קישור מת', () => {
     expect(confirmUrlFor('https://reg-in.app', null)).toBe(null)
+  })
+})
+
+// 🔴 עוגן-האדווה של מודול 8 (①): מייל-הסקר של מ6 נושא מעכשיו קישור-טוקן לדף-המשוב שלנו
+// ולא את קישור-ה-Google-Forms הקבוע. שלוש הבדיקות כאן נועלות את המסלול — צורת-הקישור,
+// הסירוב בהיעדר טוקן, ומה שנוחת בפועל בגוף-המייל.
+describe('feedbackUrlFor — קישור-המשוב האישי (אדוות-מ8 ①)', () => {
+  it('הטוקן בנתיב `/feedback/`, לעולם לא ב-query — הוא מפתח-כתיבה למסד', () => {
+    expect(feedbackUrlFor('https://reg-in.app', 'tok-abc')).toBe(
+      'https://reg-in.app/feedback/tok-abc',
+    )
+    // בסיס עם לוכסן-סיום לא מייצר `//feedback` — אותה נורמליזציה כמו confirmUrlFor.
+    expect(feedbackUrlFor('https://reg-in.app/', 'tok-abc')).toBe(
+      'https://reg-in.app/feedback/tok-abc',
+    )
+  })
+
+  it('בלי טוקן (טביעה שנכשלה) אין קישור — ומיד אחר-כך אין מייל', () => {
+    expect(feedbackUrlFor('https://reg-in.app', null)).toBe(null)
+    expect(feedbackUrlFor('https://reg-in.app', '')).toBe(null)
+    expect(feedbackUrlFor('', 'tok-abc')).toBe(null)
   })
 })
 
@@ -455,28 +477,41 @@ describe('buildFeedbackSurveyPayload — התבנית הזרועה של מודו
 צוות REG-IN.`
   const contact = { contact_name: 'שרית מזרחי', email: 'sarit@hadera.test' }
 
-  it('שלושת ה-placeholders מתמלאים, הקישור מהפרמטר הזרוע, ואין מצורף', () => {
+  it('שלושת ה-placeholders מתמלאים, בגוף יושב **קישור-הטוקן** (ולא Google Forms), ואין מצורף', () => {
+    const surveyUrl = feedbackUrlFor('https://reg-in.app', 'tok-abc')
     const payload = buildFeedbackSurveyPayload({
       template: SURVEY_TEMPLATE,
-      surveyUrl: 'https://forms.gle/YFJobqmgpBCqf1x87',
+      surveyUrl,
       contact,
       project,
     })
     expect(payload).not.toBe(null)
-    expect(payload.body).toContain('https://forms.gle/YFJobqmgpBCqf1x87')
+    expect(payload.body).toContain('https://reg-in.app/feedback/tok-abc')
+    // 🔴 אדוות-מ8 ①: Google Forms יצא מהזרימה — לא רק שהטוקן נכנס, אלא שהישן לא נשאר.
+    expect(payload.body).not.toContain('forms.gle')
     expect(payload.body).toContain('שרית מזרחי')
     expect(payload.body).not.toMatch(/\[[^\]\n]+\]/)
     expect(payload.pdf_base64).toBe('')
   })
 
-  it('בלי קישור-סקר או בלי כתובת ⇒ null — לא יוצא מייל עם [לינק] גולמי', () => {
+  // ⚠️ `surveyUrl` ריק אינו מקרה-תיאורטי מאז מ8: זו בדיוק התוצאה של `feedbackUrlFor` כשטביעת
+  // הטוקן נכשלה — ולכן הבדיקה הזו היא השומר שמונע מייל עם `[לינק_לשאלון_שביעות_רצון]` גולמי.
+  it('בלי קישור-סקר (טוקן שלא נטבע) או בלי כתובת ⇒ null — לא יוצא מייל עם [לינק] גולמי', () => {
     expect(
       buildFeedbackSurveyPayload({ template: SURVEY_TEMPLATE, surveyUrl: '', contact, project }),
     ).toBe(null)
     expect(
       buildFeedbackSurveyPayload({
         template: SURVEY_TEMPLATE,
-        surveyUrl: 'https://forms.gle/x',
+        surveyUrl: null,
+        contact,
+        project,
+      }),
+    ).toBe(null)
+    expect(
+      buildFeedbackSurveyPayload({
+        template: SURVEY_TEMPLATE,
+        surveyUrl: 'https://reg-in.app/feedback/tok-abc',
         contact: { contact_name: 'א', email: '' },
         project,
       }),
