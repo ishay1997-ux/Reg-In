@@ -45,6 +45,24 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 27/08/2026 19:1X — the flaky CI test fixed, with proof it is a flake and proof the fix still bites
+
+- 🐞 **`ChecklistDialog.test.jsx` "שלושת האפקטים יחד" failed CI on the push to `dev`**, minutes after
+  the SAME code passed the pull-request run. 🔑 **Same SHA `7eba407`, one run failed and one
+  succeeded** — no code difference is possible, so this is a flake, proven rather than argued.
+  It had already failed once locally earlier today under CPU contention.
+- **Cause:** focus restoration happens in an effect **after** the re-sort (`ChecklistDialog.jsx`
+  `focusRef` effect), and the test asserted `document.activeElement` **synchronously**. Under load
+  the assertion ran before the effect committed, and `activeElement` was still Radix's dialog close
+  button. **Fix: the focus assertion now `waitFor`s, exactly like the row-order assertion two lines
+  above it.**
+- 🔴 **And it is not a softening — proved, not claimed:** disabling focus restoration in the
+  component made the test fail again, exactly one test and the right one; the component was then
+  restored byte-identical. A genuinely broken focus restore still fails, now by timeout.
+- **Why fix module 5's test at all, mid-m8:** a gate that goes red at random is worse than no gate —
+  it teaches everyone to ignore it, and there is a presentation tomorrow with another merge (`N1b`)
+  still to come.
+
 ### 27/08/2026 18:0X–19:0X — N1 applied and the client rewired; gate green at 1,454
 
 - ✅ **N1 additive half applied, client rewired, gate exit 0 at 1,454 tests** (up from 1,446).
