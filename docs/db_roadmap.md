@@ -458,9 +458,7 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
-- ⏳ 27/08/2026 — **module-8 migration F · WRITTEN, NOT APPLIED — typed-echo gate OPEN.**
-  `20260827155303_module8_public_feedback_rpc.sql`. **Check live:**
-  `select count(*) from pg_proc where proname='submit_feedback'` ⇒ **0 means it did not land**.
+- ✅ 27/08/2026 — **module-8 migration F APPLIED** (typed-echo: `module8_public_feedback_rpc`).
   **The only surface in the module an anonymous person touches**, so three rules that were not
   softened: **no policy for `anon` on any table** (the two functions are the only door) · the
   **not-found answer is byte-identical for a wrong, empty and dead token** — any difference is an
@@ -489,6 +487,29 @@ protection is false until it does.
   customer could submit **2 with no reason** and the archive would pass, closing the file **without
   the phone call ever happening**. The approved spec is explicit — *"שער-הארכוב ממשיך לחסום עד הזנת-
   סיבה"* / *"עד אז אין ארכוב"* (P2). The gate is now in. E2's migration was not edited (history).
+  **✅ Verified live in rolled-back transactions — 19 assertions across two probes, driven from the
+  attacker's seat as well as the customer's:**
+  · mint as **מנהלת פרויקטים** (the real caller) returns a 32-char token, and **calling it again
+    returns the same token** — get-or-create holds, so a re-sent mail never invalidates a live link.
+  · **As `anon`:** a valid token returns `{state: ok}` with event name and date · garbage, empty and
+    NULL tokens each return `{state: not_found}` — and **the three are byte-identical**, which was
+    asserted rather than eyeballed.
+  · **`anon` reading the tables directly gets 0 rows** — `projects` and `feedback_rpc_calls` both.
+    The functions really are the only door.
+  · score 6 ⇒ `invalid` · score 2 + notes ⇒ `ok` (notes trimmed) · **submitting again ⇒ `already`**
+    and the page then also reports `already` — the single-submission rule holds from both entries.
+  · 🔴 **The new archive gate proven end-to-end:** a customer submits **2 with no reason** through
+    the public page, the manager records payment, and **archive is BLOCKED** with the spoken message
+    naming the score. After she enters a reason it **passes**. And an **invented** reason string is
+    refused by the live CHECK — the five locked strings hold.
+  · 🔴 **Rate limit proven by a loop, not by reading the code: 20 calls ⇒ exactly 15 allowed, 5
+    blocked**, with the spoken Hebrew message.
+  **Rollback clean:** #12 back to `awaiting_invoice`/`sent`, no score, **no token**; 0 rows in
+  `feedback_rpc_calls` and `project_finance`.
+  **State after F:** 27 tables / 43 functions · deny-all-by-design tables are now four
+  (`feedback_rpc_calls` joins `login_attempts`, `login_rpc_calls`, `project_changes`) ·
+  **anon-callable functions: the four login/shift ones plus exactly `get_feedback_page` and
+  `submit_feedback`** — the +2 the step predicted, and nothing else.
 - ✅ 27/08/2026 — **module-8 E3 FIX-FORWARD APPLIED** (typed-echo:
   `module8_salary_report_temp_table_fix`).
   🐞 **A bug in E3 that MY OWN verification caught, minutes after E3 was applied.**

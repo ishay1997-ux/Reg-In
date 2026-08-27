@@ -42,7 +42,7 @@
 -- 🚫 **אין כאן סעיף "היסטוריה"/"יומן שינויים"** — הקובץ מתאר הווה בלבד. ציר השינויים חי
 --    ב-`supabase/migrations/` וב-`docs/db_roadmap.md`.
 --
--- מוסכמות: כל 26 הטבלאות ב-`public` עם RLS **מופעל** (נמדד 27/08/2026 אחרי מיגרציה D).
+-- מוסכמות: כל 27 הטבלאות ב-`public` עם RLS **מופעל** (נמדד 27/08/2026 אחרי מיגרציה F).
 -- כל 55 המדיניות (43 ב-public, 12 על `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`.
 -- 🔴 **PERMISSIVE = הן מתאחדות ב-OR.** שתי policies על אותה טבלה מרחיבות גישה, לא מצמצמות —
 --    ולכן policy חדשה "מגודרת היטב" אינה מגבילה אף אחד שכבר עובר דרך policy אחרת.
@@ -1604,7 +1604,7 @@ create policy hostess_bank_details_select_finance_module on hostess_bank_details
   );
 
 -- ============================================================
--- 24. פונקציות בסכמה public — 39 פונקציות
+-- 24. פונקציות בסכמה public — 43 פונקציות
 -- ============================================================
 -- 🚫 **הגופים אינם כאן במכוון** (ר' כותרת הקובץ). לכל פונקציה: חתימה · מצב אבטחה · search_path ·
 --    למי יש EXECUTE · ומצביע לקובץ המיגרציה שבו הגוף הנוכחי חי.
@@ -1770,6 +1770,19 @@ create policy hostess_bank_details_select_finance_module on hostess_bank_details
 -- finalize_salary_report(integer, text, text) returns jsonb  SD · plpgsql · [authenticated]
 --   הדוח נשמר גם כשהמייל נכשל (P4) — "נכשל" הוא מצב מוצג עם שליחה-חוזרת.
 --   → supabase/migrations/20260827152840_module8_salary_report_transaction.sql
+
+-- ── מודול 8 · הדף הציבורי (27/08/2026, F) ───────────────────────
+-- feedback_rate_limit() returns void                        SD · plpgsql · [service_role]
+--   15/IP/שעה, דפוס login_rpc_calls. fail-open כשאין כותרת-פרוקסי תקינה (מכוון).
+-- mint_feedback_token(integer) returns text                  SD · plpgsql · [authenticated]
+--   מגודרת 'פרויקטים' — הקורא הוא מסלול-המייל של מ6. get-or-create; מסרבת רק ל-finished.
+-- get_feedback_page(text) returns jsonb                      SD · plpgsql · [anon, authenticated]
+-- submit_feedback(text, integer, text) returns jsonb         SD · plpgsql · [anon, authenticated]
+--   🔴 שתי הפונקציות היחידות של מ8 שאנונימי קורא להן. תשובת not_found **זהה
+--      בייט-בבייט** לטוקן שגוי/ריק/מת — אומת. אין policy ל-anon על אף טבלה.
+--   → supabase/migrations/20260827155303_module8_public_feedback_rpc.sql
+--   ⚠️ ובאותה מיגרציה: `archive_project` קיבלה שער נוסף — ציון <3 בלי סיבה חוסם
+--      ארכוב (P2). הגוף הנוכחי שלה משם, לא מ-E2.
 
 -- ============================================================
 -- 25. עבודות מתוזמנות — cron.job (3 עבודות, כולן active)

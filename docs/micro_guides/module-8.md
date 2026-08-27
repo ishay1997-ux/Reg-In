@@ -12,8 +12,8 @@
 | **Branch** | `ishay/module-8-finance` — ✅ **CUT 27/08/2026 12:4X from fresh `origin/dev` (`585ad27`)**, at step 1.0. Preconditions verified the same turn: m5 IS merged (`git merge-base --is-ancestor origin/ishay/module-5-logistics origin/dev` ⇒ yes; `git log origin/dev..origin/ishay/module-5-logistics` ⇒ empty), and `origin/dev` NOW carries `docs/specs/module_08_finance/` (`git ls-tree origin/dev docs/specs/` ⇒ 04/05/06/**08**). Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ empty (fresh, not dead — iron rule 10's caveat). *(Was: "NOT YET CUT", 26/08.)* |
 | **Owner** | Ishay (sole developer) |
 | **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X** — step 1.0's 🤖 half done; standing at its 👤 checkpoint. **Zero migrations applied.** |
-| **Last updated** | `27/08/2026 15:4X` *(system clock)* |
-| **Active step** | **1.6 — Migration F: the public feedback RPC pair for `/feedback/:token` + rate limiting, NOT STARTED.** ‏1.0–1.5 **all ✅** — 1.5 landed as E1+E2+E3 plus a same-minute fix-forward. **Three of the four hand-computed anchors are now produced by the code itself:** 3,650.00 (profit) · 3,508.00 (cancellation fee) · 270.00 → 292.60 after G (salary line). 🔴 **C2 still owed after deploy — ה19 is NOT closed** (§8.4 · `db_roadmap` §9א, alongside the newly-registered N1/N2). 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
+| **Last updated** | `27/08/2026 16:0X` *(system clock)* |
+| **Active step** | **1.7 — Migration G, the LAST of phase 1: extend the merged m6 `cancel_project` to persist `released_from_status`, + the two param seeds. NOT STARTED.** ‏1.0–1.6 **all ✅**. 🔴 **G rewrites a live merged m6 function that production calls** — the live body gets pulled first and the diff shown to Ishay. After G the third hand anchor completes: the salary line moves **270.00 → 292.60**. 🔴 **C2 still owed after deploy — ה19 is NOT closed** (§8.4 · `db_roadmap` §9א, with N1/N2). 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
 | **Deadline** | conference **01/10** (target: 100%) · end 20/10. m8 is the last *process* module before reports — the conference's "closing the loop" story leans on it. |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -27,8 +27,8 @@
 | **1.3** | Migration C + same-step client rewire — `hostess_bank_details` split (ה19) | ✅ *(both halves; `drop column` deferred to C2 — §8.4)* |
 | **1.4** | Migration D — `email_log` CHECK +2 values + 'כספים' SELECT policy → **then** `send-email` deploy | ✅ *(both halves; deploy = v6)* |
 | **1.5** | Migration E — the finance RPC family (E1 SSOT+readers+m6 ripple · E2 7 write actions · E3 salary + fix-forward) | ✅ |
-| **1.6** | Migration F — public feedback RPC pair `/feedback/:token` + rate limit | 🔨 |
-| **1.7** | Migration G — `cancel_project` extension (live-body pull) + params seeds | ⬜ |
+| **1.6** | Migration F — public feedback RPC pair `/feedback/:token` + rate limit | ✅ |
+| **1.7** | Migration G — `cancel_project` extension (live-body pull) + params seeds | 🔨 |
 | **1.8** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | ⬜ |
 | **2.0** | Phase-2 door — ledger sweep | ⬜ |
 | **2.1** | `src/lib/projectFinance.js` — revenue/cost/profit/fee/deviation/overdue SSOT + tests vs hand anchors ⚠️ shared-surface | ⬜ |
@@ -1097,7 +1097,40 @@ shape byte-identical to expired · submit writes the three fields · anon `selec
 0 rows while the RPC answers (positive+negative pair) · rate-limit counter proven by loop ·
 advisors (+2 anon-fn WARNs expected — the /shift class).
 **מה ייחשב עובד** *(P2 card quoted)*: `"הלקוח פותח /feedback/:token — בלי התחברות … שולח פעם
-אחת"` — the DB half. **🌊 אדוות —** אין. **🗣️ אושר —**
+אחת"` — the DB half.
+
+**↳ as-built · APPLIED `27/08/2026 15:5X` — `20260827155303_module8_public_feedback_rpc`.**
+🔴 **T14 confirmed the hard way:** m4's `/shift/:token` has **no rate limiter to copy**, so the
+shape came from module 1's login counter — the only live one. **Builder's call the step left open:
+a SEPARATE counter table**, not a reuse of `login_rpc_calls`. Sharing it would have let a customer
+refreshing the feedback page **eat into the login-attempt budget for that IP** and the reverse;
+behind a shared office NAT that reads as "the system locked me out" with no connection to anything.
+
+**🔻🤖 Verify — 19 assertions in rolled-back transactions, driven from the attacker's seat too:**
+
+| Assertion | Measured |
+|---|---|
+| mint as מנהלת פרויקטים (the real caller) | 32-char token ✅ |
+| mint again | **same token** — get-or-create, so a re-sent mail never kills a live link ✅ |
+| anon + valid token | `{state: ok}` with event name and date ✅ |
+| anon + garbage / empty / NULL | each `{state: not_found}` — **and the three asserted byte-identical**, not eyeballed ✅ |
+| 🔴 anon reading tables directly | `projects` **0 rows** · `feedback_rpc_calls` **0 rows** — the functions are the only door ✅ |
+| score 6 / score 2+notes / submit again | `invalid` / `ok` (notes trimmed) / **`already`**, and the page then reports `already` too ✅ |
+| 🔴 **the new archive gate, end-to-end** | customer submits **2 with no reason** → manager records payment → **archive BLOCKED**, message names the score → she enters a reason → **passes**. An **invented** reason string is refused by the live CHECK ✅ |
+| 🔴 rate limit | **proven by a 20-call loop: exactly 15 allowed, 5 blocked**, spoken Hebrew message ✅ |
+| rollback | #12 back to `awaiting_invoice`/`sent`, no score, **no token**; 0 rows in both new-touched tables ✅ |
+| anon surface after F | **exactly `get_feedback_page` + `submit_feedback`** added to the four login/shift ones — the +2 predicted, nothing else ✅ |
+
+🔑 **A gap this step exposed in the PREVIOUS one, and the shape is worth keeping:** `archive_project`
+(E2) checked that feedback was *resolved* but not that a low score had a **reason**. It was
+unreachable until F existed — **the public page has no reason field at all**, because the reason is
+chosen by the manager after a phone call. The moment F shipped, a customer giving **2** would let the
+file close **without the phone call ever happening**, against `"עד אז אין ארכוב"` (P2). Fixed forward
+in F; E2's migration was not edited. ⚠️ **The lesson: a harmless-looking step can arm an older
+defect** — the gap existed for an hour and only became dangerous when its trigger was built.
+
+**🌊 אדוות —** `db_roadmap` §10 · `docs/schema.sql` · §1 header + step table. **No `🚧`.**
+**🗣️ אושר —** typed-echo `27/08/2026 15:5X`.
 
 **Step 1.7 · Migration G — `module8_cancel_project_released_status_and_seeds`**
 **Files:** one migration
