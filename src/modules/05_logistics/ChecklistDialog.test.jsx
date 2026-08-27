@@ -587,7 +587,17 @@ describe('ChecklistDialog — מסלול-הכתיבה', () => {
       'checklist-row-B-ECO-TAG-1',
     ])
     // …והמיקוד נשאר על הפקד שנלחץ, כי הוא העוגן הוויזואלי שלה וקורא-המסך זקוק לו.
-    expect(document.activeElement).toBe(screen.getByTestId('checklist-status-01WEB-1-ready'))
+    // 🐞 **`waitFor` ולא `expect` יבש — תוקן 27/08/2026 אחרי שתי נפילות באותו יום.**
+    // שחזור-המיקוד קורה ב-effect **אחרי** המיון-מחדש, ואילו ההשוואה הייתה סינכרונית ⇒
+    // תחת עומס-מעבד היא רצה לפני שה-effect התחייב, ו-`activeElement` עדיין היה
+    // כפתור-הסגירה של Radix (שמקבל מיקוד בפתיחת הדיאלוג).
+    // 🔑 **וההוכחה שזו שבריריות ולא רגרסיה: אותו SHA בדיוק (`7eba407`) נכשל בריצת-CI
+    // אחת ועבר בשנייה, דקות זו מזו.** בלי הפרש-קוד אפשרי.
+    // ⚠️ **וזה אינו ריכוך:** הטענה זהה — אותו אלמנט בדיוק — רק מותר לה להמתין
+    // ל-effect. שחזור-מיקוד שבאמת נשבר עדיין מפיל את הבדיקה ב-timeout.
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByTestId('checklist-status-01WEB-1-ready')),
+    )
     // ㉘ — תג-מצב-הפריט שבשורה התהפך לתווית החדשה (`LOGISTICS_STATUS_LABELS.ready`).
     expect(screen.getByTestId('checklist-item-status-01WEB-1')).toHaveTextContent('מוכן')
     // …והמדד שבכותרת נספר מחדש מאותה שורה שחזרה מה-RPC: 1 ⇒ 2 מתוך 4.
