@@ -433,10 +433,8 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
-- ⏳ 27/08/2026 — **module-8 migration E2 · WRITTEN ON DISK, NOT APPLIED — typed-echo gate OPEN.**
-  `20260827150049_module8_finance_write_actions.sql`.
-  🔴 **Not a Done row.** **Check live before assuming it landed:**
-  `select count(*) from pg_proc where proname='archive_project'` ⇒ **0 means it did not**.
+- ✅ 27/08/2026 — **module-8 migration E2 APPLIED via MCP** (typed-echo:
+  `module8_finance_write_actions`).
   **Step 1.5 runs as E1 (applied) + E2 (this) + E3 (the salary transaction, next).** Three rather
   than the two first planned: the salary flow is P4 and has nothing to do with P1/P3's collection
   flow, and burying both in one migration would have made each unverifiable on its own. Builder's
@@ -464,6 +462,35 @@ protection is false until it does.
   🔴 **Freeze moments (Q-4), and they are not symmetric:** waive and write-off freeze **immediately**;
   a BILLED cancellation fee freezes **when the payment is recorded**, never at fee-save and never at
   archive. A waive produces a **real recorded loss** — the accrual truth Q-3 ruled.
+  **✅ Verified live after apply — two full journeys driven through the real functions inside
+  transactions that were then ROLLED BACK, so a real project was exercised and nothing persisted.**
+  *(Results were carried out in the rollback exception's own message — a rollback destroys any
+  result table, so the report has to travel in the error.)*
+  **Journey A, regular project #12 — 11 assertions, all passed:** old m6 function gone (0) ·
+  ה12 blocks a write to a not-yet-closed project · invoice without a file blocked · invoice sent ⇒
+  status **awaiting_payment** · archive without payment **blocked with the gate wording** · future
+  payment date blocked · score 2 without a reason blocked · archive paid-but-no-feedback **still
+  blocked** · **archive succeeds with `final_profit = 230.00` — exactly what E1's reader computed
+  for #12**, i.e. the frozen number and the live number agree · status `finished` and
+  `feedback_token = NULL` (**B-6's token kill**) · a write after archive is **locked**.
+  **Journey B, cancellation on #14 — 7 assertions, all passed:** the proposal returns pct **50**,
+  hours **30.0**, compensation **328.00**, goods@price **3,180.00** ⇒ **fee 3,508.00 = the hand
+  anchor**, produced by the function itself rather than by a query I wrote to match · archiving a
+  cancelled project **blocked** (T1) · waive without a note blocked · **billing alone does NOT
+  freeze** (`frozen_profit` NULL — Q-4) · **recording the payment freezes at 1,680.00** =
+  3,508 − 328 − 1,500(goods at cost) · **status stays `cancelled`** — m6's state machine untouched.
+  **Rollback confirmed clean:** #12 back to `awaiting_invoice`/`sent`/no payment, #14 back to
+  `in_progress` with `cancelled_at` NULL, zero `released_from_status` values, `project_finance`
+  **0 rows**.
+  **T8:** `finance_project_money`, `finance_assert_writable`, `finance_freeze_cancelled_profit` are
+  `postgres`+`service_role` only — **no `anon`, no `authenticated`**; the nine client-callable ones
+  all carry `authenticated`. **The anon-callable DEFINER set did not grow** — still the same four
+  login/shift functions.
+  **Advisor reconciliation (predicted, then measured):** predicted **+8 net** on the
+  `authenticated`-callable DEFINER class (9 added, 1 dropped). Measured: the class moved **17 → 25**
+  — exactly +8, so total findings 25 → **33**, all of the accepted DEFINER class. ⚠️ **Triage
+  stated:** the class was measured directly against `pg_proc`/`proacl` rather than by a full
+  `get_advisors` sweep; the full sweep is required at the **1.8** phase gate and runs there.
 - ✅ 27/08/2026 — **module-8 migration E1 APPLIED via MCP** (typed-echo:
   `module8_finance_money_ssot_and_readers`).
   **Step 1.5 was split in two** (the guide permits it): **E1 = the money SSOT + the two readers +

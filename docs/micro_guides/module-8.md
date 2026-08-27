@@ -12,8 +12,8 @@
 | **Branch** | `ishay/module-8-finance` — ✅ **CUT 27/08/2026 12:4X from fresh `origin/dev` (`585ad27`)**, at step 1.0. Preconditions verified the same turn: m5 IS merged (`git merge-base --is-ancestor origin/ishay/module-5-logistics origin/dev` ⇒ yes; `git log origin/dev..origin/ishay/module-5-logistics` ⇒ empty), and `origin/dev` NOW carries `docs/specs/module_08_finance/` (`git ls-tree origin/dev docs/specs/` ⇒ 04/05/06/**08**). Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ empty (fresh, not dead — iron rule 10's caveat). *(Was: "NOT YET CUT", 26/08.)* |
 | **Owner** | Ishay (sole developer) |
 | **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X** — step 1.0's 🤖 half done; standing at its 👤 checkpoint. **Zero migrations applied.** |
-| **Last updated** | `27/08/2026 15:0X` *(system clock)* |
-| **Active step** | **1.5 · E2 — the five write actions + fee resolution + archive + the salary transaction, NOT STARTED.** ‏1.0–1.4 ✅ · **E1 ✅ applied**: the money SSOT (`finance_project_money`, internal, no anon/authenticated) and both gated readers, plus the F16 ripple into merged m6 SQL — **m6's own anchor #8 held at 5,355.00, digit-identical**. Profit formula proven against the hand anchor **before** any SQL was written (#13 ⇒ 3,650.00). Unit suite **1,446/56 exit 0**. 🔴 **C2 still owed after deploy — ה19 is NOT closed** (§8.4 · `db_roadmap` §9א). 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
+| **Last updated** | `27/08/2026 15:2X` *(system clock)* |
+| **Active step** | **1.5 · E3 — the salary transaction (`generate_salary_report` + `finalize_salary_report`), NOT STARTED.** ‏1.0–1.4 ✅ · **E1 ✅** (money SSOT + both readers + the F16 ripple; m6's anchor #8 held at 5,355.00) · **E2 ✅** (7 write actions + the drop; **two full journeys verified inside rolled-back transactions** — archive froze **230.00** matching the live reader, and the cancellation proposal produced **3,508.00**, the hand anchor). Two of the four hand-computed anchors are now proven **by the functions themselves**. 🔴 **C2 still owed after deploy — ה19 is NOT closed** (§8.4 · `db_roadmap` §9א). 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
 | **Deadline** | conference **01/10** (target: 100%) · end 20/10. m8 is the last *process* module before reports — the conference's "closing the loop" story leans on it. |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -26,7 +26,7 @@
 | **1.2** | Migration B — `salary_reports` document model + `salary_report_lines` + RLS | ✅ |
 | **1.3** | Migration C + same-step client rewire — `hostess_bank_details` split (ה19) | ✅ *(both halves; `drop column` deferred to C2 — §8.4)* |
 | **1.4** | Migration D — `email_log` CHECK +2 values + 'כספים' SELECT policy → **then** `send-email` deploy | ✅ *(both halves; deploy = v6)* |
-| **1.5** | Migration E — the finance RPC family | 🔨 *(E1 ✅ money SSOT + readers + m6 ripple · E2 pending: 5 write actions + archive + salary)* |
+| **1.5** | Migration E — the finance RPC family | 🔨 *(E1 ✅ SSOT+readers+m6 ripple · E2 ✅ 7 write actions · E3 pending: salary transaction)* |
 | **1.6** | Migration F — public feedback RPC pair `/feedback/:token` + rate limit | ⬜ |
 | **1.7** | Migration G — `cancel_project` extension (live-body pull) + params seeds | ⬜ |
 | **1.8** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | ⬜ |
@@ -990,6 +990,51 @@ says ₪ is stored while % is always derived. `payment_terms_days` comes back **
 **🌊 אדוות —** `db_roadmap` §10 · `docs/schema.sql` (3 new functions, count 26→29, **and the m6
 function's source pointer now names THIS migration with the reason**) · §1 header + step table.
 **No `🚧` created or consumed.** **🗣️ אושר —** typed-echo `27/08/2026 14:5X`.
+
+**↳ as-built · E2 APPLIED `27/08/2026 15:1X` — `20260827150049_module8_finance_write_actions`.**
+Seven functions + the explicit drop of m6's `set_project_finance_fields` (**0 call sites, measured**).
+**Split note:** step 1.5 runs as **E1 + E2 + E3** rather than the two first announced — the salary
+transaction is P4 and shares nothing with P1/P3's collection flow; one migration would have made
+neither half verifiable alone. The step's own text grants the builder that call.
+
+**🔻🤖 Verify — two complete journeys driven through the real functions, each inside a transaction
+that was then ROLLED BACK**, so real projects were exercised and **nothing persisted**. *(The report
+travels in the rollback exception's message: a rollback destroys any result table.)*
+
+| Journey A — regular project #12 | Result |
+|---|---|
+| old m6 function gone | **0** ✅ |
+| ה12 — write to a not-yet-closed project | blocked ✅ |
+| invoice without a file | blocked ✅ |
+| invoice sent | ⇒ **`awaiting_payment`** ✅ |
+| archive without payment | blocked, **with the gate's own wording** ✅ |
+| future payment date | blocked ✅ |
+| score 2 without a reason | blocked ✅ |
+| archive paid but no feedback | **still blocked** ✅ |
+| 🔴 **archive** | succeeds, **`final_profit = 230.00`** — **identical to what E1's reader computes for #12**, so the frozen number and the live number agree ✅ |
+| after archive | `finished` · **`feedback_token = NULL`** (B-6's token kill) ✅ |
+| write after archive | **locked** ✅ |
+
+| Journey B — cancellation on #14 | Result |
+|---|---|
+| 🔴 **fee proposal** | pct **50** · hours **30.0** · compensation **328.00** · goods@price **3,180.00** ⇒ **fee 3,508.00** — **the hand anchor, produced by the function itself**, not by a query written to match ✅ |
+| archive a cancelled project | blocked (T1) ✅ |
+| waive without a note | blocked ✅ |
+| **billing alone** | **does NOT freeze** — `frozen_profit` NULL (Q-4) ✅ |
+| **recording the payment** | **freezes at 1,680.00** = 3,508 − 328 − 1,500 (goods at cost) ✅ |
+| status afterwards | **stays `cancelled`** — m6's state machine untouched (T1) ✅ |
+
+**Rollback proven clean:** #12 back to `awaiting_invoice`/`sent`/no payment · #14 back to
+`in_progress`, `cancelled_at` NULL · zero `released_from_status` values · `project_finance` **0 rows**.
+**T8:** the three internal functions are `postgres`+`service_role` only — **no `anon`, no
+`authenticated`**; the nine client-callable ones all carry `authenticated`; **the anon-callable
+DEFINER set did not grow.**
+**Advisors — predicted then measured:** predicted **+8 net** on the `authenticated`-DEFINER class
+(9 added, 1 dropped); measured **17 → 25**, exactly +8 ⇒ total findings 25 → **33**, all the accepted
+class. ⚠️ Measured against `pg_proc`/`proacl` directly; the **full `get_advisors` sweep runs at the
+1.8 gate**, which requires it anyway.
+**🌊 אדוות —** `db_roadmap` §10 · `docs/schema.sql` · §1 header + step table. **🗣️ אושר —** typed-echo
+`27/08/2026 15:1X`.
 
 **Step 1.6 · Migration F — `module8_public_feedback_rpc`**
 **Files:** one migration
