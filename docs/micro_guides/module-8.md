@@ -1264,6 +1264,41 @@ it already names `תנאי_תשלום_ימים` default 30, exactly what G seede
 
 ### Phase 2 — Business logic
 
+> 🔑 **READ THIS BEFORE STEP 2.1 — the DB layer already exists, and phase 2 CONSUMES it.**
+> *(Moved here 27/08/2026 from the ⑥2 paste-block, per iron rule 15: knowledge still true in a
+> month belongs in the guide; only freshness stamps belong in a prompt. The block had grown to
+> ~85 lines against a house pattern of 21–25 — and module 4's own ⑥2 records that rules parked in
+> a paste-block **contradicted the skill within nine hours**. Ishay caught the same drift here.)*
+>
+> **🔴 Do not re-derive the money formulas in JavaScript.** `finance_project_money` is the single
+> calculator, and it is **internal** (`service_role` only) precisely so no screen can bypass it.
+> Two screens computing their own profit for the same project is the failure it exists to prevent
+> (F16/R1-4). Phase 2's job is to **call, shape and test** — not to reimplement.
+>
+> **Client-callable (14):** `get_finance_overview` · `get_project_finance_detail` ·
+> `finance_cancellation_fee_proposal` · `record_invoice_sent` · `record_payment` · `record_feedback` ·
+> `record_write_off` · `resolve_cancellation_fee` · `archive_project` · `generate_salary_report` ·
+> `finalize_salary_report` · `mint_feedback_token` · `get_feedback_page` · `submit_feedback`.
+> **Internal — never from the client (4):** `finance_project_money` · `finance_assert_writable` ·
+> `finance_freeze_cancelled_profit` · `feedback_rate_limit`.
+> *(Names read from `pg_proc` on 27/08/2026, not from memory. **Return shapes live in the E1/E2/E3/F
+> migration headers** — read them there; this guide deliberately does not copy them, because a
+> copied contract goes stale and its reader never knows.)*
+>
+> **🔑 Three of the four hand anchors are already produced by the database itself** (verified
+> 27/08): profit #13 **3,650.00** · cancellation fee #14 **3,508.00** · Efrat's salary line
+> **292.60**. ⇒ **If your JS disagrees with them, the JS is wrong** — they are no longer only
+> paper numbers. *(The fourth, the 69% display, is derived in the UI and lands in phase 3.)*
+>
+> ⚠️ **`deriveProfitability` (m3's "רווח הצעה") is a DIFFERENT entity — do not import, do not
+> merge** (R1-4).
+>
+> 🔴 **And the trap that will bite a verification query, not just production code:** the finance
+> manager is RLS-blocked on 'לוגיסטיקה' and 'דיילות', and a blocked read returns
+> `{data: null, error: null}` — **"no permission" is byte-identical to "no rows"**. Measured
+> 27/08: the same query returned **1** as `postgres` and **0** impersonating her. It lies in the
+> reassuring direction, so an empty result is a reason to suspect RLS before suspecting the UI.
+
 **Step 2.0 · 🔻🤖 Phase door** — sweep §3.4/§3.5 items anchored here (N-1 subjects needed by 2.3);
 re-read the return-shape contracts from 1.5's migration headers.
 

@@ -47,6 +47,33 @@ consistent with this section's own framing that the folder is the record). `roun
 touches module-3-owned objects (`product_costs`) but is a cross-module hardening pass, not
 `module3_`-named — tracked separately, not folded into the 10.
 
+**↳ Re-measured live 27/08/2026 19:5X, at Ishay's ask ("this should be one-to-one against the real
+database, right?") — and the answer is yes, with the arithmetic closing exactly:**
+**65 files on disk · 64 rows in `schema_migrations`.** The gap is fully explained, and every term
+was measured rather than recalled:
+`65 − 3 unregistered-by-design + 2 extra round-G rows = 64`. **Exact.**
+· the **3** are the same ones §0.0 has always named: `baseline_schema` (local-only by design) ·
+  `module2_customer_contacts` · `module3_quotes_structure_and_constraints` — **the last two are
+  live in the DB**, applied out-of-band during the 23/07 MCP outage.
+· the **+2** are round G's second and third rows (`..._fix_forward_remaining_cost_readers`,
+  `..._fix_forward_approve_rpc_cost_source`), which share the one consolidated file — the file's own
+  header names all three, and the 31/07 entry below tells the full story.
+· the filename-vs-version drift continues as ruled: every m8 migration is registered under an
+  `apply_migration`-stamped UTC version, never its filename prefix.
+⇒ **Nothing to delete and nothing to correct in the folder.** The only thing that was stale here
+was this section's own counts (22/21, from 01/08).
+
+🔑 **AND A STRONGER CHECK THAN COUNTS, run the same turn and worth reusing — `docs/schema.sql` was
+proved IDENTICAL to the live catalog, not merely equal in size.** Both sides were reduced to a
+sorted list and fingerprinted (`LC_ALL=C sort | md5sum` on the file side, `md5(string_agg(… order by
+… collate "C"))` on the DB side). **All four hashes matched:**
+`columns 5e279fb8ed6a86ff8a22aeb77a05f916` (261) · `tables 27a0b1db0be14c6ff6a2028585290d49` (28) ·
+`functions afa68fd97ffba7a7992d7d438787df0a` (43) · `policies 8fb61bc54d0edc035544cce5f16648fb` (45).
+⚠️ **Why this beats counting, and it is not pedantry:** 261 documented against 261 live is still true
+when one column is missing and a different one is invented. **A matching md5 says it is the same set,
+name for name.** The `collate "C"` on the DB side and `LC_ALL=C` on the file side are load-bearing —
+without them the two sides sort differently and the hashes disagree on identical data.
+
 **Consequence:** `supabase db push` would try to re-run already-applied migrations, and the two
 unregistered ones are **not idempotent** (`create table` · `drop constraint` · `add constraint`
 without `if not exists`) — so it halts on `customer_contacts`. **There is no automatic way to rebuild
