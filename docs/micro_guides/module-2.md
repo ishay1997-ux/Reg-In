@@ -488,6 +488,12 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
   `customers.js` · `customerProjects.js` · `02_customers/api.js` · `CustomersPage.jsx` ·
   `CustomerDetailsPage.jsx`. **Not yet committed and not yet regression-verified**; m2's own suites
   are re-run at the gate, and a weakened m2 test counts as a regression, not as an accommodation.
+  📌 **And one m2-relevant consequence of a ruling made in m8 the same night** *(the survey ruling,
+  `module-8.md` §10, `28/08 01:1X`)*: the customer-satisfaction average this ripple lights up is fed
+  by a **single** 1–5 score per project, and that will not change — the four-question Google Form was
+  ruled out for good. ⇒ **§1's satisfaction filter has exactly one number to sort on**, and any later
+  wish for per-dimension customer filtering would need a schema change in m8, not a screen change
+  here. Recorded so a future m2 session does not plan around a richer score that is not coming.
 - 🚧 מ6 — **12/08/2026 — the M6 half of the two deferred derived customer-list filters had no live token
   in this guide, only a trailing parenthetical.** §1's capability table carries the M8 half as a real row
   (*"Satisfaction stars in list + satisfaction filter — 🚧 מ8 · present-but-inert"*), but its twin —

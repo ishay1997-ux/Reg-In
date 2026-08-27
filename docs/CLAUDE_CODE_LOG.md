@@ -45,6 +45,45 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 28/08/2026 01:1X — the survey ruling: kept the decision, threw away its reason
+
+- ✅ **RULED under Ishay's explicit delegation** (*"תציג את האפשרויות ותחליט בעצמך עם סיבה… תנסה
+  להקל עלי ולא להוסיף לי עבודה"*), with the condition that mattered: *"כל עוד באמת ביררת ושקלת
+  אפשרויות"*. **The one-question feedback page stays. The justification originally written for it
+  was wrong and has been struck.**
+- 🔴 **The research refuted our own argument — the most valuable thing it did.** "Short surveys get
+  materially better response rates" **does not hold at this magnitude**: Sandelin 2022 (SOM
+  Institute, U. Gothenburg — full PDF read) measured **205 vs 149 questions** ⇒ a **2.7-point** gap
+  and **no effect at all among web respondents**, with no data-quality loss. Rolstad 2011's
+  meta-analysis: heterogeneous, decide **on content not length**. Cochrane MR000008: direction holds,
+  **I²≈91%**. The circulating 83%↔42% figures are survey-vendor marketing, and two major vendors
+  disagree by **37 points**.
+- 🟢 **What the decision now rests on, and it is internal and checkable:** the old path already threw
+  away what four questions bought — the customer filled four ratings and **a human read them and
+  typed ONE number in**. Option A paid a long form's whole price (external tool · customer burden ·
+  **a manual transcription step between the event and its financial closing**) and banked none of it.
+- 🔑 **The steelman's real objection was already answered by the system, and nobody had noticed.**
+  "A bare 3 does not say what broke" — but a score <3 forces a phone clarification and the manager
+  picks from **five structured reasons enforced by a live DB CHECK** (verified 28/08). **The middle
+  pattern the research recommends — one score plus diagnostic tags on low scores — already exists
+  here**, with the tag chosen by the manager rather than the customer. A customer-facing picker
+  would have duplicated it. *(This is the second time tonight that reading the live DB answered a
+  design question that reading documents could not.)*
+- 📌 **A negative finding worth more than most positive ones:** **no industry body publishes any
+  standard for client-side post-event feedback** (EIC · PCMA · MPI · IAEE · ASAE · ICCA all
+  searched). The EIC's canonical **APEX Post-Event Report contains zero satisfaction fields** and
+  prescribes a **face-to-face debrief** instead. And there is **no academic literature on
+  agency→corporate-client event surveys** — it is all attendee-side. ⇒ there is no "industry
+  standard" to cite, and the conference answer says so honestly.
+- 📝 **Write-backs, same session:** the unsourced clause struck in `processes-approved.md` with a
+  dated ✏️ note · the real sources added to `world-sources.md` — **the very file the dead citation
+  pointed at** · the negative finding recorded in its §ה · the ruling in `module-8.md` §10.
+- ✅ **Ishay confirmed the send-ownership independently** (*"השאלון נשלח בסגירה התפעולית במודול 6 על
+  ידי מנהלת הפרויקטים"*) — and the code had already proved it the hard way: minting a feedback token
+  as `postgres` was **refused** with *"אין לך הרשאה … במודול פרויקטים"*, and only succeeded when
+  impersonating the projects manager. **The permission sits with 'פרויקטים', not 'כספים'** — m8
+  receives the score and sends nothing, exactly as §7.39/㉜ rule.
+
 ### 28/08/2026 00:4X–01:0X — both fix migrations applied; phase 4 in flight; a citation that did not resolve
 
 - ✅ **H1 + H2 APPLIED, after Ishay typed both migration names** — the typed-echo gate, not a spoken
