@@ -25,7 +25,7 @@
 ## Current State (snapshot — rewritten, not appended)
 <!-- target ~15 lines · no internal dates (F4) · over budget? compress / move to journal -->
 
-**Where we stand:** Modules **1**, **2**, **3**, **4** and **6** are closed and merged to `dev` (3/4/6 also live on `main`). **Module 5 (logistics): built in full, closing audit COMPLETE, verdict [YES] — awaiting the typed DoD echo, then commit → PR → merge** (branch `ishay/module-5-logistics`; the merge itself is Ishay's, executed via his real Chrome on his explicit ask — the PR #62 precedent). Full battery green: **gate exit 0 · 1,440 unit / 56 files · e2e 143/0/6 · smoke 0.** The audit's resume contract + all findings: `docs/micro_guides/close-findings-module-5.md` (archived at the YES-finalization). The as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log). Approved spec set: `docs/specs/module_05_logistics/` (42 rulings ①–㊷ in `processes-approved.md`); mockups appearance-final; `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8: Discovery complete + blueprint APPROVED** (`docs/micro_guides/module-8.md`); its build opens only after the m5 merge via the rewritten ⑥2 — the guide's own step 1.0 verifies the merge and cuts `ishay/module-8-finance`. 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
+**Where we stand:** Modules **1**, **2**, **3**, **4**, **5** and **6** are closed and merged to `dev`; `dev` has been promoted to `main` and tagged `milestone-2.5`, so 1–6 are all live. The m5 as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log); its spec set `docs/specs/module_05_logistics/` (42 rulings ①–㊷); `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8 (finance) is the ACTIVE build** — branch `ishay/module-8-finance`, cut from fresh `dev`. Step **1.0 (Phase-1 door) is ✅ closed**: all 8 live re-measurements held with zero drift, MCP verified live, baseline **1,440 unit / 56 files exit 0**, `E2E_FINANCE_*` confirmed present. Standing at **step 1.1 — migration A written on disk and awaiting Ishay's typed-echo; NOTHING applied to the live project yet.** The plan: `docs/micro_guides/module-8.md`; the approved spec: `docs/specs/module_08_finance/` (its `spec.md §①` is the binding reading list, and the four hand-computed acceptance anchors in `§③3` are never recomputed from code). 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
 Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-encode in QuotesPage · Select-uncontrolled in QuoteLineEditor — §6 line `🚧 מ10 ← מ3`): touching src after the certified regression would have voided the verdict's identity.
 `docs/schema.sql` measure command: `grep -c '^create table' docs/schema.sql` (23 at the last audit).
 
@@ -44,6 +44,63 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 ---
 
 ## Session Log (newest first)
+
+### 27/08/2026 12:39–13:1X — MODULE 8 BUILD OPENED: Phase-1 door closed, migration A applied
+
+- **Step 1.0 (👤 phase door) ✅.** Branch `ishay/module-8-finance` cut from fresh `origin/dev`
+  (`585ad27`) after verifying m5 really merged. **All 8 live re-measurements held — zero drift
+  since the 26/08 blueprint**, so no pre-emptive guide rewrite was needed. Baseline **1,440 unit /
+  56 files exit 0**. MCP verified live (T11 closed — it had been unauthenticated at blueprint time,
+  which is exactly why every §2.9 claim carried a 26/08 date and needed re-measuring).
+- 🔴 **A risk the blueprint never carried, raised at the door: the 28/08 interim presentation is
+  TOMORROW**, and Phase 1 drops 7 migrations on the live project — four of them touching merged,
+  demoed code. Recommended the safe split (only the additive A+B today); **Ishay ruled
+  `הכל היום, כרגיל`** and that stands. Mitigation actually added: a reported regression after every
+  step that touches merged code, no silent progression past a red one. He also picked **`חסכוני`**
+  (one sequential session, no agent army) for Phase 1 — matching the guide's own recommendation,
+  since typed-echo gates serialize the work anyway.
+- **Migration A applied** (`20260827125155_module8_finance_tables_and_columns`), typed-echo
+  received. `project_finance` child table + `projects.invoice_sent_at`/`feedback_token` +
+  `assignments.released_from_status` + the C-1 index + the ה30 `quote_services` tightening.
+  Every assertion measured impersonated with a positive control first; advisors 26 = baseline;
+  post-apply suite 1,440/56 exit 0, unchanged.
+- 🔑 **Two guide facts were WRONG and only measurement caught them — both are the "a written rule
+  is not a working rule" species.** ① 🛑 **T1 named the wrong mechanism**: it said a CHECK blocks
+  `cancelled → finished`, but the live `projects_closed_needs_report` body never mentions
+  `cancelled` — it requires `summary_report_url IS NOT NULL` for three statuses. Same conclusion,
+  different mechanism, and it changes step 1.5: `archive_project` must assert that precondition
+  itself or a legitimate archive dies on a raw CHECK instead of the Hebrew `P0001` contract.
+  ② **§2.7 claimed `E2E_FINANCE_*` was "not configured"** — a 29/07 fact carried forward unverified
+  into a 26/08 guide; the pair exists, and a 👤 question to Ishay would have been raised for nothing.
+- ⚠️ **Operational lesson worth keeping: a fact inherited from another document ages silently, and
+  the guide gives it the same authority as a fact it measured itself.** Both defects above were
+  inherited, not invented — one from a 5-week-old micro-guide, one from a paraphrase of a
+  constraint nobody re-read. **The cheap defense is the one that worked here: the phase door's
+  re-measurement list.** Its value is not confirming what held (all 8 did) — it is that running it
+  at all is what put eyes on the two that had not.
+- Found while cross-checking `schema.sql` against the catalog: its §24 heading said **"25
+  functions" while listing 26** — stale before this session, corrected along with the header's
+  table/policy counts (24 / 38 public + 12 storage).
+- **Deferred with Ishay's approval ("לתקן, אבל לא עכשיו"):** `micro_guides/module-5.md`'s **Active
+  step** and **Branch** rows still read "pending typed-echo" / "NOT merged" while its own Status row
+  says MERGED. Parked as an open item in `STATUS.md`.
+
+### 27/08/2026 12:2X–12:3X — PRODUCTION PROMOTED: dev → main (PR #66), tagged `milestone-2.5`; the #63 divergence root-fixed
+
+- **Ishay's word ("מעולה מאשר למזג") executed:** PR #66 merged after its CI went green on the
+  reconciled dev head; verified with fresh git evidence — `dev` is an ancestor of `main`, the
+  verdict commit `3822a47` is in `main`, main head = `6a387f5`; live site returns HTTP 200.
+  **Tagged `milestone-2.5`** (joins milestone-1/-2; the tag belongs to the version presented —
+  roadmap §4's M2.5 row, satisfied a day early).
+- 🔴 **Root cause found and fixed en route:** the first #66 merge attempt failed — **PR #63 (the
+  #62 write-back) was merged to `main` only and never returned to `dev`**, so main carried 2
+  commits dev lacked and every future promotion would conflict. Reconciled via a dedicated branch
+  (PR #67, `8e63da9`): main merged back into dev, STATUS conflict resolved with dev's version
+  after VERIFYING #63's sole content (one 21/08 banner entry) already exists verbatim in dev's
+  chain — zero information loss. **Lesson for every future main-targeted flip: it must land on
+  dev too, or the next promotion pays for it.**
+- Three merged=dead branches await Ishay's delete click: `ishay/module-5-logistics` ·
+  `ishay/post-merge-m5-flip` · `ishay/reconcile-main-into-dev`.
 
 ### 27/08/2026 01:0X–01:2X — MODULE 5 MERGED to dev (PR #64) + post-merge flip + three debts paid
 

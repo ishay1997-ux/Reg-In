@@ -9,11 +9,11 @@
 | | |
 |---|---|
 | **Module** | 8 — כספים וסגירת אירוע (Finance & event closing) |
-| **Branch** | `ishay/module-8-finance` — **NOT YET CUT** (verified 26/08/2026: `git branch -r --list "*module-8*"` → empty). 🔴 **`origin/dev` does NOT contain `docs/specs/module_08_finance/`** (measured: `git ls-tree origin/dev docs/specs/` → only modules 04/06) — the whole m8 Discovery lives on `ishay/module-5-logistics`. ⇒ **the branch is cut from fresh `dev` at step 1.0, AFTER the m5 PR merges** (which carries the spec into `dev`). Cutting earlier produces a branch without its own spec. |
+| **Branch** | `ishay/module-8-finance` — ✅ **CUT 27/08/2026 12:4X from fresh `origin/dev` (`585ad27`)**, at step 1.0. Preconditions verified the same turn: m5 IS merged (`git merge-base --is-ancestor origin/ishay/module-5-logistics origin/dev` ⇒ yes; `git log origin/dev..origin/ishay/module-5-logistics` ⇒ empty), and `origin/dev` NOW carries `docs/specs/module_08_finance/` (`git ls-tree origin/dev docs/specs/` ⇒ 04/05/06/**08**). Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ empty (fresh, not dead — iron rule 10's caveat). *(Was: "NOT YET CUT", 26/08.)* |
 | **Owner** | Ishay (sole developer) |
-| **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. **Build not started.** |
-| **Last updated** | `26/08/2026 22:43` *(system clock)* |
-| **Active step** | **1.0 — Phase-1 door, in a FRESH session ("תמשיך לבנות"), ONLY after the m5 merge** (step 1.0 itself verifies the merge and cuts the branch) |
+| **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X** — step 1.0's 🤖 half done; standing at its 👤 checkpoint. **Zero migrations applied.** |
+| **Last updated** | `27/08/2026 13:0X` *(system clock)* |
+| **Active step** | **1.2 — Migration B (`salary_reports` document model + `salary_report_lines` + RLS), NOT STARTED.** ‏1.0 ✅ and **1.1 ✅ APPLIED** (`20260827125155_module8_finance_tables_and_columns`) — every assertion measured, advisors 26 = baseline, unit suite **1,440/56 exit 0** identical to the pre-phase baseline, `schema.sql` refreshed and cross-checked against the live catalog. 🔴 **Ishay ruled `הכל היום, כרגיל`** on the 28/08-presentation risk (§10) ⇒ Phase 1 runs complete, in plan order, with a reported regression after each step that touches merged code. |
 | **Deadline** | conference **01/10** (target: 100%) · end 20/10. m8 is the last *process* module before reports — the conference's "closing the loop" story leans on it. |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -21,9 +21,9 @@
 
 | Step | Title | Status |
 |---|---|:--:|
-| **1.0** | 🔻👤 Phase-1 door — branch cut · ledger sweep · live re-measurement · baseline · **Ishay checkpoint** | ⬜ |
-| **1.1** | Migration A — `project_finance` child + `projects` finance columns + `assignments.released_from_status` + C-1 index | ⬜ |
-| **1.2** | Migration B — `salary_reports` document model + `salary_report_lines` + RLS | ⬜ |
+| **1.0** | 🔻👤 Phase-1 door — branch cut · ledger sweep · live re-measurement · baseline · **Ishay checkpoint** | ✅ |
+| **1.1** | Migration A — `project_finance` child + `projects` finance columns + `assignments.released_from_status` + C-1 index | ✅ |
+| **1.2** | Migration B — `salary_reports` document model + `salary_report_lines` + RLS | 🔨 |
 | **1.3** | Migration C + same-step client rewire — `hostess_bank_details` split (ה19) | ⬜ |
 | **1.4** | Migration D — `email_log` CHECK +2 values + 'כספים' SELECT policy → **then** `send-email` deploy | ⬜ |
 | **1.5** | Migration E — the finance RPC family (4 actions + archive freeze + fee resolution + DEFINER readers) | ⬜ |
@@ -165,10 +165,14 @@ Copy m5 §2.7's recipe wholesale; the m8-specific facts:
   `rolbypassrls` — without the role switch every negative control silently passes).
 - **Positive control first:** a known-edit role must return ≥1 row before any 0-row result is
   read as "RLS works".
-- UI-login creds: `E2E_<ROLE>_*` pairs in `.env.local`. 🔴 **Count which pairs actually exist at
-  step 1.0 — do not assume.** Historical fact: `E2E_FINANCE_*` was "optional, not configured" as of
-  29/07 (module-1.md §9); m8's E2E NEEDS the finance identity — if the pair is absent, step 1.0
-  raises it to Ishay (creating a login is his; iron rule prohibited-actions).
+- UI-login creds: `E2E_<ROLE>_*` pairs in `.env.local`. ✅ **Counted at step 1.0, 27/08/2026: five
+  pairs exist — CEO · FINANCE · PROJECTS · RECRUIT · STAFF. `E2E_FINANCE_*` IS configured**, so the
+  door's "raise it to Ishay" branch did not fire. ⚠️ **The 29/07 note that it was "optional, not
+  configured" (module-1.md §9) was already stale when this guide was written** — it was carried
+  forward unverified; the correction is measured, not inherited. 🔴 **Still unproven: that the
+  credential actually LOGS IN** — presence is not a working identity, and the first thing that
+  exercises it is 4.4/5.1. If it fails there, creating/repairing a login is Ishay's (iron rule,
+  prohibited-actions).
 - Resolve `role→email→user_id` LIVE from the seed at test time, never hard-code.
 
 ### 2.8 Product source of truth
@@ -541,7 +545,7 @@ conflict-question rule.
 >
 > | # | The trap | Owning step |
 > |---|---|---|
-> | T1 | `projects_closed_needs_report` CHECK **physically blocks** cancelled→`finished` ⇒ cancelled-profit freezes at FEE RESOLUTION, never via archive | 1.5 |
+> | T1 | `projects_closed_needs_report` CHECK **physically blocks** cancelled→`finished` ⇒ cancelled-profit freezes at FEE RESOLUTION, never via archive. 🔴 **↳ Wording corrected 27/08/2026 at step 1.0 — the live constraint does not mention `cancelled` at all.** Measured body: `CHECK ((project_status <> ALL (ARRAY['awaiting_invoice','awaiting_payment','finished'])) OR (summary_report_url IS NOT NULL))`. **What it really enforces: you cannot enter ANY of those three statuses while `summary_report_url IS NULL`.** The conclusion is unchanged — a cancelled project never went through the operational close, so it has no summary URL and `finished` is unreachable — but the **mechanism** matters for 1.5: `archive_project`'s real precondition is **`summary_report_url IS NOT NULL`**, so it must assert that itself and refuse with the Hebrew `P0001` contract, or a legitimate archive fails with a raw CHECK error instead of a spoken message. Verified against the live cast the same turn: **#12 (`awaiting_invoice`) has the URL ⇒ m6's operational close does set it**; #13/#14/#15 do not yet | 1.5 |
 > | T2 | §7.50's lock trigger raises on ANY quotes/quote_services row UPDATE ⇒ m8 only READS quote rows; ה30 is a policy (DDL), not a row write | 1.1 |
 > | T3 | `hostesses.bank_*` are NOT NULL ⇒ the split migration must copy-then-drop in ONE migration, and the client rewire lands in the SAME step, or every new-hostess save breaks in the window | 1.3 |
 > | T4 | `salary_reports.sent_date`/`report_file_url` are NOT NULL today ⇒ relax to nullable FIRST (same migration B) or the generation transaction cannot insert before the file exists | 1.2 |
@@ -551,7 +555,7 @@ conflict-question rule.
 > | T8 | new-function grants: `revoke … from public` alone leaves `anon` EXECUTE ⇒ `from public, anon, authenticated` + verify `proacl` | 1.5 · 1.6 |
 > | T9 | `moddatetime` lives in `extensions` schema; `public.moddatetime` is broken SQL | 1.1 · 1.2 |
 > | T10 | `recompute_project_status` measured NOT to fight `awaiting_*`→`finished` writes (R4-F15) — trust the measurement, but the regression test that proves salary writes move no status is mandatory | 4.4 |
-> | T11 | MCP was unauthenticated at blueprint time ⇒ 1.0 re-verifies MCP live before anything |
+> | T11 | MCP was unauthenticated at blueprint time ⇒ 1.0 re-verifies MCP live before anything. ✅ **CLOSED 27/08/2026 12:4X** — MCP answered live (PostgreSQL 17.6); all of §2.9's dated-26/08 claims were re-measured at 1.0 and **every one held** | 1.0 ✅ |
 > | T12 | `feedback_status` transition to `completed` must also work from `no_response` (the dorse rule) — the CHECK allows it; the RPC logic must not block it | 1.5 · 1.6 |
 > | T13 | Change-list rows 5+13 (`m8-review-infra-ripples.md`) predate the same-day product rulings — the ruled shapes (child table · Q-3/Q-4 freeze) override them (B-12); do not "restore" the projects-columns version | 1.1 · 1.5 |
 > | T14 | **The `/shift/:token` "precedent" has NO rate limiter** (measured — §6's `🚧 מ12 ← מ4` row records it as a known gap). The only live rate-limit precedent is module-1's `login_rpc_calls` counter (15/IP/hour). The spec's pointer means "the §7.45 LESSON", not "copy the shift RPC" | 1.6 |
@@ -582,8 +586,51 @@ record the unit baseline count.
 ruling — he picks efficient vs economical, never a default) · ③ sweep §3.4/§3.5/§3.6 for items
 anchored to Phase 1 and settle any still-open one with him (Q-3/Q-4/Q-5 and N-4 are anchored HERE —
 normally ruled at blueprint approval; re-ask only if still open) — §9(h).
-**🔻👤 Verify:** the measurements reported + Ishay's checkpoint answered. **🌊 אדוות —** ·
-**🗣️ אושר —**
+**🔻👤 Verify:** the measurements reported + Ishay's checkpoint answered.
+
+**↳ as-built · the 🤖 half, run `27/08/2026 12:39–12:4X` (every row a same-turn measurement):**
+
+| # | Checked | Result |
+|---|---|---|
+| — | m5 merged | ✅ `merge-base --is-ancestor origin/ishay/module-5-logistics origin/dev` ⇒ yes; discriminator `git log origin/dev..origin/ishay/module-5-logistics` ⇒ **empty** |
+| — | branch cut | ✅ `ishay/module-8-finance` from `origin/dev` = `585ad27`; `git log origin/dev..HEAD` ⇒ empty (**fresh**, not dead) |
+| — | spec on branch | ✅ `docs/specs/module_08_finance/spec.md` + `docs/micro_guides/module-8.md` both present |
+| T11 | Supabase MCP live | ✅ `select current_database(), version()` ⇒ `postgres`, **PostgreSQL 17.6** — T11 CLOSED |
+| — | `salary_reports` deny-all + minimal | ✅ RLS on, **0 policies**; columns = `report_id`, `sent_date`/NN, `report_file_url`/NN, `created_at`, `updated_at` (**T4 confirmed live**); `salary_report_lines` absent |
+| — | `set_project_finance_fields` | ✅ **0 call sites** (`grep -rn` over `src/ e2e/ supabase/functions/`); live signature still the 6-arg `(integer,boolean,date,integer,text,text)` |
+| — | bank columns on `hostesses` | ✅ `bank_account`/NN · `bank_branch`/NN · `bank_name`/NN — **all three NOT NULL (T3 confirmed)**; `hostess_bank_details` absent |
+| — | `email_log` CHECK | ✅ still **4 values** (`quote`,`shift`,`project`,`project_report`) + 3 SELECT policies (m8 adds the 4th) — **T5 confirmed** |
+| — | `params` | ✅ `תנאי_תשלום_ימים` **absent**; `סכום_נסיעות_למשמרת` present at **0** (ה20 seeds it to 22.60) |
+| — | `project_finance` | ✅ absent (nothing pre-exists) |
+| — | demo cast #12–#15 | ✅ **unchanged from `data-set.md`**: #12 `awaiting_invoice` (🌱) · #13 `event_finished` · #14 `in_progress` (its cancellation is 🎭 demo-only, exactly as the data-set states) · #15 `in_progress`. No drift since 26/08 |
+| — | `E2E_*` pairs | ✅ **five pairs** in `.env.local`: CEO · **FINANCE** · PROJECTS · RECRUIT · STAFF. **`E2E_FINANCE_*` EXISTS** ⇒ the 👤 item ① does not fire (§2.7's "not configured" note was stale — corrected there). ⚠️ *Presence ≠ a working login; the credential itself is first exercised at 4.4/5.1.* `E2E_LOGISTICS_*` is referenced only inside a deleted-variant comment (`e2e/customers.spec.js:152`) — not a gap |
+| — | unit baseline | ✅ `npm run test:run` (no pipe) ⇒ **exit 0 · 56 files · 1,440 tests passed**. Every later step compares against **1,440/56** |
+| — | `finance` bucket (§2.5's dated claim, not on the door's list — checked anyway) | ✅ live: private, `file_size_limit`=10,485,760, **4 policies**, **0 objects** |
+| — | live CHECKs backing §3.7's locked strings | ✅ `negative_feedback_reason` = the five strings **byte-exact** · `cancel_type` = `customer`/`force_majeure`/`other` (**T6 confirmed**, C6's `standard` really is superseded) |
+| — | cross-module collision (§2.3) | ✅ no other micro-guide is live-OPEN; m5 is merged. **One stale row found, NOT fixed here** (another module's surface): `module-5.md`'s **Active step** and **Branch** rows still read "pending typed-echo" / "NOT merged" while its own Status row says MERGED — reported to Ishay, his call |
+
+**🔻🤖 door measurements: PASS** — nothing moved since 26/08, so no pre-emptive guide rewrite was needed.
+**↳ as-built · the 👤 half, answered by Ishay `27/08/2026 12:5X`:**
+- **① `E2E_FINANCE_*`** — did not fire; the pair exists (measured above).
+- **② Agent-batching** — offered per his 26/08 standing ruling; **he chose `חסכוני` — ONE session,
+  sequential.** Matches this guide's own Phase-1 recommendation (typed-echo gates serialize the work
+  and no agent can apply a migration).
+- **③ Phase-1 ledger sweep (§3.4/§3.5/§3.6) — result: ZERO still-open items.** Anchored to Phase 1:
+  **Q-3 · Q-4 · Q-5** (all → 1.5) and **N-4** (→ 1.5) — all four ruled at blueprint approval
+  26/08 22:40–22:43, so per the door's own instruction they were NOT re-asked. §3.5's Phase-1
+  assumptions **A-5 · A-6 · A-7 · A-8** were re-shown to Ishay for his eye (A-7 and A-8 are the
+  money-visible pair) with no action requested; none overridden. §3.6 holds nothing newly relevant
+  to Phase 1 (§7.69's travel AMOUNT stays deferred; 1.7 seeds the demo-grade 22.60 as ruled).
+- **④ 🔴 The presentation-risk item (§10, this date) — RULED BY ISHAY: `הכל היום, כרגיל`.** The
+  concern was raised with its anchor (`00_roadmap.md` §3 row א׳ / §4 row M2.5, 28/08 = tomorrow) and
+  the recommendation was the safe split; **he reaffirmed the full plan and that is the decision.**
+  Phase 1 runs complete, in plan order. **The one thing this adds to the plan:** each of the four
+  migrations that touch live merged code (**the ה30 rider in 1.1 · 1.3 · 1.4 · 1.7**) gets its
+  targeted regression run and REPORTED before the next step opens — the steps already carry those
+  checks; this makes "no silent progression past a red one" explicit.
+
+**🔻👤 door: CLOSED.** **🌊 אדוות —** §1 header (Branch · Status · Last-updated · Active-step) + step-table row · §2.7 (stale `E2E_FINANCE` note) · 🛑 T1 (the CHECK's real text) + T11 (closed) · §10 dated entry ×2. **No DoD checkbox and no Ledger row moved** — 1.0 implements no ruling and delivers no code.
+**🗣️ אושר —** `27/08/2026 12:5X` (Ishay: `הכל היום, כרגיל` + `חסכוני — סשן אחד`).
 
 **Step 1.1 · Migration A — `module8_finance_tables_and_columns`**
 **Files:** `supabase/migrations/<ts>_module8_finance_tables_and_columns.sql`
@@ -615,7 +662,40 @@ allowed (positive control), logistics-manager ⇒ 0 rows · direct client UPDATE
 `quote_services` rows incl. cost ≥1 row via the OR-branch, AND מנהלת פרויקטים (edit) still reads —
 positive controls both; a role with neither ⇒ 0 rows · advisors: no new findings.
 **מה ייחשב עובד** *(spec §⑤2/§⑤8, quoted)*: the columns exist for P1/P3/S4's data; nothing
-user-visible yet. **🌊 אדוות —** db_roadmap M8 rows flipped. **🗣️ אושר —**
+user-visible yet.
+
+**↳ as-built · APPLIED `27/08/2026 12:5X`** — file
+`supabase/migrations/20260827125155_module8_finance_tables_and_columns.sql`; typed-echo received
+(`module8_finance_tables_and_columns`). **Built exactly as planned — no deviation.**
+**🔻🤖 Verify — every assertion of this step, measured:**
+
+| Assertion | Measured |
+|---|---|
+| `pg_policies` on `project_finance` = exactly 1 | **1** ✅ |
+| SELECT — finance (POSITIVE CONTROL first) | **1 row** ✅ *(a seeded probe row; without it a 0-vs-0 result proves nothing — §2.7)* |
+| SELECT — logistics-manager / projects-manager | **0 / 0** ✅ |
+| direct client UPDATE on `project_finance` (as finance) | **0 rows** ✅ — the RPC-only model holds at the DB, not only in the UI |
+| columns + types | ✅ money = `numeric(12,2)` (§7.74), all times `timestamptz` (§7.56), 4 constraints present, `assignments_salary_report_id_idx` created |
+| `moddatetime` binding (T9) | **`extensions.moddatetime`** ✅ — verified through `pg_trigger→pg_proc→pg_namespace`, **not** by grepping `pg_get_triggerdef`, which prints the name unqualified (the documented sub-mine in `supabase/migrations/CLAUDE.md`) |
+| **ה30 regression, BOTH personas** (the contrarian catch) | מנהלת כספים **44** rows incl. **44** cost-bearing — she still reads cost, now via the 'כספים' OR-branch · מנהלת פרויקטים (edit) **44** · מנהלת גיוס (neither) **0** ✅ |
+| advisors | **26 findings = the m5 baseline of 26. Zero new.** `project_finance` absent from `rls_enabled_no_policy` ✅ |
+| probe cleanup | `project_finance` left at **0 rows** ✅ |
+
+🔴 **Said out loud, per the standing rule: this step changed a policy on a MERGED m3 table**
+(`quote_services`). Before writing the SQL, all five roles were measured against the live
+permissions matrix ⇒ **zero live loss**: the only `view`-on-quotes holder today is מנהלת כספים,
+and she qualifies through `edit` on 'כספים'. A FUTURE view-only-quotes role would read zero
+`quote_services` rows — **intended, and written into the migration's why-header** so a later
+role-grant is not surprised by it.
+
+**🌊 אדוות —** `docs/db_roadmap.md` §10 (⏳→✅ Done row, with the C-1 caveat that two FKs stay open) ·
+`docs/schema.sql` (new §27 `project_finance` block · `projects` +2 cols +unique · `assignments`
++col +CHECK +index · the `quote_services` policy body · header counts 23→24 tables, 49→50 policies,
+and the §24 heading 25→26 functions — **the last one was stale before this session**, found while
+cross-checking) · §1 header + step table. **No `🚧` token created or consumed** — m8 creates zero
+new tokens (§2.2), and the inbound ones are marked paid at 4.3, not here. **No DoD checkbox moved**
+— none of §8's checkboxes counts migrations.
+**🗣️ אושר —** typed-echo `27/08/2026 12:5X`.
 
 **Step 1.2 · Migration B — `module8_salary_report_document_model`**
 **Files:** `supabase/migrations/<ts>_module8_salary_report_document_model.sql`
@@ -1107,6 +1187,27 @@ anchored to it and settle them with Ishay at the phase door, not mid-step.
   writes the code (Ishay's 14/08 rule).
 
 ### Dated entries
+- `27/08/2026 12:39–12:4X` — **BUILD OPENED · step 1.0's 🤖 half complete; standing at its 👤 gate.**
+  Branch `ishay/module-8-finance` cut from `origin/dev` `585ad27`. **All 8 door re-measurements held
+  — zero drift since 26/08**, so no pre-emptive guide rewrite was needed. Baseline **1,440 tests /
+  56 files, exit 0**. **Three corrections landed from live measurement** (the ⑥2 block's own rule —
+  a measurement beats its dated facts): ① **T1's stated mechanism was wrong** — the live
+  `projects_closed_needs_report` body never mentions `cancelled`; it requires
+  `summary_report_url IS NOT NULL` for `awaiting_invoice`/`awaiting_payment`/`finished`. Same
+  conclusion, different mechanism, and 1.5's `archive_project` must assert that precondition itself
+  or a legitimate archive dies on a raw CHECK instead of the Hebrew `P0001` contract. ② **§2.7's
+  `E2E_FINANCE_*` "not configured" note was stale** — the pair exists; the 👤 branch that would have
+  gone to Ishay did not fire. ③ T11 closed (MCP live).
+- 🔴 `27/08/2026` — **A RISK THE BLUEPRINT DID NOT CARRY, raised at the 1.0 door: the 28/08 interim
+  presentation is TOMORROW** (`00_roadmap.md` §3 row א׳ + §4 row M2.5 — *"תהליך אחד מקצה-לקצה עובד
+  באתר החי"*), and Phase 1 applies **7 migrations to the live production project**, three of which
+  touch code that is already merged, demoed and in the live path: the **ה30 rider inside 1.1**
+  (narrows an existing `quote_services` read → m3's quote screens), **1.3** (drops three NOT NULL
+  bank columns and rewires 5 m4 client sites in the same step), **1.4** (redeploys the shared
+  `send-email` function), **1.7** (rewrites the merged m6 `cancel_project`). Neither the blueprint,
+  the 🛑 table, nor the ⑥2 block mentions the presentation date. 1.1-without-the-rider and 1.2 are
+  provably additive (new table · new nullable columns · relaxing NOT NULL on a deny-all table with
+  no reader) and carry no demo risk. **Ishay's call — presented at the door; nothing applied.**
 - `26/08/2026 22:43` — **BLUEPRINT APPROVED** (Ishay: *"מבחינתי אחרי הבדיקה הזו יש אישור"*).
   Sequence of the approval: Q-1…Q-5 ruled per recommendations (22:40) → his migrations-impact
   question answered by a walked check (zero table/column/policy changes — all five land in RPC
