@@ -39,6 +39,11 @@
 --    (הרחבת `cancel_project` הממוזגת של מ6 בשורה אחת — שימור
 --    `released_from_status`, הוכח ב-md5 על הגוף החי — ושני זרעי-פרמטרים:
 --    `תנאי_תשלום_ימים`=30 ו-`סכום_נסיעות_למשמרת` 0→22.60) ·
+--    ואחרי C2 `20260827175132_module8_c2_drop_legacy_bank_columns` (שלוש עמודות-הבנק
+--    **נמחקו** מ-`hostesses` — ה19 נסגר) ·
+--    ואחרי N1 `20260827183845_module8_n1_hostess_languages_additive` (טבלה חדשה
+--    `hostess_languages` — סעיף 31 — +RLS +2 policies +אינדקס + העתקת 33 שורות
+--    מ-20 דיילות; העמודה `languages` נשארת עד N1b) ·
 --    פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
 --
 -- 🔴 **לרענן את הקובץ הזה אחרי כל מיגרציה.** העותק הקודם לא רוענן חמישה חודשים והכריז על עמודה
@@ -52,8 +57,8 @@
 -- 🚫 **אין כאן סעיף "היסטוריה"/"יומן שינויים"** — הקובץ מתאר הווה בלבד. ציר השינויים חי
 --    ב-`supabase/migrations/` וב-`docs/db_roadmap.md`.
 --
--- מוסכמות: כל 27 הטבלאות ב-`public` עם RLS **מופעל** (נמדד 27/08/2026 אחרי מיגרציה F).
--- כל 55 המדיניות (43 ב-public, 12 על `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`.
+-- מוסכמות: כל 28 הטבלאות ב-`public` עם RLS **מופעל** (נמדד 27/08/2026 אחרי מיגרציה N1).
+-- כל 57 המדיניות (45 ב-public, 12 על `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`.
 -- 🔴 **PERMISSIVE = הן מתאחדות ב-OR.** שתי policies על אותה טבלה מרחיבות גישה, לא מצמצמות —
 --    ולכן policy חדשה "מגודרת היטב" אינה מגבילה אף אחד שכבר עובר דרך policy אחרת.
 -- 🔴 ארבע טבלאות נותרו deny-all **במכוון**: `project_changes` (נקראת רק דרך ה-RPC הממסך),
@@ -751,14 +756,11 @@ create table hostesses (
   hourly_rate  numeric     not null,
   rating       integer,
   status       text        not null default 'active',
-  -- ⚠️ מ8 ה19 (27/08/2026): שלוש אלה הוחלפו ע"י hostess_bank_details (סעיף 29).
-  --    שוחררו מ-NOT NULL ונשארות זמנית **רק** כדי שהקוד שרץ בייצור לא יישבר;
-  --    הוא כותב אליהן ישירות ב-HostessFormDialog.jsx:217-219 וקורא אותן
-  --    ב-HostessViewCard.jsx:315. **תימחקנה במיגרציה C2 אחרי מיזוג ופריסה של מ8**
-  --    (db_roadmap §9א). 🔴 קוד חדש קורא וכותב ל-hostess_bank_details, לא לכאן.
-  bank_name    text,
-  bank_branch  text,
-  bank_account text,
+  -- ✅ מ8 ה19 **נסגר 27/08/2026 18:0X**: שלוש עמודות-הבנק (bank_name/branch/account)
+  --    **נמחקו כאן** במיגרציה C2, אחרי מיזוג מ8 ופריסתו לייצור. הן חיות עכשיו
+  --    **רק** ב-hostess_bank_details (סעיף 29), שנקראת ע"י 'דיילות' ו'כספים' בלבד.
+  --    🔴 מי שמחפש אותן כאן — הן אינן, וזה מכוון: RLS הוא ברמת-שורה, ולכן
+  --    עמודה על hostesses הייתה קריאה לכל מי שיש לו 'דיילות'. זו הייתה החשיפה.
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now(),
   hostess_id   bigint      not null generated always as identity,
@@ -766,6 +768,10 @@ create table hostesses (
   lat          numeric,
   lng          numeric,
   has_car      boolean     not null default false,
+  -- ⚠️ מ8 · N1 (27/08/2026): הוחלפה ע"י `hostess_languages` (סעיף 31). נשארת זמנית
+  --    **רק** כדי שהקוד שנפרס לא יישבר; הוא כותב אליה ב-HostessFormDialog.jsx:222
+  --    וקורא אותה ב-HostessViewCard.jsx:328. **תימחק במיגרציה N1b אחרי הפריסה**
+  --    (db_roadmap §9א). 🔴 קוד חדש קורא וכותב לטבלת-הבת בלבד.
   languages    text[]      not null default '{}'::text[],
   constraint hostesses_pkey          primary key (hostess_id),
   constraint hostesses_id_number_key unique (id_number),
@@ -1635,6 +1641,66 @@ create index feedback_rpc_calls_ip_called_at_idx on feedback_rpc_calls using btr
 
 -- מדיניות RLS: אין (0 policies)
 --   → supabase/migrations/20260827155303_module8_public_feedback_rpc.sql
+
+-- ============================================================
+-- 31. שפות הדיילת — public.hostess_languages (מודול 8 · N1)
+-- ============================================================
+-- 🔴 **נרמול, לא אבטחה — וזה קובע את ההרשאות.** `hostesses.languages` היה `text[]`,
+--    כלומר רשימה בתא אחד — ההפרה היחידה של 1NF במסד. הפיצול הזה שונה מ-ה19
+--    (פרטי-הבנק): שם המטרה הייתה **לצמצם** מי רואה, וכאן אין צמצום כלל.
+--    ⇒ שתי ה-policies כאן **זהות אחת-לאחת** לאלה של `hostesses`.
+-- 🔑 **מפתח ראשי מורכב** `(hostess_id, language)` — כפילות בלתי-אפשרית בהגדרה.
+--    המערך הישן קיבל `{'עברית','עברית'}` בשקט.
+-- ⚠️ **האינדקס על `language` ולא על `hostess_id`** — המפתח כבר מכסה את השני
+--    כעמודה מובילה; מה שחסר הוא "מי מדברת ערבית?".
+create table hostess_languages (
+  hostess_id bigint      not null,
+  language   text        not null,
+  created_at timestamptz not null default now(),
+  constraint hostess_languages_pkey primary key (hostess_id, language),
+  constraint hostess_languages_hostess_id_fkey
+    foreign key (hostess_id) references hostesses (hostess_id) on delete cascade,
+  constraint hostess_languages_not_blank check (btrim(language) <> '')
+);
+
+alter table hostess_languages enable row level security;
+
+-- אינדקסים
+create index hostess_languages_language_idx on hostess_languages using btree (language);
+
+-- מדיניות RLS (2) — שיקוף מדויק של hostesses
+create policy hostess_languages_select_by_permission on hostess_languages
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = any (array['edit', 'view'])
+    )
+  );
+
+-- ⚠️ `for all` מכסה גם SELECT לבעל edit — מי שבודק "מה קורה בלי policy" חייב
+--    להפיל את **שתיהן**.
+create policy hostess_languages_write_by_permission on hostess_languages
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = 'edit'
+    )
+  );
+--   → supabase/migrations/20260827183845_module8_n1_hostess_languages_additive.sql
 
 -- ============================================================
 -- 24. פונקציות בסכמה public — 43 פונקציות

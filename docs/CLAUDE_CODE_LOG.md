@@ -45,6 +45,105 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 27/08/2026 18:0X–19:0X — N1 applied and the client rewired; gate green at 1,454
+
+- ✅ **N1 additive half applied, client rewired, gate exit 0 at 1,454 tests** (up from 1,446).
+  33 rows / 20 hostesses / 5 languages, 2 policies, RLS on. 🔑 **The count is the weak claim, so the
+  one relied on is different: `mismatched_hostesses = 0` — every original array reconstructs
+  EXACTLY from the child table.**
+- 🔴 **Impersonated read matrix, positive control first:** גיוס / פרויקטים / מנכ"ל = **26 hostesses
+  and 33 languages** · כספים / לוגיסטיקה = **0 and 0**. The language count tracks the hostess count
+  one for one for every role — the mirror is proven rather than asserted.
+- **Two files changed, and the two SCREENS deliberately not touched.** Ishay caught the gap between
+  what I said ("2 files") and what I did, and he was right to: the "2 files" was the count of
+  *consumers* of `languages`, not of files I would edit. The split lives in `api.js`, so
+  `hostess.languages` is still a plain array to the screens — the same call the bank split made, and
+  it keeps the lowest-auto-coverage write surface in the repo untouched. My wording was the error,
+  not the work.
+- 🔴 **Two mutations, both proved red, file restored byte-identical:** treating a missing
+  `languages` field as `[]` (which would have wiped a hostess's languages on **every phone edit**,
+  silently) · reversing insert/delete (the `src/CLAUDE.md` rule that has already destroyed live data
+  once here).
+- **Live in a connected browser**, the narrow announced-and-restored exception: the card read
+  `שפות · אנגלית · עברית` from the child table · **editing only the phone left both languages
+  intact** · phone restored and the restore verified in the DB · 33 rows unchanged · zero console
+  errors.
+- **`docs/schema.sql` re-synced and re-measured:** 28 tables (all RLS) · 45 public + 12 storage
+  policies · 43 functions · **271 documented columns minus 9 parser artefacts = 262 = live**.
+
+### 27/08/2026 18:0X–18:4X — N1 additive half written, standing at its typed-echo gate
+
+- **`N1` written** (`20260827183845_module8_n1_hostess_languages_additive`): `hostesses.languages`
+  (`text[]`) → `hostess_languages`, 1:N. Ishay approved the package earlier today and, asked to pick
+  between "additive tonight, drop tomorrow" and the full cycle tonight, said **"בצע לפי המלצתך"** —
+  the full cycle. Additive half first, as always.
+- 🔴 **The decision worth keeping: N1's permissions are the OPPOSITE of ה19's, on purpose.** The bank
+  split was a **security** measure and its child table got **narrowed** policies. N1 is
+  **normalization only** — language names are not sensitive, and anyone who can see a hostess should
+  see her languages. So its two policies **mirror `hostesses`' own one for one**, measured live from
+  `pg_policies` before writing rather than copied from the fresh C2 pattern.
+  ⚠️ **Reusing C2's shape unthinkingly would have narrowed access and broken readers silently** — a
+  missing policy returns an empty list with `error: null`. The pattern in my head was the wrong one
+  to reach for, and the only thing that caught it was asking *why* the earlier split was narrowed.
+- **Two design calls, both stated in the file:** composite PK `(hostess_id, language)` so duplication
+  is impossible by definition (the old array accepted `{'עברית','עברית'}`); and the index on
+  **`language`**, not `hostess_id` — the PK already leads with the latter, while "who speaks Arabic?"
+  has no index without it.
+- Measured first: 26 hostesses · 0 NULL · 6 empty arrays · 20 with languages · **33 language rows** ·
+  five distinct values.
+
+### 27/08/2026 16:5X–18:0X — MODULE 8 MERGED, IN PRODUCTION, AND ה19 CLOSED (C2 applied)
+
+- ✅ **C2 applied on Ishay's typed echo — ה19 is CLOSED.** The three bank columns are gone from
+  `hostesses`; bank details now live only in `hostess_bank_details`, readable by 'דיילות' and
+  'כספים' alone. **Until today every holder of 'דיילות' could read every account number**, because
+  RLS gates rows, not columns. That was the exposure, and it is shut.
+  **Measured after apply:** 0 legacy columns · **26/26 rows intact** · **0** hostesses left with an
+  empty bank triple · a real hostess still reads her line through the new table.
+- 🔴 **Regression run immediately after an irreversible drop — the moment things break silently:**
+  `npm run smoke` **exit 0** and the full `e2e/hostesses.spec.js` **20/20**. Nothing broke.
+  `docs/schema.sql` updated in the same minute and re-cross-checked: `hostesses` **16 documented /
+  16 live, zero divergence**.
+- 🔑 **The guard added to C2's contract four hours earlier paid off, measurably.** All 26 child rows
+  were NEWER than their parent, so the originally-registered unguarded `on conflict do update` would
+  have touched all 26 and pulled them back to the stale source. With the guard the copy touched
+  **0 rows**. A contract defect found by reasoning about the deploy window, and confirmed by the
+  numbers when it ran.
+- ⚠️ **And an alarm on the way that was chased to the end rather than waved off:**
+  `generate_salary_report` mentions `bank_*` — line-by-line it reads them from
+  `left join public.hostess_bank_details b`, the new table, not the parent. Clean, and checked
+  before the irreversible statement, not after.
+
+### 27/08/2026 16:5X–17:5X — MODULE 8 MERGED AND IN PRODUCTION; C2 written and gated
+
+- **Merged and promoted on Ishay's explicit approval** *("ויש לך אישור להתקדם ולמזג")*:
+  PR #68 → `dev` (`518587d`), PR #69 `dev` → `main` (**`9e07233`**). `dev`/`main` content-identical
+  (`git diff` = 0 bytes). CI **5/5 green** on both, checked on the run itself — never `gh pr checks
+  --watch` on the queue, which reports green while still queued (the 12/08 mine).
+- 🔑 **"Deployed" was not accepted as a claim.** Vercel reported `state=success` for production —
+  and then the live site's own JS bundle was fetched (`index-B7qWDbqi.js`, 2,662,504 bytes) and
+  asserted to **contain `hostess_bank_details`**. The first is a statement about the pipeline; only
+  the second is a statement about what the browser receives — and C2's safety depends on the second.
+- **C2 written, dry-run in a rolled-back transaction, standing at its typed-echo gate.** Copy
+  touched **0 rows** · bank columns **3 → 0** · 26 child rows intact · a real hostess still reads her
+  bank line through the new table **after** the drop · **rollback verified**.
+  🔑 **And the guard I added to the contract this afternoon earned itself here:** all 26 child rows
+  are newer than their parent, so an unguarded `do update` would have touched all 26 and pulled them
+  back to the stale source. Measured, not argued.
+  ⚠️ One alarm chased to the end rather than waved off: `generate_salary_report` mentions `bank_*`,
+  but line-by-line it reads them from `hostess_bank_details`, not the parent.
+- 🔴 **Three register defects found because Ishay asked "how will I remember?" — measured, not
+  answered.** ① the session-start banner was stale by two days and two modules, and it is what every
+  fresh session is handed as fact ② `supabase/migrations/CLAUDE.md` pointed at **§10 and a
+  sub-heading that does not exist**, so a session obeying it lands in the Done list and concludes
+  there are no pending removals — the pointer never once pointed correctly ③ `PROJECT_MASTER §6` had
+  **zero rows** for C2/N1/N2. All three fixed, and §6 now says out loud that `grep '🚧 מN'` cannot
+  find these in time because none of them waits on a module — they wait on a **deploy**.
+- **Recommendation on record, and Ishay may override:** N1 (10 occurrences / 2 files) is small and
+  is the same shape as today's bank split. **N2 is 46 occurrences across 16 production files plus a
+  screen**, running through the quote→project→email chain — the thing the 28/08 presentation demos.
+  Recommended after the presentation, said twice as promised.
+
 ### 27/08/2026 12:39–16:5X — MODULE 8 PHASE 1 COMPLETE: ten migrations live, 1.8 gate passed
 
 - ✅ **All ten migrations applied and verified** (A · B · C · D · E1 · E2 · E3 · E3-fix · F · G),
