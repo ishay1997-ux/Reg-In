@@ -408,9 +408,9 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 
 | # | The removal that is owed | Blocked until | Its contract (more than a `drop`) | Registered where |
 |---|---|---|---|---|
-| **C2** | `alter table hostesses drop column bank_name, bank_branch, bank_account` — the destructive half of ה19 (m8 migration C did the additive half on 27/08/2026) | m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live** — because `origin/main` writes those columns (`HostessFormDialog.jsx:217-219`) and reads them (`HostessViewCard.jsx:315`) | 1️⃣ **Re-copy first** — `insert … on conflict do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
+| **C2** | `alter table hostesses drop column bank_name, bank_branch, bank_account` — the destructive half of ה19 (m8 migration C did the additive half on 27/08/2026) | m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live** — because `origin/main` writes those columns (`HostessFormDialog.jsx:217-219`) and reads them (`HostessViewCard.jsx:315`) | 1️⃣ **Re-copy first** — `insert … on conflict (hostess_id) do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 🔴 **BUT THE `do update` MUST BE GUARDED BY `updated_at`** *(found 27/08/2026 at the 1.8 gate — the contract as first written was wrong)*: **after** the deploy m8's `api.js` writes ONLY the child, so an unguarded overwrite would push **stale parent values over fresh child rows** — the same data loss pointed backwards, landing as wrong bank numbers in a CPA salary report. Overwrite only where the parent row is genuinely newer than the child row (both tables carry a `moddatetime`-maintained `updated_at`). **Full contract + the SQL shape: `micro_guides/module-8.md` §8.4.** 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
 
-| **N1** | `hostesses.languages` (`text[]`) → child table `hostess_languages(hostess_id, language)`, then `drop column` | m8 merged **and deployed** | Same three beats as C2: **add + copy → deploy → drop**, with a **re-copy immediately before the drop**. ⚠️ `languages` is **nullable** (unlike the bank columns), so the additive half needs no constraint relaxation — create, copy, drop later | `PROJECT_MASTER_sec7.md §7.87` · here |
+| **N1** | `hostesses.languages` (`text[]`) → child table `hostess_languages(hostess_id, language)`, then `drop column` | m8 merged **and deployed** | Same three beats as C2: **add + copy → deploy → drop**, with a **re-copy immediately before the drop** — 🔴 **including C2's `updated_at` guard on the conflict action**, for the same reason: once the new code writes only the child, an unguarded overwrite runs backwards. ⚠️ `languages` is **nullable** (unlike the bank columns), so the additive half needs no constraint relaxation — create, copy, drop later | `PROJECT_MASTER_sec7.md §7.87` · here |
 | **N2** | `customer_contacts` consolidation — `is_primary` on the child, then drop `contact_name`/`phone`/`email` from `customers` | m8 merged **and deployed** | Same pattern, **separate drop migration** from N1's. 🔴 **Its blast radius is ~4.6× N1's — see the measurement below; "one package" is true of the pattern, not of the size** | here |
 
 🔴 **Provenance of N1/N2, stated precisely because it did not reach this session directly.**
@@ -458,6 +458,61 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
+- ✅ 27/08/2026 — **module-8 · 🔻👤 PHASE-1 GATE (step 1.8) — the DB half of m8 is closed.**
+  All ten migrations live: A · B · C · D · E1 · E2 · E3 · E3-fix · F · G.
+  🔑 **Advisors, predicted-vs-measured, every delta explained and nothing left as "probably fine":**
+  **SECURITY 33 → 41.** The 33 was the post-E2 total recorded that morning; the +8 is
+  **E3 +2** (`generate_salary_report`, `finalize_salary_report`) **and F +6**
+  (`mint_feedback_token` + the two anon-callable ones counted in BOTH the anon and the
+  authenticated class, plus `feedback_rpc_calls` joining `rls_enabled_no_policy`). **G added zero** —
+  it re-created an already-listed function. Breakdown: `authenticated`-DEFINER **30** ·
+  `anon`-DEFINER **6** *(the four login/shift ones + exactly `get_feedback_page` and
+  `submit_feedback` — the +2 the step predicted, and nothing else)* · `rls_enabled_no_policy` **4**
+  *(all four deny-all by design)* · `auth_leaked_password_protection` **1** *(pre-existing Auth
+  setting, not DB)*. 🔴 **And the three internal functions are absent from both DEFINER lists** —
+  `finance_project_money`, `finance_assert_writable`, `feedback_rate_limit` are `service_role` only.
+  T8 holds.
+  **PERFORMANCE 28, of which m8 added exactly 4**, each expected: `no_primary_key` on
+  `feedback_rpc_calls` (by design, mirrors `login_rpc_calls`) · `unused_index` ×2
+  (`assignments_salary_report_id_idx`, `salary_report_lines_source_project_id_idx` — **unused
+  because m8 has no UI yet**; phase 3 uses both) · `multiple_permissive_policies` on
+  `hostess_bank_details` (the two ruled policies). **Zero unexplained.**
+  ⚠️ **The advisor counts were re-derived from `pg_proc`/`pg_policies`/`pg_class` directly, not
+  hand-counted off the JSON** — same numbers from both, which is the point of doing it twice.
+  🔴 **`docs/schema.sql` cross-checked object-by-object against the live catalog — 54 m8
+  identifiers, and it found FOUR real gaps, all fixed:**
+  ① **`feedback_rpc_calls` was missing entirely** — 26 `create table` blocks for 27 live tables.
+  F's ripple added the function block and not the table. Now §30.
+  ② **`set_project_finance_fields` was still listed in §24 as a live m6 function** with signature
+  and file pointer, while the same file said 12 lines later that it had been dropped. It is gone
+  from the DB; the stale entry was deleted (the file is present-tense by its own rule, so no
+  tombstone).
+  ③ the deny-all roll-call still said **three** tables; there are **four** since F.
+  ④ the refresh header stopped at **E2** while the body already carried F and G.
+  🔴 **The deploy rule was re-run as a COMMAND against `origin/main`, not recalled:**
+  `set_project_finance_fields` ⇒ **zero call sites** (dropping it was safe) · the three bank columns
+  ⇒ **still written at `HostessFormDialog.jsx:217-219` and read at `HostessViewCard.jsx:315`**
+  (C2 must keep waiting) · `hostess_bank_details` ⇒ **unknown to `origin/main`**, which is why the
+  live site still works.
+  🐞 **`npm run gate` was RED on the first run and the cause was mine.** `format:check` failed on
+  `ci.yml` and `send-email/index.ts`. Cause: Python's `io.open(...,'w')` on Windows rewrites every
+  newline as CRLF, and the repo is LF (`.gitattributes`). **Eleven files were contaminated**, and
+  the trap is that **`git status` was clean and `git diff` empty the whole time** — `core.autocrlf`
+  normalises before comparing — so nothing showed until the gate fell. **The committed blobs were
+  always LF ⇒ CI would have stayed green and only a local gate could catch it.** Normalised;
+  **`gate` re-run end-to-end: exit 0.** The mine is now written into root `CLAUDE.md`.
+  🔴 **A defect was found in C2's own registered contract — the debt this module still owes.**
+  It said `insert … on conflict do update`, unqualified. The window has two halves running opposite
+  ways: before the deploy `origin/main` writes the PARENT, after it m8's `api.js` writes ONLY the
+  child. An unguarded overwrite therefore runs **after** the deploy and pushes **stale parent values
+  over fresh child rows** — the same data loss the re-copy exists to prevent, pointed backwards, and
+  it would land as wrong bank numbers in a CPA salary report. Contract corrected in both registers
+  (§9א here + `micro_guides/module-8.md` §8.4) to guard the conflict action on `updated_at`.
+  **N1 inherits the same guard.**
+  **§7 write-back (rule 13א):** `§7.69` 🟠 received a dated ↳ — the DB now holds `22.60` where the
+  item's text says "הסכום לא נקבע". **Status unchanged, CPA verification before M10 stands in full**;
+  recorded so §7 and the database do not disagree. `§7.20` needed nothing — it already names
+  `תנאי_תשלום_ימים` default 30, which is exactly what G seeded.
 - ✅ 27/08/2026 — **module-8 migration G APPLIED — the LAST of phase 1** (typed-echo:
   `module8_cancel_project_released_status_and_seeds`). **All ten m8 migrations are now live.**
   **① Extends the MERGED, LIVE m6 function `cancel_project` — the riskiest edit in the phase.**

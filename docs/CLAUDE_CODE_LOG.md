@@ -45,6 +45,44 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 27/08/2026 12:39–16:5X — MODULE 8 PHASE 1 COMPLETE: ten migrations live, 1.8 gate passed
+
+- ✅ **All ten migrations applied and verified** (A · B · C · D · E1 · E2 · E3 · E3-fix · F · G),
+  and the 🔻👤 **1.8 gate passed**. **All three currently-reachable hand anchors are produced by the
+  code itself:** profit **3,650.00** · cancellation fee **3,508.00** · salary line **292.60**.
+- **Battery, reported per suite on purpose** — `test:e2e` carries `--grep-invert בדיקת-עשן`, so a
+  single "E2E green" line would be a false all-clear: `gate` **exit 0** (1,446 unit / 56 files) ·
+  `test:e2e` **143 passed / 6 skipped / 0 failed** · `smoke` **exit 0** · browser walkthrough of the
+  three production surfaces with **zero console errors**.
+- 🐞 **`gate` was RED first, and the cause was mine — kept because the failure mode is invisible.**
+  Python's `io.open(...,'w')` on Windows rewrites newlines as CRLF; the repo is LF. Eleven files
+  were contaminated. 🔴 **`git status` stayed clean and `git diff` stayed empty the whole time**
+  (`core.autocrlf` normalises before comparing) ⇒ no signal until `format:check` fell, and its
+  message says "code style", not "line endings". **The committed blobs were always LF, so CI would
+  have stayed green** — only a local gate could catch it. Mine written into root `CLAUDE.md`.
+- ⚠️ **One flake, diagnosed rather than waved away.** A mid-gate re-run showed 1 failed / 1,445
+  passed — `05_logistics/ChecklistDialog.test.jsx › "הצלחה רגילה — שלושת האפקטים יחד"`, which
+  asserts **focus** after a sort jump. Alone the file is **34/34 exit 0**; the failing run had a dev
+  server competing for CPU (vitest reported `environment 629.53s` vs **1.53s** in isolation), and
+  with the server stopped the gate is **1,446/56 exit 0**. Not a regression, not m8's — but that
+  test is timing-sensitive under load and someone will want this the day CI goes red on it.
+- 🔴 **Four real gaps in `docs/schema.sql`**, found by cross-checking 54 m8 identifiers against the
+  live catalog rather than skimming: a whole live table missing (`feedback_rpc_calls` — 26 blocks
+  for 27 tables), a **dropped function still listed as live** in §24 twelve lines above the note
+  saying it was dropped, a stale deny-all count, and a refresh header that stopped at E2. All fixed.
+- 🔴 **A defect in C2's own registered contract**, the debt m8 still owes. `insert … on conflict do
+  update` was unqualified. The deploy window runs in **two opposite directions** — before it,
+  production writes the parent; **after** it, m8's `api.js` writes only the child. So the unguarded
+  overwrite fires **after** the deploy and pushes stale parent values over fresh child rows: the
+  same data loss the re-copy exists to prevent, reversed, landing as wrong bank numbers in a CPA
+  salary report. Guarded on `updated_at` in both registers; N1 inherits it.
+- **Deploy rule re-run as a command, not recalled:** `set_project_finance_fields` has **zero call
+  sites on `origin/main`** · the three bank columns are **still written and read there** ⇒ C2 keeps
+  waiting · `hostess_bank_details` is **unknown to `origin/main`**, which is why the live site works.
+- **§7 write-back:** `§7.69` got a dated ↳ — the DB now holds `22.60` where the item's text says the
+  amount was never set. **Status unchanged; CPA verification before M10 stands in full.** `§7.20`
+  needed nothing: it already names `תנאי_תשלום_ימים` default 30, exactly what G seeded.
+
 ### 27/08/2026 12:39–16:0X — MODULE 8 phase 1: steps 1.0–1.6 closed; G written, phase nearly done
 
 - **Step 1.0 (👤 phase door) ✅.** Branch `ishay/module-8-finance` cut from fresh `origin/dev`

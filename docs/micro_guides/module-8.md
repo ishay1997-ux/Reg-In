@@ -11,9 +11,9 @@
 | **Module** | 8 — כספים וסגירת אירוע (Finance & event closing) |
 | **Branch** | `ishay/module-8-finance` — ✅ **CUT 27/08/2026 12:4X from fresh `origin/dev` (`585ad27`)**, at step 1.0. Preconditions verified the same turn: m5 IS merged (`git merge-base --is-ancestor origin/ishay/module-5-logistics origin/dev` ⇒ yes; `git log origin/dev..origin/ishay/module-5-logistics` ⇒ empty), and `origin/dev` NOW carries `docs/specs/module_08_finance/` (`git ls-tree origin/dev docs/specs/` ⇒ 04/05/06/**08**). Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ empty (fresh, not dead — iron rule 10's caveat). *(Was: "NOT YET CUT", 26/08.)* |
 | **Owner** | Ishay (sole developer) |
-| **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X** — step 1.0's 🤖 half done; standing at its 👤 checkpoint. **Zero migrations applied.** |
-| **Last updated** | `27/08/2026 16:1X` *(system clock)* |
-| **Active step** | **1.8 — the 🔻👤 Phase-1 gate: full advisors sweep · `schema.sql` cross-check · registers · commit.** 🎉 **All ten migrations of phase 1 are applied and verified** (A · B · C · D · E1 · E2 · E3 · E3-fix · F · G). **All three currently-reachable hand anchors are now produced by the code itself:** profit **3,650.00** · cancellation fee **3,508.00** · salary line **292.60**. *(The fourth, the 69% display, is derived in the UI — phase 3.)* Unit suite **1,446/56** green after every step. 🔴 **C2 still owed after deploy — ה19 is NOT closed** (§8.4 · `db_roadmap` §9א, with N1/N2). 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
+| **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X.** ✅ **PHASE 1 COMPLETE 27/08/2026 16:5X — all ten migrations applied and verified, and the 1.8 gate passed.** *(This row read "Zero migrations applied" until the gate; corrected there.)* |
+| **Last updated** | `27/08/2026 16:5X` *(system clock)* |
+| **Active step** | 🎉 **PHASE 1 IS DONE — 1.8 gate PASSED `27/08/2026 16:5X`.** All ten migrations applied and verified (A · B · C · D · E1 · E2 · E3 · E3-fix · F · G); **the full battery is green, each suite reported separately: `gate` exit 0 (1,446 unit / 56 files) · `test:e2e` 143 passed / 6 skipped / 0 failed · `smoke` exit 0 · browser walkthrough of the 3 production surfaces with 0 console errors.** All three currently-reachable hand anchors are produced by the code itself: profit **3,650.00** · cancellation fee **3,508.00** · salary line **292.60** *(the fourth, the 69% display, is derived in the UI — phase 3)*. ➡️ **NEXT IS ISHAY'S, NOT A BUILD STEP: PR → merge to `dev` → promote to `main` → confirm the deploy is live.** 🔴 **THEN C2 — and only then is ה19 closed** (§8.4 carries the corrected contract; `db_roadmap` §9א, with N1/N2). **Step 2.0 does not start before that**, because C2 is the thing that stops being possible if it is forgotten. 🔴 Ishay ruled 27/08: merge to production today, run C2 today. 🔄 Seed refresh tomorrow morning (28/08) before the interim presentation. |
 | **Deadline** | conference **01/10** (target: 100%) · end 20/10. m8 is the last *process* module before reports — the conference's "closing the loop" story leans on it. |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -29,8 +29,9 @@
 | **1.5** | Migration E — the finance RPC family (E1 SSOT+readers+m6 ripple · E2 7 write actions · E3 salary + fix-forward) | ✅ |
 | **1.6** | Migration F — public feedback RPC pair `/feedback/:token` + rate limit | ✅ |
 | **1.7** | Migration G — `cancel_project` extension (live-body pull) + params seeds | ✅ |
-| **1.8** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | 🔨 |
-| **2.0** | Phase-2 door — ledger sweep | ⬜ |
+| **1.8** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | ✅ |
+| **1.9** | 👤 **Ishay: PR → merge `dev` → promote `main` → confirm deploy live** → **then C2** (ה19 closes only here) | ⬜ |
+| **2.0** | Phase-2 door — ledger sweep *(does not start before 1.9)* | ⬜ |
 | **2.1** | `src/lib/projectFinance.js` — revenue/cost/profit/fee/deviation/overdue SSOT + tests vs hand anchors ⚠️ shared-surface | ⬜ |
 | **2.2** | `src/lib/salaryReport.js` — aggregation model + line building + xlsx assembly + tests ⚠️ shared-surface | ⬜ |
 | **2.3** | `src/modules/08_finance/api.js` — reads, RPC calls, mail sends + tests | ⬜ |
@@ -1184,7 +1185,80 @@ exactly. **A different input, not a different rule**, and worth writing down so 
 Advisors full triage (predicted vs measured, every delta explained) · `docs/schema.sql` regenerated
 by catalog queries + cross-checked · db_roadmap §10 Done-entry + M8 register rows flipped ·
 `git commit` (pathspec!) of migrations+schema together · unit baseline unchanged · report to Ishay
-in Hebrew with the evidence table. **🗣️ אושר —**
+in Hebrew with the evidence table.
+
+**↳ as-built · GATE RUN `27/08/2026 16:5X`. The DB half of module 8 is closed.**
+
+**🔻🤖 The battery, each suite reported SEPARATELY — `test:e2e` silently excludes the smoke suite
+(`--grep-invert בדיקת-עשן`), so one green line for "E2E" would be a false all-clear:**
+
+| Suite | Result |
+|---|---|
+| `npm run gate` | **exit 0** — lint · format · **1,446 unit / 56 files** · build · jscpd · knip · audit · bidi · context · docs-structure |
+| ⚠️ one FLAKE, diagnosed not waved away | a mid-gate re-run showed **1 failed / 1,445 passed**: `src/modules/05_logistics/ChecklistDialog.test.jsx › "הצלחה רגילה — שלושת האפקטים יחד"`, which asserts **focus** after a sort jump. **Not a regression and not m8's:** the same file run alone is **34/34 exit 0**, and the failing run had a dev server competing for CPU — vitest reported `environment 629.53s` against **1.53s** in isolation. Re-run with the dev server stopped: **1,446/56 exit 0.** 📌 Worth knowing that this one test is timing-sensitive under load |
+| `npm run test:e2e` | **143 passed · 6 skipped · 0 failed · exit 0** (12.9 min) |
+| `npm run smoke` | **exit 0** — every main screen up on the REAL data |
+| browser walkthrough | 3 surfaces, **0 console errors** (below) |
+
+🐞 **`gate` was RED on its first run today, and the cause was mine — worth keeping because the
+failure mode is invisible.** `format:check` failed on `ci.yml` and `send-email/index.ts`. Cause:
+Python's `io.open(...,'w')` on Windows rewrites every newline as CRLF; the repo is LF
+(`.gitattributes`). **Eleven files were contaminated.** 🔴 **And `git status` was clean and
+`git diff` empty the entire time** — `core.autocrlf` normalises before comparing — so there was
+**no signal at all** until the gate fell, and even then the message says "code style", not
+"line endings". **The committed blobs were always LF ⇒ CI would have stayed green**; only a local
+gate could ever catch this. Normalised, `gate` re-run end-to-end green, and the mine is now in root
+`CLAUDE.md` beside the `Measure-Object` one.
+
+**🔻🤖 Browser walkthrough — the three PRODUCTION surfaces the migrations touched.** Driven by a
+throwaway Playwright spec (credentials injected from `.env.local`, never through chat; **zero
+writes — no "save" is ever clicked**; file deleted before the commit).
+
+| Surface | What it proves | Measured |
+|---|---|---|
+| מאגר הדיילות — כרטיס + טופס (ה19: C + the `api.js` rewire) | bank details now come from `hostess_bank_details`, and the form's data contract is unchanged | card renders **`מזרחי טפחות · 512 · 449…`**, form fields load the same three values ✅ |
+| הצעות מחיר (ה30: A narrowed `quote_services` SELECT) | the merged m3 screens still read | list renders all **17** quotes with amounts and statuses ✅ · and the stronger proof is in `test:e2e`: `cost-visibility.spec.js` — מנהלת פרויקטים still sees cost, **מנהלת גיוס gets 0 cost rows straight from REST** |
+| פרויקטים — מבט-על (E1 rewrote merged m6 `list_projects_overview`) | the rewrite did not break the screen that consumes it | tabs **6 בעבודה / 2 לסגירה / 9 הכול**, real rows, **no error state** ✅ |
+| console | — | **`[]` — zero errors across all three** ✅ |
+
+**🔻🤖 Advisors, predicted vs measured, every delta explained:** SECURITY **33 → 41**
+(E3 +2 · F +6 · **G +0**) · `authenticated`-DEFINER **30** · `anon`-DEFINER **6** — the four
+login/shift ones plus exactly `get_feedback_page` and `submit_feedback`, **the +2 predicted and
+nothing else** · `rls_enabled_no_policy` **4**, all deny-all by design · one pre-existing Auth
+setting. 🔴 **T8 holds: `finance_project_money`, `finance_assert_writable` and `feedback_rate_limit`
+appear in NEITHER list** — `service_role` only. PERFORMANCE **28**, of which m8 added **exactly 4**,
+each expected. ⚠️ Counts re-derived from `pg_proc`/`pg_policies`/`pg_class` directly as well as
+from the advisor output — same numbers twice, which is the point.
+
+🔴 **`docs/schema.sql` cross-checked object-by-object (54 m8 identifiers) — FOUR real gaps, fixed:**
+① **`feedback_rpc_calls` was missing entirely** — 26 `create table` blocks for 27 live tables; F's
+ripple added the functions and not the table. Now §30. ② **`set_project_finance_fields` was still
+listed in §24 as a live m6 function**, with signature and file pointer, twelve lines above the note
+saying it had been dropped. Entry deleted (the file is present-tense by its own rule — no
+tombstone). ③ the deny-all roll-call said **three** tables; four since F. ④ the refresh header
+stopped at **E2** while the body already carried F and G.
+
+🔴 **The deploy rule was re-run as a COMMAND against `origin/main`, not recalled from this morning:**
+`set_project_finance_fields` ⇒ **zero call sites** (the drop was safe) · the three bank columns ⇒
+**still written at `HostessFormDialog.jsx:217-219`, read at `HostessViewCard.jsx:315`** ⇒ **C2 must
+keep waiting** · `hostess_bank_details` ⇒ **unknown to `origin/main`**, which is exactly why the live
+site still works.
+
+🔴 **A defect was found in C2's own contract — the debt this module still owes, and it was wrong in
+BOTH registers.** It said `insert … on conflict do update`, unqualified. **The window has two halves
+and they run in opposite directions:** before the deploy `origin/main` writes the PARENT and the
+child goes stale; **after** the deploy m8's `api.js` writes ONLY the child (`splitBankFields`) and
+the parent goes stale. An unqualified overwrite runs **after** the deploy and therefore pushes
+**stale parent values over fresh child rows** — the same data loss the re-copy exists to prevent,
+pointed backwards, surfacing as **wrong bank numbers in a CPA salary report**. Contract corrected in
+§8.4 and `db_roadmap` §9א to guard the conflict action on `updated_at`; **N1 inherits the guard.**
+
+**🌊 אדוות —** `db_roadmap` §10 (the gate entry) + §9א (C2/N1 contracts) · `docs/schema.sql` (4
+fixes) · `PROJECT_MASTER_sec7.md` §7.69 (a dated ↳: the DB now holds 22.60 where the item says
+"הסכום לא נקבע" — **status unchanged, CPA verification before M10 stands**) · root `CLAUDE.md` (the
+CRLF mine) · §1 header + step table · `STATUS.md` · `CLAUDE_CODE_LOG.md`. **§7.20 needed nothing** —
+it already names `תנאי_תשלום_ימים` default 30, exactly what G seeded. **No `🚧` created or consumed.**
+**🗣️ אושר —**
 
 ---
 
@@ -1495,8 +1569,32 @@ presentation in between. **Measured, not assumed** (`git show origin/main:…`, 
 **Its contract, which is more than a `drop`:**
 1. **Re-copy first.** In the window, production's old code keeps writing bank details to the PARENT
    columns; a hostess created or edited through the live site during it will have no child row.
-   C2 must `insert … on conflict do update` from `hostesses` into `hostess_bank_details` **before**
-   dropping anything, or that hostess silently loses her bank details.
+   C2 must copy `hostesses` → `hostess_bank_details` **before** dropping anything, or that hostess
+   silently loses her bank details.
+   🔴 **AND THE CONFLICT CLAUSE MUST BE GUARDED — a bare `on conflict do update` corrupts data
+   in the other direction, found 27/08/2026 at the 1.8 gate.** The window has TWO halves and they
+   run opposite ways: **before** the deploy, `origin/main` writes the PARENT and the child goes
+   stale; **after** the deploy, m8's `api.js` writes ONLY the child (`splitBankFields`) and the
+   PARENT goes stale. An unguarded `do update` runs after the deploy and therefore **overwrites
+   fresh child rows with stale parent values** — the exact failure the re-copy exists to prevent,
+   pointed backwards, and it would surface as wrong bank numbers on a salary report to the CPA.
+   ⇒ **the copy overwrites only where the parent is genuinely newer:**
+   ```sql
+   insert into hostess_bank_details (hostess_id, bank_name, bank_branch, bank_account)
+   select h.hostess_id, h.bank_name, h.bank_branch, h.bank_account
+     from hostesses h
+    where coalesce(h.bank_name, h.bank_branch, h.bank_account) is not null
+   on conflict (hostess_id) do update
+      set bank_name    = excluded.bank_name,
+          bank_branch  = excluded.bank_branch,
+          bank_account = excluded.bank_account
+    where hostesses_updated_at_is_newer;   -- see below
+   ```
+   The `where` on the conflict action compares the two `updated_at` columns — both tables carry one,
+   both maintained by `extensions.moddatetime` — so a row m8's code just wrote is left alone.
+   ⚠️ **`excluded` cannot see the parent's `updated_at`** unless it is selected into the insert, so
+   either add it to the column list or re-join `hostesses` in the `where`. **Decide that when C2 is
+   written, against the live DDL — not from this snippet.**
 2. Then drop the three columns.
 3. Then delete the three `⚠️ … תימחק במיגרציה C2` column comments' subject matter from
    `docs/schema.sql`, and strike this block.

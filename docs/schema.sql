@@ -9,7 +9,7 @@
 -- ⚠️ זהו SNAPSHOT שנוצר מתוך שאילתות על המסד החי. **מקור-אמת לשינויים = `supabase/migrations/`**
 --    (ולא הקובץ הזה). כל שינוי DB נכתב כקובץ מיגרציה חדש, מוחל, ואז הקובץ הזה נוצר מחדש.
 --
--- 📅 נוצר: 14/08/2026 · רוענן: 27/08/2026 (צעד 1.1 של מודול 8 — אחרי מיגרציה
+-- 📅 נוצר: 14/08/2026 · רוענן: 27/08/2026 (צעד 1.8 — כל עשר מיגרציות פזה 1 של מודול 8; אחרי מיגרציה
 --    `20260827125155_module8_finance_tables_and_columns`; הדלתא: טבלה חדשה `project_finance`
 --    (+RLS +policy קריאה +טריגר), 2 עמודות ואילוץ-ייחודיות על `projects`, עמודה + CHECK
 --    + אינדקס-C-1 על `assignments`, והידוק policy-הקריאה של `quote_services` (ה30)) ·
@@ -29,6 +29,16 @@
 --    ‏2 פנימיות ו-7 נקראות-מהלקוח — ו**הסרת `set_project_finance_fields` של מ6**;
 --    שני מסעות מלאים אומתו בטרנזקציות שגולגלו אחורה: ארכוב הקפיא 230.00 וההצעה
 --    החזירה 3,508.00 — שני עוגני-היד) ·
+--    ואחרי E3 `20260827152840_module8_salary_report_transaction` + תיקון-קדימה
+--    `20260827153725_module8_salary_report_temp_table_fix` (שתי פונקציות דוח-השכר) ·
+--    ואחרי F `20260827155303_module8_public_feedback_rpc` (טבלה חדשה
+--    `feedback_rpc_calls` — סעיף 30 — +RLS בלי policies ואינדקס; 4 פונקציות חדשות,
+--    שתיים מהן נקראות בידי `anon`; ו**שער נוסף ל-`archive_project`** — ציון <3 בלי
+--    סיבה חוסם ארכוב) ·
+--    ואחרי G `20260827160357_module8_cancel_project_released_status_and_seeds`
+--    (הרחבת `cancel_project` הממוזגת של מ6 בשורה אחת — שימור
+--    `released_from_status`, הוכח ב-md5 על הגוף החי — ושני זרעי-פרמטרים:
+--    `תנאי_תשלום_ימים`=30 ו-`סכום_נסיעות_למשמרת` 0→22.60) ·
 --    פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
 --
 -- 🔴 **לרענן את הקובץ הזה אחרי כל מיגרציה.** העותק הקודם לא רוענן חמישה חודשים והכריז על עמודה
@@ -46,8 +56,9 @@
 -- כל 55 המדיניות (43 ב-public, 12 על `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`.
 -- 🔴 **PERMISSIVE = הן מתאחדות ב-OR.** שתי policies על אותה טבלה מרחיבות גישה, לא מצמצמות —
 --    ולכן policy חדשה "מגודרת היטב" אינה מגבילה אף אחד שכבר עובר דרך policy אחרת.
--- 🔴 שלוש טבלאות נותרו deny-all **במכוון**: `project_changes` (נקראת רק דרך ה-RPC הממסך),
---    `login_attempts` ו-`login_rpc_calls` (רק דרך פונקציות ה-DEFINER של הכניסה). מ-27/08/2026
+-- 🔴 ארבע טבלאות נותרו deny-all **במכוון**: `project_changes` (נקראת רק דרך ה-RPC הממסך),
+--    `login_attempts` ו-`login_rpc_calls` (רק דרך פונקציות ה-DEFINER של הכניסה), ו-`feedback_rpc_calls`
+--    (נוספה 27/08/2026 ב-F — אותו דפוס, לדף-המשוב הציבורי). מ-27/08/2026
 --    **אין יותר אף טבלה עסקית שחסומה מחוסר-בנייה** — `salary_reports` הייתה האחרונה. הפונקציה `moddatetime` (טריגר
 -- `updated_at`) יושבת בסכמה `extensions`, לא ב-`public`.
 -- ============================================================
@@ -1604,6 +1615,28 @@ create policy hostess_bank_details_select_finance_module on hostess_bank_details
   );
 
 -- ============================================================
+-- 30. קצב-קריאות לדף-המשוב הציבורי — public.feedback_rpc_calls (מודול 8)
+-- ============================================================
+-- ⚠️ אין לטבלה הזו מפתח ראשי. RLS מופעל ואין לה אף policy — בדיוק כמו `login_rpc_calls`.
+-- 🔴 הדף הציבורי `/feedback/:token` נפתח **בלי התחברות**; המונה הזה הוא
+--    הדבר היחיד שמונע מניחוש-טוקנים בלולאה: 15 קריאות ל-IP לשעה.
+create table feedback_rpc_calls (
+  ip        inet        not null,
+  called_at timestamptz not null default now()
+);
+
+comment on table feedback_rpc_calls is
+  'מ8 — מונה הגבלת-קצב לדף-המשוב הציבורי (15/IP/שעה). דפוס `login_rpc_calls`. deny-all: הגישה רק דרך פונקציות DEFINER.';
+
+alter table feedback_rpc_calls enable row level security;
+
+-- אינדקסים
+create index feedback_rpc_calls_ip_called_at_idx on feedback_rpc_calls using btree (ip, called_at);
+
+-- מדיניות RLS: אין (0 policies)
+--   → supabase/migrations/20260827155303_module8_public_feedback_rpc.sql
+
+-- ============================================================
 -- 24. פונקציות בסכמה public — 43 פונקציות
 -- ============================================================
 -- 🚫 **הגופים אינם כאן במכוון** (ר' כותרת הקובץ). לכל פונקציה: חתימה · מצב אבטחה · search_path ·
@@ -1696,10 +1729,6 @@ create policy hostess_bank_details_select_finance_module on hostess_bank_details
 --   SD · plpgsql · [authenticated, service_role]
 --   → supabase/migrations/20260814142439_module6_rpcs_reads_and_close.sql
 -- mark_feedback_survey_sent(p_project_id integer) returns boolean
---   SD · plpgsql · [authenticated, service_role]
---   → supabase/migrations/20260814142439_module6_rpcs_reads_and_close.sql
--- set_project_finance_fields(p_project_id integer, p_invoice_sent boolean, p_payment_date date,
---   p_feedback_score integer, p_negative_feedback_reason text, p_feedback_notes text) returns boolean
 --   SD · plpgsql · [authenticated, service_role]
 --   → supabase/migrations/20260814142439_module6_rpcs_reads_and_close.sql
 -- list_project_changes(p_project_id integer) returns table (change_id bigint, change_group_id uuid,
