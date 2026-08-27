@@ -45,6 +45,26 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 27/08/2026 19:4X–19:5X — everything in production; dead branches cleared; phase-2 branch cut
+
+- 🚀 **Production is `c1a3306`.** PR #73 → `dev`, #74 → `main`, `dev`/`main` content-identical,
+  Vercel `state=success`. **And the deploy was verified the way it has been all day — by fetching
+  the live bundle and asserting its contents**, not by trusting the pipeline: it reads
+  `hostess_languages(language)` and `hostess_bank_details(*)`, and **does not write the dropped
+  parent column**. ⚠️ Same bundle hash as the previous deploy, correctly: N1b carried no `src/`
+  change, only a migration and docs.
+- 🧹 **Seven merged branches deleted, remote and local.** Each was measured first
+  (`git rev-list --count origin/dev..<branch>` ⇒ 0) rather than assumed, and **every SHA was
+  recorded before deletion** so any of them is recoverable: `module-8-finance` `e41be2b` ·
+  `module-8-c2-and-n1` `3593bf9` · `module-8-n1b` `5e0bf45` · `fix-flaky-checklist-focus`
+  `c3b2eaf` · `module-5-logistics` `3822a47` · `post-merge-m5-flip` `89f830b` ·
+  `reconcile-main-into-dev` `8e63da9`. **The remote now holds `dev` and `main` only.**
+- 🌱 **`ishay/module-8-phase-2` cut from fresh `origin/dev` (`ed353bc`)**, with the fresh-vs-dead
+  discriminator run at cut (`git log origin/dev..HEAD` ⇒ empty ⇒ fresh, not merged).
+- **The day's ledger:** phase 1 (ten migrations + the 1.8 gate) · `C2` — ה19 closed · `N1`+`N1b` —
+  normalization complete · one flaky test fixed with a mutation proof. **One debt remains and it is
+  not m8's to build: `N2`, after the 28/08 presentation.**
+
 ### 27/08/2026 19:3X — N1b applied: the normalization is complete
 
 - ✅ **`hostesses.languages` dropped. The languages package (N1 + N1b) is closed**, and so is C2's
