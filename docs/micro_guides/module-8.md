@@ -12,8 +12,8 @@
 | **Branch** | `ishay/module-8-finance` — ✅ **CUT 27/08/2026 12:4X from fresh `origin/dev` (`585ad27`)**, at step 1.0. Preconditions verified the same turn: m5 IS merged (`git merge-base --is-ancestor origin/ishay/module-5-logistics origin/dev` ⇒ yes; `git log origin/dev..origin/ishay/module-5-logistics` ⇒ empty), and `origin/dev` NOW carries `docs/specs/module_08_finance/` (`git ls-tree origin/dev docs/specs/` ⇒ 04/05/06/**08**). Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ empty (fresh, not dead — iron rule 10's caveat). *(Was: "NOT YET CUT", 26/08.)* |
 | **Owner** | Ishay (sole developer) |
 | **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X** — step 1.0's 🤖 half done; standing at its 👤 checkpoint. **Zero migrations applied.** |
-| **Last updated** | `27/08/2026 14:2X` *(system clock)* |
-| **Active step** | **1.4 (second half) — deploy `supabase/functions/send-email/index.ts` with the two new entity types, then 1.5 (migration E).** ‏1.0 ✅ · 1.1 ✅ · 1.2 ✅ · **1.3 ✅ both halves** (bank split live-verified in a credentialed browser, restore verified) · 1.4 migration ✅. **`npm run gate` exit 0, 1,446 unit tests.** 🔴 **C2 still owed after deploy — ה19 is NOT closed** (§8.4 · `db_roadmap` §9א). 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
+| **Last updated** | `27/08/2026 14:4X` *(system clock)* |
+| **Active step** | **1.5 — Migration E, the finance RPC family (the module's whole authorization model), NOT STARTED.** ‏1.0–1.4 all ✅ **including both halves of 1.3 and 1.4.** DB: A · B · C(additive half) · D applied and live-verified; `send-email` deployed at **v6** and certified by a 5-call behavioural probe (zero mails sent, `email_log` unchanged at 33). **`npm run gate` exit 0 · 1,446 unit tests.** 🔴 **C2 still owed after deploy — ה19 is NOT closed** (§8.4 · `db_roadmap` §9א). 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
 | **Deadline** | conference **01/10** (target: 100%) · end 20/10. m8 is the last *process* module before reports — the conference's "closing the loop" story leans on it. |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -25,8 +25,8 @@
 | **1.1** | Migration A — `project_finance` child + `projects` finance columns + `assignments.released_from_status` + C-1 index | ✅ |
 | **1.2** | Migration B — `salary_reports` document model + `salary_report_lines` + RLS | ✅ |
 | **1.3** | Migration C + same-step client rewire — `hostess_bank_details` split (ה19) | ✅ *(both halves; `drop column` deferred to C2 — §8.4)* |
-| **1.4** | Migration D — `email_log` CHECK +2 values + 'כספים' SELECT policy → **then** `send-email` deploy | 🔨 *(migration ✅ · deploy pending)* |
-| **1.5** | Migration E — the finance RPC family (4 actions + archive freeze + fee resolution + DEFINER readers) | ⬜ |
+| **1.4** | Migration D — `email_log` CHECK +2 values + 'כספים' SELECT policy → **then** `send-email` deploy | ✅ *(both halves; deploy = v6)* |
+| **1.5** | Migration E — the finance RPC family (4 actions + archive freeze + fee resolution + DEFINER readers) | 🔨 |
 | **1.6** | Migration F — public feedback RPC pair `/feedback/:token` + rate limit | ⬜ |
 | **1.7** | Migration G — `cancel_project` extension (live-body pull) + params seeds | ⬜ |
 | **1.8** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | ⬜ |
@@ -855,9 +855,36 @@ changing; the *description* was wrong, not the SQL. 📌 The corrected statement
 `docs/schema.sql` beside the four policies, where the next reader will actually be.
 🔑 **Generalise it, because it will bite again in 1.5/1.6:** when reasoning about who can see what,
 count **every** policy on the table, not just the one being added.
+**↳ as-built · DEPLOY DONE `27/08/2026 14:4X` — `send-email` is now **version 6, ACTIVE**,
+`verify_jwt` still true.** T5's order was honoured and is now provable: the migration went first
+(CHECK live at 6 values), the deploy second.
+**🔻🤖 Verify — behaviour, not text.** *(A source diff would only have shown the maps were edited,
+not that they LOADED and that the gate judges against the right module.)* A temporary credentialed
+probe made five calls to the DEPLOYED function with real JWTs:
+
+| # | Call | Result | What it proves |
+|:-:|---|---|---|
+| ① | כספים · `invoice` · no attachment | **400** `חסרים נתונים לשליחה.` | `invoice` is a KNOWN entity gated on 'כספים' — an unknown one is refused **403** by deny-by-default, so a 400 can only be reached *past* the gate. And the attachment floor is live. |
+| ② | כספים · `salary_report` · no attachment | **400**, same | idem |
+| ③ | כספים · `not_a_real_entity` | **403** | the map did not become permissive — deny-by-default still holds |
+| ④ | **גיוס** · `invoice` | **403** `אין לך הרשאה לשלוח.` | 🔴 the mapping really is 'כספים' and **not a recycled `quote`/`shift`** — the exact trap m6 documented on this same line |
+| ⑤ | גיוס · `shift` · empty body | **400** | **positive control**: her login works, so ④'s 403 is a permission decision and not broken auth |
+
+🚫 **Zero mails were sent and zero rows written:** every call dies at the gate or at body-validation,
+**before** the `fetch` to Make. Confirmed after the run — `email_log` still holds **33** rows
+(`quote`=6 · `shift`=25 · `project`=1 · `project_report`=1), unchanged.
+⚠️ **`npx deno check` FAILS — and it is NOT this change.** Measured both ways: the same
+`Could not find a matching package for 'npm:@supabase/realtime-js@2.112.0'` appears on the
+**unmodified committed file**. A local dependency-resolution gap, pre-existing, reported rather than
+worked around. *(The step asked for `deno check`; it cannot pass locally today. The behavioural
+probe above is what actually certifies the deploy.)*
+📌 **A stale comment inside the function was corrected in the same edit:** it read *"🚫 אין כאן
+`invoice`/`salary_report`"* — true until today, false the moment the values landed. It now records
+the order that was actually followed, and keeps the 🚧 note for מ11, which still has to do the same.
+
 **🌊 אדוות —** `docs/schema.sql` (CHECK + the 4th policy + the PERMISSIVE/OR note in the header) ·
-`db_roadmap` §10 · §10 below. **§6's mail-engine row is NOT marked paid** — m8's share is paid only
-once the Edge function is deployed. **🗣️ אושר —** typed-echo `27/08/2026 13:5X`.
+`db_roadmap` §10 · §10 below · the Edge function's own header comment. **§6's mail-engine row: m8's
+share is now paid** — the two entity types exist end-to-end. **🗣️ אושר —** typed-echo `27/08/2026 13:5X`.
 
 **Step 1.5 · Migration E — `module8_finance_rpc_family`**
 **Files:** one migration (or two if the reader family earns its own — builder's call, stated in

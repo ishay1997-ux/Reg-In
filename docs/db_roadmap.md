@@ -451,9 +451,16 @@ protection is false until it does.
   sees, never subtract. Nothing is broken; the description was wrong, not the SQL. **The corrected
   statement now sits in `docs/schema.sql` beside the four policies and in the header's conventions
   block**, where the next reader stands.
-  🔴 **Both steps are HALF done and neither owns its §6 debt yet:** C's 5-site client rewire has not
-  landed, and D's `send-email` deploy has not run (T5's order therefore still intact). **ה19 is not
-  closed — see §9א, C2.**
+  ✅ **Both second halves landed the same day.** C's client rewire shipped (the split lives in
+  `04_hostesses/api.js`; live-verified in a credentialed browser). D's `send-email` deploy ran
+  **after** the migration, per T5 — the function is **version 6, ACTIVE**, and was certified
+  behaviourally rather than by source diff: `invoice`/`salary_report` reach body-validation as
+  מנהלת כספים (**400**, so they passed the gate) · an invented entity still gets **403** ·
+  מנהלת גיוס gets **403** on `invoice` but **400** on `shift` (positive control) ⇒ the mapping is
+  genuinely `'כספים'` and not a recycled `quote`/`shift`. **Zero mails sent, `email_log` unchanged
+  at 33 rows.** ⚠️ `npx deno check` fails identically on the unmodified committed file — a
+  pre-existing local dependency-resolution gap, not this change.
+  🔴 **ה19 is STILL not closed — C2 is owed after the production deploy. See §9א.**
   **`docs/schema.sql` refreshed** (§15 bank columns → nullable + deprecation note · new §29
   `hostess_bank_details` · `email_log` CHECK + 4th policy · header 25→26 tables, 52→55 policies + an
   explicit PERMISSIVE/OR warning) **and cross-checked against the live catalog — zero divergence.**
