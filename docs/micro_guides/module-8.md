@@ -873,11 +873,21 @@ probe made five calls to the DEPLOYED function with real JWTs:
 🚫 **Zero mails were sent and zero rows written:** every call dies at the gate or at body-validation,
 **before** the `fetch` to Make. Confirmed after the run — `email_log` still holds **33** rows
 (`quote`=6 · `shift`=25 · `project`=1 · `project_report`=1), unchanged.
-⚠️ **`npx deno check` FAILS — and it is NOT this change.** Measured both ways: the same
-`Could not find a matching package for 'npm:@supabase/realtime-js@2.112.0'` appears on the
-**unmodified committed file**. A local dependency-resolution gap, pre-existing, reported rather than
-worked around. *(The step asked for `deno check`; it cannot pass locally today. The behavioural
-probe above is what actually certifies the deploy.)*
+✅ **`deno check` PASSES — exit 0.**
+🔴 **A correction I owe, because my first report of this step got it wrong.** I ran
+`npx deno check <file>`, hit `Could not find a matching package for 'npm:@supabase/realtime-js'`,
+confirmed the identical failure on the unmodified committed file, and concluded *"a pre-existing
+local environment gap; it cannot pass locally today"*. **The first half was right and the conclusion
+was wrong.** The correct command is the one CI already uses —
+`deno check --node-modules-dir=none supabase/functions/send-email/index.ts` — and it exits 0 on this
+change. **The cause was diagnosed and written down in this repo on 05/08/2026**, in
+`.github/workflows/ci.yml` directly above the job: with a `package.json` at the root and no
+`deno.json`, Deno 2 defaults to `nodeModulesDir: "manual"` and demands the package from a
+`node_modules` that was never installed; the flag forces resolution from the global cache, which is
+also how Supabase's Edge runtime resolves.
+🔑 **The lesson, and it is not "remember the flag":** *"the same failure on the unmodified file"*
+proves the change is innocent — **it does not diagnose the failure**, and I stopped at the first
+conclusion. The repo already held the answer, one file away, next to the job that runs it.
 📌 **A stale comment inside the function was corrected in the same edit:** it read *"🚫 אין כאן
 `invoice`/`salary_report`"* — true until today, false the moment the values landed. It now records
 the order that was actually followed, and keeps the 🚧 note for מ11, which still has to do the same.

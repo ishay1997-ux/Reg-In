@@ -458,8 +458,9 @@ protection is false until it does.
   מנהלת כספים (**400**, so they passed the gate) · an invented entity still gets **403** ·
   מנהלת גיוס gets **403** on `invoice` but **400** on `shift` (positive control) ⇒ the mapping is
   genuinely `'כספים'` and not a recycled `quote`/`shift`. **Zero mails sent, `email_log` unchanged
-  at 33 rows.** ⚠️ `npx deno check` fails identically on the unmodified committed file — a
-  pre-existing local dependency-resolution gap, not this change.
+  at 33 rows.** ✅ `deno check --node-modules-dir=none …` **passes, exit 0** — the flag CI
+  already uses. *(Corrected same-day: this row first said the check "cannot pass locally", after I
+  ran it without the flag. The diagnosis was already written in `.github/workflows/ci.yml`.)*
   🔴 **ה19 is STILL not closed — C2 is owed after the production deploy. See §9א.**
   **`docs/schema.sql` refreshed** (§15 bank columns → nullable + deprecation note · new §29
   `hostess_bank_details` · `email_log` CHECK + 4th policy · header 25→26 tables, 52→55 policies + an
