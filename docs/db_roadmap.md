@@ -135,7 +135,7 @@ only) · the typed-echo gate before every apply · `docs/schema.sql` refreshed a
 | `assignments` | `attendance_status`, `lateness_level`, `no_show_reason` | §7.16(א) | 4/8 |
 | `quote_services` | `closing_unit_cost` (הקפאת עלות) ✅ **בוצע בפועל — `20260723111005_module3_quotes_structure_and_constraints.sql`** *(`alter table quote_services add column closing_unit_cost numeric(12,2) not null check (closing_unit_cost >= 0);` — וההקפאה עצמה נכתבת ב-RPC `20260723115000`: `update public.quote_services qs set closing_unit_cost = pr.cost`. נמדד 12/08/2026 ב-`regin-docs-sync`; השורה תיארה את השינוי כעתידי. **תוקן ב-§7.47 קודם, ואז כאן** — כלל ברזל 13(א))* | §7.28 | 3 |
 | `quotes` | `estimated_start_time` + `estimated_end_time` (time); `estimated_hours` נגזר-מההפרש ✅ **בוצע בפועל — `20260723111005_module3_quotes_structure_and_constraints.sql`** *(`alter table quotes add column estimated_start_time time not null;   -- §7.82/F23` + `alter table quotes add column estimated_end_time time not null;     -- §7.82/F23`, **ונוסחת-הגלגול +24 של F23(א) נחתה באותה מיגרציה** כעמודה-נגזרת: `case when estimated_end_time > estimated_start_time then extract(epoch from (estimated_end_time - estimated_start_time)) / 3600 else … + 24 end`. נמדד 12/08/2026 ב-`regin-docs-sync`; השורה תיארה את השינוי כעתידי)* ⚠️ **לשורה הזאת אין תאום ב-§7.47** — היא שורה מקומית של הקובץ הזה, ולכן אין כאן "SSOT קודם" לתקן; **ההכרעה עצמה חיה ב-§7.82/F23, ושם היא עדיין מנוסחת בלשון עתיד** *(לא נגעתי — היקף-העריכה של האודיט הזה היה §7.47 בלבד)* | §7.82/F23 | 3 |
-| `params` / `roles` / `modules` / `salary_reports` | אילוצי-ייחודיות ◐ **בוצע חלקית — שלושה מארבעה** *(נמדד 12/08/2026 ב-`regin-docs-sync`)*: ✅ `roles` + `modules` ב-`20260710160735_module2_customers_surrogate_key_rls_and_marketing.sql` (`alter table roles add constraint roles_role_name_key unique (role_name);` · `alter table modules add constraint modules_module_name_key unique (module_name);`) · ✅ `params` ב-`20260723111005_module3_quotes_structure_and_constraints.sql` (`alter table params add constraint params_param_name_key unique (param_name);`) · 🔴 **`salary_reports` — לא בוצע ונשאר פתוח למ8:** זהו סעיף (ג) של §7.40 (*"אין מזהה-חודש — אין מניעת הרצה כפולה של דוח חודשי"*), והטבלה עדיין `(report_id serial primary key, sent_date date not null, report_file_url text not null)` בלבד — `grep` על כל `supabase/migrations/**` ⇒ **אפס** אילוץ-ייחודיות עליה. **⇒ אין לסמן את השורה כבוצעה.** **תוקן ב-§7.47 קודם, ואז כאן** — כלל ברזל 13(א) | §7.40 | 2/3/8 |
+| `params` / `roles` / `modules` / `salary_reports` | אילוצי-ייחודיות ◐ **בוצע חלקית — שלושה מארבעה** *(נמדד 12/08/2026 ב-`regin-docs-sync`)*: ✅ `roles` + `modules` ב-`20260710160735_module2_customers_surrogate_key_rls_and_marketing.sql` (`alter table roles add constraint roles_role_name_key unique (role_name);` · `alter table modules add constraint modules_module_name_key unique (module_name);`) · ✅ `params` ב-`20260723111005_module3_quotes_structure_and_constraints.sql` (`alter table params add constraint params_param_name_key unique (param_name);`) · ✅ **`salary_reports` — בוצע 27/08/2026 ב-`20260827131033_module8_salary_report_document_model` (מ8, צעד 1.2): `alter table salary_reports add constraint salary_reports_period_key unique (period);` ⇒ **ארבעה מארבעה — השורה הזו סגורה.** זהו סעיף (ג) של §7.40 (*"אין מזהה-חודש — אין מניעת הרצה כפולה"*), והוא נסגר עם אילוץ-משנה שאין לו זכר בניסוח המקורי: **`salary_reports_period_first_of_month` — CHECK שדורש ש-`period` יהיה תמיד ה-1 לחודש.** בלעדיו תאריך באמצע החודש היה מפצל חודש אחד לשתי "תקופות" חוקיות ועובר את ה-UNIQUE **בלי להתלונן** — כלומר בדיוק ההרצה-הכפולה שהאילוץ בא למנוע. **שניהם הוכחו בכתיבה שנכשלה בפועל, לא בקריאת ה-DDL** (`unique_violation` · `check_violation`). *(הנוסח שקדם — "לא בוצע ונשאר פתוח למ8 … אפס אילוץ-ייחודיות עליה" — נמדד 12/08/2026 והיה נכון עד היום.)* **תוקן ב-§7.47 קודם, ואז כאן** — כלל ברזל 13(א) | §7.40 | 2/3/8 |
 | `customers` | `customer_id` surrogate bigint PK + `company_number`(ח"פ) unique not null ✅ **בוצע בפועל — `20260710160735_module2_customers_surrogate_key_rls_and_marketing.sql`** *(SECTION 1, שלושת החלקים: `alter table customers rename column customer_id to company_number;` + `alter table customers add constraint customers_company_number_key unique (company_number);` + `alter table customers add column customer_id bigint generated always as identity primary key;` — וה-FK של `quotes` הוקם מחדש מול המפתח החדש. נמדד 12/08/2026 ב-`regin-docs-sync`; השורה תיארה את השינוי כעתידי)* ➕ **שורה זו נעדרה מהמראה לגמרי עד 12/08/2026** — היא קיימת ב-§7.47 מאז ומעולם, ומעולם לא שוכפלה לכאן; **הועתקה מ-§7.47 כלשונה, לא נגזרה מחדש.** *(זו בדיוק התקלה שתג ה-🔗 קיים כדי למנוע: מראה שמשמיטה שורות-SSOT בשקט נקראת כרשימה מלאה.)* | §7.64 | 2 |
 | `hostesses` | `id_number`(ת"ז) → surrogate + ת"ז unique ✅ **בוצע בפועל — `20260809122536_module4_hostesses_surrogate_key_and_columns.sql`** *(`hostess_id bigint generated always as identity primary key` + `hostesses_id_number_key unique (id_number)`. נמדד 12/08/2026 ב-`regin-docs-sync`; השורה תיארה את השינוי כעתידי)* ➕ **שורה זו נעדרה מהמראה לגמרי עד 12/08/2026** — הועתקה מ-§7.47 כלשונה, לא נגזרה מחדש. ⚠️ **והערת-הפרוזה שמתחת לטבלה** (*"ושאר הרשימה … **כן** רשומה: ת"ז→סורוגייט …"*) **נכונה רק לגבי שורת-§7.64 בטבלת-העדיפויות למטה, ולא לגבי המראה הזאת** — משפט-כיסוי כזה הוא מה שהחביא את ההשמטה | §7.64 | 4 |
 | `hostesses` | `languages text[] not null default '{}'` ✅ **בוצע בפועל — `20260809122536_module4_hostesses_surrogate_key_and_columns.sql`** *(`alter table public.hostesses add column languages text[] not null default '{}';` — בדיוק כפי שנוסח כאן. ⚠️ **ולכן המשפט "המיגרציה טרם נכתבה, ולכן השינוי הוא טקסט בלבד" שבגוף השורה התיישן** — הוא היה נכון ב-06/08 ולא ב-09/08. נמדד 12/08/2026 ב-`regin-docs-sync`)* ⚠️ **(שונה מ-`speaks_english boolean` בהכרעת-ישי 06/08/2026 — *"הגיוני שיהיה שפות"*, כפי שניסח מלכתחילה. עלות-בנייה זהה — רב-בחירה במקום תיבה — וחוסך מיגרציה אם יידרשו רוסית/ערבית. **המיגרציה טרם נכתבה, ולכן השינוי הוא טקסט בלבד.**)** — **שדה-מידע בכרטיס הדיילת בלבד.** 🚫 **אינו תנאי בשער של שכבה 1 ואינו עמודה בטבלת-המאגר** *(הכרעת-ישי 06/08/2026)*: לאירוע אחד יש **תפקידים שונים** — *"אולי סבבה מישהי שתהיה עם המדפסת ולא צריכה את השפה"* — ושער ברמת-האירוע מניח שכל העמדות זהות. **השדה מיידע; המנהלת בוחרת ידנית ממילא (C5:311).** ‏🚧 הצעד הבא אם יידרש: **צ'יפ-הקשר** בכרטיס-המועמדת, לא שער | הכרעת-ישי 06/08/2026 (‏Discovery מ4 · `research §7` פריט 8, שהיה ⚪ "לשאול את ישי") | 4 |
@@ -397,6 +397,73 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | 14 | T3 reminder wording says "מחר" while the timing is a param in hours | C5:1127 vs P:99 | §7.42↳ — the param rules |
 | 15 | Gross profit "computed and saved" vs "derived, not stored" — **resolved 11/07 (§7.52 two-figure ruling): both were right about different numbers (final=stored, expected=derived)** | C5:453 vs C6:279 | §7.52 + §7.78 (snapshot-as-a-unit) |
 
+## 9א. ⏸️ Removals waiting for a deploy — READ THIS BEFORE WRITING ANY DESTRUCTIVE MIGRATION
+
+> **The rule this section serves lives in `supabase/migrations/CLAUDE.md` ("כלל-הפריסה") — that file
+> auto-loads the moment anyone touches the migrations folder, so it is the rule's single home.**
+> This is only the LIST. Added 27/08/2026 by Ishay's ruling.
+> **One-line version:** one database serves production and development, and production runs code
+> from a different commit ⇒ **additive DDL is always safe; `drop`/`rename`/tightening must wait
+> until the code that stopped using the thing is deployed.**
+
+| # | The removal that is owed | Blocked until | Its contract (more than a `drop`) | Registered where |
+|---|---|---|---|---|
+| **C2** | `alter table hostesses drop column bank_name, bank_branch, bank_account` — the destructive half of ה19 (m8 migration C did the additive half on 27/08/2026) | m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live** — because `origin/main` writes those columns (`HostessFormDialog.jsx:217-219`) and reads them (`HostessViewCard.jsx:315`) | 1️⃣ **Re-copy first** — `insert … on conflict (hostess_id) do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 🔴 **BUT THE `do update` MUST BE GUARDED BY `updated_at`** *(found 27/08/2026 at the 1.8 gate — the contract as first written was wrong)*: **after** the deploy m8's `api.js` writes ONLY the child, so an unguarded overwrite would push **stale parent values over fresh child rows** — the same data loss pointed backwards, landing as wrong bank numbers in a CPA salary report. Overwrite only where the parent row is genuinely newer than the child row (both tables carry a `moddatetime`-maintained `updated_at`). **Full contract + the SQL shape: `micro_guides/module-8.md` §8.4.** 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
+
+| **N1** | `hostesses.languages` (`text[]`) → child table `hostess_languages(hostess_id, language)`, then `drop column` | m8 merged **and deployed** | Same three beats as C2: **add + copy → deploy → drop**, with a **re-copy immediately before the drop** — 🔴 **including C2's `updated_at` guard on the conflict action**, for the same reason: once the new code writes only the child, an unguarded overwrite runs backwards. ⚠️ `languages` is **nullable** (unlike the bank columns), so the additive half needs no constraint relaxation — create, copy, drop later | `PROJECT_MASTER_sec7.md §7.87` · here |
+| **N2** | `customer_contacts` consolidation — `is_primary` on the child, then drop `contact_name`/`phone`/`email` from `customers` | m8 merged **and deployed** | Same pattern, **separate drop migration** from N1's. 🔴 **Its blast radius is ~4.6× N1's — see the measurement below; "one package" is true of the pattern, not of the size** | here |
+
+✅ **CONFIRMED BY ISHAY DIRECTLY, `27/08/2026 17:1X` — the flag below is resolved and the rows stand.**
+He restated the ruling to this session in his own words: **"מאושר. שני הפריטים נכנסים כחבילה אחת
+אחרי מיזוג מודול 8."** ⇒ **both are approved debt, and the timing is his: AFTER the m8 merge, as one
+package.** Three product rulings travel with them, also his and also relayed-then-restated: the
+contacts form is **one list where every row is the same card**, primary marked by a chip and a border
+(not a separate "primary" field above a "others" list) · **deleting the primary contact is BLOCKED**
+with *"אי אפשר למחוק את איש הקשר הראשי. סמן קודם אחר כראשי."* · the backfill makes every existing
+contact primary, so **the 7 live customers show no change at all**.
+🔴 **AND THIS SESSION'S MEASURED RECOMMENDATION ON TIMING, `27/08/2026 17:1X`, because he asked
+"מה דעתך" about doing them the same day:** **N1 and N2 are not the same size and should not travel
+as one commit** *(they may still be one approved package)*. Measured on `origin/main` this hour:
+**N1 = 10 occurrences / 2 files** (module 4 only) · **N2 = 46 occurrences / 16 PRODUCTION files**
+(68 / 23 including test files — both counted, so nobody has to guess which basis is meant), spanning
+`src/lib/customers.js`, `quotes.js`, `shiftEmails.js` and modules **2, 3 and 6** — the whole
+quote→project→email chain. ⚠️ **And N2 is not only a migration: the approved contacts form is a
+SCREEN in module 2**, so "just do the migration" understates it.
+🔴 **Neither belongs on the m8 branch, and the reason is arithmetic, not caution.** The additive
+half alone buys nothing — a child table nothing writes to goes stale from the first edit — so each
+needs migration + client rewire + deploy + drop, i.e. its own full cycle. Putting the additive
+halves inside m8's deploy does **not** save a deploy: the drops would still need a second one.
+It would only delay the m8 merge, which is the thing gated on today's date.
+⚠️ **Plus the calendar: the interim presentation is 28/08.** Touching the quote→project→email chain
+the night before it is the highest-risk item on the table. **Recommended order: merge m8 → deploy →
+C2 (tonight) · N1 (small) then N2 (with its screen) on a fresh branch after the presentation.**
+*(Ishay can override; this is a recommendation with its measurement, not a gate.)*
+*(The original provenance flag, kept because the correction is the record:)* a parallel DB-structure
+investigation session reported on 27/08/2026 that Ishay approved both, relaying his words as
+**"מאשר את שניהם"**; **this session had not heard that ruling from Ishay** and flagged it for his
+confirmation rather than acting on a peer's relay. **He confirmed it directly hours later** — the
+flag did its job.
+**Independently measured by THIS session on `origin/main` — the peer explicitly asked that its own
+numbers not be taken on trust:**
+· **N1 — `languages`: 10 occurrences across 2 files**, with a real write at
+  `HostessFormDialog.jsx:222` and reads at `:125` and `HostessViewCard.jsx:320`.
+· **N2 — `contact_name`: 46 occurrences across 16 production files** (tests excluded), with the
+  write at `CustomerFormDialog.jsx:206` and readers reaching into `lib/quotes.js` and
+  `lib/shiftEmails.js`.
+🔑 **A consequence worth naming before anyone starts:** both were approved as one package "because
+they are the same pattern". **The pattern is identical; the size is not** — N2 touches more than
+four times the code surface of N1, and its readers sit in the quote and shift-mail paths rather
+than in one module. **Whoever builds this should be free to ship N1 first and N2 as its own step**,
+and should not read "one package" as "one migration".
+⚠️ **Still open at the time of writing, per the same peer: the customer-form design, plus the
+delete-the-primary behaviour and the backfill for the 7 existing customers.** Not decided ⇒ not
+buildable.
+
+🔴 **Until C2 runs, ה19 is NOT closed** — the exposure it exists to fix (bank details readable by
+anyone holding 'דיילות', because RLS is row-level) is still open. **m8 may not be reported as having
+closed ה19 before then**, and `micro_guides/module-8.md` §2.2's "✅ complete here" row for bank
+protection is false until it does.
+
 ## 10. Maintenance protocol (how this file stays alive)
 
 1. **Live update, same session (parallel of iron rule 15):** any session that applies a migration,
@@ -415,6 +482,480 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
+- ✅ 27/08/2026 — **module-8 · 🔻👤 PHASE-1 GATE (step 1.8) — the DB half of m8 is closed.**
+  All ten migrations live: A · B · C · D · E1 · E2 · E3 · E3-fix · F · G.
+  🔑 **Advisors, predicted-vs-measured, every delta explained and nothing left as "probably fine":**
+  **SECURITY 33 → 41.** The 33 was the post-E2 total recorded that morning; the +8 is
+  **E3 +2** (`generate_salary_report`, `finalize_salary_report`) **and F +6**
+  (`mint_feedback_token` + the two anon-callable ones counted in BOTH the anon and the
+  authenticated class, plus `feedback_rpc_calls` joining `rls_enabled_no_policy`). **G added zero** —
+  it re-created an already-listed function. Breakdown: `authenticated`-DEFINER **30** ·
+  `anon`-DEFINER **6** *(the four login/shift ones + exactly `get_feedback_page` and
+  `submit_feedback` — the +2 the step predicted, and nothing else)* · `rls_enabled_no_policy` **4**
+  *(all four deny-all by design)* · `auth_leaked_password_protection` **1** *(pre-existing Auth
+  setting, not DB)*. 🔴 **And the three internal functions are absent from both DEFINER lists** —
+  `finance_project_money`, `finance_assert_writable`, `feedback_rate_limit` are `service_role` only.
+  T8 holds.
+  **PERFORMANCE 28, of which m8 added exactly 4**, each expected: `no_primary_key` on
+  `feedback_rpc_calls` (by design, mirrors `login_rpc_calls`) · `unused_index` ×2
+  (`assignments_salary_report_id_idx`, `salary_report_lines_source_project_id_idx` — **unused
+  because m8 has no UI yet**; phase 3 uses both) · `multiple_permissive_policies` on
+  `hostess_bank_details` (the two ruled policies). **Zero unexplained.**
+  ⚠️ **The advisor counts were re-derived from `pg_proc`/`pg_policies`/`pg_class` directly, not
+  hand-counted off the JSON** — same numbers from both, which is the point of doing it twice.
+  🔴 **`docs/schema.sql` cross-checked object-by-object against the live catalog — 54 m8
+  identifiers, and it found FOUR real gaps, all fixed:**
+  ① **`feedback_rpc_calls` was missing entirely** — 26 `create table` blocks for 27 live tables.
+  F's ripple added the function block and not the table. Now §30.
+  ② **`set_project_finance_fields` was still listed in §24 as a live m6 function** with signature
+  and file pointer, while the same file said 12 lines later that it had been dropped. It is gone
+  from the DB; the stale entry was deleted (the file is present-tense by its own rule, so no
+  tombstone).
+  ③ the deny-all roll-call still said **three** tables; there are **four** since F.
+  ④ the refresh header stopped at **E2** while the body already carried F and G.
+  🔴 **The deploy rule was re-run as a COMMAND against `origin/main`, not recalled:**
+  `set_project_finance_fields` ⇒ **zero call sites** (dropping it was safe) · the three bank columns
+  ⇒ **still written at `HostessFormDialog.jsx:217-219` and read at `HostessViewCard.jsx:315`**
+  (C2 must keep waiting) · `hostess_bank_details` ⇒ **unknown to `origin/main`**, which is why the
+  live site still works.
+  🐞 **`npm run gate` was RED on the first run and the cause was mine.** `format:check` failed on
+  `ci.yml` and `send-email/index.ts`. Cause: Python's `io.open(...,'w')` on Windows rewrites every
+  newline as CRLF, and the repo is LF (`.gitattributes`). **Eleven files were contaminated**, and
+  the trap is that **`git status` was clean and `git diff` empty the whole time** — `core.autocrlf`
+  normalises before comparing — so nothing showed until the gate fell. **The committed blobs were
+  always LF ⇒ CI would have stayed green and only a local gate could catch it.** Normalised;
+  **`gate` re-run end-to-end: exit 0.** The mine is now written into root `CLAUDE.md`.
+  🔴 **A defect was found in C2's own registered contract — the debt this module still owes.**
+  It said `insert … on conflict do update`, unqualified. The window has two halves running opposite
+  ways: before the deploy `origin/main` writes the PARENT, after it m8's `api.js` writes ONLY the
+  child. An unguarded overwrite therefore runs **after** the deploy and pushes **stale parent values
+  over fresh child rows** — the same data loss the re-copy exists to prevent, pointed backwards, and
+  it would land as wrong bank numbers in a CPA salary report. Contract corrected in both registers
+  (§9א here + `micro_guides/module-8.md` §8.4) to guard the conflict action on `updated_at`.
+  **N1 inherits the same guard.**
+  **§7 write-back (rule 13א):** `§7.69` 🟠 received a dated ↳ — the DB now holds `22.60` where the
+  item's text says "הסכום לא נקבע". **Status unchanged, CPA verification before M10 stands in full**;
+  recorded so §7 and the database do not disagree. `§7.20` needed nothing — it already names
+  `תנאי_תשלום_ימים` default 30, which is exactly what G seeded.
+- ✅ 27/08/2026 — **module-8 migration G APPLIED — the LAST of phase 1** (typed-echo:
+  `module8_cancel_project_released_status_and_seeds`). **All ten m8 migrations are now live.**
+  **① Extends the MERGED, LIVE m6 function `cancel_project` — the riskiest edit in the phase.**
+  **The problem (R4-F2):** cancelling flips every live assignment to `released`, which **erases who
+  had been `finally_approved`** — and §7.16 compensation is owed **only** to those. ⇒ without the
+  fix, cancellation compensation is not computable against the merged code and **a hostess whose
+  event was cancelled would simply not be paid what was ruled to her.**
+  **The delta is one addition to one `set` clause:** `released_from_status = a.assignment_status`
+  alongside the existing flip. In Postgres the right-hand side of `set` reads the pre-update row, so
+  both assignments see the same source state and there is no ordering dependency.
+  🔴 **The live body was pulled with `pg_get_functiondef` before editing, not rebuilt from an older
+  file** — the documented mine: on 12/08/2026 a migration built from a pre-fix version broke real
+  quote approval **silently for three days**, caught only at a live demo rehearsal.
+  🔑 **And the proof of "exactly one line" is arranged in advance, not asserted after the fact.**
+  The pre-edit live body was fingerprinted **before touching anything**:
+  **`md5 = b21ef3d8e53270dce52dcd3134f8b103`, length 4,457, occurrences of `released_from_status` =
+  0.** After applying, removing the added line from the new body must reproduce that md5 exactly.
+  A hash match is arithmetic; "looks the same" is not.
+  ⚠️ **New cancellations only** — pre-m8 cancellations keep NULL and yield no compensation. Declared
+  limitation (§4.5⑤), not a gap.
+  **② Two param seeds the already-built numbers are waiting on:**
+  · `תנאי_תשלום_ימים = 30` with `param_type='pricing_timing'` (T22 — the type of
+    `סכום_נסיעות_למשמרת`; ⚠️ `products_and_params.md` carries **neither** new param and answers only
+    the enum). **It does not exist in the DB at all today**, which is why both m8 readers return
+    `NULL` for `payment_terms_days` and the due date is uncomputable.
+  · `סכום_נסיעות_למשמרת` **0 → 22.60** (ה20, the legal daily cap). The 0 empties the travel column
+    of every salary report. **⚠️ §7.69 stays open — the amount is verified with the CPA before M10**;
+    this is a lawful default, not a final figure.
+  🔑 **This completes the third hand anchor:** אפרת דהן's salary line moves **270.00 → 292.60**.
+  **Deliberately conservative:** the new param is seeded `on conflict do nothing` — **if Ishay has
+  set a different value meanwhile it is not overwritten** (a seed is a default, not a ruling) — and
+  travel is updated **only where it is still 0**, i.e. only where nobody chose anything.
+  **✅ Verified after apply.**
+  🔑 **The one-line claim was PROVEN, not asserted.** The new live body was taken back through the
+  single edit — the added `set` line removed — and re-hashed: **`md5 =
+  b21ef3d8e53270dce52dcd3134f8b103`, length 4,457 — an exact match to the fingerprint taken before
+  anything was touched.** ⇒ nothing else in a merged m6 function was changed, silently or otherwise.
+  `released_from_status` occurs exactly **once** in the live body.
+  **Behaviour, in a rolled-back transaction:** cancelling #14 through the live function returned
+  `released_rows=4`, and **all four assignments now carry `released<-finally_approved`** — the
+  information §7.16 compensation depends on is preserved instead of erased. With it, the fee
+  proposal became computable where it previously could not be.
+  ⚠️ **One number in that probe deserves precision rather than hand-waving:** the proposal returned
+  **3,836.00**, not the 3,508.00 anchor — because the probe cancelled **now**, and #14's event is
+  today at 17:00, i.e. **under 24 hours ⇒ 100%**, not the anchor's 30-hours-before ⇒ 50%. **The
+  formula is unchanged**; simulating the anchor's timing still reproduces 328.00 + 3,180.00 =
+  3,508.00 exactly. A different input, not a different rule.
+  🔑 **THIRD HAND ANCHOR COMPLETE:** with travel seeded, the salary line reads
+  **אפרת דהן — 6.00h × 45.00 + travel 22.60 = 292.60**, matching `spec.md §③3` digit for digit.
+  And `payment_terms_days` now returns **30** where both readers returned NULL before G, so the due
+  date and days-overdue become computable at all.
+  **Rollback clean** (#14 back to `in_progress`, no signatures, no reports). **The two params
+  correctly PERSIST** — they are the migration's own effect, not probe data.
+- ✅ 27/08/2026 — **module-8 migration F APPLIED** (typed-echo: `module8_public_feedback_rpc`).
+  **The only surface in the module an anonymous person touches**, so three rules that were not
+  softened: **no policy for `anon` on any table** (the two functions are the only door) · the
+  **not-found answer is byte-identical for a wrong, empty and dead token** — any difference is an
+  oracle telling a token-guesser they guessed right · **rate limit 15/IP/hour**.
+  🔴 **T14 confirmed the hard way: the precedent everyone points at does not exist.** m4's
+  `/shift/:token` has **no rate limiter at all** (a known gap in §6), so there was nothing to copy.
+  The shape was taken from **module 1's login counter**, the only live one: pull the IP from
+  `x-forwarded-for`, prune rows older than an hour, count, block, record. **Fail-open when the
+  header is missing** — same as the login counter; a broken limiter that locks out real users is
+  worse than one that did not fire.
+  🔑 **A call the guide left to the builder: a SEPARATE counter table, not a reuse of
+  `login_rpc_calls`.** Sharing it would have let a customer refreshing the feedback page **eat into
+  the login-attempt budget for that IP**, and the reverse — behind a shared office NAT that reads as
+  "the system locked me out" with no connection to anything. Same shape as the existing table so it
+  is recognisable; deny-all with RLS on and zero policies, exactly like its sibling.
+  **Edge contracts from the rehearsal:** `mint_feedback_token` is gated **'פרויקטים'** (m6's mail
+  path is the caller — gating it 'כספים' would 403 every survey the projects manager sends), it is
+  **get-or-create** so a re-sent mail never invalidates a link already in the customer's hands, and
+  it refuses **only** `finished` (G-16). `submit_feedback` accepts a `not_sent` project (G-17 — the
+  mail may have failed after the token was minted, and a customer holding a working link still
+  counts) and **overwrites `no_response`** (T12 — data beats a flag).
+  🔴 **It also carries a fix-forward for a gap found while writing it, not in E2's own review:**
+  `archive_project` checked that feedback was *resolved* but **not that a low score had a reason**.
+  This only became reachable with F: **the public page has no reason field at all** — the customer
+  gives a score and free text, and the reason is chosen by the manager *after a phone call*. ⇒ a
+  customer could submit **2 with no reason** and the archive would pass, closing the file **without
+  the phone call ever happening**. The approved spec is explicit — *"שער-הארכוב ממשיך לחסום עד הזנת-
+  סיבה"* / *"עד אז אין ארכוב"* (P2). The gate is now in. E2's migration was not edited (history).
+  **✅ Verified live in rolled-back transactions — 19 assertions across two probes, driven from the
+  attacker's seat as well as the customer's:**
+  · mint as **מנהלת פרויקטים** (the real caller) returns a 32-char token, and **calling it again
+    returns the same token** — get-or-create holds, so a re-sent mail never invalidates a live link.
+  · **As `anon`:** a valid token returns `{state: ok}` with event name and date · garbage, empty and
+    NULL tokens each return `{state: not_found}` — and **the three are byte-identical**, which was
+    asserted rather than eyeballed.
+  · **`anon` reading the tables directly gets 0 rows** — `projects` and `feedback_rpc_calls` both.
+    The functions really are the only door.
+  · score 6 ⇒ `invalid` · score 2 + notes ⇒ `ok` (notes trimmed) · **submitting again ⇒ `already`**
+    and the page then also reports `already` — the single-submission rule holds from both entries.
+  · 🔴 **The new archive gate proven end-to-end:** a customer submits **2 with no reason** through
+    the public page, the manager records payment, and **archive is BLOCKED** with the spoken message
+    naming the score. After she enters a reason it **passes**. And an **invented** reason string is
+    refused by the live CHECK — the five locked strings hold.
+  · 🔴 **Rate limit proven by a loop, not by reading the code: 20 calls ⇒ exactly 15 allowed, 5
+    blocked**, with the spoken Hebrew message.
+  **Rollback clean:** #12 back to `awaiting_invoice`/`sent`, no score, **no token**; 0 rows in
+  `feedback_rpc_calls` and `project_finance`.
+  **State after F:** 27 tables / 43 functions · deny-all-by-design tables are now four
+  (`feedback_rpc_calls` joins `login_attempts`, `login_rpc_calls`, `project_changes`) ·
+  **anon-callable functions: the four login/shift ones plus exactly `get_feedback_page` and
+  `submit_feedback`** — the +2 the step predicted, and nothing else.
+- ✅ 27/08/2026 — **module-8 E3 FIX-FORWARD APPLIED** (typed-echo:
+  `module8_salary_report_temp_table_fix`).
+  🐞 **A bug in E3 that MY OWN verification caught, minutes after E3 was applied.**
+  `generate_salary_report` creates a temp table `_collect` with `on commit drop`; that flag fires at
+  COMMIT, so a **second call inside the same transaction** dies on
+  `relation "_collect" already exists`.
+  **Production would not have exploded:** each Supabase RPC call runs in its own transaction, so the
+  table is gone between calls. The bug would have sat silent until someone batched two calls — a
+  `finalize` then a `generate`, or any future grouping.
+  🔑 **What DID break immediately, and it is the real reason this is being fixed rather than
+  noted:** this project verifies write functions by running them on real data **inside a transaction
+  that is then rolled back**. A bug of this shape makes the function **unverifiable by that method**
+  — it is not merely a silent defect, it **disables the checker**. Caught on the first attempt to
+  generate August and then September in sequence, i.e. by the very test meant to prove the signature
+  prevents double payment. **A salary function I could not verify is one that must not ship.**
+  **The fix:** an explicit `drop table if exists _collect;` before the create. `on commit drop` stays
+  as the end-of-transaction net; the explicit drop handles a table surviving from an earlier call in
+  the SAME transaction.
+  🚫 **The original migration was NOT edited** — applied and committed means history
+  (`supabase/migrations/CLAUDE.md`, append-only; fixes go forward).
+  ✅ **The delta was proven mechanically, not asserted:** the new body was extracted from the
+  original file programmatically rather than retyped, and a line-by-line comparison excluding the
+  added lines reports **141 lines before, 141 after, identical**. Zero change to logic, formula or
+  grants.
+- ✅ 27/08/2026 — **module-8 migration E3 APPLIED** (typed-echo:
+  `module8_salary_report_transaction`). ⚠️ **Read the fix-forward row above with it** — E3 as first
+  applied carried a temp-table defect, fixed the same minute.
+  Two functions, `generate_salary_report(period)` + `finalize_salary_report(id, url, status)`,
+  completing step 1.5's E1+E2+E3 split. Its own file because P4 crosses projects and months and
+  **pays people** — an error here is not a wrong number on a screen, it is a double payment or a
+  payment that never happens.
+  **The contracts it implements, each with the reason it is not obvious:**
+  · **ה15's unsigned-rows model** — a month's report collects every assignment with
+    `salary_report_id IS NULL` whose event date falls in that month **or earlier**. ⇒ a
+    late-closing project rides into the NEXT report by itself. **The anti-double-pay mechanism is
+    the signature, not a check**: a signed row can never be collected again.
+  · **Two sources, and the second one is a same-day correction of ה15 that Ishay's own question
+    caught**: (א) operationally-closed ⇒ actual hours × frozen rate + bonus; (ב) **cancelled ⇒
+    §7.16 compensation** (ה24's scale × planned hours × frozen rate). ה15's first wording listed
+    only (א), and **a cancelled project is never operationally closed** — so the compensation would
+    have entered no report at all and the hostesses would silently not have been paid it. No
+    mechanism would have caught that; a person's question did.
+  · **Q-5 — the ruling most likely to be built wrong in the whole phase.** ה15 said "**every**
+    unsigned row". Read literally that collects `declined`, `released` and `approval_withdrawn`
+    rows, each becoming a **permanently signed ₪0.00 line in the accountant's document**. Only
+    `finally_approved` (source א) and `released_from_status='finally_approved'` (source ב, A-7) are
+    collected. **Signing is irreversible.**
+  · **ה14** — travel is stamped to `assignments.travel_amount` **at generation**, not at
+    assignment creation: it is a regulated allowance paid at the rate in force, deliberately unlike
+    `hourly_rate_snapshot`. **B-16/ה29**: only where `actual_hours > 0` — a cancelled shift did not
+    travel.
+  · **N-4** — ₪0 lines are signed and recorded (so they never re-collect and the evidence is
+    complete) but flagged `show_in_file=false`; the total is unchanged.
+  · **B-4** — bank details are **returned for the xlsx and never stored** in
+    `salary_report_lines`. Copying them into a second table would reopen exactly the exposure ה19
+    closed this morning.
+  · A row whose hours cannot be computed **raises rather than signing a 0** (A-8).
+  🔑 **Third hand anchor pre-verified:** אפרת דהן on #12 — 6h × 45 + bonus 0 = **270.00** today, and
+  **292.60** once migration G seeds `סכום_נסיעות_למשמרת` to 22.60. She is currently the only
+  unsigned assignment with hours > 0.
+  **✅ Verified live after the fix — a real August report generated inside a rolled-back
+  transaction, 9 assertions:** report produced **1 line, total 270.00** · the line is
+  **אפרת דהן · basis `actual` · 6.00h × 45.00 · total 270.00 · `show_in_file=true`**, with **bonus
+  and travel returned as NULL rather than 0.00** (§3.7: "—" is not zero) · **B-4 proven in both
+  directions** — the bank triple came back **on the returned line for the xlsx**
+  (`הפועלים / 601 / 2047199`) while `salary_report_lines` has **no bank columns at all** · ה14's
+  signature written (**1 assignment, travel stamped 0.00**, correct pre-G) · a **second August
+  report is refused with the spoken message naming the existing report number**, and a mid-month
+  date normalises to the 1st so it cannot slip past · **September then collects 0 lines — the
+  signature has already consumed her**, which is the anti-double-pay mechanism working · finalize
+  moves the row to `sent`. **Rollback clean: 0 reports, 0 lines, 0 signatures, 0 travel stamps.**
+  🔴 **And the probe caught the project's central silent failure — in MY OWN verification.** Step 5
+  first reported "**0 assignments signed**" while step 7 proved the signature had been written. The
+  contradiction was the tell: my check queried `assignments` **directly while impersonating the
+  finance manager**, who is RLS-blocked on 'דיילות' ⇒ **`0` meaning "no permission", not "no rows"**
+  — exactly R4-F5, the trap this whole migration family exists to route around. Re-checked outside
+  the impersonation: **1 assignment, אפרת דהן / project 12**. **Demonstrated side by side in the
+  same run**: the identical query returns **1** as `postgres` and **0** as the finance manager.
+  ⇒ **A verification query is subject to the same trap as production code**; reading a blocked table
+  directly makes the checker lie in the safe-looking direction.
+  **T8:** no `anon` on any m8 function. Public functions now **39**.
+- ✅ 27/08/2026 — **module-8 migration E2 APPLIED via MCP** (typed-echo:
+  `module8_finance_write_actions`).
+  **Step 1.5 runs as E1 (applied) + E2 (this) + E3 (the salary transaction, next).** Three rather
+  than the two first planned: the salary flow is P4 and has nothing to do with P1/P3's collection
+  flow, and burying both in one migration would have made each unverifiable on its own. Builder's
+  call, which the step's own text grants.
+  **What E2 contains — seven functions and one drop:**
+  · `drop function set_project_finance_fields(integer, boolean, date, integer, text, text)` —
+    explicit, ה22. **Measured: zero call sites** across `src/`, `e2e/`, `supabase/functions/`.
+  · `finance_assert_writable` (internal) — the shared gate: 'כספים' `edit` + ה12's status gate +
+    **the `finished` lock** (preconditions, the ㉙ pattern — not a trigger).
+  · `finance_cancellation_fee_proposal` — the three components, **derived and never stored** (ה28).
+    ה23 (full price = `closing_unit_price`) · ה24's scale from the live params · force-majeure = 0%
+    always · A-7/R4-F2 population (`released_from_status='finally_approved'`) · **NULL, never 0,
+    when planned hours are missing** (T7/A-8).
+  · `finance_freeze_cancelled_profit` (internal) — Q-3: `fee − compensation − goods AT COST`.
+  · `record_invoice_sent` · `record_payment` · `record_feedback` · `record_write_off` (**the fifth
+    action, B-13 — ה22 listed four and P3's approved bad-debt path had no writer**) ·
+    `resolve_cancellation_fee` (bill/waive/write_off) · `archive_project`.
+  🔑 **The fee formula was proven against the hand anchor BEFORE the SQL was written**, run on live
+  data: #14 ⇒ 30.0 hours before the event ⇒ 50% ⇒ compensation **328.00** + goods **3,180.00** =
+  **3,508.00** = `spec.md §③3`. Every component matched, not just the total.
+  🔴 **T1's correction is implemented, not just documented:** `archive_project` asserts
+  `summary_report_url IS NOT NULL` **itself** and raises a Hebrew `P0001`. Without it a legitimate
+  archive would die on a raw CHECK violation nobody can read. It also refuses `cancelled` explicitly
+  with its own message.
+  🔴 **Freeze moments (Q-4), and they are not symmetric:** waive and write-off freeze **immediately**;
+  a BILLED cancellation fee freezes **when the payment is recorded**, never at fee-save and never at
+  archive. A waive produces a **real recorded loss** — the accrual truth Q-3 ruled.
+  **✅ Verified live after apply — two full journeys driven through the real functions inside
+  transactions that were then ROLLED BACK, so a real project was exercised and nothing persisted.**
+  *(Results were carried out in the rollback exception's own message — a rollback destroys any
+  result table, so the report has to travel in the error.)*
+  **Journey A, regular project #12 — 11 assertions, all passed:** old m6 function gone (0) ·
+  ה12 blocks a write to a not-yet-closed project · invoice without a file blocked · invoice sent ⇒
+  status **awaiting_payment** · archive without payment **blocked with the gate wording** · future
+  payment date blocked · score 2 without a reason blocked · archive paid-but-no-feedback **still
+  blocked** · **archive succeeds with `final_profit = 230.00` — exactly what E1's reader computed
+  for #12**, i.e. the frozen number and the live number agree · status `finished` and
+  `feedback_token = NULL` (**B-6's token kill**) · a write after archive is **locked**.
+  **Journey B, cancellation on #14 — 7 assertions, all passed:** the proposal returns pct **50**,
+  hours **30.0**, compensation **328.00**, goods@price **3,180.00** ⇒ **fee 3,508.00 = the hand
+  anchor**, produced by the function itself rather than by a query I wrote to match · archiving a
+  cancelled project **blocked** (T1) · waive without a note blocked · **billing alone does NOT
+  freeze** (`frozen_profit` NULL — Q-4) · **recording the payment freezes at 1,680.00** =
+  3,508 − 328 − 1,500(goods at cost) · **status stays `cancelled`** — m6's state machine untouched.
+  **Rollback confirmed clean:** #12 back to `awaiting_invoice`/`sent`/no payment, #14 back to
+  `in_progress` with `cancelled_at` NULL, zero `released_from_status` values, `project_finance`
+  **0 rows**.
+  **T8:** `finance_project_money`, `finance_assert_writable`, `finance_freeze_cancelled_profit` are
+  `postgres`+`service_role` only — **no `anon`, no `authenticated`**; the nine client-callable ones
+  all carry `authenticated`. **The anon-callable DEFINER set did not grow** — still the same four
+  login/shift functions.
+  **Advisor reconciliation (predicted, then measured):** predicted **+8 net** on the
+  `authenticated`-callable DEFINER class (9 added, 1 dropped). Measured: the class moved **17 → 25**
+  — exactly +8, so total findings 25 → **33**, all of the accepted DEFINER class. ⚠️ **Triage
+  stated:** the class was measured directly against `pg_proc`/`proacl` rather than by a full
+  `get_advisors` sweep; the full sweep is required at the **1.8** phase gate and runs there.
+- ✅ 27/08/2026 — **module-8 migration E1 APPLIED via MCP** (typed-echo:
+  `module8_finance_money_ssot_and_readers`).
+  **Step 1.5 was split in two** (the guide permits it): **E1 = the money SSOT + the two readers +
+  the m6 ripple**; E2 = the five write actions, fee resolution, archive and the salary transaction.
+  Splitting gives each half its own verification instead of burying both in one giant migration.
+  **What E1 contains:**
+  · `finance_project_money(project_id)` — **the single place money is computed**, internal
+    (`revoke … from public, anon, authenticated`), DEFINER because מנהלת-הכספים is RLS-blocked on
+    'לוגיסטיקה' and 'דיילות' and a client-side read returns `[]` with no error (R4-F1/F5).
+    Implements ה2 (revenue = frozen preVat + Σ signed scope changes) · ה17/ה26 (goods = ordered qty
+    × frozen cost, from the QUOTE lines, never `actual_qty` and never logistics) · ה7 (labour from
+    assignment rows) · ה14/ה29/B-16 (travel only where `actual_hours > 0`) · ה18 (deviation, labour
+    side only, **NULL** — never 0 — when planned hours are missing, T7).
+  · `get_finance_overview()` / `get_project_finance_detail(id)` — DEFINER, gated 'כספים', **both
+    consuming that one function**, which is what makes F16/R1-4 structurally true rather than a
+    promise.
+  · 🔴 **A ripple into MERGED m6 SQL: `list_projects_overview` is rewritten.** Its `planned_revenue`
+    counted the quote only; m8 counts scope changes too, so the same project would show two
+    different revenues on two screens (measured by the review: **#15 → 6,060 vs 5,985**). The live
+    body was pulled with `pg_get_functiondef` before editing (the documented mine: a migration built
+    from a stale version once broke quote approval silently for three days) and **the delta is one
+    added term**. **Regression proof named in advance: m6's hand-computed anchor #8 → 5,355.00 has
+    ZERO scope changes and must stay digit-identical.**
+  🔑 **Verified BEFORE a line was written — the formula reproduces the hand-computed anchor:**
+  project #13 ⇒ revenue **5,300.00** · goods **1,650.00** · labour **0** · **profit 3,650.00** =
+  `spec.md §③3`. ⚠️ **And the anchor settled a design question no self-authored test would have
+  caught:** the hostess quote line (`04ST`) carries its own `closing_unit_cost` (300.00/unit);
+  counting it as goods would have added 1,200 ₪ of cost and returned **2,450** instead of 3,650.
+  ⇒ hostess-category lines are excluded from the goods term — labour comes from the assignment rows
+  alone. **That is exactly why these numbers were computed by hand before the code existed.**
+  ⚠️ `payment_terms_days` is returned **nullable** on purpose: `תנאי_תשלום_ימים` is seeded by
+  migration G. Until then the due date is uncomputable and the screen must show `—`, never
+  "0 days overdue", which is a lie that looks like a fact.
+  **✅ Verified live after apply, impersonated:**
+  · 🔴 **The m6 regression is the headline: `list_projects_overview` still returns `5,355.00` for
+    project #8 — digit-identical.** The rewrite of merged m6 SQL did not move its oracle.
+  · #15 now returns **5,985.00** where it returned 6,060.00 — **the reviewer's predicted number
+    exactly** (its one scope change is −25 × 3.00 = −75). ⚠️ **This is a visible change to a merged
+    module's screen and is the POINT of the fix**, not a side effect: m6 and m8 now show one
+    revenue. Swept for tests pinning the old value — **none exist**; `ProjectCardPage.test.jsx`
+    uses `5355.00` as a hand-written fixture, unaffected.
+  · #13 profit **3,650.00** from `get_project_finance_detail` = the hand anchor · revenue
+    **5,300.00** · goods **1,650.00** · labour **0**.
+  · #12 (the only project currently in a finance status) is coherent end-to-end: revenue 500.00 ·
+    goods 0.00 · labour 270.00 · deviation **202.50** (6 actual hours against 1.5 planned at rate
+    45) · travel 0.00 **because the param is still 0 — G raises it to 22.60**.
+  · Gate: כספים reads (positive control, ≥1 row) · **לוגיסטיקה and גיוס both raise**, not empty-set.
+  · **T8: `finance_project_money` proacl = `postgres`, `service_role` only — no `anon`, no
+    `authenticated`.** The internal function is genuinely internal.
+  · Unit suite **1,446 / 56, exit 0**. `docs/schema.sql` refreshed (29 functions; the m6 row now
+    points at THIS migration as the source of its current body, with the reason) and cross-checked.
+- ✅ 27/08/2026 — **module-8 migrations C and D APPLIED via MCP** (typed-echo received for both).
+  `20260827132708_module8_hostess_bank_details_split` · `20260827132709_module8_email_log_finance_entities`.
+  **Verified live, impersonated, positive control first:** 26 of 26 bank rows copied · the three
+  parent columns still present and now nullable · child FK `on delete cascade` + `extensions.moddatetime`
+  · bank reads גיוס **26** / כספים **26** / לוגיסטיקה **0** · bank writes גיוס **26 rows** / כספים
+  **0 rows** (read-only by design) · `email_log` CHECK live at **6 values**, policy count **4**,
+  recruiter's shift mails **27, unchanged**. 🔴 **The decisive one — an INSERT/UPDATE/READ shaped
+  exactly as `origin/main` performs them, against the PARENT columns, all three SUCCEEDED** (probe
+  row removed, 0 left): the split did what it was for and production is untouched. Unit suite
+  **1,440/56 exit 0** after both.
+  ⚠️ **A claim in migration D's own why-comment was DISPROVEN by the verification and cannot be
+  edited there (applied + committed = append-only):** it says the finance manager will see "only her
+  two m8 rows". **She sees 8 today** (`quote`=6, `project`=1, `project_report`=1) because **RLS
+  policies are PERMISSIVE and combine with OR** — she already qualified through the quotes and
+  projects policies via her `view` grants. A new tightly-gated policy can only ADD to what someone
+  sees, never subtract. Nothing is broken; the description was wrong, not the SQL. **The corrected
+  statement now sits in `docs/schema.sql` beside the four policies and in the header's conventions
+  block**, where the next reader stands.
+  ✅ **Both second halves landed the same day.** C's client rewire shipped (the split lives in
+  `04_hostesses/api.js`; live-verified in a credentialed browser). D's `send-email` deploy ran
+  **after** the migration, per T5 — the function is **version 6, ACTIVE**, and was certified
+  behaviourally rather than by source diff: `invoice`/`salary_report` reach body-validation as
+  מנהלת כספים (**400**, so they passed the gate) · an invented entity still gets **403** ·
+  מנהלת גיוס gets **403** on `invoice` but **400** on `shift` (positive control) ⇒ the mapping is
+  genuinely `'כספים'` and not a recycled `quote`/`shift`. **Zero mails sent, `email_log` unchanged
+  at 33 rows.** ✅ `deno check --node-modules-dir=none …` **passes, exit 0** — the flag CI
+  already uses. *(Corrected same-day: this row first said the check "cannot pass locally", after I
+  ran it without the flag. The diagnosis was already written in `.github/workflows/ci.yml`.)*
+  🔴 **ה19 is STILL not closed — C2 is owed after the production deploy. See §9א.**
+  **`docs/schema.sql` refreshed** (§15 bank columns → nullable + deprecation note · new §29
+  `hostess_bank_details` · `email_log` CHECK + 4th policy · header 25→26 tables, 52→55 policies + an
+  explicit PERMISSIVE/OR warning) **and cross-checked against the live catalog — zero divergence.**
+  *(The pre-apply plan row this replaced described C as: )* **C — closes ה19 only PARTIALLY, by design.** It creates `hostess_bank_details` (PK=hostess_id,
+  1:1, FK cascade-on-delete), copies the 26 live rows, adds the two ruled policies ('דיילות' edit =
+  ALL so m4's form keeps working · 'כספים' edit = SELECT for the salary report), and **relaxes — does
+  NOT drop — the three `hostesses` bank columns.**
+  🔴 **Why the plan changed, measured 27/08/2026 and it is the load-bearing fact:** `origin/main`
+  (the code actually serving the live site) writes those three columns directly in
+  `HostessFormDialog.jsx:217-219` and reads them in `HostessViewCard.jsx:315`, and **production and
+  development share ONE Supabase project.** Dropping them would have broken the live hostess form
+  immediately and kept it broken until m8 merged and deployed — days away, with the 28/08 interim
+  presentation in between. 🛑 **T3 does not cover this**: it reasons about the branch's code, not
+  production's. **The drop moves to `C2`, a post-merge migration, registered in
+  `micro_guides/module-8.md` §8.4 with a re-copy-before-drop contract** (production keeps writing to
+  the parent during the window, so a hostess created there would otherwise lose her bank details).
+  ⇒ **ה19's exposure — bank details readable by anyone holding 'דיילות', because RLS is row-level —
+  stays OPEN until C2 runs.** Status quo, not a regression, but m8 may not be reported as having
+  closed ה19 before then.
+  **D — the `email_log` half of the finance mail path.** Replaces `email_log_entity_type_check` with
+  a 6-value list (adds `invoice`, `salary_report`) and adds the **fourth** SELECT policy, gated
+  'כספים' `edit|view` AND filtered to those two entity types — the exact shape of the three existing
+  per-module policies, so the finance manager sees her two mail types and not the quote/shift/project
+  ones. 🔴 **T5 ordering is absolute: this migration lands BEFORE the `send-email` deploy.** The
+  function sends and then journals; in the reverse order the mail reaches the customer while the
+  journal write is rejected by the CHECK — **the mail is out and the system believes it was never
+  sent**, with no error anyone sees.
+- ✅ 27/08/2026 — **module-8 migration B APPLIED via MCP `apply_migration`** (typed-echo received:
+  `module8_salary_report_document_model`).
+  File: `supabase/migrations/20260827131033_module8_salary_report_document_model.sql`.
+  **Closed by it:** the **§7.40ג / §7.47 `salary_reports` uniqueness row** (the
+  one explicitly marked *"לא בוצע ונשאר פתוח למ8"* — the fourth of the four unique-constraint items,
+  the other three closed in m2/m3) · **§7.68** (`period` UNIQUE + a frozen line-snapshot table +
+  stored total) · **T4** (the two NOT NULLs that make the generation transaction impossible) ·
+  **T19** (RESTRICT on every FK + the first-of-month CHECK) · **T20** (policy level `edit|view` on
+  'כספים'). It also removes `salary_reports` from the deny-all list — **after it, the only
+  remaining deny-all tables are the three BY-DESIGN ones** (`project_changes`, `login_attempts`,
+  `login_rpc_calls`), and the "one business table still deny-all for want of building" note in the
+  DB protocol's *"טבלה חדשה בשימוש ראשון"* section — **now measured true: the only deny-all tables
+  left are `project_changes`, `login_attempts`, `login_rpc_calls`, all three by design. 🚧 that
+  section of `supabase/migrations/CLAUDE.md` still names `salary_reports` and is now stale** (left
+  for whoever next touches that file — it is another module's instruction surface, not m8's).
+  **Measured live before writing it (27/08/2026):** `salary_reports` held **0 rows** and **0**
+  `assignments` rows pointed at a report ⇒ `add column period not null` was safe with no default and
+  no backfill; the table already had RLS enabled and its `updated_at` trigger already bound to
+  `extensions.moddatetime`, so the migration added neither.
+  **Verified live, impersonated, positive control first:** SELECT — כספים **1 row** *(the table had
+  never returned a row to any client before this migration)*, לוגיסטיקה **0**, גיוס **0** · direct
+  client UPDATE as כספים ⇒ **0 rows** · **the two behaviours proven by real failed writes, not by
+  reading the DDL**: a second report for the same month ⇒ `unique_violation`; a mid-month `period`
+  ⇒ `check_violation` (T19's silent month-split is genuinely blocked) · all three
+  `salary_report_lines` FKs measured `del=r/upd=r` · a covering index on each · trigger on
+  `extensions.moddatetime` · probe rows deleted, both tables back to **0 rows**.
+  **Advisor delta: 26 → 25, and the one that left is `rls_enabled_no_policy` on `salary_reports`.**
+  ⚠️ **Triage note, stated rather than hidden:** the full `get_advisors` sweep was NOT re-run for
+  this step — migration B creates **zero functions**, so the only advisor category it can move is
+  `rls_enabled_no_policy`, which was measured directly against `pg_class`/`pg_policies`. The full
+  sweep runs at the 1.8 phase gate, which requires it anyway.
+  **`docs/schema.sql` refreshed** (§19 rewritten, new §28 `salary_report_lines`, header 24→25
+  tables / 50→52 policies + an explicit note that no business table is deny-all for want of
+  building any more) **and cross-checked column-by-column against `information_schema` — zero
+  divergence.**
+- ✅ 27/08/2026 — **module-8 migration A APPLIED via MCP `apply_migration`** (typed-echo received
+  from Ishay: `module8_finance_tables_and_columns`).
+  File: `supabase/migrations/20260827125155_module8_finance_tables_and_columns.sql`.
+  **Rows closed by it, each registered above:** **§6 `projects` row** — the `project_finance` child
+  table (Ishay 26/08 *"סבבה לפי המלצתך"*) with `final_profit` · `cancellation_fee` ·
+  `cancellation_fee_note` · `written_off` + `written_off_reason` · `invoice_file_url` (B-8) ·
+  `archived_at` · **§6 `projects` row** — `feedback_token` and the §7.20 `invoice_sent_at` column ·
+  **C-1** — the covering index `assignments_salary_report_id_idx`; ⚠️ **two C-1 FKs remain open,
+  `permissions.module_id` and `users.role_id`, owned by their own modules — C-1 is NOT closed** ·
+  **R4-F2** — `assignments.released_from_status` + its CHECK (new; born from the m8 Discovery, not
+  previously registered here) · **ה30** — the `quote_services` SELECT tightening (SSOT for the ruled
+  shape: `PROJECT_MASTER.md` §6's struck `~~🚧 מ8 · 🚧 מ9~~` line + `processes-approved.md` ה30 —
+  **not this file**, which never carried ה30).
+  **Verified live, impersonated (`set local role authenticated` + jwt claims, positive control
+  first):** exactly **1** policy on `project_finance` · SELECT — כספים **1 row (positive control)**,
+  לוגיסטיקה **0**, פרויקטים **0** · direct client UPDATE as כספים ⇒ **0 rows** (RPC-only holds) ·
+  **ה30 regression on BOTH personas** — כספים **44** rows incl. **44** cost-bearing (she qualifies
+  through the 'כספים' OR-branch), פרויקטים **44**, גיוס **0** · trigger bound to
+  **`extensions.moddatetime`** (checked via `pg_trigger→pg_proc→pg_namespace`, not grep — the
+  documented sub-mine) · the probe row deleted, `project_finance` left at **0 rows**.
+  **Advisors: 26 = the m5 baseline of 26, zero new** — and `project_finance` does NOT appear under
+  `rls_enabled_no_policy`. **`docs/schema.sql` refreshed and cross-checked** column-by-column against
+  `information_schema` for all three touched tables — zero divergence (24 tables / 38 public policies
+  / 26 functions, all three header counts corrected; the section-24 heading had said "25 functions"
+  while listing 26 — a stale label predating this session, fixed).
+  🚧 **Forward notice — מ11 · מ7 · מ10:** `project_finance` ships with **one SELECT policy, gated
+  'כספים', and no write policy at all**. A later module that must read it adds **its own**
+  module-gated policy (the `email_log` per-module precedent, A-20) — **never widen m8's.** The three
+  supply contracts already exist as `🚧 מ11 ← מ8` · `🚧 מ7 ← מ8` · `🚧 מ10 ← מ8` in `PROJECT_MASTER` §6.
+  ⚠️ **And one measured caveat for whoever applies it:** the ה30 tightening changes the ACCESS CHANNEL
+  of מנהלת כספים ולקוחות (today `view` on 'הצעות מחיר'; afterwards she qualifies only through `edit`
+  on 'כספים'). Measured live 27/08/2026 across all five roles ⇒ **zero live loss** — but a future
+  view-only-quotes role would see zero `quote_services` rows, and that is intended, not a bug.
 - ✅ 26/08/2026 — **module-5 Phase 1: all four migrations APPLIED via MCP `apply_migration` + the
   two-mode demo seed EXECUTED — every M5-1…M5-8 register row closed.**
   `20260826002445_module5_logistics_hardening` (M5-1 · M5-2 · M5-5 · M5-8 + `actual_qty_autofilled`) ·
