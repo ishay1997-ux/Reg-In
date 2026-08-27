@@ -408,9 +408,9 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 
 | # | The removal that is owed | Blocked until | Its contract (more than a `drop`) | Registered where |
 |---|---|---|---|---|
-| **C2** | `alter table hostesses drop column bank_name, bank_branch, bank_account` — the destructive half of ה19 (m8 migration C did the additive half on 27/08/2026) | m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live** — because `origin/main` writes those columns (`HostessFormDialog.jsx:217-219`) and reads them (`HostessViewCard.jsx:315`) | 1️⃣ **Re-copy first** — `insert … on conflict (hostess_id) do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 🔴 **BUT THE `do update` MUST BE GUARDED BY `updated_at`** *(found 27/08/2026 at the 1.8 gate — the contract as first written was wrong)*: **after** the deploy m8's `api.js` writes ONLY the child, so an unguarded overwrite would push **stale parent values over fresh child rows** — the same data loss pointed backwards, landing as wrong bank numbers in a CPA salary report. Overwrite only where the parent row is genuinely newer than the child row (both tables carry a `moddatetime`-maintained `updated_at`). **Full contract + the SQL shape: `micro_guides/module-8.md` §8.4.** 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
+| ✅ ~~**C2**~~ **DONE 27/08/2026 18:0X** | ~~`alter table hostesses drop column bank_name, bank_branch, bank_account`~~ — **applied; ה19 is CLOSED.** Legacy columns **0** · child table **26/26** · **0** empty bank rows · `smoke` exit 0 and `hostesses.spec.js` **20/20** after the drop · `schema.sql` re-synced (16 documented / 16 live). 🔑 **The `updated_at` guard was not theoretical: all 26 child rows were NEWER than their parent, so an unguarded `do update` would have touched all 26 and pulled them back to the stale source. With the guard the copy touched 0.** *(Row kept struck rather than deleted — the correction it carries is the record. The original contract:)* | ~~m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live**~~ — **all three met: `dev` 518587d · `main` 9e07233 · Vercel production `state=success`, and the live bundle was fetched and asserted to contain `hostess_bank_details`** | 1️⃣ **Re-copy first** — `insert … on conflict (hostess_id) do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 🔴 **BUT THE `do update` MUST BE GUARDED BY `updated_at`** *(found 27/08/2026 at the 1.8 gate — the contract as first written was wrong)*: **after** the deploy m8's `api.js` writes ONLY the child, so an unguarded overwrite would push **stale parent values over fresh child rows** — the same data loss pointed backwards, landing as wrong bank numbers in a CPA salary report. Overwrite only where the parent row is genuinely newer than the child row (both tables carry a `moddatetime`-maintained `updated_at`). **Full contract + the SQL shape: `micro_guides/module-8.md` §8.4.** 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
 
-| **N1** | `hostesses.languages` (`text[]`) → child table `hostess_languages(hostess_id, language)`, then `drop column` | m8 merged **and deployed** | Same three beats as C2: **add + copy → deploy → drop**, with a **re-copy immediately before the drop** — 🔴 **including C2's `updated_at` guard on the conflict action**, for the same reason: once the new code writes only the child, an unguarded overwrite runs backwards. ⚠️ `languages` is **nullable** (unlike the bank columns), so the additive half needs no constraint relaxation — create, copy, drop later | `PROJECT_MASTER_sec7.md §7.87` · here |
+| **N1b** *(the additive half is ✅ DONE 27/08/2026 18:4X — table created, 33 rows copied, client rewired, gate green)* | ~~create + copy~~ → **what remains: `alter table hostesses drop column languages`** | **the m8+N1 branch is merged and its deploy is confirmed live** — `origin/main` still writes the column (`HostessFormDialog.jsx:222`) and reads it (`HostessViewCard.jsx:328`) | Same three beats as C2: **add + copy → deploy → drop**, with a **re-copy immediately before the drop** — 🔴 **including C2's `updated_at` guard on the conflict action**, for the same reason: once the new code writes only the child, an unguarded overwrite runs backwards. ⚠️ `languages` is **nullable** (unlike the bank columns), so the additive half needs no constraint relaxation — create, copy, drop later | `PROJECT_MASTER_sec7.md §7.87` · here |
 | **N2** | `customer_contacts` consolidation — `is_primary` on the child, then drop `contact_name`/`phone`/`email` from `customers` | m8 merged **and deployed** | Same pattern, **separate drop migration** from N1's. 🔴 **Its blast radius is ~4.6× N1's — see the measurement below; "one package" is true of the pattern, not of the size** | here |
 
 ✅ **CONFIRMED BY ISHAY DIRECTLY, `27/08/2026 17:1X` — the flag below is resolved and the rows stand.**
@@ -482,6 +482,92 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
+- ✅ 27/08/2026 18:4X — **`N1` (additive half) APPLIED + the client rewired** (typed-echo:
+  `module8_n1_hostess_languages_additive`).
+  **Verified after apply — and the count is the weak claim, so it is not the one relied on:**
+  33 rows · 20 hostesses · 5 distinct languages · 2 policies · RLS on · 2 indexes ·
+  🔑 **`mismatched_hostesses = 0` — every original array reconstructs EXACTLY from the child
+  table**, which is the assertion that actually proves nothing was lost or invented.
+  🔴 **Impersonated read matrix, positive control first:** גיוס / פרויקטים / מנכ"ל = **26 hostesses
+  and 33 languages** · כספים / לוגיסטיקה = **0 and 0**. **The language count tracks the hostess
+  count one for one for every role** — the mirror is proven, not asserted.
+  **Client rewire — `api.js` + `api.test.js` only.** The two screens were deliberately NOT touched:
+  the split lives in the data layer, so `hostess.languages` is still a plain array to them. That is
+  the same call the bank split made, and it keeps the lowest-auto-coverage write surface in the repo
+  untouched.
+  🔴 **Two mutations, both proved red, file restored byte-identical:** treating a missing
+  `languages` field as `[]` → the "update without languages must not touch the child" test failed ·
+  reversing insert/delete → the "write before delete" test failed (the `src/CLAUDE.md` rule that has
+  already destroyed live data once in this project).
+  **Live in a connected browser** *(the narrow announced-and-restored exception)*: the card showed
+  `שפות · אנגלית · עברית` from the child table · **editing only the phone left both languages
+  intact** · phone restored and the restore verified in the DB · 33 language rows unchanged · zero
+  console errors.
+  **Gate: exit 0, 1,454 tests** (up from 1,446 — the 8 new ones).
+  ⚠️ **`hostesses.languages` still exists** — the deployed code writes it. **`N1b` drops it after
+  this deploy.**
+  *(The pre-apply plan row this replaces:)*
+  **What it is:** `hostesses.languages` (`text[]`) → child table `hostess_languages`, 1:N. It is
+  **the only column in the database holding a list in one cell** — the single 1NF breach the
+  normalization sweep found (27/08/2026; approved by Ishay the same day).
+  🔴 **AND THE PERMISSIONS ARE DELIBERATELY THE OPPOSITE OF ה19's, which is the decision worth
+  recording.** The bank split was a **security** measure, so its child table got **narrowed**
+  policies. N1 is **normalization only** — language names are not sensitive, and anyone who can see
+  a hostess should see her languages. ⇒ its two policies **mirror `hostesses`' own, one for one**
+  (measured live from `pg_policies` before writing, not copied from the C2 pattern).
+  ⚠️ **Copying C2's shape unthinkingly would have narrowed access and broken readers SILENTLY**,
+  because a missing policy returns an empty list with `error: null`.
+  **Two design calls:** ① **composite PK `(hostess_id, language)`** — duplication becomes
+  *impossible by definition* rather than something code must prevent; the old array accepted
+  `{'עברית','עברית'}` without complaint. ② the index goes on **`language`, not `hostess_id`** —
+  the PK already covers the latter as its leading column, while "who speaks Arabic?" is a plausible
+  future Smart-Match query with no index otherwise.
+  📏 **Measured before writing:** 26 hostesses · **0** NULL · 6 empty arrays · 20 with languages ·
+  **33 language rows** · max 3 per hostess · five distinct values (אמהרית · אנגלית · עברית · ערבית ·
+  רוסית).
+  ⚠️ **Additive half ONLY — `hostesses.languages` stays.** `origin/main` writes it
+  (`HostessFormDialog.jsx:222`) and reads it (`HostessViewCard.jsx:328`). **The drop is a separate
+  migration `N1b`, only after the fixed code is deployed** — exactly the C → deploy → C2 shape that
+  ran today.
+- ✅ 27/08/2026 18:0X — **module-8 migration `C2` APPLIED** (typed-echo:
+  `module8_c2_drop_legacy_bank_columns`). 🔑 **ה19 IS CLOSED.**
+  **Verified after apply:** legacy columns on `hostesses` = **0** · `hostess_bank_details` = **26**
+  rows for **26** hostesses · **0 rows with an empty bank triple** — nobody lost details ·
+  a real hostess (אביגיל רוזן) reads **`מזרחי טפחות · 512 · 449…`** through the new table ·
+  migration recorded in `schema_migrations`.
+  🔴 **And the regression AFTER an irreversible drop, which is the moment things break silently:**
+  `npm run smoke` **exit 0** · the FULL module-4 suite `e2e/hostesses.spec.js` **20/20 passed**
+  (repository · card · form · deactivation dialog). **Nothing broke.**
+  🌊 `docs/schema.sql` updated the same minute and re-cross-checked against the live catalog:
+  `hostesses` = **16 documented / 16 live, zero divergence**.
+  *(The pre-apply plan row this replaces:)*
+  🔴 **Its preconditions were MEASURED, not assumed** — and this is the whole point of §9א:
+  ① m8 merged to `dev` (`518587d`) and promoted to `main` via PR #69 ⇒ **`9e07233`**, `dev`/`main`
+  content-identical (`git diff` = 0 bytes) · ② the Vercel **production** deployment reported
+  `state=success` (id 6124955191, 27/08 14:44Z) · ③ 🔑 **and the deployment claim was not taken at
+  face value: the live site's own JS bundle was fetched (`index-B7qWDbqi.js`, 2,662,504 bytes) and
+  asserted to CONTAIN `hostess_bank_details`.** "Deployed successfully" is a claim about the
+  pipeline; this is a claim about what the browser receives · ④ the three other `.from('hostesses')`
+  paths in production code were read by hand — explicit column list without bank fields ·
+  `update({status})` · a `select('*')` nothing reads bank from · ⑤ DB dependencies: **0 constraints,
+  0 indexes, 0 views** on the three columns.
+  ⚠️ **One alarm was raised and chased to the end rather than waved off:** `generate_salary_report`
+  does mention `bank_*` — but line-by-line it reads them from **`left join public.hostess_bank_details b`**,
+  the NEW table, not from the parent. Clean.
+  **Its shape:** ① a **guarded** re-copy parent→child — `on conflict (hostess_id) do update … where`
+  the child's `updated_at` is older than the parent's · ② the three `drop column`s.
+  🔑 **The guard is not decoration, and the dry run proved it:** all **26** child rows are NEWER than
+  their parent, so an unguarded `do update` would have touched all 26 and pulled them back to the
+  stale source. With the guard the copy touches **0**.
+  ⚠️ **The `excluded` gap the §8.4 contract deliberately left open is now decided:** `excluded` does
+  not carry the parent's `updated_at` (it is not in the INSERT list), so the comparison re-queries
+  `hostesses` in an explicit sub-select inside the conflict action's `where`.
+  **✅ Dry-run in a rolled-back transaction:** copy touched **0 rows** · bank columns on `hostesses`
+  **3 → 0** · `hostess_bank_details` **26 rows intact** · a real hostess (אביגיל רוזן) still reads
+  **`מזרחי טפחות · 512 · 449…`** THROUGH the new table AFTER the drop · **rollback verified — the
+  three columns came back.**
+  ⚠️ **Not reversible once applied.** The values are not lost (they live in `hostess_bank_details`),
+  but the columns do not come back.
 - ✅ 27/08/2026 — **module-8 · 🔻👤 PHASE-1 GATE (step 1.8) — the DB half of m8 is closed.**
   All ten migrations live: A · B · C · D · E1 · E2 · E3 · E3-fix · F · G.
   🔑 **Advisors, predicted-vs-measured, every delta explained and nothing left as "probably fine":**

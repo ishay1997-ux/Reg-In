@@ -110,6 +110,81 @@ async function ensureProjectCoordinates(project) {
 // הפריסה — `db_roadmap.md` §9א. 🚫 **הקוד כאן לא נוגע בהן יותר.**
 const BANK_FIELDS = ['bank_name', 'bank_branch', 'bank_account']
 
+// ---- שפות: אותו דפוס, סיבה אחרת לגמרי (N1, 27/08/2026) ----
+//
+// 🔴 **‏`hostesses.languages` היה `text[]` — רשימה בתא אחד**, ההפרה היחידה של 1NF
+// שנמצאה בסריקת-הנרמול. עבר ל-`hostess_languages` (1:N).
+//
+// ⚠️ **וההבדל מה19 קובע את ההרשאות, ולכן הוא כתוב כאן ולא רק במיגרציה:** פיצול
+// הבנק היה **אבטחתי** ⇒ טבלת-הבת שלו מצומצמת. הפיצול הזה הוא **נרמול בלבד** ⇒
+// ה-policies שלו **זהות ל-`hostesses`**. **מי שרואה דיילת רואה את שפותיה.**
+// 🚫 מי שיעתיק מכאן תבנית למשטח רגיש — שיצמצם במפורש; אין כאן צמצום.
+const LANGUAGES_FIELD = 'languages'
+
+// מוציא את `languages` ממטען שטוח. מחזיר `undefined` כשהשדה כלל לא נשלח —
+// ⚠️ וזה **שונה מ-`[]`**: `undefined` = "אל תיגע", `[]` = "מחקי את כולן".
+// ‏`updateHostess` מקבל patch חלקי, ולכן הבחנה זו היא ההבדל בין עדכון-טלפון
+// שמשאיר שפות לבין עדכון-טלפון שמוחק אותן בשקט.
+function splitLanguages(payload) {
+  const rest = { ...payload }
+  let languages
+  if (LANGUAGES_FIELD in rest) {
+    languages = rest[LANGUAGES_FIELD]
+    delete rest[LANGUAGES_FIELD]
+  }
+  return { rest, languages }
+}
+
+// ניקוי-קלט אחד לשני מסלולי-הכתיבה: ריקים החוצה, רווחי-קצה נחתכים, כפילויות
+// מוסרות. ה-CHECK וה-PK במסד אוסרים את שלושתם — עדיף להיכשל כאן מאשר לקבל
+// שגיאת-מסד גולמית על טופס.
+function normalizeLanguages(list) {
+  if (!Array.isArray(list)) return []
+  return [...new Set(list.map((l) => (typeof l === 'string' ? l.trim() : '')).filter(Boolean))]
+}
+
+// 🔴 **replace-set לפי הכלל של `src/CLAUDE.md`: כותבים את החדש לפני שמוחקים
+// את הישן, לעולם לא ההפך.** סגירת-טאב בין שתי הבקשות משאירה את הישן שלם או
+// את החדש כתוב — אף פעם לא דיילת בלי שפות. *(שתי תקריות אמיתיות בפרויקט הזה
+// נבעו מ-delete-then-insert, אחת מהן מחקה דאטה חי.)*
+async function replaceHostessLanguages(hostessId, list) {
+  const wanted = normalizeLanguages(list)
+
+  if (wanted.length > 0) {
+    const { error: insertError } = await supabase.from('hostess_languages').upsert(
+      wanted.map((language) => ({ hostess_id: hostessId, language })),
+      { onConflict: 'hostess_id,language', ignoreDuplicates: true },
+    )
+    if (insertError) throw toWriteError(insertError, 'שמירת השפות נכשלה.')
+  }
+
+  // ⚠️ המחיקה ממוקדת בשורות שאינן ברשימה החדשה — לא `delete all`. וכשהרשימה
+  // ריקה, `.not.in.()` הוא תחביר לא-חוקי ⇒ מוחקים את הכול לדיילת הזו במפורש.
+  // 🔴 **והערכים מצוטטים:** ב-PostgREST רשימת-`in` ללא מרכאות נשברת על פסיק,
+  // רווח או סוגריים בתוך ערך. חמש השפות היום הן מילה אחת — כלומר הציטוט אינו
+  // משנה כלום **היום**, ובלעדיו הוספת שפה כמו "ערבית (מדוברת)" הייתה מוחקת
+  // שורות בשקט. זול להדק עכשיו.
+  const staleQuery = supabase.from('hostess_languages').delete().eq('hostess_id', hostessId)
+  const { error: deleteError } =
+    wanted.length > 0
+      ? await staleQuery.not('language', 'in', `("${wanted.join('","')}")`)
+      : await staleQuery
+  if (deleteError) throw toWriteError(deleteError, 'עדכון השפות נכשל.')
+}
+
+// 🔴 **LEFT JOIN ומיון בצד-לקוח.** דיילת בלי שפות היא מצב תקין (‏6 מתוך 26 היום),
+// והמסך מצפה ל-`languages` כמערך — לעולם לא `undefined`, כי `ChipToggle` מקבל
+// `selected` ומריץ עליו `includes`.
+function flattenLanguages(row) {
+  if (!row) return row
+  const { hostess_languages: joined, ...rest } = row
+  const list = Array.isArray(joined) ? joined : joined ? [joined] : []
+  return {
+    ...rest,
+    languages: list.map((l) => l.language).sort((a, b) => a.localeCompare(b, 'he')),
+  }
+}
+
 // מוציא את שדות-הבנק מתוך מטען שטוח ומחזיר את שני החלקים בנפרד.
 function splitBankFields(payload) {
   const hostess = { ...payload }
@@ -147,22 +222,22 @@ function flattenBankDetails(row) {
 export async function listHostesses() {
   const { data, error } = await supabase
     .from('hostesses')
-    .select('*, hostess_unavailability(*), hostess_bank_details(*)')
+    .select('*, hostess_unavailability(*), hostess_bank_details(*), hostess_languages(language)')
     .order('full_name')
     .order('hostess_id')
   if (error) throw toError(error, 'שגיאה בטעינת מאגר הדיילות.')
-  return (data ?? []).map(flattenBankDetails)
+  return (data ?? []).map((row) => flattenLanguages(flattenBankDetails(row)))
 }
 
 // דיילת אחת לכרטיס (משטח 3ד).
 export async function getHostess(hostessId) {
   const { data, error } = await supabase
     .from('hostesses')
-    .select('*, hostess_unavailability(*), hostess_bank_details(*)')
+    .select('*, hostess_unavailability(*), hostess_bank_details(*), hostess_languages(language)')
     .eq('hostess_id', hostessId)
     .maybeSingle()
   if (error) throw toError(error, 'שגיאה בטעינת כרטיס הדיילת.')
-  return data ? flattenBankDetails(data) : null
+  return data ? flattenLanguages(flattenBankDetails(data)) : null
 }
 
 // המבט-על (משטח 1): הפרויקטים הפתוחים + שורות-השיבוץ שלהם.
@@ -767,7 +842,8 @@ export async function setShiftLead(row, isShiftLead) {
 // למאגר-המועמדות (`spec.md §2.1(1)`); שינוי-מצב עובר **רק** דרך `setHostessStatus`.
 export async function createHostess(payload) {
   const coordinates = await resolveHostessCoordinates(payload)
-  const { hostess, bank } = splitBankFields(payload)
+  const { rest: withoutLanguages, languages } = splitLanguages(payload)
+  const { hostess, bank } = splitBankFields(withoutLanguages)
   const { data, error } = await supabase
     .from('hostesses')
     .insert({ ...hostess, ...coordinates, status: 'active' })
@@ -791,7 +867,21 @@ export async function createHostess(payload) {
     }
     assertRowsAffected(bankRows, `${data.full_name} נשמרה, אך אין לך הרשאה לשמור את פרטי הבנק שלה.`)
   }
-  return { ...data, ...bank }
+
+  // ⚠️ שפות הן **רשות** (שש מתוך 26 הדיילות היום בלי אף אחת) ⇒ רשימה ריקה אינה
+  // כשל ואינה מצדיקה הודעה. אבל כשל-כתיבה כן — והוא נאמר **בשמה של הדיילת**,
+  // כמו בפרטי-הבנק, כדי שלא יתגלגל כ"נשמר בהצלחה".
+  if (languages !== undefined) {
+    try {
+      await replaceHostessLanguages(data.hostess_id, languages)
+    } catch (languagesError) {
+      throw toWriteError(
+        languagesError,
+        `${data.full_name} נשמרה, אך השפות שלה לא נשמרו. פתחי אותה לעריכה וסמני אותן שוב.`,
+      )
+    }
+  }
+  return { ...data, ...bank, languages: normalizeLanguages(languages) }
 }
 
 // עדכון דיילת קיימת.
@@ -801,7 +891,8 @@ export async function createHostess(payload) {
 // ⚠️ תעריף שעודכן **אינו** משנה שיבוצים קיימים: הם מחזיקים `hourly_rate_snapshot`
 // שהוקפא ברגע השיבוץ — "הבטחנו לה תעריף במייל, ומייל הוא הבטחה" (§א2).
 export async function updateHostess(hostessId, patch) {
-  const { hostess: safePatch, bank } = splitBankFields(patch)
+  const { rest: patchWithoutLanguages, languages } = splitLanguages(patch)
+  const { hostess: safePatch, bank } = splitBankFields(patchWithoutLanguages)
   delete safePatch.hostess_id
   delete safePatch.id_number
   delete safePatch.status
@@ -832,7 +923,17 @@ export async function updateHostess(hostessId, patch) {
     if (bankError) throw toWriteError(bankError, 'שמירת פרטי הבנק נכשלה.')
     assertRowsAffected(bankRows, 'אין הרשאה לעדכן את פרטי הבנק של דיילת זו.')
   }
-  return { ...data[0], ...bank }
+
+  // 🔴 `undefined` מדלג לגמרי — patch שאינו נוגע בשפות לא ימחק אותן.
+  // מערך ריק (`[]`) הוא דווקא כן בקשה להסיר את כולן.
+  if (languages !== undefined) {
+    await replaceHostessLanguages(hostessId, languages)
+  }
+  return {
+    ...data[0],
+    ...bank,
+    ...(languages === undefined ? {} : { languages: normalizeLanguages(languages) }),
+  }
 }
 
 // השבתה/הפעלה — פונקציה ייעודית, כמו `setCustomerStatus` במודול 2.
