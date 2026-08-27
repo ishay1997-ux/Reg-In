@@ -45,7 +45,7 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
-### 27/08/2026 12:39–15:0X — MODULE 8 phase 1: steps 1.0–1.4 closed; E1 applied, E2 written
+### 27/08/2026 12:39–15:3X — MODULE 8 phase 1: steps 1.0–1.4 closed; E1+E2 applied, E3 written
 
 - **Step 1.0 (👤 phase door) ✅.** Branch `ishay/module-8-finance` cut from fresh `origin/dev`
   (`585ad27`) after verifying m5 really merged. **All 8 live re-measurements held — zero drift
@@ -69,6 +69,24 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
   verification: **m6's own hand anchor, project #8, still returns 5,355.00 digit-identical** after
   its function was rewritten. #15 moved 6,060 → 5,985 exactly as the reviewer predicted, which is
   the *point* — m6 and m8 now report one revenue instead of two. No test pinned the old value.
+- **E2 applied and verified by two complete journeys run inside rolled-back transactions**, so real
+  projects were exercised and nothing persisted. *(The report had to travel inside the rollback
+  exception's message — a rollback destroys any result table. Worth remembering as a technique.)*
+  Archive froze **230.00**, identical to what E1's reader computes live for the same project, so the
+  frozen number and the live number agree. The cancellation proposal returned **3,508.00** — the
+  hand anchor, produced by the function itself rather than by a query written to match it. Billing
+  alone did not freeze; the payment did, at 1,680.00. Status stayed `cancelled`.
+- **E3 written (not yet applied) — the salary transaction.** Its own migration because P4 crosses
+  projects and months and pays people. 🔑 **The design fact worth carrying forward: the anti-double-
+  pay mechanism is the SIGNATURE on the row, not a check** — which is also what makes a late-closing
+  project ride into the next report with nobody remembering. And **Q-5 is the ruling most likely to
+  be built wrong**: ה15 said "every unsigned row", which read literally would sign `declined` and
+  `released` rows as permanent ₪0.00 lines in the accountant's document.
+- ⚠️ **A same-day correction of ה15 that no mechanism would have caught, only a person's question:**
+  its first wording collected from operationally-closed projects only — and **a cancelled project is
+  never operationally closed**, so §7.16 compensation would have entered no report at all and those
+  hostesses would silently not have been paid. Ishay's own "I didn't understand how compensation
+  works against a cancellation" is what surfaced it.
 - **E2 written (not yet applied): seven write actions + the explicit drop of m6's
   `set_project_finance_fields`** (zero call sites, measured). Its fee formula was likewise proven
   first: #14 ⇒ 30.0h before the event ⇒ 50% ⇒ 328.00 + 3,180.00 = **3,508.00**, matching `spec §③3`

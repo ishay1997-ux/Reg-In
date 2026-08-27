@@ -410,6 +410,31 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 |---|---|---|---|---|
 | **C2** | `alter table hostesses drop column bank_name, bank_branch, bank_account` — the destructive half of ה19 (m8 migration C did the additive half on 27/08/2026) | m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live** — because `origin/main` writes those columns (`HostessFormDialog.jsx:217-219`) and reads them (`HostessViewCard.jsx:315`) | 1️⃣ **Re-copy first** — `insert … on conflict do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
 
+| **N1** | `hostesses.languages` (`text[]`) → child table `hostess_languages(hostess_id, language)`, then `drop column` | m8 merged **and deployed** | Same three beats as C2: **add + copy → deploy → drop**, with a **re-copy immediately before the drop**. ⚠️ `languages` is **nullable** (unlike the bank columns), so the additive half needs no constraint relaxation — create, copy, drop later | `PROJECT_MASTER_sec7.md §7.87` · here |
+| **N2** | `customer_contacts` consolidation — `is_primary` on the child, then drop `contact_name`/`phone`/`email` from `customers` | m8 merged **and deployed** | Same pattern, **separate drop migration** from N1's. 🔴 **Its blast radius is ~4.6× N1's — see the measurement below; "one package" is true of the pattern, not of the size** | here |
+
+🔴 **Provenance of N1/N2, stated precisely because it did not reach this session directly.**
+A parallel DB-structure investigation session reported on 27/08/2026 that Ishay approved both,
+relaying his words as **"מאשר את שניהם"**. **This session did not hear that ruling from Ishay** and
+has not re-confirmed it with him; it is recorded here so the item cannot fall between two sessions
+(his standing anxiety about deferred work), **and it is flagged for his confirmation.** If he did
+not mean this, these two rows come out.
+**Independently measured by THIS session on `origin/main` — the peer explicitly asked that its own
+numbers not be taken on trust:**
+· **N1 — `languages`: 10 occurrences across 2 files**, with a real write at
+  `HostessFormDialog.jsx:222` and reads at `:125` and `HostessViewCard.jsx:320`.
+· **N2 — `contact_name`: 46 occurrences across 16 production files** (tests excluded), with the
+  write at `CustomerFormDialog.jsx:206` and readers reaching into `lib/quotes.js` and
+  `lib/shiftEmails.js`.
+🔑 **A consequence worth naming before anyone starts:** both were approved as one package "because
+they are the same pattern". **The pattern is identical; the size is not** — N2 touches more than
+four times the code surface of N1, and its readers sit in the quote and shift-mail paths rather
+than in one module. **Whoever builds this should be free to ship N1 first and N2 as its own step**,
+and should not read "one package" as "one migration".
+⚠️ **Still open at the time of writing, per the same peer: the customer-form design, plus the
+delete-the-primary behaviour and the backfill for the 7 existing customers.** Not decided ⇒ not
+buildable.
+
 🔴 **Until C2 runs, ה19 is NOT closed** — the exposure it exists to fix (bank details readable by
 anyone holding 'דיילות', because RLS is row-level) is still open. **m8 may not be reported as having
 closed ה19 before then**, and `micro_guides/module-8.md` §2.2's "✅ complete here" row for bank
@@ -433,6 +458,42 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
+- ⏳ 27/08/2026 — **module-8 migration E3 · WRITTEN ON DISK, NOT APPLIED — typed-echo gate OPEN.**
+  `20260827152840_module8_salary_report_transaction.sql`. **Check live before assuming it landed:**
+  `select count(*) from pg_proc where proname='generate_salary_report'` ⇒ **0 means it did not**.
+  Two functions, `generate_salary_report(period)` + `finalize_salary_report(id, url, status)`,
+  completing step 1.5's E1+E2+E3 split. Its own file because P4 crosses projects and months and
+  **pays people** — an error here is not a wrong number on a screen, it is a double payment or a
+  payment that never happens.
+  **The contracts it implements, each with the reason it is not obvious:**
+  · **ה15's unsigned-rows model** — a month's report collects every assignment with
+    `salary_report_id IS NULL` whose event date falls in that month **or earlier**. ⇒ a
+    late-closing project rides into the NEXT report by itself. **The anti-double-pay mechanism is
+    the signature, not a check**: a signed row can never be collected again.
+  · **Two sources, and the second one is a same-day correction of ה15 that Ishay's own question
+    caught**: (א) operationally-closed ⇒ actual hours × frozen rate + bonus; (ב) **cancelled ⇒
+    §7.16 compensation** (ה24's scale × planned hours × frozen rate). ה15's first wording listed
+    only (א), and **a cancelled project is never operationally closed** — so the compensation would
+    have entered no report at all and the hostesses would silently not have been paid it. No
+    mechanism would have caught that; a person's question did.
+  · **Q-5 — the ruling most likely to be built wrong in the whole phase.** ה15 said "**every**
+    unsigned row". Read literally that collects `declined`, `released` and `approval_withdrawn`
+    rows, each becoming a **permanently signed ₪0.00 line in the accountant's document**. Only
+    `finally_approved` (source א) and `released_from_status='finally_approved'` (source ב, A-7) are
+    collected. **Signing is irreversible.**
+  · **ה14** — travel is stamped to `assignments.travel_amount` **at generation**, not at
+    assignment creation: it is a regulated allowance paid at the rate in force, deliberately unlike
+    `hourly_rate_snapshot`. **B-16/ה29**: only where `actual_hours > 0` — a cancelled shift did not
+    travel.
+  · **N-4** — ₪0 lines are signed and recorded (so they never re-collect and the evidence is
+    complete) but flagged `show_in_file=false`; the total is unchanged.
+  · **B-4** — bank details are **returned for the xlsx and never stored** in
+    `salary_report_lines`. Copying them into a second table would reopen exactly the exposure ה19
+    closed this morning.
+  · A row whose hours cannot be computed **raises rather than signing a 0** (A-8).
+  🔑 **Third hand anchor pre-verified:** אפרת דהן on #12 — 6h × 45 + bonus 0 = **270.00** today, and
+  **292.60** once migration G seeds `סכום_נסיעות_למשמרת` to 22.60. She is currently the only
+  unsigned assignment with hours > 0.
 - ✅ 27/08/2026 — **module-8 migration E2 APPLIED via MCP** (typed-echo:
   `module8_finance_write_actions`).
   **Step 1.5 runs as E1 (applied) + E2 (this) + E3 (the salary transaction, next).** Three rather
