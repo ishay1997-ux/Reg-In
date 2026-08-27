@@ -12,8 +12,8 @@
 | **Branch** | `ishay/module-8-finance` — ✅ **CUT 27/08/2026 12:4X from fresh `origin/dev` (`585ad27`)**, at step 1.0. Preconditions verified the same turn: m5 IS merged (`git merge-base --is-ancestor origin/ishay/module-5-logistics origin/dev` ⇒ yes; `git log origin/dev..origin/ishay/module-5-logistics` ⇒ empty), and `origin/dev` NOW carries `docs/specs/module_08_finance/` (`git ls-tree origin/dev docs/specs/` ⇒ 04/05/06/**08**). Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ empty (fresh, not dead — iron rule 10's caveat). *(Was: "NOT YET CUT", 26/08.)* |
 | **Owner** | Ishay (sole developer) |
 | **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X** — step 1.0's 🤖 half done; standing at its 👤 checkpoint. **Zero migrations applied.** |
-| **Last updated** | `27/08/2026 13:0X` *(system clock)* |
-| **Active step** | **1.2 — Migration B (`salary_reports` document model + `salary_report_lines` + RLS), NOT STARTED.** ‏1.0 ✅ and **1.1 ✅ APPLIED** (`20260827125155_module8_finance_tables_and_columns`) — every assertion measured, advisors 26 = baseline, unit suite **1,440/56 exit 0** identical to the pre-phase baseline, `schema.sql` refreshed and cross-checked against the live catalog. 🔴 **Ishay ruled `הכל היום, כרגיל`** on the 28/08-presentation risk (§10) ⇒ Phase 1 runs complete, in plan order, with a reported regression after each step that touches merged code. |
+| **Last updated** | `27/08/2026 13:2X` *(system clock)* |
+| **Active step** | **1.3 — Migration C + the SAME-STEP m4 client rewire (`hostess_bank_details` split, ה19), NOT STARTED. 🔴 This is the highest-risk step in the phase:** it drops three NOT NULL columns off the live `hostesses` table and rewires 5 call sites in MERGED module-4 code; if the two halves do not land together, every new-hostess save breaks (T3). ‏1.0 ✅ · **1.1 ✅ APPLIED** · **1.2 ✅ APPLIED** — both verified live with positive controls, advisors **26 → 25** (‏`salary_reports` left the deny-all list), unit suite **1,440/56 exit 0** unchanged after each. 🔴 Ishay ruled `הכל היום, כרגיל` on the 28/08-presentation risk (§10) ⇒ Phase 1 runs complete, with a reported regression after every step that touches merged code. |
 | **Deadline** | conference **01/10** (target: 100%) · end 20/10. m8 is the last *process* module before reports — the conference's "closing the loop" story leans on it. |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -23,8 +23,8 @@
 |---|---|:--:|
 | **1.0** | 🔻👤 Phase-1 door — branch cut · ledger sweep · live re-measurement · baseline · **Ishay checkpoint** | ✅ |
 | **1.1** | Migration A — `project_finance` child + `projects` finance columns + `assignments.released_from_status` + C-1 index | ✅ |
-| **1.2** | Migration B — `salary_reports` document model + `salary_report_lines` + RLS | 🔨 |
-| **1.3** | Migration C + same-step client rewire — `hostess_bank_details` split (ה19) | ⬜ |
+| **1.2** | Migration B — `salary_reports` document model + `salary_report_lines` + RLS | ✅ |
+| **1.3** | Migration C + same-step client rewire — `hostess_bank_details` split (ה19) | 🔨 |
 | **1.4** | Migration D — `email_log` CHECK +2 values + 'כספים' SELECT policy → **then** `send-email` deploy | ⬜ |
 | **1.5** | Migration E — the finance RPC family (4 actions + archive freeze + fee resolution + DEFINER readers) | ⬜ |
 | **1.6** | Migration F — public feedback RPC pair `/feedback/:token` + rate limit | ⬜ |
@@ -715,7 +715,46 @@ both: SELECT gated `'כספים'` level **`edit|view`** (T20), no write policies
 **🔻👤 Typed-echo → apply. 🔻🤖 Verify:** constraint list live · UNIQUE proven by a rolled-back
 double-insert · impersonated read matrix (positive first) · advisors.
 **מה ייחשב עובד** *(§7.68 quoted)*: `"period UNIQUE + טבלת שורות-snapshot מוקפאות-בהפקה + סה"כ"`.
-**🌊 אדוות —** db_roadmap §6 `salary_reports` row. **🗣️ אושר —**
+
+**↳ as-built · APPLIED `27/08/2026 13:1X`** — file
+`supabase/migrations/20260827131033_module8_salary_report_document_model.sql`; typed-echo received.
+**Built as planned, with one addition worth naming:** the migration does NOT re-`enable row level
+security` on `salary_reports` — RLS was already on (measured); what was missing was a *policy*.
+Writing a redundant `enable` would read as though m8 turned RLS on, which is false.
+**🔻🤖 Verify:**
+
+| Assertion | Measured |
+|---|---|
+| T4 — the two NOT NULLs released | `sent_date=YES`, `report_file_url=YES` ✅ |
+| constraints live | `salary_reports_period_key` · `..._period_first_of_month` · `..._send_status_check` · `salary_report_lines_pkey` · `..._line_basis_check` ✅ |
+| **UNIQUE proven by a real double-insert** | second report for `2026-08-01` ⇒ **`unique_violation`** ✅ — *the double-generation block is proven by a write that failed, not by reading the DDL* |
+| **T19 first-of-month proven the same way** | `period = 2026-09-15` ⇒ **`check_violation`** ✅ — the silent month-split is genuinely impossible |
+| T19 — every `salary_report_lines` FK RESTRICT both ways | all three measured `del=r/upd=r` ✅ |
+| covering index per FK (checklist §1: applies to ANY new FK) | 3 of 3 ✅ |
+| T9 moddatetime | `extensions.moddatetime` ✅ (via `pg_trigger→pg_proc→pg_namespace`) |
+| T20 — impersonated read matrix, positive control first | כספים **1 row** — *the table had never returned a row to any client before this* · לוגיסטיקה **0** · גיוס **0** ✅ |
+| direct client UPDATE as כספים | **0 rows** ✅ |
+| probe cleanup | both tables back to **0 rows** ✅ |
+| advisors | **26 → 25.** The finding that left is `rls_enabled_no_policy` on `salary_reports` ✅ |
+| unit regression | **1,440 / 56, exit 0** — identical to baseline ✅ |
+
+⚠️ **Stated triage, not a silent skip:** the full `get_advisors` sweep was not re-run here. Migration
+B creates **zero functions**, so the only category it can move is `rls_enabled_no_policy`, measured
+directly against `pg_class`/`pg_policies`. The full sweep is required at the **1.8** phase gate and
+runs there.
+
+🔑 **A fact this step retires, worth knowing before 1.8:** `salary_reports` was the **last** business
+table that was deny-all for want of being built. The three that remain (`project_changes`,
+`login_attempts`, `login_rpc_calls`) are deny-all **by design**. 🚧 **The
+`supabase/migrations/CLAUDE.md` section "טבלה חדשה בשימוש ראשון" still names `salary_reports` as the
+open one and is now stale** — left untouched on purpose (another module's instruction surface);
+flagged in `db_roadmap` §10 so whoever next edits that file finds it.
+
+**🌊 אדוות —** `db_roadmap` §10 Done row · **`db_roadmap` §7.40ג row struck** (the four-unique-
+constraints item is now 4/4 — it had read *"אין לסמן את השורה כבוצעה"* since 12/08) ·
+`docs/schema.sql` (§19 rewritten + new §28 + header counts 24→25 tables, 50→52 policies + the
+no-business-table-deny-all note) · §1 header + step table. **No `🚧` created or consumed.**
+**🗣️ אושר —** typed-echo `27/08/2026 13:1X`.
 
 **Step 1.3 · Migration C + SAME-STEP client rewire — `module8_hostess_bank_details_split`** ⚠️ shared-surface
 **Files:** migration + `src/modules/04_hostesses/HostessFormDialog.jsx` · `HostessViewCard.jsx` ·

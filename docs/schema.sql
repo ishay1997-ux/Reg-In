@@ -13,6 +13,9 @@
 --    `20260827125155_module8_finance_tables_and_columns`; הדלתא: טבלה חדשה `project_finance`
 --    (+RLS +policy קריאה +טריגר), 2 עמודות ואילוץ-ייחודיות על `projects`, עמודה + CHECK
 --    + אינדקס-C-1 על `assignments`, והידוק policy-הקריאה של `quote_services` (ה30)) ·
+--    ואחרי מיגרציה B `20260827131033_module8_salary_report_document_model` (הדלתא:
+--    `salary_reports` מריצה למסמך — 3 עמודות + 3 אילוצים + policy ראשונה אי-פעם, ושחרור
+--    שתי עמודות-חובה; טבלה חדשה `salary_report_lines` +RLS +policy +3 אינדקסים +טריגר) ·
 --    פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
 --
 -- 🔴 **לרענן את הקובץ הזה אחרי כל מיגרציה.** העותק הקודם לא רוענן חמישה חודשים והכריז על עמודה
@@ -26,8 +29,11 @@
 -- 🚫 **אין כאן סעיף "היסטוריה"/"יומן שינויים"** — הקובץ מתאר הווה בלבד. ציר השינויים חי
 --    ב-`supabase/migrations/` וב-`docs/db_roadmap.md`.
 --
--- מוסכמות: כל 24 הטבלאות ב-`public` עם RLS **מופעל** (נמדד 27/08/2026: 24 טבלאות, 24 עם RLS).
--- כל 50 המדיניות (38 ב-public, 12 על `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`. הפונקציה `moddatetime` (טריגר
+-- מוסכמות: כל 25 הטבלאות ב-`public` עם RLS **מופעל** (נמדד 27/08/2026 אחרי מיגרציה B).
+-- כל 52 המדיניות (40 ב-public, 12 על `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`.
+-- 🔴 שלוש טבלאות נותרו deny-all **במכוון**: `project_changes` (נקראת רק דרך ה-RPC הממסך),
+--    `login_attempts` ו-`login_rpc_calls` (רק דרך פונקציות ה-DEFINER של הכניסה). מ-27/08/2026
+--    **אין יותר אף טבלה עסקית שחסומה מחוסר-בנייה** — `salary_reports` הייתה האחרונה. הפונקציה `moddatetime` (טריגר
 -- `updated_at`) יושבת בסכמה `extensions`, לא ב-`public`.
 -- ============================================================
 
@@ -1017,29 +1023,106 @@ create policy assignments_write_by_permission on assignments
 
 
 -- ============================================================
--- 19. דוחות שכר חודשיים — public.salary_reports
+-- 19. דוחות שכר חודשיים — public.salary_reports (הורחבה למודול 8)
 -- ============================================================
--- RLS מופעל ואין לטבלה אף policy ⇒ גישה ישירה מהלקוח חסומה.
+-- 🔴 עד 27/08/2026 הייתה deny-all מחוסר-בנייה (RLS דלוק, אפס policies) — הטבלה העסקית
+--    האחרונה במצב הזה. מיגרציה B של מ8 פתחה אותה והפכה אותה ממריצה ל**מסמך**:
+--    `period` (ראשון-לחודש, UNIQUE) הוא מנגנון מניעת ההפקה-הכפולה של §7.40ג/§7.68,
+--    ושתי עמודות-החובה שוחררו כי הקובץ נוצר אחרי חישוב השורות (T4).
 create table salary_reports (
-  report_id       serial      not null,
-  sent_date       date        not null,
-  report_file_url text        not null,
-  created_at      timestamptz not null default now(),
-  updated_at      timestamptz not null default now(),
-  constraint salary_reports_pkey primary key (report_id)
+  report_id       serial        not null,
+  sent_date       date,                        -- שוחרר מ-NOT NULL במ8 (T4)
+  report_file_url text,                        -- שוחרר מ-NOT NULL במ8 (T4)
+  period          date          not null,      -- מ8 §7.40ג — תמיד ראשון-לחודש
+  send_status     text          not null default 'pending',
+  total_amount    numeric(12,2),
+  created_at      timestamptz   not null default now(),
+  updated_at      timestamptz   not null default now(),
+  constraint salary_reports_pkey primary key (report_id),
+  constraint salary_reports_period_key unique (period),
+  constraint salary_reports_period_first_of_month check (extract(day from period) = 1),
+  constraint salary_reports_send_status_check check (send_status = any (array['pending'::text, 'sent'::text, 'failed'::text]))
 );
 
 alter table salary_reports enable row level security;
 
 -- אינדקסים
 -- salary_reports_pkey — unique btree (report_id) [נוצר ע"י האילוץ salary_reports_pkey]
+-- salary_reports_period_key — unique btree (period) [נוצר ע"י האילוץ salary_reports_period_key]
 
 -- טריגרים
 create trigger salary_reports_set_updated_at
   before update on salary_reports
   for each row execute function moddatetime('updated_at');
 
--- מדיניות RLS: אין (0 policies)
+-- מדיניות RLS (מ8): קריאה בלבד. אין מדיניות-כתיבה — ההפקה היא טרנזקציית RPC.
+create policy salary_reports_select_by_permission on salary_reports
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'כספים')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+
+-- ============================================================
+-- 28. שורות דוח השכר — public.salary_report_lines (מודול 8)
+-- ============================================================
+-- ה-snapshot הקפוא של מה שנחתם ונשלח לרו"ח (§7.68). שני מקורות-שורה (ה15):
+-- עבודה בפועל בפרויקט שנסגר תפעולית, ופיצוי-§7.16 בפרויקט שבוטל — line_basis מפריד.
+-- 🔴 אין כאן עמודות בנק במכוון (B-4): ההוכחה היא קובץ ה-xlsx בבאקט finance הפרטי;
+--    שכפול פרטי-בנק לכאן היה פותח מחדש את החשיפה שמיגרציה C סוגרת.
+-- 🔴 כל FK הוא RESTRICT בשני הכיוונים (T19) — אלה שורות שכר חתומות, ראיה חשבונאית;
+--    ה-CASCADE של assignments→projects היה מוחק אותן יחד עם הפרויקט.
+create table salary_report_lines (
+  line_id           bigint        not null generated always as identity,
+  report_id         integer       not null,
+  hostess_id        bigint        not null,
+  hostess_name      text          not null,   -- צילום-זהות ברגע החתימה
+  id_number         text          not null,   -- צילום-זהות ברגע החתימה
+  source_project_id integer       not null,
+  line_basis        text          not null,
+  hours             numeric(12,2) not null default 0,
+  rate              numeric(12,2) not null,
+  bonus             numeric(12,2),            -- NULL = לא-רלוונטי; המסך מציג "—" ולא 0.00
+  travel            numeric(12,2),            -- NULL = לא-רלוונטי (ה29)
+  line_total        numeric(12,2) not null,
+  created_at        timestamptz   not null default now(),
+  updated_at        timestamptz   not null default now(),
+  constraint salary_report_lines_pkey primary key (line_id),
+  constraint salary_report_lines_report_id_fkey         foreign key (report_id)         references salary_reports (report_id) on update restrict on delete restrict,
+  constraint salary_report_lines_hostess_id_fkey        foreign key (hostess_id)        references hostesses (hostess_id)     on update restrict on delete restrict,
+  constraint salary_report_lines_source_project_id_fkey foreign key (source_project_id) references projects (project_id)      on update restrict on delete restrict,
+  constraint salary_report_lines_line_basis_check check (line_basis = any (array['actual'::text, 'cancellation_compensation'::text]))
+);
+
+alter table salary_report_lines enable row level security;
+
+-- אינדקסים (מכסה לכל FK)
+create index salary_report_lines_report_id_idx         on salary_report_lines using btree (report_id);
+create index salary_report_lines_hostess_id_idx        on salary_report_lines using btree (hostess_id);
+create index salary_report_lines_source_project_id_idx on salary_report_lines using btree (source_project_id);
+-- salary_report_lines_pkey — unique btree (line_id) [נוצר ע"י האילוץ salary_report_lines_pkey]
+
+-- טריגרים
+create trigger salary_report_lines_set_updated_at
+  before update on salary_report_lines
+  for each row execute function extensions.moddatetime('updated_at');
+
+-- מדיניות RLS
+create policy salary_report_lines_select_by_permission on salary_report_lines
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'כספים')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
 
 
 -- ============================================================

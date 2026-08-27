@@ -135,7 +135,7 @@ only) · the typed-echo gate before every apply · `docs/schema.sql` refreshed a
 | `assignments` | `attendance_status`, `lateness_level`, `no_show_reason` | §7.16(א) | 4/8 |
 | `quote_services` | `closing_unit_cost` (הקפאת עלות) ✅ **בוצע בפועל — `20260723111005_module3_quotes_structure_and_constraints.sql`** *(`alter table quote_services add column closing_unit_cost numeric(12,2) not null check (closing_unit_cost >= 0);` — וההקפאה עצמה נכתבת ב-RPC `20260723115000`: `update public.quote_services qs set closing_unit_cost = pr.cost`. נמדד 12/08/2026 ב-`regin-docs-sync`; השורה תיארה את השינוי כעתידי. **תוקן ב-§7.47 קודם, ואז כאן** — כלל ברזל 13(א))* | §7.28 | 3 |
 | `quotes` | `estimated_start_time` + `estimated_end_time` (time); `estimated_hours` נגזר-מההפרש ✅ **בוצע בפועל — `20260723111005_module3_quotes_structure_and_constraints.sql`** *(`alter table quotes add column estimated_start_time time not null;   -- §7.82/F23` + `alter table quotes add column estimated_end_time time not null;     -- §7.82/F23`, **ונוסחת-הגלגול +24 של F23(א) נחתה באותה מיגרציה** כעמודה-נגזרת: `case when estimated_end_time > estimated_start_time then extract(epoch from (estimated_end_time - estimated_start_time)) / 3600 else … + 24 end`. נמדד 12/08/2026 ב-`regin-docs-sync`; השורה תיארה את השינוי כעתידי)* ⚠️ **לשורה הזאת אין תאום ב-§7.47** — היא שורה מקומית של הקובץ הזה, ולכן אין כאן "SSOT קודם" לתקן; **ההכרעה עצמה חיה ב-§7.82/F23, ושם היא עדיין מנוסחת בלשון עתיד** *(לא נגעתי — היקף-העריכה של האודיט הזה היה §7.47 בלבד)* | §7.82/F23 | 3 |
-| `params` / `roles` / `modules` / `salary_reports` | אילוצי-ייחודיות ◐ **בוצע חלקית — שלושה מארבעה** *(נמדד 12/08/2026 ב-`regin-docs-sync`)*: ✅ `roles` + `modules` ב-`20260710160735_module2_customers_surrogate_key_rls_and_marketing.sql` (`alter table roles add constraint roles_role_name_key unique (role_name);` · `alter table modules add constraint modules_module_name_key unique (module_name);`) · ✅ `params` ב-`20260723111005_module3_quotes_structure_and_constraints.sql` (`alter table params add constraint params_param_name_key unique (param_name);`) · 🔴 **`salary_reports` — לא בוצע ונשאר פתוח למ8:** זהו סעיף (ג) של §7.40 (*"אין מזהה-חודש — אין מניעת הרצה כפולה של דוח חודשי"*), והטבלה עדיין `(report_id serial primary key, sent_date date not null, report_file_url text not null)` בלבד — `grep` על כל `supabase/migrations/**` ⇒ **אפס** אילוץ-ייחודיות עליה. **⇒ אין לסמן את השורה כבוצעה.** **תוקן ב-§7.47 קודם, ואז כאן** — כלל ברזל 13(א) | §7.40 | 2/3/8 |
+| `params` / `roles` / `modules` / `salary_reports` | אילוצי-ייחודיות ◐ **בוצע חלקית — שלושה מארבעה** *(נמדד 12/08/2026 ב-`regin-docs-sync`)*: ✅ `roles` + `modules` ב-`20260710160735_module2_customers_surrogate_key_rls_and_marketing.sql` (`alter table roles add constraint roles_role_name_key unique (role_name);` · `alter table modules add constraint modules_module_name_key unique (module_name);`) · ✅ `params` ב-`20260723111005_module3_quotes_structure_and_constraints.sql` (`alter table params add constraint params_param_name_key unique (param_name);`) · ✅ **`salary_reports` — בוצע 27/08/2026 ב-`20260827131033_module8_salary_report_document_model` (מ8, צעד 1.2): `alter table salary_reports add constraint salary_reports_period_key unique (period);` ⇒ **ארבעה מארבעה — השורה הזו סגורה.** זהו סעיף (ג) של §7.40 (*"אין מזהה-חודש — אין מניעת הרצה כפולה"*), והוא נסגר עם אילוץ-משנה שאין לו זכר בניסוח המקורי: **`salary_reports_period_first_of_month` — CHECK שדורש ש-`period` יהיה תמיד ה-1 לחודש.** בלעדיו תאריך באמצע החודש היה מפצל חודש אחד לשתי "תקופות" חוקיות ועובר את ה-UNIQUE **בלי להתלונן** — כלומר בדיוק ההרצה-הכפולה שהאילוץ בא למנוע. **שניהם הוכחו בכתיבה שנכשלה בפועל, לא בקריאת ה-DDL** (`unique_violation` · `check_violation`). *(הנוסח שקדם — "לא בוצע ונשאר פתוח למ8 … אפס אילוץ-ייחודיות עליה" — נמדד 12/08/2026 והיה נכון עד היום.)* **תוקן ב-§7.47 קודם, ואז כאן** — כלל ברזל 13(א) | §7.40 | 2/3/8 |
 | `customers` | `customer_id` surrogate bigint PK + `company_number`(ח"פ) unique not null ✅ **בוצע בפועל — `20260710160735_module2_customers_surrogate_key_rls_and_marketing.sql`** *(SECTION 1, שלושת החלקים: `alter table customers rename column customer_id to company_number;` + `alter table customers add constraint customers_company_number_key unique (company_number);` + `alter table customers add column customer_id bigint generated always as identity primary key;` — וה-FK של `quotes` הוקם מחדש מול המפתח החדש. נמדד 12/08/2026 ב-`regin-docs-sync`; השורה תיארה את השינוי כעתידי)* ➕ **שורה זו נעדרה מהמראה לגמרי עד 12/08/2026** — היא קיימת ב-§7.47 מאז ומעולם, ומעולם לא שוכפלה לכאן; **הועתקה מ-§7.47 כלשונה, לא נגזרה מחדש.** *(זו בדיוק התקלה שתג ה-🔗 קיים כדי למנוע: מראה שמשמיטה שורות-SSOT בשקט נקראת כרשימה מלאה.)* | §7.64 | 2 |
 | `hostesses` | `id_number`(ת"ז) → surrogate + ת"ז unique ✅ **בוצע בפועל — `20260809122536_module4_hostesses_surrogate_key_and_columns.sql`** *(`hostess_id bigint generated always as identity primary key` + `hostesses_id_number_key unique (id_number)`. נמדד 12/08/2026 ב-`regin-docs-sync`; השורה תיארה את השינוי כעתידי)* ➕ **שורה זו נעדרה מהמראה לגמרי עד 12/08/2026** — הועתקה מ-§7.47 כלשונה, לא נגזרה מחדש. ⚠️ **והערת-הפרוזה שמתחת לטבלה** (*"ושאר הרשימה … **כן** רשומה: ת"ז→סורוגייט …"*) **נכונה רק לגבי שורת-§7.64 בטבלת-העדיפויות למטה, ולא לגבי המראה הזאת** — משפט-כיסוי כזה הוא מה שהחביא את ההשמטה | §7.64 | 4 |
 | `hostesses` | `languages text[] not null default '{}'` ✅ **בוצע בפועל — `20260809122536_module4_hostesses_surrogate_key_and_columns.sql`** *(`alter table public.hostesses add column languages text[] not null default '{}';` — בדיוק כפי שנוסח כאן. ⚠️ **ולכן המשפט "המיגרציה טרם נכתבה, ולכן השינוי הוא טקסט בלבד" שבגוף השורה התיישן** — הוא היה נכון ב-06/08 ולא ב-09/08. נמדד 12/08/2026 ב-`regin-docs-sync`)* ⚠️ **(שונה מ-`speaks_english boolean` בהכרעת-ישי 06/08/2026 — *"הגיוני שיהיה שפות"*, כפי שניסח מלכתחילה. עלות-בנייה זהה — רב-בחירה במקום תיבה — וחוסך מיגרציה אם יידרשו רוסית/ערבית. **המיגרציה טרם נכתבה, ולכן השינוי הוא טקסט בלבד.**)** — **שדה-מידע בכרטיס הדיילת בלבד.** 🚫 **אינו תנאי בשער של שכבה 1 ואינו עמודה בטבלת-המאגר** *(הכרעת-ישי 06/08/2026)*: לאירוע אחד יש **תפקידים שונים** — *"אולי סבבה מישהי שתהיה עם המדפסת ולא צריכה את השפה"* — ושער ברמת-האירוע מניח שכל העמדות זהות. **השדה מיידע; המנהלת בוחרת ידנית ממילא (C5:311).** ‏🚧 הצעד הבא אם יידרש: **צ'יפ-הקשר** בכרטיס-המועמדת, לא שער | הכרעת-ישי 06/08/2026 (‏Discovery מ4 · `research §7` פריט 8, שהיה ⚪ "לשאול את ישי") | 4 |
@@ -415,6 +415,41 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
+- ✅ 27/08/2026 — **module-8 migration B APPLIED via MCP `apply_migration`** (typed-echo received:
+  `module8_salary_report_document_model`).
+  File: `supabase/migrations/20260827131033_module8_salary_report_document_model.sql`.
+  **Closed by it:** the **§7.40ג / §7.47 `salary_reports` uniqueness row** (the
+  one explicitly marked *"לא בוצע ונשאר פתוח למ8"* — the fourth of the four unique-constraint items,
+  the other three closed in m2/m3) · **§7.68** (`period` UNIQUE + a frozen line-snapshot table +
+  stored total) · **T4** (the two NOT NULLs that make the generation transaction impossible) ·
+  **T19** (RESTRICT on every FK + the first-of-month CHECK) · **T20** (policy level `edit|view` on
+  'כספים'). It also removes `salary_reports` from the deny-all list — **after it, the only
+  remaining deny-all tables are the three BY-DESIGN ones** (`project_changes`, `login_attempts`,
+  `login_rpc_calls`), and the "one business table still deny-all for want of building" note in the
+  DB protocol's *"טבלה חדשה בשימוש ראשון"* section — **now measured true: the only deny-all tables
+  left are `project_changes`, `login_attempts`, `login_rpc_calls`, all three by design. 🚧 that
+  section of `supabase/migrations/CLAUDE.md` still names `salary_reports` and is now stale** (left
+  for whoever next touches that file — it is another module's instruction surface, not m8's).
+  **Measured live before writing it (27/08/2026):** `salary_reports` held **0 rows** and **0**
+  `assignments` rows pointed at a report ⇒ `add column period not null` was safe with no default and
+  no backfill; the table already had RLS enabled and its `updated_at` trigger already bound to
+  `extensions.moddatetime`, so the migration added neither.
+  **Verified live, impersonated, positive control first:** SELECT — כספים **1 row** *(the table had
+  never returned a row to any client before this migration)*, לוגיסטיקה **0**, גיוס **0** · direct
+  client UPDATE as כספים ⇒ **0 rows** · **the two behaviours proven by real failed writes, not by
+  reading the DDL**: a second report for the same month ⇒ `unique_violation`; a mid-month `period`
+  ⇒ `check_violation` (T19's silent month-split is genuinely blocked) · all three
+  `salary_report_lines` FKs measured `del=r/upd=r` · a covering index on each · trigger on
+  `extensions.moddatetime` · probe rows deleted, both tables back to **0 rows**.
+  **Advisor delta: 26 → 25, and the one that left is `rls_enabled_no_policy` on `salary_reports`.**
+  ⚠️ **Triage note, stated rather than hidden:** the full `get_advisors` sweep was NOT re-run for
+  this step — migration B creates **zero functions**, so the only advisor category it can move is
+  `rls_enabled_no_policy`, which was measured directly against `pg_class`/`pg_policies`. The full
+  sweep runs at the 1.8 phase gate, which requires it anyway.
+  **`docs/schema.sql` refreshed** (§19 rewritten, new §28 `salary_report_lines`, header 24→25
+  tables / 50→52 policies + an explicit note that no business table is deny-all for want of
+  building any more) **and cross-checked column-by-column against `information_schema` — zero
+  divergence.**
 - ✅ 27/08/2026 — **module-8 migration A APPLIED via MCP `apply_migration`** (typed-echo received
   from Ishay: `module8_finance_tables_and_columns`).
   File: `supabase/migrations/20260827125155_module8_finance_tables_and_columns.sql`.
