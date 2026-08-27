@@ -12,8 +12,8 @@
 | **Branch** | `ishay/module-8-finance` — ✅ **CUT 27/08/2026 12:4X from fresh `origin/dev` (`585ad27`)**, at step 1.0. Preconditions verified the same turn: m5 IS merged (`git merge-base --is-ancestor origin/ishay/module-5-logistics origin/dev` ⇒ yes; `git log origin/dev..origin/ishay/module-5-logistics` ⇒ empty), and `origin/dev` NOW carries `docs/specs/module_08_finance/` (`git ls-tree origin/dev docs/specs/` ⇒ 04/05/06/**08**). Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ empty (fresh, not dead — iron rule 10's caveat). *(Was: "NOT YET CUT", 26/08.)* |
 | **Owner** | Ishay (sole developer) |
 | **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X** — step 1.0's 🤖 half done; standing at its 👤 checkpoint. **Zero migrations applied.** |
-| **Last updated** | `27/08/2026 15:2X` *(system clock)* |
-| **Active step** | **1.5 · E3 — the salary transaction (`generate_salary_report` + `finalize_salary_report`), NOT STARTED.** ‏1.0–1.4 ✅ · **E1 ✅** (money SSOT + both readers + the F16 ripple; m6's anchor #8 held at 5,355.00) · **E2 ✅** (7 write actions + the drop; **two full journeys verified inside rolled-back transactions** — archive froze **230.00** matching the live reader, and the cancellation proposal produced **3,508.00**, the hand anchor). Two of the four hand-computed anchors are now proven **by the functions themselves**. 🔴 **C2 still owed after deploy — ה19 is NOT closed** (§8.4 · `db_roadmap` §9א). 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
+| **Last updated** | `27/08/2026 15:4X` *(system clock)* |
+| **Active step** | **1.6 — Migration F: the public feedback RPC pair for `/feedback/:token` + rate limiting, NOT STARTED.** ‏1.0–1.5 **all ✅** — 1.5 landed as E1+E2+E3 plus a same-minute fix-forward. **Three of the four hand-computed anchors are now produced by the code itself:** 3,650.00 (profit) · 3,508.00 (cancellation fee) · 270.00 → 292.60 after G (salary line). 🔴 **C2 still owed after deploy — ה19 is NOT closed** (§8.4 · `db_roadmap` §9א, alongside the newly-registered N1/N2). 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
 | **Deadline** | conference **01/10** (target: 100%) · end 20/10. m8 is the last *process* module before reports — the conference's "closing the loop" story leans on it. |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -26,8 +26,8 @@
 | **1.2** | Migration B — `salary_reports` document model + `salary_report_lines` + RLS | ✅ |
 | **1.3** | Migration C + same-step client rewire — `hostess_bank_details` split (ה19) | ✅ *(both halves; `drop column` deferred to C2 — §8.4)* |
 | **1.4** | Migration D — `email_log` CHECK +2 values + 'כספים' SELECT policy → **then** `send-email` deploy | ✅ *(both halves; deploy = v6)* |
-| **1.5** | Migration E — the finance RPC family | 🔨 *(E1 ✅ SSOT+readers+m6 ripple · E2 ✅ 7 write actions · E3 pending: salary transaction)* |
-| **1.6** | Migration F — public feedback RPC pair `/feedback/:token` + rate limit | ⬜ |
+| **1.5** | Migration E — the finance RPC family (E1 SSOT+readers+m6 ripple · E2 7 write actions · E3 salary + fix-forward) | ✅ |
+| **1.6** | Migration F — public feedback RPC pair `/feedback/:token` + rate limit | 🔨 |
 | **1.7** | Migration G — `cancel_project` extension (live-body pull) + params seeds | ⬜ |
 | **1.8** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | ⬜ |
 | **2.0** | Phase-2 door — ledger sweep | ⬜ |
@@ -1035,6 +1035,50 @@ class. ⚠️ Measured against `pg_proc`/`proacl` directly; the **full `get_advi
 1.8 gate**, which requires it anyway.
 **🌊 אדוות —** `db_roadmap` §10 · `docs/schema.sql` · §1 header + step table. **🗣️ אושר —** typed-echo
 `27/08/2026 15:1X`.
+
+**↳ as-built · E3 APPLIED `27/08/2026 15:3X` + a same-minute FIX-FORWARD
+(`20260827153725_module8_salary_report_temp_table_fix`).** Step 1.5 is now COMPLETE as E1+E2+E3.
+
+🐞 **E3 shipped with a defect that my own verification caught, and the shape of it is worth keeping.**
+`generate_salary_report` created a temp table with `on commit drop`; that fires at COMMIT, so a
+**second call inside one transaction** died on `relation "_collect" already exists`.
+**Production would never have shown it** — every Supabase RPC runs in its own transaction.
+🔑 **What it DID break is the checker:** this project verifies write functions by running them on
+real data inside a transaction that is then rolled back, so the defect made the function
+**unverifiable by the only method available**. It surfaced on the first attempt to generate August
+and then September in sequence — the very test meant to prove the signature prevents double payment.
+**A salary function that cannot be verified must not ship**, so this was fixed rather than noted.
+The original migration was NOT edited (applied + committed = history); the fix went forward, and the
+new body was **extracted from the original file programmatically rather than retyped** — a
+line-by-line comparison excluding the added lines reports **141 before, 141 after, identical**.
+
+**🔻🤖 Verify — a real August report inside a rolled-back transaction:**
+
+| Assertion | Measured |
+|---|---|
+| August report | **1 line · total 270.00** ✅ |
+| the line | **אפרת דהן** · basis `actual` · **6.00h × 45.00** · total **270.00** · `show_in_file=true` ✅ |
+| §3.7's `—` rule | bonus and travel come back **NULL, not 0.00** ✅ |
+| **B-4, both directions** | the bank triple is **returned for the xlsx** (`הפועלים / 601 / 2047199`) **and `salary_report_lines` has no bank columns at all** ✅ |
+| ה14 signature | **1 assignment signed**, travel stamped **0.00** (correct until G) ✅ |
+| double-generation | second August report **refused, naming the existing report number**; a mid-month date normalises to the 1st so it cannot slip past ✅ |
+| 🔴 **the anti-double-pay mechanism** | **September collects 0 lines** — the signature already consumed her ✅ |
+| finalize | row moves to `sent` ✅ |
+| rollback | **0 reports · 0 lines · 0 signatures · 0 travel stamps** ✅ |
+
+🔴 **And the run caught the project's central silent failure inside MY OWN probe.** One step reported
+"**0 assignments signed**" while another proved the signature had been written — and the
+contradiction was the tell. My check read `assignments` **directly while impersonating the finance
+manager**, who is RLS-blocked on 'דיילות' ⇒ the `0` meant **"no permission", not "no rows"**. That is
+R4-F5 exactly, the trap this entire migration family exists to route around. Re-checked outside the
+impersonation: **1 assignment, אפרת דהן / project 12**, and the same query demonstrated **side by
+side in one run** returning **1** as `postgres` and **0** as the finance manager.
+🔑 **The lesson generalises past this step: a verification query is subject to the same trap as
+production code.** Reading a blocked table directly makes the checker lie **in the reassuring
+direction** — it reports absence, which reads as "nothing to worry about".
+
+**🌊 אדוות —** `db_roadmap` §10 (both E3 rows) · `docs/schema.sql` · §1 header + step table.
+**🗣️ אושר —** typed-echo ×2, `27/08/2026 15:3X`.
 
 **Step 1.6 · Migration F — `module8_public_feedback_rpc`**
 **Files:** one migration

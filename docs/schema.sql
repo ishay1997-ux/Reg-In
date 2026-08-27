@@ -1604,7 +1604,7 @@ create policy hostess_bank_details_select_finance_module on hostess_bank_details
   );
 
 -- ============================================================
--- 24. פונקציות בסכמה public — 37 פונקציות
+-- 24. פונקציות בסכמה public — 39 פונקציות
 -- ============================================================
 -- 🚫 **הגופים אינם כאן במכוון** (ר' כותרת הקובץ). לכל פונקציה: חתימה · מצב אבטחה · search_path ·
 --    למי יש EXECUTE · ומצביע לקובץ המיגרציה שבו הגוף הנוכחי חי.
@@ -1757,6 +1757,19 @@ create policy hostess_bank_details_select_finance_module on hostess_bank_details
 --   🔴 אוכפת `summary_report_url IS NOT NULL` **בעצמה** — האילוץ החי דורש זאת,
 --      ובלי האכיפה ארכוב לגיטימי היה נופל על שגיאת-CHECK גולמית (תיקון T1).
 --   → כל התשע: supabase/migrations/20260827150049_module8_finance_write_actions.sql
+
+-- ── מודול 8 · דוח-השכר (27/08/2026, E3) ────────────────────────
+-- generate_salary_report(date) returns jsonb                 SD · plpgsql · [authenticated]
+--   🔑 מנגנון מניעת התשלום-הכפול הוא **החתימה על השורה** (`salary_report_id`),
+--      לא בדיקה — ולכן פרויקט שנסגר באיחור עולה מעצמו לדוח הבא (ה15).
+--      שני מקורות: עבודה-בפועל + פיצוי-ביטול. נאספות `finally_approved` בלבד (Q-5).
+--      פרטי-בנק **מוחזרים לאקסל ואינם נשמרים** (B-4).
+--   → supabase/migrations/20260827152840_module8_salary_report_transaction.sql
+--     ⚠️ **הגוף הנוכחי מ-**`20260827153725_module8_salary_report_temp_table_fix.sql`
+--     (טבלה זמנית שלא נמחקה בין קריאות באותה טרנזקציה — שורה אחת)
+-- finalize_salary_report(integer, text, text) returns jsonb  SD · plpgsql · [authenticated]
+--   הדוח נשמר גם כשהמייל נכשל (P4) — "נכשל" הוא מצב מוצג עם שליחה-חוזרת.
+--   → supabase/migrations/20260827152840_module8_salary_report_transaction.sql
 
 -- ============================================================
 -- 25. עבודות מתוזמנות — cron.job (3 עבודות, כולן active)

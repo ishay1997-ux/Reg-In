@@ -458,8 +458,8 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
-- ⏳ 27/08/2026 — **module-8 E3 FIX-FORWARD · WRITTEN, NOT APPLIED — typed-echo gate OPEN.**
-  `20260827153725_module8_salary_report_temp_table_fix.sql`.
+- ✅ 27/08/2026 — **module-8 E3 FIX-FORWARD APPLIED** (typed-echo:
+  `module8_salary_report_temp_table_fix`).
   🐞 **A bug in E3 that MY OWN verification caught, minutes after E3 was applied.**
   `generate_salary_report` creates a temp table `_collect` with `on commit drop`; that flag fires at
   COMMIT, so a **second call inside the same transaction** dies on
@@ -482,9 +482,9 @@ protection is false until it does.
   original file programmatically rather than retyped, and a line-by-line comparison excluding the
   added lines reports **141 lines before, 141 after, identical**. Zero change to logic, formula or
   grants.
-- ⏳ 27/08/2026 — **module-8 migration E3 · WRITTEN ON DISK, NOT APPLIED — typed-echo gate OPEN.**
-  `20260827152840_module8_salary_report_transaction.sql`. **Check live before assuming it landed:**
-  `select count(*) from pg_proc where proname='generate_salary_report'` ⇒ **0 means it did not**.
+- ✅ 27/08/2026 — **module-8 migration E3 APPLIED** (typed-echo:
+  `module8_salary_report_transaction`). ⚠️ **Read the fix-forward row above with it** — E3 as first
+  applied carried a temp-table defect, fixed the same minute.
   Two functions, `generate_salary_report(period)` + `finalize_salary_report(id, url, status)`,
   completing step 1.5's E1+E2+E3 split. Its own file because P4 crosses projects and months and
   **pays people** — an error here is not a wrong number on a screen, it is a double payment or a
@@ -518,6 +518,27 @@ protection is false until it does.
   🔑 **Third hand anchor pre-verified:** אפרת דהן on #12 — 6h × 45 + bonus 0 = **270.00** today, and
   **292.60** once migration G seeds `סכום_נסיעות_למשמרת` to 22.60. She is currently the only
   unsigned assignment with hours > 0.
+  **✅ Verified live after the fix — a real August report generated inside a rolled-back
+  transaction, 9 assertions:** report produced **1 line, total 270.00** · the line is
+  **אפרת דהן · basis `actual` · 6.00h × 45.00 · total 270.00 · `show_in_file=true`**, with **bonus
+  and travel returned as NULL rather than 0.00** (§3.7: "—" is not zero) · **B-4 proven in both
+  directions** — the bank triple came back **on the returned line for the xlsx**
+  (`הפועלים / 601 / 2047199`) while `salary_report_lines` has **no bank columns at all** · ה14's
+  signature written (**1 assignment, travel stamped 0.00**, correct pre-G) · a **second August
+  report is refused with the spoken message naming the existing report number**, and a mid-month
+  date normalises to the 1st so it cannot slip past · **September then collects 0 lines — the
+  signature has already consumed her**, which is the anti-double-pay mechanism working · finalize
+  moves the row to `sent`. **Rollback clean: 0 reports, 0 lines, 0 signatures, 0 travel stamps.**
+  🔴 **And the probe caught the project's central silent failure — in MY OWN verification.** Step 5
+  first reported "**0 assignments signed**" while step 7 proved the signature had been written. The
+  contradiction was the tell: my check queried `assignments` **directly while impersonating the
+  finance manager**, who is RLS-blocked on 'דיילות' ⇒ **`0` meaning "no permission", not "no rows"**
+  — exactly R4-F5, the trap this whole migration family exists to route around. Re-checked outside
+  the impersonation: **1 assignment, אפרת דהן / project 12**. **Demonstrated side by side in the
+  same run**: the identical query returns **1** as `postgres` and **0** as the finance manager.
+  ⇒ **A verification query is subject to the same trap as production code**; reading a blocked table
+  directly makes the checker lie in the safe-looking direction.
+  **T8:** no `anon` on any m8 function. Public functions now **39**.
 - ✅ 27/08/2026 — **module-8 migration E2 APPLIED via MCP** (typed-echo:
   `module8_finance_write_actions`).
   **Step 1.5 runs as E1 (applied) + E2 (this) + E3 (the salary transaction, next).** Three rather
