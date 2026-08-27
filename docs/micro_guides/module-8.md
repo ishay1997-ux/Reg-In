@@ -53,11 +53,19 @@
 > which is what he will be shown at review. *(Recorded here because a future session reading the
 > Q-1 row alone would conclude the gate was skipped.)*
 | **3.6** | 🔻👤 Phase-3 gate — 🎨 UX & functional review | ⬜ |
-| **4.1** | M6 ripple — survey-link → token URL (mint-before-send) ⚠️ shared-surface | ⬜ |
-| **4.2** | M2 ripple — customer metrics filters + "סכום" column (RC-6) ⚠️ shared-surface | ⬜ |
-| **4.3** | Doc ripples — §6 debt consumption · registers · ripple sweep | ⬜ |
-| **4.4** | E2E + smoke + accessibility for the 4 surfaces; full regression | ⬜ |
+| **4.0** | S3 preview state (Ishay-approved `28/08 00:3X`) + S2 footer layout fix | 🔨 S2 polish ✅ *(49 tests)*; S3 preview building |
+| **4.1** | M6 ripple — survey-link → token URL (mint-before-send) ⚠️ shared-surface | 🔨 in flight *(cross-ref logged in `module-6.md` §10)* |
+| **4.2** | M2 ripple — customer metrics filters + "סכום" column (RC-6) ⚠️ shared-surface | 🔨 in flight *(cross-ref logged in `module-2.md` §9, incl. the deliberately-reversed privacy comment)* |
+| **4.3** | Doc ripples — §6 debt consumption · registers · ripple sweep | ⬜ *(orchestrator's; the §7.52/§7.68 flips are Ishay's per rule 13(ו))* |
+| **4.4** | E2E + smoke + accessibility for the 4 surfaces; full regression | 🔨 in flight |
 | **4.5** | 🔻👤 Phase-4 gate | ⬜ |
+
+> 🗣️ **Ishay delegated the survey ruling to Claude, `28/08/2026 ~01:0X`** — *"תציג את האפשרויות
+> ותחליט בעצמך עם סיבה וזהו… תנסה להקל עלי ולא להוסיף לי עבודה"*. ⇒ **the A/B/C question does NOT
+> go back to him as a question.** The morning report presents the options, the decision, and the
+> reason; he overrides if he disagrees. **The condition he attached is the real instruction —**
+> *"כל עוד באמת ביררת ושקלת אפשרויות"* — so the ruling is only legitimate once the dispatched
+> research returns and its sources are read, not summarised.
 | **5.1** | Live acceptance journeys on real data (credentialed; mails land in Ishay's inbox) | ⬜ |
 | **5.2** | 🔻👤 Closing audit — `module-close` in a FRESH session | ⬜ |
 
@@ -1739,10 +1747,39 @@ anchored to it and settle them with Ishay at the phase door, not mid-step.
   the Google Form the four answers **never reach REG-IN** — someone reads the form and types one
   number by hand. With the built page the score lands automatically and unblocks the archive gate.
   So this is not "richer vs simpler", it is **manual-and-detached vs automatic-and-integrated**.
-  **Status: research dispatched at his instruction** (*"תעשה את ב עכשיו"*) to establish the actual
-  2025–26 norm for post-event B2B feedback with real sources. **Default if he never rules: the built
-  one-question page stays.** *(Cross-referenced in `module-6.md` §10 — m6's guide is what proved the
-  page was a 🔮 candidate there and never a ruling, so the ruling is m8's to own.)*
+  **‏✅ RULED `28/08/2026 01:1X` — by Claude, under Ishay's explicit delegation** (*"תציג את
+  האפשרויות ותחליט בעצמך עם סיבה… תנסה להקל עלי ולא להוסיף לי עבודה"*). **The one-question page
+  STAYS — and the reason it stays is not the reason originally written.**
+  🔴 **The research killed our own argument, and that is the most useful thing it did.** The claim
+  that short surveys get materially better response rates **does not survive at this magnitude**:
+  **Sandelin 2022** (SOM Institute, U. Gothenburg — the full PDF was read, not a snippet) measured
+  **205 vs 149 questions** and found a **2.7-point** gap (48.5% vs 45.8%) with **no effect at all
+  among web respondents**, and no data-quality loss. Rolstad 2011's meta-analysis calls the
+  association heterogeneous and advises deciding **on content, not length**. Cochrane MR000008:
+  direction holds, **I²≈91%**. The dramatic figures in circulation (83%↔42%) are survey-vendor
+  marketing, and two major vendors disagree by **37 points**. ⇒ **anyone defending our design on
+  response rates would lose to one question at the conference.**
+  🟢 **What replaces it — internal, and checkable by Ishay himself:** the OLD path already threw away
+  everything four questions bought. The customer filled four ratings ⇒ **a human read them and typed
+  ONE number in.** So option A paid a long form's full price — an external tool, customer burden, and
+  **a manual transcription step standing between the event and its financial closing** — and banked
+  none of it. This is not survey theory; it is an incoherence in A *as it was actually built*.
+  🔑 **And the steelman's real objection — "a bare 3 does not say what broke" — is ALREADY answered
+  in this system, and not by free text.** A score <3 forces a phone clarification, and the manager
+  picks from **five structured reasons enforced by a live DB CHECK**
+  (`projects_negative_feedback_reason_check`, verified 28/08: `איחור דיילות` · `תפקוד דיילות` ·
+  `איכות תגים` · `ניהול לקוי` · `אחר`). ⇒ **the middle pattern the research recommends — one score
+  plus diagnostic tags on low scores — already exists here**, with the tag chosen by the manager
+  after a call rather than by the customer. A customer-facing tag picker would **duplicate** it.
+  ⏳ **Declared gaps, not filled by invention:** **no industry body publishes any standard for
+  client-side post-event feedback** — the EIC's canonical `APEX Post-Event Report` contains **zero
+  satisfaction fields** and prescribes a **face-to-face debrief** instead; and there is **no academic
+  literature at all** on agency→corporate-client event surveys (it is all about attendees).
+  **Write-backs done the same session:** the unsourced clause struck in `processes-approved.md` with
+  a dated ✏️ note · the real sources added to `world-sources.md`, which is the file the dead citation
+  pointed at · the negative finding recorded in its §ה.
+  *(Cross-referenced in `module-6.md` §10 — m6's guide is what proved the page was a 🔮 candidate
+  there and never a ruling, so the ruling is m8's to own.)*
 - 🟢 `28/08/2026 00:3X` — **ISHAY RULED, mid-run, on two items this build had escalated:**
   **‏① The S3 preview state is APPROVED FOR BUILD** (*"מאשר את התצוגה המקדימה"*). It was the
   mockup-fidelity lens's top finding: S3 rendered its 8-column table only AFTER

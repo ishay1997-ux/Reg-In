@@ -484,6 +484,10 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
   instruction given to the agent was explicit — **flip it into a deliberate-widening comment naming
   why and on whose authority, never delete it.** A future reader must be able to see that the
   narrowing was intentional and that the widening was too. Verified at the phase-4 gate.
+  🔨 **Status `28/08 01:0X`: in flight.** Files already modified in the working tree —
+  `customers.js` · `customerProjects.js` · `02_customers/api.js` · `CustomersPage.jsx` ·
+  `CustomerDetailsPage.jsx`. **Not yet committed and not yet regression-verified**; m2's own suites
+  are re-run at the gate, and a weakened m2 test counts as a regression, not as an accommodation.
 - 🚧 מ6 — **12/08/2026 — the M6 half of the two deferred derived customer-list filters had no live token
   in this guide, only a trailing parenthetical.** §1's capability table carries the M8 half as a real row
   (*"Satisfaction stars in list + satisfaction filter — 🚧 מ8 · present-but-inert"*), but its twin —

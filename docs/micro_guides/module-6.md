@@ -1042,6 +1042,16 @@ Unchanged from module 1: Supabase Auth (Google), session in `sessionStorage`, `c
   ⚠️ **The Google-Form param itself is left seeded and orphaned, deliberately** — nothing reads it
   after the ripple, and deleting a seeded param with a real URL in it is a separate decision nobody
   has made.
+  🔨 **Status `28/08 01:0X`: in flight, NOT yet committed and NOT yet regression-verified.** Files
+  already modified in the working tree: `src/lib/shiftEmails.js` (+ test) · `ClosingTab.jsx`
+  (+ test) · `closingApi.js` · `api.js`. **The gate's rule for this step, stated in advance so it
+  cannot be softened afterwards: m6's existing suites must pass UNCHANGED. A test that was loosened,
+  retargeted or deleted to accommodate the ripple is a regression wearing a green badge** — that is
+  the specific lens the phase-4 panel was given for these files.
+  ⚠️ **And one thing this ripple must NOT do, restated because it is easy to lose:** the stale
+  comment in `shiftEmails.js` asserting the OLD behaviour (*"הקישור קבוע"*) has to be flipped, not
+  left standing. A comment that contradicts the code it sits beside outlives everyone who knew
+  better — iron rule 13(ח)'s class.
 
 - **`14/08/2026 01:25` — Guide created as `module-6.draft.md`.** Not the approval gate and not the saved guide; a reviewer audits it next, then it is renamed. Nothing committed, no other file touched.
 - **`14/08/2026 10:20` — Renamed `module-6.draft.md` → `module-6.md`; the guide is now live.** **What the `.draft` suffix was protecting against, and why it can come off:** the draft was written by one agent in one pass, and a fresh-context reviewer returned **8 blockers**. All eight are closed, and the two that mattered most were not content errors but **routing** errors — findings that were measured correctly, written down correctly, and filed where no build step would ever read them *(the 03:12 audit; seven of them)*. 🚫 **What the rename does NOT mean: it is not approval to start building.** ⚠️ **Rule 15's `🔻` gates still stand, and the Phase-1 door is 👤 — Ishay's**; step 1.1 applies a migration, which is his gate under iron rule 12 and the typed-echo protocol. **Live means "this is the plan of record", not "go".**
