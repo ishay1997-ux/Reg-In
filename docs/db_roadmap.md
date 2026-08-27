@@ -482,6 +482,31 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
+- ⏳ 27/08/2026 — **`N1` (additive half) · WRITTEN, NOT APPLIED — typed-echo gate OPEN.**
+  `20260827183845_module8_n1_hostess_languages_additive.sql`. **Check live:**
+  `select to_regclass('public.hostess_languages')` ⇒ **NULL means it did not land.**
+  **What it is:** `hostesses.languages` (`text[]`) → child table `hostess_languages`, 1:N. It is
+  **the only column in the database holding a list in one cell** — the single 1NF breach the
+  normalization sweep found (27/08/2026; approved by Ishay the same day).
+  🔴 **AND THE PERMISSIONS ARE DELIBERATELY THE OPPOSITE OF ה19's, which is the decision worth
+  recording.** The bank split was a **security** measure, so its child table got **narrowed**
+  policies. N1 is **normalization only** — language names are not sensitive, and anyone who can see
+  a hostess should see her languages. ⇒ its two policies **mirror `hostesses`' own, one for one**
+  (measured live from `pg_policies` before writing, not copied from the C2 pattern).
+  ⚠️ **Copying C2's shape unthinkingly would have narrowed access and broken readers SILENTLY**,
+  because a missing policy returns an empty list with `error: null`.
+  **Two design calls:** ① **composite PK `(hostess_id, language)`** — duplication becomes
+  *impossible by definition* rather than something code must prevent; the old array accepted
+  `{'עברית','עברית'}` without complaint. ② the index goes on **`language`, not `hostess_id`** —
+  the PK already covers the latter as its leading column, while "who speaks Arabic?" is a plausible
+  future Smart-Match query with no index otherwise.
+  📏 **Measured before writing:** 26 hostesses · **0** NULL · 6 empty arrays · 20 with languages ·
+  **33 language rows** · max 3 per hostess · five distinct values (אמהרית · אנגלית · עברית · ערבית ·
+  רוסית).
+  ⚠️ **Additive half ONLY — `hostesses.languages` stays.** `origin/main` writes it
+  (`HostessFormDialog.jsx:222`) and reads it (`HostessViewCard.jsx:328`). **The drop is a separate
+  migration `N1b`, only after the fixed code is deployed** — exactly the C → deploy → C2 shape that
+  ran today.
 - ✅ 27/08/2026 18:0X — **module-8 migration `C2` APPLIED** (typed-echo:
   `module8_c2_drop_legacy_bank_columns`). 🔑 **ה19 IS CLOSED.**
   **Verified after apply:** legacy columns on `hostesses` = **0** · `hostess_bank_details` = **26**

@@ -45,6 +45,27 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 27/08/2026 18:0X–18:4X — N1 additive half written, standing at its typed-echo gate
+
+- **`N1` written** (`20260827183845_module8_n1_hostess_languages_additive`): `hostesses.languages`
+  (`text[]`) → `hostess_languages`, 1:N. Ishay approved the package earlier today and, asked to pick
+  between "additive tonight, drop tomorrow" and the full cycle tonight, said **"בצע לפי המלצתך"** —
+  the full cycle. Additive half first, as always.
+- 🔴 **The decision worth keeping: N1's permissions are the OPPOSITE of ה19's, on purpose.** The bank
+  split was a **security** measure and its child table got **narrowed** policies. N1 is
+  **normalization only** — language names are not sensitive, and anyone who can see a hostess should
+  see her languages. So its two policies **mirror `hostesses`' own one for one**, measured live from
+  `pg_policies` before writing rather than copied from the fresh C2 pattern.
+  ⚠️ **Reusing C2's shape unthinkingly would have narrowed access and broken readers silently** — a
+  missing policy returns an empty list with `error: null`. The pattern in my head was the wrong one
+  to reach for, and the only thing that caught it was asking *why* the earlier split was narrowed.
+- **Two design calls, both stated in the file:** composite PK `(hostess_id, language)` so duplication
+  is impossible by definition (the old array accepted `{'עברית','עברית'}`); and the index on
+  **`language`**, not `hostess_id` — the PK already leads with the latter, while "who speaks Arabic?"
+  has no index without it.
+- Measured first: 26 hostesses · 0 NULL · 6 empty arrays · 20 with languages · **33 language rows** ·
+  five distinct values.
+
 ### 27/08/2026 16:5X–18:0X — MODULE 8 MERGED, IN PRODUCTION, AND ה19 CLOSED (C2 applied)
 
 - ✅ **C2 applied on Ishay's typed echo — ה19 is CLOSED.** The three bank columns are gone from
