@@ -415,6 +415,39 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
+- ✅ 27/08/2026 — **module-8 migration A APPLIED via MCP `apply_migration`** (typed-echo received
+  from Ishay: `module8_finance_tables_and_columns`).
+  File: `supabase/migrations/20260827125155_module8_finance_tables_and_columns.sql`.
+  **Rows closed by it, each registered above:** **§6 `projects` row** — the `project_finance` child
+  table (Ishay 26/08 *"סבבה לפי המלצתך"*) with `final_profit` · `cancellation_fee` ·
+  `cancellation_fee_note` · `written_off` + `written_off_reason` · `invoice_file_url` (B-8) ·
+  `archived_at` · **§6 `projects` row** — `feedback_token` and the §7.20 `invoice_sent_at` column ·
+  **C-1** — the covering index `assignments_salary_report_id_idx`; ⚠️ **two C-1 FKs remain open,
+  `permissions.module_id` and `users.role_id`, owned by their own modules — C-1 is NOT closed** ·
+  **R4-F2** — `assignments.released_from_status` + its CHECK (new; born from the m8 Discovery, not
+  previously registered here) · **ה30** — the `quote_services` SELECT tightening (SSOT for the ruled
+  shape: `PROJECT_MASTER.md` §6's struck `~~🚧 מ8 · 🚧 מ9~~` line + `processes-approved.md` ה30 —
+  **not this file**, which never carried ה30).
+  **Verified live, impersonated (`set local role authenticated` + jwt claims, positive control
+  first):** exactly **1** policy on `project_finance` · SELECT — כספים **1 row (positive control)**,
+  לוגיסטיקה **0**, פרויקטים **0** · direct client UPDATE as כספים ⇒ **0 rows** (RPC-only holds) ·
+  **ה30 regression on BOTH personas** — כספים **44** rows incl. **44** cost-bearing (she qualifies
+  through the 'כספים' OR-branch), פרויקטים **44**, גיוס **0** · trigger bound to
+  **`extensions.moddatetime`** (checked via `pg_trigger→pg_proc→pg_namespace`, not grep — the
+  documented sub-mine) · the probe row deleted, `project_finance` left at **0 rows**.
+  **Advisors: 26 = the m5 baseline of 26, zero new** — and `project_finance` does NOT appear under
+  `rls_enabled_no_policy`. **`docs/schema.sql` refreshed and cross-checked** column-by-column against
+  `information_schema` for all three touched tables — zero divergence (24 tables / 38 public policies
+  / 26 functions, all three header counts corrected; the section-24 heading had said "25 functions"
+  while listing 26 — a stale label predating this session, fixed).
+  🚧 **Forward notice — מ11 · מ7 · מ10:** `project_finance` ships with **one SELECT policy, gated
+  'כספים', and no write policy at all**. A later module that must read it adds **its own**
+  module-gated policy (the `email_log` per-module precedent, A-20) — **never widen m8's.** The three
+  supply contracts already exist as `🚧 מ11 ← מ8` · `🚧 מ7 ← מ8` · `🚧 מ10 ← מ8` in `PROJECT_MASTER` §6.
+  ⚠️ **And one measured caveat for whoever applies it:** the ה30 tightening changes the ACCESS CHANNEL
+  of מנהלת כספים ולקוחות (today `view` on 'הצעות מחיר'; afterwards she qualifies only through `edit`
+  on 'כספים'). Measured live 27/08/2026 across all five roles ⇒ **zero live loss** — but a future
+  view-only-quotes role would see zero `quote_services` rows, and that is intended, not a bug.
 - ✅ 26/08/2026 — **module-5 Phase 1: all four migrations APPLIED via MCP `apply_migration` + the
   two-mode demo seed EXECUTED — every M5-1…M5-8 register row closed.**
   `20260826002445_module5_logistics_hardening` (M5-1 · M5-2 · M5-5 · M5-8 + `actual_qty_autofilled`) ·

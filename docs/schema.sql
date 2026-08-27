@@ -9,9 +9,11 @@
 -- ⚠️ זהו SNAPSHOT שנוצר מתוך שאילתות על המסד החי. **מקור-אמת לשינויים = `supabase/migrations/`**
 --    (ולא הקובץ הזה). כל שינוי DB נכתב כקובץ מיגרציה חדש, מוחל, ואז הקובץ הזה נוצר מחדש.
 --
--- 📅 נוצר: 14/08/2026 · רוענן: 26/08/2026 (שער 1.6 של מודול 5 — אחרי ארבע מיגרציות
---    `module5_*`; הדלתא: 5 עמודות + 2 אילוצים + policy-כתיבה על `logistics`, פונקציה חדשה
---    `update_logistics_item`, ושני מצביעי-גוף שהוסטו) · פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
+-- 📅 נוצר: 14/08/2026 · רוענן: 27/08/2026 (צעד 1.1 של מודול 8 — אחרי מיגרציה
+--    `20260827125155_module8_finance_tables_and_columns`; הדלתא: טבלה חדשה `project_finance`
+--    (+RLS +policy קריאה +טריגר), 2 עמודות ואילוץ-ייחודיות על `projects`, עמודה + CHECK
+--    + אינדקס-C-1 על `assignments`, והידוק policy-הקריאה של `quote_services` (ה30)) ·
+--    פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
 --
 -- 🔴 **לרענן את הקובץ הזה אחרי כל מיגרציה.** העותק הקודם לא רוענן חמישה חודשים והכריז על עמודה
 --    (`assignments.id_number`) שאינה קיימת במסד — מפתח ראשי שגוי לטבלה שלמה, בקובץ שהוא דרגה 1
@@ -24,8 +26,8 @@
 -- 🚫 **אין כאן סעיף "היסטוריה"/"יומן שינויים"** — הקובץ מתאר הווה בלבד. ציר השינויים חי
 --    ב-`supabase/migrations/` וב-`docs/db_roadmap.md`.
 --
--- מוסכמות: כל 23 הטבלאות ב-`public` עם RLS **מופעל**. כל 49 המדיניות (37 ב-public, 12 על
--- `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`. הפונקציה `moddatetime` (טריגר
+-- מוסכמות: כל 24 הטבלאות ב-`public` עם RLS **מופעל** (נמדד 27/08/2026: 24 טבלאות, 24 עם RLS).
+-- כל 50 המדיניות (38 ב-public, 12 על `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`. הפונקציה `moddatetime` (טריגר
 -- `updated_at`) יושבת בסכמה `extensions`, לא ב-`public`.
 -- ============================================================
 
@@ -667,14 +669,20 @@ create trigger quote_services_set_updated_at
   for each row execute function moddatetime('updated_at');
 
 -- מדיניות RLS
+-- ⚠️ הודקה 27/08/2026 (מ8, ה30, מיגרציה A): הקריאה דורשת עריכה — ב'הצעות מחיר'
+-- או ב'כספים'. הצורה מועתקת מ-product_costs_select_by_permission (תקדים חי).
+-- הסיבה: closing_unit_cost (עלות) היה קריא לכל מחזיק צפייה ב'הצעות מחיר'.
 create policy quote_services_select_by_permission on quote_services
   for select to authenticated
   using (
     exists (
       select 1 from permissions p
       where p.role_id = (select current_user_role_id())
-        and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
-        and p.permission_level = any (array['edit'::text, 'view'::text])
+        and p.module_id in (
+          select module_id from modules
+          where module_name = any (array['הצעות מחיר'::text, 'כספים'::text])
+        )
+        and p.permission_level = 'edit'::text
     )
   );
 
@@ -925,6 +933,9 @@ create table assignments (
   attendance_status    text,
   lateness_level       text,
   no_show_reason       text,
+  -- מ8 (27/08/2026): הסטטוס שקדם ל-released בביטול פרויקט; בסיס פיצוי §7.16.
+  -- nullable במכוון — ביטולי-עבר נשארים NULL ואינם מניבים פיצוי (מגבלה מוצהרת).
+  released_from_status text,
   constraint assignments_pkey                 primary key (project_id, hostess_id, assignment_number),
   constraint assignments_invite_token_key     unique (invite_token),
   constraint assignments_project_id_fkey      foreign key (project_id)       references projects (project_id)      on delete cascade,
@@ -941,13 +952,16 @@ create table assignments (
     or (attendance_status = 'late'::text    and lateness_level is not null and no_show_reason is null)
     or (attendance_status = 'no_show'::text and lateness_level is null     and no_show_reason is not null)
   ),
-  constraint assignments_no_show_zero_hours check (attendance_status is distinct from 'no_show'::text or actual_hours = 0::numeric)
+  constraint assignments_no_show_zero_hours check (attendance_status is distinct from 'no_show'::text or actual_hours = 0::numeric),
+  constraint assignments_released_from_status_check check (released_from_status is null or released_from_status = any (array['pending'::text, 'confirmed_available'::text, 'declined'::text, 'finally_approved'::text, 'released'::text, 'approval_withdrawn'::text]))
 );
 
 alter table assignments enable row level security;
 
 -- אינדקסים
 create index assignments_hostess_id_idx on assignments using btree (hostess_id);
+-- C-1 (שורת-מ8, 27/08/2026): אינדקס מכסה ל-FK salary_report_id
+create index assignments_salary_report_id_idx on assignments using btree (salary_report_id);
 -- דיילת מאושרת סופית לאירוע אחד ביום
 create unique index assignments_one_event_per_day on assignments using btree (hostess_id, event_date)
   where (assignment_status = 'finally_approved'::text);
@@ -1168,8 +1182,14 @@ create table projects (
   cancel_type              text,
   operationally_closed_at  timestamptz,
   operationally_closed_by  text,
+  -- שתי עמודות מודול 8 (27/08/2026): חותמת שליחת-החשבונית (ממנה נגזרים ימי-האיחור
+  -- מול תנאי_תשלום_ימים) וטוקן דף-המשוב הציבורי (נטבע בשליחה, מאופס ל-NULL בארכוב).
+  -- 🔴 הכסף עצמו אינו כאן — הוא בטבלת-הבת project_finance (סעיף 27, product-Q2).
+  invoice_sent_at          timestamptz,
+  feedback_token           text,
   constraint projects_pkey                        primary key (project_id),
   constraint projects_quote_id_key                unique (quote_id),
+  constraint projects_feedback_token_key          unique (feedback_token),
   constraint projects_quote_id_fkey               foreign key (quote_id)                references quotes (quote_id)       on delete restrict,
   constraint projects_customer_id_fkey            foreign key (customer_id)             references customers (customer_id),
   constraint projects_owner_email_fkey            foreign key (owner_email)             references users (email)           on delete restrict,
@@ -1197,6 +1217,7 @@ create index projects_cancelled_by_idx            on projects using btree (cance
 create index projects_operationally_closed_by_idx on projects using btree (operationally_closed_by);
 -- projects_pkey — unique btree (project_id) [נוצר ע"י האילוץ projects_pkey]
 -- projects_quote_id_key — unique btree (quote_id) [נוצר ע"י האילוץ projects_quote_id_key]
+-- projects_feedback_token_key — unique btree (feedback_token) [נוצר ע"י האילוץ projects_feedback_token_key]
 
 -- טריגרים
 create trigger projects_set_updated_at
@@ -1352,7 +1373,55 @@ create policy email_log_select_projects_module on email_log
 
 
 -- ============================================================
--- 24. פונקציות בסכמה public — 25 פונקציות
+-- 27. כספי הפרויקט — public.project_finance (מודול 8)
+-- ============================================================
+-- טבלת-בת 1:1 לפרויקט. נוצרה 27/08/2026 במיגרציה
+-- 20260827125155_module8_finance_tables_and_columns.
+-- 🔴 למה בת ולא עמודות על projects (product-Q2): ה-policy של projects פותחת
+--    את כל השורה לכל מחזיק 'פרויקטים' — רווח ודמי-ביטול אינם אמורים להיחשף כך.
+-- 🔴 policy אחת בלבד, קריאה. **אין מדיניות-כתיבה במכוון** — כל כתיבה עוברת
+--    ב-SECURITY DEFINER RPC שמאשר 'כספים' (§7.63/ה22). UPDATE ישיר = 0 שורות.
+-- 🚧 מודול שיצטרך לקרוא מכאן (מ11/מ7/מ10) מוסיף policy מגודרת משלו — לא מרחיב
+--    את של מ8 (תקדים email_log, db_roadmap A-20).
+create table project_finance (
+  project_id            integer     not null,
+  final_profit          numeric(12,2),          -- §7.52 — רווח סופי קפוא בשקלים בארכוב
+  cancellation_fee      numeric(12,2),          -- §7.20ג/ה28 — הסכום הסופי בלבד
+  cancellation_fee_note text,                   -- ה28 — הערת-פירוט חופשית
+  written_off           boolean     not null default false,
+  written_off_reason    text,                   -- P3 — ה-RPC אוכף שאינה ריקה בחוב-אבוד
+  invoice_file_url      text,                   -- B-8 — הקובץ שהועלה לבאקט finance
+  archived_at           timestamptz,
+  created_at            timestamptz not null default now(),
+  updated_at            timestamptz not null default now(),
+  constraint project_finance_pkey primary key (project_id),
+  constraint project_finance_project_id_fkey foreign key (project_id) references projects (project_id) on update restrict on delete restrict
+);
+
+alter table project_finance enable row level security;
+
+-- אינדקסים
+-- project_finance_pkey — unique btree (project_id) [נוצר ע"י האילוץ project_finance_pkey]
+
+-- טריגרים
+create trigger project_finance_set_updated_at
+  before update on project_finance
+  for each row execute function extensions.moddatetime('updated_at');
+
+-- מדיניות RLS
+create policy project_finance_select_by_permission on project_finance
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'כספים')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+-- ============================================================
+-- 24. פונקציות בסכמה public — 26 פונקציות
 -- ============================================================
 -- 🚫 **הגופים אינם כאן במכוון** (ר' כותרת הקובץ). לכל פונקציה: חתימה · מצב אבטחה · search_path ·
 --    למי יש EXECUTE · ומצביע לקובץ המיגרציה שבו הגוף הנוכחי חי.
