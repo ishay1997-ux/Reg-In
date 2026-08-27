@@ -9,9 +9,37 @@
 -- ⚠️ זהו SNAPSHOT שנוצר מתוך שאילתות על המסד החי. **מקור-אמת לשינויים = `supabase/migrations/`**
 --    (ולא הקובץ הזה). כל שינוי DB נכתב כקובץ מיגרציה חדש, מוחל, ואז הקובץ הזה נוצר מחדש.
 --
--- 📅 נוצר: 14/08/2026 · רוענן: 26/08/2026 (שער 1.6 של מודול 5 — אחרי ארבע מיגרציות
---    `module5_*`; הדלתא: 5 עמודות + 2 אילוצים + policy-כתיבה על `logistics`, פונקציה חדשה
---    `update_logistics_item`, ושני מצביעי-גוף שהוסטו) · פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
+-- 📅 נוצר: 14/08/2026 · רוענן: 27/08/2026 (צעד 1.8 — כל עשר מיגרציות פזה 1 של מודול 8; אחרי מיגרציה
+--    `20260827125155_module8_finance_tables_and_columns`; הדלתא: טבלה חדשה `project_finance`
+--    (+RLS +policy קריאה +טריגר), 2 עמודות ואילוץ-ייחודיות על `projects`, עמודה + CHECK
+--    + אינדקס-C-1 על `assignments`, והידוק policy-הקריאה של `quote_services` (ה30)) ·
+--    ואחרי מיגרציה B `20260827131033_module8_salary_report_document_model` (הדלתא:
+--    `salary_reports` מריצה למסמך — 3 עמודות + 3 אילוצים + policy ראשונה אי-פעם, ושחרור
+--    שתי עמודות-חובה; טבלה חדשה `salary_report_lines` +RLS +policy +3 אינדקסים +טריגר) ·
+--    ואחרי C `20260827132708_module8_hostess_bank_details_split` (טבלה חדשה
+--    `hostess_bank_details` +RLS +2 policies +טריגר + העתקת 26 שורות, ושחרור שלוש
+--    עמודות-הבנק ב-`hostesses` מ-NOT NULL **בלי למחוק אותן** — ר' סעיף 29 ו-db_roadmap §9א) ·
+--    ואחרי D `20260827132709_module8_email_log_finance_entities` (‏CHECK של `email_log`
+--    מ-4 ל-6 ערכים + policy רביעית ל'כספים') ·
+--    ואחרי E1 `20260827144459_module8_finance_money_ssot_and_readers` (‏3 פונקציות חדשות —
+--    ‏`finance_project_money` הפנימית ושני הקוראים המגודרים — **וכתיבה-מחדש של
+--    `list_projects_overview` הממוזגת של מ6**: ‏`planned_revenue` כולל מעכשיו גם
+--    Σ שינויי-תכולה. עוגן-מ6 (#8 = 5,355.00) אומת זהה-ספרתית אחרי השכתוב) ·
+--    ואחרי E2 `20260827150049_module8_finance_write_actions` (‏9 פונקציות חדשות —
+--    ‏2 פנימיות ו-7 נקראות-מהלקוח — ו**הסרת `set_project_finance_fields` של מ6**;
+--    שני מסעות מלאים אומתו בטרנזקציות שגולגלו אחורה: ארכוב הקפיא 230.00 וההצעה
+--    החזירה 3,508.00 — שני עוגני-היד) ·
+--    ואחרי E3 `20260827152840_module8_salary_report_transaction` + תיקון-קדימה
+--    `20260827153725_module8_salary_report_temp_table_fix` (שתי פונקציות דוח-השכר) ·
+--    ואחרי F `20260827155303_module8_public_feedback_rpc` (טבלה חדשה
+--    `feedback_rpc_calls` — סעיף 30 — +RLS בלי policies ואינדקס; 4 פונקציות חדשות,
+--    שתיים מהן נקראות בידי `anon`; ו**שער נוסף ל-`archive_project`** — ציון <3 בלי
+--    סיבה חוסם ארכוב) ·
+--    ואחרי G `20260827160357_module8_cancel_project_released_status_and_seeds`
+--    (הרחבת `cancel_project` הממוזגת של מ6 בשורה אחת — שימור
+--    `released_from_status`, הוכח ב-md5 על הגוף החי — ושני זרעי-פרמטרים:
+--    `תנאי_תשלום_ימים`=30 ו-`סכום_נסיעות_למשמרת` 0→22.60) ·
+--    פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
 --
 -- 🔴 **לרענן את הקובץ הזה אחרי כל מיגרציה.** העותק הקודם לא רוענן חמישה חודשים והכריז על עמודה
 --    (`assignments.id_number`) שאינה קיימת במסד — מפתח ראשי שגוי לטבלה שלמה, בקובץ שהוא דרגה 1
@@ -24,8 +52,14 @@
 -- 🚫 **אין כאן סעיף "היסטוריה"/"יומן שינויים"** — הקובץ מתאר הווה בלבד. ציר השינויים חי
 --    ב-`supabase/migrations/` וב-`docs/db_roadmap.md`.
 --
--- מוסכמות: כל 23 הטבלאות ב-`public` עם RLS **מופעל**. כל 49 המדיניות (37 ב-public, 12 על
--- `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`. הפונקציה `moddatetime` (טריגר
+-- מוסכמות: כל 27 הטבלאות ב-`public` עם RLS **מופעל** (נמדד 27/08/2026 אחרי מיגרציה F).
+-- כל 55 המדיניות (43 ב-public, 12 על `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`.
+-- 🔴 **PERMISSIVE = הן מתאחדות ב-OR.** שתי policies על אותה טבלה מרחיבות גישה, לא מצמצמות —
+--    ולכן policy חדשה "מגודרת היטב" אינה מגבילה אף אחד שכבר עובר דרך policy אחרת.
+-- 🔴 ארבע טבלאות נותרו deny-all **במכוון**: `project_changes` (נקראת רק דרך ה-RPC הממסך),
+--    `login_attempts` ו-`login_rpc_calls` (רק דרך פונקציות ה-DEFINER של הכניסה), ו-`feedback_rpc_calls`
+--    (נוספה 27/08/2026 ב-F — אותו דפוס, לדף-המשוב הציבורי). מ-27/08/2026
+--    **אין יותר אף טבלה עסקית שחסומה מחוסר-בנייה** — `salary_reports` הייתה האחרונה. הפונקציה `moddatetime` (טריגר
 -- `updated_at`) יושבת בסכמה `extensions`, לא ב-`public`.
 -- ============================================================
 
@@ -667,14 +701,20 @@ create trigger quote_services_set_updated_at
   for each row execute function moddatetime('updated_at');
 
 -- מדיניות RLS
+-- ⚠️ הודקה 27/08/2026 (מ8, ה30, מיגרציה A): הקריאה דורשת עריכה — ב'הצעות מחיר'
+-- או ב'כספים'. הצורה מועתקת מ-product_costs_select_by_permission (תקדים חי).
+-- הסיבה: closing_unit_cost (עלות) היה קריא לכל מחזיק צפייה ב'הצעות מחיר'.
 create policy quote_services_select_by_permission on quote_services
   for select to authenticated
   using (
     exists (
       select 1 from permissions p
       where p.role_id = (select current_user_role_id())
-        and p.module_id = (select module_id from modules where module_name = 'הצעות מחיר')
-        and p.permission_level = any (array['edit'::text, 'view'::text])
+        and p.module_id in (
+          select module_id from modules
+          where module_name = any (array['הצעות מחיר'::text, 'כספים'::text])
+        )
+        and p.permission_level = 'edit'::text
     )
   );
 
@@ -711,9 +751,14 @@ create table hostesses (
   hourly_rate  numeric     not null,
   rating       integer,
   status       text        not null default 'active',
-  bank_name    text        not null,
-  bank_branch  text        not null,
-  bank_account text        not null,
+  -- ⚠️ מ8 ה19 (27/08/2026): שלוש אלה הוחלפו ע"י hostess_bank_details (סעיף 29).
+  --    שוחררו מ-NOT NULL ונשארות זמנית **רק** כדי שהקוד שרץ בייצור לא יישבר;
+  --    הוא כותב אליהן ישירות ב-HostessFormDialog.jsx:217-219 וקורא אותן
+  --    ב-HostessViewCard.jsx:315. **תימחקנה במיגרציה C2 אחרי מיזוג ופריסה של מ8**
+  --    (db_roadmap §9א). 🔴 קוד חדש קורא וכותב ל-hostess_bank_details, לא לכאן.
+  bank_name    text,
+  bank_branch  text,
+  bank_account text,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now(),
   hostess_id   bigint      not null generated always as identity,
@@ -925,6 +970,9 @@ create table assignments (
   attendance_status    text,
   lateness_level       text,
   no_show_reason       text,
+  -- מ8 (27/08/2026): הסטטוס שקדם ל-released בביטול פרויקט; בסיס פיצוי §7.16.
+  -- nullable במכוון — ביטולי-עבר נשארים NULL ואינם מניבים פיצוי (מגבלה מוצהרת).
+  released_from_status text,
   constraint assignments_pkey                 primary key (project_id, hostess_id, assignment_number),
   constraint assignments_invite_token_key     unique (invite_token),
   constraint assignments_project_id_fkey      foreign key (project_id)       references projects (project_id)      on delete cascade,
@@ -941,13 +989,16 @@ create table assignments (
     or (attendance_status = 'late'::text    and lateness_level is not null and no_show_reason is null)
     or (attendance_status = 'no_show'::text and lateness_level is null     and no_show_reason is not null)
   ),
-  constraint assignments_no_show_zero_hours check (attendance_status is distinct from 'no_show'::text or actual_hours = 0::numeric)
+  constraint assignments_no_show_zero_hours check (attendance_status is distinct from 'no_show'::text or actual_hours = 0::numeric),
+  constraint assignments_released_from_status_check check (released_from_status is null or released_from_status = any (array['pending'::text, 'confirmed_available'::text, 'declined'::text, 'finally_approved'::text, 'released'::text, 'approval_withdrawn'::text]))
 );
 
 alter table assignments enable row level security;
 
 -- אינדקסים
 create index assignments_hostess_id_idx on assignments using btree (hostess_id);
+-- C-1 (שורת-מ8, 27/08/2026): אינדקס מכסה ל-FK salary_report_id
+create index assignments_salary_report_id_idx on assignments using btree (salary_report_id);
 -- דיילת מאושרת סופית לאירוע אחד ביום
 create unique index assignments_one_event_per_day on assignments using btree (hostess_id, event_date)
   where (assignment_status = 'finally_approved'::text);
@@ -1003,29 +1054,106 @@ create policy assignments_write_by_permission on assignments
 
 
 -- ============================================================
--- 19. דוחות שכר חודשיים — public.salary_reports
+-- 19. דוחות שכר חודשיים — public.salary_reports (הורחבה למודול 8)
 -- ============================================================
--- RLS מופעל ואין לטבלה אף policy ⇒ גישה ישירה מהלקוח חסומה.
+-- 🔴 עד 27/08/2026 הייתה deny-all מחוסר-בנייה (RLS דלוק, אפס policies) — הטבלה העסקית
+--    האחרונה במצב הזה. מיגרציה B של מ8 פתחה אותה והפכה אותה ממריצה ל**מסמך**:
+--    `period` (ראשון-לחודש, UNIQUE) הוא מנגנון מניעת ההפקה-הכפולה של §7.40ג/§7.68,
+--    ושתי עמודות-החובה שוחררו כי הקובץ נוצר אחרי חישוב השורות (T4).
 create table salary_reports (
-  report_id       serial      not null,
-  sent_date       date        not null,
-  report_file_url text        not null,
-  created_at      timestamptz not null default now(),
-  updated_at      timestamptz not null default now(),
-  constraint salary_reports_pkey primary key (report_id)
+  report_id       serial        not null,
+  sent_date       date,                        -- שוחרר מ-NOT NULL במ8 (T4)
+  report_file_url text,                        -- שוחרר מ-NOT NULL במ8 (T4)
+  period          date          not null,      -- מ8 §7.40ג — תמיד ראשון-לחודש
+  send_status     text          not null default 'pending',
+  total_amount    numeric(12,2),
+  created_at      timestamptz   not null default now(),
+  updated_at      timestamptz   not null default now(),
+  constraint salary_reports_pkey primary key (report_id),
+  constraint salary_reports_period_key unique (period),
+  constraint salary_reports_period_first_of_month check (extract(day from period) = 1),
+  constraint salary_reports_send_status_check check (send_status = any (array['pending'::text, 'sent'::text, 'failed'::text]))
 );
 
 alter table salary_reports enable row level security;
 
 -- אינדקסים
 -- salary_reports_pkey — unique btree (report_id) [נוצר ע"י האילוץ salary_reports_pkey]
+-- salary_reports_period_key — unique btree (period) [נוצר ע"י האילוץ salary_reports_period_key]
 
 -- טריגרים
 create trigger salary_reports_set_updated_at
   before update on salary_reports
   for each row execute function moddatetime('updated_at');
 
--- מדיניות RLS: אין (0 policies)
+-- מדיניות RLS (מ8): קריאה בלבד. אין מדיניות-כתיבה — ההפקה היא טרנזקציית RPC.
+create policy salary_reports_select_by_permission on salary_reports
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'כספים')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+
+-- ============================================================
+-- 28. שורות דוח השכר — public.salary_report_lines (מודול 8)
+-- ============================================================
+-- ה-snapshot הקפוא של מה שנחתם ונשלח לרו"ח (§7.68). שני מקורות-שורה (ה15):
+-- עבודה בפועל בפרויקט שנסגר תפעולית, ופיצוי-§7.16 בפרויקט שבוטל — line_basis מפריד.
+-- 🔴 אין כאן עמודות בנק במכוון (B-4): ההוכחה היא קובץ ה-xlsx בבאקט finance הפרטי;
+--    שכפול פרטי-בנק לכאן היה פותח מחדש את החשיפה שמיגרציה C סוגרת.
+-- 🔴 כל FK הוא RESTRICT בשני הכיוונים (T19) — אלה שורות שכר חתומות, ראיה חשבונאית;
+--    ה-CASCADE של assignments→projects היה מוחק אותן יחד עם הפרויקט.
+create table salary_report_lines (
+  line_id           bigint        not null generated always as identity,
+  report_id         integer       not null,
+  hostess_id        bigint        not null,
+  hostess_name      text          not null,   -- צילום-זהות ברגע החתימה
+  id_number         text          not null,   -- צילום-זהות ברגע החתימה
+  source_project_id integer       not null,
+  line_basis        text          not null,
+  hours             numeric(12,2) not null default 0,
+  rate              numeric(12,2) not null,
+  bonus             numeric(12,2),            -- NULL = לא-רלוונטי; המסך מציג "—" ולא 0.00
+  travel            numeric(12,2),            -- NULL = לא-רלוונטי (ה29)
+  line_total        numeric(12,2) not null,
+  created_at        timestamptz   not null default now(),
+  updated_at        timestamptz   not null default now(),
+  constraint salary_report_lines_pkey primary key (line_id),
+  constraint salary_report_lines_report_id_fkey         foreign key (report_id)         references salary_reports (report_id) on update restrict on delete restrict,
+  constraint salary_report_lines_hostess_id_fkey        foreign key (hostess_id)        references hostesses (hostess_id)     on update restrict on delete restrict,
+  constraint salary_report_lines_source_project_id_fkey foreign key (source_project_id) references projects (project_id)      on update restrict on delete restrict,
+  constraint salary_report_lines_line_basis_check check (line_basis = any (array['actual'::text, 'cancellation_compensation'::text]))
+);
+
+alter table salary_report_lines enable row level security;
+
+-- אינדקסים (מכסה לכל FK)
+create index salary_report_lines_report_id_idx         on salary_report_lines using btree (report_id);
+create index salary_report_lines_hostess_id_idx        on salary_report_lines using btree (hostess_id);
+create index salary_report_lines_source_project_id_idx on salary_report_lines using btree (source_project_id);
+-- salary_report_lines_pkey — unique btree (line_id) [נוצר ע"י האילוץ salary_report_lines_pkey]
+
+-- טריגרים
+create trigger salary_report_lines_set_updated_at
+  before update on salary_report_lines
+  for each row execute function extensions.moddatetime('updated_at');
+
+-- מדיניות RLS
+create policy salary_report_lines_select_by_permission on salary_report_lines
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'כספים')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
 
 
 -- ============================================================
@@ -1168,8 +1296,14 @@ create table projects (
   cancel_type              text,
   operationally_closed_at  timestamptz,
   operationally_closed_by  text,
+  -- שתי עמודות מודול 8 (27/08/2026): חותמת שליחת-החשבונית (ממנה נגזרים ימי-האיחור
+  -- מול תנאי_תשלום_ימים) וטוקן דף-המשוב הציבורי (נטבע בשליחה, מאופס ל-NULL בארכוב).
+  -- 🔴 הכסף עצמו אינו כאן — הוא בטבלת-הבת project_finance (סעיף 27, product-Q2).
+  invoice_sent_at          timestamptz,
+  feedback_token           text,
   constraint projects_pkey                        primary key (project_id),
   constraint projects_quote_id_key                unique (quote_id),
+  constraint projects_feedback_token_key          unique (feedback_token),
   constraint projects_quote_id_fkey               foreign key (quote_id)                references quotes (quote_id)       on delete restrict,
   constraint projects_customer_id_fkey            foreign key (customer_id)             references customers (customer_id),
   constraint projects_owner_email_fkey            foreign key (owner_email)             references users (email)           on delete restrict,
@@ -1197,6 +1331,7 @@ create index projects_cancelled_by_idx            on projects using btree (cance
 create index projects_operationally_closed_by_idx on projects using btree (operationally_closed_by);
 -- projects_pkey — unique btree (project_id) [נוצר ע"י האילוץ projects_pkey]
 -- projects_quote_id_key — unique btree (quote_id) [נוצר ע"י האילוץ projects_quote_id_key]
+-- projects_feedback_token_key — unique btree (feedback_token) [נוצר ע"י האילוץ projects_feedback_token_key]
 
 -- טריגרים
 create trigger projects_set_updated_at
@@ -1300,7 +1435,7 @@ create table email_log (
   sent_by_email text,
   created_at    timestamptz not null default now(),
   constraint email_log_pkey              primary key (email_log_id),
-  constraint email_log_entity_type_check check (entity_type = any (array['quote'::text, 'shift'::text, 'project'::text, 'project_report'::text])),
+  constraint email_log_entity_type_check check (entity_type = any (array['quote'::text, 'shift'::text, 'project'::text, 'project_report'::text, 'invoice'::text, 'salary_report'::text])),
   constraint email_log_status_check      check (status = any (array['sent'::text, 'failed'::text]))
 );
 
@@ -1338,6 +1473,23 @@ create policy email_log_select_shifts_module on email_log
     )
   );
 
+-- מ8 (27/08/2026) — ה-policy הרביעית. ⚠️ ארבעתן PERMISSIVE, כלומר הן **מתאחדות ב-OR**:
+-- מנהלת-הכספים אינה רואה *רק* את שתי השורות שלה — היא כבר רואה גם מיילי-הצעות
+-- (view על 'הצעות מחיר') ומיילי-פרויקטים (view על 'פרויקטים'), דרך שתי ה-policies
+-- הקיימות. נמדד 27/08/2026: 8 שורות = 6 quote + 1 project + 1 project_report.
+-- ה-policy הזו רק **מוסיפה** לה את invoice/salary_report; היא אינה מצמצמת דבר.
+create policy email_log_select_finance_module on email_log
+  for select to authenticated
+  using (
+    entity_type = any (array['invoice'::text, 'salary_report'::text])
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'כספים')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
 create policy email_log_select_projects_module on email_log
   for select to authenticated
   using (
@@ -1352,7 +1504,140 @@ create policy email_log_select_projects_module on email_log
 
 
 -- ============================================================
--- 24. פונקציות בסכמה public — 25 פונקציות
+-- 27. כספי הפרויקט — public.project_finance (מודול 8)
+-- ============================================================
+-- טבלת-בת 1:1 לפרויקט. נוצרה 27/08/2026 במיגרציה
+-- 20260827125155_module8_finance_tables_and_columns.
+-- 🔴 למה בת ולא עמודות על projects (product-Q2): ה-policy של projects פותחת
+--    את כל השורה לכל מחזיק 'פרויקטים' — רווח ודמי-ביטול אינם אמורים להיחשף כך.
+-- 🔴 policy אחת בלבד, קריאה. **אין מדיניות-כתיבה במכוון** — כל כתיבה עוברת
+--    ב-SECURITY DEFINER RPC שמאשר 'כספים' (§7.63/ה22). UPDATE ישיר = 0 שורות.
+-- 🚧 מודול שיצטרך לקרוא מכאן (מ11/מ7/מ10) מוסיף policy מגודרת משלו — לא מרחיב
+--    את של מ8 (תקדים email_log, db_roadmap A-20).
+create table project_finance (
+  project_id            integer     not null,
+  final_profit          numeric(12,2),          -- §7.52 — רווח סופי קפוא בשקלים בארכוב
+  cancellation_fee      numeric(12,2),          -- §7.20ג/ה28 — הסכום הסופי בלבד
+  cancellation_fee_note text,                   -- ה28 — הערת-פירוט חופשית
+  written_off           boolean     not null default false,
+  written_off_reason    text,                   -- P3 — ה-RPC אוכף שאינה ריקה בחוב-אבוד
+  invoice_file_url      text,                   -- B-8 — הקובץ שהועלה לבאקט finance
+  archived_at           timestamptz,
+  created_at            timestamptz not null default now(),
+  updated_at            timestamptz not null default now(),
+  constraint project_finance_pkey primary key (project_id),
+  constraint project_finance_project_id_fkey foreign key (project_id) references projects (project_id) on update restrict on delete restrict
+);
+
+alter table project_finance enable row level security;
+
+-- אינדקסים
+-- project_finance_pkey — unique btree (project_id) [נוצר ע"י האילוץ project_finance_pkey]
+
+-- טריגרים
+create trigger project_finance_set_updated_at
+  before update on project_finance
+  for each row execute function extensions.moddatetime('updated_at');
+
+-- מדיניות RLS
+create policy project_finance_select_by_permission on project_finance
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'כספים')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+-- ============================================================
+-- 29. פרטי בנק של דיילת — public.hostess_bank_details (מודול 8)
+-- ============================================================
+-- ה19: RLS ב-Postgres הוא ברמת-שורה ולא ברמת-עמודה ⇒ כל מחזיק 'דיילות' שראה דיילת
+-- ראה גם את חשבון-הבנק שלה. הפיצול לטבלת-בת הוא התקדים החי של product_costs.
+-- 🔴 קריאה: 'דיילות' עם עריכה (הטופס של מ4, ALL) + 'כספים' עם עריכה (דוח-השכר, SELECT
+--    בלבד — היא לעולם לא עורכת פרטי בנק).
+-- 🔴 שורה חסרה היא מצב תקין — דיילת בלי פרטי בנק. הקריאה היא LEFT JOIN, והיא מוצגת.
+-- ⏸️ **הפיצול חצי-גמור בכוונה:** שלוש העמודות המקוריות עדיין קיימות על hostesses
+--    (סעיף 15) כי הייצור כותב אליהן. C2 תמחק אותן אחרי הפריסה — db_roadmap §9א.
+--    **עד אז חשיפת-ה19 עדיין פתוחה**, ופרטי-בנק חיים בשני מקומות.
+create table hostess_bank_details (
+  hostess_id   bigint      not null,
+  bank_name    text        not null,
+  bank_branch  text        not null,
+  bank_account text        not null,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  constraint hostess_bank_details_pkey primary key (hostess_id),
+  constraint hostess_bank_details_hostess_id_fkey foreign key (hostess_id) references hostesses (hostess_id) on update restrict on delete cascade
+);
+
+alter table hostess_bank_details enable row level security;
+
+-- אינדקסים
+-- hostess_bank_details_pkey — unique btree (hostess_id) [נוצר ע"י האילוץ hostess_bank_details_pkey]
+
+-- טריגרים
+create trigger hostess_bank_details_set_updated_at
+  before update on hostess_bank_details
+  for each row execute function extensions.moddatetime('updated_at');
+
+-- מדיניות RLS
+create policy hostess_bank_details_all_hostesses_module on hostess_bank_details
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = 'edit'
+    )
+  );
+
+create policy hostess_bank_details_select_finance_module on hostess_bank_details
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'כספים')
+        and p.permission_level = 'edit'
+    )
+  );
+
+-- ============================================================
+-- 30. קצב-קריאות לדף-המשוב הציבורי — public.feedback_rpc_calls (מודול 8)
+-- ============================================================
+-- ⚠️ אין לטבלה הזו מפתח ראשי. RLS מופעל ואין לה אף policy — בדיוק כמו `login_rpc_calls`.
+-- 🔴 הדף הציבורי `/feedback/:token` נפתח **בלי התחברות**; המונה הזה הוא
+--    הדבר היחיד שמונע מניחוש-טוקנים בלולאה: 15 קריאות ל-IP לשעה.
+create table feedback_rpc_calls (
+  ip        inet        not null,
+  called_at timestamptz not null default now()
+);
+
+comment on table feedback_rpc_calls is
+  'מ8 — מונה הגבלת-קצב לדף-המשוב הציבורי (15/IP/שעה). דפוס `login_rpc_calls`. deny-all: הגישה רק דרך פונקציות DEFINER.';
+
+alter table feedback_rpc_calls enable row level security;
+
+-- אינדקסים
+create index feedback_rpc_calls_ip_called_at_idx on feedback_rpc_calls using btree (ip, called_at);
+
+-- מדיניות RLS: אין (0 policies)
+--   → supabase/migrations/20260827155303_module8_public_feedback_rpc.sql
+
+-- ============================================================
+-- 24. פונקציות בסכמה public — 43 פונקציות
 -- ============================================================
 -- 🚫 **הגופים אינם כאן במכוון** (ר' כותרת הקובץ). לכל פונקציה: חתימה · מצב אבטחה · search_path ·
 --    למי יש EXECUTE · ומצביע לקובץ המיגרציה שבו הגוף הנוכחי חי.
@@ -1425,7 +1710,10 @@ create policy email_log_select_projects_module on email_log
 --   pending_invites integer, assignments_row_count integer, logistics_ready integer,
 --   logistics_total integer, cancelled_at timestamptz, cancel_type text, planned_revenue numeric)
 --   SD · stable · plpgsql · [authenticated, service_role]
---   → supabase/migrations/20260814142439_module6_rpcs_reads_and_close.sql
+--   → supabase/migrations/20260827144459_module8_finance_money_ssot_and_readers.sql
+--     ⚠️ **הגוף הנוכחי הוא של מ8, לא של מ6.** מ8 הרחיב את `planned_revenue` כך שיכלול
+--     גם Σ שינויי-תכולה (ה2/F16) — אחרת אותו פרויקט מוצג בשני סכומים במ6 ובמ8.
+--     המקור המקורי: `20260814142439_module6_rpcs_reads_and_close.sql`.
 -- update_project_details(p_project_id integer, p_event_date date, p_location text,
 --   p_start_time time, p_end_time time) returns jsonb
 --   SD · plpgsql · [authenticated, service_role]
@@ -1443,10 +1731,6 @@ create policy email_log_select_projects_module on email_log
 -- mark_feedback_survey_sent(p_project_id integer) returns boolean
 --   SD · plpgsql · [authenticated, service_role]
 --   → supabase/migrations/20260814142439_module6_rpcs_reads_and_close.sql
--- set_project_finance_fields(p_project_id integer, p_invoice_sent boolean, p_payment_date date,
---   p_feedback_score integer, p_negative_feedback_reason text, p_feedback_notes text) returns boolean
---   SD · plpgsql · [authenticated, service_role]
---   → supabase/migrations/20260814142439_module6_rpcs_reads_and_close.sql
 -- list_project_changes(p_project_id integer) returns table (change_id bigint, change_group_id uuid,
 --   change_target text, sku text, color text, delta_qty integer, unit_price_snapshot numeric,
 --   unit_cost_snapshot numeric, revenue_delta numeric, money_visible boolean, reason text,
@@ -1462,6 +1746,82 @@ create policy email_log_select_projects_module on email_log
 --   SD · plpgsql · [authenticated, service_role]
 --   → supabase/migrations/20260826002447_module5_checklist_rpc.sql
 
+
+-- ── מודול 8 (27/08/2026) ──────────────────────────────────────────────────────
+-- finance_project_money(p_project_id integer) returns table (revenue numeric,
+--   goods_cost numeric, labor_cost numeric, travel_cost numeric, gross_profit numeric,
+--   budget_deviation numeric, planned_hours numeric, paid_shift_count integer,
+--   finally_approved_count integer)
+--   SD · stable · plpgsql · [service_role]   ← 🔴 **פנימית: אין anon ואין authenticated**
+--   🔑 **מקור-האמת היחיד של הכסף.** כל מסך של מ8 עובר דרכה, ולכן אי-אפשר ששני מסכים
+--      יראו שני רווחים שונים לאותו פרויקט (F16/R1-4). אומתה מול עוגן-היד: #13 ⇒ 3,650.00.
+--   → supabase/migrations/20260827144459_module8_finance_money_ssot_and_readers.sql
+-- get_finance_overview() returns table (22 columns — S1's three tabs)
+--   SD · stable · plpgsql · [authenticated, service_role] · gated 'כספים'
+--   → supabase/migrations/20260827144459_module8_finance_money_ssot_and_readers.sql
+-- get_project_finance_detail(p_project_id integer) returns table (30 columns — S2's balance)
+--   SD · stable · plpgsql · [authenticated, service_role] · gated 'כספים'
+--   → supabase/migrations/20260827144459_module8_finance_money_ssot_and_readers.sql
+
+-- ── מודול 8 · פעולות-הכתיבה (27/08/2026, E2) ────────────────────────
+-- 🔴 `set_project_finance_fields` של מ6 **הוסרה** כאן (ה22, אפס אתרי-קריאה).
+-- פנימיות — [service_role] בלבד, בלי anon ובלי authenticated:
+-- finance_assert_writable(integer) returns text             SD · plpgsql
+--   השער המשותף: 'כספים' edit + שער-הסטטוס ה12 + נעילת-`finished` (דפוס ㊙, לא טריגר)
+-- finance_freeze_cancelled_profit(integer) returns numeric   SD · plpgsql
+--   Q-3: דמי-ביטול − פיצוי-צוות − סחורה **בעלות**. ויתור ⇒ הפסד רשום אמיתי.
+-- נקראות מהלקוח — [authenticated, service_role], כולן מגודרות 'כספים':
+-- finance_cancellation_fee_proposal(integer) returns table (8 cols)   SD · stable
+--   שלושת הרכיבים, **נגזרים ולא נשמרים** (ה28). אומתה: #14 ⇒ 3,508.00 = עוגן-היד.
+-- record_invoice_sent(integer, text) returns jsonb           SD · plpgsql
+-- record_payment(integer, date) returns jsonb                SD · plpgsql
+--   🔴 אצל מבוטל — **זהו רגע הקפאת-הרווח** (Q-4), לא שמירת-הסכום ולא הארכוב.
+-- record_feedback(integer, integer, text, text, boolean) returns jsonb   SD · plpgsql
+--   ציון <3 מחייב סיבה; כתיבה על שורה `completed` מותרת עד הארכוב (B-15).
+-- record_write_off(integer, text) returns jsonb              SD · plpgsql   ← הפעולה החמישית (B-13)
+-- resolve_cancellation_fee(integer, text, numeric, text) returns jsonb   SD · plpgsql
+--   bill / waive / write_off. הסטטוס נשאר `cancelled` תמיד (T1).
+-- archive_project(integer) returns jsonb                     SD · plpgsql
+--   שער כפול → הקפאה → `finished` → `feedback_token = NULL` (B-6) → חותמת. טרנזקציה אחת.
+--   🔴 אוכפת `summary_report_url IS NOT NULL` **בעצמה** — האילוץ החי דורש זאת,
+--      ובלי האכיפה ארכוב לגיטימי היה נופל על שגיאת-CHECK גולמית (תיקון T1).
+--   → כל התשע: supabase/migrations/20260827150049_module8_finance_write_actions.sql
+
+-- ── מודול 8 · דוח-השכר (27/08/2026, E3) ────────────────────────
+-- generate_salary_report(date) returns jsonb                 SD · plpgsql · [authenticated]
+--   🔑 מנגנון מניעת התשלום-הכפול הוא **החתימה על השורה** (`salary_report_id`),
+--      לא בדיקה — ולכן פרויקט שנסגר באיחור עולה מעצמו לדוח הבא (ה15).
+--      שני מקורות: עבודה-בפועל + פיצוי-ביטול. נאספות `finally_approved` בלבד (Q-5).
+--      פרטי-בנק **מוחזרים לאקסל ואינם נשמרים** (B-4).
+--   → supabase/migrations/20260827152840_module8_salary_report_transaction.sql
+--     ⚠️ **הגוף הנוכחי מ-**`20260827153725_module8_salary_report_temp_table_fix.sql`
+--     (טבלה זמנית שלא נמחקה בין קריאות באותה טרנזקציה — שורה אחת)
+-- finalize_salary_report(integer, text, text) returns jsonb  SD · plpgsql · [authenticated]
+--   הדוח נשמר גם כשהמייל נכשל (P4) — "נכשל" הוא מצב מוצג עם שליחה-חוזרת.
+--   → supabase/migrations/20260827152840_module8_salary_report_transaction.sql
+
+-- ── מודול 8 · הדף הציבורי (27/08/2026, F) ───────────────────────
+-- feedback_rate_limit() returns void                        SD · plpgsql · [service_role]
+--   15/IP/שעה, דפוס login_rpc_calls. fail-open כשאין כותרת-פרוקסי תקינה (מכוון).
+-- mint_feedback_token(integer) returns text                  SD · plpgsql · [authenticated]
+--   מגודרת 'פרויקטים' — הקורא הוא מסלול-המייל של מ6. get-or-create; מסרבת רק ל-finished.
+-- get_feedback_page(text) returns jsonb                      SD · plpgsql · [anon, authenticated]
+-- submit_feedback(text, integer, text) returns jsonb         SD · plpgsql · [anon, authenticated]
+--   🔴 שתי הפונקציות היחידות של מ8 שאנונימי קורא להן. תשובת not_found **זהה
+--      בייט-בבייט** לטוקן שגוי/ריק/מת — אומת. אין policy ל-anon על אף טבלה.
+--   → supabase/migrations/20260827155303_module8_public_feedback_rpc.sql
+--   ⚠️ ובאותה מיגרציה: `archive_project` קיבלה שער נוסף — ציון <3 בלי סיבה חוסם
+--      ארכוב (P2). הגוף הנוכחי שלה משם, לא מ-E2.
+
+-- ── מודול 8 · G (27/08/2026) — נגיעה בפונקציה ממוזגת של מ6 ────────
+-- cancel_project(integer, text, text) — **הגוף הנוכחי מ-G, לא מ-מ6.**
+--   הדלתא מול הגוף שקדם לה: **שורה אחת** ב-`set` של שחרור-השיבוצים —
+--   `released_from_status = a.assignment_status`. בלעדיה נמחק מי הייתה
+--   מאושרת-סופית, ופיצוי-§7.16 אינו בר-חישוב (R4-F2).
+--   🔑 הוכח אריתמטית: הסרת השורה מהגוף החדש מחזירה md5 זהה לגוף שלפני
+--      (`b21ef3d8e53270dce52dcd3134f8b103`, 4,457 תווים).
+--   → supabase/migrations/20260827160357_module8_cancel_project_released_status_and_seeds.sql
+--     המקור המקורי: 20260814142440_module6_rpcs_writes.sql
 
 -- ============================================================
 -- 25. עבודות מתוזמנות — cron.job (3 עבודות, כולן active)

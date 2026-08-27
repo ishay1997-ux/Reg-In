@@ -94,6 +94,50 @@ async function ensureProjectCoordinates(project) {
   return coordinates
 }
 
+// ---- פרטי בנק: פיצול/שיטוח (מ8 ה19, 27/08/2026) ----
+//
+// 🔴 **למה זה קיים:** ‏RLS ב-Postgres הוא ברמת-שורה ולא ברמת-עמודה, ולכן כל מי שראה
+// דיילת ראה גם את חשבון-הבנק שלה. ה19 העביר את שלושת השדות לטבלת-הבת
+// `hostess_bank_details`, שנקראת רק ע"י 'דיילות' (הטופס) ו'כספים' (דוח-השכר).
+//
+// 🔑 **הכרעת-מימוש: הפיצול חי *כאן*, בשכבת-ה-API, ולא במסכים.** כלפי חוץ אובייקט
+// הדיילת נשאר שטוח בדיוק כמו קודם (`hostess.bank_name`), ולכן הטופס והכרטיס לא
+// שינו את חוזה-הנתונים שלהם. זו לא עצלנות — זו הקטנת שטח-הסיכון: הטופס הזה הוא
+// **משטח-הכתיבה עם הכיסוי האוטומטי הנמוך ביותר בריפו**, והוא נפרס לייצור.
+//
+// ⚠️ **ושלוש העמודות הישנות עדיין קיימות על `hostesses`** (שוחררו מ-NOT NULL,
+// לא נמחקו) כי הקוד שרץ בייצור כותב אליהן. הן יימחקו במיגרציה **C2** אחרי
+// הפריסה — `db_roadmap.md` §9א. 🚫 **הקוד כאן לא נוגע בהן יותר.**
+const BANK_FIELDS = ['bank_name', 'bank_branch', 'bank_account']
+
+// מוציא את שדות-הבנק מתוך מטען שטוח ומחזיר את שני החלקים בנפרד.
+function splitBankFields(payload) {
+  const hostess = { ...payload }
+  const bank = {}
+  for (const field of BANK_FIELDS) {
+    if (field in hostess) {
+      bank[field] = hostess[field]
+      delete hostess[field]
+    }
+  }
+  return { hostess, bank }
+}
+
+// 🔴 **LEFT JOIN במכוון: דיילת בלי שורת-בנק היא מצב תקין, לא שגיאה** — היא נטענת
+// ומוצגת, והשדות פשוט ריקים. מחרוזת ריקה ולא `null`, כי הטופס משתמש בשדות
+// מבוקרים ו-`null` היה הופך אותם ללא-מבוקרים באזהרת-React.
+function flattenBankDetails(row) {
+  if (!row) return row
+  const { hostess_bank_details: joined, ...rest } = row
+  const bank = Array.isArray(joined) ? joined[0] : joined
+  return {
+    ...rest,
+    bank_name: bank?.bank_name ?? '',
+    bank_branch: bank?.bank_branch ?? '',
+    bank_account: bank?.bank_account ?? '',
+  }
+}
+
 // ---- קריאות (Reads) ----
 
 // כל הדיילות + טווחי אי-הזמינות שלהן. המסננים והמיון העדין נעשים בצד-לקוח
@@ -103,22 +147,22 @@ async function ensureProjectCoordinates(project) {
 export async function listHostesses() {
   const { data, error } = await supabase
     .from('hostesses')
-    .select('*, hostess_unavailability(*)')
+    .select('*, hostess_unavailability(*), hostess_bank_details(*)')
     .order('full_name')
     .order('hostess_id')
   if (error) throw toError(error, 'שגיאה בטעינת מאגר הדיילות.')
-  return data ?? []
+  return (data ?? []).map(flattenBankDetails)
 }
 
 // דיילת אחת לכרטיס (משטח 3ד).
 export async function getHostess(hostessId) {
   const { data, error } = await supabase
     .from('hostesses')
-    .select('*, hostess_unavailability(*)')
+    .select('*, hostess_unavailability(*), hostess_bank_details(*)')
     .eq('hostess_id', hostessId)
     .maybeSingle()
   if (error) throw toError(error, 'שגיאה בטעינת כרטיס הדיילת.')
-  return data ?? null
+  return data ? flattenBankDetails(data) : null
 }
 
 // המבט-על (משטח 1): הפרויקטים הפתוחים + שורות-השיבוץ שלהם.
@@ -723,13 +767,31 @@ export async function setShiftLead(row, isShiftLead) {
 // למאגר-המועמדות (`spec.md §2.1(1)`); שינוי-מצב עובר **רק** דרך `setHostessStatus`.
 export async function createHostess(payload) {
   const coordinates = await resolveHostessCoordinates(payload)
+  const { hostess, bank } = splitBankFields(payload)
   const { data, error } = await supabase
     .from('hostesses')
-    .insert({ ...payload, ...coordinates, status: 'active' })
+    .insert({ ...hostess, ...coordinates, status: 'active' })
     .select()
     .single()
   if (error) throw toWriteError(error, 'שמירת הדיילת נכשלה.')
-  return data
+
+  // 🔴 שתי כתיבות, ולא טרנזקציה אחת — ולכן הכשל האפשרי נאמר בקול ולא מתגלגל
+  // כ"נשמר בהצלחה". דיילת בלי שורת-בנק היא מצב חוקי במסד (הקריאה היא LEFT JOIN),
+  // **אבל השכר משולם מהשדות האלה**, ולכן ההודעה אומרת בדיוק מה קרה ומה לעשות.
+  if (Object.keys(bank).length > 0) {
+    const { data: bankRows, error: bankError } = await supabase
+      .from('hostess_bank_details')
+      .insert({ hostess_id: data.hostess_id, ...bank })
+      .select()
+    if (bankError) {
+      throw toWriteError(
+        bankError,
+        `${data.full_name} נשמרה, אך פרטי הבנק שלה לא נשמרו. פתחי אותה לעריכה והזיני אותם שוב.`,
+      )
+    }
+    assertRowsAffected(bankRows, `${data.full_name} נשמרה, אך אין לך הרשאה לשמור את פרטי הבנק שלה.`)
+  }
+  return { ...data, ...bank }
 }
 
 // עדכון דיילת קיימת.
@@ -739,7 +801,7 @@ export async function createHostess(payload) {
 // ⚠️ תעריף שעודכן **אינו** משנה שיבוצים קיימים: הם מחזיקים `hourly_rate_snapshot`
 // שהוקפא ברגע השיבוץ — "הבטחנו לה תעריף במייל, ומייל הוא הבטחה" (§א2).
 export async function updateHostess(hostessId, patch) {
-  const safePatch = { ...patch }
+  const { hostess: safePatch, bank } = splitBankFields(patch)
   delete safePatch.hostess_id
   delete safePatch.id_number
   delete safePatch.status
@@ -758,7 +820,19 @@ export async function updateHostess(hostessId, patch) {
     .select()
   if (error) throw toWriteError(error, 'שמירת השינויים נכשלה.')
   assertRowsAffected(data, 'אין הרשאה לעדכן דיילת זו.')
-  return data[0]
+
+  // ⚠️ `upsert` ולא `update`: לדיילת שנוצרה לפני הפיצול — או שנוצרה דרך הקוד
+  // שרץ בייצור בזמן חלון-הביניים — אין בהכרח שורת-בת, והעריכה הראשונה שלה
+  // חייבת ליצור אותה ולא להיכשל בשקט על אפס שורות מעודכנות.
+  if (Object.keys(bank).length > 0) {
+    const { data: bankRows, error: bankError } = await supabase
+      .from('hostess_bank_details')
+      .upsert({ hostess_id: hostessId, ...bank }, { onConflict: 'hostess_id' })
+      .select()
+    if (bankError) throw toWriteError(bankError, 'שמירת פרטי הבנק נכשלה.')
+    assertRowsAffected(bankRows, 'אין הרשאה לעדכן את פרטי הבנק של דיילת זו.')
+  }
+  return { ...data[0], ...bank }
 }
 
 // השבתה/הפעלה — פונקציה ייעודית, כמו `setCustomerStatus` במודול 2.
