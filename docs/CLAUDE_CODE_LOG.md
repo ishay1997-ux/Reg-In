@@ -45,6 +45,45 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 28/08/2026 00:4X–01:0X — both fix migrations applied; phase 4 in flight; a citation that did not resolve
+
+- ✅ **H1 + H2 APPLIED, after Ishay typed both migration names** — the typed-echo gate, not a spoken
+  approval. Verified by query rather than by the tool's `success`: the `finance` bucket now lists the
+  xlsx MIME type, and `prosrc` contains `v_hours > v_part_h` with no `>=` remaining. Advisors re-run:
+  **zero new findings** — every warning present is the project's existing gated-RPC pattern.
+  🔑 **Ishay released the concern himself**, and he was the one who could: *"אני סוגר את הפינה הזו
+  בהצגה בסוף יהיה קצרה ממש… אין לך ממה לחשוש"*. He knows what the demo covers; the orchestrator did
+  not. **The caution was right to raise once and wrong to repeat after he ruled.**
+- 📸 **All four surfaces captured on the live app as the finance manager**, through the documented
+  evidence-provider pattern (temp spec, credentials from `.env.local`, screenshots to scratchpad,
+  spec deleted before commit). **This also settled something the guide had carried as unproven since
+  it was written: `E2E_FINANCE_*` does not merely exist, it authenticates.**
+- 🔴 **A blocker I nearly reported and did not, because I checked first.** The public feedback page
+  appeared stuck on its loading skeleton for 12 seconds. Before escalating: the RPC returned
+  `{state:'ok'}` as `anon`; the app's own client resolved in **151ms** from the page context; and
+  `feedback-form`/`feedback-stars`/`feedback-submit` were all present in the DOM. **Not a bug —
+  the dev server was hot-reloading under the screenshot while 11 agents edited files beneath it**,
+  the exact phenomenon `e2e/CLAUDE.md` documents. The fix was to wait for the measured content
+  instead of a wrapper — which is that file's own rule, applied to myself.
+- 🔴 **A CITATION IN THE APPROVED SPEC THAT DOES NOT RESOLVE — found by following Ishay's question
+  rather than answering it from memory.** He asked where the four-question survey he had built had
+  gone. It exists: a live Google Form, seeded as `קישור_בסיס_סקר_לקוחות`, four 1–5 questions.
+  m8's Discovery replaced it with one star rating + free text, recorded as a reasoned deviation
+  citing *"מקורות ב-`world-sources.md`"* and a *"~75 seconds"* response-time figure.
+  **`world-sources.md` has no such entry** — its only CSAT row concerns the <3 phone threshold.
+  ⇒ the world-standard half of that justification was never sourced. **The internal half stands and
+  is checkable:** the schema stores ONE score, four questions need a collapse rule, and that rule is
+  §7.37 — still open. **Research dispatched at Ishay's instruction to establish the real norm.**
+  🔑 **The transferable lesson, and it is about how we work:** a spec sentence that names its source
+  reads as verified to every later reader, and this one survived Discovery, a blueprint, three
+  review passes and a build. **What caught it was a product owner asking "is this really standard?"
+  and the answer being checked instead of restated.** Sibling of `discipline.md`'s "the source must
+  answer DIRECTLY" — this is the same failure seen from the citing side rather than the citer's.
+- 🔨 **Phase 4 in flight** (11 agents): the S3 preview Ishay approved, the m6 and m2 ripples into
+  merged production code, an S2 layout fix measured on the live screen, then E2E and a
+  regression-focused panel. ⚠️ m6's guide now carries a cross-reference: its code is being edited by
+  m8's ripple while the module itself stays closed.
+
 ### 28/08/2026 00:2X–00:4X — phase 3 shipped by a 12-agent workflow; Ishay ruled on the escalations
 
 - ✅ **PHASE 3 COMPLETE.** All four surfaces + the route swap. **Suite 1,697 / 64 exit 0** (was

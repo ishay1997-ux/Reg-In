@@ -468,6 +468,22 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 
 ## 9. 📝 Deviations & Tech-Debt Log
 
+- 🔗 `28/08/2026 00:5X` — **M2 CODE IS BEING EDITED BY MODULE 8's PHASE-4 RIPPLE (step 4.2). This
+  module stays CLOSED; the change is m8's, recorded here so a future m2 reader is not surprised by
+  the diff — and because one of its edits deliberately REVERSES an m2 decision.**
+  **Files:** `src/lib/customers.js` (`deriveCustomerMetrics`, `matchesCustomerFilters`) ·
+  `src/lib/customerProjects.js` (`projectAmount`) · `src/modules/02_customers/api.js` ·
+  `CustomersPage.jsx` · `CustomerDetailsPage.jsx`.
+  **What it delivers — the m8 half of a debt this guide already carries:** the satisfaction stars +
+  filter that §1's capability table records as *"🚧 מ8 · present-but-inert"* stop being inert, and
+  the customer "סכום" column starts including approved scope changes (RC-6). §7.79's populations
+  land with them: cumulative profit counts finished **and** resolved-cancelled projects; the average
+  feedback counts **only** customers who actually answered.
+  🔴 **The part that must not read as a silent edit:** m2 carries a deliberate PRIVACY comment
+  narrowing what the customer-metrics read returns. m8's step widens that read on purpose, and the
+  instruction given to the agent was explicit — **flip it into a deliberate-widening comment naming
+  why and on whose authority, never delete it.** A future reader must be able to see that the
+  narrowing was intentional and that the widening was too. Verified at the phase-4 gate.
 - 🚧 מ6 — **12/08/2026 — the M6 half of the two deferred derived customer-list filters had no live token
   in this guide, only a trailing parenthetical.** §1's capability table carries the M8 half as a real row
   (*"Satisfaction stars in list + satisfaction filter — 🚧 מ8 · present-but-inert"*), but its twin —

@@ -1718,6 +1718,31 @@ anchored to it and settle them with Ishay at the phase door, not mid-step.
   writes the code (Ishay's 14/08 rule).
 
 ### Dated entries
+- 🔴 `28/08/2026 00:5X` — **AN OPEN PRODUCT QUESTION ISHAY RAISED, AND A CITATION THAT DOES NOT
+  RESOLVE. Neither is closed; both are his to rule after the conference.**
+  **What he asked:** *"איפה השאלון שבניתי עם 3 שאלות?"* — he remembered building a customer survey
+  and could not find it on the new page.
+  **He was right.** `params.קישור_בסיס_סקר_לקוחות` is seeded with a **live Google Form**
+  (`https://forms.gle/YFJobqmgpBCqf1x87`) carrying **four** 1–5 rating questions (staff
+  professionalism · manager communication · registration experience · product quality — C5 §5.8.8).
+  m6 mails a link to it at operational close. **m8's Discovery replaced it** with a single star
+  rating + free text, recorded at `processes-approved.md` as a *"סטייה מנומקת"* and marked
+  **reopenable without ceremony**.
+  🔴 **AND THE PART THAT MATTERS FOR THE REGISTERS: that deviation cites *"מקורות ב-`world-sources.md`"*
+  and a *"~75 שניות לשאלה יחידה"* figure — and `world-sources.md` CONTAINS NO SUCH ENTRY.** Measured
+  27/08 00:5X: its only CSAT row is about the **<3 phone-clarification threshold**, a different
+  decision. ⇒ **the "this is the world standard" half of that justification is unsourced.** The
+  *internal* half is sound and independently checkable, and is what the recommendation now rests on:
+  **the schema stores ONE score, so four questions need a collapse rule — and that rule is §7.37,
+  which is still open.** Four questions without it cannot enter the system at all.
+  ⚠️ **The mechanism difference Ishay had not connected, and it is the real decision driver:** with
+  the Google Form the four answers **never reach REG-IN** — someone reads the form and types one
+  number by hand. With the built page the score lands automatically and unblocks the archive gate.
+  So this is not "richer vs simpler", it is **manual-and-detached vs automatic-and-integrated**.
+  **Status: research dispatched at his instruction** (*"תעשה את ב עכשיו"*) to establish the actual
+  2025–26 norm for post-event B2B feedback with real sources. **Default if he never rules: the built
+  one-question page stays.** *(Cross-referenced in `module-6.md` §10 — m6's guide is what proved the
+  page was a 🔮 candidate there and never a ruling, so the ruling is m8's to own.)*
 - 🟢 `28/08/2026 00:3X` — **ISHAY RULED, mid-run, on two items this build had escalated:**
   **‏① The S3 preview state is APPROVED FOR BUILD** (*"מאשר את התצוגה המקדימה"*). It was the
   mockup-fidelity lens's top finding: S3 rendered its 8-column table only AFTER

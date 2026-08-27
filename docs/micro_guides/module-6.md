@@ -1027,6 +1027,21 @@ Unchanged from module 1: Supabase Auth (Google), session in `sessionStorage`, `c
 ---
 
 ### Dated entries
+- 🔗 `28/08/2026 00:5X` — **M6 CODE IS BEING EDITED BY MODULE 8's PHASE-4 RIPPLE. This module stays
+  CLOSED; the change is m8's, recorded here so a future reader of m6 is not surprised by a diff.**
+  **What changes:** the survey mail's link moves from the `קישור_בסיס_סקר_לקוחות` param (a live
+  Google Form, `https://forms.gle/…`) to m8's own `/feedback/:token` URL, with the token minted
+  lazily at send time. Files: `src/lib/shiftEmails.js` (+ its test) · `src/modules/06_projects/
+  ClosingTab.jsx` (+ test) · `closingApi.js` · `api.js`. **`close_project_operationally` is NOT
+  touched** and the `sent` timing is unchanged (AR-5 survives).
+  🔑 **And this guide is the source that settled a question Ishay raised tonight:** its step-12 row
+  and §4 both state that `/feedback/:token` was **explicitly NOT built here** — *"a 🔮 candidate for
+  M8"*, a candidate and **not a ruling**. ⇒ the ruling that replaced his four-question Google Form
+  with a one-question in-app page was made in **m8's Discovery**, not here. Recorded in
+  `module-8.md` §10 under the same date, where the open product question now lives.
+  ⚠️ **The Google-Form param itself is left seeded and orphaned, deliberately** — nothing reads it
+  after the ripple, and deleting a seeded param with a real URL in it is a separate decision nobody
+  has made.
 
 - **`14/08/2026 01:25` — Guide created as `module-6.draft.md`.** Not the approval gate and not the saved guide; a reviewer audits it next, then it is renamed. Nothing committed, no other file touched.
 - **`14/08/2026 10:20` — Renamed `module-6.draft.md` → `module-6.md`; the guide is now live.** **What the `.draft` suffix was protecting against, and why it can come off:** the draft was written by one agent in one pass, and a fresh-context reviewer returned **8 blockers**. All eight are closed, and the two that mattered most were not content errors but **routing** errors — findings that were measured correctly, written down correctly, and filed where no build step would ever read them *(the 03:12 audit; seven of them)*. 🚫 **What the rename does NOT mean: it is not approval to start building.** ⚠️ **Rule 15's `🔻` gates still stand, and the Phase-1 door is 👤 — Ishay's**; step 1.1 applies a migration, which is his gate under iron rule 12 and the typed-echo protocol. **Live means "this is the plan of record", not "go".**
