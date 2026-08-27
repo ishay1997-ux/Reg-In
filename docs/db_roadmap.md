@@ -482,6 +482,37 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
+- ⏳ 27/08/2026 — **module-8 migration `C2` · WRITTEN, NOT APPLIED — typed-echo gate OPEN.**
+  `20260827175132_module8_c2_drop_legacy_bank_columns.sql`. 🔑 **This is the migration that closes
+  ה19.** **Check live:** `select count(*) from information_schema.columns where table_name='hostesses'
+  and column_name like 'bank_%'` ⇒ **3 means it did not land; 0 means it did.**
+  🔴 **Its preconditions were MEASURED, not assumed** — and this is the whole point of §9א:
+  ① m8 merged to `dev` (`518587d`) and promoted to `main` via PR #69 ⇒ **`9e07233`**, `dev`/`main`
+  content-identical (`git diff` = 0 bytes) · ② the Vercel **production** deployment reported
+  `state=success` (id 6124955191, 27/08 14:44Z) · ③ 🔑 **and the deployment claim was not taken at
+  face value: the live site's own JS bundle was fetched (`index-B7qWDbqi.js`, 2,662,504 bytes) and
+  asserted to CONTAIN `hostess_bank_details`.** "Deployed successfully" is a claim about the
+  pipeline; this is a claim about what the browser receives · ④ the three other `.from('hostesses')`
+  paths in production code were read by hand — explicit column list without bank fields ·
+  `update({status})` · a `select('*')` nothing reads bank from · ⑤ DB dependencies: **0 constraints,
+  0 indexes, 0 views** on the three columns.
+  ⚠️ **One alarm was raised and chased to the end rather than waved off:** `generate_salary_report`
+  does mention `bank_*` — but line-by-line it reads them from **`left join public.hostess_bank_details b`**,
+  the NEW table, not from the parent. Clean.
+  **Its shape:** ① a **guarded** re-copy parent→child — `on conflict (hostess_id) do update … where`
+  the child's `updated_at` is older than the parent's · ② the three `drop column`s.
+  🔑 **The guard is not decoration, and the dry run proved it:** all **26** child rows are NEWER than
+  their parent, so an unguarded `do update` would have touched all 26 and pulled them back to the
+  stale source. With the guard the copy touches **0**.
+  ⚠️ **The `excluded` gap the §8.4 contract deliberately left open is now decided:** `excluded` does
+  not carry the parent's `updated_at` (it is not in the INSERT list), so the comparison re-queries
+  `hostesses` in an explicit sub-select inside the conflict action's `where`.
+  **✅ Dry-run in a rolled-back transaction:** copy touched **0 rows** · bank columns on `hostesses`
+  **3 → 0** · `hostess_bank_details` **26 rows intact** · a real hostess (אביגיל רוזן) still reads
+  **`מזרחי טפחות · 512 · 449…`** THROUGH the new table AFTER the drop · **rollback verified — the
+  three columns came back.**
+  ⚠️ **Not reversible once applied.** The values are not lost (they live in `hostess_bank_details`),
+  but the columns do not come back.
 - ✅ 27/08/2026 — **module-8 · 🔻👤 PHASE-1 GATE (step 1.8) — the DB half of m8 is closed.**
   All ten migrations live: A · B · C · D · E1 · E2 · E3 · E3-fix · F · G.
   🔑 **Advisors, predicted-vs-measured, every delta explained and nothing left as "probably fine":**

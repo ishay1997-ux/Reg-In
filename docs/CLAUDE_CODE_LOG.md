@@ -45,6 +45,36 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 27/08/2026 16:5X–17:5X — MODULE 8 MERGED AND IN PRODUCTION; C2 written and gated
+
+- **Merged and promoted on Ishay's explicit approval** *("ויש לך אישור להתקדם ולמזג")*:
+  PR #68 → `dev` (`518587d`), PR #69 `dev` → `main` (**`9e07233`**). `dev`/`main` content-identical
+  (`git diff` = 0 bytes). CI **5/5 green** on both, checked on the run itself — never `gh pr checks
+  --watch` on the queue, which reports green while still queued (the 12/08 mine).
+- 🔑 **"Deployed" was not accepted as a claim.** Vercel reported `state=success` for production —
+  and then the live site's own JS bundle was fetched (`index-B7qWDbqi.js`, 2,662,504 bytes) and
+  asserted to **contain `hostess_bank_details`**. The first is a statement about the pipeline; only
+  the second is a statement about what the browser receives — and C2's safety depends on the second.
+- **C2 written, dry-run in a rolled-back transaction, standing at its typed-echo gate.** Copy
+  touched **0 rows** · bank columns **3 → 0** · 26 child rows intact · a real hostess still reads her
+  bank line through the new table **after** the drop · **rollback verified**.
+  🔑 **And the guard I added to the contract this afternoon earned itself here:** all 26 child rows
+  are newer than their parent, so an unguarded `do update` would have touched all 26 and pulled them
+  back to the stale source. Measured, not argued.
+  ⚠️ One alarm chased to the end rather than waved off: `generate_salary_report` mentions `bank_*`,
+  but line-by-line it reads them from `hostess_bank_details`, not the parent.
+- 🔴 **Three register defects found because Ishay asked "how will I remember?" — measured, not
+  answered.** ① the session-start banner was stale by two days and two modules, and it is what every
+  fresh session is handed as fact ② `supabase/migrations/CLAUDE.md` pointed at **§10 and a
+  sub-heading that does not exist**, so a session obeying it lands in the Done list and concludes
+  there are no pending removals — the pointer never once pointed correctly ③ `PROJECT_MASTER §6` had
+  **zero rows** for C2/N1/N2. All three fixed, and §6 now says out loud that `grep '🚧 מN'` cannot
+  find these in time because none of them waits on a module — they wait on a **deploy**.
+- **Recommendation on record, and Ishay may override:** N1 (10 occurrences / 2 files) is small and
+  is the same shape as today's bank split. **N2 is 46 occurrences across 16 production files plus a
+  screen**, running through the quote→project→email chain — the thing the 28/08 presentation demos.
+  Recommended after the presentation, said twice as promised.
+
 ### 27/08/2026 12:39–16:5X — MODULE 8 PHASE 1 COMPLETE: ten migrations live, 1.8 gate passed
 
 - ✅ **All ten migrations applied and verified** (A · B · C · D · E1 · E2 · E3 · E3-fix · F · G),
