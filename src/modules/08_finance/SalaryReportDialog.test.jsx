@@ -1,0 +1,472 @@
+// בדיקות S3 — SalaryReportDialog + SalaryReportHistoryCard (צעד 3.3).
+//
+// מה נעול כאן: ברירת-המחדל לחודש היא **החודש שהסתיים** (P4: "בסוף-חודש") · בדיקת-הכפילות
+// מצד-לקוח נגד `listSalaryReports()` חוסמת "ייצא ושלח" ומציגה את הבאנר · "ייצא ושלח" קורא
+// ל-`generateAndSendSalaryReport` עם `accountantName: null` (חור-מוצר מוצהר, לא מומצא כאן) ·
+// אחרי הצלחה מוצגת אותה טבלת-8-עמודות **כתוצאה**, לא כתצוגה-מקדימה (אין RPC לתצוגה-מקדימה —
+// ר' הערת-הראש של הקובץ הנבדק) · "אין שעות לתשלום החודש" על 0 שורות · שלושת מצבי-השליחה
+// (sent/failed/unknown) מדווחים נכון · כרטיס-ההיסטוריה מציג ריק/שורות, הורדה, ושליחה-חוזרת
+// רק על שורות `failed` עם קובץ שמור.
+//
+// ה-API ממוקק לגמרי (כולל `getParamValue` חוצה-המודול) — אין נגיעה ברשת/Supabase.
+
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
+import { ToastProvider } from '@/components/ToastProvider'
+import { formatShekelExact, formatShekelWhole } from '@/lib/pricing'
+import SalaryReportDialog, { SalaryReportHistoryCard } from './SalaryReportDialog'
+import {
+  ACCOUNTANT_EMAIL_PARAM,
+  fileNameOf,
+  generateAndSendSalaryReport,
+  getFinanceFileSignedUrl,
+  listSalaryReports,
+  resendSalaryReportMail,
+} from './api'
+import { getParamValue } from '@/modules/06_projects/closingApi'
+
+vi.mock('./api', async () => {
+  const actual = await vi.importActual('./api')
+  return {
+    ...actual,
+    generateAndSendSalaryReport: vi.fn(),
+    getFinanceFileSignedUrl: vi.fn(),
+    listSalaryReports: vi.fn(),
+    resendSalaryReportMail: vi.fn(),
+  }
+})
+vi.mock('@/modules/06_projects/closingApi', () => ({ getParamValue: vi.fn() }))
+
+const NOW = new Date('2026-10-15T10:00:00Z') // "היום" המשותף של data-set.md §0
+const ACCOUNTANT_EMAIL = 'office@cpa-firm.co.il'
+
+function reportRow(overrides) {
+  return {
+    report_id: 7,
+    period: '2026-08-01',
+    send_status: 'sent',
+    sent_date: '2026-09-01',
+    report_file_url: 'salary_reports/7_08_2026_Payroll_Report.xlsx',
+    total_amount: 620.6,
+    created_at: '2026-09-01T08:00:00Z',
+    ...overrides,
+  }
+}
+
+// שורות תואמות-בייט לצורה שמחזירה `shapeLine` ב-`salaryReport.js` — לא ממציאות שדות.
+function actualLine(overrides) {
+  return {
+    hostessId: 1,
+    hostessName: 'אפרת דהן',
+    idNumber: '301554333',
+    sourceProjectId: 12,
+    lineBasis: 'actual',
+    basisLabel: 'שעות בפועל',
+    hoursLabel: 'בפועל',
+    hours: 6,
+    rate: 45,
+    bonus: 0,
+    travel: 22.6,
+    lineTotal: 292.6,
+    bankDetails: 'הפועלים 601-2047199',
+    showInFile: true,
+    ...overrides,
+  }
+}
+
+function compensationLine(overrides) {
+  return {
+    hostessId: 2,
+    hostessName: 'אורלי שני',
+    idNumber: '301550224',
+    sourceProjectId: 14,
+    lineBasis: 'cancellation_compensation',
+    basisLabel: 'פיצוי-ביטול',
+    hoursLabel: 'מתוכנן',
+    hours: 4,
+    rate: 43,
+    bonus: null,
+    travel: null,
+    lineTotal: 86,
+    bankDetails: 'דיסקונט 045-8732016',
+    showInFile: true,
+    ...overrides,
+  }
+}
+
+function generateResult(overrides) {
+  const lines = overrides?.lines ?? [actualLine(), compensationLine()]
+  return {
+    reportId: 8,
+    period: '2026-09-01',
+    periodLabel: 'ספטמבר 2026',
+    fileName: '09_2026_Payroll_Report.xlsx',
+    lines,
+    totals: {
+      lineCount: lines.length,
+      fileLineCount: lines.filter((l) => l.showInFile).length,
+      total: lines.reduce((s, l) => s + l.lineTotal, 0),
+      bonusTotal: lines.reduce((s, l) => s + (l.bonus ?? 0), 0),
+      travelTotal: lines.reduce((s, l) => s + (l.travel ?? 0), 0),
+    },
+    linesMissingBankDetails: [],
+    filePath: 'salary_reports/8_09_2026_Payroll_Report.xlsx',
+    fileError: null,
+    sendResult: 'sent',
+    sendStatus: 'sent',
+    mailError: null,
+    logFailed: false,
+    finalizeError: null,
+    ...overrides,
+  }
+}
+
+function renderDialog(props = {}) {
+  return render(
+    <ToastProvider>
+      <SalaryReportDialog open onOpenChange={vi.fn()} {...props} />
+    </ToastProvider>,
+  )
+}
+
+beforeEach(() => {
+  // `shouldAdvanceTime` הוא קריטי: בלעדיו `findBy*`/`waitFor` של testing-library (שמסתמכות
+  // על `setTimeout` אמיתי כדי לתשאל מחדש) נתקעות מול שעונים מדומים — כל 17 הבדיקות בקובץ
+  // הזה תקעו (timeout 5000ms) עד שזה נוסף.
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  vi.setSystemTime(NOW)
+  // `mockReset` ולא רק `mockResolvedValue`: בלעדיו מונה-הקריאות מצטבר מהרצות קודמות
+  // (נתפס כאן בפועל — בדיקת "רענון" ראתה 18 קריאות, בדיוק מספר-הבדיקות בקובץ).
+  listSalaryReports.mockReset().mockResolvedValue([])
+  getParamValue.mockReset().mockResolvedValue(ACCOUNTANT_EMAIL)
+  generateAndSendSalaryReport.mockReset()
+  getFinanceFileSignedUrl.mockReset()
+  resendSalaryReportMail.mockReset()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+})
+
+describe('SalaryReportDialog — בחירת-חודש וברירת-מחדל', () => {
+  it('ברירת-המחדל היא החודש שהסתיים (P4: "בסוף-חודש") — "היום" 15/10/2026 ⇒ ספטמבר 2026', async () => {
+    renderDialog()
+    expect(await screen.findByTestId('salary-report-month-button')).toHaveTextContent('ספטמבר')
+    expect(screen.getByTestId('salary-report-month-button')).toHaveTextContent('2026')
+  })
+
+  it('פותחת את הבורר, משנה שנה+חודש, ומאשרת — הכפתור הסגור מציג את הבחירה החדשה', async () => {
+    renderDialog()
+    fireEvent.click(await screen.findByTestId('salary-report-month-button'))
+
+    const monthSelect = screen.getByTestId('salary-report-month-select')
+    fireEvent.change(monthSelect, { target: { value: '1' } })
+    const yearInput = screen.getByTestId('salary-report-year-input')
+    fireEvent.change(yearInput, { target: { value: '2027' } })
+    fireEvent.click(screen.getByTestId('salary-report-month-apply'))
+
+    const button = screen.getByTestId('salary-report-month-button')
+    expect(button).toHaveTextContent('ינואר')
+    expect(button).toHaveTextContent('2027')
+  })
+
+  it('ביטול-הבורר משאיר את החודש הקודם ללא שינוי', async () => {
+    renderDialog()
+    fireEvent.click(await screen.findByTestId('salary-report-month-button'))
+    fireEvent.change(screen.getByTestId('salary-report-year-input'), { target: { value: '1999' } })
+    fireEvent.click(screen.getByTestId('salary-report-month-cancel'))
+
+    expect(screen.getByTestId('salary-report-month-button')).toHaveTextContent('2026')
+    expect(screen.queryByText(/1999/)).not.toBeInTheDocument()
+  })
+})
+
+describe('SalaryReportDialog — חסימת-כפילות מצד-לקוח (תצוגה ג׳ של המוקאפ)', () => {
+  it('חודש שכבר הופק (send_status=sent) מציג את הבאנר החסום ומשבית "ייצא ושלח"', async () => {
+    listSalaryReports.mockResolvedValue([reportRow({ period: '2026-09-01' })])
+    renderDialog()
+
+    const banner = await screen.findByTestId('salary-report-blocked-banner')
+    expect(banner).toHaveTextContent('דוח לחודש ספטמבר 2026 כבר הופק')
+    expect(banner).toHaveTextContent('01/09/2026')
+    expect(banner).toHaveTextContent(ACCOUNTANT_EMAIL)
+    expect(screen.getByTestId('salary-report-generate')).toBeDisabled()
+    expect(generateAndSendSalaryReport).not.toHaveBeenCalled()
+  })
+
+  it('חודש שלא הופק אינו מציג באנר, וה-RPC לא נקרא לפני לחיצה', async () => {
+    listSalaryReports.mockResolvedValue([reportRow({ period: '2026-01-01' })])
+    renderDialog()
+
+    await screen.findByTestId('salary-report-month-button')
+    expect(screen.queryByTestId('salary-report-blocked-banner')).not.toBeInTheDocument()
+    expect(screen.getByTestId('salary-report-generate')).not.toBeDisabled()
+  })
+})
+
+describe('SalaryReportDialog — "ייצא ושלח" (המסלול הבלתי-הפיך היחיד)', () => {
+  it('קוראת ל-RPC עם התקופה הנבחרת ו-accountantName:null, ומציגה את טבלת-התוצאה', async () => {
+    generateAndSendSalaryReport.mockResolvedValue(generateResult())
+    const onGenerated = vi.fn()
+    renderDialog({ onGenerated })
+
+    await screen.findByTestId('salary-report-month-button')
+    fireEvent.click(screen.getByTestId('salary-report-generate'))
+
+    await waitFor(() => expect(generateAndSendSalaryReport).toHaveBeenCalledTimes(1))
+    const call = generateAndSendSalaryReport.mock.calls[0][0]
+    expect(call.period).toBe('2026-09-01')
+    expect(call.accountantName).toBeNull()
+
+    const table = await screen.findByTestId('salary-report-result-table')
+    expect(within(table).getByText('אפרת דהן')).toBeInTheDocument()
+    expect(within(table).getByText('אורלי שני')).toBeInTheDocument()
+    // בונוס/נסיעות בשורת-פיצוי-ביטול = "—" ולא 0.00 (ה24/ה29, §3.7)
+    const compRow = within(table).getByText('אורלי שני').closest('tr')
+    expect(within(compRow).getAllByText('—').length).toBeGreaterThanOrEqual(2)
+
+    expect(onGenerated).toHaveBeenCalledTimes(1)
+  })
+
+  it('דוח עם אפס שורות מציג "אין שעות לתשלום החודש" ולא טבלה ריקה', async () => {
+    generateAndSendSalaryReport.mockResolvedValue(generateResult({ lines: [] }))
+    renderDialog()
+
+    await screen.findByTestId('salary-report-month-button')
+    fireEvent.click(screen.getByTestId('salary-report-generate'))
+
+    expect(await screen.findByTestId('salary-report-empty-note')).toHaveTextContent(
+      'אין שעות לתשלום החודש',
+    )
+    expect(screen.queryByTestId('salary-report-result-table')).not.toBeInTheDocument()
+  })
+
+  it('כשל-RPC (למשל P0001 מהמסד) מציג את הודעת-השרת כפי-שהיא, בלי לסגור את הדיאלוג', async () => {
+    generateAndSendSalaryReport.mockRejectedValue(
+      new Error(
+        'לא ניתן להפיק את הדוח — לפרויקט מבוטל אחד או יותר חסרות שעות סופיות לחישוב הפיצוי.',
+      ),
+    )
+    renderDialog()
+
+    await screen.findByTestId('salary-report-month-button')
+    fireEvent.click(screen.getByTestId('salary-report-generate'))
+
+    expect(await screen.findByTestId('salary-report-error')).toHaveTextContent(
+      'חסרות שעות סופיות לחישוב הפיצוי',
+    )
+    expect(screen.getByTestId('salary-report-dialog')).toBeInTheDocument()
+    expect(screen.queryByTestId('salary-report-result-table')).not.toBeInTheDocument()
+  })
+
+  it('sendResult=failed מציג תג "נכשל" בתוצאה (הדוח כבר נחתם ונשמר — לא נעלם)', async () => {
+    generateAndSendSalaryReport.mockResolvedValue(
+      generateResult({ sendResult: 'failed', sendStatus: 'failed' }),
+    )
+    renderDialog()
+
+    await screen.findByTestId('salary-report-month-button')
+    fireEvent.click(screen.getByTestId('salary-report-generate'))
+
+    await screen.findByTestId('salary-report-result')
+    expect(screen.getByTestId('salary-report-send-tag')).toHaveTextContent('נכשל')
+  })
+
+  it('fileError (הבאקט דחה את קובץ ה-xlsx — פגם (a) המוכר) מדווח על קובץ שלא נשמר, לא מוסתר', async () => {
+    generateAndSendSalaryReport.mockResolvedValue(
+      generateResult({ fileError: new Error('הבאקט דחה את סוג-הקובץ'), filePath: null }),
+    )
+    renderDialog()
+
+    await screen.findByTestId('salary-report-month-button')
+    fireEvent.click(screen.getByTestId('salary-report-generate'))
+
+    await screen.findByTestId('salary-report-result')
+    expect(screen.getByTestId('salary-report-send-tag')).toHaveTextContent('קובץ לא נשמר')
+  })
+
+  // ⚠️ הבדיקה הזו נועלת את הפער שנמצא בבקרה: `formatShekelWhole` (ברירת-המחדל של `Money`)
+  // **מעגל**, בעוד הגיליון שהולך לרו"ח כותב את אותו תעריף ב-`#,##0.00`. תעריף שברי הוא ערך
+  // אפשרי (`hourly_rate` הוא `numeric` בלי סקאלה, נכתב משדה-טקסט חופשי), ואז השורה על המסך
+  // שהמנהלת מאשרת **אינה מתחברת**: 34 × 6.00 אינו 205.92.
+  it('תעריף שברי מוצג במלואו והשורה מתיישבת (34.32 × 6.00 = 205.92) — ותעריף שלם נשאר "43 ₪"', async () => {
+    const fractional = actualLine({ rate: 34.32, hours: 6, bonus: 0, travel: 0, lineTotal: 205.92 })
+    generateAndSendSalaryReport.mockResolvedValue(
+      generateResult({ lines: [fractional, compensationLine()] }),
+    )
+    renderDialog()
+
+    await screen.findByTestId('salary-report-month-button')
+    fireEvent.click(screen.getByTestId('salary-report-generate'))
+
+    const table = await screen.findByTestId('salary-report-result-table')
+    const row = within(table).getByText('אפרת דהן').closest('tr')
+
+    // 🛡️ "שומר שלא נצפה נכשל אינו שומר": שתי השורות האלה מוכיחות שהבדיקה **מפלה** — הן
+    // מודדות שברירת-המחדל של `Money` הייתה מדפיסה כאן "34 ₪" (הפגם), ושהצורה שנבחרה
+    // משאירה תעריף שלם בדיוק כפי שהמוקאפ מצייר. בלעדיהן הבדיקה עוברת גם על הקוד השבור.
+    expect(formatShekelWhole(34.32)).toBe('34 ₪')
+    expect(formatShekelExact(43)).toBe('43 ₪')
+
+    // אין עיגול: "34 ₪" אינו על המסך בכלל, וגם לא "34.00 ₪" (הצורה שהמוקאפ אינו מצייר).
+    expect(within(row).getByText('34.32 ₪')).toBeInTheDocument()
+    expect(within(table).queryByText('34 ₪')).not.toBeInTheDocument()
+    expect(within(table).queryByText('34.00 ₪')).not.toBeInTheDocument()
+
+    // ההתיישבות נמדדת מהמסך עצמו, לא מהפיקסצ'ר: שעות × תעריף כפי שהם **מוצגים**.
+    const num = (text) => Number(text.replace(/[^\d.-]/g, ''))
+    const shownHours = num(within(row).getByText('6.00').textContent)
+    const shownRate = num(within(row).getByText('34.32 ₪').textContent)
+    const shownTotal = num(within(row).getByText('205.92 ₪').textContent)
+    expect(shownHours * shownRate).toBeCloseTo(shownTotal, 2)
+
+    // תעריף שלם נשאר כפי שהמוקאפ המאושר מצייר — "43 ₪", לא "43.00 ₪".
+    const compRow = within(table).getByText('אורלי שני').closest('tr')
+    expect(within(compRow).getByText('43 ₪')).toBeInTheDocument()
+
+    // אין שורות-אפס בדוח הזה ⇒ הערת-ההשמטה אינה מוצגת כלל.
+    expect(screen.queryByTestId('salary-report-omitted-note')).not.toBeInTheDocument()
+  })
+
+  // N-4: שורת-אפס נחתמת ונרשמת אך אינה בגוף הקובץ. הכותרת סופרת את **הטבלה**
+  // (screens-approved §③ של S3: "ספירה/סכימה של הטבלה"), ולכן היא חייבת להראות 3 מעל שלוש
+  // שורות — ולא 2, שהוא מספר-השורות שבקובץ.
+  it('שורת-אפס: הכותרת סופרת את הטבלה (3) והערת-שוליים אומרת שבקובץ יש 2', async () => {
+    const zeroLine = compensationLine({
+      hostessId: 3,
+      hostessName: 'נועה לוי',
+      idNumber: '301550999',
+      hours: 0,
+      rate: 41,
+      lineTotal: 0,
+      showInFile: false,
+    })
+    generateAndSendSalaryReport.mockResolvedValue(
+      generateResult({ lines: [actualLine(), compensationLine(), zeroLine] }),
+    )
+    renderDialog()
+
+    await screen.findByTestId('salary-report-month-button')
+    fireEvent.click(screen.getByTestId('salary-report-generate'))
+
+    const table = await screen.findByTestId('salary-report-result-table')
+    expect(within(table).getByText('נועה לוי')).toBeInTheDocument()
+    expect(screen.getByText('שורות בדוח:').parentElement).toHaveTextContent('3')
+
+    const note = screen.getByTestId('salary-report-omitted-note')
+    expect(note).toHaveTextContent('שורה אחת')
+    expect(note).toHaveTextContent('0.00 ₪')
+    expect(note).toHaveTextContent('2')
+  })
+
+  it('"ייצא ושלח" חסום כשהחודש הנבחר כבר קיים בהיסטוריה, גם בלי המתנה לרשת', async () => {
+    listSalaryReports.mockResolvedValue([reportRow({ period: '2026-09-01' })])
+    renderDialog()
+
+    await screen.findByTestId('salary-report-blocked-banner')
+    fireEvent.click(screen.getByTestId('salary-report-generate'))
+    expect(generateAndSendSalaryReport).not.toHaveBeenCalled()
+  })
+})
+
+describe('SalaryReportHistoryCard', () => {
+  function renderCard(props = {}) {
+    return render(
+      <ToastProvider>
+        <SalaryReportHistoryCard {...props} />
+      </ToastProvider>,
+    )
+  }
+
+  it('מציגה מצב-ריק כשאין דוחות', async () => {
+    listSalaryReports.mockResolvedValue([])
+    renderCard()
+    expect(await screen.findByTestId('salary-history-empty')).toHaveTextContent(
+      'עדיין לא הופקו דוחות',
+    )
+  })
+
+  it('מציגה שורה עם תג "✓ נשלח" וכפתור-הורדה פעיל כשיש קובץ', async () => {
+    const row = reportRow()
+    listSalaryReports.mockResolvedValue([row])
+    renderCard()
+
+    const tr = await screen.findByTestId(`salary-history-row-${row.report_id}`)
+    expect(within(tr).getByText('✓ נשלח')).toBeInTheDocument()
+    expect(within(tr).getByTestId(`salary-history-download-${row.report_id}`)).toBeEnabled()
+    expect(
+      within(tr).queryByTestId(`salary-history-resend-${row.report_id}`),
+    ).not.toBeInTheDocument()
+  })
+
+  it('שורה נכשלת עם קובץ שמור מציגה "שלח שוב" — לחיצה קוראת ל-resend ומרעננת', async () => {
+    const row = reportRow({ report_id: 9, send_status: 'failed', sent_date: null })
+    listSalaryReports
+      .mockResolvedValueOnce([row])
+      .mockResolvedValueOnce([{ ...row, send_status: 'sent' }])
+    resendSalaryReportMail.mockResolvedValue({
+      sendResult: 'sent',
+      sendStatus: 'sent',
+      logFailed: false,
+    })
+    renderCard()
+
+    const resendBtn = await screen.findByTestId('salary-history-resend-9')
+    fireEvent.click(resendBtn)
+
+    await waitFor(() =>
+      expect(resendSalaryReportMail).toHaveBeenCalledWith({ report: row, accountantName: null }),
+    )
+    await waitFor(() => expect(listSalaryReports).toHaveBeenCalledTimes(2))
+  })
+
+  it('שורה נכשלת בלי קובץ שמור: כפתור "שלח שוב" קיים אך מושבת (אין מה לצרף)', async () => {
+    const row = reportRow({
+      report_id: 10,
+      send_status: 'failed',
+      report_file_url: null,
+      sent_date: null,
+    })
+    listSalaryReports.mockResolvedValue([row])
+    renderCard()
+
+    const resendBtn = await screen.findByTestId('salary-history-resend-10')
+    expect(resendBtn).toBeDisabled()
+    const downloadBtn = screen.getByTestId('salary-history-download-10')
+    expect(downloadBtn).toBeDisabled()
+  })
+
+  it('כפתור-ההורדה יוצר קישור-חתום ופותח אותו בכרטיסייה חדשה', async () => {
+    const row = reportRow()
+    listSalaryReports.mockResolvedValue([row])
+    getFinanceFileSignedUrl.mockResolvedValue('https://signed.example/file.xlsx')
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => {})
+    renderCard()
+
+    fireEvent.click(await screen.findByTestId(`salary-history-download-${row.report_id}`))
+
+    await waitFor(() => expect(getFinanceFileSignedUrl).toHaveBeenCalledWith(row.report_file_url))
+    expect(openSpy).toHaveBeenCalledWith('https://signed.example/file.xlsx', '_blank')
+    openSpy.mockRestore()
+  })
+
+  it('רענון מבחוץ (refreshToken) גורם לטעינה חוזרת', async () => {
+    listSalaryReports.mockResolvedValue([])
+    const { rerender } = renderCard({ refreshToken: 1 })
+    await waitFor(() => expect(listSalaryReports).toHaveBeenCalledTimes(1))
+
+    rerender(
+      <ToastProvider>
+        <SalaryReportHistoryCard refreshToken={2} />
+      </ToastProvider>,
+    )
+    await waitFor(() => expect(listSalaryReports).toHaveBeenCalledTimes(2))
+  })
+})
+
+// עוגן-חוזה שקט: `fileNameOf`/`ACCOUNTANT_EMAIL_PARAM` נצרכים מהקובץ הזה — ודא שהם עדיין
+// קיימים בחוזה של api.js (לא נערך כאן; רק תזכורת-קומפילציה אם הם ייעלמו משם).
+it('חוזה-הייבוא מ-api.js עדיין קיים (fileNameOf/ACCOUNTANT_EMAIL_PARAM)', () => {
+  expect(typeof fileNameOf).toBe('function')
+  expect(typeof ACCOUNTANT_EMAIL_PARAM).toBe('string')
+})

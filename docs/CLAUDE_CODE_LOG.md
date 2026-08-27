@@ -45,6 +45,50 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 28/08/2026 00:2X–00:4X — phase 3 shipped by a 12-agent workflow; Ishay ruled on the escalations
+
+- ✅ **PHASE 3 COMPLETE.** All four surfaces + the route swap. **Suite 1,697 / 64 exit 0** (was
+  1,572 / 59 ⇒ **+125 tests, zero regressions**); `npm run gate` **exit 0**. Shape: 3 leaf surfaces
+  in parallel → S1 (the composer) → the route step alone → 3 adversarial lenses → 4 fixers.
+  12 agents, 0 errors, 3.28M tokens, ~2h.
+- 🔑 **Evidence the adversarial panel was not manufacturing work — Ishay asked directly, and the
+  numbers answer him.** The mechanical lens returned **ZERO findings in BOTH phases**, listing five
+  honest could-not-checks instead. The fixers were explicitly permitted to reject findings, and
+  across both phases they **refuted none**. What they DID reject was three suggested *fixes*: one
+  would have overwritten the recorded acceptance anchor `292.60`; one would have printed
+  `בוטל ע"י הלקוח ביטל` (the proposed string double-worded an existing label); one contradicted a
+  recorded ruling. **"The finding is real, the proposed fix is not" is the distinction the fix layer
+  exists to draw** — and it drew it three times.
+- 🐛 **The six that mattered, each re-verified by the orchestrator rather than taken on report:** the
+  `finance` bucket rejects xlsx · the fee band pays 0% at exactly 72.0h · `StatusTag` had no red so
+  `טעון בירור` rendered grey · the salary **rate** cell went through whole-shekel formatting, so a
+  `34.32` rate printed `34 ₪` beside `205.92 ₪` in the same row — on the screen the manager approves
+  before the file leaves · the archive button looked enabled while the server would refuse it (the UI
+  did not know the low-score-requires-reason rule the DB enforces) · and S3 had **no preview at all**
+  before an irreversible generation.
+- 🟢 **Ishay ruled on both escalations.** The S3 preview is approved for build. Both migrations are
+  approved in principle, and he offered to apply them tonight or at 11:00. **Neither was applied** —
+  the typed-echo gate states plainly that a spoken approval is not sufficient to apply, and the
+  recommendation returned was to wait: measured, H2 replaces a function with **zero production
+  callers** and H1 widens a MIME whitelist nothing currently uses for xlsx, so neither can affect the
+  demo and neither is urgent enough to spend the risk before it.
+- 🔎 **The two unauthorised files were checked and CLEARED — and the fault was the orchestrator's
+  scoping, not the agent's overreach.** `publicApi.js` cites a precedent that genuinely exists
+  (`04_hostesses/publicApi.js`, on disk since 12/08), reaches **exactly** the two RPCs the database
+  already grants to `anon`, and duplicates nothing `api.js` exports. The task file simply named a
+  narrower ownership than the work honestly required.
+- 🔴 **AN OPERATIONAL MISTAKE WORTH KEEPING, because the repo already warns about it and it still
+  happened.** Appending this entry via a Python heredoc (`open(p,'w')`) **truncated
+  `CLAUDE_CODE_LOG.md` to zero bytes**: `'w'` empties the file before writing, and the write then
+  died on a `UnicodeEncodeError` (surrogates in the emoji), leaving nothing behind. Root
+  `CLAUDE.md` already carries a Python-file-writing mine — but it is scoped to **CRLF line endings**,
+  so a reader checks `tr -cd '\r'`, sees 0, and concludes the write was safe. **It was not: the
+  failure mode here is truncation, not line endings.** Recovered with `git checkout HEAD --` at zero
+  loss **only because the file had been committed twenty minutes earlier** — which is the actual
+  lesson: the mid-run commits were not bookkeeping, they were the undo buffer. ⇒ **Use the
+  Write/Edit tools for repo files; if a script must do it, write to a temp file and move it into
+  place, never open the live file with `'w'`.**
+
 ### 27/08/2026 21:0X–23:1X — phase 2 shipped by an agent workflow; two shipped-code defects found; phase 3 in flight
 
 - ✅ **PHASE 2 COMPLETE, committed `0baf74b`.** A 9-agent workflow (3 builders · 3 read-only
