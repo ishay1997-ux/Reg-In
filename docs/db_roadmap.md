@@ -413,12 +413,36 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | **N1** | `hostesses.languages` (`text[]`) → child table `hostess_languages(hostess_id, language)`, then `drop column` | m8 merged **and deployed** | Same three beats as C2: **add + copy → deploy → drop**, with a **re-copy immediately before the drop** — 🔴 **including C2's `updated_at` guard on the conflict action**, for the same reason: once the new code writes only the child, an unguarded overwrite runs backwards. ⚠️ `languages` is **nullable** (unlike the bank columns), so the additive half needs no constraint relaxation — create, copy, drop later | `PROJECT_MASTER_sec7.md §7.87` · here |
 | **N2** | `customer_contacts` consolidation — `is_primary` on the child, then drop `contact_name`/`phone`/`email` from `customers` | m8 merged **and deployed** | Same pattern, **separate drop migration** from N1's. 🔴 **Its blast radius is ~4.6× N1's — see the measurement below; "one package" is true of the pattern, not of the size** | here |
 
-🔴 **Provenance of N1/N2, stated precisely because it did not reach this session directly.**
-A parallel DB-structure investigation session reported on 27/08/2026 that Ishay approved both,
-relaying his words as **"מאשר את שניהם"**. **This session did not hear that ruling from Ishay** and
-has not re-confirmed it with him; it is recorded here so the item cannot fall between two sessions
-(his standing anxiety about deferred work), **and it is flagged for his confirmation.** If he did
-not mean this, these two rows come out.
+✅ **CONFIRMED BY ISHAY DIRECTLY, `27/08/2026 17:1X` — the flag below is resolved and the rows stand.**
+He restated the ruling to this session in his own words: **"מאושר. שני הפריטים נכנסים כחבילה אחת
+אחרי מיזוג מודול 8."** ⇒ **both are approved debt, and the timing is his: AFTER the m8 merge, as one
+package.** Three product rulings travel with them, also his and also relayed-then-restated: the
+contacts form is **one list where every row is the same card**, primary marked by a chip and a border
+(not a separate "primary" field above a "others" list) · **deleting the primary contact is BLOCKED**
+with *"אי אפשר למחוק את איש הקשר הראשי. סמן קודם אחר כראשי."* · the backfill makes every existing
+contact primary, so **the 7 live customers show no change at all**.
+🔴 **AND THIS SESSION'S MEASURED RECOMMENDATION ON TIMING, `27/08/2026 17:1X`, because he asked
+"מה דעתך" about doing them the same day:** **N1 and N2 are not the same size and should not travel
+as one commit** *(they may still be one approved package)*. Measured on `origin/main` this hour:
+**N1 = 10 occurrences / 2 files** (module 4 only) · **N2 = 46 occurrences / 16 PRODUCTION files**
+(68 / 23 including test files — both counted, so nobody has to guess which basis is meant), spanning
+`src/lib/customers.js`, `quotes.js`, `shiftEmails.js` and modules **2, 3 and 6** — the whole
+quote→project→email chain. ⚠️ **And N2 is not only a migration: the approved contacts form is a
+SCREEN in module 2**, so "just do the migration" understates it.
+🔴 **Neither belongs on the m8 branch, and the reason is arithmetic, not caution.** The additive
+half alone buys nothing — a child table nothing writes to goes stale from the first edit — so each
+needs migration + client rewire + deploy + drop, i.e. its own full cycle. Putting the additive
+halves inside m8's deploy does **not** save a deploy: the drops would still need a second one.
+It would only delay the m8 merge, which is the thing gated on today's date.
+⚠️ **Plus the calendar: the interim presentation is 28/08.** Touching the quote→project→email chain
+the night before it is the highest-risk item on the table. **Recommended order: merge m8 → deploy →
+C2 (tonight) · N1 (small) then N2 (with its screen) on a fresh branch after the presentation.**
+*(Ishay can override; this is a recommendation with its measurement, not a gate.)*
+*(The original provenance flag, kept because the correction is the record:)* a parallel DB-structure
+investigation session reported on 27/08/2026 that Ishay approved both, relaying his words as
+**"מאשר את שניהם"**; **this session had not heard that ruling from Ishay** and flagged it for his
+confirmation rather than acting on a peer's relay. **He confirmed it directly hours later** — the
+flag did its job.
 **Independently measured by THIS session on `origin/main` — the peer explicitly asked that its own
 numbers not be taken on trust:**
 · **N1 — `languages`: 10 occurrences across 2 files**, with a real write at
