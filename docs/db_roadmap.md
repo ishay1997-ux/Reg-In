@@ -433,6 +433,37 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
+- ⏳ 27/08/2026 — **module-8 migration E2 · WRITTEN ON DISK, NOT APPLIED — typed-echo gate OPEN.**
+  `20260827150049_module8_finance_write_actions.sql`.
+  🔴 **Not a Done row.** **Check live before assuming it landed:**
+  `select count(*) from pg_proc where proname='archive_project'` ⇒ **0 means it did not**.
+  **Step 1.5 runs as E1 (applied) + E2 (this) + E3 (the salary transaction, next).** Three rather
+  than the two first planned: the salary flow is P4 and has nothing to do with P1/P3's collection
+  flow, and burying both in one migration would have made each unverifiable on its own. Builder's
+  call, which the step's own text grants.
+  **What E2 contains — seven functions and one drop:**
+  · `drop function set_project_finance_fields(integer, boolean, date, integer, text, text)` —
+    explicit, ה22. **Measured: zero call sites** across `src/`, `e2e/`, `supabase/functions/`.
+  · `finance_assert_writable` (internal) — the shared gate: 'כספים' `edit` + ה12's status gate +
+    **the `finished` lock** (preconditions, the ㉙ pattern — not a trigger).
+  · `finance_cancellation_fee_proposal` — the three components, **derived and never stored** (ה28).
+    ה23 (full price = `closing_unit_price`) · ה24's scale from the live params · force-majeure = 0%
+    always · A-7/R4-F2 population (`released_from_status='finally_approved'`) · **NULL, never 0,
+    when planned hours are missing** (T7/A-8).
+  · `finance_freeze_cancelled_profit` (internal) — Q-3: `fee − compensation − goods AT COST`.
+  · `record_invoice_sent` · `record_payment` · `record_feedback` · `record_write_off` (**the fifth
+    action, B-13 — ה22 listed four and P3's approved bad-debt path had no writer**) ·
+    `resolve_cancellation_fee` (bill/waive/write_off) · `archive_project`.
+  🔑 **The fee formula was proven against the hand anchor BEFORE the SQL was written**, run on live
+  data: #14 ⇒ 30.0 hours before the event ⇒ 50% ⇒ compensation **328.00** + goods **3,180.00** =
+  **3,508.00** = `spec.md §③3`. Every component matched, not just the total.
+  🔴 **T1's correction is implemented, not just documented:** `archive_project` asserts
+  `summary_report_url IS NOT NULL` **itself** and raises a Hebrew `P0001`. Without it a legitimate
+  archive would die on a raw CHECK violation nobody can read. It also refuses `cancelled` explicitly
+  with its own message.
+  🔴 **Freeze moments (Q-4), and they are not symmetric:** waive and write-off freeze **immediately**;
+  a BILLED cancellation fee freezes **when the payment is recorded**, never at fee-save and never at
+  archive. A waive produces a **real recorded loss** — the accrual truth Q-3 ruled.
 - ✅ 27/08/2026 — **module-8 migration E1 APPLIED via MCP** (typed-echo:
   `module8_finance_money_ssot_and_readers`).
   **Step 1.5 was split in two** (the guide permits it): **E1 = the money SSOT + the two readers +

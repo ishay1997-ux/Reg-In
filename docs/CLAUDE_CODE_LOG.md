@@ -45,7 +45,7 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
-### 27/08/2026 12:39–14:5X — MODULE 8 phase 1: steps 1.0–1.4 closed; E1 written
+### 27/08/2026 12:39–15:0X — MODULE 8 phase 1: steps 1.0–1.4 closed; E1 applied, E2 written
 
 - **Step 1.0 (👤 phase door) ✅.** Branch `ishay/module-8-finance` cut from fresh `origin/dev`
   (`585ad27`) after verifying m5 really merged. **All 8 live re-measurements held — zero drift
@@ -65,6 +65,14 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
   re-read after a full reload, rendered on the card, restored, restore verified in the DB. The
   6 new unit tests were red-proved (broke `splitBankFields` ⇒ exactly 2 went red). `send-email`
   deployed at v6 and certified by 5 real calls — zero mails sent, `email_log` unchanged at 33.
+- **E1 applied — the money SSOT + both readers + the F16 ripple into merged m6 SQL.** The headline
+  verification: **m6's own hand anchor, project #8, still returns 5,355.00 digit-identical** after
+  its function was rewritten. #15 moved 6,060 → 5,985 exactly as the reviewer predicted, which is
+  the *point* — m6 and m8 now report one revenue instead of two. No test pinned the old value.
+- **E2 written (not yet applied): seven write actions + the explicit drop of m6's
+  `set_project_finance_fields`** (zero call sites, measured). Its fee formula was likewise proven
+  first: #14 ⇒ 30.0h before the event ⇒ 50% ⇒ 328.00 + 3,180.00 = **3,508.00**, matching `spec §③3`
+  component by component, not just at the total.
 - 🔑 **Before writing a line of migration E1, I ran the approved profit formula against live data:
   #13 ⇒ 3,650.00, digit-identical to `spec.md §③3`'s hand-computed anchor.** ⚠️ **And the anchor
   settled something no test I wrote myself could have caught:** the hostess quote line carries its
