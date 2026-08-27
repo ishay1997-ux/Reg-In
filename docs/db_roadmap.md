@@ -458,6 +458,37 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
+- ⏳ 27/08/2026 — **module-8 migration F · WRITTEN, NOT APPLIED — typed-echo gate OPEN.**
+  `20260827155303_module8_public_feedback_rpc.sql`. **Check live:**
+  `select count(*) from pg_proc where proname='submit_feedback'` ⇒ **0 means it did not land**.
+  **The only surface in the module an anonymous person touches**, so three rules that were not
+  softened: **no policy for `anon` on any table** (the two functions are the only door) · the
+  **not-found answer is byte-identical for a wrong, empty and dead token** — any difference is an
+  oracle telling a token-guesser they guessed right · **rate limit 15/IP/hour**.
+  🔴 **T14 confirmed the hard way: the precedent everyone points at does not exist.** m4's
+  `/shift/:token` has **no rate limiter at all** (a known gap in §6), so there was nothing to copy.
+  The shape was taken from **module 1's login counter**, the only live one: pull the IP from
+  `x-forwarded-for`, prune rows older than an hour, count, block, record. **Fail-open when the
+  header is missing** — same as the login counter; a broken limiter that locks out real users is
+  worse than one that did not fire.
+  🔑 **A call the guide left to the builder: a SEPARATE counter table, not a reuse of
+  `login_rpc_calls`.** Sharing it would have let a customer refreshing the feedback page **eat into
+  the login-attempt budget for that IP**, and the reverse — behind a shared office NAT that reads as
+  "the system locked me out" with no connection to anything. Same shape as the existing table so it
+  is recognisable; deny-all with RLS on and zero policies, exactly like its sibling.
+  **Edge contracts from the rehearsal:** `mint_feedback_token` is gated **'פרויקטים'** (m6's mail
+  path is the caller — gating it 'כספים' would 403 every survey the projects manager sends), it is
+  **get-or-create** so a re-sent mail never invalidates a link already in the customer's hands, and
+  it refuses **only** `finished` (G-16). `submit_feedback` accepts a `not_sent` project (G-17 — the
+  mail may have failed after the token was minted, and a customer holding a working link still
+  counts) and **overwrites `no_response`** (T12 — data beats a flag).
+  🔴 **It also carries a fix-forward for a gap found while writing it, not in E2's own review:**
+  `archive_project` checked that feedback was *resolved* but **not that a low score had a reason**.
+  This only became reachable with F: **the public page has no reason field at all** — the customer
+  gives a score and free text, and the reason is chosen by the manager *after a phone call*. ⇒ a
+  customer could submit **2 with no reason** and the archive would pass, closing the file **without
+  the phone call ever happening**. The approved spec is explicit — *"שער-הארכוב ממשיך לחסום עד הזנת-
+  סיבה"* / *"עד אז אין ארכוב"* (P2). The gate is now in. E2's migration was not edited (history).
 - ✅ 27/08/2026 — **module-8 E3 FIX-FORWARD APPLIED** (typed-echo:
   `module8_salary_report_temp_table_fix`).
   🐞 **A bug in E3 that MY OWN verification caught, minutes after E3 was applied.**

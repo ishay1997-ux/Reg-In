@@ -45,7 +45,7 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
-### 27/08/2026 12:39–15:3X — MODULE 8 phase 1: steps 1.0–1.4 closed; E1+E2 applied, E3 written
+### 27/08/2026 12:39–15:5X — MODULE 8 phase 1: steps 1.0–1.5 closed; F written, only G left
 
 - **Step 1.0 (👤 phase door) ✅.** Branch `ishay/module-8-finance` cut from fresh `origin/dev`
   (`585ad27`) after verifying m5 really merged. **All 8 live re-measurements held — zero drift
@@ -76,6 +76,21 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
   frozen number and the live number agree. The cancellation proposal returned **3,508.00** — the
   hand anchor, produced by the function itself rather than by a query written to match it. Billing
   alone did not freeze; the payment did, at 1,680.00. Status stayed `cancelled`.
+- 🔴 **Two real defects found today, both in my own code, and both share a shape worth naming: they
+  were invisible in production and visible only to the checker.**
+  **(1) E3's temp table** used `on commit drop`, so a second call in one transaction failed. Every
+  Supabase RPC runs in its own transaction, so production would never have shown it — but this
+  project verifies write functions by running them inside a transaction that is then rolled back,
+  and the defect made the function **unverifiable by the only method available**. Fixed forward; the
+  new body was extracted programmatically rather than retyped and proven a one-line delta.
+  **(2) `archive_project` never checked that a low score had a reason.** It only became reachable
+  when F landed: **the public feedback page has no reason field at all** — the customer gives a
+  score and free text, and the reason is chosen by the manager after a phone call. So a customer
+  could submit **2 with no reason** and the file would close **without the phone call ever
+  happening**, against an explicit approved rule (*"עד אז אין ארכוב"*). Gate added in F.
+  🔑 **The generalisation: a defect that production cannot show you is not a small defect** — it is
+  one whose only witness is the verification, which is exactly why the verification has to be a real
+  journey and not a shape check.
 - **E3 written (not yet applied) — the salary transaction.** Its own migration because P4 crosses
   projects and months and pays people. 🔑 **The design fact worth carrying forward: the anti-double-
   pay mechanism is the SIGNATURE on the row, not a check** — which is also what makes a late-closing
