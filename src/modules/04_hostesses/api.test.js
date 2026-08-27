@@ -56,6 +56,7 @@ function makeChain(result) {
     'insert',
     'delete',
     'upsert',
+    'not',
   ]) {
     builder[method] = vi.fn(() => builder)
   }
@@ -511,5 +512,153 @@ describe('פרטי-בנק — פיצול לטבלת-הבת (ה19)', () => {
 
     const selectArg = supabase.from.mock.results[0].value.select.mock.calls[0][0]
     expect(selectArg).toContain('hostess_bank_details(*)')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// (6) שפות — נרמול לטבלת-בת (N1, 27/08/2026)
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🔴 **מה הבדיקות האלה נועלות, וזה לא "שהקוד רץ":** ההבחנה בין `undefined` ל-`[]`.
+// ‏`updateHostess` מקבל patch **חלקי** — עדכון-טלפון בלבד אינו נושא `languages`, ואם
+// נתייחס לזה כ"רשימה ריקה" **נמחק לדיילת את כל שפותיה בשקט** בכל עריכה שאינה נוגעת בהן.
+// זה בדיוק סוג הכשל שאין לו הודעת-שגיאה ואיש לא מבחין בו עד שמישהו מחפש דוברת רוסית.
+describe('שפות — נרמול לטבלת-הבת (N1)', () => {
+  it('createHostess: `languages` אינו נשלח ל-hostesses, אלא לטבלת-הבת עם המזהה החדש', async () => {
+    const queues = {}
+    queueTable(queues, 'hostesses', { data: { hostess_id: 91, full_name: 'רותם' }, error: null })
+    queueTable(queues, 'hostess_languages', { data: [], error: null }) // upsert
+    queueTable(queues, 'hostess_languages', { data: [], error: null }) // delete-stale
+    setupFrom(queues)
+
+    await createHostess({ full_name: 'רותם', languages: ['עברית', 'אנגלית'] })
+
+    const hostessInsert = supabase.from.mock.results[0].value.insert.mock.calls[0][0]
+    expect(hostessInsert).not.toHaveProperty('languages')
+
+    const rows = supabase.from.mock.results[1].value.upsert.mock.calls[0][0]
+    expect(rows).toEqual([
+      { hostess_id: 91, language: 'עברית' },
+      { hostess_id: 91, language: 'אנגלית' },
+    ])
+  })
+
+  it('🔴 updateHostess בלי `languages` — לא נוגע בטבלת-הבת בכלל', async () => {
+    const queues = {}
+    queueTable(queues, 'hostesses', { data: [{ hostess_id: 5 }], error: null })
+    setupFrom(queues)
+
+    await updateHostess(5, { phone: '050-1111111' })
+
+    // אילו היינו מתייחסים ל-`undefined` כ-`[]`, כאן הייתה נופלת קריאה שנייה
+    // שמוחקת את כל שפותיה — והבדיקה הזאת היא מה שמונע את זה.
+    expect(supabase.from).toHaveBeenCalledTimes(1)
+    expect(supabase.from).toHaveBeenCalledWith('hostesses')
+  })
+
+  it('🔴 updateHostess עם מערך ריק — כן מוחק את כולן (בקשה מפורשת, לא היעדר)', async () => {
+    const queues = {}
+    queueTable(queues, 'hostesses', { data: [{ hostess_id: 5 }], error: null })
+    queueTable(queues, 'hostess_languages', { data: [], error: null })
+    setupFrom(queues)
+
+    await updateHostess(5, { languages: [] })
+
+    const chain = supabase.from.mock.results[1].value
+    expect(chain.upsert).not.toHaveBeenCalled()
+    expect(chain.delete).toHaveBeenCalled()
+    expect(chain.eq).toHaveBeenCalledWith('hostess_id', 5)
+    // מחיקת-הכול לדיילת הזו — ובלי `not`, שהוא תחביר לא-חוקי על רשימה ריקה.
+    expect(chain.not).not.toHaveBeenCalled()
+  })
+
+  it('🔴 replace כותב את החדש לפני שמוחק את הישן — הכלל של src/CLAUDE.md', async () => {
+    const order = []
+    const queues = {}
+    queueTable(queues, 'hostesses', { data: [{ hostess_id: 5 }], error: null })
+    queueTable(queues, 'hostess_languages', { data: [], error: null })
+    queueTable(queues, 'hostess_languages', { data: [], error: null })
+    supabase.from.mockImplementation((table) => {
+      const chain = makeChain((queues[table] ?? []).shift() ?? { data: [], error: null })
+      const originalUpsert = chain.upsert
+      const originalDelete = chain.delete
+      chain.upsert = vi.fn((...args) => {
+        order.push('upsert')
+        return originalUpsert(...args)
+      })
+      chain.delete = vi.fn((...args) => {
+        order.push('delete')
+        return originalDelete(...args)
+      })
+      return chain
+    })
+
+    await updateHostess(5, { languages: ['עברית'] })
+
+    expect(order).toEqual(['upsert', 'delete'])
+  })
+
+  it('ניקוי-קלט: רווחי-קצה, ריקים וכפילויות אינם מגיעים למסד', async () => {
+    const queues = {}
+    queueTable(queues, 'hostesses', { data: [{ hostess_id: 7 }], error: null })
+    queueTable(queues, 'hostess_languages', { data: [], error: null })
+    queueTable(queues, 'hostess_languages', { data: [], error: null })
+    setupFrom(queues)
+
+    await updateHostess(7, { languages: ['  עברית  ', 'עברית', '', '   ', 'ערבית'] })
+
+    const rows = supabase.from.mock.results[1].value.upsert.mock.calls[0][0]
+    expect(rows).toEqual([
+      { hostess_id: 7, language: 'עברית' },
+      { hostess_id: 7, language: 'ערבית' },
+    ])
+  })
+
+  it('קריאה: הצירוף משוטח בחזרה למערך `languages` ממוין', async () => {
+    const queues = {}
+    queueTable(queues, 'hostesses', {
+      data: {
+        hostess_id: 3,
+        full_name: 'נועה',
+        hostess_bank_details: null,
+        hostess_languages: [{ language: 'רוסית' }, { language: 'אנגלית' }],
+      },
+      error: null,
+    })
+    setupFrom(queues)
+
+    const row = await getHostess(3)
+
+    expect(row.languages).toEqual(['אנגלית', 'רוסית'])
+    expect(row).not.toHaveProperty('hostess_languages')
+  })
+
+  it('🔴 דיילת בלי שפות נטענת עם מערך ריק — לעולם לא undefined', async () => {
+    const queues = {}
+    queueTable(queues, 'hostesses', {
+      data: {
+        hostess_id: 4,
+        full_name: 'אורלי',
+        hostess_bank_details: null,
+        hostess_languages: [],
+      },
+      error: null,
+    })
+    setupFrom(queues)
+
+    const row = await getHostess(4)
+
+    // `ChipToggle` מריץ `.includes()` על הערך הזה — `undefined` היה מפיל את הכרטיס.
+    expect(row.languages).toEqual([])
+  })
+
+  it('listHostesses: מבקשת גם את שורות-השפה בצירוף', async () => {
+    const queues = {}
+    queueTable(queues, 'hostesses', { data: [], error: null })
+    setupFrom(queues)
+
+    await listHostesses()
+
+    const selectArg = supabase.from.mock.results[0].value.select.mock.calls[0][0]
+    expect(selectArg).toContain('hostess_languages(language)')
   })
 })

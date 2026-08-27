@@ -45,6 +45,32 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 27/08/2026 18:0X–19:0X — N1 applied and the client rewired; gate green at 1,454
+
+- ✅ **N1 additive half applied, client rewired, gate exit 0 at 1,454 tests** (up from 1,446).
+  33 rows / 20 hostesses / 5 languages, 2 policies, RLS on. 🔑 **The count is the weak claim, so the
+  one relied on is different: `mismatched_hostesses = 0` — every original array reconstructs
+  EXACTLY from the child table.**
+- 🔴 **Impersonated read matrix, positive control first:** גיוס / פרויקטים / מנכ"ל = **26 hostesses
+  and 33 languages** · כספים / לוגיסטיקה = **0 and 0**. The language count tracks the hostess count
+  one for one for every role — the mirror is proven rather than asserted.
+- **Two files changed, and the two SCREENS deliberately not touched.** Ishay caught the gap between
+  what I said ("2 files") and what I did, and he was right to: the "2 files" was the count of
+  *consumers* of `languages`, not of files I would edit. The split lives in `api.js`, so
+  `hostess.languages` is still a plain array to the screens — the same call the bank split made, and
+  it keeps the lowest-auto-coverage write surface in the repo untouched. My wording was the error,
+  not the work.
+- 🔴 **Two mutations, both proved red, file restored byte-identical:** treating a missing
+  `languages` field as `[]` (which would have wiped a hostess's languages on **every phone edit**,
+  silently) · reversing insert/delete (the `src/CLAUDE.md` rule that has already destroyed live data
+  once here).
+- **Live in a connected browser**, the narrow announced-and-restored exception: the card read
+  `שפות · אנגלית · עברית` from the child table · **editing only the phone left both languages
+  intact** · phone restored and the restore verified in the DB · 33 rows unchanged · zero console
+  errors.
+- **`docs/schema.sql` re-synced and re-measured:** 28 tables (all RLS) · 45 public + 12 storage
+  policies · 43 functions · **271 documented columns minus 9 parser artefacts = 262 = live**.
+
 ### 27/08/2026 18:0X–18:4X — N1 additive half written, standing at its typed-echo gate
 
 - **`N1` written** (`20260827183845_module8_n1_hostess_languages_additive`): `hostesses.languages`
