@@ -14,6 +14,11 @@ import {
   MONEY_HIDDEN_SENTENCE,
 } from '@/lib/projectLogistics'
 
+// 🔴 שכבת-ההרשאות מוקקת מאז 26/08: המבחין הראשון של מצב-הריק הוא **ההרשאה ללוגיסטיקה**
+// ולא ההצעה. ברירת-המחדל היא `edit`, כך שכל הבדיקות שקדמו לשינוי מתנהגות בדיוק כשהיו.
+const authState = { permissions: { לוגיסטיקה: 'edit', 'הצעות מחיר': 'edit' } }
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => authState }))
+
 vi.mock('./api', () => ({
   getProjectLogistics: vi.fn(),
   getProjectChanges: vi.fn(),
@@ -122,6 +127,7 @@ async function renderTab(props = {}) {
 }
 
 beforeEach(() => {
+  authState.permissions = { לוגיסטיקה: 'edit', 'הצעות מחיר': 'edit' }
   vi.clearAllMocks()
 })
 
@@ -291,6 +297,57 @@ describe('טבלת-הפריטים — קריאה בלבד, בסדר "רחוק מ
     expect(screen.getAllByText('טרם החל').length).toBeGreaterThan(0)
   })
 
+  // ㉒ — ההערה של מנהלת הלוגיסטיקה נראית למנהלת הפרויקטים. הצורה הוכרעה 26/08/2026:
+  // תת-שורה ברוחב מלא מתחת לפריט; שורה בלי הערה אינה מייצרת תת-שורה כלל.
+  // המערך מצטט את `#107` החי (`data-set.md`): ההערה היחידה במערך יושבת על שורה 1.
+  it('ההערה מוצגת כתת-שורה ברוחב מלא — ורק על השורה שיש בה הערה (㉒)', async () => {
+    mockHappyPath({
+      rows: [
+        {
+          sku: 'B-REG-TAG',
+          serial_number: 1,
+          planned_qty: 150,
+          actual_qty: 0,
+          item_status: 'ordered',
+          notes: 'הוזמן בבית-הדפוס — הובטחה אספקה בתחילת השבוע הבא.',
+        },
+        {
+          sku: 'B-SAT-LAN',
+          serial_number: 2,
+          planned_qty: 150,
+          actual_qty: 0,
+          item_status: 'not_started',
+          notes: null,
+        },
+        {
+          sku: 'B-ECO-TAG',
+          serial_number: 3,
+          planned_qty: 50,
+          actual_qty: 50,
+          item_status: 'ready',
+          notes: '   ',
+        },
+        {
+          sku: '01WEB',
+          serial_number: 4,
+          planned_qty: 1,
+          actual_qty: 0,
+          item_status: 'not_started',
+        },
+      ],
+      changes: [],
+    })
+    await renderTab()
+
+    const noteRow = screen.getByTestId('logistics-note-B-REG-TAG-1')
+    expect(noteRow).toHaveTextContent('הערת הלוגיסטיקה:')
+    expect(noteRow).toHaveTextContent('הוזמן בבית-הדפוס — הובטחה אספקה בתחילת השבוע הבא.')
+    // ברוחב מלא — ארבע העמודות הקיימות אינן משנות רוחב בגלל ההערה.
+    expect(noteRow.querySelector('td')).toHaveAttribute('colspan', '4')
+    // ושלוש האחרות — אפס אלמנט-הערה. גם `null` וגם רווחים-בלבד אינם הערה.
+    expect(screen.getAllByTestId(/^logistics-note-/)).toHaveLength(1)
+  })
+
   it('ready ממוין אחרון — מה שרחוק ביותר ממוכן תחילה', async () => {
     mockHappyPath({
       rows: [
@@ -315,5 +372,49 @@ describe('טבלת-הפריטים — קריאה בלבד, בסדר "רחוק מ
     const rows = screen.getAllByTestId(/^logistics-row-/)
     expect(rows[0].dataset.testid).toBe('logistics-row-B-FAB-LAN-2')
     expect(rows[1].dataset.testid).toBe('logistics-row-B-REG-TAG-1')
+  })
+})
+
+// 🔴 שני הכיוונים של מבחין-הריק — כל אחד נמדד כשבור לפני התיקון (26/08/2026).
+// המבחין נשען עד אז על **ההצעה בלבד**, ולכן טעה בשני הכיוונים ההפוכים.
+describe('LogisticsTab — חסימת-הרשאה אינה "תקלה", וריק-כדין אינו "אין הרשאה"', () => {
+  it('🔴 חסומה על לוגיסטיקה + רואה הצעות ⇒ "אין הרשאה ללוגיסטיקה" — ולא פאנל-תקלה', async () => {
+    // מנהלת הכספים והלקוחות: `blocked` על לוגיסטיקה, `view` על הצעות מחיר.
+    authState.permissions = { לוגיסטיקה: 'blocked', 'הצעות מחיר': 'view' }
+    getProjectLogistics.mockResolvedValue([]) // RLS: אפס שורות, בלי שגיאה
+    getProjectChanges.mockResolvedValue([])
+    getProjectQuoteMeta.mockResolvedValue(null)
+    getPricingCatalog.mockResolvedValue(catalogFixture())
+    // ההצעה **כן** נקראית לה ויש בה פריטי-מוצר — זה מה שהוליד קודם את "תקלה".
+    getQuote.mockResolvedValue({ quote_services: [{ sku: 'B-REG-TAG', qty: 300 }] })
+
+    render(<LogisticsTab project={{ project_id: 15, quote_id: 31 }} />)
+
+    const panel = await screen.findByTestId('logistics-state-no-permission-logistics')
+    expect(panel).toHaveTextContent('אין לך הרשאה לצפות בפריטי הלוגיסטיקה')
+    // 🚫 ולא הפאנל שמאשים את המערכת:
+    expect(screen.queryByTestId('logistics-state-broken')).toBeNull()
+    // 🚫 ולא המשפט שמדבר על **ההצעה** — היא כן רשאית לראות אותה:
+    expect(screen.queryByTestId('logistics-state-no-permission')).toBeNull()
+    // והמדד חסום — לעולם לא "0 מתוך 0" עם ✓ (‏S-26).
+    expect(screen.getByTestId('logistics-tile-ready')).toHaveTextContent('—')
+  })
+
+  it('🔴 מנהלת הלוגיסטיקה על אירוע דיילות-בלבד ⇒ "ריק כדין", ולא "אין לך הרשאה"', async () => {
+    // היא `edit` על לוגיסטיקה ו-`blocked` על הצעות מחיר — ולכן `getQuote` חוזרת ריקה.
+    authState.permissions = { לוגיסטיקה: 'edit', 'הצעות מחיר': 'blocked' }
+    getProjectLogistics.mockResolvedValue([])
+    getProjectChanges.mockResolvedValue([])
+    getProjectQuoteMeta.mockResolvedValue(null)
+    getPricingCatalog.mockResolvedValue(catalogFixture())
+    getQuote.mockResolvedValue(null) // ‏RLS על 'הצעות מחיר' — אפס שורות בלי שגיאה
+
+    render(<LogisticsTab project={{ project_id: 11, quote_id: 24 }} />)
+
+    // המצב הנכון היום הוא "אין הרשאה **להצעה**" — כי באמת אין לה, והמבחין באמת חסום.
+    // 🔑 מה שחשוב: **זה לא הענף החדש**, ולכן התיקון לא גזל ממנה את ההבחנה הקיימת.
+    await waitFor(() => {
+      expect(screen.queryByTestId('logistics-state-no-permission-logistics')).toBeNull()
+    })
   })
 })

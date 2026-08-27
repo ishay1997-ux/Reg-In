@@ -62,7 +62,7 @@
 ## 2. הרוטינות — הגדרה מלאה לכל אחת
 
 ### 🔄 `regin-docs-sync`
-> 🕓 עודכנה (קנוני): 28/07/2026 — **שיפוץ ארכיטקטורת ההקשר:** ‏STEP 1 מכיר עכשיו את **עץ ה-CLAUDE.md** (שורש דק + הקבצים פר-תיקייה שמחזיקים את הפרוטוקולים המלאים — כלל 13 עבר ל-`docs/CLAUDE.md`, פרוטוקול-DB ל-`supabase/migrations/CLAUDE.md`), ‏`docs/toolbox.md` ו-`docs/archive/**` (קפוא, לא לערוך ולא להטביע חותמת) · **STEP 3 קיבל בדיקת-דיספאץ'-שבור** — סקיל שמפעיל סוכן מפלאגין שכבוי ב-`enabledPlugins` נכשל **בשקט בזמן ריצה** (נולד מתקרית אמיתית: 7 הפניות שבורות בבת-אחת) · ‏**העותק החי סונכרן זהה באותו סשן.** קודם: 23/07/2026 ערב — STEP 1: היקף-הסקילים הורחב ל-6 (+3 סקילי-עזר) + `_shared/discipline.md` (SSOT-הדוקטרינה; אימות גרעין-זהה-×6) · קודם באותו יום: נוסף `.claude/skills/**` + CHANGELOG סומן retired · קודם: 10/07/2026 00:12 (STEP 2 בולט-🚧→ציטוט כלל 15) · 08/07/2026 17:15 (חותמת-אימות) · 07/07/2026 ערב (אודיט-עמוק) · סונכרנה: ישי ✓ (העותק החי `~/.claude/scheduled-tasks/regin-docs-sync/SKILL.md` עודכן זהה-בייט באותו סשן, 23/07/2026 ערב)
+> 🕓 **סונכרן מהחי: 26/08/2026 00:2X** — ‏`doc-map.md` תוקן **בעותק החי קודם** (כנדרש בפרוטוקול החד-כיווני שב§4) ואז הועתק לכאן: ספירת הסקילים **שמונה ← תשעה** (‏`module-discovery` נחת 13/08/2026 ולא הגיע לכאן שלושה-עשר יום) · ההערה על שני סקילי-הניסיון תוקנה (הם **מקומטים** מאז `3003f40`). שאר הקובץ **אומת זהה לעותק החי** באותה הרצה. **קודם:** עודכנה (קנוני): 28/07/2026 — **שיפוץ ארכיטקטורת ההקשר:** ‏STEP 1 מכיר עכשיו את **עץ ה-CLAUDE.md** (שורש דק + הקבצים פר-תיקייה שמחזיקים את הפרוטוקולים המלאים — כלל 13 עבר ל-`docs/CLAUDE.md`, פרוטוקול-DB ל-`supabase/migrations/CLAUDE.md`), ‏`docs/toolbox.md` ו-`docs/archive/**` (קפוא, לא לערוך ולא להטביע חותמת) · **STEP 3 קיבל בדיקת-דיספאץ'-שבור** — סקיל שמפעיל סוכן מפלאגין שכבוי ב-`enabledPlugins` נכשל **בשקט בזמן ריצה** (נולד מתקרית אמיתית: 7 הפניות שבורות בבת-אחת) · ‏**העותק החי סונכרן זהה באותו סשן.** קודם: 23/07/2026 ערב — STEP 1: היקף-הסקילים הורחב ל-6 (+3 סקילי-עזר) + `_shared/discipline.md` (SSOT-הדוקטרינה; אימות גרעין-זהה-×6) · קודם באותו יום: נוסף `.claude/skills/**` + CHANGELOG סומן retired · קודם: 10/07/2026 00:12 (STEP 2 בולט-🚧→ציטוט כלל 15) · 08/07/2026 17:15 (חותמת-אימות) · 07/07/2026 ערב (אודיט-עמוק) · סונכרנה: ישי ✓ (העותק החי `~/.claude/scheduled-tasks/regin-docs-sync/SKILL.md` עודכן זהה-בייט באותו סשן, 23/07/2026 ערב)
 
 **מטרה (שודרגה 07/07/2026 לאודיט-סנכרון עמוק):** לסנכרן את כל התיעוד מול המציאות (קוד/DB) **ומול עצמו**, ומעל הכול — **לתפוס כל החלטה שהוכרעה ונשארה "פתוחה"/בערך-ישן במקום אחר** (לשני הכיוונים). קוראת הכול במלואו (לא skim), מסווגת כל ממצא בעץ-הכרעה (מכני→מתקנת · יש-מקור-הכרעה→מסנכרנת · עמום→שואלת), ומפיקה conflict-ledger.
 
@@ -183,9 +183,10 @@ A protocol that drifted back into root, or a directory file contradicting root, 
 ## Skills
 
 The repo-local skills under `.claude/skills/`: the module-flow three (`module-blueprint`,
-`module-build`, `module-close` — templates beside them since 23/07/2026), the two helpers
-(`section7-rulings`, `post-merge`), `quality-audit`, **`skill-scan` (added 04/08/2026)**, and
-**`advisor` (added 05/08/2026)** — **eight**. All point at `_shared/discipline.md` — except
+`module-build`, `module-close` — templates beside them since 23/07/2026), **`module-discovery`
+(added 13/08/2026, commit `e6c2655` — it runs BEFORE the blueprint and produces `docs/specs/module_NN_*/`)**,
+the two helpers (`section7-rulings`, `post-merge`), `quality-audit`, **`skill-scan` (added 04/08/2026)**, and
+**`advisor` (added 05/08/2026)** — **nine**. All point at `_shared/discipline.md` — except
 `quality-audit`, which **declares its own opt-out in its opening lines** ("NOT part of the
 shared-kernel set"), and `skill-scan`, which carries a short-form pointer only. Verify trigger
 phrasings, routing, and that the shared-kernel paragraph matches what the kernels promise.
@@ -194,7 +195,11 @@ phrasings, routing, and that the shared-kernel paragraph matches what the kernel
 only the repo backup, not this live copy, so it silently regressed here. **Re-measured against
 `.claude/skills/` and restored 12/08/2026 13:2X**; that incident is exactly why the repo copy is
 now marked generated-only. Two externally-installed trial skills also sit in that directory
-(`Nate's Frontend Design`, `Skill Builder`) — deliberately uncommitted, not a finding: `docs/toolbox.md`.)*
+(`Nate's Frontend Design`, `Skill Builder`) — **committed since `3003f40` (08/08/2026); they no longer
+show as `??` in `git status`.** Not a finding either way: `docs/toolbox.md`.)*
+*(🕓 **Re-measured 26/08/2026 with `git ls-files .claude/skills/`: the count said **eight** for thirteen
+days after `module-discovery` landed — the same silent regression this note already documents once. The
+count is now derived, not remembered: re-run the `git ls-files` above rather than trusting this number.)*
 
 ⚠️ `feature-acceptance` moved OUT to `~/.claude/skills/` (23/07, project-agnostic) — out of scope
 here; verify only that no REG-IN doc still claims it lives under this repo.
@@ -331,7 +336,7 @@ Respond in Hebrew, concise and direct.
 ### 🧪 `regin-e2e-check`
 > 🕓 עודכנה (קנוני): 11/07/2026 (שורת-הכיסוי → מודולים 1–2, טריגר-צמיחה בסגירת-מ2; הפרומפט עצמו גנרי — לא נגעו) · סונכרנה: ישי ✓ (העותק החי כבר גנרי — נבדק 11/07/2026, אין דריפט)
 
-**מטרה:** להריץ את חבילת ה-E2E האמיתית (Playwright) ולדווח תקציר עברי pass/fail. **כיסוי היום: מודולים 1–4** — ‏**17 קובצי `e2e/*.spec.js`** *(נספרו 12/08/2026 בסגירת-מ4, טריגר-הצמיחה של סעיף 4)*, כולל שלושה של מודול 4 (`hostesses` · `smart-match` · `public-confirm`) ובדיקת-נגישות חוצת-מודולים. ‏2 ספי finance/logistics עדיין מדלגים-בחן עד `E2E_FINANCE_*`/`E2E_LOGISTICS_*`.
+**מטרה:** להריץ את חבילת ה-E2E האמיתית (Playwright) ולדווח תקציר עברי pass/fail. **כיסוי היום: מודולים 1–6 ‏(1·2·3·4·5·6)** — ‏**20 קובצי `e2e/*.spec.js`** *(נספרו 27/08/2026 בסגירת-מ5, טריגר-הצמיחה של סעיף 4; נוספו `logistics` של מ5 ו-`projects`/`project-closing` של מ6)*, כולל בדיקת-נגישות חוצת-מודולים. ⚠️ **‏`E2E_LOGISTICS_*` אינו קיים ואינו חסר** — ‏`E2E_STAFF_*` *הוא* מנהלת-הלוגיסטיקה (נמדד 25/08, `e2e/customers.spec.js:10`); חמשת זוגות-הקרדנצ'לס קיימים ב-`.env.local`, והדילוגים-בחן היחידים הם ספי-תנאי מתועדים (נושא-E2E ייעודי וכד').
 > 🔴 **ואל תעדכן את השורה הזאת בכל מודול — הפרומפט עצמו כבר גנרי ומורה לספור את התיקייה בזמן-ריצה.** ‏**‏`npm run smoke` אינו חלק מ-`test:e2e`** *(הוא מסונן החוצה ב-`--grep-invert`)*; מי שרוצה את שניהם מריץ שתי פקודות.
 
 **🕐 מתי להפעיל:** לפני מיזוג גדול ל-`dev`, או אחרי שינוי בזרימות Auth/הרשאות.

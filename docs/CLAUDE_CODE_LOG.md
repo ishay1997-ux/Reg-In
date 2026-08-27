@@ -1,6 +1,7 @@
 <div dir="ltr">
 
 # CLAUDE_CODE_LOG — Claude Code's internal work journal
+✅ אומת-סנכרון: 26/08/2026 00:2X (regin-docs-sync — 15 תיקונים, 0 קונפליקטים פתוחים. 🔴 **גבול החותמת:** נגזר מקבצים + git בלבד — **Supabase MCP היה ללא-אימות בהרצה הזו, ואף טענה לא נבדקה מול המסד החי**)
 
 > This file is **not** for Ishay to maintain — it is for my (Claude Code) own creation and self-update between sessions, so context isn't lost. Ishay may read it, but keeping it current is my responsibility. Update it at the end of every meaningful session.
 > Language: **English** (this is a Claude-facing file, like `micro_guides/` and the templates; Hebrew appears only as data — role/module names, UI strings, §7 refs, migration names). Other truth-sources not duplicated here: `docs/PROJECT_MASTER.md` (schema/permissions/screens + §7 open questions), `../CLAUDE.md` + the directory-scoped `CLAUDE.md` files (iron rules; the DB protocol lives in `supabase/migrations/CLAUDE.md`), `../STATUS.md` (module status board, Hebrew), `docs/guides/00_roadmap.md` (operational roadmap), `docs/archive/` (pre-28/07 full versions). *(`docs/CHANGELOG.md` was frozen 23/07/2026 — archive only, never written to.)*
@@ -24,9 +25,9 @@
 ## Current State (snapshot — rewritten, not appended)
 <!-- target ~15 lines · no internal dates (F4) · over budget? compress / move to journal -->
 
-**Where we stand:** Modules **1** (users/permissions), **2** (customers), **3** (quotes) and **4** (hostesses + Smart Match) are closed, merged to `dev`, and promoted to `main` (module 4 is live in production — PR #26, merge `6a7bde9`). **Module 6 (projects) is CLOSED [YES] and MERGED to `dev`** — typed DoD echo signed, PR #41, merge `40fb973` (verified: branch `ishay/module-6-projects` is a strict ancestor of `origin/dev`, module 6's migration + `06_projects/api.js` present on `dev`). Branch `ishay/module-6-projects` is now dead (rule 10). **Next module: 5 (logistics).** Branch `ishay/module-5-logistics` exists on origin but carries **zero commits ahead of `dev`** (`git log origin/dev..origin/ishay/module-5-logistics --oneline` — empty) — not started, despite `00_roadmap.md` having said "בעבודה" until this was caught and corrected.
-⚠️ **Not independently re-verified this pass** (module-6's own docs, `db_roadmap.md`, `PROJECT_MASTER §6/§7` tallies, `STATUS.md`) — several were mid-edit by a parallel session while this snapshot was written. Re-check before citing an exact count from any of them; don't assume this line has already done it.
-`docs/schema.sql` freshly measured: **23 tables** (`grep -c '^create table' docs/schema.sql`).
+**Where we stand:** Modules **1**, **2**, **3**, **4** and **6** are closed and merged to `dev` (3/4/6 also live on `main`). **Module 5 (logistics): built in full, closing audit COMPLETE, verdict [YES] — awaiting the typed DoD echo, then commit → PR → merge** (branch `ishay/module-5-logistics`; the merge itself is Ishay's, executed via his real Chrome on his explicit ask — the PR #62 precedent). Full battery green: **gate exit 0 · 1,440 unit / 56 files · e2e 143/0/6 · smoke 0.** The audit's resume contract + all findings: `docs/micro_guides/close-findings-module-5.md` (archived at the YES-finalization). The as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log). Approved spec set: `docs/specs/module_05_logistics/` (42 rulings ①–㊷ in `processes-approved.md`); mockups appearance-final; `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8: Discovery complete + blueprint APPROVED** (`docs/micro_guides/module-8.md`); its build opens only after the m5 merge via the rewritten ⑥2 — the guide's own step 1.0 verifies the merge and cuts `ishay/module-8-finance`. 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
+Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-encode in QuotesPage · Select-uncontrolled in QuoteLineEditor — §6 line `🚧 מ10 ← מ3`): touching src after the certified regression would have voided the verdict's identity.
+`docs/schema.sql` measure command: `grep -c '^create table' docs/schema.sql` (23 at the last audit).
 
 **Governance:** single developer (Ishay). Schedule (re-ruled 12/08/2026, old `19/09` deadline cancelled everywhere): **28/08** interim presentation (10 min · one end-to-end process · ~50%) · **01/10** closing conference (target **100%**) · **20/10** end. Per-module schedule + dates SSOT: `00_roadmap.md` §3. Overflow policy: whole modules defer, nothing is trimmed — shock-absorbers are **M10 and M7 only**; the 3→4→6→5 core, M8 and M12 never defer.
 
@@ -44,74 +45,204 @@
 
 ## Session Log (newest first)
 
-### 21/08/2026 — Docs-freshness sweep on branch `ishay/docs-freshness-sweep`: `docs/DEV_HOME.md` was missing (32 broken relative links traced to it), STATUS.md and `00_roadmap.md` had stale claims
-- **Trigger:** Ishay asked to check docs linked from README (and their own links) for accuracy — separately, in the same conversation, from a `PROJECT_MASTER` §6 debt audit of modules 1/2/3/4/6 (see that entry below/forthcoming).
-- **Session started on a stale branch.** The working tree was on `ishay/quote-time-bidi-fix`, which predates 10 docs-only PRs already merged to `main` (#50–#61: a new English `README.md`, a new `docs/BUILD_METHOD.md`, screenshots). Confirmed safe before switching: `git merge-base --is-ancestor HEAD origin/main` → exit 0 (old branch is a strict ancestor, its one commit `03e5468` already merged via PR #52). Checked out `main`, pulled, branched `ishay/docs-freshness-sweep` from it.
-- **Root cause found: `docs/DEV_HOME.md` was created in the same commit (`9f640c9`) that rewrote the old Hebrew `README.md` into the new English public-facing one — the old content was moved to `docs/DEV_HOME.md` verbatim, but its ~30 internal links were never updated for the new location.** Every link written as `docs/guides/00_roadmap.md`-style (correct when the file lived at repo root) resolved, from inside `docs/`, to `docs/docs/guides/00_roadmap.md` — a 404. Verified mechanically: wrote a link-checker one-liner, ran it against the pre-edit file (`git show HEAD:docs/DEV_HOME.md`), got 32 broken-link hits, all doubled-`docs/` or repo-root-relative paths one level off (one, `[CLAUDE.md](CLAUDE.md)`, was worse — it silently resolved to the *wrong existing file*, `docs/CLAUDE.md`, instead of 404ing). Both `README.md:158` and `docs/BUILD_METHOD.md:130` link to this file publicly. Rewrote `docs/DEV_HOME.md` with corrected relative paths (`../CLAUDE.md`, `../STATUS.md`, `guides/00_roadmap.md`, etc.); same link-checker now returns zero hits against both README.md, BUILD_METHOD.md, and DEV_HOME.md itself.
-- **`STATUS.md`'s live banner was stale in place.** The current (not archived) top entry still read "לא קומט, לא נפתח PR" for the quote-time-bidi fix, even though that exact commit (`03e5468`) was merged via PR #52 (`52a700d`, 21/08 15:46) — `git show 52a700d --stat` confirms `STATUS.md` itself was touched in that merge without this specific claim being corrected. Fixed in place with a dated `⚠️ תוקן` correction (not a silent rewrite, per iron rule against rewriting dated records) — item ① (BiDi) is confirmed merged; item ② (icon centering) is explicitly still unverified visually, that part of the old claim stands.
-- **`docs/guides/00_roadmap.md` (the declared SSOT for module status) claimed module 5 "בעבודה" (in progress) in three places.** Measured: `git log origin/dev..origin/ishay/module-5-logistics --oneline` is empty — the branch exists but carries zero commits ahead of `dev`. Not started, contrary to the roadmap's own wording. Corrected all three occurrences to "הבא בתור" (next up) with the measurement cited inline.
-- **Also fixed:** README.md's "three-stage loop" section contradicted BUILD_METHOD.md's explicit "the loop is four stages, stated exactly, because accuracy is part of the point" — added one clarifying clause rather than restructuring the diagram (a design call left for Ishay if he wants the diagram itself split to four boxes).
-- **Flagged, not touched (needs Ishay, not a doc-accuracy bug):** README.md's Academic Note says "under the **team's** direction" — worth a look given the sole-developer/retired-co-developer history (`README.md`'s own "מי זה מי" note in `DEV_HOME.md`), but rewriting self-representation language is his call, not a mechanical fix.
-- **Not yet done:** commit + push this branch; Ishay has not yet been asked to open a PR.
+### 27/08/2026 01:0X–01:2X — MODULE 5 MERGED to dev (PR #64) + post-merge flip + three debts paid
 
-### 21/08/2026 — Two real bugs found in module-3's quote builder (post-close), fixed on branch `ishay/quote-time-bidi-fix`
-- **Trigger:** Ishay eyeballing the live quote-edit screen ("שעת סיום" range field), then separately flagging "משך האירוע" reading `שעות 8` instead of `8 שעות`.
-- **Bug 1 — BiDi reversal, `QuoteBuilderPage.jsx` duration output.** The `<output id="quote-hours">` forced `dir="ltr"` on a primarily-Hebrew string (`` `${eventHours} שעות` ``) — wrong direction for a Hebrew word + one embedded digit (that pattern is what `dir="ltr"`/`<Ltr>`/`Money` are for, not this). **Measured, not guessed:** `Range.getBoundingClientRect()` on the digit vs. the word glyph, same technique `src/CLAUDE.md`'s BiDi section already prescribes. With `dir="ltr"`: digit left of word → a right-to-left scan reads "שעות 8". Removed the `dir="ltr"` (inherits page `dir="rtl"`); re-measured: digit right of word → reads "8 שעות" correctly. `grep`-checked for the same pattern elsewhere (`OverviewTab.jsx`, `SmartMatchPage.jsx`, `projectCard.js`, `shiftInvite.js`) — all four already omit `dir` and are fine; this was an isolated single-site defect, not a systemic one.
-- **Bug 2 — native time-input picker icon visually off-center.** `<input type="time">` inside `LtrFieldGroup` renders the browser's own picker-indicator (clock icon) as a separate shadow-DOM part that doesn't respond to the input's own `text-center`; it pins to one edge and leaves a visible gap against the centered digits. Fixed in the shared component (`src/components/LtrFieldGroup.jsx`) — `display:flex; justify-content:center` on the `<input>` itself plus `[&::-webkit-calendar-picker-indicator]:mx-1`, so icon+digits render as one centered unit. **Not visually screenshotted** — the Browser pane would not composite frames in this session (pane-not-displayed error); the fix is a standard, narrowly-scoped CSS technique, and Ishay was asked to eyeball the real screen before treating it as closed.
-- **Scope:** both fixes are shared/UI-only, no schema, no RPC, no `params` change. `npx vite build` exit 0. No dedicated unit test exists for `QuoteBuilderPage` or `LtrFieldGroup` (E2E-only coverage on this screen, per module-3's own `CLAUDE.md`).
-- **Process note:** the edits were first made directly on `dev`'s working tree (uncommitted) while answering an unrelated question in the same conversation — caught before committing and moved to a fresh branch (`git checkout -b`, preserves uncommitted changes) per iron rule 10. Nothing was ever committed to `dev`.
-- **Not yet done:** commit + PR (Ishay hasn't asked for either yet) · Ishay's live-screen eyeball on Bug 2.
-- **Follow-up, same session — Ishay asked for actual proof, not a claim.** Re-verified Bug 1 on the **real running app**, not the isolated scratch file: logged in as CEO (`E2E_CEO_*` from `.env.local`), opened a real `/quotes/new`, typed 09:00→17:00 through the actual inputs, then re-ran the `Range.getBoundingClientRect()` measurement on the live DOM node (`[data-testid="quote-hours"]`): `computedDir: "rtl"`, digit right of word → confirmed "8 שעות" reads correctly on the actual screen. **Bug 2 (icon centering) still has zero visual confirmation — tried again (`screenshot` and `zoom`), both failed with "Browser pane is not displayed, so the page is not compositing frames."** This is an environment limitation in this session, not something a retry fixes, and it cannot be substituted with DOM measurement — the picker-indicator lives in closed shadow DOM with no exposed `::part()`. Told Ishay explicitly: fix 1 proven, fix 2 not, offered a handoff prompt for him to eyeball it himself.
+- **Merge executed via Ishay's real Chrome on his explicit ask** (*"מזג לפי הנוהל בבקשה עבורי"* —
+  the PR #62/#41 precedent): PR #64, 74 commits / 124 files, ALL checks green **by name**
+  (Lint·Test·Build · Deno type-check · gitleaks · Vercel ×2). **Verified with fresh git evidence,
+  never the browser banner:** `git merge-base --is-ancestor 3822a47 origin/dev` ⇒ yes; dev head =
+  merge commit `0eb42a4`. Branch is merged ⇒ dead (rule 10); deletion is Ishay's click.
+- 🔴 **CI gotcha caught en route:** `gh pr checks --watch` exited GREEN while the Actions run was
+  still **queued** — at that moment only the two Vercel checks existed. Green-that-means-not-yet-run;
+  the merge waited for `gh run watch` on the run itself. (Same family as the wrapper-exit gotcha.)
+- **This flip branch (`ishay/post-merge-m5-flip`, cut from fresh dev) also pays three debts** under
+  the standing "בצע הכל לפי המלצה שלך": the two `🚧 מ10 ← מ3` one-liners (mailto
+  `encodeURIComponent` per the marketing.js house pattern · `QuoteLineEditor` controlled-from-birth
+  `value={sku || ''}`) — deliberately AFTER the merge so the certified tree stayed untouched — and
+  `🚧 מ12 ← מ4`(א) measured ALREADY-paid (the live SelectTrigger carries the aria-label with a
+  12/08 dated comment; struck with evidence). STATUS row → ✅ merged; roadmap → merged.
 
-### 21/08/2026 11:01 — Root-caused module-6's Discovery→build decision-loss; added 3 safeguards to the skills (branch `ishay/discovery-blueprint-safeguards`)
-- **Ishay's report:** "many decisions I made didn't reach the blueprint; screens re-asked what I'd already decided about the processes." Investigated with 3 parallel agents (spec→blueprint · screens-vs-processes · pipeline mechanism) cross-read against the 13–14/08 log.
-- **Measured finding — honest, and it corrected my own first framing:** the final blueprint actually carried the large majority of rulings (its Decisions Ledger restates all 38 + architecture + surface rulings). **Only ㊲ (cancelled future-dated project → "התקיימו") is genuinely dropped from the blueprint.** ⚠️ **A second candidate was a FALSE POSITIVE, caught by a concurrent session:** the `negative_feedback_reason` CHECK already exists on `dev` and the live DB (applied migration `20260814140015`, 14/08) — agent 1 read the blueprint's migration *description*, not the applied migration. **Lesson: agent 1's findings are blueprint-text-based, so ㊲ too may already be handled in the built code — the fix session Ishay started will confirm/close it.** The felt "many" came from the **process**, in three mechanisms: (a) **parallel authorship** — 8 screen cards drawn in different sessions → 10 cross-card contradictions (appendix `screens-approved.md:2393`); (b) **reality rulings ("לא קורה") leave no findable artifact** → docs/build re-ask/re-build (anchor `processes-approved.md:737`); (c) **no decision-coverage back-check for spec modules** — the `template.md:54` check lives only in the no-spec branch; `:17` replaced it with a sufficiency check structurally blind to a ruling present-in-spec-but-dropped-from-steps (per the mechanism agent).
-- **Three safeguards added:** ① cross-surface **reconciliation matrix** (discovery Stage-3 cross-check **#7**, count six→seven); ② **reality-ruling register** (discovery §0ד — a fixed-heading `## מסלולים שנשללו כ"לא-קורה"` section in `processes-approved.md`, greppable, read by ③); ③ **decision-coverage back-check** for spec modules (blueprint UNCONDITIONAL **(3)** — walk every ruling ①…㊳ + reality register → step / `🚧 מN` / kill-row).
-- **Fresh-context reviewer caught 3 defects in my own edits (the rule earning its cost):** a stale "all six ran" left after the six→seven change, a **fabricated** "two loading patterns" appendix example (only 2 of the 3 were real), and an **inverted causal claim** on the zero-hostess case. All three fixed against grep-verified evidence before commit.
-- **Goal:** module 5 — the first module to run these clean — does not repeat the frustration. **Must merge to `dev` before module 5's Discovery opens**, else it has no effect. Touches only the 2 skill files (no schema/db_roadmap/migrations — coordinated with the concurrent neg-feedback session).
+### 26/08/2026 23:1X – 27/08/2026 00:3X — module-5 CLOSING AUDIT: blocker fixed · three rulings landed and executed · verdict [YES] pending the typed echo
 
+**Round 2 (00:2X–00:3X) — Ishay ruled all three per the recommendations (*"בצע הכל לפי המלצה שלך
+בלי לחסוך בעבודה"*), then asked the cross-module debts question; everything executed:**
+- **C-2 ratified** → `projects.spec.js:122` now asserts the honest branch (new testid + byte-copied
+  `TAB_NO_PERMISSION_SENTENCE`, old branch asserted absent) · the commit's leftover
+  `exhaustive-deps` warning fixed · **write-back the 22:5X commits lacked = module-6.md entry S.**
+- **C-3 built:** `STAFFING_HOLD_SENTENCE` amber banner in ChecklistDialog — fires exactly at the
+  card's "נאמר בהודעה ברגע שזה קורה" moment (this save marked ready + all rows ready + project not
+  ready), clears on any other save; wording `הנחתי`-delegated (§3.7 row). Red-proved (stash → 1
+  failed → pop → green).
+- **C-4 registered:** one `🚧 מ12 ← מ5` §6 line (glyphs · notes length-cap · irreversible-lens rerun)
+  + O-7 guide row.
+- **Carried items:** `customer-page.spec.js` pinned negatives → runtime invariant with a denominator
+  assert (loud fixture-refresh failure, never vacuous green) · `.first()` conflict answered — the
+  rule is runtime-condition selection; `.first()` AFTER a condition is fine, module-4's dated
+  approval stands · dead GHSA waivers removed from `audit-gate.mjs` (pays `🚧 מ12 ← מ4`(ב), struck).
+- **The debts sweep Ishay asked for (all §6, all modules):** THREE stale-open מ4 lines measured
+  ALREADY-PAID and struck with evidence — the false-reassurance sentence (0 occurrences), 3 of the
+  4 hook-enforcement failures (PM_LIVE strike-stripping · specs glob · awk doc all live), and the
+  §2 table-count (fixed 21/08; last TOC remnant fixed now). The register was OVER-reporting open
+  debt; nothing payable was found unpaid except two 1-line src fixes deliberately left for
+  post-merge (mailto-encode · Select-uncontrolled — touching src would void the regression the
+  verdict rests on) and the twice-registered LOG compaction this close's persistence pays.
+- **Full battery after all fixes: gate exit 0 (1,440/56) · `test:e2e` 143 passed / 0 failed / 6
+  skipped · smoke exit 0.** §6b re-scan of the round-2 diff (both lenses): clean — notable proof:
+  the staffing sentence cannot lie (all-ready + active + not-ready ⇒ staffing-missing by the
+  trigger's own formula). **Verdict [YES] pending the literal "לוגיסטיקה DoD" echo.**
+- **The docs pass (his "תעבור על תיעוד הקבצים") COMPLETED 01:0X:** LOG narrative compacted
+  **747→244** (archive first; 3 working-lessons harvested to Gotchas; Current State rewritten;
+  2b′ fast-read ranges declared: the m8-day sub-bullets + the m6-arc one-liners) · guide compacted
+  **1,716→1,005** (phases → as-built table; both carry-forward contracts verbatim; §3/§10/DoD/QA
+  intact; archive `module-5_pre-compaction_2026-08-27.md`) · **40 dated `🔴 גובר` annotations**
+  landed on the stale spec anchors by a dispatched agent and VERIFIED (original text preserved —
+  mechanical per-cell diff; spot-checks; `check:docs-structure` 66 files / 0 findings) · roadmap 2c
+  line (−15 days → the buffer, later modules NOT moved) · module gotchas file +3 close-mines ·
+  routines coverage → 20 specs/modules 1–6 (the `E2E_LOGISTICS_*` myth corrected) · two-weeks plan
+  → attic · debts sweep: 3 stale-open מ4 §6 lines struck as already-paid. **Awaiting only the echo,
+  then: findings-file archive → STATUS row flip → pathspec commit (+`git add` for new files) → push
+  → PR+merge via his Chrome (his explicit ask; PR #62 precedent) → post-merge flip.**
+- **00:5X — the typed DoD echo received: Ishay typed `DoD5`** (module number + DoD — read as the
+  module-5 signature; the interpretation was stated back to him, overridable). Recorded verbatim
+  here + guide §1. Findings file archived (`docs/archive/close-findings-module-5_2026-08-27.md`);
+  STATUS row flipped to 🔒 awaiting-PR/merge; closing commit follows (its hash = the verdict's
+  identity), then push → PR → CI → merge via claude-in-chrome.
 
-### 21/08/2026 10:5X — M6 ㊲ ledger gap closed (a reported "latent bug" that was already correctly built)
-Investigated a reported cancelled-future-project sorting bug in the customer-card projects tab against the merged code — it does not exist (`customerProjects.js` gates on `cancelled` before date; a dedicated test pins it; 33/33 pass). The only real gap was the decision-ledger table itself skipping ㉲ — fixed doc-only, no code change. Full detail: `docs/micro_guides/module-6.md` §3/§10.
+*(Round 1, original entry:)*
+### 🅿️ round-1 record — audit ran end-to-end; one blocker fixed; frozen on three rulings
 
-### 21/08/2026 01:2X — MODULE 6 MERGED to dev (PR #41, merge `40fb973`) + post-merge verified
-Ishay delegated the merge. CI caught a real env-dependency the local gate hid (two test files created a Supabase client at module-load with no `.env.local` in CI) — fixed via `vi.mock`, reproduced red→green locally before trusting it. Branch `ishay/module-6-projects` now dead (rule 10); STATUS + roadmap flipped via a small follow-up PR. Full detail: `docs/db_roadmap.md`, `docs/micro_guides/module-6.md` §10.
+`module-close` in a fresh session, template executed in full. **Working file (NOT archived — audit
+open): `docs/micro_guides/close-findings-module-5.md` — it IS the resume contract**, with the three
+questions verbatim, per-blocker state and the completed-work ledger.
+**artifact: published** (`claude.ai/code/artifact/17872adf-2da2-4e53-b570-87e79560c4a3`) ·
+**quiz: asked** (3 questions at its foot, two of them doubling as decisions 1–2).
+- **Green, all named:** gate ×2 exit 0 (1,438 → **1,439/56** with the audit's one new test) · smoke 0 ·
+  RLS live stress-test (Dana 16-read/1-write · Noa 16/0 · Recruit 0/0, full recipe incl. role switch) ·
+  advisors security 26 = baseline exactly · §2c security agent 0 exploits · spec-diff agent: zero
+  deviations beyond one omission · live screenshots of both surfaces + M6 notes tab (pills on screen
+  4·1·6 = the audit's own SQL derivation; values drifted from 3·1·5 with real usage, as ⑥3 warned).
+- 🔴 **Blocker found AND fixed in the one round (C-1):** flush-on-close save failure was swallowed —
+  RPC fails after the dialog unmounted ⇒ `aliveRef` early-return dropped the error; no toast, no
+  console; the note evaporates under "כל שינוי נשמר מיד". The failure branch of the 26/08 Esc fix.
+  Repair per the approved toast precedent: persistent error toast naming the item + S-2/server
+  sentence; `onSaveSettledAfterClose` re-syncs the queue after late-landing saves. **Red-proved**
+  (stash-fix → test fails → pop → green), full gate re-run exit 0. Changes UNCOMMITTED (frozen state).
+- 🅿️ **The freeze (C-2, the load-bearing finding):** commits `030bee4`+`bde057a` (22:55–22:56) landed
+  AFTER STATUS's 22:2X entry that lists both indication fixes as `⏸️ פתוח אליך` — no recorded nod, the
+  LogisticsTab permission-gate documented nowhere, full e2e never re-run after them ⇒
+  `projects.spec.js:122` red (pins the OLD testid/sentence; the screen now shows the MORE honest
+  state). To Ishay as a record-gap question with a ratify recommendation, not an accusation.
+  Plus **C-3** (card-promised understaffed-completion message unbuilt — spec-diff agent's omission
+  hunt) and **C-4** (internal glyphs user-visible — flag, M12).
+- **Self-review recorded in the findings file**; its headline: the dominant root cause is
+  post-gate-window work missing its process tail (nod-record · e2e re-run · write-back) — C-2 wholly,
+  and C-1's defect was born inside a post-gate fix no scan ever saw.
+- **Deferred to the YES-completion of this close (numbered):** LOG compaction (narrative measured
+  **685** lines vs ≤150 — archive-first + 2b′) · dated annotations on **19** stale spec anchors ·
+  `src/CLAUDE.md` deny-all += `project_changes` · roadmap 2c line · STATUS row flip · findings-file
+  archive · pathspec commit · PR instructions + 🧩.
 
-### 21/08/2026 00:47 — regin-docs-sync audit (partial coverage, explicitly disclosed)
-Fixed two stale claims (a doc-map row citing the cancelled 19/09 date; §7's counting-header snapshot one item stale). Several large files (full `STATUS.md`, §7 items 22–95, `db_roadmap.md`, the module-6 guide body) were deliberately NOT read this pass — flagged as partial coverage rather than claimed exhaustive, and freshness stamps were NOT bumped. Recommends a dedicated full-coverage follow-up.
+### 26/08/2026 20:1X–22:5X — module 8 BLUEPRINT drafted, triple-verified, APPROVED & SAVED
 
-### 21/08/2026 00:30 — MODULE 6 CLOSED: verdict [YES] + typed DoD echo
-Full persistence written: 8 dated spec annotations (annotate-not-rewrite), 2 new §6 debts (`🚧 מ11 ← מ6`, `🚧 מ10 ← מ6`) + `🚧 מ8` for the surface-8 amount gap, `db_roadmap` M6-14 flipped Done, roadmap §3 updated, 3 closing gotchas added to the module's own `CLAUDE.md`. Quiz asked and answered (3/3). Next: Ishay opens the PR to `dev`. Full detail: `docs/micro_guides/module-6.md`.
+Opened via the ⑥1 prompt (`module-blueprint` skill). **Deliverable on disk:
+`docs/micro_guides/module-8.draft.md`** — the full 9-section guide (5 phases · ~7 migrations ·
+a 🛑 table of 22 closed traps T1–T22 · a ruling-coverage ledger walking EVERY
+`processes-approved.md` ruling to an owning step). **NOT yet approved — stays `.draft.md`;
+nothing else was written to the repo** (STATUS/LOG entries excepted, per the Stop hook).
+Presentation package (Hebrew, HTML artifact) delivered with **5 🛑 questions (Q-1…Q-5) + 6 nods
+(N-1…N-6)** open on Ishay.
 
-### 20/08–21/08/2026 — Module-6 fix round: all 3 blockers fixed, empty-close path removed, gate green
-Blocker 1 reclassified as not-a-real-case (Ishay's reality ruling). Blocker 2: migration applied fixing the closing RPC's hours-bound to derive from entered (not planned) hours. Blocker 3: a swallowed real-failure `.catch()` removed. While fixing, the empty-close path was removed from the client entirely — a signed Phase-3 UI had been offering an empty close the server had always refused. Gate exit 0, 1,271 unit, full E2E green including the first live closing journey (project `#12`, red→green proof). Verdict: [YES] pending typed-echo. Full detail: `docs/micro_guides/module-6.md` §10.
+- **Three verification passes ran, in the template's order, ALL findings folded before presenting:**
+  ① **simulated build** confined to spec.md §①'s reading list — 5 blockers (S2's awaiting-payment
+  state never drawn · manual feedback entry undrawn · no navigation path to S3 · cancelled
+  frozen-profit formula unstated · mail subjects unapproved), 5 conflicts (incl. change-list rows
+  5/13 being PRE-ruling snapshots, and the spec's rate-limit "precedent" pointing at `/shift`
+  which has NO limiter), verdict: the reading list alone is INSUFFICIENT (schema.sql · §3 matrix ·
+  e2e sweep · products_and_params added to the guide's §2.8). ② **fresh-context reviewer**
+  (+Contrarian/Outsider) — 11 findings; the loud ones: the `🚧 מ11 ← מ8` §6 line ALREADY EXISTS
+  (draft planned to create it — cite-don't-duplicate), per-build-unit fields missing on Phase-3/4
+  steps, the ה30 pointer aimed at a db_roadmap row that doesn't exist, `RatingStars` exists (census
+  said "no precedent"), the ה30 regression tested the WRONG persona (מנהלת כספים is the only
+  view-holder on quotes — her channel is what changes). Its denominator walk confirmed zero
+  orphan rulings. ③ **execution rehearsal** — wrote ALL of Phase 1's SQL apply-ready on paper;
+  3 red gaps: step 1.0 was tagged 🤖 while three of its duties are Ishay-interactions (retagged
+  👤), ה22's four-action family lacks the regular-project bad-debt writer P3 approved (extended to
+  five, disclosed — B-13), and the salary-collection population is unstated (→ **Q-5**, its
+  "single most likely to build wrong": a literal ה15 reading would permanently SIGN a declined
+  invite as a ₪0 CPA line).
+- **Ishay rulings landed mid-session:** branch — blueprint saves on the m5 branch; the BUILD
+  branch `ishay/module-8-finance` is cut by the guide's own step 1.0 AFTER the m5 merge (measured:
+  `origin/dev` does not contain `docs/specs/module_08_finance/` — a branch cut today would be
+  spec-less). ⑥2/⑥3 stay generic until approval, then rewritten in the m5 pattern (full text shown
+  to him verbatim in the package).
+- **Anchored self-closures worth knowing (all overridable, all in the draft's §3.3):** B-1
+  מנהלת-פרויקטים sees no m8 surface (live §3 matrix: ➖ on 'כספים') · B-14 the §7.20ב credit-note
+  flag's ONLY reachable trigger is a billed fee later waived/written-off (the live `cancel_project`
+  refuses cancellation once `awaiting_invoice`) · B-15 feedback stays manager-editable until
+  archive (else the <3 gate deadlocks) · F16 resolved by EXTENDING `list_projects_overview`
+  (+Σ scope changes; m6's #8→5,355.00 oracle must stay digit-identical) · ✏️ spec §③3's 3,650
+  anchor is mislabeled "רווח-צפוי" (it is the frozen derivation; data-set §2 documents the
+  tension) — dated correction note lands at guide save, disclosed in the package.
+- **What broke / stayed red:** nothing run — docs-only session; no code, no migrations, no commits
+  (rule 16: STATUS/LOG carry uncommitted m5 lines; this session only appended its banner/entry).
+- **22:40 — Q-1…Q-5 ALL RULED by Ishay per the recommendations** ("מאשר את חמשתן לפי ההמלצות") —
+  recorded in the draft's §3.4 (the recommendation column is now the ruling column, dated+quoted).
+  **His follow-up "do the migrations need updating?" answered by a walked check: NO** — all five
+  land in RPC bodies/UI the plan already carries (Q-1/Q-2 UI-only; Q-3/Q-4 inside 1.5's freeze
+  logic as drafted post-rehearsal; Q-5 resolves the collection-filter indirection the rehearsal's
+  own SQL already used); zero table/column/policy changes. The ONLY still-open item touching
+  Phase 1 is **N-4** (zero-amount rows — an override rewrites the 1.5 generation transaction),
+  flagged in the draft. **Open on Ishay: N-1…N-6 + the blueprint approval itself → then save,
+  ⑥2/⑥3 rewrite, pathspec commit.**
+- **22:43 — BLUEPRINT APPROVED** (*"מבחינתי אחרי הבדיקה הזו יש אישור"* — read as covering
+  N-1…N-6 too, stated to him as the interpretation, correctable). **Save package executed:**
+  draft → **`docs/micro_guides/module-8.md`** (1,115 lines) with the approval stamped in §1/§3.4/
+  §10 · step guide `module_08_finance.md`: ⑥1 marked done, **⑥2+⑥3 rewritten in the m5 pattern**
+  (unique address block · 5 measured mines · the 1.0-cuts-the-branch flow), §④'s stale checkout
+  instruction struck · `spec.md` §③3 got the dated ✏️ label correction ("רווח-צפוי"→"רווח-קפוא",
+  the false "(טרם שובצו)" parenthetical fixed — disclosed pre-approval) · pathspec commit on the
+  m5 branch (module-8.md + step guide + spec) — STATUS/LOG stay uncommitted (rule 16, m5 session's
+  lines). **Next:** m5 close (⑥3) → merge → m8 build opens via the rewritten ⑥2; its step 1.0
+  verifies the merge and cuts `ishay/module-8-finance` itself.
 
-### 20/08/2026 23:5X — Module-6 closing audit (5.2): verdict [NO] — 3 fix-ready blockers
-The first live closing journey (project `#12`) caught a real contract drift between the closing RPC's hours-bound (planned times) and the client/spec (entered hours), plus a legal-empty-close rejection and a swallowed-failure `.catch()`. ~24 findings clustered into 9 root causes, persisted to `docs/micro_guides/close-findings-module-6.md` for the fix session. LOG-compaction escape-hatch invoked (narrative already over budget) — dedicated debt line added to §6.
+### 26/08/2026 19:3X–21:4X — post-gate on Ishay's word: removal becomes a CONTROL, the gate turns green *(compacted 27/08 — full text: guide §10 POST-GATE sections + the pre-compaction archive)*
+All after the approved 4.5 gate, each on his word: ‏① removal moved from "type 0" to an explicit `הסר פריט` control (his question; ㊳ ruled ownership not mechanism; every destructive action here has a named control; derived state, 18 mutations red-proved) · ‏② the Esc-close note-loss found and fixed (input-device dependent: mouse saved, Esc lost — focus flushed before close propagates) · ‏③ the five module-4 fixtures rewritten as invariants (32 passed; three now stricter) · ‏④ `check:docs-structure` sharpened with three lookbehinds — gate green first time in two days; M8's correct file NOT rewritten · ‏⑤ two doc corrections owned out loud (Amit-guide "live" claim was MY false correction of a true sentence; do-not-touch's reversibility promise bounded by §7.44's own guard) · ‏⑥ error toasts no longer auto-dismiss (his approval; success still does).
 
-### 19/08/2026 18:3X — Session E part 3: Ishay's delegated round executed; E2E demo project `#12` created live
-Matrix ratified, smoke anchor proven red→green (2 read-only RPCs allowlisted), and project `#12` ("E2E-תרחיש-סגירה") built end-to-end through the real app flows as the module's closing-journey test fixture — customer, quote, approval, a real hostess final-approval via the T-24 phone path.
+### 26/08/2026 19:5X–20:2X — Q&A on `api.js` + M8's ⑥1 prompt fixed (`8df8e4c`) *(compacted 27/08)*
+Teaching turn: the three-layer picture (api.js = DB I/O · lib = rules · components = render; ㉑ is enforceable because there is exactly one door; what api.js does NOT contain is evidence too). M8's ⑥1 carried a 9-vs-16 §7 list that drifted within two days — the list is gone, the prompt points at the register; M5's three paying practices folded in (🛑 table · coverage ledger · phase-1 SQL dry-run). The SessionStart-banner gotcha harvested to Reference: Operational Gotchas.
 
-### 19/08/2026 17:2X — Session E: Phase-3 compacted, §6 sweep closed 12 module-6 debts, gate green, E2E built
-Phase-3 micro-guide compacted 1,466→1,090 lines. `automations.md` and `§6` fully re-measured (zero live `🚧 מ6` bullets left). `npm run gate` exit 0, suite 1271; 5.1's E2E built (129 passed, write journeys self-skip until an `E2E-*` demo project exists). One drift found and ratified: a permission-matrix cell had rotated during an earlier interrupted E2E run.
+### 26/08/2026 16:4X–19:2X — M5 PHASE 4 COMPLETE (4.1–4.4) *(compacted 27/08)*
+The three ruled forms built (notes full-width sub-row · `StatusTag` in the existing sub-line · dynamic zero-floor with byte-copied refusal strings, machine-verified 6/6) + the shared `FilterPill` tooltip fix. AR-4 amended in three sites; `🚧 מ5 ← מ6` items 1+7 consumed (pointer 16/16). `e2e/logistics.spec.js` (12) + smoke + a11y — 59 assertions red-proved; regression 1,420/55; the 5 e2e fails proven pre-existing (module-4 pinned fixtures) by a 27-file stash re-run. Wrapper-exit gotcha + the `1 יחידות` singular fix recorded in guide §10. Full as-built: guide §10 + `docs/archive/CLAUDE_CODE_LOG_pre-compaction_2026-08-27.md`.
 
-### 19/08/2026 15:1X — Session D: steps 3.8 + 4.0/4.1 pulled forward, full regression green
-Module-2 customer page's real projects tab (3.8); surface-8's live-404 fix pulled forward to 4.1 (`/projects` wired permanently, 5-role render proof). 6 jscpd clones consolidated, 10 dead exports removed. Gate exit 0, full E2E 116 + smoke 0, suite 1270.
+### 26/08/2026 10:5X–20:0X — the parallel M8 Discovery: Stage 0 → CLOSE in one day *(compacted 27/08)*
+`docs/specs/module_08_finance/` born complete (7 files + 3 evidence dirs) · 6 mockups approved ("מאשר את כולם") · 30 delegated rulings ה1–ה30 (each anchored+dated) · §7 register 16🟡→8🟡 with live re-counts · a 4-agent stage-1 review wave (42 findings, 42/42 landed after Ishay's "והכל סידרת?" audit caught 3 chat-only) · hand-computed acceptance anchors (3,650 · 3,508 · 292.60) · the outgoing-debt audit wrote the three ` ← מ8` supply contracts (מ11 · מ10 · **מ7**, the unsuspected third). Ishay's six field-reality catches are credited in the files (the §7.16-cancellation hole among them); the who-caught harvest went to `discovery_lessons.md`. Commits `1caa8b3`…`a2c6333`. Working-lesson harvested to Gotchas: untracked files never ride a pathspec commit.
 
-### 19/08/2026 12:5X — Session C: the three closing/logistics/team tabs (3.3–3.5) built and panel-verified
-Adversarial panel caught and fixed a stale readiness-tile lie and a shift-lead display bug. Ishay ruled the duplicate primary action (card-header wins over an in-tab button). Suite 1235; live closing journey deliberately deferred to 5.1.
+### 26/08/2026 09:3X–12:3X — M5 phases 2+3 orchestration *(compacted 27/08)*
+1.6 closed from disk (the phase-1 session died between commit and doc-flip — resume-from-disk caught the half-step). Ishay's three directives implemented: explicit per-agent reading lists · Workflow agent-army with adversarial read-only lenses (verifiers barred from mutating source and from trusting builder reports) · approvals front-loaded (O-1/O-4/O-5 + both experience-briefs, "מאשר את הכל" 10:29). Fresh-eyes reviewer caught 14 task-file defects pre-dispatch. Phase 2 landed (1,341 = 1,271+70, zero regressions, `40a978b`); phase 3 launched (`wf_fc693d3e`) and landed — both screens faithful, 4 conflict questions escalated not patched, Q1–Q4 triaged with Ishay ("מאשר לפי המלצתך"). Prompt-craft ruling → `_shared/writing-prompts.md`. Full detail: guide §10.
 
-### 19/08/2026 10:2X — Session B: steps 3.2+3.6+3.7 built, 7-finding adversarial fix batch, permission ruling rippled
-Ishay widened the project manager's permission on 'דיילות' view→edit; the ripple flipped 3 E2E specs + the live matrix + docs, all re-verified red→green. Suite 1094.
+### 26/08/2026 — M8 step guide got the m5 prompt template (advisory session) *(compacted 27/08)*
+⑥0 added (did not exist) · ⑥1 modernized (`d4dd9e9`) · parallel-Discovery timing recommended post-28/08; Ishay chose to run it same-day.
 
-### 19/08/2026 08:5X — Module-6 Phase 3 session A: Phase-2 compacted, steps 3.0+3.1 built, ⑫ proven live
-A visual-regression fear settled by live before/after measurement: no live module-2 split from a shared-component edit. An inherited dead agent-worktree was found poisoning `test:run` with 17 phantom failures — permanently excluded in `vite.config.js`. Two browser-only defects fixed (a raw English error string; a broken Hebrew plural). The live status board was proven via a real trigger firing a real email to Ishay's inbox.
+### 26/08/2026 02:0X — Ishay's ruling: `module-build` reads the ⑥2 block ITSELF at every activation *(compacted 27/08)*
+A bare "תמשיך לבנות" had silently lost every address in the block. The ruling + the grep-anchor discipline live in the skill's Read order (`module-build/SKILL.md`); this line is a pointer.
 
-### 18/08/2026 22:1X–19/08/2026 00:4X — Module-6 Phase-1 gate run and closed; Phase 2 built end-to-end and closed in the same session
-Phase-1's end-to-end SQL gate ran for the first time (100 checks — 97 pass, 2 stale-gate-expectation fails, both explained against the live DB, not the script's word). Ishay signed Phase 1, then approved continuing into Phase 2 in the same session: 8 build-agent rounds (steps 2.1–2.8), each independently orchestrator-verified against the actual diff and a full suite re-run, plus a 3-lens adversarial panel at the phase gate (regression / spec-fidelity / test-quality-by-mutation) that found and fixed one real reliability-score crash risk. Suite grew 752→923. One new cross-module debt registered (`🚧 מ9 ← מ4/מ6`). Ishay signed the Phase-2 report. Full blow-by-blow: `docs/micro_guides/module-6.md` §9/§10 and `docs/db_roadmap.md`.
+### 26/08/2026 00:15–01:3X — M5 Phase 1 EXECUTED (1.0–1.5, then 1.6 next session) *(compacted 27/08)*
+Migrations A–D applied serially under Ishay's one-time blanket typed-echo (quoted in guide §10) after he cleared the `apply_migration` tool block himself. Two-mode seed ran via the real quote→approve path (demo `#13/#14/#15` born with pointers+color; refresh = delta 0; removal rider proved both ㊱ refusals live). Israel-timezone "today" fix (`current_date` is UTC — measured; §7.56). Advisors 26/27 triaged; `schema.sql` refreshed. Full detail: guide §10 + db_roadmap strike entry.
 
-### 19/08/2026 00:4X–01:1X — Stop hook's single-writer assumption FIXED: LOG/STATUS enforcement defers while background agents are mid-write
-`check-docs-updated.sh` now detects live background agents via the harness-written session transcript and skips only the doc-freshness enforcements (1-3) while one is running — enforcements 0/0b/0c/0d stay fully active. Fail-direction is strict (any detection failure ⇒ old behavior). Verified via a 5-scenario bench; approved by Ishay in-chat before applying. Fixes the recurring ×4–×6 false-fire loop from concurrent agent writes documented earlier in this file's history.
+### 26/08/2026 00:12 — `regin-docs-sync`: 13 fixes *(compacted 27/08)*
+Loudest: the current-step line had rotted two whole modules behind (it feeds every fresh session's opening banner) · M6's board row flipped to merged (PR #41, git-verified). Supabase MCP unauthenticated — zero live-DB claims checked that run.
+
+### 25/08/2026 — Module-5 blueprint written, triple-reviewed, APPROVED ("מאשר", 23:35) *(compacted 27/08)*
+Triage round → simulated builder → fresh-context reviewer (19 findings) → execution rehearsal (15 gaps; the seed-idempotency BLOCKER ⇒ the Ishay-approved two-mode seed). 42 rulings · `M5-1`…`M5-8` · 4 ripples into merged code. The 🛑 gap table lives at the head of the guide's Phase 1; the seed-refresh demo-morning routine was set here.
+
+### 📦 21–22/08/2026 — Module 5 Discovery: opened → approved spec set *(bucketed 27/08)*
+Stage 0 measured live (no write policy · pointers 0/6 · no `actual_qty` CHECK · silent write to cancelled projects) → surface list M=3→**M=2** (removal moved to M6's dialog, ㊳; scope cut through the conference lens) → mockups approved against a five-process walk (7 actions · 2 screens · 0 orphans; three rulings ㉟㊱㊲ born from DRAWING, not reading) → `spec.md` behind Ishay's zero-unapproved-claims gate (96 claims audited → 2 → 0). The day's real products were three measuring tests: the zero-claims gate · source triage (6 of 41 questions actually his) · the simulated builder (38 guesses caught). Rulings ①–㊷ + 🧱 facts: `processes-approved.md`; evidence: `discovery-log.md`. Ishay's corrections en route: mockups=zero credibility · "מיגרציות זה לא פער" · the skipped surface-list approval.
+
+### 📦 21/08/2026 — freshness sweep · post-close M3 fixes · discovery safeguards *(bucketed 27/08)*
+Docs-freshness sweep (`ishay/docs-freshness-sweep`, later PR #62 → main): `DEV_HOME.md` rebuilt (32 broken links) · stale "מ5 בעבודה" corrected against git (branch existed, zero commits) · live-DB demo-data fixes (locked quotes deliberately left). Two real post-close M3 bugs fixed (`ishay/quote-time-bidi-fix`). M6's Discovery→build decision-loss root-caused → 3 safeguards into the skills (`ishay/discovery-blueprint-safeguards`). M6 ㊲ "latent bug" re-measured: correctly built all along.
+
+### 📦 18–21/08/2026 — Module 6 build → close → merge arc *(bucketed 27/08)*
+Phases 1–3 built across sessions A–E (panel-verified; ⑫ proven live: `#11 → ready` via M4's real UI + Noa's mail receipt) → closing audit **[NO]** with 3 fix-ready blockers → fix round → **[YES] + typed DoD echo** (21/08 00:30) → **PR #41 merged to dev** + post-merge verified with fresh git evidence. Same window: the Stop hook's single-writer assumption fixed (LOG/STATUS enforcement defers while background agents are mid-write). Full arc: `micro_guides/module-6.md` + its archives.
 
 ### 📦 Week 13/08–17/08/2026 — Module 6 Discovery finished and ruled (38 rulings, 8 approved surfaces); `module-discovery` skill built from the retiring prompt; module-6 blueprint drafted and rehearsed through 3 review passes before approval; Amit conference-prep guide built as a 28/08 fallback
 
@@ -194,6 +325,7 @@ Sessions up to and including 15/07/2026 (M3 blueprint, milestone-1 promotion, mo
 > The scan stamp is refreshed whenever this section is checked (a session / `regin-docs-sync`). A much older stamp = suspected drift, dig deeper.
 
 - **Running a routine needs a manual "Run now" in the UI** — `list_scheduled_tasks` **does show** the 4 routines (`enabled`, valid `taskId`/`lastRunAt`; verified 08/07/2026 — the old display bug from 06/07, where the tool returned empty, is gone). I have no direct run tool (create/update/list only) — end-to-end verification that a routine ran = running `regin-health-pulse` in the UI and seeing a new journal line. Absence from the list (if it happens) is not a creation failure.
+- **‏`block_pipe` triggers on the TOKEN, not the act (measured live 26/08/2026 by a fresh-context reviewer — this corrected my own wrong first version of this entry).** The words `vitest`/`playwright`/`eslint`/`tsc`/`prettier`, or `npm run <gate-script>`, appearing ANYWHERE before a pipe into `head|tail|grep|less|more` reject the **entire** Bash call — **a filename glob like `playwright*.js` counts**, and everything earlier in the compound (a heredoc creating a file, an `ls`) silently never ran. Keep file-creation and piped inspection in separate calls. *(Distinct from the cmdlet-in-verb-position mine in root `CLAUDE.md` — that is `block-shell-dialect-mixup.sh:71`; this is `block_pipe`, `:102-103`.)* **Paired trap, same day:** Python printing Hebrew under the Bash tool dies on `cp1255` (`UnicodeEncodeError`) — always `PYTHONIOENCODING=utf-8`; cost two round-trips before it stuck.
 - 🔴 **A running session does NOT see `CLAUDE.md` edits made after it started — and "loading is automatic, compliance is not."** The context files are read at session start; a rule you add mid-flight binds the *next* session, never the ones already open. Together with `discipline.md`'s skills-only load path this fully explained a parallel session's incomplete summary on 07/08/2026, measured live that day. ⚠️ **The consequence that bites: several files describe themselves as "loading automatically every session", which reads as "always current" and is not.** A rule that must bind NOW has to be handed to the running session in chat, or enforced by a hook — text alone cannot reach it, and no mechanism can judge whether a finding rests on a real anchor. *(Restored 12/08/2026 by `regin-docs-sync`: this fact was deleted in the log compaction `bf5b3fc` and existed **nowhere else in the repo** — found by an agent sent to verify the compacting session's own declared blind spot. Its disclosure is what made the recovery possible.)*
 - 🔴 **"Use Chrome" does NOT reliably mean the right browser — there are two, and the default is the useless one for our work** *(12/08/2026)*. `mcp__Claude_Browser__*` is the in-app Browser pane: Chromium-based, **logged into nothing**, and it is what the harness instructs me to default to. `mcp__claude-in-chrome__*` is **Ishay's real Chrome**, already authenticated to GitHub/Supabase/Vercel/Google. **The word "כרום" alone does not disambiguate them** — Ishay reported that earlier sessions opened the wrong one on that exact phrasing, and it worked on 12/08 only because he wrote *"השתמש בכרום **האמיתי**"*. ⇒ **The discriminator is not the brand name but the question "does this task need a logged-in identity?"** GitHub PRs · Supabase Studio · Vercel · Gmail ⇒ **go straight to `claude-in-chrome`, without asking, even if he only says "כרום"**. The in-app pane is for `localhost:5173` and public pages. *(Anchor: PR #24 was opened and merged from his account with no login step. The phrasing that always works, if he needs one: **"בכרום שלי, זה שאני מחובר בו"**.)*
 - **Open REG-IN sessions from `C:\Users\ishay\Reg-In`** — a session running from another directory works on absolute paths and may miss hooks/CLAUDE.md.
@@ -203,6 +335,9 @@ Sessions up to and including 15/07/2026 (M3 blueprint, milestone-1 promotion, mo
   - 🔴 **And the mirror-image variant, measured 08/08/2026 — the dangerous one, because it defeats the protection people think they have.** The trap is **not** `-A`; it is **leaving the shared index loaded at all.** I ran `git add -- <11 explicit paths>` (no `-A`), my `git commit` then failed on a syntax error, and in that window the *other* session's **ordinary** `git commit` swept all 11 of my files into **its** commit under **its** subject line (`cfd8e82`) — while its own work stayed uncommitted. **Reading rule 10 as "avoid `git add -A`" is not enough: any separate `git add` step is the exposure.** ⇒ **Stage and commit in ONE atomic call — `git commit -m "…" -- <paths>` — and note the flag order: `-m` must come BEFORE `--`, or git reads the message as a pathspec and the commit fails**, which is exactly what left the index loaded here. *(Damage was label-only: content verified intact and reachable via `git log -- <file>` / `git log -S`; no history was rewritten — the wrong subject line was judged not worth an empty marker commit.)*
 - **Network-dependent npm hangs (up to 17 min)** — a TLS failure against the registry (proxy/AV injecting a root CA). Verified fix: `NODE_OPTIONS="--use-system-ca"` before every `npm install`/`update`/`outdated`.
 - **E2E on a slow network:** a matrix cell click must wait for the PATCH response before `reload()`, otherwise the write is cancelled in flight (`clickCellAndAwaitWrite`); login flows = up to 8 network calls → 30s timeout.
+- 🔴 **The SessionStart hook banner's "active step" is a POINTER, not evidence** *(measured 26/08/2026; harvested here at the 27/08 compaction)*. The banner is generated from the micro-guide's §1 header, so it is only as fresh as the last write to that header — a parallel builder that lands work without touching §1 leaves the banner behind. It opened a session saying "step 1.0, build not started" while phases 1–4 were done, **and was quoted to Ishay twice** before the journal exposed it. ⇒ re-derive the active step from the guide §1 *and* Current State before citing it — "resume from disk", applied to machine-generated narration.
+- 🔴 **New (untracked) files never ride `git commit -- <paths>` alone** *(bit three times in one day, 26/08/2026, m8 Discovery session)*: a pathspec commit picks up MODIFIED tracked files but silently skips untracked ones even when named — each new file needs an explicit `git add <file>` first (then the atomic-commit rule above still applies). The symptom: a commit that "landed the spec" while the spec file stayed untracked.
+- 🔴 **An Edit whose old_string spans up to a NEIGHBOR's heading deletes that heading silently** *(nearly lost the m8-blueprint journal heading, 27/08/2026 — caught only by a headings-listing pass before compaction)*. When inserting a new entry above an existing one, the old_string should END at the boundary line, and the new_string must RE-INCLUDE any neighbor text it consumed. After any multi-entry edit in an append-only log: `grep '^### '` and count.
 - **react-hooks (new, caught in module 2 — 10–11/07):** `set-state-in-effect`/`static-components` reject module-1's open-in-dialog effect pattern — use `useState(initializer)` + `key`-remount on the parent, and error/header components as top-of-file components (not defined inside render) · `react-hooks/purity` forbids `Date.now()`/an impure call inside a `useMemo`/render body — breaks `lint` (and thus `npm run verify`) but **not** `vite build`/dev-server (no React Compiler, plain `@vitejs/plugin-react`) — compute a time-dependent value in an event handler and pass it as a prop.
 - **Prettier `printWidth` in CI:** long lines (tests/JSX) pass `lint` but fail `format:check`; run `prettier --write --end-of-line auto <file>` on new files before commit (`--end-of-line auto` preserves local CRLF without causing git noise).
 - **A migration with Hebrew comments + the browser SQL editor = corruption risk:** typing/pasting directly garbles RTL/bidi (chars interpreted as keyboard shortcuts, policy names break). The MCP `apply_migration` (after typed-echo) avoids the problem entirely — fallback to browser/CLI only if the MCP is unavailable, and then hand over SQL clean of Hebrew comments (keep only load-bearing strings like `'לקוחות'`).
@@ -254,10 +389,10 @@ Sessions up to and including 15/07/2026 (M3 blueprint, milestone-1 promotion, mo
 - **Central migrations:** soft-delete (frozen→inactive) · `users_update_self` · `harden_current_user_role_id` · `module1_login_attempts_lockout` · `module1_reset_login_attempts_revoke_anon`.
 - ✅ **The initplan debt closed (07/07/2026):** the `(select …)` wrap was applied in migration `20260707163709_module1_users_rls_initplan_select_wrap` — advisors clean. *(The original record's wording, folded here from the old macro-guide 06/07, described the debt as open — updated in the 07/07 open-items audit.)*
 
-## Reference: Templates & hooks · 🕓 reviewed 08/08/2026 15:33 (regin-docs-sync — skill count, kernel-readers and hook count re-measured against `.claude/`; two stale claims corrected)
+## Reference: Templates & hooks · 🕓 reviewed 26/08/2026 00:0X (regin-docs-sync — re-measured against `.claude/`: skill count **8 → 9** (`module-discovery` was missing), hook count **4 confirmed**, `enabledPlugins` **9 on / 10 off confirmed**, `docs/templates/` **confirmed absent**. Prior: 08/08/2026 15:33)
 
 **Templates** — **relocated 23/07/2026** from `docs/templates/` into the module-flow skills (`git mv`, byte-identical): the blueprint template is now `.claude/skills/module-blueprint/template.md` and the closing-audit template `.claude/skills/module-close/template.md`, each invoked by its skill (`module-blueprint`/`module-close`; `module-build` has no template — the micro-guide is its engine). `docs/templates/` no longer exists. Output = a micro-guide **in English, written for Claude** (9 sections, 🤖/👤 tags, self-update). **Substantially hardened 07–08/07** (over the 06/07 version): cross-module blueprint cross-check (was cross-dev until 22/07/2026) · question-anchored-to-step + phase scan · DB-Design-Challenge + mandatory db_roadmap read · shared-surface marker · §7-ripple-check + forward-notice at close (the 📣 cross-developer convention and the two-owner shared-module header were retired 22/07/2026 — single developer). **+ 09/07:** the 🚧 mechanism (mandatory `🚧 מN`↔§6 pairing as a 🔻🤖 ripple) · typed-echo for DoD signing and migration apply · fresh-context reviewer for the blueprint (rule 2b). **+ 17:07 (Ishay's ruling, M2):** a mandatory "🎨 UX & functional review" gate at end-of-Phase-3 (opening) + a mandatory "§2b UX & Validation Audit" section (closing) — the infra freeze was deliberately opened before M3. **+ 11/07 22:33–22:42 (Ishay's rulings, in the M2 close — 3 opening-template changes):** (1) 🗣️ went from "narrate-and-continue" to a **mandatory "experience brief" + wait-for-PM-approval-before-code** (invited-correction understanding statement · validations · screen/mockup description · "for-your-approval" flags); (2) 🤖 gates = functional+visual self-verification **with screenshots**, full 👤 only at phase-end/design (not mid-build); (3) a new **🎤 "PM interview" section** before blueprint approval — a full user journey + focused questions + "what didn't I ask about?". Ripple: CLAUDE.md rule 1 updated accordingly.
-**Skills (re-measured 08/08/2026) — 8 repo-local:** `module-blueprint` · `module-build` · `module-close` · `section7-rulings` · `post-merge` · `quality-audit` · **`skill-scan`** · **`advisor`** (the last two added 05/08/2026; registry + triggers in `docs/toolbox.md`). **All eight `SKILL.md` files read `.claude/skills/_shared/discipline.md` first** (the kernel was consolidated there 24/07 — each skill carries only a one-line pointer, no duplicated paragraph). *(This line said "6 repo-local" and "the first five read it — `quality-audit` deliberately opts out" until 08/08/2026; both halves were stale — measured `grep -rl 'discipline.md' .claude/skills/`, which returns all eight including `quality-audit`. `quality-audit` still keeps its own verify-the-recommendation doctrine on top of the kernel — that part was never wrong.)* `feature-acceptance` moved OUT to Ishay's global `~/.claude/skills/` (23/07 — project-agnostic).
+**Skills (re-measured 26/08/2026) — 9 repo-local:** **`module-discovery`** · `module-blueprint` · `module-build` · `module-close` · `section7-rulings` · `post-merge` · `quality-audit` · **`skill-scan`** · **`advisor`** (`skill-scan`/`advisor` added 05/08/2026; **`module-discovery` added 13/08/2026, commit `e6c2655`, and this line kept saying "8" for thirteen days** — corrected by `regin-docs-sync` 26/08/2026, measured with `git ls-files .claude/skills/`; registry + triggers in `docs/toolbox.md`). **All nine `SKILL.md` files read `.claude/skills/_shared/discipline.md` first** (the kernel was consolidated there 24/07 — each skill carries only a one-line pointer, no duplicated paragraph). *(This line said "6 repo-local" and "the first five read it — `quality-audit` deliberately opts out" until 08/08/2026; both halves were stale — measured `grep -rl 'discipline.md' .claude/skills/`, which returns all eight including `quality-audit`. `quality-audit` still keeps its own verify-the-recommendation doctrine on top of the kernel — that part was never wrong.)* `feature-acceptance` moved OUT to Ishay's global `~/.claude/skills/` (23/07 — project-agnostic).
 
 **Code-quality tooling (built 23/07, extended 25/07, hardened 29/07)** — `npm run dup` (jscpd, `.jscpd.json`) · `eslint-plugin-sonarjs` curated set in `eslint.config.js` · `npm run deadcode` (knip, `knip.jsonc`) · `npm run audit` (npm audit, `scripts/audit-gate.mjs`) · Dependabot (`.github/dependabot.yml`) · a duplication/should-be-shared step in `module-close` §4b. **The gates are now BLOCKING** — hardening completed 29/07/2026 08:45 (`sonarjs`→error · `continue-on-error` removed from jscpd/knip/audit); `npm run gate` = verify+dup+knip+audit+check:context, all blocking. `gitleaks` and `format:check` were already blocking. Sole accepted-risk waiver: `react-router` GHSA (RSC-only, unused) in `scripts/audit-gate.mjs`.
 

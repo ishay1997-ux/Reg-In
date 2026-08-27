@@ -28,6 +28,13 @@ async function login(page, email, password) {
 // דיילות-ההדגמה של צעד 4.2 נבנו סביבו.
 const DEMO_EVENT = 'כנס לקוחות שנתי'
 
+// 🐞 **שתי צורות-רינדור לאותה עובדה, והבדיקה הכירה רק אחת** (נתפס 26/08/2026).
+// ‏`OverviewTab` כותב `{gap === 1 ? 'חסרה 1' : `חסרות ${gap}`}` — כלומר סינון על המילה
+// `חסרות` בלבד **עיוור מבנית לענף היחיד**. הלוח החי נשא באותו יום פערים 10 · 6 · 5 · **1**:
+// האריח אמר `4`, ומונה-הבדיקה ראה `3`, בלי שום באג במסך.
+// ⇒ הביטוי מזהה את **שתי** הצורות, ואינו תלוי בכמה אירועים יש על הלוח.
+const MISSING_ROW_MARK = /חסר(?:ה|ות) \d+/
+
 // התאריכים המצוירים בשורות שמסומנות כחסרות-איוש, כמספרים בני-השוואה.
 // ⚠️ **נקרא מהמסך ולא מהמסד** — הטענה של הבדיקה היא על מה שהמנהלת רואה, וגם המיון עצמו
 // רץ בדפדפן. הפורמט על המסך הוא `DD/MM/YYYY` (`formatDate`), ולכן ההיפוך ל-`YYYYMMDD`.
@@ -90,10 +97,26 @@ test.describe('מודול 4 · משטח 1 — מבט-על השיבוצים', () 
 
     // ⚠️ מספרים **לא** מקובעים: הדאטה חיה, ושורות-שיבוץ ייווצרו בצעדים 3.4/3.5. הטענה
     // היציבה היא שהמונה תואם את מספר השורות שמסומנות כחסרות — ולא ערך קסם.
+    await expect(page.getByTestId('overview-table')).toBeVisible()
+
+    // 🔴 **אסרשן-מכנה** (`e2e/CLAUDE.md`: *"מדידה שהמכנה שלה 0 אינה ירוקה — היא לא רצה"*):
+    // בלי זה, לוח שכל שורותיו נעלמו היה מפיק `0 === 0` ירוק שאינו בודק דבר.
+    const rowCount = await page.locator('[data-testid^="overview-row-"]').count()
+    expect(rowCount).toBeGreaterThan(0)
+
+    // 🔴 **האינווריאנט: האריח והרשימה שמתחתיו מתארים את אותה קבוצה** — `missingEvents`
+    // סופר `isMissing` (כלומר `gap > 0`), וזה בדיוק התנאי שמצייר את שורת-החוסר.
     const missingRows = await page
-      .locator('[data-testid^="overview-row-"]', { hasText: 'חסרות' })
+      .locator('[data-testid^="overview-row-"]', { hasText: MISSING_ROW_MARK })
       .count()
-    await expect(page.getByTestId('overview-kpi-missing')).toContainText(String(missingRows))
+
+    // ⚠️ **הערך נקרא מהאריח כמספר, ולא כהכלת-מחרוזת:** `toContainText('3')` היה עובר
+    // בירוק גם על אריח שערכו `4` ושורת-המשנה שלו נושאת "מתוכם 3 בתוך 24 שעות".
+    // התווית עצמה נטולת ספרות, ולכן רצף-הספרות הראשון באריח הוא הערך.
+    const tileText = (await page.getByTestId('overview-kpi-missing').textContent()) ?? ''
+    const tileValue = Number(tileText.match(/\d+/)?.[0])
+    expect(Number.isFinite(tileValue)).toBe(true)
+    expect(tileValue).toBe(missingRows)
 
     // 🐞 **רגרסיה לפגם שנתפס בצילום-מסך ולא בבדיקה:** `StatTile` מעביר ערך **מספרי**
     // דרך `Money`, והאריח הציג `0 ₪` על **ספירת זימונים**. שני האריחים מונים דברים,
@@ -102,18 +125,67 @@ test.describe('מודול 4 · משטח 1 — מבט-על השיבוצים', () 
     await expect(page.getByTestId('overview-kpi-missing')).not.toContainText('₪')
   })
 
+  // 🕓 **תוקנה 26/08/2026 — ושוב בלי שום באג במסך.** הגרסה הקודמת נשענה על משפט
+  // *"אין היום אירוע דחוף"*, כלומר על **מצב הלוח באותו יום**. ב-26/08 היו שני אירועים
+  // בתוך 72 שעות (אחד היום, אחד מחר) ⇒ המסנן החזיר שורות, מצב ריק-אחרי-סינון פשוט לא
+  // התרחש, ו-`overview-empty-filtered` לא נולד. ⚠️ **ואין מסנן שני שמובטח ריק** —
+  // 'הצג חסרים בלבד' החזיר באותו רגע 4 שורות.
+  // 🔴 **ולכן המצב נכפה ברשת ולא נצוד בדאטה** — אותה מוסכמה בדיוק כמו מצב T-24 שמתחת
+  // (`e2e/CLAUDE.md`: יירוט הוא הדרך היחידה לייצר מצב): אירוע יחיד, **רחוק ומאויש
+  // במלואו**, ולכן שני המסננים גם יחד מובטחים ריקים עליו — בכל יום, לנצח.
   test('ריק-אחרי-סינון אומר "לא נמצאו" ומציע לנקות — ולא מתחזה למאגר ריק', async ({ page }) => {
     await login(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
+
+    const farDate = new Date(Date.now() + 60 * 24 * 3600_000).toISOString().slice(0, 10)
+    await page.route('**/rest/v1/projects*', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          {
+            project_id: 99003,
+            event_name: 'אירוע בדיקת ריק-אחרי-סינון',
+            customer_name: 'לקוח בדיקה',
+            final_event_date: farDate,
+            final_start_time: '10:00:00',
+            final_end_time: '23:00:00',
+            final_location: 'אולם בדיקה',
+            required_hostess_count: 1,
+            project_status: 'not_started',
+            // מאויש 1/1 ⇒ `gap = 0` ⇒ אינו "חסר"; ורחוק 60 יום ⇒ אינו "דחוף".
+            assignments: [
+              {
+                project_id: 99003,
+                hostess_id: 99003,
+                assignment_number: 1,
+                assignment_status: 'finally_approved',
+                invite_sent_at: new Date(Date.now() - 5 * 24 * 3600_000).toISOString(),
+              },
+            ],
+          },
+        ]),
+      }),
+    )
+
     await page.goto('/hostesses')
-    await expect(page.getByTestId('overview-table')).toBeVisible({ timeout: 30_000 })
+    // 🔑 **בקרה חיובית קודם:** האירוע **כן** יושב ברשימה. בלעדיה "ריק אחרי סינון" היה
+    // מוכיח רק שהלוח ריק מלכתחילה — וזו בדיוק ההטעיה שהבדיקה קיימת כדי לשלול.
+    await expect(page.getByTestId('overview-row-99003')).toBeVisible({ timeout: 30_000 })
 
-    // "דחוף (עד 72 שעות)" — אין היום אירוע כזה, ולכן זה מצב ריק-אחרי-סינון אמיתי.
-    await page.getByTestId('overview-filter-urgent').click()
-    await expect(page.getByTestId('overview-empty-filtered')).toBeVisible()
-    await expect(page.getByTestId('overview-empty-filtered')).toContainText('התואמים לסינון')
+    for (const filter of ['missing', 'urgent']) {
+      await page.getByTestId(`overview-filter-${filter}`).click()
 
-    await page.getByTestId('overview-clear-filters').click()
-    await expect(page.getByTestId('overview-table')).toBeVisible()
+      await expect(page.getByTestId('overview-empty-filtered')).toBeVisible()
+      await expect(page.getByTestId('overview-empty-filtered')).toContainText('התואמים לסינון')
+      // 🔴 **הלב, ולא קוסמטיקה:** ריק-שנגרם-בסינון לעולם אינו מתחזה ל"אין כרגע אירועים"
+      // (`overview-empty-true`) — שתי משמעויות הפוכות שנראות זהות בדפדפן.
+      await expect(page.getByTestId('overview-empty-true')).toHaveCount(0)
+      // ...ומציע לנקות. הצעה שאינה על המסך משאירה את המנהלת תקועה במסך ריק.
+      await expect(page.getByTestId('overview-clear-filters')).toBeVisible()
+
+      await page.getByTestId('overview-clear-filters').click()
+      await expect(page.getByTestId('overview-table')).toBeVisible()
+    }
   })
 
   // 🕓 **תוקנה 11/08/2026 בצעד 5.1 — והיא עצמה הייתה ההדגמה החיה של הכלל.** הגרסה הראשונה

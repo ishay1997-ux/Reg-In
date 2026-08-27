@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ מ8 · מייל דוח-שכר (M2)</title>
+<style>
+/* ═══ טוקנים — לא לשנות ערך. מקור: design-contract.md §①, מועתק מילולית משם. ═══ */
+:root{
+  --primary:#0D9488;
+  --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4;
+  --teal500:#00BBA7; --teal600:#009689; --teal700:#00786F;
+  --green50:#F0FDF4; --green100:#DCFCE7; --green200:#B9F8CF; --green700:#008236;
+  --amber50:#FFFBEB; --amber100:#FEF3C6; --amber200:#FEE685;
+  --amber700:#BB4D00; --amber800:#973C00;
+  --red50:#FEF2F2; --red100:#FFE2E2; --red200:#FFC9C9; --red600:#E7000B; --red700:#C10007;
+  --s50:#F8FAFC; --s100:#F1F5F9; --s200:#E2E8F0; --s300:#CAD5E2;
+  --s400:#90A1B9; --s500:#62748E; --s600:#45556C; --s700:#314158; --s800:#1D293D;
+  --r-md:8px; --r-lg:10px; --r-xl:14px; --r-2xl:18px;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  background:var(--s50); color:var(--s800);
+  font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif;
+  font-size:14px; line-height:1.5;
+}
+
+/* כל ערך שאינו עברית טהורה עובר דרך .ltr (§3.2). שני מספרים ברצף מפורקים, לא §3.3 כאן — אין זוג. */
+.ltr{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
+
+/* ── רצועת-מטא: "היום" המשותף + מקרא-מקורות. מידע ניטרלי ⇒ לבן+מסגרת, בלי מילוי (כלל-המילוי §④) ── */
+.metastrip{
+  background:#fff; border-bottom:1px solid var(--s200);
+  padding:9px 20px; display:flex; flex-wrap:wrap; gap:6px 20px;
+  align-items:center; font-size:12px; color:var(--s500);
+}
+.metastrip b{color:var(--s700); font-weight:600}
+.metastrip .legend{display:flex; gap:12px; margin-right:auto}
+
+/* ── באנר-טיוטה: אזהרה אמיתית ⇒ מילוי-ענבר מותר (זהה ל-BannerRow, §2.5) ── */
+.draftbanner{
+  background:var(--amber50); border-bottom:1px solid var(--amber200);
+  color:var(--amber800); font-size:13px; font-weight:700;
+  text-align:center; padding:8px 16px;
+}
+
+/* ── מעטפת-עמוד: כרטיס ממורכז על רקע slate-50, בלי סרגל-צד/עליון —
+   תקדים S4 (design-contract §⑥): "min-h-screen bg-slate-50 px-4 py-8, כרטיס ממורכז" —
+   מותאם לרוחב-דיאלוג במקום max-w-sm, כי התוכן כאן הוא רינדור-מייל לא טופס-מגע. ר' נספח. ── */
+.page{min-height:calc(100vh - 84px); display:flex; justify-content:center; padding:36px 16px 56px}
+.pagehead{width:100%; max-width:560px; margin-bottom:14px}
+.pagehead h1{font-size:18px; font-weight:700; color:var(--s800)}
+.pagehead .psub{font-size:12px; color:var(--s500); margin-top:2px}
+
+/* ── כרטיס-המייל: אותם רכיבי-דיאלוג בדיוק כמו §⑤ (dlg-head/.meta/.dlg-body/.dlg-foot),
+   רק ללא position:fixed/scrim — כאן אין "מסך מאחורי" לעמעם (ר' נספח). רוחב 512px (§2.5:
+   רוחב-שני 768px שמור לתוכן-טבלה; גוף-מייל הוא פסקאות-טקסט). ── */
+.mailshell{width:100%; max-width:512px; background:#fff; border:1px solid var(--s200);
+     border-radius:var(--r-xl); box-shadow:0 1px 2px rgba(15,23,42,.06); overflow:hidden}
+.dlg-head{padding:18px 20px 14px; border-bottom:1px solid var(--s100)}
+.dlg-head h2{font-size:17px; font-weight:700; color:var(--s800); text-align:right}
+.dlg-head .meta{display:flex; flex-direction:column; gap:7px; margin-top:12px}
+.mrow{display:flex; align-items:baseline; gap:8px}
+.mrow .k{font-size:11.5px; color:var(--s500); flex:none; width:44px}
+.mrow .v{font-size:13px; font-weight:600; color:var(--s800)}
+.dlg-body{padding:16px 20px}
+.dlg-body p{font-size:13.5px; color:var(--s700); margin-bottom:10px}
+.dlg-body p:last-child{margin-bottom:0}
+.attach-row{padding:0 20px 16px}
+.dlg-foot{display:flex; align-items:center; justify-content:space-between; gap:8px;
+     padding:12px 20px 16px; border-top:1px solid var(--s100)}
+
+/* ── תג-סטטוס (StatusTag.jsx, §2.4) ── */
+.tag{display:inline-block; white-space:nowrap; border-radius:999px;
+     padding:2px 10px; font-size:11px; font-weight:600}
+.tag.ok{background:var(--green100); color:var(--green700)}
+.tag.warn{background:var(--amber200); color:var(--amber800)}
+
+/* ── גלולת-מצורף — מידע ניטרלי (מה שצורף, לא פעולה) ⇒ לבן+מסגרת (FilterPill.jsx כבוי, §2.4) ── */
+.pill{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--s200); background:#fff;
+     color:var(--s600); border-radius:999px; padding:5px 12px; font:inherit; font-size:12.5px}
+
+/* ── תג-מקור (🌱/🎭/📐) — עוקב אחר כל ערך, כמו טבלאות data-set.md ── */
+.src{font-size:11px; margin-right:2px; cursor:help}
+
+/* ── סימון "מהמוקאפ — לאישור" — הצעה חדשה שלי, לא עוגן ⇒ ענבר מותר (זו אזהרה: "לא מאושר עדיין") ── */
+.mock-mark{display:inline-flex; align-items:center; gap:4px; margin-right:6px}
+</style>
+</head>
+<body>
+
+<div class="metastrip">
+  <span>"היום" המשותף לכל מוקאפי מודול 8: <b class="ltr">15/10/2026</b> <span class="src" title="נבחר להדגמה — data-set.md §0">🎭</span></span>
+  <span class="legend">
+    <span>מקרא-מקורות:</span>
+    <span>🌱 מהמסד</span>
+    <span>🎭 דמו</span>
+    <span>📐 נגזר</span>
+  </span>
+</div>
+<div class="draftbanner">טיוטה — טרם אושר</div>
+
+<div class="page">
+  <div style="width:100%; display:flex; flex-direction:column; align-items:center">
+    <div class="pagehead">
+      <h1>רינדור-מייל M2 — דוח-שכר לרו״ח</h1>
+      <p class="psub">כספים ‹ הפקת דוח-שכר (S3) ‹ היסטוריית-שליחה — תצוגת המייל שיצא בפועל</p>
+    </div>
+
+    <div class="mailshell">
+      <div class="dlg-head">
+        <h2>תצוגת-מייל שנשלח</h2>
+        <div class="meta">
+          <div class="mrow">
+            <span class="k">אל</span>
+            <span class="v ltr">office@cpa-firm.co.il</span>
+            <span class="src" title="params.מייל_משרד_רואי_חשבון — data-set.md §7">🌱</span>
+          </div>
+          <div class="mrow">
+            <span class="k">נושא</span>
+            <span class="v">דוח שכר דיילות — אוגוסט <span class="ltr">2026</span></span>
+            <span class="mock-mark"><span class="tag warn">🎭 מהמוקאפ — לאישור</span></span>
+          </div>
+          <div class="mrow">
+            <span class="k">תאריך</span>
+            <span class="v ltr">01/09/2026</span>
+            <span class="src" title="הופק ונשלח — data-set.md §5, לפי כרטיס P4 (&quot;1 בספטמבר&quot;)">🎭</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dlg-body">
+        <p>שלום לצוות הנהלת חשבונות / רו"ח דורון אשכנזי<span class="src" title="שם מומצא-לחלוטין — אין שדה &quot;שם רו״ח&quot; במסד; מקור: data-set.md §6, כבר תויג שם">🎭</span>,</p>
+        <p>מצורף בזאת קובץ אקסל המרכז את שעות העבודה של צוות הדיילות של חברת REG-IN עבור חודש אוגוסט <span class="ltr">2026</span>.</p>
+        <p>הקובץ כולל פירוט תעריפים, שעות בפועל ובונוסים, לאחר שעבר בקרה ואישור במערכת. בכל שאלה או בירור בנוגע לנתונים, ניתן לפנות למחלקת הכספים.</p>
+        <p>בברכה,<br>מערכת REG-IN.</p>
+        <p style="margin-top:2px"><span class="src" title="params.תבנית_מייל_דוח_שכר, גוף-התבנית המלא — data-set.md §6, ממולא עם [שם_רואה_חשבון] ו-[חודש_דיווח_ושנה]">🌱</span> <span style="font-size:11px; color:var(--s400)">גוף-המייל — תבנית תבנית_מייל_דוח_שכר, ממולאת</span></p>
+      </div>
+
+      <div class="attach-row">
+        <span class="pill">
+          📎 <span class="ltr">אוגוסט_2026_Payroll_Report.xlsx</span>
+        </span>
+        <span class="src" title="נגזר מדפוס [חודש_שנה]_Payroll_Report.xlsx בפרמטר-התבנית — data-set.md §5">📐</span>
+      </div>
+
+      <div class="dlg-foot">
+        <span class="tag ok">✓ נשלח</span>
+        <span style="font-size:11px; color:var(--s500)">נשלח אוטומטית עם "ייצא ושלח" בהפקת דוח-השכר (S3)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+<!-- מה הכרעתי לבד
+
+1. 🔴 שם-קובץ-הצרופה: המשימה הציעה "08_2026_Payroll_Report.xlsx"; החלטתי להציג "אוגוסט_2026_Payroll_Report.xlsx"
+   במקום, כי זה הערך המפורש והיחיד ב-data-set.md §5 ("שם-קובץ: אוגוסט_2026_Payroll_Report.xlsx (📐, לפי
+   דפוס [חודש_שנה]_Payroll_Report.xlsx בפרמטר-התבנית)"), וכלל-הברזל של המשימה אוסר דאטה שאינה מ-data-set.
+   דגל לישי/לסוכן-הבא: אם השם "08_2026" באמת נדרש, זו סטייה מה-data-set שצריך להכריע עליה, לא רק לצייר.
+
+2. אין שלד-אפליקציה (סרגל-צד/עליון) למייל — מייל אינו "מסך" בתוך REG-IN; אימצתי את תבנית-העמוד
+   הממורכזת שכבר נמדדה עבור S4 ב-design-contract §⑥ ("min-h-screen bg-slate-50, כרטיס ממורכז"),
+   ברוחב-דיאלוג (512px) במקום max-w-sm, כי זה תוכן-מייל ולא טופס-מגע ציבורי.
+
+3. כרטיס-המייל בנוי מ-.dlg-head/.meta/.dlg-body/.dlg-foot של §⑤ (הדיאלוג הקיים), בלי position:fixed+scrim —
+   אין "מסך מאחורי" לעמעם בדף-מוקאפ עצמאי; רק המיקום שונה, לא הצבע/הרדיוס/הצל.
+
+4. רוחב 512px (לא 768px): גוף-המייל הוא פסקאות-טקסט, לא טבלת-שורות — לפי הכלל שכבר קיים ב-§2.5
+   ("768px נבחר כשהתוכן טבלת-שורות עריכה").
+
+5. שורת "נושא" (subject) אינה קיימת ב-data-set/processes-approved בשום מקום — ניסחתי "דוח שכר
+   דיילות — אוגוסט 2026" מהאפס, וסימנתי אותה 🎭 מהמוקאפ — לאישור, כנדרש בכללי-הברזל.
+
+6. שדה "מאת" (from) הושמט לגמרי — אין פרמטר-שולח/מייל-מערכת ב-params, והמשימה לא ביקשה אותו
+   במפורש; הוספת שם-שולח מומצא הייתה פרט מיותר שלא נדרש.
+
+7. כותרת-הכרטיס "תצוגת-מייל שנשלח" (לא "שליחת מייל") ותג-הפוטר "✓ נשלח" (ok, ירוק) — כי data-set §5
+   מתאר את המייל הזה כבר כהיסטוריה שנשלחה ב-01/09/2026, לא כדיאלוג-שליחה פעיל; לכן אין כפתורי
+   שלח/בטל, רק אישור-מצב, בהתאם למשפט "היסטוריית-הדוחות מציגה כל מה שנשלח" (data-set §5).
+
+8. קובץ "M1" (מייל-חשבונית) לא נמצא בתיקיית ה-drafts בזמן כתיבת קובץ זה (התיקייה לא הייתה קיימת
+   כלל) — לא היה מה להעתיק ממנו בפועל. מסגרת-המייל כאן (.mailshell/.dlg-head/.mrow/.pill/.src)
+   נבנתה מעקרונות §⑤/§2.5/§2.4 של design-contract.md, ומוצעת כבסיס-משותף למי שיצייר את M1.
+
+9. תגיות-מקור (🌱/🎭/📐) מוצגות כאייקון קטן ליד כל ערך, עם title=הסבר+מראה — פורמט שלא נקבע במפורש
+   ב-design-contract (שאינו מכסה מסך-מייל), אך עקבי עם טבלאות-התיוג ב-data-set.md עצמו.
+-->

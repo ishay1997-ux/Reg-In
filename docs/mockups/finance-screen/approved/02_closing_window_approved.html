@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ מ8 · משטח 2 — חלון סגירת-תיק פרויקט (דראפט-עבר)</title>
+<style>
+/* ═══ טוקנים — הועתקו מילולית מ-design-contract.md §① / §⑤. אל תשנה ערך. ═══ */
+:root{
+  --primary:#0D9488;
+  --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4;
+  --teal500:#00BBA7; --teal600:#009689; --teal700:#00786F;
+  --green50:#F0FDF4; --green100:#DCFCE7; --green200:#B9F8CF; --green700:#008236;
+  --amber50:#FFFBEB; --amber100:#FEF3C6; --amber200:#FEE685;
+  --amber700:#BB4D00; --amber800:#973C00;
+  --red50:#FEF2F2; --red100:#FFE2E2; --red200:#FFC9C9; --red600:#E7000B; --red700:#C10007;
+  --s50:#F8FAFC; --s100:#F1F5F9; --s200:#E2E8F0; --s300:#CAD5E2;
+  --s400:#90A1B9; --s500:#62748E; --s600:#45556C; --s700:#314158; --s800:#1D293D;
+  --r-md:8px; --r-lg:10px; --r-xl:14px; --r-2xl:18px;
+  --sidebar:240px; --topbar:64px;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  background:var(--s50); color:var(--s800);
+  font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif;
+  font-size:14px; line-height:1.5;
+}
+
+/* כל ערך שאינו עברית טהורה עובר דרך .ltr. שני מספרים ברצף: מפרקים במילה עברית, לא מבודדים יחד. */
+.ltr{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
+
+/* ── מעטפת-הדף של המוקאפ עצמו (אינה חלק מהמסך) ─────────────────────────── */
+.sheet{max-width:1280px; margin:0 auto; padding:24px 24px 48px}
+
+.draftbanner{background:var(--amber100); border:1px solid var(--amber200); color:var(--amber800);
+  border-radius:var(--r-lg); padding:10px 16px; font-size:13px; font-weight:700; text-align:center;
+  margin-bottom:14px}
+
+.metastrip{display:flex; flex-wrap:wrap; gap:8px 22px; align-items:center; background:#fff;
+  border:1px solid var(--s200); border-radius:var(--r-lg); padding:9px 14px; font-size:12px;
+  color:var(--s600); margin-bottom:18px}
+.metastrip b{color:var(--s800)}
+.metastrip .sep{color:var(--s300)}
+
+.viewcap{margin:28px 0 10px; padding:9px 14px; background:#fff; border:1px solid var(--s200);
+     border-right:4px solid var(--primary); border-radius:var(--r-lg);
+     font-size:13px; color:var(--s700); line-height:1.7}
+.viewcap b{color:var(--s800)}
+.viewcap .sm{display:block; font-size:11.5px; color:var(--s500); margin-top:2px}
+
+/* ── הבמה: רקע-האפליקציה + חשכה + הדיאלוג מעליו (מבנה מהמוקאפ המאושר של מ5,
+     02_dialog_checklist_approved.html — position:relative כי כמה במות חיות באותו קובץ) ── */
+.stage{position:relative; overflow:hidden; border:1px solid var(--s200);
+     border-radius:var(--r-xl); background:var(--s50)}
+
+.side{position:absolute; top:0; right:0; width:var(--sidebar); height:100%; background:#fff;
+      border-left:1px solid var(--s200); z-index:1}
+.side .logo{height:var(--topbar); display:flex; align-items:center; justify-content:center;
+      border-bottom:1px solid var(--s100); font-weight:700; color:var(--teal700); letter-spacing:.5px}
+.side nav{padding:12px 8px; display:flex; flex-direction:column; gap:4px}
+.nav-i{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--r-lg);
+      font-size:14px; font-weight:500; color:var(--s600); text-decoration:none}
+.nav-i .ic{width:20px; text-align:center; flex:none}
+.nav-i.on{background:var(--teal50); color:var(--teal700)}
+
+.top{position:absolute; top:0; left:0; right:var(--sidebar); height:var(--topbar); background:#fff;
+     border-bottom:1px solid var(--s200); display:flex; align-items:center;
+     justify-content:space-between; padding:0 24px; z-index:1}
+.top h1{font-size:17px; font-weight:700; color:var(--s800)}
+.search{position:relative; width:220px; max-width:100%}
+.search .mg{position:absolute; right:10px; top:50%; transform:translateY(-50%); color:var(--s400); font-size:12px}
+.search input{width:100%; height:32px; border:1px solid var(--s200); border-radius:var(--r-lg);
+     background:var(--s50); padding:0 32px 0 10px; font:inherit; font-size:13px; color:var(--s500)}
+.who{display:flex; align-items:center; gap:8px}
+.who .av{width:32px; height:32px; border-radius:999px; background:var(--teal600); color:#fff;
+     display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px}
+
+.behind{position:absolute; top:var(--topbar); right:var(--sidebar); left:0; bottom:0;
+     padding:14px 24px; overflow:hidden}
+.scrim{position:absolute; inset:0; background:rgba(2,6,23,.45); z-index:5}
+
+/* ── ה-S1 שמאחורי הדיאלוג: סקיצת-הקשר בלבד, S1 עצמו טרם צויר ── */
+.s1sketch{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl); padding:0; overflow:hidden}
+.s1sketch .tabs{display:flex; gap:4px; border-bottom:1px solid var(--s200); padding:0 14px}
+.s1sketch .tab{border:none; background:none; border-bottom:2px solid transparent; margin-bottom:-1px;
+     padding:10px 14px; font-size:13px; font-weight:500; color:var(--s500)}
+.s1sketch .tab.on{border-color:var(--teal600); font-weight:600; color:var(--teal700)}
+.s1sketch .row{display:flex; align-items:center; justify-content:space-between; gap:12px;
+     padding:10px 14px; border-bottom:1px solid var(--s100); font-size:12.5px; color:var(--s700)}
+.s1sketch .row:last-child{border-bottom:0}
+.s1sketch .row.hi{background:var(--teal50)}
+.s1sketch .row .r{color:var(--s500); font-size:11.5px}
+
+/* ── הדיאלוג (design-contract §⑤ — ui/dialog.jsx, sm:max-w-lg = 512px, זה התקדים
+     שהוקצה ל-S2 בטבלת §⑥, ולא dlg-wide 768px שהוקצה ל-S3) ── */
+.scrim2{display:none} /* לא בשימוש — למניעת התנגשות-שם עם .scrim למעלה */
+.dlg{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:10;
+     width:calc(100% - 2rem); max-width:512px; max-height:calc(100% - 32px);
+     display:flex; flex-direction:column; overflow:hidden;
+     background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     box-shadow:0 10px 30px rgba(15,23,42,.20)}
+.dlg-head{padding:18px 20px 12px; border-bottom:1px solid var(--s100); position:relative}
+.dlg-head h2{font-size:17px; font-weight:700; color:var(--s800); text-align:right; padding-left:28px}
+.dlg-head .lead{font-size:12px; color:var(--s500); margin-top:3px}
+.dlg-head .meta{display:flex; flex-wrap:wrap; align-items:center; gap:6px 16px; margin-top:9px}
+.dlg-head .meta .k{font-size:11px; color:var(--s500)}
+.dlg-head .meta .v{font-size:12.5px; font-weight:600; color:var(--s800)}
+.dlg-head .sub{display:block; margin-top:6px; font-size:11.5px; color:var(--amber700); font-weight:600}
+.x{position:absolute; left:16px; top:16px; width:26px; height:26px; border:0; background:none;
+   color:var(--s400); font-size:16px; cursor:pointer; border-radius:var(--r-md)}
+.dlg-body{padding:14px 20px 6px; overflow:auto}
+.dlg-foot{display:flex; flex-wrap:wrap; justify-content:flex-start; gap:8px;
+     padding:12px 20px 16px; border-top:1px solid var(--s100)}
+.gate-note{width:100%; margin-top:6px; font-size:11px; color:var(--s500); line-height:1.6}
+.gate-note b{color:var(--amber700)}
+
+/* ── כפתורים ── */
+.btn{border:1px solid transparent; border-radius:var(--r-lg); padding:7px 14px;
+     font:inherit; font-size:13px; font-weight:600; cursor:pointer}
+.btn-primary{background:var(--teal600); color:#fff}
+.btn-primary:hover{background:var(--teal700)}
+.btn-outline{background:#fff; border-color:var(--s300); color:var(--s700); font-weight:500}
+.btn:disabled{opacity:.5; cursor:not-allowed}
+
+/* ── כותרת-פסקה בתוך הגוף ── */
+.sec-h{font-size:12px; font-weight:700; color:var(--s600); margin:14px 0 8px; text-transform:none}
+.sec-h:first-child{margin-top:0}
+
+/* ── כרטיס-זהות (Cell/Val/Sub, design-contract §2.6) ── */
+.idgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px 16px}
+.cell{display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0}
+.cell .lb{font-size:11px; color:var(--s500)}
+.cell .val{font-size:13px; font-weight:600; color:var(--s800)}
+.cell .val.empty{font-weight:500; color:var(--s400)}
+.cell .sub{font-size:10.5px; color:var(--s500)}
+
+/* ── אריח-מדד (StatTile, §2.2 — לבן+מסגרת, לעולם לא מילוי, §④) ── */
+.tiles{display:flex; flex-wrap:wrap; gap:10px}
+.tile{border:1px solid var(--s200); background:#fff; border-radius:var(--r-lg); padding:11px 13px;
+      display:flex; flex-direction:column; align-items:flex-start; gap:2px; flex:1; min-width:140px}
+.tile .lb{font-size:11px; color:var(--s500)}
+.tile .vl{font-size:16.5px; font-weight:700; color:var(--s800)}
+.tile .sub{font-size:10.5px; color:var(--s500)}
+
+/* ── "LtrFieldGroup" — נוסחת-מאזן: תוויות+ערכים מאותו רצף, §2.3 ── */
+.balance{background:var(--s50); border:1px solid var(--s200); border-radius:var(--r-lg);
+     padding:12px 14px; display:flex; flex-direction:column; gap:0}
+.brow{display:flex; justify-content:space-between; align-items:baseline; padding:5px 0; font-size:13px}
+.brow .blabel{color:var(--s600)}
+.brow .bval{font-weight:600; color:var(--s800)}
+.bop{text-align:center; color:var(--s400); font-size:12px; padding:1px 0}
+.brow.total{border-top:1px solid var(--s300); margin-top:4px; padding-top:9px}
+.brow.total .blabel{font-weight:700; color:var(--s800); font-size:13.5px}
+.brow.total .bval{font-weight:800; color:var(--s800); font-size:17px}
+
+/* ── תג-סטטוס (StatusTag, §2.4) — שש הטונים + הרחבה-אחת מתויגת (ר' נספח) ── */
+.tag{display:inline-block; white-space:nowrap; border-radius:999px;
+     padding:2px 10px; font-size:11px; font-weight:600}
+.tag.ok{background:var(--green100); color:var(--green700)}
+.tag.teal{background:var(--teal100); color:var(--teal700)}
+.tag.muted{background:var(--s100); color:var(--s500)}
+.tag.warn{background:var(--amber200); color:var(--amber800)}
+.tag.dashed{background:var(--s100); color:var(--s500); border:1px dashed var(--s300)}
+.tag.danger{background:var(--red100); color:var(--red700)} /* ⚠️ הרחבה — ר' "מה הכרעתי לבד" */
+
+/* ── באנרים (מ-02_dialog_checklist_approved.html — ענבר=הודעה, ירוק=נסגר) ── */
+.banner{border-radius:var(--r-lg); padding:10px 13px; font-size:12px; line-height:1.7; margin-bottom:12px}
+.banner > b:first-child{display:block; font-size:12.5px; margin-bottom:2px}
+.banner.warn{background:var(--amber50); border:1px solid var(--amber200); color:var(--amber800)}
+.banner.done{background:var(--green50); border:1px solid var(--green200); color:var(--green700)}
+
+/* ── אזור-העלאת-קובץ — אין תקדים-קוד מדוד (ר' "מה הכרעתי לבד"); הרכבה
+     משדות/מסגרות קיימים בלבד, לא צבע חדש ── */
+.dropzone{border:1.5px dashed var(--s300); border-radius:var(--r-lg); background:var(--s50);
+     padding:16px 12px; text-align:center; color:var(--s500); font-size:12px}
+.dropzone .ic{font-size:20px; margin-bottom:4px; display:block; color:var(--s400)}
+.dropzone .hint{font-size:10.5px; color:var(--s400); margin-top:4px}
+
+/* ── שדות-קלט (input.jsx) ── */
+input[type=text], select, textarea{border:1px solid var(--s200); border-radius:var(--r-lg);
+     background:#fff; padding:6px 10px; font:inherit; font-size:12.5px; color:var(--s800); width:100%}
+textarea{resize:vertical; min-height:52px; line-height:1.5}
+label.flabel{display:block; font-size:11px; color:var(--s500); margin-bottom:3px}
+.field{margin-bottom:10px}
+.field:last-child{margin-bottom:0}
+.inline2{display:flex; gap:10px}
+.inline2 > div{flex:1}
+
+/* ── פירוט-הרכיבים (דמי-ביטול) ── */
+.comp{border:1px solid var(--s200); border-radius:var(--r-lg); padding:10px 12px; margin-bottom:8px; background:#fff}
+.comp .ct{display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+.comp .cname{font-size:12.5px; font-weight:700; color:var(--s800)}
+.comp .camt{font-size:14px; font-weight:800; color:var(--s800)}
+.comp .cwhy{font-size:11px; color:var(--s500); margin-top:4px; line-height:1.6}
+.comp .csub{display:flex; justify-content:space-between; font-size:11px; color:var(--s600); margin-top:2px}
+.demo-chip{display:inline-block; font-size:10px; font-weight:700; color:var(--s600); background:var(--s100);
+     border-radius:999px; padding:1px 7px; margin-inline-start:6px}
+.subtotal{display:flex; justify-content:space-between; align-items:baseline; padding:9px 2px 2px;
+     border-top:1px dashed var(--s300); margin-top:2px; font-size:13.5px; font-weight:700; color:var(--s800)}
+
+/* ── סקיצת-רצועת-הדגמה + מצב (מ-02_dialog_checklist_approved.html) ── */
+.demoband{margin-top:20px; padding:9px 13px; background:var(--s100); border:1px dashed var(--s300);
+     border-radius:var(--r-lg); font-size:11.5px; color:var(--s600); line-height:1.75}
+
+/* ── שורת-מקורות — חובה בכל מוקאפ ── */
+.srcline{margin-top:24px; padding:11px 13px; background:#fff; border:1px solid var(--s200);
+     border-radius:var(--r-lg); font-size:11.5px; color:var(--s500); line-height:1.9}
+.srcline b{color:var(--s700)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<div class="draftbanner">🚧 מאושר — הכרעת-ישי 26/08/2026 ("מאשר את כולם הם נראים מעולה")</div>
+
+<div class="metastrip">
+  <span>🕓 <b>"היום" המשותף לכל מוקאפי מודול 8:</b> <span class="ltr">15/10/2026</span></span>
+  <span class="sep">|</span>
+  <span>🏷️ <b>מקורות:</b> 🌱 מהמסד החי · 🎭 דמו (אינו במסד) · 📐 נגזר-בנוסחה-מאושרת</span>
+  <span class="sep">|</span>
+  <span>📄 <span class="ltr">02_closing_window_draft.html</span> — משטח S2, שלושה מצבים</span>
+</div>
+
+<div class="demoband">
+  🚫 <b>מבט-העל שמאחורי הדיאלוג (S1) טרם צויר</b> — מה שמצויר בעמודה הימנית בכל אחת משלוש התצוגות
+  הוא <b>סקיצת-הקשר בלבד</b> (שלוש הלשוניות + שורה-שתיים), כדי להראות שהחלון נפתח <b>מעל</b> רשימת-
+  הפרויקטים ואינו ראוט עצמאי — <b>אין כאן טענה על עיצוב S1 עצמו</b>, שדינו בכרטיס-מסך נפרד.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     תצוגה א׳ — פרויקט #12, "ממתין לחשבונית" (המסלול הרגיל, P1)
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="viewcap">
+  <b>תצוגה א׳ · המסלול הרגיל — ‏<span class="ltr">#12</span> "כנס משקיעים שנתי"</b>
+  <span class="sm">נסגר תפעולית, טרם נשלחה חשבונית. שדות-חיוב נעולים-לעיון · אזור-העלאה · משוב
+    במצב-ציון-2 (טעון-בירור, כבר תועד טלפונית) · כפתור "העבר לארכיון" חסום עם נימוק-השער (ה10).</span>
+</div>
+
+<div class="stage" style="height:900px">
+  <aside class="side">
+    <div class="logo">REG-IN</div>
+    <nav>
+      <a class="nav-i" href="#"><span class="ic">🏠</span>מסך הבית</a>
+      <a class="nav-i" href="#"><span class="ic">👥</span>לקוחות</a>
+      <a class="nav-i" href="#"><span class="ic">📄</span>הצעות מחיר</a>
+      <a class="nav-i" href="#"><span class="ic">📁</span>פרויקטים</a>
+      <a class="nav-i" href="#"><span class="ic">👤</span>דיילות</a>
+      <a class="nav-i" href="#"><span class="ic">📦</span>לוגיסטיקה</a>
+      <a class="nav-i on" href="#"><span class="ic">💰</span>כספים</a>
+      <a class="nav-i" href="#"><span class="ic">📊</span>דו"חות</a>
+    </nav>
+  </aside>
+
+  <header class="top">
+    <h1>כספים</h1>
+    <div class="search"><span class="mg">🔍</span><input placeholder="חיפוש…"></div>
+    <div class="who"><span class="av">מ</span></div>
+  </header>
+
+  <div class="behind">
+    <div class="s1sketch">
+      <div class="tabs">
+        <button class="tab on">ממתין לחשבונית <span class="ltr" style="opacity:.7">2</span></button>
+        <button class="tab">ממתין לתשלום <span class="ltr" style="opacity:.7">1</span></button>
+        <button class="tab">הסתיים <span class="ltr" style="opacity:.7">1</span></button>
+      </div>
+      <div class="row hi"><span>כנס משקיעים שנתי · <span class="ltr">#12</span></span><span class="r">נסגר תפעולית <span class="ltr">21/08/2026</span></span></div>
+      <div class="row"><span>כנס פתיחת שנה · <span class="ltr">#14</span> <span class="tag dashed" style="margin-right:6px">בוטל</span></span><span class="r">דמי-ביטול טרם נפתרו</span></div>
+    </div>
+  </div>
+
+  <div class="scrim"></div>
+
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="t12">
+    <div class="dlg-head">
+      <button class="x" title="סגירה" aria-label="סגירה">✕</button>
+      <h2 id="t12">כנס משקיעים שנתי</h2>
+      <div class="lead">קבוצת אחזקות דנוך בע"מ · <span class="ltr">19/08/2026, 22:00–23:30</span></div>
+      <div class="meta">
+        <span><span class="k">מצב הפרויקט:</span> <span class="tag muted">ממתין לחשבונית</span></span>
+        <span><span class="k">נסגר תפעולית:</span> <span class="v"><span class="ltr">21/08/2026 00:06</span></span></span>
+      </div>
+    </div>
+
+    <div class="dlg-body">
+
+      <div class="sec-h">פרטי חיוב — נעול לעיון</div>
+      <div class="idgrid">
+        <div class="cell"><span class="lb">ח.פ</span><span class="val ltr">515822073</span></div>
+        <div class="cell"><span class="lb">איש קשר</span><span class="val">בודק אוטומטי</span></div>
+        <div class="cell" style="grid-column:1/3"><span class="lb">מייל לחיוב</span><span class="val ltr">ishay1997@gmail.com</span></div>
+      </div>
+
+      <div class="sec-h">חשבונית</div>
+      <div class="banner warn" style="margin-bottom:10px">
+        <b>המערכת אינה מפיקה חשבונית (§7.38).</b>
+        יש להכין אותה בתוכנת הנהלת-החשבונות ולהעלות כאן — <span class="ltr">PDF</span> או תמונה,
+        עד <span class="ltr">10MB</span>.
+      </div>
+      <div class="dropzone">
+        <span class="ic">📎</span>
+        גררי קובץ-חשבונית לכאן, או
+        <button class="btn btn-outline" style="padding:4px 10px; font-size:12px; margin-right:2px">בחרי קובץ</button>
+        <div class="hint">לא נבחר קובץ עדיין</div>
+      </div>
+      <div style="margin-top:10px">
+        <button class="btn btn-primary" disabled title="יש לבחור קובץ-חשבונית לפני השליחה">שמור ושלח</button>
+        <span class="gate-note" style="display:inline; margin-right:8px">חסום: <b>יש לבחור קובץ</b> — שליחה בלי חשבונית אינה אפשרית (כרטיס-P1).</span>
+      </div>
+
+      <div class="sec-h">משוב הלקוח</div>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px">
+        <span class="tag danger">ציון <span class="ltr">2</span> — טעון בירור</span>
+        <span style="font-size:11px; color:var(--s500)">✓ בירור טלפוני תועד — שער-המשוב פתוח (P2)</span>
+      </div>
+      <div class="field">
+        <label class="flabel">סיבת-הבירור</label>
+        <select>
+          <option>איחור דיילות</option>
+          <option selected>תפקוד דיילות</option>
+          <option>איכות תגים</option>
+          <option>ניהול לקוי</option>
+          <option>אחר</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="flabel">הערות המנהלת מהשיחה</label>
+        <textarea readonly>הלקוח ציין שהדיילת הגיעה לא-מוכנה ולא הכירה את סדר-היום של האירוע. המנהלת קבעה שיחת-בירור טלפונית ותיעדה.</textarea>
+      </div>
+      <div style="font-size:10.5px; color:var(--s400); margin-top:2px">
+        גם "לא ענה לסקר" היה עובר את שער-הארכוב הזה (ה3) — כאן הלקוח כן ענה, בציון נמוך.
+      </div>
+
+    </div>
+
+    <div class="dlg-foot">
+      <button class="btn btn-outline">שמור סטטוס</button>
+      <button class="btn btn-primary" disabled title="חסום עד תשלום — ר' ההערה למטה">העבר לארכיון</button>
+      <span class="gate-note">🔒 <b>חסום:</b> חשבונית טרם נשלחה ולא נרשם תאריך-תשלום — שער-הארכוב
+        דורש גם תשלום וגם משוב-פתור (ה10 / כרטיס-P3). המשוב כאן כבר תקין; התשלום עדיין חסר.</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     תצוגה ב׳ — פרויקט #13, "הסתיים" — רווח קפוא ונעילה מלאה (כרטיס-P3)
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="viewcap">
+  <b>תצוגה ב׳ · תיק סגור — ‏<span class="ltr">#13</span> "פסטיבל קיץ עירוני"</b>
+  <span class="sm">כל השדות נעולים לעיון: תחשיב-המאזן (הכנסות − הוצאות = רווח גולמי, מודגש) ולידו
+    סטיית-התקציב (ה18). לא ניתן לערוך — "התיק נעול" (P3).</span>
+</div>
+
+<div class="stage" style="height:900px">
+  <aside class="side">
+    <div class="logo">REG-IN</div>
+    <nav>
+      <a class="nav-i" href="#"><span class="ic">🏠</span>מסך הבית</a>
+      <a class="nav-i" href="#"><span class="ic">👥</span>לקוחות</a>
+      <a class="nav-i" href="#"><span class="ic">📄</span>הצעות מחיר</a>
+      <a class="nav-i" href="#"><span class="ic">📁</span>פרויקטים</a>
+      <a class="nav-i" href="#"><span class="ic">👤</span>דיילות</a>
+      <a class="nav-i" href="#"><span class="ic">📦</span>לוגיסטיקה</a>
+      <a class="nav-i on" href="#"><span class="ic">💰</span>כספים</a>
+      <a class="nav-i" href="#"><span class="ic">📊</span>דו"חות</a>
+    </nav>
+  </aside>
+
+  <header class="top">
+    <h1>כספים</h1>
+    <div class="search"><span class="mg">🔍</span><input placeholder="חיפוש…"></div>
+    <div class="who"><span class="av">מ</span></div>
+  </header>
+
+  <div class="behind">
+    <div class="s1sketch">
+      <div class="tabs">
+        <button class="tab">ממתין לחשבונית <span class="ltr" style="opacity:.7">2</span></button>
+        <button class="tab">ממתין לתשלום <span class="ltr" style="opacity:.7">1</span></button>
+        <button class="tab on">הסתיים <span class="ltr" style="opacity:.7">1</span></button>
+      </div>
+      <div class="row hi"><span>פסטיבל קיץ עירוני · <span class="ltr">#13</span></span><span class="r">רווח <span class="ltr">3,650.00 ₪</span></span></div>
+    </div>
+  </div>
+
+  <div class="scrim"></div>
+
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="t13">
+    <div class="dlg-head">
+      <button class="x" title="סגירה" aria-label="סגירה">✕</button>
+      <h2 id="t13">פסטיבל קיץ עירוני</h2>
+      <div class="lead">עיריית חדרה · <span class="ltr">26/08/2026, 09:00–13:00</span></div>
+      <div class="meta">
+        <span><span class="k">מצב הפרויקט:</span> <span class="tag ok">הסתיים</span></span>
+        <span><span class="k">הועבר לארכיון:</span> <span class="v"><span class="ltr">06/09/2026</span></span></span>
+      </div>
+    </div>
+
+    <div class="dlg-body">
+
+      <div class="banner done">
+        <b>התיק נעול — הועבר לארכיון ב-<span class="ltr">06/09/2026</span>.</b>
+        הרווח-הסופי קפוא ואינו ניתן לעריכה (P3). כל השדות שלמטה לעיון בלבד.
+      </div>
+
+      <div class="sec-h">פרטי חיוב · תשלום · משוב — נעול לעיון</div>
+      <div class="idgrid" style="margin-bottom:12px">
+        <div class="cell"><span class="lb">ח.פ</span><span class="val ltr">500221004</span></div>
+        <div class="cell"><span class="lb">איש קשר</span><span class="val">שרית מזרחי</span></div>
+        <div class="cell" style="grid-column:1/3"><span class="lb">מייל לחיוב</span><span class="val ltr">ishay1997@gmail.com</span></div>
+        <div class="cell"><span class="lb">חשבונית</span><span class="val ltr" style="font-weight:500">Invoice_4127.pdf</span><span class="sub">נשלחה <span class="ltr">28/08/2026</span></span></div>
+        <div class="cell"><span class="lb">תאריך תשלום</span><span class="val ltr">05/09/2026</span></div>
+        <div class="cell" style="grid-column:1/3">
+          <span class="lb">משוב הלקוח</span>
+          <span class="val"><span class="tag ok" style="margin-left:6px"><span class="ltr">4</span> — טוב</span></span>
+          <span class="sub">"האירוע התנהל בצורה מקצועית, הדיילות היו אדיבות וזמינות לאורך כל הבוקר. הערה קטנה: היה עומס בכניסה בשעה הראשונה — כדאי לתגבר שם בפעם הבאה."</span>
+        </div>
+      </div>
+
+      <div class="sec-h">תחשיב-מאזן (P3)</div>
+      <div class="balance">
+        <div class="brow"><span class="blabel">הכנסות (הצעה-קפואה + שינויי-תכולה, ה2)</span><span class="bval ltr">5,300.00 ₪</span></div>
+        <div class="bop">−</div>
+        <div class="brow"><span class="blabel">הוצאות (שכר + נסיעות + סחורה, ה17)</span><span class="bval ltr">1,650.00 ₪</span></div>
+        <div class="brow total"><span class="blabel">רווח גולמי</span><span class="bval ltr">3,650.00 ₪</span></div>
+      </div>
+
+      <div class="tiles" style="margin-top:10px">
+        <div class="tile">
+          <span class="lb">סטיית-תקציב — עבודה (ה18)</span>
+          <span class="vl"><span class="ltr">−692.00 ₪</span></span>
+          <span class="sub">בפועל מתחת למתוכנן</span>
+        </div>
+        <div class="tile">
+          <span class="lb">חוסר בסחורה שהוזמנה</span>
+          <span class="vl"><span class="ltr">15</span> יח'</span>
+          <span class="sub">B-REG-TAG: הוזמנו 300, הגיעו 285 — אינו משפיע על הרווח (ה17)</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="dlg-foot">
+      <button class="btn btn-outline">סגירה</button>
+    </div>
+  </div>
+</div>
+
+<div class="demoband">
+  ⚠️ <b>מתח בדאטה, לא בעיצוב-המסך:</b> סטיית-התקציב שלמעלה (<span class="ltr">−692.00 ₪</span>)
+  נגזרת משעות-בפועל <span class="ltr">= 0</span> אצל כל ארבע הדיילות של <span class="ltr">#13</span> —
+  פרויקט "הסתיים" שבמסד לא נושא שעות-אמת (מתועד ב-<span class="ltr">data-set.md §2</span>). המספר
+  מוצג <b>כפי שהוא נגזר מהדאטה הקיים</b>, בלי לתקן — זה בדיוק מה שהמתח שם מזהיר עליו.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     תצוגה ג׳ — פרויקט #14, "בוטל" — פירוט דמי-הביטול התלת-רכיבי (P1)
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="viewcap">
+  <b>תצוגה ג׳ · דמי-ביטול — ‏<span class="ltr">#14</span> "כנס פתיחת שנה"</b>
+  <span class="sm">שלושת הרכיבים המוצעים (פיצוי-צוות · סחורה במחיר-מלא · שורה-ידנית לדוגמה) ·
+    סכום סופי עריך · פעולת-ויתור · ו"סגור ללא תשלום" (חוב-אבוד, P3) כחלופה.</span>
+</div>
+
+<div class="stage" style="height:1060px">
+  <aside class="side">
+    <div class="logo">REG-IN</div>
+    <nav>
+      <a class="nav-i" href="#"><span class="ic">🏠</span>מסך הבית</a>
+      <a class="nav-i" href="#"><span class="ic">👥</span>לקוחות</a>
+      <a class="nav-i" href="#"><span class="ic">📄</span>הצעות מחיר</a>
+      <a class="nav-i" href="#"><span class="ic">📁</span>פרויקטים</a>
+      <a class="nav-i" href="#"><span class="ic">👤</span>דיילות</a>
+      <a class="nav-i" href="#"><span class="ic">📦</span>לוגיסטיקה</a>
+      <a class="nav-i on" href="#"><span class="ic">💰</span>כספים</a>
+      <a class="nav-i" href="#"><span class="ic">📊</span>דו"חות</a>
+    </nav>
+  </aside>
+
+  <header class="top">
+    <h1>כספים</h1>
+    <div class="search"><span class="mg">🔍</span><input placeholder="חיפוש…"></div>
+    <div class="who"><span class="av">מ</span></div>
+  </header>
+
+  <div class="behind">
+    <div class="s1sketch">
+      <div class="tabs">
+        <button class="tab on">ממתין לחשבונית <span class="ltr" style="opacity:.7">2</span></button>
+        <button class="tab">ממתין לתשלום <span class="ltr" style="opacity:.7">1</span></button>
+        <button class="tab">הסתיים <span class="ltr" style="opacity:.7">1</span></button>
+      </div>
+      <div class="row"><span>כנס משקיעים שנתי · <span class="ltr">#12</span></span><span class="r">נסגר תפעולית</span></div>
+      <div class="row hi"><span>כנס פתיחת שנה · <span class="ltr">#14</span> <span class="tag dashed" style="margin-right:6px">בוטל</span></span><span class="r">דמי-ביטול טרם נפתרו — <span class="ltr">7</span> שבועות</span></div>
+    </div>
+  </div>
+
+  <div class="scrim"></div>
+
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="t14">
+    <div class="dlg-head">
+      <button class="x" title="סגירה" aria-label="סגירה">✕</button>
+      <h2 id="t14">כנס פתיחת שנה</h2>
+      <div class="lead">הייטק גרופ בע"מ · <span class="ltr">tal@hitechgroup.co.il</span></div>
+      <div class="meta">
+        <span><span class="k">מצב הפרויקט:</span> <span class="tag dashed">בוטל</span></span>
+        <span><span class="k">בוטל ע"י:</span> <span class="v">הלקוח</span></span>
+      </div>
+      <span class="sub">בוטל <span class="ltr">26/08/2026 11:00</span> — <span class="ltr">30</span> שעות לפני מועד-האירוע המקורי (<span class="ltr">27/08/2026 17:00</span>); דמי-הביטול טרם נפתרו</span>
+    </div>
+
+    <div class="dlg-body">
+
+      <div class="sec-h">פרטי חיוב — נעול לעיון</div>
+      <div class="idgrid">
+        <div class="cell"><span class="lb">ח.פ</span><span class="val ltr">515330872</span></div>
+        <div class="cell"><span class="lb">איש קשר</span><span class="val">טל אבידן</span></div>
+      </div>
+
+      <div class="sec-h" style="margin-top:14px">פירוט דמי-הביטול המוצע (P1 · ה24 / ה23)</div>
+
+      <div class="comp">
+        <div class="ct"><span class="cname">① פיצוי-צוות</span><span class="camt ltr">328.00 ₪</span></div>
+        <div class="csub"><span>סה"כ תעריפי 4 הדיילות</span><span class="ltr">164 ₪/ש</span></div>
+        <div class="csub"><span><span class="ltr">100%</span> (4.00 שעות מתוכננות)</span><span class="ltr">656.00 ₪</span></div>
+        <div class="cwhy"><b>סולם-הביטול (ה24):</b> בוטל בטווח <span class="ltr">24–72</span> שעות לפני
+          האירוע ⇐ <span class="ltr">50%</span> מהתעריף המלא = <span class="ltr">328.00 ₪</span>.
+          בלי רכיב-נסיעות (ה29) — משמרת שבוטלה לא נסעה.</div>
+      </div>
+
+      <div class="comp">
+        <div class="ct"><span class="cname">② סחורה שהוזמנה/הגיעה — במחיר מלא</span><span class="camt ltr">3,180.00 ₪</span></div>
+        <div class="csub"><span>תג אקולוגי-ממותג — <span class="ltr">200</span> יח' × <span class="ltr">7.50 ₪</span></span><span class="ltr">1,500.00 ₪</span></div>
+        <div class="csub"><span>שרוך סאטן-ממותג — <span class="ltr">200</span> יח' × <span class="ltr">8.40 ₪</span></span><span class="ltr">1,680.00 ₪</span></div>
+        <div class="cwhy"><b>ה23:</b> "מחיר מלא" = מחיר-הלקוח שהודפס בהצעה (<span class="ltr">closing_unit_price</span>), לא עלות — שתי השורות כבר "הוזמן"/"מוכן" בלוגיסטיקה.</div>
+      </div>
+
+      <div class="comp">
+        <div class="ct">
+          <span class="cname">③ שירותים שבוצעו <span class="demo-chip">🎭 שורת-דוגמה</span></span>
+          <span class="camt ltr">250.00 ₪</span>
+        </div>
+        <div class="field" style="margin-top:6px">
+          <input type="text" value="עיצוב גרפי לבמה שכבר הופק" aria-label="תיאור-שירות ידני">
+        </div>
+        <div class="cwhy">שורה-ידנית חופשית, בלי מעקב-סטטוס במסד (כרטיס-P1) — <b>אינה חלק מהעוגן
+          <span class="ltr">3,508.00 ₪</span></b>; זו דוגמה-להמחשת-הממשק בלבד (מתועדת כך גם ב-
+          <span class="ltr">data-set.md §3</span>). ניתן להוסיף שורה נוספת.</div>
+      </div>
+
+      <div class="subtotal">
+        <span>תת-סכום (① + ②)</span>
+        <span class="ltr">3,508.00 ₪</span>
+      </div>
+      <div style="font-size:11px; color:var(--s500); margin-top:4px">
+        עם השורה הידנית שלמעלה (אם תיוותר): <span class="ltr">3,758.00 ₪</span>
+        <span class="demo-chip">🎭 להמחשה בלבד</span>
+      </div>
+
+      <div class="sec-h">סכום דמי-הביטול הסופי</div>
+      <div class="inline2">
+        <div class="field">
+          <label class="flabel">הסכום שייחתם (עריך — ה28)</label>
+          <input type="text" class="ltr" value="3,508.00" dir="ltr" aria-label="סכום דמי-הביטול הסופי">
+        </div>
+        <div class="field">
+          <label class="flabel">הערת-פירוט (נשמרת עם הסכום)</label>
+          <input type="text" placeholder="חופשי — יישמר לצד הסכום הסופי" aria-label="הערת-פירוט לדמי-הביטול">
+        </div>
+      </div>
+      <div style="font-size:10.5px; color:var(--s400)">
+        נשמר במסד: <b>הסכום הסופי + ההערה בלבד</b> — שלושת הרכיבים שלמעלה נגזרים-מחדש לתצוגה בכל
+        פתיחה, לא נשמרים כעמודות נפרדות (ה28).
+      </div>
+
+    </div>
+
+    <div class="dlg-foot" style="flex-direction:column; align-items:flex-start; gap:10px">
+      <div style="display:flex; flex-wrap:wrap; gap:8px">
+        <button class="btn btn-primary">שמור דמי-ביטול</button>
+        <button class="btn btn-outline" title="מאפס את הסכום ל-0 ומחייב הערה — לא מחיקה שקטה">ויתור על החוב</button>
+        <button class="btn btn-outline" title="חוב-אבוד — הרווח נקפא כרגיל, בסיס-צבירה">סגור ללא תשלום</button>
+      </div>
+      <span class="gate-note" style="margin-top:0">
+        <b>"ויתור"</b> = פעולה מפורשת (סכום <span class="ltr">0</span> + הערת-חובה), לא מחיקה שקטה (P1).
+        <b>"סגור ללא תשלום"</b> = מסלול חוב-אבוד — הפרויקט מקבל תג "הסתיים — לא שולם"; הרווח נקפא
+        גם בלי גבייה בפועל, כי הבסיס הוא צבירה (P3).
+      </span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="srcline">
+  <b>🏷️ מקורות הנתונים בשלוש התצוגות</b><br>
+  <b>🌱 מהמסד (‏<span class="ltr">data-set.md</span>, נבדק 26/08/2026):</b>
+  שלושת הפרויקטים <span class="ltr">#12</span>/<span class="ltr">#13</span>/<span class="ltr">#14</span>
+  וכל שדות-הזהות שלהם (ח.פ · איש-קשר · מייל) · תאריכי-אירוע ושעות · שורות-ההצעה ומחירי-היחידה ·
+  תעריפי-הדיילות (<span class="ltr">164 = 43+40+39+42</span>) · סטטוסי-הלוגיסטיקה של <span class="ltr">#14</span>
+  (‏<span class="ltr">B-ECO-TAG</span>/<span class="ltr">B-SAT-LAN</span>) · הפרמטרים
+  (<span class="ltr">שעות_פיצוי_ביטול_מלא/_חלקי</span>, <span class="ltr">24/72</span>) · הרווח-הקפוא של
+  <span class="ltr">#13</span> (<span class="ltr">3,650.00</span>) · תוכן-המשוב המדויק של שני הפרויקטים ·
+  שם-קובץ-החשבונית <span class="ltr">Invoice_4127.pdf</span> (מסומן שם עצמו כ🎭-מספר-מומצא, §7.38).<br>
+  <b>🎭 דמו (ציר-הזמן וההשלמות, אינו במסד):</b> תאריכי-הסגירה/שליחה/תשלום/ארכוב של <span class="ltr">#13</span> ·
+  תרחיש-הביטול המלא של <span class="ltr">#14</span> (‏<span class="ltr">cancelled_at</span>, הסיבה) ·
+  שורת-השירות-הידנית "עיצוב גרפי לבמה" (<span class="ltr">250.00 ₪</span>, מסומנת בגלוי במסך גם היא) ·
+  "בודק אוטומטי" הוא שם-דמו מהזרע עצמו, לא הומצא כאן.<br>
+  <b>📐 נגזר-בנוסחה-מאושרת:</b> תחשיב-המאזן של <span class="ltr">#13</span> (ה2/ה17) · סטיית-התקציב
+  <span class="ltr">−692.00 ₪</span> (ה18) · שלושת רכיבי-דמי-הביטול ותת-הסכום <span class="ltr">3,508.00 ₪</span>
+  (ה23/ה24/ה29) · שדה "חוסר בסחורה" (<span class="ltr">300−285</span>).<br>
+  <b>🎨 תקציב-צבע:</b> אין מילוי-צבע על עובדה (כלל-המילוי, §④) — רווח/סטייה/מספרים בכרטיסי-לבן+מסגרת
+  בלבד. ענבר = הודעה/אזהרה (חשבונית-חסרה, תג "בוטל" בכותרת). ירוק = תיק-שנסגר בהצלחה. אדום מופיע
+  רק בתג-הציון (ה16, <span class="ltr">2</span>) — לא כמילוי-כפתור; שני כפתורי-הרס בסגנון-מסגרת-אדומה
+  <b>אינם קיימים בתצוגות האלה כלל</b> — אף פעולה כאן אינה "מחק", גם "סגור ללא תשלום" (מוגדר חיובית
+  ב-P3, לא הרסני).
+</div>
+
+</div>
+</body>
+</html>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     מה הכרעתי לבד (הספק שקוד קורא/מוקאפ קורא רשאי לפתוח מחדש) —
+     ═══════════════════════════════════════════════════════════════════════
+① רוחב-הדיאלוג: נבחר sm:max-w-lg (512px, ברירת-המחדל) לפי טבלת-השיוך §⑥ בחוזה-העיצוב עצמה
+   ("Dialog/DialogFooter, sm:max-w-lg" עבור S2) — ולא dlg-wide (768px), שמשויך שם במפורש ל-S3.
+   לא המצאה: זו הכרעה שכבר נמצאת בחוזה, רק פותרת את המתח מול העובדה שהתוכן כולל טבלאות-קטנות.
+
+② אזור-העלאת-קובץ (dropzone): אין רכיב-קוד מדוד בשום מקום בחוזה-העיצוב לתבנית-העלאה. הרכבתי
+   מסגרת-מקווקוות + כפתור-outline קיימים (לא צבע/רכיב חדש) — הבחירה בעלת-הפתעה-מינימלית.
+
+③ "שמור ושלח" (תצוגה א׳) מוצג DISABLED במכוון, כי invoice_sent=false בסט-הנתונים ⇒ אין קובץ שנבחר
+   עדיין; זה מדגים ישירות את הכלל "שליחה בלי קובץ נחסמת" (כרטיס-P1) ולא רק מספר את הרכיב.
+
+④ תג-סטטוס אדום למשוב (‏.tag.danger): StatusTag מתעד שישה טונים בלבד (§2.4) — בלי אדום. ה16
+   (הכרעה מאושרת) מחייבת אדום לציון<3. הרחבתי בטוקנים קיימים בלבד (‏--red100/--red700, שניהם כבר
+   נמדדו בפלטת §① — לא צבע חדש), ולא כתוב-outline/מילוי-חדש.
+
+⑤ שם-איש-הקשר "בודק אוטומטי" (#12) מוצג כפי-שהוא, בלי תיקון ובלי הערה בתוך הדיאלוג עצמו — נאמנות
+   למה שמסך אמיתי יציג; ההסתייגות (זה כנראה שם-דמו טכני) נשארת חיצונית לדיאלוג (שורת-המקורות),
+   כי מסך-אמת לא מפרשן את עצמו.
+
+⑥ בתצוגה א׳ לא צוירו StatTile/LtrFieldGroup של רווח — הבריף לא ביקש זאת שם, והפרויקט טרם שולם/נגבה.
+   שני הרכיבים האלה (הנדרשים ע"י טבלת-§⑥ ברמת-המשטח, לא ברמת-כל-מצב) מיוצגים בתצוגות ב'/ג' במקום.
+
+⑦ המתח "actual_hours=0" של #13 (מתועד ב-data-set.md §2) מוצג רק ברצועת-הדגמה מחוץ לדיאלוג, לא
+   בתוך גוף-הדיאלוג — כי מסך-אמת לא היה מזהיר על עצמו; ההערה שייכת לקורא-המוקאפ, לא למשתמשת-הקצה.
+
+⑧ "סגור ללא תשלום" (תצוגה ג׳) מעוצב כ-btn-outline רגיל, לא במסגרת-אדומה. "כפתור-הרס=מסגרת אדומה"
+   (§2.5) שמור לפעולה הרסנית כמו ביטול; חוב-אבוד מוגדר ב-P3 כמסלול-סגירה לגיטימי, לא הרסני.
+
+⑨ שורת-השירות-הידנית (רכיב ③ בדמי-הביטול) מסומנת בגלוי "🎭 שורת-דוגמה" באותו רוח כמו "מולא
+   אוטומטית" בתקדים המאושר — כדי שלא תיקרא כרכיב אמיתי של העוגן 3,508.00 (שהיא לא, לפי data-set §3).
+
+⑩ אווטאר-המחוברת: אות "מ" בלבד, בלי שם/תפקיד — כפי שחוזה-העיצוב §⑤ עצמו מציג (`<span class="av">מ</span>`).
+   אין באפיון המאושר שם למנהלת-הכספים; לא הומצא שם.
+
+⑪ טווח "24–72 שעות" נשאר טוקן-LTR יחיד (כמו טווחי-שעה קיימים, "09:00–13:00") ולא פוצל במילה עברית —
+   זהו טווח סמנטי אחד, לא שני מספרים נפרדים; כל שאר הזוגות-המספריים במסך מופרדים בתווית עברית צמודה.
+   ══════════════════════════════════════════════════════════════════════ -->

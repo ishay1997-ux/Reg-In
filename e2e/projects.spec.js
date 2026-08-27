@@ -122,9 +122,11 @@ test.describe('מודול 6 · הכרטיס — מנהלת גיוס ושיבוץ
   test('לשונית הלוגיסטיקה מציגה מצב-חסימה (🔒) — לא "לא הוזמנו מוצרים" ולא שגיאה', async ({
     page,
   }) => {
-    // היא ➖ גם על 'לוגיסטיקה' וגם על 'הצעות מחיר' ⇒ רשימת-הפריטים חוזרת ריקה בלי
-    // שגיאה, והמבחין (פריטי-ההצעה) חסום גם הוא ⇒ המצב היחיד הכן הוא noPermission.
-    // "ריק כדין" אצלה היה שקר ("אפס שורות ⇒ הושלם" על טבלה לא-קריאה — S-26).
+    // היא ➖ גם על 'לוגיסטיקה' וגם על 'הצעות מחיר' ⇒ רשימת-הפריטים חוזרת ריקה בלי שגיאה.
+    // 🔄 עודכן 27/08/2026 (אודיט-סגירת-מ5, אשרור-ישי "בצע הכל לפי המלצה שלך"): מאז
+    // `bde057a` המבחין **הראשון** הוא מפת-ההרשאות שלה על 'לוגיסטיקה' — לא ההצעה — ולכן
+    // הענף, ה-testid והנוסח חדשים: `TAB_NO_PERMISSION_SENTENCE` (הגרסה המדויקת-יותר, על
+    // *הלוגיסטיקה* ולא על *ההצעה*). הבדיקה הקודמת הכירה את המסך הישן ונפלה בצדק.
     await login(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
     await gotoProjects(page, '?tab=all')
 
@@ -135,10 +137,14 @@ test.describe('מודול 6 · הכרטיס — מנהלת גיוס ושיבוץ
     await expect(page.getByTestId('project-card-page')).toBeVisible({ timeout: 15_000 })
 
     // לשונית-הלוגיסטיקה היא ברירת-המחדל של הכרטיס.
-    const blocked = page.getByTestId('logistics-state-no-permission')
+    const blocked = page.getByTestId('logistics-state-no-permission-logistics')
     await expect(blocked).toBeVisible({ timeout: 15_000 })
-    await expect(blocked).toContainText('אין לך הרשאה לצפות בפריטי ההצעה')
-    // ולא אחד משני המצבים האחרים — ההבחנה היא הטענה, לא הנוכחות.
+    await expect(blocked).toContainText(
+      'אין לך הרשאה לצפות בפריטי הלוגיסטיקה, ולכן לא ניתן לקבוע אם הרשימה ריקה כדין.',
+    )
+    // ולא אחד מהמצבים האחרים — ההבחנה היא הטענה, לא הנוכחות (כולל הענף הישן, שאסור
+    // שיופיע אצל חסומת-לוגיסטיקה).
+    await expect(page.getByTestId('logistics-state-no-permission')).toHaveCount(0)
     await expect(page.getByTestId('logistics-state-legal-empty')).toHaveCount(0)
     await expect(page.getByTestId('logistics-state-error')).toHaveCount(0)
     await expect(page.getByTestId('logistics-state-broken')).toHaveCount(0)
@@ -311,5 +317,46 @@ test.describe('מודול 6 · הכרטיס — פרויקט פעיל', () => {
 
     // התא התשיעי (סיבת-הביטול, S-30) קיים רק על פרויקט מבוטל — על חי הוא נעדר, לא ריק.
     await expect(page.getByTestId('project-cell-cancel-reason')).toHaveCount(0)
+  })
+})
+
+// ── הקישור "פתח שיבוץ חכם" נושא את הפרויקט איתו ──────────────────────────────────
+// 🔗 **ישי, 22/08/2026:** *"יותר נכון שהקישור הזה בכרטיס פרויקט יוביל לשיבוץ של אותו
+// פרויקט? כרגע הוא מוביל למבט על של הגיוס."* — נכון; הוא היה `<Link to="/hostesses">`
+// חשוף, והמנהלת נחתה על מבט-העל ונאלצה לאתר מחדש את הפרויקט שממנו בדיוק יצאה.
+//
+// 🔴 **הבדיקה מנוסחת על ההקשר ולא על הכתובת, בכוונה.** `HostessesPage` מצהיר
+// ששיבוץ-חכם **אינו מסלול** ("מסלול היה מאבד את מצב-הסינון של המבט-על בכל חזרה"),
+// ולכן ההעברה היא דרך `state` של הניווט — הכתובת נשארת `/hostesses` בשני המקרים.
+// ⇒ `toHaveURL` היה עובר בירוק גם לפני התיקון וגם אחריו. **מה שמפריד הוא שם-האירוע
+// בכותרת** ("שיבוץ חכם — {event_name}"), וזה מה שנבדק כאן.
+test.describe('מודול 6 · כרטיס פרויקט — הקישור לשיבוץ חכם', () => {
+  test.skip(!PROJECTS_EMAIL || !PROJECTS_PASSWORD, 'E2E_PROJECTS_* לא הוגדרו ב-.env.local')
+
+  test('🔗 הקישור מלשונית "צוות דיילות" נוחת על השיבוץ של אותו פרויקט', async ({ page }) => {
+    await login(page, PROJECTS_EMAIL, PROJECTS_PASSWORD)
+    await gotoProjects(page)
+
+    // נושא בזמן-ריצה, לא מזהה קשיח (e2e/CLAUDE.md — פיקסטורה נעוצה מרקיבה לבד).
+    const rows = page.locator(ROW_SELECTOR)
+    test.skip((await rows.count()) === 0, 'אין פרויקט פעיל — אין נושא לבדיקה')
+    await rows.first().click()
+    await expect(page.getByTestId('project-card-page')).toBeVisible({ timeout: 15_000 })
+
+    // שם-האירוע נקרא מהמסך עצמו — הוא הטענה שתיבדק בצד השני.
+    const eventName = (await page.locator('h1').first().innerText()).trim()
+    expect(eventName.length).toBeGreaterThan(0)
+
+    await page.getByTestId('project-tab-team').click()
+    const link = page.getByTestId('team-smart-match-link')
+    await expect(link).toBeVisible({ timeout: 15_000 })
+    await link.click()
+
+    // 🔑 הטענה: נחתנו על מסך-השיבוץ **של אותו פרויקט**, לא על מבט-העל של הגיוס.
+    await expect(page.getByRole('heading', { name: `שיבוץ חכם — ${eventName}` })).toBeVisible({
+      timeout: 30_000,
+    })
+    // ובקרה שלילית: לשוניות מבט-העל של הגיוס אינן על המסך — כלומר לא נחתנו שם.
+    await expect(page.getByTestId('hostesses-tab-overview')).toHaveCount(0)
   })
 })

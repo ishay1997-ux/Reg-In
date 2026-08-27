@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button'
 import Money from '@/components/Money'
 import Ltr from '@/components/Ltr'
 import StatusTag from '@/components/StatusTag'
+import { LOGISTICS_STATUS_LABELS, resolveLogisticsTone } from '@/lib/projectLogistics'
 import LoadingOrError from '@/components/LoadingOrError'
 import PermissionAwareEmpty from '@/components/PermissionAwareEmpty'
 import { useAuth } from '@/contexts/AuthContext'
@@ -51,13 +52,29 @@ import {
 import { computeQuoteTotals, findMatchingTier, resolveUnitPrice } from '@/lib/pricing'
 import { formatDate, formatTimeRange, formatTimestamp } from '@/lib/dates'
 
-// 🔒 שתי מחרוזות-הסירוב זהות-בייט לשרת — הדיאלוג חוסם **לפני** השליחה באותו משפט בדיוק
+// 🔒 מחרוזות-הסירוב זהות-בייט לשרת — הדיאלוג חוסם **לפני** השליחה באותו משפט בדיוק
 // שה-RPC היה זורק (as-built ② של צעד 3.6: "verify they are identical, not merely similar").
-// המקור: supabase/migrations/20260814142440_module6_rpcs_writes.sql, גוף apply_scope_change
-// (שורות ה-raise של בדיקת-הכמות). ⚠️ נוסח-השרת של אי-השלם נושא סיומת " השינוי לא בוצע." —
-// היא מושמטת כאן במכוון (לפני-שליחה שום שינוי לא נוסה), בהתאם לנוסח שמדריך-המיקרו נעל.
-const ZERO_QTY_MESSAGE = 'הכמות חייבת להיות גדולה מאפס. להסרת פריט לגמרי — פני למנהלת הלוגיסטיקה.'
+// המקור מ-26/08/2026 הוא הכותב האחרון של הפונקציה:
+// supabase/migrations/20260826002448_module5_scope_change_reset_removal.sql (M5-4 + M5-7).
+//
+// 🔴 למה ההודעה הגורפת הישנה נמחקה, ולא נוסחה מחדש: עד M5-7 כל `<= 0` קיבל משפט אחד —
+// *"הכמות חייבת להיות גדולה מאפס. להסרת פריט לגמרי — פני למנהלת הלוגיסטיקה."* — והוא הפך
+// **לשקרי פעמיים**: אפס בשורת-לוגיסטיקה קיימת הוא היום **הסרה חוקית** (㊳ · ㊱), וההסרה
+// שייכת למנהלת הפרויקטים — מהמסך הזה — ולא למנהלת הלוגיסטיקה. במקומו יושבות מראות
+// ממוקדות-יעד, בדיוק לפי האופן שבו השרת מסתעף בפועל.
+//
+// ⚠️ הסיומת " השינוי לא בוצע." שהשרת משרשר לחלק מה-raise מושמטת כאן במכוון — לפני-שליחה
+// שום שינוי לא נוסה, ולכן המשפט היה שקרי. זו החלטה מצעד 3.6 והיא נשמרת כלשונה. שלוש
+// מהמחרוזות אינן נושאות סיומת בשרת מלכתחילה (הדיילות ושתי מחרוזות כלל-ההסרה) ⇒ הן
+// זהות-בייט במלואן.
+const HOSTESS_ZERO_MESSAGE = 'כמות הדיילות חייבת להיות גדולה מאפס.'
+const NEW_ROW_ZERO_MESSAGE = 'כמות של פריט חדש חייבת להיות גדולה מאפס.'
+const NEGATIVE_QTY_MESSAGE = 'הכמות אינה יכולה להיות שלילית.'
 const NON_INTEGER_MESSAGE = 'הכמות חייבת להיות מספר שלם.'
+// 🔒 שני נוסחי כלל-ההסרה (㊱) — **שונים בכוונה**: היא צריכה לדעת איזה משני החוקים חסם
+// אותה, וזה בדיוק מה ש-㉚ דורשת מפקד שנשאר על המסך ומנומק.
+const REMOVAL_BLOCKED_ORDERED = 'הפריט כבר הוזמן — לא ניתן להסירו'
+const REMOVAL_BLOCKED_ARRIVED = 'הגיעו כבר פריטים — לא ניתן להסיר'
 // 🔒 נעול ב-§3.7 של מדריך-המיקרו (וריאנט שינוי-התכולה — שונה במכוון מנוסח-הביטול).
 const EMPTY_REASON_MESSAGE = 'חובה למלא סיבה — היא מה שיסביר את החיוב הזה בעוד חודש.'
 // הדפוס של מודול 3 ("עדכן ושלח" בלי שינוי — הכרעת-ישי 01/08/2026), בנוסח הכרטיס.
@@ -84,6 +101,9 @@ function buildLineModels({ quote, products, logisticsRows, requiredHostessCount 
         frozenPrice: null,
         effectiveQty: Number(requiredHostessCount) || 0,
         serialNumber: null,
+        // שורת-דיילות אינה שורת-לוגיסטיקה ⇒ אין לה מצב-פריט ואין לה מסלול-הסרה (AR-10).
+        itemStatus: null,
+        actualQty: null,
         editable: true,
         product: null,
       },
@@ -96,6 +116,8 @@ function buildLineModels({ quote, products, logisticsRows, requiredHostessCount 
         frozenPrice: null,
         effectiveQty: Number(row.planned_qty),
         serialNumber: row.serial_number,
+        itemStatus: row.item_status,
+        actualQty: Number(row.actual_qty ?? 0),
         editable: true,
         product: bySku.get(row.sku) ?? null,
       })),
@@ -123,6 +145,8 @@ function buildLineModels({ quote, products, logisticsRows, requiredHostessCount 
         frozenPrice: line.closing_unit_price,
         effectiveQty: Number(requiredHostessCount) || Number(line.qty) || 0,
         serialNumber: null,
+        itemStatus: null,
+        actualQty: null,
         editable: true,
         product,
       }
@@ -150,6 +174,10 @@ function buildLineModels({ quote, products, logisticsRows, requiredHostessCount 
       frozenPrice: line.closing_unit_price,
       effectiveQty: logRow ? Number(logRow.planned_qty) : Number(line.qty),
       serialNumber: logRow ? logRow.serial_number : null,
+      // ㊳ ② — מצב-הפריט והכמות-שהגיעה נוסעים על מודל-השורה. הדאטה כבר נשלף
+      // (getProjectLogistics עושה select('*')) — עד היום פשוט לא הוצג ולא שימש לכלום.
+      itemStatus: logRow ? logRow.item_status : null,
+      actualQty: logRow ? Number(logRow.actual_qty ?? 0) : null,
       // 🔴 בלי שורת-לוגיסטיקה תואמת אין `serial_number` — ושליחה בלעדיו הייתה מתפרשת
       // בשרת כ"פריט חדש" וכותבת שורה שנייה. עדיף פקד מושבת-ומנומק מכתיבה שגויה-בשקט.
       editable: Boolean(logRow),
@@ -158,16 +186,66 @@ function buildLineModels({ quote, products, logisticsRows, requiredHostessCount 
   })
 }
 
-// פענוח קלט-כמות: '' = "לא נגעו" (השורה מוצגת ללא-שינוי) · לא-שלם/אפס-ומטה = שגיאה
+// ㊱ — מותר להסיר אך ורק שורה שגם `item_status = 'not_started'` וגם `actual_qty = 0`.
+// **שני התנאים, תמיד.** שורת-הצעה בלי שורת-לוגיסטיקה תואמת אינה מסלול-הסרה בכלל: אין לה
+// `serial_number`, והפקד שלה ממילא מושבת-ומנומק.
+function isRemovableLine(model) {
+  return (
+    model.kind === 'logistics' &&
+    model.editable &&
+    model.itemStatus === 'not_started' &&
+    Number(model.actualQty) === 0
+  )
+}
+
+// ㉚ — פקד שנחסם **נשאר ומנומק**, והנוסח נוקב באיזה משני החוקים חסם אותה.
+// null = ניתן להסרה, או שאין כאן מסלול-הסרה בכלל.
+function removalBlockReason(model) {
+  if (model.kind !== 'logistics' || !model.editable) return null
+  if (model.itemStatus === 'ordered' || model.itemStatus === 'ready') return REMOVAL_BLOCKED_ORDERED
+  if (model.itemStatus === 'not_started' && Number(model.actualQty) > 0) {
+    return REMOVAL_BLOCKED_ARRIVED
+  }
+  return null
+}
+
+// מראות-הסירוב פר-שורה, בדיוק לפי הסתעפות השרת: שורת-דיילות חוסמת כל `<= 0` בהודעה אחת
+// (`v_target = 'hostess_count' and v_new_qty <= 0`), ואילו שורת-לוגיסטיקה חוסמת שלילי
+// בהודעה נפרדת ומוקדמת, ואפס — רק כשכלל-ההסרה חוסם אותו.
+function qtyRulesFor(model) {
+  if (model.kind === 'hostess') {
+    return {
+      allowZero: false,
+      zeroMessage: HOSTESS_ZERO_MESSAGE,
+      negativeMessage: HOSTESS_ZERO_MESSAGE,
+    }
+  }
+  return {
+    allowZero: isRemovableLine(model),
+    // שורה בלי שורת-לוגיסטיקה תואמת נשלחת (אילו נשלחה) בלי `serial_number` ⇒ השרת רואה
+    // בה "פריט חדש", וזה המשפט שלו. בפועל הפקד מושבת והשגיאה מנוטרלת בהמשך.
+    zeroMessage: removalBlockReason(model) ?? NEW_ROW_ZERO_MESSAGE,
+    negativeMessage: NEGATIVE_QTY_MESSAGE,
+  }
+}
+
+// פענוח קלט-כמות: '' = "לא נגעו" (השורה מוצגת ללא-שינוי) · לא-שלם/מתחת-לרצפה = שגיאה
 // באותו נוסח שהשרת היה מחזיר. הבדיקה כאן היא נוחות; ה-RPC הוא השער (וה-CHECK — הגיבוי).
-function parseQtyInput(raw) {
+//
+// 🔴 **השומר לאפס יושב כאן, לא ב-`min` של הספינר.** ‏`min` על `<input type="number">` הוא
+// רמז ולא אילוץ — אפס שהוקלד עובר אותו בלי להיחסם. לו הרצפה לבדה הייתה משתנה, `M5-7`
+// (ההסרה בשרת) לא היה מגיע לעולם לאף שורה, כי הפונקציה הזאת הייתה בולעת את האפס קודם.
+// `rules` הוא ארגומנט חובה — קריאה בלי כללים זורקת כאן ולא נכשלת בשקט.
+function parseQtyInput(raw, rules) {
+  const { allowZero = false, zeroMessage, negativeMessage = zeroMessage } = rules
   const text = String(raw ?? '').trim()
   if (text === '') return { value: null, error: null }
   const value = Number(text)
   if (!Number.isFinite(value) || !Number.isInteger(value)) {
     return { value: null, error: NON_INTEGER_MESSAGE }
   }
-  if (value <= 0) return { value: null, error: ZERO_QTY_MESSAGE }
+  if (value < 0) return { value: null, error: negativeMessage }
+  if (value === 0 && !allowZero) return { value: null, error: zeroMessage }
   return { value, error: null }
 }
 
@@ -175,7 +253,8 @@ function parseQtyInput(raw) {
 function deriveLineStates(lineModels, qtyInputs) {
   return lineModels.map((model) => {
     const raw = qtyInputs[model.key] ?? String(model.effectiveQty)
-    const { value: target, error } = parseQtyInput(raw)
+    const rules = qtyRulesFor(model)
+    const { value: target, error } = parseQtyInput(raw, rules)
     const delta = error || target === null ? null : computeDeltaQty(model.effectiveQty, target)
     const changed = model.editable && delta !== null && delta !== 0
     return {
@@ -183,6 +262,9 @@ function deriveLineStates(lineModels, qtyInputs) {
       raw,
       target,
       error: model.editable ? error : null,
+      // ④ של `🔄ה` — רצפת-הספינר דינמית, ולצידה ההסבר איזה משני החוקים חסם (㉚).
+      removable: rules.allowZero,
+      blockedReason: removalBlockReason(model),
       delta,
       changed,
       amount: changed ? lineChangeAmount(delta, model.frozenPrice) : null,
@@ -195,7 +277,12 @@ function deriveLineStates(lineModels, qtyInputs) {
 function deriveNewRowStates(newRows, products, tiers) {
   return newRows.map((row) => {
     const product = products.find((p) => p.sku === row.sku) ?? null
-    const { value: qty, error } = parseQtyInput(row.qty)
+    // AR-10 — אין "הסרה" של מה שטרם קיים ⇒ המסלול הזה נשאר `allowZero:false` לנצח,
+    // וזה גם מה שהשרת אוכף (`v_is_new and v_new_qty <= 0`, G11b).
+    const { value: qty, error } = parseQtyInput(row.qty, {
+      allowZero: false,
+      zeroMessage: NEW_ROW_ZERO_MESSAGE,
+    })
     const price = product && qty !== null ? resolveUnitPrice(product, tiers, qty) : null
     const tier = product && qty !== null ? findMatchingTier(product, tiers, qty) : null
     const valid = Boolean(product) && qty !== null && !error
@@ -254,12 +341,44 @@ const NUM_TD = 'border-b border-slate-100 px-2 py-2 text-left align-middle white
 const NUM_TH =
   'border-b border-slate-200 px-2 py-1.5 text-left text-[11.5px] font-semibold whitespace-nowrap text-slate-500'
 
-function QtyInput({ value, error, disabled, disabledReason, ariaLabel, testId, onChange }) {
+// 🔑 מזהה-התיאור נגזר בפונקציה אחת כדי ש**שדה-הכמות וכפתור-ההסרה יצביעו לאותו אלמנט**:
+// משפט-הסיבה נכתב על המסך פעם אחת בלבד (מעבר-המלאי ב-`src/CLAUDE.md`: שניים באותו תפקיד
+// ⇒ אחד נמחק — אותה שורה עברית פעמיים באותה שורת-טבלה היא בדיוק זה), ושני הפקדים
+// מקושרים אליו.
+// 🔴 והרווחים נמחקים: `aria-describedby` הוא **רשימת-טוקנים מופרדת-ברווח**, ולכן id
+// שמכיל רווח (וכל התוויות כאן עבריות עם רווחים — "כמות חדשה — תג שם רגיל") היה נקרא
+// כמה מזהים נפרדים, ואף אחד מהם לא היה קיים ⇒ הקישור נשבר **בשקט**, בלי שגיאה ובלי
+// שהבדיקה הוויזואלית תראה משהו.
+function describedIdFor(seed) {
+  return `qty-desc-${String(seed).replace(/\s+/g, '-')}`
+}
+
+// `min` הוא **מראה** של הרצפה, לא אכיפתה — האכיפה ב-`parseQtyInput`. ברירת-המחדל `1`;
+// רק שורת-לוגיסטיקה קיימת שעומדת בשני תנאי ㊱ מקבלת `0`, ואז אפס פירושו הסרה (M5-7).
+function QtyInput({
+  value,
+  error,
+  hint,
+  min = 1,
+  disabled,
+  disabledReason,
+  ariaLabel,
+  testId,
+  onChange,
+}) {
+  // 🔴 ㉚ בקורא-מסך, לא רק בעין (הכרעת-ישי 26/08/2026: "למה לדחות, לסדר עכשיו").
+  // המשפט שמסביר **איזה** חוק חסם אותה יושב ב-div נפרד — ובלי קישור מפורש, מי שמנווט
+  // במקלדת מגיע לשדה ושומע רק את התווית: שדה שאינו מקבל אפס, בלי סיבה. `aria-describedby`
+  // הוא מה שגורם לקורא-המסך להקריא את הסיבה מיד אחרי התווית, באותו רגע שהמיקוד נכנס.
+  // המזהה נגזר מ-`testId`/`ariaLabel` כדי שיהיה ייחודי פר-שורה בטבלה (שני שדות באותו
+  // מסך עם אותו id היו שולחים את שניהם לאותו הסבר). הגזירה עצמה — ומחיקת-הרווחים שבה —
+  // ב-`describedIdFor` למעלה, כי גם כפתור-ההסרה מצביע לאותו אלמנט.
+  const describedById = error || hint ? describedIdFor(testId ?? ariaLabel) : undefined
   return (
     <>
       <input
         type="number"
-        min="1"
+        min={String(min)}
         dir="ltr"
         className={`h-8 w-[78px] rounded-md border bg-white px-2 text-left text-sm text-slate-800 ${
           error ? 'border-red-600' : 'border-slate-300'
@@ -268,26 +387,117 @@ function QtyInput({ value, error, disabled, disabledReason, ariaLabel, testId, o
         disabled={disabled}
         title={disabledReason}
         aria-label={ariaLabel}
+        aria-describedby={describedById}
         data-testid={testId}
         onFocus={(e) => e.target.select()}
         onChange={onChange}
       />
       {error ? (
-        <div className="mt-1 text-[11px] font-semibold text-red-600" role="alert">
+        <div
+          id={describedById}
+          className="mt-1 text-[11px] font-semibold text-red-600"
+          role="alert"
+        >
           {error}
+        </div>
+      ) : hint ? (
+        // ㉚ — הפקד נשאר, והסיבה יושבת לצידו **גם בלי שהיא תקליד אפס**: "כפתור מושבת
+        // מלמד אותה את החוק". וכשהיא כן מקלידה אפס, אותו משפט עצמו עולה באדום למעלה —
+        // הודעה אחת, לא שתיים שאומרות את אותו דבר בשני צבעים.
+        <div id={describedById} className="mt-1 text-[11px] text-slate-500">
+          {hint}
         </div>
       ) : null}
     </>
   )
 }
 
+// ㉚ · ㊳ — הפעולה ההרסנית מקבלת פקד ששמו נקוב, כמו כל פעולה הרסנית אחרת במערכת
+// ("העבר לארכיון", "השבת", "ביטול פרויקט"). עד כה הדרך היחידה להסיר פריט הייתה להקליד
+// `0` — התנהגות נכונה שאיש לא היה מוצא.
+// 🔑 והוא **אינו מסלול שני אל השרת**: הוא כותב `0` לשדה-הכמות (או מחזיר את הכמות
+// שבתוקף), ומשם הכול ממשיך בדיוק כמו הקלדה ידנית — אותו `changedCount`, אותו בלוק-השלכה,
+// אותו `target_qty: 0` בפיילוד, ואותם שני תנאי ㊱ כשומר. ⇒ אין כאן דרך חדשה למחוק, יש
+// דרך חדשה **למצוא** את הקיימת.
+// 🚫 ואין חלון-אישור: הסיבה שחובה למלא (㉖), בלוק "מה יקרה כשתשמרי" וכפתור-השמירה הם
+// שלושה שערים; רביעי הוא אישור-יתר, וזה פגם בפני עצמו בבית הזה (⑯ — "הזמן מודיע ולא חוסם").
+function RemovalButton({
+  model,
+  marked,
+  removable,
+  blockedReason,
+  descriptionId,
+  submitting,
+  onQtyChange,
+}) {
+  const label = marked ? 'בטל הסרה' : 'הסר פריט'
+  return (
+    <button
+      type="button"
+      // אדום = הרסני בשפת-העיצוב של הבית; הביטול הוא פעולה מחזירה ולכן ניטרלי — ואין
+      // בשפה הזאת צבע "מותר לך", ולא ממציאים אחד.
+      className={`mt-1 block text-[11.5px] font-semibold whitespace-nowrap disabled:text-slate-400 ${
+        marked ? 'text-slate-600' : 'text-red-600'
+      }`}
+      // 🔴 נסגר על `removable` (שני תנאי ㊱) ולא על "יש סיבת-חסימה": היום שניהם משלימים
+      // זה את זה (ה-CHECK במסד מכיר בדיוק שלושה מצבי-פריט), אבל מצב רביעי שיתווסף אי-פעם
+      // ינחת כך על **מושבת**, ולא על כפתור פעיל שכותב אפס ומקבל בחזרה את הודעת-"פריט
+      // חדש" — כשל שקט שאיש לא היה מחפש.
+      disabled={!removable || submitting}
+      // ㉚ — הפקד החסום **נשאר ומנומק**, והנימוק הוא אותו אלמנט-הסבר שכבר יושב מתחת
+      // לשדה (משפט אחד, שני פקדים). 🔴 ולא `title`: לכפתור מושבת אין hit-test ולכן
+      // tooltip עליו לעולם אינו נפתח — הסיבה חייבת להיות טקסט גלוי, והקישור ל-AT מפורש.
+      aria-describedby={blockedReason ? descriptionId : undefined}
+      // שם-הפריט בתווית: על המסך יושבים כמה כפתורי-הסרה זהים, ו"הסר פריט" לבדו אינו
+      // אומר לקורא-מסך **איזה** פריט (אותו דפוס כמו תווית שדה-הכמות).
+      aria-label={`${label} — ${model.name}`}
+      data-testid={`scope-remove-${model.key}`}
+      onClick={() => onQtyChange(model.key, marked ? String(model.effectiveQty) : '0')}
+    >
+      {label}
+    </button>
+  )
+}
+
 function ExistingLineRow({ state, quoteReadable, submitting, onQtyChange }) {
-  const { model, raw, error, delta, changed, amount } = state
+  const { model, raw, target, error, delta, changed, amount, removable, blockedReason } = state
+  // ㊳ ② — מצב-הפריט מוצג **בתוך שורת-המשנה הקיימת** (היחידה), ולא בעמודה שביעית:
+  // עמודה נוספת הייתה מצרה את שתי עמודות-הכסף, שהן מה שמנהלת הפרויקטים פותחת את
+  // הדיאלוג כדי לקרוא. שורת-דיילות אין לה מצב-פריט ⇒ אין לה תג.
+  const statusLabel = LOGISTICS_STATUS_LABELS[model.itemStatus]
+  // 🔑 "מסומנת להסרה" **נגזר מהיעד** (`target === 0`) ואינו מצב-מקביל, וזו ההכרעה שמחזיקה
+  // את כל הסעיף: הכפתור אינו מסלול שני אל השרת אלא **קיצור-דרך אל אותו שדה** — הוא כותב
+  // `0` בדיוק כפי שהיא הייתה מקלידה ביד. ⇒ שני המסלולים הם אותו מצב, ואי-אפשר שייפרדו
+  // בשקט ("מסומן אבל היעד אינו אפס", או להפך). ⚠️ ויעד 0 אפשרי **רק** בשורה שעברה את שני
+  // תנאי ㊱ — בכל שורה חסומה `parseQtyInput` מחזירה שגיאה ו-`target` נשאר null.
+  const marked = target === 0
+  const qtyAriaLabel = `כמות חדשה — ${model.name}`
+  // מסלול-הסרה קיים רק לשורת-לוגיסטיקה שיש לה שורת-לוגיסטיקה תואמת: שורת-דיילות אינה
+  // פריט (AR-10 — ואת כמות-הדיילות מקטינים, לא "מסירים"), ובלי `serial_number` אין לשרת
+  // מה להסיר. שורה חדשה שטרם נשמרה אינה כאן בכלל — יש לה קישור "הסרה" משלה, שמוחק שורת
+  // טופס ולא פריט מהאירוע, ולכן הנוסח כאן **"הסר פריט"** ולא "הסרה".
+  const showRemoval = model.kind === 'logistics' && model.editable
   return (
     <tr className={changed ? '' : 'bg-slate-50 text-slate-500'}>
       <td className="border-b border-slate-100 px-2 py-2 align-middle">
-        <div className="font-semibold text-slate-800">{model.name}</div>
-        <div className="mt-0.5 text-[11.5px] text-slate-500">{model.subLabel}</div>
+        {/* השורה המסומנת נקראת כמסומנת עוד לפני שמגיעים לעמודת-ההפרש — קו-מחיקה על השם.
+            אדום = חוסם/הרסני בשפת-העיצוב של הבית (§4), וזה בדיוק מה שקורה כאן. */}
+        <div
+          className={
+            marked ? 'font-semibold text-red-700 line-through' : 'font-semibold text-slate-800'
+          }
+        >
+          {model.name}
+        </div>
+        <div className="mt-0.5 text-[11.5px] text-slate-500">
+          {model.subLabel}
+          {statusLabel ? (
+            <>
+              {' · '}
+              <StatusTag label={statusLabel} tone={resolveLogisticsTone(statusLabel)} />
+            </>
+          ) : null}
+        </div>
       </td>
       <td className={`${NUM_TD} text-slate-600`}>
         {quoteReadable ? <Money exact amount={model.frozenPrice} /> : <Ltr>—</Ltr>}
@@ -296,16 +506,37 @@ function ExistingLineRow({ state, quoteReadable, submitting, onQtyChange }) {
         <Ltr>{String(model.effectiveQty)}</Ltr>
       </td>
       <td className="border-b border-slate-100 px-2 py-2 text-left align-middle">
-        <QtyInput
-          value={raw}
-          error={error}
-          disabled={!model.editable || submitting}
-          disabledReason={
-            model.editable ? undefined : 'לפריט אין שורת-לוגיסטיקה מקושרת — לא ניתן לעדכן אותו מכאן'
-          }
-          ariaLabel={`כמות חדשה — ${model.name}`}
-          onChange={(e) => onQtyChange(model.key, e.target.value)}
-        />
+        {marked ? (
+          // הכמות אינה נערכת יותר — השורה כולה יוצאת. שדה-מספר שהיה נשאר על המסך היה
+          // מזמין אותה "לתקן" כמות של פריט שלא יהיה, ומטשטש את מה שהיא בעצם עשתה.
+          <div className="text-[12.5px] font-bold text-red-700">יוסר</div>
+        ) : (
+          <QtyInput
+            value={raw}
+            error={error}
+            hint={blockedReason}
+            min={removable ? 0 : 1}
+            disabled={!model.editable || submitting}
+            disabledReason={
+              model.editable
+                ? undefined
+                : 'לפריט אין שורת-לוגיסטיקה מקושרת — לא ניתן לעדכן אותו מכאן'
+            }
+            ariaLabel={qtyAriaLabel}
+            onChange={(e) => onQtyChange(model.key, e.target.value)}
+          />
+        )}
+        {showRemoval ? (
+          <RemovalButton
+            model={model}
+            marked={marked}
+            removable={removable}
+            blockedReason={blockedReason}
+            descriptionId={describedIdFor(qtyAriaLabel)}
+            submitting={submitting}
+            onQtyChange={onQtyChange}
+          />
+        ) : null}
       </td>
       <td className={`${NUM_TD} font-bold`}>
         {changed ? <Ltr>{delta > 0 ? `+${delta}` : String(delta)}</Ltr> : 'ללא שינוי'}
@@ -493,12 +724,21 @@ function LogisticsConsequence({ changedLogistics, validNewRows }) {
   }
   return (
     <>
-      {changedLogistics.map((s) => (
-        <span key={s.model.key}>
-          "{s.model.name}" — הכמות המתוכננת תעודכן ל-<Ltr>{String(s.target)}</Ltr> במסך הלוגיסטיקה,
-          עם הפניה לשינוי הזה.{' '}
-        </span>
-      ))}
+      {changedLogistics.map((s) =>
+        // 🔒 נוסח ההסרה — הכרעת-ישי 26/08/2026 (החלטה ג של תדריך פאזה 4). לשורה הזאת לא
+        // היה מקור באף שכבה, ולכן היא הובאה אליו במפורש ולא נוסחה כאן.
+        s.target === 0 ? (
+          <span key={s.model.key}>
+            "{s.model.name}" — השורה תוסר ממסך הלוגיסטיקה, וההסרה תירשם בהיסטוריית
+            שינויי-התכולה.{' '}
+          </span>
+        ) : (
+          <span key={s.model.key}>
+            "{s.model.name}" — הכמות המתוכננת תעודכן ל-<Ltr>{String(s.target)}</Ltr> במסך
+            הלוגיסטיקה, עם הפניה לשינוי הזה.{' '}
+          </span>
+        ),
+      )}
       {validNewRows.map((s) => (
         <span key={s.row.key}>
           "{s.product.item_name}" — תיפתח שורה חדשה במסך הלוגיסטיקה שמקורה הוא השינוי הזה.{' '}

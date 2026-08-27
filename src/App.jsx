@@ -36,6 +36,7 @@ import CustomerDetailsPage from '@/modules/02_customers/CustomerDetailsPage'
 import QuoteBuilderPage from '@/modules/03_quotes/QuoteBuilderPage'
 import QuotesPage from '@/modules/03_quotes/QuotesPage'
 import HostessesPage from '@/modules/04_hostesses/HostessesPage'
+import LogisticsPage from '@/modules/05_logistics/LogisticsPage'
 import ProjectsPage from '@/modules/06_projects/ProjectsPage'
 import ProjectCardPage from '@/modules/06_projects/ProjectCardPage'
 import PublicConfirmPage from '@/modules/04_hostesses/PublicConfirmPage'
@@ -167,8 +168,10 @@ function App() {
                   <Route
                     path="logistics"
                     element={
+                      // ‏3.3 (מודול 5, 26/08/2026): הוחלף UnderConstruction במסך האמיתי.
+                      // השומר עצמו לא נגע — `allow` זהה-בייט לשורת `modules` (כרטיס §⑨).
                       <ProtectedRoute allow="לוגיסטיקה">
-                        <UnderConstruction moduleName="לוגיסטיקה" />
+                        <LogisticsPage />
                       </ProtectedRoute>
                     }
                   />

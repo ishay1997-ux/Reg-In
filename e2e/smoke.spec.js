@@ -162,6 +162,37 @@ test.describe('בדיקת-עשן', () => {
     await expect(page.getByText(anchors.hostesses.excludedNoCar)).toHaveCount(0)
     await expect(page.getByText(anchors.hostesses.excludedUnavailable)).toHaveCount(0)
 
+    // לוגיסטיקה (מודול 5, נוסף 26/08/2026): תור-העבודה עולה עם הלוח האמיתי.
+    // 🔴 **אף עוגן כאן אינו תאריך ואינו מספר-חי** — הסיד של המודול גוזר את תאריכיו
+    // מ-`current_date` ולכן הוא זז מדי יום, והמונים זזים עם כל סימון של מנהלת הלוגיסטיקה.
+    // מה שנעוץ: שמות שלוש הגלולות ומספרן (㉙ — גלולה רביעית אסורה), כותרת סעיף-היציאה
+    // (S-7 — הסעיף נשאר על המסך גם ביום שאין בו אירוע יוצא, וזה רוב הימים), וכיתוב-המיון.
+    // המספר היחיד הוא **אינווריאנט עצמי**: מונה `הכול` מול ספירת-השורות שרונדרו.
+    // ⚠️ העשן רץ כמנכ"ל בלבד, והוא `edit` על "לוגיסטיקה" ⇒ המסך נפתח לו במלואו.
+    await expect(page.getByRole('link', { name: anchors.logistics.sidebarLink })).toBeVisible()
+    await page.goto('/logistics')
+    // הגלולות מרונדרות רק אחרי שהקריאות חזרו (עד אז — שלד) ⇒ ממתינים לגלולה עצמה,
+    // לא ל-`logistics-page` שמרונדר גם במצב-הטעינה.
+    const logisticsAllPill = page.getByTestId('logistics-pill-all')
+    await expect(logisticsAllPill).toBeEnabled({ timeout: 30_000 })
+    const logisticsPills = page.locator('[data-testid^="logistics-pill-"]')
+    await expect(logisticsPills).toHaveCount(anchors.logistics.pills.length)
+    for (const [index, label] of anchors.logistics.pills.entries()) {
+      await expect(logisticsPills.nth(index)).toContainText(label)
+    }
+    await expect(page.getByTestId('logistics-outbound')).toContainText(
+      anchors.logistics.outboundHeading,
+    )
+    await expect(page.getByText(anchors.logistics.sortLine)).toBeVisible()
+    await logisticsAllPill.click()
+    const logisticsAllText = await logisticsAllPill.innerText()
+    const logisticsAllCount = Number(logisticsAllText.replace(/[^0-9]/g, ''))
+    expect(
+      logisticsAllCount,
+      'מונה "הכול" הוא 0 אצל המנכ"ל (edit) — הזדהות/RLS שבורים, לא "אין דאטה"',
+    ).toBeGreaterThan(0)
+    await expect(page.locator('[data-testid^="logistics-row-"]')).toHaveCount(logisticsAllCount)
+
     // המנגנונים — לא הבטחות: אפס ניסיונות-כתיבה, אפס יעדים חיצוניים, אפס שגיאות-קונסול.
     expect(blockedWrites, 'מסך ניסה לכתוב למסד בזמן קריאה-בלבד').toEqual([])
     expect(externalHits, 'בקשה ליעד חיצוני שאינו האפליקציה/Supabase').toEqual([])
