@@ -397,6 +397,24 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | 14 | T3 reminder wording says "מחר" while the timing is a param in hours | C5:1127 vs P:99 | §7.42↳ — the param rules |
 | 15 | Gross profit "computed and saved" vs "derived, not stored" — **resolved 11/07 (§7.52 two-figure ruling): both were right about different numbers (final=stored, expected=derived)** | C5:453 vs C6:279 | §7.52 + §7.78 (snapshot-as-a-unit) |
 
+## 9א. ⏸️ Removals waiting for a deploy — READ THIS BEFORE WRITING ANY DESTRUCTIVE MIGRATION
+
+> **The rule this section serves lives in `supabase/migrations/CLAUDE.md` ("כלל-הפריסה") — that file
+> auto-loads the moment anyone touches the migrations folder, so it is the rule's single home.**
+> This is only the LIST. Added 27/08/2026 by Ishay's ruling.
+> **One-line version:** one database serves production and development, and production runs code
+> from a different commit ⇒ **additive DDL is always safe; `drop`/`rename`/tightening must wait
+> until the code that stopped using the thing is deployed.**
+
+| # | The removal that is owed | Blocked until | Its contract (more than a `drop`) | Registered where |
+|---|---|---|---|---|
+| **C2** | `alter table hostesses drop column bank_name, bank_branch, bank_account` — the destructive half of ה19 (m8 migration C did the additive half on 27/08/2026) | m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live** — because `origin/main` writes those columns (`HostessFormDialog.jsx:217-219`) and reads them (`HostessViewCard.jsx:315`) | 1️⃣ **Re-copy first** — `insert … on conflict do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
+
+🔴 **Until C2 runs, ה19 is NOT closed** — the exposure it exists to fix (bank details readable by
+anyone holding 'דיילות', because RLS is row-level) is still open. **m8 may not be reported as having
+closed ה19 before then**, and `micro_guides/module-8.md` §2.2's "✅ complete here" row for bank
+protection is false until it does.
+
 ## 10. Maintenance protocol (how this file stays alive)
 
 1. **Live update, same session (parallel of iron rule 15):** any session that applies a migration,
@@ -415,13 +433,31 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
-- ⏳ 27/08/2026 — **module-8 migrations C and D · WRITTEN ON DISK, NOT APPLIED — the typed-echo gate
-  is OPEN for both.** `20260827132708_module8_hostess_bank_details_split.sql` ·
-  `20260827132709_module8_email_log_finance_entities.sql`.
-  🔴 **Not Done rows.** Present because the Stop hook requires this file to move whenever
-  `supabase/migrations/**` changes; a file on disk is a plan. **Verify live before assuming either
-  landed** — `hostess_bank_details` / the `invoice` value in `email_log_entity_type_check`.
-  **C — will close ה19 only PARTIALLY, by design.** It creates `hostess_bank_details` (PK=hostess_id,
+- ✅ 27/08/2026 — **module-8 migrations C and D APPLIED via MCP** (typed-echo received for both).
+  `20260827132708_module8_hostess_bank_details_split` · `20260827132709_module8_email_log_finance_entities`.
+  **Verified live, impersonated, positive control first:** 26 of 26 bank rows copied · the three
+  parent columns still present and now nullable · child FK `on delete cascade` + `extensions.moddatetime`
+  · bank reads גיוס **26** / כספים **26** / לוגיסטיקה **0** · bank writes גיוס **26 rows** / כספים
+  **0 rows** (read-only by design) · `email_log` CHECK live at **6 values**, policy count **4**,
+  recruiter's shift mails **27, unchanged**. 🔴 **The decisive one — an INSERT/UPDATE/READ shaped
+  exactly as `origin/main` performs them, against the PARENT columns, all three SUCCEEDED** (probe
+  row removed, 0 left): the split did what it was for and production is untouched. Unit suite
+  **1,440/56 exit 0** after both.
+  ⚠️ **A claim in migration D's own why-comment was DISPROVEN by the verification and cannot be
+  edited there (applied + committed = append-only):** it says the finance manager will see "only her
+  two m8 rows". **She sees 8 today** (`quote`=6, `project`=1, `project_report`=1) because **RLS
+  policies are PERMISSIVE and combine with OR** — she already qualified through the quotes and
+  projects policies via her `view` grants. A new tightly-gated policy can only ADD to what someone
+  sees, never subtract. Nothing is broken; the description was wrong, not the SQL. **The corrected
+  statement now sits in `docs/schema.sql` beside the four policies and in the header's conventions
+  block**, where the next reader stands.
+  🔴 **Both steps are HALF done and neither owns its §6 debt yet:** C's 5-site client rewire has not
+  landed, and D's `send-email` deploy has not run (T5's order therefore still intact). **ה19 is not
+  closed — see §9א, C2.**
+  **`docs/schema.sql` refreshed** (§15 bank columns → nullable + deprecation note · new §29
+  `hostess_bank_details` · `email_log` CHECK + 4th policy · header 25→26 tables, 52→55 policies + an
+  explicit PERMISSIVE/OR warning) **and cross-checked against the live catalog — zero divergence.**
+  *(The pre-apply plan row this replaced described C as: )* **C — closes ה19 only PARTIALLY, by design.** It creates `hostess_bank_details` (PK=hostess_id,
   1:1, FK cascade-on-delete), copies the 26 live rows, adds the two ruled policies ('דיילות' edit =
   ALL so m4's form keeps working · 'כספים' edit = SELECT for the salary report), and **relaxes — does
   NOT drop — the three `hostesses` bank columns.**

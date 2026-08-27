@@ -45,7 +45,7 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
-### 27/08/2026 12:39–13:3X — MODULE 8 BUILD OPENED: Phase-1 door closed, migrations A + B applied
+### 27/08/2026 12:39–14:0X — MODULE 8: Phase-1 door closed; migrations A · B · C · D applied
 
 - **Step 1.0 (👤 phase door) ✅.** Branch `ishay/module-8-finance` cut from fresh `origin/dev`
   (`585ad27`) after verifying m5 really merged. **All 8 live re-measurements held — zero drift
@@ -72,6 +72,23 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
   §8.4 and §10, and `db_roadmap` §10 — because a debt with one home is a debt that gets lost.
   ⚠️ **Consequence stated, not buried: ה19 is NOT closed until C2 runs**, so §2.2's "✅ complete
   here" row for bank protection is false on merge day and the closing audit must check C2 itself.
+- **Migrations C + D applied.** C shipped the ADDITIVE half of ה19 only: `hostess_bank_details`
+  created, 26 of 26 rows copied, both ruled policies in place, and the three parent columns
+  **relaxed but kept**. **The decisive proof that the split worked: an INSERT, an UPDATE and a READ
+  shaped exactly as `origin/main` performs them — against the parent columns — all succeeded.**
+  (First attempt at that probe failed on a missing `city` value — my probe's bug, not the
+  migration's; re-run clean. Worth recording: a verification table that looks green while its one
+  decisive row never actually ran is the failure mode, not the exception.) D widened `email_log`'s
+  CHECK to 6 and added the 4th per-module policy. Suite **1,440/56 exit 0** after both.
+- 🔴 **A claim I wrote into migration D's why-header was disproven by my own verification, and the
+  file is append-only, so the correction had to be re-homed.** I wrote that the finance manager
+  would see "only her two m8 rows". She sees **8** — quote mails and project mails — because **RLS
+  policies are PERMISSIVE and OR together**, and she already qualified through two existing
+  policies via her `view` grants. **A new tightly-gated policy can only ADD to what someone sees,
+  never subtract.** Nothing broken; the SQL is right and the sentence was wrong. Correction landed
+  in `docs/schema.sql` (beside the four policies AND in the header conventions) and in the guide.
+  **Generalise: when reasoning about who sees what, count every policy on the table, not the one
+  you are adding.**
 - 🔑 **The generalisable lesson, and it is not "check main":** every migration this project applies
   goes to the SAME database the deployed site is using, while the deployed site runs code from a
   DIFFERENT commit. **So the real question before any destructive DDL is not "does my branch still

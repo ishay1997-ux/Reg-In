@@ -12,8 +12,8 @@
 | **Branch** | `ishay/module-8-finance` — ✅ **CUT 27/08/2026 12:4X from fresh `origin/dev` (`585ad27`)**, at step 1.0. Preconditions verified the same turn: m5 IS merged (`git merge-base --is-ancestor origin/ishay/module-5-logistics origin/dev` ⇒ yes; `git log origin/dev..origin/ishay/module-5-logistics` ⇒ empty), and `origin/dev` NOW carries `docs/specs/module_08_finance/` (`git ls-tree origin/dev docs/specs/` ⇒ 04/05/06/**08**). Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ empty (fresh, not dead — iron rule 10's caveat). *(Was: "NOT YET CUT", 26/08.)* |
 | **Owner** | Ishay (sole developer) |
 | **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X** — step 1.0's 🤖 half done; standing at its 👤 checkpoint. **Zero migrations applied.** |
-| **Last updated** | `27/08/2026 13:2X` *(system clock)* |
-| **Active step** | **1.3 — Migration C + the SAME-STEP m4 client rewire (`hostess_bank_details` split, ה19), NOT STARTED. 🔴 This is the highest-risk step in the phase:** it drops three NOT NULL columns off the live `hostesses` table and rewires 5 call sites in MERGED module-4 code; if the two halves do not land together, every new-hostess save breaks (T3). ‏1.0 ✅ · **1.1 ✅ APPLIED** · **1.2 ✅ APPLIED** — both verified live with positive controls, advisors **26 → 25** (‏`salary_reports` left the deny-all list), unit suite **1,440/56 exit 0** unchanged after each. 🔴 Ishay ruled `הכל היום, כרגיל` on the 28/08-presentation risk (§10) ⇒ Phase 1 runs complete, with a reported regression after every step that touches merged code. |
+| **Last updated** | `27/08/2026 14:0X` *(system clock)* |
+| **Active step** | **1.3 (client half) — the 5-site m4 rewire to `hostess_bank_details`, then 1.4's `send-email` deploy.** DB state: **A ✅ B ✅ C ✅(DB half) D ✅(migration)** — all four applied and verified live, unit suite **1,440/56 exit 0** after each. 🔴 **C shipped the ADDITIVE half only**: the three `hostesses` bank columns still exist (nullable) because `origin/main` writes them; the `drop` is **C2**, owed after deploy — `db_roadmap` §9א + §8.4. **⇒ ה19 is NOT closed yet.** 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
 | **Deadline** | conference **01/10** (target: 100%) · end 20/10. m8 is the last *process* module before reports — the conference's "closing the loop" story leans on it. |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -24,8 +24,8 @@
 | **1.0** | 🔻👤 Phase-1 door — branch cut · ledger sweep · live re-measurement · baseline · **Ishay checkpoint** | ✅ |
 | **1.1** | Migration A — `project_finance` child + `projects` finance columns + `assignments.released_from_status` + C-1 index | ✅ |
 | **1.2** | Migration B — `salary_reports` document model + `salary_report_lines` + RLS | ✅ |
-| **1.3** | Migration C + same-step client rewire — `hostess_bank_details` split (ה19) | 🔨 |
-| **1.4** | Migration D — `email_log` CHECK +2 values + 'כספים' SELECT policy → **then** `send-email` deploy | ⬜ |
+| **1.3** | Migration C + same-step client rewire — `hostess_bank_details` split (ה19) | 🔨 *(DB half ✅ · client rewire pending · `drop column` → C2)* |
+| **1.4** | Migration D — `email_log` CHECK +2 values + 'כספים' SELECT policy → **then** `send-email` deploy | 🔨 *(migration ✅ · deploy pending)* |
 | **1.5** | Migration E — the finance RPC family (4 actions + archive freeze + fee resolution + DEFINER readers) | ⬜ |
 | **1.6** | Migration F — public feedback RPC pair `/feedback/:token` + rate limit | ⬜ |
 | **1.7** | Migration G — `cancel_project` extension (live-body pull) + params seeds | ⬜ |
@@ -774,7 +774,33 @@ least-covered write surface in the repo (§6's `🚧 מ12 ← מ4` row: zero aut
 impersonation: recruitment-manager reads bank ✓ (edit on 'דיילות'), finance reads ✓,
 logistics-manager ⇒ 0 rows · m4 unit tests green · advisors.
 **מה ייחשב עובד** *(ה19 quoted)*: `"כתיבה/קריאה לבעלות edit על 'דיילות' (טופס-מ4 ממשיך לעבוד) +
-קריאה ל'כספים' (הדוח); חסום לכל השאר"`. **🌊 אדוות —** §6 bank-debt row consumed. **🗣️ אושר —**
+קריאה ל'כספים' (הדוח); חסום לכל השאר"`.
+
+**↳ as-built · DB HALF APPLIED `27/08/2026 13:5X` — `20260827132708_module8_hostess_bank_details_split`.
+🔴 DEVIATION: the `drop column` did NOT run and is deferred to C2 (see §10, this date, and §8.4).**
+The client rewire is the remaining half of this step and is NOT done yet.
+**🔻🤖 Verify — the DB half:**
+
+| Assertion | Measured |
+|---|---|
+| rows copied == parent count | **26 of 26** ✅ |
+| parent columns after C | all three still **present**, all now **nullable** ✅ — this is what keeps production alive |
+| child FK + trigger | `hostess_id_fkey del=c` (cascade — a deleted hostess takes her bank row) · `extensions.moddatetime` ✅ |
+| impersonated reads (positive control first) | גיוס/דיילות **26** · כספים **26** · לוגיסטיקה **0** ✅ |
+| impersonated writes | גיוס/דיילות **26 rows** updatable (she owns the form) · כספים **0 rows** — read-only by design ✅ |
+| 🔴 **production-safety proof** — the point of the whole split | An INSERT shaped exactly as `origin/main` writes it (bank values into the PARENT) **SUCCEEDED**; the UPDATE path **SUCCEEDED**; the READ path returned `לאומי · 002 · 12345`, not NULL. **Probe row deleted, 0 left.** ✅ |
+| unit regression | **1,440 / 56, exit 0** ✅ |
+
+⚠️ **First attempt at that production probe FAILED and the failure was MINE, not the migration's** —
+the probe omitted `city`, a pre-existing NOT NULL column. Re-run complete; recorded because a
+green-looking table that silently never ran the decisive check is exactly the failure this guide
+warns about elsewhere.
+🔴 **Still outstanding for this step:** the 5-site client rewire + the MANDATORY live-form check with
+a screenshot (this file's own instruction above — `04_hostesses/api.js` writes have zero automated
+coverage, so the live check is the only net). **The step is NOT closeable until both are done.**
+**🌊 אדוות —** `db_roadmap` §10 + **new §9א (the pending-removals list)** · `supabase/migrations/CLAUDE.md`
+(the new deploy rule) · `docs/schema.sql` §15 + new §29 · §8.4 (C2's contract) · §10. **§6's bank-debt
+row is NOT consumed yet** — ה19 is not closed until C2. **🗣️ אושר —** typed-echo `27/08/2026 13:5X`.
 
 **Step 1.4 · Migration D + ordered deploy — `module8_email_log_finance_types`**
 **Files:** migration + `supabase/functions/send-email/index.ts`
@@ -787,7 +813,31 @@ then update `ENTITY_MODULE` (+2 → 'כספים') and `ENTITY_REQUIRES_ATTACHMEN
 function · a `send-email` dry call with `entity_type='invoice'` and no attachment refuses (floor
 proven) · advisors.
 **מה ייחשב עובד** *(R4-F12 quoted)*: `"שני ערכים חדשים … שניהם attachment-חובה … מיגרציה לפני
-דיפלוי, לעולם לא הפוך"`. **🌊 אדוות —** §6 mail-engine debt row: m8's share paid. **🗣️ אושר —**
+דיפלוי, לעולם לא הפוך"`.
+
+**↳ as-built · MIGRATION APPLIED `27/08/2026 13:5X` — `20260827132709_module8_email_log_finance_entities`.
+🔴 The Edge-function deploy — the second half of this step — has NOT run yet. T5's order is therefore
+still intact and must stay that way.**
+**🔻🤖 Verify — the migration half:** CHECK live shows **6 values** ✅ · `email_log` policy count **4** ✅ ·
+recruitment-manager still reads her shift mails, **27 rows, unchanged by D** ✅ · unit regression
+**1,440/56 exit 0** ✅.
+
+🔴 **A CLAIM OF MINE THAT THE VERIFICATION DISPROVED — recorded because the migration file is
+committed and append-only, so the correction can only live here.** The migration's own why-comment
+says the finance manager *"will see only her two m8 rows — not the quote, shift or project mails."*
+**That is false. Measured: she sees 8 `email_log` rows right now** (`quote`=6 + `project`=1 +
+`project_report`=1), and zero of them are m8's, because no invoice/salary rows exist yet.
+**The mechanism: RLS policies are PERMISSIVE, so they combine with OR.** She already qualified
+through `email_log_select_quotes_module` (she holds `view` on 'הצעות מחיר') and
+`email_log_select_projects_module` (`view` on 'פרויקטים'). **A new, tightly-gated policy can only
+ADD rows to what someone sees — it can never subtract.** Nothing is broken and nothing needs
+changing; the *description* was wrong, not the SQL. 📌 The corrected statement now sits in
+`docs/schema.sql` beside the four policies, where the next reader will actually be.
+🔑 **Generalise it, because it will bite again in 1.5/1.6:** when reasoning about who can see what,
+count **every** policy on the table, not just the one being added.
+**🌊 אדוות —** `docs/schema.sql` (CHECK + the 4th policy + the PERMISSIVE/OR note in the header) ·
+`db_roadmap` §10 · §10 below. **§6's mail-engine row is NOT marked paid** — m8's share is paid only
+once the Edge function is deployed. **🗣️ אושר —** typed-echo `27/08/2026 13:5X`.
 
 **Step 1.5 · Migration E — `module8_finance_rpc_family`**
 **Files:** one migration (or two if the reader family earns its own — builder's call, stated in

@@ -16,6 +16,11 @@
 --    ואחרי מיגרציה B `20260827131033_module8_salary_report_document_model` (הדלתא:
 --    `salary_reports` מריצה למסמך — 3 עמודות + 3 אילוצים + policy ראשונה אי-פעם, ושחרור
 --    שתי עמודות-חובה; טבלה חדשה `salary_report_lines` +RLS +policy +3 אינדקסים +טריגר) ·
+--    ואחרי C `20260827132708_module8_hostess_bank_details_split` (טבלה חדשה
+--    `hostess_bank_details` +RLS +2 policies +טריגר + העתקת 26 שורות, ושחרור שלוש
+--    עמודות-הבנק ב-`hostesses` מ-NOT NULL **בלי למחוק אותן** — ר' סעיף 29 ו-db_roadmap §9א) ·
+--    ואחרי D `20260827132709_module8_email_log_finance_entities` (‏CHECK של `email_log`
+--    מ-4 ל-6 ערכים + policy רביעית ל'כספים') ·
 --    פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
 --
 -- 🔴 **לרענן את הקובץ הזה אחרי כל מיגרציה.** העותק הקודם לא רוענן חמישה חודשים והכריז על עמודה
@@ -29,8 +34,10 @@
 -- 🚫 **אין כאן סעיף "היסטוריה"/"יומן שינויים"** — הקובץ מתאר הווה בלבד. ציר השינויים חי
 --    ב-`supabase/migrations/` וב-`docs/db_roadmap.md`.
 --
--- מוסכמות: כל 25 הטבלאות ב-`public` עם RLS **מופעל** (נמדד 27/08/2026 אחרי מיגרציה B).
--- כל 52 המדיניות (40 ב-public, 12 על `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`.
+-- מוסכמות: כל 26 הטבלאות ב-`public` עם RLS **מופעל** (נמדד 27/08/2026 אחרי מיגרציה D).
+-- כל 55 המדיניות (43 ב-public, 12 על `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`.
+-- 🔴 **PERMISSIVE = הן מתאחדות ב-OR.** שתי policies על אותה טבלה מרחיבות גישה, לא מצמצמות —
+--    ולכן policy חדשה "מגודרת היטב" אינה מגבילה אף אחד שכבר עובר דרך policy אחרת.
 -- 🔴 שלוש טבלאות נותרו deny-all **במכוון**: `project_changes` (נקראת רק דרך ה-RPC הממסך),
 --    `login_attempts` ו-`login_rpc_calls` (רק דרך פונקציות ה-DEFINER של הכניסה). מ-27/08/2026
 --    **אין יותר אף טבלה עסקית שחסומה מחוסר-בנייה** — `salary_reports` הייתה האחרונה. הפונקציה `moddatetime` (טריגר
@@ -725,9 +732,14 @@ create table hostesses (
   hourly_rate  numeric     not null,
   rating       integer,
   status       text        not null default 'active',
-  bank_name    text        not null,
-  bank_branch  text        not null,
-  bank_account text        not null,
+  -- ⚠️ מ8 ה19 (27/08/2026): שלוש אלה הוחלפו ע"י hostess_bank_details (סעיף 29).
+  --    שוחררו מ-NOT NULL ונשארות זמנית **רק** כדי שהקוד שרץ בייצור לא יישבר;
+  --    הוא כותב אליהן ישירות ב-HostessFormDialog.jsx:217-219 וקורא אותן
+  --    ב-HostessViewCard.jsx:315. **תימחקנה במיגרציה C2 אחרי מיזוג ופריסה של מ8**
+  --    (db_roadmap §9א). 🔴 קוד חדש קורא וכותב ל-hostess_bank_details, לא לכאן.
+  bank_name    text,
+  bank_branch  text,
+  bank_account text,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now(),
   hostess_id   bigint      not null generated always as identity,
@@ -1404,7 +1416,7 @@ create table email_log (
   sent_by_email text,
   created_at    timestamptz not null default now(),
   constraint email_log_pkey              primary key (email_log_id),
-  constraint email_log_entity_type_check check (entity_type = any (array['quote'::text, 'shift'::text, 'project'::text, 'project_report'::text])),
+  constraint email_log_entity_type_check check (entity_type = any (array['quote'::text, 'shift'::text, 'project'::text, 'project_report'::text, 'invoice'::text, 'salary_report'::text])),
   constraint email_log_status_check      check (status = any (array['sent'::text, 'failed'::text]))
 );
 
@@ -1438,6 +1450,23 @@ create policy email_log_select_shifts_module on email_log
       select 1 from permissions p
       where p.role_id = (select current_user_role_id())
         and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+-- מ8 (27/08/2026) — ה-policy הרביעית. ⚠️ ארבעתן PERMISSIVE, כלומר הן **מתאחדות ב-OR**:
+-- מנהלת-הכספים אינה רואה *רק* את שתי השורות שלה — היא כבר רואה גם מיילי-הצעות
+-- (view על 'הצעות מחיר') ומיילי-פרויקטים (view על 'פרויקטים'), דרך שתי ה-policies
+-- הקיימות. נמדד 27/08/2026: 8 שורות = 6 quote + 1 project + 1 project_report.
+-- ה-policy הזו רק **מוסיפה** לה את invoice/salary_report; היא אינה מצמצמת דבר.
+create policy email_log_select_finance_module on email_log
+  for select to authenticated
+  using (
+    entity_type = any (array['invoice'::text, 'salary_report'::text])
+    and exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'כספים')
         and p.permission_level = any (array['edit'::text, 'view'::text])
     )
   );
@@ -1500,6 +1529,69 @@ create policy project_finance_select_by_permission on project_finance
       where p.role_id = (select current_user_role_id())
         and p.module_id = (select module_id from modules where module_name = 'כספים')
         and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+
+-- ============================================================
+-- 29. פרטי בנק של דיילת — public.hostess_bank_details (מודול 8)
+-- ============================================================
+-- ה19: RLS ב-Postgres הוא ברמת-שורה ולא ברמת-עמודה ⇒ כל מחזיק 'דיילות' שראה דיילת
+-- ראה גם את חשבון-הבנק שלה. הפיצול לטבלת-בת הוא התקדים החי של product_costs.
+-- 🔴 קריאה: 'דיילות' עם עריכה (הטופס של מ4, ALL) + 'כספים' עם עריכה (דוח-השכר, SELECT
+--    בלבד — היא לעולם לא עורכת פרטי בנק).
+-- 🔴 שורה חסרה היא מצב תקין — דיילת בלי פרטי בנק. הקריאה היא LEFT JOIN, והיא מוצגת.
+-- ⏸️ **הפיצול חצי-גמור בכוונה:** שלוש העמודות המקוריות עדיין קיימות על hostesses
+--    (סעיף 15) כי הייצור כותב אליהן. C2 תמחק אותן אחרי הפריסה — db_roadmap §9א.
+--    **עד אז חשיפת-ה19 עדיין פתוחה**, ופרטי-בנק חיים בשני מקומות.
+create table hostess_bank_details (
+  hostess_id   bigint      not null,
+  bank_name    text        not null,
+  bank_branch  text        not null,
+  bank_account text        not null,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  constraint hostess_bank_details_pkey primary key (hostess_id),
+  constraint hostess_bank_details_hostess_id_fkey foreign key (hostess_id) references hostesses (hostess_id) on update restrict on delete cascade
+);
+
+alter table hostess_bank_details enable row level security;
+
+-- אינדקסים
+-- hostess_bank_details_pkey — unique btree (hostess_id) [נוצר ע"י האילוץ hostess_bank_details_pkey]
+
+-- טריגרים
+create trigger hostess_bank_details_set_updated_at
+  before update on hostess_bank_details
+  for each row execute function extensions.moddatetime('updated_at');
+
+-- מדיניות RLS
+create policy hostess_bank_details_all_hostesses_module on hostess_bank_details
+  for all to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = 'edit'
+    )
+  )
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'דיילות')
+        and p.permission_level = 'edit'
+    )
+  );
+
+create policy hostess_bank_details_select_finance_module on hostess_bank_details
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select module_id from modules where module_name = 'כספים')
+        and p.permission_level = 'edit'
     )
   );
 
