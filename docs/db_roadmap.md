@@ -433,6 +433,57 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
+- ✅ 27/08/2026 — **module-8 migration E1 APPLIED via MCP** (typed-echo:
+  `module8_finance_money_ssot_and_readers`).
+  **Step 1.5 was split in two** (the guide permits it): **E1 = the money SSOT + the two readers +
+  the m6 ripple**; E2 = the five write actions, fee resolution, archive and the salary transaction.
+  Splitting gives each half its own verification instead of burying both in one giant migration.
+  **What E1 contains:**
+  · `finance_project_money(project_id)` — **the single place money is computed**, internal
+    (`revoke … from public, anon, authenticated`), DEFINER because מנהלת-הכספים is RLS-blocked on
+    'לוגיסטיקה' and 'דיילות' and a client-side read returns `[]` with no error (R4-F1/F5).
+    Implements ה2 (revenue = frozen preVat + Σ signed scope changes) · ה17/ה26 (goods = ordered qty
+    × frozen cost, from the QUOTE lines, never `actual_qty` and never logistics) · ה7 (labour from
+    assignment rows) · ה14/ה29/B-16 (travel only where `actual_hours > 0`) · ה18 (deviation, labour
+    side only, **NULL** — never 0 — when planned hours are missing, T7).
+  · `get_finance_overview()` / `get_project_finance_detail(id)` — DEFINER, gated 'כספים', **both
+    consuming that one function**, which is what makes F16/R1-4 structurally true rather than a
+    promise.
+  · 🔴 **A ripple into MERGED m6 SQL: `list_projects_overview` is rewritten.** Its `planned_revenue`
+    counted the quote only; m8 counts scope changes too, so the same project would show two
+    different revenues on two screens (measured by the review: **#15 → 6,060 vs 5,985**). The live
+    body was pulled with `pg_get_functiondef` before editing (the documented mine: a migration built
+    from a stale version once broke quote approval silently for three days) and **the delta is one
+    added term**. **Regression proof named in advance: m6's hand-computed anchor #8 → 5,355.00 has
+    ZERO scope changes and must stay digit-identical.**
+  🔑 **Verified BEFORE a line was written — the formula reproduces the hand-computed anchor:**
+  project #13 ⇒ revenue **5,300.00** · goods **1,650.00** · labour **0** · **profit 3,650.00** =
+  `spec.md §③3`. ⚠️ **And the anchor settled a design question no self-authored test would have
+  caught:** the hostess quote line (`04ST`) carries its own `closing_unit_cost` (300.00/unit);
+  counting it as goods would have added 1,200 ₪ of cost and returned **2,450** instead of 3,650.
+  ⇒ hostess-category lines are excluded from the goods term — labour comes from the assignment rows
+  alone. **That is exactly why these numbers were computed by hand before the code existed.**
+  ⚠️ `payment_terms_days` is returned **nullable** on purpose: `תנאי_תשלום_ימים` is seeded by
+  migration G. Until then the due date is uncomputable and the screen must show `—`, never
+  "0 days overdue", which is a lie that looks like a fact.
+  **✅ Verified live after apply, impersonated:**
+  · 🔴 **The m6 regression is the headline: `list_projects_overview` still returns `5,355.00` for
+    project #8 — digit-identical.** The rewrite of merged m6 SQL did not move its oracle.
+  · #15 now returns **5,985.00** where it returned 6,060.00 — **the reviewer's predicted number
+    exactly** (its one scope change is −25 × 3.00 = −75). ⚠️ **This is a visible change to a merged
+    module's screen and is the POINT of the fix**, not a side effect: m6 and m8 now show one
+    revenue. Swept for tests pinning the old value — **none exist**; `ProjectCardPage.test.jsx`
+    uses `5355.00` as a hand-written fixture, unaffected.
+  · #13 profit **3,650.00** from `get_project_finance_detail` = the hand anchor · revenue
+    **5,300.00** · goods **1,650.00** · labour **0**.
+  · #12 (the only project currently in a finance status) is coherent end-to-end: revenue 500.00 ·
+    goods 0.00 · labour 270.00 · deviation **202.50** (6 actual hours against 1.5 planned at rate
+    45) · travel 0.00 **because the param is still 0 — G raises it to 22.60**.
+  · Gate: כספים reads (positive control, ≥1 row) · **לוגיסטיקה and גיוס both raise**, not empty-set.
+  · **T8: `finance_project_money` proacl = `postgres`, `service_role` only — no `anon`, no
+    `authenticated`.** The internal function is genuinely internal.
+  · Unit suite **1,446 / 56, exit 0**. `docs/schema.sql` refreshed (29 functions; the m6 row now
+    points at THIS migration as the source of its current body, with the reason) and cross-checked.
 - ✅ 27/08/2026 — **module-8 migrations C and D APPLIED via MCP** (typed-echo received for both).
   `20260827132708_module8_hostess_bank_details_split` · `20260827132709_module8_email_log_finance_entities`.
   **Verified live, impersonated, positive control first:** 26 of 26 bank rows copied · the three

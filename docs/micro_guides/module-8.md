@@ -12,8 +12,8 @@
 | **Branch** | `ishay/module-8-finance` — ✅ **CUT 27/08/2026 12:4X from fresh `origin/dev` (`585ad27`)**, at step 1.0. Preconditions verified the same turn: m5 IS merged (`git merge-base --is-ancestor origin/ishay/module-5-logistics origin/dev` ⇒ yes; `git log origin/dev..origin/ishay/module-5-logistics` ⇒ empty), and `origin/dev` NOW carries `docs/specs/module_08_finance/` (`git ls-tree origin/dev docs/specs/` ⇒ 04/05/06/**08**). Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ empty (fresh, not dead — iron rule 10's caveat). *(Was: "NOT YET CUT", 26/08.)* |
 | **Owner** | Ishay (sole developer) |
 | **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X** — step 1.0's 🤖 half done; standing at its 👤 checkpoint. **Zero migrations applied.** |
-| **Last updated** | `27/08/2026 14:4X` *(system clock)* |
-| **Active step** | **1.5 — Migration E, the finance RPC family (the module's whole authorization model), NOT STARTED.** ‏1.0–1.4 all ✅ **including both halves of 1.3 and 1.4.** DB: A · B · C(additive half) · D applied and live-verified; `send-email` deployed at **v6** and certified by a 5-call behavioural probe (zero mails sent, `email_log` unchanged at 33). **`npm run gate` exit 0 · 1,446 unit tests.** 🔴 **C2 still owed after deploy — ה19 is NOT closed** (§8.4 · `db_roadmap` §9א). 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
+| **Last updated** | `27/08/2026 15:0X` *(system clock)* |
+| **Active step** | **1.5 · E2 — the five write actions + fee resolution + archive + the salary transaction, NOT STARTED.** ‏1.0–1.4 ✅ · **E1 ✅ applied**: the money SSOT (`finance_project_money`, internal, no anon/authenticated) and both gated readers, plus the F16 ripple into merged m6 SQL — **m6's own anchor #8 held at 5,355.00, digit-identical**. Profit formula proven against the hand anchor **before** any SQL was written (#13 ⇒ 3,650.00). Unit suite **1,446/56 exit 0**. 🔴 **C2 still owed after deploy — ה19 is NOT closed** (§8.4 · `db_roadmap` §9א). 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
 | **Deadline** | conference **01/10** (target: 100%) · end 20/10. m8 is the last *process* module before reports — the conference's "closing the loop" story leans on it. |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -26,7 +26,7 @@
 | **1.2** | Migration B — `salary_reports` document model + `salary_report_lines` + RLS | ✅ |
 | **1.3** | Migration C + same-step client rewire — `hostess_bank_details` split (ה19) | ✅ *(both halves; `drop column` deferred to C2 — §8.4)* |
 | **1.4** | Migration D — `email_log` CHECK +2 values + 'כספים' SELECT policy → **then** `send-email` deploy | ✅ *(both halves; deploy = v6)* |
-| **1.5** | Migration E — the finance RPC family (4 actions + archive freeze + fee resolution + DEFINER readers) | 🔨 |
+| **1.5** | Migration E — the finance RPC family | 🔨 *(E1 ✅ money SSOT + readers + m6 ripple · E2 pending: 5 write actions + archive + salary)* |
 | **1.6** | Migration F — public feedback RPC pair `/feedback/:token` + rate limit | ⬜ |
 | **1.7** | Migration G — `cancel_project` extension (live-body pull) + params seeds | ⬜ |
 | **1.8** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | ⬜ |
@@ -954,7 +954,42 @@ lines snapshot + signatures + travel stamps present, second call raises on UNIQU
 no anon on internal functions (T8) · advisors (expect +N DEFINER WARNs — the accepted class;
 predict, then reconcile).
 **מה ייחשב עובד** *(spec §④ quoted)*: `"מסע #12 מקצה-לקצה … מפיק רווח-קפוא שתואם חישוב-יד"` —
-the DB half. **🌊 אדוות —** db_roadmap rows · §6. **🗣️ אושר —**
+the DB half.
+
+**↳ as-built · SPLIT INTO E1 + E2** (the step's own text permits it). **E1 APPLIED
+`27/08/2026 14:5X` — `20260827144459_module8_finance_money_ssot_and_readers`.** E2 (the five write
+actions, fee resolution, archive, salary transaction) is next and consumes what E1 built.
+
+🔑 **The formula was proven against the hand-computed anchor BEFORE a line of SQL was written** —
+run against live data, not against a test I would author later: #13 ⇒ revenue **5,300.00** · goods
+**1,650.00** · labour **0** · **profit 3,650.00** = `spec.md §③3`.
+🔴 **And the anchor settled a design question that no self-authored test could have caught.** The
+hostess quote line (`04ST`) carries its own `closing_unit_cost` of 300.00/unit. Counting it inside
+the goods term adds 1,200 ₪ of cost and yields **2,450**, not 3,650. ⇒ **hostess-category lines are
+excluded from goods; labour comes from the assignment rows alone.** A test written beside the
+implementation would have encoded the same misreading and passed green on top of a wrong invoice.
+
+**🔻🤖 Verify:**
+
+| # | Assertion | Measured |
+|:-:|---|---|
+| R1 | 🔴 **m6 regression — `list_projects_overview` #8** | **5,355.00** — digit-identical to m6's own hand anchor. The merged-SQL rewrite did not move it ✅ |
+| R2 | m6 #15, which HAS a scope change | 6,060.00 → **5,985.00**, the reviewer's predicted number (−25 × 3.00). **A visible change to a merged module's screen, and the point of the fix** — m6 and m8 now report one revenue. Swept: **no test pins the old value** |
+| R3 | #13 profit via `get_project_finance_detail` | **3,650.00** = the hand anchor ✅ |
+| R4 | #12 coherence end-to-end | revenue 500.00 · goods 0.00 · labour 270.00 · deviation **202.50** (6 actual hours vs 1.5 planned @45) · travel 0.00 — correct, the travel param is still 0 until G |
+| R5 | gate, positive control first | כספים reads ≥1 row · **לוגיסטיקה and גיוס RAISE** (not an empty set — the difference that matters) ✅ |
+| R6 | **T8** — `finance_project_money` grants | `postgres`, `service_role` only. **No `anon`, no `authenticated`** ✅ |
+| R7 | unit regression | **1,446 / 56, exit 0** ✅ |
+
+📌 **A contract for phases 2–3, stated here because `api.js` will consume it by name:** both readers
+return **facts**, not display values. Due date, days-overdue, the profit **%** and the score tag are
+derived in `src/lib/projectFinance.js` (step 2.1) — the S1 card says "נגזר בזמן-תצוגה", and §7.52
+says ₪ is stored while % is always derived. `payment_terms_days` comes back **NULL** until G seeds
+`תנאי_תשלום_ימים`; the screen must render `—`, never "0 days overdue".
+
+**🌊 אדוות —** `db_roadmap` §10 · `docs/schema.sql` (3 new functions, count 26→29, **and the m6
+function's source pointer now names THIS migration with the reason**) · §1 header + step table.
+**No `🚧` created or consumed.** **🗣️ אושר —** typed-echo `27/08/2026 14:5X`.
 
 **Step 1.6 · Migration F — `module8_public_feedback_rpc`**
 **Files:** one migration

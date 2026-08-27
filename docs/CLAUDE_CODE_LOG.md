@@ -45,7 +45,7 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
-### 27/08/2026 12:39–14:0X — MODULE 8: Phase-1 door closed; migrations A · B · C · D applied
+### 27/08/2026 12:39–14:5X — MODULE 8 phase 1: steps 1.0–1.4 closed; E1 written
 
 - **Step 1.0 (👤 phase door) ✅.** Branch `ishay/module-8-finance` cut from fresh `origin/dev`
   (`585ad27`) after verifying m5 really merged. **All 8 live re-measurements held — zero drift
@@ -59,6 +59,19 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
   step that touches merged code, no silent progression past a red one. He also picked **`חסכוני`**
   (one sequential session, no agent army) for Phase 1 — matching the guide's own recommendation,
   since typed-echo gates serialize the work anyway.
+- **Steps 1.3 and 1.4 closed in BOTH halves.** The m4 bank rewire shipped — and the split lives in
+  `04_hostesses/api.js` alone, so the hostess form itself was never touched; only the view card
+  changed, by one line. Proven in a credentialed browser: loaded from the child table, saved,
+  re-read after a full reload, rendered on the card, restored, restore verified in the DB. The
+  6 new unit tests were red-proved (broke `splitBankFields` ⇒ exactly 2 went red). `send-email`
+  deployed at v6 and certified by 5 real calls — zero mails sent, `email_log` unchanged at 33.
+- 🔑 **Before writing a line of migration E1, I ran the approved profit formula against live data:
+  #13 ⇒ 3,650.00, digit-identical to `spec.md §③3`'s hand-computed anchor.** ⚠️ **And the anchor
+  settled something no test I wrote myself could have caught:** the hostess quote line carries its
+  own `closing_unit_cost` (300/unit). Counting it as goods gives 2,450, not 3,650 — so hostess-
+  category lines are excluded from the goods term and labour comes from the assignment rows alone.
+  **This is the whole argument for hand-computing acceptance numbers before the code exists**: a
+  test authored beside the implementation would have encoded the same wrong reading and passed.
 - 🔴 **A defect in the plan itself, found at the 1.3 gate and worth more than the migrations:
   migration C as written would have broken the LIVE site — today.** The plan (step 1.3 / 🛑 T3)
   says copy-then-drop the three `hostesses` bank columns in one migration, with the client rewire

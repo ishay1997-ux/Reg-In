@@ -21,6 +21,10 @@
 --    עמודות-הבנק ב-`hostesses` מ-NOT NULL **בלי למחוק אותן** — ר' סעיף 29 ו-db_roadmap §9א) ·
 --    ואחרי D `20260827132709_module8_email_log_finance_entities` (‏CHECK של `email_log`
 --    מ-4 ל-6 ערכים + policy רביעית ל'כספים') ·
+--    ואחרי E1 `20260827144459_module8_finance_money_ssot_and_readers` (‏3 פונקציות חדשות —
+--    ‏`finance_project_money` הפנימית ושני הקוראים המגודרים — **וכתיבה-מחדש של
+--    `list_projects_overview` הממוזגת של מ6**: ‏`planned_revenue` כולל מעכשיו גם
+--    Σ שינויי-תכולה. עוגן-מ6 (#8 = 5,355.00) אומת זהה-ספרתית אחרי השכתוב) ·
 --    פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
 --
 -- 🔴 **לרענן את הקובץ הזה אחרי כל מיגרציה.** העותק הקודם לא רוענן חמישה חודשים והכריז על עמודה
@@ -1596,7 +1600,7 @@ create policy hostess_bank_details_select_finance_module on hostess_bank_details
   );
 
 -- ============================================================
--- 24. פונקציות בסכמה public — 26 פונקציות
+-- 24. פונקציות בסכמה public — 29 פונקציות
 -- ============================================================
 -- 🚫 **הגופים אינם כאן במכוון** (ר' כותרת הקובץ). לכל פונקציה: חתימה · מצב אבטחה · search_path ·
 --    למי יש EXECUTE · ומצביע לקובץ המיגרציה שבו הגוף הנוכחי חי.
@@ -1669,7 +1673,10 @@ create policy hostess_bank_details_select_finance_module on hostess_bank_details
 --   pending_invites integer, assignments_row_count integer, logistics_ready integer,
 --   logistics_total integer, cancelled_at timestamptz, cancel_type text, planned_revenue numeric)
 --   SD · stable · plpgsql · [authenticated, service_role]
---   → supabase/migrations/20260814142439_module6_rpcs_reads_and_close.sql
+--   → supabase/migrations/20260827144459_module8_finance_money_ssot_and_readers.sql
+--     ⚠️ **הגוף הנוכחי הוא של מ8, לא של מ6.** מ8 הרחיב את `planned_revenue` כך שיכלול
+--     גם Σ שינויי-תכולה (ה2/F16) — אחרת אותו פרויקט מוצג בשני סכומים במ6 ובמ8.
+--     המקור המקורי: `20260814142439_module6_rpcs_reads_and_close.sql`.
 -- update_project_details(p_project_id integer, p_event_date date, p_location text,
 --   p_start_time time, p_end_time time) returns jsonb
 --   SD · plpgsql · [authenticated, service_role]
@@ -1706,6 +1713,22 @@ create policy hostess_bank_details_select_finance_module on hostess_bank_details
 --   SD · plpgsql · [authenticated, service_role]
 --   → supabase/migrations/20260826002447_module5_checklist_rpc.sql
 
+
+-- ── מודול 8 (27/08/2026) ──────────────────────────────────────────────────────
+-- finance_project_money(p_project_id integer) returns table (revenue numeric,
+--   goods_cost numeric, labor_cost numeric, travel_cost numeric, gross_profit numeric,
+--   budget_deviation numeric, planned_hours numeric, paid_shift_count integer,
+--   finally_approved_count integer)
+--   SD · stable · plpgsql · [service_role]   ← 🔴 **פנימית: אין anon ואין authenticated**
+--   🔑 **מקור-האמת היחיד של הכסף.** כל מסך של מ8 עובר דרכה, ולכן אי-אפשר ששני מסכים
+--      יראו שני רווחים שונים לאותו פרויקט (F16/R1-4). אומתה מול עוגן-היד: #13 ⇒ 3,650.00.
+--   → supabase/migrations/20260827144459_module8_finance_money_ssot_and_readers.sql
+-- get_finance_overview() returns table (22 columns — S1's three tabs)
+--   SD · stable · plpgsql · [authenticated, service_role] · gated 'כספים'
+--   → supabase/migrations/20260827144459_module8_finance_money_ssot_and_readers.sql
+-- get_project_finance_detail(p_project_id integer) returns table (30 columns — S2's balance)
+--   SD · stable · plpgsql · [authenticated, service_role] · gated 'כספים'
+--   → supabase/migrations/20260827144459_module8_finance_money_ssot_and_readers.sql
 
 -- ============================================================
 -- 25. עבודות מתוזמנות — cron.job (3 עבודות, כולן active)
