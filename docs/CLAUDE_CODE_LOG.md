@@ -45,6 +45,21 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 27/08/2026 19:3X — N1b applied: the normalization is complete
+
+- ✅ **`hostesses.languages` dropped. The languages package (N1 + N1b) is closed**, and so is C2's
+  ה19 earlier today. **Two of the three registered schema removals landed on the same day; only N2
+  remains.**
+- 🔑 **The closing measurement is the one worth keeping, because it is checkable in one query rather
+  than believed: `data_type = 'ARRAY'` across the whole `public` schema now returns ZERO columns.**
+  The single 1NF violation the normalization scan found is gone.
+- 🔴 **Regression after an irreversible drop:** `smoke` **exit 0** · `hostesses.spec.js` +
+  `smart-match.spec.js` **32/32**. `docs/schema.sql` updated the same minute and re-cross-checked —
+  `hostesses` **15 documented / 15 live, zero divergence**.
+- **The safety net touched 0 rows, exactly as measured beforehand** — which is the point of
+  measuring first: the net exists for the case that did not happen, and its narrowness is what made
+  it safe if it had.
+
 ### 27/08/2026 19:2X — C2+N1 in production; N1b written and gated
 
 - **Merged and promoted:** PR #70 → `dev`, the flaky fix #72 → `dev` (`4b9f7af`), PR #71 `dev` →

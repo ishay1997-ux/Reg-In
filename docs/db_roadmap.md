@@ -410,7 +410,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 |---|---|---|---|---|
 | ✅ ~~**C2**~~ **DONE 27/08/2026 18:0X** | ~~`alter table hostesses drop column bank_name, bank_branch, bank_account`~~ — **applied; ה19 is CLOSED.** Legacy columns **0** · child table **26/26** · **0** empty bank rows · `smoke` exit 0 and `hostesses.spec.js` **20/20** after the drop · `schema.sql` re-synced (16 documented / 16 live). 🔑 **The `updated_at` guard was not theoretical: all 26 child rows were NEWER than their parent, so an unguarded `do update` would have touched all 26 and pulled them back to the stale source. With the guard the copy touched 0.** *(Row kept struck rather than deleted — the correction it carries is the record. The original contract:)* | ~~m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live**~~ — **all three met: `dev` 518587d · `main` 9e07233 · Vercel production `state=success`, and the live bundle was fetched and asserted to contain `hostess_bank_details`** | 1️⃣ **Re-copy first** — `insert … on conflict (hostess_id) do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 🔴 **BUT THE `do update` MUST BE GUARDED BY `updated_at`** *(found 27/08/2026 at the 1.8 gate — the contract as first written was wrong)*: **after** the deploy m8's `api.js` writes ONLY the child, so an unguarded overwrite would push **stale parent values over fresh child rows** — the same data loss pointed backwards, landing as wrong bank numbers in a CPA salary report. Overwrite only where the parent row is genuinely newer than the child row (both tables carry a `moddatetime`-maintained `updated_at`). **Full contract + the SQL shape: `micro_guides/module-8.md` §8.4.** 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
 
-| **N1b** *(the additive half is ✅ DONE 27/08/2026 18:4X — table created, 33 rows copied, client rewired, gate green)* | ~~create + copy~~ → **what remains: `alter table hostesses drop column languages`** | **the m8+N1 branch is merged and its deploy is confirmed live** — `origin/main` still writes the column (`HostessFormDialog.jsx:222`) and reads it (`HostessViewCard.jsx:328`) | Same three beats as C2: **add + copy → deploy → drop**, with a **re-copy immediately before the drop** — 🔴 **including C2's `updated_at` guard on the conflict action**, for the same reason: once the new code writes only the child, an unguarded overwrite runs backwards. ⚠️ `languages` is **nullable** (unlike the bank columns), so the additive half needs no constraint relaxation — create, copy, drop later | `PROJECT_MASTER_sec7.md §7.87` · here |
+| ✅ ~~**N1b**~~ **DONE 27/08/2026 19:3X — the whole N1 package is closed.** 🔑 **`data_type='ARRAY'` across `public` now returns ZERO columns** — the one 1NF violation is gone. Regression after the drop: `smoke` exit 0, m4 suites **32/32**. *(Row struck rather than deleted: the C2-vs-N1b guard lesson below is the record.)* | ~~create + copy~~ → **what remains: `alter table hostesses drop column languages`** | **the m8+N1 branch is merged and its deploy is confirmed live** — `origin/main` still writes the column (`HostessFormDialog.jsx:222`) and reads it (`HostessViewCard.jsx:328`) | Same three beats as C2: **add + copy → deploy → drop**, with a **re-copy immediately before the drop** — 🔴 **including C2's `updated_at` guard on the conflict action**, for the same reason: once the new code writes only the child, an unguarded overwrite runs backwards. ⚠️ `languages` is **nullable** (unlike the bank columns), so the additive half needs no constraint relaxation — create, copy, drop later | `PROJECT_MASTER_sec7.md §7.87` · here |
 | **N2** | `customer_contacts` consolidation — `is_primary` on the child, then drop `contact_name`/`phone`/`email` from `customers` | m8 merged **and deployed** | Same pattern, **separate drop migration** from N1's. 🔴 **Its blast radius is ~4.6× N1's — see the measurement below; "one package" is true of the pattern, not of the size** | here |
 
 ✅ **CONFIRMED BY ISHAY DIRECTLY, `27/08/2026 17:1X` — the flag below is resolved and the rows stand.**
@@ -482,8 +482,18 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
-- ⏳ 27/08/2026 — **`N1b` · WRITTEN, NOT APPLIED — typed-echo gate OPEN. This one finishes the
-  normalization.** `20260827192631_module8_n1b_drop_hostesses_languages.sql`. **Check live:**
+- ✅ 27/08/2026 19:3X — **`N1b` APPLIED — THE NORMALIZATION IS COMPLETE** (typed-echo:
+  `module8_n1b_drop_hostesses_languages`).
+  **Verified after apply:** `hostesses.languages` gone (**0**) · 33 child rows across 20 hostesses ·
+  26 hostesses total · a real hostess still reads `אנגלית · עברית` · migration recorded.
+  🔑 **And the closing measurement, which is the one worth keeping: `data_type = 'ARRAY'` across the
+  whole `public` schema now returns ZERO columns.** The single 1NF violation in the database is
+  gone, and that is checkable in one query rather than believed.
+  🔴 **Regression after an irreversible drop:** `npm run smoke` **exit 0** · `hostesses.spec.js` +
+  `smart-match.spec.js` **32/32 passed**. Nothing broke.
+  🌊 `docs/schema.sql` updated the same minute and re-cross-checked: `hostesses` **15 documented /
+  15 live, zero divergence**.
+  *(The pre-apply plan row this replaces:)* **`N1b` · the drop that finishes the normalization.** `20260827192631_module8_n1b_drop_hostesses_languages.sql`. **Check live:**
   `select count(*) from information_schema.columns where table_name='hostesses' and
   column_name='languages'` ⇒ **1 means it did not land; 0 means it did.**
   **Preconditions measured:** merged to `dev` (PR #70 ⇒ `7eba407`, then the flaky-test fix #72 ⇒
