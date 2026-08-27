@@ -32,6 +32,10 @@ import {
   releaseAssignment,
   approveFinalAndRelease,
   getSmartMatchData,
+  createHostess,
+  updateHostess,
+  getHostess,
+  listHostesses,
 } from './api'
 
 // ── עוזר-מוקינג: "בילדר" שרשרתי אחד לכל הקריאות ─────────────────────────────────
@@ -42,7 +46,17 @@ import {
 // ‏`.single()` בסוף (התבנית שרוב הכתיבות בקובץ הזה משתמשות בה: `.select()` כמילה אחרונה).
 function makeChain(result) {
   const builder = {}
-  for (const method of ['select', 'eq', 'order', 'in', 'limit', 'update', 'insert', 'delete']) {
+  for (const method of [
+    'select',
+    'eq',
+    'order',
+    'in',
+    'limit',
+    'update',
+    'insert',
+    'delete',
+    'upsert',
+  ]) {
     builder[method] = vi.fn(() => builder)
   }
   builder.maybeSingle = vi.fn(() => Promise.resolve(result))
@@ -362,5 +376,140 @@ describe('ensureProjectCoordinates (פנימית, נבדקת דרך getSmartMatc
     expect(supabase.rpc).not.toHaveBeenCalled()
     expect(result.project.lat).toBeNull()
     expect(result.project.lng).toBeNull()
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// (5) פרטי-בנק בטבלת-בת — מ8 ה19, 27/08/2026
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🔴 **למה דווקא כאן ודווקא עכשיו:** `createHostess`/`updateHostess` הן משטח-הכתיבה
+// עם הכיסוי הנמוך ביותר בריפו (`04_hostesses/CLAUDE.md`), ומיגרציה C הרגע שינתה
+// לאן הן כותבות. בלי הבדיקות האלה, שגיאה בפיצול הייתה מתגלה רק כשדיילת נשמרת בלי
+// חשבון-בנק — כלומר **כשלא משלמים לה**, וזה כשל שקט קלאסי.
+// ⚠️ שלוש העמודות הישנות עדיין קיימות על `hostesses` (יימחקו ב-C2), ולכן הבדיקה
+// שהן **לא** נשלחות ל-insert אינה טאוטולוגיה — המסד היה מקבל אותן בשמחה.
+describe('פרטי-בנק — פיצול לטבלת-הבת (ה19)', () => {
+  it('createHostess: שדות-הבנק לא נשלחים ל-hostesses, ונכתבים לטבלת-הבת עם המזהה החדש', async () => {
+    geocodeAddress.mockResolvedValue(null)
+    const queues = {}
+    queueTable(queues, 'hostesses', { data: { hostess_id: 77, full_name: 'דנה כהן' }, error: null })
+    queueTable(queues, 'hostess_bank_details', { data: [{ hostess_id: 77 }], error: null })
+    setupFrom(queues)
+
+    await createHostess({
+      full_name: 'דנה כהן',
+      city: 'חיפה',
+      bank_name: 'לאומי',
+      bank_branch: '001',
+      bank_account: '12345',
+    })
+
+    const hostessInsert = supabase.from.mock.results[0].value.insert.mock.calls[0][0]
+    expect(hostessInsert).not.toHaveProperty('bank_name')
+    expect(hostessInsert).not.toHaveProperty('bank_branch')
+    expect(hostessInsert).not.toHaveProperty('bank_account')
+    expect(hostessInsert.full_name).toBe('דנה כהן')
+
+    const bankInsert = supabase.from.mock.results[1].value.insert.mock.calls[0][0]
+    expect(bankInsert).toEqual({
+      hostess_id: 77,
+      bank_name: 'לאומי',
+      bank_branch: '001',
+      bank_account: '12345',
+    })
+  })
+
+  it('createHostess: כתיבת-בנק שנחסמה ב-RLS (אפס שורות) זועקת ואינה מדווחת הצלחה', async () => {
+    geocodeAddress.mockResolvedValue(null)
+    const queues = {}
+    queueTable(queues, 'hostesses', {
+      data: { hostess_id: 78, full_name: 'רותי לוי' },
+      error: null,
+    })
+    // 🚨 המלכודת המרכזית של הפרויקט: RLS מחזיר מערך ריק **בלי שגיאה**.
+    queueTable(queues, 'hostess_bank_details', { data: [], error: null })
+    setupFrom(queues)
+
+    await expect(
+      createHostess({
+        full_name: 'רותי לוי',
+        city: 'חיפה',
+        bank_name: 'לאומי',
+        bank_branch: '1',
+        bank_account: '2',
+      }),
+    ).rejects.toThrow('רותי לוי')
+  })
+
+  it('updateHostess: משתמשת ב-upsert על טבלת-הבת, לא ב-update', async () => {
+    const queues = {}
+    queueTable(queues, 'hostesses', { data: [{ hostess_id: 5 }], error: null })
+    queueTable(queues, 'hostess_bank_details', { data: [{ hostess_id: 5 }], error: null })
+    setupFrom(queues)
+
+    await updateHostess(5, {
+      full_name: 'שרה',
+      bank_name: 'דיסקונט',
+      bank_branch: '9',
+      bank_account: '8',
+    })
+
+    const hostessUpdate = supabase.from.mock.results[0].value.update.mock.calls[0][0]
+    expect(hostessUpdate).not.toHaveProperty('bank_name')
+
+    // ⚠️ upsert ולא update: לדיילת שנוצרה לפני הפיצול אין שורת-בת, ו-update היה
+    // מחזיר אפס שורות — כלומר "אין הרשאה" מזויף על מצב תקין לחלוטין.
+    const bankChain = supabase.from.mock.results[1].value
+    expect(bankChain.update).not.toHaveBeenCalled()
+    expect(bankChain.upsert).toHaveBeenCalledWith(
+      { hostess_id: 5, bank_name: 'דיסקונט', bank_branch: '9', bank_account: '8' },
+      { onConflict: 'hostess_id' },
+    )
+  })
+
+  it('getHostess: משטח את שורת-הבת לשדות שטוחים, כמו שהמסך מצפה', async () => {
+    const queues = {}
+    queueTable(queues, 'hostesses', {
+      data: {
+        hostess_id: 3,
+        full_name: 'מיכל',
+        hostess_bank_details: { bank_name: 'הפועלים', bank_branch: '77', bank_account: '999' },
+      },
+      error: null,
+    })
+    setupFrom(queues)
+
+    const row = await getHostess(3)
+    expect(row.bank_name).toBe('הפועלים')
+    expect(row.bank_account).toBe('999')
+    expect(row).not.toHaveProperty('hostess_bank_details')
+  })
+
+  it('getHostess: דיילת בלי שורת-בנק נטענת ומוצגת — מחרוזות ריקות, לא null ולא קריסה', async () => {
+    const queues = {}
+    queueTable(queues, 'hostesses', {
+      data: { hostess_id: 4, full_name: 'אורלי', hostess_bank_details: null },
+      error: null,
+    })
+    setupFrom(queues)
+
+    const row = await getHostess(4)
+    // 🔴 מחרוזת ריקה ולא null: הטופס משתמש בשדות מבוקרים, ו-null היה הופך אותם
+    // ללא-מבוקרים באזהרת-React — באג שקט שנראה כמו "השדה לא נשמר".
+    expect(row.bank_name).toBe('')
+    expect(row.bank_branch).toBe('')
+    expect(row.bank_account).toBe('')
+    expect(row.full_name).toBe('אורלי')
+  })
+
+  it('listHostesses: מבקשת את שורת-הבת בצירוף, אחרת המסך יראה שדות ריקים בשקט', async () => {
+    const queues = {}
+    queueTable(queues, 'hostesses', { data: [], error: null })
+    setupFrom(queues)
+
+    await listHostesses()
+
+    const selectArg = supabase.from.mock.results[0].value.select.mock.calls[0][0]
+    expect(selectArg).toContain('hostess_bank_details(*)')
   })
 })

@@ -310,9 +310,17 @@ function CardBody({ hostess, derived, canEdit, now, onEdit }) {
             <div className="grid grid-cols-2 gap-2">
               <KeyValue label="תעודת זהות" value={hostess.id_number} ltr />
               <KeyValue label="שכר שעתי" value={<Money amount={Number(hostess.hourly_rate)} />} />
+              {/* 🔴 מ8 ה19: פרטי-הבנק מגיעים מטבלת-הבת דרך LEFT JOIN, ולכן **חוסר-שורה
+                  הוא מצב תקין** ולא שגיאה. בלי התנאי הזה דיילת בלי פרטי-בנק הייתה
+                  מציגה `" ·  · "` — שלוש נקודות ריקות שנראות כמו תקלה. `—` הוא
+                  המוסכמה בפרויקט ל"לא רלוונטי/חסר", ולעולם לא 0 או מחרוזת ריקה. */}
               <KeyValue
                 label="בנק · סניף · חשבון"
-                value={`${hostess.bank_name} · ${hostess.bank_branch} · ${hostess.bank_account}`}
+                value={
+                  hostess.bank_name || hostess.bank_branch || hostess.bank_account
+                    ? `${hostess.bank_name} · ${hostess.bank_branch} · ${hostess.bank_account}`
+                    : '—'
+                }
                 ltr
               />
               <KeyValue

@@ -12,8 +12,8 @@
 | **Branch** | `ishay/module-8-finance` — ✅ **CUT 27/08/2026 12:4X from fresh `origin/dev` (`585ad27`)**, at step 1.0. Preconditions verified the same turn: m5 IS merged (`git merge-base --is-ancestor origin/ishay/module-5-logistics origin/dev` ⇒ yes; `git log origin/dev..origin/ishay/module-5-logistics` ⇒ empty), and `origin/dev` NOW carries `docs/specs/module_08_finance/` (`git ls-tree origin/dev docs/specs/` ⇒ 04/05/06/**08**). Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ empty (fresh, not dead — iron rule 10's caveat). *(Was: "NOT YET CUT", 26/08.)* |
 | **Owner** | Ishay (sole developer) |
 | **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X** — step 1.0's 🤖 half done; standing at its 👤 checkpoint. **Zero migrations applied.** |
-| **Last updated** | `27/08/2026 14:0X` *(system clock)* |
-| **Active step** | **1.3 (client half) — the 5-site m4 rewire to `hostess_bank_details`, then 1.4's `send-email` deploy.** DB state: **A ✅ B ✅ C ✅(DB half) D ✅(migration)** — all four applied and verified live, unit suite **1,440/56 exit 0** after each. 🔴 **C shipped the ADDITIVE half only**: the three `hostesses` bank columns still exist (nullable) because `origin/main` writes them; the `drop` is **C2**, owed after deploy — `db_roadmap` §9א + §8.4. **⇒ ה19 is NOT closed yet.** 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
+| **Last updated** | `27/08/2026 14:2X` *(system clock)* |
+| **Active step** | **1.4 (second half) — deploy `supabase/functions/send-email/index.ts` with the two new entity types, then 1.5 (migration E).** ‏1.0 ✅ · 1.1 ✅ · 1.2 ✅ · **1.3 ✅ both halves** (bank split live-verified in a credentialed browser, restore verified) · 1.4 migration ✅. **`npm run gate` exit 0, 1,446 unit tests.** 🔴 **C2 still owed after deploy — ה19 is NOT closed** (§8.4 · `db_roadmap` §9א). 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
 | **Deadline** | conference **01/10** (target: 100%) · end 20/10. m8 is the last *process* module before reports — the conference's "closing the loop" story leans on it. |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -24,7 +24,7 @@
 | **1.0** | 🔻👤 Phase-1 door — branch cut · ledger sweep · live re-measurement · baseline · **Ishay checkpoint** | ✅ |
 | **1.1** | Migration A — `project_finance` child + `projects` finance columns + `assignments.released_from_status` + C-1 index | ✅ |
 | **1.2** | Migration B — `salary_reports` document model + `salary_report_lines` + RLS | ✅ |
-| **1.3** | Migration C + same-step client rewire — `hostess_bank_details` split (ה19) | 🔨 *(DB half ✅ · client rewire pending · `drop column` → C2)* |
+| **1.3** | Migration C + same-step client rewire — `hostess_bank_details` split (ה19) | ✅ *(both halves; `drop column` deferred to C2 — §8.4)* |
 | **1.4** | Migration D — `email_log` CHECK +2 values + 'כספים' SELECT policy → **then** `send-email` deploy | 🔨 *(migration ✅ · deploy pending)* |
 | **1.5** | Migration E — the finance RPC family (4 actions + archive freeze + fee resolution + DEFINER readers) | ⬜ |
 | **1.6** | Migration F — public feedback RPC pair `/feedback/:token` + rate limit | ⬜ |
@@ -795,9 +795,29 @@ The client rewire is the remaining half of this step and is NOT done yet.
 the probe omitted `city`, a pre-existing NOT NULL column. Re-run complete; recorded because a
 green-looking table that silently never ran the decisive check is exactly the failure this guide
 warns about elsewhere.
-🔴 **Still outstanding for this step:** the 5-site client rewire + the MANDATORY live-form check with
-a screenshot (this file's own instruction above — `04_hostesses/api.js` writes have zero automated
-coverage, so the live check is the only net). **The step is NOT closeable until both are done.**
+**↳ as-built · CLIENT HALF DONE `27/08/2026 14:1X`.**
+🔑 **DEVIATION IN PLACEMENT, and it is deliberate:** the plan said "the F13-mapped 5 sites — form
+reads/writes via the child, view card reads LEFT-joined". **The split landed in `api.js` alone**
+(`splitBankFields` / `flattenBankDetails`): the hostess object stays FLAT to its consumers
+(`hostess.bank_name`), so the form's data contract did not change and **the form was not touched at
+all**. Only `HostessViewCard` changed, by one line, to render `—` instead of `" ·  · "` when a
+hostess has no bank row. **Why smaller is righter here:** this form is the lowest-automated-coverage
+write surface in the repo AND it deploys to production tonight — every UI line not touched is a
+regression that cannot happen. Same behaviour, same child table, a third of the blast radius.
+**🔻🤖 Verify — the client half:**
+
+| Assertion | Evidence |
+|---|---|
+| unit tests for the split | **6 new tests** in `04_hostesses/api.test.js` — bank fields absent from the `hostesses` insert · written to the child with the new id · RLS-blocked bank write throws **naming the hostess** instead of reporting success · `upsert` (not `update`) with `onConflict` · flatten on read · **a hostess with NO bank row loads with empty strings, not null and not a crash** |
+| 🔴 the tests actually BITE | Broke `splitBankFields` deliberately (removed the `delete`) ⇒ **exactly 2 of the 6 went red**; restored ⇒ green. *A guard never seen failing is not a guard.* |
+| `npm run gate` | **exit 0** — lint · prettier · **1,446 unit tests** · build · jscpd · knip · audit · check:bidi · check:context · check:docs-structure |
+| 🔴 **live browser, credentialed** *(the step's mandatory check)* | Logged in as מנהלת גיוס, opened `נועה שגיא` in the REAL form: values loaded **from the child table** (`לאומי · 782 · 1184530`) → changed the branch → saved → **re-opened after a full reload and read back `783`** → the view card rendered `לאומי · 783 · 1184530` → restored to `782` and re-verified. **4 screenshots** in the session scratchpad. |
+| the `e2e/CLAUDE.md` narrow exception, honoured in full | Announced in chat BEFORE running · a value-update on an existing seeded demo row · **zero rows created or deleted** · restored immediately · **restore verified against the live DB** (`לאומי · 782 · 1184530`, and 26/26 hostesses still hold a bank row) · the temporary probe spec **deleted before committing** (`git status` clean of `e2e/`) |
+
+⚠️ **A measurement worth keeping:** the probe's first run FAILED on `getByLabel('סניף')` — the
+form's `Field` component renders a `<label>` **with no `htmlFor`**, so Playwright cannot associate
+it. Not a bug in the form, but any future test of this form hits it; the working locator is the
+innermost `div` containing the label, then its `input`.
 **🌊 אדוות —** `db_roadmap` §10 + **new §9א (the pending-removals list)** · `supabase/migrations/CLAUDE.md`
 (the new deploy rule) · `docs/schema.sql` §15 + new §29 · §8.4 (C2's contract) · §10. **§6's bank-debt
 row is NOT consumed yet** — ה19 is not closed until C2. **🗣️ אושר —** typed-echo `27/08/2026 13:5X`.
