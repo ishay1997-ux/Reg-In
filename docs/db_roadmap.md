@@ -482,6 +482,37 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
+- ⏳ 27/08/2026 — **`N1b` · WRITTEN, NOT APPLIED — typed-echo gate OPEN. This one finishes the
+  normalization.** `20260827192631_module8_n1b_drop_hostesses_languages.sql`. **Check live:**
+  `select count(*) from information_schema.columns where table_name='hostesses' and
+  column_name='languages'` ⇒ **1 means it did not land; 0 means it did.**
+  **Preconditions measured:** merged to `dev` (PR #70 ⇒ `7eba407`, then the flaky-test fix #72 ⇒
+  `4b9f7af`) and promoted to `main` (PR #71) ⇒ **`008b037`**, `dev`/`main` content-identical ·
+  Vercel production `state=success` (6126694371) · 🔑 **the live bundle was fetched
+  (`index-BPFpouI9.js`, 2,663,669 bytes) and asserted to CONTAIN `hostess_languages`** ·
+  no path in `origin/main` reads or writes the parent column any more.
+  🔑 **AND THE SAFETY NET IS DELIBERATELY NARROWER THAN C2's — this is the lesson worth keeping.**
+  C2 guarded a **1:1** relation where **both** tables carry `updated_at`, so "is the parent newer?"
+  was answerable. Here that shape would be **wrong, and not theoretically:**
+  · the relation is **1:N** and the child has only `created_at` — a row is created and deleted,
+    never updated, so there is no "when was this row last changed".
+  · `hostesses.updated_at` bumps on **any** edit — phone, rating, hourly rate.
+  🔬 **And it happened today:** the announced write probe (19:0X) changed **only a phone number**,
+  so `max(hostesses.updated_at)` = 16:02Z is **newer than every child row** (15:47Z) **while no
+  language changed at all**. A C2-shaped guard would have read that as "the parent was edited" and
+  re-copied from the array — and if the new code had meanwhile removed a language, **it would have
+  come back from the dead.**
+  ⇒ **the net here copies ONLY for a hostess with a non-empty array and ZERO child rows** — the one
+  state that can only mean "created during the window by the old code", and the one state where
+  there is nothing to overwrite.
+  📏 **Measured before writing — the copy is expected to touch 0 rows:** 26 hostesses · 33 child
+  rows · **0 orphan arrays** · **0 pairs only-in-array** · **0 pairs only-in-child**. The two
+  sources are **identical in both directions**. The net stays anyway: a migration is a record, not
+  a one-off script.
+  **✅ Dry run in a rolled-back transaction:** copy touched **0** · column **1 → 0** · 33 child rows
+  intact · a real hostess still reads `אנגלית · עברית` **after** the drop · **0 function bodies**
+  reference the parent column.
+  ⚠️ **Not reversible.** The values are safe in `hostess_languages`; the column is not coming back.
 - ✅ 27/08/2026 18:4X — **`N1` (additive half) APPLIED + the client rewired** (typed-echo:
   `module8_n1_hostess_languages_additive`).
   **Verified after apply — and the count is the weak claim, so it is not the one relied on:**

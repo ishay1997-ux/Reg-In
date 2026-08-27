@@ -45,6 +45,27 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 27/08/2026 19:2X — C2+N1 in production; N1b written and gated
+
+- **Merged and promoted:** PR #70 → `dev`, the flaky fix #72 → `dev` (`4b9f7af`), PR #71 `dev` →
+  `main` ⇒ **`008b037`**, content-identical. Vercel production `state=success`, and once again the
+  claim was not taken at face value: **the live bundle `index-BPFpouI9.js` was fetched and asserted
+  to contain `hostess_languages`.**
+- **`N1b` written, dry-run, standing at its typed-echo gate.** Copy touches 0 · column 1 → 0 · 33
+  child rows intact · a real hostess still reads `אנגלית · עברית` after the drop · 0 function
+  bodies reference the parent column · rollback clean.
+- 🔑 **The lesson of the day, and it is about NOT reusing a pattern that worked hours earlier.**
+  C2's `updated_at` guard was right for a **1:1** relation where both tables carry `updated_at`.
+  Reusing that shape for N1b would have been **wrong, and measurably so**: the relation is 1:N, the
+  child has only `created_at`, and `hostesses.updated_at` bumps on *any* edit. 🔬 **The proof was
+  sitting in the data:** my own announced phone probe at 19:0X made
+  `max(hostesses.updated_at)` = 16:02Z newer than every child row (15:47Z) **while no language
+  changed**. A C2-shaped guard would have re-copied from the frozen array and resurrected any
+  language the new code had removed. ⇒ N1b's net is narrower on purpose: copy only where a hostess
+  has a non-empty array and **zero** child rows — the one state with nothing to overwrite.
+  **Twice today the fresh pattern was the wrong one to reach for** (the first was N1's permissions
+  vs ה19's), and both times what caught it was asking *why* the earlier decision was made.
+
 ### 27/08/2026 19:1X — the flaky CI test fixed, with proof it is a flake and proof the fix still bites
 
 - 🐞 **`ChecklistDialog.test.jsx` "שלושת האפקטים יחד" failed CI on the push to `dev`**, minutes after
