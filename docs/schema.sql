@@ -25,6 +25,10 @@
 --    ‏`finance_project_money` הפנימית ושני הקוראים המגודרים — **וכתיבה-מחדש של
 --    `list_projects_overview` הממוזגת של מ6**: ‏`planned_revenue` כולל מעכשיו גם
 --    Σ שינויי-תכולה. עוגן-מ6 (#8 = 5,355.00) אומת זהה-ספרתית אחרי השכתוב) ·
+--    ואחרי E2 `20260827150049_module8_finance_write_actions` (‏9 פונקציות חדשות —
+--    ‏2 פנימיות ו-7 נקראות-מהלקוח — ו**הסרת `set_project_finance_fields` של מ6**;
+--    שני מסעות מלאים אומתו בטרנזקציות שגולגלו אחורה: ארכוב הקפיא 230.00 וההצעה
+--    החזירה 3,508.00 — שני עוגני-היד) ·
 --    פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
 --
 -- 🔴 **לרענן את הקובץ הזה אחרי כל מיגרציה.** העותק הקודם לא רוענן חמישה חודשים והכריז על עמודה
@@ -1600,7 +1604,7 @@ create policy hostess_bank_details_select_finance_module on hostess_bank_details
   );
 
 -- ============================================================
--- 24. פונקציות בסכמה public — 29 פונקציות
+-- 24. פונקציות בסכמה public — 37 פונקציות
 -- ============================================================
 -- 🚫 **הגופים אינם כאן במכוון** (ר' כותרת הקובץ). לכל פונקציה: חתימה · מצב אבטחה · search_path ·
 --    למי יש EXECUTE · ומצביע לקובץ המיגרציה שבו הגוף הנוכחי חי.
@@ -1729,6 +1733,30 @@ create policy hostess_bank_details_select_finance_module on hostess_bank_details
 -- get_project_finance_detail(p_project_id integer) returns table (30 columns — S2's balance)
 --   SD · stable · plpgsql · [authenticated, service_role] · gated 'כספים'
 --   → supabase/migrations/20260827144459_module8_finance_money_ssot_and_readers.sql
+
+-- ── מודול 8 · פעולות-הכתיבה (27/08/2026, E2) ────────────────────────
+-- 🔴 `set_project_finance_fields` של מ6 **הוסרה** כאן (ה22, אפס אתרי-קריאה).
+-- פנימיות — [service_role] בלבד, בלי anon ובלי authenticated:
+-- finance_assert_writable(integer) returns text             SD · plpgsql
+--   השער המשותף: 'כספים' edit + שער-הסטטוס ה12 + נעילת-`finished` (דפוס ㊙, לא טריגר)
+-- finance_freeze_cancelled_profit(integer) returns numeric   SD · plpgsql
+--   Q-3: דמי-ביטול − פיצוי-צוות − סחורה **בעלות**. ויתור ⇒ הפסד רשום אמיתי.
+-- נקראות מהלקוח — [authenticated, service_role], כולן מגודרות 'כספים':
+-- finance_cancellation_fee_proposal(integer) returns table (8 cols)   SD · stable
+--   שלושת הרכיבים, **נגזרים ולא נשמרים** (ה28). אומתה: #14 ⇒ 3,508.00 = עוגן-היד.
+-- record_invoice_sent(integer, text) returns jsonb           SD · plpgsql
+-- record_payment(integer, date) returns jsonb                SD · plpgsql
+--   🔴 אצל מבוטל — **זהו רגע הקפאת-הרווח** (Q-4), לא שמירת-הסכום ולא הארכוב.
+-- record_feedback(integer, integer, text, text, boolean) returns jsonb   SD · plpgsql
+--   ציון <3 מחייב סיבה; כתיבה על שורה `completed` מותרת עד הארכוב (B-15).
+-- record_write_off(integer, text) returns jsonb              SD · plpgsql   ← הפעולה החמישית (B-13)
+-- resolve_cancellation_fee(integer, text, numeric, text) returns jsonb   SD · plpgsql
+--   bill / waive / write_off. הסטטוס נשאר `cancelled` תמיד (T1).
+-- archive_project(integer) returns jsonb                     SD · plpgsql
+--   שער כפול → הקפאה → `finished` → `feedback_token = NULL` (B-6) → חותמת. טרנזקציה אחת.
+--   🔴 אוכפת `summary_report_url IS NOT NULL` **בעצמה** — האילוץ החי דורש זאת,
+--      ובלי האכיפה ארכוב לגיטימי היה נופל על שגיאת-CHECK גולמית (תיקון T1).
+--   → כל התשע: supabase/migrations/20260827150049_module8_finance_write_actions.sql
 
 -- ============================================================
 -- 25. עבודות מתוזמנות — cron.job (3 עבודות, כולן active)
