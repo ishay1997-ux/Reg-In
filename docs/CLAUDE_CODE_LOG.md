@@ -45,6 +45,59 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 27/08/2026 21:0X–23:1X — phase 2 shipped by an agent workflow; two shipped-code defects found; phase 3 in flight
+
+- ✅ **PHASE 2 COMPLETE, committed `0baf74b`.** A 9-agent workflow (3 builders · 3 read-only
+  adversarial lenses · 3 fixers; 0 errors, 2.06M tokens, 64 min) produced six files, then the
+  orchestrator re-verified independently. **Suite 1,572 / 59 exit 0** against a 1,454 / 56 baseline
+  ⇒ **+118 tests, zero regressions**; `npm run gate` **exit 0**.
+- 🔑 **The verification worth reusing — a three-source oracle.** Green tests were not accepted as
+  proof. The orchestrator fed the **live database's** measured outputs through the **agent-written**
+  functions and compared against the **spec's hand-computed** anchors: 8/8. None of the three sources
+  saw the other two. Then a **sign-flip mutation** on the deviation term reddened **7 tests across two
+  files**, and the file was restored **byte-identical** (`sha256sum -c` OK). *(A test authored beside
+  the formula it tests proves internal consistency and nothing else — this is the cheap way to get an
+  oracle the code did not produce.)*
+- 🔴 **TWO REAL DEFECTS IN ALREADY-SHIPPED PHASE-1 WORK, found by the lenses, migrations written and
+  deliberately NOT applied** (`c47076e`): **H1** — the `finance` bucket's `allowed_mime_types` omits
+  xlsx, so the salary file can never be stored. **The email to the accountant still goes out** (the
+  attachment is built from the in-memory blob), so nobody is mispaid — what dies is the archival side:
+  history download, resend, and §7.68's proof-of-what-was-sent. **Not a decision anyone made** — the
+  m6 migration that created the bucket carries *"לא הוכרע (M8 יחליט)"* on that row. **H2** — the
+  cancellation-fee band returns 0% instead of 50% at exactly 72.0h (`>= v_part_h` evaluated first);
+  ה24 puts 72 inside the 50% band. Fires only at exactly 72.000000h, so near-impossible in practice,
+  but it is a money error against the customer on a spec-defined boundary. **Proven unapplied:**
+  `list_migrations` still ends at `20260827163737`.
+- 🛡️ **A fixer REFUSED its instruction, and was right to.** A verifier's suggested fix would have
+  rewritten Efrat's fixture to bonus 250 / total 542.60 — **overwriting the recorded acceptance anchor
+  292.60**. The fixer applied the finding's INTENT additively (a separate variant) and left all three
+  anchors byte-identical. **The conflict-question rule firing in the direction nobody designs for: a
+  review being wrong.** Worth keeping as the argument for why fixers must re-verify rather than obey.
+- 🎚️ **Model mix changed mid-run at Ishay's prompt** (*"אתה זוכר להשתמש גם בסונאט?"*). The honest
+  answer was that only one mechanical lens had been Sonnet. New rule applied from phase 3 on:
+  **Sonnet where the answer is already drawn or mechanically defined** (fully-drawn surfaces, the
+  route swap, E2E authoring, the conventions lens); **Opus where judgement is needed or a touch breaks
+  something already in production** (the two logic-bearing screens, the m2/m6 ripples, the money and
+  spec lenses). ⚠️ This deviates from the micro-guide's own phase table (Opus everywhere) — disclosed
+  to Ishay, not done quietly.
+- 🗣️ **Ishay consolidated the per-unit approval gate into ONE review at the end**, on the built
+  screens. This overrides his own Q-1 note that S2's undrawn controls would get small mockups first —
+  put to him with both sides quoted, and he ruled: build them and **mark every undrawn control at
+  presentation**. Each surface agent therefore returns a structured `undrawn_controls` list.
+- 🏗️ **Orchestrator-owned serial work** (the things a fan-out must never do concurrently): the npm
+  installs, the `StatusTag` `danger` tone (four parallel agents would have collided on that shared
+  file), the mutation probe, the full gate, and every commit.
+- 📦 **Dependency de-risked BEFORE three agents were sent to depend on it:** `write-excel-file` +
+  `read-excel-file` (dev). The npm `xlsx` package is stuck at 0.18.5 with known advisories and its
+  fixed line is CDN-only. A round trip was proven first — Hebrew survives, decimals survive, and **a
+  ת"ז written as a String comes back a string** (an ID silently coerced to a number loses a leading
+  zero on a document that goes to the accountant), and the browser entry graph was traced to confirm
+  it reaches no Node builtins.
+- 🔨 **Phase 3 in flight** (12-agent workflow): S4 `22:31` · S3 `22:47` · S2 `23:02` built; S1 and the
+  route step running; **the adversarial panel has not run — nothing in phase 3 is verified yet.**
+  ⚠️ Two files exist that no agent was given ownership of (`src/lib/feedback.js`, `publicApi.js`) —
+  architecturally plausible, unauthorised, and flagged in the guide's §10 for gate verification.
+
 ### 27/08/2026 20:3X–20:4X — phase-2 door opened; the guide would have sent a builder to rebuild the money calculator
 
 - ✅ **Step 2.0 (phase-2 door) closed.** Pre-flight held: `ishay/module-8-phase-2` is **3 commits

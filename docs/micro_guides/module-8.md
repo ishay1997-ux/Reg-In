@@ -13,7 +13,7 @@
 | **Owner** | Ishay (sole developer) |
 | **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X.** ✅ **PHASE 1 COMPLETE 27/08/2026 16:5X — all ten migrations applied and verified, and the 1.8 gate passed.** *(This row read "Zero migrations applied" until the gate; corrected there.)* |
 | **Last updated** | `27/08/2026 20:45` *(system clock)* |
-| **Active step** | **3.0 — the Phase-3 door. ✅ PHASE 2 COMPLETE `27/08/2026 22:1X`: six new files, 117 new tests, suite 1,572/59 exit 0, `gate` exit 0, zero regressions.** Built by a 9-agent workflow (3 builders · 3 adversarial lenses · 3 fixers, 0 errors, 2.06M tokens, 64 min) and then re-verified independently by the orchestrator. 🔴 **Two REAL defects in already-shipped Phase-1 work were found by the lenses and are NOT fixed — both need Ishay's typed echo and both are recorded in §10 under `27/08 22:1X`: (a) the `finance` bucket rejects xlsx ⇒ the salary file can never be stored; (b) the cancellation-fee band pays 0% instead of 50% at exactly 72.0h.** ⏸️ Neither was applied — the 28/08 interim presentation runs on this same Supabase project. *(Previous: `2.1`. Door 2.0 closed `27/08/2026 20:45`* (baseline re-measured **1,454 tests / 56 files, exit 0** — identical to hand-off; ledger sweep found **nothing new for Ishay**: Q-1…Q-5 ruled 26/08 22:40, N-1…N-6 approved 26/08 22:43, A-1…A-10 recorded — but **two measured findings did land, both in §10 under `27/08/2026 20:4X`**: step 2.1's function list is superseded by what Phase 1 actually built, and two of the four acceptance anchors do not reproduce from a plain read of the live DB). 🎉 **PHASE 1 IS DONE AND IN PRODUCTION**, and so is every debt it created. **Shipped 27/08/2026:** ten migrations (A–G) · the 1.8 gate · **`C2` — ה19 CLOSED** (the three bank columns are gone; bank details live only in `hostess_bank_details`) · **`N1`+`N1b` — the languages normalization COMPLETE** *(🔑 `data_type='ARRAY'` across `public` now returns **zero** columns — the single 1NF violation is gone)* · plus a flaky m5 test fixed with proof. **Production is `c1a3306`, deploy verified by fetching the live bundle and asserting its contents** — not by trusting the pipeline's word. **Battery at hand-off: `gate` exit 0 / 1,454 tests · `smoke` exit 0 · m4 suites 32/32.** ⏸️ **ONE debt remains and it is NOT m8's to build: `N2`** (`customer_contacts` consolidation — 46 occurrences / 16 production files across `src/lib` and modules 2·3·6, **plus a screen**). **Ishay approved it 27/08; the measured recommendation is a fresh branch AFTER the 28/08 interim presentation**, because it runs through the quote→project→email chain. Registered in `db_roadmap` §9א · `PROJECT_MASTER §6` · the session-start banner. 🔄 **Seed refresh 28/08 morning, before the presentation.** |
+| **Active step** | **3.1 / 3.5 — phase 3 IN FLIGHT (12-agent workflow, launched `22:1X`). Built so far: S4 `22:31` · S3 `22:47` · S2 `23:02`. S1 and the route step running; the adversarial panel has NOT run yet — nothing in phase 3 is verified.** *(Previously: 3.0 — the Phase-3 door.)* **✅ PHASE 2 COMPLETE `27/08/2026 22:1X`: six new files, 117 new tests, suite 1,572/59 exit 0, `gate` exit 0, zero regressions.** Built by a 9-agent workflow (3 builders · 3 adversarial lenses · 3 fixers, 0 errors, 2.06M tokens, 64 min) and then re-verified independently by the orchestrator. 🔴 **Two REAL defects in already-shipped Phase-1 work were found by the lenses and are NOT fixed — both need Ishay's typed echo and both are recorded in §10 under `27/08 22:1X`: (a) the `finance` bucket rejects xlsx ⇒ the salary file can never be stored; (b) the cancellation-fee band pays 0% instead of 50% at exactly 72.0h.** ⏸️ Neither was applied — the 28/08 interim presentation runs on this same Supabase project. *(Previous: `2.1`. Door 2.0 closed `27/08/2026 20:45`* (baseline re-measured **1,454 tests / 56 files, exit 0** — identical to hand-off; ledger sweep found **nothing new for Ishay**: Q-1…Q-5 ruled 26/08 22:40, N-1…N-6 approved 26/08 22:43, A-1…A-10 recorded — but **two measured findings did land, both in §10 under `27/08/2026 20:4X`**: step 2.1's function list is superseded by what Phase 1 actually built, and two of the four acceptance anchors do not reproduce from a plain read of the live DB). 🎉 **PHASE 1 IS DONE AND IN PRODUCTION**, and so is every debt it created. **Shipped 27/08/2026:** ten migrations (A–G) · the 1.8 gate · **`C2` — ה19 CLOSED** (the three bank columns are gone; bank details live only in `hostess_bank_details`) · **`N1`+`N1b` — the languages normalization COMPLETE** *(🔑 `data_type='ARRAY'` across `public` now returns **zero** columns — the single 1NF violation is gone)* · plus a flaky m5 test fixed with proof. **Production is `c1a3306`, deploy verified by fetching the live bundle and asserting its contents** — not by trusting the pipeline's word. **Battery at hand-off: `gate` exit 0 / 1,454 tests · `smoke` exit 0 · m4 suites 32/32.** ⏸️ **ONE debt remains and it is NOT m8's to build: `N2`** (`customer_contacts` consolidation — 46 occurrences / 16 production files across `src/lib` and modules 2·3·6, **plus a screen**). **Ishay approved it 27/08; the measured recommendation is a fresh branch AFTER the 28/08 interim presentation**, because it runs through the quote→project→email chain. Registered in `db_roadmap` §9א · `PROJECT_MASTER §6` · the session-start banner. 🔄 **Seed refresh 28/08 morning, before the presentation.** |
 | **Deadline** | conference **01/10** (target: 100%) · end 20/10. m8 is the last *process* module before reports — the conference's "closing the loop" story leans on it. |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -36,12 +36,21 @@
 | **2.2** | `src/lib/salaryReport.js` — aggregation model + line building + xlsx assembly + tests ⚠️ shared-surface | ✅ *(30 tests)* |
 | **2.3** | `src/modules/08_finance/api.js` — reads, RPC calls, mail sends + tests | ✅ *(49 tests)* |
 | **2.4** | 🔻👤 Phase-2 gate — full unit suite + anchors reproduced | ✅ *(`27/08 22:1X` — suite **1,572/59 exit 0** vs baseline 1,454/56, **zero regressions** · `npm run gate` **exit 0** · orchestrator cross-check 8/8 · sign-flip mutation reddened **7** tests across two files, file restored byte-identical)* |
-| **3.0** | Phase-3 door — shared-component checkpoint + OPEN-item sweep | ⬜ |
-| **3.1** | S1 — `/finance` overview page (🗣️ brief → build → verify) | ⬜ |
-| **3.2** | S2 — closing-window dialog, 3 states (🗣️ brief → build → verify) | ⬜ |
-| **3.3** | S3 — salary-report dialog + history (🗣️ brief → build → verify) | ⬜ |
-| **3.4** | S4 — public feedback page `/feedback/:token` (🗣️ brief → build → verify) | ⬜ |
-| **3.5** | Route + nav registration ⚠️ shared-surface | ⬜ |
+| **3.0** | Phase-3 door — shared-component checkpoint + OPEN-item sweep | ✅ *(`27/08 22:1X` — done serially by the orchestrator: `StatusTag` `danger` tone added, `RatingStars` confirmed present, `assertFinanceShape` call-site rule ruled)* |
+| **3.1** | S1 — `/finance` overview page | 🔨 **building** |
+| **3.2** | S2 — closing-window dialog, **4 states** (Q-1 added the fourth) | 🔨 built `23:02`, verification pending |
+| **3.3** | S3 — salary-report dialog + history | 🔨 built `22:47`, verification pending |
+| **3.4** | S4 — public feedback page `/feedback/:token` | 🔨 built `22:31`, verification pending |
+| **3.5** | Route + nav registration ⚠️ shared-surface | ⬜ *(runs alone — it edits `App.jsx`)* |
+
+> 🗣️ **Approval model for phase 3, changed by Ishay `27/08/2026 ~21:0X`:** the per-unit 🗣️ gate is
+> **consolidated into ONE review at the end**, on the built screens, in his words — *"אני יאשר בסוף
+> את המסכים פעם אחת אחרי שאראה את כולם"*. ⚠️ **This overrides his own Q-1 note that S2's added
+> controls would each get a small mockup before code** — put to him explicitly with both sides
+> quoted (`27/08 ~21:3X`), and he ruled: build them, and **mark every undrawn control when you
+> present the screen**. Each surface agent therefore returns a structured `undrawn_controls` list,
+> which is what he will be shown at review. *(Recorded here because a future session reading the
+> Q-1 row alone would conclude the gate was skipped.)*
 | **3.6** | 🔻👤 Phase-3 gate — 🎨 UX & functional review | ⬜ |
 | **4.1** | M6 ripple — survey-link → token URL (mint-before-send) ⚠️ shared-surface | ⬜ |
 | **4.2** | M2 ripple — customer metrics filters + "סכום" column (RC-6) ⚠️ shared-surface | ⬜ |
@@ -1708,6 +1717,19 @@ anchored to it and settle them with Ishay at the phase door, not mid-step.
   writes the code (Ishay's 14/08 rule).
 
 ### Dated entries
+- `27/08/2026 23:1X` — **PHASE 3 IN FLIGHT (12-agent workflow). Three leaf surfaces built; S1 and the
+  route step still running; verification not yet run.** Recorded mid-run because the Stop hook fired
+  and a half-built tree must not read as a finished one.
+  ⚠️ **Deviation to check at the gate — TWO FILES EXIST THAT NO AGENT WAS GIVEN OWNERSHIP OF:**
+  `src/lib/feedback.js` (+ test) and `src/modules/08_finance/publicApi.js`. The S4 task named exactly
+  `PublicFeedbackPage.jsx` + its test. **The architectural reason is plausible and may well be right**
+  — the public page is unauthenticated and cannot share the `'כספים'`-gated `api.js`, so a separate
+  anon client path plus pure feedback logic is a sensible split, and neither file collided with
+  another agent. **But it was not authorised, and "plausible" is not "verified":** the orchestrator
+  must confirm at the gate that (a) both are genuinely reachable and used, (b) `publicApi.js` does not
+  quietly widen what an anonymous caller can reach, and (c) neither duplicates something `api.js`
+  already exports. **Logged as `הנחתי` on the agent's behalf** — it filled a structural gap the task
+  file did not describe.
 - 🔴 `27/08/2026 22:1X` — **PHASE 2 COMPLETE — and the adversarial panel found TWO REAL DEFECTS IN
   ALREADY-SHIPPED PHASE-1 WORK. Neither is fixed; both have a migration written and NOT applied.**
   **Built by a 9-agent workflow** (3 builders · 3 read-only adversarial lenses · 3 fixers; 0 errors,
