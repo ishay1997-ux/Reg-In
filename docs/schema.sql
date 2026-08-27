@@ -751,14 +751,11 @@ create table hostesses (
   hourly_rate  numeric     not null,
   rating       integer,
   status       text        not null default 'active',
-  -- ⚠️ מ8 ה19 (27/08/2026): שלוש אלה הוחלפו ע"י hostess_bank_details (סעיף 29).
-  --    שוחררו מ-NOT NULL ונשארות זמנית **רק** כדי שהקוד שרץ בייצור לא יישבר;
-  --    הוא כותב אליהן ישירות ב-HostessFormDialog.jsx:217-219 וקורא אותן
-  --    ב-HostessViewCard.jsx:315. **תימחקנה במיגרציה C2 אחרי מיזוג ופריסה של מ8**
-  --    (db_roadmap §9א). 🔴 קוד חדש קורא וכותב ל-hostess_bank_details, לא לכאן.
-  bank_name    text,
-  bank_branch  text,
-  bank_account text,
+  -- ✅ מ8 ה19 **נסגר 27/08/2026 18:0X**: שלוש עמודות-הבנק (bank_name/branch/account)
+  --    **נמחקו כאן** במיגרציה C2, אחרי מיזוג מ8 ופריסתו לייצור. הן חיות עכשיו
+  --    **רק** ב-hostess_bank_details (סעיף 29), שנקראת ע"י 'דיילות' ו'כספים' בלבד.
+  --    🔴 מי שמחפש אותן כאן — הן אינן, וזה מכוון: RLS הוא ברמת-שורה, ולכן
+  --    עמודה על hostesses הייתה קריאה לכל מי שיש לו 'דיילות'. זו הייתה החשיפה.
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now(),
   hostess_id   bigint      not null generated always as identity,

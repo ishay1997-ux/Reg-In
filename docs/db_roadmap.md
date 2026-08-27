@@ -408,7 +408,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 
 | # | The removal that is owed | Blocked until | Its contract (more than a `drop`) | Registered where |
 |---|---|---|---|---|
-| **C2** | `alter table hostesses drop column bank_name, bank_branch, bank_account` — the destructive half of ה19 (m8 migration C did the additive half on 27/08/2026) | m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live** — because `origin/main` writes those columns (`HostessFormDialog.jsx:217-219`) and reads them (`HostessViewCard.jsx:315`) | 1️⃣ **Re-copy first** — `insert … on conflict (hostess_id) do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 🔴 **BUT THE `do update` MUST BE GUARDED BY `updated_at`** *(found 27/08/2026 at the 1.8 gate — the contract as first written was wrong)*: **after** the deploy m8's `api.js` writes ONLY the child, so an unguarded overwrite would push **stale parent values over fresh child rows** — the same data loss pointed backwards, landing as wrong bank numbers in a CPA salary report. Overwrite only where the parent row is genuinely newer than the child row (both tables carry a `moddatetime`-maintained `updated_at`). **Full contract + the SQL shape: `micro_guides/module-8.md` §8.4.** 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
+| ✅ ~~**C2**~~ **DONE 27/08/2026 18:0X** | ~~`alter table hostesses drop column bank_name, bank_branch, bank_account`~~ — **applied; ה19 is CLOSED.** Legacy columns **0** · child table **26/26** · **0** empty bank rows · `smoke` exit 0 and `hostesses.spec.js` **20/20** after the drop · `schema.sql` re-synced (16 documented / 16 live). 🔑 **The `updated_at` guard was not theoretical: all 26 child rows were NEWER than their parent, so an unguarded `do update` would have touched all 26 and pulled them back to the stale source. With the guard the copy touched 0.** *(Row kept struck rather than deleted — the correction it carries is the record. The original contract:)* | ~~m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live**~~ — **all three met: `dev` 518587d · `main` 9e07233 · Vercel production `state=success`, and the live bundle was fetched and asserted to contain `hostess_bank_details`** | 1️⃣ **Re-copy first** — `insert … on conflict (hostess_id) do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 🔴 **BUT THE `do update` MUST BE GUARDED BY `updated_at`** *(found 27/08/2026 at the 1.8 gate — the contract as first written was wrong)*: **after** the deploy m8's `api.js` writes ONLY the child, so an unguarded overwrite would push **stale parent values over fresh child rows** — the same data loss pointed backwards, landing as wrong bank numbers in a CPA salary report. Overwrite only where the parent row is genuinely newer than the child row (both tables carry a `moddatetime`-maintained `updated_at`). **Full contract + the SQL shape: `micro_guides/module-8.md` §8.4.** 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
 
 | **N1** | `hostesses.languages` (`text[]`) → child table `hostess_languages(hostess_id, language)`, then `drop column` | m8 merged **and deployed** | Same three beats as C2: **add + copy → deploy → drop**, with a **re-copy immediately before the drop** — 🔴 **including C2's `updated_at` guard on the conflict action**, for the same reason: once the new code writes only the child, an unguarded overwrite runs backwards. ⚠️ `languages` is **nullable** (unlike the bank columns), so the additive half needs no constraint relaxation — create, copy, drop later | `PROJECT_MASTER_sec7.md §7.87` · here |
 | **N2** | `customer_contacts` consolidation — `is_primary` on the child, then drop `contact_name`/`phone`/`email` from `customers` | m8 merged **and deployed** | Same pattern, **separate drop migration** from N1's. 🔴 **Its blast radius is ~4.6× N1's — see the measurement below; "one package" is true of the pattern, not of the size** | here |
@@ -482,10 +482,18 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
-- ⏳ 27/08/2026 — **module-8 migration `C2` · WRITTEN, NOT APPLIED — typed-echo gate OPEN.**
-  `20260827175132_module8_c2_drop_legacy_bank_columns.sql`. 🔑 **This is the migration that closes
-  ה19.** **Check live:** `select count(*) from information_schema.columns where table_name='hostesses'
-  and column_name like 'bank_%'` ⇒ **3 means it did not land; 0 means it did.**
+- ✅ 27/08/2026 18:0X — **module-8 migration `C2` APPLIED** (typed-echo:
+  `module8_c2_drop_legacy_bank_columns`). 🔑 **ה19 IS CLOSED.**
+  **Verified after apply:** legacy columns on `hostesses` = **0** · `hostess_bank_details` = **26**
+  rows for **26** hostesses · **0 rows with an empty bank triple** — nobody lost details ·
+  a real hostess (אביגיל רוזן) reads **`מזרחי טפחות · 512 · 449…`** through the new table ·
+  migration recorded in `schema_migrations`.
+  🔴 **And the regression AFTER an irreversible drop, which is the moment things break silently:**
+  `npm run smoke` **exit 0** · the FULL module-4 suite `e2e/hostesses.spec.js` **20/20 passed**
+  (repository · card · form · deactivation dialog). **Nothing broke.**
+  🌊 `docs/schema.sql` updated the same minute and re-cross-checked against the live catalog:
+  `hostesses` = **16 documented / 16 live, zero divergence**.
+  *(The pre-apply plan row this replaces:)*
   🔴 **Its preconditions were MEASURED, not assumed** — and this is the whole point of §9א:
   ① m8 merged to `dev` (`518587d`) and promoted to `main` via PR #69 ⇒ **`9e07233`**, `dev`/`main`
   content-identical (`git diff` = 0 bytes) · ② the Vercel **production** deployment reported

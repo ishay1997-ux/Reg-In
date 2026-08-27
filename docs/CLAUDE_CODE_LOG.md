@@ -45,6 +45,28 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 27/08/2026 16:5X–18:0X — MODULE 8 MERGED, IN PRODUCTION, AND ה19 CLOSED (C2 applied)
+
+- ✅ **C2 applied on Ishay's typed echo — ה19 is CLOSED.** The three bank columns are gone from
+  `hostesses`; bank details now live only in `hostess_bank_details`, readable by 'דיילות' and
+  'כספים' alone. **Until today every holder of 'דיילות' could read every account number**, because
+  RLS gates rows, not columns. That was the exposure, and it is shut.
+  **Measured after apply:** 0 legacy columns · **26/26 rows intact** · **0** hostesses left with an
+  empty bank triple · a real hostess still reads her line through the new table.
+- 🔴 **Regression run immediately after an irreversible drop — the moment things break silently:**
+  `npm run smoke` **exit 0** and the full `e2e/hostesses.spec.js` **20/20**. Nothing broke.
+  `docs/schema.sql` updated in the same minute and re-cross-checked: `hostesses` **16 documented /
+  16 live, zero divergence**.
+- 🔑 **The guard added to C2's contract four hours earlier paid off, measurably.** All 26 child rows
+  were NEWER than their parent, so the originally-registered unguarded `on conflict do update` would
+  have touched all 26 and pulled them back to the stale source. With the guard the copy touched
+  **0 rows**. A contract defect found by reasoning about the deploy window, and confirmed by the
+  numbers when it ran.
+- ⚠️ **And an alarm on the way that was chased to the end rather than waved off:**
+  `generate_salary_report` mentions `bank_*` — line-by-line it reads them from
+  `left join public.hostess_bank_details b`, the new table, not the parent. Clean, and checked
+  before the irreversible statement, not after.
+
 ### 27/08/2026 16:5X–17:5X — MODULE 8 MERGED AND IN PRODUCTION; C2 written and gated
 
 - **Merged and promoted on Ishay's explicit approval** *("ויש לך אישור להתקדם ולמזג")*:
