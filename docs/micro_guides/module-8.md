@@ -1185,6 +1185,29 @@ not a compile gate (build before commit). Every gate result is reported BY NAME.
 PR opened base:`dev` · CI green · merged — after the closing audit's YES; the audit confirms
 *mergeable*, never merges (module-close boundary).
 
+🔴 **AND ONE REAL POST-MERGE MIGRATION IS OWED — `C2`. This is a work item, not a note.**
+**What:** `alter table hostesses drop column bank_name, bank_branch, bank_account` — the destructive
+half of ה19, deliberately split out of migration C on 27/08/2026 (§10, that date).
+**Why it could not run with C:** the code live on `origin/main` writes those three columns directly
+(`HostessFormDialog.jsx:217-219`) and reads them (`HostessViewCard.jsx:315`), and production and
+development share ONE Supabase project — so dropping them would have broken the live hostess form
+from the moment of apply until m8 merged and deployed, days later, with the 28/08 interim
+presentation in between. **Measured, not assumed** (`git show origin/main:…`, 27/08/2026).
+**When:** after m8 is merged to `dev`, promoted, and the deploy is confirmed live.
+**Its contract, which is more than a `drop`:**
+1. **Re-copy first.** In the window, production's old code keeps writing bank details to the PARENT
+   columns; a hostess created or edited through the live site during it will have no child row.
+   C2 must `insert … on conflict do update` from `hostesses` into `hostess_bank_details` **before**
+   dropping anything, or that hostess silently loses her bank details.
+2. Then drop the three columns.
+3. Then delete the three `⚠️ … תימחק במיגרציה C2` column comments' subject matter from
+   `docs/schema.sql`, and strike this block.
+🔑 **Until C2 runs, ה19 is NOT closed** — the exposure it exists to fix (anyone with 'דיילות' can
+read bank details, because RLS is row-level) is still open. **§2.2's "Bank-details protection (ה19)
+… ✅ complete here" row is therefore NOT yet true**, and the closing audit must check C2's state
+rather than trusting that row. *(Registered in three places on purpose — here, `db_roadmap` §10,
+and §10 below — because a debt with one home is a debt that gets lost.)*
+
 ## 9. 🔄 Self-Update Protocol
 
 (a) At every step transition, update §1 (header + step table) in the same session, before moving
@@ -1226,6 +1249,27 @@ anchored to it and settle them with Ishay at the phase door, not mid-step.
   writes the code (Ishay's 14/08 rule).
 
 ### Dated entries
+- 🔴 `27/08/2026 13:2X` — **DEVIATION FROM THE APPROVED PLAN: migration C split into C (safe half,
+  now) + C2 (the column drop, post-merge). Presented to Ishay at the gate; nothing applied before
+  his ruling.**
+  **The plan said** (step 1.3 / 🛑 T3): copy-then-drop in ONE migration, with the client rewire in
+  the same step, "or every new-hostess save breaks in the window".
+  **What that missed, measured 27/08/2026:** T3 reasons about the BRANCH's code. **Production runs
+  its own, older copy** — `git show origin/main:src/modules/04_hostesses/HostessFormDialog.jsx`
+  writes `bank_name`/`bank_branch`/`bank_account` straight into `hostesses` at lines 217–219, and
+  `HostessViewCard.jsx:315` reads them — **and there is ONE Supabase project for production and
+  development** (`.env.local` → `yfeovxppnfoafmfbdfvh`, the same ref every migration in this session
+  was applied to). ⇒ the drop breaks the LIVE hostess form the instant it applies, and keeps it
+  broken until m8 merges and deploys — days, with the **28/08 interim presentation** in between.
+  **The split:** C creates the child, copies the 26 rows, adds both policies, and **relaxes the three
+  parent columns from NOT NULL while leaving them in place** — relaxing a constraint never breaks a
+  writer that still supplies a value, so production is untouched. C2 (§8.4) does the drop later,
+  after a re-copy.
+  **What the split COSTS, stated rather than buried:** ה19's actual exposure stays open until C2
+  (status quo, not a regression), and during the window bank details live in two places — a hostess
+  edited through production writes to the parent only. C2's re-copy step exists for exactly that.
+  ⚠️ **This also means §2.2's `Bank-details protection (ה19) … ✅ complete here` is not true on
+  merge day** — the closing audit must verify C2, not that row.
 - `27/08/2026 12:39–12:4X` — **BUILD OPENED · step 1.0's 🤖 half complete; standing at its 👤 gate.**
   Branch `ishay/module-8-finance` cut from `origin/dev` `585ad27`. **All 8 door re-measurements held
   — zero drift since 26/08**, so no pre-emptive guide rewrite was needed. Baseline **1,440 tests /

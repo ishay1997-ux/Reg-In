@@ -415,6 +415,36 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
    citation.
 
 <!-- Done strike-list (dated) -->
+- ⏳ 27/08/2026 — **module-8 migrations C and D · WRITTEN ON DISK, NOT APPLIED — the typed-echo gate
+  is OPEN for both.** `20260827132708_module8_hostess_bank_details_split.sql` ·
+  `20260827132709_module8_email_log_finance_entities.sql`.
+  🔴 **Not Done rows.** Present because the Stop hook requires this file to move whenever
+  `supabase/migrations/**` changes; a file on disk is a plan. **Verify live before assuming either
+  landed** — `hostess_bank_details` / the `invoice` value in `email_log_entity_type_check`.
+  **C — will close ה19 only PARTIALLY, by design.** It creates `hostess_bank_details` (PK=hostess_id,
+  1:1, FK cascade-on-delete), copies the 26 live rows, adds the two ruled policies ('דיילות' edit =
+  ALL so m4's form keeps working · 'כספים' edit = SELECT for the salary report), and **relaxes — does
+  NOT drop — the three `hostesses` bank columns.**
+  🔴 **Why the plan changed, measured 27/08/2026 and it is the load-bearing fact:** `origin/main`
+  (the code actually serving the live site) writes those three columns directly in
+  `HostessFormDialog.jsx:217-219` and reads them in `HostessViewCard.jsx:315`, and **production and
+  development share ONE Supabase project.** Dropping them would have broken the live hostess form
+  immediately and kept it broken until m8 merged and deployed — days away, with the 28/08 interim
+  presentation in between. 🛑 **T3 does not cover this**: it reasons about the branch's code, not
+  production's. **The drop moves to `C2`, a post-merge migration, registered in
+  `micro_guides/module-8.md` §8.4 with a re-copy-before-drop contract** (production keeps writing to
+  the parent during the window, so a hostess created there would otherwise lose her bank details).
+  ⇒ **ה19's exposure — bank details readable by anyone holding 'דיילות', because RLS is row-level —
+  stays OPEN until C2 runs.** Status quo, not a regression, but m8 may not be reported as having
+  closed ה19 before then.
+  **D — the `email_log` half of the finance mail path.** Replaces `email_log_entity_type_check` with
+  a 6-value list (adds `invoice`, `salary_report`) and adds the **fourth** SELECT policy, gated
+  'כספים' `edit|view` AND filtered to those two entity types — the exact shape of the three existing
+  per-module policies, so the finance manager sees her two mail types and not the quote/shift/project
+  ones. 🔴 **T5 ordering is absolute: this migration lands BEFORE the `send-email` deploy.** The
+  function sends and then journals; in the reverse order the mail reaches the customer while the
+  journal write is rejected by the CHECK — **the mail is out and the system believes it was never
+  sent**, with no error anyone sees.
 - ✅ 27/08/2026 — **module-8 migration B APPLIED via MCP `apply_migration`** (typed-echo received:
   `module8_salary_report_document_model`).
   File: `supabase/migrations/20260827131033_module8_salary_report_document_model.sql`.

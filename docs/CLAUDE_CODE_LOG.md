@@ -45,7 +45,7 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
-### 27/08/2026 12:39–13:1X — MODULE 8 BUILD OPENED: Phase-1 door closed, migration A applied
+### 27/08/2026 12:39–13:3X — MODULE 8 BUILD OPENED: Phase-1 door closed, migrations A + B applied
 
 - **Step 1.0 (👤 phase door) ✅.** Branch `ishay/module-8-finance` cut from fresh `origin/dev`
   (`585ad27`) after verifying m5 really merged. **All 8 live re-measurements held — zero drift
@@ -59,11 +59,43 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
   step that touches merged code, no silent progression past a red one. He also picked **`חסכוני`**
   (one sequential session, no agent army) for Phase 1 — matching the guide's own recommendation,
   since typed-echo gates serialize the work anyway.
+- 🔴 **A defect in the plan itself, found at the 1.3 gate and worth more than the migrations:
+  migration C as written would have broken the LIVE site — today.** The plan (step 1.3 / 🛑 T3)
+  says copy-then-drop the three `hostesses` bank columns in one migration, with the client rewire
+  in the same step. **T3 reasons about the BRANCH's code. Production runs its own older copy, and
+  there is ONE Supabase project for both** — measured: `git show origin/main:…HostessFormDialog.jsx`
+  writes the columns at 217–219, `HostessViewCard.jsx:315` reads them, `.env.local` points at the
+  same ref every migration this session went to. ⇒ the drop breaks the live hostess form from the
+  instant it applies until m8 merges and deploys — days, with the **28/08 presentation** in between.
+  **Split into C (create + copy + policies + relax NOT NULL, production untouched) and C2 (the drop,
+  post-merge, with a re-copy-first contract).** Registered in three places — `micro_guides/module-8.md`
+  §8.4 and §10, and `db_roadmap` §10 — because a debt with one home is a debt that gets lost.
+  ⚠️ **Consequence stated, not buried: ה19 is NOT closed until C2 runs**, so §2.2's "✅ complete
+  here" row for bank protection is false on merge day and the closing audit must check C2 itself.
+- 🔑 **The generalisable lesson, and it is not "check main":** every migration this project applies
+  goes to the SAME database the deployed site is using, while the deployed site runs code from a
+  DIFFERENT commit. **So the real question before any destructive DDL is not "does my branch still
+  compile" but "what is `origin/main` doing with this column right now".** Nothing in the guide, the
+  🛑 table, or the DB protocol asks that question today. Additive DDL is immune; `drop`, `rename`
+  and `not null`-tightening are not.
 - **Migration A applied** (`20260827125155_module8_finance_tables_and_columns`), typed-echo
   received. `project_finance` child table + `projects.invoice_sent_at`/`feedback_token` +
   `assignments.released_from_status` + the C-1 index + the ה30 `quote_services` tightening.
   Every assertion measured impersonated with a positive control first; advisors 26 = baseline;
   post-apply suite 1,440/56 exit 0, unchanged.
+- **Migration B applied** (`20260827131033_module8_salary_report_document_model`). `salary_reports`
+  run → document: `period` (UNIQUE + first-of-month CHECK) closes §7.40ג's double-generation hole,
+  `send_status`/`total_amount` added, the two NOT NULLs released (T4), and its first policy ever.
+  New `salary_report_lines` — the frozen signed snapshot, identity+numbers only, **no bank columns**
+  (B-4), every FK RESTRICT both ways (T19) with a covering index each. **Both behaviours proven by
+  writes that actually failed, not by reading DDL:** a second report for the same month →
+  `unique_violation`; a mid-month `period` → `check_violation`. Advisors **26 → 25** — the finding
+  that left is `rls_enabled_no_policy` on `salary_reports`, **the last business table that was
+  deny-all for want of being built.** The three that remain are deny-all by design. 🚧 the
+  `supabase/migrations/CLAUDE.md` section "טבלה חדשה בשימוש ראשון" still names `salary_reports` and
+  is now stale — flagged, deliberately not edited (another file's surface).
+  Suite after: **1,440/56 exit 0**, unchanged. Also struck `db_roadmap`'s §7.40ג row, which had read
+  *"אין לסמן את השורה כבוצעה"* since 12/08 — the four-unique-constraints item is now 4/4.
 - 🔑 **Two guide facts were WRONG and only measurement caught them — both are the "a written rule
   is not a working rule" species.** ① 🛑 **T1 named the wrong mechanism**: it said a CHECK blocks
   `cancelled → finished`, but the live `projects_closed_needs_report` body never mentions
