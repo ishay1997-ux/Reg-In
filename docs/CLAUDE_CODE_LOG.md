@@ -45,6 +45,28 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 28/08/2026 01:1X — phase 4, first three agents home (3/11)
+
+- ✅ **S2 footer polish.** The two gate-notes were being crushed into narrow columns; fixed with the
+  **approved mockup's own technique** (`.dlg-foot{flex-wrap:wrap}` + `.gate-note{width:100%}`) rather
+  than an invented layout — `GateNote` gained an opt-in `fullWidth`, default off, so no other call
+  site moved. 49/49 green before and after, and the suite already covers all four Q-1 controls.
+- ✅ **S3 pre-flight panel** — the state Ishay approved. **And it was built honest, which was the
+  whole instruction:** it shows only what is knowable with certainty BEFORE the irreversible write —
+  recipient from live `params`, the file name **via the same function that names the real file**
+  (not a second spelling that could drift), the cut-off date, the three collection rules transcribed
+  from the live body of `generate_salary_report`, the last report generated, and any skipped months
+  — and it **says in plain Hebrew that the rows themselves cannot be shown before generation**
+  rather than implying a completeness it cannot deliver. 20 → 30 tests.
+- ✅ **4.1 — the m6 survey-link ripple, with the strongest regression evidence of the night: 218
+  tests across every existing suite touching the changed files**, each named and counted. The agent
+  verified its own test-count claim by `git show HEAD:file | grep -c` rather than asserting it (49
+  before, 51 after). `feedbackUrlFor` mirrors `confirmUrlFor` exactly (token in the path, origin
+  from the caller), the token is minted at send time via the `'פרויקטים'`-gated get-or-create, and
+  🔴 **the stale comment was FLIPPED, not deleted** — the old *"הקישור קבוע — הכרעת-ישי 13/08"* now
+  states what the value is today, what it was, and when it changed. That is rule 13(ח)'s class of
+  failure caught in the act.
+
 ### 28/08/2026 01:1X — the survey ruling: kept the decision, threw away its reason
 
 - ✅ **RULED under Ishay's explicit delegation** (*"תציג את האפשרויות ותחליט בעצמך עם סיבה… תנסה
