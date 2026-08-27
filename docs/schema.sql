@@ -43,7 +43,7 @@
 --    **נמחקו** מ-`hostesses` — ה19 נסגר) ·
 --    ואחרי N1 `20260827183845_module8_n1_hostess_languages_additive` (טבלה חדשה
 --    `hostess_languages` — סעיף 31 — +RLS +2 policies +אינדקס + העתקת 33 שורות
---    מ-20 דיילות; העמודה `languages` נשארת עד N1b) ·
+--    מ-20 דיילות, **והעמודה `languages` נמחקה ב-N1b**) ·
 --    פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
 --
 -- 🔴 **לרענן את הקובץ הזה אחרי כל מיגרציה.** העותק הקודם לא רוענן חמישה חודשים והכריז על עמודה
@@ -768,11 +768,10 @@ create table hostesses (
   lat          numeric,
   lng          numeric,
   has_car      boolean     not null default false,
-  -- ⚠️ מ8 · N1 (27/08/2026): הוחלפה ע"י `hostess_languages` (סעיף 31). נשארת זמנית
-  --    **רק** כדי שהקוד שנפרס לא יישבר; הוא כותב אליה ב-HostessFormDialog.jsx:222
-  --    וקורא אותה ב-HostessViewCard.jsx:328. **תימחק במיגרציה N1b אחרי הפריסה**
-  --    (db_roadmap §9א). 🔴 קוד חדש קורא וכותב לטבלת-הבת בלבד.
-  languages    text[]      not null default '{}'::text[],
+  -- ✅ מ8 · N1b **נמחקה 27/08/2026 19:3X**: העמודה `languages` (`text[]`) ירדה כאן.
+  --    השפות חיות עכשיו **רק** ב-`hostess_languages` (סעיף 31), ביחס 1:N.
+  --    🔑 **ומאז אין ולו עמודת-מערך אחת בכל המסד** — נמדד: `data_type='ARRAY'` ⇒ אפס.
+  --    זו הייתה ההפרה היחידה של 1NF, והיא סגורה.
   constraint hostesses_pkey          primary key (hostess_id),
   constraint hostesses_id_number_key unique (id_number),
   constraint hostesses_rating_check  check (rating >= 1 and rating <= 5),
