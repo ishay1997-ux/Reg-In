@@ -12,8 +12,8 @@
 | **Branch** | `ishay/module-8-finance` — ✅ **CUT 27/08/2026 12:4X from fresh `origin/dev` (`585ad27`)**, at step 1.0. Preconditions verified the same turn: m5 IS merged (`git merge-base --is-ancestor origin/ishay/module-5-logistics origin/dev` ⇒ yes; `git log origin/dev..origin/ishay/module-5-logistics` ⇒ empty), and `origin/dev` NOW carries `docs/specs/module_08_finance/` (`git ls-tree origin/dev docs/specs/` ⇒ 04/05/06/**08**). Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ empty (fresh, not dead — iron rule 10's caveat). *(Was: "NOT YET CUT", 26/08.)* |
 | **Owner** | Ishay (sole developer) |
 | **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X** — step 1.0's 🤖 half done; standing at its 👤 checkpoint. **Zero migrations applied.** |
-| **Last updated** | `27/08/2026 16:0X` *(system clock)* |
-| **Active step** | **1.7 — Migration G, the LAST of phase 1: extend the merged m6 `cancel_project` to persist `released_from_status`, + the two param seeds. NOT STARTED.** ‏1.0–1.6 **all ✅**. 🔴 **G rewrites a live merged m6 function that production calls** — the live body gets pulled first and the diff shown to Ishay. After G the third hand anchor completes: the salary line moves **270.00 → 292.60**. 🔴 **C2 still owed after deploy — ה19 is NOT closed** (§8.4 · `db_roadmap` §9א, with N1/N2). 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
+| **Last updated** | `27/08/2026 16:1X` *(system clock)* |
+| **Active step** | **1.8 — the 🔻👤 Phase-1 gate: full advisors sweep · `schema.sql` cross-check · registers · commit.** 🎉 **All ten migrations of phase 1 are applied and verified** (A · B · C · D · E1 · E2 · E3 · E3-fix · F · G). **All three currently-reachable hand anchors are now produced by the code itself:** profit **3,650.00** · cancellation fee **3,508.00** · salary line **292.60**. *(The fourth, the 69% display, is derived in the UI — phase 3.)* Unit suite **1,446/56** green after every step. 🔴 **C2 still owed after deploy — ה19 is NOT closed** (§8.4 · `db_roadmap` §9א, with N1/N2). 🔴 Ishay ruled 27/08: finish Phase 1 today, merge to production today, run C2 today. |
 | **Deadline** | conference **01/10** (target: 100%) · end 20/10. m8 is the last *process* module before reports — the conference's "closing the loop" story leans on it. |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -28,8 +28,8 @@
 | **1.4** | Migration D — `email_log` CHECK +2 values + 'כספים' SELECT policy → **then** `send-email` deploy | ✅ *(both halves; deploy = v6)* |
 | **1.5** | Migration E — the finance RPC family (E1 SSOT+readers+m6 ripple · E2 7 write actions · E3 salary + fix-forward) | ✅ |
 | **1.6** | Migration F — public feedback RPC pair `/feedback/:token` + rate limit | ✅ |
-| **1.7** | Migration G — `cancel_project` extension (live-body pull) + params seeds | 🔨 |
-| **1.8** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | ⬜ |
+| **1.7** | Migration G — `cancel_project` extension (live-body pull) + params seeds | ✅ |
+| **1.8** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | 🔨 |
 | **2.0** | Phase-2 door — ledger sweep | ⬜ |
 | **2.1** | `src/lib/projectFinance.js` — revenue/cost/profit/fee/deviation/overdue SSOT + tests vs hand anchors ⚠️ shared-surface | ⬜ |
 | **2.2** | `src/lib/salaryReport.js` — aggregation model + line building + xlsx assembly + tests ⚠️ shared-surface | ⬜ |
@@ -1144,7 +1144,41 @@ stands).
 addition · cancel a throwaway demo project inside a rollback: `released_from_status` filled ·
 params live values 30/22.60 · advisors.
 **מה ייחשב עובד** *(R4-F2 quoted)*: `"עמודה משמרת-סטטוס-קדם-ביטול … לביטולים חדשים בלבד"`.
-**🌊 אדוות —** db_roadmap §10 strike entry. **🗣️ אושר —**
+
+**↳ as-built · APPLIED `27/08/2026 16:1X` — `20260827160357_module8_cancel_project_released_status_and_seeds`.
+PHASE 1's MIGRATIONS ARE COMPLETE — all ten m8 migrations live.**
+
+🔑 **The "one line" claim was PROVEN rather than asserted, and the method is the point.** Before
+touching anything, the live body was fingerprinted: **md5 `b21ef3d8e53270dce52dcd3134f8b103`,
+length 4,457, zero occurrences of `released_from_status`.** After applying, the new live body was
+taken back through the single edit — the added `set` line removed — and re-hashed: **same md5, same
+length.** ⇒ **arithmetic proof that nothing else in a merged m6 function moved.** A char-diff of a
+transcription would have proven only that my transcription matched itself; this compares the
+database to the database.
+*(The mine this defends against is expensive and real: 12/08/2026, a migration built from a pre-fix
+version of a function broke live quote approval **silently for three days**, found only at a demo
+rehearsal.)*
+
+**🔻🤖 Verify:**
+
+| Assertion | Measured |
+|---|---|
+| 🔴 delta = exactly the one addition | **md5 match** `b21ef3d8…`, length 4,457 ✅ · `released_from_status` occurs **once** ✅ |
+| behaviour — cancel #14 through the live function | `released_rows=4`, and **all four now carry `released<-finally_approved`** ✅ — the fact §7.16 depends on is preserved instead of erased |
+| the fee becomes computable | proposal returns a number where it previously could not ✅ |
+| 🔑 **third hand anchor** | **אפרת דהן — 6.00h × 45.00 + travel 22.60 = 292.60** = `spec §③3` ✅ |
+| `payment_terms_days` | **30** (was NULL from both readers before G) ⇒ due date and days-overdue are computable at all ✅ |
+| rollback | #14 back to `in_progress`, no signatures, no reports ✅ · **the two params correctly persist** — the migration's own effect, not probe data |
+
+⚠️ **One probe number stated precisely rather than smoothed over:** the fee proposal returned
+**3,836.00**, not the 3,508.00 anchor — because the probe cancelled **now**, and #14's event is today
+at 17:00, i.e. **under 24 hours ⇒ 100%**, where the anchor assumes 30 hours before ⇒ 50%. **The
+formula is unchanged** — simulating the anchor's timing still yields 328.00 + 3,180.00 = 3,508.00
+exactly. **A different input, not a different rule**, and worth writing down so nobody later reads
+3,836 as a regression.
+
+**🌊 אדוות —** `db_roadmap` §10 · `docs/schema.sql` · §1 header + step table. **🗣️ אושר —** typed-echo
+`27/08/2026 16:1X`.
 
 **Step 1.8 · 🔻👤 Phase-1 gate**
 Advisors full triage (predicted vs measured, every delta explained) · `docs/schema.sql` regenerated

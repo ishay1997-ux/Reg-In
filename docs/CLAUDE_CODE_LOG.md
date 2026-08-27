@@ -45,7 +45,7 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
-### 27/08/2026 12:39–15:5X — MODULE 8 phase 1: steps 1.0–1.5 closed; F written, only G left
+### 27/08/2026 12:39–16:0X — MODULE 8 phase 1: steps 1.0–1.6 closed; G written, phase nearly done
 
 - **Step 1.0 (👤 phase door) ✅.** Branch `ishay/module-8-finance` cut from fresh `origin/dev`
   (`585ad27`) after verifying m5 really merged. **All 8 live re-measurements held — zero drift
@@ -76,6 +76,18 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
   frozen number and the live number agree. The cancellation proposal returned **3,508.00** — the
   hand anchor, produced by the function itself rather than by a query written to match it. Billing
   alone did not freeze; the payment did, at 1,680.00. Status stayed `cancelled`.
+- **F applied — the public feedback page, verified from the attacker's seat as well as the
+  customer's.** The not-found answer for a wrong, empty and NULL token was **asserted byte-identical
+  rather than eyeballed** (any difference is an oracle telling a token-guesser they guessed right);
+  anon reading the tables directly gets 0 rows; and the rate limit was **proven by a 20-call loop —
+  exactly 15 through, 5 blocked**, not by reading the code. T14 held: m4's `/shift/:token` has no
+  limiter to copy, so the shape came from module 1's login counter, with a **separate** table so a
+  customer refreshing the page cannot eat the login-attempt budget for that IP.
+- 🔑 **A technique worth reusing, discovered under pressure:** these RPC families were verified by
+  driving complete journeys on REAL projects **inside transactions that were then rolled back**,
+  with the report carried out **inside the rollback exception's own message** — because a rollback
+  destroys any result table. It is the only way to exercise irreversible writes against live data
+  without leaving a trace, and it is how every gate in E2/E3/F was proven rather than assumed.
 - 🔴 **Two real defects found today, both in my own code, and both share a shape worth naming: they
   were invisible in production and visible only to the checker.**
   **(1) E3's temp table** used `on commit drop`, so a second call in one transaction failed. Every

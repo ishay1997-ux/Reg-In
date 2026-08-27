@@ -458,6 +458,59 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
+- ✅ 27/08/2026 — **module-8 migration G APPLIED — the LAST of phase 1** (typed-echo:
+  `module8_cancel_project_released_status_and_seeds`). **All ten m8 migrations are now live.**
+  **① Extends the MERGED, LIVE m6 function `cancel_project` — the riskiest edit in the phase.**
+  **The problem (R4-F2):** cancelling flips every live assignment to `released`, which **erases who
+  had been `finally_approved`** — and §7.16 compensation is owed **only** to those. ⇒ without the
+  fix, cancellation compensation is not computable against the merged code and **a hostess whose
+  event was cancelled would simply not be paid what was ruled to her.**
+  **The delta is one addition to one `set` clause:** `released_from_status = a.assignment_status`
+  alongside the existing flip. In Postgres the right-hand side of `set` reads the pre-update row, so
+  both assignments see the same source state and there is no ordering dependency.
+  🔴 **The live body was pulled with `pg_get_functiondef` before editing, not rebuilt from an older
+  file** — the documented mine: on 12/08/2026 a migration built from a pre-fix version broke real
+  quote approval **silently for three days**, caught only at a live demo rehearsal.
+  🔑 **And the proof of "exactly one line" is arranged in advance, not asserted after the fact.**
+  The pre-edit live body was fingerprinted **before touching anything**:
+  **`md5 = b21ef3d8e53270dce52dcd3134f8b103`, length 4,457, occurrences of `released_from_status` =
+  0.** After applying, removing the added line from the new body must reproduce that md5 exactly.
+  A hash match is arithmetic; "looks the same" is not.
+  ⚠️ **New cancellations only** — pre-m8 cancellations keep NULL and yield no compensation. Declared
+  limitation (§4.5⑤), not a gap.
+  **② Two param seeds the already-built numbers are waiting on:**
+  · `תנאי_תשלום_ימים = 30` with `param_type='pricing_timing'` (T22 — the type of
+    `סכום_נסיעות_למשמרת`; ⚠️ `products_and_params.md` carries **neither** new param and answers only
+    the enum). **It does not exist in the DB at all today**, which is why both m8 readers return
+    `NULL` for `payment_terms_days` and the due date is uncomputable.
+  · `סכום_נסיעות_למשמרת` **0 → 22.60** (ה20, the legal daily cap). The 0 empties the travel column
+    of every salary report. **⚠️ §7.69 stays open — the amount is verified with the CPA before M10**;
+    this is a lawful default, not a final figure.
+  🔑 **This completes the third hand anchor:** אפרת דהן's salary line moves **270.00 → 292.60**.
+  **Deliberately conservative:** the new param is seeded `on conflict do nothing` — **if Ishay has
+  set a different value meanwhile it is not overwritten** (a seed is a default, not a ruling) — and
+  travel is updated **only where it is still 0**, i.e. only where nobody chose anything.
+  **✅ Verified after apply.**
+  🔑 **The one-line claim was PROVEN, not asserted.** The new live body was taken back through the
+  single edit — the added `set` line removed — and re-hashed: **`md5 =
+  b21ef3d8e53270dce52dcd3134f8b103`, length 4,457 — an exact match to the fingerprint taken before
+  anything was touched.** ⇒ nothing else in a merged m6 function was changed, silently or otherwise.
+  `released_from_status` occurs exactly **once** in the live body.
+  **Behaviour, in a rolled-back transaction:** cancelling #14 through the live function returned
+  `released_rows=4`, and **all four assignments now carry `released<-finally_approved`** — the
+  information §7.16 compensation depends on is preserved instead of erased. With it, the fee
+  proposal became computable where it previously could not be.
+  ⚠️ **One number in that probe deserves precision rather than hand-waving:** the proposal returned
+  **3,836.00**, not the 3,508.00 anchor — because the probe cancelled **now**, and #14's event is
+  today at 17:00, i.e. **under 24 hours ⇒ 100%**, not the anchor's 30-hours-before ⇒ 50%. **The
+  formula is unchanged**; simulating the anchor's timing still reproduces 328.00 + 3,180.00 =
+  3,508.00 exactly. A different input, not a different rule.
+  🔑 **THIRD HAND ANCHOR COMPLETE:** with travel seeded, the salary line reads
+  **אפרת דהן — 6.00h × 45.00 + travel 22.60 = 292.60**, matching `spec.md §③3` digit for digit.
+  And `payment_terms_days` now returns **30** where both readers returned NULL before G, so the due
+  date and days-overdue become computable at all.
+  **Rollback clean** (#14 back to `in_progress`, no signatures, no reports). **The two params
+  correctly PERSIST** — they are the migration's own effect, not probe data.
 - ✅ 27/08/2026 — **module-8 migration F APPLIED** (typed-echo: `module8_public_feedback_rpc`).
   **The only surface in the module an anonymous person touches**, so three rules that were not
   softened: **no policy for `anon` on any table** (the two functions are the only door) · the
