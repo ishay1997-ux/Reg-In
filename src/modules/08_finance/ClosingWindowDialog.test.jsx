@@ -117,6 +117,9 @@ function proposalRow(over = {}) {
     proposed_fee: '3508.00',
     planned_hours: '4.00',
     compensated_count: 4,
+    // 🔵 H5 — הפיצוי שהצוות יקבל בפועל. בפיקסטורה הבסיסית הוא **שווה** ל-`team_compensation`,
+    // וזה נכון: השתיים נפרדות רק בסיווג "אחר". שער-הצורה דורש את השדה בכל מקרה.
+    payout_compensation: '328.00',
     ...over,
   }
 }
@@ -928,6 +931,33 @@ describe('תצוגה ג׳ — מקרי-הקצה של דמי-הביטול', () =>
     const why = screen.getByTestId('closing-fee-comp-why')
     expect(why).toHaveTextContent('הסולם אינו מופעל')
     expect(why).not.toHaveTextContent('סולם-הביטול (ה24) נותן')
+  })
+
+  // 🔵 H5 — העוגן שהופך "שיקול-דעת" מ*שדה ריק* ל*החלטה על מספר*. הבדיקה נועלת שלושה
+  // דברים, והשלישי הוא הקריטי: **העוגן אינו זורע את שדה-הסכום.** אילו זרע, H4 הייתה
+  // מתבטלת בשקט והלקוח היה מחויב בלחיצה אחת בדיוק כמו קודם.
+  it('🔵 "אחר" — מוצג כמה הצוות יקבל בפועל, והשדה נשאר ריק', async () => {
+    await openCancelled(
+      { cancel_type: 'other' },
+      {
+        team_compensation: null,
+        proposed_fee: null,
+        compensation_pct: null,
+        payout_compensation: '90.00',
+      },
+    )
+    const anchor = screen.getByTestId('closing-fee-payout-anchor')
+    expect(anchor).toHaveTextContent('הצוות יקבל בפועל')
+    expect(screen.getByTestId('closing-fee-payout')).toHaveTextContent('90.00')
+    expect(anchor).toHaveTextContent('כמה מתוכו להעביר ללקוח')
+    // 🔴 השדה נשאר ריק — עוגן ולא ברירת-מחדל.
+    expect(screen.getByTestId('closing-fee-amount')).toHaveValue(null)
+    expect(screen.getByTestId('closing-save-fee')).toBeDisabled()
+  })
+
+  it('העוגן מופיע רק ב"אחר" — בביטול רגיל ההצעה עצמה היא המספר', async () => {
+    await openCancelled({ cancel_type: 'customer' }, { payout_compensation: '90.00' })
+    expect(screen.queryByTestId('closing-fee-payout-anchor')).not.toBeInTheDocument()
   })
 
   // הצד השני, כדי ש-A-8 לא ייבלע: שעות חסרות **בביטול רגיל** עדיין אומרות את משפטן.

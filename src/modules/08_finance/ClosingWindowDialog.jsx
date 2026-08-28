@@ -121,6 +121,11 @@ const PROPOSAL_FIELDS = [
   'proposed_fee',
   'planned_hours',
   'compensated_count',
+  // 🔵 H5 — הפיצוי שהצוות **יקבל בפועל** בדוח-השכר. **אינו הצעת-חיוב**: הוא נשאר מלא גם
+  // כש-`proposed_fee` הוא `null` (סיווג "אחר"), וזה בדיוק תפקידו — לתת למנהלת מספר להחליט
+  // *עליו*, במקום שדה ריק. ‏`assertFinanceShape` דורש אותו ⇒ חזרה של הפונקציה לגרסה בלי
+  // העמודה תיתפס כשער-צורה, ולא כ-`undefined` שקט שמכווץ את המשפט על המסך.
+  'payout_compensation',
 ]
 
 // 🔤 חמש סיבות-הבירור — **זהות-בייט ל-CHECK החי** ולרשימה שבמוקאפ המאושר. תו אחד שונה
@@ -571,6 +576,35 @@ function CompensationComponent({ proposal, cancelType }) {
           />
         )}
       </div>
+      {/* 🔵 H5 — **עוגן-ההחלטה, ולא הצעה.** בסיווג "אחר" המסד מפסיק להציע (ה25/H4), אבל
+          החברה **עדיין משלמת** לצוות: ‏`generate_salary_report` מסתעף על `force_majeure`
+          בלבד (נמדד 28/08/2026). ⇒ השאלה שלה אינה "כמה לחייב" באוויר אלא "כמה ממה שאנחנו
+          כבר משלמים להעביר ללקוח", וזה טווח: ‏0 → הפיצוי → הפיצוי + סחורה.
+          🚫 **ואינו זורע את השדה** — מספר לחשוב עליו, לא ברירת-מחדל שנשמרת בלחיצה. */}
+      {manualOnly && proposal?.payout_compensation != null ? (
+        <div
+          className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
+          data-testid="closing-fee-payout-anchor"
+        >
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-[12.5px] font-semibold text-slate-700">
+              הצוות יקבל בפועל (משולם בדוח-השכר)
+            </span>
+            <Money
+              amount={proposal.payout_compensation}
+              cents
+              className="text-sm font-semibold text-slate-800"
+              data-testid="closing-fee-payout"
+            />
+          </div>
+          <Sub className="mt-1 block">
+            זהו הסכום שהחברה משלמת בלי קשר לשאלה מי ביטל. ההחלטה שלך היא{' '}
+            <b>כמה מתוכו להעביר ללקוח</b> — אפס (החברה סופגת) · הסכום המלא · או הסכום בתוספת הסחורה
+            שכבר הוזמנה.
+          </Sub>
+        </div>
+      ) : null}
+
       <Sub className="mt-1 block" testId="closing-fee-comp-why">
         <Ltr>{proposal?.compensated_count ?? '—'}</Ltr> דיילות מאושרות-סופית · הביטול נעשה{' '}
         <Ltr>{formatHoursBeforeEvent(proposal?.hours_before_event)}</Ltr> שעות לפני האירוע{' '}
