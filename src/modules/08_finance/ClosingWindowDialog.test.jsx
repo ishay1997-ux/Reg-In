@@ -915,6 +915,28 @@ describe('תצוגה ג׳ — מקרי-הקצה של דמי-הביטול', () =>
     expect(screen.getByTestId('closing-save-fee')).toBeDisabled()
   })
 
+  // 🔴 אחרי מיגרציה H4 הפונקציה מחזירה `team_compensation = null` בסיווג "אחר". הבדיקה
+  // נועלת את מה שהמיגרציה לבדה הייתה שוברת: המסך **לא** יגיד "חסרות שעות סופיות" על
+  // ביטול שהשעות שלו תקינות — זה היה שולח את המנהלת לחפש נתון שאינו חסר.
+  it('🔴 "אחר" עם פיצוי null — המשפט הוא ה25, ולא "חסרות שעות סופיות"', async () => {
+    await openCancelled(
+      { cancel_type: 'other' },
+      { team_compensation: null, proposed_fee: null, compensation_pct: null },
+    )
+    expect(screen.getByTestId('closing-fee-comp-manual')).toHaveTextContent('אין הצעה אוטומטית')
+    expect(screen.queryByTestId('closing-fee-comp-missing')).not.toBeInTheDocument()
+    const why = screen.getByTestId('closing-fee-comp-why')
+    expect(why).toHaveTextContent('הסולם אינו מופעל')
+    expect(why).not.toHaveTextContent('סולם-הביטול (ה24) נותן')
+  })
+
+  // הצד השני, כדי ש-A-8 לא ייבלע: שעות חסרות **בביטול רגיל** עדיין אומרות את משפטן.
+  it('שעות סופיות חסרות בביטול רגיל — משפט A-8 נשאר כשהיה', async () => {
+    await openCancelled({ cancel_type: 'customer' }, { team_compensation: null })
+    expect(screen.getByTestId('closing-fee-comp-missing')).toHaveTextContent('חסרות שעות סופיות')
+    expect(screen.queryByTestId('closing-fee-comp-manual')).not.toBeInTheDocument()
+  })
+
   it('ביטול ע"י הלקוח כן נזרע — כדי ש"לא נזרע" לא יהיה התנהגות גורפת', async () => {
     await openCancelled({ cancel_type: 'customer' }, { proposed_fee: '3508.00' })
     expect(screen.getByTestId('closing-fee-amount')).toHaveValue(3508)

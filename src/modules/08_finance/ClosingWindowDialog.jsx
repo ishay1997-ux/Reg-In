@@ -174,6 +174,11 @@ const NO_BILLING_EMAIL_NOTE =
 // שני חישובים שונים, ו-A-8 מנסח את משפטו על **רכיב-הפיצוי** בלבד. אריח סטיית-התקציב אינו
 // מחשב פיצוי כלל — משפט שמדבר על "פיצוי" מתחת לתווית "סטיית-תקציב" קורא כמו תקלה במסך.
 const NO_PLANNED_HOURS_NOTE = 'לא ניתן לחשב פיצוי — חסרות שעות סופיות'
+// 🔴 **ה25 מייצר `null` שני, ומסיבה הפוכה לגמרי — ולכן משפט נפרד ולא שיתוף.** אחרי
+// מיגרציה `H4` הפונקציה מחזירה `team_compensation = null` גם בסיווג "אחר", **והשעות שם
+// תקינות לחלוטין.** שימוש חוזר ב-`NO_PLANNED_HOURS_NOTE` היה שולח את מנהלת-הכספים לחפש
+// שעות חסרות שאינן חסרות — כלומר המיגרציה עצמה הייתה מייצרת שקר על המסך.
+const OTHER_NO_PROPOSAL_NOTE = 'אין הצעה אוטומטית — סיווג "אחר" (ה25)'
 const NO_DEVIATION_NOTE = 'לא ניתן לחשב סטייה — חסרות שעות סופיות'
 const ARCHIVE_CONFIRM_MESSAGE =
   'הרווח הסופי ייקפא בשקלים, התיק יינעל לצמיתות וקישור-המשוב של הלקוח יבוטל. אין ביטול לפעולה.'
@@ -545,6 +550,7 @@ function IdentityBlock({ detail, billing, invoiceName, showFeedback, showPayment
 // שממנו מנהלת-הכספים תסיק שהחישוב שבור ותתקן את הסכום ביד.
 function CompensationComponent({ proposal, cancelType }) {
   const forceMajeure = cancelType === 'force_majeure'
+  const manualOnly = cancelType === 'other'
   return (
     <div className="mt-2 rounded-lg border border-slate-200 bg-white p-3">
       <div className="flex items-baseline justify-between gap-3">
@@ -552,9 +558,9 @@ function CompensationComponent({ proposal, cancelType }) {
         {proposal?.team_compensation == null ? (
           <span
             className="text-[12px] font-semibold text-amber-800"
-            data-testid="closing-fee-comp-missing"
+            data-testid={manualOnly ? 'closing-fee-comp-manual' : 'closing-fee-comp-missing'}
           >
-            {NO_PLANNED_HOURS_NOTE}
+            {manualOnly ? OTHER_NO_PROPOSAL_NOTE : NO_PLANNED_HOURS_NOTE}
           </span>
         ) : (
           <Money
@@ -573,6 +579,10 @@ function CompensationComponent({ proposal, cancelType }) {
             · הביטול סווג ככוח-עליון (ה25) ⇐ <Ltr>{proposal?.compensation_pct ?? '—'}%</Ltr>.{' '}
             {FORCE_MAJEURE_COMP_NOTE}{' '}
           </>
+        ) : manualOnly ? (
+          // 🔴 בסיווג "אחר" **אסור לצטט את הסולם**: הוא לא הופעל. השעות נשארות עובדה
+          // מוצגת — הן נכונות, הן פשוט אינן קובעות כאן אחוז.
+          <>· הביטול סווג כ"אחר" (ה25) ⇐ הסולם אינו מופעל, והסכום נקבע בשיקול-דעתך. </>
         ) : (
           <>
             ⇐ סולם-הביטול (ה24) נותן <Ltr>{proposal?.compensation_pct ?? '—'}%</Ltr>.{' '}
