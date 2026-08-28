@@ -1836,7 +1836,11 @@ create policy hostess_languages_write_by_permission on hostess_languages
 -- finance_freeze_cancelled_profit(integer) returns numeric   SD · plpgsql
 --   Q-3: דמי-ביטול − פיצוי-צוות − סחורה **בעלות**. ויתור ⇒ הפסד רשום אמיתי.
 -- נקראות מהלקוח — [authenticated, service_role], כולן מגודרות 'כספים':
--- finance_cancellation_fee_proposal(integer) returns table (8 cols)   SD · stable
+-- finance_cancellation_fee_proposal(integer) returns table (9 cols)   SD · stable
+--   ↳ העמודה התשיעית `payout_compensation` נוספה ב-`20260828095633_module8_h5_...`
+--     (28/08/2026). ⚠️ ההוספה חייבה `drop function`, וה-ACL אופס בדרך — הוחזר
+--     במפורש, ו-`anon` הוסר בנפרד ב-`20260828102433_module8_h5b_...`.
+--     ACL בפועל: {postgres, authenticated, service_role} — **בלי `anon`**.
 --   שלושת הרכיבים, **נגזרים ולא נשמרים** (ה28). אומתה: #14 ⇒ 3,508.00 = עוגן-היד.
 -- record_invoice_sent(integer, text) returns jsonb           SD · plpgsql
 -- record_payment(integer, date) returns jsonb                SD · plpgsql

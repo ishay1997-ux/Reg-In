@@ -38,13 +38,28 @@
 --    ‏`md5(prosrc)`=`a8ad0c1765be015d6ca69b42bff172d6`, אורך 3,270).
 --    **השינויים מול הגוף החי: ‏`v_payout_pct` + עמודת-החזרה התשיעית. שום שינוי בקיים.**
 --
+-- 🔴 **`create or replace` אינו מספיק כאן, ו-Postgres עוצר על זה במפורש:**
+--    *"cannot change return type of existing function — Row type defined by OUT parameters is
+--    different"*. הוספת עמודת-החזרה מחייבת `drop function` ואז יצירה מחדש.
+-- 🩸 **ומה ש-`drop` הורס בשקט, ולכן נמדד לפני ולא אחרי (28/08/2026, `pg_proc.proacl`):**
+--    ‏`{postgres=X/postgres, service_role=X/postgres, authenticated=X/postgres}` — כלומר
+--    **הרשאות-ההרצה מפורשות, ו-PUBLIC נשלל.** ⚠️ **ובמיוחד: ל-`anon` אין הרצה** — וזה מכוון:
+--    ‏`finance_cancellation_fee_proposal` היא `security definer` וחושפת נתוני-כסף.
+--    ⇒ **המיגרציה חייבת להחזיר את ה-ACL בעצמה.** ‏`drop` בלי ה-`grant` שאחריו היה מחזיר את
+--    ברירת-המחדל של Postgres — **`EXECUTE` ל-PUBLIC**, כלומר פתיחת הפונקציה לכל תפקיד
+--    כולל `anon`. **זו לא הערה זהירותית: זו הסיבה שהשורות האלה קיימות.**
+--
 -- 🔻 אימות אחרי ההחלה (שלושתם חייבים להחזיר true):
 --   select prosrc like '%v_payout_pct%' from pg_proc where proname='finance_cancellation_fee_proposal';
 --   -- ובעסקה מתגלגלת על #11 (48ש' לפני): other ⇒ proposed_fee IS NULL **וגם** payout_compensation = 90.00
 --   -- customer ⇒ team_compensation = payout_compensation (השתיים חייבות להסכים)
 -- =============================================================================
 
-create or replace function public.finance_cancellation_fee_proposal(p_project_id integer)
+-- 🔴 חובה לפני היצירה מחדש — ר' ההסבר בכותרת. `if exists` כדי שהמיגרציה תהיה
+-- בת-הרצה-חוזרת (idempotent) ולא תיפול על סביבה שבה הפונקציה עדיין לא קיימת.
+drop function if exists public.finance_cancellation_fee_proposal(integer);
+
+create function public.finance_cancellation_fee_proposal(p_project_id integer)
 returns table(compensation_pct numeric, hours_before_event numeric, team_compensation numeric,
               goods_at_price numeric, goods_at_cost numeric, proposed_fee numeric,
               planned_hours numeric, compensated_count integer,
@@ -141,3 +156,10 @@ begin
          else round(v_payout_pct / 100.0 * v_planned_hours * v_rate_sum, 2) end;
 end;
 $function$;
+
+-- 🔒 שחזור ה-ACL שנמדד לפני ה-`drop` — **בדיוק כפי שהיה, לא רחב יותר.**
+-- ‏`revoke from public` הוא החצי החשוב: בלעדיו ברירת-המחדל של Postgres נותנת `EXECUTE`
+-- לכל תפקיד, **כולל `anon`** — פונקציית-כסף `security definer` שנפתחת לאנונימי.
+revoke all on function public.finance_cancellation_fee_proposal(integer) from public;
+grant execute on function public.finance_cancellation_fee_proposal(integer) to authenticated;
+grant execute on function public.finance_cancellation_fee_proposal(integer) to service_role;

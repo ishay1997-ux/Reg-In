@@ -509,6 +509,36 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
+- ✅ 28/08/2026 — **`H5` + `H5b` APPLIED** (typed echo for H5: `module8_h5_payout_anchor_for_manual_fee`).
+  **`H5`** adds a ninth return column, `payout_compensation` — what the team is actually paid in
+  the salary report — so the manual fee decision in `other` has a number to be a decision *about*.
+  Verified live, rolling back: `customer` team=payout=90.00 *(they agree, as designed)* ·
+  **`other` proposed_fee `null` but payout 90.00** · `force_majeure` 0.00/0.00.
+  🩸 **`H5b` — a security regression that `H5` itself created, caught by measuring rather than by
+  assuming, and fixed within minutes.** Adding a return column forced `drop function`, and the
+  recreated function was granted EXECUTE to **`anon`** by Supabase's `alter default privileges` —
+  which grant **by name**, so the `revoke … from public` written into H5 did not touch it.
+  📌 **The mine was written down in advance** (`supabase/migrations/CLAUDE.md`, measured 09/08/2026):
+  *"always write `revoke … from public, anon, authenticated` … and verify via `pg_proc.proacl`,
+  do not assume the revoke took"*. H5 obeyed the verify half and not the revoke half — which is
+  why it was caught at all. **ACL now `{postgres, authenticated, service_role}`.**
+  🔑 **Generalizable lesson: `drop function` RESETS the ACL.** Any migration that breaks a function
+  signature must (a) measure `proacl` before, (b) restore explicitly, **(c) measure again after** —
+  because the provider's defaults add roles you did not ask for.
+- 🔴 28/08/2026 — **`H6` WRITTEN, NOT APPLIED — the missing permission gate on
+  `finance_cancellation_fee_proposal`.** *(`module8_h6_gate_fee_proposal_on_finance_permission`.)*
+  Found by measuring the whole m8 function family against `pg_proc` when Ishay asked whether the
+  money model was really verified. **Thirteen of fourteen are correct** — the six write actions all
+  gate through `finance_assert_writable`; the four client-facing readers/generators gate directly;
+  and `finance_project_money` / `finance_freeze_cancelled_profit` / `finance_assert_writable` are
+  **`service_role` only**, unreachable from the browser. **One is not:**
+  `finance_cancellation_fee_proposal` is `security definer`, executable by **any authenticated
+  user**, and carries **no gate at all** — since birth (`20260827150049`), not a regression.
+  🩸 **Why it matters beyond "extra data": it returns `goods_at_cost`.** §7.34 rules purchase cost
+  invisible to non-finance roles and `e2e/cost-visibility.spec.js` proves a recruitment manager gets
+  `[]` from `product_costs` — **this RPC hands the same figure through a different door.**
+  ⚠️ Not an anon exposure (that was H5b) and not a write path (the function is `stable`).
+  Fix is one line, in the exact shape the module's other two readers already use.
 - ✅ 28/08/2026 — **the four module-8 fix migrations `H1`–`H4`, each applied after its OWN typed
   echo.** *(Registered here 28/08/2026; they were applied on 27–28/08 and this file lagged — a real
   §10.1 miss, recorded rather than backdated.)*
