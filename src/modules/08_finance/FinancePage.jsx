@@ -294,12 +294,24 @@ function computeFinanceSummary(byTab) {
   }
 }
 
+// 🔤 **יחיד/רבים בעברית — נתפס בצילום-מסך על דאטה אמיתית, לא בבדיקה.** האריחים הציגו
+// *"1 תיקים בטיפול"*, כי המחרוזת נבנתה עם ריבוי קבוע. **בדיקה עם `openCount: 1` הייתה
+// עוברת** — היא בודקת שהמספר נכון, לא שהעברית תקינה. ⇒ הפונקציה הזו היא המקום היחיד
+// שבו הצורה נבחרת, וכל אריח חדש שמונה משהו חייב לעבור דרכה.
+// ⚠️ ‏`2` בעברית הוא "שני X" ולא "2 X", ולכן שלוש צורות ולא שתיים.
+function countLabel(n, singular, plural) {
+  if (n === 1) return `${singular} אחד`
+  if (n === 2) return `שני ${plural}`
+  return `${n} ${plural}`
+}
+
 // שורת-המשנה של אריח "ממתין לגבייה" — מונה-התיקים תמיד, ובנוסף אזהרת-החוסר כשהיא רלוונטית.
 function summaryOpenSub(summary) {
   if (summary.openCount === 0) return 'אין תיקים פתוחים לגבייה כרגע'
-  const base = `${summary.openCount} תיקים בטיפול`
+  const base = `${countLabel(summary.openCount, 'תיק', 'תיקים')} בטיפול`
   if (summary.unresolvedCount === 0) return base
-  return `${base} · לא כולל ${summary.unresolvedCount} דמי-ביטול שטרם נקבעו`
+  const missing = countLabel(summary.unresolvedCount, 'דמי-ביטול', 'דמי-ביטול')
+  return `${base} · לא כולל ${missing} שטרם נקבעו`
 }
 
 // ── המסך ─────────────────────────────────────────────────────────────────────
@@ -564,7 +576,7 @@ function SummaryTiles({ summary }) {
       <StatTile
         label={SUMMARY_OVERDUE_LABEL}
         value={summary.overdueTotal}
-        sub={`${summary.overdueCount} תיקים באיחור-תשלום`}
+        sub={`${countLabel(summary.overdueCount, 'תיק', 'תיקים')} באיחור-תשלום`}
         testId="finance-summary-overdue"
       />
     </div>

@@ -569,14 +569,39 @@ describe('S1 — רצועת-הסיכום ("ממתין לגבייה" / "באיח�
     expect(open).toHaveTextContent('סה"כ ממתין לגבייה')
     expect(open).toHaveTextContent('6,485 ₪')
     expect(open).toHaveTextContent('3 תיקים בטיפול')
-    expect(open).toHaveTextContent('לא כולל 1 דמי-ביטול שטרם נקבעו')
+    expect(open).toHaveTextContent('לא כולל דמי-ביטול אחד שטרם נקבעו')
 
     // "באיחור-תשלום" = תת-קבוצה של הפתוח: רק #15 (5 ימי-איחור, נעול בבדיקה למעלה); #12
     // אינו יכול להיות באיחור כי חשבונית טרם נשלחה לו (`daysOverdue===null`).
     const overdue = screen.getByTestId('finance-summary-overdue')
     expect(overdue).toHaveTextContent('מתוכו באיחור-תשלום')
     expect(overdue).toHaveTextContent('5,985 ₪')
-    expect(overdue).toHaveTextContent('1 תיקים באיחור-תשלום')
+    expect(overdue).toHaveTextContent('תיק אחד באיחור-תשלום')
+  })
+
+  // 🔤 **יחיד/רבים — נתפס בצילום-מסך על דאטה אמיתית, לא בבדיקה.** האריח הציג *"1 תיקים
+  // בטיפול"*. 🔴 **וזה בדיוק סוג הפגם שבדיקה רגילה מפספסת:** בדיקה שמאשרת שהמספר 1 נכון
+  // **עוברת** — היא בודקת חשבון, לא עברית. שלוש הצורות נבדקות כאן במפורש, כולל `2`, שבעברית
+  // הוא "שני X" ולא "2 X".
+  it('🔤 מונה-התיקים בעברית תקינה בשלוש הצורות (1 · 2 · 3)', async () => {
+    const openOne = { ...P12, written_off: false }
+    listFinanceOverview.mockResolvedValue([openOne])
+    const one = render(<FinancePage />)
+    await screen.findByTestId('finance-summary-open')
+    expect(screen.getByTestId('finance-summary-open')).toHaveTextContent('תיק אחד בטיפול')
+    expect(screen.getByTestId('finance-summary-open')).not.toHaveTextContent('1 תיקים')
+    one.unmount()
+
+    listFinanceOverview.mockResolvedValue([P12, P15])
+    const two = render(<FinancePage />)
+    await screen.findByTestId('finance-summary-open')
+    expect(screen.getByTestId('finance-summary-open')).toHaveTextContent('שני תיקים בטיפול')
+    two.unmount()
+
+    listFinanceOverview.mockResolvedValue(BOARD)
+    render(<FinancePage />)
+    await screen.findByTestId('finance-summary-open')
+    expect(screen.getByTestId('finance-summary-open')).toHaveTextContent('3 תיקים בטיפול')
   })
 
   it('אין כלום פתוח לגבייה: שני האריחים מציגים 0 ₪ אמיתי, לא ריק', async () => {
@@ -618,7 +643,7 @@ describe('S1 — רצועת-הסיכום ("ממתין לגבייה" / "באיח�
     const open = screen.getByTestId('finance-summary-open')
     expect(open).toHaveTextContent('לא ידוע — דמי-ביטול טרם נקבעו')
     expect(open).not.toHaveTextContent('0 ₪')
-    expect(open).toHaveTextContent('לא כולל 1 דמי-ביטול שטרם נקבעו')
+    expect(open).toHaveTextContent('לא כולל דמי-ביטול אחד שטרם נקבעו')
   })
 
   // שלוש הבדיקות הבאות מפורדות (ולא רצף-render יחיד) כי `render` של testing-library אינו
