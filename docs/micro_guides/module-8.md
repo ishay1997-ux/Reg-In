@@ -9,7 +9,7 @@
 | | |
 |---|---|
 | **Module** | 8 — כספים וסגירת אירוע (Finance & event closing) |
-| **Branch** | `ishay/module-8-phase-2` — ✅ **CUT `27/08/2026 19:5X` from fresh `origin/dev` (`ed353bc`)**, after phase 1 shipped to production. Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ **empty** *(fresh, NOT merged-and-dead — iron rule 10's caveat)*. 🧹 **Seven merged branches were deleted the same minute** (remote + local), SHAs recorded in `CLAUDE_CODE_LOG` before deletion: `module-8-finance` `e41be2b` · `module-8-c2-and-n1` `3593bf9` · `module-8-n1b` `5e0bf45` · `fix-flaky-checklist-focus` `c3b2eaf` · `module-5-logistics` `3822a47` · `post-merge-m5-flip` `89f830b` · `reconcile-main-into-dev` `8e63da9`. **Remote now holds `dev` and `main` only.** *(Was: `ishay/module-8-finance`, cut 12:4X from `585ad27` — merged to production 17:4X and deleted.)* |
+| **Branch** | `ishay/module-8-phase-2` — ✅ **CUT `27/08/2026 19:5X` from fresh `origin/dev` (`ed353bc`)**, after phase 1 shipped to production. Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ **empty** *(fresh, NOT merged-and-dead — iron rule 10's caveat)*. 🧹 **Seven merged branches were deleted the same minute** (remote + local), SHAs recorded in `CLAUDE_CODE_LOG` before deletion: `module-8-finance` `e41be2b` · `module-8-c2-and-n1` `3593bf9` · `module-8-n1b` `5e0bf45` · `fix-flaky-checklist-focus` `c3b2eaf` · `module-5-logistics` `3822a47` · `post-merge-m5-flip` `89f830b` · `reconcile-main-into-dev` `8e63da9`. **Remote now holds `dev` and `main` only.** ⏱️ *(נכון לרגע הכתיבה, `27/08 20:0X`. **התיישן באותו לילה:** חמישה ענפי-`dependabot/*` אוטומטיים נוצרו `28/08 01:5X`. נתפס באודיט-התיעוד 28/08 — **הטענה לא הייתה שגויה, היא פשוט לא נושאת חותמת**, וקורא עתידי היה מסיק שמישהו יצר ענפים בניגוד לכלל 10.)* *(Was: `ishay/module-8-finance`, cut 12:4X from `585ad27` — merged to production 17:4X and deleted.)* |
 | **Owner** | Ishay (sole developer) |
 | **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X.** ✅ **PHASE 1 COMPLETE 27/08/2026 16:5X — all ten migrations applied and verified, and the 1.8 gate passed.** *(This row read "Zero migrations applied" until the gate; corrected there.)* |
 | **Last updated** | `28/08/2026 08:5X` *(system clock)* |
@@ -1730,6 +1730,27 @@ anchored to it and settle them with Ishay at the phase door, not mid-step.
   writes the code (Ishay's 14/08 rule).
 
 ### Dated entries
+- ✅ `28/08/2026 11:4X` — **צעד 4.3, אדוות-התיעוד: שלושה חובות-§6 סומנו שולמו, אחד נשאר פתוח
+  בכוונה, ו-`schema.sql` סונכרן אחרי `H6`.**
+  🔑 **וכל 'שולם' כאן נשען על מדידה בקוד, לא על 'בנינו את זה':**
+  · **‏`salary_reports` (מ8←מ4)** — נבנה **ורץ חי**: אוגוסט 2026, `292.60 ₪` = עוגן-האפיון,
+    האקסל הורד ותאיו נקראו. **ובכך אומת גם הנימוק שהחוב עצמו נשען עליו** — *"הבעלים חסום
+    מהמודול"* — כי פרטי-הבנק נקראו מהטבלה המוגנת דווקא בהרשאת 'כספים'.
+  · **שלוש ההכתבות ממ6** — ‏**(א)** מ8 **מייבאת** את `PROJECT_STATUS_LABELS` ואינה מגדירה תווית
+    משלה ⇒ `event_finished` הוא "ממתין לסגירה" **ממקור אחד**. ‏**(ב)** ‏`grep actual_guests` על כל
+    המודול ⇒ **אפס** — החיוב על סחורה יוצא מ-`logistics.planned_qty`, כלומר **מה שהוזמן** (⑳).
+    ‏**(ג)** כבר היה סגור.
+  · **‏RC-6, עמודת "סכום"** — ‏`projectAmount` מסכם הצעה + שינויי-תכולה, ➕ **עם שער שהחוב
+    המקורי לא ביקש:** שורה שכספה ממוסך מחזירה `null` ולא מדלגת, **אחרת מסך חסום-הרשאה היה
+    מציג תוספת 0 במקום "אין נתון"** — בדיוק דוקטרינת-האפס-השקט של המודול, מוחלת על חוב של מודול אחר.
+  🔴 **והחוב שנשאר פתוח, ובמכוון — "בדיקת מבנה" על פרטי-הבנק.** מ8 **קורא** את שלושת השדות
+  ומדפיס אותם לרו"ח, **ואינו מאמת אותם.** ⇒ ההצלבה שהחוב ציפה לה **לא נבנתה**, ושדה שגוי יגיע
+  לרו"ח כמו שהוא. **מה שכן השתנה: עכשיו יש לו צרכן אמיתי ומקום טבעי לבדיקה — רגע ההפקה.**
+  📌 **ושתי הערות-תיעוד שנסגרו באותה נשימה:** ‏`schema.sql` §פונקציות — הכותרת הצהירה *"כולן
+  מגודרות 'כספים'"* בעוד זה נכון רק מאז `H6` **באותו בוקר**; נכתב עכשיו עם התאריך שבו הפך לנכון.
+  ‏· ושורת *"נשארו רק `dev` ו-`main`"* קיבלה חותמת-זמן — היא **התיישנה באותו לילה** כשנוצרו
+  חמישה ענפי-`dependabot` אוטומטיים. **הטענה לא הייתה שגויה; היא פשוט לא נשאה תאריך**, וקורא
+  עתידי היה מסיק שמישהו יצר ענפים בניגוד לכלל 10. *(שניהם מאודיט-התיעוד הבלתי-תלוי.)*
 - ✅ `28/08/2026 11:0X` — **‏5.1 מסע ② בוצע דרך המסך, בהרשאת-ישי — שלושת המסעות סגורים.**
   🔎 **ומה שהתגלה בבחירת-הפרויקט, וזה ממצא ולא טרוויה:** ‏`cancel_project` **מסרבת לבטל אירוע
   שכבר התקיים או נסגר** (`event_finished` בכלל התנאי) ⇒ **‏#14 — תרחיש-הביטול שהאפיון עצמו
