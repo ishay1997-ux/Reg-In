@@ -26,6 +26,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import LoadingOrError from '@/components/LoadingOrError'
 import PermissionAwareEmpty, { DENIED_MARK } from '@/components/PermissionAwareEmpty'
+import StatTile from '@/components/StatTile'
 import StatusTag from '@/components/StatusTag'
 import RatingStars from '@/components/RatingStars'
 import Money from '@/components/Money'
@@ -76,6 +77,15 @@ const PAID_TAG = 'שולם'
 const CREDIT_NOTE_LINE = 'נדרשת חשבונית זיכוי'
 const VAT_SUFFIX = 'כולל מע"מ'
 const DASH = '—'
+
+// 🔤 רצועת-הסיכום (הכרעת-ישי 28/08/2026). "סה"כ ממתין לגבייה" הוא הניסוח שהמוקאפ המאושר
+// עצמו שקל ודחה בזמנו — לא מומצא כאן (`01_finance_overview_approved.html`, "מה הכרעתי לבד"
+// ②: "אין אריחי-KPI מעל הטבלה … כל מדד-סיכום (למשל 'סה"כ ממתין לגבייה')..." — האריח לא
+// היה מוצדק על ארבע שורות-בדיקה; על נתוני-אמת הוא כן). ממשיכים את אותו אוצר-מילים במקום
+// להמציא חדש (מעבר-ניסוח, `src/CLAUDE.md`).
+const SUMMARY_OPEN_LABEL = 'סה"כ ממתין לגבייה'
+const SUMMARY_OVERDUE_LABEL = 'מתוכו באיחור-תשלום'
+const SUMMARY_OPEN_UNKNOWN = 'לא ידוע — דמי-ביטול טרם נקבעו'
 
 // שלוש הלשוניות, בשמן ובסדר שהמוקאפ מצייר. ‏`key` = הערך ש-`get_finance_overview` מחזיר
 // בעמודת `tab`, כדי שהשיוך יגיע מהמסד ולא ייגזר כאן שנית (B-9 חי במסד, לא כאן).
@@ -227,6 +237,71 @@ function matchesFilters(entry, tab, filters) {
 
 const EMPTY_FILTERS = { from: '', to: '', company: '', projectNumber: '' }
 
+// ── רצועת-הסיכום מעל הטבלה (הכרעת-ישי 28/08/2026) ────────────────────────────
+// "כמה כסף פתוח לגבייה בסה"כ, וכמה ממנו כבר באיחור" — השאלה שהכותרת-משנה של המסך
+// ("בקרת גבייה") מבטיחה ושהטבלה, שמראה רק סכום פר-שורה, לא עונה עליה.
+//
+// 🔴 **"פתוח לגבייה" = לשוניות ①+② בלבד (`awaiting_invoice`+`awaiting_payment`), לא ③.**
+// לשונית "הסתיימו" מוצגת רק אחרי ארכוב, ושער-הארכוב (`archiveGateNote`,
+// `ClosingWindowDialog.jsx`) דורש `paid || written_off` **וגם** משוב-פתור לפני שהוא נפתח —
+// כלומר כל שורה שם כבר נסגרה כספית (שולמה, או נמחקה כחוב-אבוד). ‏`resolved_cancelled`
+// כבר לא מגיע לכאן כלל — הוא לא אחד משלושת המפתחות של `byTab` (B-9 בכותרת הקובץ), אז
+// לולאת-החלוקה משמיטה אותו לבד; אין צורך לסנן אותו שוב כאן.
+//
+// 🔴 **חוב-אבוד (`written_off`) מסונן החוצה במפורש, גם לפני הארכוב.** `record_write_off`
+// (מיגרציה E2) אינה נוגעת ב-`project_status` — תיק יכול להיות `written_off=true` ועדיין
+// לשבת ב"ממתין לתשלום" עד שהמשוב ייפתר ויאפשר ארכוב, בדיוק כמו שתיק ששולם נשאר שם עד
+// הארכוב (`debtOpen` למעלה). ברגע שסומן אבוד, החברה הפסיקה לרדוף אחריו — הוא כבר לא
+// "פתוח לגבייה" גם אם עדיין לא ארוכב רשמית.
+//
+// 🔴 **"לא ידוע" אינו "0" — דוקטרינת-האפס-השקט של המודול (§4.3, `projectFinance.js`).**
+// שורת-ביטול שדמי-הביטול שלה טרם נקבעו (`entry.amount === null`, `feeUnresolved`) היא
+// כסף אמיתי בלי מספר עדיין — לא כסף שאינו קיים. סכימה ששותקת עליה הייתה מדווחת סכום
+// קטן-מדי בלי שום סימן. **הפתרון: מסכמים את מה שכן ידוע, וחושפים במפורש את מה שלא** —
+// אם יש שורה כזו, שורת-המשנה אומרת זאת; ואם **כל** הפתוח הוא כזה (0 ידוע, יש לא-ידוע),
+// האריח בכלל לא מציג "0 ₪" — הוא מציג `SUMMARY_OPEN_UNKNOWN`, כדי שלא ייקרא כעובדה.
+function computeFinanceSummary(byTab) {
+  const eligible = [...byTab.awaiting_invoice, ...byTab.awaiting_payment].filter(
+    (entry) => !entry.row.written_off,
+  )
+  let knownAgorot = 0
+  let knownCount = 0
+  let unresolvedCount = 0
+  let overdueAgorot = 0
+  let overdueCount = 0
+  for (const entry of eligible) {
+    if (entry.amount === null) {
+      unresolvedCount += 1
+      continue
+    }
+    knownAgorot += toAgorot(entry.amount)
+    knownCount += 1
+    // אותו תנאי בדיוק כמו `isActionable`'s overdue-branch — עוד תיק שהחוב עליו סגור
+    // (שולם/אבוד, `debtOpen=false`) לא נספר, ותיק בלי מועד-פירעון ידוע (`daysOverdue===null`,
+    // בעיקר לשונית ① — חשבונית טרם נשלחה) לא יכול להיות "באיחור".
+    if (entry.debtOpen && entry.daysOverdue !== null && entry.daysOverdue > 0) {
+      overdueAgorot += toAgorot(entry.amount)
+      overdueCount += 1
+    }
+  }
+  return {
+    openCount: eligible.length,
+    knownCount,
+    unresolvedCount,
+    openTotal: knownCount === 0 && unresolvedCount > 0 ? null : toShekels(knownAgorot),
+    overdueCount,
+    overdueTotal: toShekels(overdueAgorot),
+  }
+}
+
+// שורת-המשנה של אריח "ממתין לגבייה" — מונה-התיקים תמיד, ובנוסף אזהרת-החוסר כשהיא רלוונטית.
+function summaryOpenSub(summary) {
+  if (summary.openCount === 0) return 'אין תיקים פתוחים לגבייה כרגע'
+  const base = `${summary.openCount} תיקים בטיפול`
+  if (summary.unresolvedCount === 0) return base
+  return `${base} · לא כולל ${summary.unresolvedCount} דמי-ביטול שטרם נקבעו`
+}
+
 // ── המסך ─────────────────────────────────────────────────────────────────────
 
 export default function FinancePage() {
@@ -310,6 +385,11 @@ export default function FinancePage() {
     }
     return buckets
   }, [prepared])
+
+  // רצועת-הסיכום נגזרת מ-`byTab` בלבד — אין כאן קריאת-רשת נוספת ואין נוסחה חדשה, רק
+  // סכימה של מה שכבר נטען וכבר נגזר לכל שורה (`entry.amount` / `entry.debtOpen` /
+  // `entry.daysOverdue`, שלושתם מ-`prepareRows` למעלה).
+  const summary = useMemo(() => computeFinanceSummary(byTab), [byTab])
 
   // ‏`byTab` תמיד מחזיק את שלושת המפתחות (הוא נבנה מהם), ו-`tab` מגיע רק מ-`TABS` ⇒ אין
   // כאן `?? []` שהיה יוצר מערך חדש בכל render ומפיל את התלות של ה-useMemo שמתחתיו.
@@ -397,6 +477,7 @@ export default function FinancePage() {
   return (
     <div data-testid="finance-page">
       {header}
+      <SummaryTiles summary={summary} />
       <Card>
         <TabsBar active={tab} counts={counts} onSelect={setTab} />
         <FilterBar filters={filters} onChange={setFilters} onClear={clearFilters} />
@@ -461,6 +542,31 @@ function PageHeader({ onOpenSalary }) {
       >
         {SALARY_BUTTON_LABEL}
       </Button>
+    </div>
+  )
+}
+
+// רצועת-הסיכום — אותו רכיב-משותף ואותה מוסכמה בדיוק כמו `ProjectsPage.TilesRow`:
+// `flex flex-wrap` בין הכותרת לכרטיס-הטבלה, לעולם לא `grid` שמותח לרוחב-מלא (הכרעת-ישי
+// 08/08/2026, `StatTile.jsx`). ‏`summary.openTotal === null` = "יש חוב פתוח, הסכום שלו
+// עדיין לא ידוע" (דמי-ביטול לא-נפתרים בלבד בפתוח) — **לא** "0 חוב פתוח"; `emptyText`
+// הוא ההבדל היחיד בין השניים ב-`StatTile`.
+function SummaryTiles({ summary }) {
+  return (
+    <div className="mb-4 flex flex-wrap gap-3">
+      <StatTile
+        label={SUMMARY_OPEN_LABEL}
+        value={summary.openTotal}
+        emptyText={SUMMARY_OPEN_UNKNOWN}
+        sub={summaryOpenSub(summary)}
+        testId="finance-summary-open"
+      />
+      <StatTile
+        label={SUMMARY_OVERDUE_LABEL}
+        value={summary.overdueTotal}
+        sub={`${summary.overdueCount} תיקים באיחור-תשלום`}
+        testId="finance-summary-overdue"
+      />
     </div>
   )
 }

@@ -558,6 +558,103 @@ describe('S1 — פתיחת S2 (חלון סגירת-תיק)', () => {
   })
 })
 
+describe('S1 — רצועת-הסיכום ("ממתין לגבייה" / "באיחור-תשלום")', () => {
+  it('הרגיל: מסכם ①+② בלבד (500+5,985), ומדווח בגלוי על דמי-ביטול שטרם נקבעו', async () => {
+    // BOARD = [P15, P12, RESOLVED_CANCELLED, P13, P14]. ‏P13 (הסתיים, שולם, ארוכב) יורד
+    // כי לשונית ③ אינה "פתוחה"; RESOLVED_CANCELLED יורד כי הוא לא אחד משלושת ה-buckets
+    // (B-9); P14 (מבוטל, דמי-ביטול טרם נקבעו) נשאר "בטיפול" אבל התרומה שלו לסכום לא ידועה.
+    // ⇒ ידוע: 500.00 (#12) + 5,985.00 (#15) = 6,485 ₪ — מעוגל לשקל שלם, כמו כל StatTile כספי.
+    await renderPage()
+    const open = screen.getByTestId('finance-summary-open')
+    expect(open).toHaveTextContent('סה"כ ממתין לגבייה')
+    expect(open).toHaveTextContent('6,485 ₪')
+    expect(open).toHaveTextContent('3 תיקים בטיפול')
+    expect(open).toHaveTextContent('לא כולל 1 דמי-ביטול שטרם נקבעו')
+
+    // "באיחור-תשלום" = תת-קבוצה של הפתוח: רק #15 (5 ימי-איחור, נעול בבדיקה למעלה); #12
+    // אינו יכול להיות באיחור כי חשבונית טרם נשלחה לו (`daysOverdue===null`).
+    const overdue = screen.getByTestId('finance-summary-overdue')
+    expect(overdue).toHaveTextContent('מתוכו באיחור-תשלום')
+    expect(overdue).toHaveTextContent('5,985 ₪')
+    expect(overdue).toHaveTextContent('1 תיקים באיחור-תשלום')
+  })
+
+  it('אין כלום פתוח לגבייה: שני האריחים מציגים 0 ₪ אמיתי, לא ריק', async () => {
+    // #13 בלבד — הסתיים, שולם, ארוכב. 0 כאן הוא עובדה נמדדת (אין אף תיק בלשוניות ①/②),
+    // ולכן שונה במפורש מ"לא ידוע" (הבדיקה הבאה) — StatTile מבדיל ביניהם רק דרך emptyText.
+    listFinanceOverview.mockResolvedValue([P13])
+    render(<FinancePage />)
+    await screen.findByTestId('finance-empty-tab')
+    expect(screen.getByTestId('finance-summary-open')).toHaveTextContent('0 ₪')
+    expect(screen.getByTestId('finance-summary-open')).toHaveTextContent(
+      'אין תיקים פתוחים לגבייה כרגע',
+    )
+    expect(screen.getByTestId('finance-summary-overdue')).toHaveTextContent('0 ₪')
+  })
+
+  it('חוב-אבוד אינו נספר כ"פתוח לגבייה", גם לפני שהוא ארוכב', async () => {
+    // 🔴 העוגן: `record_write_off` (מיגרציה E2) אינה נוגעת ב-`project_status` — תיק יכול
+    // להיות `written_off=true` ולהישאר ב"ממתין לתשלום" עד שהמשוב ייפתר. אילו האריח היה סופר
+    // לפי הלשונית בלבד (בלי לבדוק `written_off`), 5,985 ₪ "אבודים" היו נספרים כפתוחים —
+    // בדיוק המספר שהמנהלת לא אמורה לרדוף אחריו יותר.
+    listFinanceOverview.mockResolvedValue([{ ...P15, written_off: true }])
+    render(<FinancePage />)
+    await screen.findByTestId('finance-table')
+    expect(screen.getByTestId('finance-summary-open')).toHaveTextContent('0 ₪')
+    expect(screen.getByTestId('finance-summary-open')).toHaveTextContent(
+      'אין תיקים פתוחים לגבייה כרגע',
+    )
+    expect(screen.getByTestId('finance-summary-overdue')).toHaveTextContent('0 ₪')
+  })
+
+  it('כל הפתוח הוא דמי-ביטול לא-ידועים: האריח לא מציג "0 ₪" — הוא מציג שהסכום לא ידוע', async () => {
+    // #14 לבדו: תיק אמיתי, כסף אמיתי על הפרק — רק שהמספר שלו טרם נקבע. "0 ₪" כאן היה שקר
+    // שקורא כעובדה (דוקטרינת-האפס-השקט, §4.3 ב-`projectFinance.js`).
+    // #14 יושב בלשונית "ממתין לחשבונית", והלשונית שנפתחת כברירת-מחדל היא "ממתין לתשלום"
+    // (ריקה כאן) — ולכן ממתינים לאריחים עצמם, לא לטבלה.
+    listFinanceOverview.mockResolvedValue([P14])
+    render(<FinancePage />)
+    await screen.findByTestId('finance-empty-tab')
+    const open = screen.getByTestId('finance-summary-open')
+    expect(open).toHaveTextContent('לא ידוע — דמי-ביטול טרם נקבעו')
+    expect(open).not.toHaveTextContent('0 ₪')
+    expect(open).toHaveTextContent('לא כולל 1 דמי-ביטול שטרם נקבעו')
+  })
+
+  // שלוש הבדיקות הבאות מפורדות (ולא רצף-render יחיד) כי `render` של testing-library אינו
+  // מנקה את ה-DOM הקודם בין קריאות בתוך אותה בדיקה — שני עמודים היו נשארים בו-זמנית
+  // ומזייפים "נמצא" על שאריות מהעמוד הקודם. אותה מוסכמה בדיוק כמו `TilesRow` של
+  // `ProjectsPage`: מדד-סיכום מוצג רק על נתונים אמיתיים, לא כדי "למלא שורה" בזמן
+  // שהמסך לא יודע עדיין (או לא רשאי לדעת) מה קרה.
+  it('לא מוצג בטעינה — אריח "0" בזמן שהתשובה עוד לא חזרה היה שקר', async () => {
+    let release
+    listFinanceOverview.mockReturnValue(
+      new Promise((resolve) => {
+        release = () => resolve(BOARD)
+      }),
+    )
+    render(<FinancePage />)
+    expect(screen.queryByTestId('finance-summary-open')).not.toBeInTheDocument()
+    release()
+    await screen.findByTestId('finance-table')
+    expect(screen.getByTestId('finance-summary-open')).toBeInTheDocument()
+  })
+
+  it('לא מוצג בחוסר-הרשאה — אריח "0" על תיק חסום היה נקרא כ"אין חוב"', async () => {
+    listFinanceOverview.mockRejectedValue(rpcError('42501', 'אין לך הרשאה'))
+    render(<FinancePage />)
+    await screen.findByTestId('finance-no-permission')
+    expect(screen.queryByTestId('finance-summary-open')).not.toBeInTheDocument()
+  })
+
+  it('לא מוצג בתקלת-טעינה — אין נתונים לסכם', async () => {
+    listFinanceOverview.mockRejectedValue(new Error('Failed to fetch'))
+    render(<FinancePage />)
+    await screen.findByTestId('finance-error')
+    expect(screen.queryByTestId('finance-summary-open')).not.toBeInTheDocument()
+  })
+})
+
 describe('S1 — מסלול-הכניסה ל-S3 (הכרעת Q-2)', () => {
   it('כפתור "הפקת דוח-שכר" קיים בכותרת ופותח את הדיאלוג', async () => {
     await renderPage()

@@ -199,11 +199,17 @@ test.describe('מודול 8 · כספים — E2E פנימי (S1/S2/S3), קרי�
 
     const history = dialog.getByTestId('salary-history-card')
     await expect(history).toBeVisible({ timeout: 30_000 })
-    // 🕓 מספר-הדוחות משתנה עם הזמן (5.1 הפיק את אוגוסט 2026) — ולכן הענף ולא מספר נעוץ.
-    const historyRows = history.locator('[data-testid^="salary-history-row-"]')
-    if ((await historyRows.count()) === 0) {
-      await expect(history.getByTestId('salary-history-empty')).toBeVisible()
-    }
+    // 🕓 מספר-הדוחות משתנה עם הזמן (5.1 הפיק את אוגוסט 2026) ⇒ שני מצבים לגיטימיים.
+    // 🔴 **תוקן 28/08/2026 — כאן היה `if ((await historyRows.count()) === 0)`, וזה מרוץ.**
+    // ‏`.count()` הוא צילום-רגע **ואינו חוזר על עצמו** כמו `expect`: הוא יכול לקרוא 0 בעוד
+    // השליפה באוויר, ואז הבדיקה מחכה למציין-"ריק" שלעולם לא יופיע — כי שורות כן הגיעו.
+    // ‏`.or()` הוא ה-locator היחיד שמחכה **לשני** המצבים ומצליח על הראשון שמתייצב.
+    // *(נתפס באודיט-ריצה בלתי-תלוי, שאבחן את השורה במדויק — הכשל היה בבדיקה, לא במסך.)*
+    await expect(
+      history
+        .getByTestId('salary-history-empty')
+        .or(history.locator('[data-testid^="salary-history-row-"]').first()),
+    ).toBeVisible({ timeout: 30_000 })
 
     // תצוגה-מקדימה **אינה** מציגה מספר-כסף (הערת-הראש של הקובץ — אין קורא שאינו כותב) —
     // הבדיקה נשארת נאמנה לכך ומאמתת רק את מה שהמסך בפועל מבטיח: כפתור-בורר-החודש (הבורר

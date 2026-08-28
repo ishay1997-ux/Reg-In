@@ -42,7 +42,7 @@
 | **3.3** | S3 — salary-report dialog + history | ✅ *(20 tests)* |
 | **3.4** | S4 — public feedback page `/feedback/:token` | ✅ *(9 tests)* |
 | **3.5** | Route + nav registration ⚠️ shared-surface | ✅ *(`App.jsx` swap + the public route)* |
-| **3.6** | 🔻👤 Phase-3 🎨 gate — UX & functional review **with Ishay** | 🔨 **awaiting his single consolidated review** |
+| **3.6** | 🔻👤 Phase-3 🎨 gate — UX & functional review **with Ishay** | ✅ **APPROVED `28/08/2026 11:2X`** — *"מאשר את המסכים"*, on a single review page carrying eight live screenshots + the undrawn-controls list |
 
 > 🗣️ **Approval model for phase 3, changed by Ishay `27/08/2026 ~21:0X`:** the per-unit 🗣️ gate is
 > **consolidated into ONE review at the end**, on the built screens, in his words — *"אני יאשר בסוף
@@ -52,14 +52,14 @@
 > present the screen**. Each surface agent therefore returns a structured `undrawn_controls` list,
 > which is what he will be shown at review. *(Recorded here because a future session reading the
 > Q-1 row alone would conclude the gate was skipped.)*
-| **3.6** | 🔻👤 Phase-3 gate — 🎨 UX & functional review | ⬜ |
+| **3.6** | 🔻👤 Phase-3 gate — 🎨 UX & functional review | ✅ *(duplicate row — the table restarts after the blockquote above; kept so the numbering reads continuously)* |
 | **4.0** | S3 preview state (Ishay-approved `28/08 00:3X`) + S2 footer layout fix | ✅ |
 | **4.1** | M6 ripple — survey-link → token URL (mint-before-send) ⚠️ shared-surface | ✅ *(cross-ref logged in `module-6.md` §10)* |
 | **4.2** | M2 ripple — customer metrics filters + "סכום" column (RC-6) ⚠️ shared-surface | ✅ *(cross-ref logged in `module-2.md` §9, incl. the deliberately-reversed privacy comment)* |
-| **4.3** | Doc ripples — §6 debt consumption · registers · ripple sweep | ⬜ *(orchestrator's; the §7.52/§7.68 flips are Ishay's per rule 13(ו))* |
+| **4.3** | Doc ripples — §6 debt consumption · registers · ripple sweep | ✅ `28/08 11:4X` *(three §6 debts marked paid **against measurement**; one left open — bank-structure validation was never built. §7.52/§7.68 flips remain Ishay's per rule 13(ו))* |
 | **4.4** | E2E + smoke + accessibility for the 4 surfaces; full regression | ✅ *(`e2e/finance.spec.js` + `e2e/public-feedback.spec.js` written)* |
 | **4.4ב** | 🆕 UX pass + edge-case sweep across the four surfaces — **Ishay's explicit ask `28/08 ~07:2X`** | ✅ *(8-agent run `wf_8da1e480-df9`; 4 lenses → 4 fixers; suite **1,765 / 65 exit 0**)* |
-| **4.5** | 🔻👤 Phase-4 gate | ⬜ |
+| **4.5** | 🔻👤 Phase-4 gate | 🔨 **blocked on a quiet tree** — three writer agents are mid-edit on the finance files; the independent runtime audit measured against a moving target and said so |
 
 > 🗣️ **Ishay delegated the survey ruling to Claude, `28/08/2026 ~01:0X`** — *"תציג את האפשרויות
 > ותחליט בעצמך עם סיבה וזהו… תנסה להקל עלי ולא להוסיף לי עבודה"*. ⇒ **the A/B/C question does NOT
@@ -67,9 +67,9 @@
 > reason; he overrides if he disagrees. **The condition he attached is the real instruction —**
 > *"כל עוד באמת ביררת ושקלת אפשרויות"* — so the ruling is only legitimate once the dispatched
 > research returns and its sources are read, not summarised.
-| **5.1** | Live acceptance journeys on real data (credentialed; mails land in Ishay's inbox) | ◐ **2 of 3** |
+| **5.1** | Live acceptance journeys on real data (credentialed; mails land in Ishay's inbox) | ✅ **3 of 3 run** *(the fee-resolution write is the one deliberate remainder)* |
 | ↳ ① | **#12 end-to-end** — invoice→mail→payment→public feedback→archive→frozen profit | ✅ `28/08 07:15–07:19` *(live DB: `final_profit` **207.40**, `feedback_score` 5, `archived_at` 07:19, **token dead**; invoice mail `sent` to Ishay's inbox — he confirmed it arrived)* |
-| ↳ ② | **Cancellation fee** — cancel a demo project through m6, resolve the three components | ⬜ **needs Ishay's nod** *(no project in the live seed is `cancelled`; running it means cancelling one)* |
+| ↳ ② | **Cancellation fee** — cancel a demo project through m6, resolve the three components | ✅ `28/08 11:0X` *(nod given. #15 cancelled through m6's real screen — 1 hostess released, row landed in "awaiting invoice" flagged; fee = 0 team + **1,225 goods**. **Resolving the fee itself still pending** — it freezes profit irreversibly)* |
 | ↳ ③ | **Salary report** — generate · xlsx · mail · double-generation blocked · history + download | ✅ `28/08 08:35` *(report **13**, אוגוסט 2026, total **292.60** = the spec anchor; 1 line signed; xlsx downloaded and its cells read; second generation blocked)* |
 | **5.2** | 🔻👤 Closing audit — `module-close` in a FRESH session | ⬜ |
 
@@ -1730,6 +1730,49 @@ anchored to it and settle them with Ishay at the phase door, not mid-step.
   writes the code (Ishay's 14/08 rule).
 
 ### Dated entries
+- ✅ `28/08/2026 12:5X` — **שני אריחי-סיכום ב-S1 (הכרעה-בהאצלה שלי, אושרה ע"י ישי).**
+  ‏"סה"כ ממתין לגבייה" · "מתוכו באיחור-תשלום", ברכיב `StatTile` הקיים ובפריסת-`TilesRow`
+  של `ProjectsPage` — **לא רכיב חדש.**
+  🔑 **והסוכן מצא עוגן שאני לא ידעתי עליו:** בהערות-המחבר של המוקאפ המאושר של S1 **המדד הזה
+  נשקל ונדחה במכוון** — רק מפני שדאטת-הבדיקה בת ארבע השורות הפכה אותו למיותר. ⇒ **הוא השתמש
+  בניסוח של המחבר עצמו במקום להמציא תווית.** *(וזה גם מצמצם את הסטייה: לא הוספנו מדד חדש —
+  החזרנו אחד שנדחה מטעם שכבר לא מתקיים.)*
+  🔴 **וההגדרה של "חייבים לי" נבנתה בזהירות, וזה החלק שקל לטעות בו:**
+  · לשונית ③ מוחרגת — **שער-הארכוב דורש `paid || written_off`**, כלומר כל שורה שם כבר סגורה כספית.
+  · **חוב-אבוד מוחרג במפורש ולא רק דרך הלשונית** — ‏`record_write_off` **אינו מזיז סטטוס**, ולכן
+    תיק שוויתרנו עליו יושב בלשונית ②/① ימים עד הארכוב. בלי הבדיקה המפורשת **כסף שכבר ויתרנו
+    עליו היה נספר כפתוח.**
+  · **ודמי-ביטול שטרם נקבעו אינם 0** — האריח סוכם את הידוע **ואומר במפורש כמה לא נכללו**;
+    וכשהכול לא-ידוע הוא כותב *"לא ידוע — דמי-ביטול טרם נקבעו"* ולא "0 ₪". **זו דוקטרינת
+    האפס-השקט של המודול (§4.3), מוחלת על מספר חדש.**
+  ‏47 בדיקות בקובץ *(‏+5)*, כולל מקרה "אין חוב" ומקרה "הכול לא-ידוע".
+- 🔍 `28/08/2026 12:4X` — **אודיט-הריצה הבלתי-תלוי החזיר שני ממצאים שלא ידעתי עליהם, ושניהם
+  תוקנו. ➕ ותיקון-דיווח שלי כלפי ישי.**
+  🔴 **התיקון קודם, כי הוא שלי:** דיווחתי לישי שהסוכן *"חזר בלי כלום"* אחרי שהודעת-הסיום שלו
+  הייתה משפט-המתנה. **הוא לא נכשל — הוא עצר והמשיך**, והדוח שהגיע הוא **המפורט מבין השלושה.**
+  ⇒ **הודעת-סיום ריקה אינה עדות לכישלון-סוכן**, ומיהרתי להסיק.
+  **‏① ‏`scripts/audit-gate.mjs` מצטט דדליין שבוטל — בחמישה מקומות.** ‏`reviewTrigger` של חמשת
+  פטורי-האבטחה נקוב *"הגשת הפרויקט 19/09/2026"*, **ו-19/09 בוטל 12/08/2026** ורשום ככזה
+  ב-`CLAUDE.md`. 🔑 **ולמה זה לא קוסמטי: פטור-אבטחה שתוקפו נמדד מול תאריך-רפאים לא ייבדק
+  מחדש לעולם.** הוחלף ב-`כנס-הסיום 01/10/2026`, עם הערה שמסבירה מה זז ולמה.
+  **‏② והמרוץ — שלי, מהבוקר.** ב-`e2e/finance.spec.js` כתבתי
+  `if ((await historyRows.count()) === 0)`. ‏**`.count()` הוא צילום-רגע ואינו חוזר על עצמו**
+  כמו `expect` ⇒ הוא יכול לקרוא 0 בעוד השליפה באוויר, ואז הבדיקה ממתינה למציין-"ריק"
+  **שלעולם לא יופיע**, כי שורות כן הגיעו. **הסוכן אבחן את השורה במדויק והבחין נכון: הכשל
+  היה בבדיקה, לא במסך.** הוחלף ב-`.or()` — ה-locator היחיד שממתין לשני המצבים.
+  📌 **ומה שהוא מדד ויצא ירוק:** ‏`lint` · `format` · `build` · `dup` · **`knip` — 0 ממצאים** ·
+  `audit` · `check:bidi` · `check:docs-structure`, ו-**1,776 בדיקות בשתי ריצות מבודדות.**
+  ⚠️ **ומה שהוא אמר בפירוש שלא הצליח:** אף ריצת-`smoke` נקייה (0 מתוך 4), ושלוש בדיקות-E2E
+  שנשארו **לא-מאומתות** כי ריצת-הבידוד שלו נקטעה. **הוא הצהיר על שתיהן ולא טשטש.**
+  🔑 **ומה שהוא תפס שאף אחד לא תכנן:** הוא זיהה בזמן-אמת ש**סשן אחר עורך את קובצי-הכספים
+  בזמן שהוא מודד** *(שלושת סוכני-הכתיבה שלי)*, מדד חותמות-קבצים מול השעון, **והכריז שכל
+  מדידותיו הן תמונה של קוד שכבר זז.** ⇒ **בדיוק הסיבה ששער-פזה-4 ממתין לעץ שקט.**
+- ✅ `28/08/2026 12:3X` — **‏S3 נוקה מקודים פנימיים (סוכן ייעודי, בעלות-קובץ בלעדית).**
+  שמונה מחרוזות מוצגות — `ה9` · `ה15` · `ה7` · `ה24` · `ה29` · `§7.69` · `ה19` **ושם-טבלת-המסד
+  `hostess_bank_details`** — נוסחו מחדש בעברית מקצועית **בלי לאבד את ההסבר**. 🔑 **והקודים לא
+  נמחקו: הועברו להערות-קוד מעל אותן שורות**, כדי שהקשר להכרעה יישרד למפתח ולא ייראה למשתמשת.
+  ➕ **ושלוש הערות שתיארו את המבנה שלפני העברת-ההיסטוריה תוקנו** לפי מוסכמת-הבית *(מה נכון
+  היום · מה היה · מתי ובהכרעת-מי)*. ‏44 בדיקות עוברות, lint/format נקיים, אפס CRLF.
 - ✅ `28/08/2026 11:4X` — **צעד 4.3, אדוות-התיעוד: שלושה חובות-§6 סומנו שולמו, אחד נשאר פתוח
   בכוונה, ו-`schema.sql` סונכרן אחרי `H6`.**
   🔑 **וכל 'שולם' כאן נשען על מדידה בקוד, לא על 'בנינו את זה':**
