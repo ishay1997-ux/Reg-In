@@ -26,7 +26,7 @@
 // remount-on-open: כמו כל דיאלוג בפרויקט (ScopeChangeDialog/QuoteDocumentDialog), האיפוס
 // הוא באחריות הקורא דרך `key` (לעולם לא effect שמסנכרן props→state, src/CLAUDE.md).
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Calendar, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -219,7 +219,7 @@ const COLUMN_WIDTHS = ['21%', '12%', '15%', '9%', '8%', '9%', '12%', '14%']
 // SalaryReportDialog — הדיאלוג עצמו
 // ---------------------------------------------------------------------------
 
-export default function SalaryReportDialog({ open, onOpenChange, onGenerated }) {
+export default function SalaryReportDialog({ open, onOpenChange }) {
   const toast = useToast()
   const confirm = useConfirm()
 
@@ -239,6 +239,18 @@ export default function SalaryReportDialog({ open, onOpenChange, onGenerated }) 
   // ⚠️ ואינו משנה שום התנהגות קיימת: כל אתרי-הקריאה כאן משתמשים ב-`?? '—'`/`?? 'רואה-החשבון'`,
   // ו-`undefined ?? x` זהה-תוצאה ל-`null ?? x`.
   const [accountantEmail, setAccountantEmail] = useState(undefined)
+
+  // 🔴 **היסטוריית-ההפקות עברה לכאן `28/08/2026`, בהכרעת-ישי — והיא גוברת על Q-2 ועל
+  // המוקאפ המאושר, שניהם מיקמו אותה ככרטיס על מסך-הכספים מתחת לטבלה.** ‏**מה שהוא ראה
+  // ואני לא:** הטבלה גדלה ללא-גבול (לשונית "הסתיימו" צוברת כל פרויקט שאורכב אי-פעם), ולכן
+  // הכרטיס נדחק מתחת לקו-הקיפול לצמיתות. ⚠️ **ובאג חי שנפל מזה, ולא רק אי-נוחות:** הבאנר
+  // של חודש-חסום הציע *"צפייה בדוח הקיים ↑"* — כפתור ש**סגר את הדיאלוג** והצביע למעלה על
+  // כרטיס שיושב שני מסכים למטה. עכשיו הוא גולל אל הסעיף שכאן.
+  // 🔑 **ולמה `state` מקומי ולא `onGenerated` כלפי חוץ:** ההיסטוריה חיה בתוך הדיאלוג ⇒
+  // איתות-הרענון הוא פנימי לחלוטין, ואין יותר צרכן חיצוני. הפרופ הוסר במקום להישאר
+  // מיותם — פרופ שאיש אינו מעביר הוא קוד מת שהבדיקה לבדה מחזיקה בחיים.
+  const [historyTick, setHistoryTick] = useState(0)
+  const historyRef = useRef(null)
 
   const [phase, setPhase] = useState('select') // 'select' | 'submitting' | 'result' | 'error'
   const [result, setResult] = useState(null)
@@ -351,7 +363,7 @@ export default function SalaryReportDialog({ open, onOpenChange, onGenerated }) 
       })
       setResult(generated)
       setPhase('result')
-      onGenerated?.(generated)
+      setHistoryTick((tick) => tick + 1)
 
       if (generated.sendResult === EMAIL_SEND_RESULT.SENT) {
         if (generated.fileError) {
@@ -539,11 +551,17 @@ export default function SalaryReportDialog({ open, onOpenChange, onGenerated }) 
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => handleClose(false)}
+              // ‏`?.()` על המתודה עצמה ולא רק על ה-ref: ‏`scrollIntoView` אינו ממומש
+              // ב-jsdom והלחיצה זרקה שם. ובלעדיו זו לא רק בעיית-בדיקה — כשל-גלילה היה
+              // מפיל את המטפל כולו. **וההתנהגות בהיעדרו נכונה בפני עצמה:** ההיסטוריה
+              // כבר באותו דיאלוג, אז "לא גללנו" הוא חוסר-נוחות, לא פעולה שלא קרתה.
+              onClick={() =>
+                historyRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+              }
               className="mt-2 h-auto rounded-lg px-2.5 py-1 text-xs font-semibold"
               data-testid="salary-report-view-existing"
             >
-              צפייה בדוח הקיים ↑
+              צפייה בדוח הקיים ↓
             </Button>
           </div>
         )}
@@ -559,6 +577,13 @@ export default function SalaryReportDialog({ open, onOpenChange, onGenerated }) 
         )}
 
         {phase === 'result' && result && <ResultView result={result} />}
+
+        {/* ההיסטוריה כסעיף בתוך הדיאלוג, לא ככרטיס-אח: `embedded` מפשיט את מסגרת-הכרטיס
+            כדי שלא ייווצר כרטיס-בתוך-כרטיס, ומשאיר קו-הפרדה בלבד — בדיוק כמו שהסעיפים
+            ב-`ClosingWindowDialog` מופרדים זה מזה. */}
+        <div ref={historyRef}>
+          <SalaryReportHistoryCard embedded refreshToken={historyTick} />
+        </div>
 
         <DialogFooter>
           {phase === 'result' ? (
@@ -986,7 +1011,7 @@ function SendResultTag({ result }) {
 
 // `refreshToken`: כל ערך שמשתנה גורם לרענון (S1 מעביר מונה שהוא מגדיל ב-`onGenerated` של
 // הדיאלוג). הכרטיס עצמו לא תלוי בדיאלוג ולא יודע עליו — כל מה שהוא צריך הוא איתות-לרענון.
-export function SalaryReportHistoryCard({ refreshToken }) {
+export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
   const toast = useToast()
   const [rows, setRows] = useState(null)
   const [error, setError] = useState('')
@@ -1054,7 +1079,11 @@ export function SalaryReportHistoryCard({ refreshToken }) {
 
   return (
     <div
-      className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+      className={cn(
+        embedded
+          ? 'mt-4 border-t border-slate-200 pt-4'
+          : 'rounded-xl border border-slate-200 bg-white p-4 shadow-sm',
+      )}
       data-testid="salary-history-card"
     >
       <h3 className="mb-2.5 text-sm font-bold text-slate-800">היסטוריית דוחות-שכר</h3>

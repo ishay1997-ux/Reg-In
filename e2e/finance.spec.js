@@ -182,25 +182,28 @@ test.describe('מודול 8 · כספים — E2E פנימי (S1/S2/S3), קרי�
     await expect(page.getByTestId('closing-server-error')).toHaveCount(0)
   })
 
-  test('S3: דיאלוג דוח-השכר נפתח עם תצוגה-מקדימה, וכרטיס-ההיסטוריה מתחתיו מרונדר', async ({
-    page,
-  }) => {
+  test('S3: דיאלוג דוח-השכר נפתח עם תצוגה-מקדימה, וההיסטוריה יושבת בתוכו', async ({ page }) => {
     await login(page)
     await page.goto('/finance')
     await expect(page.getByTestId('finance-page')).toBeVisible()
 
-    // כרטיס-ההיסטוריה יושב על מסך-הכספים עצמו (Q-2), לא בתוך הדיאלוג — מרונדר בלי לפתוח
-    // כלום. 🕓 ריק כרגע (0 דוחות ב-`salary_reports`, נמדד חי) — אם 5.1 כבר הפיק דוח, השורה
-    // הבאה מתחלפת אוטומטית בתנאי ה-`if`, ולא צריכה עדכון-קוד.
-    await expect(page.getByTestId('salary-history-card')).toBeVisible({ timeout: 30_000 })
-    const historyRows = page.locator('[data-testid^="salary-history-row-"]')
-    if ((await historyRows.count()) === 0) {
-      await expect(page.getByTestId('salary-history-empty')).toBeVisible()
-    }
+    // 🔴 **ההיסטוריה עברה אל תוך הדיאלוג — הכרעת-ישי 28/08/2026, שגוברת על Q-2 ועל
+    // המוקאפ המאושר.** הנימוק שלו: לשונית "הסתיימו" צוברת כל פרויקט שאורכב אי-פעם, ולכן
+    // כרטיס מתחת לטבלה נדחק מתחת לקו-הקיפול לצמיתות. **הבדיקה נועלת את שני הצדדים** —
+    // שהמסך כבר אינו נושא אותו, ושהדיאלוג כן — כדי שחזרה שקטה למצב הקודם תיתפס.
+    await expect(page.getByTestId('salary-history-card')).toHaveCount(0)
 
     await page.getByTestId('finance-open-salary').click()
     const dialog = page.getByTestId('salary-report-dialog')
     await expect(dialog).toBeVisible({ timeout: 15_000 })
+
+    const history = dialog.getByTestId('salary-history-card')
+    await expect(history).toBeVisible({ timeout: 30_000 })
+    // 🕓 מספר-הדוחות משתנה עם הזמן (5.1 הפיק את אוגוסט 2026) — ולכן הענף ולא מספר נעוץ.
+    const historyRows = history.locator('[data-testid^="salary-history-row-"]')
+    if ((await historyRows.count()) === 0) {
+      await expect(history.getByTestId('salary-history-empty')).toBeVisible()
+    }
 
     // תצוגה-מקדימה **אינה** מציגה מספר-כסף (הערת-הראש של הקובץ — אין קורא שאינו כותב) —
     // הבדיקה נשארת נאמנה לכך ומאמתת רק את מה שהמסך בפועל מבטיח: כפתור-בורר-החודש (הבורר

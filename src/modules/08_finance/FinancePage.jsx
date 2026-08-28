@@ -47,7 +47,7 @@ import {
 import { listFinanceOverview } from './api'
 import { getParamValue } from '@/modules/06_projects/closingApi'
 import ClosingWindowDialog from './ClosingWindowDialog'
-import SalaryReportDialog, { SalaryReportHistoryCard } from './SalaryReportDialog'
+import SalaryReportDialog from './SalaryReportDialog'
 
 // ── מחרוזות המשטח ────────────────────────────────────────────────────────────
 // 🔤 מועתקות מהמוקאפ המאושר `01_finance_overview_approved.html` ומ-§3.7 של מדריך-המיקרו,
@@ -249,8 +249,6 @@ export default function FinancePage() {
   const [salaryOpen, setSalaryOpen] = useState(false)
   // מונה-פתיחות ל-`key` של S3 — ר' ההערה באתר-הרינדור.
   const [salaryMountKey, setSalaryMountKey] = useState(0)
-  // מונה-רענון לכרטיס-ההיסטוריה: הדיאלוג אינו יודע עליו, וכל מה שהכרטיס צריך הוא איתות.
-  const [historyToken, setHistoryToken] = useState(0)
 
   const refresh = useCallback(() => setReloadTick((tick) => tick + 1), [])
   const retry = useCallback(() => {
@@ -414,12 +412,9 @@ export default function FinancePage() {
         )}
       </Card>
 
-      {/* היסטוריית-דוחות-השכר יושבת על **מסך-הכספים** ולא בתוך הדיאלוג — הכרעת המוקאפ
-          המאושר של S3 ("היסטוריית ההפקות · מסך-הכספים, לא בתוך הדיאלוג"), ובדיוק המבנה
-          שהכרעת Q-2 מתארת ("the history card sits on the same screen below"). */}
-      <div className="mt-4">
-        <SalaryReportHistoryCard refreshToken={historyToken} />
-      </div>
+      {/* 🔴 **היסטוריית-דוחות-השכר אינה כאן יותר — הכרעת-ישי `28/08/2026`.** היא עברה
+          לתוך `SalaryReportDialog`, וההנמקה המלאה יושבת שם ליד ה-state שמרענן אותה.
+          **מה שהמסך הזה מרוויח:** הוא חוזר להציג ישות אחת בלבד — פרויקטים. */}
 
       {/* S2 הוא דיאלוג ואינו ראוט (B-2) — הרשימה נשארת גלויה מאחור. הרכבה-מותנית ולא `key`
           על `open`: ‏`ClosingWindowDialog` כבר מרכיב את גופו מחדש בכל פתיחה מבפנים
@@ -439,12 +434,7 @@ export default function FinancePage() {
           והורג את אנימציית-היציאה של Radix (`src/CLAUDE.md`, מלכודת א'). המונה עולה רק
           בפתיחה ⇒ הרכבה טרייה בכל פתיחה, ויציאה חלקה. ‏S3 מחזיק תוצאת-הפקה ב-state, ובלי
           זה פתיחה שנייה הייתה נפתחת על מסך-התוצאה של ההפקה הקודמת. */}
-      <SalaryReportDialog
-        key={salaryMountKey}
-        open={salaryOpen}
-        onOpenChange={setSalaryOpen}
-        onGenerated={() => setHistoryToken((token) => token + 1)}
-      />
+      <SalaryReportDialog key={salaryMountKey} open={salaryOpen} onOpenChange={setSalaryOpen} />
     </div>
   )
 }

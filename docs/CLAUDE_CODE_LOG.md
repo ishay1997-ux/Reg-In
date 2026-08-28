@@ -45,6 +45,21 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 28/08/2026 09:0X–09:3X — Ishay reversed Q-2: the salary-report history moved into the dialog
+
+**His words:** *"למטה זה לא טוב כי יהיו מלא שורות של פרויקטים שם"*. `Q-2` (mine, nodded by him 26/08) and the approved S3 mockup both put the history card on the finance page below the table. The "finished projects" tab accumulates every project ever archived, so that card is pushed below the fold **permanently**. He picked option ב from three presented.
+
+🩸 **A live bug fell out of the same placement, not just inconvenience:** the blocked-month banner offered *"צפייה בדוח הקיים ↑"* — a button that **closed the dialog** and pointed **up** at a card sitting two screens **down**. It now scrolls to the section in the same window, and the arrow is ↓.
+
+`SalaryReportHistoryCard` gained `embedded` (strips the card chrome, keeps a rule); the refresh signal became internal state, so **`onGenerated` was deleted outright** — a prop nobody passes is dead code that only its test keeps alive. `FinancePage` is back to one entity: projects. Suite 1,767 / 65 exit 0, verified live in the browser.
+
+**Two test mines measured here, both generic:**
+- `mockResolvedValueOnce` is unsafe when **two mounted components call the same API** — the dialog loads history for its preflight and the card loads it for itself, so the `Once` was swallowed by the first call and the test failed for a reason unrelated to the behaviour. An explicit flag flipped by the action under test is order-independent.
+- `scrollIntoView` **does not exist in jsdom** and throws — the assertions passed while the run still exited 1 on an unhandled error. `?.()` on the method (not just the ref) is the fix, and the no-op behaviour is correct on its own terms.
+
+🔴 **New finding, reported not fixed — a history that lies.** The "sent to" column on a history row reads the **live** `מייל_משרד_רואי_חשבון` param, not the address the report actually went to. It is visible right now: report 13 went to `office@cpa-firm.co.il` (proven in `email_log`) and the screen shows `ishay1997@gmail.com`, because the param was changed after generation. Every historical row therefore claims retroactively that it went to today's address. The truthful source is `email_log.recipient`; `salary_reports` has no recipient column, so the fix is a join or a new column — Ishay's call.
+
+
 ### 28/08/2026 08:2X–09:0X — 5.1 journeys ① and ③, and the record that lagged behind the work
 
 **Ishay caught this, not me:** *"את 4 ו-5.1 עשיתי אולי יש חוסר בתיעוד… קראת באמת את השיחה?"* — I had answered his "what's left" question from the summary plus disk state, **without reading the transcript**, and reported 5.1 as not started. He was right.

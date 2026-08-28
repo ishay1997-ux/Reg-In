@@ -453,8 +453,7 @@ describe('SalaryReportDialog — חסימת-כפילות מצד-לקוח (תצו
 describe('SalaryReportDialog — "ייצא ושלח" (המסלול הבלתי-הפיך היחיד)', () => {
   it('קוראת ל-RPC עם התקופה הנבחרת ו-accountantName:null, ומציגה את טבלת-התוצאה', async () => {
     generateAndSendSalaryReport.mockResolvedValue(generateResult())
-    const onGenerated = vi.fn()
-    renderDialog({ onGenerated })
+    renderDialog()
 
     await screen.findByTestId('salary-report-month-button')
     await clickGenerateAndConfirm()
@@ -470,8 +469,48 @@ describe('SalaryReportDialog — "ייצא ושלח" (המסלול הבלתי-ה
     // בונוס/נסיעות בשורת-פיצוי-ביטול = "—" ולא 0.00 (ה24/ה29, §3.7)
     const compRow = within(table).getByText('אורלי שני').closest('tr')
     expect(within(compRow).getAllByText('—').length).toBeGreaterThanOrEqual(2)
+  })
 
-    expect(onGenerated).toHaveBeenCalledTimes(1)
+  // 🔴 ההיסטוריה עברה לתוך הדיאלוג (הכרעת-ישי 28/08/2026), ולכן איתות-הרענון הוא פנימי.
+  // הבדיקה נועלת את מה שנשבר אילו ה-tick לא היה עולה: הדוח שזה-עתה הופק לא היה מופיע
+  // בהיסטוריה שנמצאת באותו מסך, ומנהלת שרואה תוצאה ורשימה שאינה כוללת אותה מסיקה שמשהו נכשל.
+  it('הפקה מוצלחת מרעננת את ההיסטוריה שבתוך אותו דיאלוג', async () => {
+    // ⚠️ **לא `mockResolvedValueOnce`:** ‏`listSalaryReports` נקראת **פעמיים** בהרכבה —
+    // הדיאלוג עצמו טוען היסטוריה לפאנל-הקדם-הפקה ולבאנר-החסימה, והכרטיס טוען בנפרד.
+    // ה-`Once` נבלע ע"י הקריאה הראשונה, והכרטיס קיבל את השורה כבר בטעינה. דגל מפורש
+    // הופך את "לפני" ו"אחרי" לתלויים בהפקה עצמה ולא בסדר-הקריאות.
+    let generated = false
+    listSalaryReports.mockImplementation(() =>
+      Promise.resolve(generated ? [reportRow({ report_id: 42 })] : []),
+    )
+    generateAndSendSalaryReport.mockImplementation(() => {
+      generated = true
+      return Promise.resolve(generateResult())
+    })
+    renderDialog()
+
+    await screen.findByTestId('salary-report-month-button')
+    expect(await screen.findByTestId('salary-history-empty')).toBeInTheDocument()
+
+    await clickGenerateAndConfirm()
+
+    expect(await screen.findByTestId('salary-history-row-42')).toBeInTheDocument()
+    expect(screen.queryByTestId('salary-history-empty')).not.toBeInTheDocument()
+  })
+
+  // הצד השני של אותו מעבר: הבאנר של חודש-חסום מפנה עכשיו **מטה** אל הסעיף שבאותו דיאלוג,
+  // ואינו סוגר אותו. עד 28/08 הוא קרא ל-`handleClose(false)` והצביע ↑ על כרטיס שנמצא
+  // מתחת לקו-הקיפול של מסך אחר.
+  it('"צפייה בדוח הקיים" מצביע מטה ואינו סוגר את הדיאלוג', async () => {
+    listSalaryReports.mockResolvedValue([reportRow({ period: '2026-09-01' })])
+    renderDialog()
+
+    const link = await screen.findByTestId('salary-report-view-existing')
+    expect(link).toHaveTextContent('↓')
+    expect(link).not.toHaveTextContent('↑')
+    fireEvent.click(link)
+    expect(screen.getByTestId('salary-report-dialog')).toBeInTheDocument()
+    expect(screen.getByTestId('salary-history-card')).toBeInTheDocument()
   })
 
   it('דוח עם אפס שורות מציג "אין שעות לתשלום החודש" ולא טבלה ריקה', async () => {

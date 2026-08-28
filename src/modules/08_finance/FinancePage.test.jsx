@@ -17,7 +17,7 @@
 // חמשת ימי-האיחור של #15. בלי קיבוע, בדיקת-האיחור הייתה משתנה מדי יום.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import FinancePage from './FinancePage'
 import { listFinanceOverview } from './api'
 import { getParamValue } from '@/modules/06_projects/closingApi'
@@ -39,16 +39,7 @@ vi.mock('./ClosingWindowDialog', () => ({
 }))
 
 vi.mock('./SalaryReportDialog', () => ({
-  default: ({ open, onGenerated }) => (
-    <div data-testid="salary-dialog" data-open={String(open)}>
-      <button type="button" data-testid="salary-generate" onClick={() => onGenerated?.()}>
-        הפק
-      </button>
-    </div>
-  ),
-  SalaryReportHistoryCard: ({ refreshToken }) => (
-    <div data-testid="salary-history" data-token={String(refreshToken)} />
-  ),
+  default: ({ open }) => <div data-testid="salary-dialog" data-open={String(open)} />,
 }))
 
 const NOW = new Date('2026-10-15T10:00:00Z') // "היום" המשותף — data-set.md §0
@@ -577,12 +568,11 @@ describe('S1 — מסלול-הכניסה ל-S3 (הכרעת Q-2)', () => {
     expect(screen.getByTestId('salary-dialog')).toHaveAttribute('data-open', 'true')
   })
 
-  it('כרטיס-ההיסטוריה יושב על מסך-הכספים, והפקה מוצלחת מרעננת אותו', async () => {
+  // 🔴 הכרעת-ישי 28/08/2026: ההיסטוריה עברה אל תוך הדיאלוג. הבדיקה הפוכה בכוונה — היא
+  // נועלת את מה שהמסך הזה **אינו** מציג יותר, כדי שהחזרה שלה תיתפס ולא תיראה כתוספת תמימה.
+  it('מסך-הכספים אינו מציג יותר את כרטיס-ההיסטוריה — הוא מציג פרויקטים בלבד', async () => {
     await renderPage()
-    const before = screen.getByTestId('salary-history').getAttribute('data-token')
-    fireEvent.click(screen.getByTestId('salary-generate'))
-    await waitFor(() =>
-      expect(screen.getByTestId('salary-history').getAttribute('data-token')).not.toBe(before),
-    )
+    expect(screen.queryByTestId('salary-history-card')).not.toBeInTheDocument()
+    expect(screen.getByTestId('finance-open-salary')).toBeInTheDocument()
   })
 })
