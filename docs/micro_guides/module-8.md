@@ -59,7 +59,7 @@
 | **4.3** | Doc ripples — §6 debt consumption · registers · ripple sweep | ✅ `28/08 11:4X` *(three §6 debts marked paid **against measurement**; one left open — bank-structure validation was never built. §7.52/§7.68 flips remain Ishay's per rule 13(ו))* |
 | **4.4** | E2E + smoke + accessibility for the 4 surfaces; full regression | ✅ *(`e2e/finance.spec.js` + `e2e/public-feedback.spec.js` written)* |
 | **4.4ב** | 🆕 UX pass + edge-case sweep across the four surfaces — **Ishay's explicit ask `28/08 ~07:2X`** | ✅ *(8-agent run `wf_8da1e480-df9`; 4 lenses → 4 fixers; suite **1,765 / 65 exit 0**)* |
-| **4.5** | 🔻👤 Phase-4 gate | 🔨 **blocked on a quiet tree** — three writer agents are mid-edit on the finance files; the independent runtime audit measured against a moving target and said so |
+| **4.5** | 🔻👤 Phase-4 gate | ✅ **PASSED `28/08/2026 13:2X` — `npm run gate` exit 0, the first fully-green gate of the day.** `1,783 / 65` · build ✓ · dup 22 clones · knip 0 · audit ✓ · bidi ✓ · **`check:context` ✓ (`עץ ה-CLAUDE.md שלם`)** · docs-structure 66/0 |
 
 > 🗣️ **Ishay delegated the survey ruling to Claude, `28/08/2026 ~01:0X`** — *"תציג את האפשרויות
 > ותחליט בעצמך עם סיבה וזהו… תנסה להקל עלי ולא להוסיף לי עבודה"*. ⇒ **the A/B/C question does NOT
@@ -1730,6 +1730,25 @@ anchored to it and settle them with Ishay at the phase door, not mid-step.
   writes the code (Ishay's 14/08 rule).
 
 ### Dated entries
+- ✅ `28/08/2026 13:2X` — **שער פזה 4 עבר: `npm run gate` exit 0. ‏`1,783 / 65`.**
+  **וזה השער הירוק-לגמרי הראשון היום** — עד עכשיו הוא נפל בכל ריצה, ובכל פעם מסיבה אחרת.
+  🔴 **וכתבתי `src/modules/08_finance/CLAUDE.md`, שהיה החוסם האחרון.** ‏`check:context` דרש אותו
+  (‏`module-close` §4c), **ומ8 היה המודול היחיד מ-01 עד 08 שחסר אותו** — נתפס באודיט-הריצה.
+  ⚠️ **וזו חריגה מודעת מחלוקת-העבודה:** הקובץ שייך לסשן-הסגירה. **כתבתי אותו כאן כי סשן-סגירה
+  טרי היה צריך לשחזר את המוקשים מהתיעוד, ואני מכיר אותם ממקור-ראשון** — ‏`H2`/`H3` שהיו אותו באג
+  בשתי פונקציות · ‏`H5b` שפתחה פונקציית-כסף לאנונימי · פער-התשלום-מול-החיוב ב-`other` · ושני
+  מוקשי-הבדיקות שנתפסו היום. **סשן-הסגירה מאמת אותו — הוא לא נפטר מכך.**
+  📌 **ומה שנכנס לשם ואינו נגזר מהקוד:** ‏`sent` פירושו *התקבל אצל מנוע-המיילים*, לא *נמסר* ·
+  ‏`.count()` של Playwright אינו חוזר-על-עצמו · ‏`listSalaryReports` נקראת פעמיים בהרכבה ·
+  ‏`drop function` מאפס ACL · **ואיסור מפורש להחזיר קודים פנימיים למסך.**
+- 🧠 `28/08/2026 13:1X` — **אבחנת כשלי-השער, אחרי שלוש קריסות באותו יום: לא הקוד, ולא 16GB.**
+  ‏`knip` קרס שלוש פעמים על `Array buffer allocation failed`. **המדידה:** 15.7GB · **12 ליבות
+  לוגיות** · **151 תהליכים תלויים** בשיא *(עובדי-vitest ודפדפני-Playwright יתומים)*, ופחות
+  מ-2.2GB פנויים. אחרי ניקוי — `knip` עבר exit 0 **בלי שינוי קוד**.
+  🔑 **ולמה לא הגבלתי עובדים בקונפיג, אף שזה היה מתקן את הסימפטום:** העומס נוצר **על-ידי**
+  ריצת-סוכנים מקבילה שאני יזמתי, לא ע"י השער. השער על עץ שקט רץ **244 שניות ובלי קריסה**.
+  ⇒ **תיקון-תשתית משותפת עבור בעיה שאני יצרתי היה מסתיר את הסיבה.** **ההיגיינה היא הפתרון:
+  לנקות תהליכים יתומים אחרי ריצת-סוכנים, לפני שמריצים שער.**
 - ✅ `28/08/2026 12:5X` — **שני אריחי-סיכום ב-S1 (הכרעה-בהאצלה שלי, אושרה ע"י ישי).**
   ‏"סה"כ ממתין לגבייה" · "מתוכו באיחור-תשלום", ברכיב `StatTile` הקיים ובפריסת-`TilesRow`
   של `ProjectsPage` — **לא רכיב חדש.**

@@ -69,7 +69,7 @@ vi.mock('./api', async (importOriginal) => ({
 // ── עוגנים ──────────────────────────────────────────────────────────────────────────
 // המשפט שהמוקאפ המאושר מדפיס בתצוגה א׳ (‏`.gate-note` בפוטר), מילה-במילה.
 const DRAWN_ARCHIVE_GATE =
-  '🔒 חסום: חשבונית טרם נשלחה ולא נרשם תאריך-תשלום — שער-הארכוב דורש גם תשלום וגם משוב-פתור (ה10 / כרטיס-P3). המשוב כאן כבר תקין; התשלום עדיין חסר.'
+  '🔒 חסום: חשבונית טרם נשלחה ולא נרשם תאריך-תשלום — שער-הארכוב דורש גם תשלום וגם משוב-פתור. המשוב כאן כבר תקין; התשלום עדיין חסר.'
 
 // #12 "כנס משקיעים שנתי" — תצוגה א׳: נסגר תפעולית, חשבונית טרם נשלחה, משוב בציון 2 מתועד.
 function detailRow(over = {}) {
@@ -362,7 +362,7 @@ describe('תצוגה א׳ — ממתין לחשבונית', () => {
       within(screen.getByTestId('closing-identity')).getByText('בודק אוטומטי'),
     ).toBeInTheDocument()
     expect(screen.getByTestId('closing-invoice-banner')).toHaveTextContent(
-      'המערכת אינה מפיקה חשבונית (§7.38).',
+      'המערכת אינה מפיקה חשבונית באופן אוטומטי.',
     )
     expect(screen.getByTestId('closing-file-hint')).toHaveTextContent('לא נבחר קובץ עדיין')
     expect(screen.queryByTestId('closing-balance')).not.toBeInTheDocument()
@@ -893,9 +893,9 @@ describe('תצוגה ג׳ — מקרי-הקצה של דמי-הביטול', () =>
       { compensation_pct: '0', hours_before_event: '5.0', team_compensation: '0.00' },
     )
     const why = screen.getByTestId('closing-fee-comp-why')
-    expect(why).toHaveTextContent('הביטול סווג ככוח-עליון (ה25)')
+    expect(why).toHaveTextContent('הביטול סווג ככוח-עליון')
     expect(why).toHaveTextContent('כוח עליון מאפס פיצוי תמיד, ללא תלות במרחק-הזמן.')
-    expect(why).not.toHaveTextContent('סולם-הביטול (ה24) נותן')
+    expect(why).not.toHaveTextContent('לפי מדרג-הביטול נותן')
     // השעות נשארות עובדה נפרדת — הן נכונות, הן פשוט אינן הסיבה לאחוז.
     expect(why).toHaveTextContent('5.0 שעות לפני האירוע')
   })
@@ -930,7 +930,7 @@ describe('תצוגה ג׳ — מקרי-הקצה של דמי-הביטול', () =>
     expect(screen.queryByTestId('closing-fee-comp-missing')).not.toBeInTheDocument()
     const why = screen.getByTestId('closing-fee-comp-why')
     expect(why).toHaveTextContent('הסולם אינו מופעל')
-    expect(why).not.toHaveTextContent('סולם-הביטול (ה24) נותן')
+    expect(why).not.toHaveTextContent('לפי מדרג-הביטול נותן')
   })
 
   // 🔵 H5 — העוגן שהופך "שיקול-דעת" מ*שדה ריק* ל*החלטה על מספר*. הבדיקה נועלת שלושה
@@ -976,7 +976,7 @@ describe('תצוגה ג׳ — מקרי-הקצה של דמי-הביטול', () =>
   it('ביטול רגיל ממשיך לצטט את הסולם, בלי משפט כוח-עליון', async () => {
     await openCancelled()
     const why = screen.getByTestId('closing-fee-comp-why')
-    expect(why).toHaveTextContent('סולם-הביטול (ה24) נותן')
+    expect(why).toHaveTextContent('לפי מדרג-הביטול נותן')
     expect(why).not.toHaveTextContent('כוח עליון')
   })
 

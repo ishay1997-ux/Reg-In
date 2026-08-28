@@ -133,20 +133,21 @@ const PROPOSAL_FIELDS = [
 const FEEDBACK_REASONS = ['איחור דיילות', 'תפקוד דיילות', 'איכות תגים', 'ניהול לקוי', 'אחר']
 
 // 🔤 נוסחים שנקראו מילולית מהמוקאפ המאושר `02_closing_window_approved.html`.
-const INVOICE_BANNER_TITLE = 'המערכת אינה מפיקה חשבונית (§7.38).'
+const INVOICE_BANNER_TITLE = 'המערכת אינה מפיקה חשבונית באופן אוטומטי.' // §7.38
 const INVOICE_BANNER_BODY =
   'יש להכין אותה בתוכנת הנהלת-החשבונות ולהעלות כאן — PDF או תמונה, עד 10MB.'
 const INVOICE_SEND_TITLE = 'יש לבחור קובץ-חשבונית לפני השליחה'
 const WAIVE_TITLE = 'מאפס את הסכום ל-0 ומחייב הערה — לא מחיקה שקטה'
 const WRITE_OFF_TITLE = 'חוב-אבוד — הרווח נקפא כרגיל, בסיס-צבירה'
+// "ויתור" נעול בכרטיס-P1 (פעולה מפורשת ולא מחיקה שקטה); "צבירה כבסיס" נעולה בכרטיס-P3.
 const CANCEL_ACTIONS_NOTE =
-  '"ויתור" = פעולה מפורשת (סכום 0 + הערת-חובה), לא מחיקה שקטה (P1). "סגור ללא תשלום" = מסלול חוב-אבוד — הפרויקט מקבל תג "הסתיים — לא שולם"; הרווח נקפא גם בלי גבייה בפועל, כי הבסיס הוא צבירה (P3).'
+  '"ויתור" = פעולה מפורשת (סכום 0 + הערת-חובה), לא מחיקה שקטה. "סגור ללא תשלום" = מסלול חוב-אבוד — הפרויקט מקבל תג "הסתיים — לא שולם"; הרווח נקפא גם בלי גבייה בפועל, כי הבסיס הוא צבירה.'
 const FEE_STORAGE_NOTE =
-  'נשמר במסד: הסכום הסופי וההערה בלבד — שלושת הרכיבים שלמעלה נגזרים-מחדש לתצוגה בכל פתיחה, ולא נשמרים כעמודות נפרדות (ה28).'
-const LOCKED_BANNER_BODY = 'הרווח-הסופי קפוא ואינו ניתן לעריכה (P3). כל השדות שלמטה לעיון בלבד.'
+  'נשמר במסד: הסכום הסופי וההערה בלבד — שלושת הרכיבים שלמעלה נגזרים-מחדש לתצוגה בכל פתיחה, ולא נשמרים כעמודות נפרדות.' // ה28
+const LOCKED_BANNER_BODY = 'הרווח-הסופי קפוא ואינו ניתן לעריכה. כל השדות שלמטה לעיון בלבד.' // P3
 const CREDIT_NOTE_LINE = 'נדרשת חשבונית זיכוי'
 const FEEDBACK_REASON_GATE =
-  'חסום: ציון מתחת ל-3 מחייב בחירת סיבת-בירור מהרשימה, אחרי בירור טלפוני (כרטיס-P2).'
+  'חסום: ציון מתחת ל-3 מחייב בחירת סיבת-בירור מהרשימה, אחרי בירור טלפוני.' // כרטיס-P2
 // שני הנוסחים שהיו חסרים: עד כה "שמור סטטוס" נכבה גם בשני המצבים האלה **בלי מילה על המסך**.
 // ‏A-1 (הכרעת-הבלופרינט) קובעת disabled-with-reason כדפוס-הבית; כפתור מת בלי סיבה הוא בדיוק
 // מה שהיא נכתבה נגדו. ⚠️ **הנוסח של "אין ציון" מראה את מה שהמסד יענה בלאו הכי**
@@ -161,9 +162,8 @@ const FEEDBACK_UNCHANGED_GATE = 'אין שינוי לשמור — עדכני צ�
 // נפתרת במשפט שאומר מה חסם, ליד הכפתור שנחסם.
 const FEE_SAVE_EMPTY_GATE = 'חסום: יש להזין את הסכום שייחתם.'
 const FEE_SAVE_ZERO_GATE =
-  'חסום: הסכום שייחתם חייב להיות גדול מ-0. לאיפוס מלא יש להשתמש בכפתור "ויתור על החוב" — ויתור הוא פעולה מפורשת, לא סכום 0 (P1).'
-const WAIVE_NOTE_GATE =
-  'חסום: ויתור מחייב הערת-חובה — יש למלא את "הערת-פירוט" שמעל לפני הוויתור (P1).'
+  'חסום: הסכום שייחתם חייב להיות גדול מ-0. לאיפוס מלא יש להשתמש בכפתור "ויתור על החוב" — ויתור הוא פעולה מפורשת, לא סכום 0.' // P1
+const WAIVE_NOTE_GATE = 'חסום: ויתור מחייב הערת-חובה — יש למלא את "הערת-פירוט" שמעל לפני הוויתור.' // P1
 // 🔤 נוסח כוח-העליון **אינו נכתב כאן מחדש**: הוא נשאב מהפונקציה שכבר נועלת אותו במודול 6
 // (‏`compensationReason`, מהמוקאפ המאושר `07_dialog_cancel_approved.html`). שני המסכים
 // מסבירים את אותו כלל (ה25), ומשפט שיוקלד פעמיים יתפצל ביום שאחד מהם ינוסח מחדש.
@@ -183,7 +183,7 @@ const NO_PLANNED_HOURS_NOTE = 'לא ניתן לחשב פיצוי — חסרות 
 // מיגרציה `H4` הפונקציה מחזירה `team_compensation = null` גם בסיווג "אחר", **והשעות שם
 // תקינות לחלוטין.** שימוש חוזר ב-`NO_PLANNED_HOURS_NOTE` היה שולח את מנהלת-הכספים לחפש
 // שעות חסרות שאינן חסרות — כלומר המיגרציה עצמה הייתה מייצרת שקר על המסך.
-const OTHER_NO_PROPOSAL_NOTE = 'אין הצעה אוטומטית — סיווג "אחר" (ה25)'
+const OTHER_NO_PROPOSAL_NOTE = 'אין הצעה אוטומטית — סיווג "אחר"' // ה25
 const NO_DEVIATION_NOTE = 'לא ניתן לחשב סטייה — חסרות שעות סופיות'
 const ARCHIVE_CONFIRM_MESSAGE =
   'הרווח הסופי ייקפא בשקלים, התיק יינעל לצמיתות וקישור-המשוב של הלקוח יבוטל. אין ביטול לפעולה.'
@@ -233,7 +233,7 @@ export function archiveGateNote({
   if (paymentOk) ok = ' התשלום כאן כבר תקין; המשוב עדיין חסר.'
   else if (feedbackOk) ok = ' המשוב כאן כבר תקין; התשלום עדיין חסר.'
 
-  return `🔒 חסום: ${missing.join(', ו')} — שער-הארכוב דורש גם תשלום וגם משוב-פתור (ה10 / כרטיס-P3).${ok}`
+  return `🔒 חסום: ${missing.join(', ו')} — שער-הארכוב דורש גם תשלום וגם משוב-פתור.${ok}` // ה10 / כרטיס-P3
 }
 
 // המזהה שאליו מצביעים גם הכפתור החסום וגם ה-select — הערך יחיד בדיאלוג, ולכן קבוע ולא נגזר.
@@ -609,20 +609,23 @@ function CompensationComponent({ proposal, cancelType }) {
         <Ltr>{proposal?.compensated_count ?? '—'}</Ltr> דיילות מאושרות-סופית · הביטול נעשה{' '}
         <Ltr>{formatHoursBeforeEvent(proposal?.hours_before_event)}</Ltr> שעות לפני האירוע{' '}
         {forceMajeure ? (
+          // ה25 — כוח-עליון מאפס פיצוי תמיד, ללא תלות בשעון.
           <>
-            · הביטול סווג ככוח-עליון (ה25) ⇐ <Ltr>{proposal?.compensation_pct ?? '—'}%</Ltr>.{' '}
+            · הביטול סווג ככוח-עליון ⇐ <Ltr>{proposal?.compensation_pct ?? '—'}%</Ltr>.{' '}
             {FORCE_MAJEURE_COMP_NOTE}{' '}
           </>
         ) : manualOnly ? (
           // 🔴 בסיווג "אחר" **אסור לצטט את הסולם**: הוא לא הופעל. השעות נשארות עובדה
-          // מוצגת — הן נכונות, הן פשוט אינן קובעות כאן אחוז.
-          <>· הביטול סווג כ"אחר" (ה25) ⇐ הסולם אינו מופעל, והסכום נקבע בשיקול-דעתך. </>
+          // מוצגת — הן נכונות, הן פשוט אינן קובעות כאן אחוז. (ה25)
+          <>· הביטול סווג כ"אחר" ⇐ הסולם אינו מופעל, והסכום נקבע בשיקול-דעתך. </>
         ) : (
+          // ה24 — סולם-הביטול הסטנדרטי.
           <>
-            ⇐ סולם-הביטול (ה24) נותן <Ltr>{proposal?.compensation_pct ?? '—'}%</Ltr>.{' '}
+            ⇐ לפי מדרג-הביטול נותן <Ltr>{proposal?.compensation_pct ?? '—'}%</Ltr>.{' '}
           </>
         )}
-        בלי רכיב-נסיעות (ה29) — משמרת שבוטלה לא נסעה.
+        {/* ה29 */}
+        בלי רכיב-נסיעות — משמרת שבוטלה לא נסעה.
       </Sub>
     </div>
   )
@@ -656,7 +659,8 @@ function ManualServiceComponent({ label, amount, onLabel, onAmount }) {
         />
       </div>
       <Sub className="mt-1 block">
-        שורה חופשית בלי מעקב-סטטוס במסד (כרטיס-P1) — אינה נשמרת, ואינה נכנסת מעצמה לסכום שייחתם.
+        {/* כרטיס-P1 */}
+        שורה חופשית בלי מעקב-סטטוס במסד — אינה נשמרת, ואינה נכנסת מעצמה לסכום שייחתם.
       </Sub>
     </div>
   )
@@ -676,14 +680,16 @@ function FeeAmountFields({ amount, note, cancelType, onAmount, onNote }) {
           role="note"
           data-testid="closing-fee-manual-only"
         >
-          ביטול בסיווג <b>"אחר"</b> — אין הצעה אוטומטית (ה25). הביטול אינו בהכרח באשמת הלקוח, ולכן
-          הסכום נקבע בשיקול-דעתך. התחשיב שמעל מוצג לעיון בלבד.
+          {/* ה25 */}
+          ביטול בסיווג <b>"אחר"</b> — אין הצעה אוטומטית. הביטול אינו בהכרח באשמת הלקוח, ולכן הסכום
+          נקבע בשיקול-דעתך. התחשיב שמעל מוצג לעיון בלבד.
         </p>
       )}
       <div className="mt-2 grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
+          {/* ה28 */}
           <label className="text-xs text-slate-500" htmlFor="closing-fee-amount">
-            הסכום שייחתם (עריך — ה28)
+            הסכום שייחתם (עריך)
           </label>
           <input
             id="closing-fee-amount"
@@ -782,7 +788,8 @@ function FeeActions({ busy, actions }) {
 function FeeProposalBlock({ proposal, cancelType, form, withManual, busy, actions }) {
   return (
     <div data-testid="closing-fee-block">
-      <SectionTitle>פירוט דמי-הביטול המוצע (P1 · ה24 / ה23)</SectionTitle>
+      {/* P1 · ה24 / ה23 */}
+      <SectionTitle>פירוט דמי-הביטול המוצע</SectionTitle>
 
       <CompensationComponent proposal={proposal} cancelType={cancelType} />
 
@@ -799,8 +806,9 @@ function FeeProposalBlock({ proposal, cancelType, form, withManual, busy, action
           />
         </div>
         <Sub className="mt-1 block">
-          ה23: "מחיר מלא" = מחיר-הלקוח שהוקפא בהצעה, לא עלות — ורק שורות שכבר "הוזמן"/"מוכן"
-          בלוגיסטיקה נכנסות.
+          {/* ה23 */}
+          "מחיר מלא" = מחיר-הלקוח שהוקפא בהצעה, לא עלות — ורק שורות שכבר "הוזמן"/"מוכן" בלוגיסטיקה
+          נכנסות.
         </Sub>
       </div>
 
@@ -1128,7 +1136,8 @@ function FeedbackBlock({ detail, form, tag, scoreLow, busy, onNoResponse }) {
 
       {detail.feedback_status === 'no_response' ? (
         <Sub className="mt-2 block" testId="closing-feedback-no-response">
-          הלקוח לא השיב — השער עובר גם כך (ה3). ציון שיתקבל טלפונית עדיין ניתן להזנה כאן.
+          {/* ה3 */}
+          הלקוח לא השיב — השער עובר גם כך. ציון שיתקבל טלפונית עדיין ניתן להזנה כאן.
         </Sub>
       ) : null}
 
@@ -1179,19 +1188,22 @@ function budgetDeviationSub(deviation) {
 function BalanceBlock({ detail }) {
   return (
     <div>
-      <SectionTitle>תחשיב-מאזן (P3)</SectionTitle>
+      {/* P3 */}
+      <SectionTitle>תחשיב-מאזן</SectionTitle>
       <div
         className="mt-2 rounded-xl border border-slate-200 bg-white px-3 py-2"
         data-testid="closing-balance"
       >
         <BalanceRow
-          label="הכנסות (הצעה-קפואה + שינויי-תכולה, ה2)"
+          // ה2
+          label="הכנסות (הצעה-קפואה + שינויי-תכולה)"
           amount={detail.revenue}
           testId="closing-balance-revenue"
         />
         <BalanceRow
           op="−"
-          label="עבודה — שעות בפועל × תעריף קפוא + בונוסים (ה17)"
+          // ה17
+          label="עבודה — שעות בפועל × תעריף קפוא + בונוסים"
           amount={detail.labor_cost}
           testId="closing-balance-labor"
         />
@@ -1217,7 +1229,8 @@ function BalanceBlock({ detail }) {
 
       <div className="mt-2 flex flex-wrap gap-2">
         <StatTile
-          label="סטיית-תקציב — עבודה (ה18)"
+          // ה18
+          label="סטיית-תקציב — עבודה"
           // ‏`StatTile` מדפיס מספר דרך `Money` **בלי אגורות**, והתצוגה המאושרת מציירת
           // ‏`−692.00 ₪`. לכן מועבר צומת ולא מספר — שימוש בחוזה הקיים של הרכיב
           // (‏`typeof value === 'number' ? <Money/> : value`), לא עקיפה שלו.
@@ -1234,7 +1247,8 @@ function BalanceBlock({ detail }) {
           <StatTile
             label="רווח סופי — קפוא"
             value={<Money amount={detail.final_profit} cents />}
-            sub="נקפא בשקלים ואינו ניתן לעריכה (§7.52)"
+            // §7.52
+            sub="נקפא בשקלים ואינו ניתן לעריכה"
             testId="closing-final-profit-tile"
           />
         ) : null}
@@ -1254,13 +1268,15 @@ function CancelledProfitBlock({ detail }) {
         <StatTile
           label="רווח סופי — קפוא"
           value={<Money amount={detail.final_profit} cents />}
-          sub="נקפא בשקלים ואינו ניתן לעריכה (§7.52)"
+          // §7.52
+          sub="נקפא בשקלים ואינו ניתן לעריכה"
           testId="closing-final-profit-tile"
         />
       </div>
       <Sub className="mt-1 block" testId="closing-cancelled-no-balance">
-        אין תחשיב-מאזן לפרויקט מבוטל: הרווח כאן נגזר מדמי-הביטול בניכוי פיצוי-הצוות ועלות-הסחורה
-        (Q-3), ולא מהכנסות-האירוע — האירוע לא התקיים ולא נגבה עליו התשלום שבהצעה.
+        {/* Q-3 */}
+        אין תחשיב-מאזן לפרויקט מבוטל: הרווח כאן נגזר מדמי-הביטול בניכוי פיצוי-הצוות ועלות-הסחורה,
+        ולא מהכנסות-האירוע — האירוע לא התקיים ולא נגבה עליו התשלום שבהצעה.
       </Sub>
     </div>
   )
