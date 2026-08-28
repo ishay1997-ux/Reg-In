@@ -525,7 +525,7 @@ protection is false until it does.
   🔑 **Generalizable lesson: `drop function` RESETS the ACL.** Any migration that breaks a function
   signature must (a) measure `proacl` before, (b) restore explicitly, **(c) measure again after** —
   because the provider's defaults add roles you did not ask for.
-- 🔴 28/08/2026 — **`H6` WRITTEN, NOT APPLIED — the missing permission gate on
+- ✅ 28/08/2026 — **`H6` APPLIED (typed echo given) — the missing permission gate on
   `finance_cancellation_fee_proposal`.** *(`module8_h6_gate_fee_proposal_on_finance_permission`.)*
   Found by measuring the whole m8 function family against `pg_proc` when Ishay asked whether the
   money model was really verified. **Thirteen of fourteen are correct** — the six write actions all
@@ -538,7 +538,24 @@ protection is false until it does.
   invisible to non-finance roles and `e2e/cost-visibility.spec.js` proves a recruitment manager gets
   `[]` from `product_costs` — **this RPC hands the same figure through a different door.**
   ⚠️ Not an anon exposure (that was H5b) and not a write path (the function is `stable`).
-  Fix is one line, in the exact shape the module's other two readers already use.
+  Fixed with one line, in the exact shape the module's other two readers already use.
+  ✅ **Verified live in the browser, both directions — this is the pair that makes it a proof
+  rather than an assertion:**
+  · **Finance manager** opens project #12's closing window: dialog renders, `closing-meta`
+    visible, `closing-server-error` count **0**. ⇒ **the gate broke nothing.**
+  · **Recruitment manager** (`blocked` on 'כספים') issues the *same* RPC with her own live session
+    token and the app's own apikey — both captured from real traffic, not guessed:
+    **HTTP 403 · `42501` · `"אין לך הרשאה לבצע פעולה זו במודול כספים"`.**
+  🔑 **And the first attempt at this proof FAILED honestly and is worth recording:** a guessed
+  apikey returned `401 Invalid API key`, which looks like a refusal but proves nothing — the call
+  never reached the function. **A negative result only counts when the request would otherwise
+  have succeeded.** The rerun asserts the apikey was captured before trusting the 403.
+  📌 **Permission matrix at the time of applying** (measured, `roles` × `permissions`):
+  `edit` on 'כספים' — מנכ"ל · מנהלת כספים ולקוחות. **`blocked` — מנהלת פרויקטים · מנהלת גיוס
+  ושיבוץ · מנהלת לוגיסטיקה.** ⇒ the gate now excludes exactly the three roles §7.34 intends.
+  ✅ **ACL re-measured after apply and unchanged** — `{postgres, authenticated, service_role}`,
+  no `anon`. *(The H5b mine does not recur here: `create or replace` without a signature change
+  keeps the ACL. Measured anyway, because that is the assumption H5 broke.)*
 - ✅ 28/08/2026 — **the four module-8 fix migrations `H1`–`H4`, each applied after its OWN typed
   echo.** *(Registered here 28/08/2026; they were applied on 27–28/08 and this file lagged — a real
   §10.1 miss, recorded rather than backdated.)*
