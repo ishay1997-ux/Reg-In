@@ -43,6 +43,18 @@
 | **3.4** | S4 — public feedback page `/feedback/:token` | ✅ *(9 tests)* |
 | **3.5** | Route + nav registration ⚠️ shared-surface | ✅ *(`App.jsx` swap + the public route)* |
 | **3.6** | 🔻👤 Phase-3 🎨 gate — UX & functional review **with Ishay** | ✅ **APPROVED `28/08/2026 11:2X`** — *"מאשר את המסכים"*, on a single review page carrying eight live screenshots + the undrawn-controls list |
+| **4.0** | S3 preview state (Ishay-approved `28/08 00:3X`) + S2 footer layout fix | ✅ |
+| **4.1** | M6 ripple — survey-link → token URL (mint-before-send) ⚠️ shared-surface | ✅ *(cross-ref logged in `module-6.md` §10)* |
+| **4.2** | M2 ripple — customer metrics filters + "סכום" column (RC-6) ⚠️ shared-surface | ✅ *(cross-ref logged in `module-2.md` §9, incl. the deliberately-reversed privacy comment)* |
+| **4.3** | Doc ripples — §6 debt consumption · registers · ripple sweep | ✅ `28/08 11:4X` *(three §6 debts marked paid **against measurement**; one left open — bank-structure validation was never built. §7.52/§7.68 flips remain Ishay's per rule 13(ו))* |
+| **4.4** | E2E + smoke + accessibility for the 4 surfaces; full regression | ✅ *(`e2e/finance.spec.js` + `e2e/public-feedback.spec.js` written)* |
+| **4.4ב** | 🆕 UX pass + edge-case sweep across the four surfaces — **Ishay's explicit ask `28/08 ~07:2X`** | ✅ *(8-agent run `wf_8da1e480-df9`; 4 lenses → 4 fixers; suite **1,765 / 65 exit 0**)* |
+| **4.5** | 🔻👤 Phase-4 gate | ✅ **PASSED `28/08/2026 13:2X` — `npm run gate` exit 0, the first fully-green gate of the day.** `1,783 / 65` · build ✓ · dup 22 clones · knip 0 · audit ✓ · bidi ✓ · **`check:context` ✓ (`עץ ה-CLAUDE.md שלם`)** · docs-structure 66/0 |
+| **5.1** | Live acceptance journeys on real data (credentialed; mails land in Ishay's inbox) | ✅ **3 of 3 run** *(the fee-resolution write is the one deliberate remainder)* |
+| ↳ ① | **#12 end-to-end** — invoice→mail→payment→public feedback→archive→frozen profit | ✅ `28/08 07:15–07:19` *(live DB: `final_profit` **207.40**, `feedback_score` 5, `archived_at` 07:19, **token dead**; invoice mail `sent` to Ishay's inbox — he confirmed it arrived)* |
+| ↳ ② | **Cancellation fee** — cancel a demo project through m6, resolve the three components | ✅ `28/08 11:0X` *(nod given. #15 cancelled through m6's real screen — 1 hostess released, row landed in "awaiting invoice" flagged; fee = 0 team + **1,225 goods**. **Resolving the fee itself still pending** — it freezes profit irreversibly)* |
+| ↳ ③ | **Salary report** — generate · xlsx · mail · double-generation blocked · history + download | ✅ `28/08 08:35` *(report **13**, אוגוסט 2026, total **292.60** = the spec anchor; 1 line signed; xlsx downloaded and its cells read; second generation blocked)* |
+| **5.2** | 🔻👤 Closing audit — `module-close` in a FRESH session | ⬜ |
 
 > 🗣️ **Approval model for phase 3, changed by Ishay `27/08/2026 ~21:0X`:** the per-unit 🗣️ gate is
 > **consolidated into ONE review at the end**, on the built screens, in his words — *"אני יאשר בסוף
@@ -52,14 +64,6 @@
 > present the screen**. Each surface agent therefore returns a structured `undrawn_controls` list,
 > which is what he will be shown at review. *(Recorded here because a future session reading the
 > Q-1 row alone would conclude the gate was skipped.)*
-| **3.6** | 🔻👤 Phase-3 gate — 🎨 UX & functional review | ✅ *(duplicate row — the table restarts after the blockquote above; kept so the numbering reads continuously)* |
-| **4.0** | S3 preview state (Ishay-approved `28/08 00:3X`) + S2 footer layout fix | ✅ |
-| **4.1** | M6 ripple — survey-link → token URL (mint-before-send) ⚠️ shared-surface | ✅ *(cross-ref logged in `module-6.md` §10)* |
-| **4.2** | M2 ripple — customer metrics filters + "סכום" column (RC-6) ⚠️ shared-surface | ✅ *(cross-ref logged in `module-2.md` §9, incl. the deliberately-reversed privacy comment)* |
-| **4.3** | Doc ripples — §6 debt consumption · registers · ripple sweep | ✅ `28/08 11:4X` *(three §6 debts marked paid **against measurement**; one left open — bank-structure validation was never built. §7.52/§7.68 flips remain Ishay's per rule 13(ו))* |
-| **4.4** | E2E + smoke + accessibility for the 4 surfaces; full regression | ✅ *(`e2e/finance.spec.js` + `e2e/public-feedback.spec.js` written)* |
-| **4.4ב** | 🆕 UX pass + edge-case sweep across the four surfaces — **Ishay's explicit ask `28/08 ~07:2X`** | ✅ *(8-agent run `wf_8da1e480-df9`; 4 lenses → 4 fixers; suite **1,765 / 65 exit 0**)* |
-| **4.5** | 🔻👤 Phase-4 gate | ✅ **PASSED `28/08/2026 13:2X` — `npm run gate` exit 0, the first fully-green gate of the day.** `1,783 / 65` · build ✓ · dup 22 clones · knip 0 · audit ✓ · bidi ✓ · **`check:context` ✓ (`עץ ה-CLAUDE.md שלם`)** · docs-structure 66/0 |
 
 > 🗣️ **Ishay delegated the survey ruling to Claude, `28/08/2026 ~01:0X`** — *"תציג את האפשרויות
 > ותחליט בעצמך עם סיבה וזהו… תנסה להקל עלי ולא להוסיף לי עבודה"*. ⇒ **the A/B/C question does NOT
@@ -67,11 +71,6 @@
 > reason; he overrides if he disagrees. **The condition he attached is the real instruction —**
 > *"כל עוד באמת ביררת ושקלת אפשרויות"* — so the ruling is only legitimate once the dispatched
 > research returns and its sources are read, not summarised.
-| **5.1** | Live acceptance journeys on real data (credentialed; mails land in Ishay's inbox) | ✅ **3 of 3 run** *(the fee-resolution write is the one deliberate remainder)* |
-| ↳ ① | **#12 end-to-end** — invoice→mail→payment→public feedback→archive→frozen profit | ✅ `28/08 07:15–07:19` *(live DB: `final_profit` **207.40**, `feedback_score` 5, `archived_at` 07:19, **token dead**; invoice mail `sent` to Ishay's inbox — he confirmed it arrived)* |
-| ↳ ② | **Cancellation fee** — cancel a demo project through m6, resolve the three components | ✅ `28/08 11:0X` *(nod given. #15 cancelled through m6's real screen — 1 hostess released, row landed in "awaiting invoice" flagged; fee = 0 team + **1,225 goods**. **Resolving the fee itself still pending** — it freezes profit irreversibly)* |
-| ↳ ③ | **Salary report** — generate · xlsx · mail · double-generation blocked · history + download | ✅ `28/08 08:35` *(report **13**, אוגוסט 2026, total **292.60** = the spec anchor; 1 line signed; xlsx downloaded and its cells read; second generation blocked)* |
-| **5.2** | 🔻👤 Closing audit — `module-close` in a FRESH session | ⬜ |
 
 ---
 
