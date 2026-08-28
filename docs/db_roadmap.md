@@ -509,6 +509,45 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
+- ✅ 28/08/2026 — **the four module-8 fix migrations `H1`–`H4`, each applied after its OWN typed
+  echo.** *(Registered here 28/08/2026; they were applied on 27–28/08 and this file lagged — a real
+  §10.1 miss, recorded rather than backdated.)*
+  - **`H1` — `module8_h1_finance_bucket_allow_xlsx`** *(27/08 ~23:2X)*. The `finance` bucket allowed
+    pdf/jpeg/png only, so **the salary xlsx could never be stored at all** — the file the whole P4
+    process exists to produce. ⇒ `allowed_mime_types` gained
+    `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`. **`docs/schema.sql` §26 was
+    NOT re-synced at the time and still described the old set — caught and fixed 28/08.**
+  - **`H2` — `module8_h2_fix_cancellation_band_72h`** *(27/08 ~23:2X)*. ה24 rules **>72 = 0% ·
+    24–72 = 50%**, so exactly 72.0h sits **inside** the 50% band; `finance_cancellation_fee_proposal`
+    used `>=` and paid 0%. One character: `>=` ⇒ `>`.
+  - **`H3` — `module8_h3_fix_salary_cancellation_band_72h`** *(28/08 ~01:2X)*. 🔴 **The same defect,
+    second home — and my own H2 was half a fix.** `generate_salary_report` carried the identical
+    `>=`, and it is the graver one: the proposal is a number on a screen a human can correct, while
+    the salary report **pays hostesses and signs the rows permanently**. Found by the phase-4 panel,
+    not by me; `_shared/discipline.md` requires checking where else a defect lives, and I had not.
+  - **`H4` — `module8_h4_rule25_other_no_auto_proposal`** *(28/08 ~10:2X)*. ה25 rules
+    *"`other` ⇒ no automatic proposal"* and **the function never built that branch** — `other` fell
+    through the same hour thresholds as `customer`. **Measured live before and after, in a
+    self-rolling-back transaction on #11 at 48h before the event** *(zero permanent rows — #11 came
+    out `ready` with `cancelled_at IS NULL` both times)*:
+    | `cancel_type` | before H4 | after H4 |
+    |---|---|---|
+    | `customer` | 50% · 90.00 | 50% · 90.00 *(unchanged)* |
+    | **`other`** | **50% · 90.00** 🔴 | **null · null** ✅ |
+    | `force_majeure` | 0% · 0.00 | 0% · 0.00 *(unchanged)* |
+    🔑 **What H4 deliberately does NOT suppress:** `goods_at_price` · `goods_at_cost` ·
+    `planned_hours` · `compensated_count` · `hours_before_event` all still return. Ordered goods are
+    a fact; what is withheld is the **proposal**, not the data.
+    ⚠️ **Forward notice (§10.2) — a divergence this creates, and it is intentional but must be
+    known:** `generate_salary_report` branches on `force_majeure` **only** (measured 28/08), so a
+    project cancelled as `other` **still pays its hostesses** the scale compensation while the
+    customer-facing fee now has no suggested number. **That gap IS the manager's decision** — and it
+    means the payout figure is the natural anchor for it. **Open item for m8's 🎨 gate / a possible
+    `H5`:** surface that payout figure on S2 as a labelled reference, so "her judgement" has a
+    number to be a judgement *about*. Not built; Ishay's ruling.
+    **Post-apply verification, quoted:** `prosrc like '%when v_cancel_type = ''other'' then null%'`
+    ⇒ **true** · `provolatile='s'` ⇒ **true** · `prosecdef` ⇒ **true** · new `md5(prosrc)` =
+    `a8ad0c1765be015d6ca69b42bff172d6`, length 3,270 *(was `8e54ca8aa56ee94cad16300734343e5e`/2,908)*.
 - ✅ 27/08/2026 19:3X — **`N1b` APPLIED — THE NORMALIZATION IS COMPLETE** (typed-echo:
   `module8_n1b_drop_hostesses_languages`).
   **Verified after apply:** `hostesses.languages` gone (**0**) · 33 child rows across 20 hostesses ·
