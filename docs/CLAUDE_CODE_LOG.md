@@ -45,6 +45,23 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 28/08/2026 09:3X–10:1X — a claim I flipped on his word, ה25 closed screen-side, and the history that stopped lying
+
+🔴 **The failure worth keeping is mine, and it is a two-step one.** I wrote *"the salary mail landed nowhere"* from the **domain name alone** — an unmeasured negative. Ishay then said *"I got the mail and it's great"*, and I **reversed the claim immediately and reverted the param** — obeying a report instead of checking it, which is precisely the yes-man behaviour his own working agreement forbids. Only then did I measure his inbox (with his permission): the mail was **sent from his own account** to `office@cpa-firm.co.il` and **bounced** — `mailer-daemon`: *"the domain cpa-firm.co.il was not found… DNS Error"*. What he saw was the sent copy plus the failure notice, and he was judging the **content**, which was indeed fine. ⇒ **The original claim was right, the reversal was wrong, and neither was measured when stated.** The rule this teaches: a user's report is evidence about *what he saw*, never about *what the system did* — those are two different questions and only one of them is answerable from his inbox.
+
+🔴 **A systemic finding that is not m8's:** `email_log.status = 'sent'` means the mail engine accepted the call, **not** that the mail was delivered. A bounce returns to the sender's mailbox and **never reaches the system**, so a screen can show "✓ sent" over a mail that came back. Debt for the mail module (M10).
+
+**ה25 — the defect is now measured, not read.** A self-rolling-back transaction on #11 (48h before the event) called the real `finance_cancellation_fee_proposal` three times: `customer` ⇒ 50% / 90.00 (hand-check: 1 hostess × 4h × 45 = 180, half = 90) · `force_majeure` ⇒ 0% / 0.00 · **`other` ⇒ 50% / 90.00, byte-identical to `customer`** while ה25 rules that `other` gets **no automatic proposal**. Fixed screen-side (the amount field is no longer seeded for `other`, and says why); the DB branch needs a migration and stays Ishay's. #11 came out `ready` with `cancelled_at IS NULL` — zero residue.
+
+**This also covered 5.1 journey ② without cancelling a live project** — the documented rollback-proof pattern (`db_roadmap` §1477). Stated limit: it does **not** cover the UI leg (m6's cancel dialog → the row appearing in the tab → resolving through S2), which still needs a real cancellation and his nod.
+
+**The history's "sent to" column stopped lying.** It read the live accountant param *at view time*, so every historical row claimed retroactively that it went to today's address. `listSalaryReports` now attaches `sent_to` from `email_log` (a second query — the table is polymorphic and FK-less by design), latest send wins. Verified live: param says `ishay1997@gmail.com`, the row shows `office@cpa-firm.co.il`. The param fallback was removed deliberately — it would have restored the exact lie.
+
+**And one recommendation of mine that was simply wrong:** I twice recommended defaulting the finance screen to "awaiting invoice". The **approved mockup marks the second tab active** — "awaiting payment" — and `DEFAULT_TAB` already matched it. Default tab placement is appearance, so the mockup governs. His *"don't redo what's already done"* prevented a regression here, not a duplicate.
+
+⚠️ **Tooling note worth remembering:** `knip` died mid-gate with `Array buffer allocation failed`. Not code — leftover Playwright `chrome-headless-shell` processes held 1.6 GB and the machine was down to 1 GB free. After killing them it passed. **A red gate can be the machine's state.**
+
+
 ### 28/08/2026 09:0X–09:3X — Ishay reversed Q-2: the salary-report history moved into the dialog
 
 **His words:** *"למטה זה לא טוב כי יהיו מלא שורות של פרויקטים שם"*. `Q-2` (mine, nodded by him 26/08) and the approved S3 mockup both put the history card on the finance page below the table. The "finished projects" tab accumulates every project ever archived, so that card is pushed below the fold **permanently**. He picked option ב from three presented.

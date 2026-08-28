@@ -1015,7 +1015,8 @@ export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
   const toast = useToast()
   const [rows, setRows] = useState(null)
   const [error, setError] = useState('')
-  const [accountantEmail, setAccountantEmail] = useState(null)
+  // ‏`accountantEmail` הוסר מכאן `28/08/2026`: הכרטיס אינו צריך יותר את הפרמטר החי —
+  // הנמען מגיע פר-שורה מ-`sent_to`. שמירתו הייתה משאירה את המקור השגוי בהישג-יד.
   const [resendingId, setResendingId] = useState(null)
   // ‏"ניסי-שוב" ורענון-אחרי-שליחה-חוזרת בונים ערך חדש ל-effect לתלות בו, במקום לקרוא
   // ל-setState בגוף-ה-effect עצמו (שער `react-hooks/set-state-in-effect`) — אותו דפוס
@@ -1034,11 +1035,6 @@ export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
       .catch((err) => {
         if (!cancelled) setError(err?.message || 'שגיאה בטעינת היסטוריית דוחות השכר.')
       })
-    getParamValue(ACCOUNTANT_EMAIL_PARAM)
-      .then((value) => {
-        if (!cancelled) setAccountantEmail(value)
-      })
-      .catch(() => {})
     return () => {
       cancelled = true
     }
@@ -1143,7 +1139,10 @@ export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
                     <Ltr>{formatDate(row.sent_date, '—')}</Ltr>
                   </Td>
                   <Td className="truncate">
-                    <Ltr>{accountantEmail ?? '—'}</Ltr>
+                    {/* 🔴 הנמען **של השורה** (`sent_to`, מ-`email_log`), לא הפרמטר החי —
+                        ר' ההנמקה המלאה ב-`listSalaryReports`. נפילה-לאחור לפרמטר הוסרה
+                        בכוונה: היא הייתה מחזירה בדיוק את השקר שהתיקון בא להסיר. */}
+                    <Ltr>{row.sent_to ?? '—'}</Ltr>
                   </Td>
                   <Td>
                     <Money amount={row.total_amount} cents />

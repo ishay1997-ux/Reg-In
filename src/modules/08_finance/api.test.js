@@ -458,13 +458,49 @@ describe('קריאות S1/S2', () => {
     await expect(getBillingContact(4)).resolves.toEqual(CUSTOMER)
   })
 
-  it('listSalaryReports קוראת מהטבלה (policy של מיגרציה B) ולא מ-RPC', async () => {
+  // 🔴 **שתי טבלאות ולא אחת, מאז 28/08/2026** — ו-`email_log` היא התוספת המכוונת: הנמען
+  // חייב להגיע מהשליחה שנרשמה, לא מהפרמטר החי (ר' ההנמקה ב-`listSalaryReports`).
+  it('listSalaryReports קוראת מהטבלאות (policy של מיגרציה B) ולא מ-RPC, ומצמידה את הנמען שנרשם', async () => {
+    const seen = []
     mocks.from.mockImplementation((table) => {
-      expect(table).toBe('salary_reports')
-      return queryStub({ data: [{ report_id: 7, period: '2026-08-01' }], error: null })
+      seen.push(table)
+      if (table === 'salary_reports') {
+        return queryStub({
+          data: [
+            { report_id: 7, period: '2026-08-01' },
+            { report_id: 8, period: '2026-07-01' },
+          ],
+          error: null,
+        })
+      }
+      return queryStub({
+        data: [
+          // שתי שורות לדוח 7 — שליחה-חוזרת אחרי כישלון. הסדר יורד, ולכן הראשונה גוברת.
+          { entity_id: 7, recipient: 'new@example.com', created_at: '2026-09-02T00:00:00Z' },
+          { entity_id: 7, recipient: 'old@example.com', created_at: '2026-09-01T00:00:00Z' },
+        ],
+        error: null,
+      })
     })
-    await expect(listSalaryReports()).resolves.toEqual([{ report_id: 7, period: '2026-08-01' }])
+
+    await expect(listSalaryReports()).resolves.toEqual([
+      { report_id: 7, period: '2026-08-01', sent_to: 'new@example.com' },
+      // דוח 8 אינו ביומן ⇒ `undefined`, לא כתובת מומצאת ולא הפרמטר החי.
+      { report_id: 8, period: '2026-07-01', sent_to: undefined },
+    ])
+    expect(seen).toEqual(['salary_reports', 'email_log'])
     expect(mocks.rpc).not.toHaveBeenCalled()
+  })
+
+  // רשימה ריקה אינה מחייבת פנייה שנייה — ומדידה זולה שמונעת שאילתה מיותרת בכל טעינה.
+  it('אין דוחות ⇒ `email_log` אינה נשאלת כלל', async () => {
+    const seen = []
+    mocks.from.mockImplementation((table) => {
+      seen.push(table)
+      return queryStub({ data: [], error: null })
+    })
+    await expect(listSalaryReports()).resolves.toEqual([])
+    expect(seen).toEqual(['salary_reports'])
   })
 })
 

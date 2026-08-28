@@ -903,6 +903,24 @@ describe('תצוגה ג׳ — מקרי-הקצה של דמי-הביטול', () =>
     )
   })
 
+  // 🔴 ה25 (`processes-approved.md`): `other` ⇒ **אין הצעה אוטומטית** — שיקול-המנהלת.
+  // המסד לא בנה את הענף (‏`v_pct` מטפל ב-`force_majeure` בלבד), ולכן השער הוא המסך.
+  it('🔴 ביטול בסיווג "אחר" — שדה-הסכום נשאר ריק ואומר למה (ה25)', async () => {
+    await openCancelled({ cancel_type: 'other' })
+    expect(screen.getByTestId('closing-fee-amount')).toHaveValue(null)
+    expect(screen.getByTestId('closing-fee-manual-only')).toHaveTextContent('אין הצעה אוטומטית')
+    // ההצעה עצמה **נשארת מוצגת** — היא מידע לעיון; מה שהוסר הוא ההסכמה השקטה.
+    expect(screen.getByTestId('closing-fee-subtotal')).toBeInTheDocument()
+    // ומכיוון שהשדה ריק, שער-השמירה חוסם עד שהמנהלת תקליד סכום — בדיוק הכוונה.
+    expect(screen.getByTestId('closing-save-fee')).toBeDisabled()
+  })
+
+  it('ביטול ע"י הלקוח כן נזרע — כדי ש"לא נזרע" לא יהיה התנהגות גורפת', async () => {
+    await openCancelled({ cancel_type: 'customer' }, { proposed_fee: '3508.00' })
+    expect(screen.getByTestId('closing-fee-amount')).toHaveValue(3508)
+    expect(screen.queryByTestId('closing-fee-manual-only')).not.toBeInTheDocument()
+  })
+
   it('ביטול רגיל ממשיך לצטט את הסולם, בלי משפט כוח-עליון', async () => {
     await openCancelled()
     const why = screen.getByTestId('closing-fee-comp-why')

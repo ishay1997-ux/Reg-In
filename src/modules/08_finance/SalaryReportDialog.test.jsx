@@ -730,6 +730,37 @@ describe('SalaryReportDialog — "ייצא ושלח" (המסלול הבלתי-ה
 })
 
 describe('SalaryReportHistoryCard', () => {
+  // 🔴 **הנמען הוא של השורה, לא של היום.** נולד ממדידה חיה 28/08/2026: דוח 13 יצא אל
+  // `office@cpa-firm.co.il`, הפרמטר הוחלף אחר-כך, והמסך הציג את הכתובת החדשה על שליחה
+  // שמעולם לא הלכה לשם. הבדיקה נותנת ל`sent_to` ערך **שונה** מכל פרמטר אפשרי, כדי
+  // שנפילה-לאחור לפרמטר תיראה מיד.
+  it('🔴 "נשלח אל" מציג את הנמען שנרשם בשליחה, לא את הפרמטר החי', async () => {
+    listSalaryReports.mockResolvedValue([
+      reportRow({ report_id: 13, sent_to: 'old-accountant@example.com' }),
+    ])
+    getParamValue.mockResolvedValue('brand-new@example.com')
+    render(
+      <ToastProvider>
+        <SalaryReportHistoryCard />
+      </ToastProvider>,
+    )
+    const tr = await screen.findByTestId('salary-history-row-13')
+    expect(within(tr).getByText('old-accountant@example.com')).toBeInTheDocument()
+    expect(within(tr).queryByText('brand-new@example.com')).not.toBeInTheDocument()
+  })
+
+  // ‏"היומן לא נקרא / אין שורה" אינו "נשלח לאף אחד" — §4.3: חוסר-נתון הוא `—`.
+  it('שורה בלי רישום-שליחה מציגה `—` ולא כתובת מומצאת', async () => {
+    listSalaryReports.mockResolvedValue([reportRow({ report_id: 14, sent_to: undefined })])
+    render(
+      <ToastProvider>
+        <SalaryReportHistoryCard />
+      </ToastProvider>,
+    )
+    const tr = await screen.findByTestId('salary-history-row-14')
+    expect(within(tr).getAllByText('—').length).toBeGreaterThanOrEqual(1)
+  })
+
   function renderCard(props = {}) {
     return render(
       <ToastProvider>

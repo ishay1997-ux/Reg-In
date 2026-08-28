@@ -122,7 +122,33 @@ export async function listSalaryReports() {
     .select('report_id, period, send_status, sent_date, report_file_url, total_amount, created_at')
     .order('period', { ascending: false })
   if (error) throw toError(error, 'שגיאה בטעינת היסטוריית דוחות השכר.')
-  return data ?? []
+  const reports = data ?? []
+  if (reports.length === 0) return reports
+
+  // 🔴 **הנמען נשלף מהיומן ולא מהפרמטר החי — תוקן `28/08/2026`, אחרי שהפגם נצפה על המסך.**
+  // עמודת "נשלח אל" קראה עד היום את `params.מייל_משרד_רואי_חשבון` **בזמן-הצפייה**, ולכן כל
+  // שורה היסטורית טענה רטרואקטיבית שנשלחה לכתובת של היום. **נמדד חי:** דוח 13 יצא ב-08:35
+  // אל `office@cpa-firm.co.il`, הפרמטר הוחלף אחר-כך, והמסך הציג את הכתובת החדשה על שליחה
+  // שמעולם לא הלכה לשם. ⇒ **היסטוריה חייבת לזכור את מה שקרה, לא לשקף את מה שמוגדר עכשיו.**
+  // ‏`email_log` הוא פולימורפי ובלי FK (‏`db_roadmap` A-20 — במכוון), ולכן שאילתה שנייה
+  // ומיפוי בצד-הלקוח; ה-policy של מ8 מתירה למנהלת-הכספים לקרוא בדיוק את שתי השורות האלה.
+  // ⚠️ **ומה שזה עדיין אינו אומר: `sent` פירושו שמנוע-המיילים קיבל את הקריאה — לא שהדואר
+  // נמסר.** ‏Bounce חוזר לתיבת-השולח ואינו מגיע למערכת בשום צורה (נמדד 28/08: דוח 13 חזר
+  // מ-`mailer-daemon` עם `DNS Error`, והיומן ממשיך לומר `sent`). זהו חוב של מודול-המיילים.
+  const { data: logRows } = await supabase
+    .from('email_log')
+    .select('entity_id, recipient, created_at')
+    .eq('entity_type', 'salary_report')
+    .order('created_at', { ascending: false })
+
+  // השורה הראשונה לכל דוח היא האחרונה בזמן (הסדר יורד) — שליחה-חוזרת גוברת על המקורית.
+  const sentTo = new Map()
+  for (const row of logRows ?? []) {
+    if (!sentTo.has(row.entity_id)) sentTo.set(row.entity_id, row.recipient)
+  }
+  // ‏`undefined` ולא `null`: "היומן לא נקרא / אין שורה" אינו "נשלח לאף אחד", והמסך מציג
+  // עליו את אותו `—` שהוא מציג על כל נתון חסר (§4.3).
+  return reports.map((r) => ({ ...r, sent_to: sentTo.get(r.report_id) }))
 }
 
 // שורות דוח שהופק — ה-snapshot הקפוא (§7.68). 🔴 **אין כאן פרטי-בנק** (B-4): הם חיים רק

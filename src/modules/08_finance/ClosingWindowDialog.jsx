@@ -618,10 +618,24 @@ function ManualServiceComponent({ label, amount, onLabel, onAmount }) {
   )
 }
 
-function FeeAmountFields({ amount, note, onAmount, onNote }) {
+// ‏`cancelType` נכנס לכאן בשביל ה25 בלבד: בסיווג "אחר" השדה נשאר ריק **ואומר למה**.
+// שדה ריק בלי משפט נראה כמו תקלת-טעינה, וזה בדיוק המקום שבו מנהלת ממלאת את המספר
+// מהתת-סכום שמעל — כלומר חוזרת לאוטומט שההכרעה ביקשה לבטל.
+function FeeAmountFields({ amount, note, cancelType, onAmount, onNote }) {
+  const manualOnly = cancelType === 'other'
   return (
     <>
       <SectionTitle>סכום דמי-הביטול הסופי</SectionTitle>
+      {manualOnly && (
+        <p
+          className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] leading-relaxed text-amber-800"
+          role="note"
+          data-testid="closing-fee-manual-only"
+        >
+          ביטול בסיווג <b>"אחר"</b> — אין הצעה אוטומטית (ה25). הביטול אינו בהכרח באשמת הלקוח, ולכן
+          הסכום נקבע בשיקול-דעתך. התחשיב שמעל מוצג לעיון בלבד.
+        </p>
+      )}
       <div className="mt-2 grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-slate-500" htmlFor="closing-fee-amount">
@@ -771,6 +785,7 @@ function FeeProposalBlock({ proposal, cancelType, form, withManual, busy, action
       <FeeAmountFields
         amount={form.feeAmount}
         note={form.feeNote}
+        cancelType={cancelType}
         onAmount={form.setFeeAmount}
         onNote={form.setFeeNote}
       />
@@ -1457,7 +1472,19 @@ function ClosingWindowBody({ project, onOpenChange, onChanged }) {
     setReason(row.negative_feedback_reason ?? '')
     setNotes(row.feedback_notes ?? '')
     setFeeNote(row.cancellation_fee_note ?? '')
-    setFeeAmount(proposalRow?.proposed_fee == null ? '' : String(Number(proposalRow.proposed_fee)))
+    // 🔴 **ה25: ‏`other` אינו נזרע — הכרעת-ישי, `28/08/2026`.** האפיון קובע מילה-במילה
+    // *"‏`other` ⇒ **אין הצעה אוטומטית** (ביטול שאינו-בהכרח-באשמת-הלקוח — שיקול-המנהלת,
+    // ידני)"* (`processes-approved.md`, ה25) — **והמסד לא בנה את הענף הזה**: ‏`v_pct` מטפל
+    // ב-`force_majeure` בלבד ו-`other` נופל לסולם המלא כמו `customer`. ⇒ עד היום השדה נזרע
+    // מראש בסכום שההכרעה אמרה שצריך להיות שיקול-דעת, ולחיצה אחת על "שמור" חייבה לקוח.
+    // ⚠️ **ההצעה עצמה נשארת מוצגת** — היא מידע לגיטימי לעיון; מה שהוסר הוא רק ההסכמה
+    // השקטה. **וזה תיקון-מסך בלבד:** הפונקציה במסד ממשיכה להחזיר את המספר, ותיקונה דורש
+    // מיגרציה (רשום ב-§10 להכרעה נפרדת).
+    setFeeAmount(
+      row.cancel_type === 'other' || proposalRow?.proposed_fee == null
+        ? ''
+        : String(Number(proposalRow.proposed_fee)),
+    )
     setFeedbackTouched(false)
     setFile(null)
     setFileError('')
