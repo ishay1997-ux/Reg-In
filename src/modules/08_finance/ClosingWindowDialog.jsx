@@ -62,6 +62,7 @@ import { formatDate, formatTimestampFull } from '@/lib/dates'
 import { toAgorot, toShekels } from '@/lib/pricing'
 import { PROJECT_STATUS_LABELS } from '@/lib/projects'
 import { EMAIL_SEND_RESULT, sendResultMessage } from '@/lib/email'
+import { compensationReason } from '@/lib/projectCancellation'
 import { assertFinanceShape, scoreTag, scoreTagText } from '@/lib/projectFinance'
 import {
   CANCELLATION_FEE_ACTIONS,
@@ -147,6 +148,23 @@ const FEEDBACK_REASON_GATE =
 // (‏`record_feedback`: "יש לבחור ציון בין 1 ל-5") — המסך והשרת אומרים אותו דבר.
 const FEEDBACK_SCORE_GATE = 'חסום: יש לבחור ציון בין 1 ל-5, או לסמן "לא ענה לסקר".'
 const FEEDBACK_UNCHANGED_GATE = 'אין שינוי לשמור — עדכני ציון, סיבה או הערות.'
+// שני שערי-ענף-הביטול, שעד 28/08/2026 היו בוליאנים בלבד: "שמור דמי-ביטול" ו"ויתור על החוב"
+// נכבו **בלי מילה על המסך**, בדיוק כמו שני המצבים שהשורות שמעל תיקנו. ‏A-1 היא דפוס-הבית.
+// ⚠️ ובוויתור זה חמור יותר מכפתור-מת רגיל: תווית-השדה ומציין-המקום שלו נלקחו מילולית
+// מהמוקאפ המאושר ואומרים **"חופשי"** — כלומר המסך עצמו מבטיח שההערה היא רשות, בעוד
+// הוויתור דורש אותה. ‏🚫 הנוסח המאושר אינו משתנה כאן (אינו הממצא ואינו רשותי) — הסתירה
+// נפתרת במשפט שאומר מה חסם, ליד הכפתור שנחסם.
+const FEE_SAVE_EMPTY_GATE = 'חסום: יש להזין את הסכום שייחתם.'
+const FEE_SAVE_ZERO_GATE =
+  'חסום: הסכום שייחתם חייב להיות גדול מ-0. לאיפוס מלא יש להשתמש בכפתור "ויתור על החוב" — ויתור הוא פעולה מפורשת, לא סכום 0 (P1).'
+const WAIVE_NOTE_GATE =
+  'חסום: ויתור מחייב הערת-חובה — יש למלא את "הערת-פירוט" שמעל לפני הוויתור (P1).'
+// 🔤 נוסח כוח-העליון **אינו נכתב כאן מחדש**: הוא נשאב מהפונקציה שכבר נועלת אותו במודול 6
+// (‏`compensationReason`, מהמוקאפ המאושר `07_dialog_cancel_approved.html`). שני המסכים
+// מסבירים את אותו כלל (ה25), ומשפט שיוקלד פעמיים יתפצל ביום שאחד מהם ינוסח מחדש.
+// הענף של `force_majeure` הוא return מוקדם ואינו נוגע בשאר הארגומנטים; הבדיקה נועלת את
+// המחרוזת בייט-בבייט, כדי ששינוי-סדר-ענפים שם לא ירוקן את המשפט כאן בשקט.
+const FORCE_MAJEURE_COMP_NOTE = compensationReason({ cancelType: 'force_majeure' })
 // 🔤 נלקח מילולית מהודעת-השרת שב-`api.js` (‏`NO_BILLING_EMAIL`) — המסך והשרת אומרים את
 // אותו משפט, כדי שמנהלת שראתה את החסימה מראש לא תקבל ניסוח אחר אחרי לחיצה.
 const NO_BILLING_EMAIL_NOTE =
@@ -211,6 +229,40 @@ export function archiveGateNote({
 // המזהה שאליו מצביעים גם הכפתור החסום וגם ה-select — הערך יחיד בדיאלוג, ולכן קבוע ולא נגזר.
 const FEEDBACK_GATE_ID = 'closing-feedback-gate-note'
 const ARCHIVE_GATE_ID = 'closing-archive-gate-note'
+const FEE_SAVE_GATE_ID = 'closing-fee-save-gate-note'
+const WAIVE_GATE_ID = 'closing-waive-gate-note'
+
+// שער "שמור דמי-ביטול" — אותה צורה: `null` ⇒ פתוח, אחרת המשפט. שני ענפים ולא אחד, כי
+// "לא הקלדתי סכום" ו"הקלדתי 0" הם שתי טעויות שונות: השנייה היא בדיוק המקום שבו המנהלת
+// מנסה לוותר דרך הסכום במקום דרך פעולת-הוויתור, ואז ההערה **אינה** נשמרת כהערת-ויתור.
+// eslint-disable-next-line react-refresh/only-export-components -- פונקציה טהורה שנועלת נוסח-שער, כמו `archiveGateNote` שמעליה
+export function feeSaveGateNote({ amount }) {
+  if (amount == null || !Number.isFinite(amount)) return FEE_SAVE_EMPTY_GATE
+  if (amount <= 0) return FEE_SAVE_ZERO_GATE
+  return null
+}
+
+// שער "ויתור על החוב" — ה28/P1: ויתור = סכום 0 **+ הערת-חובה**, ולכן הערה ריקה חוסמת.
+// eslint-disable-next-line react-refresh/only-export-components -- כנ"ל: פונקציה טהורה שנועלת נוסח-שער
+export function waiveGateNote({ note }) {
+  return String(note ?? '').trim() === '' ? WAIVE_NOTE_GATE : null
+}
+
+// 🔢 שעות-לפני-האירוע לתצוגה. ‏`hours_before_event` נולד במסד כ-
+// `extract(epoch from (event_start - cancelled_at)) / 3600.0` — חלוקת `numeric` בלי `round` —
+// ו-`cancelled_at` נכתב מ-`now()` בלחיצה, כלומר **ערך עגול הוא צירוף-מקרים ולא המקרה
+// הרגיל**. ‏`numeric` עובר מ-PostgREST במלוא הסקאלה (המדידה החיה בכותרת
+// `src/lib/projectFinance.js`: `"202.5000000000000000"`), ולכן הדפסה גולמית נותנת מספר
+// בן 16–18 ספרות בתוך משפט שמצדיק סכום שנגבה מלקוח — קריאה כמו תקלה, לא כמו נימוק.
+// ⚠️ **ספרה אחת ולא שלם**, בכוונה: הסולם (24 / 72) נבדק **במסד** על הערך המדויק, ועיגול
+// לשלם היה יכול להציג "72 שעות ⇐ 0%" בעוד הטווח שאותו משפט מצטט מכיל את 72.
+// 🚫 ואין כאן חישוב-מחדש של הסולם — האחוז מגיע כפי שהמסד קבע אותו (③ בראש הקובץ).
+// eslint-disable-next-line react-refresh/only-export-components -- כנ"ל: פורמט טהור, לא רכיב
+export function formatHoursBeforeEvent(value) {
+  if (value == null) return '—'
+  const n = Number(value)
+  return Number.isFinite(n) ? n.toFixed(1) : '—'
+}
 
 // שער "שמור סטטוס" — אותה צורה בדיוק כמו `archiveGateNote`: `null` ⇒ פתוח, אחרת **המשפט**
 // שיוצג ליד הכפתור. עד כה שלושת הענפים חיו כבוליאני אחד, ושניים מהם כיבו את הכפתור בשתיקה.
@@ -426,7 +478,7 @@ function LockedFeedbackCell({ detail }) {
   )
 }
 
-function IdentityBlock({ detail, billing, invoiceName, showFeedback }) {
+function IdentityBlock({ detail, billing, invoiceName, showFeedback, showPaymentDate }) {
   return (
     <div>
       <SectionTitle>
@@ -463,7 +515,9 @@ function IdentityBlock({ detail, billing, invoiceName, showFeedback }) {
             </Sub>
           </Cell>
         ) : null}
-        {detail.payment_date ? (
+        {/* ‏"נעול לעיון" מתקיים רק כשהתאריך באמת אינו עריך. כשבלוק-התשלום שמתחת פתוח
+            לתיקון, אותו תאריך היה מופיע פעמיים על מסך אחד — פעם כערך-קריאה ופעם בשדה. */}
+        {detail.payment_date && showPaymentDate ? (
           <Cell label="תאריך תשלום" testId="closing-payment-done">
             <Val>
               <Ltr>{formatDate(detail.payment_date, '—')}</Ltr>
@@ -484,7 +538,13 @@ function IdentityBlock({ detail, billing, invoiceName, showFeedback }) {
 
 // רכיב① — פיצוי-הצוות. ‏`null` כאן אינו 0 אלא משפט (A-8): פיצוי-אפס לדיילות שהתחייבו
 // הוא בדיוק הכשל השקט שהמודול נבנה נגדו.
-function CompensationComponent({ proposal }) {
+// 🔴 **ומה שהמשפט שמתחתיו אסור לו לומר:** בכוח-עליון האחוז נקבע **לפני** שהשעון נבדק
+// בכלל (`v_pct := case when v_cancel_type = 'force_majeure' then 0 …` — הענף הראשון
+// בפונקציה, ה24/ה25: "כוח-עליון = 0% תמיד"). משפט אחד שמצרף תמיד שעות⇐אחוז היה מציג
+// "5 שעות לפני האירוע ⇐ סולם-הביטול נותן 0%" — שקר-לכאורה מול הסולם שהוא עצמו מצטט,
+// שממנו מנהלת-הכספים תסיק שהחישוב שבור ותתקן את הסכום ביד.
+function CompensationComponent({ proposal, cancelType }) {
+  const forceMajeure = cancelType === 'force_majeure'
   return (
     <div className="mt-2 rounded-lg border border-slate-200 bg-white p-3">
       <div className="flex items-baseline justify-between gap-3">
@@ -505,11 +565,20 @@ function CompensationComponent({ proposal }) {
           />
         )}
       </div>
-      <Sub className="mt-1 block">
+      <Sub className="mt-1 block" testId="closing-fee-comp-why">
         <Ltr>{proposal?.compensated_count ?? '—'}</Ltr> דיילות מאושרות-סופית · הביטול נעשה{' '}
-        <Ltr>{proposal?.hours_before_event ?? '—'}</Ltr> שעות לפני האירוע ⇐ סולם-הביטול (ה24) נותן{' '}
-        <Ltr>{proposal?.compensation_pct ?? '—'}%</Ltr>. בלי רכיב-נסיעות (ה29) — משמרת שבוטלה לא
-        נסעה.
+        <Ltr>{formatHoursBeforeEvent(proposal?.hours_before_event)}</Ltr> שעות לפני האירוע{' '}
+        {forceMajeure ? (
+          <>
+            · הביטול סווג ככוח-עליון (ה25) ⇐ <Ltr>{proposal?.compensation_pct ?? '—'}%</Ltr>.{' '}
+            {FORCE_MAJEURE_COMP_NOTE}{' '}
+          </>
+        ) : (
+          <>
+            ⇐ סולם-הביטול (ה24) נותן <Ltr>{proposal?.compensation_pct ?? '—'}%</Ltr>.{' '}
+          </>
+        )}
+        בלי רכיב-נסיעות (ה29) — משמרת שבוטלה לא נסעה.
       </Sub>
     </div>
   )
@@ -597,7 +666,9 @@ function FeeActions({ busy, actions }) {
       <div className="mt-3 flex flex-wrap gap-2">
         <Button
           type="button"
-          disabled={actions.saveBlocked || busy !== ''}
+          disabled={actions.saveNote != null || busy !== ''}
+          title={actions.saveNote ?? undefined}
+          aria-describedby={actions.saveNote ? FEE_SAVE_GATE_ID : undefined}
           data-testid="closing-save-fee"
           className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700"
           onClick={actions.onSaveFee}
@@ -607,8 +678,9 @@ function FeeActions({ busy, actions }) {
         <Button
           type="button"
           variant="outline"
-          title={WAIVE_TITLE}
-          disabled={actions.waiveBlocked || busy !== ''}
+          title={actions.waiveNote ?? WAIVE_TITLE}
+          disabled={actions.waiveNote != null || busy !== ''}
+          aria-describedby={actions.waiveNote ? WAIVE_GATE_ID : undefined}
           data-testid="closing-waive"
           className="h-auto rounded-lg border-slate-300 px-4 py-2 text-slate-700"
           onClick={actions.onWaive}
@@ -627,17 +699,34 @@ function FeeActions({ busy, actions }) {
           סגור ללא תשלום
         </Button>
       </div>
-      <GateNote testId="closing-fee-actions-note">{CANCEL_ACTIONS_NOTE}</GateNote>
+      {/* עמודה ולא שורה: ‏`GateNote` הוא `span`, ושני משפטי-שער זה לצד זה בתוך אב-בלוק
+          היו נדבקים לפסקה אחת. ‏`w-full` (ה-`fullWidth`) פועל רק בתוך flex — בדיוק
+          התקלה שנמדדה בשורת-הכפתורים של ClosingFooter. */}
+      <div className="mt-1 flex flex-col gap-1">
+        {actions.saveNote ? (
+          <GateNote testId="closing-fee-save-gate" id={FEE_SAVE_GATE_ID} fullWidth>
+            {actions.saveNote}
+          </GateNote>
+        ) : null}
+        {actions.waiveNote ? (
+          <GateNote testId="closing-waive-gate" id={WAIVE_GATE_ID} fullWidth>
+            {actions.waiveNote}
+          </GateNote>
+        ) : null}
+        <GateNote testId="closing-fee-actions-note" fullWidth>
+          {CANCEL_ACTIONS_NOTE}
+        </GateNote>
+      </div>
     </>
   )
 }
 
-function FeeProposalBlock({ proposal, form, withManual, busy, actions }) {
+function FeeProposalBlock({ proposal, cancelType, form, withManual, busy, actions }) {
   return (
     <div data-testid="closing-fee-block">
       <SectionTitle>פירוט דמי-הביטול המוצע (P1 · ה24 / ה23)</SectionTitle>
 
-      <CompensationComponent proposal={proposal} />
+      <CompensationComponent proposal={proposal} cancelType={cancelType} />
 
       <div className="mt-2 rounded-lg border border-slate-200 bg-white p-3">
         <div className="flex items-baseline justify-between gap-3">
@@ -819,7 +908,15 @@ function InvoiceUploadBlock({
 }
 
 // 🆕 הפקד שהשלים Q-1 (הכרעת-ישי 26/08/2026): "ממתין לתשלום" לא צויר באף תצוגה מאושרת.
-function PaymentBlock({ value, onChange, onSave, onOpenWriteOff, busy }) {
+//
+// 🔴 **והבלוק אינו נעלם ברגע שנרשם תאריך** (תוקן 28/08/2026). קודם לכן `!phase.paid` הוריד
+// אותו מיד אחרי השמירה, והתאריך הפך לערך-קריאה — כלומר הקלדה של 04/09 במקום 04/10 לא
+// הייתה ניתנת לתיקון **בשום מסך**. ‏**המסד מעולם לא אסר זאת:** `record_payment` הוא
+// `update projects set payment_date = …` בלי שום שער-חד-פעמיות (מיגרציה E2) — האיסור היה
+// של ה-UI בלבד, ולא נובע מאף הכרעה רשומה (המוקאפ המאושר אינו מצייר את הבלוק כלל).
+// ⚠️ **החריג נשמר במפורש: בפרויקט מבוטל רישום-התשלום הוא גם רגע הקפאת-הרווח (Q-4)**,
+// והתיק ננעל מיד — שם הבלוק אכן נעלם, וזה נגזר מ-`phase.locked`, לא מכאן.
+function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, busy }) {
   return (
     <div data-testid="closing-payment-block">
       <SectionTitle>תשלום</SectionTitle>
@@ -845,7 +942,7 @@ function PaymentBlock({ value, onChange, onSave, onOpenWriteOff, busy }) {
           className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700"
           onClick={onSave}
         >
-          {busy === 'payment' ? 'שומר...' : 'שמור תשלום'}
+          {busy === 'payment' ? 'שומר...' : alreadyPaid ? 'עדכון תאריך התשלום' : 'שמור תשלום'}
         </Button>
         <Button
           type="button"
@@ -1300,15 +1397,23 @@ function derivedView({ detail, proposal, billing, phase, form }) {
     withManual:
       proposedAgorot != null && manualAgorot > 0 ? toShekels(proposedAgorot + manualAgorot) : null,
     feeAmountNumber,
-    feeSaveBlocked:
-      feeAmountNumber == null || !Number.isFinite(feeAmountNumber) || feeAmountNumber <= 0,
+    // שני השערים חיים כמשפט ולא כבוליאני, ומצב-הכפתור נגזר מ-`!= null` — בדיוק כמו
+    // הארכוב ו"שמור סטטוס" בפוטר. כך אי-אפשר לכבות כפתור בלי שהסיבה תגיע איתו למסך.
+    feeSaveGate: feeSaveGateNote({ amount: feeAmountNumber }),
+    waiveGate: waiveGateNote({ note: form.feeNote }),
     feedbackGate: feedbackGateNote({
       score: form.score,
       reason: form.reason,
       touched: form.feedbackTouched,
     }),
+    // ‏`showInvoiceBlock` כבר נושא את `!archived && !cancelResolved` ⇒ תיק נעול אינו מגיע
+    // לכאן כלל. מה שנשאר: תשלום שנרשם **אינו** מוריד את הבלוק בפרויקט רגיל (תיקון), אבל
+    // כן מורידו במבוטל — שם התשלום מקפיא את הרווח (Q-4) והתיק ננעל באותה נשימה.
     showPaymentBlock:
-      phase.showInvoiceBlock && phase.invoiceSent && !phase.paid && !phase.writtenOff,
+      phase.showInvoiceBlock &&
+      phase.invoiceSent &&
+      !phase.writtenOff &&
+      !(phase.paid && phase.cancelled),
     showInvoiceUpload: phase.showInvoiceBlock && !phase.invoiceSent,
     showFeeSaved: phase.cancelled && phase.feeSet,
   }
@@ -1434,7 +1539,7 @@ function ClosingWindowBody({ project, onOpenChange, onChanged }) {
     proposal,
     billing,
     phase,
-    form: { score, reason, feedbackTouched, feeAmount, manualAmount },
+    form: { score, reason, feedbackTouched, feeAmount, feeNote, manualAmount },
   })
   const { scoreLow, feeAmountNumber } = view
 
@@ -1516,8 +1621,8 @@ function ClosingWindowBody({ project, onOpenChange, onChanged }) {
   }
 
   const feeActions = {
-    saveBlocked: view.feeSaveBlocked,
-    waiveBlocked: feeNote.trim() === '',
+    saveNote: view.feeSaveGate,
+    waiveNote: view.waiveGate,
     onSaveFee: () =>
       runAction(
         'fee',
@@ -1563,11 +1668,13 @@ function ClosingWindowBody({ project, onOpenChange, onChanged }) {
         billing={billing}
         invoiceName={view.invoiceName}
         showFeedback={phase.archived}
+        showPaymentDate={!view.showPaymentBlock}
       />
 
       {phase.showFeeProposal ? (
         <FeeProposalBlock
           proposal={proposal}
+          cancelType={detail.cancel_type}
           form={feeForm}
           withManual={view.withManual}
           busy={busy}
@@ -1595,6 +1702,7 @@ function ClosingWindowBody({ project, onOpenChange, onChanged }) {
       {view.showPaymentBlock ? (
         <PaymentBlock
           value={paymentDate}
+          alreadyPaid={phase.paid}
           onChange={setPaymentDate}
           busy={busy}
           onSave={() =>
@@ -1663,7 +1771,14 @@ function ClosingWindowBody({ project, onOpenChange, onChanged }) {
               recordFeedback(projectId, {
                 score,
                 reason: scoreLow ? reason : null,
-                notes: notes.trim() === '' ? null : notes,
+                // 🔴 **`null` אינו "רוקן" בצד השני של הגבול, אלא "לא סופק":**
+                // ‏`record_feedback` כותב `feedback_notes = coalesce(p_notes, feedback_notes)`
+                // (מיגרציה E2) ⇒ שליחת `null` על תיבה שרוקנה **משאירה את ההערה הישנה**,
+                // ומיד אחרי טוסט-ההצלחה `refresh()`+`seed()` מחזירים אותה לתיבה. מחיקת
+                // הערה שגויה לא הייתה אפשרית בשום מסלול. מחרוזת ריקה עוברת את ה-`coalesce`
+                // ומנקה בפועל, ו-`''` נופל כ-falsy בכל אתרי-התצוגה (כאן, ובכרטיס-הפרויקט
+                // `projectCard.js` ⇒ `feedback.notes && …`) — כלומר אין שינוי-מראה בשום מצב אחר.
+                notes: notes.trim(),
               }),
             'המשוב נשמר.',
           )

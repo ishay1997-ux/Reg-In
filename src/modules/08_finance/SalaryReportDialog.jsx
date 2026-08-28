@@ -38,6 +38,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+import { useConfirm } from '@/components/ConfirmDialog'
 import Money from '@/components/Money'
 import Ltr from '@/components/Ltr'
 import StatusTag from '@/components/StatusTag'
@@ -137,6 +138,31 @@ function monthIndex(parts) {
   return parts.year * 12 + (parts.month - 1)
 }
 
+// 🔴 **גבול-עליון לבורר, ולא קישוט: חודש עתידי אינו טעות-תצוגה אלא חתימה של כל השכר הפתוח
+// תחת כותרת שגויה.** שדה-השנה הוא `<input type="number">` חופשי, והקלדת `2027` במקום `2026`
+// (או בחירת החודש שאחרי) עוברת היום כל שער: `applyPicker` בודק רק ארבע-ספרות, `handleGenerate`
+// בודק רק כפילות, **וגם המסד אינו חוסם** — `generate_salary_report` דוחה `null` ותקופה שכבר
+// הופקה בלבד, וכלל-האיסוף שלה הוא `a.event_date <= סוף-החודש-הנבחר`, כלומר חודש עתידי אוסף
+// **הכול**. התוצאה בלתי-הפיכה בשלוש דרכים בבת-אחת: השורות נחתמות ולא ייאספו שוב · החודש
+// הנבחר ננעל ב-UNIQUE ולא ניתן להפקה שנייה · הקובץ כבר יצא לרו"ח בכותרת של חודש שלא היה.
+// 🔑 **והגבול הוא "אחרי החודש הנוכחי" ולא "אחרי החודש שהסתיים"**, בכוונה: P4 מגדירה את
+// ההפקה כ"מנהלת-הכספים, ידנית, **בסוף-חודש**", והפקה ב-31/08 עבור אוגוסט היא בדיוק השימוש
+// שהכרטיס מתאר — חסימתה הייתה שוברת מסלול לגיטימי כדי למנוע טעות שאינה קיימת בו.
+// `new Date` בהאנדלר ולא בגוף-רינדור (`react-hooks/purity`, כמו `lastCompletedMonthPeriod`).
+function currentMonthIndex(now = new Date()) {
+  return now.getFullYear() * 12 + now.getMonth()
+}
+
+// נוסח חלונית-הווידוא של "ייצא ושלח" — באותו קול בדיוק כשלוש הפעולות הבלתי-הפיכות של
+// חלון-הסגירה (`ClosingWindowDialog`: ארכוב · חוב-אבוד · ויתור): מה יקרה, ואז "אין ביטול
+// לפעולה." 🚫 **ובלי כתובת-המייל בגוף המשפט, וזו הימנעות מדודה ולא השמטה:** הכתובת היא רצף
+// LTR בתוך משפט עברי — משפחת-הכשל שנתפסה תשע פעמים כאן (src/CLAUDE.md, "מעבר-כיווניות") —
+// וחלונית-הווידוא המשותפת מקבלת **מחרוזת** בכל אתרי-הקריאה שלה בפרויקט, כלומר אין דרך לבודד
+// אותה ב-`<Ltr>`. הנמען המדויק מוצג עם `<Ltr>` בפאנל-הקדם-הפקה שמאחורי החלונית.
+function generateConfirmMessage(periodLabel) {
+  return `דוח השכר לחודש ${periodLabel} ייחתם ויישלח למשרד רואי-החשבון. השורות שייאספו לא ייאספו שוב לדוח הבא, ולא ניתן להפיק את אותו חודש פעמיים. אין ביטול לפעולה.`
+}
+
 // החודשים שבין הדוח האחרון שהופק לבין החודש הנבחר — **לא רשימת-נוחות אלא היקף-הדוח**: כיוון
 // שהאיסוף הוא "כל מה שטרם נחתם עד סוף החודש הנבחר", דילוג על חודש אינו מאבד את שורותיו אלא
 // **מגלגל אותן לדוח הזה**. מנהלת שמפיקה נובמבר אחרי שהאחרון היה אוגוסט צריכה לדעת שהיא עומדת
@@ -195,6 +221,7 @@ const COLUMN_WIDTHS = ['21%', '12%', '15%', '9%', '8%', '9%', '12%', '14%']
 
 export default function SalaryReportDialog({ open, onOpenChange, onGenerated }) {
   const toast = useToast()
+  const confirm = useConfirm()
 
   const [selectedPeriod, setSelectedPeriod] = useState(() => lastCompletedMonthPeriod())
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -275,8 +302,18 @@ export default function SalaryReportDialog({ open, onOpenChange, onGenerated }) 
     // עובר את `parsePeriodParts` (הוא דורש ארבע ספרות). ‏`selectedParts` היה נעשה `null`,
     // והשורה שמציגה את הכפתור הסגור (`selectedParts.year`) הייתה זורקת — **מסך לבן**.
     // הבדיקה מנוסחת על **התוצאה** ולא על הקלט, כדי שתחסום גם צורות-קלט שלא חשבתי עליהן.
-    if (!next || !parsePeriodParts(next)) {
+    const nextParts = next ? parsePeriodParts(next) : null
+    if (!nextParts) {
       setPickerError('יש להזין שנה בת ארבע ספרות (למשל 2026).')
+      return
+    }
+    // 🔴 שער-החודש-העתידי (ר' `currentMonthIndex`). מנוסח על **התוצאה** ולא על הקלט, כמו
+    // שער-ארבע-הספרות שמעליו, כדי שיחסום גם הדבקה, חצי-המקלדת של שדה-המספר וכל צורת-קלט
+    // שלא נצפתה. הבורר הוא הדלת **היחידה** ל-`selectedPeriod` (`setSelectedPeriod` נקרא
+    // מכאן בלבד; ברירת-המחדל היא `lastCompletedMonthPeriod`), ולכן שער כאן הוא שער מלא —
+    // ואין צורך בעותק שני שלו ב-`handleGenerate`.
+    if (monthIndex(nextParts) > currentMonthIndex()) {
+      setPickerError('לא ניתן להפיק דוח לחודש עתידי.')
       return
     }
     setPickerError('')
@@ -286,6 +323,21 @@ export default function SalaryReportDialog({ open, onOpenChange, onGenerated }) 
 
   async function handleGenerate() {
     if (existingForSelected || phase === 'submitting') return
+    // 🔴 **חלונית-וידוא — והנימוק הוא עקביות, לא זהירות כללית.** באותו מודול בדיוק, שלוש
+    // פעולות **קטנות מזו** — ארכוב · סגירה-ללא-תשלום · ויתור על דמי-הביטול — עוצרות ושואלות
+    // (`ClosingWindowDialog`, שלוש קריאות ל-`confirmThenRun`), ואילו הפעולה שחותמת את שכר
+    // כל החודש ומוציאה קובץ לרו"ח לא שאלה דבר. **מסך שמאשר את הקטן ולא את הגדול נקרא כתקלה.**
+    // ⚠️ **ואינה מחליפה את פאנל-הקדם-הפקה ואינה מכפילה אותו:** הפאנל עונה על *"מה ייכלל"*
+    // והוא טקסט פסיבי על אותו מסך; החלונית עוצרת ושואלת *"על החודש הזה, בטוחה?"* — וזה
+    // המחסום היחיד שנשאר לטעות שהשער שמעל אינו יכול לתפוס: בחירת חודש **עבר** שגוי.
+    // 🎨 `danger` **לא** מועבר, בכוונה: התקדים הישיר ביותר — ארכוב, שגם הוא בלתי-הפיך —
+    // משאיר את כפתור-האישור בטורקיז, ואדום שמור במודול הזה לכשל/הרס (`StatusTag` `danger`).
+    const approved = await confirm({
+      title: 'הפקת דוח-שכר',
+      message: generateConfirmMessage(periodLabel),
+      confirmLabel: 'ייצא ושלח',
+    })
+    if (!approved) return
     setPhase('submitting')
     setErrorMessage('')
     try {

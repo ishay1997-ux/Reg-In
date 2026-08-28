@@ -615,6 +615,47 @@ describe('sendInvoiceAndRecord (P1)', () => {
     expect(uploadMock).not.toHaveBeenCalled()
   })
 
+  // 🔴 המקרה שהצעד הזה נבנה בשבילו: הבאנר במסך מזמין "PDF או תמונה, עד 10MB", והמנהלת
+  // מצלמת את החשבונית בטלפון. הקובץ עובר את `validateInvoiceFile` (4MB < 10MB) אבל **אינו
+  // עובר את קיר-המייל** (`MAX_ATTACHMENT_BASE64_CHARS = 4,000,000` ⇒ ~2.86MB בינארי).
+  // הבדיקה נועלת שני דברים שמפרידים בין "מבוי סתום" ל"הודעה שאפשר לפעול לפיה": ההודעה
+  // עצמה, ו**העצירה לפני ההעלאה** — בלי קובץ יתום בבאקט ובלי מגע במסד.
+  it('🔴 קובץ שעובר את הבאקט ונופל בקיר-המייל: נעצרת לפני ההעלאה, עם משפט שאפשר לפעול לפיו', async () => {
+    // 4MB — צילום-טלפון טיפוסי. base64 ≈ 5.59M תווים, מעל התקרה של 4M.
+    const photo = {
+      name: 'IMG_2043.jpg',
+      type: 'image/jpeg',
+      size: 4 * 1024 * 1024,
+      arrayBuffer: () => Promise.resolve(new Uint8Array(4 * 1024 * 1024).buffer),
+    }
+
+    await expect(
+      sendInvoiceAndRecord({ project: PROJECT, customer: CUSTOMER, file: photo }),
+    ).rejects.toThrow(
+      'הקובץ גדול מדי לשליחה אוטומטית במייל — יש להקטין אותו (סריקה או צילום ברזולוציה נמוכה יותר) ולנסות שוב. שום דבר לא נשלח ולא נשמר.',
+    )
+
+    expect(uploadMock).not.toHaveBeenCalled()
+    expect(mocks.sendEmail).not.toHaveBeenCalled()
+    expect(mocks.rpc).not.toHaveBeenCalled()
+    expect(removeMock).not.toHaveBeenCalled()
+  })
+
+  // הצד השני של אותו שומר — אחרת "עובר" היה יכול להיות "השומר תמיד יורה". חשבונית-PDF
+  // רגילה חייבת להמשיך בדיוק כמו קודם.
+  it('חשבונית בגודל רגיל אינה נבלמת ע"י קיר-המייל', async () => {
+    routeRpc({
+      record_invoice_sent: { data: { ok: true, project_status: 'awaiting_payment' }, error: null },
+    })
+    const result = await sendInvoiceAndRecord({
+      project: PROJECT,
+      customer: CUSTOMER,
+      file: fakeFile(),
+    })
+    expect(result.sendResult).toBe('sent')
+    expect(uploadMock).toHaveBeenCalledTimes(1)
+  })
+
   it('מעבירה הלאה את `logFailed` — המייל יצא אך ההגנה מפני שליחה כפולה מתה', async () => {
     routeRpc({ record_invoice_sent: { data: { ok: true }, error: null } })
     mocks.sendEmail.mockResolvedValue({ logFailed: true })

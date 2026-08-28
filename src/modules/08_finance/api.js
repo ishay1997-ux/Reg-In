@@ -32,6 +32,7 @@ import {
   buildEmailPayload,
   classifySendError,
   fillEmailTemplate,
+  isAttachmentTooLarge,
   EMAIL_SEND_RESULT,
 } from '@/lib/email'
 import { getEmailTemplate, sendEmail } from '@/api/email'
@@ -405,6 +406,28 @@ export async function sendInvoiceAndRecord({ project, customer, file } = {}) {
     fileToBase64(file),
   ])
 
+  // 🔴 **קיר-המייל נמוך מקיר-הבאקט, ולכן `validateInvoiceFile` לבדה אינה מספיקה.** הבאקט מתיר
+  // 10MB, אבל `MAX_ATTACHMENT_BASE64_CHARS = 4,000,000` שבמנוע הוא קיר בינארי של ~2.86MB
+  // (‏base64 מנפח 3⇒4) ⇒ חשבונית שצולמה בטלפון (4MB) **עוברת** את הוולידציה, נדחית בצד-Make,
+  // וחוזרת ככשל גנרי שכל מה שהוא מציע הוא "יש לנסות שוב" — הפעולה היחידה שלעולם לא תעבוד.
+  // מדריך-המיקרו §2.6 דורש זאת במפורש: *"the 10MB bucket admits invoice files bigger than mail
+  // can carry — invoice send must surface the engine's size error (it exists) rather than assume
+  // fit"*. ⚠️ **והמיקום הוא חצי מהתיקון: לפני ההעלאה** ⇒ אין קובץ יתום בבאקט ואין נגיעה במסד,
+  // ולכן ההודעה יכולה להבטיח שדבר לא נשלח ולא נשמר.
+  // 🔗 התקדים: `03_quotes/QuoteDocumentDialog.jsx` עוצר באותה פונקציה בדיוק. **הנוסח שונה
+  // במכוון** — שם המסמך נוצר במערכת ולכן "יש להוריד אותו ולשלוח ידנית" הוא פתרון; כאן הקובץ
+  // כבר אצל המנהלת, ושליחה ידנית הייתה משאירה את הפרויקט לא-מסומן. לכן הפעולה היא הקטנת הקובץ.
+  // 📌 **מה זה אינו סוגר** (חוב, ולא שכחה): הבאנר במסך עדיין מזמין "עד 10MB", כי הוא חי
+  // ב-`ClosingWindowDialog.jsx` ונגזר מ-`FINANCE_MAX_BYTES`/מגבלת-הבאקט. הצורה הנקייה היא זו
+  // של מודול 6 (`REPORT_MAX_BYTES = 2MB`, עם בדיוק הנימוק הזה) — תקרה שנמוכה מקיר-המייל כבר
+  // בבחירת-הקובץ; היא דורשת גם שינוי-מסך וגם מיגרציית-באקט, ולכן אינה נעשית כאן בשקט.
+  if (isAttachmentTooLarge(attachmentBase64)) {
+    throw toError(
+      { code: 'ATTACHMENT_TOO_LARGE' },
+      'הקובץ גדול מדי לשליחה אוטומטית במייל — יש להקטין אותו (סריקה או צילום ברזולוציה נמוכה יותר) ולנסות שוב. שום דבר לא נשלח ולא נשמר.',
+    )
+  }
+
   const payload = buildInvoiceEmailPayload({
     template,
     customer,
@@ -456,7 +479,7 @@ export async function sendInvoiceAndRecord({ project, customer, file } = {}) {
 // קובץ פגום אצל הרו"ח; לכן הסוג נאמר כמות-שהוא, והשגיאה עולה למסך.
 export const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
-export async function uploadSalaryReportFile(reportId, fileName, blob) {
+async function uploadSalaryReportFile(reportId, fileName, blob) {
   const path = `salary_reports/${reportId}_${fileName}`
   const { error } = await supabase.storage
     .from('finance')

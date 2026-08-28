@@ -20,10 +20,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { ConfirmProvider } from '@/components/ConfirmDialog'
 import { ToastProvider } from '@/components/ToastProvider'
+import { compensationReason } from '@/lib/projectCancellation'
 import ClosingWindowDialog, {
   archiveGateNote,
   closingPhase,
+  feeSaveGateNote,
   feedbackGateNote,
+  formatHoursBeforeEvent,
+  waiveGateNote,
 } from './ClosingWindowDialog'
 import {
   INVOICE_FILE_REQUIRED_NOTE,
@@ -809,5 +813,222 @@ describe('שער-הצורה (assertFinanceShape)', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'נסי שוב' }))
     await screen.findByTestId('closing-meta')
     expect(screen.getByTestId('closing-invoice-banner')).toBeInTheDocument()
+  })
+})
+
+// ── ⑨ מקרי-הקצה שחודש-עבודה אמיתי מייצר (נוספו 28/08/2026) ─────────────────────────
+// חמישה, וכל אחד נולד מממצא מדוד ולא מדמיון: מספר-שעות גולמי · ביטול בכוח-עליון ·
+// כפתור-מת בענף-הביטול · תאריך-תשלום שהוקלד שגוי · הערת-משוב שאי-אפשר היה למחוק.
+
+describe('formatHoursBeforeEvent — ‏numeric גולמי אינו מגיע למסך-כספים', () => {
+  it('מקצץ את זנב-הספרות של `numeric` לספרה אחת', () => {
+    // הצורה שבה PostgREST מעביר `extract(epoch …)/3600.0` — המדידה החיה מתועדת בכותרת
+    // `src/lib/projectFinance.js` ("202.5000000000000000").
+    expect(formatHoursBeforeEvent('45.716666666666666667')).toBe('45.7')
+    // ‏`Number(...)` ולא ליטרל: ליטרל בדיוק כזה הוא `no-loss-of-precision` בלינטר.
+    expect(formatHoursBeforeEvent(Number('45.716666666666666667'))).toBe('45.7')
+    expect(formatHoursBeforeEvent('30.0')).toBe('30.0')
+  })
+
+  it('חוסר-נתון נשאר `—` ולעולם לא 0 (§4.3)', () => {
+    expect(formatHoursBeforeEvent(null)).toBe('—')
+    expect(formatHoursBeforeEvent(undefined)).toBe('—')
+    expect(formatHoursBeforeEvent('לא-מספר')).toBe('—')
+    expect(formatHoursBeforeEvent(0)).toBe('0.0')
+  })
+})
+
+describe('שערי ענף-הביטול — משפט, לא בוליאני (A-1)', () => {
+  it('סכום ריק וסכום 0 הם שתי סיבות שונות, ו-0 מפנה לפעולת-הוויתור', () => {
+    expect(feeSaveGateNote({ amount: null })).toContain('יש להזין את הסכום')
+    expect(feeSaveGateNote({ amount: Number.NaN })).toContain('יש להזין את הסכום')
+    expect(feeSaveGateNote({ amount: 0 })).toContain('ויתור על החוב')
+    expect(feeSaveGateNote({ amount: -5 })).toContain('ויתור על החוב')
+    expect(feeSaveGateNote({ amount: 3508 })).toBeNull()
+  })
+
+  it('ויתור בלי הערה חסום, ורווחים בלבד אינם הערה', () => {
+    expect(waiveGateNote({ note: '' })).toContain('הערת-פירוט')
+    expect(waiveGateNote({ note: '   ' })).toContain('הערת-פירוט')
+    expect(waiveGateNote({ note: null })).toContain('הערת-פירוט')
+    expect(waiveGateNote({ note: 'ויתור מסחרי' })).toBeNull()
+  })
+})
+
+describe('תצוגה ג׳ — מקרי-הקצה של דמי-הביטול', () => {
+  const cancelledRow = (over = {}) =>
+    detailRow({
+      project_id: 14,
+      event_name: 'כנס פתיחת שנה',
+      project_status: 'cancelled',
+      cancelled_at: '2026-08-26T08:00:00Z',
+      cancel_type: 'customer',
+      feedback_status: 'not_sent',
+      feedback_score: null,
+      negative_feedback_reason: null,
+      ...over,
+    })
+
+  const openCancelled = async (detailOver = {}, proposalOver = {}) => {
+    getFinanceDetail.mockResolvedValue(cancelledRow(detailOver))
+    getCancellationFeeProposal.mockResolvedValue(proposalRow(proposalOver))
+    await renderLoaded({ project: s1Row({ project_id: 14, event_name: 'כנס פתיחת שנה' }) })
+  }
+
+  it('🔴 שעות-הביטול מוצגות מעוגלות — לא זנב-`numeric` בן 16 ספרות', async () => {
+    await openCancelled({}, { hours_before_event: '45.716666666666666667' })
+    const why = screen.getByTestId('closing-fee-comp-why')
+    expect(why).toHaveTextContent('45.7 שעות לפני האירוע')
+    expect(why).not.toHaveTextContent('45.716')
+  })
+
+  // 🔴 המסד קובע 0% בענף `force_majeure` **לפני** שהשעון נבדק (ה24/ה25). משפט אחד
+  // שמצרף תמיד שעות⇐אחוז היה קורא כמו חישוב שבור: "5 שעות ⇐ הסולם נותן 0%".
+  it('כוח-עליון — האחוז אינו מיוחס לשעון, והמשפט הוא זה שנעול במודול 6', async () => {
+    await openCancelled(
+      { cancel_type: 'force_majeure' },
+      { compensation_pct: '0', hours_before_event: '5.0', team_compensation: '0.00' },
+    )
+    const why = screen.getByTestId('closing-fee-comp-why')
+    expect(why).toHaveTextContent('הביטול סווג ככוח-עליון (ה25)')
+    expect(why).toHaveTextContent('כוח עליון מאפס פיצוי תמיד, ללא תלות במרחק-הזמן.')
+    expect(why).not.toHaveTextContent('סולם-הביטול (ה24) נותן')
+    // השעות נשארות עובדה נפרדת — הן נכונות, הן פשוט אינן הסיבה לאחוז.
+    expect(why).toHaveTextContent('5.0 שעות לפני האירוע')
+  })
+
+  it('הנוסח נשאב מ-`compensationReason` של מודול 6 ואינו מוקלד כאן מחדש', () => {
+    expect(compensationReason({ cancelType: 'force_majeure' })).toBe(
+      'כוח עליון מאפס פיצוי תמיד, ללא תלות במרחק-הזמן.',
+    )
+  })
+
+  it('ביטול רגיל ממשיך לצטט את הסולם, בלי משפט כוח-עליון', async () => {
+    await openCancelled()
+    const why = screen.getByTestId('closing-fee-comp-why')
+    expect(why).toHaveTextContent('סולם-הביטול (ה24) נותן')
+    expect(why).not.toHaveTextContent('כוח עליון')
+  })
+
+  it('"ויתור על החוב" מושבת עם סיבה כתובה וקשורה אליו (A-1)', async () => {
+    await openCancelled()
+    const waive = screen.getByTestId('closing-waive')
+    expect(waive).toBeDisabled()
+    const note = screen.getByTestId('closing-waive-gate')
+    expect(note).toHaveTextContent('ויתור מחייב הערת-חובה')
+    expect(waive).toHaveAttribute('aria-describedby', note.id)
+    expect(note.id).not.toBe('')
+
+    fireEvent.change(screen.getByTestId('closing-fee-note'), { target: { value: 'ויתור מסחרי' } })
+    expect(screen.getByTestId('closing-waive')).toBeEnabled()
+    expect(screen.queryByTestId('closing-waive-gate')).not.toBeInTheDocument()
+  })
+
+  it('סכום 0 — "שמור דמי-ביטול" מושבת ומפנה לפעולת-הוויתור, לא נכבה בשתיקה', async () => {
+    await openCancelled()
+    fireEvent.change(screen.getByTestId('closing-fee-amount'), { target: { value: '0' } })
+    const save = screen.getByTestId('closing-save-fee')
+    expect(save).toBeDisabled()
+    const note = screen.getByTestId('closing-fee-save-gate')
+    expect(note).toHaveTextContent('ויתור על החוב')
+    expect(save).toHaveAttribute('aria-describedby', note.id)
+  })
+
+  // Q-4 — אצל מבוטל רישום-התשלום הוא רגע הקפאת-הרווח, ולכן אין שם "תיקון תאריך".
+  it('מבוטל שנרשם לו תשלום — בלוק-התשלום אינו חוזר (Q-4)', async () => {
+    getFinanceDetail.mockResolvedValue(
+      cancelledRow({
+        cancellation_fee: '3508.00',
+        invoice_sent: true,
+        invoice_sent_at: '2026-08-28T09:00:00Z',
+        invoice_file_url: '14/1_Invoice_9001.pdf',
+        payment_date: '2026-08-27',
+      }),
+    )
+    await renderLoaded({ project: s1Row({ project_id: 14 }) })
+    expect(screen.queryByTestId('closing-payment-block')).not.toBeInTheDocument()
+    expect(screen.getByTestId('closing-payment-done')).toHaveTextContent('27/08/2026')
+  })
+})
+
+describe('תיקון תאריך-תשלום שהוקלד שגוי', () => {
+  const paidRow = () =>
+    detailRow({
+      project_status: 'awaiting_payment',
+      invoice_sent: true,
+      invoice_sent_at: '2026-08-28T09:00:00Z',
+      invoice_file_url: '12/1_Invoice_4127.pdf',
+      payment_date: '2026-08-04',
+    })
+
+  it('🔴 הבלוק נשאר פתוח אחרי שנרשם תשלום, זרוע בתאריך שנשמר', async () => {
+    getFinanceDetail.mockResolvedValue(paidRow())
+    await renderLoaded()
+    expect(screen.getByTestId('closing-payment-block')).toBeInTheDocument()
+    expect(screen.getByTestId('closing-payment-date')).toHaveValue('2026-08-04')
+    expect(screen.getByTestId('closing-save-payment')).toHaveTextContent('עדכון תאריך התשלום')
+  })
+
+  it('אותו תאריך אינו מופיע פעמיים — תא-הקריאה נסוג מפני השדה העריך', async () => {
+    getFinanceDetail.mockResolvedValue(paidRow())
+    await renderLoaded()
+    expect(screen.queryByTestId('closing-payment-done')).not.toBeInTheDocument()
+  })
+
+  it('תיקון התאריך נשלח ל-record_payment כערך החדש', async () => {
+    getFinanceDetail.mockResolvedValue(paidRow())
+    recordPayment.mockResolvedValue({ ok: true })
+    await renderLoaded()
+    fireEvent.change(screen.getByTestId('closing-payment-date'), {
+      target: { value: '2026-08-14' },
+    })
+    fireEvent.click(screen.getByTestId('closing-save-payment'))
+    await waitFor(() => expect(recordPayment).toHaveBeenCalledWith(12, '2026-08-14'))
+  })
+
+  it('תיק שהועבר לארכיון עדיין אינו מציג את השדה — הנעילה גוברת', async () => {
+    getFinanceDetail.mockResolvedValue({
+      ...paidRow(),
+      project_status: 'finished',
+      archived_at: '2026-09-06T07:00:00Z',
+      final_profit: '3650.00',
+    })
+    await renderLoaded()
+    expect(screen.queryByTestId('closing-payment-block')).not.toBeInTheDocument()
+    expect(screen.getByTestId('closing-payment-done')).toHaveTextContent('04/08/2026')
+  })
+})
+
+// 🔴 `record_feedback` כותב `feedback_notes = coalesce(p_notes, feedback_notes)` ⇒ `null`
+// פירושו "אל תיגע". המסך התכוון ב-`null` ל"רוקן", ולכן מחיקת הערה שגויה לא הייתה אפשרית.
+describe('מחיקת הערת-משוב', () => {
+  it('תיבה שרוקנה נשלחת כמחרוזת ריקה, לא כ-null', async () => {
+    recordFeedback.mockResolvedValue({ ok: true })
+    await renderLoaded() // ‏#12 נטען עם הערה קיימת
+    fireEvent.change(screen.getByTestId('closing-feedback-notes'), { target: { value: '' } })
+    fireEvent.click(screen.getByTestId('closing-save-status'))
+    await waitFor(() =>
+      expect(recordFeedback).toHaveBeenCalledWith(12, {
+        score: 2,
+        reason: 'תפקוד דיילות',
+        notes: '',
+      }),
+    )
+  })
+
+  it('הערה אמיתית ממשיכה להישלח כלשונה (גזומת-רווחים בלבד)', async () => {
+    recordFeedback.mockResolvedValue({ ok: true })
+    await renderLoaded()
+    fireEvent.change(screen.getByTestId('closing-feedback-notes'), {
+      target: { value: '  שיחת-בירור בוצעה  ' },
+    })
+    fireEvent.click(screen.getByTestId('closing-save-status'))
+    await waitFor(() =>
+      expect(recordFeedback).toHaveBeenCalledWith(12, {
+        score: 2,
+        reason: 'תפקוד דיילות',
+        notes: 'שיחת-בירור בוצעה',
+      }),
+    )
   })
 })

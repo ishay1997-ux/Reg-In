@@ -319,7 +319,7 @@ function sheetTotalRow(totals) {
 // חותמת-הזמן וקוד-ההפקה בכותרת — כרטיס-P4 ("Excel עם חותמת-זמן ושורת-סה\"כ") + B-11
 // ("קוד-הפקה ייחודי = `report_id`, מוצג בכותרת האקסל"). `generatedAt` מוזרק ואינו נקרא
 // משעון פנימי: קובץ שנבנה פעמיים חייב להיות זהה, וקבצי-`src/lib` כאן טהורים מ-clock.
-export function buildSalaryReportSheet({ reportId, periodLabel, generatedAt, lines, totals }) {
+function buildSalaryReportSheet({ reportId, periodLabel, generatedAt, lines, totals }) {
   const stamp = formatTimestampFull(generatedAt)
   if (!stamp) {
     throw salaryReportError(

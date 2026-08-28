@@ -1906,7 +1906,10 @@ create policy hostess_languages_write_by_permission on hostess_languages
 -- ============================================================
 -- דלי       · public · תקרת-גודל  · סוגי-קובץ מותרים
 -- marketing · true   · 10485760 B · application/pdf, image/jpeg, image/png
--- finance   · false  · 10485760 B · application/pdf, image/jpeg, image/png
+-- finance   · false  · 10485760 B · application/pdf, image/jpeg, image/png,
+--                                  application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+--            ↳ סוג-האקסל נוסף ב-`20260827221902_module8_h1_finance_bucket_allow_xlsx` (הוחלה 28/08/2026
+--              אחרי הקלדת-ישי). בלעדיו קובץ דוח-השכר לא היה ניתן לאחסון כלל.
 -- reports   · false  ·  2097152 B · application/pdf, image/jpeg, image/png
 
 -- 12 policies על storage.objects — ארבע לכל דלי (select/insert/update/delete), כולן

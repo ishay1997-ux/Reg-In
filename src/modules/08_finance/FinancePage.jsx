@@ -68,6 +68,9 @@ const OPERATIONALLY_CLOSED_NOTE = 'נסגר תפעולית'
 // אותו; שני התאים מספרים שני דברים — *מה קרה בתאריך הזה* מול *מי ביטל*.
 const CANCELLED_DATE_NOTE = 'בוטל'
 const WRITTEN_OFF_TAG = 'הסתיים — לא שולם'
+// 🔤 **אותו פועל שהמסך כבר נועל בשלילה** (`WRITTEN_OFF_TAG` — "הסתיים — לא שולם"), בחיוב.
+// לא מילה חדשה על המשטח אלא הצד השני של אוצר-מילים שכבר אושר, ולכן אין כאן ניסוח שהומצא.
+const PAID_TAG = 'שולם'
 // זהה-בייט ל-`CREDIT_NOTE_LINE` של S2 (`ClosingWindowDialog.jsx`) — אותו דגל, אותן מילים.
 // ‏A-9 השאיר את הניסוח ל-🗣️; S2 נבנה קודם וקבע אותו, ושני נוסחים לאותו דגל היו הפגם.
 const CREDIT_NOTE_LINE = 'נדרשת חשבונית זיכוי'
@@ -183,6 +186,14 @@ function prepareRows(raw, today, vatPercent) {
       return {
         row,
         cancelled,
+        // 🔴 **החוב פתוח או סגור — נגזר פעם אחת, וכל מי שצריך אותו קורא מכאן.**
+        // עד `28/08/2026` התנאי הזה חי **רק בתוך `isActionable`**, כלומר שלט על צבע-הרקע
+        // בלבד: ‏`record_payment` (מיגרציה E2) כותבת `payment_date` ו**אינה נוגעת
+        // ב-`project_status`**, ו-`get_finance_overview` משייכת ללשונית לפי הסטטוס בלבד ⇒
+        // תיק ששולם **נשאר ב"ממתין לתשלום"** עד הארכוב — וזה לא רגע אלא ימים, כי שער-הארכוב
+        // דורש גם משוב-פתור. באותם ימים הרקע הענברי כבה בעוד מונה-ימי-האיחור המשיך לגדול
+        // באדום על אותה שורה. שני חצאי-אותו-כלל שחיים בשני מקומות — ‏SSOT אחד, ולא שניים.
+        debtOpen: row.payment_date === null && !row.written_off,
         feeUnresolved: cancelled && row.cancellation_fee === null,
         amount,
         amountWithVat: grossWithVat(amount, vatPercent),
@@ -668,8 +679,8 @@ function isActionable(entry) {
   // משוב-פתור, ולכן ציון נמוך בשורה מארוכבת כבר טופל — ושורת-"נדרש בירור" עליו הייתה
   // מבקשת מהמנהלת לעשות שוב מה שהיא כבר עשתה.
   if (entry.row.archived_at) return false
-  const debtOpen = entry.row.payment_date === null && !entry.row.written_off
-  const overdue = debtOpen && entry.daysOverdue !== null && entry.daysOverdue > 0
+  // ‏`entry.debtOpen` נגזר ב-`prepareRows` — אותו שדה בדיוק שמכבה את מונה-ימי-האיחור.
+  const overdue = entry.debtOpen && entry.daysOverdue !== null && entry.daysOverdue > 0
   const needsClarification = entry.score !== null && entry.score.score < 3
   return overdue || needsClarification || entry.feeUnresolved
 }
@@ -766,7 +777,12 @@ function FinanceRow({ entry, tab, onOpen }) {
             )}
           </Td>
           <Td>
-            <OverdueCell days={entry.daysOverdue} />
+            <OverdueCell
+              days={entry.daysOverdue}
+              debtOpen={entry.debtOpen}
+              paidOn={row.payment_date}
+              testId={`finance-paid-${row.project_id}`}
+            />
           </Td>
           <Td>
             <AmountCell entry={entry} />
@@ -864,7 +880,28 @@ function AmountCell({ entry }) {
 // אמיתי, מוצג אפור ובלי הדגשה; ‏`>0` = איחור בפועל ⇒ אדום, עם המילה "ימים".
 // ⚠️ ההערה ב-`projectFinance.js` כותבת *"המסך מציג את המונה רק כשהוא > 0"*; הצגת `—` על 0
 // הייתה מוחקת את ההבחנה שאותו קובץ עצמו בנה. **מדווח כסתירה, לא הוכרע כאן לבד.**
-function OverdueCell({ days }) {
+// 🔴 **וקודם לשלושת המצבים — שאלה אחת: האם החוב בכלל עוד פתוח.** ‏`deriveDaysOverdue` היא
+// חשבון-ימים טהור ואינה יודעת דבר על תשלום *(כך היא מתועדת ב-`projectFinance.js`)*, ולכן
+// על שורה ששולמה היא ממשיכה להחזיר מספר חיובי **שגדל כל יום**. תיק ששולם נשאר בלשונית
+// "ממתין לתשלום" עד הארכוב (ר' `debtOpen` ב-`prepareRows`), ולכן זה אינו מקרה-קצה נדיר
+// אלא המצב הרגיל של כל תיק בין רישום-התשלום לארכוב. **מונה-איחור אדום על חוב שנסגר אינו
+// "מספר ישן" — הוא עובדה שקרית**, והמחיר שלה הוא טלפון-גבייה ללקוח ששילם.
+// 🎨 **התג ירוק דרך `StatusTag` ולא צבע מקומי** — ובמילות הרכיב עצמו, ירוק כאן אומר בדיוק
+// *"סגור, אין מה לעשות"*. אין טוקן חדש ואין החלטת-עיצוב חדשה (כלל 8).
+// ⚪ **חוב-אבוד (`written_off`) מקבל `—` ולא תג:** הוא לא שולם, והשורה כבר נושאת את
+// `WRITTEN_OFF_TAG` שאומר בדיוק זאת. מה שנכון לשתי הדרכים הוא רק שהספירה נעצרת.
+function OverdueCell({ days, debtOpen, paidOn, testId }) {
+  if (!debtOpen) {
+    if (!paidOn) return <span className="text-slate-400">{DASH}</span>
+    return (
+      <>
+        <StatusTag label={PAID_TAG} tone="ok" testId={testId} />
+        <div className="mt-px text-[11.5px] text-slate-500">
+          <Ltr>{formatDate(paidOn, DASH)}</Ltr>
+        </div>
+      </>
+    )
+  }
   if (days === null) return <span className="text-slate-400">{DASH}</span>
   if (days === 0) return <Ltr className="text-[13px] text-slate-400">0</Ltr>
   return (

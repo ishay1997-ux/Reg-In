@@ -281,6 +281,36 @@ describe('S1 — לשונית "ממתין לתשלום" (#15)', () => {
     expect(row).not.toHaveTextContent('שוטף+')
     expect(row).not.toHaveTextContent('ימים')
   })
+
+  // 🔴 **המצב שלא היה מכוסה כאן, והוא המצב הרגיל של כל תיק בין תשלום לארכוב.**
+  // ‏`record_payment` כותבת `payment_date` ואינה נוגעת ב-`project_status` (מיגרציה E2),
+  // ו-`get_finance_overview` משייכת ללשונית לפי הסטטוס בלבד ⇒ השורה **נשארת כאן** עד
+  // שהארכוב יעבור — ושער-הארכוב דורש גם משוב-פתור, כלומר ימים ולא רגע. עד `28/08/2026`
+  // המונה האדום המשיך לגדול על השורה הזאת כל יום. **הקיבוע כאן הוא על שני חצאים:**
+  // ‏① המונה נעצר · ‏② במקומו נאמר בפועל שהכסף הגיע — בלי זה השורה עדיין קוראת
+  // "סכום לתשלום" בלי שום סימן-נגד, וזה בדיוק הטלפון ללקוח ששילם.
+  it('תיק ששולם וטרם ארוכב: המונה נעצר, ובמקומו תג "שולם" עם התאריך', async () => {
+    // חשבונית 10/09 + שוטף30 ⇒ פירעון 10/10; ה"היום" הוא 15/10 ⇒ חשבון-הימים הטהור
+    // מחזיר 5. התשלום (12/10) הוא מה שסוגר את החוב, והסטטוס נשאר `awaiting_payment`.
+    listFinanceOverview.mockResolvedValue([{ ...P15, payment_date: '2026-10-12' }, P13])
+    await renderPage()
+    const row = screen.getByTestId('finance-row-15')
+    expect(screen.getByTestId('finance-paid-15')).toHaveTextContent('שולם')
+    expect(row).toHaveTextContent('12/10/2026')
+    expect(row).not.toHaveTextContent('5 ימים')
+    expect(row).not.toHaveTextContent('ימים')
+    expect(row.className).not.toContain('bg-amber-50')
+  })
+
+  it('תיק שנסגר כחוב-אבוד וטרם ארוכב: המונה נעצר, ובלי תג "שולם" — הוא לא שולם', async () => {
+    listFinanceOverview.mockResolvedValue([{ ...P15, written_off: true }, P13])
+    await renderPage()
+    const row = screen.getByTestId('finance-row-15')
+    expect(screen.queryByTestId('finance-paid-15')).not.toBeInTheDocument()
+    expect(screen.getByTestId('finance-writeoff-tag-15')).toHaveTextContent('הסתיים — לא שולם')
+    expect(row).not.toHaveTextContent('ימים')
+    expect(row.className).not.toContain('bg-amber-50')
+  })
 })
 
 describe('S1 — לשונית "ממתין לחשבונית" (#12 · #14)', () => {
