@@ -31,6 +31,11 @@ const ALLOWED_WRITE_PATHS = [
   // והחוסם הפיל את מסך-הפרויקטים כולו כשנחסמו. אין כאן ריכוך: כתיבות אמיתיות עדיין נחסמות.
   '/rest/v1/rpc/list_projects_overview',
   '/rest/v1/rpc/list_project_changes',
+  // מודול 8 (28/08/2026, צעד 4.4): `get_finance_overview` היא DEFINER-קוראת-בלבד (מיגרציה
+  // E1) — אותו נימוק בדיוק כמו שתי השורות שמעל. `finance-open-salary` לעולם לא נלחץ כאן,
+  // ולכן `generate_salary_report`/`finalize_salary_report` (שתיהן כותבות, נמדד `pg_proc`)
+  // לא נכנסות לרשימה הזו במכוון.
+  '/rest/v1/rpc/get_finance_overview',
 ]
 
 test.describe('בדיקת-עשן', () => {
@@ -192,6 +197,38 @@ test.describe('בדיקת-עשן', () => {
       'מונה "הכול" הוא 0 אצל המנכ"ל (edit) — הזדהות/RLS שבורים, לא "אין דאטה"',
     ).toBeGreaterThan(0)
     await expect(page.locator('[data-testid^="logistics-row-"]')).toHaveCount(logisticsAllCount)
+
+    // כספים (מודול 8, נוסף 28/08/2026): מבט-העל עולה, ושלוש הלשוניות עקביות עם השורות
+    // שרונדרו. 🔴 **אין כאן מספר-שורות נעוץ** — שלוש הלשוניות מחזיקות שורה בודדת כרגע
+    // (עוגן חי, `smoke-anchors.json`), והבדיקה קוראת כל מונה בזמן-ריצה ומאמתת אינווריאנט-
+    // עצמי מולו, בדיוק כמו `logistics`/`projects` שמעל. עוגן-החיוב היחיד: הפרויקט הידוע
+    // חייב להופיע באיזושהי לשונית שיש בה שורות (לא דווקא זו שנרשמה — ר' הערת-הראש שם).
+    await expect(page.getByRole('link', { name: anchors.finance.sidebarLink })).toBeVisible()
+    await page.goto('/finance')
+    await expect(page.getByTestId('finance-page')).toBeVisible({ timeout: 30_000 })
+    let financeKnownProjectFound = false
+    for (const tabKey of ['awaiting_invoice', 'awaiting_payment', 'finished']) {
+      const tab = page.getByTestId(`finance-tab-${tabKey}`)
+      await expect(tab).not.toContainText('—', { timeout: 30_000 })
+      await tab.click()
+      const tabCount = Number((await tab.innerText()).replace(/[^0-9]/g, ''))
+      expect(tabCount, `מונה-לשונית ${tabKey} שלילי`).toBeGreaterThanOrEqual(0)
+      const financeRows = page.locator('[data-testid^="finance-row-"]')
+      if (tabCount === 0) {
+        await expect(page.getByTestId('finance-empty-tab')).toBeVisible()
+        continue
+      }
+      await expect(financeRows).toHaveCount(tabCount)
+      const knownRow = page.getByTestId(`finance-row-${anchors.finance.knownProjectId}`)
+      if ((await knownRow.count()) > 0) {
+        await expect(knownRow).toContainText(anchors.finance.knownProjectName)
+        financeKnownProjectFound = true
+      }
+    }
+    expect(
+      financeKnownProjectFound,
+      `פרויקט #${anchors.finance.knownProjectId} ("${anchors.finance.knownProjectName}") לא נמצא באף לשונית — הזדהות/RLS שבורים, לא "העוגן זז" (אם הוא רק עבר לשונית, זה עדכון-עוגן לגיטימי)`,
+    ).toBe(true)
 
     // המנגנונים — לא הבטחות: אפס ניסיונות-כתיבה, אפס יעדים חיצוניים, אפס שגיאות-קונסול.
     expect(blockedWrites, 'מסך ניסה לכתוב למסד בזמן קריאה-בלבד').toEqual([])

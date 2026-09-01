@@ -47,6 +47,33 @@ consistent with this section's own framing that the folder is the record). `roun
 touches module-3-owned objects (`product_costs`) but is a cross-module hardening pass, not
 `module3_`-named — tracked separately, not folded into the 10.
 
+**↳ Re-measured live 27/08/2026 19:5X, at Ishay's ask ("this should be one-to-one against the real
+database, right?") — and the answer is yes, with the arithmetic closing exactly:**
+**65 files on disk · 64 rows in `schema_migrations`.** The gap is fully explained, and every term
+was measured rather than recalled:
+`65 − 3 unregistered-by-design + 2 extra round-G rows = 64`. **Exact.**
+· the **3** are the same ones §0.0 has always named: `baseline_schema` (local-only by design) ·
+  `module2_customer_contacts` · `module3_quotes_structure_and_constraints` — **the last two are
+  live in the DB**, applied out-of-band during the 23/07 MCP outage.
+· the **+2** are round G's second and third rows (`..._fix_forward_remaining_cost_readers`,
+  `..._fix_forward_approve_rpc_cost_source`), which share the one consolidated file — the file's own
+  header names all three, and the 31/07 entry below tells the full story.
+· the filename-vs-version drift continues as ruled: every m8 migration is registered under an
+  `apply_migration`-stamped UTC version, never its filename prefix.
+⇒ **Nothing to delete and nothing to correct in the folder.** The only thing that was stale here
+was this section's own counts (22/21, from 01/08).
+
+🔑 **AND A STRONGER CHECK THAN COUNTS, run the same turn and worth reusing — `docs/schema.sql` was
+proved IDENTICAL to the live catalog, not merely equal in size.** Both sides were reduced to a
+sorted list and fingerprinted (`LC_ALL=C sort | md5sum` on the file side, `md5(string_agg(… order by
+… collate "C"))` on the DB side). **All four hashes matched:**
+`columns 5e279fb8ed6a86ff8a22aeb77a05f916` (261) · `tables 27a0b1db0be14c6ff6a2028585290d49` (28) ·
+`functions afa68fd97ffba7a7992d7d438787df0a` (43) · `policies 8fb61bc54d0edc035544cce5f16648fb` (45).
+⚠️ **Why this beats counting, and it is not pedantry:** 261 documented against 261 live is still true
+when one column is missing and a different one is invented. **A matching md5 says it is the same set,
+name for name.** The `collate "C"` on the DB side and `LC_ALL=C` on the file side are load-bearing —
+without them the two sides sort differently and the hashes disagree on identical data.
+
 **Consequence:** `supabase db push` would try to re-run already-applied migrations, and the two
 unregistered ones are **not idempotent** (`create table` · `drop constraint` · `add constraint`
 without `if not exists`) — so it halts on `customer_contacts`. **There is no automatic way to rebuild
@@ -408,7 +435,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 
 | # | The removal that is owed | Blocked until | Its contract (more than a `drop`) | Registered where |
 |---|---|---|---|---|
-| ✅ ~~**C2**~~ **DONE 27/08/2026 18:0X** | ~~`alter table hostesses drop column bank_name, bank_branch, bank_account`~~ — **applied; ה19 is CLOSED.** Legacy columns **0** · child table **26/26** · **0** empty bank rows · `smoke` exit 0 and `hostesses.spec.js` **20/20** after the drop · `schema.sql` re-synced (16 documented / 16 live). 🔑 **The `updated_at` guard was not theoretical: all 26 child rows were NEWER than their parent, so an unguarded `do update` would have touched all 26 and pulled them back to the stale source. With the guard the copy touched 0.** *(Row kept struck rather than deleted — the correction it carries is the record. The original contract:)* | ~~m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live**~~ — **all three met: `dev` 518587d · `main` 9e07233 · Vercel production `state=success`, and the live bundle was fetched and asserted to contain `hostess_bank_details`** | 1️⃣ **Re-copy first** — `insert … on conflict (hostess_id) do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 🔴 **BUT THE `do update` MUST BE GUARDED BY `updated_at`** *(found 27/08/2026 at the 1.8 gate — the contract as first written was wrong)*: **after** the deploy m8's `api.js` writes ONLY the child, so an unguarded overwrite would push **stale parent values over fresh child rows** — the same data loss pointed backwards, landing as wrong bank numbers in a CPA salary report. Overwrite only where the parent row is genuinely newer than the child row (both tables carry a `moddatetime`-maintained `updated_at`). **Full contract + the SQL shape: `micro_guides/module-8.md` §8.4.** 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
+| ✅ ~~**C2**~~ **DONE 27/08/2026 18:0X** | ~~`alter table hostesses drop column bank_name, bank_branch, bank_account`~~ — **applied; ה19 is CLOSED.** Legacy columns **0** · child table **26/26** · **0** empty bank rows · `smoke` exit 0 and `hostesses.spec.js` **20/20** after the drop · `schema.sql` re-synced (16 documented / 16 live). 🔑 **The `updated_at` guard was not theoretical: all 26 child rows were NEWER than their parent, so an unguarded `do update` would have touched all 26 and pulled them back to the stale source. With the guard the copy touched 0.** *(Row kept struck rather than deleted — the correction it carries is the record. The original contract:)* | ~~m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live**~~ — **all three met: `dev` 518587d · `main` 9e07233 · Vercel production `state=success`, and the live bundle was fetched and asserted to contain `hostess_bank_details`** | 1️⃣ **Re-copy first** — `insert … on conflict (hostess_id) do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 🔴 **BUT THE `do update` MUST BE GUARDED BY `updated_at`** *(found 27/08/2026 at the 1.8 gate — the contract as first written was wrong)*: **after** the deploy m8's `api.js` writes ONLY the child, so an unguarded overwrite would push **stale parent values over fresh child rows** — the same data loss pointed backwards, landing as wrong bank numbers in a CPA salary report. Overwrite only where the parent row is genuinely newer than the child row (both tables carry a `moddatetime`-maintained `updated_at`). **Full contract + the SQL shape: **THIS ROW.** 🔴 *גובר: המצביע ל-`module-8.md` §8.4 אינו מוביל עוד ל-SQL · 01/09/2026 · אודיט-סגירת מ8* — הבלוק שם נגרס אחרי ש-C2 בוצעה, לפי הוראת-הבלוק עצמו (שלב 3).** 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
 
 | ✅ ~~**N1b**~~ **DONE 27/08/2026 19:3X — the whole N1 package is closed.** 🔑 **`data_type='ARRAY'` across `public` now returns ZERO columns** — the one 1NF violation is gone. Regression after the drop: `smoke` exit 0, m4 suites **32/32**. *(Row struck rather than deleted: the C2-vs-N1b guard lesson below is the record.)* | ~~create + copy~~ → **what remains: `alter table hostesses drop column languages`** | **the m8+N1 branch is merged and its deploy is confirmed live** — `origin/main` still writes the column (`HostessFormDialog.jsx:222`) and reads it (`HostessViewCard.jsx:328`) | Same three beats as C2: **add + copy → deploy → drop**, with a **re-copy immediately before the drop** — 🔴 **including C2's `updated_at` guard on the conflict action**, for the same reason: once the new code writes only the child, an unguarded overwrite runs backwards. ⚠️ `languages` is **nullable** (unlike the bank columns), so the additive half needs no constraint relaxation — create, copy, drop later | `PROJECT_MASTER_sec7.md §7.87` · here |
 | **N2** | `customer_contacts` consolidation — `is_primary` on the child, then drop `contact_name`/`phone`/`email` from `customers` | m8 merged **and deployed** | Same pattern, **separate drop migration** from N1's. 🔴 **Its blast radius is ~4.6× N1's — see the measurement below; "one package" is true of the pattern, not of the size** | here |
@@ -463,6 +490,12 @@ buildable.
 anyone holding 'דיילות', because RLS is row-level) is still open. **m8 may not be reported as having
 closed ה19 before then**, and `micro_guides/module-8.md` §2.2's "✅ complete here" row for bank
 protection is false until it does.
+🔴 **גובר: C2 רצה — ה19 סגור · 27/08/2026 18:0X · ההכרעה והמדידה בשורת-`C2` של §9א למעלה
+(עוגן: `DONE 27/08/2026 18:0X`)** — *נוסף 01/09/2026 באודיט-סגירת מ8.* הפסקה שמעליה נשארת
+כלשונה כרשומה היסטורית, **והיא אינה מתארת את המצב היום:** נמדד חי — אפס משלוש עמודות-הבנק
+על `hostesses`, ו-26 שורות ב-`hostess_bank_details` מול 26 דיילות. ⇒ **שורת §2.2 של
+`micro_guides/module-8.md` נכונה**, ו-מ8 כן סגר את ה19. *(זה היה אתר שלישי של אותה טענה
+שהתיישנה — האחרים: `module-8.md` §8.4 ו-`docs/schema.sql` §29, שניהם תוקנו באותו יום.)*
 
 ## 10. Maintenance protocol (how this file stays alive)
 
@@ -482,6 +515,123 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
+- ✅ 01/09/2026 — **`H7` APPLIED after Ishay's typed echo** (`module8_h7_budget_deviation_excludes_bonus`). **Verified both directions:** body `md5` `5ad34019e87fb52c7a000c9c4d9d2708` (3,279) → `7fe0b63fb8bf7583d3eb9a6f9492cf9e` (3,652); `provolatile='s'` · `prosecdef=true` · **ACL unchanged** `{postgres=X/postgres,service_role=X/postgres}` (the `H5`→`H5b` mine did not recur — no `drop`). 🔬 **The red→green proof, same 250 bonus seeded on #12 in a rolled-back transaction:** **before** `labor_cost 520 · gross_profit −42.60 · budget_deviation **452.50**` → **after** `labor_cost 520 · gross_profit −42.60 · budget_deviation **202.50**` — **only the deviation moved, and it moved to the value it had before the bonus existed.** Anchors re-measured after apply and unchanged (#13 `3,650.00` / −692 · #12 `207.40` / 202.50); residue re-checked ⇒ **0** bonus rows in the DB.
+  *(`20260901233014_module8_h7_budget_deviation_excludes_bonus`.)* Found by the closing audit's
+  built-vs-approved-spec pass; **Ishay overrode the audit's own recommendation to defer it**
+  (*"מה התסביך אקליד מיגרציה הכל טוב עושים פעם אחת עבודה בצורה נכונה"*, 01/09).
+  **The defect:** `budget_deviation` compares `v_labor − (planned_hours × Σ rates)`, where
+  `v_labor = Σ(actual_hours × rate + personal_bonus)` — but **the planned side carries no bonus
+  term at all.** ⇒ a project where every hostess worked exactly to plan and was paid a bonus reads
+  as an overrun of exactly the bonus. ה18 defines the deviation without bonus on either side.
+  🔴 **The trap this migration exists to avoid, and it is the reason the naive fix is wrong:**
+  `v_labor` feeds **three** outputs — `labor_cost` (bonus belongs: real cost) · `gross_profit`
+  (bonus belongs: it reduces profit, **and this is the number `final_profit` freezes**) ·
+  `budget_deviation` (bonus pollutes). **Removing the bonus from `v_labor` would have moved the
+  gross profit and broken the acceptance anchor.** So a separate `v_labor_hours` was added for the
+  deviation's actual side only, and `v_labor` is untouched.
+  🔬 **Measured before writing, in a rolled-back transaction** (bonus 250 seeded on #12, current
+  function): `labor_cost` 270→**520** ✅ correct · `gross_profit` 207.40→**−42.60** ✅ correct ·
+  `budget_deviation` 202.50→**452.50** ❌ **grew by exactly the bonus while nobody worked longer**.
+  After `H7` the first two stay and the third returns to 202.50.
+  🔑 **Blast radius measured, not assumed: the live DB holds ZERO `assignments` rows with a
+  non-zero `personal_bonus`** ⇒ the change is a no-op on all existing data and **neither acceptance
+  anchor can move** (#13 `gross_profit` 3,650 · #12 207.40, both re-measured after the rollback and
+  unchanged). **It also means the live data can never demonstrate the fix** — the proof is the
+  rolling transaction, not a query.
+  🌍 **World anchor (Ishay asked for it explicitly):** standard cost accounting decomposes a labour
+  variance into **rate variance** and **efficiency variance**, precisely so the figure says *what to
+  act on*. A discretionary bonus is neither; folding it in makes a tile that means "someone worked
+  longer than planned" fire when nobody did. The bonus keeps appearing in `labor_cost` and
+  `gross_profit`, which is where a cost belongs.
+  🚫 **No `drop function`** — `create or replace` preserves the ACL (the `H5`→`H5b` mine). The
+  function is `service_role`-only and not browser-reachable; ACL to be re-measured after apply.
+
+- ✅ 28/08/2026 — **`H5` + `H5b` APPLIED** (typed echo for H5: `module8_h5_payout_anchor_for_manual_fee`).
+  **`H5`** adds a ninth return column, `payout_compensation` — what the team is actually paid in
+  the salary report — so the manual fee decision in `other` has a number to be a decision *about*.
+  Verified live, rolling back: `customer` team=payout=90.00 *(they agree, as designed)* ·
+  **`other` proposed_fee `null` but payout 90.00** · `force_majeure` 0.00/0.00.
+  🩸 **`H5b` — a security regression that `H5` itself created, caught by measuring rather than by
+  assuming, and fixed within minutes.** Adding a return column forced `drop function`, and the
+  recreated function was granted EXECUTE to **`anon`** by Supabase's `alter default privileges` —
+  which grant **by name**, so the `revoke … from public` written into H5 did not touch it.
+  📌 **The mine was written down in advance** (`supabase/migrations/CLAUDE.md`, measured 09/08/2026):
+  *"always write `revoke … from public, anon, authenticated` … and verify via `pg_proc.proacl`,
+  do not assume the revoke took"*. H5 obeyed the verify half and not the revoke half — which is
+  why it was caught at all. **ACL now `{postgres, authenticated, service_role}`.**
+  🔑 **Generalizable lesson: `drop function` RESETS the ACL.** Any migration that breaks a function
+  signature must (a) measure `proacl` before, (b) restore explicitly, **(c) measure again after** —
+  because the provider's defaults add roles you did not ask for.
+- ✅ 28/08/2026 — **`H6` APPLIED (typed echo given) — the missing permission gate on
+  `finance_cancellation_fee_proposal`.** *(`module8_h6_gate_fee_proposal_on_finance_permission`.)*
+  Found by measuring the whole m8 function family against `pg_proc` when Ishay asked whether the
+  money model was really verified. **Thirteen of fourteen are correct** — the six write actions all
+  gate through `finance_assert_writable`; the four client-facing readers/generators gate directly;
+  and `finance_project_money` / `finance_freeze_cancelled_profit` / `finance_assert_writable` are
+  **`service_role` only**, unreachable from the browser. **One is not:**
+  `finance_cancellation_fee_proposal` is `security definer`, executable by **any authenticated
+  user**, and carries **no gate at all** — since birth (`20260827150049`), not a regression.
+  🩸 **Why it matters beyond "extra data": it returns `goods_at_cost`.** §7.34 rules purchase cost
+  invisible to non-finance roles and `e2e/cost-visibility.spec.js` proves a recruitment manager gets
+  `[]` from `product_costs` — **this RPC hands the same figure through a different door.**
+  ⚠️ Not an anon exposure (that was H5b) and not a write path (the function is `stable`).
+  Fixed with one line, in the exact shape the module's other two readers already use.
+  ✅ **Verified live in the browser, both directions — this is the pair that makes it a proof
+  rather than an assertion:**
+  · **Finance manager** opens project #12's closing window: dialog renders, `closing-meta`
+    visible, `closing-server-error` count **0**. ⇒ **the gate broke nothing.**
+  · **Recruitment manager** (`blocked` on 'כספים') issues the *same* RPC with her own live session
+    token and the app's own apikey — both captured from real traffic, not guessed:
+    **HTTP 403 · `42501` · `"אין לך הרשאה לבצע פעולה זו במודול כספים"`.**
+  🔑 **And the first attempt at this proof FAILED honestly and is worth recording:** a guessed
+  apikey returned `401 Invalid API key`, which looks like a refusal but proves nothing — the call
+  never reached the function. **A negative result only counts when the request would otherwise
+  have succeeded.** The rerun asserts the apikey was captured before trusting the 403.
+  📌 **Permission matrix at the time of applying** (measured, `roles` × `permissions`):
+  `edit` on 'כספים' — מנכ"ל · מנהלת כספים ולקוחות. **`blocked` — מנהלת פרויקטים · מנהלת גיוס
+  ושיבוץ · מנהלת לוגיסטיקה.** ⇒ the gate now excludes exactly the three roles §7.34 intends.
+  ✅ **ACL re-measured after apply and unchanged** — `{postgres, authenticated, service_role}`,
+  no `anon`. *(The H5b mine does not recur here: `create or replace` without a signature change
+  keeps the ACL. Measured anyway, because that is the assumption H5 broke.)*
+- ✅ 28/08/2026 — **the four module-8 fix migrations `H1`–`H4`, each applied after its OWN typed
+  echo.** *(Registered here 28/08/2026; they were applied on 27–28/08 and this file lagged — a real
+  §10.1 miss, recorded rather than backdated.)*
+  - **`H1` — `module8_h1_finance_bucket_allow_xlsx`** *(27/08 ~23:2X)*. The `finance` bucket allowed
+    pdf/jpeg/png only, so **the salary xlsx could never be stored at all** — the file the whole P4
+    process exists to produce. ⇒ `allowed_mime_types` gained
+    `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`. **`docs/schema.sql` §26 was
+    NOT re-synced at the time and still described the old set — caught and fixed 28/08.**
+  - **`H2` — `module8_h2_fix_cancellation_band_72h`** *(27/08 ~23:2X)*. ה24 rules **>72 = 0% ·
+    24–72 = 50%**, so exactly 72.0h sits **inside** the 50% band; `finance_cancellation_fee_proposal`
+    used `>=` and paid 0%. One character: `>=` ⇒ `>`.
+  - **`H3` — `module8_h3_fix_salary_cancellation_band_72h`** *(28/08 ~01:2X)*. 🔴 **The same defect,
+    second home — and my own H2 was half a fix.** `generate_salary_report` carried the identical
+    `>=`, and it is the graver one: the proposal is a number on a screen a human can correct, while
+    the salary report **pays hostesses and signs the rows permanently**. Found by the phase-4 panel,
+    not by me; `_shared/discipline.md` requires checking where else a defect lives, and I had not.
+  - **`H4` — `module8_h4_rule25_other_no_auto_proposal`** *(28/08 ~10:2X)*. ה25 rules
+    *"`other` ⇒ no automatic proposal"* and **the function never built that branch** — `other` fell
+    through the same hour thresholds as `customer`. **Measured live before and after, in a
+    self-rolling-back transaction on #11 at 48h before the event** *(zero permanent rows — #11 came
+    out `ready` with `cancelled_at IS NULL` both times)*:
+    | `cancel_type` | before H4 | after H4 |
+    |---|---|---|
+    | `customer` | 50% · 90.00 | 50% · 90.00 *(unchanged)* |
+    | **`other`** | **50% · 90.00** 🔴 | **null · null** ✅ |
+    | `force_majeure` | 0% · 0.00 | 0% · 0.00 *(unchanged)* |
+    🔑 **What H4 deliberately does NOT suppress:** `goods_at_price` · `goods_at_cost` ·
+    `planned_hours` · `compensated_count` · `hours_before_event` all still return. Ordered goods are
+    a fact; what is withheld is the **proposal**, not the data.
+    ⚠️ **Forward notice (§10.2) — a divergence this creates, and it is intentional but must be
+    known:** `generate_salary_report` branches on `force_majeure` **only** (measured 28/08), so a
+    project cancelled as `other` **still pays its hostesses** the scale compensation while the
+    customer-facing fee now has no suggested number. **That gap IS the manager's decision** — and it
+    means the payout figure is the natural anchor for it. **Open item for m8's 🎨 gate / a possible
+    `H5`:** surface that payout figure on S2 as a labelled reference, so "her judgement" has a
+    number to be a judgement *about*. Not built; Ishay's ruling.
+    **Post-apply verification, quoted:** `prosrc like '%when v_cancel_type = ''other'' then null%'`
+    ⇒ **true** · `provolatile='s'` ⇒ **true** · `prosecdef` ⇒ **true** · new `md5(prosrc)` =
+    `a8ad0c1765be015d6ca69b42bff172d6`, length 3,270 *(was `8e54ca8aa56ee94cad16300734343e5e`/2,908)*.
 - ✅ 27/08/2026 19:3X — **`N1b` APPLIED — THE NORMALIZATION IS COMPLETE** (typed-echo:
   `module8_n1b_drop_hostesses_languages`).
   **Verified after apply:** `hostesses.languages` gone (**0**) · 33 child rows across 20 hostesses ·

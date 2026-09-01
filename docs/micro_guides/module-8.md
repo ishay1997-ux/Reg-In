@@ -9,11 +9,11 @@
 | | |
 |---|---|
 | **Module** | 8 — כספים וסגירת אירוע (Finance & event closing) |
-| **Branch** | `ishay/module-8-finance` — ✅ **CUT 27/08/2026 12:4X from fresh `origin/dev` (`585ad27`)**, at step 1.0. Preconditions verified the same turn: m5 IS merged (`git merge-base --is-ancestor origin/ishay/module-5-logistics origin/dev` ⇒ yes; `git log origin/dev..origin/ishay/module-5-logistics` ⇒ empty), and `origin/dev` NOW carries `docs/specs/module_08_finance/` (`git ls-tree origin/dev docs/specs/` ⇒ 04/05/06/**08**). Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ empty (fresh, not dead — iron rule 10's caveat). *(Was: "NOT YET CUT", 26/08.)* |
+| **Branch** | `ishay/module-8-phase-2` — ✅ **CUT `27/08/2026 19:5X` from fresh `origin/dev` (`ed353bc`)**, after phase 1 shipped to production. Fresh-branch discriminator at cut: `git log origin/dev..HEAD` ⇒ **empty** *(fresh, NOT merged-and-dead — iron rule 10's caveat)*. 🧹 **Seven merged branches were deleted the same minute** (remote + local), SHAs recorded in `CLAUDE_CODE_LOG` before deletion: `module-8-finance` `e41be2b` · `module-8-c2-and-n1` `3593bf9` · `module-8-n1b` `5e0bf45` · `fix-flaky-checklist-focus` `c3b2eaf` · `module-5-logistics` `3822a47` · `post-merge-m5-flip` `89f830b` · `reconcile-main-into-dev` `8e63da9`. **Remote now holds `dev` and `main` only.** ⏱️ *(נכון לרגע הכתיבה, `27/08 20:0X`. **התיישן באותו לילה:** חמישה ענפי-`dependabot/*` אוטומטיים נוצרו `28/08 01:5X`. נתפס באודיט-התיעוד 28/08 — **הטענה לא הייתה שגויה, היא פשוט לא נושאת חותמת**, וקורא עתידי היה מסיק שמישהו יצר ענפים בניגוד לכלל 10.)* *(Was: `ishay/module-8-finance`, cut 12:4X from `585ad27` — merged to production 17:4X and deleted.)* |
 | **Owner** | Ishay (sole developer) |
-| **Status** | 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X.** ✅ **PHASE 1 COMPLETE 27/08/2026 16:5X — all ten migrations applied and verified, and the 1.8 gate passed.** *(This row read "Zero migrations applied" until the gate; corrected there.)* |
-| **Last updated** | `27/08/2026 16:5X` *(system clock)* |
-| **Active step** | 🎉 **PHASE 1 IS DONE — 1.8 gate PASSED `27/08/2026 16:5X`.** All ten migrations applied and verified (A · B · C · D · E1 · E2 · E3 · E3-fix · F · G); **the full battery is green, each suite reported separately: `gate` exit 0 (1,446 unit / 56 files) · `test:e2e` 143 passed / 6 skipped / 0 failed · `smoke` exit 0 · browser walkthrough of the 3 production surfaces with 0 console errors.** All three currently-reachable hand anchors are produced by the code itself: profit **3,650.00** · cancellation fee **3,508.00** · salary line **292.60** *(the fourth, the 69% display, is derived in the UI — phase 3)*. ➡️ **NEXT IS ISHAY'S, NOT A BUILD STEP: PR → merge to `dev` → promote to `main` → confirm the deploy is live.** 🔴 **THEN C2 — and only then is ה19 closed** (§8.4 carries the corrected contract; `db_roadmap` §9א, with N1/N2). **Step 2.0 does not start before that**, because C2 is the thing that stops being possible if it is forgotten. 🔴 Ishay ruled 27/08: merge to production today, run C2 today. 🔄 Seed refresh tomorrow morning (28/08) before the interim presentation. |
+| **Status** | 🔒 **Closed — awaiting PR/merge · `02/09/2026 00:1X`.** Verdict **[YES]** after Ishay's typed echo (`מודול 8 DoD`). **The close ran as audit → one fix round → re-verification.** ✅ `npm run gate` **exit 0 · 1,819 tests / 65 files** (audit start: 1,786) · `npm run smoke` **exit 0** · m8 E2E **8/8** · `H7` applied and verified both directions · 3 of 4 acceptance anchors re-derived live. **All four blockers closed:** the `browserslist` CVE (lockfile bump, clears 5 standing exemptions too) · the empty `getBillingContact` catch · A-10 per-tab sorting · the balance block before archive. ⚠️ **Named, not hidden: the full E2E suite is 151 passed / 3 failed / 6 skipped.** The three are **byte-identical to the three the audit found BEFORE the fix round** — one m5 data precondition (no queued project holds an `ordered`/`ready` logistics row, because m8's own demo journey cancelled #15 and the 02:00 cron moves the rest). **Zero are m8 code, zero are new, and E2E does not run in CI.** Remedy = the standing demo-morning seed refresh. *(Previously:)* 🛑 **Closed-audit `01/09/2026 23:0X` — NOT mergeable yet: 4 open items, 3 of them Ishay's ruling.** The audit ran in a fresh session on `a2e2064`. **Everything measurable is green**: `npm run gate` **exit 0** (1,786/65) · `npm run smoke` **exit 0** (the module's first clean smoke run) · m8 E2E **8/8** · advisors carry nothing new-and-unexplained · 3 of the 4 acceptance anchors re-derived live. **One fix round ran (§6b)** and closed 2 real defects + the doc drift. 🔴 **What blocks: (1) the `browserslist` CVE turns CI red on this HEAD** — the repair is an uncommitted `package-lock.json` bump already in the tree, Ishay's call to include · **(2) `getBillingContact`'s empty catch reports a read failure as "the customer has no billing email" and blocks the invoice send** — needs a new sentence, so his · **(3) approved ruling A-10 (per-tab default sort) was never built** — `order by p.project_id` is the only sort in the path · **(4) the balance block renders only AFTER archiving**, so profit is frozen unseen, against P3's stated order. **Findings file kept in place: `docs/archive/close-findings-module-8.md`.** *(Previously:)* 📘 **BLUEPRINT APPROVED — Ishay, `26/08/2026 22:43`** (*"מבחינתי אחרי הבדיקה הזו יש אישור"*, after the migrations-impact check; Q-1…Q-5 ruled 22:40 — *"מאשר את חמשתן לפי ההמלצות"*; N-1…N-6 approved within the same word — each reopenable without ceremony). Discovery CLOSED 26/08/2026. 🖥️ **BUILD OPENED 27/08/2026 12:4X.** ✅ **PHASE 1 COMPLETE 27/08/2026 16:5X — all ten migrations applied and verified, and the 1.8 gate passed.** *(This row read "Zero migrations applied" until the gate; corrected there.)* |
+| **Last updated** | `02/09/2026 00:1X` *(system clock — closing audit, verdict [YES])* |
+| **Active step** | 🛑 **5.2 — אודיט-הסגירה רץ `01/09/2026` וחזר [NO]. ארבעה פריטים פתוחים, שלושה מהם הכרעת-ישי.** ‏`3.6` (ה-🎨) **אושר `28/08 11:2X`** — הוא כבר אינו חוסם, וגם `4.3`/`4.5`/`5.1` סגורים. ‏**מה שהאודיט סגר בעצמו בסבב-התיקון:** תג-השליחה שהכריז "נשלח" על מייל שנכשל · הבאנר שנקב בנמען הלא-נכון · בדיקת-E2E תלוית-תאריך · ובדיקה קיימת ש**נעלה את הבאג עצמו** · ואדוות-התיעוד של `C2`/ה19 בשלושה קבצים. ‏**מה שנשאר, ובסדר הזה: (1)** ה-CVE ב-`browserslist` שמאדים CI — התיקון כבר בעץ כ-`package-lock.json` לא-מקומט · **(2)** ה-catch הריק ב-`getBillingContact` · **(3)** ‏A-10, מיון-ברירת-מחדל פר-לשונית, שלא נבנה · **(4)** גוש-המאזן שמופיע רק אחרי הארכוב. **הפרטים המלאים — `close-findings-module-8.md` ו-§10 של `01/09`.** *(הקודם:)* ⏸️ **3.6 — ה-🎨 של ישי, וזה הפריט היחיד שחוסם.** הוגש לו `28/08 11:1X` כדף-סקירה אחד עם שמונה צילומים חיים ורשימת הפקדים-הלא-מצוירים. ✅ **הכול מאחוריו סגור:** פזות 2·3·4 · מעבר-UX · `H1`–`H6` הוחלו ואומתו · **5.1 — שלושת המסעות בוצעו** *(#12 מקצה-לקצה · דוח-שכר אוגוסט 292.60 · ביטול #15 דרך המסך)*. **סוויטה 1,776 / 65 exit 0.** ⏭️ **אחריו: 4.3 · 4.5 · 5.2 (`module-close` בסשן טרי).** 🔴 **ותיקון-תברואה שנעשה כאן:** התא הזה נערם היום שבע פעמים בהוספות-בראש ונעשה בלתי-קריא. הנרטיב המלא חי ב-§10 המתוארך, שהוא ממילא המקום שלו. *(הקודם:)* 🔵 **`H5` נכתבה `28/08 10:0X` וממתינה להקלדה** — עוגן-התשלום בסיווג "אחר". *(הקודם:)* ✅ **`H4` הוחלה ואומתה `28/08 10:2X`** — ה25 סגור גם במסד. ⏸️ **ופתוח: `H5`** — הצגת סכום-התשלום-לדיילות כעוגן להחלטת-המנהלת ב-`other`. *(הקודם:)* ✅ **`28/08 10:0X` — ה25 נסגר בצד-המסך · הנמען בהיסטוריה מגיע מהיומן · מסע ② כוסה בעסקה מתגלגלת** *(סוויטה **1,772 / 65 exit 0**)*. *(הקודם:)* 🔄 **‏Q-2 נהפכה `28/08 09:1X` בהכרעת-ישי — ההיסטוריה עברה אל תוך דיאלוג דוח-השכר** *(סוויטה **1,767 / 65 exit 0**; אומת חי בדפדפן)*. *(הקודם:)* ✅ **‏5.1 — מסעות ① ו-③ בוצעו ואומתו חי `28/08 07:15–08:35`** *(‏#12 מקצה-לקצה, `final_profit` 207.40 קפוא · דוח-שכר אוגוסט **292.60** = עוגן-האפיון)*; **② ממתין להנהון-ישי** (דורש לבטל פרויקט). *(הקודם:)* ✅ **פזה 4 הושלמה `28/08/2026 02:2X`** (4.0–4.2 · 4.4), ➕ **מעבר-UX ומקרי-קצה הושלם `28/08 08:0X`** בבקשת-ישי — ‏8 סוכנים, 0 שגיאות, **סוויטה 1,765 / 65 exit 0** (מ-1,697/64 ⇒ **+68, אפס רגרסיות**). 🔴 **ו-`npm run deadcode` נכשל על `HEAD` — שלב חוסם ב-CI; תוקן היום.** ⏸️ **מה שנשאר, ובסדר הזה: ‏3.6 (ה-🎨 של ישי) · ‏4.3 (אדוות-תיעוד + הפיכות §7.52/§7.68 — שלו) · ‏4.5 · ‏5.1 (מסעות חיים; דוח-השכר הוחזק בכוונה כדי שישי יציג אוגוסט בכנס) · ‏5.2 (`module-close` בסשן טרי). ‏🔴 ופתוח להכרעתו: ה25 — ‏`cancel_type='other'` אמור להיות בלי הצעה אוטומטית, והמסד בונה לו את הסולם המלא (מיגרציה).** *(הקודם:)* **3.6 — the 🎨 gate, which is Ishay's single consolidated review. ✅ PHASE 3 COMPLETE `28/08/2026 00:2X`: all four surfaces + the route swap, suite `1,697 / 64 exit 0` (was 1,572/59 ⇒ **+125, zero regressions**), `npm run gate` **exit 0**.** Built by a 12-agent workflow (3 leaf surfaces ‖ → S1 → routes → 3 adversarial lenses → 4 fixers; 0 errors, 3.28M tokens, ~2h). **The panel raised 16 findings; the mechanical lens returned ZERO in both phases; the fixers — who were explicitly allowed to reject — refuted NONE, though they rejected three suggested FIXES** (one would have destroyed the recorded anchor `292.60`, one would have printed `בוטל ע"י הלקוח ביטל`, one contradicted a recorded ruling). ⏸️ **Awaiting Ishay: the 🎨 review, the 17 undrawn S2 controls, the S3-preview product question, and the two unapplied migrations.** *(Previously: 3.1/3.5 in flight; before that 3.0 — the Phase-3 door.)* **✅ PHASE 2 COMPLETE `27/08/2026 22:1X`: six new files, 117 new tests, suite 1,572/59 exit 0, `gate` exit 0, zero regressions.** Built by a 9-agent workflow (3 builders · 3 adversarial lenses · 3 fixers, 0 errors, 2.06M tokens, 64 min) and then re-verified independently by the orchestrator. 🔴 **Two REAL defects in already-shipped Phase-1 work were found by the lenses and are NOT fixed — both need Ishay's typed echo and both are recorded in §10 under `27/08 22:1X`: (a) the `finance` bucket rejects xlsx ⇒ the salary file can never be stored; (b) the cancellation-fee band pays 0% instead of 50% at exactly 72.0h.** ⏸️ Neither was applied — the 28/08 interim presentation runs on this same Supabase project. *(Previous: `2.1`. Door 2.0 closed `27/08/2026 20:45`* (baseline re-measured **1,454 tests / 56 files, exit 0** — identical to hand-off; ledger sweep found **nothing new for Ishay**: Q-1…Q-5 ruled 26/08 22:40, N-1…N-6 approved 26/08 22:43, A-1…A-10 recorded — but **two measured findings did land, both in §10 under `27/08/2026 20:4X`**: step 2.1's function list is superseded by what Phase 1 actually built, and two of the four acceptance anchors do not reproduce from a plain read of the live DB). 🎉 **PHASE 1 IS DONE AND IN PRODUCTION**, and so is every debt it created. **Shipped 27/08/2026:** ten migrations (A–G) · the 1.8 gate · **`C2` — ה19 CLOSED** (the three bank columns are gone; bank details live only in `hostess_bank_details`) · **`N1`+`N1b` — the languages normalization COMPLETE** *(🔑 `data_type='ARRAY'` across `public` now returns **zero** columns — the single 1NF violation is gone)* · plus a flaky m5 test fixed with proof. **Production is `c1a3306`, deploy verified by fetching the live bundle and asserting its contents** — not by trusting the pipeline's word. **Battery at hand-off: `gate` exit 0 / 1,454 tests · `smoke` exit 0 · m4 suites 32/32.** ⏸️ **ONE debt remains and it is NOT m8's to build: `N2`** (`customer_contacts` consolidation — 46 occurrences / 16 production files across `src/lib` and modules 2·3·6, **plus a screen**). **Ishay approved it 27/08; the measured recommendation is a fresh branch AFTER the 28/08 interim presentation**, because it runs through the quote→project→email chain. Registered in `db_roadmap` §9א · `PROJECT_MASTER §6` · the session-start banner. 🔄 **Seed refresh 28/08 morning, before the presentation.** |
 | **Deadline** | conference **01/10** (target: 100%) · end 20/10. m8 is the last *process* module before reports — the conference's "closing the loop" story leans on it. |
 
 **Legend:** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file · 🔮 future checkpoint · 🗡️ DB Design Challenge
@@ -30,26 +30,47 @@
 | **1.6** | Migration F — public feedback RPC pair `/feedback/:token` + rate limit | ✅ |
 | **1.7** | Migration G — `cancel_project` extension (live-body pull) + params seeds | ✅ |
 | **1.8** | 🔻👤 Phase-1 gate — advisors · schema.sql regen · db_roadmap §10 · commit | ✅ |
-| **1.9** | 👤 **Ishay: merge [PR #68](https://github.com/ishay1997-ux/Reg-In/pull/68) → promote `main` → confirm deploy live** → **then C2** (ה19 closes only here). **PR opened `27/08/2026 17:0X`, branch pushed at `fd49f9c`; all 5 checks PASS** — Lint·Test·Build 1m16s · Deno type-check · gitleaks · **Vercel preview deployment completed** · Vercel comments. *(Checked with `gh pr checks`/`gh run watch` on the run itself — not `--watch` on the queue, which reports green while still queued: the 12/08 mine.)* | 🔨 |
-| **2.0** | Phase-2 door — ledger sweep *(does not start before 1.9)* | ⬜ |
-| **2.1** | `src/lib/projectFinance.js` — revenue/cost/profit/fee/deviation/overdue SSOT + tests vs hand anchors ⚠️ shared-surface | ⬜ |
-| **2.2** | `src/lib/salaryReport.js` — aggregation model + line building + xlsx assembly + tests ⚠️ shared-surface | ⬜ |
-| **2.3** | `src/modules/08_finance/api.js` — reads, RPC calls, mail sends + tests | ⬜ |
-| **2.4** | 🔻👤 Phase-2 gate — full unit suite + anchors reproduced | ⬜ |
-| **3.0** | Phase-3 door — shared-component checkpoint + OPEN-item sweep | ⬜ |
-| **3.1** | S1 — `/finance` overview page (🗣️ brief → build → verify) | ⬜ |
-| **3.2** | S2 — closing-window dialog, 3 states (🗣️ brief → build → verify) | ⬜ |
-| **3.3** | S3 — salary-report dialog + history (🗣️ brief → build → verify) | ⬜ |
-| **3.4** | S4 — public feedback page `/feedback/:token` (🗣️ brief → build → verify) | ⬜ |
-| **3.5** | Route + nav registration ⚠️ shared-surface | ⬜ |
-| **3.6** | 🔻👤 Phase-3 gate — 🎨 UX & functional review | ⬜ |
-| **4.1** | M6 ripple — survey-link → token URL (mint-before-send) ⚠️ shared-surface | ⬜ |
-| **4.2** | M2 ripple — customer metrics filters + "סכום" column (RC-6) ⚠️ shared-surface | ⬜ |
-| **4.3** | Doc ripples — §6 debt consumption · registers · ripple sweep | ⬜ |
-| **4.4** | E2E + smoke + accessibility for the 4 surfaces; full regression | ⬜ |
-| **4.5** | 🔻👤 Phase-4 gate | ⬜ |
-| **5.1** | Live acceptance journeys on real data (credentialed; mails land in Ishay's inbox) | ⬜ |
-| **5.2** | 🔻👤 Closing audit — `module-close` in a FRESH session | ⬜ |
+| **1.9** | 👤 **Ishay: merge → promote → deploy → then the drops.** ✅ **ALL DONE 27/08/2026.** PR [#68](https://github.com/ishay1997-ux/Reg-In/pull/68)→`dev`, [#69](https://github.com/ishay1997-ux/Reg-In/pull/69)→`main` ⇒ **`C2` applied 18:0X, ה19 CLOSED**. Then [#70](https://github.com/ishay1997-ux/Reg-In/pull/70)/[#71](https://github.com/ishay1997-ux/Reg-In/pull/71) ⇒ **`N1` + rewire**, and [#73](https://github.com/ishay1997-ux/Reg-In/pull/73)/[#74](https://github.com/ishay1997-ux/Reg-In/pull/74) ⇒ **`N1b`, normalization complete**. Production **`c1a3306`**, live bundle asserted. *(Also merged on the way: [#72](https://github.com/ishay1997-ux/Reg-In/pull/72) — the flaky m5 test.)* | ✅ |
+| **2.0** | Phase-2 door — ledger sweep | ✅ *(`27/08 20:45`; findings → §10)* |
+| **2.1** | `src/lib/projectFinance.js` — display derivations + shape guards + tests vs hand anchors ⚠️ shared-surface | ✅ *(38 tests)* |
+| **2.2** | `src/lib/salaryReport.js` — aggregation model + line building + xlsx assembly + tests ⚠️ shared-surface | ✅ *(30 tests)* |
+| **2.3** | `src/modules/08_finance/api.js` — reads, RPC calls, mail sends + tests | ✅ *(49 tests)* |
+| **2.4** | 🔻👤 Phase-2 gate — full unit suite + anchors reproduced | ✅ *(`27/08 22:1X` — suite **1,572/59 exit 0** vs baseline 1,454/56, **zero regressions** · `npm run gate` **exit 0** · orchestrator cross-check 8/8 · sign-flip mutation reddened **7** tests across two files, file restored byte-identical)* |
+| **3.0** | Phase-3 door — shared-component checkpoint + OPEN-item sweep | ✅ *(`27/08 22:1X` — done serially by the orchestrator: `StatusTag` `danger` tone added, `RatingStars` confirmed present, `assertFinanceShape` call-site rule ruled)* |
+| **3.1** | S1 — `/finance` overview page | ✅ *(38 tests)* |
+| **3.2** | S2 — closing-window dialog, **4 states** (Q-1 added the fourth) | ✅ *(49 tests; **17 undrawn controls declared** — see §10)* |
+| **3.3** | S3 — salary-report dialog + history | ✅ *(20 tests)* |
+| **3.4** | S4 — public feedback page `/feedback/:token` | ✅ *(9 tests)* |
+| **3.5** | Route + nav registration ⚠️ shared-surface | ✅ *(`App.jsx` swap + the public route)* |
+| **3.6** | 🔻👤 Phase-3 🎨 gate — UX & functional review **with Ishay** | ✅ **APPROVED `28/08/2026 11:2X`** — *"מאשר את המסכים"*, on a single review page carrying eight live screenshots + the undrawn-controls list |
+| **4.0** | S3 preview state (Ishay-approved `28/08 00:3X`) + S2 footer layout fix | ✅ |
+| **4.1** | M6 ripple — survey-link → token URL (mint-before-send) ⚠️ shared-surface | ✅ *(cross-ref logged in `module-6.md` §10)* |
+| **4.2** | M2 ripple — customer metrics filters + "סכום" column (RC-6) ⚠️ shared-surface | ✅ *(cross-ref logged in `module-2.md` §9, incl. the deliberately-reversed privacy comment)* |
+| **4.3** | Doc ripples — §6 debt consumption · registers · ripple sweep | ✅ `28/08 11:4X` *(three §6 debts marked paid **against measurement**; one left open — bank-structure validation was never built. §7.52/§7.68 flips remain Ishay's per rule 13(ו))* |
+| **4.4** | E2E + smoke + accessibility for the 4 surfaces; full regression | ✅ *(`e2e/finance.spec.js` + `e2e/public-feedback.spec.js` written)* |
+| **4.4ב** | 🆕 UX pass + edge-case sweep across the four surfaces — **Ishay's explicit ask `28/08 ~07:2X`** | ✅ *(8-agent run `wf_8da1e480-df9`; 4 lenses → 4 fixers; suite **1,765 / 65 exit 0**)* |
+| **4.5** | 🔻👤 Phase-4 gate | ✅ **PASSED `28/08/2026 13:2X` — `npm run gate` exit 0, the first fully-green gate of the day.** `1,783 / 65` · build ✓ · dup 22 clones · knip 0 · audit ✓ · bidi ✓ · **`check:context` ✓ (`עץ ה-CLAUDE.md שלם`)** · docs-structure 66/0 |
+| **5.1** | Live acceptance journeys on real data (credentialed; mails land in Ishay's inbox) | ✅ **3 of 3 run** *(the fee-resolution write is the one deliberate remainder)* |
+| ↳ ① | **#12 end-to-end** — invoice→mail→payment→public feedback→archive→frozen profit | ✅ `28/08 07:15–07:19` *(live DB: `final_profit` **207.40**, `feedback_score` 5, `archived_at` 07:19, **token dead**; invoice mail `sent` to Ishay's inbox — he confirmed it arrived)* |
+| ↳ ② | **Cancellation fee** — cancel a demo project through m6, resolve the three components | ✅ `28/08 11:0X` *(nod given. #15 cancelled through m6's real screen — 1 hostess released, row landed in "awaiting invoice" flagged; fee = 0 team + **1,225 goods**. **Resolving the fee itself still pending** — it freezes profit irreversibly)* |
+| ↳ ③ | **Salary report** — generate · xlsx · mail · double-generation blocked · history + download | ✅ `28/08 08:35` *(report **13**, אוגוסט 2026, total **292.60** = the spec anchor; 1 line signed; xlsx downloaded and its cells read; second generation blocked)* |
+| **5.2** | 🔻👤 Closing audit — `module-close` in a FRESH session | ✅ **[YES] `02/09/2026 00:1X`** — typed echo given; one fix round closed all four blockers |
+
+> 🗣️ **Approval model for phase 3, changed by Ishay `27/08/2026 ~21:0X`:** the per-unit 🗣️ gate is
+> **consolidated into ONE review at the end**, on the built screens, in his words — *"אני יאשר בסוף
+> את המסכים פעם אחת אחרי שאראה את כולם"*. ⚠️ **This overrides his own Q-1 note that S2's added
+> controls would each get a small mockup before code** — put to him explicitly with both sides
+> quoted (`27/08 ~21:3X`), and he ruled: build them, and **mark every undrawn control when you
+> present the screen**. Each surface agent therefore returns a structured `undrawn_controls` list,
+> which is what he will be shown at review. *(Recorded here because a future session reading the
+> Q-1 row alone would conclude the gate was skipped.)*
+
+> 🗣️ **Ishay delegated the survey ruling to Claude, `28/08/2026 ~01:0X`** — *"תציג את האפשרויות
+> ותחליט בעצמך עם סיבה וזהו… תנסה להקל עלי ולא להוסיף לי עבודה"*. ⇒ **the A/B/C question does NOT
+> go back to him as a question.** The morning report presents the options, the decision, and the
+> reason; he overrides if he disagrees. **The condition he attached is the real instruction —**
+> *"כל עוד באמת ביררת ושקלת אפשרויות"* — so the ruling is only legitimate once the dispatched
+> research returns and its sources are read, not summarised.
 
 ---
 
@@ -1264,10 +1285,73 @@ it already names `תנאי_תשלום_ימים` default 30, exactly what G seede
 
 ### Phase 2 — Business logic
 
+> 🔑 **READ THIS BEFORE STEP 2.1 — the DB layer already exists, and phase 2 CONSUMES it.**
+> *(Moved here 27/08/2026 from the ⑥2 paste-block, per iron rule 15: knowledge still true in a
+> month belongs in the guide; only freshness stamps belong in a prompt. The block had grown to
+> ~85 lines against a house pattern of 21–25 — and module 4's own ⑥2 records that rules parked in
+> a paste-block **contradicted the skill within nine hours**. Ishay caught the same drift here.)*
+>
+> **🔴 Do not re-derive the money formulas in JavaScript.** `finance_project_money` is the single
+> calculator, and it is **internal** (`service_role` only) precisely so no screen can bypass it.
+> Two screens computing their own profit for the same project is the failure it exists to prevent
+> (F16/R1-4). Phase 2's job is to **call, shape and test** — not to reimplement.
+>
+> **Client-callable (14):** `get_finance_overview` · `get_project_finance_detail` ·
+> `finance_cancellation_fee_proposal` · `record_invoice_sent` · `record_payment` · `record_feedback` ·
+> `record_write_off` · `resolve_cancellation_fee` · `archive_project` · `generate_salary_report` ·
+> `finalize_salary_report` · `mint_feedback_token` · `get_feedback_page` · `submit_feedback`.
+> **Internal — never from the client (4):** `finance_project_money` · `finance_assert_writable` ·
+> `finance_freeze_cancelled_profit` · `feedback_rate_limit`.
+> *(Names read from `pg_proc` on 27/08/2026, not from memory. **Return shapes live in the E1/E2/E3/F
+> migration headers** — read them there; this guide deliberately does not copy them, because a
+> copied contract goes stale and its reader never knows.)*
+>
+> **🔑 Three of the four hand anchors are already produced by the database itself** (verified
+> 27/08): profit #13 **3,650.00** · cancellation fee #14 **3,508.00** · Efrat's salary line
+> **292.60**. ⇒ **If your JS disagrees with them, the JS is wrong** — they are no longer only
+> paper numbers. *(The fourth, the 69% display, is derived in the UI and lands in phase 3.)*
+>
+> ⚠️ **`deriveProfitability` (m3's "רווח הצעה") is a DIFFERENT entity — do not import, do not
+> merge** (R1-4).
+>
+> 🔴 **And the trap that will bite a verification query, not just production code:** the finance
+> manager is RLS-blocked on 'לוגיסטיקה' and 'דיילות', and a blocked read returns
+> `{data: null, error: null}` — **"no permission" is byte-identical to "no rows"**. Measured
+> 27/08: the same query returned **1** as `postgres` and **0** impersonating her. It lies in the
+> reassuring direction, so an empty result is a reason to suspect RLS before suspecting the UI.
+
 **Step 2.0 · 🔻🤖 Phase door** — sweep §3.4/§3.5 items anchored here (N-1 subjects needed by 2.3);
 re-read the return-shape contracts from 1.5's migration headers.
 
 **Step 2.1 · `src/lib/projectFinance.js` + tests** ⚠️ shared-surface (new file in shared lib)
+
+> 🔴 **↳ SCOPE CORRECTED `27/08/2026 20:45` at the 2.0 door — read this before the list below, which
+> was written 26/08 (blueprint) and is now partly superseded by what Phase 1 actually shipped on 27/08.**
+> **The measurement:** `finance_project_money` — read live from `pg_proc` and from its own migration
+> header (`20260827144459_…_finance_money_ssot_and_readers.sql`) — **already computes revenue ·
+> goods_cost · labor_cost · travel_cost · gross_profit · budget_deviation · planned_hours**, and
+> `finance_cancellation_fee_proposal` already computes the fee's three components. That migration's
+> own header states the division of labour in writing: *"מחזיר **עובדות**; הגזירות לתצוגה
+> (מועד-פירעון, ימי-איחור, %, תגית-ציון) חיות ב-`src/lib/projectFinance.js`"*.
+> ⇒ **`deriveRevenue` / `deriveGoodsCost` / `deriveLaborCost` / `deriveTravelCost` /
+> `deriveBudgetDeviation` / `deriveCancellationFee` are NOT re-implemented in JS.** Building them
+> would create the second profit number F16/R1-4 exist to forbid — and the phase preamble above
+> already says so; only this step's own list had not been updated to match.
+> **What 2.1 genuinely owns (all of it invisible to the DB):**
+> `deriveDaysOverdue(invoiceSentAt, termsDays, today)` · `deriveExpectedProfit` — **and its formula
+> is `gross_profit + budget_deviation`**, because the DB's `gross_profit` uses ACTUAL labor while
+> ה27's expected uses PLANNED, and `budget_deviation = actual_labor − planned_labor` is exactly that
+> difference (verified live 27/08 against all three hand anchors: #13 `3650 + (−692) = 2,958.00` ·
+> #15 `3635 + (−164) = 3,471.00` · #12 `207.40 + 202.50 = 409.90`) · `scoreTag(score)` (ה16) ·
+> percent display incl. the zero-denominator ⇒ `—` rule · the `—`-vs-`0` discipline · fail-loud
+> shape guards (R4-F9) · **and a null `budget_deviation` (T7) must propagate to a null expected
+> profit — never to `gross_profit` alone**, or a project with no final hours silently reports the
+> actual-labor number as its forecast.
+> 🔑 **The anchor tests do not shrink** — they now assert that the JS agrees with numbers the DB
+> already produces, which is a STRONGER oracle than a JS-only test, not a weaker one.
+> *(`הכרעתי, הפיך` — technical execution with no product-visible meaning; disclosed to Ishay in the
+> same message, overridable.)*
+
 **What to do:** pure functions, no Supabase: `deriveRevenue(quoteTotals, changes)` (ה2) ·
 `deriveGoodsCost(lines, changes)` (ה17/ה26) · `deriveLaborCost(assignments)` (§7.19) ·
 `deriveTravelCost(param, shiftCount)` · `deriveExpectedProfit(...)` (ה27 incl. "טרם שובצו" marker) ·
@@ -1506,15 +1590,15 @@ re-verification → DoD typed-echo → PR instructions + 🧩 browser prompt (ir
 
 | Test type | Planned | As-run (closing audit fills) |
 |---|---|---|
-| Unit | `projectFinance` (anchors!) · `salaryReport` · `api.js` · ripple suites (m2/m6) | |
-| Integration | RPC round-trips under impersonation (rolled-back), incl. negative gates | |
-| E2E | `finance.spec.js` · `public-feedback.spec.js` · smoke anchors | |
-| Regression | full four-name run vs baseline · R4-F15 status test · m3 quote screens after ה30 · m4 form after bank split | |
-| UAT | Ishay drives journey 1 himself at the 🎨/closing gate (his stop) | |
-| Security/Pen | RLS matrix on 4 new/changed tables (positive control first) · anon exposure pair on the public RPCs · rate-limit proof · token-death proof | |
-| Performance | N/A at this scale — S1 reads ≤ dozens of rows; note only if the overview reader exceeds 1s | |
-| Usability | the 🎨 gate (3.6) + closing UX audit | |
-| Compatibility | Chromium (house config); cross-browser = M12 | |
+| Unit | `projectFinance` (anchors!) · `salaryReport` · `api.js` · ripple suites (m2/m6) |  ✅ **1,786 passing / 65 files, `npm run gate` exit 0** (baseline at phase-2 hand-off: 1,454/56). +2 tests added by this audit, locking the `SendResultTag` truth-order and the banner recipient |
+| Integration | RPC round-trips under impersonation (rolled-back), incl. negative gates |  ⚠️ **partial — done by the BUILD session, not re-run here.** H6 was proven both ways in the browser (finance 200 / recruitment 403 `42501`) and the fee anchor reproduced in a rolling transaction. This audit re-verified the *outcomes* live (advisors · `pg_get_functiondef` · column constraints) but did not re-impersonate |
+| E2E | `finance.spec.js` · `public-feedback.spec.js` · smoke anchors |  ✅ **m8's own: 8/8 pass** after this audit fixed a date-dependent assertion. Whole suite **150 passed / 5 failed / 5 skipped**; of the 5, **1 was a load flake and 3 are one m5 data-precondition — none is m8 code** (§10, `01/09`) |
+| Regression | full four-name run vs baseline · R4-F15 status test · m3 quote screens after ה30 · m4 form after bank split |  ✅ **gate green after the fix round** — `verify` + `dup` 22 clones + `knip` 0 + `audit` 0 + `bidi` + `context` + `docs-structure` 66/0. ⚠️ the m3-quote and m4-form regressions were run by the build session at apply time, **not** re-run here |
+| UAT | Ishay drives journey 1 himself at the 🎨/closing gate (his stop) |  ⏸️ **his stop, still open.** The 🎨 screen review passed 28/08 11:2X; the closing comprehension quiz sits in this audit's report page |
+| Security/Pen | RLS matrix on 4 new/changed tables (positive control first) · anon exposure pair on the public RPCs · rate-limit proof · token-death proof |  ✅ advisors carry **nothing new and unexplained** (`rls_enabled_no_policy` judged whole-DB: 4 tables, all with written triage) · anon surface measured at **exactly 2 functions**, and `finance_cancellation_fee_proposal` is **absent** from the anon list ⇒ H5b holds · `set search_path to ''` on **24/24** DEFINER functions · token death proven live on #12 · rate limit 15/IP/hr present · **OWASP scan of the m8 diff: no exploitable defect** |
+| Performance | N/A at this scale — S1 reads ≤ dozens of rows; note only if the overview reader exceeds 1s |  ✅ N/A confirmed — S1 rendered live with no perceptible delay; no measurement warranted |
+| Usability | the 🎨 gate (3.6) + closing UX audit |  ✅ 🎨 gate passed 28/08 11:2X. **Closing UX audit found and fixed 2 real defects** (the send-tag lying, the banner's wrong recipient) **and reported 6 spec contradictions + 6 omissions** |
+| Compatibility | Chromium (house config); cross-browser = M12 |  ✅ Chromium only, as planned — cross-browser stays M12 |
 
 ### 🔴 The measured boundary of the automated gates
 `npm run test:e2e` silently excludes smoke (`--grep-invert בדיקת-עשן`); E2E does not run in CI at
@@ -1524,85 +1608,50 @@ not a compile gate (build before commit). Every gate result is reported BY NAME.
 ## 8. ✅ Definition of Done
 
 ### 8.1 Canonical (instantiated)
-- [ ] `npm run verify` green · full suite ≥ baseline, zero regressions
-- [ ] every migration applied via MCP after typed-echo · `docs/schema.sql` regenerated by catalog
-      queries · migration+snapshot committed together
-- [ ] `db_roadmap.md` M8 rows flipped + §10 entries · §6 inbound debts marked paid (the three
-      outbound contracts already exist — cited, not duplicated)
-- [ ] §7.52 + §7.68 flipped ⚪→🟢 with Ishay (rule 13(א)/(ו)) · snapshot line re-counted
-- [ ] CLAUDE_CODE_LOG + STATUS current
+- [x] `npm run verify` green · full suite ≥ baseline, zero regressions — **measured 01/09/2026: `npm run gate` exit 0, 1,786 / 65** (baseline 1,454/56)
+- [x] every migration applied via MCP after typed-echo · `docs/schema.sql` regenerated · committed together — **20 m8 migrations applied, 20 files on disk, 1:1** (`list_migrations` vs `ls`, 01/09). ⚠️ `schema.sql` §29 was found **contradicting §15** on ה19 and was fixed at this close
+- [x] `db_roadmap.md` M8 rows flipped · §6 inbound debts marked paid — **and the reverse sweep found 8 LIVE `🚧 מ8` rows in other modules' guides that m8 had actually paid; all struck at this close.** One inbound debt stays open on purpose (bank-structure validation, §6)
+- [x] §7.52 + §7.68 flipped ⚪→🟢 — **verified at the item itself, not from the snapshot line**, and the snapshot re-counted independently: 🟢64 · 🟡8 · 🔵3 · ⚪16 · 🟠1 = **92**, 92 distinct items, no gaps, no duplicates
+- [x] CLAUDE_CODE_LOG + STATUS current — written at this close
 
 ### 8.2 Module-specific (each with its measurement)
-- [ ] The four §③3 anchors reproduced by tests AND by the live screens (3,650.00 · 3,508.00 ·
-      292.60 · 69%) — checked against the spec's numbers, never against the code's own output
-- [ ] Journey 1 (#12 end-to-end) completed live; both mails opened in Ishay's real inbox
-- [ ] `salary_reports` UNIQUE blocks a second generation (proven live once, rolled back or on a
-      sacrificial period)
-- [ ] Salary write moves NO project status (R4-F15 test red-proven once by inverting, then restored)
-- [ ] Bank details: logistics/recruitment impersonation reads `hostess_bank_details` ⇒ 0 rows;
-      recruitment still edits via the m4 form (positive)
-- [ ] Feedback token dies at archive (live proof: state ד' after archiving)
-- [ ] `%` primary / `₪` sub-line on every list; frozen ₪ is what's stored (`project_finance` row
-      inspected live)
-- [ ] Cancelled project with resolved fee appears in customer cumulative profit (§7.79↳) — one
-      fixture proves it
-- [ ] Zero new unexplained advisor findings (predicted-vs-measured table written)
+- [x] **3 of 4 anchors re-derived LIVE by this audit** — `finance_project_money(13)` ⇒ `gross_profit` **3650** exactly · report 13 `total_amount` **292.6** with its single line 6×45+22.60 · **69%** = 3650/5300. ⚠️ **3,508.00 was NOT re-run here** — #14 is not `cancelled`, so it needs a live write; the build session reproduced it 28/08 in a rolling transaction. Stated, not glossed
+- [x] Journey 1 verified **in the live DB by this audit**: `finished` · `invoice_sent` 04:15:36Z · `payment_date` 2026-08-28 · `feedback_status='completed'` score 5 · **token dead** · `final_profit` **207.40** frozen · `archived_at` 04:19:08Z. Ishay confirmed the invoice mail arrived (28/08)
+- [x] proven live 28/08 (banner + disabled button), **and re-confirmed at the source by this audit**: `generate_salary_report` raises a Hebrew `P0001` on a duplicate period (read from `pg_get_functiondef`)
+- [x] **Verified at the SOURCE, 02/09/2026 — stronger than a test.** `pg_get_functiondef` on both `generate_salary_report` and `finalize_salary_report`: **neither contains an `update public.projects` at all**, and neither writes `project_status`; the only mention is a **read** in `generate_salary_report`'s `where` clause. ⇒ a salary write **cannot** move a project status — it is structurally impossible, not merely untested. *(This item was left unticked earlier in the audit rather than assumed; measuring it was the honest close.)*
+- [x] structurally verified at this close: `hostess_bank_details` carries exactly two policies ('דיילות' edit ALL · 'כספים' edit SELECT), and **C2 is confirmed applied — 0 legacy bank columns on `hostesses`, 26 child rows / 26 hostesses** ⇒ ה19 genuinely closed. ⚠️ the impersonation read itself was run by the build session, not re-run here
+- [x] live proof re-measured 01/09: `projects.feedback_token IS NULL` on the archived #12
+- [x] `project_finance` row inspected live (#12 `final_profit` 207.40 stored; % derived by `formatPercent`, never stored — 🔗 §7.52)
+- [x] fixture found and read: `src/lib/customers.test.js:199` — `cumulativeProfit — אוכלוסיית §7.79 (finished + מבוטל-שנפתר)`, covering finished+cancelled, a negative fee, and a null fee
+- [x] advisors run live 01/09: **zero new unexplained findings.** `rls_enabled_no_policy` judged whole-DB (the m8-close exemption): 4 tables, **all four with written triage** in `schema.sql:64-65` / `db_roadmap:882`. m8's own `feedback_rpc_calls` mirrors the `login_rpc_calls` precedent
 
 ### 8.3 UX & validation
-- [ ] The 🎨 gate passed: §4 design · states (loading/empty/no-results/error+retry/success) on all
-      four surfaces · keyboard operability + focus rings · every spec'd validation present ·
-      spec-silent validations (A-1/A-2/A-3) confirmed with Ishay
+- [x] 🎨 gate passed 28/08 11:2X (*"מאשר את המסכים"*, on eight live screenshots). ⚠️ **and this audit's own UX pass then found more** — 2 defects fixed here, 6 spec contradictions + 6 omissions reported for Ishay's ruling. **The 🎨 gate is honoured; it was not sufficient**
 
 ### 8.4 Post-merge note — NOT audit checkboxes
 PR opened base:`dev` · CI green · merged — after the closing audit's YES; the audit confirms
 *mergeable*, never merges (module-close boundary).
 
-🔴 **AND ONE REAL POST-MERGE MIGRATION IS OWED — `C2`. This is a work item, not a note.**
-**What:** `alter table hostesses drop column bank_name, bank_branch, bank_account` — the destructive
-half of ה19, deliberately split out of migration C on 27/08/2026 (§10, that date).
-**Why it could not run with C:** the code live on `origin/main` writes those three columns directly
-(`HostessFormDialog.jsx:217-219`) and reads them (`HostessViewCard.jsx:315`), and production and
-development share ONE Supabase project — so dropping them would have broken the live hostess form
-from the moment of apply until m8 merged and deployed, days later, with the 28/08 interim
-presentation in between. **Measured, not assumed** (`git show origin/main:…`, 27/08/2026).
-**When:** after m8 is merged to `dev`, promoted, and the deploy is confirmed live.
-**Its contract, which is more than a `drop`:**
-1. **Re-copy first.** In the window, production's old code keeps writing bank details to the PARENT
-   columns; a hostess created or edited through the live site during it will have no child row.
-   C2 must copy `hostesses` → `hostess_bank_details` **before** dropping anything, or that hostess
-   silently loses her bank details.
-   🔴 **AND THE CONFLICT CLAUSE MUST BE GUARDED — a bare `on conflict do update` corrupts data
-   in the other direction, found 27/08/2026 at the 1.8 gate.** The window has TWO halves and they
-   run opposite ways: **before** the deploy, `origin/main` writes the PARENT and the child goes
-   stale; **after** the deploy, m8's `api.js` writes ONLY the child (`splitBankFields`) and the
-   PARENT goes stale. An unguarded `do update` runs after the deploy and therefore **overwrites
-   fresh child rows with stale parent values** — the exact failure the re-copy exists to prevent,
-   pointed backwards, and it would surface as wrong bank numbers on a salary report to the CPA.
-   ⇒ **the copy overwrites only where the parent is genuinely newer:**
-   ```sql
-   insert into hostess_bank_details (hostess_id, bank_name, bank_branch, bank_account)
-   select h.hostess_id, h.bank_name, h.bank_branch, h.bank_account
-     from hostesses h
-    where coalesce(h.bank_name, h.bank_branch, h.bank_account) is not null
-   on conflict (hostess_id) do update
-      set bank_name    = excluded.bank_name,
-          bank_branch  = excluded.bank_branch,
-          bank_account = excluded.bank_account
-    where hostesses_updated_at_is_newer;   -- see below
-   ```
-   The `where` on the conflict action compares the two `updated_at` columns — both tables carry one,
-   both maintained by `extensions.moddatetime` — so a row m8's code just wrote is left alone.
-   ⚠️ **`excluded` cannot see the parent's `updated_at`** unless it is selected into the insert, so
-   either add it to the column list or re-join `hostesses` in the `where`. **Decide that when C2 is
-   written, against the live DDL — not from this snippet.**
-2. Then drop the three columns.
-3. Then delete the three `⚠️ … תימחק במיגרציה C2` column comments' subject matter from
-   `docs/schema.sql`, and strike this block.
-🔑 **Until C2 runs, ה19 is NOT closed** — the exposure it exists to fix (anyone with 'דיילות' can
-read bank details, because RLS is row-level) is still open. **§2.2's "Bank-details protection (ה19)
-… ✅ complete here" row is therefore NOT yet true**, and the closing audit must check C2's state
-rather than trusting that row. *(Registered in three places on purpose — here, `db_roadmap` §10,
-and §10 below — because a debt with one home is a debt that gets lost.)*
+✅ **`C2` IS DONE — struck 01/09/2026 at the closing audit, per this block's own step 3.**
+`C2` (`20260827150024_module8_c2_drop_legacy_bank_columns`) was applied **27/08/2026 18:0X**, ahead of
+the schedule this block assumed, because m8's phase-1 work merged and deployed that same afternoon.
+**Re-measured live at the close (01/09/2026), not read from a record:** `information_schema.columns`
+returns **0** of `bank_name`/`bank_branch`/`bank_account` on `hostesses`, and `hostess_bank_details`
+holds **26 rows against 26 hostesses** — the re-copy lost nothing.
+🔑 **Therefore ה19 IS closed, and §2.2's `Bank-details protection (ה19) … ✅ complete here` row IS true.**
+This block previously ended by saying the opposite (*"Until C2 runs, ה19 is NOT closed … that row is
+therefore NOT yet true"*) and instructed the closing audit to verify C2 rather than trust the row —
+the audit did exactly that, and the answer is that C2 already ran. **The full pre-drop contract — the
+three beats and the `updated_at`-guarded `on conflict` clause with its two-directional window — lives
+in `docs/db_roadmap.md` §9א, in the struck `C2` row** *(grep anchor: `DONE 27/08/2026 18:0X`)*, which
+also records the measurement that vindicated the guard: **all 26 child rows were newer than their
+parents, so an unguarded `do update` would have pulled all 26 back to the stale source; with the guard
+it touched 0.** It is no longer live guidance.
+*(🔴 That row's own pointer — *"Full contract + the SQL shape: `micro_guides/module-8.md` §8.4"* — is
+annotated there as of 01/09/2026, because this block no longer carries the SQL.)*
+⚠️ **The one debt this block created that is NOT paid by C2** — the `⚠️ … תימחק במיגרציה C2` comments in
+`docs/schema.sql` — was half-done: §15 was updated 27/08 but **§29 still described the split as
+half-finished and the PII exposure as open**, contradicting §15 in the same file. Fixed 01/09/2026.
 
 ## 9. 🔄 Self-Update Protocol
 
@@ -1645,6 +1694,626 @@ anchored to it and settle them with Ishay at the phase door, not mid-step.
   writes the code (Ishay's 14/08 rule).
 
 ### Dated entries
+- 🧪 `02/09/2026 01:3X` — **ארבע בדיקות-E2E שבירות הוסבו לייצור-מצב, בבקשת-ישי — וההוכחה היא
+  שביטלתי את הטלאי ובדקתי שוב.**
+  **הרקע:** שלוש בדיקות של מ5 + אחת של נגישות **חיפשו בדאטה החיה** פרויקט-בתור שיש לו שורת-לוגיסטיקה
+  `ordered`/`ready`. מסע-הקבלה של מ8 ביטל את #15 — **הפרויקט האחרון שהיה כזה** — וכולן נפלו.
+  **הקוד מעולם לא נשבר; הדאטה זזה.** תיקנתי תחילה בשורת-דאטה אחת, **ואמרתי מיד שזה טלאי שירקב שוב.**
+  🔑 **ההסבה, ולמה היא הדפוס הנכון כאן:** אין סביבת-בדיקה נפרדת ⇒ אסור להזריק שורות
+  (`e2e/CLAUDE.md`). התבנית המותרת היחידה היא **יירוט-רשת** — וחצי מהקובץ כבר עשה בדיוק את זה
+  (*"מצבים מיוצרים ביירוט"*). הזהות עדיין נבחרת בזמן-ריצה; **המצב** נבנה מהשורות האמיתיות של אותו
+  פרויקט, ורק `item_status` מוחלף.
+  🔴 **ההוכחה, והיא מה ששווה לזכור מהערך הזה: ביטלתי את תיקון-הדאטה ומדדתי את המסד** —
+  `count(*)` של פרויקטים-בתור עם פריט `ordered`/`ready` ⇒ **0** — **ו-17 הבדיקות עוברות.**
+  **הסבה שעדיין נשענה על הדאטה הייתה נופלת שם.** *(הטלאי בוטל לצמיתות; המסד חזר למצבו.)*
+  🛡️ **וכל הסבה נראתה נכשלת לפני שהתקבלה:** שש מוטציות ממוקדות (סטטוס-פרויקט · סט-סטטוסים
+  אחיד · מעטפת-RPC תקינה · `project_status:'in_progress'` · כל השורות `not_started` · ריקון רשימת-הפטור
+  של הניגודיות) האדימו **בדיוק** את הבדיקה הנכונה בכל פעם, והקבצים שוחזרו בייט-בבייט.
+  🚫 **ומה שבמכוון לא נגעו בו — וזו הייתה התוצאה המסוכנת היחידה כאן:** **שומרי-המכנה**
+  (`expect(count).toBeGreaterThan(0, 'המדידה רצה על מכנה 0')`). הם **נכונים** וקיימים כדי שבדיקה לא
+  תעבור על ריק; מחיקתם הייתה משאירה בדיקות ירוקות-על-כלום. **שניים מהם אף האדימו תחת מוטציה** —
+  כלומר הם נושאי-משקל ולא קישוט. פריט אחד מסופק (לולאת-הלשוניות של מ8 בנגישות) **דווח ולא הוסב**,
+  כי האיחוד של שלוש הלשוניות **מצטבר** ואינו חלון-חולף.
+  🔴 **וטעות-תהליך שלי, שחזרה שלוש פעמים הלילה ולכן נרשמת ככלל ולא כאנקדוטה:** הרצתי אימות
+  על עץ שסוכן עדיין החזיק. בפעם השלישית זה היה גרוע במיוחד — **הסוכן היה באמצע מוטציה של הוכחת-כשל**,
+  כלומר העץ היה שבור *בכוונה*, ואני דיווחתי לו על "בדיקה רביעית שנכשלת" שכלל לא הייתה קיימת.
+  ⇒ **הכלל בצורתו המעשית: כשסוכן מחזיק קבצים — לא מריצים עליהם כלום עד שהוא מדווח.** לא בדיקות,
+  לא `prettier`, לא שער. *(המדידה שהכריעה: ריצה על עץ שקט ⇒ 17/17.)*
+
+- ✅ `01/09/2026 23:3X` — **`H7` הוחלה בהקלדת-ישי: סטיית-התקציב הפסיקה לספור בונוס כחריגה — והתיקון
+  ה"מתבקש" היה שובר את הרווח הקפוא.**
+  **הרקע, וזו הכרעת-ישי שהפכה המלצה שלי:** האודיט המליץ **לדחות** את הפגם הזה לחוב, כי הוא דורש
+  מיגרציה ונוגע באריח אחד. ישי עקף — *"מה התסביך אקליד מיגרציה הכל טוב עושים פעם אחת עבודה
+  בצורה נכונה"* — **וההכרעה שלו הייתה הנכונה**, כי בדרך התגלה משהו שהדחייה הייתה מסתירה.
+  🔴 **מה שנמצא רק מפני שקראתי את הפונקציה במקום לתקן לפי התיאור:** `v_labor`
+  (`Σ שעות×תעריף + בונוס`) מזין **שלושה** ערכים — `labor_cost` · `gross_profit` *(ומשם
+  ה-`final_profit` הקפוא)* · ו-`budget_deviation`. **הבונוס שייך לשניים הראשונים ומזהם רק את
+  השלישי**, כי הצד-המתוכנן חסר איבר-בונוס. ⇒ **גריעת הבונוס מ-`v_labor`, שהיא התיקון שנשמע
+  מתבקש, הייתה מזיזה את הרווח-הגולמי ושוברת את עוגן-הקבלה `3,650.00`.** התיקון בפועל: משתנה
+  `v_labor_hours` **נפרד** לצד-הביצוע של הסטייה בלבד; `v_labor` לא נגע.
+  🔬 **הוכחה אדום→ירוק בעסקה מתגלגלת** *(בונוס 250 ₪ על #12)*: **לפני** — `labor_cost 520 ·
+  gross_profit −42.60 · budget_deviation **452.50**` · **אחרי** — `520 · −42.60 · **202.50**`.
+  ⇒ **רק המספר הנכון זז, וחזר בדיוק לערך שהיה לפני שהבונוס נכנס.**
+  📌 **ומה שנמדד כדי שהטענה "לא שברתי כלום" לא תהיה הבטחה:** ‏`md5(prosrc)`
+  `5ad34019…`(3,279) → `7fe0b63f…`(3,652) · `provolatile='s'` · `prosecdef` · **ACL לא זז**
+  (`{postgres,service_role}` — מוקש-`H5b` לא חזר, אין `drop`) · שני העוגנים זהים אחרי ההחלה ·
+  **אפס שורות-בונוס במסד** ⇒ התיקון הוא no-op על כל הדאטה הקיימת. **ולכן גם אי-אפשר להוכיחו
+  מהדאטה החי** — ההוכחה היא העסקה, לא שאילתה.
+  🌍 **עוגן-עולם, לבקשת ישי המפורשת** *("מתיישבים עם מה שמקובל היום ועם מה שמנהלת כספים
+  מצפה לראות")*: בחשבונאות-תמחיר-תקן מפרקים סטיית-עבודה ל**סטיית-תעריף** ול**סטיית-יעילות**,
+  כדי שהמספר יגיד *מה לעשות*. בונוס שיקול-דעתי אינו אף אחת מהן. **מנהלת שרואה "+250 חריגה"
+  תחפש מי האריך — ולא תמצא אף אחד.**
+
+- 🔨 `01/09/2026 23:2X–23:4X` — **סבב-התיקון של הסגירה, בארבעה סוכנים עם בעלות-קבצים בלעדית.**
+  ‏**‏(א) מיון-ברירת-המחדל פר-לשונית (A-10) נבנה** — הכרעה שאושרה 26/08 ומעולם לא מומשה;
+  ‏`order by p.project_id` היה המיון היחיד במסלול. נבנה **בצד-הלקוח** *(עשרות שורות; אין חישוב
+  כסף חדש, רק סידור)*, ו**"לא ידוע" יורד לתחתית ולא מתחזה לאפס** — דוקטרינת-§4.3 מוחלת על מיון.
+  🔑 **והסוכן הוכיח שהבדיקות תופסות במקום להצהיר:** שלוש מוטציות *(ביטול המיון · unknown→0 ·
+  תאריך-חסר→היום)* האדימו 3/2/1 בדיקות בהתאמה, והקובץ הוחזר בייט-בבייט.
+  ‏**(ב) הדף הציבורי יושר לכרטיס המאושר** — `aria-label` `כוכב N` · הסרת `טרם התרשמת`
+  *(לשון-נקבה-יחיד שנכתבה למנהלת ודלפה ללקוח עסקי)* · כוכבים בטורקיז. 🔴 **הכול בתוספת-props
+  בלבד ל-`RatingStars` המשותף** — שבעה אתרי-קריאה נבדקו, אפס ברירות-מחדל שונו, **224 בדיקות
+  ב-16 קבצים ירוקות**. ⚠️ **והסוכן דיווח ביושר על פער שלא יכול היה לסגור:** לשלושת קוראי-מ4
+  אין בדיקות-יחידה כלל, ולכן כתב בדיקות שנועלות את מראם הישן.
+  ‏**(ג) ושתי בדיקות-E2E נשברו מהשינוי הזה ותוקנו על-ידי** *(‏`public-feedback.spec.js` ·
+  `accessibility.spec.js`)* — שתיהן חיפשו את הכפתור לפי השם-הנגיש הישן. **לאלמנט יש שם-נגיש
+  אחד, ולכן אין גרסה שמספקת את שני הנוסחים** — הבדיקה נעה עם המסך.
+  ‏**(ד) חלון-הסגירה — חמישה תיקונים.** ה-`catch` הריק פוצל לשלושה מצבים *(`undefined`=לא-ידוע ·
+  `null`=אין-שורה · אובייקט)* עם נוסח שלישי משלו ו-`console.error` כמו כל מסך אחר · **המאזן נפתח
+  כששער-הארכוב נפתח ולא רק אחרי הארכוב** · `שנה ציון` · ח.פ *(התא היה כתוב מאז 3.2 ומעולם לא
+  רונדר — ה-select לא ביקש את העמודה)* · והמייל לרו"ח כבר לא נפתח ב-`שלום לצוות הנהלת חשבונות / ,`.
+  ‏**(ה) דיאלוג-השכר** — `existingForSelected` הפך תלת-מצבי, ושער-הצורה של אימות-הסכום מפריד
+  עכשיו **נוכחות-מפתח** מ-**ערך-null**.
+  🛡️ **וזה החלק ששווה לזכור מהסבב הזה: אף סוכן לא הסתפק ב"ירוק".** סוכן-חלון-הסגירה **החזיר את
+  חמשת הפגמים בבת-אחת** ⇒ **9 בדיקות האדימו, בדיוק החדשות**, והקבצים שוחזרו בייט-בבייט; סוכן-המיון
+  הריץ **שלוש מוטציות נפרדות** (ביטול-מיון · unknown→0 · תאריך-חסר→היום) ⇒ 3/2/1 בדיקות בהתאמה;
+  סוכן-השכר ביטל כל תיקון בנפרד. **שומר שלא נצפה נכשל — אינו שומר.**
+  🔎 **וסתירה אחת נבדקה ולא "תוקנה על דעת הסוכן":** הערת-קוד טענה שהתצוגה המאושרת מציירת מאזן
+  אחרי הארכוב בלבד. הסוכן הביא את **שני** המקורות — כרטיס-P3 (*"החלון מציג תחשיב-מאזן … 'העבר
+  לארכיון'"*) מול המוקאפ — והראה שהמוקאפ צודק רק במקרה הפרטי שצויר בו *(#12, שחשבוניתו טרם יצאה)*,
+  ושהיררכיית-האמת מציבה את האפיון מעל המוקאפים. **מנגנון מדוד מול הכרעה רשומה, לא שינוי-מוצר.**
+  ⏸️ **ושארית מוצהרת שלא נגעו בה:** כש-`getBillingContact` מחזירה `null` כי **אין שורת-לקוח**
+  (או ש-RLS חסמה), המסך ממשיך לומר *"אין כתובת מייל בכרטיס הלקוח"* — **הכרעה רשומה בהערת-הקוד**
+  של הפונקציה עצמה. נעולה בבדיקה כדי שלא תתאחד בטעות עם המצב החדש. משפט שלישי גם שם = הכרעת-ישי.
+  🔴 **וטעות-תהליך שלי בסבב, נרשמת כי היא תחזור:** הרצתי `prettier --write` **ושער מלא** על קבצים
+  שסוכן עדיין עבד עליהם, וקיבלתי **9 בדיקות אדומות שנראו כמו רגרסיה ולא היו** — הוא פשוט טרם סיים.
+  אחרי המתנה: 139/139. **הכלל שהופר הוא של הפרויקט עצמו — שער רץ על עץ שקט** (§10, `28/08 13:1X`).
+  ✅ **תוצאת הסבב: `npm run gate` exit 0 · `1,819 / 65` (מ-1,786 ⇒ +33) · `smoke` exit 0.**
+
+- 🛑 `01/09/2026 23:0X` — **אודיט-הסגירה (`module-close`, סשן טרי, `a2e2064`): פסק [NO] — ארבעה פריטים פתוחים, שלושה מהם הכרעת-ישי.**
+  🔴 **והממצא שמשנה את קריאת כל השאר: השער היה אדום כשהאודיט נפתח.** ‏`npm run audit` נפל על
+  `browserslist [high]` (‏GHSA-c83g-rgw3-j3cx) בלי פטור — **ו-CI מריץ את השלב הזה** (`ci.yml:54-55`),
+  כלומר ה-PR היה אדום. **הייחוס נמדד ואינו של מ8:** החבילה מגיעה דרך
+  `eslint-plugin-react-hooks` ו-`shadcn`, ושתי חבילות-האקסל שמ8 הוסיף חסרות תלויות לגמרי; אפס מופעים ב-`dist`.
+  ⚠️ **וסשן-הבנייה כתב לעץ-העבודה באמצע הסריקה** (‏`npm audit fix`, 12 חבילות-כלים) **ודיווח
+  על כך מיוזמתו, בלי לקמט.** מדדתי הכל מחדש במקום לסמוך — וגם על עצמי: **הספירה שלי
+  "29 קומיטים" הייתה שגויה** (‏`wc -l` מראה **31**), וגם ספירת-החבילות הראשונה שלי (17) הייתה
+  שגויה — `grep -U6` ספר גם שורות-הקשר. **ה-12 שלו נכון.**
+  🔑 **ומה שהבדיקה הוסיפה על מה שהוא אמר:** העדכון מנקה **גם את חמשת הפטורים העומדים**
+  ב-`audit-gate.mjs` — הסקריפט עצמו מדפיס עכשיו *"🧹 הפטור X אינו תואם עוד לאף חולשה"* על שלושה מהם.
+  ‏⇒ **הקובץ יכול להשיל פטורים במקום לצבור אותם** — טיעון חזק יותר מזה שניתן לי.
+
+  ✅ **מה שנמדד ועבר:** `gate` **exit 0** (1,786/65 · dup 22 · knip 0 · audit 0 · bidi · context · docs-structure 66/0) ·
+  `smoke` **exit 0** — **ריצת-העשן הנקייה הראשונה של המודול** (§10 של `28/08 12:4X` רשם 0 מתוך 4) ·
+  ‏m8 E2E **8/8** · advisors בלי שום דבר חדש-ולא-מוסבר · **שלושה מארבעת עוגני-הקבלה נגזרו חי מחדש**
+  (‏3,650.00 · 292.60 · 69%); **3,508.00 לא — ונאמר בפירוש**, כי #14 אינו מבוטל והשחזור דורש כתיבה חיה.
+
+  🔧 **סבב-התיקון (§6b, אחד בלבד) — שני פגמים אמיתיים ושתי בדיקות:**
+  ① **`SendResultTag` הכריז "נשלח" על מייל שנכשל.** ‏`api.js` מריץ העלאה ושליחה כשני שלבים
+  בלתי-תלויים ⇒ `{fileError, sendResult:'failed'}` הוא מצב אמיתי, והתג בדק `fileError` ראשון.
+  **על המסלול הבלתי-הפיך היחיד במודול** — החודש חתום ב-UNIQUE, ומנהלת שמאמינה לתג לא תשלח שוב.
+  ② **הבאנר-החסום נקב בנמען הלא-נכון** — **האתר השלישי של אותו באג** שתוקן ב-28/08:
+  התיקון אז טיפל בטבלה ובכרטיס ופסח על הבאנר. **הפגם היה גלוי לעין על מסך אחד:**
+  הבאנר אמר `ishay1997@gmail.com` והשורה מתחתיו `office@cpa-firm.co.il` — לאותו דוח.
+  ③ **בדיקת-E2E תלוית-תאריך נפלה על מסך תקין** — הבורר נפתח על החודש הקודם,
+  ומ-01/09 זהו אוגוסט שכבר הופק. נעלתי **אינווריאנט** במקום מצב.
+  🔴 **④ והחצי שלמדתי ממנו הכי הרבה: בדיקה קיימת נעלה את הבאג עצמו.**
+  ‏`SalaryReportDialog.test.jsx` דרשה שהבאנר יציג את **הפרמטר החי** ⇒ הריצה הראשונה
+  אחרי התיקון האדימה. **התיקון היה נכון והבדיקה היא שהייתה שגויה** — נכתבה מחדש
+  לפי התבנית שכבר הייתה באותו קובץ (`sent_to: 'old-accountant@example.com'`) עם **אסרשן שלילי**.
+  ⇒ **לקח: בדיקה שנכתבה מול הקוד הקיים מנציחה את הקוד הקיים, לא את הכוונה.**
+
+  📚 **אדוות-תיעוד שנסגרו כאן:** ‏`C2` רצה ב-27/08 **ושלושה מסמכים המשיכו לומר שלא** —
+  §8.4 של המדריך הזה · `docs/schema.sql` §29 (שסתר את §15 באותו קובץ!) · `db_roadmap:489`.
+  **קורא שהגיע ל§29 ב-grep הסיק שחשיפת-PII פתוחה — והיא סגורה.** שלושתם תוקנו.
+  ➕ **וסבב-ה-🚧 ההפוך החזיר שמונה שורות-חוב חיות** במדריכי-מ2/מ4/מ6 וב-§6, על דברים שמ8 **כן** שילם
+  (ממוצע-המשוב · מסנן-שביעות-הרצון · דוח-השכר · הרווח-הקפוא · פיצוי-הביטול · המסך שקורא ל-RPC · דף-המשוב).
+  **זו בדיוק המחלקה שכלל הסביבה-ההפוכה נכתב נגדה, והעוגן שלו הוא אותה שורה בדיוק** (`module-2.md:45`).
+
+  🔍 **מה שנשאר פתוח ולמה הוא של ישי:** ‏(1) לקמט את עדכון-ה-lockfile — שינוי-תלויות חודש לפני הכנס ·
+  ‏(2) ה-catch הריק ב-`getBillingContact` — **דורש משפט חדש על המסך** · (3) ‏A-10 (מיון פר-לשונית) שלא נבנה ·
+  ‏(4) גוש-המאזן שמופיע רק **אחרי** הארכוב ⇒ הרווח נקפא בלי שראתה אותו, בניגוד לסדר ש-P3 קובע.
+  **הרשימה המלאה (30 ממצאים ⇒ 24 סיבות-שורש): `docs/archive/close-findings-module-8.md`.**
+
+- ✅ `28/08/2026 13:2X` — **שער פזה 4 עבר: `npm run gate` exit 0. ‏`1,783 / 65`.**
+  **וזה השער הירוק-לגמרי הראשון היום** — עד עכשיו הוא נפל בכל ריצה, ובכל פעם מסיבה אחרת.
+  🔴 **וכתבתי `src/modules/08_finance/CLAUDE.md`, שהיה החוסם האחרון.** ‏`check:context` דרש אותו
+  (‏`module-close` §4c), **ומ8 היה המודול היחיד מ-01 עד 08 שחסר אותו** — נתפס באודיט-הריצה.
+  ⚠️ **וזו חריגה מודעת מחלוקת-העבודה:** הקובץ שייך לסשן-הסגירה. **כתבתי אותו כאן כי סשן-סגירה
+  טרי היה צריך לשחזר את המוקשים מהתיעוד, ואני מכיר אותם ממקור-ראשון** — ‏`H2`/`H3` שהיו אותו באג
+  בשתי פונקציות · ‏`H5b` שפתחה פונקציית-כסף לאנונימי · פער-התשלום-מול-החיוב ב-`other` · ושני
+  מוקשי-הבדיקות שנתפסו היום. **סשן-הסגירה מאמת אותו — הוא לא נפטר מכך.**
+  📌 **ומה שנכנס לשם ואינו נגזר מהקוד:** ‏`sent` פירושו *התקבל אצל מנוע-המיילים*, לא *נמסר* ·
+  ‏`.count()` של Playwright אינו חוזר-על-עצמו · ‏`listSalaryReports` נקראת פעמיים בהרכבה ·
+  ‏`drop function` מאפס ACL · **ואיסור מפורש להחזיר קודים פנימיים למסך.**
+- 🧠 `28/08/2026 13:1X` — **אבחנת כשלי-השער, אחרי שלוש קריסות באותו יום: לא הקוד, ולא 16GB.**
+  ‏`knip` קרס שלוש פעמים על `Array buffer allocation failed`. **המדידה:** 15.7GB · **12 ליבות
+  לוגיות** · **151 תהליכים תלויים** בשיא *(עובדי-vitest ודפדפני-Playwright יתומים)*, ופחות
+  מ-2.2GB פנויים. אחרי ניקוי — `knip` עבר exit 0 **בלי שינוי קוד**.
+  🔑 **ולמה לא הגבלתי עובדים בקונפיג, אף שזה היה מתקן את הסימפטום:** העומס נוצר **על-ידי**
+  ריצת-סוכנים מקבילה שאני יזמתי, לא ע"י השער. השער על עץ שקט רץ **244 שניות ובלי קריסה**.
+  ⇒ **תיקון-תשתית משותפת עבור בעיה שאני יצרתי היה מסתיר את הסיבה.** **ההיגיינה היא הפתרון:
+  לנקות תהליכים יתומים אחרי ריצת-סוכנים, לפני שמריצים שער.**
+- ✅ `28/08/2026 12:5X` — **שני אריחי-סיכום ב-S1 (הכרעה-בהאצלה שלי, אושרה ע"י ישי).**
+  ‏"סה"כ ממתין לגבייה" · "מתוכו באיחור-תשלום", ברכיב `StatTile` הקיים ובפריסת-`TilesRow`
+  של `ProjectsPage` — **לא רכיב חדש.**
+  🔑 **והסוכן מצא עוגן שאני לא ידעתי עליו:** בהערות-המחבר של המוקאפ המאושר של S1 **המדד הזה
+  נשקל ונדחה במכוון** — רק מפני שדאטת-הבדיקה בת ארבע השורות הפכה אותו למיותר. ⇒ **הוא השתמש
+  בניסוח של המחבר עצמו במקום להמציא תווית.** *(וזה גם מצמצם את הסטייה: לא הוספנו מדד חדש —
+  החזרנו אחד שנדחה מטעם שכבר לא מתקיים.)*
+  🔴 **וההגדרה של "חייבים לי" נבנתה בזהירות, וזה החלק שקל לטעות בו:**
+  · לשונית ③ מוחרגת — **שער-הארכוב דורש `paid || written_off`**, כלומר כל שורה שם כבר סגורה כספית.
+  · **חוב-אבוד מוחרג במפורש ולא רק דרך הלשונית** — ‏`record_write_off` **אינו מזיז סטטוס**, ולכן
+    תיק שוויתרנו עליו יושב בלשונית ②/① ימים עד הארכוב. בלי הבדיקה המפורשת **כסף שכבר ויתרנו
+    עליו היה נספר כפתוח.**
+  · **ודמי-ביטול שטרם נקבעו אינם 0** — האריח סוכם את הידוע **ואומר במפורש כמה לא נכללו**;
+    וכשהכול לא-ידוע הוא כותב *"לא ידוע — דמי-ביטול טרם נקבעו"* ולא "0 ₪". **זו דוקטרינת
+    האפס-השקט של המודול (§4.3), מוחלת על מספר חדש.**
+  ‏47 בדיקות בקובץ *(‏+5)*, כולל מקרה "אין חוב" ומקרה "הכול לא-ידוע".
+- 🔍 `28/08/2026 12:4X` — **אודיט-הריצה הבלתי-תלוי החזיר שני ממצאים שלא ידעתי עליהם, ושניהם
+  תוקנו. ➕ ותיקון-דיווח שלי כלפי ישי.**
+  🔴 **התיקון קודם, כי הוא שלי:** דיווחתי לישי שהסוכן *"חזר בלי כלום"* אחרי שהודעת-הסיום שלו
+  הייתה משפט-המתנה. **הוא לא נכשל — הוא עצר והמשיך**, והדוח שהגיע הוא **המפורט מבין השלושה.**
+  ⇒ **הודעת-סיום ריקה אינה עדות לכישלון-סוכן**, ומיהרתי להסיק.
+  **‏① ‏`scripts/audit-gate.mjs` מצטט דדליין שבוטל — בחמישה מקומות.** ‏`reviewTrigger` של חמשת
+  פטורי-האבטחה נקוב *"הגשת הפרויקט 19/09/2026"*, **ו-19/09 בוטל 12/08/2026** ורשום ככזה
+  ב-`CLAUDE.md`. 🔑 **ולמה זה לא קוסמטי: פטור-אבטחה שתוקפו נמדד מול תאריך-רפאים לא ייבדק
+  מחדש לעולם.** הוחלף ב-`כנס-הסיום 01/10/2026`, עם הערה שמסבירה מה זז ולמה.
+  **‏② והמרוץ — שלי, מהבוקר.** ב-`e2e/finance.spec.js` כתבתי
+  `if ((await historyRows.count()) === 0)`. ‏**`.count()` הוא צילום-רגע ואינו חוזר על עצמו**
+  כמו `expect` ⇒ הוא יכול לקרוא 0 בעוד השליפה באוויר, ואז הבדיקה ממתינה למציין-"ריק"
+  **שלעולם לא יופיע**, כי שורות כן הגיעו. **הסוכן אבחן את השורה במדויק והבחין נכון: הכשל
+  היה בבדיקה, לא במסך.** הוחלף ב-`.or()` — ה-locator היחיד שממתין לשני המצבים.
+  📌 **ומה שהוא מדד ויצא ירוק:** ‏`lint` · `format` · `build` · `dup` · **`knip` — 0 ממצאים** ·
+  `audit` · `check:bidi` · `check:docs-structure`, ו-**1,776 בדיקות בשתי ריצות מבודדות.**
+  ⚠️ **ומה שהוא אמר בפירוש שלא הצליח:** אף ריצת-`smoke` נקייה (0 מתוך 4), ושלוש בדיקות-E2E
+  שנשארו **לא-מאומתות** כי ריצת-הבידוד שלו נקטעה. **הוא הצהיר על שתיהן ולא טשטש.**
+  🔑 **ומה שהוא תפס שאף אחד לא תכנן:** הוא זיהה בזמן-אמת ש**סשן אחר עורך את קובצי-הכספים
+  בזמן שהוא מודד** *(שלושת סוכני-הכתיבה שלי)*, מדד חותמות-קבצים מול השעון, **והכריז שכל
+  מדידותיו הן תמונה של קוד שכבר זז.** ⇒ **בדיוק הסיבה ששער-פזה-4 ממתין לעץ שקט.**
+- ✅ `28/08/2026 12:3X` — **‏S3 נוקה מקודים פנימיים (סוכן ייעודי, בעלות-קובץ בלעדית).**
+  שמונה מחרוזות מוצגות — `ה9` · `ה15` · `ה7` · `ה24` · `ה29` · `§7.69` · `ה19` **ושם-טבלת-המסד
+  `hostess_bank_details`** — נוסחו מחדש בעברית מקצועית **בלי לאבד את ההסבר**. 🔑 **והקודים לא
+  נמחקו: הועברו להערות-קוד מעל אותן שורות**, כדי שהקשר להכרעה יישרד למפתח ולא ייראה למשתמשת.
+  ➕ **ושלוש הערות שתיארו את המבנה שלפני העברת-ההיסטוריה תוקנו** לפי מוסכמת-הבית *(מה נכון
+  היום · מה היה · מתי ובהכרעת-מי)*. ‏44 בדיקות עוברות, lint/format נקיים, אפס CRLF.
+- ✅ `28/08/2026 11:4X` — **צעד 4.3, אדוות-התיעוד: שלושה חובות-§6 סומנו שולמו, אחד נשאר פתוח
+  בכוונה, ו-`schema.sql` סונכרן אחרי `H6`.**
+  🔑 **וכל 'שולם' כאן נשען על מדידה בקוד, לא על 'בנינו את זה':**
+  · **‏`salary_reports` (מ8←מ4)** — נבנה **ורץ חי**: אוגוסט 2026, `292.60 ₪` = עוגן-האפיון,
+    האקסל הורד ותאיו נקראו. **ובכך אומת גם הנימוק שהחוב עצמו נשען עליו** — *"הבעלים חסום
+    מהמודול"* — כי פרטי-הבנק נקראו מהטבלה המוגנת דווקא בהרשאת 'כספים'.
+  · **שלוש ההכתבות ממ6** — ‏**(א)** מ8 **מייבאת** את `PROJECT_STATUS_LABELS` ואינה מגדירה תווית
+    משלה ⇒ `event_finished` הוא "ממתין לסגירה" **ממקור אחד**. ‏**(ב)** ‏`grep actual_guests` על כל
+    המודול ⇒ **אפס** — החיוב על סחורה יוצא מ-`logistics.planned_qty`, כלומר **מה שהוזמן** (⑳).
+    ‏**(ג)** כבר היה סגור.
+  · **‏RC-6, עמודת "סכום"** — ‏`projectAmount` מסכם הצעה + שינויי-תכולה, ➕ **עם שער שהחוב
+    המקורי לא ביקש:** שורה שכספה ממוסך מחזירה `null` ולא מדלגת, **אחרת מסך חסום-הרשאה היה
+    מציג תוספת 0 במקום "אין נתון"** — בדיוק דוקטרינת-האפס-השקט של המודול, מוחלת על חוב של מודול אחר.
+  🔴 **והחוב שנשאר פתוח, ובמכוון — "בדיקת מבנה" על פרטי-הבנק.** מ8 **קורא** את שלושת השדות
+  ומדפיס אותם לרו"ח, **ואינו מאמת אותם.** ⇒ ההצלבה שהחוב ציפה לה **לא נבנתה**, ושדה שגוי יגיע
+  לרו"ח כמו שהוא. **מה שכן השתנה: עכשיו יש לו צרכן אמיתי ומקום טבעי לבדיקה — רגע ההפקה.**
+  📌 **ושתי הערות-תיעוד שנסגרו באותה נשימה:** ‏`schema.sql` §פונקציות — הכותרת הצהירה *"כולן
+  מגודרות 'כספים'"* בעוד זה נכון רק מאז `H6` **באותו בוקר**; נכתב עכשיו עם התאריך שבו הפך לנכון.
+  ‏· ושורת *"נשארו רק `dev` ו-`main`"* קיבלה חותמת-זמן — היא **התיישנה באותו לילה** כשנוצרו
+  חמישה ענפי-`dependabot` אוטומטיים. **הטענה לא הייתה שגויה; היא פשוט לא נשאה תאריך**, וקורא
+  עתידי היה מסיק שמישהו יצר ענפים בניגוד לכלל 10. *(שניהם מאודיט-התיעוד הבלתי-תלוי.)*
+- ✅ `28/08/2026 11:0X` — **‏5.1 מסע ② בוצע דרך המסך, בהרשאת-ישי — שלושת המסעות סגורים.**
+  🔎 **ומה שהתגלה בבחירת-הפרויקט, וזה ממצא ולא טרוויה:** ‏`cancel_project` **מסרבת לבטל אירוע
+  שכבר התקיים או נסגר** (`event_finished` בכלל התנאי) ⇒ **‏#14 — תרחיש-הביטול שהאפיון עצמו
+  מייעד (העוגן 3,508) — אינו ניתן לביטול דרך המסך**, כי שעון-הדמו עבר את מועד-האירוע שלו.
+  **השומר נכון; התרחיש הוא שהתיישן.**
+  ⇒ נבחר **#15 "ערב השקה — קמפוס צפון"** *(אירוע 07/09, עתידי ⇒ ניתן לביטול)*, **ובכוונה הוא
+  ולא #11:** ל-#15 יש **שני פריטי-לוגיסטיקה במצב `ordered`/`ready` בשווי 1,225 ₪**, כלומר
+  דמי-ביטול אמיתיים; ל-#11 אין שורות-לוגיסטיקה כלל והתחשיב היה יוצא אפס.
+  **מה שרץ:** מסך-הפרויקט ⇒ "ביטול פרויקט" ⇒ סוג `הלקוח ביטל` + סיבה-חובה ⇒ אישור.
+  **התוצאה במסד:** `cancelled` · `cancel_type='customer'` · הסיבה נשמרה · **דיילת אחת שוחררה**
+  (`released_from_status`). **והשורה הופיעה מיד בלשונית "ממתין לחשבונית" מסומנת `דמי-ביטול`.**
+  💰 **והתחשיב על המסך, שהוא בדיוק הסיפור שישי יספר בכנס:** ‏**① פיצוי-צוות 0.00 ₪** — הביטול
+  נעשה **247.9 שעות** לפני האירוע, ומעל 72 שעות הסולם נותן 0% *(ושים לב: **247.9 ולא זנב בן 16
+  ספרות** — זה תיקון-העיגול של הבוקר, נראה לעין)* · **② סחורה 1,225.00 ₪ במחיר מלא** — התגים
+  הוזמנו ואי-אפשר לבטלם (ה23) · **③ שירותים שבוצעו** — שורה חופשית · **תת-סכום 1,225.00 ₪.**
+  ⏸️ **מה שנשאר במסע הזה:** פתרון-הפה עצמו (שמירת הסכום / ויתור) — **פעולה כותבת בלתי-הפיכה
+  שמקפיאה רווח**, ולכן מחכה לאחרי ה-🎨.
+- 🎨 `28/08/2026 11:1X` — **המסכים הוגשו לישי לאישור.** דף-סקירה אחד: **שמונה צילומים חיים**
+  *(S1 ×3 לשוניות · S2 ×2 מצבים — ביטול ונעול · S3 · S4 ×2 — קישור חי וקישור מת)*, ולצד כל
+  מסך **מה לבדוק** ו**מה נבנה בלי ציור**. 🔑 **והחלק שהוא באמת לא יכול לתפוס לבד מסומן בנפרד:
+  שלושת הפריטים ב-S2 שאין להם ציור ואין הכרעה שלו — הם `הנחתי` שלי**, ולכן הם בקופסה משלהם.
+- ✅ `28/08/2026 10:4X` — **‏H6 הוחלה: הפונקציה היחידה במ8 שהייתה נגישה לכל משתמש מחובר בלי
+  שער — סגורה. אומתה משני הכיוונים בדפדפן.**
+  · **מנהלת הכספים** פותחת את חלון-הסגירה של #12 ⇒ הדיאלוג עולה, `closing-meta` נראה,
+    `closing-server-error` = **0**. ⇒ **השער לא שבר כלום.**
+  · **מנהלת הגיוס** *(`blocked` על 'כספים')* מריצה את **אותה קריאה בדיוק** עם הטוקן החי שלה
+    ⇒ **‏403 · `42501` · *"אין לך הרשאה לבצע פעולה זו במודול כספים"*.**
+  🔑 **והניסיון הראשון להוכחה נכשל, וזה שווה רישום:** ‏apikey מנוחש החזיר `401 Invalid API key`
+  — **נראה כמו דחייה ואינו מוכיח כלום**, כי הקריאה מעולם לא הגיעה לפונקציה. **תוצאה שלילית
+  נחשבת רק כשהבקשה הייתה מצליחה אחרת.** הריצה השנייה תופסת apikey **מתעבורה אמיתית** ונכשלת
+  מפורשות אם לא תפסה.
+  📌 **מטריצת-ההרשאות במדידה:** ‏`edit` — מנכ"ל · מנהלת כספים ולקוחות · **`blocked` — פרויקטים ·
+  גיוס · לוגיסטיקה.** ⇒ השער מוציא בדיוק את שלושת התפקידים ש-§7.34 מתכוון להוציא.
+  ✅ **וה-ACL נמדד שוב אחרי ההחלה ולא זז** *(מוקש-H5b אינו חוזר כאן: אין `drop`)*.
+- ✅ `28/08/2026 10:3X` — **עוגן-האפיון `3,508.00` שוחזר חי — §10 רשם אותו כ"אינו משוחזר",
+  והרישום הזה תוקן.** שאלת-ישי *"הכל אומת בקוד היטב?"* שלחה אותי למדוד במקום לענות.
+  **בעסקה מתגלגלת על #14** *(30 שעות לפני האירוע; #14 יצא `event_finished`, `cancelled_at`
+  ‏`NULL` — אפס שורות קבועות)*:
+  ‏`team_compensation` **328.00** *(4 דיילות · 4 שעות · 50%)* + `goods_at_price` **3,180.00**
+  ⇒ **`proposed_fee` 3,508.00 — זהה בייט-בבייט לעוגן ב-§③3.** ➕ `goods_at_cost` 1,500.00 ·
+  `payout_compensation` 328.00 *(= `team_compensation`, כמתוכנן ב-`customer`)*.
+  🔑 **ולמה זה לא נשחזר עד היום, וזו לא הייתה שגיאה:** אף פרויקט בסיד אינו `cancelled`, והשחזור
+  דורש ביטול. **דפוס-העסקה-המתגלגלת פותר בדיוק את זה** — הוא נותן מדידה חיה בלי שיור.
+  ⇒ **שלושה מארבעת עוגני-הקבלה שוחזרו חי** *(3,650 · 3,508 · 292.60)*; הרביעי (69%) הוא
+  אחוז-תצוגה שנבדק ביחידה.
+  📌 **ומה שהמספרים האלה מלמדים על המודל העסקי, ושווה לישי בכנס:** הסחורה מחויבת ללקוח
+  ב-**מחיר** (3,180) בעוד עלותה לחברה **1,500** — כלומר על סחורה שכבר הוזמנה החברה שומרת את
+  המרווח. **זו הכרעת-ה23** *("מחיר מלא = מחיר-הלקוח שהוקפא בהצעה, לא עלות")*, והיא הגיונית:
+  התגים נרכשו ואי-אפשר לבטל אותם. **הפיצוי לדיילות, לעומת זאת, מחויב לפי הסולם ולא במלואו.**
+- 🔵 `28/08/2026 10:0X` — **‏H5 נכתבה: עוגן-התשלום שהופך "שיקול-דעת" מ*שדה ריק* ל*החלטה על
+  מספר*. ‏ממתינה להקלדת-ישי.** ‏`module8_h5_payout_anchor_for_manual_fee`.
+  **מה שנוסף:** עמודת-החזרה תשיעית — `payout_compensation` — הפיצוי שהצוות **יקבל בפועל**
+  בדוח-השכר, לפי `v_payout_pct` שהוא מראה מדויקת של ענף-השכר (`force_majeure` ⇒ 0, אחרת
+  הסולם) **בלי השעיית-ה"אחר" של H4.** ‏`proposed_fee`/`team_compensation` נשארים `null`
+  ב"אחר" — **ה25 לא נסוג ולו בסנטימטר.**
+  🔑 **הנימוק, ואינו העדפה — הוא מדידה:** ‏`generate_salary_report` מסתעף על `force_majeure`
+  **בלבד** (אין בו ולו אזכור אחד של `'other'`) ⇒ **החברה משלמת לצוות גם בביטול "אחר".**
+  ⇒ ההחלטה של מנהלת-הכספים מעולם לא הייתה *"כמה לחייב"* באוויר, אלא **"כמה ממה שאנחנו כבר
+  משלמים להעביר ללקוח"** — טווח: ‏0 (החברה סופגת) → הפיצוי → הפיצוי + סחורה. **המסך אומר
+  לה בדיוק את זה.**
+  🚫 **ומה שהוא במפורש אינו: זריעה.** שדה-הסכום נשאר ריק, ובדיקה ייעודית נועלת זאת — אילו
+  זרע, ‏H4 הייתה מתבטלת בשקט והלקוח היה מחויב בלחיצה אחת בדיוק כמו קודם.
+  ⚠️ **פער-עיגול שנאמר מראש כדי שלא ייקרא כבאג:** דוח-השכר מעגל **פר-שורה** ואז סוכם;
+  הפונקציה כאן מעגלת **את הסכום**. דיילת אחת ⇒ זהה; ‏N דיילות ⇒ הפרש חסום ב-N×½ אגורה.
+  ‏`payout_compensation` נבנתה **באותה צורה בדיוק** כמו `team_compensation`, כדי שהשתיים
+  יסכימו בייט-בבייט בכל סיווג שאינו "אחר" ולא ייראו כשני מספרים סותרים.
+  🔴 **ולמה מהמסד ולא מ-JS:** ‏`pct × שעות × Σתעריפים` בצד-הלקוח הוא **מחשבון-כסף שני**
+  (‏F16/R1-4) — בדיוק הדפוס ש-H2/H3 הוכיחו כמסוכן: אותו כלל בשני מקומות, ושניהם שגו.
+  ‏`payout_compensation` נוסף גם ל-`PROPOSAL_FIELDS` ⇒ חזרה לגרסה בלי העמודה נתפסת
+  כשער-צורה ולא כ-`undefined` שקט. **סוויטה 1,776 / 65 exit 0.**
+  ⏸️ **לא הוחלה** — שער-ההקלדה. *(⚠️ ו-`knip` קרס שוב על זיכרון באמצע השער; אחרי ניקוי
+  דפדפני-Playwright עבר exit 0. **הדפוס חוזר — שווה לזכור שכשל-שער יכול להיות מצב-המכונה.**)*
+- ✅ `28/08/2026 10:2X` — **‏H4 הוחלה אחרי הקלדת-ישי, ואומתה משני הכיוונים.**
+  ‏`prosrc` נושא את השורה · `provolatile='s'` · `prosecdef` — שלושתם `true`.
+  ‏`md5` חדש `a8ad0c1765be015d6ca69b42bff172d6` (3,270) מול `8e54ca8aa56ee94cad16300734343e5e` (2,908).
+  **אותה הוכחה מתגלגלת שרצה לפני ההחלה, רצה שוב אחריה** *(אפס שורות קבועות; #11 יצא `ready`)*:
+  ‏`customer` **50% · 90.00 → ללא שינוי** · `force_majeure` **0% · 0.00 → ללא שינוי** ·
+  **`other` — מ-50% · 90.00 ל-`null` · `null`.** ‏`goods_at_price` · `planned_hours` ·
+  `compensated_count` · `hours_before_event` ממשיכים לחזור, כמתוכנן.
+  ➕ **וה-`db_roadmap` קיבל את `H1`–`H4` בבת-אחת** — הן היו מוחלות ולא רשומות שם, כלומר §10.1
+  הופר בארבע מיגרציות. **נרשם כפער ולא תוארך לאחור.**
+  🔴 **ושאלת-ישי שנולדה מיד אחרי ההחלה, והיא הנכונה: *"בסיווג 'אחר' — איך היא בוחרת כמה?"***
+  **מדדתי, והתשובה קיימת בנתונים אבל אינה על המסך:** ‏`generate_salary_report` מסתעף על
+  `force_majeure` **בלבד** (נמדד 28/08) ⇒ **פרויקט שבוטל כ"אחר" עדיין משלם לדיילות** את פיצוי-
+  הסולם, בעוד צד-החיוב נשאר בלי מספר. ⇒ **ההחלטה שלה אינה "כמה לחייב" באוויר, אלא "כמה מתוך מה
+  שאנחנו כבר משלמים להעביר ללקוח"** — טווח מוגדר: ‏0 (החברה סופגת) → פיצוי-הצוות → פיצוי + סחורה.
+  ⏸️ **ההצגה של המספר הזה על S2 אינה בנויה** — נדרש להחזיר עמודת-תשלום שאינה מתאפסת ב-`other`
+  (‏`H5`), ולכן **מיגרציה + הכרעת-ישי.** נרשם ב-`db_roadmap` כ-Forward notice.
+- 🔴 `28/08/2026 09:4X` — **‏H4 נכתבה — ה25 נסגר גם במקור. ממתינה להקלדת-ישי.**
+  ‏`module8_h4_rule25_other_no_auto_proposal`. הגוף נמשך חי (`md5(prosrc)`=
+  `8e54ca8aa56ee94cad16300734343e5e`, אורך 2,908), **והשינוי היחיד הוא שורת-`when` אחת**:
+  ‏`when v_cancel_type = 'other' then null`, **לפני** תנאי-השעות — בדיוק במקום שבו יושב ענף
+  כוח-העליון, כי הסיווג מכריע לפני שהשעון נבדק.
+  🔑 **ומה שלא נשלל:** ‏`goods_at_price` · `goods_at_cost` · `planned_hours` ·
+  `compensated_count` ממשיכים לחזור. **הסחורה שהוזמנה היא עובדה** — נשללת ההצעה, לא המידע.
+  🔴 **ושינוי-מסך נכנס באותו קומיט, אחרת המיגרציה מייצרת שקר:** ‏`team_compensation IS NULL`
+  מרונדר עד היום כ-*"לא ניתן לחשב פיצוי — חסרות שעות סופיות"* (‏A-8), ובסיווג "אחר" **השעות
+  תקינות לחלוטין** — המשפט היה שולח את מנהלת-הכספים לחפש נתון שאינו חסר. עכשיו שני הענפים
+  נפרדים (`closing-fee-comp-manual` מול `closing-fee-comp-missing`), ושורת-ההסבר **אינה מצטטת
+  את הסולם** בסיווג "אחר" כי הוא לא הופעל. **שתי בדיקות נועלות את שני הכיוונים** — כולל ש-A-8
+  לא נבלע בביטול רגיל.
+  **סוויטה 1,774 / 65 exit 0.** ⏸️ **המיגרציה לא הוחלה** — שער-ההקלדה.
+- 🔴 `28/08/2026 10:0X` — **תיקון-טענה שהתהפך פעמיים, ה25 שנסגר בצד-המסך, והנמען שהפסיק לשקר.**
+  **‏① הטענה על מייל דוח-השכר — וזה הפריט החשוב כאן, כי הכשל הוא שלי ולא של הקוד.**
+  כתבתי *"המייל לא נחת אצל איש"* על סמך **שם-הדומיין בלבד**, בלי למדוד ⇒ טענה-שלילית לא-מאומתת.
+  ישי כתב *"קיבלתי מייל… והוא אחלה"*, **ואני הפכתי את הטענה מיד ואף החזרתי את הפרמטר** — כלומר
+  צייתי לדיווח במקום לבדוק. **ואז מדדתי בתיבה עצמה (בהרשאתו), והתמונה הפוכה משתי הגרסאות:**
+  ‏🔹 המייל נשלח **מהחשבון שלו** (‏`SENT`) אל `office@cpa-firm.co.il` ·
+  ‏🔹 **וחזר `mailer-daemon`:** *"הדומיין cpa-firm.co.il לא נמצא… DNS Error"* ·
+  ‏🔹 מה שהוא ראה בתיבה = **העותק-מהשולח + הודעת-הכישלון**, והוא העריך את **התוכן** — בצדק.
+  ⇒ **הטענה המקורית הייתה נכונה, ההיפוך היה שגוי, והמדידה הכריעה.** הפרמטר הוחזר ל-
+  `ishay1997@gmail.com`. 🔴 **והממצא המערכתי שנולד מזה, והוא לא של מ8: ‏`status='sent'` פירושו
+  שמנוע-המיילים קיבל את הקריאה — לא שהדואר נמסר.** ‏bounce חוזר לתיבת-השולח **ואינו מגיע
+  למערכת בשום צורה** ⇒ המסך יכול להציג "✓ נשלח" על מייל שחזר. **חוב של מודול-המיילים (מ10).**
+  **‏② ה25 — נסגר בצד-המסך, והפגם במסד **אומת חי** (לא נקרא מהמקור).** בעסקה שגלגלה את עצמה
+  לאחור על #11 (48 שעות לפני האירוע): ‏**`customer` ⇒ 50% · 90.00 ₪** *(1 דיילת × 4 ש' × 45 = 180;
+  חצי = 90 — התאמה ידנית)* · **`force_majeure` ⇒ 0% · 0.00 ₪** ✅ · 🔴 **`other` ⇒ 50% · 90.00 ₪ —
+  זהה ל-`customer` בדיוק**, בעוד ה25 קובע *"‏`other` ⇒ אין הצעה אוטומטית"*. **הפגם קיים, מדוד.**
+  **התיקון שנעשה הוא מסך-בלבד:** ‏`seed` אינו זורע את שדה-הסכום כש-`cancel_type='other'`,
+  ומשפט מוסבר מופיע במקומו. **ההצעה נשארת מוצגת לעיון** — הוסרה ההסכמה-השקטה, לא המידע.
+  ⏸️ **תיקון-המסד נשאר פתוח** (ענף `other` ב-`v_pct`) — מיגרציה, ולכן הכרעה+הקלדה של ישי.
+  **‏③ עמודת "נשלח אל" הפסיקה לשקר.** היא קראה את הפרמטר **בזמן-הצפייה** ⇒ כל שורה היסטורית
+  טענה רטרואקטיבית שנשלחה לכתובת של היום. עכשיו `listSalaryReports` מצמידה `sent_to`
+  מ-`email_log` (שאילתה שנייה — הטבלה פולימורפית ובלי FK במכוון), ושליחה-חוזרת גוברת על
+  המקורית. **אומת חי:** הפרמטר הוא `ishay1997@gmail.com` והשורה מציגה `office@cpa-firm.co.il` —
+  בדיוק מה שקרה. **הנפילה-לאחור לפרמטר הוסרה בכוונה**; חוסר-רישום מציג `—` (§4.3).
+  **‏④ מסע ② של 5.1 — כוסה בלי לבטל פרויקט.** שלושת סיווגי-הביטול נבדקו מול הפונקציה האמיתית
+  בעסקה שהתגלגלה לאחור (הדפוס המתועד ב-`db_roadmap` §1477), ו-#11 נשאר `ready` · `cancelled_at
+  IS NULL`. ⚠️ **ומה שזה אינו מכסה, במפורש: את הרגל ה-UI** — מסך-הביטול של מ6, הופעת השורה
+  בלשונית, ופתרון-הפה דרך S2. **זה נשאר ⬜ ודורש ביטול אמיתי ⇒ הנהון-ישי.**
+  **‏⑤ לשונית ברירת-המחדל — ההמלצה שלי הייתה שגויה, והקוד כבר צודק.** המלצתי לפתוח על
+  "ממתין לחשבונית"; **המוקאפ המאושר מסמן `class="tab on"` על הלשונית השנייה — "ממתין לתשלום"**,
+  ו-`DEFAULT_TAB` כבר עומד על `awaiting_payment`. ⇒ **מיקום-ברירת-מחדל הוא APPEARANCE, והמוקאפ
+  גובר.** ‏**"אל תעשה מה שכבר נעשה" מנע כאן שבירה, לא כפילות.**
+  **בדיקות:** ‏**1,772 / 65 exit 0** *(מ-1,767; +5)*. ‏`knip` קרס באמצע על `Array buffer
+  allocation failed` — **זיכרון, לא קוד**: דפדפני-Playwright שנשארו תפסו 1.6GB ונשארו 1GB פנויים.
+  אחרי ניקוי — עבר. *(שווה לדעת: כשל-שער יכול להיות מצב-המכונה.)*
+- 🔄 `28/08/2026 09:1X` — **‏Q-2 נהפכה בהכרעת-ישי: היסטוריית-דוחות-השכר עברה אל תוך הדיאלוג.**
+  **מה שהוא ראה ואני לא.** ‏`Q-2` (שלי, בהנהון שלו 26/08) והמוקאפ המאושר של S3 שניהם מיקמו את
+  ההיסטוריה ככרטיס על מסך-הכספים **מתחת לטבלה**. ישי: *"למטה זה לא טוב כי יהיו מלא שורות של
+  פרויקטים שם"* — **ולשונית "פרויקטים שהסתיימו" אכן צוברת כל פרויקט שאורכב אי-פעם**, כלומר
+  הכרטיס נדחק מתחת לקו-הקיפול **לצמיתות**. הוא הכריע `ב׳` מתוך שלוש שהוצגו לו.
+  🩸 **ובאג חי שנפל מאותו מיקום, ולא רק אי-נוחות:** באנר חודש-חסום הציע *"צפייה בדוח הקיים ↑"*,
+  והכפתור **סגר את הדיאלוג** והצביע **למעלה** על כרטיס שיושב שני מסכים **למטה**. עכשיו הוא גולל
+  אל הסעיף באותו חלון, והחץ הוא ↓.
+  **מה השתנה בקוד:** ‏`SalaryReportHistoryCard` מקבל `embedded` (מפשיט מסגרת-כרטיס, משאיר
+  קו-הפרדה) ומרונדר בתוך `SalaryReportDialog` מעל ה-footer · איתות-הרענון הפך ל-state פנימי
+  (`historyTick`) ⇒ **הפרופ `onGenerated` הוסר לחלוטין** — פרופ שאיש אינו מעביר הוא קוד מת
+  שהבדיקה לבדה מחזיקה בחיים · ‏`FinancePage` חזר להציג **ישות אחת בלבד: פרויקטים.**
+  **בדיקות:** ‏**1,767 / 65 exit 0** *(מ-1,765; +2 נטו)*. שלוש חדשות, וכולן נועלות את הכיוון
+  ולא רק את המצב: הרענון-בתוך-הדיאלוג · הכפתור מצביע ↓ ואינו סוגר · **ו-`FinancePage`
+  *אינו* נושא יותר את הכרטיס** — בדיקה שלילית בכוונה, כדי שחזרה שקטה למצב הקודם תיתפס.
+  ⚠️ **מוקש-בדיקה שנמדד תוך כדי, ושווה לדעת:** ‏`listSalaryReports` נקראת **פעמיים** בהרכבה
+  (הדיאלוג לפאנל-הקדם-הפקה, והכרטיס לעצמו) ⇒ ‏`mockResolvedValueOnce` נבלע ע"י הראשונה
+  והבדיקה נכשלה. הפתרון: דגל מפורש שנדלק בהפקה, לא תלוי בסדר-קריאות. ➕ **ו-`scrollIntoView`
+  אינו ממומש ב-jsdom** ⇒ ‏`?.()` על המתודה עצמה; ההתנהגות בהיעדרו נכונה בפני עצמה — ההיסטוריה
+  כבר באותו דיאלוג.
+  📌 **ומה שהוצע ונדחה, עם הנימוק:** ‏(ג) לשונית רביעית בסרגל — **אפס גלילה, אבל שלוש הלשוניות
+  סופרות פרויקטים והרביעית הייתה סופרת דוחות**: שתי ישויות בסרגל אחד, ומונים שאינם מדברים על
+  אותו דבר. · **מודול 7 (דו"חות)** — רעיון של ישי עצמו, ונענה כ"נכון ומוקדם": **ההפקה נעולה
+  בהרשאת 'כספים' וה-P4 הוא תהליך של מנהלת-הכספים**, ולכן פיצול הפקה↔היסטוריה בין מודולים גרוע
+  משתי האפשרויות. **עותק-לקריאה במ7 נשאר טבעי בהמשך — פריט של מ7, לא שינוי במ8.**
+  🔴 **וממצא חדש שנולד מהצילום החי ולא תוקן — היסטוריה שמשקרת.** עמודת *"נשלח אל"* בשורת-היסטוריה
+  קוראת את **הפרמטר החי** ‏`מייל_משרד_רואי_חשבון`, ולא את הנמען שאליו הדוח באמת יצא. **וזה גלוי
+  ברגע זה:** דוח 13 נשלח ב-08:35 אל `office@cpa-firm.co.il` *(מוכח ב-`email_log`)*, והמסך מציג
+  `ishay1997@gmail.com` — כי החלפתי את הפרמטר אחרי ההפקה. ⇒ **כל שורה היסטורית טוענת רטרואקטיבית
+  שנשלחה לכתובת של היום.** מקור-האמת הוא `email_log.recipient` (פר-שליחה); ל-`salary_reports`
+  אין עמודת-נמען. **התיקון דורש חיבור ל-`email_log` או עמודה חדשה ⇒ הכרעת-ישי, לא תיקון-בזק.**
+- ✅ `28/08/2026 08:5X` — **‏5.1: מסעות ① ו-③ בוצעו חי. ‏② ממתין להנהון-ישי.**
+  🔴 **וזו תיקון-רישום לפני הכול: מסע ① רץ ב-07:15–07:19 והמדריך המשיך לסמן את 5.1 ⬜.** הסיבה
+  לפער אינה שכחה אלא רצף-הכרעות: ב-`~07:0X` דיווחתי *"נעצר בכוונה: 5.1 — לא אכתוב למסד שאתה
+  מדגים עליו בעוד שעתיים"*; **ישי עקף** (*"למה לכתוב למסד בעייתי לפני? לדעתי אפשר עכשיו זה לא
+  מפריע"*), המסע רץ — **והרישום לא נסגר אחריו.** *(ישי תפס את זה בעצמו: "את 4 ו-5.1 עשיתי אולי
+  יש חוסר בתיעוד".)*
+  **‏① — ‏#12 מקצה-לקצה, מאומת מהמסד החי ולא מהנרטיב:** `project_status='finished'` ·
+  `invoice_sent=true` · מייל-חשבונית `sent` לתיבה האמיתית ב-`07:15:36` · `payment_date=2026-08-28`
+  · `feedback_status='completed'`, `feedback_score=5` **דרך הדף הציבורי** (`feedback_rpc_calls`=3)
+  · `archived_at=07:19` · **`final_profit=207.40` קפוא** · **`feedback_token` מת.**
+  **‏③ — דוח-שכר אוגוסט 2026, `08:35`.** דוח **13**, `total_amount` **292.60** — **בדיוק
+  עוגן-האפיון**, ובהסכמה משולשת: העוגן ב-§③3 · התחזית שנכתבה ב-`PRE_5_1_RESTORE` **לפני**
+  ההרצה · והתוצאה החיה. שורה אחת (אפרת דהן, #12, 6ש' × 45 + 22.60 נסיעות), `salary_report_id`
+  **חתום**, `travel_amount` נחתם 22.60. **האקסל הורד ותאיו נקראו** —
+  `13_08_2026_Payroll_Report.xlsx`, הכותרת *"דוח שכר דיילות — אוגוסט 2026"*, שמונה העמודות,
+  ו-`292.60` גם בשורה וגם בסך. **הפקה שנייה חסומה** — הבאנר מצטט את ה-UNIQUE, והכפתור
+  `disabled`. **וה19 הוכח חי:** פרטי-הבנק (`הפועלים 601-2047199`) נקראו מהטבלה המוגנת בהרשאת
+  'כספים'.
+  ⚠️ **ומה שלא הוכח, במפורש: המייל של דוח-השכר לא נחת אצל איש.** הפרמטר
+  `מייל_משרד_רואי_חשבון` היה `office@cpa-firm.co.il` — **דומיין מת**; ‏Make קיבל את הקריאה
+  ולכן היומן אומר `sent`, אבל אין נמען. **כפתור "שלח שוב" מופיע רק על `failed`** ⇒ אי-אפשר
+  לשחזר את השליחה הזו. 🔧 **מה כן נעשה:** הפרמטר הועבר ל-`ishay1997@gmail.com` **אחרי** ההפקה,
+  לפי מוסכמת-מיילי-הבדיקה (הכרעת-ישי 19/08/2026) — ⇒ **דוח ספטמבר, זה שירוץ בכנס, ינחת בתיבה
+  שלו.** ‏**שינוי-דאטה חי, הפיך בשורה אחת, ומדווח כאן כי אינו נגזר משום קובץ.**
+  **‏② לא רץ, ולמה זו לא שכחה:** אף פרויקט בסיד אינו `cancelled`, כלומר המסע דורש **לבטל
+  פרויקט חי** — פעולה שמשנה את נתוני-ההדגמה שעות לפני הצגת-הביניים. **הנהון-ישי נדרש**, והוא
+  זול: מספיק פרויקט `not_started` (#3 או #16).
+- 🟢 `28/08/2026 08:5X` — **מעבר-UX ומקרי-קצה (בקשת-ישי מפורשת), ושני כשלי-שער שהיו על העץ מאז פזה 2
+  ואיש לא מדד אותם.**
+  **המעבר עצמו:** ריצה בת 8 סוכנים (`wf_8da1e480-df9`, 0 שגיאות) — ארבע עדשות קריאה-בלבד
+  (מקרי-קצה · נגישות/RTL · שלמות-מצבים · זרימת-מנהלת) ואז ארבעה מתקנים בבעלות-קובץ בלעדית.
+  **חמישה תיקונים נכנסו, וכל אחד נולד ממדידה ולא מדמיון:**
+  ① `ClosingWindowDialog` — `hours_before_event` הודפס גולמי (`45.716666666666665`) במשפט שמצדיק
+     חיוב-לקוח; עוגל ל-`toFixed(1)` בתצוגה בלבד (המסד לא נגע — עיגול שם היה משנה את קלט-הסולם).
+  ② אותו קובץ — בכוח-עליון המשפט צירף שעות⇐אחוז והציג *"5 שעות ⇐ הסולם נותן 0%"*; המסד קובע 0%
+     ב-`force_majeure` **לפני** שהשעון נבדק, ולכן הענף מוצג בנפרד והנוסח **נשאב** מ-`compensationReason`
+     של מ6 במקום להיכתב פעמיים.
+  ③ אותו קובץ — `שמור דמי-ביטול` ו`ויתור על החוב` נכבו כבוליאן בלי מילה על המסך (A-1 היא דפוס-הבית);
+     הפכו למשפטי-שער עם `aria-describedby`. ➕ בלוק-התשלום נשאר פתוח אחרי רישום כדי לתקן תאריך שהוקלד
+     שגוי, ו-`record_feedback` מקבל `''` ולא `null` כשמרוקנים הערה (`coalesce` פירושו "אל תיגע" ⇒ מחיקה
+     לא הייתה אפשרית).
+  ④ `FinancePage` — מונה-האיחור המשיך לרוץ באדום על חוב **שכבר נגבה**: `record_payment` אינו מזיז
+     סטטוס, והשורה נשארת בלשונית "ממתין לתשלום" עד הארכוב — ימים. עכשיו תג `שולם` + תאריך.
+     ⚠️ **המילה `שולם` היא `הנחתי`** — המסך כבר נועל את החצי השלילי (`הסתיים — לא שולם`), אך את החיובי
+     איש לא אישר. **פריט ל-🎨.**
+  ⑤ `SalaryReportDialog` — שדה-השנה קיבל כל ערך; `2027` היה חותם את כל השכר הפתוח ושולח לרו"ח דוח
+     בשם חודש שלא היה, בלי ביטול. נוסף שער "לא ניתן להפיק דוח לחודש עתידי" **וחלונית-וידוא** לפני
+     `ייצא ושלח` — הפעולה הבלתי-הפיכה היחידה במודול שלא שאלה כלום.
+  ⑥ `api.js` — חשבונית שצולמה בטלפון (4MB) עוברת את הבאקט (10MB) ונופלת בקיר-המייל (~2.86MB), והמסך
+     אמר *"יש לנסות שוב"* בלולאה. נוסף `isAttachmentTooLarge` **לפני ההעלאה** ⇒ אין קובץ יתום.
+  📌 **חוב שנרשם בקוד ולא נסגר:** הבאנר עדיין מזמין "עד 10MB"; הצורה הנקייה (דפוס מ6, `REPORT_MAX_BYTES`)
+     דורשת שינוי-מסך **ומיגרציית-באקט**.
+  🔴 **ושני כשלי-שער שנמדדו היום ולא נבעו מהריצה הזו כלל:**
+  **‏(א) `npm run deadcode` (knip) נכשל על `HEAD` — ו-knip הוא שלב חוסם ב-CI** (`ci.yml:46`).
+    `buildSalaryReportSheet` ו-`uploadSalaryReportFile` יוצאו בעוד הצרכן היחיד של כל אחת יושב באותו
+    קובץ. ⇒ **‏`4f2b352` היה נכשל ב-CI.** תוקן בהסרת `export` (טכני, ללא משמעות מוצרית).
+    ⚠️ **וזה סותר את מה שנרשם כאן על שערי פזה 2/3** — הרישום אמר `gate exit 0`; המדידה של היום אומרת
+    אחרת, ואני לא יכול ליישב בין השניים. **המדידה גוברת.**
+  **‏(ב) `docs/schema.sql` §26 עדיין תיאר את דלי `finance` כמקבל pdf/jpeg/png בלבד** — כלומר לא סונכרן
+    אחרי `H1`. תוקן באותו סעיף, עם ציון המיגרציה.
+  **‏(ג) `npm run gate` **עדיין** יוצא 1, ובפריט אחד בלבד: `src/modules/08_finance/CLAUDE.md` חסר
+    (`check:context`). זהו תוצר של `module-close §4c` ולכן **נשאר לסשן-הסגירה במכוון**;
+    ‏`check:context` **אינו** רץ ב-CI ⇒ **‏CI ירוק.**
+- 🔴 `28/08/2026 00:5X` — **AN OPEN PRODUCT QUESTION ISHAY RAISED, AND A CITATION THAT DOES NOT
+  RESOLVE. Neither is closed; both are his to rule after the conference.**
+  **What he asked:** *"איפה השאלון שבניתי עם 3 שאלות?"* — he remembered building a customer survey
+  and could not find it on the new page.
+  **He was right.** `params.קישור_בסיס_סקר_לקוחות` is seeded with a **live Google Form**
+  (`https://forms.gle/YFJobqmgpBCqf1x87`) carrying **four** 1–5 rating questions (staff
+  professionalism · manager communication · registration experience · product quality — C5 §5.8.8).
+  m6 mails a link to it at operational close. **m8's Discovery replaced it** with a single star
+  rating + free text, recorded at `processes-approved.md` as a *"סטייה מנומקת"* and marked
+  **reopenable without ceremony**.
+  🔴 **AND THE PART THAT MATTERS FOR THE REGISTERS: that deviation cites *"מקורות ב-`world-sources.md`"*
+  and a *"~75 שניות לשאלה יחידה"* figure — and `world-sources.md` CONTAINS NO SUCH ENTRY.** Measured
+  27/08 00:5X: its only CSAT row is about the **<3 phone-clarification threshold**, a different
+  decision. ⇒ **the "this is the world standard" half of that justification is unsourced.** The
+  *internal* half is sound and independently checkable, and is what the recommendation now rests on:
+  **the schema stores ONE score, so four questions need a collapse rule — and that rule is §7.37,
+  which is still open.** Four questions without it cannot enter the system at all.
+  ⚠️ **The mechanism difference Ishay had not connected, and it is the real decision driver:** with
+  the Google Form the four answers **never reach REG-IN** — someone reads the form and types one
+  number by hand. With the built page the score lands automatically and unblocks the archive gate.
+  So this is not "richer vs simpler", it is **manual-and-detached vs automatic-and-integrated**.
+  **‏✅ RULED `28/08/2026 01:1X` — by Claude, under Ishay's explicit delegation** (*"תציג את
+  האפשרויות ותחליט בעצמך עם סיבה… תנסה להקל עלי ולא להוסיף לי עבודה"*). **The one-question page
+  STAYS — and the reason it stays is not the reason originally written.**
+  🔴 **The research killed our own argument, and that is the most useful thing it did.** The claim
+  that short surveys get materially better response rates **does not survive at this magnitude**:
+  **Sandelin 2022** (SOM Institute, U. Gothenburg — the full PDF was read, not a snippet) measured
+  **205 vs 149 questions** and found a **2.7-point** gap (48.5% vs 45.8%) with **no effect at all
+  among web respondents**, and no data-quality loss. Rolstad 2011's meta-analysis calls the
+  association heterogeneous and advises deciding **on content, not length**. Cochrane MR000008:
+  direction holds, **I²≈91%**. The dramatic figures in circulation (83%↔42%) are survey-vendor
+  marketing, and two major vendors disagree by **37 points**. ⇒ **anyone defending our design on
+  response rates would lose to one question at the conference.**
+  🟢 **What replaces it — internal, and checkable by Ishay himself:** the OLD path already threw away
+  everything four questions bought. The customer filled four ratings ⇒ **a human read them and typed
+  ONE number in.** So option A paid a long form's full price — an external tool, customer burden, and
+  **a manual transcription step standing between the event and its financial closing** — and banked
+  none of it. This is not survey theory; it is an incoherence in A *as it was actually built*.
+  🔑 **And the steelman's real objection — "a bare 3 does not say what broke" — is ALREADY answered
+  in this system, and not by free text.** A score <3 forces a phone clarification, and the manager
+  picks from **five structured reasons enforced by a live DB CHECK**
+  (`projects_negative_feedback_reason_check`, verified 28/08: `איחור דיילות` · `תפקוד דיילות` ·
+  `איכות תגים` · `ניהול לקוי` · `אחר`). ⇒ **the middle pattern the research recommends — one score
+  plus diagnostic tags on low scores — already exists here**, with the tag chosen by the manager
+  after a call rather than by the customer. A customer-facing tag picker would **duplicate** it.
+  ⏳ **Declared gaps, not filled by invention:** **no industry body publishes any standard for
+  client-side post-event feedback** — the EIC's canonical `APEX Post-Event Report` contains **zero
+  satisfaction fields** and prescribes a **face-to-face debrief** instead; and there is **no academic
+  literature at all** on agency→corporate-client event surveys (it is all about attendees).
+  **Write-backs done the same session:** the unsourced clause struck in `processes-approved.md` with
+  a dated ✏️ note · the real sources added to `world-sources.md`, which is the file the dead citation
+  pointed at · the negative finding recorded in its §ה.
+  *(Cross-referenced in `module-6.md` §10 — m6's guide is what proved the page was a 🔮 candidate
+  there and never a ruling, so the ruling is m8's to own.)*
+- 🟢 `28/08/2026 00:3X` — **ISHAY RULED, mid-run, on two items this build had escalated:**
+  **‏① The S3 preview state is APPROVED FOR BUILD** (*"מאשר את התצוגה המקדימה"*). It was the
+  mockup-fidelity lens's top finding: S3 rendered its 8-column table only AFTER
+  `generate_salary_report`, **which is irreversible** — so the manager pressed "ייצא ושלח" without
+  ever seeing what she was about to send the accountant. Owned by a dedicated agent in the phase-4
+  workflow.
+  **‏② BOTH fix migrations are approved in principle** (*"מאשר את 2 המיגרציות… קראתי היטב על מה
+  מדובר"*), **and he offered to let them run tonight or at 11:00 after the presentation.**
+  🔴 **They were NOT applied on that approval, and the reason is a rule, not caution:** the DB
+  protocol's typed-echo gate states that *a plain approval is not sufficient to apply*. Ishay types
+  the migration name; that is the gate. **Recommendation given: wait until after the 28/08
+  presentation** — the payoff is asymmetric. Applying tonight buys only the ability to verify one
+  upload path; what it risks, however small, is the demo he has been building toward. **Measured, so
+  the "small" is not a feeling:** H2 replaces a function with **zero production callers** (module 8
+  is not merged or deployed), and H1 only widens a MIME whitelist that nothing currently uses for
+  xlsx — so neither can affect the demo, and neither is urgent enough to spend the risk.
+- `27/08/2026 23:1X` — **PHASE 3 IN FLIGHT (12-agent workflow). Three leaf surfaces built; S1 and the
+  route step still running; verification not yet run.** Recorded mid-run because the Stop hook fired
+  and a half-built tree must not read as a finished one.
+  ⚠️ **Deviation to check at the gate — TWO FILES EXIST THAT NO AGENT WAS GIVEN OWNERSHIP OF:**
+  `src/lib/feedback.js` (+ test) and `src/modules/08_finance/publicApi.js`. The S4 task named exactly
+  `PublicFeedbackPage.jsx` + its test. **The architectural reason is plausible and may well be right**
+  — the public page is unauthenticated and cannot share the `'כספים'`-gated `api.js`, so a separate
+  anon client path plus pure feedback logic is a sensible split, and neither file collided with
+  another agent. **But it was not authorised, and "plausible" is not "verified":** the orchestrator
+  must confirm at the gate that (a) both are genuinely reachable and used, (b) `publicApi.js` does not
+  quietly widen what an anonymous caller can reach, and (c) neither duplicates something `api.js`
+  already exports. **Logged as `הנחתי` on the agent's behalf** — it filled a structural gap the task
+  file did not describe.
+- 🔴 `27/08/2026 22:1X` — **PHASE 2 COMPLETE — and the adversarial panel found TWO REAL DEFECTS IN
+  ALREADY-SHIPPED PHASE-1 WORK. Neither is fixed; both have a migration written and NOT applied.**
+  **Built by a 9-agent workflow** (3 builders · 3 read-only adversarial lenses · 3 fixers; 0 errors,
+  2.06M tokens, 64 min), then re-verified independently by the orchestrator.
+  **Evidence, by name:** suite **1,572 / 59 files exit 0** (baseline 1,454 / 56 ⇒ **+118, zero
+  regressions**) · `npm run gate` **exit 0** · orchestrator cross-check **8/8** · a sign-flip mutation
+  on the deviation term reddened **7 tests across two files**, then the file was restored
+  **byte-identical** (`sha256sum -c` OK).
+  🔑 **The cross-check is the part worth keeping:** it fed the LIVE DATABASE's measured outputs
+  through the AGENT-written functions and compared against the SPEC's hand-computed anchors. Three
+  sources, none of which saw the other two — a strictly stronger oracle than any test the same
+  session could author.
+  **‏🐛 DEFECT H1 — the `finance` bucket rejects xlsx, so the salary file can never be stored.**
+  Measured live: `allowed_mime_types = {application/pdf, image/jpeg, image/png}`. ⇒
+  `uploadSalaryReportFile` cannot succeed, `report_file_url` stays NULL, and **three explicit P4
+  promises die silently** — history-with-download, resend, and §7.68's proof-of-what-was-sent.
+  **Not a recorded decision that anyone made:** the m6 migration that created the bucket carries
+  *"לא הוכרע (M8 יחליט)"* on the `finance` row — the MIME list was a declared placeholder and m8 is
+  the module that owes the ruling. ה13 fixed only the SIZE; ה4 mandates xlsx. Migration written:
+  `20260827221902_module8_h1_finance_bucket_allow_xlsx.sql`.
+  **‏🐛 DEFECT H2 — the cancellation-fee band pays 0% instead of 50% at exactly 72.0 hours.**
+  ה24 reads *">72 = 0% · **24–72 = 50%** · <24 = 100%"* ⇒ 72.0 sits INSIDE the 50% band. The shipped
+  body evaluates `when v_hours >= v_part_h then 0` first, so exactly 72.0 falls to 0%. (24.0 is
+  correct.) Verified three independent ways: the approved ה24 · step 2.1's own wording · the live
+  params (24/72/50). **Severity, honestly: only fires at exactly 72.000000h**, which a
+  microsecond timestamp makes near-impossible in real use — but it is a money error against the
+  customer, on a boundary the spec defines explicitly. One operator. Migration written:
+  `20260827221903_module8_h2_fix_cancellation_band_72h.sql` (body pulled live from
+  `pg_get_functiondef`, per the migrations rule; the only diff is `>=` ⇒ `>`).
+  ⏸️ **Why neither was applied:** applying needs Ishay's typed echo, and the **28/08 interim
+  presentation runs on this same Supabase project**. **Proven not applied, not merely asserted:**
+  `list_migrations` ends at `20260827163737_module8_n1b_drop_hostesses_languages`; neither new
+  version appears.
+  **‏🔧 Two more things the lenses caught, both fixed inside phase 2:** `scoreTagText`'s `withScore`
+  option reproduced a tag format that cross-surface resolution #4 had **retired** — deleted, and the
+  test now BLOCKS the retired shape · `deriveDueDate` swallowed `undefined` (shape drift) into a
+  measured `—`, contradicting the file's own header — now throws, matching `deriveExpectedProfit`.
+  **‏🛡️ And one fixer REFUSED its instruction, correctly:** a verifier's suggested fix would have
+  rewritten Efrat's fixture to bonus 250 / total 542.60 — **overwriting the recorded acceptance
+  anchor 292.60**. The fixer applied the finding's INTENT additively (a separate
+  `efratWithPersonalBonus` variant) and left all three anchors byte-identical. This is the
+  conflict-question rule working in the direction nobody tests for: a review being wrong.
+  **‏🎨 Shared-component change made serially by the orchestrator** (four parallel phase-3 agents
+  would collide on it): `StatusTag` gains the `danger` tone. Colours read from the approved mockup's
+  own declaration (`.tag.danger{background:var(--red100); color:var(--red700)}`), not chosen by eye.
+  Without it `scoreTag()`'s `danger` fell through `?? TONES.muted` and rendered **grey with no
+  error** — "טעון בירור" would have looked like a neutral status.
+  **‏📦 Dependency, decided and de-risked before three agents were sent to depend on it:**
+  `write-excel-file` (runtime) + `read-excel-file` (dev). The npm `xlsx` package is stuck at 0.18.5
+  with known advisories and its fixed line is CDN-only. A round trip was PROVEN before use — Hebrew
+  survives, decimals survive, and **a ת"ז written as a String type comes back a string**, which is
+  the one that matters: an ID silently converted to a number loses a leading zero on a document that
+  goes to the accountant. Its browser entry graph was traced and reaches no Node builtins.
+  **‏⏭️ Two open items carried into phase 3:** `assertFinanceShape` has ZERO production call sites ⇒
+  **orchestrator ruling: every screen calls it on an RPC row before deriving** (one shape gate at the
+  boundary is the design; that is why the leaf derivations stay simple) · an empty payroll month
+  still mails a header-only xlsx to the CPA — P4 calls that case *"תקין"*, and the only clean guard
+  lives inside `generate_salary_report`, i.e. a phase-1 migration **and a product question for
+  Ishay**, so it was escalated rather than patched.
+- `27/08/2026 20:45` — **PHASE-2 DOOR (step 2.0) CLOSED. Baseline re-measured: 1,454 tests / 56
+  files, exit 0** — byte-identical to the Phase-1 hand-off figure, so Phase 2 starts from a clean,
+  re-verified floor. **Ledger sweep result: nothing new for Ishay** — every §3.4 item (Q-1…Q-5,
+  N-1…N-6) was ruled 26/08 and every §3.5 assumption (A-1…A-10) is recorded; the door's "settle with
+  Ishay" branch legitimately did not fire. **Two measured findings did land:**
+  **① `הכרעתי, הפיך` — step 2.1's function list was superseded by Phase 1** and has been corrected
+  in place above (see the boxed `↳ SCOPE CORRECTED` note on step 2.1). The list was written 26/08 at
+  blueprint, *before* the DB existed; `finance_project_money` now owns every money formula it names.
+  A builder obeying the step's literal text would have re-implemented the calculator in JavaScript —
+  **the exact second-profit-number failure F16/R1-4 forbid**, and it would have passed its own tests.
+  The phase preamble (added 27/08) already forbade it; only the step's own text still contradicted
+  it. Technical execution, no product-visible meaning ⇒ decided, logged, disclosed, overridable.
+  **② `אומת-על-ידי` — two of the four acceptance anchors DO NOT reproduce from a plain read of the
+  live DB, and the phase preamble's claim that three of four are "already produced by the database
+  itself" is therefore not reproducible as written.** Measured 27/08 20:4X:
+  · **#13 `3,650.00` ✅ reproduces** on a plain read (`finance_project_money(13)`), and so do
+    `−692.00` deviation, `#15 5,985.00` revenue, and all three expected-profit anchors.
+  · **#14 `3,508.00` ❌ does not.** `finance_cancellation_fee_proposal(14)` returns
+    `proposed_fee = NULL` — because **no project in the live seed is `cancelled`**: #14 is
+    `in_progress` with `cancelled_at IS NULL`. Only the goods half (`goods_at_price = 3,180.00`)
+    reproduces. **This is not a defect** — `data-set.md §0` tags the whole #14 cancellation 🎭
+    (demo scenario, "26/08 11:00 🎭 #14 מבוטל … בדיוק 30 שעות לפני"); the seed was never meant to
+    carry it. But the fee's compensation half is unverifiable against the live DB **without first
+    writing a cancellation**.
+  · **Efrat's `292.60` ❌ does not** either. Her `assignments.travel_amount` is `0.00`, so her row
+    totals `270.00` today. That is CORRECT per ה14 — travel is *stamped at generation* — so 292.60
+    only exists after `generate_salary_report` runs, and that call **signs rows irreversibly**.
+  🔴 **The consequence for Phase 2, and it changes nothing about the test values:** the acceptance
+  numbers are typed from the registers either way (§4.3: "tests are written TO these numbers, never
+  re-derived from code"), so the unit tests are unaffected. What IS affected is any plan to
+  *cross-check* those two anchors live — that needs a **live-DB write**, which is on the ask-first
+  boundary (`_shared/discipline.md` (ג)) and, with the **28/08 interim presentation tomorrow**, was
+  NOT run. Recommended: defer both probes to after the presentation, as part of 5.1's live journeys.
 - 🔴 `27/08/2026 13:2X` — **DEVIATION FROM THE APPROVED PLAN: migration C split into C (safe half,
   now) + C2 (the column drop, post-merge). Presented to Ishay at the gate; nothing applied before
   his ruling.**

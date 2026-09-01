@@ -14,6 +14,13 @@ import { test, expect } from '@playwright/test'
 // "פיקסטורות נעוצות… מרקיבות לבד" + "וגם מספר חי הוא פיקסטורה"). ⇒ כל טענה מספרית כאן
 // היא **אינווריאנט עצמי**: המסך נמדד מול עצמו (מונה-גלולה מול ספירת-השורות שרונדרו).
 //
+// 🆕 🔴 **ותיקון 02/09/2026 — "בזמן-ריצה" אינו מספיק, וזה נמדד:** בחירה בזמן-ריצה עמידה
+// ל**זהות** שזזה (‏`project_id` אחר), ואינה עמידה ל**מצב** שנעלם. שלוש בדיקות של משטח 2
+// חיפשו בתור פרויקט שבמקרה יש לו שורה `הוזמן`/`מוכן`; מסע-הקבלה של מודול 8 ביטל את
+// הפרויקט היחיד שהיה כזה, שאר המועמדים יצאו מהתור כשהתאריכים זזו — ושלושתן האדימו
+// **בלי שאיש נגע בקוד**. ⇒ הכלל שהוחלף: ה**זהות** נבחרת בזמן-ריצה (הפרויקט הראשון בתור),
+// וה**מצב** מיוצר ביירוט (`craftChecklistRows` למטה). מה שהבדיקה בודקת אינו יכול להיעלם.
+//
 // 🔴 ומדידה שהמכנה שלה 0 אינה ירוקה — היא לא רצה (`e2e/CLAUDE.md`, 26/08/2026, **על
 // דיאלוג של המודול הזה**): כל סריקה כאן מאשרת קודם שהאוסף אינו ריק, וההמתנה היא **לתוכן
 // הנמדד עצמו** ולא ל-`toBeVisible` של המעטפת.
@@ -208,6 +215,95 @@ async function fulfillTransformed(route, transform) {
     contentType: 'application/json',
     body: JSON.stringify(next),
   })
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// ייצור-המצב של משטח 2 — שורות-הצ׳קליסט נבנות ביירוט, ואינן מחופשות בדאטה החיה
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// 🔴 **מה ישב כאן עד 02/09/2026, ולמה הוא נשבר:** ‏`findChecklistSubject` פתחה את הדיאלוג
+// של **כל** פרויקט בתור בזה אחר זה, וחיפשה אחד שבמקרה יש לו שורה שהכמות-בפועל שלה עריכה
+// (‏`הוזמן`/`מוכן`), וב-`preferFull` גם שדה-תאריך וגם שדה-כמות נעול. ⇒ **הנושא היה של
+// הדאטה, לא של הבדיקה.** מסע-הקבלה של מודול 8 ביטל את הפרויקט היחיד בתור שהיו לו שורות
+// `הוזמן`/`מוכן`, ושאר המועמדים יצאו מהתור כשהתאריכים זזו — שלוש בדיקות האדימו על **קוד
+// שלא נגעו בו** ("אין בתור אף פרויקט עם שורה בסטטוס 'הוזמן'/'מוכן'"). תיקון-שורה-אחת
+// בדאטת-הדמו החזיר אותן לירוק, **והיה מרקיב שוב** בביטול הבא או בתאריך הבא.
+//
+// ✅ **מה מיוצר במקום:** פרויקט אמיתי נבחר מהתור (הראשון — **כל אחד מתאים**, כי המצב כבר
+// לא נדרש ממנו אלא מורכב עליו), ושורות-הלוגיסטיקה **שלו בלבד** מוחלפות בשלוש שורות קבועות.
+// כל שורה נגזרת משורה אמיתית שלו — אותו `project_id`, אותו `sku` — ומה שנקבע הוא מצב-הפריט
+// והשדות שהמסך גוזר ממנו. 🚫 ואפס כתיבות: זהו `page.route` על קריאת-GET, כמו שאר הקובץ.
+//
+// 🔑 **ושלושת המצבים אינם שרירותיים — כל אחד מייצר אוסף שבדיקה סורקת, ומדידה שהמכנה שלה
+// 0 אינה ירוקה אלא לא-רצה:**
+//   · `ordered`     ⇒ שדה-כמות **פתוח** *וגם* **שדה-תאריך** — הפקד היחיד ש-㊴ נועלת
+//   · `not_started` ⇒ שדה-כמות **נעול בנימוק מצב-הפריט** (㉕), ולא בנימוק הביטול
+//   · `ready`       ⇒ שדה-כמות פתוח **בלי** שדה-תאריך (‏`actual_arrival_date` מוצג כטקסט)
+const CRAFTED_STATUSES = ['ordered', 'not_started', 'ready']
+
+// המפתח הראשי כפי שהמסך בונה ממנו `data-testid` (‏`rowKey` ב-`ChecklistDialog.jsx`).
+const rowKeyOf = (row) => `${row.sku}-${row.serial_number}`
+
+// יירוט שמחליף את **האוסף כולו**, ולא שורה-שורה כמו `fulfillTransformed` (שהיא 1:1):
+// ייצור-מצב חייב לקבוע גם *כמה* שורות יש ובאילו מצבים, לא רק לשנות שדה בשורה קיימת.
+async function fulfillRewritten(route, rewrite) {
+  const response = await route.fetch()
+  const payload = await response.json()
+  return route.fulfill({
+    status: response.status(),
+    contentType: 'application/json',
+    body: JSON.stringify(rewrite(Array.isArray(payload) ? payload : [payload])),
+  })
+}
+
+// בונה את שלוש השורות מתוך השורות **האמיתיות** של `projectId`.
+// ⚠️ **ושורה רביעית אינה נולדת יש-מאין:** פרויקט שיש לו פחות משלוש שורות מקבל שכפול של
+// הראשונה עם `serial_number` פנוי — הוא החלק השלישי במפתח הראשי, ולכן זהו מפתח חוקי ולא
+// התנגשות. 🚫 שום שורה אינה נכתבת למסד: התשובה מוגשת מהדפדפן ולעולם אינה עוזבת אותו.
+function craftChecklistRows(rows, projectId) {
+  const mine = rows.filter((row) => Number(row.project_id) === Number(projectId))
+  if (mine.length === 0) return { rows, crafted: [] }
+  const others = rows.filter((row) => Number(row.project_id) !== Number(projectId))
+  let spareSerial = Math.max(...mine.map((row) => Number(row.serial_number) || 0)) + 1
+  const crafted = CRAFTED_STATUSES.map((status, index) => {
+    const source = mine[index] ?? { ...mine[0], serial_number: spareSerial++ }
+    return {
+      ...source,
+      item_status: status,
+      // ‏`planned_qty` נשמר מהשורה האמיתית, עם **רצפה של 1**: באנר-ההשלמה (⑬) מדווח חוסר
+      // רק כש-`planned − actual > 0`, ושורה מתוכננת-0 הייתה מכבה את שורת-㊵ בשקט — כלומר
+      // מכנה 0 בתחפושת של בדיקה ירוקה, בדיוק המשפחה שהקובץ הזה נבנה נגדה.
+      planned_qty: Math.max(Number(source.planned_qty) || 0, 1),
+      // ושאר השדות נקבעים כדי שהמסך יהיה חד-משמעי ולא יירש שאריות מהשורה שממנה נגזר:
+      // כמות-בפועל 0 (⇒ הערך שלפני-הכתיבה ידוע ב-S-2), בלי תג-מילוי-אוטומטי, בלי הערה,
+      // ותאריך-הגעה-בפועל רק ב-`מוכן` — שם, ורק שם, המסך מציג אותו כטקסט (㊶).
+      actual_qty: 0,
+      actual_qty_autofilled: false,
+      notes: null,
+      expected_arrival_date: null,
+      actual_arrival_date: status === 'ready' ? israelTodayIso() : null,
+    }
+  })
+  return { rows: [...others, ...crafted], crafted }
+}
+
+// מתקין את היירוט ומחזיר את המערך שיתמלא בשורות שיוצרו — הקורא נשען עליו ל-`data-testid`
+// **ולמכנה**. ⚠️ הוא ריק עד הקריאה הראשונה, ולכן נקרא רק אחרי שהדיאלוג נפתח.
+// 🔒 היירוט חל על כל קריאת-`logistics` (התור והדיאלוג חולקים נתיב), אבל נוגע **רק בשורות
+// של `projectId`** ⇒ שאר התור נשאר אמיתי, וגם ה-`refetch` שנורה בסגירת-דיאלוג אינו מזייף
+// אותו. הגזירה דטרמיניסטית — אותו מקור, אותו סדר (`sku` ואז `serial_number`) ⇒ קריאה חוזרת
+// מחזירה בדיוק את אותו אוסף, ולא נושא שני שהתחזה לראשון.
+async function routeCraftedRows(page, projectId) {
+  const crafted = []
+  await page.route(
+    (url) => isLogisticsRead(url),
+    (route) =>
+      fulfillRewritten(route, (rows) => {
+        const result = craftChecklistRows(rows, projectId)
+        if (result.crafted.length > 0) crafted.splice(0, crafted.length, ...result.crafted)
+        return result.rows
+      }),
+  )
+  return crafted
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -459,41 +555,38 @@ test.describe('מודול 5 · משטח 1 — מצבים מיוצרים בייר
 test.describe('מודול 5 · משטח 2 — דיאלוג-הצ׳קליסט (מסלולי-כתיבה ביירוט)', () => {
   test.skip(!STAFF_EMAIL || !STAFF_PASSWORD, 'E2E_STAFF_* לא הוגדרו ב-.env.local')
 
-  // בוחר בזמן-ריצה את הפרויקט שהדיאלוג שלו נושא שורה שהכמות-בפועל שלה **עריכה**
-  // (‏`הוזמן`/`מוכן` — ㉕). 🚫 לא `project_id` קשיח: הלוח החי זז, והמצב הזה יכול לעבור
-  // מפרויקט לפרויקט בלי שאיש יגע בקוד.
-  //
-  // 🔴 **`preferFull` — ולמה הוא אינו קישוט:** בדיקת-הנעילה סורקת שלושה אוספים
-  // (כפתורי-מצב · שדות-תאריך · שדות-כמות נעולים), ו**מדידה שהמכנה שלה 0 אינה ירוקה**.
-  // שדה-תאריך קיים רק בשורת `הוזמן`, וכמות נעולה רק בשורת `טרם החל` ⇒ פרויקט שכל שורותיו
-  // `מוכן` נותן שני אוספים ריקים ושתי לולאות שגופן לא הורץ מעולם. **וזה בדיוק מה שקרה כאן,
-  // ונתפס במבחן-האדום:** הבדיקה עברה בירוק גם כששתי הטענות הופכו. ⇒ הבחירה **מעדיפה**
-  // פרויקט שיש בו את שלושת סוגי-השורות, והבדיקה מצהירה על המכנה לפני כל לולאה.
-  // ‏🚪 והפונקציה תמיד מחזירה עם הדיאלוג **סגור** — הקורא פותח מחדש, כדי שלמסלול-היציאה
-  // תהיה צורה אחת (חצי-מצב כאן הוא בדיוק הבאג שקשה לראות).
-  async function findChecklistSubject(page, ids, { preferFull = false } = {}) {
-    let fallback = null
-    for (const id of ids) {
-      await openChecklist(page, id)
-      const editable = page.locator('[data-testid^="checklist-qty-"]:not([disabled])')
-      const editableCount = await editable.count()
-      const dateCount = await page.locator('[data-testid^="checklist-date-"]').count()
-      const lockedQtyCount = await page.locator('[data-testid^="checklist-qty-"][disabled]').count()
-      const qtyTestId =
-        editableCount > 0 ? await editable.first().getAttribute('data-testid') : null
-      await closeChecklist(page)
-      if (!qtyTestId) continue
-      const candidate = {
-        rowId: id,
-        qtyTestId,
-        key: qtyTestId.replace('checklist-qty-', ''),
-        dateCount,
-        lockedQtyCount,
-      }
-      if (!preferFull || (dateCount > 0 && lockedQtyCount > 0)) return candidate
-      if (!fallback) fallback = candidate
+  // 🔑 **הזהות נבחרת בזמן-ריצה, המצב מיוצר** (הנימוק המלא ליד `craftChecklistRows`).
+  // ‏`allQueueRowIds` נשארת כאן כ**בקרה החיובית** של `e2e/CLAUDE.md` ואינה חיפוש-נושא:
+  // תפקיד עם `edit` שרואה אפס שורות = הזדהות/RLS שבורים, לא "אין דאטה".
+  // 🚪 הפונקציה מחזירה עם הדיאלוג **סגור** — הקורא פותח בעצמו, אחרי שהוא רשם את היירוטים
+  // הנוספים שהמצב שלו דורש (חצי-מצב כאן הוא בדיוק הבאג שקשה לראות).
+  async function craftSubject(page) {
+    const ids = await allQueueRowIds(page)
+    const rowId = ids[0]
+    const projectId = Number(rowId.replace('logistics-row-', ''))
+    // ‏`crafted` מתמלא בקריאה הראשונה שהיירוט מגיש — כלומר נקרא רק אחרי שהדיאלוג נפתח.
+    const crafted = await routeCraftedRows(page, projectId)
+    return { rowId, projectId, crafted }
+  }
+
+  // השורה שהכמות-בפועל שלה פתוחה **ושיש לה שדה-תאריך** — היא הנושא של ㊴, של מסלול-הכתיבה
+  // (S-2) ושל סימון-`מוכן` (⑬). מיוצרת תמיד, ולכן אין כאן ענף "לא נמצא".
+  const orderedRowOf = (crafted) => crafted.find((row) => row.item_status === 'ordered')
+
+  // 🔴 **המכנה של בדיקה שמייצרת את הנושא שלה — והוא לא ניתן לוויתור.** בדיקה שמזייפת את
+  // הקלט שלה יכולה לעבור בירוק בעוד המסך לא צייר דבר; התקדים בפרויקט הוא בדיקת-מיון
+  // שעברה על קוד שבור כי כל שורות-הפיקסטורה היו זהות (`src/CLAUDE.md`, 30/07/2026).
+  // ⇒ לפני כל טענה: שלוש השורות **יוצרו**, הדיאלוג מציג **בדיוק** אותן, וכל אחת מזוהה בשמה
+  // (ספירה לבדה הייתה מסתפקת בשלוש שורות אקראיות של פרויקט אחר).
+  async function assertCraftedRowsRendered(page, crafted) {
+    expect(
+      crafted.length,
+      'היירוט לא ייצר שורות — לפרויקט שבתור לא הייתה ולו שורת-לוגיסטיקה אחת לגזור ממנה',
+    ).toBe(CRAFTED_STATUSES.length)
+    await expect(page.locator(CHECKLIST_ROW)).toHaveCount(crafted.length)
+    for (const row of crafted) {
+      await expect(page.getByTestId(`checklist-row-${rowKeyOf(row)}`)).toBeVisible()
     }
-    return fallback
   }
 
   test('㊲ + ㉝ + ㊴ — שורה שנטענה פעילה, סטטוס שנקרא-מחדש מבוטל ⇒ נעילה, ורק הכמות פתוחה', async ({
@@ -502,17 +595,16 @@ test.describe('מודול 5 · משטח 2 — דיאלוג-הצ׳קליסט (מ�
     const blockedWrites = await installWriteGuard(page)
     await login(page, STAFF_EMAIL, STAFF_PASSWORD)
     await gotoLogistics(page)
-    const ids = await allQueueRowIds(page)
 
-    const subject = await findChecklistSubject(page, ids, { preferFull: true })
-    expect(
-      subject,
-      'אין בתור אף פרויקט עם שורה בסטטוס "הוזמן"/"מוכן" — לחריג ㊴ אין נושא',
-    ).not.toBeNull()
+    // ✅ הנושא **מיוצר**: שורות-הפרויקט מוחלפות ב-`הוזמן` · `טרם החל` · `מוכן`, ולכן שלושת
+    // האוספים שהבדיקה סורקת (כפתורי-מצב · שדות-תאריך · שדות-כמות נעולים) קיימים תמיד ואינם
+    // תלויים במה שמישהו סימן בדאטה החיה. *(עד 02/09/2026 עמד כאן חיפוש, והוא זה שהאדים.)*
+    const subject = await craftSubject(page)
 
-    // 🔴 **זו הגזרה של ㊲ בדיוק:** התור (שנטען קודם, בלי יירוט) הציג את הפרויקט כ**פעיל** —
-    // הוא לא היה מגיע לשם אחרת. היירוט חל **רק על הקריאה-מחדש של הדיאלוג** (המובחנת
-    // ב-`quote_id` שב-`select`), כלומר בדיוק על התרחיש שבו הביטול נחת אחרי טעינת-התור.
+    // 🔴 **זו הגזרה של ㊲ בדיוק:** התור (שנטען קודם, בלי יירוט על `projects`) הציג את
+    // הפרויקט כ**פעיל** — הוא לא היה מגיע לשם אחרת. היירוט חל **רק על הקריאה-מחדש של
+    // הדיאלוג** (המובחנת ב-`quote_id` שב-`select`), כלומר בדיוק על התרחיש שבו הביטול נחת
+    // אחרי טעינת-התור.
     await page.route(
       (url) => isChecklistProjectRead(url),
       (route) =>
@@ -524,6 +616,7 @@ test.describe('מודול 5 · משטח 2 — דיאלוג-הצ׳קליסט (מ�
         })),
     )
     await openChecklist(page, subject.rowId)
+    await assertCraftedRowsRendered(page, subject.crafted)
 
     // הבאנר — הודעה על מצב **תקין-וסופי**, ובו שתי השורות של O-4 מילה-במילה.
     const banner = page.getByTestId('checklist-banner-cancelled')
@@ -556,8 +649,8 @@ test.describe('מודול 5 · משטח 2 — דיאלוג-הצ׳קליסט (מ�
     }
 
     // 🔓 ㊴ — **החריג היחיד**: הכמות-בפועל של שורה שכבר הוזמנה נשארת פתוחה ומנומקת.
-    // הנושא נבחר בזמן-ריצה למעלה, ולכן קיומו כבר אושר.
-    const qty = page.getByTestId(subject.qtyTestId)
+    // השורה יוצרה למעלה ורינדורה כבר אושר במכנה, ולכן אין כאן ענף "אם נמצאה".
+    const qty = page.getByTestId(`checklist-qty-${rowKeyOf(orderedRowOf(subject.crafted))}`)
     await expect(qty).toBeEnabled()
     await expect(qty).toHaveAttribute('title', CANCELLED_QTY_TITLE)
 
@@ -592,11 +685,17 @@ test.describe('מודול 5 · משטח 2 — דיאלוג-הצ׳קליסט (מ�
     const blockedWrites = await installWriteGuard(page)
     await login(page, STAFF_EMAIL, STAFF_PASSWORD)
     await gotoLogistics(page)
-    const ids = await allQueueRowIds(page)
 
-    const subject = await findChecklistSubject(page, ids)
-    expect(subject, 'אין שורה עם כמות-בפועל עריכה — למסלול-הכתיבה אין נושא').not.toBeNull()
+    // ✅ שורת-הנושא **מיוצרת** במצב `הוזמן` ⇒ הכמות-בפועל שלה פתוחה תמיד, וערכה שלפני
+    // הכתיבה ידוע (‏`0`). *(עד 02/09/2026 חיפשה כאן הבדיקה שורה עריכה בדאטה החיה, ונפלה
+    // ברגע שלא הייתה כזאת — כשל בדאטה שנקרא ככשל של מסלול-הכתיבה.)*
+    const subject = await craftSubject(page)
     await openChecklist(page, subject.rowId)
+    await assertCraftedRowsRendered(page, subject.crafted)
+    const key = rowKeyOf(orderedRowOf(subject.crafted))
+    // מכנה נוסף, וספציפי למסלול הזה: השדה שעליו תיערך הכתיבה **אכן פתוח**. בלעדיו
+    // `fill` היה נכשל בהודעת-תשתית שאינה מלמדת דבר על S-2.
+    await expect(page.getByTestId(`checklist-qty-${key}`)).toBeEnabled()
 
     // 🔴 ה-RPC הכותב **מיורט ומוגש מקומית** — הבקשה לעולם אינה עוזבת את הדפדפן, ואפס
     // שורות משתנות במסד. מעטפת-ההחזרה מוגשת **בלי `row`**, וזו בדיוק התשובה ש-RLS
@@ -612,13 +711,13 @@ test.describe('מודול 5 · משטח 2 — דיאלוג-הצ׳קליסט (מ�
         }),
     )
 
-    const qty = page.getByTestId(subject.qtyTestId)
+    const qty = page.getByTestId(`checklist-qty-${key}`)
     const before = await qty.inputValue()
     const typed = String(Number(before) + 7)
     await qty.fill(typed)
     await qty.press('Tab')
 
-    const error = page.getByTestId(`checklist-error-${subject.key}`)
+    const error = page.getByTestId(`checklist-error-${key}`)
     await expect(error).toBeVisible({ timeout: 15_000 })
     // מחרוזת S-2 **כפי שהיא**, לא נוסח שני (AR-9), ומוכרזת לקורא-מסך כשגיאה.
     await expect(error).toHaveText(WRITE_FAILURE_SENTENCE)
@@ -636,44 +735,34 @@ test.describe('מודול 5 · משטח 2 — דיאלוג-הצ׳קליסט (מ�
   test('⑬ — באנר-ההשלמה הוא הודעה ולא שער: הדיאלוג נשאר פתוח ואין מה לאשר', async ({ page }) => {
     const blockedWrites = await installWriteGuard(page)
     await login(page, STAFF_EMAIL, STAFF_PASSWORD)
-
-    // שורות-הפריטים של הדיאלוג נאספות מהתשובה **האמיתית**, כדי שתשובת-ה-RPC המוגשת
-    // תיבנה משורה אמיתית ולא ממצאה. 🚫 אין כאן `route.fetch` על ה-RPC עצמו — זו הייתה
-    // כתיבה אמיתית.
-    const seenRows = new Map()
-    await page.route(
-      (url) => isLogisticsRead(url),
-      (route) =>
-        fulfillTransformed(route, (row) => {
-          seenRows.set(`${row.sku}-${row.serial_number}`, row)
-          return row
-        }),
-    )
     await gotoLogistics(page)
-    const ids = await allQueueRowIds(page)
 
-    // נושא בזמן-ריצה: פרויקט שאינו **כבר** `מוכן לביצוע` — הבאנר נדלק ב*מעבר* אל `ready`
-    // בלבד, ועל פרויקט שכבר שם הוא לא היה נדלק והבדיקה הייתה ירוקה על כלום.
-    let subject = null
-    for (const id of ids) {
-      await openChecklist(page, id)
-      const status = await page.getByTestId('checklist-project-status').innerText()
-      const button = page
-        .locator(
-          '[data-testid^="checklist-status-"][data-testid$="-ready"]:not([aria-pressed="true"])',
-        )
-        .first()
-      if (status.trim() !== 'מוכן לביצוע' && (await button.count()) > 0) {
-        const testId = await button.getAttribute('data-testid')
-        subject = { id, key: testId.replace(/^checklist-status-/, '').replace(/-ready$/, '') }
-        break
-      }
-      await closeChecklist(page)
-    }
-    expect(subject, 'אין פרויקט לא-מוכן עם שורה שניתן לסמן "מוכן" — לבאנר אין נושא').not.toBeNull()
+    // ✅ הנושא **מיוצר**, ולא מחופש. *(עד 02/09/2026 סרקה כאן לולאה את כל הדיאלוגים בתור
+    // בחיפוש פרויקט שאינו כבר `מוכן לביצוע` ושיש בו שורה שניתן לסמן `מוכן` — אותה משפחת
+    // שבירות בדיוק שהפילה את שתי הבדיקות שמעל: מצב שהמערכת נעה דרכו, לא זהות שזזה.)*
+    // ‏`ordered` היא השורה שתסומן, והיא **קיימת תמיד** — ושורות-הפריטים ידועות לבדיקה
+    // מראש, ולכן תשובת-ה-RPC נבנית מהשורה עצמה ולא מ-`Map` שנאספה תוך-כדי.
+    const subject = await craftSubject(page)
 
-    const row = seenRows.get(subject.key)
-    expect(row, `שורת ${subject.key} לא נצפתה בתשובת הקריאה — אין ממה לבנות תשובת-RPC`).toBeTruthy()
+    // 🔴 סטטוס-הפרויקט נקבע ל-`בתהליך` — פעיל, **ואינו** `מוכן לביצוע`: הבאנר נדלק ב*מעבר*
+    // אל `ready` בלבד (‏`wasReady` ב-`ChecklistDialog.save`), ועל פרויקט שכבר שם הוא לא היה
+    // נדלק **והבדיקה הייתה ירוקה על כלום**. זו בדיוק התכונה שהלולאה שהוסרה חיפשה בדאטה.
+    await page.route(
+      (url) => isChecklistProjectRead(url),
+      (route) =>
+        fulfillTransformed(route, (project) => ({ ...project, project_status: 'in_progress' })),
+    )
+    await openChecklist(page, subject.rowId)
+    await assertCraftedRowsRendered(page, subject.crafted)
+
+    const row = orderedRowOf(subject.crafted)
+    const key = rowKeyOf(row)
+    // מכנה המצב עצמו: הפרויקט **אינו** כבר מוכן, ולשורה יש כפתור `מוכן` שאינו לחוץ —
+    // שני התנאים שהלולאה הישנה חיפשה, עכשיו כטענות שנמדדות על המסך ולא כמזל.
+    await expect(page.getByTestId('checklist-project-status')).toHaveText('בתהליך')
+    const readyButton = page.getByTestId(`checklist-status-${key}-ready`)
+    await expect(readyButton).toBeEnabled()
+    await expect(readyButton).toHaveAttribute('aria-pressed', 'false')
 
     // תשובת-הצלחה מוגשת מקומית: השורה עוברת ל-`ready` עם חוסר מלאכותי של יחידה אחת,
     // כדי ששורת-החוסר של ㊵ תופיע בוודאות (‏`items ≥ 1`) בלי לנחש מה במסד.
@@ -695,7 +784,7 @@ test.describe('מודול 5 · משטח 2 — דיאלוג-הצ׳קליסט (מ�
         }),
     )
 
-    await page.getByTestId(`checklist-status-${subject.key}-ready`).click()
+    await readyButton.click()
 
     const banner = page.getByTestId('checklist-banner-complete')
     await expect(banner).toBeVisible({ timeout: 15_000 })

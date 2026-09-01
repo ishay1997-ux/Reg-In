@@ -22,6 +22,15 @@ const TONES = {
   warn: 'bg-amber-200 text-amber-800',
   outline: 'bg-slate-100 text-slate-600 border border-slate-200',
   dashed: 'bg-slate-100 text-slate-500 border border-dashed border-slate-300',
+  // 🔴 `danger` — אדום, ונוסף למען מודול 8 (‏27/08/2026). **הרחבה מאושרת, לא המצאה:** ה16
+  // מחייבת אדום לציון-משוב מתחת ל-3, והמוקאפ המאושר `02_closing_window_approved.html`
+  // מכריז עליו במפורש (`.tag.danger{background:var(--red100); color:var(--red700)}`, שורה 164,
+  // ובנספח "מה הכרעתי לבד" ④: *"הרחבתי בטוקנים קיימים בלבד — לא צבע חדש"*).
+  // ⚠️ **ולמה הוא נוסף כאן ולא במסך שצורך אותו:** בלעדיו `scoreTag()` מחזירה `tone: 'danger'`,
+  // והשורה למטה (`?? TONES.muted`) הייתה מציגה אותו **אפור, בלי שגיאה** — כלומר "טעון בירור"
+  // היה נראה בדיוק כמו סטטוס נייטרלי. זה בדיוק כשל-ההאפרה שההערה של `PROJECT_STATUS_TONES`
+  // מזהירה ממנו, ונתפס ע"י בודק בפזה 2 לפני שנבנה ולו מסך אחד.
+  danger: 'bg-red-100 text-red-700',
 }
 
 import { PROJECT_STATUS_TONES } from '@/lib/projects'

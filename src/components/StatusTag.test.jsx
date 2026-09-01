@@ -80,4 +80,16 @@ describe('StatusTag', () => {
       expect(classOf(label), label).toContain(expectedClass)
     }
   })
+
+  // 🔴 מודול 8 (‏27/08/2026): הטון `danger` נוסף עבור ציון-משוב מתחת ל-3 (ה16).
+  // **הבדיקה הזו קיימת כדי לחסום נסיגה שקטה, לא כדי לתעד תכונה:** לפני ההוספה,
+  // ‏`tone="danger"` נפל ל-`?? TONES.muted` והוצג **אפור בלי שגיאה** — כלומר "טעון בירור"
+  // נראה בדיוק כמו סטטוס נייטרלי, וזו בדיוק ההאפרה-בשקט שהרכיב הזה נבנה למנוע.
+  it('טון danger — אדום ולא אפור (ה16: ציון<3), ולא נופל בשקט ל-muted', () => {
+    const { container } = render(<StatusTag label="טעון בירור" tone="danger" />)
+    const cls = container.firstChild.className
+    expect(cls).toContain('bg-red-100')
+    expect(cls).toContain('text-red-700')
+    expect(cls).not.toContain('bg-slate-100')
+  })
 })

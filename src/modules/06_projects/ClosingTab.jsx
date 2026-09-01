@@ -67,8 +67,8 @@ import { SHIFT_LEAD_LABEL } from '@/lib/projectTeam'
 import {
   buildProjectReportPayload,
   buildFeedbackSurveyPayload,
+  feedbackUrlFor,
   FEEDBACK_TEMPLATE_NAME,
-  SURVEY_LINK_PARAM_NAME,
 } from '@/lib/shiftEmails'
 import { classifySendError, EMAIL_SEND_RESULT } from '@/lib/email'
 import { sendEmail, getEmailTemplate, getLastSuccessfulSend } from '@/api/email'
@@ -78,6 +78,7 @@ import {
   getProjectChanges,
   closeProjectOperationally,
   markFeedbackSurveySent,
+  mintFeedbackToken,
 } from './api'
 import {
   REPORT_MAX_BYTES,
@@ -88,7 +89,6 @@ import {
   getReportSignedUrl,
   getCustomerMailContact,
   getCustomerPreferences,
-  getParamValue,
   fileToBase64,
 } from './closingApi'
 import ScopeChangeDialog from './ScopeChangeDialog'
@@ -131,13 +131,20 @@ async function trySendReportMail({ contact, project, localFile, reportPath }) {
   }
 }
 
-// שליחת מייל-הסקר: התבנית הזרועה + פרמטר-הקישור, entityType 'project' (בלי מצורף).
+// שליחת מייל-הסקר: התבנית הזרועה + **קישור-הטוקן האישי לדף-המשוב שלנו** (אדוות-מ8 ①; עד
+// 28/08/2026 ישב כאן קישור-Google-Forms קבוע מ-`params`), entityType 'project' (בלי מצורף).
+// 🔑 **הטביעה קודמת לשליחה, ובכוונה בתוך אותו try**: טוקן שלא הונפק ⇒ אין קישור ⇒ אין מייל,
+// והכשל נספר בדיוק כמו כשל-שליחה ("מייל הסקר לא יצא") — כלומר `feedback_status` נשאר
+// `not_sent` וכפתור השליחה-החוזרת מופיע. מייל עם קישור-מת גרוע ממייל שלא יצא.
+// ⚠️ `window.location.origin` ולא קבוע — מייל שנשלח מסביבת-פיתוח חייב להצביע לסביבת-פיתוח
+// (התקדים: קישור-אישור-המשמרת של מודול 4).
 async function trySendSurveyMail({ contact, project }) {
   try {
-    const [template, surveyUrl] = await Promise.all([
+    const [template, token] = await Promise.all([
       getEmailTemplate(FEEDBACK_TEMPLATE_NAME),
-      getParamValue(SURVEY_LINK_PARAM_NAME),
+      mintFeedbackToken(project.project_id),
     ])
+    const surveyUrl = feedbackUrlFor(window.location.origin, token)
     const payload = buildFeedbackSurveyPayload({ template, surveyUrl, contact, project })
     if (!payload) throw new Error('SURVEY_PAYLOAD_EMPTY')
     await sendEmail({

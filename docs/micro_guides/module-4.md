@@ -78,7 +78,7 @@ Legend: ⬜ pending · 🔨 in progress · ✅ done · ⏸️ deferred (target m
 | T-24 **on-screen alert** | ✅ derived at read time (§7.91) | — | — |
 | `projects.project_status` → `מוכן לביצוע` | ❌ **M4 never writes it** | 🚧 מ6 | `🚧 מ6 ← מ4` |
 | 🆕 Hebrew message for a **reschedule blocked by the same-day rule** | ⚠️ the DB constraint only | 🚧 מ6 | `🚧 מ6 ← מ4` (written 09/08, mig B) |
-| Salary report | ❌ M4 supplies raw material only | 🚧 מ8 | `🚧 מ8 ← מ4` |
+| Salary report | ❌ M4 supplies raw material only | ~~🚧 מ8~~ **paid 28/08/2026 (M8 phases 1-5)** — `salary_reports`+`salary_report_lines` built and RUN live: August 2026, **292.60** = the spec anchor, xlsx downloaded and its cells read; struck 01/09/2026 at m8's close | ~~`🚧 מ8 ← מ4`~~ ✅ `PROJECT_MASTER §6` |
 | "Who is below minimum wage" report | ❌ | 🚧 מ9 | `🚧 מ9 ← מ4` ✅ exists — grep `דוח "מי מתחת לשכר-המינימום"` |
 | Smart Match params **editing screen** | ❌ rows seeded, no UI | 🚧 מ9 | `🚧 מ9 ← מ4` ✅ exists — grep `מסך-הפרמטרים של Smart Match` |
 
