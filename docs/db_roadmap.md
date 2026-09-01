@@ -435,7 +435,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 
 | # | The removal that is owed | Blocked until | Its contract (more than a `drop`) | Registered where |
 |---|---|---|---|---|
-| ✅ ~~**C2**~~ **DONE 27/08/2026 18:0X** | ~~`alter table hostesses drop column bank_name, bank_branch, bank_account`~~ — **applied; ה19 is CLOSED.** Legacy columns **0** · child table **26/26** · **0** empty bank rows · `smoke` exit 0 and `hostesses.spec.js` **20/20** after the drop · `schema.sql` re-synced (16 documented / 16 live). 🔑 **The `updated_at` guard was not theoretical: all 26 child rows were NEWER than their parent, so an unguarded `do update` would have touched all 26 and pulled them back to the stale source. With the guard the copy touched 0.** *(Row kept struck rather than deleted — the correction it carries is the record. The original contract:)* | ~~m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live**~~ — **all three met: `dev` 518587d · `main` 9e07233 · Vercel production `state=success`, and the live bundle was fetched and asserted to contain `hostess_bank_details`** | 1️⃣ **Re-copy first** — `insert … on conflict (hostess_id) do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 🔴 **BUT THE `do update` MUST BE GUARDED BY `updated_at`** *(found 27/08/2026 at the 1.8 gate — the contract as first written was wrong)*: **after** the deploy m8's `api.js` writes ONLY the child, so an unguarded overwrite would push **stale parent values over fresh child rows** — the same data loss pointed backwards, landing as wrong bank numbers in a CPA salary report. Overwrite only where the parent row is genuinely newer than the child row (both tables carry a `moddatetime`-maintained `updated_at`). **Full contract + the SQL shape: `micro_guides/module-8.md` §8.4.** 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
+| ✅ ~~**C2**~~ **DONE 27/08/2026 18:0X** | ~~`alter table hostesses drop column bank_name, bank_branch, bank_account`~~ — **applied; ה19 is CLOSED.** Legacy columns **0** · child table **26/26** · **0** empty bank rows · `smoke` exit 0 and `hostesses.spec.js` **20/20** after the drop · `schema.sql` re-synced (16 documented / 16 live). 🔑 **The `updated_at` guard was not theoretical: all 26 child rows were NEWER than their parent, so an unguarded `do update` would have touched all 26 and pulled them back to the stale source. With the guard the copy touched 0.** *(Row kept struck rather than deleted — the correction it carries is the record. The original contract:)* | ~~m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live**~~ — **all three met: `dev` 518587d · `main` 9e07233 · Vercel production `state=success`, and the live bundle was fetched and asserted to contain `hostess_bank_details`** | 1️⃣ **Re-copy first** — `insert … on conflict (hostess_id) do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 🔴 **BUT THE `do update` MUST BE GUARDED BY `updated_at`** *(found 27/08/2026 at the 1.8 gate — the contract as first written was wrong)*: **after** the deploy m8's `api.js` writes ONLY the child, so an unguarded overwrite would push **stale parent values over fresh child rows** — the same data loss pointed backwards, landing as wrong bank numbers in a CPA salary report. Overwrite only where the parent row is genuinely newer than the child row (both tables carry a `moddatetime`-maintained `updated_at`). **Full contract + the SQL shape: **THIS ROW.** 🔴 *גובר: המצביע ל-`module-8.md` §8.4 אינו מוביל עוד ל-SQL · 01/09/2026 · אודיט-סגירת מ8* — הבלוק שם נגרס אחרי ש-C2 בוצעה, לפי הוראת-הבלוק עצמו (שלב 3).** 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
 
 | ✅ ~~**N1b**~~ **DONE 27/08/2026 19:3X — the whole N1 package is closed.** 🔑 **`data_type='ARRAY'` across `public` now returns ZERO columns** — the one 1NF violation is gone. Regression after the drop: `smoke` exit 0, m4 suites **32/32**. *(Row struck rather than deleted: the C2-vs-N1b guard lesson below is the record.)* | ~~create + copy~~ → **what remains: `alter table hostesses drop column languages`** | **the m8+N1 branch is merged and its deploy is confirmed live** — `origin/main` still writes the column (`HostessFormDialog.jsx:222`) and reads it (`HostessViewCard.jsx:328`) | Same three beats as C2: **add + copy → deploy → drop**, with a **re-copy immediately before the drop** — 🔴 **including C2's `updated_at` guard on the conflict action**, for the same reason: once the new code writes only the child, an unguarded overwrite runs backwards. ⚠️ `languages` is **nullable** (unlike the bank columns), so the additive half needs no constraint relaxation — create, copy, drop later | `PROJECT_MASTER_sec7.md §7.87` · here |
 | **N2** | `customer_contacts` consolidation — `is_primary` on the child, then drop `contact_name`/`phone`/`email` from `customers` | m8 merged **and deployed** | Same pattern, **separate drop migration** from N1's. 🔴 **Its blast radius is ~4.6× N1's — see the measurement below; "one package" is true of the pattern, not of the size** | here |
@@ -490,6 +490,12 @@ buildable.
 anyone holding 'דיילות', because RLS is row-level) is still open. **m8 may not be reported as having
 closed ה19 before then**, and `micro_guides/module-8.md` §2.2's "✅ complete here" row for bank
 protection is false until it does.
+🔴 **גובר: C2 רצה — ה19 סגור · 27/08/2026 18:0X · ההכרעה והמדידה בשורת-`C2` של §9א למעלה
+(עוגן: `DONE 27/08/2026 18:0X`)** — *נוסף 01/09/2026 באודיט-סגירת מ8.* הפסקה שמעליה נשארת
+כלשונה כרשומה היסטורית, **והיא אינה מתארת את המצב היום:** נמדד חי — אפס משלוש עמודות-הבנק
+על `hostesses`, ו-26 שורות ב-`hostess_bank_details` מול 26 דיילות. ⇒ **שורת §2.2 של
+`micro_guides/module-8.md` נכונה**, ו-מ8 כן סגר את ה19. *(זה היה אתר שלישי של אותה טענה
+שהתיישנה — האחרים: `module-8.md` §8.4 ו-`docs/schema.sql` §29, שניהם תוקנו באותו יום.)*
 
 ## 10. Maintenance protocol (how this file stays alive)
 
@@ -509,6 +515,37 @@ protection is false until it does.
    citation.
 
 <!-- Done strike-list (dated) -->
+- ✅ 01/09/2026 — **`H7` APPLIED after Ishay's typed echo** (`module8_h7_budget_deviation_excludes_bonus`). **Verified both directions:** body `md5` `5ad34019e87fb52c7a000c9c4d9d2708` (3,279) → `7fe0b63fb8bf7583d3eb9a6f9492cf9e` (3,652); `provolatile='s'` · `prosecdef=true` · **ACL unchanged** `{postgres=X/postgres,service_role=X/postgres}` (the `H5`→`H5b` mine did not recur — no `drop`). 🔬 **The red→green proof, same 250 bonus seeded on #12 in a rolled-back transaction:** **before** `labor_cost 520 · gross_profit −42.60 · budget_deviation **452.50**` → **after** `labor_cost 520 · gross_profit −42.60 · budget_deviation **202.50**` — **only the deviation moved, and it moved to the value it had before the bonus existed.** Anchors re-measured after apply and unchanged (#13 `3,650.00` / −692 · #12 `207.40` / 202.50); residue re-checked ⇒ **0** bonus rows in the DB.
+  *(`20260901233014_module8_h7_budget_deviation_excludes_bonus`.)* Found by the closing audit's
+  built-vs-approved-spec pass; **Ishay overrode the audit's own recommendation to defer it**
+  (*"מה התסביך אקליד מיגרציה הכל טוב עושים פעם אחת עבודה בצורה נכונה"*, 01/09).
+  **The defect:** `budget_deviation` compares `v_labor − (planned_hours × Σ rates)`, where
+  `v_labor = Σ(actual_hours × rate + personal_bonus)` — but **the planned side carries no bonus
+  term at all.** ⇒ a project where every hostess worked exactly to plan and was paid a bonus reads
+  as an overrun of exactly the bonus. ה18 defines the deviation without bonus on either side.
+  🔴 **The trap this migration exists to avoid, and it is the reason the naive fix is wrong:**
+  `v_labor` feeds **three** outputs — `labor_cost` (bonus belongs: real cost) · `gross_profit`
+  (bonus belongs: it reduces profit, **and this is the number `final_profit` freezes**) ·
+  `budget_deviation` (bonus pollutes). **Removing the bonus from `v_labor` would have moved the
+  gross profit and broken the acceptance anchor.** So a separate `v_labor_hours` was added for the
+  deviation's actual side only, and `v_labor` is untouched.
+  🔬 **Measured before writing, in a rolled-back transaction** (bonus 250 seeded on #12, current
+  function): `labor_cost` 270→**520** ✅ correct · `gross_profit` 207.40→**−42.60** ✅ correct ·
+  `budget_deviation` 202.50→**452.50** ❌ **grew by exactly the bonus while nobody worked longer**.
+  After `H7` the first two stay and the third returns to 202.50.
+  🔑 **Blast radius measured, not assumed: the live DB holds ZERO `assignments` rows with a
+  non-zero `personal_bonus`** ⇒ the change is a no-op on all existing data and **neither acceptance
+  anchor can move** (#13 `gross_profit` 3,650 · #12 207.40, both re-measured after the rollback and
+  unchanged). **It also means the live data can never demonstrate the fix** — the proof is the
+  rolling transaction, not a query.
+  🌍 **World anchor (Ishay asked for it explicitly):** standard cost accounting decomposes a labour
+  variance into **rate variance** and **efficiency variance**, precisely so the figure says *what to
+  act on*. A discretionary bonus is neither; folding it in makes a tile that means "someone worked
+  longer than planned" fire when nobody did. The bonus keeps appearing in `labor_cost` and
+  `gross_profit`, which is where a cost belongs.
+  🚫 **No `drop function`** — `create or replace` preserves the ACL (the `H5`→`H5b` mine). The
+  function is `service_role`-only and not browser-reachable; ACL to be re-measured after apply.
+
 - ✅ 28/08/2026 — **`H5` + `H5b` APPLIED** (typed echo for H5: `module8_h5_payout_anchor_for_manual_fee`).
   **`H5`** adds a ninth return column, `payout_compensation` — what the team is actually paid in
   the salary report — so the manual fee decision in `other` has a number to be a decision *about*.

@@ -286,10 +286,23 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
     }
   }, [open])
 
-  const existingForSelected = useMemo(
-    () => history?.find((row) => row.period === selectedPeriod) ?? null,
-    [history, selectedPeriod],
-  )
+  // 🔴 **שלושה מצבים ולא שניים — בדיוק כמו `accountantEmail` שמעליו, ומאותה סיבה.**
+  // ‏`undefined` = ההיסטוריה טרם נטענה ⇒ **לא ידוע** אם החודש כבר הופק · `null` = ידוע שאין
+  // דוח לחודש · אובייקט = יש. עד `01/09/2026` עמד כאן `?? null` בלבד, ואז "טרם נטען" נראה
+  // זהה ל"אין דוח": בחלון-הטעינה הוצג פאנל-הקדם-הפקה על חודש שכבר הופק (ואז התחלף בבאנר
+  // החסום), ו**"ייצא ושלח" היה לחיץ** — כלומר המסך הציע פעולה בלתי-הפיכה שאנחנו כבר יודעים
+  // שתידחה. ⚠️ **זה מעולם לא היה סיכון-דאטה** — ההפקה נדחית במסד על כפילות-חודש, וזו האכיפה
+  // האמיתית שאין להחליש — אלא הימנעות מהצעת פעולה שתסורב. **וזו דוקטרינת-חוסר-הנתון של
+  // המודול במקום שבו היא הכי קלה לפספוס:** ערך שטרם הגיע אינו "לא", בדיוק כפי שסכום חסר
+  // אינו 0.
+  // ⚠️ **וכשל-טעינה אינו "לא ידוע" — הוא נופל בכוונה למצב המקיל.** הבדיקה הזו היא נוחות-תצוגה
+  // שכשל בה **אינו חוסם** את המסך (ההערה על ה-`useEffect` למעלה), והשורה שמוצגת אז מבטיחה
+  // למנהלת שהבדיקה הסופית תתבצע בלחיצה עצמה. השבתת-הכפתור על כשל הייתה הופכת את ההבטחה
+  // הזו לשקר, ונועלת את המנהלת מחוץ להפקה בגלל תקלת-רשת בת-שנייה.
+  const existingForSelected = useMemo(() => {
+    if (history === null) return historyError ? null : undefined
+    return history.find((row) => row.period === selectedPeriod) ?? null
+  }, [history, historyError, selectedPeriod])
   const periodLabel = useMemo(() => salaryPeriodLabel(selectedPeriod), [selectedPeriod])
   const selectedParts = useMemo(() => parsePeriodParts(selectedPeriod), [selectedPeriod])
 
@@ -337,7 +350,9 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
   }
 
   async function handleGenerate() {
-    if (existingForSelected || phase === 'submitting') return
+    // ‏`!== null` ולא בדיקת-אמת: גם **"טרם ידוע"** (‏`undefined`) עוצר כאן, כמו שהכפתור מושבת
+    // אז — אחרת לחיצה שהקדימה את טעינת-ההיסטוריה הייתה עוקפת את השער שהמסך מציג.
+    if (existingForSelected !== null || phase === 'submitting') return
     // 🔴 **חלונית-וידוא — והנימוק הוא עקביות, לא זהירות כללית.** באותו מודול בדיוק, שלוש
     // פעולות **קטנות מזו** — ארכוב · סגירה-ללא-תשלום · ויתור על דמי-הביטול — עוצרות ושואלות
     // (`ClosingWindowDialog`, שלוש קריאות ל-`confirmThenRun`), ואילו הפעולה שחותמת את שכר
@@ -413,7 +428,14 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
   // ממונחי-מסד ואומר רק את האפקט.
   const blockedBannerText = existingForSelected
     ? existingForSelected.send_status === 'sent'
-      ? `דוח לחודש ${periodLabel} כבר הופק. נשלח ב-${formatDate(existingForSelected.sent_date, '—')} אל ${accountantEmail ?? '—'}. לא ניתן להפיק פעמיים אותו חודש — המערכת חוסמת זאת גם במקרה של לחיצה כפולה.`
+      ? // 🔴 **הנמען של הדוח הזה (`sent_to`, מ-`email_log`) — לא הפרמטר החי.** ‏`accountantEmail`
+        // עמד כאן עד `01/09/2026` והפך את הבאנר לטענה רטרואקטיבית שהדוח נשלח לכתובת של **היום**.
+        // *(נתפס באודיט-הסגירה: הבאנר אמר `ishay1997@gmail.com` בעוד שורת-ההיסטוריה מתחתיו, שכבר
+        // תוקנה ב-28/08, אמרה `office@cpa-firm.co.il` — שני נמענים סותרים לאותו דוח, על אותו מסך.)*
+        // ⚠️ **זהו אתר שלישי של אותו באג** — התיקון של 28/08 טיפל בטבלה (`row.sent_to`) ובכרטיס
+        // (הסרת `accountantEmail`) ופסח על הבאנר. `existingForSelected` מגיע מאותה
+        // `listSalaryReports` ולכן כבר נושא `sent_to`.
+        `דוח לחודש ${periodLabel} כבר הופק. נשלח ב-${formatDate(existingForSelected.sent_date, '—')} אל ${existingForSelected.sent_to ?? '—'}. לא ניתן להפיק פעמיים אותו חודש — המערכת חוסמת זאת גם במקרה של לחיצה כפולה.`
       : // ⚠️ סטייה מודעת מהנוסח הנעול: הוא מניח "נשלח ב-X" — ונכון תמיד למה שהמוקאפ מצייר,
         // אבל דוח קיים יכול גם לעמוד על `pending`/`failed` (למשל תקלת-סגירה, ר' סיכום-הבנייה).
         // אמירת "נשלח ב-" על דוח שלא נשלח הייתה שקר; הנוסח כאן נשאר קרוב אך כן.
@@ -525,8 +547,13 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
 
         {/* מצב-הקדם-הפקה. **לא מוצג כשהחודש כבר הופק** — אז הבאנר החסום הוא המסר, ורשימת
             "מה ייאסף" לצידו הייתה מבטיחה פעולה שלא תתרחש. ר' הערת-הראש: זו אינה
-            תצוגה-מקדימה של השורות, וגם אינה מתחזה לכזו. */}
-        {phase !== 'result' && !existingForSelected && (
+            תצוגה-מקדימה של השורות, וגם אינה מתחזה לכזו.
+            🔴 **ו-`=== null` ולא `!existingForSelected`: כל עוד לא ידוע — הפאנל אינו מצויר.**
+            הוא פותח ב"מה ייכלל בדוח של ספטמבר", כלומר הצהרה על חודש שטרם נבדק; על חודש שכבר
+            הופק הוא היה נכתב ומוחלף בבאנר רגע אחר-כך. **בלי מחוון-טעינה בכוונה** — הטעינה
+            קצרה, ואותה משמעת כבר קיימת בפאנל עצמו (`historyLoaded`, ששותק על שורת
+            "הדוח האחרון" עד שהיא ידועה) — הסיבה להשבתת-הכפתור נאמרת ב-`title` שלו. */}
+        {phase !== 'result' && existingForSelected === null && (
           <PreflightPanel
             periodLabel={periodLabel}
             parts={selectedParts}
@@ -608,7 +635,13 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
               <Button
                 type="button"
                 onClick={handleGenerate}
-                disabled={Boolean(existingForSelected) || phase === 'submitting'}
+                // מושבת בשני מצבים שונים: "החודש כבר הופק" ו**"עדיין לא ידוע אם הופק"**.
+                // ‏`title` נושא את הסיבה במצב השני בלבד — בראשון הבאנר החסום כבר אומר אותה
+                // בקול. אותה תבנית של כפתור-מושבת-עם-נימוק שכבר קיימת בטבלת-ההיסטוריה כאן.
+                disabled={existingForSelected !== null || phase === 'submitting'}
+                title={
+                  existingForSelected === undefined ? 'בודקת אם כבר הופק דוח לחודש זה' : undefined
+                }
                 className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700 disabled:opacity-50"
                 data-testid="salary-report-generate"
               >
@@ -1006,12 +1039,22 @@ function ResultView({ result }) {
   )
 }
 
+// 🔴 **סדר-הענפים כאן קובע אמת, ולכן `sendResult` נבדק ראשון ו-`fileError` הוא רק סייג.**
+// עד `01/09/2026` `fileError` נבדק **לפני** `sendResult`, ו-`api.js` מייצר את שני המצבים
+// באופן בלתי-תלוי: העלאת-הקובץ נתפסת ב-`catch` משלה (`:568-570`) **וההרצה ממשיכה** לשליחה
+// (`:588`), שיכולה להיכשל בעצמה (`:596`). ⇒ הצירוף `{fileError, sendResult:'failed'}` קיים,
+// והתג הציג עליו **"נשלח — קובץ לא נשמר"** על מייל שלא יצא — הצגת כשל כהצלחה, בדיוק מה
+// שדוקטרינת-האפס-השקט (§4.3) אוסרת, ועל המסלול הבלתי-הפיך היחיד במודול: החודש כבר נחתם
+// ב-UNIQUE ואי-אפשר להפיקו שוב. הטוסט אמר את ההפך באותו רגע — **והתג הוא החצי שנשאר על המסך.**
+// ⚠️ הצירוף הזה לא היה מכוסה בבדיקות (`SalaryReportDialog.test.jsx` נעל רק `fileError` עם
+// ברירת-המחדל `sendResult:'sent'`) — ולכן שרד. נוספה בדיקה שנועלת את הכיוון הזה.
 function SendResultTag({ result }) {
-  if (result.fileError) {
-    return <StatusTag label="נשלח — קובץ לא נשמר" tone="warn" testId="salary-report-send-tag" />
-  }
   if (result.sendResult === EMAIL_SEND_RESULT.SENT) {
-    return <StatusTag label="✓ נשלח" tone="ok" testId="salary-report-send-tag" />
+    return result.fileError ? (
+      <StatusTag label="נשלח — קובץ לא נשמר" tone="warn" testId="salary-report-send-tag" />
+    ) : (
+      <StatusTag label="✓ נשלח" tone="ok" testId="salary-report-send-tag" />
+    )
   }
   if (result.sendResult === EMAIL_SEND_RESULT.UNKNOWN) {
     return <StatusTag label="סטטוס-שליחה לא ידוע" tone="warn" testId="salary-report-send-tag" />

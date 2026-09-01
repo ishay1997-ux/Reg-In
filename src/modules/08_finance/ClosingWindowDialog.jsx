@@ -174,6 +174,15 @@ const FORCE_MAJEURE_COMP_NOTE = compensationReason({ cancelType: 'force_majeure'
 // אותו משפט, כדי שמנהלת שראתה את החסימה מראש לא תקבל ניסוח אחר אחרי לחיצה.
 const NO_BILLING_EMAIL_NOTE =
   'חסום: אין כתובת מייל לחיוב בכרטיס הלקוח — לא ניתן לשלוח את החשבונית. יש להשלים אותה בכרטיס הלקוח.'
+// 🔴 **המשפט השלישי, שעד 01/09/2026 לא היה קיים — והיעדרו הפך תקלת-רשת להצהרה על הלקוח.**
+// קריאת פרטי-החיוב נכשלה ⇒ **איננו יודעים** אם יש כתובת. עד היום הכשל הוחזר כ-`null`,
+// ו-`null` נקרא במורד-הזרם בדיוק כמו "אין מייל בכרטיס" ⇒ המסך הכריז כעובדה שכרטיס-הלקוח
+// חסר כתובת, ושלח את המנהלת למסך שבו הכתובת **כן** רשומה. ⚠️ **החסימה נשארת בשני
+// המצבים** — גם כשלא ידוע אין לנו לאן לשלוח — אבל הפעולה הנדרשת הפוכה: שם להשלים נתון,
+// כאן לנסות שוב. **התקדים לזוג-הנוסחים הזה חי בקובץ הזה עצמו**: ‏`closing-fee-comp-manual`
+// מול `closing-fee-comp-missing` — שני `null` מאותה עמודה, שני משפטים, כי הסיבה שונה.
+const BILLING_UNKNOWN_NOTE =
+  'חסום: לא הצלחנו לטעון את פרטי החיוב של הלקוח — לא ניתן לשלוח את החשבונית. יש לרענן את המסך ולנסות שוב.'
 // A-8 — שעות-סופיות חסרות: משפט רועש, לעולם לא 0 שקט.
 // ⚠️ **שני נוסחים ולא אחד, בכוונה.** אותו חוסר-נתון (‏`final_start/end_time` ריקים) מפיל
 // שני חישובים שונים, ו-A-8 מנסח את משפטו על **רכיב-הפיצוי** בלבד. אריח סטיית-התקציב אינו
@@ -298,6 +307,10 @@ export function closingPhase(detail) {
   const cancelResolved = cancelled && detail?.final_profit != null
   const feedbackResolved =
     detail?.feedback_status === 'completed' || detail?.feedback_status === 'no_response'
+  const paid = detail?.payment_date != null
+  // חוב-אבוד פותח את צד-התשלום בדיוק כמו תשלום שנרשם — אותה הכרעה כמו ב-`archiveGateNote`,
+  // ואותו זוג-תנאים בדיוק. אילו הוא נכתב כאן מחדש, שער-הארכוב והמאזן היו יכולים להיפרד.
+  const archiveGateOpen = (paid || writtenOff) && feedbackResolved
 
   return {
     cancelled,
@@ -308,7 +321,7 @@ export function closingPhase(detail) {
     feeSet,
     writtenOff,
     invoiceSent: detail?.invoice_sent === true,
-    paid: detail?.payment_date != null,
+    paid,
     feedbackResolved,
     // שני אלה קיימים כאן **רק** בשביל שער-הארכוב: הוא צריך לדעת שציון-נמוך-בלי-סיבה
     // חוסם, בדיוק כמו שהמסד יודע. ‏`feedbackResolved` לבדו אינו מספיק (ר' הפונקציה).
@@ -322,9 +335,22 @@ export function closingPhase(detail) {
     // עדיין מחזירה `revenue` = ההצעה הקפואה + שינויי-התכולה — כסף שמעולם לא נגבה —
     // ו-`gross_profit` שנגזר ממנה. הצגתם לצד "רווח סופי — קפוא" (שנוסחתו Q-3:
     // דמי-ביטול − פיצוי-צוות − עלות-סחורה) הייתה שמה **שני מספרי-רווח סותרים על מסך
-    // אחד** ומפרה את F16/R1-4 ("מספר-הכנסה אחד"). התצוגה המאושרת מציירת מאזן בתצוגה ב'
-    // בלבד; מבוטל-שנפתר מקבל את הרווח-הקפוא לבדו.
-    showBalance: archived,
+    // אחד** ומפרה את F16/R1-4 ("מספר-הכנסה אחד"). מבוטל-שנפתר מקבל את הרווח-הקפוא לבדו,
+    // וזה נשאר נכון גם אחרי התיקון שמתחת — ולכן `!cancelled` הוא תנאי ולא הערה.
+    //
+    // 🔴 **ומתי כן — תוקן 01/09/2026, כי הקוד הפוך מהתהליך המאושר.** עד היום הבלוק היה
+    // ‏`archived` בלבד ⇒ **הרווח נקפא בלי שאיש ראה אותו:** המנהלת לחצה "העבר לארכיון"
+    // על מספר שהמסך מעולם לא הציג לה, והפעולה בלתי-הפיכה. כרטיס-P3 קובע את הסדר
+    // מפורשות — *"התשלום נכנס והמשוב נפתר. החלון מציג **תחשיב-מאזן** … שורה תחתונה
+    // מודגשת: רווח גולמי בשקלים + סטיית-תקציב לצידה. 'העבר לארכיון' → חלונית-וידוא →
+    // ה-RPC מקפיא את הרווח-הסופי"* — והתצוגה המאושרת מסמנת את השורה **"נגזר, נקפא
+    // בארכוב"**, כלומר מספר חי שקופא, לא מספר שנולד בארכוב.
+    // ⚠️ **ומה שחשבתי שסותר ולא סותר:** ההערה כאן טענה קודם *"התצוגה המאושרת מציירת
+    // מאזן בתצוגה ב' בלבד"* — וזה נכון על **המוקאפ** (‏א' הוא #12, פרויקט שהחשבונית שלו
+    // טרם יצאה, ושם באמת אין מאזן). המוקאפים הם רפרנס ויזואלי והאפיון המאושר גובר
+    // עליהם; הם פשוט לא ציירו את המצב הזה. **המצב המוקדם נשאר בלי מאזן, כפי שהמוקאפ
+    // מראה** — לפני תשלום אין מה למאזן, וזו הסיבה שהתנאי הוא השער ולא "תמיד".
+    showBalance: archived || (!cancelled && archiveGateOpen),
     showCancelledProfit: cancelResolved,
   }
 }
@@ -498,10 +524,12 @@ function IdentityBlock({ detail, billing, invoiceName, showFeedback, showPayment
         <Cell label="לקוח">
           <Val>{detail.customer_name ?? '—'}</Val>
         </Cell>
-        {/* ⚠️ ‏ח.פ אינו מרונדר: `getBillingContact` (‏api.js, צעד 2.3) אינו שולף את
-            `company_number`, ואין דרך מותרת אחרת להשיגו — מסך של מודול קורא רק דרך
-            ה-api שלו (כלל ברזל 14). תא עם `—` היה נקרא כ"ללא ח.פ", והעמודה NOT NULL.
-            התא נדלק מעצמו ברגע שהשדה יתווסף לאותו select. */}
+        {/* ‏ח.פ — התא היה כתוב מאז צעד 3.2 ו**מעולם לא רונדר**: `getBillingContact` לא
+            שלפה את `company_number`, ולכן התנאי שמעליו לעולם לא התקיים והשדה שהתצוגה
+            המאושרת מבטיחה ("ח.פ / איש-קשר / מייל-לחיוב") פשוט נעדר מהמסך. השדה נוסף
+            ל-select ב-01/09/2026 והתא נדלק. ⚠️ **התנאי נשאר ולא הפך ל-`—`**: העמודה
+            `not null` במסד ⇒ ערך חסר כאן פירושו שאין שורת-לקוח או שהקריאה נכשלה, ושני
+            אלה כבר נאמרים במפורש במקום אחר במסך — תא `—` היה מוסיף להם "ללא ח.פ" שקרי. */}
         {billing?.company_number ? (
           <Cell label="ח.פ">
             <Val>
@@ -872,7 +900,12 @@ function FeeSavedBlock({ detail, creditNoteFlag }) {
   )
 }
 
-function InvoiceGateNote({ billingEmailMissing, hasFile }) {
+// סדר-הענפים הוא לוגיקת-אמת ולא סגנון: "לא הצלחנו לקרוא" **קודם** ל"אין מייל", כי כשלא
+// קראנו איננו יודעים דבר על הכרטיס — בדיוק ההיפוך שנדרש ב-`SendResultTag` של דוח-השכר.
+function InvoiceGateNote({ billingUnknown, billingEmailMissing, hasFile }) {
+  if (billingUnknown) {
+    return <GateNote testId="closing-invoice-gate">{BILLING_UNKNOWN_NOTE}</GateNote>
+  }
   if (billingEmailMissing) {
     return <GateNote testId="closing-invoice-gate">{NO_BILLING_EMAIL_NOTE}</GateNote>
   }
@@ -889,6 +922,7 @@ function InvoiceUploadBlock({
   file,
   fileError,
   blocked,
+  billingUnknown,
   billingEmailMissing,
   busy,
   onPick,
@@ -968,7 +1002,11 @@ function InvoiceUploadBlock({
         >
           {busy === 'invoice' ? 'שולח...' : 'שמור ושלח'}
         </Button>
-        <InvoiceGateNote billingEmailMissing={billingEmailMissing} hasFile={Boolean(file)} />
+        <InvoiceGateNote
+          billingUnknown={billingUnknown}
+          billingEmailMissing={billingEmailMissing}
+          hasFile={Boolean(file)}
+        />
       </div>
     </div>
   )
@@ -1073,20 +1111,30 @@ function WriteOffForm({ reason, onReason, onConfirm, onCancel, busy }) {
 }
 
 // הזנה ידנית (א24) — `RatingStars` במצב-עריכה, הרכיב הקיים ולא חדש.
-function FeedbackEntry({ score, onScore, onNoResponse, busy }) {
+//
+// 🔴 **‏`showNoResponse` — למה הכפתור נעלם דווקא בתיקון-ציון (01/09/2026).** ‏`record_feedback`
+// במסלול "לא ענה לסקר" כותב `feedback_status = 'no_response'` **ואינו מנקה את `feedback_score`**
+// (מיגרציית פעולות-הכתיבה, הענף הראשון בפונקציה). ⇒ לחיצה עליו על פרויקט שכבר יש לו ציון
+// הייתה מייצרת שורה שאומרת בו-זמנית "הלקוח נתן 4" ו"הלקוח לא ענה" — מצב שאף מסך אינו יודע
+// להציג, ושאין ממנו דרך חזרה מלבד תיקון-מסד. ⚠️ **וזו אינה החמרה של הזרימה הקיימת:** עד
+// היום הבלוק כולו רונדר רק כשאין ציון, ולכן הצירוף הזה **מעולם לא היה נגיש** — הפרמטר רק
+// שומר שהוא לא ייעשה נגיש בדלת האחורית שנפתחה עכשיו.
+function FeedbackEntry({ score, onScore, onNoResponse, busy, showNoResponse = true }) {
   return (
     <div className="mt-2 flex flex-wrap items-center gap-3">
       <RatingStars value={score} onChange={onScore} testId="closing-feedback-stars" />
-      <Button
-        type="button"
-        variant="outline"
-        disabled={busy !== ''}
-        data-testid="closing-no-response"
-        className="h-auto rounded-lg border-slate-300 px-3 py-1.5 text-[12.5px] text-slate-700"
-        onClick={onNoResponse}
-      >
-        לא ענה לסקר
-      </Button>
+      {showNoResponse ? (
+        <Button
+          type="button"
+          variant="outline"
+          disabled={busy !== ''}
+          data-testid="closing-no-response"
+          className="h-auto rounded-lg border-slate-300 px-3 py-1.5 text-[12.5px] text-slate-700"
+          onClick={onNoResponse}
+        >
+          לא ענה לסקר
+        </Button>
+      ) : null}
     </div>
   )
 }
@@ -1116,23 +1164,62 @@ function FeedbackReasonField({ value, onChange, describedBy }) {
   )
 }
 
-function FeedbackTag({ score, tag }) {
+function FeedbackTag({ score, tag, children }) {
   return (
     <div className="mt-2 flex flex-wrap items-center gap-2">
       <StatusTag label={scoreTagText(score)} tone={tag.tone} testId="closing-feedback-tag" />
       <Sub>
         ציון <Ltr>{tag.score}</Ltr> מתוך <Ltr>5</Ltr>
       </Sub>
+      {children}
     </div>
   )
 }
 
-function FeedbackBlock({ detail, form, tag, scoreLow, busy, onNoResponse }) {
+// 🔴 **"שנה ציון" — הכרעת-ישי 01/09/2026, והפער שהיא סוגרת.** עד היום גוש-ההזנה רונדר
+// **רק** כשאין ציון, ולכן ברגע שציון הגיע — מהדף הציבורי או מהזנה טלפונית — הכוכבים נעלמו
+// ולא נותר שום מסלול לתקן אותו: לקוח שהקליד 2 במקום 5, או מנהלת שלחצה על הכוכב השגוי,
+// היו נעולים עד הארכוב. האפיון קובע *"תיקון מאוחר — ידני ע"י המנהלת"*, כלומר האפשרות
+// הייתה אמורה להתקיים כל הזמן.
+// 🔑 **והמסד כבר מרשה זאת בדיוק עד הגבול הנכון, בלי מיגרציה:** `record_feedback` הוא
+// ‏`update` בלי שער-חד-פעמיות, הוא מנקה את סיבת-הבירור מעצמו כשהציון החדש ≥ 3, ו-
+// `finance_assert_writable` מסרבת ברגע שהפרויקט `finished`. ⇒ **התיקון אפשרי עד הארכוב
+// ונחסם אחריו** — וזה בדיוק הגבול שכרטיס-P3 מתאר ("נעילה מוחלטת").
+// 🎨 **קישור-טקסט ולא כפתור-טורקיז**, במכוון: הטורקיז המלא שמור לפעולה-הראשית האחת של
+// המסך (כלל-המילוי, `PROJECT_MASTER §4`), והתיקון הוא מסלול-חריג ולא מה שהמנהלת באה
+// לעשות. **ברירת-המחדל נשארת תצוגת-התג** — הגוש נפתח רק בלחיצה, ונסגר בחזרה בכל טעינה
+// ואחרי כל שמירה (`seed`), כי אז התג כבר מציג את הערך החדש.
+function FeedbackBlock({
+  detail,
+  form,
+  tag,
+  scoreLow,
+  busy,
+  onNoResponse,
+  scoreEditOpen,
+  onOpenScoreEdit,
+}) {
+  const hasScore = detail.feedback_score != null
   return (
     <div data-testid="closing-feedback-block">
       <SectionTitle>משוב הלקוח</SectionTitle>
 
-      {tag ? <FeedbackTag score={detail.feedback_score} tag={tag} /> : null}
+      {tag ? (
+        <FeedbackTag score={detail.feedback_score} tag={tag}>
+          {scoreEditOpen ? null : (
+            <Button
+              type="button"
+              variant="link"
+              disabled={busy !== ''}
+              data-testid="closing-feedback-score-edit"
+              className="h-auto p-0 text-[12px] font-semibold text-slate-600 underline"
+              onClick={onOpenScoreEdit}
+            >
+              שנה ציון
+            </Button>
+          )}
+        </FeedbackTag>
+      ) : null}
 
       {detail.feedback_status === 'no_response' ? (
         <Sub className="mt-2 block" testId="closing-feedback-no-response">
@@ -1141,12 +1228,13 @@ function FeedbackBlock({ detail, form, tag, scoreLow, busy, onNoResponse }) {
         </Sub>
       ) : null}
 
-      {detail.feedback_score == null ? (
+      {!hasScore || scoreEditOpen ? (
         <FeedbackEntry
           score={form.score}
           onScore={form.setScore}
           onNoResponse={onNoResponse}
           busy={busy}
+          showNoResponse={!hasScore}
         />
       ) : null}
 
@@ -1410,11 +1498,19 @@ async function loadClosingData(projectId) {
 
   // פרטי-החיוב אינם חלק מהמאזן, ולכן כשלם אינו מפיל את המסך — הוא רק חוסם שליחה
   // (כרטיס-P1: "אין מייל-לחיוב — נחסם עם הפניה לכרטיס-הלקוח").
+  //
+  // 🔴 **שלושה מצבים ולא שניים, וזו הצורה הנעולה של הפרויקט** (`src/CLAUDE.md`, חוזה
+  // יומן-המיילים): ‏`undefined` = **לא ידוע** · `null` = אין שורה · אובייקט = יש שורה.
+  // שלושתם חוסמים שליחה, אבל רק הראשון אומר "נסי שוב" במקום להאשים את כרטיס-הלקוח.
+  // ⚠️ **וה-`catch` הריק שהיה כאן לא רק שיקר — הוא גם בלע את השגיאה לגמרי:** אחרי כשל
+  // כזה לא נשארה ולו שורה אחת בקונסול, ולכן לא הייתה שום דרך לדעת *מה* נכשל. הצורה
+  // זהה לשאר המודול (`FinancePage.jsx`), כדי שכל כשלי-הטעינה ייראו אותו דבר ביומן.
   let contact
   try {
     contact = await getBillingContact(row.customer_id)
-  } catch {
-    contact = null
+  } catch (err) {
+    console.error('billing contact load failed:', err)
+    contact = undefined
   }
 
   return { row, proposalRow, contact }
@@ -1468,7 +1564,11 @@ function derivedView({ detail, proposal, billing, phase, form }) {
     gateNote: archiveGateNote(phase),
     scoreLow,
     invoiceName: detail.invoice_file_url ? fileNameOf(detail.invoice_file_url) : null,
-    billingEmailMissing: !billing?.email,
+    // שני דגלים ולא אחד — ר' `BILLING_UNKNOWN_NOTE`. ‏`undefined` הוא **קריאה שנכשלה**,
+    // ולכן הוא **אינו** נספר כ"אין מייל": משפט שמאשים את כרטיס-הלקוח נאמר רק כשבאמת
+    // קראנו את הכרטיס. שניהם חוסמים את השליחה.
+    billingUnknown: billing === undefined,
+    billingEmailMissing: billing !== undefined && !billing?.email,
     withManual:
       proposedAgorot != null && manualAgorot > 0 ? toShekels(proposedAgorot + manualAgorot) : null,
     feeAmountNumber,
@@ -1515,6 +1615,8 @@ function ClosingWindowBody({ project, onOpenChange, onChanged }) {
   const [reason, setReason] = useState('')
   const [notes, setNotes] = useState('')
   const [feedbackTouched, setFeedbackTouched] = useState(false)
+  // גוש-הזנת-הציון בתצוגת-התג נפתח בלחיצה בלבד — ר' ההנמקה מעל `FeedbackBlock`.
+  const [scoreEditOpen, setScoreEditOpen] = useState(false)
   const [feeAmount, setFeeAmount] = useState('')
   const [feeNote, setFeeNote] = useState('')
   const [manualLabel, setManualLabel] = useState('')
@@ -1546,6 +1648,10 @@ function ClosingWindowBody({ project, onOpenChange, onChanged }) {
         : String(Number(proposalRow.proposed_fee)),
     )
     setFeedbackTouched(false)
+    // 🔑 נסגר כאן ולא בהאנדלר-השמירה, כי `seed` היא **נקודת-האיפוס היחידה** של הטופס
+    // (טעינה ראשונה + כל רענון-אחרי-כתיבה). סגירה בהאנדלר הייתה משאירה מסלול שני שבו
+    // הגוש נשאר פתוח על ערך שכבר נשמר.
+    setScoreEditOpen(false)
     setFile(null)
     setFileError('')
     setWriteOffOpen(false)
@@ -1777,7 +1883,8 @@ function ClosingWindowBody({ project, onOpenChange, onChanged }) {
         <InvoiceUploadBlock
           file={file}
           fileError={fileError}
-          blocked={!file || Boolean(fileError) || view.billingEmailMissing}
+          blocked={!file || Boolean(fileError) || view.billingUnknown || view.billingEmailMissing}
+          billingUnknown={view.billingUnknown}
           billingEmailMissing={view.billingEmailMissing}
           busy={busy}
           onPick={handlePickFile}
@@ -1820,6 +1927,8 @@ function ClosingWindowBody({ project, onOpenChange, onChanged }) {
           tag={view.tag}
           scoreLow={scoreLow}
           busy={busy}
+          scoreEditOpen={scoreEditOpen}
+          onOpenScoreEdit={() => setScoreEditOpen(true)}
           onNoResponse={() =>
             runAction(
               'noResponse',

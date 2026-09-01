@@ -303,6 +303,42 @@ describe('שומרי תיפול-ברעש (R4-F9) — מסמך שמספריו א�
     )
   })
 
+  // 🔴 **השומר ששומר על שני האימותים שמעליו מלכבות את עצמם בשקט.** שניהם מדלגים על `null`,
+  // ו-`toFiniteNumber` מחזיר `null` גם לשדה שנעדר לגמרי ⇒ בלי שער-הצורה, שינוי-שם בצורת
+  // ההחזרה של ההפקה היה מכבה את האימות בלי שגיאה ובלי סימן, והדוח היה נשלח לרו"ח כרגיל.
+  // **המפלה היא בדיוק בין שני המקרים:** מפתח שנעדר (או `undefined`) = שבירת-חוזה ⇒ זריקה ·
+  // מפתח שקיים עם `null` = תשובה לגיטימית ⇒ מקילים, כמו קודם.
+  it('שדה-אימות שנעדר מתשובת ההפקה זורק — ואותו שדה שקיים עם null נשאר מקיל', () => {
+    const payload = augustPayload(efratRuling20Travel)
+
+    for (const field of ['total_amount', 'line_count']) {
+      const withoutField = { ...payload }
+      delete withoutField[field]
+      expect(() => buildSalaryReportDocument(withoutField, { generatedAt: GENERATED_AT })).toThrow(
+        /חסרה את נתוני-האימות/,
+      )
+      // מפתח שקיים במפורש עם `undefined` הוא עדיין דריפט-צורה (אותה הבחנה של `assertFinanceShape`).
+      expect(() =>
+        buildSalaryReportDocument(
+          { ...payload, [field]: undefined },
+          { generatedAt: GENERATED_AT },
+        ),
+      ).toThrow(/חסרה את נתוני-האימות/)
+      // 🛡️ המפלה: `null` אינו "נעדר" — הדוח כן מורכב.
+      expect(() =>
+        buildSalaryReportDocument({ ...payload, [field]: null }, { generatedAt: GENERATED_AT }),
+      ).not.toThrow()
+    }
+
+    // 🛡️ ומפלה שנייה: הקלה על שדה אחד אינה מכבה את האימות של השני.
+    expect(() =>
+      buildSalaryReportDocument(
+        { ...payload, total_amount: null, line_count: 99 },
+        { generatedAt: GENERATED_AT },
+      ),
+    ).toThrow(/מספר שורות הדוח אינו תואם/)
+  })
+
   it('שורה מוסתרת שנושאת סכום ⇒ נופלת (הקובץ לעולם לא יסכום פחות משורותיו)', () => {
     const hiddenPaid = { ...compensationLines[0], show_in_file: false }
     const lines = buildSalaryReportLines({ ok: true, lines: [hiddenPaid] })

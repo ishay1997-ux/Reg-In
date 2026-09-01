@@ -73,6 +73,7 @@ import {
   rpcErrorMessage,
   salaryReportEmailSubject,
   sendInvoiceAndRecord,
+  templateWithoutAccountantName,
   uploadInvoiceFile,
   validateInvoiceFile,
 } from './api'
@@ -394,7 +395,12 @@ describe('buildSalaryReportEmailPayload', () => {
     expect(payload.body).toContain('עבור חודש אוגוסט 2026')
   })
 
-  it('בלי שם רו"ח הפנייה נשארת חסרה ואינה ממציאה שם — החור מדווח, לא נסתם בקוד', () => {
+  // 🔴 **תוקן 01/09/2026, ובניסוח בלבד.** כל שלושת אתרי-הקריאה מעבירים `null`, ולכן זה
+  // המצב היחיד שרץ בפועל: ערך ריק על שורת-הפנייה הפיק **"שלום לצוות הנהלת חשבונות / ,"** —
+  // לוכסן ופסיק יתומים בשורה הראשונה של מייל שיוצא למשרד רואי-חשבון אמיתי.
+  // ⛔ **ומה שהתיקון עדיין אינו עושה, וזו הנקודה:** אינו ממציא שם ואינו זורע שדה. אין
+  // ל"שם רו"ח" מקור-נתונים בשום מקום במערכת, והוספת אחד היא הכרעת-מוצר שטרם התקבלה.
+  it('בלי שם רו"ח — פנייה תקינה בעברית, בלי לוכסן ובלי פסיק יתום, ובלי שם מומצא', () => {
     const payload = buildSalaryReportEmailPayload({
       template: SALARY_TEMPLATE,
       recipient: 'office@cpa-firm.co.il',
@@ -402,8 +408,48 @@ describe('buildSalaryReportEmailPayload', () => {
       fileName: '08_2026_Payroll_Report.xlsx',
       attachmentBase64: 'AQID',
     })
-    expect(payload.body).toContain('שלום לצוות הנהלת חשבונות / ,')
+    expect(payload.body).toContain('שלום לצוות הנהלת חשבונות,')
+    // ⛔ שלוש השליליות: השארית הישנה, מציין-המקום הגולמי, והשם המומצא שבמוקאפ.
+    expect(payload.body).not.toContain('שלום לצוות הנהלת חשבונות / ,')
+    expect(payload.body).not.toContain('[שם_רואה_חשבון]')
     expect(payload.body).not.toContain('דורון')
+    // שאר התבנית לא נגעה — הניקוי חל על שורת-הפנייה בלבד.
+    expect(payload.body).toContain('עבור חודש אוגוסט 2026')
+  })
+
+  it('מחרוזת-רווחים אינה שם — מקבלת אותו טיפול כמו `null`', () => {
+    const payload = buildSalaryReportEmailPayload({
+      template: SALARY_TEMPLATE,
+      recipient: 'office@cpa-firm.co.il',
+      periodLabel: 'אוגוסט 2026',
+      accountantName: '   ',
+      fileName: '08_2026_Payroll_Report.xlsx',
+      attachmentBase64: 'AQID',
+    })
+    expect(payload.body).toContain('שלום לצוות הנהלת חשבונות,')
+  })
+})
+
+describe('templateWithoutAccountantName', () => {
+  it('מסירה את מציין-המקום יחד עם המפריד שלפניו', () => {
+    expect(templateWithoutAccountantName('שלום לצוות הנהלת חשבונות / [שם_רואה_חשבון],')).toBe(
+      'שלום לצוות הנהלת חשבונות,',
+    )
+  })
+
+  // ניסוח-מחדש של השורה במסד (§7.70 — פרמטרים נערכים ב-Table Editor) לא יחזיר את הפגם.
+  it('גם כשהמפריד אחרי מציין-המקום, וגם כשאין מפריד כלל', () => {
+    expect(templateWithoutAccountantName('[שם_רואה_חשבון] / לצוות הנהלת חשבונות, שלום')).toBe(
+      'לצוות הנהלת חשבונות, שלום',
+    )
+    expect(templateWithoutAccountantName('שלום [שם_רואה_חשבון],')).toBe('שלום,')
+  })
+
+  it('נוגעת רק בשורה שנושאת את מציין-המקום — שאר הגוף הוא דאטה ואינו משוכתב', () => {
+    const out = templateWithoutAccountantName(SALARY_TEMPLATE)
+    const [greeting, ...rest] = out.split('\n')
+    expect(greeting).toBe('שלום לצוות הנהלת חשבונות,')
+    expect(rest.join('\n')).toBe(SALARY_TEMPLATE.split('\n').slice(1).join('\n'))
   })
 })
 
@@ -456,6 +502,25 @@ describe('קריאות S1/S2', () => {
   it('getBillingContact מחזירה את שם-החברה והמייל לחיוב', async () => {
     mocks.from.mockImplementation(() => queryStub({ data: CUSTOMER, error: null }))
     await expect(getBillingContact(4)).resolves.toEqual(CUSTOMER)
+  })
+
+  // 🔴 **הבדיקה היחידה שהייתה תופסת את הפגם שנסגר 01/09/2026:** תא ה-ח.פ היה כתוב במסך
+  // ומעולם לא רונדר, כי העמודה לא הייתה ב-select — כלומר **תנאי-תצוגה שלעולם אינו
+  // מתקיים**, מצב שאף בדיקת-מסך אינה יכולה להבחין בו מ"אין ללקוח ח.פ". שם-העמודה נבדק
+  // מול `schema.sql` ולא נוחש. ⚠️ הרשימה נבדקת כמחרוזת כי זה בדיוק מה ש-PostgREST מקבל.
+  it('🔴 ה-select מבקש את ח.פ — השדה שהתצוגה המאושרת מבטיחה ליד איש-הקשר והמייל', async () => {
+    const select = vi.fn()
+    const stub = {
+      select,
+      eq: () => stub,
+      maybeSingle: () => Promise.resolve({ data: CUSTOMER, error: null }),
+    }
+    select.mockReturnValue(stub)
+    mocks.from.mockImplementation(() => stub)
+    await getBillingContact(4)
+    expect(select).toHaveBeenCalledWith(
+      'customer_id, company_number, company_name, contact_name, email',
+    )
   })
 
   // 🔴 **שתי טבלאות ולא אחת, מאז 28/08/2026** — ו-`email_log` היא התוספת המכוונת: הנמען

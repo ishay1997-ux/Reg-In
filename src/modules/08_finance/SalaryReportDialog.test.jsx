@@ -142,6 +142,10 @@ function renderDialog(props = {}) {
 // 🔴 כל הפעלה של המסלול הבלתי-הפיך עוברת דרך העוזר הזה ולא דרך לחיצה ישירה — אחרת שכחת
 // חלונית-הווידוא הייתה נראית בבדיקה בדיוק כמו "ה-RPC לא נקרא", כלומר כשל אילם.
 async function clickGenerateAndConfirm() {
+  // 🔴 המתנה לכפתור **פעיל** ולא רק קיים: מ-`01/09/2026` הוא מושבת גם כל עוד לא ידוע אם
+  // החודש כבר הופק (חלון-טעינת-ההיסטוריה). לחיצה עליו אז אינה מפעילה דבר, והבדיקה הייתה
+  // נכשלת על "חלונית-הווידוא לא נפתחה" — כלומר מצביעה על המנגנון הלא-נכון.
+  await waitFor(() => expect(screen.getByTestId('salary-report-generate')).not.toBeDisabled())
   fireEvent.click(screen.getByTestId('salary-report-generate'))
   fireEvent.click(await screen.findByTestId('confirm-dialog-confirm'))
 }
@@ -389,7 +393,8 @@ describe('SalaryReportDialog — חלונית-הווידוא של "ייצא וש
     generateAndSendSalaryReport.mockResolvedValue(generateResult())
     renderDialog()
 
-    await screen.findByTestId('salary-report-month-button')
+    // כמו בעוזר `clickGenerateAndConfirm` — ממתינים לכפתור פעיל, כי הוא מושבת בחלון-הטעינה.
+    await waitFor(() => expect(screen.getByTestId('salary-report-generate')).not.toBeDisabled())
     fireEvent.click(screen.getByTestId('salary-report-generate'))
 
     const message = await screen.findByTestId('confirm-dialog-message')
@@ -404,7 +409,8 @@ describe('SalaryReportDialog — חלונית-הווידוא של "ייצא וש
     generateAndSendSalaryReport.mockResolvedValue(generateResult())
     renderDialog()
 
-    await screen.findByTestId('salary-report-month-button')
+    // כמו בעוזר `clickGenerateAndConfirm` — ממתינים לכפתור פעיל, כי הוא מושבת בחלון-הטעינה.
+    await waitFor(() => expect(screen.getByTestId('salary-report-generate')).not.toBeDisabled())
     fireEvent.click(screen.getByTestId('salary-report-generate'))
     fireEvent.click(await screen.findByTestId('confirm-dialog-cancel'))
 
@@ -428,25 +434,107 @@ describe('SalaryReportDialog — חלונית-הווידוא של "ייצא וש
 })
 
 describe('SalaryReportDialog — חסימת-כפילות מצד-לקוח (תצוגה ג׳ של המוקאפ)', () => {
-  it('חודש שכבר הופק (send_status=sent) מציג את הבאנר החסום ומשבית "ייצא ושלח"', async () => {
-    listSalaryReports.mockResolvedValue([reportRow({ period: '2026-09-01' })])
+  // 🔴 **הבדיקה הזו נעלה עד `01/09/2026` את הבאג עצמו.** היא דרשה שהבאנר יציג את
+  // `ACCOUNTANT_EMAIL` — כלומר את **הפרמטר החי** — בעוד שהבאנר מדבר על דוח שכבר נשלח,
+  // ולכן הנמען הנכון הוא זה שאליו הוא **באמת** יצא (`sent_to`, מ-`email_log`).
+  // ⇒ כל עוד הבדיקה עמדה כך, כל תיקון היה נראה כרגרסיה. *(נמצא באודיט-סגירת מ8: הבאנר
+  // אמר `ishay1997@gmail.com` בעוד שורת-ההיסטוריה שמתחתיו אמרה `office@cpa-firm.co.il`.)*
+  // 🔑 **התבנית מועתקת מבדיקת-ההיסטוריה למטה** (`sent_to: 'old-accountant@example.com'`):
+  // ערך ששונה מכל פרמטר אפשרי, **ואסרשן שלילי** — כי רק הוא תופס חזרה שקטה לפרמטר.
+  it('חודש שכבר הופק (send_status=sent) מציג את הבאנר החסום, את הנמען האמיתי, ומשבית "ייצא ושלח"', async () => {
+    listSalaryReports.mockResolvedValue([
+      reportRow({ period: '2026-09-01', sent_to: 'old-accountant@example.com' }),
+    ])
     renderDialog()
 
     const banner = await screen.findByTestId('salary-report-blocked-banner')
     expect(banner).toHaveTextContent('דוח לחודש ספטמבר 2026 כבר הופק')
     expect(banner).toHaveTextContent('01/09/2026')
-    expect(banner).toHaveTextContent(ACCOUNTANT_EMAIL)
+    expect(banner).toHaveTextContent('old-accountant@example.com')
+    expect(banner).not.toHaveTextContent(ACCOUNTANT_EMAIL)
     expect(screen.getByTestId('salary-report-generate')).toBeDisabled()
     expect(generateAndSendSalaryReport).not.toHaveBeenCalled()
+  })
+
+  // חוסר-רישום ב-`email_log` מציג `—` ולא נופל חזרה לפרמטר (§4.3 — חוסר-נתון אינו ניחוש).
+  it('דוח שנשלח בלי רישום-נמען מציג "—" בבאנר, ולא את הפרמטר החי', async () => {
+    listSalaryReports.mockResolvedValue([reportRow({ period: '2026-09-01', sent_to: undefined })])
+    renderDialog()
+
+    const banner = await screen.findByTestId('salary-report-blocked-banner')
+    expect(banner).toHaveTextContent('אל —')
+    expect(banner).not.toHaveTextContent(ACCOUNTANT_EMAIL)
   })
 
   it('חודש שלא הופק אינו מציג באנר, וה-RPC לא נקרא לפני לחיצה', async () => {
     listSalaryReports.mockResolvedValue([reportRow({ period: '2026-01-01' })])
     renderDialog()
 
-    await screen.findByTestId('salary-report-month-button')
+    // ⚠️ ההמתנה היא לפאנל-הקדם-הפקה ולא לכפתור-החודש: הכפתור קיים כבר ברינדור הראשון, בעוד
+    // שההיסטוריה עדיין באוויר — והבדיקה הייתה מאמתת "פעיל" בחלון שבו הוא **אמור** להיות
+    // מושבת. הפאנל מצויר רק כשידוע שאין דוח לחודש, ולכן הוא הסימן שהתשובה הגיעה.
+    await screen.findByTestId('salary-report-preflight')
     expect(screen.queryByTestId('salary-report-blocked-banner')).not.toBeInTheDocument()
     expect(screen.getByTestId('salary-report-generate')).not.toBeDisabled()
+  })
+
+  // 🔴 **המצב השלישי: "עדיין לא ידוע" — נמדד באודיט-סגירת מ8 (`01/09/2026`) כצילום חי.**
+  // עד אז `existingForSelected` היה `null` גם בזמן הטעינה, ולכן על חודש **שכבר הופק** הוצג
+  // לרגע פאנל-הקדם-הפקה ו**"ייצא ושלח" היה לחיץ** — הצעת פעולה בלתי-הפיכה שידוע שתידחה.
+  // ⚠️ הדחייה נשלטת בדגל מפורש (הבטחה תלויה) ולא ב-`mockResolvedValueOnce`: ‏`listSalaryReports`
+  // נקראת **פעמיים** בהרכבה — הדיאלוג וכרטיס-ההיסטוריה — וה-`Once` נבלע ע"י הראשונה.
+  it('כל עוד ההיסטוריה לא נטענה: הכפתור מושבת, אין קדם-הפקה, ואז מתגלה שהחודש כבר הופק', async () => {
+    let releaseHistory
+    listSalaryReports.mockReturnValue(
+      new Promise((resolve) => {
+        releaseHistory = resolve
+      }),
+    )
+    renderDialog()
+
+    const generate = await screen.findByTestId('salary-report-generate')
+    expect(generate).toBeDisabled()
+    expect(generate).toHaveAttribute('title', 'בודקת אם כבר הופק דוח לחודש זה')
+    expect(screen.queryByTestId('salary-report-preflight')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('salary-report-blocked-banner')).not.toBeInTheDocument()
+
+    releaseHistory([reportRow({ period: '2026-09-01' })])
+
+    await screen.findByTestId('salary-report-blocked-banner')
+    expect(screen.getByTestId('salary-report-generate')).toBeDisabled()
+    expect(screen.queryByTestId('salary-report-preflight')).not.toBeInTheDocument()
+    expect(generateAndSendSalaryReport).not.toHaveBeenCalled()
+  })
+
+  // 🛡️ **המפלה של הבדיקה שמעליה** — בלעדיה "מושבת תמיד" היה עובר אותה במלואה.
+  it('ההיסטוריה נטענה ואין דוח לחודש ⇒ הכפתור נפתח, הפאנל מצויר, ואין עוד נימוק-השבתה', async () => {
+    let releaseHistory
+    listSalaryReports.mockReturnValue(
+      new Promise((resolve) => {
+        releaseHistory = resolve
+      }),
+    )
+    renderDialog()
+    expect(await screen.findByTestId('salary-report-generate')).toBeDisabled()
+
+    releaseHistory([])
+
+    await screen.findByTestId('salary-report-preflight')
+    const generate = screen.getByTestId('salary-report-generate')
+    expect(generate).not.toBeDisabled()
+    expect(generate).not.toHaveAttribute('title')
+  })
+
+  // 🔴 **כשל-טעינה אינו "לא ידוע" — ההכרעה הרשומה היא שהוא אינו חוסם.** הבדיקה הזו היא
+  // נוחות-תצוגה בלבד (האכיפה היא במסד), והמסך מבטיח למנהלת שהבדיקה הסופית תתבצע בלחיצה —
+  // כפתור מושבת אז היה הופך את ההבטחה לשקר ונועל אותה בגלל תקלת-רשת בת-שנייה.
+  it('כשל בטעינת ההיסטוריה נופל למצב המקיל: הכפתור פעיל, הפאנל מצויר, והכשל נאמר בקול', async () => {
+    listSalaryReports.mockRejectedValue(new Error('נפילת רשת'))
+    renderDialog()
+
+    await screen.findByTestId('salary-report-preflight')
+    expect(screen.getByTestId('salary-report-generate')).not.toBeDisabled()
+    expect(screen.getByText(/לא ניתן היה לבדוק אם החודש כבר הופק/)).toBeInTheDocument()
   })
 })
 
@@ -643,6 +731,31 @@ describe('SalaryReportDialog — "ייצא ושלח" (המסלול הבלתי-ה
 
     await screen.findByTestId('salary-report-result')
     expect(screen.getByTestId('salary-report-send-tag')).toHaveTextContent('קובץ לא נשמר')
+  })
+
+  // 🔴 **הצירוף ששרד עד `01/09/2026`, ושתי הבדיקות שמעליו לא כיסו: שניהם נכשלו.**
+  // ‏`api.js` מריץ העלאה ושליחה כשני שלבים בלתי-תלויים — כשל-העלאה נתפס וההרצה ממשיכה — ולכן
+  // `{fileError, sendResult:'failed'}` הוא מצב אמיתי. התג בדק `fileError` ראשון והכריז
+  // **"נשלח — קובץ לא נשמר"** על מייל שלא יצא. **הכיוון החשוב הוא השלילי:** התג חייב לומר
+  // "נכשל" ו**אסור** לו לומר "נשלח", אחרת המנהלת לא תשלח שוב — והחודש כבר חתום ובלתי-הפיך.
+  it('כשל-שליחה **וגם** כשל-קובץ ⇒ התג אומר "נכשל", ולעולם לא "נשלח"', async () => {
+    generateAndSendSalaryReport.mockResolvedValue(
+      generateResult({
+        fileError: new Error('הבאקט דחה את סוג-הקובץ'),
+        filePath: null,
+        sendResult: 'failed',
+        sendStatus: 'failed',
+      }),
+    )
+    renderDialog()
+
+    await screen.findByTestId('salary-report-month-button')
+    await clickGenerateAndConfirm()
+
+    await screen.findByTestId('salary-report-result')
+    const tag = screen.getByTestId('salary-report-send-tag')
+    expect(tag).toHaveTextContent('נכשל')
+    expect(tag).not.toHaveTextContent('נשלח')
   })
 
   // ⚠️ הבדיקה הזו נועלת את הפער שנמצא בבקרה: `formatShekelWhole` (ברירת-המחדל של `Money`)

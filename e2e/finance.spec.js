@@ -216,7 +216,30 @@ test.describe('מודול 8 · כספים — E2E פנימי (S1/S2/S3), קרי�
     // עצמו סגור כברירת-מחדל — `pickerOpen` מתחיל `false`, ולא נלחץ כאן כדי להישאר קריאה-
     // בלבד) + גוש-תצוגה-מקדימה עולים, ואפס פעולה-כותבת נלחצת.
     await expect(page.getByTestId('salary-report-month-button')).toBeVisible()
-    await expect(page.getByTestId('salary-report-preflight')).toBeVisible({ timeout: 15_000 })
+
+    // 🔴 **תוקן `01/09/2026` באודיט-הסגירה — הבדיקה הייתה תלוית-תאריך ונפלה על מסך תקין.**
+    // בורר-החודש נפתח על **החודש הקודם** (`SalaryReportDialog.jsx`, `d.setMonth(d.getMonth() - 1)`).
+    // ב-28/08, כשהבדיקה נכתבה, זה היה יולי — שלא הופק — ולכן הקדם-הפקה רונדר. **מ-01/09 זהו
+    // אוגוסט, שדוח 13 כבר הופק עבורו**, והמסך מרנדר במקומו את הבאנר-החסום — **וזו התנהגות
+    // נכונה ומתועדת** (`ClosingWindow`/`SalaryReportDialog`: "מצב-הקדם-הפקה **לא מוצג כשהחודש
+    // כבר הופק**"). האסרשן היה בלתי-מותנה במקום שבו המסך מותנה.
+    // ⇒ **נועלים את האינווריאנט ולא את המצב:** בדיוק אחד משני הגושים קיים, ולכל אחד מהם
+    // המשמעות ההפוכה לגבי כפתור-ההפקה. זהו אותו דפוס של `.or()` שכבר תוקן למעלה, ואותו לקח
+    // שהיומן רושם: בדיקה שנעוצה לספירה/תאריך/מזהה חי **מרקיבה** — נועלים תנאי-ריצה, לא ערך.
+    const preflight = page.getByTestId('salary-report-preflight')
+    const blockedBanner = page.getByTestId('salary-report-blocked-banner')
+    await expect(preflight.or(blockedBanner).first()).toBeVisible({ timeout: 15_000 })
+
+    const monthAlreadyGenerated = (await blockedBanner.count()) > 0
+    if (monthAlreadyGenerated) {
+      // חודש שהופק ⇒ אין קדם-הפקה, וכפתור-ההפקה **חייב** להיות מושבת.
+      await expect(preflight).toHaveCount(0)
+      await expect(page.getByTestId('salary-report-generate')).toBeDisabled()
+    } else {
+      // חודש פתוח ⇒ הקדם-הפקה הוא המסר, וכפתור-ההפקה פעיל.
+      await expect(preflight).toBeVisible()
+      await expect(page.getByTestId('salary-report-generate')).toBeEnabled()
+    }
 
     // סגירה בכפתור-הביטול המפורש (לא "הפקה") — הכפתור הכותב היחיד בדיאלוג נשאר בלתי-נלחץ.
     await expect(page.getByTestId('salary-report-generate')).toBeVisible()

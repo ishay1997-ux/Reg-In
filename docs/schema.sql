@@ -1564,9 +1564,12 @@ create policy project_finance_select_by_permission on project_finance
 -- 🔴 קריאה: 'דיילות' עם עריכה (הטופס של מ4, ALL) + 'כספים' עם עריכה (דוח-השכר, SELECT
 --    בלבד — היא לעולם לא עורכת פרטי בנק).
 -- 🔴 שורה חסרה היא מצב תקין — דיילת בלי פרטי בנק. הקריאה היא LEFT JOIN, והיא מוצגת.
--- ⏸️ **הפיצול חצי-גמור בכוונה:** שלוש העמודות המקוריות עדיין קיימות על hostesses
---    (סעיף 15) כי הייצור כותב אליהן. C2 תמחק אותן אחרי הפריסה — db_roadmap §9א.
---    **עד אז חשיפת-ה19 עדיין פתוחה**, ופרטי-בנק חיים בשני מקומות.
+-- ✅ **הפיצול הושלם — C2 רצה 27/08/2026 18:0X ו-ה19 סגור.** שלוש העמודות המקוריות
+--    **אינן קיימות יותר** על hostesses (ר' סעיף 15), ופרטי-בנק חיים **רק כאן**.
+--    🔴 **תוקן 01/09/2026 באודיט-סגירת מ8:** עד כאן עמד "⏸️ הפיצול חצי-גמור בכוונה …
+--    **עד אז חשיפת-ה19 עדיין פתוחה**" — נכון בזמן הכתיבה ושקרי מרגע ש-C2 רצה, **וסותר
+--    את סעיף 15 באותו קובץ.** נמדד חי: אפס משלוש העמודות ב-information_schema, ו-26
+--    שורות-בנק מול 26 דיילות. **קורא שהגיע לכאן ב-grep הסיק שחשיפת-PII פתוחה — והיא סגורה.**
 create table hostess_bank_details (
   hostess_id   bigint      not null,
   bank_name    text        not null,
@@ -1820,7 +1823,14 @@ create policy hostess_languages_write_by_permission on hostess_languages
 --   SD · stable · plpgsql · [service_role]   ← 🔴 **פנימית: אין anon ואין authenticated**
 --   🔑 **מקור-האמת היחיד של הכסף.** כל מסך של מ8 עובר דרכה, ולכן אי-אפשר ששני מסכים
 --      יראו שני רווחים שונים לאותו פרויקט (F16/R1-4). אומתה מול עוגן-היד: #13 ⇒ 3,650.00.
+--   🔴 **עודכנה ב-`H7` (01/09/2026) — ואם אתה נוגע בה, זה המוקש:** המשתנה `v_labor`
+--      (שעות×תעריף **+ בונוס**) מזין **שלושה** ערכים — `labor_cost` · `gross_profit`
+--      (ומשם `final_profit` הקפוא) · ו-`budget_deviation`. הבונוס **שייך** לשניים
+--      הראשונים ו**מזהם** את השלישי, כי הצד-המתוכנן חסר איבר-בונוס. ⇒ קיים `v_labor_hours`
+--      **נפרד** לצד-הביצוע של הסטייה בלבד. 🚫 **אל תאחד אותם** — גריעת הבונוס מ-`v_labor`
+--      מזיזה את הרווח-הגולמי ושוברת את עוגן-הקבלה.
 --   → supabase/migrations/20260827144459_module8_finance_money_ssot_and_readers.sql
+--   → supabase/migrations/20260901233014_module8_h7_budget_deviation_excludes_bonus.sql
 -- get_finance_overview() returns table (22 columns — S1's three tabs)
 --   SD · stable · plpgsql · [authenticated, service_role] · gated 'כספים'
 --   → supabase/migrations/20260827144459_module8_finance_money_ssot_and_readers.sql

@@ -32,11 +32,14 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-// 🔴 **הכוכב נבחר לפי מיקומו בקבוצה, ולא לפי ה-`aria-label` שלו — במכוון.**
-// ה-`aria-label` פר-כוכב נפלט מ-`RatingStars.jsx`, רכיב-משותף שהקובץ הזה אינו בבעלותו,
-// והנוסח שלו כרגע חורג ממה שהמוקאפ המאושר נועל (ר' פער (3) בהערת-הראש של המסך). שאילתה
-// לפי הנוסח הנוכחי הייתה **נועלת את הפער בבדיקה** ומאדימה אותה ברגע שהרכיב יתוקן —
-// כלומר הופכת את הבדיקה שלי לחסם בפני תיקון של מישהו אחר. המיקום יציב בשני העולמות.
+// 🔴 **הכוכב נבחר לפי מיקומו בקבוצה, ולא לפי ה-`aria-label` שלו — במכוון, ו**זה הוכיח
+// את עצמו**.** ה-`aria-label` פר-כוכב נפלט מ-`RatingStars.jsx`, רכיב-משותף; ההערה כאן
+// נכתבה כשהנוסח שלו עוד חרג מהמוקאפ, ונימקה שנעילת-הנוסח בעוזר תהפוך את הבדיקה לחסם
+// בפני תיקון של מישהו אחר. ✅ **התיקון אכן הגיע (01/09/2026) והקובץ הזה לא זז בבייט**,
+// בעוד **שתי בדיקות-E2E שכן נעלו את הנוסח הישן** (`public-feedback.spec.js`,
+// `accessibility.spec.js` — `name: '5 מתוך 5'`) נשברו ודורשות עדכון. ⇒ **המיקום נשאר
+// הצורה הנכונה לאתר כוכב בבדיקת-זרימה.** הנוסח עצמו נעול בבדיקה ייעודית אחת למטה,
+// שזה מקומה הנכון: היא **על** הנוסח, ולא משתמשת בו כדי לבדוק משהו אחר.
 function star(n) {
   return within(screen.getByTestId('feedback-stars')).getAllByRole('button')[n - 1]
 }
@@ -97,6 +100,52 @@ describe('PublicFeedbackPage — טעינה', () => {
 
     await waitFor(() => expect(screen.getByTestId('feedback-form')).toBeInTheDocument())
     expect(fetchFeedbackPage).toHaveBeenCalledTimes(2)
+  })
+})
+
+// 🔴 **מה החבילה הזו נועלת: מה שהלקוח קורא — ולא מה שהמנהלת קוראת.** `RatingStars` נכתב
+// לקהל הפנימי, והדף הזה הוא הקהל השני. שלוש הבדיקות למטה הן היחידות במערכת שיאדימו אם
+// מישהו "יאחד בחזרה" את שני הקהלים לנוסח אחד — פגם שאינו מפיל שום בדיקה אחרת, ושישי
+// לא יתפוס בעין כי "טרם התרשמת" נראה כמו עברית תקינה עד שקוראים למי הוא מדבר.
+describe('PublicFeedbackPage — הכוכבים מדברים אל הלקוח, לא אל המנהלת', () => {
+  async function openForm() {
+    fetchFeedbackPage.mockResolvedValue({
+      state: 'ok',
+      event_name: 'ערב השקה — קמפוס צפון',
+      event_date: '2026-09-07',
+    })
+    renderPage()
+    await waitFor(() => expect(screen.getByTestId('feedback-form')).toBeInTheDocument())
+  }
+
+  it('🔴 חמשת ה-aria-label הם "כוכב 1"…"כוכב 5" — מוקאפ מאושר + screens-approved §S4/①', async () => {
+    await openForm()
+    const group = within(screen.getByTestId('feedback-stars'))
+    for (const n of [1, 2, 3, 4, 5]) {
+      expect(group.getByRole('button', { name: `כוכב ${n}` })).toBeInTheDocument()
+    }
+  })
+
+  it('🔴 אין כיתוב-מנהלת על הדף הציבורי — לא "טרם התרשמת" ולא "N מתוך 5"', async () => {
+    await openForm()
+    // לפני בחירה: הנוסח הריק הוא לשון-נקבה-יחיד ("התרשמת"), והדף כולו ברבים.
+    expect(screen.queryByText('טרם התרשמת')).not.toBeInTheDocument()
+    expect(screen.queryByText(/התרשמ/)).not.toBeInTheDocument()
+    // ואחרי בחירה: גם הנוסח המלא לא צץ — הפער היה בשני הצדדים, לא רק בריק.
+    fireEvent.click(star(4))
+    expect(screen.queryByText(/מתוך 5/)).not.toBeInTheDocument()
+    // מה שכן נשאר — הכיתוב היחיד שהמוקאפ מצייר, ברבים.
+    expect(screen.getByText('געו בכוכב כדי לדרג')).toBeInTheDocument()
+  })
+
+  it('🔴 הכוכב הנבחר נצבע בטורקיז-המותג — הדירוג הוא הפעולה הראשית (§S4/⑧4)', async () => {
+    await openForm()
+    fireEvent.click(star(3))
+    const stars = within(screen.getByTestId('feedback-stars')).getAllByRole('button')
+    expect(stars.slice(0, 3).every((b) => b.className.includes('text-teal-600'))).toBe(true)
+    expect(stars.slice(3).every((b) => b.className.includes('text-slate-300'))).toBe(true)
+    // 🚫 ולא אפור-המנהלת, שהיה כאן עד 01/09/2026.
+    expect(stars.some((b) => b.className.includes('text-slate-700'))).toBe(false)
   })
 })
 

@@ -698,3 +698,178 @@ describe('S1 — מסלול-הכניסה ל-S3 (הכרעת Q-2)', () => {
     expect(screen.getByTestId('finance-open-salary')).toBeInTheDocument()
   })
 })
+
+describe('S1 — מיון ברירת-המחדל פר-לשונית (A-10)', () => {
+  // 🔬 **כל מערך-קלט כאן מעורבב בכוונה ואינו בסדר הצפוי — וזו אינה קפדנות אלא תיקון של
+  // כשל שקרה בפרויקט הזה** (`src/CLAUDE.md`, 30/07/2026): בדיקת-מיון על שורות בעלות ערך
+  // זהה מאמתת "כל שורה ≤ קודמתה", וזה נכון גם כשהמיון לא עשה כלום. לכן הערכים כאן מגוונים,
+  // הקלט אינו מונוטוני לפי האינדקס, ואף מערך אינו מתחיל כשהוא כבר ממוין.
+
+  // 🔴 **מחליפים לשונית רק אחרי שהטעינה הסתיימה, וזו אינה קפדנות מיותרת:** סרגל-הלשוניות
+  // מרונדר גם במצב-הטעינה, אבל הוא ענף-JSX אחר — כשהנתונים חוזרים React מחליף את צמתי-ה-DOM,
+  // והקליק על הכפתור **מלפני** ההחלפה נוחת על צומת מנותק ונבלע בלי שגיאה (הלשונית פשוט לא
+  // מתחלפת). לכן כל מערך-פיקסצ'רים כאן נושא גם את #15 מהקאסט המשותף — לא כדי להיבדק, אלא
+  // כדי שלשונית ברירת-המחדל לא תהיה ריקה ו-`renderPage` יוכל להמתין לטבלה כרגיל.
+  async function renderOnTab(tab) {
+    await renderPage()
+    fireEvent.click(screen.getByTestId(`finance-tab-${tab}`))
+  }
+
+  // סדר-השורות כפי שהוא בפועל ב-DOM (‏`getAllByTestId` מחזיר בסדר-מסמך).
+  function rowOrder() {
+    return screen
+      .getAllByTestId(/^finance-row-/)
+      .map((tr) => Number(tr.getAttribute('data-testid').replace('finance-row-', '')))
+  }
+
+  it('"ממתין לתשלום" — לפי ימי-איחור, מהמאחר ביותר לפחות', async () => {
+    // "היום" = 15/10/2026, ‏`payment_terms_days` = 30 ⇒ ימי-איחור: 26 · 5 · 0 · לא-ידוע.
+    const overdue26 = overviewRow({
+      project_id: 21,
+      event_name: 'ותיק באיחור',
+      project_status: 'awaiting_payment',
+      tab: 'awaiting_payment',
+      revenue: '1000.00',
+      invoice_sent: true,
+      invoice_sent_at: '2026-08-20T09:00:00Z', // פירעון 19/09 ⇒ 26 ימי איחור
+    })
+    const overdue5 = overviewRow({
+      project_id: 22,
+      event_name: 'איחור קצר',
+      project_status: 'awaiting_payment',
+      tab: 'awaiting_payment',
+      revenue: '2000.00',
+      invoice_sent: true,
+      invoice_sent_at: '2026-09-10T09:00:00Z', // פירעון 10/10 ⇒ 5 ימי איחור
+    })
+    const overdue0 = overviewRow({
+      project_id: 23,
+      event_name: 'טרם הגיע מועד הפירעון',
+      project_status: 'awaiting_payment',
+      tab: 'awaiting_payment',
+      revenue: '3000.00',
+      invoice_sent: true,
+      invoice_sent_at: '2026-10-01T09:00:00Z', // פירעון 31/10 ⇒ 0
+    })
+    const unknown = overviewRow({
+      project_id: 24,
+      event_name: 'חשבונית טרם נשלחה',
+      project_status: 'awaiting_payment',
+      tab: 'awaiting_payment',
+      revenue: '4000.00',
+      invoice_sent: false,
+      invoice_sent_at: null, // ⇒ ימי-איחור `null`
+    })
+
+    // 🔴 **הלא-ידוע מוצב לפני האפס בקלט, וזה עיקר הבדיקה:** אילו `null` היה נספר כ-0 הוא
+    // היה נקשר עם שורת-האפס, והמיון היציב היה משאיר אותו **לפניה** — כלומר בדיוק הסדר
+    // ההפוך ממה שנטען כאן. השורה הזאת היא מה שהופך את הבדיקה למסוגלת להיכשל.
+    listFinanceOverview.mockResolvedValue([unknown, overdue26, overdue0, overdue5])
+    await renderPage()
+    expect(rowOrder()).toEqual([21, 22, 23, 24])
+  })
+
+  it('"ממתין לחשבונית" — לפי תאריך-הסגירה-התפעולית, מהוותיק לחדש', async () => {
+    const closedAug01 = overviewRow({
+      project_id: 31,
+      event_name: 'נסגר תפעולית באוגוסט',
+      project_status: 'awaiting_invoice',
+      tab: 'awaiting_invoice',
+      revenue: '1000.00',
+      operationally_closed_at: '2026-08-01T09:00:00Z',
+    })
+    const closedSep12 = overviewRow({
+      project_id: 32,
+      event_name: 'נסגר תפעולית באמצע ספטמבר',
+      project_status: 'awaiting_invoice',
+      tab: 'awaiting_invoice',
+      revenue: '2000.00',
+      operationally_closed_at: '2026-09-12T09:00:00Z',
+    })
+    const closedSep30 = overviewRow({
+      project_id: 33,
+      event_name: 'נסגר תפעולית בסוף ספטמבר',
+      project_status: 'awaiting_invoice',
+      tab: 'awaiting_invoice',
+      revenue: '3000.00',
+      operationally_closed_at: '2026-09-30T09:00:00Z',
+    })
+    // ⚠️ פיקסצ'ר-הגנה: תאריך-סגירה חסר. הוא לא אמור להגיע מהמסד, ובדיוק לכן נעול כאן
+    // **היכן** הוא נוחת — בתחתית, ולא בראש כפי שמחרוזת-ריקה במיון-עולה הייתה מציבה אותו.
+    const unknown = overviewRow({
+      project_id: 34,
+      event_name: 'בלי תאריך סגירה',
+      project_status: 'awaiting_invoice',
+      tab: 'awaiting_invoice',
+      revenue: '4000.00',
+      operationally_closed_at: null,
+    })
+
+    listFinanceOverview.mockResolvedValue([closedSep30, unknown, P15, closedAug01, closedSep12])
+    await renderOnTab('awaiting_invoice')
+    expect(rowOrder()).toEqual([31, 32, 33, 34])
+  })
+
+  it('"פרויקטים שהסתיימו" — לפי תאריך-הארכוב, מהאחרון שארוכב לראשון', async () => {
+    const archivedJul20 = overviewRow({
+      project_id: 41,
+      event_name: 'ארוכב ביולי',
+      project_status: 'finished',
+      tab: 'finished',
+      revenue: '1000.00',
+      final_profit: '100.00',
+      payment_date: '2026-07-15',
+      archived_at: '2026-07-20T09:00:00Z',
+    })
+    const archivedSep06 = overviewRow({
+      project_id: 42,
+      event_name: 'ארוכב בספטמבר',
+      project_status: 'finished',
+      tab: 'finished',
+      revenue: '2000.00',
+      final_profit: '200.00',
+      payment_date: '2026-09-01',
+      archived_at: '2026-09-06T09:00:00Z',
+    })
+    const archivedOct02 = overviewRow({
+      project_id: 43,
+      event_name: 'ארוכב באוקטובר',
+      project_status: 'finished',
+      tab: 'finished',
+      revenue: '3000.00',
+      final_profit: '300.00',
+      payment_date: '2026-10-01',
+      archived_at: '2026-10-02T09:00:00Z',
+    })
+    const unknown = overviewRow({
+      project_id: 44,
+      event_name: 'בלי תאריך ארכוב',
+      project_status: 'finished',
+      tab: 'finished',
+      revenue: '4000.00',
+      final_profit: '400.00',
+      payment_date: '2026-10-01',
+      archived_at: null,
+    })
+
+    listFinanceOverview.mockResolvedValue([
+      unknown,
+      archivedJul20,
+      P15,
+      archivedOct02,
+      archivedSep06,
+    ])
+    await renderOnTab('finished')
+    expect(rowOrder()).toEqual([43, 42, 41, 44])
+  })
+
+  it('המיון הוא ברירת-מחדל בלבד — אין פקד-מיון על המסך, וכותרות-העמודות אינן לחיצות', async () => {
+    // ‏A-10 קבע **סדר**, לא בורר. בדיקה הפוכה בכוונה: היא נועלת את מה שלא נבנה, כדי
+    // שהוספת פקד תגיע כהכרעה ולא כתוספת שקטה.
+    await renderPage()
+    for (const th of screen.getAllByRole('columnheader')) {
+      expect(th.querySelector('button')).toBeNull()
+      expect(th).not.toHaveAttribute('aria-sort')
+    }
+  })
+})

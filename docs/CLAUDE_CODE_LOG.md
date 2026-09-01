@@ -45,6 +45,106 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 01/09/2026 22:0X–23:2X — module 8 closing audit: verdict [NO], and a test that had locked the bug in
+
+**`module-close` on `a2e2064`, fresh session, nothing merged or pushed.** Everything measurable is green —
+`gate` **exit 0** (1,786/65), `smoke` **exit 0** (the module's **first clean smoke run**; the phase-4 gate had
+recorded 0 of 4), m8 E2E **8/8**, advisors carrying nothing new-and-unexplained, and **3 of the 4 acceptance
+anchors re-derived live from the database** (3,650.00 · 292.60 · 69%). The fourth, 3,508.00, was **not** re-run
+and that is said out loud: #14 is not `cancelled`, so reproducing it needs a live write.
+
+🔴 **The gate was RED when the audit opened, and CI runs the failing step.** `npm run audit` blocked on
+`browserslist [high]` with no exemption, and `.github/workflows/ci.yml:54-55` runs that script — so the PR
+would have gone red on push. **Measured attribution: not module 8's.** The package arrives via
+`eslint-plugin-react-hooks` and the `shadcn` CLI; m8's two new packages have zero transitive deps; zero
+occurrences in `dist`.
+
+⚠️ **And the build session wrote into my working tree mid-scan** — `npm audit fix`, 12 tooling packages —
+**then disclosed it unprompted and deliberately did not commit.** That disclosure is the only reason this
+stayed recoverable. I re-measured everything rather than carrying its numbers, **including against myself:
+my "29 commits ahead" was wrong (`wc -l` says 31), and my first package count (17) was wrong too — `grep -U6`
+counted context lines. Its 12 was right.** What the re-measurement added: the bump also clears **all five
+standing exemptions**, and `audit-gate.mjs` now prints "🧹 this exemption no longer matches any advisory" for
+three of them — so the file can shed exemptions instead of gaining one.
+
+🔧 **One fix round (§6b), two real defects, and the lesson is in the fourth item:**
+① `SendResultTag` tested `fileError` before `sendResult`, so a **failed** send with a failed upload rendered
+**"נשלח — קובץ לא נשמר"** — a failure shown as a success, on the module's only irreversible path (the month is
+UNIQUE-signed; a manager who believes the tag never resends). ② The blocked banner named the wrong recipient —
+**the third site of a bug fixed on 28/08**, which had covered the table and the card and missed the banner. It
+was visible on one screen: banner said `ishay1997@gmail.com`, the row beneath it said `office@cpa-firm.co.il`,
+same report. ③ A date-dependent E2E assertion failed on a correct screen.
+🔴 **④ An existing unit test had encoded the defect** — it asserted the banner shows the *live param*, so the
+first regression run after my fix went red. **The fix was right and the test was wrong.** Rewritten to the
+pattern already in that same file, with a negative assertion.
+**The general lesson, and it is not about this module: a test written against existing code preserves the
+code, not the intent.** The acceptance-oracle rule already says never re-author an acceptance number; this is
+its sibling — never let a test that was written *after* the behaviour stand as evidence *for* the behaviour.
+
+📚 **Documentation ripples closed:** `C2` ran 27/08 and **three documents still said it had not** — the guide's
+§8.4, `docs/schema.sql` §29 (**contradicting §15 in the same file**), and `db_roadmap:489`. A reader landing on
+§29 by grep concluded a PII exposure was open when it is closed. ➕ The reverse 🚧 sweep found **8 live debt
+rows** in the m2/m4/m6 guides and §6 for work m8 actually delivered — **the same class the sweep rule was
+written against, anchored on the very same line (`module-2.md:45`)**.
+
+🛑 **Verdict [NO], 4 open items, 3 of them Ishay's:** commit the lockfile bump (a dependency change a month
+before the conference) · the empty catch in `getBillingContact` that reports a read failure as *"the customer
+has no billing email"* **and blocks the invoice send** (needs new on-screen wording) · approved ruling **A-10**
+(per-tab default sort) **was never built** — `order by p.project_id` is the only sort in the path · and the
+balance block renders **only after archiving**, so profit is frozen unseen, against P3's stated order.
+**artifact: published · quiz: asked** (both in the report page). Findings file kept in place per §6:
+`docs/micro_guides/close-findings-module-8.md` — 30 raw findings ⇒ 24 root causes.
+**LOG compaction: NOT run — escape hatch, with the measured number.** Narrative = **976 lines** against the
+file's own ~180 trigger (down from 2,233, so intermediate compactions did happen). §6 debt line refreshed.
+
+🔄 **Then Ishay overrode the close and it became a build session** — *"מה התסביך אקליד מיגרציה הכל טוב
+עושים פעם אחת עבודה בצורה נכונה"*, plus a standing instruction to check that each change "sits with what
+is conventional today and with what a finance manager expects to see." He ruled the two genuinely-conflicted
+items (score correction: add the affordance · public page: stay minimal), and everything else was executed
+against an anchor rather than asked about.
+
+🔴 **`H7` — and the lesson is that the obvious fix was the wrong one.** Budget deviation counted a personal
+bonus as an overrun because the planned side has no bonus term. **Reading the function instead of patching
+its description showed `v_labor` feeds THREE outputs** — `labor_cost` and `gross_profit` (bonus belongs in
+both; `final_profit` freezes the latter) and `budget_deviation` (bonus pollutes). **Removing the bonus from
+`v_labor`, which is what "fix the deviation" sounds like, would have moved the gross profit and broken the
+`3,650.00` acceptance anchor.** A separate `v_labor_hours` was added for the deviation's actual side only.
+Proof was a rolled-back transaction with a 250 bonus on #12: before `520 / −42.60 / **452.50**`, after
+`520 / −42.60 / **202.50**` — only the intended number moved. ACL unchanged (the `H5`→`H5b` mine did not
+recur), both anchors re-measured after apply, zero residue. **The live DB holds zero bonus rows, so the
+change is a no-op on all existing data — and therefore the live data could never have demonstrated it.**
+
+🛡️ **Four agents, exclusive file ownership, and none of them settled for green.** The closing-dialog agent
+**re-introduced all five defects at once and watched exactly the nine new tests redden**; the sorting agent
+ran three separate mutations; the salary agent reverted each fix individually. Suite 1,786 → **1,819**.
+🔎 **One agent found a contradiction and refused to rule on it** — a code comment claimed the approved
+design shows the balance only after archiving; it brought both sources side by side and showed the mockup
+is right only for the particular project drawn in it, with the approved process card saying otherwise.
+That is a measured mechanism against a recorded decision, which is the one case where a reviewer may act.
+
+🔴 **My own process error, recorded because it recurred — three times in one night.** I ran `prettier
+--write` and a full gate over files an agent still held, and got nine red tests that looked like a
+regression and were not. Later I ran the E2E suite while the conversion agent was mid **red-proof
+mutation**, and reported a fourth failing test to it that did not exist — its own mutation was in the
+tree for the duration of my run. **The rule I broke each time is this project's own: a gate runs on a
+quiet tree.** ⇒ **the operational form of that rule, which was missing: when an agent owns files, do
+not run ANY verification against them until it reports — not tests, not formatters, not the gate.**
+A mutation-based red-proof makes the tree deliberately broken for seconds at a time, so a concurrent
+run does not merely race — it reads a state the agent *intends* to be wrong.
+
+🧪 **The E2E fragility class Ishay asked to fix, and how it was proven fixed.** Four Playwright tests
+hunted the live queue for a project whose checklist happened to be in a particular state; module 8's
+own acceptance journey cancelled the last such project and all four broke. They now **produce** that
+state via `page.route`, deriving crafted rows from the project's own real rows.
+🔑 **The proof is the part worth keeping: I reverted the one-row demo-data patch and re-measured.**
+`select count(*) from logistics join projects … where item_status in ('ordered','ready') and
+project_status in ('not_started','in_progress')` ⇒ **0**, and all 17 tests pass anyway. **A conversion
+that still needed the data would have failed there.** Bucket-B denominator guards
+(`expect(count).toBeGreaterThan(0, 'המדידה רצה על מכנה 0')`) were deliberately left untouched — deleting
+those would have been the one genuinely damaging outcome, since they are what stops a test passing
+vacuously, and two of them reddened under the agent's mutations, proving they are load-bearing.
+
+
 ### 28/08/2026 09:3X–10:1X — a claim I flipped on his word, ה25 closed screen-side, and the history that stopped lying
 
 🔴 **The failure worth keeping is mine, and it is a two-step one.** I wrote *"the salary mail landed nowhere"* from the **domain name alone** — an unmeasured negative. Ishay then said *"I got the mail and it's great"*, and I **reversed the claim immediately and reverted the param** — obeying a report instead of checking it, which is precisely the yes-man behaviour his own working agreement forbids. Only then did I measure his inbox (with his permission): the mail was **sent from his own account** to `office@cpa-firm.co.il` and **bounced** — `mailer-daemon`: *"the domain cpa-firm.co.il was not found… DNS Error"*. What he saw was the sent copy plus the failure notice, and he was judging the **content**, which was indeed fine. ⇒ **The original claim was right, the reversal was wrong, and neither was measured when stated.** The rule this teaches: a user's report is evidence about *what he saw*, never about *what the system did* — those are two different questions and only one of them is answerable from his inbox.

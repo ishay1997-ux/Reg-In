@@ -339,6 +339,11 @@ function buildSalaryReportSheet({ reportId, periodLabel, generatedAt, lines, tot
   ]
 }
 
+// שני השדות שההרכבה מצליבה מולם את מה שהיא עצמה חישבה. הם **חייבים להגיע** — ר' שער-הצורה
+// בגוף `buildSalaryReportDocument`. שינית את צורת-ההחזרה של `generate_salary_report`? עדכן
+// את הרשימה באותו קומיט (אותה מוסכמה כמו רשימות-השדות של `assertFinanceShape`).
+const RECONCILIATION_FIELDS = ['total_amount', 'line_count']
+
 // הרכבת המסמך כולו — טהור, בלי רשת ובלי קבצים, כדי שכל שומר כאן ייבדק ביחידה.
 export function buildSalaryReportDocument(payload, { generatedAt } = {}) {
   if (!payload || payload.ok !== true) {
@@ -352,6 +357,28 @@ export function buildSalaryReportDocument(payload, { generatedAt } = {}) {
 
   const lines = buildSalaryReportLines(payload)
   const totals = salaryReportTotals(lines)
+
+  // 🔴 **שער-צורה על שני שדות-האימות — כי בלעדיו האימות עצמו יכול לכבות את עצמו בשקט.**
+  // ‏`toFiniteNumber` מחזיר `null` גם ל"המסד שלח null" וגם ל"המפתח לא הגיע כלל", ושני
+  // האימותים שמתחת מדלגים על `null`. ⇒ ביום שבו צורת-ההחזרה של ההפקה תפסיק לשאת
+  // `total_amount`/`line_count` — שינוי-שם, בנייה מחדש של אובייקט-ההחזרה — **שכבת-ההגנה
+  // הייתה נעלמת בלי שגיאה ובלי סימן**, והדוח היה מורכב ונשלח כרגיל.
+  // 🔑 **ההבחנה היא בין נוכחות-מפתח לערך-null, וזו בדיוק זו של `assertFinanceShape`:**
+  // מפתח שנעדר (או קיים עם `undefined`) = החוזה נשבר ⇒ זריקה · מפתח שקיים עם `null` =
+  // תשובה לגיטימית ⇒ מקילים כמו קודם. ‏`Object.hasOwn` ולא `=== undefined` לבדו, מאותו נימוק.
+  // ⚠️ **וההצהרה הכנה: היום זה בלתי-נגיש.** ‏`generate_salary_report` בונה תמיד את שני
+  // המפתחות, ו-`total_amount` שלה הוא `coalesce(...)` שלעולם אינו null. זו **הקשחה שמונעת
+  // אובדן-שקט של שכבת-הגנה**, לא תיקון לתקלה שנצפתה — ולכן היא ממוקמת כאן, צמוד לשני
+  // האימותים שהיא שומרת עליהם, ואינה מקדימה את שומרי-השורות שרצים לפניה.
+  const missingReconciliation = RECONCILIATION_FIELDS.filter(
+    (field) => !Object.hasOwn(payload, field) || payload[field] === undefined,
+  )
+  if (missingReconciliation.length > 0) {
+    throw salaryReportError(
+      'SALARY_RECONCILIATION_FIELDS_MISSING',
+      'תשובת ההפקה חסרה את נתוני-האימות של הדוח — הדוח לא הורכב.',
+    )
+  }
 
   // אימות-צולב מול המספר שהמסד עצמו כתב ל-`salary_reports.total_amount`. שני הצדדים נולדו
   // באותה טרנזקציה ⇒ פער כלשהו הוא באג-הרכבה, לא הבדל-עיגול. הדוח לא נשלח על ספק.

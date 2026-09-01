@@ -124,9 +124,12 @@ function proposalRow(over = {}) {
   }
 }
 
+// שלושת ערכי-הזהות מוקלדים מתצוגה א׳ של המוקאפ המאושר (`02_closing_window_approved.html`,
+// דיאלוג #12) — כולל ה-ח.פ, שהתא שלו היה כתוב במסך אך לא רונדר עד 01/09/2026.
 function billingRow(over = {}) {
   return {
     customer_id: 5,
+    company_number: '515822073',
     company_name: 'קבוצת אחזקות דנוך בע"מ',
     contact_name: 'בודק אוטומטי',
     email: 'ishay1997@gmail.com',
@@ -314,9 +317,38 @@ describe('closingPhase', () => {
     expect(phase.showInvoiceBlock).toBe(true)
   })
 
-  it('תחשיב-המאזן מוצג רק בתיק שאורכב — כפי שהתצוגה המאושרת מציגה', () => {
-    expect(closingPhase(detailRow()).showBalance).toBe(false)
+  // 🔴 כרטיס-P3, מילה-במילה: *"התשלום נכנס והמשוב נפתר. החלון מציג תחשיב-מאזן … 'העבר
+  // לארכיון' → … ה-RPC מקפיא את הרווח-הסופי"*. המאזן **קודם** לארכוב, ולא נולד ממנו —
+  // אחרת המנהלת מקפיאה רווח בפעולה בלתי-הפיכה בלי לראות אותו ולו פעם אחת.
+  it('המאזן נפתח כששער-הארכוב נפתח — לא רק אחרי הארכוב (כרטיס-P3)', () => {
+    const gateOpen = detailRow({
+      project_status: 'awaiting_payment',
+      invoice_sent: true,
+      payment_date: '2026-09-05',
+    })
+    expect(closingPhase(gateOpen).showBalance).toBe(true)
+    // חוב-אבוד פותח את צד-התשלום בדיוק כמו תשלום שנרשם — אותו זוג-תנאים כמו בשער-הארכוב.
+    expect(
+      closingPhase(detailRow({ project_status: 'awaiting_payment', written_off: true }))
+        .showBalance,
+    ).toBe(true)
     expect(closingPhase(detailRow({ project_status: 'finished' })).showBalance).toBe(true)
+  })
+
+  it('לפני תשלום ולפני משוב-פתור אין מאזן — המצב שהמוקאפ א׳ מצייר נשאר כשהיה', () => {
+    // #12 כפי שהוא: חשבונית טרם יצאה, אין תאריך-תשלום.
+    expect(closingPhase(detailRow()).showBalance).toBe(false)
+    // תשלום נרשם אבל המשוב לא נפתר ⇒ עדיין אין מאזן, בדיוק כמו שהארכוב עדיין חסום.
+    expect(
+      closingPhase(
+        detailRow({
+          project_status: 'awaiting_payment',
+          payment_date: '2026-09-05',
+          feedback_status: 'sent',
+          feedback_score: null,
+        }),
+      ).showBalance,
+    ).toBe(false)
   })
 
   // ‏`finance_project_money` מחזירה למבוטל `revenue` = ההצעה הקפואה שלא נגבתה, בעוד
@@ -368,6 +400,18 @@ describe('תצוגה א׳ — ממתין לחשבונית', () => {
     expect(screen.queryByTestId('closing-balance')).not.toBeInTheDocument()
   })
 
+  // 🔴 עד 01/09/2026 התא היה כתוב ב-JSX ו**מעולם לא רונדר**, כי ה-select של
+  // `getBillingContact` לא ביקש את העמודה ⇒ תנאי שלעולם לא התקיים. הבדיקה נועלת את
+  // שלושת פרטי-החיוב שהתצוגה המאושרת מבטיחה, ולא רק שניים מהם.
+  it('🔴 שלושת פרטי-החיוב מוצגים — ח.פ, איש-קשר ומייל (התצוגה המאושרת §③)', async () => {
+    await renderLoaded()
+    const grid = screen.getByTestId('closing-identity')
+    expect(within(grid).getByText('ח.פ')).toBeInTheDocument()
+    expect(within(grid).getByText('515822073')).toBeInTheDocument()
+    expect(within(grid).getByText('בודק אוטומטי')).toBeInTheDocument()
+    expect(within(grid).getByText('ishay1997@gmail.com')).toBeInTheDocument()
+  })
+
   it('אזור-ההעלאה נושא את משפט-הגרירה המצויר, וגרירת קובץ מצרפת אותו כמו בורר-הקבצים', async () => {
     await renderLoaded()
     const zone = screen.getByTestId('closing-dropzone')
@@ -406,6 +450,38 @@ describe('תצוגה א׳ — ממתין לחשבונית', () => {
     fireEvent.change(screen.getByTestId('closing-file-input'), { target: { files: [file] } })
     expect(screen.getByTestId('closing-send-invoice')).toBeDisabled()
     expect(screen.getByTestId('closing-invoice-gate')).toHaveTextContent('כרטיס הלקוח')
+  })
+
+  // 🔴 **הפגם שנסגר 01/09/2026, וההוכחה שלו היא השלילה.** קריאת פרטי-החיוב שנכשלה חזרה
+  // כ-`null`, ו-`null` נקרא כ"אין מייל בכרטיס" ⇒ תקלת-רשת בת-שנייה הכריזה כעובדה שכרטיס
+  // הלקוח חסר כתובת ושלחה את המנהלת למסך שבו הכתובת רשומה. **המשפט שאסור שיופיע הוא
+  // הממצא עצמו**, ולכן הוא נבדק בשלילה מפורשת ולא רק "המשפט החדש קיים".
+  it('🔴 כשל-קריאה של פרטי-החיוב אינו מכריז "אין מייל" — הוא אומר שלא הצלחנו לקרוא', async () => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+    getBillingContact.mockRejectedValue(new Error('network down'))
+    await renderLoaded()
+    const file = new File(['x'], 'Invoice_4127.pdf', { type: 'application/pdf' })
+    fireEvent.change(screen.getByTestId('closing-file-input'), { target: { files: [file] } })
+
+    const gate = screen.getByTestId('closing-invoice-gate')
+    expect(gate).toHaveTextContent('לא הצלחנו לטעון את פרטי החיוב של הלקוח')
+    expect(gate).toHaveTextContent('יש לרענן את המסך ולנסות שוב')
+    // ⛔ השלילה — שתי הצלעות של המשפט השקרי, לא רק אחת מהן.
+    expect(gate).not.toHaveTextContent('אין כתובת מייל לחיוב בכרטיס הלקוח')
+    expect(gate).not.toHaveTextContent('יש להשלים אותה בכרטיס הלקוח')
+    // החסימה נשארת — אין לנו כתובת בשום מקרה.
+    expect(screen.getByTestId('closing-send-invoice')).toBeDisabled()
+    // והכשל אינו נבלע: `catch` ריק לא הותיר ולו שורה אחת לאבחון.
+    expect(logged).toHaveBeenCalledWith('billing contact load failed:', expect.any(Error))
+    logged.mockRestore()
+  })
+
+  it('אין שורת-לקוח (null) ממשיך לומר את משפט כרטיס-הלקוח — שני המצבים לא התאחדו', async () => {
+    getBillingContact.mockResolvedValue(null)
+    await renderLoaded()
+    const gate = screen.getByTestId('closing-invoice-gate')
+    expect(gate).toHaveTextContent('אין כתובת מייל לחיוב בכרטיס הלקוח')
+    expect(gate).not.toHaveTextContent('לא הצלחנו לטעון')
   })
 
   it('קובץ שנבחר פותח את השליחה; שליחה מוצלחת מרעננת מהשרת ומדווחת', async () => {
@@ -522,6 +598,69 @@ describe('בלוק-המשוב', () => {
     expect(screen.getByTestId('closing-archive-gate')).toHaveTextContent('הלקוח נתן ציון 2')
   })
 
+  // ── תיקון-ציון (הכרעת-ישי 01/09/2026) ────────────────────────────────────────────
+  // עד היום גוש-ההזנה רונדר רק כשאין ציון, ולכן ציון שהגיע היה נעול עד הארכוב — בלי שום
+  // מסלול לתקן לקוח שהקליד 2 במקום 5. האפיון קובע *"תיקון מאוחר — ידני ע"י המנהלת"*.
+  it('🔴 ציון קיים ⇒ ברירת-המחדל היא תצוגת-התג, והכוכבים אינם על המסך', async () => {
+    await renderLoaded() // #12: ציון 2 שמור
+    expect(screen.getByTestId('closing-feedback-tag')).toBeInTheDocument()
+    // ⛔ השלילה — האפשרות החדשה **אינה** הופכת את המסך למסך-הזנה.
+    expect(screen.queryByTestId('closing-feedback-stars')).not.toBeInTheDocument()
+    expect(screen.getByTestId('closing-feedback-score-edit')).toHaveTextContent('שנה ציון')
+  })
+
+  it('"שנה ציון" מחזיר את הכוכבים — ובלי "לא ענה לסקר", שסותר ציון קיים', async () => {
+    await renderLoaded()
+    fireEvent.click(screen.getByTestId('closing-feedback-score-edit'))
+    expect(screen.getByTestId('closing-feedback-stars')).toBeInTheDocument()
+    // התג נשאר — הוא אומר מה **שמור**, בעוד הכוכבים הם מה שעומד להישמר.
+    expect(screen.getByTestId('closing-feedback-tag')).toBeInTheDocument()
+    // `record_feedback` אינו מנקה ציון במסלול "לא ענה", ולכן הצירוף היה יוצר שורה
+    // שאומרת בו-זמנית "נתן 2" ו"לא ענה".
+    expect(screen.queryByTestId('closing-no-response')).not.toBeInTheDocument()
+    // הקישור עצמו נסוג ברגע שהגוש פתוח — אין שתי דרכים לאותה פעולה.
+    expect(screen.queryByTestId('closing-feedback-score-edit')).not.toBeInTheDocument()
+  })
+
+  it('ציון מתוקן נשלח ל-record_feedback, וסיבת-הבירור נושרת כשהציון עלה מעל 3', async () => {
+    recordFeedback.mockResolvedValue({ ok: true })
+    await renderLoaded()
+    fireEvent.click(screen.getByTestId('closing-feedback-score-edit'))
+    const stars = within(screen.getByTestId('closing-feedback-stars')).getAllByRole('button')
+    fireEvent.click(stars[3]) // ציון 4
+    expect(screen.queryByTestId('closing-feedback-reason')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByTestId('closing-save-status'))
+    await waitFor(() =>
+      expect(recordFeedback).toHaveBeenCalledWith(12, {
+        score: 4,
+        reason: null,
+        notes: 'הדיילת הגיעה לא-מוכנה; תועדה שיחת-בירור.',
+      }),
+    )
+  })
+
+  it('שינוי-ציון כלפי מטה עדיין דורש סיבה — שער ה-<3 לא נפרץ בדלת החדשה', async () => {
+    getFinanceDetail.mockResolvedValue(
+      detailRow({ feedback_score: 5, negative_feedback_reason: null }),
+    )
+    await renderLoaded()
+    fireEvent.click(screen.getByTestId('closing-feedback-score-edit'))
+    const stars = within(screen.getByTestId('closing-feedback-stars')).getAllByRole('button')
+    fireEvent.click(stars[0]) // ציון 1
+    expect(screen.getByTestId('closing-save-status')).toBeDisabled()
+    expect(screen.getByTestId('closing-feedback-gate')).toHaveTextContent('סיבת-בירור')
+  })
+
+  it('בתיק שאורכב אין "שנה ציון" — הנעילה גוברת, וזה הגבול שהמסד אוכף', async () => {
+    getFinanceDetail.mockResolvedValue(
+      detailRow({ project_status: 'finished', archived_at: '2026-09-06T07:00:00Z' }),
+    )
+    await renderLoaded()
+    expect(screen.queryByTestId('closing-feedback-score-edit')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('closing-feedback-stars')).not.toBeInTheDocument()
+  })
+
   it('כפתור "שמור סטטוס" מושבת לעולם עם סיבה כתובה וקשורה אליו (A-1)', async () => {
     await renderLoaded() // ‏#12: ציון 2, סיבה קיימת, שום דבר לא נגע
     const save = screen.getByTestId('closing-save-status')
@@ -594,6 +733,26 @@ describe('ממתין לתשלום (המצב שהוסף ב-Q-1)', () => {
 
     fireEvent.click(await screen.findByTestId('confirm-dialog-confirm'))
     await waitFor(() => expect(recordWriteOff).toHaveBeenCalledWith(12, 'הלקוח נכנס לפירוק'))
+  })
+
+  // 🔴 הפגם שנסגר 01/09/2026: הכפתור שמקפיא את הרווח היה פעיל בעוד המספר שהוא מקפיא
+  // לא הופיע בשום מקום על המסך. הבדיקה נועלת את שניהם **יחד** — כפתור פעיל + מאזן מוצג.
+  it('🔴 שער פתוח ⇒ המאזן מוצג לפני הארכוב, עם עוגן-היד 3,650.00 (כרטיס-P3)', async () => {
+    getFinanceDetail.mockResolvedValue(
+      detailRow({
+        project_status: 'awaiting_payment',
+        invoice_sent: true,
+        invoice_sent_at: '2026-08-28T09:00:00Z',
+        payment_date: '2026-09-05',
+      }),
+    )
+    await renderLoaded()
+    expect(screen.getByTestId('closing-balance')).toBeInTheDocument()
+    expect(screen.getByTestId('closing-balance-profit')).toHaveTextContent('3,650.00 ₪')
+    expect(screen.getByTestId('closing-deviation-tile')).toHaveTextContent('692.00 ₪')
+    // התיק עדיין אינו נעול — המאזן חי, לא ארכיוני.
+    expect(screen.queryByTestId('closing-locked-banner')).not.toBeInTheDocument()
+    expect(screen.getByTestId('closing-archive')).toBeEnabled()
   })
 
   it('שער פתוח (תשלום + משוב) ⇒ הארכוב פעיל ורץ רק אחרי חלונית-הווידוא (א37)', async () => {

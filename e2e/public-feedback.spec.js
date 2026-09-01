@@ -145,7 +145,11 @@ test.describe('משטח S4 — הדף הציבורי למשוב-לקוח (ארב
     await expect(form).toContainText('כנס E2E לבדיקה')
 
     await expect(page.getByTestId('feedback-submit')).toBeDisabled()
-    await page.getByTestId('feedback-stars').getByRole('button', { name: '5 מתוך 5' }).click()
+    // 🔴 תוקן `01/09/2026` באודיט-הסגירה: השם הנגיש של כפתור-הכוכב היה `5 מתוך 5` —
+    // נוסח שנכתב למסך **פנימי** שבו מנהלת מדרגת דיילת. כרטיס-המסך המאושר של הדף
+    // הציבורי (§S4/①) נועל `כוכב 1`…`כוכב 5`, והדף תוקן אליו. **לאלמנט יש שם-נגיש
+    // אחד בלבד**, ולכן אין גרסה שמספקת את שניהם — הבדיקה נעה עם המסך.
+    await page.getByTestId('feedback-stars').getByRole('button', { name: 'כוכב 5' }).click()
     await expect(page.getByTestId('feedback-submit')).toBeEnabled()
     await page.getByTestId('feedback-submit').click()
 
