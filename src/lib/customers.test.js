@@ -4,6 +4,8 @@ import {
   archiveWarningMessage,
   countActiveFilters,
   matchesCustomerFilters,
+  needsSatisfactionAttention,
+  SATISFACTION_ATTENTION_MAX,
   sortCustomers,
   deriveCustomerMetrics,
   validateCustomerField,
@@ -159,12 +161,73 @@ describe('deriveCustomerMetrics — 5 מדדים ממוקדי-מנהלת-לקו�
     expect(deriveCustomerMetrics([]).projectCount).toBeNull()
   })
 
-  it('avgFeedback = ממוצע feedback_score כשיש, אחרת null', () => {
-    expect(deriveCustomerMetrics([{ feedback_score: 4 }, { feedback_score: 2 }]).avgFeedback).toBe(
-      3,
-    )
+  // 🔴 **הבדיקה הזו שונתה ב-28/08/2026 (מ8 · צעד 4.2) והשינוי מכוון.** עד אז היא נעלה את
+  // ההתנהגות הישנה — ממוצע על **כל** פרויקט שיש לו ציון, בלי מסנן-סטטוס. ‏§7.79 מכנה בדיוק
+  // את זה "פגם חי, נמדד 26/08", ו-ה8 קובע את האוכלוסייה: **בעלי `feedback_status='completed'`
+  // בלבד** ("מאלה שענו", C6 §2.4.1). ⇒ שורה בלי `feedback_status='completed'` **אינה נספרת**
+  // גם כשיש לה ציון. השורות שנשארו כאן בלי סטטוס הן בדיוק המקרה הזה.
+  it('avgFeedback = ממוצע על בעלי feedback_status=completed בלבד (ה8/§7.79)', () => {
+    const completed = (score) => ({ feedback_status: 'completed', feedback_score: score })
+    expect(deriveCustomerMetrics([completed(4), completed(2)]).avgFeedback).toBe(3)
     expect(deriveCustomerMetrics([]).avgFeedback).toBeNull()
-    expect(deriveCustomerMetrics([{ feedback_score: null }]).avgFeedback).toBeNull()
+    expect(deriveCustomerMetrics([completed(null)]).avgFeedback).toBeNull()
+    // ציון שקיים על פרויקט שהמשוב שלו לא הושלם — מודר במפורש (זה הפגם שנסגר).
+    expect(
+      deriveCustomerMetrics([{ feedback_status: 'sent', feedback_score: 1 }, completed(5)])
+        .avgFeedback,
+    ).toBe(5)
+    expect(
+      deriveCustomerMetrics([{ feedback_status: 'no_response', feedback_score: 2 }]).avgFeedback,
+    ).toBeNull()
+    // ⚠️ שורה **בלי** שדה-סטטוס כלל (קורא ישן / select צר) אינה "מרוצה" ואינה "לא מרוצה" —
+    // היא פשוט מחוץ לאוכלוסייה. אחרת select שנשכח היה מייצר ממוצע שקרי בשקט.
+    expect(deriveCustomerMetrics([{ feedback_score: 4 }]).avgFeedback).toBeNull()
+  })
+
+  // עיגול לספרה אחת — הערך נכנס גם לכוכבים על המסך וגם למסנן "טעון בירור", ושניהם חייבים
+  // לראות את אותו מספר (לקוח שמוצג "3 ★" לא יכול להופיע ברשימת ה-<3).
+  it('avgFeedback מעוגל לספרה אחת, ו-feedbackCount סופר את המשיבים', () => {
+    const completed = (score) => ({ feedback_status: 'completed', feedback_score: score })
+    const m = deriveCustomerMetrics([completed(5), completed(4), completed(5)])
+    expect(m.avgFeedback).toBe(4.7)
+    expect(m.feedbackCount).toBe(3)
+    expect(deriveCustomerMetrics([]).feedbackCount).toBe(0)
+  })
+
+  // ה8 + ה-↳ של §7.79 — אוכלוסיית הרווח-המצטבר. **לא מוצג בכרטיס** (הרווח ירד ממנו
+  // בהחלטת-פרסונה), אבל הנוסחה חיה כאן כי §7.79 מורה עליה כאן ומ11 יצרוך אותה.
+  describe('cumulativeProfit — אוכלוסיית §7.79 (finished + מבוטל-שנפתר)', () => {
+    const finished = (profit) => ({ project_status: 'finished', final_profit: profit })
+    const cancelled = (profit) => ({ project_status: 'cancelled', final_profit: profit })
+
+    it('סוכם פרויקטים שהסתיימו', () => {
+      expect(deriveCustomerMetrics([finished(1000), finished(250.5)]).cumulativeProfit).toBe(1250.5)
+    })
+
+    it('🔴 מבוטל שדמי-הביטול שלו נפתרו **נכנס** — הרווח הקפוא הוא ההוכחה שנפתר (§7.79↳)', () => {
+      expect(deriveCustomerMetrics([finished(1000), cancelled(300)]).cumulativeProfit).toBe(1300)
+      // ויתור על דמי-הביטול = הפסד רשום אמיתי, ולא נעלם מהסכום.
+      expect(deriveCustomerMetrics([finished(1000), cancelled(-200)]).cumulativeProfit).toBe(800)
+    })
+
+    it('מבוטל שטרם נפתר (אין רווח קפוא) אינו באוכלוסייה, ואינו מרעיל את הסכום', () => {
+      expect(deriveCustomerMetrics([finished(1000), cancelled(null)]).cumulativeProfit).toBe(1000)
+    })
+
+    it('פרויקט פעיל אינו נספר — רווח של פרויקט פתוח עוד זז (§7.52)', () => {
+      expect(
+        deriveCustomerMetrics([{ project_status: 'in_progress', final_profit: 9999 }])
+          .cumulativeProfit,
+      ).toBeNull()
+      expect(deriveCustomerMetrics([]).cumulativeProfit).toBeNull()
+    })
+
+    it('🔴 "ריק אינו 0": פרויקט באוכלוסייה בלי מספר-רווח מרעיל את הסכום כולו ל-null', () => {
+      // זה בדיוק מה שקורה למי שאין לו 'כספים' (‏`project_finance` מגודרת) — "אין נתונים",
+      // לא "0 ₪" על לקוח שאולי הכניס מאה אלף.
+      expect(deriveCustomerMetrics([finished(1000), finished(null)]).cumulativeProfit).toBeNull()
+      expect(deriveCustomerMetrics([finished(undefined)]).cumulativeProfit).toBeNull()
+    })
   })
 })
 
@@ -321,6 +384,43 @@ describe('countActiveFilters — תג ספירת-המסננים', () => {
   it('dormantOnly נספר רק כשהוא true (A3, מודול 6 · משטח 8)', () => {
     expect(countActiveFilters({ dormantOnly: true })).toBe(1)
     expect(countActiveFilters({ dormantOnly: false })).toBe(0)
+  })
+
+  it('lowSatisfactionOnly נספר רק כשהוא true (A3 · מ8, צעד 4.2)', () => {
+    expect(countActiveFilters({ lowSatisfactionOnly: true })).toBe(1)
+    expect(countActiveFilters({ lowSatisfactionOnly: false })).toBe(0)
+    expect(countActiveFilters({ dormantOnly: true, lowSatisfactionOnly: true })).toBe(2)
+  })
+})
+
+// 🆕 A3 · מסנן-שביעות-הרצון שמ8 חייב למ2 (מ8 · צעד 4.2)
+describe('needsSatisfactionAttention + מסנן "טעון בירור"', () => {
+  it('הסף הוא 3, בדיוק כמו ה16/§7.80 ("אדום <3") ו-record_feedback במסד', () => {
+    expect(SATISFACTION_ATTENTION_MAX).toBe(3)
+    expect(needsSatisfactionAttention(2.9)).toBe(true)
+    expect(needsSatisfactionAttention(1)).toBe(true)
+    // 🔴 שלוש **אינו** טעון-בירור — הוא "בינוני" (צהוב). גבול-המדרגה נעול כאן כי הוא היחיד
+    // שמפריד בין "לצלצל ללקוח" לבין "בסדר".
+    expect(needsSatisfactionAttention(3)).toBe(false)
+    expect(needsSatisfactionAttention(4.5)).toBe(false)
+  })
+
+  it('🔴 "אין נתון" אינו "לא מרוצה" — null/undefined אינם ברשימת-הטיפול', () => {
+    expect(needsSatisfactionAttention(null)).toBe(false)
+    expect(needsSatisfactionAttention(undefined)).toBe(false)
+  })
+
+  it('המסנן קורא את `avg_feedback` שהוזרק לשורה, ומסנן רק כשהוא true מפורש', () => {
+    const low = c({ avg_feedback: 2 })
+    const high = c({ avg_feedback: 4.5 })
+    const unknown = c({ avg_feedback: null })
+    expect(matchesCustomerFilters(low, { lowSatisfactionOnly: true })).toBe(true)
+    expect(matchesCustomerFilters(high, { lowSatisfactionOnly: true })).toBe(false)
+    expect(matchesCustomerFilters(unknown, { lowSatisfactionOnly: true })).toBe(false)
+    // כבוי / לא-סופק ⇒ אינו מסנן איש (כמו כל שאר הדגלים כאן)
+    expect(matchesCustomerFilters(high, {})).toBe(true)
+    expect(matchesCustomerFilters(high, { lowSatisfactionOnly: false })).toBe(true)
+    expect(matchesCustomerFilters(unknown, {})).toBe(true)
   })
 })
 

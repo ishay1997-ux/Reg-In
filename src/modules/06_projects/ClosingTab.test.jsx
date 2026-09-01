@@ -12,6 +12,7 @@ import {
   getProjectChanges,
   closeProjectOperationally,
   markFeedbackSurveySent,
+  mintFeedbackToken,
 } from './api'
 import {
   uploadReportFile,
@@ -19,7 +20,6 @@ import {
   downloadReportAsBase64,
   getCustomerMailContact,
   getCustomerPreferences,
-  getParamValue,
 } from './closingApi'
 import { sendEmail, getEmailTemplate, getLastSuccessfulSend } from '@/api/email'
 
@@ -29,6 +29,7 @@ vi.mock('./api', () => ({
   getProjectChanges: vi.fn(),
   closeProjectOperationally: vi.fn(),
   markFeedbackSurveySent: vi.fn(),
+  mintFeedbackToken: vi.fn(),
 }))
 
 vi.mock('./closingApi', () => ({
@@ -41,7 +42,6 @@ vi.mock('./closingApi', () => ({
   getReportSignedUrl: vi.fn(),
   getCustomerMailContact: vi.fn(),
   getCustomerPreferences: vi.fn(),
-  getParamValue: vi.fn(),
   fileToBase64: vi.fn(async () => 'QUJD'),
 }))
 
@@ -167,7 +167,8 @@ beforeEach(() => {
     email: 'sarit@hadera.test',
   })
   getCustomerPreferences.mockResolvedValue([])
-  getParamValue.mockResolvedValue('https://forms.gle/YFJobqmgpBCqf1x87')
+  // אדוות-מ8 ①: הקישור שבמייל-הסקר נגזר מטוקן שנטבע ברגע-השליחה, לא מפרמטר-Google-Forms.
+  mintFeedbackToken.mockResolvedValue('tok-abc')
   getEmailTemplate.mockResolvedValue(SURVEY_TEMPLATE)
   uploadReportFile.mockResolvedValue({ path: '7/1700000000_report.pdf' })
   deleteReportFile.mockResolvedValue()
@@ -329,6 +330,14 @@ describe('סדר-השמירה: העלאה ⇒ RPC ⇒ (אחרי commit) מייל
     expect(sendEmail.mock.calls[0][0].entityType).toBe('project_report')
     expect(sendEmail.mock.calls[1][0].entityType).toBe('project')
     expect(deleteReportFile).not.toHaveBeenCalled()
+    // 🔴 אדוות-מ8 ①: הטוקן נטבע (get-or-create) **לפני** ששליחת-הסקר יצאה, וקישור-הטוקן
+    // — לא Google Forms — הוא מה שנחת בגוף-המייל שהלקוח יקבל.
+    expect(mintFeedbackToken).toHaveBeenCalledWith(7)
+    expect(mintFeedbackToken.mock.invocationCallOrder[0]).toBeLessThan(
+      sendEmail.mock.invocationCallOrder[1],
+    )
+    expect(sendEmail.mock.calls[1][0].payload.body).toContain('/feedback/tok-abc')
+    expect(sendEmail.mock.calls[1][0].payload.body).not.toContain('forms.gle')
     // ה-payload של ה-RPC נושא את חוזה-השדות — כולל assignment_number של השורה הקובעת.
     const rpcArgs = closeProjectOperationally.mock.calls[0][1]
     expect(rpcArgs.reportPath).toBe('7/1700000000_report.pdf')
@@ -365,6 +374,27 @@ describe('סדר-השמירה: העלאה ⇒ RPC ⇒ (אחרי commit) מייל
     // אין רענון-עמוד — ההודעה בשם הייתה נמחקת; המסך הנעול מרונדר מקומית.
     expect(onSaved).not.toHaveBeenCalled()
     expect(screen.getByTestId('closing-tab-closed')).toBeInTheDocument()
+    expect(screen.getByTestId('closing-resend')).toBeInTheDocument()
+  })
+
+  // 🔴 המצב שנולד באדוות-מ8 ①: הטביעה היא תלות-רשת חדשה **לפני** השליחה. הכשל שלה חייב
+  // להיראות כמו כשל-מייל ולא כמו הצלחה — אחרת מייל היה יוצא בלי קישור, או שהמסך היה מסמן
+  // `sent` על סקר שאיש לא קיבל.
+  it('🔴 טביעת-הטוקן נכשלה ⇒ מייל-הסקר כלל לא נשלח, הכשל בשם, ו-mark לא נקרא', async () => {
+    mintFeedbackToken.mockRejectedValue(new Error('הנפקת קישור-המשוב נכשלה.'))
+    const onSaved = vi.fn()
+    renderTab({ onSaved })
+    await screen.findByTestId('closing-row-11')
+    await fillValidForm()
+    await waitFor(() => expect(screen.getByTestId('closing-save')).toBeEnabled())
+    fireEvent.click(screen.getByTestId('closing-save'))
+
+    const failure = await screen.findByTestId('closing-mail-failure')
+    expect(failure).toHaveTextContent('מייל הסקר לא יצא')
+    // רק מייל-הדוח יצא; מייל-הסקר נעצר לפני השליחה — לא נשלח עם קישור ריק.
+    expect(sendEmail).toHaveBeenCalledTimes(1)
+    expect(sendEmail.mock.calls[0][0].entityType).toBe('project_report')
+    expect(markFeedbackSurveySent).not.toHaveBeenCalled()
     expect(screen.getByTestId('closing-resend')).toBeInTheDocument()
   })
 })
@@ -451,6 +481,10 @@ describe('שליחה חוזרת — רק על not_sent אחרי שחותמת-ה�
     // הדוח לא נשלח שוב — email_log הוא מקור-האמת ל"כבר נשלח".
     expect(sendEmail).toHaveBeenCalledTimes(1)
     expect(sendEmail.mock.calls[0][0].entityType).toBe('project')
+    // גם בשליחה-החוזרת עוברים דרך הטביעה ולא דרך קישור שנשמר בזיכרון: ה-RPC הוא
+    // get-or-create, ולכן הלקוח מקבל **אותו** קישור ולא קישור שני שפוסל את הראשון.
+    expect(mintFeedbackToken).toHaveBeenCalledWith(7)
+    expect(sendEmail.mock.calls[0][0].payload.body).toContain('/feedback/tok-abc')
     await waitFor(() => expect(screen.queryByTestId('closing-resend')).not.toBeInTheDocument())
     expect(onSaved).toHaveBeenCalled()
   })

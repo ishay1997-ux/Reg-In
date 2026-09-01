@@ -25,7 +25,7 @@
 ## Current State (snapshot — rewritten, not appended)
 <!-- target ~15 lines · no internal dates (F4) · over budget? compress / move to journal -->
 
-**Where we stand:** Modules **1**, **2**, **3**, **4**, **5** and **6** are closed and merged to `dev`; `dev` has been promoted to `main` and tagged `milestone-2.5`, so 1–6 are all live. The m5 as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log); its spec set `docs/specs/module_05_logistics/` (42 rulings ①–㊷); `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8 (finance) is the ACTIVE build** — branch `ishay/module-8-finance`, cut from fresh `dev`. Step **1.0 (Phase-1 door) is ✅ closed**: all 8 live re-measurements held with zero drift, MCP verified live, baseline **1,440 unit / 56 files exit 0**, `E2E_FINANCE_*` confirmed present. Standing at **step 1.1 — migration A written on disk and awaiting Ishay's typed-echo; NOTHING applied to the live project yet.** The plan: `docs/micro_guides/module-8.md`; the approved spec: `docs/specs/module_08_finance/` (its `spec.md §①` is the binding reading list, and the four hand-computed acceptance anchors in `§③3` are never recomputed from code). 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
+**Where we stand:** Modules **1**, **2**, **3**, **4**, **5** and **6** are closed and merged to `dev`; `dev` has been promoted to `main` and tagged `milestone-2.5`, so 1–6 are all live. The m5 as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log); its spec set `docs/specs/module_05_logistics/` (42 rulings ①–㊷); `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8 (finance) is the ACTIVE build** — branch `ishay/module-8-phase-2`, cut from fresh `dev`. **Phase 1 is COMPLETE and in production** (ten migrations, the 1.8 gate, `C2`+`N1`+`N1b` all shipped). **Phases 2, 3 and 4 are COMPLETE**, plus an extra UX/edge-case pass Ishay asked for — suite **1,765 tests / 65 files, exit 0**, and `H1`/`H2`/`H3` applied after his typed echo. **Step 5.1's journeys ① (#12 end-to-end) and ③ (August salary report) are DONE and verified against the live DB**; ② (cancellation fee) needs Ishay's nod because it means cancelling a live project. Standing at **step 3.6 — his single consolidated 🎨 review of the four screens** (the per-unit gate was consolidated at his own ruling), with 4.3 · 4.5 · 5.1 · 5.2 behind it. Salary-report generation is deliberately UNRUN so he can demo August at the conference. The plan: `docs/micro_guides/module-8.md`; the approved spec: `docs/specs/module_08_finance/` (its `spec.md §①` is the binding reading list, and the four hand-computed acceptance anchors in `§③3` are never recomputed from code). 🔴 **And two of those four do not reproduce from a plain read of the live DB — no project in the seed is `cancelled`, and travel is stamped only at salary-report generation** (measured 27/08; full finding in `module-8.md` §10). Their live cross-check needs a live-DB WRITE and is deferred to step 5.1. 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
 Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-encode in QuotesPage · Select-uncontrolled in QuoteLineEditor — §6 line `🚧 מ10 ← מ3`): touching src after the certified regression would have voided the verdict's identity.
 `docs/schema.sql` measure command: `grep -c '^create table' docs/schema.sql` (23 at the last audit).
 
@@ -44,6 +44,442 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 ---
 
 ## Session Log (newest first)
+
+### 01/09/2026 22:0X–23:2X — module 8 closing audit: verdict [NO], and a test that had locked the bug in
+
+**`module-close` on `a2e2064`, fresh session, nothing merged or pushed.** Everything measurable is green —
+`gate` **exit 0** (1,786/65), `smoke` **exit 0** (the module's **first clean smoke run**; the phase-4 gate had
+recorded 0 of 4), m8 E2E **8/8**, advisors carrying nothing new-and-unexplained, and **3 of the 4 acceptance
+anchors re-derived live from the database** (3,650.00 · 292.60 · 69%). The fourth, 3,508.00, was **not** re-run
+and that is said out loud: #14 is not `cancelled`, so reproducing it needs a live write.
+
+🔴 **The gate was RED when the audit opened, and CI runs the failing step.** `npm run audit` blocked on
+`browserslist [high]` with no exemption, and `.github/workflows/ci.yml:54-55` runs that script — so the PR
+would have gone red on push. **Measured attribution: not module 8's.** The package arrives via
+`eslint-plugin-react-hooks` and the `shadcn` CLI; m8's two new packages have zero transitive deps; zero
+occurrences in `dist`.
+
+⚠️ **And the build session wrote into my working tree mid-scan** — `npm audit fix`, 12 tooling packages —
+**then disclosed it unprompted and deliberately did not commit.** That disclosure is the only reason this
+stayed recoverable. I re-measured everything rather than carrying its numbers, **including against myself:
+my "29 commits ahead" was wrong (`wc -l` says 31), and my first package count (17) was wrong too — `grep -U6`
+counted context lines. Its 12 was right.** What the re-measurement added: the bump also clears **all five
+standing exemptions**, and `audit-gate.mjs` now prints "🧹 this exemption no longer matches any advisory" for
+three of them — so the file can shed exemptions instead of gaining one.
+
+🔧 **One fix round (§6b), two real defects, and the lesson is in the fourth item:**
+① `SendResultTag` tested `fileError` before `sendResult`, so a **failed** send with a failed upload rendered
+**"נשלח — קובץ לא נשמר"** — a failure shown as a success, on the module's only irreversible path (the month is
+UNIQUE-signed; a manager who believes the tag never resends). ② The blocked banner named the wrong recipient —
+**the third site of a bug fixed on 28/08**, which had covered the table and the card and missed the banner. It
+was visible on one screen: banner said `ishay1997@gmail.com`, the row beneath it said `office@cpa-firm.co.il`,
+same report. ③ A date-dependent E2E assertion failed on a correct screen.
+🔴 **④ An existing unit test had encoded the defect** — it asserted the banner shows the *live param*, so the
+first regression run after my fix went red. **The fix was right and the test was wrong.** Rewritten to the
+pattern already in that same file, with a negative assertion.
+**The general lesson, and it is not about this module: a test written against existing code preserves the
+code, not the intent.** The acceptance-oracle rule already says never re-author an acceptance number; this is
+its sibling — never let a test that was written *after* the behaviour stand as evidence *for* the behaviour.
+
+📚 **Documentation ripples closed:** `C2` ran 27/08 and **three documents still said it had not** — the guide's
+§8.4, `docs/schema.sql` §29 (**contradicting §15 in the same file**), and `db_roadmap:489`. A reader landing on
+§29 by grep concluded a PII exposure was open when it is closed. ➕ The reverse 🚧 sweep found **8 live debt
+rows** in the m2/m4/m6 guides and §6 for work m8 actually delivered — **the same class the sweep rule was
+written against, anchored on the very same line (`module-2.md:45`)**.
+
+🛑 **Verdict [NO], 4 open items, 3 of them Ishay's:** commit the lockfile bump (a dependency change a month
+before the conference) · the empty catch in `getBillingContact` that reports a read failure as *"the customer
+has no billing email"* **and blocks the invoice send** (needs new on-screen wording) · approved ruling **A-10**
+(per-tab default sort) **was never built** — `order by p.project_id` is the only sort in the path · and the
+balance block renders **only after archiving**, so profit is frozen unseen, against P3's stated order.
+**artifact: published · quiz: asked** (both in the report page). Findings file kept in place per §6:
+`docs/micro_guides/close-findings-module-8.md` — 30 raw findings ⇒ 24 root causes.
+**LOG compaction: NOT run — escape hatch, with the measured number.** Narrative = **976 lines** against the
+file's own ~180 trigger (down from 2,233, so intermediate compactions did happen). §6 debt line refreshed.
+
+🔄 **Then Ishay overrode the close and it became a build session** — *"מה התסביך אקליד מיגרציה הכל טוב
+עושים פעם אחת עבודה בצורה נכונה"*, plus a standing instruction to check that each change "sits with what
+is conventional today and with what a finance manager expects to see." He ruled the two genuinely-conflicted
+items (score correction: add the affordance · public page: stay minimal), and everything else was executed
+against an anchor rather than asked about.
+
+🔴 **`H7` — and the lesson is that the obvious fix was the wrong one.** Budget deviation counted a personal
+bonus as an overrun because the planned side has no bonus term. **Reading the function instead of patching
+its description showed `v_labor` feeds THREE outputs** — `labor_cost` and `gross_profit` (bonus belongs in
+both; `final_profit` freezes the latter) and `budget_deviation` (bonus pollutes). **Removing the bonus from
+`v_labor`, which is what "fix the deviation" sounds like, would have moved the gross profit and broken the
+`3,650.00` acceptance anchor.** A separate `v_labor_hours` was added for the deviation's actual side only.
+Proof was a rolled-back transaction with a 250 bonus on #12: before `520 / −42.60 / **452.50**`, after
+`520 / −42.60 / **202.50**` — only the intended number moved. ACL unchanged (the `H5`→`H5b` mine did not
+recur), both anchors re-measured after apply, zero residue. **The live DB holds zero bonus rows, so the
+change is a no-op on all existing data — and therefore the live data could never have demonstrated it.**
+
+🛡️ **Four agents, exclusive file ownership, and none of them settled for green.** The closing-dialog agent
+**re-introduced all five defects at once and watched exactly the nine new tests redden**; the sorting agent
+ran three separate mutations; the salary agent reverted each fix individually. Suite 1,786 → **1,819**.
+🔎 **One agent found a contradiction and refused to rule on it** — a code comment claimed the approved
+design shows the balance only after archiving; it brought both sources side by side and showed the mockup
+is right only for the particular project drawn in it, with the approved process card saying otherwise.
+That is a measured mechanism against a recorded decision, which is the one case where a reviewer may act.
+
+🔴 **My own process error, recorded because it recurred — three times in one night.** I ran `prettier
+--write` and a full gate over files an agent still held, and got nine red tests that looked like a
+regression and were not. Later I ran the E2E suite while the conversion agent was mid **red-proof
+mutation**, and reported a fourth failing test to it that did not exist — its own mutation was in the
+tree for the duration of my run. **The rule I broke each time is this project's own: a gate runs on a
+quiet tree.** ⇒ **the operational form of that rule, which was missing: when an agent owns files, do
+not run ANY verification against them until it reports — not tests, not formatters, not the gate.**
+A mutation-based red-proof makes the tree deliberately broken for seconds at a time, so a concurrent
+run does not merely race — it reads a state the agent *intends* to be wrong.
+
+🧪 **The E2E fragility class Ishay asked to fix, and how it was proven fixed.** Four Playwright tests
+hunted the live queue for a project whose checklist happened to be in a particular state; module 8's
+own acceptance journey cancelled the last such project and all four broke. They now **produce** that
+state via `page.route`, deriving crafted rows from the project's own real rows.
+🔑 **The proof is the part worth keeping: I reverted the one-row demo-data patch and re-measured.**
+`select count(*) from logistics join projects … where item_status in ('ordered','ready') and
+project_status in ('not_started','in_progress')` ⇒ **0**, and all 17 tests pass anyway. **A conversion
+that still needed the data would have failed there.** Bucket-B denominator guards
+(`expect(count).toBeGreaterThan(0, 'המדידה רצה על מכנה 0')`) were deliberately left untouched — deleting
+those would have been the one genuinely damaging outcome, since they are what stops a test passing
+vacuously, and two of them reddened under the agent's mutations, proving they are load-bearing.
+
+
+### 28/08/2026 09:3X–10:1X — a claim I flipped on his word, ה25 closed screen-side, and the history that stopped lying
+
+🔴 **The failure worth keeping is mine, and it is a two-step one.** I wrote *"the salary mail landed nowhere"* from the **domain name alone** — an unmeasured negative. Ishay then said *"I got the mail and it's great"*, and I **reversed the claim immediately and reverted the param** — obeying a report instead of checking it, which is precisely the yes-man behaviour his own working agreement forbids. Only then did I measure his inbox (with his permission): the mail was **sent from his own account** to `office@cpa-firm.co.il` and **bounced** — `mailer-daemon`: *"the domain cpa-firm.co.il was not found… DNS Error"*. What he saw was the sent copy plus the failure notice, and he was judging the **content**, which was indeed fine. ⇒ **The original claim was right, the reversal was wrong, and neither was measured when stated.** The rule this teaches: a user's report is evidence about *what he saw*, never about *what the system did* — those are two different questions and only one of them is answerable from his inbox.
+
+🔴 **A systemic finding that is not m8's:** `email_log.status = 'sent'` means the mail engine accepted the call, **not** that the mail was delivered. A bounce returns to the sender's mailbox and **never reaches the system**, so a screen can show "✓ sent" over a mail that came back. Debt for the mail module (M10).
+
+**ה25 — the defect is now measured, not read.** A self-rolling-back transaction on #11 (48h before the event) called the real `finance_cancellation_fee_proposal` three times: `customer` ⇒ 50% / 90.00 (hand-check: 1 hostess × 4h × 45 = 180, half = 90) · `force_majeure` ⇒ 0% / 0.00 · **`other` ⇒ 50% / 90.00, byte-identical to `customer`** while ה25 rules that `other` gets **no automatic proposal**. Fixed screen-side (the amount field is no longer seeded for `other`, and says why); the DB branch needs a migration and stays Ishay's. #11 came out `ready` with `cancelled_at IS NULL` — zero residue.
+
+**This also covered 5.1 journey ② without cancelling a live project** — the documented rollback-proof pattern (`db_roadmap` §1477). Stated limit: it does **not** cover the UI leg (m6's cancel dialog → the row appearing in the tab → resolving through S2), which still needs a real cancellation and his nod.
+
+**The history's "sent to" column stopped lying.** It read the live accountant param *at view time*, so every historical row claimed retroactively that it went to today's address. `listSalaryReports` now attaches `sent_to` from `email_log` (a second query — the table is polymorphic and FK-less by design), latest send wins. Verified live: param says `ishay1997@gmail.com`, the row shows `office@cpa-firm.co.il`. The param fallback was removed deliberately — it would have restored the exact lie.
+
+**And one recommendation of mine that was simply wrong:** I twice recommended defaulting the finance screen to "awaiting invoice". The **approved mockup marks the second tab active** — "awaiting payment" — and `DEFAULT_TAB` already matched it. Default tab placement is appearance, so the mockup governs. His *"don't redo what's already done"* prevented a regression here, not a duplicate.
+
+⚠️ **Tooling note worth remembering:** `knip` died mid-gate with `Array buffer allocation failed`. Not code — leftover Playwright `chrome-headless-shell` processes held 1.6 GB and the machine was down to 1 GB free. After killing them it passed. **A red gate can be the machine's state.**
+
+
+### 28/08/2026 09:0X–09:3X — Ishay reversed Q-2: the salary-report history moved into the dialog
+
+**His words:** *"למטה זה לא טוב כי יהיו מלא שורות של פרויקטים שם"*. `Q-2` (mine, nodded by him 26/08) and the approved S3 mockup both put the history card on the finance page below the table. The "finished projects" tab accumulates every project ever archived, so that card is pushed below the fold **permanently**. He picked option ב from three presented.
+
+🩸 **A live bug fell out of the same placement, not just inconvenience:** the blocked-month banner offered *"צפייה בדוח הקיים ↑"* — a button that **closed the dialog** and pointed **up** at a card sitting two screens **down**. It now scrolls to the section in the same window, and the arrow is ↓.
+
+`SalaryReportHistoryCard` gained `embedded` (strips the card chrome, keeps a rule); the refresh signal became internal state, so **`onGenerated` was deleted outright** — a prop nobody passes is dead code that only its test keeps alive. `FinancePage` is back to one entity: projects. Suite 1,767 / 65 exit 0, verified live in the browser.
+
+**Two test mines measured here, both generic:**
+- `mockResolvedValueOnce` is unsafe when **two mounted components call the same API** — the dialog loads history for its preflight and the card loads it for itself, so the `Once` was swallowed by the first call and the test failed for a reason unrelated to the behaviour. An explicit flag flipped by the action under test is order-independent.
+- `scrollIntoView` **does not exist in jsdom** and throws — the assertions passed while the run still exited 1 on an unhandled error. `?.()` on the method (not just the ref) is the fix, and the no-op behaviour is correct on its own terms.
+
+🔴 **New finding, reported not fixed — a history that lies.** The "sent to" column on a history row reads the **live** `מייל_משרד_רואי_חשבון` param, not the address the report actually went to. It is visible right now: report 13 went to `office@cpa-firm.co.il` (proven in `email_log`) and the screen shows `ishay1997@gmail.com`, because the param was changed after generation. Every historical row therefore claims retroactively that it went to today's address. The truthful source is `email_log.recipient`; `salary_reports` has no recipient column, so the fix is a join or a new column — Ishay's call.
+
+
+### 28/08/2026 08:2X–09:0X — 5.1 journeys ① and ③, and the record that lagged behind the work
+
+**Ishay caught this, not me:** *"את 4 ו-5.1 עשיתי אולי יש חוסר בתיעוד… קראת באמת את השיחה?"* — I had answered his "what's left" question from the summary plus disk state, **without reading the transcript**, and reported 5.1 as not started. He was right.
+
+🔴 **The mechanism, because it will recur:** at ~07:0X I reported *"5.1 deliberately stopped — I will not write to the DB you demo on in two hours"*. **He overrode it** (*"why is writing to the DB a problem? I think we can now"*), journey ① ran at 07:15–07:19 — **and no step-table row was flipped afterwards.** The lesson is not "update docs"; it is that **an override arrives as one short sentence and silently invalidates a status line written minutes earlier**. A deferral I announce and he lifts leaves *two* stale artifacts: the plan row, and my own memory of having deferred it.
+
+**Journey ① — verified from the live DB, not from narration:** #12 `finished` · invoice mail `sent` to his real inbox 07:15:36 · `payment_date` 28/08 · `feedback_status='completed'`, score 5 **through the public page** (`feedback_rpc_calls`=3) · `archived_at` 07:19 · **`final_profit` 207.40 frozen** · **token dead**.
+
+**Journey ③ — run today at his explicit go-ahead** (*"אתה יכול להריץ על אוגוסט בכנס אשתמש בספטמבר"*). Report 13, August 2026, total **292.60** — the spec anchor, agreeing three ways: the §③3 anchor, the prediction written into `PRE_5_1_RESTORE.md` *before* the run, and the live result. xlsx downloaded and its **cells read** (not just its size); double generation blocked by the UNIQUE with the button `disabled`; ה19 proven live (bank details read from the protected table under 'כספים').
+
+⚠️ **Stated limitation, not a pass:** the salary mail went to `office@cpa-firm.co.il` — **a dead domain**. Make accepted the call so the journal says `sent`, but nobody received it, and the resend button only renders on `failed`, so that send is unrecoverable. The param was moved to Ishay's real address **after** generation, per his 19/08 test-mail convention ⇒ the September report he runs at the conference will land. **A live data change, reversible in one line, recorded because it derives from no file.**
+
+**Journey ② not run, deliberately:** no seeded project is `cancelled`, so it requires cancelling a live one hours before his interim presentation. Needs his nod; a `not_started` project (#3 or #16) is the cheap subject.
+
+
+### 28/08/2026 07:2X–08:5X — the UX/edge-case pass Ishay asked for, and two gate failures nobody had measured
+
+**Ishay's ask, verbatim:** *"לא לשכוח לבדוק שהמערכת מתמודדת גם עם מקרי קצה (בגדר הסביר והמקובל בשוק) ובכללי שחווית המשתמש טובה ומקצועית"* — so this was a requested pass, not an unprompted improvement.
+
+**Shape:** `wf_8da1e480-df9` — 4 read-only lenses (edge cases · accessibility+RTL · state completeness · the manager's flow) → 4 fixers with exclusive per-file ownership. 8 agents, 0 errors, ~2.0M tokens. The 4th fixer's structured report was lost to a session boundary; **its work was on disk and is proven by the suite**, and the journal (`subagents/workflows/wf_8da1e480-df9/journal.jsonl`) holds the other seven verbatim.
+
+**Six fixes landed** — full list with the measurement behind each: `module-8.md` §10 under `28/08/2026 08:5X`. The two worth remembering here: a future-month gate on the salary dialog (typing `2027` would have signed every open salary row and mailed the accountant a report for a month that never happened, irreversibly), and the overdue counter that kept running red on a debt already collected (`record_payment` does not move status, so the row sits in "ממתין לתשלום" until archive — days).
+
+🔴 **`npm run deadcode` (knip) was failing on `HEAD` — and knip is a BLOCKING CI step (`ci.yml:46`).** Two functions were exported whose only consumer sits in the same file. ⇒ **commit `4f2b352` would have failed CI.** Fixed by dropping the `export`. ⚠️ **This contradicts the `gate exit 0` claims recorded for the phase-2 and phase-3 gates. I cannot reconcile them; today's measurement stands, and the earlier claim should be read as unverified.**
+
+🔴 **`docs/schema.sql` §26 still described the `finance` bucket as pdf/jpeg/png only** — never synced after `H1` added the xlsx MIME type. Fixed in place, with the migration named.
+
+**Remaining `gate` failure, deliberately left:** `src/modules/08_finance/CLAUDE.md` is missing (`check:context`). It is a `module-close §4c` deliverable and belongs to the closing session. `check:context` does **not** run in CI, so **CI is green.**
+
+**Lesson for the reference sections:** a workflow killed by a session boundary leaves its *files* on disk and its *report* only in the journal — so after any interrupted run, `journal.jsonl` is the primary source and `git diff` is the proof, in that order. Reading only the task notification would have missed a whole fixer.
+
+
+### 28/08/2026 01:1X — phase 4, first three agents home (3/11)
+
+- ✅ **S2 footer polish.** The two gate-notes were being crushed into narrow columns; fixed with the
+  **approved mockup's own technique** (`.dlg-foot{flex-wrap:wrap}` + `.gate-note{width:100%}`) rather
+  than an invented layout — `GateNote` gained an opt-in `fullWidth`, default off, so no other call
+  site moved. 49/49 green before and after, and the suite already covers all four Q-1 controls.
+- ✅ **S3 pre-flight panel** — the state Ishay approved. **And it was built honest, which was the
+  whole instruction:** it shows only what is knowable with certainty BEFORE the irreversible write —
+  recipient from live `params`, the file name **via the same function that names the real file**
+  (not a second spelling that could drift), the cut-off date, the three collection rules transcribed
+  from the live body of `generate_salary_report`, the last report generated, and any skipped months
+  — and it **says in plain Hebrew that the rows themselves cannot be shown before generation**
+  rather than implying a completeness it cannot deliver. 20 → 30 tests.
+- ✅ **4.1 — the m6 survey-link ripple, with the strongest regression evidence of the night: 218
+  tests across every existing suite touching the changed files**, each named and counted. The agent
+  verified its own test-count claim by `git show HEAD:file | grep -c` rather than asserting it (49
+  before, 51 after). `feedbackUrlFor` mirrors `confirmUrlFor` exactly (token in the path, origin
+  from the caller), the token is minted at send time via the `'פרויקטים'`-gated get-or-create, and
+  🔴 **the stale comment was FLIPPED, not deleted** — the old *"הקישור קבוע — הכרעת-ישי 13/08"* now
+  states what the value is today, what it was, and when it changed. That is rule 13(ח)'s class of
+  failure caught in the act.
+
+### 28/08/2026 01:1X — the survey ruling: kept the decision, threw away its reason
+
+- ✅ **RULED under Ishay's explicit delegation** (*"תציג את האפשרויות ותחליט בעצמך עם סיבה… תנסה
+  להקל עלי ולא להוסיף לי עבודה"*), with the condition that mattered: *"כל עוד באמת ביררת ושקלת
+  אפשרויות"*. **The one-question feedback page stays. The justification originally written for it
+  was wrong and has been struck.**
+- 🔴 **The research refuted our own argument — the most valuable thing it did.** "Short surveys get
+  materially better response rates" **does not hold at this magnitude**: Sandelin 2022 (SOM
+  Institute, U. Gothenburg — full PDF read) measured **205 vs 149 questions** ⇒ a **2.7-point** gap
+  and **no effect at all among web respondents**, with no data-quality loss. Rolstad 2011's
+  meta-analysis: heterogeneous, decide **on content not length**. Cochrane MR000008: direction holds,
+  **I²≈91%**. The circulating 83%↔42% figures are survey-vendor marketing, and two major vendors
+  disagree by **37 points**.
+- 🟢 **What the decision now rests on, and it is internal and checkable:** the old path already threw
+  away what four questions bought — the customer filled four ratings and **a human read them and
+  typed ONE number in**. Option A paid a long form's whole price (external tool · customer burden ·
+  **a manual transcription step between the event and its financial closing**) and banked none of it.
+- 🔑 **The steelman's real objection was already answered by the system, and nobody had noticed.**
+  "A bare 3 does not say what broke" — but a score <3 forces a phone clarification and the manager
+  picks from **five structured reasons enforced by a live DB CHECK** (verified 28/08). **The middle
+  pattern the research recommends — one score plus diagnostic tags on low scores — already exists
+  here**, with the tag chosen by the manager rather than the customer. A customer-facing picker
+  would have duplicated it. *(This is the second time tonight that reading the live DB answered a
+  design question that reading documents could not.)*
+- 📌 **A negative finding worth more than most positive ones:** **no industry body publishes any
+  standard for client-side post-event feedback** (EIC · PCMA · MPI · IAEE · ASAE · ICCA all
+  searched). The EIC's canonical **APEX Post-Event Report contains zero satisfaction fields** and
+  prescribes a **face-to-face debrief** instead. And there is **no academic literature on
+  agency→corporate-client event surveys** — it is all attendee-side. ⇒ there is no "industry
+  standard" to cite, and the conference answer says so honestly.
+- 📝 **Write-backs, same session:** the unsourced clause struck in `processes-approved.md` with a
+  dated ✏️ note · the real sources added to `world-sources.md` — **the very file the dead citation
+  pointed at** · the negative finding recorded in its §ה · the ruling in `module-8.md` §10.
+- ✅ **Ishay confirmed the send-ownership independently** (*"השאלון נשלח בסגירה התפעולית במודול 6 על
+  ידי מנהלת הפרויקטים"*) — and the code had already proved it the hard way: minting a feedback token
+  as `postgres` was **refused** with *"אין לך הרשאה … במודול פרויקטים"*, and only succeeded when
+  impersonating the projects manager. **The permission sits with 'פרויקטים', not 'כספים'** — m8
+  receives the score and sends nothing, exactly as §7.39/㉜ rule.
+
+### 28/08/2026 00:4X–01:0X — both fix migrations applied; phase 4 in flight; a citation that did not resolve
+
+- ✅ **H1 + H2 APPLIED, after Ishay typed both migration names** — the typed-echo gate, not a spoken
+  approval. Verified by query rather than by the tool's `success`: the `finance` bucket now lists the
+  xlsx MIME type, and `prosrc` contains `v_hours > v_part_h` with no `>=` remaining. Advisors re-run:
+  **zero new findings** — every warning present is the project's existing gated-RPC pattern.
+  🔑 **Ishay released the concern himself**, and he was the one who could: *"אני סוגר את הפינה הזו
+  בהצגה בסוף יהיה קצרה ממש… אין לך ממה לחשוש"*. He knows what the demo covers; the orchestrator did
+  not. **The caution was right to raise once and wrong to repeat after he ruled.**
+- 📸 **All four surfaces captured on the live app as the finance manager**, through the documented
+  evidence-provider pattern (temp spec, credentials from `.env.local`, screenshots to scratchpad,
+  spec deleted before commit). **This also settled something the guide had carried as unproven since
+  it was written: `E2E_FINANCE_*` does not merely exist, it authenticates.**
+- 🔴 **A blocker I nearly reported and did not, because I checked first.** The public feedback page
+  appeared stuck on its loading skeleton for 12 seconds. Before escalating: the RPC returned
+  `{state:'ok'}` as `anon`; the app's own client resolved in **151ms** from the page context; and
+  `feedback-form`/`feedback-stars`/`feedback-submit` were all present in the DOM. **Not a bug —
+  the dev server was hot-reloading under the screenshot while 11 agents edited files beneath it**,
+  the exact phenomenon `e2e/CLAUDE.md` documents. The fix was to wait for the measured content
+  instead of a wrapper — which is that file's own rule, applied to myself.
+- 🔴 **A CITATION IN THE APPROVED SPEC THAT DOES NOT RESOLVE — found by following Ishay's question
+  rather than answering it from memory.** He asked where the four-question survey he had built had
+  gone. It exists: a live Google Form, seeded as `קישור_בסיס_סקר_לקוחות`, four 1–5 questions.
+  m8's Discovery replaced it with one star rating + free text, recorded as a reasoned deviation
+  citing *"מקורות ב-`world-sources.md`"* and a *"~75 seconds"* response-time figure.
+  **`world-sources.md` has no such entry** — its only CSAT row concerns the <3 phone threshold.
+  ⇒ the world-standard half of that justification was never sourced. **The internal half stands and
+  is checkable:** the schema stores ONE score, four questions need a collapse rule, and that rule is
+  §7.37 — still open. **Research dispatched at Ishay's instruction to establish the real norm.**
+  🔑 **The transferable lesson, and it is about how we work:** a spec sentence that names its source
+  reads as verified to every later reader, and this one survived Discovery, a blueprint, three
+  review passes and a build. **What caught it was a product owner asking "is this really standard?"
+  and the answer being checked instead of restated.** Sibling of `discipline.md`'s "the source must
+  answer DIRECTLY" — this is the same failure seen from the citing side rather than the citer's.
+- 🔨 **Phase 4 in flight** (11 agents): the S3 preview Ishay approved, the m6 and m2 ripples into
+  merged production code, an S2 layout fix measured on the live screen, then E2E and a
+  regression-focused panel. ⚠️ m6's guide now carries a cross-reference: its code is being edited by
+  m8's ripple while the module itself stays closed.
+
+### 28/08/2026 00:2X–00:4X — phase 3 shipped by a 12-agent workflow; Ishay ruled on the escalations
+
+- ✅ **PHASE 3 COMPLETE.** All four surfaces + the route swap. **Suite 1,697 / 64 exit 0** (was
+  1,572 / 59 ⇒ **+125 tests, zero regressions**); `npm run gate` **exit 0**. Shape: 3 leaf surfaces
+  in parallel → S1 (the composer) → the route step alone → 3 adversarial lenses → 4 fixers.
+  12 agents, 0 errors, 3.28M tokens, ~2h.
+- 🔑 **Evidence the adversarial panel was not manufacturing work — Ishay asked directly, and the
+  numbers answer him.** The mechanical lens returned **ZERO findings in BOTH phases**, listing five
+  honest could-not-checks instead. The fixers were explicitly permitted to reject findings, and
+  across both phases they **refuted none**. What they DID reject was three suggested *fixes*: one
+  would have overwritten the recorded acceptance anchor `292.60`; one would have printed
+  `בוטל ע"י הלקוח ביטל` (the proposed string double-worded an existing label); one contradicted a
+  recorded ruling. **"The finding is real, the proposed fix is not" is the distinction the fix layer
+  exists to draw** — and it drew it three times.
+- 🐛 **The six that mattered, each re-verified by the orchestrator rather than taken on report:** the
+  `finance` bucket rejects xlsx · the fee band pays 0% at exactly 72.0h · `StatusTag` had no red so
+  `טעון בירור` rendered grey · the salary **rate** cell went through whole-shekel formatting, so a
+  `34.32` rate printed `34 ₪` beside `205.92 ₪` in the same row — on the screen the manager approves
+  before the file leaves · the archive button looked enabled while the server would refuse it (the UI
+  did not know the low-score-requires-reason rule the DB enforces) · and S3 had **no preview at all**
+  before an irreversible generation.
+- 🟢 **Ishay ruled on both escalations.** The S3 preview is approved for build. Both migrations are
+  approved in principle, and he offered to apply them tonight or at 11:00. **Neither was applied** —
+  the typed-echo gate states plainly that a spoken approval is not sufficient to apply, and the
+  recommendation returned was to wait: measured, H2 replaces a function with **zero production
+  callers** and H1 widens a MIME whitelist nothing currently uses for xlsx, so neither can affect the
+  demo and neither is urgent enough to spend the risk before it.
+- 🔎 **The two unauthorised files were checked and CLEARED — and the fault was the orchestrator's
+  scoping, not the agent's overreach.** `publicApi.js` cites a precedent that genuinely exists
+  (`04_hostesses/publicApi.js`, on disk since 12/08), reaches **exactly** the two RPCs the database
+  already grants to `anon`, and duplicates nothing `api.js` exports. The task file simply named a
+  narrower ownership than the work honestly required.
+- 🔴 **AN OPERATIONAL MISTAKE WORTH KEEPING, because the repo already warns about it and it still
+  happened.** Appending this entry via a Python heredoc (`open(p,'w')`) **truncated
+  `CLAUDE_CODE_LOG.md` to zero bytes**: `'w'` empties the file before writing, and the write then
+  died on a `UnicodeEncodeError` (surrogates in the emoji), leaving nothing behind. Root
+  `CLAUDE.md` already carries a Python-file-writing mine — but it is scoped to **CRLF line endings**,
+  so a reader checks `tr -cd '\r'`, sees 0, and concludes the write was safe. **It was not: the
+  failure mode here is truncation, not line endings.** Recovered with `git checkout HEAD --` at zero
+  loss **only because the file had been committed twenty minutes earlier** — which is the actual
+  lesson: the mid-run commits were not bookkeeping, they were the undo buffer. ⇒ **Use the
+  Write/Edit tools for repo files; if a script must do it, write to a temp file and move it into
+  place, never open the live file with `'w'`.**
+
+### 27/08/2026 21:0X–23:1X — phase 2 shipped by an agent workflow; two shipped-code defects found; phase 3 in flight
+
+- ✅ **PHASE 2 COMPLETE, committed `0baf74b`.** A 9-agent workflow (3 builders · 3 read-only
+  adversarial lenses · 3 fixers; 0 errors, 2.06M tokens, 64 min) produced six files, then the
+  orchestrator re-verified independently. **Suite 1,572 / 59 exit 0** against a 1,454 / 56 baseline
+  ⇒ **+118 tests, zero regressions**; `npm run gate` **exit 0**.
+- 🔑 **The verification worth reusing — a three-source oracle.** Green tests were not accepted as
+  proof. The orchestrator fed the **live database's** measured outputs through the **agent-written**
+  functions and compared against the **spec's hand-computed** anchors: 8/8. None of the three sources
+  saw the other two. Then a **sign-flip mutation** on the deviation term reddened **7 tests across two
+  files**, and the file was restored **byte-identical** (`sha256sum -c` OK). *(A test authored beside
+  the formula it tests proves internal consistency and nothing else — this is the cheap way to get an
+  oracle the code did not produce.)*
+- 🔴 **TWO REAL DEFECTS IN ALREADY-SHIPPED PHASE-1 WORK, found by the lenses, migrations written and
+  deliberately NOT applied** (`c47076e`): **H1** — the `finance` bucket's `allowed_mime_types` omits
+  xlsx, so the salary file can never be stored. **The email to the accountant still goes out** (the
+  attachment is built from the in-memory blob), so nobody is mispaid — what dies is the archival side:
+  history download, resend, and §7.68's proof-of-what-was-sent. **Not a decision anyone made** — the
+  m6 migration that created the bucket carries *"לא הוכרע (M8 יחליט)"* on that row. **H2** — the
+  cancellation-fee band returns 0% instead of 50% at exactly 72.0h (`>= v_part_h` evaluated first);
+  ה24 puts 72 inside the 50% band. Fires only at exactly 72.000000h, so near-impossible in practice,
+  but it is a money error against the customer on a spec-defined boundary. **Proven unapplied:**
+  `list_migrations` still ends at `20260827163737`.
+- 🛡️ **A fixer REFUSED its instruction, and was right to.** A verifier's suggested fix would have
+  rewritten Efrat's fixture to bonus 250 / total 542.60 — **overwriting the recorded acceptance anchor
+  292.60**. The fixer applied the finding's INTENT additively (a separate variant) and left all three
+  anchors byte-identical. **The conflict-question rule firing in the direction nobody designs for: a
+  review being wrong.** Worth keeping as the argument for why fixers must re-verify rather than obey.
+- 🎚️ **Model mix changed mid-run at Ishay's prompt** (*"אתה זוכר להשתמש גם בסונאט?"*). The honest
+  answer was that only one mechanical lens had been Sonnet. New rule applied from phase 3 on:
+  **Sonnet where the answer is already drawn or mechanically defined** (fully-drawn surfaces, the
+  route swap, E2E authoring, the conventions lens); **Opus where judgement is needed or a touch breaks
+  something already in production** (the two logic-bearing screens, the m2/m6 ripples, the money and
+  spec lenses). ⚠️ This deviates from the micro-guide's own phase table (Opus everywhere) — disclosed
+  to Ishay, not done quietly.
+- 🗣️ **Ishay consolidated the per-unit approval gate into ONE review at the end**, on the built
+  screens. This overrides his own Q-1 note that S2's undrawn controls would get small mockups first —
+  put to him with both sides quoted, and he ruled: build them and **mark every undrawn control at
+  presentation**. Each surface agent therefore returns a structured `undrawn_controls` list.
+- 🏗️ **Orchestrator-owned serial work** (the things a fan-out must never do concurrently): the npm
+  installs, the `StatusTag` `danger` tone (four parallel agents would have collided on that shared
+  file), the mutation probe, the full gate, and every commit.
+- 📦 **Dependency de-risked BEFORE three agents were sent to depend on it:** `write-excel-file` +
+  `read-excel-file` (dev). The npm `xlsx` package is stuck at 0.18.5 with known advisories and its
+  fixed line is CDN-only. A round trip was proven first — Hebrew survives, decimals survive, and **a
+  ת"ז written as a String comes back a string** (an ID silently coerced to a number loses a leading
+  zero on a document that goes to the accountant), and the browser entry graph was traced to confirm
+  it reaches no Node builtins.
+- 🔨 **Phase 3 in flight** (12-agent workflow): S4 `22:31` · S3 `22:47` · S2 `23:02` built; S1 and the
+  route step running; **the adversarial panel has not run — nothing in phase 3 is verified yet.**
+  ⚠️ Two files exist that no agent was given ownership of (`src/lib/feedback.js`, `publicApi.js`) —
+  architecturally plausible, unauthorised, and flagged in the guide's §10 for gate verification.
+
+### 27/08/2026 20:3X–20:4X — phase-2 door opened; the guide would have sent a builder to rebuild the money calculator
+
+- ✅ **Step 2.0 (phase-2 door) closed.** Pre-flight held: `ishay/module-8-phase-2` is **3 commits
+  ahead of `origin/dev` and not merged** (`merge-base --is-ancestor` ⇒ yes, but
+  `git log origin/dev..HEAD` ⇒ **non-empty** — iron rule 10's discriminator, so "fresh branch" is
+  ruled out and so is "dead branch"). Baseline **1,454 tests / 56 files, exit 0** — identical to the
+  phase-1 hand-off figure. **Ledger sweep: nothing new for Ishay** (Q-1…Q-5 ruled 26/08 22:40,
+  N-1…N-6 approved 22:43, A-1…A-10 recorded) — the door's "settle with Ishay" branch legitimately
+  did not fire, which is a measured `אין`, not a skipped step.
+- 🔴 **THE FINDING — the guide's step 2.1 was internally contradictory, and the losing side was the
+  one a builder reads first.** Step 2.1's function list (`deriveRevenue`, `deriveGoodsCost`,
+  `deriveLaborCost`, `deriveCancellationFee`…) was written **26/08 at blueprint, before the DB
+  existed**. Phase 1 then built `finance_project_money` on **27/08**, which computes every one of
+  them. The phase-2 preamble added the same day says *"do not re-derive the money formulas in
+  JavaScript"* — **but the step's own text was never updated to match**, and a build session reads
+  the step, not the preamble, when it starts typing. **Obeying the literal step would have produced
+  a second profit number for the same project — precisely the F16/R1-4 failure the whole design
+  exists to forbid — and it would have passed its own unit tests**, because a JS test written
+  beside a JS formula proves internal consistency and nothing else. Corrected in place with a boxed
+  dated note (`הכרעתי, הפיך`; technical execution, no product-visible meaning, disclosed to Ishay
+  in the same message).
+  🔑 **The evidence that settled it was written by the migration's own author:**
+  `20260827144459_…_finance_money_ssot_and_readers.sql` states the division of labour in its header
+  — *"מחזיר **עובדות**; הגזירות לתצוגה … חיות ב-`src/lib/projectFinance.js`"*. **The contract was
+  never ambiguous; it just lived in a file the step didn't point at.**
+- 🆕 **Derived and verified: expected profit = `gross_profit + budget_deviation`.** The DB's
+  `gross_profit` uses ACTUAL labor; ה27's expected uses PLANNED; `budget_deviation` is exactly that
+  difference. Checked against all three hand anchors and all three land digit-for-digit — #13
+  `3650+(−692)=2,958.00` · #15 `3635+(−164)=3,471.00` · #12 `207.40+202.50=409.90`. **A null
+  deviation (T7) must propagate to a null expected profit**, never silently fall back to
+  `gross_profit`.
+- 🔴 **Two of the four acceptance anchors are NOT live-readable, and the guide claimed they were.**
+  `finance_cancellation_fee_proposal(14)` returns `proposed_fee = NULL` because **no project in the
+  seed is `cancelled`** (#14 is `in_progress`); only its goods half `3,180.00` reproduces. Efrat's
+  row totals `270.00`, not `292.60`, because `travel_amount = 0.00` until `generate_salary_report`
+  stamps it (ה14 — correct behaviour). **Neither is a defect** — `data-set.md §0` tags the whole #14
+  cancellation 🎭 — but the phase-2 preamble's *"three of the four … already produced by the
+  database itself"* is **not reproducible as written**. Verifying them live requires a **live-DB
+  write** (a cancellation; a generation that signs rows irreversibly), which is on the ask-first
+  boundary — and with the **28/08 interim presentation the next morning** it was not run.
+  Recommended to Ishay: defer both probes to step 5.1.
+- 📦 **Dependency finding for step 2.2:** the npm `xlsx` package is stuck at **0.18.5** carrying two
+  known advisories; SheetJS ships the fixed line **only from its own CDN**, not npm. §2.6's
+  "SheetJS `xlsx` **or equivalent**" is doing real work. Recommended `exceljs` 4.4.0 (maintained on
+  npm; writes AND reads, which step 2.2's re-parse test needs). Also measured in passing and
+  triaged `דחה-ל-אחרי-הכנס`: **6 pre-existing advisories in the transitive `undici`**, not ours.
+- 🏛️ **Architecture answer given to Ishay's "can an army do phases 2 and 3 together?": no, and the
+  blocker is not the agents.** Phase 3's screens consume phase 2's `api.js`; building them against
+  an imagined interface buys one rebuild. **And a workflow cannot pause at a 👤 gate** — every one
+  of the seven build-units carries an empty `🗣️ אושר —` slot, so batch size follows the GATES, not
+  the phase boundary. **What IS parallelizable, and it is the expensive half: his approvals.**
+  Phase 3's inputs are already frozen (6 approved mockups · screen cards · locked strings ·
+  Q/N rulings), so the phase-3 brief package can be put to him *while* the phase-2 army runs — the
+  gate blocks building, not reading.
+
+### 27/08/2026 19:4X–19:5X — everything in production; dead branches cleared; phase-2 branch cut
+
+- 🚀 **Production is `c1a3306`.** PR #73 → `dev`, #74 → `main`, `dev`/`main` content-identical,
+  Vercel `state=success`. **And the deploy was verified the way it has been all day — by fetching
+  the live bundle and asserting its contents**, not by trusting the pipeline: it reads
+  `hostess_languages(language)` and `hostess_bank_details(*)`, and **does not write the dropped
+  parent column**. ⚠️ Same bundle hash as the previous deploy, correctly: N1b carried no `src/`
+  change, only a migration and docs.
+- 🧹 **Seven merged branches deleted, remote and local.** Each was measured first
+  (`git rev-list --count origin/dev..<branch>` ⇒ 0) rather than assumed, and **every SHA was
+  recorded before deletion** so any of them is recoverable: `module-8-finance` `e41be2b` ·
+  `module-8-c2-and-n1` `3593bf9` · `module-8-n1b` `5e0bf45` · `fix-flaky-checklist-focus`
+  `c3b2eaf` · `module-5-logistics` `3822a47` · `post-merge-m5-flip` `89f830b` ·
+  `reconcile-main-into-dev` `8e63da9`. **The remote now holds `dev` and `main` only.**
+- 🌱 **`ishay/module-8-phase-2` cut from fresh `origin/dev` (`ed353bc`)**, with the fresh-vs-dead
+  discriminator run at cut (`git log origin/dev..HEAD` ⇒ empty ⇒ fresh, not merged).
+- **The day's ledger:** phase 1 (ten migrations + the 1.8 gate) · `C2` — ה19 closed · `N1`+`N1b` —
+  normalization complete · one flaky test fixed with a mutation proof. **One debt remains and it is
+  not m8's to build: `N2`, after the 28/08 presentation.**
 
 ### 27/08/2026 19:3X — N1b applied: the normalization is complete
 

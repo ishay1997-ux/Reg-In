@@ -42,9 +42,9 @@
 | Marketing upload + `mailto:` send to consented | ✅ full (interim send model) | M10: real server-side email + tracking | PROJECT_MASTER §6 |
 | Customer card — details | ✅ full | — | — |
 | Customer card — project history | ~~🚧 מ6~~ **paid 19/08/2026 (M6 step 3.8)** — real "מתקרבים"/"התקיימו" tabs render actual project data, not an empty-state placeholder | ~~M6 (projects data + policies)~~ ✅ | PROJECT_MASTER §6 |
-| Customer card — totalRevenue + avgFeedback metrics | ~~🚧 מ3~~ **paid 30/07/2026 (M3 step 3.5)** · 🚧 מ8 · placeholder for the feedback half only | ~~M3 (pricing SSOT)~~ ✅ + M8 (feedback) | PROJECT_MASTER §6 |
-| Customer card — cumulative gross-profit metric (C6 §2.4.1 derived attr; distinct from the M7 monthly-KPI §7-item) | 🚧 מ8 · placeholder ("אין נתונים עדיין") | M8 (owns the gross-profit formula — spec 5.14; retargeted from M7 10/07 evening, reviewer finding — M7 is the display-only dashboard; see §7.79) | PROJECT_MASTER §6 |
-| Satisfaction stars in list + satisfaction filter | 🚧 מ8 · present-but-inert | M8 | PROJECT_MASTER §6 |
+| Customer card — totalRevenue + avgFeedback metrics | ~~🚧 מ3~~ **paid 30/07/2026 (M3 step 3.5)** · ~~🚧 מ8~~ **paid 28/08/2026 (M8 step 4.2)** — `avgFeedback` is computed in `deriveCustomerMetrics` (`src/lib/customers.js`, and its ה8 population filter counts only `feedback_status='completed'`); struck 01/09/2026 at m8's close, against a code measurement | ~~M3 (pricing SSOT)~~ ✅ + M8 (feedback) | PROJECT_MASTER §6 |
+| Customer card — cumulative gross-profit metric (C6 §2.4.1 derived attr; distinct from the M7 monthly-KPI §7-item) | 🚧 מ8 — **still open, and narrowed 01/09/2026 at m8's close:** the NUMBER is built (`cumulativeProfit` in `deriveCustomerMetrics`, §7.79) and is deliberately **not displayed on the customer card**; the DISPLAY belongs to M11 per m8's §2.2. What remains here is the display only | M8 (owns the gross-profit formula — spec 5.14; retargeted from M7 10/07 evening, reviewer finding — M7 is the display-only dashboard; see §7.79) | PROJECT_MASTER §6 |
+| Satisfaction stars in list + satisfaction filter | ~~🚧 מ8 · present-but-inert~~ **paid 28/08/2026 (M8 step 4.2)** — `lowSatisfactionOnly` is live in `matchesCustomerFilters`, wired through `CustomersFilterSheet` + the `customers-preset-low-satisfaction` chip, with its own test file; struck 01/09/2026 at m8's close | M8 | PROJECT_MASTER §6 |
 
 Rule (ENFORCED — iron rule 15 + Stop hook): every 🚧 row above carries a `🚧 מN` token (N = the target module that finishes it) and MUST have a byte-matching `🚧 מN` line in `PROJECT_MASTER.md` §6, written in the SAME session the 🚧 is created. The opening prompt of every module greps `🚧 מ<its-number>` in §6 to learn every debt owed to it — that is how future sessions know to come back and finish these. A 🚧 row with no matching §6 line is a silent-debt BUG that the Stop hook (`check-docs-updated.sh`, enforcement 0ג) blocks session end on. (🚧 = cross-module capability debt; distinct from ⏳ deferred-decision and 🕓 freshness-stamp.)
 
@@ -468,6 +468,32 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 
 ## 9. 📝 Deviations & Tech-Debt Log
 
+- 🔗 `28/08/2026 00:5X` — **M2 CODE IS BEING EDITED BY MODULE 8's PHASE-4 RIPPLE (step 4.2). This
+  module stays CLOSED; the change is m8's, recorded here so a future m2 reader is not surprised by
+  the diff — and because one of its edits deliberately REVERSES an m2 decision.**
+  **Files:** `src/lib/customers.js` (`deriveCustomerMetrics`, `matchesCustomerFilters`) ·
+  `src/lib/customerProjects.js` (`projectAmount`) · `src/modules/02_customers/api.js` ·
+  `CustomersPage.jsx` · `CustomerDetailsPage.jsx`.
+  **What it delivers — the m8 half of a debt this guide already carries:** the satisfaction stars +
+  filter that §1's capability table records as *"🚧 מ8 · present-but-inert"* stop being inert, and
+  the customer "סכום" column starts including approved scope changes (RC-6). §7.79's populations
+  land with them: cumulative profit counts finished **and** resolved-cancelled projects; the average
+  feedback counts **only** customers who actually answered.
+  🔴 **The part that must not read as a silent edit:** m2 carries a deliberate PRIVACY comment
+  narrowing what the customer-metrics read returns. m8's step widens that read on purpose, and the
+  instruction given to the agent was explicit — **flip it into a deliberate-widening comment naming
+  why and on whose authority, never delete it.** A future reader must be able to see that the
+  narrowing was intentional and that the widening was too. Verified at the phase-4 gate.
+  🔨 **Status `28/08 01:0X`: in flight.** Files already modified in the working tree —
+  `customers.js` · `customerProjects.js` · `02_customers/api.js` · `CustomersPage.jsx` ·
+  `CustomerDetailsPage.jsx`. **Not yet committed and not yet regression-verified**; m2's own suites
+  are re-run at the gate, and a weakened m2 test counts as a regression, not as an accommodation.
+  📌 **And one m2-relevant consequence of a ruling made in m8 the same night** *(the survey ruling,
+  `module-8.md` §10, `28/08 01:1X`)*: the customer-satisfaction average this ripple lights up is fed
+  by a **single** 1–5 score per project, and that will not change — the four-question Google Form was
+  ruled out for good. ⇒ **§1's satisfaction filter has exactly one number to sort on**, and any later
+  wish for per-dimension customer filtering would need a schema change in m8, not a screen change
+  here. Recorded so a future m2 session does not plan around a richer score that is not coming.
 - 🚧 מ6 — **12/08/2026 — the M6 half of the two deferred derived customer-list filters had no live token
   in this guide, only a trailing parenthetical.** §1's capability table carries the M8 half as a real row
   (*"Satisfaction stars in list + satisfaction filter — 🚧 מ8 · present-but-inert"*), but its twin —

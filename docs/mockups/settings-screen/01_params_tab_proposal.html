@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ מ9 · לשונית הפרמטרים — הצעה (אפשרות א׳)</title>
+<style>
+/* ═══ טוקנים — הועתקו מילולית ממוקאפי מ8 (אותו design-contract §⑤). אל תשנה ערך. ═══ */
+:root{
+  --primary:#0D9488;
+  --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4;
+  --teal500:#00BBA7; --teal600:#009689; --teal700:#00786F;
+  --green50:#F0FDF4; --green100:#DCFCE7; --green200:#B9F8CF; --green700:#008236;
+  --amber50:#FFFBEB; --amber100:#FEF3C6; --amber200:#FEE685;
+  --amber700:#BB4D00; --amber800:#973C00;
+  --red50:#FEF2F2; --red100:#FFE2E2; --red200:#FFC9C9; --red600:#E7000B; --red700:#C10007;
+  --s50:#F8FAFC; --s100:#F1F5F9; --s200:#E2E8F0; --s300:#CAD5E2;
+  --s400:#90A1B9; --s500:#62748E; --s600:#45556C; --s700:#314158; --s800:#1D293D;
+  --r-md:8px; --r-lg:10px; --r-xl:14px; --r-2xl:18px;
+  --sidebar:240px; --topbar:64px;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{background:var(--s50); color:var(--s800);
+  font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif; font-size:14px; line-height:1.5}
+.ltr{direction:ltr; unicode-bidi:isolate; display:inline-block}
+
+.side{position:fixed; top:0; right:0; width:var(--sidebar); height:100vh; background:#fff;
+      border-left:1px solid var(--s200); display:flex; flex-direction:column; z-index:30}
+.side .logo{height:var(--topbar); display:flex; align-items:center; justify-content:center;
+      border-bottom:1px solid var(--s100); font-weight:700; color:var(--teal700); letter-spacing:.5px}
+.side nav{padding:12px 8px; display:flex; flex-direction:column; gap:4px}
+.nav-i{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--r-lg);
+      font-size:14px; font-weight:500; color:var(--s600); text-decoration:none}
+.nav-i .ic{width:20px; text-align:center; font-size:15px; flex:none}
+.nav-i.on{background:var(--teal50); color:var(--teal700)}
+.top{position:fixed; top:0; left:0; right:var(--sidebar); height:var(--topbar); background:#fff;
+     border-bottom:1px solid var(--s200); display:flex; align-items:center;
+     justify-content:space-between; padding:0 24px; z-index:20}
+.who{display:flex; align-items:center; gap:8px}
+.who .av{width:36px; height:36px; border-radius:999px; background:var(--teal600); color:#fff;
+     display:flex; align-items:center; justify-content:center; font-weight:600}
+main{margin-right:var(--sidebar); padding:calc(var(--topbar) + 24px) 24px 40px}
+h1{font-size:20px; font-weight:700; color:var(--s800)}
+.psub{font-size:12px; color:var(--s500); margin-top:2px}
+.card{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     box-shadow:0 1px 2px rgba(15,23,42,.06); padding:16px}
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--s200); margin:0 -16px 0; padding:0 16px}
+.tab{border:none; background:none; border-bottom:2px solid transparent; margin-bottom:-1px;
+     padding:10px 16px; font-size:14px; font-weight:500; color:var(--s500); cursor:pointer}
+.tab.on{border-color:var(--teal600); font-weight:600; color:var(--teal700)}
+.tag{display:inline-block; white-space:nowrap; border-radius:999px;
+     padding:2px 10px; font-size:11px; font-weight:600}
+.tag.ok{background:var(--green100); color:var(--green700)}
+.tag.teal{background:var(--teal100); color:var(--teal700)}
+.tag.muted{background:var(--s100); color:var(--s500)}
+.tag.warn{background:var(--amber200); color:var(--amber800)}
+.btn{border-radius:var(--r-lg); font:inherit; font-size:14px; font-weight:600;
+     padding:8px 16px; border:1px solid transparent; cursor:pointer; white-space:nowrap}
+.btn-primary{background:var(--teal600); color:#fff}
+.btn-outline{background:#fff; border-color:var(--s300); color:var(--s700); font-weight:500}
+.btn-sm{padding:5px 12px; font-size:12.5px}
+table{width:100%; border-collapse:collapse}
+th{font-size:12px; font-weight:600; color:var(--s500); text-align:right;
+   padding:6px 10px; border-bottom:1px solid var(--s200); white-space:nowrap}
+td{padding:10px; border-bottom:1px solid var(--s100); vertical-align:middle}
+.cell .lb{font-size:12px; color:var(--s500)}
+.cell .sub{font-size:11px; color:var(--s500)}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   מחלקות חדשות למשטח הזה בלבד. אף ערך למעלה לא שונה.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* רצועת-הסבר לקורא-המוקאפ. אינה חלק מהמסך. */
+.readme{margin:0 0 16px; padding:10px 16px; background:var(--amber50);
+     border:1px solid var(--amber200); border-radius:var(--r-lg); color:var(--amber800);
+     font-size:12.5px; line-height:1.7}
+.viewlabel{margin:28px 0 10px; font-size:13px; font-weight:700; color:var(--s600);
+     border-right:3px solid var(--teal600); padding-right:10px}
+
+/* חיפוש-על — יושב מעל רשימת-הסוגים, לא בתוך סוג. זה מה שמונע מהרשימה להיות כלוב. */
+.psearch{position:relative; margin-bottom:12px}
+.psearch .mg{position:absolute; right:12px; top:50%; transform:translateY(-50%);
+     color:var(--s400); font-size:13px}
+.psearch input{width:100%; height:38px; border:1px solid var(--s200); border-radius:var(--r-lg);
+     background:#fff; padding:0 36px 0 12px; font:inherit; font-size:14px; color:var(--s500)}
+
+/* פריסת-המאסטר-דיטייל: רשימת-סוגים ימין, מסך-הסוג שמאל. */
+.md{display:grid; grid-template-columns:212px minmax(0,1fr); gap:14px; align-items:start}
+.types{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl); padding:6px}
+.type-i{display:flex; align-items:center; justify-content:space-between; gap:8px;
+     padding:9px 11px; border-radius:var(--r-lg); cursor:pointer; color:var(--s600)}
+.type-i .nm{font-size:13.5px; font-weight:500}
+.type-i .ct{font-size:11.5px; color:var(--s400)}
+.type-i.on{background:var(--teal50); color:var(--teal700)}
+.type-i.on .nm{font-weight:600}
+.type-i.on .ct{color:var(--teal700)}
+
+.pane{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl); padding:16px}
+.pane h2{font-size:16px; font-weight:700; color:var(--s800)}
+.pane .lead{font-size:12.5px; color:var(--s500); margin:2px 0 14px}
+
+/* שדה-ערך בטבלת-פרמטרים. `.ltr` על כל ערך שאינו עברית טהורה. */
+.vin{width:120px; height:34px; border:1px solid var(--s300); border-radius:var(--r-md);
+     padding:0 10px; font:inherit; font-size:13.5px; text-align:left; direction:ltr;
+     color:var(--s800); background:#fff}
+/* 🔴 שדה+יחידה כזוג בלתי-נפרד. בלי העטיפה הזו היחידה נשברת לשורה נפרדת ברוחב צר —
+   נצפה במוקאפ עצמו — וזו בדיוק משפחת-הכשל של תווית-עברית מול ערך-LTR שנרשמה ב-src/CLAUDE.md. */
+.vwrap{display:inline-flex; align-items:center; gap:6px; white-space:nowrap}
+.unit{font-size:12px; color:var(--s500)}
+
+/* משפט-אזהרה על סוג מסוכן. ענבר, לא אדום — זו הנחיה, לא שגיאה. */
+.danger-note{margin:0 0 14px; padding:10px 14px; background:var(--amber50);
+     border:1px solid var(--amber200); border-radius:var(--r-lg); color:var(--amber800);
+     font-size:12.5px; line-height:1.65}
+
+/* אילוץ-סכימה למשקולות. ירוק כשתקין, ענבר כששבור. */
+.sumbar{display:flex; align-items:center; justify-content:space-between; gap:10px;
+     padding:9px 14px; border-radius:var(--r-lg); font-size:13px; font-weight:600;
+     background:var(--green50); border:1px solid var(--green200); color:var(--green700)}
+
+/* עורך-התבניות. */
+.ted{display:grid; grid-template-columns:168px minmax(0,1fr); gap:12px; align-items:start}
+.tlist{border:1px solid var(--s200); border-radius:var(--r-lg); padding:5px}
+.tlist .ti{padding:7px 10px; border-radius:var(--r-md); font-size:13px; color:var(--s600); cursor:pointer}
+.tlist .ti.on{background:var(--teal50); color:var(--teal700); font-weight:600}
+.tbody{border:1px solid var(--s300); border-radius:var(--r-lg); padding:12px 14px;
+     background:var(--s50); line-height:2.1; font-size:13.5px; color:var(--s700)}
+.var{display:inline-block; background:var(--teal100); color:var(--teal700); border-radius:5px;
+     padding:1px 7px; font-size:12.5px; font-weight:600; white-space:nowrap}
+.varbank{margin-top:12px; border-top:1px solid var(--s200); padding-top:11px}
+.varbank .hd{font-size:12px; color:var(--s500); margin-bottom:7px}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{border:1px solid var(--s300); background:#fff; color:var(--s600); border-radius:999px;
+     padding:3px 10px; font-size:12.5px; cursor:pointer}
+.chip.miss{border-color:var(--amber200); background:var(--amber50); color:var(--amber800); font-weight:600}
+
+/* שורת-שמירה דביקה בתחתית הפאנל. */
+.saverow{display:flex; align-items:center; justify-content:space-between; gap:10px;
+     margin-top:14px; padding-top:12px; border-top:1px solid var(--s200)}
+.saverow .hint{font-size:12px; color:var(--s500)}
+</style>
+</head>
+<body>
+
+<aside class="side">
+  <div class="logo">REG&#8209;IN</div>
+  <nav>
+    <span class="nav-i"><span class="ic">▢</span>מסך הבית</span>
+    <span class="nav-i"><span class="ic">▢</span>לקוחות</span>
+    <span class="nav-i"><span class="ic">▢</span>הצעות מחיר</span>
+    <span class="nav-i"><span class="ic">▢</span>פרויקטים</span>
+    <span class="nav-i"><span class="ic">▢</span>כספים</span>
+    <span class="nav-i"><span class="ic">▢</span>דו&#8221;חות</span>
+    <span class="nav-i on"><span class="ic">▢</span>ניהול מערכת</span>
+  </nav>
+</aside>
+
+<header class="top">
+  <div></div>
+  <div class="who">
+    <div style="text-align:right">
+      <div style="font-size:13px; font-weight:600">דנה כהן</div>
+      <div style="font-size:11px; color:var(--s500)">מנכ&#8221;ל</div>
+    </div>
+    <div class="av">ד</div>
+  </div>
+</header>
+
+<main>
+
+  <div class="readme">
+    <b>מוקאפ&#8209;הצעה למודול 9 — לשונית &#8221;פרמטרים&#8221;. טרם אושר.</b><br>
+    האפשרות המומלצת מבין שלוש: <b>רשימת סוגים מימין, ומסך הסוג נפתח משמאל</b>. הנימוק:
+    חמשת סוגי הפרמטרים אינם &#8221;אותה חוויה&#8221; — אחד הוא מספרים, אחד הוא נוסחי מייל,
+    ואחד הוא משקולות ששולטות במי מקבל עבודה. ניווט אחיד, ולכל סוג המסך שמתאים לו.<br>
+    🔑 <b>החלוקה לחמישה אינה בחירה עיצובית</b> — היא <span class="ltr">param_type</span> שכבר
+    קיים במסד. <b>כל הערכים כאן אמיתיים</b>, נשלפו <span class="ltr">28/08/2026</span>.
+  </div>
+
+  <h1>ניהול מערכת</h1>
+  <div class="psub">משתמשים, הרשאות, מחירים ופרמטרים — מנכ&#8221;ל בלבד</div>
+
+  <div class="viewlabel">תצוגה א׳ — סוג פשוט נבחר (&#8221;תמחור ותזמון&#8221;)</div>
+
+  <div class="card" style="padding-top:0">
+    <div class="tabs">
+      <button class="tab">ניהול משתמשים</button>
+      <button class="tab">הרשאות</button>
+      <button class="tab">מחירים</button>
+      <button class="tab on">פרמטרים</button>
+    </div>
+
+    <div style="padding-top:16px">
+      <div class="psearch">
+        <span class="mg">⌕</span>
+        <input value="חיפוש בכל 39 ההגדרות…" readonly>
+      </div>
+
+      <div class="md">
+        <div class="types">
+          <div class="type-i on"><span class="nm">תמחור ותזמון</span><span class="ct">6</span></div>
+          <div class="type-i"><span class="nm">בקרה והתראות</span><span class="ct">6</span></div>
+          <div class="type-i"><span class="nm">תבניות מייל</span><span class="ct">13</span></div>
+          <div class="type-i"><span class="nm">התאמת דיילות</span><span class="ct">13</span></div>
+          <div class="type-i"><span class="nm">טכני</span><span class="ct">1</span></div>
+        </div>
+
+        <div class="pane">
+          <h2>תמחור ותזמון</h2>
+          <p class="lead">הערכים שמנוע התמחור וההצעות קורא. שינוי משפיע על הצעות חדשות בלבד —
+             הצעה שכבר אושרה שומרת את הערכים שהוקפאו בה.</p>
+
+          <table>
+            <thead>
+              <tr><th style="width:46%">הגדרה</th><th style="width:26%">ערך</th><th>הערה</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="cell"><div>אחוז מע&#8221;מ</div></div></td>
+                <td><span class="vwrap"><input class="vin" value="18"><span class="unit">%</span></span></td>
+                <td class="cell"><span class="sub">‏0–100, עד שתי ספרות אחרי הנקודה</span></td>
+              </tr>
+              <tr>
+                <td>יחס אורחים לדיילת</td>
+                <td><span class="vwrap"><input class="vin" value="50"><span class="unit">אורחים</span></span></td>
+                <td class="cell"><span class="sub">מספר שלם חיובי</span></td>
+              </tr>
+              <tr>
+                <td>תוקף הצעת מחיר</td>
+                <td><span class="vwrap"><input class="vin" value="30"><span class="unit">ימים</span></span></td>
+                <td class="cell"><span class="sub">מספר שלם חיובי</span></td>
+              </tr>
+              <tr>
+                <td>סכום נסיעות למשמרת</td>
+                <td><span class="vwrap"><input class="vin" value="22.60"><span class="unit">&#8362;</span></span></td>
+                <td class="cell"><span class="sub">סכום, עד שתי ספרות</span></td>
+              </tr>
+              <tr>
+                <td>שכר מינימום שעתי</td>
+                <td><span class="vwrap"><input class="vin" value="35"><span class="unit">&#8362;</span></span></td>
+                <td class="cell"><span class="sub">משמש לבדיקת תעריפי דיילות</span></td>
+              </tr>
+              <tr>
+                <td>תנאי תשלום</td>
+                <td><span class="vwrap"><input class="vin" value="30"><span class="unit">ימים</span></span></td>
+                <td class="cell"><span class="sub">קובע מתי חשבונית נחשבת באיחור</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="saverow">
+            <span class="hint">שינית 0 מתוך 6</span>
+            <span><button class="btn btn-outline btn-sm">ביטול</button>
+                  <button class="btn btn-primary btn-sm">שמור שינויים</button></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="viewlabel">תצוגה ב׳ — &#8221;תבניות מייל&#8221;: עורך, לא טופס</div>
+
+  <div class="card" style="padding-top:0">
+    <div class="tabs">
+      <button class="tab">ניהול משתמשים</button>
+      <button class="tab">הרשאות</button>
+      <button class="tab">מחירים</button>
+      <button class="tab on">פרמטרים</button>
+    </div>
+
+    <div style="padding-top:16px">
+      <div class="psearch"><span class="mg">⌕</span><input value="חיפוש בכל 39 ההגדרות…" readonly></div>
+
+      <div class="md">
+        <div class="types">
+          <div class="type-i"><span class="nm">תמחור ותזמון</span><span class="ct">6</span></div>
+          <div class="type-i"><span class="nm">בקרה והתראות</span><span class="ct">6</span></div>
+          <div class="type-i on"><span class="nm">תבניות מייל</span><span class="ct">13</span></div>
+          <div class="type-i"><span class="nm">התאמת דיילות</span><span class="ct">13</span></div>
+          <div class="type-i"><span class="nm">טכני</span><span class="ct">1</span></div>
+        </div>
+
+        <div class="pane">
+          <h2>תבניות מייל</h2>
+          <p class="lead">נוסח כל מייל שהמערכת שולחת. הסוגריים המודגשים מוחלפים בערך אמיתי
+             ברגע השליחה.</p>
+
+          <div class="ted">
+            <div class="tlist">
+              <div class="ti on">זימון משמרת</div>
+              <div class="ti">אישור סופי שיבוץ</div>
+              <div class="ti">הצעת מחיר</div>
+              <div class="ti">חשבונית מס</div>
+              <div class="ti">דוח שכר</div>
+              <div class="ti">משוב לקוח</div>
+              <div class="ti" style="color:var(--s400)">ועוד 7…</div>
+            </div>
+
+            <div>
+              <div class="tbody">
+                היי <span class="var">שם דיילת</span>,<br>
+                התאמת לאירוע חדש של <span class="ltr">REG-IN</span>!<br>
+                אירוע: <span class="var">שם פרויקט</span><br>
+                תאריך: <span class="var">תאריך אירוע</span><br>
+                שעות: <span class="var">שעת התחלה</span> עד <span class="var">שעת סיום</span><br>
+                מיקום: <span class="var">עיר אירוע</span><br>
+                תעריף: <span class="var">תעריף שעתי</span> ש&#8221;ח לשעה + נסיעות<br>
+                לאישור הגעה או דחייה, לחצי על הלינק הבא: <span class="var">לינק אישור משמרת</span><br>
+                שימי לב: השיבוץ הינו על בסיס כל הקודם זוכה.
+              </div>
+
+              <div class="varbank">
+                <div class="hd">מה מותר להכניס בתבנית הזו — לחיצה מוסיפה לטקסט</div>
+                <div class="chips">
+                  <span class="chip">שם דיילת</span>
+                  <span class="chip">שם פרויקט</span>
+                  <span class="chip">תאריך אירוע</span>
+                  <span class="chip">שעת התחלה</span>
+                  <span class="chip">שעת סיום</span>
+                  <span class="chip">עיר אירוע</span>
+                  <span class="chip">תעריף שעתי</span>
+                  <span class="chip">לינק אישור משמרת</span>
+                </div>
+                <div class="hd" style="margin-top:9px; margin-bottom:0">
+                  הרשימה משתנה לפי התבנית — &#8221;לינק אישור משמרת&#8221; קיים רק בזימון,
+                  ו&#8221;חתימת שולח&#8221; רק בהצעת מחיר.
+                </div>
+              </div>
+
+              <div class="saverow">
+                <span class="hint">כל 8 המשתנים במקומם</span>
+                <span><button class="btn btn-outline btn-sm">ביטול</button>
+                      <button class="btn btn-primary btn-sm">שמור תבנית</button></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="viewlabel">תצוגה ג׳ — משתנה נמחק: המסך אומר מה נשבר</div>
+
+  <div class="card">
+    <div class="pane" style="border:none; padding:0">
+      <div class="tbody">
+        היי <span class="var">שם דיילת</span>,<br>
+        התאמת לאירוע חדש של <span class="ltr">REG-IN</span>!<br>
+        אירוע: <span class="var">שם פרויקט</span><br>
+        תעריף: <span class="var">תעריף שעתי</span> ש&#8221;ח לשעה + נסיעות<br>
+        לאישור הגעה או דחייה, לחצי על הלינק הבא:
+      </div>
+
+      <div class="danger-note" style="margin-top:12px">
+        <b>נמחק המשתנה &#8221;לינק אישור משמרת&#8221;.</b><br>
+        בלעדיו הדיילת מקבלת זימון שאי אפשר לאשר, והשיבוץ לא יתקדם.
+        אפשר להחזיר אותו מהרשימה שלמטה.
+      </div>
+
+      <div class="varbank" style="border-top:none; padding-top:0">
+        <div class="hd">מה מותר להכניס בתבנית הזו</div>
+        <div class="chips">
+          <span class="chip">שם דיילת</span>
+          <span class="chip">שם פרויקט</span>
+          <span class="chip">תאריך אירוע</span>
+          <span class="chip">שעת התחלה</span>
+          <span class="chip">שעת סיום</span>
+          <span class="chip">עיר אירוע</span>
+          <span class="chip">תעריף שעתי</span>
+          <span class="chip miss">לינק אישור משמרת ✚</span>
+        </div>
+      </div>
+
+      <div class="saverow">
+        <span class="hint" style="color:var(--amber800); font-weight:600">
+          אפשר לשמור — אבל כדאי להחזיר את המשתנה קודם</span>
+        <span><button class="btn btn-outline btn-sm">ביטול</button>
+              <button class="btn btn-primary btn-sm">שמור תבנית</button></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="viewlabel">תצוגה ד׳ — &#8221;התאמת דיילות&#8221;: הסוג היחיד ששינוי בו משנה מי מקבל עבודה</div>
+
+  <div class="card" style="padding-top:0">
+    <div class="tabs">
+      <button class="tab">ניהול משתמשים</button>
+      <button class="tab">הרשאות</button>
+      <button class="tab">מחירים</button>
+      <button class="tab on">פרמטרים</button>
+    </div>
+
+    <div style="padding-top:16px">
+      <div class="psearch"><span class="mg">⌕</span><input value="חיפוש בכל 39 ההגדרות…" readonly></div>
+
+      <div class="md">
+        <div class="types">
+          <div class="type-i"><span class="nm">תמחור ותזמון</span><span class="ct">6</span></div>
+          <div class="type-i"><span class="nm">בקרה והתראות</span><span class="ct">6</span></div>
+          <div class="type-i"><span class="nm">תבניות מייל</span><span class="ct">13</span></div>
+          <div class="type-i on"><span class="nm">התאמת דיילות</span><span class="ct">13</span></div>
+          <div class="type-i"><span class="nm">טכני</span><span class="ct">1</span></div>
+        </div>
+
+        <div class="pane">
+          <h2>התאמת דיילות</h2>
+          <p class="lead">הערכים שקובעים איך המערכת מדרגת מועמדות לשיבוץ.</p>
+
+          <div class="danger-note">
+            <b>שינוי כאן משנה שיבוצים אמיתיים.</b> הדירוג שמנהלת השיבוץ תראה מחר ייראה אחרת,
+            והיא לא תדע שמשהו השתנה. שינוי כדאי לתאם איתה מראש.
+          </div>
+
+          <div class="sumbar" style="margin-bottom:14px">
+            <span>שלוש המשקולות מסתכמות ל&#8209;<span class="ltr">1.00</span></span>
+            <span class="tag ok">תקין</span>
+          </div>
+
+          <table>
+            <thead><tr><th style="width:46%">הגדרה</th><th style="width:26%">ערך</th><th>הערה</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>משקולת היענות</td>
+                <td><input class="vin" value="0.40"></td>
+                <td class="cell"><span class="sub">כמה מהציון נקבע לפי היענות לזימונים</span></td>
+              </tr>
+              <tr>
+                <td>משקולת אמינות</td>
+                <td><input class="vin" value="0.35"></td>
+                <td class="cell"><span class="sub">כמה מהציון נקבע לפי דירוגי עבר</span></td>
+              </tr>
+              <tr>
+                <td>משקולת קרבה</td>
+                <td><input class="vin" value="0.25"></td>
+                <td class="cell"><span class="sub">כמה מהציון נקבע לפי מרחק מהאירוע</span></td>
+              </tr>
+              <tr>
+                <td>מרחק שממנו מתחילים להוריד ניקוד</td>
+                <td><span class="vwrap"><input class="vin" value="40"><span class="unit">ק&#8221;מ</span></span></td>
+                <td class="cell"><span class="sub">מספר שלם חיובי</span></td>
+              </tr>
+              <tr>
+                <td>מרחק שמעליו הניקוד מתאפס</td>
+                <td><span class="vwrap"><input class="vin" value="80"><span class="unit">ק&#8221;מ</span></span></td>
+                <td class="cell"><span class="sub">חייב להיות גדול מהערך שמעליו</span></td>
+              </tr>
+              <tr>
+                <td>מרכיב האמינות פעיל</td>
+                <td><span class="tag muted">כבוי</span></td>
+                <td class="cell">
+                  <span class="sub" style="color:var(--amber800)">
+                    לא ניתן להדליק עדיין — נדרש מינימום דירוגים לכל דיילת כדי שהממוצע יהיה אמין
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="3" style="color:var(--s400); font-size:12.5px">ועוד 7 הגדרות…</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="saverow">
+            <span class="hint">שינית 0 מתוך 13</span>
+            <span><button class="btn btn-outline btn-sm">ביטול</button>
+                  <button class="btn btn-primary btn-sm">שמור שינויים</button></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       מה הכרעתי לבד — לאישור ישי, ולא הוסתר
+       ═══════════════════════════════════════════════════════════════════
+       ① שמות בעברית ידידותית במקום שמות-המסד. `שער_מרחק_קמ` הוצג כ"מרחק שממנו
+          מתחילים להוריד ניקוד", `גולפוסט_מרחק_קמ` כ"מרחק שמעליו הניקוד מתאפס".
+          הנימוק: זו בדיוק ההכרעה של 28/08 להוציא אוצר-מילים פנימי מהמסך. ⚠️ המחיר:
+          מי שמחפש לפי שם-המסד לא ימצא — ולכן החיפוש חייב לחפש בשני השמות.
+       ② "התאמת דיילות" ולא "Smart Match" ברשימת-הסוגים, מאותה סיבה.
+       ③ אילוץ-הסכימה 1.00 — נגזר מהדאטה החיה (0.40+0.35+0.25) ולא מהאפיון.
+          **טעון אישור: האם זה באמת אילוץ קשיח, או צירוף-מקרים בערכי-הזריעה?**
+       ④ שורת "שינית N מתוך M" — אין לה מקור. נוספה כי טופס עם 13 שדות בלי חיווי
+          שינוי הוא מקום שקל לשמור בו בטעות.
+       ⑤ ההערה על מרכיב-האמינות מנוסחת כאן במילים; **הניסוח המדויק לא הוכרע**,
+          והחוב עצמו רשום ב-PROJECT_MASTER §6 (🚧 מ9 ← מ4/מ6).
+       ⑥ מה שלא צויר: מצב-טעינה, מצב-שגיאה, חסימת-הרשאה למי שאינו מנכ"ל,
+          ועורך התבניות במצב שגיאת-שמירה.
+  -->
+
+</main>
+</body>
+</html>

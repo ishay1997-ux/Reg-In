@@ -82,14 +82,14 @@ Governing principle, verbatim (`spec.md` §②): *"המערכת לא דוחפת,
 | 2 | Project card shell + identity area (surface 2) | ✅ full | — | — |
 | 3 | Logistics tab (surface 3) — read + scope-change history | ✅ read + the read policy M5 owes | Item-status editing stays M5's screen | `🚧 מ5 ← מ6` (contract item 7) |
 | 4 | Hostess team tab (surface 4) — read + round history | ✅ full | Invitation/release actions stay M4's screen | — |
-| 5 | Operational closing (surface 5) | ✅ full — attendance, quality mark, per-hostess hours, report upload | 🚧 **Final gross profit is NOT frozen here** (Ishay 14/08/2026 01:17 — §7.52 means the *financial* closing) | `🚧 מ8 ← מ6` |
+| 5 | Operational closing (surface 5) | ✅ full — attendance, quality mark, per-hostess hours, report upload | ~~🚧 **Final gross profit is NOT frozen here**~~ **paid 28/08/2026 (M8)** — `archive_project` freezes `project_finance.final_profit`; proven live on #12 (**207.40**), and §7.52 flipped to green. Struck 01/09/2026 at m8's close. *(Ishay 14/08/2026 01:17 — §7.52 means the *financial* closing)* | `🚧 מ8 ← מ6` |
 | 6 | Scope change (surface 6) | ✅ full | 🚧 **מ5** — logistics-side UI for the resulting `planned_qty` change | `🚧 מ5 ← מ6` (contract item 4) |
-| 7 | Project cancellation (surface 7) | ✅ full — status, release, mail, stamp, type | 🚧 **מ8** — the 0/50/100 compensation computation itself | `🚧 מ8 ← מ6` |
+| 7 | Project cancellation (surface 7) | ✅ full — status, release, mail, stamp, type | ~~🚧 **מ8** — the 0/50/100 compensation computation itself~~ **paid 28/08/2026 (M8)** — `finance_cancellation_fee_proposal` computes it, with H2/H3/H4 correcting the 72h boundary and the `other` classification; ran live on #15 (goods **1,225.00**, team 0 at 247.9h). Struck 01/09/2026 | `🚧 מ8 ← מ6` |
 | 8 | Customer projects tab (surface 8) | ✅ full — `מתקרבים`/`התקיימו` split, 2 tiles, dormant filter | — | `🚧 מ6` A1 · A2 · A3 · A12 · A13 |
 | 9 | Attendance → Smart-Match reliability | ✅ M6 **writes** the three columns and aligns `smartMatch.js` | 🚧 **מ9** — flipping `מרכיב_אמינות_פעיל` to `true` is a params change, not M6's | `🚧 מ9 ← מ4` (`PROJECT_MASTER:465`) |
 | 10 | Email send + journal for 4 mail types | ✅ send + `email_log` rows | 🚧 **מ10** — retry engine for a failed send (`§7.36`) | `🚧 מ10` |
-| 11 | Finance-owned columns on `projects` | ✅ the dedicated RPC (M6-9) exists and is gated on `'כספים'` | 🚧 **מ8** — the screen that calls it | `🚧 מ8 ← מ6` |
-| 12 | Public feedback page `/feedback/:token` | ❌ **not built** | 🔮 **מ8** — candidate, not a ruling | `🔮 🚧 מ8 ← מ6` |
+| 11 | Finance-owned columns on `projects` | ✅ the dedicated RPC (M6-9) exists and is gated on `'כספים'` | ~~🚧 **מ8** — the screen that calls it~~ **paid 28/08/2026 (M8)** — S2 `ClosingWindowDialog` calls the `'כספים'`-gated RPC family. Struck 01/09/2026 | `🚧 מ8 ← מ6` |
+| 12 | Public feedback page `/feedback/:token` | ~~❌ **not built**~~ ✅ **BUILT by M8, 28/08/2026** — S4 `PublicFeedbackPage.jsx` + the `get_feedback_page`/`submit_feedback` anon pair, rate-limited, token dies at archive; ran live on #12 (score 5 through the public page). Struck 01/09/2026 at m8's close | ~~🔮 **מ8** — candidate, not a ruling~~ ✅ **adopted — Ishay 26/08/2026** | ~~`🔮 🚧 מ8 ← מ6`~~ ✅ `PROJECT_MASTER §6` |
 | 13 | Reports (5 of them) | ❌ **not built** | 🚧 **מ11** — Discovery starts from the question, not the report | `🚧 מ11 ← מ6` |
 | 14 | E2E fixture de-pinning | ✅ must be checked before 28/08 | — | `🚧 מ6 ← מ3` (A10) |
 
@@ -1027,6 +1027,31 @@ Unchanged from module 1: Supabase Auth (Google), session in `sessionStorage`, `c
 ---
 
 ### Dated entries
+- 🔗 `28/08/2026 00:5X` — **M6 CODE IS BEING EDITED BY MODULE 8's PHASE-4 RIPPLE. This module stays
+  CLOSED; the change is m8's, recorded here so a future reader of m6 is not surprised by a diff.**
+  **What changes:** the survey mail's link moves from the `קישור_בסיס_סקר_לקוחות` param (a live
+  Google Form, `https://forms.gle/…`) to m8's own `/feedback/:token` URL, with the token minted
+  lazily at send time. Files: `src/lib/shiftEmails.js` (+ its test) · `src/modules/06_projects/
+  ClosingTab.jsx` (+ test) · `closingApi.js` · `api.js`. **`close_project_operationally` is NOT
+  touched** and the `sent` timing is unchanged (AR-5 survives).
+  🔑 **And this guide is the source that settled a question Ishay raised tonight:** its step-12 row
+  and §4 both state that `/feedback/:token` was **explicitly NOT built here** — *"a 🔮 candidate for
+  M8"*, a candidate and **not a ruling**. ⇒ the ruling that replaced his four-question Google Form
+  with a one-question in-app page was made in **m8's Discovery**, not here. Recorded in
+  `module-8.md` §10 under the same date, where the open product question now lives.
+  ⚠️ **The Google-Form param itself is left seeded and orphaned, deliberately** — nothing reads it
+  after the ripple, and deleting a seeded param with a real URL in it is a separate decision nobody
+  has made.
+  🔨 **Status `28/08 01:0X`: in flight, NOT yet committed and NOT yet regression-verified.** Files
+  already modified in the working tree: `src/lib/shiftEmails.js` (+ test) · `ClosingTab.jsx`
+  (+ test) · `closingApi.js` · `api.js`. **The gate's rule for this step, stated in advance so it
+  cannot be softened afterwards: m6's existing suites must pass UNCHANGED. A test that was loosened,
+  retargeted or deleted to accommodate the ripple is a regression wearing a green badge** — that is
+  the specific lens the phase-4 panel was given for these files.
+  ⚠️ **And one thing this ripple must NOT do, restated because it is easy to lose:** the stale
+  comment in `shiftEmails.js` asserting the OLD behaviour (*"הקישור קבוע"*) has to be flipped, not
+  left standing. A comment that contradicts the code it sits beside outlives everyone who knew
+  better — iron rule 13(ח)'s class.
 
 - **`14/08/2026 01:25` — Guide created as `module-6.draft.md`.** Not the approval gate and not the saved guide; a reviewer audits it next, then it is renamed. Nothing committed, no other file touched.
 - **`14/08/2026 10:20` — Renamed `module-6.draft.md` → `module-6.md`; the guide is now live.** **What the `.draft` suffix was protecting against, and why it can come off:** the draft was written by one agent in one pass, and a fresh-context reviewer returned **8 blockers**. All eight are closed, and the two that mattered most were not content errors but **routing** errors — findings that were measured correctly, written down correctly, and filed where no build step would ever read them *(the 03:12 audit; seven of them)*. 🚫 **What the rename does NOT mean: it is not approval to start building.** ⚠️ **Rule 15's `🔻` gates still stand, and the Phase-1 door is 👤 — Ishay's**; step 1.1 applies a migration, which is his gate under iron rule 12 and the typed-echo protocol. **Live means "this is the plan of record", not "go".**

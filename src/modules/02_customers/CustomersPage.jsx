@@ -28,12 +28,14 @@ import {
   countActiveFilters,
   deriveCustomerMetrics,
   matchesCustomerFilters,
+  needsSatisfactionAttention,
   sortCustomers,
 } from '@/lib/customers'
 import { QUOTE_SCREEN_PARAM_NAMES } from '@/lib/quotes'
 import { formatShekelWhole } from '@/lib/pricing'
 import { DORMANT_THRESHOLD_PARAM_NAME, isCustomerDormant } from '@/lib/customerProjects'
 import Money from '@/components/Money'
+import RatingStars from '@/components/RatingStars'
 import {
   getCustomerScreenParams,
   listCustomers,
@@ -57,17 +59,33 @@ import {
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 
-// שביעות-רצון (§7.80, הכרעת P13): כוכבים כבויים + "אין נתונים עדיין" בלבד — בלי תג-טקסט ("מצוין").
-// הנתונים יגיעו רק במודול 8 (feedback_score); עד אז העמודה קיימת-אך-רדומה כדי שהמסך ישקף את האפיון.
-function SatisfactionPlaceholder() {
-  return (
-    <div className="flex flex-col gap-0.5" title="אין נתונים עדיין">
-      <div className="flex gap-0.5 text-slate-300">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Star key={i} className="size-3" />
-        ))}
+// שביעות-רצון (§7.80, הכרעת P13): כוכבים + "אין נתונים עדיין" — **בלי תג-טקסט** ("מצוין").
+// ‏🆕 **הודלקה 28/08/2026 (מ8 · צעד 4.2): העמודה כבר אינה רדומה.** עד אז לא היה `feedback_score`
+// במערכת והתא הציג חמישה כוכבים אפורים בקביעות; מ8 חיבר את הנתון, והתא מציג עכשיו את הממוצע
+// האמיתי (‏`deriveCustomerMetrics` — בעלי `feedback_status='completed'` בלבד, ה8).
+// 🔴 הצורה `4.5 ★` (‏`RatingStars variant="compact"`) ולא חמישה גליפים: הערך הוא **ממוצע**,
+// וגליפים יודעים לצייר רק שלם — 4.5 היה נצבע כחמישה מלאים. זו גם הצורה שמוקאפ-הטבלה מצייר.
+// ‏`null` = אין ולו משוב אחד שהושלם ⇒ הכוכבים נשארים אפורים והמשפט נשאר — **לא "0 ★"**.
+function SatisfactionCell({ average }) {
+  if (average == null) {
+    return (
+      <div className="flex flex-col gap-0.5" title="אין נתונים עדיין">
+        <div className="flex gap-0.5 text-slate-300">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Star key={i} className="size-3" />
+          ))}
+        </div>
+        <span className="text-xs text-slate-400">אין נתונים עדיין</span>
       </div>
-      <span className="text-xs text-slate-400">אין נתונים עדיין</span>
+    )
+  }
+  return (
+    <div className="flex flex-col gap-0.5">
+      <RatingStars value={average} variant="compact" />
+      {needsSatisfactionAttention(average) && (
+        // אותה תווית מילולית בדיוק של ה16/§7.80 (`scoreTagText` במ8) — לא ניסוח מקומי חדש.
+        <span className="text-xs font-medium text-rose-700">טעון בירור</span>
+      )}
     </div>
   )
 }
@@ -306,6 +324,8 @@ export default function CustomersPage() {
       createdAfter: searchParams.get('createdAfter') ?? undefined,
       // 🆕 A3 — צ'יפ עליון כמו "קהל דיוור" (לא בפאנל-המתקדם): בוליאני-חד-כיווני.
       dormantOnly: boolParam(searchParams.get('dormant')),
+      // 🆕 A3 · החצי השני (מ8 · צעד 4.2) — "טעון בירור". אותה תבנית-צ'יפ בדיוק.
+      lowSatisfactionOnly: boolParam(searchParams.get('lowSatisfaction')),
     }),
     [searchParams],
   )
@@ -320,6 +340,7 @@ export default function CustomersPage() {
       newDays: next.newWithinDays,
       createdAfter: next.createdAfter,
       dormant: next.dormantOnly,
+      lowSatisfaction: next.lowSatisfactionOnly,
     })
   }
 
@@ -339,10 +360,16 @@ export default function CustomersPage() {
     // (ב-sortCustomers) ממילא לא אכפת לו מתי הוא הגיע. null = עדיין נטען / אין הרשאה —
     // התא מציג "—"; is_dormant נגזר פעם אחת (isCustomerDormant, src/lib/customerProjects.js)
     // כדי שהאריח בכרטיס-הלקוח והמסננת כאן לא יוכלו לסטות זה מזה (⑨).
+    // 🆕 `avg_feedback` מצטרף לזוג הזה מאותה סיבה בדיוק (מ8 · 4.2): מסנן-"טעון בירור" מסנן
+    // לפיו, ולכן הוא חייב להיות על השורה **לפני** הסינון. 🔴 והוא נגזר דרך
+    // `deriveCustomerMetrics` — אותה פונקציה שהכרטיס קורא לה — כדי שהרשימה והכרטיס לא יוכלו
+    // להציג שני ממוצעים שונים לאותו לקוח (⑨/כלל 14). מסנן-האוכלוסייה (`completed` בלבד, ה8)
+    // חי שם ולא כאן.
     const withDerived = customers.map((c) => ({
       ...c,
       total_revenue: revenueByCustomer?.[c.customer_id]?.totalRevenue ?? null,
       is_dormant: isCustomerDormant(projectsByCustomer[c.customer_id], today, dormantThresholdDays),
+      avg_feedback: deriveCustomerMetrics(projectsByCustomer[c.customer_id] ?? []).avgFeedback,
     }))
     // מסנן-הסטטוס: 'active'/'inactive' מסננים לסטטוס יחיד, 'all' מסיר את ההגבלה (status=undefined).
     // createdAfter ("נוספו לאחרונה") מחושב במסננת (event handler) ומגיע דרך ...filters — לא כאן,
@@ -600,6 +627,37 @@ export default function CustomersPage() {
               >
                 רדומים
               </Button>
+              {/* 🆕 A3 · החצי השני (מ8 · צעד 4.2): "טעון בירור" — לקוחות שממוצע-המשוב שלהם
+                  מתחת ל-3. **למה צ'יפ ולא שדה בפאנל-המתקדם:** אותו תקדים בדיוק שהצ'יפ
+                  "רדומים" נשען עליו — מסננת קצרה ותכופה יושבת בסרגל, לא בפאנל.
+                  ⚠️ **וזה משאיר פער גלוי שצעד 4.2 לא הוסמך לסגור, ולכן הוא מדווח ולא מתוקן
+                  כאן:** שדה "שביעות רצון" בפאנל-המתקדם (`CustomersFilterSheet.jsx`) עדיין
+                  **מושבת** ונושא את המלל "אין נתונים עדיין" — מלל שהיה נכון עד היום ומפסיק
+                  להיות נכון ברגע שהעמודה הזו נדלקת. 🔴 **ולמה זו הכרעת-ישי ולא שלנו:** השדה
+                  הוסר בסגירת-מ2 (11/07 12:06, "המשבצת גדולה מדי") **והוחזר באותו יום
+                  בהכרעתו** ("סינון חשוב", `module-2.md §9`) — כלומר גם הסרתו וגם חיווטו
+                  מתנגשים בהכרעה רשומה שלו.
+                  🎨 גוון ורוד-אדמדם ולא ענבר: §7.80 קובע "אדום <3" (ענבר שמור ל"רדומים"). */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  setFilters((f) => ({
+                    ...f,
+                    lowSatisfactionOnly: f.lowSatisfactionOnly !== true ? true : undefined,
+                  }))
+                }
+                aria-pressed={filters.lowSatisfactionOnly === true}
+                className={cn(
+                  'h-auto py-2.5 px-4 rounded-lg gap-2',
+                  filters.lowSatisfactionOnly === true
+                    ? 'bg-rose-50 border-rose-300 text-rose-800 hover:bg-rose-100'
+                    : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
+                )}
+                data-testid="customers-preset-low-satisfaction"
+              >
+                טעון בירור
+              </Button>
               {/* כפתור-יחיד לתצוגת-הארכיון (הכרעת-ישי 11/07): בתצוגת הפעילים הוא מוביל לארכיון;
                   בתצוגת הארכיון הוא חוזר לפעילים. אף פעם לא מציג את שתי הרשימות יחד. */}
               <Button
@@ -775,7 +833,7 @@ export default function CustomersPage() {
                             )}
                           </td>
                           <td className="py-3">
-                            <SatisfactionPlaceholder />
+                            <SatisfactionCell average={customer.avg_feedback} />
                           </td>
                           <td className="py-3">
                             <span

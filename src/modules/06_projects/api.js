@@ -393,6 +393,25 @@ export async function sendDetailsChangedMails(project, hostessIds) {
   return outcome
 }
 
+// טביעת טוקן-המשוב, רגע לפני שמייל-הסקר יוצא (אדוות-מ8 ①, מיגרציה `20260827155303`).
+// 🔑 **get-or-create בשרת, ולכן אין כאן שום בדיקת "האם כבר יש"**: שליחה חוזרת של אותו מייל
+// מחזירה את אותו הטוקן ואינה פוסלת קישור שכבר בידי הלקוח (R4-F11).
+// 🔴 ה-RPC מגודר ב-**'פרויקטים'** ולא ב'כספים' — השולחת היא מנהלת-הפרויקטים בסגירה התפעולית;
+// גידור ב'כספים' היה מפיל לה כל שליחה. 🚫 ו-`close_project_operationally` **לא נגעה** (R4-F11):
+// הטביעה עצלה, ברגע-המייל בלבד, ולכן תזמון ה-`sent` של הסגירה נשאר בדיוק כפי שהיה.
+// ⚠️ **ומה כן קורה כשהשליחה נכשלת אחרי טביעה מוצלחת: נשאר טוקן חי שקישורו לא נשלח.** זה מכוון
+// ולא דליפה — הטוקן הוא 32 תווי-אקראי שאיש אינו יכול לנחש, והשליחה-החוזרת תשתמש בו עצמו.
+export async function mintFeedbackToken(projectId) {
+  const { data, error } = await supabase.rpc('mint_feedback_token', { p_project_id: projectId })
+  if (error) throw toRpcError(error, 'הנפקת קישור-המשוב נכשלה.')
+  // מחרוזת ריקה/`null` = לא התקבל טוקן. **לא ממשיכים לשליחה** — מייל עם קישור מת גרוע ממייל
+  // שלא יצא, וזו בדיוק חתימת-ה-RLS השקטה שהמערכת נשמרת ממנה.
+  if (!data) {
+    throw toError({ code: RLS_DENIED_CODE }, 'לא התקבל קישור-משוב — ייתכן שאין לך הרשאה.')
+  }
+  return data
+}
+
 export async function markFeedbackSurveySent(projectId) {
   const { data, error } = await supabase.rpc('mark_feedback_survey_sent', {
     p_project_id: projectId,

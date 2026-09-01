@@ -17,6 +17,23 @@ export const CUSTOMER_TYPE_LABELS = {
   nonprofit: 'עמותה',
 }
 
+// 🆕 סף "טעון בירור" — הציון שמתחתיו לקוח דורש בירור אנושי (§7.80 / ה16 של מודול 8:
+// ‏5=מצוין · 4=טוב · 3=בינוני · **1–2=טעון בירור**, "הקו האדום מתלכד עם סף-הבירור-הטלפוני
+// הקיים"). אותו קו בדיוק חי במסד: `record_feedback` דורשת `negative_feedback_reason` בכל
+// ציון **קטן מ-3** — כלומר הסף הזה אינו בחירת-מסך אלא הכלל שהמערכת כבר אוכפת.
+//
+// ⚠️ **ולמה המספר נכתב כאן ולא מיובא מ-`scoreTag` (src/lib/projectFinance.js), שמחזיקה את
+// אותה מדרגה:** ‏`scoreTag` **זורקת** על ציון שאינו שלם (‏`Number.isInteger` — הוא נועד
+// לציון-פרויקט בודד מהמסד), ואילו כאן מדובר ב**ממוצע** של כמה משובים (3.5). ייבוא היה
+// מפיל את המסך; שכפול-המדרגה מסומן במפורש כדי שמי שישנה אחד ידע שיש שני.
+export const SATISFACTION_ATTENTION_MAX = 3
+
+// ממוצע-משוב ⇒ האם הלקוח ברשימת-"טעון בירור". ‏null/לא-מספר = **אין נתון**, ולא "בסדר"
+// ולא "בעייתי" — ר' ההערה במסנן עצמו.
+export function needsSatisfactionAttention(avgFeedback) {
+  return typeof avgFeedback === 'number' && avgFeedback < SATISFACTION_ATTENTION_MAX
+}
+
 // חיפוש-טקסט סלחני-אך-חד-משמעי (§7.11): מתאים אם מחרוזת-החיפוש היא תת-מחרוזת בשם-החברה
 // או בשם-איש-הקשר, או **תחילית** של ה-ח"פ (company_number). ח"פ הוא מזהה ולכן התאמת-תחילית
 // בלבד (לא includes) — כדי שחיפוש "514" ימצא לקוח שח"פ שלו מתחיל ב-514, בלי התאמות-אמצע מקריות.
@@ -49,6 +66,7 @@ export function matchesCustomerFilters(customer, filters = {}) {
     status,
     createdAfter,
     dormantOnly,
+    lowSatisfactionOnly,
   } = filters
   // סטטוס: מסננים רק כשסופק ערך מפורש. toggle-הארכיון בעמוד שולח status='active' כברירת-מחדל
   // (מציג פעילים בלבד — סטיית-הכרעה מ-5.x, ר' §9 במדריך); כשמדליקים "הצג ארכיון" הוא לא נשלח כלל.
@@ -58,6 +76,14 @@ export function matchesCustomerFilters(customer, filters = {}) {
   // (`isCustomerDormant`, src/lib/customerProjects.js) תלויה בנתוני-פרויקטים חוצי-לקוח וב"היום",
   // ששניהם נטענים/מחושבים ברמת-העמוד. בוליאני-מפורש בלבד — כמו כל שאר הדגלים כאן.
   if (dormantOnly === true && customer.is_dormant !== true) return false
+  // 🆕 "טעון בירור" (A3 — מסנן-שביעות-הרצון שמודול 8 חייב למודול 2). אותה תבנית בדיוק כמו
+  // `is_dormant`: `avg_feedback` הוא ערך-נגזר שמוזרק לשורה **לפני** הסינון, כי הוא נשען על
+  // נתוני-פרויקטים חוצי-לקוח שהפונקציה הטהורה הזו אינה רואה. **ולמה `null` אינו עובר את
+  // המסנן:** לקוח שאיש מלקוחותיו לא ענה על סקר אינו "לקוח לא-מרוצה" — הוא לקוח שאין עליו
+  // נתון, ורשימת-הטיפול חייבת להכיל רק את מי שבאמת דורש טלפון (אותה דוקטרינת "ריק אינו 0").
+  if (lowSatisfactionOnly === true && !needsSatisfactionAttention(customer.avg_feedback)) {
+    return false
+  }
   if (customerType && customer.customer_type !== customerType) return false
   // הסכמת-דיוור: מסננים רק כשהפילטר בוליאני מפורש; undefined/null = "לא אכפת", לא מסנן.
   if (typeof marketingConsent === 'boolean' && customer.marketing_consent !== marketingConsent) {
@@ -84,7 +110,9 @@ export function countActiveFilters(filters = {}) {
     (filters.minDiscount != null ? 1 : 0) +
     (typeof filters.hasDiscount === 'boolean' ? 1 : 0) +
     (filters.newWithinDays ? 1 : 0) +
-    (filters.dormantOnly === true ? 1 : 0)
+    (filters.dormantOnly === true ? 1 : 0) +
+    // 🆕 "טעון בירור" — נספר כמו `dormantOnly`: צ'יפ בוליאני חד-כיווני, ולכן רק `true` נספר.
+    (filters.lowSatisfactionOnly === true ? 1 : 0)
   )
 }
 
@@ -228,10 +256,9 @@ export function validateExtraContacts(contacts = []) {
 //   projectCount — נגזר מיד מאורך הרשימה (0-נראה מוחזר null כדי לא להטעות כל עוד projects deny-all).
 //   totalRevenue + avgDealSize — מ-SSOT-התמחור של מ3 (src/lib/pricing.js).
 //   lastEventDate + isDormant — מתאריכי-הפרויקט של מ6.
-//   avgFeedback — מ-feedback_score של מ8. ⚠️ למחווט-מ8: האפיון (5.7.3) ממצע אירועי-עבר בלבד
-//   (getCustomerProjects לא מסנן סטטוס — לסנן פרויקטים-שהסתיימו לפני הממוצע).
-// ~~🚧 מ3~~ (שולם 05/08/2026) · 🚧 מ6 · 🚧 מ8 — רשום ב-PROJECT_MASTER §6 ("השלמות כרטיס לקוח"); כל מודול-יעד גורף
-// `grep '🚧 מ<מספרו>' §6` וחוזר לחווט כאן — כלל ברזל 15.
+//   avgFeedback — מ-feedback_score של מ8. ✅ **חובר 28/08/2026 (מ8, צעד 4.2)** — ר' ה8 למטה.
+// ~~🚧 מ3~~ (שולם 05/08/2026) · 🚧 מ6 · ~~🚧 מ8~~ (שולם 28/08/2026) — רשום ב-PROJECT_MASTER §6
+// ("השלמות כרטיס לקוח"); כל מודול-יעד גורף `grep '🚧 מ<מספרו>' §6` וחוזר לחווט כאן — כלל ברזל 15.
 // ⚠️ סכימת סכומי-הצעות. הרעלה מכוונת: אם ולו הצעה אחת מחזירה total=null (מע"מ שלא נפתר —
 // לא קפוא בהצעה ולא נטען מ-params), הסכום **כולו** מוחזר null. הסיבה: סכום שחסרה בו הצעה
 // אחת נראה תקין לחלוטין, ולכן הוא מסוכן יותר מ"אין נתונים" — "ריק אינו 0" (quotes.js).
@@ -246,6 +273,23 @@ function sumQuoteTotals(rows, vatRate) {
   return Math.round(sum * 100) / 100
 }
 
+// 🆕 ה8 · אוכלוסיית **הרווח-המצטבר** (§7.79 + ה-↳ שלו): פרויקט שהסתיים (`finished`), **או**
+// פרויקט מבוטל שדמי-הביטול שלו נפתרו. **המבחן ל"נפתר" הוא הרווח הקפוא עצמו** ולא סטטוס נפרד:
+// מבוטל **לעולם אינו מגיע ל-`finished`** במסד (‏CHECK `projects_closed_needs_report` מונע זאת
+// פיזית), והרווח שלו נכתב **ברגע פתרון-הפה** (‏`resolve_cancellation_fee`/`record_payment`,
+// הכרעת Q-4) — כלומר `final_profit` מלא **הוא** ההוכחה שהפה נפתר. גבייה אמיתית של דמי-ביטול
+// לא נעלמת מהדו"חות, וּויתור נרשם כהפסד אמיתי (שלילי) ולא נמחק.
+function isInProfitPopulation(project) {
+  if (project?.project_status === 'finished') return true
+  return project?.project_status === 'cancelled' && project?.final_profit != null
+}
+
+// 🆕 ה8 · אוכלוסיית **ממוצע-המשוב**: בעלי `feedback_status = 'completed'` בלבד — ‏C6 §2.4.1
+// "מאלה שענו". ‏`sent`/`no_response`/`not_sent` אינם משתתפים גם אם משום-מה יש להם ציון.
+function hasCompletedFeedback(project) {
+  return project?.feedback_status === 'completed'
+}
+
 // ↳ הורחבה בצעד 3.5 (מודול 3) **בתוספת-פרמטרים בלבד**: קורא ישן שמעביר רק `projects` מקבל
 // בדיוק את מה שקיבל קודם, וכל ה-null המכוונים נשמרים. `quotes` = שורות listQuotesByCustomer
 // (צורת-DB גולמית), `vatRate` = המע"מ החי מ-params (ההצעות המאושרות גוברות עליו עם הקפוא שלהן).
@@ -253,13 +297,58 @@ export function deriveCustomerMetrics(projects = [], quotes = null, vatRate = nu
   // מספר-אירועים: 0-נראה → null (projects עדיין deny-all עד מ6; 0-נראה ≠ 0-אמיתי) כדי שהכרטיס
   // יציג "אין נתונים עדיין" ולא "0" מטעה.
   const projectCount = projects.length > 0 ? projects.length : null
+  // 🔴 **שינוי-התנהגות מכוון (מ8 · ה8 · §7.79, 28/08/2026): הממוצע רץ על `completed` בלבד.**
+  // עד היום הוא מיצע **כל** פרויקט שיש לו ציון, בלי מסנן — פגם חי שנמדד ב-26/08 ונרשם ב-§7.79
+  // ("היום הוא ממצע כל פרויקט עם ציון, בלי מסנן-סטטוס"). ⚠️ הסינון הוא על **סטטוס-המשוב** ולא
+  // על סטטוס-הפרויקט: `completed` הוא בדיוק "הלקוח ענה", וזו האוכלוסייה שהאפיון נוקב בה.
   const scores = projects
+    .filter(hasCompletedFeedback)
     .map((p) => p?.feedback_score)
     .filter((s) => typeof s === 'number' && !Number.isNaN(s))
+  // עיגול לספרה אחת אחרי הנקודה — **וזה לא קוסמטיקה**: הערך נכנס גם לתצוגת-הכוכבים
+  // (`4.6666666666666665 ★` על המסך) וגם למסנן "טעון בירור", ושניהם חייבים לראות בדיוק
+  // את אותו מספר. עיגול בתצוגה בלבד היה יוצר לקוח שמוצג "3 ★" ובכל זאת יושב ברשימת ה-<3.
   const avgFeedback =
-    scores.length > 0 ? scores.reduce((sum, s) => sum + s, 0) / scores.length : null
+    scores.length > 0
+      ? Math.round((scores.reduce((sum, s) => sum + s, 0) / scores.length) * 10) / 10
+      : null
+  const feedbackCount = scores.length
 
-  const base = { projectCount, lastEventDate: null, isDormant: null, avgFeedback }
+  // 🆕 רווח-גולמי מצטבר (§7.79 + ה8) — **נגזר כאן, לא מוצג בכרטיס-הלקוח**, וזו הכרעה קיימת
+  // ולא השמטה: הרווח ירד מהכרטיס בהחלטת-פרסונה (11/07) ויעדו מסך-הכספים ודו"ח-מ11, וגם
+  // ה-RLS מסכים — ‏`final_profit` חי על `project_finance`, שקריאתה מגודרת ב'כספים' בלבד.
+  // הנוסחה יושבת כאן כי §7.79 מורה עליה כאן ("`deriveCustomerMetrics` מקבל את שני המסננים"),
+  // וכי מ11 יצרוך **את הפונקציה הזו** ולא יכתוב שנייה. 🚫 **לא למחוק כ"קוד מת".**
+  //
+  // ⚠️ ההרעלה זהה ל-`sumQuoteTotals`: פרויקט שבאוכלוסייה אך `final_profit` שלו אינו מספר
+  // ⇒ הסכום **כולו** null. סכום שחסר בו פרויקט אחד נראה תקין לחלוטין, ולכן הוא מסוכן יותר
+  // מ"אין נתונים". קורא בלי הרשאת-'כספים' (או קורא שלא ביקש את השדה כלל — מודול 2) מקבל
+  // ‏null על כל לקוח שיש לו פרויקט באוכלוסייה, וזה בדיוק "אין נתונים", לא "0 ₪".
+  const profitRows = projects.filter(isInProfitPopulation)
+  let cumulativeProfit = null
+  if (profitRows.length > 0) {
+    let sum = 0
+    for (const row of profitRows) {
+      const value = Number(row?.final_profit)
+      if (row?.final_profit == null || Number.isNaN(value)) {
+        sum = null
+        break
+      }
+      sum += value
+    }
+    cumulativeProfit = sum === null ? null : Math.round(sum * 100) / 100
+  }
+
+  const base = {
+    projectCount,
+    lastEventDate: null,
+    isDormant: null,
+    avgFeedback,
+    // כמה משובים עומדים מאחורי הממוצע — שורת-המשנה של האריח ("מאלה שענו"). 0 אמיתי ולא null:
+    // זו עובדה נכונה ("איש לא ענה"), והאריח ממילא מציג "אין נתונים עדיין" כשהממוצע null.
+    feedbackCount,
+    cumulativeProfit,
+  }
 
   // מודול 3 לא חווט בקריאה הזו (קורא ישן) ⇒ null מכוון ולא 0: "אין נתונים עדיין" הוא
   // הודעה נכונה, ואילו "0 ₪" הוא טענה שקרית על לקוח שאולי הכניס מיליון.

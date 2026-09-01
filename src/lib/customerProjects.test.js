@@ -208,8 +208,12 @@ describe('projectAmount — מגן על מלכודת-ה"0 ₪" (S-2)', () => {
     expect(projectAmount(p({ quotes: null }), 18)).toBeNull()
   })
 
-  it('quotes קיים ⇒ מחושב דרך deriveQuoteAmount (SSOT), אותם מספרים כמו מדיטק', () => {
+  it('quotes קיים ובלי שינויי-תכולה ⇒ מחושב דרך deriveQuoteAmount (SSOT), אותם מספרים כמו מדיטק', () => {
+    // ↳ 28/08/2026 (מ8 · 4.2): נוסף `project_changes: []`. **המספר לא זז** — 8,800 בהנחה 5%
+    // ומע"מ 18% הם 9,864.80 בדיוק כמו קודם. זו הוכחת-אי-הרגרסיה של RC-6: פרויקט בלי
+    // שינויי-תכולה חייב להישאר ספרתית זהה.
     const withQuote = p({
+      project_changes: [],
       quotes: {
         applied_customer_discount: '5.00',
         manual_discount: '0.00',
@@ -218,6 +222,69 @@ describe('projectAmount — מגן על מלכודת-ה"0 ₪" (S-2)', () => {
       },
     })
     expect(projectAmount(withQuote, 18)).toBe(9864.8)
+  })
+})
+
+// 🆕 RC-6 / ה2 (מ8 · צעד 4.2) — "סכום" = הצעה + התוספת-לחיוב של שינויי-התכולה.
+describe('projectAmount — שינויי-תכולה (RC-6)', () => {
+  const quote = {
+    applied_customer_discount: '5.00',
+    manual_discount: '0.00',
+    vat_rate_snapshot: '18.00',
+    quote_services: [{ qty: 1, closing_unit_price: '8800.00' }],
+  }
+  const change = (over = {}) => ({ delta_qty: 1, unit_price_snapshot: '1000.00', ...over })
+
+  it('תוספת-תכולה מוסיפה את **אותו** מספר שדיאלוג-שינוי-התכולה של מ6 הציג ואושר', () => {
+    // 1,000 ₪ בהנחת-ההצעה 5% = 950 לפני-מע"מ · +18% = 1,121.00 "תוספת לחיוב".
+    // 9,864.80 + 1,121.00 = 10,985.80 — אותו חשבון-אגורות בדיוק של computeScopeChangeMoney.
+    expect(projectAmount(p({ quotes: quote, project_changes: [change()] }), 18)).toBe(10985.8)
+  })
+
+  it('הפחתת-תכולה מקטינה את הסכום (delta_qty חתום, לא abs)', () => {
+    expect(
+      projectAmount(p({ quotes: quote, project_changes: [change({ delta_qty: -1 })] }), 18),
+    ).toBe(8743.8)
+  })
+
+  it('כמה שורות-שינוי מצטברות', () => {
+    const rows = [change(), change({ delta_qty: 2, unit_price_snapshot: '250.00' })]
+    // (1,000 + 500) − 5% = 1,425 · +18% = 1,681.50 ⇒ 9,864.80 + 1,681.50 = 11,546.30
+    expect(projectAmount(p({ quotes: quote, project_changes: rows }), 18)).toBe(11546.3)
+  })
+
+  it('🔴 שינויים לא-ידועים (קריאת-ה-RPC נכשלה / השדה לא צורף) ⇒ null, לעולם לא סכום-הצעה בלבד', () => {
+    // סכום-הצעה-בלבד על פרויקט שאולי גדל ב-2,000 ₪ נראה תקין לחלוטין — ולכן הוא מסוכן
+    // יותר מ-'—'. זו בדיוק המלכודת ש-RC-6 נולד ממנה.
+    expect(projectAmount(p({ quotes: quote, project_changes: null }), 18)).toBeNull()
+    expect(projectAmount(p({ quotes: quote }), 18)).toBeNull()
+  })
+
+  it('🔴 כסף ממוסך בשורת-שינוי (money_visible=false ⇒ null) ⇒ null, לא "תוספת 0"', () => {
+    const masked = [change({ unit_price_snapshot: null })]
+    expect(projectAmount(p({ quotes: quote, project_changes: masked }), 18)).toBeNull()
+  })
+
+  // 🔑 **עוגן מהנתונים החיים, לא מומצא** (נמדד ב-DB 28/08/2026): פרויקט **#15**
+  // "ערב השקה — קמפוס צפון" של הלקוח "קמפוס טכנולוגי צפון בע\"מ" הוא **שורת-שינוי-התכולה
+  // היחידה בכל המסד** (‏`select count(*) from project_changes` ⇒ 1). שורות-ההצעה שלו
+  // מסתכמות ב-6,060.00 · שתי ההנחות 0 · מע"מ קפוא 18% ⇒ 7,150.80, והשינוי הוא
+  // ‏`delta_qty = −25` במחיר-יחידה 3.00 ⇒ −75.00 לפני-מע"מ, −88.50 כולל.
+  // ⇒ **העמודה "סכום" בכרטיס-הלקוח עוברת מ-7,150.80 ל-7,062.30 ברגע שהצעד הזה נכנס.**
+  // זה המספר היחיד במערכת שבו RC-6 **נראה** בעין, ולכן הוא נעול כאן: אם מישהו יחזיר
+  // את הנוסחה לסכום-הצעה-בלבד, הבדיקה הזו תיפול על מסך אמיתי ולא על פיקסצ'ר.
+  it('🔑 עוגן חי — פרויקט #15 (שורת-השינוי היחידה במסד): 7,150.80 ⇒ 7,062.30', () => {
+    const live = p({
+      quotes: {
+        applied_customer_discount: '0.00',
+        manual_discount: '0.00',
+        vat_rate_snapshot: '18.00',
+        quote_services: [{ qty: 1, closing_unit_price: '6060.00' }],
+      },
+      project_changes: [{ delta_qty: -25, unit_price_snapshot: '3.00' }],
+    })
+    expect(projectAmount({ ...live, project_changes: [] }, 18)).toBe(7150.8)
+    expect(projectAmount(live, 18)).toBe(7062.3)
   })
 })
 

@@ -40,6 +40,8 @@ import LogisticsPage from '@/modules/05_logistics/LogisticsPage'
 import ProjectsPage from '@/modules/06_projects/ProjectsPage'
 import ProjectCardPage from '@/modules/06_projects/ProjectCardPage'
 import PublicConfirmPage from '@/modules/04_hostesses/PublicConfirmPage'
+import FinancePage from '@/modules/08_finance/FinancePage'
+import PublicFeedbackPage from '@/modules/08_finance/PublicFeedbackPage'
 import WelcomePage from '@/components/WelcomePage'
 import UnderConstruction from '@/components/UnderConstruction'
 import ProfileSettingsPage from '@/components/ProfileSettingsPage'
@@ -71,6 +73,18 @@ function App() {
                     להוסיף אותו לשם:** רשומה כזו הייתה משתיקה את השומר אם מישהו יעביר את
                     הדף לתוך MainLayout בעתיד — כלומר בדיוק במקרה שבו הוא נחוץ. */}
                 <Route path="/shift/:token" element={<PublicConfirmPage />} />
+
+                {/* משטח 8 (S4) — הדף הציבורי למשוב-לקוח. **אותו תקדים מדויק כמו `/shift/:token`
+                    ממש מעליו**: מי שפותחת אותו היא לקוחה-חיצונית שקיבלה קישור במייל-הסקר של
+                    מ6 — **אין לה חשבון ולא יהיה לה**. מחוץ ל-MainLayout, בלי ProtectedRoute.
+                    🔴 **הנתיב `/feedback/:token` נעול ואינו בחירה** — `mint_feedback_token`
+                    כבר צורב אותו ל-`projects.feedback_token`, ומייל-סקר אי-אפשר להחזיר.
+                    ℹ️ **`App.routes.test.jsx` אינו נוגע במסלול הזה** — הוא סורק אך ורק את
+                    הצאצאים של `<Route element={<MainLayout />}>`, ומסלול זה אינו כזה, בדיוק
+                    כמו `/shift/:token` ו-`/login`. 🚫 **ולכן גם אין להוסיף אותו ל-
+                    `ALLOWED_UNPROTECTED`** — מאותו נימוק שכבר נכתב מעל: רשומה כזו הייתה
+                    משתיקה את השומר אם מישהו יעביר את הדף לתוך MainLayout בעתיד. */}
+                <Route path="/feedback/:token" element={<PublicFeedbackPage />} />
 
                 <Route element={<MainLayout />}>
                   <Route index element={<WelcomePage />} />
@@ -175,11 +189,13 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  {/* מודול 8 (צעד 3.5) — הוחלף UnderConstruction במסך האמיתי. השומר עצמו
+                      לא נגע — `allow` זהה-בייט לשורת `modules` (כרטיס §⑨, כמו תקדים מ5). */}
                   <Route
                     path="finance"
                     element={
                       <ProtectedRoute allow="כספים">
-                        <UnderConstruction moduleName="כספים" />
+                        <FinancePage />
                       </ProtectedRoute>
                     }
                   />
