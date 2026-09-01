@@ -31,6 +31,18 @@ import {
 } from './api'
 import { getParamValue } from '@/modules/06_projects/closingApi'
 
+// 🔴 **מוק-הלקוח חובה, ואינו נוחות — בלעדיו הקובץ הזה נופל ב-CI בלבד.**
+// ‏`vi.mock('./api')` למטה קורא ל-`vi.importActual('./api')`, שמריץ את **המודול האמיתי**,
+// שמייבא את `@/supabaseClient`, שקורא ל-`createClient` **בזמן-הייבוא**. מקומית יש
+// ‏`.env.local` ולכן זה מצליח בשקט; **ב-CI אין `VITE_SUPABASE_*` ו-`createClient` זורק
+// `supabaseUrl is required`** — הקובץ כולו נכשל בטעינה ואף בדיקה בו אינה רצה.
+// 🕓 **וזה לא נתפס עד `02/09/2026` כי הקובץ מעולם לא עבר ב-CI:** הוא נולד ב-`648d6be`
+// (פזה 3), שאינו על `dev`. ‏`npm run gate` מקומי **אינו יכול** לשחזר את זה.
+// ⇒ זהו הדפוס של כל שאר הקבצים במודול (`api.test.js`, `ClosingWindowDialog.test.jsx`).
+vi.mock('@/supabaseClient', () => ({
+  supabase: { rpc: vi.fn(), from: vi.fn(), storage: { from: vi.fn() } },
+}))
+
 vi.mock('./api', async () => {
   const actual = await vi.importActual('./api')
   return {
