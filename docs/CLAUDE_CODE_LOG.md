@@ -45,6 +45,54 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 
 ## Session Log (newest first)
 
+### 02/09/2026 — module 8 merged to `dev` and promoted to `main`; the merge event itself had no journal entry
+
+**Ishay's words, quoted at absorption before any interpretation:** *"היי סגרתי ומיזגתי את מודול 8… יש כמה
+דברים שאני צריך לעשות אחרי המיזוג ושכחתי."* He was right that something was missing, and it was not what
+either of us expected: the closing session had already flipped `STATUS.md` and the micro-guide header, but
+**the journal carried no record of the merge at all** — this entry is that record.
+
+**Fresh evidence, same turn, quoted rather than summarised:**
+- `git log --oneline origin/main -2` ⇒ `00ecf9d Merge pull request #81 from ishay1997-ux/dev` ·
+  `0d45cf1 Merge pull request #80 from ishay1997-ux/ishay/module-8-phase-2`
+- `git log origin/dev..HEAD --oneline | wc -l` ⇒ **0** — nothing local is unmerged.
+- `git rev-parse HEAD` = `git rev-parse origin/dev` = `a100fb3` — local `dev` is exactly origin.
+- 21 `module8_*` migration files present in `origin/dev`.
+- ⚠️ **`git merge-base --is-ancestor origin/ishay/module-8-phase-2 origin/dev` returns NO — and that is not
+  a contradiction:** the remote branch was deleted at merge, so the ref no longer resolves. The
+  discriminator that actually answers the question is the `origin/dev..HEAD` count above, which is the
+  caveat iron rule 10 exists to make explicit. **A session reading only the `merge-base` line would have
+  reported module 8 as unmerged.**
+
+🧹 **Two dead local branches deleted** (`git branch -d`, the safe form that refuses an unmerged branch):
+`ishay/module-8-phase-2` (was `c653ade`) · `ishay/m8-post-merge-flip` (was `518c877`). Remote now carries
+`dev`, `main` and the dependabot branches only.
+
+🔎 **And two things this pass surfaced that were not in anyone's report.**
+
+**① `H7` exists and I did not know about it.** `20260901233014_module8_h7_budget_deviation_excludes_bonus`
+was written by the closing audit at 23:30, after the build session had stopped — a **fourth** money defect
+in the same module: `budget_deviation` compared an actual side that included personal bonuses against a
+planned side that has no bonus term, so a project where everyone worked exactly to plan and earned a bonus
+was displayed as **over budget by the bonus**. The fix is deliberately narrow — a separate variable for the
+deviation's actual side, leaving `v_labor` byte-identical, because the same value also feeds `labor_cost`
+and `gross_profit` where the bonus genuinely belongs, and `gross_profit` is what `final_profit` freezes.
+**Removing the bonus from `v_labor` would have fixed one number and broken the acceptance anchor.**
+
+**② A mockup folder for the settings screen has existed since 23/07, and the module-9 work ignored it.**
+`docs/mockups/system-settings-screen/` holds `01.png` (weights) · `02.png` (**weight validation**) ·
+`03.png` (financial) · `04.png` (integrations) plus `05_prices_tab_approved.html`. The build session drew a
+fresh params mockup on 28/08 into a **new** folder, `docs/mockups/settings-screen/`, without checking.
+🔴 **The concrete cost, not a hypothetical one:** the weights-must-sum-to-`1.00` rule was presented to Ishay
+as a discovery from live data and flagged "needs your confirmation" — while `mockup_descriptions.md:66` had
+recorded it since July as *"חייב סכום 1.0, אחרת שגיאה אדומה"*. **A settled decision was re-opened as an open
+question.** ⚠️ And the two sources disagree on the split — the July mockup says `W₁=0.4 · W₂=0.3 · W₃=0.3`,
+the live seed is `היענות 0.40 · אמינות 0.35 · קרבה 0.25`; both sum to 1.00. `mockup_descriptions.md` itself
+says the mockup values are not authoritative (`reference_spec/products_and_params.md` is), so this is a
+known-stale drawing, not a conflict — **but nobody checked, which is the actual finding.**
+📌 **Route:** the two mockup folders need reconciling before module 9 opens, and the `1.00` constraint should
+be recorded as already-decided rather than re-asked.
+
 ### 01/09/2026 22:0X–23:2X — module 8 closing audit: verdict [NO], and a test that had locked the bug in
 
 **`module-close` on `a2e2064`, fresh session, nothing merged or pushed.** Everything measurable is green —
