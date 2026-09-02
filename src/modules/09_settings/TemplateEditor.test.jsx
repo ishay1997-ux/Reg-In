@@ -1,6 +1,7 @@
 // בדיקת TemplateEditor (S2, מודול 9) — נועלת את שלושת המצבים מהמוקאפ (§3א/ב/ג): תקין,
 // חסום (משתנה-חובה חסר), אזהרה (משתנה-רשות חסר); את הכנסת-הצ'יפ בסמן; את הסינון של שורה
 // בלי חוזה ב-TEMPLATE_PLACEHOLDERS; ואת מצב-הקריאה-בלבד.
+import { useState } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import TemplateEditor from './TemplateEditor'
@@ -90,7 +91,16 @@ describe('TemplateEditor', () => {
     )
   })
 
-  it('לחיצה על צ׳יפ מכניסה את הטוקן בדיוק במיקום הסמן', () => {
+  // 🔬 A1 — הבאג שנמדד 03/09/2026: הצ'יפ **הוסיף בסוף** במקום להכניס בסמן, כי `selectionStart`
+  // של טקסטה ש-React כתב לה `value` מדווח את **סוף** הטקסט גם כשאיש לא נגע בה. שלוש הבדיקות
+  // הבאות נועלות את שלושת המצבים: סמן אמיתי · בחירה פעילה · טקסטה שמעולם לא מוקדה.
+  function placeCaret(textarea, start, end = start) {
+    fireEvent.focus(textarea)
+    textarea.setSelectionRange(start, end)
+    fireEvent.select(textarea)
+  }
+
+  it('A1 — לחיצה על צ׳יפ מכניסה את הטוקן בדיוק במיקום הסמן', () => {
     const onChange = vi.fn()
     render(
       <TemplateEditor
@@ -102,11 +112,96 @@ describe('TemplateEditor', () => {
       />,
     )
 
-    const textarea = screen.getByTestId('settings-template-body')
-    textarea.setSelectionRange(2, 2)
+    placeCaret(screen.getByTestId('settings-template-body'), 2)
     fireEvent.click(screen.getByTestId('settings-template-chip-שם_דיילת'))
 
     expect(onChange).toHaveBeenCalledWith(SHIFT_INVITE_ROW.param_name, 'של[שם_דיילת]ום')
+  })
+
+  it('A1 — בחירה פעילה מוחלפת בטוקן, לא נדחפת הצידה', () => {
+    const onChange = vi.fn()
+    render(
+      <TemplateEditor
+        rows={[SHIFT_INVITE_ROW]}
+        values={{ [SHIFT_INVITE_ROW.param_name]: 'היי חנה, המשמרת' }}
+        onChange={onChange}
+        canEdit={() => true}
+        errors={{}}
+      />,
+    )
+
+    // "חנה" (תווים 4–7) מסומן — הצ'יפ מחליף אותו.
+    placeCaret(screen.getByTestId('settings-template-body'), 4, 7)
+    fireEvent.click(screen.getByTestId('settings-template-chip-שם_דיילת'))
+
+    expect(onChange).toHaveBeenCalledWith(SHIFT_INVITE_ROW.param_name, 'היי [שם_דיילת], המשמרת')
+  })
+
+  it('A1 — טקסטה שמעולם לא מוקדה: הטוקן נוסף בשורה חדשה, לעולם לא מודבק למילה האחרונה', () => {
+    const onChange = vi.fn()
+    render(
+      <TemplateEditor
+        rows={[SHIFT_INVITE_ROW]}
+        values={{ [SHIFT_INVITE_ROW.param_name]: 'היי, נשמח לראותך.' }}
+        onChange={onChange}
+        canEdit={() => true}
+        errors={{}}
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('settings-template-chip-שם_דיילת'))
+
+    expect(onChange).toHaveBeenCalledWith(
+      SHIFT_INVITE_ROW.param_name,
+      ['היי, נשמח לראותך.', '[שם_דיילת]'].join('\n'),
+    )
+  })
+
+  it('A1 — הוורדיקט מחושב מחדש מהגוף החדש: החזרת המשתנה מהצ׳יפ משחררת את החסימה', () => {
+    // 🔴 הרכיב מבוקר (`values` מגיע מבחוץ), ולכן "הוורדיקט מתעדכן" נבדק רק עם מחזיק-מצב
+    // אמיתי — בדיוק כמו ש-`ParamsTab` מחזיקה אותו. בלי זה הבדיקה מאמתת רק את הקריאה.
+    function Harness() {
+      const [body, setBody] = useState(FULL_BODY.replace('[שם_דיילת]', ''))
+      return (
+        <TemplateEditor
+          rows={[SHIFT_INVITE_ROW]}
+          values={{ [SHIFT_INVITE_ROW.param_name]: body }}
+          onChange={(_name, next) => setBody(next)}
+          canEdit={() => true}
+          errors={{}}
+        />
+      )
+    }
+    render(<Harness />)
+
+    expect(screen.getByTestId('settings-template-blocked').textContent).toContain('בלי [שם_דיילת]')
+
+    placeCaret(screen.getByTestId('settings-template-body'), 4)
+    fireEvent.click(screen.getByTestId('settings-template-chip-שם_דיילת'))
+
+    expect(screen.queryByTestId('settings-template-blocked')).not.toBeInTheDocument()
+    expect(screen.getByTestId('settings-template-body').value).toContain('[שם_דיילת]')
+  })
+
+  it('B2 — טוקן לא-מוכר: החסימה אומרת "למחוק מהטקסט", לא "להחזיר מהרשימה"', () => {
+    renderEditor({
+      values: { [SHIFT_INVITE_ROW.param_name]: `${FULL_BODY} [משתנה_שלא_קיים]` },
+    })
+    const blocked = screen.getByTestId('settings-template-blocked')
+    expect(blocked.textContent).toContain('משתנה לא מוכר בתבנית')
+    expect(blocked.textContent).toContain(
+      'השמירה חסומה. צריך למחוק את המשתנה מהטקסט — הוא לא קיים במערכת.',
+    )
+    expect(blocked.textContent).not.toContain('אפשר להחזיר את המשתנה מהרשימה שלמטה')
+  })
+
+  it('B2 — משתנה-חובה חסר: ההוראה נשארת "אפשר להחזיר מהרשימה שלמטה"', () => {
+    renderEditor({
+      values: { [SHIFT_INVITE_ROW.param_name]: FULL_BODY.replace('[לינק_אישור_משמרת]', '') },
+    })
+    expect(screen.getByTestId('settings-template-blocked').textContent).toContain(
+      'השמירה חסומה. אפשר להחזיר את המשתנה מהרשימה שלמטה.',
+    )
   })
 
   it('שורה מסוג templates בלי חוזה ב-TEMPLATE_PLACEHOLDERS לא נכנסת לרשימה ולא נפתחת', () => {

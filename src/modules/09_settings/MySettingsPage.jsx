@@ -21,7 +21,10 @@ import { listMyParams } from '@/modules/09_settings/api'
 import BelowMinWageList from '@/modules/09_settings/BelowMinWageList'
 import TemplateEditor from '@/modules/09_settings/TemplateEditor'
 import SmartMatchPane from '@/modules/09_settings/SmartMatchPane'
-import ParamRow from '@/modules/09_settings/components/ParamRow'
+import ParamRow, {
+  PARAMS_TABLE_CLASS,
+  ParamsTableHead,
+} from '@/modules/09_settings/components/ParamRow'
 import SaveRow from '@/modules/09_settings/components/SaveRow'
 import useParamsForm from '@/modules/09_settings/components/useParamsForm'
 
@@ -204,16 +207,10 @@ export default function MySettingsPage() {
                       />
                     ) : (
                       <table
-                        className="w-full border-collapse text-right"
+                        className={PARAMS_TABLE_CLASS}
                         data-testid={`settings-my-table-${group.type}`}
                       >
-                        <thead>
-                          <tr className="border-b border-slate-200 text-xs text-slate-500">
-                            <th className="w-2/5 py-2 font-medium">הגדרה</th>
-                            <th className="w-1/5 py-2 text-center font-medium">ערך</th>
-                            <th className="py-2 font-medium">הערה</th>
-                          </tr>
-                        </thead>
+                        <ParamsTableHead />
                         <tbody>
                           {group.rows.map((row) => (
                             <ParamRow
@@ -229,21 +226,24 @@ export default function MySettingsPage() {
                       </table>
                     )}
                   </div>
+
+                  {/* 📍 **הרשימה יושבת בתוך הקבוצה שבה השדה שלה** (סקירת-UX 03/09/2026):
+                      עד לתיקון היא רונדרה אחרי **כל** הקבוצות, ~900px מתחת ל"שכר מינימום
+                      שעתי" — כלומר מי שמעלה את הרף אינה רואה את התוצאה שלו. `max-w-sm`
+                      זהה ללשונית (`ParamsTab`), כדי ששני המשטחים יציגו אותה ברוחב אחד.
+                      🎨 והכותרת החיצונית נשארת מוסרת: הכרטיס עצמו נושא כותרת + הרף. */}
+                  {showMinWage && group.rows.some((row) => row.param_name === MIN_WAGE_PARAM) && (
+                    <div className="mt-3 max-w-sm">
+                      <BelowMinWageList
+                        threshold={minWageRow?.param_value}
+                        draftThreshold={form.values[MIN_WAGE_PARAM]}
+                        refreshKey={minWageKey}
+                      />
+                    </div>
+                  )}
                 </div>
               )
             })}
-
-            {/* 🎨 03/09/2026 — הכותרת החיצונית ("מי מתחת לשכר המינימום") הוסרה: הכרטיס
-                עצמו כבר נושא כותרת זהה + הרף בסוגריים (`BelowMinWageList`, ה-`hd`/`h3`),
-                וזוג-הכותרות נראה ככפילות בצילום `06-finance-my-settings.png`. הכותרת
-                שבכרטיס נשארת — היא היחידה שנושאת את הרף בפועל. */}
-            {showMinWage && (
-              <BelowMinWageList
-                threshold={minWageRow?.param_value}
-                draftThreshold={form.values[MIN_WAGE_PARAM]}
-                refreshKey={minWageKey}
-              />
-            )}
           </div>
 
           {form.crossFieldErrors.map((message) => (

@@ -13,6 +13,18 @@ describe('SaveRow', () => {
     expect(screen.getByTestId('settings-dirty-count')).toHaveTextContent('שינית 2 מתוך 7')
   })
 
+  it('קבוצה בת שורה אחת בלי שינוי אומרת "לא שינית כלום", לא "שינית 0 מתוך 1"', () => {
+    render(<SaveRow dirtyCount={0} total={1} onCancel={() => {}} onSave={() => {}} />)
+    const counter = screen.getByTestId('settings-dirty-count')
+    expect(counter).toHaveTextContent('לא שינית כלום')
+    expect(counter.textContent).not.toContain('מתוך')
+  })
+
+  it('אותה קבוצה **עם** שינוי חוזרת למונה הרגיל', () => {
+    render(<SaveRow dirtyCount={1} total={1} onCancel={() => {}} onSave={() => {}} />)
+    expect(screen.getByTestId('settings-dirty-count')).toHaveTextContent('שינית 1 מתוך 1')
+  })
+
   it('בלי שינויים שני הכפתורים מושבתים', () => {
     render(<SaveRow dirtyCount={0} total={7} onCancel={() => {}} onSave={() => {}} />)
     expect(screen.getByTestId('settings-save-button')).toBeDisabled()

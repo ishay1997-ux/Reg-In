@@ -16,17 +16,27 @@
 // הייתה מגיעה להודעה העברית בכלל. `inputMode` שומר על מקלדת-מספרים בנייד.
 //
 // 📐 **תא-הערך ממורכז** (הכרעת-ישי, אחרי שראה את פאנל Smart Match: קופסאות-מספר בגבהים/
-// רוחבים שונים שיושבות במיקומים אופקיים שונים). **הזוג (קלט+יחידה) ממורכז כיחידה אחת** —
-// לא סלוט-יחידה קבוע. 🔬 **נוסה סלוט קבוע (רוחב-קבוע ליחידה, מוצג גם ריק) וסולק, נמדד
-// ולא נראה:** הוא כן נעל את קצה-הקלט לאותו x בכל שורה, אבל `getBoundingClientRect()` הראה
-// שהתוכן ה*נראה* (קלט בלי יחידה) יושב באופן עקבי ~21-29px משמאל למרכז-הכותרת "ערך" —
-// כי המרכוז-הלוגי כלל גם את הסלוט הבלתי-נראה. שורה בלי יחידה ("משקולת קרבה") נראתה
-// דחוקה שמאלה מתחת לכותרת. **הפתרון שנשאר:** בלי סלוט — שורה בלי יחידה ממרכזת את הקופסה
-// שלה **לבד** (בדיוק מתחת לכותרת), ושורה עם יחידה ממרכזת את **הזוג הצמוד** (קלט+פער-6px+
-// יחידה) כמקשה אחת — כך שה-`x` של תיבת-הקלט עצמה משתנה קלות בין שורה-עם-יחידה לשורה-בלעדיה,
-// אבל מה שנראה בפועל תמיד ממורכז אמיתית מתחת לכותרת, לא רק "ממורכז כולל שוליים בלתי-נראים".
+// רוחבים שונים שיושבות במיקומים אופקיים שונים).
+// 🔬 **שני ניסיונות קודמים נמדדו ונפסלו, וזה השלישי** (03/09/2026):
+// ‏**‏(א) סלוט-יחידה קבוע** (רוחב קבוע ליחידה, מוצג גם ריק) — נעל את קצה-הקלט לאותו x, אבל
+//   התוכן ה*נראה* (קלט בלי יחידה) ישב ~21-29px משמאל למרכז-הכותרת "ערך", כי המרכוז כלל גם
+//   את הסלוט הבלתי-נראה. **‏(ב) מרכוז-הזוג כמקשה אחת** (קלט+פער+יחידה) — הנראות מתחת
+//   לכותרת תקינה, אבל **רוחב היחידה משתנה משורה לשורה**, ולכן ה-`x` של תיבת-הקלט נדד:
+//   ‏`getBoundingClientRect().left` נמדד 350.8 / 339.0 / 345.5 / 351.0 בתוך **אותה קבוצה** —
+//   עד 12px הפרש, שנראה כמו קופסאות "רועדות" בעמודה.
+// ✅ **‏(ג) מרווח-מראה סימטרי — הפתרון שנשאר:** אותה מחרוזת-יחידה בדיוק מרונדרת פעם שנייה
+//   בצד ההפוך של הקלט כ-`invisible` (שומר-מקום; **לא** `hidden`, שאינו תופס מקום). הזוג
+//   נעשה סימטרי סביב הקלט ⇒ **מרכז-הקלט = מרכז-התא בכל שורה**, בין אם יש יחידה ובין אם לא,
+//   וללא תלות באורך היחידה. שתי הדרישות מתקיימות יחד: קצה-שמאל זהה בכל שורות הקבוצה, והקלט
+//   יושב מתחת לכותרת "ערך". `aria-hidden` על המראה — קורא-מסך שומע את היחידה פעם אחת.
 // ‏`shrink-0` + `whitespace-nowrap` על היחידה מונעים את שבירת-שני-המילים ("ימי עסקים" על
 // `סף_לוגיסטיקה_ימי_עסקים`) כשהעמודה נדחקת.
+//
+// 📏 **עמודות-הטבלה `table-fixed` ברוחב אחיד** (ר' הכותרות ב-`ParamsTab`/`MySettingsPage`/
+// `SmartMatchPane`) — ולכן שדה-הטקסט-הרחב (מייל) **אינו** יכול עוד להיות רחב מהעמודה:
+// עד 03/09/2026 היה עליו `w-72 min-w-[18rem]`, והוא הרחיב את עמודת-הערך של קבוצת "טכני"
+// עד ש**כותרת "ערך" שלה ישבה ב-315.8 בעוד שאר הקבוצות ב-424.2** — שתי טבלאות באותו מסך
+// עם רשת אחרת. הוא ממלא היום את רוחב-התא (`w-full`), לא קובע אותו.
 
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -45,6 +55,27 @@ const WIDE_TEXT_KINDS = new Set(['email', 'url'])
 // ידרוס את `paneComponents` בלי `templates`, השורה עדיין מוצגת — בלי שדה-עריכה שעוקף את
 // `templateSaveVerdict` (R-3) — במקום להיעלם.
 
+// 📏 **רשת-העמודות של שלוש הטבלאות של המודול — מקור אחד.** הלשונית (`ParamsTab`),
+// "ההגדרות שלי" (`MySettingsPage`) ופאנל ה-Smart Match מציירות את אותה טבלה בת שלוש
+// עמודות, וכשהרשת חיה בשלושה עותקים היא **סוטה בשקט** — בדיוק המחלה שתועדה על `StatTile`
+// ב-`src/CLAUDE.md`. ‏`table-fixed` הוא מה שמנתק את רוחב-העמודה מרוחב-התוכן: בלעדיו שדה
+// רחב אחד (המייל, קבוצת "טכני") מזיז את כל הרשת של הטבלה שלו לבדה.
+export const PARAMS_TABLE_CLASS = 'w-full min-w-[40rem] table-fixed border-collapse text-right'
+
+export function ParamsTableHead() {
+  return (
+    <thead>
+      <tr className="border-b border-slate-200 text-xs text-slate-500">
+        <th className="w-[36%] py-2 pl-3 font-medium">הגדרה</th>
+        {/* `pl-3` זהה לזה של תא-הערך: בלעדיו תיבת-הקלט יושבת 6px ימינה ממרכז הכותרת,
+            כי הריפוד של התא מצמצם את תיבת-התוכן שלו ולא את זו של הכותרת (נמדד 03/09). */}
+        <th className="w-[30%] py-2 pl-3 text-center font-medium">ערך</th>
+        <th className="py-2 font-medium">הערה</th>
+      </tr>
+    </thead>
+  )
+}
+
 export default function ParamRow({ row, value, onChange, canEdit, error }) {
   const name = row.param_name
   const entry = getParamEntry(name)
@@ -53,6 +84,7 @@ export default function ParamRow({ row, value, onChange, canEdit, error }) {
   const isTemplate = entry.kind === 'templates'
   const isBoolean = entry.kind === 'boolean'
   const isUnknown = entry.hint === 'הגדרה ללא הגדרת-תצוגה'
+  const isWideText = WIDE_TEXT_KINDS.has(entry.kind)
 
   return (
     <tr
@@ -86,7 +118,21 @@ export default function ParamRow({ row, value, onChange, canEdit, error }) {
 
         {!isBoolean && !isTemplate && (
           <div className="flex justify-center">
-            <Ltr className="inline-flex items-center gap-1.5">
+            <Ltr
+              className={cn(
+                'inline-flex items-center gap-1.5',
+                isWideText && 'w-full max-w-full min-w-0',
+              )}
+            >
+              {entry.unit && (
+                <span
+                  aria-hidden="true"
+                  className="invisible shrink-0 text-xs whitespace-nowrap"
+                  data-testid={`settings-unit-mirror-${name}`}
+                >
+                  {entry.unit}
+                </span>
+              )}
               <Input
                 type="text"
                 inputMode={NUMERIC_KINDS.has(entry.kind) ? 'decimal' : 'text'}
@@ -99,12 +145,12 @@ export default function ParamRow({ row, value, onChange, canEdit, error }) {
                 aria-invalid={error ? 'true' : undefined}
                 aria-describedby={errorId}
                 className={cn(
-                  'h-9 shrink-0 rounded-lg border-slate-300 p-2 text-center text-sm',
+                  'h-9 rounded-lg border-slate-300 p-2 text-center text-sm',
                   NUMERIC_KINDS.has(entry.kind)
-                    ? 'w-24'
-                    : WIDE_TEXT_KINDS.has(entry.kind)
-                      ? 'w-72 min-w-[18rem]'
-                      : 'w-28',
+                    ? 'w-24 shrink-0'
+                    : isWideText
+                      ? 'w-full min-w-0'
+                      : 'w-28 shrink-0',
                   error && 'border-red-500 focus-visible:ring-red-300',
                   !canEdit &&
                     'disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:opacity-100',

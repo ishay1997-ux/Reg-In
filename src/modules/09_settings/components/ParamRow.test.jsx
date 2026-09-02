@@ -28,7 +28,28 @@ describe('ParamRow', () => {
     renderRow({ row: row('אחוז_מעמ', '18'), value: '18' })
     expect(screen.getByText('אחוז מע"מ')).toBeInTheDocument()
     expect(screen.getByText('אחוז המע"מ שמתווסף לכל הצעת מחיר חדשה')).toBeInTheDocument()
-    expect(screen.getByText('%')).toBeInTheDocument()
+    // שני מופעים של היחידה: הנראה, ומרווח-המראה הסימטרי שממרכז את הקלט (ר' הבדיקה הבאה).
+    const units = screen.getAllByText('%')
+    expect(units).toHaveLength(2)
+    expect(units.filter((el) => !el.getAttribute('aria-hidden'))).toHaveLength(1)
+  })
+
+  it('B8 — מרווח-מראה סימטרי: אותה יחידה בדיוק, בצד השני של הקלט, מוסתרת מקורא-מסך', () => {
+    renderRow({ row: row('סף_לוגיסטיקה_ימי_עסקים', '3', 'control_alerts'), value: '3' })
+    const mirror = screen.getByTestId('settings-unit-mirror-סף_לוגיסטיקה_ימי_עסקים')
+    // אותה מחרוזת — אחרת הסימטריה נשברת והקלט חוזר לנדוד בין שורות.
+    expect(mirror.textContent).toBe('ימי עסקים')
+    expect(mirror).toHaveAttribute('aria-hidden', 'true')
+    // `invisible` ולא `hidden`: שומר-מקום חייב לתפוס רוחב, אחרת אינו ממרכז כלום.
+    expect(mirror.className).toContain('invisible')
+    // המראה יושב **לפני** הקלט בסדר-ה-DOM, והיחידה הנראית **אחריו**.
+    const input = screen.getByTestId('settings-value-סף_לוגיסטיקה_ימי_עסקים')
+    expect(mirror.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('B8 — שורה בלי יחידה אינה מרנדרת מראה כלל (אין מה לאזן)', () => {
+    renderRow({ row: row('משקולת_קרבה', '0.25', 'smart_match'), value: '0.25' })
+    expect(screen.queryByTestId('settings-unit-mirror-משקולת_קרבה')).not.toBeInTheDocument()
   })
 
   it('הערך והיחידה יושבים בתוך עטיפת-כיווניות אחת', () => {

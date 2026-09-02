@@ -36,7 +36,10 @@ import BelowMinWageList from '@/modules/09_settings/BelowMinWageList'
 import TemplateEditor from '@/modules/09_settings/TemplateEditor'
 import SmartMatchPane from '@/modules/09_settings/SmartMatchPane'
 import GroupList from '@/modules/09_settings/components/GroupList'
-import ParamRow from '@/modules/09_settings/components/ParamRow'
+import ParamRow, {
+  PARAMS_TABLE_CLASS,
+  ParamsTableHead,
+} from '@/modules/09_settings/components/ParamRow'
 import SaveRow from '@/modules/09_settings/components/SaveRow'
 import useParamsForm from '@/modules/09_settings/components/useParamsForm'
 
@@ -211,7 +214,7 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="חיפוש לפי שם ההגדרה או שם השדה במסד"
+          placeholder="חיפוש לפי שם ההגדרה או שם הפרמטר במערכת"
           className="h-auto rounded-lg border-slate-300 py-2.5 pr-10 pl-3 text-right"
           data-testid="settings-search"
         />
@@ -264,14 +267,8 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
                     {...extraPaneProps}
                   />
                 ) : (
-                  <table className="w-full border-collapse text-right" data-testid="settings-table">
-                    <thead>
-                      <tr className="border-b border-slate-200 text-xs text-slate-500">
-                        <th className="w-2/5 py-2 font-medium">הגדרה</th>
-                        <th className="w-1/5 py-2 text-center font-medium">ערך</th>
-                        <th className="py-2 font-medium">הערה</th>
-                      </tr>
-                    </thead>
+                  <table className={PARAMS_TABLE_CLASS} data-testid="settings-table">
+                    <ParamsTableHead />
                     <tbody>
                       {groupRows.map((row) => (
                         <ParamRow

@@ -20,8 +20,8 @@
 // המרחקים מוסתר, לעולם לא חצי-מרונדר (שורת-מרחק בודדת בלי בת-הזוג שלה חסרת-משמעות: אין
 // לדעת אם מרחק-הפסילה גדול או קטן ממרחק-הציון-0).
 //
-// 🔢 שני מספרים במשפט עברי אחד ("N שורות-נוכחות קיימות מתוך M שיבוצים") — כל אחד מבודד
-// לחוד ב-`<Ltr>`, בדיוק כמו "שינית N מתוך M" ב-`SaveRow` (src/CLAUDE.md, מופע-הרצף התשיעי:
+// 🔢 שני מספרים במשפט עברי אחד ("N שורות-נוכחות מתוך M שיבוצים") — כל אחד מבודד לחוד
+// ב-`<Ltr>`, בדיוק כמו "שינית N מתוך M" ב-`SaveRow` (src/CLAUDE.md, מופע-הרצף התשיעי:
 // שני מספרים *צמודים* נשברים; כאן הם אינם צמודים, כל אחד לחוד הוא הפתרון).
 
 import { useEffect, useState } from 'react'
@@ -31,7 +31,10 @@ import { cn } from '@/lib/utils'
 import { getParamEntry, parseForDisplay, weightsSumOk } from '@/lib/paramsRegistry'
 import { SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
 import { countAttendanceRows } from '@/modules/09_settings/api'
-import ParamRow from '@/modules/09_settings/components/ParamRow'
+import ParamRow, {
+  PARAMS_TABLE_CLASS,
+  ParamsTableHead,
+} from '@/modules/09_settings/components/ParamRow'
 
 const WEIGHT_NAMES = [
   SMART_MATCH_PARAM_NAMES.responsivenessWeight,
@@ -50,6 +53,26 @@ const CEO_WARNING =
   CEO_WARNING_LEAD +
   ' הדירוג שמנהלת השיבוץ תראה מחר ייראה אחרת, והיא לא תדע שמשהו השתנה. שינוי כדאי לתאם איתה מראש.'
 const OWNER_WARNING = 'שינוי כאן משנה את הדירוג שתראי מחר במסך השיבוץ.'
+
+// 🔤 הערת-הנוכחות (סקירת-UX 03/09/2026, מעבר-הניסוח): המספרים חיים תמיד, אבל **המקרה של
+// שורה בודדת אינו "1 שורות-נוכחות"** — הוא המקרה שבו ההודעה צריכה גם לומר *למה זה משנה*,
+// כי מנהלת שרואה מספר בלי פרשנות אינה יודעת אם 1 מתוך 27 זה הרבה או מעט. הנוסח זהה בשני
+// הווריאנטים (מנכ"ל/בעלים) — זו עובדה על הדאטה, לא על מי שמסתכלת.
+function renderAttendanceNote({ withAttendance, total }) {
+  if (withAttendance === 1) {
+    return (
+      <>
+        שורת-נוכחות אחת בלבד מתוך <Ltr>{total}</Ltr> שיבוצים — עדיין אין מספיק נתונים כדי שהמרכיב
+        הזה ישנה משהו
+      </>
+    )
+  }
+  return (
+    <>
+      <Ltr>{withAttendance}</Ltr> שורות-נוכחות מתוך <Ltr>{total}</Ltr> שיבוצים
+    </>
+  )
+}
 
 export default function SmartMatchPane({
   rows,
@@ -152,14 +175,8 @@ export default function SmartMatchPane({
         </span>
       </div>
 
-      <table className="w-full border-collapse text-right" data-testid="settings-smartmatch-table">
-        <thead>
-          <tr className="border-b border-slate-200 text-xs text-slate-500">
-            <th className="w-2/5 py-2 font-medium">הגדרה</th>
-            <th className="w-1/5 py-2 text-center font-medium">ערך</th>
-            <th className="py-2 font-medium">הערה</th>
-          </tr>
-        </thead>
+      <table className={PARAMS_TABLE_CLASS} data-testid="settings-smartmatch-table">
+        <ParamsTableHead />
         <tbody>
           {weightRows.map(renderRow)}
           {/* סדר-המוקאפ (§2/§6): שער (פסילה) לפני גולפוסט (ציון⇒0) — כלל-הסדר עצמו יושב
@@ -182,16 +199,11 @@ export default function SmartMatchPane({
               className="mt-0.5 text-xs text-amber-800"
               data-testid="settings-smartmatch-attendance-note"
             >
-              {attendanceError ? (
-                attendanceError
-              ) : attendance ? (
-                <>
-                  <Ltr>{attendance.withAttendance}</Ltr> שורות-נוכחות קיימות מתוך{' '}
-                  <Ltr>{attendance.total}</Ltr> שיבוצים
-                </>
-              ) : (
-                'טוען נתוני נוכחות…'
-              )}
+              {attendanceError
+                ? attendanceError
+                : attendance
+                  ? renderAttendanceNote(attendance)
+                  : 'טוען נתוני נוכחות…'}
             </div>
           </div>
           <Switch

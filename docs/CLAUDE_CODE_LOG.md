@@ -25,13 +25,13 @@
 ## Current State (snapshot — rewritten, not appended)
 <!-- target ~15 lines · no internal dates (F4) · over budget? compress / move to journal -->
 
-**Active module: 9 (הגדרות מערכת)** — blueprint approved, branch `ishay/module-9-settings`, guide `docs/micro_guides/module-9.md` (no `docs/specs/` folder by Ishay's ruling), active step 1.0, zero code. **Where we stand:** Modules **1**, **2**, **3**, **4**, **5** and **6** are closed and merged to `dev`; `dev` has been promoted to `main` and tagged `milestone-2.5`, so 1–6 are all live. The m5 as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log); its spec set `docs/specs/module_05_logistics/` (42 rulings ①–㊷); `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8 (finance) is the ACTIVE build** — branch `ishay/module-8-phase-2`, cut from fresh `dev`. **Phase 1 is COMPLETE and in production** (ten migrations, the 1.8 gate, `C2`+`N1`+`N1b` all shipped). **Phases 2, 3 and 4 are COMPLETE**, plus an extra UX/edge-case pass Ishay asked for — suite **1,765 tests / 65 files, exit 0**, and `H1`/`H2`/`H3` applied after his typed echo. **Step 5.1's journeys ① (#12 end-to-end) and ③ (August salary report) are DONE and verified against the live DB**; ② (cancellation fee) needs Ishay's nod because it means cancelling a live project. Standing at **step 3.6 — his single consolidated 🎨 review of the four screens** (the per-unit gate was consolidated at his own ruling), with 4.3 · 4.5 · 5.1 · 5.2 behind it. Salary-report generation is deliberately UNRUN so he can demo August at the conference. The plan: `docs/micro_guides/module-8.md`; the approved spec: `docs/specs/module_08_finance/` (its `spec.md §①` is the binding reading list, and the four hand-computed acceptance anchors in `§③3` are never recomputed from code). 🔴 **And two of those four do not reproduce from a plain read of the live DB — no project in the seed is `cancelled`, and travel is stamped only at salary-report generation** (measured 27/08; full finding in `module-8.md` §10). Their live cross-check needs a live-DB WRITE and is deferred to step 5.1. 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
+**Active module: 9 (הגדרות מערכת) — BUILT, awaiting only the closing audit in a fresh session.** Branch `ishay/module-9-settings`, guide `docs/micro_guides/module-9.md` (no `docs/specs/` folder by Ishay's ruling). Four migrations applied (A/B/C in one waived-echo batch Ishay authorised in advance; D with a real typed echo), six screens shipped, Ishay approved the 🎨 gate. `params` is now 43 rows / 6 types / 4 per-command policies / 38 owned by role, and `notification_preferences` exists with three self policies. Six hard-coded constants left the code (grep: 0). What remains: the live acceptance journeys (5.1) and `module-close` in a fresh session. **Where we stand:** Modules **1**, **2**, **3**, **4**, **5** and **6** are closed and merged to `dev`; `dev` has been promoted to `main` and tagged `milestone-2.5`, so 1–6 are all live. The m5 as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log); its spec set `docs/specs/module_05_logistics/` (42 rulings ①–㊷); `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8 (finance) is CLOSED and merged** — `dev` and `main`, PRs #80/#81; its plan `docs/micro_guides/module-8.md` and spec `docs/specs/module_08_finance/` remain the reference (the four hand-computed anchors in `spec.md §③3` are never recomputed from code). The N2 contact-consolidation package finished the same day, so no schema removal is pending. **Next after m9: module 7 (מסך הבית)** per `00_roadmap` §3. 🔴 **And two of those four do not reproduce from a plain read of the live DB — no project in the seed is `cancelled`, and travel is stamped only at salary-report generation** (measured 27/08; full finding in `module-8.md` §10). Their live cross-check needs a live-DB WRITE and is deferred to step 5.1. 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
 ✅ **The two 1-line src fixes that were parked for immediately-post-merge are DONE** — verified in code 02/09/2026, not assumed: `QuotesPage.jsx` wraps the address in `encodeURIComponent` (with the `?`/`&` injection reason in a comment beside it), and `QuoteLineEditor.jsx` drives both Selects from controlled values (`line.sku || ''`, `line.color || NO_COLOR_VALUE`) using the sentinel convention. **This line said "parked" until today** — it outlived the work it described, which is the ordinary way a Current-State line goes stale: the fix lands in a commit that has no reason to come back and edit the snapshot.
 `docs/schema.sql` measure command: `grep -c '^create table' docs/schema.sql` (23 at the last audit).
 
 **Governance:** single developer (Ishay). Schedule (re-ruled 12/08/2026, old `19/09` deadline cancelled everywhere): **28/08** interim presentation (10 min · one end-to-end process · ~50%) · **01/10** closing conference (target **100%**) · **20/10** end. Per-module schedule + dates SSOT: `00_roadmap.md` §3. Overflow policy: whole modules defer, nothing is trimmed — shock-absorbers are **M10 and M7 only**; the 3→4→6→5 core, M8 and M12 never defer.
 
-**Quality gates:** `npm run gate` = verify+dup+knip+audit+check:bidi+check:context+check:docs-structure, all blocking. `npm run test:e2e` excludes the smoke suite (`npm run smoke`, separate); neither runs in CI.
+**Quality gates:** `npm run gate` = verify+dup+knip+audit+check:bidi+check:context+check:docs-structure, all blocking. `npm run test:e2e` excludes the smoke suite (`npm run smoke`, separate); neither runs in CI. 🔑 **And the gate none of these are: a screen nobody rendered.** Module 9 passed lint, 2094 unit tests, axe, bidi and a full E2E run while carrying two flow-breaking defects that a first-time-user journey found in minutes — so a screen builder does not report "done" without a live screenshot it has looked at, and a module does not reach Ishay without one heuristic journey per role.
 
 **Context architecture:** `CLAUDE.md` is a thin root + directory-scoped files loaded on demand — `supabase/migrations/CLAUDE.md` (DB protocol), `src/CLAUDE.md` (security/SSOT model), `docs/CLAUDE.md` (iron rule 13 + emoji legend), `e2e/CLAUDE.md` (test gotchas), plus per-module `src/modules/NN_*/CLAUDE.md`. `STATUS.md` holds only live state; the module-status board there is the SSOT for what's open, not this file.
 
@@ -44,6 +44,56 @@
 ---
 
 ## Session Log (newest first)
+
+### 02/09/2026 21:1X – 03/09/2026 02:0X — module 9 built end-to-end under delegation: four migrations, six screens, and two blockers only a human journey found
+
+**The frame.** Ishay delegated the whole module (*"אני מאציל אותך להתחיל ולסיים את מודול 9… העזר
+בסוכנים… תפתור בעצמך את הקונפליקטים. אבל שום דבר לא בשקט"*), keeping only module-close for a fresh
+session. Orchestration: this session on Fable 5.1 (later Opus 5), builders on Opus/Sonnet with
+disjoint file lists and a shared preamble (`scratchpad/builder-preamble.md`) carrying the hard rules
+— no git, LF only, run only related tests, gap protocol, report format.
+
+**DB (phase 1).** Migrations A/B/C applied at 21:2X **after Ishay waived the typed echo once,
+explicitly and in advance** (*"תחיל חד פעמי עם אישור מראש. הנה אני מאשר לך להכיל את כולם"*) — the
+gate itself is unchanged and this is recorded as a one-off in `db_roadmap` §10ב, not as precedent.
+Migration D (the min-wage RPC's preview argument) got a real typed echo at 23:1X. Live proofs, all
+rolled back: 43 rows / 6 types / 4 policies / 38 owned; finance updates VAT (1 row) and not a weight
+(0 rows), recruitment the mirror; the RPC returns 2 rows at a 40 ₪ threshold and `42501` for
+logistics; `record_feedback` still marks `no_response` with the param row absent, and blocks score 3
+once the threshold is raised to 4. Health battery: 13/0, then 12/0 after D (check 10 N/A).
+
+**Logic + screens (phases 2–3).** Six hard-coded business constants became `params` rows across
+m2/m3/m4/m5/m6/m8 — grep for the six constants and for the literal `< 3`/`ל-3` in finance both
+return **0**. Six surfaces built by four parallel builders on the approved v2 mockup. Gate exit 0 at
+**83 files / 2094 tests** (baseline 67 / 1838); `test:e2e` **166 passed**; `smoke` 1/1.
+
+**The finding that matters.** Ishay asked *"מישהו עבר על המסכים עשה בדיקות UI UX?"* — the honest
+answer was "partially": axe, bidi and the state matrix were measured, no heuristic journey had been
+run. A fresh-context Opus reviewer then walked five real logins and found **two blockers that every
+automated gate had passed**: (1) the template editor's chip **appended** the token at the end of the
+body instead of inserting it at the caret, so obeying the screen's own instruction produced a broken
+mail — **and cleared the block, enabling Save on it**; (2) `validateParamValue` never read the
+registry's own `min`/`max`/`decimals`, so `סף שביעות רצון = 99` was accepted while the message
+promised a range. Both fixed and re-measured (chip restores the body byte-identical; bounds enforced
+from the same numbers the message prints, guarded by an `it.each` over every bounded entry).
+🔑 **The operational lesson, and it is about how we work, not about this module: builders shipped
+"green" without ever rendering their screen.** Unit tests see structure, not layout or flow; the
+first screenshot was taken at the 🎨 gate, and that is where every layout defect surfaced — three
+found by the screenshot-taker, two by Ishay's own eye, two by the journey reviewer. ⇒ **a screen
+builder does not report "done" without a live screenshot it has looked at** (to be carried into
+`src/CLAUDE.md` at module close).
+
+**Ishay's rulings this session.** micro-guide over Discovery (R-1) · the second door "ההגדרות שלי"
+(R-2) · two-level template gating (R-3) · prefs table with only the email toggle live (R-4) · Q-1…Q-4
+(prices card leaves the `מחירים` tab · both unread rows deleted ⇒ 43 · the validation kinds · owner
+map by natural owner ⇒ 38) · the v2 mockup approved 22:02 · the value column *"שיראה נורמלי למרכז
+ולהקטין את המלבן"* · the 🎨 gate approved 01:3X.
+
+**Claude rulings under the delegation (all reversible, all disclosed):** four hard-coded numbers in
+UI sentences interpolated from the params they describe · the attendance note stays uniform across
+CEO and owner views · search navigates rather than filters inside a designed pane · loaders fail
+loud on a missing param name · the min-wage preview reads the typed value (migration D) rather than
+only the saved one.
 
 ### 02/09/2026 19:0X–20:5X — module 9 opened: blueprint approved after a review and a rehearsal that each found what the other could not
 

@@ -116,12 +116,29 @@ describe('SmartMatchPane', () => {
     expect(screen.getByTestId(`settings-value-${N.goalpostDistanceKm}`)).toBeInTheDocument()
   })
 
-  it('מציגה את המונה-החי מ-countAttendanceRows: "1" מתוך "27"', async () => {
+  it('מונה חי = 1 ⇒ הנוסח היחידאי, עם המספר החי ועם הסיבה שזה משנה', async () => {
     await renderPane()
     const note = screen.getByTestId('settings-smartmatch-attendance-note')
-    expect(note.textContent).toContain('1')
-    expect(note.textContent).toContain('27')
-    expect(note.textContent).toContain('שורות-נוכחות')
+    // 🔤 שורה בודדת אינה "1 שורות-נוכחות" — היא המקרה שגם אומר *למה* זה משנה (03/09/2026).
+    expect(note.textContent).toBe(
+      'שורת-נוכחות אחת בלבד מתוך 27 שיבוצים — עדיין אין מספיק נתונים כדי שהמרכיב הזה ישנה משהו',
+    )
+  })
+
+  it('מונה חי > 1 ⇒ צורת-הרבים, ושני המספרים חיים (לא מקודדים)', async () => {
+    countAttendanceRows.mockResolvedValue({ total: 40, withAttendance: 12 })
+    await renderPane()
+    expect(screen.getByTestId('settings-smartmatch-attendance-note').textContent).toBe(
+      '12 שורות-נוכחות מתוך 40 שיבוצים',
+    )
+  })
+
+  it('הנוסח זהה בשני הווריאנטים — זו עובדה על הדאטה, לא על מי שמסתכלת', async () => {
+    const { unmount } = await renderPane({ variant: 'ceo' })
+    const ceoNote = screen.getByTestId('settings-smartmatch-attendance-note').textContent
+    unmount()
+    await renderPane({ variant: 'owner' })
+    expect(screen.getByTestId('settings-smartmatch-attendance-note').textContent).toBe(ceoNote)
   })
 
   it('מתג-האמינות מדווח onChange עם ערך טקסטואלי "true"/"false"', async () => {

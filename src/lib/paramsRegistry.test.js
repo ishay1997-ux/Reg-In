@@ -212,6 +212,93 @@ describe('validateParamValue — טבלת קבלה/דחייה לכל kind (Q-3)'
   })
 })
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 🔬 **הפגם שזה נועל (נמדד 03/09/2026, סקירת-UX בהקשר-טרי):** `min`/`max`/`decimals`
+// שבשורת-המרשם היו **מטא-דאטה מתה** — ההודעה הבטיחה כלל, ואף שורת-קוד לא אכפה אותו.
+// שלוש מדידות שהתקבלו כתקינות: `אחוז_מעמ = 17.555` · `משקולת_קרבה = 0.333333` ·
+// `סף_שביעות_רצון = 99`. הבדיקות כאן נכשלות **בדיוק** אם המטא-דאטה תתעלם שוב.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const NUMERIC_KINDS = new Set(['percent', 'int', 'decimal', 'weight'])
+const BOUNDED_ENTRIES = PARAM_REGISTRY.filter(
+  (entry) =>
+    NUMERIC_KINDS.has(entry.kind) &&
+    (entry.min != null || entry.max != null || entry.decimals != null),
+)
+
+// ערך תקין באמצע-הטווח של השורה — נקודת-ההשוואה שמונעת בדיקה ש"עוברת" כי הכול נפסל.
+function inRangeValue(entry) {
+  const decimals = entry.decimals ?? 0
+  if (entry.kind === 'int') return String(entry.min ?? 1)
+  if (entry.min != null && entry.max != null) {
+    return ((entry.min + entry.max) / 2).toFixed(decimals)
+  }
+  return ((entry.min ?? 0) + 1).toFixed(decimals)
+}
+
+describe('validateParamValue — min/max/decimals של השורה נאכפים, לא רק מוצהרים (A2)', () => {
+  it('יש שורות שמכריזות גבולות (אחרת הבדיקה למטה ריקה ותמיד "עוברת")', () => {
+    expect(BOUNDED_ENTRIES.length).toBeGreaterThanOrEqual(10)
+  })
+
+  // ⚠️ `it.each` על **המרשם החי** ולא על רשימה כתובה-ביד: שורה חדשה עם גבולות נכנסת
+  // לבדיקה מעצמה, ואי-אפשר להוסיף מטא-דאטה שאיש אינו אוכף.
+  it.each(BOUNDED_ENTRIES.map((entry) => [entry.name, entry]))(
+    '%s — הגבולות שהשורה מכריזה נאכפים על הערך',
+    (_name, entry) => {
+      const decimals = entry.decimals ?? 0
+      const step = entry.decimals ? Number(`1e-${entry.decimals}`) : 1
+
+      // ① ערך תקין באמצע הטווח חייב לעבור.
+      expect(validateParamValue(entry, inRangeValue(entry)).ok).toBe(true)
+
+      // ② צעד אחד מתחת ל-min ⇒ נפסל.
+      if (entry.min != null) {
+        expect(validateParamValue(entry, (entry.min - step).toFixed(decimals)).ok).toBe(false)
+      }
+      // ③ צעד אחד מעל ל-max ⇒ נפסל.
+      if (entry.max != null) {
+        expect(validateParamValue(entry, (entry.max + step).toFixed(decimals)).ok).toBe(false)
+      }
+      // ④ ספרה אחת יותר מהמוצהר ⇒ נפסל — **בתוך הטווח**, כדי שהפסילה תהיה על הספרות בלבד.
+      if (entry.decimals) {
+        const tooPrecise = `${inRangeValue(entry)}1`
+        expect(Number(tooPrecise)).toBeGreaterThanOrEqual(entry.min ?? 0)
+        if (entry.max != null) expect(Number(tooPrecise)).toBeLessThanOrEqual(entry.max)
+        expect(validateParamValue(entry, tooPrecise).ok).toBe(false)
+      }
+    },
+  )
+
+  it.each([
+    ['אחוז_מעמ', '17.555', 'ערך חוקי: מספר בין 0 ל-100, עד שתי ספרות אחרי הנקודה'],
+    ['משקולת_קרבה', '0.333333', 'ערך חוקי: מספר בין 0 ל-1, עד שתי ספרות אחרי הנקודה'],
+    ['סף_שביעות_רצון', '99', 'ערך חוקי: מספר שלם בין 1 ל-5'],
+  ])(
+    'שלוש המדידות של 03/09 — %s = %s נפסל, וההודעה נושאת את המספרים הנאכפים',
+    (name, value, message) => {
+      const result = validateParamValue(getParamEntry(name), value)
+      expect(result.ok).toBe(false)
+      expect(result.message).toBe(message)
+    },
+  )
+
+  it('ריק אומר "חסר ערך" ולא טווח — לכל קינד מספרי (C6)', () => {
+    for (const entry of BOUNDED_ENTRIES) {
+      expect(validateParamValue(entry, '')).toEqual({
+        ok: false,
+        message: 'יש למלא ערך — שדה ריק אינו 0',
+      })
+    }
+  })
+
+  it('קינד לא-מספרי (מייל) שומר על הודעת-הקינד שלו גם כשהוא ריק', () => {
+    expect(validateParamValue(getParamEntry('מייל_משרד_רואי_חשבון'), '').message).toBe(
+      'ערך חוקי: כתובת מייל תקינה',
+    )
+  })
+})
+
 describe('weightsSumOk — הסכימה ל-1.00 (±0.005)', () => {
   it('0.40/0.35/0.25 (הזרע החי) ⇒ תקין', () => {
     expect(weightsSumOk([0.4, 0.35, 0.25])).toBe(true)

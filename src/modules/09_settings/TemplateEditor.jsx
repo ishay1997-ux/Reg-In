@@ -32,6 +32,10 @@ function TemplateChip({ token, required, missing, disabled, onInsert }) {
     <button
       type="button"
       disabled={disabled}
+      // 🖱️ מונע את איבוד-המיקוד מהטקסטה בלחיצה — אותה תבנית בדיוק כמו `CustomerPicker`
+      // (`src/CLAUDE.md`, "משטח-צף שנסגר ב-blur"): הסמן לא זז מלכתחילה, ולכן אין מה
+      // "לשחזר". ה-`click` עצמו ממשיך לעבוד, וגם הפעלה מהמקלדת (Enter/רווח) לא נפגעת.
+      onMouseDown={(e) => e.preventDefault()}
       onClick={() => onInsert(token)}
       className={cn(
         'rounded-full border px-2.5 py-1 text-[12.5px] disabled:cursor-not-allowed disabled:opacity-60',
@@ -59,6 +63,16 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
 
   const [selectedName, setSelectedName] = useState(templateRows[0]?.param_name ?? null)
   const textareaRef = useRef(null)
+  // 🔴 **מיקום-הסמן נשמר בעצמנו ולא נקרא מ-`selectionStart` ברגע הלחיצה — וזה לא קפדנות,
+  // זה באג שנמדד** (03/09/2026): כש-React כותב `value` לתוך ה-DOM, הדפדפן מזיז את הסמן
+  // ל**סוף** הטקסט. ⇒ טקסטה שהמשתמשת מעולם לא נגעה בה מדווחת `selectionStart === body.length`,
+  // והצ'יפ "הוסיף בסוף" במקום להכניס בסמן — הטוקן נדבק למשפט האחרון, השורה הראשונה נשארה
+  // ‏`היי ,` והחסימה נעלמה על גוף פגום. ‏`{ name, start, end }` — ה-`name` הוא מה שמבחין
+  // בין "המשתמשת מיקמה סמן בתבנית הזו" ל"התחלפה תבנית והסמן שנשמר שייך לטקסט אחר".
+  const caretRef = useRef(null)
+  // מיקום שאליו יש להחזיר את הסמן **אחרי** ש-React יכתוב את הגוף החדש ל-DOM. ‏`useEffect`
+  // ולא `requestAnimationFrame`: ה-effect רץ בוודאות אחרי ה-commit, בעוד ש-rAF רק "בדרך-כלל".
+  const pendingCaretRef = useRef(null)
 
   // השורה שנבחרה יכולה להיעלם (סינון/רענון) — נגזר-בזמן-render, לא effect+setState
   // (`react-hooks/set-state-in-effect` היא שגיאה קשיחה כאן, src/CLAUDE.md).
@@ -75,26 +89,56 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
     // eslint-disable-next-line react-hooks/exhaustive-deps -- תלוי בתוכן ה-verdict, לא בזהותו
   }, [selectedRow?.param_name, verdict?.status, verdict?.message])
 
+  // החזרת המיקוד והסמן אחרי שהגוף החדש כבר נכתב ל-DOM (ר' `pendingCaretRef` למעלה).
+  useEffect(() => {
+    const el = textareaRef.current
+    const caretPos = pendingCaretRef.current
+    if (el && caretPos != null) {
+      pendingCaretRef.current = null
+      el.focus()
+      el.setSelectionRange(caretPos, caretPos)
+    }
+  }, [body])
+
   if (templateRows.length === 0) return null
+
+  // כל אירוע שבו למשתמשת **באמת** יש סמן בטקסטה (מיקוד · הזזת-סמן · הקלדה) — נשמר כאן.
+  function rememberCaret() {
+    const el = textareaRef.current
+    if (!el || !selectedRow) return
+    caretRef.current = {
+      name: selectedRow.param_name,
+      start: el.selectionStart,
+      end: el.selectionEnd,
+    }
+  }
 
   function insertToken(token) {
     if (!selectedRow || !editable) return
     const current = body
-    const el = textareaRef.current
-    if (!el) {
-      onChange?.(selectedRow.param_name, `${current}${token}`)
-      return
+    const name = selectedRow.param_name
+    const remembered = caretRef.current?.name === name ? caretRef.current : null
+
+    let next
+    let caretPos
+    if (remembered) {
+      // הכנסה בסמן, ובחירה-פעילה מוחלפת בטוקן (start<end) — הצמדה לאורך הגוף מגינה מפני
+      // סמן ששרד עריכה שקיצרה את הטקסט.
+      const start = Math.min(remembered.start, current.length)
+      const end = Math.min(Math.max(remembered.end, start), current.length)
+      next = current.slice(0, start) + token + current.slice(end)
+      caretPos = start + token.length
+    } else {
+      // 🔻 גיבוי — הטקסטה מעולם לא קיבלה מיקוד ⇒ אין סמן אמיתי להכניס בו. מוסיפים בסוף,
+      // אבל **לעולם לא מודבק למילה האחרונה**: גוף שאינו מסתיים ברווח/שורה מקבל שורה חדשה.
+      const separator = current.length === 0 || /\s$/.test(current) ? '' : '\n'
+      next = `${current}${separator}${token}`
+      caretPos = next.length
     }
-    const start = el.selectionStart ?? current.length
-    const end = el.selectionEnd ?? current.length
-    const next = current.slice(0, start) + token + current.slice(end)
-    onChange?.(selectedRow.param_name, next)
-    // מחזירים פוקוס+סמן אחרי הטוקן שהוכנס, בתור-הבא — לא תוך-כדי ה-render הנוכחי.
-    const caretPos = start + token.length
-    requestAnimationFrame(() => {
-      el.focus()
-      el.setSelectionRange(caretPos, caretPos)
-    })
+
+    onChange?.(name, next)
+    caretRef.current = { name, start: caretPos, end: caretPos }
+    pendingCaretRef.current = caretPos
   }
 
   return (
@@ -133,7 +177,14 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
             value={body}
             readOnly={!editable}
             disabled={!editable}
-            onChange={(e) => onChange?.(selectedRow.param_name, e.target.value)}
+            onFocus={rememberCaret}
+            onSelect={rememberCaret}
+            onKeyUp={rememberCaret}
+            onMouseUp={rememberCaret}
+            onChange={(e) => {
+              rememberCaret()
+              onChange?.(selectedRow.param_name, e.target.value)
+            }}
             className={cn(
               'w-full rounded-lg border border-slate-300 bg-slate-50 p-3 text-[13.5px] leading-[2.1] text-slate-700',
               !editable && 'cursor-not-allowed text-slate-500',
@@ -149,7 +200,14 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
             >
               <b>{verdict.message}</b>
               <br />
-              השמירה חסומה. אפשר להחזיר את המשתנה מהרשימה שלמטה.
+              {/* 🔤 שתי סיבות-חסימה שונות ⇒ שתי הוראות שונות. עד 03/09/2026 המשפט השני היה
+                  קבוע ואמר "אפשר להחזיר את המשתנה מהרשימה שלמטה" — הוראה **שגויה** לטוקן
+                  לא-מוכר: הוא אינו ברשימה שלמטה מלכתחילה (זו בדיוק הסיבה שהוא לא-מוכר),
+                  והפעולה הנכונה היא למחוק אותו מהטקסט. `verdict.missingRequired` הוא מה
+                  שמבחין — `templateSaveVerdict` מדווחת חובה-חסרה לפני לא-מוכר. */}
+              {verdict.missingRequired?.length > 0
+                ? 'השמירה חסומה. אפשר להחזיר את המשתנה מהרשימה שלמטה.'
+                : 'השמירה חסומה. צריך למחוק את המשתנה מהטקסט — הוא לא קיים במערכת.'}
             </div>
           )}
 

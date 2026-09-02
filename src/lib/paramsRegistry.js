@@ -73,7 +73,7 @@ function paramBoolean(value) {
 
 // קישור https תקין. אף שורה חיה מבין ה-43 אינה מסוג `url` נכון לרגע זה (הפרמטר היחיד
 // שהיה זקוק לו, `קישור_בסיס_סקר_לקוחות`, נמחק ב-Q-2) — אבל §2.8 דורש את הפרדיקט כחלק
-// מהחוזה (שורת-URL עתידית לא תדרוש קובץ שני), ולכן הוא מחובר ב-KIND_VALIDATORS למטה.
+// מהחוזה (שורת-URL עתידית לא תדרוש קובץ שני), ולכן הוא מחובר ב-KIND_RULES למטה.
 function isValidHttpsUrl(value) {
   if (isBlank(value)) return false
   try {
@@ -84,17 +84,24 @@ function isValidHttpsUrl(value) {
 }
 
 // ── ולידציה לפי קינד — ההודעה תמיד אומרת מה כן תקין (§2.8) ─────────────────
-const KIND_VALIDATORS = {
-  percent: {
-    test: isValidVatPercent,
-    message: 'ערך חוקי: מספר בין 0 ל-100, עד שתי ספרות אחרי הנקודה',
-  },
-  int: { test: isValidPositiveInt, message: 'ערך חוקי: מספר שלם חיובי' },
-  decimal: {
-    test: isValidNonNegativePrice,
-    message: 'ערך חוקי: מספר 0 ומעלה, עד שתי ספרות אחרי הנקודה',
-  },
-  weight: { test: isValidWeight, message: 'ערך חוקי: מספר בין 0 ל-1' },
+//
+// 🔴 **ההודעה נבנית מאותם מספרים שנאכפים בפועל — וזה תיקון של פגם שנמדד** (03/09/2026,
+// סקירת-UX בהקשר-טרי): עד לתיקון היו ההודעות **מחרוזות קבועות** שהבטיחו כלל ש**שום קוד
+// לא אכף**, כי `min`/`max`/`decimals` שבשורת-המרשם מעולם לא נקראו. שלוש מדידות:
+// ‏`אחוז מע"מ = 17.555` התקבל בעוד ההודעה מבטיחה "עד שתי ספרות אחרי הנקודה" ·
+// ‏`משקולת קרבה = 0.333333` התקבל · `סף שביעות רצון = 99` התקבל אף שהשורה מכריזה
+// ‏`min: 1, max: 5`. **הודעה שמבטיחה כלל שאינו נאכף גרועה מהיעדר-הודעה** — היא מלמדת את
+// המשתמשת חוק שקרי. ⇒ מקור אחד: `boundsFor(entry)` מייצר גם את האכיפה וגם את הנוסח.
+const BLANK_NUMERIC_ERROR = 'יש למלא ערך — שדה ריק אינו 0'
+
+// ברירות-המחדל של הקינד = בדיוק מה שהפרדיקט המורכב כבר אוכף (`isValidVatPercent` = 0–100,
+// ‏`isValidPositiveInt` = שלם ≥1, `isValidNonNegativePrice` = ≥0, `isValidWeight` = 0–1).
+// שורת-מרשם שמכריזה `min`/`max`/`decimals` **מצרה** מהם; היא לעולם אינה מרחיבה.
+const KIND_RULES = {
+  percent: { test: isValidVatPercent, base: 'מספר', min: 0, max: 100, decimals: 2 },
+  int: { test: isValidPositiveInt, base: 'מספר שלם', min: 1, decimals: 0, integer: true },
+  decimal: { test: isValidNonNegativePrice, base: 'מספר', min: 0, decimals: 2 },
+  weight: { test: isValidWeight, base: 'מספר', min: 0, max: 1, decimals: 2 },
   boolean: { test: isValidBooleanText, message: 'ערך חוקי: כן או לא בלבד' },
   email: {
     test: (value) => !isBlank(value) && EMAIL_REGEX.test(String(value).trim()),
@@ -105,11 +112,70 @@ const KIND_VALIDATORS = {
   // גוף-התבנית מאומת ב-emailTemplates.js (templateSaveVerdict, צעד 2.2) — לא כפילות-חוזה.
 }
 
+function boundsFor(entry, rule) {
+  return {
+    base: rule.base,
+    integer: Boolean(rule.integer),
+    min: entry?.min ?? rule.min ?? null,
+    max: entry?.max ?? rule.max ?? null,
+    decimals: entry?.decimals ?? rule.decimals ?? null,
+  }
+}
+
+function rangePhrase({ min, max, integer }) {
+  if (min != null && max != null) return `בין ${min} ל-${max}`
+  // 🔒 "שלם עם רצפה 1" ו-"שלם חיובי" הם אותה עובדה בדיוק, והנוסח השני הוא זה שכבר נעול
+  // בבדיקת-E2E (`e2e/prices.spec.js`, יחס-אורחים) — אין סיבה לשבור אותו כדי לומר מספר.
+  if (min != null) return integer && min === 1 ? 'חיובי' : `${min} ומעלה`
+  if (max != null) return `עד ${max}`
+  return ''
+}
+
+// צורות-הריבוי בעברית אינן נגזרות ממספר, ולכן שתי הצורות הנפוצות כתובות במפורש.
+function decimalsPhrase(decimals) {
+  if (decimals === 1) return 'עד ספרה אחת אחרי הנקודה'
+  if (decimals === 2) return 'עד שתי ספרות אחרי הנקודה'
+  return `עד ${decimals} ספרות אחרי הנקודה`
+}
+
+function numericMessage(bounds) {
+  const range = rangePhrase(bounds)
+  const head = range ? `${bounds.base} ${range}` : bounds.base
+  // `decimals: 0` (קינד שלם) אינו נאמר — "מספר שלם" כבר אומר זאת, ומשפט כפול מבלבל.
+  return bounds.decimals
+    ? `ערך חוקי: ${head}, ${decimalsPhrase(bounds.decimals)}`
+    : `ערך חוקי: ${head}`
+}
+
+// ספירת ספרות-אחרי-הנקודה מהטקסט ולא מהמספר: `Number('17.550')` הוא 17.55, ומי שהקליד
+// שלוש ספרות צריך לראות את ההודעה על מה שהקליד.
+function decimalPlaces(value) {
+  const text = String(value).trim()
+  const dot = text.indexOf('.')
+  return dot === -1 ? 0 : text.length - dot - 1
+}
+
 // { ok:true } | { ok:false, message } — ההודעה תמיד חיובית ("מה כן תקין"), לא רק "לא תקין".
 export function validateParamValue(entry, value) {
-  const validator = KIND_VALIDATORS[entry?.kind]
-  if (!validator) return { ok: true }
-  return validator.test(value) ? { ok: true } : { ok: false, message: validator.message }
+  const rule = KIND_RULES[entry?.kind]
+  if (!rule) return { ok: true }
+  if (!rule.base) return rule.test(value) ? { ok: true } : { ok: false, message: rule.message }
+
+  // A-4 / C6: ריק אינו 0 — וההודעה עליו אומרת "חסר ערך", לא טווח. משתמשת שמחקה שדה
+  // וקיבלה "ערך חוקי: מספר בין 1 ל-5" חושבת שהמספר שלה פסול, ולא שהשדה ריק.
+  if (isBlank(value)) return { ok: false, message: BLANK_NUMERIC_ERROR }
+
+  const bounds = boundsFor(entry, rule)
+  const message = numericMessage(bounds)
+  if (!rule.test(value)) return { ok: false, message }
+
+  const n = Number(value)
+  if (bounds.min != null && n < bounds.min) return { ok: false, message }
+  if (bounds.max != null && n > bounds.max) return { ok: false, message }
+  if (bounds.decimals != null && decimalPlaces(value) > bounds.decimals) {
+    return { ok: false, message }
+  }
+  return { ok: true }
 }
 
 // ── כללי-רוחב (§2.8 "Cross-field") — לא חלק מ-validateParamValue של שדה בודד ──
@@ -490,7 +556,7 @@ export const PARAM_REGISTRY = [
   },
   {
     name: 'קבוע_ריסון_m',
-    label: 'קבוע ריסון',
+    label: 'משקל ממוצע-החברה',
     hint: 'כמה "תשובות דמיוניות" ממוצע-החברה שוקל בציון של דיילת עם מעט היסטוריה — מונע קפיצה מדירוג אחד או שניים',
     kind: 'int',
     min: 1,
@@ -498,7 +564,7 @@ export const PARAM_REGISTRY = [
   },
   {
     name: 'חלון_חישוב_חודשים',
-    label: 'חלון חישוב',
+    label: 'טווח חישוב',
     hint: 'כמה חודשים אחורה נספרים לחישוב ציוני היענות ואמינות',
     kind: 'int',
     unit: 'חודשים',
@@ -507,7 +573,7 @@ export const PARAM_REGISTRY = [
   },
   {
     name: 'חלון_חישוב_מורחב_חודשים',
-    label: 'חלון חישוב מורחב',
+    label: 'טווח חישוב מורחב',
     hint: 'החלון המורחב שנפתח כשלדיילת אין מספיק תשובות בחלון הרגיל',
     kind: 'int',
     unit: 'חודשים',

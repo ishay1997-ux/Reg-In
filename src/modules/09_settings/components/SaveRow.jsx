@@ -21,7 +21,14 @@ export default function SaveRow({
   failedMessage = '',
 }) {
   return (
-    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-3">
+    // 📌 **דביקה לתחתית הכרטיס (סקירת-UX 03/09/2026).** נמדד שבמסך-הגיוס כפתור-השמירה
+    // **היחיד** יושב ~2200px מתחת לראש-העמוד: מי שמשנה משקולת בראש הטבלה אינה רואה שיש
+    // בכלל מה לשמור. ‏`sticky bottom-0` צף מעל תוכן, ולכן חובה **רקע אטום + גבול-עליון** —
+    // בלעדיהם השורה קוראת כטקסט שרץ על גבי הטבלה. ‏`-mx-4/-mb-4` + `px-4/pb-4` מנטרלים את
+    // ריפוד-הכרטיס (`p-4` בשני הצרכנים) כדי שהפס ישתרע מקצה לקצה, ו-`rounded-b-xl` שומר
+    // על פינות-הכרטיס. **חל על שני המשטחים** — הלשונית ו"ההגדרות שלי" — כי אותה שורה
+    // עצמה משרתת את שניהם, וטבלת "תבניות מייל" בלשונית ארוכה בדיוק באותה מידה.
+    <div className="sticky bottom-0 z-10 -mx-4 -mb-4 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-b-xl border-t border-slate-200 bg-white px-4 pt-3 pb-4">
       {failedMessage ? (
         <span
           role="alert"
@@ -32,7 +39,15 @@ export default function SaveRow({
         </span>
       ) : (
         <span className="text-sm text-slate-500" data-testid="settings-dirty-count">
-          שינית <Ltr>{dirtyCount}</Ltr> מתוך <Ltr>{total}</Ltr>
+          {/* 🔤 קבוצה בת שורה אחת (קבוצת "טכני") הציגה "שינית 0 מתוך 1" — ניסוח שנקרא
+              כמו תקלה, לא כמו "אין מה לשמור" (סקירת-UX 03/09/2026). */}
+          {dirtyCount === 0 && total === 1 ? (
+            'לא שינית כלום'
+          ) : (
+            <>
+              שינית <Ltr>{dirtyCount}</Ltr> מתוך <Ltr>{total}</Ltr>
+            </>
+          )}
         </span>
       )}
 

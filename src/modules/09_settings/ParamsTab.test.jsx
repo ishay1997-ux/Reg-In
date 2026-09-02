@@ -119,11 +119,17 @@ describe('ParamsTab — ולידציה ושמירה', () => {
   it('ערך פסול מציג הודעה עברית ואינו נשלח', async () => {
     renderTab()
     await screen.findByTestId('settings-table')
-    fireEvent.change(screen.getByTestId('settings-value-אחוז_מעמ'), { target: { value: '' } })
+    fireEvent.change(screen.getByTestId('settings-value-אחוז_מעמ'), { target: { value: '150' } })
 
     expect(
       await screen.findByText('ערך חוקי: מספר בין 0 ל-100, עד שתי ספרות אחרי הנקודה'),
     ).toBeInTheDocument()
+    expect(screen.getByTestId('settings-save-button')).toBeDisabled()
+
+    // ריק ⇒ הודעת-"חסר ערך" ולא טווח (C6, 03/09/2026): מי שמחקה שדה חושבת שהמספר שלה
+    // פסול כשהיא מקבלת טווח, ולא שהשדה ריק.
+    fireEvent.change(screen.getByTestId('settings-value-אחוז_מעמ'), { target: { value: '' } })
+    expect(await screen.findByText('יש למלא ערך — שדה ריק אינו 0')).toBeInTheDocument()
     expect(screen.getByTestId('settings-save-button')).toBeDisabled()
     fireEvent.click(screen.getByTestId('settings-save-button'))
     expect(updateParams).not.toHaveBeenCalled()
