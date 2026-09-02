@@ -8,14 +8,25 @@ import {
   selectRecipients,
 } from './marketing'
 
-// עוזר-בנייה לשורת-נמען (override נקודתי לכל תרחיש)
-const r = (over = {}) => ({
+// עוזר-בנייה לשורת-נמען (override נקודתי לכל תרחיש).
+// 🔴 שונה 02/09/2026 — והשינוי הזה הוא הלקח, לא הפרט. הפיקסטורה הייתה **שטוחה**
+// (`email` ו-`contact_name` ישירות על הלקוח), בעוד `getConsentedCustomers` עברה מזמן
+// לאמבד `customer_contacts(...)`. ⇒ **הבדיקות רצו מול צורת-נתונים שאינה קיימת בייצור**,
+// ולכן עברו בירוק בזמן ש-`dedupeEmails` החזירה `[undefined]` והדיוור נשלח לאף אחד.
+// 🔑 **פיקסטורה שאינה תואמת את ה-`select` האמיתי אינה רשת-ביטחון — היא חותמת-גומי.**
+// המבנה כאן משקף מילה-במילה את מה ש-`getConsentedCustomers` מחזירה
+// (`src/modules/02_customers/api.js`, קבוע `PRIMARY_CONTACT_EMBED`).
+// ⚠️ ה-override נשאר **שטוח בכוונה** (`r({ email: 'x' })`) כדי שהבדיקות יישארו קריאות —
+// העוזר הוא שמרכיב ממנו את השורה המקוננת. אין כאן קיצור-דרך: `dedupeEmails` עדיין חייבת
+// לעבור דרך `primaryContact`, אחרת היא תקבל `undefined` בדיוק כמו בייצור.
+const r = ({ contact_name = 'דנה כהן', email = 'dana@alpha.co.il', ...over } = {}) => ({
   customer_id: 1,
   company_name: 'טכנולוגיות אלפא',
-  contact_name: 'דנה כהן',
-  email: 'dana@alpha.co.il',
   customer_type: 'private_company',
   discount_percent: 0,
+  customer_contacts: [
+    { contact_id: 101, contact_name, phone: '050-1112223', email, is_primary: true },
+  ],
   ...over,
 })
 
@@ -192,6 +203,36 @@ describe('dedupeEmails — BCC ייחודי (email אינו UNIQUE §7.65)', () 
       r({ customer_id: 3, email: 'b@x.co.il' }),
     ]
     expect(dedupeEmails(rows)).toEqual(['b@x.co.il', 'a@x.co.il'])
+  })
+
+  // 🔴 שלוש הבדיקות הבאות נוספו 02/09/2026 אחרי שהתקלה כבר קרתה בייצור. הן קיימות
+  // כדי שהיא לא תוכל לחזור בשקט — כל אחת נופלת אם מישהו יחזיר קריאה שטוחה.
+  it('לקוח שאיש-הקשר הראשי שלו בלי אימייל — אינו נספר כנמען', () => {
+    // בלי filter(Boolean) הוא היה מגיע ל-BCC כמחרוזת "undefined" ומרעיל את כל השליחה.
+    const rows = [r({ customer_id: 1, email: 'real@x.co.il' }), r({ customer_id: 2, email: null })]
+    expect(dedupeEmails(rows)).toEqual(['real@x.co.il'])
+  })
+
+  it('לקוח בלי שורות אנשי-קשר כלל — אינו מפיל ואינו נספר', () => {
+    const rows = [r({ customer_id: 1, email: 'real@x.co.il' }), { customer_id: 2 }]
+    expect(dedupeEmails(rows)).toEqual(['real@x.co.il'])
+  })
+
+  it('הכתובת נלקחת מהראשי בלבד — לא מאיש-קשר נוסף', () => {
+    // הבדיקה שתופסת מימוש שמשטח את כל אנשי-הקשר במקום לבחור את הראשי. השני מוזרק
+    // ראשון במערך בכוונה: `find` על is_primary חייב לגבור על "הראשון ברשימה".
+    const row = r()
+    row.customer_contacts = [
+      {
+        contact_id: 9,
+        contact_name: 'משני',
+        phone: null,
+        email: 'wrong@x.co.il',
+        is_primary: false,
+      },
+      ...row.customer_contacts,
+    ]
+    expect(dedupeEmails([row])).toEqual(['dana@alpha.co.il'])
   })
 
   it('רשימה ריקה ⇒ []', () => {

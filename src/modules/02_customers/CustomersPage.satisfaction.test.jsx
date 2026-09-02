@@ -46,9 +46,17 @@ function customerRow(id, name) {
     company_name: name,
     company_number: `51400000${id}`,
     customer_type: 'private_company',
-    contact_name: 'דנה כהן',
-    phone: '050-1234567',
-    email: `c${id}@example.co.il`,
+    // N2: הצורה שהשאילתה באמת מחזירה — איש-הקשר הראשי הוא שורת-בת עם `is_primary`,
+    // לא עמודות על הלקוח. פיקסטורה שטוחה כאן הייתה עוברת בירוק גם על מימוש שבור.
+    customer_contacts: [
+      {
+        contact_id: id,
+        contact_name: 'דנה כהן',
+        phone: '050-1234567',
+        email: `c${id}@example.co.il`,
+        is_primary: true,
+      },
+    ],
     discount_percent: 0,
     marketing_consent: false,
     status: 'active',

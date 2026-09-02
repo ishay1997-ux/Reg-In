@@ -79,14 +79,33 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
   test.beforeAll(async () => {
     await resolveSendableQuote()
     await withServiceClient(async (sb) => {
-      await sb.from('customers').insert({
-        company_name: CLEAN_COMPANY_NAME,
-        company_number: CLEAN_COMPANY_NUMBER,
-        customer_type: 'private_company',
-        contact_name: 'איש קשר בדיקה',
-        phone: '03-1234567',
-        email: 'guards@example.com',
-      })
+      // 🔴 N2 (02/09/2026): איש-הקשר נכתב לטבלת-הבת, לא לשלוש עמודות-האב.
+      // **שתי סיבות, ושתיהן נמדדו — זו אינה הצמדות-לסגנון:**
+      // ① שלוש העמודות נמחקות ב-`N2ד`, ואז ה-insert הישן היה נכשל ב-`42703` ומפיל את
+      //    כל הקובץ — כשל שהיה נראה כמו רגרסיה בקוד ולא כמו פיקסטורה מיושנת.
+      // ② וגם היום, לפני המחיקה: הגרסה הישנה יצרה לקוח עם **אפס שורות אנשי-קשר**,
+      //    מצב ש-`primaryContact()` מחזיר עליו `null` ו**שהמסך אינו יכול לייצר בכלל**
+      //    (ה-RPC אוכף "לפחות אחד"). בדיקה שרצה על ישות בלתי-אפשרית בודקת מצב שאינו קיים.
+      // ⚠️ אין כאן הזרקת-שורות חדשה — הספק הזה כבר הזריק, וזה רק תיקון-צורה. הניקוי
+      // ב-`afterAll` מכסה גם את שורת-הבת דרך `on delete cascade` של ה-FK.
+      const { data: created } = await sb
+        .from('customers')
+        .insert({
+          company_name: CLEAN_COMPANY_NAME,
+          company_number: CLEAN_COMPANY_NUMBER,
+          customer_type: 'private_company',
+        })
+        .select('customer_id')
+        .single()
+      if (created?.customer_id) {
+        await sb.from('customer_contacts').insert({
+          customer_id: created.customer_id,
+          contact_name: 'איש קשר בדיקה',
+          phone: '03-1234567',
+          email: 'guards@example.com',
+          is_primary: true,
+        })
+      }
     })
   })
 

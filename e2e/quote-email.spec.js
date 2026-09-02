@@ -132,19 +132,29 @@ test.describe('שליחת ההצעה במייל — החוזה מול השרת (
         .eq('status', 'sent')
       const everSent = new Set((sentRows ?? []).map((row) => row.entity_id))
 
+      // 🔴 N2 (02/09/2026): המייל נקרא מ-`customer_contacts` דרך הראשי, לא מ-`customers.email`.
+      // **הצורה הישנה נשברת פעמיים:** אחרי `N2ד` השאילתה עצמה תיכשל (העמודה לא קיימת),
+      // וכבר היום היא מצמצמת את מאגר-המועמדים בשקט — כל לקוח שנוצר אחרי `N2ג` נושא `null`
+      // באב, ולכן היה **נופל מהסינון** ונראה כאילו "אין הצעה מתאימה" במקום להיבחר.
       const { data: openQuotes } = await sb
         .from('quotes')
-        .select('quote_id, customers(email)')
+        .select('quote_id, customers(customer_contacts(email, is_primary))')
         .eq('quote_status', 'in_progress')
         .order('quote_id')
+      const primaryEmail = (row) =>
+        (row.customers?.customer_contacts ?? []).find((c) => c?.is_primary)?.email
       const candidates = (openQuotes ?? []).filter(
-        (row) => row.customers?.email && !everSent.has(row.quote_id),
+        (row) => primaryEmail(row) && !everSent.has(row.quote_id),
       )
       // דומיין-דמו קודם; כתובת אמיתית היא מוצא-אחרון ולא ברירת-מחדל.
+      // ⚠️ שלוש השורות האלה קוראות את אותה כתובת — כולן חייבות לעבור דרך `primaryEmail`.
+      // תיקון חלקי כאן נכשל בפועל 02/09/2026: השאילתה והסינון הוסבו, השורות האלה נשארו,
+      // וה-`find` נפל על `undefined.includes`. **המקרה הכללי: כשמסבים מקור-נתונים, מסבים
+      // את כל הצרכנים שלו באותו מעבר — לא את אלה שהחיפוש הראשון הראה.**
       const chosen =
-        candidates.find((row) => row.customers.email.includes(DEMO_DOMAIN)) ?? candidates[0] ?? null
+        candidates.find((row) => primaryEmail(row)?.includes(DEMO_DOMAIN)) ?? candidates[0] ?? null
       CLEAN_QUOTE_ID = chosen?.quote_id ?? null
-      CLEAN_RECIPIENT = chosen?.customers?.email ?? null
+      CLEAN_RECIPIENT = chosen ? (primaryEmail(chosen) ?? null) : null
     } finally {
       await sb.auth.signOut()
     }

@@ -12,6 +12,8 @@
 // דיוור בלי שום שגיאה. לכן סף-בטיחות מתחת לגבול: מעליו לא מרנדרים mailto חתוך — משביתים ומפנים
 // ל"העתק רשימת נמענים". (השליחה האמיתית בלי מגבלה = מודול 10.)
 // **פרטי במכוון** — לא מיוצא, כדי לא לחזור על ממצא-knip של `MARKETING_MAX_BYTES`.
+import { primaryContact } from '@/lib/customers'
+
 const MAILTO_MAX_CHARS = 1900
 
 const SUBJECT = 'חומר שיווקי מ-REG-IN'
@@ -24,8 +26,16 @@ export function selectRecipients(recipients, excludedIds) {
 
 // רשימת ה-BCC נגזרת מהנמענים עם dedup על email — ‏email **אינו UNIQUE** ב-DB (§7.65), ולכן
 // שני לקוחות שונים יכולים לחלוק כתובת. בלי ה-dedup אותה כתובת הייתה מופיעה פעמיים ב-BCC.
+// 🔴 N2 (02/09/2026): הכתובת מגיעה מ-`customer_contacts` דרך `primaryContact`, לא מ-`r.email`.
+// 🩸 **וזה תוקן אחרי שנשבר בייצור, לא לפניו:** ‏`getConsentedCustomers` עברה לאמבד באותו סבב,
+// והשורה כאן המשיכה לקרוא `r.email` שטוח ⇒ **כל כתובת הייתה `undefined`**, ה-`Set` כיווץ אותן
+// לאיבר אחד, ו-`buildMarketingMailtoHref` בנה `bcc=` ריק. **הדיוור נשלח לאף אחד, בלי שגיאה.**
+// ⚠️ **ולמה אף שער לא תפס: אין כאן קריאה ל-`customer.contact_name`** — יש `r.email`, שם גנרי
+// שאינו נראה קשור ללקוחות. **‏grep אחרי שם-העמודה מפספס את זה מעצם הגדרתו.**
+// 🔑 ה-`filter(Boolean)` אינו קוסמטי: לקוח בלי אימייל אצל הראשי מייצר `undefined`, ובלעדיו
+// הוא היה נספר כנמען ומגיע ל-BCC כמחרוזת "undefined".
 export function dedupeEmails(rows) {
-  return [...new Set((rows ?? []).map((r) => r.email))]
+  return [...new Set((rows ?? []).map((r) => primaryContact(r)?.email).filter(Boolean))]
 }
 
 // סוג התצוגה-המקדימה לפי ה-MIME של הקובץ שהועלה. ה-MIME כבר נבדק מול MARKETING_ALLOWED_MIME

@@ -329,9 +329,8 @@ test.describe('מסנן "פג בקרוב" — 7 הימים שאי-אפשר לה�
       customers: {
         customer_id: 46,
         company_name: 'לקוח בדיקה',
-        contact_name: 'א',
-        phone: '',
-        email: '',
+        // N2: הצורה שה-select האמיתי מחזיר (03_quotes/api.js) — שורת-בת, לא עמודות-אב.
+        customer_contacts: [{ contact_name: 'א', phone: '', email: '', is_primary: true }],
       },
     }
     await page.route('**/rest/v1/quotes?select=*', async (route) => {
@@ -379,9 +378,8 @@ test.describe('מסנן "פג בקרוב" — 7 הימים שאי-אפשר לה�
       customers: {
         customer_id: 46,
         company_name: 'לקוח בדיקה',
-        contact_name: 'א',
-        phone: '',
-        email: '',
+        // N2: הצורה שה-select האמיתי מחזיר (03_quotes/api.js) — שורת-בת, לא עמודות-אב.
+        customer_contacts: [{ contact_name: 'א', phone: '', email: '', is_primary: true }],
       },
     }
     await page.route('**/rest/v1/quotes?select=*', async (route) => {
