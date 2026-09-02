@@ -438,7 +438,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | ✅ ~~**C2**~~ **DONE 27/08/2026 18:0X** | ~~`alter table hostesses drop column bank_name, bank_branch, bank_account`~~ — **applied; ה19 is CLOSED.** Legacy columns **0** · child table **26/26** · **0** empty bank rows · `smoke` exit 0 and `hostesses.spec.js` **20/20** after the drop · `schema.sql` re-synced (16 documented / 16 live). 🔑 **The `updated_at` guard was not theoretical: all 26 child rows were NEWER than their parent, so an unguarded `do update` would have touched all 26 and pulled them back to the stale source. With the guard the copy touched 0.** *(Row kept struck rather than deleted — the correction it carries is the record. The original contract:)* | ~~m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live**~~ — **all three met: `dev` 518587d · `main` 9e07233 · Vercel production `state=success`, and the live bundle was fetched and asserted to contain `hostess_bank_details`** | 1️⃣ **Re-copy first** — `insert … on conflict (hostess_id) do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 🔴 **BUT THE `do update` MUST BE GUARDED BY `updated_at`** *(found 27/08/2026 at the 1.8 gate — the contract as first written was wrong)*: **after** the deploy m8's `api.js` writes ONLY the child, so an unguarded overwrite would push **stale parent values over fresh child rows** — the same data loss pointed backwards, landing as wrong bank numbers in a CPA salary report. Overwrite only where the parent row is genuinely newer than the child row (both tables carry a `moddatetime`-maintained `updated_at`). **Full contract + the SQL shape: **THIS ROW.** 🔴 *גובר: המצביע ל-`module-8.md` §8.4 אינו מוביל עוד ל-SQL · 01/09/2026 · אודיט-סגירת מ8* — הבלוק שם נגרס אחרי ש-C2 בוצעה, לפי הוראת-הבלוק עצמו (שלב 3).** 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
 
 | ✅ ~~**N1b**~~ **DONE 27/08/2026 19:3X — the whole N1 package is closed.** 🔑 **`data_type='ARRAY'` across `public` now returns ZERO columns** — the one 1NF violation is gone. Regression after the drop: `smoke` exit 0, m4 suites **32/32**. *(Row struck rather than deleted: the C2-vs-N1b guard lesson below is the record.)* | ~~create + copy~~ → **what remains: `alter table hostesses drop column languages`** | **the m8+N1 branch is merged and its deploy is confirmed live** — `origin/main` still writes the column (`HostessFormDialog.jsx:222`) and reads it (`HostessViewCard.jsx:328`) | Same three beats as C2: **add + copy → deploy → drop**, with a **re-copy immediately before the drop** — 🔴 **including C2's `updated_at` guard on the conflict action**, for the same reason: once the new code writes only the child, an unguarded overwrite runs backwards. ⚠️ `languages` is **nullable** (unlike the bank columns), so the additive half needs no constraint relaxation — create, copy, drop later | `PROJECT_MASTER_sec7.md §7.87` · here |
-| **N2** | `customer_contacts` consolidation — `is_primary` on the child, then drop `contact_name`/`phone`/`email` from `customers` | ✅ **trigger satisfied 02/09/2026** — m8 merged (PR #80→`dev`, #81→`main`) **and deployed**, asserted by fetching the live bundle from `reg-in-umber.vercel.app` and finding m8 strings in it (`ממתין לגבייה` · `היסטוריית דוחות-שכר` · `הצוות יקבל בפועל`) **and zero internal codes** (`(ה24)`/`(ה25)`/`(P1 ·` all 0). ⇒ **`N2א` APPLIED 02/09/2026** — see §10 | Same pattern, **separate drop migration** from N1's. 🔴 **Its blast radius is ~4.6× N1's — see the measurement below; "one package" is true of the pattern, not of the size** | here |
+| ✅ ~~**N2**~~ **DONE 02/09/2026 17:3X — the whole N2 package is closed.** 🔑 **The three columns return ZERO rows from `information_schema`; `customers` is down to 9 columns.** ‏9 customers · 9 contact rows · 9 primaries · 0 without a primary. **Four migrations, not the three the plan assumed** — `N2א` add · `N2ב` RPC · **`N2ג` relax + stop writing** · deploy · `N2ד` drop. 🔴 **`N2ג` exists because the precondition we had written down was the wrong one: the deployed form still WROTE the columns (they were `NOT NULL`), which "the code no longer reads them" cannot detect — and the two came apart precisely BECAUSE the read-rewire was done well.** ⚠️ **And three of the four real blockers were invisible to a `src/` grep:** two E2E specs (`load-failure-guards` inserted the columns directly; `quote-email` selected them) plus a third that only surfaced when the suite was RUN (`customers.spec.js` targeted testids the form rebuild had deleted, red since `53b562b`, unnoticed because E2E is not in CI). **Regression after the drop: full E2E suite run, `customers.spec.js` 3/3.** *(Row struck rather than deleted — the corrections it carries are the record. The original contract:)* | `customer_contacts` consolidation — `is_primary` on the child, then drop `contact_name`/`phone`/`email` from `customers` | ✅ **trigger satisfied 02/09/2026** — m8 merged (PR #80→`dev`, #81→`main`) **and deployed**, asserted by fetching the live bundle from `reg-in-umber.vercel.app` and finding m8 strings in it (`ממתין לגבייה` · `היסטוריית דוחות-שכר` · `הצוות יקבל בפועל`) **and zero internal codes** (`(ה24)`/`(ה25)`/`(P1 ·` all 0). ⇒ **`N2א` APPLIED 02/09/2026** — see §10 | Same pattern, **separate drop migration** from N1's. 🔴 **Its blast radius is ~4.6× N1's — see the measurement below; "one package" is true of the pattern, not of the size** | here |
 
 ✅ **CONFIRMED BY ISHAY DIRECTLY, `27/08/2026 17:1X` — the flag below is resolved and the rows stand.**
 He restated the ruling to this session in his own words: **"מאושר. שני הפריטים נכנסים כחבילה אחת
@@ -586,11 +586,45 @@ protection is false until it does.
   **That is expected.** Until `N2ד` the check answers "was the rewire completed", not "are the two
   copies identical" — and it dies with the drop.
 
-- 🔜 **`N2ד` — the drop. NOT WRITTEN YET.** Blocked on one thing only: **`N2ג`'s code half must be
-  deployed to `main`**, so that no running code writes the columns. Then: `drop column` ×3 on
-  `customers`, regenerate `docs/schema.sql`, delete check 10 from `docs/db_health_checks.md` and
-  replace it with a residue check (no trace of the three columns in the DB, in function bodies, in
-  `schema.sql`, or in `src/`).
+- ✅ **`20260902173354_n2d_drop_customers_contact_columns` — APPLIED 02/09/2026 17:3X**
+  (typed echo given). **The drop. The one irreversible step in N2 — and N2 is now CLOSED.**
+  **Verified after apply:** the three columns return **0** rows from `information_schema` ·
+  `customers` is down to 9 columns · 9 customers · 9 contact rows · 9 primaries · 0 without a
+  primary. **And the FULL E2E suite was run, not just read** — see the fourth finding below.
+  🩸 `drop column` deletes the data with the definition — there is no undo. What justifies it is not
+  that the columns are unused but that **`customer_contacts` holds the same values**: measured
+  immediately before writing — 9 customers · 9 child rows · 9 primaries · **0 without a primary ·
+  0 value-for-value mismatches**.
+  **All four preconditions checked today, none assumed:**
+  **① deployed code does not READ them** — `origin/main` scanned, every read goes through
+  `primaryContact()`; the live bundle was fetched from `reg-in-umber.vercel.app` and carries
+  `customer_contacts(`, `is_primary`, `replace_customer_contacts`.
+  **② deployed code does not WRITE them** — `payload.contact_name/phone/email` absent from the live
+  bundle. 🔑 **This is the condition that was nearly missed and that produced `N2ג`.**
+  **③ no database object depends on them** — 0 policies, 0 indexes, 0 views.
+  ⚠️ **The function scan first returned a FALSE POSITIVE:** an over-broad regex matched
+  `auth.email()` and `u.email` (the users table) inside `approve_quote_and_create_project`. Precise
+  check: `contact_name` does not appear in its body at all, and it does not read `customers` at all.
+  *(Recorded because that function silently broke quote approval on 09/08 and anyone seeing its name
+  next to a drop will reasonably panic.)*
+  **④ and the TEST SUITE does not depend on them either** — the dimension that nearly sank this:
+  `e2e/load-failure-guards` inserted the three columns directly, and `e2e/quote-email` selected
+  `customers(email)` for its candidate pool. **A grep over `src/` alone would have reported "zero
+  residue" and the drop would have broken the E2E suite.** Both fixed and deployed first (PR #93/#94).
+  🚫 **No re-copy needed, and that is a deliberate reading of the deploy rule, not an omission:** the
+  rule demands it when production kept writing to the old place during the window — here production
+  stopped writing at `N2ג`, verified in the live bundle, and `child_parent_mismatch = 0` is the proof
+  there is no delta to sync.
+  🗑️ **Died with this migration, as designed:** check §10 in `docs/db_health_checks.md`
+  (`child_parent_mismatch`) lost the parent to compare against. **Replaced** by a generalised
+  residue check in three dimensions — reads · writes · tests/E2E.
+  🔴 **And a FOURTH residue surfaced only when the suite was actually RUN, after the drop:**
+  `e2e/customers.spec.js` still filled `customer-form-contact-name`/`-phone`/`-email` — testids the
+  N2 form rebuild deleted in `53b562b`, **hours before the drop**. It had been red since then and
+  nobody knew, because `test:e2e` does not run in CI. **It was not caused by the drop and was not
+  found by any static check** — only by running the suite. Fixed by adding stable
+  `contact-field-*` testids inside `contact-row` and repointing the spec. ⇒ **"run the E2E suite
+  after a drop" is now part of the residue check, not an optional extra.**
 
 ## 10. Maintenance protocol (how this file stays alive)
 

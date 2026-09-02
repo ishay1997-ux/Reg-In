@@ -538,13 +538,18 @@ export default function CustomerFormDialog({
                   </div>
 
                   {/* שלושה שדות שווים, כל תווית-ותא באותה עטיפה (מוקש-RTL/LTR הקבוע של הפרויקט —
-                      תווית עברית שנפרדת מהערך שמתחתיה נצפתה שלוש פעמים כשהם לא באותו בלוק). */}
+                      תווית עברית שנפרדת מהערך שמתחתיה נצפתה שלוש פעמים כשהם לא באותו בלוק).
+                      🔴 `data-testid` נוסף 02/09/2026: שכתוב-הטופס ב-N2 מחק את
+                      `customer-form-contact-name/phone/email`, ו-`e2e/customers.spec.js` נשאר
+                      מפנה אליהם — **אדום מאז `53b562b`, ואיש לא ידע כי E2E אינו רץ ב-CI.**
+                      המזהים ממוקמים בתוך `contact-row`, ולכן ייחודיים בהיקף-השורה גם כשיש כמה. */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <div className="flex flex-col gap-1">
                       <label className="text-xs text-slate-500">שם</label>
                       <Input
                         value={c.contact_name}
                         onChange={(e) => updateContactRow(c._rk, 'contact_name', e.target.value)}
+                        data-testid="contact-field-contact_name"
                         placeholder="שם איש הקשר"
                         aria-invalid={contactFieldInvalid(c._rk, 'contact_name') || undefined}
                         className={cn(
@@ -558,6 +563,7 @@ export default function CustomerFormDialog({
                       <Input
                         value={c.phone}
                         onChange={(e) => updateContactRow(c._rk, 'phone', e.target.value)}
+                        data-testid="contact-field-phone"
                         placeholder="050-0000000"
                         dir="ltr"
                         aria-invalid={contactFieldInvalid(c._rk, 'phone') || undefined}
@@ -572,6 +578,7 @@ export default function CustomerFormDialog({
                       <Input
                         value={c.email}
                         onChange={(e) => updateContactRow(c._rk, 'email', e.target.value)}
+                        data-testid="contact-field-email"
                         placeholder="name@company.co.il"
                         dir="ltr"
                         aria-invalid={contactFieldInvalid(c._rk, 'email') || undefined}

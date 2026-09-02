@@ -45,6 +45,74 @@
 
 ## Session Log (newest first)
 
+### 02/09/2026 — N2 closed. Four migrations, and the fourth blocker was only findable by RUNNING
+
+**Applied.** `N2ד` dropped `customers.contact_name/phone/email` after the typed echo. Verified:
+`information_schema` returns 0 for all three, `customers` is down to 9 columns, 9 customers ·
+9 contact rows · 9 primaries · 0 without a primary. A peer session ran the full DB battery
+independently — every check green, including the residue scan and the advisors.
+
+🔴 **The fourth blocker, and it is the one worth remembering: `e2e/customers.spec.js` filled
+`customer-form-contact-name`/`-phone`/`-email`, testids the N2 form rebuild deleted in `53b562b` —
+hours before the drop.** It had been red since then and nobody knew, because `test:e2e` does not run
+in CI. **No static check could have found it**: not a grep (the testids are not column names), not
+query enumeration (there is no query), not `pg_catalog`. **Only running the suite.** ⇒ "run the E2E
+suite after a drop" is now a condition inside the residue check, not an optional extra. Fixed by
+adding stable `contact-field-*` testids inside `contact-row`.
+
+⇒ **Tally for the whole N2 arc: four real blockers, three of them outside `src/`.** A `src/` grep
+would have reported "zero residue" three times in a row and been wrong every time.
+
+**Two false alarms, both from the same species of regex, in two different sessions on the same day.**
+Mine: `<table>[^;]*\.(phone|email)` matched `auth.email()` and the users table's `u.email`, accusing
+`approve_quote_and_create_project` — a function that had silently broken quote approval once before,
+so the false alarm was maximally alarming. The peer's: `c\.contact_name` matched **`cc.`**, the
+child table, accusing `replace_customer_contacts` — the function that implements the migration.
+**Both were resolved by reading the body before reporting.** Word-boundary anchoring is now written
+into `db_health_checks.md` §10.
+
+**And a false GREEN of my own, caught before it was reported.** `npm run test:e2e` exited 0 while
+having run nothing — port 4173 was still held by a run I had killed, and Playwright refused to start.
+The exit code came from the launcher. **A pass with no test lines in the log is not a pass.**
+*(Related, same day: `npm run gate` failed with 64/1671 instead of 67/1838 — three files failed to
+START, not to pass, because the E2E suite was saturating the machine. Documented in `vite.config.js`;
+re-ran on a quiet machine and got exit 0.)*
+
+**A peer measurement worth recording as a trap, not a result.** The battery reported `10 · 10 · 10`
+and read it as "a customer was created after the drop and got a primary — proof the new path works
+forwards". The real count was 9: it had caught a transient `e2e/customers.spec.js` fixture that its
+own `afterAll` deleted seconds later. **Counting a table the test suite writes to, while the suite is
+running, measures noise.** Also in §10 now.
+
+### 02/09/2026 — N2ד written; every precondition for the drop measured rather than assumed
+
+**State.** PR #93 (the rewire-hole fixes) and #94 (deploy) merged; `main` is `f59ecb3` and the live
+bundle was fetched and asserted to contain no flat parent-column path at all — neither reads nor
+writes. `N2ד` is written and awaiting the typed echo. Nothing else is open on Ishay.
+
+**What the pre-drop check actually caught, in order of how close each came to production.**
+① The `NOT NULL` on the three columns, which is what produced `N2ג` — recorded in the previous
+entry. ② Two E2E specs that would have failed at the drop (`load-failure-guards` inserted the three
+columns directly; `quote-email` selected `customers(email)`), neither of them under `src/`.
+③ A false positive worth writing down: an over-broad regex over `pg_proc.prosrc` reported
+`approve_quote_and_create_project` as depending on the columns. It matched `auth.email()` and the
+users table's `u.email`. The precise check — `prosrc ~ 'contact_name'` — is false, and the function
+does not read `customers` at all. **That function silently broke quote approval on 09/08, so seeing
+its name next to a drop is alarming by design; the lesson is to narrow the regex before reacting,
+not to skip the scan.**
+
+**Independently, a peer session enumerated every query touching `customers`** — by counting queries
+and following their shapes, not by grepping column names — and found no residue. It flagged one
+exposure honestly rather than deciding it alone: `listCustomers`/`getCustomer` use `select('*')`, so
+today the `*` still returns the three columns. After the drop it simply returns three fewer, and no
+consumer names them, so this is safe — but it is the difference between "green" and "green and
+understood".
+
+🔑 **The rule that came out of the whole N2 arc, and it is not about contacts:** a drop's
+precondition is that the deployed code no longer WRITES the column — reads are the easier half and
+moving them well is exactly what hides the writes. And the residue check has three dimensions, not
+one: reads · writes · tests/E2E. **Two of the three real blockers found today lived in `e2e/`.**
+
 ### 02/09/2026 — the N2 rewire had a hole, and grepping for column names could not find it
 
 **What broke.** `src/lib/marketing.js` did `rows.map((r) => r.email)`. Its source query,
