@@ -40,6 +40,8 @@ import {
   validateQuoteForm,
   QUOTE_SCREEN_PARAM_NAMES,
 } from '@/lib/quotes'
+// N2: הראשי הוא שורת customer_contacts עם is_primary — primaryContact היא נקודת-הבחירה היחידה.
+import { primaryContact } from '@/lib/customers'
 import { listCustomers } from '@/modules/02_customers/api'
 import CustomerFormDialog from '@/modules/02_customers/CustomerFormDialog'
 import {
@@ -217,6 +219,8 @@ export default function QuoteBuilderPage() {
   }, [quoteId, isEditMode, reloadTick, preselectCustomerId])
 
   const selectedCustomer = customers.find((c) => c.customer_id === form.customerId) ?? null
+  // N2: הראשי הוא שורת customer_contacts עם is_primary, לא selectedCustomer.contact_name.
+  const selectedContact = primaryContact(selectedCustomer)
 
   // מפת מק"ט⇒מוצר — המסמך צריך אותה כדי להציג שם-פריט ולא מק"ט (מוקש 3.1: מק"ט שאינו
   // בקטלוג נופל חזרה למק"ט עצמו, כי שורה בלי שם במסמך-לקוח מביכה).
@@ -634,9 +638,9 @@ export default function QuoteBuilderPage() {
                   {'ח"פ '}
                   <span dir="ltr">{selectedCustomer.company_number}</span>
                 </span>
-                {selectedCustomer.contact_name && (
+                {selectedContact?.contact_name && (
                   <span className="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs text-slate-600">
-                    איש קשר: {selectedCustomer.contact_name}
+                    איש קשר: {selectedContact.contact_name}
                   </span>
                 )}
                 <span className="rounded-full border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-700">

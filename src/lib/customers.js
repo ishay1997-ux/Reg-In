@@ -37,6 +37,25 @@ export function needsSatisfactionAttention(avgFeedback) {
 // חיפוש-טקסט סלחני-אך-חד-משמעי (§7.11): מתאים אם מחרוזת-החיפוש היא תת-מחרוזת בשם-החברה
 // או בשם-איש-הקשר, או **תחילית** של ה-ח"פ (company_number). ח"פ הוא מזהה ולכן התאמת-תחילית
 // בלבד (לא includes) — כדי שחיפוש "514" ימצא לקוח שח"פ שלו מתחיל ב-514, בלי התאמות-אמצע מקריות.
+// ── N2 · איש-הקשר הראשי — נקודת-הקריאה היחידה ────────────────────────────────
+// 🔴 **הכלל שהפונקציה הזו קיימת בשבילו: אחרי N2 אין יותר `customer.contact_name`.**
+// איש-הקשר הראשי הוא **שורה** ב-`customer_contacts` עם `is_primary`, ולא שלוש עמודות
+// על `customers`. ⇒ **כל מסך שצריך "מי איש-הקשר" קורא מכאן**, ואף אחד לא בוחר לבד מתוך
+// המערך — אחרת נקבל 11 מימושים של אותה בחירה, וזה בדיוק מה ש-N2 בא לחסל.
+//
+// ⚠️ **מחזירה `null` ולא אובייקט-ריק, וזו הבחנה שהמסך צריך:** `null` = "אין איש-קשר",
+// מצב ש-`replace_customer_contacts` אוסר ליצור אבל **כן קיים בדאטה ישן** אם מישהו הגיע
+// לשם דרך ה-Table Editor. אובייקט-ריק היה מציג שדות ריקים כאילו הם ערך, ו-§4.3 של
+// המודול אוסר בדיוק את זה.
+//
+// 🔑 **ולמה `?? []` ולא `?.[0]`:** ה-embed חוזר `undefined` כשהקורא לא ביקש אותו בכלל —
+// מצב שקורה בקלות כשמישהו מוסיף select חדש ושוכח את אנשי-הקשר. **אז החזרת `null` כאן
+// אומרת "לא ביקשת" בדיוק כמו "אין", והקורא רואה `—` במקום ליפול.**
+export function primaryContact(customer) {
+  const contacts = customer?.customer_contacts ?? []
+  return contacts.find((c) => c?.is_primary) ?? null
+}
+
 function matchesText(customer, rawText) {
   const q = (rawText ?? '').trim().toLowerCase()
   if (q === '') return true
@@ -44,10 +63,10 @@ function matchesText(customer, rawText) {
   const companyNumber = customer.company_number ?? '' // ח"פ (מאז §7.64 עמודה עסקית, לא ה-PK)
   // איש-הקשר הראשי (inline) + כל אנשי-הקשר הנוספים (customer_contacts, §7.81) — חיפוש על פני כולם,
   // כדי שאיתור-לקוח לפי שם-איש-קשר (§7.11) יעבוד גם כשההתאמה היא לאיש-קשר משני.
-  const contactNames = [
-    customer.contact_name,
-    ...(customer.customer_contacts ?? []).map((cc) => cc.contact_name),
-  ]
+  // N2: הראשי הוא כבר שורה ב-`customer_contacts`, ולכן המערך לבדו מכיל את כולם.
+  // ⚠️ `customer.contact_name` **הוסר במכוון** — אחרי מיגרציית-המחיקה הוא `undefined`,
+  // ו-`undefined` במערך היה שקט ולא שגיאה: החיפוש היה ממשיך לעבוד ופשוט מפספס את הראשי.
+  const contactNames = (customer.customer_contacts ?? []).map((cc) => cc.contact_name)
   const contactMatch = contactNames.some((n) => (n ?? '').toLowerCase().includes(q))
   return company.includes(q) || contactMatch || companyNumber.startsWith(q)
 }

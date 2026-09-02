@@ -987,6 +987,17 @@ Unchanged from module 1: Supabase Auth (Google), session in `sessionStorage`, `c
 
 ## 10. 📝 Deviations & Tech-Debt Log
 
+- 🔗 `02/09/2026` — **N2 (איחוד אנשי-הקשר) נוגע בקבצים של המודול הזה. הרשומה המלאה אינה כאן:**
+  ‏`docs/db_roadmap.md §10ב` *(שתי המיגרציות והנימוק שלהן)* + ‏`PROJECT_MASTER §6`.
+  **מה שהמודול הזה צריך לדעת במשפט אחד:** איש-הקשר **הראשי** מפסיק להיות שלוש עמודות על
+  `customers` (`contact_name`/`phone`/`email`) והופך ל**שורה** ב-`customer_contacts` עם
+  `is_primary`. ⇒ **כל קריאה של `customer.contact_name` בקוד של המודול הזה תחזיר `undefined`
+  אחרי מיגרציית-המחיקה**, והבחירה עצמה מרוכזת ב-`primaryContact()` שב-`src/lib/customers.js`
+  — **אין לממש אותה מקומית.**
+  ⏸️ **מצב נכון לרגע הכתיבה: שתי המיגרציות הוחלו, שלוש העמודות עדיין קיימות ועדיין מקור-האמת**,
+  והחיווט בעבודה על `ishay/n2-contacts-rewire`. **המחיקה תבוא רק אחרי חיווט מלא ופריסה.**
+
+
 *(Append-only, dated lines.)*
 
 ### 🔴 Nine-point verification of the approved spec — run `14/08/2026 01:20–01:30`, before a single step was written

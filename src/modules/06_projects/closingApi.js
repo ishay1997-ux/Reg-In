@@ -9,6 +9,9 @@
 
 import { supabase } from '@/supabaseClient'
 import { toError } from '@/lib/apiError'
+// N2: איש-הקשר הראשי הוא שורה ב-customer_contacts (is_primary), לא שלוש עמודות על customers.
+// primaryContact היא נקודת-הבחירה היחידה (src/lib/customers.js) — לא לממש inline.
+import { primaryContact } from '@/lib/customers'
 
 // מגבלות ה-bucket — זהות-ערך למה שנמדד חי על storage.buckets (צעד 3.5 as-built ⑤:
 // `file_size_limit = 2097152`, `allowed_mime_types = {application/pdf, image/jpeg, image/png}`).
@@ -74,18 +77,22 @@ export async function getReportSignedUrl(path) {
   return data.signedUrl
 }
 
-// איש-הקשר ואת כתובת-המייל של הלקוח — הנמען של שני מיילי-הסגירה. `customers` מגודרת על
-// 'לקוחות' (למנהלת הפרויקטים ולמנכ"ל יש edit שם); קריאה חסומה מחזירה null בלי שגיאה —
-// והקורא מציג כשל-שליחה מנומק ("אין כתובת מייל"), לא מסיק שאין ללקוח מייל.
+// איש-הקשר ואת כתובת-המייל של הלקוח — הנמען של שני מיילי-הסגירה. `customers` (וה-embed
+// customer_contacts תחתיה) מגודרת על 'לקוחות' (למנהלת הפרויקטים ולמנכ"ל יש edit שם); קריאה
+// חסומה מחזירה null בלי שגיאה — והקורא מציג כשל-שליחה מנומק ("אין כתובת מייל"), לא מסיק
+// שאין ללקוח מייל.
+// N2: קוראים את אנשי-הקשר כאמבד ובוחרים את הראשי דרך primaryContact — לא inline. הצורה
+// שיוצאת ({contact_name, email} או null) נשארת זהה כדי ש-ClosingTab לא ישתנה כלל.
 export async function getCustomerMailContact(customerId) {
   if (!customerId) return null
   const { data, error } = await supabase
     .from('customers')
-    .select('contact_name, email')
+    .select('customer_contacts(contact_name, email, is_primary)')
     .eq('customer_id', customerId)
     .maybeSingle()
   if (error) throw toError(error, 'שגיאה בטעינת פרטי הלקוח.')
-  return data ?? null
+  const contact = primaryContact(data)
+  return contact ? { contact_name: contact.contact_name, email: contact.email } : null
 }
 
 // סימוני-האיכות השמורים — לתצוגת הקריאה-בלבד של הלשונית אחרי סגירה. הטבלה מגודרת על

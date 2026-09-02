@@ -449,7 +449,12 @@ function quoteRow(overrides = {}) {
     estimated_event_date: '2026-08-22',
     rejection_reason: null,
     quote_services: WORKED_SERVICES,
-    customers: { company_name: 'מדיטק פתרונות בע"מ', contact_name: 'רון גל' },
+    // N2 (02/09/2026): איש-הקשר הראשי הוא שורת customer_contacts עם is_primary, לא עמודת
+    // contact_name על customers — הצורה כאן משקפת את מה ש-listQuotes()/listCustomers() יחזירו.
+    customers: {
+      company_name: 'מדיטק פתרונות בע"מ',
+      customer_contacts: [{ contact_name: 'רון גל', is_primary: true }],
+    },
     ...overrides,
   }
 }
@@ -749,8 +754,7 @@ describe('quoteToPdfModel — שורת-DB ⇒ צורת-הקלט של מנוע ה
     customers: {
       company_name: 'מדיטק פתרונות בע"מ',
       company_number: '514789632',
-      contact_name: 'רון גל',
-      phone: '052-4471180',
+      customer_contacts: [{ contact_name: 'רון גל', phone: '052-4471180', is_primary: true }],
     },
     quote_services: [
       { sku: '04ST', qty: 6, closing_unit_price: 500, color: null, notes: '', line_number: 1 },
@@ -828,8 +832,9 @@ const SENDABLE_QUOTE = {
   estimated_event_date: '2026-08-22',
   customers: {
     company_name: 'מדיטק פתרונות בע"מ',
-    contact_name: 'רון גל',
-    email: 'ron@meditech-demo.co.il',
+    customer_contacts: [
+      { contact_name: 'רון גל', email: 'ron@meditech-demo.co.il', is_primary: true },
+    ],
   },
 }
 
@@ -1091,7 +1096,13 @@ describe('formToPreviewQuote — תצוגת המסמך ממה שעל המסך, �
     notes: 'הערה ללקוח',
   }
   const SAVED = { quote_id: 6, issue_date: '2026-07-29', updated_at: '2026-07-29T10:00:00Z' }
-  const CUSTOMER = { company_name: 'מדיטק', company_number: '514', contact_name: 'רון גל' }
+  // formToPreviewQuote מעבירה את הלקוח כמות-שהוא (בלי לגעת באיש-הקשר) — הצורה כאן
+  // עדיין נבדקת עם customer_contacts כדי לשקף את selectedCustomer האמיתי (post-N2).
+  const CUSTOMER = {
+    company_name: 'מדיטק',
+    company_number: '514',
+    customer_contacts: [{ contact_name: 'רון גל', is_primary: true }],
+  }
 
   it('הכמות שעל המסך היא זו שתיכנס למסמך — גם לפני שמירה', () => {
     const preview = formToPreviewQuote({

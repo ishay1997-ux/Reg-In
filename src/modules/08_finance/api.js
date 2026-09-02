@@ -28,6 +28,9 @@
 
 import { supabase } from '@/supabaseClient'
 import { toError } from '@/lib/apiError'
+// N2: איש-הקשר הראשי הוא שורה ב-customer_contacts (is_primary), לא שלוש עמודות על customers.
+// primaryContact היא נקודת-הבחירה היחידה (src/lib/customers.js) — לא לממש inline.
+import { primaryContact } from '@/lib/customers'
 import {
   buildEmailPayload,
   classifySendError,
@@ -176,15 +179,30 @@ export async function getSalaryReportLines(reportId) {
 // (כלל ברזל 14), ולכן החוסר לא היה ניתן לתיקון בצד-המסך. **שם-העמודה נלקח מ-`schema.sql`
 // ולא נוחש** — היא `not null` עם ‏`check` של 9 ספרות, כלומר תא ריק כאן פירושו שאין שורה
 // כלל, ולא שללקוח אין ח.פ.
+// N2: `contact_name`/`email` הראשיים הם שורה ב-customer_contacts (is_primary), לא עמודות
+// על customers — נקראים כאמבד ונבחרים דרך primaryContact (לא inline). `customer_id` /
+// `company_number` / `company_name` נשארים על customers עצמה (אינם N2). הצורה שיוצאת
+// ({customer_id, company_number, company_name, contact_name, email} או null) נשארת זהה
+// כדי ש-ClosingWindowDialog (כולל sendInvoiceAndRecord, שמקבלת את זה כ-`customer`) לא ישתנה.
 export async function getBillingContact(customerId) {
   if (!customerId) return null
   const { data, error } = await supabase
     .from('customers')
-    .select('customer_id, company_number, company_name, contact_name, email')
+    .select(
+      'customer_id, company_number, company_name, customer_contacts(contact_name, email, is_primary)',
+    )
     .eq('customer_id', customerId)
     .maybeSingle()
   if (error) throw toError(error, 'שגיאה בטעינת פרטי החיוב של הלקוח.')
-  return data ?? null
+  if (!data) return null
+  const contact = primaryContact(data)
+  return {
+    customer_id: data.customer_id,
+    company_number: data.company_number,
+    company_name: data.company_name,
+    contact_name: contact?.contact_name ?? null,
+    email: contact?.email ?? null,
+  }
 }
 
 // ---- פעולות-כתיבה (RPC בלבד) ----

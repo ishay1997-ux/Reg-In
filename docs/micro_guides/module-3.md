@@ -632,6 +632,29 @@ Post-merge (NOT audit checkboxes): PR opened, CI green, merged to dev.
 (a) Every step transition updates the status header + step table in the same session, before moving on. (b) Any deviation gets an inline "↳ as-built" note on the step + a line in §9. (c) The repo's Stop hook (`.claude/hooks/check-docs-updated.sh`) blocks session end if module code under `src/modules/03_*/` changed but this guide didn't — keep it current, not as an afterthought. (d) End-of-session protocol in `CLAUDE.md` applies (this guide → CLAUDE_CODE_LOG → STATUS; the CHANGELOG was frozen 23/07/2026 and is never written to). (e)–(g): per CLAUDE.md iron rules 13/15/16 + end-of-session protocol (new §7 questions → presented in Ishay's question style and registered, never self-answered; migrations/DB gaps ⇒ db_roadmap same session; schema/shared-surface changes name the FUTURE modules they land on in the CHANGELOG line). (i) **Compaction (added 28/07/2026 — this guide is read in full on every "תמשיך לבנות" turn, so it must not grow without bound):** when a phase closes, replace its step-by-step build instructions with a compact done-table — one row per step: what landed + the evidence that proved it — plus a short "carry-forward" note for anything later phases must not re-derive. **Never compact the active phase.** §9 (deviations/tech-debt) and the Ledger are **never** compacted; they are the memory. Archive the pre-compaction text under `docs/archive/` first. At module close the whole guide compacts to an as-built summary. (h) On ENTERING a phase: sweep this Ledger for OPEN/nod-pending items anchored to this phase's steps and present them to Ishay for a consolidated ruling (P13 style) BEFORE the phase's first step — as of 23/07 **0 OPEN items remain** (LOCAL-6 ruled 23/07: notes block after totals, before terms).
 
 ### 9. 📝 Deviations & Tech-Debt Log
+  ↳ **as-built N2, 02/09/2026** — the files of this module that actually changed:
+  `api.js` *(`listQuotes()`'s `customers(...)` embed swapped the three flat columns for
+  `customer_contacts(contact_name, phone, email, is_primary)`)* · `CustomerPicker.jsx` ·
+  `QuoteBuilderPage.jsx` · `QuotesPage.jsx` · `QuoteDocumentDialog.jsx` · `src/lib/quotes.js`
+  *(`quoteToPdfModel` + `buildQuoteEmailPayload`)*. `quotePdf.jsx` needed **no** change — it only
+  ever receives the shaped view-model.
+  🔴 **Two of these were missed by the original file split and found only by a follow-up scan** —
+  `api.js` *(the embed: without it every contact column on the quotes list renders empty)* and
+  `QuoteDocumentDialog.jsx` *(it read `quote?.customers?.email` directly, so the send button would
+  have reported "no email" for a customer that plainly has one)*. **The lesson for the next
+  rewire of this shape: split by DATA PATH, not by file list** — a file list drawn up front cannot
+  see the consumer that reads a field two hops away from where it was fetched.
+
+- 🔗 `02/09/2026` — **N2 (איחוד אנשי-הקשר) נוגע בקבצים של המודול הזה. הרשומה המלאה אינה כאן:**
+  ‏`docs/db_roadmap.md §10ב` *(שתי המיגרציות והנימוק שלהן)* + ‏`PROJECT_MASTER §6`.
+  **מה שהמודול הזה צריך לדעת במשפט אחד:** איש-הקשר **הראשי** מפסיק להיות שלוש עמודות על
+  `customers` (`contact_name`/`phone`/`email`) והופך ל**שורה** ב-`customer_contacts` עם
+  `is_primary`. ⇒ **כל קריאה של `customer.contact_name` בקוד של המודול הזה תחזיר `undefined`
+  אחרי מיגרציית-המחיקה**, והבחירה עצמה מרוכזת ב-`primaryContact()` שב-`src/lib/customers.js`
+  — **אין לממש אותה מקומית.**
+  ⏸️ **מצב נכון לרגע הכתיבה: שתי המיגרציות הוחלו, שלוש העמודות עדיין קיימות ועדיין מקור-האמת**,
+  והחיווט בעבודה על `ishay/n2-contacts-rewire`. **המחיקה תבוא רק אחרי חיווט מלא ופריסה.**
+
 
 > 🔎 **Four entries added 12/08/2026 by the reverse-direction audit of `PROJECT_MASTER §6`** (`regin-docs-sync`):
 > §6 carried a debt whose statement was missing from *this* guide. Each points at §6 rather than restating it.

@@ -4,7 +4,15 @@
 // האמיתית (ח"פ 9 ספרות, הנחה 0-100) — הוולידציה כאן נוחות בלבד (כלל 9).
 // זרימת-הכפילות §7.11: ח"פ קיים ופעיל ⇒ שגיאה ידידושית עם שם הלקוח + קפיצה לעריכת הכרטיס הקיים;
 // ח"פ קיים בארכיון ⇒ הצעת שחזור מפורשת (אושר 07/07). ח"פ לעולם לא משתנה בעריכה (קיבוע מודול 2).
-
+//
+// 🔴 N2 (02/09/2026, מוקאפ מאושר docs/mockups/customers-screen/08_contacts_form_approved.html,
+// הכרעת-ישי 27/08): איש-הקשר הראשי מפסיק להיות שלושה שדות מיוחדים בראש הטופס ונכנס לאותה רשימה
+// ככל אנשי-הקשר — שורה אחת, מסומנת בצ'יפ+מסגרת, לא "ראשי" מעל "אחרים". `contacts` הוא עכשיו
+// הרשימה **המלאה** (כולל הראשי), וכל שורה נבדקת באותה ולידציה בדיוק (validateExtraContacts).
+// "בדיוק ראשי אחד" נאכף כאן לפני הכתיבה — תואם את מה שה-RPC replace_customer_contacts (N2ב)
+// אוכף בשרת. מחיקת הראשי חסומה תמיד (לא רק כשהיא השורה היחידה) — זו הכרעת-מוצר מפורשת, לא
+// תוצאה של "אין למי להעביר את הדגל": "הפוך לראשי" על שורה אחרת מזיז את הדגל, ורק אז מחיקת
+// השורה הישנה (שכבר אינה ראשית) מותרת.
 import { useEffect, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -44,14 +52,11 @@ const EMPTY_FORM = {
   company_name: '',
   company_number: '',
   customer_type: '',
-  contact_name: '',
-  phone: '',
-  email: '',
   discount_percent: '0',
   marketing_consent: false,
 }
 
-// מפתח-שורה יציב לאנשי-הקשר הנוספים (§7.81): index-key שובר את ה-reconciliation בהסרת-שורה.
+// מפתח-שורה יציב לאנשי-הקשר (§7.81, N2): index-key שובר את ה-reconciliation בהסרת-שורה.
 // מוגדל ב-handler בלבד (לא ברינדור) — לכן לא מפר react-hooks/purity.
 let nextContactRowKey = 1
 
@@ -65,6 +70,13 @@ function FieldError({ name, message }) {
     </p>
   )
 }
+
+// המשפט המדויק שה-RPC (replace_customer_contacts, N2ב) זורק כשאין ראשי בכלל — נשמר מילה-במילה
+// גם בצד-הלקוח כדי שהודעת-החסימה תהיה עקבית בין "ניסית למחוק אותו" לבין "המצב הגיע לשם בכל דרך".
+const NO_PRIMARY_MSG = 'אי אפשר למחוק את איש הקשר הראשי. סמן קודם אחר כראשי.'
+// ואותו דבר לשני-ראשיים בבת-אחת — מצב שה-UI אמור למנוע מלכתחילה ("הפוך לראשי" מזיז ולא מכפיל),
+// אך נבדק כאן הגנתית ובאותו נוסח כמו השרת.
+const TWO_PRIMARY_MSG = 'ניתן לסמן איש קשר ראשי אחד בלבד.'
 
 // ⚠️ הקומפוננטה מאותחלת מ-editingCustomer ב-useState בלבד (בלי effect-סנכרון) — עמוד-האב חייב
 // לרנדר אותה עם key שמשתנה בכל פתיחה/החלפת-לקוח (remount = איפוס-טופס). זה הדפוס הקנוני של
@@ -86,9 +98,6 @@ export default function CustomerFormDialog({
           company_name: editingCustomer.company_name ?? '',
           company_number: editingCustomer.company_number ?? '',
           customer_type: editingCustomer.customer_type ?? '',
-          contact_name: editingCustomer.contact_name ?? '',
-          phone: editingCustomer.phone ?? '',
-          email: editingCustomer.email ?? '',
           discount_percent: String(editingCustomer.discount_percent ?? 0),
           marketing_consent: !!editingCustomer.marketing_consent,
         }
@@ -100,11 +109,20 @@ export default function CustomerFormDialog({
   const [duplicate, setDuplicate] = useState(null)
   const [saving, setSaving] = useState(false)
   const [savedOk, setSavedOk] = useState(false)
-  // אנשי-קשר נוספים (§7.81): כל שורה {_rk (מפתח-react יציב), contact_name, phone, email}.
-  const [contacts, setContacts] = useState([])
+  // N2: רשימת אנשי-הקשר **המלאה** (כולל הראשי) — כל שורה {_rk, contact_name, phone, email,
+  // is_primary}. במצב-הוספה מתחילה עם שורה ריקה אחת מסומנת-ראשי (אין דו-משמעות: יש רק שורה
+  // אחת, והיא חייבת להיות הראשי). במצב-עריכה מתחילה ריקה ונטענת מה-DB (ר' ה-effect למטה).
+  const [contacts, setContacts] = useState(() =>
+    editingCustomer
+      ? []
+      : [{ _rk: nextContactRowKey++, contact_name: '', phone: '', email: '', is_primary: true }],
+  )
   // שגיאות-ולידציה פר-שורת-איש-קשר (§7.81, הכרעת-ישי 11/07): שם חובה + טלפון או אימייל. מפתח = _rk,
   // הערך = {field, msg} כדי לצבוע את השדה הרלוונטי באדום ('both' = טלפון+אימייל יחד).
   const [contactErrors, setContactErrors] = useState({})
+  // N2: הודעת "בדיוק ראשי אחד" — מחושבת בשמירה, לא רציפה (אותה מוסכמה כמו fieldErrors/contactErrors:
+  // מוצג אחרי ניסיון-שמירה, לא מנטרל את הכפתור בשקט — "בקרה חסומה נושאת משפט").
+  const [primaryError, setPrimaryError] = useState('')
   // תיקון אובדן-נתונים (11/07): במצב-עריכה שומרים אנשי-קשר רק אחרי טעינה מוצלחת. בלי זה, כשל-טעינה
   // שקט היה משאיר contacts=[] ובשמירה replaceCustomerContacts היה מוחק את כל אנשי-הקשר הקיימים ב-DB.
   // add-mode: אין מה לטעון ⇒ מותר לשמור מיד (true).
@@ -125,6 +143,7 @@ export default function CustomerFormDialog({
               contact_name: r.contact_name ?? '',
               phone: r.phone ?? '',
               email: r.email ?? '',
+              is_primary: !!r.is_primary,
             })),
           )
           // רק אחרי טעינה מוצלחת מותר ל-replaceCustomerContacts לרוץ בשמירה (מונע מחיקה עקב כשל-טעינה).
@@ -148,20 +167,32 @@ export default function CustomerFormDialog({
     if (name === 'company_number') setDuplicate(null)
   }
 
-  // ניהול שורות אנשי-הקשר הנוספים (§7.81) — לפי מפתח-שורה יציב (_rk), לא index.
+  // ניהול שורות אנשי-הקשר (N2, §7.81) — לפי מפתח-שורה יציב (_rk), לא index.
   function addContactRow() {
     setContacts((prev) => [
       ...prev,
-      { _rk: nextContactRowKey++, contact_name: '', phone: '', email: '' },
+      { _rk: nextContactRowKey++, contact_name: '', phone: '', email: '', is_primary: false },
     ])
+    setPrimaryError('')
   }
   function updateContactRow(rk, field, value) {
     setContacts((prev) => prev.map((c) => (c._rk === rk ? { ...c, [field]: value } : c)))
     // ניקוי שגיאת-השורה תוך-כדי הקלדה — המשוב הבא יגיע בשמירה הבאה (כמו שדות-הטופס הראשיים).
     setContactErrors((prev) => (prev[rk] ? { ...prev, [rk]: '' } : prev))
   }
+  // מחיקת הראשי חסומה תמיד (הכרעת-מוצר מפורשת, לא רק "אין למי להעביר") — ההגנה כאן ולא רק
+  // בנטרול-הכפתור, כך שהפונקציה עצמה בטוחה גם אם ייקרא אליה ממקום אחר בעתיד.
   function removeContactRow(rk) {
-    setContacts((prev) => prev.filter((c) => c._rk !== rk))
+    setContacts((prev) => {
+      const row = prev.find((c) => c._rk === rk)
+      if (row?.is_primary) return prev
+      return prev.filter((c) => c._rk !== rk)
+    })
+  }
+  // "הפוך לראשי" — מזיז את הדגל, לעולם לא מכפיל אותו (בדיוק שורה אחת מקבלת is_primary:true).
+  function makePrimary(rk) {
+    setContacts((prev) => prev.map((c) => ({ ...c, is_primary: c._rk === rk })))
+    setPrimaryError('')
   }
 
   // שכבה 1 (C5 §5.6.17.4): ולידציה ב-blur — משוב מיידי מתחת לשדה, בלי לחכות לשמירה.
@@ -185,10 +216,23 @@ export default function CustomerFormDialog({
     const errors = validateCustomerForm(form)
     setFieldErrors(errors)
 
-    const cErrors = validateExtraContacts(contacts)
+    // N2: כשטעינת אנשי-הקשר נכשלה (contactsLoadError) אין לנו נתון אמיתי לבדוק — בדיוק כמו
+    // שהשמירה עצמה מדלגת על replaceCustomerContacts במקרה הזה (contactsLoaded), הולידציה כאן
+    // מדלגת גם היא, כדי לא לחסום שמירת שאר פרטי הלקוח על סמך מצב שאנחנו יודעים שהוא לא אמין.
+    const cErrors = contactsLoadError ? {} : validateExtraContacts(contacts)
     setContactErrors(cErrors)
 
-    if (Object.values(errors).some(Boolean) || Object.keys(cErrors).length > 0) return
+    let primaryMsg = ''
+    if (!contactsLoadError) {
+      const primaryCount = contacts.filter((c) => c.is_primary).length
+      if (primaryCount === 0) primaryMsg = NO_PRIMARY_MSG
+      else if (primaryCount > 1) primaryMsg = TWO_PRIMARY_MSG
+    }
+    setPrimaryError(primaryMsg)
+
+    if (Object.values(errors).some(Boolean) || Object.keys(cErrors).length > 0 || primaryMsg) {
+      return
+    }
 
     if (!isEdit) {
       const existing = findDuplicate(form.company_number)
@@ -200,14 +244,23 @@ export default function CustomerFormDialog({
 
     setSaving(true)
     try {
+      const primary = contacts.find((c) => c.is_primary)
       const payload = {
         company_name: form.company_name.trim(),
         customer_type: form.customer_type,
-        contact_name: form.contact_name.trim(),
-        phone: form.phone.trim(),
-        email: form.email.trim(),
         discount_percent: Number(form.discount_percent),
         marketing_consent: form.marketing_consent,
+      }
+      // N2, החלטה שלי (לא מהמוקאפ — הוא מצייר רק את מסך אנשי-הקשר, לא את חוזה-הכתיבה):
+      // `customers.contact_name/phone/email` נשארות NOT NULL ב-DB ועדיין נקראות ישירות ע"י
+      // מסכים אחרים שטרם עברו לקרוא מ-customer_contacts (CustomersPage, CustomerDetailsPage) —
+      // ר' ההערה המורחבת ב-src/lib/customers.js (primaryContact) וב-migrations/…is_primary_additive.
+      // כל עוד העמודות האלה חיות, השורה הראשית ממשיכה לשקף את הראשי שבטופס. כש-`primary` חסר
+      // (contactsLoadError) מדלגים על השדות האלה לגמרי — כדי לא לדרוס ערך אמיתי ב-DB בערך מומצא.
+      if (primary) {
+        payload.contact_name = primary.contact_name.trim()
+        payload.phone = primary.phone.trim()
+        payload.email = (primary.email ?? '').trim()
       }
       let saved
       if (isEdit) {
@@ -216,7 +269,7 @@ export default function CustomerFormDialog({
       } else {
         saved = await createCustomer({ ...payload, company_number: form.company_number.trim() })
       }
-      // אנשי-הקשר הנוספים (§7.81) נשמרים כיחידה אחרי שהלקוח נשמר (replace צריך את ה-customer_id).
+      // אנשי-הקשר (§7.81, N2) נשמרים כיחידה אחרי שהלקוח נשמר (replace צריך את ה-customer_id).
       // נשמרים רק אם נטענו בהצלחה (או מצב-הוספה) — אחרת דילוג, לא מחיקה (תיקון אובדן-הנתונים 11/07).
       if (contactsLoaded) {
         await replaceCustomerContacts(saved.customer_id, contacts)
@@ -384,130 +437,116 @@ export default function CustomerFormDialog({
             <FieldError name="customer_type" message={fieldErrors.customer_type} />
           </div>
 
-          {/* שדות קצרים בזוגות 2-עמודות (הכרעת-ישי 11/07) — לקצר את הטופס כדי שלא צריך לגלול עד
-              "הוסף לקוח". השדות הארוכים (שם/ח"פ/סוג) נשארים ברוחב-מלא. גולש לעמודה-אחת במסך צר. */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm text-slate-700">איש קשר</label>
-              <Input
-                value={form.contact_name}
-                onChange={(e) => setField('contact_name', e.target.value)}
-                onBlur={() => handleBlur('contact_name')}
-                placeholder="שם איש הקשר"
-                className={fieldClass('contact_name')}
-                data-testid="customer-form-contact-name"
-              />
-              <FieldError name="contact_name" message={fieldErrors.contact_name} />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm text-slate-700">טלפון</label>
-              <Input
-                type="tel"
-                value={form.phone}
-                onChange={(e) => setField('phone', e.target.value)}
-                onBlur={() => handleBlur('phone')}
-                placeholder="טלפון ליצירת קשר"
-                className={fieldClass('phone')}
-                data-testid="customer-form-phone"
-              />
-              <FieldError name="phone" message={fieldErrors.phone} />
-            </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm text-slate-700">אחוז הנחה קבוע (0–100)</label>
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              step="0.5"
+              value={form.discount_percent}
+              onChange={(e) => setField('discount_percent', e.target.value)}
+              onBlur={() => handleBlur('discount_percent')}
+              className={cn(fieldClass('discount_percent'), 'sm:w-1/2')}
+              data-testid="customer-form-discount"
+            />
+            <FieldError name="discount_percent" message={fieldErrors.discount_percent} />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm text-slate-700">אימייל</label>
-              <Input
-                type="email"
-                value={form.email}
-                onChange={(e) => setField('email', e.target.value)}
-                onBlur={() => handleBlur('email')}
-                placeholder="contact@company.co.il"
-                className={fieldClass('email')}
-                data-testid="customer-form-email"
-              />
-              <FieldError name="email" message={fieldErrors.email} />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm text-slate-700">אחוז הנחה קבוע (0–100)</label>
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                step="0.5"
-                value={form.discount_percent}
-                onChange={(e) => setField('discount_percent', e.target.value)}
-                onBlur={() => handleBlur('discount_percent')}
-                className={fieldClass('discount_percent')}
-                data-testid="customer-form-discount"
-              />
-              <FieldError name="discount_percent" message={fieldErrors.discount_percent} />
-            </div>
-          </div>
-
-          {/* אנשי-קשר נוספים (§7.81, אופציה C) — הראשי הוא השדות למעלה; כאן כרטיס לכל נוסף.
-              עיצוב-כרטיסים + ולידציה "שם + טלפון/אימייל" (הכרעת-ישי 11/07). אם טעינת-הקשרים נכשלה —
-              מסתירים את העורך ומראים אזהרה, כדי לא לאבד עריכות שלא יישמרו (contactsLoaded=false). */}
+          {/* אנשי-קשר (N2, §7.81) — רשימה אחת שבה כל שורה היא אותו כרטיס; הראשי מסומן בצ'יפ
+              ובמסגרת (docs/mockups/customers-screen/08_contacts_form_approved.html, הכרעת-ישי
+              27/08). אם טעינת-הקשרים נכשלה — מסתירים את העורך ומראים אזהרה, כדי לא לאבד עריכות
+              שלא יישמרו (contactsLoaded=false). */}
           {contactsLoadError ? (
             <p
               className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800"
               role="alert"
               data-testid="customer-contacts-load-error"
             >
-              לא ניתן לטעון את אנשי הקשר הנוספים כרגע. שאר פרטי הלקוח יישמרו כרגיל; נסו שוב מאוחר
-              יותר לעריכת אנשי הקשר.
+              לא ניתן לטעון את אנשי הקשר כרגע. שאר פרטי הלקוח יישמרו כרגיל; נסו שוב מאוחר יותר
+              לעריכת אנשי הקשר.
             </p>
           ) : (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm text-slate-700">אנשי קשר נוספים</label>
-                <Button
-                  type="button"
-                  variant="link"
-                  onClick={addContactRow}
-                  className="h-auto gap-1 p-0 text-teal-600 hover:text-teal-700"
-                  data-testid="contact-add-row"
+            <div className="flex flex-col gap-2" data-testid="customer-contacts-section">
+              <label className="text-sm text-slate-700">אנשי קשר</label>
+              <p className="text-xs text-slate-500">
+                איש קשר אחד חייב להיות מסומן כראשי. הוא זה שמופיע בהצעת המחיר ומקבל את המיילים.
+              </p>
+
+              {primaryError && (
+                <p
+                  className="rounded-lg border border-amber-300 bg-amber-50 p-2 text-sm text-amber-800"
+                  role="alert"
+                  data-testid="customer-contacts-primary-error"
                 >
-                  <Plus className="size-4" />
-                  הוסף איש קשר
-                </Button>
-              </div>
+                  {primaryError}
+                </p>
+              )}
+
               {contacts.map((c, idx) => (
                 <div
                   key={c._rk}
-                  className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3"
+                  className={cn(
+                    'flex flex-col gap-2 rounded-xl border p-3',
+                    c.is_primary ? 'border-2 border-teal-600' : 'border-slate-200',
+                  )}
                   data-testid="contact-row"
+                  data-primary={c.is_primary ? 'true' : 'false'}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-slate-500">איש קשר {idx + 1}</span>
+                  <div className="flex items-center gap-2">
+                    {c.is_primary ? (
+                      <>
+                        <span
+                          className="rounded-full bg-teal-100 text-teal-700 px-2.5 py-0.5 text-xs font-bold"
+                          data-testid="contact-primary-chip"
+                        >
+                          ראשי
+                        </span>
+                        <span className="text-xs text-slate-400">מופיע בהצעת המחיר</span>
+                      </>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="link"
+                        onClick={() => makePrimary(c._rk)}
+                        className="h-auto p-0 text-xs font-semibold text-slate-600 hover:text-slate-800"
+                        data-testid="contact-make-primary"
+                      >
+                        הפוך לראשי
+                      </Button>
+                    )}
+                    <span className="flex-1" />
                     <Button
                       type="button"
                       variant="link"
-                      title="הסר איש קשר"
-                      aria-label={`הסר איש קשר ${idx + 1}`}
+                      // מוסכמת-הבית (MarketingPanel/marketing.js): פקד חסום נושא title שמסביר למה.
+                      title={c.is_primary ? NO_PRIMARY_MSG : 'הסר איש קשר'}
+                      aria-label={c.is_primary ? 'מחיקה חסומה' : `הסר איש קשר ${idx + 1}`}
+                      disabled={c.is_primary}
                       onClick={() => removeContactRow(c._rk)}
-                      className="h-auto p-0 text-red-600 hover:text-red-700"
+                      className="h-auto p-0 text-red-600 hover:text-red-700 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:text-slate-300"
                       data-testid="contact-remove"
                     >
                       <Trash2 className="size-4" />
                     </Button>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs text-slate-500">שם</label>
-                    <Input
-                      value={c.contact_name}
-                      onChange={(e) => updateContactRow(c._rk, 'contact_name', e.target.value)}
-                      placeholder="שם איש הקשר"
-                      aria-invalid={contactFieldInvalid(c._rk, 'contact_name') || undefined}
-                      className={cn(
-                        'h-auto rounded-lg border-slate-300 p-2 text-right',
-                        contactFieldInvalid(c._rk, 'contact_name') && 'border-red-500',
-                      )}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
+
+                  {/* שלושה שדות שווים, כל תווית-ותא באותה עטיפה (מוקש-RTL/LTR הקבוע של הפרויקט —
+                      תווית עברית שנפרדת מהערך שמתחתיה נצפתה שלוש פעמים כשהם לא באותו בלוק). */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-slate-500">שם</label>
+                      <Input
+                        value={c.contact_name}
+                        onChange={(e) => updateContactRow(c._rk, 'contact_name', e.target.value)}
+                        placeholder="שם איש הקשר"
+                        aria-invalid={contactFieldInvalid(c._rk, 'contact_name') || undefined}
+                        className={cn(
+                          'h-auto rounded-lg border-slate-300 p-2 text-right',
+                          contactFieldInvalid(c._rk, 'contact_name') && 'border-red-500',
+                        )}
+                      />
+                    </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-xs text-slate-500">טלפון</label>
                       <Input
@@ -537,6 +576,7 @@ export default function CustomerFormDialog({
                       />
                     </div>
                   </div>
+
                   {contactErrors[c._rk] && (
                     <p
                       className="text-red-600 text-sm"
@@ -546,8 +586,30 @@ export default function CustomerFormDialog({
                       {contactErrors[c._rk].msg}
                     </p>
                   )}
+
+                  {/* חסימת-מחיקת-הראשי — הנוסח המדויק מהמוקאפ (הכרעת-ישי 27/08), מוצג תמיד
+                      ולא רק אחרי ניסיון-לחיצה: "בקרה חסומה נושאת משפט", לא נטרול שקט. */}
+                  {c.is_primary && (
+                    <p
+                      className="rounded-lg border border-amber-300 bg-amber-50 p-2 text-xs text-amber-800"
+                      data-testid="contact-primary-delete-notice"
+                    >
+                      {NO_PRIMARY_MSG}
+                    </p>
+                  )}
                 </div>
               ))}
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addContactRow}
+                className="h-auto w-full gap-1 rounded-lg border-dashed border-slate-300 p-2.5 text-sm font-semibold text-slate-600 hover:text-slate-800"
+                data-testid="contact-add-row"
+              >
+                <Plus className="size-4" />
+                הוסף איש קשר
+              </Button>
             </div>
           )}
 

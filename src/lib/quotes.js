@@ -12,6 +12,9 @@ import {
 // מנוע-המיילים המשותף (כלל 14 — הלוגיקה שאינה ייחודית להצעות-מחיר חיה שם פעם אחת,
 // ומודולים 4/8/11 יצרכו את אותו קוד ואת אותן בדיקות).
 import { buildEmailPayload, fillEmailTemplate, findUnknownPlaceholders } from '@/lib/email'
+// N2 (02/09/2026): איש-הקשר הראשי הוא שורה ב-customer_contacts, לא שלוש עמודות על customers.
+// primaryContact הוא נקודת-הקריאה היחידה (src/lib/customers.js) — לא לבחור ידנית מהמערך כאן.
+import { primaryContact } from '@/lib/customers'
 
 // quotes.quote_status — שלושת הערכים של CHECK quotes_quote_status_check.
 export const QUOTE_STATUS_LABELS = {
@@ -703,11 +706,13 @@ export function quoteToPdfModel(quote, productsBySku, defaultVatRate, validityDa
     // תוקף ההצעה נספר מ-updated_at ולא מ-issue_date (F4) — אותו שעון שהמסך מציג
     // ושעבודת-הרקע פועלת לפיו, אחרת המסמך ללקוח היה נוקב בתאריך אחר מהמערכת.
     validUntil: days !== null && updated !== null ? toIsoDate(updated + days * MS_PER_DAY) : null,
+    // N2: איש-הקשר הראשי אינו quote.customers.contact_name/phone יותר — הוא שורת customer_contacts
+    // עם is_primary, ו-primaryContact היא נקודת-הבחירה היחידה (ר' ייבוא בראש הקובץ).
     customer: {
       companyName: quote?.customers?.company_name,
       companyNumber: quote?.customers?.company_number,
-      contactName: quote?.customers?.contact_name,
-      phone: quote?.customers?.phone,
+      contactName: primaryContact(quote?.customers)?.contact_name,
+      phone: primaryContact(quote?.customers)?.phone,
     },
     event: {
       name: quote?.event_name,
@@ -854,12 +859,15 @@ export function buildQuoteEmailPayload({
   pdfBase64,
   sender,
 } = {}) {
+  // N2 (02/09/2026): איש-הקשר הראשי (§6 מ3) הוא כעת שורת customer_contacts עם is_primary —
+  // עד היום ההערה כאן אמרה "customer_contacts ריקה בפועל" כי הטבלה טרם אוכלסה; אחרי המיגרציה
+  // היא כן מאוכלסת, ו-quote.customers.email/contact_name הישנים אינם נקודת-הקריאה יותר.
+  const contact = primaryContact(quote?.customers)
   return buildEmailPayload({
-    // איש-הקשר הראשי בלבד (§6 מ3, אושר מחדש 30/07 — `customer_contacts` ריקה בפועל).
-    to: quote?.customers?.email,
+    to: contact?.email,
     subject: quoteEmailSubject(quote),
     body: fillQuoteEmailTemplate(template, {
-      contactName: quote?.customers?.contact_name,
+      contactName: contact?.contact_name,
       companyName: quote?.customers?.company_name,
       eventName: quote?.event_name,
       eventDate,

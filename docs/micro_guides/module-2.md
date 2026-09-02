@@ -467,6 +467,32 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
 6. **(e)–(g) per CLAUDE.md iron rules 13/15/16 + end-of-session protocol** (new-open-question → stop+§7 · migration/DB-gap → db_roadmap same session · shared-surface change → name the affected future modules in the CHANGELOG line) — these apply automatically; not restated here (F1).
 
 ## 9. 📝 Deviations & Tech-Debt Log
+  ↳ **as-built N2, 02/09/2026** — the files of this module that actually changed, measured not assumed:
+  `api.js` *(three selects now carry `customer_contacts(... is_primary)`; `replaceCustomerContacts`
+  became one `rpc('replace_customer_contacts')` call)* · `CustomerFormDialog.jsx` *(rebuilt to the
+  approved mockup — one uniform card per contact, primary marked by chip+border, delete-primary
+  blocked)* · `CustomersPage.jsx` **and** `CustomerDetailsPage.jsx` *(both read through
+  `primaryContact()` now)* · new test files `api.test.js` and `CustomerFormDialog.test.jsx`
+  *(neither existed before — module 2 was one of the two modules with no `api.js` test)*.
+  🔴 **The assumption filled here, tagged `הנחתי` and NOT ruled by anyone:** the form **still mirrors**
+  the primary contact back into `customers.contact_name/phone/email` on save. **Why:** those columns
+  are still `NOT NULL` and still the source of truth until the drop migration. ⚠️ **The cost, stated
+  plainly:** the write is now **two HTTP requests** (RPC for the child rows, `updateCustomer` for the
+  parent columns) — if one lands and the other fails, the two diverge. **That divergence is exactly
+  what `child_parent_mismatch` detects**, and it dies with the drop migration.
+  🚫 **Do NOT "fix" this by removing the mirror before the columns are dropped** — that breaks every
+  screen not yet rewired.
+
+- 🔗 `02/09/2026` — **N2 (איחוד אנשי-הקשר) נוגע בקבצים של המודול הזה. הרשומה המלאה אינה כאן:**
+  ‏`docs/db_roadmap.md §10ב` *(שתי המיגרציות והנימוק שלהן)* + ‏`PROJECT_MASTER §6`.
+  **מה שהמודול הזה צריך לדעת במשפט אחד:** איש-הקשר **הראשי** מפסיק להיות שלוש עמודות על
+  `customers` (`contact_name`/`phone`/`email`) והופך ל**שורה** ב-`customer_contacts` עם
+  `is_primary`. ⇒ **כל קריאה של `customer.contact_name` בקוד של המודול הזה תחזיר `undefined`
+  אחרי מיגרציית-המחיקה**, והבחירה עצמה מרוכזת ב-`primaryContact()` שב-`src/lib/customers.js`
+  — **אין לממש אותה מקומית.**
+  ⏸️ **מצב נכון לרגע הכתיבה: שתי המיגרציות הוחלו, שלוש העמודות עדיין קיימות ועדיין מקור-האמת**,
+  והחיווט בעבודה על `ishay/n2-contacts-rewire`. **המחיקה תבוא רק אחרי חיווט מלא ופריסה.**
+
 
 - 🔗 `28/08/2026 00:5X` — **M2 CODE IS BEING EDITED BY MODULE 8's PHASE-4 RIPPLE (step 4.2). This
   module stays CLOSED; the change is m8's, recorded here so a future m2 reader is not surprised by
