@@ -26,7 +26,7 @@
 <!-- target ~15 lines · no internal dates (F4) · over budget? compress / move to journal -->
 
 **Where we stand:** Modules **1**, **2**, **3**, **4**, **5** and **6** are closed and merged to `dev`; `dev` has been promoted to `main` and tagged `milestone-2.5`, so 1–6 are all live. The m5 as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log); its spec set `docs/specs/module_05_logistics/` (42 rulings ①–㊷); `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8 (finance) is the ACTIVE build** — branch `ishay/module-8-phase-2`, cut from fresh `dev`. **Phase 1 is COMPLETE and in production** (ten migrations, the 1.8 gate, `C2`+`N1`+`N1b` all shipped). **Phases 2, 3 and 4 are COMPLETE**, plus an extra UX/edge-case pass Ishay asked for — suite **1,765 tests / 65 files, exit 0**, and `H1`/`H2`/`H3` applied after his typed echo. **Step 5.1's journeys ① (#12 end-to-end) and ③ (August salary report) are DONE and verified against the live DB**; ② (cancellation fee) needs Ishay's nod because it means cancelling a live project. Standing at **step 3.6 — his single consolidated 🎨 review of the four screens** (the per-unit gate was consolidated at his own ruling), with 4.3 · 4.5 · 5.1 · 5.2 behind it. Salary-report generation is deliberately UNRUN so he can demo August at the conference. The plan: `docs/micro_guides/module-8.md`; the approved spec: `docs/specs/module_08_finance/` (its `spec.md §①` is the binding reading list, and the four hand-computed acceptance anchors in `§③3` are never recomputed from code). 🔴 **And two of those four do not reproduce from a plain read of the live DB — no project in the seed is `cancelled`, and travel is stamped only at salary-report generation** (measured 27/08; full finding in `module-8.md` §10). Their live cross-check needs a live-DB WRITE and is deferred to step 5.1. 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
-Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-encode in QuotesPage · Select-uncontrolled in QuoteLineEditor — §6 line `🚧 מ10 ← מ3`): touching src after the certified regression would have voided the verdict's identity.
+✅ **The two 1-line src fixes that were parked for immediately-post-merge are DONE** — verified in code 02/09/2026, not assumed: `QuotesPage.jsx` wraps the address in `encodeURIComponent` (with the `?`/`&` injection reason in a comment beside it), and `QuoteLineEditor.jsx` drives both Selects from controlled values (`line.sku || ''`, `line.color || NO_COLOR_VALUE`) using the sentinel convention. **This line said "parked" until today** — it outlived the work it described, which is the ordinary way a Current-State line goes stale: the fix lands in a commit that has no reason to come back and edit the snapshot.
 `docs/schema.sql` measure command: `grep -c '^create table' docs/schema.sql` (23 at the last audit).
 
 **Governance:** single developer (Ishay). Schedule (re-ruled 12/08/2026, old `19/09` deadline cancelled everywhere): **28/08** interim presentation (10 min · one end-to-end process · ~50%) · **01/10** closing conference (target **100%**) · **20/10** end. Per-module schedule + dates SSOT: `00_roadmap.md` §3. Overflow policy: whole modules defer, nothing is trimmed — shock-absorbers are **M10 and M7 only**; the 3→4→6→5 core, M8 and M12 never defer.
@@ -44,6 +44,54 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 ---
 
 ## Session Log (newest first)
+
+### 02/09/2026 — module 8 merged to `dev` and promoted to `main`; the merge event itself had no journal entry
+
+**Ishay's words, quoted at absorption before any interpretation:** *"היי סגרתי ומיזגתי את מודול 8… יש כמה
+דברים שאני צריך לעשות אחרי המיזוג ושכחתי."* He was right that something was missing, and it was not what
+either of us expected: the closing session had already flipped `STATUS.md` and the micro-guide header, but
+**the journal carried no record of the merge at all** — this entry is that record.
+
+**Fresh evidence, same turn, quoted rather than summarised:**
+- `git log --oneline origin/main -2` ⇒ `00ecf9d Merge pull request #81 from ishay1997-ux/dev` ·
+  `0d45cf1 Merge pull request #80 from ishay1997-ux/ishay/module-8-phase-2`
+- `git log origin/dev..HEAD --oneline | wc -l` ⇒ **0** — nothing local is unmerged.
+- `git rev-parse HEAD` = `git rev-parse origin/dev` = `a100fb3` — local `dev` is exactly origin.
+- 21 `module8_*` migration files present in `origin/dev`.
+- ⚠️ **`git merge-base --is-ancestor origin/ishay/module-8-phase-2 origin/dev` returns NO — and that is not
+  a contradiction:** the remote branch was deleted at merge, so the ref no longer resolves. The
+  discriminator that actually answers the question is the `origin/dev..HEAD` count above, which is the
+  caveat iron rule 10 exists to make explicit. **A session reading only the `merge-base` line would have
+  reported module 8 as unmerged.**
+
+🧹 **Two dead local branches deleted** (`git branch -d`, the safe form that refuses an unmerged branch):
+`ishay/module-8-phase-2` (was `c653ade`) · `ishay/m8-post-merge-flip` (was `518c877`). Remote now carries
+`dev`, `main` and the dependabot branches only.
+
+🔎 **And two things this pass surfaced that were not in anyone's report.**
+
+**① `H7` exists and I did not know about it.** `20260901233014_module8_h7_budget_deviation_excludes_bonus`
+was written by the closing audit at 23:30, after the build session had stopped — a **fourth** money defect
+in the same module: `budget_deviation` compared an actual side that included personal bonuses against a
+planned side that has no bonus term, so a project where everyone worked exactly to plan and earned a bonus
+was displayed as **over budget by the bonus**. The fix is deliberately narrow — a separate variable for the
+deviation's actual side, leaving `v_labor` byte-identical, because the same value also feeds `labor_cost`
+and `gross_profit` where the bonus genuinely belongs, and `gross_profit` is what `final_profit` freezes.
+**Removing the bonus from `v_labor` would have fixed one number and broken the acceptance anchor.**
+
+**② A mockup folder for the settings screen has existed since 23/07, and the module-9 work ignored it.**
+`docs/mockups/system-settings-screen/` holds `01.png` (weights) · `02.png` (**weight validation**) ·
+`03.png` (financial) · `04.png` (integrations) plus `05_prices_tab_approved.html`. The build session drew a
+fresh params mockup on 28/08 into a **new** folder, `docs/mockups/settings-screen/`, without checking.
+🔴 **The concrete cost, not a hypothetical one:** the weights-must-sum-to-`1.00` rule was presented to Ishay
+as a discovery from live data and flagged "needs your confirmation" — while `mockup_descriptions.md:66` had
+recorded it since July as *"חייב סכום 1.0, אחרת שגיאה אדומה"*. **A settled decision was re-opened as an open
+question.** ⚠️ And the two sources disagree on the split — the July mockup says `W₁=0.4 · W₂=0.3 · W₃=0.3`,
+the live seed is `היענות 0.40 · אמינות 0.35 · קרבה 0.25`; both sum to 1.00. `mockup_descriptions.md` itself
+says the mockup values are not authoritative (`reference_spec/products_and_params.md` is), so this is a
+known-stale drawing, not a conflict — **but nobody checked, which is the actual finding.**
+📌 **Route:** the two mockup folders need reconciling before module 9 opens, and the `1.00` constraint should
+be recorded as already-decided rather than re-asked.
 
 ### 01/09/2026 22:0X–23:2X — module 8 closing audit: verdict [NO], and a test that had locked the bug in
 
