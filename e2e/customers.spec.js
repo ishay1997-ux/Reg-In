@@ -77,9 +77,14 @@ test.describe('לקוחות (מודול 2) — קבלה E2E (guide ⑦)', () => 
     // Radix Select — פותחים את ה-trigger ובוחרים תווית-אפיון (§7.3): private_company = "חברה פרטית".
     await page.getByTestId('customer-form-type').click()
     await page.getByRole('option', { name: 'חברה פרטית' }).click()
-    await page.getByTestId('customer-form-contact-name').fill('איש קשר בדיקה')
-    await page.getByTestId('customer-form-phone').fill('03-1234567')
-    await page.getByTestId('customer-form-email').fill('e2e@example.com')
+    // 🔴 N2 (02/09/2026): איש-הקשר אינו שלושה שדות בראש הטופס אלא **שורה** ברשימה המאוחדת.
+    // הבדיקה הזו הפנתה ל-`customer-form-contact-name/phone/email` שנמחקו ב-`53b562b`, והייתה
+    // **אדומה מאז ואיש לא ידע — E2E אינו רץ ב-CI** (מתועד ב-CLAUDE.md). המזהים החדשים חיים
+    // בתוך `contact-row`, ולכן נגישים דרך השורה ולא גלובלית.
+    const firstContact = page.getByTestId('contact-row').first()
+    await firstContact.getByTestId('contact-field-contact_name').fill('איש קשר בדיקה')
+    await firstContact.getByTestId('contact-field-phone').fill('03-1234567')
+    await firstContact.getByTestId('contact-field-email').fill('e2e@example.com')
     await page.getByTestId('customer-form-discount').fill('10')
     await page.getByTestId('customer-form-submit').click()
 

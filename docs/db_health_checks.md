@@ -211,36 +211,84 @@ never reach zero without changing the architecture, so as a gate it is pure nois
 can pass is a gate everybody ignores. **Check 11 replaces it** and tests the thing that actually
 matters. *(Ruled 02/09/2026 by both sessions independently.)*
 
-## 10 · Contact consolidation integrity (N2) — ⏳ **temporary, dies with the drop migration**
+## 10 · No residue of a dropped column — three dimensions, not one
+
+Replaced the N2 parent/child integrity check on 02/09/2026, when `N2ד` dropped
+`customers.contact_name/phone/email` and took its parent away. **Generalised deliberately: this is
+the check to run after ANY column drop, not a leftover from one refactor.**
+
+🔴 **Reads are the easy half, and moving them WELL is what hides the other half.** The N2 rewire
+moved every read to `primaryContact()` and looked finished — while the save path still WROTE the
+three columns, because they were `NOT NULL`. **The precondition for a drop is that deployed code no
+longer WRITES the column; "no longer reads it" is not the same claim and can be true while the drop
+is still fatal.**
+
+🔑 **And do not grep for the column name. Enumerate the queries.** The worst instance found on
+02/09 was `rows.map((r) => r.email)` — a generic property on a variable named `r`. **No search for
+`contact_name`, `customers.`, or the table name can reach it.** The method that works:
+
+1. List every query that touches the table (`.from('<table>')`, RPC bodies, raw SQL in specs).
+   **This is a finite list, which is what makes "I finished" a claim you can defend.**
+2. For each, write down the SHAPE it returns.
+3. Follow that value to every consumer — components, helpers, props, test fixtures — regardless of
+   what the variable is called.
+
+**Three dimensions, and all three must be clean:**
+
+| Dimension | What to check | Real miss on 02/09 |
+|---|---|---|
+| **Reads** | every consumer of every query | `marketing.js` → empty BCC in production |
+| **Writes** | `insert`/`update` payloads, RPC bodies | the `NOT NULL` that forced `N2ג` |
+| **Tests / E2E** | fixtures, `page.route` mocks, direct DB setup, **and testids** | **2 of 3 blockers lived in `e2e/`** |
+
+⚠️ **The third dimension is the one everyone forgets, and here it is not theory:** `grep` over `src/`
+alone would have reported "zero residue" while `e2e/load-failure-guards` inserted the columns
+directly (`42703` at the drop) and `e2e/quote-email` selected them for its candidate pool.
+🔴 **And a fourth instance surfaced only when the suite was actually RUN:** `e2e/customers.spec.js`
+still targeted `customer-form-contact-name`/`-phone`/`-email`, testids the N2 form rebuild had
+deleted hours earlier. **It had been red since `53b562b` and nobody knew — `test:e2e` does not run in
+CI** (root `CLAUDE.md`). ⇒ **After a drop, RUN the E2E suite. Reading it is not enough.**
+
+**In the database:**
 
 ```sql
-select (select count(*) from customers) as customers_total,
-       (select count(*) from customer_contacts) as contact_rows,
-       (select count(*) from customer_contacts where is_primary) as primary_rows,
-       (select count(*) from customers c
-         where not exists (select 1 from customer_contacts cc
-                            where cc.customer_id=c.customer_id and cc.is_primary)) as without_primary,
-       (select count(*) from customers c
-          join customer_contacts cc on cc.customer_id=c.customer_id and cc.is_primary
-         where cc.contact_name is distinct from c.contact_name
-            or cc.phone     is distinct from c.phone
-            or cc.email     is distinct from c.email) as child_parent_mismatch;
+select (select count(*) from information_schema.columns
+         where table_schema='public' and table_name='<table>'
+           and column_name in ('<col1>','<col2>')) as columns_still_there,
+       (select coalesce(json_agg(p.proname),'[]'::json)
+          from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+         where n.nspname='public' and p.prokind='f' and p.prosrc ~ '<col1>') as functions_referencing,
+       (select coalesce(json_agg(polname),'[]'::json) from pg_policy pol
+          join pg_class t on t.oid=pol.polrelid where t.relname='<table>'
+           and pg_get_expr(pol.polqual,pol.polrelid) ~ '<col1>') as policies_referencing;
 ```
 
-**Baseline 02/09/2026: 9 · 9 · 9 · 0 · 0.**
+**Pass = `columns_still_there` is 0 and both lists are empty.**
 
-🔑 **`child_parent_mismatch` is the strongest gate that exists on the N2 rewire** — it is the only
-thing that can catch a production file still writing to the parent columns. **It stops working the
-moment those columns are dropped**, so it must be run while they are still there.
+🔴 **Two traps that produced a false alarm each on 02/09, in two different sessions, on the same day:**
 
-⚠️ **`without_primary` is a REPORT, not a gate.** The partial unique index enforces *at most* one
-primary and cannot enforce *at least* one; that rule lives in `replace_customer_contacts`. A value
-above 0 therefore means **somebody wrote to the table without going through the RPC** — not that the
-database is broken.
+**① Anchor the column name to a word boundary.** A residue regex written as `c\.contact_name`
+matched **`cc.contact_name`** — where `cc` is the CHILD table, the correct place for the value to
+live. It accused `replace_customer_contacts`, the very function that implements the migration.
+Write `\ycontact_name\y`, and **then read the body before reporting anything.**
+*(The mirror-image trap: an over-broad `<table>[^;]*\.(phone|email)` matched `auth.email()` and the
+users table's `u.email`. Both directions cost a session's time; neither was a real finding.)*
 
-🗑️ **Delete this whole check when the drop migration lands**, and replace it with a residue check:
-no trace of `contact_name`/`phone`/`email` on `customers` in the database, in function bodies, in
-`docs/schema.sql`, or in `src/`.
+**② Count checks are only valid while the test suite is NOT running.** `customers` and
+`customer_contacts` are tables the E2E specs write to and clean up. A count taken mid-run catches a
+transient row: on 02/09 a session measured `10 · 10 · 10`, reported it as *"a customer was created
+after the drop and got a primary — proof the new path works forwards"*, and it was an
+`e2e/customers.spec.js` fixture that its own `afterAll` deleted seconds later. **The real number was
+9.** ⇒ **Before drawing a conclusion from an unexpected count, check `created_at` and check whether
+a suite is running.**
+⚠️ **Write the function regex TIGHT.** A broad one (`'<table>[^;]*\.(phone|email)'`) matched
+`auth.email()` and the users table's `u.email` and falsely accused
+`approve_quote_and_create_project` — a function that had silently broken quote approval once before,
+so the false alarm was maximally alarming. **Match the column name as a word; then confirm by
+reading the body.**
+
+**N2's own closing numbers, 02/09/2026:** three columns gone · `customers` down to 9 columns ·
+9 customers · 9 contact rows · 9 primaries · 0 without a primary · full E2E suite run, not just read.
 
 ## 11 · Every reachable DEFINER function has a permission gate inside
 

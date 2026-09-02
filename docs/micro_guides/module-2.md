@@ -483,6 +483,25 @@ Run order: 4 → 1 inside one transaction (scenario 1 needs the row inserted in 
   🚫 **Do NOT "fix" this by removing the mirror before the columns are dropped** — that breaks every
   screen not yet rewired.
 
+- ✅ `02/09/2026` — **N2 הושלם וסגור. איש-הקשר הראשי הוא שורה ב-`customer_contacts` עם `is_primary`,
+  ושלוש העמודות `customers.contact_name/phone/email` **נמחקו** (`N2ד`, `20260902173354`).**
+  **ארבע מיגרציות ולא שלוש**, והרביעית נולדה מגילוי: ‏`N2ג` ריככה את ה-`NOT NULL` **כי הטופס עדיין
+  כתב לעמודות** — ‏🔑 **התנאי למחיקה אינו "הקוד כבר לא קורא" אלא "הקוד כבר לא כותב", והשניים נפרדו
+  דווקא מפני שהעברת-הקריאות נעשתה היטב.**
+  **מה שהשתנה בקבצים של המודול הזה:** ‏`api.js` — ‏`PRIMARY_CONTACT_EMBED` בכל select, והשמירה דרך
+  ה-RPC ‏`replace_customer_contacts` *(טרנזקציה אחת; מחליף את insert-ואז-delete)* · `CustomerFormDialog`
+  — רשימת אנשי-קשר אחידה עם צ'יפ "ראשי", **ו-`data-testid="contact-field-*"` בתוך `contact-row`** ·
+  ‏`CustomersPage` — שלוש עמודות אוחדו לאחת + צ'יפ `✉ מייל` · ‏`CustomerDetailsPage` ו-`MarketingPanel`
+  קוראים דרך `primaryContact()`.
+  🩸 **וארבעה באגים נתפסו אחרי שהחיווט "הושלם", שלושה מהם מחוץ ל-`src/`:** ‏`lib/marketing.js` קרא
+  `r.email` שטוח ⇒ **רשימת-הדיוור יצאה ריקה בייצור** *(אפס נזק — `mailto:` נפתח לעין המשתמשת)* ·
+  באנר-הכפילות קרא את עמודת-האב · שני ספי-E2E · **וספק רביעי שהיה אדום שעות ואיש לא ידע, כי
+  `test:e2e` אינו רץ ב-CI — נמצא רק בהרצה.**
+  ⚠️ **פער מוצהר: לבאנר-הכפילות אין בדיקה** — הגישה אליו דורשת Radix Select שאינו נפתח ב-jsdom
+  *(נמדד, כולל פוליפילים)*. מקומו ב-E2E.
+  **החוזה המלא והמדידות:** ‏`docs/db_roadmap.md` §9א+§10 · **בדיקת-השריד המוכללת לכל מחיקה עתידית:**
+  ‏`docs/db_health_checks.md` §10.
+
 - 🔗 `02/09/2026` — **N2 (איחוד אנשי-הקשר) נוגע בקבצים של המודול הזה. הרשומה המלאה אינה כאן:**
   ‏`docs/db_roadmap.md §10ב` *(שתי המיגרציות והנימוק שלהן)* + ‏`PROJECT_MASTER §6`.
   **מה שהמודול הזה צריך לדעת במשפט אחד:** איש-הקשר **הראשי** מפסיק להיות שלוש עמודות על
