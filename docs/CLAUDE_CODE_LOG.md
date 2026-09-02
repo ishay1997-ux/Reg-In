@@ -45,6 +45,42 @@
 
 ## Session Log (newest first)
 
+### 02/09/2026 — deployed N2, then found the drop's precondition was the wrong one
+
+**What changed.** `dev` -> `main` (PR #90, 24 commits) and verified **live**, not by CI: the bundle
+was fetched from `reg-in-umber.vercel.app` and asserted to carry `customer_contacts(`, `is_primary`,
+`replace_customer_contacts`, the `mailto` chip and the delete-block wording — **and to no longer
+carry any of the three old parent-column selects**. Before that, PR #89 merged the customers-table
+density fix (12 columns -> 10) and `docs/db_health_checks.md`. After the deploy, migration `N2ג`
+(nullability relaxation) was applied and the form stopped writing the three parent columns.
+
+**Why the plan grew from three migrations to four.** With the rewire deployed it looked like the
+drop was unblocked. It was not: `CustomerFormDialog.jsx` on `origin/main` was still **writing**
+`contact_name/phone/email` on every save — deliberately, because all three were `NOT NULL`
+(verified in `information_schema`, not from the code comment that claimed it). Dropping would have
+failed every save with `42703`; removing the writes without relaxing first would have failed them
+with `23502`. So: relax -> stop writing -> deploy -> drop.
+
+🔑 **The lesson worth keeping, and it is not about N2.** *"The code no longer READS this column"* is
+not the precondition for dropping it — *"the code no longer WRITES it"* is. Those two came apart
+here precisely because the rewire was done well: reads were moved, and the writes were deliberately
+left behind to satisfy a constraint. **A rewire audit that greps for reads will pass while the
+drop is still fatal.**
+
+**Two more things the day produced.** (a) Cross-checking the DB battery against a second session
+caught four defects neither of us found alone — an ambiguous empty result (0-of-19 and 0-of-0 render
+identically), three different permission-gate idioms that made a naive check report 25 false
+findings, a criterion that counted instead of naming, and two functions missing from an allow-list.
+That is now written down instead of living in chat. (b) Writing it down caught a wrong number before
+it shipped: "33 language rows across 26 hostesses" is really 33 rows across **20** of 26 — six
+hostesses have no language, which is data, not a bug. Both cases are the same shape: **the number
+was copied, not measured.**
+
+**What is not done.** `N2ד` (the actual drop) is unwritten and blocked on deploying `N2ג`'s code
+half. The customers table's cell gaps are still structurally 0px — the collision is fixed because
+content no longer reaches the boundary, not because spacing was added; the table is exactly its
+container width, so padding risks horizontal scroll. Module 9 still has no Discovery.
+
 ### 02/09/2026 — N2 rewired end-to-end, and the file split missed four consumers it could not see
 
 **What changed.** The client half of N2: every read of the primary contact now goes through

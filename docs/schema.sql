@@ -231,9 +231,13 @@ create table customers (
   company_number    text        not null,
   customer_type     text        not null,
   company_name      text        not null,
-  contact_name      text        not null,
-  phone             text        not null,
-  email             text        not null,
+  -- 🔴 שלוש העמודות הבאות מוצאות משימוש (N2). מקור-האמת לאיש-הקשר הראשי הוא
+  -- customer_contacts עם is_primary. הן רוככו ל-nullable ב-N2ג (20260902162001) — צעד
+  -- שנדרש כדי שהטופס יוכל להפסיק לכתוב אליהן, ובלעדיו כל שמירה הייתה נכשלת ב-23502.
+  -- ⏸️ הן עדיין קיימות ועדיין מלאות: קו-נסיגה עד N2ד, שתמחק אותן אחרי פריסת הקוד.
+  contact_name      text,
+  phone             text,
+  email             text,
   discount_percent  numeric     not null default 0,
   marketing_consent boolean     not null default false,
   status            text        not null default 'active',

@@ -3,9 +3,13 @@
 // הראשי הוא עכשיו שורה ברשימה המאוחדת (צ'יפ+מסגרת), לא שלושה שדות נפרדים בראש הטופס.
 // מכסות: שמירה בלי איש-קשר ראשי מסומן (חסימה + הנוסח של ה-RPC replace_customer_contacts,
 // N2ב) · מחיקת הראשי חסומה **תמיד**, לא רק כשהוא היחיד (הכרעת-מוצר מפורשת, לא "אין למי
-// להעביר את הדגל") · "הפוך לראשי" מזיז את הדגל ולא מכפיל אותו · ושמירה רגילה, כולל השיקוף
-// של הראשי חזרה ל-customers.contact_name/phone/email (עדיין NOT NULL ב-DB — ר' ההערה
-// ב-CustomerFormDialog.jsx עצמו). כל הבדיקות הן במצב-עריכה: אין כאן ניסיון להפעיל את
+// להעביר את הדגל") · "הפוך לראשי" מזיז את הדגל ולא מכפיל אותו · ושמירה רגילה.
+// 🔴 שונה 02/09/2026 (N2ג): שתי בדיקות אימתו שהראשי **משתקף חזרה** ל-
+// customers.contact_name/phone/email. זה היה נכון כל עוד שלוש העמודות היו NOT NULL; אחרי
+// מיגרציית-הריכוך הטופס הפסיק לכתוב אליהן, **והבדיקות הפוכות עכשיו: הן מאמתות שהשדות
+// האלה אינם ב-payload.** ⚠️ ואסרשן-היעדרות חלש מטבעו — הוא עובר גם אם הקריאה כולה נעלמה —
+// ולכן שתיהן מאמתות **גם** את מה שכן נשלח.
+// כל הבדיקות הן במצב-עריכה: אין כאן ניסיון להפעיל את
 // ה-Select של "סוג לקוח" (Radix, ללא תקדים-בדיקה בריפו לאינטראקציה איתו) — לא נוגע ב-N2.
 // ה-API ממוקק כולו (./api) — אין Supabase בבדיקה, אותו סגנון-בית כמו
 // CustomerDetailsPage.projects.test.jsx.
@@ -179,16 +183,13 @@ describe('CustomerFormDialog — N2, "הפוך לראשי" מזיז את הדג�
     fireEvent.click(screen.getByTestId('customer-form-submit'))
     await waitFor(() => expect(updateCustomer).toHaveBeenCalledTimes(1))
 
-    // הראשי-החדש משתקף חזרה לשלוש העמודות ב-customers (עדיין NOT NULL ב-DB, ר' ההערה בקוד —
-    // מסכים אחרים כמו CustomersPage/CustomerDetailsPage עדיין קוראים אותן ישירות).
-    expect(updateCustomer).toHaveBeenCalledWith(
-      47,
-      expect.objectContaining({
-        contact_name: 'דנה פרץ',
-        phone: '04-6303011',
-        email: 'dana@hadera.muni.il',
-      }),
-    )
+    // N2ג: שלוש עמודות-האב **אינן נשלחות יותר**. הראשי חי רק בטבלת-הבת.
+    const [, payload] = updateCustomer.mock.calls[0]
+    expect(payload).not.toHaveProperty('contact_name')
+    expect(payload).not.toHaveProperty('phone')
+    expect(payload).not.toHaveProperty('email')
+    // והחיובי, שמונע מהאסרשן שלמעלה לעבור על קריאה ריקה:
+    expect(payload).toEqual(expect.objectContaining({ company_name: 'עיריית חדרה' }))
 
     expect(replaceCustomerContacts).toHaveBeenCalledTimes(1)
     const [customerId, sentContacts] = replaceCustomerContacts.mock.calls[0]
@@ -215,11 +216,16 @@ describe('CustomerFormDialog — N2, שמירה רגילה (לקוח עם איש
         customer_type: 'government',
         discount_percent: 0,
         marketing_consent: false,
-        contact_name: 'שרית מזרחי',
-        phone: '054-8123390',
-        email: 'sarit@hadera.muni.il',
       }),
     )
+    // N2ג: ו**רק** אלה. `objectContaining` לבדו לא היה תופס את שלוש העמודות שירדו,
+    // כי הוא מתעלם משדות עודפים — ולכן משווים את קבוצת-המפתחות המלאה.
+    expect(Object.keys(updateCustomer.mock.calls[0][1]).sort()).toEqual([
+      'company_name',
+      'customer_type',
+      'discount_percent',
+      'marketing_consent',
+    ])
     expect(replaceCustomerContacts).toHaveBeenCalledWith(
       47,
       expect.arrayContaining([
