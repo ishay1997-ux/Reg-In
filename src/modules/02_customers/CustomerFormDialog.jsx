@@ -244,23 +244,22 @@ export default function CustomerFormDialog({
 
     setSaving(true)
     try {
-      const primary = contacts.find((c) => c.is_primary)
+      // 🔴 N2ג (02/09/2026): שלוש העמודות `customers.contact_name/phone/email` **אינן נכתבות
+      // יותר מכאן.** עד עכשיו הן כן נכתבו — בכוונה, כי הן היו `NOT NULL` והשמטתן הייתה מפילה
+      // כל שמירה ב-23502. המיגרציה `…_n2c_customers_contact_columns_nullable` ריככה את האילוץ,
+      // וזה מה שפתח את הצעד הזה.
+      // 🔑 **ולמה זה קודם למחיקה ולא ביחד איתה:** המסד משותף לפיתוח ולייצור, והקוד החי רץ
+      // מ-`main`. מחיקת עמודה בזמן שהקוד הפרוס עדיין כותב אליה שוברת את הטופס ברגע ההחלה,
+      // לא במיזוג. הסדר היחיד שעובד הוא רכך ← הפסק לכתוב ← פרוס ← מחק (`supabase/migrations/CLAUDE.md`).
+      // ⚠️ שלוש העמודות עדיין קיימות ועדיין מלאות — הן קו-הנסיגה עד `N2ד`. מרגע זה הן קפואות:
+      // אף מסלול-כתיבה אינו נוגע בהן, ולכן `child_parent_mismatch` יכול להתחיל להתפצל כשמישהו
+      // יערוך איש-קשר. **זה צפוי ותקין** — הבדיקה מתה עם המחיקה, ומשמעותה עד אז היא
+      // "האם החיווט הושלם", לא "האם הנתונים זהים".
       const payload = {
         company_name: form.company_name.trim(),
         customer_type: form.customer_type,
         discount_percent: Number(form.discount_percent),
         marketing_consent: form.marketing_consent,
-      }
-      // N2, החלטה שלי (לא מהמוקאפ — הוא מצייר רק את מסך אנשי-הקשר, לא את חוזה-הכתיבה):
-      // `customers.contact_name/phone/email` נשארות NOT NULL ב-DB ועדיין נקראות ישירות ע"י
-      // מסכים אחרים שטרם עברו לקרוא מ-customer_contacts (CustomersPage, CustomerDetailsPage) —
-      // ר' ההערה המורחבת ב-src/lib/customers.js (primaryContact) וב-migrations/…is_primary_additive.
-      // כל עוד העמודות האלה חיות, השורה הראשית ממשיכה לשקף את הראשי שבטופס. כש-`primary` חסר
-      // (contactsLoadError) מדלגים על השדות האלה לגמרי — כדי לא לדרוס ערך אמיתי ב-DB בערך מומצא.
-      if (primary) {
-        payload.contact_name = primary.contact_name.trim()
-        payload.phone = primary.phone.trim()
-        payload.email = (primary.email ?? '').trim()
       }
       let saved
       if (isEdit) {
