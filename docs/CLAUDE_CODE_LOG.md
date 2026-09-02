@@ -25,7 +25,7 @@
 ## Current State (snapshot — rewritten, not appended)
 <!-- target ~15 lines · no internal dates (F4) · over budget? compress / move to journal -->
 
-**Where we stand:** Modules **1**, **2**, **3**, **4**, **5** and **6** are closed and merged to `dev`; `dev` has been promoted to `main` and tagged `milestone-2.5`, so 1–6 are all live. The m5 as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log); its spec set `docs/specs/module_05_logistics/` (42 rulings ①–㊷); `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8 (finance) is the ACTIVE build** — branch `ishay/module-8-phase-2`, cut from fresh `dev`. **Phase 1 is COMPLETE and in production** (ten migrations, the 1.8 gate, `C2`+`N1`+`N1b` all shipped). **Phases 2, 3 and 4 are COMPLETE**, plus an extra UX/edge-case pass Ishay asked for — suite **1,765 tests / 65 files, exit 0**, and `H1`/`H2`/`H3` applied after his typed echo. **Step 5.1's journeys ① (#12 end-to-end) and ③ (August salary report) are DONE and verified against the live DB**; ② (cancellation fee) needs Ishay's nod because it means cancelling a live project. Standing at **step 3.6 — his single consolidated 🎨 review of the four screens** (the per-unit gate was consolidated at his own ruling), with 4.3 · 4.5 · 5.1 · 5.2 behind it. Salary-report generation is deliberately UNRUN so he can demo August at the conference. The plan: `docs/micro_guides/module-8.md`; the approved spec: `docs/specs/module_08_finance/` (its `spec.md §①` is the binding reading list, and the four hand-computed acceptance anchors in `§③3` are never recomputed from code). 🔴 **And two of those four do not reproduce from a plain read of the live DB — no project in the seed is `cancelled`, and travel is stamped only at salary-report generation** (measured 27/08; full finding in `module-8.md` §10). Their live cross-check needs a live-DB WRITE and is deferred to step 5.1. 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
+**Active module: 9 (הגדרות מערכת)** — blueprint approved, branch `ishay/module-9-settings`, guide `docs/micro_guides/module-9.md` (no `docs/specs/` folder by Ishay's ruling), active step 1.0, zero code. **Where we stand:** Modules **1**, **2**, **3**, **4**, **5** and **6** are closed and merged to `dev`; `dev` has been promoted to `main` and tagged `milestone-2.5`, so 1–6 are all live. The m5 as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log); its spec set `docs/specs/module_05_logistics/` (42 rulings ①–㊷); `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8 (finance) is the ACTIVE build** — branch `ishay/module-8-phase-2`, cut from fresh `dev`. **Phase 1 is COMPLETE and in production** (ten migrations, the 1.8 gate, `C2`+`N1`+`N1b` all shipped). **Phases 2, 3 and 4 are COMPLETE**, plus an extra UX/edge-case pass Ishay asked for — suite **1,765 tests / 65 files, exit 0**, and `H1`/`H2`/`H3` applied after his typed echo. **Step 5.1's journeys ① (#12 end-to-end) and ③ (August salary report) are DONE and verified against the live DB**; ② (cancellation fee) needs Ishay's nod because it means cancelling a live project. Standing at **step 3.6 — his single consolidated 🎨 review of the four screens** (the per-unit gate was consolidated at his own ruling), with 4.3 · 4.5 · 5.1 · 5.2 behind it. Salary-report generation is deliberately UNRUN so he can demo August at the conference. The plan: `docs/micro_guides/module-8.md`; the approved spec: `docs/specs/module_08_finance/` (its `spec.md §①` is the binding reading list, and the four hand-computed acceptance anchors in `§③3` are never recomputed from code). 🔴 **And two of those four do not reproduce from a plain read of the live DB — no project in the seed is `cancelled`, and travel is stamped only at salary-report generation** (measured 27/08; full finding in `module-8.md` §10). Their live cross-check needs a live-DB WRITE and is deferred to step 5.1. 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
 ✅ **The two 1-line src fixes that were parked for immediately-post-merge are DONE** — verified in code 02/09/2026, not assumed: `QuotesPage.jsx` wraps the address in `encodeURIComponent` (with the `?`/`&` injection reason in a comment beside it), and `QuoteLineEditor.jsx` drives both Selects from controlled values (`line.sku || ''`, `line.color || NO_COLOR_VALUE`) using the sentinel convention. **This line said "parked" until today** — it outlived the work it described, which is the ordinary way a Current-State line goes stale: the fix lands in a commit that has no reason to come back and edit the snapshot.
 `docs/schema.sql` measure command: `grep -c '^create table' docs/schema.sql` (23 at the last audit).
 
@@ -44,6 +44,52 @@
 ---
 
 ## Session Log (newest first)
+
+### 02/09/2026 19:0X–20:5X — module 9 opened: blueprint approved after a review and a rehearsal that each found what the other could not
+
+**What happened.** Branch `ishay/module-9-settings` cut from `origin/dev` (`f785d71`, discriminator
+empty). Ishay asked "מספיק מיקרו-גייד?" — the 08/08 STATUS task line said "run Discovery like m4 for
+modules 5–12"; the blueprint skill's own no-spec branch says "STOP, tell Ishay, the PM interview
+applies". Both were shown; **he ruled micro-guide (R-1)**. Ground measured live (MCP was authenticated
+this session): 39 `params` rows / 5 types / 2 policies · 4 of 5 roles `blocked` on 'הגדרות מערכת' ·
+1 of 27 assignments carries attendance · 0 hostesses below 35 (2 below 40) · 0 projects owned by
+inactive users · 5 `E2E_*` pairs. The opening package went to him as one HTML page ordered by
+volatility; round 1 (4 questions) and round 2 (4 questions) — **all eight rulings = the recommendation**.
+Then `docs/micro_guides/module-9.md` (10 headings, m8's numbering) — approved 20:5X.
+
+**The two passes, and why both were needed.**
+- *Fresh-context reviewer (Opus, ~23 min, 372K tokens):* 5 blockers. The one that would have shipped
+  wrong: the guide sent the builder to `src/modules/06_projects/` for the satisfaction-threshold copies —
+  **they live in m8** (`ClosingWindowDialog.jsx` ×3 + two Hebrew "ל-3" strings, `FinancePage.jsx` ×2), and
+  the DoD's constant-name grep would have passed green with five `3`s still hard-coded. Also: three of
+  the six constant consumers (m5 `LogisticsPage`, m6 `TeamTab`, m8 finance) have **no params loader at
+  all** — "extend the loader" pointed at nothing; §7.64's cascade flipped from build-now to deferred
+  (cascade without auth-sync converts a loud FK failure into a silent lockout); §7.84's 30/07 ruling
+  carried an explicit reopen trigger naming m9 that the draft never cited; the survey-link deletion was
+  a Claude closure against three dated sources naming the row.
+- *Execution rehearsal (Opus, ~17 min, 261K tokens; wrote all three migrations in full; MCP was
+  unauthenticated for it, so it used last-defining migrations — recorded as a fallback, not compliance):*
+  **§7.70's owner map names roles that do not exist in `roles`** ("מנהלת כספים" vs the live
+  `מנהלת כספים ולקוחות`) — a subquery on the truncated name sets `owner_role_id = NULL` with no error,
+  and the guide's own verification compared the builder's count to the builder's list. Fixed with the
+  live strings + a `raise` guard on the owned count. Also: "one policy for INSERT+DELETE" is not
+  expressible in Postgres (⇒ 4 policies, not 3); `hostess_id` is `bigint`; the threshold read must not
+  block paths that never consult it; `updated_at` bumps on 38 rows; the `.draft` filename made the
+  Stop hook blind to m9 (`check-docs-updated.sh` looks for `module-9.md`). **It ran T9 for real:**
+  both doomed rows have zero executable readers on `origin/main` `73c61d5`.
+- 🔑 The reviewer read; the rehearsal *did*. Readers found wrong pointers and missing rulings;
+  the doer found the silent NULL and the inexpressible policy. Neither found the other's class.
+
+**Rulings written back (rule 13, §7 first):** §7.21 (record-level ownership for `params` only) ·
+§7.35 (→ M12) · §7.64 (cascade deferred, why) · §7.70 (m9 opened; truncated names warning; Q-4 map) ·
+§7.83 (write clause widened) · §7.84 (trigger fired; `PricingParamsCard` leaves the prices tab) ·
+`db_roadmap` A-24 / §7.64 row / §7.35 row / `users` + `params` §6 rows / §7 matrix row · STATUS
+(header, module row, current step, the 08/08 task line) · the step guide's broken `§5.16` pointer.
+Interview scratch file folded into the guide's §3 and deleted.
+
+**What is NOT done, stated:** no migration written, no code, no mockup v2 — Phase 1 opens on
+"תמשיך לבנות" at step 1.0. The ~2-day allotment grew to ~3 (three new loaders, the card removal);
+deadline 18/09 holds.
 
 ### 02/09/2026 — N2 closed. Four migrations, and the fourth blocker was only findable by RUNNING
 
