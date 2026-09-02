@@ -45,6 +45,58 @@
 
 ## Session Log (newest first)
 
+### 02/09/2026 — N2 rewired end-to-end, and the file split missed four consumers it could not see
+
+**What changed.** The client half of N2: every read of the primary contact now goes through
+`primaryContact()` (`src/lib/customers.js`), and the write goes through the
+`replace_customer_contacts` RPC instead of two HTTP requests. Four agents owned disjoint file sets
+(`02_customers/api.js` · `CustomerFormDialog.jsx` · the project/finance fetchers · the quote side),
+and `CustomerFormDialog.jsx` was rebuilt to the approved mockup — one uniform card per contact,
+primary marked by chip + border, delete-primary blocked with Ishay's exact sentence.
+
+**Why it matters that this is a rewire and not a feature.** The parent columns
+(`customers.contact_name/phone/email`) are still live and still hold the same values, so **"the app
+still works" proves nothing here** — old code and new code render identically today. The change is
+only provable after the drop migration, which is why every agent was asked to state that limit
+rather than report a green screen as evidence.
+
+🔴 **The finding, and it is a method finding, not a bug.** The four-way split was drawn from a
+file list, and **four consumers fell outside every set**: `03_quotes/api.js` *(its `listQuotes()`
+embed never fetched the child table — the whole contact column on the quotes list would have gone
+blank)*, `QuoteDocumentDialog.jsx` *(read `quote?.customers?.email` directly; the send button would
+have declared "no email" for customers who plainly have one)*, and `CustomersPage.jsx` +
+`CustomerDetailsPage.jsx` *(the customer table and the customer card — three empty fields each)*.
+**Two were reported by agents as out-of-scope observations; two I found only by scanning afterward.**
+⇒ **The lesson: split by DATA PATH, not by file list.** A file list drawn up front cannot see the
+consumer that reads a field two hops from where it was fetched — and the agents were right to report
+rather than reach outside their mandate. **What actually caught it was asking each agent to name
+breakage it was forbidden to fix**, plus one independent scan; either alone would have missed half.
+
+⚠️ **The transitional cost, recorded so nobody "fixes" it early.** The form still mirrors the primary
+back into the three parent columns on save, because they remain `NOT NULL` and remain the truth
+until the drop. That makes the save **two requests again** — child via RPC, parent via `updateCustomer`
+— so they can diverge if one fails. `child_parent_mismatch` (the peer session's contacts check) is
+exactly the gate for that, and both the mirror and the gate die with the drop migration.
+
+**Tests were the thing that nearly lied.** The gate went red on two `customers.test.js` cases only
+**after** the whole rewire landed: the fixture still carried `contact_name` on the parent and no
+`customer_contacts` array, so a search test asserted a path the code no longer takes. Fixed in the
+fixture, not the code — **and deliberately kept `contact_name` on the parent there**, which makes the
+test stronger: a passing search for the primary now proves it was found through the child row.
+
+**Evidence.** `npm run gate` exit 0 — **67 files / 1,835 tests** (up from 1,819; the new
+`api.test.js` and `CustomerFormDialog.test.jsx` are files module 2 never had). `vite build` exit 0.
+Fresh DB baseline measured live and compared against the peer session's 27/08 inventory: 1NF empty ·
+44 functions / 0 without `search_path` · 28 tables / 0 with RLS off · FK-without-index unchanged ·
+contacts 9·9·9·0·0. `replace_customer_contacts` ACL = `authenticated`, `service_role` — **no `anon`,
+no PUBLIC**, so the `H5`→`H5b` mine did not repeat. One deny-all table appeared that the 27/08
+baseline does not list — `feedback_rpc_calls`; **measured, not assumed**: it is touched by exactly one
+`security definer` function (`feedback_rate_limit`), the same shape as `login_rpc_calls`, so it is
+intentional. ⚠️ **Reported and NOT closed:** a whole advisor family
+(`authenticated_security_definer_function_executable`, ~25 entries) is absent from that inventory; it
+describes the project's entire gated-RPC architecture and is unrelated to N2, but whether it belongs
+in the criterion is the peer session's call, not mine.
+
 ### 02/09/2026 — N2's additive half applied, and the register's own wording would have produced a no-op
 
 **Ishay asked what he still owed after the merge and half-remembered it: *"אולי כתוב בקלוד לוג משהו עם

@@ -499,6 +499,38 @@ protection is false until it does.
 
 ## 10ב. Applied migrations — running log (newest first)
 
+- ⏸️ **`20260902141451_n2b_replace_customer_contacts_rpc` — WRITTEN 02/09/2026 14:1X, NOT APPLIED**
+  (awaiting Ishay's typed echo). **`replace_customer_contacts(bigint, jsonb)` — the contact-set
+  swap becomes one transaction.**
+  🩸 **It exists because `N2א` broke both of the client's save paths, and that was measured rather
+  than reasoned.** `replaceCustomerContacts` (`02_customers/api.js`) saves in the order
+  **insert-then-delete**, and that order is a *recorded ruling* — Ishay's, 30/07/2026, made after the
+  reverse order **actually destroyed** the five price tiers of `B-REG-TAG` in module 3. Its stated
+  reason still holds: *"two HTTP requests are not a transaction — closing the browser between the
+  delete and the insert leaves the customer with no contacts at all, with no error."*
+  ⚠️ **But with `is_primary` in play that order self-contradicts:**
+  · **if the insert marks a primary** — the old primary still exists at that instant, so
+    `customer_contacts_one_primary_per_customer` **rejects the insert**. *(Verified 02/09 against
+    customer #47: `primaries_now = 1`, index is `unique (customer_id) where is_primary`.)*
+  · **if the insert does not mark one** — the customer is left with **zero** primaries, and **the
+    index cannot catch that**: it forbids two, it cannot demand one.
+  ⇒ **Both paths broken. That is the whole reason for this migration.**
+  🔑 **What changes at the root: a function body in Postgres is one transaction.** So
+  delete-then-insert — the order forbidden on the client — is *safe here*, because there is no
+  "between": either both happened or neither. **The 30/07 ruling is not bypassed; it is satisfied
+  more strongly.** And the old primary is gone before the new one lands, so the index never collides.
+  🛡️ **It is also the only possible home for "exactly one primary"** — the invariant the partial
+  index provably cannot express — and the only place Ishay's own sentence
+  (*"אי אפשר למחוק את איש הקשר הראשי. סמן קודם אחר כראשי."*) can be returned instead of a generic
+  constraint error that reads to the user as a malfunction.
+  🚫 **Deliberately NOT included: format validation on phone/email.** There is an explicit ruling
+  (12/08/2026, on bank details) that an undefined "structure check" is an invented check that blocks
+  valid saves. Same logic applies; name is required, the rest optional.
+  ➕ **And the `H5`→`H5b` mine is closed in the same migration rather than by a follow-up:** a new
+  `security definer` function receives `EXECUTE` to PUBLIC by Postgres default. On 28/08 that opened
+  a money function to `anon` and cost an extra migration. Here the `revoke`/`grant` block ships with
+  the function.
+
 - ✅ **`20260902125001_n2a_customer_contacts_is_primary_additive` — APPLIED 02/09/2026 12:5X**
   (typed echo given). **The additive half of N2. Deletes nothing.**
   **Measured BEFORE writing, and it changed the migration:** `customers` = **9** *(the register said

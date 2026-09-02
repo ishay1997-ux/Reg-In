@@ -29,6 +29,7 @@ import {
   deriveCustomerMetrics,
   matchesCustomerFilters,
   needsSatisfactionAttention,
+  primaryContact,
   sortCustomers,
 } from '@/lib/customers'
 import { QUOTE_SCREEN_PARAM_NAMES } from '@/lib/quotes'
@@ -771,6 +772,10 @@ export default function CustomersPage() {
                   <tbody>
                     {visibleCustomers.map((customer) => {
                       const isActive = customer.status === 'active'
+                      // N2 (02/09/2026): שם/טלפון/אימייל של איש-הקשר הראשי הם שורת
+                      // `customer_contacts` עם `is_primary`, לא עמודות על `customers`.
+                      // `listCustomers()` מביא את האמדב; primaryContact היא נקודת-הבחירה היחידה.
+                      const contact = primaryContact(customer)
                       return (
                         <tr
                           key={customer.customer_id}
@@ -798,12 +803,12 @@ export default function CustomersPage() {
                           <td className="py-3 text-slate-600">
                             {CUSTOMER_TYPE_LABELS[customer.customer_type] ?? customer.customer_type}
                           </td>
-                          <td className="py-3 text-slate-600">{customer.contact_name}</td>
+                          <td className="py-3 text-slate-600">{contact?.contact_name}</td>
                           <td className="py-3 text-slate-600" dir="ltr">
-                            {customer.phone}
+                            {contact?.phone}
                           </td>
                           <td className="py-3 text-slate-600" dir="ltr">
-                            {customer.email}
+                            {contact?.email}
                           </td>
                           <td className="py-3 text-slate-600">
                             {Number(customer.discount_percent ?? 0)}%

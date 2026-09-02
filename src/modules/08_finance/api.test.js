@@ -499,16 +499,40 @@ describe('קריאות S1/S2', () => {
     expect(mocks.from).not.toHaveBeenCalled()
   })
 
-  it('getBillingContact מחזירה את שם-החברה והמייל לחיוב', async () => {
-    mocks.from.mockImplementation(() => queryStub({ data: CUSTOMER, error: null }))
-    await expect(getBillingContact(4)).resolves.toEqual(CUSTOMER)
+  // N2: `contact_name`/`email` הראשיים מגיעים היום מ-customer_contacts (is_primary), לא
+  // מעמודות על customers — ה-mock נושא אמבד, ו-getBillingContact בוחר את הראשי דרך
+  // primaryContact (src/lib/customers.js). `company_number`/`company_name`/`customer_id`
+  // נשארים עמודות על customers עצמה (אינם N2).
+  it('getBillingContact מחזירה את שם-החברה ואת איש-הקשר/המייל הראשיים מ-customer_contacts', async () => {
+    mocks.from.mockImplementation(() =>
+      queryStub({
+        data: {
+          customer_id: 4,
+          company_number: '514012345',
+          company_name: 'עיריית חדרה',
+          customer_contacts: [
+            { contact_name: 'דנה לוי', email: 'ishay1997@gmail.com', is_primary: true },
+          ],
+        },
+        error: null,
+      }),
+    )
+    await expect(getBillingContact(4)).resolves.toEqual({
+      customer_id: 4,
+      company_number: '514012345',
+      company_name: 'עיריית חדרה',
+      contact_name: 'דנה לוי',
+      email: 'ishay1997@gmail.com',
+    })
   })
 
   // 🔴 **הבדיקה היחידה שהייתה תופסת את הפגם שנסגר 01/09/2026:** תא ה-ח.פ היה כתוב במסך
   // ומעולם לא רונדר, כי העמודה לא הייתה ב-select — כלומר **תנאי-תצוגה שלעולם אינו
   // מתקיים**, מצב שאף בדיקת-מסך אינה יכולה להבחין בו מ"אין ללקוח ח.פ". שם-העמודה נבדק
   // מול `schema.sql` ולא נוחש. ⚠️ הרשימה נבדקת כמחרוזת כי זה בדיוק מה ש-PostgREST מקבל.
-  it('🔴 ה-select מבקש את ח.פ — השדה שהתצוגה המאושרת מבטיחה ליד איש-הקשר והמייל', async () => {
+  // 🔄 **עודכן N2:** איש-הקשר והמייל עברו לאמבד `customer_contacts(contact_name, email,
+  // is_primary)` — המחרוזת המצופה שונתה בהתאם; ח.פ/שם-חברה/מזהה-לקוח נשארו עמודות שטוחות.
+  it('🔴 ה-select מבקש את ח.פ ואת אנשי-הקשר (N2 embed) — השדות שהתצוגה המאושרת מבטיחה', async () => {
     const select = vi.fn()
     const stub = {
       select,
@@ -519,7 +543,7 @@ describe('קריאות S1/S2', () => {
     mocks.from.mockImplementation(() => stub)
     await getBillingContact(4)
     expect(select).toHaveBeenCalledWith(
-      'customer_id, company_number, company_name, contact_name, email',
+      'customer_id, company_number, company_name, customer_contacts(contact_name, email, is_primary)',
     )
   })
 

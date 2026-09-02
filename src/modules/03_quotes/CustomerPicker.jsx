@@ -11,7 +11,7 @@
 
 import { useMemo, useState } from 'react'
 import { Search, X } from 'lucide-react'
-import { matchesCustomerFilters } from '@/lib/customers'
+import { matchesCustomerFilters, primaryContact } from '@/lib/customers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -142,32 +142,37 @@ export default function CustomerPicker({
           onMouseDown={(event) => event.preventDefault()}
           data-testid="quote-customer-panel"
         >
-          {visible.map((customer, index) => (
-            <button
-              key={customer.customer_id}
-              type="button"
-              onClick={() => choose(customer)}
-              onMouseEnter={() => setActiveIndex(index)}
-              className={cn(
-                'flex w-full items-center gap-2 border-b border-slate-100 px-3 py-2 text-right',
-                index === activeIndex && 'bg-teal-50',
-              )}
-              data-testid={`quote-customer-option-${customer.customer_id}`}
-            >
-              <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800">
-                {customer.company_name}
-              </span>
-              <span className="whitespace-nowrap text-xs text-slate-500">
-                {'· ח"פ '}
-                <span dir="ltr">{customer.company_number}</span>
-              </span>
-              {customer.contact_name && (
-                <span className="whitespace-nowrap text-xs text-slate-500">
-                  · {customer.contact_name}
+          {visible.map((customer, index) => {
+            // N2: הראשי הוא שורת customer_contacts עם is_primary, לא customer.contact_name —
+            // primaryContact (src/lib/customers.js) היא נקודת-הבחירה היחידה.
+            const contact = primaryContact(customer)
+            return (
+              <button
+                key={customer.customer_id}
+                type="button"
+                onClick={() => choose(customer)}
+                onMouseEnter={() => setActiveIndex(index)}
+                className={cn(
+                  'flex w-full items-center gap-2 border-b border-slate-100 px-3 py-2 text-right',
+                  index === activeIndex && 'bg-teal-50',
+                )}
+                data-testid={`quote-customer-option-${customer.customer_id}`}
+              >
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800">
+                  {customer.company_name}
                 </span>
-              )}
-            </button>
-          ))}
+                <span className="whitespace-nowrap text-xs text-slate-500">
+                  {'· ח"פ '}
+                  <span dir="ltr">{customer.company_number}</span>
+                </span>
+                {contact?.contact_name && (
+                  <span className="whitespace-nowrap text-xs text-slate-500">
+                    · {contact.contact_name}
+                  </span>
+                )}
+              </button>
+            )
+          })}
 
           {visible.length === 0 && (
             <p className="px-3 py-3 text-sm text-slate-500" data-testid="quote-customer-no-results">

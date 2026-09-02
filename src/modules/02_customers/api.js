@@ -11,17 +11,30 @@ import { DORMANT_THRESHOLD_PARAM_NAME } from '@/lib/customerProjects'
 // 🔁 אתר-הקריאה היחיד ל-`list_project_changes` במערכת חי במודול 6 (‏`src/modules/06_projects/CLAUDE.md`:
 // *"הקריאה היחידה: `rpc('list_project_changes')`"*). מודול 2 **צורך** אותו ולא משכפל אותו —
 // שכפול היה מייצר שתי גרסאות של שער-הכסף המסוכך (`money_visible`). ר' `attachProjectChanges`.
-import { getProjectChanges } from '@/modules/06_projects/api'
+// 🔁 ‏`rpcErrorMessage` — אותו תקדים-בית בדיוק: מ6 מגדירה ומייצאת אותה, ו-`05_logistics/api.js`
+// כבר מייבא אותה משם ("תקדים-הבית לייבוא חוצה-מודולים") במקום לשכפל את הפונקציה. `toRpcError`
+// **אינה** מיוצאת שם (05_logistics גם מרכיבה אותה מקומית) — ר' ההרכבה למטה, ליד replaceCustomerContacts.
+import { getProjectChanges, rpcErrorMessage } from '@/modules/06_projects/api'
+
+// N2 (02/09/2026): המרכיב שכל select-לקוחות-למסך צריך כדי ש-`primaryContact()`
+// (src/lib/customers.js — נקודת-הבחירה היחידה, כלל 14) תוכל לעבוד, ומסך יוכל להציג
+// שם/טלפון/אימייל של הראשי. קבוע אחד כדי ששלושת ה-select-ים למטה לא יסטו זה מזה —
+// בדיוק המחלה שכבר קרתה עם `customer_contacts(contact_name)` הבודד לפני N2.
+const PRIMARY_CONTACT_EMBED =
+  'customer_contacts(contact_id, contact_name, phone, email, is_primary)'
 
 // ---- קריאות (Reads) ----
 
 // כל הלקוחות (פעילים ולא-פעילים) ממוינים לפי שם-חברה. הסינון/המיון העדין נעשה בצד-לקוח דרך
 // src/lib/customers.js (מסך קטן, דאטה קטן) — כאן מביאים את הסט המלא שה-RLS מתיר לתפקיד.
 export async function listCustomers() {
-  // כולל את אנשי-הקשר הנוספים (§7.81) לחיפוש הסלחני על פני כולם (matchesText ב-src/lib/customers.js).
+  // 🔴 N2: היה `customer_contacts(contact_name)` בלבד — מספיק לחיפוש הסלחני (matchesText),
+  // לא-מספיק כדי לקבוע/להציג את הראשי. עם `PRIMARY_CONTACT_EMBED` השורה גם מכילה `is_primary`
+  // (ל-`primaryContact()`) וגם `phone`/`email` (לתצוגה) — לחיפוש-הטקסט זה שינוי-סרק, ל-primaryContact
+  // זה מה שהופך את זה מ"אפשרי" ל"קיים".
   const { data, error } = await supabase
     .from('customers')
-    .select('*, customer_contacts(contact_name)')
+    .select(`*, ${PRIMARY_CONTACT_EMBED}`)
     .order('company_name')
   if (error) throw toError(error, 'שגיאה בטעינת רשימת הלקוחות.')
   return data ?? []
@@ -29,10 +42,13 @@ export async function listCustomers() {
 
 // לקוח בודד לפי ה-PK הפנימי (customer_id, surrogate §7.64). מחזיר null אם אין שורה נגישה
 // (לא-קיים או חסום ב-RLS) — הקורא מחליט אם זו שגיאה בהקשר שלו.
+// 🔴 N2: עד היום `select('*')` לא צירף אנשי-קשר בכלל — מסך-פרטי-הלקוח קרא את הראשי משלוש
+// עמודות-האב (שעדיין קיימות). ‏`PRIMARY_CONTACT_EMBED` נוסף כדי שכרטיס-הלקוח יוכל לעבור
+// ל-`primaryContact()` בלי קריאה שנייה.
 export async function getCustomer(customerId) {
   const { data, error } = await supabase
     .from('customers')
-    .select('*')
+    .select(`*, ${PRIMARY_CONTACT_EMBED}`)
     .eq('customer_id', customerId)
     .maybeSingle()
   if (error) throw toError(error, 'שגיאה בטעינת פרטי הלקוח.')
@@ -129,10 +145,13 @@ export async function getCustomerScreenParams() {
 // (שם/איש-קשר/אימייל/סוג/הנחה) כדי שהפאנל יציג רשימת-נמענים לבחירה פר-שליחה, לא רק מונה (רדיזיין 11/07).
 // ה-BCC נגזר מהמסומנים בצד-ה-UI עם dedup על email (email אינו UNIQUE §7.65 — איש-קשר משותף לשתי חברות
 // לגיטימי; Set מונע דיוור כפול). why-first: לא-פעיל לא מקבל דיוור גם אם נתן הסכמה בעבר (ארכיון=מחוץ לתפוצה).
+// 🔴 N2: עד היום נבחרו `contact_name`/`email` כעמודות-שטוחות ישירות מ-`customers` — בדיוק שתי
+// העמודות שעומדות להימחק (N2ב הבאה). ⚠️ הוחלף ב-`PRIMARY_CONTACT_EMBED`: הפאנל עובר ל-
+// `primaryContact()` כדי לגזור את השם/אימייל להצגה, כך שהמחיקה העתידית לא שוברת select כאן.
 export async function getConsentedCustomers() {
   const { data, error } = await supabase
     .from('customers')
-    .select('customer_id, company_name, contact_name, email, customer_type, discount_percent')
+    .select(`customer_id, company_name, customer_type, discount_percent, ${PRIMARY_CONTACT_EMBED}`)
     .eq('marketing_consent', true)
     .eq('status', 'active')
     .order('company_name')
@@ -184,10 +203,12 @@ export async function setCustomerStatus(customerId, status) {
   return data[0]
 }
 
-// ---- אנשי-קשר נוספים (customer_contacts, §7.81 — מודל אופציה C) ----
-// איש-הקשר הראשי חי inline על customers; כאן רק ה*נוספים*. RLS זהה (הרשאת מודול 'לקוחות').
+// ---- אנשי-קשר (customer_contacts, §7.81 — מודל אופציה C) ----
+// 🔴 N2: עד היום איש-הקשר הראשי חי inline על customers וכאן היו רק ה*נוספים*. אחרי N2א
+// (המיגרציה המוסיפה) הראשי הוא **שורה כמו כל השורות**, מסומנת ב-`is_primary` — הטבלה הזו
+// עכשיו מחזיקה את כל אנשי-הקשר של הלקוח, לא רק את הנוספים. RLS זהה (הרשאת מודול 'לקוחות').
 
-// אנשי-הקשר הנוספים של לקוח, ממוינים לפי סדר-יצירה.
+// כל אנשי-הקשר של לקוח (כולל הראשי, N2), ממוינים לפי סדר-יצירה.
 export async function listCustomerContacts(customerId) {
   const { data, error } = await supabase
     .from('customer_contacts')
@@ -198,51 +219,45 @@ export async function listCustomerContacts(customerId) {
   return data ?? []
 }
 
-// שמירת קבוצת אנשי-הקשר הנוספים של לקוח = replace. הטופס עורך את כל הקבוצה כיחידה;
-// ה-contact_id מתחדש בכל שמירה — מקובל כי אנשי-הקשר אינם מפתח-זר לשום דבר. שורות בלי שם
-// מסוננות (שם = חובה ב-DB). מחזיר את השורות שנשמרו.
+// שמירת קבוצת אנשי-הקשר של לקוח (הראשי **וגם** הנוספים, N2 — אין יותר הבחנה מבנית ביניהם;
+// `is_primary` הוא מה שמסמן) = replace, כולה דרך RPC יחיד. `contacts` הוא המערך המלא
+// שהטופס עורך כיחידה, לכל שורה `{contact_name, phone, email, is_primary}`. ‏`contact_id`
+// מתחדש בכל שמירה (כמו קודם) — מקובל כי אנשי-הקשר אינם מפתח-זר לשום דבר. ה-RPC מסנן שורות
+// בלי שם, מנרמל רווחים/מחרוזת-ריקה→null בעצמו, ומחזיר את השורות שנשמרו — הפונקציה כאן לא
+// משכפלת את הנירמול הזה (מקור-אמת יחיד, בתוך `replace_customer_contacts`).
 //
-// 🐞 סדר-הפעולות תוקן 30/07/2026 (בהכרעת-ישי, אחרי שאותה חולשה בדיוק מחקה בפועל את 5
-// מדרגות-המחיר של B-REG-TAG במודול 3): הגרסה הקודמת הייתה מחיקה-ואז-הכנסה, ושתי בקשות
-// HTTP אינן טרנזקציה — סגירת-דפדפן/רענון בין המחיקה להכנסה משאירה את הלקוח **בלי אנשי-קשר
-// בכלל**, בלי שגיאה. הסדר החדש: קריאת המזהים הישנים ← הכנסת החדשים ← מחיקת הישנים בלבד.
-// קטיעה באמצע משאירה לכל היותר כפילות **גלויה** (ישן+חדש זה לצד זה) שנעלמת בשמירה הבאה —
-// לעולם לא אובדן. ‏upsert (הפתרון של price_tiers) לא ישים כאן: המפתח היחיד הוא contact_id
-// מתחולל, ואין לשורה מפתח טבעי לעגון בו.
+// 🔴🔴 **למה RPC ולא עוד תיקון-סדר בצד-הלקוח — קרא את זה לפני שאתה נוגע בסדר-הפעולות כאן.**
+// עד N2 הפונקציה הייתה **הכנס-ואז-מחק-לפי-מזהים**, וזה סדר שנקבע **בכוונה** ב-30/07/2026
+// (הכרעת-ישי) אחרי שהכיוון ההפוך — מחק-ואז-הכנס — מחק בפועל את חמש מדרגות-המחיר של
+// ‏B-REG-TAG במודול 3: שתי בקשות-HTTP אינן טרנזקציה, וסגירת-טאב/רענון בין המחיקה להכנסה
+// הייתה משאירה את הלקוח **בלי אנשי-קשר בכלל**, בלי שגיאה. **הנימוק ההוא נכון ועומד בעינו.**
+// ⚠️ **אבל N2א הוסיפה `customer_contacts_one_primary_per_customer`** (אינדקס-חלקי ייחודי:
+// "לכל היותר ראשי אחד לכל לקוח"), ועם `is_primary` בתמונה הכנס-ואז-מחק נשבר משני הכיוונים
+// גם יחד: אם השורות החדשות מסמנות ראשי — ההכנסה **נחסמת** על-ידי האינדקס, כי הראשי הישן
+// עדיין קיים באותו רגע; ואם לא מסמנות — הלקוח נשאר עם **אפס ראשיים**, ואת זה האינדקס-החלקי
+// *אינו יכול* לתפוס (הוא אוכף "לא יותר מאחד", לא "לפחות אחד"). שני המסלולים שבורים, לא אחד.
+// **הפתרון אינו "לחזור למחק-ואז-הכנס בצד-הלקוח"** — זה בדיוק הסדר שנאסר ב-30/07, מאותה סיבה
+// בדיוק, ועדיין נכון. **הפתרון הוא שההחלפה כולה עוברת לתוך טרנזקציה אחת של המסד:** גוף-פונקציה
+// ב-Postgres הוא אטומי, ולכן מחיקה-ואז-הכנסה הופכת **בטוחה שם** — אין "בין" (או ששתיהן קרו,
+// או שאף אחת), ואין שום קטיעת-דפדפן שיכולה לתפוס אותה באמצע. ‏**ההכרעה מ-30/07 אינה נעקפת —
+// היא מתקיימת בדרך חזקה יותר**, וזה גם הבית הטבעי לאכיפת "בדיוק ראשי אחד" (מה שהאינדקס-החלקי
+// לבדו לא יכול), כולל הניסוח המדויק שישי קבע (27/08) על מחיקת הראשי האחרון.
 export async function replaceCustomerContacts(customerId, contacts) {
-  const { data: existing, error: listError } = await supabase
-    .from('customer_contacts')
-    .select('contact_id')
-    .eq('customer_id', customerId)
-  if (listError) throw toError(listError, 'שמירת אנשי הקשר נכשלה.')
-  const oldIds = (existing ?? []).map((r) => r.contact_id)
-
-  const rows = (contacts ?? [])
-    .filter((c) => (c.contact_name ?? '').trim() !== '')
-    .map((c) => ({
-      customer_id: customerId,
-      contact_name: c.contact_name.trim(),
-      phone: (c.phone ?? '').trim() || null,
-      email: (c.email ?? '').trim() || null,
-    }))
-
-  let saved = []
-  if (rows.length > 0) {
-    const { data, error } = await supabase.from('customer_contacts').insert(rows).select()
-    if (error) throw toError(error, 'שמירת אנשי הקשר נכשלה.')
-    saved = data ?? []
-  }
-
-  // מחיקת הישנים לפי המזהים שנקראו למעלה — לא לפי customer_id, שהיה מוחק גם את שזה-עתה הוכנסו.
-  if (oldIds.length > 0) {
-    const { error: delError } = await supabase
-      .from('customer_contacts')
-      .delete()
-      .in('contact_id', oldIds)
-    if (delError) throw toError(delError, 'שמירת אנשי הקשר נכשלה.')
-  }
-
-  return saved
+  const payload = (contacts ?? []).map((c) => ({
+    contact_name: c?.contact_name ?? '',
+    phone: c?.phone ?? null,
+    email: c?.email ?? null,
+    is_primary: Boolean(c?.is_primary),
+  }))
+  const { data, error } = await supabase.rpc('replace_customer_contacts', {
+    p_customer_id: customerId,
+    p_contacts: payload,
+  })
+  // הודעת-השרת מוצגת כפי-שהיא (תקדים-הבית `rpcErrorMessage`/`toRpcError`, מ6/מ5) — ה-RPC זורק
+  // עברית גמורה (P0001) שנוסחה כדי שהמשתמשת תקרא אותה ("אי אפשר למחוק את איש הקשר הראשי...",
+  // "ניתן לסמן איש קשר ראשי אחד בלבד."); ניסוח שני כאן היה יוצר שתי אמיתות לאותה שגיאה.
+  if (error) throw toError(error, rpcErrorMessage(error, 'שמירת אנשי הקשר נכשלה.'))
+  return data ?? []
 }
 
 // ---- אחסון שיווקי (Storage) ----

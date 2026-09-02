@@ -37,6 +37,8 @@ import {
   sortQuotes,
 } from '@/lib/quotes'
 import { parseVatPercent } from '@/lib/pricing'
+// N2: הראשי הוא שורת customer_contacts עם is_primary — primaryContact היא נקודת-הבחירה היחידה.
+import { primaryContact } from '@/lib/customers'
 import { formatDate } from '@/modules/03_quotes/quotePdf'
 import {
   approveQuote,
@@ -607,7 +609,9 @@ export default function QuotesPage() {
                   const expiry = deriveQuoteExpiry(quote, validityDays, todayIso)
                   const pill = STATUS_PILL[quote.quote_status]
                   const isOpen = quote.quote_status === 'in_progress'
-                  const email = quote.customers?.email
+                  // N2: הראשי הוא שורת customer_contacts עם is_primary, לא quote.customers.contact_name/phone/email.
+                  const contact = primaryContact(quote.customers)
+                  const email = contact?.email
 
                   return (
                     <tr
@@ -628,9 +632,9 @@ export default function QuotesPage() {
                         </div>
                       </td>
                       <td className="py-2.5 pl-3.5">
-                        <div className="text-slate-700">{quote.customers?.contact_name}</div>
+                        <div className="text-slate-700">{contact?.contact_name}</div>
                         <div dir="ltr" className="text-[11.5px] text-slate-500 text-right">
-                          {quote.customers?.phone}
+                          {contact?.phone}
                         </div>
                         {/* קישור-פנייה כללי לאיש-הקשר (mailto ריק, אותו מנגנון כמו פאנל-השיווק
                             של מודול 2). ⚠️ תפקיד שונה משליחת-ההצעה בחלון "צפייה במסמך" — שם

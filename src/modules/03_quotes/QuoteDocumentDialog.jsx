@@ -17,6 +17,10 @@
 
 import { useEffect, useState } from 'react'
 import { Download, Mail } from 'lucide-react'
+// N2 (02/09/2026): איש-הקשר הראשי הוא שורת `customer_contacts` עם `is_primary`, לא עמודה
+// על `customers`. `primaryContact` היא נקודת-הבחירה היחידה (src/lib/customers.js) — מימוש
+// מקומי של אותה בחירה היה יוצר שני מקורות שיכולים להיפרד.
+import { primaryContact } from '@/lib/customers'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -170,12 +174,16 @@ export default function QuoteDocumentDialog({
   // הקבצים לא יוכלו להחזיק שני נוסחים.
   // ⚠️ **לא** נכנס ל-`emailSendDisabledReason`: הוא המנוע הגנרי של כל שולחי-המייל
   // במערכת (מ4/מ8/מ11), ומע"מ הוא עניין של הצעות-מחיר בלבד. ר' `src/CLAUDE.md`.
+  // נגזר פעם אחת ונקרא בשני מקומות (חסימת-השליחה למטה, ואישור "נשלח ל-" בגוף החלון) —
+  // שתי קריאות נפרדות ל-primaryContact היו יכולות להיפרד בעריכה עתידית.
+  const customerEmail = primaryContact(quote?.customers)?.email
+
   const vatBlocked = error === MISSING_VAT_MESSAGE
   const disabledReason = vatBlocked
     ? MISSING_VAT_MESSAGE
     : canSend
       ? emailSendDisabledReason({
-          email: quote?.customers?.email,
+          email: customerEmail,
           template: emailTemplate,
           canEdit,
           // הנוסח הספציפי להצעות-מחיר עבר ל-`src/lib/quotes.js` (פזה 0 של מודול 4):
@@ -365,7 +373,7 @@ export default function QuoteDocumentDialog({
         )}
         {canSend && sent && !sendError && (
           <p className="text-teal-700 text-sm" data-testid="quote-send-success">
-            ✓ נשלח ל-{quote?.customers?.email}
+            ✓ נשלח ל-{customerEmail}
           </p>
         )}
 

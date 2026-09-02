@@ -15,6 +15,9 @@
 import { supabase } from '@/supabaseClient'
 import { toError, RLS_DENIED_CODE } from '@/lib/apiError'
 import { finalAssignmentRows } from '@/lib/hostesses'
+// N2: איש-הקשר הראשי הוא שורה ב-customer_contacts (is_primary), לא שלוש עמודות על customers.
+// primaryContact היא נקודת-הבחירה היחידה (src/lib/customers.js) — לא לממש inline.
+import { primaryContact } from '@/lib/customers'
 import { classifySendError, EMAIL_SEND_RESULT } from '@/lib/email'
 import {
   SHIFT_TEMPLATE_NAMES,
@@ -129,17 +132,21 @@ export async function getProjectQuoteMeta(quoteId) {
 }
 
 // איש-הקשר אצל הלקוח — חי, לא snapshot (כרטיס-המסך ③: החלפת איש-קשר אצל הלקוח משתקפת
-// מיד). ‏customers מגודרת על 'לקוחות' ⇒ למנהלת גיוס/לוגיסטיקה הקריאה חוזרת null בשקט;
-// המסך בודק את ההרשאה בלקוח ומציג `—` במקום להסיק "אין איש קשר" מקריאה חסומה.
+// מיד). ‏customers (וה-embed customer_contacts תחתיה) מגודרת על 'לקוחות' ⇒ למנהלת גיוס/
+// לוגיסטיקה הקריאה חוזרת null בשקט; המסך בודק את ההרשאה בלקוח ומציג `—` במקום להסיק
+// "אין איש קשר" מקריאה חסומה.
+// N2: קוראים את אנשי-הקשר כאמבד ובוחרים את הראשי דרך primaryContact — לא inline. הצורה
+// שיוצאת ({contact_name, phone} או null) נשארת זהה כדי ש-ProjectCardPage לא ישתנה כלל.
 export async function getProjectCustomerContact(customerId) {
   if (!customerId) return null
   const { data, error } = await supabase
     .from('customers')
-    .select('contact_name, phone')
+    .select('customer_contacts(contact_name, phone, is_primary)')
     .eq('customer_id', customerId)
     .maybeSingle()
   if (error) throw toError(error, 'שגיאה בטעינת איש הקשר של הלקוח.')
-  return data ?? null
+  const contact = primaryContact(data)
+  return contact ? { contact_name: contact.contact_name, phone: contact.phone } : null
 }
 
 // ---- מדד-רשות ל-gapSentence: confirmed_available ----

@@ -294,13 +294,16 @@ create policy customers_write_by_permission on customers
 -- ============================================================
 -- 8. טבלת אנשי-קשר נוספים ללקוח — public.customer_contacts (מודול 2)
 -- ============================================================
--- איש-הקשר הראשי יושב inline על customers (contact_name/phone/email); כאן ה*נוספים* בלבד.
+-- 🔴 עודכן 02/09/2026 (N2): **הראשי כבר אינו inline על customers** — הוא שורה כאן
+-- כמו כל השאר, מסומנת ב-is_primary. שלוש העמודות על customers עדיין קיימות ועדיין
+-- מקור-האמת עד מיגרציית-המחיקה (N2ג, טרם נכתבה) — ר' docs/db_roadmap.md §9א.
 create table customer_contacts (
   contact_id   bigint      not null generated always as identity,
   customer_id  bigint      not null,
   contact_name text        not null,
   phone        text,
   email        text,
+  is_primary   boolean     not null default false,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now(),
   constraint customer_contacts_pkey             primary key (contact_id),
@@ -312,6 +315,10 @@ alter table customer_contacts enable row level security;
 -- אינדקסים
 create index customer_contacts_customer_id_idx on customer_contacts using btree (customer_id);
 -- customer_contacts_pkey — unique btree (contact_id) [נוצר ע"י האילוץ customer_contacts_pkey]
+-- N2, 02/09/2026 — "לכל היותר ראשי אחד ללקוח". אינדקס **חלקי**, ולכן אינו constraint
+-- (אימות: contype='u' נשאר 11). ⚠️ "לפחות אחד" אינו ניתן לאכיפה כאן והוא חי ב-RPC למטה.
+create unique index customer_contacts_one_primary_per_customer
+  on customer_contacts using btree (customer_id) where is_primary;
 
 -- טריגרים
 create trigger customer_contacts_set_updated_at
@@ -1875,6 +1882,15 @@ create policy hostess_languages_write_by_permission on hostess_languages
 --   🔴 אוכפת `summary_report_url IS NOT NULL` **בעצמה** — האילוץ החי דורש זאת,
 --      ובלי האכיפה ארכוב לגיטימי היה נופל על שגיאת-CHECK גולמית (תיקון T1).
 --   → כל התשע: supabase/migrations/20260827150049_module8_finance_write_actions.sql
+
+-- ── מודול 2 · N2 — החלפת אנשי-הקשר (02/09/2026) ────────────────
+-- replace_customer_contacts(bigint, jsonb) returns table(...)   SD · plpgsql
+--   מוחקת-ואז-מכניסה **בטרנזקציה אחת**. מותר כאן ואסור בצד-הלקוח: גוף-פונקציה הוא
+--   טרנזקציה, ולכן אין "בין" שסגירת-טאב יכולה לנחות בו (הכרעת-30/07 מתקיימת, לא נעקפת).
+--   אוכפת שלושה אינווריאנטים שהמסד לבדו אינו יכול: לפחות איש-קשר אחד · **בדיוק אחד ראשי** ·
+--   ולא יותר מאחד. שער: assert_module_permission('לקוחות', ['edit']).
+--   ACL בפועל: {postgres, authenticated, service_role} — **בלי `anon`** (נסגר באותה מיגרציה,
+--   בגלל מוקש H5→H5b מ-28/08). → supabase/migrations/20260902141451_n2b_replace_customer_contacts_rpc.sql
 
 -- ── מודול 8 · דוח-השכר (27/08/2026, E3) ────────────────────────
 -- generate_salary_report(date) returns jsonb                 SD · plpgsql · [authenticated]

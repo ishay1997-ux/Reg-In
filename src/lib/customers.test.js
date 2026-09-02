@@ -18,7 +18,12 @@ const c = (over = {}) => ({
   customer_id: 1,
   company_number: '514000001',
   company_name: 'טכנולוגיות אלפא',
+  // N2 (02/09/2026): `contact_name` נשאר על האב **בכוונה** — הוא עדיין עמודה חיה עד
+  // מיגרציית-המחיקה, וכך הפיקסצ'ר משקף את המציאות. ⚠️ **וזה גם מה שהופך את הבדיקה לחזקה
+  // יותר:** `matchesText` **אינה** קוראת אותו יותר, ולכן חיפוש 'דנה' שמצליח מוכיח שהוא נמצא
+  // דרך שורת-הבת — לא שהוא "עדיין עובד" בגלל האב.
   contact_name: 'דנה כהן',
+  customer_contacts: [{ contact_name: 'דנה כהן', is_primary: true }],
   customer_type: 'private_company',
   discount_percent: 5,
   marketing_consent: true,
@@ -43,7 +48,14 @@ describe('matchesCustomerFilters — חיפוש סלחני (§7.11)', () => {
   })
 
   it('מוצא לפי שם איש-קשר *נוסף* (customer_contacts, §7.81)', () => {
-    const withExtra = c({ customer_contacts: [{ contact_name: 'מיכל לוי' }] })
+    // ⚠️ ה-override **מחליף** את המערך, ולכן הראשי חייב להיכתב בו במפורש — אחרת הבדיקה
+    // "עדיין מוצא את הראשי" הייתה נכשלת מסיבה טכנית ולא מסיבה אמיתית.
+    const withExtra = c({
+      customer_contacts: [
+        { contact_name: 'דנה כהן', is_primary: true },
+        { contact_name: 'מיכל לוי', is_primary: false },
+      ],
+    })
     expect(matchesCustomerFilters(withExtra, { text: 'מיכל' })).toBe(true) // איש-קשר נוסף
     expect(matchesCustomerFilters(withExtra, { text: 'דנה' })).toBe(true) // עדיין מוצא את הראשי
   })

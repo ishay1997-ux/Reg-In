@@ -24,7 +24,7 @@ import StatusTag from '@/components/StatusTag'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
-import { CUSTOMER_TYPE_LABELS, deriveCustomerMetrics } from '@/lib/customers'
+import { CUSTOMER_TYPE_LABELS, deriveCustomerMetrics, primaryContact } from '@/lib/customers'
 import { parseVatPercent } from '@/lib/pricing'
 import { eventDaysFromToday, PROJECT_STATUS_LABELS, resolveProjectTone } from '@/lib/projects'
 import {
@@ -249,6 +249,9 @@ export default function CustomerDetailsPage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [customer, setCustomer] = useState(null)
+  // N2 (02/09/2026): נגזר פעם אחת מהאמבד ש-`getCustomer()` מביא. `customer` הוא null
+  // עד שהטעינה מסתיימת, ולכן primaryContact מקבלת null בטוח ומחזירה null.
+  const primaryCustomerContact = primaryContact(customer)
   const [contacts, setContacts] = useState([])
   const [quotes, setQuotes] = useState([])
   // ⚠️ **`null` = טרם ידוע, Set = נטען** (31/07/2026, אותה משפחה כמו חלון-המסמך). קבוצה ריקה
@@ -572,9 +575,11 @@ export default function CustomerDetailsPage() {
           </div>
           <div className="flex flex-col gap-2.5">
             <h3 className="text-xs font-semibold text-slate-400">איש קשר</h3>
-            <Detail label="שם" value={customer.contact_name} />
-            <Detail label="טלפון" value={customer.phone} ltr />
-            <Detail label="אימייל" value={customer.email} ltr />
+            {/* N2 (02/09/2026): הראשי הוא שורת `customer_contacts` עם `is_primary`, לא עמודה
+                על `customers`. `getCustomer()` מביא את האמבד; primaryContact בוחרת. */}
+            <Detail label="שם" value={primaryCustomerContact?.contact_name} />
+            <Detail label="טלפון" value={primaryCustomerContact?.phone} ltr />
+            <Detail label="אימייל" value={primaryCustomerContact?.email} ltr />
           </div>
           <div className="flex flex-col gap-2.5">
             <h3 className="text-xs font-semibold text-slate-400">מסחרי</h3>
