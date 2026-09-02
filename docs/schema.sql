@@ -9,7 +9,8 @@
 -- ⚠️ זהו SNAPSHOT שנוצר מתוך שאילתות על המסד החי. **מקור-אמת לשינויים = `supabase/migrations/`**
 --    (ולא הקובץ הזה). כל שינוי DB נכתב כקובץ מיגרציה חדש, מוחל, ואז הקובץ הזה נוצר מחדש.
 --
--- 📅 נוצר: 14/08/2026 · רוענן: 27/08/2026 (צעד 1.8 — כל עשר מיגרציות פזה 1 של מודול 8; אחרי מיגרציה
+-- 📅 נוצר: 14/08/2026 · **רוענן לאחרונה: 02/09/2026** (מודול 9, פזה 1 — שלוש מיגרציות; הדלתא
+--    מפורטת בסוף הרשימה) · רוענן קודם: 27/08/2026 (צעד 1.8 — כל עשר מיגרציות פזה 1 של מודול 8; אחרי מיגרציה
 --    `20260827125155_module8_finance_tables_and_columns`; הדלתא: טבלה חדשה `project_finance`
 --    (+RLS +policy קריאה +טריגר), 2 עמודות ואילוץ-ייחודיות על `projects`, עמודה + CHECK
 --    + אינדקס-C-1 על `assignments`, והידוק policy-הקריאה של `quote_services` (ה30)) ·
@@ -44,6 +45,21 @@
 --    ואחרי N1 `20260827183845_module8_n1_hostess_languages_additive` (טבלה חדשה
 --    `hostess_languages` — סעיף 31 — +RLS +2 policies +אינדקס + העתקת 33 שורות
 --    מ-20 דיילות, **והעמודה `languages` נמחקה ב-N1b**) ·
+--
+--    ── **מודול 9, פזה 1 (02/09/2026) — שלוש מיגרציות** ──
+--    ואחרי A `20260902211549_module9_a_params_owner_types_seed` (‏`params` — סעיף 12:
+--    עמודה חדשה `owner_role_id` + FK ל-`roles` + אינדקס `params_owner_role_id_idx`;
+--    ‏`params_param_type_check` מ-5 ל-6 ערכים (`shift_invites`); ו**החלפת מדיניות-הכתיבה** —
+--    ‏`params_write_ceo_only` (FOR ALL) ירדה, ובמקומה שלוש מדיניות פר-פקודה ⇒ **2 policies
+--    הפכו ל-4**. בנוסף, שינויי-נתונים שאינם סכמה: 6 שורות-הגדרה חדשות, 2 שורות מתות נמחקו,
+--    ‏38 שורות קיבלו בעלים) ·
+--    ואחרי B `20260902211550_module9_b_notification_preferences` (‏**טבלה חדשה** —
+--    ‏`notification_preferences`, סעיף 32 — +RLS +3 policies +טריגר `updated_at`;
+--    ה-FK החמישי ל-`users(email)`) ·
+--    ואחרי C `20260902211551_module9_c_threshold_functions_and_min_wage_rpc`
+--    (‏**פונקציה חדשה** `list_hostesses_below_min_wage()`, ו**כתיבה-מחדש של
+--    `record_feedback` ו-`archive_project`** של מ8 — סף שביעות-הרצון עבר מקבוע-בקוד
+--    ל-`params.סף_שביעות_רצון`. **החתימות לא השתנו** ⇒ הקוד הפרוס לא נשבר) ·
 --    פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
 --
 -- 🔴 **לרענן את הקובץ הזה אחרי כל מיגרציה.** העותק הקודם לא רוענן חמישה חודשים והכריז על עמודה
@@ -57,8 +73,8 @@
 -- 🚫 **אין כאן סעיף "היסטוריה"/"יומן שינויים"** — הקובץ מתאר הווה בלבד. ציר השינויים חי
 --    ב-`supabase/migrations/` וב-`docs/db_roadmap.md`.
 --
--- מוסכמות: כל 28 הטבלאות ב-`public` עם RLS **מופעל** (נמדד 27/08/2026 אחרי מיגרציה N1).
--- כל 57 המדיניות (45 ב-public, 12 על `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`.
+-- מוסכמות: כל 29 הטבלאות ב-`public` עם RLS **מופעל** (נמדד 02/09/2026 אחרי מיגרציות מודול 9).
+-- כל 62 המדיניות (50 ב-public, 12 על `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`.
 -- 🔴 **PERMISSIVE = הן מתאחדות ב-OR.** שתי policies על אותה טבלה מרחיבות גישה, לא מצמצמות —
 --    ולכן policy חדשה "מגודרת היטב" אינה מגבילה אף אחד שכבר עובר דרך policy אחרת.
 -- 🔴 ארבע טבלאות נותרו deny-all **במכוון**: `project_changes` (נקראת רק דרך ה-RPC הממסך),
@@ -526,52 +542,95 @@ create policy price_tiers_write_ceo_only on price_tiers
 -- ============================================================
 -- 12. פרמטרים גלובליים — public.params (מע"מ, יחסי-תכנון, משקולות Smart Match, תבניות)
 -- ============================================================
+-- 🔑 **`owner_role_id` — היוצא-מן-הכלל היחיד לכלל "בלי בעלות ברמת-רשומה" (§7.21).** הוא
+--    קיים **רק** על `params`, ורק כדי שכל בעלת-תפקיד תוכל לערוך את ההגדרות שלה מתוך
+--    "ההגדרות שלי" בלי הרשאת-`edit` על מודול 'הגדרות מערכת' כולו (§7.70↳ · R-2).
+--    ‏NULL = ההגדרה שייכת למנכ"ל בלבד.
+-- ⚠️ **ארבע מדיניות — אחת לכל פקודה, ולא `for all` אחת.** ‏SELECT פתוח לכל מחובר;
+--    ‏UPDATE נפתח גם לבעלים (`owner_role_id`); INSERT ו-DELETE נשארו למחזיק-`edit` בלבד.
+--    ⇒ **בעלת-תפקיד יכולה לשנות ערך, ולא ליצור או למחוק הגדרה.** לו נשארה `for all`
+--    אחת, פתיחת-הבעלות הייתה פותחת גם יצירה ומחיקה.
 create table params (
-  param_id    serial      not null,
-  param_name  text        not null,
-  param_value text        not null,
-  param_type  text        not null,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now(),
+  param_id      serial      not null,
+  param_name    text        not null,
+  param_value   text        not null,
+  param_type    text        not null,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now(),
+  owner_role_id integer     null,
   constraint params_pkey            primary key (param_id),
   constraint params_param_name_key  unique (param_name),
-  constraint params_param_type_check check (param_type = any (array['pricing_timing'::text, 'control_alerts'::text, 'smart_match'::text, 'templates'::text, 'integration_tech'::text]))
+  constraint params_owner_role_id_fkey
+    foreign key (owner_role_id) references roles (role_id) on update restrict on delete set null,
+  constraint params_param_type_check check (param_type = any (array['pricing_timing'::text, 'control_alerts'::text, 'smart_match'::text, 'templates'::text, 'integration_tech'::text, 'shift_invites'::text]))
 );
 
 alter table params enable row level security;
 
+-- הערת-עמודה (comment on column)
+-- owner_role_id — 'התפקיד שהוא "הבעלים הטבעי" של ההגדרה ורשאי לערוך אותה מ"ההגדרות שלי"
+--   (§7.70↳ · R-2). NULL = מנכ"ל בלבד. מודול 9.'
+
 -- אינדקסים
 -- params_pkey — unique btree (param_id) [נוצר ע"י האילוץ params_pkey]
 -- params_param_name_key — unique btree (param_name) [נוצר ע"י האילוץ params_param_name_key]
+create index params_owner_role_id_idx on params using btree (owner_role_id);
 
 -- טריגרים
 create trigger params_set_updated_at
   before update on params
   for each row execute function moddatetime('updated_at');
 
--- מדיניות RLS
+-- מדיניות RLS (4) — אחת לכל פקודה
 create policy params_select_all_authenticated on params
   for select to authenticated
   using (true);
 
-create policy params_write_ceo_only on params
-  for all to authenticated
+create policy params_update_settings_or_owner on params
+  for update to authenticated
   using (
     exists (
       select 1 from permissions p
       where p.role_id = (select current_user_role_id())
-        and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת')
+        and p.module_id = (select m.module_id from modules m where m.module_name = 'הגדרות מערכת')
         and p.permission_level = 'edit'
     )
+    or owner_role_id = (select current_user_role_id())
   )
   with check (
     exists (
       select 1 from permissions p
       where p.role_id = (select current_user_role_id())
-        and p.module_id = (select module_id from modules where module_name = 'הגדרות מערכת')
+        and p.module_id = (select m.module_id from modules m where m.module_name = 'הגדרות מערכת')
+        and p.permission_level = 'edit'
+    )
+    or owner_role_id = (select current_user_role_id())
+  );
+
+create policy params_insert_settings_only on params
+  for insert to authenticated
+  with check (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select m.module_id from modules m where m.module_name = 'הגדרות מערכת')
         and p.permission_level = 'edit'
     )
   );
+
+create policy params_delete_settings_only on params
+  for delete to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select m.module_id from modules m where m.module_name = 'הגדרות מערכת')
+        and p.permission_level = 'edit'
+    )
+  );
+--   → supabase/migrations/20260902211549_module9_a_params_owner_types_seed.sql
+--     (עמודת-הבעלות + FK + אינדקס · הטיפוס השישי `shift_invites` · שלוש מדיניות-הכתיבה
+--      שהחליפו את `params_write_ceo_only`)
 
 
 -- ============================================================
@@ -1712,12 +1771,70 @@ create policy hostess_languages_write_by_permission on hostess_languages
   );
 --   → supabase/migrations/20260827183845_module8_n1_hostess_languages_additive.sql
 
+
 -- ============================================================
--- 24. פונקציות בסכמה public — 43 פונקציות
+-- 32. העדפות התראות של המשתמש — public.notification_preferences (מודול 9)
+-- ============================================================
+-- 🔑 **המפתח הראשי הוא המייל עצמו** — שורה אחת למשתמש, בלי מפתח-סינתטי. זהו ה-FK
+--    **החמישי** במסד שמצביע ל-`users(email)` (הארבעה האחרים: שלושה על `projects`
+--    ואחד על `project_changes`).
+-- ⚠️ **`on update no action` נכתב במפורש, ואינו שכחה.** שינוי-מייל צריך להיכשל **בקול**
+--    על ה-FK עד שיגיע סנכרון-Auth (§7.64, נדחה) — `cascade` היה הופך כשל רועש
+--    לנעילה שקטה. ‏`on delete cascade`: משתמש שנמחק לוקח את ההעדפה איתו.
+-- 🔴 **אין שורה = שני המתגים כבויים.** אין Seed ואין ברירת-מחדל בצד המסד מעבר
+--    ל-`false` — קוד שלא מוצא שורה חייב להציג "כבוי", לא "לא ידוע".
+-- ⚠️ **`sms_last_minute` קיימת והערוץ אינו קיים** (R-4): המתג מוצג כבוי ונעול עם
+--    "אין ערוץ SMS במערכת". העמודה נוצרה עכשיו כדי שלא תידרש מיגרציה כשהערוץ יגיע.
+-- 🔴 **שלוש מדיניות בלבד — אין DELETE.** אין פעולת-מחיקה במסך; מחיקה מגיעה רק
+--    דרך ה-cascade של `users`.
+create table notification_preferences (
+  email              text        not null,
+  email_new_projects boolean     not null default false,
+  sms_last_minute    boolean     not null default false,
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz not null default now(),
+  constraint notification_preferences_pkey primary key (email),
+  constraint notification_preferences_email_fkey
+    foreign key (email) references users (email) on update no action on delete cascade
+);
+
+alter table notification_preferences enable row level security;
+
+-- הערת-טבלה (comment on table)
+-- 'העדפות-התראות פר-משתמש (מודול 9 שומר, מודול 10 שולח). אין שורה = הכל כבוי.
+--  SMS: העמודה קיימת, הערוץ לא (R-4).'
+
+-- אינדקסים
+-- notification_preferences_pkey — unique btree (email) [נוצר ע"י האילוץ notification_preferences_pkey]
+-- (אין אינדקס נוסף — ה-PK מכסה את כל שאילתות המסך)
+
+-- טריגרים
+create trigger notification_preferences_set_updated_at
+  before update on notification_preferences
+  for each row execute function moddatetime('updated_at');
+
+-- מדיניות RLS (3) — מדיניות-עצמי, בתקדים users_update_self
+create policy notification_preferences_select_self on notification_preferences
+  for select to authenticated
+  using (email = (select auth.email()));
+
+create policy notification_preferences_insert_self on notification_preferences
+  for insert to authenticated
+  with check (email = (select auth.email()));
+
+create policy notification_preferences_update_self on notification_preferences
+  for update to authenticated
+  using (email = (select auth.email()))
+  with check (email = (select auth.email()));
+--   → supabase/migrations/20260902211550_module9_b_notification_preferences.sql
+
+
+-- ============================================================
+-- 24. פונקציות בסכמה public — 45 פונקציות
 -- ============================================================
 -- 🚫 **הגופים אינם כאן במכוון** (ר' כותרת הקובץ). לכל פונקציה: חתימה · מצב אבטחה · search_path ·
 --    למי יש EXECUTE · ומצביע לקובץ המיגרציה שבו הגוף הנוכחי חי.
--- לכל 25 הפונקציות `search_path = ''` (שמות מלאים בגוף).
+-- לכל 45 הפונקציות `search_path = ''` (שמות מלאים בגוף) — נמדד 02/09/2026.
 -- ⚠️ `moddatetime` (הטריגר של updated_at) **אינה כאן** — היא יושבת בסכמה `extensions`.
 --
 -- מקרא: SD = security definer · SI = security invoker · [רשימת התפקידים] = מי קיבל EXECUTE.
@@ -1874,7 +1991,10 @@ create policy hostess_languages_write_by_permission on hostess_languages
 -- record_payment(integer, date) returns jsonb                SD · plpgsql
 --   🔴 אצל מבוטל — **זהו רגע הקפאת-הרווח** (Q-4), לא שמירת-הסכום ולא הארכוב.
 -- record_feedback(integer, integer, text, text, boolean) returns jsonb   SD · plpgsql
---   ציון <3 מחייב סיבה; כתיבה על שורה `completed` מותרת עד הארכוב (B-15).
+--   ציון מתחת לסף מחייב סיבה; כתיבה על שורה `completed` מותרת עד הארכוב (B-15).
+--   🔴 **הגוף הנוכחי מ-מודול 9 (מיגרציה C), לא מ-E2.** הסף אינו קבוע-בקוד יותר —
+--      נקרא מ-`params.סף_שביעות_רצון`; שורה חסרה/לא-מספרית ⇒ `P0001` בעברית
+--      הנוקבת בשם הפרמטר. ר' הסעיף האחרון של סעיף 24.
 -- record_write_off(integer, text) returns jsonb              SD · plpgsql   ← הפעולה החמישית (B-13)
 -- resolve_cancellation_fee(integer, text, numeric, text) returns jsonb   SD · plpgsql
 --   bill / waive / write_off. הסטטוס נשאר `cancelled` תמיד (T1).
@@ -1916,8 +2036,8 @@ create policy hostess_languages_write_by_permission on hostess_languages
 --   🔴 שתי הפונקציות היחידות של מ8 שאנונימי קורא להן. תשובת not_found **זהה
 --      בייט-בבייט** לטוקן שגוי/ריק/מת — אומת. אין policy ל-anon על אף טבלה.
 --   → supabase/migrations/20260827155303_module8_public_feedback_rpc.sql
---   ⚠️ ובאותה מיגרציה: `archive_project` קיבלה שער נוסף — ציון <3 בלי סיבה חוסם
---      ארכוב (P2). הגוף הנוכחי שלה משם, לא מ-E2.
+--   ⚠️ ובאותה מיגרציה: `archive_project` קיבלה שער נוסף — ציון מתחת לסף בלי סיבה חוסם
+--      ארכוב (P2). 🔴 **אך הגוף הנוכחי שלה כבר לא משם — הוא ממודול 9 (מיגרציה C).**
 
 -- ── מודול 8 · G (27/08/2026) — נגיעה בפונקציה ממוזגת של מ6 ────────
 -- cancel_project(integer, text, text) — **הגוף הנוכחי מ-G, לא מ-מ6.**
@@ -1928,6 +2048,30 @@ create policy hostess_languages_write_by_permission on hostess_languages
 --      (`b21ef3d8e53270dce52dcd3134f8b103`, 4,457 תווים).
 --   → supabase/migrations/20260827160357_module8_cancel_project_released_status_and_seeds.sql
 --     המקור המקורי: 20260814142440_module6_rpcs_writes.sql
+
+-- ── מודול 9 · C (02/09/2026) — הסף יצא מהקוד, ורשימת "מי מתחת לרף" ──
+-- 🔑 **שתי פונקציות של מ8 נכתבו מחדש, ואחת נוספה. החתימות לא השתנו** ⇒ הקוד הפרוס
+--    ממשיך לעבוד (הערך שנזרע = 3 = המספר שהיה קשיח בגוף).
+-- ✅ **ACL בפועל לשלושתן, נמדד 02/09/2026: `{postgres, service_role, authenticated}` —
+--    בלי `anon`.** ההענקה נכתבה מפורשות גם לשתי הקיימות (`revoke … from public, anon,
+--    authenticated` ואז `grant … to authenticated`), כדי שהמצב יהיה כתוב ולא מוסק.
+-- record_feedback(integer, integer, text, text, boolean) returns jsonb   SD · plpgsql · [authenticated, service_role]
+--   הדלתא מול הגוף שקדם: `p_score < 3` ⇒ `p_score < v_threshold` **בשני המקומות**
+--   (השער וה-`case`), וההודעה נושאת מעכשיו את הסף בפועל. הקריאה ל-`params` יושבת
+--   **אחרי** מסלול `p_mark_no_response` ואחרי בדיקת 1–5 — סימון "לא ענה לסקר" עובד
+--   גם כששורת-הסף חסרה.
+-- archive_project(integer) returns jsonb                     SD · plpgsql · [authenticated, service_role]
+--   `v_score < 3` ⇒ `v_score < v_threshold`, והקריאה ל-`params` **בתוך**
+--   `if v_score is not null` — ארכוב פרויקט בלי ציון לא נוגע בסף כלל.
+-- list_hostesses_below_min_wage() returns table(hostess_id bigint, full_name text, hourly_rate numeric)
+--   SD · plpgsql · stable · [authenticated, service_role]   ← **חדשה**
+--   🔴 **למה DEFINER ולא שאילתה מהלקוח:** מנהלת-הכספים היא הבעלים של
+--      `שכר_מינימום_שעתי` אבל **חסומה על מודול 'דיילות'** — קריאה ישירה הייתה מחזירה
+--      ‏`[]` בשקט. השער בגוף: **קודם בעלות** על הפרמטר, ואם לא — `assert_module_permission
+--      ('הגדרות מערכת', ['edit'])` שמעלה `42501`.
+--   דיילות **פעילות בלבד** (V-10). משלימה את טריגר-מ4 שחוסם שמירה מתחת לרף אך אינו
+--   מראה מי כבר מתחתיו (§7.66 · `🚧 מ9 ← מ4`).
+--   → כל השלוש: supabase/migrations/20260902211551_module9_c_threshold_functions_and_min_wage_rpc.sql
 
 -- ============================================================
 -- 25. עבודות מתוזמנות — cron.job (3 עבודות, כולן active)
