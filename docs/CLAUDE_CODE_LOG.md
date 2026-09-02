@@ -45,6 +45,56 @@
 
 ## Session Log (newest first)
 
+### 02/09/2026 — the N2 rewire had a hole, and grepping for column names could not find it
+
+**What broke.** `src/lib/marketing.js` did `rows.map((r) => r.email)`. Its source query,
+`getConsentedCustomers()`, had moved to a `customer_contacts(...)` embed in the same round, so
+`r.email` was `undefined` for every row, the `Set` collapsed them to one, and the marketing BCC list
+came out empty. No error anywhere. Found during the mandatory pre-drop check for `N2ד`, not by any
+gate. The display in `MarketingPanel.jsx` was equally blank.
+
+🔑 **Why every audit missed it, and this is the transferable part.** The code never contains the
+string `customer.contact_name`. It contains `r.email` — a generic property on a variable named `r`.
+**Searching for the column name cannot find this by construction**, and that was exactly the search
+that had reported "zero gaps" an hour earlier. The method that does work: enumerate every
+`.from('customers')` select, note the shape each returns, and follow the returned value into every
+consumer regardless of variable naming.
+
+**Blast radius, measured rather than assumed.** A peer session checked from the DB side: `email_log`
+has zero marketing rows and *cannot* have any — its `entity_type` CHECK allows six values and
+`marketing` is not among them. The send path is `mailto:`, which opens Ishay's mail client with BCC
+prefilled, so an empty BCC is visible before sending. **No silent damage occurred**; the risk was
+real, the loss was not. Also worth recording: the `Set` returned `[undefined]`, length 1 — so any
+guard asking "are there recipients?" would have passed. Only `.join(',')` turned it into "".
+
+**A second occurrence, found by a dispatched agent.** `CustomerFormDialog.jsx`'s duplicate-company
+banner read `duplicate.customer.contact_name` flat. `listCustomers()` uses `select('*', embed)` and
+the `*` still returns the frozen parent column — blank for any customer created after `N2ג`, stale
+for any whose contact was edited since, and `undefined` after `N2ד`. Fixed via `primaryContact()`.
+
+**Two E2E specs would have broken at the drop, and one was already wrong.**
+`load-failure-guards.spec.js` inserted `contact_name/phone/email` straight into `customers` — that
+would fail with `42703` after `N2ד`, and *today* it produced a customer with zero contact rows, a
+state the UI cannot create because the RPC enforces at least one. `quote-email.spec.js` selected
+`customers(email)` for its candidate pool, which silently shrinks as new customers carry `null`
+there. Both fixed; 11/11 green.
+⚠️ **And I fixed that second one wrong the first time** — converted the query and the filter, left a
+third read two lines below, and it failed on `undefined.includes`. **When you move a data source,
+move every consumer in the same pass, not the ones the first search showed you.**
+
+**Fixtures were the other half.** `marketing.test.js` passed the whole time because its fixtures were
+hand-written flat objects — a shape the real query no longer returns. **A fixture that does not
+match its query is not a safety net, it is a rubber stamp.** Reshaped, plus three regression tests.
+The same reshaping was applied to `quotes.spec.js`, `CustomerDetailsPage.projects.test.jsx` and
+`CustomersPage.satisfaction.test.jsx` — inert today, but the template the next person copies.
+
+**What is NOT covered, stated rather than glossed.** The duplicate banner still has no test. Reaching
+it needs a valid create-form, which needs `customer_type`, which is a Radix Select that will not open
+under jsdom — I tried, with the `hasPointerCapture`/`scrollIntoView` polyfills, and the option never
+renders. The file's own header already said there was no precedent for driving it; that is now
+measured, not assumed. Its home is E2E. Also unchanged: `MarketingPanel.jsx` remains the only file in
+`src/` with no automated test at all (`src/CLAUDE.md` already records this).
+
 ### 02/09/2026 — deployed N2, then found the drop's precondition was the wrong one
 
 **What changed.** `dev` -> `main` (PR #90, 24 commits) and verified **live**, not by CI: the bundle
