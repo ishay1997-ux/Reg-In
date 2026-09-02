@@ -93,7 +93,7 @@ has no billing email"* **and blocks the invoice send** (needs new on-screen word
 (per-tab default sort) **was never built** — `order by p.project_id` is the only sort in the path · and the
 balance block renders **only after archiving**, so profit is frozen unseen, against P3's stated order.
 **artifact: published · quiz: asked** (both in the report page). Findings file kept in place per §6:
-`docs/micro_guides/close-findings-module-8.md` — 30 raw findings ⇒ 24 root causes.
+`docs/archive/close-findings-module-8.md` — 30 raw findings ⇒ 24 root causes.
 **LOG compaction: NOT run — escape hatch, with the measured number.** Narrative = **976 lines** against the
 file's own ~180 trigger (down from 2,233, so intermediate compactions did happen). §6 debt line refreshed.
 
