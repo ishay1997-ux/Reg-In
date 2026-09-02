@@ -156,7 +156,7 @@ export default function SmartMatchPane({
         <thead>
           <tr className="border-b border-slate-200 text-xs text-slate-500">
             <th className="w-2/5 py-2 font-medium">הגדרה</th>
-            <th className="w-1/5 py-2 font-medium">ערך</th>
+            <th className="w-1/5 py-2 text-center font-medium">ערך</th>
             <th className="py-2 font-medium">הערה</th>
           </tr>
         </thead>

@@ -36,6 +36,12 @@ const ALLOWED_WRITE_PATHS = [
   // ולכן `generate_salary_report`/`finalize_salary_report` (שתיהן כותבות, נמדד `pg_proc`)
   // לא נכנסות לרשימה הזו במכוון.
   '/rest/v1/rpc/get_finance_overview',
+  // מודול 9 (02/09/2026, צעד 4.2): `list_hostesses_below_min_wage` — אותו נימוק בדיוק
+  // כמו שלוש השורות שמעל. היא מוכרזת `stable` (‏`20260902230500…:27`), ו-Postgres **אוסר**
+  // על פונקציה `stable` לכתוב — כלומר זו אינה הבטחה אלא אילוץ של המנוע. היא נקראת
+  // אוטומטית בעליית לשונית-הפרמטרים (הפאנל שליד `שכר_מינימום_שעתי`), ולכן חסימתה
+  // הפילה את המסע בלי שאיש לחץ על דבר.
+  '/rest/v1/rpc/list_hostesses_below_min_wage',
 ]
 
 test.describe('בדיקת-עשן', () => {
@@ -44,7 +50,19 @@ test.describe('בדיקת-עשן', () => {
     'E2E_CEO_* לא הוגדרו — העוטפן אמור לתפוס זאת לפני (exit 2)',
   )
 
+  // ⏱️ **תקציב-הזמן הורחב 02/09/2026 (מודול 9, צעד 4.2) — והנימוק תוקן אחרי המדידה.**
+  // המסע הוא **בדיקה אחת ארוכה**, ולכן `timeout` ברירת-המחדל (60 שניות,
+  // `playwright.config.js`) הוא התקציב של **עשרת** המסכים יחד. עם הוספת שני מסכי מודול 9
+  // הריצה נחתכה ב-`/projects` — המסך שמיד אחריהם.
+  // 🔬 **מה באמת אכל את הזמן, ולא מה שהנחתי:** לא עצם שני המסכים, אלא ש-
+  // `list_hostesses_below_min_wage` **נחסמה** ע"י שומר-הקריאה-בלבד (‏RPC ב-Supabase הוא
+  // POST) והפאנל נתקע בטעינה. אחרי שהיא נוספה ל-`ALLOWED_WRITE_PATHS` המסע כולו רץ
+  // ב-**48.4 שניות** — כלומר מתחת ל-60 המקוריות. התקציב נשאר רחב בכל זאת: 11 שניות מרווח
+  // על מסע שתלוי-רשת מול Supabase הן שוליים דקים מדי לכשל-שווא, וזו בדיוק הסיבה
+  // ש-`playwright.config.js` כבר בחר "תקרה נדיבה" על אותו נימוק.
+  // 🚫 ואין כאן ריכוך: אף עוגן לא הוסר ואף טענה לא נחלשה — רק החלון שבו כולן צריכות להספיק.
   test('כל המסכים הראשיים עולים עם הנתונים האמיתיים', async ({ page }) => {
+    test.setTimeout(150_000)
     const blockedWrites = []
     const externalHits = []
     const consoleErrors = []
@@ -135,7 +153,25 @@ test.describe('בדיקת-עשן', () => {
     await expect(productRow.getByTestId('prices-tiers-button')).toHaveText(
       anchors.prices.tiersButton,
     )
-    await expect(page.getByTestId('param-vat')).toHaveValue(anchors.prices.vat)
+
+    // הגדרות מערכת · לשונית "פרמטרים" (מודול 9, נוסף 02/09/2026): המסך החדש עולה עם
+    // כל שש קבוצות ה-`param_type`, ואחוז-המע"מ נקרא מהשורה החיה ב-`params`.
+    // 🔀 **עוגן-המע"מ עבר לכאן מלשונית "מחירים" (Q-1)** — `PricingParamsCard` הוסר משם,
+    // והשדה היחיד שמציג את הפרמטר הזה היום הוא `settings-value-אחוז_מעמ`. הערך (18) הוא
+    // אותו ערך-חי בדיוק; רק המסך שמסתכלים בו השתנה.
+    await page.goto('/system/params')
+    await expect(page.getByTestId('settings-params-tab')).toBeVisible({ timeout: 30_000 })
+    await expect(page.locator('[data-testid^="settings-group-"]')).toHaveCount(
+      anchors.settings.groupCount,
+    )
+    await expect(page.getByTestId('settings-value-אחוז_מעמ')).toHaveValue(anchors.settings.vat)
+
+    // "ההגדרות שלי" — הדלת השנייה (מודול 9). 🔴 העשן רץ כמנכ"ל, והוא **אינו בעלים של אף
+    // שורה** (`owner_role_id IS NULL` = CEO-בלבד, §2.7) ⇒ מצב-הריק הוא התשובה הנכונה כאן,
+    // לא ליקוי. העוגן הוא שהמסך **עולה ואומר זאת במילים**, ולא נופל ולא מציג טבלה ריקה.
+    await page.goto('/my-settings')
+    await expect(page.getByTestId('settings-my-page')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('settings-my-empty')).toHaveText('אין הגדרות בבעלות התפקיד שלך')
 
     // פרויקטים (מודול 6, נוסף 19/08/2026): מבט-העל עולה עם הלוח האמיתי. שני עוגנים:
     // האירוע הידוע מופיע בלשונית "הכול" (שם-אירוע הוא snapshot, עמיד-ריקבון — הסטטוס

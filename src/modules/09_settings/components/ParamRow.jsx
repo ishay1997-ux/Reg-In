@@ -14,6 +14,15 @@
 // (טווח · מספר ספרות · "ריק לעולם לא 0" — A-4), והיא צריכה להיות **נראית**. שדה-מספר
 // של הדפדפן בולע קלט לא-חוקי בשקט ומחזיר מחרוזת ריקה, כלומר חצי ממשפחת-הטעויות לא
 // הייתה מגיעה להודעה העברית בכלל. `inputMode` שומר על מקלדת-מספרים בנייד.
+//
+// 📐 **תא-הערך ממורכז, והיחידה תופסת סלוט קבוע — גם כשאין יחידה** (הכרעת-ישי, אחרי
+// שראה את פאנל Smart Match: קופסאות-מספר בגבהים/רוחבים שונים שיושבות במיקומים אופקיים
+// שונים). בלי הסלוט הקבוע, שורה בלי יחידה ("משקולת קרבה") מיושרת ישירות לקצה-העמודה
+// בעוד ששורה עם יחידה ("ק"מ") "דוחפת" את תיבת-הקלט שמאלה — כלומר תיבת-הקלט לא נופלת
+// על אותו x בשתי השורות. סלוט קבוע פותר את זה בלי תלות בתוכן: כל הזוג (קלט+סלוט)
+// תמיד באותו רוחב, ומרכוז-הזוג בעמודה ממקם את תיבת-הקלט באותו מקום בכל שורה.
+// ‏`shrink-0` + `whitespace-nowrap` על היחידה מונעים גם את שבירת-שני-המילים
+// ("ימי עסקים" על `סף_לוגיסטיקה_ימי_עסקים`) לשתי שורות כשהעמודה נדחקת.
 
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -22,6 +31,9 @@ import { cn } from '@/lib/utils'
 import { getParamEntry, parseForDisplay } from '@/lib/paramsRegistry'
 
 const NUMERIC_KINDS = new Set(['percent', 'int', 'decimal', 'weight'])
+// טקסט-חופשי-רחב: מייל/קישור עלולים להיות ארוכים (`ishay1997@gmail.com` נחתך ברוחב
+// המספרי-הרגיל) — נשארים רחבים גם אחרי הצרת-הריבוע של הקינדים המספריים.
+const WIDE_TEXT_KINDS = new Set(['email', 'url'])
 
 // ✅ גל 2 (צעד 3.4) — `TemplateEditor` כבר בחיווט (`paneComponents.templates`, ברירת-המחדל
 // ב-`ParamsTab`/`MySettingsPage`), ולכן שורת-`templates` כבר לא עוברת כאן בזרימה הרגילה.
@@ -48,13 +60,15 @@ export default function ParamRow({ row, value, onChange, canEdit, error }) {
 
       <td className="py-3 pl-3">
         {isBoolean && (
-          <Switch
-            checked={parseForDisplay(entry, value) === true}
-            disabled={!canEdit}
-            onCheckedChange={(next) => onChange(name, next ? 'true' : 'false')}
-            aria-label={entry.label}
-            data-testid={testId}
-          />
+          <div className="flex justify-center">
+            <Switch
+              checked={parseForDisplay(entry, value) === true}
+              disabled={!canEdit}
+              onCheckedChange={(next) => onChange(name, next ? 'true' : 'false')}
+              aria-label={entry.label}
+              data-testid={testId}
+            />
+          </div>
         )}
 
         {isTemplate && (
@@ -67,27 +81,39 @@ export default function ParamRow({ row, value, onChange, canEdit, error }) {
         )}
 
         {!isBoolean && !isTemplate && (
-          <Ltr className="inline-flex items-center gap-1.5">
-            <Input
-              type="text"
-              inputMode={NUMERIC_KINDS.has(entry.kind) ? 'decimal' : 'text'}
-              dir="ltr"
-              disabled={!canEdit}
-              value={value ?? ''}
-              onFocus={(e) => e.target.select()}
-              onChange={(e) => onChange(name, e.target.value)}
-              aria-label={entry.label}
-              aria-invalid={error ? 'true' : undefined}
-              aria-describedby={errorId}
-              className={cn(
-                'h-auto w-28 rounded-lg border-slate-300 p-2 text-sm',
-                error && 'border-red-500 focus-visible:ring-red-300',
-                !canEdit && 'disabled:opacity-60',
-              )}
-              data-testid={testId}
-            />
-            {entry.unit && <span className="text-xs text-slate-500">{entry.unit}</span>}
-          </Ltr>
+          <div className="flex justify-center">
+            <Ltr className="inline-flex items-center gap-1.5">
+              <Input
+                type="text"
+                inputMode={NUMERIC_KINDS.has(entry.kind) ? 'decimal' : 'text'}
+                dir="ltr"
+                disabled={!canEdit}
+                value={value ?? ''}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => onChange(name, e.target.value)}
+                aria-label={entry.label}
+                aria-invalid={error ? 'true' : undefined}
+                aria-describedby={errorId}
+                className={cn(
+                  'h-9 shrink-0 rounded-lg border-slate-300 p-2 text-center text-sm',
+                  NUMERIC_KINDS.has(entry.kind)
+                    ? 'w-24'
+                    : WIDE_TEXT_KINDS.has(entry.kind)
+                      ? 'w-72 min-w-[18rem]'
+                      : 'w-28',
+                  error && 'border-red-500 focus-visible:ring-red-300',
+                  !canEdit &&
+                    'disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:opacity-100',
+                )}
+                data-testid={testId}
+              />
+              {/* סלוט-יחידה קבוע — מוצג גם ריק, כדי שקצה-הקלט ייפול על אותו x גם בשורה
+                  בלי יחידה (ר' ההערה בראש הקובץ). */}
+              <span className="w-16 shrink-0 text-xs whitespace-nowrap text-slate-500">
+                {entry.unit ?? ''}
+              </span>
+            </Ltr>
+          </div>
         )}
       </td>
 

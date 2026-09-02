@@ -240,11 +240,19 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
               אין הגדרות שתואמות לחיפוש
             </p>
           ) : (
-            <div
-              className={
-                showMinWage ? 'grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_280px]' : ''
-              }
-            >
+            // 🎨 תיקון-פריסה (03/09/2026, נמצא בשער-🎨 מהצילום `01-ceo-params-pricing.png`):
+            // האסייד היה יושב **לצד** הטבלה (`lg:grid-cols-[1fr_280px]`) — וברוחב-המסך
+            // שבו הבנייה בפועל נמדדת (1280px, viewport ברירת-המחדל של Playwright), זה בדיוק
+            // הרוחב שבו `lg:` (1024px+) כבר פעיל, כך שהעמודה "הערה" נדחקת ל-~190px ושורה
+            // עוברת ל-5-6 שורות (90px גובה) במקום שורה אחת (~44px, כמו במוקאפ סעיף 1).
+            // 🔴 **הוחלט לרנדר את האסייד *מתחת* לטבלה, ברוחב-מלא של הפאנל** — לא
+            // `xl:grid-cols-[1fr_280px]` (האפשרות השנייה שהוצעה): `xl:` הוא 1280px גם הוא,
+            // כלומר היה נדלק **באותו viewport בדיוק** שבו הבאג נמדד, ולא היה פותר כלום.
+            // מוקאפ סעיף 4 מצייר צד-לצד, אבל הדגמת-הסעיף שם עומדת לבד בלי סרגל-הקבוצות
+            // (220px+גאפ) שהמסך האמיתי תמיד נושא — כלומר יש לה ~350px רוחב נוסף שלא קיים
+            // כאן. "מכבדים" את כוונת-המוקאפ (הרשימה צמודה לשדה, באותה קבוצה) בלי לשכפל
+            // את הפריסה המדויקת שמניחה רוחב שאין.
+            <div className="flex flex-col gap-3">
               <div className="overflow-x-auto">
                 {PaneComponent ? (
                   <PaneComponent
@@ -260,7 +268,7 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
                     <thead>
                       <tr className="border-b border-slate-200 text-xs text-slate-500">
                         <th className="w-2/5 py-2 font-medium">הגדרה</th>
-                        <th className="w-1/5 py-2 font-medium">ערך</th>
+                        <th className="w-1/5 py-2 text-center font-medium">ערך</th>
                         <th className="py-2 font-medium">הערה</th>
                       </tr>
                     </thead>
@@ -281,11 +289,13 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
               </div>
 
               {showMinWage && (
-                <BelowMinWageList
-                  threshold={minWageRow?.param_value}
-                  draftThreshold={form.values[MIN_WAGE_PARAM]}
-                  refreshKey={minWageKey}
-                />
+                <div className="max-w-sm">
+                  <BelowMinWageList
+                    threshold={minWageRow?.param_value}
+                    draftThreshold={form.values[MIN_WAGE_PARAM]}
+                    refreshKey={minWageKey}
+                  />
+                </div>
               )}
             </div>
           )}

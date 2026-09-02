@@ -155,7 +155,8 @@ export default function MySettingsPage() {
             ואת מחרוזת-הריק) — "הנחתי": מונה-קבוצות/שורות, מותאם לכל תפקיד. */}
         {rows.length > 0 && (
           <p className="mt-1 text-sm text-slate-500">
-            {rows.length} הגדרות בבעלותך, ב-{ownedGroups.length} קבוצות.
+            {rows.length === 1 ? 'הגדרה אחת בבעלותך' : `${rows.length} הגדרות בבעלותך`}
+            {ownedGroups.length === 1 ? ', בקבוצה אחת.' : `, ב-${ownedGroups.length} קבוצות.`}
           </p>
         )}
       </div>
@@ -209,7 +210,7 @@ export default function MySettingsPage() {
                         <thead>
                           <tr className="border-b border-slate-200 text-xs text-slate-500">
                             <th className="w-2/5 py-2 font-medium">הגדרה</th>
-                            <th className="w-1/5 py-2 font-medium">ערך</th>
+                            <th className="w-1/5 py-2 text-center font-medium">ערך</th>
                             <th className="py-2 font-medium">הערה</th>
                           </tr>
                         </thead>
@@ -232,15 +233,16 @@ export default function MySettingsPage() {
               )
             })}
 
+            {/* 🎨 03/09/2026 — הכותרת החיצונית ("מי מתחת לשכר המינימום") הוסרה: הכרטיס
+                עצמו כבר נושא כותרת זהה + הרף בסוגריים (`BelowMinWageList`, ה-`hd`/`h3`),
+                וזוג-הכותרות נראה ככפילות בצילום `06-finance-my-settings.png`. הכותרת
+                שבכרטיס נשארת — היא היחידה שנושאת את הרף בפועל. */}
             {showMinWage && (
-              <div>
-                <h2 className="mb-2 text-sm font-semibold text-slate-700">מי מתחת לשכר המינימום</h2>
-                <BelowMinWageList
-                  threshold={minWageRow?.param_value}
-                  draftThreshold={form.values[MIN_WAGE_PARAM]}
-                  refreshKey={minWageKey}
-                />
-              </div>
+              <BelowMinWageList
+                threshold={minWageRow?.param_value}
+                draftThreshold={form.values[MIN_WAGE_PARAM]}
+                refreshKey={minWageKey}
+              />
             )}
           </div>
 

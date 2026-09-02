@@ -138,6 +138,7 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
               'w-full rounded-lg border border-slate-300 bg-slate-50 p-3 text-[13.5px] leading-[2.1] text-slate-700',
               !editable && 'cursor-not-allowed text-slate-500',
             )}
+            aria-label={`גוף התבנית — ${getParamEntry(selectedRow.param_name).label}`}
             data-testid="settings-template-body"
           />
 
