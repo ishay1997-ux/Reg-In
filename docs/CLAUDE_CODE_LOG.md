@@ -45,6 +45,38 @@
 
 ## Session Log (newest first)
 
+### 02/09/2026 — N2's additive half applied, and the register's own wording would have produced a no-op
+
+**Ishay asked what he still owed after the merge and half-remembered it: *"אולי כתוב בקלוד לוג משהו עם
+הטבלת לקוחות ושינוי מסך."*** He was right on both counts. Measured rather than recalled: two of the
+three parked items were already done — the `mailto` encoding in `QuotesPage` and the controlled Selects
+in `QuoteLineEditor`, both verified in code — and the third, `N2`, was not.
+⚠️ **The Current State line above still calls those two "parked"; its correction lives on `ishay/m8-merge-journal`,
+which is unmerged, so this branch has not got it. Merge that PR first.**
+
+🔓 **Its trigger was "m8 merged AND deployed", and I closed that properly instead of assuming it.**
+`main` carries PR #80 and #81; the live bundle was fetched from `reg-in-umber.vercel.app` and
+asserted to contain module-8 strings (`ממתין לגבייה` · `היסטוריית דוחות-שכר` · `הצוות יקבל בפועל`)
+**and zero internal codes** — so yesterday's plain-language cleanup is live too. **The URL is not in
+any doc; it came out of `vercel.json`, and a repo-wide grep for it timed out on `node_modules` first.**
+
+🔴 **The finding worth keeping: measuring the data changed the migration.** `db_roadmap`'s N2 entry
+said the backfill *"makes every existing contact primary"* — true only if child rows exist. **They do
+not: `customer_contacts` was empty, and all 9 customers carry their primary on the parent.** So the
+backfill is an `INSERT` that promotes three parent columns into rows, not an `UPDATE`. **Following
+the register literally would have produced an UPDATE matching nothing, which reports success.**
+*(The register also said 7 customers; there are 9.)*
+
+**Applied and verified four ways** — 9 primaries / 9 rows · 0 customers without one · index present ·
+and 9/9 **value-for-value** match on name, phone and email, because a count does not prove the copy
+was faithful. **The partial unique index was then observed to fire**, not assumed: a self-rolling-back
+block attempted a second primary and caught `unique_violation` ⇒ `t`, with 9 rows and 0 leftovers
+after. Full detail in `db_roadmap.md §10ב`.
+
+⏸️ **Deliberately not done: the drop.** The three columns remain the live source until the client
+rewire lands — **18 production files**, modules 2·3·6·8 plus shared libs *(the register said 16)*.
+Until `N2ב`, **no screen may write to the child table**, or the two sources diverge.
+
 ### 02/09/2026 — module 8 merged to `dev` and promoted to `main`; the merge event itself had no journal entry
 
 **Ishay's words, quoted at absorption before any interpretation:** *"היי סגרתי ומיזגתי את מודול 8… יש כמה
@@ -92,6 +124,7 @@ says the mockup values are not authoritative (`reference_spec/products_and_param
 known-stale drawing, not a conflict — **but nobody checked, which is the actual finding.**
 📌 **Route:** the two mockup folders need reconciling before module 9 opens, and the `1.00` constraint should
 be recorded as already-decided rather than re-asked.
+
 
 ### 01/09/2026 22:0X–23:2X — module 8 closing audit: verdict [NO], and a test that had locked the bug in
 
