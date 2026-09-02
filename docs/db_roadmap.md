@@ -499,8 +499,8 @@ protection is false until it does.
 
 ## 10ב. Applied migrations — running log (newest first)
 
-- ⏸️ **`20260902141451_n2b_replace_customer_contacts_rpc` — WRITTEN 02/09/2026 14:1X, NOT APPLIED**
-  (awaiting Ishay's typed echo). **`replace_customer_contacts(bigint, jsonb)` — the contact-set
+- ✅ **`20260902141451_n2b_replace_customer_contacts_rpc` — APPLIED 02/09/2026 14:1X**
+  (typed echo given). **`replace_customer_contacts(bigint, jsonb)` — the contact-set
   swap becomes one transaction.**
   🩸 **It exists because `N2א` broke both of the client's save paths, and that was measured rather
   than reasoned.** `replaceCustomerContacts` (`02_customers/api.js`) saves in the order
@@ -552,9 +552,45 @@ protection is false until it does.
   afterwards: **9 rows, 0 test leftovers.**
   ⚠️ **What this does NOT do, deliberately:** the three columns stay on `customers` as the live
   source of truth until the client (18 production files, modules 2·3·6·8 plus shared libs) reads
-  from the table. **The drop is a separate migration (`N2ב`), after the rewire and after a deploy** —
-  the `N1`→`N1b` / `C2` pattern. **Until then nothing may write to the child table from a screen**,
+  from the table. **The drop is a separate migration, after the rewire and after a deploy** —
+  the `N1`→`N1b` / `C2` pattern. 🔴 **Corrected 02/09/2026: this line said the drop is `N2ב`. It is
+  not — `N2ב` turned out to be the save RPC, and the drop needed a nullability step of its own
+  first (`N2ג`), so the drop is `N2ד`.** The plan grew from three migrations to four because a
+  measurement found the form still WRITING to these columns; see `N2ג` below. **Until then nothing may write to the child table from a screen**,
   or the two sources diverge.
+
+- ✅ **`20260902162001_n2c_customers_contact_columns_nullable` — APPLIED 02/09/2026 16:2X**
+  (typed echo given). **A relaxation. Drops `not null` from `customers.contact_name/phone/email`.
+  Deletes nothing and empties nothing.**
+  🩸 **Why this migration exists at all — it was not in the plan, and a measurement put it there.**
+  After `N2א`/`N2ב` and the full read-rewire, `main` was deployed and verified live (PR #90,
+  02/09 13:17 — the bundle was fetched from `reg-in-umber.vercel.app` and found to contain
+  `customer_contacts(`, `is_primary`, `replace_customer_contacts` **and zero of the three old
+  parent-column selects**). That looked like the drop's precondition being met. **It was not.**
+  🔴 **`CustomerFormDialog.jsx` on `origin/main` was still WRITING all three columns on every save**
+  — deliberately, and documented in its own comment — **because all three were `NOT NULL`.**
+  *(Verified in `information_schema.columns`, not from the comment: three rows, `is_nullable='NO'`.)*
+  ⇒ dropping them would have failed every customer save with `42703`, and merely removing the writes
+  first would have failed them with `23502`.
+  🔑 **The generalisable lesson, and the reason this is written at length: "the code no longer READS
+  the column" is not the precondition for a drop. "The code no longer WRITES it" is.** The two came
+  apart here because the rewire moved reads while the writes were deliberately left in place to
+  satisfy the constraint. **A rewire checklist that only greps for reads will produce exactly this
+  near-miss.**
+  **Order that actually works, and it is four steps, not three:**
+  `add (N2א)` → `RPC (N2ב)` → **`relax + stop writing (N2ג)` → deploy** → `drop (N2ד)`.
+  **Verified after apply:** three columns `is_nullable='YES'` · **0** rows lost data (9 still
+  populated) · 9/9 primaries · `child_parent_mismatch` still **0**.
+  ⏸️ **From this point the three columns are FROZEN, not stale:** no write path touches them, so
+  `child_parent_mismatch` may legitimately start diverging as soon as anyone edits a contact.
+  **That is expected.** Until `N2ד` the check answers "was the rewire completed", not "are the two
+  copies identical" — and it dies with the drop.
+
+- 🔜 **`N2ד` — the drop. NOT WRITTEN YET.** Blocked on one thing only: **`N2ג`'s code half must be
+  deployed to `main`**, so that no running code writes the columns. Then: `drop column` ×3 on
+  `customers`, regenerate `docs/schema.sql`, delete check 10 from `docs/db_health_checks.md` and
+  replace it with a residue check (no trace of the three columns in the DB, in function bodies, in
+  `schema.sql`, or in `src/`).
 
 ## 10. Maintenance protocol (how this file stays alive)
 
