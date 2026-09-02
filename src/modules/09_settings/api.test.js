@@ -140,7 +140,7 @@ describe('updateParams', () => {
         ],
         { roleId: 4, canEditAll: false },
       ),
-    ).rejects.toThrow(/ב/)
+    ).rejects.toMatchObject({ paramName: 'ב' })
 
     // שורה 3 לא נגעה ב-Supabase בכלל — הלולאה נעצרה אחרי שורה 2.
     expect(supabase.from).toHaveBeenCalledTimes(2)

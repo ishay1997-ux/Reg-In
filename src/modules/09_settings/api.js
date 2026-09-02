@@ -64,6 +64,13 @@ function canEditParam(change, { roleId, canEditAll }) {
   return Boolean(canEditAll) || change.ownerRoleId === roleId
 }
 
+// שם-השורה שנכשלה נוסע כשדה על השגיאה, לא בתוך הטקסט: המסך כבר נוקב בתווית הידידותית
+// במשפט הנעול (§3.7), וקורא אחר (בדיקה, לוג) עדיין צריך את שם-הפרמטר המדויק.
+function withParamName(err, paramName) {
+  err.paramName = paramName
+  return err
+}
+
 export async function updateParams(changes, { roleId, canEditAll } = {}) {
   const list = changes ?? []
 
@@ -85,10 +92,18 @@ export async function updateParams(changes, { roleId, canEditAll } = {}) {
       .update({ param_value: String(change.value) })
       .eq('param_name', change.name)
       .select()
-    if (error) throw toError(error, `שמירת "${change.name}" נכשלה.`)
+    // הסיבה נבלעת בתוך המשפט הנעול `השמירה נכשלה ב"<label>" — <reason>` (§3.7), ולכן היא
+    // מנוסחת כסיבה בלבד — בלי "נכשלה" חוזרת ובלי `param_name` גולמי, ששם-מסד ואינו שפת-משתמש.
+    // (נמדד במסע-הקבלה 03/09/2026: הנוסח הקודם הופיע על המסך כ"השמירה נכשלה ב"אחוז מע"מ" —
+    // שמירת "אחוז_מעמ" נכשלה." — שתי הודעות מודבקות ושתי מערכות-שמות.)
+    if (error) throw withParamName(toError(error, 'השרת דחה את השמירה'), change.name)
     // 0 שורות = הכשל השקט (למעלה) — או ששם-הפרמטר שגוי, או שה-RLS חסם. שני המקרים חייבים
     // להישמע, ולכן הניסוח כאן דו-משמעי בכוונה כמו בשאר הקובץ המקביל (`pricesApi.js`).
-    assertRowsAffected(data, `הפרמטר "${change.name}" לא עודכן — ייתכן שאין לך הרשאה.`)
+    try {
+      assertRowsAffected(data, 'ייתכן שאין לך הרשאה לשנות אותה')
+    } catch (err) {
+      throw withParamName(err, change.name)
+    }
     written.push(change.name)
   }
   return written
