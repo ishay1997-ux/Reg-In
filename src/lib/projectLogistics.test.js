@@ -432,9 +432,12 @@ describe('pillOf + queuePillCounts — ㉙ · ㉛ · ⑲', () => {
   })
 })
 
-describe('amberMark — ⑳ (פריט פיזי + 10 ימי-עסקים) + הטריגר השני של ㊶', () => {
-  const mark = (rows, eventDate, today = TODAY) =>
-    amberMark(rows, PRODUCTS, eventDate, today, businessDaysUntil)
+describe('amberMark — ⑳ (פריט פיזי + סף ימי-עסקים) + הטריגר השני של ㊶', () => {
+  // 🔄 הסף ירד מקבוע-קוד לשורת-`params` `סף_לוגיסטיקה_ימי_עסקים` (מודול 9 · צעד 2.3)
+  // ומוזרק כמו `todayIso` ו-`businessDaysUntil`. **מחרוזת** — `param_value` הוא `text`.
+  const AMBER_DAYS = '10'
+  const mark = (rows, eventDate, today = TODAY, thresholdDays = AMBER_DAYS) =>
+    amberMark(rows, PRODUCTS, eventDate, today, businessDaysUntil, thresholdDays)
 
   it('‏#107 הוא היחיד במערך שנושא סימון — ‏8 ימי-עסקים', () => {
     const result = mark(rowsOf(107), '2026-09-08')
@@ -466,6 +469,36 @@ describe('amberMark — ⑳ (פריט פיזי + 10 ימי-עסקים) + הטר�
     expect(mark([row(902, 'B-REG-TAG', 'not_started')], '2026-09-10').amber).toBe(true)
     expect(mark([row(902, 'B-REG-TAG', 'not_started')], '2026-09-13').businessDays).toBe(11)
     expect(mark([row(902, 'B-REG-TAG', 'not_started')], '2026-09-13').amber).toBe(false)
+  })
+
+  // 🔬 בדיקת-המוטציה: אותה שורה ואותו תאריך בדיוק, סף אחר ⇒ תשובה אחרת. אילו המימוש
+  // היה ממשיך לקרוא 10 מהקוד, שתי השורות היו זהות והבדיקה הייתה ירוקה על קוד שלא זז.
+  it('‏8 ימי-עסקים: סף 10 ⇒ ענבר, סף 5 ⇒ לא', () => {
+    const rows = [row(905, 'B-REG-TAG', 'not_started')]
+    expect(mark(rows, '2026-09-08', TODAY, '10').amber).toBe(true)
+    expect(mark(rows, '2026-09-08', TODAY, '5').amber).toBe(false)
+  })
+
+  // 🔴 סף חסר ⇒ הטריגר של ⑳ אינו נדלק, ולא נפילה חזרה ל-10. הטריגר השני (איחור-הגעה)
+  // אינו תלוי בסף וממשיך לעבוד — וזה מה שהשורה השנייה נועלת.
+  it('סף חסר ⇒ ⑳ שותק, ㊶ ממשיך', () => {
+    // ⚠️ קריאה ישירה ולא דרך `mark`: לעוזר יש ברירת-מחדל לסף, ו-`undefined` דרכו היה
+    // נופל עליה — כלומר הבדיקה הייתה מוכיחה את ההפך ממה שהיא מתיימרת.
+    const notStarted = [row(906, 'B-REG-TAG', 'not_started')]
+    for (const bad of [undefined, null, '', '   ']) {
+      expect(
+        amberMark(notStarted, PRODUCTS, '2026-09-08', TODAY, businessDaysUntil, bad).amber,
+      ).toBe(false)
+    }
+    const late = [
+      row(907, 'B-REG-TAG', 'ordered', {
+        expected_arrival_date: '2026-08-25',
+        actual_arrival_date: null,
+      }),
+    ]
+    expect(
+      amberMark(late, PRODUCTS, '2026-10-15', TODAY, businessDaysUntil, undefined).triggers,
+    ).toEqual(['lateArrival'])
   })
 
   it('🔴 אירוע שעבר אינו מסומן — businessDaysUntil מחזירה 0 על תאריך-עבר', () => {

@@ -2063,7 +2063,8 @@ create policy notification_preferences_update_self on notification_preferences
 -- archive_project(integer) returns jsonb                     SD · plpgsql · [authenticated, service_role]
 --   `v_score < 3` ⇒ `v_score < v_threshold`, והקריאה ל-`params` **בתוך**
 --   `if v_score is not null` — ארכוב פרויקט בלי ציון לא נוגע בסף כלל.
--- list_hostesses_below_min_wage() returns table(hostess_id bigint, full_name text, hourly_rate numeric)
+-- list_hostesses_below_min_wage(p_threshold numeric default null) returns table(hostess_id bigint, full_name text, hourly_rate numeric)
+--   (מיגרציה D `20260902230500`: NULL = הרף השמור ב-params · ערך = תצוגה-מקדימה מול הרף המוקלד; הגרסה בלי ארגומנט הוסרה)
 --   SD · plpgsql · stable · [authenticated, service_role]   ← **חדשה**
 --   🔴 **למה DEFINER ולא שאילתה מהלקוח:** מנהלת-הכספים היא הבעלים של
 --      `שכר_מינימום_שעתי` אבל **חסומה על מודול 'דיילות'** — קריאה ישירה הייתה מחזירה

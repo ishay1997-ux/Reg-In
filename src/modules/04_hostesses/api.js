@@ -27,6 +27,7 @@ import {
 } from '@/lib/hostesses'
 import { classifySendError, EMAIL_SEND_RESULT } from '@/lib/email'
 import { sendEmail, getEmailTemplate } from '@/api/email'
+import { getParamValues } from '@/api/params'
 import { ACTIVE_PROJECT_STATUSES } from '@/lib/projects'
 import {
   SHIFT_TEMPLATE_NAMES,
@@ -283,7 +284,7 @@ export async function getSmartMatchData(projectId) {
   // מחזיר שגיאה במקום רשימה ריקה. 🚧 מ6 — הטבלה ריקה היום, וזה תקין.
   // ⏱️ הגאוקוד רץ **במקביל** לחמש השאילתות ולא לפניהן: הוא כרוך בעד ארבע פניות
   // לשירות חיצוני בשנייה אחת ביניהן, וסדרתית הוא היה מוסיף שניות לטעינת המסך.
-  const [coordinates, hostessesRes, assignmentsRes, sameDayRes, preferencesRes, paramsRes] =
+  const [coordinates, hostessesRes, assignmentsRes, sameDayRes, preferencesRes, params] =
     await Promise.all([
       ensureProjectCoordinates(project),
       supabase.from('hostesses').select('*, hostess_unavailability(*)').order('hostess_id'),
@@ -301,14 +302,16 @@ export async function getSmartMatchData(projectId) {
             .select('hostess_id, preference')
             .eq('customer_id', project.customer_id)
         : Promise.resolve({ data: [], error: null }),
-      supabase.from('params').select('param_name, param_value').in('param_name', ALL_PARAM_NAMES),
+      // 🔴 דרך הקורא המשותף ולא בשאילתה גולמית (מודול 9 · צעד 2.3): הוא **זורק** על שם
+      // שלא חזר, ולכן שורת-`params` חסרה מגיעה למצב-השגיאה של מסך-השיבוץ במקום להפוך
+      // בשקט כל זימון פג ל"ממתינה למענה" ואת המסנן "דחוף" לריק-לנצח.
+      getParamValues(ALL_PARAM_NAMES),
     ])
 
   if (hostessesRes.error) throw toError(hostessesRes.error, 'שגיאה בטעינת מאגר הדיילות.')
   if (assignmentsRes.error) throw toError(assignmentsRes.error, 'שגיאה בטעינת היסטוריית השיבוצים.')
   if (sameDayRes.error) throw toError(sameDayRes.error, 'שגיאה בבדיקת שיבוצים באותו תאריך.')
   if (preferencesRes.error) throw toError(preferencesRes.error, 'שגיאה בטעינת העדפות הלקוח.')
-  if (paramsRes.error) throw toError(paramsRes.error, 'שגיאה בטעינת פרמטרי Smart Match.')
 
   return {
     // הקואורדינטות שזה-עתה נשמרו מוזגות לתוך האירוע שחוזר, כדי שהמסך הראשון
@@ -321,7 +324,8 @@ export async function getSmartMatchData(projectId) {
       .filter((row) => row.project_id !== project.project_id)
       .map((row) => row.hostess_id),
     preferences: preferencesRes.data ?? [],
-    params: Object.fromEntries((paramsRes.data ?? []).map((p) => [p.param_name, p.param_value])),
+    // ‏`getParamValues` כבר החזירה מפה (ולא תשובת-PostgREST) — או זרקה.
+    params,
   }
 }
 
@@ -358,15 +362,16 @@ export async function getHostessAssignments(hostessId) {
 }
 
 // הפרמטרים שמסכי מודול 4 צריכים.
-// ⚠️ **פרמטר שלא חוזר אינו מקבל ברירת-מחדל כאן** — המסך מציג "—" או חוסם, ולא מספר
-// מומצא. אותה הכרעה בדיוק כמו ב-`03_quotes/api.js`.
+// 🔴 **עברה לקורא המשותף (מודול 9 · צעד 2.3), וזה שינוי-התנהגות מכוון: שם שלא חוזר
+// עכשיו *זורק* במקום להיעדר בשקט.** עד כאן היא החזירה מפה חלקית, והקורא לא יכול היה
+// להבחין בין "הפרמטר חסר" ל"הפרמטר ריק" — כלומר שורת-`params` שנמחקה הייתה מציגה
+// **כל זימון פג כ"ממתינה למענה"** בלי שום שגיאה, בדיוק הכשל שצעד 2.3 בא לסגור.
+// ⚠️ שלושת אתרי-הקריאה (`HostessViewCard` · `RepositoryTab` · `HostessFormDialog`) כולם
+// עוטפים ב-try/catch ומציגים מצב-שגיאה מוצהר ⇒ הזריקה נוחתת במסך ולא במסך לבן.
+// 🚫 ועדיין **אין ברירת-מחדל בשום מקום** — זו הייתה ההכרעה כאן מלכתחילה, רק שהחצי
+// שצועק עליה היה חסר.
 export async function getHostessScreenParams() {
-  const { data, error } = await supabase
-    .from('params')
-    .select('param_name, param_value')
-    .in('param_name', ALL_PARAM_NAMES)
-  if (error) throw toError(error, 'שגיאה בטעינת הגדרות המערכת.')
-  return Object.fromEntries((data ?? []).map((p) => [p.param_name, p.param_value]))
+  return getParamValues(ALL_PARAM_NAMES)
 }
 
 // ---- זימוני-משמרת (קריאה + כתיבה + מייל, יחד בכוונה) ----
@@ -496,6 +501,12 @@ export async function resendExpiredInvites(projectIds, origin) {
 
   const nowIso = new Date().toISOString()
   const template = await getEmailTemplate(SHIFT_TEMPLATE_NAMES.invite)
+  // 🔴 סף-התוקף נקרא מ-`params` ו**זורק** כשהוא חסר (`getParamValues`), במקום להיקרא
+  // כ"אף זימון לא פג" ולסיים בשקט עם 0 נשלחו. הפעולה הזו שולחת מיילים — "לא עשיתי כלום
+  // כי לא מצאתי פרמטר" חייב להישמע במסך, לא להיראות כמו רשימה ריקה.
+  const { [HOSTESS_PARAM_NAMES.inviteValidityHours]: validityHours } = await getParamValues([
+    HOSTESS_PARAM_NAMES.inviteValidityHours,
+  ])
 
   // ⚠️ נשלפות **כל** שורות הפרויקטים ולא רק ה-`pending`: הסטטוס הקובע הוא של
   // `MAX(assignment_number)` פר-דיילת, ושליפה מסוננת-מראש הייתה מרעננת קישור של שורה
@@ -508,7 +519,9 @@ export async function resendExpiredInvites(projectIds, origin) {
     .in('project_id', projectIds)
   if (error) throw toError(error, 'שגיאה בטעינת הזימונים לשליחה חוזרת.')
 
-  const targets = finalAssignmentRows(data ?? []).filter((row) => isInviteExpired(row, nowIso))
+  const targets = finalAssignmentRows(data ?? []).filter((row) =>
+    isInviteExpired(row, nowIso, validityHours),
+  )
 
   const outcome = emptyOutcome()
   for (const row of targets) {

@@ -223,13 +223,15 @@ export function resolveAttendanceOutcome(record) {
   )
 }
 
-// מרכיב-האמינות. **המשקל שלו כבוי עד שמ9 ידליק את `מרכיב_אמינות_פעיל`** (`🚧 מ9 ← מ4`) —
-// הפונקציה נקראת כבר היום במשקל 0 כדי שהנרמול יהיה אמיתי, לא כדי שתשפיע על הציון.
+// 🔑 עוזר משותף ל-`reliabilityScore` ול-`companyReliabilityAverage` — **אותו מסנן בדיוק**
+// (ביטול-לקוח · אירוע-עתידי · צירוף-לא-מוכר · "חולה"/"אישור-מראש" מוחרגים) על רשומות-נוכחות
+// גולמיות. שני מימושים נפרדים של המסנן הזה היו יכולים להתפצל בשקט ביום שהמיפוי משתנה —
+// דיילת בודדת וממוצע-החברה חייבים להסכים על "מה נחשב תצפית-אמינות".
 // ✅ **שמות שדות-הרשומה אושרו במיגרציה `20260814141047` (14/08/2026, צעד 2.7) ואינם עוד
 // הנחה:** `attendance_status` / `lateness_level` / `no_show_reason` / `assignment_status`
 // (לענף ה-WITHDREW) + `projectCancelled` / `eventPassed`. ההרכבה בפועל מ-שורות-מסד גולמיות
-// יושבת ב-`smartMatchCandidates.js` — כאן רק פענוח הצירוף וחישוב-הציון.
-export function reliabilityScore(records, companyAverage, dampingConstant) {
+// יושבת ב-`smartMatchCandidates.js` — כאן רק פענוח הצירוף וספירתו.
+function attendanceCounts(records) {
   let count = 0
   let total = 0
 
@@ -256,6 +258,35 @@ export function reliabilityScore(records, companyAverage, dampingConstant) {
     total += value
   }
 
+  return { count, total }
+}
+
+// 🚧 מ9 ← מ4/מ6 — **מקבילת-האמינות ל-`companyResponsivenessAverage` שמעליי, לא עוד עותק
+// שלה.** עד לצעד הזה `rankCandidates` הזין למרכיב-האמינות את ממוצע-ה**היענות** — נמצא
+// כתנאי-קדם רדום להדלקת `מרכיב_אמינות_פעיל` (`PROJECT_MASTER §6`, פאנל שער-2.9 של מ6,
+// 19/08/2026): המחקר (`module4_smart_match_research.md §"מרכיב 2"`) קובע "אותה נוסחת
+// ריסון" מול C **של הנוכחות**, לא מול C של המענה — שני מרכיבים עובדתיים שונים, שני ממוצעים.
+// ⚠️ **הסכומים ולא ממוצע-של-ממוצעים** — אותו נימוק כמו למעלה: לדיילת עם תצפית-נוכחות אחת
+// אין אותו משקל כמו לוותיקה שנסגרו לה עשרות אירועים.
+// 🔴 **מחושב על כל הדיילות שבמאגר, כולל מי שתיפסל בשער** — עקביות עם `C` של ההיענות;
+// אחרת אותה דיילת הייתה מקבלת ריסון-אמינות שונה בשני אירועים בלי ששום דבר בה השתנה.
+// **אין נתון (המסד היום מחזיק אפס סימוני-נוכחות סגורים) ⇒ `null`, כמו התאום שלה** — הקורא
+// (`rankCandidates`) הוא שמחליט מה לעשות בהיעדר-ממוצע, לא הפונקציה הזו.
+export function companyReliabilityAverage(candidates) {
+  let count = 0
+  let total = 0
+  for (const candidate of candidates ?? []) {
+    const counts = attendanceCounts(candidate?.attendance)
+    count += counts.count
+    total += counts.total
+  }
+  return count > 0 ? total / count : null
+}
+
+// מרכיב-האמינות. **המשקל שלו כבוי עד שמ9 ידליק את `מרכיב_אמינות_פעיל`** (`🚧 מ9 ← מ4`) —
+// הפונקציה נקראת כבר היום במשקל 0 כדי שהנרמול יהיה אמיתי, לא כדי שתשפיע על הציון.
+export function reliabilityScore(records, companyAverage, dampingConstant) {
+  const { count, total } = attendanceCounts(records)
   return responsivenessScore({ answered: count, confirmed: total }, companyAverage, dampingConstant)
 }
 
@@ -435,6 +466,8 @@ export function rankCandidates(candidates, context) {
   const weights = activeWeights(params)
   // 🔴 לפני השער, לא אחריו. זו הנקודה שבודק בהקשר-טרי מדד עליה תיקו-בראש-הרשימה.
   const companyAverage = companyResponsivenessAverage(pool)
+  // 🚧 מ9 ← מ4/מ6 — ממוצע-חברה **נפרד** לאמינות, ולא עוד עותק של ממוצע-ההיענות שמעליי.
+  const reliabilityAverage = companyReliabilityAverage(pool)
 
   const ranked = pool
     .filter((candidate) => passesGate(candidate, { eventDate, params }))
@@ -446,11 +479,12 @@ export function rankCandidates(candidates, context) {
           companyAverage ?? 0,
           params.dampingConstant,
         ),
-        // 🚧 מ6: כל עוד הדגל כבוי המשקל שלו הוא 0, ולכן הערך אינו משפיע על הציון.
-        // הוא מחושב בכל זאת כדי שהדלקת הדגל תהיה שינוי-פרמטר ולא שינוי-קוד.
+        // 🚧 מ9 ← מ4/מ6: כל עוד הדגל כבוי המשקל שלו הוא 0, ולכן הערך אינו משפיע על הציון.
+        // הוא מחושב בכל זאת כדי שהדלקת הדגל תהיה שינוי-פרמטר ולא שינוי-קוד — ומ-2.4
+        // הוא מתרסן מול ממוצע-**אמינות**, לא מול ממוצע-ההיענות שמשמש את המרכיב שמעליי.
         reliability: reliabilityScore(
           candidate.attendance,
-          companyAverage ?? 0,
+          reliabilityAverage ?? 0,
           params.dampingConstant,
         ),
         proximity: proximityScore(candidate.distanceKm, params.goalpostDistanceKm),

@@ -1,0 +1,271 @@
+// S4 — "ההגדרות שלי" (מודול 9, צעד 3.4, מוקאפ docs/mockups/settings-screen/
+// 02_params_tab_roles_and_states.html §5–§7). דלת שנייה ל-`params`: כל תפקיד שאינו מחזיקה
+// `edit` על 'הגדרות מערכת' (ר' Topbar) פותחת כאן ורואה **רק** את השורות שבבעלותה
+// (`owner_role_id`, R-2/A-9) — לא לשונית עם קבוצות-לניווט כמו `ParamsTab`, אלא כל הקבוצות
+// שבבעלותה מוצגות יחד, שמירה אחת משותפת לכולן ("שינית N מתוך M" על **כל** השורות שבבעלותה,
+// לא פר-קבוצה — כך מצייר המוקאפ §5/§6: מונה אחד בתחתית הכרטיס, לא אחד לכל טבלת-קבוצה).
+//
+// 🔐 §4.4 — "the my-settings page queries with owner_role_id = roleId, never all then filter":
+// `listMyParams(roleId)` מסנן בצד-השרת; אין `listParams()` ואין סינון-לקוח כאן.
+//
+// 🔌 מרכיבה בעצמה את שני הפאנלים (`TemplateEditor`/`SmartMatchPane`, `variant="owner"`) —
+// לא דרך `paneComponents` prop של `ParamsTab` (זו לא אותה קומפוננטה); §3.7 נוסח-הבעלים
+// לאזהרת-Smart-Match שונה מנוסח-המנכ"ל, ולכן ה-variant נדרש כאן תמיד.
+
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import LoadingOrError from '@/components/LoadingOrError'
+import { useToast } from '@/components/ToastProvider'
+import { PARAM_GROUPS, PARAM_REGISTRY } from '@/lib/paramsRegistry'
+import { listMyParams } from '@/modules/09_settings/api'
+import BelowMinWageList from '@/modules/09_settings/BelowMinWageList'
+import TemplateEditor from '@/modules/09_settings/TemplateEditor'
+import SmartMatchPane from '@/modules/09_settings/SmartMatchPane'
+import ParamRow from '@/modules/09_settings/components/ParamRow'
+import SaveRow from '@/modules/09_settings/components/SaveRow'
+import useParamsForm from '@/modules/09_settings/components/useParamsForm'
+
+const MIN_WAGE_PARAM = 'שכר_מינימום_שעתי'
+
+// אותו רעיון בדיוק כמו `ParamsTab.jsx` (הועתק, לא יובא — שני "עמודי-מסך" עצמאיים, לא
+// אמורים לצרוך זה מזה): סדר-התצוגה בתוך קבוצה = סדר-המרשם (ה-SSOT לתצוגה), לא סדר-אלפביתי.
+const REGISTRY_ORDER = new Map(PARAM_REGISTRY.map((entry, index) => [entry.name, index]))
+function registryIndex(name) {
+  return REGISTRY_ORDER.has(name) ? REGISTRY_ORDER.get(name) : Number.MAX_SAFE_INTEGER
+}
+
+// קבוצה עם פאנל ייעודי (תבניות/Smart Match) מרונדרת דרכו, בדיוק כמו `paneComponents`
+// ב-`ParamsTab` — אבל כאן בלי החיווט הכללי, כי הדף הזה תמיד `variant="owner"` על Smart Match.
+const PANE_TYPES = new Set(['templates', 'smart_match'])
+
+export default function MySettingsPage() {
+  const { user, permissions } = useAuth()
+  const canEditAll = permissions?.['הגדרות מערכת'] === 'edit'
+  const roleId = user?.roleId ?? null
+  const toast = useToast()
+
+  const [rows, setRows] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+  const [minWageKey, setMinWageKey] = useState(0)
+  // ר' ההערה המקבילה ב-`ParamsTab.jsx` (חיווט-גל-2, §6 צעד 3.2): `validateParamValue`
+  // לעולם אינה נכשלת על `templates` — ורדיקט-`TemplateEditor` הוא השער היחיד.
+  const [templateVerdicts, setTemplateVerdicts] = useState({})
+  const handleTemplateVerdict = useCallback((name, verdict) => {
+    setTemplateVerdicts((prev) => ({ ...prev, [name]: verdict }))
+  }, [])
+
+  const form = useParamsForm({ rows, roleId, canEditAll })
+
+  const loadData = useCallback(async () => {
+    setLoading(true)
+    setLoadError('')
+    try {
+      setRows(await listMyParams(roleId))
+    } catch {
+      // 🔤 אותו נוסח נעול כמו `ParamsTab` (§3.7) — "לא ניתן לטעון", בלי לחשוף אם זו רשת או RLS.
+      setLoadError('לא ניתן לטעון את ההגדרות.')
+    } finally {
+      setLoading(false)
+    }
+  }, [roleId])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- טעינה בעלייה, אותו דפוס כמו ParamsTab.
+    loadData()
+  }, [loadData])
+
+  // כל קבוצה שיש לה ≥1 שורה בבעלות התפקיד — לפי סדר `PARAM_GROUPS` (מוקאפ §5–§7 מציג
+  // רק את הקבוצות שבבעלות, אף פעם לא קבוצה ריקה עם "0").
+  const ownedGroups = useMemo(() => {
+    const byType = new Map()
+    for (const row of rows) {
+      const list = byType.get(row.param_type) ?? []
+      list.push(row)
+      byType.set(row.param_type, list)
+    }
+    const known = PARAM_GROUPS.filter((group) => byType.has(group.type)).map((group) => ({
+      ...group,
+      rows: (byType.get(group.type) ?? [])
+        .slice()
+        .sort((a, b) => registryIndex(a.param_name) - registryIndex(b.param_name)),
+    }))
+    // סוג שאינו ברשימת-הקבוצות הידועה (שורה חדשה שנזרעה לפני שתויגה) — לא נעלם (§2.8 "never
+    // hidden"), מוצג תחת שמו-הגולמי כקבוצה בפני עצמה, כמו ב-`ParamsTab`.
+    const extraTypes = [...byType.keys()].filter(
+      (type) => !PARAM_GROUPS.some((group) => group.type === type),
+    )
+    const extra = extraTypes.map((type) => ({
+      type,
+      label: type,
+      rows: byType
+        .get(type)
+        .slice()
+        .sort((a, b) => registryIndex(a.param_name) - registryIndex(b.param_name)),
+    }))
+    return [...known, ...extra]
+  }, [rows])
+
+  const dirtyCount = form.dirtyNames.length
+  const totalCount = rows.length
+  const hasErrors =
+    form.dirtyNames.some((name) => form.errors[name]) ||
+    form.crossFieldErrors.length > 0 ||
+    // R-3 (ר' ParamsTab.jsx): ורדיקט-חסימה של תבנית חוסם שמירה בדיוק כמו שגיאת-שדה רגילה.
+    form.dirtyNames.some((name) => templateVerdicts[name]?.status === 'blocked')
+
+  const minWageRow = rows.find((row) => row.param_name === MIN_WAGE_PARAM)
+  const showMinWage = Boolean(minWageRow)
+
+  async function handleSave() {
+    // בלי scope — כל השורות-שבבעלות בבת-אחת (שמירה-אחת-לדף, לא פר-קבוצה כמו ב-`ParamsTab`;
+    // המוקאפ מצייר מונה-שינויים אחד לכל הכרטיס — §5/§6/§7).
+    const { ok, written } = await form.submit()
+    if (written.length > 0) {
+      setRows((prev) =>
+        prev.map((row) =>
+          written.includes(row.param_name)
+            ? { ...row, param_value: form.values[row.param_name] }
+            : row,
+        ),
+      )
+      if (written.includes(MIN_WAGE_PARAM)) setMinWageKey((key) => key + 1)
+    }
+    if (ok) toast.success('ההגדרות נשמרו')
+  }
+
+  if (loading || loadError) {
+    return (
+      <LoadingOrError
+        loading={loading}
+        error={loadError}
+        onRetry={loadError ? loadData : undefined}
+        retryLabel="נסי שוב"
+        retryTestId="settings-my-retry"
+        skeleton={{ variant: 'table', rows: 4, cols: 3 }}
+      />
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-4" dir="rtl" data-testid="settings-my-page">
+      <div>
+        <h1 className="text-xl font-bold text-slate-800">ההגדרות שלי</h1>
+        {/* תת-כותרת ממוקאפ §5/§6/§7 (תיאור-ויזואלי, לא נעול — §3.7 נועל רק את הכותרת עצמה
+            ואת מחרוזת-הריק) — "הנחתי": מונה-קבוצות/שורות, מותאם לכל תפקיד. */}
+        {rows.length > 0 && (
+          <p className="mt-1 text-sm text-slate-500">
+            {rows.length} הגדרות בבעלותך, ב-{ownedGroups.length} קבוצות.
+          </p>
+        )}
+      </div>
+
+      {rows.length === 0 ? (
+        <p
+          className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500"
+          data-testid="settings-my-empty"
+        >
+          אין הגדרות בבעלות התפקיד שלך
+        </p>
+      ) : (
+        <section className="rounded-xl border border-slate-200 bg-white p-4">
+          <div className="flex flex-col gap-5">
+            {ownedGroups.map((group) => {
+              const PaneComponent = PANE_TYPES.has(group.type)
+                ? group.type === 'templates'
+                  ? TemplateEditor
+                  : SmartMatchPane
+                : null
+              const extraPaneProps =
+                group.type === 'templates'
+                  ? { onVerdict: handleTemplateVerdict }
+                  : group.type === 'smart_match'
+                    ? { variant: 'owner' }
+                    : {}
+
+              return (
+                <div key={group.type}>
+                  <h2
+                    className="mb-2 text-sm font-semibold text-slate-700"
+                    data-testid={`settings-my-group-${group.type}`}
+                  >
+                    {group.label} ({group.rows.length})
+                  </h2>
+                  <div className="overflow-x-auto">
+                    {PaneComponent ? (
+                      <PaneComponent
+                        rows={group.rows}
+                        values={form.values}
+                        onChange={form.setValue}
+                        canEdit={form.canEditRow}
+                        errors={form.errors}
+                        {...extraPaneProps}
+                      />
+                    ) : (
+                      <table
+                        className="w-full border-collapse text-right"
+                        data-testid={`settings-my-table-${group.type}`}
+                      >
+                        <thead>
+                          <tr className="border-b border-slate-200 text-xs text-slate-500">
+                            <th className="w-2/5 py-2 font-medium">הגדרה</th>
+                            <th className="w-1/5 py-2 font-medium">ערך</th>
+                            <th className="py-2 font-medium">הערה</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {group.rows.map((row) => (
+                            <ParamRow
+                              key={row.param_name}
+                              row={row}
+                              value={form.values[row.param_name]}
+                              onChange={form.setValue}
+                              canEdit={form.canEditRow(row)}
+                              error={form.errors[row.param_name]}
+                            />
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+
+            {showMinWage && (
+              <div>
+                <h2 className="mb-2 text-sm font-semibold text-slate-700">מי מתחת לשכר המינימום</h2>
+                <BelowMinWageList
+                  threshold={minWageRow?.param_value}
+                  draftThreshold={form.values[MIN_WAGE_PARAM]}
+                  refreshKey={minWageKey}
+                />
+              </div>
+            )}
+          </div>
+
+          {form.crossFieldErrors.map((message) => (
+            <p
+              key={message}
+              role="alert"
+              className="mt-3 text-sm font-medium text-red-600"
+              data-testid="settings-cross-field-error"
+            >
+              {message}
+            </p>
+          ))}
+
+          <SaveRow
+            dirtyCount={dirtyCount}
+            total={totalCount}
+            saving={form.saving}
+            disabled={hasErrors}
+            failedMessage={form.saveError}
+            onCancel={() => form.reset()}
+            onSave={handleSave}
+          />
+        </section>
+      )}
+    </div>
+  )
+}

@@ -149,6 +149,11 @@ function s1Row(over = {}) {
   }
 }
 
+// 🔄 סף-המשוב ירד ל-`params` (מודול 9 · צעד 2.3) ומגיע לדיאלוג **כ-prop מ-`FinancePage`**,
+// שהוא היחיד שטוען אותו — כך שהמסך והדיאלוג קוראים את אותה שורה ואינם יכולים להתפצל.
+// הערך `'3'` **מחרוזת**, כפי שהמסד מחזיר (`param_value` הוא `text`).
+const THRESHOLD = '3'
+
 function renderDialog(props = {}) {
   return render(
     <ConfirmProvider>
@@ -156,6 +161,7 @@ function renderDialog(props = {}) {
         <ClosingWindowDialog
           project={props.project ?? s1Row()}
           open
+          satisfactionThreshold={props.satisfactionThreshold ?? THRESHOLD}
           onOpenChange={props.onOpenChange ?? vi.fn()}
           onChanged={props.onChanged ?? vi.fn()}
         />
@@ -233,6 +239,7 @@ describe('archiveGateNote', () => {
       feedbackResolved: true,
       feedbackScore: 2,
       feedbackReason: null,
+      satisfactionThreshold: THRESHOLD,
     })
     expect(note).toContain('הלקוח נתן ציון 2 ונדרשים בירור טלפוני ובחירת סיבה')
     expect(
@@ -243,8 +250,26 @@ describe('archiveGateNote', () => {
         feedbackResolved: true,
         feedbackScore: 2,
         feedbackReason: '   ',
+        satisfactionThreshold: THRESHOLD,
       }),
     ).toBe(note)
+  })
+
+  // 🔬 בדיקת-המוטציה של צעד 2.3: אותו ציון 3 בדיוק — סף 3 פותח את השער, סף 4 חוסם.
+  // אילו המימוש היה ממשיך להשוות לסף קשיח מהקוד, שתי השורות היו זהות.
+  it('ציון 3 בלי סיבה: סף 3 ⇒ פתוח, סף 4 ⇒ חסום', () => {
+    const gate = (satisfactionThreshold) =>
+      archiveGateNote({
+        invoiceSent: true,
+        paid: true,
+        writtenOff: false,
+        feedbackResolved: true,
+        feedbackScore: 3,
+        feedbackReason: null,
+        satisfactionThreshold,
+      })
+    expect(gate('3')).toBeNull()
+    expect(gate('4')).toContain('הלקוח נתן ציון 3 ונדרשים בירור טלפוני ובחירת סיבה')
   })
 
   it('אותו ציון נמוך עם סיבה — השער נפתח; ציון גבוה בלי סיבה אינו נחסם כלל', () => {
@@ -256,6 +281,7 @@ describe('archiveGateNote', () => {
         feedbackResolved: true,
         feedbackScore: 2,
         feedbackReason: 'תפקוד דיילות',
+        satisfactionThreshold: THRESHOLD,
       }),
     ).toBeNull()
     expect(
@@ -266,6 +292,7 @@ describe('archiveGateNote', () => {
         feedbackResolved: true,
         feedbackScore: 4,
         feedbackReason: null,
+        satisfactionThreshold: THRESHOLD,
       }),
     ).toBeNull()
   })
@@ -364,24 +391,66 @@ describe('closingPhase', () => {
 // ── ②ב שער "שמור סטטוס" — שלושה ענפים, שלושה משפטים ────────────────────────────────
 describe('feedbackGateNote', () => {
   it('אין ציון ⇒ המשפט שמצביע גם על "לא ענה לסקר"', () => {
-    expect(feedbackGateNote({ score: null, reason: '', touched: true })).toContain(
-      'יש לבחור ציון בין 1 ל-5',
-    )
+    expect(
+      feedbackGateNote({
+        score: null,
+        reason: '',
+        touched: true,
+        satisfactionThreshold: THRESHOLD,
+      }),
+    ).toContain('יש לבחור ציון בין 1 ל-5')
   })
 
   it('ציון נמוך בלי סיבה ⇒ משפט-הסיבה של כרטיס-P2', () => {
-    expect(feedbackGateNote({ score: 2, reason: '  ', touched: true })).toContain('סיבת-בירור')
+    expect(
+      feedbackGateNote({
+        score: 2,
+        reason: '  ',
+        touched: true,
+        satisfactionThreshold: THRESHOLD,
+      }),
+    ).toContain('סיבת-בירור')
   })
 
   it('הכול תקין אך שום דבר לא נגע ⇒ "אין שינוי לשמור", ולא כפתור אילם', () => {
-    expect(feedbackGateNote({ score: 4, reason: '', touched: false })).toBe(
-      'אין שינוי לשמור — עדכני ציון, סיבה או הערות.',
-    )
+    expect(
+      feedbackGateNote({
+        score: 4,
+        reason: '',
+        touched: false,
+        satisfactionThreshold: THRESHOLD,
+      }),
+    ).toBe('אין שינוי לשמור — עדכני ציון, סיבה או הערות.')
   })
 
   it('נגע ותקין ⇒ השער פתוח', () => {
-    expect(feedbackGateNote({ score: 2, reason: 'איכות תגים', touched: true })).toBeNull()
-    expect(feedbackGateNote({ score: 5, reason: '', touched: true })).toBeNull()
+    expect(
+      feedbackGateNote({
+        score: 2,
+        reason: 'איכות תגים',
+        touched: true,
+        satisfactionThreshold: THRESHOLD,
+      }),
+    ).toBeNull()
+    expect(
+      feedbackGateNote({
+        score: 5,
+        reason: '',
+        touched: true,
+        satisfactionThreshold: THRESHOLD,
+      }),
+    ).toBeNull()
+  })
+
+  // 🔬 מוטציה: הסף כתוב עכשיו **בתוך המשפט** ולא מקודד — סף 4 מייצר "מתחת ל-4".
+  it('נוסח-החסימה נושא את הסף מ-`params`, לא מספר קפוא', () => {
+    expect(
+      feedbackGateNote({ score: 3, reason: '', touched: true, satisfactionThreshold: '4' }),
+    ).toBe('חסום: ציון מתחת ל-4 מחייב בחירת סיבת-בירור מהרשימה, אחרי בירור טלפוני.')
+    // סף 3 ⇒ ציון 3 אינו נמוך כלל ⇒ אין שער כלל (השדה נגע ⇒ null)
+    expect(
+      feedbackGateNote({ score: 3, reason: '', touched: true, satisfactionThreshold: '3' }),
+    ).toBeNull()
   })
 })
 
@@ -640,7 +709,7 @@ describe('בלוק-המשוב', () => {
     )
   })
 
-  it('שינוי-ציון כלפי מטה עדיין דורש סיבה — שער ה-<3 לא נפרץ בדלת החדשה', async () => {
+  it('שינוי-ציון כלפי מטה עדיין דורש סיבה — שער-הסף לא נפרץ בדלת החדשה', async () => {
     getFinanceDetail.mockResolvedValue(
       detailRow({ feedback_score: 5, negative_feedback_reason: null }),
     )
@@ -671,7 +740,7 @@ describe('בלוק-המשוב', () => {
     expect(note.id).not.toBe('')
   })
 
-  it('ציון שהוזן מתחת ל-3 בלי סיבה — "שמור סטטוס" חסום עם הסבר (כרטיס-P2)', async () => {
+  it('ציון שהוזן מתחת לסף בלי סיבה — "שמור סטטוס" חסום עם הסבר (כרטיס-P2)', async () => {
     getFinanceDetail.mockResolvedValue(
       detailRow({ feedback_status: 'sent', feedback_score: null, negative_feedback_reason: null }),
     )

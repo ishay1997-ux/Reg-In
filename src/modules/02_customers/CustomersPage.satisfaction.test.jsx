@@ -77,11 +77,16 @@ function projectRow(customerId, feedbackStatus, score) {
   }
 }
 
-function mockPage(projectRows) {
+function mockPage(
+  projectRows,
+  screenParams = [{ param_name: 'סף_שביעות_רצון', param_value: '3' }],
+) {
   listCustomers.mockResolvedValue([customerRow(1, 'טכנולוגיות אלפא'), customerRow(2, 'ביתא בע"מ')])
   listQuotes.mockResolvedValue([])
   getQuoteScreenParams.mockResolvedValue([])
-  getCustomerScreenParams.mockResolvedValue([])
+  // 🔄 סף "טעון בירור" ירד ל-`params` (מודול 9 · צעד 2.3) ונטען דרך `getCustomerScreenParams`,
+  // באותה שאילתה שכבר מביאה את סף-הרדימות. הצורה כאן היא **שורות**, כמו שהפונקציה מחזירה.
+  getCustomerScreenParams.mockResolvedValue(screenParams)
   listProjectsForCustomerMetrics.mockResolvedValue(projectRows)
 }
 

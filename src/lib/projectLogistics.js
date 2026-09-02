@@ -9,6 +9,10 @@ import { ACTIVE_PROJECT_STATUSES, eventDaysFromToday, logisticsTileSub } from '@
 import { computeScopeChangeMoney } from '@/lib/projectChanges'
 import { formatShekelCents } from '@/lib/pricing'
 import { weekdayOf } from '@/lib/dates'
+// ‏`optionalNumber` ולא `Number`: ‏`params.param_value` הוא `text`, ו-`Number('  ')` הוא **0**
+// — סף-ענבר של "אפס ימי-עסקים" היה מכבה את הסימון בשקט. עותק אחד לכל הריפו (jscpd תפס
+// שכפול שלו פעם אחת ובצדק), ולכן מייבאים ולא כותבים מחדש.
+import { optionalNumber } from '@/lib/hostesses'
 
 // ── אוצר-המילים של שלושת מצבי-הפריט (schema.sql: CHECK על שלושה ערכים בלבד) ──
 // התוויות מילוליות מהמוקאפ המאושר; "טרם החל" הוא ברירת-המחדל שבה השורה נולדה —
@@ -353,9 +357,10 @@ function isPhysical(row, bySku) {
   return bySku.get(row?.sku)?.category !== 'site'
 }
 
-// ‏⑳ — 10 ימי-עסקים, לא "שבועיים קלנדריים": היחידה שבה הקוד כבר מודד (`businessDaysUntil`),
-// וכך שני הספים של המערכת (3 ימי-עסקים ב-isLateChange · 10 כאן) ברי-השוואה במקום סותרים.
-const AMBER_BUSINESS_DAYS = 10
+// ‏⑳ — **ימי-עסקים, לא "שבועיים קלנדריים"**: היחידה שבה הקוד כבר מודד (`businessDaysUntil`),
+// וכך שני הספים של המערכת (3 ימי-עסקים ב-isLateChange · סף-הענבר) ברי-השוואה במקום סותרים.
+// 🔄 **הסף עצמו ירד מקבוע-קוד לשורת-`params` `סף_לוגיסטיקה_ימי_עסקים`=10** (מודול 9 · צעד
+// 2.3) ומוזרק ל-`amberMark`, כמו `todayIso` ו-`businessDaysUntil` שכבר בחתימתה.
 
 // 🔴 **שומר-העבר, והוא נושא-משקל:** `businessDaysUntil` מחזירה **0** על תאריך שעבר
 // (הלולאה שלה פשוט אינה רצה) ⇒ בלי הבדיקה הזאת פרויקט פעיל שתאריכו חלף היה נדלק בענבר
@@ -384,16 +389,27 @@ function findLateArrivalRow(rows, todayIso) {
   )
 }
 
+// שם-הפרמטר קבוע ולעולם לא מוקלד באתר-הקריאה — אותה מוסכמה בדיוק כמו
+// `DORMANT_THRESHOLD_PARAM_NAME` (`src/lib/customerProjects.js`) ו-`SATISFACTION_THRESHOLD_PARAM_NAME`
+// (`src/lib/customers.js`), ומאותו טעם: תו אחד שגוי מחזיר שורה ריקה, הפרמטר נראה "חסר",
+// ואין שום שגיאה בשום מקום.
+export const AMBER_THRESHOLD_PARAM_NAME = 'סף_לוגיסטיקה_ימי_עסקים'
+
 // מחזירה **גם את הטריגרים שנדלקו** — המסך צריך לדעת איזו שורת-נימוק לכתוב (⑳ מול O-1),
 // ובלי זה הקורא היה מחשב את אותו תנאי פעם שנייה בעצמו.
-export function amberMark(rows, products, eventDate, todayIso, businessDaysUntil) {
+// ⚠️ **סף חסר ⇒ הטריגר של ⑳ אינו נדלק** (`null` מ-`optionalNumber`), והטריגר השני של ㊶
+// (איחור-הגעה) ממשיך לעבוד — הוא אינו תלוי בסף כלל. ברירת-מחדל כאן הייתה צובעת שורות
+// בענבר לפי מספר שאיש לא הכריע; הצעקה על פרמטר חסר יושבת ב-`getParamValues`.
+export function amberMark(rows, products, eventDate, todayIso, businessDaysUntil, thresholdDays) {
   const list = rows ?? []
   const bySku = new Map((products ?? []).map((product) => [product.sku, product]))
   const businessDays = businessDaysToEvent(eventDate, todayIso, businessDaysUntil)
+  const threshold = optionalNumber(thresholdDays)
   const triggers = []
   if (
     businessDays !== null &&
-    businessDays <= AMBER_BUSINESS_DAYS &&
+    threshold !== null &&
+    businessDays <= threshold &&
     list.some((row) => row.item_status === 'not_started' && isPhysical(row, bySku))
   ) {
     triggers.push('physicalNotStarted')

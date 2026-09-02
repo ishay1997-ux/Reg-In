@@ -24,6 +24,7 @@ import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
 import {
   CUSTOMER_TYPE_LABELS,
+  SATISFACTION_THRESHOLD_PARAM_NAME,
   archiveWarningMessage,
   countActiveFilters,
   deriveCustomerMetrics,
@@ -67,7 +68,10 @@ import { cn } from '@/lib/utils'
 // 🔴 הצורה `4.5 ★` (‏`RatingStars variant="compact"`) ולא חמישה גליפים: הערך הוא **ממוצע**,
 // וגליפים יודעים לצייר רק שלם — 4.5 היה נצבע כחמישה מלאים. זו גם הצורה שמוקאפ-הטבלה מצייר.
 // ‏`null` = אין ולו משוב אחד שהושלם ⇒ הכוכבים נשארים אפורים והמשפט נשאר — **לא "0 ★"**.
-function SatisfactionCell({ average }) {
+// ‏`threshold` = הערך הגולמי של `סף_שביעות_רצון` מ-`params` (מודול 9 · צעד 2.3, ירד
+// מקבוע-קוד ב-`src/lib/customers.js`). חסר ⇒ אין תווית "טעון בירור" — אותה "לא בכוח"
+// שהמסך כבר מפעיל על סף-הרדימות, ולא סף מומצא שיצבע לקוחות באדום.
+function SatisfactionCell({ average, threshold }) {
   if (average == null) {
     return (
       <div className="flex flex-col gap-0.5" title="אין נתונים עדיין">
@@ -83,7 +87,7 @@ function SatisfactionCell({ average }) {
   return (
     <div className="flex flex-col gap-0.5">
       <RatingStars value={average} variant="compact" />
-      {needsSatisfactionAttention(average) && (
+      {needsSatisfactionAttention(average, threshold) && (
         // אותה תווית מילולית בדיוק של ה16/§7.80 (`scoreTagText` במ8) — לא ניסוח מקומי חדש.
         <span className="text-xs font-medium text-rose-700">טעון בירור</span>
       )}
@@ -144,6 +148,9 @@ export default function CustomersPage() {
   // כמו revenueByCustomer. `{}` = טרם נטען/כשל — אז אף לקוח לא רדום, ולא נופלים ("לא בכוח").
   const [projectsByCustomer, setProjectsByCustomer] = useState({})
   const [dormantThresholdDays, setDormantThresholdDays] = useState(NaN)
+  // 🆕 סף "טעון בירור" — נטען מאותה שאילתה בדיוק, ומאותה סיבה: הוא הגדרת-מערכת ולא בחירה
+  // של המשתמשת. `null` = טרם נטען/כשל ⇒ המסנן והתווית שותקים (ולא "כולם טעונים בירור").
+  const [satisfactionThreshold, setSatisfactionThreshold] = useState(null)
   // "היום" מחושב פעם אחת (אתחול-עצל, לא ב-render — react-hooks/purity), אותו דפוס כמו
   // CustomerDetailsPage.jsx/ProjectCardPage.jsx.
   const [today] = useState(() => new Date().toISOString().slice(0, 10))
@@ -215,14 +222,15 @@ export default function CustomersPage() {
         ])
         if (cancelled) return
         setProjectsByCustomer(groupProjectsByCustomer(projectRows))
-        const threshold = customerParamRows.find(
-          (row) => row.param_name === DORMANT_THRESHOLD_PARAM_NAME,
-        )?.param_value
-        setDormantThresholdDays(Number(threshold))
+        const paramValue = (name) =>
+          customerParamRows.find((row) => row.param_name === name)?.param_value
+        setDormantThresholdDays(Number(paramValue(DORMANT_THRESHOLD_PARAM_NAME)))
+        setSatisfactionThreshold(paramValue(SATISFACTION_THRESHOLD_PARAM_NAME) ?? null)
       } catch {
         if (!cancelled) {
           setProjectsByCustomer({})
           setDormantThresholdDays(NaN)
+          setSatisfactionThreshold(null)
         }
       }
     })()
@@ -376,11 +384,17 @@ export default function CustomersPage() {
     // createdAfter ("נוספו לאחרונה") מחושב במסננת (event handler) ומגיע דרך ...filters — לא כאן,
     // כדי לא לקרוא Date.now בזמן רינדור (react-hooks/purity).
     const filtered = withDerived.filter((c) =>
-      matchesCustomerFilters(c, {
-        text: searchText,
-        ...filters,
-        status: statusView, // 'active' או 'inactive' — תמיד רשימה אחת, לא שתיהן
-      }),
+      matchesCustomerFilters(
+        c,
+        {
+          text: searchText,
+          ...filters,
+          status: statusView, // 'active' או 'inactive' — תמיד רשימה אחת, לא שתיהן
+        },
+        // ⚠️ ארגומנט שלישי ולא שדה ב-`filters`: זו הגדרת-מערכת, ו-`countActiveFilters`
+        // הייתה סופרת אותה כמסננת פעילה.
+        satisfactionThreshold,
+      ),
     )
     return sortKey ? sortCustomers(filtered, sortKey, sortDir) : filtered
   }, [
@@ -392,6 +406,7 @@ export default function CustomersPage() {
     searchText,
     filters,
     statusView,
+    satisfactionThreshold,
     sortKey,
     sortDir,
   ])
@@ -864,7 +879,10 @@ export default function CustomersPage() {
                             )}
                           </td>
                           <td className="py-3">
-                            <SatisfactionCell average={customer.avg_feedback} />
+                            <SatisfactionCell
+                              average={customer.avg_feedback}
+                              threshold={satisfactionThreshold}
+                            />
                           </td>
                           <td className="py-3">
                             <span

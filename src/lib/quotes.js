@@ -464,9 +464,11 @@ export function crossesMidnight(startTime, endTime) {
 // quotes.* + quote_services(*) + customers(...). ‏listQuotes() אינה מקבלת מסננים
 // (סטייה מהבלופרינט, מתועדת ב-api.js): הטאבים, המונים, המסננים והמיון כולם כאן.
 
-// LOCAL-4 (הכרעת-ישי 15/07): "פג בקרוב" = 7 ימים או פחות לתפוגה. זה **לא** אותו מספר
-// כמו ימי-התוקף עצמם (פרמטר `ימי_תוקף_הצעה`=30) ולא כמו חלון-האירוע (`ימי_אזהרה_קדם_אירוע`=14).
-export const EXPIRING_SOON_DAYS = 7
+// 🔄 LOCAL-4 (הכרעת-ישי 15/07): "פג בקרוב" = N ימים או פחות לתפוגה. **הסף ירד מקבוע-קוד
+// לשורת-`params` `ימי_אזהרה_הצעה_פגה`=7** (מודול 9 · צעד 2.3) ומוזרק ל-`deriveQuoteExpiry`
+// כמו `validityDays` שכבר לצידו. זה **לא** אותו מספר כמו ימי-התוקף עצמם
+// (`ימי_תוקף_הצעה`=30) ולא כמו חלון-האירוע (`ימי_אזהרה_קדם_אירוע`=14) — שלושה ספים
+// שקל להחליף ביניהם, ולכן לכל אחד שורה משלו במסד ושם משלו כאן.
 
 // שמות-הפרמטרים שמסך-הניהול קורא מ-params. שתי המחרוזות החדשות חייבות להיות זהות-בייט
 // לשורות ה-Seed (מיגרציה 20260723112000); המע"מ **אינו נכתב כאן שוב** אלא נשאב מ-pricing.js,
@@ -475,6 +477,8 @@ export const QUOTE_SCREEN_PARAM_NAMES = {
   vatPercent: PRICING_PARAM_NAMES.VAT_PERCENT,
   validityDays: 'ימי_תוקף_הצעה',
   eventWarningDays: 'ימי_אזהרה_קדם_אירוע',
+  // 🆕 מודול 9 (צעד 2.3) — הסף של "פג בקרוב", שעד אז היה קבוע מיוצא בקובץ הזה.
+  expiringSoonDays: 'ימי_אזהרה_הצעה_פגה',
   // גוף מייל-ההצעה (צעד 3.4). נטען יחד עם השאר כי `getQuoteScreenParams` שולפת
   // בדיוק את הערכים שכאן — הוספת שם כאן היא כל מה שנדרש כדי שהמסך יקבל אותו.
   quoteEmailTemplate: 'תבנית_מייל_הצעת_מחיר',
@@ -580,7 +584,11 @@ export function deriveQuoteAmount(quote, defaultVatRate) {
 // מחזיר null להצעה שאינה in_progress: הצעה סגורה כבר לא פגה, ו"פג בעוד -12 יום" הוא רעש.
 // ⚠️ הפרש-מותר של עד יממה מול עבודת-הרקע: היא משווה חותמות-זמן מלאות, כאן משווים תאריכים.
 // זה מכוון — המשתמש חושב בימים, לא בשעות.
-export function deriveQuoteExpiry(quote, validityDays, todayIso) {
+// ⚠️ **שני פרמטרים ולא אחד** (מודול 9 · צעד 2.3): `validityDays` קובע **מתי** ההצעה פגה,
+// ו-`warningDays` (`ימי_אזהרה_הצעה_פגה`) קובע מתי מתחילים להתריע על כך. סף-אזהרה חסר
+// ⇒ `isExpiringSoon: false` — התאריך ומספר-הימים עדיין נכונים ומוצגים, רק ההתראה שותקת;
+// ברירת-מחדל כאן הייתה צובעת הצעות באדום לפי מספר שאיש לא הכריע.
+export function deriveQuoteExpiry(quote, validityDays, todayIso, warningDays) {
   if (quote?.quote_status !== 'in_progress') return null
   const days = paramNumber(validityDays)
   if (days === null) return null
@@ -593,7 +601,8 @@ export function deriveQuoteExpiry(quote, validityDays, todayIso) {
   const daysLeft = daysUntil(expiryDate, todayIso)
   if (daysLeft === null) return null
 
-  return { expiryDate, daysLeft, isExpiringSoon: daysLeft <= EXPIRING_SOON_DAYS }
+  const warning = paramNumber(warningDays)
+  return { expiryDate, daysLeft, isExpiringSoon: warning !== null && daysLeft <= warning }
 }
 
 // "אירועים קרובים" — אירוע שמתקיים בתוך חלון-האזהרה (`ימי_אזהרה_קדם_אירוע`=14).
@@ -681,7 +690,7 @@ export function matchesQuoteFilters(quote, filters = {}, ctx = {}) {
   if (filters.eventDateTo && (!eventDate || eventDate > filters.eventDateTo)) return false
 
   if (filters.expiringSoon) {
-    const expiry = deriveQuoteExpiry(quote, ctx.validityDays, ctx.todayIso)
+    const expiry = deriveQuoteExpiry(quote, ctx.validityDays, ctx.todayIso, ctx.expiringSoonDays)
     if (!expiry?.isExpiringSoon) return false
   }
 

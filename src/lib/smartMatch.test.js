@@ -5,6 +5,7 @@ import {
   parseSmartMatchParams,
   activeWeights,
   companyResponsivenessAverage,
+  companyReliabilityAverage,
   responsivenessCounts,
   responsivenessScore,
   proximityScore,
@@ -119,6 +120,48 @@ describe('companyResponsivenessAverage — C של החברה, לא של המאג
   it('מאגר ריק או בלי מענים ⇒ null, לא 0', () => {
     expect(companyResponsivenessAverage([])).toBeNull()
     expect(companyResponsivenessAverage([{ answered: 0, confirmed: 0 }])).toBeNull()
+  })
+})
+
+// 🚧 מ9 ← מ4/מ6 (V-5, צעד 2.4) — מקבילת-האמינות ל-`companyResponsivenessAverage` שמעליי.
+// עד הצעד הזה `rankCandidates` הזין למרכיב-האמינות את ממוצע-ה**היענות** (תנאי-קדם רדום —
+// `PROJECT_MASTER §6`); המחקר (`module4_smart_match_research.md §"מרכיב 2"`) קובע ריסון
+// מול C **של הנוכחות**. הבדיקות כאן על הפונקציה החדשה בלבד — ההוכחה שהיא באמת מוזנת
+// למקום הנכון (ולא רק קיימת) יושבת ב-`describe` הייעודי בתחתית הקובץ.
+describe('companyReliabilityAverage — C של אמינות, לא עותק של C של היענות', () => {
+  const arrived = { projectCancelled: false, eventPassed: true, attendance_status: 'arrived' }
+  const noShow = {
+    projectCancelled: false,
+    eventPassed: true,
+    attendance_status: 'no_show',
+    no_show_reason: 'ghosted',
+  }
+
+  it('הסכומים על-פני כל רשומות-הנוכחות של כל הדיילות במאגר — לא ממוצע-של-ממוצעים', () => {
+    const pool = [
+      { attendance: [arrived, arrived] }, // count 2, total 2
+      { attendance: [noShow] }, // count 1, total 0
+    ]
+    // (2 + 0) ÷ (2 + 1) = 2/3
+    expect(companyReliabilityAverage(pool)).toBeCloseTo(2 / 3, 10)
+  })
+
+  it('מחושב על כל הדיילות שבמאגר — כולל מי שאין לה שום רשומת-נוכחות (כמו §11.3 עבור C)', () => {
+    const pool = [{ attendance: [arrived] }, { attendance: [] }, {}]
+    expect(companyReliabilityAverage(pool)).toBeCloseTo(1, 10)
+  })
+
+  it('מאגר ריק או בלי אף תצפית-נוכחות סגורה ⇒ null, לא 0', () => {
+    expect(companyReliabilityAverage([])).toBeNull()
+    expect(companyReliabilityAverage([{ attendance: [] }, {}])).toBeNull()
+  })
+
+  it('🔴 אינה עותק של companyResponsivenessAverage — שני מקורות-דאטה שונים על אותו מאגר', () => {
+    const pool = [
+      { answered: 10, confirmed: 5, attendance: [arrived] }, // היענות 50%, אמינות 100%
+    ]
+    expect(companyResponsivenessAverage(pool)).toBeCloseTo(0.5, 10)
+    expect(companyReliabilityAverage(pool)).toBeCloseTo(1, 10)
   })
 })
 
@@ -615,6 +658,145 @@ describe('🎯 rankCandidates — העוגן של כנס לקוחות שנתי, 
     const noa = rankCandidates(POOL, context).find((r) => r.full_name === 'נועה')
     expect(noa.components).toBeDefined()
     expect(noa.flags.noCoordinates).toBe(false)
+  })
+})
+
+// 🚧 מ9 ← מ4/מ6 (V-5, צעד 2.4) — ההוכחה ש-companyReliabilityAverage באמת מוזנת ל-reliabilityScore
+// בתוך rankCandidates, בשני המצבים: כבוי (הבטחת-הרדימות) ודלוק (ההשפעה על הסדר).
+describe('rankCandidates — מ9 ← מ4/מ6: ממוצע-אמינות במקום ממוצע-היענות (V-5)', () => {
+  const EVENT_DATE = '2026-08-22'
+  const arrived = { projectCancelled: false, eventPassed: true, attendance_status: 'arrived' }
+  const noShow = {
+    projectCancelled: false,
+    eventPassed: true,
+    attendance_status: 'no_show',
+    no_show_reason: 'ghosted',
+  }
+
+  // אותו מאגר-העוגן של למעלה (§3.2), עם attendance שונה בכוונה בין הדיילות — כדי
+  // שאם reliability דולפת לציון בטעות למרות משקל 0, הבדיקה הבאה תיפול.
+  function anchorPoolWithAttendance() {
+    return [
+      {
+        hostess_id: 1,
+        full_name: 'נועה',
+        status: 'active',
+        has_car: true,
+        answered: 7,
+        confirmed: 6,
+        distanceKm: 30,
+        weeksSinceWorked: 8,
+        attendance: [arrived, arrived],
+      },
+      {
+        hostess_id: 2,
+        full_name: 'דנה',
+        status: 'active',
+        has_car: true,
+        answered: 12,
+        confirmed: 6,
+        distanceKm: 8,
+        weeksSinceWorked: 1,
+        attendance: [noShow],
+      },
+      {
+        hostess_id: 3,
+        full_name: 'מיכל',
+        status: 'active',
+        has_car: true,
+        answered: 1,
+        confirmed: 1,
+        distanceKm: 20,
+        weeksSinceWorked: 3,
+        attendance: [],
+      },
+      {
+        hostess_id: 4,
+        full_name: 'יעל',
+        status: 'active',
+        has_car: false,
+        answered: 5,
+        confirmed: 2,
+        distanceKm: 55,
+        weeksSinceWorked: null,
+      },
+      {
+        hostess_id: 5,
+        full_name: 'שירה',
+        status: 'active',
+        has_car: true,
+        answered: 5,
+        confirmed: 3,
+        distanceKm: 18,
+        weeksSinceWorked: null,
+        unavailability: [{ start_date: '2026-08-20', end_date: '2026-08-25' }],
+      },
+    ]
+  }
+
+  it('🛡️ הבטחת-הרדימות — המתג כבוי (SEED_PARAMS): הדירוג זהה-בייט לעוגן המקורי, בלי attendance', () => {
+    const context = {
+      eventDate: EVENT_DATE,
+      projectId: 8,
+      params: parseSmartMatchParams(SEED_PARAMS),
+    }
+    const ranked = rankCandidates(anchorPoolWithAttendance(), context)
+    // ‏אותם שלושת הציונים ואותו סדר כמו העוגן המקורי (§3.2) — עכשיו עם attendance
+    // שונה-בכוונה בין הדיילות. אילו reliability דלפה לציון, הציונים כאן היו שונים.
+    expect(ranked.map((r) => [r.full_name, r.score])).toEqual([
+      ['נועה', 0.67],
+      ['מיכל', 0.66],
+      ['דנה', 0.64],
+    ])
+  })
+
+  it('המתג דלוק (משקל 0.35) — שתי דיילות זהות בכול חוץ מהיסטוריית-הנוכחות מתהפכות בסדר', () => {
+    // ‏א מגיעה תמיד (value 1 פעמיים), ב הבריזה (value 0) — שאר הרכיבים זהים בכוונה,
+    // כדי שהעלאת reliability לבדה תקבע את הסדר.
+    // ‏C (ממוצע-אמינות) על שתיהן: (2+0) ÷ (2+1) = 2/3.
+    // ‏reliabilityScore(א) = (2 + 3×⅔) ÷ (2+3) = 4/5 = 0.8
+    // ‏reliabilityScore(ב) = (0 + 3×⅔) ÷ (1+3) = 2/4 = 0.5
+    // שאר הרכיבים זהים (אותו answered/confirmed/distanceKm/weeksSinceWorked) ⇒ ההפרש
+    // בציון הגולמי הוא בדיוק (0.8−0.5) × 0.35 = 0.105 לטובת א.
+    const on = parseSmartMatchParams({ ...SEED_PARAMS, מרכיב_אמינות_פעיל: 'true' })
+    const pool = [
+      {
+        hostess_id: 1,
+        full_name: 'א',
+        status: 'active',
+        has_car: true,
+        answered: 10,
+        confirmed: 8,
+        distanceKm: 10,
+        weeksSinceWorked: 0,
+        attendance: [arrived, arrived],
+      },
+      {
+        hostess_id: 2,
+        full_name: 'ב',
+        status: 'active',
+        has_car: true,
+        answered: 10,
+        confirmed: 8,
+        distanceKm: 10,
+        weeksSinceWorked: 0,
+        attendance: [noShow],
+      },
+    ]
+    const context = { eventDate: EVENT_DATE, projectId: 8, params: on }
+    const ranked = rankCandidates(pool, context)
+    const byName = Object.fromEntries(ranked.map((r) => [r.full_name, r]))
+
+    expect(byName['א'].components.reliability).toBeCloseTo(0.8, 10)
+    expect(byName['ב'].components.reliability).toBeCloseTo(0.5, 10)
+    // הרכיבים האחרים זהים לגמרי — ולכן ההפרש כולו מגיע מהאמינות, לא מרעש בשאר הנוסחה.
+    expect(byName['א'].components.responsiveness).toBeCloseTo(
+      byName['ב'].components.responsiveness,
+      10,
+    )
+    expect(byName['א'].components.proximity).toBeCloseTo(byName['ב'].components.proximity, 10)
+    expect(byName['א'].rawScore - byName['ב'].rawScore).toBeCloseTo(0.105, 10)
+    expect(ranked.map((r) => r.full_name)).toEqual(['א', 'ב'])
   })
 })
 

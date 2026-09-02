@@ -42,6 +42,8 @@ import ProjectCardPage from '@/modules/06_projects/ProjectCardPage'
 import PublicConfirmPage from '@/modules/04_hostesses/PublicConfirmPage'
 import FinancePage from '@/modules/08_finance/FinancePage'
 import PublicFeedbackPage from '@/modules/08_finance/PublicFeedbackPage'
+import ParamsTab from '@/modules/09_settings/ParamsTab'
+import MySettingsPage from '@/modules/09_settings/MySettingsPage'
 import WelcomePage from '@/components/WelcomePage'
 import UnderConstruction from '@/components/UnderConstruction'
 import ProfileSettingsPage from '@/components/ProfileSettingsPage'
@@ -90,6 +92,10 @@ function App() {
                   <Route index element={<WelcomePage />} />
                   {/* נגיש לכל משתמש מחובר בלי קשר לתפקיד - בכוונה בלי ProtectedRoute, MainLayout כבר חוסם לא-מחוברים/מוקפאים */}
                   <Route path="profile" element={<ProfileSettingsPage />} />
+                  {/* מודול 9, צעד 3.4 (A-9/R-2) — "ההגדרות שלי". אותו תקדים בדיוק כמו /profile:
+                      בכוונה בלי ProtectedRoute משלה, כי "יש לה ≥1 פרמטר בבעלותה" אינו ניתן
+                      לביטוי כהרשאת-מודול — ה-RLS (`owner_role_id`) הוא הקיר, לא ה-UI (§4.4). */}
+                  <Route path="my-settings" element={<MySettingsPage />} />
 
                   <Route
                     path="system"
@@ -104,7 +110,9 @@ function App() {
                     <Route path="permissions" element={<PermissionsMatrixPage />} />
                     {/* מודול 3 §7.84 — תחזוקת קטלוג/מדרגות/2 פרמטרי-תמחור; כתיבה CEO בלבד (RLS) */}
                     <Route path="prices" element={<PricesManagementPage />} />
-                    <Route path="params" element={<UnderConstruction moduleName="פרמטרים" />} />
+                    {/* מודול 9 (צעד 3.1, 02/09/2026): הוחלף UnderConstruction במסך האמיתי.
+                        השומר יורש מ-`system` (allow={SYSTEM_MODULES}) ולכן אין עטיפה משלו. */}
+                    <Route path="params" element={<ParamsTab />} />
                   </Route>
                   <Route path="users" element={<Navigate to="/system/users" replace />} />
 

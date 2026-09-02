@@ -204,8 +204,18 @@ export default function QuotesPage() {
   const vatRate = parseVatPercent(params[QUOTE_SCREEN_PARAM_NAMES.vatPercent])
   const validityDays = params[QUOTE_SCREEN_PARAM_NAMES.validityDays]
   const eventWarningDays = params[QUOTE_SCREEN_PARAM_NAMES.eventWarningDays]
+  // 🆕 סף "פג בקרוב" ירד מקבוע-קוד ב-`src/lib/quotes.js` לשורת-`params` (מודול 9 · צעד 2.3),
+  // ומגיע באותה שליפה שכבר מביאה את שאר פרמטרי-המסך — `QUOTE_SCREEN_PARAM_NAMES` הוא
+  // מקור-האמת של `getQuoteScreenParams`, ולכן ההוספה שם מספיקה.
+  const expiringSoonDays = params[QUOTE_SCREEN_PARAM_NAMES.expiringSoonDays]
   const emailTemplate = params[QUOTE_SCREEN_PARAM_NAMES.quoteEmailTemplate]
-  const ctx = { todayIso, validityDays, eventWarningDays, defaultVatRate: vatRate }
+  const ctx = {
+    todayIso,
+    validityDays,
+    eventWarningDays,
+    expiringSoonDays,
+    defaultVatRate: vatRate,
+  }
   const missingParamsMessage = missingPricingParamsMessage({ vatRate, validityDays })
 
   // בלי useMemo: הקומפיילר של React מזכר את זה לבד, ו-memoization ידני על ערך שנגזר
@@ -239,7 +249,7 @@ export default function QuotesPage() {
   })
 
   const expiringCount = tabRows.filter(
-    (q) => deriveQuoteExpiry(q, validityDays, todayIso)?.isExpiringSoon,
+    (q) => deriveQuoteExpiry(q, validityDays, todayIso, expiringSoonDays)?.isExpiringSoon,
   ).length
   const eventSoonCount = tabRows.filter((q) => isEventSoon(q, eventWarningDays, todayIso)).length
 
@@ -606,7 +616,7 @@ export default function QuotesPage() {
               <tbody>
                 {visibleRows.map((quote) => {
                   const { total, discountPercent } = deriveQuoteAmount(quote, vatRate)
-                  const expiry = deriveQuoteExpiry(quote, validityDays, todayIso)
+                  const expiry = deriveQuoteExpiry(quote, validityDays, todayIso, expiringSoonDays)
                   const pill = STATUS_PILL[quote.quote_status]
                   const isOpen = quote.quote_status === 'in_progress'
                   // N2: הראשי הוא שורת customer_contacts עם is_primary, לא quote.customers.contact_name/phone/email.

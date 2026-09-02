@@ -5,7 +5,7 @@ import {
   countActiveFilters,
   matchesCustomerFilters,
   needsSatisfactionAttention,
-  SATISFACTION_ATTENTION_MAX,
+  SATISFACTION_THRESHOLD_PARAM_NAME,
   sortCustomers,
   deriveCustomerMetrics,
   validateCustomerField,
@@ -407,32 +407,59 @@ describe('countActiveFilters — תג ספירת-המסננים', () => {
 
 // 🆕 A3 · מסנן-שביעות-הרצון שמ8 חייב למ2 (מ8 · צעד 4.2)
 describe('needsSatisfactionAttention + מסנן "טעון בירור"', () => {
-  it('הסף הוא 3, בדיוק כמו ה16/§7.80 ("אדום <3") ו-record_feedback במסד', () => {
-    expect(SATISFACTION_ATTENTION_MAX).toBe(3)
-    expect(needsSatisfactionAttention(2.9)).toBe(true)
-    expect(needsSatisfactionAttention(1)).toBe(true)
+  // 🔄 הסף ירד מקבוע-קוד לשורת-`params` (מודול 9 · צעד 2.3) ומוזרק פנימה. **מחרוזת**, כי
+  // `param_value` הוא `text` במסד — בדיקה עם מספר בלבד הייתה מפספסת את הפענוח.
+  const THRESHOLD = '3'
+
+  it('שם-הפרמטר נעול כאן — תו אחד שגוי מחזיר שורה ריקה בלי שום שגיאה', () => {
+    expect(SATISFACTION_THRESHOLD_PARAM_NAME).toBe('סף_שביעות_רצון')
+  })
+
+  it('סף 3 מתנהג בדיוק כמו ה16/§7.80 ("אדום <3") ו-record_feedback במסד', () => {
+    expect(needsSatisfactionAttention(2.9, THRESHOLD)).toBe(true)
+    expect(needsSatisfactionAttention(1, THRESHOLD)).toBe(true)
     // 🔴 שלוש **אינו** טעון-בירור — הוא "בינוני" (צהוב). גבול-המדרגה נעול כאן כי הוא היחיד
     // שמפריד בין "לצלצל ללקוח" לבין "בסדר".
-    expect(needsSatisfactionAttention(3)).toBe(false)
-    expect(needsSatisfactionAttention(4.5)).toBe(false)
+    expect(needsSatisfactionAttention(3, THRESHOLD)).toBe(false)
+    expect(needsSatisfactionAttention(4.5, THRESHOLD)).toBe(false)
+  })
+
+  // 🔬 בדיקת-המוטציה של צעד 2.3: אותו ציון בדיוק, סף אחר ⇒ תשובה אחרת. אילו המימוש היה
+  // ממשיך לקרוא 3 מהקוד, שתי השורות היו זהות והבדיקה הייתה ירוקה על קוד שלא זז.
+  it('ציון 3.5 — סף 3 ⇒ תקין, סף 4 ⇒ טעון בירור', () => {
+    expect(needsSatisfactionAttention(3.5, '3')).toBe(false)
+    expect(needsSatisfactionAttention(3.5, '4')).toBe(true)
+  })
+
+  // 🔴 סף חסר ⇒ `false` ולא נפילה חזרה ל-3. אותה "לא בכוח" שהמסך מפעיל על סף-הרדימות.
+  it('סף חסר או לא-מספרי ⇒ אף לקוח אינו "טעון בירור"', () => {
+    for (const bad of [undefined, null, '', '   ', 'שלוש']) {
+      expect(needsSatisfactionAttention(1, bad)).toBe(false)
+    }
   })
 
   it('🔴 "אין נתון" אינו "לא מרוצה" — null/undefined אינם ברשימת-הטיפול', () => {
-    expect(needsSatisfactionAttention(null)).toBe(false)
-    expect(needsSatisfactionAttention(undefined)).toBe(false)
+    expect(needsSatisfactionAttention(null, THRESHOLD)).toBe(false)
+    expect(needsSatisfactionAttention(undefined, THRESHOLD)).toBe(false)
   })
 
   it('המסנן קורא את `avg_feedback` שהוזרק לשורה, ומסנן רק כשהוא true מפורש', () => {
     const low = c({ avg_feedback: 2 })
     const high = c({ avg_feedback: 4.5 })
     const unknown = c({ avg_feedback: null })
-    expect(matchesCustomerFilters(low, { lowSatisfactionOnly: true })).toBe(true)
-    expect(matchesCustomerFilters(high, { lowSatisfactionOnly: true })).toBe(false)
-    expect(matchesCustomerFilters(unknown, { lowSatisfactionOnly: true })).toBe(false)
+    expect(matchesCustomerFilters(low, { lowSatisfactionOnly: true }, THRESHOLD)).toBe(true)
+    expect(matchesCustomerFilters(high, { lowSatisfactionOnly: true }, THRESHOLD)).toBe(false)
+    expect(matchesCustomerFilters(unknown, { lowSatisfactionOnly: true }, THRESHOLD)).toBe(false)
     // כבוי / לא-סופק ⇒ אינו מסנן איש (כמו כל שאר הדגלים כאן)
-    expect(matchesCustomerFilters(high, {})).toBe(true)
-    expect(matchesCustomerFilters(high, { lowSatisfactionOnly: false })).toBe(true)
-    expect(matchesCustomerFilters(unknown, {})).toBe(true)
+    expect(matchesCustomerFilters(high, {}, THRESHOLD)).toBe(true)
+    expect(matchesCustomerFilters(high, { lowSatisfactionOnly: false }, THRESHOLD)).toBe(true)
+    expect(matchesCustomerFilters(unknown, {}, THRESHOLD)).toBe(true)
+  })
+
+  // ⚠️ ‏`CustomerPicker` (מודול 3) קורא ל-`matchesCustomerFilters` **בלי** סף — הוא לעולם
+  // אינו מדליק את המסנן הזה. הבדיקה נועלת שהשמטת הארגומנט אינה שוברת אותו.
+  it('בלי סף ובלי המסנן — הפונקציה מתנהגת כרגיל (מסלול CustomerPicker)', () => {
+    expect(matchesCustomerFilters(c({ avg_feedback: 2 }), { status: 'active' })).toBe(true)
   })
 })
 

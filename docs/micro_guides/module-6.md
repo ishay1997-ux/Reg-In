@@ -1334,3 +1334,5 @@ Unchanged from module 1: Supabase Auth (Google), session in `sessionStorage`, `c
   specific no-permission sentence; the quote-discriminator branch (`logistics-state-no-permission`,
   the *"פריטי ההצעה"* sentence) still exists and fires only for quote-blocked-but-logistics-readable
   readers. Two branches, two sentences, both honest — do not "unify" them.
+
+- **`02/09/2026 22:0X` — CROSS-MODULE EDIT by module 9 (steps 2.3/2.4; this module is closed — this is the required ripple record).** Six hard-coded business constants became `params` rows (Ishay G-2, 02/09; `docs/micro_guides/module-9.md` §6 step 2.3 carries the per-constant ripple table). Touched here: `src/lib/projectTeam.js` · `src/lib/assignmentActions.js` (invite threshold passed through) and `TeamTab.jsx` (loads `שעות_תוקף_זימון` via `src/api/params.js`). Behaviour is unchanged while the seeded values equal the old constants (24 · 48 · 72 · 3 · 10 · 7); the module's suites were re-run green by the m9 builder and again in m9's Phase-2 gate.
