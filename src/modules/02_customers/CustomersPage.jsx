@@ -29,6 +29,7 @@ import {
   deriveCustomerMetrics,
   matchesCustomerFilters,
   needsSatisfactionAttention,
+  primaryContact,
   sortCustomers,
 } from '@/lib/customers'
 import { QUOTE_SCREEN_PARAM_NAMES } from '@/lib/quotes'
@@ -733,9 +734,13 @@ export default function CustomersPage() {
                         sortDir={sortDir}
                         onSort={toggleSort}
                       />
+                      {/* 🔴 שלוש עמודות (שם · טלפון · אימייל) אוחדו לאחת — הכרעת-ישי 02/09/2026,
+                          אחרי שראה את הטבלה חיה ואמר "נראה קצת צפוף". **העוגן אינו טעם אלא תקדים
+                          בתוך המערכת:** `03_quotes/QuotesPage.jsx` כבר מציג שם+טלפון+קישור-מייל
+                          בתא אחד — כלומר המסך הזה היה החריג, לא האיחוד. ⚠️ **והאימייל ירד מהטבלה
+                          ולא נמחק:** הוא חי בכרטיס-הלקוח, שם C5 §5.6.3 שם אותו מלכתחילה
+                          ("תצוגת כרטיס לקוח… כוללת את כלל הפרטים"); הרשימה היא לסריקה. */}
                       <th className="py-2 font-medium">איש קשר</th>
-                      <th className="py-2 font-medium">טלפון</th>
-                      <th className="py-2 font-medium">אימייל</th>
                       <SortableHeader
                         label="% הנחה"
                         colKey="discount_percent"
@@ -771,6 +776,10 @@ export default function CustomersPage() {
                   <tbody>
                     {visibleCustomers.map((customer) => {
                       const isActive = customer.status === 'active'
+                      // N2 (02/09/2026): שם/טלפון/אימייל של איש-הקשר הראשי הם שורת
+                      // `customer_contacts` עם `is_primary`, לא עמודות על `customers`.
+                      // `listCustomers()` מביא את האמדב; primaryContact היא נקודת-הבחירה היחידה.
+                      const contact = primaryContact(customer)
                       return (
                         <tr
                           key={customer.customer_id}
@@ -798,12 +807,34 @@ export default function CustomersPage() {
                           <td className="py-3 text-slate-600">
                             {CUSTOMER_TYPE_LABELS[customer.customer_type] ?? customer.customer_type}
                           </td>
-                          <td className="py-3 text-slate-600">{customer.contact_name}</td>
-                          <td className="py-3 text-slate-600" dir="ltr">
-                            {customer.phone}
-                          </td>
-                          <td className="py-3 text-slate-600" dir="ltr">
-                            {customer.email}
+                          <td className="py-3 text-slate-600">
+                            <div>{contact?.contact_name}</div>
+                            {/* טלפון מתחת לשם, קטן ואפור — הדפוס של QuotesPage. `dir="ltr"` על
+                                האלמנט שנושא את הערך עצמו, לא על עוטף: תווית-RTL שנפרדת מערך-LTR
+                                היא הכשל שחזר שלוש פעמים (src/CLAUDE.md). */}
+                            {contact?.phone && (
+                              <div dir="ltr" className="text-[11.5px] text-slate-500 text-right">
+                                {contact.phone}
+                              </div>
+                            )}
+                            {/* ✉ מחליף את עמודת-האימייל שירדה: הכתובת עצמה אינה נסרקת בעין,
+                                אבל **הפעולה** כן נדרשת. `mailto:` ולא כתובת-Gmail — שני תקדימים
+                                בבית (`lib/marketing.js`, `QuotesPage`) ואפס שימוש ב-mail.google.com;
+                                ובאותה הערה ב-QuotesPage יושבת הכרעת-ישי שהורידה את `tel:` דווקא
+                                משום שאינו עושה דבר במחשב — כלומר ה-mailto נבחן ונשאר.
+                                `encodeURIComponent` הוא load-bearing: כתובת עם `?`/`&` הייתה
+                                מוזרקת ככותרות-mailto. */}
+                            {contact?.email && (
+                              <a
+                                href={`mailto:${encodeURIComponent(contact.email)}`}
+                                title={`מייל ל${contact.contact_name || 'איש הקשר'}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-block mt-1 text-[11px] text-teal-700 bg-teal-50 border border-teal-200 rounded-md px-1.5 py-0.5"
+                                data-testid={`customer-mailto-${customer.customer_id}`}
+                              >
+                                ✉ מייל
+                              </a>
+                            )}
                           </td>
                           <td className="py-3 text-slate-600">
                             {Number(customer.discount_percent ?? 0)}%

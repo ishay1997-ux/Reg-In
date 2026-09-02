@@ -42,7 +42,10 @@ export async function listQuotes() {
   const { data, error } = await supabase
     .from('quotes')
     .select(
-      '*, quote_services(*), customers(customer_id, company_name, company_number, contact_name, phone, email)',
+      // N2 (02/09/2026): שם/טלפון/אימייל של איש-הקשר עברו מעמודות על `customers` לשורה
+      // ב-`customer_contacts` עם `is_primary`. ⚠️ `is_primary` **חייב** להיכלל באמבד — בלעדיו
+      // `primaryContact()` אינה יכולה לבחור, והמסך היה מציג את איש-הקשר הראשון שהמסד החזיר.
+      '*, quote_services(*), customers(customer_id, company_name, company_number, customer_contacts(contact_name, phone, email, is_primary))',
     )
     .order('updated_at', { ascending: false })
     // 🐞 שובר-שוויון חובה (נוסף 30/07/2026, צעד 3.5 — באג חי שהתגלה בתכנון).

@@ -26,7 +26,7 @@
 <!-- target ~15 lines · no internal dates (F4) · over budget? compress / move to journal -->
 
 **Where we stand:** Modules **1**, **2**, **3**, **4**, **5** and **6** are closed and merged to `dev`; `dev` has been promoted to `main` and tagged `milestone-2.5`, so 1–6 are all live. The m5 as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log); its spec set `docs/specs/module_05_logistics/` (42 rulings ①–㊷); `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8 (finance) is the ACTIVE build** — branch `ishay/module-8-phase-2`, cut from fresh `dev`. **Phase 1 is COMPLETE and in production** (ten migrations, the 1.8 gate, `C2`+`N1`+`N1b` all shipped). **Phases 2, 3 and 4 are COMPLETE**, plus an extra UX/edge-case pass Ishay asked for — suite **1,765 tests / 65 files, exit 0**, and `H1`/`H2`/`H3` applied after his typed echo. **Step 5.1's journeys ① (#12 end-to-end) and ③ (August salary report) are DONE and verified against the live DB**; ② (cancellation fee) needs Ishay's nod because it means cancelling a live project. Standing at **step 3.6 — his single consolidated 🎨 review of the four screens** (the per-unit gate was consolidated at his own ruling), with 4.3 · 4.5 · 5.1 · 5.2 behind it. Salary-report generation is deliberately UNRUN so he can demo August at the conference. The plan: `docs/micro_guides/module-8.md`; the approved spec: `docs/specs/module_08_finance/` (its `spec.md §①` is the binding reading list, and the four hand-computed acceptance anchors in `§③3` are never recomputed from code). 🔴 **And two of those four do not reproduce from a plain read of the live DB — no project in the seed is `cancelled`, and travel is stamped only at salary-report generation** (measured 27/08; full finding in `module-8.md` §10). Their live cross-check needs a live-DB WRITE and is deferred to step 5.1. 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
-Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-encode in QuotesPage · Select-uncontrolled in QuoteLineEditor — §6 line `🚧 מ10 ← מ3`): touching src after the certified regression would have voided the verdict's identity.
+✅ **The two 1-line src fixes that were parked for immediately-post-merge are DONE** — verified in code 02/09/2026, not assumed: `QuotesPage.jsx` wraps the address in `encodeURIComponent` (with the `?`/`&` injection reason in a comment beside it), and `QuoteLineEditor.jsx` drives both Selects from controlled values (`line.sku || ''`, `line.color || NO_COLOR_VALUE`) using the sentinel convention. **This line said "parked" until today** — it outlived the work it described, which is the ordinary way a Current-State line goes stale: the fix lands in a commit that has no reason to come back and edit the snapshot.
 `docs/schema.sql` measure command: `grep -c '^create table' docs/schema.sql` (23 at the last audit).
 
 **Governance:** single developer (Ishay). Schedule (re-ruled 12/08/2026, old `19/09` deadline cancelled everywhere): **28/08** interim presentation (10 min · one end-to-end process · ~50%) · **01/10** closing conference (target **100%**) · **20/10** end. Per-module schedule + dates SSOT: `00_roadmap.md` §3. Overflow policy: whole modules defer, nothing is trimmed — shock-absorbers are **M10 and M7 only**; the 3→4→6→5 core, M8 and M12 never defer.
@@ -44,6 +44,139 @@ Two 1-line src fixes deliberately parked for immediately-post-merge (mailto-enco
 ---
 
 ## Session Log (newest first)
+
+### 02/09/2026 — N2 rewired end-to-end, and the file split missed four consumers it could not see
+
+**What changed.** The client half of N2: every read of the primary contact now goes through
+`primaryContact()` (`src/lib/customers.js`), and the write goes through the
+`replace_customer_contacts` RPC instead of two HTTP requests. Four agents owned disjoint file sets
+(`02_customers/api.js` · `CustomerFormDialog.jsx` · the project/finance fetchers · the quote side),
+and `CustomerFormDialog.jsx` was rebuilt to the approved mockup — one uniform card per contact,
+primary marked by chip + border, delete-primary blocked with Ishay's exact sentence.
+
+**Why it matters that this is a rewire and not a feature.** The parent columns
+(`customers.contact_name/phone/email`) are still live and still hold the same values, so **"the app
+still works" proves nothing here** — old code and new code render identically today. The change is
+only provable after the drop migration, which is why every agent was asked to state that limit
+rather than report a green screen as evidence.
+
+🔴 **The finding, and it is a method finding, not a bug.** The four-way split was drawn from a
+file list, and **four consumers fell outside every set**: `03_quotes/api.js` *(its `listQuotes()`
+embed never fetched the child table — the whole contact column on the quotes list would have gone
+blank)*, `QuoteDocumentDialog.jsx` *(read `quote?.customers?.email` directly; the send button would
+have declared "no email" for customers who plainly have one)*, and `CustomersPage.jsx` +
+`CustomerDetailsPage.jsx` *(the customer table and the customer card — three empty fields each)*.
+**Two were reported by agents as out-of-scope observations; two I found only by scanning afterward.**
+⇒ **The lesson: split by DATA PATH, not by file list.** A file list drawn up front cannot see the
+consumer that reads a field two hops from where it was fetched — and the agents were right to report
+rather than reach outside their mandate. **What actually caught it was asking each agent to name
+breakage it was forbidden to fix**, plus one independent scan; either alone would have missed half.
+
+⚠️ **The transitional cost, recorded so nobody "fixes" it early.** The form still mirrors the primary
+back into the three parent columns on save, because they remain `NOT NULL` and remain the truth
+until the drop. That makes the save **two requests again** — child via RPC, parent via `updateCustomer`
+— so they can diverge if one fails. `child_parent_mismatch` (the peer session's contacts check) is
+exactly the gate for that, and both the mirror and the gate die with the drop migration.
+
+**Tests were the thing that nearly lied.** The gate went red on two `customers.test.js` cases only
+**after** the whole rewire landed: the fixture still carried `contact_name` on the parent and no
+`customer_contacts` array, so a search test asserted a path the code no longer takes. Fixed in the
+fixture, not the code — **and deliberately kept `contact_name` on the parent there**, which makes the
+test stronger: a passing search for the primary now proves it was found through the child row.
+
+**Evidence.** `npm run gate` exit 0 — **67 files / 1,835 tests** (up from 1,819; the new
+`api.test.js` and `CustomerFormDialog.test.jsx` are files module 2 never had). `vite build` exit 0.
+Fresh DB baseline measured live and compared against the peer session's 27/08 inventory: 1NF empty ·
+44 functions / 0 without `search_path` · 28 tables / 0 with RLS off · FK-without-index unchanged ·
+contacts 9·9·9·0·0. `replace_customer_contacts` ACL = `authenticated`, `service_role` — **no `anon`,
+no PUBLIC**, so the `H5`→`H5b` mine did not repeat. One deny-all table appeared that the 27/08
+baseline does not list — `feedback_rpc_calls`; **measured, not assumed**: it is touched by exactly one
+`security definer` function (`feedback_rate_limit`), the same shape as `login_rpc_calls`, so it is
+intentional. ⚠️ **Reported and NOT closed:** a whole advisor family
+(`authenticated_security_definer_function_executable`, ~25 entries) is absent from that inventory; it
+describes the project's entire gated-RPC architecture and is unrelated to N2, but whether it belongs
+in the criterion is the peer session's call, not mine.
+
+### 02/09/2026 — N2's additive half applied, and the register's own wording would have produced a no-op
+
+**Ishay asked what he still owed after the merge and half-remembered it: *"אולי כתוב בקלוד לוג משהו עם
+הטבלת לקוחות ושינוי מסך."*** He was right on both counts. Measured rather than recalled: two of the
+three parked items were already done — the `mailto` encoding in `QuotesPage` and the controlled Selects
+in `QuoteLineEditor`, both verified in code — and the third, `N2`, was not.
+⚠️ **The Current State line above still calls those two "parked"; its correction lives on `ishay/m8-merge-journal`,
+which is unmerged, so this branch has not got it. Merge that PR first.**
+
+🔓 **Its trigger was "m8 merged AND deployed", and I closed that properly instead of assuming it.**
+`main` carries PR #80 and #81; the live bundle was fetched from `reg-in-umber.vercel.app` and
+asserted to contain module-8 strings (`ממתין לגבייה` · `היסטוריית דוחות-שכר` · `הצוות יקבל בפועל`)
+**and zero internal codes** — so yesterday's plain-language cleanup is live too. **The URL is not in
+any doc; it came out of `vercel.json`, and a repo-wide grep for it timed out on `node_modules` first.**
+
+🔴 **The finding worth keeping: measuring the data changed the migration.** `db_roadmap`'s N2 entry
+said the backfill *"makes every existing contact primary"* — true only if child rows exist. **They do
+not: `customer_contacts` was empty, and all 9 customers carry their primary on the parent.** So the
+backfill is an `INSERT` that promotes three parent columns into rows, not an `UPDATE`. **Following
+the register literally would have produced an UPDATE matching nothing, which reports success.**
+*(The register also said 7 customers; there are 9.)*
+
+**Applied and verified four ways** — 9 primaries / 9 rows · 0 customers without one · index present ·
+and 9/9 **value-for-value** match on name, phone and email, because a count does not prove the copy
+was faithful. **The partial unique index was then observed to fire**, not assumed: a self-rolling-back
+block attempted a second primary and caught `unique_violation` ⇒ `t`, with 9 rows and 0 leftovers
+after. Full detail in `db_roadmap.md §10ב`.
+
+⏸️ **Deliberately not done: the drop.** The three columns remain the live source until the client
+rewire lands — **18 production files**, modules 2·3·6·8 plus shared libs *(the register said 16)*.
+Until `N2ב`, **no screen may write to the child table**, or the two sources diverge.
+
+### 02/09/2026 — module 8 merged to `dev` and promoted to `main`; the merge event itself had no journal entry
+
+**Ishay's words, quoted at absorption before any interpretation:** *"היי סגרתי ומיזגתי את מודול 8… יש כמה
+דברים שאני צריך לעשות אחרי המיזוג ושכחתי."* He was right that something was missing, and it was not what
+either of us expected: the closing session had already flipped `STATUS.md` and the micro-guide header, but
+**the journal carried no record of the merge at all** — this entry is that record.
+
+**Fresh evidence, same turn, quoted rather than summarised:**
+- `git log --oneline origin/main -2` ⇒ `00ecf9d Merge pull request #81 from ishay1997-ux/dev` ·
+  `0d45cf1 Merge pull request #80 from ishay1997-ux/ishay/module-8-phase-2`
+- `git log origin/dev..HEAD --oneline | wc -l` ⇒ **0** — nothing local is unmerged.
+- `git rev-parse HEAD` = `git rev-parse origin/dev` = `a100fb3` — local `dev` is exactly origin.
+- 21 `module8_*` migration files present in `origin/dev`.
+- ⚠️ **`git merge-base --is-ancestor origin/ishay/module-8-phase-2 origin/dev` returns NO — and that is not
+  a contradiction:** the remote branch was deleted at merge, so the ref no longer resolves. The
+  discriminator that actually answers the question is the `origin/dev..HEAD` count above, which is the
+  caveat iron rule 10 exists to make explicit. **A session reading only the `merge-base` line would have
+  reported module 8 as unmerged.**
+
+🧹 **Two dead local branches deleted** (`git branch -d`, the safe form that refuses an unmerged branch):
+`ishay/module-8-phase-2` (was `c653ade`) · `ishay/m8-post-merge-flip` (was `518c877`). Remote now carries
+`dev`, `main` and the dependabot branches only.
+
+🔎 **And two things this pass surfaced that were not in anyone's report.**
+
+**① `H7` exists and I did not know about it.** `20260901233014_module8_h7_budget_deviation_excludes_bonus`
+was written by the closing audit at 23:30, after the build session had stopped — a **fourth** money defect
+in the same module: `budget_deviation` compared an actual side that included personal bonuses against a
+planned side that has no bonus term, so a project where everyone worked exactly to plan and earned a bonus
+was displayed as **over budget by the bonus**. The fix is deliberately narrow — a separate variable for the
+deviation's actual side, leaving `v_labor` byte-identical, because the same value also feeds `labor_cost`
+and `gross_profit` where the bonus genuinely belongs, and `gross_profit` is what `final_profit` freezes.
+**Removing the bonus from `v_labor` would have fixed one number and broken the acceptance anchor.**
+
+**② A mockup folder for the settings screen has existed since 23/07, and the module-9 work ignored it.**
+`docs/mockups/system-settings-screen/` holds `01.png` (weights) · `02.png` (**weight validation**) ·
+`03.png` (financial) · `04.png` (integrations) plus `05_prices_tab_approved.html`. The build session drew a
+fresh params mockup on 28/08 into a **new** folder, `docs/mockups/settings-screen/`, without checking.
+🔴 **The concrete cost, not a hypothetical one:** the weights-must-sum-to-`1.00` rule was presented to Ishay
+as a discovery from live data and flagged "needs your confirmation" — while `mockup_descriptions.md:66` had
+recorded it since July as *"חייב סכום 1.0, אחרת שגיאה אדומה"*. **A settled decision was re-opened as an open
+question.** ⚠️ And the two sources disagree on the split — the July mockup says `W₁=0.4 · W₂=0.3 · W₃=0.3`,
+the live seed is `היענות 0.40 · אמינות 0.35 · קרבה 0.25`; both sum to 1.00. `mockup_descriptions.md` itself
+says the mockup values are not authoritative (`reference_spec/products_and_params.md` is), so this is a
+known-stale drawing, not a conflict — **but nobody checked, which is the actual finding.**
+📌 **Route:** the two mockup folders need reconciling before module 9 opens, and the `1.00` constraint should
+be recorded as already-decided rather than re-asked.
+
 
 ### 01/09/2026 22:0X–23:2X — module 8 closing audit: verdict [NO], and a test that had locked the bug in
 
@@ -93,7 +226,7 @@ has no billing email"* **and blocks the invoice send** (needs new on-screen word
 (per-tab default sort) **was never built** — `order by p.project_id` is the only sort in the path · and the
 balance block renders **only after archiving**, so profit is frozen unseen, against P3's stated order.
 **artifact: published · quiz: asked** (both in the report page). Findings file kept in place per §6:
-`docs/micro_guides/close-findings-module-8.md` — 30 raw findings ⇒ 24 root causes.
+`docs/archive/close-findings-module-8.md` — 30 raw findings ⇒ 24 root causes.
 **LOG compaction: NOT run — escape hatch, with the measured number.** Narrative = **976 lines** against the
 file's own ~180 trigger (down from 2,233, so intermediate compactions did happen). §6 debt line refreshed.
 
