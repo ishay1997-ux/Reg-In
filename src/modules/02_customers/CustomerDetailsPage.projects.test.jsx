@@ -65,9 +65,17 @@ function customerFixture(overrides) {
     company_number: '512345678',
     customer_type: 'private_company',
     status: 'active',
-    contact_name: 'דנה כהן',
-    phone: '050-1234567',
-    email: 'dana@meditech.co.il',
+    // N2: הצורה שהשאילתה באמת מחזירה — איש-הקשר הראשי הוא שורת-בת עם `is_primary`,
+    // לא עמודות על הלקוח. פיקסטורה שטוחה כאן הייתה עוברת בירוק גם על מימוש שבור.
+    customer_contacts: [
+      {
+        contact_id: 1,
+        contact_name: 'דנה כהן',
+        phone: '050-1234567',
+        email: 'dana@meditech.co.il',
+        is_primary: true,
+      },
+    ],
     discount_percent: 0,
     marketing_consent: false,
     ...overrides,

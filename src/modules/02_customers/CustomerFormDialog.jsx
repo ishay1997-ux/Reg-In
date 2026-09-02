@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/select'
 import {
   CUSTOMER_TYPE_LABELS,
+  primaryContact,
   validateCustomerField,
   validateCustomerForm,
   validateExtraContacts,
@@ -378,8 +379,14 @@ export default function CustomerFormDialog({
               {duplicate.isActive ? (
                 <>
                   <p className="text-sm text-amber-800 font-medium">
+                    {/* 🔴 N2 (02/09/2026): הראשי נקרא דרך `primaryContact` ולא מ-
+                        `duplicate.customer.contact_name`. ‏`listCustomers` עושה `select('*', embed)`,
+                        וה-`*` עדיין מחזיר את עמודת-האב **הקפואה** ⇒ הקריאה הישנה הציגה מחרוזת
+                        ריקה לכל לקוח שנוצר אחרי `N2ג`, ושם **מיושן** ללקוח שאיש-הקשר שלו נערך
+                        מאז. אחרי `N2ד` היא תהיה `undefined`. **שני המצבים שקטים — אין שגיאה.** */}
                     חברה זו כבר רשומה במערכת: {duplicate.customer.company_name} (איש קשר:{' '}
-                    {duplicate.customer.contact_name}, ח"פ {duplicate.customer.company_number}).
+                    {primaryContact(duplicate.customer)?.contact_name ?? '—'}, ח"פ{' '}
+                    {duplicate.customer.company_number}).
                   </p>
                   <Button
                     type="button"

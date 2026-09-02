@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react'
 import { Upload, Send, Copy, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ToastProvider'
-import { CUSTOMER_TYPE_LABELS } from '@/lib/customers'
+import { CUSTOMER_TYPE_LABELS, primaryContact } from '@/lib/customers'
 import { cn } from '@/lib/utils'
 import {
   buildMarketingMailtoHref,
@@ -376,8 +376,11 @@ function RecipientsSection({
             />
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium text-slate-700 truncate">{r.company_name}</div>
+              {/* N2: איש-הקשר הראשי הוא שורת-בת, לא עמודות על הלקוח. אותה נקודת-בחירה
+                  יחידה כמו בכל שאר המסכים — `primaryContact` (src/lib/customers.js). */}
               <div className="text-xs text-slate-500 truncate">
-                {r.contact_name} · <span dir="ltr">{r.email}</span>
+                {primaryContact(r)?.contact_name} ·{' '}
+                <span dir="ltr">{primaryContact(r)?.email}</span>
               </div>
             </div>
             <div className="text-xs text-slate-500 shrink-0 text-left">
