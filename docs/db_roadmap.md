@@ -438,7 +438,7 @@ Label + citation ONLY — decision content lives in §7. 🔴 = cheap now, expen
 | ✅ ~~**C2**~~ **DONE 27/08/2026 18:0X** | ~~`alter table hostesses drop column bank_name, bank_branch, bank_account`~~ — **applied; ה19 is CLOSED.** Legacy columns **0** · child table **26/26** · **0** empty bank rows · `smoke` exit 0 and `hostesses.spec.js` **20/20** after the drop · `schema.sql` re-synced (16 documented / 16 live). 🔑 **The `updated_at` guard was not theoretical: all 26 child rows were NEWER than their parent, so an unguarded `do update` would have touched all 26 and pulled them back to the stale source. With the guard the copy touched 0.** *(Row kept struck rather than deleted — the correction it carries is the record. The original contract:)* | ~~m8's branch is merged to `dev`, promoted to `main`, **and the deploy is confirmed live**~~ — **all three met: `dev` 518587d · `main` 9e07233 · Vercel production `state=success`, and the live bundle was fetched and asserted to contain `hostess_bank_details`** | 1️⃣ **Re-copy first** — `insert … on conflict (hostess_id) do update` from `hostesses` into `hostess_bank_details`: production keeps writing to the PARENT during the window, so a hostess created/edited through the live site would otherwise lose her bank details. 🔴 **BUT THE `do update` MUST BE GUARDED BY `updated_at`** *(found 27/08/2026 at the 1.8 gate — the contract as first written was wrong)*: **after** the deploy m8's `api.js` writes ONLY the child, so an unguarded overwrite would push **stale parent values over fresh child rows** — the same data loss pointed backwards, landing as wrong bank numbers in a CPA salary report. Overwrite only where the parent row is genuinely newer than the child row (both tables carry a `moddatetime`-maintained `updated_at`). **Full contract + the SQL shape: **THIS ROW.** 🔴 *גובר: המצביע ל-`module-8.md` §8.4 אינו מוביל עוד ל-SQL · 01/09/2026 · אודיט-סגירת מ8* — הבלוק שם נגרס אחרי ש-C2 בוצעה, לפי הוראת-הבלוק עצמו (שלב 3).** 2️⃣ then drop. 3️⃣ then remove the three "תימחק במיגרציה C2" column comments and this row | `micro_guides/module-8.md` §8.4 + §10 · here |
 
 | ✅ ~~**N1b**~~ **DONE 27/08/2026 19:3X — the whole N1 package is closed.** 🔑 **`data_type='ARRAY'` across `public` now returns ZERO columns** — the one 1NF violation is gone. Regression after the drop: `smoke` exit 0, m4 suites **32/32**. *(Row struck rather than deleted: the C2-vs-N1b guard lesson below is the record.)* | ~~create + copy~~ → **what remains: `alter table hostesses drop column languages`** | **the m8+N1 branch is merged and its deploy is confirmed live** — `origin/main` still writes the column (`HostessFormDialog.jsx:222`) and reads it (`HostessViewCard.jsx:328`) | Same three beats as C2: **add + copy → deploy → drop**, with a **re-copy immediately before the drop** — 🔴 **including C2's `updated_at` guard on the conflict action**, for the same reason: once the new code writes only the child, an unguarded overwrite runs backwards. ⚠️ `languages` is **nullable** (unlike the bank columns), so the additive half needs no constraint relaxation — create, copy, drop later | `PROJECT_MASTER_sec7.md §7.87` · here |
-| **N2** | `customer_contacts` consolidation — `is_primary` on the child, then drop `contact_name`/`phone`/`email` from `customers` | m8 merged **and deployed** | Same pattern, **separate drop migration** from N1's. 🔴 **Its blast radius is ~4.6× N1's — see the measurement below; "one package" is true of the pattern, not of the size** | here |
+| **N2** | `customer_contacts` consolidation — `is_primary` on the child, then drop `contact_name`/`phone`/`email` from `customers` | ✅ **trigger satisfied 02/09/2026** — m8 merged (PR #80→`dev`, #81→`main`) **and deployed**, asserted by fetching the live bundle from `reg-in-umber.vercel.app` and finding m8 strings in it (`ממתין לגבייה` · `היסטוריית דוחות-שכר` · `הצוות יקבל בפועל`) **and zero internal codes** (`(ה24)`/`(ה25)`/`(P1 ·` all 0). ⇒ **`N2א` APPLIED 02/09/2026** — see §10 | Same pattern, **separate drop migration** from N1's. 🔴 **Its blast radius is ~4.6× N1's — see the measurement below; "one package" is true of the pattern, not of the size** | here |
 
 ✅ **CONFIRMED BY ISHAY DIRECTLY, `27/08/2026 17:1X` — the flag below is resolved and the rows stand.**
 He restated the ruling to this session in his own words: **"מאושר. שני הפריטים נכנסים כחבילה אחת
@@ -496,6 +496,33 @@ protection is false until it does.
 על `hostesses`, ו-26 שורות ב-`hostess_bank_details` מול 26 דיילות. ⇒ **שורת §2.2 של
 `micro_guides/module-8.md` נכונה**, ו-מ8 כן סגר את ה19. *(זה היה אתר שלישי של אותה טענה
 שהתיישנה — האחרים: `module-8.md` §8.4 ו-`docs/schema.sql` §29, שניהם תוקנו באותו יום.)*
+
+## 10ב. Applied migrations — running log (newest first)
+
+- ✅ **`20260902125001_n2a_customer_contacts_is_primary_additive` — APPLIED 02/09/2026 12:5X**
+  (typed echo given). **The additive half of N2. Deletes nothing.**
+  **Measured BEFORE writing, and it changed the migration:** `customers` = **9** *(the register said
+  7 — stale)*, all 9 carrying a primary contact on the parent, and `customer_contacts` = **0 rows**.
+  🔴 **So the backfill is an `INSERT`, not the `UPDATE` the register implied.** Its wording — *"the
+  backfill makes every existing contact primary"* — is only true if child rows already exist, and
+  none did. **Had it been followed literally, the migration would have run an UPDATE that matched
+  nothing and "succeeded" without doing anything.**
+  **What ran:** `is_primary boolean not null default false` *(`false`, so a row added from the screen
+  is an additional contact unless stated — `true` would have manufactured a second primary on every
+  insert and then been rejected by the index below, i.e. an error instead of a behaviour)* ·
+  promotion of the 9 parent-column contacts into child rows marked primary · a **partial unique
+  index** `customer_contacts_one_primary_per_customer`.
+  **Verified after apply, four ways:** 9 primaries / 9 rows · **0** customers without a primary ·
+  index present · and **9/9 value-for-value match** on name, email and phone against the parent — a
+  count alone would not have proven the copy was faithful.
+  🔑 **And the guard was observed to fire, not assumed:** a self-rolling-back `DO` block attempted a
+  second primary for an existing customer and caught `unique_violation` ⇒ `t`. Table re-counted
+  afterwards: **9 rows, 0 test leftovers.**
+  ⚠️ **What this does NOT do, deliberately:** the three columns stay on `customers` as the live
+  source of truth until the client (18 production files, modules 2·3·6·8 plus shared libs) reads
+  from the table. **The drop is a separate migration (`N2ב`), after the rewire and after a deploy** —
+  the `N1`→`N1b` / `C2` pattern. **Until then nothing may write to the child table from a screen**,
+  or the two sources diverge.
 
 ## 10. Maintenance protocol (how this file stays alive)
 
