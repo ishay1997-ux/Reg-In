@@ -158,4 +158,36 @@ describe('SmartMatchPane', () => {
     expect(screen.getByTestId(`settings-value-${N.dampingConstant}`)).toBeInTheDocument()
     expect(screen.getByTestId(`settings-value-${N.unansweredStreak}`)).toBeInTheDocument()
   })
+  // 🔴 **שורת "בפועל" — נועלת את שני הכיוונים** (הערת-ישי 03/09/2026 מצילום-מסך).
+  // הכיוון השני הוא העיקר: כשאין פער, שורה נוספת היא רעש — ובדיקה שרואה רק את ההופעה
+  // הייתה מאשרת גם מימוש שמדפיס אותה תמיד.
+  it('מרכיב כבוי ⇒ מוצגות המשקולות שפועלות בפועל, מנורמלות', async () => {
+    await renderPane({
+      values: { ...DEFAULT_VALUES, [N.reliabilityEnabled]: 'false' },
+    })
+    const line = screen.getByTestId('settings-smartmatch-effective-weights')
+    // 0.40/(0.40+0.25) = 61.5% ⇒ 62% · 0.25/0.65 = 38.5% ⇒ 38%
+    expect(line).toHaveTextContent('62%')
+    expect(line).toHaveTextContent('38%')
+  })
+
+  it('מרכיב דלוק ⇒ אין שורת "בפועל" כלל', async () => {
+    await renderPane({
+      values: { ...DEFAULT_VALUES, [N.reliabilityEnabled]: 'true' },
+    })
+    expect(screen.queryByTestId('settings-smartmatch-effective-weights')).not.toBeInTheDocument()
+  })
+
+  it('ערך-ביניים לא-חוקי (סכום 0) אינו מפיל את הפאנל', async () => {
+    await renderPane({
+      values: {
+        ...DEFAULT_VALUES,
+        [N.responsivenessWeight]: '0',
+        [N.reliabilityWeight]: '0',
+        [N.proximityWeight]: '0',
+      },
+    })
+    expect(screen.queryByTestId('settings-smartmatch-effective-weights')).not.toBeInTheDocument()
+    expect(screen.getByTestId('settings-smartmatch-table')).toBeInTheDocument()
+  })
 })

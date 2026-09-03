@@ -24,11 +24,12 @@
 // ב-`<Ltr>`, בדיוק כמו "שינית N מתוך M" ב-`SaveRow` (src/CLAUDE.md, מופע-הרצף התשיעי:
 // שני מספרים *צמודים* נשברים; כאן הם אינם צמודים, כל אחד לחוד הוא הפתרון).
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Switch } from '@/components/ui/switch'
 import Ltr from '@/components/Ltr'
 import { cn } from '@/lib/utils'
 import { getParamEntry, parseForDisplay, weightsSumOk } from '@/lib/paramsRegistry'
+import { activeWeights } from '@/lib/smartMatch'
 import { SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
 import { countAttendanceRows } from '@/modules/09_settings/api'
 import ParamRow, {
@@ -99,6 +100,42 @@ export default function SmartMatchPane({
     return total + (Number.isFinite(n) ? n : 0)
   }, 0)
   const sumOk = weightsSumOk(WEIGHT_NAMES.map((name) => values?.[name]))
+
+  // 🔴 **המשקל שמוצג אינו המשקל שפועל — וזה מה שהשורה הזו אומרת** (הערת-ישי 03/09/2026,
+  // מצילום-מסך). מרכיב כבוי יוצא מהסכום ו-`activeWeights` מנרמלת את הנותרים ל-1.00, כך
+  // שעם אמינות כבויה ‏0.40/0.30/0.30 פועלים בתור **57%/43%**. המסך הראה שלושה מספרים
+  // סטטיים שאף אחד מהם אינו המשקל בפועל.
+  // 🔑 **ולמה זה נגזר מהפער ולא מהמתג** *(הכרעה משותפת של שני הסשנים)*: קישור למתג-האמינות
+  // מקבע הנחה שההערה ב-`smartMatch.js:122-127` מזהירה מפניה במפורש — היא אומרת ש-`0.62/0.38`
+  // הוא "המחשה, לא קבוע", ושמימוש שיקודד אותו **"נשבר ביום שמ6 ידליק את מרכיב-האמינות"**.
+  // ⇒ השורה נגזרת מהשוואת `activeWeights` למשקולות הגולמיות, ולכן היא נכונה מאליה גם ביום
+  // שמרכיב שני ייעשה ניתן-לכיבוי. **ומוצגת רק כשיש פער** — כשאין, המספרים שבטבלה *הם*
+  // הפועלים, ושורה נוספת היא רעש.
+  // 🛡️ `activeWeights` זורקת על סכום לא-חיובי (מצב-עריכה לגיטימי, למשל אפסים באמצע הקלדה)
+  // ולכן היא עטופה — פאנל-הגדרות לעולם לא יקרוס בגלל ערך-ביניים.
+  const effectiveWeights = useMemo(() => {
+    const raw = {
+      responsivenessWeight: Number(values?.[SMART_MATCH_PARAM_NAMES.responsivenessWeight]),
+      reliabilityWeight: Number(values?.[SMART_MATCH_PARAM_NAMES.reliabilityWeight]),
+      proximityWeight: Number(values?.[SMART_MATCH_PARAM_NAMES.proximityWeight]),
+      reliabilityEnabled: String(values?.[RELIABILITY_NAME]) === 'true',
+    }
+    if (!Object.values(raw).slice(0, 3).every(Number.isFinite)) return null
+    let active
+    try {
+      active = activeWeights(raw)
+    } catch {
+      return null
+    }
+    // פער אמיתי בלבד — השוואה בסובלנות של אחוז שלם, כי זה מה שמוצג.
+    const differs = [
+      [active.responsiveness, raw.responsivenessWeight],
+      [active.reliability, raw.reliabilityWeight],
+      [active.proximity, raw.proximityWeight],
+    ].some(([a, b]) => Math.round(a * 100) !== Math.round(b * 100))
+    if (!differs) return null
+    return active
+  }, [values])
 
   // מונה-הנוכחות החי (A-10) — נטען פעם אחת בעלייה; אין רף מינימלי מקודד (§6 צעד 3.3:
   // "no hard-coded minimum, none was ruled") — רק המספרים כפי שהם.
@@ -178,6 +215,18 @@ export default function SmartMatchPane({
           {sumOk ? 'תקין' : <Ltr>{weightSum.toFixed(2)}</Ltr>}
         </span>
       </div>
+
+      {effectiveWeights && (
+        <p
+          className="rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-600"
+          data-testid="settings-smartmatch-effective-weights"
+        >
+          <span className="font-semibold text-slate-700">בפועל כרגע:</span> היענות{' '}
+          <Ltr>{Math.round(effectiveWeights.responsiveness * 100)}%</Ltr> · קרבה{' '}
+          <Ltr>{Math.round(effectiveWeights.proximity * 100)}%</Ltr> — מרכיב שכבוי יוצא מהחישוב,
+          והנותרים מתחלקים ביניהם.
+        </p>
+      )}
 
       <table className={PARAMS_TABLE_CLASS} data-testid="settings-smartmatch-table">
         <ParamsTableHead />
