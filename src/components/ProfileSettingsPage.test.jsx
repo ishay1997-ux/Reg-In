@@ -18,6 +18,20 @@ const authState = {
   reload: vi.fn(),
 }
 
+// 🔴 **המוק שחסר כאן והפיל את ה-CI (03/09/2026, ‏PR #97).** ‏`ProfileSettingsPage` מייבא את
+// `@/supabaseClient` **בזמן-הייבוא**, והמודול הזה קורא ל-`createClient` מיד — כלומר בלי המוק
+// הקובץ קורס ב-`Error: supabaseUrl is required` עוד לפני שבדיקה אחת רצה.
+// ⚠️ **ולמה זה עבר מקומית ונפל רק ב-CI, וזה המוקש האמיתי:** מקומית `.env.local` מספק
+// `VITE_SUPABASE_URL`, ולרץ של GitHub אין קובץ כזה. ⇒ **`npm run gate` אינו מסוגל לראות את
+// מחלקת-הכשל הזו** — שני סשנים הריצו אותו וקיבלו 83 קבצים / 2,165 בדיקות ירוקות על עץ שבו
+// הסוויטה הזו שבורה. **השחזור הנאמן:** `VITE_SUPABASE_URL= VITE_SUPABASE_ANON_KEY= npx vitest run`.
+// 🔒 **והמוק אינו מחליש שום בדיקה:** ‏`supabase` נוגע בקומפוננטה בשתי נקודות בלבד (‏`:189` ו-`:200`),
+// שתיהן במסלול שינוי-הסיסמה — ואף אחת מחמש הבדיקות כאן אינה מגיעה לשם (הקובץ מצהיר בכותרת
+// שלשונית-האבטחה מחוץ לתחום). אותו נוסח בדיוק כמו ב-15 קובצי-הבדיקות האחרים בריפו.
+vi.mock('@/supabaseClient', () => ({
+  supabase: { rpc: vi.fn(), from: vi.fn(), auth: { getSession: vi.fn() } },
+}))
+
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => authState }))
 
 vi.mock('@/modules/09_settings/api', () => ({
