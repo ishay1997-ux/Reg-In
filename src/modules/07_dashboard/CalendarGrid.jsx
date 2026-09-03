@@ -222,20 +222,26 @@ function DayChip({ project }) {
 function Legend({ warningDays }) {
   // המספר במקרא דינמי מ-params, לא מועתק-קשיח מהמוקאפ (ששם "14" קבוע) — אחרת שינוי-פרמטר
   // עתידי (event_warning_days) היה משאיר מקרא שקרי. סף לא-נטען ⇒ נוסח כללי בלי מספר.
-  const soonLabel = warningDays != null ? `חוסר, בתוך ${warningDays} יום` : 'חוסר, קרוב'
+  // ניסוח (הערת-ישי בשער 3.4, 03/09/2026): תוויות-מקרא הן צירופי-שם קצרים, לא משפטים —
+  // מעבר-הניסוח של src/CLAUDE.md. ההסבר הקצר לאייקונים נשאר, כפריט אחד ולא כמשפט על כל אייקון.
+  const soonLabel = warningDays != null ? `חוסר בתוך ${warningDays} יום` : 'חוסר קרוב'
+  const laterLabel = warningDays != null ? `חוסר מעבר ל-${warningDays} יום` : 'חוסר רחוק'
   return (
     <div className="mt-3 flex flex-wrap items-center gap-4 text-[11px] text-slate-500">
       <LegendSwatch className={SWATCH_CLASS.red} label={soonLabel} />
-      <LegendSwatch className={SWATCH_CLASS.yellow} label="חוסר, רחוק יותר" />
-      <LegendSwatch className={SWATCH_CLASS.green} label="אין חוסר" />
-      {/* מבוטל: צבע-לוח רביעי (§7.94, אחרי אישור-המוקאפ) — לא מופיע במוקאפ הסטטי, נוסף כאן
-          כדי שהמקרא יישאר נאמן לצ'יפי-הסינון שמעליו. */}
-      <LegendSwatch className={SWATCH_CLASS.cancelled} label="מבוטל — נשאר בלוח" />
+      <LegendSwatch className={SWATCH_CLASS.yellow} label={laterLabel} />
+      <LegendSwatch className={SWATCH_CLASS.green} label="ללא חוסר" />
+      {/* מבוטל: צבע-לוח רביעי (הכרעת-ישי 03/09, אחרי אישור-המוקאפ) — לא מופיע במוקאפ הסטטי,
+          נוסף כאן כדי שהמקרא יישאר נאמן לצ'יפי-הסינון שמעליו. */}
+      <LegendSwatch className={SWATCH_CLASS.cancelled} label="מבוטל" />
       <span className="flex items-center gap-1">
         <StaffingIcon filled /> איוש
       </span>
       <span className="flex items-center gap-1">
-        <LogisticsIcon filled /> לוגיסטיקה — מלא (צבוע) או חסר (מתאר בלבד)
+        <LogisticsIcon filled /> לוגיסטיקה
+      </span>
+      <span className="flex items-center gap-1">
+        <StaffingIcon filled /> הושלם · <StaffingIcon filled={false} /> חסר
       </span>
     </div>
   )
