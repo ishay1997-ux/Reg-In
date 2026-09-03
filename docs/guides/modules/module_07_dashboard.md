@@ -61,7 +61,10 @@ docs/specs/module_07_dashboard/dashboard-mockup-approved.html.
 ```
 אנחנו בפרויקט REG-IN. קרא את CLAUDE.md, STATUS.md ואת docs/micro_guides/module-7.md.
 קרא בעצמך את התבנית .claude/skills/module-close/template.md ובצע אותה כלשונה עם:
-MODULE_NUMBER=7 · MODULE_NAME=מסך הבית / Dashboard · BRANCH_NAME=ishay/m7-blueprint-and-seed
+MODULE_NUMBER=7 · MODULE_NAME=מסך הבית / Dashboard · BRANCH_NAME=ishay/module-7-dashboard
+⚠️ הענף חי ב-worktree: C:\Users\ishay\Reg-In\.claude\worktrees\m7 (נחתך 03/09/2026 מ-`ishay/m7-blueprint-and-seed`
+בהכרעת-ישי, כי סשן-הזריעה כתב במקביל לעץ הראשי). עבוד שם, לא בעץ הראשי. §7.96 נושא ↳ שממתין להדבקה
+(הנוסח ב-`docs/micro_guides/module-7.md` §9) — לבדוק קודם אם פריטים 93–97 כבר קומטו בענף-הזריעה.
 בסוף: בצע את סעיף ההתמדה (עדכון מדריך המיקרו + היומנים, תאריך+שעה) והדפס לי את הוראות ה-PR
 בעברית + פרומפט מסירה 🧩 לתוסף הכרום (כלל ברזל 17) לפתיחת ה-PR בפועל.
 ```
