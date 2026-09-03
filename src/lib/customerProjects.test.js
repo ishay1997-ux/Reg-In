@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  customerProfitTile,
   DORMANT_THRESHOLD_PARAM_NAME,
   splitCustomerProjectsByTimeline,
   eventCountSummary,
@@ -299,5 +300,42 @@ describe('matchesProjectSearch — חיפוש-הטבלה (⑦), בלי אורך-
     expect(matchesProjectSearch(p(), '')).toBe(true)
     expect(matchesProjectSearch(p(), '   ')).toBe(true)
     expect(matchesProjectSearch(p(), undefined)).toBe(true)
+  })
+})
+
+describe('customerProfitTile — "רווח גולמי מהלקוח" במקום "סה"כ הצעות מאושרות" (ישי 04/09/2026)', () => {
+  const rows = [
+    { project_status: 'finished', project_finance: { final_profit: '1200.50' } },
+    { project_status: 'finished', project_finance: { final_profit: 800 } },
+    { project_status: 'cancelled', project_finance: { final_profit: 999 } },
+    { project_status: 'finished', project_finance: null },
+    { project_status: 'in_progress', project_finance: null },
+  ]
+  const ok = { canViewFinance: true, loading: false, error: null }
+
+  it('סוכם final_profit קפוא של פרויקטים שהסתיימו בלבד, עם מונה בשורת-המשנה', () => {
+    expect(customerProfitTile(rows, ok)).toEqual({
+      value: 2000.5,
+      emptyText: undefined,
+      sub: 'מ-2 פרויקטים שהסתיימו',
+    })
+    expect(customerProfitTile([rows[0]], ok).sub).toBe('מפרויקט אחד שהסתיים')
+  })
+
+  it('🔴 בלי הרשאת כספים ⇒ null עם "דורש הרשאת כספים" — לעולם לא 0', () => {
+    expect(customerProfitTile(rows, { ...ok, canViewFinance: false })).toEqual({
+      value: null,
+      emptyText: 'דורש הרשאת כספים',
+      sub: undefined,
+    })
+  })
+
+  it('טוען / כשל / אין פרויקט שהסתיים ⇒ null, לא 0', () => {
+    expect(customerProfitTile(rows, { ...ok, loading: true }).value).toBeNull()
+    expect(customerProfitTile(rows, { ...ok, error: new Error('x') }).value).toBeNull()
+    expect(customerProfitTile([rows[4]], ok)).toMatchObject({
+      value: null,
+      sub: 'אין עדיין פרויקט שהסתיים',
+    })
   })
 })

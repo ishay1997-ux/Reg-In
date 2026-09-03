@@ -90,6 +90,9 @@ export async function getCustomerProjects(customerId) {
       'project_id, event_name, final_event_date, project_status, customer_id, quote_id, ' +
         'cancelled_at, cancel_type, cancelled_by, cancel_reason, ' +
         'feedback_status, feedback_score, ' +
+        // 04/09/2026 — הרווח הקפוא לאריח "רווח גולמי מהלקוח". צירוף LEFT: בלי הרשאת 'כספים'
+        // ה-RLS מחזיר null (לא שגיאה), והמסך מציג "דורש הרשאת כספים" ולא 0.
+        'project_finance(final_profit), ' +
         'quotes(applied_customer_discount, manual_discount, vat_rate_snapshot, quote_services(qty, closing_unit_price))',
     )
     .eq('customer_id', customerId)

@@ -38,6 +38,8 @@ import { formatShekelWhole } from '@/lib/pricing'
 import { DORMANT_THRESHOLD_PARAM_NAME, isCustomerDormant } from '@/lib/customerProjects'
 import Money from '@/components/Money'
 import RatingStars from '@/components/RatingStars'
+import { Pager } from '@/components/ListWindow'
+import { paginate, parsePageParam } from '@/lib/listWindow'
 import {
   getCustomerScreenParams,
   listCustomers,
@@ -300,11 +302,14 @@ export default function CustomersPage() {
 
   // כתיבה ממוזגת לכתובת. `replace` ולא push — אחרת כל הקלדה בתיבת-החיפוש הייתה רשומת-היסטוריה
   // נפרדת, ו"חזור" היה מוחק תו-תו במקום לחזור לרשימה.
+  // 🆕 דפדוף (מעבר-האחידות, `src/lib/listWindow.js`): כל שינוי שאינו את `page` עצמו מאפס אותו
+  // ל-1 — אחרת חיפוש/סינון/מיון על עמוד 3 היה משאיר את המשתמשת על עמוד שכבר לא קיים בתוצאה החדשה.
   function writeParams(patch) {
+    const finalPatch = 'page' in patch ? patch : { ...patch, page: undefined }
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev)
-        for (const [key, value] of Object.entries(patch)) {
+        for (const [key, value] of Object.entries(finalPatch)) {
           if (value === undefined || value === null || value === '') next.delete(key)
           else next.set(key, String(value))
         }
@@ -312,6 +317,11 @@ export default function CustomersPage() {
       },
       { replace: true },
     )
+  }
+
+  const page = parsePageParam(searchParams.get('page'))
+  function setPage(nextPage) {
+    writeParams({ page: nextPage === 1 ? undefined : nextPage })
   }
 
   // ⚠️ הסטרים האלה **חייבים** לקבל גם את צורת-העדכון-הפונקציונלית של React (`set(v => ...)`),
@@ -423,6 +433,11 @@ export default function CustomersPage() {
     sortKey,
     sortDir,
   ])
+
+  // דפדוף (60 לקוחות פעילים היום, גדל) — לקוחות בלי תאריך-אירוע משלהם, ולכן בלי חלון-זמן,
+  // רק עמוד. `paginate` גוזרת את `page` לטווח החוקי בעצמה (רשימה שהתקצרה אחרי סינון).
+  const pagedResult = useMemo(() => paginate(visibleCustomers, page), [visibleCustomers, page])
+  const pagedCustomers = pagedResult.pageRows
 
   // מפתח-רענון לאזור-השיווק: משתנה בדיוק כשקבוצת המאושרים-הפעילים משתנה (מתג-הסכמה/ארכוב/עריכה),
   // כדי שהפאנל יביא-מחדש את רשימת-הנמענים מ-getConsentedCustomers ולא יפגר. מפתח-מטמון בלבד,
@@ -825,7 +840,7 @@ export default function CustomersPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {visibleCustomers.map((customer) => {
+                    {pagedCustomers.map((customer) => {
                       const isActive = customer.status === 'active'
                       // N2 (02/09/2026): שם/טלפון/אימייל של איש-הקשר הראשי הם שורת
                       // `customer_contacts` עם `is_primary`, לא עמודות על `customers`.
@@ -990,6 +1005,16 @@ export default function CustomersPage() {
                 </table>
               </div>
             )}
+
+            {/* דפדוף (מעבר-האחידות) — ישירות מתחת לטבלה, בתוך אותו כרטיס. */}
+            <Pager
+              page={pagedResult.page}
+              pageCount={pagedResult.pageCount}
+              from={pagedResult.from}
+              to={pagedResult.to}
+              total={pagedResult.total}
+              onPage={setPage}
+            />
           </>
         )}
       </div>

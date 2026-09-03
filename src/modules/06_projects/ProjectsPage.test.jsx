@@ -309,13 +309,58 @@ describe('ProjectsPage — לשונית "הכול": גלולות ומסנן', ()
   })
 
   it('מצב ③ — ריק אחרי סינון: המשפטים הנעולים + "נקה סינון" שבאמת מנקה (ההפך ממצב ②)', async () => {
-    renderPage('/projects?tab=all&status=awaiting_invoice')
+    // ‏window=all — הבדיקה הזו בודקת את מסנן-הסטטוס, לא את חלון-הזמן; #104 (לפני 146 ימים)
+    // חייב להישאר בפנים כדי ש"נקה סינון" יחזיר את כל שמונת השורות כפי שהיה לפני 04/09.
+    renderPage('/projects?tab=all&status=awaiting_invoice&window=all')
     expect(await screen.findByText('אין פרויקט התואם למסנן שבחרת.')).toBeInTheDocument()
     expect(screen.getByText('8 פרויקטים קיימים ואינם מוצגים כרגע.')).toBeInTheDocument()
     expect(screen.queryByText('למסך הצעות מחיר →')).not.toBeInTheDocument()
     fireEvent.click(screen.getByTestId('projects-clear-filter'))
     expect(await screen.findByTestId('projects-table')).toBeInTheDocument()
     expect(rowOrder()).toHaveLength(8)
+  })
+
+  it('🕐 חלון-ברירת-המחדל (04/09/2026): #104 (לפני 146 ימים) מוסתר; "הכול" (חלון) מציג אותו', async () => {
+    // ברירת-המחדל '90d' תוחמת רק את העבר — #104 (awaiting_payment, לפני 146 ימים) נעלם,
+    // ושבע השורות האחרות (עתידיות/קרובות) נשארות. גלולת-הרמז מדווחת "עוד 1 מחוץ לחלון".
+    renderPage('/projects?tab=all')
+    await screen.findByTestId('projects-table')
+    expect(rowOrder()).toHaveLength(7)
+    expect(rowOrder()).not.toContain(104)
+    expect(screen.getByTestId('list-window-hidden')).toHaveTextContent('עוד 1 מחוץ לחלון')
+
+    // מעבר ל"הכול" (גלולת-חלון, לא גלולת-סטטוס) מחזיר את #104 ומכבה את רמז-החוסר.
+    fireEvent.click(screen.getByTestId('list-window-all'))
+    expect(await screen.findByTestId('projects-row-104')).toBeInTheDocument()
+    expect(rowOrder()).toHaveLength(8)
+    expect(screen.queryByTestId('list-window-hidden')).not.toBeInTheDocument()
+  })
+})
+
+describe('ProjectsPage — דפדוף (04/09/2026)', () => {
+  it('רשימה של 60 שורות מוצגת בעמודים של 50, והחלפת-לשונית מאפסת את העמוד', async () => {
+    // 60 שורות עתידיות (תמיד בתוך כל חלון) בלשונית "בעבודה" — מספיק כדי לחצות את PAGE_SIZE.
+    const many = Array.from({ length: 60 }, (_, i) =>
+      row({
+        project_id: 200 + i,
+        event_name: `אירוע ${i}`,
+        final_event_date: offsetIso(1 + i),
+        project_status: 'not_started',
+        assignments_row_count: 0,
+      }),
+    )
+    listProjectsOverview.mockResolvedValue(many)
+    renderPage('/projects?page=2')
+    await screen.findByTestId('projects-table')
+    expect(screen.getByTestId('list-pager-page')).toHaveTextContent('2/2')
+    expect(rowOrder()).toHaveLength(10) // 60 - 50
+
+    // מעבר-לשונית מאפס את העמוד — עוברים ל"הכול" (גם 60 השורות שם) ומוודאים שהעמוד חוזר
+    // ל-1 (50 הראשונות), לא נשאר על ה-offset של עמוד 2 בלשונית הקודמת.
+    fireEvent.click(screen.getByTestId('projects-tab-all'))
+    await screen.findByTestId('projects-table')
+    expect(rowOrder()).toHaveLength(50)
+    expect(screen.getByTestId('list-pager-page')).toHaveTextContent('1/2')
   })
 })
 

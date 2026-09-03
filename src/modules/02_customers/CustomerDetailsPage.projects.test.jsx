@@ -162,7 +162,8 @@ describe('לשונית-פרויקטים — ריק-אמיתי, ואריח "אי�
     expect(empty).toHaveTextContent('פרויקט נולד מאישור הצעת מחיר.')
 
     // E3 (🟢 RULED 14/08): התווית הנעולה — מוצגת בכל מצב של העמוד, לא רק כאן.
-    expect(screen.getByText('סה"כ הצעות מאושרות')).toBeInTheDocument()
+    // 🔄 04/09/2026: האריח הראשון הוא "רווח גולמי מהלקוח" (הכרעת-ישי) — התווית הנעולה החדשה.
+    expect(screen.getByText('רווח גולמי מהלקוח')).toBeInTheDocument()
 
     // מצב neverHeld: אין פרויקטים בכלל ⇒ אין "הראשון מתוכנן ל-", רק ה-emptyText הנעול.
     expect(screen.getByTestId('metric-last-event')).toHaveTextContent('טרם התקיים אירוע')
@@ -274,8 +275,10 @@ describe('לשונית-פרויקטים — רדום + מבוטל-עתידי + "
     const tag = within(cancelledRow).getByText('בוטל')
     expect(tag.className).toContain('border-dashed')
 
-    // מונה-הלשונית מציג את המספר האמיתי (יש הרשאה) — לא '—'.
-    expect(within(screen.getByTestId('customer-tab-projects')).getByText('2')).toBeInTheDocument()
+    // 🆕 מונה-הלשונית נספר **בתוך חלון-הזמן** (ברירת-מחדל 90 יום, הכרעת-ישי 04/09/2026) —
+    // ולכן הוא "1" ולא "2": פרויקט 301 (150 יום אחורה) מחוץ לחלון, בעוד אריח "מספר אירועים"
+    // שמעליי (metric-event-count) ממשיך לספור את כל ההיסטוריה — שני מדדים שונים בכוונה.
+    expect(within(screen.getByTestId('customer-tab-projects')).getByText('1')).toBeInTheDocument()
   })
 })
 
