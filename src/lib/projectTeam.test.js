@@ -70,11 +70,37 @@ describe('assignmentMeaning — משפט לכל מצב, לעולם לא ציון
 
 describe('teamHeadline — המשפט האדום היחיד, והמילים נושאות אותו', () => {
   it('המקרה החי של #8: כל הזימונים הפתוחים פגו — הנוסח המאושר', () => {
-    const headline = teamHeadline({ gap: 5, pendingLive: 0, pendingExpired: 2 })
+    const headline = teamHeadline({
+      gap: 5,
+      pendingLive: 0,
+      pendingExpired: 2,
+      validityHours: '48',
+    })
     expect(headline.lead).toBe('⚠ חסרות 5 דיילות')
     expect(headline.rest).toBe(
       '— שני הזימונים הפתוחים פגו אחרי 48 שעות, כלומר אין קישור חי: גם דיילת שתרצה לאשר עכשיו לא תוכל. הפעולה הבאה היא זימון חדש, לא המתנה.',
     )
+  })
+
+  // 🔬 **בדיקת-המוטציה של אודיט-הסגירה (03/09/2026).** אותו מקרה בדיוק, סף אחר. אילו
+  // ה-48 היה נשאר קשיח במחרוזת — כפי שהיה עד עכשיו — שתי הבדיקות היו זהות והירוק לא
+  // היה מוכיח דבר. הלשונית סופרת "פג" לפי הסף החי; המשפט חייב להסביר לפי אותו סף.
+  it('🔬 סף 12 ⇒ המשפט אומר 12, ולא 48', () => {
+    const headline = teamHeadline({
+      gap: 5,
+      pendingLive: 0,
+      pendingExpired: 2,
+      validityHours: '12',
+    })
+    expect(headline.rest).toContain('פגו אחרי 12 שעות')
+    expect(headline.rest).not.toContain('48')
+  })
+
+  // סף חסר ⇒ המשפט נאמר בלי המספר, ולא "אחרי null שעות".
+  it('סף חסר ⇒ אין מספר במשפט, והמשפט עדיין שלם', () => {
+    const headline = teamHeadline({ gap: 5, pendingLive: 0, pendingExpired: 2 })
+    expect(headline.rest).toContain('שני הזימונים הפתוחים פגו, כלומר אין קישור חי')
+    expect(headline.rest).not.toContain('null')
   })
 
   it('אין חוסר ⇒ אין משפט — "לא בכוח"', () => {

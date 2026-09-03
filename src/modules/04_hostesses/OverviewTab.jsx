@@ -276,6 +276,7 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
                 key={row.project.project_id}
                 row={row}
                 today={today}
+                cutoffHours={cutoffHours}
                 canEdit={canEdit}
                 sending={sending}
                 onOpen={() => onOpenSmartMatch?.(row.project.project_id)}
@@ -290,13 +291,18 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
 }
 
 // 🔴 שלושת תנאי-הכיבוי של "שלח שוב", והם של כרטיס מסך 4 §⑤/§⑧③ ולא המצאה מקומית:
-// ‏① אין בכלל קישור מת · ② האירוע בתוך T-24 (הקישור מת 24 שעות לפני האירוע — רענון
+// ‏① אין בכלל קישור מת · ② האירוע בתוך הסף (הקישור מת `שעות_סף_זימון_לפני_אירוע` שעות
+// לפני האירוע — ברירת-המחדל 24, והמספר חי ב-`params` מאז מודול 9 · צעד 2.3 — רענון
 // היה שולח מייל שהדיילת תלחץ עליו ותקבל "המשרה כבר אוישה") · ③ האירוע כבר אויש.
 function canResend(row) {
   return row.counts.expired > 0 && !row.isFinalDay && row.isMissing
 }
 
-function OverviewRow({ row, today, canEdit, sending, onOpen, onResend }) {
+// 🔴 **`cutoffHours` יורד לכאן מהאב, ואינו קבוע** (אודיט-סגירת מ9, 03/09/2026): שתי
+// המחרוזות שלמטה נשאו `24` קשיח בעוד אריח ה-KPI שמעליהן כבר ציטט את `שעות_סף_זימון_לפני_אירוע`
+// החי. בסף 6, אותו מסך היה מציג "מתוכם 1 בתוך 6 שעות" באריח ו"בתוך 24 שעות" בשורה שמתחתיו —
+// **מסך שסותר את עצמו.** שניהם קוראים עכשיו ערך אחד, וזה בדיוק הנימוק שכבר כתוב על האריח.
+function OverviewRow({ row, today, cutoffHours, canEdit, sending, onOpen, onResend }) {
   const { project, counts, required, staffed, gap, isMissing, isFinalDay, showsFinalDayAlert } = row
   const filled = required > 0 ? Math.min(100, Math.round((staffed / required) * 100)) : 0
 
@@ -321,7 +327,10 @@ function OverviewRow({ row, today, canEdit, sending, onOpen, onResend }) {
           {/* ⚠ נדלק על **חוסר** בתוך T-24, לא על קרבה (כרטיס §④): אירוע מלא שמתקיים מחר
               אינו דורש ממנה דבר, וסימון עליו מלמד להתעלם מהסימן. */}
           {showsFinalDayAlert && (
-            <span className="ml-1.5 text-red-600" title="חסר איוש, והאירוע בתוך 24 שעות">
+            <span
+              className="ml-1.5 text-red-600"
+              title={`חסר איוש, והאירוע בתוך ${cutoffHours} שעות`}
+            >
               ⚠
             </span>
           )}
@@ -336,7 +345,7 @@ function OverviewRow({ row, today, canEdit, sending, onOpen, onResend }) {
           className={`mt-0.5 text-[11.5px] ${isFinalDay ? 'font-semibold text-red-600' : 'text-slate-400'}`}
         >
           {eventProximityLabel(project.final_event_date, today)}
-          {isFinalDay ? ' · בתוך 24 שעות' : ''}
+          {isFinalDay ? ` · בתוך ${cutoffHours} שעות` : ''}
         </div>
       </Td>
 

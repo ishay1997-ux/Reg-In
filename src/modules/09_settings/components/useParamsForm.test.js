@@ -12,6 +12,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import useParamsForm, {
+  crossFieldErrorsIn,
   WEIGHTS_SUM_ERROR,
   DISTANCE_ORDER_ERROR,
   CANCELLATION_ORDER_ERROR,
@@ -120,11 +121,15 @@ describe('useParamsForm — ולידציה', () => {
     expect(result.current.errors).toEqual({})
   })
 
+  // שגיאת-רוחב היא `{ message, names }` מאז אודיט-הסגירה (03/09/2026) — ה-`names` הם מה
+  // שמאפשר לכל משטח לסנן לטווח שלו. הבדיקות ממשיכות לנעול את **הנוסח**, דרך הקורא הזה.
+  const messagesOf = (errors) => errors.map((error) => error.message)
+
   it('סכום-משקולות שאינו 1.00 נחסם — ורק אחרי שנגעו במשקולת', () => {
     const { result } = setup(WEIGHT_ROWS, { canEditAll: true })
     expect(result.current.crossFieldErrors).toEqual([])
     act(() => result.current.setValue('משקולת_היענות', '0.50'))
-    expect(result.current.crossFieldErrors).toContain(WEIGHTS_SUM_ERROR)
+    expect(messagesOf(result.current.crossFieldErrors)).toContain(WEIGHTS_SUM_ERROR)
     act(() => result.current.setValue('משקולת_קרבה', '0.15'))
     expect(result.current.crossFieldErrors).toEqual([])
   })
@@ -132,7 +137,7 @@ describe('useParamsForm — ולידציה', () => {
   it('גולפוסט גדול משער-הפסילה נחסם', () => {
     const { result } = setup(DISTANCE_ROWS, { canEditAll: true })
     act(() => result.current.setValue('גולפוסט_מרחק_קמ', '90'))
-    expect(result.current.crossFieldErrors).toContain(DISTANCE_ORDER_ERROR)
+    expect(messagesOf(result.current.crossFieldErrors)).toContain(DISTANCE_ORDER_ERROR)
   })
 
   // 🔴 שני הכללים שנוספו באודיט-הסגירה (03/09/2026). הראשון הוא **באג-כסף**: היפוך המדרגות
@@ -142,7 +147,7 @@ describe('useParamsForm — ולידציה', () => {
     const { result } = setup(COMPENSATION_ROWS, { canEditAll: true })
     expect(result.current.crossFieldErrors).toEqual([])
     act(() => result.current.setValue('שעות_פיצוי_ביטול_מלא', '100'))
-    expect(result.current.crossFieldErrors).toContain(CANCELLATION_ORDER_ERROR)
+    expect(messagesOf(result.current.crossFieldErrors)).toContain(CANCELLATION_ORDER_ERROR)
     act(() => result.current.setValue('שעות_פיצוי_ביטול_מלא', '24'))
     expect(result.current.crossFieldErrors).toEqual([])
   })
@@ -150,7 +155,48 @@ describe('useParamsForm — ולידציה', () => {
   it('ימי-אזהרה ארוכים מימי-התוקף נחסמים', () => {
     const { result } = setup(EXPIRY_ROWS, { canEditAll: true })
     act(() => result.current.setValue('ימי_אזהרה_הצעה_פגה', '40'))
-    expect(result.current.crossFieldErrors).toContain(EXPIRY_WARNING_ORDER_ERROR)
+    expect(messagesOf(result.current.crossFieldErrors)).toContain(EXPIRY_WARNING_ORDER_ERROR)
+  })
+
+  // 🔴 **הטווח של שער-השמירה (אודיט-סגירת מ9, 03/09/2026).** עד עכשיו שלושת המשטחים
+  // ו-`submit` בדקו `crossFieldErrors.length > 0` על המערך המלא: צמד הפוך שהוקלד בקבוצה
+  // אחת הרג את השמירה **בכל** הקבוצות. שתי הבדיקות הבאות נועלות את שני חצאי התיקון —
+  // הסינון עצמו, ו-`submit` שמכבד אותו. בלעדיהן, החזרה למצב הקודם הייתה עוברת בירוק.
+  describe('שגיאת-רוחב חוסמת רק את הטווח שהיא מדברת עליו', () => {
+    it('`crossFieldErrorsIn` — נכלל אם לפחות אחד מהשמות בטווח, ובלי טווח מחזיר הכול', () => {
+      const errors = [
+        { message: 'א', names: ['x', 'y'] },
+        { message: 'ב', names: ['z'] },
+      ]
+      expect(messagesOf(crossFieldErrorsIn(errors, ['y']))).toEqual(['א'])
+      expect(messagesOf(crossFieldErrorsIn(errors, new Set(['z'])))).toEqual(['ב'])
+      expect(messagesOf(crossFieldErrorsIn(errors, ['לא_קיים']))).toEqual([])
+      expect(messagesOf(crossFieldErrorsIn(errors, null))).toEqual(['א', 'ב'])
+    })
+
+    it('🔬 צמד הפוך בקבוצה אחת אינו חוסם שמירה של פרמטר בקבוצה אחרת', async () => {
+      updateParams.mockResolvedValue(undefined)
+      const { result } = setup([...COMPENSATION_ROWS, ...PRICING_ROWS], { canEditAll: true })
+      act(() => result.current.setValue('שעות_פיצוי_ביטול_מלא', '100'))
+      act(() => result.current.setValue('אחוז_מעמ', '17'))
+      expect(messagesOf(result.current.crossFieldErrors)).toContain(CANCELLATION_ORDER_ERROR)
+
+      // הטווח של המשטח השני אינו מכיל אף שם מהצמד ⇒ נשמר.
+      let outcome
+      await act(async () => {
+        outcome = await result.current.submit(['אחוז_מעמ', 'תנאי_תשלום_ימים'])
+      })
+      expect(outcome).toEqual({ ok: true, written: ['אחוז_מעמ'] })
+
+      // ובטווח **שלו** הצמד עדיין חוסם — התיקון מצמצם את השער, לא מבטל אותו.
+      updateParams.mockClear()
+      let blocked
+      await act(async () => {
+        blocked = await result.current.submit(['שעות_פיצוי_ביטול_מלא', 'שעות_פיצוי_ביטול_חלקי'])
+      })
+      expect(blocked).toEqual({ ok: false, written: [] })
+      expect(updateParams).not.toHaveBeenCalled()
+    })
   })
 
   it('ערך פסול אינו נשלח בכלל', async () => {

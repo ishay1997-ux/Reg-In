@@ -34,6 +34,7 @@ import ParamRow, {
 } from '@/modules/09_settings/components/ParamRow'
 import SaveRow from '@/modules/09_settings/components/SaveRow'
 import useParamsForm from '@/modules/09_settings/components/useParamsForm'
+import { crossFieldErrorsIn } from '@/modules/09_settings/components/useParamsForm'
 
 const MIN_WAGE_PARAM = 'שכר_מינימום_שעתי'
 
@@ -141,9 +142,17 @@ export default function MySettingsPage() {
   const dirtyVisible = form.dirtyNames.filter((name) => visibleNames.has(name))
   const dirtyCount = dirtyVisible.length
   const totalCount = visibleRows.length
+  // 🔴 ואותו סינון בדיוק על שגיאות-הרוחב (אודיט-סגירת מ9, 03/09/2026). הבדיקה כאן הייתה
+  // ‏`form.crossFieldErrors.length > 0` על המערך המלא — כלומר **בתוך אותו `hasErrors` ש-R-2
+  // שכתב**, ובניגוד למה שההערה שמעל הצהירה. חיפוש שמסתיר את השדה החורג היה מחזיר בדיוק את
+  // מבוי-הסתום ש-R-2 בא לסגור, רק דרך הדלת השנייה.
+  const visibleCrossErrors = useMemo(
+    () => crossFieldErrorsIn(form.crossFieldErrors, visibleNames),
+    [form.crossFieldErrors, visibleNames],
+  )
   const hasErrors =
     dirtyVisible.some((name) => form.errors[name]) ||
-    form.crossFieldErrors.length > 0 ||
+    visibleCrossErrors.length > 0 ||
     // R-3 (ר' ParamsTab.jsx): ורדיקט-חסימה של תבנית חוסם שמירה בדיוק כמו שגיאת-שדה רגילה.
     dirtyVisible.some((name) => templateVerdicts[name]?.status === 'blocked')
 
@@ -299,7 +308,7 @@ export default function MySettingsPage() {
             })}
           </div>
 
-          {form.crossFieldErrors.map((message) => (
+          {visibleCrossErrors.map(({ message }) => (
             <p
               key={message}
               role="alert"

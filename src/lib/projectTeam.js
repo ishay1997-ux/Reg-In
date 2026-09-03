@@ -73,7 +73,12 @@ export function assignmentMeaning({
 // ── המשפט-האדום-היחיד של המסך ────────────────────────────────────────────────
 // המילים נושאות אותו גם בלי הצבע (§3.4). המקרה החי (#8: כל הזימונים הפתוחים פגו) הוא
 // הנוסח המאושר מילה-במילה; שאר הענפים נגזרו — `הנחתי`. אין חוסר ⇒ null ("לא בכוח").
-export function teamHeadline({ gap, pendingLive = 0, pendingExpired = 0 } = {}) {
+// 🔴 **`validityHours` הוא ארגומנט ולא `48` במחרוזת** (אודיט-סגירת מ9, 03/09/2026):
+// `שעות_תוקף_זימון` ירד ל-`params` בצעד 2.3, ו-`isInviteExpired` — שממנו נגזר `pendingExpired`
+// שכאן — כבר קורא את הסף החי. רק המשפט נשאר קפוא, כלומר הלשונית הייתה סופרת לפי 12 ומסבירה
+// לפי 48. ⚠️ סף חסר ⇒ המשפט נאמר **בלי המספר**, לא עם `null` ("לא בכוח"): הענף הזה
+// אינו נגיש בפועל — `pendingExpired>0` מחייב סף — והוא כאן כדי שלא תיווצר דרך חדשה לרנדר ריק.
+export function teamHeadline({ gap, pendingLive = 0, pendingExpired = 0, validityHours } = {}) {
   const missing = Number(gap) || 0
   if (missing <= 0) return null
   const lead = missing === 1 ? '⚠ חסרה דיילת אחת' : `⚠ חסרות ${missing} דיילות`
@@ -84,9 +89,11 @@ export function teamHeadline({ gap, pendingLive = 0, pendingExpired = 0 } = {}) 
         : pendingExpired === 2
           ? 'שני הזימונים הפתוחים פגו'
           : `${pendingExpired} הזימונים הפתוחים פגו`
+    const hours = optionalNumber(validityHours)
+    const after = hours === null ? '' : ` אחרי ${hours} שעות`
     return {
       lead,
-      rest: `— ${opening} אחרי 48 שעות, כלומר אין קישור חי: גם דיילת שתרצה לאשר עכשיו לא תוכל. הפעולה הבאה היא זימון חדש, לא המתנה.`,
+      rest: `— ${opening}${after}, כלומר אין קישור חי: גם דיילת שתרצה לאשר עכשיו לא תוכל. הפעולה הבאה היא זימון חדש, לא המתנה.`,
     }
   }
   if (pendingLive > 0) {

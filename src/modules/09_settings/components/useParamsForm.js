@@ -62,6 +62,16 @@ export const CANCELLATION_ORDER_ERROR =
 export const EXPIRY_WARNING_ORDER_ERROR =
   'ימי האזהרה חייבים להיות קטנים מימי התוקף — אחרת כל הצעה פתוחה מסומנת "פגה בקרוב" מרגע יצירתה'
 
+// סינון שגיאות-רוחב לטווח שמות נתון — הפונקציה היחידה שכל שלושת המשטחים ו-`submit`
+// עוברים דרכה, כדי שלא ייווצרו שני ניסוחים לאותו שער. שגיאה נכללת אם **לפחות אחד**
+// מהשמות שהיא מדברת עליהם נמצא בטווח: כלל-רוחב שאחד מאיבריו על המסך הוא כלל שהמסך
+// הזה חייב לכבד. ‏`names` ריק/חסר ⇒ בלי סינון (הטווח הוא "הכול").
+export function crossFieldErrorsIn(errors, names) {
+  if (!names) return errors
+  const scope = names instanceof Set ? names : new Set(names)
+  return errors.filter((error) => error.names.some((name) => scope.has(name)))
+}
+
 // המחרוזת הנעולה (§3.7). מיוצאת כדי שהבדיקות ינעלו את התבנית ולא ישכפלו אותה.
 export function saveFailedMessage(label, reason) {
   return `השמירה נכשלה ב"${label}" — ${reason}`
@@ -127,6 +137,16 @@ export default function useParamsForm({ rows, roleId, canEditAll } = {}) {
 
   // כללי-רוחב (§2.8) — נבדקים רק כששורה מהצמד/השלישייה **שונתה**, מאותו נימוק בדיוק:
   // סכום-משקולות היסטורי של 0.99 לא אמור לחסום שמירה של פרמטר אחר לגמרי באותה קבוצה.
+  //
+  // 🔴 **כל שגיאה נושאת את השמות שהיא מדברת עליהם — `{ message, names }` ולא מחרוזת**
+  // (אודיט-סגירת מ9, 03/09/2026). הצורה הזו אינה קישוט: היא מה שמאפשר לכל משטח לסנן
+  // לפי הטווח שהוא ממילא מחזיק — `ParamsTab` לפי הקבוצה הפעילה, "ההגדרות שלי" לפי
+  // השורות הנראות, ו-`submit` לפי הטווח שנמסר לו. עד עכשיו שלושתם בדקו `length > 0`
+  // על המערך **המלא**, והתוצאה: המנכ"לית מזינה פיצוי-מלא הפוך בקבוצה אחת, עוברת לקבוצה
+  // אחרת, ושמירת המע"מ שם מתה בגלל שגיאה בשדות שאינם על המסך. **וב-`submit` זה גרוע יותר
+  // מבלבול** — הכפתור יכול להיות פעיל בעוד `submit` מחזיר `{ok:false}` **בלי `saveError`**:
+  // לחיצה שלא עושה כלום ולא אומרת כלום. ⚠️ **ומקור-אמת אחד במכוון:** לא נוסף `crossFieldErrorsFor`
+  // לצד המערך המלא — שער-שמירה בשני מקומות הוא בדיוק מחלקת-הפגם שהאודיט הזה ניקה.
   const crossFieldErrors = useMemo(() => {
     const found = []
     const dirty = new Set(dirtyNames)
@@ -136,7 +156,7 @@ export default function useParamsForm({ rows, roleId, canEditAll } = {}) {
       WEIGHT_NAMES.some((name) => dirty.has(name)) &&
       !weightsSumOk(WEIGHT_NAMES.map((name) => values[name]))
     ) {
-      found.push(WEIGHTS_SUM_ERROR)
+      found.push({ message: WEIGHTS_SUM_ERROR, names: WEIGHT_NAMES })
     }
     const haveDistances = GOALPOST_NAME in values && GATE_NAME in values
     if (
@@ -144,7 +164,7 @@ export default function useParamsForm({ rows, roleId, canEditAll } = {}) {
       (dirty.has(GOALPOST_NAME) || dirty.has(GATE_NAME)) &&
       !distanceOrderOk(values[GOALPOST_NAME], values[GATE_NAME])
     ) {
-      found.push(DISTANCE_ORDER_ERROR)
+      found.push({ message: DISTANCE_ORDER_ERROR, names: [GOALPOST_NAME, GATE_NAME] })
     }
     const haveComp = FULL_COMP_NAME in values && PARTIAL_COMP_NAME in values
     if (
@@ -152,7 +172,7 @@ export default function useParamsForm({ rows, roleId, canEditAll } = {}) {
       (dirty.has(FULL_COMP_NAME) || dirty.has(PARTIAL_COMP_NAME)) &&
       !cancellationOrderOk(values[FULL_COMP_NAME], values[PARTIAL_COMP_NAME])
     ) {
-      found.push(CANCELLATION_ORDER_ERROR)
+      found.push({ message: CANCELLATION_ORDER_ERROR, names: [FULL_COMP_NAME, PARTIAL_COMP_NAME] })
     }
     const haveExpiry = EXPIRY_WARNING_NAME in values && QUOTE_VALIDITY_NAME in values
     if (
@@ -160,7 +180,10 @@ export default function useParamsForm({ rows, roleId, canEditAll } = {}) {
       (dirty.has(EXPIRY_WARNING_NAME) || dirty.has(QUOTE_VALIDITY_NAME)) &&
       !expiryWarningOrderOk(values[EXPIRY_WARNING_NAME], values[QUOTE_VALIDITY_NAME])
     ) {
-      found.push(EXPIRY_WARNING_ORDER_ERROR)
+      found.push({
+        message: EXPIRY_WARNING_ORDER_ERROR,
+        names: [EXPIRY_WARNING_NAME, QUOTE_VALIDITY_NAME],
+      })
     }
     return found
   }, [values, dirtyNames])
@@ -188,8 +211,13 @@ export default function useParamsForm({ rows, roleId, canEditAll } = {}) {
       const scope = names ? new Set(names) : null
       const scopedDirty = dirtyNames.filter((name) => !scope || scope.has(name))
       if (scopedDirty.length === 0) return { ok: false, written: [] }
-      // ולידציה מלאה לפני כל כתיבה — לא "לנסות ולראות מה המסד אומר".
-      if (scopedDirty.some((name) => errors[name]) || crossFieldErrors.length > 0) {
+      // ולידציה מלאה לפני כל כתיבה — לא "לנסות ולראות מה המסד אומר". שגיאות-הרוחב
+      // מסוננות לטווח שנמסר, בדיוק כמו `scopedDirty` בשורה שמעל: מה שהמסך שומר ומה
+      // שחוסם את השמירה חייבים להיות אותה קבוצה.
+      if (
+        scopedDirty.some((name) => errors[name]) ||
+        crossFieldErrorsIn(crossFieldErrors, scope).length > 0
+      ) {
         return { ok: false, written: [] }
       }
 

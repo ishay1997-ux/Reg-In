@@ -210,6 +210,36 @@ describe('ParamsTab — מצבי-טעינה ורשימת שכר-המינימום
     expect(listParams).toHaveBeenCalledTimes(2)
   })
 
+  // 🔴 **שער-השמירה מסונן לקבוצה הפעילה (אודיט-סגירת מ9, 03/09/2026).** עד עכשיו הוא בדק
+  // את **כל** שגיאות-הרוחב: המנכ"לית מהפכת את צמד-המרחקים ב"התאמה חכמה", עוברת ל"תמחור
+  // ותזמון", והשמירה שם מתה — עם משפט אדום שמדבר על שני שדות שאינם על המסך. הבדיקה נועלת
+  // את שני הצדדים: שקוף בקבוצה הזרה, וחוסם בקבוצה שלו.
+  it('🔬 צמד-מרחקים הפוך ב"התאמה חכמה" אינו חוסם שמירה ב"תמחור ותזמון"', async () => {
+    renderTab()
+    await screen.findByTestId('settings-groups')
+
+    fireEvent.click(screen.getByTestId('settings-group-smart_match'))
+    fireEvent.change(await screen.findByTestId('settings-value-גולפוסט_מרחק_קמ'), {
+      target: { value: '90' },
+    })
+    expect(screen.getByTestId('settings-cross-field-error')).toBeInTheDocument()
+    expect(screen.getByTestId('settings-save-button')).toBeDisabled()
+
+    fireEvent.click(screen.getByTestId('settings-group-pricing_timing'))
+    fireEvent.change(await screen.findByTestId('settings-value-אחוז_מעמ'), {
+      target: { value: '17' },
+    })
+    // המשפט שייך לקבוצה השנייה ⇒ אינו מצויר כאן, והכפתור חי.
+    expect(screen.queryByTestId('settings-cross-field-error')).not.toBeInTheDocument()
+    expect(screen.getByTestId('settings-save-button')).not.toBeDisabled()
+
+    fireEvent.click(screen.getByTestId('settings-save-button'))
+    await waitFor(() => expect(updateParams).toHaveBeenCalled())
+    expect(updateParams.mock.calls[0][0]).toEqual([
+      expect.objectContaining({ name: 'אחוז_מעמ', value: '17' }),
+    ])
+  })
+
   it('רשימת "מי מתחת לרף" מוצגת לצד שכר-המינימום, ורק בקבוצה שלו', async () => {
     renderTab()
     await screen.findByTestId('settings-table')

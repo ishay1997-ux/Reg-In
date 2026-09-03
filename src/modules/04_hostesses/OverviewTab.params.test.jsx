@@ -130,4 +130,19 @@ describe('הכיתובים מצטטים את הספים החיים — ולא מ
       'אף אחד מהם אינו בתוך 6 שעות',
     )
   })
+
+  // 🔬 **החצי שחסר עד עכשיו (אודיט-סגירת מ9, 03/09/2026): גם ה*שורה*, לא רק האריח.**
+  // `OverviewRow` נשא `24` קשיח בעוד האריח שמעליו כבר ציטט את הסף החי, כלומר בסף 6 אותו
+  // מסך היה מציג שני מספרים סותרים במרחק שורה זה מזה. שתי הבדיקות שקדמו לזו היו עוברות.
+  it('🔬 שורת-האירוע מצטטת את אותו סף כמו האריח — ולא 24 קפוא', async () => {
+    getParamValues.mockResolvedValue({ ...THRESHOLDS, שעות_סף_זימון_לפני_אירוע: '48' })
+    renderTab()
+    await screen.findByTestId('overview-table')
+
+    const kpi = screen.getByTestId('overview-kpi-missing')
+    expect(kpi).toHaveTextContent('בתוך 48 שעות')
+    const table = screen.getByTestId('overview-table')
+    expect(table).toHaveTextContent('בתוך 48 שעות')
+    expect(table).not.toHaveTextContent('בתוך 24 שעות')
+  })
 })

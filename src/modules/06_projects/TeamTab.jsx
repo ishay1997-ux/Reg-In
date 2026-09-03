@@ -191,7 +191,9 @@ export default function TeamTab({
   }
 
   const noInvites = canReadHostesses && rows.length === 0
-  const headline = canReadHostesses ? teamHeadline({ gap, pendingLive, pendingExpired }) : null
+  const headline = canReadHostesses
+    ? teamHeadline({ gap, pendingLive, pendingExpired, validityHours: inviteValidityHours })
+    : null
 
   return (
     <div className="pt-3" data-testid="team-tab">

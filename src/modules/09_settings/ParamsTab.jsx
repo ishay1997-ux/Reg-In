@@ -42,6 +42,7 @@ import ParamRow, {
 } from '@/modules/09_settings/components/ParamRow'
 import SaveRow from '@/modules/09_settings/components/SaveRow'
 import useParamsForm from '@/modules/09_settings/components/useParamsForm'
+import { crossFieldErrorsIn } from '@/modules/09_settings/components/useParamsForm'
 
 const MIN_WAGE_PARAM = 'שכר_מינימום_שעתי'
 
@@ -157,9 +158,16 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
 
   const groupNames = useMemo(() => groupRows.map((row) => row.param_name), [groupRows])
   const dirtyInGroup = form.dirtyNames.filter((name) => groupNames.includes(name))
+  // 🔴 שגיאות-הרוחב מסוננות לקבוצה הפעילה (אודיט-סגירת מ9, 03/09/2026) — עד עכשיו זה היה
+  // ‏`form.crossFieldErrors.length > 0` על המערך המלא, כלומר צמד הפוך שהוקלד בקבוצה אחת
+  // הרג את השמירה בכל שאר הקבוצות, והמשפט האדום ניצב מעל שדות שאינם קשורים אליו.
+  const groupCrossErrors = useMemo(
+    () => crossFieldErrorsIn(form.crossFieldErrors, groupNames),
+    [form.crossFieldErrors, groupNames],
+  )
   const hasErrorsInGroup =
     dirtyInGroup.some((name) => form.errors[name]) ||
-    form.crossFieldErrors.length > 0 ||
+    groupCrossErrors.length > 0 ||
     // R-3: ורדיקט-חסימה של תבנית (משתנה-חובה חסר / טוקן לא-מוכר) חוסם שמירה בדיוק כמו
     // שגיאת-שדה רגילה — רק ששורש-האמת שלו הוא `TemplateEditor`, לא `validateParamValue`.
     dirtyInGroup.some((name) => templateVerdicts[name]?.status === 'blocked')
@@ -301,7 +309,7 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
             </div>
           )}
 
-          {form.crossFieldErrors.map((message) => (
+          {groupCrossErrors.map(({ message }) => (
             <p
               key={message}
               role="alert"

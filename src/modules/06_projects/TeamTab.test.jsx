@@ -227,6 +227,17 @@ describe('המשפט האדום היחיד — המילים נושאות אות�
     expect(headline).toHaveTextContent('הפעולה הבאה היא זימון חדש, לא המתנה.')
   })
 
+  // 🔬 **בדיקת-המוטציה של אודיט-הסגירה (03/09/2026).** אותה פיקסצ'ר ואותו "עכשיו" — רק
+  // `שעות_תוקף_זימון` אחר. עד עכשיו ה-48 היה קשיח במחרוזת, כלומר הלשונית הייתה סופרת
+  // "פג" לפי 12 ומסבירה במילים "אחרי 48 שעות" — **שני מספרים על אותו מסך.**
+  it('🔬 סף 12 ⇒ המשפט אומר 12, והמסך אינו סותר את עצמו', async () => {
+    getParamValues.mockResolvedValue({ שעות_תוקף_זימון: '12' })
+    await renderTab()
+    const headline = screen.getByTestId('team-headline')
+    expect(headline).toHaveTextContent('שני הזימונים הפתוחים פגו אחרי 12 שעות')
+    expect(headline).not.toHaveTextContent('48')
+  })
+
   it('עמודת "מה זה אומר" — משפט, לעולם לא ציון', async () => {
     await renderTab()
     expect(screen.getByTestId('team-meaning-h1')).toHaveTextContent(

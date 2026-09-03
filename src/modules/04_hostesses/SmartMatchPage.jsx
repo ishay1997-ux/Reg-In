@@ -702,6 +702,11 @@ function EventRow({ row, now, canEdit, busy, context, onAction }) {
   // כך שאין prop רביעי שאפשר לשכוח להעביר לשורה אחת מתוך רשימה.
   const label = assignmentDisplayStatus(row, now, context?.inviteValidityHours)
   const hoursLeft = inviteHoursLeft(row, now, context?.inviteValidityHours)
+  // 🔴 **המספר במשפט הוא הסף החי, לא `48`** (אודיט-סגירת מ9, 03/09/2026): `שעות_תוקף_זימון`
+  // ירד ל-`params` בצעד 2.3, והחישוב שמעל כבר קורא אותו — רק המחרוזת נשארה קפואה. סף 12
+  // היה מציג "נותרו 3 שעות" בשורה אחת ו"פג אחרי 48 שעות" בשורה שלידה. `hoursLeft` הוא
+  // `null` בדיוק כשהסף חסר, ולכן אף אחת משתי השורות אינה מצוירת עם מספר ריק.
+  const validityHours = optionalNumber(context?.inviteValidityHours)
 
   return (
     <li
@@ -742,7 +747,7 @@ function EventRow({ row, now, canEdit, busy, context, onAction }) {
             תאריך. הגרסה הראשונה הציגה `09T20:33:42.432+00:00/08/2026` על המסך; נתפס
             בצילום-מסך ולא בבדיקה. ‏`formatDate` דוחה עכשיו קלט כזה במקום לפלוט זבל. */}
         {row.invite_sent_at ? `נשלח ${formatTimestamp(row.invite_sent_at, '—')}` : 'טרם נשלח זימון'}
-        {hoursLeft === 0 && ' · הקישור פג אחרי 48 שעות'}
+        {hoursLeft === 0 && ` · הקישור פג אחרי ${validityHours} שעות`}
         {hoursLeft > 0 && ` · נותרו ${hoursLeft} שעות`}
       </div>
 
