@@ -9,13 +9,12 @@
 -- ⚠️ זהו SNAPSHOT שנוצר מתוך שאילתות על המסד החי. **מקור-אמת לשינויים = `supabase/migrations/`**
 --    (ולא הקובץ הזה). כל שינוי DB נכתב כקובץ מיגרציה חדש, מוחל, ואז הקובץ הזה נוצר מחדש.
 --
--- 📅 נוצר: 14/08/2026 · **רוענן לאחרונה: 03/09/2026 18:5X** (מודול 7, צעדים 1.2–1.3 — שתי מיגרציות,
+-- 📅 נוצר: 14/08/2026 · **רוענן לאחרונה: 03/09/2026 23:2X (מיזוג שני סשנים)** (מודול 7, צעדים 1.2–1.3 — שתי מיגרציות,
 --    `20260903182735_module7_dashboard_summary_rpc` + תיקון-קדימה `20260903184711_…_cancelled_on_calendar_and_profit`:
 --    **פונקציה חדשה** `get_dashboard_summary(date)`,
 --    סעיף 24 בלוק "מודול 7"; אפס טבלאות/עמודות/policies. ⚠️ **ובאותה שעה, מסשן מקביל:**
 --    `20260903180958_seed_registry_and_helpers` (הוחלה 18:15) הוסיפה טבלה `seed_registry` + 4 פונקציות
---    `seed_*` + שינוי בגוף `enforce_quote_in_progress_lock` — **חיות במסד, טרם מתועדות כאן**; הרענון
---    שלהן שייך לסשן-הזריעה (ענף `ishay/m7-blueprint-and-seed`) ויתמזג לכאן. הספירה "45" בסעיף 24 היא
+--    `seed_*` + שינוי בגוף `enforce_quote_in_progress_lock` — **מתועדות בסעיף 33 ובבלוק "זריעת נתוני-ההדגמה" בסעיף 24** (מוזגו לכאן 03/09 23:2X). הספירה "45" בסעיף 24 היא
 --    לכן 45 + 1 (כאן) + 4 (שם) = **50 חי, נמדד `pg_proc` 03/09 18:4X**) · רוענן קודם: 02/09/2026 (מודול 9, פזה 1 — שלוש מיגרציות; הדלתא
 --    מפורטת בסוף הרשימה) · רוענן קודם: 27/08/2026 (צעד 1.8 — כל עשר מיגרציות פזה 1 של מודול 8; אחרי מיגרציה
 --    `20260827125155_module8_finance_tables_and_columns`; הדלתא: טבלה חדשה `project_finance`
@@ -67,6 +66,14 @@
 --    (‏**פונקציה חדשה** `list_hostesses_below_min_wage()`, ו**כתיבה-מחדש של
 --    `record_feedback` ו-`archive_project`** של מ8 — סף שביעות-הרצון עבר מקבוע-בקוד
 --    ל-`params.סף_שביעות_רצון`. **החתימות לא השתנו** ⇒ הקוד הפרוס לא נשבר) ·
+--
+--    ── **מרשם-הזריעה של מודול 7 (03/09/2026) — מיגרציה אחת** ──
+--    ואחרי `20260903180958_seed_registry_and_helpers` (‏**טבלה חדשה** `seed_registry`, סעיף 33 —
+--    ‏+RLS **בלי policies במכוון** +אינדקס; **4 פונקציות חדשות** `seed_register` ·
+--    ‏`seed_backdate_quote` · `seed_backdate_project` · `seed_reset`, כולן DEFINER גדורות
+--    ל-`edit` על 'הגדרות מערכת'; ו**כתיבה-מחדש של `enforce_quote_in_progress_lock`** מהגוף
+--    החי — בלוק-`if` אחד בראשה: מעבר חופשי רק עם מפתח-סשן `regin.seed_bypass` **וגם**
+--    הצעה רשומה במרשם. **החתימה לא השתנתה, הטריגרים לא נגעו**) ·
 --    פרויקט Supabase `yfeovxppnfoafmfbdfvh` · Postgres 17.
 --
 -- 🔴 **לרענן את הקובץ הזה אחרי כל מיגרציה.** העותק הקודם לא רוענן חמישה חודשים והכריז על עמודה
@@ -80,13 +87,14 @@
 -- 🚫 **אין כאן סעיף "היסטוריה"/"יומן שינויים"** — הקובץ מתאר הווה בלבד. ציר השינויים חי
 --    ב-`supabase/migrations/` וב-`docs/db_roadmap.md`.
 --
--- מוסכמות: כל 29 הטבלאות ב-`public` עם RLS **מופעל** (נמדד 02/09/2026 אחרי מיגרציות מודול 9).
+-- מוסכמות: כל 30 הטבלאות ב-`public` עם RLS **מופעל** (נמדד 03/09/2026 אחרי מיגרציית מרשם-הזריעה).
 -- כל 62 המדיניות (50 ב-public, 12 על `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`.
 -- 🔴 **PERMISSIVE = הן מתאחדות ב-OR.** שתי policies על אותה טבלה מרחיבות גישה, לא מצמצמות —
 --    ולכן policy חדשה "מגודרת היטב" אינה מגבילה אף אחד שכבר עובר דרך policy אחרת.
--- 🔴 ארבע טבלאות נותרו deny-all **במכוון**: `project_changes` (נקראת רק דרך ה-RPC הממסך),
---    `login_attempts` ו-`login_rpc_calls` (רק דרך פונקציות ה-DEFINER של הכניסה), ו-`feedback_rpc_calls`
---    (נוספה 27/08/2026 ב-F — אותו דפוס, לדף-המשוב הציבורי). מ-27/08/2026
+-- 🔴 חמש טבלאות נותרו deny-all **במכוון**: `project_changes` (נקראת רק דרך ה-RPC הממסך),
+--    `login_attempts` ו-`login_rpc_calls` (רק דרך פונקציות ה-DEFINER של הכניסה), `feedback_rpc_calls`
+--    (נוספה 27/08/2026 ב-F — אותו דפוס, לדף-המשוב הציבורי), ו-`seed_registry` (נוספה 03/09/2026 —
+--    נכתבת ונקראת רק דרך ארבע פונקציות `seed_*`; סעיף 33). מ-27/08/2026
 --    **אין יותר אף טבלה עסקית שחסומה מחוסר-בנייה** — `salary_reports` הייתה האחרונה. הפונקציה `moddatetime` (טריגר
 -- `updated_at`) יושבת בסכמה `extensions`, לא ב-`public`.
 -- ============================================================
@@ -1837,12 +1845,8 @@ create policy notification_preferences_update_self on notification_preferences
 
 
 -- ============================================================
--- 24. פונקציות בסכמה public — 46 פונקציות מתועדות כאן (50 חי: +4 `seed_*` של סשן-הזריעה, ר' הכותרת)
--- ============================================================
--- 🚫 **הגופים אינם כאן במכוון** (ר' כותרת הקובץ). לכל פונקציה: חתימה · מצב אבטחה · search_path ·
---    למי יש EXECUTE · ומצביע לקובץ המיגרציה שבו הגוף הנוכחי חי.
--- לכל 45 הפונקציות `search_path = ''` (שמות מלאים בגוף) — נמדד 02/09/2026; ה-46 (מ7) נמדדה 03/09/2026.
--- ⚠️ `moddatetime` (הטריגר של updated_at) **אינה כאן** — היא יושבת בסכמה `extensions`.
+-- 33. מרשם-הזריעה — public.seed_registry (זריעת נתוני-ההדגמה, מודול 7)
+-- =====================================================-- ⚠️ `moddatetime` (הטריגר של updated_at) **אינה כאן** — היא יושבת בסכמה `extensions`.
 --
 -- מקרא: SD = security definer · SI = security invoker · [רשימת התפקידים] = מי קיבל EXECUTE.
 
@@ -1872,7 +1876,11 @@ create policy notification_preferences_update_self on notification_preferences
 --   → supabase/migrations/20260826002446_module5_approve_rpc_origin_backfill.sql
 -- enforce_quote_in_progress_lock() returns trigger
 --   SD · plpgsql · [service_role]
---   → supabase/migrations/20260723115000_module3_lock_and_conversion_rpc.sql
+--   🔑 **נכתבה מחדש 03/09/2026 (מרשם-הזריעה):** בלוק-`if` אחד בראשה — מפתח-סשן
+--      `regin.seed_bypass` **וגם** הצעה ב-`seed_registry` ⇒ מעבר חופשי; אחרת הגוף המקורי
+--      של מ3 ללא שינוי. החתימה זהה; שני הטריגרים (quotes / quote_services) לא נגעו.
+--   → supabase/migrations/20260903180958_seed_registry_and_helpers.sql (הגוף הנוכחי)
+--   → supabase/migrations/20260723115000_module3_lock_and_conversion_rpc.sql (הגוף המקורי)
 
 -- ── מודול 4 — דיילות ומשמרות ───────────────────────────────
 -- enforce_hostess_min_wage() returns trigger
@@ -2092,6 +2100,26 @@ create policy notification_preferences_update_self on notification_preferences
 --   → C: supabase/migrations/20260902211551_module9_c_threshold_functions_and_min_wage_rpc.sql
 --   → D: supabase/migrations/20260902230500_module9_d_min_wage_rpc_threshold_arg.sql
 --   → E: supabase/migrations/20260903032212_module9_e_min_wage_rpc_threshold_ceiling.sql
+
+-- ── זריעת נתוני-ההדגמה (מודול 7, 03/09/2026) — ארבע פונקציות, כולן על שורות רשומות בלבד ──
+-- 🔐 שער משותף לכולן: `assert_module_permission('הגדרות מערכת', ['edit'])` — מודול-מערכת
+--    שאינו ניתן למתן מהמסך ⇒ בפועל מנכ"ל בלבד, בלי לקודד שם-תפקיד.
+-- seed_register(p_batch text, p_entity text, p_ids bigint[]) returns integer
+--   SD · plpgsql · [authenticated, service_role]   ← **חדשה**
+--   רושמת מזהים במרשם (`on conflict do nothing`); מחזירה כמה נרשמו.
+-- seed_backdate_quote(p_quote_id integer, p_created_at timestamptz, p_issue_date date, p_estimated_event_date date, p_vat_rate_snapshot numeric default null) returns void
+--   SD · plpgsql · [authenticated, service_role]   ← **חדשה**
+--   מזיזה תאריכים של הצעה **רשומה** אחרי אישור/דחייה (מפתח-הסשן פותח את הנעילה לשורה זו בלבד).
+--   ⚠️ `updated_at` נשאר now() — `moddatetime` דורס; מגבלה מוצהרת ("פג בקרוב" אינו ניתן לזריעה).
+-- seed_backdate_project(p_project_id integer, p_created_at timestamptz default null, p_final_event_date date default null, p_cancelled_at timestamptz default null, p_operationally_closed_at timestamptz default null, p_invoice_sent_at timestamptz default null, p_archived_at timestamptz default null) returns text
+--   SD · plpgsql · [authenticated, service_role]   ← **חדשה**
+--   מזיזה חותמות של פרויקט **רשום** (`archived_at` ב-`project_finance`), ואז מחילה עליו בלבד את
+--   כלל ה-cron `module6-event-finished`. מחזירה את הסטטוס אחרי ההזזה.
+-- seed_reset(p_batch text) returns jsonb
+--   SD · plpgsql · [authenticated, service_role]   ← **חדשה**
+--   מוחקת אצווה רשומה בסדר ה-FK: project_finance → projects (cascade) → quotes (cascade)
+--   → customers (cascade) → hostesses (cascade) → שורות-המרשם. FK-restrict שלא כוסה מפיל בקול.
+--   → supabase/migrations/20260903180958_seed_registry_and_helpers.sql
 
 -- ── מודול 7 · מסך הבית (03/09/2026) ────────────────────────────────────
 -- get_dashboard_summary(p_month date default null) returns jsonb

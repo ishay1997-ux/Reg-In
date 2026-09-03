@@ -60,6 +60,8 @@ function makeChain(result) {
     'delete',
     'upsert',
     'not',
+    // `range` נוסף 03/09/2026 — `fetchAll` (תקרת-1,000) מדפדף דרכו; המוק מחזיר עמוד יחיד.
+    'range',
   ]) {
     builder[method] = vi.fn(() => builder)
   }

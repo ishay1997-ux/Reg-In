@@ -23,13 +23,36 @@ const PROJECTS_PASSWORD = process.env.E2E_PROJECTS_PASSWORD
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL
 const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY
 
+// 🔄 03/09/2026: דמו-יולי (הצעות 6–13 · 21–23 · 26–27, לקוחות 46–49) נמחק בהכרעת-ישי; הערות-
+// הזרע שלמטה הן היסטוריה. אף בדיקה כאן אינה נועצת מזהה חי — הפיקסטורות נבחרות בזמן-ריצה.
+// לקוח פעיל כלשהו לבורר-הלקוחות (הבדיקות שמשתמשות בו מיירטות את `create_quote`, ולכן זהות
+// הלקוח אינה חשובה — רק שהבורר ימצא אחד).
+async function firstActiveCustomerName(page) {
+  return page.evaluate(
+    async ({ url, anon }) => {
+      const key = Object.keys(sessionStorage).find((k) => k.startsWith('sb-'))
+      const token = JSON.parse(sessionStorage.getItem(key)).access_token
+      const res = await fetch(
+        `${url}/rest/v1/customers?select=company_name&status=eq.active&limit=1`,
+        { headers: { apikey: anon, Authorization: `Bearer ${token}` } },
+      )
+      return (await res.json())[0].company_name
+    },
+    { url: SUPABASE_URL, anon: SUPABASE_ANON },
+  )
+}
+
 // ⚠️ שורות-זרע אמיתיות. נמדדו חי 31/07/2026: 8 הצעות — 4 בתהליך (6,7,8,9) · 1 מאושרת (10) ·
 // 3 דחויות (11 תקציב לקוח · 12 נבחר מתחרה · 13 פג תוקף). המקור: `scripts/demo-seed.mjs`.
 // לפני מחיקת הצעה מהמסד — לחפש את מספרה בחבילת-הבדיקות (זה כבר נשך פעם, ב-#14/#15).
 // ↳ 01/08/2026 (צעד 5.1): +1 הצעה (מדיטק #21, נבנתה ואושרה חי) — עכשיו 9 הצעות: אותן 4
 // בתהליך, 2 מאושרות (10,21), אותן 3 דחויות. אף אסרטה כאן אינה נשענת על מונה-כולל, רק על
 // REJECTED_COUNT (לא זז) ומזהי-שורה ספציפיים — ולכן אין תיקון-קוד מעבר להערה הזו.
-const REJECTED_QUOTE_ID = 11
+// ↳ 03/09/2026 (זריעת מ7): REJECTED_COUNT הפך מ"בדיוק" ל**רצפה** — גנרטור נתוני-ההדגמה
+// מוסיף הצעות דחויות, והמספר המדויק נקרא בזמן-ריצה ממונה-הלשונית (ר' הבדיקה למטה).
+// שלוש ההצעות הישנות (11/12/13) לא נוגעות ⇒ הרצפה נשארת נכונה גם אחרי `--reset`.
+// 🔄 03/09/2026: #11 (דחויה, דמו-יולי) נמחקה — הדחויה נבחרת בזמן-ריצה מהשורה הראשונה בלשונית "נדחו".
+let REJECTED_QUOTE_ID = null
 const REJECTED_COUNT = 3
 
 async function login(page, email, password) {
@@ -164,8 +187,9 @@ test.describe('הצעה שנדחתה נעולה — והנעילה בשרת, ל�
     await page.goto('/quotes')
     await page.getByTestId('quotes-tab-rejected').click()
 
-    const row = page.getByTestId(`quote-row-${REJECTED_QUOTE_ID}`)
-    await expect(row).toBeVisible({ timeout: 30_000 })
+    const row = page.locator('[data-testid^="quote-row-"]').first()
+    await expect(row, 'אין הצעה דחויה — פיקסטורה חסרה, לא באג').toBeVisible({ timeout: 30_000 })
+    REJECTED_QUOTE_ID = (await row.getAttribute('data-testid')).replace('quote-row-', '')
     // בקרת-חיוב: המסמך **כן** נגיש — אחרת "אין כפתורים" היה יכול לנבוע ממסך שבור.
     await expect(page.getByTestId(`quote-document-${REJECTED_QUOTE_ID}`)).toBeVisible()
     await expect(page.getByTestId(`quote-edit-${REJECTED_QUOTE_ID}`)).toHaveCount(0)
@@ -209,13 +233,28 @@ test.describe('הצעה שנדחתה נעולה — והנעילה בשרת, ל�
     // OLD.quote_status ישירות, ועל `quote_services` הוא רץ תת-שאילתה (ענף נפרד לגמרי,
     // מיגרציה 20260723115000 שורות 40-41 + טריגר `quote_services_lock_non_in_progress`
     // שורות 53-55, `before update or delete`). זה הענף ששומר על הקפאת-שורות של הצעה
-    // מאושרת/דחויה — ומעולם לא נבדק ישירות. line_id=19 = השורה הראשונה (04ST) של הצעה #11
-    // (נדחתה, 'תקציב לקוח').
+    // מאושרת/דחויה — ומעולם לא נבדק ישירות. השורה הנעולה
+    // נבחרת בזמן-ריצה (🔄 03/09/2026 — היה line_id=19 של הצעה #11, שנמחקה עם דמו-יולי).
     await login(page, CEO_EMAIL, CEO_PASSWORD)
     await page.goto('/quotes')
     await expect(page.getByTestId('quotes-table')).toBeVisible({ timeout: 30_000 })
 
-    const LOCKED_LINE_ID = 19
+    // 🔄 03/09/2026: שורה 19 (הצעה #11 של דמו-יולי) נמחקה. השורה הנעולה נבחרת בזמן-ריצה: השורה
+    // הראשונה שנמצאה על הצעה מאושרת/דחויה עם notes=null — תנאי-הקדם של ה-PATCH-שאינו-משנה.
+    const lockedLine = await page.evaluate(
+      async ({ url, anon }) => {
+        const key = Object.keys(sessionStorage).find((k) => k.startsWith('sb-'))
+        const token = JSON.parse(sessionStorage.getItem(key)).access_token
+        const res = await fetch(
+          `${url}/rest/v1/quote_services?select=line_id,notes,quotes!inner(quote_status)&quotes.quote_status=in.(approved,rejected)&notes=is.null&limit=1`,
+          { headers: { apikey: anon, Authorization: `Bearer ${token}` } },
+        )
+        return (await res.json())[0] ?? null
+      },
+      { url: SUPABASE_URL, anon: SUPABASE_ANON },
+    )
+    expect(lockedLine, 'אין שורה נעולה עם notes=null — פיקסטורה חסרה, לא באג').toBeTruthy()
+    const LOCKED_LINE_ID = lockedLine.line_id
 
     async function callRest(method) {
       return page.evaluate(
@@ -267,13 +306,25 @@ test.describe('הצעה שנדחתה נעולה — והנעילה בשרת, ל�
 test.describe('התפוגה מגיעה למסך כמו כל דחייה אחרת (4.2)', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
 
-  test('לשונית "נדחו": שלוש שורות, פילוח-סיבות, ו"פג תוקף" ביניהן', async ({ page }) => {
+  test('לשונית "נדחו": המונה בלשונית = השורות שרונדרו (≥3), פילוח-סיבות, ו"פג תוקף" ביניהן', async ({
+    page,
+  }) => {
     await login(page, CEO_EMAIL, CEO_PASSWORD)
     await page.goto('/quotes')
     await page.getByTestId('quotes-tab-rejected').click()
     await expect(page.getByTestId('quotes-table')).toBeVisible({ timeout: 30_000 })
 
-    await expect(page.locator('[data-testid^="quote-row-"]')).toHaveCount(REJECTED_COUNT)
+    // 🔄 שוכתב 03/09/2026 (זריעת מ7, `seed-build-handoff.md §7א ②`): `toHaveCount(3)` היה
+    // מספר-חי נעוץ — הגנרטור מוסיף עשרות הצעות דחויות והמספר מרקיב (נמדד: 10 באצווה
+    // הקטנה). האינווריאנט: **המונה שבלשונית "נדחו" שווה למספר השורות שרונדרו** (אותה תבנית
+    // כמו בלוקי projects/logistics ב-`smoke-anchors.json`), **וטענת-מכנה** — לפחות שלוש שורות,
+    // כי שלוש סיבות-הדחייה שלמטה חייבות שורה כל אחת. בדיקה שעוברת על אפס שורות אינה בדיקה.
+    const tabLabel = await page.getByTestId('quotes-tab-rejected').innerText()
+    const tabCount = Number((tabLabel.match(/\d+/) ?? [])[0])
+    expect(tabCount, `מונה-הלשונית לא נקרא מתוך "${tabLabel}"`).toBeGreaterThanOrEqual(
+      REJECTED_COUNT,
+    )
+    await expect(page.locator('[data-testid^="quote-row-"]')).toHaveCount(tabCount)
 
     // 🔒 חוזה: שלוש המחרוזות הן ערכי `quotes_rejection_reason_check` במסד, לא תוויות-מסך.
     // ‏'פג תוקף' הוא היחיד שאיש אינו יכול לבחור בחלון — **רק עבודת-הרקע כותבת אותו**
@@ -546,7 +597,7 @@ test.describe('שמירה פותחת את חלון-השליחה (C5 §5.5.4 "ש�
     await page.goto('/quotes/new')
     await expect(page.getByTestId('quote-summary')).toBeVisible({ timeout: 30_000 })
 
-    await page.getByTestId('quote-customer-search').fill('מדיטק')
+    await page.getByTestId('quote-customer-search').fill(await firstActiveCustomerName(page))
     await page.locator('[data-testid^="quote-customer-option-"]').first().click()
     await page.getByTestId('quote-event-name').fill('בדיקת שמור-ושלח')
     await page.getByTestId('quote-event-date').fill('2026-12-01')
@@ -610,7 +661,7 @@ test.describe('שמירה פותחת את חלון-השליחה (C5 §5.5.4 "ש�
     await page.goto('/quotes/new')
     await expect(page.getByTestId('quote-summary')).toBeVisible({ timeout: 30_000 })
 
-    await page.getByTestId('quote-customer-search').fill('מדיטק')
+    await page.getByTestId('quote-customer-search').fill(await firstActiveCustomerName(page))
     await page.locator('[data-testid^="quote-customer-option-"]').first().click()
     await page.getByTestId('quote-event-name').fill('בדיקת כשל-שליפה')
     await page.getByTestId('quote-event-date').fill('2026-12-01')
@@ -643,8 +694,26 @@ test.describe('"עדכן ושלח" בלי שינוי — לא שומרים, וה
   // ⚠️ **מה זה מגן עליו:** עדכון-ריק הריץ `update` מלא, וטריגר `moddatetime` הקפיץ את
   // `updated_at` — שממנו נגזרת התפוגה. כלומר הצעה שנותרו לה יומיים חזרה בשקט ל-30 יום.
   // ⚠️ **אפס כתיבות אמיתיות:** ה-RPC של העריכה מיורט. הבדיקה מודדת **האם הבקשה נשלחה**,
-  // ולא משנה את המסד — כי `quotes#7` היא שורת-זרע אמיתית.
-  const EDITABLE_QUOTE_ID = 7
+  // ולא משנה את המסד — ההצעה היא שורה אמיתית.
+  // 🔄 03/09/2026: #7 (דמו-יולי) נמחקה — נבחרת בזמן-ריצה: הצעה בתהליך שאירועה עתידי (אחרת
+  // הוולידציה של הטופס חוסמת את "עדכן ושלח" לפני שהמסלול הנבדק בכלל רץ).
+  async function pickEditableQuote(page) {
+    const today = new Date().toISOString().slice(0, 10)
+    const id = await page.evaluate(
+      async ({ url, anon, today }) => {
+        const key = Object.keys(sessionStorage).find((k) => k.startsWith('sb-'))
+        const token = JSON.parse(sessionStorage.getItem(key)).access_token
+        const res = await fetch(
+          `${url}/rest/v1/quotes?select=quote_id&quote_status=eq.in_progress&estimated_event_date=gt.${today}&order=quote_id&limit=1`,
+          { headers: { apikey: anon, Authorization: `Bearer ${token}` } },
+        )
+        return (await res.json())[0]?.quote_id ?? null
+      },
+      { url: SUPABASE_URL, anon: SUPABASE_ANON, today },
+    )
+    expect(id, 'אין הצעה בתהליך עם אירוע עתידי — פיקסטורה חסרה, לא באג').toBeTruthy()
+    return id
+  }
 
   function countEditRpc(page) {
     const calls = []
@@ -662,7 +731,7 @@ test.describe('"עדכן ושלח" בלי שינוי — לא שומרים, וה
       )
     }
     await login(page, CEO_EMAIL, CEO_PASSWORD)
-    await page.goto(`/quotes/${EDITABLE_QUOTE_ID}/edit`)
+    await page.goto(`/quotes/${await pickEditableQuote(page)}/edit`)
     await expect(page.getByTestId('quote-summary')).toBeVisible({ timeout: 30_000 })
   }
 

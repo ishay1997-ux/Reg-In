@@ -13,6 +13,7 @@
 // reconstruct it") — ורק כשאין הודעה (תקלת-רשת/timeout) נופל לניסוח כללי.
 
 import { supabase } from '@/supabaseClient'
+import { fetchAll } from '@/api/fetchAll'
 import { toError, RLS_DENIED_CODE } from '@/lib/apiError'
 import { finalAssignmentRows } from '@/lib/hostesses'
 // N2: איש-הקשר הראשי הוא שורה ב-customer_contacts (is_primary), לא שלוש עמודות על customers.
@@ -50,8 +51,12 @@ function toRpcError(error, fallbackMessage) {
 // מבט-העל (משטח 1): RPC אחד, לא צירוף בצד-דפדפן. AR-3: 🚫 אין לצרף projects+assignments+logistics
 // כאן — 17 העמודות (כולל required_hostess_count ו-pending_invites) כבר מגיעות מחושבות מהמסד.
 // planned_revenue === null פירושו "אין הרשאה / אין הצעה", לעולם לא 0 — הקורא לא הופך את זה.
+// 🔴 03/09/2026: גם RPC שמחזיר טבלה נחתך ב-1,000 שורות בשקט (PostgREST), ו-792 פרויקטים חיים כבר
+// קרובים לשם ⇒ `fetchAll`. `order('project_id')` חובה: הפונקציה עצמה אינה ממיינת את הפלט הסופי.
 export async function listProjectsOverview() {
-  const { data, error } = await supabase.rpc('list_projects_overview')
+  const { data, error } = await fetchAll(() =>
+    supabase.rpc('list_projects_overview').order('project_id'),
+  )
   if (error) throw toRpcError(error, 'שגיאה בטעינת מבט-העל של הפרויקטים.')
   return data ?? []
 }
