@@ -135,7 +135,9 @@ test.describe('לקוחות (מודול 2) — קבלה E2E (guide ⑦)', () => 
     )
     await login(page, STAFF_EMAIL, STAFF_PASSWORD)
     // סרגל-הצד מסנן מודולים blocked (Sidebar.jsx) — אין קישור 'לקוחות'.
-    await expect(page.getByRole('link', { name: 'לקוחות' })).toHaveCount(0)
+    // ⚠️ מוגבל ל-`navigation` (03/09/2026, מודול 7): `/` הוא עכשיו מסך-הבית, ושבבי-הלוח שלו הם
+    // קישורים ששמם הוא שם-האירוע — "כנס לקוחות שנתי" תאם את החיפוש-הרחב והחזיר 6 במקום 0.
+    await expect(page.getByRole('navigation').getByRole('link', { name: 'לקוחות' })).toHaveCount(0)
     // גישה ישירה ל-URL חסומה ב-ProtectedRoute (הגנה-כפולה, לא רק הסתרה בתפריט).
     await page.goto('/customers')
     await expect(page.getByText('אין לך הרשאה לצפות במסך זה')).toBeVisible()

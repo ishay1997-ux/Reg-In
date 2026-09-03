@@ -9,8 +9,14 @@
 -- ⚠️ זהו SNAPSHOT שנוצר מתוך שאילתות על המסד החי. **מקור-אמת לשינויים = `supabase/migrations/`**
 --    (ולא הקובץ הזה). כל שינוי DB נכתב כקובץ מיגרציה חדש, מוחל, ואז הקובץ הזה נוצר מחדש.
 --
--- 📅 נוצר: 14/08/2026 · **רוענן לאחרונה: 03/09/2026** (מרשם-הזריעה של מ7 — מיגרציה אחת; הדלתא
---    מפורטת בסוף הרשימה) · רוענן קודם: 02/09/2026 (מודול 9, פזה 1 — שלוש מיגרציות) · 27/08/2026 (צעד 1.8 — כל עשר מיגרציות פזה 1 של מודול 8; אחרי מיגרציה
+-- 📅 נוצר: 14/08/2026 · **רוענן לאחרונה: 03/09/2026 23:2X (מיזוג שני סשנים)** (מודול 7, צעדים 1.2–1.3 — שתי מיגרציות,
+--    `20260903182735_module7_dashboard_summary_rpc` + תיקון-קדימה `20260903184711_…_cancelled_on_calendar_and_profit`:
+--    **פונקציה חדשה** `get_dashboard_summary(date)`,
+--    סעיף 24 בלוק "מודול 7"; אפס טבלאות/עמודות/policies. ⚠️ **ובאותה שעה, מסשן מקביל:**
+--    `20260903180958_seed_registry_and_helpers` (הוחלה 18:15) הוסיפה טבלה `seed_registry` + 4 פונקציות
+--    `seed_*` + שינוי בגוף `enforce_quote_in_progress_lock` — **מתועדות בסעיף 33 ובבלוק "זריעת נתוני-ההדגמה" בסעיף 24** (מוזגו לכאן 03/09 23:2X). הספירה "45" בסעיף 24 היא
+--    לכן 45 + 1 (כאן) + 4 (שם) = **50 חי, נמדד `pg_proc` 03/09 18:4X**) · רוענן קודם: 02/09/2026 (מודול 9, פזה 1 — שלוש מיגרציות; הדלתא
+--    מפורטת בסוף הרשימה) · רוענן קודם: 27/08/2026 (צעד 1.8 — כל עשר מיגרציות פזה 1 של מודול 8; אחרי מיגרציה
 --    `20260827125155_module8_finance_tables_and_columns`; הדלתא: טבלה חדשה `project_finance`
 --    (+RLS +policy קריאה +טריגר), 2 עמודות ואילוץ-ייחודיות על `projects`, עמודה + CHECK
 --    + אינדקס-C-1 על `assignments`, והידוק policy-הקריאה של `quote_services` (ה30)) ·
@@ -1840,48 +1846,7 @@ create policy notification_preferences_update_self on notification_preferences
 
 -- ============================================================
 -- 33. מרשם-הזריעה — public.seed_registry (זריעת נתוני-ההדגמה, מודול 7)
--- ============================================================
--- 🎯 **"מדבקה" על כל שורה שגנרטור נתוני-ההדגמה (`scripts/demo-seed.mjs`) יצר** — לקוח ·
---    דיילת · הצעה · פרויקט — כדי ש-`seed_reset` תמחק בדיוק את מה שנזרע ו-`seed_backdate_*`
---    יזיזו תאריכים **רק** של שורות רשומות. הדמו הישן (לקוחות 46–49, פרויקטים 3/7/8/13/14,
---    חמש הדיילות) **אינו במרשם** ⇒ בלתי-נגיש לפונקציות האלה מבנייה.
--- 🔴 **RLS דלוק בלי policies במכוון** — הגישה רק דרך ארבע פונקציות ה-DEFINER (סעיף 24,
---    "זריעה"), באותו דפוס של `login_attempts`/`feedback_rpc_calls`. אף מסך אינו קורא אותה.
--- 🔑 **והשפעתה היחידה על טבלה קיימת:** `enforce_quote_in_progress_lock` (הטריגר של quotes/
---    quote_services) מתיר עדכון/מחיקה של הצעה **רשומה כאן** כשמפתח-הסשן `regin.seed_bypass`
---    דלוק — והמפתח נקבע רק בתוך `seed_backdate_quote`/`seed_reset`. הצעה אמיתית לעולם אינה
---    כאן ⇒ הנעילה עליה לא נחלשה.
-create table seed_registry (
-  entity_type text        not null,
-  entity_id   bigint      not null,
-  batch_id    text        not null,
-  created_at  timestamptz not null default now(),
-  constraint seed_registry_pkey              primary key (entity_type, entity_id),
-  constraint seed_registry_entity_type_check check (entity_type = any (array['customer'::text, 'hostess'::text, 'quote'::text, 'project'::text]))
-);
-
-alter table seed_registry enable row level security;
-
--- הערת-טבלה (comment on table)
--- 'רישום שורות שנוצרו ע"י גנרטור נתוני-ההדגמה (scripts/demo-seed.mjs). RLS דלוק בלי policies
---  במכוון — גישה רק דרך seed_register / seed_backdate_* / seed_reset.'
-
--- אינדקסים
--- seed_registry_pkey      — unique btree (entity_type, entity_id) [נוצר ע"י האילוץ seed_registry_pkey]
--- seed_registry_batch_idx — btree (batch_id)  [המפתח של seed_reset]
-
--- טריגרים: אין (אין updated_at — שורת-רישום אינה נערכת, רק נוצרת ונמחקת)
--- מדיניות RLS: אין (deny-all במכוון)
---   → supabase/migrations/20260903180958_seed_registry_and_helpers.sql
-
-
--- ============================================================
--- 24. פונקציות בסכמה public — 49 פונקציות
--- ============================================================
--- 🚫 **הגופים אינם כאן במכוון** (ר' כותרת הקובץ). לכל פונקציה: חתימה · מצב אבטחה · search_path ·
---    למי יש EXECUTE · ומצביע לקובץ המיגרציה שבו הגוף הנוכחי חי.
--- לכל 49 הפונקציות `search_path = ''` (שמות מלאים בגוף) — נמדד 03/09/2026.
--- ⚠️ `moddatetime` (הטריגר של updated_at) **אינה כאן** — היא יושבת בסכמה `extensions`.
+-- =====================================================-- ⚠️ `moddatetime` (הטריגר של updated_at) **אינה כאן** — היא יושבת בסכמה `extensions`.
 --
 -- מקרא: SD = security definer · SI = security invoker · [רשימת התפקידים] = מי קיבל EXECUTE.
 
@@ -2155,6 +2120,25 @@ alter table seed_registry enable row level security;
 --   מוחקת אצווה רשומה בסדר ה-FK: project_finance → projects (cascade) → quotes (cascade)
 --   → customers (cascade) → hostesses (cascade) → שורות-המרשם. FK-restrict שלא כוסה מפיל בקול.
 --   → supabase/migrations/20260903180958_seed_registry_and_helpers.sql
+
+-- ── מודול 7 · מסך הבית (03/09/2026) ────────────────────────────────────
+-- get_dashboard_summary(p_month date default null) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** (ACL נמדד: בלי `anon`)
+--   השער בכניסה: `assert_module_permission('פרויקטים', edit/view)` — כל חמשת התפקידים (§7.10:
+--   המסך לכולם, אין שורת-מודול "מסך הבית"). **המיסוך (§7.97) בגוף, פר-שדה** — אותו predicate של
+--   `project_finance_select_by_permission` ('כספים') ו-`quotes_select_by_permission` ('הצעות מחיר');
+--   שדה חסום = NULL (לא 0) + דגל `profit_visible` / `quotes_visible`. **אין policy חדשה.**
+--   מחזירה בקריאה אחת: 4 KPI (`active_projects_count` · `satisfaction_avg` 90-יום · `monthly_profit`
+--   §7.96 · `pending_quotes_count`) · `projects` (חודש-היעד + כל הסטטוסים הפתוחים, **דרך
+--   `list_projects_overview()`** — אותן ספירות-איוש/לוגיסטיקה כמו מסך-הפרויקטים) · `pending_quotes` ·
+--   `params` (שלושת הספים). צבע-הלוח נגזר בלקוח (`src/lib/dashboard.js`), לא כאן — כלל 14.
+--   אומת אחרי ההחלה בהתחזות ל-5 התפקידים: מנכ"ל/כספים רואות רווח · פרויקטים רואה הצעות ולא רווח ·
+--   גיוס/לוגיסטיקה לא רואות שניהם · מייל לא-קיים ⇒ `42501` · הספירות תאמו ספירת-יד (4 · 6 · 5.00).
+--   ↳ **תיקון-קדימה 03/09/2026 18:5X (הכרעות-ישי):** מבוטל **נשאר** בשורות-הלוח (הלקוח מצייר אותו
+--     אפור-מחוק, כמו Monday) · מבוטל שדמי-הביטול שלו לא נפתרו תורם **0** ל-`monthly_profit` (עקיפת
+--     §7.96 כלשונו, אחרי שנמדד #15 ⇒ 3,635 ₪ לאירוע שלא יתקיים). הגוף החי = הקובץ השני.
+--   → supabase/migrations/20260903182735_module7_dashboard_summary_rpc.sql (המקור + הכותרת המלאה)
+--   → supabase/migrations/20260903184711_module7_dashboard_cancelled_on_calendar_and_profit.sql (הגוף החי)
 
 -- ============================================================
 -- 25. עבודות מתוזמנות — cron.job (3 עבודות, כולן active)
