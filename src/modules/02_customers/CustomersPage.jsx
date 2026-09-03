@@ -143,6 +143,10 @@ export default function CustomersPage() {
   // הגיע לארכיון בלי שאלה. הדגל הזה הוא המצב-השלישי המוצהר: המשתמש רואה שהנתונים לא נטענו
   // ויכול לנסות שוב, ובינתיים כל ארכוב שואל וידוא. אותה דוקטרינת "ריק אינו 0" של מודול-הכסף.
   const [revenueLoadFailed, setRevenueLoadFailed] = useState(false)
+  // 🔴 R-1 (אודיט-סגירת מ9, 03/09/2026): הבלוק הזה איבד את השקט שלו בכוונה — ר' ההערה מעל
+  // ה-try — ולכן הוא צריך דגל ובאנר משלו, בדיוק כמו עמודת-ההכנסות. בלי זה הפכנו שכבת-API
+  // כנה למסך אילם שמאבד יותר ממה שאיבד קודם.
+  const [screenParamsFailed, setScreenParamsFailed] = useState(false)
   // 🆕 מסננת "רדומים" (A3, מודול 6 · משטח 8) — פר-לקוח: מערך שורות-הפרויקטים המזעריות
   // (customer_id, final_event_date, project_status) שממנו isCustomerDormant נגזרת, בדיוק
   // כמו revenueByCustomer. `{}` = טרם נטען/כשל — אז אף לקוח לא רדום, ולא נופלים ("לא בכוח").
@@ -213,8 +217,14 @@ export default function CustomersPage() {
       }
 
       // 🆕 A3 (מודול 6 · משטח 8) — פרויקטים בתפזורת + סף-הרדימות, לצורך מסננת "רדומים".
-      // בלוק try נפרד ומכוון: כשל כאן לא נוגע בעמודת-ההכנסות ולא בטבלה עצמה — רק במסננת
-      // (מפה ריקה ⇒ isCustomerDormant מחזירה false לכולם, "לא בכוח" ולא קורס).
+      // בלוק try נפרד ומכוון: כשל כאן לא נוגע בעמודת-ההכנסות ולא בטבלה עצמה.
+      // 🔴 **אבל מה שכן נופל כאן גדל ב-03/09/2026, וזה נאמר במפורש כי הנוסח הקודם כבר לא נכון:**
+      // ‏`getCustomerScreenParams` עברה לקורא שצועק (ממצא F-7 — שורת-סף חסרה הייתה מוחקת את
+      // תגית "טעון בירור" מכל הלקוחות **בשקט**), ולכן שורה חסרה **מפילה את כל ה-`Promise.all`**:
+      // גם מפת-הפרויקטים, כלומר גם מסננת-הרדומים וגם עמודת-הכוכבים. ⇒ **מ"לא בכוח" שקט
+      // ל"נכשל בקול" — ולכן חייב באנר.** בלי הבאנר הזה התיקון של F-7 היה רגרסיה נטו (ממצא R-1
+      // בסריקה-החוזרת של אותו אודיט: הפכנו את ה-API כנה ואת המסך לא רועש יותר, והרחבנו את
+      // רדיוס-הפגיעה). הבאנר, הדגל וה-`console.error` מועתקים מ-`revenueLoadFailed` שתשע שורות מכאן.
       try {
         const [projectRows, customerParamRows] = await Promise.all([
           listProjectsForCustomerMetrics(),
@@ -226,11 +236,14 @@ export default function CustomersPage() {
           customerParamRows.find((row) => row.param_name === name)?.param_value
         setDormantThresholdDays(Number(paramValue(DORMANT_THRESHOLD_PARAM_NAME)))
         setSatisfactionThreshold(paramValue(SATISFACTION_THRESHOLD_PARAM_NAME) ?? null)
-      } catch {
+        if (!cancelled) setScreenParamsFailed(false)
+      } catch (err) {
         if (!cancelled) {
+          console.error('[02_customers] screen params/projects load failed', err)
           setProjectsByCustomer({})
           setDormantThresholdDays(NaN)
           setSatisfactionThreshold(null)
+          setScreenParamsFailed(true)
         }
       }
     })()
@@ -555,6 +568,29 @@ export default function CustomersPage() {
               onClick={reloadCustomers}
               className="h-auto py-1.5 px-3 rounded-lg border-amber-300 text-amber-800 shrink-0"
               data-testid="customers-revenue-retry"
+            >
+              נסה שוב
+            </Button>
+          </div>
+        )}
+
+        {/* R-1: אותו דפוס בדיוק כמו הבאנר שמעליו. הנוסח נוקב במה שנעלם מהמסך — מסננת-הרדומים
+            ועמודת-ההתרשמות — ולא ב"שגיאת טעינה" גנרית, כי המשתמשת רואה טבלה מלאה ותוהה מה חסר. */}
+        {screenParamsFailed && (
+          <div
+            className="rounded-lg border border-amber-300 bg-amber-50 p-3 mb-4 flex items-center justify-between gap-3 flex-wrap"
+            role="alert"
+            data-testid="customers-screen-params-error"
+          >
+            <p className="text-sm text-amber-800">
+              הגדרות המסך לא נטענו — מסננת "לקוחות רדומים" ועמודת ההתרשמות אינן זמינות כרגע.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={reloadCustomers}
+              className="h-auto py-1.5 px-3 rounded-lg border-amber-300 text-amber-800 shrink-0"
+              data-testid="customers-screen-params-retry"
             >
               נסה שוב
             </Button>

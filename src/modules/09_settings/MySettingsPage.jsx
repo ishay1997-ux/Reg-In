@@ -129,21 +129,32 @@ export default function MySettingsPage() {
     return [...known, ...extra]
   }, [visibleRows])
 
-  const dirtyCount = form.dirtyNames.length
-  const totalCount = rows.length
+  // 🔴 R-2 (אודיט-סגירת מ9, 03/09/2026): השער מחושב על **השורות הנראות**, לא על כל השורות
+  // המשונות. אחרת החיפוש שהוסף באותו סבב מייצר מבוי-סתום: מקלידים ערך לא-תקין (למשל 3500
+  // בשכר-המינימום, שנחסם מאותו סבב), מחפשים משהו אחר, ואז כפתור-השמירה אפור, המונה אומר
+  // "שינית 1", וההודעה האדומה **מחוץ למסך בלי שום דבר שמצביע עליה**. ‏`ParamsTab` כבר פתר
+  // את זה בכך שהוא מגדיר את השער ואת הכתיבה לפי הקבוצה הפעילה; כאן המקבילה היא החיפוש.
+  const visibleNames = useMemo(
+    () => new Set(visibleRows.map((row) => row.param_name)),
+    [visibleRows],
+  )
+  const dirtyVisible = form.dirtyNames.filter((name) => visibleNames.has(name))
+  const dirtyCount = dirtyVisible.length
+  const totalCount = visibleRows.length
   const hasErrors =
-    form.dirtyNames.some((name) => form.errors[name]) ||
+    dirtyVisible.some((name) => form.errors[name]) ||
     form.crossFieldErrors.length > 0 ||
     // R-3 (ר' ParamsTab.jsx): ורדיקט-חסימה של תבנית חוסם שמירה בדיוק כמו שגיאת-שדה רגילה.
-    form.dirtyNames.some((name) => templateVerdicts[name]?.status === 'blocked')
+    dirtyVisible.some((name) => templateVerdicts[name]?.status === 'blocked')
 
   const minWageRow = rows.find((row) => row.param_name === MIN_WAGE_PARAM)
   const showMinWage = Boolean(minWageRow)
 
   async function handleSave() {
-    // בלי scope — כל השורות-שבבעלות בבת-אחת (שמירה-אחת-לדף, לא פר-קבוצה כמו ב-`ParamsTab`;
-    // המוקאפ מצייר מונה-שינויים אחד לכל הכרטיס — §5/§6/§7).
-    const { ok, written } = await form.submit()
+    // שמירה-אחת-לדף (המוקאפ מצייר מונה-שינויים אחד לכל הכרטיס — §5/§6/§7), **אבל מוגבלת
+    // לשורות הנראות** מאותו נימוק של R-2 שמעל: מה שהמסך סופר ומה שהוא כותב חייבים להיות
+    // אותה קבוצה, אחרת חיפוש פעיל שומר בשקט שורה שהמשתמשת אינה רואה.
+    const { ok, written } = await form.submit(dirtyVisible)
     if (written.length > 0) {
       setRows((prev) =>
         prev.map((row) =>

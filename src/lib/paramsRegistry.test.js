@@ -4,6 +4,8 @@ import {
   PARAM_GROUPS,
   getParamEntry,
   validateParamValue,
+  cancellationOrderOk,
+  expiryWarningOrderOk,
   weightsSumOk,
   distanceOrderOk,
   matchesParamSearch,
@@ -427,5 +429,25 @@ describe('שכר_מינימום_שעתי — תקרת-שפיות (F-4)', () => {
     const result = validateParamValue(entry, '3500')
     expect(result.ok).toBe(false)
     expect(result.message).toContain('200')
+  })
+})
+
+// 🔴 שני כללי-הרוחב שנוספו באודיט-הסגירה (03/09/2026). **כל אחד נבדק גם כשהוא נכשל** —
+// כלל שראית רק עובר אינו כלל (src/CLAUDE.md, "שומר שלא נצפה נכשל אינו שומר").
+describe('כללי-רוחב יחסיים — סדר, לא תקרה', () => {
+  it('מדרגות דמי-ביטול: 24 לפני 72 תקין, והיפוך נחסם', () => {
+    expect(cancellationOrderOk('24', '72')).toBe(true)
+    expect(cancellationOrderOk('100', '72')).toBe(false)
+    // שווה אינו תקין: `full === partial` מוחק את המדרגה האמצעית בדיוק כמו היפוך.
+    expect(cancellationOrderOk('72', '72')).toBe(false)
+    // ערך לא-מספרי אינו עניינו של כלל-הרוחב — ולידציית-השדה תופסת אותו קודם.
+    expect(cancellationOrderOk('', '72')).toBe(true)
+  })
+
+  it('אזהרה מול תוקף: 7 מתוך 30 תקין, ואזהרה ארוכה מהתוקף נחסמת', () => {
+    expect(expiryWarningOrderOk('7', '30')).toBe(true)
+    expect(expiryWarningOrderOk('40', '30')).toBe(false)
+    expect(expiryWarningOrderOk('30', '30')).toBe(false)
+    expect(expiryWarningOrderOk(undefined, '30')).toBe(true)
   })
 })

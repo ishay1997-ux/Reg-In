@@ -14,6 +14,8 @@ import { renderHook, act } from '@testing-library/react'
 import useParamsForm, {
   WEIGHTS_SUM_ERROR,
   DISTANCE_ORDER_ERROR,
+  CANCELLATION_ORDER_ERROR,
+  EXPIRY_WARNING_ORDER_ERROR,
   saveFailedMessage,
 } from './useParamsForm'
 import { updateParams } from '@/modules/09_settings/api'
@@ -49,6 +51,15 @@ const WEIGHT_ROWS = [
 const DISTANCE_ROWS = [
   row('שער_מרחק_קמ', '80', 'smart_match'),
   row('גולפוסט_מרחק_קמ', '40', 'smart_match'),
+]
+
+const COMPENSATION_ROWS = [
+  row('שעות_פיצוי_ביטול_מלא', '24', 'control_alerts'),
+  row('שעות_פיצוי_ביטול_חלקי', '72', 'control_alerts'),
+]
+const EXPIRY_ROWS = [
+  row('ימי_אזהרה_הצעה_פגה', '7', 'pricing_timing'),
+  row('ימי_תוקף_הצעה', '30', 'pricing_timing'),
 ]
 
 function setup(rows, options = {}) {
@@ -122,6 +133,24 @@ describe('useParamsForm — ולידציה', () => {
     const { result } = setup(DISTANCE_ROWS, { canEditAll: true })
     act(() => result.current.setValue('גולפוסט_מרחק_קמ', '90'))
     expect(result.current.crossFieldErrors).toContain(DISTANCE_ORDER_ERROR)
+  })
+
+  // 🔴 שני הכללים שנוספו באודיט-הסגירה (03/09/2026). הראשון הוא **באג-כסף**: היפוך המדרגות
+  // מוחק את מדרגת ה-50% בשקט, וביטול 50 שעות לפני אירוע מחויב ב-100%. הנימוק המלא ליד
+  // `cancellationOrderOk` ב-`paramsRegistry.js`; כאן נבדק שהשער **באמת נורה**, ולא רק שהתקין עובר.
+  it('מדרגות דמי-ביטול הפוכות נחסמות — ורק אחרי שנגעו באחת מהן', () => {
+    const { result } = setup(COMPENSATION_ROWS, { canEditAll: true })
+    expect(result.current.crossFieldErrors).toEqual([])
+    act(() => result.current.setValue('שעות_פיצוי_ביטול_מלא', '100'))
+    expect(result.current.crossFieldErrors).toContain(CANCELLATION_ORDER_ERROR)
+    act(() => result.current.setValue('שעות_פיצוי_ביטול_מלא', '24'))
+    expect(result.current.crossFieldErrors).toEqual([])
+  })
+
+  it('ימי-אזהרה ארוכים מימי-התוקף נחסמים', () => {
+    const { result } = setup(EXPIRY_ROWS, { canEditAll: true })
+    act(() => result.current.setValue('ימי_אזהרה_הצעה_פגה', '40'))
+    expect(result.current.crossFieldErrors).toContain(EXPIRY_WARNING_ORDER_ERROR)
   })
 
   it('ערך פסול אינו נשלח בכלל', async () => {

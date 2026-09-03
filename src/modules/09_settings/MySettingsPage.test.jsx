@@ -184,3 +184,41 @@ describe('MySettingsPage — חיפוש (UX-6)', () => {
     expect(screen.getByTestId('settings-my-no-results')).toBeInTheDocument()
   })
 })
+
+// 🔴 R-2 (אודיט-סגירת מ9, 03/09/2026): החיפוש לא יוצר מבוי-סתום. ערך לא-תקין בשורה שהוסתרה
+// בחיפוש אינו משאיר כפתור אפור בלי הסבר — המונה והשער מדברים על מה שנראה על המסך.
+describe('MySettingsPage — החיפוש אינו מסתיר את סיבת-החסימה (R-2)', () => {
+  it('שגיאה בשורה מוסתרת אינה חוסמת שמירה של השורה הנראית', async () => {
+    listMyParams.mockResolvedValue([
+      {
+        param_name: 'שכר_מינימום_שעתי',
+        param_value: '35',
+        param_type: 'pricing_timing',
+        owner_role_id: 3,
+      },
+      {
+        param_name: 'תנאי_תשלום_ימים',
+        param_value: '30',
+        param_type: 'pricing_timing',
+        owner_role_id: 3,
+      },
+    ])
+    updateParams.mockResolvedValue(['תנאי_תשלום_ימים'])
+    renderPage()
+    // ערך פסול בשכר-המינימום (מעל התקרה שנוספה באותו סבב), ואז מחפשים משהו אחר.
+    fireEvent.change(await screen.findByTestId('settings-value-שכר_מינימום_שעתי'), {
+      target: { value: '3500' },
+    })
+    fireEvent.change(screen.getByTestId('settings-my-search'), { target: { value: 'תשלום' } })
+    fireEvent.change(screen.getByTestId('settings-value-תנאי_תשלום_ימים'), {
+      target: { value: '45' },
+    })
+    // המונה מדבר על הנראה, והכפתור פעיל — השגיאה שמחוץ למסך אינה נועלת את המסך.
+    expect(screen.getByTestId('settings-save-button')).not.toBeDisabled()
+    fireEvent.click(screen.getByTestId('settings-save-button'))
+    await waitFor(() => expect(updateParams).toHaveBeenCalled())
+    // ורק השורה הנראית נשלחה — לא השורה הפסולה שהוסתרה.
+    const [changes] = updateParams.mock.calls.at(-1)
+    expect(changes.map((c) => c.name)).toEqual(['תנאי_תשלום_ימים'])
+  })
+})

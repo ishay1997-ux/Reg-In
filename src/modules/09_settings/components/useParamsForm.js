@@ -26,6 +26,8 @@ import {
   validateParamValue,
   weightsSumOk,
   distanceOrderOk,
+  cancellationOrderOk,
+  expiryWarningOrderOk,
 } from '@/lib/paramsRegistry'
 import { SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
 import { updateParams } from '@/modules/09_settings/api'
@@ -39,6 +41,12 @@ const WEIGHT_NAMES = [
 ]
 const GOALPOST_NAME = SMART_MATCH_PARAM_NAMES.goalpostDistanceKm
 const GATE_NAME = SMART_MATCH_PARAM_NAMES.gateDistanceKm
+// שני הצמדים שנוספו 03/09/2026 (אודיט-הסגירה) — הנימוק המלא, כולל באג-הכסף שהראשון מייצר,
+// יושב ליד `cancellationOrderOk` ב-`paramsRegistry.js`.
+const FULL_COMP_NAME = 'שעות_פיצוי_ביטול_מלא'
+const PARTIAL_COMP_NAME = 'שעות_פיצוי_ביטול_חלקי'
+const EXPIRY_WARNING_NAME = 'ימי_אזהרה_הצעה_פגה'
+const QUOTE_VALIDITY_NAME = 'ימי_תוקף_הצעה'
 
 // נוסחי כללי-הרוחב — נגזרו מהטקסט הנעול/הרשום ולא הומצאו: משפט-הסכום נגזר משורת-הסיכום
 // הנעולה `שלוש המשקולות חייבות להסתכם ל-1.00` (§3.7, עודכנה 03/09/2026 — ממצא UX-4),
@@ -47,6 +55,12 @@ const GATE_NAME = SMART_MATCH_PARAM_NAMES.gateDistanceKm
 export const WEIGHTS_SUM_ERROR = 'שלוש המשקולות חייבות להסתכם ל-1.00'
 export const DISTANCE_ORDER_ERROR =
   'מרחק שבו ציון-הקרבה מגיע ל-0 חייב להיות קטן או שווה למרחק-הפסילה'
+// שני הנוסחים הבאים נוקבים ב**כיוון** ולא רק בכלל — מי שקורא "חייב להיות קטן" בלי לדעת למה
+// עלול להחליף בין השדות שוב. המשפט אומר את הסיבה העסקית באותה שורה.
+export const CANCELLATION_ORDER_ERROR =
+  'שעות הפיצוי המלא חייבות להיות קטנות משעות הפיצוי החלקי — ככל שקרוב יותר לאירוע, הפיצוי גדול יותר'
+export const EXPIRY_WARNING_ORDER_ERROR =
+  'ימי האזהרה חייבים להיות קטנים מימי התוקף — אחרת כל הצעה פתוחה מסומנת "פגה בקרוב" מרגע יצירתה'
 
 // המחרוזת הנעולה (§3.7). מיוצאת כדי שהבדיקות ינעלו את התבנית ולא ישכפלו אותה.
 export function saveFailedMessage(label, reason) {
@@ -131,6 +145,22 @@ export default function useParamsForm({ rows, roleId, canEditAll } = {}) {
       !distanceOrderOk(values[GOALPOST_NAME], values[GATE_NAME])
     ) {
       found.push(DISTANCE_ORDER_ERROR)
+    }
+    const haveComp = FULL_COMP_NAME in values && PARTIAL_COMP_NAME in values
+    if (
+      haveComp &&
+      (dirty.has(FULL_COMP_NAME) || dirty.has(PARTIAL_COMP_NAME)) &&
+      !cancellationOrderOk(values[FULL_COMP_NAME], values[PARTIAL_COMP_NAME])
+    ) {
+      found.push(CANCELLATION_ORDER_ERROR)
+    }
+    const haveExpiry = EXPIRY_WARNING_NAME in values && QUOTE_VALIDITY_NAME in values
+    if (
+      haveExpiry &&
+      (dirty.has(EXPIRY_WARNING_NAME) || dirty.has(QUOTE_VALIDITY_NAME)) &&
+      !expiryWarningOrderOk(values[EXPIRY_WARNING_NAME], values[QUOTE_VALIDITY_NAME])
+    ) {
+      found.push(EXPIRY_WARNING_ORDER_ERROR)
     }
     return found
   }, [values, dirtyNames])

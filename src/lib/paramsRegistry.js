@@ -201,6 +201,40 @@ export function distanceOrderOk(goalpostKm, gateKm) {
   return goalpost <= gate
 }
 
+// 🔴 **שני כללי-רוחב שנוספו 03/09/2026 באודיט-הסגירה, ושניהם עלו מהבחנה אחת: יש אילוצים
+// שהם *יחסיים* ולא מוחלטים, ותקרה על כל מספר בנפרד אינה יכולה להביע אותם.**
+//
+// ‏① **מדרגות דמי-הביטול — וזה היה באג-כסף חי, לא היפותזה.** `compensationPercent`
+// (`src/lib/projectCancellation.js`) בנוי כך: `hours > partial ⇒ 0` · `hours >= full ⇒
+// partialPct` · אחרת `100`. הזרע הוא `full=24 · partial=72`, כלומר ככל שקרוב יותר לאירוע
+// הפיצוי גדל. **הפוך את השניים והמדרגה האמצעית מפסיקה להתקיים:** כל `hours` שעובר את
+// השורה הראשונה כבר לא יכול לעמוד בשנייה, ‏`partialPct` הופך קוד-מת, וביטול 50 שעות לפני
+// אירוע מחויב ב-**100% במקום 50%**. אין שגיאה, אין באנר, ואת הטעות רואים בחשבונית.
+// ⚠️ **ומה שהפך את זה לחוסם דווקא עכשיו: מודול 9 יצר את הנגישות.** עד היום שתי השורות
+// היו ניתנות לעריכה רק ב-Table Editor; מסך-הפרמטרים שם אותן זו לצד זו, באותה קבוצה
+// ובאותה שמירה.
+//
+// ‏② **חלון-האזהרה מול חלון-התוקף.** `deriveQuoteExpiry` מחשב `daysLeft` מהתוקף ואז
+// `isExpiringSoon = daysLeft <= warning`. אזהרה של 40 יום מול תוקף של 30 הופכת **כל הצעה
+// פתוחה** ל"פגה בקרוב" מרגע יצירתה — השבב שנועד לבודד את הדחופות מצביע על כולן.
+//
+// 🚫 **ולמה לא תקרה על כל אחד מהארבעה:** האילוץ אינו "המספר גדול מדי" אלא "שני המספרים
+// בסדר הפוך". תקרה מוחלטת הייתה מפספסת `מלא=100 · חלקי=72` (שני ערכים סבירים לחלוטין,
+// ובסדר הרסני), והייתה נראית כאילו לא הבנו את הממצא של עצמנו.
+export function cancellationOrderOk(fullHours, partialHours) {
+  const full = Number(fullHours)
+  const partial = Number(partialHours)
+  if (!Number.isFinite(full) || !Number.isFinite(partial)) return true
+  return full < partial
+}
+
+export function expiryWarningOrderOk(warningDays, validityDays) {
+  const warning = Number(warningDays)
+  const validity = Number(validityDays)
+  if (!Number.isFinite(warning) || !Number.isFinite(validity)) return true
+  return warning < validity
+}
+
 // חיפוש בשני השמות (§2.8, A-6, מוקש-המוקאפ ①): תווית ידידותית **וגם** שם-המסד הגולמי —
 // מי שמחפש "שער_מרחק_קמ" חייב למצוא, לא רק מי שמחפש "מרחק".
 export function matchesParamSearch(entry, query) {
