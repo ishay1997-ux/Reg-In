@@ -25,7 +25,7 @@
 ## Current State (snapshot — rewritten, not appended)
 <!-- target ~15 lines · no internal dates (F4) · over budget? compress / move to journal -->
 
-**Active module: 9 (הגדרות מערכת) — BUILT, awaiting only the closing audit in a fresh session.** Branch `ishay/module-9-settings`, guide `docs/micro_guides/module-9.md` (no `docs/specs/` folder by Ishay's ruling). Four migrations applied (A/B/C in one waived-echo batch Ishay authorised in advance; D with a real typed echo), six screens shipped, Ishay approved the 🎨 gate. `params` is now 43 rows / 6 types / 4 per-command policies / 38 owned by role, and `notification_preferences` exists with three self policies. Six hard-coded constants left the code (grep: 0). What remains: the live acceptance journeys (5.1) and `module-close` in a fresh session. **Where we stand:** Modules **1**, **2**, **3**, **4**, **5** and **6** are closed and merged to `dev`; `dev` has been promoted to `main` and tagged `milestone-2.5`, so 1–6 are all live. The m5 as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log); its spec set `docs/specs/module_05_logistics/` (42 rulings ①–㊷); `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8 (finance) is CLOSED and merged** — `dev` and `main`, PRs #80/#81; its plan `docs/micro_guides/module-8.md` and spec `docs/specs/module_08_finance/` remain the reference (the four hand-computed anchors in `spec.md §③3` are never recomputed from code). The N2 contact-consolidation package finished the same day, so no schema removal is pending. **Next after m9: module 7 (מסך הבית)** per `00_roadmap` §3. 🔴 **And two of those four do not reproduce from a plain read of the live DB — no project in the seed is `cancelled`, and travel is stamped only at salary-report generation** (measured 27/08; full finding in `module-8.md` §10). Their live cross-check needs a live-DB WRITE and is deferred to step 5.1. 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
+**Active module: 9 (הגדרות מערכת) — BUILT and AUDITED by a second session; merge pending its verdict.** Branch `ishay/module-9-settings`, guide `docs/micro_guides/module-9.md` (no `docs/specs/` folder by Ishay's ruling). **Five** migrations applied (A/B/C in one waived-echo batch Ishay authorised in advance; D with a real typed echo; E from the closing audit, capping the RPC's preview threshold), six screens shipped, Ishay approved the 🎨 gate. `params` is now 43 rows / 6 types / 4 per-command policies / 38 owned by role, and `notification_preferences` exists with three self policies. Six hard-coded constants left the code (grep: 0). The live acceptance journeys (5.1) ran and passed, and a second session audited the module as a peer under Ishay's rule that neither session decides alone. What remains: the audit's verdict, then `dev` → CI green → `main`. **Where we stand:** Modules **1**, **2**, **3**, **4**, **5** and **6** are closed and merged to `dev`; `dev` has been promoted to `main` and tagged `milestone-2.5`, so 1–6 are all live. The m5 as-built map: `docs/micro_guides/module-5.md` (§1 header + §10 log); its spec set `docs/specs/module_05_logistics/` (42 rulings ①–㊷); `db_roadmap` `M5-1`…`M5-8` all ✅. **Module 8 (finance) is CLOSED and merged** — `dev` and `main`, PRs #80/#81; its plan `docs/micro_guides/module-8.md` and spec `docs/specs/module_08_finance/` remain the reference (the four hand-computed anchors in `spec.md §③3` are never recomputed from code). The N2 contact-consolidation package finished the same day, so no schema removal is pending. **Next after m9: module 7 (מסך הבית)** per `00_roadmap` §3. 🔴 **And two of those four do not reproduce from a plain read of the live DB — no project in the seed is `cancelled`, and travel is stamped only at salary-report generation** (measured 27/08; full finding in `module-8.md` §10). Their live cross-check needs a live-DB WRITE and is deferred to step 5.1. 🔄 **Standing routine: run the seed REFRESH on every demo morning** — the 02:00 cron closes the "today" demo project overnight; the seed never deletes. ⚠️ **The system is exercised in production ahead of the demo, so any test pinned to a live count/date/id keeps rotting** — the documented fix is runtime-condition invariants with denominator asserts, never new pinned values.
 ✅ **The two 1-line src fixes that were parked for immediately-post-merge are DONE** — verified in code 02/09/2026, not assumed: `QuotesPage.jsx` wraps the address in `encodeURIComponent` (with the `?`/`&` injection reason in a comment beside it), and `QuoteLineEditor.jsx` drives both Selects from controlled values (`line.sku || ''`, `line.color || NO_COLOR_VALUE`) using the sentinel convention. **This line said "parked" until today** — it outlived the work it described, which is the ordinary way a Current-State line goes stale: the fix lands in a commit that has no reason to come back and edit the snapshot.
 `docs/schema.sql` measure command: `grep -c '^create table' docs/schema.sql` (23 at the last audit).
 
@@ -44,6 +44,86 @@
 ---
 
 ## Session Log (newest first)
+
+### 03/09/2026 02:0X – 05:1X — the two-session closing round: peer review as a real gate, and the five defects it found that a green gate did not
+
+**The frame, and it is the finding.** Ishay put a second session on the module as a peer auditor and
+then ruled that **neither session decides anything alone** (*"אתם לא מחליטים לבד על כלום רק אם שינכם
+מסגימים"*). Everything below was agreed by both before a line was written — including the merge target,
+and including each session's own findings about the other's work. **The mechanism produced defects that
+`npm run gate` at 83 files / 2158 tests did not**, which is the reusable lesson: a green gate measures
+what the tests know to ask.
+
+**What round three fixed (`c305322`).** **(A)** Four hard-coded Hebrew strings still quoted numbers that
+moved into `params` in step 2.3 — and the harm was a screen contradicting itself: `OverviewTab` computed
+`cutoffHours` for its KPI tile while `OverviewRow` carried the literal `24`, so at threshold 6 the tile
+read `בתוך 6 שעות` and the row under it `בתוך 24 שעות`. Same for the two `48`s in `SmartMatchPage` and
+`teamHeadline`. **Three existing tests pinned the stale literals and therefore stayed green at any
+threshold** — the exact shape of a test that locks in the bug. Three mutation tests added.
+**(B)** The save gate was unscoped across groups: `submit` scoped `scopedDirty` and then gated on the
+full `crossFieldErrors`, so an inverted pair typed in one group killed saving everywhere — and the button
+could be live while `submit` returned `{ok:false}` **with no `saveError`**, a click that does nothing and
+says nothing. `crossFieldErrors` became `{ message, names }[]` with one shared `crossFieldErrorsIn`.
+
+🔴 **The pattern worth carrying forward, and it recurred three times in one night: we are reliably better
+at writing a fix than at describing what it covers.** R-2's own comment claimed `ParamsTab` scoped
+*"את השער ואת הכתיבה"* — it scoped the write and the per-field half only, **and the identical unscoped
+clause sat inside the `hasErrors` that R-2 itself had rewritten**. `projectCancellation.js:58` claimed the
+inverted-ladder guard blocks interpretation *"מכל מקור"* — it blocks the client only; the same ladder
+lives in `module8_h6…sql:90-96` and `:105` with no inversion guard. A `customers.js` comment had the same
+species earlier the same night. ⇒ **a false claim in a comment is worse than no comment, because the next
+session reads it as a wall that has been checked** — and the check that catches it is re-deriving the
+claim, never re-reading the sentence.
+
+**What the screen showed that the tests could not.** B was verified live (temporary credentialed spec,
+every non-GET to `params` aborted, deleted immediately) — and **reading the screenshot produced a fifth
+finding neither session had looked for**: in the blocked state the pinned save button sits at y=666 while
+the red line explaining it is at y=1274, **`errorBelowFoldBy: 554`** on a 720 px viewport. A dead button
+with its reason half a screen below the fold. **This is R-2 a third time with a third cause** — search,
+then another group, now scroll — and the sticky save row from B4 is what guarantees the button stays
+visible while the explanation does not. Recorded, not fixed: the natural fix puts a third element into the
+slot that already holds the failure message and the counter in a ternary, next to a sentence that is
+Ishay's to word.
+
+**Measured, not inferred, before asking for a merge into `main`.** All five m9 migrations confirmed live
+(43 params · 38 owned · `notification_preferences` present · four policies · `pg_get_functiondef` carries
+`p_threshold > 1000`). Deploy-rule re-check against `origin/main`: the two deleted param rows have **zero
+readers** (the one hit is a 🪦 tombstone comment); every `params` read on main selects `param_name,
+param_value` explicitly, so the new column and sixth `param_type` are invisible to deployed code; and
+`record_feedback`/`archive_project` read a threshold that is live at 3, i.e. byte-identical behaviour.
+⇒ **leaving `main` behind was the inconsistent option, not the cautious one.**
+
+**Three dead params, confirmed independently by both sessions.** `חלון_חישוב_חודשים` and
+`חלון_חישוב_מורחב_חודשים` are parsed at `smartMatch.js:100-101` and read by nothing;
+**`שעות_תזכורת_לדיילת` is in the same state** — the live `cron.job` table returns exactly three rows
+(`module1-login-attempts-cleanup`, `module3-quote-expiry`, `module6-event-finished`) and none of them
+sends shift reminders. Three editable fields whose hints promise an effect that does not exist.
+
+**Ceilings: 22 uncapped, not 23** — my own count was wrong (a regex reading a fixed window into
+neighbouring entries); the peer's brace-matched parse was right both times. The safety check that decides
+whether these are ours to set: **all 21 proposed maxima sit above their live value**, so none would block a
+value in use today — which is what makes them typo-guards rather than product decisions.
+`תקרת_שבועות_הוגנות` gets none: the real bound is on the product `rate × cap`, and that is Ishay's.
+
+**Not a finding, recorded so it is not re-raised:** `schema_migrations` versions do not match our
+filenames (`apply_migration` stamps UTC at apply time) — already documented in
+`supabase/migrations/CLAUDE.md:158-164` with Ishay's accepted trade-off. The one residue is
+`supabase/README.md:66`, which still tells the reader to run `supabase db push` thirty lines under the
+paragraph explaining that it will fail.
+
+**Closing-audit record (module-close persistence 2 — stated by name so a reader who was not here can audit it).**
+**Verdict [YES], code identity `c305322`.** `gate` exit 0 (83 files / 2165 tests) · `test:e2e` 166 passed / 6 skipped / 0 failed ·
+`smoke` 1/1 — all three run by name on the verdict commit. **artifact: published** (the closing report, an HTML page for Ishay).
+**quiz: asked** — three behaviour questions at the foot of that page. 🔴 **The typed-echo DoD sign-off was NOT obtained:** Ishay waived it
+in advance in his own words (*"מאשר למזג לייצור בלי הקלדה כנ"ל לגבי המיגרציות רק תהיו מסונכרנים בינכם"*), the audit did not sign it,
+and the merge is the build session's record. **Third waiver of the night — A/B/C in advance, D typed in full, E + the DoD here** —
+the count is stated so it does not read as erosion.
+
+**LOG compaction (persistence 2b) — escape hatch taken, with the measurement.** Narrative measured at the close:
+**1,542 lines** against the ≤150 this file sets for itself (`awk '/^## Session Log/{f=1;next} /^## Reference/{f=0} f' docs/CLAUDE_CODE_LOG.md | wc -l`).
+It was 976 at m8's close on 01/09 — **+566 in two days.** Harvesting ~1,390 lines with the working-lessons category hunt does not fit
+beside a full audit in one window, so the `PROJECT_MASTER §6` debt line is refreshed with the measured number and a dedicated
+compaction session is recommended. **Not silence: a done compaction or a numbered debt line, and this is the second.**
 
 ### 02/09/2026 21:1X – 03/09/2026 02:0X — module 9 built end-to-end under delegation: four migrations, six screens, and two blockers only a human journey found
 
