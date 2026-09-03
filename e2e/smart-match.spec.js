@@ -15,6 +15,8 @@ const RECRUIT_EMAIL = process.env.E2E_RECRUIT_EMAIL
 const RECRUIT_PASSWORD = process.env.E2E_RECRUIT_PASSWORD
 const PROJECTS_EMAIL = process.env.E2E_PROJECTS_EMAIL
 const PROJECTS_PASSWORD = process.env.E2E_PROJECTS_PASSWORD
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL
+const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY
 
 async function login(page, email, password) {
   await page.goto('/login')
@@ -211,6 +213,31 @@ test.describe('מודול 4 · מסך 2 — שיבוץ חכם', () => {
 
   test('🔴 המסך אומר בקול שמרכיב האמינות כבוי, ואינו מעמיד פנים שהציון מלא', async ({ page }) => {
     await openSmartMatch(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
+    // 🔄 03/09/2026: המתג `מרכיב_אמינות_פעיל` הוא הכרעת-מוצר שיכולה להתהפך במסך-הפרמטרים
+    // (ישי הורה להדליק אותו היום, אחרי שנתוני-הנוכחות נזרעו). האינווריאנט אינו "הבאנר קיים"
+    // אלא **הבאנר אומר את האמת על הפרמטר**: כבוי ⇒ באנר עם המשקלים בפועל; דלוק ⇒ אין באנר.
+    // הפרמטר נקרא כמו שהמסך עצמו קורא אותו (אותה זהות, אותה RLS).
+    const reliabilityOn = await page.evaluate(
+      async ({ url, anon }) => {
+        const key = Object.keys(sessionStorage).find((k) => k.startsWith('sb-'))
+        const token = JSON.parse(sessionStorage.getItem(key)).access_token
+        const res = await fetch(
+          `${url}/rest/v1/params?select=param_value&param_name=eq.${encodeURIComponent('מרכיב_אמינות_פעיל')}`,
+          { headers: { apikey: anon, Authorization: `Bearer ${token}` } },
+        )
+        const [row] = await res.json()
+        return row ? String(row.param_value).trim().toLowerCase() === 'true' : null
+      },
+      { url: SUPABASE_URL, anon: SUPABASE_ANON },
+    )
+    expect(reliabilityOn, 'הפרמטר לא נקרא — הזדהות/RLS, לא באג במסך').not.toBeNull()
+    if (reliabilityOn) {
+      await expect(page.locator('[data-testid^="sm-candidate-"]').first()).toBeVisible({
+        timeout: 30_000,
+      })
+      await expect(page.getByTestId('sm-reliability-off')).toHaveCount(0)
+      return
+    }
     await expect(page.getByTestId('sm-reliability-off')).toContainText('אמינות')
     // 🔴 **עודכן 22/08/2026 — והבדיקה הקודמת היא דוגמה למה שהקובץ הזה מזהיר מפניו.**
     // היא אימתה `toContainText('מודול 6')`, כלומר **ניסוח-ההסבר** ("אין עדיין נתונים
@@ -233,19 +260,69 @@ test.describe('מודול 4 · מסך 2 — שיבוץ חכם', () => {
   // בדיוק המקרה הזה.
   test('🔴 שער אי-הזמינות בודק את תאריך האירוע — לא את תאריך היום', async ({ page }) => {
     await login(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
+    // 🔄 03/09/2026: "ליאת רזניק" (20–25/08 מול אירוע 22/08) נמחקה עם דמו-יולי בהכרעת-ישי —
+    // וממילא הטווח שלה חלף, כלומר הבדיקה הפסיקה להוכיח משהו ב-26/08 בלי שאיש נגע בה.
+    // הפיקסטורה נבחרת עכשיו בזמן-ריצה: אירוע עתידי שמופיע במבט-העל + דיילת פעילה שטווח
+    // אי-הזמינות שלה מכיל את תאריך האירוע **ושאינה משובצת בו** (אחרת הייתה נעדרת מהמועמדות
+    // מסיבה אחרת, והבדיקה הייתה עוברת מהסיבה הלא-נכונה). אין זוג ⇒ נפילה ברעש על פיקסטורה.
+    const today = new Date().toISOString().slice(0, 10)
+    const pairs = await page.evaluate(
+      async ({ url, anon, today }) => {
+        const key = Object.keys(sessionStorage).find((k) => k.startsWith('sb-'))
+        const token = JSON.parse(sessionStorage.getItem(key)).access_token
+        const get = async (path) =>
+          (
+            await fetch(`${url}/rest/v1/${path}`, {
+              headers: { apikey: anon, Authorization: `Bearer ${token}` },
+            })
+          ).json()
+        const [unavail, projects, assigned] = await Promise.all([
+          get(
+            `hostess_unavailability?select=hostess_id,start_date,end_date,hostesses!inner(full_name,status)&hostesses.status=eq.active&end_date=gte.${today}`,
+          ),
+          get(
+            `projects?select=project_id,final_event_date&final_event_date=gte.${today}&project_status=in.(not_started,in_progress,ready)&order=final_event_date&limit=200`,
+          ),
+          get(`assignments?select=project_id,hostess_id&event_date=gte.${today}`),
+        ])
+        const taken = new Set(assigned.map((a) => `${a.project_id}:${a.hostess_id}`))
+        const found = []
+        for (const p of projects)
+          for (const u of unavail)
+            if (
+              u.start_date <= p.final_event_date &&
+              p.final_event_date <= u.end_date &&
+              !taken.has(`${p.project_id}:${u.hostess_id}`)
+            )
+              found.push({ projectId: p.project_id, hostessName: u.hostesses.full_name })
+        return found
+      },
+      { url: SUPABASE_URL, anon: SUPABASE_ANON, today },
+    )
+    expect(
+      pairs.length,
+      'אין זוג אירוע-עתידי/דיילת-לא-זמינה — פיקסטורה חסרה, לא באג',
+    ).toBeGreaterThan(0)
+
     await page.goto('/hostesses')
     await expect(page.getByTestId('overview-table')).toBeVisible({ timeout: 30_000 })
-    // נבחר בזמן-ריצה לפי שם-האירוע, לא לפי מזהה קשיח (`e2e/CLAUDE.md`).
-    await page
-      .locator('[data-testid^="overview-row-"]', { hasText: 'כנס לקוחות שנתי' })
-      .first()
-      .click()
+    // הזוג הראשון שאירועו באמת מופיע במבט-העל (אירוע שאויש במלואו עשוי שלא להופיע שם).
+    let chosen = null
+    for (const pair of pairs) {
+      if ((await page.getByTestId(`overview-row-${pair.projectId}`).count()) > 0) {
+        chosen = pair
+        break
+      }
+    }
+    expect(chosen, 'אף אירוע מהזוגות אינו במבט-העל — פיקסטורה חסרה, לא באג').toBeTruthy()
+    await page.getByTestId(`overview-row-${chosen.projectId}`).click()
     await expect(page.getByTestId('smart-match-page')).toBeVisible({ timeout: 30_000 })
 
-    // בקרה חיובית קודם: דיילת-דגמה זמינה **כן** מופיעה — אחרת הבדיקה הייתה מוכיחה רק
-    // שהרשימה כולה ריקה, לא שהשער עובד נכון.
-    await expect(page.locator('body')).toContainText('מאיה כהן')
-    await expect(page.locator('body')).not.toContainText('ליאת רזניק')
+    // בקרה חיובית קודם: יש מועמדות — אחרת הבדיקה הייתה מוכיחה רק שהרשימה כולה ריקה,
+    // לא שהשער עובד נכון.
+    const candidates = page.locator('[data-testid^="sm-candidate-"]')
+    await expect(candidates.first()).toBeVisible({ timeout: 30_000 })
+    await expect(candidates.filter({ hasText: chosen.hostessName })).toHaveCount(0)
   })
 
   test('🔴 כשל-טעינה מציג שגיאה + "נסה שוב", ולעולם לא "אין מועמדות"', async ({ page }) => {

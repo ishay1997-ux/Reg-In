@@ -17,6 +17,8 @@ import { test, expect } from '@playwright/test'
 
 const CEO_EMAIL = process.env.E2E_CEO_EMAIL
 const CEO_PASSWORD = process.env.E2E_CEO_PASSWORD
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL
+const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY
 const PROJECTS_EMAIL = process.env.E2E_PROJECTS_EMAIL
 const PROJECTS_PASSWORD = process.env.E2E_PROJECTS_PASSWORD
 const STAFF_EMAIL = process.env.E2E_STAFF_EMAIL
@@ -234,40 +236,32 @@ test.describe('מודול 6 · לשונית-לוגיסטיקה — ריק-כדי
     await login(page, CEO_EMAIL, CEO_PASSWORD)
     await gotoProjects(page, '?tab=all')
 
-    // הנושא בזמן-ריצה לפי תנאי: הפרויקט הראשון שלשונית-הלוגיסטיקה שלו ריקה-כדין
-    // (הצעה בלי שורות-מוצר — היום #11 עומד בזה, אבל לא ננעץ למספר). סורקים את הכרטיסים
-    // לפי הסדר עד שנמצא אחד כזה.
-    const ids = await page
-      .locator(ROW_SELECTOR)
-      .evaluateAll((rows) =>
-        rows.map((row) => row.getAttribute('data-testid').replace('projects-row-', '')),
-      )
-
-    let legalEmptyText = null
-    let subjectId = null
-    for (const id of ids) {
-      await page.goto(`/projects/${id}`)
-      await expect(page.getByTestId('project-card-page')).toBeVisible({ timeout: 15_000 })
-      // מחכים שהלשונית תצא ממצב-טעינה: אחד מארבעת המצבים או הטבלה עצמה.
-      await expect(
-        page
-          .getByTestId('logistics-state-legal-empty')
-          .or(page.getByTestId('logistics-state-no-permission'))
-          .or(page.getByTestId('logistics-state-error'))
-          .or(page.getByTestId('logistics-state-broken'))
-          .or(page.locator('[data-testid^="logistics-row-"]').first()),
-      ).toBeVisible({ timeout: 20_000 })
-      const legal = page.getByTestId('logistics-state-legal-empty')
-      if ((await legal.count()) > 0) {
-        legalEmptyText = await legal.textContent()
-        subjectId = id
-        break
-      }
-    }
+    // הנושא בזמן-ריצה לפי תנאי: פרויקט שאין לו אף שורת-לוגיסטיקה (הצעה בלי שורות-מוצר).
+    // 🔄 03/09/2026: עד היום הבדיקה סרקה כרטיס-אחר-כרטיס עד שמצאה; עם 800+ פרויקטים זרועים
+    // הסריקה אינה מסתיימת — ובהכרעת-ישי (03/09: "בכל אירוע חייב לפחות פריט של תגים ושרוכים")
+    // ייתכן שאין כזה כלל. ⇒ הבחירה עוברת ל-REST (אנטי-join על `logistics`), והדילוג-כדין
+    // נשאר בדיוק כפי שהיה: אין נושא ⇒ הריק-כדין אינו בר-השגה, וזה נאמר.
+    const subjectId = await page.evaluate(
+      async ({ url, anon }) => {
+        const key = Object.keys(sessionStorage).find((k) => k.startsWith('sb-'))
+        const token = JSON.parse(sessionStorage.getItem(key)).access_token
+        const res = await fetch(
+          `${url}/rest/v1/projects?select=project_id,logistics!left(project_id)&logistics=is.null&project_status=neq.cancelled&order=project_id.desc&limit=1`,
+          { headers: { apikey: anon, Authorization: `Bearer ${token}` } },
+        )
+        return (await res.json())[0]?.project_id ?? null
+      },
+      { url: SUPABASE_URL, anon: SUPABASE_ANON },
+    )
     test.skip(
       subjectId === null,
       'אין פרויקט שהצעתו נטולת-מוצרים — הריק-כדין אינו בר-השגה בלוח החי היום',
     )
+    await page.goto(`/projects/${subjectId}`)
+    await expect(page.getByTestId('project-card-page')).toBeVisible({ timeout: 15_000 })
+    const legal = page.getByTestId('logistics-state-legal-empty')
+    await expect(legal).toBeVisible({ timeout: 20_000 })
+    const legalEmptyText = await legal.textContent()
 
     // הנוסח של ריק-כדין: עובדה חיובית, לא תקלה.
     expect(legalEmptyText).toContain('לא הוזמנו מוצרים לאירוע הזה')
