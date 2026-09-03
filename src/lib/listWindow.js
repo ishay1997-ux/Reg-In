@@ -36,6 +36,9 @@ export function parsePageParam(value) {
 // גבול-ההתחלה (ISO `YYYY-MM-DD`) של החלון, או `null` ל"הכול". מחושב על מחרוזות-ISO בלבד —
 // בלי `Date` מקומי, כדי שלא יזוז עם אזור-הזמן (המוקש שנתפס ב-CI ב-`seed-lib/calendar.mjs`).
 export function windowStart(key, todayIso) {
+  // 🔴 בפריים הראשון של מסך `today` עדיין ריק (נקבע ב-effect) — ואז אין חלון בכלל, לא קריסה.
+  // נתפס 04/09/2026 בבדיקת-העשן: `Invalid time value` הפיל את מסך-ההצעות ל-ErrorBoundary.
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(todayIso ?? ''))) return null
   const [y, m, d] = todayIso.split('-').map(Number)
   switch (key) {
     case 'month':

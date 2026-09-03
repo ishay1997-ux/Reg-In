@@ -19,6 +19,13 @@ describe('windowStart', () => {
     expect(windowStart('all', TODAY)).toBeNull()
   })
 
+  it('🔴 today ריק/לא-תקין (הפריים הראשון של מסך) ⇒ אין חלון, לא קריסה', () => {
+    expect(windowStart('90d', '')).toBeNull()
+    expect(windowStart('month', undefined)).toBeNull()
+    expect(windowStart('year', 'not-a-date')).toBeNull()
+    expect(inWindow('2020-01-01', '90d', '')).toBe(true)
+  })
+
   it('חוצה שנה ואינו תלוי באזור-זמן (חישוב על מחרוזות, לא על Date מקומי)', () => {
     expect(windowStart('90d', '2026-02-10')).toBe('2025-11-12')
     expect(windowStart('month', '2026-01-31')).toBe('2026-01-01')
