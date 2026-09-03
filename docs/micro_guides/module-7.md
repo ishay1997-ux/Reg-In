@@ -15,8 +15,8 @@
 | **Module** | 7 — מסך הבית (Home Dashboard) |
 | **Branch** | **`ishay/module-7-dashboard`** — cut from `d0f9679` (the blueprint-and-seed branch's tip) on 03/09/2026 18:2X, **Ishay's "מאשר"** to the worktree recommendation. Lives in a git worktree at `.claude/worktrees/m7` so the seed-generator session (writing to the main checkout on `ishay/m7-blueprint-and-seed` at the same time — rule 16) and this build never share an index. The step guide's ⑥3 prompt still says `BRANCH_NAME=ishay/m7-blueprint-and-seed` — **fix before the closing session** (§9). Shared docs (`STATUS.md` · `CLAUDE_CODE_LOG.md` · `db_roadmap.md` · `schema.sql`) will need an ordinary merge between the two branches. |
 | **Owner** | Ishay (sole developer) |
-| **Status** | 🔨 **Phase 1 in progress.** Blueprint nodded by Ishay (paste of ⑥2, 03/09/2026 18:1X). |
-| **Active step** | **READY FOR CLOSE — phases 1–4 ✅, 3.4 nodded, 5.1 run (gate green; E2E/smoke green on this module's surface, red on seed-drift anchors elsewhere — see 5.1). Next: 5.2 closing audit in a FRESH session (Ishay: "מאשר", 20:0X) via ⑥3 in `docs/guides/modules/module_07_dashboard.md`. Branch `ishay/module-7-dashboard`, worktree `.claude/worktrees/m7`, last commit see `git log`.** |
+| **Status** | 🔒 **Closed — awaiting PR/merge.** Closing audit ran 03/09/2026 21:0X on branch head `1d10eca`, verdict **[YES]**. Blueprint was nodded by Ishay (paste of ⑥2, 03/09/2026 18:1X). |
+| **Active step** | **5.2 ✅ — closing audit complete (03/09/2026 21:0X, fresh session, worktree `.claude/worktrees/m7`). Verdict [YES] on `1d10eca`. Next action is Ishay's: open the PR to `dev`.** |
 | **No approved spec folder** | `docs/specs/module_07_dashboard/` exists but holds *debate/decision records* (`dashboard-design-debate.html`, `seed-data-spec.md`), not a Discovery `processes-approved.md`/`screens-approved.md` pair — **by Ishay's explicit ruling, no Discovery for this module** ("מיותר דיסקברי... רק חשוב להציג דיון"). Tier-2 in the truth hierarchy is therefore this micro-guide itself plus the two decision-record files it cites; C5/C6 apply only where neither says anything (see §3). |
 
 **Legend (verbatim, per iron rule F7):** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file.
@@ -200,13 +200,13 @@ No item here contradicts C5/C6; where C5 §5.6.2 is silent (masking, the exact c
 
 | Type | Planned coverage | As-run |
 |---|---|---|
-| Unit | `dashboard.js` derivations (color rule, masking format, 90-day window) | — |
-| Integration | `api.js` wrapper against a mocked RPC shape | — |
-| E2E | Nav to `/` as each of 5 roles; masked-card assertion for 3 of them; calendar click-through to a project card | — |
-| Regression | Full suite green, zero new failures | — |
-| Security/Pen | RLS stress-test (Phase 4.2), positive control mandatory | — |
-| Usability | End-of-Phase-3 🎨 gate — largely pre-satisfied by the live mockup's 4 iteration rounds | — |
-| Compatibility | Standard RTL/dark-mode checks per `src/CLAUDE.md`'s five-pass discipline | — |
+| Unit | `dashboard.js` derivations (color rule, masking format, 90-day window) | ✅ 52 cases in `src/lib/dashboard.test.js` (14-day boundary: 13,14 ⇒ red · 15 ⇒ yellow). Part of the 2,264 that passed at the close |
+| Integration | `api.js` wrapper against a mocked RPC shape | ✅ 15 cases in `src/modules/07_dashboard/api.test.js` + 308 lines of `DashboardPage.test.jsx` |
+| E2E | Nav to `/` as each of 5 roles; masked-card assertion for 3 of them; calendar click-through to a project card | ✅ `e2e/dashboard.spec.js` re-run at the close on a production build: **10 passed** (with `auth.spec.js`), exit 0 for both files |
+| Regression | Full suite green, zero new failures | ✅ `npm run gate` **exit 0** at the close — 86 files / **2,264** unit tests, build, dup, knip, audit, bidi, context, docs-structure. ⚠️ `npm run test:e2e` as a WHOLE suite was **not re-run at the close, deliberately** — a parallel session was writing to the shared tree and DB (rule 16); its 5.1 run stands, classified |
+| Security/Pen | RLS stress-test (Phase 4.2), positive control mandatory | ✅ re-verified INDEPENDENTLY at the close, at seed scale (832 projects): 5-role impersonation matrix + negative control (`42501`) + `pg_proc` ACL (no `anon`) + hand-count oracle (65 = 65). §2c agent scan: 7/7 categories clean |
+| Usability | End-of-Phase-3 🎨 gate — largely pre-satisfied by the live mockup's 4 iteration rounds | ✅ Ishay on the live screenshots 19:2X — *"אהבתי מאוד"*, one wording fix applied; five mockup deviations listed and accepted. axe-core scan of `/` passes in `e2e/accessibility.spec.js:98` |
+| Compatibility | Standard RTL/dark-mode checks per `src/CLAUDE.md`'s five-pass discipline | ✅ `check:bidi` clean at the close; the one measured bidi bug (`5/4.7`) was caught and fixed in `KpiStrip.jsx` at build time |
 
 ---
 
@@ -219,7 +219,7 @@ No item here contradicts C5/C6; where C5 §5.6.2 is silent (masking, the exact c
 - [x] Masked cards render "לא זמין בתפקידך", never `0 ₪`, for the 3 non-finance roles — E2E asserts the text and the absence of `₪` (PROJECTS: profit masked, quotes visible per the existing gate)
 - [x] `/` route accessible to all 5 roles, no `<ProtectedRoute>` regression — `App.routes.test.jsx` 3/3 + E2E 5 logins
 - [x] 🎨 UX & functional review passed — built screen matches the approved mockup — Ishay 19:2X *"אהבתי מאוד"*, legend wording tightened
-- [x] Full regression green: `gate` · `test:e2e` · `smoke`, all three named with counts — `gate` ✅ 86 files / 2,254 tests · `test:e2e` 146/178 with 13 module-caused failures fixed and re-run green, the remaining 12 are seed-drift / pre-existing / capacity (step 5.1, itemised) · `smoke` 21/22, the one failure a seed-drift anchor after the home screen passed. ⚠️ **Honest reading: the module's own surface is green; the suite as a whole is not, because the demo seed landed during the run and the fixed-value anchors elsewhere rotted — that is the closing audit's first item.**
+- [x] Full regression green: `gate` · `test:e2e` · `smoke`, all three named with counts — `gate` ✅ 86 files / 2,254 tests *(re-measured at the close on the same tree: **2,264** — the 5.1 number is the stale one)* · `test:e2e` 146/178 with 13 module-caused failures fixed and re-run green, the remaining 12 are seed-drift / pre-existing / capacity (step 5.1, itemised) · `smoke` 21/22, the one failure a seed-drift anchor after the home screen passed. ⚠️ **Honest reading: the module's own surface is green; the suite as a whole is not, because the demo seed landed during the run and the fixed-value anchors elsewhere rotted — that is the closing audit's first item.**
 - [x] `WelcomePage.jsx`'s removal-or-keep decided (knip check, not a guess) — removed; knip exit 1 → 0
 
 **Post-merge (not audit blockers):** PR opened, CI green, merged to `dev`.
@@ -298,3 +298,82 @@ nothing anchored beyond what's already ruled).
 - **03/09/2026 — the approved mockup lives only in scratchpad as of blueprint-writing time.** Flagged
   in §2 as a same-class risk to the two files already rescued into git tonight; commit it before or
   during Phase 3, not after.
+
+### 🔒 Closing audit — 03/09/2026 21:0X, head `1d10eca`, verdict **[YES]**
+
+Ran in a fresh session from the `module-close` template, in the worktree. Everything below was measured
+in that session, not carried over.
+
+**Tech debt registered at the close (none of it a merge blocker — nothing is broken today):**
+
+- **T-1 · The screen asserts a fact it does not have — two sites, one root cause.**
+  ‏(a) `src/modules/07_dashboard/api.js:86-91` — `assertDashboardShape` checks `params.*` for
+  `undefined`/absent but **not for `null`**, and `…184711…sql:165-169` builds those three thresholds as
+  scalar sub-selects, so a deleted `params` row arrives as `null` and passes the gate. Downstream the
+  module correctly refuses to invent a default (`dashboard.js:43`, `:164`, `:208`) — and says nothing:
+  the calendar can never turn red, the shortage branch and the quote-expiry branch both vanish, and
+  `AttentionPanel` renders **`✓ אין פריטים הדורשים טיפול`** while a project three days out is short two
+  hostesses. ‏(b) `dashboard.js:81` — `?? 0` on `active_projects_count` would turn "unknown" into a
+  confident `0` if that field ever joined `NULLABLE_FIELDS`.
+  🧭 **Precedent this module half-adopted:** `src/lib/quotes.js` `missingPricingParamsMessage` +
+  the `QuotesPage` banner already solve exactly this, for the same three parameters. Module 7 took the
+  "refuse a default" half and left the "tell the user" half.
+  **Not live:** all three `params` rows exist (30 · 14 · 7, measured). **Target: מ7 fix-forward, or מ12.**
+
+- **T-2 · Every load failure collapses into one mute message with a retry that cannot help.**
+  `DashboardPage.jsx:46-52` — one `catch`, one string `מסך הבית לא נטען.`, `onRetry` always offered.
+  A `42501`, a `P0001` from `finance_project_money`, and `assertDashboardShape`'s carefully-worded Hebrew
+  drift messages all render identically, and the specific text dies in `console.error`.
+  🧭 **Precedent:** `FinancePage.jsx:428-434` branches on `err?.code === '42501'` and passes `detail`
+  — with the reason written in its own comment.
+  **Not live, and measured so:** `projects.quote_id` is `NOT NULL`, and **0** of 827 dated projects lack a
+  quote or have a quote with no `quote_services` rows ⇒ the P0001 path is unreachable with today's data.
+  **Target: מ7 fix-forward, or מ12.**
+
+- **T-3 · `isStaffingComplete` (`CalendarGrid.jsx:45-51`) claims byte-identity with `staffingCell`
+  (`src/lib/projects.js`) and omits its `required > 0` guard.** Unreachable — `projects.required_hostess_count`
+  is `NOT NULL` with `CHECK (> 0)`. Reported because the **comment states a guarantee the code does not
+  hold**; the DB constraint is what keeps the screen honest. **Target: מ12.**
+
+- **T-4 · `AttentionPanel.jsx:29` recomputes `attentionRows` a second time** just to find the first
+  hidden row, after `attentionSummary` already built the full list. Cosmetic at this size. **Target: מ12.**
+
+**Measured at the close, and they close open questions rather than opening them:**
+
+- 🔴 **The §6 scalability worry did not materialise.** §6's `🚧 מ12` row (`PROJECT_MASTER.md:717`) commissioned
+  a re-measurement "once the seed lands, fix only what measures >~1 s". The seed has landed (**832** projects,
+  1,225 quotes, 5,697 assignments). Measured, impersonated, in rolled-back transactions:
+  `get_dashboard_summary` **139 ms** cold / **39 ms** warm on the densest month · `list_projects_overview()`
+  **51.98 ms** / 827 rows · `get_finance_overview()` **194.19 ms** / 758 rows. Payload 75 project rows +
+  33 quote rows = **27 kB**. ⇒ **no fix-forward migration.** Items ② (Smart Match's unfiltered `assignments`)
+  and ③ (`listQuotes` + `quote_services(*)`) are client-side and stay open in that §6 row.
+- 🔴 **The home screen sends the RPC exactly ONCE per entry** — measured on a production build with a
+  temporary evidence-spec (deleted after the run): 1 after login, +1 per month-nav, +1 per re-visit.
+  The `useEffect` deps `[monthParam, reloadTick]` are stable. (In `npm run dev`, StrictMode double-invokes
+  by design ⇒ 2 — dev only.) The "3 not 1" in `e2e/logistics.spec.js` was an **allow-list, not a counter**:
+  each of the 12 logistics tests passes through `/` on the way in.
+
+**Two things this audit could NOT do, and did not pretend to:**
+
+- 🔴 **The §7.96 ↳ write-back is still pending.** Items **93–97 are not committed anywhere** — they exist
+  only in the main checkout's *uncommitted working copy* on `ishay/m7-blueprint-and-seed` (verified:
+  `git show HEAD:docs/PROJECT_MASTER_sec7.md` there yields 90/91/92 only; this branch has 90/91/92 too).
+  That tree's files were written at 20:39–20:42, minutes before this audit ⇒ rule 16 forbids touching it.
+  **The verbatim ↳ text above stays parked here until the seed branch commits its §7 diff.**
+- 🔴 **The full `npm run test:e2e` was not re-run at the close, deliberately.** Several of its specs WRITE
+  to the shared Supabase project, and the seed session was writing to that same DB and to those same spec
+  files minutes earlier. A full run would measure a moving target and risk colliding with it. What WAS run:
+  `dashboard.spec.js` + `auth.spec.js` + `smoke.spec.js` on a production build ⇒ **10 passed · 1 failed**,
+  the single failure being `smoke.spec.js:131`'s hard-coded "מדיטק" revenue anchor — **module 2's anchor,
+  seed drift, owned by the seed session, which is demonstrably fixing that class right now** (its uncommitted
+  `e2e/quotes.spec.js` diff replaces `toHaveCount(3)` with a runtime-read counter). ⚠️ **CI runs no E2E at
+  all**, so the m7 PR is unaffected.
+
+**Housekeeping measured at the close:** `🚧 מ7` swept across all four surfaces — **11 tokens, 4 files, zero
+live unpaid debts**: `PROJECT_MASTER.md:714` is struck-and-dated (paid today), `:444` + `module-2.md:332/785/789`
+are the historical מ7→מ8 routing tombstone, `module-8.md:98/103` + `db_roadmap.md:1372` cite the now-paid §6
+line, and `module-7.md:293` + `db_roadmap.md:503` are this module's own correction of the forward-notice.
+· jscpd 27 clones, **zero** touching a module-7 file · knip clean · advisors: one module-7 finding, the expected
+DEFINER class. · Whole-DB `rls_enabled_no_policy` is now **five** tables, not four — `seed_registry` joined
+tonight as a *deliberate* deny-all (its migration carries the comment saying so); the doc ripple in
+`docs/db_health_checks.md` (check 3 + line 200 "the four tables") is owed by the **seed** branch.
