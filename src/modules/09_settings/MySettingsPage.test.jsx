@@ -157,3 +157,30 @@ describe('MySettingsPage — "מי מתחת לשכר המינימום" (מוקא
     expect(screen.queryByTestId('settings-below-min-wage')).not.toBeInTheDocument()
   })
 })
+
+// 🔍 ממצא UX-6 (אודיט-סגירת מ9, 03/09/2026): הטיעון שהוליד את תיבת-החיפוש בלשונית המלאה
+// (①ב② במדריך-הצעדים) חל גם כאן — מנהלת-הגיוס מחזיקה 25 מ-38 השורות. כאן החיפוש **מסנן**
+// ולא מנווט, כי אין ניווט-קבוצות שיתנגש בכלל-השורה-החלקית של פאנל-ההתאמה.
+describe('MySettingsPage — חיפוש (UX-6)', () => {
+  it('מסנן את השורות המוצגות, ומודיע כשאין תוצאה', async () => {
+    listMyParams.mockResolvedValue([
+      { param_name: 'אחוז_מעמ', param_value: '18', param_type: 'pricing_timing', owner_role_id: 3 },
+      {
+        param_name: 'תנאי_תשלום_ימים',
+        param_value: '30',
+        param_type: 'pricing_timing',
+        owner_role_id: 3,
+      },
+    ])
+    renderPage()
+    expect(await screen.findByTestId('settings-my-search')).toBeInTheDocument()
+    expect(screen.getByText('אחוז מע"מ')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByTestId('settings-my-search'), { target: { value: 'תשלום' } })
+    expect(screen.queryByText('אחוז מע"מ')).not.toBeInTheDocument()
+    expect(screen.getByText('תנאי תשלום')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByTestId('settings-my-search'), { target: { value: 'זזזז' } })
+    expect(screen.getByTestId('settings-my-no-results')).toBeInTheDocument()
+  })
+})

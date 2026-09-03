@@ -508,16 +508,38 @@ function paramNumber(value) {
 }
 
 // שורת-האזהרה שמסך-ההצעות מציג כששורת-פרמטר תמחור חסרה מ-`params` (הכרעת-ישי 31/07/2026).
-// ⚠️ **למה בכלל צריך אותה:** שני הפרמטרים האלה נכשלים בשקט כשהם חסרים, כל אחד בדרכו —
+// ⚠️ **למה בכלל צריך אותה:** שלושת הפרמטרים האלה נכשלים בשקט כשהם חסרים, כל אחד בדרכו —
 // המע"מ חוסם הפקת מסמך (המשתמש כן יראה זאת בחלון), אבל `ימי_תוקף_הצעה` חסר מפיל את
 // **עבודת-הלילה** שמסמנת הצעות שפג תוקפן. העבודה זורקת שגיאה ורצה נכשלת, אך היומן
 // שלה (`cron.job_run_details`) הוא מקום שאיש אינו פותח — ובלי סימן במסך, "נכשל ברעש"
 // שקול ל"נכשל בשקט". כאן זה נאמר במקום שבו המשתמש ממילא נמצא.
+// 🆕 **הורחב 03/09/2026 באודיט-הסגירה של מודול 9 (ממצא F-6) — משניים לארבעה.**
+// ‏`ימי_אזהרה_הצעה_פגה` הוא מ9 (הוצא מקבוע-קוד לשורה במסד) · `ימי_אזהרה_קדם_אירוע` **קדם למ9**
+// ונשאר מחוץ לבאנר מאז שנכתב. שניהם נופלים בדיוק במחלקה שהבאנר נבנה בשבילה: בלי השורה,
+// `isExpiringSoon`/`isEventSoon` נגזרים ל-`false` לכל הצעה ⇒ השבב מציג **0**, המסנן מחזיר ריק,
+// ואין שום סימן. 🔑 **וזו הצורה הגרועה ביותר של כשל-שקט: הוא נקרא כבשורה טובה** — "אין הצעות
+// שעומדות לפוג", "אין אירועים קרובים" — ולכן איש אינו הולך לחפש. אירוע בעוד חמישה ימים שאיש
+// לא אייש אינו נזק קטן ממסמך שאי-אפשר להפיק.
+// ⚖️ **הרחבה מכוונת אל מעבר לגבול-מ9, ובמחלוקת שהוכרעה בין שני סשנים** *(03/09/2026, אודיט-הסגירה)*:
+// סשן-האודיט התנגד תחילה — "הבאנר מכסה 2 מ-4 **בכוונה**, לפי כלל 'בלתי-נראה וגם בעל-משמעות';
+// תיקון של אחד בלבד יעשה אותו 3 מ-4 ושרירותי עוד יותר" — ואז **חזר בו** בנימוק שהכלל שלו-עצמו
+// מכסה גם את השניים האלה, ושהגבול הישן לא היה כלל אלא המקום שבו מישהו עצר. ⇒ **4 מתוך 4,
+// והמחלקה סגורה.** ‏`grep` על `QUOTE_SCREEN_PARAM_NAMES` יראה שרק גוף-המייל נשאר בחוץ, וזה נכון:
+// הוא אינו מספר ואינו נגזר ל-false.
 // מחזירה '' כשהכול תקין, כדי שהקורא יוכל לכתוב `{message && <banner/>}`.
-export function missingPricingParamsMessage({ vatRate, validityDays } = {}) {
+export function missingPricingParamsMessage({
+  vatRate,
+  validityDays,
+  expiringSoonDays,
+  eventWarningDays,
+} = {}) {
   const missing = []
   if (paramNumber(vatRate) === null) missing.push(QUOTE_SCREEN_PARAM_NAMES.vatPercent)
   if (paramNumber(validityDays) === null) missing.push(QUOTE_SCREEN_PARAM_NAMES.validityDays)
+  if (paramNumber(expiringSoonDays) === null)
+    missing.push(QUOTE_SCREEN_PARAM_NAMES.expiringSoonDays)
+  if (paramNumber(eventWarningDays) === null)
+    missing.push(QUOTE_SCREEN_PARAM_NAMES.eventWarningDays)
   if (missing.length === 0) return ''
 
   // ההשלכה נאמרת פר-פרמטר ולא כמשפט כללי: המשתמש צריך לדעת מה **לא עובד עכשיו**,
@@ -528,6 +550,12 @@ export function missingPricingParamsMessage({ vatRate, validityDays } = {}) {
   }
   if (missing.includes(QUOTE_SCREEN_PARAM_NAMES.validityDays)) {
     effects.push('הצעות אינן פגות אוטומטית')
+  }
+  if (missing.includes(QUOTE_SCREEN_PARAM_NAMES.expiringSoonDays)) {
+    effects.push('אין התראה על הצעות שעומדות לפוג')
+  }
+  if (missing.includes(QUOTE_SCREEN_PARAM_NAMES.eventWarningDays)) {
+    effects.push('אין התראה על אירועים קרובים')
   }
   // התאמת מין ומספר — תווית שאומרת "השורות" על שורה אחת נקראת כמו טקסט מתורגם.
   const label = missing.length === 1 ? 'חסר פרמטר מערכת' : 'חסרים פרמטרי מערכת'

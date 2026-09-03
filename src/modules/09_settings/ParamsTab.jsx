@@ -96,9 +96,13 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
     setLoadError('')
     try {
       setRows(await listParams())
-    } catch {
+    } catch (err) {
       // 🔤 הנוסח נעול (§3.7) ואינו מגיע מהודעת-השגיאה של השכבה שמתחת: המשתמשת אינה
       // צריכה לדעת אם זו רשת או RLS — שתיהן "לא ניתן לטעון", והכפתור זהה.
+      // 🔍 **אבל העקבה כן נשמרת** (ממצא F-9, אודיט-סגירת מ9 03/09/2026): הודעה נעולה למשתמשת
+      // ואפס דיאגנוסטיקה למי שיבוא לתקן הם שני דברים שונים. אותו דפוס כמו `LogisticsPage:199`,
+      // `TeamTab:125` ו-`FinancePage:433`.
+      console.error('[09_settings] ParamsTab load failed', err)
       setLoadError('לא ניתן לטעון את ההגדרות.')
     } finally {
       setLoading(false)

@@ -880,35 +880,95 @@ describe('QUOTE_SCREEN_PARAM_NAMES — שם תבנית-המייל', () => {
 })
 
 describe('missingPricingParamsMessage — האזהרה על פרמטר-מערכת חסר', () => {
-  it('שותקת כששני הפרמטרים קיימים', () => {
-    expect(missingPricingParamsMessage({ vatRate: 18, validityDays: '30' })).toBe('')
+  it('שותקת כשארבעת הפרמטרים קיימים', () => {
+    expect(
+      missingPricingParamsMessage({
+        vatRate: 18,
+        validityDays: '30',
+        expiringSoonDays: '7',
+        eventWarningDays: '14',
+      }),
+    ).toBe('')
   })
 
   it('מע"מ חסר — נוקבת בשם הפרמטר ובהשלכה', () => {
-    const msg = missingPricingParamsMessage({ vatRate: null, validityDays: '30' })
+    const msg = missingPricingParamsMessage({
+      vatRate: null,
+      validityDays: '30',
+      expiringSoonDays: '7',
+      eventWarningDays: '14',
+    })
     expect(msg).toContain('אחוז_מעמ')
     expect(msg).toContain('לא ניתן להפיק מסמכים ללקוחות')
     expect(msg).not.toContain('ימי_תוקף_הצעה')
   })
 
   it('ימי-תוקף חסרים — ההשלכה היא שהצעות אינן פגות', () => {
-    const msg = missingPricingParamsMessage({ vatRate: 18, validityDays: undefined })
+    const msg = missingPricingParamsMessage({
+      vatRate: 18,
+      validityDays: undefined,
+      expiringSoonDays: '7',
+      eventWarningDays: '14',
+    })
     expect(msg).toContain('ימי_תוקף_הצעה')
     expect(msg).toContain('הצעות אינן פגות אוטומטית')
     expect(msg).not.toContain('אחוז_מעמ')
   })
 
-  it('שניהם חסרים — לשון רבים ושתי ההשלכות', () => {
+  it('כולם חסרים — לשון רבים וכל ארבע ההשלכות', () => {
     const msg = missingPricingParamsMessage({})
     expect(msg).toContain('חסרים פרמטרי מערכת')
     expect(msg).toContain('אחוז_מעמ')
     expect(msg).toContain('ימי_תוקף_הצעה')
+    expect(msg).toContain('ימי_אזהרה_הצעה_פגה')
+    expect(msg).toContain('ימי_אזהרה_קדם_אירוע')
+  })
+
+  // 🔴 שני הפרמטרים שנוספו לבאנר 03/09/2026 (ממצא F-6 באודיט-הסגירה של מ9). שניהם נגזרים
+  // ל-`false` כשהם חסרים — כלומר השבב מציג 0 והמסך **נראה תקין**. בלי הבדיקות האלה אין שום
+  // דבר שמונע מהם ליפול שוב מהבאנר בעריכה עתידית.
+  it('ימי-אזהרה-הצעה-פגה חסר — ההשלכה היא שאין התראה על הצעות שעומדות לפוג', () => {
+    const msg = missingPricingParamsMessage({
+      vatRate: 18,
+      validityDays: '30',
+      expiringSoonDays: null,
+      eventWarningDays: '14',
+    })
+    expect(msg).toContain('ימי_אזהרה_הצעה_פגה')
+    expect(msg).toContain('אין התראה על הצעות שעומדות לפוג')
+    expect(msg).not.toContain('אחוז_מעמ')
+  })
+
+  it('ימי-אזהרה-קדם-אירוע חסר — ההשלכה היא שאין התראה על אירועים קרובים', () => {
+    const msg = missingPricingParamsMessage({
+      vatRate: 18,
+      validityDays: '30',
+      expiringSoonDays: '7',
+      eventWarningDays: undefined,
+    })
+    expect(msg).toContain('ימי_אזהרה_קדם_אירוע')
+    expect(msg).toContain('אין התראה על אירועים קרובים')
+    expect(msg).not.toContain('ימי_תוקף_הצעה')
   })
 
   // "ריק אינו 0": מחרוזת ריקה היא שורה שנשמרה ריקה, לא הגדרה תקינה של אפס.
   it('מחרוזת ריקה נחשבת חסרה, ו-0 נחשב ערך קיים', () => {
-    expect(missingPricingParamsMessage({ vatRate: '', validityDays: '30' })).toContain('אחוז_מעמ')
-    expect(missingPricingParamsMessage({ vatRate: 0, validityDays: '30' })).toBe('')
+    expect(
+      missingPricingParamsMessage({
+        vatRate: '',
+        validityDays: '30',
+        expiringSoonDays: '7',
+        eventWarningDays: '14',
+      }),
+    ).toContain('אחוז_מעמ')
+    expect(
+      missingPricingParamsMessage({
+        vatRate: 0,
+        validityDays: '30',
+        expiringSoonDays: '7',
+        eventWarningDays: '14',
+      }),
+    ).toBe('')
   })
 })
 

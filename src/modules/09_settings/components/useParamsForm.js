@@ -41,7 +41,8 @@ const GOALPOST_NAME = SMART_MATCH_PARAM_NAMES.goalpostDistanceKm
 const GATE_NAME = SMART_MATCH_PARAM_NAMES.gateDistanceKm
 
 // נוסחי כללי-הרוחב — נגזרו מהטקסט הנעול/הרשום ולא הומצאו: משפט-הסכום נגזר משורת-הסיכום
-// הנעולה `שלוש המשקולות מסתכמות ל-1.00` (§3.7), ומשפט-המרחק הוא ה-hint שכבר יושב על
+// הנעולה `שלוש המשקולות חייבות להסתכם ל-1.00` (§3.7, עודכנה 03/09/2026 — ממצא UX-4),
+// ומשפט-המרחק הוא ה-hint שכבר יושב על
 // `גולפוסט_מרחק_קמ` במרשם (`חייב להיות קטן או שווה למרחק-הפסילה`).
 export const WEIGHTS_SUM_ERROR = 'שלוש המשקולות חייבות להסתכם ל-1.00'
 export const DISTANCE_ORDER_ERROR =

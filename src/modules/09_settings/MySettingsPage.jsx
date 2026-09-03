@@ -16,7 +16,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import LoadingOrError from '@/components/LoadingOrError'
 import { useToast } from '@/components/ToastProvider'
-import { PARAM_GROUPS, PARAM_REGISTRY } from '@/lib/paramsRegistry'
+import { Search } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import {
+  PARAM_GROUPS,
+  PARAM_REGISTRY,
+  getParamEntry,
+  matchesParamSearch,
+} from '@/lib/paramsRegistry'
 import { listMyParams } from '@/modules/09_settings/api'
 import BelowMinWageList from '@/modules/09_settings/BelowMinWageList'
 import TemplateEditor from '@/modules/09_settings/TemplateEditor'
@@ -51,6 +58,12 @@ export default function MySettingsPage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [minWageKey, setMinWageKey] = useState(0)
+  // 🔍 חיפוש — נוסף 03/09/2026 (ממצא UX-6, אודיט-הסגירה). אותו נימוק בדיוק שהוליד את
+  // תיבת-החיפוש בלשונית המלאה (מדריך-הצעדים ①ב②: "רשימה בסדר-גודל כזה כבר לא נסרקת בעין")
+  // חל גם כאן — מנהלת-הגיוס מחזיקה 25 מתוך 38 השורות שבבעלות. אותו `matchesParamSearch`,
+  // בלי מנוע-חיפוש שני. **מסנן בתוך הקבוצות, ולא מנווט** — כאן אין ניווט-קבוצות שיתנגש
+  // בכלל-השורה-החלקית של פאנל-ההתאמה, ולכן ההכרעה של הלשונית לא חלה.
+  const [query, setQuery] = useState('')
   // ר' ההערה המקבילה ב-`ParamsTab.jsx` (חיווט-גל-2, §6 צעד 3.2): `validateParamValue`
   // לעולם אינה נכשלת על `templates` — ורדיקט-`TemplateEditor` הוא השער היחיד.
   const [templateVerdicts, setTemplateVerdicts] = useState({})
@@ -65,8 +78,10 @@ export default function MySettingsPage() {
     setLoadError('')
     try {
       setRows(await listMyParams(roleId))
-    } catch {
+    } catch (err) {
       // 🔤 אותו נוסח נעול כמו `ParamsTab` (§3.7) — "לא ניתן לטעון", בלי לחשוף אם זו רשת או RLS.
+      // 🔍 והעקבה נשמרת, מאותו נימוק (ממצא F-9).
+      console.error('[09_settings] MySettingsPage load failed', err)
       setLoadError('לא ניתן לטעון את ההגדרות.')
     } finally {
       setLoading(false)
@@ -80,9 +95,14 @@ export default function MySettingsPage() {
 
   // כל קבוצה שיש לה ≥1 שורה בבעלות התפקיד — לפי סדר `PARAM_GROUPS` (מוקאפ §5–§7 מציג
   // רק את הקבוצות שבבעלות, אף פעם לא קבוצה ריקה עם "0").
+  const visibleRows = useMemo(
+    () => rows.filter((row) => matchesParamSearch(getParamEntry(row.param_name), query)),
+    [rows, query],
+  )
+
   const ownedGroups = useMemo(() => {
     const byType = new Map()
-    for (const row of rows) {
+    for (const row of visibleRows) {
       const list = byType.get(row.param_type) ?? []
       list.push(row)
       byType.set(row.param_type, list)
@@ -107,7 +127,7 @@ export default function MySettingsPage() {
         .sort((a, b) => registryIndex(a.param_name) - registryIndex(b.param_name)),
     }))
     return [...known, ...extra]
-  }, [rows])
+  }, [visibleRows])
 
   const dirtyCount = form.dirtyNames.length
   const totalCount = rows.length
@@ -163,6 +183,28 @@ export default function MySettingsPage() {
           </p>
         )}
       </div>
+
+      {rows.length > 0 && (
+        <div className="relative max-w-md">
+          <Search className="absolute top-1/2 right-3 size-4 -translate-y-1/2 text-slate-400" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="חיפוש לפי שם ההגדרה או שם הפרמטר במערכת"
+            className="h-auto rounded-lg border-slate-300 py-2.5 pr-10 pl-3 text-right"
+            data-testid="settings-my-search"
+          />
+        </div>
+      )}
+
+      {rows.length > 0 && ownedGroups.length === 0 && (
+        <p
+          className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500"
+          data-testid="settings-my-no-results"
+        >
+          אין הגדרות שתואמות לחיפוש
+        </p>
+      )}
 
       {rows.length === 0 ? (
         <p

@@ -409,3 +409,23 @@ describe('V-4 — התוויות המתוקנות של שער/גולפוסט (§
     expect(getParamEntry('גולפוסט_מרחק_קמ').label).toBe('מרחק שבו ציון-הקרבה מגיע ל-0')
   })
 })
+
+// 🔴 ממצא F-4 (אודיט-סגירת מ9, 03/09/2026). התקרה על שכר-המינימום היא היחידה שנוספה באודיט,
+// כי היא היחידה שנמדדה לה השלכה חוצת-מודול: הטריגר `enforce_hostess_min_wage` דוחה כל שמירת
+// דיילת שתעריפה נמוך מהערך, ולכן `3500` במקום `35` נועל את כל מסלול-השמירה של מודול 4.
+// 22 הפרמטרים המספריים האחרים נשארו בלי תקרה **במכוון** — 22 הכרעות-מוצר, לישי בבוקר.
+describe('שכר_מינימום_שעתי — תקרת-שפיות (F-4)', () => {
+  const entry = getParamEntry('שכר_מינימום_שעתי')
+
+  it('הערך החי (35) והתעריף הגבוה שנמדד (52) עוברים', () => {
+    expect(validateParamValue(entry, '35').ok).toBe(true)
+    expect(validateParamValue(entry, '52').ok).toBe(true)
+    expect(validateParamValue(entry, '200').ok).toBe(true)
+  })
+
+  it('הקלדה של 3500 במקום 35 נדחית — וההודעה נוקבת באותה תקרה שהיא אוכפת', () => {
+    const result = validateParamValue(entry, '3500')
+    expect(result.ok).toBe(false)
+    expect(result.message).toContain('200')
+  })
+})

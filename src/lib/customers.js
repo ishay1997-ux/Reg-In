@@ -42,7 +42,11 @@ export const SATISFACTION_THRESHOLD_PARAM_NAME = 'סף_שביעות_רצון'
 // ממוצע-משוב ⇒ האם הלקוח ברשימת-"טעון בירור". ‏null/לא-מספר = **אין נתון**, ולא "בסדר"
 // ולא "בעייתי" — ר' ההערה במסנן עצמו. 🔴 **וסף חסר ⇒ `false` ולא 3**: אותה דוקטרינה
 // שהמסך כבר מפעיל על `isCustomerDormant` עם סף-רדימות חסר (`CustomersPage.jsx`) — "לא
-// בכוח", בלי להמציא מספר. הצעקה על פרמטר חסר יושבת ב-`getParamValues`.
+// בכוח", בלי להמציא מספר.
+// ✅ **והצעקה על שורה חסרה אכן יושבת ב-`getParamValues` — מ-03/09/2026, ולא לפני כן.**
+// עד אודיט-הסגירה של מ9 המשפט הזה היה **שגוי בפועל**: `getCustomerScreenParams` לא עברה
+// שם, ולכן שורה חסרה הייתה מגיעה לכאן בשקט והתגית הייתה נעלמת מכל הלקוחות (ממצא F-7).
+// הפונקציה כאן לא השתנתה — מה שהשתנה הוא שהטענה הזו נעשתה נכונה.
 export function needsSatisfactionAttention(avgFeedback, threshold) {
   const max = optionalNumber(threshold)
   return typeof avgFeedback === 'number' && max !== null && avgFeedback < max

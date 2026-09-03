@@ -216,7 +216,12 @@ export default function QuotesPage() {
     expiringSoonDays,
     defaultVatRate: vatRate,
   }
-  const missingParamsMessage = missingPricingParamsMessage({ vatRate, validityDays })
+  const missingParamsMessage = missingPricingParamsMessage({
+    vatRate,
+    validityDays,
+    expiringSoonDays,
+    eventWarningDays,
+  })
 
   // בלי useMemo: הקומפיילר של React מזכר את זה לבד, ו-memoization ידני על ערך שנגזר
   // ממשתנה-רינדור מקומי (vatRate) מפיל אצלו את האופטימיזציה כולה — ‏react-hooks/preserve-manual-memoization.
