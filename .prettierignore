@@ -6,3 +6,5 @@ public
 docs
 supabase/migrations
 .claude
+# 03/09/2026 — רשומות-ריצה של גנרטור נתוני-ההדגמה: JSON שהסקריפט כותב, לא קוד
+scripts/seed-runs

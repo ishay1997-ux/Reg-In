@@ -247,15 +247,22 @@ async function main() {
   )
 
   // 5 · שיבוץ לפני created_at של הדיילת
-  const early = d.assignments.filter((a) => {
-    const h = hostessById.get(a.hostess_id)
-    return h && a.event_date < h.created_at.slice(0, 10)
-  })
+  const earlyOf = (list) =>
+    list.filter((a) => {
+      const h = hostessById.get(a.hostess_id)
+      return h && a.event_date < h.created_at.slice(0, 10)
+    })
+  const seededAssignments = d.assignments.filter((a) => seededProjects.has(a.project_id))
+  const early = earlyOf(seededAssignments)
+  const earlyLegacy = earlyOf(d.assignments.filter((a) => !seededProjects.has(a.project_id)))
   check(
     5,
-    'אף event_date לא לפני created_at של הדיילת',
+    'אף event_date זרוע לא לפני created_at של הדיילת',
     early.length === 0,
-    `${d.assignments.length} שיבוצים · ${early.length} מוקדמים מדי`,
+    `${seededAssignments.length} שיבוצים זרועים · ${early.length} מוקדמים מדי` +
+      (earlyLegacy.length
+        ? ` · ⚠️ ${earlyLegacy.length} שיבוצי-עבר ישנים מוקדמים מדי (פגם קיים: ${[...new Set(earlyLegacy.map((a) => `#${a.project_id}`))].join(', ')})`
+        : ''),
   )
 
   // 6 · אפס חריגות בריצה — מהרשם
@@ -302,21 +309,10 @@ async function main() {
 
   // 8 · סריקת-עוגנים מכנית — smoke-anchors.json + מספרים בקובצי E2E
   const anchors = JSON.parse(readFileSync(resolve('e2e/smoke-anchors.json'), 'utf-8'))
-  const meditech = d.customers.find((c) => c.company_name.includes(anchors.customers.name))
-  const medQuotes = d.quotes.filter((q) => q.customer_id === meditech?.customer_id)
-  const medApproved = medQuotes.filter((q) => q.quote_status === 'approved')
-  const medRevenue = medApproved.reduce((s, q) => s + (quoteTotal(q, vat) ?? 0), 0)
-  const medOpen = medQuotes
-    .filter((q) => q.quote_status === 'in_progress')
-    .reduce((s, q) => s + (quoteTotal(q, vat) ?? 0), 0)
+  // 🔄 03/09/2026: העוגנים החיים (מדיטק · #6 · "כנס לקוחות שנתי" · דיילות-הדגמה · המספרים
+  // הנעוצים בקובץ-הלקוח) נמחקו עם דמו-יולי בהכרעת-ישי והוחלפו בפיקסטורות בזמן-ריצה (§7א).
+  // נשארו לסריקה רק עוגני קטלוג/פרמטרים/סכמה — שאינם מרקיבים — והפרויקט הידוע של מודול 8.
   const findings = []
-  const expectNum = (label, actual, expected) => {
-    if (fmt(actual) !== String(expected).replace(/\s*₪/, ''))
-      findings.push(`${label}: חי ${fmt(actual)} ≠ נעוץ ${expected}`)
-  }
-  expectNum('customers.revenues', medRevenue, anchors.customers.revenues)
-  const q6 = d.quotes.find((q) => q.quote_id === 6)
-  if (q6) expectNum('quotes.knownAmount (#6)', quoteTotal(q6, vat) ?? 0, anchors.quotes.knownAmount)
   if (d.products.filter((p) => p.status === 'active').length !== anchors.prices.productCount)
     findings.push(
       `prices.productCount: ${d.products.filter((p) => p.status === 'active').length} ≠ ${anchors.prices.productCount}`,
@@ -331,13 +327,9 @@ async function main() {
     findings.push(`settings.vat: ${vat} ≠ ${anchors.settings.vat}`)
   if (new Set(d.params.map((p) => p.param_type)).size !== anchors.settings.groupCount)
     findings.push('settings.groupCount זז')
-  if (!d.projects.some((p) => p.event_name === anchors.projects.knownEvent))
-    findings.push('projects.knownEvent חסר')
-  for (const key of ['availableCandidate', 'excludedNoCar', 'excludedUnavailable']) {
-    const h = d.hostesses.find((x) => x.full_name === anchors.hostesses[key])
-    if (!h || h.status !== 'active')
-      findings.push(`hostesses.${key} (${anchors.hostesses[key]}) חסרה או מושבתת`)
-  }
+  for (const key of ['customers', 'quotes', 'projects'])
+    if (anchors[key] && Object.keys(anchors[key]).length)
+      findings.push(`smoke-anchors.json נועץ שוב ערך-דאטה תחת "${key}" — §7א אוסר`)
   const p12 = projectById.get(anchors.finance.knownProjectId)
   const tabOf = (s) =>
     s === 'awaiting_invoice'
@@ -347,22 +339,11 @@ async function main() {
         : s === 'cancelled'
           ? 'cancelled'
           : null
-  if (!p12 || tabOf(p12.project_status) !== anchors.finance.knownProjectTab)
-    findings.push(
-      `finance.knownProjectTab: #${anchors.finance.knownProjectId} הוא ${p12?.project_status} (עוגן שבור מראש — §א׳3)`,
-    )
-  // מספרים נעוצים ב-customer-page.spec.js — נסרקים ומושווים לנגזרות החיות של אותו לקוח.
-  const specText = readFileSync(resolve('e2e/customer-page.spec.js'), 'utf-8')
-  const pinned = [...specText.matchAll(/toContainText\('([\d,]{3,})'\)/g)].map((m) => m[1])
-  const live = new Set([
-    fmt(medRevenue),
-    fmt(medOpen),
-    fmt(medApproved.length ? medRevenue / medApproved.length : 0),
-    ...medQuotes.map((q) => fmt(quoteTotal(q, vat) ?? 0)),
-  ])
-  for (const value of new Set(pinned))
-    if (!live.has(value))
-      findings.push(`customer-page.spec.js נועץ ${value} ואינו נגזר מלקוח 46 החי`)
+  // העוגן השבור-מראש (§א׳3) מדווח בנפרד — הוא לא נשבר על-ידי הזריעה, והתיקון שלו הוא של ישי.
+  const knownBroken =
+    !p12 || tabOf(p12.project_status) !== anchors.finance.knownProjectTab
+      ? `finance.knownProjectTab: #${anchors.finance.knownProjectId} הוא ${p12?.project_status}, ה-JSON אומר ${anchors.finance.knownProjectTab}`
+      : null
   const gotoIds = [
     ...readdirSync(resolve('e2e'))
       .filter((f) => f.endsWith('.spec.js'))
@@ -380,32 +361,46 @@ async function main() {
     'סריקת-עוגנים מכנית (smoke-anchors.json + e2e/*.spec.js)',
     findings.length
       ? findings.join(' | ')
-      : `${pinned.length} מספרים נעוצים בקובץ-הלקוח + ${Object.keys(anchors).filter((k) => !k.startsWith('_')).length} בלוקים ב-JSON — כולם תואמים`,
+      : `${Object.keys(anchors).filter((k) => !k.startsWith('_')).length} בלוקים ב-JSON (קטלוג/פרמטרים/סכמה בלבד) — כולם תואמים`,
   )
+
+  if (knownBroken) warn('8׳', 'עוגן שבור-מראש (§א׳3) — תיקון של ישי, לא של הזריעה', knownBroken)
 
   // 10 · פיזור-העומס בין דיילות פעילות
   const activeIds = d.hostesses
     .filter((h) => h.status === 'active' && h.created_at.slice(0, 10) <= addDays(today, -90))
     .map((h) => h.hostess_id)
+  // המדד: אירועים-לחודש-פעיל ב-12 החודשים האחרונים (חלון-החישוב של Smart Match) — ולא ספירה
+  // גולמית, כי דיילת-גרעין שפעילה 32 חודשים צוברת יותר ממי שהצטרפה לפני חצי שנה בלי שזה
+  // אומר דבר על הוגנות-השיבוץ. `הנחתי` על נוסח-המפרט.
+  const windowStart = addDays(today, -365)
   const load = activeIds
-    .map(
-      (id) =>
-        finals.filter(
-          (a) =>
-            a.hostess_id === id &&
-            a.assignment_status === 'finally_approved' &&
-            a.event_date < today &&
-            projectById.get(a.project_id)?.project_status !== 'cancelled',
-        ).length,
-    )
+    .map((id) => {
+      const created = hostessById.get(id).created_at.slice(0, 10)
+      const activeMonths = Math.min(
+        12,
+        Math.max(1, daysBetween(created > windowStart ? created : windowStart, today) / 30),
+      )
+      const events = finals.filter(
+        (a) =>
+          a.hostess_id === id &&
+          a.assignment_status === 'finally_approved' &&
+          a.event_date < today &&
+          a.event_date >= windowStart &&
+          projectById.get(a.project_id)?.project_status !== 'cancelled',
+      ).length
+      return Math.round((events / activeMonths) * 10) / 10
+    })
     .sort((a, b) => a - b)
   const median = load.length ? load[Math.floor(load.length / 2)] : 0
-  const q25 = load.length ? load[Math.floor(load.length / 4)] : 0
+  const idle = load.filter((n) => n === 0).length
+  // `הנחתי` על נוסח-המפרט "רבעון-תחתון אינו ריק": לכל היותר רבע מהפעילות-הוותיקות בלי
+  // אירוע אחד — כלומר בונוס-ההוגנות באמת מפזר, ולא רק "יש מישהי ברבעון".
   check(
     10,
-    'אף דיילת פעילה מעל פי-3 מהחציון, ורבעון-תחתון לא ריק',
-    load.length > 0 && median > 0 && Math.max(...load) <= 3 * median && q25 > 0,
-    `n=${load.length} · חציון=${median} · רבעון-תחתון=${q25} · מקסימום=${load.length ? Math.max(...load) : 0}`,
+    'אף דיילת פעילה מעל פי-3 מהחציון (אירועים/חודש-פעיל, 12 חודשים), ולכל היותר רבע בלי אירוע',
+    load.length > 0 && median > 0 && Math.max(...load) <= 3 * median && idle <= load.length / 4,
+    `n=${load.length} (פעילות שנוצרו לפני ≥90 יום) · חציון=${median}/חודש · בלי-אירוע=${idle} · מקסימום=${load.length ? Math.max(...load) : 0}/חודש`,
   )
 
   warn(11, 'npm run smoke + npm run test:e2e — מורצים ידנית, אינם ב-gate ולא ב-CI', 'ר׳ דוח-השלב')

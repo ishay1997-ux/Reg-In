@@ -23,10 +23,9 @@ async function login(page, email, password) {
   await expect(page).toHaveURL('/', { timeout: 30_000 })
 }
 
-// 🕓 **אירוע-ההדגמה נבחר בשמו ולעולם לא ב-`project_id`** (`e2e/CLAUDE.md`: פיקסטורה נעוצה
-// לשורת-מסד חיה מרקיבה לבד; והכרעת-דפוס-הפיקסטורות ב-`module-4.md` §10). זהו האירוע שחמש
-// דיילות-ההדגמה של צעד 4.2 נבנו סביבו.
-const DEMO_EVENT = 'כנס לקוחות שנתי'
+// 🔄 03/09/2026: אירוע-ההדגמה ('כנס לקוחות שנתי', #8) וחמש דיילות-ההדגמה של צעד 4.2 נמחקו
+// עם דמו-יולי בהכרעת-ישי. גם שם-אירוע הוא פיקסטורה חיה (`e2e/CLAUDE.md`) — הטענה היחידה
+// שנשענה עליו הוחלפה ב"יש לפחות שורה אחת במבט-העל", שזה מה שהיא באמת בדקה.
 
 // 🐞 **שתי צורות-רינדור לאותה עובדה, והבדיקה הכירה רק אחת** (נתפס 26/08/2026).
 // ‏`OverviewTab` כותב `{gap === 1 ? 'חסרה 1' : `חסרות ${gap}`}` — כלומר סינון על המילה
@@ -73,7 +72,6 @@ test.describe('מודול 4 · משטח 1 — מבט-על השיבוצים', () 
     await expect(page.getByTestId('overview-table')).not.toContainText('תרחיש-קבלה')
 
     await expect(page.locator('[data-testid^="overview-row-"]').first()).toBeVisible()
-    await expect(page.getByTestId('overview-table')).toContainText(DEMO_EVENT)
   })
 
   test('🔴 הסדר הוא התשובה — האירוע הקרוב יותר יושב מעל הרחוק', async ({ page }) => {

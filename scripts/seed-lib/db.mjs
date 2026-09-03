@@ -95,13 +95,24 @@ export class SeedDb {
     return data
   }
 
+  // 🔴 PostgREST מחזיר לכל היותר 1,000 שורות לבקשה, **בשקט** — בלי שגיאה ובלי סימן. אחרי הזריעה
+  // המלאה יש 5,000+ שיבוצים ⇒ קריאה אחת הייתה "מוכיחה" שלדיילת אין היסטוריה (נמדד 03/09/2026:
+  // סקריפט-הטענות דיווח 0/0 על פרופיל שיש לו 55 שורות). ⇒ תמיד דפדוף עד עמוד חלקי.
   async select(table, columns, filters = []) {
-    this.calls += 1
-    let query = this.supabase.from(table).select(columns)
-    for (const [op, col, value] of filters) query = query[op](col, value)
-    const { data, error } = await query
-    if (error) this.fail(`select ${table}`, error)
-    return data ?? []
+    const PAGE = 1000
+    const rows = []
+    for (let from = 0; ; from += PAGE) {
+      this.calls += 1
+      let query = this.supabase
+        .from(table)
+        .select(columns)
+        .range(from, from + PAGE - 1)
+      for (const [op, col, value] of filters) query = query[op](col, value)
+      const { data, error } = await query
+      if (error) this.fail(`select ${table}`, error)
+      rows.push(...(data ?? []))
+      if ((data?.length ?? 0) < PAGE) return rows
+    }
   }
 
   // רישום במרשם-הזריעה — הפונקציה הגדורה למנכ"ל מהמיגרציה `seed_registry_and_helpers`.

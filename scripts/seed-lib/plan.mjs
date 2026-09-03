@@ -402,9 +402,10 @@ function buildHostesses(rng, ctx) {
   for (let i = 0; i < total; i += 1) {
     const { name, ascii } = nextName()
     const core = rng.chance(0.08)
+    // תאריך-הצטרפות לעולם לא אחרי היום — דיילת "שתצטרף באוקטובר" אינה קוהרנטית על מסך שמוצג היום.
     const start = core
       ? addDays(ctx.from, -rng.int(0, 400))
-      : addDays(ctx.from, rng.int(-60, ctx.pastDays + 60))
+      : addDays(ctx.from, rng.int(-60, ctx.pastDays - 1))
     let end = null
     if (!core) {
       const duration = rng.chance(0.75) ? rng.int(60, 330) : rng.int(330, 800)
@@ -549,15 +550,19 @@ function buildLines(rng, ctx, { guests, date, size, hostessCount, start, hours }
       notes: '',
     })
   }
+  // 🔴 הכרעת-ישי 03/09/2026 (היגיון עסקי, לא אילוץ-מסד): "בכל אירוע חייב לפחות פריט של תגים
+  // ושרוכים ודיילת אחת לפחות" — כל הצעה נושאת את שלוש השורות, תמיד.
   push(hostessSku(start, hours), hostessCount)
-  if (rng.chance(0.9)) {
-    const qty = Math.ceil((guests * rng.float(1.0, 1.15)) / 10) * 10
-    push(rng.pick(TAG_SKUS), qty, rng.chance(0.6) ? rng.pick(COLORS) : null)
-  }
-  if (rng.chance(0.55)) {
-    const qty = Math.ceil((guests * rng.float(1.0, 1.1)) / 10) * 10
-    push(rng.pick(LANYARD_SKUS), qty, rng.chance(0.5) ? rng.pick(COLORS) : null)
-  }
+  push(
+    rng.pick(TAG_SKUS),
+    Math.ceil((guests * rng.float(1.0, 1.15)) / 10) * 10,
+    rng.chance(0.6) ? rng.pick(COLORS) : null,
+  )
+  push(
+    rng.pick(LANYARD_SKUS),
+    Math.ceil((guests * rng.float(1.0, 1.1)) / 10) * 10,
+    rng.chance(0.5) ? rng.pick(COLORS) : null,
+  )
   if ((size === 'big' && rng.chance(0.35)) || (size === 'medium' && rng.chance(0.1)))
     push('01WEB', 1)
   return lines
@@ -689,6 +694,9 @@ function rejection(rng, event, quoteAge) {
 
 function targetStatusFor(rng, ctx, event) {
   const days = daysBetween(ctx.today, event.date)
+  // חוב-פתוח בן שנתיים אינו קוהרנטי — "ממתין לתשלום" רק בחצי-השנה האחרונה (נמדד 03/09/2026:
+  // הגרסה הראשונה הציגה 897 ימי-איחור במסך הכספים).
+  if (days < -150) return 'finished'
   if (days < -21) return rng.chance(0.96) ? 'finished' : 'awaiting_payment'
   if (days < -10)
     return rng.weighted([
@@ -703,16 +711,26 @@ function targetStatusFor(rng, ctx, event) {
       { weight: 2, value: 'event_finished' },
     ])
   if (days < 0) return 'event_finished'
-  if (days <= 14)
+  // 🔴 קרבה קובעת מוכנות (הכרעת-ישי 03/09/2026: "אירועים להיום בלי דיילות ולוגיסטיקה — לא סביר"):
+  // עד 3 ימים — מוכן לגמרי; 4–10 — לכל היותר חוסר אחד; חוסר של "איש לא נגע" רק לאירוע רחוק
+  // שהצעתו טרייה (ר' למטה). מנהלת אמיתית לא מגיעה לשבוע-האירוע בלי צוות.
+  if (days <= 3) return 'ready'
+  if (days <= 10)
     return rng.weighted([
-      { weight: 5, value: 'ready' },
-      { weight: 4, value: 'in_progress' },
-      { weight: 1, value: 'not_started' },
+      { weight: 7, value: 'ready' },
+      { weight: 3, value: 'in_progress' },
+    ])
+  const freshQuote = daysBetween(event.quoteCreated, ctx.today) <= 10
+  if (days <= 21)
+    return rng.weighted([
+      { weight: 3, value: 'ready' },
+      { weight: 5, value: 'in_progress' },
+      { weight: freshQuote ? 2 : 0, value: 'not_started' },
     ])
   return rng.weighted([
-    { weight: 2, value: 'ready' },
+    { weight: 1, value: 'ready' },
     { weight: 5, value: 'in_progress' },
-    { weight: 4, value: 'not_started' },
+    { weight: freshQuote ? 5 : 1, value: 'not_started' },
   ])
 }
 
@@ -857,21 +875,23 @@ function buildLogistics(rng, ctx, event, project) {
           { weight: 3, value: 'ready' },
         ])
       } else if (daysToEvent >= 0) {
-        if (businessDays > 15)
+        // אותה מדרגת-קרבה כמו הסטטוס: בשבוע-האירוע הסחורה כבר כאן (הכרעת-ישי 03/09/2026).
+        if (businessDays <= 3) status = 'ready'
+        else if (businessDays <= 10)
           status = rng.weighted([
-            { weight: 8, value: 'not_started' },
-            { weight: 2, value: 'ordered' },
-          ])
-        else if (businessDays > 5)
-          status = rng.weighted([
-            { weight: 2, value: 'not_started' },
             { weight: 5, value: 'ordered' },
-            { weight: 3, value: 'ready' },
+            { weight: 5, value: 'ready' },
+          ])
+        else if (businessDays <= 20)
+          status = rng.weighted([
+            { weight: 3, value: 'not_started' },
+            { weight: 5, value: 'ordered' },
+            { weight: 2, value: 'ready' },
           ])
         else
           status = rng.weighted([
-            { weight: 3, value: 'ordered' },
-            { weight: 7, value: 'ready' },
+            { weight: 8, value: 'not_started' },
+            { weight: 2, value: 'ordered' },
           ])
       }
       const expected = addDays(event.date, -rng.int(3, 12))
@@ -965,9 +985,11 @@ function buildStaffing(rng, ctx, event, project, hostesses, booked) {
     .shuffle(hostessPool(ctx, hostesses, inviteDate, event.date))
     .filter((p) => !booked.has(`${refKey(p.ref)}@${event.date}`))
   const isPast = event.date < ctx.today
+  // "בתהליך" = חסרה דיילת אחת (או שתיים באירוע גדול), ולעולם לא אפס מאושרות — אירוע שעובדים עליו
+  // מאויש לפחות בדיילת אחת (הכרעת-ישי 03/09/2026). "טרם החל" הוא היחיד בלי שיבוצים.
   const needApproved =
     project.target === 'in_progress'
-      ? Math.max(0, event.hostessCount - rng.int(1, 2))
+      ? Math.max(1, event.hostessCount - rng.int(1, event.hostessCount >= 6 ? 2 : 1))
       : event.hostessCount
   const rows = []
   let approved = 0
@@ -1090,7 +1112,8 @@ function applyFutureHeroes(rng, ctx, events, hostesses, booked) {
   }
 
   // הצמד של מ7 (§7.94): שיבוץ מלא + לוגיסטיקה חסרה, וההפך.
-  const near = within(1, 12)
+  // שורות-גיבור רק מ-4 ימי-עסקים והלאה — בשבוע-האירוע אין "חוסר להדגמה", יש אירוע שלא מוכן.
+  const near = within(4, 12)
   mark(
     near.find((e) => e.project.staffing.length > 0),
     'fullStaffMissingLogistics',
@@ -1124,7 +1147,7 @@ function applyFutureHeroes(rng, ctx, events, hostesses, booked) {
     },
   )
   // שני טריגרי-הענבר של מ5 (§ה׳): פריט פיזי לא-הוזמן בתוך הסף · משלוח שאיחר.
-  for (const e of within(1, 9)
+  for (const e of within(4, 9)
     .filter((x) => !x.project.hero.length)
     .slice(0, 2)) {
     mark(e, 'amberNotStarted', (ev) => {
@@ -1134,7 +1157,7 @@ function applyFutureHeroes(rng, ctx, events, hostesses, booked) {
     })
   }
   mark(
-    within(2, 15).find((x) => !x.project.hero.length),
+    within(4, 15).find((x) => !x.project.hero.length),
     'lateArrival',
     (e) => {
       e.project.logistics.forEach((l) =>
@@ -1146,7 +1169,7 @@ function applyFutureHeroes(rng, ctx, events, hostesses, booked) {
       )
     },
   )
-  for (const e of within(3, 20)
+  for (const e of within(4, 20)
     .filter((x) => !x.project.hero.length)
     .slice(0, 2)) {
     mark(e, 'orderedOnly', (ev) => {
@@ -1211,9 +1234,13 @@ export function buildPlan(input) {
     event.outcome = outcome
     if (outcome.kind === 'approved' && event.date < ctx.today) pastApprovedCandidates.push(event)
   }
-  const cancelPicks = rng
-    .shuffle(pastApprovedCandidates)
-    .slice(0, Math.max(4, Math.round(pastApprovedCandidates.length * VOLUME.cancelRate)))
+  // לפחות ארבעה (אחד לכל מדרגה), ולעולם לא יותר משליש מהפרויקטים — אצווה קטנה אינה
+  // "עסק שבו הכול מתבטל".
+  const cancelCount = Math.min(
+    Math.max(4, Math.round(pastApprovedCandidates.length * VOLUME.cancelRate)),
+    Math.floor(pastApprovedCandidates.length / 3),
+  )
+  const cancelPicks = rng.shuffle(pastApprovedCandidates).slice(0, cancelCount)
   const tiers = ['mid', 'near', 'force_majeure', 'far']
   cancelPicks.forEach((event, i) => {
     event.outcome = { kind: 'approved', cancel: true, cancelTier: tiers[i] ?? null }

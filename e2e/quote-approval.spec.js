@@ -24,11 +24,9 @@ const FINANCE_PASSWORD = process.env.E2E_FINANCE_PASSWORD
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL
 const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY
 
-// הצעה #10 מאושרת בזרע, והלקוח שלה (46) מחזיק גם הצעה פתוחה — כלומר בשני המסכים יש
-// שורה שכן אמורה לשאת כפתור-אישור ושורה שלא. ⚠️ נתוני-הזרע השתנו ב-31/07; אם מזהה
-// כאן נעלם, המקור הוא `scripts/demo-seed.mjs`.
-const APPROVED_QUOTE_ID = 10
-const CUSTOMER_WITH_QUOTES = 46
+// 🔄 03/09/2026: הצעה #10 ולקוח 46 (דמו-יולי) נמחקו בהכרעת-ישי. שתי הבדיקות שנשענו עליהם
+// בוחרות עכשיו בזמן-ריצה — השורה הראשונה בלשונית "מאושרות", והלקוח הראשון ברשימה שמציג
+// הכנסות (= יש לו הצעה מאושרת ⇒ יש "צפייה במסמך") — ונופלות ברעש כשאין (פיקסטורה, לא באג).
 
 async function login(page, email, password) {
   await page.goto('/login')
@@ -130,7 +128,15 @@ test.describe('הרשאת-צפייה: הכפתור חסר בשני המסכים 
     // ⚠️ שני שערי-הרשאה נפרדים על העמוד הזה (LOCAL-15): `לקוחות` לעריכת הכרטיס,
     // `הצעות מחיר` לפעולות על שורות-ההצעה. מנהלת-כספים היא edit על הראשון ו-view
     // על השני — כלומר שער יחיד היה מעניק לה אישור/דחייה. זו הבדיקה שנועלת את ההפרדה.
-    await page.goto(`/customers/${CUSTOMER_WITH_QUOTES}`)
+    await page.goto('/customers')
+    const revenueRow = page
+      .locator('[data-testid^="customer-row-"]')
+      .filter({ hasText: /[1-9][d,]* ₪/ })
+      .first()
+    await expect(revenueRow, 'אין לקוח עם הכנסות — פיקסטורה חסרה, לא באג').toBeVisible({
+      timeout: 30_000,
+    })
+    await revenueRow.click()
     await expect(page.getByTestId('customer-page')).toBeVisible({ timeout: 30_000 })
     await expect(page.locator('[data-testid^="customer-quote-document-"]').first()).toBeVisible()
 
@@ -155,16 +161,21 @@ test.describe('הרשאת-צפייה: הכפתור חסר בשני המסכים 
 test.describe('הצעה סגורה: גם למי שמורשית אין כפתור-אישור', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
 
-  test(`הצעה #${APPROVED_QUOTE_ID} מאושרת — יש "צפייה במסמך" ואין "אישור"`, async ({ page }) => {
+  test('הצעה מאושרת — יש "צפייה במסמך" ואין "אישור"', async ({ page }) => {
     // בלי הבדיקה הזו, בדיקת-ההרשאה שלמעלה מוכיחה חצי דבר: השורה נסתרת גם לפי סטטוס
     // (`canEdit && isOpen`), ולכן "אין כפתור" יכול לנבוע מהסטטוס ולא מההרשאה.
     await login(page, CEO_EMAIL, CEO_PASSWORD)
     await page.goto('/quotes')
     await page.getByTestId('quotes-tab-approved').click()
 
-    await expect(page.getByTestId(`quote-row-${APPROVED_QUOTE_ID}`)).toBeVisible({
+    const approvedRow = page.locator('[data-testid^="quote-row-"]').first()
+    await expect(approvedRow, 'אין הצעה מאושרת — פיקסטורה חסרה, לא באג').toBeVisible({
       timeout: 30_000,
     })
+    const APPROVED_QUOTE_ID = (await approvedRow.getAttribute('data-testid')).replace(
+      'quote-row-',
+      '',
+    )
     await expect(page.getByTestId(`quote-document-${APPROVED_QUOTE_ID}`)).toBeVisible()
     await expect(page.getByTestId(`quote-approve-${APPROVED_QUOTE_ID}`)).toHaveCount(0)
     await expect(page.getByTestId(`quote-edit-${APPROVED_QUOTE_ID}`)).toHaveCount(0)
