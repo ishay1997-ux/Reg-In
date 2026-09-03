@@ -137,12 +137,13 @@ test.describe('בדיקת-עשן', () => {
     await expect(customerRow, 'אין לקוח עם הכנסות ברשימה — הזריעה חסרה').toBeVisible({
       timeout: 30_000,
     })
-    const customerRevenue = (await customerRow.innerText()).match(/[1-9][\d,]* ₪/)[0]
 
     // עמוד-הלקוח: אותו סכום ברצועת-המדדים — מסלול נפרד (שאילתות עמוד-הרשומה).
     await customerRow.click()
     await expect(page).toHaveURL(/\/customers\/\d+/)
-    await expect(page.getByTestId('metric-revenue')).toContainText(customerRevenue)
+    // 🔄 04/09/2026: האריח הראשון הוא "רווח גולמי מהלקוח" (הכרעת-ישי) — סכום-כסף למנכ"ל;
+    // הסכום שברשימה כבר אומת בשורה עצמה, ואינו מושווה לאריח.
+    await expect(page.getByTestId('metric-profit')).toContainText(/[1-9][\d,]* ₪/)
 
     // הצעות: לשונית "הכל" נטענת ושורותיה נושאות סכום שעבר דרך מנוע-התמחור.
     // 🔄 03/09/2026: הסכום הקנוני 6,319 ₪ (הצעה #6 של דמו-יולי) נמחק. לשונית-ברירת-המחדל היא

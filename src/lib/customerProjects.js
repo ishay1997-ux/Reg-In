@@ -197,3 +197,31 @@ export function matchesProjectSearch(project, text) {
     .toLowerCase()
     .includes(q)
 }
+
+// ── אריח "רווח גולמי מהלקוח" (הכרעת-ישי 04/09/2026 — *במקום* "סה"כ הצעות מאושרות") ─────────
+//
+// 🔑 למה במקום ולא בנוסף, במילותיו: *"מה אכפת לי כמה הסכום הצעות מאושרות יש לו"* — השאלה
+// הניהולית על לקוח היא כמה הוא **שווה** לנו, לא כמה הוא הזמין. הרווח נלקח **קפוא** מ-
+// `project_finance.final_profit` (נקבע בסגירת-הפרויקט, §7.79 — המסד הוא מחשבון-הכסף היחיד,
+// `08_finance/CLAUDE.md`); כאן רק סכימה של מספרים גמורים, אף פעם לא חישוב-מחדש.
+//
+// 🔴 מי שאין לו הרשאת "כספים" מקבל `null` ולא 0 — ה-RLS על `project_finance` מחזיר לו
+// `null` בשקט על כל שורה, ו-0 היה נראה כמו "הלקוח לא הרוויח כלום" (§7.97: כרטיסי-כסף
+// למנכ"ל ולכספים בלבד; `08_finance` §4.3: חוסר-נתון אינו 0).
+// `loading`/`error` ⇒ `null` גם כן — אותו דפוס כמו `lastEventTileState`.
+export function customerProfitTile(projects, { canViewFinance, loading, error }) {
+  if (!canViewFinance) return { value: null, emptyText: 'דורש הרשאת כספים', sub: undefined }
+  if (loading || error) return { value: null, emptyText: 'אין נתונים עדיין', sub: undefined }
+  const finished = (projects ?? []).filter(
+    (p) => p.project_status === 'finished' && p.project_finance?.final_profit != null,
+  )
+  if (finished.length === 0) {
+    return { value: null, emptyText: 'אין נתונים עדיין', sub: 'אין עדיין פרויקט שהסתיים' }
+  }
+  const total = finished.reduce((sum, p) => sum + Number(p.project_finance.final_profit), 0)
+  return {
+    value: Math.round(total * 100) / 100,
+    emptyText: undefined,
+    sub: finished.length === 1 ? 'מפרויקט אחד שהסתיים' : `מ-${finished.length} פרויקטים שהסתיימו`,
+  }
+}

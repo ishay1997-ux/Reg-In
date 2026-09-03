@@ -93,6 +93,9 @@ test.describe('נגישות (axe-core) — מסכים ראשיים על פני �
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_* לא הוגדרו ב-.env.local')
 
   test('סריקה על מסכי מודולים 1–4', async ({ page }) => {
+    // ⏱️ 04/09/2026: אחרי זריעת-ההדגמה (186 דיילות · 60 לקוחות) הסריקה חצתה את 60 השניות
+    // (נמדד: 1.2 דק' בריצה מלאה). התקציב הורחב — אף טענת-נגישות לא נחלשה.
+    test.setTimeout(150_000)
     await login(page)
 
     await page.goto('/')

@@ -19,6 +19,7 @@ import Ltr from '@/components/Ltr'
 import Money from '@/components/Money'
 import RowAction from '@/components/RowAction'
 import RatingStars from '@/components/RatingStars'
+import ScoreCell from '@/components/ScoreCell'
 import StatTile from '@/components/StatTile'
 import StatusTag from '@/components/StatusTag'
 import { WindowChips, Pager } from '@/components/ListWindow'
@@ -35,11 +36,13 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import { CUSTOMER_TYPE_LABELS, deriveCustomerMetrics, primaryContact } from '@/lib/customers'
 import { parseVatPercent } from '@/lib/pricing'
+import { scoreTag } from '@/lib/projectFinance'
 import { eventDaysFromToday, PROJECT_STATUS_LABELS, resolveProjectTone } from '@/lib/projects'
 import {
   DORMANT_THRESHOLD_PARAM_NAME,
   cancellationSubLabel,
   cancelledCountNote,
+  customerProfitTile,
   eventCountSummary,
   lastEventTileState,
   matchesProjectSearch,
@@ -55,7 +58,6 @@ import {
   QUOTE_REJECTED_TOAST,
   QUOTE_SCREEN_PARAM_NAMES,
   QUOTE_STATUS_LABELS,
-  approvedQuotesLabel,
   pendingQuotesLabel,
   quoteApprovedToast,
 } from '@/lib/quotes'
@@ -158,16 +160,6 @@ function lastEventTileDisplay(state) {
       projectDaySentence(-state.daysAgo)
     ),
   }
-}
-
-// E3 (🟢 RULED 14/08): התווית משתנה ("סה"כ הצעות מאושרות"), החישוב לא — ומונה-הביטולים
-// מצטרף לשורת-המשנה הקיימת כשיש כאלה. "לא בכוח": אין הרשאת-פרויקטים/עדיין נטען
-// (`cancelledCount` undefined) ⇒ מציגים את מה שכן ידוע בלי מונה-הביטולים, לא מסתירים הכול.
-function revenueTileSub(metrics, cancelledCount) {
-  if (metrics.approvedCount <= 0) return 'טרם נסגרה עסקה'
-  return [approvedQuotesLabel(metrics.approvedCount), cancelledCountNote(cancelledCount)]
-    .filter(Boolean)
-    .join(' · ')
 }
 
 // 🆕 שורת-המשנה של אריח-המשוב (מ8 · 4.2): **כמה** משובים עומדים מאחורי הממוצע. בלעדיה
@@ -545,7 +537,15 @@ export default function CustomerDetailsPage() {
     today,
     dormantThresholdDays,
   })
-  const revenueSub = revenueTileSub(metrics, eventStats?.cancelledCount)
+  // 🔄 04/09/2026 (הכרעת-ישי): אריח "רווח גולמי מהלקוח" **במקום** "סה"כ הצעות מאושרות" —
+  // `final_profit` קפוא של פרויקטים שהסתיימו (`customerProfitTile`, SSOT ב-lib), ולמי שאין
+  // הרשאת כספים — "דורש הרשאת כספים", לא 0 (§7.97). הסכום של ההצעות המאושרות נשאר בעמודה
+  // ברשימת-הלקוחות; כאן הוא יצא.
+  const profitTile = customerProfitTile(projects, {
+    canViewFinance: ['edit', 'view'].includes(permissions['כספים']),
+    loading: projectsLoading,
+    error: projectsError,
+  })
 
   // חלון-הזמן+הדפדוף חושבים מחוץ לקומפוננטה (`deriveWindowedListsState`, מתחת) — אותה
   // סיבה כמו `deriveProjectsTileData`: ריכוז המורכבות-הקוגניטיבית של כל התנאים האלה
@@ -634,14 +634,15 @@ export default function CustomerDetailsPage() {
 
         {/* ---- רצועת-הדגשים: שלושת הקיימים (מ2/מ3) + שני שמ6 מחבר (LOCAL-14, ③.2) ---- */}
         <div className="flex flex-wrap gap-3 p-6 pb-0">
-          {/* E3 (🟢 RULED 14/08): התווית משתנה מ"סה"כ הכנסות" ל"סה"כ הצעות מאושרות" בשני
-              המקומות שהיא מוצגת (כאן וב-CustomersPage) — החישוב עצמו לא זז. הצעה מאושרת
-              נספרת גם כשהפרויקט שנולד ממנה בוטל, ומונה-הביטולים מסביר את זה בשורת-המשנה. */}
+          {/* 04/09/2026 (הכרעת-ישי, במילותיו: "מה אכפת לי כמה הסכום הצעות מאושרות יש לו") —
+              "רווח גולמי מהלקוח" במקום "סה"כ הצעות מאושרות". ערך = סכימת `final_profit` הקפוא
+              של הפרויקטים שהסתיימו; מוסך למי שאין לו הרשאת כספים (§7.97 — כרטיס-כסף). */}
           <StatTile
-            label={'סה"כ הצעות מאושרות'}
-            value={metrics.totalRevenue}
-            sub={revenueSub}
-            testId="metric-revenue"
+            label="רווח גולמי מהלקוח"
+            value={profitTile.value}
+            sub={profitTile.sub}
+            emptyText={profitTile.emptyText}
+            testId="metric-profit"
           />
           <StatTile
             label="שווי הצעות פתוחות"
@@ -1235,6 +1236,7 @@ function ProjectsSection({ title, definition, rows, today, vatRate }) {
               <th className="text-right font-medium py-2.5 px-3">שם האירוע</th>
               <th className="text-right font-medium py-2.5 px-3">סכום</th>
               <th className="text-right font-medium py-2.5 px-3">מצב</th>
+              <th className="text-right font-medium py-2.5 px-3">שביעות רצון</th>
               <th className="py-2.5 px-3" />
             </tr>
           </thead>
@@ -1306,6 +1308,15 @@ function ProjectRow({ project, today, vatRate }) {
         {/* הטון דרך resolveProjectTone — שצועק על תווית לא-ממופה במקום להאפיר בשקט
             (אותו דפוס כמו ProjectsPage.jsx של מודול 6 עצמו). */}
         <StatusTag label={label} tone={resolveProjectTone(label)} />
+      </td>
+      <td className="py-2.5 px-3">
+        {/* הדירוג שהלקוח נתן לאירוע הזה (בקשת-ישי 04/09/2026) — אותו תא בדיוק כמו במסך
+            הכספים S1: כוכבים + תגית-תווית, `—` כל עוד לא ענה. הציון עצמו נגזר דרך
+            `scoreTag` (SSOT של מ8) ולא מחושב כאן; ממוצע-המשוב באריח למעלה רץ על אותו שדה. */}
+        <ScoreCell
+          score={scoreTag(project.feedback_status === 'completed' ? project.feedback_score : null)}
+          testId={`customer-project-score-${project.project_id}`}
+        />
       </td>
       <td className="py-2.5 px-3">
         <a

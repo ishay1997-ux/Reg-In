@@ -29,7 +29,7 @@ import LoadingOrError from '@/components/LoadingOrError'
 import PermissionAwareEmpty, { DENIED_MARK } from '@/components/PermissionAwareEmpty'
 import StatTile from '@/components/StatTile'
 import StatusTag from '@/components/StatusTag'
-import RatingStars from '@/components/RatingStars'
+import ScoreCell from '@/components/ScoreCell'
 import Money from '@/components/Money'
 import Ltr from '@/components/Ltr'
 import { WindowChips, Pager } from '@/components/ListWindow'
@@ -1205,17 +1205,8 @@ function OverdueCell({ days, debtOpen, paidOn, testId }) {
   )
 }
 
-// תג-הציון בפורמט S1 הקנוני: **תווית בלבד, בלי מספר בתוך התג** (החלטה חוצת-משטחים #4).
-// הכוכבים מגיעים מ-`RatingStars` המשותף ולא מגליפים מקומיים — אותו רכיב שמשרת את מ4 ואת S4.
-function ScoreCell({ score }) {
-  if (score === null) return <span className="text-slate-400">{DASH}</span>
-  return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <RatingStars value={score.score} />
-      <StatusTag label={score.label} tone={score.tone} />
-    </div>
-  )
-}
+// תג-הציון בפורמט S1 הקנוני (תווית בלבד, בלי מספר — החלטה חוצת-משטחים #4) חי עכשיו
+// ב-`src/components/ScoreCell.jsx` — משותף עם שורת-הפרויקט בכרטיס-הלקוח (04/09/2026).
 
 function Th({ children, style }) {
   return (
