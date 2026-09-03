@@ -9,6 +9,7 @@
 // (line_number) — קוד-לקוח שמנחש מספור עלול להתנגש. ר' migration 20260723115000.
 
 import { supabase } from '@/supabaseClient'
+import { fetchAll } from '@/api/fetchAll'
 import { PRICING_PARAM_NAMES } from '@/lib/pricing'
 import { flattenProductCost } from '@/lib/catalog'
 import { QUOTE_SCREEN_PARAM_NAMES, quoteServerErrorMessage } from '@/lib/quotes'
@@ -38,24 +39,29 @@ function toWriteError(error, fallbackMessage) {
 // איש-הקשר הראשי (§6 מ3 — הראשי בלבד, אנשי-הקשר הנוספים של §7.81 אינם מוצגים כאן).
 // טעינה נפרדת של הלקוחות הייתה מחייבת מיזוג-ידני בצד-הלקוח ומייצרת מצב-ביניים שבו
 // הטבלה מציגה שורות בלי שמות.
+// 🔴 03/09/2026: דרך `fetchAll` — 1,176 הצעות חיות מול תקרת-1,000 השקטה של PostgREST; בלי הדפדוף
+// מסך-הלקוחות הציג "אין נתונים עדיין" על לקוח שההצעות שלו נחתכו (בדיקת-העשן נפלה על 22,503 ₪).
+// שני ה-`order` שלמטה הם גם חוזה-הדפדוף: סדר-מלא, אחרת עמודים חופפים.
 export async function listQuotes() {
-  const { data, error } = await supabase
-    .from('quotes')
-    .select(
-      // N2 (02/09/2026): שם/טלפון/אימייל של איש-הקשר עברו מעמודות על `customers` לשורה
-      // ב-`customer_contacts` עם `is_primary`. ⚠️ `is_primary` **חייב** להיכלל באמבד — בלעדיו
-      // `primaryContact()` אינה יכולה לבחור, והמסך היה מציג את איש-הקשר הראשון שהמסד החזיר.
-      '*, quote_services(*), customers(customer_id, company_name, company_number, customer_contacts(contact_name, phone, email, is_primary))',
-    )
-    .order('updated_at', { ascending: false })
-    // 🐞 שובר-שוויון חובה (נוסף 30/07/2026, צעד 3.5 — באג חי שהתגלה בתכנון).
-    // ‏`updated_at` לבדו **אינו מפתח-מיון יציב**: אומת במסד שכבר יש שתי הצעות עם חותמת זהה
-    // לחלוטין (`2026-07-29 16:18:08.682902+00`), ו-Postgres אינו מבטיח סדר בתוך שוויון — כלומר
-    // השורות מחליפות מקום בין רענונים בלי סיבה נראית. ⚠️ זה מחמיר מבנית: עבודת-התפוגה היומית
-    // (pg_cron, §7.42) מעדכנת הרבה הצעות **בטרנזקציה אחת**, וכל שורה בטרנזקציה מקבלת את אותו
-    // `now()` בדיוק — כלומר ריצה אחת מייצרת גוש שלם של חותמות זהות.
-    // ⚠️ שום בדיקה אוטומטית לא תופסת את זה: ריצה בודדת רואה סדר כלשהו ועוברת.
-    .order('quote_id', { ascending: false })
+  const { data, error } = await fetchAll(() =>
+    supabase
+      .from('quotes')
+      .select(
+        // N2 (02/09/2026): שם/טלפון/אימייל של איש-הקשר עברו מעמודות על `customers` לשורה
+        // ב-`customer_contacts` עם `is_primary`. ⚠️ `is_primary` **חייב** להיכלל באמבד — בלעדיו
+        // `primaryContact()` אינה יכולה לבחור, והמסך היה מציג את איש-הקשר הראשון שהמסד החזיר.
+        '*, quote_services(*), customers(customer_id, company_name, company_number, customer_contacts(contact_name, phone, email, is_primary))',
+      )
+      .order('updated_at', { ascending: false })
+      // 🐞 שובר-שוויון חובה (נוסף 30/07/2026, צעד 3.5 — באג חי שהתגלה בתכנון).
+      // ‏`updated_at` לבדו **אינו מפתח-מיון יציב**: אומת במסד שכבר יש שתי הצעות עם חותמת זהה
+      // לחלוטין (`2026-07-29 16:18:08.682902+00`), ו-Postgres אינו מבטיח סדר בתוך שוויון — כלומר
+      // השורות מחליפות מקום בין רענונים בלי סיבה נראית. ⚠️ זה מחמיר מבנית: עבודת-התפוגה היומית
+      // (pg_cron, §7.42) מעדכנת הרבה הצעות **בטרנזקציה אחת**, וכל שורה בטרנזקציה מקבלת את אותו
+      // `now()` בדיוק — כלומר ריצה אחת מייצרת גוש שלם של חותמות זהות.
+      // ⚠️ שום בדיקה אוטומטית לא תופסת את זה: ריצה בודדת רואה סדר כלשהו ועוברת.
+      .order('quote_id', { ascending: false }),
+  )
   if (error) throw toError(error, 'שגיאה בטעינת רשימת ההצעות.')
   return data ?? []
 }

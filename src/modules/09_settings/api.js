@@ -22,6 +22,7 @@
 // (§2.9). כתיבה עוברת `String(value)`, בדיוק כמו `pricesApi.updatePricingParam`.
 
 import { supabase } from '@/supabaseClient'
+import { fetchAll } from '@/api/fetchAll'
 import { toError, assertRowsAffected } from '@/lib/apiError'
 
 // קוד-שגיאה סינתטי שה-UI בודק כדי להסתיר את פאנל-השכר-מתחת-למינימום במקום להציג שגיאה
@@ -142,8 +143,18 @@ export async function listBelowMinWage(threshold) {
 // הפאנל הזה נגיש רק לתפקידים שכבר מחזיקים 'דיילות' (CEO, גיוס), אז RPC-עוקף היה חשיפה
 // בלי תועלת (A-10). סופרים בצד-הלקוח על שליפה אחת ולא שתי שאילתות `count`, כי הטבלה קטנה
 // (כלי-פנים ל-5 משתמשים) והמונים חייבים להסתכם תמיד לאותו מכנה בלי מרוץ בין שתי בקשות-רשת.
+// 🔴 03/09/2026: "הטבלה קטנה" חדל להיות נכון — 5,040 שיבוצים, ו-`select` בלי דפדוף מחזיר 1,000
+// בשקט (המונה היה מציג 1,000 לנצח). `fetchAll` שומר על העיקרון שלמעלה — מכנה אחד לשני המונים
+// מאותה שליפה — במחיר של כמה בקשות במקום אחת. `order` על ה-PK = חוזה-הדפדוף.
 export async function countAttendanceRows() {
-  const { data, error } = await supabase.from('assignments').select('attendance_status')
+  const { data, error } = await fetchAll(() =>
+    supabase
+      .from('assignments')
+      .select('project_id, hostess_id, assignment_number, attendance_status')
+      .order('project_id')
+      .order('hostess_id')
+      .order('assignment_number'),
+  )
   if (error) throw toError(error, 'שגיאה בטעינת נתוני הנוכחות.')
   const rows = data ?? []
   return {

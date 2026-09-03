@@ -27,6 +27,7 @@
 //    מי הנמען, מה הנושא, ואילו placeholders יש לתבנית שלו.
 
 import { supabase } from '@/supabaseClient'
+import { fetchAll } from '@/api/fetchAll'
 import { toError } from '@/lib/apiError'
 // N2: איש-הקשר הראשי הוא שורה ב-customer_contacts (is_primary), לא שלוש עמודות על customers.
 // primaryContact היא נקודת-הבחירה היחידה (src/lib/customers.js) — לא לממש inline.
@@ -83,8 +84,12 @@ async function callWriteRpc(fn, args, fallbackMessage) {
 // שורות שלוש הלשוניות של S1. ה-RPC מחזיר **עובדות בלבד**; ימי-האיחור, האחוזים ותגית-הציון
 // נגזרים ב-`src/lib/projectFinance.js` בזמן-תצוגה (§7.52 — ‏₪ נשמר, ‏% תמיד נגזר).
 // ⚠️ `payment_terms_days` יכול לחזור `null` (הפרמטר לא נזרע) — הקורא מציג `—`, לעולם לא 0.
+// 🔴 03/09/2026: `fetchAll` — 711 שורות-כספים חיות, וגם RPC נחתך ב-1,000 בשקט. הפונקציה ממיינת
+// לפי `project_id` בעצמה; ה-`order` כאן מצהיר את חוזה-הדפדוף גם אם הגוף ישתנה.
 export async function listFinanceOverview() {
-  const { data, error } = await supabase.rpc('get_finance_overview')
+  const { data, error } = await fetchAll(() =>
+    supabase.rpc('get_finance_overview').order('project_id'),
+  )
   if (error) throw toRpcError(error, 'שגיאה בטעינת מסך הכספים.')
   return data ?? []
 }
