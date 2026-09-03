@@ -148,11 +148,12 @@ export default function DashboardPage() {
         </p>
       )}
       <KpiStrip cards={kpiCards(summary)} />
+      {/* 🔴 **04/09/2026 — הלוח מלא-רוחב, והרצועה מתחתיו (מוקאפ מאושר).** קודם היה
+          `grid-cols-[2fr_1fr]`, כלומר שליש מהמסך הוקצע לרשימה — והלוח, שהוא הגיבור של
+          המסך, נשאר עם תאים בני ~90px שחתכו את שם-האירוע. `flex-col` ולא grid: אין כאן
+          יותר שתי עמודות, רק שני בלוקים אחד מתחת לשני. */}
       <div
-        className={cn(
-          'grid grid-cols-[2fr_1fr] gap-4',
-          refreshing && 'opacity-60 transition-opacity',
-        )}
+        className={cn('flex flex-col gap-4', refreshing && 'opacity-60 transition-opacity')}
         aria-busy={refreshing}
       >
         <CalendarGrid

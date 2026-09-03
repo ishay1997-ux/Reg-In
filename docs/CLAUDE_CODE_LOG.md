@@ -45,6 +45,30 @@
 
 ## Session Log (newest first)
 
+### 04/09/2026 01:0X – 01:3X — two defects Ishay found by looking, and one of them was mine from an hour earlier *(same session)*
+
+**What changed:** two follow-ups folded into the same PR (#114). `gate` exit 0 — 88 files / **2,295** tests.
+
+**① The strip was hiding a whole category — and I created that an hour earlier.** Dropping `ATTENTION_CAP` 8 ⇒ 4 for the horizontal strip let the 9 `unbilled` rows take all four slots, so the 13 `shortage` rows were **announced by the counter and shown zero times**. Ishay's instinct was to make the counter clickable. ⚖️ **That collided with his own ruling from the day before** — *"זה מעולה"* on the strip, explicitly **without filters**, per §7.9's "one sorted list" — so both were quoted back dated, per the contradiction protocol, with a recommendation to fix the cause instead of adding a control. He approved the recommendation. **The fix is a fairer slice, not a filter:** one reserved slot per non-empty group in priority order, remaining slots by urgency, output re-sorted into the original order. No new control, no state, and it works on first paint.
+🔑 **The lesson, and it generalises past this screen:** *lowering a cap is not a display change — it is a change to what the screen is allowed to omit.* I treated 8⇒4 as layout arithmetic and did not ask what falls off the bottom. A counter that says 13 next to zero visible rows is the screen contradicting itself, and **no test can fail on that**, because every individual assertion was still true.
+
+**② The legend was lying, and only the legend.** Its last three items used `StaffingIcon` three times — "איוש", "לוגיסטיקה" (box), "הושלם · חסר" (person again) — so the screen showed three person glyphs and **no example of missing logistics at all**. Ishay: *"לאיוש 3 אייקונים טעות?"*, then narrowed it himself: *"אה הבעיה רק במקרא… בלוח שנה עצמו זה טוב"*. **Why it survived everything:** the cells were always correct, so screenshots, unit tests and E2E all passed — the defect lived only in the key that explains the cells, and nothing asserts against a legend. **The generalisable form: a legend is documentation rendered as UI, and it rots exactly like documentation — silently, while the thing it describes stays right.**
+
+➕ `attentionSummary` now returns `firstHidden` (with representation, "the row after the cap" is no longer `all[cap]`), which also **closes closing-audit debt T-4** — `AttentionPanel` no longer recomputes the list.
+
+### 04/09/2026 00:0X – 00:4X — the home screen got its width back, after Ishay used it *(same session, worktree `.claude/worktrees/m7`)*
+
+**What changed:** module 7 shipped, Ishay opened the live screen, and brought back three complaints that were one problem — the calendar was the hero and a 21-row list was holding a third of the width. Approved as a mockup first, then built on `ishay/m7-dashboard-layout`. Calendar goes full width, the attention panel becomes a 4-card horizontal strip below it, `MAX_CHIPS_PER_DAY` 2 ⇒ 3, and `+N עוד` stops being a link. `gate` exit 0 — 88 files / **2,292** tests.
+
+**🔑 The lesson worth keeping, and it is about how the decision got made rather than what it was.** The chip count was not argued, it was **counted**: projects-per-day across the whole DB is 355 days with one (62%) · 178 with two (31%) · 36 with three (6%) · **2 days with four** · zero with five. That single query settled three things at once — three chips cover 99.6% of days, Ishay's instinct was right, and the `+N עוד` affordance is a genuine edge case (it fires twice in the entire dataset) rather than the daily path its design implied. **A five-second query replaced a design argument.**
+
+**🔴 And the defect he named is the one worth remembering.** `+N עוד` was `<Link to="/projects">` — it answered *"show me the third event on this day"* by dropping the user into a list of 832 projects to search. In his words: *"ואז מזה עוזר לי לחפש את הפרויקט השלישי?"* Nobody caught this in the blueprint, the build, the 🎨 gate, or the closing audit — because **every one of those read it as "there is a link, and it goes somewhere reasonable"**. Only using the screen for a real purpose exposed that the destination did not answer the question the control asks. The generalisable form: *an affordance is wrong when its destination does not answer the question the affordance itself poses* — and that is invisible to anyone checking whether the link works.
+
+**🐞 One defect found by the verification screenshot and by nothing else:** the weekday header row lived inside the day grid, so `auto-rows-[minmax(92px,auto)]` applied a 92px minimum to *it* too — a ~90px empty band between the headers and the first week, on the exact screen this change existed to shorten. **It predated this change** (at 76px) and had survived every review, because a unit test cannot see vertical rhythm and a reviewer reading JSX sees one grid, not two row types. Split into its own 7-column grid; the page got ~78px shorter.
+
+**Also renamed, and the reason is a product one:** `attentionOverflowLabel(hidden)` ⇒ `attentionAllLabel(total)`. `+13 נוספים` describes what the screen **hid**; `כל 21 הפריטים` describes what there is **to handle**. The first is a statement about the UI, the second about the work — and only the second is what the reader is looking for.
+
+
 ### 03/09/2026 22:4X – 23:0X — module 7 shipped to production, and a module-9 test proved itself flaky on the way *(same session)*
 
 **What changed:** module 7 is live. `main` = `c5e6aa6`, `dev` = `c8a28ee`. Three PRs, all green, all merged: **#106** (`ishay/module-7-dashboard` → `dev`) · **#108** (the flake fix below → `dev`) · **#107** (`dev` → `main`, 44 commits: module 7, its fix round, and the nine module-9 follow-ups that were already sitting on `dev`). Vercel deployed `c5e6aa6`, state `success`.
