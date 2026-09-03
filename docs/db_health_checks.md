@@ -90,6 +90,7 @@ pattern here, not an omission — so the criterion has to check the *reason*, no
 | `login_attempts` · `login_rpc_calls` | `register_failed_login` (login flow) |
 | `feedback_rpc_calls` | `feedback_rate_limit` |
 | `project_changes` | `list_project_changes` (read) · `apply_scope_change` (write) |
+| `seed_registry` | `seed_register` · `seed_backdate_quote` · `seed_backdate_project` · `seed_reset` (M7 demo seed, 03/09/2026 — `comment on table` states the deny-all intent) |
 
 Verify the reason, don't assume it:
 
@@ -197,7 +198,7 @@ already gone stale twice (29 → 37 → 44).
 Tool `get_advisors`, `type: security`, then `performance`.
 
 **Pass = no finding outside these known families:**
-- `rls_enabled_no_policy` — the four tables of check 3, each with its named gatekeeper.
+- `rls_enabled_no_policy` — the five tables of check 3, each with its named gatekeeper (`seed_registry` joined 03/09/2026; advisors measured 49 findings that night, all in the known families).
 - `anon_security_definer_function_executable` — six deliberately public functions:
   `check_login_lock`, `register_failed_login` (login, pre-auth) ·
   `get_shift_invite`, `respond_to_shift_invite`, `get_feedback_page`, `submit_feedback`
