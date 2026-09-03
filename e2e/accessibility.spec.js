@@ -304,6 +304,63 @@ test.describe('נגישות (axe-core) — מסכים ראשיים על פני �
     await page.keyboard.press('Escape')
     await expect(dialog).toBeHidden()
   })
+
+  // ── מודול 9 (נוסף 02/09/2026, צעד 4.2) — שלושת ה-DOM-ים של לשונית "פרמטרים" ──────────
+  // 🔴 **שלוש סריקות ולא אחת, וזה לא ייתור:** שלוש הקבוצות מרנדרות פקדים שונים לגמרי —
+  // טבלה גנרית (שדות-טקסט), עורך-תבניות (textarea + צ׳יפים כפתורים), ופאנל Smart Match
+  // (מתג + באנר + שורת-סיכום). ‏axe בודק DOM, וממצא של אחד אינו נבדק אצל האחרים.
+  // ⚠️ **וכל סריקה ממתינה לתוכן של אותה קבוצה, לא לשלד** — הלקח של `e2e/CLAUDE.md`
+  // (מדידה שהמכנה שלה 0 אינה ירוקה, היא לא רצה).
+  test('סריקה על לשונית הפרמטרים (מודול 9) — טבלה גנרית, עורך-תבניות ופאנל Smart Match', async ({
+    page,
+  }) => {
+    await login(page)
+    await page.goto('/system/params')
+
+    const rows = page.locator('[data-testid="settings-row"]')
+    await expect(rows.first()).toBeVisible({ timeout: 30_000 })
+    expect(await rows.count(), 'הקבוצה הגנרית נסרקה בלי שורות — מכנה 0').toBeGreaterThan(0)
+    await scan(page, 'הגדרות מערכת · קבוצה גנרית (מודול 9)')
+
+    await page.getByTestId('settings-group-templates').click()
+    await expect(page.getByTestId('settings-template-body')).toBeVisible({ timeout: 30_000 })
+    await scan(page, 'הגדרות מערכת · עורך התבניות (מודול 9)')
+
+    await page.getByTestId('settings-group-smart_match').click()
+    await expect(page.getByTestId('settings-smartmatch-reliability-toggle')).toBeVisible({
+      timeout: 30_000,
+    })
+    await scan(page, 'הגדרות מערכת · פאנל Smart Match (מודול 9)')
+  })
+})
+
+// ── מודול 9 · "ההגדרות שלי" — נסרק **כמנהלת הכספים ולא כמנכ"ל** (נוסף 02/09/2026) ───────
+// 🔴 **וזה הכרחי, לא העדפה:** המנכ"ל אינו בעלים של אף שורה (`owner_role_id IS NULL` =
+// CEO-בלבד) ⇒ אצלו הדף מרנדר את מצב-הריק בלבד, וסריקה עליו הייתה בודקת פסקה אחת
+// ומדווחת "ירוק" על מסך שלא צייר את הטבלאות, את פאנל-התבניות ואת רשימת-השכר.
+// מנהלת הכספים היא הזהות שיש לה תוכן אמיתי בדף הזה.
+test.describe('נגישות (axe-core) — מודול 9, "ההגדרות שלי" (מנהלת הכספים)', () => {
+  const FINANCE_EMAIL = process.env.E2E_FINANCE_EMAIL
+  const FINANCE_PASSWORD = process.env.E2E_FINANCE_PASSWORD
+  test.skip(
+    !FINANCE_EMAIL || !FINANCE_PASSWORD,
+    'E2E_FINANCE_EMAIL/E2E_FINANCE_PASSWORD לא הוגדרו ב-.env.local',
+  )
+
+  test('סריקה על "ההגדרות שלי" עם שורות אמיתיות', async ({ page }) => {
+    await page.goto('/login')
+    await page.getByPlaceholder('כתובת דוא״ל').fill(FINANCE_EMAIL)
+    await page.getByPlaceholder('סיסמה').fill(FINANCE_PASSWORD)
+    await page.getByRole('button', { name: 'התחברות', exact: true }).click()
+    await expect(page).toHaveURL('/', { timeout: 30_000 })
+
+    await page.goto('/my-settings')
+    const rows = page.locator('[data-testid="settings-row"]')
+    await expect(rows.first()).toBeVisible({ timeout: 30_000 })
+    // המכנה: היא באמת בעלת שורות. אפס = מפת-הבעלות/ההזדהות שבורות, והסריקה מדדה ריק.
+    expect(await rows.count(), '"ההגדרות שלי" נסרק בלי שורות — מכנה 0').toBeGreaterThan(0)
+    await scan(page, 'הגדרות מערכת · "ההגדרות שלי" (מודול 9)')
+  })
 })
 
 // ── מודול 8 — S4, הדף הציבורי למשוב-לקוח (נוסף 28/08/2026, צעד 4.4) ────────────────────

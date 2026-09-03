@@ -1,6 +1,11 @@
-// לשונית "מחירים" ב-/system (§7.84, צעד 3.6) — תחזוקה שוטפת של קטלוג-המוצרים, מדרגות-המחיר
-// ושני פרמטרי-התמחור. ה-Seed הנעול (11 מוצרים, 40 מדרגות) עדיין רץ ראשון דרך מיגרציה; המסך
-// מתחזק מכאן ואילך.
+// לשונית "מחירים" ב-/system (§7.84, צעד 3.6) — תחזוקה שוטפת של קטלוג-המוצרים ומדרגות-המחיר.
+// ה-Seed הנעול (11 מוצרים, 40 מדרגות) עדיין רץ ראשון דרך מיגרציה; המסך מתחזק מכאן ואילך.
+//
+// 🔀 **‏`PricingParamsCard` הוסר מכאן ב-02/09/2026 (מודול 9, Q-1 — הכרעת-ישי).** אחוז-המע"מ
+// ויחס-האורחים-לדיילת עברו ללשונית "פרמטרים" (‏`09_settings/ParamsTab`) ול"ההגדרות שלי".
+// **הנימוק:** אחרי מ9 אותם שני ערכים היו נערכים בשלושה מסכים — וכלל-הבית הוא "שניים באותו
+// תפקיד ⇒ אחד נמחק" (‏`src/CLAUDE.md`, מעבר-מלאי). ‏§7.84 עצמו נקב ב"מסך-הפרמטרים המלא
+// במודול 9" כטריגר-פתיחה-מחדש, כלומר זו ההחלה שלו ולא סטייה ממנו.
 //
 // הרשאה: כתיבה למנכ"ל בלבד לפי הרשאת-המודול 'הגדרות מערכת' (§7.83). ‏canEdit הוא **נוחות** —
 // הקיר האמיתי הוא ה-RLS, ו-pricesApi זורק RLS_DENIED כשכתיבה מחזירה 0 שורות (כלל 9).
@@ -27,7 +32,6 @@ import { computeMarginPercent } from '@/lib/pricing'
 import { listProducts, listPriceTiers, setProductStatus } from '@/modules/01_auth/pricesApi'
 import ProductFormDialog from '@/modules/01_auth/ProductFormDialog'
 import PriceTiersDialog from '@/modules/01_auth/PriceTiersDialog'
-import PricingParamsCard from '@/modules/01_auth/PricingParamsCard'
 
 export default function PricesManagementPage() {
   const { permissions } = useAuth()
@@ -254,11 +258,6 @@ export default function PricesManagementPage() {
             </tbody>
           </table>
         </div>
-      </section>
-
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="text-base font-semibold text-slate-800 mb-4">פרמטרי תמחור</h2>
-        <PricingParamsCard canEdit={canEdit} />
       </section>
 
       {productDialog && (

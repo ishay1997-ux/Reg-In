@@ -1,0 +1,1003 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ מ9 v2 · לשונית הפרמטרים — לפי תפקיד ומצבים (לאישור סופי)</title>
+<style>
+/* ═══ טוקנים — הועתקו מילולית מהמוקאפ v1 (אותו design-contract, PROJECT_MASTER §4). אל תשנה ערך. ═══ */
+:root{
+  --primary:#0D9488;
+  --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4;
+  --teal500:#00BBA7; --teal600:#009689; --teal700:#00786F;
+  --green50:#F0FDF4; --green100:#DCFCE7; --green200:#B9F8CF; --green700:#008236;
+  --amber50:#FFFBEB; --amber100:#FEF3C6; --amber200:#FEE685;
+  --amber700:#BB4D00; --amber800:#973C00;
+  --red50:#FEF2F2; --red100:#FFE2E2; --red200:#FFC9C9; --red600:#E7000B; --red700:#C10007;
+  --s50:#F8FAFC; --s100:#F1F5F9; --s200:#E2E8F0; --s300:#CAD5E2;
+  --s400:#90A1B9; --s500:#62748E; --s600:#45556C; --s700:#314158; --s800:#1D293D;
+  --r-md:8px; --r-lg:10px; --r-xl:14px; --r-2xl:18px;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{background:var(--s50); color:var(--s800);
+  font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif; font-size:14px; line-height:1.5}
+.ltr{direction:ltr; unicode-bidi:isolate; display:inline-block}
+main{max-width:1180px; margin:0 auto; padding:16px 20px 64px}
+h1{font-size:20px; font-weight:700; color:var(--s800)}
+h2{font-size:16px; font-weight:700; color:var(--s800)}
+.psub{font-size:12px; color:var(--s500); margin-top:2px}
+.card{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl);
+     box-shadow:0 1px 2px rgba(15,23,42,.06); padding:16px}
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--s200); margin:0 -16px 0; padding:0 16px}
+.tab{border:none; background:none; border-bottom:2px solid transparent; margin-bottom:-1px;
+     padding:10px 16px; font-size:14px; font-weight:500; color:var(--s500); cursor:pointer}
+.tab.on{border-color:var(--teal600); font-weight:600; color:var(--teal700)}
+.tag{display:inline-block; white-space:nowrap; border-radius:999px;
+     padding:2px 10px; font-size:11px; font-weight:600}
+.tag.ok{background:var(--green100); color:var(--green700)}
+.tag.teal{background:var(--teal100); color:var(--teal700)}
+.tag.muted{background:var(--s100); color:var(--s500)}
+.tag.warn{background:var(--amber200); color:var(--amber800)}
+.tag.err{background:var(--red100); color:var(--red700)}
+.btn{border-radius:var(--r-lg); font:inherit; font-size:14px; font-weight:600;
+     padding:8px 16px; border:1px solid transparent; cursor:pointer; white-space:nowrap}
+.btn-primary{background:var(--teal600); color:#fff}
+.btn-primary:disabled{background:var(--s200); color:var(--s400); cursor:not-allowed}
+.btn-outline{background:#fff; border-color:var(--s300); color:var(--s700); font-weight:500}
+.btn-sm{padding:5px 12px; font-size:12.5px}
+table{width:100%; border-collapse:collapse}
+th{font-size:12px; font-weight:600; color:var(--s500); text-align:right;
+   padding:6px 10px; border-bottom:1px solid var(--s200); white-space:nowrap}
+td{padding:10px; border-bottom:1px solid var(--s100); vertical-align:middle}
+.cell .lb{font-size:12px; color:var(--s500)}
+.cell .sub{font-size:11px; color:var(--s500)}
+.cell .affects{font-size:11px; color:var(--amber800); margin-top:3px}
+
+/* רצועת-הסבר לקורא-המוקאפ. אינה חלק מהמסך. */
+.readme{margin:0 0 16px; padding:12px 16px; background:var(--amber50);
+     border:1px solid var(--amber200); border-radius:var(--r-lg); color:var(--amber800);
+     font-size:12.5px; line-height:1.75}
+.viewlabel{margin:36px 0 10px; font-size:14px; font-weight:700; color:var(--s700);
+     border-right:3px solid var(--teal600); padding-right:10px; scroll-margin-top:64px}
+.viewlabel .num{color:var(--teal700)}
+.subviewlabel{margin:20px 0 8px; font-size:12.5px; font-weight:700; color:var(--s600)}
+
+/* ── ניווט-על דביק — לא חלק מהמסך, כלי-ניווט למוקאפ עצמו ───────────────── */
+.mocknav{position:sticky; top:0; z-index:50; background:#fff; border-bottom:1px solid var(--s200);
+     box-shadow:0 1px 2px rgba(15,23,42,.06)}
+.mocknav-inner{max-width:1180px; margin:0 auto; padding:0 20px; display:flex; align-items:center;
+     gap:2px; overflow-x:auto; height:48px}
+.mocknav a{flex:none; font-size:12.5px; color:var(--s600); text-decoration:none; padding:6px 10px;
+     border-radius:999px; white-space:nowrap}
+.mocknav a:hover{background:var(--teal50); color:var(--teal700)}
+.mocknav-logo{flex:none; font-weight:700; color:var(--teal700); padding-left:10px; margin-left:6px;
+     border-left:1px solid var(--s200); font-size:13px}
+
+/* חיפוש-על */
+.psearch{position:relative; margin-bottom:12px}
+.psearch .mg{position:absolute; right:12px; top:50%; transform:translateY(-50%);
+     color:var(--s400); font-size:13px}
+.psearch input{width:100%; height:38px; border:1px solid var(--s200); border-radius:var(--r-lg);
+     background:#fff; padding:0 36px 0 12px; font:inherit; font-size:14px; color:var(--s500)}
+
+/* פריסת-המאסטר-דיטייל */
+.md{display:grid; grid-template-columns:212px minmax(0,1fr); gap:14px; align-items:start}
+.types{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl); padding:6px}
+.type-i{display:flex; align-items:center; justify-content:space-between; gap:8px;
+     padding:9px 11px; border-radius:var(--r-lg); cursor:pointer; color:var(--s600)}
+.type-i .nm{font-size:13.5px; font-weight:500}
+.type-i .ct{font-size:11.5px; color:var(--s400)}
+.type-i.on{background:var(--teal50); color:var(--teal700)}
+.type-i.on .nm{font-weight:600}
+.type-i.on .ct{color:var(--teal700)}
+
+.pane{background:#fff; border:1px solid var(--s200); border-radius:var(--r-xl); padding:16px}
+.pane .lead{font-size:12.5px; color:var(--s500); margin:2px 0 14px}
+
+/* שדה-ערך + יחידה כזוג בלתי-נפרד */
+.vin{width:120px; height:34px; border:1px solid var(--s300); border-radius:var(--r-md);
+     padding:0 10px; font:inherit; font-size:13.5px; text-align:left; direction:ltr;
+     color:var(--s800); background:#fff}
+.vin:disabled{background:var(--s100); color:var(--s500); cursor:not-allowed}
+.vwrap{display:inline-flex; align-items:center; gap:6px; white-space:nowrap}
+.unit{font-size:12px; color:var(--s500)}
+
+.danger-note{margin:0 0 14px; padding:10px 14px; background:var(--amber50);
+     border:1px solid var(--amber200); border-radius:var(--r-lg); color:var(--amber800);
+     font-size:12.5px; line-height:1.65}
+.blocked-note{margin:0 0 14px; padding:10px 14px; background:var(--red50);
+     border:1px solid var(--red200); border-radius:var(--r-lg); color:var(--red700);
+     font-size:12.5px; line-height:1.65}
+
+.sumbar{display:flex; align-items:center; justify-content:space-between; gap:10px;
+     padding:9px 14px; border-radius:var(--r-lg); font-size:13px; font-weight:600;
+     background:var(--green50); border:1px solid var(--green200); color:var(--green700)}
+.sumbar.bad{background:var(--amber50); border-color:var(--amber200); color:var(--amber800)}
+
+/* עורך-התבניות */
+.ted{display:grid; grid-template-columns:168px minmax(0,1fr); gap:12px; align-items:start}
+.tlist{border:1px solid var(--s200); border-radius:var(--r-lg); padding:5px}
+.tlist .ti{padding:7px 10px; border-radius:var(--r-md); font-size:13px; color:var(--s600); cursor:pointer}
+.tlist .ti.on{background:var(--teal50); color:var(--teal700); font-weight:600}
+.tbody{border:1px solid var(--s300); border-radius:var(--r-lg); padding:12px 14px;
+     background:var(--s50); line-height:2.1; font-size:13.5px; color:var(--s700)}
+.var{display:inline-block; background:var(--teal100); color:var(--teal700); border-radius:5px;
+     padding:1px 7px; font-size:12.5px; font-weight:600; white-space:nowrap}
+.varbank{margin-top:12px; border-top:1px solid var(--s200); padding-top:11px}
+.varbank .hd{font-size:12px; color:var(--s500); margin-bottom:7px}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{border:1px solid var(--s300); background:#fff; color:var(--s600); border-radius:999px;
+     padding:3px 10px; font-size:12.5px; cursor:pointer}
+.chip.req{border-color:var(--teal200); background:var(--teal50); color:var(--teal700); font-weight:600}
+.chip.miss{border-color:var(--amber200); background:var(--amber50); color:var(--amber800); font-weight:600}
+.chip-legend{display:flex; gap:14px; margin-top:8px; font-size:11.5px; color:var(--s500)}
+.chip-legend b{color:var(--s700)}
+
+.saverow{display:flex; align-items:center; justify-content:space-between; gap:10px;
+     margin-top:14px; padding-top:12px; border-top:1px solid var(--s200)}
+.saverow .hint{font-size:12px; color:var(--s500)}
+
+/* טוגל */
+.switch{position:relative; display:inline-block; width:40px; height:22px; flex:none}
+.switch .track{position:absolute; inset:0; border-radius:999px; background:var(--s300); transition:background .15s}
+.switch .knob{position:absolute; top:2px; right:2px; width:18px; height:18px; border-radius:999px;
+     background:#fff; box-shadow:0 1px 2px rgba(15,23,42,.25); transition:right .15s}
+.switch.on .track{background:var(--teal600)}
+.switch.on .knob{right:20px}
+.switch.disabled .track{background:var(--s200)}
+.switch.disabled .knob{background:var(--s100)}
+.togrow{display:flex; align-items:center; justify-content:space-between; gap:14px;
+     padding:12px 14px; border:1px solid var(--s200); border-radius:var(--r-lg); background:#fff}
+.togrow + .togrow{margin-top:10px}
+.togrow .t{font-size:13.5px; font-weight:600; color:var(--s800)}
+.togrow .h{font-size:12px; color:var(--s500); margin-top:2px}
+
+/* מי-מתחת-לשכר-המינימום — רשימה */
+.mwbox{border:1px solid var(--s200); border-radius:var(--r-lg); padding:12px 14px; background:var(--s50)}
+.mwbox .hd{font-size:12.5px; font-weight:700; color:var(--s700); margin-bottom:8px}
+.mwrow{display:flex; align-items:center; justify-content:space-between; padding:6px 0;
+     border-bottom:1px solid var(--s200); font-size:13px}
+.mwrow:last-child{border-bottom:none}
+.mwempty{font-size:12.5px; color:var(--s500); padding:10px 0}
+
+/* מצב-טעינה — שלד */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.sk{background:var(--s200); border-radius:6px; animation:pulse 1.4s ease-in-out infinite}
+.sk-row{display:flex; align-items:center; gap:16px; padding:12px 10px; border-bottom:1px solid var(--s100)}
+
+/* תפריט-משתמש */
+.usermenu{width:230px; background:#fff; border:1px solid var(--s200); border-radius:var(--r-lg);
+     box-shadow:0 8px 24px rgba(15,23,42,.14); padding:6px; direction:rtl}
+.usermenu .um-head{padding:10px 12px; border-bottom:1px solid var(--s100); margin-bottom:4px}
+.usermenu .um-head .nm{font-size:13.5px; font-weight:600}
+.usermenu .um-head .rl{font-size:11.5px; color:var(--s500)}
+.usermenu .um-i{display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:var(--r-md);
+     font-size:13px; color:var(--s600); cursor:pointer}
+.usermenu .um-i.hi{background:var(--teal50); color:var(--teal700); font-weight:600}
+.usermenu .um-i .ic{width:16px; text-align:center; font-size:13px; flex:none; color:var(--s400)}
+.usermenu .um-i.hi .ic{color:var(--teal600)}
+
+/* לפני/אחרי — לשונית מחירים */
+.ba{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+.ba-col .cap{font-size:12.5px; font-weight:700; color:var(--s600); margin-bottom:8px}
+.ba-mini{border:1px solid var(--s200); border-radius:var(--r-lg); padding:10px; background:#fff}
+.ba-mini .mtab{display:flex; gap:4px; margin-bottom:8px; border-bottom:1px solid var(--s200)}
+.ba-mini .mtab span{font-size:11px; padding:6px 8px; color:var(--s500)}
+.ba-mini .mtab span.on{color:var(--teal700); font-weight:600; border-bottom:2px solid var(--teal600); margin-bottom:-1px}
+.mini-card{border:1px solid var(--s200); border-radius:8px; padding:8px 10px; margin-bottom:6px; font-size:12px; color:var(--s600)}
+.mini-card b{color:var(--s800); display:block; font-size:12.5px; margin-bottom:2px}
+.mini-card.removed{border-color:var(--red200); background:var(--red50); color:var(--red700); position:relative}
+.mini-card.removed b{color:var(--red700); text-decoration:line-through}
+.mini-card.moved-note{border-style:dashed; border-color:var(--teal200); background:var(--teal50); color:var(--teal700); font-size:11.5px}
+
+/* תג נעילת-בעלות */
+.role-badge{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--s600);
+     background:var(--s100); border-radius:999px; padding:4px 10px 4px 4px; margin-bottom:12px}
+.role-badge .av{width:22px; height:22px; border-radius:999px; background:var(--teal600); color:#fff;
+     display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px}
+.role-badge b{color:var(--s800)}
+
+.toast{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#fff;
+     border:1px solid var(--green200); border-radius:var(--r-lg); box-shadow:0 8px 24px rgba(15,23,42,.18);
+     padding:10px 18px; font-size:13px; font-weight:600; color:var(--green700); display:flex;
+     align-items:center; gap:8px; z-index:60}
+.toast .dot{width:8px; height:8px; border-radius:999px; background:var(--green600,#16a34a)}
+
+.errbox{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+     padding:60px 20px; text-align:center}
+.errbox .msg{font-size:14px; font-weight:600; color:var(--s700)}
+
+footer.decisions{margin-top:52px; padding:18px 20px; background:#fff; border:1px solid var(--s200);
+     border-radius:var(--r-xl)}
+footer.decisions h3{font-size:14px; margin-bottom:10px; color:var(--s800)}
+footer.decisions ol{padding-right:20px; display:flex; flex-direction:column; gap:8px; font-size:12.5px; color:var(--s600)}
+footer.decisions b{color:var(--s800)}
+
+/* ═══ רוחב-צר — מונע גלילה-אופקית של כל העמוד (נמדד: ה-.md הקבוע ב-212px היה שובר את זה). ═══
+   הסעיף היחיד שנדרש לצייר ברוחב-מובייל הוא סעיף 1 (יש לו תת-תצוגה ייעודית משלו, לא תלויה ב-.md);
+   המדיה-קוורי הזו קיימת רק כדי שהעמוד *כולו* לא יגלול אופקית אם מישהו כן מקטין את החלון. */
+@media (max-width:640px){
+  .md, .ted{grid-template-columns:1fr; min-width:0}
+  .types{display:flex; flex-wrap:wrap; gap:6px; min-width:0}
+  .type-i{flex:1 1 auto; min-width:0}
+  .tlist{display:flex; flex-wrap:wrap; gap:4px; min-width:0}
+  .ba{grid-template-columns:1fr}
+  .mw-grid{grid-template-columns:1fr !important}
+  .tabs{overflow-x:auto}
+  .card, .pane{min-width:0}
+}
+</style>
+</head>
+<body>
+
+<nav class="mocknav">
+  <div class="mocknav-inner">
+    <span class="mocknav-logo">מוקאפ מ9 v2</span>
+    <a href="#s1">1· לשונית CEO</a>
+    <a href="#s2">2· Smart Match (CEO)</a>
+    <a href="#s3">3· עורך תבניות</a>
+    <a href="#s4">4· שכר-מינימום</a>
+    <a href="#s5">5· ההגדרות שלי — כספים</a>
+    <a href="#s6">6· ההגדרות שלי — גיוס</a>
+    <a href="#s7">7· ההגדרות שלי — לוגיסטיקה</a>
+    <a href="#s8">8· מצבים לא-מצוירים</a>
+    <a href="#s9">9· פרופיל · התראות</a>
+    <a href="#s10">10· לשונית מחירים</a>
+  </div>
+</nav>
+
+<main>
+
+  <div class="readme">
+    <b>מוקאפ מ9 — עדכון v2, לאישור סופי (צעד 3.0 של מדריך-הבנייה).</b> ממשיך את הכיוון שאושר
+    ב-01_params_tab_proposal.html (28/08) — <b>אותם טוקנים, אותה פריסת מאסטר-דיטייל, אותם צבעים</b>;
+    זהו הרחבה, לא עיצוב-מחדש. <b>כל הערכים כאן אמיתיים</b>, נשלפו מהמסד החי
+    (<span class="ltr">yfeovxppnfoafmfbdfvh</span>) <span class="ltr">02/09/2026</span>: 43 שורות,
+    6 סוגים, 38 שורות בבעלות (מתוכן 8 כספים · 4 פרויקטים · 25 גיוס · 1 לוגיסטיקה), 5 שורות מנכ"ל-בלבד.
+    🔑 <b>מה חדש מול v1:</b> תצוגה לפי תפקיד ("ההגדרות שלי") · ארבעת המצבים הלא-מצוירים · שני מצבי-עורך
+    חדשים (חסימה ואזהרה) · הרשימה מתחת לשכר-המינימום · לשונית "מחירים" בלי כרטיס-הפרמטרים (Q-1) ·
+    תיקון תוויות המרחק (V-4) · הקבוצה השישית "שיבוץ וזימונים". <b>ניווט-העל למעלה שייך למוקאפ בלבד</b>
+    ואינו חלק מהמסך עצמו.
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <h1 id="s1" class="viewlabel"><span class="num">1</span> · CEO — הלשונית "פרמטרים" המלאה</h1>
+  <p class="psub" style="margin:-4px 0 12px">מנכ"ל רואה ועורך את כל 43 השורות. תצוגת קבוצת "תמחור ותזמון" פתוחה.</p>
+
+  <div class="card" style="padding-top:0; position:relative">
+    <div class="tabs">
+      <button class="tab">ניהול משתמשים</button>
+      <button class="tab">הרשאות</button>
+      <button class="tab">מחירים</button>
+      <button class="tab on">פרמטרים</button>
+    </div>
+
+    <div style="padding-top:16px">
+      <div class="psearch">
+        <span class="mg">⌕</span>
+        <input data-testid="settings-search" value="חיפוש בכל 43 ההגדרות…" readonly>
+      </div>
+
+      <div class="md">
+        <div class="types">
+          <div class="type-i on" data-testid="settings-group-pricing_timing"><span class="nm">תמחור ותזמון</span><span class="ct">7</span></div>
+          <div class="type-i" data-testid="settings-group-control_alerts"><span class="nm">בקרה והתראות</span><span class="ct">8</span></div>
+          <div class="type-i" data-testid="settings-group-shift_invites"><span class="nm">שיבוץ וזימונים</span><span class="ct">3</span></div>
+          <div class="type-i" data-testid="settings-group-templates"><span class="nm">תבניות מייל</span><span class="ct">11</span></div>
+          <div class="type-i" data-testid="settings-group-smart_match"><span class="nm">התאמת דיילות</span><span class="ct">13</span></div>
+          <div class="type-i" data-testid="settings-group-integration_tech"><span class="nm">טכני</span><span class="ct">1</span></div>
+        </div>
+
+        <div class="pane">
+          <h2>תמחור ותזמון</h2>
+          <p class="lead">הערכים שמנוע התמחור וההצעות קורא. שינוי משפיע על הצעות חדשות בלבד —
+             הצעה שכבר אושרה שומרת את הערכים שהוקפאו בה.</p>
+
+          <table>
+            <thead><tr><th style="width:42%">הגדרה</th><th style="width:24%">ערך</th><th>הערה</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>אחוז מע"מ</td>
+                <td><span class="vwrap"><input class="vin" data-testid="settings-value-אחוז_מעמ" value="18"><span class="unit">%</span></span></td>
+                <td class="cell">
+                  <span class="sub">0–100, עד שתי ספרות אחרי הנקודה</span>
+                  <div class="affects">↳ משפיע: משנה את סכום המע"מ בהצעות מחיר חדשות — מסך בניית ההצעה יציג את הערך החדש מיד</div>
+                </td>
+              </tr>
+              <tr>
+                <td>יחס אורחים לדיילת</td>
+                <td><span class="vwrap"><input class="vin" value="50"><span class="unit">אורחים</span></span></td>
+                <td class="cell"><span class="sub">מספר שלם חיובי</span></td>
+              </tr>
+              <tr>
+                <td>תוקף הצעת מחיר</td>
+                <td><span class="vwrap"><input class="vin" value="30"><span class="unit">ימים</span></span></td>
+                <td class="cell">
+                  <span class="sub">מספר שלם חיובי</span>
+                  <div class="affects">↳ משפיע: משנה מתי הצעת מחיר נחשבת פגה — משפיע על מסך ההצעות ועל הסינון בו</div>
+                </td>
+              </tr>
+              <tr>
+                <td>ימי אזהרה לפני שהצעה פגה</td>
+                <td><span class="vwrap"><input class="vin" value="7"><span class="unit">ימים</span></span></td>
+                <td class="cell"><span class="sub">מספר שלם חיובי</span></td>
+              </tr>
+              <tr>
+                <td>סכום נסיעות למשמרת</td>
+                <td><span class="vwrap"><input class="vin" value="22.60"><span class="unit">₪</span></span></td>
+                <td class="cell"><span class="sub">סכום, עד שתי ספרות</span></td>
+              </tr>
+              <tr>
+                <td>שכר מינימום שעתי</td>
+                <td><span class="vwrap"><input class="vin" data-testid="settings-value-שכר_מינימום_שעתי" value="35"><span class="unit">₪</span></span></td>
+                <td class="cell">
+                  <span class="sub">משמש לבדיקת תעריפי דיילות ולרשימת דיילות מתחת לרף</span>
+                  <div class="affects">↳ משפיע: משנה את רשימת הדיילות שמתחת לשכר המינימום, ואת בדיקת התעריפים במודול הדיילות (ר' סעיף 4 למטה)</div>
+                </td>
+              </tr>
+              <tr>
+                <td>תנאי תשלום</td>
+                <td><span class="vwrap"><input class="vin" value="30"><span class="unit">ימים</span></span></td>
+                <td class="cell"><span class="sub">קובע מתי חשבונית נחשבת באיחור</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="saverow">
+            <span class="hint">שינית 0 מתוך 7</span>
+            <span><button class="btn btn-outline btn-sm">ביטול</button>
+                  <button class="btn btn-primary btn-sm" data-testid="settings-save-button">שמור שינויים</button></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast"><span class="dot"></span> ההגדרות נשמרו</div>
+  </div>
+  <p class="psub" style="margin-top:8px">↑ ה-Toast (למטה בכרטיס) מופיע לרגע אחרי שמירה מוצלחת ונעלם לבדו (C5 §5.6.17.4).</p>
+
+  <!-- ── רוחב-מובייל 375px, לסעיף 1 בלבד — כפי שהתבקש ──────────────────── -->
+  <div class="subviewlabel">רוחב מובייל (375px) — לבדיקת עומס-מסך בלבד, תצוגה זו לא פותחת מסך נפרד</div>
+  <div class="card" style="max-width:375px; padding-top:0; overflow:hidden">
+    <div class="tabs" style="overflow-x:auto">
+      <button class="tab" style="padding:10px 10px">משתמשים</button>
+      <button class="tab" style="padding:10px 10px">הרשאות</button>
+      <button class="tab" style="padding:10px 10px">מחירים</button>
+      <button class="tab on" style="padding:10px 10px">פרמטרים</button>
+    </div>
+    <div style="padding-top:12px">
+      <div class="psearch"><span class="mg">⌕</span><input value="חיפוש…" readonly style="font-size:13px"></div>
+      <div class="types" style="margin-bottom:10px">
+        <div class="type-i on"><span class="nm">תמחור ותזמון</span><span class="ct">7</span></div>
+        <div class="type-i"><span class="nm">בקרה והתראות</span><span class="ct">8</span></div>
+        <div class="type-i"><span class="nm">שיבוץ וזימונים</span><span class="ct">3</span></div>
+        <div class="type-i"><span class="nm">תבניות מייל</span><span class="ct">11</span></div>
+        <div class="type-i"><span class="nm">התאמת דיילות</span><span class="ct">13</span></div>
+        <div class="type-i"><span class="nm">טכני</span><span class="ct">1</span></div>
+      </div>
+      <div class="pane" style="padding:12px">
+        <h2 style="font-size:14px">תמחור ותזמון</h2>
+        <p class="lead" style="font-size:11.5px">שינוי משפיע על הצעות חדשות בלבד.</p>
+        <table>
+          <tbody>
+            <tr>
+              <td style="padding:8px 4px; font-size:12.5px">אחוז מע"מ</td>
+              <td style="padding:8px 4px"><span class="vwrap"><input class="vin" value="18" style="width:74px; font-size:12.5px"><span class="unit">%</span></span></td>
+            </tr>
+            <tr>
+              <td style="padding:8px 4px; font-size:12.5px">יחס אורחים לדיילת</td>
+              <td style="padding:8px 4px"><span class="vwrap"><input class="vin" value="50" style="width:74px; font-size:12.5px"><span class="unit">אורחים</span></span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="saverow"><span class="hint" style="font-size:11px">שינית 0 מתוך 7</span>
+          <button class="btn btn-primary btn-sm" style="padding:5px 10px; font-size:11.5px">שמור</button></div>
+      </div>
+    </div>
+  </div>
+  <p class="psub">בבדיקת רוחב-הדפדפן: השדות והיחידה (למשל "18" ו-"%") נשארים זוג אחד ואינם נשברים
+    לשורה נפרדת — זו בדיוק ההגנה של <span class="ltr">.vwrap</span> (מעבר-כיווניות, src/CLAUDE.md).</p>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <h1 id="s2" class="viewlabel"><span class="num">2</span> · CEO — פאנל "התאמת דיילות" (Smart Match)</h1>
+  <p class="psub" style="margin:-4px 0 12px">אזהרה בניסוח-מנכ"ל (§3.7) · פס-הסכום 1.00 · שתי שורות-המרחק בתוויות המתוקנות (V-4) · מתג-האמינות עם המונה החי.</p>
+
+  <div class="card" style="padding-top:0">
+    <div class="tabs">
+      <button class="tab">ניהול משתמשים</button><button class="tab">הרשאות</button>
+      <button class="tab">מחירים</button><button class="tab on">פרמטרים</button>
+    </div>
+    <div style="padding-top:16px">
+      <div class="psearch"><span class="mg">⌕</span><input value="חיפוש בכל 43 ההגדרות…" readonly></div>
+      <div class="md">
+        <div class="types">
+          <div class="type-i"><span class="nm">תמחור ותזמון</span><span class="ct">7</span></div>
+          <div class="type-i"><span class="nm">בקרה והתראות</span><span class="ct">8</span></div>
+          <div class="type-i"><span class="nm">שיבוץ וזימונים</span><span class="ct">3</span></div>
+          <div class="type-i"><span class="nm">תבניות מייל</span><span class="ct">11</span></div>
+          <div class="type-i on"><span class="nm">התאמת דיילות</span><span class="ct">13</span></div>
+          <div class="type-i"><span class="nm">טכני</span><span class="ct">1</span></div>
+        </div>
+
+        <div class="pane">
+          <h2>התאמת דיילות</h2>
+          <p class="lead">הערכים שקובעים איך המערכת מדרגת מועמדות לשיבוץ.</p>
+
+          <div class="danger-note" data-testid="settings-smartmatch-warning">
+            <b>שינוי כאן משנה שיבוצים אמיתיים.</b> הדירוג שמנהלת השיבוץ תראה מחר ייראה אחרת,
+            והיא לא תדע שמשהו השתנה. שינוי כדאי לתאם איתה מראש.
+          </div>
+
+          <div class="sumbar" data-testid="settings-weights-sum" style="margin-bottom:14px">
+            <span>שלוש המשקולות מסתכמות ל־<span class="ltr">1.00</span></span>
+            <span class="tag ok">תקין</span>
+          </div>
+
+          <table>
+            <thead><tr><th style="width:42%">הגדרה</th><th style="width:24%">ערך</th><th>הערה</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>משקולת היענות</td>
+                <td><input class="vin" value="0.40"></td>
+                <td class="cell">
+                  <span class="sub">כמה מהציון נקבע לפי היענות לזימונים</span>
+                  <div class="affects">↳ משפיע: משנה את סדר המועמדות שמנהלת השיבוץ תראה מחר במסך ההתאמה</div>
+                </td>
+              </tr>
+              <tr>
+                <td>משקולת אמינות</td>
+                <td><input class="vin" value="0.35"></td>
+                <td class="cell"><span class="sub">כמה מהציון נקבע לפי נוכחות בפועל במשמרות קודמות</span></td>
+              </tr>
+              <tr>
+                <td>משקולת קרבה</td>
+                <td><input class="vin" value="0.25"></td>
+                <td class="cell"><span class="sub">כמה מהציון נקבע לפי מרחק מהאירוע</span></td>
+              </tr>
+              <tr>
+                <td>מרחק שמעבר לו הדיילת נפסלת</td>
+                <td><span class="vwrap"><input class="vin" value="80"><span class="unit">ק"מ</span></span></td>
+                <td class="cell"><span class="sub">דיילת שמרחקה גדול מהערך הזה לא מוצגת כמועמדת כלל</span></td>
+              </tr>
+              <tr>
+                <td>מרחק שבו ציון־הקרבה מגיע ל־0</td>
+                <td><span class="vwrap"><input class="vin" value="40"><span class="unit">ק"מ</span></span></td>
+                <td class="cell"><span class="sub">חייב להיות קטן או שווה למרחק־הפסילה</span></td>
+              </tr>
+              <tr>
+                <td colspan="3" style="color:var(--s400); font-size:12.5px; padding:6px 10px">
+                  ועוד 7 הגדרות (חלון־חישוב, חלון־חישוב מורחב, מינימום־תשובות, קבוע־ריסון,
+                  שיעור־בונוס־הוגנות, תקרת־שבועות־הוגנות, רצף אי־מענה)…
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="togrow" style="margin-top:14px">
+            <div>
+              <div class="t">מרכיב האמינות פעיל</div>
+              <div class="h" style="color:var(--amber800)">
+                1 שורות־נוכחות קיימות מתוך 27 שיבוצים — אין רף מינימלי מוגדר, ההחלטה להדליק היא של מי שמדליקה
+              </div>
+            </div>
+            <span class="switch" data-testid="settings-reliability-toggle"><span class="track"></span><span class="knob"></span></span>
+          </div>
+
+          <div class="saverow">
+            <span class="hint">שינית 0 מתוך 13</span>
+            <span><button class="btn btn-outline btn-sm">ביטול</button>
+                  <button class="btn btn-primary btn-sm">שמור שינויים</button></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <h1 id="s3" class="viewlabel"><span class="num">3</span> · CEO — עורך התבניות: "תבנית זימון משמרת"</h1>
+  <p class="psub" style="margin:-4px 0 12px">שלושה מצבים: תקין · חסום (משתנה־חובה נמחק) · אזהרה (משתנה־רשות נמחק).</p>
+
+  <div class="subviewlabel">3א · מצב תקין — כל 8 המשתנים במקומם</div>
+  <div class="card" style="padding-top:0">
+    <div class="tabs"><button class="tab">ניהול משתמשים</button><button class="tab">הרשאות</button>
+      <button class="tab">מחירים</button><button class="tab on">פרמטרים</button></div>
+    <div style="padding-top:16px">
+      <div class="psearch"><span class="mg">⌕</span><input value="חיפוש בכל 43 ההגדרות…" readonly></div>
+      <div class="md">
+        <div class="types">
+          <div class="type-i"><span class="nm">תמחור ותזמון</span><span class="ct">7</span></div>
+          <div class="type-i"><span class="nm">בקרה והתראות</span><span class="ct">8</span></div>
+          <div class="type-i"><span class="nm">שיבוץ וזימונים</span><span class="ct">3</span></div>
+          <div class="type-i on"><span class="nm">תבניות מייל</span><span class="ct">11</span></div>
+          <div class="type-i"><span class="nm">התאמת דיילות</span><span class="ct">13</span></div>
+          <div class="type-i"><span class="nm">טכני</span><span class="ct">1</span></div>
+        </div>
+        <div class="pane">
+          <h2>תבניות מייל</h2>
+          <p class="lead">נוסח כל מייל שהמערכת שולחת. הסוגריים המודגשים מוחלפים בערך אמיתי ברגע השליחה.</p>
+          <div class="ted">
+            <div class="tlist" data-testid="settings-template-list">
+              <div class="ti on">זימון משמרת</div>
+              <div class="ti">אישור סופי שיבוץ</div>
+              <div class="ti">ביטול משמרת</div>
+              <div class="ti">תזכורת משמרת</div>
+              <div class="ti">שחרור ממשמרת</div>
+              <div class="ti">הצעת מחיר</div>
+              <div class="ti">חשבונית מס</div>
+              <div class="ti">דוח שכר</div>
+              <div class="ti">משוב לקוח</div>
+              <div class="ti" style="color:var(--s400)">ועוד 2…</div>
+            </div>
+            <div>
+              <div class="tbody" data-testid="settings-template-body">
+                היי <span class="var">שם דיילת</span>,<br>
+                התאמת לאירוע חדש של <span class="ltr">REG-IN</span>!<br>
+                אירוע: <span class="var">שם פרויקט</span><br>
+                תאריך: <span class="var">תאריך אירוע</span><br>
+                שעות: <span class="var">שעת התחלה</span> עד <span class="var">שעת סיום</span><br>
+                מיקום: <span class="var">עיר אירוע</span><br>
+                תעריף: <span class="var">תעריף שעתי דיילת</span> ש"ח לשעה + נסיעות<br>
+                לאישור הגעה או דחייה, לחצי על הלינק הבא: <span class="var">לינק אישור משמרת</span><br>
+                שימי לב: השיבוץ הינו על בסיס כל הקודם זוכה.
+              </div>
+              <div class="varbank">
+                <div class="hd">מה מותר להכניס בתבנית הזו — לחיצה מוסיפה לטקסט</div>
+                <div class="chips">
+                  <span class="chip req">שם דיילת ✱</span>
+                  <span class="chip req">לינק אישור משמרת ✱</span>
+                  <span class="chip">שם פרויקט</span>
+                  <span class="chip">תאריך אירוע</span>
+                  <span class="chip">שעת התחלה</span>
+                  <span class="chip">שעת סיום</span>
+                  <span class="chip">עיר אירוע</span>
+                  <span class="chip">תעריף שעתי דיילת</span>
+                </div>
+                <div class="chip-legend"><span>✱ <b>חובה</b> — בלעדיו השמירה נחסמת</span><span>בלי סימון — רשות, חוסר גורר אזהרה בלבד</span></div>
+              </div>
+              <div class="saverow">
+                <span class="hint">כל 8 המשתנים במקומם</span>
+                <span><button class="btn btn-outline btn-sm">ביטול</button>
+                      <button class="btn btn-primary btn-sm">שמור תבנית</button></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subviewlabel">3ב · מצב חסום — משתנה־החובה "לינק אישור משמרת" נמחק מהגוף</div>
+  <div class="card">
+    <div class="pane" style="border:none; padding:0">
+      <div class="tbody">
+        היי <span class="var">שם דיילת</span>,<br>
+        התאמת לאירוע חדש של <span class="ltr">REG-IN</span>!<br>
+        אירוע: <span class="var">שם פרויקט</span><br>
+        תעריף: <span class="var">תעריף שעתי דיילת</span> ש"ח לשעה + נסיעות<br>
+        לאישור הגעה או דחייה, לחצי על הלינק הבא:
+      </div>
+      <div class="blocked-note" data-testid="settings-template-blocked" style="margin-top:12px">
+        <b>בלי [לינק_אישור_משמרת] הדיילת לא יכולה לאשר את המשמרת.</b><br>
+        השמירה חסומה. אפשר להחזיר את המשתנה מהרשימה שלמטה.
+      </div>
+      <div class="varbank" style="border-top:none; padding-top:0">
+        <div class="hd">מה מותר להכניס בתבנית הזו</div>
+        <div class="chips">
+          <span class="chip req">שם דיילת ✱</span>
+          <span class="chip miss">לינק אישור משמרת ✱ — חסר ✚</span>
+          <span class="chip">שם פרויקט</span>
+          <span class="chip">תאריך אירוע</span>
+          <span class="chip">שעת התחלה</span>
+          <span class="chip">שעת סיום</span>
+          <span class="chip">עיר אירוע</span>
+          <span class="chip">תעריף שעתי דיילת</span>
+        </div>
+      </div>
+      <div class="saverow">
+        <span class="hint" style="color:var(--red700); font-weight:600">השמירה חסומה — החזירי את המשתנה קודם</span>
+        <span><button class="btn btn-outline btn-sm">ביטול</button>
+              <button class="btn btn-primary btn-sm" disabled data-testid="settings-template-save-blocked">שמור תבנית</button></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="subviewlabel">3ג · מצב אזהרה — משתנה־רשות "עיר אירוע" נמחק; שמירה עדיין אפשרית</div>
+  <div class="card">
+    <div class="pane" style="border:none; padding:0">
+      <div class="tbody">
+        היי <span class="var">שם דיילת</span>,<br>
+        התאמת לאירוע חדש של <span class="ltr">REG-IN</span>!<br>
+        אירוע: <span class="var">שם פרויקט</span><br>
+        תאריך: <span class="var">תאריך אירוע</span><br>
+        שעות: <span class="var">שעת התחלה</span> עד <span class="var">שעת סיום</span><br>
+        תעריף: <span class="var">תעריף שעתי דיילת</span> ש"ח לשעה + נסיעות<br>
+        לאישור הגעה או דחייה, לחצי על הלינק הבא: <span class="var">לינק אישור משמרת</span>
+      </div>
+      <div class="danger-note" data-testid="settings-template-warning" style="margin-top:12px">
+        <b>חסרים משתנים אופציונליים: [עיר_אירוע].</b><br>
+        אפשר לשמור — אבל הדיילת לא תדע לאיזו עיר היא מגיעה, אלא אם זה ברור מהקשר אחר.
+      </div>
+      <div class="varbank" style="border-top:none; padding-top:0">
+        <div class="hd">מה מותר להכניס בתבנית הזו</div>
+        <div class="chips">
+          <span class="chip req">שם דיילת ✱</span>
+          <span class="chip req">לינק אישור משמרת ✱</span>
+          <span class="chip">שם פרויקט</span>
+          <span class="chip">תאריך אירוע</span>
+          <span class="chip">שעת התחלה</span>
+          <span class="chip">שעת סיום</span>
+          <span class="chip miss">עיר אירוע — חסר ✚</span>
+          <span class="chip">תעריף שעתי דיילת</span>
+        </div>
+      </div>
+      <div class="saverow">
+        <span class="hint" style="color:var(--amber800); font-weight:600">אפשר לשמור — אבל כדאי לבדוק את החוסר</span>
+        <span><button class="btn btn-outline btn-sm">ביטול</button>
+              <button class="btn btn-primary btn-sm">שמור תבנית</button></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <h1 id="s4" class="viewlabel"><span class="num">4</span> · CEO — "שכר מינימום שעתי" + רשימת "מי מתחת לרף"</h1>
+  <p class="psub" style="margin:-4px 0 12px">הרשימה יושבת ליד השדה עצמו, בתוך אותה קבוצת "תמחור ותזמון" (סעיף 1). שני מצבים: ריק (הרף הנוכחי) ומאוכלס (רף היפותטי).</p>
+
+  <div class="subviewlabel">4א · הרף הנוכחי — 35 ₪ (אף דיילת פעילה לא מתחתיו)</div>
+  <div class="card">
+    <div class="pane mw-grid" style="border:none; padding:0; display:grid; grid-template-columns:1fr 280px; gap:18px; align-items:start">
+      <table>
+        <thead><tr><th style="width:46%">הגדרה</th><th style="width:26%">ערך</th><th>הערה</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>שכר מינימום שעתי</td>
+            <td><span class="vwrap"><input class="vin" data-testid="settings-value-שכר_מינימום_שעתי" value="35"><span class="unit">₪</span></span></td>
+            <td class="cell"><span class="sub">משמש לבדיקת תעריפי דיילות ולרשימה מימין</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="mwbox" data-testid="settings-below-min-wage">
+        <div class="hd">מי מתחת לשכר המינימום (35 ₪)</div>
+        <div class="mwempty">אין דיילות פעילות מתחת לרף הנוכחי</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subviewlabel">4ב · רף היפותטי — 40 ₪ (דוגמה: שתי דיילות פעילות חושפות)</div>
+  <div class="card">
+    <div class="pane mw-grid" style="border:none; padding:0; display:grid; grid-template-columns:1fr 280px; gap:18px; align-items:start">
+      <table>
+        <thead><tr><th style="width:46%">הגדרה</th><th style="width:26%">ערך</th><th>הערה</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>שכר מינימום שעתי</td>
+            <td><span class="vwrap"><input class="vin" value="40"><span class="unit">₪</span></span></td>
+            <td class="cell"><span class="sub">שינית — עדיין לא נשמר; הרשימה מימין כבר מגיבה לערך שבשדה</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="mwbox">
+        <div class="hd">מי מתחת לשכר המינימום (40 ₪)</div>
+        <div class="mwrow"><span>מירב אטיאס</span><span class="ltr">38 ₪</span></div>
+        <div class="mwrow"><span>ליאת פרץ</span><span class="ltr">39 ₪</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="psub">מקור: <span class="ltr">list_hostesses_below_min_wage()</span> — דיילות פעילות בלבד (V-10), ממוינות
+    לפי תעריף ואז שם. שתי הדוגמאות נמדדו חי 02/09/2026: מתחת ל-35 ₪ אין אף אחת; מתחת ל-40 ₪ שתיים.</p>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <h1 id="s5" class="viewlabel"><span class="num">5</span> · מנהלת כספים ולקוחות — "ההגדרות שלי"</h1>
+  <div class="role-badge"><span class="av">כ</span>מוצג עבור <b>מנהלת כספים ולקוחות</b> — נכנסת דרך תפריט-המשתמש, לא רואה את הלשונית "פרמטרים"</div>
+
+  <div class="card">
+    <h1 style="margin-bottom:2px">ההגדרות שלי</h1>
+    <p class="psub" style="margin-bottom:16px">8 הגדרות בבעלותך, ב-4 קבוצות. הגדרות של תפקידים אחרים אינן מוצגות כאן.</p>
+
+    <div class="subviewlabel" style="margin-top:0">תמחור ותזמון (4)</div>
+    <table>
+      <thead><tr><th style="width:42%">הגדרה</th><th style="width:24%">ערך</th><th>הערה</th></tr></thead>
+      <tbody>
+        <tr><td>אחוז מע"מ</td><td><span class="vwrap"><input class="vin" value="18"><span class="unit">%</span></span></td>
+          <td class="cell"><span class="sub">0–100, עד שתי ספרות אחרי הנקודה</span></td></tr>
+        <tr><td>סכום נסיעות למשמרת</td><td><span class="vwrap"><input class="vin" value="22.60"><span class="unit">₪</span></span></td>
+          <td class="cell"><span class="sub">סכום, עד שתי ספרות</span></td></tr>
+        <tr><td>שכר מינימום שעתי</td><td><span class="vwrap"><input class="vin" value="35"><span class="unit">₪</span></span></td>
+          <td class="cell"><span class="sub">ר' הרשימה למטה</span></td></tr>
+        <tr><td>תנאי תשלום</td><td><span class="vwrap"><input class="vin" value="30"><span class="unit">ימים</span></span></td>
+          <td class="cell"><span class="sub">קובע מתי חשבונית נחשבת באיחור</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="subviewlabel">בקרה והתראות (1)</div>
+    <table>
+      <tbody>
+        <tr><td style="width:42%">סף שביעות רצון</td>
+          <td style="width:24%"><span class="vwrap"><input class="vin" value="3"><span class="unit">★</span></span></td>
+          <td class="cell"><span class="sub">מתחתיו נדרשת סיבה ובירור טלפוני</span>
+            <div class="affects">↳ משפיע: מעלה את הרף שבו נדרשת סיבה למשוב — מסך הכספים ידרוש אותה</div></td></tr>
+      </tbody>
+    </table>
+
+    <div class="subviewlabel">תבניות מייל (2)</div>
+    <table>
+      <tbody>
+        <tr><td style="width:42%">חשבונית מס</td><td colspan="2" class="cell"><span class="sub">עורך תבנית — לא פתוח כאן, כמו בסעיף 3</span></td></tr>
+        <tr><td>דוח שכר</td><td colspan="2" class="cell"><span class="sub">עורך תבנית — לא פתוח כאן, כמו בסעיף 3</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="subviewlabel">טכני (1)</div>
+    <table>
+      <tbody>
+        <tr><td style="width:42%">מייל משרד רואי החשבון</td>
+          <td colspan="2"><input class="vin ltr" style="width:220px; text-align:right" value="ishay1997@gmail.com"></td></tr>
+      </tbody>
+    </table>
+
+    <div class="subviewlabel">מי מתחת לשכר המינימום (35 ₪)</div>
+    <div class="mwbox" style="max-width:340px">
+      <div class="mwempty">אין דיילות פעילות מתחת לרף הנוכחי</div>
+    </div>
+    <p class="psub" style="margin-top:4px">הרשימה מוצגת גם כאן — לא רק ב"פרמטרים" — כי היא נמצאת ליד השדה שבבעלותה, בכל מקום שהוא מופיע (RPC מגן, ולא הרשאת-קריאה ישירה על <span class="ltr">hostesses</span>).</p>
+
+    <div class="saverow"><span class="hint">שינית 0 מתוך 8</span>
+      <span><button class="btn btn-outline btn-sm">ביטול</button><button class="btn btn-primary btn-sm">שמור שינויים</button></span></div>
+  </div>
+  <p class="psub">אין כאן פאנל "התאמת דיילות" — היא לא בבעלות מנהלת הכספים, ולכן לא מוצגת בכלל
+    (לא ריקה, לא נעולה — נעדרת).</p>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <h1 id="s6" class="viewlabel"><span class="num">6</span> · מנהלת גיוס ושיבוץ — "ההגדרות שלי"</h1>
+  <div class="role-badge"><span class="av">ג</span>מוצג עבור <b>מנהלת גיוס ושיבוץ</b> — 25 הגדרות בבעלותה, כולל כל פאנל ה-Smart Match</div>
+
+  <div class="card">
+    <h1 style="margin-bottom:2px">ההגדרות שלי</h1>
+    <p class="psub" style="margin-bottom:16px">25 הגדרות בבעלותך, ב-5 קבוצות.</p>
+
+    <div class="subviewlabel" style="margin-top:0">תמחור ותזמון (1) · בקרה והתראות (1) · שיבוץ וזימונים (3)</div>
+    <table>
+      <thead><tr><th style="width:42%">הגדרה</th><th style="width:24%">ערך</th><th>הערה</th></tr></thead>
+      <tbody>
+        <tr><td>יחס אורחים לדיילת</td><td><span class="vwrap"><input class="vin" value="50"><span class="unit">אורחים</span></span></td>
+          <td class="cell"><span class="sub">מספר שלם חיובי</span></td></tr>
+        <tr><td>שעות לתזכורת לדיילת</td><td><span class="vwrap"><input class="vin" value="24"><span class="unit">שעות</span></span></td>
+          <td class="cell"><span class="sub">כמה שעות לפני המשמרת נשלחת תזכורת</span></td></tr>
+        <tr><td>סף זימון לפני אירוע</td><td><span class="vwrap"><input class="vin" value="24"><span class="unit">שעות</span></span></td>
+          <td class="cell"><span class="sub">מתי זימון נחשב "ליום האחרון"</span></td></tr>
+        <tr><td>תוקף זימון־משמרת</td><td><span class="vwrap"><input class="vin" value="48"><span class="unit">שעות</span></span></td>
+          <td class="cell"><span class="sub">כמה זמן יש לדיילת לענות</span>
+            <div class="affects">↳ משפיע: משנה מתי זימון־משמרת נחשב פג — משפיע גם על מסך הצוות בפרויקט (מודול 6)</div></td></tr>
+        <tr><td>סף אירוע דחוף</td><td><span class="vwrap"><input class="vin" value="72"><span class="unit">שעות</span></span></td>
+          <td class="cell"><span class="sub">מתי אירוע מסומן "דחוף"</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="subviewlabel">התאמת דיילות (13) — פאנל מלא, בניסוח־בעלים</div>
+    <div class="danger-note" data-testid="settings-smartmatch-warning-owner">
+      <b>שינוי כאן משנה את הדירוג שתראי מחר במסך השיבוץ.</b>
+    </div>
+    <div class="sumbar" style="margin-bottom:14px">
+      <span>שלוש המשקולות מסתכמות ל־<span class="ltr">1.00</span></span><span class="tag ok">תקין</span>
+    </div>
+    <table>
+      <tbody>
+        <tr><td style="width:42%">משקולת היענות</td><td style="width:24%"><input class="vin" value="0.40"></td>
+          <td class="cell"><span class="sub">כמה מהציון נקבע לפי היענות לזימונים</span></td></tr>
+        <tr><td>משקולת אמינות</td><td><input class="vin" value="0.35"></td>
+          <td class="cell"><span class="sub">כמה מהציון נקבע לפי נוכחות בפועל</span></td></tr>
+        <tr><td>משקולת קרבה</td><td><input class="vin" value="0.25"></td>
+          <td class="cell"><span class="sub">כמה מהציון נקבע לפי מרחק מהאירוע</span></td></tr>
+        <tr><td>מרחק שמעבר לו הדיילת נפסלת</td><td><span class="vwrap"><input class="vin" value="80"><span class="unit">ק"מ</span></span></td>
+          <td class="cell"><span class="sub">דיילת שמרחקה גדול מזה לא מוצגת כמועמדת</span></td></tr>
+        <tr><td>מרחק שבו ציון־הקרבה מגיע ל־0</td><td><span class="vwrap"><input class="vin" value="40"><span class="unit">ק"מ</span></span></td>
+          <td class="cell"><span class="sub">חייב להיות ≤ מרחק־הפסילה</span></td></tr>
+        <tr><td colspan="3" style="color:var(--s400); font-size:12.5px; padding:6px 10px">ועוד 7 הגדרות…</td></tr>
+      </tbody>
+    </table>
+    <div class="togrow" style="margin-top:14px">
+      <div><div class="t">מרכיב האמינות פעיל</div>
+        <div class="h" style="color:var(--amber800)">1 שורות־נוכחות קיימות מתוך 27 שיבוצים</div></div>
+      <span class="switch"><span class="track"></span><span class="knob"></span></span>
+    </div>
+
+    <div class="subviewlabel">תבניות מייל (7)</div>
+    <div class="ted">
+      <div class="tlist">
+        <div class="ti on">זימון משמרת</div>
+        <div class="ti">אישור סופי שיבוץ</div>
+        <div class="ti">ביטול משמרת</div>
+        <div class="ti">תזכורת משמרת</div>
+        <div class="ti">שחרור ממשמרת</div>
+        <div class="ti">האירוע בוטל</div>
+        <div class="ti">פרטי האירוע השתנו</div>
+      </div>
+      <div>
+        <div class="tbody" style="font-size:12.5px">
+          היי <span class="var">שם דיילת</span>, התאמת לאירוע חדש… (כמו סעיף 3א — עורך זהה, בבעלות מלאה)
+        </div>
+      </div>
+    </div>
+
+    <div class="saverow"><span class="hint">שינית 0 מתוך 25</span>
+      <span><button class="btn btn-outline btn-sm">ביטול</button><button class="btn btn-primary btn-sm">שמור שינויים</button></span></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <h1 id="s7" class="viewlabel"><span class="num">7</span> · מנהלת לוגיסטיקה — "ההגדרות שלי" + תפריט-המשתמש</h1>
+  <div class="role-badge"><span class="av">ל</span>מוצג עבור <b>מנהלת לוגיסטיקה</b> — הגדרה אחת בבעלותה</div>
+
+  <div class="card">
+    <h1 style="margin-bottom:2px">ההגדרות שלי</h1>
+    <p class="psub" style="margin-bottom:16px">הגדרה אחת בבעלותך.</p>
+    <div class="subviewlabel" style="margin-top:0">בקרה והתראות (1)</div>
+    <table>
+      <thead><tr><th style="width:42%">הגדרה</th><th style="width:24%">ערך</th><th>הערה</th></tr></thead>
+      <tbody>
+        <tr><td>סף אזהרת לוגיסטיקה</td><td><span class="vwrap"><input class="vin" value="10"><span class="unit">ימי עסקים</span></span></td>
+          <td class="cell"><span class="sub">כמה ימי־עסקים לפני האירוע פריט שלא הוחל מסומן בענבר</span></td></tr>
+      </tbody>
+    </table>
+    <div class="saverow"><span class="hint">שינית 0 מתוך 1</span>
+      <span><button class="btn btn-outline btn-sm">ביטול</button><button class="btn btn-primary btn-sm">שמור שינויים</button></span></div>
+  </div>
+
+  <div class="subviewlabel">תפריט־המשתמש — משם היא מגיעה לכאן</div>
+  <div style="display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start">
+    <div>
+      <p class="psub" style="margin-bottom:8px">מנהלת לוגיסטיקה (blocked על "הגדרות מערכת") — הפריט מופיע:</p>
+      <div class="usermenu" data-testid="settings-user-menu">
+        <div class="um-head"><div class="nm">שרון בכר</div><div class="rl">מנהלת לוגיסטיקה</div></div>
+        <div class="um-i"><span class="ic">◐</span>הפרופיל שלי</div>
+        <div class="um-i hi" data-testid="settings-my-settings-link"><span class="ic">⚙</span>ההגדרות שלי</div>
+        <div class="um-i"><span class="ic">⇥</span>התנתקות</div>
+      </div>
+    </div>
+    <div>
+      <p class="psub" style="margin-bottom:8px">מנכ"ל (edit על "הגדרות מערכת" — יש לה את הלשונית המלאה) — הפריט <b>נעדר</b>:</p>
+      <div class="usermenu">
+        <div class="um-head"><div class="nm">דנה כהן</div><div class="rl">מנכ"ל</div></div>
+        <div class="um-i"><span class="ic">◐</span>הפרופיל שלי</div>
+        <div class="um-i"><span class="ic">⇥</span>התנתקות</div>
+      </div>
+      <p class="psub" style="margin-top:6px; font-size:11px">V-7: אותו תנאי בדיוק כמו <span class="ltr">canEdit</span> — לא רשימת-תפקידים נפרדת.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <h1 id="s8" class="viewlabel"><span class="num">8</span> · ארבעת המצבים הלא־מצוירים ב-v1</h1>
+
+  <div class="subviewlabel">8א · טעינה (שלד)</div>
+  <div class="card">
+    <div class="pane" style="border:none; padding:0" data-testid="settings-loading">
+      <div class="sk-row"><span class="sk" style="width:140px; height:14px"></span><span class="sk" style="width:100px; height:30px; border-radius:8px"></span><span class="sk" style="flex:1; height:12px"></span></div>
+      <div class="sk-row"><span class="sk" style="width:170px; height:14px"></span><span class="sk" style="width:100px; height:30px; border-radius:8px"></span><span class="sk" style="flex:1; height:12px"></span></div>
+      <div class="sk-row"><span class="sk" style="width:120px; height:14px"></span><span class="sk" style="width:100px; height:30px; border-radius:8px"></span><span class="sk" style="flex:1; height:12px"></span></div>
+    </div>
+  </div>
+
+  <div class="subviewlabel">8ב · שגיאת־טעינה</div>
+  <div class="card">
+    <div class="errbox" data-testid="settings-error">
+      <div class="msg">לא ניתן לטעון את ההגדרות.</div>
+      <button class="btn btn-outline btn-sm" data-testid="settings-retry">נסי שוב</button>
+    </div>
+  </div>
+
+  <div class="subviewlabel">8ג · צפייה-בלבד (הרשאת <span class="ltr">view</span> — היום אין תפקיד חי עם ההרשאה, מוכח ביחידה)</div>
+  <div class="card">
+    <div class="pane" style="border:none; padding:0">
+      <div class="tag muted" data-testid="settings-view-only-note" style="margin-bottom:12px">צפייה בלבד</div>
+      <table>
+        <thead><tr><th style="width:42%">הגדרה</th><th style="width:24%">ערך</th><th>הערה</th></tr></thead>
+        <tbody>
+          <tr><td>אחוז מע"מ</td><td><span class="vwrap"><input class="vin" value="18" disabled><span class="unit">%</span></span></td>
+            <td class="cell"><span class="sub">אין הרשאת עריכה</span></td></tr>
+          <tr><td>יחס אורחים לדיילת</td><td><span class="vwrap"><input class="vin" value="50" disabled><span class="unit">אורחים</span></span></td>
+            <td class="cell"><span class="sub">אין הרשאת עריכה</span></td></tr>
+        </tbody>
+      </table>
+      <p class="psub" style="margin-top:10px">אין שורת-שמירה במצב הזה — אין מה לשמור.</p>
+    </div>
+  </div>
+
+  <div class="subviewlabel">8ד · שמירה נכשלה — שדה אחד נכשל, השאר נשארים כפי שהוקלדו</div>
+  <div class="card">
+    <div class="pane" style="border:none; padding:0">
+      <table>
+        <thead><tr><th style="width:42%">הגדרה</th><th style="width:24%">ערך</th><th>הערה</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>אחוז מע"מ</td>
+            <td><span class="vwrap"><input class="vin" value="19" style="border-color:var(--red600)"><span class="unit">%</span></span></td>
+            <td class="cell"><span class="sub" style="color:var(--red700)">השמירה נכשלה — ר׳ ההודעה למטה</span></td>
+          </tr>
+          <tr>
+            <td>תנאי תשלום</td>
+            <td><span class="vwrap"><input class="vin" value="45" style="border-color:var(--amber200); background:var(--amber50)"><span class="unit">ימים</span></span></td>
+            <td class="cell"><span class="sub" style="color:var(--amber800)">השינוי שלך עדיין כאן — לא נמחק ולא נשלח</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="saverow">
+        <span class="hint" style="color:var(--red700); font-weight:600" data-testid="settings-save-failed">
+          השמירה נכשלה ב"אחוז מע"מ" — החיבור לשרת נכשל, נסי שוב
+        </span>
+        <span><button class="btn btn-outline btn-sm">ביטול</button><button class="btn btn-primary btn-sm">נסי שוב</button></span>
+      </div>
+    </div>
+  </div>
+  <p class="psub">לפי §2.8: כתיבה סדרתית שדה־אחר־שדה, נעצרת בכשל הראשון והמסך נוקב בשם השדה שנכשל.
+    שדה "תנאי תשלום" למטה בתור — לא נשלח בכלל, ולכן הערך שהקלדת (45) עדיין בשדה, לא אבד ולא נשמר.</p>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <h1 id="s9" class="viewlabel"><span class="num">9</span> · פרופיל — קטע ההתראות</h1>
+  <p class="psub" style="margin:-4px 0 12px">מסך "הפרופיל שלי" הקיים (מודול 1) — רק קטע ההתראות מצויר, כדי להראות את השינוי.</p>
+
+  <div class="card" style="max-width:560px">
+    <h2 style="margin-bottom:12px">התראות</h2>
+    <div class="togrow">
+      <div><div class="t">מייל על פרויקטים חדשים</div>
+        <div class="h">ההתראות עצמן יישלחו כשמנוע ההתראות יעלה (מודול 10)</div></div>
+      <span class="switch on" data-testid="settings-notify-email"><span class="track"></span><span class="knob"></span></span>
+    </div>
+    <div class="togrow">
+      <div><div class="t">SMS על שיבוץ ברגע האחרון</div>
+        <div class="h">אין ערוץ SMS במערכת</div></div>
+      <span class="switch disabled" data-testid="settings-notify-sms"><span class="track"></span><span class="knob"></span></span>
+    </div>
+  </div>
+  <p class="psub">שני התיוגים "(בקרוב)" שהיו מעל הקטע הזה הוסרו לגמרי (R-4) — אין אף מופע שלהם במסך.</p>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <h1 id="s10" class="viewlabel"><span class="num">10</span> · לשונית "מחירים" — בלי כרטיס-הפרמטרים (Q-1)</h1>
+  <p class="psub" style="margin:-4px 0 12px">רצועה סכמטית לפני/אחרי — לא שחזור מדויק של <span class="ltr">PricingParamsCard</span>, רק להראות מה נעלם ולאן זה עבר.</p>
+
+  <div class="ba">
+    <div class="ba-col">
+      <div class="cap">לפני (v1 של מודול 3 — כרטיס-פרמטרים כלול)</div>
+      <div class="ba-mini">
+        <div class="mtab"><span>משתמשים</span><span>הרשאות</span><span class="on">מחירים</span><span>פרמטרים</span></div>
+        <div class="mini-card"><b>קטלוג מוצרים</b>מחירונים ומדרגות לפי סוג-שירות</div>
+        <div class="mini-card"><b>מדרגות מחיר</b>כמויות וסף-הנחה</div>
+        <div class="mini-card removed"><b>פרמטרים כלליים</b>אחוז מע"מ (18%) · יחס אורחים לדיילת (50)</div>
+      </div>
+    </div>
+    <div class="ba-col">
+      <div class="cap">אחרי (מודול 9, מוצע)</div>
+      <div class="ba-mini">
+        <div class="mtab"><span>משתמשים</span><span>הרשאות</span><span class="on">מחירים</span><span>פרמטרים</span></div>
+        <div class="mini-card"><b>קטלוג מוצרים</b>מחירונים ומדרגות לפי סוג-שירות</div>
+        <div class="mini-card"><b>מדרגות מחיר</b>כמויות וסף-הנחה</div>
+        <div class="mini-card moved-note">אחוז מע"מ ויחס אורחים לדיילת עברו ללשונית "פרמטרים" (סעיף 1) ול"ההגדרות שלי" (סעיפים 5–6) — עורך אחד לכל ערך, לא שלושה (Q-1)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <footer class="decisions">
+    <h3>מה הכרעתי לבד בציור — לאישור ישי, ולא הוסתר</h3>
+    <ol>
+      <li><b>סדר-הקבוצות בניווט</b> (תמחור→בקרה→שיבוץ→תבניות→התאמה→טכני) — זו כבר הכרעה-טכנית שנרשמה
+        ב-<span class="ltr">paramsRegistry.js</span> (§30-33 שם, "הנחתי") ולא הכרעת-ישי; שוכפלה כאן לעקביות בלבד.</li>
+      <li><b>ניווט-העל הדביק (הרצועה הכחולה למעלה)</b> אינו חלק מהמסך — כלי-ניווט של המוקאפ עצמו,
+        כדי לדלג בין 10 הסעיפים בעמוד ארוך אחד. במסך האמיתי אין רצועה כזו.</li>
+      <li><b>סרגל-הצד והטופ-בר של v1 הוצאו</b> מכל סעיף — כדי שהעמוד לא יישא 10 עותקים כמעט-זהים
+        של אותו סרגל, כל סעיף נפתח בתג-תפקיד קטן ("מוצג עבור: …") במקום. זו פשרת-קריאוּת, לא שינוי
+        למסך עצמו — v1 עדיין הרפרנס לפריסת ה-Chrome המלאה.</li>
+      <li><b>נוסח-הסיבה בכשל-שמירה (סעיף 8ד)</b>: "החיבור לשרת נכשל" הוא דוגמה בלבד — §2.8 לא נועל
+        טקסט-סיבה ספציפי, רק את התבנית <span class="ltr">השמירה נכשלה ב"&lt;label&gt;" — &lt;reason&gt;</span>.</li>
+      <li><b>מצב-האזהרה של עורך-התבניות (3ג)</b>: הודעת "חסרים משתנים אופציונליים: [עיר_אירוע]" נלקחה
+        ישירות מ-<span class="ltr">templateSaveVerdict</span> (§2.8) — לא נעולה ב-§3.7 כמו משפט-החסימה,
+        ולכן זו הצעת-ניסוח ולא ציטוט-חובה.</li>
+      <li><b>הרצועה בסעיף 10</b> סכמטית ולא שחזור-פיקסל של <span class="ltr">PricingParamsCard</span>
+        האמיתי — לא היה לי מוקאפ-רפרנס נפרד לכרטיס הזה, רק המידע שהוא מציג את שני הפרמטרים שעוברים (Q-1).</li>
+      <li><b>שם וייצוג מנהלת-הלוגיסטיקה בתפריט-המשתמש</b> ("שרון בכר") הוא שם-דוגמה למוקאפ בלבד —
+        לא נמדד מה-DB, כדי לא לתלות מוקאפ באדם אמיתי בטבלת <span class="ltr">users</span>.</li>
+      <li><b>איקון-ההגדרות (⚙) ואיקון-הפרופיל (◐) בתפריט-המשתמש</b> הם תווי-Unicode פשוטים, לא
+        <span class="ltr">lucide-react</span> — בקוד האמיתי (מעבר-אחידות, src/CLAUDE.md) ייבחרו משם.</li>
+    </ol>
+  </footer>
+
+</main>
+</body>
+</html>

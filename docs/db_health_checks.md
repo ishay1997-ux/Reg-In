@@ -46,7 +46,7 @@ select count(*) filter (where c.contype='c') as check_constraints,
  where n.nspname='public';
 ```
 
-**Baseline 02/09/2026: 67 · 33 · 11 · 26.** *(27/08: 66 · 32 · 11 · 25.)*
+**Baseline 02/09/2026 21:4X (after m9 phase 1): 67 · 35 · 11 · 27.** *(02/09 morning: 67 · 33 · 11 · 26 · 27/08: 66 · 32 · 11 · 25.)*
 **Pass = no number went DOWN.** A drop means a constraint was removed, which is never accidental.
 
 ⚠️ **A partial unique INDEX is not a unique CONSTRAINT.** `customer_contacts_one_primary_per_customer`
@@ -78,7 +78,7 @@ select t.relname as tbl, t.relrowsecurity as rls_on,
  order by rls_on, policies, t.relname;
 ```
 
-**Baseline 02/09/2026: 28 tables, `rls_on` true on 28/28, four with zero policies.**
+**Baseline 02/09/2026 21:4X (after m9 phase 1): 29 tables, `rls_on` true on 29/29, four with zero policies** *(the same four; `notification_preferences` arrived with its 3 self policies in the same migration)*. *(02/09 morning: 28 / 28.)*
 
 🔴 **Pass is NOT "the zero-policy list did not grow" — that phrasing was wrong and was replaced.**
 **Pass = `rls_on` is true everywhere, AND every zero-policy table is reachable through exactly one
@@ -168,7 +168,7 @@ select (select count(*) from has_col) as tables_with_column,
                   where table_name not in (select table_name from has_trg)), '[]'::json) as missing;
 ```
 
-**Baseline 02/09/2026: 19 · 19 · `[]`.** **Pass = `tables_with_column` equals `with_trigger`.**
+**Baseline 02/09/2026 21:4X (after m9 phase 1): 20 · 20 · `[]`.** *(02/09 morning: 19 · 19.)* **Pass = `tables_with_column` equals `with_trigger`.**
 
 🔴 **This check is why the denominator rule at the top exists.** An earlier version returned only
 the `missing` list, and an empty result there means *either* "all good" *or* "no table has the
@@ -188,8 +188,8 @@ select p.proname, p.prosecdef,
  order by p.prosecdef desc, p.proname;
 ```
 
-**Pass = zero rows reading `(no search_path)`.** *(Baseline 02/09: 44 functions — 42 `security
-definer` + 2 invoker — all configured.)* **Count the failures, never the total** — the total has
+**Pass = zero rows reading `(no search_path)`.** *(Baseline 02/09 21:4X, after m9 phase 1: 45 functions — all configured; m9 added
+`list_hostesses_below_min_wage`. 02/09 morning: 44 — 42 `security definer` + 2 invoker.)* **Count the failures, never the total** — the total has
 already gone stale twice (29 → 37 → 44).
 
 ## 9 · Supabase advisors

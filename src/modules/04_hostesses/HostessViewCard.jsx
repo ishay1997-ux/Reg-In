@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   ASSIGNMENT_STATUS_LABELS,
+  HOSTESS_PARAM_NAMES,
   assignmentDisplayStatus,
   eventStartInstant,
   eventWasCancelled,
@@ -114,6 +115,9 @@ export default function HostessViewCard({ hostessId, onClose, onEdit }) {
           derived={derived}
           canEdit={canEdit}
           now={now}
+          // 🔄 סף-תוקף-הזימון מ-`params` (מודול 9 · צעד 2.3) — מגיע מהטעינה שכבר קיימת
+          // בכרטיס (`getHostessScreenParams`), ולא בשליפה נוספת.
+          inviteValidityHours={params[HOSTESS_PARAM_NAMES.inviteValidityHours]}
           onEdit={() => onEdit(hostessId)}
         />
       </DialogContent>
@@ -187,7 +191,7 @@ function deriveCardData(hostess, assignments, params, today) {
   }
 }
 
-function CardBody({ hostess, derived, canEdit, now, onEdit }) {
+function CardBody({ hostess, derived, canEdit, now, inviteValidityHours, onEdit }) {
   return (
     <>
       <DialogHeader>
@@ -259,7 +263,11 @@ function CardBody({ hostess, derived, canEdit, now, onEdit }) {
           {derived.upcoming.length === 0 ? (
             <Muted>אין לה כרגע שיבוץ פעיל</Muted>
           ) : (
-            <AssignmentTable rows={derived.upcoming} now={now} />
+            <AssignmentTable
+              rows={derived.upcoming}
+              now={now}
+              inviteValidityHours={inviteValidityHours}
+            />
           )}
         </Section>
 
@@ -351,7 +359,11 @@ function CardBody({ hostess, derived, canEdit, now, onEdit }) {
           {derived.history.length === 0 ? (
             <Muted>דיילת חדשה, עדיין אין לה היסטוריית שיבוצים</Muted>
           ) : (
-            <AssignmentTable rows={derived.history} now={now} />
+            <AssignmentTable
+              rows={derived.history}
+              now={now}
+              inviteValidityHours={inviteValidityHours}
+            />
           )}
         </Section>
       </div>
@@ -359,7 +371,9 @@ function CardBody({ hostess, derived, canEdit, now, onEdit }) {
   )
 }
 
-function AssignmentTable({ rows, now }) {
+// ‏`inviteValidityHours` = הערך הגולמי של `שעות_תוקף_זימון` מ-`params` (מודול 9 · צעד 2.3).
+// הוא מגיע מהטעינה שכבר קיימת בכרטיס (`getHostessScreenParams`) ואינו שליפה נוספת.
+function AssignmentTable({ rows, now, inviteValidityHours }) {
   return (
     <table className="w-full border-collapse text-[12.5px]">
       <thead>
@@ -392,6 +406,7 @@ function AssignmentTable({ rows, now }) {
                 ),
               },
               now,
+              inviteValidityHours,
             ) ?? ASSIGNMENT_STATUS_LABELS[row.assignment_status]
           return (
             <tr key={`${row.project_id}-${row.assignment_number}`}>

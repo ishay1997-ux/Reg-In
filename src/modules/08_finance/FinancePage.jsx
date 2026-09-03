@@ -45,6 +45,8 @@ import {
   formatPercent,
   scoreTag,
 } from '@/lib/projectFinance'
+import { SATISFACTION_THRESHOLD_PARAM_NAME, needsSatisfactionAttention } from '@/lib/customers'
+import { getParamValues } from '@/api/params'
 import { listFinanceOverview } from './api'
 import { getParamValue } from '@/modules/06_projects/closingApi'
 import ClosingWindowDialog from './ClosingWindowDialog'
@@ -378,6 +380,14 @@ function summaryOpenSub(summary) {
 export default function FinancePage() {
   const [raw, setRaw] = useState([])
   const [vatPercent, setVatPercent] = useState(null)
+  // 🔄 סף-המשוב ירד מקבוע-קוד (שלוש השוואות + שתי מחרוזות עבריות שנשאו את המספר) לשורת-`params`
+  // ‏`סף_שביעות_רצון` (מודול 9 · צעד 2.3). 🔴 **הוא נטען כאן ומועבר לדיאלוג** ולא נטען
+  // פעמיים: העותק שבמסך והעותק שבחלון-הסגירה **חייבים לקרוא את אותה שורה**, אחרת הם
+  // מתפצלים בשקט — וזו בדיוק הסיבה שהעותק בלקוח קיים (הודעה ידידותית לפני ה-P0001 של
+  // המסד), שהופכת למזיקה ברגע שהשניים אינם מסכימים.
+  // ⚠️ ובניגוד למע"מ שמתחתיו — **כשל כאן כן מפיל את המסך**: הסף מכריע אילו שורות נצבעות
+  // ואילו נחסמות בשמירה, ו-`—` אינו מצב אפשרי עבורו.
+  const [satisfactionThreshold, setSatisfactionThreshold] = useState(null)
   const [loading, setLoading] = useState(true)
   // ‏`error` נושא גם את הענף: `'noPermission'` נבדק ראשון (כרטיס §④).
   const [error, setError] = useState(null)
@@ -406,9 +416,13 @@ export default function FinancePage() {
     let cancelled = false
     ;(async () => {
       try {
-        const rows = await listFinanceOverview()
+        const [rows, params] = await Promise.all([
+          listFinanceOverview(),
+          getParamValues([SATISFACTION_THRESHOLD_PARAM_NAME]),
+        ])
         if (cancelled) return
         setRaw(rows)
+        setSatisfactionThreshold(params[SATISFACTION_THRESHOLD_PARAM_NAME])
         setToday(todayIso())
         setError(null)
       } catch (err) {
@@ -566,7 +580,12 @@ export default function FinancePage() {
             onClear={clearFilters}
           />
         ) : (
-          <FinanceTable tab={tab} entries={visible} onOpen={setOpenProject} />
+          <FinanceTable
+            tab={tab}
+            entries={visible}
+            satisfactionThreshold={satisfactionThreshold}
+            onOpen={setOpenProject}
+          />
         )}
       </Card>
 
@@ -585,6 +604,7 @@ export default function FinancePage() {
             if (!next) setOpenProject(null)
           }}
           onChanged={refresh}
+          satisfactionThreshold={satisfactionThreshold}
         />
       )}
 
@@ -812,7 +832,7 @@ const COLUMNS = {
   ],
 }
 
-function FinanceTable({ tab, entries, onOpen }) {
+function FinanceTable({ tab, entries, satisfactionThreshold, onOpen }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full table-fixed border-collapse" data-testid="finance-table">
@@ -831,6 +851,7 @@ function FinanceTable({ tab, entries, onOpen }) {
               key={entry.row.project_id}
               entry={entry}
               tab={tab}
+              satisfactionThreshold={satisfactionThreshold}
               onOpen={() => onOpen(entry.row)}
             />
           ))}
@@ -843,7 +864,9 @@ function FinanceTable({ tab, entries, onOpen }) {
 // 🎨 **ענבר = פריט-פעולה אמיתי וממתין, לעולם לא אדום ולעולם לא קישוט** (מוסכמת ⑳, זהה
 // למ5/מ6): איחור-תשלום · ציון-משוב שדורש בירור טלפוני · דמי-ביטול שטרם נפתרו. שורה
 // שהסתיימה — רגילה. **האדום היחיד בשורה הוא מונה ימי-האיחור עצמו** (עובדה שלילית, לא מילוי).
-function isActionable(entry) {
+// ‏`threshold` = הערך הגולמי של `סף_שביעות_רצון`; חסר ⇒ ציון-משוב אינו הופך שורה
+// לפריט-פעולה (ושאר שני הטריגרים ממשיכים כרגיל) — ולא סף מומצא שיצבע שורות בענבר.
+function isActionable(entry, threshold) {
   // 🔴 **האיחור נספר רק כל עוד החוב פתוח.** ‏`deriveDaysOverdue` היא חשבון-ימים טהור ואינה
   // יודעת דבר על תשלום — פרויקט שכבר שולם וארוכב עדיין מחזיק `invoice_sent_at` ישן, ולכן
   // המספר שהיא מחזירה עליו חיובי. בלי התנאי הזה **כל** שורה בלשונית "הסתיימו" הייתה נצבעת
@@ -854,11 +877,18 @@ function isActionable(entry) {
   if (entry.row.archived_at) return false
   // ‏`entry.debtOpen` נגזר ב-`prepareRows` — אותו שדה בדיוק שמכבה את מונה-ימי-האיחור.
   const overdue = entry.debtOpen && entry.daysOverdue !== null && entry.daysOverdue > 0
-  const needsClarification = entry.score !== null && entry.score.score < 3
+  const needsClarification = needsSatisfactionAttention(entry.score?.score ?? null, threshold)
   return overdue || needsClarification || entry.feeUnresolved
 }
 
-function FinanceRow({ entry, tab, onOpen }) {
+function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
+  // 🔑 **אותה פונקציה בדיוק שמסך-הלקוחות משתמש בה** (`needsSatisfactionAttention`,
+  // `src/lib/customers.js`) ולא תנאי מקומי: הסף חי עכשיו בשורה אחת במסד, והכלל שמפרש
+  // אותו חייב לחיות בפונקציה אחת — אחרת מ2 ומ8 יסטו ביום שהסף ישתנה.
+  const needsClarification = needsSatisfactionAttention(
+    entry.score?.score ?? null,
+    satisfactionThreshold,
+  )
   const { row } = entry
   const locked = tab === 'finished'
   const label = PROJECT_STATUS_LABELS[row.project_status]
@@ -878,7 +908,7 @@ function FinanceRow({ entry, tab, onOpen }) {
       aria-label={`${row.event_name}, פתיחת חלון סגירת-תיק${locked ? ' (נעול-לעיון)' : ''}`}
       className={cn(
         'cursor-pointer focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-inset focus-visible:outline-none',
-        isActionable(entry) && 'bg-amber-50',
+        isActionable(entry, satisfactionThreshold) && 'bg-amber-50',
       )}
       data-testid={`finance-row-${row.project_id}`}
     >
@@ -903,7 +933,7 @@ function FinanceRow({ entry, tab, onOpen }) {
         )}
         {/* אותו תנאי בדיוק כמו `isActionable` — הרקע והשורה מספרים סיפור אחד, ותיק
             מארוכב אינו מבקש בירור שכבר נעשה כתנאי לארכובו. */}
-        {!row.archived_at && entry.score !== null && entry.score.score < 3 && (
+        {!row.archived_at && needsClarification && (
           <div className="mt-0.5 text-[11.5px] font-semibold text-amber-700">
             ⚠ ציון-משוב <Ltr>{String(entry.score.score)}</Ltr> — נדרש בירור טלפוני
           </div>

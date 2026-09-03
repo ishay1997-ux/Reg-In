@@ -22,7 +22,6 @@ import {
   quoteToFormState,
   computeEventHours,
   crossesMidnight,
-  EXPIRING_SOON_DAYS,
   quoteToPdfModel,
   MANUAL_REJECTION_REASONS,
   NON_LOSS_REJECTION_REASONS,
@@ -490,8 +489,16 @@ describe('deriveQuoteAmount — הסכום בשורת-הטבלה', () => {
 })
 
 describe('deriveQuoteExpiry — "פג בעוד N יום" (F4: נספר מ-updated_at)', () => {
+  // 🔄 סף "פג בקרוב" ירד מקבוע-קוד לשורת-`params` `ימי_אזהרה_הצעה_פגה` (מודול 9 · צעד 2.3)
+  // והוא הארגומנט הרביעי. **מחרוזת** — `param_value` הוא `text` במסד.
+  const WARNING_DAYS = '7'
+
+  it('שם-הפרמטר נעול כאן — תו אחד שגוי מחזיר שורה ריקה בלי שום שגיאה', () => {
+    expect(QUOTE_SCREEN_PARAM_NAMES.expiringSoonDays).toBe('ימי_אזהרה_הצעה_פגה')
+  })
+
   it('הצעה שעודכנה היום פגה בעוד מלוא ימי-התוקף', () => {
-    const exp = deriveQuoteExpiry(quoteRow(), 30, '2026-07-29')
+    const exp = deriveQuoteExpiry(quoteRow(), 30, '2026-07-29', WARNING_DAYS)
     expect(exp.expiryDate).toBe('2026-08-28')
     expect(exp.daysLeft).toBe(30)
     expect(exp.isExpiringSoon).toBe(false)
@@ -499,25 +506,47 @@ describe('deriveQuoteExpiry — "פג בעוד N יום" (F4: נספר מ-update
 
   it('נשארו 5 ימים ⇒ נכנסת ל"פג בקרוב" (סף LOCAL-4 = 7)', () => {
     const row = quoteRow({ updated_at: '2026-07-04T09:00:00.000Z' })
-    const exp = deriveQuoteExpiry(row, 30, '2026-07-29')
+    const exp = deriveQuoteExpiry(row, 30, '2026-07-29', WARNING_DAYS)
     expect(exp.daysLeft).toBe(5)
     expect(exp.isExpiringSoon).toBe(true)
   })
 
   it('בדיוק 7 ימים עדיין "פג בקרוב" — הסף כולל', () => {
     const row = quoteRow({ updated_at: '2026-07-06T09:00:00.000Z' })
-    const exp = deriveQuoteExpiry(row, 30, '2026-07-29')
-    expect(exp.daysLeft).toBe(EXPIRING_SOON_DAYS)
+    const exp = deriveQuoteExpiry(row, 30, '2026-07-29', WARNING_DAYS)
+    expect(exp.daysLeft).toBe(7)
     expect(exp.isExpiringSoon).toBe(true)
   })
 
+  // 🔬 בדיקת-המוטציה של צעד 2.3: אותה הצעה ואותו "היום" בדיוק, סף-אזהרה אחר ⇒ תשובה
+  // אחרת. אילו המימוש היה ממשיך לקרוא 7 מהקוד, שתי השורות היו זהות.
+  it('נשארו 5 ימים: סף 7 ⇒ "פג בקרוב", סף 3 ⇒ לא', () => {
+    const row = quoteRow({ updated_at: '2026-07-04T09:00:00.000Z' })
+    expect(deriveQuoteExpiry(row, 30, '2026-07-29', '7').isExpiringSoon).toBe(true)
+    expect(deriveQuoteExpiry(row, 30, '2026-07-29', '3').isExpiringSoon).toBe(false)
+  })
+
+  // 🔴 סף-אזהרה חסר ⇒ ההתראה שותקת, אך התאריך ומספר-הימים **עדיין נכונים ומוצגים**.
+  it('סף-אזהרה חסר ⇒ isExpiringSoon=false, בלי נפילה חזרה ל-7 ובלי לאבד את התאריך', () => {
+    const row = quoteRow({ updated_at: '2026-07-04T09:00:00.000Z' })
+    for (const bad of [undefined, null, '', '   ']) {
+      const exp = deriveQuoteExpiry(row, 30, '2026-07-29', bad)
+      expect(exp.daysLeft).toBe(5)
+      expect(exp.isExpiringSoon).toBe(false)
+    }
+  })
+
   it('הצעה סגורה (מאושרת/נדחתה) אינה פגה ⇒ null', () => {
-    expect(deriveQuoteExpiry(quoteRow({ quote_status: 'approved' }), 30, '2026-07-29')).toBeNull()
-    expect(deriveQuoteExpiry(quoteRow({ quote_status: 'rejected' }), 30, '2026-07-29')).toBeNull()
+    expect(
+      deriveQuoteExpiry(quoteRow({ quote_status: 'approved' }), 30, '2026-07-29', WARNING_DAYS),
+    ).toBeNull()
+    expect(
+      deriveQuoteExpiry(quoteRow({ quote_status: 'rejected' }), 30, '2026-07-29', WARNING_DAYS),
+    ).toBeNull()
   })
 
   it('ימי-תוקף שלא נטענו ⇒ null, ולא ספירה לפי 30 מומצא', () => {
-    expect(deriveQuoteExpiry(quoteRow(), null, '2026-07-29')).toBeNull()
+    expect(deriveQuoteExpiry(quoteRow(), null, '2026-07-29', WARNING_DAYS)).toBeNull()
   })
 })
 
@@ -625,7 +654,13 @@ describe('countRejectionReasons — פילוח הסיבות בלשונית "נד
 })
 
 describe('matchesQuoteFilters — סינון צד-לקוח', () => {
-  const CTX = { todayIso: '2026-07-29', validityDays: 30, eventWarningDays: 14 }
+  const CTX = {
+    todayIso: '2026-07-29',
+    validityDays: 30,
+    eventWarningDays: 14,
+    // 🆕 סף "פג בקרוב" עובר עכשיו ב-`ctx` (מודול 9 · צעד 2.3) — בלעדיו המסנן שותק.
+    expiringSoonDays: '7',
+  }
 
   it('חיפוש חופשי תופס שם-אירוע וגם שם-לקוח', () => {
     expect(matchesQuoteFilters(quoteRow(), { text: 'כנס' }, CTX)).toBe(true)
@@ -845,35 +880,95 @@ describe('QUOTE_SCREEN_PARAM_NAMES — שם תבנית-המייל', () => {
 })
 
 describe('missingPricingParamsMessage — האזהרה על פרמטר-מערכת חסר', () => {
-  it('שותקת כששני הפרמטרים קיימים', () => {
-    expect(missingPricingParamsMessage({ vatRate: 18, validityDays: '30' })).toBe('')
+  it('שותקת כשארבעת הפרמטרים קיימים', () => {
+    expect(
+      missingPricingParamsMessage({
+        vatRate: 18,
+        validityDays: '30',
+        expiringSoonDays: '7',
+        eventWarningDays: '14',
+      }),
+    ).toBe('')
   })
 
   it('מע"מ חסר — נוקבת בשם הפרמטר ובהשלכה', () => {
-    const msg = missingPricingParamsMessage({ vatRate: null, validityDays: '30' })
+    const msg = missingPricingParamsMessage({
+      vatRate: null,
+      validityDays: '30',
+      expiringSoonDays: '7',
+      eventWarningDays: '14',
+    })
     expect(msg).toContain('אחוז_מעמ')
     expect(msg).toContain('לא ניתן להפיק מסמכים ללקוחות')
     expect(msg).not.toContain('ימי_תוקף_הצעה')
   })
 
   it('ימי-תוקף חסרים — ההשלכה היא שהצעות אינן פגות', () => {
-    const msg = missingPricingParamsMessage({ vatRate: 18, validityDays: undefined })
+    const msg = missingPricingParamsMessage({
+      vatRate: 18,
+      validityDays: undefined,
+      expiringSoonDays: '7',
+      eventWarningDays: '14',
+    })
     expect(msg).toContain('ימי_תוקף_הצעה')
     expect(msg).toContain('הצעות אינן פגות אוטומטית')
     expect(msg).not.toContain('אחוז_מעמ')
   })
 
-  it('שניהם חסרים — לשון רבים ושתי ההשלכות', () => {
+  it('כולם חסרים — לשון רבים וכל ארבע ההשלכות', () => {
     const msg = missingPricingParamsMessage({})
     expect(msg).toContain('חסרים פרמטרי מערכת')
     expect(msg).toContain('אחוז_מעמ')
     expect(msg).toContain('ימי_תוקף_הצעה')
+    expect(msg).toContain('ימי_אזהרה_הצעה_פגה')
+    expect(msg).toContain('ימי_אזהרה_קדם_אירוע')
+  })
+
+  // 🔴 שני הפרמטרים שנוספו לבאנר 03/09/2026 (ממצא F-6 באודיט-הסגירה של מ9). שניהם נגזרים
+  // ל-`false` כשהם חסרים — כלומר השבב מציג 0 והמסך **נראה תקין**. בלי הבדיקות האלה אין שום
+  // דבר שמונע מהם ליפול שוב מהבאנר בעריכה עתידית.
+  it('ימי-אזהרה-הצעה-פגה חסר — ההשלכה היא שאין התראה על הצעות שעומדות לפוג', () => {
+    const msg = missingPricingParamsMessage({
+      vatRate: 18,
+      validityDays: '30',
+      expiringSoonDays: null,
+      eventWarningDays: '14',
+    })
+    expect(msg).toContain('ימי_אזהרה_הצעה_פגה')
+    expect(msg).toContain('אין התראה על הצעות שעומדות לפוג')
+    expect(msg).not.toContain('אחוז_מעמ')
+  })
+
+  it('ימי-אזהרה-קדם-אירוע חסר — ההשלכה היא שאין התראה על אירועים קרובים', () => {
+    const msg = missingPricingParamsMessage({
+      vatRate: 18,
+      validityDays: '30',
+      expiringSoonDays: '7',
+      eventWarningDays: undefined,
+    })
+    expect(msg).toContain('ימי_אזהרה_קדם_אירוע')
+    expect(msg).toContain('אין התראה על אירועים קרובים')
+    expect(msg).not.toContain('ימי_תוקף_הצעה')
   })
 
   // "ריק אינו 0": מחרוזת ריקה היא שורה שנשמרה ריקה, לא הגדרה תקינה של אפס.
   it('מחרוזת ריקה נחשבת חסרה, ו-0 נחשב ערך קיים', () => {
-    expect(missingPricingParamsMessage({ vatRate: '', validityDays: '30' })).toContain('אחוז_מעמ')
-    expect(missingPricingParamsMessage({ vatRate: 0, validityDays: '30' })).toBe('')
+    expect(
+      missingPricingParamsMessage({
+        vatRate: '',
+        validityDays: '30',
+        expiringSoonDays: '7',
+        eventWarningDays: '14',
+      }),
+    ).toContain('אחוז_מעמ')
+    expect(
+      missingPricingParamsMessage({
+        vatRate: 0,
+        validityDays: '30',
+        expiringSoonDays: '7',
+        eventWarningDays: '14',
+      }),
+    ).toBe('')
   })
 })
 

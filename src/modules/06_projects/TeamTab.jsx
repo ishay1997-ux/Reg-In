@@ -11,7 +11,7 @@
 //   במודול 'פרויקטים' ⇒ למנהלת כספים/לוגיסטיקה הטבלה מקבלת מצב-ריק מוצהר-הרשאה (⑧-8ב),
 //   לעולם לא טבלה ריקה בשקט. המונים באריחים ממשיכים להגיע משורת מבט-העל (RPC מוגדר).
 // · **המשפט האדום היחיד**: המילים נושאות אותו בלי הצבע (§3.4) — הנוסח המאושר למקרה
-//   שכל הזימונים הפתוחים פגו (48 שעות, isInviteExpired), נגזר חי ולא מועתק.
+//   שכל הזימונים הפתוחים פגו (`שעות_תוקף_זימון` ב-`params`, isInviteExpired), נגזר חי ולא מועתק.
 // · **בבוטל אין חוסר ואין אדום** — ביטול הוא מצב-סיום תקין; כל השיבוצים שוחררו אוטומטית.
 //
 // 🚫 ובמכוון אין כאן (רשימת-ההדרה של המוקאפ): כפתור הפעולה הראשית של הכרטיס · מדד
@@ -32,6 +32,7 @@ import { formatDate, formatTimestamp, formatTimestampFull } from '@/lib/dates'
 import {
   ASSIGNMENT_STATUS_LABELS,
   COMPLETED_ASSIGNMENT_LABEL,
+  HOSTESS_PARAM_NAMES,
   assignmentDisplayStatus,
   countAssignmentStates,
   eventStartInstant,
@@ -39,6 +40,7 @@ import {
   inviteHoursLeft,
   isInviteExpired,
 } from '@/lib/hostesses'
+import { getParamValues } from '@/api/params'
 import { CANCEL_TYPE_LABELS } from '@/lib/projectCard'
 import {
   CANCELLED_SCOPE_REASON,
@@ -67,6 +69,13 @@ import { getProjectAssignments, getProjectChanges } from './api'
 // אותה חסימת-מצב כמו כפתורי שינוי-התכולה האחרים: אחרי האירוע שינויים מוזנים בלשונית
 // הסגירה (㉔); אחרי הסגירה התפעולית ה-RPC מסרב (㉙) והכפתור מנומק בחותמת.
 const POST_EVENT_STATUSES = ['event_finished', 'awaiting_invoice', 'awaiting_payment', 'finished']
+
+// 🔄 סף-תוקף-הזימון ירד מקבוע-קוד ל-`params` (מודול 9 · צעד 2.3). **מודול 6 לא החזיק טוען-
+// פרמטרים שמשרת את הלשונית הזו** (שני הטוענים שלו משרתים ביטול וסגירה), ולכן היא טוענת
+// אותו בעצמה דרך הקורא המשותף. 🔴 ‏`getParamValues` **זורקת** על שורה חסרה, והכשל נוחת
+// במצב-השגיאה המפורש של הלשונית — ולא הופך בשקט כל זימון פג ל"ממתינה למענה", שהוא בדיוק
+// המצב שהמשפט-האדום של המסך קיים בשבילו.
+const TEAM_PARAM_NAMES = [HOSTESS_PARAM_NAMES.inviteValidityHours]
 const SCOPE_BLOCKED_TITLE = "אחרי האירוע, שינויים מוזנים בלשונית 'סגירת אירוע'"
 
 export default function TeamTab({
@@ -82,6 +91,7 @@ export default function TeamTab({
   const [error, setError] = useState(null)
   const [rows, setRows] = useState([])
   const [changes, setChanges] = useState([])
+  const [inviteValidityHours, setInviteValidityHours] = useState(null)
   const [now, setNow] = useState(() => new Date().toISOString())
   const [historyOpen, setHistoryOpen] = useState(false)
   const [reloadTick, setReloadTick] = useState(0)
@@ -98,11 +108,13 @@ export default function TeamTab({
         // מי שחסומה על 'דיילות' אינה קוראת שיבוצים בכלל — קריאה חסומה הייתה חוזרת []
         // בלי שגיאה ונקראת בטעות "טרם נשלח זימון"; ההיסטוריה של השינויים ('פרויקטים')
         // נקראת לכולן.
-        const [assignmentRows, changeRows] = await Promise.all([
+        const [assignmentRows, changeRows, params] = await Promise.all([
           canReadHostesses ? getProjectAssignments(projectId) : Promise.resolve([]),
           getProjectChanges(projectId),
+          getParamValues(TEAM_PARAM_NAMES),
         ])
         if (cancelled) return
+        setInviteValidityHours(params[HOSTESS_PARAM_NAMES.inviteValidityHours])
         // 'הושלם' נגזר מאושרה-סופית + אירוע שעבר — הנגזרת צריכה את רגע-האירוע על השורה
         // (החוזה של assignmentDisplayStatus), והוא מוצמד כאן פעם אחת לכולן.
         const startsAt = eventStartInstant(project?.final_event_date, project?.final_start_time)
@@ -153,7 +165,7 @@ export default function TeamTab({
   }
 
   const finalRows = finalAssignmentRows(rows)
-  const counts = countAssignmentStates(rows, now)
+  const counts = countAssignmentStates(rows, now, inviteValidityHours)
   const required = Number(project?.required_hostess_count) || 0
   // מונה-המאושרות: מהשורות כשהן קריאות, אחרת משורת מבט-העל — ה-RPC המוגדר קריא לכל תפקיד.
   const confirmed = canReadHostesses
@@ -179,7 +191,9 @@ export default function TeamTab({
   }
 
   const noInvites = canReadHostesses && rows.length === 0
-  const headline = canReadHostesses ? teamHeadline({ gap, pendingLive, pendingExpired }) : null
+  const headline = canReadHostesses
+    ? teamHeadline({ gap, pendingLive, pendingExpired, validityHours: inviteValidityHours })
+    : null
 
   return (
     <div className="pt-3" data-testid="team-tab">
@@ -261,7 +275,7 @@ export default function TeamTab({
           testId="team-state-no-invites"
         />
       ) : (
-        <MainTable finalRows={finalRows} now={now} />
+        <MainTable finalRows={finalRows} now={now} inviteValidityHours={inviteValidityHours} />
       )}
 
       {/* ── שינויי-תכולה בכמות הדיילות — יושבים איפה שהתוצאה שלהם נראית ── */}
@@ -335,7 +349,7 @@ function ActionsBar({ project, canEdit, canReadHostesses, onScopeChange, showSor
 }
 
 // הטבלה הראשית: שורה אחת פר-דיילת (הקיפול), 4 עמודות. "מה זה אומר" — משפט, לעולם לא ציון.
-function MainTable({ finalRows, now }) {
+function MainTable({ finalRows, now, inviteValidityHours }) {
   const sorted = sortTeamRows(finalRows)
   return (
     <table className="w-full border-collapse text-sm" data-testid="team-table">
@@ -349,16 +363,18 @@ function MainTable({ finalRows, now }) {
       </thead>
       <tbody>
         {sorted.map((row) => {
-          const displayLabel = assignmentDisplayStatus(row, now)
-          const expired = isInviteExpired(row, now)
+          const displayLabel = assignmentDisplayStatus(row, now, inviteValidityHours)
+          const expired = isInviteExpired(row, now, inviteValidityHours)
           const meaning = assignmentMeaning({
             status: row.assignment_status,
             expired,
             completed: displayLabel === COMPLETED_ASSIGNMENT_LABEL,
             isShiftLead: Boolean(row.is_shift_lead),
             daysWithoutAnswer: expired ? daysWithoutAnswer(row.invite_sent_at, now) : null,
-            expiredOnText: expired ? inviteExpiryText(row.invite_sent_at) : null,
-            hoursLeft: inviteHoursLeft(row, now),
+            expiredOnText: expired
+              ? inviteExpiryText(row.invite_sent_at, inviteValidityHours)
+              : null,
+            hoursLeft: inviteHoursLeft(row, now, inviteValidityHours),
           })
           return (
             <tr

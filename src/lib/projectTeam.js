@@ -6,7 +6,7 @@
 // כאן חי מה שהלשונית מוסיפה מעליהן: עמודת "מה זה אומר" (משפט, לעולם לא ציון — §1.8),
 // המשפט-האדום-היחיד של המסך, וסדר "בפנים · פתוח · יצא".
 
-import { INVITE_VALIDITY_HOURS } from '@/lib/hostesses'
+import { optionalNumber } from '@/lib/hostesses'
 import { formatTimestamp } from '@/lib/dates'
 
 // ── המחרוזות הנעולות של הלשונית ──────────────────────────────────────────────
@@ -73,7 +73,12 @@ export function assignmentMeaning({
 // ── המשפט-האדום-היחיד של המסך ────────────────────────────────────────────────
 // המילים נושאות אותו גם בלי הצבע (§3.4). המקרה החי (#8: כל הזימונים הפתוחים פגו) הוא
 // הנוסח המאושר מילה-במילה; שאר הענפים נגזרו — `הנחתי`. אין חוסר ⇒ null ("לא בכוח").
-export function teamHeadline({ gap, pendingLive = 0, pendingExpired = 0 } = {}) {
+// 🔴 **`validityHours` הוא ארגומנט ולא `48` במחרוזת** (אודיט-סגירת מ9, 03/09/2026):
+// `שעות_תוקף_זימון` ירד ל-`params` בצעד 2.3, ו-`isInviteExpired` — שממנו נגזר `pendingExpired`
+// שכאן — כבר קורא את הסף החי. רק המשפט נשאר קפוא, כלומר הלשונית הייתה סופרת לפי 12 ומסבירה
+// לפי 48. ⚠️ סף חסר ⇒ המשפט נאמר **בלי המספר**, לא עם `null` ("לא בכוח"): הענף הזה
+// אינו נגיש בפועל — `pendingExpired>0` מחייב סף — והוא כאן כדי שלא תיווצר דרך חדשה לרנדר ריק.
+export function teamHeadline({ gap, pendingLive = 0, pendingExpired = 0, validityHours } = {}) {
   const missing = Number(gap) || 0
   if (missing <= 0) return null
   const lead = missing === 1 ? '⚠ חסרה דיילת אחת' : `⚠ חסרות ${missing} דיילות`
@@ -84,9 +89,11 @@ export function teamHeadline({ gap, pendingLive = 0, pendingExpired = 0 } = {}) 
         : pendingExpired === 2
           ? 'שני הזימונים הפתוחים פגו'
           : `${pendingExpired} הזימונים הפתוחים פגו`
+    const hours = optionalNumber(validityHours)
+    const after = hours === null ? '' : ` אחרי ${hours} שעות`
     return {
       lead,
-      rest: `— ${opening} אחרי 48 שעות, כלומר אין קישור חי: גם דיילת שתרצה לאשר עכשיו לא תוכל. הפעולה הבאה היא זימון חדש, לא המתנה.`,
+      rest: `— ${opening}${after}, כלומר אין קישור חי: גם דיילת שתרצה לאשר עכשיו לא תוכל. הפעולה הבאה היא זימון חדש, לא המתנה.`,
     }
   }
   if (pendingLive > 0) {
@@ -139,11 +146,15 @@ export function isMutedTeamRow(status) {
   return status === 'released' || status === 'approval_withdrawn'
 }
 
-// רגע-התפוגה של זימון: invite_sent_at + 48 שעות, בפורמט DD/MM HH:MM (שעון ישראל).
-export function inviteExpiryText(inviteSentAt) {
+// רגע-התפוגה של זימון: invite_sent_at + `שעות_תוקף_זימון`, בפורמט DD/MM HH:MM (שעון ישראל).
+// 🔄 הסף ירד מקבוע-קוד ל-`params` (מודול 9 · צעד 2.3) ומוזרק כפרמטר, כמו "עכשיו" שמעליו.
+// ⚠️ סף חסר ⇒ `null` ולא חותמת מומצאת: הלשונית מציגה את המשפט בלי רגע-התפוגה, ולעולם
+// לא שעה שהמערכת בדתה. הצעקה על פרמטר חסר יושבת ב-`getParamValues` (`src/api/params.js`).
+export function inviteExpiryText(inviteSentAt, validityHours) {
   const sent = Date.parse(inviteSentAt ?? '')
-  if (Number.isNaN(sent)) return null
-  return formatTimestamp(new Date(sent + INVITE_VALIDITY_HOURS * 3_600_000).toISOString())
+  const hours = optionalNumber(validityHours)
+  if (Number.isNaN(sent) || hours === null) return null
+  return formatTimestamp(new Date(sent + hours * 3_600_000).toISOString())
 }
 
 // "4 ימים ללא מענה" — ימים שלמים מרגע-השליחה ועד עכשיו.

@@ -8,6 +8,9 @@ import { supabase } from '@/supabaseClient'
 // הוא מה שמניע כאן את זרימת-הכפילות §7.11 (‏23505 = הפרת-unique על ח"פ) ב-step 3.2.
 import { toError, assertRowsAffected } from '@/lib/apiError'
 import { DORMANT_THRESHOLD_PARAM_NAME } from '@/lib/customerProjects'
+import { SATISFACTION_THRESHOLD_PARAM_NAME } from '@/lib/customers'
+// הקורא המשותף שצועק על שורה חסרה (מ9, צעד 2.3) — ר' ההערה מעל `getCustomerScreenParams`.
+import { getParamValues } from '@/api/params'
 // 🔁 אתר-הקריאה היחיד ל-`list_project_changes` במערכת חי במודול 6 (‏`src/modules/06_projects/CLAUDE.md`:
 // *"הקריאה היחידה: `rpc('list_project_changes')`"*). מודול 2 **צורך** אותו ולא משכפל אותו —
 // שכפול היה מייצר שתי גרסאות של שער-הכסף המסוכך (`money_visible`). ר' `attachProjectChanges`.
@@ -129,16 +132,28 @@ export async function listProjectsForCustomerMetrics() {
   return data ?? []
 }
 
-// הפרמטר היחיד שמשטח-8 ולשונית-הלקוחות (A3) צריכים מ-params ואינו בין שלושת פרמטרי-מסך-
+// הפרמטרים שמשטח-8 ולשונית-הלקוחות (A3) צריכים מ-params ואינם בין שלושת פרמטרי-מסך-
 // ההצעות של getQuoteScreenParams (03_quotes/api.js) — לכן שאילתה נפרדת, לא הרחבת הקיימת
 // (שם היא מוגדרת-במפורש לשלושת השדות של מסך-ההצעות, ולא בית חוקי לפרמטר של מודול 2/6).
+// 🆕 `סף_שביעות_רצון` הצטרף במודול 9 (צעד 2.3), כשהסף של "טעון בירור" ירד מקבוע-קוד
+// ב-`src/lib/customers.js` לשורה במסד — הוא נטען כאן ולא בשאילתה שנייה, כי המסך שצריך
+// אותו הוא בדיוק המסך שכבר טוען את סף-הרדימות.
+// 🔴 **צועקת על שורה חסרה, ואינה מחזירה מפה חלקית** — תוקן 03/09/2026 באודיט-הסגירה של מ9
+// (ממצא F-7). עד אז השאילתה בדקה `error` בלבד והחזירה את מה שחזר; שורה שנמחקה מ-`params`
+// הייתה מגיעה למסך כ-`undefined`, `needsSatisfactionAttention` היה נגזר ל-`false` לכל לקוח,
+// והתגית "טעון בירור" הייתה **נעלמת מכל השורות בלי שום סימן** — כולל המסנן, שהיה מחזיר רשימה
+// ריקה שנקראת כ"אין למי להתקשר". ⚠️ **וההערה ב-`customers.js` הצהירה שהצעקה יושבת
+// ב-`getParamValues` — היא פשוט לא הייתה במסלול הזה.** עכשיו היא כן: הקריאה עוברת דרך
+// הקורא המשותף, שמאמת שכל שם שביקשנו חזר עם ערך לא-ריק ומפיל בעברית את מי שחסר.
+// 🔁 **זהו שינוי-התנהגות במסלול-כשל, לא תיקון-באג**: לפני כן המסך היה נטען עם אינדיקטור מת,
+// עכשיו הוא נוחת במצב-שגיאה מוצהר. זו הדוקטרינה של `src/CLAUDE.md` §4.3 ושל כל מסך-אח.
 export async function getCustomerScreenParams() {
-  const { data, error } = await supabase
-    .from('params')
-    .select('param_name, param_value')
-    .in('param_name', [DORMANT_THRESHOLD_PARAM_NAME])
-  if (error) throw toError(error, 'שגיאה בטעינת הגדרות המסך.')
-  return data ?? []
+  const values = await getParamValues([
+    DORMANT_THRESHOLD_PARAM_NAME,
+    SATISFACTION_THRESHOLD_PARAM_NAME,
+  ])
+  // צורת-ההחזרה נשמרת (מערך שורות) כדי שאתר-הקריאה במסך לא ישתנה.
+  return Object.entries(values).map(([param_name, param_value]) => ({ param_name, param_value }))
 }
 
 // הלקוחות המאושרים-לדיוור **וגם** הפעילים — קהל-היעד של אזור-השיווק (step 3.5). מחזיר שורות מלאות

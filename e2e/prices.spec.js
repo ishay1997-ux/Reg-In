@@ -167,7 +167,13 @@ test.describe('מנכ"ל — הקטלוג נטען ונערך (4.3)', () => {
   })
 })
 
-test.describe('פרמטרי-תמחור: שמירה ווולידציה (4.3b ②)', () => {
+// 🔀 **הועבר ללשונית "פרמטרים" ב-02/09/2026 (מודול 9, Q-1 — הכרעת-ישי).** ‏`PricingParamsCard`
+// הוסר מלשונית "מחירים", ושני הפרמטרים (`אחוז_מעמ` · `יחס_אורחים_לדיילת`) חיים עכשיו
+// ב-`/system/params` (מנכ"ל) וב-"ההגדרות שלי" (הבעלים). **הכיסוי לא רוכך ולא נמחק** — הוא
+// מצביע למסך שבו הפרמטרים באמת נערכים היום, במזהי `settings-` (המרחב `param-*`/`params-*`
+// מת יחד עם הכרטיס). החבילה נשארת כאן כי הטענה עצמה היא של §7.84 ("מי עורך את שני
+// הפרמטרים האלה"), ולא של מודול 9 — `e2e/settings.spec.js` מכסה את המסך עצמו.
+test.describe('פרמטרי-תמחור: שמירה ווולידציה (4.3b ②, הועבר ללשונית "פרמטרים")', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
 
   test.beforeEach(async ({ page }) => {
@@ -175,8 +181,8 @@ test.describe('פרמטרי-תמחור: שמירה ווולידציה (4.3b ②)
   })
 
   test('שמירת שני הפרמטרים יחד יוצאת עם השם והערך הנכונים (§7.84)', async ({ page }) => {
-    // 🔴 פער ② (4.3b): `param-vat` מכוסה פעם אחת בלבד, לקריאה-בלבד, בתוך `smoke.spec.js`.
-    // `param-ratio` ו-`params-save` אינם מכוסים כלל. מע"מ שבור מדפיס ללקוח "מע"מ (0%)" בלי
+    // 🔴 פער ② (4.3b): שדה-המע"מ היה מכוסה פעם אחת בלבד, לקריאה-בלבד, בתוך `smoke.spec.js`;
+    // שדה-היחס וכפתור-השמירה לא היו מכוסים כלל. מע"מ שבור מדפיס ללקוח "מע"מ (0%)" בלי
     // שגיאה (שומר-המע"מ, `03_quotes/CLAUDE.md`) — בדיוק הכשל שסבב A נבנה כדי לעצור.
     const sent = []
     await page.route('**/rest/v1/params?*', async (route) => {
@@ -190,17 +196,19 @@ test.describe('פרמטרי-תמחור: שמירה ווולידציה (4.3b ②)
       })
     })
 
-    await page.goto('/system/prices')
-    await expect(page.getByTestId('param-vat')).toBeVisible({ timeout: 30_000 })
+    // שני הפרמטרים יושבים בקבוצה `pricing_timing`, שהיא הקבוצה הפעילה בעלייה ⇒ שמירה
+    // אחת של הקבוצה מכסה את שניהם, בדיוק כמו ששני ה-upsert של הכרטיס הישן עשו.
+    await page.goto('/system/params')
+    await expect(page.getByTestId('settings-value-אחוז_מעמ')).toBeVisible({ timeout: 30_000 })
 
-    await page.getByTestId('param-vat').fill('17')
-    await page.getByTestId('param-ratio').fill('60')
-    await page.getByTestId('params-save').click()
+    await page.getByTestId('settings-value-אחוז_מעמ').fill('17')
+    await page.getByTestId('settings-value-יחס_אורחים_לדיילת').fill('60')
+    await page.getByTestId('settings-save-button').click()
 
-    await expect(page.getByTestId('params-save-success')).toBeVisible()
+    await expect(page.getByTestId('toast-success')).toHaveText('ההגדרות נשמרו')
     expect(sent).toHaveLength(2)
-    // שני ה-upsert רצים ברצף (לא מקבילית — ר' `PricingParamsCard.jsx`), ולכן שני מזהי-השם
-    // ב-URL, לא בגוף (‏`updatePricingParam` שולח רק `param_value`, השם הוא ה-`.eq()` שבשאילתה).
+    // הכתיבות רצות ברצף שורה-שורה (`useParamsForm.submit`), ולכן שני מזהי-השם ב-URL
+    // ולא בגוף (‏`updateParams` שולחת רק `param_value`; השם הוא ה-`.eq()` שבשאילתה).
     const vatWrite = sent.find((s) => s.url.includes('אחוז_מעמ'))
     const ratioWrite = sent.find((s) => s.url.includes('יחס_אורחים_לדיילת'))
     expect(vatWrite?.body.param_value).toBe('17')
@@ -216,16 +224,23 @@ test.describe('פרמטרי-תמחור: שמירה ווולידציה (4.3b ②)
       await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
     })
 
-    await page.goto('/system/prices')
-    await expect(page.getByTestId('param-ratio')).toBeVisible({ timeout: 30_000 })
+    await page.goto('/system/params')
+    await expect(page.getByTestId('settings-value-יחס_אורחים_לדיילת')).toBeVisible({
+      timeout: 30_000,
+    })
 
-    // `isValidGuestsRatio` (`src/lib/validators.js`) דורש `n > 0` בדיוק — 0 הוא ערך-הגבול
-    // האמיתי שנכשל (`0 מחלק-באפס ב-recommendHostessCount`), לא ערך-שרירותי שנראה לא-תקין.
-    await page.getByTestId('param-ratio').fill('0')
-    await page.getByTestId('params-save').click()
+    // `isValidPositiveInt` (`src/lib/validators.js`, דרך קינד `int` במרשם) דורש `n > 0`
+    // בדיוק — 0 הוא ערך-הגבול האמיתי שנכשל (`0 מחלק-באפס ב-recommendHostessCount`),
+    // לא ערך-שרירותי שנראה לא-תקין.
+    await page.getByTestId('settings-value-יחס_אורחים_לדיילת').fill('0')
 
-    await expect(page.getByTestId('param-ratio-error')).toBeVisible()
-    await expect(page.getByTestId('params-save-success')).toHaveCount(0)
+    // 🔀 הבדל-צורה מהכרטיס הישן, לא ריכוך: שם השגיאה הופיעה **אחרי** לחיצה על "שמור";
+    // כאן היא מוצגת מיד, וכפתור-השמירה עצמו מנוטרל — כלומר המסלול חסום בשלב מוקדם יותר.
+    await expect(page.locator('[data-param="יחס_אורחים_לדיילת"]').getByRole('alert')).toHaveText(
+      'ערך חוקי: מספר שלם חיובי',
+    )
+    await expect(page.getByTestId('settings-save-button')).toBeDisabled()
+    await expect(page.getByTestId('toast-success')).toHaveCount(0)
     expect(sent).toHaveLength(0)
   })
 })

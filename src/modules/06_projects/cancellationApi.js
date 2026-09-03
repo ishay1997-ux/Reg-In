@@ -13,7 +13,8 @@ import { getEmailTemplate } from '@/api/email'
 
 // שלוש שורות-המדרג מ-`params` (נזרעו בצעד 1.7). מוחזרות כמפה param_name⇒param_value.
 // ⚠️ פרמטר שלא חוזר אינו מקבל ברירת-מחדל כאן — הדיאלוג מציג מצב-שגיאה במקום מספר מומצא
-// (אותה הכרעה בדיוק כמו `getQuoteScreenParams` ו-`getHostessScreenParams`).
+// (אותה הכרעה כמו `getQuoteScreenParams`; מ-02/09/2026, מודול 9, `getHostessScreenParams` הלך צעד
+// רחוק יותר ונכשל בקול כבר בטעינה דרך `getParamValues` — כאן הדיאלוג עדיין הוא שמציג את השגיאה).
 export async function getCancellationParams() {
   const { data, error } = await supabase
     .from('params')

@@ -14,12 +14,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import LogisticsPage from './LogisticsPage'
 import { listActiveProjects, listLogisticsRows, listProducts } from './api'
+import { getParamValues } from '@/api/params'
 
 vi.mock('./api', () => ({
   listActiveProjects: vi.fn(),
   listLogisticsRows: vi.fn(),
   listProducts: vi.fn(),
 }))
+
+// 🔄 סף-הענבר ירד ל-`params` (מודול 9 · צעד 2.3) והמסך טוען אותו בעצמו — הקורא המשותף
+// ממוקק כמו כל שאר ה-API. הערך `'10'` הוא **מחרוזת**, כפי שהמסד מחזיר (`param_value` הוא `text`).
+vi.mock('@/api/params', () => ({ getParamValues: vi.fn() }))
 
 // הדיאלוג הוא של צעד 3.2 — כאן נבדק **חוזה-האינטגרציה בלבד**: מי נפתח, ומה קורה בסגירה.
 vi.mock('./ChecklistDialog', () => ({
@@ -132,6 +137,7 @@ function queueOrder() {
 beforeEach(() => {
   vi.clearAllMocks()
   listProducts.mockResolvedValue(PRODUCTS)
+  getParamValues.mockResolvedValue({ סף_לוגיסטיקה_ימי_עסקים: '10' })
   loadBoard(board())
 })
 
@@ -213,6 +219,19 @@ describe('LogisticsPage — מצב ②: תקלת-טעינה', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'נסי שוב' }))
     expect(await screen.findByTestId('logistics-queue-table')).toBeInTheDocument()
+  })
+
+  // 🛡️ **"שומר שלא נצפה נכשל — אינו שומר"** (`src/CLAUDE.md`): הכשל מוחזר בכוונה כדי
+  // לראות את ההגנה צועקת. שורת-`params` חסרה **חייבת** לנחות במצב ② ולא לצייר תור לבן
+  // שנראה תקין — זה בדיוק "המסך משקר" שכרטיס-המסך נכתב נגדו.
+  it('🔴 שורת `סף_לוגיסטיקה_ימי_עסקים` חסרה ⇒ מצב ②, ולא תור בלי ענבר', async () => {
+    getParamValues.mockRejectedValueOnce(
+      new Error('הפרמטר "סף_לוגיסטיקה_ימי_עסקים" חסר בהגדרות המערכת.'),
+    )
+    render(<LogisticsPage />)
+
+    expect(await screen.findByText('לא ניתן לטעון את הנתונים.')).toBeInTheDocument()
+    expect(screen.queryByTestId('logistics-queue-table')).not.toBeInTheDocument()
   })
 })
 
@@ -524,6 +543,41 @@ describe('LogisticsPage — מקרא-הענבר נועל את שתי הסיבו�
     expect(legend.textContent).toContain('פריט פיזי טרם הוזמן')
     expect(legend.textContent).toContain('או: משלוח שתאריכו המובטח עבר וטרם הגיע.')
     expect(legend.textContent).toContain('אינה נספרת — הסף נגזר מזמן ייצור של דפוס.')
+  })
+
+  // 🔬 בדיקת-המוטציה של צעד 2.3: **שינוי השורה ב-`params` משנה את מה שכתוב על המסך.**
+  // אילו המספר היה נשאר קפוא בשתי המחרוזות, שני האתרים היו ממשיכים לומר "10" בעוד
+  // הצבע עצמו נקבע לפי 5 — כלומר המסך היה מסביר את עצמו לא נכון, בלי שום שגיאה.
+  it('🔬 סף 5 ב-`params` ⇒ המקרא **וגם** כיתוב-הגליף אומרים 5, לא 10', async () => {
+    getParamValues.mockResolvedValue({ סף_לוגיסטיקה_ימי_עסקים: '5' })
+    render(<LogisticsPage />)
+    await screen.findByTestId('logistics-queue-table')
+
+    const legend = screen.getByText(/שורה בענבר/).closest('div')
+    expect(legend.textContent).toContain('בתוך 5 ימי עסקים')
+    expect(legend.textContent).not.toContain('בתוך 10 ימי עסקים')
+
+    // ‏#107 הוא 8 ימי-עסקים ⇒ בסף 5 הוא כבר **אינו** בענבר, ולכן אין לו כיתוב-גליף
+    // כלל: הצבע והכיתוב זזו יחד, וזה בדיוק מה שהבדיקה נועלת.
+    expect(
+      screen.queryByTitle('פריט פיזי טרם הוזמן, והאירוע בתוך 5 ימי עסקים'),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByTitle('פריט פיזי טרם הוזמן, והאירוע בתוך 10 ימי עסקים'),
+    ).not.toBeInTheDocument()
+  })
+
+  // 🔬 והצד השני של אותה מוטציה: סף 12 **כן** מדליק את #107 (8 ימי-עסקים), והכיתוב
+  // נושא 12. בלי הזוג הזה, הבדיקה שמעליי הייתה מתיישבת גם עם "הגליף פשוט נעלם תמיד".
+  it('🔬 סף 12 ⇒ ‏#107 בענבר, וכיתוב-הגליף אומר 12', async () => {
+    getParamValues.mockResolvedValue({ סף_לוגיסטיקה_ימי_עסקים: '12' })
+    render(<LogisticsPage />)
+    await screen.findByTestId('logistics-queue-table')
+
+    const flagged = screen.getByTestId('logistics-row-107')
+    expect(
+      within(flagged).getByTitle('פריט פיזי טרם הוזמן, והאירוע בתוך 12 ימי עסקים'),
+    ).toBeInTheDocument()
   })
 })
 

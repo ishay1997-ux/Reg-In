@@ -3,9 +3,12 @@
 // לא-מחוברים ומוקפאים, וזו רמת ההגנה הנדרשת כאן).
 // טאבים מקומיים (state, לא Routes) - עמוד שטוח אחד, אין הבדל הרשאות בין הטאבים.
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/supabaseClient'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/components/ToastProvider'
+import LoadingOrError from '@/components/LoadingOrError'
+import { getNotificationPreferences, saveNotificationPreferences } from '@/modules/09_settings/api'
 import { CEO_ROLE_NAME } from '@/lib/constants'
 import { ISRAELI_MOBILE_REGEX, MIN_PASSWORD_LENGTH } from '@/lib/validators'
 import { Button } from '@/components/ui/button'
@@ -254,37 +257,97 @@ function SecuritySection({ user }) {
   )
 }
 
-// UI מקומי בלבד בשלב זה, לא מחובר ל-DB (אין עדיין טבלת העדפות) - ראו TODO ב-CLAUDE_CODE_LOG.md.
-// מנוטרל בכוונה (disabled) עד שהתכונה תפותח בפועל, כדי לא ליצור רושם מטעה שההעדפות האלו כבר פעילות.
+// מתג המייל חי מאז מודול 9 (טבלת notification_preferences, מיגרציה B, 02/09/2026) — נטען
+// ונשמר דרך src/modules/09_settings/api.js, בדיוק כמו כל שאר הכתיבה על הטבלה הזו (כלל ברזל 14).
+// שמירה נכשלת משחזרת את המתג למצבו הקודם ומציגה שגיאה, כדי שהוא לא יישאר "דלוק" כוזב מול
+// שורה שלא נכתבה (הכשל השקט המרכזי, src/CLAUDE.md). מתג ה-SMS נשאר disabled **לצמיתות**,
+// לא "עד שהתכונה תפותח" — אין כרגע ערוץ SMS במערכת (R-4), ולכן הוא תמיד כבוי ותמיד נשלח
+// כ-false בשמירה. שליחת המייל בפועל (מנוע-ההתראות) היא עדיין מודול 10 — טקסט-העזר אומר זאת
+// במפורש כדי שלא ייווצר רושם שהמייל כבר יוצא.
 function NotificationsSection() {
-  const [emailNewProjects, setEmailNewProjects] = useState(true)
-  const [smsLastMinuteChanges, setSmsLastMinuteChanges] = useState(true)
+  const toast = useToast()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [emailNewProjects, setEmailNewProjects] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [reloadTick, setReloadTick] = useState(0)
+
+  // ניסיון-חוזר אחרי כשל-טעינה - מדליק loading דרך handler (לחיצה על "נסה שוב"), לא בגוף
+  // ה-effect עצמו (react-hooks/set-state-in-effect; אותו דפוס כמו LogisticsPage.jsx).
+  const retry = useCallback(() => {
+    setLoading(true)
+    setError('')
+    setReloadTick((tick) => tick + 1)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const prefs = await getNotificationPreferences()
+        if (cancelled) return
+        setEmailNewProjects(prefs.emailNewProjects)
+      } catch (err) {
+        if (!cancelled) setError(err.message || 'לא ניתן לטעון את ההגדרות.')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [reloadTick])
+
+  async function handleEmailToggle(nextChecked) {
+    const previous = emailNewProjects
+    setEmailNewProjects(nextChecked) // אופטימי - התגובה למגע במתג חייבת להיות מיידית
+    setSaving(true)
+    try {
+      // מתג ה-SMS תמיד false (disabled, אין ערוץ) - נשלח מפורשות ולא נגזר מה-state הקודם.
+      await saveNotificationPreferences({ emailNewProjects: nextChecked, smsLastMinute: false })
+      toast.success('ההגדרות נשמרו')
+    } catch (err) {
+      setEmailNewProjects(previous) // שחזור בכשל - לא משאירים מצג-שווא של "נשמר"
+      toast.error(err.message || 'שמירת ההעדפה נכשלה.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading || error) {
+    return (
+      <LoadingOrError
+        loading={loading}
+        error={error}
+        onRetry={retry}
+        retryTestId="settings-notify-retry"
+      />
+    )
+  }
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-slate-800">
-            התראות מייל על פרויקטים חדשים <span className="text-xs text-slate-400">(בקרוב)</span>
-          </p>
+          <p className="text-sm font-medium text-slate-800">מייל על פרויקטים חדשים</p>
           <p className="text-xs text-slate-500">
-            קבלת הודעת דוא"ל בכל פעם שנפתח פרויקט חדש שרלוונטי אליך.
+            ההתראות עצמן יישלחו כשמנוע ההתראות יעלה (מודול 10)
           </p>
         </div>
-        <Switch checked={emailNewProjects} onCheckedChange={setEmailNewProjects} disabled />
+        <Switch
+          checked={emailNewProjects}
+          onCheckedChange={handleEmailToggle}
+          disabled={saving}
+          data-testid="settings-notify-email"
+        />
       </div>
 
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-slate-800">
-            התראות SMS על שינויי שיבוץ ברגע האחרון{' '}
-            <span className="text-xs text-slate-400">(בקרוב)</span>
-          </p>
-          <p className="text-xs text-slate-500">
-            קבלת מסרון כשיש שינוי דחוף בשיבוץ שלך קרוב לתאריך האירוע.
-          </p>
+          <p className="text-sm font-medium text-slate-800">SMS על שיבוץ ברגע האחרון</p>
+          <p className="text-xs text-slate-500">אין ערוץ SMS במערכת</p>
         </div>
-        <Switch checked={smsLastMinuteChanges} onCheckedChange={setSmsLastMinuteChanges} disabled />
+        <Switch checked={false} disabled data-testid="settings-notify-sms" />
       </div>
     </div>
   )

@@ -17,6 +17,12 @@ const ISRAEL_TIME_ZONE = 'Asia/Jerusalem'
 export const HOSTESS_PARAM_NAMES = {
   minHourlyWage: 'שכר_מינימום_שעתי',
   travelAmount: 'סכום_נסיעות_למשמרת',
+  // 🆕 מודול 9 (צעד 2.3): שלושת ספי-הזמן של הזימונים ירדו מקבועים בקוד לשורות ב-`params`,
+  // כדי שהמנכ"לית תוכל לשנות אותם ממסך-ההגדרות בלי מיגרציה. ‏`ALL_PARAM_NAMES`
+  // ב-`04_hostesses/api.js` נגזר מהמפה הזו ⇒ ההוספה כאן מספיקה, ואין לשכפל אותם שם.
+  inviteValidityHours: 'שעות_תוקף_זימון',
+  inviteCutoffHours: 'שעות_סף_זימון_לפני_אירוע',
+  urgentEventHours: 'שעות_אירוע_דחוף',
 }
 
 // אוצר-המילים הנעול (`spec.md §1.1`) — **מה שכתוב כאן הוא מה שנכתב על המסך, מילה-במילה.**
@@ -36,12 +42,13 @@ export const HOSTESS_STATUS_LABELS = { active: 'פעילה', inactive: 'מושב
 export const EXPIRED_INVITE_LABEL = 'פג תוקף'
 export const COMPLETED_ASSIGNMENT_LABEL = 'הושלם'
 
-// שלושה ספי-זמן שקל להחליף ביניהם, ולכן הם נקובים בשמם ולא כמספרים בתוך תנאי:
-// ‏48 — תוקף הקישור מרגע השליחה · 24 — הקישור מת לפני האירוע, והמסך מחליף מצב ·
-// ‏72 — "דחוף": מסנן המבט-על וברירת-המחדל של זווית-המיון.
-export const INVITE_VALIDITY_HOURS = 48
-export const INVITE_CUTOFF_HOURS_BEFORE_EVENT = 24
-export const URGENT_EVENT_HOURS = 72
+// 🔄 **שלושת ספי-הזמן אינם קבועים בקובץ הזה יותר** (מודול 9 · צעד 2.3). הם חיים ב-`params`
+// (`שעות_תוקף_זימון`=48 · `שעות_סף_זימון_לפני_אירוע`=24 · `שעות_אירוע_דחוף`=72) ומוזרקים
+// לכל פונקציה כפרמטר — **בדיוק כמו `nowIso`**, ומאותו טעם: פונקציה טהורה שקוראת סף מגלובל
+// מוכיחה את הסביבה ולא את הכלל, וכאן היא הייתה גם ממשיכה לענות 48 אחרי שהמנכ"לית שינתה ל-24.
+// 🔴 **וסף חסר אינו מוחלף בברירת-מחדל** (דוקטרינת `optionalNumber`): הפונקציה מחזירה את
+// תשובת-ה"לא-יודע" שלה (`null`/`false`), והצעקה נמצאת שכבה אחת מעל — `getParamValues`
+// (`src/api/params.js`) זורקת בעברית ונוקבת בשם, כך שהמסך מציג שגיאה ולא מספר מומצא.
 
 // קריאת מספר **אופציונלי** — מ-`params` (שהוא `text` לכל סוג) או מעמודה nullable.
 // מחזיר `null` ולא ברירת-מחדל: הקורא חייב להחליט מה לעשות כשהערך חסר, במקום לחשב
@@ -192,20 +199,26 @@ export function unavailabilityLabel(range) {
 // ── מצבים נגזרים — אין להם עמודה ואין להם מיגרציה ────────────────────────────
 
 // כמה שעות שלמות נותרו לקישור. `null` = השאלה אינה רלוונטית (הסטטוס אינו "ממתינה
-// למענה", או שזימון מעולם לא נשלח). `0` = פג.
-export function inviteHoursLeft(assignment, nowIso) {
+// למענה", זימון מעולם לא נשלח, **או שסף-התוקף אינו ידוע**). `0` = פג.
+// ‏`validityHours` = `params['שעות_תוקף_זימון']` — גולמי מהמסד; הפענוח כאן.
+export function inviteHoursLeft(assignment, nowIso, validityHours) {
   if (assignment?.assignment_status !== 'pending') return null
   const sent = Date.parse(assignment?.invite_sent_at ?? '')
   const now = Date.parse(nowIso ?? '')
   if (Number.isNaN(sent) || Number.isNaN(now)) return null
+  // 🔴 סף חסר ⇒ `null` ("לא יודע") ולא 48: זימון שיוצג "ממתין" על סמך מספר מומצא הוא בדיוק
+  // הכשל השקט שהמעבר ל-`params` בא למנוע. הצעקה נמצאת ב-`getParamValues`.
+  const hours = optionalNumber(validityHours)
+  if (hours === null) return null
 
-  const remaining = sent + INVITE_VALIDITY_HOURS * MS_PER_HOUR - now
+  const remaining = sent + hours * MS_PER_HOUR - now
   return remaining <= 0 ? 0 : Math.ceil(remaining / MS_PER_HOUR)
 }
 
-// "פג תוקף" = `ממתינה למענה` **וגם** עברו 48 שעות מ-`invite_sent_at`. שום דבר אחר.
-export function isInviteExpired(assignment, nowIso) {
-  return inviteHoursLeft(assignment, nowIso) === 0
+// "פג תוקף" = `ממתינה למענה` **וגם** עברו `שעות_תוקף_זימון` שעות מ-`invite_sent_at`.
+// שום דבר אחר.
+export function isInviteExpired(assignment, nowIso, validityHours) {
+  return inviteHoursLeft(assignment, nowIso, validityHours) === 0
 }
 
 // שעות עד תחילת האירוע. שלילי = כבר עבר.
@@ -221,23 +234,27 @@ function hoursUntilEvent(eventStartsAt, nowIso) {
 }
 
 // מצב T-24: הקישור הציבורי כבר מת, ולכן הפעולה הראשית במסך מתחלפת ל"סוכם בטלפון".
-// ⚠️ אירוע שכבר התחיל אינו "בתוך 24 שעות" — הוא נגמר, וזה מצב אחר לגמרי.
-export function isWithinFinalDay(eventStartsAt, nowIso) {
+// ⚠️ אירוע שכבר התחיל אינו "בתוך החלון" — הוא נגמר, וזה מצב אחר לגמרי.
+// ‏`cutoffHours` = `params['שעות_סף_זימון_לפני_אירוע']`; חסר ⇒ `false` ("לא יודע"), כי
+// תשובה חיובית כאן **מחליפה את הפעולה הראשית של המסך** ואסור שתישען על מספר מומצא.
+export function isWithinFinalDay(eventStartsAt, nowIso, cutoffHours) {
   const left = hoursUntilEvent(eventStartsAt, nowIso)
-  return left !== null && left > 0 && left <= INVITE_CUTOFF_HOURS_BEFORE_EVENT
+  const hours = optionalNumber(cutoffHours)
+  return left !== null && hours !== null && left > 0 && left <= hours
 }
 
-// "דחוף" — סף אחר לגמרי (72), ומשמש למסנן ולברירת-מחדל של זווית-המיון.
-export function isUrgentEvent(eventStartsAt, nowIso) {
+// "דחוף" — סף אחר לגמרי (`שעות_אירוע_דחוף`), ומשמש למסנן ולברירת-מחדל של זווית-המיון.
+export function isUrgentEvent(eventStartsAt, nowIso, urgentHours) {
   const left = hoursUntilEvent(eventStartsAt, nowIso)
-  return left !== null && left > 0 && left <= URGENT_EVENT_HOURS
+  const hours = optionalNumber(urgentHours)
+  return left !== null && hours !== null && left > 0 && left <= hours
 }
 
 // התווית שמוצגת בפועל על התג. סדר הבדיקות אינו שרירותי: הנגזרות גוברות על הסטטוס
 // הגולמי, אחרת זימון מת היה מוצג "ממתינה למענה" והמנהלת הייתה ממשיכה לחכות לו.
 // 🚫 סטטוס לא-מוכר מוחזר כ-"—" ולא כערכו: ערך-enum באנגלית על מסך עברי הוא דליפה.
-export function assignmentDisplayStatus(assignment, nowIso) {
-  if (isInviteExpired(assignment, nowIso)) return EXPIRED_INVITE_LABEL
+export function assignmentDisplayStatus(assignment, nowIso, validityHours) {
+  if (isInviteExpired(assignment, nowIso, validityHours)) return EXPIRED_INVITE_LABEL
 
   if (assignment?.assignment_status === 'finally_approved') {
     const left = hoursUntilEvent(assignment?.event_starts_at, nowIso)
@@ -283,7 +300,7 @@ export function finalAssignmentRows(rows) {
 // *"**אותו מספר**, שתי פעולות הפוכות"* — הפיצול הוא בתצוגה ובפעולה, לא בספירה.
 // ⚠️ **ואל תערבב עם התווית:** על שורה בודדת `assignmentDisplayStatus` מציגה `פג תוקף`
 // ולא `ממתינה למענה` — שם הנגזרת **כן** גוברת. מונה ותווית עונים על שתי שאלות שונות.
-export function countAssignmentStates(rows, nowIso) {
+export function countAssignmentStates(rows, nowIso, validityHours) {
   const counts = {
     pending: 0,
     expired: 0,
@@ -297,7 +314,7 @@ export function countAssignmentStates(rows, nowIso) {
   for (const row of finalAssignmentRows(rows)) {
     // ⚠️ בלי `continue`: שורה שפג תוקפה נספרת **גם** ב-`expired` **וגם** ב-`pending`.
     // ‏`isInviteExpired` מחייבת ממילא `pending`, ולכן אין כאן סיכון לספירה כפולה בסטטוס אחר.
-    if (isInviteExpired(row, nowIso)) counts.expired += 1
+    if (isInviteExpired(row, nowIso, validityHours)) counts.expired += 1
 
     switch (row.assignment_status) {
       case 'pending':
@@ -396,14 +413,18 @@ export function eventProximityLabel(eventDate, todayIso) {
 // 🔴 **"מאויש" = `אושרה סופית` בלבד.** מי שרק אישרה זמינות **אינה** מאיישת — וזו כל הסיבה
 // שהמונה החמישי נולד: אירוע עם 3 שאישרו זמינות ואפס מאושרות **עדיין חסר**, אבל הפעולה
 // שהוא דורש (לאשר) הפוכה מזו של אירוע שאיש לא ענה בו (לשלוח לעוד).
-export function overviewRow(project, nowIso, todayIso) {
-  const counts = countAssignmentStates(project?.assignments, nowIso)
+// ⚠️ **שלושת הספים מגיעים כאובייקט אחד ולא כשלושה ארגומנטים** (מודול 9 · צעד 2.3): שלושה
+// מספרים עוקבים בחתימה הם בדיוק המקום שבו שניים מהם מתחלפים בשקט, והשגיאה נראית כמו
+// "המסנן 'דחוף' מתנהג מוזר" ולא כמו באג. המפתחות זהים לשמות ב-`HOSTESS_PARAM_NAMES`.
+export function overviewRow(project, nowIso, todayIso, thresholds = {}) {
+  const { inviteValidityHours, inviteCutoffHours, urgentEventHours } = thresholds
+  const counts = countAssignmentStates(project?.assignments, nowIso, inviteValidityHours)
   const required = optionalNumber(project?.required_hostess_count) ?? 0
   const staffed = counts.finallyApproved
   const gap = Math.max(0, required - staffed)
   const isMissing = gap > 0
   const eventStartsAt = eventStartInstant(project?.final_event_date, project?.final_start_time)
-  const isFinalDay = isWithinFinalDay(eventStartsAt, nowIso)
+  const isFinalDay = isWithinFinalDay(eventStartsAt, nowIso, inviteCutoffHours)
 
   return {
     project,
@@ -414,7 +435,7 @@ export function overviewRow(project, nowIso, todayIso) {
     isMissing,
     eventStartsAt,
     isFinalDay,
-    isUrgent: isUrgentEvent(eventStartsAt, nowIso),
+    isUrgent: isUrgentEvent(eventStartsAt, nowIso, urgentEventHours),
     isPast: isPastEvent(project?.final_event_date, todayIso),
     // ⚠️ ההתראה היא על **חוסר** בתוך T-24, לא על הקרבה עצמה (כרטיס מסך 1 §④): אירוע מלא
     // שמתקיים מחר אינו דורש ממנה דבר, וסימון-אזהרה עליו היה מלמד אותה להתעלם מהסימן.

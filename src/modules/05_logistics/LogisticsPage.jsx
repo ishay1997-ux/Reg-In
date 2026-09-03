@@ -28,6 +28,8 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatDate, weekdayOf } from '@/lib/dates'
 import { businessDaysUntil } from '@/lib/projectChanges'
+// ‏`param_value` הוא `text` — הפענוח לתצוגה עובר דרך העותק המשותף, לא דרך `Number`.
+import { optionalNumber } from '@/lib/hostesses'
 import {
   PROJECT_STATUS_LABELS,
   resolveProjectTone,
@@ -45,14 +47,24 @@ import {
   filterQueueByPill,
   sortQueueProjects,
   outboundMembership,
+  AMBER_THRESHOLD_PARAM_NAME,
   amberMark,
   queueReason,
   outboundReason,
   lateArrivalReason,
   resolveQueueBranch,
 } from '@/lib/projectLogistics'
+import { getParamValues } from '@/api/params'
 import ChecklistDialog from './ChecklistDialog'
 import { listActiveProjects, listLogisticsRows, listProducts } from './api'
+
+// 🔄 סף-הענבר (⑳) ירד מקבוע-קוד ל-`params` (מודול 9 · צעד 2.3). **למודול 5 לא היה
+// טוען-פרמטרים כלל**, ולכן המסך טוען אותו בעצמו דרך הקורא המשותף — באותה `Promise.all`
+// שכבר קיימת, בלי סיבוב-רשת נוסף. 🔴 ‏`getParamValues` **זורקת** על שורה חסרה, והכשל
+// נוחת במצב ② (תקלת-טעינה) — ולא הופך בשקט את כל התור ללבן, שהוא בדיוק "המסך משקר"
+// שהכותרת של הקובץ הזה נכתבה נגדו.
+// ⚠️ **שם-הפרמטר מיובא ואינו מוקלד כאן** (כלל 14): הוא חי ליד `amberMark` שצורכת אותו,
+// כמו `DORMANT_THRESHOLD_PARAM_NAME` ליד `isCustomerDormant`.
 
 // שלוש גלולות בדיוק (㉙), בשמן ובסדר שהמוקאפ מצייר. 🚫 **ואין גלולה רביעית** — ובפרט אין
 // `בוטלו`: פרויקט מבוטל אינו פעיל ⇒ אינו מגיע למשטח הזה בשום מסנן (כרטיס §①).
@@ -77,7 +89,11 @@ const REASON_TONES = {
 // 🚫 מועתקות בייט-בבייט ואינן מנוסחות מחדש. הן יושבות כאן ולא ב-`src/lib` מאותו טעם
 // ש-`SORT_LINE` של מבט-העל במ6 יושב בקומפוננטה שלו: זהו טקסט של משטח יחיד.
 const OUTBOUND_LEGEND = 'הסעיף מיידע בלבד — אין כאן סימון "יצא" ואין מה לשמור.'
-const AMBER_GLYPH_TITLE = 'פריט פיזי טרם הוזמן, והאירוע בתוך 10 ימי עסקים'
+// 🔄 המספר ירד ל-`params` (`סף_לוגיסטיקה_ימי_עסקים`, מודול 9 · צעד 2.3) ולכן הוא מוזרק
+// ולא כתוב. ⚠️ **ולמה זה לא ניואנס-ניסוח:** הצבע על השורה נגזר מהסף החי, וכיתוב שנשאר
+// על מספר קפוא היה מסביר את הצבע **לא נכון** — למשתמשת אין דרך לדעת מי משניהם צודק.
+// הנוסח עצמו (S-3) לא זז. ‏`amberDays` מגיע גולמי מ-`params`; הפענוח דרך `optionalNumber`.
+const amberGlyphTitle = (days) => `פריט פיזי טרם הוזמן, והאירוע בתוך ${days} ימי עסקים`
 const DISABLED_PILL_TITLE = 'אין כרגע פרויקט במצב הזה'
 const FILTERED_EMPTY_TITLE = 'אין פרויקט התואם למסנן שבחרת.'
 const CLEAR_FILTER_LABEL = 'נקי סינון'
@@ -140,7 +156,7 @@ function pickQueueReason(rows, amber) {
 }
 
 export default function LogisticsPage() {
-  const [data, setData] = useState({ projects: [], rows: [], products: [] })
+  const [data, setData] = useState({ projects: [], rows: [], products: [], amberDays: null })
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
   const [today, setToday] = useState(todayIso)
@@ -171,12 +187,13 @@ export default function LogisticsPage() {
         // שלוש קריאות ישירות (AR-3), בלי RPC-קריאה חדש. שורות-הלוגיסטיקה תלויות ברשימת
         // הפרויקטים ⇒ סדרתי; הקטלוג עצמאי ⇒ במקביל.
         const projects = await listActiveProjects()
-        const [rows, products] = await Promise.all([
+        const [rows, products, params] = await Promise.all([
           listLogisticsRows(projects.map((project) => project.project_id)),
           listProducts(),
+          getParamValues([AMBER_THRESHOLD_PARAM_NAME]),
         ])
         if (cancelled) return
-        setData({ projects, rows, products })
+        setData({ projects, rows, products, amberDays: params[AMBER_THRESHOLD_PARAM_NAME] })
         setToday(todayIso())
         setFailed(false)
       } catch (err) {
@@ -317,9 +334,10 @@ export default function LogisticsPage() {
               entries={visible}
               products={data.products}
               today={today}
+              amberDays={data.amberDays}
               onOpen={openChecklist}
             />
-            <AmberLegend />
+            <AmberLegend amberDays={data.amberDays} />
           </>
         )}
       </Card>
@@ -468,7 +486,7 @@ function OutboundRow({ entry, today, onOpen }) {
   )
 }
 
-function QueueTable({ entries, products, today, onOpen }) {
+function QueueTable({ entries, products, today, amberDays, onOpen }) {
   return (
     <table className="w-full border-collapse" data-testid="logistics-queue-table">
       <thead>
@@ -491,6 +509,7 @@ function QueueTable({ entries, products, today, onOpen }) {
             entry={entry}
             products={products}
             today={today}
+            amberDays={amberDays}
             onOpen={onOpen}
           />
         ))}
@@ -499,16 +518,28 @@ function QueueTable({ entries, products, today, onOpen }) {
   )
 }
 
-function QueueRow({ entry, products, today, onOpen }) {
+function QueueRow({ entry, products, today, amberDays, onOpen }) {
   const { project, rows } = entry
   const metric = logisticsMetric(rows)
-  const amber = amberMark(rows, products, project.final_event_date, today, businessDaysUntil)
+  // ‏`amberDays` = הערך הגולמי של `סף_לוגיסטיקה_ימי_עסקים`; הפענוח בתוך `amberMark`.
+  const amber = amberMark(
+    rows,
+    products,
+    project.final_event_date,
+    today,
+    businessDaysUntil,
+    amberDays,
+  )
   const reason = pickQueueReason(rows, amber)
   const days = eventDaysFromToday(project.final_event_date, today)
   const label = PROJECT_STATUS_LABELS[project.project_status]
   // הטריגר של ⑳ הוא זה שהכיתוב מסביר. כשהשורה בענבר בגלל **איחור-הגעה** בלבד (הטריגר השני
   // של ㊶) — הכיתוב הזה היה שקרי, ושורת-הנימוק כבר אומרת במילים מה קרה ⇒ אין `title`.
-  const glyphTitle = amber.triggers.includes('physicalNotStarted') ? AMBER_GLYPH_TITLE : undefined
+  // ‏`amber.triggers` כולל `physicalNotStarted` רק כשהסף היה מספר תקין (`amberMark`) ⇒
+  // אין כאן מסלול שבו הכיתוב נבנה על ערך חסר.
+  const glyphTitle = amber.triggers.includes('physicalNotStarted')
+    ? amberGlyphTitle(optionalNumber(amberDays))
+    : undefined
 
   return (
     <ClickableRow
@@ -628,13 +659,15 @@ function ReasonLine({ reason, className }) {
 // נשאלת מול המסך, בכנס. פסוקית-הטריגר-השני נוספה בהכרעת-ישי Q1 ("מאשר לפי המלצתך",
 // 26/08/2026 13:0X) — ההכרעה ㊶ שלו יצרה סיבת-ענבר שהמקרא המצויר לא הכיר, והגליף נשאר
 // אחיד על שתי הסיבות.
-function AmberLegend() {
+// ‏`amberDays` — אותו ערך בדיוק שמזין את `amberMark` ואת כיתוב-הגליף. **שלושתם קוראים
+// שורה אחת**; מספר קפוא כאן היה מקרא שמסביר צבע שנקבע לפי מספר אחר.
+function AmberLegend({ amberDays }) {
   return (
     <div className="mt-2.5 text-[11.5px] leading-[1.8] text-slate-500">
       <span className="font-bold text-amber-700">⏱ שורה בענבר</span> — פריט פיזי טרם הוזמן, והאירוע
-      בתוך <Ltr>10</Ltr> ימי עסקים — או: משלוח שתאריכו המובטח עבר וטרם הגיע. סימון מיידע בלבד: אפשר
-      להתעלם ממנו, ואף פקד אינו ננעל. הקמת אתר רישום (<Ltr>01WEB</Ltr>) אינה נספרת — הסף נגזר מזמן
-      ייצור של דפוס.
+      בתוך <Ltr>{optionalNumber(amberDays)}</Ltr> ימי עסקים — או: משלוח שתאריכו המובטח עבר וטרם
+      הגיע. סימון מיידע בלבד: אפשר להתעלם ממנו, ואף פקד אינו ננעל. הקמת אתר רישום (<Ltr>01WEB</Ltr>)
+      אינה נספרת — הסף נגזר מזמן ייצור של דפוס.
     </div>
   )
 }

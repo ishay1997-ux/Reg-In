@@ -7,6 +7,7 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom'
 import TeamTab from './TeamTab'
 import { getProjectAssignments, getProjectChanges } from './api'
+import { getParamValues } from '@/api/params'
 import { TEAM_NO_PERMISSION_SENTENCE, CANCELLED_SCOPE_REASON } from '@/lib/projectTeam'
 
 vi.mock('./api', () => ({
@@ -14,7 +15,12 @@ vi.mock('./api', () => ({
   getProjectChanges: vi.fn(),
 }))
 
-// תאריכים יחסיים לשעון האמיתי — הלשונית קוראת את השעון בעצמה, ותוקף-48-השעות נגזר ממנו.
+// 🔄 סף-תוקף-הזימון ירד ל-`params` (מודול 9 · צעד 2.3) והלשונית טוענת אותו בעצמה.
+// הערך `'48'` **מחרוזת**, כפי שהמסד מחזיר (`param_value` הוא `text`).
+vi.mock('@/api/params', () => ({ getParamValues: vi.fn() }))
+
+// תאריכים יחסיים לשעון האמיתי — הלשונית קוראת את השעון בעצמה, ותוקף-הזימון נגזר ממנו
+// (‏48 שעות, מ-`params`).
 function hoursAgo(hours) {
   return new Date(Date.now() - hours * 3_600_000).toISOString()
 }
@@ -143,6 +149,29 @@ beforeEach(() => {
   vi.clearAllMocks()
   getProjectAssignments.mockResolvedValue(boardFixture())
   getProjectChanges.mockResolvedValue([])
+  getParamValues.mockResolvedValue({ שעות_תוקף_זימון: '48' })
+})
+
+// 🛡️ **"שומר שלא נצפה נכשל — אינו שומר"** (`src/CLAUDE.md`): הכשל מוחזר בכוונה כדי לראות
+// את ההגנה צועקת. שורת-`params` חסרה **חייבת** לנחות במצב-השגיאה המוצהר, ולא להפוך בשקט
+// כל זימון פג ל"ממתינה למענה" — הפגם שהמשפט-האדום של המסך קיים בשבילו.
+describe('סף-תוקף-הזימון חסר — מצב-שגיאה מוצהר, לא טבלה שקרית', () => {
+  it('🔴 `getParamValues` שנכשלת ⇒ שגיאה + "נסי שוב", בלי טבלה', async () => {
+    getParamValues.mockRejectedValueOnce(new Error('הפרמטר "שעות_תוקף_זימון" חסר בהגדרות המערכת.'))
+    render(
+      <MemoryRouter>
+        <TeamTab
+          project={project()}
+          overviewRow={overviewRow()}
+          canEdit
+          canReadHostesses
+          onScopeChange={() => {}}
+        />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByTestId('team-state-error')).toBeInTheDocument()
+    expect(screen.queryByTestId('team-table')).not.toBeInTheDocument()
+  })
 })
 
 describe('הקיפול — 9 שורות במסד, 6 דיילות על המסך', () => {
@@ -196,6 +225,17 @@ describe('המשפט האדום היחיד — המילים נושאות אות�
     expect(headline).toHaveTextContent('⚠ חסרות 5 דיילות')
     expect(headline).toHaveTextContent('שני הזימונים הפתוחים פגו אחרי 48 שעות')
     expect(headline).toHaveTextContent('הפעולה הבאה היא זימון חדש, לא המתנה.')
+  })
+
+  // 🔬 **בדיקת-המוטציה של אודיט-הסגירה (03/09/2026).** אותה פיקסצ'ר ואותו "עכשיו" — רק
+  // `שעות_תוקף_זימון` אחר. עד עכשיו ה-48 היה קשיח במחרוזת, כלומר הלשונית הייתה סופרת
+  // "פג" לפי 12 ומסבירה במילים "אחרי 48 שעות" — **שני מספרים על אותו מסך.**
+  it('🔬 סף 12 ⇒ המשפט אומר 12, והמסך אינו סותר את עצמו', async () => {
+    getParamValues.mockResolvedValue({ שעות_תוקף_זימון: '12' })
+    await renderTab()
+    const headline = screen.getByTestId('team-headline')
+    expect(headline).toHaveTextContent('שני הזימונים הפתוחים פגו אחרי 12 שעות')
+    expect(headline).not.toHaveTextContent('48')
   })
 
   it('עמודת "מה זה אומר" — משפט, לעולם לא ציון', async () => {

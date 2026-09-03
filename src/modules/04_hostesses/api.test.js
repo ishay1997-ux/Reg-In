@@ -27,11 +27,14 @@ vi.mock('@/api/geocode', () => ({ geocodeAddress: vi.fn() }))
 import { supabase } from '@/supabaseClient'
 import { sendEmail, getEmailTemplate } from '@/api/email'
 import { geocodeAddress } from '@/api/geocode'
+import { SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
+import { HOSTESS_PARAM_NAMES } from '@/lib/hostesses'
 import {
   listStaffingOverview,
   releaseAssignment,
   approveFinalAndRelease,
   getSmartMatchData,
+  getHostessScreenParams,
   createHostess,
   updateHostess,
   getHostess,
@@ -71,6 +74,14 @@ function makeChain(result) {
 // (‏`await` בין כל שתי קריאות) בכל הפונקציות הנבדקות כאן — חוץ מ-`getSmartMatchData`, שמריץ
 // ‏`Promise.all`; שם עדיין תקף כי JS בונה ליטרל-מערך משמאל-לימין בצורה סינכרונית, ולכן סדר
 // הקריאות ל-`.from(...)` בפועל זהה לסדר-הכתיבה במקור גם כשההמתנה עצמה מקבילה.
+// כל שמות-הפרמטרים ש-`ALL_PARAM_NAMES` מרכיב, נגזרים **מאותן מפות** שהקוד קורא מהן —
+// רשימה מוקלדת כאן הייתה מתיישנת בשקט ברגע שמודול מוסיף שם (וזה בדיוק מה שקרה בצעד 2.3).
+function allParamRows() {
+  return [...Object.values(SMART_MATCH_PARAM_NAMES), ...Object.values(HOSTESS_PARAM_NAMES)].map(
+    (param_name) => ({ param_name, param_value: '1' }),
+  )
+}
+
 function queueTable(queues, table, result) {
   queues[table] = queues[table] ?? []
   queues[table].push(result)
@@ -301,7 +312,11 @@ describe('ensureProjectCoordinates (פנימית, נבדקת דרך getSmartMatc
     queueTable(queues, 'hostesses', { data: [], error: null })
     queueTable(queues, 'assignments', { data: [], error: null }) // assignmentsRes
     queueTable(queues, 'assignments', { data: [], error: null }) // sameDayRes
-    queueTable(queues, 'params', { data: [], error: null })
+    // 🔄 מאז מודול 9 · צעד 2.3 שליפת ה-`params` של המסך עוברת דרך `getParamValues`,
+    // ש**זורקת** על כל שם שלא חזר ⇒ תשובה ריקה כבר אינה "פרמטרים חסרים בשקט" אלא
+    // כשל-טעינה. הבדיקות כאן בודקות את **הגאוקוד**, ולכן הן מזינות את המפה המלאה
+    // ומשאירות את מסלול-החוסר לבדיקה שנועדה לו (מטה).
+    queueTable(queues, 'params', { data: allParamRows(), error: null })
   }
 
   it('הגאוקוד הצליח אבל שמירת-הקואורדינטה נחסמה (42501) ⇒ הנקודה עדיין חוזרת ב-project', async () => {
@@ -660,5 +675,39 @@ describe('שפות — נרמול לטבלת-הבת (N1)', () => {
 
     const selectArg = supabase.from.mock.results[0].value.select.mock.calls[0][0]
     expect(selectArg).toContain('hostess_languages(language)')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// (5) getHostessScreenParams — שורת-`params` חסרה צועקת, ואינה נעדרת בשקט (מודול 9 · 2.3)
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🛡️ **"שומר שלא נצפה נכשל — אינו שומר"** (`src/CLAUDE.md`): הכשל מוחזר בכוונה כדי לראות
+// את ההגנה צועקת. עד צעד 2.3 הפונקציה החזירה **מפה חלקית** — כלומר שורה שנמחקה מ-`params`
+// הייתה מגיעה לכרטיס-הדיילת ולמאגר כ-`undefined`, וכל זימון שפג היה מוצג "ממתינה למענה"
+// בלי שום שגיאה. שלושת אתרי-הקריאה עוטפים ב-try/catch ⇒ הזריקה נוחתת במצב-שגיאה מוצהר.
+describe('getHostessScreenParams — פרמטר חסר זורק ונוקב בשמו', () => {
+  it('🔴 שם שלא חזר ⇒ שגיאה בעברית שמכילה את שם-הפרמטר', async () => {
+    const queues = {}
+    // כל השמות חוץ מסף-תוקף-הזימון — בדיוק התרחיש של שורה שנמחקה מהמסד.
+    queueTable(queues, 'params', {
+      data: allParamRows().filter((r) => r.param_name !== HOSTESS_PARAM_NAMES.inviteValidityHours),
+      error: null,
+    })
+    setupFrom(queues)
+
+    await expect(getHostessScreenParams()).rejects.toThrow(
+      'הפרמטר "שעות_תוקף_זימון" חסר בהגדרות המערכת.',
+    )
+  })
+
+  it('כל השמות חזרו ⇒ מפה מלאה, בלי זריקה', async () => {
+    const queues = {}
+    queueTable(queues, 'params', { data: allParamRows(), error: null })
+    setupFrom(queues)
+
+    const params = await getHostessScreenParams()
+
+    expect(params[HOSTESS_PARAM_NAMES.inviteValidityHours]).toBe('1')
+    expect(params[SMART_MATCH_PARAM_NAMES.gateDistanceKm]).toBe('1')
   })
 })

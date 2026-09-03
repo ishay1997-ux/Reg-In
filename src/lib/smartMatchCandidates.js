@@ -121,6 +121,9 @@ export function buildSmartMatchCandidates(
       // (למעלה בקובץ). מערך ריק ולא אפס: `reliabilityScore` על מערך ריק הוא "אין נתונים",
       // בעוד אפס הוא "נכשלה". ⚠️ המרכיב עצמו נשאר במשקל 0 עד ש-מ9 ידליק את
       // `מרכיב_אמינות_פעיל` — הצינור-הזה כבר עובד כדי שההדלקה תהיה שינוי-פרמטר בלבד.
+      // 🚧 מ9 ← מ4/מ6 (צעד 2.4, V-5) — אותו `attendance` הזה עכשיו גם ניזון ל-
+      // `companyReliabilityAverage` (‏`smartMatch.js`, מחושב על כל המאגר בתוך `rankCandidates`)
+      // ולא רק ל-`reliabilityScore` של הדיילת עצמה — אין שינוי כאן, הצורה כבר הייתה נכונה.
       attendance: buildAttendanceRecords(finalRows, todayIso),
 
       // ── מה שצ'יפי-ההנמקה מציגים (אינם משפיעים על הציון) ──

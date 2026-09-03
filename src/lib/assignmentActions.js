@@ -9,7 +9,7 @@
 // מסך 2 (Smart Match) ומסך 1 דרך פעולת "שלח שוב". שני עותקים של המפה הזאת היו מתפצלים
 // בשקט, וההבדל היה מתגלה רק כשמנהלת לוחצת על פריט שלא היה אמור להיות שם.
 
-import { finalAssignmentRows, isInviteExpired } from '@/lib/hostesses'
+import { finalAssignmentRows, isInviteExpired, optionalNumber } from '@/lib/hostesses'
 
 export const ASSIGNMENT_ACTION = {
   RESEND: 'resend',
@@ -94,12 +94,26 @@ export function overQuotaLabel(approvedCount, requiredCount) {
 // לא-עקבית; פריט מכובה עם סיבה מלמד אותה **למה**, והיא עוברת לטלפון.
 // 🚫 הסיבה השלישית אינה מיותרת רק מפני שהפריט מוצג היום על שורות `pending` בלבד: אותה
 // פונקציה משרתת את כפתור-הצובר של מסך 1, שם השורות מגיעות בכל הסטטוסים.
-export function resendDisabledReason(row, { isEventStaffed, isWithinFinalDay, nowIso } = {}) {
-  if (isWithinFinalDay) return 'האירוע בתוך 24 שעות — קישור חדש כבר לא ייפתח'
+export function resendDisabledReason(
+  row,
+  { isEventStaffed, isWithinFinalDay, nowIso, inviteValidityHours, inviteCutoffHours } = {},
+) {
+  // 🔄 המספר במשפט ירד ל-`params` (`שעות_סף_זימון_לפני_אירוע`, מודול 9 · צעד 2.3): הודעה
+  // שאומרת "24" בעוד הסף החי הוא אחר מלמדת את המנהלת כלל שגוי, בלי שאף בדיקה תיפול.
+  // ⚠️ **וכשהסף חסר — הפסוקית פשוט יורדת, ואין נוסח-חלופה חדש.** המסלול הזה אינו נגיש
+  // ממסך אמיתי (‏`isWithinFinalDay` עצמה מחזירה `false` בלי סף, והמסך נופל קודם לכן על
+  // `getParamValues` שזורקת) ⇒ ניסוח חדש כאן היה מחרוזת שאיש לא יראה ואיש לא אישר.
+  if (isWithinFinalDay) {
+    const hours = optionalNumber(inviteCutoffHours)
+    return hours === null
+      ? 'קישור חדש כבר לא ייפתח'
+      : `האירוע בתוך ${hours} שעות — קישור חדש כבר לא ייפתח`
+  }
   if (isEventStaffed) return 'האירוע כבר אויש במלואו'
   if (row?.assignment_status !== 'pending') return 'הדיילת כבר ענתה — רענון קישור לא רלוונטי'
-  // ⚠️ פקיעת 48 השעות **אינה** סיבת-כיבוי — היא בדיוק המצב שבו הכפתור נחוץ.
-  void isInviteExpired(row, nowIso)
+  // ⚠️ פקיעת התוקף **אינה** סיבת-כיבוי — היא בדיוק המצב שבו הכפתור נחוץ.
+  // 🔄 הסף עצמו ירד ל-`params` (`שעות_תוקף_זימון`, מודול 9 · צעד 2.3) ומגיע בהקשר, לצד "עכשיו".
+  void isInviteExpired(row, nowIso, inviteValidityHours)
   return null
 }
 

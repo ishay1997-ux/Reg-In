@@ -64,5 +64,8 @@ supabase migration list          # אימות: כל המיגרציות מסומ�
 1. `supabase migration new <שם_תיאורי>` — יוצר קובץ מיגרציה ריק וממוספר.
 2. כתוב את ה-DDL (רק שינוי דלתא — `alter table ...`, לא הסכימה המלאה).
 3. החל: `supabase db push` (או דרך Supabase MCP `apply_migration`).
+   🔴 **תוקן 03/09/2026 באודיט-סגירת מ9 — הצעד הזה כפי שנוסח אינו עובד, וההסבר כבר יושב ~30 שורות מעליו:**
+   ‏`supabase db push` נופל על המיגרציה הלא-אידמפוטנטית הראשונה, ולכן **מסלול-ההחלה בפועל בפרויקט הזה הוא
+   ‏`apply_migration` דרך ה-MCP** (עם שער ה-typed-echo). ‏`db push` נשאר כאן כהיסטוריה בלבד — לא להריץ אותו.
 4. עדכן את `docs/schema.sql` כ-snapshot של המצב החדש.
 5. תעד ב-`docs/db_roadmap.md` §10 (רשימת-ה-Done) וברשומת-הסשן ב-`docs/CLAUDE_CODE_LOG.md`. *(‏`CHANGELOG.md` הוקפא 23/07/2026.)*
