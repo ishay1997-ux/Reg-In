@@ -18,6 +18,7 @@
 // *(השורות האלה אמרו "מה עדיין אינו כאן" עד 10/08/2026 — טענה שהתיישנה באותו סשן שכתב אותן.)*
 
 import { supabase } from '@/supabaseClient'
+import { fetchAll } from '@/api/fetchAll'
 import { toError, assertRowsAffected } from '@/lib/apiError'
 import {
   HOSTESS_PARAM_NAMES,
@@ -220,12 +221,16 @@ function flattenBankDetails(row) {
 // (עד 50 שורות — הכרעת-היקף מתועדת), אבל **הסט עצמו מסונן ע"י ה-RLS בשרת.**
 // ⚠️ ‏`.order` שני על המפתח אינו קישוט: שמות זהים מחליפים מקום בין רענונים בלי
 // שובר-שוויון יציב, וזו תקלה שכבר תועדה ב-`03_quotes/api.js`.
+// 🔴 03/09/2026: `fetchAll` — המאגר גדל ל-191 (זריעת מ7) והכיוון הוא מעלה; תקרת-1,000 השקטה
+// (ר' `src/api/fetchAll.js`). `full_name`+`hostess_id` = סדר-מלא, חוזה-הדפדוף.
 export async function listHostesses() {
-  const { data, error } = await supabase
-    .from('hostesses')
-    .select('*, hostess_unavailability(*), hostess_bank_details(*), hostess_languages(language)')
-    .order('full_name')
-    .order('hostess_id')
+  const { data, error } = await fetchAll(() =>
+    supabase
+      .from('hostesses')
+      .select('*, hostess_unavailability(*), hostess_bank_details(*), hostess_languages(language)')
+      .order('full_name')
+      .order('hostess_id'),
+  )
   if (error) throw toError(error, 'שגיאה בטעינת מאגר הדיילות.')
   return (data ?? []).map((row) => flattenLanguages(flattenBankDetails(row)))
 }
@@ -287,10 +292,20 @@ export async function getSmartMatchData(projectId) {
   const [coordinates, hostessesRes, assignmentsRes, sameDayRes, preferencesRes, params] =
     await Promise.all([
       ensureProjectCoordinates(project),
-      supabase.from('hostesses').select('*, hostess_unavailability(*)').order('hostess_id'),
-      supabase
-        .from('assignments')
-        .select('*, projects(final_event_date, project_status, customer_id)'),
+      // 🔴 03/09/2026: שתי הקריאות המלאות דרך `fetchAll` — 5,040 שיבוצים חיים מול תקרת-1,000
+      // השקטה; `C` (ממוצע-החברה) והריסון חושבו על חמישית מההיסטוריה בלי שאיש ראה שגיאה.
+      // הסדר המשולש על `assignments` הוא ה-PK — חוזה-הדפדוף.
+      fetchAll(() =>
+        supabase.from('hostesses').select('*, hostess_unavailability(*)').order('hostess_id'),
+      ),
+      fetchAll(() =>
+        supabase
+          .from('assignments')
+          .select('*, projects(final_event_date, project_status, customer_id)')
+          .order('project_id')
+          .order('hostess_id')
+          .order('assignment_number'),
+      ),
       supabase
         .from('assignments')
         .select('hostess_id, project_id')
@@ -337,12 +352,20 @@ export async function getSmartMatchData(projectId) {
 // בשרת בדיוק כמו כל קריאה אחרת.
 // ⚠️ שולפים גם שורות ישנות במכוון — מונה-הרבעון ותגי-ההיענות **חייבים** היסטוריה;
 // סינון לעתיד בלבד היה מרוקן את שתי העמודות בשקט.
+// 🔴 03/09/2026: `fetchAll` — התג "לא ענתה ל-N האחרונים" ממיין לפי `invite_sent_at` **בצד-לקוח**
+// על מה שהגיע; עם תקרת-1,000 השקטה הוא חושב על חתך שרירותי של 5,040 ויכול היה לשקר על
+// דיילת ספציפית. הסדר המשולש = ה-PK, חוזה-הדפדוף.
 export async function listRepositoryAssignments() {
-  const { data, error } = await supabase
-    .from('assignments')
-    .select(
-      'project_id, hostess_id, assignment_number, assignment_status, invite_sent_at, projects(event_name, final_event_date, project_status)',
-    )
+  const { data, error } = await fetchAll(() =>
+    supabase
+      .from('assignments')
+      .select(
+        'project_id, hostess_id, assignment_number, assignment_status, invite_sent_at, projects(event_name, final_event_date, project_status)',
+      )
+      .order('project_id')
+      .order('hostess_id')
+      .order('assignment_number'),
+  )
   if (error) throw toError(error, 'שגיאה בטעינת היסטוריית השיבוצים.')
   return data ?? []
 }

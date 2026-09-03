@@ -32,7 +32,18 @@ import {
 // ── עוזר-מוקינג (זהה ל-04_hostesses/api.test.js) ──────────────────────────────────
 function makeChain(result) {
   const builder = {}
-  for (const method of ['select', 'eq', 'order', 'in', 'limit', 'update', 'insert', 'upsert']) {
+  // `range` נוסף 03/09/2026 — `fetchAll` (תקרת-1,000) מדפדף דרכו; המוק מחזיר עמוד יחיד.
+  for (const method of [
+    'select',
+    'eq',
+    'order',
+    'in',
+    'limit',
+    'range',
+    'update',
+    'insert',
+    'upsert',
+  ]) {
     builder[method] = vi.fn(() => builder)
   }
   builder.maybeSingle = vi.fn(() => Promise.resolve(result))

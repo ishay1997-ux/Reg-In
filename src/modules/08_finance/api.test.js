@@ -233,11 +233,20 @@ function augustPayload(overrides = {}) {
 }
 
 // ניתוב ה-RPC לפי שם, כדי שבדיקה תוכל להצהיר רק על מה שמעניין אותה.
+// הבילדר של `rpc()` האמיתי הוא thenable **וגם** שרשרתי (`.order()`/`.range()`) — `fetchAll`
+// (03/09/2026, תקרת-1,000) משתמש בשניים. המוק מחזיר אובייקט עם אותה צורה: `await` ישיר או
+// `.order(...).range(...)` מגיעים לאותו ערך, כעמוד יחיד.
 function routeRpc(map) {
   mocks.rpc.mockImplementation((fn) => {
     if (!(fn in map)) throw new Error(`RPC לא צפוי בבדיקה: ${fn}`)
     const value = map[fn]
-    return Promise.resolve(typeof value === 'function' ? value() : value)
+    const resolved = () => Promise.resolve(typeof value === 'function' ? value() : value)
+    const builder = {
+      order: () => builder,
+      range: () => resolved(),
+      then: (resolve, reject) => resolved().then(resolve, reject),
+    }
+    return builder
   })
 }
 

@@ -4,6 +4,7 @@
 // לוגיקה עסקית (תוויות, סינון, מיון, מדדים) חיה ב-src/lib/customers.js — כאן רק קלט/פלט מול ה-DB.
 
 import { supabase } from '@/supabaseClient'
+import { fetchAll } from '@/api/fetchAll'
 // עוטף-השגיאות המשותף (חולץ 31/07/2026 — היה משוכפל זהה-בייט בשלושה api.js). הקוד המשומר
 // הוא מה שמניע כאן את זרימת-הכפילות §7.11 (‏23505 = הפרת-unique על ח"פ) ב-step 3.2.
 import { toError, assertRowsAffected } from '@/lib/apiError'
@@ -124,10 +125,15 @@ async function attachProjectChanges(rows) {
 // קורא לה, ולכן הם צריכים בדיוק את אותם שני השדות. ‏🚫 שאר שדות-הכספים נשארו בחוץ (ר' ההערה
 // המורחבת שמעל `getCustomerProjects`). 🚫 **ואין כאן קריאת שינויי-תכולה** — הרשימה אינה מציגה
 // סכום פר-פרויקט, ו-N-קריאות-RPC על **כל** הפרויקטים במערכת היו מחיר בלי צרכן.
+// 🔴 03/09/2026: `fetchAll` — 792 פרויקטים חיים, בדרך לתקרת-1,000 השקטה (ר' `src/api/fetchAll.js`).
+// `order('project_id')` הוא חוזה-הדפדוף, לא קוסמטיקה.
 export async function listProjectsForCustomerMetrics() {
-  const { data, error } = await supabase
-    .from('projects')
-    .select('customer_id, final_event_date, project_status, feedback_status, feedback_score')
+  const { data, error } = await fetchAll(() =>
+    supabase
+      .from('projects')
+      .select('customer_id, final_event_date, project_status, feedback_status, feedback_score')
+      .order('project_id'),
+  )
   if (error) throw toError(error, 'שגיאה בטעינת נתוני הפרויקטים.')
   return data ?? []
 }
