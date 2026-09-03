@@ -212,15 +212,15 @@ No item here contradicts C5/C6; where C5 §5.6.2 is silent (masking, the exact c
 
 ## 7. ✅ Definition of Done
 
-- [ ] `get_dashboard_summary()` RPC applied, `profit_visible` flips correctly per role (2 allow-identities, 3 deny-identities — no separate table policy exists to test, per §4)
-- [ ] `docs/schema.sql` + `db_roadmap.md` updated in the same commit as the migration (DB protocol)
-- [ ] All 4 KPI cards show correct values against a known seed project (hand-computed, not re-authored from the same formula)
-- [ ] Calendar color matches §7.94 for both hero-pair days
-- [ ] Masked cards render "לא זמין בתפקידך", never `0 ₪`, for the 3 non-finance roles
-- [ ] `/` route accessible to all 5 roles, no `<ProtectedRoute>` regression
-- [ ] 🎨 UX & functional review passed — built screen matches the approved mockup
-- [ ] Full regression green: `gate` · `test:e2e` · `smoke`, all three named with counts
-- [ ] `WelcomePage.jsx`'s removal-or-keep decided (knip check, not a guess)
+- [x] `get_dashboard_summary()` RPC applied, `profit_visible` flips correctly per role (2 allow-identities, 3 deny-identities — no separate table policy exists to test, per §4) — DB impersonation (1.1) + screen E2E (4.2)
+- [x] `docs/schema.sql` + `db_roadmap.md` updated in the same commit as the migration (DB protocol) — `43378b0`, `e644066`
+- [x] All 4 KPI cards show correct values against a known seed project (hand-computed, not re-authored from the same formula) — active 4 · pending quotes 6 · satisfaction 5.00 (hand queries, 1.1); October profit 12,239.20 = hand sum (1.3)
+- [x] Calendar color matches §7.94 for both hero-pair days — unit tests (2.1) on hand-built fixtures; live hero pair pending the seed
+- [x] Masked cards render "לא זמין בתפקידך", never `0 ₪`, for the 3 non-finance roles — E2E asserts the text and the absence of `₪` (PROJECTS: profit masked, quotes visible per the existing gate)
+- [x] `/` route accessible to all 5 roles, no `<ProtectedRoute>` regression — `App.routes.test.jsx` 3/3 + E2E 5 logins
+- [x] 🎨 UX & functional review passed — built screen matches the approved mockup — Ishay 19:2X *"אהבתי מאוד"*, legend wording tightened
+- [ ] Full regression green: `gate` · `test:e2e` · `smoke`, all three named with counts — `gate` ✅ 86 files / 2,254 tests (19:3X); `test:e2e` · `smoke` → step 5.1
+- [x] `WelcomePage.jsx`'s removal-or-keep decided (knip check, not a guess) — removed; knip exit 1 → 0
 
 **Post-merge (not audit blockers):** PR opened, CI green, merged to `dev`.
 
