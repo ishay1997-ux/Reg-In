@@ -269,15 +269,21 @@ function Legend({ warningDays }) {
       {/* מבוטל: צבע-לוח רביעי (הכרעת-ישי 03/09, אחרי אישור-המוקאפ) — לא מופיע במוקאפ הסטטי,
           נוסף כאן כדי שהמקרא יישאר נאמן לצ'יפי-הסינון שמעליו. */}
       <LegendSwatch className={SWATCH_CLASS.cancelled} label="מבוטל" />
+      {/* 🐞 **תוקן 04/09/2026 — ישי תפס את זה במקרא, והלוח עצמו היה תקין כל הזמן.**
+          קודם עמדו כאן שלושה פריטים שהשתמשו ב-`StaffingIcon` **שלוש פעמים**: "איוש",
+          "לוגיסטיקה" (עם אייקון-קופסה) ואז "הושלם · חסר" — שוב עם אייקון-דיילת. התוצאה:
+          המסך הראה שלושה אייקוני-דיילת, **ולסימול-החסר של הלוגיסטיקה לא היה ייצוג כלל**,
+          כך שקורא לא יכול היה לדעת איך נראית לוגיסטיקה חסרה. שני צמדים סימטריים — מלא
+          וקו לצד כל אחד מהם — אומרים את שני הממדים בבת-אחת ובלי לתאר אחד מהם בעזרת השני. */}
       <span className="flex items-center gap-1">
-        <StaffingIcon filled /> איוש
+        <StaffingIcon filled />
+        <StaffingIcon filled={false} /> איוש
       </span>
       <span className="flex items-center gap-1">
-        <LogisticsIcon filled /> לוגיסטיקה
+        <LogisticsIcon filled />
+        <LogisticsIcon filled={false} /> לוגיסטיקה
       </span>
-      <span className="flex items-center gap-1">
-        <StaffingIcon filled /> הושלם · <StaffingIcon filled={false} /> חסר
-      </span>
+      <span>מלא = הושלם · קו = חסר</span>
     </div>
   )
 }

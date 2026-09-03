@@ -478,3 +478,30 @@ and no `+N עוד` appears anywhere in September. Screenshot sent to Ishay.
 **Anchor for the "why", in one sentence he can say out loud:** Monday, Google Calendar and Notion
 Calendar all give the calendar the full width and keep only filters in a side rail — a list beside a
 calendar is a report, and a home screen is not a report.
+
+**➕ Two more, same PR, both found by Ishay using the screen (04/09/2026)**
+
+- **Group representation in the attention strip — and it fixes a regression this same change caused.**
+  Dropping the cap 8 ⇒ 4 let the 9 `unbilled` rows swallow all four slots, so **13 `shortage` rows were
+  announced by the counter and represented on screen exactly zero times.** He noticed and proposed
+  clicking the counter to reveal them. ⚖️ **That collided with his own 03/09 ruling** (*"זה מעולה"*,
+  explicitly **no filters**, per §7.9's "one sorted list") — both were quoted back to him dated, and the
+  recommendation was to fix the cause rather than add a control. He approved: *"ואלה אחלה רעיון בנה
+  לפי המלצה"*. `pickWithGroupRepresentation` now reserves one slot per non-empty group **in priority
+  order**, fills the rest by urgency, and returns the selection **in the original order** so the visible
+  hierarchy is unchanged. Each group's representative is its most urgent row, because `attentionRows`
+  already sorts within every branch. 🔑 **It is a fairer slice, not a filter** — no new control, no state,
+  and it works on first paint, which is the whole point of a home screen. ➕ `attentionSummary` now also
+  returns `firstHidden` (with representation, "the row after the cap" is no longer `all[cap]`, so the
+  overflow link would have pointed at a row that is on screen) — **which also closes closing-audit debt
+  T-4**, since `AttentionPanel` no longer recomputes the list a second time.
+- **🐞 The legend was lying, and only the legend.** Its last three items used `StaffingIcon` **three
+  times** — "איוש", then "לוגיסטיקה" (box), then "הושלם · חסר" (person again). ⇒ three person glyphs
+  on screen and **no example at all of what missing logistics looks like**. Ishay: *"לא צריך סימול לחסר
+  לוגיסטיקה? לאיוש 3 אייקונים טעות?"* — then, correctly, *"אה הבעיה רק במקרא… בלוח שנה עצמו זה טוב"*.
+  Now each dimension shows filled **and** outline side by side, with one short line saying what the fill
+  means. **Worth noting how it survived:** the calendar cells were always right, so every screenshot,
+  unit test and E2E assertion passed — the defect lived only in the key that explains them, which
+  nothing asserts against.
+
+**Regression after both:** `npm run gate` exit 0 — 88 files / **2,295** tests.

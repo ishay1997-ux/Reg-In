@@ -378,7 +378,7 @@ describe('DashboardPage — מה דורש טיפול', () => {
 
 describe('DashboardPage — מה דורש טיפול: תיקרה וקבוצות (הכרעת-ישי 03/09/2026 19:3X)', () => {
   // ארבעה "הסתיים ולא חויב" (ותיק→חדש) + ארבעה "חוסר קרוב" (קרוב→רחוק) + שתי הצעות = 10.
-  // 🔴 התיקרה ירדה 8 ⇒ 4 ב-04/09/2026 (הרצועה עברה לפס-אופקי מתחת ללוח) ⇒ 4 מוצגות, 6 מוסתרות.
+  // 🔴 תקרה 4 + ייצוג-קבוצות (04/09/2026) ⇒ 2 חיוב · 1 חוסר · 1 הצעה, ו-6 מוסתרות.
   function unbilled(id, date) {
     return project({
       project_id: id,
@@ -426,7 +426,12 @@ describe('DashboardPage — מה דורש טיפול: תיקרה וקבוצות 
     renderPage()
     await screen.findByTestId('kpi-active')
 
-    expect(screen.getAllByTestId(/^dashboard-attention-row-/)).toHaveLength(4)
+    const cards = screen.getAllByTestId(/^dashboard-attention-row-/)
+    expect(cards).toHaveLength(4)
+    // 🔴 בלי ייצוג-קבוצות ארבעת ה"לא חויב" היו בולעים את כל התקרה, ו-"חוסר קרוב (4)"
+    // היה מוכרז במונה בלי שאף פריט שלו נראה על המסך — הפגם שישי תפס בשימוש חי.
+    expect(within(cards[2]).getByText(/חסרות|דיילות|לוגיסטיקה/)).toBeInTheDocument()
+    expect(within(cards[3]).getByText(/פגה/)).toBeInTheDocument()
 
     // 🔑 המונים סופרים על **כל** הרשימה ולא על הארבעה המוצגים — גודל-הבעיה נשאר גלוי
     // גם כשהתיקרה נמוכה. זו כל הסיבה שהתיקרה מותרת מלכתחילה.

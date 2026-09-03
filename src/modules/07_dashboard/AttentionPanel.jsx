@@ -10,7 +10,7 @@
 // **עוגן:** Monday · Google Calendar · Notion Calendar — כולם לוח מלא-רוחב, ובצד רק מסננים.
 
 import { Link } from 'react-router-dom'
-import { attentionRows, attentionSummary, attentionAllLabel, ATTENTION_CAP } from '@/lib/dashboard'
+import { attentionSummary, attentionAllLabel } from '@/lib/dashboard'
 import Ltr from '@/components/Ltr'
 
 const DOT_CLASS = { red: 'bg-red-500', yellow: 'bg-amber-500' }
@@ -21,15 +21,17 @@ const PROJECT_KINDS = new Set(['unbilled', 'shortage'])
 
 export default function AttentionPanel({ summary }) {
   const today = summary?.today
-  const { rows, hidden, groups, total } = attentionSummary(summary, today)
+  const { rows, hidden, firstHidden, groups, total } = attentionSummary(summary, today)
 
-  // יעד ה"הכול": השורה הראשונה שמעבר לתיקרה קובעת (לא ברירת-מחדל) — כך שהקישור תמיד
-  // פותח את המסך שבו יושב הבא-בתור לטיפול, לא מסך אקראי.
-  let overflowHref = null
-  if (hidden > 0) {
-    const firstHidden = attentionRows(summary, today)[ATTENTION_CAP]
-    overflowHref = firstHidden && PROJECT_KINDS.has(firstHidden.kind) ? '/projects' : '/quotes'
-  }
+  // יעד ה"הכול": השורה הראשונה שנשארה בחוץ קובעת (לא ברירת-מחדל) — כך שהקישור תמיד
+  // פותח את המסך שבו יושב הבא-בתור לטיפול, לא מסך אקראי. ‏`firstHidden` מגיע מוכן
+  // מ-`attentionSummary` (04/09/2026): עם ייצוג-קבוצות אי-אפשר לגזור אותו מהאינדקס.
+  const overflowHref =
+    hidden > 0 && firstHidden
+      ? PROJECT_KINDS.has(firstHidden.kind)
+        ? '/projects'
+        : '/quotes'
+      : null
 
   return (
     <div
