@@ -23,8 +23,20 @@ vi.mock('@/supabaseClient', () => ({
   supabase: { from: vi.fn(), rpc: vi.fn() },
 }))
 
+// הקורא-המשותף מדומה ישירות: `getCustomerScreenParams` עברה אליו 03/09/2026 (ממצא F-7),
+// ומה שהבדיקות כאן צריכות לאמת הוא **החוזה מולו** — לא את שאילתת-ה-Supabase שבתוכו,
+// שכבר מכוסה ב-`src/api/params.test.js`.
+vi.mock('@/api/params', () => ({ getParamValues: vi.fn() }))
+
 import { supabase } from '@/supabaseClient'
-import { listCustomers, getCustomer, getConsentedCustomers, replaceCustomerContacts } from './api'
+import { getParamValues } from '@/api/params'
+import {
+  listCustomers,
+  getCustomer,
+  getConsentedCustomers,
+  replaceCustomerContacts,
+  getCustomerScreenParams,
+} from './api'
 
 // בילדר-שרשרתי מזערי לצורך שלוש בדיקות-ה-select — לא בילדר-התור-פר-טבלה המלא של
 // 04_hostesses/05_logistics/06_projects (שם יש כמה טבלאות בו-זמנית באותה בדיקה; כאן, בכל
@@ -222,5 +234,31 @@ describe('replaceCustomerContacts — RPC יחיד במקום insert-then-delete
     await expect(replaceCustomerContacts(47, [])).rejects.toMatchObject({
       message: 'לא ניתן לשמור לקוח בלי איש קשר אחד לפחות.',
     })
+  })
+})
+
+// 🔴 ממצא F-7 (אודיט-סגירת מ9, 03/09/2026): שורת-פרמטר חסרה חייבת להפיל את הטעינה ולא לחזור
+// כמפה חלקית. בלי זה הרגרסיה שקטה לגמרי — התגית "טעון בירור" נעלמת מכל הלקוחות והמסנן מחזיר
+// ריק, מה שנקרא כ"אין למי להתקשר". השינוי מוצהר כשינוי-התנהגות במסלול-כשל, לא כתיקון-באג.
+describe('getCustomerScreenParams — עוברת דרך הקורא שצועק (F-7)', () => {
+  beforeEach(() => {
+    getParamValues.mockReset()
+  })
+
+  it('מבקשת בדיוק את שני השמות, ומחזירה אותם בצורת-שורות', async () => {
+    getParamValues.mockResolvedValue({ סף_לקוח_רדום_ימים: '120', סף_שביעות_רצון: '3' })
+    const rows = await getCustomerScreenParams()
+    expect(getParamValues).toHaveBeenCalledWith(['סף_לקוח_רדום_ימים', 'סף_שביעות_רצון'])
+    expect(rows).toEqual(
+      expect.arrayContaining([
+        { param_name: 'סף_לקוח_רדום_ימים', param_value: '120' },
+        { param_name: 'סף_שביעות_רצון', param_value: '3' },
+      ]),
+    )
+  })
+
+  it('שורה חסרה ⇒ השגיאה של הקורא עולה החוצה, ואין מפה חלקית', async () => {
+    getParamValues.mockRejectedValue(new Error('הפרמטר "סף_שביעות_רצון" חסר בהגדרות המערכת.'))
+    await expect(getCustomerScreenParams()).rejects.toThrow(/סף_שביעות_רצון/)
   })
 })

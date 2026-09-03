@@ -21,6 +21,7 @@ import { render, screen, fireEvent, within } from '@testing-library/react'
 import FinancePage from './FinancePage'
 import { listFinanceOverview } from './api'
 import { getParamValue } from '@/modules/06_projects/closingApi'
+import { getParamValues } from '@/api/params'
 
 // 🔴 **מוק-הלקוח חובה, ואינו נוחות — בלעדיו הקובץ הזה נופל ב-CI בלבד.**
 // ‏`vi.mock('./api')` למטה קורא ל-`vi.importActual('./api')`, שמריץ את **המודול האמיתי**,
@@ -39,13 +40,19 @@ vi.mock('./api', async () => {
   return { ...actual, listFinanceOverview: vi.fn() }
 })
 vi.mock('@/modules/06_projects/closingApi', () => ({ getParamValue: vi.fn() }))
+// 🔄 סף-המשוב ירד ל-`params` (מודול 9 · צעד 2.3) והמסך טוען אותו דרך הקורא המשותף,
+// ומעביר אותו ל-`ClosingWindowDialog` — כך שהשניים קוראים את אותה שורה.
+vi.mock('@/api/params', () => ({ getParamValues: vi.fn() }))
 
 vi.mock('./ClosingWindowDialog', () => ({
-  default: ({ project, open }) => (
+  // ‏`data-threshold` נועל את **חוזה-האינטגרציה** של צעד 2.3: הדיאלוג אינו טוען את הסף
+  // בעצמו — הוא מקבל אותו מהמסך, ולכן שניהם קוראים את אותה שורה ב-`params`.
+  default: ({ project, open, satisfactionThreshold }) => (
     <div
       data-testid="closing-dialog"
       data-project={String(project?.project_id)}
       data-open={String(open)}
+      data-threshold={String(satisfactionThreshold)}
     />
   ),
 }))
@@ -176,6 +183,8 @@ beforeEach(() => {
   vi.setSystemTime(NOW)
   listFinanceOverview.mockResolvedValue(BOARD)
   getParamValue.mockResolvedValue('18')
+  // **מחרוזת**, כפי שהמסד מחזיר (`param_value` הוא `text`).
+  getParamValues.mockResolvedValue({ סף_שביעות_רצון: '3' })
 })
 
 afterEach(() => {
@@ -521,6 +530,26 @@ describe('S1 — מצבי-הריק והשגיאה, בסדר-הענפים של ה
     listFinanceOverview.mockResolvedValue([{ ...P13, feedback_score: 9 }])
     render(<FinancePage />)
     expect(await screen.findByTestId('finance-error')).toHaveTextContent('ציון משוב לא חוקי: 9')
+  })
+
+  // 🛡️ **"שומר שלא נצפה נכשל — אינו שומר"** (`src/CLAUDE.md`): הכשל מוחזר בכוונה.
+  // ⚠️ ובניגוד למע"מ שמתחתיו — סף-המשוב **כן** מפיל את המסך: הוא מכריע אילו שורות
+  // נצבעות ואילו שמירות נחסמות, ו-"—" אינו מצב אפשרי עבורו.
+  it('🔴 שורת `סף_שביעות_רצון` חסרה ⇒ מסך-שגיאה, ולא טבלה בלי סימוני-בירור', async () => {
+    getParamValues.mockRejectedValueOnce(new Error('הפרמטר "סף_שביעות_רצון" חסר בהגדרות המערכת.'))
+    render(<FinancePage />)
+    await screen.findByTestId('finance-error')
+    expect(screen.queryByTestId('finance-table')).not.toBeInTheDocument()
+  })
+})
+
+// 🔑 חוזה-האינטגרציה של צעד 2.3: **המסך טוען, הדיאלוג מקבל.** שתי טעינות נפרדות היו
+// יכולות להיפרד בזמן ולהציג שני ספים שונים לאותו ציון, בלי שום שגיאה.
+describe('S2 — סף-המשוב עובר מהמסך לדיאלוג ואינו נטען פעמיים', () => {
+  it('‏`ClosingWindowDialog` מקבל את הערך שהמסך קרא מ-`params`', async () => {
+    await renderPage()
+    fireEvent.click(screen.getByTestId('finance-row-15'))
+    expect(screen.getByTestId('closing-dialog')).toHaveAttribute('data-threshold', '3')
   })
 })
 

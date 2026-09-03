@@ -7,6 +7,9 @@ import { COMPANY_ID_REGEX, EMAIL_REGEX, isValidDiscountPercent } from '@/lib/val
 // במפורש: "דרך ה-SSOT של התמחור — לא לשכפל נוסחה"). deriveQuoteAmount כבר עוטף את
 // computeQuoteTotals ומטפל במע"מ הקפוא מול החי, ולכן זו נקודת-הכניסה הנכונה.
 import { deriveQuoteAmount } from '@/lib/quotes'
+// ‏`optionalNumber` ולא `Number`: ‏`params.param_value` הוא `text`, ו-`Number('  ')` הוא **0**
+// — סף-שביעות-רצון של 0 היה מוציא כל לקוח מרשימת-הטיפול בשקט. עותק אחד לכל הריפו.
+import { optionalNumber } from '@/lib/hostesses'
 
 // §7.3 (הכרעת ישי 06/07): תוויות סוג-הלקוח לפי האפיון הקפוא C5 §1.5.3, 1:1 מול ערכי ה-enum ב-DB
 // (docs/schema.sql:43). מקור-אמת יחיד לתוויות — ה-UI לא כותב מחרוזות-עברית ידנית (מונע אי-התאמה).
@@ -17,21 +20,36 @@ export const CUSTOMER_TYPE_LABELS = {
   nonprofit: 'עמותה',
 }
 
-// 🆕 סף "טעון בירור" — הציון שמתחתיו לקוח דורש בירור אנושי (§7.80 / ה16 של מודול 8:
-// ‏5=מצוין · 4=טוב · 3=בינוני · **1–2=טעון בירור**, "הקו האדום מתלכד עם סף-הבירור-הטלפוני
-// הקיים"). אותו קו בדיוק חי במסד: `record_feedback` דורשת `negative_feedback_reason` בכל
-// ציון **קטן מ-3** — כלומר הסף הזה אינו בחירת-מסך אלא הכלל שהמערכת כבר אוכפת.
+// 🔄 סף "טעון בירור" — הציון שמתחתיו לקוח דורש בירור אנושי (§7.80 / ה16 של מודול 8:
+// ‏5=מצוין · 4=טוב · 3=בינוני · **מתחת לסף=טעון בירור**, "הקו האדום מתלכד עם
+// סף-הבירור-הטלפוני הקיים"). **הסף ירד מקבוע-קוד לשורת-`params` `סף_שביעות_רצון`=3**
+// (מודול 9 · צעד 2.3) והוא מוזרק פנימה.
 //
-// ⚠️ **ולמה המספר נכתב כאן ולא מיובא מ-`scoreTag` (src/lib/projectFinance.js), שמחזיקה את
-// אותה מדרגה:** ‏`scoreTag` **זורקת** על ציון שאינו שלם (‏`Number.isInteger` — הוא נועד
-// לציון-פרויקט בודד מהמסד), ואילו כאן מדובר ב**ממוצע** של כמה משובים (3.5). ייבוא היה
-// מפיל את המסך; שכפול-המדרגה מסומן במפורש כדי שמי שישנה אחד ידע שיש שני.
-export const SATISFACTION_ATTENTION_MAX = 3
+// 🔑 **וזה בדיוק מה שהמעבר בא לתקן:** אותו קו חי גם במסד — `record_feedback` ו-`archive_project`
+// דורשות `negative_feedback_reason` מתחת לאותו סף — ושני העותקים היו נפרדים. כשהמנכ"לית
+// תשנה את השורה, המסך והמסד יזוזו יחד; קודם הם היו מתפצלים בלי שום שגיאה.
+//
+// ⚠️ **ומה שלא השתנה:** `SCORE_TAGS`/`SCORE_LABELS` (‏`src/lib/projectFinance.js`) **נשארים
+// קשיחים** — §7.80 מכריע תווית פר-ציון (5=מצוין · 4=טוב · 3=בינוני), וזו מדרגה מילולית ולא
+// סף. הן גם אינן ניתנות לייבוא לכאן: `scoreTag` **זורקת** על ציון שאינו שלם
+// (‏`Number.isInteger`), ואילו כאן מדובר ב**ממוצע** של כמה משובים (3.5).
+//
+// שם-הפרמטר קבוע ולעולם לא מוקלד באתר-הקריאה — אותה מוסכמה בדיוק כמו
+// `DORMANT_THRESHOLD_PARAM_NAME` (`src/lib/customerProjects.js`), ומאותו טעם: תו אחד שגוי
+// מחזיר שורה ריקה, הפרמטר נראה "חסר", ואין שום שגיאה בשום מקום.
+export const SATISFACTION_THRESHOLD_PARAM_NAME = 'סף_שביעות_רצון'
 
 // ממוצע-משוב ⇒ האם הלקוח ברשימת-"טעון בירור". ‏null/לא-מספר = **אין נתון**, ולא "בסדר"
-// ולא "בעייתי" — ר' ההערה במסנן עצמו.
-export function needsSatisfactionAttention(avgFeedback) {
-  return typeof avgFeedback === 'number' && avgFeedback < SATISFACTION_ATTENTION_MAX
+// ולא "בעייתי" — ר' ההערה במסנן עצמו. 🔴 **וסף חסר ⇒ `false` ולא 3**: אותה דוקטרינה
+// שהמסך כבר מפעיל על `isCustomerDormant` עם סף-רדימות חסר (`CustomersPage.jsx`) — "לא
+// בכוח", בלי להמציא מספר.
+// ✅ **והצעקה על שורה חסרה אכן יושבת ב-`getParamValues` — מ-03/09/2026, ולא לפני כן.**
+// עד אודיט-הסגירה של מ9 המשפט הזה היה **שגוי בפועל**: `getCustomerScreenParams` לא עברה
+// שם, ולכן שורה חסרה הייתה מגיעה לכאן בשקט והתגית הייתה נעלמת מכל הלקוחות (ממצא F-7).
+// הפונקציה כאן לא השתנתה — מה שהשתנה הוא שהטענה הזו נעשתה נכונה.
+export function needsSatisfactionAttention(avgFeedback, threshold) {
+  const max = optionalNumber(threshold)
+  return typeof avgFeedback === 'number' && max !== null && avgFeedback < max
 }
 
 // חיפוש-טקסט סלחני-אך-חד-משמעי (§7.11): מתאים אם מחרוזת-החיפוש היא תת-מחרוזת בשם-החברה
@@ -75,7 +93,11 @@ function matchesText(customer, rawText) {
 // יש/אין-הנחה, סטטוס (toggle-ארכיון), "נוספו-לאחרונה", וטקסט חופשי (§7.11). כל קריטריון שלא-סופק =
 // לא-מסנן (משאיר את הרשומה). הפונקציה טהורה: הסף לתאריך "נוספו-לאחרונה" (createdAfter) מחושב ב-UI
 // ומועבר פנימה — כדי שהיא תישאר נבדקת בלי תלות בשעון.
-export function matchesCustomerFilters(customer, filters = {}) {
+// ⚠️ ‏`satisfactionThreshold` הוא ארגומנט שלישי ולא שדה ב-`filters`, בכוונה: `filters` הוא
+// **מה שהמשתמשת בחרה**, וזה **הגדרת-מערכת**. ערבובם היה גורם ל-`countActiveFilters` שמתחתיו
+// לספור הגדרה כאילו היא מסננת. ‏`CustomerPicker` (מודול 3) אינו מעביר אותו — הוא לעולם אינו
+// מדליק `lowSatisfactionOnly`, ולכן הסף אינו נדרש שם.
+export function matchesCustomerFilters(customer, filters = {}, satisfactionThreshold) {
   const {
     text,
     customerType,
@@ -100,7 +122,10 @@ export function matchesCustomerFilters(customer, filters = {}) {
   // נתוני-פרויקטים חוצי-לקוח שהפונקציה הטהורה הזו אינה רואה. **ולמה `null` אינו עובר את
   // המסנן:** לקוח שאיש מלקוחותיו לא ענה על סקר אינו "לקוח לא-מרוצה" — הוא לקוח שאין עליו
   // נתון, ורשימת-הטיפול חייבת להכיל רק את מי שבאמת דורש טלפון (אותה דוקטרינת "ריק אינו 0").
-  if (lowSatisfactionOnly === true && !needsSatisfactionAttention(customer.avg_feedback)) {
+  if (
+    lowSatisfactionOnly === true &&
+    !needsSatisfactionAttention(customer.avg_feedback, satisfactionThreshold)
+  ) {
     return false
   }
   if (customerType && customer.customer_type !== customerType) return false
@@ -326,7 +351,7 @@ export function deriveCustomerMetrics(projects = [], quotes = null, vatRate = nu
     .filter((s) => typeof s === 'number' && !Number.isNaN(s))
   // עיגול לספרה אחת אחרי הנקודה — **וזה לא קוסמטיקה**: הערך נכנס גם לתצוגת-הכוכבים
   // (`4.6666666666666665 ★` על המסך) וגם למסנן "טעון בירור", ושניהם חייבים לראות בדיוק
-  // את אותו מספר. עיגול בתצוגה בלבד היה יוצר לקוח שמוצג "3 ★" ובכל זאת יושב ברשימת ה-<3.
+  // את אותו מספר. עיגול בתצוגה בלבד היה יוצר לקוח שמוצג "3 ★" ובכל זאת יושב ברשימת-הטיפול.
   const avgFeedback =
     scores.length > 0
       ? Math.round((scores.reduce((sum, s) => sum + s, 0) / scores.length) * 10) / 10

@@ -2,6 +2,9 @@
 // הטריק המרכזי: מוקקים את useAuth כדי לשלוט במצב המשתמש/ההרשאות בלי DB אמיתי.
 import { describe, it, expect, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
+// 🔗 עוטף-ניתוב: מ-03/09/2026 מסך-השלילה נושא קישור "חזרה למסך הבית" (ממצא UX-3 באודיט-סגירת
+// מ9 — הוא אמר מה קרה ולא מה לעשות), ו-`<Link>` דורש Router בהקשר. הבדיקות עצמן לא השתנו.
+import { MemoryRouter } from 'react-router-dom'
 import ProtectedRoute from './ProtectedRoute'
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -12,9 +15,11 @@ import { useAuth } from '@/contexts/AuthContext'
 function renderWith(authState) {
   useAuth.mockReturnValue(authState)
   return render(
-    <ProtectedRoute allow="לקוחות">
-      <div>תוכן מוגן</div>
-    </ProtectedRoute>,
+    <MemoryRouter>
+      <ProtectedRoute allow="לקוחות">
+        <div>תוכן מוגן</div>
+      </ProtectedRoute>
+    </MemoryRouter>,
   )
 }
 
@@ -37,6 +42,8 @@ describe('ProtectedRoute', () => {
     })
     expect(screen.getByText(/אין לך הרשאה/)).toBeInTheDocument()
     expect(screen.queryByText('תוכן מוגן')).not.toBeInTheDocument()
+    // UX-3: המסך מציע יעד, לא רק סיבה. העוגן `access-denied` והמחרוזת שמעליו לא נגעו.
+    expect(screen.getByTestId('access-denied-home')).toHaveAttribute('href', '/')
   })
 
   it('מרנדר את התוכן המוגן כשיש הרשאת edit/view', () => {

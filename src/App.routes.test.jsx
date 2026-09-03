@@ -10,7 +10,10 @@ import traverse from '@babel/traverse'
 const traverseAst = traverse.default ?? traverse
 
 // מסכים שבכוונה פתוחים לכל משתמש מחובר-ופעיל — MainLayout עצמו כבר חוסם לא-מחוברים/מוקפאים.
-const ALLOWED_UNPROTECTED = new Set(['__index__', 'profile', '*'])
+// 'my-settings' (מודול 9, A-9/§4.4, 02/09/2026): "יש לה ≥1 פרמטר בבעלותה" אינה הרשאת-מודול
+// שאפשר לבטא ב-`allow`, ולכן אינה יכולה לקבל `<ProtectedRoute>` — הבעלות עצמה, לא ה-UI,
+// היא הקיר (RLS על `owner_role_id`). אותו תקדים בדיוק כמו 'profile' משורה מעליי.
+const ALLOWED_UNPROTECTED = new Set(['__index__', 'profile', 'my-settings', '*'])
 
 function isJSXElementNamed(node, name) {
   return node?.type === 'JSXElement' && node.openingElement.name.name === name

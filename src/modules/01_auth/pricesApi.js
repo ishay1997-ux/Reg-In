@@ -138,36 +138,10 @@ export async function replacePriceTiers(sku, tiers) {
   return saved
 }
 
-// ---- פרמטרי-תמחור (2 בלבד — לא כל params; ר' src/lib/pricing.js PRICING_PARAM_NAMES) ----
-
-export async function getPricingParams() {
-  const { data, error } = await supabase
-    .from('params')
-    .select('param_id, param_name, param_value')
-    .in('param_name', ['אחוז_מעמ', 'יחס_אורחים_לדיילת'])
-  if (error) throw toError(error, 'שגיאה בטעינת פרמטרי התמחור.')
-  return data ?? []
-}
-
-// 🐞 תוקן 30/07/2026 (צעד 3.6) — **ה-upsert שהיה כאן לא יכול היה לעבוד לעולם**, ונתפס רק
-// בשמירה אמיתית מהמסך: `23502 — null value in column "param_type"`.
-// **הטעות המושגית שהוחלפה:** ההערה הקודמת הניחה ש"שתי השורות תמיד קיימות ⇒ ה-upsert תמיד
-// פוגע ב-UPDATE ⇒ מותר לא לשלוח param_type". ‏Postgres לא עובד כך: ב-`INSERT … ON CONFLICT`
-// הוא **בונה קודם את שורת-המועמד** ומאמת עליה NOT NULL, ורק אחר-כך מגלה את הקונפליקט.
-// שורה קיימת אינה מצילה — האילוץ נבדק לפני.
-//
-// עדכון-בלבד, ולא "לתקן" ע"י הוספת param_type: זהו מסך-תחזוקה לשני פרמטרים זרועים (§7.84;
-// מסך-הפרמטרים המלא הוא מודול 9). בלי מסלול-INSERT, שם-פרמטר שגוי נכשל בקול (0 שורות)
-// במקום ליצור בשקט שורת-params רפאים שאיש לא יחפש.
-export async function updatePricingParam(paramName, value) {
-  const { data, error } = await supabase
-    .from('params')
-    .update({ param_value: String(value) })
-    .eq('param_name', paramName)
-    .select()
-  if (error) throw toError(error, 'שמירת הפרמטר נכשלה.')
-  // 0 שורות = או שהפרמטר לא קיים, או שה-RLS חסם (מחזיר ריק עם error: null — הכשל השקט
-  // המרכזי של הפרויקט). שתי האפשרויות חייבות להישמע, לא להיראות כהצלחה.
-  assertRowsAffected(data, `הפרמטר ${paramName} לא עודכן — ייתכן שאין לך הרשאה.`)
-  return data[0]
-}
+// ---- פרמטרי-התמחור אינם כאן יותר (02/09/2026, מודול 9 צעד 3.1, Q-1) ----
+// `getPricingParams` / `updatePricingParam` נמחקו יחד עם `PricingParamsCard`: שני הפרמטרים
+// נערכים מעכשיו בלשונית "פרמטרים" דרך `09_settings/api.js` (`listParams`/`updateParams`), שמכבדת
+// גם את מדיניות-הבעלות החדשה (`owner_role_id`) שמיגרציה A הוסיפה — דבר שעדכון-השורה שהיה כאן
+// לא ידע עליו. ⚠️ **הלקח שהיה כתוב כאן לא אבד** — "לעולם לא `upsert` על `params`, כי
+// `param_type` הוא NOT NULL ו-`INSERT … ON CONFLICT` מאמת אותו **לפני** שהוא מגלה את
+// הקונפליקט" — הועתק לכותרת `09_settings/api.js` ול-`09_settings/CLAUDE.md`.

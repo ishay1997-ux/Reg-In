@@ -1002,3 +1002,6 @@ e2e · smoke · live read-only screenshots · answerable-later · duplication ·
   owed at the YES-completion of this close) · hardening: no notes length cap · 2 stale audit-gate
   exemptions · the ⑥3 carried trio (.first() ruling-conflict answered with a recommendation ·
   customer-page vacuous-by-31/08 · irreversible-actions lens never re-run).
+
+- **`02/09/2026 22:0X` — CROSS-MODULE EDIT by module 9 (steps 2.3/2.4; this module is closed — this is the required ripple record).** Six hard-coded business constants became `params` rows (Ishay G-2, 02/09; `docs/micro_guides/module-9.md` §6 step 2.3 carries the per-constant ripple table). Touched here: `src/lib/projectLogistics.js` (`AMBER_BUSINESS_DAYS` deleted; `amberMark` takes the threshold) and `LogisticsPage.jsx` (loads `סף_לוגיסטיקה_ימי_עסקים` via `src/api/params.js` with a load/error state — m5 had no params loader). Behaviour is unchanged while the seeded values equal the old constants (24 · 48 · 72 · 3 · 10 · 7); the module's suites were re-run green by the m9 builder and again in m9's Phase-2 gate.
+ ↳ `02/09 23:0X` follow-up by the same m9 builder: `AMBER_GLYPH_TITLE` (`…בתוך N ימי עסקים`) interpolates the loaded `סף_לוגיסטיקה_ימי_עסקים` instead of the literal 10.

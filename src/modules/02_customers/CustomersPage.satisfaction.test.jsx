@@ -77,11 +77,16 @@ function projectRow(customerId, feedbackStatus, score) {
   }
 }
 
-function mockPage(projectRows) {
+function mockPage(
+  projectRows,
+  screenParams = [{ param_name: 'סף_שביעות_רצון', param_value: '3' }],
+) {
   listCustomers.mockResolvedValue([customerRow(1, 'טכנולוגיות אלפא'), customerRow(2, 'ביתא בע"מ')])
   listQuotes.mockResolvedValue([])
   getQuoteScreenParams.mockResolvedValue([])
-  getCustomerScreenParams.mockResolvedValue([])
+  // 🔄 סף "טעון בירור" ירד ל-`params` (מודול 9 · צעד 2.3) ונטען דרך `getCustomerScreenParams`,
+  // באותה שאילתה שכבר מביאה את סף-הרדימות. הצורה כאן היא **שורות**, כמו שהפונקציה מחזירה.
+  getCustomerScreenParams.mockResolvedValue(screenParams)
   listProjectsForCustomerMetrics.mockResolvedValue(projectRows)
 }
 
@@ -173,5 +178,26 @@ describe('רשימת-הלקוחות — צ\'יפ "טעון בירור" (A3)', ()
     const alpha = await screen.findByTestId('customer-row-1')
     expect(alpha).toHaveTextContent('אין נתונים עדיין')
     expect(screen.getByTestId('customers-table')).toBeInTheDocument()
+    // 🔴 R-1: הרשימה שורדת — **ובאנר אומר מה נעלם.** עד 03/09/2026 הבדיקה הזו נעלה דווקא
+    // את השתיקה: המסך היה מאבד את המסננת ואת הכוכבים בלי לומר מילה.
+    expect(screen.getByTestId('customers-screen-params-error')).toBeInTheDocument()
+  })
+
+  // 🔴 R-1 (סריקה-חוזרת של אודיט-סגירת מ9, 03/09/2026): שורת-פרמטר חסרה מפילה עכשיו את
+  // הטעינה **בקול** (זו הייתה הכוונה ב-F-7), ולכן חובה שהמסך יאמר זאת. בלי הבדיקה הזו
+  // התיקון הקודם היה רגרסיה נטו — שכבת-API כנה ומסך אילם שמאבד יותר ממה שאיבד קודם.
+  it('שורת-פרמטר חסרה ⇒ באנר שנוקב במה שנעלם, והטבלה עצמה נשארת', async () => {
+    mockPage([])
+    getCustomerScreenParams.mockRejectedValue(
+      new Error('הפרמטר "סף_שביעות_רצון" חסר בהגדרות המערכת.'),
+    )
+    renderPage()
+
+    await screen.findByTestId('customer-row-1')
+    expect(screen.getByTestId('customers-table')).toBeInTheDocument()
+    const banner = screen.getByTestId('customers-screen-params-error')
+    expect(banner).toHaveTextContent('לקוחות רדומים')
+    expect(banner).toHaveTextContent('עמודת ההתרשמות')
+    expect(screen.getByTestId('customers-screen-params-retry')).toBeInTheDocument()
   })
 })

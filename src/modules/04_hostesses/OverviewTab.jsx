@@ -19,14 +19,38 @@ import FilterPill from '@/components/FilterPill'
 import StatTile from '@/components/StatTile'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/dates'
-import { overviewRow, sortOverviewRows, overviewKpis, eventProximityLabel } from '@/lib/hostesses'
+import {
+  HOSTESS_PARAM_NAMES,
+  optionalNumber,
+  overviewRow,
+  sortOverviewRows,
+  overviewKpis,
+  eventProximityLabel,
+} from '@/lib/hostesses'
+import { getParamValues } from '@/api/params'
 import { listStaffingOverview } from './api'
 
-const FILTERS = {
+// שלושת ספי-הזימון שהמסך הזה נשען עליהם, אחרי שירדו מקבועים בקוד ל-`params`
+// (מודול 9 · צעד 2.3). 🔴 **נטענים דרך `getParamValues` ולא דרך `getHostessScreenParams`:**
+// המסך אינו מציג Smart Match, ושליפה של 15 שמות בשביל 3 הייתה גם רחבה מדי וגם **שקטה** —
+// ‏`getParamValues` זורקת על שם חסר, ולכן שורה חסרה מגיעה למצב-השגיאה של המסך במקום
+// להפוך בשקט כל זימון פג ל"ממתין" ולרוקן את הכפתור המרוכז.
+const OVERVIEW_PARAM_NAMES = [
+  HOSTESS_PARAM_NAMES.inviteValidityHours,
+  HOSTESS_PARAM_NAMES.inviteCutoffHours,
+  HOSTESS_PARAM_NAMES.urgentEventHours,
+]
+
+// 🔄 תווית "דחוף" נושאת את הסף עצמו, והוא ירד ל-`params` (`שעות_אירוע_דחוף`, מודול 9 ·
+// צעד 2.3) ⇒ המפה נבנית מהערך הטעון ואינה קבועה. ⚠️ **ולמה זה לא ניואנס-ניסוח:** הגלולה
+// מסננת לפי הסף החי (`row.isUrgent`), וכיתוב שנשאר על מספר קפוא היה מתאר את המסנן
+// **לא נכון** — המשתמשת רואה "עד 72 שעות" ומקבלת רשימה אחרת, בלי שום שגיאה.
+// הנוסח עצמו לא זז; רק המספר בתוכו נגזר.
+const filterLabels = (urgentHours) => ({
   all: 'הכול',
   missing: 'הצג חסרים בלבד',
-  urgent: 'דחוף (עד 72 שעות)',
-}
+  urgent: `דחוף (עד ${urgentHours} שעות)`,
+})
 
 // ⚠️ מחושב פעם אחת בטעינה ומוחזק ב-state — `react-hooks/purity` אוסר קריאת-שעון בתוך
 // render, וגם לוגית: "עכשיו" שזז באמצע רינדור מייצר שורות שמסכימות זו עם זו רק לפעמים.
@@ -42,6 +66,7 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
   const toast = useToast()
 
   const [projects, setProjects] = useState([])
+  const [thresholds, setThresholds] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [now, setNow] = useState(nowIso)
@@ -58,9 +83,18 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
     let cancelled = false
     ;(async () => {
       try {
-        const rows = await listStaffingOverview()
+        // במקביל ולא סדרתי — שתי שאילתות בלתי-תלויות; כשל של אחת מהן הוא כשל-מסך אחד.
+        const [rows, params] = await Promise.all([
+          listStaffingOverview(),
+          getParamValues(OVERVIEW_PARAM_NAMES),
+        ])
         if (cancelled) return
         setProjects(rows)
+        setThresholds({
+          inviteValidityHours: params[HOSTESS_PARAM_NAMES.inviteValidityHours],
+          inviteCutoffHours: params[HOSTESS_PARAM_NAMES.inviteCutoffHours],
+          urgentEventHours: params[HOSTESS_PARAM_NAMES.urgentEventHours],
+        })
         setNow(nowIso())
         setError(null)
       } catch (err) {
@@ -80,12 +114,18 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
 
   const today = now.slice(0, 10)
 
+  // הערכים שהכיתובים מצטטים — **אותם ערכים בדיוק** שנכנסים ל-`overviewRow` ומכריעים
+  // מי "דחוף" ומי "בתוך החלון". שני מקורות היו מייצרים מסך שמתאר את עצמו לא נכון.
+  // ‏`getParamValues` זרקה אילו שורה הייתה חסרה ⇒ כאן הן תמיד מספרים.
+  const cutoffHours = optionalNumber(thresholds.inviteCutoffHours)
+  const urgentHours = optionalNumber(thresholds.urgentEventHours)
+
   // 🔴 אירוע שתאריכו עבר יוצא מהרשימה **לפני** המיון וה-KPI — הוא אינו החלטה שממתינה
   // לה, והמיון-לפי-קרבה היה מקבע אותו בראש לנצח. ר' `isPastEvent` לנימוק המלא.
   const rows = useMemo(() => {
-    const derived = projects.map((project) => overviewRow(project, now, today))
+    const derived = projects.map((project) => overviewRow(project, now, today, thresholds))
     return sortOverviewRows(derived.filter((row) => !row.isPast))
-  }, [projects, now, today])
+  }, [projects, now, today, thresholds])
 
   const kpis = useMemo(() => overviewKpis(rows), [rows])
 
@@ -153,10 +193,12 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
               {kpis.missingEvents}
             </span>
           }
+          // שתי שורות-המשנה מצטטות את סף ה-T-24 (`שעות_סף_זימון_לפני_אירוע`), והוא
+          // בדיוק הסף ש-`showsFinalDayAlert` נגזר ממנו ⇒ שניהם חייבים לקרוא ערך אחד.
           sub={
             kpis.missingWithinFinalDay > 0
-              ? `מתוכם ${kpis.missingWithinFinalDay} בתוך 24 שעות`
-              : 'אף אחד מהם אינו בתוך 24 שעות'
+              ? `מתוכם ${kpis.missingWithinFinalDay} בתוך ${cutoffHours} שעות`
+              : `אף אחד מהם אינו בתוך ${cutoffHours} שעות`
           }
           testId="overview-kpi-missing"
         />
@@ -179,7 +221,7 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
       </div>
 
       <div className="flex flex-wrap items-center gap-2 pb-3">
-        {Object.entries(FILTERS).map(([key, label]) => (
+        {Object.entries(filterLabels(urgentHours)).map(([key, label]) => (
           <FilterPill
             key={key}
             on={filter === key}
@@ -234,6 +276,7 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
                 key={row.project.project_id}
                 row={row}
                 today={today}
+                cutoffHours={cutoffHours}
                 canEdit={canEdit}
                 sending={sending}
                 onOpen={() => onOpenSmartMatch?.(row.project.project_id)}
@@ -248,13 +291,18 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
 }
 
 // 🔴 שלושת תנאי-הכיבוי של "שלח שוב", והם של כרטיס מסך 4 §⑤/§⑧③ ולא המצאה מקומית:
-// ‏① אין בכלל קישור מת · ② האירוע בתוך T-24 (הקישור מת 24 שעות לפני האירוע — רענון
+// ‏① אין בכלל קישור מת · ② האירוע בתוך הסף (הקישור מת `שעות_סף_זימון_לפני_אירוע` שעות
+// לפני האירוע — ברירת-המחדל 24, והמספר חי ב-`params` מאז מודול 9 · צעד 2.3 — רענון
 // היה שולח מייל שהדיילת תלחץ עליו ותקבל "המשרה כבר אוישה") · ③ האירוע כבר אויש.
 function canResend(row) {
   return row.counts.expired > 0 && !row.isFinalDay && row.isMissing
 }
 
-function OverviewRow({ row, today, canEdit, sending, onOpen, onResend }) {
+// 🔴 **`cutoffHours` יורד לכאן מהאב, ואינו קבוע** (אודיט-סגירת מ9, 03/09/2026): שתי
+// המחרוזות שלמטה נשאו `24` קשיח בעוד אריח ה-KPI שמעליהן כבר ציטט את `שעות_סף_זימון_לפני_אירוע`
+// החי. בסף 6, אותו מסך היה מציג "מתוכם 1 בתוך 6 שעות" באריח ו"בתוך 24 שעות" בשורה שמתחתיו —
+// **מסך שסותר את עצמו.** שניהם קוראים עכשיו ערך אחד, וזה בדיוק הנימוק שכבר כתוב על האריח.
+function OverviewRow({ row, today, cutoffHours, canEdit, sending, onOpen, onResend }) {
   const { project, counts, required, staffed, gap, isMissing, isFinalDay, showsFinalDayAlert } = row
   const filled = required > 0 ? Math.min(100, Math.round((staffed / required) * 100)) : 0
 
@@ -279,7 +327,10 @@ function OverviewRow({ row, today, canEdit, sending, onOpen, onResend }) {
           {/* ⚠ נדלק על **חוסר** בתוך T-24, לא על קרבה (כרטיס §④): אירוע מלא שמתקיים מחר
               אינו דורש ממנה דבר, וסימון עליו מלמד להתעלם מהסימן. */}
           {showsFinalDayAlert && (
-            <span className="ml-1.5 text-red-600" title="חסר איוש, והאירוע בתוך 24 שעות">
+            <span
+              className="ml-1.5 text-red-600"
+              title={`חסר איוש, והאירוע בתוך ${cutoffHours} שעות`}
+            >
               ⚠
             </span>
           )}
@@ -294,7 +345,7 @@ function OverviewRow({ row, today, canEdit, sending, onOpen, onResend }) {
           className={`mt-0.5 text-[11.5px] ${isFinalDay ? 'font-semibold text-red-600' : 'text-slate-400'}`}
         >
           {eventProximityLabel(project.final_event_date, today)}
-          {isFinalDay ? ' · בתוך 24 שעות' : ''}
+          {isFinalDay ? ` · בתוך ${cutoffHours} שעות` : ''}
         </div>
       </Td>
 

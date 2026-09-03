@@ -2,7 +2,7 @@
 // ותפריט משתמש (שם+תפקיד מתוך AuthContext, וכפתור התנתקות אמיתי).
 
 import { useNavigate } from 'react-router-dom'
-import { Search, LogOut, User, UserCog } from 'lucide-react'
+import { Search, LogOut, User, UserCog, Settings } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
 import {
@@ -15,8 +15,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 export default function Topbar({ collapsed }) {
-  const { user, signOut } = useAuth()
+  const { user, permissions, signOut } = useAuth()
   const navigate = useNavigate()
+  // V-7 (מודול 9, §4.4) — אותו תנאי בדיוק כמו `canEdit` בכל מסכי מודול 9, לא רשימת-תפקידים
+  // נפרדת: מי שמחזיקה `edit` על "הגדרות מערכת" כבר רואה את הלשונית המלאה תחת "מערכת",
+  // ופריט-תפריט שני לאותו יעד הוא בדיוק "שניים באותו תפקיד" (מעבר-המלאי, src/CLAUDE.md).
+  const hasFullSettingsTab = permissions?.['הגדרות מערכת'] === 'edit'
 
   async function handleLogout() {
     await signOut()
@@ -45,6 +49,7 @@ export default function Topbar({ collapsed }) {
         <DropdownMenuTrigger asChild>
           <button
             type="button"
+            data-testid="topbar-user-menu-trigger"
             className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50 transition-colors"
           >
             <span className="flex flex-col items-end text-right">
@@ -63,6 +68,15 @@ export default function Topbar({ collapsed }) {
             <UserCog className="size-4" />
             הגדרות פרופיל
           </DropdownMenuItem>
+          {!hasFullSettingsTab && (
+            <DropdownMenuItem
+              onClick={() => navigate('/my-settings')}
+              data-testid="settings-my-settings-link"
+            >
+              <Settings className="size-4" />
+              ההגדרות שלי
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onClick={handleLogout}>
             <LogOut className="size-4" />

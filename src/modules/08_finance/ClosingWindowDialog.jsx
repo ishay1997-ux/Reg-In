@@ -64,6 +64,9 @@ import { PROJECT_STATUS_LABELS } from '@/lib/projects'
 import { EMAIL_SEND_RESULT, sendResultMessage } from '@/lib/email'
 import { compensationReason } from '@/lib/projectCancellation'
 import { assertFinanceShape, scoreTag, scoreTagText } from '@/lib/projectFinance'
+// ⛔ ייבוא חוצה-מודולים במכוון ולא העתקה: הכלל "ציון מתחת לסף ⇒ טעון בירור" חייב
+// להיות אותו כלל בדיוק במסך-הלקוחות (מ2) ובמסך-הכספים, אחרת הם יסטו ביום שהסף ישתנה.
+import { needsSatisfactionAttention } from '@/lib/customers'
 import {
   CANCELLATION_FEE_ACTIONS,
   INVOICE_FILE_REQUIRED_NOTE,
@@ -146,8 +149,13 @@ const FEE_STORAGE_NOTE =
   'נשמר במסד: הסכום הסופי וההערה בלבד — שלושת הרכיבים שלמעלה נגזרים-מחדש לתצוגה בכל פתיחה, ולא נשמרים כעמודות נפרדות.' // ה28
 const LOCKED_BANNER_BODY = 'הרווח-הסופי קפוא ואינו ניתן לעריכה. כל השדות שלמטה לעיון בלבד.' // P3
 const CREDIT_NOTE_LINE = 'נדרשת חשבונית זיכוי'
-const FEEDBACK_REASON_GATE =
-  'חסום: ציון מתחת ל-3 מחייב בחירת סיבת-בירור מהרשימה, אחרי בירור טלפוני.' // כרטיס-P2
+// 🔄 **הסף אינו כתוב במשפט יותר** (מודול 9 · צעד 2.3): הוא נקרא מ-`params`
+// (`סף_שביעות_רצון`) ומוזרק לנוסח. ⚠️ **ולמה זה לא ניואנס-ניסוח:** אותו סף נאכף גם במסד
+// (`record_feedback`/`archive_project`), והמשפט הזה הוא ההודעה הידידותית שקודמת ל-`P0001`
+// שלו. מספר קפוא במשפט מול סף חי במסד = המסך מצטט סף אחד בעוד המסד אוכף אחר,
+// **בלי שום שגיאה** — בדיוק הכשל השקט שכל המעבר הזה בא למנוע. הנוסח עצמו (כרטיס-P2) לא זז.
+const feedbackReasonGate = (threshold) =>
+  `חסום: ציון מתחת ל-${threshold} מחייב בחירת סיבת-בירור מהרשימה, אחרי בירור טלפוני.` // כרטיס-P2
 // שני הנוסחים שהיו חסרים: עד כה "שמור סטטוס" נכבה גם בשני המצבים האלה **בלי מילה על המסך**.
 // ‏A-1 (הכרעת-הבלופרינט) קובעת disabled-with-reason כדפוס-הבית; כפתור מת בלי סיבה הוא בדיוק
 // מה שהיא נכתבה נגדו. ⚠️ **הנוסח של "אין ציון" מראה את מה שהמסד יענה בלאו הכי**
@@ -214,6 +222,7 @@ export function archiveGateNote({
   feedbackResolved,
   feedbackScore,
   feedbackReason,
+  satisfactionThreshold,
 }) {
   const paymentOk = Boolean(paid) || Boolean(writtenOff)
 
@@ -221,9 +230,13 @@ export function archiveGateNote({
   // הציון נמוך מ-3 ואין סיבה (‏`archive_project`, מיגרציה F). המסלול אינו תיאורטי —
   // הדף הציבורי **אינו יודע לקבל סיבה**, ולכן לקוח שהגיש 2 יוצר בדיוק את המצב הזה.
   // בלי השורה הזאת הכפתור נראה פעיל, המנהלת לוחצת, והשרת עונה P0001.
+  // ‏`needsSatisfactionAttention` ולא השוואה מקומית: הסף חי בשורה אחת ב-`params`, והכלל
+  // שמפרש אותו חי בפונקציה אחת (`src/lib/customers.js`) שגם מסך-הלקוחות קורא לה.
   const lowScoreNeedsReason =
-    feedbackScore != null &&
-    Number(feedbackScore) < 3 &&
+    needsSatisfactionAttention(
+      feedbackScore == null ? null : Number(feedbackScore),
+      satisfactionThreshold,
+    ) &&
     (feedbackReason == null || String(feedbackReason).trim() === '')
   const feedbackOk = Boolean(feedbackResolved) && !lowScoreNeedsReason
   if (paymentOk && feedbackOk) return null
@@ -286,9 +299,14 @@ export function formatHoursBeforeEvent(value) {
 // שער "שמור סטטוס" — אותה צורה בדיוק כמו `archiveGateNote`: `null` ⇒ פתוח, אחרת **המשפט**
 // שיוצג ליד הכפתור. עד כה שלושת הענפים חיו כבוליאני אחד, ושניים מהם כיבו את הכפתור בשתיקה.
 // eslint-disable-next-line react-refresh/only-export-components -- פונקציה טהורה שנועלת נוסח-שער, כמו `archiveGateNote` שמעליה
-export function feedbackGateNote({ score, reason, touched }) {
+export function feedbackGateNote({ score, reason, touched, satisfactionThreshold }) {
   if (score == null) return FEEDBACK_SCORE_GATE
-  if (score < 3 && String(reason ?? '').trim() === '') return FEEDBACK_REASON_GATE
+  if (
+    needsSatisfactionAttention(score, satisfactionThreshold) &&
+    String(reason ?? '').trim() === ''
+  ) {
+    return feedbackReasonGate(satisfactionThreshold)
+  }
   if (!touched) return FEEDBACK_UNCHANGED_GATE
   return null
 }
@@ -1139,11 +1157,14 @@ function FeedbackEntry({ score, onScore, onNoResponse, busy, showNoResponse = tr
   )
 }
 
-function FeedbackReasonField({ value, onChange, describedBy }) {
+// ⚠️ התווית נושאת את הסף, ולכן הוא מוזרק ולא כתוב (מודול 9 · צעד 2.3) — אותה הנמקה
+// בדיוק כמו `feedbackReasonGate`: תווית שאומרת מספר אחר ממה שהמסד אוכף מלמדת את
+// המנהלת כלל שגוי, בלי שאף בדיקה תיפול.
+function FeedbackReasonField({ value, onChange, describedBy, satisfactionThreshold }) {
   return (
     <div className="mt-2 flex flex-col gap-1">
       <label className="text-xs text-slate-500" htmlFor="closing-feedback-reason">
-        סיבת-הבירור — חובה בציון מתחת ל-3
+        סיבת-הבירור — חובה בציון מתחת ל-{satisfactionThreshold}
       </label>
       <select
         id="closing-feedback-reason"
@@ -1197,6 +1218,7 @@ function FeedbackBlock({
   busy,
   onNoResponse,
   scoreEditOpen,
+  satisfactionThreshold,
   onOpenScoreEdit,
 }) {
   const hasScore = detail.feedback_score != null
@@ -1242,6 +1264,7 @@ function FeedbackBlock({
         <FeedbackReasonField
           value={form.reason}
           onChange={form.setReason}
+          satisfactionThreshold={satisfactionThreshold}
           describedBy={form.reason.trim() === '' ? FEEDBACK_GATE_ID : undefined}
         />
       ) : null}
@@ -1552,8 +1575,8 @@ async function sendInvoiceFlow({ detail, billing, file, refresh, toast, setBusy,
 // מחוץ לרכיב: כולן טהורות (שורה + ערכי-טופס ⇒ דגלים), וריכוזן כאן הוא מה שמאפשר לקרוא
 // את הגוף כרשימת-בלוקים ולא כרשת-תנאים. **אין כאן חשבון-כסף** מלבד תת-הסכום הידני,
 // שהוא כולו קלט של המנהלת.
-function derivedView({ detail, proposal, billing, phase, form }) {
-  const scoreLow = form.score != null && form.score < 3
+function derivedView({ detail, proposal, billing, phase, form, satisfactionThreshold }) {
+  const scoreLow = needsSatisfactionAttention(form.score, satisfactionThreshold)
   const manualAgorot = form.manualAmount.trim() === '' ? 0 : toAgorot(form.manualAmount)
   const proposedAgorot = proposal?.proposed_fee == null ? null : toAgorot(proposal.proposed_fee)
   const feeAmountNumber = form.feeAmount.trim() === '' ? null : Number(form.feeAmount)
@@ -1561,7 +1584,7 @@ function derivedView({ detail, proposal, billing, phase, form }) {
   return {
     statusLabel: PROJECT_STATUS_LABELS[detail.project_status] ?? detail.project_status,
     tag: detail.feedback_score == null ? null : scoreTag(detail.feedback_score),
-    gateNote: archiveGateNote(phase),
+    gateNote: archiveGateNote({ ...phase, satisfactionThreshold }),
     scoreLow,
     invoiceName: detail.invoice_file_url ? fileNameOf(detail.invoice_file_url) : null,
     // שני דגלים ולא אחד — ר' `BILLING_UNKNOWN_NOTE`. ‏`undefined` הוא **קריאה שנכשלה**,
@@ -1580,6 +1603,7 @@ function derivedView({ detail, proposal, billing, phase, form }) {
       score: form.score,
       reason: form.reason,
       touched: form.feedbackTouched,
+      satisfactionThreshold,
     }),
     // ‏`showInvoiceBlock` כבר נושא את `!archived && !cancelResolved` ⇒ תיק נעול אינו מגיע
     // לכאן כלל. מה שנשאר: תשלום שנרשם **אינו** מוריד את הבלוק בפרויקט רגיל (תיקון), אבל
@@ -1595,7 +1619,7 @@ function derivedView({ detail, proposal, billing, phase, form }) {
 }
 
 // ── הגוף — ממונטש רק כשהדיאלוג פתוח, ולכן כל פתיחה מתחילה מ-state טרי ────────────────
-function ClosingWindowBody({ project, onOpenChange, onChanged }) {
+function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThreshold }) {
   const toast = useToast()
   const confirm = useConfirm()
 
@@ -1733,6 +1757,10 @@ function ClosingWindowBody({ project, onOpenChange, onChanged }) {
     billing,
     phase,
     form: { score, reason, feedbackTouched, feeAmount, feeNote, manualAmount },
+    // 🔴 **מגיע מ-`FinancePage` ואינו נטען כאן שוב:** המסך והדיאלוג חייבים לקרוא את
+    // **אותה שורה** ב-`params` — שתי שליפות נפרדות היו יכולות להיפרד בזמן (רענון של אחד
+    // בלבד) ולהציג שני ספים שונים לאותו ציון, בלי שום שגיאה.
+    satisfactionThreshold,
   })
   const { scoreLow, feeAmountNumber } = view
 
@@ -1928,6 +1956,7 @@ function ClosingWindowBody({ project, onOpenChange, onChanged }) {
           scoreLow={scoreLow}
           busy={busy}
           scoreEditOpen={scoreEditOpen}
+          satisfactionThreshold={satisfactionThreshold}
           onOpenScoreEdit={() => setScoreEditOpen(true)}
           onNoResponse={() =>
             runAction(
@@ -1984,7 +2013,13 @@ function ClosingWindowBody({ project, onOpenChange, onChanged }) {
   )
 }
 
-export default function ClosingWindowDialog({ project, open, onOpenChange, onChanged }) {
+export default function ClosingWindowDialog({
+  project,
+  open,
+  onOpenChange,
+  onChanged,
+  satisfactionThreshold,
+}) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent dir="rtl" className="sm:max-w-lg" data-testid="closing-dialog">
@@ -1995,7 +2030,12 @@ export default function ClosingWindowDialog({ project, open, onOpenChange, onCha
           </DialogDescription>
         </DialogHeader>
         {open && project ? (
-          <ClosingWindowBody project={project} onOpenChange={onOpenChange} onChanged={onChanged} />
+          <ClosingWindowBody
+            project={project}
+            onOpenChange={onOpenChange}
+            onChanged={onChanged}
+            satisfactionThreshold={satisfactionThreshold}
+          />
         ) : null}
       </DialogContent>
     </Dialog>

@@ -37,6 +37,7 @@ import {
   autoReleaseTargets,
 } from '@/lib/assignmentActions'
 import {
+  HOSTESS_PARAM_NAMES,
   finalAssignmentRows,
   countAssignmentStates,
   assignmentDisplayStatus,
@@ -137,11 +138,21 @@ export default function SmartMatchPage({ projectId, onBack }) {
     }))
   }, [data?.assignments, data?.hostesses, data?.project, projectId])
 
-  const counts = useMemo(() => countAssignmentStates(eventRows, now), [eventRows, now])
+  // 🔄 שלושת ספי-הזימון ירדו ל-`params` (מודול 9 · צעד 2.3) ומגיעים באותה שליפה שכבר
+  // מביאה את פרמטרי ה-Smart Match (`ALL_PARAM_NAMES`) — בלי סיבוב-רשת נוסף.
+  // ⚠️ גולמיים (`text`) ולא מפוענחים: כל פונקציה מפענחת בעצמה דרך `optionalNumber`.
+  const inviteValidityHours = data?.params?.[HOSTESS_PARAM_NAMES.inviteValidityHours]
+  const inviteCutoffHours = data?.params?.[HOSTESS_PARAM_NAMES.inviteCutoffHours]
+  const urgentEventHours = data?.params?.[HOSTESS_PARAM_NAMES.urgentEventHours]
+
+  const counts = useMemo(
+    () => countAssignmentStates(eventRows, now, inviteValidityHours),
+    [eventRows, now, inviteValidityHours],
+  )
   const required = optionalNumber(project?.required_hostess_count) ?? 0
   const isStaffed = required > 0 && counts.finallyApproved >= required
   const eventStartsAt = eventStartInstant(project?.final_event_date, project?.final_start_time)
-  const finalDay = isWithinFinalDay(eventStartsAt, now)
+  const finalDay = isWithinFinalDay(eventStartsAt, now, inviteCutoffHours)
 
   // 🔴 **הזווית "תענה הכי מהר" נשענת על `responded_at` — ונמדדת מהדאטה, לא מונחת.**
   // כל עוד אף דיילת לא ענתה דרך הקישור, מיון לפי עמודה ריקה **משקר בשקט**.
@@ -150,7 +161,8 @@ export default function SmartMatchPage({ projectId, onBack }) {
     [data?.assignments],
   )
   const availability = { hasResponseTimes }
-  const activeAngle = angle ?? defaultSortAngle(isUrgentEvent(eventStartsAt, now), availability)
+  const activeAngle =
+    angle ?? defaultSortAngle(isUrgentEvent(eventStartsAt, now, urgentEventHours), availability)
 
   // ── ארבע השכבות ────────────────────────────────────────────────────────────
   // ⚠️ **המועמדות מחושבות על כל המאגר**, גם על מי שתיפסל בשער: `C` (ממוצע-החברה) מחושב
@@ -491,7 +503,8 @@ export default function SmartMatchPage({ projectId, onBack }) {
 
           (א) **הטקסט אמר "ואין עדיין נתונים", וזו הייתה גם טענת-זמן-ריצה וגם הסיבה הלא-נכונה.**
               המרכיב אינו כבוי בגלל היעדר דאטה — הוא כבוי כי הפרמטר `מרכיב_אמינות_פעיל` כבוי,
-              **והדלקתו היא של מ9** (`🚧 מ9 ← מ4`). מ6 רק מייצר את נתוני-הנוכחות, **והוא כבר
+              **והמתג עצמו נבנה במ9** (~~`🚧 מ9 ← מ4`~~ — שולם 03/09/2026, צעד 3.3; ההדלקה
+              עצמה היא הכרעת-מוצר של ישי ולא חוב-מודול). מ6 רק מייצר את נתוני-הנוכחות, **והוא כבר
               מוזג וחי** (`close_project_operationally` כותב `attendance_status`) ⇒ המשפט התיישן
               ברגע שמ6 מוזג, ואיש לא היה מתריע. ⇒ הבאנר אומר עכשיו רק את מה שהוא **קורא** מהמצב.
 
@@ -546,6 +559,10 @@ export default function SmartMatchPage({ projectId, onBack }) {
                   busy={busy}
                   context={{
                     nowIso: now,
+                    inviteValidityHours,
+                    // נוסח-הכיבוי של "שלח שוב" מצטט את הסף במילים ⇒ הוא צריך את הערך
+                    // עצמו, לא רק את הבוליאני שנגזר ממנו.
+                    inviteCutoffHours,
                     isEventStaffed: isStaffed,
                     isWithinFinalDay: finalDay,
                     hasShiftLead,
@@ -681,8 +698,15 @@ function hhmm(value) {
 }
 
 function EventRow({ row, now, canEdit, busy, context, onAction }) {
-  const label = assignmentDisplayStatus(row, now)
-  const hoursLeft = inviteHoursLeft(row, now)
+  // סף-התוקף מגיע בתוך `context` — אותו אובייקט שכבר נושא את "עכשיו" ואת שני שערי-הכיבוי,
+  // כך שאין prop רביעי שאפשר לשכוח להעביר לשורה אחת מתוך רשימה.
+  const label = assignmentDisplayStatus(row, now, context?.inviteValidityHours)
+  const hoursLeft = inviteHoursLeft(row, now, context?.inviteValidityHours)
+  // 🔴 **המספר במשפט הוא הסף החי, לא `48`** (אודיט-סגירת מ9, 03/09/2026): `שעות_תוקף_זימון`
+  // ירד ל-`params` בצעד 2.3, והחישוב שמעל כבר קורא אותו — רק המחרוזת נשארה קפואה. סף 12
+  // היה מציג "נותרו 3 שעות" בשורה אחת ו"פג אחרי 48 שעות" בשורה שלידה. `hoursLeft` הוא
+  // `null` בדיוק כשהסף חסר, ולכן אף אחת משתי השורות אינה מצוירת עם מספר ריק.
+  const validityHours = optionalNumber(context?.inviteValidityHours)
 
   return (
     <li
@@ -723,7 +747,7 @@ function EventRow({ row, now, canEdit, busy, context, onAction }) {
             תאריך. הגרסה הראשונה הציגה `09T20:33:42.432+00:00/08/2026` על המסך; נתפס
             בצילום-מסך ולא בבדיקה. ‏`formatDate` דוחה עכשיו קלט כזה במקום לפלוט זבל. */}
         {row.invite_sent_at ? `נשלח ${formatTimestamp(row.invite_sent_at, '—')}` : 'טרם נשלח זימון'}
-        {hoursLeft === 0 && ' · הקישור פג אחרי 48 שעות'}
+        {hoursLeft === 0 && ` · הקישור פג אחרי ${validityHours} שעות`}
         {hoursLeft > 0 && ` · נותרו ${hoursLeft} שעות`}
       </div>
 

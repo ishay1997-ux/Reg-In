@@ -234,3 +234,22 @@ describe('CANCELLATION_PARAM_NAMES — זהים-בייט לזרע 1.7', () => {
     ])
   })
 })
+
+// 🔴 אודיט-סגירת מ9 (03/09/2026): מדרגות הפוכות ⇒ `null`, לא אחוז. הבדיקה נכתבה סביב
+// **התרחיש הכספי** ולא סביב הכלל: 50 שעות לפני אירוע, שאמור לזכות ב-50%, חויב ב-100%
+// כשהסדר התהפך — כי `hours > partial` בלע אותו לפני שהשורה השנייה נבדקה בכלל.
+describe('compensationPercent — מדרגות הפוכות אינן מתפרשות (באג-הכסף)', () => {
+  const base = { hoursUntilEvent: 50, cancelType: 'client', partialPercent: 50 }
+
+  it('הסדר התקין: 50 שעות מזכות במדרגה האמצעית', () => {
+    expect(compensationPercent({ ...base, fullHours: 24, partialHours: 72 })).toBe(50)
+  })
+
+  it('סדר הפוך ⇒ null, ולא 100 בשקט', () => {
+    expect(compensationPercent({ ...base, fullHours: 100, partialHours: 72 })).toBeNull()
+  })
+
+  it('שווה ⇒ null — המדרגה האמצעית ריקה, וזה אותו כשל', () => {
+    expect(compensationPercent({ ...base, fullHours: 72, partialHours: 72 })).toBeNull()
+  })
+})

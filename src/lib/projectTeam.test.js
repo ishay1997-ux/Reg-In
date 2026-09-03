@@ -70,11 +70,37 @@ describe('assignmentMeaning — משפט לכל מצב, לעולם לא ציון
 
 describe('teamHeadline — המשפט האדום היחיד, והמילים נושאות אותו', () => {
   it('המקרה החי של #8: כל הזימונים הפתוחים פגו — הנוסח המאושר', () => {
-    const headline = teamHeadline({ gap: 5, pendingLive: 0, pendingExpired: 2 })
+    const headline = teamHeadline({
+      gap: 5,
+      pendingLive: 0,
+      pendingExpired: 2,
+      validityHours: '48',
+    })
     expect(headline.lead).toBe('⚠ חסרות 5 דיילות')
     expect(headline.rest).toBe(
       '— שני הזימונים הפתוחים פגו אחרי 48 שעות, כלומר אין קישור חי: גם דיילת שתרצה לאשר עכשיו לא תוכל. הפעולה הבאה היא זימון חדש, לא המתנה.',
     )
+  })
+
+  // 🔬 **בדיקת-המוטציה של אודיט-הסגירה (03/09/2026).** אותו מקרה בדיוק, סף אחר. אילו
+  // ה-48 היה נשאר קשיח במחרוזת — כפי שהיה עד עכשיו — שתי הבדיקות היו זהות והירוק לא
+  // היה מוכיח דבר. הלשונית סופרת "פג" לפי הסף החי; המשפט חייב להסביר לפי אותו סף.
+  it('🔬 סף 12 ⇒ המשפט אומר 12, ולא 48', () => {
+    const headline = teamHeadline({
+      gap: 5,
+      pendingLive: 0,
+      pendingExpired: 2,
+      validityHours: '12',
+    })
+    expect(headline.rest).toContain('פגו אחרי 12 שעות')
+    expect(headline.rest).not.toContain('48')
+  })
+
+  // סף חסר ⇒ המשפט נאמר בלי המספר, ולא "אחרי null שעות".
+  it('סף חסר ⇒ אין מספר במשפט, והמשפט עדיין שלם', () => {
+    const headline = teamHeadline({ gap: 5, pendingLive: 0, pendingExpired: 2 })
+    expect(headline.rest).toContain('שני הזימונים הפתוחים פגו, כלומר אין קישור חי')
+    expect(headline.rest).not.toContain('null')
   })
 
   it('אין חוסר ⇒ אין משפט — "לא בכוח"', () => {
@@ -152,9 +178,23 @@ describe('sortTeamRows — בפנים · פתוח · יצא', () => {
 })
 
 describe('נגזרות-הזמן של זימון', () => {
-  it('רגע-התפוגה = שליחה + 48 שעות, בשעון ישראל', () => {
+  // 🔄 סף-התוקף ירד מקבוע-קוד לשורת-`params` `שעות_תוקף_זימון` (מודול 9 · צעד 2.3)
+  // ומוזרק כמו "עכשיו". **מחרוזת** — `param_value` הוא `text` במסד.
+  it('רגע-התפוגה = שליחה + סף-התוקף, בשעון ישראל', () => {
     // ‏09/08 20:33Z (קיץ, UTC+3 ⇒ ‏23:33 מקומי); ‏+48 שעות ⇒ ‏11/08 23:33.
-    expect(inviteExpiryText('2026-08-09T20:33:00Z')).toBe('11/08 23:33')
+    expect(inviteExpiryText('2026-08-09T20:33:00Z', '48')).toBe('11/08 23:33')
+  })
+
+  // 🔬 מוטציה: אותה שליחה בדיוק, סף אחר ⇒ רגע-תפוגה אחר.
+  it('סף 24 שעות מזיז את רגע-התפוגה ליום קודם', () => {
+    expect(inviteExpiryText('2026-08-09T20:33:00Z', '24')).toBe('10/08 23:33')
+  })
+
+  // 🔴 סף חסר ⇒ `null` ולא חותמת מומצאת — הלשונית מציגה את המשפט בלי רגע-התפוגה.
+  it('סף חסר ⇒ null, ולא נפילה חזרה ל-48', () => {
+    for (const bad of [undefined, null, '', '   ']) {
+      expect(inviteExpiryText('2026-08-09T20:33:00Z', bad)).toBeNull()
+    }
   })
 
   it('ימים-ללא-מענה נספרים בימים שלמים מרגע-השליחה', () => {

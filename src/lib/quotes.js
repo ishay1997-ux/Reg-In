@@ -464,9 +464,11 @@ export function crossesMidnight(startTime, endTime) {
 // quotes.* + quote_services(*) + customers(...). ‏listQuotes() אינה מקבלת מסננים
 // (סטייה מהבלופרינט, מתועדת ב-api.js): הטאבים, המונים, המסננים והמיון כולם כאן.
 
-// LOCAL-4 (הכרעת-ישי 15/07): "פג בקרוב" = 7 ימים או פחות לתפוגה. זה **לא** אותו מספר
-// כמו ימי-התוקף עצמם (פרמטר `ימי_תוקף_הצעה`=30) ולא כמו חלון-האירוע (`ימי_אזהרה_קדם_אירוע`=14).
-export const EXPIRING_SOON_DAYS = 7
+// 🔄 LOCAL-4 (הכרעת-ישי 15/07): "פג בקרוב" = N ימים או פחות לתפוגה. **הסף ירד מקבוע-קוד
+// לשורת-`params` `ימי_אזהרה_הצעה_פגה`=7** (מודול 9 · צעד 2.3) ומוזרק ל-`deriveQuoteExpiry`
+// כמו `validityDays` שכבר לצידו. זה **לא** אותו מספר כמו ימי-התוקף עצמם
+// (`ימי_תוקף_הצעה`=30) ולא כמו חלון-האירוע (`ימי_אזהרה_קדם_אירוע`=14) — שלושה ספים
+// שקל להחליף ביניהם, ולכן לכל אחד שורה משלו במסד ושם משלו כאן.
 
 // שמות-הפרמטרים שמסך-הניהול קורא מ-params. שתי המחרוזות החדשות חייבות להיות זהות-בייט
 // לשורות ה-Seed (מיגרציה 20260723112000); המע"מ **אינו נכתב כאן שוב** אלא נשאב מ-pricing.js,
@@ -475,6 +477,8 @@ export const QUOTE_SCREEN_PARAM_NAMES = {
   vatPercent: PRICING_PARAM_NAMES.VAT_PERCENT,
   validityDays: 'ימי_תוקף_הצעה',
   eventWarningDays: 'ימי_אזהרה_קדם_אירוע',
+  // 🆕 מודול 9 (צעד 2.3) — הסף של "פג בקרוב", שעד אז היה קבוע מיוצא בקובץ הזה.
+  expiringSoonDays: 'ימי_אזהרה_הצעה_פגה',
   // גוף מייל-ההצעה (צעד 3.4). נטען יחד עם השאר כי `getQuoteScreenParams` שולפת
   // בדיוק את הערכים שכאן — הוספת שם כאן היא כל מה שנדרש כדי שהמסך יקבל אותו.
   quoteEmailTemplate: 'תבנית_מייל_הצעת_מחיר',
@@ -504,16 +508,38 @@ function paramNumber(value) {
 }
 
 // שורת-האזהרה שמסך-ההצעות מציג כששורת-פרמטר תמחור חסרה מ-`params` (הכרעת-ישי 31/07/2026).
-// ⚠️ **למה בכלל צריך אותה:** שני הפרמטרים האלה נכשלים בשקט כשהם חסרים, כל אחד בדרכו —
+// ⚠️ **למה בכלל צריך אותה:** שלושת הפרמטרים האלה נכשלים בשקט כשהם חסרים, כל אחד בדרכו —
 // המע"מ חוסם הפקת מסמך (המשתמש כן יראה זאת בחלון), אבל `ימי_תוקף_הצעה` חסר מפיל את
 // **עבודת-הלילה** שמסמנת הצעות שפג תוקפן. העבודה זורקת שגיאה ורצה נכשלת, אך היומן
 // שלה (`cron.job_run_details`) הוא מקום שאיש אינו פותח — ובלי סימן במסך, "נכשל ברעש"
 // שקול ל"נכשל בשקט". כאן זה נאמר במקום שבו המשתמש ממילא נמצא.
+// 🆕 **הורחב 03/09/2026 באודיט-הסגירה של מודול 9 (ממצא F-6) — משניים לארבעה.**
+// ‏`ימי_אזהרה_הצעה_פגה` הוא מ9 (הוצא מקבוע-קוד לשורה במסד) · `ימי_אזהרה_קדם_אירוע` **קדם למ9**
+// ונשאר מחוץ לבאנר מאז שנכתב. שניהם נופלים בדיוק במחלקה שהבאנר נבנה בשבילה: בלי השורה,
+// `isExpiringSoon`/`isEventSoon` נגזרים ל-`false` לכל הצעה ⇒ השבב מציג **0**, המסנן מחזיר ריק,
+// ואין שום סימן. 🔑 **וזו הצורה הגרועה ביותר של כשל-שקט: הוא נקרא כבשורה טובה** — "אין הצעות
+// שעומדות לפוג", "אין אירועים קרובים" — ולכן איש אינו הולך לחפש. אירוע בעוד חמישה ימים שאיש
+// לא אייש אינו נזק קטן ממסמך שאי-אפשר להפיק.
+// ⚖️ **הרחבה מכוונת אל מעבר לגבול-מ9, ובמחלוקת שהוכרעה בין שני סשנים** *(03/09/2026, אודיט-הסגירה)*:
+// סשן-האודיט התנגד תחילה — "הבאנר מכסה 2 מ-4 **בכוונה**, לפי כלל 'בלתי-נראה וגם בעל-משמעות';
+// תיקון של אחד בלבד יעשה אותו 3 מ-4 ושרירותי עוד יותר" — ואז **חזר בו** בנימוק שהכלל שלו-עצמו
+// מכסה גם את השניים האלה, ושהגבול הישן לא היה כלל אלא המקום שבו מישהו עצר. ⇒ **4 מתוך 4,
+// והמחלקה סגורה.** ‏`grep` על `QUOTE_SCREEN_PARAM_NAMES` יראה שרק גוף-המייל נשאר בחוץ, וזה נכון:
+// הוא אינו מספר ואינו נגזר ל-false.
 // מחזירה '' כשהכול תקין, כדי שהקורא יוכל לכתוב `{message && <banner/>}`.
-export function missingPricingParamsMessage({ vatRate, validityDays } = {}) {
+export function missingPricingParamsMessage({
+  vatRate,
+  validityDays,
+  expiringSoonDays,
+  eventWarningDays,
+} = {}) {
   const missing = []
   if (paramNumber(vatRate) === null) missing.push(QUOTE_SCREEN_PARAM_NAMES.vatPercent)
   if (paramNumber(validityDays) === null) missing.push(QUOTE_SCREEN_PARAM_NAMES.validityDays)
+  if (paramNumber(expiringSoonDays) === null)
+    missing.push(QUOTE_SCREEN_PARAM_NAMES.expiringSoonDays)
+  if (paramNumber(eventWarningDays) === null)
+    missing.push(QUOTE_SCREEN_PARAM_NAMES.eventWarningDays)
   if (missing.length === 0) return ''
 
   // ההשלכה נאמרת פר-פרמטר ולא כמשפט כללי: המשתמש צריך לדעת מה **לא עובד עכשיו**,
@@ -524,6 +550,12 @@ export function missingPricingParamsMessage({ vatRate, validityDays } = {}) {
   }
   if (missing.includes(QUOTE_SCREEN_PARAM_NAMES.validityDays)) {
     effects.push('הצעות אינן פגות אוטומטית')
+  }
+  if (missing.includes(QUOTE_SCREEN_PARAM_NAMES.expiringSoonDays)) {
+    effects.push('אין התראה על הצעות שעומדות לפוג')
+  }
+  if (missing.includes(QUOTE_SCREEN_PARAM_NAMES.eventWarningDays)) {
+    effects.push('אין התראה על אירועים קרובים')
   }
   // התאמת מין ומספר — תווית שאומרת "השורות" על שורה אחת נקראת כמו טקסט מתורגם.
   const label = missing.length === 1 ? 'חסר פרמטר מערכת' : 'חסרים פרמטרי מערכת'
@@ -580,7 +612,11 @@ export function deriveQuoteAmount(quote, defaultVatRate) {
 // מחזיר null להצעה שאינה in_progress: הצעה סגורה כבר לא פגה, ו"פג בעוד -12 יום" הוא רעש.
 // ⚠️ הפרש-מותר של עד יממה מול עבודת-הרקע: היא משווה חותמות-זמן מלאות, כאן משווים תאריכים.
 // זה מכוון — המשתמש חושב בימים, לא בשעות.
-export function deriveQuoteExpiry(quote, validityDays, todayIso) {
+// ⚠️ **שני פרמטרים ולא אחד** (מודול 9 · צעד 2.3): `validityDays` קובע **מתי** ההצעה פגה,
+// ו-`warningDays` (`ימי_אזהרה_הצעה_פגה`) קובע מתי מתחילים להתריע על כך. סף-אזהרה חסר
+// ⇒ `isExpiringSoon: false` — התאריך ומספר-הימים עדיין נכונים ומוצגים, רק ההתראה שותקת;
+// ברירת-מחדל כאן הייתה צובעת הצעות באדום לפי מספר שאיש לא הכריע.
+export function deriveQuoteExpiry(quote, validityDays, todayIso, warningDays) {
   if (quote?.quote_status !== 'in_progress') return null
   const days = paramNumber(validityDays)
   if (days === null) return null
@@ -593,7 +629,8 @@ export function deriveQuoteExpiry(quote, validityDays, todayIso) {
   const daysLeft = daysUntil(expiryDate, todayIso)
   if (daysLeft === null) return null
 
-  return { expiryDate, daysLeft, isExpiringSoon: daysLeft <= EXPIRING_SOON_DAYS }
+  const warning = paramNumber(warningDays)
+  return { expiryDate, daysLeft, isExpiringSoon: warning !== null && daysLeft <= warning }
 }
 
 // "אירועים קרובים" — אירוע שמתקיים בתוך חלון-האזהרה (`ימי_אזהרה_קדם_אירוע`=14).
@@ -681,7 +718,7 @@ export function matchesQuoteFilters(quote, filters = {}, ctx = {}) {
   if (filters.eventDateTo && (!eventDate || eventDate > filters.eventDateTo)) return false
 
   if (filters.expiringSoon) {
-    const expiry = deriveQuoteExpiry(quote, ctx.validityDays, ctx.todayIso)
+    const expiry = deriveQuoteExpiry(quote, ctx.validityDays, ctx.todayIso, ctx.expiringSoonDays)
     if (!expiry?.isExpiringSoon) return false
   }
 

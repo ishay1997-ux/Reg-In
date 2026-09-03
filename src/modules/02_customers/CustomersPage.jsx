@@ -24,6 +24,7 @@ import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
 import {
   CUSTOMER_TYPE_LABELS,
+  SATISFACTION_THRESHOLD_PARAM_NAME,
   archiveWarningMessage,
   countActiveFilters,
   deriveCustomerMetrics,
@@ -67,7 +68,10 @@ import { cn } from '@/lib/utils'
 // 🔴 הצורה `4.5 ★` (‏`RatingStars variant="compact"`) ולא חמישה גליפים: הערך הוא **ממוצע**,
 // וגליפים יודעים לצייר רק שלם — 4.5 היה נצבע כחמישה מלאים. זו גם הצורה שמוקאפ-הטבלה מצייר.
 // ‏`null` = אין ולו משוב אחד שהושלם ⇒ הכוכבים נשארים אפורים והמשפט נשאר — **לא "0 ★"**.
-function SatisfactionCell({ average }) {
+// ‏`threshold` = הערך הגולמי של `סף_שביעות_רצון` מ-`params` (מודול 9 · צעד 2.3, ירד
+// מקבוע-קוד ב-`src/lib/customers.js`). חסר ⇒ אין תווית "טעון בירור" — אותה "לא בכוח"
+// שהמסך כבר מפעיל על סף-הרדימות, ולא סף מומצא שיצבע לקוחות באדום.
+function SatisfactionCell({ average, threshold }) {
   if (average == null) {
     return (
       <div className="flex flex-col gap-0.5" title="אין נתונים עדיין">
@@ -83,7 +87,7 @@ function SatisfactionCell({ average }) {
   return (
     <div className="flex flex-col gap-0.5">
       <RatingStars value={average} variant="compact" />
-      {needsSatisfactionAttention(average) && (
+      {needsSatisfactionAttention(average, threshold) && (
         // אותה תווית מילולית בדיוק של ה16/§7.80 (`scoreTagText` במ8) — לא ניסוח מקומי חדש.
         <span className="text-xs font-medium text-rose-700">טעון בירור</span>
       )}
@@ -139,11 +143,18 @@ export default function CustomersPage() {
   // הגיע לארכיון בלי שאלה. הדגל הזה הוא המצב-השלישי המוצהר: המשתמש רואה שהנתונים לא נטענו
   // ויכול לנסות שוב, ובינתיים כל ארכוב שואל וידוא. אותה דוקטרינת "ריק אינו 0" של מודול-הכסף.
   const [revenueLoadFailed, setRevenueLoadFailed] = useState(false)
+  // 🔴 R-1 (אודיט-סגירת מ9, 03/09/2026): הבלוק הזה איבד את השקט שלו בכוונה — ר' ההערה מעל
+  // ה-try — ולכן הוא צריך דגל ובאנר משלו, בדיוק כמו עמודת-ההכנסות. בלי זה הפכנו שכבת-API
+  // כנה למסך אילם שמאבד יותר ממה שאיבד קודם.
+  const [screenParamsFailed, setScreenParamsFailed] = useState(false)
   // 🆕 מסננת "רדומים" (A3, מודול 6 · משטח 8) — פר-לקוח: מערך שורות-הפרויקטים המזעריות
   // (customer_id, final_event_date, project_status) שממנו isCustomerDormant נגזרת, בדיוק
   // כמו revenueByCustomer. `{}` = טרם נטען/כשל — אז אף לקוח לא רדום, ולא נופלים ("לא בכוח").
   const [projectsByCustomer, setProjectsByCustomer] = useState({})
   const [dormantThresholdDays, setDormantThresholdDays] = useState(NaN)
+  // 🆕 סף "טעון בירור" — נטען מאותה שאילתה בדיוק, ומאותה סיבה: הוא הגדרת-מערכת ולא בחירה
+  // של המשתמשת. `null` = טרם נטען/כשל ⇒ המסנן והתווית שותקים (ולא "כולם טעונים בירור").
+  const [satisfactionThreshold, setSatisfactionThreshold] = useState(null)
   // "היום" מחושב פעם אחת (אתחול-עצל, לא ב-render — react-hooks/purity), אותו דפוס כמו
   // CustomerDetailsPage.jsx/ProjectCardPage.jsx.
   const [today] = useState(() => new Date().toISOString().slice(0, 10))
@@ -206,8 +217,14 @@ export default function CustomersPage() {
       }
 
       // 🆕 A3 (מודול 6 · משטח 8) — פרויקטים בתפזורת + סף-הרדימות, לצורך מסננת "רדומים".
-      // בלוק try נפרד ומכוון: כשל כאן לא נוגע בעמודת-ההכנסות ולא בטבלה עצמה — רק במסננת
-      // (מפה ריקה ⇒ isCustomerDormant מחזירה false לכולם, "לא בכוח" ולא קורס).
+      // בלוק try נפרד ומכוון: כשל כאן לא נוגע בעמודת-ההכנסות ולא בטבלה עצמה.
+      // 🔴 **אבל מה שכן נופל כאן גדל ב-03/09/2026, וזה נאמר במפורש כי הנוסח הקודם כבר לא נכון:**
+      // ‏`getCustomerScreenParams` עברה לקורא שצועק (ממצא F-7 — שורת-סף חסרה הייתה מוחקת את
+      // תגית "טעון בירור" מכל הלקוחות **בשקט**), ולכן שורה חסרה **מפילה את כל ה-`Promise.all`**:
+      // גם מפת-הפרויקטים, כלומר גם מסננת-הרדומים וגם עמודת-הכוכבים. ⇒ **מ"לא בכוח" שקט
+      // ל"נכשל בקול" — ולכן חייב באנר.** בלי הבאנר הזה התיקון של F-7 היה רגרסיה נטו (ממצא R-1
+      // בסריקה-החוזרת של אותו אודיט: הפכנו את ה-API כנה ואת המסך לא רועש יותר, והרחבנו את
+      // רדיוס-הפגיעה). הבאנר, הדגל וה-`console.error` מועתקים מ-`revenueLoadFailed` שתשע שורות מכאן.
       try {
         const [projectRows, customerParamRows] = await Promise.all([
           listProjectsForCustomerMetrics(),
@@ -215,14 +232,18 @@ export default function CustomersPage() {
         ])
         if (cancelled) return
         setProjectsByCustomer(groupProjectsByCustomer(projectRows))
-        const threshold = customerParamRows.find(
-          (row) => row.param_name === DORMANT_THRESHOLD_PARAM_NAME,
-        )?.param_value
-        setDormantThresholdDays(Number(threshold))
-      } catch {
+        const paramValue = (name) =>
+          customerParamRows.find((row) => row.param_name === name)?.param_value
+        setDormantThresholdDays(Number(paramValue(DORMANT_THRESHOLD_PARAM_NAME)))
+        setSatisfactionThreshold(paramValue(SATISFACTION_THRESHOLD_PARAM_NAME) ?? null)
+        if (!cancelled) setScreenParamsFailed(false)
+      } catch (err) {
         if (!cancelled) {
+          console.error('[02_customers] screen params/projects load failed', err)
           setProjectsByCustomer({})
           setDormantThresholdDays(NaN)
+          setSatisfactionThreshold(null)
+          setScreenParamsFailed(true)
         }
       }
     })()
@@ -376,11 +397,17 @@ export default function CustomersPage() {
     // createdAfter ("נוספו לאחרונה") מחושב במסננת (event handler) ומגיע דרך ...filters — לא כאן,
     // כדי לא לקרוא Date.now בזמן רינדור (react-hooks/purity).
     const filtered = withDerived.filter((c) =>
-      matchesCustomerFilters(c, {
-        text: searchText,
-        ...filters,
-        status: statusView, // 'active' או 'inactive' — תמיד רשימה אחת, לא שתיהן
-      }),
+      matchesCustomerFilters(
+        c,
+        {
+          text: searchText,
+          ...filters,
+          status: statusView, // 'active' או 'inactive' — תמיד רשימה אחת, לא שתיהן
+        },
+        // ⚠️ ארגומנט שלישי ולא שדה ב-`filters`: זו הגדרת-מערכת, ו-`countActiveFilters`
+        // הייתה סופרת אותה כמסננת פעילה.
+        satisfactionThreshold,
+      ),
     )
     return sortKey ? sortCustomers(filtered, sortKey, sortDir) : filtered
   }, [
@@ -392,6 +419,7 @@ export default function CustomersPage() {
     searchText,
     filters,
     statusView,
+    satisfactionThreshold,
     sortKey,
     sortDir,
   ])
@@ -540,6 +568,29 @@ export default function CustomersPage() {
               onClick={reloadCustomers}
               className="h-auto py-1.5 px-3 rounded-lg border-amber-300 text-amber-800 shrink-0"
               data-testid="customers-revenue-retry"
+            >
+              נסה שוב
+            </Button>
+          </div>
+        )}
+
+        {/* R-1: אותו דפוס בדיוק כמו הבאנר שמעליו. הנוסח נוקב במה שנעלם מהמסך — מסננת-הרדומים
+            ועמודת-ההתרשמות — ולא ב"שגיאת טעינה" גנרית, כי המשתמשת רואה טבלה מלאה ותוהה מה חסר. */}
+        {screenParamsFailed && (
+          <div
+            className="rounded-lg border border-amber-300 bg-amber-50 p-3 mb-4 flex items-center justify-between gap-3 flex-wrap"
+            role="alert"
+            data-testid="customers-screen-params-error"
+          >
+            <p className="text-sm text-amber-800">
+              הגדרות המסך לא נטענו — מסננת "לקוחות רדומים" ועמודת ההתרשמות אינן זמינות כרגע.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={reloadCustomers}
+              className="h-auto py-1.5 px-3 rounded-lg border-amber-300 text-amber-800 shrink-0"
+              data-testid="customers-screen-params-retry"
             >
               נסה שוב
             </Button>
@@ -864,7 +915,10 @@ export default function CustomersPage() {
                             )}
                           </td>
                           <td className="py-3">
-                            <SatisfactionCell average={customer.avg_feedback} />
+                            <SatisfactionCell
+                              average={customer.avg_feedback}
+                              threshold={satisfactionThreshold}
+                            />
                           </td>
                           <td className="py-3">
                             <span

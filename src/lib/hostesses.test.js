@@ -5,9 +5,6 @@ import {
   HOSTESS_STATUS_LABELS,
   EXPIRED_INVITE_LABEL,
   COMPLETED_ASSIGNMENT_LABEL,
-  INVITE_VALIDITY_HOURS,
-  INVITE_CUTOFF_HOURS_BEFORE_EVENT,
-  URGENT_EVENT_HOURS,
   eventStartInstant,
   minWageError,
   duplicateEmailWarning,
@@ -73,11 +70,18 @@ describe('שמות-פרמטרים — זהים בית-בבית לשורות ה-S
   })
 })
 
-describe('ספי-הזמן — שלושה מספרים שונים שקל לבלבל ביניהם', () => {
-  it('48 שעות לתוקף הזימון · 24 שעות חסימה לפני האירוע · 72 שעות "דחוף"', () => {
-    expect(INVITE_VALIDITY_HOURS).toBe(48)
-    expect(INVITE_CUTOFF_HOURS_BEFORE_EVENT).toBe(24)
-    expect(URGENT_EVENT_HOURS).toBe(72)
+// 🔄 **שלושת הספים אינם קבועים בקוד יותר** (מודול 9 · צעד 2.3) — הם שורות ב-`params`,
+// והבדיקות מזריקות אותם בדיוק כמו `nowIso`. הערכים כאן **מחרוזות**, כי `param_value` הוא
+// `text` במסד; בדיקה עם מספרים בלבד הייתה מפספסת את הפענוח שהקוד באמת עושה.
+const VALIDITY_HOURS = '48'
+const CUTOFF_HOURS = '24'
+const URGENT_HOURS = '72'
+
+describe('שמות שלושת ספי-הזימון ב-params — זהים-בייט לשורות ה-Seed', () => {
+  it('תו אחד שגוי מחזיר שורה ריקה בלי שום שגיאה, ולכן השמות ננעלים כאן', () => {
+    expect(HOSTESS_PARAM_NAMES.inviteValidityHours).toBe('שעות_תוקף_זימון')
+    expect(HOSTESS_PARAM_NAMES.inviteCutoffHours).toBe('שעות_סף_זימון_לפני_אירוע')
+    expect(HOSTESS_PARAM_NAMES.urgentEventHours).toBe('שעות_אירוע_דחוף')
   })
 })
 
@@ -203,12 +207,14 @@ describe('isInviteExpired — ממתינה למענה וגם עברו 48 שעו�
       isInviteExpired(
         { assignment_status: 'pending', invite_sent_at: sent },
         '2026-08-12T08:00:00.000Z',
+        VALIDITY_HOURS,
       ),
     ).toBe(false)
     expect(
       isInviteExpired(
         { assignment_status: 'pending', invite_sent_at: sent },
         '2026-08-12T10:00:00.000Z',
+        VALIDITY_HOURS,
       ),
     ).toBe(true)
   })
@@ -225,6 +231,7 @@ describe('isInviteExpired — ממתינה למענה וגם עברו 48 שעו�
         isInviteExpired(
           { assignment_status: status, invite_sent_at: sent },
           '2026-08-20T09:00:00.000Z',
+          VALIDITY_HOURS,
         ),
       ).toBe(false)
     }
@@ -235,6 +242,7 @@ describe('isInviteExpired — ממתינה למענה וגם עברו 48 שעו�
       isInviteExpired(
         { assignment_status: 'pending', invite_sent_at: null },
         '2026-08-20T09:00:00.000Z',
+        VALIDITY_HOURS,
       ),
     ).toBe(false)
   })
@@ -244,14 +252,36 @@ describe('isInviteExpired — ממתינה למענה וגם עברו 48 שעו�
       inviteHoursLeft(
         { assignment_status: 'pending', invite_sent_at: sent },
         '2026-08-11T02:00:00.000Z',
+        VALIDITY_HOURS,
       ),
     ).toBe(31)
     expect(
       inviteHoursLeft(
         { assignment_status: 'pending', invite_sent_at: sent },
         '2026-08-12T10:00:00.000Z',
+        VALIDITY_HOURS,
       ),
     ).toBe(0)
+  })
+
+  // 🔬 **בדיקת-המוטציה של צעד 2.3 — זו שמוכיחה שהסף באמת הגיע מ-`params`.**
+  // אותה שורה ואותו "עכשיו" בדיוק, רק עם סף אחר: אילו המימוש היה ממשיך לקרוא 48 מהקוד,
+  // שתי השורות האלה היו מחזירות את אותה תשובה והבדיקה הייתה ירוקה על קוד שלא זז.
+  it('סף שעה אחת הופך זימון בן שעתיים לפג — מה שסף 48 מחזיר כתקף', () => {
+    const row = { assignment_status: 'pending', invite_sent_at: sent }
+    const twoHoursLater = '2026-08-10T11:00:00.000Z'
+    expect(isInviteExpired(row, twoHoursLater, VALIDITY_HOURS)).toBe(false)
+    expect(isInviteExpired(row, twoHoursLater, '1')).toBe(true)
+  })
+
+  // 🔴 סף חסר ⇒ "לא יודע", **לעולם לא 48 מובלע**. הצעקה יושבת ב-`getParamValues`.
+  it('סף חסר או לא-מספרי ⇒ null / false, ולא נפילה חזרה לערך הישן', () => {
+    const row = { assignment_status: 'pending', invite_sent_at: sent }
+    const wayLater = '2026-09-10T09:00:00.000Z'
+    for (const bad of [undefined, null, '', '   ', 'שלוש']) {
+      expect(inviteHoursLeft(row, wayLater, bad)).toBeNull()
+      expect(isInviteExpired(row, wayLater, bad)).toBe(false)
+    }
   })
 })
 
@@ -260,20 +290,39 @@ describe('isWithinFinalDay / isUrgentEvent — שני ספים שונים', () =
   const eventAt = '2026-08-22T15:00:00.000Z'
 
   it('‏19 שעות לפני האירוע ⇒ בתוך T-24', () => {
-    expect(isWithinFinalDay(eventAt, '2026-08-21T20:00:00.000Z')).toBe(true)
+    expect(isWithinFinalDay(eventAt, '2026-08-21T20:00:00.000Z', CUTOFF_HOURS)).toBe(true)
   })
 
   it('‏25 שעות לפני האירוע ⇒ עדיין לא', () => {
-    expect(isWithinFinalDay(eventAt, '2026-08-21T14:00:00.000Z')).toBe(false)
+    expect(isWithinFinalDay(eventAt, '2026-08-21T14:00:00.000Z', CUTOFF_HOURS)).toBe(false)
   })
 
   it('אירוע שכבר עבר אינו "בתוך 24 שעות" — הוא נגמר', () => {
-    expect(isWithinFinalDay(eventAt, '2026-08-23T15:00:00.000Z')).toBe(false)
+    expect(isWithinFinalDay(eventAt, '2026-08-23T15:00:00.000Z', CUTOFF_HOURS)).toBe(false)
   })
 
   it('"דחוף" הוא 72 שעות ולא 24 — סף המסנן וברירת-מחדל המיון', () => {
-    expect(isUrgentEvent(eventAt, '2026-08-20T15:00:00.000Z')).toBe(true)
-    expect(isUrgentEvent(eventAt, '2026-08-19T09:00:00.000Z')).toBe(false)
+    expect(isUrgentEvent(eventAt, '2026-08-20T15:00:00.000Z', URGENT_HOURS)).toBe(true)
+    expect(isUrgentEvent(eventAt, '2026-08-19T09:00:00.000Z', URGENT_HOURS)).toBe(false)
+  })
+
+  // 🔬 מוטציה: אותו רגע בדיוק, סף אחר — התשובה מתהפכת.
+  it('‏19 שעות לפני האירוע: סף 24 ⇒ כן, סף 12 ⇒ לא', () => {
+    const at = '2026-08-21T20:00:00.000Z'
+    expect(isWithinFinalDay(eventAt, at, CUTOFF_HOURS)).toBe(true)
+    expect(isWithinFinalDay(eventAt, at, '12')).toBe(false)
+    expect(isUrgentEvent(eventAt, at, URGENT_HOURS)).toBe(true)
+    expect(isUrgentEvent(eventAt, at, '6')).toBe(false)
+  })
+
+  // 🔴 סף חסר ⇒ `false`. **וזה נושא-משקל:** תשובה חיובית כאן מחליפה את הפעולה הראשית
+  // של מסך-השיבוץ, ואסור שהיא תישען על מספר שאיש לא הכריע.
+  it('סף חסר ⇒ false בשתיהן, ולא נפילה חזרה ל-24/72', () => {
+    const at = '2026-08-21T20:00:00.000Z'
+    for (const bad of [undefined, null, '', '   ']) {
+      expect(isWithinFinalDay(eventAt, at, bad)).toBe(false)
+      expect(isUrgentEvent(eventAt, at, bad)).toBe(false)
+    }
   })
 })
 
@@ -283,23 +332,37 @@ describe('assignmentDisplayStatus — ששת הסטטוסים ושתי הנגז�
 
   it('ממתינה שפג תוקפה מוצגת "פג תוקף"', () => {
     const row = { assignment_status: 'pending', invite_sent_at: '2026-08-10T09:00:00.000Z' }
-    expect(assignmentDisplayStatus(row, '2026-08-13T09:00:00.000Z')).toBe('פג תוקף')
+    expect(assignmentDisplayStatus(row, '2026-08-13T09:00:00.000Z', VALIDITY_HOURS)).toBe('פג תוקף')
   })
 
   it('אושרה סופית ואירועה עבר מוצגת "הושלם" — תווית תצוגה, לא סטטוס', () => {
     const row = { assignment_status: 'finally_approved', event_starts_at: eventAt }
-    expect(assignmentDisplayStatus(row, '2026-08-23T09:00:00.000Z')).toBe('הושלם')
+    expect(assignmentDisplayStatus(row, '2026-08-23T09:00:00.000Z', VALIDITY_HOURS)).toBe('הושלם')
   })
 
   it('אושרה סופית לאירוע עתידי נשארת "אושרה סופית"', () => {
     const row = { assignment_status: 'finally_approved', event_starts_at: eventAt }
-    expect(assignmentDisplayStatus(row, '2026-08-20T09:00:00.000Z')).toBe('אושרה סופית')
+    expect(assignmentDisplayStatus(row, '2026-08-20T09:00:00.000Z', VALIDITY_HOURS)).toBe(
+      'אושרה סופית',
+    )
   })
 
   it('סטטוס שאינו מוכר אינו דולף למסך כערך-אנגלית', () => {
-    expect(assignmentDisplayStatus({ assignment_status: 'zzz' }, '2026-08-20T09:00:00.000Z')).toBe(
-      '—',
-    )
+    expect(
+      assignmentDisplayStatus(
+        { assignment_status: 'zzz' },
+        '2026-08-20T09:00:00.000Z',
+        VALIDITY_HOURS,
+      ),
+    ).toBe('—')
+  })
+
+  // 🔬 מוטציה: אותה שורה, אותו "עכשיו" — סף קצר הופך "ממתינה למענה" ל"פג תוקף".
+  it('סף שעה אחת מציג "פג תוקף" במקום "ממתינה למענה"', () => {
+    const row = { assignment_status: 'pending', invite_sent_at: '2026-08-10T09:00:00.000Z' }
+    const at = '2026-08-10T11:00:00.000Z'
+    expect(assignmentDisplayStatus(row, at, VALIDITY_HOURS)).toBe('ממתינה למענה')
+    expect(assignmentDisplayStatus(row, at, '1')).toBe('פג תוקף')
   })
 })
 
@@ -375,7 +438,7 @@ describe('countAssignmentStates — חמשת המונים של המבט-על', (
   ]
 
   it('סופר על השורה הקובעת בלבד', () => {
-    const c = countAssignmentStates(rows, '2026-08-13T09:00:00.000Z')
+    const c = countAssignmentStates(rows, '2026-08-13T09:00:00.000Z', VALIDITY_HOURS)
     expect(c.finallyApproved).toBe(1)
     expect(c.confirmedAvailable).toBe(1)
     expect(c.declined).toBe(0)
@@ -391,7 +454,7 @@ describe('countAssignmentStates — חמשת המונים של המבט-על', (
   // 🔬 **והחשבון של המוקאפ המאושר מכריע:** שורותיו מציגות `ממתינות` 1+4+2 והכותרת אומרת
   //    `זימונים ממתינים 7`; ה-`פג תוקפן` הם 1+2+0 והכותרת אומרת `מתוכם 3`. **7 ולא 10.**
   it('🔴 "פג תוקפן" הוא תת-קבוצה של "ממתינות" ולא מונה זר — "מתוכן", לא "ובנוסף"', () => {
-    const c = countAssignmentStates(rows, '2026-08-13T09:00:00.000Z')
+    const c = countAssignmentStates(rows, '2026-08-13T09:00:00.000Z', VALIDITY_HOURS)
     expect(c.pending).toBe(2) // שתי שורות ממתינות בסך-הכול
     expect(c.expired).toBe(1) // אחת מהשתיים, לא שלישית
   })
@@ -399,7 +462,9 @@ describe('countAssignmentStates — חמשת המונים של המבט-על', (
   it('התג הפר-שורה עדיין מציג "פג תוקף" ולא "ממתינה למענה" — המונה השתנה, התווית לא', () => {
     // ⚠️ שתי שאלות שונות: **כמה ממתינות** (מונה, מכליל) מול **מה כתוב על השורה הזאת**
     // (תווית, והנגזרת גוברת). ערבוב ביניהן היה מחזיר את הבאג מהצד השני.
-    expect(assignmentDisplayStatus(rows[3], '2026-08-13T09:00:00.000Z')).toBe('פג תוקף')
+    expect(assignmentDisplayStatus(rows[3], '2026-08-13T09:00:00.000Z', VALIDITY_HOURS)).toBe(
+      'פג תוקף',
+    )
   })
 })
 
@@ -408,6 +473,13 @@ describe('countAssignmentStates — חמשת המונים של המבט-על', (
 describe('מבט-על — הנגזרות של שורת-האירוע', () => {
   const NOW = '2026-08-21T20:00:00.000Z'
   const TODAY = '2026-08-21'
+  // 🔄 שלושת הספים מוזרקים כאובייקט אחד (מודול 9 · צעד 2.3) — שלושה ארגומנטים עוקבים
+  // הם בדיוק המקום שבו שניים מהם מתחלפים בשקט.
+  const THRESHOLDS = {
+    inviteValidityHours: VALIDITY_HOURS,
+    inviteCutoffHours: CUTOFF_HOURS,
+    urgentEventHours: URGENT_HOURS,
+  }
   const EXPIRED_SENT = '2026-08-18T00:00:00.000Z' // 92 שעות לפני NOW ⇒ מת
   const FRESH_SENT = '2026-08-21T08:00:00.000Z' // 12 שעות לפני NOW ⇒ חי
 
@@ -461,6 +533,7 @@ describe('מבט-על — הנגזרות של שורת-האירוע', () => {
       project({ required_hostess_count: 6, assignments: rowsOf({ confirmed_available: 3 }) }),
       NOW,
       TODAY,
+      THRESHOLDS,
     )
     expect(row.staffed).toBe(0)
     expect(row.gap).toBe(6)
@@ -473,6 +546,7 @@ describe('מבט-על — הנגזרות של שורת-האירוע', () => {
       project({ required_hostess_count: 5, assignments: rowsOf({ finally_approved: 7 }) }),
       NOW,
       TODAY,
+      THRESHOLDS,
     )
     expect(row.isMissing).toBe(false)
     expect(row.gap).toBe(0)
@@ -483,11 +557,13 @@ describe('מבט-על — הנגזרות של שורת-האירוע', () => {
       project({ required_hostess_count: 4, assignments: rowsOf({ finally_approved: 3 }) }),
       NOW,
       TODAY,
+      THRESHOLDS,
     )
     const full = overviewRow(
       project({ required_hostess_count: 4, assignments: rowsOf({ finally_approved: 4 }) }),
       NOW,
       TODAY,
+      THRESHOLDS,
     )
     expect(missing.isFinalDay).toBe(true)
     expect(missing.showsFinalDayAlert).toBe(true)
@@ -560,6 +636,7 @@ describe('מבט-על — הנגזרות של שורת-האירוע', () => {
         }),
         NOW,
         TODAY,
+        THRESHOLDS,
       ),
       overviewRow(
         project({
@@ -576,6 +653,7 @@ describe('מבט-על — הנגזרות של שורת-האירוע', () => {
         }),
         NOW,
         TODAY,
+        THRESHOLDS,
       ),
       overviewRow(
         project({
@@ -586,6 +664,7 @@ describe('מבט-על — הנגזרות של שורת-האירוע', () => {
         }),
         NOW,
         TODAY,
+        THRESHOLDS,
       ),
     ]
 

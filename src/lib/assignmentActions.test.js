@@ -21,8 +21,12 @@ const row = (patch = {}) => ({
   ...patch,
 })
 
+// 🔄 שני ספי-הזימון ירדו ל-`params` (מודול 9 · צעד 2.3) ונוסעים באותו אובייקט-הקשר
+// שכבר נשא את "עכשיו". **מחרוזות** — `param_value` הוא `text` במסד.
 const CTX = {
   nowIso: '2026-08-09T12:00:00.000Z',
+  inviteValidityHours: '48',
+  inviteCutoffHours: '24',
   isEventStaffed: false,
   isWithinFinalDay: false,
   hasShiftLead: false,
@@ -138,6 +142,24 @@ describe('resendDisabledReason — שלושה מצבים, לא אחד (מסך 4 
     expect(resendDisabledReason(row(), { ...CTX, isWithinFinalDay: true })).toBe(
       'האירוע בתוך 24 שעות — קישור חדש כבר לא ייפתח',
     )
+  })
+
+  // 🔬 בדיקת-המוטציה של צעד 2.3: אותו מצב בדיוק, סף אחר ⇒ **הכיתוב עצמו משתנה**.
+  // אילו המספר היה נשאר קפוא במחרוזת, שתי השורות היו זהות והבדיקה ירוקה על נוסח שקרי.
+  it('הסף במשפט מגיע מ-`params` — סף 12 מייצר "בתוך 12 שעות"', () => {
+    expect(
+      resendDisabledReason(row(), { ...CTX, isWithinFinalDay: true, inviteCutoffHours: '12' }),
+    ).toBe('האירוע בתוך 12 שעות — קישור חדש כבר לא ייפתח')
+  })
+
+  // 🔴 סף חסר ⇒ **הפסוקית יורדת ואין נוסח חדש** — הסיבה עצמה נאמרת במלואה.
+  // המסלול אינו נגיש ממסך אמיתי (הטוען זורק קודם), ולכן ניסוח-חלופה היה המצאה.
+  it('סף חסר ⇒ הסיבה בלי הפסוקית, ובלי מספר מומצא', () => {
+    for (const bad of [undefined, null, '', '   ']) {
+      expect(
+        resendDisabledReason(row(), { ...CTX, isWithinFinalDay: true, inviteCutoffHours: bad }),
+      ).toBe('קישור חדש כבר לא ייפתח')
+    }
   })
 
   it('🔴 האירוע כבר אויש — הדיילת תלחץ ותקבל "המשרה כבר אוישה"', () => {
