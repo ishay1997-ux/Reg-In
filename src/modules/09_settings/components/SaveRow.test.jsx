@@ -60,7 +60,9 @@ describe('SaveRow', () => {
     expect(screen.getByTestId('settings-save-failed')).toHaveTextContent(
       'השמירה נכשלה ב"אחוז מע"מ" — ייתכן שאין לך הרשאה לשנות אותה',
     )
-    expect(screen.queryByTestId('settings-dirty-count')).not.toBeInTheDocument()
+    // 🔴 **המונה נשאר** (תוקן 03/09/2026). קודם נבדק כאן ש-`settings-dirty-count` **נעלם** —
+    // כלומר הבדיקה נעלה את הפגם: דווקא אחרי כשל, כשהשאלה היא "כמה עוד ממתין", המספר נמחק.
+    expect(screen.getByTestId('settings-dirty-count')).toHaveTextContent('שינית 2 מתוך 7')
     expect(screen.getByTestId('settings-save-button')).toHaveTextContent('נסי שוב')
   })
 
@@ -68,5 +70,49 @@ describe('SaveRow', () => {
     render(<SaveRow dirtyCount={1} total={7} saving onCancel={() => {}} onSave={() => {}} />)
     expect(screen.getByTestId('settings-save-button')).toBeDisabled()
     expect(screen.getByTestId('settings-save-button')).toHaveTextContent('שומר...')
+  })
+  // 🔴 **סיבת-ההשבתה יושבת ליד הכפתור** (אודיט-סגירת מ9, 554px). בלי זה הכפתור מושבת
+  // והמשפט המסביר נמצא מחוץ למסך — הפגם שהבדיקות האלה נועלות.
+  it('כפתור חסום מציג את הסיבה בפס עצמו, ומקושר אליה לקורא-מסך', () => {
+    render(
+      <SaveRow
+        dirtyCount={3}
+        total={9}
+        disabled
+        blockedReason="פיצוי מלא חייב להיות מוקדם מפיצוי חלקי"
+        onCancel={() => {}}
+        onSave={() => {}}
+      />,
+    )
+    const reason = screen.getByTestId('settings-save-blocked')
+    expect(reason).toHaveTextContent('פיצוי מלא חייב להיות מוקדם מפיצוי חלקי')
+    const button = screen.getByTestId('settings-save-button')
+    expect(button).toBeDisabled()
+    // הקישור עצמו — לא רק שהטקסט קיים, אלא שהכפתור מצביע עליו.
+    expect(button.getAttribute('aria-describedby')).toBe(reason.getAttribute('id'))
+    expect(screen.getByTestId('settings-dirty-count')).toHaveTextContent('שינית 3 מתוך 9')
+  })
+
+  it('כשאין חסימה ואין כשל — אין שורת-סיבה ואין קישור', () => {
+    render(<SaveRow dirtyCount={1} total={4} onCancel={() => {}} onSave={() => {}} />)
+    expect(screen.queryByTestId('settings-save-blocked')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('settings-save-failed')).not.toBeInTheDocument()
+    expect(screen.getByTestId('settings-save-button').getAttribute('aria-describedby')).toBeNull()
+  })
+
+  it('כשל גובר על חסימה — מוצגת הודעת-הכשל, לא סיבת-החסימה', () => {
+    render(
+      <SaveRow
+        dirtyCount={2}
+        total={5}
+        disabled
+        blockedReason="סיבת חסימה"
+        failedMessage="השמירה נכשלה"
+        onCancel={() => {}}
+        onSave={() => {}}
+      />,
+    )
+    expect(screen.getByTestId('settings-save-failed')).toHaveTextContent('השמירה נכשלה')
+    expect(screen.queryByTestId('settings-save-blocked')).not.toBeInTheDocument()
   })
 })
