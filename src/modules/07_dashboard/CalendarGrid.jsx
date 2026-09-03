@@ -5,7 +5,12 @@
 //
 // 🔴 שתי תקלות-CSS שהמוקאפ המאושר נתפס בהן וישי תיקן (ר' פרומפט-המסירה): `grid-cols-7` של
 // Tailwind הוא כבר `repeat(7,minmax(0,1fr))` בייט-לבייט (לא צריך ערך-שרירותי) — אבל
-// `auto-rows-*` המוכן לא כולל `minmax(76px,auto)`, ולכן זה כן ערך-שרירותי.
+// `auto-rows-*` המוכן לא כולל `minmax(92px,auto)`, ולכן זה כן ערך-שרירותי.
+//
+// 🆕 **04/09/2026 — הלוח עבר למלוא-הרוחב (מוקאפ מאושר, "מאשר את המוקאפ בנה ככה").** הפאנל
+// "מה דורש טיפול" ירד מתחתיו, והתא גדל מ-~90px ל-~150px רוחב. **זה מה שהתיקון קנה, וזו
+// הסיבה שלו:** ב-2 עמודות שם-האירוע נחתך (`כנס לקוח — רישום וה…`) והמשתמשת נאלצה לרחף
+// כדי לדעת מה השבב. ⇒ גם `MAX_CHIPS_PER_DAY` עלה ל-3 וגם המידות גדלו במקצת.
 
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -143,12 +148,19 @@ export default function CalendarGrid({ summary, monthStartIso, onPrev, onNext, o
         ))}
       </div>
 
-      <div className="grid grid-cols-7 auto-rows-[minmax(76px,auto)] gap-[5px]">
+      {/* 🐞 שורת-ימי-השבוע יצאה מרשת-הימים (04/09/2026, נתפס בצילום-האימות): היא ישבה
+          באותו grid, ולכן `auto-rows-[minmax(92px,auto)]` החיל עליה גם את גובה-המינימום של
+          תא-יום — פס ריק בן ~90px בין הכותרות לשבוע הראשון. הפגם היה קיים גם ב-76px, ורק
+          התרחב איתו. רשת נפרדת באותן 7 עמודות פותרת בלי לגעת בתאים. */}
+      <div className="grid grid-cols-7 gap-1.5">
         {WEEKDAYS.map((d) => (
           <div key={d} className="pb-1 text-center text-[11px] font-semibold text-slate-400">
             {d}
           </div>
         ))}
+      </div>
+
+      <div className="grid grid-cols-7 auto-rows-[minmax(92px,auto)] gap-1.5">
         {cells.map((cell, i) => (
           <DayCell
             key={cell.date ?? `empty-${i}`}
@@ -164,16 +176,24 @@ export default function CalendarGrid({ summary, monthStartIso, onPrev, onNext, o
   )
 }
 
+// 🔢 **שלושה שבבים ליום, ולא שניים — נמדד ולא הורגש** (04/09/2026, הכרעת-ישי על המוקאפ).
+// התפלגות האירועים-ליום בכל המסד: 355 ימים עם אחד (62%) · 178 עם שניים (31%) · 36 עם
+// שלושה (6%) · **2 ימים בלבד עם ארבעה, ואפס עם חמישה.** ⇒ שלושה מכסים 99.6% מהימים,
+// ו"+N עוד" נותר מנגנון-קצה שנדלק פעמיים בכל הדאטה — לא מסלול יומיומי.
+const MAX_CHIPS_PER_DAY = 3
+
 function DayCell({ cell, today, projects }) {
+  // ⚠️ ה-hook לפני היציאה-המוקדמת — כללי-ה-hooks אוסרים קריאה מותנית.
+  const [expanded, setExpanded] = useState(false)
   if (!cell.inMonth) return <div />
   const isToday = cell.date === today
-  const shown = projects.slice(0, 2)
+  const shown = expanded ? projects : projects.slice(0, MAX_CHIPS_PER_DAY)
   const extra = projects.length - shown.length
 
   return (
     <div
       className={cn(
-        'flex min-w-0 flex-col gap-[2px] rounded-lg border p-[3px] text-[11px] text-slate-500',
+        'flex min-w-0 flex-col gap-[3px] rounded-lg border p-[4px] text-[11px] text-slate-500',
         isToday ? 'border-teal-500 ring-1 ring-teal-500' : 'border-slate-200',
       )}
       data-testid={`dashboard-day-${cell.date}`}
@@ -182,14 +202,29 @@ function DayCell({ cell, today, projects }) {
       {shown.map((project) => (
         <DayChip key={project.project_id} project={project} />
       ))}
+      {/* 🔴 **מרחיב את התא, לא מנווט למסך אחר** (הכרעת-ישי 04/09/2026, במילותיו: *"העוד מוביל
+          לפרויקטים ואז מזה עוזר לי לחפש את הפרויקט השלישי?"*). קודם זה היה `<Link to="/projects">`
+          — כלומר קפיצה לרשימה בת מאות שורות כדי למצוא פרויקט שכבר ידעת באיזה יום הוא. עכשיו
+          השאר נפתח במקום, וזו גם מוסכמת Google Calendar / Monday. */}
       {extra > 0 && (
-        <Link
-          to="/projects"
-          className="px-[3px] text-[10px] text-slate-400"
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="px-[3px] text-right text-[10.5px] font-semibold text-slate-400 hover:text-teal-700"
           data-testid={`dashboard-more-${cell.date}`}
         >
           {`+${extra} עוד`}
-        </Link>
+        </button>
+      )}
+      {expanded && projects.length > MAX_CHIPS_PER_DAY && (
+        <button
+          type="button"
+          onClick={() => setExpanded(false)}
+          className="px-[3px] text-right text-[10.5px] font-semibold text-slate-400 hover:text-teal-700"
+          data-testid={`dashboard-less-${cell.date}`}
+        >
+          הצג פחות
+        </button>
       )}
     </div>
   )
@@ -201,7 +236,7 @@ function DayChip({ project }) {
     <Link
       to={`/projects/${project.project_id}`}
       className={cn(
-        'flex items-center gap-[3px] overflow-hidden rounded px-[3px] py-[1px] text-[10px] font-semibold',
+        'flex items-center gap-[4px] overflow-hidden rounded px-[5px] py-[2px] text-[11px] font-semibold',
         CHIP_CLASS[project.color],
       )}
       data-testid={`dashboard-chip-${project.project_id}`}
@@ -234,15 +269,21 @@ function Legend({ warningDays }) {
       {/* מבוטל: צבע-לוח רביעי (הכרעת-ישי 03/09, אחרי אישור-המוקאפ) — לא מופיע במוקאפ הסטטי,
           נוסף כאן כדי שהמקרא יישאר נאמן לצ'יפי-הסינון שמעליו. */}
       <LegendSwatch className={SWATCH_CLASS.cancelled} label="מבוטל" />
+      {/* 🐞 **תוקן 04/09/2026 — ישי תפס את זה במקרא, והלוח עצמו היה תקין כל הזמן.**
+          קודם עמדו כאן שלושה פריטים שהשתמשו ב-`StaffingIcon` **שלוש פעמים**: "איוש",
+          "לוגיסטיקה" (עם אייקון-קופסה) ואז "הושלם · חסר" — שוב עם אייקון-דיילת. התוצאה:
+          המסך הראה שלושה אייקוני-דיילת, **ולסימול-החסר של הלוגיסטיקה לא היה ייצוג כלל**,
+          כך שקורא לא יכול היה לדעת איך נראית לוגיסטיקה חסרה. שני צמדים סימטריים — מלא
+          וקו לצד כל אחד מהם — אומרים את שני הממדים בבת-אחת ובלי לתאר אחד מהם בעזרת השני. */}
       <span className="flex items-center gap-1">
-        <StaffingIcon filled /> איוש
+        <StaffingIcon filled />
+        <StaffingIcon filled={false} /> איוש
       </span>
       <span className="flex items-center gap-1">
-        <LogisticsIcon filled /> לוגיסטיקה
+        <LogisticsIcon filled />
+        <LogisticsIcon filled={false} /> לוגיסטיקה
       </span>
-      <span className="flex items-center gap-1">
-        <StaffingIcon filled /> הושלם · <StaffingIcon filled={false} /> חסר
-      </span>
+      <span>מלא = הושלם · קו = חסר</span>
     </div>
   )
 }
