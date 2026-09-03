@@ -434,3 +434,47 @@ quotes-blind role · `42501` shows the locked sentence and no retry · **an Engl
 reaches the screen** · shape drift shows its Hebrew · a known `P0001` shows our wording without the id ·
 **an unmapped DB message falls through to the generic screen**. The last two are the guard being
 watched *fail*, per `src/CLAUDE.md`'s "a guard never seen failing is not a guard".
+
+### 🎨 Post-merge layout change — 04/09/2026 (Ishay's own use of the live screen)
+
+Module 7 was already in production when Ishay opened it, used it, and brought three things back.
+All three turned out to be the same problem: **the calendar is the hero of this screen and it was
+being squeezed by a list.** Approved as a mockup first (*"מאשר את המוקאפ בנה ככה"*), then built.
+
+**What he said, and what it turned out to be**
+- *"תקטין את החלק של מה דורש טיפול ואז זה יאפשר ללוח שנה להיות יותר גדול"* — the panel held a third
+  of the screen for a 21-row list.
+- *"ולא עוזר שכתוב עוד... העוד מוביל לפרויקטים ואז מזה עוזר לי לחפש את הפרויקט השלישי?"* — **a real
+  defect, and he is exactly right:** `+N עוד` was a `<Link to="/projects">`, i.e. it answered "show me
+  the third event on this day" by dumping the user into a list of 832 projects to search.
+- *"יש דרך אלגנטית להגדיל את הלוח שנה קצת?"*
+
+**The measurement that decided the chip count** — projects-per-day across the whole DB:
+**355** days with one (62%) · **178** with two (31%) · **36** with three (6%) · **2** days with four
+(0.4%) · **zero** with five. ⇒ three chips cover **99.6%** of days, and in September 2026 the
+`+N עוד` affordance does not appear even once. His instinct ("just show 3") was right, and the data
+also shows the overflow mechanism is a genuine edge case rather than a daily path.
+
+**Built**
+- `DashboardPage.jsx` — `grid-cols-[2fr_1fr]` ⇒ `flex flex-col`. Calendar full width, strip below.
+- `CalendarGrid.jsx` — `MAX_CHIPS_PER_DAY = 3`; `+N עוד` is now a **button that expands the cell in
+  place** (with `הצג פחות` to collapse), never a navigation; cells `minmax(76px)` ⇒ `minmax(92px)`,
+  chip text 10px ⇒ 11px. **Cell width ~90px ⇒ ~150px, so event names stop truncating** — that is the
+  actual win, not the extra chip.
+- `AttentionPanel.jsx` — horizontal card strip: 4 cards (`ATTENTION_CAP` 8 ⇒ 4), the whole card is
+  the link, group counts still computed over the **full** list so the size of the problem stays visible.
+- `dashboard.js` — `attentionOverflowLabel(hidden)` ⇒ `attentionAllLabel(total)`: `+13 נוספים`
+  describes what was **hidden** (a statement about the screen); `כל 21 הפריטים` describes what there
+  is **to handle** (a statement about the work).
+
+**🐞 Caught by the verification screenshot, not by the tests:** the weekday header row sat inside the
+day grid, so `auto-rows-[minmax(92px,auto)]` gave *it* a 92px minimum too — a ~90px empty band between
+the headers and the first week, on the very screen the change was meant to make shorter. The defect
+predated this change (at 76px) and only got more visible. Split into its own 7-column grid.
+
+**Regression:** `npm run gate` exit 0 — 88 files / **2,292** tests. Verified on a production build with
+real data: 4 attention cards, the link reads `כל 22 הפריטים ←`, three chips render on 7/9 · 8/9 · 14/9,
+and no `+N עוד` appears anywhere in September. Screenshot sent to Ishay.
+**Anchor for the "why", in one sentence he can say out loud:** Monday, Google Calendar and Notion
+Calendar all give the calendar the full width and keep only filters in a side rail — a list beside a
+calendar is a report, and a home screen is not a report.

@@ -45,6 +45,19 @@
 
 ## Session Log (newest first)
 
+### 04/09/2026 00:0X – 00:4X — the home screen got its width back, after Ishay used it *(same session, worktree `.claude/worktrees/m7`)*
+
+**What changed:** module 7 shipped, Ishay opened the live screen, and brought back three complaints that were one problem — the calendar was the hero and a 21-row list was holding a third of the width. Approved as a mockup first, then built on `ishay/m7-dashboard-layout`. Calendar goes full width, the attention panel becomes a 4-card horizontal strip below it, `MAX_CHIPS_PER_DAY` 2 ⇒ 3, and `+N עוד` stops being a link. `gate` exit 0 — 88 files / **2,292** tests.
+
+**🔑 The lesson worth keeping, and it is about how the decision got made rather than what it was.** The chip count was not argued, it was **counted**: projects-per-day across the whole DB is 355 days with one (62%) · 178 with two (31%) · 36 with three (6%) · **2 days with four** · zero with five. That single query settled three things at once — three chips cover 99.6% of days, Ishay's instinct was right, and the `+N עוד` affordance is a genuine edge case (it fires twice in the entire dataset) rather than the daily path its design implied. **A five-second query replaced a design argument.**
+
+**🔴 And the defect he named is the one worth remembering.** `+N עוד` was `<Link to="/projects">` — it answered *"show me the third event on this day"* by dropping the user into a list of 832 projects to search. In his words: *"ואז מזה עוזר לי לחפש את הפרויקט השלישי?"* Nobody caught this in the blueprint, the build, the 🎨 gate, or the closing audit — because **every one of those read it as "there is a link, and it goes somewhere reasonable"**. Only using the screen for a real purpose exposed that the destination did not answer the question the control asks. The generalisable form: *an affordance is wrong when its destination does not answer the question the affordance itself poses* — and that is invisible to anyone checking whether the link works.
+
+**🐞 One defect found by the verification screenshot and by nothing else:** the weekday header row lived inside the day grid, so `auto-rows-[minmax(92px,auto)]` applied a 92px minimum to *it* too — a ~90px empty band between the headers and the first week, on the exact screen this change existed to shorten. **It predated this change** (at 76px) and had survived every review, because a unit test cannot see vertical rhythm and a reviewer reading JSX sees one grid, not two row types. Split into its own 7-column grid; the page got ~78px shorter.
+
+**Also renamed, and the reason is a product one:** `attentionOverflowLabel(hidden)` ⇒ `attentionAllLabel(total)`. `+13 נוספים` describes what the screen **hid**; `כל 21 הפריטים` describes what there is **to handle**. The first is a statement about the UI, the second about the work — and only the second is what the reader is looking for.
+
+
 ### 03/09/2026 22:4X – 23:0X — module 7 shipped to production, and a module-9 test proved itself flaky on the way *(same session)*
 
 **What changed:** module 7 is live. `main` = `c5e6aa6`, `dev` = `c8a28ee`. Three PRs, all green, all merged: **#106** (`ishay/module-7-dashboard` → `dev`) · **#108** (the flake fix below → `dev`) · **#107** (`dev` → `main`, 44 commits: module 7, its fix round, and the nine module-9 follow-ups that were already sitting on `dev`). Vercel deployed `c5e6aa6`, state `success`.

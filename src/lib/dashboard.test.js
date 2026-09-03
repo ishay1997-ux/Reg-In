@@ -6,7 +6,7 @@ import {
   MASKED_TEXT,
   attentionRows,
   attentionSummary,
-  attentionOverflowLabel,
+  attentionAllLabel,
   monthStartOf,
   shiftMonth,
   hebrewMonthTitle,
@@ -505,7 +505,7 @@ describe('attentionRows — ניסוחי-קצה: יום בודד', () => {
   })
 })
 
-// ── attentionSummary / attentionOverflowLabel — תיקרה, לא סינון ─────────────
+// ── attentionSummary / attentionAllLabel — תיקרה, לא סינון ─────────────────
 // (הכרעת-ישי 03/09/2026 19:3X, "זה מעולה" על ההמלצה: הפאנל מוגבל, לא מסונן ולא מעומד.)
 
 describe('attentionSummary — תיקרה על 12 שורות (5 unbilled + 5 shortage + 2 quote)', () => {
@@ -626,16 +626,17 @@ describe('attentionSummary — תיקרה על 12 שורות (5 unbilled + 5 sho
     ],
   }
 
-  it('12 שורות בסך-הכול; cap=8 (ברירת-מחדל) שומר על סדר attentionRows, hidden=4, total=12', () => {
+  // 🔴 התיקרה ירדה 8 ⇒ 4 ב-04/09/2026 (הרצועה עברה לפס-אופקי מתחת ללוח, מוקאפ מאושר).
+  it('12 שורות בסך-הכול; cap=4 (ברירת-מחדל) שומר על סדר attentionRows, hidden=8, total=12', () => {
     const full = attentionRows(bigSummary, TODAY)
     expect(full).toHaveLength(12)
     const { rows, hidden, total } = attentionSummary(bigSummary, TODAY)
-    expect(rows).toEqual(full.slice(0, 8))
-    expect(hidden).toBe(4)
+    expect(rows).toEqual(full.slice(0, 4))
+    expect(hidden).toBe(8)
     expect(total).toBe(12)
   })
 
-  it('groups סופרים על הרשימה המלאה (12), לא על השמונה המוצגות', () => {
+  it('groups סופרים על הרשימה המלאה (12), לא על הארבע המוצגות', () => {
     const { groups } = attentionSummary(bigSummary, TODAY)
     expect(groups).toEqual([
       { kind: 'unbilled', label: 'הסתיים ולא חויב', count: 5 },
@@ -665,17 +666,17 @@ describe('attentionSummary — תיקרה על 12 שורות (5 unbilled + 5 sho
   })
 })
 
-describe('attentionOverflowLabel', () => {
-  it('0 ⇒ מחרוזת ריקה (בלי קישור-עוד)', () => {
-    expect(attentionOverflowLabel(0)).toBe('')
+describe('attentionAllLabel', () => {
+  it('0 ⇒ מחרוזת ריקה (בלי קישור)', () => {
+    expect(attentionAllLabel(0)).toBe('')
   })
 
-  it('1 ⇒ לשון-יחיד ("+1 נוספים" הייתה עברית שבורה)', () => {
-    expect(attentionOverflowLabel(1)).toBe('+1 נוסף')
+  it('1 ⇒ לשון-יחיד ("כל 1 הפריטים" הייתה עברית שבורה)', () => {
+    expect(attentionAllLabel(1)).toBe('פריט אחד ←')
   })
 
-  it('2 ומעלה ⇒ לשון-רבים עם המספר', () => {
-    expect(attentionOverflowLabel(2)).toBe('+2 נוספים')
+  it('2 ומעלה ⇒ המספר הכולל, לא המוסתר — "כמה יש לטפל" ולא "כמה הוסתרו"', () => {
+    expect(attentionAllLabel(21)).toBe('כל 21 הפריטים ←')
   })
 })
 
