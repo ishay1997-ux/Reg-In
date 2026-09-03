@@ -268,6 +268,20 @@ nothing anchored beyond what's already ruled).
   > עד אז 0, ונשאר באוכלוסייה. מיגרציה `20260903184711`. 🎤 *"אירוע שבוטל תורם לרווח את מה שבאמת נגבה
   > ממנו, לא את מה שהיה אמור להרוויח."* **ובאותה הכרעה:** מבוטל **נשאר בלוח-השנה** (אפור, מחוק-בקו,
   > תג "מבוטל", שבב-סינון רביעי) — עוגן: Monday / Google Calendar; *"אהבתי את הכיוון שנהיה בדומה למנדיי"*.
+- **03/09/2026 19:4X — scalability of `get_dashboard_summary` (Ishay's own question, measured, deferred by rule).**
+  The RPC reuses `list_projects_overview()` for the staffing/logistics counts (rule 14 — one source) and
+  filters *after* it; that function has no `WHERE`, so at the seed target (~900 projects) the counts run
+  for every project on every home-screen load. **Measured now: 69 ms with 9 projects** (`explain analyze`,
+  impersonated CEO). Linear ⇒ plausibly seconds at 900. **Not fixed in this session:** the seed has not
+  landed, and the fix is a measurement decision (`PROJECT_MASTER §6`, the new cross-module row): re-measure
+  with 900 rows; if >~1 s, give the dashboard a month-bounded variant (or push a date `WHERE` into
+  `list_projects_overview` via a parameter) — a fix-forward migration, not a design change. **Flag for the
+  closing audit: re-run the timing if the seed has landed by then.** Same review found the sibling
+  risks outside this module (Smart Match reads all `assignments`; `listQuotes` unbounded;
+  `get_finance_overview` no time window) — all in the §6 row, none touched here.
+- **03/09/2026 — attention strip capped at 8 with per-kind counts (Ishay, *"זה מעולה"* on the
+  recommendation; no filters, per §7.9's "one sorted list").** `attentionSummary`/`ATTENTION_CAP` in the
+  lib; the "+N נוספים" link routes to the screen of the first hidden row.
 - **03/09/2026 — `db_roadmap` forward-notice row (`🚧 מ7 ← מ8`) says מ7 adds a `project_finance`
   policy; it does not.** Corrected in this branch's §10ב entry; the main-checkout addendum of the same
   claim (uncommitted there, seed session's file) will surface at merge time — resolve toward "no policy".
