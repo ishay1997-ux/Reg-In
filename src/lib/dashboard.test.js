@@ -239,9 +239,14 @@ describe('kpiCards — masked / no-data / value, לעולם לא null⇒0', () =
     expect(sat).toMatchObject({ value: '4.3', sub: 'על סמך 5 משובים' })
   })
 
-  it('פרויקטים פעילים: מספר תמיד, גם כשלא נטען ⇒ 0 (לא null — הכרטיס לעולם לא ממוסך)', () => {
+  // 🔴 שונה 03/09/2026 (אודיט-הסגירה, T-1): קודם נדרש כאן `0` כשלא-נטען. זה היה שקר שקט —
+  // "לא ידוע" הוצג כעובדה "אפס פרויקטים פעילים" על מסך ששלושת האריחים האחרים בו מציגים `—`.
+  // השער הרועש (`assertDashboardShape`) הוא הערובה שזה לא יקרה; הכרטיס מדווח `null` ביושר.
+  it('פרויקטים פעילים: המספר כמו-שהוא, ו-null נשאר null (לא 0 — "לא ידוע" אינו עובדה)', () => {
     expect(kpiCards({ active_projects_count: 17 }).find((c) => c.key === 'active').value).toBe(17)
-    expect(kpiCards({ active_projects_count: null }).find((c) => c.key === 'active').value).toBe(0)
+    expect(kpiCards({ active_projects_count: null }).find((c) => c.key === 'active').value).toBe(
+      null,
+    )
   })
 })
 

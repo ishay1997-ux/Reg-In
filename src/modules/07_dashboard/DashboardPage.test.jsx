@@ -8,7 +8,13 @@ import { MemoryRouter } from 'react-router-dom'
 import DashboardPage from './DashboardPage'
 import { getDashboardSummary } from './api'
 
-vi.mock('./api', () => ({ getDashboardSummary: vi.fn() }))
+// ⚠️ הקוד קורא גם את `DASHBOARD_SHAPE_DRIFT_CODE` מאותו מודול — מוק שמייצא רק את הפונקציה
+// מפיל את המסך ב-"No export is defined on the mock", והבדיקה שנכתבה כדי להוכיח את השומר
+// הייתה נופלת דווקא היא. (נתפס 03/09/2026 בסריקה-חוזרת של סבב-התיקון.)
+vi.mock('./api', () => ({
+  getDashboardSummary: vi.fn(),
+  DASHBOARD_SHAPE_DRIFT_CODE: 'DASHBOARD_SHAPE_DRIFT',
+}))
 
 function project(overrides) {
   return {
@@ -125,16 +131,119 @@ describe('DashboardPage — טעינה ושגיאה', () => {
     expect(screen.getByTestId('skeleton-page')).toBeInTheDocument()
   })
 
-  it('🔴 כשל-טעינה: המשפט הנעול בעברית + "נסה שוב" שבאמת מנסה שוב', async () => {
+  it('🔴 נפילת-רשת: המשפט הנעול בעברית, בלי הודעה טכנית, + "נסי שוב" שבאמת מנסה שוב', async () => {
     getDashboardSummary.mockRejectedValueOnce(new TypeError('Failed to fetch'))
     renderPage()
-    expect(await screen.findByText('מסך הבית לא נטען.')).toBeInTheDocument()
+    expect(await screen.findByText('לא ניתן לטעון את הנתונים.')).toBeInTheDocument()
+    // 🔴 הלב של T-2: הודעה אנגלית-טכנית לעולם לא מגיעה למסך, גם עכשיו כשיש שורת-פירוט.
     expect(screen.queryByText(/Failed to fetch/)).not.toBeInTheDocument()
 
     getDashboardSummary.mockResolvedValueOnce(summaryFixture())
-    fireEvent.click(screen.getByTestId('dashboard-retry'))
+    fireEvent.click(screen.getByRole('button', { name: 'נסי שוב' }))
     expect(await screen.findByTestId('kpi-active')).toBeInTheDocument()
     expect(getDashboardSummary).toHaveBeenCalledTimes(2)
+  })
+
+  it('🔴 חסימת-הרשאה (42501): מסך אחר, המשפט הנעול שלנו, ובלי כפתור שלא יעזור לעולם', async () => {
+    const err = new Error('שגיאה בטעינת מסך-הבית.')
+    err.code = '42501'
+    err.cause = { message: 'אין לך הרשאה לבצע פעולה זו במודול פרויקטים' }
+    getDashboardSummary.mockRejectedValueOnce(err)
+    renderPage()
+    expect(await screen.findByText('אין לך הרשאה לצפות במסך הבית.')).toBeInTheDocument()
+    expect(screen.getByTestId('dashboard-no-permission')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'נסי שוב' })).not.toBeInTheDocument()
+  })
+
+  // 🔴 השומר נצפה **נכשל**, לא רק עובר (src/CLAUDE.md — "שומר שלא נצפה נכשל אינו שומר"):
+  // `42501` אינו רק ה-raise העברי שלנו. `revoke` בלי `grant`, או טוקן שפג, מחזירים את
+  // ההודעה האנגלית של Postgres — והיא לא תגיע למסך בשום מצב.
+  it('🔴 42501 באנגלית (permission denied for function) לא מגיע למסך', async () => {
+    const err = new Error('שגיאה בטעינת מסך-הבית.')
+    err.code = '42501'
+    err.cause = { message: 'permission denied for function get_dashboard_summary' }
+    getDashboardSummary.mockRejectedValueOnce(err)
+    renderPage()
+    expect(await screen.findByText('אין לך הרשאה לצפות במסך הבית.')).toBeInTheDocument()
+    expect(screen.queryByText(/permission denied/)).not.toBeInTheDocument()
+  })
+
+  it('🔴 דריפט-צורה: ההודעה העברית של שער-הצורה מגיעה למסך ולא רק לקונסול', async () => {
+    const err = new Error('חסרים שדות בנתוני מסך-הבית: monthly_profit.')
+    err.code = 'DASHBOARD_SHAPE_DRIFT'
+    getDashboardSummary.mockRejectedValueOnce(err)
+    renderPage()
+    expect(
+      await screen.findByText('חסרים שדות בנתוני מסך-הבית: monthly_profit.'),
+    ).toBeInTheDocument()
+  })
+
+  it('🔴 פרויקט בלי הצעת-מחיר: נאמר מה קרה ומה לעשות — בנוסח שלנו, בלי מזהה פנימי', async () => {
+    const err = new Error('שגיאה בטעינת מסך-הבית.')
+    err.code = 'P0001'
+    err.cause = { message: 'לא ניתן לחשב כספים לפרויקט 22 — אין לו הצעת מחיר מקושרת.' }
+    getDashboardSummary.mockRejectedValueOnce(err)
+    renderPage()
+    expect(await screen.findByText(/אין לו הצעת מחיר מקושרת, או שההצעה ריקה/)).toBeInTheDocument()
+    // §7.34 — מזהה פנימי אינו מוצג במסך.
+    expect(screen.queryByText(/לפרויקט 22/)).not.toBeInTheDocument()
+  })
+
+  // 🔴 והצד השני של אותו שומר: הודעת-מסד שאינה ברשימה **אינה** מנוחשת — היא נופלת למסך
+  // הכללי. זה מה שהופך את המיפוי לתואם-קדימה כשמישהו יוסיף `raise` חדש למסלול הזה.
+  it('🔴 הודעת-מסד לא-מוכרת נופלת למסך הכללי ולא מודפסת גולמית', async () => {
+    const err = new Error('שגיאה בטעינת מסך-הבית.')
+    err.code = 'P0001'
+    err.cause = { message: 'some future raise nobody mapped yet' }
+    getDashboardSummary.mockRejectedValueOnce(err)
+    renderPage()
+    expect(await screen.findByText('לא ניתן לטעון את הנתונים.')).toBeInTheDocument()
+    expect(screen.queryByText(/future raise/)).not.toBeInTheDocument()
+  })
+})
+
+// T-1 — הכשל שנקרא כבשורה טובה: בלי שורת-הפרמטר הלוח לא מאדים והרצועה מכריזה "אין פריטים".
+describe('DashboardPage — שורת-פרמטר חסרה (T-1)', () => {
+  it('חסר ימי_אזהרה_קדם_אירוע ⇒ באנר שנוקב בשם הפרמטר ובהשלכה, והמסך ממשיך לעבוד', async () => {
+    getDashboardSummary.mockResolvedValueOnce(
+      summaryFixture({
+        params: {
+          event_warning_days: null,
+          quote_validity_days: '30',
+          quote_expiring_soon_days: '7',
+        },
+      }),
+    )
+    renderPage()
+    const banner = await screen.findByTestId('dashboard-missing-params')
+    expect(banner.textContent).toContain('ימי_אזהרה_קדם_אירוע')
+    expect(banner.textContent).toContain('אין התראה על אירועים קרובים')
+    // המסך עצמו ממשיך לעבוד — הבאנר מוסיף אמירה, לא מחליף מסך.
+    expect(screen.getByTestId('kpi-active')).toBeInTheDocument()
+  })
+
+  it('כל הפרמטרים קיימים ⇒ אין באנר', async () => {
+    renderPage()
+    await screen.findByTestId('kpi-active')
+    expect(screen.queryByTestId('dashboard-missing-params')).not.toBeInTheDocument()
+  })
+
+  it('מי שאינו רואה הצעות לא מקבל התראה על פרמטרי-הצעות שאינם משנים לה דבר', async () => {
+    getDashboardSummary.mockResolvedValueOnce(
+      summaryFixture({
+        quotes_visible: false,
+        pending_quotes_count: null,
+        pending_quotes: null,
+        params: {
+          event_warning_days: '14',
+          quote_validity_days: null,
+          quote_expiring_soon_days: null,
+        },
+      }),
+    )
+    renderPage()
+    await screen.findByTestId('kpi-active')
+    expect(screen.queryByTestId('dashboard-missing-params')).not.toBeInTheDocument()
   })
 })
 

@@ -45,6 +45,23 @@
 
 ## Session Log (newest first)
 
+### 03/09/2026 22:0X – 22:3X — the fix round: two debts built, and the fix round's own re-scan caught two defects I had just written *(same session, worktree `.claude/worktrees/m7`)*
+
+**What changed:** Ishay ruled `בנה` on T-1 and T-2 from the closing audit. Both shipped. `gate` **exit 0** on the final tree — 86 files / **2,272** tests (up 8). T-3 and T-4 stay as `🚧 מ12 ← מ7`.
+
+**Why the shape of the fix matters more than the fix:** both were solved by *finding the existing pattern and copying it*, not by inventing. T-1 reuses `missingPricingParamsMessage` (`src/lib/quotes.js`) — generalised so a caller asks about only the params it depends on, with `Object.hasOwn` keeping `undefined` meaning "row missing" so the quotes screen stays byte-identical. T-2 copies `FinancePage`'s error branching and `quoteServerErrorMessage`'s prefix-map. Zero new components, zero new colours, zero new sentences that did not already exist somewhere.
+
+**🔴 The lesson worth keeping, and it is about how we work, not about this module.** An independent re-scan was run on the fix round's *own diff* — the step that exists because "the code written last, under time pressure, at the end of a close, is the only code no scan ever saw". It found three things, and **two of them were defects I had just authored**:
+- The `42501` branch rendered the raw server message, on the assumption that every `42501` is `assert_module_permission`'s Hebrew raise. **It is not** — `42501` is Postgres's generic `insufficient_privilege`; a `revoke` without its `grant`, or an expired token, returns `permission denied for function get_dashboard_summary` in English, straight into the page title. **The fix written to keep English off the screen had itself opened a path for English onto the screen.** The precedent I was copying (`FinancePage.jsx:434`) passes no detail at all — I deviated from it without noticing I had.
+- The `P0001` branch passed through a message embedding an internal project id, against §7.34.
+- Plus three red tests the round introduced — including a `vi.mock` that did not export the new constant, which killed **the very test written to prove the guard works**.
+🔑 **Self-catch was again zero.** Four sessions in a row now. And the generalisable half: *copying a precedent is not the same as copying a precedent's reasoning* — I copied FinancePage's structure and silently improved on it in the one place where its restraint was the whole point.
+
+**And one defect the round caught on itself, which is the counter-example worth recording:** removing the `?? 0` from `active_projects_count` (a silent lie: "unknown" shown as "0 active projects") would have made the screen print the literal string `"null"` — because `KpiStrip` had been written *relying* on that coalesce, and said so in a comment. Reading the comment that justified the thing I was deleting is what caught it. **The comment that explains a hack is also the index of what breaks when you remove it.**
+
+**Visual evidence, and it is the finding made visible** (production build, real CEO login, RPC response intercepted read-only — zero DB writes): param present ⇒ **9 red / 5 yellow**, strip counts `חוסר קרוב (9)`. `event_warning_days` forced null ⇒ **0 red / 14 yellow** and the `חוסר קרוב` group **gone entirely**, with the banner naming the row and the consequence. Screenshots sent to Ishay.
+
+
 ### 03/09/2026 20:5X – 21:2X — module 7 CLOSING AUDIT: [YES] on `1d10eca`, and the scalability fear did not survive measurement *(fresh session, worktree `.claude/worktrees/m7`)*
 
 **What changed:** the `module-close` template was run end-to-end against `docs/micro_guides/module-7.md`. Verdict **[YES] — mergeable**, recorded against branch head `1d10eca` (32 commits ahead of `origin/dev`, 0 behind, already pushed). `artifact: published` · `quiz: asked`. Doc write-backs: micro-guide (status header → 🔒 Closed, QA matrix as-run filled, closing-audit section appended to §9) · `PROJECT_MASTER §6` (scalability row updated with the post-seed measurement; new `🚧 מ12 ← מ7` line carrying T-1…T-4) · `db_roadmap §10ב` (closing stamp on the m7 entry) · `00_roadmap §3` (m7 closed 03/09 vs planned 05/09 ⇒ 11/10/12 each shifted 2 days earlier, ~18 buffer days to 01/10) · `STATUS.md`.

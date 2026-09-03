@@ -46,8 +46,15 @@ function tilePropsFor(card) {
     case 'quotes':
       return { label: card.label, value: quotesValue(card), emptyText: '—' }
     default:
-      // 'active' — מונה שלם, לעולם לא null (kpiCards כבר מחזירה ?? 0).
-      return { label: card.label, value: <Ltr>{String(card.value)}</Ltr> }
+      // 'active' — מונה שלם. 🔴 **תוקן 03/09/2026 (אודיט-הסגירה, T-1):** כאן ישב
+      // `String(card.value)` בלי שמירה, בהסתמך על `?? 0` שהיה ב-kpiCards. ה-`?? 0` הוסר שם
+      // (שקר שקט: "לא ידוע" הוצג כ-0), ובלי השורה הזו המסך היה מדפיס את המחרוזת **"null"**.
+      // אותה שמירה בדיוק כמו בכרטיס-ההצעות מעליי, ואותו `emptyText`.
+      return {
+        label: card.label,
+        value: card.value == null ? null : <Ltr>{String(card.value)}</Ltr>,
+        emptyText: '—',
+      }
   }
 }
 

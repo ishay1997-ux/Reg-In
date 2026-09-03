@@ -318,7 +318,8 @@ in that session, not carried over.
   🧭 **Precedent this module half-adopted:** `src/lib/quotes.js` `missingPricingParamsMessage` +
   the `QuotesPage` banner already solve exactly this, for the same three parameters. Module 7 took the
   "refuse a default" half and left the "tell the user" half.
-  **Not live:** all three `params` rows exist (30 · 14 · 7, measured). **Target: מ7 fix-forward, or מ12.**
+  **Not live:** all three `params` rows exist (30 · 14 · 7, measured).
+  ✅ **BUILT 03/09/2026 22:2X, Ishay's "בנה"** — see the fix-round section below.
 
 - **T-2 · Every load failure collapses into one mute message with a retry that cannot help.**
   `DashboardPage.jsx:46-52` — one `catch`, one string `מסך הבית לא נטען.`, `onRetry` always offered.
@@ -328,7 +329,7 @@ in that session, not carried over.
   — with the reason written in its own comment.
   **Not live, and measured so:** `projects.quote_id` is `NOT NULL`, and **0** of 827 dated projects lack a
   quote or have a quote with no `quote_services` rows ⇒ the P0001 path is unreachable with today's data.
-  **Target: מ7 fix-forward, or מ12.**
+  ✅ **BUILT 03/09/2026 22:2X, Ishay's "בנה"** — see the fix-round section below.
 
 - **T-3 · `isStaffingComplete` (`CalendarGrid.jsx:45-51`) claims byte-identity with `staffingCell`
   (`src/lib/projects.js`) and omits its `required > 0` guard.** Unreachable — `projects.required_hostess_count`
@@ -377,3 +378,59 @@ line, and `module-7.md:293` + `db_roadmap.md:503` are this module's own correcti
 DEFINER class. · Whole-DB `rls_enabled_no_policy` is now **five** tables, not four — `seed_registry` joined
 tonight as a *deliberate* deny-all (its migration carries the comment saying so); the doc ripple in
 `docs/db_health_checks.md` (check 3 + line 200 "the four tables") is owed by the **seed** branch.
+
+### 🔁 Fix round — 03/09/2026 22:0X–22:3X (Ishay: "בנה"), head `66e2fcd` → new commit
+
+**T-1 and T-2 were BUILT.** T-3 and T-4 stay registered as `🚧 מ12 ← מ7` debt.
+
+**What shipped**
+- `src/lib/quotes.js` — `missingPricingParamsMessage` now delegates to a new exported
+  `missingParamsMessage(values)` that checks **only the keys the caller actually passed**
+  (`Object.hasOwn`, so `undefined` still means "row missing" and an un-passed key means "not my
+  concern"). The quotes screen passes all four keys in an object literal, always, so its behaviour is
+  byte-identical — verified per input class (`undefined` / `null` / `''` / `0` / non-numeric).
+- `src/lib/dashboard.js` — `missingDashboardParamsMessage(summary)` (rule 14: the sentence is derived
+  in `lib`, the component only renders it). ⚖️ It passes the two quote params **only when
+  `quotes_visible`** — for a role that cannot see quotes those params change nothing on her screen,
+  and a banner about something irrelevant is the noise that teaches people to stop reading banners.
+  Also **removed the `?? 0`** on `active_projects_count`.
+- `src/modules/07_dashboard/KpiStrip.jsx` — the null-guard the `?? 0` removal made necessary.
+  🔴 **Without it the screen printed the literal string `"null"`** — the fix would have shipped a
+  worse bug than the one it fixed. Caught in the same round.
+- `src/modules/07_dashboard/api.js` — shape-gate throws are tagged `DASHBOARD_SHAPE_DRIFT_CODE`
+  (synthetic code; same precedent as `RLS_DENIED_CODE` in `apiError.js`).
+- `src/modules/07_dashboard/DashboardPage.jsx` — the banner (styling and `role` copied byte-for-byte
+  from the `QuotesPage` banner) + `toScreenError`: `42501` ⇒ its own screen with the locked sentence
+  and **no retry button**; a **known** DB message ⇒ our own wording via a prefix map; shape drift ⇒
+  its own Hebrew message; everything else ⇒ the shared locked `לא ניתן לטעון את הנתונים.` + retry.
+
+**🔴 Two real defects the re-scan of this very round caught — worth keeping, because both were mine**
+- **The first version of the `42501` branch rendered `err.cause.message` on screen.** The assumption
+  was that every `42501` is `assert_module_permission`'s Hebrew raise. It is not — `42501` is
+  Postgres's generic `insufficient_privilege`, and a `revoke` without its `grant`, or an expired
+  token, yields `permission denied for function get_dashboard_summary` **in English**, straight into
+  the page title. ⇒ **the fix for "no English on screen" had itself opened a path for English on
+  screen.** `FinancePage.jsx:434`, the precedent being copied, passes no detail at all — the deviation
+  was undocumented and wrong. Now: locked sentence, always.
+- **The `P0001` branch leaked an internal id** (`לא ניתן לחשב כספים לפרויקט 22 …`), against the
+  project's own §7.34 convention. Replaced with a prefix map to a sentence of ours that keeps the
+  actionable half and drops the number. 🔑 **Prefix-based, not code-based, on purpose:** a future
+  `raise` added to this read path falls through to the generic screen instead of leaking.
+- Plus three red tests the round introduced (a stale `toBe(0)` assertion, and a `vi.mock` that did not
+  export the new constant — which killed the very test written to prove the guard). All fixed.
+
+**Regression, measured on the final tree:** `npm run gate` **exit 0** — 86 files / **2,272** tests
+(2,264 → 2,272: +8 new), build, dup, knip, audit, bidi, context, docs-structure all clean.
+
+**Visual evidence (production build, port 4176, real CEO login, RPC response intercepted read-only —
+zero DB writes):** with the param present ⇒ **9 red / 5 yellow**, strip counts `חוסר קרוב (9)`.
+With `event_warning_days` forced to null ⇒ **0 red / 14 yellow**, the `חוסר קרוב` group **gone
+entirely**, and the banner reads
+`חסר פרמטר מערכת: ימי_אזהרה_קדם_אירוע — אין התראה על אירועים קרובים. יש להוסיף את השורה בהגדרות המערכת.`
+Screenshots sent to Ishay. **That contrast is the finding, made visible.**
+
+**New tests (8):** the banner appears / does not appear / is not shown for params that do not affect a
+quotes-blind role · `42501` shows the locked sentence and no retry · **an English `42501` never
+reaches the screen** · shape drift shows its Hebrew · a known `P0001` shows our wording without the id ·
+**an unmapped DB message falls through to the generic screen**. The last two are the guard being
+watched *fail*, per `src/CLAUDE.md`'s "a guard never seen failing is not a guard".

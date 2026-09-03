@@ -53,41 +53,54 @@ const REQUIRED_PARAM_FIELDS = [
 // שדה שנעלם בשקט (undefined) היה הופך "מוסך בכוונה" ל"אין נתון בכלל", בדיוק המחלה
 // ש-src/lib/projectFinance.js נבנה כדי למנוע ב'כספים'. פונקציה טהורה כדי שאפשר לבדוק אותה
 // בבדיקת-יחידה בלי לדמות Supabase — ראו api.test.js.
+// 🔴 **קוד סינתטי, במכוון** — אותו תקדים בדיוק כמו `RLS_DENIED_CODE` ב-`src/lib/apiError.js`
+// ("הקוד סינתטי במכוון — הוא לא הגיע מהמסד, הוא המסקנה שלנו"). נוסף 03/09/2026 באודיט-הסגירה
+// (‏T-2): המסך צריך להבחין בין זריקה **שלנו**, שההודעה שלה עברית ונוקבת-שם ולכן ראויה להצגה,
+// לבין `TypeError: Failed to fetch` שהודעתו אנגלית-טכנית ואסור שתגיע למסך. בלי הקוד הזה
+// ההבחנה הייתה נשענת על סוג-החריגה (`Error` מול `TypeError`) — הבחנה שנשברת בשקט.
+export const DASHBOARD_SHAPE_DRIFT_CODE = 'DASHBOARD_SHAPE_DRIFT'
+
+function shapeError(message) {
+  const e = new Error(message)
+  e.code = DASHBOARD_SHAPE_DRIFT_CODE
+  return e
+}
+
 export function assertDashboardShape(row) {
   if (row === null || row === undefined || typeof row !== 'object') {
-    throw new Error('לא התקבל מסך-בית מהשרת.')
+    throw shapeError('לא התקבל מסך-בית מהשרת.')
   }
 
   const missing = REQUIRED_TOP_LEVEL_FIELDS.filter(
     (field) => !Object.hasOwn(row, field) || row[field] === undefined,
   )
   if (missing.length > 0) {
-    throw new Error(`חסרים שדות בנתוני מסך-הבית: ${missing.join(', ')}.`)
+    throw shapeError(`חסרים שדות בנתוני מסך-הבית: ${missing.join(', ')}.`)
   }
 
   for (const field of REQUIRED_TOP_LEVEL_FIELDS) {
     if (!NULLABLE_FIELDS.has(field) && row[field] === null) {
-      throw new Error(`שדה "${field}" חסר ערך (חזר null) בנתוני מסך-הבית.`)
+      throw shapeError(`שדה "${field}" חסר ערך (חזר null) בנתוני מסך-הבית.`)
     }
   }
 
   if (typeof row.profit_visible !== 'boolean') {
-    throw new Error('שדה "profit_visible" אינו בוליאני בנתוני מסך-הבית.')
+    throw shapeError('שדה "profit_visible" אינו בוליאני בנתוני מסך-הבית.')
   }
   if (typeof row.quotes_visible !== 'boolean') {
-    throw new Error('שדה "quotes_visible" אינו בוליאני בנתוני מסך-הבית.')
+    throw shapeError('שדה "quotes_visible" אינו בוליאני בנתוני מסך-הבית.')
   }
   if (!Array.isArray(row.projects)) {
-    throw new Error('שדה "projects" אינו מערך בנתוני מסך-הבית.')
+    throw shapeError('שדה "projects" אינו מערך בנתוני מסך-הבית.')
   }
   if (row.params === null || typeof row.params !== 'object' || Array.isArray(row.params)) {
-    throw new Error('שדה "params" חסר או שגוי בנתוני מסך-הבית.')
+    throw shapeError('שדה "params" חסר או שגוי בנתוני מסך-הבית.')
   }
   const missingParams = REQUIRED_PARAM_FIELDS.filter(
     (field) => !Object.hasOwn(row.params, field) || row.params[field] === undefined,
   )
   if (missingParams.length > 0) {
-    throw new Error(`חסרים שדות ב-params של מסך-הבית: ${missingParams.join(', ')}.`)
+    throw shapeError(`חסרים שדות ב-params של מסך-הבית: ${missingParams.join(', ')}.`)
   }
 
   return row

@@ -9,7 +9,7 @@
 // לא משוכפלת כאן — הקובץ הזה רק מרכיב אותה מחדש לצורת מסך-הבית.
 
 import { ACTIVE_PROJECT_STATUSES, overviewHasGap, eventDaysFromToday } from '@/lib/projects'
-import { deriveQuoteExpiry } from '@/lib/quotes'
+import { deriveQuoteExpiry, missingParamsMessage } from '@/lib/quotes'
 
 // אותה סמנטיקה בדיוק כמו paramNumber הפרטית ב-quotes.js ("לא נטען ≠ אפס") — מועתקת
 // מקומית כי המקור שם אינו מיוצא. ⚠️ Number(null) ו-Number('') הם 0: ערך-פרמטר שלא
@@ -77,8 +77,13 @@ export function kpiCards(summary) {
   return [
     {
       key: 'active',
+      // 🔴 בלי `?? 0` (הוסר 03/09/2026, אודיט-הסגירה T-1): `active_projects_count` הוא שדה-חובה
+      // לא-null ב-`assertDashboardShape`, ולכן הוא כבר נזרק בקול לפני שנגיע לכאן. נפילה-לאחור
+      // שקטה ל-0 כאן לא הגנה על כלום — היא רק המתינה ליום שבו מישהו יוסיף את השדה ל-NULLABLE,
+      // ואז "לא ידוע" היה מוצג כ-"0 פרויקטים פעילים" על מסך ששלושת האריחים האחרים בו מקפידים
+      // להציג "—". השער הרועש נשאר הערובה; המסך מציג `—` אם בכל זאת אין ערך.
       label: 'פרויקטים פעילים',
-      value: paramNumber(summary?.active_projects_count) ?? 0,
+      value: paramNumber(summary?.active_projects_count),
     },
     {
       key: 'satisfaction',
@@ -109,6 +114,27 @@ export function kpiCards(summary) {
 // (proximitySentence, gapWord): "משוב אחד" ולא "1 משובים".
 function satisfactionSub(count) {
   return count === 1 ? 'על סמך משוב אחד' : `על סמך ${count} משובים`
+}
+
+// ── שורת-פרמטר חסרה (הכרעת-ישי 03/09/2026, אודיט-הסגירה T-1) ────────────────
+// 🔴 **הכשל שזה מונע, במילים של המסך:** בלי `ימי_אזהרה_קדם_אירוע` הלוח **לעולם לא מאדים**
+// ‏(`deriveCalendarColor` מחזיר yellow) ורצועת "מה דורש טיפול" **מוותרת על ענף-החוסר לגמרי**
+// (`shortageRows` מחזירה []) — ואז המסך מכריז "✓ אין פריטים הדורשים טיפול" בזמן שלאירוע
+// בעוד שלושה ימים חסרות דיילות. הסירוב להמציא ברירת-מחדל נכון ונשאר; מה שחסר היה **לומר**.
+// אותו באנר ואותו נוסח בדיוק כמו מסך-ההצעות — `missingParamsMessage` ב-`src/lib/quotes.js`.
+//
+// ⚖️ **ולמה רק מה שרלוונטי לצופה:** שני פרמטרי-ההצעות משפיעים על המסך הזה **רק** דרך ענף
+// "הצעה פגה בקרוב", וענף זה כבר לא קיים אצל מי שאינו רואה הצעות (`quotes_visible=false` ⇒
+// ‏`pending_quotes` הוא null). לדווח למנהלת-הגיוס על פרמטר שאינו משנה דבר במסך שלה זה רעש,
+// והרעש הוא מה שגורם לבאנרים להיקרא כרקע. ⇒ המפתחות נמסרים לפי מה שבאמת פעיל אצלה.
+export function missingDashboardParamsMessage(summary) {
+  const params = summary?.params
+  const values = { eventWarningDays: params?.event_warning_days }
+  if (summary?.quotes_visible) {
+    values.validityDays = params?.quote_validity_days
+    values.expiringSoonDays = params?.quote_expiring_soon_days
+  }
+  return missingParamsMessage(values)
 }
 
 // ── "מה דורש טיפול" (המוקאפ המאושר) ─────────────────────────────────────────
