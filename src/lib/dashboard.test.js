@@ -5,6 +5,8 @@ import {
   kpiCards,
   MASKED_TEXT,
   attentionRows,
+  attentionSummary,
+  attentionOverflowLabel,
   monthStartOf,
   shiftMonth,
   hebrewMonthTitle,
@@ -495,6 +497,180 @@ describe('attentionRows — ניסוחי-קצה: יום בודד', () => {
     const rows = attentionRows(summary, TODAY)
     expect(rows.find((r) => r.title === 'הצעה #70').why).toBe('פגה היום')
     expect(rows.find((r) => r.title === 'הצעה #71').why).toBe('פגה מחר')
+  })
+})
+
+// ── attentionSummary / attentionOverflowLabel — תיקרה, לא סינון ─────────────
+// (הכרעת-ישי 03/09/2026 19:3X, "זה מעולה" על ההמלצה: הפאנל מוגבל, לא מסונן ולא מעומד.)
+
+describe('attentionSummary — תיקרה על 12 שורות (5 unbilled + 5 shortage + 2 quote)', () => {
+  const bigSummary = {
+    today: TODAY,
+    params: {
+      event_warning_days: '14',
+      quote_validity_days: '30',
+      quote_expiring_soon_days: '7',
+    },
+    projects: [
+      // (א) חמישה "הסתיים ולא חויב" — ותיק-לחדש, כל תאריך בעבר.
+      {
+        project_id: 301,
+        event_name: 'הסתיים 1',
+        final_event_date: '2026-08-29',
+        project_status: 'event_finished',
+        required_hostess_count: 1,
+        hostesses_confirmed: 1,
+        logistics_ready: 1,
+        logistics_total: 1,
+      },
+      {
+        project_id: 302,
+        event_name: 'הסתיים 2',
+        final_event_date: '2026-08-30',
+        project_status: 'event_finished',
+        required_hostess_count: 1,
+        hostesses_confirmed: 1,
+        logistics_ready: 1,
+        logistics_total: 1,
+      },
+      {
+        project_id: 303,
+        event_name: 'הסתיים 3',
+        final_event_date: '2026-08-31',
+        project_status: 'event_finished',
+        required_hostess_count: 1,
+        hostesses_confirmed: 1,
+        logistics_ready: 1,
+        logistics_total: 1,
+      },
+      {
+        project_id: 304,
+        event_name: 'הסתיים 4',
+        final_event_date: '2026-09-01',
+        project_status: 'event_finished',
+        required_hostess_count: 1,
+        hostesses_confirmed: 1,
+        logistics_ready: 1,
+        logistics_total: 1,
+      },
+      {
+        project_id: 305,
+        event_name: 'הסתיים 5',
+        final_event_date: '2026-09-02',
+        project_status: 'event_finished',
+        required_hostess_count: 1,
+        hostesses_confirmed: 1,
+        logistics_ready: 1,
+        logistics_total: 1,
+      },
+      // (ב) חמישה "חוסר קרוב" — קרוב-לרחוק, כולם בתוך 14 יום.
+      {
+        project_id: 306,
+        event_name: 'חוסר 1',
+        final_event_date: '2026-09-04',
+        project_status: 'in_progress',
+        required_hostess_count: 2,
+        hostesses_confirmed: 0,
+        logistics_ready: 1,
+        logistics_total: 1,
+      },
+      {
+        project_id: 307,
+        event_name: 'חוסר 2',
+        final_event_date: '2026-09-05',
+        project_status: 'in_progress',
+        required_hostess_count: 2,
+        hostesses_confirmed: 0,
+        logistics_ready: 1,
+        logistics_total: 1,
+      },
+      {
+        project_id: 308,
+        event_name: 'חוסר 3',
+        final_event_date: '2026-09-06',
+        project_status: 'in_progress',
+        required_hostess_count: 2,
+        hostesses_confirmed: 0,
+        logistics_ready: 1,
+        logistics_total: 1,
+      },
+      {
+        project_id: 309,
+        event_name: 'חוסר 4',
+        final_event_date: '2026-09-07',
+        project_status: 'in_progress',
+        required_hostess_count: 2,
+        hostesses_confirmed: 0,
+        logistics_ready: 1,
+        logistics_total: 1,
+      },
+      {
+        project_id: 310,
+        event_name: 'חוסר 5',
+        final_event_date: '2026-09-08',
+        project_status: 'in_progress',
+        required_hostess_count: 2,
+        hostesses_confirmed: 0,
+        logistics_ready: 1,
+        logistics_total: 1,
+      },
+    ],
+    pending_quotes: [
+      { quote_id: 70, event_name: 'הצעה א', updated_at: '2026-08-04T00:00:00+00:00' }, // daysLeft=0
+      { quote_id: 71, event_name: 'הצעה ב', updated_at: '2026-08-05T00:00:00+00:00' }, // daysLeft=1
+    ],
+  }
+
+  it('12 שורות בסך-הכול; cap=8 (ברירת-מחדל) שומר על סדר attentionRows, hidden=4, total=12', () => {
+    const full = attentionRows(bigSummary, TODAY)
+    expect(full).toHaveLength(12)
+    const { rows, hidden, total } = attentionSummary(bigSummary, TODAY)
+    expect(rows).toEqual(full.slice(0, 8))
+    expect(hidden).toBe(4)
+    expect(total).toBe(12)
+  })
+
+  it('groups סופרים על הרשימה המלאה (12), לא על השמונה המוצגות', () => {
+    const { groups } = attentionSummary(bigSummary, TODAY)
+    expect(groups).toEqual([
+      { kind: 'unbilled', label: 'הסתיים ולא חויב', count: 5 },
+      { kind: 'shortage', label: 'חוסר קרוב', count: 5 },
+      { kind: 'quote', label: 'הצעה שפגה בקרוב', count: 2 },
+    ])
+  })
+
+  it('קבוצה בת-0 מדולגת: בלי פרויקטים פעילים ⇒ אין "חוסר קרוב" ברשימת הקבוצות', () => {
+    const noShortage = {
+      ...bigSummary,
+      projects: bigSummary.projects.filter((p) => p.project_status === 'event_finished'),
+    }
+    const { groups } = attentionSummary(noShortage, TODAY)
+    expect(groups.map((g) => g.kind)).toEqual(['unbilled', 'quote'])
+  })
+
+  it('cap מותאם-אישית (פרמטר שלישי): cap=3 מציג 3 שורות, hidden=9', () => {
+    const { rows, hidden } = attentionSummary(bigSummary, TODAY, 3)
+    expect(rows).toHaveLength(3)
+    expect(hidden).toBe(9)
+  })
+
+  it('רשימה ריקה ⇒ rows/groups ריקים, hidden=0, total=0', () => {
+    const empty = attentionSummary({ today: TODAY, projects: [], pending_quotes: [] }, TODAY)
+    expect(empty).toEqual({ rows: [], hidden: 0, groups: [], total: 0 })
+  })
+})
+
+describe('attentionOverflowLabel', () => {
+  it('0 ⇒ מחרוזת ריקה (בלי קישור-עוד)', () => {
+    expect(attentionOverflowLabel(0)).toBe('')
+  })
+
+  it('1 ⇒ לשון-יחיד ("+1 נוספים" הייתה עברית שבורה)', () => {
+    expect(attentionOverflowLabel(1)).toBe('+1 נוסף')
+  })
+
+  it('2 ומעלה ⇒ לשון-רבים עם המספר', () => {
+    expect(attentionOverflowLabel(2)).toBe('+2 נוספים')
   })
 })
 

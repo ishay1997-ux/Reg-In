@@ -229,3 +229,80 @@ describe('DashboardPage — מה דורש טיפול', () => {
     expect(screen.queryByTestId(/^dashboard-attention-row-/)).not.toBeInTheDocument()
   })
 })
+
+describe('DashboardPage — מה דורש טיפול: תיקרה וקבוצות (הכרעת-ישי 03/09/2026 19:3X)', () => {
+  // ארבעה "הסתיים ולא חויב" (ותיק→חדש) + ארבעה "חוסר קרוב" (קרוב→רחוק) = 8, בדיוק התיקרה —
+  // ושתי הצעות-שפגות-בקרוב נחתכות ל"עוד". סה"כ 10 שורות, כמו שהמשימה מבקשת.
+  function unbilled(id, date) {
+    return project({
+      project_id: id,
+      event_name: `הסתיים ${id}`,
+      final_event_date: date,
+      project_status: 'event_finished',
+      required_hostess_count: 1,
+      hostesses_confirmed: 1,
+      logistics_ready: 1,
+      logistics_total: 1,
+    })
+  }
+  function shortage(id, date) {
+    return project({
+      project_id: id,
+      event_name: `חוסר ${id}`,
+      final_event_date: date,
+      project_status: 'in_progress',
+      required_hostess_count: 2,
+      hostesses_confirmed: 0,
+      logistics_ready: 1,
+      logistics_total: 1,
+    })
+  }
+
+  it('10 פריטים (4+4+2) ⇒ 8 שורות מוצגות, שורת-קבוצות מלאה, וקישור "+2 נוספים" ל-/quotes', async () => {
+    getDashboardSummary.mockResolvedValue(
+      summaryFixture({
+        projects: [
+          unbilled(401, '2026-08-20'),
+          unbilled(402, '2026-08-21'),
+          unbilled(403, '2026-08-22'),
+          unbilled(404, '2026-08-23'),
+          shortage(405, '2026-09-04'),
+          shortage(406, '2026-09-05'),
+          shortage(407, '2026-09-06'),
+          shortage(408, '2026-09-07'),
+        ],
+        pending_quotes: [
+          { quote_id: 41, updated_at: '2026-08-07T09:00:00+00:00' }, // daysLeft=3
+          { quote_id: 42, updated_at: '2026-08-08T09:00:00+00:00' }, // daysLeft=4
+        ],
+      }),
+    )
+    renderPage()
+    await screen.findByTestId('kpi-active')
+
+    expect(screen.getAllByTestId(/^dashboard-attention-row-/)).toHaveLength(8)
+
+    const groupLine = screen.getByTestId('dashboard-attention-groups').textContent
+    expect(groupLine).toContain('הסתיים ולא חויב (4)')
+    expect(groupLine).toContain('חוסר קרוב (4)')
+    expect(groupLine).toContain('הצעה שפגה בקרוב (2)')
+
+    const more = screen.getByTestId('dashboard-attention-more')
+    expect(more).toHaveTextContent('+2 נוספים')
+    expect(more.getAttribute('href')).toBe('/quotes')
+  })
+
+  it('3 פריטים בלבד ⇒ בלי קישור-עוד (הכול כבר מוצג)', async () => {
+    getDashboardSummary.mockResolvedValue(
+      summaryFixture({
+        projects: [unbilled(409, '2026-08-20'), shortage(410, '2026-09-04')],
+        pending_quotes: [{ quote_id: 43, updated_at: '2026-08-07T09:00:00+00:00' }],
+      }),
+    )
+    renderPage()
+    await screen.findByTestId('kpi-active')
+
+    expect(screen.getAllByTestId(/^dashboard-attention-row-/)).toHaveLength(3)
+    expect(screen.queryByTestId('dashboard-attention-more')).not.toBeInTheDocument()
+  })
+})

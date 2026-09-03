@@ -223,6 +223,40 @@ function quoteExpiryWhy(daysLeft) {
   return `פגה בעוד ${daysLeft} ימים`
 }
 
+// ── תקציר-הפאנל: תיקרה, לא סינון (הכרעת-ישי 03/09/2026 19:3X, "זה מעולה") ───────
+// המסך הוא מסך-טריאז' ולא דוח (§7.9: "רשימה אחת ממוינת, וכל שורה אומרת למה היא שם").
+// התיקרה שומרת את הרצועה קריאה בחודש-שיא (‏~38 אירועים לפי מפרט-הזרע) — בלי לחתוך את
+// גודל-הבעיה: שורת-הקבוצות שמתחת סופרת על **כל** הרשימה, לא רק על השורות המוצגות.
+// הרשימה המלאה חיה במסכי הפרויקטים/ההצעות שכבר ממיינים ומסננים — הפאנל הזה לא צריך
+// לשכפל את זה.
+export const ATTENTION_CAP = 8
+
+const ATTENTION_GROUP_DEFS = [
+  { kind: 'unbilled', label: 'הסתיים ולא חויב' },
+  { kind: 'shortage', label: 'חוסר קרוב' },
+  { kind: 'quote', label: 'הצעה שפגה בקרוב' },
+]
+
+export function attentionSummary(summary, todayIso, cap = ATTENTION_CAP) {
+  const all = attentionRows(summary, todayIso)
+  const rows = all.slice(0, cap)
+  // ספירה על all, לא על rows — מונה-הקבוצה חייב לשקף את גודל-הבעיה האמיתי, לא רק
+  // את מה שנחתך לתוך התקרה. קבוצה בת-0 מדולגת (בלי "הצעה שפגה בקרוב (0)").
+  const groups = ATTENTION_GROUP_DEFS.map(({ kind, label }) => ({
+    kind,
+    label,
+    count: all.filter((row) => row.kind === kind).length,
+  })).filter((group) => group.count > 0)
+  return { rows, hidden: all.length - rows.length, groups, total: all.length }
+}
+
+// "+1 נוסף" / "+N נוספים" — אותה תבנית-הרחבה שכבר אושרה ב-gapWord/proximitySentence
+// (projects.js): לשון-יחיד לפריט בודד, "1 נוספים" הייתה עברית שבורה.
+export function attentionOverflowLabel(hidden) {
+  if (hidden === 0) return ''
+  return hidden === 1 ? '+1 נוסף' : `+${hidden} נוספים`
+}
+
 // יום-בחודש (timezone-safe) — אותו תרגיל Date.UTC כמו weekdayOf ב-dates.js: פענוח
 // מקומי (`new Date(iso)`) מזיז תאריכים סביב חצות בחלק מאזורי-הזמן בלבד.
 function dayOfMonthOf(isoDate) {
