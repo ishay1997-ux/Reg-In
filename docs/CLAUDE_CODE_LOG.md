@@ -83,6 +83,23 @@ found by the screenshot-taker, two by Ishay's own eye, two by the journey review
 builder does not report "done" without a live screenshot it has looked at** (to be carried into
 `src/CLAUDE.md` at module close).
 
+**Closing audit + fix round (03/09, a separate session).** A fresh audit session ran `module-close`
+against the built branch and wrote `docs/micro_guides/close-findings-module-9.md`. Ishay asked the
+two of us to work as peers, and the division held: **the audit ruled the scope, this session wrote
+the code, the audit verifies afterwards.** Its findings were real — I re-measured the four
+load-bearing ones myself rather than accept them, and it corrected me twice in the process
+(my registry count of 20-without-a-ceiling was a regex artifact, the true figure is 23 of 30; and
+my "silent param" blocker was weaker than I claimed, because a sibling param on the same screen
+fails the same way and **predates m9**). I corrected it once, on a QA-matrix cell that credited a
+journey it had planned and not run. **Ten fixes landed at `f51fe6e`, gate exit 0, 2149 tests.**
+The two heaviest: the customers screen lost its "טעון בירור" indicator **silently** whenever the
+threshold row was missing, and the Smart Match sum bar **asserted** "מסתכמות ל-1.00" beside a tag
+showing 1.50 — a screen stating something the number next to it disproved.
+🔑 **The lesson worth keeping, and it is about the shape of the collaboration, not about m9:** the
+audit's value came from the two places it refused me — it would not sign the DoD typed echo in
+Ishay's place while he slept, and it would not let two Claude sessions widen the fix scope by
+agreeing with each other. Both refusals were correct and I was wrong to push on the first.
+
 **Ishay's rulings this session.** micro-guide over Discovery (R-1) · the second door "ההגדרות שלי"
 (R-2) · two-level template gating (R-3) · prefs table with only the email toggle live (R-4) · Q-1…Q-4
 (prices card leaves the `מחירים` tab · both unread rows deleted ⇒ 43 · the validation kinds · owner
