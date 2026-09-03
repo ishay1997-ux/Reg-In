@@ -66,7 +66,11 @@ export function buildHolidayMap(fromYear, toYear) {
       noModern: false,
     })
     for (const event of events) {
-      const iso = event.getDate().greg().toISOString().slice(0, 10)
+      // 🔴 `greg()` מחזיר Date בחצות **מקומית**; `toISOString` ממיר ל-UTC ⇒ בישראל (UTC+2/3) כל חג
+      // היה זז יום אחורה, ובשרת-CI (UTC) לא — הבדיקה עברה מקומית ונפלה ב-CI (03/09/2026, PR #110).
+      // הרכיבים המקומיים הם התאריך הלועזי שהלוח התכוון אליו, בכל אזור-זמן.
+      const g = event.getDate().greg()
+      const iso = `${g.getFullYear()}-${String(g.getMonth() + 1).padStart(2, '0')}-${String(g.getDate()).padStart(2, '0')}`
       const f = event.getFlags()
       const desc = event.getDesc()
       let kind = null
