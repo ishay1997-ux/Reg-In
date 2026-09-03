@@ -44,7 +44,8 @@ test.describe('התחברות (מודול 1)', () => {
     // login מוצלח = שרשרת קריאות-רשת ארוכה (lock-check, Auth, reset, שליפת users) לפני הניווט -
     // timeout מורחב מונע כשל-שווא ברשת איטית (האפליקציה תקינה, הרשת לא).
     await expect(page).toHaveURL('/', { timeout: 30_000 })
-    await expect(page.getByText('ברוכים הבאים לכלים הניהוליים של REG-IN')).toBeVisible()
+    // מודול 7 (03/09/2026): `/` הוא מסך-הבית האמיתי; "ברוכים הבאים" (WelcomePage) הוסר.
+    await expect(page.getByRole('heading', { name: 'מסך הבית', level: 1 })).toBeVisible()
     // כל test מקבל browser context מבודד ב-Playwright - אין session שדולף לטסט הבא.
   })
 })

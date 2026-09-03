@@ -9,7 +9,9 @@
 //     ProtectedRoute, והגנתו כולה בשתי פונקציות-DB. ר' ההערה המלאה בגוף הקובץ.
 //     *(השורה הזו אמרה "‏/login — הנתיב הציבורי היחיד" עד 10/08/2026, צעד 3.6.)*
 //   • כל השאר — מקוננים תחת <MainLayout> שאוכף session פעיל + status='active'.
-//       – / (WelcomePage) ו-/profile נגישים לכל משתמש מחובר.
+//       – / (DashboardPage — מסך-הבית, מודול 7, מ-03/09/2026; עד אז WelcomePage) ו-/profile
+//         נגישים לכל משתמש מחובר. מסך-הבית **בכוונה בלי ProtectedRoute** (§7.10 — נגיש לכולם,
+//         אין שורת-מודול "מסך הבית"); המיסוך לפי-תפקיד של כרטיסי-הכסף חי בגוף ה-RPC שלו.
 //       – /system/* — permission-driven (ProtectedRoute allow={SYSTEM_MODULES}): נגיש למי
 //         שיש לו edit/view על "ניהול הרשאות"/"הגדרות מערכת" (כרגע המנכ"ל בלבד לפי ה-seed,
 //         אך מונע-הרשאה ולא role קשיח); מאחד ניהול-משתמשים/הרשאות/פרמטרים תחת טאבים.
@@ -44,7 +46,7 @@ import FinancePage from '@/modules/08_finance/FinancePage'
 import PublicFeedbackPage from '@/modules/08_finance/PublicFeedbackPage'
 import ParamsTab from '@/modules/09_settings/ParamsTab'
 import MySettingsPage from '@/modules/09_settings/MySettingsPage'
-import WelcomePage from '@/components/WelcomePage'
+import DashboardPage from '@/modules/07_dashboard/DashboardPage'
 import UnderConstruction from '@/components/UnderConstruction'
 import ProfileSettingsPage from '@/components/ProfileSettingsPage'
 import NotFound from '@/components/NotFound'
@@ -89,7 +91,10 @@ function App() {
                 <Route path="/feedback/:token" element={<PublicFeedbackPage />} />
 
                 <Route element={<MainLayout />}>
-                  <Route index element={<WelcomePage />} />
+                  {/* מודול 7 (03/09/2026): מסך-הבית במקום WelcomePage. §7.10 — לכולם, בכוונה בלי
+                      ProtectedRoute (המסלול `index` פטור בשומר App.routes.test.jsx מראש — אין
+                      להוסיף רשומת-פטור חדשה). מיסוך-הכסף לפי תפקיד: בגוף ה-RPC, לא כאן. */}
+                  <Route index element={<DashboardPage />} />
                   {/* נגיש לכל משתמש מחובר בלי קשר לתפקיד - בכוונה בלי ProtectedRoute, MainLayout כבר חוסם לא-מחוברים/מוקפאים */}
                   <Route path="profile" element={<ProfileSettingsPage />} />
                   {/* מודול 9, צעד 3.4 (A-9/R-2) — "ההגדרות שלי". אותו תקדים בדיוק כמו /profile:

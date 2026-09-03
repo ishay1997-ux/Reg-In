@@ -216,11 +216,37 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
   test('עמוד הלקוח: כשל ביומן ⇒ החיוויים נעלמים והסיבה נאמרת', async ({ page }) => {
     await login(page, CEO_EMAIL, CEO_PASSWORD)
 
+    // 🔄 03/09/2026: לקוח 46 (מדיטק) נמחק עם דמו-יולי בהכרעת-ישי. הפיקסטורה — לקוח שיש לו
+    // הצעה "בתהליך" שנשלחה בפועל (שורת `sent` ביומן) — נבחרת בזמן-ריצה **לפני** היירוט,
+    // כי גם הקריאה הזו עוברת דרך `page.route`. אין כזה ⇒ נפילה ברעש על פיקסטורה, לא באג.
+    const customerId = await page.evaluate(
+      async ({ url, anon }) => {
+        const key = Object.keys(sessionStorage).find((k) => k.startsWith('sb-'))
+        const token = JSON.parse(sessionStorage.getItem(key)).access_token
+        const get = async (path) =>
+          (
+            await fetch(`${url}/rest/v1/${path}`, {
+              headers: { apikey: anon, Authorization: `Bearer ${token}` },
+            })
+          ).json()
+        const sent = await get(
+          'email_log?select=entity_id&entity_type=eq.quote&status=eq.sent&limit=200',
+        )
+        const ids = [...new Set(sent.map((r) => r.entity_id))]
+        if (!ids.length) return null
+        const quotes = await get(
+          `quotes?select=customer_id&quote_status=eq.in_progress&quote_id=in.(${ids.join(',')})&limit=1`,
+        )
+        return quotes[0]?.customer_id ?? null
+      },
+      { url: SUPABASE_URL, anon: SUPABASE_ANON },
+    )
+    expect(customerId, 'אין הצעה בתהליך שנשלחה ללקוח — פיקסטורה חסרה, לא באג').toBeTruthy()
+
     await page.route('**/rest/v1/email_log*', (route) =>
       route.fulfill({ status: 500, contentType: 'application/json', body: '{"message":"forced"}' }),
     )
-    // לקוח 46 (מדיטק) — שתי הצעות, אחת מהן "בתהליך" ונשלחה בפועל.
-    await page.goto('/customers/46')
+    await page.goto(`/customers/${customerId}`)
     await expect(page.getByTestId('customer-sent-history-error')).toBeVisible()
     // ⚠️ הלב של הממצא: קבוצה ריקה הציגה "טרם נשלחה ללקוח" על הצעה **שכן** נשלחה.
     await expect(page.getByText('טרם נשלחה ללקוח')).toHaveCount(0)

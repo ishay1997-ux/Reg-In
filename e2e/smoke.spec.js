@@ -42,6 +42,11 @@ const ALLOWED_WRITE_PATHS = [
   // אוטומטית בעליית לשונית-הפרמטרים (הפאנל שליד `שכר_מינימום_שעתי`), ולכן חסימתה
   // הפילה את המסע בלי שאיש לחץ על דבר.
   '/rest/v1/rpc/list_hostesses_below_min_wage',
+  // מודול 7 (03/09/2026, צעד 5.1): `get_dashboard_summary` — ה-RPC היחיד של מסך-הבית, שהוא
+  // עכשיו `/` ולכן נקרא **מיד אחרי ההתחברות**, לפני כל מסך אחר במסע. `stable` + DEFINER
+  // קוראת-בלבד (מיגרציה `20260903182735`) — אותו נימוק בדיוק כמו ארבע השורות שמעל.
+  // בלעדיה המסע היה מתחיל בכשל-טעינה של מסך-הבית עוד לפני המסך הראשון שהוא באמת בודק.
+  '/rest/v1/rpc/get_dashboard_summary',
 ]
 
 test.describe('בדיקת-עשן', () => {
@@ -120,25 +125,35 @@ test.describe('בדיקת-עשן', () => {
     // מסך הבית: הסרגל נבנה ממפת-ההרשאות האמיתית — מודול חסר = הרשאות לא נטענו.
     await expect(page.getByRole('link', { name: anchors.sidebarModule })).toBeVisible()
 
-    // לקוחות: הלקוחה המוכרת עם ההכנסות המחושבות שלה (עובר דרך מנוע-התמחור האמיתי).
+    // לקוחות: השורה הראשונה שמציגה הכנסות ממשיות (עוברות דרך מנוע-התמחור האמיתי) — נבחרת
+    // בזמן-ריצה ולא בשם. 🔄 03/09/2026 (זריעת-הדגמה, `seed-data-spec.md §7א`): "מדיטק /
+    // 22,503 ₪" נמחקו עם דמו-יולי; במקומם אינווריאנט חוצה-מסכים — הסכום שברשימה חייב להופיע
+    // ברצועת-המדדים של עמוד-הלקוח. עמודת-הכסף היחידה ברשימה היא "סה"כ הצעות מאושרות".
     await page.goto('/customers')
-    const customerRow = page.locator('tr').filter({ hasText: anchors.customers.name }).first()
-    await expect(customerRow).toContainText(anchors.customers.revenues)
+    const customerRow = page
+      .locator('[data-testid^="customer-row-"]')
+      .filter({ hasText: /[1-9][\d,]* ₪/ })
+      .first()
+    await expect(customerRow, 'אין לקוח עם הכנסות ברשימה — הזריעה חסרה').toBeVisible({
+      timeout: 30_000,
+    })
+    const customerRevenue = (await customerRow.innerText()).match(/[1-9][\d,]* ₪/)[0]
 
-    // עמוד-הלקוח: אותו עוגן ברצועת-המדדים — מסלול נפרד (שאילתות עמוד-הרשומה).
+    // עמוד-הלקוח: אותו סכום ברצועת-המדדים — מסלול נפרד (שאילתות עמוד-הרשומה).
     await customerRow.click()
     await expect(page).toHaveURL(/\/customers\/\d+/)
-    await expect(page.getByText(anchors.customers.revenues).first()).toBeVisible()
+    await expect(page.getByTestId('metric-revenue')).toContainText(customerRevenue)
 
-    // הצעות: הסכום הקנוני של תרחיש-האפיון חייב להופיע ברשימה.
-    // ⚠️ **דרך לשונית "הכל", וזו תוספת-תיקון של 09/08/2026 ולא ריכוך.** לשונית-ברירת-המחדל
-    // היא `בתהליך` (`QuotesPage.jsx`, `useState('in_progress')`), והצעה #6 — נושאת הסכום
-    // הקנוני — **אושרה ב-01/08/2026** ומאז אינה מופיעה שם. הבדיקה חיפשה אותה בלשונית שבה
-    // היא כבר לא יכולה להיות. העוגן עצמו (‏6,319 ₪, שעובר דרך מנוע-התמחור האמיתי) נשמר
-    // כלשונו — רק המסך שבו מסתכלים עליו תוקן.
+    // הצעות: לשונית "הכל" נטענת ושורותיה נושאות סכום שעבר דרך מנוע-התמחור.
+    // 🔄 03/09/2026: הסכום הקנוני 6,319 ₪ (הצעה #6 של דמו-יולי) נמחק. לשונית-ברירת-המחדל היא
+    // "בתהליך" (QuotesPage.jsx) ולכן עדיין עוברים ל"הכל"; SMOKE_BREAK=empty-quotes עדיין
+    // מפיל את הריצה — אפס שורות אינו עובר את הטענה הראשונה. 🚫 אין כאן ריכוך: מה שנפל הוא
+    // המספר הנעוץ, לא הדרישה שהמסך יעלה עם דאטה אמיתית.
     await page.goto('/quotes')
     await page.getByTestId('quotes-tab-all').click()
-    await expect(page.getByText(anchors.quotes.knownAmount).first()).toBeVisible()
+    const quoteRows = page.locator('[data-testid^="quote-row-"]')
+    await expect(quoteRows.first()).toBeVisible({ timeout: 30_000 })
+    await expect(quoteRows.first()).toContainText('₪')
 
     // בניית-הצעה: שדה-היחס נטען מ-params האמיתי — ריק/שגוי = טעינת-פרמטרים שבורה.
     await page.goto('/quotes/new')
@@ -173,35 +188,32 @@ test.describe('בדיקת-עשן', () => {
     await expect(page.getByTestId('settings-my-page')).toBeVisible({ timeout: 30_000 })
     await expect(page.getByTestId('settings-my-empty')).toHaveText('אין הגדרות בבעלות התפקיד שלך')
 
-    // פרויקטים (מודול 6, נוסף 19/08/2026): מבט-העל עולה עם הלוח האמיתי. שני עוגנים:
-    // האירוע הידוע מופיע בלשונית "הכול" (שם-אירוע הוא snapshot, עמיד-ריקבון — הסטטוס
-    // שלו ינוע ולכן לא נועצים לשונית-סטטוס), ומונה-הלשונית שווה לספירת השורות שרונדרו —
-    // אינווריאנט עצמי שאינו נועץ מספר ללוח שעוד יגדל.
+    // פרויקטים (מודול 6, נוסף 19/08/2026): מבט-העל עולה עם הלוח האמיתי. 🔄 03/09/2026:
+    // "האירוע הידוע" (#8 של דמו-יולי) נמחק; נשאר האינווריאנט העצמי — לשונית "הכול" מציגה
+    // שורות, ומונה-הלשונית שווה לספירת השורות שרונדרו (בלי מספר נעוץ ללוח שעוד יגדל).
     await page.goto('/projects')
     // הלשוניות מרונדרות רק אחרי שה-RPC חזר (עד אז — שלד) ⇒ ממתינים לטבלה לפני הלחיצה.
     await expect(page.getByTestId('projects-table')).toBeVisible({ timeout: 30_000 })
     await page.getByTestId('projects-tab-all').click()
-    await expect(
-      page.locator('[data-testid^="projects-row-"]', { hasText: anchors.projects.knownEvent }),
-    ).toHaveCount(1)
+    await expect(page.locator('[data-testid^="projects-row-"]').first()).toBeVisible()
     const allTabText = await page.getByTestId('projects-tab-all').innerText()
     const allTabCount = Number(allTabText.replace(/[^0-9]/g, ''))
     await expect(page.locator('[data-testid^="projects-row-"]')).toHaveCount(allTabCount)
 
-    // דיילות: הסרגל טוען את המודול, ומסך Smart Match לאירוע האמיתי מציג רק מי שעברה
-    // את שער-הפסילה — מועמדת אחת ידועה בפנים, ושתי הנפסלות (בלי-רכב-ורחוקה /
-    // לא-זמינה-בתאריך-האירוע) בחוץ.
+    // דיילות: הסרגל טוען את המודול, ומסך Smart Match של האירוע הראשון במבט-העל עולה עם
+    // מועמדות אמיתיות. 🔄 03/09/2026: שלוש דיילות-הדגמה ("מאיה כהן" / "קרן אשכנזי" /
+    // "ליאת רזניק") ואירוען נמחקו עם דמו-יולי — וטווח אי-הזמינות שלהן (20–25/08) ממילא חלף,
+    // כלומר טענת-הפסילה כאן הפסיקה להוכיח משהו ב-26/08 בלי שאיש נגע בה. הוכחת השער עצמו
+    // חיה ב-`smart-match.spec.js` עם פיקסטורה שנבחרת בזמן-ריצה; כאן נשאר: המסך עולה,
+    // ורשימת-המועמדות אינה ריקה (מכנה ≠ 0, `e2e/CLAUDE.md`).
     await expect(page.getByRole('link', { name: anchors.hostesses.sidebarLink })).toBeVisible()
     await page.goto('/hostesses')
     await expect(page.getByTestId('overview-table')).toBeVisible()
-    await page
-      .locator('[data-testid^="overview-row-"]', { hasText: anchors.hostesses.eventName })
-      .first()
-      .click()
+    await page.locator('[data-testid^="overview-row-"]').first().click()
     await expect(page.getByTestId('smart-match-page')).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByText(anchors.hostesses.availableCandidate).first()).toBeVisible()
-    await expect(page.getByText(anchors.hostesses.excludedNoCar)).toHaveCount(0)
-    await expect(page.getByText(anchors.hostesses.excludedUnavailable)).toHaveCount(0)
+    await expect(page.locator('[data-testid^="sm-candidate-"]').first()).toBeVisible({
+      timeout: 30_000,
+    })
 
     // לוגיסטיקה (מודול 5, נוסף 26/08/2026): תור-העבודה עולה עם הלוח האמיתי.
     // 🔴 **אף עוגן כאן אינו תאריך ואינו מספר-חי** — הסיד של המודול גוזר את תאריכיו

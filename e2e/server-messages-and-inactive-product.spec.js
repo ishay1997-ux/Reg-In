@@ -26,7 +26,39 @@ const CEO_PASSWORD = process.env.E2E_CEO_PASSWORD
 // ראשונה (הבדיקות פונות ל-`.first()`) · שורה שנייה שאינה דיילות (‏`B-ECO-TAG`) —
 // היא זו שמוכיחה ש-§7.34 מסתיר את המוצר המושבת **בשורה אחרת**.
 const HOSTESS_SKU = '04ST'
-const QUOTE_WITH_HOSTESS_LINE = 8
+// 🔄 03/09/2026: #8 נמחקה עם דמו-יולי בהכרעת-ישי. ההצעה נבחרת בזמן-ריצה לפי אותם שלושה
+// תנאים בדיוק (`pickQuoteWithHostessLine`, נקראת ב-`beforeEach`), ונופלת ברעש על
+// "פיקסטורה חסרה" אם אין כזו — לא ירוק-על-כלום ולא מזהה שירקיב.
+let QUOTE_WITH_HOSTESS_LINE = null
+
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL
+const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY
+
+async function pickQuoteWithHostessLine(page) {
+  const lines = await page.evaluate(
+    async ({ url, anon }) => {
+      const key = Object.keys(sessionStorage).find((k) => k.startsWith('sb-'))
+      const token = JSON.parse(sessionStorage.getItem(key)).access_token
+      const res = await fetch(
+        `${url}/rest/v1/quote_services?select=quote_id,line_number,sku,quotes!inner(quote_status)&quotes.quote_status=eq.in_progress&line_number=in.(1,2)&order=quote_id,line_number`,
+        { headers: { apikey: anon, Authorization: `Bearer ${token}` } },
+      )
+      return res.json()
+    },
+    { url: SUPABASE_URL, anon: SUPABASE_ANON },
+  )
+  const byQuote = new Map()
+  for (const line of lines)
+    byQuote.set(line.quote_id, { ...byQuote.get(line.quote_id), [line.line_number]: line.sku })
+  const found = [...byQuote.entries()].find(
+    ([, skus]) => skus[1] === HOSTESS_SKU && skus[2] && !skus[2].endsWith('ST'),
+  )
+  expect(
+    found,
+    'אין הצעה בתהליך עם 04ST בשורה 1 ושורה שנייה שאינה דיילות — פיקסטורה חסרה, לא באג',
+  ).toBeTruthy()
+  QUOTE_WITH_HOSTESS_LINE = found[0]
+}
 
 async function login(page, email, password) {
   await page.goto('/login')
@@ -80,6 +112,7 @@ test.describe('הודעות-הכשל של המסד מגיעות למסך (סבב
 
   test.beforeEach(async ({ page }) => {
     await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await pickQuoteWithHostessLine(page)
   })
 
   // פותח את חלון-האישור על ההצעה הפתוחה הראשונה בלשונית "בתהליך" ולוחץ "אישור".
@@ -239,6 +272,7 @@ test.describe('מוצר שהושבת אינו מפיל שורה קיימת ל-0 
 
   test.beforeEach(async ({ page }) => {
     await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await pickQuoteWithHostessLine(page)
   })
 
   test('השורה מסומנת, המחיר שורד שינוי-כמות, והשמירה אינה נחסמת', async ({ page }) => {

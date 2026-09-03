@@ -1,0 +1,315 @@
+<title>מסך הבית — מה שם</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@500;700;800&family=Assistant:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --ground:#F8FAFC; --surface:#FFFFFF; --surface-2:#F1F6F7;
+    --ink:#111C22; --muted:#5A6B72; --line:#DEE7E9;
+    --accent:#0D9488; --accent-soft:#E6F4F2; --accent-ink:#0B6F66;
+    --pass:#0F7B4F; --pass-soft:#E4F3EB;
+    --warn:#B45309; --warn-soft:#FBF0E2;
+    --open:#B3261E; --open-soft:#FBEAE8;
+    --shadow:0 1px 2px rgba(17,28,34,.05), 0 8px 24px -16px rgba(17,28,34,.28);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#0B1416; --surface:#111E21; --surface-2:#16272B;
+      --ink:#E4EDEE; --muted:#93A8AD; --line:#22343A;
+      --accent:#2DD4BF; --accent-soft:#12312F; --accent-ink:#7FE6DA;
+      --pass:#4ADE9B; --pass-soft:#102A20;
+      --warn:#F2B872; --warn-soft:#2E2113;
+      --open:#F98F86; --open-soft:#311614;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0B1416; --surface:#111E21; --surface-2:#16272B;
+    --ink:#E4EDEE; --muted:#93A8AD; --line:#22343A;
+    --accent:#2DD4BF; --accent-soft:#12312F; --accent-ink:#7FE6DA;
+    --pass:#4ADE9B; --pass-soft:#102A20;
+    --warn:#F2B872; --warn-soft:#2E2113;
+    --open:#F98F86; --open-soft:#311614;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:Assistant,"Segoe UI",system-ui,sans-serif;
+    font-size:16.5px; line-height:1.65; direction:rtl;
+  }
+  .wrap{max-width:56rem; margin:0 auto; padding:2.2rem 1.15rem 5rem}
+  h1,h2,h3{font-family:Heebo,Assistant,system-ui,sans-serif; text-wrap:balance; margin:0}
+  h1{font-size:clamp(1.85rem,4.6vw,2.6rem); font-weight:800; letter-spacing:-.02em; line-height:1.15}
+  h2{font-size:1.32rem; font-weight:700; letter-spacing:-.01em}
+  h3{font-size:1.03rem; font-weight:700}
+  p{margin:0}
+  p + p{margin-top:.7rem}
+  code{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.86em; direction:ltr;
+       unicode-bidi:isolate; background:var(--surface-2); border:1px solid var(--line);
+       border-radius:5px; padding:.06em .36em}
+  .num{font-variant-numeric:tabular-nums; direction:ltr; unicode-bidi:isolate; display:inline-block}
+  :focus-visible{outline:2.5px solid var(--accent); outline-offset:3px; border-radius:4px}
+
+  .eyebrow{font-size:.735rem; font-weight:700; letter-spacing:.13em; color:var(--muted); text-transform:uppercase}
+  .lede{color:var(--muted); font-size:1.06rem; margin-top:.7rem; max-width:62ch}
+
+  section{margin-top:2.9rem}
+  .sec-head{display:flex; align-items:baseline; gap:.7rem; flex-wrap:wrap; margin-bottom:.9rem}
+  .sec-head p{color:var(--muted); font-size:.94rem}
+
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:13px; padding:1.1rem 1.2rem}
+  .grid{display:grid; gap:.8rem}
+  @media(min-width:660px){ .grid.two{grid-template-columns:1fr 1fr} }
+
+  .decide{background:var(--surface); border:1px solid var(--line); border-radius:16px;
+          box-shadow:var(--shadow); overflow:hidden; margin-top:1.6rem}
+  .decide-top{padding:1.5rem 1.5rem 1.3rem; border-inline-start:5px solid var(--accent)}
+  .decide-word{font-family:Heebo,sans-serif; font-size:clamp(1.3rem,3.1vw,1.7rem);
+               font-weight:800; line-height:1.3; margin-top:.35rem}
+  .decide-foot{padding:1rem 1.5rem; background:var(--surface-2); border-top:1px solid var(--line);
+               font-size:.92rem; color:var(--muted)}
+
+  .side{background:var(--surface); border:1px solid var(--line); border-radius:13px; overflow:hidden}
+  .side-head{padding:.7rem 1.05rem; font-family:Heebo,sans-serif; font-weight:700; font-size:.9rem;
+             background:var(--surface-2); border-bottom:1px solid var(--line)}
+  .side-body{padding:1rem 1.05rem; font-size:.95rem}
+  .side.win .side-head{background:var(--pass-soft); color:var(--pass)}
+  .side.lose .side-head{background:var(--open-soft); color:var(--open)}
+
+  .tablewrap{overflow-x:auto; border:1px solid var(--line); border-radius:13px; background:var(--surface)}
+  table{border-collapse:collapse; width:100%; font-size:.93rem; min-width:32rem}
+  th,td{text-align:start; padding:.62rem .85rem; border-bottom:1px solid var(--line); vertical-align:top}
+  th{font-family:Heebo,sans-serif; font-weight:700; font-size:.8rem; letter-spacing:.04em;
+     color:var(--muted); text-transform:uppercase; background:var(--surface-2); white-space:nowrap}
+  tbody tr:last-child td{border-bottom:0}
+
+  .tag{display:inline-block; padding:.11rem .5rem; border-radius:6px; font-size:.76rem; font-weight:700; white-space:nowrap}
+  .tag.two{background:var(--pass-soft); color:var(--pass)}
+  .tag.one{background:var(--warn-soft); color:var(--warn)}
+
+  ul{margin:.5rem 0 0; padding-inline-start:1.15rem}
+  li{margin:.4rem 0}
+  li::marker{color:var(--accent)}
+
+  .note{border-inline-start:3px solid var(--accent); background:var(--accent-soft);
+        padding:.85rem 1rem; border-radius:0 11px 11px 0; margin-top:.9rem}
+  .note.warn{border-inline-start-color:var(--warn); background:var(--warn-soft)}
+  .note.stop{border-inline-start-color:var(--open); background:var(--open-soft)}
+
+  .q{background:var(--surface); border:1px solid var(--line); border-radius:13px;
+     padding:1.05rem 1.2rem; margin-top:.85rem}
+  .q-n{font-family:Heebo,sans-serif; font-size:.74rem; font-weight:700; letter-spacing:.1em;
+       color:var(--accent-ink); display:block; margin-bottom:.4rem}
+  .q h3{margin-bottom:.5rem}
+  .trap{margin-top:.65rem; font-size:.9rem; color:var(--muted)}
+
+  .quote{font-family:Heebo,sans-serif; font-size:1.06rem; font-weight:500; line-height:1.5;
+         border-inline-start:3px solid var(--accent); padding-inline-start:1rem; margin-top:.8rem}
+
+  footer{margin-top:3.4rem; padding-top:1.2rem; border-top:1px solid var(--line);
+         color:var(--muted); font-size:.86rem}
+</style>
+
+<div class="wrap">
+
+  <p class="eyebrow">מודול 7 · דיון לקראת בלופרינט</p>
+  <h1>מסך הבית — מה שם?</h1>
+  <p class="lede">שני סשנים עבדו על זה במקביל והגיעו לאותה מסקנה מכיוונים שונים — אבל <strong>לא מאותה סיבה</strong>, ואחד מאיתנו טעה בדרך. ביקשת לראות את התהליך ולא תוצאה מוחלקת, אז המחלוקת נשארה בפנים.</p>
+
+  <div class="decide">
+    <div class="decide-top">
+      <p class="eyebrow">✅ תוקן 03/09 — זו הייתה שאלה פתוחה, ואינה יותר</p>
+      <p class="decide-word">מסך אחד, לא לשוניות. <span style="color:var(--accent-ink)">הלוח קבוע במרכז</span>, לצד רצועת-מדדים ורצועת «מה תקוע».</p>
+      <p style="margin-top:.7rem">**הפסקה הזו נשארה כתובה כ"שאלה פתוחה" אחרי שכבר נענתה** — אמרת "נגיע בערך 20 אירועים בחודש… שלפעמים 2 או 3 במקביל ביום", וזה כבר הפך את ההמלצה בזמנו: בעומס כזה הלוח עונה על שאלה יומית אמיתית, ואין סיבה להסתיר אותו מאחורי לשונית. הטבלה "מה הוחלט" למטה כבר שיקפה את זה נכון — רק הקופסה הזו לא עודכנה. תוקן עכשיו כדי שהדף לא יסתור את עצמו.</p>
+    </div>
+    <div class="decide-foot">לוח-השנה שהמלצת מלכתחילה נשאר במרכז המסך, בדיוק כמו שרצית — לא כלשונית-משנית מאחורי "מה תקוע".</div>
+  </div>
+
+  <section>
+    <div class="sec-head"><h2>מה הוחלט</h2><p>בהאצלה שלך — «תדונו ותחליטו לי וזהו»</p></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>הנושא</th><th>ההכרעה</th><th>הסיבה במשפט אחד</th></tr></thead>
+        <tbody>
+          <tr><td><strong>מבנה המסך</strong></td><td><strong>מסך אחד.</strong> רצועת מדדים · <strong>הלוח</strong> · רצועת «מה תקוע»</td><td>ב-20 אירועים בחודש הלוח מרוויח מקום קבוע, ורשימה מעליו הייתה דוחפת אותו מתחת לקצה המסך.</td></tr>
+          <tr><td><strong>§7.18 — צבע</strong></td><td>🔴 חוסר <strong>וגם</strong> בתוך 14 יום · 🟡 חוסר רחוק יותר · 🟢 אין חוסר</td><td>«חוסר» = דיילות חסרות <strong>או</strong> לוגיסטיקה פתוחה — כי «גם וגם» היה מציג ירוק לאירוע בלי אף דיילת.</td></tr>
+          <tr><td><strong>§7.59 — רווח חודשי</strong></td><td>אירועי החודש; סגור = מספר קפוא, פתוח = מתוכנן. <strong>שורת משנה: כמה כבר נסגר</strong></td><td>המדד עונה «איך ייגמר החודש», והשורה מפרידה כסף בבנק מכסף בתקווה.</td></tr>
+          <tr><td><strong>§7.37 — חלון</strong></td><td><strong>90 יום נגללים</strong>, לא רבעון קלנדרי</td><td>רבעון מתאפס ב-1 בינואר ומציג ממוצע על שתי תשובות; נגלל אין לו מדרגה.</td></tr>
+          <tr><td><strong>שתי התקרות שלך</strong></td><td>סף לקוח רדום <strong>730</strong> · תקרת הוגנות <strong>104</strong></td><td>שנתיים בשני המקרים — לקוח שעושה כנס פעם בשנה הוא עדיין לקוח.</td></tr>
+          <tr><td><strong>אחראית משמרת</strong></td><td><strong>לא נוגעים.</strong> מוכנות = ספירה מול הנדרש</td><td><strong>הכרעה שלך</strong>, לא שלנו: «תשחרר מזה, זרום עם מה שקיים».</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note warn"><strong>ומה שהוחלט תחת אי-ודאות מוכרזת, כדי שלא ייקרא כסגור:</strong> אם רשימת «מה תקוע» תתברר כארוכה מ-5 פריטים בעבודה אמיתית — <strong>הרצועה הופכת לרשימה והסדר נבדק מחדש.</strong> לא הצלחנו להכריע את זה מהנתונים, ואנחנו אומרים את זה במקום להעמיד פנים.</div>
+    <div class="note stop"><strong>🔴 ודבר אחד שצריך תיקון לפני הכנס, והוא לא החלטה אלא תקלה:</strong> <strong>לאף פרויקט במסד אין דיילות משובצות סופית.</strong> ⇒ בלוח, <strong>כל האירועים יופיעו כלא-מוכנים</strong> — המסך ייראה שבור בהדגמה. <strong>צריך לשבץ דיילות לכמה פרויקטים בדאטת ההדגמה לפני שמציגים.</strong> <em>(נמדד בסשן השני; לא הצלחתי לאמת בעצמי.)</em></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>קודם כל — למי המסך הזה שייך</h2></div>
+    <div class="card">
+      <p><strong>בדקנו מי בכלל צריך אותו, ויצאה תשובה שלא ציפינו לה.</strong> לארבע מתוך חמש המנהלות <em>כבר יש</em> מסך שאומר להן מה דורש טיפול — כל אחת נכנסת למודול שלה ורואה את זה. פרויקטים, גיוס, לוגיסטיקה, כספים.</p>
+      <p class="quote">היחיד שאין לו כלום — <strong>הוא אתה.</strong> מודול הדו"חות עוד לא נבנה.</p>
+      <p style="margin-top:.8rem">⇒ <strong>וזה נימוק להוסיף רצועה שלישית — לא לצמצם מי רואה מה.</strong> ✅ <strong>תוקן 03/09:</strong> הניסוח הקודם כאן ("צריך לשרת אחד, לא חמישה") היה חריגה מ-§7.10 ("נגיש לכולם") שלא התכוונו אליה, ותיקנת אותנו על זה במפורש ("מה? מסך הבית הוא לכולם"). §7.10 לא זז ולא היה בסיכון — <strong>המסך נשאר לכולם, כמו שהיה.</strong> מה שכן נכון: הפער שמצאנו (ל-4 מ-5 המנהלות כבר יש מסך-טריאז' משלהן, ורק אתה בלי כלום) הוא הנימוק ל<em>הוספת</em> רצועת "מה תקוע" — לא לשינוי מי מורשה לראות את שאר המסך.</p>
+      <div class="note warn"><strong>וזה גם אילוץ טכני, לא רק מוצרי:</strong> ההרשאות חוסמות ארבע מתוך חמש המנהלות מרוב מה שמסך בית עשיר היה מציג. הכספים חסומה מדיילות ולוגיסטיקה; הגיוס והלוגיסטיקה חסומות מלקוחות, הצעות וכספים. <strong>המסך חייב להיבנות כאוסף מקטעים לפי הרשאה</strong> — כולל הלוח: התאריכים גלויים לכולן, אבל תג של איוש או של כסף חייב להיות ממוסך.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>מה שנמדד</h2><p>ולא מה שחשבנו</p></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>הממצא</th><th>מי בדק</th></tr></thead>
+        <tbody>
+          <tr><td>🔴 <strong>נמחק — הטענה הזו לא עמדה במדידה.</strong> כתבנו כאן "שלוש חשבוניות נשכחו". <strong>נמדד מאז: בכל היסטוריית המערכת חויב אירוע <em>אחד</em>, אחרי 9 ימים.</strong> שניים מהשלושה (‏8 ו-7 ימים) <strong>צעירים מהפער היחיד שנמדד אי-פעם</strong> — כלומר לא מאחרים. נשאר חריג אחד (33 יום) מול מדגם של אחד.</td><td><span class="tag one">נמדד ונפסל</span></td></tr>
+          <tr><td><strong>אף מסך במערכת לא מראה לאף אחד אירוע שהסתיים וטרם חויב</strong> — חוץ ממנהלת הכספים, בתוך הלשונית שלה.</td><td><span class="tag two">אומת בקוד</span></td></tr>
+          <tr><td><strong>לארבע מתוך חמש המנהלות כבר יש מסך טריאז'.</strong> רק למנכ"ל אין.</td><td><span class="tag two">שנינו</span></td></tr>
+          <tr><td><strong>העובדה היחידה שכל חמשת התפקידים רוצים היא «מה בסיכון».</strong> כסף רוצות שתיים — ושתיים חסומות ממנו בהרשאות.</td><td><span class="tag two">שנינו</span></td></tr>
+          <tr><td><strong>בעולם, מסך בית של מערכת כזו הוא כרטיסי מדד + לוח שנה.</strong> יצא ממחקר עצמאי — ו<strong>זה קלף נגד ההמלצה שלנו</strong>, לא בעדה.</td><td><span class="tag two">שנינו</span></td></tr>
+          <tr><td>בדאטה היום <strong>תשעה פרויקטים</strong>, ובכל ספטמבר <strong>אירוע אחד — מבוטל</strong>. לוח חודש היה מצייר 29 תאים ריקים.</td><td><span class="tag one">סשן אחד</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note stop"><strong>ואני חייב לסמן משהו שפועל לרעתי:</strong> את המספרים החיים מהמסד <strong>לא הצלחתי לאמת בעצמי</strong> — החיבור למסד לא היה זמין לי בסשן הזה. שורות ה־<span class="tag one">סשן אחד</span> נמדדו בסשן השני בלבד. כל הלילה התעקשתי לבדוק כל מספר פעמיים, וכאן לא יכולתי. <strong>עדיף לסמן מאשר לתת להן להתחזות למספרים ששנינו אישרנו.</strong></div>
+    <div class="note warn"><strong>וסייג על מספר התשעה:</strong> זה סיד הדגמה, לא שנה אמיתית. <strong>אין בריפו שום רישום של נפח אירועים אמיתי</strong> — המספר קיים רק אצלך בראש. לכן הוא שאלה למטה, ולא ראיה כאן.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>המחלוקת בינינו</h2><p>אותה מסקנה, ונימוק אחד שלא החזיק</p></div>
+    <p>הסשן השני שלח חוקר לבנות את הטיעון <strong>בעד</strong> הלוח — והוא חזר עם «לא». זה סימן חזק: חוקר שנשלח להגן על רעיון וחוזר בידיים ריקות שווה יותר מאחד שנשלח לתקוף אותו. <strong>אבל אחד משלושת נימוקיו לא עמד בבדיקה — ודווקא המרכזי.</strong></p>
+    <div class="grid two" style="margin-top:1rem">
+      <div class="side lose">
+        <div class="side-head">✗ הנימוק שנפסל</div>
+        <div class="side-body">
+          <p>«ב־13/08 סגרת את §7.9 וקבעת <strong>רשימה ממוינת ולא ציון דחיפות</strong>. אחד הנימוקים שלך היה: <em>מיון לפי קרבת התאריך מקודד את המשתנה שהמנהלת כבר יודעת.</em></p>
+          <p><strong>ולוח חודש הוא בהגדרתו כלי שממיין לפי תאריך</strong> — כלומר זו אותה הכרעה, בלבוש של מסך אחר.»</p>
+        </div>
+      </div>
+      <div class="side win">
+        <div class="side-head">✓ למה זה לא נכון</div>
+        <div class="side-body">
+          <p>שלפתי את §7.9 מילה במילה. <strong>הדוגמה שאתה עצמך נתת שם:</strong> «כנס רפואה 2026», בעוד 45 יום, עם <span class="num">0</span> מתוך <span class="num">6</span> דיילות — <strong>לפי צבע תאריך הוא יוצא ירוק.</strong> זו הייתה הבעיה שפסלת.</p>
+          <p><strong>אבל הלוח של מודול 7 לא צובע לפי תאריך — הוא צובע לפי מוכנות</strong> (שיבוץ ולוגיסטיקה). אותו אירוע בדיוק יוצא בו <strong>אדום</strong>. הלוח <em>ממקם</em> לפי תאריך ו<em>צובע</em> לפי סיכון — <strong>שני דברים שונים.</strong></p>
+        </div>
+      </div>
+    </div>
+    <div class="note stop"><strong>ולמה התעקשתי במקום לתת לזה לעבור:</strong> אילו היית עולה לכנס ואומר «לוח שנה ממיין לפי תאריך ואני פסלתי את זה», השאלה הבאה מהקהל היא <em>«אבל הלוח שלכם צובע לפי מוכנות — אז מה נכון?»</em> — <strong>ואין לך תשובה, כי ההנחה הייתה שגויה.</strong> נימוק שקורס משאלה אחת הוא בדיוק מה שהקריטריון הרביעי בכנס בודק, וזה היחיד שאפשר להיכשל בו בלי לכתוב שורת קוד.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>הנימוק שכן מחזיק</h2><p>וזה המשפט שאתה אומר בקול</p></div>
+    <p class="quote">מסך הבית לא נועד להראות מה מתוכנן — הוא נועד להראות <strong>מה תקוע</strong>. לוח שנה מצייר את מה שעוד יקרה; הדברים שנופלים בין הכיסאות <strong>כבר קרו</strong>.</p>
+    <p style="margin-top:.9rem">אירוע שהסתיים וטרם חויב הוא בדיוק זה: האירוע קרה, התאריך עבר, <strong>ולאף תא בלוח אין מקום לשבת בו.</strong></p>
+    <div class="note stop"><strong>ובגרסה הראשונה של הדף הזה נשענו כאן על טענה שגויה, וצריך לומר את זה בקול.</strong> כתבנו «שלוש חשבוניות נשכחו». <strong>ואז מדדנו:</strong> בכל היסטוריית המערכת חויב אירוע <strong>אחד</strong> — אחרי <span class="num">9</span> ימים. שניים מהשלושה עומדים על <span class="num">8</span> ו-<span class="num">7</span> ימים, כלומר <strong>עדיין בתוך הפער היחיד שנמדד.</strong> <strong>«שלוש נשכחו» היה שלוש טענות, והדאטה תומכת לכל היותר באחת.</strong>
+    <p style="margin-top:.6rem">🔑 <strong>ומה שנשאר במקומו חזק יותר, כי הוא מבני ולא סטטיסטי:</strong> בדקנו בקוד — <strong>אף מסך במערכת אינו מציג אירוע שהסתיים וטרם חויב, לאף אחד</strong>, חוץ ממנהלת הכספים בתוך המודול שלה. ⇒ <strong>הטיעון אינו «שלושה דברים נשכחו» אלא «אם משהו יישכח, אף אחד לא יידע».</strong> אותה מסקנה, הנחה כנה — <strong>וזו לא קורסת כשמישהו בכנס ישאל «לעומת מה?»</strong></p></div>
+    <div class="note"><strong>ובונוס:</strong> הוא גם לא מחייב אותך להגן שוב על §7.9 בכנס. הכרעה מלפני שלושה שבועות היא לא דבר שאתה צריך לשחזר על הבמה.</div>
+
+    <h3 style="margin-top:1.8rem">ומה עונים על «אבל בעולם כולם פותחים בלוח שנה?»</h3>
+    <p style="margin-top:.5rem">זו ההתנגדות הכי חזקה להמלצה שלנו, והיא נכונה — <strong>המחקר שלנו עצמו החזיר שמסך בית של מערכת כזו הוא כרטיסי מדד ולוח שנה.</strong> אז צריך תשובה, לא התעלמות.</p>
+    <p class="quote">המוצרים האלה נפתחים בלוח כי <strong>המשתמש שלהם הוא מי שמשבץ</strong> — אצל חברת שירות בשטח, העבודה <em>היא</em> רשת היום. <strong>אצלנו ארבע מתוך חמש המנהלות כבר מקבלות "מה תקוע" במודול שלהן, ומה שחסר הוא רצועה שלישית בשביל מה שאף מודול לא מכסה</strong> — לא שינוי של מי רואה את שאר המסך.</p>
+    <p style="margin-top:.7rem">⇒ המוסכמה נכונה למשתמשים שלה, <strong>והפער אצלנו שונה.</strong> כשאומרים את זה בקול, ההתנגדות הופכת מ«התעלמתם מהשוק» ל<strong>«הכרתם את השוק והסברתם למה אתם חורגים»</strong> — וזה בדיוק מה שהקריטריון הרביעי מחפש. ✅ <strong>תוקן 03/09:</strong> הניסוח המקורי כאן דיבר על "המשתמש שנשאר הוא המנכ"ל" כאילו המסך מצטמצם אליו — לא מדויק; המסך נשאר לכולם (§7.10), רק הרצועה השלישית נולדה מהפער שלו.</p>
+    <div class="note warn"><strong>וסימון הוגן:</strong> הפסקה הזו היא <strong>טיעון, לא מדידה.</strong> מה שנמדד הוא שהמוסכמה קיימת ושארבע מהמנהלות מכוסות; <strong>ההסבר <em>למה</em> המוסכמה לא חלה עלינו הוא היסק שלנו</strong> — סביר, אבל לא בדוק. אל תציג אותו כממצא.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>שלוש שאלות שרק אתה יכול לענות</h2></div>
+
+    <div class="q">
+      <span class="q-n">שאלה 1 — וזו שמכריעה</span>
+      <h3>כמה אירועים יש לך בחודש עמוס באמת?</h3>
+      <p>אתה פותח את המערכת בבוקר הראשון של אוקטובר. <strong>אם באוקטובר יש שלושה אירועים</strong> — כמו היום — הלוח מראה 28 תאים ריקים ושלושה מלאים, ואתה סורק בעיניים כדי למצוא אותם. <strong>אם יש עשרים</strong> — הלוח פתאום עונה על שאלה אמיתית: <em>«ב־14 כבר יש שניים, אפשר לקחת שלישי?»</em></p>
+      <p class="trap">⚠️ <strong>המלכודת:</strong> קל לענות «תלוי». אבל <strong>המספר הזה לבדו מכריע בין לוח לרשימה</strong> — חיפשנו סף מקובל בעולם, ואין כזה. <strong>מי שינקוב במספר בלי לשאול אותך — ממציא אותו.</strong></p>
+    </div>
+
+    <div class="q">
+      <span class="q-n">שאלה 2</span>
+      <h3>כשמשהו תקוע אצל אחת המנהלות — איך השנייה יודעת היום?</h3>
+      <p>הפסטיבל של עיריית חדרה הסתיים ב־26/08. החשבונית לא יצאה, וזה כבר שמונה ימים. <strong>איך זה אמור להתגלות?</strong></p>
+      <ul>
+        <li>אם התשובה <em>«מנהלת הכספים רואה את זה בלשונית שלה, וזה מספיק»</em> ⇒ <strong>מסך הבית הוא קישוט</strong>, ולוח יפה מספיק בהחלט.</li>
+        <li>אם התשובה <em>«אף אחד לא רואה עד שמישהו שואל — וזו בדיוק הבעיה»</em> ⇒ <strong>מסך הבית הוא מנגנון</strong>, ורשימה היא הדבר היחיד שעונה עליו.</li>
+      </ul>
+    </div>
+
+    <div class="q">
+      <span class="q-n">שאלה 3</span>
+      <h3>אתה נכנס כל בוקר, או פעם בשבוע?</h3>
+      <p>כל בוקר יחד עם המנהלות ⇒ המסך צריך להיות <strong>מסך עבודה</strong>: מה זז מאתמול. פעם בשבוע כדי לראות איפה החברה עומדת ⇒ <strong>לוח בקרה עסקי</strong>: צבר, רווח חודשי, כמה כסף תקוע בכל שלב.</p>
+      <p class="trap">🔑 <strong>ולזה יש עוגן שלך:</strong> ב־11/07 ביקשת בעצמך «תצוגת צבר חודשית… תובנה עסקית מעניינת». <strong>זה מעולם לא נבנה, ומסך הבית הוא המקום הטבעי היחיד שלו.</strong></p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>מה אפשר לבנות בלי שום עבודת מסד חדשה</h2></div>
+    <div class="card">
+      <ul>
+        <li><strong>«מה דורש טיפול»</strong> — כל שורה אומרת במילים למה היא שם, בדיוק כפי שהכרעת ב־§7.9. חשבוניות שלא יצאו · אירועים לא מאוישים · הצעות שפגות.</li>
+        <li><strong>לוח חודשי צבוע לפי מוכנות</strong> — כלל הצבע הוא הכרעה שממתינה לך (§7.18), והנתונים כבר קיימים.</li>
+        <li><strong>ארבעה כרטיסי מדד</strong> — רווח חודשי משוער, פרויקטים פעילים, שביעות רצון, הצעות ממתינות.</li>
+      </ul>
+      <div class="note"><strong>הכול נשען על נתונים שכבר במערכת.</strong> אין טבלה חדשה, אין מיגרציה, אין עבודה מתוזמנת.</div>
+      <div class="note stop"><strong>אבל «הנתונים קיימים» אינו «מוכן לבנייה», ואת ההבדל צריך לומר בקול:</strong> <strong>שניים מארבעת כרטיסי המדד עדיין בלי נוסחה מוסכמת</strong>, ושתיהן הכרעות שלך שממתינות דווקא במודול הזה.
+      <ul>
+        <li><strong>«רווח חודשי משוער» (§7.59)</strong> — לא הוגדר <em>אילו פרויקטים נספרים</em>: רק אלה שהאירוע שלהם החודש? כל הפתוחים? כאלה שהסתיימו וטרם נסגרו? וגם לא איך משקללים מתוכנן מול בפועל בפרויקט חצי־סגור.</li>
+        <li><strong>«שביעות רצון ממוצעת» (§7.37)</strong> — <strong>החצי הקשה כבר נסגר</strong> ב־26/08 (אין נוסחת שקלול; המנהלת מזינה ציון אחד). מה שנשאר פתוח הוא <strong>חלון הזמן בלבד</strong>: רבעון קלנדרי או 90 יום נגללים.</li>
+      </ul>
+      <p style="margin-top:.6rem">⇒ <strong>שלוש הכרעות שלך פתוחות על המודול הזה, לא אחת:</strong> §7.18 (צבע הלוח) · §7.59 · §7.37. <strong>ואם תיאמר בכנס «הדשבורד לא דורש עבודה חדשה» ומישהו ישאל «איך מחושב הרווח החודשי?» — אין היום תשובה.</strong> עדיף שתדע את זה מכאן ולא משם.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>תקלה שנתפסה לפני שמישהו בנה לפיה</h2></div>
+    <div class="note stop"><p>המדריך של מודול 7 הציג את <strong>§7.9 כשאלה פתוחה</strong> ושלח סשן עתידי «להכריע בה». <strong>§7.9 סגור מ־13/08/2026 — אתה כבר הכרעת בו.</strong></p>
+    <p style="margin-top:.6rem">סשן שהיה מציית למדריך כלשונו היה <strong>פותח מחדש הכרעה שלך</strong> — ודווקא ככלל הצבע של הלוח, כלומר בדיוק בנקודה שהדיון הזה עוסק בה. <strong>תוקן, גם בטקסט וגם בשורת הפרמטרים שמתחתיו</strong> — שתיהן, כי לתקן אחת ולהשאיר את התאומה זו הטעות שחזרה אצלנו שלוש פעמים הלילה.</p></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>איפה כל אחד מאיתנו טעה</h2><p>ביקשת את התהליך — זה התהליך</p></div>
+    <div class="grid two">
+      <div class="card">
+        <h3>הסשן השני</h3>
+        <ul>
+          <li>בנה את הטיעון המרכזי על <strong>אנלוגיה להכרעה שלך</strong> — ובדיקה מול הטקסט המקורי הראתה שהאנלוגיה הפוכה.</li>
+          <li>בדק את מצב הענפים <strong>בכיוון אחד בלבד</strong> והסיק «הכול מסונכרן». המסקנה נכונה, הראיה חצי.</li>
+          <li>ספר <strong>שלושה</strong> פרמטרים תחת כלל יחסי — יש <strong>שישה</strong>. ההערה שהיה כותב בקוד הייתה מכסה חצי מהם.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>אני</h3>
+        <ul>
+          <li>קיבלתי ממנו את המספר <strong>18</strong> בלי לספור. ספרתי — <strong>20</strong>. <strong>הוא תפס את זה, לא אני.</strong></li>
+          <li><strong>לא הצלחתי לאמת את המספרים החיים</strong>, וסימנתי אותם כמדידה של צד אחד במקום לתת להם להיראות מאושרים פעמיים.</li>
+          <li>הצעתי לכתוב שורה לקובץ שנטען בכל סשן <strong>בלי להראות לך את הנוסח</strong>. <strong>חזרתי בי מההצעה של עצמי</strong> אחרי ששנינו כבר הסכמנו עליה — כי הכלל שלך אומר שאתה רואה נוסח לפני שהוא נכנס, <strong>ושני סשנים שמסכימים הם בדיוק מה שהכלל הזה נועד לעצור.</strong></li>
+          <li>בניתי סעיף «אפשר לבנות בלי עבודה חדשה» <strong>ופספסתי ששניים מארבעת הכרטיסים בו בלי נוסחה מוסכמת.</strong> הסשן השני תפס — <strong>אותה טעות בדיוק שאני פסלתי אצלו: משפט שנכון עד השאלה הראשונה.</strong></li>
+        </ul>
+      </div>
+    </div>
+    <div class="note"><strong>ומה שעבד:</strong> אף אחת מהטעויות האלה לא נתפסה בקריאה חוזרת. <strong>כולן נתפסו כשהצד השני הלך ובדק את הטענה מחדש מול המקור.</strong> זה מה שהרוויח מזה ששני סשנים עבדו במקביל, ולא אחד.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>על מה לא שאלנו ושווה שתספר לנו?</h2></div>
+    <div class="card"><p>השאלה הזו נשאלת בסוף כל תור תכנון, והיא לא טקס — <strong>שלוש השאלות למעלה הן מה שאנחנו יודעים לשאול.</strong> מה שאתה יודע על העבודה בשטח ואנחנו לא יודעים אפילו לשאול עליו, יגיע רק אם תספר.</p></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>נספח — השאילתה עצמה</h2><p>כדי שתבדוק, לא שתאמין</p></div>
+    <div class="card">
+      <p>⚠️ <strong>הטבלה למטה נכונה כעובדה ושגויה כמסקנה, ולכן היא נשארת כאן עם התיקון לידה.</strong> אלה באמת שלושה אירועים שהסתיימו בלי חשבונית — <strong>אבל אין מולם קו-בסיס:</strong> במערכת חויב אי-פעם אירוע <strong>אחד</strong>, אחרי <span class="num">9</span> ימים. ⇒ ‏<span class="num">8</span> ו-<span class="num">7</span> ימים אינם איחור; <span class="num">33</span> הוא חריג מול מדגם של אחד.</p>
+      <div class="tablewrap" style="margin-top:.9rem"><table><thead><tr><th>#</th><th>אירוע</th><th>תאריך</th><th>ימים אחורה</th><th>חשבונית</th></tr></thead><tbody>
+        <tr><td>7</td><td>השקת מוצר — מדיטק פתרונות</td><td>01/08/2026</td><td><strong class="num">33</strong></td><td>❌ לא נשלחה</td></tr>
+        <tr><td>13</td><td>פסטיבל קיץ עירוני — עיריית חדרה</td><td>26/08/2026</td><td><strong class="num">8</strong></td><td>❌ לא נשלחה</td></tr>
+        <tr><td>14</td><td>כנס פתיחת שנה — הייטק גרופ</td><td>27/08/2026</td><td><strong class="num">7</strong></td><td>❌ לא נשלחה</td></tr>
+      </tbody></table></div>
+      <div class="note"><strong>ומה שהשאילתה <em>מוציאה</em> חשוב לא פחות ממה שהיא מכניסה</strong> — כאן מספרים כאלה בדרך כלל משקרים: היא מדלגת על אירועים <strong>מבוטלים</strong> (אין על מה לחייב) ועל אירועים <strong>שטרם קרו</strong> (עוד לא הגיע הזמן). <strong>בלי שני הסינונים האלה המספר היה גדול יותר — ושגוי.</strong></div>
+      <p style="margin-top:.8rem; font-size:.9rem; color:var(--muted)">נמדד <span class="num">03/09/2026 ~05:5X</span> בסשן הבנייה. אם הדאטה זזה מאז — תקבל שורות אחרות, וזה בסדר: <strong>העיקר שאתה בודק ולא סומך.</strong></p>
+    </div>
+  </section>
+
+  <footer>
+    דיון מודול 7, ‏<span class="num">03/09/2026</span>. נכתב בשני סשנים במקביל, אחרי סגירת מודול 9. <strong>המחלוקת הושארה גלויה בבקשתך</strong> — לא הוחלקה למסקנה אחת.
+  </footer>
+
+</div>
