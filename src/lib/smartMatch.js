@@ -283,7 +283,8 @@ export function companyReliabilityAverage(candidates) {
   return count > 0 ? total / count : null
 }
 
-// מרכיב-האמינות. **המשקל שלו כבוי עד שמ9 ידליק את `מרכיב_אמינות_פעיל`** (`🚧 מ9 ← מ4`) —
+// מרכיב-האמינות. **המשקל שלו כבוי כל עוד `מרכיב_אמינות_פעיל` כבוי** (~~`🚧 מ9 ← מ4`~~ — שולם
+// 03/09/2026: מ9 בנה את המתג ואת מסך-הפרמטרים, והדלקתו היא **הכרעת-מוצר של ישי**, לא חוב-מודול) —
 // הפונקציה נקראת כבר היום במשקל 0 כדי שהנרמול יהיה אמיתי, לא כדי שתשפיע על הציון.
 export function reliabilityScore(records, companyAverage, dampingConstant) {
   const { count, total } = attendanceCounts(records)
