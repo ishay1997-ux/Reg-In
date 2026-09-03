@@ -295,6 +295,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'אורחים',
     min: 1,
+    // סניטרי — 3× החי (50); כל יחס-איוש שנמצא במחקר נמוך מ-80
+    max: 150,
     group: 'pricing_timing',
   },
   {
@@ -304,6 +306,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'ימים',
     min: 1,
+    // 6× החי (30) ו-2× הרופף שנמצא (90 יום לעסקאות מורכבות) · הכלל היחסי הוא ההגנה האמיתית כאן; התקרה תופסת רק סדר-גודל (‏`full=24, partial=5000` עובר את הכלל היחסי ועדיין שגוי)
+    max: 180,
     group: 'pricing_timing',
     affects: 'משנה מתי הצעת מחיר נחשבת פגה — משפיע על מסך ההצעות ועל הסינון בו',
   },
@@ -314,6 +318,8 @@ export const PARAM_REGISTRY = [
     kind: 'decimal',
     unit: '₪',
     min: 0,
+    // ~2.2× התקרה הסטטוטורית היום (22.60 ₪) — מרווח להצמדות עתידיות
+    max: 50,
     decimals: 2,
     group: 'pricing_timing',
   },
@@ -344,6 +350,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'ימים',
     min: 1,
+    // שוטף+90, הרופף המקובל בישראל; מעל התקרה החוקית לעסק קטן (60)
+    max: 90,
     group: 'pricing_timing',
   },
   {
@@ -353,6 +361,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'ימים',
     min: 1,
+    // תואם את תקרת ימי-התוקף · הכלל היחסי הוא ההגנה האמיתית כאן; התקרה תופסת רק סדר-גודל (‏`full=24, partial=5000` עובר את הכלל היחסי ועדיין שגוי)
+    max: 180,
     group: 'pricing_timing',
   },
 
@@ -375,6 +385,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'ימים',
     min: 1,
+    // אין תקן חיצוני; 3 חודשי הכנה הם הגבול הסביר
+    max: 90,
     group: 'control_alerts',
   },
   {
@@ -393,6 +405,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'שעות',
     min: 1,
+    // ~2.5× החי (72) · הכלל היחסי הוא ההגנה האמיתית כאן; התקרה תופסת רק סדר-גודל (‏`full=24, partial=5000` עובר את הכלל היחסי ועדיין שגוי)
+    max: 180,
     group: 'control_alerts',
   },
   {
@@ -402,6 +416,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'שעות',
     min: 1,
+    // תואם את תקרת הפיצוי החלקי · הכלל היחסי הוא ההגנה האמיתית כאן; התקרה תופסת רק סדר-גודל (‏`full=24, partial=5000` עובר את הכלל היחסי ועדיין שגוי)
+    max: 180,
     group: 'control_alerts',
   },
   {
@@ -411,6 +427,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'שעות',
     min: 1,
+    // עקבי עם שאר ספי-השעות. ⚠️ הפרמטר אינו מחובר לכלום היום — אין עבודה מתוזמנת ששולחת תזכורות
+    max: 72,
     group: 'control_alerts',
   },
   {
@@ -431,6 +449,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'ימי עסקים',
     min: 1,
+    // אין תקן חיצוני; 60 ימי-עסקים מכסים כל זמן-אספקה ריאלי
+    max: 60,
     group: 'control_alerts',
   },
 
@@ -442,6 +462,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'שעות',
     min: 1,
+    // מעל זה "היום האחרון לפני האירוע" מפסיק להיות משמעותי
+    max: 72,
     group: 'shift_invites',
   },
   {
@@ -451,6 +473,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'שעות',
     min: 1,
+    // אותו סולם כמו שני שכניו בקבוצה
+    max: 72,
     group: 'shift_invites',
     affects: 'משנה מתי זימון-משמרת נחשב פג — משפיע גם על מסך הצוות בפרויקט (מודול 6)',
   },
@@ -461,6 +485,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'שעות',
     min: 1,
+    // שבוע — אירוע "דחוף" שבוע מראש הוא כבר מתיחה של המילה
+    max: 168,
     group: 'shift_invites',
   },
 
@@ -585,6 +611,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'ק"מ',
     min: 1,
+    // ~2× החי (80), ומעבר לספרות-הנסיעה שנמצאו (~80 ק"מ) · הכלל היחסי הוא ההגנה האמיתית כאן; התקרה תופסת רק סדר-גודל (‏`full=24, partial=5000` עובר את הכלל היחסי ועדיין שגוי)
+    max: 150,
     group: 'smart_match',
   },
   {
@@ -595,6 +623,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'ק"מ',
     min: 1,
+    // תואם את תקרת מרחק-הפסילה · הכלל היחסי הוא ההגנה האמיתית כאן; התקרה תופסת רק סדר-גודל (‏`full=24, partial=5000` עובר את הכלל היחסי ועדיין שגוי)
+    max: 150,
     group: 'smart_match',
   },
   {
@@ -603,6 +633,8 @@ export const PARAM_REGISTRY = [
     hint: 'כמה "תשובות דמיוניות" ממוצע-החברה שוקל בציון של דיילת עם מעט היסטוריה — מונע קפיצה מדירוג אחד או שניים',
     kind: 'int',
     min: 1,
+    // עוגן פנימי: 5–15 שיבוצים בשנה הם המכנה האמיתי (הערת `smartMatch.js`) — מעל זה כל ציון נבלע בממוצע-החברה
+    max: 15,
     group: 'smart_match',
   },
   {
@@ -612,6 +644,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'חודשים',
     min: 1,
+    // ⚠️ הפרמטר אינו נקרא בשום מקום היום
+    max: 60,
     group: 'smart_match',
   },
   {
@@ -621,6 +655,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'חודשים',
     min: 1,
+    // ⚠️ כנ"ל — אינו נקרא בשום מקום היום
+    max: 60,
     group: 'smart_match',
   },
   {
@@ -630,6 +666,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'תשובות',
     min: 1,
+    // אותו עוגן פנימי — מעליו התג "טרם נצבר מידע" יידלק כמעט תמיד
+    max: 15,
     group: 'smart_match',
   },
   {
@@ -658,6 +696,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'זימונים',
     min: 1,
+    // מעל המכנה השנתי הריאלי — רצף 20 הוא מקרה מנוון ממילא
+    max: 20,
     group: 'smart_match',
   },
   {
