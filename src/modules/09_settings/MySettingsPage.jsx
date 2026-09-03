@@ -324,6 +324,9 @@ export default function MySettingsPage() {
             total={totalCount}
             saving={form.saving}
             disabled={hasErrors}
+            blockedReason={
+              visibleCrossErrors[0]?.message || (hasErrors ? 'יש שדה עם ערך לא תקין' : '')
+            }
             failedMessage={form.saveError}
             onCancel={() => form.reset()}
             onSave={handleSave}

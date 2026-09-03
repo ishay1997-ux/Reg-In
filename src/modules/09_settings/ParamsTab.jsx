@@ -326,6 +326,12 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
               total={groupRows.length}
               saving={form.saving}
               disabled={hasErrorsInGroup}
+              // הסיבה הראשונה בלבד: שתי שגיאות-רוחב בו-זמנית הן נדירות, ופס-דביק אינו
+              // המקום לרשימה. המשפט המלא לכל שגיאה נשאר ליד השדות עצמם.
+              blockedReason={
+                groupCrossErrors[0]?.message ||
+                (hasErrorsInGroup ? 'יש שדה עם ערך לא תקין בקבוצה הזו' : '')
+              }
               failedMessage={form.saveError}
               onCancel={() => form.reset(groupNames)}
               onSave={handleSave}

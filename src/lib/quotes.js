@@ -527,18 +527,31 @@ function paramNumber(value) {
 // והמחלקה סגורה.** ‏`grep` על `QUOTE_SCREEN_PARAM_NAMES` יראה שרק גוף-המייל נשאר בחוץ, וזה נכון:
 // הוא אינו מספר ואינו נגזר ל-false.
 // מחזירה '' כשהכול תקין, כדי שהקורא יוכל לכתוב `{message && <banner/>}`.
-export function missingPricingParamsMessage({
-  vatRate,
-  validityDays,
-  expiringSoonDays,
-  eventWarningDays,
-} = {}) {
+export function missingPricingParamsMessage(values = {}) {
+  // ארבעת המפתחות נמסרים תמיד — גם כשערכם `undefined` — כדי שהתנהגות מסך-ההצעות תישאר
+  // זהה-בייט אחרי החילוץ למטה: `undefined` כאן פירושו "השורה חסרה", לא "לא שאלתי".
+  const { vatRate, validityDays, expiringSoonDays, eventWarningDays } = values
+  return missingParamsMessage({ vatRate, validityDays, expiringSoonDays, eventWarningDays })
+}
+
+// 🆕 **הגרסה הכללית (03/09/2026, אודיט-הסגירה של מודול 7, ממצא T-1).** אותו מנגנון בדיוק,
+// אלא שהיא בודקת **רק את המפתחות שהקורא באמת מסר** — כי מסך-הבית תלוי בשלושה מתוך הארבעה
+// ולא במע"מ. 🔑 **וההבחנה שמחזיקה את זה:** "מפתח שלא נמסר" נמדד ב-`Object.hasOwn` ולא בערך,
+// כך ש-`undefined` נשאר "השורה חסרה" (מה שמסך-ההצעות מסתמך עליו) ואי-מסירה היא "לא רלוונטי
+// לי". מסירה חלקית בלי הבחנה כזו הייתה מדווחת על המע"מ כחסר בכל טעינה של מסך-הבית.
+// ⚠️ **וזה לא רק "עוד באנר":** בלי השורה, `deriveCalendarColor` לעולם לא מאדים ורצועת
+// "מה דורש טיפול" מציגה "אין פריטים" — כלומר הכשל נקרא **כבשורה טובה**, בדיוק הנימוק
+// שכתוב בהערה שמעל. מחזירה '' כשהכול תקין.
+export function missingParamsMessage(values = {}) {
+  const asked = (key) => Object.hasOwn(values, key)
   const missing = []
-  if (paramNumber(vatRate) === null) missing.push(QUOTE_SCREEN_PARAM_NAMES.vatPercent)
-  if (paramNumber(validityDays) === null) missing.push(QUOTE_SCREEN_PARAM_NAMES.validityDays)
-  if (paramNumber(expiringSoonDays) === null)
+  if (asked('vatRate') && paramNumber(values.vatRate) === null)
+    missing.push(QUOTE_SCREEN_PARAM_NAMES.vatPercent)
+  if (asked('validityDays') && paramNumber(values.validityDays) === null)
+    missing.push(QUOTE_SCREEN_PARAM_NAMES.validityDays)
+  if (asked('expiringSoonDays') && paramNumber(values.expiringSoonDays) === null)
     missing.push(QUOTE_SCREEN_PARAM_NAMES.expiringSoonDays)
-  if (paramNumber(eventWarningDays) === null)
+  if (asked('eventWarningDays') && paramNumber(values.eventWarningDays) === null)
     missing.push(QUOTE_SCREEN_PARAM_NAMES.eventWarningDays)
   if (missing.length === 0) return ''
 

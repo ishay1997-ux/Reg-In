@@ -1,0 +1,295 @@
+<title>מוקאפ מסך הבית</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@500;700;800&family=Assistant:wght@400;600;700&display=swap">
+<style>
+  :root{
+    --primary:#0D9488; --primary-soft:#CCFBF1; --primary-ink:#0F766E;
+    --ok:#22C55E; --ok-soft:#DCFCE7; --ok-ink:#15803D;
+    --warn:#F59E0B; --warn-soft:#FEF3C7; --warn-ink:#92400E;
+    --danger:#EF4444; --danger-soft:#FEE2E2; --danger-ink:#B91C1C;
+    --navy:#1E293B;
+    --bg:#F8FAFC; --card:#FFFFFF; --line:#E2E8F0; --ink:#0F172A; --muted:#64748B;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --primary:#2DD4BF; --primary-soft:#0F3B37; --primary-ink:#5EEAD4;
+      --ok:#4ADE80; --ok-soft:#0F2E1B; --ok-ink:#86EFAC;
+      --warn:#FBBF24; --warn-soft:#3A2A05; --warn-ink:#FCD34D;
+      --danger:#F87171; --danger-soft:#3B1212; --danger-ink:#FCA5A5;
+      --navy:#E2E8F0;
+      --bg:#0B1220; --card:#111A2C; --line:#233047; --ink:#E7ECF3; --muted:#93A3B8;
+    }
+  }
+  :root[data-theme="dark"]{
+    --primary:#2DD4BF; --primary-soft:#0F3B37; --primary-ink:#5EEAD4;
+    --ok:#4ADE80; --ok-soft:#0F2E1B; --ok-ink:#86EFAC;
+    --warn:#FBBF24; --warn-soft:#3A2A05; --warn-ink:#FCD34D;
+    --danger:#F87171; --danger-soft:#3B1212; --danger-ink:#FCA5A5;
+    --navy:#E2E8F0;
+    --bg:#0B1220; --card:#111A2C; --line:#233047; --ink:#E7ECF3; --muted:#93A3B8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:Assistant,"Segoe UI",system-ui,sans-serif; direction:rtl; font-size:15px}
+  h1,h2,h3{font-family:Heebo,Assistant,sans-serif; margin:0}
+  .num{font-variant-numeric:tabular-nums; direction:ltr; unicode-bidi:isolate; display:inline-block}
+
+  .toolbar{display:flex; align-items:center; gap:1rem; justify-content:center; flex-wrap:wrap; padding:1rem; background:var(--card); border-bottom:1px solid var(--line)}
+  .toolbar .label{font-size:.78rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em}
+  .roles{display:flex; gap:.4rem; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:.25rem}
+  .roles button{border:none; background:transparent; padding:.45rem 1rem; border-radius:7px; font-family:Assistant,sans-serif; font-weight:700; font-size:.86rem; color:var(--muted); cursor:pointer}
+  .roles button.active{background:var(--primary); color:#fff}
+  .hint{font-size:.82rem; color:var(--muted); text-align:center; max-width:32rem}
+
+  .shell{display:flex; min-height:640px}
+  .sidebar{width:200px; flex:none; background:var(--card); border-inline-start:1px solid var(--line); padding:1.2rem 0}
+  .sidebar .logo{font-family:Heebo,sans-serif; font-weight:800; font-size:1.1rem; color:var(--primary-ink); padding:0 1.2rem 1.2rem; border-bottom:1px solid var(--line); margin-bottom:.6rem}
+  .sidebar nav a{display:block; padding:.6rem 1.2rem; font-size:.88rem; color:var(--ink); text-decoration:none; border-inline-start:3px solid transparent}
+  .sidebar nav a.active{background:var(--primary-soft); color:var(--primary-ink); font-weight:700; border-inline-start-color:var(--primary)}
+
+  .main{flex:1; padding:1.4rem 1.6rem; min-width:0}
+  .topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2rem}
+  .topbar h1{font-size:1.25rem; font-weight:800}
+  .avatar{width:34px; height:34px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.85rem}
+
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:.9rem; margin-bottom:1.3rem}
+  .kpi{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:1rem 1.1rem}
+  .kpi .lbl{font-size:.78rem; color:var(--muted); font-weight:700}
+  .kpi .val{font-family:Heebo,sans-serif; font-weight:800; font-size:1.55rem; margin-top:.3rem}
+  .kpi.masked{background:repeating-linear-gradient(135deg, var(--card), var(--card) 8px, var(--bg) 8px, var(--bg) 16px); display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:.82rem; text-align:center; min-height:74px}
+
+  .layout2{display:grid; grid-template-columns:2fr 1fr; gap:1rem}
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:1.1rem 1.2rem}
+  .panel h2{font-size:1rem; font-weight:700; margin-bottom:.8rem}
+
+  .calbar{display:flex; align-items:center; gap:.6rem; margin-bottom:.8rem; flex-wrap:wrap}
+  .navbtn{width:28px; height:28px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.9rem}
+  .navbtn:hover{background:var(--bg)}
+  .todaybtn{border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:8px; padding:.35rem .7rem; font-size:.78rem; font-weight:700; cursor:pointer}
+  .search{flex:1; min-width:120px; border:1px solid var(--line); border-radius:8px; padding:.35rem .6rem; font-size:.78rem; background:var(--card); color:var(--ink)}
+  .fchip{border:1px solid transparent; border-radius:999px; padding:.3rem .7rem; font-size:.74rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:.3rem}
+  .fchip.r{background:var(--danger-soft); color:var(--danger-ink)}
+  .fchip.y{background:var(--warn-soft); color:var(--warn-ink)}
+  .fchip.g{background:var(--ok-soft); color:var(--ok-ink)}
+  .fchip.off{opacity:.35}
+
+  .cal{display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); grid-auto-rows:minmax(76px,auto); gap:5px}
+  .cal .dow{font-size:.7rem; color:var(--muted); text-align:center; font-weight:700; padding-bottom:.2rem}
+  .cal .day{min-height:76px; min-width:0; border-radius:8px; padding:.3rem; display:flex; flex-direction:column; gap:.2rem; font-size:.72rem; border:1px solid var(--line); color:var(--muted); background:var(--card)}
+  .cal .day .dnum{font-size:.74rem; font-weight:700; padding:0 .15rem}
+  .chip{display:flex; align-items:center; gap:.25rem; border-radius:5px; padding:.1rem .3rem; font-size:.66rem; font-weight:600; cursor:pointer; text-decoration:none; overflow:hidden}
+  .chip .name{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; min-width:0}
+  .chip .dims{display:flex; gap:.22rem; flex:none}
+  .dim-ico{width:12px; height:12px; flex:none}
+  .dim-ico.ok{fill:var(--ok-ink); stroke:none}
+  .dim-ico.miss{fill:none; stroke:var(--danger-ink); stroke-width:1.6}
+  .chip.r{background:var(--danger-soft); color:var(--danger-ink)}
+  .chip.y{background:var(--warn-soft); color:var(--warn-ink)}
+  .chip.g{background:var(--ok-soft); color:var(--ok-ink)}
+  .more{font-size:.64rem; color:var(--muted); padding:0 .3rem}
+  .legend{display:flex; gap:1rem; margin-top:.8rem; font-size:.78rem; color:var(--muted); flex-wrap:wrap}
+  .legend span{display:inline-flex; align-items:center; gap:.35rem}
+  .sw{width:9px; height:9px; border-radius:3px; display:inline-block}
+
+  .stuck-row{display:flex; align-items:center; gap:.6rem; padding:.55rem 0; border-bottom:1px solid var(--line); font-size:.86rem}
+  .stuck-row:last-child{border-bottom:none}
+  .stuck-row .dotbig{width:8px; height:8px; border-radius:50%; flex:none}
+  .stuck-row .why{color:var(--muted); font-size:.78rem}
+  .stuck-row .go{margin-inline-start:auto; color:var(--primary-ink); font-weight:700; font-size:.78rem; text-decoration:none; white-space:nowrap}
+</style>
+
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-person" viewBox="0 0 12 12">
+    <circle cx="6" cy="3.6" r="2.1"/>
+    <path d="M2 10.3c0-2.4 1.8-3.9 4-3.9s4 1.5 4 3.9"/>
+  </symbol>
+  <symbol id="i-box" viewBox="0 0 12 12">
+    <rect x="1.4" y="3" width="9.2" height="7.2" rx="1"/>
+    <path d="M1.4 5.6h9.2M6 3v7.2"/>
+  </symbol>
+</svg>
+
+<div class="toolbar">
+  <span class="label">מציג בתור</span>
+  <div class="roles">
+    <button id="btn-ceo" class="active" onclick="setRole('ceo')">מנכ"ל</button>
+    <button id="btn-log" onclick="setRole('log')">מנהלת לוגיסטיקה</button>
+  </div>
+  <div class="roles">
+    <button id="btn-normal" class="active" onclick="setDensity('normal')">חודש רגיל (~20)</button>
+    <button id="btn-peak" onclick="setDensity('peak')">חודש שיא (~52)</button>
+  </div>
+  <span class="hint" id="hint">שני הכרטיסים הכספיים גלויים — §7.97.</span>
+</div>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo">REG-IN</div>
+    <nav>
+      <a href="#" class="active">מסך הבית</a>
+      <a href="#">לקוחות</a>
+      <a href="#">הצעות מחיר</a>
+      <a href="#">פרויקטים</a>
+      <a href="#">דיילות</a>
+      <a href="#">לוגיסטיקה</a>
+      <a href="#">כספים</a>
+      <a href="#">דו"חות</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h1>מסך הבית</h1>
+      <div class="avatar" id="who">מנ</div>
+    </div>
+
+    <div class="kpis" id="kpis">
+      <div class="kpi"><div class="lbl">פרויקטים פעילים</div><div class="val num">17</div></div>
+      <div class="kpi"><div class="lbl">שביעות רצון (90 יום)</div><div class="val num">4.3<span style="font-size:1rem">/5</span></div></div>
+      <div class="kpi money"><div class="lbl">רווח חודשי משוער</div><div class="val num">₪118,000</div></div>
+      <div class="kpi money"><div class="lbl">הצעות ממתינות</div><div class="val num">9</div></div>
+    </div>
+
+    <div class="layout2">
+      <div class="panel">
+        <h2 id="cal-title">ספטמבר 2026</h2>
+
+        <div class="calbar">
+          <button class="navbtn" aria-label="חודש קודם">‹</button>
+          <button class="navbtn" aria-label="חודש הבא">›</button>
+          <button class="todaybtn">היום</button>
+          <input class="search" type="text" placeholder="חיפוש פרויקט…">
+          <button class="fchip r" onclick="this.classList.toggle('off')"><i class="sw" style="background:var(--danger)"></i> <span class="num">4</span></button>
+          <button class="fchip y" onclick="this.classList.toggle('off')"><i class="sw" style="background:var(--warn)"></i> <span class="num">7</span></button>
+          <button class="fchip g" onclick="this.classList.toggle('off')"><i class="sw" style="background:var(--ok)"></i> <span class="num">27</span></button>
+        </div>
+
+        <div class="cal" id="cal-normal">
+          <div class="dow">א</div><div class="dow">ב</div><div class="dow">ג</div><div class="dow">ד</div><div class="dow">ה</div><div class="dow">ו</div><div class="dow">ש</div>
+
+          <div class="day"></div>
+          <div class="day"><span class="dnum num">1</span></div>
+          <div class="day"><span class="dnum num">2</span><a class="chip g" href="#"><span class="name">כנס הייטק גרופ</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><span class="dnum num">3</span></div>
+          <div class="day"><span class="dnum num">4</span><a class="chip r" href="#"><span class="name">השקת מוצר — סייברארק</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico miss"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><span class="dnum num">5</span></div>
+          <div class="day"></div>
+
+          <div class="day"><span class="dnum num">7</span></div>
+          <div class="day"><span class="dnum num">8</span><a class="chip g" href="#"><span class="name">ערב תרומות — עמותת נגה</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day">
+            <span class="dnum num">9</span>
+            <a class="chip r" href="#"><span class="name">פסטיבל קיץ עירוני</span><span class="dims"><svg class="dim-ico miss"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a>
+            <a class="chip r" href="#"><span class="name">כנס רפואה 2026</span><span class="dims"><svg class="dim-ico miss"><use href="#i-person"/></svg><svg class="dim-ico miss"><use href="#i-box"/></svg></span></a>
+          </div>
+          <div class="day"><span class="dnum num">10</span></div>
+          <div class="day"><span class="dnum num">11</span><a class="chip g" href="#"><span class="name">כנס לקוחות — מדיטק</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><span class="dnum num">12</span></div>
+          <div class="day"></div>
+
+          <div class="day"><span class="dnum num">14</span></div>
+          <div class="day"><span class="dnum num">15</span><a class="chip r" href="#"><span class="name">יריד תעסוקה — עיריית רעננה</span><span class="dims"><svg class="dim-ico miss"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><span class="dnum num">16</span></div>
+          <div class="day">
+            <span class="dnum num">17</span>
+            <a class="chip r" href="#"><span class="name">כנס לקוחות שנתי</span><span class="dims"><svg class="dim-ico miss"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a>
+            <a class="chip g" href="#"><span class="name">חתונת-חברה — אינטל</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a>
+            <div class="more">+1 עוד</div>
+          </div>
+          <div class="day"><span class="dnum num">18</span></div>
+          <div class="day"></div>
+
+          <div class="day"><span class="dnum num">21</span></div>
+          <div class="day"><span class="dnum num">22</span></div>
+          <div class="day"><span class="dnum num">23</span><a class="chip y" href="#"><span class="name">כנס פתיחת שנה</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico miss"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><span class="dnum num">24</span></div>
+          <div class="day"><span class="dnum num">25</span></div>
+          <div class="day"><span class="dnum num">26</span></div>
+          <div class="day"></div>
+
+          <div class="day"><span class="dnum num">28</span></div>
+          <div class="day"><span class="dnum num">29</span></div>
+          <div class="day"><span class="dnum num">30</span></div>
+        </div>
+
+        <div class="cal" id="cal-peak" style="display:none">
+          <div class="dow">א</div><div class="dow">ב</div><div class="dow">ג</div><div class="dow">ד</div><div class="dow">ה</div><div class="dow">ו</div><div class="dow">ש</div>
+
+          <div class="day"></div>
+          <div class="day"><a class="chip g" href="#"><span class="name">כנס עיריית הרצליה</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip r" href="#"><span class="name">השקה — נאט"ל</span><span class="dims"><svg class="dim-ico miss"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a><a class="chip g" href="#"><span class="name">כנס לקוחות — פייבר</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip g" href="#"><span class="name">ערב-גיוס תרומות</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip y" href="#"><span class="name">יריד תעסוקה — פ"ת</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico miss"><use href="#i-box"/></svg></span></a><a class="chip g" href="#"><span class="name">חתונת-חברה — וויקס</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"></div>
+          <div class="day"></div>
+
+          <div class="day"><a class="chip g" href="#"><span class="name">כנס רפואה — איכילוב</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip r" href="#"><span class="name">פתיחת סניף — שופרסל</span><span class="dims"><svg class="dim-ico miss"><use href="#i-person"/></svg><svg class="dim-ico miss"><use href="#i-box"/></svg></span></a><a class="chip y" href="#"><span class="name">השקת אפליקציה</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico miss"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip g" href="#"><span class="name">כנס לקוחות — מדיטק</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip r" href="#"><span class="name">כנס רפואה 2026</span><span class="dims"><svg class="dim-ico miss"><use href="#i-person"/></svg><svg class="dim-ico miss"><use href="#i-box"/></svg></span></a><a class="chip r" href="#"><span class="name">פסטיבל קיץ — חדרה</span><span class="dims"><svg class="dim-ico miss"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a><div class="more">+1 עוד</div></div>
+          <div class="day"><a class="chip g" href="#"><span class="name">כנס הייטק גרופ</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip y" href="#"><span class="name">יום גיבוש — פייסבוק</span><span class="dims"><svg class="dim-ico miss"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"></div>
+
+          <div class="day"><a class="chip g" href="#"><span class="name">כנס עיריית ר"ג</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip r" href="#"><span class="name">יריד תעסוקה — רעננה</span><span class="dims"><svg class="dim-ico miss"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a><a class="chip g" href="#"><span class="name">חתונת-חברה — אינטל</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip g" href="#"><span class="name">כנס לקוחות שנתי</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip y" href="#"><span class="name">כנס פתיחת שנה</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico miss"><use href="#i-box"/></svg></span></a><a class="chip g" href="#"><span class="name">ערב השקה — צפון</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip g" href="#"><span class="name">כנס עיריית חיפה</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip r" href="#"><span class="name">השקה — סייברארק</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico miss"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"></div>
+
+          <div class="day"><a class="chip g" href="#"><span class="name">יריד תעסוקה — ת"א</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip g" href="#"><span class="name">כנס לקוחות — וואלה</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip y" href="#"><span class="name">ערב-גיוס — נגה</span><span class="dims"><svg class="dim-ico miss"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a><a class="chip g" href="#"><span class="name">חתונת-חברה — גוגל</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip g" href="#"><span class="name">כנס עיריית פ"ת</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"><a class="chip g" href="#"><span class="name">פתיחת שנה — וואטסאפ</span><span class="dims"><svg class="dim-ico ok"><use href="#i-person"/></svg><svg class="dim-ico ok"><use href="#i-box"/></svg></span></a></div>
+          <div class="day"></div>
+          <div class="day"></div>
+        </div>
+
+        <div class="legend">
+          <span><i class="sw" style="background:var(--danger)"></i>חוסר, בתוך 14 יום</span>
+          <span><i class="sw" style="background:var(--warn)"></i>חוסר, רחוק יותר</span>
+          <span><i class="sw" style="background:var(--ok)"></i>אין חוסר</span>
+          <span><svg class="dim-ico ok"><use href="#i-person"/></svg> איוש</span>
+          <span><svg class="dim-ico ok"><use href="#i-box"/></svg> לוגיסטיקה — מלא (צבוע) או חסר (מתאר בלבד)</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>מה דורש טיפול</h2>
+        <div class="stuck-row"><span class="dotbig" style="background:var(--danger)"></span><span>פסטיבל קיץ עירוני<br><span class="why">הסתיים לפני 8 ימים, לא חויב</span></span><a class="go" href="#">פתח ←</a></div>
+        <div class="stuck-row"><span class="dotbig" style="background:var(--warn)"></span><span>כנס לקוחות שנתי<br><span class="why">0/6 דיילות, 17 בחודש</span></span><a class="go" href="#">פתח ←</a></div>
+        <div class="stuck-row"><span class="dotbig" style="background:var(--warn)"></span><span>הצעה #41<br><span class="why">פגה בעוד 3 ימים</span></span><a class="go" href="#">פתח ←</a></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+function setRole(r){
+  document.getElementById('btn-ceo').classList.toggle('active', r==='ceo');
+  document.getElementById('btn-log').classList.toggle('active', r==='log');
+  document.getElementById('who').textContent = r==='ceo' ? 'מנ' : 'לוג';
+  var moneyCards = document.querySelectorAll('.kpi.money');
+  var hint = document.getElementById('hint');
+  if(r==='ceo'){
+    moneyCards[0].classList.remove('masked'); moneyCards[0].innerHTML = '<div class="lbl">רווח חודשי משוער</div><div class="val num">₪118,000</div>';
+    moneyCards[1].classList.remove('masked'); moneyCards[1].innerHTML = '<div class="lbl">הצעות ממתינות</div><div class="val num">9</div>';
+    hint.textContent = 'שני הכרטיסים הכספיים גלויים — מנכ"ל רואה הכל.';
+  } else {
+    moneyCards[0].classList.add('masked'); moneyCards[0].textContent = 'לא זמין בתפקידך';
+    moneyCards[1].classList.add('masked'); moneyCards[1].textContent = 'לא זמין בתפקידך';
+    hint.textContent = 'שני הכרטיסים ממוסכים — לא "0", אלא נעדרים לגמרי. הלוח והרצועה נשארים זהים לחלוטין.';
+  }
+}
+
+function setDensity(d){
+  document.getElementById('btn-normal').classList.toggle('active', d==='normal');
+  document.getElementById('btn-peak').classList.toggle('active', d==='peak');
+  document.getElementById('cal-normal').style.display = d==='normal' ? '' : 'none';
+  document.getElementById('cal-peak').style.display = d==='peak' ? '' : 'none';
+  document.getElementById('cal-title').textContent = d==='normal' ? 'ספטמבר 2026' : 'דוגמה לעומס — לא חודש אמיתי בלוח';
+}
+</script>

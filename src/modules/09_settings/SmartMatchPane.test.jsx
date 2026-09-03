@@ -66,6 +66,16 @@ async function renderPane(props = {}) {
   )
   // ממתינים לאפקט-הטעינה של המונה-החי כדי שעדכון-state אחרי הבדיקה לא ידלוף (act warning).
   await waitFor(() => expect(countAttendanceRows).toHaveBeenCalled())
+  // 🔴 **ולא מספיק ש**נקראה** — צריך שה-state שלה כבר נחת** (03/09/2026, נתפס ב-CI).
+  // ההמתנה למעלה מסתיימת ברגע שהפונקציה הופעלה, בעוד שהערך מגיע רק ב-microtask הבא —
+  // ולכן שלוש הבדיקות שקוראות את שורת-הנוכחות היו **מרוץ**: על רץ עמוס הן מקבלות
+  // "טוען נתוני נוכחות…" במקום הנוסח הסופי. **נמדד, לא שוער:** אותו commit בדיוק
+  // (`ad35bb0`) עבר בריצת-CI אחת ונפל באחרת. ⚠️ `queryBy` ולא `getBy`, ו-`?? ''` —
+  // כדי שבדיקה שמרנדרת בלי שורת-האמינות לא תתלה כאן על אלמנט שלא אמור להתקיים.
+  await waitFor(() => {
+    const note = screen.queryByTestId('settings-smartmatch-attendance-note')
+    expect(note?.textContent ?? '').not.toBe('טוען נתוני נוכחות…')
+  })
   return { ...utils, onChange }
 }
 
@@ -157,5 +167,37 @@ describe('SmartMatchPane', () => {
     await renderPane()
     expect(screen.getByTestId(`settings-value-${N.dampingConstant}`)).toBeInTheDocument()
     expect(screen.getByTestId(`settings-value-${N.unansweredStreak}`)).toBeInTheDocument()
+  })
+  // 🔴 **שורת "בפועל" — נועלת את שני הכיוונים** (הערת-ישי 03/09/2026 מצילום-מסך).
+  // הכיוון השני הוא העיקר: כשאין פער, שורה נוספת היא רעש — ובדיקה שרואה רק את ההופעה
+  // הייתה מאשרת גם מימוש שמדפיס אותה תמיד.
+  it('מרכיב כבוי ⇒ מוצגות המשקולות שפועלות בפועל, מנורמלות', async () => {
+    await renderPane({
+      values: { ...DEFAULT_VALUES, [N.reliabilityEnabled]: 'false' },
+    })
+    const line = screen.getByTestId('settings-smartmatch-effective-weights')
+    // 0.40/(0.40+0.25) = 61.5% ⇒ 62% · 0.25/0.65 = 38.5% ⇒ 38%
+    expect(line).toHaveTextContent('62%')
+    expect(line).toHaveTextContent('38%')
+  })
+
+  it('מרכיב דלוק ⇒ אין שורת "בפועל" כלל', async () => {
+    await renderPane({
+      values: { ...DEFAULT_VALUES, [N.reliabilityEnabled]: 'true' },
+    })
+    expect(screen.queryByTestId('settings-smartmatch-effective-weights')).not.toBeInTheDocument()
+  })
+
+  it('ערך-ביניים לא-חוקי (סכום 0) אינו מפיל את הפאנל', async () => {
+    await renderPane({
+      values: {
+        ...DEFAULT_VALUES,
+        [N.responsivenessWeight]: '0',
+        [N.reliabilityWeight]: '0',
+        [N.proximityWeight]: '0',
+      },
+    })
+    expect(screen.queryByTestId('settings-smartmatch-effective-weights')).not.toBeInTheDocument()
+    expect(screen.getByTestId('settings-smartmatch-table')).toBeInTheDocument()
   })
 })
