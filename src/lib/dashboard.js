@@ -251,11 +251,17 @@ function quoteExpiryWhy(daysLeft) {
 
 // ── תקציר-הפאנל: תיקרה, לא סינון (הכרעת-ישי 03/09/2026 19:3X, "זה מעולה") ───────
 // המסך הוא מסך-טריאז' ולא דוח (§7.9: "רשימה אחת ממוינת, וכל שורה אומרת למה היא שם").
-// התיקרה שומרת את הרצועה קריאה בחודש-שיא (‏~38 אירועים לפי מפרט-הזרע) — בלי לחתוך את
-// גודל-הבעיה: שורת-הקבוצות שמתחת סופרת על **כל** הרשימה, לא רק על השורות המוצגות.
-// הרשימה המלאה חיה במסכי הפרויקטים/ההצעות שכבר ממיינים ומסננים — הפאנל הזה לא צריך
-// לשכפל את זה.
-export const ATTENTION_CAP = 8
+// התיקרה שומרת את הרצועה קריאה בחודש-שיא — בלי לחתוך את גודל-הבעיה: שורת-הקבוצות
+// סופרת על **כל** הרשימה, לא רק על השורות המוצגות. הרשימה המלאה חיה במסכי
+// הפרויקטים/ההצעות שכבר ממיינים ומסננים — הפאנל הזה לא צריך לשכפל את זה.
+//
+// 🔴 **‏8 ⇒ 4 ב-04/09/2026 (הכרעת-ישי על המוקאפ: "מאשר את המוקאפ בנה ככה").** הרצועה עברה
+// מעמודה-בצד לפס-אופקי מתחת ללוח, וארבעה כרטיסים הם מה שנכנס בשורה אחת. **וזה לא רק
+// התאמה לפריסה:** רצועה בת 8–21 שורות בצד היא *דוח*, ומסך-בית אינו דוח — ארבעה כרטיסים
+// אומרים "יש N, הנה הדחופים", והמונים לצידם משאירים את גודל-הבעיה גלוי.
+// ‏🔒 לא מיוצא: מאז שהפאנל מקבל `firstHidden` מוכן (04/09/2026) אין לו צרכן חיצוני,
+// ו-`knip` חוסם ייצוא-ללא-צרכן. הוא נשאר ברירת-המחדל של הפרמטר השלישי.
+const ATTENTION_CAP = 4
 
 const ATTENTION_GROUP_DEFS = [
   { kind: 'unbilled', label: 'הסתיים ולא חויב' },
@@ -263,9 +269,39 @@ const ATTENTION_GROUP_DEFS = [
   { kind: 'quote', label: 'הצעה שפגה בקרוב' },
 ]
 
+// 🔴 **ייצוג-קבוצות: כל קבוצה לא-ריקה מקבלת לפחות מקום אחד** (הכרעת-ישי 04/09/2026,
+// *"ואלה אחלה רעיון בנה לפי המלצה"*). **הפגם שזה מתקן, ונמדד על המסך החי:** התקרה ירדה
+// 8 ⇒ 4 באותו יום, ו-9 פריטי "הסתיים ולא חויב" בלעו את כל ארבעת המקומות — כך ש-13 פריטי
+// "חוסר קרוב" **לא היו מיוצגים על המסך אפילו פעם אחת**, בזמן שהמונה לידם הכריז "13".
+// ‏🔑 **וזה `slice` הוגן ולא מסנן** — עדיין "רשימה אחת ממוינת" (§7.9, ובלי לסתור את
+// "בלי מסננים" מ-03/09): אין פקד חדש, אין מצב לזכור, והמסך פשוט מפסיק להסתיר קטגוריה
+// שלמה כבר בטעינה הראשונה. **הפריט שכל קבוצה תורמת הוא הדחוף ביותר שבה**, כי `attentionRows`
+// כבר ממיינת בתוך כל ענף (ותיק-קודם בחיוב · קרוב-קודם בחוסר · פג-קודם בהצעות).
+function pickWithGroupRepresentation(all, cap) {
+  if (all.length <= cap) return all
+  const picked = new Set()
+  // סבב א' — נציג אחד לכל קבוצה, לפי סדר-הקדימות של ATTENTION_GROUP_DEFS. כשהתקרה
+  // קטנה ממספר הקבוצות, הקבוצות האחרונות נשארות בחוץ — וזה בלתי-נמנע ולא באג.
+  for (const { kind } of ATTENTION_GROUP_DEFS) {
+    if (picked.size >= cap) break
+    const first = all.find((row) => row.kind === kind)
+    if (first) picked.add(first)
+  }
+  // סבב ב' — המקומות שנותרו מתמלאים לפי סדר-הדחיפות המקורי.
+  for (const row of all) {
+    if (picked.size >= cap) break
+    picked.add(row)
+  }
+  // הפלט חוזר לסדר של `all` ולא לסדר-הבחירה — המשתמשת רואה את אותה היררכיה שהיא
+  // מכירה מכל מסך אחר, ולא רשימה שסודרה לפי מנגנון פנימי.
+  return all.filter((row) => picked.has(row))
+}
+
 export function attentionSummary(summary, todayIso, cap = ATTENTION_CAP) {
   const all = attentionRows(summary, todayIso)
-  const rows = all.slice(0, cap)
+  const rows = pickWithGroupRepresentation(all, cap)
+  const shown = new Set(rows)
+  const hiddenRows = all.filter((row) => !shown.has(row))
   // ספירה על all, לא על rows — מונה-הקבוצה חייב לשקף את גודל-הבעיה האמיתי, לא רק
   // את מה שנחתך לתוך התקרה. קבוצה בת-0 מדולגת (בלי "הצעה שפגה בקרוב (0)").
   const groups = ATTENTION_GROUP_DEFS.map(({ kind, label }) => ({
@@ -273,14 +309,25 @@ export function attentionSummary(summary, todayIso, cap = ATTENTION_CAP) {
     label,
     count: all.filter((row) => row.kind === kind).length,
   })).filter((group) => group.count > 0)
-  return { rows, hidden: all.length - rows.length, groups, total: all.length }
+  // ‏`firstHidden` מוחזר מכאן ולא נגזר שוב אצל הקורא: עם ייצוג-קבוצות "השורה שאחרי
+  // התקרה" כבר אינה `all[cap]`, והחישוב-מחדש היה נותן יעד שגוי לקישור-ה"הכול".
+  // ➕ וזה גם סוגר את חוב T-4 מאודיט-הסגירה (AttentionPanel חישב את הרשימה פעם שנייה).
+  return {
+    rows,
+    hidden: hiddenRows.length,
+    firstHidden: hiddenRows[0] ?? null,
+    groups,
+    total: all.length,
+  }
 }
 
-// "+1 נוסף" / "+N נוספים" — אותה תבנית-הרחבה שכבר אושרה ב-gapWord/proximitySentence
-// (projects.js): לשון-יחיד לפריט בודד, "1 נוספים" הייתה עברית שבורה.
-export function attentionOverflowLabel(hidden) {
-  if (hidden === 0) return ''
-  return hidden === 1 ? '+1 נוסף' : `+${hidden} נוספים`
+// קישור-ה"הכול" של הרצועה. 🔴 **הנוסח שונה 04/09/2026 מ-"+N נוספים" ל-"כל N הפריטים"**
+// (המוקאפ המאושר): "+13 נוספים" מתאר את מה ש**הוסתר**, וזו אמירה על המסך ולא על העבודה;
+// "כל 21 הפריטים" מתאר את מה שיש **לטפל בו**, שזה מה שהמשתמשת מחפשת. אותה תבנית-לשון-יחיד
+// שאושרה ב-gapWord/proximitySentence (projects.js) — "כל 1 הפריטים" הייתה עברית שבורה.
+export function attentionAllLabel(total) {
+  if (!total) return ''
+  return total === 1 ? 'פריט אחד ←' : `כל ${total} הפריטים ←`
 }
 
 // יום-בחודש (timezone-safe) — אותו תרגיל Date.UTC כמו weekdayOf ב-dates.js: פענוח

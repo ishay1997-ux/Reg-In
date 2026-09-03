@@ -32,7 +32,7 @@ function project(overrides) {
 }
 
 // לוח-הבדיקה: 201 אדום (9/9, חוסר-איוש בתוך 14 יום) · 202 ירוק (11/9) · 203/204/205 באותו
-// יום (17/9 — שני צ'יפים + "+1 עוד") · 206 מבוטל (7/9) · 207 event_finished מחוץ לחודש (26/8,
+// יום (17/9 — שלושתם מוצגים מאז 04/09, ר' MAX_CHIPS_PER_DAY) · 206 מבוטל (7/9) · 207 event_finished מחוץ לחודש (26/8,
 // לא-מחויב) שנבדק רק בפאנל-הטיפול, לא בלוח. ה-pending_quotes מכיל הצעה #41 שפגה בעוד 3 ימים
 // (updated_at 7/8 + תוקף 30 יום = 6/9, מול "היום" 3/9).
 function board() {
@@ -275,12 +275,49 @@ describe('DashboardPage — רצועת ה-KPI', () => {
 })
 
 describe('DashboardPage — לוח החודש', () => {
-  it('צ׳יפים בצבע הנכון, ו"+1 עוד" ביום עם שלושה פרויקטים', async () => {
+  it('צ׳יפים בצבע הנכון, ויום עם שלושה פרויקטים מציג את שלושתם בלי "עוד"', async () => {
     renderPage()
     await screen.findByTestId('kpi-active')
     expect(screen.getByTestId('dashboard-chip-201').className).toContain('bg-red-100')
     expect(screen.getByTestId('dashboard-chip-202').className).toContain('bg-green-100')
-    expect(screen.getByTestId('dashboard-more-2026-09-17')).toHaveTextContent('+1 עוד')
+    // 🔢 שלושה שבבים ליום (04/09/2026) — נמדד שזה מכסה 99.6% מהימים במסד.
+    expect(screen.getByTestId('dashboard-chip-203')).toBeInTheDocument()
+    expect(screen.getByTestId('dashboard-chip-204')).toBeInTheDocument()
+    expect(screen.getByTestId('dashboard-chip-205')).toBeInTheDocument()
+    expect(screen.queryByTestId('dashboard-more-2026-09-17')).not.toBeInTheDocument()
+  })
+
+  // 🔴 הכרעת-ישי 04/09/2026: *"העוד מוביל לפרויקטים ואז מזה עוזר לי לחפש את הפרויקט השלישי?"*
+  // ⇒ "+N עוד" מרחיב את התא במקום, ולא מנווט לרשימה בת מאות שורות.
+  it('יום עם ארבעה פרויקטים: "+1 עוד" מרחיב את התא במקום — ואינו קישור לשום מסך', async () => {
+    getDashboardSummary.mockResolvedValueOnce(
+      summaryFixture({
+        projects: [
+          ...board(),
+          project({
+            project_id: 208,
+            event_name: 'אירוע רביעי באותו יום',
+            final_event_date: '2026-09-17',
+          }),
+        ],
+      }),
+    )
+    renderPage()
+    await screen.findByTestId('kpi-active')
+
+    expect(screen.queryByTestId('dashboard-chip-208')).not.toBeInTheDocument()
+    const more = screen.getByTestId('dashboard-more-2026-09-17')
+    expect(more).toHaveTextContent('+1 עוד')
+    // 🔒 השומר: זהו כפתור, לא קישור — אין `href` שיוציא אותך מהמסך.
+    expect(more.tagName).toBe('BUTTON')
+    expect(more).not.toHaveAttribute('href')
+
+    fireEvent.click(more)
+    expect(screen.getByTestId('dashboard-chip-208')).toBeInTheDocument()
+    expect(screen.queryByTestId('dashboard-more-2026-09-17')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByTestId('dashboard-less-2026-09-17'))
+    expect(screen.queryByTestId('dashboard-chip-208')).not.toBeInTheDocument()
   })
 
   it('צ׳יפ מבוטל: קו-חוצה + תג "מבוטל", ובלי סמלי-ממד', async () => {
@@ -340,8 +377,8 @@ describe('DashboardPage — מה דורש טיפול', () => {
 })
 
 describe('DashboardPage — מה דורש טיפול: תיקרה וקבוצות (הכרעת-ישי 03/09/2026 19:3X)', () => {
-  // ארבעה "הסתיים ולא חויב" (ותיק→חדש) + ארבעה "חוסר קרוב" (קרוב→רחוק) = 8, בדיוק התיקרה —
-  // ושתי הצעות-שפגות-בקרוב נחתכות ל"עוד". סה"כ 10 שורות, כמו שהמשימה מבקשת.
+  // ארבעה "הסתיים ולא חויב" (ותיק→חדש) + ארבעה "חוסר קרוב" (קרוב→רחוק) + שתי הצעות = 10.
+  // 🔴 תקרה 4 + ייצוג-קבוצות (04/09/2026) ⇒ 2 חיוב · 1 חוסר · 1 הצעה, ו-6 מוסתרות.
   function unbilled(id, date) {
     return project({
       project_id: id,
@@ -367,7 +404,7 @@ describe('DashboardPage — מה דורש טיפול: תיקרה וקבוצות 
     })
   }
 
-  it('10 פריטים (4+4+2) ⇒ 8 שורות מוצגות, שורת-קבוצות מלאה, וקישור "+2 נוספים" ל-/quotes', async () => {
+  it('10 פריטים (4+4+2) ⇒ 4 כרטיסים, שורת-קבוצות מלאה, וקישור "כל 10 הפריטים" ל-/projects', async () => {
     getDashboardSummary.mockResolvedValue(
       summaryFixture({
         projects: [
@@ -389,19 +426,28 @@ describe('DashboardPage — מה דורש טיפול: תיקרה וקבוצות 
     renderPage()
     await screen.findByTestId('kpi-active')
 
-    expect(screen.getAllByTestId(/^dashboard-attention-row-/)).toHaveLength(8)
+    const cards = screen.getAllByTestId(/^dashboard-attention-row-/)
+    expect(cards).toHaveLength(4)
+    // 🔴 בלי ייצוג-קבוצות ארבעת ה"לא חויב" היו בולעים את כל התקרה, ו-"חוסר קרוב (4)"
+    // היה מוכרז במונה בלי שאף פריט שלו נראה על המסך — הפגם שישי תפס בשימוש חי.
+    expect(within(cards[2]).getByText(/חסרות|דיילות|לוגיסטיקה/)).toBeInTheDocument()
+    expect(within(cards[3]).getByText(/פגה/)).toBeInTheDocument()
 
+    // 🔑 המונים סופרים על **כל** הרשימה ולא על הארבעה המוצגים — גודל-הבעיה נשאר גלוי
+    // גם כשהתיקרה נמוכה. זו כל הסיבה שהתיקרה מותרת מלכתחילה.
     const groupLine = screen.getByTestId('dashboard-attention-groups').textContent
     expect(groupLine).toContain('הסתיים ולא חויב (4)')
     expect(groupLine).toContain('חוסר קרוב (4)')
     expect(groupLine).toContain('הצעה שפגה בקרוב (2)')
 
     const more = screen.getByTestId('dashboard-attention-more')
-    expect(more).toHaveTextContent('+2 נוספים')
-    expect(more.getAttribute('href')).toBe('/quotes')
+    // הנוסח מתאר כמה יש לטפל, לא כמה הוסתרו (04/09/2026).
+    expect(more).toHaveTextContent('כל 10 הפריטים')
+    // היעד הוא המסך שבו יושבת השורה הראשונה שנחתכה — כאן החמישית, שהיא "חוסר קרוב".
+    expect(more.getAttribute('href')).toBe('/projects')
   })
 
-  it('3 פריטים בלבד ⇒ בלי קישור-עוד (הכול כבר מוצג)', async () => {
+  it('3 פריטים בלבד (מתחת לתיקרה) ⇒ בלי קישור-הכול', async () => {
     getDashboardSummary.mockResolvedValue(
       summaryFixture({
         projects: [unbilled(409, '2026-08-20'), shortage(410, '2026-09-04')],

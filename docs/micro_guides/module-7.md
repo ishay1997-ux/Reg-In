@@ -434,3 +434,74 @@ quotes-blind role · `42501` shows the locked sentence and no retry · **an Engl
 reaches the screen** · shape drift shows its Hebrew · a known `P0001` shows our wording without the id ·
 **an unmapped DB message falls through to the generic screen**. The last two are the guard being
 watched *fail*, per `src/CLAUDE.md`'s "a guard never seen failing is not a guard".
+
+### 🎨 Post-merge layout change — 04/09/2026 (Ishay's own use of the live screen)
+
+Module 7 was already in production when Ishay opened it, used it, and brought three things back.
+All three turned out to be the same problem: **the calendar is the hero of this screen and it was
+being squeezed by a list.** Approved as a mockup first (*"מאשר את המוקאפ בנה ככה"*), then built.
+
+**What he said, and what it turned out to be**
+- *"תקטין את החלק של מה דורש טיפול ואז זה יאפשר ללוח שנה להיות יותר גדול"* — the panel held a third
+  of the screen for a 21-row list.
+- *"ולא עוזר שכתוב עוד... העוד מוביל לפרויקטים ואז מזה עוזר לי לחפש את הפרויקט השלישי?"* — **a real
+  defect, and he is exactly right:** `+N עוד` was a `<Link to="/projects">`, i.e. it answered "show me
+  the third event on this day" by dumping the user into a list of 832 projects to search.
+- *"יש דרך אלגנטית להגדיל את הלוח שנה קצת?"*
+
+**The measurement that decided the chip count** — projects-per-day across the whole DB:
+**355** days with one (62%) · **178** with two (31%) · **36** with three (6%) · **2** days with four
+(0.4%) · **zero** with five. ⇒ three chips cover **99.6%** of days, and in September 2026 the
+`+N עוד` affordance does not appear even once. His instinct ("just show 3") was right, and the data
+also shows the overflow mechanism is a genuine edge case rather than a daily path.
+
+**Built**
+- `DashboardPage.jsx` — `grid-cols-[2fr_1fr]` ⇒ `flex flex-col`. Calendar full width, strip below.
+- `CalendarGrid.jsx` — `MAX_CHIPS_PER_DAY = 3`; `+N עוד` is now a **button that expands the cell in
+  place** (with `הצג פחות` to collapse), never a navigation; cells `minmax(76px)` ⇒ `minmax(92px)`,
+  chip text 10px ⇒ 11px. **Cell width ~90px ⇒ ~150px, so event names stop truncating** — that is the
+  actual win, not the extra chip.
+- `AttentionPanel.jsx` — horizontal card strip: 4 cards (`ATTENTION_CAP` 8 ⇒ 4), the whole card is
+  the link, group counts still computed over the **full** list so the size of the problem stays visible.
+- `dashboard.js` — `attentionOverflowLabel(hidden)` ⇒ `attentionAllLabel(total)`: `+13 נוספים`
+  describes what was **hidden** (a statement about the screen); `כל 21 הפריטים` describes what there
+  is **to handle** (a statement about the work).
+
+**🐞 Caught by the verification screenshot, not by the tests:** the weekday header row sat inside the
+day grid, so `auto-rows-[minmax(92px,auto)]` gave *it* a 92px minimum too — a ~90px empty band between
+the headers and the first week, on the very screen the change was meant to make shorter. The defect
+predated this change (at 76px) and only got more visible. Split into its own 7-column grid.
+
+**Regression:** `npm run gate` exit 0 — 88 files / **2,292** tests. Verified on a production build with
+real data: 4 attention cards, the link reads `כל 22 הפריטים ←`, three chips render on 7/9 · 8/9 · 14/9,
+and no `+N עוד` appears anywhere in September. Screenshot sent to Ishay.
+**Anchor for the "why", in one sentence he can say out loud:** Monday, Google Calendar and Notion
+Calendar all give the calendar the full width and keep only filters in a side rail — a list beside a
+calendar is a report, and a home screen is not a report.
+
+**➕ Two more, same PR, both found by Ishay using the screen (04/09/2026)**
+
+- **Group representation in the attention strip — and it fixes a regression this same change caused.**
+  Dropping the cap 8 ⇒ 4 let the 9 `unbilled` rows swallow all four slots, so **13 `shortage` rows were
+  announced by the counter and represented on screen exactly zero times.** He noticed and proposed
+  clicking the counter to reveal them. ⚖️ **That collided with his own 03/09 ruling** (*"זה מעולה"*,
+  explicitly **no filters**, per §7.9's "one sorted list") — both were quoted back to him dated, and the
+  recommendation was to fix the cause rather than add a control. He approved: *"ואלה אחלה רעיון בנה
+  לפי המלצה"*. `pickWithGroupRepresentation` now reserves one slot per non-empty group **in priority
+  order**, fills the rest by urgency, and returns the selection **in the original order** so the visible
+  hierarchy is unchanged. Each group's representative is its most urgent row, because `attentionRows`
+  already sorts within every branch. 🔑 **It is a fairer slice, not a filter** — no new control, no state,
+  and it works on first paint, which is the whole point of a home screen. ➕ `attentionSummary` now also
+  returns `firstHidden` (with representation, "the row after the cap" is no longer `all[cap]`, so the
+  overflow link would have pointed at a row that is on screen) — **which also closes closing-audit debt
+  T-4**, since `AttentionPanel` no longer recomputes the list a second time.
+- **🐞 The legend was lying, and only the legend.** Its last three items used `StaffingIcon` **three
+  times** — "איוש", then "לוגיסטיקה" (box), then "הושלם · חסר" (person again). ⇒ three person glyphs
+  on screen and **no example at all of what missing logistics looks like**. Ishay: *"לא צריך סימול לחסר
+  לוגיסטיקה? לאיוש 3 אייקונים טעות?"* — then, correctly, *"אה הבעיה רק במקרא… בלוח שנה עצמו זה טוב"*.
+  Now each dimension shows filled **and** outline side by side, with one short line saying what the fill
+  means. **Worth noting how it survived:** the calendar cells were always right, so every screenshot,
+  unit test and E2E assertion passed — the defect lived only in the key that explains them, which
+  nothing asserts against.
+
+**Regression after both:** `npm run gate` exit 0 — 88 files / **2,295** tests.

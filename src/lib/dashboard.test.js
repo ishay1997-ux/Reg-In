@@ -6,7 +6,7 @@ import {
   MASKED_TEXT,
   attentionRows,
   attentionSummary,
-  attentionOverflowLabel,
+  attentionAllLabel,
   monthStartOf,
   shiftMonth,
   hebrewMonthTitle,
@@ -505,7 +505,7 @@ describe('attentionRows — ניסוחי-קצה: יום בודד', () => {
   })
 })
 
-// ── attentionSummary / attentionOverflowLabel — תיקרה, לא סינון ─────────────
+// ── attentionSummary / attentionAllLabel — תיקרה, לא סינון ─────────────────
 // (הכרעת-ישי 03/09/2026 19:3X, "זה מעולה" על ההמלצה: הפאנל מוגבל, לא מסונן ולא מעומד.)
 
 describe('attentionSummary — תיקרה על 12 שורות (5 unbilled + 5 shortage + 2 quote)', () => {
@@ -626,16 +626,54 @@ describe('attentionSummary — תיקרה על 12 שורות (5 unbilled + 5 sho
     ],
   }
 
-  it('12 שורות בסך-הכול; cap=8 (ברירת-מחדל) שומר על סדר attentionRows, hidden=4, total=12', () => {
+  // 🔴 התיקרה ירדה 8 ⇒ 4 ב-04/09/2026, ובאותו יום נוסף **ייצוג-קבוצות** (הכרעת-ישי):
+  // ‏4 מקומות ו-3 קבוצות ⇒ כל קבוצה מביאה את הדחוף-ביותר שבה, והמקום הרביעי הולך
+  // לבא-בתור לפי סדר-הדחיפות (unbilled#2). בלי זה — 5 ה-unbilled היו בולעים הכול.
+  it('12 שורות; cap=4 ⇒ כל קבוצה מיוצגת (2 חיוב · 1 חוסר · 1 הצעה), hidden=8, total=12', () => {
     const full = attentionRows(bigSummary, TODAY)
     expect(full).toHaveLength(12)
     const { rows, hidden, total } = attentionSummary(bigSummary, TODAY)
-    expect(rows).toEqual(full.slice(0, 8))
-    expect(hidden).toBe(4)
+    expect(rows).toHaveLength(4)
+    expect(rows.map((r) => r.kind)).toEqual(['unbilled', 'unbilled', 'shortage', 'quote'])
+    // כל נציג הוא הראשון-בתור של הקבוצה שלו — כלומר הדחוף ביותר שבה.
+    // (‏toEqual ולא toBe: attentionRows נקראת פעמיים ומחזירה אובייקטים שקולים, לא זהים.)
+    expect(rows[0]).toEqual(full.find((r) => r.kind === 'unbilled'))
+    expect(rows[2]).toEqual(full.find((r) => r.kind === 'shortage'))
+    expect(rows[3]).toEqual(full.find((r) => r.kind === 'quote'))
+    // הפלט שומר על סדר-הדחיפות המקורי, לא על סדר-הבחירה: הכותרות עולות באותו סדר
+    // שבו הן מופיעות ב-full.
+    const order = rows.map((r) => full.findIndex((f) => f.title === r.title && f.why === r.why))
+    expect(order).toEqual([...order].sort((a, b) => a - b))
+    expect(hidden).toBe(8)
     expect(total).toBe(12)
   })
 
-  it('groups סופרים על הרשימה המלאה (12), לא על השמונה המוצגות', () => {
+  it('‏firstHidden הוא הראשון שנשאר בחוץ — ולא `all[cap]`, שאינו נכון עם ייצוג-קבוצות', () => {
+    const full = attentionRows(bigSummary, TODAY)
+    const { rows, firstHidden } = attentionSummary(bigSummary, TODAY)
+    const shownTitles = new Set(rows.map((r) => r.title))
+    expect(firstHidden).toEqual(full.find((r) => !shownTitles.has(r.title)))
+    // 🔑 השומר: `all[cap]` **אינו** התשובה כאן — הוא היה נותן ליעד-הקישור שורה שמוצגת.
+    expect(firstHidden.title).not.toBe(full[4].title)
+  })
+
+  it('קבוצה יחידה ⇒ התנהגות זהה ל-slice רגיל (אין למי לשמור מקום)', () => {
+    const onlyUnbilled = {
+      ...bigSummary,
+      projects: bigSummary.projects.filter((p) => p.project_status === 'event_finished'),
+      pending_quotes: [],
+    }
+    const full = attentionRows(onlyUnbilled, TODAY)
+    const { rows } = attentionSummary(onlyUnbilled, TODAY)
+    expect(rows).toEqual(full.slice(0, 4))
+  })
+
+  it('תקרה קטנה ממספר-הקבוצות (cap=2) ⇒ שתי הקבוצות הראשונות בקדימות, השלישית בחוץ', () => {
+    const { rows } = attentionSummary(bigSummary, TODAY, 2)
+    expect(rows.map((r) => r.kind)).toEqual(['unbilled', 'shortage'])
+  })
+
+  it('groups סופרים על הרשימה המלאה (12), לא על הארבע המוצגות', () => {
     const { groups } = attentionSummary(bigSummary, TODAY)
     expect(groups).toEqual([
       { kind: 'unbilled', label: 'הסתיים ולא חויב', count: 5 },
@@ -653,29 +691,30 @@ describe('attentionSummary — תיקרה על 12 שורות (5 unbilled + 5 sho
     expect(groups.map((g) => g.kind)).toEqual(['unbilled', 'quote'])
   })
 
-  it('cap מותאם-אישית (פרמטר שלישי): cap=3 מציג 3 שורות, hidden=9', () => {
+  it('cap מותאם-אישית (פרמטר שלישי): cap=3 מציג 3 שורות — אחת מכל קבוצה, hidden=9', () => {
     const { rows, hidden } = attentionSummary(bigSummary, TODAY, 3)
     expect(rows).toHaveLength(3)
+    expect(rows.map((r) => r.kind)).toEqual(['unbilled', 'shortage', 'quote'])
     expect(hidden).toBe(9)
   })
 
-  it('רשימה ריקה ⇒ rows/groups ריקים, hidden=0, total=0', () => {
+  it('רשימה ריקה ⇒ rows/groups ריקים, hidden=0, firstHidden=null, total=0', () => {
     const empty = attentionSummary({ today: TODAY, projects: [], pending_quotes: [] }, TODAY)
-    expect(empty).toEqual({ rows: [], hidden: 0, groups: [], total: 0 })
+    expect(empty).toEqual({ rows: [], hidden: 0, firstHidden: null, groups: [], total: 0 })
   })
 })
 
-describe('attentionOverflowLabel', () => {
-  it('0 ⇒ מחרוזת ריקה (בלי קישור-עוד)', () => {
-    expect(attentionOverflowLabel(0)).toBe('')
+describe('attentionAllLabel', () => {
+  it('0 ⇒ מחרוזת ריקה (בלי קישור)', () => {
+    expect(attentionAllLabel(0)).toBe('')
   })
 
-  it('1 ⇒ לשון-יחיד ("+1 נוספים" הייתה עברית שבורה)', () => {
-    expect(attentionOverflowLabel(1)).toBe('+1 נוסף')
+  it('1 ⇒ לשון-יחיד ("כל 1 הפריטים" הייתה עברית שבורה)', () => {
+    expect(attentionAllLabel(1)).toBe('פריט אחד ←')
   })
 
-  it('2 ומעלה ⇒ לשון-רבים עם המספר', () => {
-    expect(attentionOverflowLabel(2)).toBe('+2 נוספים')
+  it('2 ומעלה ⇒ המספר הכולל, לא המוסתר — "כמה יש לטפל" ולא "כמה הוסתרו"', () => {
+    expect(attentionAllLabel(21)).toBe('כל 21 הפריטים ←')
   })
 })
 
