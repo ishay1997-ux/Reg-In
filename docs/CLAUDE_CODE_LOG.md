@@ -45,6 +45,22 @@
 
 ## Session Log (newest first)
 
+### 03/09/2026 22:4X – 23:0X — module 7 shipped to production, and a module-9 test proved itself flaky on the way *(same session)*
+
+**What changed:** module 7 is live. `main` = `c5e6aa6`, `dev` = `c8a28ee`. Three PRs, all green, all merged: **#106** (`ishay/module-7-dashboard` → `dev`) · **#108** (the flake fix below → `dev`) · **#107** (`dev` → `main`, 44 commits: module 7, its fix round, and the nine module-9 follow-ups that were already sitting on `dev`). Vercel deployed `c5e6aa6`, state `success`.
+
+**Verified the way this repo verifies a deploy — by pulling the live bundle, not by trusting the deployment badge.** 2.95 MB fetched from `reg-in-umber.vercel.app` and probed: it carries `get_dashboard_summary` · `לא זמין בתפקידך` · `חסר פרמטר מערכת` · `לא ניתן לטעון את הנתונים` · `אין לך הרשאה לצפות במסך הבית` · `אין לו הצעת מחיר מקושרת, או שההצעה ריקה`, **and no longer carries the old welcome-page string**. That last probe is the one that proves the route actually swapped, rather than that the new code merely exists.
+
+**🔴 The finding worth keeping, and it is about the test suite, not about module 7.** `#107`'s first CI run went red on `src/modules/09_settings/SmartMatchPane.test.jsx` — `expected 'טוען נתוני נוכחות…' to be 'שורת-נוכחות אחת בלבד מתוך 27 שיבוצים …'`. **The proof that it was a race and not a defect was free and decisive: the same commit `ad35bb0` ran twice on GitHub — the `push` event passed Lint·Test·Build in 1m32s and the `pull_request` event failed it in 1m38s.** Same tree, opposite result.
+**Cause:** `renderPane` awaited only that `countAttendanceRows` had been *called*, never that its promise had *landed*, so the three tests reading the attendance note were racing the microtask queue. **Why it survived module 9's own close, and every one of tonight's local `gate` runs:** it passes locally every single time; only a loaded runner loses the race. ⇒ **"green locally" and even "green in CI once" are not evidence about a race — two runs of the same SHA are.**
+**Fix (PR #108):** the wait moved into `renderPane` itself, so it covers the three existing readers and any future one; `queryBy` + `?? ''` so a test rendering without the reliability row does not hang on an element that should not exist.
+⚠️ **And this was out of module 7's scope — stated rather than glossed.** It was touched only because it blocked the merge Ishay had instructed, it is a one-line repair with precedent in the repo, and leaving it would have reddened a random future PR with nobody able to explain why.
+
+**⚖️ A ruling that must not be misread by the next session.** The merges were performed by Claude, on Ishay's explicit and *repeated* instruction (*"מזג בעצמך לפי נוהל"*, then *"מזג בבקשה למיין"*). Before acting, both of his conflicting rulings were put in front of him, quoted and dated — the 24/07/2026 one recorded in `module-close/template.md` (*"the merge decision is his alone, never Claude's"*) and iron rule 10's hard gate — per the contradiction protocol's case ②. He reaffirmed. 🔴 **This is recorded as a dated ONE-TIME authorization: the standing rule is unchanged**, and he did not answer the "one-off or permanent?" half of the question. A future session must keep asking, not treat tonight as precedent.
+
+**Dead branches after this:** `ishay/module-7-dashboard` (merged, #106) · `ishay/m9-smartmatch-test-flake` (merged, #108). The worktree at `.claude/worktrees/m7` can be removed once Ishay is done with it.
+
+
 ### 03/09/2026 22:0X – 22:3X — the fix round: two debts built, and the fix round's own re-scan caught two defects I had just written *(same session, worktree `.claude/worktrees/m7`)*
 
 **What changed:** Ishay ruled `בנה` on T-1 and T-2 from the closing audit. Both shipped. `gate` **exit 0** on the final tree — 86 files / **2,272** tests (up 8). T-3 and T-4 stay as `🚧 מ12 ← מ7`.
