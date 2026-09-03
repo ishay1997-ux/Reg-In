@@ -9,7 +9,13 @@
 -- ⚠️ זהו SNAPSHOT שנוצר מתוך שאילתות על המסד החי. **מקור-אמת לשינויים = `supabase/migrations/`**
 --    (ולא הקובץ הזה). כל שינוי DB נכתב כקובץ מיגרציה חדש, מוחל, ואז הקובץ הזה נוצר מחדש.
 --
--- 📅 נוצר: 14/08/2026 · **רוענן לאחרונה: 02/09/2026** (מודול 9, פזה 1 — שלוש מיגרציות; הדלתא
+-- 📅 נוצר: 14/08/2026 · **רוענן לאחרונה: 03/09/2026 18:4X** (מודול 7, צעד 1.2 — מיגרציה אחת,
+--    `20260903182735_module7_dashboard_summary_rpc`: **פונקציה חדשה** `get_dashboard_summary(date)`,
+--    סעיף 24 בלוק "מודול 7"; אפס טבלאות/עמודות/policies. ⚠️ **ובאותה שעה, מסשן מקביל:**
+--    `20260903180958_seed_registry_and_helpers` (הוחלה 18:15) הוסיפה טבלה `seed_registry` + 4 פונקציות
+--    `seed_*` + שינוי בגוף `enforce_quote_in_progress_lock` — **חיות במסד, טרם מתועדות כאן**; הרענון
+--    שלהן שייך לסשן-הזריעה (ענף `ishay/m7-blueprint-and-seed`) ויתמזג לכאן. הספירה "45" בסעיף 24 היא
+--    לכן 45 + 1 (כאן) + 4 (שם) = **50 חי, נמדד `pg_proc` 03/09 18:4X**) · רוענן קודם: 02/09/2026 (מודול 9, פזה 1 — שלוש מיגרציות; הדלתא
 --    מפורטת בסוף הרשימה) · רוענן קודם: 27/08/2026 (צעד 1.8 — כל עשר מיגרציות פזה 1 של מודול 8; אחרי מיגרציה
 --    `20260827125155_module8_finance_tables_and_columns`; הדלתא: טבלה חדשה `project_finance`
 --    (+RLS +policy קריאה +טריגר), 2 עמודות ואילוץ-ייחודיות על `projects`, עמודה + CHECK
@@ -1830,11 +1836,11 @@ create policy notification_preferences_update_self on notification_preferences
 
 
 -- ============================================================
--- 24. פונקציות בסכמה public — 45 פונקציות
+-- 24. פונקציות בסכמה public — 46 פונקציות מתועדות כאן (50 חי: +4 `seed_*` של סשן-הזריעה, ר' הכותרת)
 -- ============================================================
 -- 🚫 **הגופים אינם כאן במכוון** (ר' כותרת הקובץ). לכל פונקציה: חתימה · מצב אבטחה · search_path ·
 --    למי יש EXECUTE · ומצביע לקובץ המיגרציה שבו הגוף הנוכחי חי.
--- לכל 45 הפונקציות `search_path = ''` (שמות מלאים בגוף) — נמדד 02/09/2026.
+-- לכל 45 הפונקציות `search_path = ''` (שמות מלאים בגוף) — נמדד 02/09/2026; ה-46 (מ7) נמדדה 03/09/2026.
 -- ⚠️ `moddatetime` (הטריגר של updated_at) **אינה כאן** — היא יושבת בסכמה `extensions`.
 --
 -- מקרא: SD = security definer · SI = security invoker · [רשימת התפקידים] = מי קיבל EXECUTE.
@@ -2085,6 +2091,21 @@ create policy notification_preferences_update_self on notification_preferences
 --   → C: supabase/migrations/20260902211551_module9_c_threshold_functions_and_min_wage_rpc.sql
 --   → D: supabase/migrations/20260902230500_module9_d_min_wage_rpc_threshold_arg.sql
 --   → E: supabase/migrations/20260903032212_module9_e_min_wage_rpc_threshold_ceiling.sql
+
+-- ── מודול 7 · מסך הבית (03/09/2026) ────────────────────────────────────
+-- get_dashboard_summary(p_month date default null) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** (ACL נמדד: בלי `anon`)
+--   השער בכניסה: `assert_module_permission('פרויקטים', edit/view)` — כל חמשת התפקידים (§7.10:
+--   המסך לכולם, אין שורת-מודול "מסך הבית"). **המיסוך (§7.97) בגוף, פר-שדה** — אותו predicate של
+--   `project_finance_select_by_permission` ('כספים') ו-`quotes_select_by_permission` ('הצעות מחיר');
+--   שדה חסום = NULL (לא 0) + דגל `profit_visible` / `quotes_visible`. **אין policy חדשה.**
+--   מחזירה בקריאה אחת: 4 KPI (`active_projects_count` · `satisfaction_avg` 90-יום · `monthly_profit`
+--   §7.96 · `pending_quotes_count`) · `projects` (חודש-היעד + כל הסטטוסים הפתוחים, **דרך
+--   `list_projects_overview()`** — אותן ספירות-איוש/לוגיסטיקה כמו מסך-הפרויקטים) · `pending_quotes` ·
+--   `params` (שלושת הספים). צבע-הלוח נגזר בלקוח (`src/lib/dashboard.js`), לא כאן — כלל 14.
+--   אומת אחרי ההחלה בהתחזות ל-5 התפקידים: מנכ"ל/כספים רואות רווח · פרויקטים רואה הצעות ולא רווח ·
+--   גיוס/לוגיסטיקה לא רואות שניהם · מייל לא-קיים ⇒ `42501` · הספירות תאמו ספירת-יד (4 · 6 · 5.00).
+--   → supabase/migrations/20260903182735_module7_dashboard_summary_rpc.sql
 
 -- ============================================================
 -- 25. עבודות מתוזמנות — cron.job (3 עבודות, כולן active)

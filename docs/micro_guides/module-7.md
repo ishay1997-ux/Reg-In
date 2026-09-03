@@ -13,10 +13,10 @@
 | | |
 |---|---|
 | **Module** | 7 — מסך הבית (Home Dashboard) |
-| **Branch** | `ishay/m7-blueprint-and-seed` **(deviation — the step guide names `ishay/module-7-dashboard`)**. Shared with the seed-data workstream by Ishay's own split-the-work call, same session. **Open, not blocking:** whether to rename before build starts, or update the ⑥2/⑥3 handoff prompts to match — Ishay's call, flagged in §9. |
+| **Branch** | **`ishay/module-7-dashboard`** — cut from `d0f9679` (the blueprint-and-seed branch's tip) on 03/09/2026 18:2X, **Ishay's "מאשר"** to the worktree recommendation. Lives in a git worktree at `.claude/worktrees/m7` so the seed-generator session (writing to the main checkout on `ishay/m7-blueprint-and-seed` at the same time — rule 16) and this build never share an index. The step guide's ⑥3 prompt still says `BRANCH_NAME=ishay/m7-blueprint-and-seed` — **fix before the closing session** (§9). Shared docs (`STATUS.md` · `CLAUDE_CODE_LOG.md` · `db_roadmap.md` · `schema.sql`) will need an ordinary merge between the two branches. |
 | **Owner** | Ishay (sole developer) |
-| **Status** | 📘 **Blueprint ready, awaiting Ishay's read-through nod on this file** (the design itself — mockup, KPI set, masking, calendar rule — is already approved through direct iteration; this document formalizes it into build steps). |
-| **Active step** | **1.1 — not started.** |
+| **Status** | 🔨 **Phase 1 in progress.** Blueprint nodded by Ishay (paste of ⑥2, 03/09/2026 18:1X). |
+| **Active step** | **1.1 ✅ applied 18:3X (typed echo) + verified 5 roles · 1.2 ✅ (advisors +1 expected, `schema.sql` refreshed, `db_roadmap` row) · ⏳ one ruling pending with Ishay (cancelled projects: calendar + profit — may become a fix-forward migration 1.3) · 2.1 🔨 in flight (Sonnet sub-agent).** |
 | **No approved spec folder** | `docs/specs/module_07_dashboard/` exists but holds *debate/decision records* (`dashboard-design-debate.html`, `seed-data-spec.md`), not a Discovery `processes-approved.md`/`screens-approved.md` pair — **by Ishay's explicit ruling, no Discovery for this module** ("מיותר דיסקברי... רק חשוב להציג דיון"). Tier-2 in the truth hierarchy is therefore this micro-guide itself plus the two decision-record files it cites; C5/C6 apply only where neither says anything (see §3). |
 
 **Legend (verbatim, per iron rule F7):** 🔻 stop-point · 🤖 Claude verifies alone · 👤 human (Ishay) gate · 🚧 cross-module debt (§6) · ⏳ deferred decision · 🕓 freshness stamp · 🔗 tagged §7 mirror · 🧩 handoff prompt · 🧊 frozen file.
@@ -157,7 +157,8 @@ No item here contradicts C5/C6; where C5 §5.6.2 is silent (masking, the exact c
 |---|---|---|---|
 | **1.0** | Door: no OPEN ledger items anchored to Phase 1 (confirmed — §3 has none marked ⏳) | Re-read §3 in full | 🤖 |
 | **1.1** | Migration: `get_dashboard_summary()` RPC, `security definer`, `set search_path to ''`. **No new table policy** — `project_finance` keeps its existing module-8 `'כספים'`-gated policy untouched (§4 explains why one isn't needed). The RPC itself is callable by any authenticated user; masking happens **inside its body**, per field, mirroring how `get_finance_overview` gates itself — here only *part* of the payload is sensitive, so the body branches: call `finance_project_money()`/read `project_finance` only after an inline check of the same `'כספים'` permission, else emit `null` for those two fields. Embed the standard Migration Design Checklist (`db_roadmap.md §1`). Returns: `active_projects_count`, `satisfaction_avg` (nullable), `monthly_profit` (nullable — masked or genuinely no closed-yet data, **distinguish the two in the row shape**, e.g. a sibling boolean `profit_visible`), `pending_quotes_count`, and a `calendar_days` array (`date`, `project_id`, `event_name`, `color`, `staffing_ok`, `logistics_ok`) for the requested month range. **מה ייחשב עובד:** one call replaces what would otherwise be 4-5 client queries; a `PROJECTS`-role call gets real `active_projects_count`/`satisfaction_avg`/`calendar_days` and `profit_visible:false` | Impersonated call, both a `FINANCE` and a `PROJECTS` identity; assert `profit_visible` flips correctly and `monthly_profit` is `null` when it does. Cross-check `active_projects_count` against a hand count from `select count(*) from projects where project_status not in ('cancelled')` (acceptance-oracle rule — never re-author the expected number from the same formula) | 👤 typed-echo (shared Supabase project) |
-| **1.2** | Phase-1 gate: advisors clean · `docs/schema.sql` refreshed · `db_roadmap.md` row added for the new RPC | `grep` `schema.sql` for the new function; advisors diff vs. pre-migration baseline (expect **zero** new findings — no new table, no new policy) | 🤖 |
+| **1.2** | Phase-1 gate: advisors clean · `docs/schema.sql` refreshed · `db_roadmap.md` row added for the new RPC | `grep` `schema.sql` for the new function; advisors diff vs. pre-migration baseline (expect **zero** new findings — no new table, no new policy) ↳ **as-built 03/09 18:4X:** security advisors 48 → **49**, the single new key is the new DEFINER function's own `authenticated_security_definer_function_executable` (the class every RPC here carries — "zero new" was over-stated in the plan; every DEFINER function adds exactly one). Performance: unchanged. `schema.sql` header + §24 block written; `db_roadmap` §10ב row ✅ with the five-role proof | ✅ |
+| **1.1 ↳ as-built** | Applied 18:3X after the typed echo; DB version `20260903153856`. Five-role impersonation matrix + negative control + three hand-count oracles all matched (details: `db_roadmap` §10ב). 🔴 **Measured surprise:** September's only project (#15) is *cancelled, fee unresolved* and contributes its full live profit (₪3,635) under §7.96's literal wording — raised to Ishay with his own calendar question. | — | ✅ |
 
 ### Phase 2 — Business Logic
 
@@ -237,9 +238,25 @@ nothing anchored beyond what's already ruled).
 
 ## 9. 📝 Deviations & Tech-Debt Log
 
-- **03/09/2026 — branch name.** Built on the shared `ishay/m7-blueprint-and-seed` branch, not the
-  step guide's `ishay/module-7-dashboard`. Not fixed here — Ishay's call whether to rename before
-  Phase 1 starts or update the ⑥2/⑥3 handoff prompts to match reality.
+- **03/09/2026 — branch name.** ~~Built on the shared `ishay/m7-blueprint-and-seed` branch~~ ⇒
+  **resolved 18:2X:** built on **`ishay/module-7-dashboard`** in a worktree (Ishay: "מאשר"), because
+  the seed session was actively writing to the main checkout (its migration applied at 18:15, docs
+  modified 18:09–18:11 — measured, not assumed). **Still open:** the ⑥3 closing prompt in
+  `docs/guides/modules/module_07_dashboard.md` names the old branch — update before Phase 5.
+- **03/09/2026 — step 1.1 as-built: the RPC returns raw facts, not `color`/`staffing_ok`.** The
+  step text listed `color`, `staffing_ok`, `logistics_ok` in the payload; the migration returns the
+  `list_projects_overview()` counts instead and the client derives color in `src/lib/dashboard.js`
+  (rule 14 — one home for §7.94, testable without a DB). Also `calendar_days` became `projects`
+  (one array serving both the calendar month and the attention strip), plus `pending_quotes` and
+  `params` so the strip needs no second query. Three `הנחתי` marks inside the migration header
+  (90-day anchor = event date · cancelled projects off the calendar · profit card follows the viewed
+  month) — all overridable without a new migration.
+- **03/09/2026 — §7.97 head-vs-tail contradiction, raised at the typed-echo gate.** Opening sentence:
+  both money cards "מנכ"ל+כספים only"; closing sentence: `quotes` keeps its existing policy, which
+  admits מנהלת פרויקטים. Built per §2's capabilities table (existing gate). Ishay's answer: ⏳ pending.
+- **03/09/2026 — `db_roadmap` forward-notice row (`🚧 מ7 ← מ8`) says מ7 adds a `project_finance`
+  policy; it does not.** Corrected in this branch's §10ב entry; the main-checkout addendum of the same
+  claim (uncommitted there, seed session's file) will surface at merge time — resolve toward "no policy".
 - **03/09/2026 — no Discovery folder.** By Ishay's explicit ruling, not an omission — recorded so a
   future reader doesn't read the absence as a skipped step.
 - **03/09/2026 — the approved mockup lives only in scratchpad as of blueprint-writing time.** Flagged
