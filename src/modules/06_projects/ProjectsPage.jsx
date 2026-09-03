@@ -26,6 +26,15 @@ import StatusTag from '@/components/StatusTag'
 import StatTile from '@/components/StatTile'
 import FilterPill from '@/components/FilterPill'
 import Ltr from '@/components/Ltr'
+import { WindowChips, Pager } from '@/components/ListWindow'
+import {
+  DEFAULT_WINDOW,
+  PAGE_SIZE,
+  filterByWindow,
+  paginate,
+  parsePageParam,
+  parseWindowParam,
+} from '@/lib/listWindow'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/dates'
@@ -143,19 +152,37 @@ export default function ProjectsPage() {
   const setTab = (value) => {
     const next = resolveNext(value, tab)
     // מסנן-הסטטוס שייך ללשונית "הכול" בלבד — מעבר לשונית מנקה אותו, אחרת הוא היה חוזר
-    // בשקט בחזרה אליה עם סינון ישן שהמשתמשת כבר שכחה.
-    writeParams({ tab: next === 'work' ? undefined : next, status: undefined })
+    // בשקט בחזרה אליה עם סינון ישן שהמשתמשת כבר שכחה. מעבר-לשונית מאפס גם עמוד (04/09) —
+    // עמוד 3 בלשונית הישנה אינו קיים בהכרח בחדשה.
+    writeParams({ tab: next === 'work' ? undefined : next, status: undefined, page: undefined })
   }
 
   const statusFilter = searchParams.get('status') ?? 'all'
   const setStatusFilter = (value) => {
     const next = resolveNext(value, statusFilter)
-    writeParams({ status: next === 'all' ? undefined : next })
+    writeParams({ status: next === 'all' ? undefined : next, page: undefined })
+  }
+
+  // חלון-הזמן + עמוד (הכרעת-ישי 04/09/2026) — שני הפרמטרים האלה בלבד עוברים לכתובת;
+  // ‏tab/status ממשיכים באותו writeParams כבר שהיה כאן (S-18), בלי הסבה.
+  const windowKey = parseWindowParam(searchParams.get('window'))
+  const setWindowKey = (value) => {
+    const next = resolveNext(value, windowKey)
+    // כל שינוי-חלון מאפס עמוד — עמוד 3 של "3 חודשים" אינו בהכרח קיים ב"הכול".
+    writeParams({ window: next === DEFAULT_WINDOW ? undefined : next, page: undefined })
+  }
+
+  const page = parsePageParam(searchParams.get('page'))
+  const setPage = (value) => {
+    const next = resolveNext(value, page)
+    writeParams({ page: next === 1 ? undefined : next })
   }
 
   const sorted = useMemo(() => sortOverviewProjects(projects, today), [projects, today])
 
-  const tabRows = useMemo(
+  // דליים גולמיים (לפני חלון) — נשמרים כדי ש-hiddenCount ומסנן-הסטטוס יוכלו להשוות "מה היה
+  // כאן בלי החלון" מול "מה יש עם החלון", בדיוק כמו שכרטיס-החוזה מבקש.
+  const rawTabRows = useMemo(
     () => ({
       work: sorted.filter((p) => ACTIVE_PROJECT_STATUSES.includes(p.project_status)),
       closing: sorted.filter((p) => p.project_status === 'event_finished'),
@@ -164,19 +191,48 @@ export default function ProjectsPage() {
     [sorted],
   )
 
+  // 🔑 החלון חל על תאריך-האירוע (final_event_date) ומוחל **פר-לשונית** — כדי שמונה-הלשונית
+  // עצמו יספור "בתוך החלון", לא את כל הדאטה (חוזה §3: "מוני-הלשונית סופרים בתוך החלון").
+  const windowedTabRows = useMemo(() => {
+    const byKey = {}
+    for (const key of Object.keys(rawTabRows)) {
+      byKey[key] = filterByWindow(rawTabRows[key], (p) => p.final_event_date, windowKey, today)
+    }
+    return byKey
+  }, [rawTabRows, windowKey, today])
+
+  const tabRows = windowedTabRows
+
   const statusCounts = useMemo(() => {
     const counts = {}
-    for (const p of projects) counts[p.project_status] = (counts[p.project_status] ?? 0) + 1
+    for (const p of windowedTabRows.all)
+      counts[p.project_status] = (counts[p.project_status] ?? 0) + 1
     return counts
-  }, [projects])
+  }, [windowedTabRows])
 
+  // האריחים אינם תלויים בלשונית ולא בחלון-הזמן (הכרעה קיימת: הם מדד-התרעה גלובלי, לא
+  // תצוגת-רשימה) — נשארים על כל הפרויקטים, בדיוק כפי שהיו לפני החלון.
   const tiles = useMemo(() => overviewTiles(projects), [projects])
 
-  const currentRows = tabRows[tab]
-  const visible =
+  const currentRawRows = rawTabRows[tab]
+  const preWindowVisible =
     tab === 'all' && statusFilter !== 'all'
-      ? currentRows.filter((p) => p.project_status === statusFilter)
-      : currentRows
+      ? currentRawRows.filter((p) => p.project_status === statusFilter)
+      : currentRawRows
+
+  // סדר-הפעולות של החוזה: מסננים-קיימים (לשונית+סטטוס) → חלון → מיון (כבר מוחל ב-`sorted`
+  // למעלה, כי הוא רץ פעם אחת על כל הפרויקטים ומשמר את סדרו דרך כל הסינונים) → עימוד.
+  const windowedVisible = useMemo(
+    () => filterByWindow(preWindowVisible, (p) => p.final_event_date, windowKey, today),
+    [preWindowVisible, windowKey, today],
+  )
+  const hiddenCount = preWindowVisible.length - windowedVisible.length
+
+  const pageResult = useMemo(
+    () => paginate(windowedVisible, page, PAGE_SIZE),
+    [windowedVisible, page],
+  )
+  const visible = pageResult.pageRows
 
   if (loading) {
     return (
@@ -250,11 +306,14 @@ export default function ProjectsPage() {
               {tab === 'all' && (
                 <StatusPills
                   selected={statusFilter}
-                  total={projects.length}
+                  total={tabRows.all.length}
                   counts={statusCounts}
                   onSelect={setStatusFilter}
                 />
               )}
+              {/* חלון-הזמן יושב באותה שורת-המסננים, אחרי הגלולות — אותו מיקום בדיוק בשני
+                  המסכים (חוזה §4). */}
+              <WindowChips value={windowKey} onChange={setWindowKey} hiddenCount={hiddenCount} />
               <span className="mr-auto text-[12px] text-slate-400">{SORT_LINE}</span>
             </div>
             {visible.length === 0 ? (
@@ -272,6 +331,16 @@ export default function ProjectsPage() {
                 onOpen={(id) => navigate(`/projects/${id}`)}
               />
             )}
+            {/* הדפדוף יושב תחת הטבלה, בתוך אותו כרטיס (חוזה §4) — ומוסתר-מאליו כש-total=0
+                (חוסר-שורות אחרי-חלון/סינון כבר מטופל ע"י EmptyRows). */}
+            <Pager
+              page={pageResult.page}
+              pageCount={pageResult.pageCount}
+              from={pageResult.from}
+              to={pageResult.to}
+              total={pageResult.total}
+              onPage={setPage}
+            />
           </>
         )}
       </div>

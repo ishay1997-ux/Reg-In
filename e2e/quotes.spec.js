@@ -324,7 +324,9 @@ test.describe('התפוגה מגיעה למסך כמו כל דחייה אחרת 
     expect(tabCount, `מונה-הלשונית לא נקרא מתוך "${tabLabel}"`).toBeGreaterThanOrEqual(
       REJECTED_COUNT,
     )
-    await expect(page.locator('[data-testid^="quote-row-"]')).toHaveCount(tabCount)
+    // 🔄 04/09/2026: עם דפדוף (50 לעמוד) האינווריאנט הוא min(מונה, 50) + "מתוך <מונה>".
+    await expect(page.locator('[data-testid^="quote-row-"]')).toHaveCount(Math.min(tabCount, 50))
+    await expect(page.getByTestId('list-pager-range')).toContainText(`מתוך ${tabCount}`)
 
     // 🔒 חוזה: שלוש המחרוזות הן ערכי `quotes_rejection_reason_check` במסד, לא תוויות-מסך.
     // ‏'פג תוקף' הוא היחיד שאיש אינו יכול לבחור בחלון — **רק עבודת-הרקע כותבת אותו**

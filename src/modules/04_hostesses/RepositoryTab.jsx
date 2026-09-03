@@ -46,6 +46,8 @@ import {
 } from '@/lib/hostesses'
 import { SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
 import { formatDate } from '@/lib/dates'
+import { Pager } from '@/components/ListWindow'
+import { paginate } from '@/lib/listWindow'
 import {
   listHostesses,
   listRepositoryAssignments,
@@ -85,6 +87,9 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
   const [city, setCity] = useState(ALL_CITIES)
   const [activeOnly, setActiveOnly] = useState(true) // דלוק כברירת-מחדל, כמצויר
   const [unansweredOnly, setUnansweredOnly] = useState(false)
+  // 🆕 דפדוף (186 שורות כולל לא-פעילות, מעבר-האחידות `src/lib/listWindow.js`) — הלשונית אינה
+  // עמוד עצמאי (`HostessesPage` מחזיק אותה ב-state), ולכן העמוד חי כאן ולא בכתובת.
+  const [page, setPage] = useState(1)
 
   // ⚠️ הטעינה חיה **בתוך** ה-effect ומעדכנת state רק אחרי `await` — זו התבנית של
   // `CustomersPage`, והיא נדרשת: `react-hooks/set-state-in-effect` הוא **שגיאה קשיחה**
@@ -182,7 +187,12 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
     setCity(ALL_CITIES)
     setActiveOnly(true)
     setUnansweredOnly(false)
+    setPage(1)
   }
+
+  // דפדוף על הרשימה המסוננת. `paginate` גוזרת בעצמה לטווח חוקי — עמוד ששרד סינון-מצמצם
+  // לא נשאר על "עמוד ריק".
+  const paged = useMemo(() => paginate(visible, page), [visible, page])
 
   // השבתה/הפעלה. 🔴 **תלוי-מצב, וזו התנהגות כבר-מוכרעת שהמוקאפ המקורי החמיץ** (§א4):
   // בלי שיבוץ עתידי פעיל — מתהפך מיד, אפס שיקול-דעת. **עם** שיבוץ כזה — חלון שמונה
@@ -294,13 +304,22 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
       <div className="flex flex-wrap items-center gap-2 pb-3">
         <Input
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setPage(1) // כל שינוי-חיפוש מאפס עמוד — מעבר-האחידות
+            setSearch(e.target.value)
+          }}
           placeholder="חיפוש לפי שם או טלפון"
           className="min-w-[200px] max-w-[240px] h-auto py-1.5 text-[13px]"
           data-testid="repository-search"
         />
 
-        <Select value={city} onValueChange={setCity}>
+        <Select
+          value={city}
+          onValueChange={(v) => {
+            setPage(1)
+            setCity(v)
+          }}
+        >
           <SelectTrigger
             className="h-auto w-auto py-1.5 text-[12.5px]"
             aria-label="סינון לפי עיר"
@@ -320,7 +339,10 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
 
         <FilterPill
           on={activeOnly}
-          onClick={() => setActiveOnly((v) => !v)}
+          onClick={() => {
+            setPage(1)
+            setActiveOnly((v) => !v)
+          }}
           testId="repository-active-only"
         >
           פעילות בלבד
@@ -332,7 +354,10 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
           <FilterPill
             on={unansweredOnly}
             tone="warn"
-            onClick={() => setUnansweredOnly((v) => !v)}
+            onClick={() => {
+              setPage(1)
+              setUnansweredOnly((v) => !v)
+            }}
             testId="repository-unanswered"
           >
             {`לא ענתה ל-${unansweredThreshold} האחרונים (${unansweredCount})`}
@@ -382,7 +407,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
             </tr>
           </thead>
           <tbody>
-            {visible.map(({ hostess, state, streak, quarterEvents, futureActive }) => (
+            {paged.pageRows.map(({ hostess, state, streak, quarterEvents, futureActive }) => (
               <tr
                 key={hostess.hostess_id}
                 onClick={() => onOpenCard(hostess.hostess_id)}
@@ -476,6 +501,16 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
           </tbody>
         </table>
       )}
+
+      {/* דפדוף — ישירות מתחת לטבלה, בתוך אותה כרטיסייה. */}
+      <Pager
+        page={paged.page}
+        pageCount={paged.pageCount}
+        from={paged.from}
+        to={paged.to}
+        total={paged.total}
+        onPage={setPage}
+      />
 
       <Dialog
         open={deactivateChoice != null}

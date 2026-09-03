@@ -128,7 +128,7 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
   })
 
   test('העמוד: מדדים חיים, לשוניות, סיבת-דחייה על השורה, ופעולות לפי סטטוס', async ({ page }) => {
-    const { row, revenue } = await customerRowWithRevenue(page)
+    const { row } = await customerRowWithRevenue(page)
     await row.click()
     await expect(page.getByTestId('customer-page')).toBeVisible()
 
@@ -137,7 +137,10 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
     // ⚠️ עד 03/09/2026 עמדו כאן שלושה מספרים נעוצים (22,503 · 561 · 7,501) שחושבו ביד
     // מהשורות שבמסד — כל שינוי-דאטה לגיטימי הפיל אותם. האינווריאנט חוצה-המסכים תופס את
     // אותו באג (מדד שאינו מחושב מההצעות) בלי לרקוב.
-    await expect(page.getByTestId('metric-revenue')).toContainText(revenue)
+    // 🔄 04/09/2026 (הכרעת-ישי): האריח הראשון הוא "רווח גולמי מהלקוח" (final_profit קפוא של
+    // פרויקטים שהסתיימו), במקום "סה"כ הצעות מאושרות". למנכ"ל (כספים=edit) על לקוח עם הכנסות
+    // הוא סכום-כסף; הסכום שברשימה נשאר על העמודה שם ואינו מושווה עוד לאריח.
+    await expect(page.getByTestId('metric-profit')).toContainText(MONEY)
     await expect(page.getByTestId('metric-open')).toContainText('₪')
     await expect(page.getByTestId('metric-avg-deal')).toContainText(MONEY)
 
@@ -148,7 +151,9 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
     // גם אסרשן-מכנה: ללקוח עם הצעה מאושרת חייב להיות פרויקט; 0 = policy חסרה, לא "אין".
     const quoteRows = page.locator('tr[data-testid^="customer-quote-"]')
     await expect(quoteRows.first()).toBeVisible()
-    expect(await quoteRows.count()).toBe(await tabCount(page.getByTestId('customer-tab-quotes')))
+    // 🔄 04/09/2026: דפדוף של 50 לעמוד גם כאן (לקוח-הענק מחזיק 262 הצעות).
+    const quotesTabCount = await tabCount(page.getByTestId('customer-tab-quotes'))
+    expect(await quoteRows.count()).toBe(Math.min(quotesTabCount, 50))
     const projectsTab = page.getByTestId('customer-tab-projects')
     const projectCount = await tabCount(projectsTab)
     expect(
@@ -158,7 +163,7 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
     await projectsTab.click()
     await expect(
       page.locator('[data-testid^="customer-project-"]:not([data-testid*="-link-"])'),
-    ).toHaveCount(projectCount)
+    ).toHaveCount(Math.min(projectCount, 50))
 
     // ארבע פעולות על הצעה בתהליך · צפייה בלבד על סגורה (הסגורות נעולות ב-DB ממילא).
     // **חובה שזו תהיה הצעה `in_progress` אמיתית** — על סגורה שלוש האסרציות היו עוברות

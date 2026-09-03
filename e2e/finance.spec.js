@@ -74,7 +74,7 @@ async function openTabHoldingKnownProject(page) {
     if (count === 0) continue
     // ממתינים לרינדור השורות של הלשונית לפני שמחפשים — אחרת חיפוש על טבלה שעדיין
     // ריקה מחזיר 0 ומדלג על הלשונית הנכונה (מדידה על מכנה-0, `e2e/CLAUDE.md`).
-    await expect(page.locator('[data-testid^="finance-row-"]')).toHaveCount(count, {
+    await expect(page.locator('[data-testid^="finance-row-"]')).toHaveCount(Math.min(count, 50), {
       timeout: 30_000,
     })
     if ((await page.getByTestId(`finance-row-${KNOWN_PROJECT_ID}`).count()) > 0) return key
@@ -112,8 +112,10 @@ test.describe('מודול 8 · כספים — E2E פנימי (S1/S2/S3), קרי�
 
       // אינווריאנט-עצמי: מספר-השורות שרונדרו שווה למונה שהלשונית מציגה — בדיוק כמו
       // `projects-tab-all`/`logistics-pill-all` ב-`smoke.spec.js`. אין כאן מספר נעוץ שירקיב.
+      // 🔄 04/09/2026 (חלון-זמן + דפדוף): min(מונה, 50) + "מתוך <מונה>" בכותרת-הדפדוף.
       const rows = page.locator('[data-testid^="finance-row-"]')
-      await expect(rows).toHaveCount(count, { timeout: 30_000 })
+      await expect(rows).toHaveCount(Math.min(count, 50), { timeout: 30_000 })
+      await expect(page.getByTestId('list-pager-range')).toContainText(`מתוך ${count}`)
 
       // 🔴 **תוקן 28/08/2026 — כאן היה `if (key === KNOWN_PROJECT_TAB)`, וזו הייתה סתירה
       // בין ההערה לקוד:** הערת-הסיום למטה הבטיחה "באיזושהי לשונית", אבל התנאי הזה אִפשר

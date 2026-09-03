@@ -38,6 +38,8 @@ import {
 import { responsivenessCounts, SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
 import { formatDate } from '@/lib/dates'
 import { getHostess, getHostessAssignments, getHostessScreenParams } from './api'
+import { WindowChips, Pager } from '@/components/ListWindow'
+import { DEFAULT_WINDOW, filterByWindow, paginate } from '@/lib/listWindow'
 
 const MS_PER_WEEK = 7 * 24 * 3_600_000
 
@@ -52,6 +54,15 @@ export default function HostessViewCard({ hostessId, onClose, onEdit }) {
   const [error, setError] = useState(null)
   const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
   const now = useMemo(() => new Date().toISOString(), [])
+  // 🆕 חלון-זמן + דפדוף על "היסטוריה" (עד 156 שורות לדיילת אחת, מעבר-האחידות
+  // `src/lib/listWindow.js`) — הכרטיס הוא overlay בלי כתובת משלו, ולכן שניהם ב-`useState`
+  // מקומי, לא ב-URL (בניגוד ל-`CustomersPage`).
+  const [historyWindow, setHistoryWindow] = useState(DEFAULT_WINDOW)
+  const [historyPage, setHistoryPage] = useState(1)
+  function changeHistoryWindow(key) {
+    setHistoryWindow(key)
+    setHistoryPage(1) // כל שינוי-חלון מאפס עמוד — מעבר-האחידות
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -87,6 +98,27 @@ export default function HostessViewCard({ hostessId, onClose, onEdit }) {
     [hostess, assignments, params, today],
   )
 
+  // חלון-זמן על "היסטוריה" בלבד — "שיבוצים קרובים" הוא רשימה קצרה של מחר-והלאה ואינו
+  // צריך חלון. הסדר: (הסינון הקיים — כבר בתוך `derived.history`) → חלון → מיון (כבר
+  // ממוין ב-`deriveCardData`) → דפדוף.
+  const windowedHistory = useMemo(
+    () =>
+      derived
+        ? filterByWindow(
+            derived.history,
+            (row) => row.projects?.final_event_date,
+            historyWindow,
+            today,
+          )
+        : [],
+    [derived, historyWindow, today],
+  )
+  const pagedHistory = useMemo(
+    () => paginate(windowedHistory, historyPage),
+    [windowedHistory, historyPage],
+  )
+  const historyHiddenCount = derived ? derived.history.length - windowedHistory.length : 0
+
   if (loading || error || !derived) {
     return (
       <Dialog open onOpenChange={(next) => !next && onClose()}>
@@ -119,6 +151,11 @@ export default function HostessViewCard({ hostessId, onClose, onEdit }) {
           // בכרטיס (`getHostessScreenParams`), ולא בשליפה נוספת.
           inviteValidityHours={params[HOSTESS_PARAM_NAMES.inviteValidityHours]}
           onEdit={() => onEdit(hostessId)}
+          historyWindow={historyWindow}
+          onHistoryWindowChange={changeHistoryWindow}
+          historyHiddenCount={historyHiddenCount}
+          pagedHistory={pagedHistory}
+          onHistoryPage={setHistoryPage}
         />
       </DialogContent>
     </Dialog>
@@ -191,7 +228,19 @@ function deriveCardData(hostess, assignments, params, today) {
   }
 }
 
-function CardBody({ hostess, derived, canEdit, now, inviteValidityHours, onEdit }) {
+function CardBody({
+  hostess,
+  derived,
+  canEdit,
+  now,
+  inviteValidityHours,
+  onEdit,
+  historyWindow,
+  onHistoryWindowChange,
+  historyHiddenCount,
+  pagedHistory,
+  onHistoryPage,
+}) {
   return (
     <>
       <DialogHeader>
@@ -359,11 +408,36 @@ function CardBody({ hostess, derived, canEdit, now, inviteValidityHours, onEdit 
           {derived.history.length === 0 ? (
             <Muted>דיילת חדשה, עדיין אין לה היסטוריית שיבוצים</Muted>
           ) : (
-            <AssignmentTable
-              rows={derived.history}
-              now={now}
-              inviteValidityHours={inviteValidityHours}
-            />
+            <>
+              {/* חלון-זמן (עד 156 שורות לדיילת אחת) — ברירת-המחדל "3 חודשים" ולא "הכול",
+                  אותה מוסכמה כמו כל מסך-רשימה אחר (`src/lib/listWindow.js`). */}
+              <div className="mb-2">
+                <WindowChips
+                  value={historyWindow}
+                  onChange={onHistoryWindowChange}
+                  hiddenCount={historyHiddenCount}
+                />
+              </div>
+              {pagedHistory.total === 0 ? (
+                <Muted>אין שיבוצים בחלון הזמן הנבחר</Muted>
+              ) : (
+                <>
+                  <AssignmentTable
+                    rows={pagedHistory.pageRows}
+                    now={now}
+                    inviteValidityHours={inviteValidityHours}
+                  />
+                  <Pager
+                    page={pagedHistory.page}
+                    pageCount={pagedHistory.pageCount}
+                    from={pagedHistory.from}
+                    to={pagedHistory.to}
+                    total={pagedHistory.total}
+                    onPage={onHistoryPage}
+                  />
+                </>
+              )}
+            </>
           )}
         </Section>
       </div>

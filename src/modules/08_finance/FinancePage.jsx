@@ -24,13 +24,23 @@
 // (*"עם פתרונם השורה יורדת"*), והתוצאה נבחרה במודע ב-N-6: היסטוריית-הביטולים היא של מ11.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import LoadingOrError from '@/components/LoadingOrError'
 import PermissionAwareEmpty, { DENIED_MARK } from '@/components/PermissionAwareEmpty'
 import StatTile from '@/components/StatTile'
 import StatusTag from '@/components/StatusTag'
-import RatingStars from '@/components/RatingStars'
+import ScoreCell from '@/components/ScoreCell'
 import Money from '@/components/Money'
 import Ltr from '@/components/Ltr'
+import { WindowChips, Pager } from '@/components/ListWindow'
+import {
+  DEFAULT_WINDOW,
+  PAGE_SIZE,
+  filterByWindow,
+  paginate,
+  parsePageParam,
+  parseWindowParam,
+} from '@/lib/listWindow'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatDate, formatTimestampFull } from '@/lib/dates'
@@ -397,6 +407,47 @@ export default function FinancePage() {
   const [tab, setTab] = useState(DEFAULT_TAB)
   const [filters, setFilters] = useState(EMPTY_FILTERS)
 
+  // 🔑 חלון-הזמן + עמוד (הכרעת-ישי 04/09/2026) — חיים בכתובת, בעוד `tab`/`filters` נשארים
+  // ב-`useState` כפי שהיו (אין הסבה שלהם ל-URL). ⚠️ המסך הזה לא השתמש ב-`useSearchParams`
+  // עד כה — זה הייבוא היחיד הנוסף מ-react-router, ורק שני הפרמטרים האלה נכתבים אליו.
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  function writeParams(patch) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        for (const [key, value] of Object.entries(patch)) {
+          if (value === undefined || value === null) next.delete(key)
+          else next.set(key, String(value))
+        }
+        return next
+      },
+      { replace: true },
+    )
+  }
+
+  const windowKey = parseWindowParam(searchParams.get('window'))
+  const setWindowKey = (value) => {
+    // כל שינוי-חלון מאפס עמוד — ‏עמוד 3 של "3 חודשים" אינו בהכרח קיים ב"הכול".
+    writeParams({ window: value === DEFAULT_WINDOW ? undefined : value, page: undefined })
+  }
+
+  const page = parsePageParam(searchParams.get('page'))
+  const setPage = (value) => {
+    writeParams({ page: value === 1 ? undefined : value })
+  }
+
+  // עוטפים את שלושת המשנים-הקיימים (לשונית · סינון · ניקוי-סינון) כדי שכל שינוי בהם יאפס
+  // עמוד גם הוא (חוזה §2) — בלי לגעת ב-`useState` עצמו של tab/filters.
+  const changeTab = (value) => {
+    setTab(value)
+    setPage(1)
+  }
+  const changeFilters = (nextFilters) => {
+    setFilters(nextFilters)
+    setPage(1)
+  }
+
   // שורת-הפרויקט הפתוחה ב-S2. **השורה עצמה** מועברת לדיאלוג ולא רק המזהה — זה מה
   // ש-`ClosingWindowDialog` מצפה לו (`project.project_id` · `event_name` · `customer_name` ·
   // `operationally_closed_at` · `credit_note_flag`), והוא ממילא שולף את נתוני-הכסף שלו מחדש
@@ -479,16 +530,28 @@ export default function FinancePage() {
   // ‏`byTab` תמיד מחזיק את שלושת המפתחות (הוא נבנה מהם), ו-`tab` מגיע רק מ-`TABS` ⇒ אין
   // כאן `?? []` שהיה יוצר מערך חדש בכל render ומפיל את התלות של ה-useMemo שמתחתיו.
   const tabRows = byTab[tab]
-  // מסננים ואז ממיינים — ‏`sortForTab` הוא **ברירת-מחדל בלבד**, בלי פקד-מיון על המסך:
-  // ‏A-10 קבע סדר, לא בורר, ולא הוכרע שום פקד כזה.
-  const visible = useMemo(
-    () =>
-      sortForTab(
-        tabRows.filter((entry) => matchesFilters(entry, tab, filters)),
-        tab,
-      ),
+
+  // סדר-הפעולות של חוזה-החלון (04/09/2026): מסננים-קיימים (סרגל-החיפוש) → חלון-זמן →
+  // מיון (`sortForTab`, ברירת-מחדל A-10, ללא שינוי) → עימוד. ‏`rowDateIso` היא אותו שדה-תאריך
+  // בדיוק שהלשונית כבר מציגה ושמסנני מ-/עד כבר פועלים עליו (ר' ההערה על `rowDateIso` למעלה) —
+  // אין ל-`get_finance_overview` עמודת `final_event_date` (22 העמודות בטבלת-ההחזרה, בהערת
+  // `OVERVIEW_FIELDS`), ולכן "תאריך-האירוע של השורה" כאן הוא תאריך-ההקשר של הלשונית עצמה.
+  const filteredEntries = useMemo(
+    () => tabRows.filter((entry) => matchesFilters(entry, tab, filters)),
     [tabRows, tab, filters],
   )
+  const windowedEntries = useMemo(
+    () => filterByWindow(filteredEntries, (entry) => rowDateIso(entry.row, tab), windowKey, today),
+    [filteredEntries, tab, windowKey, today],
+  )
+  const hiddenCount = filteredEntries.length - windowedEntries.length
+
+  // מסננים ואז ממיינים — ‏`sortForTab` הוא **ברירת-מחדל בלבד**, בלי פקד-מיון על המסך:
+  // ‏A-10 קבע סדר, לא בורר, ולא הוכרע שום פקד כזה.
+  const sortedEntries = useMemo(() => sortForTab(windowedEntries, tab), [windowedEntries, tab])
+
+  const pageResult = useMemo(() => paginate(sortedEntries, page, PAGE_SIZE), [sortedEntries, page])
+  const visible = pageResult.pageRows
 
   const filterActive =
     filters.from !== '' ||
@@ -496,13 +559,26 @@ export default function FinancePage() {
     filters.company !== '' ||
     filters.projectNumber !== ''
 
-  const counts = {
-    awaiting_invoice: byTab.awaiting_invoice.length,
-    awaiting_payment: byTab.awaiting_payment.length,
-    finished: byTab.finished.length,
-  }
+  // 🔑 מוני-הלשונית סופרים **בתוך החלון** (חוזה §3) — כל לשונית נחלנת לפי שדה-התאריך שלה
+  // עצמה (`rowDateIso`), בדיוק כמו הרשימה שהיא מציגה. אין כאן השפעת-סינון-חיפוש: מונה-
+  // הלשונית תמיד מספר את *כל* הלשונית בתוך החלון, לא רק את מה שתואם את סרגל-החיפוש הנוכחי.
+  const counts = useMemo(() => {
+    const result = {}
+    for (const key of Object.keys(byTab)) {
+      result[key] = filterByWindow(
+        byTab[key],
+        (entry) => rowDateIso(entry.row, key),
+        windowKey,
+        today,
+      ).length
+    }
+    return result
+  }, [byTab, windowKey, today])
 
-  const clearFilters = () => setFilters(EMPTY_FILTERS)
+  const clearFilters = () => {
+    setFilters(EMPTY_FILTERS)
+    setPage(1)
+  }
 
   const openSalary = useCallback(() => {
     setSalaryMountKey((k) => k + 1)
@@ -516,7 +592,7 @@ export default function FinancePage() {
       <div data-testid="finance-page">
         {header}
         <Card>
-          <TabsBar active={tab} counts={null} onSelect={setTab} />
+          <TabsBar active={tab} counts={null} onSelect={changeTab} />
           <LoadingOrError loading skeleton={{ variant: 'table', rows: 5, cols: 6 }} />
         </Card>
       </div>
@@ -530,7 +606,7 @@ export default function FinancePage() {
       <div data-testid="finance-page">
         {header}
         <Card>
-          <TabsBar active={tab} counts={null} onSelect={setTab} />
+          <TabsBar active={tab} counts={null} onSelect={changeTab} />
           <PermissionAwareEmpty
             state="noPermission"
             title={NO_PERMISSION_SENTENCE}
@@ -570,8 +646,13 @@ export default function FinancePage() {
       {header}
       <SummaryTiles summary={summary} />
       <Card>
-        <TabsBar active={tab} counts={counts} onSelect={setTab} />
-        <FilterBar filters={filters} onChange={setFilters} onClear={clearFilters} />
+        <TabsBar active={tab} counts={counts} onSelect={changeTab} />
+        <FilterBar filters={filters} onChange={changeFilters} onClear={clearFilters} />
+        {/* חלון-הזמן יושב מתחת לסרגל-החיפוש, לפני הטבלה (חוזה §4) — אותו מיקום-יחסי כמו
+            במסך-הפרויקטים (שם הוא יושב מתחת לגלולות-הסטטוס). */}
+        <div className="flex flex-wrap items-center gap-2 pb-2.5">
+          <WindowChips value={windowKey} onChange={setWindowKey} hiddenCount={hiddenCount} />
+        </div>
         {visible.length === 0 ? (
           <EmptyRows
             filtered={filterActive}
@@ -587,6 +668,15 @@ export default function FinancePage() {
             onOpen={setOpenProject}
           />
         )}
+        {/* הדפדוף יושב תחת הטבלה, בתוך אותו כרטיס (חוזה §4). */}
+        <Pager
+          page={pageResult.page}
+          pageCount={pageResult.pageCount}
+          from={pageResult.from}
+          to={pageResult.to}
+          total={pageResult.total}
+          onPage={setPage}
+        />
       </Card>
 
       {/* 🔴 **היסטוריית-דוחות-השכר אינה כאן יותר — הכרעת-ישי `28/08/2026`.** היא עברה
@@ -1115,17 +1205,8 @@ function OverdueCell({ days, debtOpen, paidOn, testId }) {
   )
 }
 
-// תג-הציון בפורמט S1 הקנוני: **תווית בלבד, בלי מספר בתוך התג** (החלטה חוצת-משטחים #4).
-// הכוכבים מגיעים מ-`RatingStars` המשותף ולא מגליפים מקומיים — אותו רכיב שמשרת את מ4 ואת S4.
-function ScoreCell({ score }) {
-  if (score === null) return <span className="text-slate-400">{DASH}</span>
-  return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <RatingStars value={score.score} />
-      <StatusTag label={score.label} tone={score.tone} />
-    </div>
-  )
-}
+// תג-הציון בפורמט S1 הקנוני (תווית בלבד, בלי מספר — החלטה חוצת-משטחים #4) חי עכשיו
+// ב-`src/components/ScoreCell.jsx` — משותף עם שורת-הפרויקט בכרטיס-הלקוח (04/09/2026).
 
 function Th({ children, style }) {
   return (
