@@ -55,6 +55,7 @@
     "@babel/parser": "^8.0.4",
     "@babel/traverse": "^7.29.7",
     "@eslint/js": "^10.0.1",
+    "@hebcal/core": "^6.9.2",
     "@playwright/test": "^1.62.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
