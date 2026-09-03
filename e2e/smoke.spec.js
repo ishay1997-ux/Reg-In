@@ -198,7 +198,12 @@ test.describe('בדיקת-עשן', () => {
     await expect(page.locator('[data-testid^="projects-row-"]').first()).toBeVisible()
     const allTabText = await page.getByTestId('projects-tab-all').innerText()
     const allTabCount = Number(allTabText.replace(/[^0-9]/g, ''))
-    await expect(page.locator('[data-testid^="projects-row-"]')).toHaveCount(allTabCount)
+    // 🔄 04/09/2026 (חלון-זמן + דפדוף, הכרעת-ישי): המונה סופר בתוך החלון, והטבלה מציגה לכל
+    // היותר 50 לעמוד ⇒ האינווריאנט הוא "שורות = min(מונה, 50)" **ו**-"מתוך <מונה>" בכותרת-הדפדוף.
+    await expect(page.locator('[data-testid^="projects-row-"]')).toHaveCount(
+      Math.min(allTabCount, 50),
+    )
+    await expect(page.getByTestId('list-pager-range')).toContainText(`מתוך ${allTabCount}`)
 
     // דיילות: הסרגל טוען את המודול, ומסך Smart Match של האירוע הראשון במבט-העל עולה עם
     // מועמדות אמיתיות. 🔄 03/09/2026: שלוש דיילות-הדגמה ("מאיה כהן" / "קרן אשכנזי" /
@@ -266,7 +271,8 @@ test.describe('בדיקת-עשן', () => {
         await expect(page.getByTestId('finance-empty-tab')).toBeVisible()
         continue
       }
-      await expect(financeRows).toHaveCount(tabCount)
+      await expect(financeRows).toHaveCount(Math.min(tabCount, 50))
+      await expect(page.getByTestId('list-pager-range')).toContainText(`מתוך ${tabCount}`)
       const knownRow = page.getByTestId(`finance-row-${anchors.finance.knownProjectId}`)
       if ((await knownRow.count()) > 0) {
         await expect(knownRow).toContainText(anchors.finance.knownProjectName)

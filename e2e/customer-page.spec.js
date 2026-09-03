@@ -148,7 +148,9 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
     // גם אסרשן-מכנה: ללקוח עם הצעה מאושרת חייב להיות פרויקט; 0 = policy חסרה, לא "אין".
     const quoteRows = page.locator('tr[data-testid^="customer-quote-"]')
     await expect(quoteRows.first()).toBeVisible()
-    expect(await quoteRows.count()).toBe(await tabCount(page.getByTestId('customer-tab-quotes')))
+    // 🔄 04/09/2026: דפדוף של 50 לעמוד גם כאן (לקוח-הענק מחזיק 262 הצעות).
+    const quotesTabCount = await tabCount(page.getByTestId('customer-tab-quotes'))
+    expect(await quoteRows.count()).toBe(Math.min(quotesTabCount, 50))
     const projectsTab = page.getByTestId('customer-tab-projects')
     const projectCount = await tabCount(projectsTab)
     expect(
@@ -158,7 +160,7 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
     await projectsTab.click()
     await expect(
       page.locator('[data-testid^="customer-project-"]:not([data-testid*="-link-"])'),
-    ).toHaveCount(projectCount)
+    ).toHaveCount(Math.min(projectCount, 50))
 
     // ארבע פעולות על הצעה בתהליך · צפייה בלבד על סגורה (הסגורות נעולות ב-DB ממילא).
     // **חובה שזו תהיה הצעה `in_progress` אמיתית** — על סגורה שלוש האסרציות היו עוברות

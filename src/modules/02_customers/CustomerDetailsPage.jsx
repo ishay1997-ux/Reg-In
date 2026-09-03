@@ -11,7 +11,7 @@
 // הוא היה גורם לכפתור לשקר (כלל ברזל 9: ה-UI הוא נוחות, המסד הוא החומה).
 
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowRight, Check, Eye, Pencil, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import LoadingOrError from '@/components/LoadingOrError'
@@ -21,6 +21,15 @@ import RowAction from '@/components/RowAction'
 import RatingStars from '@/components/RatingStars'
 import StatTile from '@/components/StatTile'
 import StatusTag from '@/components/StatusTag'
+import { WindowChips, Pager } from '@/components/ListWindow'
+import {
+  DEFAULT_WINDOW,
+  PAGE_SIZE,
+  filterByWindow,
+  paginate,
+  parsePageParam,
+  parseWindowParam,
+} from '@/lib/listWindow'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
@@ -191,6 +200,77 @@ function deriveProjectsTileData({
   }
 }
 
+// 🆕 חלון-הזמן + הדפדוף המשותפים לשתי הלשוניות (04/09/2026, הכרעת-ישי) — מחוץ לקומפוננטה
+// מאותה סיבה בדיוק כמו deriveProjectsTileData שמעליי: כל התנאים כאן (חלון → סינון-קיים →
+// מיון → דפדוף, `src/CLAUDE.md`) הם גזירה טהורה בלי תלות ב-state, ומרוכזים כאן כדי
+// ש-CustomerDetailsPage עצמה לא תיפול על סף-המורכבות-הקוגניטיבית (sonarjs).
+function deriveWindowedListsState({
+  quotes,
+  projects,
+  windowKey,
+  today,
+  tab,
+  canViewProjects,
+  showControls,
+  statusFilter,
+  searchText,
+  sortKey,
+  vatRate,
+  projectsShowControls,
+  projectSearchText,
+  pageParam,
+}) {
+  // חלון-ההצעות: מוני-הלשונית (badge + צ'יפי-הסטטוס) סופרים **בתוך** החלון — אותו כלל
+  // בדיוק כמו הספירה-בתוך-החיפוש שכבר הייתה כאן, ואותה מוסכמה כמו מסך-הניהול של מודול 3.
+  const windowedQuotes = filterByWindow(quotes, (q) => q.estimated_event_date, windowKey, today)
+  const counts = {
+    all: windowedQuotes.length,
+    in_progress: windowedQuotes.filter((q) => q.quote_status === 'in_progress').length,
+    approved: windowedQuotes.filter((q) => q.quote_status === 'approved').length,
+    rejected: windowedQuotes.filter((q) => q.quote_status === 'rejected').length,
+  }
+  function applyQuoteRowFilters(list) {
+    return list.filter((q) => {
+      if (!showControls) return true
+      if (statusFilter !== 'all' && q.quote_status !== statusFilter) return false
+      return matchesQuoteFilters(q, { text: searchText })
+    })
+  }
+  const filteredQuotes = applyQuoteRowFilters(windowedQuotes)
+  // "עוד N מחוץ לחלון" — שורות שעונות ללשונית+לסינון הקיים ורק החלון מסתיר אותן.
+  const quotesHiddenByWindow = applyQuoteRowFilters(quotes).length - filteredQuotes.length
+  // המשווה עצמו חי ב-`sortQuotes` (src/lib/quotes.js) ונבדק שם — אותו קוד בדיוק שמסך-הניהול
+  // משתמש בו, כדי ששני המסכים לא יוכלו לסדר את אותן הצעות בסדר שונה.
+  const visibleQuotes =
+    sortKey === 'recent'
+      ? filteredQuotes
+      : sortQuotes(filteredQuotes, sortKey, { defaultVatRate: vatRate })
+  const quotesPagination = paginate(visibleQuotes, pageParam, PAGE_SIZE)
+
+  // חלון-הפרויקטים: אותו רעיון. tabCount (badge הלשונית) נגזר מהחלון ולא מכל ההיסטוריה.
+  const windowedProjects = filterByWindow(projects, (p) => p.final_event_date, windowKey, today)
+  const projectsTabCount = canViewProjects ? windowedProjects.length : '—'
+  // החיפוש בלשונית-הפרויקטים הוא פר-לשונית (`matchesProjectSearch`) ומחושב כאן ולא בתוך
+  // ProjectsTabContent, כדי ש-WindowChips היחיד שמעל שתי הלשוניות יידע להציג את "עוד N
+  // מחוץ לחלון" הנכון גם כשהלשונית הפעילה היא 'projects'.
+  function applyProjectRowFilters(list) {
+    return projectsShowControls
+      ? list.filter((p) => matchesProjectSearch(p, projectSearchText))
+      : list
+  }
+  const projectsHiddenByWindow =
+    applyProjectRowFilters(projects).length - applyProjectRowFilters(windowedProjects).length
+
+  return {
+    counts,
+    visibleQuotes,
+    quotesPagination,
+    windowedProjects,
+    projectsTabCount,
+    hiddenByWindow: tab === 'projects' ? projectsHiddenByWindow : quotesHiddenByWindow,
+  }
+}
+
 // 🆕 טעינת לשונית-הפרויקטים — מחוץ לקומפוננטה (מורכבות-קוגניטיבית, sonarjs) ומחוץ ל-effect
 // (כך שהיא לא זקוקה לגישה ל-state; הקורא מחליט מה לעשות עם התוצאה). `projects: null`
 // מסמן כשל (השאירי את הרשימה הישנה כמות שהיא; מסך-השגיאה מכסה אותה ממילא) ולעולם לא
@@ -277,6 +357,10 @@ export default function CustomerDetailsPage() {
   const [searchText, setSearchText] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [sortKey, setSortKey] = useState('recent')
+  // חלון-הזמן + הדפדוף חיים בכתובת (`?window=&page=`), לא ב-state — אותה מוסכמה כמו
+  // CustomersPage.jsx ומסך-הניהול של מודול 3 (הכרעת-ישי 04/09/2026). שתי הלשוניות חולקות
+  // חלון אחד וטופס-עמוד אחד: מעבר-לשונית הוא בעצמו "שינוי-מסנן" ומאפס את העמוד ל-1.
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [editOpen, setEditOpen] = useState(false)
   const [documentQuote, setDocumentQuote] = useState(null)
@@ -284,6 +368,45 @@ export default function CustomerDetailsPage() {
   const [rejectTarget, setRejectTarget] = useState(null)
 
   const numericId = Number(customerId)
+
+  const windowKey = parseWindowParam(searchParams.get('window'))
+  const pageParam = parsePageParam(searchParams.get('page'))
+
+  function stripPage(sp) {
+    const next = new URLSearchParams(sp)
+    next.delete('page')
+    return next
+  }
+
+  // כל שינוי לשונית/חיפוש/מסנן/חלון מאפס את העמוד ל-1 (אותו כלל כמו מסך-הניהול של
+  // מודול 3) — אחרת דפדוף עמוק בלשונית אחת נשאר תקוע כשעוברים ללשונית או לחיפוש אחר.
+  function resetPage() {
+    setSearchParams((prev) => stripPage(prev), { replace: true })
+  }
+
+  function goToPage(next) {
+    setSearchParams(
+      (prev) => {
+        const p = new URLSearchParams(prev)
+        if (next <= 1) p.delete('page')
+        else p.set('page', String(next))
+        return p
+      },
+      { replace: true },
+    )
+  }
+
+  function handleWindowChange(key) {
+    setSearchParams(
+      (prev) => {
+        const p = stripPage(prev)
+        if (key === DEFAULT_WINDOW) p.delete('window')
+        else p.set('window', key)
+        return p
+      },
+      { replace: true },
+    )
+  }
 
   async function handleApprove() {
     await approveQuote(approveTarget.quote_id)
@@ -406,22 +529,15 @@ export default function CustomerDetailsPage() {
     )
   }
 
-  const counts = {
-    all: quotes.length,
-    in_progress: quotes.filter((q) => q.quote_status === 'in_progress').length,
-    approved: quotes.filter((q) => q.quote_status === 'approved').length,
-    rejected: quotes.filter((q) => q.quote_status === 'rejected').length,
-  }
   const showControls = quotes.length > CONTROLS_THRESHOLD
+  const projectsShowControls = projects.length > CONTROLS_THRESHOLD
 
   // 🆕 שני אריחי-המדד שמ6 מחבר (③.2) — `null` (ולא 0/תאריך מזויף) כל עוד הנתון אינו ידוע
   // בביטחון: אין הרשאה · עדיין נטען · טעינה נכשלה. "אין נתונים עדיין" עדיף על שקר.
+  // ⚠️ eventStats/lastEvent נשארים על **כל** ההיסטוריה (לא בתוך החלון) — הם מדדי-לקוח
+  // מצטברים ("מספר אירועים", "אירוע אחרון"), לא רשימה שהחלון אמור לקצר.
   const dormantThresholdDays = Number(params[DORMANT_THRESHOLD_PARAM_NAME])
-  const {
-    tabCount: projectsTabCount,
-    eventStats,
-    lastEvent: lastEventDisplay,
-  } = deriveProjectsTileData({
+  const { eventStats, lastEvent: lastEventDisplay } = deriveProjectsTileData({
     canView: canViewProjects,
     loading: projectsLoading,
     error: projectsError,
@@ -430,19 +546,33 @@ export default function CustomerDetailsPage() {
     dormantThresholdDays,
   })
   const revenueSub = revenueTileSub(metrics, eventStats?.cancelledCount)
-  // ⚠️ כשהפקדים מוסתרים הם גם **לא מסננים** — מסנן דלוק בלי פקד נראה שמסביר אותו מעלים
-  // שורות בלי סיבה גלויה (אותה מלכודת שתועדה במסך-הניהול).
-  const filteredQuotes = quotes.filter((q) => {
-    if (!showControls) return true
-    if (statusFilter !== 'all' && q.quote_status !== statusFilter) return false
-    return matchesQuoteFilters(q, { text: searchText })
+
+  // חלון-הזמן+הדפדוף חושבים מחוץ לקומפוננטה (`deriveWindowedListsState`, מתחת) — אותה
+  // סיבה כמו `deriveProjectsTileData`: ריכוז המורכבות-הקוגניטיבית של כל התנאים האלה
+  // בפונקציה טהורה אחת, כדי ש-CustomerDetailsPage עצמה תישאר קריאה (sonarjs).
+  const {
+    counts,
+    visibleQuotes,
+    quotesPagination,
+    windowedProjects,
+    projectsTabCount,
+    hiddenByWindow,
+  } = deriveWindowedListsState({
+    quotes,
+    projects,
+    windowKey,
+    today,
+    tab,
+    canViewProjects,
+    showControls,
+    statusFilter,
+    searchText,
+    sortKey,
+    vatRate,
+    projectsShowControls,
+    projectSearchText,
+    pageParam,
   })
-  // המשווה עצמו חי ב-`sortQuotes` (src/lib/quotes.js) ונבדק שם — אותו קוד בדיוק שמסך-הניהול
-  // משתמש בו, כדי ששני המסכים לא יוכלו לסדר את אותן הצעות בסדר שונה.
-  const visibleQuotes =
-    sortKey === 'recent'
-      ? filteredQuotes
-      : sortQuotes(filteredQuotes, sortKey, { defaultVatRate: vatRate })
 
   return (
     <div className="flex flex-col gap-4">
@@ -611,13 +741,26 @@ export default function CustomerDetailsPage() {
           </div>
         )}
 
+        {/* חלון-הזמן — מופע יחיד מעל שתי הלשוניות (הכרעת-ישי 04/09/2026): שתיהן מציגות
+            היסטוריה שגדלה, וחלון אחד שחל על שתיהן חוסך מהמשתמש ללמוד שני פקדים זהים. */}
+        <div className="px-6 pt-4">
+          <WindowChips
+            value={windowKey}
+            onChange={handleWindowChange}
+            hiddenCount={hiddenByWindow}
+          />
+        </div>
+
         {/* ---- לשוניות ---- */}
         <div className="flex border-b border-slate-200 px-6">
           <Tab
             label="הצעות מחיר"
             count={counts.all}
             active={tab === 'quotes'}
-            onClick={() => setTab('quotes')}
+            onClick={() => {
+              setTab('quotes')
+              resetPage()
+            }}
             testId="customer-tab-quotes"
           />
           <Tab
@@ -625,7 +768,10 @@ export default function CustomerDetailsPage() {
             label="פרויקטים"
             count={projectsTabCount}
             active={tab === 'projects'}
-            onClick={() => setTab('projects')}
+            onClick={() => {
+              setTab('projects')
+              resetPage()
+            }}
             testId="customer-tab-projects"
           />
         </div>
@@ -637,11 +783,16 @@ export default function CustomerDetailsPage() {
               loading={projectsLoading}
               error={projectsError}
               onRetry={() => setProjectsReloadTick((t) => t + 1)}
-              projects={projects}
+              projects={windowedProjects}
               today={today}
               vatRate={vatRate}
               searchText={projectSearchText}
-              onSearchTextChange={setProjectSearchText}
+              onSearchTextChange={(value) => {
+                setProjectSearchText(value)
+                resetPage()
+              }}
+              page={pageParam}
+              onPage={goToPage}
             />
           ) : quotes.length === 0 ? (
             <p className="text-center text-sm text-slate-400 py-8" data-testid="customer-no-quotes">
@@ -665,7 +816,10 @@ export default function CustomerDetailsPage() {
                   <input
                     type="search"
                     value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
+                    onChange={(e) => {
+                      setSearchText(e.target.value)
+                      resetPage()
+                    }}
                     placeholder="חיפוש לפי שם אירוע"
                     data-testid="customer-quotes-search"
                     className="h-9 w-64 rounded-lg border border-slate-200 px-3 text-sm text-slate-700"
@@ -679,7 +833,10 @@ export default function CustomerDetailsPage() {
                     <button
                       key={key}
                       type="button"
-                      onClick={() => setStatusFilter(key)}
+                      onClick={() => {
+                        setStatusFilter(key)
+                        resetPage()
+                      }}
                       aria-pressed={statusFilter === key}
                       data-testid={`customer-quotes-chip-${key}`}
                       className={cn(
@@ -713,128 +870,144 @@ export default function CustomerDetailsPage() {
               {visibleQuotes.length === 0 ? (
                 <p className="text-center text-sm text-slate-400 py-8">אין הצעות התואמות לסינון</p>
               ) : (
-                <div
-                  className={cn(
-                    'rounded-xl border border-slate-100',
-                    showControls && 'max-h-[340px] overflow-y-auto',
-                  )}
-                >
-                  <table className="w-full">
-                    <thead>
-                      <tr className="text-xs text-slate-500">
-                        <th className="text-right font-medium py-2.5 px-3">תאריך אירוע</th>
-                        <th className="text-right font-medium py-2.5 px-3">שם האירוע</th>
-                        <th className="text-right font-medium py-2.5 px-3">סכום</th>
-                        <th className="text-right font-medium py-2.5 px-3">סטטוס</th>
-                        <th className="py-2.5 px-3" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {visibleQuotes.map((quote) => {
-                        const pill = statusPill(quote)
-                        const { total, discountPercent } = deriveQuoteAmount(quote, vatRate)
-                        const isOpen = quote.quote_status === 'in_progress'
-                        return (
-                          <tr
-                            key={quote.quote_id}
-                            className="border-t border-slate-100"
-                            data-testid={`customer-quote-${quote.quote_id}`}
-                          >
-                            {/* ⚠️ אותו formatDate שמסך-הניהול וה-PDF ללקוח משתמשים בו.
+                <>
+                  <div
+                    className={cn(
+                      'rounded-xl border border-slate-100',
+                      showControls && 'max-h-[340px] overflow-y-auto',
+                    )}
+                  >
+                    <table className="w-full">
+                      <thead>
+                        <tr className="text-xs text-slate-500">
+                          <th className="text-right font-medium py-2.5 px-3">תאריך אירוע</th>
+                          <th className="text-right font-medium py-2.5 px-3">שם האירוע</th>
+                          <th className="text-right font-medium py-2.5 px-3">סכום</th>
+                          <th className="text-right font-medium py-2.5 px-3">סטטוס</th>
+                          <th className="py-2.5 px-3" />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {quotesPagination.pageRows.map((quote) => {
+                          const pill = statusPill(quote)
+                          const { total, discountPercent } = deriveQuoteAmount(quote, vatRate)
+                          const isOpen = quote.quote_status === 'in_progress'
+                          return (
+                            <tr
+                              key={quote.quote_id}
+                              className="border-t border-slate-100"
+                              data-testid={`customer-quote-${quote.quote_id}`}
+                            >
+                              {/* ⚠️ אותו formatDate שמסך-הניהול וה-PDF ללקוח משתמשים בו.
                                 תאריך ISO גולמי ('2026-10-25') נראה תקין אבל הוא פורמט אחר
                                 מהמסמך שהלקוח מקבל — ושני פורמטים לאותו תאריך באותה מערכת
                                 הם בדיוק סוג חוסר-האחידות שמעבר-האחידות נועד לתפוס. */}
-                            <td className="py-2.5 px-3 text-sm text-slate-600 text-right" dir="ltr">
-                              {formatDate(quote.estimated_event_date)}
-                            </td>
-                            <td className="py-2.5 px-3">
-                              <div className="text-sm font-medium text-slate-700">
-                                {quote.event_name}
-                              </div>
-                              {discountPercent > 0 && (
-                                <div className="text-[11.5px] text-slate-500">
-                                  אחרי {discountPercent}% הנחה
+                              <td
+                                className="py-2.5 px-3 text-sm text-slate-600 text-right"
+                                dir="ltr"
+                              >
+                                {formatDate(quote.estimated_event_date)}
+                              </td>
+                              <td className="py-2.5 px-3">
+                                <div className="text-sm font-medium text-slate-700">
+                                  {quote.event_name}
                                 </div>
-                              )}
-                              {/* סיבת-הדחייה **חייבת** להיות כאן: כפתור-העין פותח את ה-PDF,
+                                {discountPercent > 0 && (
+                                  <div className="text-[11.5px] text-slate-500">
+                                    אחרי {discountPercent}% הנחה
+                                  </div>
+                                )}
+                                {/* סיבת-הדחייה **חייבת** להיות כאן: כפתור-העין פותח את ה-PDF,
                                   שהוא המסמך שהלקוח מקבל — ואין בו (ונכון שאין) סיבת-דחייה.
                                   יוצא-דופן 'פג תוקף': התגית האפורה "פגה" כבר אומרת זאת,
                                   ושורה מתחתיה הייתה אותו מידע פעמיים. */}
-                              {quote.quote_status === 'rejected' &&
-                                quote.rejection_reason &&
-                                quote.rejection_reason !== EXPIRED_REASON && (
-                                  <div className="text-[11.5px] text-slate-500">
-                                    סיבת דחייה: {quote.rejection_reason}
+                                {quote.quote_status === 'rejected' &&
+                                  quote.rejection_reason &&
+                                  quote.rejection_reason !== EXPIRED_REASON && (
+                                    <div className="text-[11.5px] text-slate-500">
+                                      סיבת דחייה: {quote.rejection_reason}
+                                    </div>
+                                  )}
+                                {/* כן/לא בלי תאריך (LOCAL-16) — ורק על הצעה פתוחה, שבה זו עדיין
+                                  פעולה שאפשר לעשות. על הצעה סגורה זו כבר לא שאלה פתוחה. */}
+                                {sentIds && isOpen && !sentIds.has(quote.quote_id) && (
+                                  <div className="text-[11.5px] text-amber-600">
+                                    טרם נשלחה ללקוח
                                   </div>
                                 )}
-                              {/* כן/לא בלי תאריך (LOCAL-16) — ורק על הצעה פתוחה, שבה זו עדיין
-                                  פעולה שאפשר לעשות. על הצעה סגורה זו כבר לא שאלה פתוחה. */}
-                              {sentIds && isOpen && !sentIds.has(quote.quote_id) && (
-                                <div className="text-[11.5px] text-amber-600">טרם נשלחה ללקוח</div>
-                              )}
-                              {sentIds?.has(quote.quote_id) && (
-                                <div className="text-[11.5px] text-teal-700">נשלחה ללקוח</div>
-                              )}
-                            </td>
-                            <td className="py-2.5 px-3 text-sm text-slate-700">
-                              {total == null ? '—' : <Money amount={total} />}
-                            </td>
-                            <td className="py-2.5 px-3">
-                              <span
-                                className={cn(
-                                  'inline-block rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold',
-                                  pill.className,
+                                {sentIds?.has(quote.quote_id) && (
+                                  <div className="text-[11.5px] text-teal-700">נשלחה ללקוח</div>
                                 )}
-                              >
-                                {pill.label}
-                              </span>
-                            </td>
-                            <td className="py-2.5 px-3">
-                              <div className="flex gap-1.5 justify-start">
-                                {canEditQuotes && isOpen && (
-                                  <RowAction
-                                    title={QUOTE_ACTION_LABELS.edit}
-                                    onClick={() => navigate(`/quotes/${quote.quote_id}/edit`)}
-                                    testId={`customer-quote-edit-${quote.quote_id}`}
-                                  >
-                                    <Pencil className="size-4" />
-                                  </RowAction>
-                                )}
-                                <RowAction
-                                  title={QUOTE_ACTION_LABELS.view}
-                                  onClick={() => setDocumentQuote(quote)}
-                                  testId={`customer-quote-document-${quote.quote_id}`}
+                              </td>
+                              <td className="py-2.5 px-3 text-sm text-slate-700">
+                                {total == null ? '—' : <Money amount={total} />}
+                              </td>
+                              <td className="py-2.5 px-3">
+                                <span
+                                  className={cn(
+                                    'inline-block rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold',
+                                    pill.className,
+                                  )}
                                 >
-                                  <Eye className="size-4" />
-                                </RowAction>
-                                {canEditQuotes && isOpen && (
-                                  <>
+                                  {pill.label}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3">
+                                <div className="flex gap-1.5 justify-start">
+                                  {canEditQuotes && isOpen && (
                                     <RowAction
-                                      title={QUOTE_ACTION_LABELS.approve}
-                                      tone="approve"
-                                      onClick={() => setApproveTarget(quote)}
-                                      testId={`customer-quote-approve-${quote.quote_id}`}
+                                      title={QUOTE_ACTION_LABELS.edit}
+                                      onClick={() => navigate(`/quotes/${quote.quote_id}/edit`)}
+                                      testId={`customer-quote-edit-${quote.quote_id}`}
                                     >
-                                      <Check className="size-4" />
+                                      <Pencil className="size-4" />
                                     </RowAction>
-                                    <RowAction
-                                      title={QUOTE_ACTION_LABELS.reject}
-                                      tone="reject"
-                                      onClick={() => setRejectTarget(quote)}
-                                      testId={`customer-quote-reject-${quote.quote_id}`}
-                                    >
-                                      <X className="size-4" />
-                                    </RowAction>
-                                  </>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                                  )}
+                                  <RowAction
+                                    title={QUOTE_ACTION_LABELS.view}
+                                    onClick={() => setDocumentQuote(quote)}
+                                    testId={`customer-quote-document-${quote.quote_id}`}
+                                  >
+                                    <Eye className="size-4" />
+                                  </RowAction>
+                                  {canEditQuotes && isOpen && (
+                                    <>
+                                      <RowAction
+                                        title={QUOTE_ACTION_LABELS.approve}
+                                        tone="approve"
+                                        onClick={() => setApproveTarget(quote)}
+                                        testId={`customer-quote-approve-${quote.quote_id}`}
+                                      >
+                                        <Check className="size-4" />
+                                      </RowAction>
+                                      <RowAction
+                                        title={QUOTE_ACTION_LABELS.reject}
+                                        tone="reject"
+                                        onClick={() => setRejectTarget(quote)}
+                                        testId={`customer-quote-reject-${quote.quote_id}`}
+                                      >
+                                        <X className="size-4" />
+                                      </RowAction>
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <Pager
+                    page={quotesPagination.page}
+                    pageCount={quotesPagination.pageCount}
+                    from={quotesPagination.from}
+                    to={quotesPagination.to}
+                    total={quotesPagination.total}
+                    onPage={goToPage}
+                    testId="customer-quotes-pager"
+                  />
+                </>
               )}
             </>
           )}
@@ -910,6 +1083,8 @@ function ProjectsTabContent({
   vatRate,
   searchText,
   onSearchTextChange,
+  page,
+  onPage,
 }) {
   // 🔒 אין הרשאה — לא "אין פרויקטים". נבדק ראשון, לפני טעינה/שגיאה: מי שחסום לא ממתין
   // לתשובת-רשת כדי לגלות שאין לו הרשאה (screens-approved ⑤).
@@ -970,7 +1145,11 @@ function ProjectsTabContent({
   const filtered = showControls
     ? projects.filter((proj) => matchesProjectSearch(proj, searchText))
     : projects
-  const { upcoming, happened } = splitCustomerProjectsByTimeline(filtered, today)
+  // ⚠️ הדפדוף חל על הרשימה הממוזגת (לפני הפיצול ל"מתקרבים"/"התקיימו") ולא על כל קטע
+  // בנפרד — אחרת "עמוד 2" היה אומר משהו שונה בכל קטע. המשמעות: קטע יכול להציג רק חלק
+  // מהשורות שלו בעמוד נתון; "N מתוך M" ב-Pager מתאר את הרשימה כולה, לא קטע בודד.
+  const projectsPagination = paginate(filtered, page, PAGE_SIZE)
+  const { upcoming, happened } = splitCustomerProjectsByTimeline(projectsPagination.pageRows, today)
 
   return (
     <div className="flex flex-col gap-4">
@@ -1024,6 +1203,15 @@ function ProjectsTabContent({
               vatRate={vatRate}
             />
           )}
+          <Pager
+            page={projectsPagination.page}
+            pageCount={projectsPagination.pageCount}
+            from={projectsPagination.from}
+            to={projectsPagination.to}
+            total={projectsPagination.total}
+            onPage={onPage}
+            testId="customer-projects-pager"
+          />
         </>
       )}
     </div>

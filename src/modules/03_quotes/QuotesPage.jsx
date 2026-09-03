@@ -10,17 +10,26 @@
 // המסננים והמיון הם **כולם צד-לקוח**, בדיוק כמו מסך הלקוחות של מודול 2.
 
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CalendarDays, Check, Eye, Pencil, Search, X } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
+import { WindowChips, Pager } from '@/components/ListWindow'
 import Money from '@/components/Money'
 import RowAction from '@/components/RowAction'
 import StatTile from '@/components/StatTile'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
+import {
+  DEFAULT_WINDOW,
+  PAGE_SIZE,
+  filterByWindow,
+  paginate,
+  parsePageParam,
+  parseWindowParam,
+} from '@/lib/listWindow'
 import {
   QUOTE_ACTION_LABELS,
   QUOTE_REJECTED_TOAST,
@@ -122,6 +131,9 @@ export default function QuotesPage() {
   const toast = useToast()
   const navigate = useNavigate()
   const canEdit = permissions['הצעות מחיר'] === 'edit'
+  // חלון-הזמן והדפדוף חיים בכתובת (`?window=&page=`), לא ב-state — אותה מוסכמה כמו
+  // CustomersPage.jsx: כך רשימה מסוננת+מדופדפת היא קישור שאפשר לשמור, ו"חזור" לא מאפס אותם.
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
@@ -201,6 +213,46 @@ export default function QuotesPage() {
     setReloadTick((t) => t + 1)
   }
 
+  const windowKey = parseWindowParam(searchParams.get('window'))
+  const pageParam = parsePageParam(searchParams.get('page'))
+
+  function stripPage(sp) {
+    const next = new URLSearchParams(sp)
+    next.delete('page')
+    return next
+  }
+
+  // כל שינוי טאב/חיפוש/מסנן מאפס את העמוד ל-1 (הכרעת-ישי 04/09/2026) — אחרת לחיצה על
+  // לשונית/צ'יפ אחרי דפדוף עמוקה הייתה משאירה "עמוד 4" על רשימה מסוננת שיש בה עמוד אחד,
+  // ומציגה טבלה ריקה בלי שום הסבר.
+  function resetPage() {
+    setSearchParams((prev) => stripPage(prev), { replace: true })
+  }
+
+  function goToPage(next) {
+    setSearchParams(
+      (prev) => {
+        const p = new URLSearchParams(prev)
+        if (next <= 1) p.delete('page')
+        else p.set('page', String(next))
+        return p
+      },
+      { replace: true },
+    )
+  }
+
+  function handleWindowChange(key) {
+    setSearchParams(
+      (prev) => {
+        const p = stripPage(prev)
+        if (key === DEFAULT_WINDOW) p.delete('window')
+        else p.set('window', key)
+        return p
+      },
+      { replace: true },
+    )
+  }
+
   const vatRate = parseVatPercent(params[QUOTE_SCREEN_PARAM_NAMES.vatPercent])
   const validityDays = params[QUOTE_SCREEN_PARAM_NAMES.validityDays]
   const eventWarningDays = params[QUOTE_SCREEN_PARAM_NAMES.eventWarningDays]
@@ -248,10 +300,24 @@ export default function QuotesPage() {
     eventDateTo: eventDateTo || undefined,
   }
   const baseRows = quotes.filter((q) => matchesQuoteFilters(q, baseFilters, ctx))
-  const tabRows = baseRows.filter((q) => {
-    const status = TABS.find((t) => t.key === tab)?.status
-    return !status || q.quote_status === status
-  })
+  // חלון-הזמן חוסם רק את העבר (`src/lib/listWindow.js`) — הוא מופעל **אחרי** החיפוש/הלקוח/
+  // טווח-התאריכים הקיימים, ולפני הלשונית: כך מוני-הלשוניות (למטה) סופרים בתוך החלון, בדיוק
+  // כמו שהם כבר סופרים בתוך החיפוש (מעבר-האחידות, הכרעת-ישי 04/09/2026).
+  const windowedBaseRows = filterByWindow(
+    baseRows,
+    (q) => q.estimated_event_date,
+    windowKey,
+    todayIso,
+  )
+  const currentTabStatus = TABS.find((t) => t.key === tab)?.status
+  const tabRowsIgnoringWindow = baseRows.filter(
+    (q) => !currentTabStatus || q.quote_status === currentTabStatus,
+  )
+  const tabRows = windowedBaseRows.filter(
+    (q) => !currentTabStatus || q.quote_status === currentTabStatus,
+  )
+  // "עוד N מחוץ לחלון" — שורות שעונות על הלשונית+הסינון הקיים ורק החלון מסתיר אותן.
+  const hiddenByWindow = tabRowsIgnoringWindow.length - tabRows.length
 
   const expiringCount = tabRows.filter(
     (q) => deriveQuoteExpiry(q, validityDays, todayIso, expiringSoonDays)?.isExpiringSoon,
@@ -284,6 +350,7 @@ export default function QuotesPage() {
     sortKey,
     ctx,
   )
+  const { pageRows, page, pageCount, from, to, total } = paginate(visibleRows, pageParam, PAGE_SIZE)
 
   const rejectionBreakdown = tab === 'rejected' ? countRejectionReasons(tabRows) : []
 
@@ -388,13 +455,20 @@ export default function QuotesPage() {
             נפסלה ע"י ישי: "נראית כמו מסננים, לא כמו לשוניות". */}
         <div className="flex items-center gap-1 border-b border-slate-200 -mx-4 px-4 mb-3">
           {TABS.map((t) => {
-            const count = baseRows.filter((q) => !t.status || q.quote_status === t.status).length
+            // המונה נספר בתוך החלון (windowedBaseRows) לא בתוך כל ההצעות — אותו כלל
+            // בדיוק כמו הספירה-בתוך-החיפוש שכבר הייתה כאן.
+            const count = windowedBaseRows.filter(
+              (q) => !t.status || q.quote_status === t.status,
+            ).length
             const active = tab === t.key
             return (
               <button
                 key={t.key}
                 type="button"
-                onClick={() => setTab(t.key)}
+                onClick={() => {
+                  setTab(t.key)
+                  resetPage()
+                }}
                 data-testid={`quotes-tab-${t.key}`}
                 className={cn(
                   'flex items-center gap-2 px-4 py-3 text-sm border-b-2 -mb-px transition-colors',
@@ -437,7 +511,10 @@ export default function QuotesPage() {
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
             <Input
               value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
+              onChange={(e) => {
+                setSearchText(e.target.value)
+                resetPage()
+              }}
               placeholder="חיפוש לקוח או אירוע..."
               className="h-auto py-2 pr-9 pl-3 text-right rounded-lg border-slate-300 text-sm"
               data-testid="quotes-search"
@@ -446,7 +523,10 @@ export default function QuotesPage() {
 
           <select
             value={customerId}
-            onChange={(e) => setCustomerId(e.target.value)}
+            onChange={(e) => {
+              setCustomerId(e.target.value)
+              resetPage()
+            }}
             className="h-[38px] max-w-[8.5rem] shrink-0 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-700"
             aria-label="סינון לפי לקוח"
             data-testid="quotes-customer-filter"
@@ -505,7 +585,10 @@ export default function QuotesPage() {
                 label="פג בקרוב"
                 count={expiringCount}
                 active={expiringSoon}
-                onToggle={() => setExpiringSoon((v) => !v)}
+                onToggle={() => {
+                  setExpiringSoon((v) => !v)
+                  resetPage()
+                }}
                 testId="quotes-chip-expiring"
               />
             )}
@@ -517,11 +600,24 @@ export default function QuotesPage() {
                 label="אירועים קרובים"
                 count={eventSoonCount}
                 active={eventSoon}
-                onToggle={() => setEventSoon((v) => !v)}
+                onToggle={() => {
+                  setEventSoon((v) => !v)
+                  resetPage()
+                }}
                 testId="quotes-chip-event-soon"
               />
             )}
           </div>
+        </div>
+
+        {/* חלון-הזמן — שורה עצמאית מתחת לשורת-הסינון (הרחבת השורה הקיימת נמדדה שוברת אותה,
+            ר' ההערה למעלה על 1,174px בתוך 960px). מציג-ומאפס עמוד יחד (הכרעת-ישי 04/09/2026). */}
+        <div className="mb-3">
+          <WindowChips
+            value={windowKey}
+            onChange={handleWindowChange}
+            hiddenCount={hiddenByWindow}
+          />
         </div>
 
         {showDateFilter && (
@@ -534,7 +630,10 @@ export default function QuotesPage() {
             <input
               type="date"
               value={eventDateFrom}
-              onChange={(e) => setEventDateFrom(e.target.value)}
+              onChange={(e) => {
+                setEventDateFrom(e.target.value)
+                resetPage()
+              }}
               aria-label="תאריך אירוע מ-"
               className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs"
               data-testid="quotes-event-from"
@@ -543,7 +642,10 @@ export default function QuotesPage() {
             <input
               type="date"
               value={eventDateTo}
-              onChange={(e) => setEventDateTo(e.target.value)}
+              onChange={(e) => {
+                setEventDateTo(e.target.value)
+                resetPage()
+              }}
               aria-label="תאריך אירוע עד"
               className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs"
               data-testid="quotes-event-to"
@@ -554,6 +656,7 @@ export default function QuotesPage() {
                 onClick={() => {
                   setEventDateFrom('')
                   setEventDateTo('')
+                  resetPage()
                 }}
                 className="text-xs text-slate-500 underline"
                 data-testid="quotes-date-clear"
@@ -619,7 +722,7 @@ export default function QuotesPage() {
                 </tr>
               </thead>
               <tbody>
-                {visibleRows.map((quote) => {
+                {pageRows.map((quote) => {
                   const { total, discountPercent } = deriveQuoteAmount(quote, vatRate)
                   const expiry = deriveQuoteExpiry(quote, validityDays, todayIso, expiringSoonDays)
                   const pill = STATUS_PILL[quote.quote_status]
@@ -777,6 +880,16 @@ export default function QuotesPage() {
             </table>
           </div>
         )}
+        {/* Pager מציג-את-עצמו-ומסתיר-את-עצמו (total===0 ⇒ null) — אין צורך לשכפל את בדיקת
+            visibleRows.length שכבר קבעה איזה ענף מעליי הוצג. */}
+        <Pager
+          page={page}
+          pageCount={pageCount}
+          from={from}
+          to={to}
+          total={total}
+          onPage={goToPage}
+        />
       </div>
 
       <QuoteDocumentDialog

@@ -274,8 +274,10 @@ describe('לשונית-פרויקטים — רדום + מבוטל-עתידי + "
     const tag = within(cancelledRow).getByText('בוטל')
     expect(tag.className).toContain('border-dashed')
 
-    // מונה-הלשונית מציג את המספר האמיתי (יש הרשאה) — לא '—'.
-    expect(within(screen.getByTestId('customer-tab-projects')).getByText('2')).toBeInTheDocument()
+    // 🆕 מונה-הלשונית נספר **בתוך חלון-הזמן** (ברירת-מחדל 90 יום, הכרעת-ישי 04/09/2026) —
+    // ולכן הוא "1" ולא "2": פרויקט 301 (150 יום אחורה) מחוץ לחלון, בעוד אריח "מספר אירועים"
+    // שמעליי (metric-event-count) ממשיך לספור את כל ההיסטוריה — שני מדדים שונים בכוונה.
+    expect(within(screen.getByTestId('customer-tab-projects')).getByText('1')).toBeInTheDocument()
   })
 })
 

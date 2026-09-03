@@ -18,6 +18,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import FinancePage from './FinancePage'
 import { listFinanceOverview } from './api'
 import { getParamValue } from '@/modules/06_projects/closingApi'
@@ -165,8 +166,10 @@ const RESOLVED_CANCELLED = overviewRow({
 // 🔬 סדר-הקלט מעורבב בכוונה — אחרת בדיקת-הפילוח הייתה מאשרת את סדר-הקליטה.
 const BOARD = [P15, P12, RESOLVED_CANCELLED, P13, P14]
 
-async function renderPage() {
-  const view = render(<FinancePage />)
+async function renderPage(url = '/finance') {
+  const view = render(<FinancePage />, {
+    wrapper: ({ children }) => <MemoryRouter initialEntries={[url]}>{children}</MemoryRouter>,
+  })
   await screen.findByTestId('finance-table')
   return view
 }
@@ -199,7 +202,7 @@ describe('S1 — שלד, לשוניות ומונים', () => {
         release = () => resolve(BOARD)
       }),
     )
-    render(<FinancePage />)
+    render(<FinancePage />, { wrapper: MemoryRouter })
     expect(screen.getByTestId('skeleton-table')).toBeInTheDocument()
     release()
     expect(await screen.findByTestId('finance-table')).toBeInTheDocument()
@@ -488,7 +491,7 @@ describe('S1 — מצבי-הריק והשגיאה, בסדר-הענפים של ה
     listFinanceOverview.mockRejectedValue(
       rpcError('42501', 'אין לך הרשאה לבצע פעולה זו במודול כספים'),
     )
-    render(<FinancePage />)
+    render(<FinancePage />, { wrapper: MemoryRouter })
     const blocked = await screen.findByTestId('finance-no-permission')
     expect(blocked).toHaveTextContent('אין לך הרשאה לצפות בנתוני הכספים.')
     expect(screen.getByTestId('finance-tab-awaiting_invoice')).toHaveTextContent('—')
@@ -498,7 +501,7 @@ describe('S1 — מצבי-הריק והשגיאה, בסדר-הענפים של ה
 
   it('② תקלת-טעינה: מסך-שגיאה עם "נסי שוב", ו"נסי שוב" באמת טוען מחדש', async () => {
     listFinanceOverview.mockRejectedValueOnce(new Error('Failed to fetch'))
-    render(<FinancePage />)
+    render(<FinancePage />, { wrapper: MemoryRouter })
     await screen.findByTestId('finance-error')
     expect(screen.getByText('לא ניתן לטעון את הנתונים.')).toBeInTheDocument()
 
@@ -513,14 +516,14 @@ describe('S1 — מצבי-הריק והשגיאה, בסדר-הענפים של ה
     const drifted = { ...P15 }
     delete drifted.final_profit
     listFinanceOverview.mockResolvedValue([drifted])
-    render(<FinancePage />)
+    render(<FinancePage />, { wrapper: MemoryRouter })
     const error = await screen.findByTestId('finance-error')
     expect(error).toHaveTextContent('חסרים שדות בשורות מסך הכספים: final_profit.')
   })
 
   it('③ ריק-אמיתי: לשונית בלי שורות ובלי סינון פעיל מקבלת משפט משלה, לא "נקי סינון"', async () => {
     listFinanceOverview.mockResolvedValue([P13])
-    render(<FinancePage />)
+    render(<FinancePage />, { wrapper: MemoryRouter })
     await screen.findByTestId('finance-empty-tab')
     expect(screen.getByTestId('finance-empty-tab')).toHaveTextContent('אין פרויקט שממתין לתשלום')
     expect(screen.queryByTestId('finance-empty-clear-filter')).not.toBeInTheDocument()
@@ -528,7 +531,7 @@ describe('S1 — מצבי-הריק והשגיאה, בסדר-הענפים של ה
 
   it('ציון-משוב מחוץ ל-1–5 אינו נופל בשקט לאפור — הוא מפיל את המסך בקול', async () => {
     listFinanceOverview.mockResolvedValue([{ ...P13, feedback_score: 9 }])
-    render(<FinancePage />)
+    render(<FinancePage />, { wrapper: MemoryRouter })
     expect(await screen.findByTestId('finance-error')).toHaveTextContent('ציון משוב לא חוקי: 9')
   })
 
@@ -537,7 +540,7 @@ describe('S1 — מצבי-הריק והשגיאה, בסדר-הענפים של ה
   // נצבעות ואילו שמירות נחסמות, ו-"—" אינו מצב אפשרי עבורו.
   it('🔴 שורת `סף_שביעות_רצון` חסרה ⇒ מסך-שגיאה, ולא טבלה בלי סימוני-בירור', async () => {
     getParamValues.mockRejectedValueOnce(new Error('הפרמטר "סף_שביעות_רצון" חסר בהגדרות המערכת.'))
-    render(<FinancePage />)
+    render(<FinancePage />, { wrapper: MemoryRouter })
     await screen.findByTestId('finance-error')
     expect(screen.queryByTestId('finance-table')).not.toBeInTheDocument()
   })
@@ -627,20 +630,20 @@ describe('S1 — רצועת-הסיכום ("ממתין לגבייה" / "באיח�
   it('🔤 מונה-התיקים בעברית תקינה בשלוש הצורות (1 · 2 · 3)', async () => {
     const openOne = { ...P12, written_off: false }
     listFinanceOverview.mockResolvedValue([openOne])
-    const one = render(<FinancePage />)
+    const one = render(<FinancePage />, { wrapper: MemoryRouter })
     await screen.findByTestId('finance-summary-open')
     expect(screen.getByTestId('finance-summary-open')).toHaveTextContent('תיק אחד בטיפול')
     expect(screen.getByTestId('finance-summary-open')).not.toHaveTextContent('1 תיקים')
     one.unmount()
 
     listFinanceOverview.mockResolvedValue([P12, P15])
-    const two = render(<FinancePage />)
+    const two = render(<FinancePage />, { wrapper: MemoryRouter })
     await screen.findByTestId('finance-summary-open')
     expect(screen.getByTestId('finance-summary-open')).toHaveTextContent('שני תיקים בטיפול')
     two.unmount()
 
     listFinanceOverview.mockResolvedValue(BOARD)
-    render(<FinancePage />)
+    render(<FinancePage />, { wrapper: MemoryRouter })
     await screen.findByTestId('finance-summary-open')
     expect(screen.getByTestId('finance-summary-open')).toHaveTextContent('3 תיקים בטיפול')
   })
@@ -649,7 +652,7 @@ describe('S1 — רצועת-הסיכום ("ממתין לגבייה" / "באיח�
     // #13 בלבד — הסתיים, שולם, ארוכב. 0 כאן הוא עובדה נמדדת (אין אף תיק בלשוניות ①/②),
     // ולכן שונה במפורש מ"לא ידוע" (הבדיקה הבאה) — StatTile מבדיל ביניהם רק דרך emptyText.
     listFinanceOverview.mockResolvedValue([P13])
-    render(<FinancePage />)
+    render(<FinancePage />, { wrapper: MemoryRouter })
     await screen.findByTestId('finance-empty-tab')
     expect(screen.getByTestId('finance-summary-open')).toHaveTextContent('0 ₪')
     expect(screen.getByTestId('finance-summary-open')).toHaveTextContent(
@@ -664,7 +667,7 @@ describe('S1 — רצועת-הסיכום ("ממתין לגבייה" / "באיח�
     // לפי הלשונית בלבד (בלי לבדוק `written_off`), 5,985 ₪ "אבודים" היו נספרים כפתוחים —
     // בדיוק המספר שהמנהלת לא אמורה לרדוף אחריו יותר.
     listFinanceOverview.mockResolvedValue([{ ...P15, written_off: true }])
-    render(<FinancePage />)
+    render(<FinancePage />, { wrapper: MemoryRouter })
     await screen.findByTestId('finance-table')
     expect(screen.getByTestId('finance-summary-open')).toHaveTextContent('0 ₪')
     expect(screen.getByTestId('finance-summary-open')).toHaveTextContent(
@@ -679,7 +682,7 @@ describe('S1 — רצועת-הסיכום ("ממתין לגבייה" / "באיח�
     // #14 יושב בלשונית "ממתין לחשבונית", והלשונית שנפתחת כברירת-מחדל היא "ממתין לתשלום"
     // (ריקה כאן) — ולכן ממתינים לאריחים עצמם, לא לטבלה.
     listFinanceOverview.mockResolvedValue([P14])
-    render(<FinancePage />)
+    render(<FinancePage />, { wrapper: MemoryRouter })
     await screen.findByTestId('finance-empty-tab')
     const open = screen.getByTestId('finance-summary-open')
     expect(open).toHaveTextContent('לא ידוע — דמי-ביטול טרם נקבעו')
@@ -699,7 +702,7 @@ describe('S1 — רצועת-הסיכום ("ממתין לגבייה" / "באיח�
         release = () => resolve(BOARD)
       }),
     )
-    render(<FinancePage />)
+    render(<FinancePage />, { wrapper: MemoryRouter })
     expect(screen.queryByTestId('finance-summary-open')).not.toBeInTheDocument()
     release()
     await screen.findByTestId('finance-table')
@@ -708,14 +711,14 @@ describe('S1 — רצועת-הסיכום ("ממתין לגבייה" / "באיח�
 
   it('לא מוצג בחוסר-הרשאה — אריח "0" על תיק חסום היה נקרא כ"אין חוב"', async () => {
     listFinanceOverview.mockRejectedValue(rpcError('42501', 'אין לך הרשאה'))
-    render(<FinancePage />)
+    render(<FinancePage />, { wrapper: MemoryRouter })
     await screen.findByTestId('finance-no-permission')
     expect(screen.queryByTestId('finance-summary-open')).not.toBeInTheDocument()
   })
 
   it('לא מוצג בתקלת-טעינה — אין נתונים לסכם', async () => {
     listFinanceOverview.mockRejectedValue(new Error('Failed to fetch'))
-    render(<FinancePage />)
+    render(<FinancePage />, { wrapper: MemoryRouter })
     await screen.findByTestId('finance-error')
     expect(screen.queryByTestId('finance-summary-open')).not.toBeInTheDocument()
   })
@@ -912,5 +915,88 @@ describe('S1 — מיון ברירת-המחדל פר-לשונית (A-10)', () =>
       expect(th.querySelector('button')).toBeNull()
       expect(th).not.toHaveAttribute('aria-sort')
     }
+  })
+})
+
+// 🕐 חלון-הזמן + דפדוף (הכרעת-ישי 04/09/2026). ‏"תאריך-האירוע" של שורת-כספים הוא
+// ‏`rowDateIso(row, tab)` — אותו שדה שהלשונית כבר מציגה ושמסנני מ-/עד כבר פועלים עליו —
+// כי ל-`get_finance_overview` אין עמודת `final_event_date` כלל (ר' ההערה ב-`FinancePage.jsx`).
+describe('S1 — חלון-זמן (04/09/2026)', () => {
+  it('ברירת-המחדל (90d) מסתירה שורה עם חשבונית ישנה; "הכול" (חלון) מציג אותה', async () => {
+    const old = overviewRow({
+      project_id: 51,
+      event_name: 'חוב ותיק מ-2025',
+      project_status: 'awaiting_payment',
+      tab: 'awaiting_payment',
+      revenue: '1000.00',
+      invoice_sent: true,
+      invoice_sent_at: '2025-01-01T09:00:00Z', // הרבה מעבר ל-90 יום לפני 15/10/2026
+    })
+    listFinanceOverview.mockResolvedValue([old, P15])
+    await renderPage()
+    expect(screen.queryByTestId('finance-row-51')).not.toBeInTheDocument()
+    expect(screen.getByTestId('finance-row-15')).toBeInTheDocument()
+    expect(screen.getByTestId('list-window-hidden')).toHaveTextContent('עוד 1 מחוץ לחלון')
+
+    fireEvent.click(screen.getByTestId('list-window-all'))
+    expect(await screen.findByTestId('finance-row-51')).toBeInTheDocument()
+    expect(screen.queryByTestId('list-window-hidden')).not.toBeInTheDocument()
+  })
+
+  it('מונה-הלשונית סופר בתוך החלון — לא את כל השורות שבמסד', async () => {
+    const old = overviewRow({
+      project_id: 52,
+      event_name: 'חוב ותיק נוסף',
+      project_status: 'awaiting_payment',
+      tab: 'awaiting_payment',
+      revenue: '1000.00',
+      invoice_sent: true,
+      invoice_sent_at: '2025-01-01T09:00:00Z',
+    })
+    listFinanceOverview.mockResolvedValue([old, P15])
+    await renderPage()
+    // רק #15 בתוך החלון — המונה על הלשונית מדווח 1, לא 2.
+    expect(screen.getByTestId('finance-tab-awaiting_payment')).toHaveTextContent('ממתין לתשלום1')
+  })
+})
+
+describe('S1 — דפדוף (04/09/2026)', () => {
+  function manyAwaitingPayment(count) {
+    return Array.from({ length: count }, (_, i) =>
+      overviewRow({
+        project_id: 300 + i,
+        event_name: `תיק ${i}`,
+        project_status: 'awaiting_payment',
+        tab: 'awaiting_payment',
+        revenue: '100.00',
+        invoice_sent: true,
+        invoice_sent_at: '2026-10-10T09:00:00Z', // בתוך החלון, כולן
+      }),
+    )
+  }
+
+  it('60 שורות מוצגות בעמודים של 50, והמונה בעמוד השני הוא 51–60 מתוך 60', async () => {
+    listFinanceOverview.mockResolvedValue(manyAwaitingPayment(60))
+    await renderPage('/finance?page=2')
+    expect(screen.getAllByTestId(/^finance-row-/)).toHaveLength(10)
+    expect(screen.getByTestId('list-pager-range')).toHaveTextContent('51–60 מתוך 60')
+    expect(screen.getByTestId('list-pager-page')).toHaveTextContent('2/2')
+  })
+
+  it('החלפת-לשונית מאפסת את העמוד ל-1', async () => {
+    listFinanceOverview.mockResolvedValue([...manyAwaitingPayment(60), P12])
+    await renderPage('/finance?page=2')
+    expect(screen.getByTestId('list-pager-page')).toHaveTextContent('2/2')
+
+    // מעבר ל"ממתין לחשבונית" (עמוד אחד בלבד, #12) ובחזרה ל"ממתין לתשלום" — העמוד חוזר ל-1,
+    // לא נשאר על ה-offset של עמוד 2 הקודם.
+    fireEvent.click(screen.getByTestId('finance-tab-awaiting_invoice'))
+    await screen.findByTestId('finance-row-12')
+    expect(screen.queryByTestId('list-pager-page')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByTestId('finance-tab-awaiting_payment'))
+    await screen.findByTestId('finance-table')
+    expect(screen.getByTestId('list-pager-page')).toHaveTextContent('1/2')
+    expect(screen.getAllByTestId(/^finance-row-/)).toHaveLength(50)
   })
 })
