@@ -66,6 +66,16 @@ async function renderPane(props = {}) {
   )
   // ממתינים לאפקט-הטעינה של המונה-החי כדי שעדכון-state אחרי הבדיקה לא ידלוף (act warning).
   await waitFor(() => expect(countAttendanceRows).toHaveBeenCalled())
+  // 🔴 **ולא מספיק ש**נקראה** — צריך שה-state שלה כבר נחת** (03/09/2026, נתפס ב-CI).
+  // ההמתנה למעלה מסתיימת ברגע שהפונקציה הופעלה, בעוד שהערך מגיע רק ב-microtask הבא —
+  // ולכן שלוש הבדיקות שקוראות את שורת-הנוכחות היו **מרוץ**: על רץ עמוס הן מקבלות
+  // "טוען נתוני נוכחות…" במקום הנוסח הסופי. **נמדד, לא שוער:** אותו commit בדיוק
+  // (`ad35bb0`) עבר בריצת-CI אחת ונפל באחרת. ⚠️ `queryBy` ולא `getBy`, ו-`?? ''` —
+  // כדי שבדיקה שמרנדרת בלי שורת-האמינות לא תתלה כאן על אלמנט שלא אמור להתקיים.
+  await waitFor(() => {
+    const note = screen.queryByTestId('settings-smartmatch-attendance-note')
+    expect(note?.textContent ?? '').not.toBe('טוען נתוני נוכחות…')
+  })
   return { ...utils, onChange }
 }
 
