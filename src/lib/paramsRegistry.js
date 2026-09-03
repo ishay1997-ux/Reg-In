@@ -396,6 +396,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'ימים',
     min: 1,
+    // שנתיים — לקוחות שעושים כנס פעם בשנה יכולים לחזור אחרי יותר משנה, ולכן 365 היה עלול לחסום בחירה עסקית לגיטימית
+    max: 730,
     group: 'control_alerts',
   },
   {
@@ -687,6 +689,8 @@ export const PARAM_REGISTRY = [
     kind: 'int',
     unit: 'שבועות',
     min: 1,
+    // שנתיים בשבועות — מגן-הקלדה בלבד, באותו סולם כמו 20 התקרות האחרות
+    max: 104,
     group: 'smart_match',
   },
   {
