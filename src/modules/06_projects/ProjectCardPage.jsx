@@ -46,6 +46,7 @@ import {
   cardLogisticsTileSub,
   CANCEL_TYPE_LABELS,
 } from '@/lib/projectCard'
+import { scoreTag } from '@/lib/projectFinance'
 import {
   getProject,
   listProjectsOverview,
@@ -580,15 +581,63 @@ function IdentityCard({
             אין שדה-עריכה ואין כוכבים לחיצים — במכוון. */}
         <Cell label="משוב הלקוח" testId="project-cell-feedback">
           {feedback.kind === 'score' ? (
-            <>
-              <Val>
-                {/* ספרה ואז כוכב, מבודד — בלי הבידוד ה-bidi הופך ל-"★ 5" (RatingStars). */}
-                <Ltr>{`${feedback.score} ★`}</Ltr>
-              </Val>
-              {feedback.reason && <Sub>{feedback.reason}</Sub>}
-              {feedback.positiveReason && <Sub>{feedback.positiveReason}</Sub>}
-              {feedback.notes && <Sub>{feedback.notes}</Sub>}
-            </>
+            (() => {
+              const tag = scoreTag(feedback.score)
+              const negReasons =
+                feedback.negativeReasons?.length > 0
+                  ? feedback.negativeReasons
+                  : feedback.reason
+                    ? [feedback.reason]
+                    : []
+              const posReasons =
+                feedback.positiveReasons?.length > 0
+                  ? feedback.positiveReasons
+                  : feedback.positiveReason
+                    ? [feedback.positiveReason]
+                    : []
+              return (
+                <div className="flex flex-col items-start gap-1 pt-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <Val className="text-sm font-bold">
+                      <Ltr>{`${feedback.score} ★`}</Ltr>
+                    </Val>
+                    {tag && <StatusTag label={tag.label} tone={tag.tone} />}
+                  </div>
+
+                  {negReasons.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {negReasons.map((r, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-800 border border-amber-200"
+                        >
+                          {r}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {posReasons.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {posReasons.map((r, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800 border border-emerald-200"
+                        >
+                          {r}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {feedback.notes && (
+                    <div className="mt-0.5 rounded border-r-2 border-slate-300 bg-slate-50 px-2 py-1 text-[11.5px] italic text-slate-700">
+                      "{feedback.notes}"
+                    </div>
+                  )}
+                </div>
+              )
+            })()
           ) : (
             <>
               <Val empty={feedback.kind === 'empty'}>{feedback.value}</Val>
