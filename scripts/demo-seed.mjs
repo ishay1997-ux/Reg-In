@@ -298,11 +298,24 @@ function makeEventWriter({ db, plan, record, customerIds, hostessIds, catalog })
           : {
               p_project_id: projectId,
               p_score: project.feedback.score,
-              p_reason: project.feedback.reason,
+              p_reason: project.feedback.negativeReason ?? project.feedback.reason ?? null,
               p_notes: project.feedback.notes,
               p_mark_no_response: false,
+              p_reasons:
+                project.feedback.negativeReasons ??
+                (project.feedback.reason ? [project.feedback.reason] : []),
             },
       )
+      if (!project.feedback.noResponse && project.feedback.positiveReasons?.length) {
+        await db.update(
+          'projects',
+          {
+            positive_feedback_reasons: project.feedback.positiveReasons,
+            positive_feedback_reason: project.feedback.positiveReasons[0] ?? null,
+          },
+          { project_id: projectId },
+        )
+      }
     }
     if (project.invoice) {
       await db.rpc('record_invoice_sent', {

@@ -39,6 +39,8 @@ import {
   LANGUAGES,
   LAST_NAMES,
   LAST_NAMES_ASCII,
+  SEED_FEEDBACK_NEGATIVE_REASONS,
+  SEED_FEEDBACK_POSITIVE_REASONS,
   STREETS,
   VENUES,
 } from './names.mjs'
@@ -835,9 +837,20 @@ function buildFeedback(rng, customer) {
   if (rng.chance(0.2)) return { noResponse: true }
   if (customer.role === 'lowFeedback') {
     const score = rng.pick([1, 2, 2, 3])
+    const count = rng.weighted([
+      { weight: 6, value: 1 },
+      { weight: 3, value: 2 },
+      { weight: 1, value: 3 },
+    ])
+    const negativeReasons = rng.shuffle(SEED_FEEDBACK_NEGATIVE_REASONS).slice(0, count)
     return {
       score,
-      reason: score < 3 ? rng.pick(['איחור דיילות', 'תפקוד דיילות', 'ניהול לקוי']) : null,
+      negativeReasons,
+      negativeReason: negativeReasons[0] ?? null,
+      positiveReasons: [],
+      positiveReason: null,
+      reason: negativeReasons[0] ?? null,
+      reasons: negativeReasons,
       notes: rng.pick(FEEDBACK_NOTES.low),
     }
   }
@@ -847,12 +860,50 @@ function buildFeedback(rng, customer) {
     { weight: 1.2, value: 3 },
     { weight: 0.25, value: 2 },
   ])
+
+  if (score >= 4) {
+    const count =
+      score === 5
+        ? rng.weighted([
+            { weight: 1.5, value: 0 },
+            { weight: 5, value: 1 },
+            { weight: 2.5, value: 2 },
+            { weight: 1, value: 3 },
+          ])
+        : rng.weighted([
+            { weight: 2.5, value: 0 },
+            { weight: 6, value: 1 },
+            { weight: 1.5, value: 2 },
+          ])
+    const positiveReasons =
+      count > 0 ? rng.shuffle(SEED_FEEDBACK_POSITIVE_REASONS).slice(0, count) : []
+    return {
+      score,
+      positiveReasons,
+      positiveReason: positiveReasons[0] ?? null,
+      negativeReasons: [],
+      negativeReason: null,
+      reason: null,
+      notes: rng.pick(FEEDBACK_NOTES.high),
+    }
+  }
+
+  // score <= 3
+  const count = rng.weighted([
+    { weight: 6, value: 1 },
+    { weight: 3, value: 2 },
+    { weight: 1, value: 3 },
+  ])
+  const negativeReasons = rng.shuffle(SEED_FEEDBACK_NEGATIVE_REASONS).slice(0, count)
   return {
     score,
-    reason: score < 3 ? rng.pick(['איחור דיילות', 'איכות תגים']) : null,
-    notes: rng.pick(
-      score >= 4 ? FEEDBACK_NOTES.high : score === 3 ? FEEDBACK_NOTES.mid : FEEDBACK_NOTES.low,
-    ),
+    negativeReasons,
+    negativeReason: negativeReasons[0] ?? null,
+    positiveReasons: [],
+    positiveReason: null,
+    reason: negativeReasons[0] ?? null,
+    reasons: negativeReasons,
+    notes: rng.pick(score === 3 ? FEEDBACK_NOTES.mid : FEEDBACK_NOTES.low),
   }
 }
 
