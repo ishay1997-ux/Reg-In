@@ -69,7 +69,11 @@ export function eventPassedSentence(days) {
   return `התקיים לפני ${days} ימים`
 }
 
-const ALL_DONE = 'הכול סגור — אין מה לעשות'
+const CANCEL_TYPE_NAMES = {
+  customer: 'ביטול לקוח',
+  internal: 'ביטול פנימי',
+  force_majeure: 'כוח עליון',
+}
 
 // עמודת "מה חסר" (⑧): משפט במילים, לעולם לא ציון. סדר הענפים = סדר-הקדימות:
 // מצב-החיים של הפרויקט קודם, ורק בתוך המצבים הפעילים נשאלת שאלת-החוסר.
@@ -83,6 +87,7 @@ export function gapSentence(project) {
     pending_invites: pending,
     assignments_row_count: rowCount,
     confirmed_available: confirmedAvailable,
+    cancel_type: cancelType,
   } = project
 
   // מצבים שאינם של מנהלת הפרויקטים: אצל הכספים / סגורים סופית.
@@ -90,7 +95,12 @@ export function gapSentence(project) {
     return 'אצל מנהלת הכספים — אינו דורש ממך פעולה'
   }
   if (status === 'finished') return '✓ נסגר בהצלחה'
-  if (status === 'cancelled') return ALL_DONE
+  if (status === 'cancelled') {
+    if (cancelType && CANCEL_TYPE_NAMES[cancelType]) {
+      return `בוטל — ${CANCEL_TYPE_NAMES[cancelType]}`
+    }
+    return 'הפרויקט בוטל'
+  }
 
   // ממתין לסגירה: ההבחנה היא האם אי-פעם נשלח זימון — ‏#7 הוא המקרה החי של "מעולם לא".
   if (status === 'event_finished') {
@@ -102,7 +112,7 @@ export function gapSentence(project) {
   // מצבים פעילים — שאלת-החוסר עצמה.
   const staffing = staffingMetric3(confirmed, required)
   const logistics = { complete: logisticsComplete(project) }
-  if (staffing.complete && logistics.complete) return ALL_DONE
+  if (staffing.complete && logistics.complete) return '✓ מוכן לאירוע'
   if (rowCount === 0) return 'לא נשלח אף זימון — איש לא נגע בפרויקט מאז שנוצר'
 
   const gap = Math.max(required - confirmed, 0)
@@ -224,19 +234,19 @@ function gapWord(gap) {
 // אחרי מסירה/ביטול). הטון: miss (אדום) רק כשאיש לא נגע — אפס שורות שיבוץ; hint (ענבר)
 // לחוסר שיש לו מענה בדרך; done לעובדה סגורה. ‏≥ ולא = (§7.43): ‏7/6 הוא מאויש.
 export function staffingCell(project) {
-  if (
-    project.project_status === 'cancelled' ||
-    project.project_status === 'awaiting_invoice' ||
-    project.project_status === 'awaiting_payment'
-  ) {
+  if (project.project_status === 'cancelled') {
     return { hidden: true }
   }
   const required = Number(project.required_hostess_count) || 0
   const confirmed = Number(project.hostesses_confirmed) || 0
   const ratio = `${confirmed}/${required}`
 
-  // פרויקט שהסתיים — מציג את עובדת האיוש הסופית בטון רגוע (done), לעולם לא ריק או אדום
-  if (project.project_status === 'finished') {
+  // פרויקט שהסתיים או שנמסר לכספים — מציג את עובדת האיוש הסופית בטון רגוע (done), לעולם לא ריק או אדום
+  if (
+    project.project_status === 'finished' ||
+    project.project_status === 'awaiting_invoice' ||
+    project.project_status === 'awaiting_payment'
+  ) {
     if (required === 0) return { ratio: null, sub: '✓ אין דיילות', tone: 'done' }
     if (confirmed >= required) return { ratio, sub: '✓ מאויש', tone: 'done' }
     return { ratio, sub: confirmed > 0 ? `${confirmed} שובצו` : 'לא שובצו', tone: 'done' }
@@ -258,11 +268,7 @@ export function staffingCell(project) {
 // ניתן לאימות מהנתונים (פריט ordered שטרם הגיע היה הופך את המשפט לשקר). degraded-never-wrong.
 // אחרי שהאירוע עבר הטון calm — הלוגיסטיקה כבר אינה עבודה (הערת-המוקאפ בלשונית "לסגירה").
 export function logisticsCell(project) {
-  if (
-    project.project_status === 'cancelled' ||
-    project.project_status === 'awaiting_invoice' ||
-    project.project_status === 'awaiting_payment'
-  ) {
+  if (project.project_status === 'cancelled') {
     return { hidden: true }
   }
   const total = project.logistics_total ?? 0
@@ -270,8 +276,12 @@ export function logisticsCell(project) {
   if (total === 0) return { ratio: null, sub: '✓ אין פריטים', tone: 'done' }
   if (ready >= total) return { ratio: `${ready}/${total}`, sub: '✓ מוכן', tone: 'done' }
 
-  // פרויקט שהסתיים — מציג את נתוני הלוגיסטיקה שהושלמה בטון done רגוע
-  if (project.project_status === 'finished') {
+  // פרויקט שהסתיים או שנמסר לכספים — מציג את נתוני הלוגיסטיקה שהושלמה בטון done רגוע
+  if (
+    project.project_status === 'finished' ||
+    project.project_status === 'awaiting_invoice' ||
+    project.project_status === 'awaiting_payment'
+  ) {
     return { ratio: `${ready}/${total}`, sub: '✓ הושלם', tone: 'done' }
   }
 
