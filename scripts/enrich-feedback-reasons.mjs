@@ -18,13 +18,7 @@ const POSITIVE_POOL = [
   'אחר',
 ]
 
-const NEGATIVE_POOL = [
-  'איחור דיילות',
-  'תפקוד דיילות',
-  'איכות תגים',
-  'ניהול לקוי',
-  'אחר',
-]
+const NEGATIVE_POOL = ['איחור דיילות', 'תפקוד דיילות', 'איכות תגים', 'ניהול לקוי', 'אחר']
 
 async function executeSql(query) {
   const url = process.env.VITE_SUPABASE_URL
@@ -52,12 +46,25 @@ function matchPositiveFromNotes(notes) {
   if (!notes) return []
   const matches = []
   const n = notes.toLowerCase()
-  if (n.includes('מוקדם') || n.includes('בזמן') || n.includes('האורחים')) matches.push('עמידה בזמנים')
-  if (n.includes('דיילות') || n.includes('מקצועי') || n.includes('אדיב') || n.includes('צוות') || n.includes('הרישום')) {
+  if (n.includes('מוקדם') || n.includes('בזמן') || n.includes('האורחים'))
+    matches.push('עמידה בזמנים')
+  if (
+    n.includes('דיילות') ||
+    n.includes('מקצועי') ||
+    n.includes('אדיב') ||
+    n.includes('צוות') ||
+    n.includes('הרישום')
+  ) {
     matches.push('מקצועיות הדיילות')
   }
-  if (n.includes('תגים') || n.includes('ציוד') || n.includes('סרטים')) matches.push('איכות תגים וציוד')
-  if (n.includes('שירות') || n.includes('תקשורת') || n.includes('מענה') || n.includes('נשמח לעבוד')) {
+  if (n.includes('תגים') || n.includes('ציוד') || n.includes('סרטים'))
+    matches.push('איכות תגים וציוד')
+  if (
+    n.includes('שירות') ||
+    n.includes('תקשורת') ||
+    n.includes('מענה') ||
+    n.includes('נשמח לעבוד')
+  ) {
     matches.push('ניהול ותקשורת')
   }
   return matches
@@ -67,10 +74,13 @@ function matchNegativeFromNotes(notes) {
   if (!notes) return []
   const matches = []
   const n = notes.toLowerCase()
-  if (n.includes('איחרו') || n.includes('איחור') || n.includes('התעכבה') || n.includes('עיכוב')) matches.push('איחור דיילות')
-  if (n.includes('תגים') || n.includes('מוזמנים') || n.includes('טעות') || n.includes('שמות')) matches.push('איכות תגים')
+  if (n.includes('איחרו') || n.includes('איחור') || n.includes('התעכבה') || n.includes('עיכוב'))
+    matches.push('איחור דיילות')
+  if (n.includes('תגים') || n.includes('מוזמנים') || n.includes('טעות') || n.includes('שמות'))
+    matches.push('איכות תגים')
   if (n.includes('ניהל') || n.includes('מנהל') || n.includes('בלגן')) matches.push('ניהול לקוי')
-  if (n.includes('תפקוד') || n.includes('יחס') || n.includes('צוות') || n.includes('התנהגות')) matches.push('תפקוד דיילות')
+  if (n.includes('תפקוד') || n.includes('יחס') || n.includes('צוות') || n.includes('התנהגות'))
+    matches.push('תפקוד דיילות')
   return matches
 }
 
@@ -115,15 +125,15 @@ async function main() {
 
   const updates = []
   const yearlyStats = {
-    '2024': { total: 0, sum: 0, scores: [], csat: 0 },
-    '2025': { total: 0, sum: 0, scores: [], csat: 0 },
-    '2026': { total: 0, sum: 0, scores: [], csat: 0 },
+    2024: { total: 0, sum: 0, scores: [], csat: 0 },
+    2025: { total: 0, sum: 0, scores: [], csat: 0 },
+    2026: { total: 0, sum: 0, scores: [], csat: 0 },
   }
   const monthlyStats = {}
   const reasonsStats = {
     pos: {},
     neg: {},
-    negByYear: { '2024': {}, '2025': {}, '2026': {} },
+    negByYear: { 2024: {}, 2025: {}, 2026: {} },
   }
 
   for (const p of projects) {
@@ -306,7 +316,9 @@ async function main() {
       .join('\n')
 
     await executeSql(`BEGIN;\n${sqlStatements}\nCOMMIT;`)
-    console.log(`✓ עודכנה קבוצה ${Math.floor(i / BATCH_SIZE) + 1} / ${Math.ceil(updates.length / BATCH_SIZE)}`)
+    console.log(
+      `✓ עודכנה קבוצה ${Math.floor(i / BATCH_SIZE) + 1} / ${Math.ceil(updates.length / BATCH_SIZE)}`,
+    )
   }
 
   console.log('\n=============================================================')
