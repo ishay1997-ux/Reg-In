@@ -26,14 +26,33 @@ export async function fetchFeedbackPage(token) {
   return data
 }
 
-// כתיבה — הגשת המשוב. `score` הוא 1–5; `notes` רשות (`null`/מחרוזת-ריקה מותרים).
+// כתיבה — הגשת המשוב. `score` הוא 1–5; `notes`/`negativeReasons`/`positiveReasons` רשות.
 // מחזירה `{state:'ok'}` · `{state:'already'}` · `{state:'not_found'}` · `{state:'invalid'}`
 // (ציון חסר/מחוץ-לטווח — הרצפה האמיתית יושבת בשרת; הלקוח רק חוסם את כפתור-השליחה, A-1).
-export async function submitFeedback(token, score, notes) {
+export async function submitFeedback(
+  token,
+  score,
+  notes,
+  negativeReasons = [],
+  positiveReasons = [],
+) {
+  const negArray = Array.isArray(negativeReasons)
+    ? negativeReasons
+    : negativeReasons
+      ? [negativeReasons]
+      : []
+  const posArray = Array.isArray(positiveReasons)
+    ? positiveReasons
+    : positiveReasons
+      ? [positiveReasons]
+      : []
+
   const { data, error } = await supabase.rpc('submit_feedback', {
     p_token: token,
     p_score: score,
     p_notes: notes,
+    p_negative_reasons: negArray,
+    p_positive_reasons: posArray,
   })
   if (error) throw error
   return data

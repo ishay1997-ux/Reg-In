@@ -45,6 +45,49 @@
 
 ## Session Log (newest first)
 
+### 04/09/2026 ~23:35 — customer satisfaction upgraded to Multi-Select chips (public survey & finance closing dialog)
+
+**What changed:** Upgraded the customer feedback system from single-reason selection to **Multi-Select Tag Chips**, allowing customers on the public survey (`/feedback/:token`) and the finance manager in the closing dialog (`ClosingWindowDialog.jsx`) to select multiple reasons (or none), with complete backward compatibility.
+
+**Architecture & Technical Decisions:**
+- **Dual-Storage Compatibility Pattern:**
+  - Added Postgres array columns `negative_feedback_reasons text[] default '{}'` and `positive_feedback_reasons text[] default '{}'` to `projects`.
+  - Backfilled existing singular columns into arrays (`array[negative_feedback_reason]`).
+  - Symmetrical array check constraints `<@ array[...]` enforcing the approved 5-reason closed taxonomies.
+  - Auto-sync: RPCs (`submit_feedback`, `record_feedback`) automatically sync `reasons[1]` into the singular column `negative_feedback_reason` so that legacy queries and the `archive_project` gate remain 100% operational without breakage.
+- **Public Survey (`/feedback/:token`):**
+  - Upgraded state to `negativeReasons: string[]` and `positiveReasons: string[]`.
+  - Multi-select toggle chips with `aria-pressed`, active styling, and seamless switching on score changes.
+- **Finance Closing Dialog (`ClosingWindowDialog.jsx`):**
+  - Upgraded reason selection to multi-select chip buttons with backward-compatible hidden `<select>` synced to `reasons[0]`.
+  - Formatted comma-separated lists for both positive highlights and negative reasons in `LockedFeedbackCell` and `FeedbackBlock`.
+  - Updated gates (`archiveGateNote`, `feedbackGateNote`) to accept reasons arrays.
+- **Project Card (`ProjectCardPage.jsx` & `projectCard.js`):**
+  - Updated `feedbackCell` and display components to show multiple reasons separated by commas.
+- **Verification & Quality gates:**
+  - Created migration `supabase/migrations/20260904233000_feedback_multi_select_reasons.sql`.
+  - Full suite verified: 96 test suites, 2,357 tests passed (0 failed).
+  - `npm run verify` passed: ESLint 0 errors, Prettier 100% clean, Vite 8 build 0 errors.
+
+### 04/09/2026 ~23:00 — customer satisfaction survey upgraded with positive highlights and negative root-cause chips (Option B)
+
+**What changed:** Option B chosen by Ishay — progressive disclosure of structured chips on `/feedback/:token` for both high scores (4–5: strengths/highlights to preserve) and low scores (1–3: root causes). No mandatory chip selection (customer can submit rating + notes without picking a chip, avoiding friction on mobile completion rates). Symmetrical 5-option taxonomies aligned with existing DB constraint `projects_negative_feedback_reason_check` and C5 §5.8.8.
+
+**Implementation details:**
+- **Database & Migration (`supabase/migrations/20260904230000_feedback_positive_and_negative_reasons.sql`):** Added `positive_feedback_reason text` column to `projects` with `CHECK` constraint `('מקצועיות הדיילות', 'עמידה בזמנים', 'איכות תגים וציוד', 'ניהול ותקשורת', 'אחר')`. Dropped old 3-arg overload of `submit_feedback(text, integer, text)` and recreated 5-arg `submit_feedback(p_token, p_score, p_notes, p_negative_reason, p_positive_reason)` with server-side validation and mutual clearing (score $\le 3$ clears positive; score $\ge 4$ clears negative). Updated `get_project_finance_detail(integer)` table return type to include `positive_feedback_reason`.
+- **Frontend library (`src/lib/feedback.js` & `feedback.test.js`):** Exported `FEEDBACK_NEGATIVE_REASONS`, `FEEDBACK_POSITIVE_REASONS`, and `sanitizeReasons(score, negativeReason, positiveReason)`. 14 unit tests covering sanitation and taxonomy conformance.
+- **Public survey page (`src/modules/08_finance/PublicFeedbackPage.jsx` & tests):** Mobile-friendly chip group with touch targets $\ge 40\text{px}$, `aria-pressed`, toggle selection, score-threshold auto-switch, and integration in `publicApi.submitFeedback`. 19 tests verifying all chip interaction permutations.
+- **Closing dialog (`src/modules/08_finance/ClosingWindowDialog.jsx`):** Replaced hardcoded negative list with shared constant. Added display of customer's positive highlight in `LockedFeedbackCell` and `FeedbackBlock`. All 84 dialog tests pass.
+- **Project Card (`src/lib/projectCard.js` & `src/modules/06_projects/ProjectCardPage.jsx`):** Included `positiveReason` in `feedbackCell` return object and rendered customer's positive highlight in `project-cell-feedback` under the star rating. 27 unit tests and 21 page tests pass.
+
+**Verification & Quality gates:**
+`npm run verify` passed exit 0:
+- `npm run lint`: 0 errors, 0 warnings.
+- `npm run format:check`: all files formatted.
+- `npm run test:run`: 96 test files, **2,354 passed (100%)**, 0 failed.
+- `npm run build`: Vite build finished with exit 0.
+- `npm run dup`, `npm run deadcode`, `npm run audit`, `npm run check:bidi`, `npm run check:context`, `npm run check:docs-structure`: all passed with 0 findings.
+
 ### 04/09/2026 ~00:0X – 00:45 — long lists get one time-window + pager everywhere *(session `reg-in-53`, continued after the seed)*
 
 **Ishay looked at the finance screen on the seeded ledger and asked two things:** is 5% cancellations plausible (yes — 41/823, 33 customer · 5 other · 3 force-majeure, kept), and what is customary for 700-row lists. Recommendation given with world anchors (Monday · Asana · HubSpot · bookkeeping tools): a default time window + search + 25–50 rows per page with a counter, never infinite scroll on a work table. **His ruling: build it per the recommendation, and keep it consistent across the system** — then *"שלח כמה סוכני סונאט"*.

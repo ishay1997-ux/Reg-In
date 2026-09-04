@@ -119,6 +119,7 @@ export function feedbackCell(project) {
       score: project.feedback_score,
       // הסיבה מוצגת רק כשהיא קיימת (C5 §5.6.14 מחייב אותה בציון < 3) — תא קבוע-וריק הוא רעש.
       reason: project.negative_feedback_reason ?? null,
+      positiveReason: project.positive_feedback_reason ?? null,
       notes: project.feedback_notes ?? null,
     }
   }
