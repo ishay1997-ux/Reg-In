@@ -239,16 +239,20 @@ export async function recordPayment(projectId, paymentDate) {
 // שער-הארכוב). שער ה-<3 (סיבה חובה) נאכף במסד ולא כאן — הוא חייב לחול גם על מסלולים אחרים.
 export async function recordFeedback(
   projectId,
-  { score = null, reason = null, notes = null, markNoResponse = false } = {},
+  { score = null, reason = null, reasons = [], notes = null, markNoResponse = false } = {},
 ) {
+  const reasonsArray =
+    Array.isArray(reasons) && reasons.length > 0 ? reasons : reason ? [reason] : []
+
   return callWriteRpc(
     'record_feedback',
     {
       p_project_id: projectId,
       p_score: score,
-      p_reason: reason,
+      p_reason: reasonsArray[0] ?? reason,
       p_notes: notes,
       p_mark_no_response: markNoResponse,
+      p_reasons: reasonsArray,
     },
     'שמירת המשוב נכשלה.',
   )

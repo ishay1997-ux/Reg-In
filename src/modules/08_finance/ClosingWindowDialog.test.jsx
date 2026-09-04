@@ -704,6 +704,7 @@ describe('בלוק-המשוב', () => {
       expect(recordFeedback).toHaveBeenCalledWith(12, {
         score: 4,
         reason: null,
+        reasons: [],
         notes: 'הדיילת הגיעה לא-מוכנה; תועדה שיחת-בירור.',
       }),
     )
@@ -1309,6 +1310,7 @@ describe('מחיקת הערת-משוב', () => {
       expect(recordFeedback).toHaveBeenCalledWith(12, {
         score: 2,
         reason: 'תפקוד דיילות',
+        reasons: ['תפקוד דיילות'],
         notes: '',
       }),
     )
@@ -1325,8 +1327,58 @@ describe('מחיקת הערת-משוב', () => {
       expect(recordFeedback).toHaveBeenCalledWith(12, {
         score: 2,
         reason: 'תפקוד דיילות',
+        reasons: ['תפקוד דיילות'],
         notes: 'שיחת-בירור בוצעה',
       }),
     )
+  })
+})
+
+describe('בחירה מרובה של סיבות משוב (Multi-Select Chips)', () => {
+  it('מאפשר בחירה של מספר סיבות במקביל ושליחתן ל-record_feedback', async () => {
+    recordFeedback.mockResolvedValue({ ok: true })
+    getFinanceDetail.mockResolvedValue(
+      detailRow({
+        feedback_score: 2,
+        negative_feedback_reason: 'תפקוד דיילות',
+        negative_feedback_reasons: ['תפקוד דיילות'],
+      }),
+    )
+    await renderLoaded()
+
+    // הסיבה הקיימת נבחרה כצ'יפ פעיל
+    const chefChip = screen.getByTestId('closing-feedback-reason-תפקוד דיילות')
+    expect(chefChip).toHaveAttribute('aria-pressed', 'true')
+
+    // לחיצה על צ'יפ נוסף מסמנת אותו
+    const lateChip = screen.getByTestId('closing-feedback-reason-איחור דיילות')
+    expect(lateChip).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(lateChip)
+    expect(lateChip).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(screen.getByTestId('closing-save-status'))
+    await waitFor(() =>
+      expect(recordFeedback).toHaveBeenCalledWith(12, {
+        score: 2,
+        reason: 'תפקוד דיילות',
+        reasons: ['תפקוד דיילות', 'איחור דיילות'],
+        notes: 'הדיילת הגיעה לא-מוכנה; תועדה שיחת-בירור.',
+      }),
+    )
+  })
+
+  it('מציג הדגשים לשימור מרובים שהלקוח ציין', async () => {
+    getFinanceDetail.mockResolvedValue(
+      detailRow({
+        feedback_score: 5,
+        feedback_status: 'completed',
+        negative_feedback_reason: null,
+        negative_feedback_reasons: [],
+        positive_feedback_reasons: ['עמידה בזמנים', 'שירות מעולה'],
+      }),
+    )
+    await renderLoaded()
+    const posElem = screen.getByTestId('closing-feedback-positive-reason')
+    expect(posElem).toHaveTextContent('עמידה בזמנים, שירות מעולה')
   })
 })

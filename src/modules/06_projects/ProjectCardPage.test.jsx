@@ -69,6 +69,7 @@ function projectRow(overrides) {
     feedback_status: 'not_sent',
     feedback_score: null,
     negative_feedback_reason: null,
+    positive_feedback_reason: null,
     feedback_notes: null,
     cancel_reason: null,
     cancel_type: null,
@@ -469,5 +470,21 @@ describe('ProjectCardPage — מצבי טעינה/כשל/לא-נמצא', () => {
     renderPage()
     expect(await screen.findByText('הפרויקט לא נמצא')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'חזרה למבט-העל →' })).toBeInTheDocument()
+  })
+
+  it('משוב לקוח עם ציון גבוה וסיבה חיובית — מוצגים הציון והסיבה', async () => {
+    getProject.mockResolvedValue(
+      projectRow({
+        feedback_status: 'completed',
+        feedback_score: 5,
+        positive_feedback_reason: 'מקצועיות הדיילות',
+        feedback_notes: 'אירוע מושלם',
+      }),
+    )
+    renderPage()
+    const cell = await screen.findByTestId('project-cell-feedback')
+    expect(cell).toHaveTextContent('5 ★')
+    expect(cell).toHaveTextContent('מקצועיות הדיילות')
+    expect(cell).toHaveTextContent('אירוע מושלם')
   })
 })

@@ -638,6 +638,26 @@ describe('פעולות-הכתיבה (RPC)', () => {
       p_reason: null,
       p_notes: null,
       p_mark_no_response: true,
+      p_reasons: [],
+    })
+  })
+
+  it('recordFeedback שולחת ציון, מערך סיבות ואת הסיבה הראשונה לתאימות לאחור', async () => {
+    routeRpc({
+      record_feedback: { data: { ok: true, feedback_status: 'completed' }, error: null },
+    })
+    await recordFeedback(12, {
+      score: 2,
+      reasons: ['איחור דיילות', 'תפקוד דיילות'],
+      notes: 'בירור טלפוני',
+    })
+    expect(mocks.rpc).toHaveBeenCalledWith('record_feedback', {
+      p_project_id: 12,
+      p_score: 2,
+      p_reason: 'איחור דיילות',
+      p_notes: 'בירור טלפוני',
+      p_mark_no_response: false,
+      p_reasons: ['איחור דיילות', 'תפקוד דיילות'],
     })
   })
 

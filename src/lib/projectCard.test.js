@@ -130,9 +130,16 @@ describe('feedbackCell — ארבעה ניסוחים + S-22', () => {
       feedback_status: 'completed',
       feedback_score: 5,
       negative_feedback_reason: null,
+      positive_feedback_reason: 'מקצועיות הדיילות',
       feedback_notes: 'שירות מצוין',
     })
-    expect(cell).toEqual({ kind: 'score', score: 5, reason: null, notes: 'שירות מצוין' })
+    expect(cell).toEqual({
+      kind: 'score',
+      score: 5,
+      reason: null,
+      positiveReason: 'מקצועיות הדיילות',
+      notes: 'שירות מצוין',
+    })
   })
 
   it('🔴 S-22: completed עם ציון NULL — שורה חוקית בסכמה, נוסח משלה ולא ציון-רפאים', () => {

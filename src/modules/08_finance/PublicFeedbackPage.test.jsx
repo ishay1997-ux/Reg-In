@@ -182,7 +182,7 @@ describe('PublicFeedbackPage — הגשה', () => {
     await waitFor(() =>
       expect(screen.getByTestId(`feedback-result-${FEEDBACK_STATE.thankYou}`)).toBeInTheDocument(),
     )
-    expect(submitFeedback).toHaveBeenCalledWith('tok-15', 4, 'היה נהדר')
+    expect(submitFeedback).toHaveBeenCalledWith('tok-15', 4, 'היה נהדר', [], [])
     expect(screen.getByText('תודה שלקחתם רגע לספר לנו איך היה!')).toBeInTheDocument()
   })
 
@@ -231,5 +231,110 @@ describe('PublicFeedbackPage — הגשה', () => {
     expect(
       screen.queryByTestId(`feedback-result-${FEEDBACK_STATE.thankYou}`),
     ).not.toBeInTheDocument()
+  })
+})
+
+describe("PublicFeedbackPage — צ'יפים לשיפור ולשימור (Progressive Chips)", () => {
+  async function openForm() {
+    fetchFeedbackPage.mockResolvedValue({
+      state: 'ok',
+      event_name: 'ערב השקה — קמפוס צפון',
+      event_date: '2026-09-07',
+    })
+    renderPage()
+    await waitFor(() => expect(screen.getByTestId('feedback-form')).toBeInTheDocument())
+  }
+
+  it("לפני בחירת כוכב — מקטע הצ'יפים אינו מופיע כלל", async () => {
+    await openForm()
+    expect(screen.queryByTestId('feedback-chips-section')).not.toBeInTheDocument()
+  })
+
+  it('בציון נמוך (1–3) — מופיעות סיבות לשיפור', async () => {
+    await openForm()
+    fireEvent.click(star(2))
+
+    expect(screen.getByTestId('feedback-chips-section')).toBeInTheDocument()
+    expect(screen.getByText('במה נוכל להשתפר? (אפשר לסמן יותר מאחד)')).toBeInTheDocument()
+    expect(screen.getByTestId('feedback-chip-איחור דיילות')).toBeInTheDocument()
+    expect(screen.getByTestId('feedback-chip-תפקוד דיילות')).toBeInTheDocument()
+  })
+
+  it('בציון גבוה (4–5) — מופיעים הדגשים לשימור', async () => {
+    await openForm()
+    fireEvent.click(star(5))
+
+    expect(screen.getByTestId('feedback-chips-section')).toBeInTheDocument()
+    expect(screen.getByText('מה בלט לטובה? (אפשר לסמן יותר מאחד)')).toBeInTheDocument()
+    expect(screen.getByTestId('feedback-chip-מקצועיות הדיילות')).toBeInTheDocument()
+    expect(screen.getByTestId('feedback-chip-עמידה בזמנים')).toBeInTheDocument()
+  })
+
+  it("לחיצה על צ'יפ בוחרת אותו, ולחיצה חוזרת מבטלת (Toggle)", async () => {
+    await openForm()
+    fireEvent.click(star(2))
+
+    const chip = screen.getByTestId('feedback-chip-איחור דיילות')
+    expect(chip).toHaveAttribute('aria-pressed', 'false')
+
+    fireEvent.click(chip)
+    expect(chip).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(chip)
+    expect(chip).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it("מעבר מציון נמוך לציון גבוה מאפס את הבחירה השלילית ומציג צ'יפים חיוביים", async () => {
+    await openForm()
+    fireEvent.click(star(2))
+    const negChip = screen.getByTestId('feedback-chip-איחור דיילות')
+    fireEvent.click(negChip)
+    expect(negChip).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(star(5))
+    expect(screen.queryByTestId('feedback-chip-איחור דיילות')).not.toBeInTheDocument()
+    expect(screen.getByText('מה בלט לטובה? (אפשר לסמן יותר מאחד)')).toBeInTheDocument()
+  })
+
+  it("שליחה עם מספר צ'יפים שליליים מעבירה negativeReasons כמערך ל-API", async () => {
+    await openForm()
+    fireEvent.click(star(2))
+    fireEvent.click(screen.getByTestId('feedback-chip-איחור דיילות'))
+    fireEvent.click(screen.getByTestId('feedback-chip-תפקוד דיילות'))
+    submitFeedback.mockResolvedValue({ state: 'ok' })
+
+    fireEvent.click(screen.getByTestId('feedback-submit'))
+
+    await waitFor(() =>
+      expect(screen.getByTestId(`feedback-result-${FEEDBACK_STATE.thankYou}`)).toBeInTheDocument(),
+    )
+    expect(submitFeedback).toHaveBeenCalledWith(
+      'tok-15',
+      2,
+      '',
+      ['איחור דיילות', 'תפקוד דיילות'],
+      [],
+    )
+  })
+
+  it("שליחה עם מספר צ'יפים חיוביים מעבירה positiveReasons כמערך ל-API", async () => {
+    await openForm()
+    fireEvent.click(star(5))
+    fireEvent.click(screen.getByTestId('feedback-chip-מקצועיות הדיילות'))
+    fireEvent.click(screen.getByTestId('feedback-chip-עמידה בזמנים'))
+    submitFeedback.mockResolvedValue({ state: 'ok' })
+
+    fireEvent.click(screen.getByTestId('feedback-submit'))
+
+    await waitFor(() =>
+      expect(screen.getByTestId(`feedback-result-${FEEDBACK_STATE.thankYou}`)).toBeInTheDocument(),
+    )
+    expect(submitFeedback).toHaveBeenCalledWith(
+      'tok-15',
+      5,
+      '',
+      [],
+      ['מקצועיות הדיילות', 'עמידה בזמנים'],
+    )
   })
 })
