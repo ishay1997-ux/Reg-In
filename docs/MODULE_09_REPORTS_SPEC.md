@@ -592,11 +592,304 @@ ${JSON.stringify(weeklyKpis)}
 
 ### תמונת מצב תשתיתית:
 * **בסיס נתונים:** 100% מוכן ומאומת (`projects`, `customers`, `hostesses`, `assignments`, `quotes`, `quote_services`, `project_changes`, `finance_project_money`).
-* **ספריות מותקנות:** `write-excel-file` (אקסל), `@react-pdf/renderer` (PDF), `@hebcal/core` (חגים עבריים).
-* **מה חסר להתקנה/הגדרה:**
-  1. ספריית גרפים ב-React (מומלץ `recharts` או `chart.js` תואמות React 19).
-  2. קובץ מודול 09 (`src/modules/09_reports/ReportsPage.jsx`).
-  3. הגדרת משתנה סביבה `VITE_GEMINI_API_KEY` ושירות `src/lib/gemini.js`.
+* **ספריות מותקנות:** 
+  * `write-excel-file` (ייצוא אקסל תעשייתי).
+  * `@react-pdf/renderer` (ייצוא מסמכי PDF).
+  * `@hebcal/core` (זיהוי חגים ומועדים עבריים לחיזוי עונתיות).
+  * `recharts` (^3.10.1 - ספריית גרפים ווקטורית רספונסיבית).
+* **מה נותר לביצוע בפועל:**
+  1. הקמת קוד המודול בתיקיית `src/modules/10_reports/` (או `src/modules/09_reports/`) לפי הארכיטקטורה המפורטת בסעיף 9 להלן.
+  2. הגדרת משתנה סביבה `VITE_GEMINI_API_KEY` ושירות הפרומפטים `src/lib/gemini.js`.
+  3. חיבור המסך הראשי ל-`src/App.jsx` במקום ה-`UnderConstruction`.
+
+---
+
+## 9. ארכיטקטורת מימוש טכני למפתח (Technical Developer Blueprint)
+
+כדי שמפתח תוכנה יוכל לקחת מסמך זה ולבנות את המודול **מא' ועד ת' ללא צורך בהנחות, ניחושים או שאלות הבהרה**, להלן מפרט המימוש הטכני ברמת קוד, קבצים, State וממשקים.
+
+### 9.1 עץ קבצים ואחריות מודולרית (`src/modules/10_reports/`)
+
+```
+src/modules/10_reports/
+├── ReportsPage.jsx               # מסך האב: ניהול State מרכזי, סרגל סינון, ניתוב לשוניות
+├── api.js                        # שכבת שליפת הנתונים מ-Supabase (קריאות מרוכזות ומניעת N+1)
+├── selectors.js                  # מנוע חישובים טהור (Pure Functions): מודלים מתמטיים, Laplace, P&L
+├── exportUtils.js                # מחולל קבצי אקסל (write-excel-file) ודוחות להדפסה
+├── constants.js                  # קבועי מודול: הגדרת לשוניות, צבעי גרפים, מפתחות Caching
+├── components/
+│   ├── ReportsHeader.jsx         # כותרת הדוח, חותמת זמן עדכניות, כפתור רענון ופעולות ייצוא
+│   ├── FilterBar.jsx             # סרגל סינון עליון: טווח תאריכים, בחירת לקוח, חיפוש מהיר
+│   ├── TabNavigation.jsx         # 5 לשוניות הניווט (כולל סינון שקט אוטומטי מבוסס RBAC)
+│   ├── KpiCardGrid.jsx           # רשת כרטיסי המדדים המרכזיים (KPIs)
+│   ├── KpiCard.jsx               # כרטיס מדד בודד: ערך, שינוי תקופתי (דלתא), תגית סטטוס וסרגל התקדמות
+│   ├── ReportChartCard.jsx       # מעטפת סטנדרטית לגרף: כותרת, הסבר עזר, כפתור הרחבה/הורדה
+│   ├── ReportsTable.jsx          # טבלה אינטראקטיבית: מיון עמודות, קיבוע כותרת עליונה (Sticky), תגיות סטטוס
+│   ├── DrillDownDrawer.jsx       # מגירת צד (Drawer) להצגת פירוט מלא בלחיצה על פרויקט/דיילת/לקוח
+│   ├── GeminiSummaryCard.jsx     # כרטיס תובנות AI שבועי: מצב שלד (Skeleton), מטמון sessionStorage
+│   └── EmptyReportState.jsx      # תצוגה אלגנטית למצב 0 נתונים עם כפתור איפוס סינונים
+└── charts/
+    ├── RevenueExpenseChart.jsx   # גרף עמודות כפול (הכנסות מול עלויות) מבוסס Recharts
+    ├── CashflowRunwayChart.jsx   # גרף שטח (AreaChart) ליתרת תזרים וחיזוי 60 יום קדימה
+    ├── ChurnRiskHeatmap.jsx      # תצוגת סיכון נטישת לקוחות (מדרג ימי שקט מול מרווח ממוצע)
+    ├── HostessReliabilityChart.jsx # גרף אמינות שיבוץ ואי-התייצבות דיילות
+    └── ProjectMarginScatter.jsx  # תרשים פיזור רווחיות לפי גודל פרויקט
+```
+
+---
+
+### 9.2 שכבת שליפת הנתונים (`api.js`) וניהול זיכרון בדפדפן
+
+כדי למנוע עומס על בסיס הנתונים וקריאות רשת חוזרות בעת סינון נתונים, הגישה המיושמת היא **Bulk Fetching & Client-Side Aggregation**:
+
+1. **שאילתת `fetchReportsData()` מרוכזת בעליית המסך:**
+   ```javascript
+   // src/modules/10_reports/api.js
+   import { supabase } from '@/lib/supabaseClient'
+
+   export async function fetchReportsData() {
+     // שליפה מקבילה של הישויות העיקריות בשאילתות מותאמות אינדקסים
+     const [projectsRes, assignmentsRes, quotesRes, hostessesRes, customersRes] = await Promise.all([
+       supabase
+         .from('projects')
+         .select(`
+           id, project_number, name, customer_id, event_date, status, closed_at,
+           quote_id, quote_version, total_price, total_hours,
+           customers (id, name, business_type, payment_terms),
+           finance_project_money (
+             total_invoice_amount, total_paid_amount, balance_due,
+             last_payment_date, is_fully_paid, collection_status
+           ),
+           project_changes (change_cost, change_price, is_approved)
+         `),
+       supabase
+         .from('assignments')
+         .select(`
+           id, project_id, hostess_id, shift_start, shift_end,
+           actual_start, actual_end, hourly_rate, travel_payment, bonus_amount,
+           status, confirmation_status, attendance_status
+         `),
+       supabase
+         .from('quotes')
+         .select(`
+           id, project_id, customer_id, total_amount, status, created_at,
+           quote_services (service_name, quantity, unit_price, cost_estimate)
+         `),
+       supabase
+         .from('hostesses')
+         .select('id, full_name, city, phone, is_active, rating'),
+       supabase
+         .from('customers')
+         .select('id, name, created_at, business_type, default_payment_terms')
+     ])
+
+     // בדיקת תקינות ועטיפת שגיאות מסודרת
+     if (projectsRes.error) throw projectsRes.error
+     if (assignmentsRes.error) throw assignmentsRes.error
+     if (quotesRes.error) throw quotesRes.error
+
+     return {
+       projects: projectsRes.data || [],
+       assignments: assignmentsRes.data || [],
+       quotes: quotesRes.data || [],
+       hostesses: hostessesRes.data || [],
+       customers: customersRes.data || []
+     }
+   }
+   ```
+
+2. **עיבוד נתונים באמצעות Pure Functions ב-`selectors.js`:**
+   * כל 20 הדוחות והחיזויים (כולל מדד Laplace, חציון מועדי תשלום וחיזוי עונתי עברי) מחושבים כפונקציות טהורות המקבלות את הנתונים הגולמיים ואת ערכי הסינון ומחזירות מבנה נתונים מעובד לתצוגה.
+   * שימוש ב-`useMemo` ב-`ReportsPage.jsx` מבטיח זמן תגובה של <10ms בעת מעבר בין לשוניות או חיפוש חופשי, ללא פנייה לשרת.
+
+---
+
+### 9.3 ניהול State מרכזי ב-`ReportsPage.jsx`
+
+```javascript
+// מבנה ה-State הראשי במסך האב:
+const [activeTab, setActiveTab] = useState('executive') // 'executive' | 'finance' | 'projects' | 'staffing' | 'clients'
+const [dateRange, setDateRange] = useState({
+  preset: 'last_30_days', // 'last_30_days' | 'this_quarter' | 'year_to_date' | 'custom'
+  from: defaultFromDate,
+  to: defaultToDate
+})
+const [selectedCustomerId, setSelectedCustomerId] = useState(null)
+const [searchQuery, setSearchQuery] = useState('')
+const [drillDownTarget, setDrillDownTarget] = useState(null) // { type: 'project' | 'customer' | 'hostess', id: string, name: string }
+const [isRefreshing, setIsRefreshing] = useState(false)
+const [lastRefreshedAt, setLastRefreshedAt] = useState(new Date())
+```
+
+---
+
+### 9.4 חוזי ממשקים לקומפוננטות ה-UI (Component Contracts & Props)
+
+1. **`KpiCard`:**
+   ```typescript
+   interface KpiCardProps {
+     title: string               // שם המדד (למשל: "רווח גולמי תקופתי")
+     value: string | number      // ערך מעוצב (למשל: "142,500 ₪" או "94.2%")
+     subtitle?: string           // טקסט עזר משני (למשל: "מתוך 24 פרויקטים שנסגרו")
+     delta?: {
+       percent: number           // אחוז השינוי מול תקופה מקבילה (למשל: 12.4)
+       direction: 'up' | 'down'  // כיוון
+       isPositive: boolean       // האם עלייה היא חיובית עסקית (ברווח: כן; בחובות: לא)
+     }
+     progress?: {
+       current: number           // ערך נוכחי
+       target: number            // יעד
+       label: string             // תיאור היעד (למשל: "יעד רבעוני: 150,000 ₪")
+     }
+     badgeText?: string          // תגית אופציונלית (למשל: "בסיכון", "תקין")
+     badgeVariant?: 'success' | 'warning' | 'danger' | 'info'
+     onClick?: () => void        // לחיצה לפתיחת פירוט
+   }
+   ```
+
+2. **`ReportChartCard`:**
+   ```typescript
+   interface ReportChartCardProps {
+     title: string               // כותרת הגרף (למשל: "הכנסות מול עלויות ישירות לפי חודש")
+     description?: string        // הסבר מתודולוגי בלחיצה על אייקון מידע (Tooltip)
+     legendItems?: Array<{ label: string; color: string }>
+     children: React.ReactNode   // קומפוננטת הגרף של Recharts
+     onExportExcel?: () => void  // ייצוא נתוני הגרף הספציפי לגיליון אקסל
+     fullWidth?: boolean         // האם תופס 2 עמודות בגריד
+   }
+   ```
+
+3. **`ReportsTable`:**
+   ```typescript
+   interface ColumnDef {
+     key: string
+     header: string
+     align?: 'right' | 'center' | 'left'
+     sortable?: boolean
+     width?: string
+     render?: (row: any) => React.ReactNode
+   }
+
+   interface ReportsTableProps {
+     columns: ColumnDef[]
+     data: any[]
+     keyField: string
+     defaultSortField?: string
+     defaultSortDir?: 'asc' | 'desc'
+     onRowClick?: (row: any) => void
+     emptyMessage?: string
+   }
+   ```
+
+4. **`DrillDownDrawer`:**
+   ```typescript
+   interface DrillDownDrawerProps {
+     isOpen: boolean
+     onClose: () => void
+     target: {
+       type: 'project' | 'customer' | 'hostess'
+       id: string
+       name: string
+     } | null
+     data: any                   // הנתונים המפורטים של הישות הנבחרת
+   }
+   ```
+
+---
+
+### 9.5 הנחיות Recharts בסביבת ממשק עברי (RTL Best Practices)
+
+בעבודה עם `recharts` בעברית יש להקפיד על הכללים הבאים למניעת שיבושי תצוגה:
+1. **ציר X הפוך:** כדי שהזמן יזרום מימין לשמאל כמקובל בעברית, מגדירים בציר ה-X:
+   `<XAxis dataKey="dateLabel" reversed={true} tick={{ fill: '#64748b', fontSize: 12 }} />`
+2. **ציר Y בצד שמאל:** ערכים מספריים נשארים בצד שמאל כמקובל בגרפים פיננסיים:
+   `<YAxis orientation="left" tickFormatter={(val) => Number(val).toLocaleString('he-IL')} />`
+3. **בועת מידע (Tooltip) מיושרת לימין:**
+   ```jsx
+   <Tooltip
+     content={({ active, payload, label }) => {
+       if (!active || !payload?.length) return null
+       return (
+         <div className="bg-slate-900 text-white p-3 rounded-lg shadow-xl text-right dir-rtl text-xs">
+           <p className="font-bold border-b border-slate-700 pb-1 mb-1.5">{label}</p>
+           {payload.map((item, idx) => (
+             <div key={idx} className="flex justify-between gap-4 py-0.5">
+               <span className="text-slate-300">{item.name}:</span>
+               <span className="font-semibold dir-ltr">{Number(item.value).toLocaleString('he-IL')} ₪</span>
+             </div>
+           ))}
+         </div>
+       )
+     }}
+   />
+   ```
+4. **גובה ואחריות גודל (Responsive Container):**
+   כל גרף עטוף תמיד ב-`<ResponsiveContainer width="100%" height={320}>` המונע קריסות רינדור בזמן שינוי גודל חלון.
+
+---
+
+### 9.6 חיבור הניתוב ב-`src/App.jsx` ובסרגל הניווט
+
+1. **ב-`src/App.jsx`:**
+   החלפת רכיב ה-`UnderConstruction` הקיים בייבוא המסך האמיתי:
+   ```jsx
+   // ייבוא בראש הקובץ:
+   import ReportsPage from '@/modules/10_reports/ReportsPage'
+
+   // בתוך עץ הניתוב תחת MainLayout:
+   <Route
+     path="reports"
+     element={
+       <ProtectedRoute allow='דו"חות'>
+         <ReportsPage />
+       </ProtectedRoute>
+     }
+   />
+   ```
+   > ⚠️ **שים לב:** ה-`allow='דו"חות'` חייב להישאר במרכאות בודדות ובאיות זהה-בייט לטבלת `modules` (כלל ברזל 9).
+
+2. **סרגל הניווט (`src/lib/constants.js`):**
+   הפריט כבר מוגדר בקוד הקיים:
+   `{ name: 'דו"חות', path: '/reports', icon: BarChart3, group: 'כספים ודוחות' }`
+   אין צורך בשינוי בסרגל — ברגע שהרכיב מחובר ב-`App.jsx`, לחיצה בתפריט תוביל ישירות למסך הדוחות.
+
+---
+
+### 9.7 שילוב שירות תקציר המנהלים מ-Gemini (`src/lib/gemini.js`)
+
+קריאת ה-API מוגנת ומבוקרת לפי עקרון החיסכון והעמידות:
+1. **פורמט שליחה:** שליחת נתוני המקרו המעובדים בלבד (ללא מידע מזהה אישי או שורות בודדות).
+2. **מנגנון מטמון (Caching):**
+   ```javascript
+   const CACHE_KEY = 'regin_executive_summary_cache'
+   const CACHE_TTL_MS = 6 * 60 * 60 * 1000 // 6 שעות
+
+   export async function getCachedExecutiveSummary(macroMetrics) {
+     const cached = sessionStorage.getItem(CACHE_KEY)
+     if (cached) {
+       try {
+         const { timestamp, data } = JSON.parse(cached)
+         if (Date.now() - timestamp < CACHE_TTL_MS) {
+           return data
+         }
+       } catch (e) {
+         sessionStorage.removeItem(CACHE_KEY)
+       }
+     }
+
+     const freshData = await generateExecutiveSummary(macroMetrics)
+     sessionStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: freshData }))
+     return freshData
+   }
+   ```
+3. **במקרה של שגיאה או היעדר מפתח API:** המסך מציג באופן שקוף תקציר מחושב מבוסס חוקים קבועים (Deterministic Rule-Based Summary) כדי שהמשתמש לעולם לא ייתקל במסך תקוע.
+
+---
+
+## 10. סיכום למפתח המבצע
+
+* **אפס ניחושים:** כל מבנה הנתונים, הנוסחאות המתמטיות, ההרשאות, הצבעים, הקומפוננטות והממשקים מוגדרים במדויק.
+* **אפס חריגות ארכיטקטורה:** שומרים על עקרונות הליבה של REG-IN — עברית RTL מושלמת, אבטחת מידע RLS, ביצועים מקסימליים ועיצוב יוקרתי ברמת מוצר Enterprise.
 
 ---
 **סוף מסמך האפיון.**
