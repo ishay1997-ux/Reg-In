@@ -1,8 +1,8 @@
 /**
  * scripts/enrich-feedback-reasons.mjs
  *
- * העשרת נתוני המשוב בטגלים ריאליסטיים עבור הפרויקטים הקיימים במסד.
- * מתבסס על מודל התפלגות אקדמי (CSAT / Root Cause Analysis) וסנכרון חכם להערות מלל.
+ * העשרת נתוני המשוב בטגלים ומגמת שביעות רצון רב-שנתית (2024–2026)
+ * מבוסס על מודל שיפור מתמשך אקדמי (Operational Learning Curve) ועונתיות אירועים.
  */
 
 import dotenv from 'dotenv'
@@ -86,43 +86,129 @@ function escapeSqlString(str) {
 }
 
 async function main() {
-  console.log('--- התחלת העשרת נתוני משוב (Feedback Reasons Enrichment) ---')
+  console.log('--- התחלת עדכון מגמת שביעות רצון והעשרת תגיות (Academic Trend) ---')
 
   // 1. קריאת כל הפרויקטים שהושלם בהם משוב
   const selectQuery = `
-    SELECT project_id, feedback_score, feedback_notes, negative_feedback_reason, negative_feedback_reasons, positive_feedback_reason, positive_feedback_reasons
+    SELECT project_id, customer_id, final_event_date, feedback_score, feedback_notes, negative_feedback_reason, negative_feedback_reasons, positive_feedback_reason, positive_feedback_reasons
     FROM public.projects
-    WHERE feedback_status = 'completed'
-    ORDER BY project_id ASC;
+    WHERE feedback_status = 'completed' AND final_event_date IS NOT NULL
+    ORDER BY final_event_date ASC;
   `
   const projects = await executeSql(selectQuery)
   console.log(`נטענו ${projects.length} פרויקטים עם משוב שהושלם.`)
 
+  // זיהוי לקוח lowFeedback לצורך שימור עוגן 'טעון בירור'
+  const customerScores = {}
+  for (const p of projects) {
+    if (!customerScores[p.customer_id]) customerScores[p.customer_id] = []
+    customerScores[p.customer_id].push(p.feedback_score)
+  }
+  let lowFeedbackCustomerId = null
+  for (const [cid, scs] of Object.entries(customerScores)) {
+    const avg = scs.reduce((a, b) => a + b, 0) / scs.length
+    if (avg < 3.5 && scs.length >= 3) {
+      lowFeedbackCustomerId = Number(cid)
+      break
+    }
+  }
+
   const updates = []
-  const stats = {
-    total: projects.length,
-    byScore: {},
-    posCounts: { '0': 0, '1': 0, '2': 0, '3+': 0 },
-    negCounts: { '1': 0, '2': 0, '3+': 0 },
-    posReasonsFreq: {},
-    negReasonsFreq: {},
+  const yearlyStats = {
+    '2024': { total: 0, sum: 0, scores: [], csat: 0 },
+    '2025': { total: 0, sum: 0, scores: [], csat: 0 },
+    '2026': { total: 0, sum: 0, scores: [], csat: 0 },
+  }
+  const monthlyStats = {}
+  const reasonsStats = {
+    pos: {},
+    neg: {},
+    negByYear: { '2024': {}, '2025': {}, '2026': {} },
   }
 
   for (const p of projects) {
-    const score = p.feedback_score
-    stats.byScore[score] = (stats.byScore[score] || 0) + 1
-    const rng = createRng(hashSeed(`enrich-feedback-${p.project_id}`))
+    const d = p.final_event_date
+    const y = d.slice(0, 4)
+    const m = d.slice(0, 7)
+    const monthNum = parseInt(d.slice(5, 7), 10)
+    const rng = createRng(hashSeed(`trend-${p.project_id}`))
+
+    let score
+    if (p.customer_id === lowFeedbackCustomerId) {
+      score = rng.pick([1, 2, 2, 3])
+    } else {
+      const isPeakMonth = [5, 6, 10, 11].includes(monthNum)
+      let weights
+      if (y === '2024') {
+        weights = isPeakMonth
+          ? [
+              { weight: 2.8, value: 5 },
+              { weight: 4.8, value: 4 },
+              { weight: 1.8, value: 3 },
+              { weight: 0.5, value: 2 },
+              { weight: 0.1, value: 1 },
+            ]
+          : [
+              { weight: 3.5, value: 5 },
+              { weight: 4.8, value: 4 },
+              { weight: 1.4, value: 3 },
+              { weight: 0.25, value: 2 },
+              { weight: 0.05, value: 1 },
+            ]
+      } else if (y === '2025') {
+        weights = isPeakMonth
+          ? [
+              { weight: 4.2, value: 5 },
+              { weight: 4.2, value: 4 },
+              { weight: 1.2, value: 3 },
+              { weight: 0.35, value: 2 },
+              { weight: 0.05, value: 1 },
+            ]
+          : [
+              { weight: 5.0, value: 5 },
+              { weight: 3.8, value: 4 },
+              { weight: 1.0, value: 3 },
+              { weight: 0.18, value: 2 },
+              { weight: 0.02, value: 1 },
+            ]
+      } else {
+        // 2026: בשלות מלאה
+        weights = isPeakMonth
+          ? [
+              { weight: 5.6, value: 5 },
+              { weight: 3.6, value: 4 },
+              { weight: 0.65, value: 3 },
+              { weight: 0.12, value: 2 },
+              { weight: 0.01, value: 1 },
+            ]
+          : [
+              { weight: 6.6, value: 5 },
+              { weight: 2.8, value: 4 },
+              { weight: 0.5, value: 3 },
+              { weight: 0.08, value: 2 },
+              { weight: 0.01, value: 1 },
+            ]
+      }
+      score = rng.weighted(weights)
+    }
+
+    if (!yearlyStats[y]) yearlyStats[y] = { total: 0, sum: 0, scores: [] }
+    yearlyStats[y].total++
+    yearlyStats[y].sum += score
+    yearlyStats[y].scores.push(score)
+
+    if (!monthlyStats[m]) monthlyStats[m] = { total: 0, sum: 0, scores: [] }
+    monthlyStats[m].total++
+    monthlyStats[m].sum += score
+    monthlyStats[m].scores.push(score)
 
     let finalPos = []
     let finalNeg = []
 
     if (score >= 4) {
-      // הדגשים לשימור
       const noteMatches = matchPositiveFromNotes(p.feedback_notes)
       let targetCount = 0
-
       if (score === 5) {
-        // מודל ציון 5: 15% ללא תגיות, 50% תגית 1-2, 35% תגיות 2-3
         targetCount = rng.weighted([
           { weight: noteMatches.length > 0 ? 0.05 : 0.15, value: 0 },
           { weight: 0.35, value: 1 },
@@ -130,7 +216,6 @@ async function main() {
           { weight: 0.15, value: 3 },
         ])
       } else {
-        // מודל ציון 4: 25% ללא תגיות, 60% תגית 1, 15% תגית 2
         targetCount = rng.weighted([
           { weight: noteMatches.length > 0 ? 0.1 : 0.25, value: 0 },
           { weight: 0.6, value: 1 },
@@ -140,34 +225,29 @@ async function main() {
 
       if (targetCount > 0) {
         const picked = new Set(noteMatches.slice(0, targetCount))
-        // שילוב משוקלל מהפול
+        // התפתחות חיובית לאורך השנים: ניהול ותקשורת ועמידה בזמנים גדלים
         const weightedPool = [
           { weight: 35, value: 'מקצועיות הדיילות' },
-          { weight: 30, value: 'עמידה בזמנים' },
-          { weight: 15, value: 'איכות תגים וציוד' },
-          { weight: 15, value: 'ניהול ותקשורת' },
+          { weight: y === '2026' ? 35 : 25, value: 'עמידה בזמנים' },
+          { weight: y === '2024' ? 10 : 20, value: 'איכות תגים וציוד' },
+          { weight: y === '2026' ? 25 : 15, value: 'ניהול ותקשורת' },
           { weight: 5, value: 'אחר' },
         ]
 
         while (picked.size < targetCount) {
-          const item = rng.weighted(weightedPool)
-          picked.add(item)
+          picked.add(rng.weighted(weightedPool))
         }
         finalPos = Array.from(picked)
       }
 
-      const countKey = finalPos.length >= 3 ? '3+' : String(finalPos.length)
-      stats.posCounts[countKey] = (stats.posCounts[countKey] || 0) + 1
-      for (const r of finalPos) {
-        stats.posReasonsFreq[r] = (stats.posReasonsFreq[r] || 0) + 1
-      }
-    } else if (score !== null && score <= 3) {
-      // סיבות לבירור — שער נעילה: חובה לפחות סיבה אחת!
+      for (const r of finalPos) reasonsStats.pos[r] = (reasonsStats.pos[r] || 0) + 1
+    } else {
+      // score <= 3
       const noteMatches = matchNegativeFromNotes(p.feedback_notes)
       const existing = p.negative_feedback_reason || p.negative_feedback_reasons?.[0]
       const initial = new Set()
       if (existing && NEGATIVE_POOL.includes(existing)) initial.add(existing)
-      for (const m of noteMatches) initial.add(m)
+      for (const item of noteMatches) initial.add(item)
 
       const targetCount = rng.weighted([
         { weight: 0.6, value: 1 },
@@ -175,29 +255,31 @@ async function main() {
         { weight: 0.1, value: 3 },
       ])
 
+      // התפתחות שלילית לאורך השנים: איכות תגים הייתה 40% ב-2024 וצונחת ב-2026
       const weightedNegPool = [
         { weight: 35, value: 'איחור דיילות' },
         { weight: 25, value: 'תפקוד דיילות' },
-        { weight: 20, value: 'איכות תגים' },
-        { weight: 15, value: 'ניהול לקוי' },
+        { weight: y === '2024' ? 40 : y === '2025' ? 20 : 8, value: 'איכות תגים' },
+        { weight: y === '2026' ? 20 : 12, value: 'ניהול לקוי' },
         { weight: 5, value: 'אחר' },
       ]
 
       while (initial.size < Math.max(1, targetCount)) {
-        const item = rng.weighted(weightedNegPool)
-        initial.add(item)
+        initial.add(rng.weighted(weightedNegPool))
       }
 
       finalNeg = Array.from(initial).slice(0, Math.max(1, targetCount))
-      const countKey = finalNeg.length >= 3 ? '3+' : String(finalNeg.length)
-      stats.negCounts[countKey] = (stats.negCounts[countKey] || 0) + 1
       for (const r of finalNeg) {
-        stats.negReasonsFreq[r] = (stats.negReasonsFreq[r] || 0) + 1
+        reasonsStats.neg[r] = (reasonsStats.neg[r] || 0) + 1
+        if (reasonsStats.negByYear[y]) {
+          reasonsStats.negByYear[y][r] = (reasonsStats.negByYear[y][r] || 0) + 1
+        }
       }
     }
 
     updates.push({
       id: p.project_id,
+      score,
       posReasons: finalPos,
       posReason: finalPos[0] || null,
       negReasons: finalNeg,
@@ -206,8 +288,6 @@ async function main() {
   }
 
   console.log(`מבצע עדכון במסד ל-${updates.length} פרויקטים...`)
-
-  // ביצוע עדכונים בקבוצות (Batches) בתוך טרנזקציה
   const BATCH_SIZE = 100
   for (let i = 0; i < updates.length; i += BATCH_SIZE) {
     const batch = updates.slice(i, i + BATCH_SIZE)
@@ -215,7 +295,8 @@ async function main() {
       .map(
         (u) => `
       UPDATE public.projects
-         SET positive_feedback_reasons = ${escapeSqlArray(u.posReasons)},
+         SET feedback_score = ${u.score},
+             positive_feedback_reasons = ${escapeSqlArray(u.posReasons)},
              positive_feedback_reason = ${escapeSqlString(u.posReason)},
              negative_feedback_reasons = ${escapeSqlArray(u.negReasons)},
              negative_feedback_reason = ${escapeSqlString(u.negReason)}
@@ -228,21 +309,24 @@ async function main() {
     console.log(`✓ עודכנה קבוצה ${Math.floor(i / BATCH_SIZE) + 1} / ${Math.ceil(updates.length / BATCH_SIZE)}`)
   }
 
-  console.log('\n========================================')
-  console.log('       דוח סיכום אקדמי - העשרת נתונים    ')
-  console.log('========================================')
-  console.log(`סה"כ פרויקטים שעודכנו: ${stats.total}`)
-  console.log('פילוח לפי ציונים:', stats.byScore)
-  console.log('\nהדגשים חיוביים (ציונים 4–5):')
-  console.log('התפלגות כמויות תגיות למשיב:', stats.posCounts)
-  console.log('שכיחות תגיות חיוביות שנבחרו:', stats.posReasonsFreq)
-  console.log('\nסיבות לבירור (ציונים 1–3):')
-  console.log('התפלגות כמויות תגיות למשיב:', stats.negCounts)
-  console.log('שכיחות תגיות שליליות שנבחרו:', stats.negReasonsFreq)
-  console.log('========================================\n')
+  console.log('\n=============================================================')
+  console.log('       דוח סיכום אקדמי: מגמת שביעות רצון לאורך השנים         ')
+  console.log('=============================================================')
+  for (const [yr, stat] of Object.entries(yearlyStats)) {
+    const avg = (stat.sum / stat.total).toFixed(2)
+    const csat = ((stat.scores.filter((s) => s >= 4).length / stat.total) * 100).toFixed(1) + '%'
+    console.log(`שנת ${yr}: ${stat.total} פרויקטים | ממוצע: ${avg} מתוך 5.0 | CSAT: ${csat}`)
+  }
+
+  console.log('\nשינוי שכיחות תקלות תגים וציוד לאורך השנים (אפקט מודול לוגיסטיקה):')
+  for (const yr of ['2024', '2025', '2026']) {
+    const badgeIssues = reasonsStats.negByYear[yr]?.['איכות תגים'] || 0
+    console.log(`  - שנת ${yr}: ${badgeIssues} מקרים`)
+  }
+  console.log('=============================================================\n')
 }
 
 main().catch((err) => {
-  console.error('שגיאה בהרצת סקריפט ההעשרה:', err)
+  console.error('שגיאה בהרצה:', err)
   process.exit(1)
 })

@@ -825,7 +825,7 @@ function buildProjectPlan(rng, ctx, event, customer, outcome) {
     if (target === 'finished' || (paidAt <= ctx.today && rng.chance(0.3))) {
       project.payment = { date: paidAt <= ctx.today ? paidAt : addDays(ctx.today, -rng.int(0, 3)) }
     }
-    project.feedback = buildFeedback(rng, customer)
+    project.feedback = buildFeedback(rng, customer, event.date)
   }
   if (target === 'finished') {
     project.archivedAt = addDays(project.payment.date, rng.int(1, 7))
@@ -833,7 +833,7 @@ function buildProjectPlan(rng, ctx, event, customer, outcome) {
   return project
 }
 
-function buildFeedback(rng, customer) {
+function buildFeedback(rng, customer, eventDate = null) {
   if (rng.chance(0.2)) return { noResponse: true }
   if (customer.role === 'lowFeedback') {
     const score = rng.pick([1, 2, 2, 3])
@@ -854,12 +854,64 @@ function buildFeedback(rng, customer) {
       notes: rng.pick(FEEDBACK_NOTES.low),
     }
   }
-  const score = rng.weighted([
-    { weight: 5, value: 5 },
-    { weight: 4, value: 4 },
-    { weight: 1.2, value: 3 },
-    { weight: 0.25, value: 2 },
-  ])
+
+  const y = eventDate ? String(eventDate).slice(0, 4) : '2025'
+  const monthNum = eventDate ? parseInt(String(eventDate).slice(5, 7), 10) : 6
+  const isPeak = [5, 6, 10, 11].includes(monthNum)
+
+  let weights
+  if (y === '2024') {
+    weights = isPeak
+      ? [
+          { weight: 2.8, value: 5 },
+          { weight: 4.8, value: 4 },
+          { weight: 1.8, value: 3 },
+          { weight: 0.5, value: 2 },
+          { weight: 0.1, value: 1 },
+        ]
+      : [
+          { weight: 3.5, value: 5 },
+          { weight: 4.8, value: 4 },
+          { weight: 1.4, value: 3 },
+          { weight: 0.25, value: 2 },
+          { weight: 0.05, value: 1 },
+        ]
+  } else if (y === '2025') {
+    weights = isPeak
+      ? [
+          { weight: 4.2, value: 5 },
+          { weight: 4.2, value: 4 },
+          { weight: 1.2, value: 3 },
+          { weight: 0.35, value: 2 },
+          { weight: 0.05, value: 1 },
+        ]
+      : [
+          { weight: 5.0, value: 5 },
+          { weight: 3.8, value: 4 },
+          { weight: 1.0, value: 3 },
+          { weight: 0.18, value: 2 },
+          { weight: 0.02, value: 1 },
+        ]
+  } else {
+    // 2026
+    weights = isPeak
+      ? [
+          { weight: 5.6, value: 5 },
+          { weight: 3.6, value: 4 },
+          { weight: 0.65, value: 3 },
+          { weight: 0.12, value: 2 },
+          { weight: 0.01, value: 1 },
+        ]
+      : [
+          { weight: 6.6, value: 5 },
+          { weight: 2.8, value: 4 },
+          { weight: 0.5, value: 3 },
+          { weight: 0.08, value: 2 },
+          { weight: 0.01, value: 1 },
+        ]
+  }
+
+  const score = rng.weighted(weights)
 
   if (score >= 4) {
     const count =
