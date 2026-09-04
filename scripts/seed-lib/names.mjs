@@ -506,3 +506,19 @@ export const FEEDBACK_NOTES = {
     'לא היה מי שינהל את הצוות בשטח.',
   ],
 }
+
+export const SEED_FEEDBACK_POSITIVE_REASONS = [
+  'מקצועיות הדיילות',
+  'עמידה בזמנים',
+  'איכות תגים וציוד',
+  'ניהול ותקשורת',
+  'אחר',
+]
+
+export const SEED_FEEDBACK_NEGATIVE_REASONS = [
+  'איחור דיילות',
+  'תפקוד דיילות',
+  'איכות תגים',
+  'ניהול לקוי',
+  'אחר',
+]
