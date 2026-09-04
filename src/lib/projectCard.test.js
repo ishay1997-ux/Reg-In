@@ -138,8 +138,22 @@ describe('feedbackCell — ארבעה ניסוחים + S-22', () => {
       score: 5,
       reason: null,
       positiveReason: 'מקצועיות הדיילות',
+      negativeReasons: [],
+      positiveReasons: ['מקצועיות הדיילות'],
       notes: 'שירות מצוין',
     })
+  })
+
+  it('completed עם מערכי סיבות מרובות — נשמרים במלואם', () => {
+    const cell = feedbackCell({
+      feedback_status: 'completed',
+      feedback_score: 2,
+      negative_feedback_reasons: ['איחור דיילות', 'איכות תגים'],
+      positive_feedback_reasons: ['שירות אדיב'],
+      feedback_notes: 'לתשומת לב',
+    })
+    expect(cell.negativeReasons).toEqual(['איחור דיילות', 'איכות תגים'])
+    expect(cell.positiveReasons).toEqual(['שירות אדיב'])
   })
 
   it('🔴 S-22: completed עם ציון NULL — שורה חוקית בסכמה, נוסח משלה ולא ציון-רפאים', () => {
