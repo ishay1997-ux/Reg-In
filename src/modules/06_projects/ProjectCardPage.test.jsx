@@ -484,7 +484,26 @@ describe('ProjectCardPage — מצבי טעינה/כשל/לא-נמצא', () => {
     renderPage()
     const cell = await screen.findByTestId('project-cell-feedback')
     expect(cell).toHaveTextContent('5 ★')
+    expect(cell).toHaveTextContent('מצוין')
     expect(cell).toHaveTextContent('מקצועיות הדיילות')
     expect(cell).toHaveTextContent('אירוע מושלם')
+  })
+
+  it('משוב לקוח עם ציון נמוך ומערך סיבות לבירור — מוצגים הציון, תגית בינוני/בירור וצ׳יפים', async () => {
+    getProject.mockResolvedValue(
+      projectRow({
+        feedback_status: 'completed',
+        feedback_score: 3,
+        negative_feedback_reasons: ['איכות תגים', 'איחור דיילות'],
+        feedback_notes: 'האירוע היה סביר',
+      }),
+    )
+    renderPage()
+    const cell = await screen.findByTestId('project-cell-feedback')
+    expect(cell).toHaveTextContent('3 ★')
+    expect(cell).toHaveTextContent('בינוני')
+    expect(cell).toHaveTextContent('איכות תגים')
+    expect(cell).toHaveTextContent('איחור דיילות')
+    expect(cell).toHaveTextContent('האירוע היה סביר')
   })
 })

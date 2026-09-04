@@ -4,7 +4,8 @@
   // 03/09/2026 — `@hebcal/core` נצרכת רק ב-`scripts/seed-lib/calendar.mjs` (לוח-החגים של
   // גנרטור נתוני-ההדגמה), ו-knip סורק את `src/` בלבד ⇒ הוא היה מדווח עליה כלא-בשימוש.
   // אינה תלות של האפליקציה (devDependency), ולא נכנסת לבנייה.
-  "ignoreDependencies": ["@hebcal/core"],
+  // 05/09/2026 — `recharts` הותקנה עבור מודול 09 (דוחות), תוסר מ-ignoreDependencies עם סיום בניית הקומפוננטות.
+  "ignoreDependencies": ["@hebcal/core", "recharts"],
   "ignore": [
     "src/components/ui/**",
     // ✅ 09/08/2026 — **הפטור ל-`src/modules/04_hostesses/api.js` הוסר בצעד 3.4, בתאריך

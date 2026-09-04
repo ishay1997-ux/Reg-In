@@ -114,12 +114,28 @@ export function feedbackCell(project) {
   if (status === 'no_response') return { kind: 'plain', value: 'הלקוח לא השיב' }
   if (status === 'completed') {
     if (project?.feedback_score == null) return { kind: 'plain', value: 'הסקר מולא' }
+    const negativeReasons =
+      Array.isArray(project.negative_feedback_reasons) &&
+      project.negative_feedback_reasons.length > 0
+        ? project.negative_feedback_reasons
+        : project.negative_feedback_reason
+          ? [project.negative_feedback_reason]
+          : []
+    const positiveReasons =
+      Array.isArray(project.positive_feedback_reasons) &&
+      project.positive_feedback_reasons.length > 0
+        ? project.positive_feedback_reasons
+        : project.positive_feedback_reason
+          ? [project.positive_feedback_reason]
+          : []
     return {
       kind: 'score',
       score: project.feedback_score,
       // הסיבה מוצגת רק כשהיא קיימת (C5 §5.6.14 מחייב אותה בציון < 3) — תא קבוע-וריק הוא רעש.
       reason: project.negative_feedback_reason ?? null,
       positiveReason: project.positive_feedback_reason ?? null,
+      negativeReasons,
+      positiveReasons,
       notes: project.feedback_notes ?? null,
     }
   }
