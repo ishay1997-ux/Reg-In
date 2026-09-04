@@ -54,6 +54,9 @@ import { formatDate, weekdayOf } from '@/lib/dates'
 import {
   FEEDBACK_STATE,
   FEEDBACK_MESSAGE,
+  FEEDBACK_NEGATIVE_REASONS,
+  FEEDBACK_POSITIVE_REASONS,
+  sanitizeReasons,
   stateFromPagePayload,
   stateFromSubmitPayload,
 } from '@/lib/feedback'
@@ -75,6 +78,8 @@ export default function PublicFeedbackPage() {
   const [state, setState] = useState(FEEDBACK_STATE.loading)
   const [page, setPage] = useState(null)
   const [score, setScore] = useState(null)
+  const [negativeReasons, setNegativeReasons] = useState([])
+  const [positiveReasons, setPositiveReasons] = useState([])
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [inlineError, setInlineError] = useState('')
@@ -107,6 +112,15 @@ export default function PublicFeedbackPage() {
     setReloadKey((key) => key + 1)
   }
 
+  function handleScoreChange(newScore) {
+    setScore(newScore)
+    if (newScore <= 3) {
+      setPositiveReasons([])
+    } else {
+      setNegativeReasons([])
+    }
+  }
+
   // 🚫 **לעולם לא "נשמר" כשלא נשמר** (אותו עוגן כמו `PublicConfirmPage`, spec.md
   // § מה ייחשב עובד #3). כשל-רשת אמיתי ⇒ `saveFailed`; תשובת-שרת מוגדרת אך לא-כותבת
   // (`invalid`) ⇒ נשארים על הטופס עם שגיאה מקומית, לא מניחים הצלחה.
@@ -115,7 +129,12 @@ export default function PublicFeedbackPage() {
     setSubmitting(true)
     setInlineError('')
     try {
-      const payload = await submitFeedback(token, score, notes)
+      const { negativeReasons: cleanNegs, positiveReasons: cleanPos } = sanitizeReasons(
+        score,
+        negativeReasons,
+        positiveReasons,
+      )
+      const payload = await submitFeedback(token, score, notes, cleanNegs, cleanPos)
       const next = stateFromSubmitPayload(payload)
       if (next) {
         setState(next)
@@ -143,10 +162,14 @@ export default function PublicFeedbackPage() {
           <FeedbackForm
             page={page}
             score={score}
+            negativeReasons={negativeReasons}
+            positiveReasons={positiveReasons}
             notes={notes}
             submitting={submitting}
             inlineError={inlineError}
-            onScoreChange={setScore}
+            onScoreChange={handleScoreChange}
+            onNegativeReasonsChange={setNegativeReasons}
+            onPositiveReasonsChange={setPositiveReasons}
             onNotesChange={setNotes}
             onSubmit={submit}
           />
@@ -175,15 +198,31 @@ function Skeleton() {
 function FeedbackForm({
   page,
   score,
+  negativeReasons = [],
+  positiveReasons = [],
   notes,
   submitting,
   inlineError,
   onScoreChange,
+  onNegativeReasonsChange,
+  onPositiveReasonsChange,
   onNotesChange,
   onSubmit,
 }) {
   const date = formatDate(page?.event_date)
   const weekday = weekdayOf(page?.event_date)
+
+  function toggleNegativeReason(item) {
+    onNegativeReasonsChange((prev) =>
+      prev.includes(item) ? prev.filter((r) => r !== item) : [...prev, item],
+    )
+  }
+
+  function togglePositiveReason(item) {
+    onPositiveReasonsChange((prev) =>
+      prev.includes(item) ? prev.filter((r) => r !== item) : [...prev, item],
+    )
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-4" data-testid="feedback-form">
@@ -216,6 +255,46 @@ function FeedbackForm({
           הדף. הוא גם נוסח-הסיבה לכפתור-"שלח" החסום (A-1), ולכן `hideCaption` למעלה
           אינו "מחיקת מידע": הוא מסיר כיתוב-מנהלת כפול ומשאיר את זה. */}
       <p className="text-center text-[11px] text-slate-400">געו בכוכב כדי לדרג</p>
+
+      {score != null ? (
+        <div className="flex flex-col gap-2" data-testid="feedback-chips-section">
+          <p className="text-xs font-semibold text-slate-600">
+            {score <= 3
+              ? 'במה נוכל להשתפר? (אפשר לסמן יותר מאחד)'
+              : 'מה בלט לטובה? (אפשר לסמן יותר מאחד)'}
+          </p>
+          <div
+            className="flex flex-wrap gap-1.5"
+            role="group"
+            aria-label={score <= 3 ? 'סיבות לשיפור' : 'הדגשים לשימור'}
+          >
+            {(score <= 3 ? FEEDBACK_NEGATIVE_REASONS : FEEDBACK_POSITIVE_REASONS).map((item) => {
+              const selected = (score <= 3 ? negativeReasons : positiveReasons).includes(item)
+              const onToggle =
+                score <= 3 ? () => toggleNegativeReason(item) : () => togglePositiveReason(item)
+
+              return (
+                <button
+                  key={item}
+                  type="button"
+                  aria-pressed={selected}
+                  data-testid={`feedback-chip-${item}`}
+                  onClick={onToggle}
+                  className={`cursor-pointer rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                    selected
+                      ? score <= 3
+                        ? 'bg-amber-600 text-white shadow-xs'
+                        : 'bg-teal-600 text-white shadow-xs'
+                      : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  {item}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="fb-notes" className="text-xs font-semibold text-slate-600">

@@ -586,6 +586,7 @@ function IdentityCard({
                 <Ltr>{`${feedback.score} ★`}</Ltr>
               </Val>
               {feedback.reason && <Sub>{feedback.reason}</Sub>}
+              {feedback.positiveReason && <Sub>{feedback.positiveReason}</Sub>}
               {feedback.notes && <Sub>{feedback.notes}</Sub>}
             </>
           ) : (

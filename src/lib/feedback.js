@@ -66,3 +66,60 @@ export function stateFromSubmitPayload(payload) {
       return null
   }
 }
+
+// חמשת הערכים המוגדרים בסכימה ובאילוץ לכל אחד משני הסוגים:
+export const FEEDBACK_NEGATIVE_REASONS = [
+  'איחור דיילות',
+  'תפקוד דיילות',
+  'איכות תגים',
+  'ניהול לקוי',
+  'אחר',
+]
+
+export const FEEDBACK_POSITIVE_REASONS = [
+  'מקצועיות הדיילות',
+  'עמידה בזמנים',
+  'איכות תגים וציוד',
+  'ניהול ותקשורת',
+  'אחר',
+]
+
+// פונקציית טיהור טהורה כדי להבטיח שלעולם לא תישלח סיבה שלילית בציון גבוה ולהפך,
+// ותמיכה מלאה בבחירה מרובה (מערכים) לצד תאימות לאחור לערכים בודדים.
+export function sanitizeReasons(score, negativeReasons, positiveReasons) {
+  if (score == null) {
+    return {
+      negativeReasons: [],
+      positiveReasons: [],
+      negativeReason: null,
+      positiveReason: null,
+    }
+  }
+
+  const toArray = (val) => {
+    if (!val) return []
+    if (Array.isArray(val)) return val
+    return [val]
+  }
+
+  const negArr = toArray(negativeReasons)
+  const posArr = toArray(positiveReasons)
+
+  if (score <= 3) {
+    const valid = negArr.filter((r) => FEEDBACK_NEGATIVE_REASONS.includes(r))
+    return {
+      negativeReasons: valid,
+      positiveReasons: [],
+      negativeReason: valid[0] ?? null,
+      positiveReason: null,
+    }
+  }
+
+  const valid = posArr.filter((r) => FEEDBACK_POSITIVE_REASONS.includes(r))
+  return {
+    negativeReasons: [],
+    positiveReasons: valid,
+    negativeReason: null,
+    positiveReason: valid[0] ?? null,
+  }
+}

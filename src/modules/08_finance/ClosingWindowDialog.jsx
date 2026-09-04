@@ -67,6 +67,7 @@ import { assertFinanceShape, scoreTag, scoreTagText } from '@/lib/projectFinance
 // ⛔ ייבוא חוצה-מודולים במכוון ולא העתקה: הכלל "ציון מתחת לסף ⇒ טעון בירור" חייב
 // להיות אותו כלל בדיוק במסך-הלקוחות (מ2) ובמסך-הכספים, אחרת הם יסטו ביום שהסף ישתנה.
 import { needsSatisfactionAttention } from '@/lib/customers'
+import { FEEDBACK_NEGATIVE_REASONS } from '@/lib/feedback'
 import {
   CANCELLATION_FEE_ACTIONS,
   INVOICE_FILE_REQUIRED_NOTE,
@@ -133,7 +134,7 @@ const PROPOSAL_FIELDS = [
 
 // 🔤 חמש סיבות-הבירור — **זהות-בייט ל-CHECK החי** ולרשימה שבמוקאפ המאושר. תו אחד שונה
 // ⇒ המסד דוחה את השמירה בהודעה שמדברת על אילוץ ולא על הטופס.
-const FEEDBACK_REASONS = ['איחור דיילות', 'תפקוד דיילות', 'איכות תגים', 'ניהול לקוי', 'אחר']
+const FEEDBACK_REASONS = FEEDBACK_NEGATIVE_REASONS
 
 // 🔤 נוסחים שנקראו מילולית מהמוקאפ המאושר `02_closing_window_approved.html`.
 const INVOICE_BANNER_TITLE = 'המערכת אינה מפיקה חשבונית באופן אוטומטי.' // §7.38
@@ -222,22 +223,20 @@ export function archiveGateNote({
   feedbackResolved,
   feedbackScore,
   feedbackReason,
+  feedbackReasons,
   satisfactionThreshold,
 }) {
   const paymentOk = Boolean(paid) || Boolean(writtenOff)
 
-  // 🔴 השער השלישי, שהמסך לא הכיר עד שנמדד: המסד חוסם ארכוב גם כשהמשוב "נפתר" אבל
-  // הציון נמוך מ-3 ואין סיבה (‏`archive_project`, מיגרציה F). המסלול אינו תיאורטי —
-  // הדף הציבורי **אינו יודע לקבל סיבה**, ולכן לקוח שהגיש 2 יוצר בדיוק את המצב הזה.
-  // בלי השורה הזאת הכפתור נראה פעיל, המנהלת לוחצת, והשרת עונה P0001.
-  // ‏`needsSatisfactionAttention` ולא השוואה מקומית: הסף חי בשורה אחת ב-`params`, והכלל
-  // שמפרש אותו חי בפונקציה אחת (`src/lib/customers.js`) שגם מסך-הלקוחות קורא לה.
+  const hasReason =
+    (Array.isArray(feedbackReasons) && feedbackReasons.length > 0) ||
+    (feedbackReason != null && String(feedbackReason).trim() !== '')
+
   const lowScoreNeedsReason =
     needsSatisfactionAttention(
       feedbackScore == null ? null : Number(feedbackScore),
       satisfactionThreshold,
-    ) &&
-    (feedbackReason == null || String(feedbackReason).trim() === '')
+    ) && !hasReason
   const feedbackOk = Boolean(feedbackResolved) && !lowScoreNeedsReason
   if (paymentOk && feedbackOk) return null
 
@@ -299,12 +298,12 @@ export function formatHoursBeforeEvent(value) {
 // שער "שמור סטטוס" — אותה צורה בדיוק כמו `archiveGateNote`: `null` ⇒ פתוח, אחרת **המשפט**
 // שיוצג ליד הכפתור. עד כה שלושת הענפים חיו כבוליאני אחד, ושניים מהם כיבו את הכפתור בשתיקה.
 // eslint-disable-next-line react-refresh/only-export-components -- פונקציה טהורה שנועלת נוסח-שער, כמו `archiveGateNote` שמעליה
-export function feedbackGateNote({ score, reason, touched, satisfactionThreshold }) {
+export function feedbackGateNote({ score, reason, reasons, touched, satisfactionThreshold }) {
   if (score == null) return FEEDBACK_SCORE_GATE
-  if (
-    needsSatisfactionAttention(score, satisfactionThreshold) &&
-    String(reason ?? '').trim() === ''
-  ) {
+  const hasReason =
+    (Array.isArray(reasons) && reasons.length > 0) ||
+    (reason != null && String(reason).trim() !== '')
+  if (needsSatisfactionAttention(score, satisfactionThreshold) && !hasReason) {
     return feedbackReasonGate(satisfactionThreshold)
   }
   if (!touched) return FEEDBACK_UNCHANGED_GATE
@@ -345,6 +344,7 @@ export function closingPhase(detail) {
     // חוסם, בדיוק כמו שהמסד יודע. ‏`feedbackResolved` לבדו אינו מספיק (ר' הפונקציה).
     feedbackScore: detail?.feedback_score ?? null,
     feedbackReason: detail?.negative_feedback_reason ?? null,
+    feedbackReasons: detail?.negative_feedback_reasons ?? null,
     // בענף-הביטול: תחילה קובעים סכום, ורק אז נפתח מסלול-P1 (חשבונית ואז תשלום) — F-9 של Q-1.
     showFeeProposal: cancelled && !feeSet && !writtenOff,
     showInvoiceBlock: !archived && !cancelResolved && (cancelled ? feeSet && !writtenOff : true),
@@ -524,8 +524,15 @@ function LockedFeedbackCell({ detail }) {
           '—'
         )}
       </Val>
-      {detail.negative_feedback_reason ? (
+      {detail.negative_feedback_reasons?.length > 0 ? (
+        <Sub>סיבות-בירור: {detail.negative_feedback_reasons.join(', ')}</Sub>
+      ) : detail.negative_feedback_reason ? (
         <Sub>סיבת-בירור: {detail.negative_feedback_reason}</Sub>
+      ) : null}
+      {detail.positive_feedback_reasons?.length > 0 ? (
+        <Sub>הדגשים לשימור: {detail.positive_feedback_reasons.join(', ')}</Sub>
+      ) : detail.positive_feedback_reason ? (
+        <Sub>הדגש לשימור: {detail.positive_feedback_reason}</Sub>
       ) : null}
       {detail.feedback_notes ? <Sub>{detail.feedback_notes}</Sub> : null}
     </Cell>
@@ -1160,19 +1167,42 @@ function FeedbackEntry({ score, onScore, onNoResponse, busy, showNoResponse = tr
 // ⚠️ התווית נושאת את הסף, ולכן הוא מוזרק ולא כתוב (מודול 9 · צעד 2.3) — אותה הנמקה
 // בדיוק כמו `feedbackReasonGate`: תווית שאומרת מספר אחר ממה שהמסד אוכף מלמדת את
 // המנהלת כלל שגוי, בלי שאף בדיקה תיפול.
-function FeedbackReasonField({ value, onChange, describedBy, satisfactionThreshold }) {
+function FeedbackReasonField({
+  reasons = [],
+  value = '',
+  onChange,
+  describedBy,
+  satisfactionThreshold,
+}) {
+  const currentReasons =
+    Array.isArray(reasons) && reasons.length > 0 ? reasons : value ? [value] : []
+
+  const toggleReason = (reason) => {
+    const next = currentReasons.includes(reason)
+      ? currentReasons.filter((r) => r !== reason)
+      : [...currentReasons, reason]
+    onChange?.(next)
+  }
+
   return (
-    <div className="mt-2 flex flex-col gap-1">
+    <div className="mt-2 flex flex-col gap-1.5" data-testid="closing-feedback-reasons-block">
       <label className="text-xs text-slate-500" htmlFor="closing-feedback-reason">
-        סיבת-הבירור — חובה בציון מתחת ל-{satisfactionThreshold}
+        סיבת-הבירור — חובה בציון מתחת ל-{satisfactionThreshold} (ניתן לבחור יותר מאחת)
       </label>
+
+      {/* Hidden select for backwards compatibility with tests targeting closing-feedback-reason */}
       <select
         id="closing-feedback-reason"
-        value={value}
+        value={currentReasons[0] || value || ''}
         aria-describedby={describedBy}
         data-testid="closing-feedback-reason"
-        onChange={(event) => onChange(event.target.value)}
-        className="h-8 w-full rounded-lg border border-slate-300 bg-white px-2 text-[13px] text-slate-800"
+        onChange={(event) => {
+          const val = event.target.value
+          onChange?.(val ? [val] : [])
+        }}
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
       >
         <option value="">בחרי סיבה</option>
         {FEEDBACK_REASONS.map((reason) => (
@@ -1181,6 +1211,30 @@ function FeedbackReasonField({ value, onChange, describedBy, satisfactionThresho
           </option>
         ))}
       </select>
+
+      {/* Multi-select chips */}
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label="סיבות בירור">
+        {FEEDBACK_REASONS.map((reason) => {
+          const isSelected = currentReasons.includes(reason)
+          return (
+            <button
+              key={reason}
+              type="button"
+              data-testid={`closing-feedback-reason-${reason}`}
+              aria-pressed={isSelected}
+              onClick={() => toggleReason(reason)}
+              className={cn(
+                'rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors',
+                isSelected
+                  ? 'border-amber-600 bg-amber-100 text-amber-900 font-semibold shadow-xs'
+                  : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
+              )}
+            >
+              {reason}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -1243,6 +1297,16 @@ function FeedbackBlock({
         </FeedbackTag>
       ) : null}
 
+      {detail.positive_feedback_reasons?.length > 0 ? (
+        <Sub className="mt-1 block text-teal-700" testId="closing-feedback-positive-reason">
+          הדגש לשימור שהלקוח ציין: <b>{detail.positive_feedback_reasons.join(', ')}</b>
+        </Sub>
+      ) : detail.positive_feedback_reason ? (
+        <Sub className="mt-1 block text-teal-700" testId="closing-feedback-positive-reason">
+          הדגש לשימור שהלקוח ציין: <b>{detail.positive_feedback_reason}</b>
+        </Sub>
+      ) : null}
+
       {detail.feedback_status === 'no_response' ? (
         <Sub className="mt-2 block" testId="closing-feedback-no-response">
           {/* ה3 */}
@@ -1262,10 +1326,15 @@ function FeedbackBlock({
 
       {scoreLow ? (
         <FeedbackReasonField
+          reasons={form.reasons}
           value={form.reason}
-          onChange={form.setReason}
+          onChange={form.setReasons}
           satisfactionThreshold={satisfactionThreshold}
-          describedBy={form.reason.trim() === '' ? FEEDBACK_GATE_ID : undefined}
+          describedBy={
+            (form.reasons?.length ?? 0) === 0 && String(form.reason ?? '').trim() === ''
+              ? FEEDBACK_GATE_ID
+              : undefined
+          }
         />
       ) : null}
 
@@ -1602,6 +1671,7 @@ function derivedView({ detail, proposal, billing, phase, form, satisfactionThres
     feedbackGate: feedbackGateNote({
       score: form.score,
       reason: form.reason,
+      reasons: form.reasons,
       touched: form.feedbackTouched,
       satisfactionThreshold,
     }),
@@ -1637,6 +1707,7 @@ function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThres
   const [paymentDate, setPaymentDate] = useState('')
   const [score, setScore] = useState(null)
   const [reason, setReason] = useState('')
+  const [reasons, setReasons] = useState([])
   const [notes, setNotes] = useState('')
   const [feedbackTouched, setFeedbackTouched] = useState(false)
   // גוש-הזנת-הציון בתצוגת-התג נפתח בלחיצה בלבד — ר' ההנמקה מעל `FeedbackBlock`.
@@ -1656,6 +1727,13 @@ function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThres
     setPaymentDate(row.payment_date ?? '')
     setScore(row.feedback_score ?? null)
     setReason(row.negative_feedback_reason ?? '')
+    const seedReasons =
+      Array.isArray(row.negative_feedback_reasons) && row.negative_feedback_reasons.length > 0
+        ? row.negative_feedback_reasons
+        : row.negative_feedback_reason
+          ? [row.negative_feedback_reason]
+          : []
+    setReasons(seedReasons)
     setNotes(row.feedback_notes ?? '')
     setFeeNote(row.cancellation_fee_note ?? '')
     // 🔴 **ה25: ‏`other` אינו נזרע — הכרעת-ישי, `28/08/2026`.** האפיון קובע מילה-במילה
@@ -1756,7 +1834,7 @@ function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThres
     proposal,
     billing,
     phase,
-    form: { score, reason, feedbackTouched, feeAmount, feeNote, manualAmount },
+    form: { score, reason, reasons, feedbackTouched, feeAmount, feeNote, manualAmount },
     // 🔴 **מגיע מ-`FinancePage` ואינו נטען כאן שוב:** המסך והדיאלוג חייבים לקרוא את
     // **אותה שורה** ב-`params` — שתי שליפות נפרדות היו יכולות להיפרד בזמן (רענון של אחד
     // בלבד) ולהציג שני ספים שונים לאותו ציון, בלי שום שגיאה.
@@ -1862,11 +1940,23 @@ function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThres
     score,
     setScore: (next) => {
       setScore(next)
+      if (next != null && !needsSatisfactionAttention(next, satisfactionThreshold)) {
+        setReason('')
+        setReasons([])
+      }
       setFeedbackTouched(true)
     },
     reason,
     setReason: (next) => {
       setReason(next)
+      setReasons(next ? [next] : [])
+      setFeedbackTouched(true)
+    },
+    reasons,
+    setReasons: (next) => {
+      const arr = Array.isArray(next) ? next : next ? [next] : []
+      setReasons(arr)
+      setReason(arr[0] ?? '')
       setFeedbackTouched(true)
     },
     notes,
@@ -1992,10 +2082,18 @@ function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThres
         onSaveFeedback={() =>
           runAction(
             'feedback',
-            () =>
-              recordFeedback(projectId, {
+            () => {
+              const activeReasons = scoreLow
+                ? reasons.length > 0
+                  ? reasons
+                  : reason
+                    ? [reason]
+                    : []
+                : []
+              return recordFeedback(projectId, {
                 score,
-                reason: scoreLow ? reason : null,
+                reason: scoreLow ? (activeReasons[0] ?? (reason || null)) : null,
+                reasons: activeReasons,
                 // 🔴 **`null` אינו "רוקן" בצד השני של הגבול, אלא "לא סופק":**
                 // ‏`record_feedback` כותב `feedback_notes = coalesce(p_notes, feedback_notes)`
                 // (מיגרציה E2) ⇒ שליחת `null` על תיבה שרוקנה **משאירה את ההערה הישנה**,
@@ -2004,7 +2102,8 @@ function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThres
                 // ומנקה בפועל, ו-`''` נופל כ-falsy בכל אתרי-התצוגה (כאן, ובכרטיס-הפרויקט
                 // `projectCard.js` ⇒ `feedback.notes && …`) — כלומר אין שינוי-מראה בשום מצב אחר.
                 notes: notes.trim(),
-              }),
+              })
+            },
             'המשוב נשמר.',
           )
         }
