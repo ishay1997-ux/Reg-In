@@ -206,8 +206,7 @@ describe('gapSentence — עמודת "מה חסר": משפט במילים, לע�
     )
   })
 
-  it('הכול סגור — פרויקט מוכן או שבוטל', () => {
-    const done = 'הכול סגור — אין מה לעשות'
+  it('פרויקט מוכן מציג מוכנות חיובית', () => {
     expect(
       gapSentence({
         ...base,
@@ -216,8 +215,14 @@ describe('gapSentence — עמודת "מה חסר": משפט במילים, לע�
         assignments_row_count: 6,
         logistics_ready: 2,
       }),
-    ).toBe(done)
-    expect(gapSentence({ ...base, project_status: 'cancelled' })).toBe(done)
+    ).toBe('✓ מוכן לאירוע')
+  })
+
+  it('פרויקט שבוטל מציג ביטול ענייני עם סיבה אם קיימת', () => {
+    expect(gapSentence({ ...base, project_status: 'cancelled' })).toBe('הפרויקט בוטל')
+    expect(gapSentence({ ...base, project_status: 'cancelled', cancel_type: 'customer' })).toBe(
+      'בוטל — ביטול לקוח',
+    )
   })
 
   it('פרויקט שהסתיים מציג סטטוס סגירה חיובי', () => {
@@ -519,11 +524,31 @@ describe('staffingCell + logisticsCell — תאי-המדד: יחס, מילה ו�
     ).toBe('calm')
   })
 
-  it('שורה שנמסרה הלאה מסתירה את שני המדדים — מוכנות שם חסרת משמעות', () => {
+  it('פרויקט שבוטל מסתיר את שני המדדים', () => {
     expect(staffingCell(overviewRow({ project_status: 'cancelled' }))).toEqual({ hidden: true })
-    expect(logisticsCell(overviewRow({ project_status: 'awaiting_payment' }))).toEqual({
-      hidden: true,
-    })
+    expect(logisticsCell(overviewRow({ project_status: 'cancelled' }))).toEqual({ hidden: true })
+  })
+
+  it('פרויקטים בהמתנה כספית מציגים את נתוני האיוש והלוגיסטיקה בטון done רגוע', () => {
+    expect(
+      staffingCell(
+        overviewRow({
+          project_status: 'awaiting_payment',
+          required_hostess_count: 4,
+          hostesses_confirmed: 4,
+        }),
+      ),
+    ).toEqual({ ratio: '4/4', sub: '✓ מאויש', tone: 'done' })
+
+    expect(
+      logisticsCell(
+        overviewRow({
+          project_status: 'awaiting_invoice',
+          logistics_total: 2,
+          logistics_ready: 2,
+        }),
+      ),
+    ).toEqual({ ratio: '2/2', sub: '✓ מוכן', tone: 'done' })
   })
 
   it('פרויקט שהסתיים מציג את נתוני האיוש והלוגיסטיקה בטון done רגוע במקום להסתירם', () => {
