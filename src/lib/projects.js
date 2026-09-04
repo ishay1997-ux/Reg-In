@@ -89,7 +89,8 @@ export function gapSentence(project) {
   if (status === 'awaiting_invoice' || status === 'awaiting_payment') {
     return 'אצל מנהלת הכספים — אינו דורש ממך פעולה'
   }
-  if (status === 'finished' || status === 'cancelled') return ALL_DONE
+  if (status === 'finished') return '✓ נסגר בהצלחה'
+  if (status === 'cancelled') return ALL_DONE
 
   // ממתין לסגירה: ההבחנה היא האם אי-פעם נשלח זימון — ‏#7 הוא המקרה החי של "מעולם לא".
   if (status === 'event_finished') {
@@ -223,10 +224,24 @@ function gapWord(gap) {
 // אחרי מסירה/ביטול). הטון: miss (אדום) רק כשאיש לא נגע — אפס שורות שיבוץ; hint (ענבר)
 // לחוסר שיש לו מענה בדרך; done לעובדה סגורה. ‏≥ ולא = (§7.43): ‏7/6 הוא מאויש.
 export function staffingCell(project) {
-  if (HANDED_OFF_STATUSES.includes(project.project_status)) return { hidden: true }
+  if (
+    project.project_status === 'cancelled' ||
+    project.project_status === 'awaiting_invoice' ||
+    project.project_status === 'awaiting_payment'
+  ) {
+    return { hidden: true }
+  }
   const required = Number(project.required_hostess_count) || 0
   const confirmed = Number(project.hostesses_confirmed) || 0
   const ratio = `${confirmed}/${required}`
+
+  // פרויקט שהסתיים — מציג את עובדת האיוש הסופית בטון רגוע (done), לעולם לא ריק או אדום
+  if (project.project_status === 'finished') {
+    if (required === 0) return { ratio: null, sub: '✓ אין דיילות', tone: 'done' }
+    if (confirmed >= required) return { ratio, sub: '✓ מאויש', tone: 'done' }
+    return { ratio, sub: confirmed > 0 ? `${confirmed} שובצו` : 'לא שובצו', tone: 'done' }
+  }
+
   if (confirmed >= required && required > 0) return { ratio, sub: '✓ מאויש', tone: 'done' }
   const gap = Math.max(required - confirmed, 0)
   if ((project.assignments_row_count ?? 0) === 0) {
@@ -243,11 +258,23 @@ export function staffingCell(project) {
 // ניתן לאימות מהנתונים (פריט ordered שטרם הגיע היה הופך את המשפט לשקר). degraded-never-wrong.
 // אחרי שהאירוע עבר הטון calm — הלוגיסטיקה כבר אינה עבודה (הערת-המוקאפ בלשונית "לסגירה").
 export function logisticsCell(project) {
-  if (HANDED_OFF_STATUSES.includes(project.project_status)) return { hidden: true }
+  if (
+    project.project_status === 'cancelled' ||
+    project.project_status === 'awaiting_invoice' ||
+    project.project_status === 'awaiting_payment'
+  ) {
+    return { hidden: true }
+  }
   const total = project.logistics_total ?? 0
   const ready = project.logistics_ready ?? 0
   if (total === 0) return { ratio: null, sub: '✓ אין פריטים', tone: 'done' }
   if (ready >= total) return { ratio: `${ready}/${total}`, sub: '✓ מוכן', tone: 'done' }
+
+  // פרויקט שהסתיים — מציג את נתוני הלוגיסטיקה שהושלמה בטון done רגוע
+  if (project.project_status === 'finished') {
+    return { ratio: `${ready}/${total}`, sub: '✓ הושלם', tone: 'done' }
+  }
+
   const remaining = total - ready
   return {
     ratio: `${ready}/${total}`,
