@@ -770,11 +770,12 @@ const CHIP_CLASS = {
   pin: 'border-green-200 bg-green-100 font-bold text-green-700',
 }
 
-function Chip({ family = 'ctx', children, testId }) {
+function Chip({ family = 'ctx', children, testId, title }) {
   return (
     <span
       className={`rounded-full border px-2 py-0.5 text-[11px] ${CHIP_CLASS[family]}`}
       data-testid={testId}
+      title={title}
     >
       {children}
     </span>
@@ -861,11 +862,15 @@ function CandidateCard({
           {candidate.has_car && <Chip family="grey">יש רכב</Chip>}
 
           {/* 🔴 **סימוני-חוסר נאמרים בקול ולעולם אינם אפס שקט** — אפס היה מעניש דיילת
-              על תקלה של המערכת, ו"טרם נצבר מידע" הוא **לא ציון נמוך**: היא מדורגת
+              על תקלה של המערכת, ו"דיילת חדשה" הוא **לא ציון נמוך**: היא מדורגת
               על ממוצע-החברה בדיוק בגלל זה. */}
           {candidate.flags.notEnoughAnswers && (
-            <Chip family="grey" testId={`sm-chip-noinfo-${candidate.hostess_id}`}>
-              טרם נצבר מידע
+            <Chip
+              family="grey"
+              testId={`sm-chip-noinfo-${candidate.hostess_id}`}
+              title="פחות מ-3 מענים — מדורגת לפי ממוצע החברה"
+            >
+              דיילת חדשה
             </Chip>
           )}
           {candidate.flags.noCoordinates && (
