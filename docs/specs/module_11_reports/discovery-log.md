@@ -54,3 +54,26 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
 
 **Open at end of this entry:** Stop 1 presented → waiting for "מה מפתיע אותך" · Ishay's action: grant recruitment
 `view` on 'דו"חות' (his click) · STATUS/LOG updated at session end.
+
+## Session 1 (cont.) — 06/09/2026 09:3X · Stop 1 passed silently · Stage 1-א presented · ruling 1
+
+- Stop 1 ("מה מפתיע אותך") — Ishay answered "המשך" with no surprise named; his one question was a COUNT question
+  ("כמה דוחות זה בעצם") — the "19" label was loose. Re-counted: 21 draft cards − 12 (killed) − 3 merged (3→7, 9→5,
+  19→18) = **17 report pages**, + 4 tab overviews = **21 pages**. Lesson for the template: a scope number inherited
+  from a review must be recounted in units the reader sees (pages), not items in a source list.
+- Stage 1-א presented: 8 processes (3 invisible), surface list M=25 (unit = report page, recommended over tab),
+  settled vs open. Approval of M still pending.
+- **Ruling 1 (Ishay: "לפי המלצה")** — reopened his own 06/09 04:3X AI ruling on his initiative ("אני עדיין לא
+  סגור… מגניב או מיותר?"). Recommendation given with the four tests: keep comment classification (answers a
+  question no table can, measurable vs customer tag, batch-stored ⇒ demo-safe), drop LLM weekly narration
+  (unmeasurable, live-demo risk, value already covered by computed "אז מה" lines). He took (א).
+  Written to `processes-approved.md` §🗳️ first (rule 13א), ledger verdicts flipped (11 rows), review §ח4 got a
+  dated ✏️ pointer. World anchor was given as "מהידע שלי, לא אומת" — to be sourced in `world-sources.md` (Stage 1).
+- Caught by: Ishay (reopening the AI scope) — the file had it as settled; I would not have reopened it. Row for ④.
+- **M = 25 approved** (Ishay: "מאשר את המשטחים", 06/09/2026 09:3X); unit = report page (recommendation taken
+  without objection). Written as the surface table in `processes-approved.md` in the same turn — verified by grep
+  before reporting.
+- **Ishay's question on the seeding plan** ("באיזה שלב אתה מכניס את זה?"): added a named stage **1-ד "סיפור-הכנס
+  והדאטה"** (`seed-plan.md`, Hebrew, spec folder — the m7 `seed-data-spec.md` precedent) between the process
+  cards and drawing, because Stage 2's data set (2א) must come from it and the blueprint's phase 1 seeding
+  (§ח8 #10) executes it. Caught by: Ishay — the template has no seeding stage; the harvest ledger gets this.
