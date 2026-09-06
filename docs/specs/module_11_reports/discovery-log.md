@@ -130,3 +130,13 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   nothing by re-reading. Ishay's own catch this block: none yet (batch pending).
 - Ishay's question "האם צריך להוסיף פרמטרים למודול?" answered: yes, exactly the four already ruled + their
   registry rows; nothing else earns a param (windows/chart choices stay formulas).
+- **17:3X — disk check at Ishay's request ("יש עוד דברים בשיחה שצריך לכתוב בדיסק? בדוק").** Found and written now:
+  ruling 14 (the params rule he asked about) · ruling 13's quote upgraded from "assumed" to his words · the §🔇
+  silent-decision register extended with the Stage-1 items · this log: (a) **written-off already seeded** — measured
+  live: 7 projects (01/2024–06/2026) with three realistic reasons; report 6 shows them as a separate counter, no
+  seeding needed; (b) **palette drift** found by the design-contract agent: `rose-*` ×5 and `emerald-*` ×3 crept
+  into `02_customers/CustomersPage.jsx` (28/08) and `06_projects/ProjectCardPage.jsx` (05/09) — not in the approved
+  language; m11 does not copy them; a cleanup candidate for a polish session (not a §6 debt — no module will grep
+  for it); (c) the handoff file refreshed to the real position (Stage 2 contract wave running here).
+  Already on disk before the check: rulings 1–12, cards, definitions, contracts, killed paths, the 17/21 recount,
+  the agents' costs, the reviewer findings.
