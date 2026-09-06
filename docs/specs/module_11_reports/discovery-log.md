@@ -220,3 +220,13 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   only on ruling 17 and could have run from the start. Split into phase A (now, parallel) and phase B (blueprint).
   **Fourth time today my default was the smaller/later option and he corrected it** — the memory entry is earning
   its place.
+- **22:3X–22:4X — rulings 26 + the ח4 reversal.** Two agent claims were verified by me before use and one was
+  wrong: the data agent said active projects have no `actual_hours` (false — 446 assignments do); the real reason
+  ח4 fails is structural (before an event happens, actual < planned always ⇒ 0 overspend on all 63 active
+  projects, max deviation 0 ₪). Dropped with Ishay's agreement. The seeding plan then produced three
+  assumption-breaking findings: **the seeding is not reversible** (no un-archive exists — my own ruling 25 said it
+  was), **a single August payroll report sweeps 3,887 lines / 919,048 ₪**, and **24 of 29 September events cannot
+  be closed today** (status + future-date gates) ⇒ phase A splits into two runs. Also: the "don't touch project 8"
+  instruction is empty — projects 3/7/8/13/14 no longer exist; live anchors are 11·12·15·16 (write-back owed to
+  `seed-data-spec.md` and `demo-seed.mjs`). Scope-change volume raised from 1.6% to ~25% of projects, anchored on
+  an internal measurement (18.7% of finished events had more guests than the quote estimated).
