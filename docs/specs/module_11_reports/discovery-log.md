@@ -103,3 +103,30 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
 - **16:0X — ruling 9:** 🔵 keeps both meanings (§7 = nod-pending · specs = open). Ishay: "אני רוצה לפי המלצתך אבל
   לא בשקט" ⇒ written where a future reader looks — `docs/CLAUDE.md` emoji legend — not only in this module's file.
   Template §13's "raise the collision" row can now point at that ruling (harvest ③).
+
+## Session 1 (cont.) — 06/09/2026 16:0X–17:0X · Ishay: "תכנן ובצע" here · Stage 1-ג/ג2/ד in delegation
+
+- Ishay reaffirmed continuing in this session despite the rotation warning ⇒ persistence law applied hard: every
+  ruling to disk + commit per block. Written by me (not agents): cards ת4–ת8 · 1-ג2 contracts · 17 report
+  definitions (`aced42e`).
+- **Four Sonnet agents in parallel** (230K + 323K + 279K + 369K ≈ 1.2M): column verify (68 ids, 0 ❌) · live
+  anchors (13 measurements, 2 discrepancies vs earlier figures) · world-sources (11 practices / 12 rejections; one
+  honest tension: arXiv 2606.26595 argues for open topics) · seed-plan draft (17 + 4 stories; found the
+  seed-registry migration header still says "not applied" though 2,250 rows live).
+- **Opus fresh-context reviewer (291K)** on the set: 32 claims — 6 ❌ · 8 ◐ · 18 ✅; 14 gaps. Fixed in the SSOT this
+  turn: the **Gini triple** (0.526 was the REJECTED active-only population; locked to 0.4556 n=106 with
+  `event_date ≤ today`) · **reliability** (0.852/7/4 → replicated formula 0.96/1/2 of 86) · **deviation triple**
+  (61/81/175 → locked signed ratio = 81 · 11.6%; % marked as display-derivation over §7.58) · §7.98 list-window +
+  pager brought into ת1 with a declared deviation on the default window · LTR time axis + shared-today rule into ת1
+  · card completeness for ת4–ת8 · מ25 clarified (surface counted, drawn inside page-20 file) · six R-rows routed
+  (R1 לא-נדרש · R2/R6 reasoned rejection · R3/R4/R7 covered) · delegated §ח rulings restated in the SSOT (so it
+  no longer depends on `research/`) · chart type per page · locked-vocabulary core · paramsRegistry rows for the
+  4 params · "53 params" → 43 · stale ceilings-branch sentence removed (PR #104 merged) · finance_project_money
+  return list completed · salary lines join via report_id · acceptance denominator locked to the array column ·
+  Cyrillic ч→ח in seed-plan (30) · mirror tags added to world-sources block 11 and seed-plan §0 · live-anchors
+  false attribution corrected. Left for Stage 2 by design: design-contract.md · data-set.md with one "today".
+- **Caught by whom (harvest ④):** Gini population mismatch, deviation-definition split, §7.98 omission, card gaps,
+  Cyrillic letters — **fresh reviewer**; agent-vs-agent number conflicts — **agents** (surfaced, not resolved);
+  nothing by re-reading. Ishay's own catch this block: none yet (batch pending).
+- Ishay's question "האם צריך להוסיף פרמטרים למודול?" answered: yes, exactly the four already ruled + their
+  registry rows; nothing else earns a param (windows/chart choices stay formulas).

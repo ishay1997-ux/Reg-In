@@ -1,3 +1,5 @@
+> ✏️ Correction 06/09 16:5X (fresh reviewer): §G's sentence "the migration file itself states 61 / 8.7%" is a false attribution — that figure sits in `research/review-2026-09-06.md` §ח9, not in the migration. The locked definition is now in `processes-approved.md` §📑 #5 (signed ratio ⇒ 81 · 11.6%).
+
 # M11 Live-DB Re-measurement — 06/09/2026 (post-hotfix `20260906083345`)
 
 > Read-only measurement pass. Project `yfeovxppnfoafmfbdfvh`, `current_date = 2026-09-06` (verified: `select current_date` → `2026-09-06`, `now()` → `2026-09-06 13:16:07+00`).
