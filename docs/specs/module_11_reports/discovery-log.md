@@ -190,3 +190,9 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   להתנהג?"). Honest answer given: what ruling 4 specified is cross-filter + drill-**through**, not true
   drill-**down** (hierarchical descent inside the chart). Recommendation put to him as a scope question with the
   behaviour spec (breadcrumb, tiles follow the level, export follows the level, state in the URL) — pending.
+- **21:3X — ruling 22, an Ishay catch that lands mid-flight.** *"יש דוחות בנאליים שהם לא תומכי החלטה וזה בסדר
+  כי הם סטנדרטים"* — and the decision-support audit agent was briefed to be ruthless, so it would have condemned
+  the operational reports (payroll, equipment) for failing a lens that is not theirs. Four report types recorded
+  with the lens each is judged by, and all 21 pages classified (5 decision · 8 monitoring · 4 strategic ·
+  2 operational). **The running agent's output must be read through this table before any of its findings is
+  applied** — noted in ruling 22's ripple column so a later session cannot miss it.
