@@ -1961,6 +1961,8 @@ create policy notification_preferences_update_self on notification_preferences
 --   budget_deviation numeric, planned_hours numeric, paid_shift_count integer,
 --   finally_approved_count integer)
 --   SD · stable · plpgsql · [service_role]   ← 🔴 **פנימית: אין anon ואין authenticated**
+--   → הגוף החי: supabase/migrations/20260906083345_module8_planned_hours_cross_midnight.sql
+--     (06/09/2026: שעות-מתוכננות עם גלגול-חצות — קודם 20:00→01:00 נתן ‎-19; H7 לפניו)
 --   🔑 **מקור-האמת היחיד של הכסף.** כל מסך של מ8 עובר דרכה, ולכן אי-אפשר ששני מסכים
 --      יראו שני רווחים שונים לאותו פרויקט (F16/R1-4). אומתה מול עוגן-היד: #13 ⇒ 3,650.00.
 --   🔴 **עודכנה ב-`H7` (01/09/2026) — ואם אתה נוגע בה, זה המוקש:** המשתנה `v_labor`
