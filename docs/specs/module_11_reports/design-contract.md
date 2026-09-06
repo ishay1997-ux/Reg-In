@@ -6,7 +6,15 @@
 > נושא **מדידות, פלטות ודאטה בלבד**. כל מקום שבו הכרעת-מוצר של מודול 11 נזכרת כאן, הוא מסומן
 > `🔗 מראת <הכרעה> — SSOT: processes-approved.md (לא לערוך כאן)` — לא משוכפל בניסוח משלו.
 
-> **מה הקובץ הזה כן:** מדידות-עיצוב לקראת שלב 2 (25 המשטחים שאושרו, `M=25`) — פלטה שנמדדה
+> ✏️ **22:1X — סבב-הביקורת נכנס לקובץ הזה בשבע נקודות:** ‏§⑥.1 **תוויות-הבורר = השם הקצר**
+> (הכרעה 18 — הפריט הדחוף ביותר בכל הסבב; הקובץ הזה הכתיב עד עכשיו את הצורה שהיא ביטלה) ·
+> §5.2 בנטים **13–15** (ערכי-ציר עגולים · קווי-ייחוס · `domain` נעול) · §⑥ **`scope="col"`**
+> ו-`aria-sort`/`aria-live` בשלד-הטבלה · §2.9 **פירורי-לחם לדריל-דאון** · §2.10 + §⑥
+> **עיגולי-מפת-הלחיצות** · §⑥ **ניגודיות החותמת ושורת-המקורות** (`--s400` → `--s500`) ·
+> §⑥ **`.somuch` → `.so-what`** + שורות **חלון-אריח · הצהרת-אוכלוסייה · הגדרות-מדדים**.
+> 🔴 **וכל אחד מהם הוא מראה של כלל ב-`processes-approved.md §📐` — לא כלל שנולד כאן.**
+>
+> **מה הקובץ הזה כן:** מדידות-עיצוב לקראת שלב 2 (‏**`M=26`** ✏️ 22:1X — הכרעה 24 הוסיפה דף) — פלטה שנמדדה
 > מחדש היום · רכיבים-משותפים לשימוש-חובה (כולל שני רכיבים שאין להם עדיין תקדים מדויק — הבורר
 > והגרף) · כיווניות (RTL) · כלל-המילוי · חוזה-הגרפים (Recharts, שאינו בשימוש עדיין בשום מקום
 > ב-`src/`) · שלד-HTML-להעתקה למעטפת-הדוחות ולדף-דוח בודד. כל טענה נושאת נתיב-קובץ
@@ -292,6 +300,36 @@ GroupList.jsx`** — עמודה ימנית של קבוצות, תווית+מונ�
 "אין שורות לייצא"). `write-excel-file` (כבר בשימוש בדוח-השכר של מודול 8) הוא המנגנון
 לכפתור-האקסל של מ1 (המעטפת) — לא ספרייה חדשה.
 
+### 2.9 ✏️ 22:1X פירורי-לחם לדריל-דאון — תקדים קיים, לא רכיב חדש
+
+🔗 **מראת 📐13 — SSOT: `processes-approved.md` (לא לערוך כאן):** דריל היררכי קיים ב**ארבעה
+דוחות בלבד** (מגמות · ריכוזיות · גיול · שכר), ובכל אחד: פירורי-לחם · אריחים ושורת-"אז מה"
+שיורדים עם הרמה · ייצוא של הרמה הנוכחית · מצב בכתובת-הדף. **בשאר הדפים — סינון-צולב בלבד.**
+
+🔑 **והתקדים קיים ומדויק: `Crumbs` ב-`src/modules/06_projects/ProjectCardPage.jsx`**
+(עוגן-גריפ: `function Crumbs({ eventName })`) — `mb-2.5 flex items-center gap-2 text-xs
+text-slate-500`, הקישור `font-semibold text-teal-700` (`data-testid="project-card-crumb"`),
+המפריד `|` ב-`text-slate-300`. ⚠️ **ו-`flex` ולא טקסט-עם-מפריד** — הערת-הקוד שם נוקבת בסיבה:
+*"סדר הפריטים נקבע ע"י הפריסה, לא ע"י אלגוריתם ה-bidi"*, וזה בדיוק המוקש של נתיב רב-רמות בעברית.
+
+**מה שמודול 11 מוסיף על התקדים, ולמה:** ① **יותר משתי רמות** (שנה › חודש › אירוע) ⇒ כל פירור
+שאינו האחרון הוא `<button>` שחוזר לרמתו · ② **הפריט האחרון נושא `aria-current="page"`** ·
+③ **הפירורים אינם ניווט-מסכים אלא ניווט-בתוך-דף** — ולכן `<button>`, לא `<Link>` (`ProjectCardPage`
+משתמש ב-`<Link to="/projects">` כי שם זה **כן** מסך אחר). **המרקאפ: §⑥ למטה.**
+
+### 2.10 ✏️ 22:1X עיגולי-מפת-הלחיצות — כלי-תיעוד במוקאפ בלבד
+
+🔗 **מראת 📐14ב — SSOT: `processes-approved.md`.** עיגול-מספר קטן ליד כל אלמנט אינטראקטיבי,
+**בספרות רגילות (1, 2, 3…) ולא ב-`①②③`** — אלה כבר תפוסים בשתי משמעויות בתיקייה הזו (מספור
+תשעת-סעיפי-כרטיס-המסך · כותרת-כרטיס בגלריית-המצבים), ומשמעות שלישית הופכת "②" בתוך כרטיס-גרף
+לחידה *(`stage2-review/m11-interaction-annotation.md` §2.1, שנבדק מול שני המוקאפים המאושרים
+של מ5 ומ8)*.
+**שלושה כללים טכניים:** ‏`position:absolute` על הורה עם `position:relative` (`.im-host`) ⇒ **אינו
+דוחף פריסה** · `aria-hidden="true"` ⇒ קורא-המסך רואה רק את ה-`aria-label` של האלמנט עצמו ·
+`class="hide-markers"` על ה-`<body>` מכבה את כולם לפני שהצילום נשלח לישי. **ה-CSS: §⑥ למטה.**
+⚠️ **והעיגול אינו ראיה לכלום** — עמודת "מקלדת" בטבלת-האינטראקציות נכתבת רק אחרי שנמצא
+`keydown` **בפועל**; ‏`tabindex`/`role` לבדם אינם מימוש (נמצאו שני מקומות כאלה בטיוטה הקיימת).
+
 ---
 
 ## ③ כיווניות (RTL) — נמדד מ-`src/CLAUDE.md`, ורלוונטי במיוחד לגרפים
@@ -449,6 +487,24 @@ recharts, e2e/accessibility.spec.js, wiki) יש לקרוא את הקובץ המ�
 12. **היסטוגרמה/פארטו/לורנץ מחייבים חישוב-נתונים (bins/מצטבר) בצד-הלקוח לפני מסירה
     ל-Recharts** — אין primitive מובנה לאף אחד מהשלושה בספרייה עצמה (§5.2ב למטה).
 
+**✏️ 22:1X — שלושה בנטים שנוספו בסבב-הביקורת (13–15).** מקורם אינו `m11-charts-rtl-a11y.md`
+אלא `stage2-review/m11-bi-professional-critique.md`, ולכן הם מסומנים בנפרד ואינם חלק מ"ההעתק המלא":
+
+13. **ערכי-ציר עגולים, וציר-ערך שמתחיל באפס.** ‏`ticks` מפורשים (0 / 25,000 / 50,000), לא
+    נגזרת-מקסימום — **נמדד במוקאפ שנחת בכל שבעת הגרפים:** `46,400 / 23,200` · `57,500 / 28,750` ·
+    `58,500 / 29,250`. ‏**ואין קטיעת-ציר בעמודות** — קטיעה מנפחת את גודל-האפקט הנתפס
+    ו**סימון-קטיעה אינו מנטרל זאת**
+    ([Correll · Bertini · Franconeri, arXiv 1907.02035](https://arxiv.org/abs/1907.02035) ·
+    [StatCan](https://www150.statcan.gc.ca/n1/pub/89-26-0005/892600052022001-eng.htm)).
+    🔗 **מראת 📐5 — SSOT: `processes-approved.md` (לא לערוך כאן).**
+14. **קווי-ייחוס, במקומות שנקבעו** *(נמדד: **0** `ReferenceLine` במוקאפ שנחת)*: ‏`ReferenceLine y={80}`
+    על הציר הימני של הפארטו (דוח 4) · ‏`ReferenceLine` **אלכסוני 1:1** בפיזור-האורחים (דוח 10) ·
+    שני קווי-חציון (תעריף אנכי · דירוג אופקי) בפיזור 14 · **קו-השוויון** בלורנץ (14א), מתויג
+    *"חלוקה שווה"*. 🔗 **מראת 📐6.**
+15. **`domain` נעול היכן שהסולם ידוע מראש:** `[0, 100]` לכל ציר-מצטבר/אחוז (פארטו · לורנץ) ·
+    `[1, 5]` לציון-משוב · **וציר-אחוז שני בגרף-משולב אינו auto** — תנודה של 1.5 נקודות על ציר
+    חופשי נראית כמפולת. 🔗 **מראת 📐6.**
+
 **בלי יוצא-מן-הכלל, ובנוסף — צבע ותוכן-הטולטיפ (מה שכבר היה בטיוטה הקודמת, נשמר):**
 - **צבעי-קטגוריה מהפלטה בלבד** (§①): טורקיז ראשי (`#009689`/`bg-teal-600`) לסדרה-עיקרית ·
   אפור-סלייט (`#62748E`/`text-slate-500`) לתקופה-קודמת/סדרה-משנית · אדום יחיד
@@ -493,8 +549,14 @@ recharts, e2e/accessibility.spec.js, wiki) יש לקרוא את הקובץ המ�
         <XAxis dataKey="period" reversed={false} /* ציר-זמן LTR: תקופה-מוקדמת בצד שמאל */ />
         <YAxis
           orientation="right" /* לא אומת: התאמת-RTL ל-YAxis בפועל, §5.2ב */
+          domain={[0, 50000]}                       /* ✏️ 22:1X §5.2 #15 — לא auto */
+          ticks={[0, 25000, 50000]}                 /* ✏️ 22:1X §5.2 #13 — ערכים עגולים, מתחיל באפס */
           tickFormatter={(v) => `⁦${v.toLocaleString('he-IL')} ₪⁩`} /* LRI…PDI סביב הצמד ספרה+₪, §5.2 #3 */
         />
+        {/* ✏️ 22:1X §5.2 #14 — קו-ייחוס היכן שנקבע (כאן: חציון-החברה, 📐15). התווית עברית
+            ולכן מחוץ לזרימת-ה-LTR מבחינה ויזואלית — לבדוק בדפדפן, `לא אומת`. */}
+        <ReferenceLine y={median} stroke="#90A1B9" strokeDasharray="4 4"
+                       label={{ value: 'חציון החברה', position: 'insideTopRight' }} />
         <Tooltip content={<HebrewTooltip />} /* עברית+ימין, לא ברירת-המחדל, §5.2 עקרון-טולטיפ */ />
         <Bar dataKey="value" onClick={onBarClick} cursor="pointer">
           {rows.map((r) => (
@@ -507,7 +569,8 @@ recharts, e2e/accessibility.spec.js, wiki) יש לקרוא את הקובץ המ�
   {/* נגישות: אותם נתונים כטבלה, מוסתרת חזותית — §5.2 #6 */}
   <table className="sr-only">
     <caption><כותרת-הדוח></caption>
-    <thead><tr><th>תקופה</th><th>ערך</th></tr></thead>
+    {/* ✏️ 22:1X scope="col" גם בטבלת-ה-sr-only — היא **הטבלה היחידה שקורא-מסך רואה** בגרף (§5.2 #6) */}
+    <thead><tr><th scope="col">תקופה</th><th scope="col">ערך</th></tr></thead>
     <tbody>{rows.map((r) => <tr key={r.period}><td>{r.period}</td><td>{r.value}</td></tr>)}</tbody>
   </table>
 </div>
@@ -578,12 +641,50 @@ main{margin-right:var(--sidebar); padding:calc(var(--topbar) + 24px) 24px 40px; 
 h1{font-size:20px; font-weight:700; color:var(--s800)}
 .psub{font-size:12px; color:var(--s500); margin-top:2px}
 
-/* ── ✏️ 17:5X חותמת "היום" (הכרעה 15-ז) — פינה שמאלית-עליונה של כל מוקאפ ── */
-.stamp{position:absolute; top:calc(var(--topbar) + 8px); left:24px; font-size:11px; color:var(--s400)}
+/* ── ✏️ 17:5X חותמת "היום" (הכרעה 15-ז) — פינה שמאלית-עליונה של כל מוקאפ ──
+   ✏️ 22:1X **ניגודיות: --s400 → --s500.** `text-slate-400` על לבן = יחס **2.63:1**, מתחת ל-4.5:1
+   של AA (`e2e/accessibility.spec.js`), ו-`stage2-review/m11-charts-rtl-a11y.md` #10 קובע
+   *"טקסט לעולם לא ב-slate-400 בלבד על רקע לבן"*. הקובץ הזה הכתיב עד עכשיו בדיוק את זה —
+   וזו הסתירה ש-`stage2-cards/cards-finance.md` G4 סימן בין שני מסמכים מאושרים. **נסגרה לטובת
+   הניגודיות**, כי היא תקן חיצוני ולא בחירת-שפה (כלל-ברזל 8 אינו נוגע: אותה משפחת-סלייט, דרגה
+   אחת כהה יותר). ⚠️ **ומה שלא נגעתי בו במכוון:** `.tile .masked` ו-`.tab.masked` נשארים
+   `--s400` — הם **מראה של קוד מוזג** (`MASKED_NODE` ב-`src/modules/07_dashboard/KpiStrip.jsx`,
+   `text-slate-400`), ושינוי שם הוא אדווה למודול 7, לא החלטת-מוקאפ. נשאר חוב-נגישות advisory ידוע. ── */
+.stamp{position:absolute; top:calc(var(--topbar) + 8px); left:24px; font-size:11px; color:var(--s500)}
 
-/* ── ✏️ 17:5X שורת-מקורות (הכרעה 15-ז) — תחתית כל מוקאפ ── */
+/* ── ✏️ 17:5X שורת-מקורות (הכרעה 15-ז) — תחתית כל מוקאפ · ✏️ 22:1X --s400 → --s500, כנ"ל ── */
 .src-footer{margin-top:24px; padding-top:10px; border-top:1px solid var(--s100);
-     font-size:11px; color:var(--s400)}
+     font-size:11px; color:var(--s500)}
+
+/* ── ✏️ 22:1X שורת-הגדרות-מדדים (📐16) — יושבת מעל שורת-המקורות, אותו משקל חזותי ── */
+.def-footer{margin-top:12px; font-size:11px; color:var(--s500); line-height:1.7}
+
+/* ── ✏️ 22:1X שורת-הצהרת-אוכלוסייה (📐2) — מתחת לכותרת-המשנה, בכל דף ── */
+.pop{font-size:11.5px; color:var(--s500); margin-top:4px}
+
+/* ── ✏️ 22:1X פירורי-לחם לדריל-דאון (📐13) — **רק** בארבעת דפי-הדריל (1 · 4 · 6 · 16).
+   🔑 **לא רכיב חדש — העתק מדויק של התקדים הקיים** `Crumbs` ב-`src/modules/06_projects/
+   ProjectCardPage.jsx` (עוגן-גריפ: `function Crumbs({ eventName })`): `flex items-center gap-2
+   text-xs text-slate-500`, הקישור `font-semibold text-teal-700`, המפריד `|` ב-`text-slate-300`.
+   ⚠️ **ו-flex ולא טקסט-עם-מפריד** — הערת-הקוד שם: הסדר נקבע ע"י הפריסה ולא ע"י אלגוריתם-ה-bidi.
+   **מה שמודול 11 מוסיף:** יותר משתי רמות, והפריט האחרון נושא `aria-current="page"`. ── */
+.crumbs{display:flex; align-items:center; gap:8px; margin:10px 0 4px; font-size:12px; color:var(--s500)}
+.crumbs button{border:none; background:none; font:inherit; font-weight:600; color:var(--teal700);
+     cursor:pointer; padding:0}
+.crumbs .sep{color:var(--s300)}
+.crumbs [aria-current="page"]{color:var(--s700); font-weight:600}
+
+/* ── ✏️ 22:1X מפת-לחיצות ויזואלית (📐14ב) — עיגול-מספר ליד אלמנט אינטראקטיבי.
+   **ספרות רגילות (1,2,3…), לא ①②③** — אלה תפוסים בשתי משמעויות (סעיפי-כרטיס · כותרת-כרטיס-מצב).
+   position:absolute ⇒ אינו דוחף פריסה · aria-hidden ⇒ קורא-המסך רואה רק את ה-aria-label של
+   האלמנט עצמו · `class="hide-markers"` על <body> מכבה הכול לפני מסירת-צילום.
+   מקור: `stage2-review/m11-interaction-annotation.md` §2.2. ── */
+.im-host{position:relative}
+.im{position:absolute; top:-8px; left:-8px; z-index:40; display:flex; align-items:center;
+    justify-content:center; width:18px; height:18px; border-radius:999px;
+    background:var(--teal600); color:#fff; font:700 10px/1 'Geist Variable',sans-serif;
+    box-shadow:0 0 0 2px #fff; pointer-events:none}
+body.hide-markers .im{display:none}
 
 /* ── לשוניות-דוחות עם מיסוך (§2.4): 4 לפי-תפקיד, אחת יכולה להיות ממוסכת ── */
 .tabs{display:flex; gap:4px; border-bottom:1px solid var(--s200); margin:0 0 16px}
@@ -623,17 +724,25 @@ h1{font-size:20px; font-weight:700; color:var(--s800)}
 /* ✏️ 17:5X שורת-השוואה (הכרעה 15-ב): ▲/▼ לא-צבוע + הערך הקודם, באותה שורה */
 .tile .cmp{font-size:11px; color:var(--s500); display:flex; align-items:center; gap:4px}
 .tile .cmp .arrow{color:inherit; font-size:10px}
+/* ✏️ 22:1X **חלון-הזמן של האריח** (📐3) — שורה שלישית קבועה בכל אריח: "נכון ל-…" · "06/09–06/10" ·
+   "12 החודשים האחרונים"; ואריח שאינו מגיב למסנן נושא כאן "אינו מושפע ממסנן התקופה". */
+.tile .win{font-size:10.5px; color:var(--s500)}
 
 /* ── כרטיס-גרף (§⑤) ── */
 .chart-card{border:1px solid var(--s200); background:#fff; border-radius:var(--r-xl);
      padding:16px; margin-bottom:16px}
 .chart-card h3{font-size:13.5px; font-weight:600; color:var(--s700); margin-bottom:10px}
 
-/* ── שורת-"אז מה" (מילון-נעול, הכרעה 15-ג) — ✏️ 17:5X תוקן: בלי מילוי-רקע, קו-ימני דק בלבד ── */
-.somuch{background:none; border:none; border-right:3px solid var(--teal600); border-radius:0;
+/* ── שורת-"אז מה" (מילון-נעול, הכרעה 15-ג) — ✏️ 17:5X תוקן: בלי מילוי-רקע, קו-ימני דק בלבד.
+   ✏️ 22:1X **שם-המחלקה `somuch` → `so-what`** — המילון-הנעול קובע "שורת-אז מה", ו-`grep somuch`
+   בבנייה לא מוצא אותה (ביקורת §3.2 · §6 שורה 40). ⚠️ **המוקאפ שנחת עדיין כותב `.somuch`** —
+   ליישר בסבב-הציור, לא כאן. ── */
+.so-what{background:none; border:none; border-right:3px solid var(--teal600); border-radius:0;
      padding:6px 14px; font-size:13px; font-weight:600; color:var(--teal700); margin-bottom:16px}
 
-/* ── טבלה + חלון-דפדוף (ListWindow, §2.5) ── */
+/* ── טבלה + חלון-דפדוף (ListWindow, §2.5) ──
+   ✏️ 22:1X **כל `<th>` נושא `scope="col"`** — מראת 📐9 (WCAG H63; נמדד במוקאפ שנחת: 99 `<th>`,
+   0 `scope`). זו תכונת-HTML ולא CSS, ולכן היא בשלד למטה — כאן רק התזכורת. ── */
 table{width:100%; border-collapse:collapse}
 th{font-size:12px; font-weight:600; color:var(--s500); text-align:right;
    padding:6px 10px; border-bottom:1px solid var(--s200); white-space:nowrap}
@@ -704,17 +813,33 @@ tr.amber td{background:var(--amber50)}
   </div>
 
   <div style="display:flex; gap:20px; align-items:flex-start">
-    <!-- בורר-דוח (§2.7) — ✏️ 17:5X תוויות = כותרות-השאלה מ-📑, מילה-במילה (הכרעה 15-א), לא מספרים/תמצות.
-         שלושת בוררי-הלשוניות האחרים (כספים/דיילות/לקוחות), גם הם מילה-במילה מ-📑: §⑥.1 למטה. -->
+    <!-- בורר-דוח (§2.7) — ✏️ 22:1X **תוויות = השם הקצר מטבלת 🏷️** (הכרעה 18), לא השאלה.
+         ההערה שהייתה כאן ("תוויות = כותרות-השאלה מ-📑") הוסרה — היא הכתיבה את הצורה שהכרעה 18 ביטלה.
+         שלושת בוררי-הלשוניות האחרים (כספים/דיילות/לקוחות): §⑥.1 למטה. -->
     <nav class="picker" aria-label="דוחות לשונית הנהלה">
-      <button class="on">מה מצב העסק השנה?</button>
-      <button>האם הצמיחה שומרת על שולי-הרווח?</button>
-      <button>האם הנחות עמוקות שוחקות את הרווח?</button>
-      <button>כמה אנחנו תלויים בלקוחות הגדולים?</button>
-      <button>כמה דיילות לאורח באמת נדרשו?</button>
+      <button class="on" aria-current="true">מבט-על הנהלה</button>
+      <button>מגמות רב-שנתיות</button>
+      <button>הנחות ורווחיות</button>
+      <button>ריכוזיות לקוחות</button>
+      <button>קהל מול צוות</button>
     </nav>
 
     <div style="flex:1; min-width:0">
+      <!-- ✏️ 22:1X כותרת-הדף: שם קצר (הכרעה 18) · השאלה · **התקופה** (📐17) · **הצהרת-אוכלוסייה** (📐2).
+           <h1> אמיתי ברמת-העמוד הוא גם דרישת §5.2 #11 (waitForReady בסריקת-הנגישות). -->
+      <h1>מבט-על הנהלה</h1>
+      <p class="psub">מה מצב העסק השנה?</p>
+      <p class="psub">2026 (01/01–06/09) · כל הלקוחות</p>
+      <p class="pop">אוכלוסייה: פרויקטים שהסתיימו + מבוטלים שדמי-הביטול נפתרו ·
+         הוצאו: פעילים ומבוטלים שלא נפתרו · <span class="ltr">n=215</span></p>
+
+      <!-- ✏️ 22:1X פירורי-לחם — מוצגים **רק** בארבעת דפי-הדריל (📐13); בשאר הדפים אין אלמנט כזה. -->
+      <nav class="crumbs" aria-label="מיקום בדוח" hidden>
+        <button>2026</button><span class="sep" aria-hidden="true">|</span>
+        <button>מרץ</button><span class="sep" aria-hidden="true">|</span>
+        <span aria-current="page">ערב גאלה שנתי</span>
+      </nav>
+
       <!-- מסננים גלובליים (§2.5): תקופה · לקוח -->
       <div class="filters">
         <span style="font-size:12px; color:var(--s500)">תקופה:</span>
@@ -731,19 +856,32 @@ tr.amber td{background:var(--amber50)}
 
       <!-- שורת-"אז מה" — מחושבת, לא מנוסחת ע"י LLM (הכרעה 1); בלי מילוי (הכרעה 15-ג).
            ✏️ 17:5X ערך אמיתי מ-`data-set.md` מ2 (לא הומצא) — הציטוט המדויק שם: "אז מה (📐, לפי 📑)" -->
-      <p class="somuch">"הכנסות עד ספטמבר: 1,487,575 ₪, Δ +21.1% מול אשתקד; שולי-רווח 60.1%."</p>
+      <p class="so-what">"הכנסות עד ספטמבר: 1,487,575 ₪, Δ +21.1% מול אשתקד; שולי-רווח 60.1%."</p>
+
+      <!-- ✏️ 22:1X אזור-הכרזה לקרוס-פילטר (📐9) — ריק עד שנבחרת עמודה, ואז נכתב לתוכו
+           "מסונן ל…; N שורות". חובה שיהיה בדף מראש, לא להיווצר בלחיצה. -->
+      <p class="sr-only" aria-live="polite" id="filterAnnounce"></p>
 
       <!-- אריחי-KPI (StatTile) — לבן+מסגרת, השוואה-לתקופה-קודמת בכל אריח (הכרעה 4);
            ✏️ 17:5X חץ ▲/▼ לא-צבוע + הערך הקודם, "—" כשאין שינוי (הכרעה 15-ב); ✏️ 17:5X הערכים
            עצמם מ-`data-set.md` מ2 (🌱/📐, לא הומצאו) — 1,487,575/1,228,142 ₪ · 60.1%/58.9% · 215 -->
+      <!-- ✏️ 22:1X כל אריח נושא **שלוש** שורות מתחת לערך: תווית · השוואה (📐1) · **חלון-זמן** (📐3).
+           והתוויות נושאות **מכנה** היכן שהן יחס (📐2/📑ב) — "נתח 5 הגדולים מתוך 61 לקוחות". -->
       <div class="tiles">
-        <div class="tile"><span class="lb">הכנסות YTD</span><span class="vl">1,487,575 ₪</span>
-          <span class="cmp"><span class="arrow">▲</span> אשתקד: 1,228,142 ₪</span></div>
+        <div class="tile im-host"><span class="lb">הכנסות YTD</span><span class="vl">1,487,575 ₪</span>
+          <span class="cmp"><span class="arrow">▲</span> אשתקד: 1,228,142 ₪</span>
+          <span class="win">01/01–06/09</span>
+          <i class="im" aria-hidden="true">1</i></div>
         <div class="tile"><span class="lb">שולי-רווח</span><span class="vl">60.1%</span>
-          <span class="cmp"><span class="arrow">▲</span> אשתקד: 58.9%</span></div>
-        <div class="tile"><span class="lb">פרויקטים שהסתיימו</span><span class="vl">215</span>
-          <span class="cmp">—</span></div>
-        <div class="tile"><span class="lb">נתח 5 הגדולים</span><span class="masked">לא זמין בתפקידך</span></div>
+          <span class="cmp"><span class="arrow">▲</span> אשתקד: 58.9%</span>
+          <span class="win">01/01–06/09</span></div>
+        <div class="tile"><span class="lb">פרויקטים שהסתיימו + מבוטלים שדמי-הביטול נפתרו</span>
+          <span class="vl">215</span>
+          <span class="cmp">—</span>
+          <span class="win">01/01–06/09</span></div>
+        <div class="tile"><span class="lb">נתח 5 הגדולים מתוך 61 לקוחות</span>
+          <span class="masked">לא זמין בתפקידך</span>
+          <span class="win">אינו מושפע ממסנן התקופה</span></div>
       </div>
 
       <!-- כרטיס-גרף (§⑤): ציר-זמן LTR. עמודה ראשונה = דוגמת כלל-המילוי (אדום מעל-סף);
@@ -763,7 +901,13 @@ tr.amber td{background:var(--amber50)}
            (🌱, פרויקט #1394 בטבלת "הפרויקטים הגדולים ב-2026"), לא שם/סכום מומצאים -->
       <div class="chart-card" style="padding:0">
         <table>
-          <thead><tr><th style="width:40%">פרויקט</th><th style="width:30%">הכנסה</th><th style="width:30%">רווח</th></tr></thead>
+          <!-- ✏️ 22:1X `scope="col"` בכל כותרת (📐9 · WCAG H63) · `aria-sort` על העמודה הממוינת
+               (📐7 קובע **לפי המדד המוצג**, כאן: הכנסה יורדת) -->
+          <thead><tr>
+            <th scope="col" style="width:40%">פרויקט</th>
+            <th scope="col" aria-sort="descending" style="width:30%">הכנסה ▼</th>
+            <th scope="col" style="width:30%">רווח</th>
+          </tr></thead>
           <tbody>
             <tr class="click"><td>ערב גאלה שנתי · אלפא סיסטמס בע"מ</td><td class="ltr">18,643 ₪</td><td class="ltr">8,932 ₪</td></tr>
           </tbody>
@@ -771,7 +915,10 @@ tr.amber td{background:var(--amber50)}
         <div class="pager">
           <!-- ✏️ 17:5X תוקן: היה "1–8 מתוך 215" (לא תואם לשום עוגן) — הכרעה 15(יא) קובעת
                בפירוש "הפאג'ר: <Ltr>1–50</Ltr> מתוך 701 בדיוק כמו הרכיב"; total נשאר מחוץ ל-Ltr
-               (§3.3, ListWindow.jsx:52-54: רק from–to מבודד, לא total). -->
+               (§3.3, ListWindow.jsx:52-54: רק from–to מבודד, לא total).
+               ✏️ 22:1X **וה-`total` הוא ספירת-השורות של הטבלה הזו אחרי המסננים ואחרי הבחירה-בגרף**
+               (📐8) — לא ספירת-האוכלוסייה. כותרת "הפרויקטים שחרגו" עם total של כל הפרויקטים
+               בתקופה היא התקלה שנמדדה במוקאפ שנחת. -->
           <span><span class="ltr">1–50</span> מתוך 701</span>
           <div style="display:flex; gap:8px">
             <button class="btn btn-outline" style="padding:4px 12px; font-size:12.5px">הקודם</button>
@@ -820,6 +967,14 @@ tr.amber td{background:var(--amber50)}
         </div>
       </div>
 
+      <!-- ✏️ 22:1X שורת-הגדרות-מדדים (📐16) — שורה למונח שיכול להיות שלושה דברים. יושבת
+           **מעל** שורת-המקורות, ובאותו משקל חזותי. -->
+      <p class="def-footer">
+        הגדרות: <b>שולי-רווח</b> = Σ רווח ÷ Σ הכנסה על אוכלוסיית הדף ·
+        <b>YTD</b> = 01/01 עד <span class="ltr">06/09</span> בשתי השנים ·
+        <b>נתח 5 הגדולים</b> = Σ הכנסת חמשת הלקוחות הגדולים ÷ Σ הכנסה בתקופה
+      </p>
+
       <!-- ✏️ 17:5X שורת-מקורות (הכרעה 15-ז) -->
       <p class="src-footer">מקורות: 🌱 מסד 06/09/2026 · 🎭 דמו: פרויקטי-דוגמה בטבלה · 📐 נגזר: שולי-רווח%</p>
     </div>
@@ -830,44 +985,70 @@ tr.amber td{background:var(--amber50)}
 </html>
 ```
 
-### ⑥.1 בוררי-הדוח לשלוש הלשוניות הנוספות — כותרות מילה-במילה מ-📑 (✏️ 17:5X נוסף, הכרעה 15-א)
+### ⑥.1 בוררי-הדוח לארבע הלשוניות — **תוויות = השם הקצר** (✏️ 22:1X — תוקן מקצה-לקצה)
 
-**המרקאפ בגוף-השלד למעלה מציג רק את בורר-לשונית "הנהלה"; שלושת האחרים (`.picker` זהה, רק
-תוכן-הכפתורים משתנה) — כדי שגם הם יעמדו במבחן "תווית = כותרת-השאלה, לא מספר/תמצות":**
+🔴 **✏️ 22:1X — התיקון הדחוף ביותר בסבב הזה, והוא היה כאן:** הבלוק שלמטה הכתיב עד עכשיו **את
+השאלה כתווית-בורר** (`<button>מה מצב הכסף?</button>`), כלומר **ביטל בשקט את הכרעה 18** לכל צייר
+שיקרא את הקובץ הזה. ‏**הכרעה 18 (ישי, 06/09 20:5X):** *"שם קצר בניווט, השאלה ככותרת-משנה"* —
+במילותיו: *"כל הבחירת סוגי דוחות כשאלות… זה נראלי ממש לא מקצועי"*. ⇒ **תוויות-הבורר הן
+השם הקצר מטבלת 🏷️, והשאלה יורדת לכותרת-המשנה של הדף** (`<p class="psub">`).
+🔗 **מראת הכרעה 18 — SSOT: `processes-approved.md` §🏷️ (לא לערוך כאן).**
+*(המקור: `stage2-review/m11-bi-professional-critique.md` §3.1 · §5-ב · §6 שורה 12 — *"הדחופה
+ביותר בפועל"*.)*
 
 ```html
-<!-- לשונית כספים -->
-<nav class="picker" aria-label="דוחות לשונית כספים">
-  <button class="on">מה מצב הכסף?</button>
-  <button>אילו פרויקטים דלפו מהתקציב?</button>
-  <button>את מי לגבות השבוע?</button>
-  <button>מה ייכנס החודש?</button>
-  <button>האם תוספות-שטח מתומחרות?</button>
-  <button>כמה ציוד נצרך ומה עלה?</button>
-  <button>כמה עלה השכר לפי חודש?</button>
+<!-- לשונית הנהלה — ✏️ 22:1X (מחליף גם את הבלוק שבגוף-השלד למעלה) -->
+<nav class="picker" aria-label="דוחות לשונית הנהלה">
+  <button class="on" aria-current="true">מבט-על הנהלה</button>
+  <button>מגמות רב-שנתיות</button>
+  <button>הנחות ורווחיות</button>
+  <button>ריכוזיות לקוחות</button>
+  <button>קהל מול צוות</button>
 </nav>
 
-<!-- לשונית דיילות -->
+<!-- לשונית כספים -->
+<nav class="picker" aria-label="דוחות לשונית כספים">
+  <button class="on" aria-current="true">מבט-על כספים</button>
+  <button>רווחיות פרויקטים</button>
+  <button>גיול חובות</button>
+  <button>תזרים צפוי</button>
+  <button>תוספות שטח</button>
+  <button>צריכת ציוד</button>
+  <button>עלות שכר חודשית</button>
+</nav>
+
+<!-- לשונית דיילות — ✏️ 22:1X שישה דפים: מ26 נוסף בהכרעה 24 (M=26) -->
 <nav class="picker" aria-label="דוחות לשונית דיילות">
-  <button class="on">מה מצב המאגר?</button>
-  <button>את מי לא לשלוח, ואת מי להזהיר?</button>
-  <button>מי שווה את התעריף שלה?</button>
-  <button>האם השיבוץ הוגן ומהיר?</button>
-  <button>מי במאגר חי ומי נעלמת?</button>
+  <button class="on" aria-current="true">מבט-על דיילות</button>
+  <button>אמינות והתייצבות</button>
+  <button>איכות מול עלות</button>
+  <button>הוגנות השיבוץ</button>
+  <button>מאגר הדיילות</button>
+  <button>זימונים שלא נענו</button>
 </nav>
 
 <!-- לשונית לקוחות -->
 <nav class="picker" aria-label="דוחות לשונית לקוחות">
-  <button class="on">מה הלקוחות מרגישים?</button>
-  <button>מה משמח ומה מכעיס לקוחות?</button>
-  <button>למי להתקשר החודש?</button>
-  <button>מה ההערות אומרות שהתגיות לא תפסו?</button>
+  <button class="on" aria-current="true">מבט-על לקוחות</button>
+  <button>שביעות רצון</button>
+  <button>לקוחות מתרחקים</button>
+  <button>ניתוח הערות</button>
 </nav>
 ```
 
-**מקור-הכותרות:** `processes-approved.md`, טבלת "📑 הגדרות 17 הדוחות" — עמודת "הכותרת (השאלה)",
-מילה-במילה. חלוקת-הדוחות ללשוניות לפי הרשאה-2 (ת1): הנהלה+כספים←'כספים' (שתי לשוניות נפרדות
+**וכותרת-הדף עצמה — שתי שורות, בסדר הזה:**
+
+```html
+<h1>גיול חובות</h1>                            <!-- השם הקצר, 🏷️ -->
+<p class="psub">את מי לגבות השבוע?</p>          <!-- השאלה, כותרת-משנה -->
+<p class="psub">2026 (01/01–06/09) · כל הלקוחות</p>  <!-- ✏️ 22:1X התקופה, מראת 📐17 -->
+<p class="pop">אוכלוסייה: … · הוצאו: … · n=…</p>     <!-- ✏️ 22:1X מראת 📐2 -->
+```
+
+**מקור-הכותרות והשמות:** `processes-approved.md`, טבלת **🏷️** (השם הקצר) ו-**📑** (השאלה) —
+מילה-במילה. חלוקת-הדוחות ללשוניות לפי הכרעה 2 (ת1): הנהלה+כספים←'כספים' (שתי לשוניות נפרדות
 על המסך, אותה הרשאת-מודול) · דיילות←'דיילות' · לקוחות←'לקוחות'.
+⚠️ **ותווית הלשונית השנייה היא "כספים"** — לא "כספים ותזרים"; 🔗 מראת 🔒 מילון-נעול (✏️ 22:1X).
 
 **כללי-שימוש** (זהים למודול 5/8): ① בלוק `:root` לא נוגעים ② כל ערך שאינו עברית טהורה עובר
 דרך `class="ltr"` ③ שני מספרים באותו משפט — מפרקים, מילה עברית ביניהם (§3.3) ④ שם-הקובץ
@@ -915,6 +1096,27 @@ tr.amber td{background:var(--amber50)}
 12. `grep -rn "gradient" src/` — 0 תוצאות (§5.2 #2).
 13. `scripts/check-bidi-glyphs.mjs` — נקרא (`RISK_GLYPHS = ['₪', '★', '×']`).
 14. `grep -rn "aria-current" src/modules` — תוצאה אחת (`GroupList.jsx`), אישרה שאין תקדים שני.
+
+**✏️ 22:1X — מה נמדד בסבב-הביקורת (06/09/2026 22:1X), מעבר לרשימה שלמעלה:**
+
+15. `grep -rn "breadcrumb\|פירורי" src/` — **נמצא תקדים אחד ויחיד לפירורי-לחם:**
+    `src/modules/06_projects/ProjectCardPage.jsx`, `function Crumbs({ eventName })`
+    (§2.9 מאמץ אותו במקום להמציא רכיב).
+16. `src/modules/04_hostesses/HostessesPage.jsx` (נקרא) + `grep -rn "smartMatchProjectId" src/` —
+    **‏`SmartMatchPage` אינו מסלול ואינו פרמטר-שאילתה**; הכניסה אליו היא
+    `navigate('/hostesses', { state: { smartMatchProjectId } })`, והתקדים היחיד הוא
+    `src/modules/06_projects/TeamTab.jsx`. **זה יעד-הקידוח של מ26** (📑).
+17. `grep -n "manager\|owner" docs/schema.sql` על בלוק `projects` — **אין עמודת מנהלת-פרויקט**
+    ⇒ הכלל "בעל-שם על שורה חורגת" (📐18) **אינו חל על דוח 5**; באודיט הוא נכתב כאילו כן.
+18. `docs/schema.sql` — `customer_contacts` (`is_primary`) קיימת, ונקראת כבר דרך
+    `getBillingContact` (`src/modules/08_finance/api.js`) ⇒ עמודת איש-הקשר בדוחות 6 ו-18
+    היא **צריכה של קיים**, לא דאטה חדשה.
+19. `docs/schema.sql` — `assignments.invite_sent_at` · `assignments.responded_at` ·
+    `assignments_assignment_status_check` (`pending`…) · `projects.required_hostess_count`
+    קיימות כולן ⇒ **מ26 ואריח-החוסר (ח2) אינם דורשים שום עמודה חדשה.**
+20. `src/lib/projects.js` — `ACTIVE_PROJECT_STATUSES` ו-`overviewHasGap` קיימים
+    (‏`src/lib/dashboard.js` צורכת אותם). ⚠️ **`OPEN_PROJECT_STATUSES` שצוטט ב-R18 אינו קיים** —
+    תוקן ב-`processes-approved.md §📑`#5.
 
 **מה לא נמצא, ונרשם ככזה:** בורר-דוח מדויק (§2.7, `GroupList` הוא הקרוב ביותר, לא זהה) ·
 כל שימוש ב-Recharts (§⑤, כל הסעיף "לא אומת" במקומות המסומנים) · `sr-only` פעיל ב-`src/
