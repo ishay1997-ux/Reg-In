@@ -49,6 +49,28 @@
   would shield real bugs: a number derived from a **count or a sum** is still always checked against the DB.
 - ⏳ **Open and unanswered: which date is the target — 01/10 (conference) or 20/10 (final)?** Ishay said "10.10
   with a 5-day buffer", which matches neither; the roadmap (his own 12/08 ruling) says 01/10 and 20/10.
+- ✅ **Answered, and the repo was wrong by two weeks.** Ishay checked with the institution: the closing
+  conference is **15/10/2026**, not 01/10. Also fixed into `00_roadmap.md` §3 as a dated ✏️ block: **20/10** is
+  his and Amit's self-imposed target, **24/10** is the handover of the ~120-page report and the system to the
+  supervisor (Amit writes it — not Claude's task, recorded so the schedule doesn't read as empty after 20/10).
+  **Net: 14 calendar days into the pre-conference buffer (~18 → ~32).** The buffer rule is untouched — days
+  accrue before the conference, they don't migrate into the next module. Remaining `01/10` strings in STATUS are
+  dated narrative and are now labelled as such on the live governance line.
+  🔑 **And the strategically important sentence, which is not about dates at all:** the supervisor told him
+  *"הדוחות זה החלק שהם הכי אוהבים דווקא"* ⇒ **module 11 is the showpiece, not filler.** That retroactively
+  justifies the depth of this Discovery, and it belongs in any future scope-cut conversation about m11.
+- 🔄 **Ruling 28 moved again, and the second move is a reframe, not a nuance.** First version: a switch that
+  mutes/shortens existing on-screen text. I wrote that to disk — and it was **half the ruling**, which he caught.
+  Final version, in his words: *"חשיבה מחדש שהכל יהיה נקי באמת כמו מערכת אמיתית כמו שמקובל בהייטק, וכפתור
+  הטמעה שידליק את כל ההסברים. אבל לא להוסיף על הקיים אלא ממש להשקיע מחשבה ולשכתב מחדש."* ⇒ **not a layer on
+  top of existing copy — a rewrite of the UI copy so the base is genuinely clean, with the explanation layer
+  switched on above it.** Both states are binding and both are drawn.
+  **And the review he demanded has a name he gave it:** *"חלק מהדברים הם לא שם ולא שם"* — strings that are
+  neither clean enough to be permanent UI nor explanatory enough to be help. His live example, which is the
+  calibration point for the sweep: *"ממוצע: חסרים תחילה, ובתוכם לפי קרבת האירוע"*.
+  A 3-agent workflow is producing `docs/plans/ui-copy-and-onboarding-mode.md` (world standards with sources ·
+  a full classified inventory of every Hebrew string in `src/` · then the plan), staged **per module** because
+  nine modules are already merged and each touch costs a full regression.
 
 - **Realistic threshold (fixed F3, 09/07/2026): the journal NARRATIVE** (Session Log only — excluding the reference sections and Current State) **over ~180 lines → compress the old tail back toward ~150.** Never compress the 2–3 newest sessions or Current State. This is a *utility-and-cost* limit: the read tool reads 2000 lines/call, and when stuck, old narrative buries the knowledge. **The metric: bound the narrative, not the reference.** *(The old "whole-file ~250→~200" threshold was never honored — it counted the exempt reference sections and thus silently "overflowed" forever; the new threshold measures what actually gets compressed.)*
 - **The trigger is measured on the whole file, but compression touches only the narrative.** If the file is large because the reference grew legitimately and the narrative is already minimal — that's fine, don't sacrifice reference to get under 250.
