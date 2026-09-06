@@ -77,3 +77,7 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   והדאטה"** (`seed-plan.md`, Hebrew, spec folder — the m7 `seed-data-spec.md` precedent) between the process
   cards and drawing, because Stage 2's data set (2א) must come from it and the blueprint's phase 1 seeding
   (§ח8 #10) executes it. Caught by: Ishay — the template has no seeding stage; the harvest ledger gets this.
+- **Stage 1-ב** (06/09 09:4X): 10 items, verdict each. Ishay answered the two reality questions with **"שניהם לא
+  קורה"** (tablet in the field · feedback edited after sending) — both written to the killed-paths register
+  verbatim. Ishay then approved the table explicitly ("מאשר את הטבלה"); the interim "assumed approval" note was replaced by the quote. Item 4 (scheduled digest) deliberately NOT written as `🚧 מ10`: nobody asked for a
+  digest; §7.57 already holds the "if ever — m10" pointer; a debt line would manufacture work.
