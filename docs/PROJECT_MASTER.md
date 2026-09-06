@@ -398,7 +398,7 @@
 **לפי האפיון:** מודול דו"חות ניהוליים לקריאה בלבד עם ייצוא ל-Excel/PDF; 5 דו"חות.
 **רכיבים:** פאנל סינון (טווחי תאריכים, סוג דו"ח, סוג לקוח) · דו"ח פרויקטים פעילים · דו"ח רווחיות וביצועים (תכנון מול ביצוע) · דו"ח ניתוח לקוחות ("לקוחות זהב") · דו"ח שיבוץ דיילות + דו"ח ריכוז שכר חודשי (ייצוא Excel לרו"ח).
 **טבלאות DB (קריאה בלבד, לרוב דרך Views):** `projects`, `quotes`, `customers`, `assignments`, `hostesses`, `salary_reports`, `logistics`.
-**מוקאפ (רפרנס ויזואלי בלבד):** `mockups/management-report-screen/01-04.png`.
+**מוקאפ:** ~~`mockups/management-report-screen/01-04.png`~~ — ✏️ **הועברו ל-`docs/delete/management-report-screen-legacy/` ב-06/09/2026 (הכרעת-ישי ב-Discovery מ11: *"המוקאפים הישנים לא רלוונטים בכלל"*; נגזרו מ-C5 שאינו קלט למודול).** המוקאפים המאושרים של מ11 ייכתבו ב-`mockups/management-report-screen/approved/` בשלב 2 של ה-Discovery.
 
 ---
 

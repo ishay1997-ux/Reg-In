@@ -94,3 +94,9 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   cross-checks vs seven · 4 stale spots in the step guide · §ז closing · mirror-tag wording · harvest destination).
   Reviewer cost: 206K tokens. Self-catch on re-read: 0 (as always).
 - Killed-paths table formatting fixed (a blank line had split it); stale `מצב` row for Stage 2 fixed.
+- **15:5X — rulings 5–8** (his answers to the five-decision batch): cost basis = ordered qty with actual as a gap
+  column · no profit target (median comparison) · four conference stories + his method instruction ("חשיבה
+  מעמיקה… בונים תוכנית זריעה וזורעים וזהו לא להתרגש") · old C5 mockups moved to `docs/delete/` (PROJECT_MASTER
+  §5.17 repointed, README entry written; deletion itself is his). Item 5 (🔵 collision) — "לא הבנתי": explained
+  as a 3-column comparison table per calibration §7③; his answer pending. Harvest ④: a batch of five decisions
+  was answered in one message — batching works; the one that did not land was the meta/emoji one.
