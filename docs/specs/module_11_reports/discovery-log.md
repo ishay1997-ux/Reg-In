@@ -211,3 +211,12 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   `pending` per project only). Result: **5 of 7 enter scope**, 1 as a tile, 1 declined **with code evidence**.
   M goes 25 → 26. The pattern in `feedback_professional_standard_once` fired for the third time today: my default
   proposal was the smaller half, and it was wrong.
+- **22:2X — ruling 25: Ishay overturned my ruling-13 sequencing, and he was right.** He asked whether a full
+  seeding run now would not have prevented a lot of confusion. Audited honestly: four separate confusions today
+  (zero tiles presented as a UI question · every finance tile with no comparison anchor · four charts undrawable ·
+  the Jul/Aug/Sep collapse found late) all trace to the same missing data. My error was assuming ALL seeding
+  depends on report definitions — only the feature seeding does (`recommended_rank`, AI classifications need new
+  schema). The profile seeding (close past events, volume, bonuses, one payroll report, scope changes) depends
+  only on ruling 17 and could have run from the start. Split into phase A (now, parallel) and phase B (blueprint).
+  **Fourth time today my default was the smaller/later option and he corrected it** — the memory entry is earning
+  its place.
