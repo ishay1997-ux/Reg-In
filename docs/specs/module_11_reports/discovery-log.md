@@ -140,3 +140,19 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   for it); (c) the handoff file refreshed to the real position (Stage 2 contract wave running here).
   Already on disk before the check: rulings 1–12, cards, definitions, contracts, killed paths, the 17/21 recount,
   the agents' costs, the reviewer findings.
+
+## 06/09/2026 18:4X–20:4X · Stage 2 production wave — interrupted by the session quota
+
+- Contract wave closed first: design-contract + data-set fixed after the fresh-context review (24 claims, 9 false,
+  17 gaps) and re-verified by a closure agent — **0 OPEN**. Ruling 15 (visual grammar) was born from that review.
+- Drawing wave dispatched as **5 parallel agents (4×Opus + 1×Sonnet)**. **Only one finished**:
+  `drafts/03_tab_finance.html` (7 pages, 1,264 lines, verified in the browser). The other four and all five card
+  files died on `rate_limit` — the user's whole session quota was consumed at once.
+- 🔴 **Measured lesson for the skill:** a drawing agent that is told to read four long files "in full"
+  (~2,900 lines combined) costs ~200K input before it draws a line; five in parallel is a session. **Draw
+  sequentially and hand each drawer only its own slice.** Recorded in the handoff.
+- Ishay's own words on it: *"אשמתי, נגמר מכסת הטוקנים… לא אשמתך ולא אחריותך לנהל את מכסת הטוקנים"* — but the
+  estimate-before-a-wave rule (`feedback_estimate_before_heavy_runs`) says the wave's cost should have been
+  measured, not guessed: I said "1.5–2M" and it was more.
+- **Next:** Ishay reviews the one landed file (shape is shared by all five) → fix → draw the remaining four one
+  at a time → 5 card files → cross-surface pass → his approval of all 25 → seeding → Stage 3.
