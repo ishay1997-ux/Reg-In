@@ -196,3 +196,10 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   with the lens each is judged by, and all 21 pages classified (5 decision · 8 monitoring · 4 strategic ·
   2 operational). **The running agent's output must be read through this table before any of its findings is
   applied** — noted in ruling 22's ripple column so a later session cannot miss it.
+- **21:4X — ruling 23, and he asked me to write it into my own memory**: *"מקצועי ונאמן לסטנדרטים בהייטק היום…
+  פעם אחת נכון בלי לחסוך עבודה"* + *"תכתוב לעצמך שזה מה שמוביל אותי"*, calibrated one message later with
+  *"זה פרויקט אקדמי, לא חייב להגזים אבל לא להתעצל"*. Written to `~/.claude/projects/…/memory/` as a cross-project
+  feedback memory (over-engineering and laziness cost him equally; the default proposal is the standard version).
+  **This ruling also answers the pending drill-down question: build it** — true hierarchical drill-down in four
+  reports, cross-filter in the rest. Twice today I had recommended the cheaper half (draw without drill-down;
+  sliced agent briefs) and he rejected both — that pattern is what the memory records.
