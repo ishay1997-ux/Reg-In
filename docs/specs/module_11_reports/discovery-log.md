@@ -230,3 +230,28 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   instruction is empty — projects 3/7/8/13/14 no longer exist; live anchors are 11·12·15·16 (write-back owed to
   `seed-data-spec.md` and `demo-seed.mjs`). Scope-change volume raised from 1.6% to ~25% of projects, anchored on
   an internal measurement (18.7% of finished events had more guests than the quote estimated).
+- **07/09 00:2X — wave 2 dispatched: the four verifiers on the rewritten mockup, which nobody had reviewed.**
+  Ishay asked which review eyes the finance mockup had passed. Checked instead of answering from memory, and the
+  honest answer was worse than my earlier reply implied: **the file has three versions** (20:41 / 1,264 lines →
+  21:20 / 1,298 → 00:02 / 2,141), and **every existing critique examined an earlier one or examined something
+  else entirely**. `m11-charts-rtl-a11y.md` (17:26) was written *before any mockup existed* — it reviews the chart
+  contract. `m11-bi-professional-critique.md` (21:39) reviewed v2, a file 843 lines shorter than what exists now.
+  `m11-decision-support-audit.md` audited the 21 report *definitions*, not the file. `m11-interaction-annotation.md`
+  *built* the marker convention and never checked its application. ⇒ **their findings were applied to v3, but nobody
+  verified the application.** My own check tonight was mechanical presence-counting (113/113 `scope`, 30/30 tiles
+  with a comparison, 26 markers, ruling-18 names, ruling-19 rows) — it cannot see correctness, data fidelity, or
+  whether the drill-down actually works when clicked.
+  **Wave 2 (already in the approved polish plan, marked ⬜, never run) launched now — four agents in parallel,
+  reading every source in full (ruling 20):** contract compliance (Opus → `m11-contract-compliance.md`) · data
+  fidelity with live DB re-measurement (Sonnet → `m11-data-fidelity.md`) · a11y + RTL verified in the browser at
+  1280px including a verdict on the open G7 item (Sonnet → `m11-a11y-rtl-verify.md`) · product eye in the browser,
+  the three questions per page, and whether the new drill-down works at all (Opus → `m11-product-eye.md`).
+  Each brief carries the head-then-tail mine, "you do not rule", "one file rules", the LF-newline gate, and the
+  two lever questions (claims with no source / what is missing). Budget: 7 of Ishay's 20 agents used before this
+  wave; 11 after.
+  **Also written this turn:** the stage-2 status row, which still claimed "1 of 5 files landed, cards folder
+  empty" — three hours stale · and a structural gap found re-reading `module-discovery/template.md` §📁:
+  **`screens-approved.md` does not exist.** The template, the handoff file and `module_playbook.md` all name it as
+  the home of the screen cards; `module-blueprint`/`module-build` open it *by name*, and a missing file reads to
+  them as "this module has no screen cards". Ruled by delegation: it will be created at the end of stage 2 as the
+  parent file (the `מצב` table for all 26 surfaces + a pointer per tab file), with the per-tab card files kept.
