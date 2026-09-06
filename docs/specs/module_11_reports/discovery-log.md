@@ -100,3 +100,6 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   §5.17 repointed, README entry written; deletion itself is his). Item 5 (🔵 collision) — "לא הבנתי": explained
   as a 3-column comparison table per calibration §7③; his answer pending. Harvest ④: a batch of five decisions
   was answered in one message — batching works; the one that did not land was the meta/emoji one.
+- **16:0X — ruling 9:** 🔵 keeps both meanings (§7 = nod-pending · specs = open). Ishay: "אני רוצה לפי המלצתך אבל
+  לא בשקט" ⇒ written where a future reader looks — `docs/CLAUDE.md` emoji legend — not only in this module's file.
+  Template §13's "raise the collision" row can now point at that ruling (harvest ③).
