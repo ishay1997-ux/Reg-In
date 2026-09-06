@@ -203,3 +203,11 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   **This ruling also answers the pending drill-down question: build it** — true hierarchical drill-down in four
   reports, cross-filter in the rest. Twice today I had recommended the cheaper half (draw without drill-down;
   sliced agent briefs) and he rejected both — that pattern is what the memory records.
+- **22:0X — ruling 24, and Ishay corrected my instinct again.** I had narrowed the 7 missing decisions to 1,
+  claiming two were covered elsewhere. He pushed back (*"אני לא מפחד להרחיב את ההיקף, זוכר את הכיוון שלי?"*) and
+  I went to check my own claim instead of defending it: **ח3 really is covered** (`QuotesPage.jsx` has the
+  expiring-soon filter with a params threshold) · **ח2 is only partly covered** (the dashboard attention strip has
+  a gap branch per event, capped — no cross-horizon count) · **ח1 is not covered at all** (`SmartMatchPage` shows
+  `pending` per project only). Result: **5 of 7 enter scope**, 1 as a tile, 1 declined **with code evidence**.
+  M goes 25 → 26. The pattern in `feedback_professional_standard_once` fired for the third time today: my default
+  proposal was the smaller half, and it was wrong.
