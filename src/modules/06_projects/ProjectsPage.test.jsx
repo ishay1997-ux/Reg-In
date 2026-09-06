@@ -222,7 +222,7 @@ describe('ProjectsPage — לשונית "בעבודה" (ברירת-מחדל)', (
     // לשון-יחיד גם בנתיב המדורד — "חסרה 1" בשני התאים של אותה שורה: עמודת-הדיילות
     // (staffingCell) ועמודת "מה חסר" (gapSentence) מספרות את אותו חוסר באותן מילים (תוקן 19/08).
     expect(within(screen.getByTestId('projects-row-11')).getAllByText('חסרה 1')).toHaveLength(2)
-    expect(screen.getByText('הכול סגור — אין מה לעשות')).toBeInTheDocument()
+    expect(screen.getByText('✓ מוכן לאירוע')).toBeInTheDocument()
   })
 })
 
