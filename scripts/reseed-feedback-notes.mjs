@@ -13,8 +13,9 @@
  *   S3 אירועים גדולים ⇒ תורים בשעת-השיא, גם בציון 4.
  *   S4 "ניהול לקוי" = אין מי שמחליט בשטח / החלפת-עמדה איטית.
  *   S5 ~10% מהערות-4 מסתירות תלונה בלי תגית ("היה מצוין, רק ש…") — הפער אדם↔AI.
- *   S6 שבח נקוב-בשם לדיילות-הגיבורות (מי שעבדה בפועל) — הצד השני של ריכוז-המשמרות.
+ *   S6 שבח לדיילות שבאמת עבדו שם — בתיאור ("מי שקיבלה אותנו בכניסה"); שם אמיתי רק כשלקוח קבוע מבקש "אותו צוות".
  *   S7 עיריות: שבח על הרישום + הערת-בירוקרטיה (מספר-הזמנה/חשבונית) — מתחבר לתזרים.
+ *   S8 הערות "תודה." / "החניה הייתה בעיה" — בכוונה: המודל אמור להחזיר "לא ניתן לסווג"/"לא שלנו", והדוח סופר.
  *
  * דטרמיניסטי: אותו project_id ⇒ אותה הערה (זרע 'notes-v2:<id>'). הרצה חוזרת = אותו פלט.
  * הרצה: `node scripts/reseed-feedback-notes.mjs` = יבש (מדפיס התפלגות ודוגמאות) · `--apply` = כותב.
@@ -41,6 +42,10 @@ async function executeSql(query) {
   if (!res.ok) throw new Error(`שגיאת SQL Management API (${res.status}): ${await res.text()}`)
   return res.json()
 }
+
+// 'ש' צמודה לתיאור ("שהדיילת"), מקף לפני שם פרטי ("ש-ליהי")
+const she = (n) =>
+  n.startsWith('ה') || n.startsWith('אחת') || n.startsWith('מי') ? `ש${n}` : `ש-${n}`
 
 const sqlString = (s) => `'${String(s).replace(/'/g, "''")}'`
 
@@ -132,7 +137,8 @@ const T = {
     () => `שירות טוב, זמינות טובה במשרד לפני האירוע. התגים — יפים, אבל הגופן קטן מדי לקריאה ממרחק.`,
   ],
   pos4hidden: [
-    ({ n, m }) => `היה מצוין בסך הכול. רק ש-${n} הגיעה כ-${m} דקות אחרי השעה, אבל השלימה את הפער.`,
+    ({ n, m }) =>
+      `היה מצוין בסך הכול. רק ${she(n)} הגיעה כ-${m} דקות אחרי השעה, אבל השלימה את הפער.`,
     ({ n }) => `נהנינו. ${n} הגיעה מאוחר, לא הפריע בסוף — הצוות כיסה.`,
     () => `טוב. בסוף היום לא היה ברור למי מדווחים על שינוי בכמות, אבל הסתדר.`,
   ],
@@ -154,6 +160,29 @@ const T = {
   ],
 }
 
+// לקוח לא זוכר שמות (ישי, 06/09/2026): ברוב ההערות הדיילת מתוארת, לא נקובה בשם. שם אמיתי נשאר
+// רק כשזה הגיוני — המנהלת-בשטח שהציגה את עצמה, או לקוח שמבקש "אותו צוות כמו בפעם הקודמת".
+const DESCRIPTORS = [
+  'אחת הדיילות',
+  'הדיילת בעמדה השנייה',
+  'מי שקיבלה אותנו בכניסה',
+  'הבחורה הגבוהה',
+  'הדיילת עם השיער האסוף',
+  'הדיילת הצעירה יותר',
+  'אחת הבנות',
+]
+const NAME_KEEP_P = 0.15
+const LEAD_NAME_KEEP_P = 0.35
+
+// הערות שהמודל *לא אמור* להצליח לסווג — חלק מהמציאות, והדוח סופר אותן ("לא ניתן לסווג" / "לא שלנו").
+const VAGUE = ['תודה.', 'היה בסדר.', 'כמו תמיד.', 'אין הערות מיוחדות.', 'בסדר גמור, תודה רבה.']
+const OFFTOPIC = [
+  'החניה באולם הייתה בעיה — לא קשור אליכם, אבל האורחים הגיעו עצבניים.',
+  'הקייטרינג איחר. לא באחריותכם, אבל זה השפיע על כל הכניסה.',
+  'האולם היה קר מדי. הדיילות עמדו במעילים.',
+  'ההגברה של המפיק לא עבדה בחצי השעה הראשונה. אתם לא אשמים.',
+]
+
 function pickLate(row, rng) {
   const names = row.late_names || []
   const levels = row.late_levels || []
@@ -167,18 +196,30 @@ function pickLate(row, rng) {
 function buildNote(row, rng) {
   const late = pickLate(row, rng)
   const good = row.good_names || []
+  const who = (realName, fallback) => {
+    if (realName && rng.chance(NAME_KEEP_P)) return realName
+    return fallback || rng.pick(DESCRIPTORS)
+  }
+  const d1 = rng.pick(DESCRIPTORS)
+  const d2 = rng.pick(DESCRIPTORS.filter((d) => d !== d1))
   const ctx = {
-    n: late?.n || good[0] || 'הדיילת',
-    n2: late?.n2 || good[1] || good[0] || 'הדיילת השנייה',
+    n: who(late?.n, d1),
+    n2: who(late?.n2, d2),
     m: late?.m || rng.int(15, 35),
-    lead: row.lead_name || 'המנהלת',
+    lead: row.lead_name && rng.chance(LEAD_NAME_KEEP_P) ? row.lead_name : 'המנהלת שלכם',
     guests: row.actual_guests || row.estimated_guests || 150,
   }
-  const goodCtx = { ...ctx, n: good[0] || ctx.lead, n2: good[1] || good[0] || ctx.lead }
+  const goodCtx = { ...ctx, n: who(good[0], d1), n2: who(good[1], d2) }
   const pick = (arr, c = ctx) => rng.pick(arr)(c)
   const score = row.score
   const neg = row.neg
   const oldBadgeEra = row.yr < 2025 || (row.yr === 2025 && row.mon <= 4)
+
+  // הערות בלתי-ניתנות-לסיווג ולא-שלנו — רק על ציונים גבוהים, כמו במציאות
+  if (score >= 4 && !neg) {
+    if (rng.chance(0.08)) return rng.pick(VAGUE)
+    if (rng.chance(0.05)) return rng.pick(OFFTOPIC)
+  }
 
   let note
   if (neg === 'איחור דיילות') {
