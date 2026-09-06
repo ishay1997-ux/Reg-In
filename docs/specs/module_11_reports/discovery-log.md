@@ -168,3 +168,11 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   never sentences ⇒ short name in the picker, question as the page subtitle. **This overrides delegated ruling
   ח8-9** — the delegation mechanism working exactly as designed.
 - Caught by: **Ishay, all three.** Claude caught none of them. Harvest ④ row.
+- **21:0X — rulings 19–20, both Ishay's catches.** (19) He spotted a column of identical "פתח שיבוצים" links in
+  the drawn mockup and asked whether they all lead to the same place. Checked the code: every list screen in the
+  system (`FinancePage` · `ProjectsPage` · `CustomersPage`) makes the **row** clickable (`cursor-pointer`) and has
+  **zero** repeated "open" links. The mockup broke the house pattern 66 times. Neither the design contract nor the
+  spec had stated it — a genuine gap in both, found by eye. (20) He rejected my "sliced brief" cost fix:
+  *"נראלי הסכנה יותר גדולה מהרווח"* — and he is right, with the repo's own rule behind him (template §2⑥: a
+  reading list is a floor; blind spots travel by inheritance). Cost is managed by concurrency and model, never by
+  narrowing what a drawer may read. My own residual point kept on the record: the SSOT file itself must stay tight.
