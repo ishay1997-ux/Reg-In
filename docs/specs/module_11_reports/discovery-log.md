@@ -176,3 +176,10 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   *"נראלי הסכנה יותר גדולה מהרווח"* — and he is right, with the repo's own rule behind him (template §2⑥: a
   reading list is a floor; blind spots travel by inheritance). Cost is managed by concurrency and model, never by
   narrowing what a drawer may read. My own residual point kept on the record: the SSOT file itself must stay tight.
+- **21:1X — Ishay's plan, approved: polish the finance tab to done BEFORE replicating**, and an explicit budget of
+  **up to 20 agents** (Sonnet/Opus per task). He also asked four review questions that turned into three research
+  agents: professional BI standard (details) · decision-support quality per report · how to annotate interactivity
+  in a static mockup so the builder implements it. Plus the polish agent on the finance file. 4 running.
+  My own answer to "how do I review a report" was given in chat as four rules (the decision · the number's home ·
+  the action in one click · the one-sentence conference answer) + three questions he asks per page; if that survives
+  his use, it belongs in the skill as the review protocol.
