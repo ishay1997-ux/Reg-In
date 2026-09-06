@@ -168,6 +168,17 @@ tr.click:hover td{background:var(--s50)}
 .datanote{border:1px dashed var(--s300); border-radius:var(--r-lg); padding:10px 12px;
      font-size:11.5px; color:var(--s500); margin-bottom:16px; background:#fff}
 .datanote b{color:var(--s600)}
+
+/* ── כותרת-הדף (הכרעה 18): השם הקצר ככותרת ראשית, השאלה ככותרת-משנה אפורה ── */
+.topttl{font-size:17px; font-weight:700; color:var(--s800)}
+.page > h1{margin-bottom:2px}
+.page > .psub{margin:0 0 16px}
+
+/* ── שורה לחיצה (הכרעה 19) — תקדים-קוד: FinancePage.jsx · ProjectsPage.jsx · CustomersPage.jsx
+     (cursor-pointer + hover:bg-slate-50 + focus-visible:ring-2 ring-teal-500 ring-inset) ── */
+tr.click:focus-visible{outline:2px solid var(--teal500); outline-offset:-2px}
+tr.click:focus-visible td{background:var(--teal50)}
+.drill{font-size:11.5px; color:var(--s500); padding:4px 16px 10px; margin:0}
 </style>
 </head>
 <body>
@@ -188,7 +199,7 @@ tr.click:hover td{background:var(--s50)}
 
 <header class="top">
   <div>
-    <h1>דו"חות</h1>
+    <p class="topttl">דו"חות</p>
     <p class="psub">מנהלת כספים ולקוחות · תפקיד: כספים ולקוחות</p>
   </div>
   <div class="who"><span style="width:36px; height:36px; border-radius:999px; background:var(--teal600);
@@ -213,13 +224,13 @@ tr.click:hover td{background:var(--s50)}
 
     <!-- ═══ בורר-דוח · תוויות = כותרות-השאלה מ-📑, מילה-במילה (הכרעה 15-א · design-contract §⑥.1) ═══ -->
     <nav class="picker" aria-label="דוחות לשונית כספים" id="picker">
-      <button class="on" data-page="p1" aria-current="true">מה מצב הכסף?</button>
-      <button data-page="p2">אילו פרויקטים דלפו מהתקציב?</button>
-      <button data-page="p3">את מי לגבות השבוע?</button>
-      <button data-page="p4">מה ייכנס החודש?</button>
-      <button data-page="p5">האם תוספות-שטח מתומחרות?</button>
-      <button data-page="p6">כמה ציוד נצרך ומה עלה?</button>
-      <button data-page="p7">כמה עלה השכר לפי חודש?</button>
+      <button class="on" data-page="p1" aria-current="true">מבט-על כספים</button>
+      <button data-page="p2">רווחיות פרויקטים</button>
+      <button data-page="p3">גיול חובות</button>
+      <button data-page="p4">תזרים צפוי</button>
+      <button data-page="p5">תוספות שטח</button>
+      <button data-page="p6">צריכת ציוד</button>
+      <button data-page="p7">עלות שכר חודשית</button>
     </nav>
 
     <div style="flex:1; min-width:0">
@@ -227,10 +238,10 @@ tr.click:hover td{background:var(--s50)}
       <!-- ═══ מסננים גלובליים (ת1): תקופה = 2026 · לקוח = הכול · ייצוא (ת4) ═══ -->
       <div class="filters">
         <span class="flabel">תקופה:</span>
-        <button class="pill">החודש</button>
-        <button class="pill">3 חודשים</button>
+        <button class="pill" aria-pressed="false">החודש</button>
+        <button class="pill" aria-pressed="false">3 חודשים</button>
         <button class="pill on" aria-pressed="true">השנה (<span class="ltr">2026</span>)</button>
-        <button class="pill">הכול</button>
+        <button class="pill" aria-pressed="false">הכול</button>
         <span class="flabel" style="margin-right:8px">לקוח:</span>
         <select class="sel" dir="rtl" aria-label="סינון לפי לקוח">
           <option>הכול</option>
@@ -250,8 +261,10 @@ tr.click:hover td{background:var(--s50)}
 <!-- ═══════════════════════════════════════════════════════════════════════════
      דף 1 · מ7 — מבט-על כספים ותזרים · "מה מצב הכסף?"
      ═══════════════════════════════════════════════════════════════════════════ -->
-<section class="page" id="p1" aria-label="מה מצב הכסף?">
+<section class="page" id="p1" aria-label="מבט-על כספים">
 
+  <h1>מבט-על כספים</h1>
+  <p class="psub">מה מצב הכסף?</p>
   <p class="somuch">75,770 ₪ פתוחים, מהם 15,609 ₪ מעל 60 יום; צפוי החודש 31,930 ₪.</p>
 
   <div class="tiles">
@@ -327,22 +340,23 @@ tr.click:hover td{background:var(--s50)}
 
   <div class="tbl-card">
     <h3>החשבוניות הישנות</h3>
+    <p class="drill">לחיצה על שורה פותחת את כרטיס הפרויקט</p>
     <div class="tbl-scroll">
       <table class="data">
-        <thead><tr><th>פרויקט</th><th>לקוח</th><th>נשלחה</th><th>סכום</th><th>ימי איחור</th><th>מדרג</th><th></th></tr></thead>
+        <thead><tr><th>פרויקט</th><th>לקוח</th><th>נשלחה</th><th>סכום</th><th>ימי איחור</th><th>מדרג</th></tr></thead>
         <tbody>
-          <tr class="click"><td><span class="ltr">1460</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">30/04/2026</span></td><td><span class="ltr">10,163</span> ₪</td><td class="over"><span class="ltr">99</span></td><td><span class="ltr">90+</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1468</span></td><td>מועצה אזורית עמק חפר</td><td><span class="ltr">11/05/2026</span></td><td><span class="ltr">2,384</span> ₪</td><td class="over"><span class="ltr">88</span></td><td><span class="ltr">61–90</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1505</span></td><td>האגודה למען המדע הצעיר</td><td><span class="ltr">03/06/2026</span></td><td><span class="ltr">3,063</span> ₪</td><td class="over"><span class="ltr">64</span></td><td><span class="ltr">61–90</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1537</span></td><td>אלמנט הפקות</td><td><span class="ltr">06/07/2026</span></td><td><span class="ltr">13,762</span> ₪</td><td><span class="ltr">32</span></td><td><span class="ltr">31–60</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1460 · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1460</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">30/04/2026</span></td><td><span class="ltr">10,163</span> ₪</td><td class="over"><span class="ltr">99</span></td><td><span class="ltr">90+</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1468 · מועצה אזורית עמק חפר"><td><span class="ltr">1468</span></td><td>מועצה אזורית עמק חפר</td><td><span class="ltr">11/05/2026</span></td><td><span class="ltr">2,384</span> ₪</td><td class="over"><span class="ltr">88</span></td><td><span class="ltr">61–90</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1505 · האגודה למען המדע הצעיר"><td><span class="ltr">1505</span></td><td>האגודה למען המדע הצעיר</td><td><span class="ltr">03/06/2026</span></td><td><span class="ltr">3,063</span> ₪</td><td class="over"><span class="ltr">64</span></td><td><span class="ltr">61–90</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1537 · אלמנט הפקות"><td><span class="ltr">1537</span></td><td>אלמנט הפקות</td><td><span class="ltr">06/07/2026</span></td><td><span class="ltr">13,762</span> ₪</td><td><span class="ltr">32</span></td><td><span class="ltr">31–60</span></td></tr>
         </tbody>
       </table>
     </div>
     <div class="pager">
-      <span><span class="ltr">1–4</span> מתוך <span class="ltr">11</span></span>
+      <span><span class="ltr">1–4</span> מתוך 11</span>
       <div style="display:flex; gap:8px; align-items:center">
         <button class="btn btn-outline" style="padding:4px 12px; font-size:12.5px">הקודם</button>
-        <span>עמוד <span class="ltr">1/1</span></span>
+        <span>עמוד <span class="ltr">1/3</span></span>
         <button class="btn btn-outline" style="padding:4px 12px; font-size:12.5px">הבא</button>
       </div>
     </div>
@@ -355,8 +369,10 @@ tr.click:hover td{background:var(--s50)}
 <!-- ═══════════════════════════════════════════════════════════════════════════
      דף 2 · מ8 — דוח 5 (+9 שעות) · "אילו פרויקטים דלפו מהתקציב?"
      ═══════════════════════════════════════════════════════════════════════════ -->
-<section class="page" id="p2" hidden aria-label="אילו פרויקטים דלפו מהתקציב?">
+<section class="page" id="p2" aria-label="רווחיות פרויקטים">
 
+  <h1>רווחיות פרויקטים</h1>
+  <p class="psub">אילו פרויקטים דלפו מהתקציב?</p>
   <p class="somuch">30 פרויקטים ב-2026 חרגו מ-15% מעלות-העבודה, סה"כ 6,045 ₪.</p>
 
   <div class="tiles">
@@ -448,23 +464,24 @@ tr.click:hover td{background:var(--s50)}
 
   <div class="tbl-card">
     <h3>הפרויקטים שחרגו — כולל שעות מתוכנן מול בפועל (דוח 9 כעמודה)</h3>
+    <p class="drill">לחיצה על שורה פותחת את הפרויקט במסך הכספים</p>
     <div class="tbl-scroll">
       <table class="data">
-        <thead><tr><th>פרויקט</th><th>לקוח</th><th>הכנסה</th><th>רווח</th><th>שעות מתוכנן</th><th>שעות בפועל</th><th>סטייה %</th><th>ציון-משוב</th><th></th></tr></thead>
+        <thead><tr><th>פרויקט</th><th>לקוח</th><th>הכנסה</th><th>רווח</th><th>שעות מתוכנן</th><th>שעות בפועל</th><th>סטייה %</th><th>ציון-משוב</th></tr></thead>
         <tbody>
-          <tr class="click"><td><span class="ltr">12</span></td><td>קבוצת אחזקות דנוך בע"מ</td><td><span class="ltr">500</span> ₪</td><td><span class="ltr">207</span> ₪</td><td><span class="ltr">1.50</span></td><td><span class="ltr">6</span></td><td class="over">▲ <span class="ltr">+300.0%</span></td><td><span class="ltr">★ 4</span> · טוב</td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1347</span></td><td>פרימיום אירועים</td><td><span class="ltr">4,108</span> ₪</td><td><span class="ltr">2,927</span> ₪</td><td><span class="ltr">2.50</span></td><td><span class="ltr">13.0</span></td><td class="over">▲ <span class="ltr">+30.3%</span></td><td>—</td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1376</span></td><td>עיריית מודיעין</td><td><span class="ltr">6,821</span> ₪</td><td><span class="ltr">4,010</span> ₪</td><td><span class="ltr">4.00</span></td><td><span class="ltr">26.0</span></td><td class="over">▲ <span class="ltr">+30.2%</span></td><td>—</td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1465</span></td><td>קוואנטום רובוטיקה</td><td><span class="ltr">9,310</span> ₪</td><td><span class="ltr">5,624</span> ₪</td><td><span class="ltr">4.00</span></td><td><span class="ltr">31.0</span></td><td class="over">▲ <span class="ltr">+29.1%</span></td><td><span class="ltr">★ 4</span> · טוב</td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1488</span></td><td>ורד קוסמטיקה טבעית</td><td><span class="ltr">4,406</span> ₪</td><td><span class="ltr">2,927</span> ₪</td><td><span class="ltr">2.50</span></td><td><span class="ltr">9.5</span></td><td class="over">▲ <span class="ltr">+27.3%</span></td><td><span class="ltr">★ 4</span> · טוב</td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1427</span></td><td>נובה פארמה בע"מ</td><td><span class="ltr">7,274</span> ₪</td><td><span class="ltr">4,605</span> ₪</td><td><span class="ltr">4.00</span></td><td><span class="ltr">30.5</span></td><td class="over">▲ <span class="ltr">+27.2%</span></td><td><span class="ltr">★ 4</span> · טוב</td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1423</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">7,357</span> ₪</td><td><span class="ltr">4,525</span> ₪</td><td><span class="ltr">4.00</span></td><td><span class="ltr">30.0</span></td><td class="over">▲ <span class="ltr">+25.2%</span></td><td><span class="ltr">★ 5</span> · מצוין</td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1433</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">2,504</span> ₪</td><td><span class="ltr">1,554</span> ₪</td><td><span class="ltr">4.00</span></td><td><span class="ltr">10</span></td><td class="over">▲ <span class="ltr">+25.0%</span></td><td><span class="ltr">★ 4</span> · טוב</td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח את פרויקט 12 במסך הכספים · קבוצת אחזקות דנוך בע&quot;מ"><td><span class="ltr">12</span></td><td>קבוצת אחזקות דנוך בע"מ</td><td><span class="ltr">500</span> ₪</td><td><span class="ltr">207</span> ₪</td><td><span class="ltr">1.50</span></td><td><span class="ltr">6</span></td><td class="over">▲ <span class="ltr">+300.0%</span></td><td><span class="ltr">★ 4</span> · טוב</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח את פרויקט 1347 במסך הכספים · פרימיום אירועים"><td><span class="ltr">1347</span></td><td>פרימיום אירועים</td><td><span class="ltr">4,108</span> ₪</td><td><span class="ltr">2,927</span> ₪</td><td><span class="ltr">2.50</span></td><td><span class="ltr">13.0</span></td><td class="over">▲ <span class="ltr">+30.3%</span></td><td>—</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח את פרויקט 1376 במסך הכספים · עיריית מודיעין"><td><span class="ltr">1376</span></td><td>עיריית מודיעין</td><td><span class="ltr">6,821</span> ₪</td><td><span class="ltr">4,010</span> ₪</td><td><span class="ltr">4.00</span></td><td><span class="ltr">26.0</span></td><td class="over">▲ <span class="ltr">+30.2%</span></td><td>—</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח את פרויקט 1465 במסך הכספים · קוואנטום רובוטיקה"><td><span class="ltr">1465</span></td><td>קוואנטום רובוטיקה</td><td><span class="ltr">9,310</span> ₪</td><td><span class="ltr">5,624</span> ₪</td><td><span class="ltr">4.00</span></td><td><span class="ltr">31.0</span></td><td class="over">▲ <span class="ltr">+29.1%</span></td><td><span class="ltr">★ 4</span> · טוב</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח את פרויקט 1488 במסך הכספים · ורד קוסמטיקה טבעית"><td><span class="ltr">1488</span></td><td>ורד קוסמטיקה טבעית</td><td><span class="ltr">4,406</span> ₪</td><td><span class="ltr">2,927</span> ₪</td><td><span class="ltr">2.50</span></td><td><span class="ltr">9.5</span></td><td class="over">▲ <span class="ltr">+27.3%</span></td><td><span class="ltr">★ 4</span> · טוב</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח את פרויקט 1427 במסך הכספים · נובה פארמה בע&quot;מ"><td><span class="ltr">1427</span></td><td>נובה פארמה בע"מ</td><td><span class="ltr">7,274</span> ₪</td><td><span class="ltr">4,605</span> ₪</td><td><span class="ltr">4.00</span></td><td><span class="ltr">30.5</span></td><td class="over">▲ <span class="ltr">+27.2%</span></td><td><span class="ltr">★ 4</span> · טוב</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח את פרויקט 1423 במסך הכספים · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1423</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">7,357</span> ₪</td><td><span class="ltr">4,525</span> ₪</td><td><span class="ltr">4.00</span></td><td><span class="ltr">30.0</span></td><td class="over">▲ <span class="ltr">+25.2%</span></td><td><span class="ltr">★ 5</span> · מצוין</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח את פרויקט 1433 במסך הכספים · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1433</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">2,504</span> ₪</td><td><span class="ltr">1,554</span> ₪</td><td><span class="ltr">4.00</span></td><td><span class="ltr">10</span></td><td class="over">▲ <span class="ltr">+25.0%</span></td><td><span class="ltr">★ 4</span> · טוב</td></tr>
         </tbody>
       </table>
     </div>
     <div class="pager">
-      <span><span class="ltr">1–8</span> מתוך <span class="ltr">206</span></span>
+      <span><span class="ltr">1–8</span> מתוך 206</span>
       <div style="display:flex; gap:8px; align-items:center">
         <button class="btn btn-outline" style="padding:4px 12px; font-size:12.5px">הקודם</button>
         <span>עמוד <span class="ltr">1/26</span></span>
@@ -480,8 +497,10 @@ tr.click:hover td{background:var(--s50)}
 <!-- ═══════════════════════════════════════════════════════════════════════════
      דף 3 · מ9 — דוח 6 · "את מי לגבות השבוע?" · מוצג במצב cross-filter נבחר
      ═══════════════════════════════════════════════════════════════════════════ -->
-<section class="page" id="p3" hidden aria-label="את מי לגבות השבוע?">
+<section class="page" id="p3" aria-label="גיול חובות">
 
+  <h1>גיול חובות</h1>
+  <p class="psub">את מי לגבות השבוע?</p>
   <p class="somuch">15,609 ₪ מעל 60 יום אצל 3 לקוחות; הגדול: אלפא סיסטמס בע"מ.</p>
 
   <!-- אריחים · מצב לא-מסונן -->
@@ -587,26 +606,27 @@ tr.click:hover td{background:var(--s50)}
 
   <div class="tbl-card">
     <h3>חשבוניות פתוחות <span id="p3Filtered" style="font-weight:500; color:var(--s500); font-size:12px">· מסונן למדרג <span class="ltr">61–90</span> יום</span></h3>
+    <p class="drill">לחיצה על שורה פותחת את כרטיס הפרויקט</p>
     <div class="tbl-scroll">
       <table class="data">
-        <thead><tr><th>פרויקט</th><th>לקוח</th><th>נשלחה</th><th>מועד-פירעון חוזי</th><th>מדרג</th><th></th></tr></thead>
+        <thead><tr><th>פרויקט</th><th>לקוח</th><th>נשלחה</th><th>מועד-פירעון חוזי</th><th>מדרג</th></tr></thead>
         <tbody id="p3Body">
-          <tr class="click" data-b="90"><td><span class="ltr">1460</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">30/04/2026</span></td><td><span class="ltr">30/05/2026</span></td><td class="over"><span class="ltr">90+</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click" data-b="61"><td><span class="ltr">1468</span></td><td>מועצה אזורית עמק חפר</td><td><span class="ltr">11/05/2026</span></td><td><span class="ltr">10/06/2026</span></td><td class="over"><span class="ltr">61–90</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click" data-b="61"><td><span class="ltr">1505</span></td><td>האגודה למען המדע הצעיר</td><td><span class="ltr">03/06/2026</span></td><td><span class="ltr">03/07/2026</span></td><td class="over"><span class="ltr">61–90</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click" data-b="31"><td><span class="ltr">1537</span></td><td>אלמנט הפקות</td><td><span class="ltr">06/07/2026</span></td><td><span class="ltr">05/08/2026</span></td><td><span class="ltr">31–60</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click" data-b="0"><td><span class="ltr">1552</span></td><td>עיריית נתניה</td><td><span class="ltr">07/08/2026</span></td><td><span class="ltr">06/09/2026</span></td><td><span class="ltr">שוטף</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click" data-b="0"><td><span class="ltr">1553</span></td><td>פלטינום נדל"ן</td><td><span class="ltr">09/08/2026</span></td><td><span class="ltr">08/09/2026</span></td><td><span class="ltr">שוטף</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click" data-b="0"><td><span class="ltr">1556</span></td><td>ספיר ייעוץ ארגוני</td><td><span class="ltr">15/08/2026</span></td><td><span class="ltr">14/09/2026</span></td><td><span class="ltr">שוטף</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click" data-b="0"><td><span class="ltr">1557</span></td><td>קרן הצפון להשקעות</td><td><span class="ltr">21/08/2026</span></td><td><span class="ltr">20/09/2026</span></td><td><span class="ltr">שוטף</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click" data-b="0"><td><span class="ltr">1559</span></td><td>קול ובמה בע"מ</td><td><span class="ltr">21/08/2026</span></td><td><span class="ltr">20/09/2026</span></td><td><span class="ltr">שוטף</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click" data-b="0"><td><span class="ltr">1560</span></td><td>אינפיניטי גיימינג</td><td><span class="ltr">20/08/2026</span></td><td><span class="ltr">19/09/2026</span></td><td><span class="ltr">שוטף</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click" data-b="0"><td><span class="ltr">1561</span></td><td>עמק חפר אגרו-טק</td><td><span class="ltr">24/08/2026</span></td><td><span class="ltr">23/09/2026</span></td><td><span class="ltr">שוטף</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1460 · אלפא סיסטמס בע&quot;מ" data-b="90"><td><span class="ltr">1460</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">30/04/2026</span></td><td><span class="ltr">30/05/2026</span></td><td class="over"><span class="ltr">90+</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1468 · מועצה אזורית עמק חפר" data-b="61"><td><span class="ltr">1468</span></td><td>מועצה אזורית עמק חפר</td><td><span class="ltr">11/05/2026</span></td><td><span class="ltr">10/06/2026</span></td><td class="over"><span class="ltr">61–90</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1505 · האגודה למען המדע הצעיר" data-b="61"><td><span class="ltr">1505</span></td><td>האגודה למען המדע הצעיר</td><td><span class="ltr">03/06/2026</span></td><td><span class="ltr">03/07/2026</span></td><td class="over"><span class="ltr">61–90</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1537 · אלמנט הפקות" data-b="31"><td><span class="ltr">1537</span></td><td>אלמנט הפקות</td><td><span class="ltr">06/07/2026</span></td><td><span class="ltr">05/08/2026</span></td><td><span class="ltr">31–60</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1552 · עיריית נתניה" data-b="0"><td><span class="ltr">1552</span></td><td>עיריית נתניה</td><td><span class="ltr">07/08/2026</span></td><td><span class="ltr">06/09/2026</span></td><td><span class="ltr">שוטף</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1553 · פלטינום נדל&quot;ן" data-b="0"><td><span class="ltr">1553</span></td><td>פלטינום נדל"ן</td><td><span class="ltr">09/08/2026</span></td><td><span class="ltr">08/09/2026</span></td><td><span class="ltr">שוטף</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1556 · ספיר ייעוץ ארגוני" data-b="0"><td><span class="ltr">1556</span></td><td>ספיר ייעוץ ארגוני</td><td><span class="ltr">15/08/2026</span></td><td><span class="ltr">14/09/2026</span></td><td><span class="ltr">שוטף</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1557 · קרן הצפון להשקעות" data-b="0"><td><span class="ltr">1557</span></td><td>קרן הצפון להשקעות</td><td><span class="ltr">21/08/2026</span></td><td><span class="ltr">20/09/2026</span></td><td><span class="ltr">שוטף</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1559 · קול ובמה בע&quot;מ" data-b="0"><td><span class="ltr">1559</span></td><td>קול ובמה בע"מ</td><td><span class="ltr">21/08/2026</span></td><td><span class="ltr">20/09/2026</span></td><td><span class="ltr">שוטף</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1560 · אינפיניטי גיימינג" data-b="0"><td><span class="ltr">1560</span></td><td>אינפיניטי גיימינג</td><td><span class="ltr">20/08/2026</span></td><td><span class="ltr">19/09/2026</span></td><td><span class="ltr">שוטף</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1561 · עמק חפר אגרו-טק" data-b="0"><td><span class="ltr">1561</span></td><td>עמק חפר אגרו-טק</td><td><span class="ltr">24/08/2026</span></td><td><span class="ltr">23/09/2026</span></td><td><span class="ltr">שוטף</span></td></tr>
         </tbody>
       </table>
     </div>
     <div class="pager">
-      <span><span class="ltr" id="p3Range">1–2</span> מתוך <span class="ltr" id="p3Total">2</span></span>
+      <span><span class="ltr" id="p3Range">1–2</span> מתוך <span id="p3Total">2</span></span>
       <div style="display:flex; gap:8px; align-items:center">
         <button class="btn btn-outline" style="padding:4px 12px; font-size:12.5px">הקודם</button>
         <span>עמוד <span class="ltr">1/1</span></span>
@@ -625,8 +645,10 @@ tr.click:hover td{background:var(--s50)}
 <!-- ═══════════════════════════════════════════════════════════════════════════
      דף 4 · מ10 — דוח 7 (+3 צווארי-בקבוק) · "מה ייכנס החודש?"
      ═══════════════════════════════════════════════════════════════════════════ -->
-<section class="page" id="p4" hidden aria-label="מה ייכנס החודש?">
+<section class="page" id="p4" aria-label="תזרים צפוי">
 
+  <h1>תזרים צפוי</h1>
+  <p class="psub">מה ייכנס החודש?</p>
   <p class="somuch">עיריות משלמות באיחור חציוני 68.5 יום מול 34 לחברות; 31,930 ₪ מהחודש יגיעו בפועל בחודש הבא.</p>
 
   <div class="tiles">
@@ -696,28 +718,29 @@ tr.click:hover td{background:var(--s50)}
 
   <div class="tbl-card">
     <h3>מתי כל חשבונית פתוחה תגיע בפועל</h3>
+    <p class="drill">לחיצה על שורה פותחת את כרטיס הפרויקט</p>
     <div class="tbl-scroll">
       <table class="data">
-        <thead><tr><th>פרויקט</th><th>לקוח</th><th>מועד חוזי</th><th>חשבוניות ששולמו</th><th>חציון-איחור אישי</th><th>מועד צפוי</th><th></th></tr></thead>
+        <thead><tr><th>פרויקט</th><th>לקוח</th><th>מועד חוזי</th><th>חשבוניות ששולמו</th><th>חציון-איחור אישי</th><th>מועד צפוי</th></tr></thead>
         <tbody>
-          <tr class="click"><td><span class="ltr">1460</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">30/05/2026</span></td><td><span class="ltr">160</span></td><td><span class="ltr">+3</span> ימים</td><td><span class="ltr">02/06/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1505</span></td><td>האגודה למען המדע הצעיר</td><td><span class="ltr">03/07/2026</span></td><td><span class="ltr">7</span></td><td><span class="ltr">+12</span> ימים</td><td><span class="ltr">15/07/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1468</span></td><td>מועצה אזורית עמק חפר</td><td><span class="ltr">10/06/2026</span></td><td><span class="ltr">11</span></td><td><span class="ltr">+41</span> ימים</td><td><span class="ltr">21/07/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1537</span></td><td>אלמנט הפקות</td><td><span class="ltr">05/08/2026</span></td><td><span class="ltr">3</span></td><td><span class="ltr">−9</span> ימים</td><td><span class="ltr">27/07/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1556</span></td><td>ספיר ייעוץ ארגוני</td><td><span class="ltr">14/09/2026</span></td><td><span class="ltr">11</span></td><td><span class="ltr">+3</span> ימים</td><td><span class="ltr">17/09/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1553</span></td><td>פלטינום נדל"ן</td><td><span class="ltr">08/09/2026</span></td><td><span class="ltr">9</span></td><td><span class="ltr">+9</span> ימים</td><td><span class="ltr">17/09/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1560</span></td><td>אינפיניטי גיימינג</td><td><span class="ltr">19/09/2026</span></td><td><span class="ltr">4</span></td><td><span class="ltr">−1.5</span> ימים</td><td><span class="ltr">17/09/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1559</span></td><td>קול ובמה בע"מ</td><td><span class="ltr">20/09/2026</span></td><td><span class="ltr">11</span></td><td><span class="ltr">−1</span> יום</td><td><span class="ltr">19/09/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1557</span></td><td>קרן הצפון להשקעות</td><td><span class="ltr">20/09/2026</span></td><td><span class="ltr">5</span></td><td><span class="ltr">0</span> ימים</td><td><span class="ltr">20/09/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1561</span></td><td>עמק חפר אגרו-טק</td><td><span class="ltr">23/09/2026</span></td><td><span class="ltr">6</span></td><td><span class="ltr">−2</span> ימים</td><td><span class="ltr">21/09/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click" style="background:var(--s50)"><td><span class="ltr">1552</span></td><td>עיריית נתניה</td><td><span class="ltr">06/09/2026</span></td><td><span class="ltr">29</span></td>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1460 · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1460</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">30/05/2026</span></td><td><span class="ltr">160</span></td><td><span class="ltr">+3</span> ימים</td><td><span class="ltr">02/06/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1505 · האגודה למען המדע הצעיר"><td><span class="ltr">1505</span></td><td>האגודה למען המדע הצעיר</td><td><span class="ltr">03/07/2026</span></td><td><span class="ltr">7</span></td><td><span class="ltr">+12</span> ימים</td><td><span class="ltr">15/07/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1468 · מועצה אזורית עמק חפר"><td><span class="ltr">1468</span></td><td>מועצה אזורית עמק חפר</td><td><span class="ltr">10/06/2026</span></td><td><span class="ltr">11</span></td><td><span class="ltr">+41</span> ימים</td><td><span class="ltr">21/07/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1537 · אלמנט הפקות"><td><span class="ltr">1537</span></td><td>אלמנט הפקות</td><td><span class="ltr">05/08/2026</span></td><td><span class="ltr">3</span></td><td><span class="ltr">−9</span> ימים</td><td><span class="ltr">27/07/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1556 · ספיר ייעוץ ארגוני"><td><span class="ltr">1556</span></td><td>ספיר ייעוץ ארגוני</td><td><span class="ltr">14/09/2026</span></td><td><span class="ltr">11</span></td><td><span class="ltr">+3</span> ימים</td><td><span class="ltr">17/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1553 · פלטינום נדל&quot;ן"><td><span class="ltr">1553</span></td><td>פלטינום נדל"ן</td><td><span class="ltr">08/09/2026</span></td><td><span class="ltr">9</span></td><td><span class="ltr">+9</span> ימים</td><td><span class="ltr">17/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1560 · אינפיניטי גיימינג"><td><span class="ltr">1560</span></td><td>אינפיניטי גיימינג</td><td><span class="ltr">19/09/2026</span></td><td><span class="ltr">4</span></td><td><span class="ltr">−1.5</span> ימים</td><td><span class="ltr">17/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1559 · קול ובמה בע&quot;מ"><td><span class="ltr">1559</span></td><td>קול ובמה בע"מ</td><td><span class="ltr">20/09/2026</span></td><td><span class="ltr">11</span></td><td><span class="ltr">−1</span> יום</td><td><span class="ltr">19/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1557 · קרן הצפון להשקעות"><td><span class="ltr">1557</span></td><td>קרן הצפון להשקעות</td><td><span class="ltr">20/09/2026</span></td><td><span class="ltr">5</span></td><td><span class="ltr">0</span> ימים</td><td><span class="ltr">20/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1561 · עמק חפר אגרו-טק"><td><span class="ltr">1561</span></td><td>עמק חפר אגרו-טק</td><td><span class="ltr">23/09/2026</span></td><td><span class="ltr">6</span></td><td><span class="ltr">−2</span> ימים</td><td><span class="ltr">21/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1552 · עיריית נתניה"><td><span class="ltr">1552</span></td><td>עיריית נתניה</td><td><span class="ltr">06/09/2026</span></td><td><span class="ltr">29</span></td>
             <td><span class="tip ltr" title="לקוח זה משלם באיחור חציוני 38 יום מעבר למועד החוזי (68 יום מקבלת החשבונית, על סמך 29 חשבוניות ששולמו)">+38</span> ימים</td>
-            <td class="over"><span class="ltr">14/10/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
+            <td class="over"><span class="ltr">14/10/2026</span></td></tr>
         </tbody>
       </table>
     </div>
     <div class="pager">
-      <span><span class="ltr">1–11</span> מתוך <span class="ltr">11</span></span>
+      <span><span class="ltr">1–11</span> מתוך 11</span>
       <div style="display:flex; gap:8px; align-items:center">
         <button class="btn btn-outline" style="padding:4px 12px; font-size:12.5px">הקודם</button>
         <span>עמוד <span class="ltr">1/1</span></span>
@@ -733,8 +756,8 @@ tr.click:hover td{background:var(--s50)}
       <table class="data">
         <thead><tr><th>שלב</th><th>חציון-ימים</th><th>מעל <span class="ltr">7</span> ימים</th></tr></thead>
         <tbody>
-          <tr><td>אירוע ← סגירה תפעולית</td><td><span class="ltr">3.00</span></td><td><span class="ltr">0</span> מתוך <span class="ltr">717</span></td></tr>
-          <tr><td>סגירה תפעולית ← חשבונית</td><td><span class="ltr">3.00</span></td><td><span class="ltr">1</span> מתוך <span class="ltr">712</span></td></tr>
+          <tr><td>אירוע ← סגירה תפעולית</td><td><span class="ltr">3.00</span></td><td><span class="ltr">0</span> מתוך 717</td></tr>
+          <tr><td>סגירה תפעולית ← חשבונית</td><td><span class="ltr">3.00</span></td><td><span class="ltr">1</span> מתוך 712</td></tr>
           <tr><td>חשבונית ← תשלום</td><td class="over"><span class="ltr">35.00</span></td><td>ר' טבלת-הגיול בדוח <span class="ltr">6</span></td></tr>
         </tbody>
       </table>
@@ -743,20 +766,21 @@ tr.click:hover td{background:var(--s50)}
 
   <div class="tbl-card">
     <h3>תקועים עכשיו — הסתיימו ועדיין בלי חשבונית</h3>
+    <p class="drill">לחיצה על שורה פותחת את כרטיס הפרויקט</p>
     <div class="tbl-scroll">
       <table class="data">
-        <thead><tr><th>פרויקט</th><th>לקוח</th><th>אירוע</th><th>נסגר תפעולית</th><th>ימים מאז האירוע</th><th></th></tr></thead>
+        <thead><tr><th>פרויקט</th><th>לקוח</th><th>אירוע</th><th>נסגר תפעולית</th><th>ימים מאז האירוע</th></tr></thead>
         <tbody>
-          <tr class="click"><td><span class="ltr">1558</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">16/08/2026</span></td><td><span class="ltr">18/08/2026</span></td><td class="over"><span class="ltr">21</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1565</span></td><td>נובה פארמה בע"מ</td><td><span class="ltr">25/08/2026</span></td><td><span class="ltr">26/08/2026</span></td><td><span class="ltr">12</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1566</span></td><td>מטריקס דאטה בע"מ</td><td><span class="ltr">26/08/2026</span></td><td><span class="ltr">29/08/2026</span></td><td><span class="ltr">11</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1567</span></td><td>פלטינום נדל"ן</td><td><span class="ltr">26/08/2026</span></td><td><span class="ltr">30/08/2026</span></td><td><span class="ltr">11</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1568</span></td><td>עיריית רעננה</td><td><span class="ltr">27/08/2026</span></td><td><span class="ltr">29/08/2026</span></td><td><span class="ltr">10</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1558 · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1558</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">16/08/2026</span></td><td><span class="ltr">18/08/2026</span></td><td class="over"><span class="ltr">21</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1565 · נובה פארמה בע&quot;מ"><td><span class="ltr">1565</span></td><td>נובה פארמה בע"מ</td><td><span class="ltr">25/08/2026</span></td><td><span class="ltr">26/08/2026</span></td><td><span class="ltr">12</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1566 · מטריקס דאטה בע&quot;מ"><td><span class="ltr">1566</span></td><td>מטריקס דאטה בע"מ</td><td><span class="ltr">26/08/2026</span></td><td><span class="ltr">29/08/2026</span></td><td><span class="ltr">11</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1567 · פלטינום נדל&quot;ן"><td><span class="ltr">1567</span></td><td>פלטינום נדל"ן</td><td><span class="ltr">26/08/2026</span></td><td><span class="ltr">30/08/2026</span></td><td><span class="ltr">11</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1568 · עיריית רעננה"><td><span class="ltr">1568</span></td><td>עיריית רעננה</td><td><span class="ltr">27/08/2026</span></td><td><span class="ltr">29/08/2026</span></td><td><span class="ltr">10</span></td></tr>
         </tbody>
       </table>
     </div>
     <div class="pager">
-      <span><span class="ltr">1–5</span> מתוך <span class="ltr">5</span></span>
+      <span><span class="ltr">1–5</span> מתוך 5</span>
       <div style="display:flex; gap:8px; align-items:center">
         <button class="btn btn-outline" style="padding:4px 12px; font-size:12.5px">הקודם</button>
         <span>עמוד <span class="ltr">1/1</span></span>
@@ -773,14 +797,16 @@ tr.click:hover td{background:var(--s50)}
 <!-- ═══════════════════════════════════════════════════════════════════════════
      דף 5 · מ11 — דוח 8 · "האם תוספות-שטח מתומחרות?"
      ═══════════════════════════════════════════════════════════════════════════ -->
-<section class="page" id="p5" hidden aria-label="האם תוספות-שטח מתומחרות?">
+<section class="page" id="p5" aria-label="תוספות שטח">
 
+  <h1>תוספות שטח</h1>
+  <p class="psub">האם תוספות-שטח מתומחרות?</p>
   <p class="somuch">תוספות הוסיפו 4,368 ₪ (0.1% מהמחזור) ב-12 אירועים.</p>
 
   <div class="tiles">
     <div class="tile"><span class="lb">שינויי-תכולה</span>
       <span class="vl"><span class="ltr">16</span></span>
-      <span class="sub"><span class="ltr">13</span> פרויקטים מתוך <span class="ltr">827</span> · <span class="ltr">12</span> תוספות ו-<span class="ltr">4</span> צמצומים</span>
+      <span class="sub"><span class="ltr">13</span> פרויקטים מתוך 827 · <span class="ltr">12</span> תוספות ו-<span class="ltr">4</span> צמצומים</span>
       <span class="cmp">— <span style="color:var(--s400)">אין ערך תקופה-קודמת</span></span></div>
     <div class="tile"><span class="lb">השפעת-הכנסה</span>
       <span class="vl"><span class="ltr">4,368</span> ₪</span>
@@ -861,32 +887,33 @@ tr.click:hover td{background:var(--s50)}
 
   <div class="tbl-card">
     <h3>שינויי-התכולה האחרונים</h3>
+    <p class="drill">לחיצה על שורה פותחת את כרטיס הפרויקט</p>
     <div class="tbl-scroll">
       <table class="data">
-        <thead><tr><th>#</th><th>פרויקט</th><th>לקוח</th><th><span class="ltr">sku</span></th><th>שינוי-כמות</th><th>מחיר שנשמר</th><th>עלות שנשמרה</th><th>תאריך</th><th></th></tr></thead>
+        <thead><tr><th>#</th><th>פרויקט</th><th>לקוח</th><th><span class="ltr">sku</span></th><th>שינוי-כמות</th><th>מחיר שנשמר</th><th>עלות שנשמרה</th><th>תאריך</th></tr></thead>
         <tbody>
-          <tr class="click"><td><span class="ltr">18</span></td><td>כנס לקוח — רישום והכוונה</td><td>הפקות דרור</td><td><span class="ltr">REG-TAG</span></td><td><span class="ltr">−30</span></td><td><span class="ltr">2.20</span> ₪</td><td><span class="ltr">1.00</span> ₪</td><td><span class="ltr">03/09/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">17</span></td><td>ערב גאלה שנתי</td><td>אופק ביטוח ופיננסים</td><td><span class="ltr">B-SAT-LAN</span></td><td><span class="ltr">+40</span></td><td><span class="ltr">9.00</span> ₪</td><td><span class="ltr">4.00</span> ₪</td><td><span class="ltr">03/09/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">16</span></td><td>יום עיון ללקוחות</td><td>נובה פארמה בע"מ</td><td>דיילת נוספת</td><td><span class="ltr">+1</span></td><td><span class="ltr">800.00</span> ₪</td><td><span class="ltr">420.00</span> ₪</td><td><span class="ltr">03/09/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">15</span></td><td>טקס פרסים עירוני</td><td>עיריית נתניה</td><td><span class="ltr">FAB-LAN</span></td><td><span class="ltr">+60</span></td><td><span class="ltr">3.70</span> ₪</td><td><span class="ltr">1.50</span> ₪</td><td><span class="ltr">03/09/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">14</span></td><td>טקס פרסים עירוני</td><td>עיריית נתניה</td><td><span class="ltr">REG-TAG</span></td><td><span class="ltr">+60</span></td><td><span class="ltr">2.80</span> ₪</td><td><span class="ltr">1.00</span> ₪</td><td><span class="ltr">03/09/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">13</span></td><td>מפגש משקיעים רבעוני</td><td>מוטורס ישראל בע"מ</td><td><span class="ltr">B-REG-TAG</span></td><td><span class="ltr">−30</span></td><td><span class="ltr">5.50</span> ₪</td><td><span class="ltr">2.50</span> ₪</td><td><span class="ltr">03/09/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">12</span></td><td>ערב גאלה שנתי</td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">B-SAT-LAN</span></td><td><span class="ltr">+40</span></td><td><span class="ltr">9.00</span> ₪</td><td><span class="ltr">4.00</span> ₪</td><td><span class="ltr">03/09/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">11</span></td><td>השקה מסחרית</td><td>הפקות דרור</td><td>דיילת נוספת</td><td><span class="ltr">+1</span></td><td><span class="ltr">800.00</span> ₪</td><td><span class="ltr">420.00</span> ₪</td><td><span class="ltr">03/09/2026</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: כנס לקוח — רישום והכוונה · הפקות דרור"><td><span class="ltr">18</span></td><td>כנס לקוח — רישום והכוונה</td><td>הפקות דרור</td><td><span class="ltr">REG-TAG</span></td><td><span class="ltr">−30</span></td><td><span class="ltr">2.20</span> ₪</td><td><span class="ltr">1.00</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: ערב גאלה שנתי · אופק ביטוח ופיננסים"><td><span class="ltr">17</span></td><td>ערב גאלה שנתי</td><td>אופק ביטוח ופיננסים</td><td><span class="ltr">B-SAT-LAN</span></td><td><span class="ltr">+40</span></td><td><span class="ltr">9.00</span> ₪</td><td><span class="ltr">4.00</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: יום עיון ללקוחות · נובה פארמה בע&quot;מ"><td><span class="ltr">16</span></td><td>יום עיון ללקוחות</td><td>נובה פארמה בע"מ</td><td>דיילת נוספת</td><td><span class="ltr">+1</span></td><td><span class="ltr">800.00</span> ₪</td><td><span class="ltr">420.00</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: טקס פרסים עירוני · עיריית נתניה"><td><span class="ltr">15</span></td><td>טקס פרסים עירוני</td><td>עיריית נתניה</td><td><span class="ltr">FAB-LAN</span></td><td><span class="ltr">+60</span></td><td><span class="ltr">3.70</span> ₪</td><td><span class="ltr">1.50</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: טקס פרסים עירוני · עיריית נתניה"><td><span class="ltr">14</span></td><td>טקס פרסים עירוני</td><td>עיריית נתניה</td><td><span class="ltr">REG-TAG</span></td><td><span class="ltr">+60</span></td><td><span class="ltr">2.80</span> ₪</td><td><span class="ltr">1.00</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: מפגש משקיעים רבעוני · מוטורס ישראל בע&quot;מ"><td><span class="ltr">13</span></td><td>מפגש משקיעים רבעוני</td><td>מוטורס ישראל בע"מ</td><td><span class="ltr">B-REG-TAG</span></td><td><span class="ltr">−30</span></td><td><span class="ltr">5.50</span> ₪</td><td><span class="ltr">2.50</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: ערב גאלה שנתי · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">12</span></td><td>ערב גאלה שנתי</td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">B-SAT-LAN</span></td><td><span class="ltr">+40</span></td><td><span class="ltr">9.00</span> ₪</td><td><span class="ltr">4.00</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: השקה מסחרית · הפקות דרור"><td><span class="ltr">11</span></td><td>השקה מסחרית</td><td>הפקות דרור</td><td>דיילת נוספת</td><td><span class="ltr">+1</span></td><td><span class="ltr">800.00</span> ₪</td><td><span class="ltr">420.00</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
         </tbody>
       </table>
     </div>
     <div class="pager">
-      <span><span class="ltr">1–8</span> מתוך <span class="ltr">16</span></span>
+      <span><span class="ltr">1–8</span> מתוך 16</span>
       <div style="display:flex; gap:8px; align-items:center">
         <button class="btn btn-outline" style="padding:4px 12px; font-size:12.5px">הקודם</button>
-        <span>עמוד <span class="ltr">1/1</span></span>
+        <span>עמוד <span class="ltr">1/2</span></span>
         <button class="btn btn-outline" style="padding:4px 12px; font-size:12.5px">הבא</button>
       </div>
     </div>
   </div>
 
-  <div class="datanote"><b>נפח נמוך במסד:</b> <span class="ltr">16</span> שורות בסך-הכול, ב-<span class="ltr">13</span> פרויקטים מתוך <span class="ltr">827</span>
+  <div class="datanote"><b>נפח נמוך במסד:</b> <span class="ltr">16</span> שורות בסך-הכול, ב-<span class="ltr">13</span> פרויקטים מתוך 827
     (<span class="ltr">1.6%</span>). שאלת-ההיקף "לזרוע עוד או לדחות ל-<span class="ltr">v2</span>" עדיין פתוחה
     (<span class="ltr">seed-plan.md §4</span>). המספרים כאן הם המצב <b>לפני</b> זריעה נוספת.</div>
 
@@ -898,8 +925,10 @@ tr.click:hover td{background:var(--s50)}
 <!-- ═══════════════════════════════════════════════════════════════════════════
      דף 6 · מ12 — דוח 11 · "כמה ציוד נצרך ומה עלה?"
      ═══════════════════════════════════════════════════════════════════════════ -->
-<section class="page" id="p6" hidden aria-label="כמה ציוד נצרך ומה עלה?">
+<section class="page" id="p6" aria-label="צריכת ציוד">
 
+  <h1>צריכת ציוד</h1>
+  <p class="psub">כמה ציוד נצרך ומה עלה?</p>
   <p class="somuch">תגים ממותגים: הוזמנו 58,490, הגיעו 54,110 (פער 7.5%); עלות 233,480 ₪.</p>
 
   <div class="tiles">
@@ -917,7 +946,7 @@ tr.click:hover td{background:var(--s50)}
       <span class="cmp">— <span style="color:var(--s400)">אין ערך תקופה-קודמת</span></span></div>
     <div class="tile"><span class="lb">שורות בלי מקור-עלות</span>
       <span class="vl"><span class="ltr">3</span></span>
-      <span class="sub">מתוך <span class="ltr">1,771</span> שורות לוגיסטיקה</span>
+      <span class="sub">מתוך 1,771 שורות לוגיסטיקה</span>
       <span class="cmp">— <span style="color:var(--s400)">אין ערך תקופה-קודמת</span></span></div>
   </div>
 
@@ -985,26 +1014,27 @@ tr.click:hover td{background:var(--s50)}
 
   <div class="tbl-card">
     <h3>צריכת-ציוד ועלות לפי <span class="ltr">sku</span></h3>
+    <p class="drill">לחיצה על שורה מציגה את הפרויקטים עם אותו <span class="ltr">sku</span></p>
     <div class="tbl-scroll">
       <table class="data">
-        <thead><tr><th><span class="ltr">sku</span></th><th>הוזמן</th><th>הגיע</th><th>פער יחידות</th><th>פער %</th><th>עלות</th><th></th></tr></thead>
+        <thead><tr><th><span class="ltr">sku</span></th><th>הוזמן</th><th>הגיע</th><th>פער יחידות</th><th>פער %</th><th>עלות</th></tr></thead>
         <tbody>
-          <tr class="click"><td><span class="ltr">B-SAT-LAN</span></td><td><span class="ltr">58,490</span></td><td><span class="ltr">54,110</span></td><td><span class="ltr">4,380</span></td><td><span class="ltr">7.5%</span></td><td><span class="ltr">233,480</span> ₪</td><td><button class="lnk">פתח פרויקטים</button></td></tr>
-          <tr class="click"><td><span class="ltr">B-FAB-LAN</span></td><td><span class="ltr">58,200</span></td><td><span class="ltr">52,650</span></td><td><span class="ltr">5,550</span></td><td><span class="ltr">9.5%</span></td><td><span class="ltr">174,600</span> ₪</td><td><button class="lnk">פתח פרויקטים</button></td></tr>
-          <tr class="click"><td><span class="ltr">B-ECO-TAG</span></td><td><span class="ltr">49,597</span></td><td><span class="ltr">43,590</span></td><td><span class="ltr">6,007</span></td><td><span class="ltr">12.1%</span></td><td><span class="ltr">173,590</span> ₪</td><td><button class="lnk">פתח פרויקטים</button></td></tr>
-          <tr class="click"><td><span class="ltr">01WEB</span></td><td><span class="ltr">118</span></td><td><span class="ltr">106</span></td><td><span class="ltr">12</span></td><td><span class="ltr">10.2%</span></td><td><span class="ltr">141,600</span> ₪</td><td><button class="lnk">פתח פרויקטים</button></td></tr>
-          <tr class="click"><td><span class="ltr">B-REG-TAG</span></td><td><span class="ltr">53,150</span></td><td><span class="ltr">48,960</span></td><td><span class="ltr">4,190</span></td><td><span class="ltr">7.9%</span></td><td><span class="ltr">132,875</span> ₪</td><td><button class="lnk">פתח פרויקטים</button></td></tr>
-          <tr class="click"><td><span class="ltr">ECO-TAG</span></td><td><span class="ltr">57,410</span></td><td><span class="ltr">50,930</span></td><td><span class="ltr">6,480</span></td><td><span class="ltr">11.3%</span></td><td><span class="ltr">103,338</span> ₪</td><td><button class="lnk">פתח פרויקטים</button></td></tr>
-          <tr class="click"><td><span class="ltr">SAT-LAN</span></td><td><span class="ltr">48,860</span></td><td><span class="ltr">43,270</span></td><td><span class="ltr">5,590</span></td><td><span class="ltr">11.4%</span></td><td><span class="ltr">97,720</span> ₪</td><td><button class="lnk">פתח פרויקטים</button></td></tr>
-          <tr class="click"><td><span class="ltr">FAB-LAN</span></td><td><span class="ltr">49,350</span></td><td><span class="ltr">44,170</span></td><td><span class="ltr">5,180</span></td><td><span class="ltr">10.5%</span></td><td><span class="ltr">74,025</span> ₪</td><td><button class="lnk">פתח פרויקטים</button></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם B-SAT-LAN"><td><span class="ltr">B-SAT-LAN</span></td><td><span class="ltr">58,490</span></td><td><span class="ltr">54,110</span></td><td><span class="ltr">4,380</span></td><td><span class="ltr">7.5%</span></td><td><span class="ltr">233,480</span> ₪</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם B-FAB-LAN"><td><span class="ltr">B-FAB-LAN</span></td><td><span class="ltr">58,200</span></td><td><span class="ltr">52,650</span></td><td><span class="ltr">5,550</span></td><td><span class="ltr">9.5%</span></td><td><span class="ltr">174,600</span> ₪</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם B-ECO-TAG"><td><span class="ltr">B-ECO-TAG</span></td><td><span class="ltr">49,597</span></td><td><span class="ltr">43,590</span></td><td><span class="ltr">6,007</span></td><td><span class="ltr">12.1%</span></td><td><span class="ltr">173,590</span> ₪</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם 01WEB"><td><span class="ltr">01WEB</span></td><td><span class="ltr">118</span></td><td><span class="ltr">106</span></td><td><span class="ltr">12</span></td><td><span class="ltr">10.2%</span></td><td><span class="ltr">141,600</span> ₪</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם B-REG-TAG"><td><span class="ltr">B-REG-TAG</span></td><td><span class="ltr">53,150</span></td><td><span class="ltr">48,960</span></td><td><span class="ltr">4,190</span></td><td><span class="ltr">7.9%</span></td><td><span class="ltr">132,875</span> ₪</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם ECO-TAG"><td><span class="ltr">ECO-TAG</span></td><td><span class="ltr">57,410</span></td><td><span class="ltr">50,930</span></td><td><span class="ltr">6,480</span></td><td><span class="ltr">11.3%</span></td><td><span class="ltr">103,338</span> ₪</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם SAT-LAN"><td><span class="ltr">SAT-LAN</span></td><td><span class="ltr">48,860</span></td><td><span class="ltr">43,270</span></td><td><span class="ltr">5,590</span></td><td><span class="ltr">11.4%</span></td><td><span class="ltr">97,720</span> ₪</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם FAB-LAN"><td><span class="ltr">FAB-LAN</span></td><td><span class="ltr">49,350</span></td><td><span class="ltr">44,170</span></td><td><span class="ltr">5,180</span></td><td><span class="ltr">10.5%</span></td><td><span class="ltr">74,025</span> ₪</td></tr>
         </tbody>
       </table>
     </div>
     <div class="pager">
-      <span><span class="ltr">1–8</span> מתוך <span class="ltr">9</span></span>
+      <span><span class="ltr">1–8</span> מתוך 9</span>
       <div style="display:flex; gap:8px; align-items:center">
         <button class="btn btn-outline" style="padding:4px 12px; font-size:12.5px">הקודם</button>
-        <span>עמוד <span class="ltr">1/1</span></span>
+        <span>עמוד <span class="ltr">1/2</span></span>
         <button class="btn btn-outline" style="padding:4px 12px; font-size:12.5px">הבא</button>
       </div>
     </div>
@@ -1012,18 +1042,19 @@ tr.click:hover td{background:var(--s50)}
 
   <div class="tbl-card">
     <h3>שורות בלי מקור-עלות — לא נכנסות לחישוב העלות</h3>
+    <p class="drill">לחיצה על שורה פותחת את כרטיס הפרויקט</p>
     <div class="tbl-scroll">
       <table class="data">
-        <thead><tr><th>פרויקט</th><th>לקוח</th><th><span class="ltr">sku</span></th><th>מתוכנן</th><th>בפועל</th><th></th></tr></thead>
+        <thead><tr><th>פרויקט</th><th>לקוח</th><th><span class="ltr">sku</span></th><th>מתוכנן</th><th>בפועל</th></tr></thead>
         <tbody>
-          <tr class="click"><td><span class="ltr">1581</span></td><td>סמארט-סיטי פתרונות</td><td><span class="ltr">B-SAT-LAN</span></td><td><span class="ltr">40</span></td><td><span class="ltr">0</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1594</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">B-SAT-LAN</span></td><td><span class="ltr">40</span></td><td><span class="ltr">0</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
-          <tr class="click"><td><span class="ltr">1606</span></td><td>אופק ביטוח ופיננסים</td><td><span class="ltr">B-SAT-LAN</span></td><td><span class="ltr">40</span></td><td><span class="ltr">0</span></td><td><button class="lnk">פתח כרטיס פרויקט</button></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1581 · סמארט-סיטי פתרונות"><td><span class="ltr">1581</span></td><td>סמארט-סיטי פתרונות</td><td><span class="ltr">B-SAT-LAN</span></td><td><span class="ltr">40</span></td><td><span class="ltr">0</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1594 · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1594</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">B-SAT-LAN</span></td><td><span class="ltr">40</span></td><td><span class="ltr">0</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1606 · אופק ביטוח ופיננסים"><td><span class="ltr">1606</span></td><td>אופק ביטוח ופיננסים</td><td><span class="ltr">B-SAT-LAN</span></td><td><span class="ltr">40</span></td><td><span class="ltr">0</span></td></tr>
         </tbody>
       </table>
     </div>
     <div class="pager">
-      <span><span class="ltr">1–3</span> מתוך <span class="ltr">3</span></span>
+      <span><span class="ltr">1–3</span> מתוך 3</span>
       <div style="display:flex; gap:8px; align-items:center">
         <button class="btn btn-outline" style="padding:4px 12px; font-size:12.5px">הקודם</button>
         <span>עמוד <span class="ltr">1/1</span></span>
@@ -1040,8 +1071,10 @@ tr.click:hover td{background:var(--s50)}
 <!-- ═══════════════════════════════════════════════════════════════════════════
      דף 7 · מ13 — דוח 16 · "כמה עלה השכר לפי חודש?"
      ═══════════════════════════════════════════════════════════════════════════ -->
-<section class="page" id="p7" hidden aria-label="כמה עלה השכר לפי חודש?">
+<section class="page" id="p7" aria-label="עלות שכר חודשית">
 
+  <h1>עלות שכר חודשית</h1>
+  <p class="psub">כמה עלה השכר לפי חודש?</p>
   <p class="somuch">עלות-שעה ממוצעת 44.16 ₪; נסיעות 8.9% מהשכר.</p>
 
   <div class="filters" style="margin-bottom:12px">
@@ -1142,23 +1175,24 @@ tr.click:hover td{background:var(--s50)}
 
     <div class="tbl-card">
       <h3>שכר לפי חודש</h3>
+    <p class="drill">לחיצה על שורה מציגה את שיבוצי החודש</p>
       <div class="tbl-scroll">
         <table class="data">
-          <thead><tr><th>חודש</th><th>שכר</th><th>נסיעות</th><th>בונוסים</th><th>משמרות בתשלום</th><th>נסיעות % מהשכר</th><th></th></tr></thead>
+          <thead><tr><th>חודש</th><th>שכר</th><th>נסיעות</th><th>בונוסים</th><th>משמרות בתשלום</th><th>נסיעות % מהשכר</th></tr></thead>
           <tbody>
-            <tr class="click"><td><span class="ltr">01/2026</span></td><td><span class="ltr">34,029</span> ₪</td><td><span class="ltr">3,345</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">148</span></td><td><span class="ltr">9.8%</span></td><td><button class="lnk">פתח שיבוצים</button></td></tr>
-            <tr class="click"><td><span class="ltr">02/2026</span></td><td><span class="ltr">53,112</span> ₪</td><td><span class="ltr">4,362</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">193</span></td><td><span class="ltr">8.2%</span></td><td><button class="lnk">פתח שיבוצים</button></td></tr>
-            <tr class="click"><td><span class="ltr">03/2026</span></td><td><span class="ltr">40,800</span> ₪</td><td><span class="ltr">3,910</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">173</span></td><td><span class="ltr">9.6%</span></td><td><button class="lnk">פתח שיבוצים</button></td></tr>
-            <tr class="click"><td><span class="ltr">04/2026</span></td><td><span class="ltr">30,945</span> ₪</td><td><span class="ltr">2,554</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">113</span></td><td><span class="ltr">8.3%</span></td><td><button class="lnk">פתח שיבוצים</button></td></tr>
-            <tr class="click"><td><span class="ltr">05/2026</span></td><td><span class="ltr">49,930</span> ₪</td><td><span class="ltr">4,543</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">201</span></td><td><span class="ltr">9.1%</span></td><td><button class="lnk">פתח שיבוצים</button></td></tr>
-            <tr class="click"><td><span class="ltr">06/2026</span></td><td><span class="ltr">40,151</span> ₪</td><td><span class="ltr">3,503</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">155</span></td><td><span class="ltr">8.7%</span></td><td><button class="lnk">פתח שיבוצים</button></td></tr>
-            <tr class="click"><td><span class="ltr">07/2026</span></td><td><span class="ltr">21,166</span> ₪</td><td><span class="ltr">1,582</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">70</span></td><td><span class="ltr">7.5%</span></td><td><button class="lnk">פתח שיבוצים</button></td></tr>
-            <tr class="click"><td><span class="ltr">08/2026</span></td><td><span class="ltr">18,054</span> ₪</td><td><span class="ltr">1,740</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">77</span></td><td><span class="ltr">9.6%</span></td><td><button class="lnk">פתח שיבוצים</button></td></tr>
+            <tr class="click" tabindex="0" role="link" aria-label="הצג את שיבוצי 01/2026"><td><span class="ltr">01/2026</span></td><td><span class="ltr">34,029</span> ₪</td><td><span class="ltr">3,345</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">148</span></td><td><span class="ltr">9.8%</span></td></tr>
+            <tr class="click" tabindex="0" role="link" aria-label="הצג את שיבוצי 02/2026"><td><span class="ltr">02/2026</span></td><td><span class="ltr">53,112</span> ₪</td><td><span class="ltr">4,362</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">193</span></td><td><span class="ltr">8.2%</span></td></tr>
+            <tr class="click" tabindex="0" role="link" aria-label="הצג את שיבוצי 03/2026"><td><span class="ltr">03/2026</span></td><td><span class="ltr">40,800</span> ₪</td><td><span class="ltr">3,910</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">173</span></td><td><span class="ltr">9.6%</span></td></tr>
+            <tr class="click" tabindex="0" role="link" aria-label="הצג את שיבוצי 04/2026"><td><span class="ltr">04/2026</span></td><td><span class="ltr">30,945</span> ₪</td><td><span class="ltr">2,554</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">113</span></td><td><span class="ltr">8.3%</span></td></tr>
+            <tr class="click" tabindex="0" role="link" aria-label="הצג את שיבוצי 05/2026"><td><span class="ltr">05/2026</span></td><td><span class="ltr">49,930</span> ₪</td><td><span class="ltr">4,543</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">201</span></td><td><span class="ltr">9.1%</span></td></tr>
+            <tr class="click" tabindex="0" role="link" aria-label="הצג את שיבוצי 06/2026"><td><span class="ltr">06/2026</span></td><td><span class="ltr">40,151</span> ₪</td><td><span class="ltr">3,503</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">155</span></td><td><span class="ltr">8.7%</span></td></tr>
+            <tr class="click" tabindex="0" role="link" aria-label="הצג את שיבוצי 07/2026"><td><span class="ltr">07/2026</span></td><td><span class="ltr">21,166</span> ₪</td><td><span class="ltr">1,582</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">70</span></td><td><span class="ltr">7.5%</span></td></tr>
+            <tr class="click" tabindex="0" role="link" aria-label="הצג את שיבוצי 08/2026"><td><span class="ltr">08/2026</span></td><td><span class="ltr">18,054</span> ₪</td><td><span class="ltr">1,740</span> ₪</td><td><span class="ltr">0</span> ₪</td><td><span class="ltr">77</span></td><td><span class="ltr">9.6%</span></td></tr>
           </tbody>
         </table>
       </div>
       <div class="pager">
-        <span><span class="ltr">1–8</span> מתוך <span class="ltr">8</span></span>
+        <span><span class="ltr">1–8</span> מתוך 8</span>
         <div style="display:flex; gap:8px; align-items:center">
           <button class="btn btn-outline" style="padding:4px 12px; font-size:12.5px">הקודם</button>
           <span>עמוד <span class="ltr">1/1</span></span>
