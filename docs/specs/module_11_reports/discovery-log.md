@@ -156,3 +156,15 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   measured, not guessed: I said "1.5–2M" and it was more.
 - **Next:** Ishay reviews the one landed file (shape is shared by all five) → fix → draw the remaining four one
   at a time → 5 card files → cross-surface pass → his approval of all 25 → seeding → Stage 3.
+- **20:5X — rulings 16–18, all three overriding me.** (16) Ishay rejected my "draw sequentially" lesson:
+  *"זה דווקא טוב עבודה במקביל"* — parallelism stays, quota is his to watch; the real cost fix (sliced briefs)
+  stays. (17) He caught that I brought him a **UI decision for a seeding problem** (the zero tiles) and asked
+  for the business profile instead. Measured on the spot: R11 per month in 2026 = 31·35·38·24·37·31·**14·5·0** —
+  the last three months collapse, because the seed never closed events near "today". That is the real defect, an
+  order of magnitude bigger than two tiles, and it would have shown a *dying* business at the conference. Written
+  as the profile block in `seed-plan.md §0א` + ruling 17, including the point nobody had stated: **the target date
+  is conference day (~01/10), not today.** (18) He rejected question-titles in the nav as unprofessional; world
+  practice (Power BI / Tableau style guides, searched this turn) says short descriptive page names, never codes and
+  never sentences ⇒ short name in the picker, question as the page subtitle. **This overrides delegated ruling
+  ח8-9** — the delegation mechanism working exactly as designed.
+- Caught by: **Ishay, all three.** Claude caught none of them. Harvest ④ row.
