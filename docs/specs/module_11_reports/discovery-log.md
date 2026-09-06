@@ -43,7 +43,7 @@ caught (`finalize_salary_report` reported "not found"; it exists in
 6. Ishay's draft §2 (table map) is almost entirely correct while §9.2 (code) is almost entirely wrong — the
    draft is a product document wearing a developer-blueprint costume; treat §9 as intent, not spec.
 
-**Harvest ledger (Stage 0) — four lines, per template §🌾:**
+**Harvest ledger (Stage 0) — MOVED to `docs/guides/discovery_lessons.md` §🌾 מודול 11 (the template's destination; a fresh reviewer caught the mis-routing). The four lines below are the original draft, superseded there:**
 ① Rounds: 0 with Ishay so far (Stop 1 is the first). ② Sections that did not fire in Stage 0: §5 (world check —
 by design, Stage 1) · §2⑧ anchors partly (the ledger cites grep anchors, agents' files still carry some line
 numbers) · the design skill / browser (Stage 2). ③ Where the template was wrong/missing: it says "the module's
@@ -81,3 +81,16 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   קורה"** (tablet in the field · feedback edited after sending) — both written to the killed-paths register
   verbatim. Ishay then approved the table explicitly ("מאשר את הטבלה"); the interim "assumed approval" note was replaced by the quote. Item 4 (scheduled digest) deliberately NOT written as `🚧 מ10`: nobody asked for a
   digest; §7.57 already holds the "if ever — m10" pointer; a debt line would manufacture work.
+- **Cards ת1 + ת2 + ruling 2 (tab gating by data-owner permission) approved** ("מאשר לפי המלצה", 09:5X) and written.
+- **Ruling 3 — blanket delegation** (verbatim in §🗳️). Consequence: the rest of the Discovery runs as an
+  orchestrator + agent waves in a FRESH session (this one is at the rotation line). Ishay's question "אתה מתכנן
+  אותו אינטראקטיבי כמו איש BI אמיתי?" answered as ruling 4 (level-1 interactivity + period comparison + computed
+  "so what" line; no further market research — §ח3 already has 5 sources; one Recharts/RTL/a11y check in Stage 2).
+- **Handoff written** (`next-session-prompt.md`) and put through a fresh-context Opus reviewer with the two
+  questions (unsourced claims · omissions): **28 claims checked — 19 ✅ · 8 ◐ · 1 ❌** (acceptance Q4 would have
+  fired a false alarm: three `### ת` headings, not two) · **16 omissions**, all fixed into the prompt (1-ג2
+  contracts · screens-approved `מצב` · sources line · mockup mechanics + 4 orphan PNGs · Stop-hook ordering ·
+  pathspec commits · Plan Mode · 🔵 collision · §11 hand-computed number · blind-spot pass · playbook says six
+  cross-checks vs seven · 4 stale spots in the step guide · §ז closing · mirror-tag wording · harvest destination).
+  Reviewer cost: 206K tokens. Self-catch on re-read: 0 (as always).
+- Killed-paths table formatting fixed (a blank line had split it); stale `מצב` row for Stage 2 fixed.
