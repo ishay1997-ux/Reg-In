@@ -183,3 +183,10 @@ measured per-agent number, not a guess. ④ Who caught what: the agent error on 
   My own answer to "how do I review a report" was given in chat as four rules (the decision · the number's home ·
   the action in one click · the one-sentence conference answer) + three questions he asks per page; if that survives
   his use, it belongs in the skill as the review protocol.
+- **21:2X — ruling 21** (*"כאילו פשוט תתקן רק תציין מה תיקנת ולמה"*): review findings are fixed directly and
+  reported as a what-changed list, not brought back as a decision table. Scope expansion, contradictions between
+  two of his own rulings, and user-visible novelty still come to him.
+- **21:2X — his question on drill-down** ("אנחנו בונים דוחות אינטראקטיביים עם דריל דאון אמיתי? איך זה אמור
+  להתנהג?"). Honest answer given: what ruling 4 specified is cross-filter + drill-**through**, not true
+  drill-**down** (hierarchical descent inside the chart). Recommendation put to him as a scope question with the
+  behaviour spec (breadcrumb, tiles follow the level, export follows the level, state in the URL) — pending.
