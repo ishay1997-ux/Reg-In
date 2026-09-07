@@ -185,6 +185,17 @@ body.hide-markers .im{display:none}
 .legend i{display:inline-block; width:14px; height:10px; border-radius:2px; margin-left:5px;
      vertical-align:-1px; border:1px solid var(--s300)}
 .chart-box{width:100%; overflow-x:auto}
+/* ✏️ 07/09 · שורת-גרף + אריח-צד — הכרעת-ישי: "שוטף" יוצא מגרף-הגיול לאריח **צמוד לצידו**
+   (📐20 בכיוון ההפוך: שם "עבר מועדו" יוצא מציר-הזמן, כאן "טרם הגיע מועדו" יוצא מציר-הגיול).
+   הגרף התכווץ 660 → 500 (עמודה אחת פחות) ⇒ 500 + 14 + 185 = 699px נכנסים בתוך כרטיס-גרף
+   שרוחבו הפנימי 710px (תוכן-דף 742 פחות 2×16 ריפוד) — 📐21, בדיקת-רוחב 1280px. */
+.chart-row{display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap}
+.chart-row .chart-box{width:auto; max-width:100%}
+.side-tile{flex:0 0 185px; min-width:185px; max-width:185px;
+     font-family:inherit; text-align:right; cursor:pointer}
+.side-tile:focus-visible{outline:2px solid var(--teal700); outline-offset:2px}
+.side-tile.on{border-color:var(--teal700); box-shadow:0 0 0 1px var(--teal700)}
+.side-tile .hintline{font-size:10.5px; color:var(--teal700); font-weight:600; margin-top:8px}
 svg{display:block}
 .ax{font-size:10px; fill:var(--s500)}
 .axh{font-size:10.5px; fill:var(--s600)}
@@ -831,7 +842,11 @@ tr.dim td{color:var(--s500)}
   <p class="psub"><span class="ltr">2026</span> (<span class="ltr">01/01–06/09</span>) · כל הלקוחות</p>
   <p class="pop">אוכלוסייה: חשבוניות שנשלחו, טרם שולמו ולא נמחקו כחוב-אבוד · הוצאו: חוב אבוד
     (<span class="ltr">1</span>) ופרויקטים שטרם חויבו · <span class="ltr">n=11</span> ·
-    <b>מדד-מלאי — אינו מושפע ממסנן התקופה</b> (📐3).</p>
+    <b>מדד-מלאי — אינו מושפע ממסנן התקופה</b> (📐3).
+    <br>✏️ <b>ולגרף שלמטה אוכלוסייה צרה יותר (📐2):</b> הוא מציג <b>חוב באיחור בלבד</b> —
+    ארבעת דליי-האיחור, <span class="ltr">4</span> חשבוניות. ‏<b>"שוטף"</b> (<span class="ltr">7</span>
+    חשבוניות · <span class="ltr">46,399</span> ₪) <b>הוצא מהגרף</b> לאריח שלצידו, כי טרם הגיע מועד
+    תשלומן — הן אינן חוב באיחור. <b>האריחים והטבלה ממשיכים לכסות את כל <span class="ltr">11</span>.</b></p>
 
   <p class="so-what" id="p3SoWhat">מדרג <span class="ltr">61–90</span> יום: <span class="ltr">5,447</span> ₪ ב-<span class="ltr">2</span> חשבוניות אצל <span class="ltr">2</span> לקוחות; הישנה ממתינה <span class="ltr">88</span> ימים.</p>
 
@@ -862,83 +877,110 @@ tr.dim td{color:var(--s500)}
     <!-- ✏️ 07/09/2026 · מובנוּת גרף-הגיול (ביקורת-ישי §👤 6: "הסתכלתי עליו חמש דקות ולא הבנתי").
          נוספו שני דברים ואף נתון לא הוסר: (1) כותרת-משנה שאומרת **מה השאלה שהעמודות עונות עליה**;
          (2) מקרא-עמודות שמתרגם כל מדרג לעברית של מנהלת-כספים ("שוטף" אינו "שולם"). -->
-    <h3>חוב פתוח לפי מדרג-גיול, מוערם לפי סוג-לקוח · נכון ל-<span class="ltr">06/09/2026</span></h3>
+    <!-- ✏️ 07/09/2026 (סבב מאוחר) · **הכרעת-ישי: "שוטף" יוצא מהגרף לאריח צמוד לצידו.**
+         🔍 **מה נמדד:** שוטף = 46,399 ₪ מול 1–30 = 0 · 31–60 = 13,762 · 61–90 = 5,447 · 90+ = 10,163
+         ⇒ **8 מתוך 16 מקטעי-הערימה נפלו מתחת לרבע-הגובה**, והדלי שאי-אפשר לגבות אותו הסתיר
+         את ארבעת אלה שכן אפשר.
+         🎯 **הנימוק:** "שוטף" הוא **חשבוניות שטרם הגיע מועד תשלומן — לא חוב באיחור**, והשאלה
+         שהדף שואל היא "את מי לגבות השבוע?".
+         🔑 **העוגן — ואינו המצאה:** 📐20 כבר מוציא את "עבר מועדו" מציר-הזמן לאריח נפרד בדוח 7.
+         **זה בדיוק אותו עיקרון בכיוון ההפוך** — קטגוריה שאינה שייכת לציר יוצאת ממנו.
+         🚫 **מה *לא* נעשה:** הציר לא נקטע ולא עבר ללוגריתמי (📐5 אוסר) — הוא פשוט ירד ל-15,000
+         כי המקסימום שנשאר הוא 13,762 · המיון לא שונה, סדר-דליים טבעי גובר (📐7) ·
+         אף מספר לא הומצא ואף מספר לא זז.
+         🔻 **והאריח לחיץ:** "שוטף" נשאר מדרג בדריל-דאון (📐13) ⇒ לחיצה עליו יורדת לרמת-הלקוחות
+         שלו בדיוק כמו לחיצה על עמודה. -->
+    <h3>חוב <b>באיחור</b> לפי מדרג-גיול, מוערם לפי סוג-לקוח · נכון ל-<span class="ltr">06/09/2026</span>
+      <span style="font-weight:400; color:var(--s500)">· ✏️ "שוטף" באריח שלצד הגרף</span></h3>
     <p class="chart-note" style="font-size:12.5px; color:var(--s600); margin-bottom:6px">
-      <b>השאלה שהעמודות עונות עליה: כמה כסף פתוח יש לנו, וכמה זמן הוא כבר מחכה?</b>
+      <b>השאלה שהעמודות עונות עליה: כמה כסף <span style="color:var(--teal700)">שכבר איחר</span> יש לנו, וכמה זמן הוא כבר מחכה?</b>
       כל עמודה היא <b>דלי של איחור</b> — כמה ימים עברו מאז שהחשבונית הייתה אמורה להשתלם.
       ככל שהולכים ימינה, הכסף מחכה יותר זמן וקשה יותר לגבות אותו. הצבעים בתוך העמודה מפצלים
-      את אותו סכום <b>לפי סוג-הלקוח</b>, כדי לראות אצל מי הכסף תקוע.</p>
+      את אותו סכום <b>לפי סוג-הלקוח</b>, כדי לראות אצל מי הכסף תקוע.
+      ✏️ <b>ומה שאינו בגרף:</b> "שוטף" — חשבוניות שטרם הגיע מועד תשלומן — יושב באריח שלצד הגרף,
+      כי הוא <b>אינו חוב באיחור</b> ואי-אפשר לגבות אותו השבוע.</p>
     <p class="chart-note">לחיצה על מדרג <b>יורדת רמה</b> ומציגה את הלקוחות שבו (📐13). כרגע פתוח <b>61–90 יום</b>.
-      מדרג <span class="ltr">1–30</span> ריק היום ואינו לחיץ (📑ב#6). ערכי-הציר עגולים והציר מתחיל באפס (📐5).
-      ארבע השכבות נבדלות גם בדפוס-מילוי ובתווית, לא בגוון בלבד (📐19).</p>
-    <div class="chart-box" dir="ltr" role="figure" aria-label="חוב פתוח לפי מדרג-גיול, עמודות מוערמות לפי סוג-לקוח; מדרג 61 עד 90 יום פתוח">
-      <svg viewBox="0 0 660 286" width="660" height="286" preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <pattern id="agHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width="6" height="6" fill="#00BBA7"/><line x1="0" y1="0" x2="0" y2="6" stroke="#00786F" stroke-width="2"/>
-          </pattern>
-          <pattern id="agDots" width="6" height="6" patternUnits="userSpaceOnUse">
-            <rect width="6" height="6" fill="#96F7E4"/><circle cx="3" cy="3" r="1.3" fill="#00786F"/>
-          </pattern>
-        </defs>
-        <line x1="90" y1="210" x2="640" y2="210" stroke="#CAD5E2" stroke-width="1"/>
-        <line x1="90" y1="125" x2="640" y2="125" stroke="#F1F5F9"/>
-        <line x1="90" y1="40" x2="640" y2="40" stroke="#F1F5F9"/>
-        <text class="ax" x="82" y="214" text-anchor="end">0</text>
-        <text class="ax" x="82" y="129" text-anchor="end">25,000</text>
-        <text class="ax" x="82" y="44" text-anchor="end">50,000</text>
+      ✏️ <b>וגם האריח "שוטף" לחיץ באותה דרך</b> — הוא מדרג לכל דבר בדריל-דאון, רק לא על הציר.
+      מדרג <span class="ltr">1–30</span> ריק היום ואינו לחיץ (📑ב#6). ערכי-הציר עגולים והציר מתחיל באפס
+      <b>בלי קטיעה</b> (📐5) — הוא ירד ל-<span class="ltr">15,000</span> רק משום שהמקסימום שנשאר בו הוא
+      <span class="ltr">13,762</span>. ארבע השכבות נבדלות גם בדפוס-מילוי ובתווית, לא בגוון בלבד (📐19).</p>
 
-        <!-- שוטף -->
-        <rect x="95" y="160.8" width="70" height="49.2" fill="#00786F"/>
-        <rect x="95" y="59.8" width="70" height="101.0" fill="#009689"/>
-        <rect x="95" y="52.3" width="70" height="7.5" fill="url(#agDots)"/>
-        <text class="vlab" x="130" y="46" text-anchor="middle">46,399</text>
-        <text class="axh" x="130" y="228" text-anchor="middle">שוטף</text>
-        <text class="ax" x="130" y="242" text-anchor="middle">7 חשבוניות</text>
+    <div class="chart-row">
+      <div class="chart-box" dir="ltr" role="figure" aria-label="חוב באיחור לפי מדרג-גיול, ארבע עמודות מוערמות לפי סוג-לקוח; מדרג 61 עד 90 יום פתוח. הקטגוריה שוטף אינה בגרף ומוצגת באריח שלצידו">
+        <svg viewBox="0 0 500 286" width="500" height="286" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <pattern id="agHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="6" height="6" fill="#00BBA7"/><line x1="0" y1="0" x2="0" y2="6" stroke="#00786F" stroke-width="2"/>
+            </pattern>
+            <pattern id="agDots" width="6" height="6" patternUnits="userSpaceOnUse">
+              <rect width="6" height="6" fill="#96F7E4"/><circle cx="3" cy="3" r="1.3" fill="#00786F"/>
+            </pattern>
+          </defs>
+          <line x1="80" y1="210" x2="482" y2="210" stroke="#CAD5E2" stroke-width="1"/>
+          <line x1="80" y1="153.3" x2="482" y2="153.3" stroke="#F1F5F9"/>
+          <line x1="80" y1="96.7" x2="482" y2="96.7" stroke="#F1F5F9"/>
+          <line x1="80" y1="40" x2="482" y2="40" stroke="#F1F5F9"/>
+          <text class="ax" x="72" y="214" text-anchor="end">0</text>
+          <text class="ax" x="72" y="157" text-anchor="end">5,000</text>
+          <text class="ax" x="72" y="100" text-anchor="end">10,000</text>
+          <text class="ax" x="72" y="44" text-anchor="end">15,000</text>
 
-        <!-- 1–30 · ריק · לא לחיץ -->
-        <rect x="200" y="208" width="70" height="2" fill="#CAD5E2"/>
-        <text class="vlab" x="235" y="202" text-anchor="middle">0</text>
-        <text class="axh" x="235" y="228" text-anchor="middle">1–30</text>
-        <text class="ax" x="235" y="242" text-anchor="middle">0 חשבוניות · לא לחיץ</text>
+          <!-- 1–30 · ריק · לא לחיץ -->
+          <rect x="108" y="208" width="66" height="2" fill="#CAD5E2"/>
+          <text class="vlab" x="141" y="202" text-anchor="middle">0</text>
+          <text class="axh" x="141" y="228" text-anchor="middle">1–30</text>
+          <text class="ax" x="141" y="242" text-anchor="middle">0 חשבוניות · לא לחיץ</text>
 
-        <!-- 31–60 -->
-        <rect x="305" y="163.2" width="70" height="46.8" fill="url(#agDots)"/>
-        <text class="vlab" x="340" y="157" text-anchor="middle">13,762</text>
-        <text class="axh" x="340" y="228" text-anchor="middle">31–60</text>
-        <text class="ax" x="340" y="242" text-anchor="middle">1 חשבונית</text>
+          <!-- 31–60 · כולו חברת-הפקה -->
+          <rect x="201" y="54.0" width="66" height="156.0" fill="url(#agDots)"/>
+          <text class="vlab" x="234" y="48" text-anchor="middle">13,762</text>
+          <text class="axh" x="234" y="228" text-anchor="middle">31–60</text>
+          <text class="ax" x="234" y="242" text-anchor="middle">1 חשבונית</text>
 
-        <!-- 61–90 · פתוח -->
-        <rect x="410" y="201.9" width="70" height="8.1" fill="#00786F"/>
-        <rect x="410" y="191.5" width="70" height="10.4" fill="url(#agHatch)"/>
-        <rect id="p3SelBox" x="408" y="189.5" width="74" height="22.5" fill="none" stroke="#00786F" stroke-width="2" rx="3"/>
-        <text class="vlab" x="445" y="184" text-anchor="middle" fill="#00786F">✓ 5,447</text>
-        <text class="axh" x="445" y="228" text-anchor="middle" font-weight="700">61–90</text>
-        <text class="ax" x="445" y="242" text-anchor="middle">2 חשבוניות · פתוח</text>
+          <!-- 61–90 · פתוח · ממשלתי 2,384 + עמותה 3,063 -->
+          <rect x="294" y="182.98" width="66" height="27.02" fill="#00786F"/>
+          <rect x="294" y="148.27" width="66" height="34.71" fill="url(#agHatch)"/>
+          <rect id="p3SelBox" x="292" y="146.3" width="70" height="65.7" fill="none" stroke="#00786F" stroke-width="2" rx="3"/>
+          <text class="vlab" x="327" y="142" text-anchor="middle" fill="#00786F">✓ 5,447</text>
+          <text class="axh" x="327" y="228" text-anchor="middle" font-weight="700">61–90</text>
+          <text class="ax" x="327" y="242" text-anchor="middle">2 חשבוניות · פתוח</text>
 
-        <!-- 90+ -->
-        <rect x="515" y="175.4" width="70" height="34.6" fill="#009689"/>
-        <text class="vlab" x="550" y="169" text-anchor="middle">10,163</text>
-        <text class="axh" x="550" y="228" text-anchor="middle">90+</text>
-        <text class="ax" x="550" y="242" text-anchor="middle">1 חשבונית</text>
+          <!-- 90+ · כולו חברה-פרטית -->
+          <rect x="387" y="94.82" width="66" height="115.18" fill="#009689"/>
+          <text class="vlab" x="420" y="89" text-anchor="middle">10,163</text>
+          <text class="axh" x="420" y="228" text-anchor="middle">90+</text>
+          <text class="ax" x="420" y="242" text-anchor="middle">1 חשבונית</text>
 
-        <!-- ✏️ 07/09 · שורת-פירוש מתחת לכל דלי — כדי שהגרף יובן בלי לקרוא את המקרא -->
-        <text class="axn sub" x="130" y="256" text-anchor="middle">טרם הגיע מועד התשלום</text>
-        <text class="axn sub" x="235" y="256" text-anchor="middle">עד חודש איחור</text>
-        <text class="axn sub" x="340" y="256" text-anchor="middle">חודש עד חודשיים</text>
-        <text class="axn sub" x="445" y="256" text-anchor="middle">חודשיים עד שלושה</text>
-        <text class="axn sub" x="550" y="256" text-anchor="middle">מעל שלושה חודשים</text>
-        <text class="ax" x="360" y="276" text-anchor="middle">ימי איחור מעבר למועד-הפירעון · ₪</text>
+          <!-- שורת-פירוש מתחת לכל דלי — כדי שהגרף יובן בלי לקרוא את המקרא -->
+          <text class="axn sub" x="141" y="256" text-anchor="middle">עד חודש איחור</text>
+          <text class="axn sub" x="234" y="256" text-anchor="middle">חודש עד חודשיים</text>
+          <text class="axn sub" x="327" y="256" text-anchor="middle">חודשיים עד שלושה</text>
+          <text class="axn sub" x="420" y="256" text-anchor="middle">מעל שלושה חודשים</text>
+          <text class="ax" x="281" y="276" text-anchor="middle">ימי איחור מעבר למועד-הפירעון · ₪</text>
 
-        <!-- אזורי-לחיצה (קידוח) -->
-        <rect class="hit" data-b="cur" x="95" y="40" width="70" height="170" fill="transparent" style="cursor:pointer"/>
-        <rect class="hit" data-b="1-30" x="200" y="40" width="70" height="170" fill="transparent" style="cursor:not-allowed"/>
-        <rect class="hit" data-b="31-60" x="305" y="40" width="70" height="170" fill="transparent" style="cursor:pointer"/>
-        <rect class="hit" data-b="61-90" x="410" y="40" width="70" height="170" fill="transparent" style="cursor:pointer"/>
-        <rect class="hit" data-b="90" x="515" y="40" width="70" height="170" fill="transparent" style="cursor:pointer"/>
-      </svg>
-      <span class="im-host" style="position:absolute"></span>
+          <!-- אזורי-לחיצה (קידוח) -->
+          <rect class="hit" data-b="1-30" x="108" y="40" width="66" height="170" fill="transparent" style="cursor:not-allowed"/>
+          <rect class="hit" data-b="31-60" x="201" y="40" width="66" height="170" fill="transparent" style="cursor:pointer"/>
+          <rect class="hit" data-b="61-90" x="294" y="40" width="66" height="170" fill="transparent" style="cursor:pointer"/>
+          <rect class="hit" data-b="90" x="387" y="40" width="66" height="170" fill="transparent" style="cursor:pointer"/>
+        </svg>
+        <span class="im-host" style="position:absolute"></span>
+      </div>
+
+      <!-- ✏️ 07/09/2026 · האריח שיצא מהגרף. לחיץ — "שוטף" נשאר מדרג בדריל-דאון (📐13),
+           ולכן לחיצה עליו יורדת בדיוק לאותה רמת-לקוחות שאליה ירדה העמודה שהייתה כאן. -->
+      <button type="button" class="tile side-tile im-host" id="p3CurTile" aria-pressed="false"
+              aria-label="שוטף: 46,399 ₪ בשבע חשבוניות שטרם הגיע מועד תשלומן. לחיצה יורדת לרמת-הלקוחות">
+        <span class="lb">שוטף — מחוץ לגרף</span>
+        <span class="vl"><span class="ltr">46,399</span> ₪</span>
+        <span class="sub"><span class="ltr">7</span> חשבוניות · <b>טרם הגיע מועד התשלום</b></span>
+        <span class="cmp"><span class="arrow">▼</span> לפני חודש: <span class="ltr">83,862</span> ₪ (<span class="ltr">14</span> חשבוניות)</span>
+        <span class="win">נכון ל-<span class="ltr">06/09</span> · אינו מושפע ממסנן התקופה</span>
+        <span class="hintline">לחיצה יורדת לרמת-הלקוחות ›</span>
+        <i class="im" aria-hidden="true" style="top:-8px; left:-8px">6</i>
+      </button>
     </div>
+
     <div class="legend im-host">
       <span style="width:100%; color:var(--s500); font-size:11px">הצבעים בתוך כל עמודה = <b>סוג-הלקוח</b> שאצלו הכסף תקוע:</span>
       <span><i style="background:#00786F"></i>ממשלתי (עיריות)</span>
@@ -949,7 +991,8 @@ tr.dim td{color:var(--s500)}
     </div>
     <!-- ✏️ 07/09/2026 · מקרא-העמודות — כל מדרג במילים של מנהלת-כספים, לא בקוד-דלי -->
     <div class="barkey" aria-label="מה כל עמודה בגרף אומרת">
-      <span><b>שוטף</b> — <b>עוד לא הגיע</b> מועד התשלום. הכסף לא מאחר; פשוט טרם הגיע תורו.</span>
+      <span>✏️ <b>שוטף</b> — <b>עוד לא הגיע</b> מועד התשלום. הכסף לא מאחר; פשוט טרם הגיע תורו —
+        <b>ולכן הוא אינו בגרף</b> אלא באריח שלצידו.</span>
       <span><b><span class="ltr">1–30</span></b> — עבר מועד התשלום, ומחכה עד חודש. תזכורת רגילה.</span>
       <span><b><span class="ltr">31–60</span></b> — מחכה בין חודש לחודשיים. כאן מתחילים להתקשר.</span>
       <span><b><span class="ltr">61–90</span></b> — מחכה בין חודשיים לשלושה. דורש טיפול אישי.</span>
@@ -957,10 +1000,9 @@ tr.dim td{color:var(--s500)}
       <span style="color:var(--s500)">גובה העמודה = <b>הסכום ב-₪</b> שממתין באותו דלי · המספר מתחת לשם הדלי = כמה חשבוניות.</span>
     </div>
     <table class="sr-only">
-      <caption>חוב פתוח לפי מדרג-גיול וסוג-לקוח</caption>
+      <caption>חוב באיחור לפי מדרג-גיול וסוג-לקוח ("שוטף" באריח שלצד הגרף)</caption>
       <thead><tr><th scope="col">מדרג</th><th scope="col">ממשלתי ₪</th><th scope="col">עמותה ₪</th><th scope="col">חברה-פרטית ₪</th><th scope="col">חברת-הפקה ₪</th><th scope="col">סה"כ ₪</th><th scope="col">חשבוניות</th></tr></thead>
       <tbody>
-        <tr data-testid="age-row-cur"><td>שוטף</td><td>14,468</td><td>0</td><td>29,714</td><td>2,217</td><td>46,399</td><td>7</td></tr>
         <tr data-testid="age-row-1-30"><td>1–30</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
         <tr data-testid="age-row-31-60"><td>31–60</td><td>0</td><td>0</td><td>0</td><td>13,762</td><td>13,762</td><td>1</td></tr>
         <tr data-testid="age-row-61-90"><td>61–90</td><td>2,384</td><td>3,063</td><td>0</td><td>0</td><td>5,447</td><td>2</td></tr>
@@ -1018,7 +1060,7 @@ tr.dim td{color:var(--s500)}
   </div>
 
   <p class="def-footer">הגדרות: <b>מדרג-גיול</b> נמדד מול <b>מועד-הפירעון</b> (<span class="ltr">invoice_sent_at</span> + <span class="ltr">תנאי_תשלום_ימים</span>=<span class="ltr">30</span>), לא מול יום השליחה ·
-    <b>"שוטף"</b> = טרם הגיע מועד-הפירעון, לא "שולם" ·
+    ✏️ <b>"שוטף"</b> = טרם הגיע מועד-הפירעון, לא "שולם" — <b>ולכן הוא מוצג באריח נפרד לצד הגרף, לא כעמודה בו</b> ·
     <b>ימים לתשלום (חציון)</b> = חציון (תאריך-תשלום − תאריך-חשבונית) על חשבוניות ששולמו, כל הזמנים — <b>אינו <span class="ltr">DSO</span></b> ·
     <b>חוב אבוד</b> = <span class="ltr">written_off = true</span>, מוחרג לגמרי מהמדרגים ומהיתרה.</p>
   <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">06/09/2026</span> — <span class="ltr">11</span> חשבוניות פתוחות · חמשת המדרגים היום ולפני חודש ·
@@ -1327,68 +1369,88 @@ tr.dim td{color:var(--s500)}
   </div>
 
   <div class="chart-card">
-    <h3>השפעת-הכנסה לפי סוג-תוספת · כל הזמנים (כל <span class="ltr">16</span> שינויי-התכולה)</h3>
-    <p class="chart-note">✏️ <b>תוויות-הציר הן שמות-המוצרים</b> (<span class="ltr">products.item_name</span>), לא קודי-מק"ט —
+    <h3>השפעת-הכנסה לפי סוג-תוספת — ✏️ <b>עמודות אופקיות, ממוין יורד</b> · כל הזמנים (כל <span class="ltr">16</span> שינויי-התכולה)</h3>
+    <p class="chart-note">✏️ <b>תוויות-השורות הן שמות-המוצרים</b> (<span class="ltr">products.item_name</span>), לא קודי-מק"ט —
       המק"ט עצמו יושב לצד השם בעמודת "מוצר (מק"ט)" בטבלה למטה, למי שמזמין מהספק.
       <b>שימו לב:</b> הסכומים בגרף מקובצים <b>לפי מוצר</b>, ולכן מוצר עם תוספות וצמצומים באותו שם מוצג
-      בערך-הנטו שלו — זו הסיבה ש"תג שם רגיל (חלק)" מופיע כ-<span class="ltr">+27</span> ₪ ולא כשתי עמודות.</p>
-    <p class="chart-note">ממוין לפי המדד שהגרף מציג — השפעת-הכנסה יורדת, וצמצומים בסוף (📐7).
-      ערכי-ציר עגולים, קו-אפס גלוי (📐5). <b>פילוח-העלות פר-מוצר אינו ב-<span class="ltr">data-set.md</span></b>
-      ולכן 📊 שמבקש "הכנסה · עלות" מיושם כאן בחצי — ר' כרטיס-המסך ⑧.</p>
-    <div class="chart-box" dir="ltr" role="figure" aria-label="השפעת-הכנסה לפי סוג-תוספת, עמודות עם ערכים שליליים">
-      <svg viewBox="0 0 660 278" width="660" height="278" preserveAspectRatio="xMidYMid meet">
-        <line x1="80" y1="190" x2="640" y2="190" stroke="#CAD5E2" stroke-width="1.5"/>
-        <line x1="80" y1="140" x2="640" y2="140" stroke="#F1F5F9"/>
-        <line x1="80" y1="90" x2="640" y2="90" stroke="#F1F5F9"/>
-        <line x1="80" y1="40" x2="640" y2="40" stroke="#F1F5F9"/>
-        <text class="ax" x="72" y="194" text-anchor="end">0</text>
-        <text class="ax" x="72" y="144" text-anchor="end">1,000</text>
-        <text class="ax" x="72" y="94" text-anchor="end">2,000</text>
-        <text class="ax" x="72" y="44" text-anchor="end">3,000</text>
-        <text class="ax" x="72" y="219" text-anchor="end">-500</text>
+      בערך-הנטו שלו — זו הסיבה ש"תג שם רגיל (חלק)" מופיע כ-<span class="ltr">+27</span> ₪ ולא כשתי עמודות. ✏️ <b>ומאז המעבר לאופקי — כשורה אחת, לא כעמודה אחת.</b></p>
+    <!-- ✏️ 07/09/2026 (סבב מאוחר) · **הכרעת-ישי: עמודות אנכיות ⇐ אופקיות ממוינות יורד.**
+         🔍 **מה נמדד:** 2,400 מול 1,080 · 510 · 390 · 336 · 27 · −165 · −210 ⇒ **6 מתוך 8 העמודות
+         מתחת לרבע-הגובה**, ושלוש מהן פס דק שאי-אפשר להשוות בעין.
+         🎯 **ולמה כאן לא מוציאים קטגוריה** (בניגוד לגרף-הגיול): כל השמונה הן **אותו סוג-מדד** —
+         השפעת-הכנסה של שינוי-תכולה. אין כאן קטגוריה "שלא שייכת לציר", יש הפרש-סדר-גודל.
+         🔑 **העוגן — ואינו המצאה:** **הגרף בדף p2 באותה לשונית כבר בנוי כך** — עמודות אופקיות,
+         קו-אפס אנכי, רוחב יורד (215→87px), תווית-שם מימין לגרף וערך לצד העמודה.
+         ⇒ **דפוס קיים בקובץ, לא חריג חדש** (המבחן השלישי של כלל-1 · 📐7).
+         🚫 **מה *לא* נעשה:** הציר לא נקטע ולא עבר ללוגריתמי (📐5) · המיון לא שונה — הוא כבר היה
+         לפי המדד המוצג, יורד, עם הצמצומים בסוף (📐7) · **אף מספר לא זז**: אותם שמונה ערכים בדיוק.
+         ⚠️ **ומה שנשאר חסר וסומן ככזה:** 📊 מבקש לדוח 8 **שתי סדרות — הכנסה · עלות**, ובגרף יש
+         **אחת**. פילוח-העלות פר-מוצר אינו ב-data-set.md, וזה בדיוק פריט ⑧ 11.3 שעודנו 🔵 פתוח.
+         **לא הומצאה סדרת-עלות** כדי לקיים את 📊. -->
+    <p class="chart-note">✏️ <b>הגרף אופקי וממוין יורד</b> — <b>אותו דפוס בדיוק</b> כמו גרף
+      סטיית-התקציב בדוח <span class="ltr">5</span> באותה לשונית: עמודות אופקיות, קו-אפס אנכי,
+      רוחב יורד, שם מימין וערך לצד העמודה. ‏<b>למה:</b> ‏<span class="ltr">2,400</span> ₪ מול
+      <span class="ltr">27</span> ₪ על ציר אנכי אחד הופכים שש מתוך שמונה העמודות לפס דק —
+      אופקית כל שורה מקבלת <b>תווית מלאה בשורה אחת</b> ואת ערכה לצידה.
+      ממוין לפי המדד שהגרף מציג — השפעת-הכנסה יורדת, וצמצומים בסוף (📐7).
+      ערכי-ציר עגולים, קו-אפס גלוי, <b>בלי קטיעת-ציר ובלי סקאלה לוגריתמית</b> (📐5).
+      <b>פילוח-העלות פר-מוצר אינו ב-<span class="ltr">data-set.md</span></b>
+      ולכן 📊 שמבקש "הכנסה · עלות" מיושם כאן <b>בחצי</b> — ר' כרטיס-המסך ⑧ <span class="ltr">11.3</span>.</p>
+    <div class="chart-box" dir="ltr" role="figure" aria-label="השפעת-הכנסה לפי סוג-תוספת, עמודות אופקיות ממוינות מהגבוה לנמוך, כולל שני ערכים שליליים; קו-אפס אנכי">
+      <svg viewBox="0 0 660 276" width="660" height="276" preserveAspectRatio="xMidYMid meet">
+        <line x1="222" y1="14" x2="222" y2="226" stroke="#F1F5F9"/>
+        <line x1="348" y1="14" x2="348" y2="226" stroke="#F1F5F9"/>
+        <line x1="411" y1="14" x2="411" y2="226" stroke="#F1F5F9"/>
+        <line x1="474" y1="14" x2="474" y2="226" stroke="#F1F5F9"/>
+        <line x1="537" y1="14" x2="537" y2="226" stroke="#F1F5F9"/>
+        <line x1="600" y1="14" x2="600" y2="226" stroke="#F1F5F9"/>
+        <line x1="285" y1="14" x2="285" y2="226" stroke="#CAD5E2" stroke-width="1.5"/>
+        <text class="ax" x="222" y="244" text-anchor="middle">-500</text>
+        <text class="ax" x="285" y="244" text-anchor="middle">0</text>
+        <text class="ax" x="348" y="244" text-anchor="middle">+500</text>
+        <text class="ax" x="411" y="244" text-anchor="middle">+1,000</text>
+        <text class="ax" x="474" y="244" text-anchor="middle">+1,500</text>
+        <text class="ax" x="537" y="244" text-anchor="middle">+2,000</text>
+        <text class="ax" x="600" y="244" text-anchor="middle">+2,500</text>
 
-        <rect x="88" y="70" width="44" height="120" fill="#009689" rx="2"/>
-        <text class="vlab" x="110" y="64" text-anchor="middle">2,400</text>
-        <rect x="158" y="136" width="44" height="54" fill="#009689" rx="2"/>
-        <text class="vlab" x="180" y="130" text-anchor="middle">1,080</text>
-        <rect x="228" y="164.5" width="44" height="25.5" fill="#009689" rx="2"/>
-        <text class="vlab" x="250" y="158" text-anchor="middle">510</text>
-        <rect x="298" y="170.5" width="44" height="19.5" fill="#009689" rx="2"/>
-        <text class="vlab" x="320" y="164" text-anchor="middle">390</text>
-        <rect x="368" y="173.2" width="44" height="16.8" fill="#009689" rx="2"/>
-        <text class="vlab" x="390" y="167" text-anchor="middle">336</text>
-        <rect x="438" y="188.6" width="44" height="1.4" fill="#009689"/>
-        <text class="vlab" x="460" y="183" text-anchor="middle">27</text>
-        <rect x="508" y="190" width="44" height="8.25" fill="#96F7E4" stroke="#009689"/>
-        <text class="vlab" x="530" y="211" text-anchor="middle">-165</text>
-        <rect x="578" y="190" width="44" height="10.5" fill="#96F7E4" stroke="#009689"/>
-        <text class="vlab" x="600" y="213" text-anchor="middle">-210</text>
+        <text class="axh" x="195" y="34" text-anchor="end">דיילת נוספת</text>
+        <rect x="285" y="22" width="302.4" height="16" fill="#009689" rx="2"/>
+        <text class="vlab" x="593" y="34" text-anchor="start">2,400 ₪</text>
 
-        <!-- ✏️ 07/09/2026 · מק"ט ⇐ שם-מוצר (ביקורת-ישי §👤 11, הועלה שלוש פעמים).
-             השמות נשלפו מ-products.item_name במסד החי (07/09) ומוצגים בשלמותם, בשתי שורות,
-             כדי שייכנסו לרוחב-העמודה בלי לקצר. "דיילת נוספת" אינה מק"ט (change_target='hostess_count',
-             sku is null) ולכן נשארה כפי שהייתה. -->
-        <text class="axn" x="110" y="238" text-anchor="middle">דיילת נוספת</text>
-        <text class="axn" x="180" y="238" text-anchor="middle">שרוך סאטן</text>
-        <text class="axn sub" x="180" y="249" text-anchor="middle">ממותג</text>
-        <text class="axn" x="250" y="238" text-anchor="middle">תג שם אקולוגי</text>
-        <text class="axn sub" x="250" y="249" text-anchor="middle">(חלק)</text>
-        <text class="axn" x="320" y="238" text-anchor="middle">שרוך בד</text>
-        <text class="axn sub" x="320" y="249" text-anchor="middle">(חלק)</text>
-        <text class="axn" x="390" y="238" text-anchor="middle">שרוך סאטן</text>
-        <text class="axn sub" x="390" y="249" text-anchor="middle">(חלק)</text>
-        <text class="axn" x="460" y="238" text-anchor="middle">תג שם רגיל</text>
-        <text class="axn sub" x="460" y="249" text-anchor="middle">(חלק)</text>
-        <text class="axn" x="530" y="238" text-anchor="middle">תג שם רגיל</text>
-        <text class="axn sub" x="530" y="249" text-anchor="middle">ממותג · צמצום</text>
-        <text class="axn" x="600" y="238" text-anchor="middle">תג שם אקולוגי</text>
-        <text class="axn sub" x="600" y="249" text-anchor="middle">ממותג · צמצום</text>
-        <text class="ax" x="360" y="270" text-anchor="middle">מוצר · השפעת-הכנסה ₪</text>
+        <text class="axh" x="195" y="60" text-anchor="end">שרוך סאטן - ממותג</text>
+        <rect x="285" y="48" width="136.1" height="16" fill="#009689" rx="2"/>
+        <text class="vlab" x="427" y="60" text-anchor="start">1,080 ₪</text>
+
+        <text class="axh" x="195" y="86" text-anchor="end">תג שם אקולוגי (חלק)</text>
+        <rect x="285" y="74" width="64.3" height="16" fill="#009689" rx="2"/>
+        <text class="vlab" x="355" y="86" text-anchor="start">510 ₪</text>
+
+        <text class="axh" x="195" y="112" text-anchor="end">שרוך בד (חלק)</text>
+        <rect x="285" y="100" width="49.1" height="16" fill="#009689" rx="2"/>
+        <text class="vlab" x="340" y="112" text-anchor="start">390 ₪</text>
+
+        <text class="axh" x="195" y="138" text-anchor="end">שרוך סאטן (חלק)</text>
+        <rect x="285" y="126" width="42.3" height="16" fill="#009689" rx="2"/>
+        <text class="vlab" x="333" y="138" text-anchor="start">336 ₪</text>
+
+        <text class="axh" x="195" y="164" text-anchor="end">תג שם רגיל (חלק)</text>
+        <rect x="285" y="152" width="3.4" height="16" fill="#009689"/>
+        <text class="vlab" x="294" y="164" text-anchor="start">27 ₪</text>
+
+        <text class="axh" x="195" y="190" text-anchor="end">תג שם רגיל - ממותג</text>
+        <rect x="264.2" y="178" width="20.8" height="16" fill="#96F7E4" stroke="#009689"/>
+        <text class="vlab" x="291" y="190" text-anchor="start">▼ -165 ₪ צמצום</text>
+
+        <text class="axh" x="195" y="216" text-anchor="end">תג שם אקולוגי - ממותג</text>
+        <rect x="258.5" y="204" width="26.5" height="16" fill="#96F7E4" stroke="#009689"/>
+        <text class="vlab" x="291" y="216" text-anchor="start">▼ -210 ₪ צמצום</text>
+
+        <text class="ax" x="411" y="264" text-anchor="middle">השפעת-הכנסה ₪ (חתום) · קו-אפס אנכי · מוצר בכל שורה</text>
       </svg>
     </div>
     <div class="legend">
       <span><i style="background:#009689"></i>תוספת (הכנסה חיובית)</span>
-      <span><i style="background:#96F7E4; border-color:#009689"></i>צמצום-תכולה (הכנסה שלילית) — מסומן גם בכיתוב "צמצום" מתחת לשם-המוצר</span>
+      <span><i style="background:#96F7E4; border-color:#009689"></i>צמצום-תכולה (הכנסה שלילית) — ✏️ העמודה פונה <b>שמאלה מקו-האפס</b>, ולצד ערכה כתוב <span class="ltr">▼</span> ו<b>"צמצום"</b> (📐19 — לא צבע לבדו)</span>
     </div>
     <table class="sr-only">
       <caption>השפעת-הכנסה לפי סוג-תוספת</caption>
@@ -2080,11 +2142,14 @@ tr.dim td{color:var(--s500)}
   //     הם היו null בטענה ש"ידוע רק הסך המשותף" — טענה שגויה: finance_project_money()
   //     מחזירה כל אחד מהם בנפרד (m11-data-fidelity §2.2, ממצא חמור מס' 2).
   var AG_BUCKETS = [
-    { k: 'cur', label: 'שוטף',   n: 7, sum: 46399, prevN: 14, prevSum: 83862, box: [93, 50.3, 74, 161.7] },
+    // ✏️ 07/09/2026 · box=null ל-'cur' — הוא יצא מהגרף לאריח (הכרעת-ישי), ולכן אין לו
+    // מסגרת-בחירה על ה-SVG; במקומה נדלקת מסגרת על האריח עצמו (.side-tile.on).
+    // שאר הקופסאות חושבו מחדש לגיאומטריה של גרף בן 4 עמודות ברוחב 500.
+    { k: 'cur', label: 'שוטף',   n: 7, sum: 46399, prevN: 14, prevSum: 83862, box: null },
     { k: 'b1',  label: '1–30',   n: 0, sum: 0,     prevN: 6,  prevSum: 48716, box: null },
-    { k: 'b31', label: '31–60',  n: 1, sum: 13762, prevN: 2,  prevSum: 5447,  box: [303, 161.2, 74, 50.8] },
-    { k: 'b61', label: '61–90',  n: 2, sum: 5447,  prevN: 1,  prevSum: 10163, box: [408, 189.5, 74, 22.5] },
-    { k: 'b90', label: '90+',    n: 1, sum: 10163, prevN: 0,  prevSum: 0,     box: [513, 173.4, 74, 38.6] }
+    { k: 'b31', label: '31–60',  n: 1, sum: 13762, prevN: 2,  prevSum: 5447,  box: [199, 52.0, 70, 160.0] },
+    { k: 'b61', label: '61–90',  n: 2, sum: 5447,  prevN: 1,  prevSum: 10163, box: [292, 146.3, 70, 65.7] },
+    { k: 'b90', label: '90+',    n: 1, sum: 10163, prevN: 0,  prevSum: 0,     box: [385, 92.8, 70, 119.2] }
   ];
   var AG_INV = [
     { id: 1460, cust: 'אלפא סיסטמס בע"מ',        sent: '30/04/2026', due: '30/05/2026', sum: 10163, days: 99, b: 'b90' },
@@ -2202,8 +2267,15 @@ tr.dim td{color:var(--s500)}
     tiles: document.getElementById('p3Tiles'), title: document.getElementById('p3TblTitle'),
     drill: document.getElementById('p3Drill'), head: document.getElementById('p3Head'),
     body: document.getElementById('p3Body'), range: document.getElementById('p3Range'),
-    total: document.getElementById('p3Total'), selBox: document.getElementById('p3SelBox')
+    total: document.getElementById('p3Total'), selBox: document.getElementById('p3SelBox'),
+    curTile: document.getElementById('p3CurTile')
   };
+
+  // ✏️ 07/09/2026 · שם-הרמה בפירורי-הלחם ובכותרות. נדרש מרגע ש-'שוטף' הפך לאריח לחיץ:
+  // הנוסח הקודם היה 'מדרג ' + label + ' יום' לכל הדליים, ועל 'שוטף' הוא ייצר
+  // "מדרג שוטף יום" — עברית שבורה על המסך. הדליים המספריים לא השתנו.
+  function agName(bk) { return bk.k === 'cur' ? 'שוטף' : 'מדרג ' + ltr(bk.label) + ' יום'; }
+  function agIn(bk) { return bk.k === 'cur' ? 'בשוטף' : 'במדרג ' + ltr(bk.label) + ' יום'; }
 
   function agCustomers(bk) {
     var map = {}, order = [];
@@ -2248,14 +2320,14 @@ tr.dim td{color:var(--s500)}
       });
     } else if (state.agLevel === 1) {
       p3.crumbs.innerHTML = '<button data-lvl="0">גיול חובות</button><span class="sep" aria-hidden="true">|</span>' +
-        '<span aria-current="page">מדרג ' + ltr(bk.label) + ' יום</span>' +
+        '<span aria-current="page">' + agName(bk) + '</span>' +
         '<i class="im" aria-hidden="true" style="top:-8px; left:-8px">7</i>';
       var custs = agCustomers(bk.k), oldest = 0, oname = '';
       custs.forEach(function (c) { if (c.days > oldest) { oldest = c.days; oname = c.cust; } });
       var share = (bk.sum / 75770 * 100).toFixed(1);
       var prevShare = bk.prevSum ? (bk.prevSum / 148188 * 100).toFixed(1) : null;
       tiles =
-        tile('חוב במדרג ' + ltr(bk.label) + ' יום', money(bk.sum), ltr(bk.n) + ' חשבוניות · ' + ltr(custs.length) + ' לקוחות',
+        tile('חוב ' + agIn(bk), money(bk.sum), ltr(bk.n) + ' חשבוניות · ' + ltr(custs.length) + ' לקוחות',
           '<span class="arrow">' + (bk.sum < bk.prevSum ? '▼' : '▲') + '</span> לפני חודש במדרג זה: ' + money(bk.prevSum) + ' (' + ltr(bk.prevN) + ')',
           'נכון ל-' + ltr('06/09') + ' · אינו מושפע ממסנן התקופה') +
         tile('חלק מסך-החוב הפתוח', ltr(share + '%'), money(bk.sum) + ' מתוך ' + money(75770),
@@ -2266,9 +2338,9 @@ tr.dim td{color:var(--s500)}
           'אין תקופה-קודמת למדד הזה — לא נמדד ב-' + ltr('data-set.md'), 'נכון ל-' + ltr('06/09'), true) +
         tile('ימים לתשלום (חציון)', ltr(35), 'על ' + ltr(699) + ' חשבוניות ששולמו, כל הזמנים · אינו ' + ltr('DSO'),
           'מדד כלל-זמני — אין תקופה-קודמת מהגדרה', 'כל הזמנים · אינו מושפע ממסנן התקופה', true);
-      sw = 'מדרג ' + ltr(bk.label) + ' יום: ' + money(bk.sum) + ' ב-' + ltr(bk.n) + ' חשבוניות אצל ' + ltr(custs.length) + ' לקוחות' +
+      sw = agName(bk) + ': ' + money(bk.sum) + ' ב-' + ltr(bk.n) + ' חשבוניות אצל ' + ltr(custs.length) + ' לקוחות' +
         (oldest ? '; הישנה ממתינה ' + ltr(oldest) + ' ימים.' : '; טרם הגיע מועד-הפירעון לאף אחת.');
-      title = 'הלקוחות במדרג ' + ltr(bk.label) + ' יום';
+      title = 'הלקוחות ' + agIn(bk);
       drill = 'לחיצה על שורה יורדת רמה — לחשבוניות של אותו לקוח';
       head = '<tr><th scope="col">לקוח</th><th scope="col">חשבוניות</th><th scope="col" aria-sort="descending">₪ ▼</th><th scope="col">ימי איחור (הישנה)</th></tr>';
       rows = custs.map(function (c) {
@@ -2279,14 +2351,14 @@ tr.dim td{color:var(--s500)}
       });
     } else {
       p3.crumbs.innerHTML = '<button data-lvl="0">גיול חובות</button><span class="sep" aria-hidden="true">|</span>' +
-        '<button data-lvl="1">מדרג ' + ltr(bk.label) + ' יום</button><span class="sep" aria-hidden="true">|</span>' +
+        '<button data-lvl="1">' + agName(bk) + '</button><span class="sep" aria-hidden="true">|</span>' +
         '<span aria-current="page">' + state.agCust + '</span>' +
         '<i class="im" aria-hidden="true" style="top:-8px; left:-8px">7</i>';
       var mine = AG_INV.filter(function (iv) { return iv.b === bk.k && iv.cust === state.agCust; });
       var sum = 0, known = true, dmax = 0;
       mine.forEach(function (iv) { if (iv.sum === null) { known = false; } else { sum += iv.sum; } if (iv.days > dmax) { dmax = iv.days; } });
       tiles =
-        tile('חוב הלקוח במדרג ' + ltr(bk.label), known ? money(sum) : '—', ltr(mine.length) + ' חשבוניות · ' + state.agCust,
+        tile('חוב הלקוח ' + agIn(bk), known ? money(sum) : '—', ltr(mine.length) + ' חשבוניות · ' + state.agCust,
           'אין תקופה-קודמת ברמת-לקוח — לא נמדד ב-' + ltr('data-set.md'), 'נכון ל-' + ltr('06/09'), true) +
         tile('ימי איחור (הישנה)', dmax ? ltr(dmax) : '—', 'מעבר למועד-הפירעון החוזי',
           'אין תקופה-קודמת ברמת-לקוח', 'נכון ל-' + ltr('06/09'), true) +
@@ -2294,9 +2366,9 @@ tr.dim td{color:var(--s500)}
           'אינו מדד-תקופתי', 'נכון ל-' + ltr('06/09'), true) +
         tile('מועד-פירעון חוזי', ltr(mine[0].due), 'שוטף' + ltr('+30'),
           'אינו מדד-תקופתי', 'נכון ל-' + ltr('06/09'), true);
-      sw = state.agCust + ': ' + (known ? money(sum) : 'סכום לא נמדד') + ' ב-' + ltr(mine.length) + ' חשבוניות במדרג ' + ltr(bk.label) +
+      sw = state.agCust + ': ' + (known ? money(sum) : 'סכום לא נמדד') + ' ב-' + ltr(mine.length) + ' חשבוניות ' + agIn(bk) +
         (dmax ? ', ממתינות ' + ltr(dmax) + ' ימים.' : '.');
-      title = 'החשבוניות של ' + state.agCust + ' במדרג ' + ltr(bk.label);
+      title = 'החשבוניות של ' + state.agCust + ' ' + agIn(bk);
       drill = 'לחיצה על שורה פותחת את כרטיס הפרויקט';
       head = '<tr><th scope="col">פרויקט</th><th scope="col">נשלחה</th><th scope="col">מועד-פירעון חוזי</th><th scope="col">סכום</th><th scope="col" aria-sort="descending">ימי איחור ▼</th></tr>';
       rows = mine.map(function (iv) {
@@ -2316,6 +2388,10 @@ tr.dim td{color:var(--s500)}
     p3.total.textContent = String(rows.length);
     if (state.agLevel === 0 || !bk.box) { p3.selBox.setAttribute('opacity', '0'); }
     else { p3.selBox.setAttribute('opacity', '1'); p3.selBox.setAttribute('x', bk.box[0]); p3.selBox.setAttribute('y', bk.box[1]); p3.selBox.setAttribute('width', bk.box[2]); p3.selBox.setAttribute('height', bk.box[3]); }
+    // ✏️ 07/09 · מצב-נבחר של "שוטף" — על האריח, כי אין לו עמודה בגרף (📐14ב: מצב-נבחר גלוי בכל רמה)
+    var curOn = state.agLevel > 0 && state.agBucket === 'cur';
+    p3.curTile.classList.toggle('on', curOn);
+    p3.curTile.setAttribute('aria-pressed', curOn ? 'true' : 'false');
     refreshChrome();
   }
 
@@ -2330,13 +2406,21 @@ tr.dim td{color:var(--s500)}
       say('ירידה למדרג ' + bk.label + '; ' + bk.n + ' חשבוניות');
     });
   });
+  // ✏️ 07/09/2026 · האריח "שוטף" — אותו נתיב-קידוח בדיוק של עמודת-מדרג (📐13).
+  // <button> אמיתי ⇒ Tab/Enter/Space עובדים מהדפדפן, בלי קוד-מקלדת נוסף (בניגוד ל-rect ב-SVG).
+  p3.curTile.addEventListener('click', function () {
+    var bk = bucket('cur');
+    state.agBucket = bk.k; state.agLevel = 1; state.agCust = null;
+    renderP3();
+    say('ירידה לשוטף — טרם הגיע מועד התשלום; ' + bk.n + ' חשבוניות');
+  });
   p3.crumbs.addEventListener('click', function (e) {
     var b = e.target.closest('button[data-lvl]');
     if (!b) { return; }
     state.agLevel = Number(b.getAttribute('data-lvl'));
     if (state.agLevel === 0) { state.agCust = null; }
     renderP3();
-    say('חזרה לרמה: ' + (state.agLevel === 0 ? 'כל המדרגים' : 'מדרג ' + bucket(state.agBucket).label));
+    say('חזרה לרמה: ' + (state.agLevel === 0 ? 'כל המדרגים' : agName(bucket(state.agBucket))));
   });
   p3.body.addEventListener('click', function (e) { p3RowAction(e.target.closest('tr')); });
   function p3RowAction(tr) {
