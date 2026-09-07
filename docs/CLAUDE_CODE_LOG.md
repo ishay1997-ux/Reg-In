@@ -68,6 +68,34 @@
   **And the review he demanded has a name he gave it:** *"חלק מהדברים הם לא שם ולא שם"* — strings that are
   neither clean enough to be permanent UI nor explanatory enough to be help. His live example, which is the
   calibration point for the sweep: *"ממוצע: חסרים תחילה, ובתוכם לפי קרבת האירוע"*.
+  - 🔴 **The measured finding of the night, and the method behind it is reusable.** The onboarding-content
+  agent noticed that Ishay had quoted a string from his own screen as **"ממוצע: חסרים תחילה"** while the code
+  says **"ממוין"** — *average* vs *sorted* (`src/modules/06_projects/ProjectsPage.jsx:79`, verified by me before
+  relaying). **The product owner, who decided that sorting rule himself, read the word on his own screen as a
+  different word** — and if he read "ממוצע" he plausibly took the sentence to be about a number rather than an
+  order, i.e. the opposite meaning. ⇒ **The reusable method: when Ishay quotes on-screen text, diff his quote
+  against the source. A mismatch is evidence about the string, not about him** — and it is the cheapest usability
+  measurement available in a project with no real users.
+  **Two findings stand independently, both verified:** the same sorting rule is worded **three different ways**
+  (מ6 `ProjectsPage.jsx:79` · מ4 `OverviewTab.jsx:236` · מ5 `projectLogistics.js:293`), and מ4's version drops
+  the word that makes it two-level · and `ClosingWindowDialog.jsx:149` explains the **database schema** to the
+  user (*"…לא נשמרים כעמודות נפרדות"*).
+- 🔑 **And the definition of the switch changed as a result, for the better:** it does not hide text — **it
+  separates a warning from a reasoning.** What a control *does* (especially an irreversible one) stays visible
+  always; *why* the system is arranged this way moves behind the switch. All five sampled strings sorted cleanly
+  under that rule, which is a test it passed rather than a phrasing that reads well.
+- **Rulings 28⑨ 28⑩ and 29.** ⑨ — the switch gets **two doors on one column** (CEO sets it per user in user
+  management, the user can toggle it herself in her profile); he raised it and settled it in the same breath, and
+  it resolves the open default-value question for free (`default false` stays, the existing table rule is not
+  broken). Cost stated: two merged screens ⇒ **two regressions**. ⑩ — the "is this my own idea?" answer, now
+  sourced: the pattern is decades old (Office ScreenTips · Blender · SAP Companion · Dynamics 365 Help Panes)
+  and has an academic name, **Scaffolded Interface** (arXiv 2505.12101); the uncommon half is his ordering, which
+  is the exact inverse of the failure NN/g calls tooltip *"band aids"*. **29** — the report picker moves from a
+  side column to a **chip row** under the role tabs (his observation from the mockup). One change to his proposal:
+  chips, not a second tab row, because two identical tab rows blur the hierarchy — and both treatments already
+  exist in the codebase (`FinancePage.jsx:769-781` and `FilterPill.jsx`), so nothing new is invented. Measured:
+  ~883px of names against ~992px available at 1280 ⇒ fits, and frees ~132px for charts, landing on the open 📐21
+  width finding.
   A 3-agent workflow is producing `docs/plans/ui-copy-and-onboarding-mode.md` (world standards with sources ·
   a full classified inventory of every Hebrew string in `src/` · then the plan), staged **per module** because
   nine modules are already merged and each touch costs a full regression.
