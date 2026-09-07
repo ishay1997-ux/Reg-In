@@ -150,6 +150,34 @@
   close — the chart-fix agent finished; its report stands in `cards-finance.md`.
 - **And the record above was itself misplaced:** `873001b` (01:56 tonight) inserted it inside the maintenance-policy
   section, between two policy bullets. Moved under `## Session Log (newest first)`, where it belongs — content unchanged.
+- **Evening (17:40) — a global skill, a ruling that changed a column type, and a fresh-eyes pass that caught a real design gap.**
+  Ishay asked for a global skill (`~/.claude/skills/ui-copy-and-onboarding-levels/`) that generalises the copy reset +
+  onboarding layer to any system, **with three levels** instead of on/off. Read the plan, both research files, the
+  brief and the 20 copy rules in full (his instruction: line by line, no grep), then asked three questions and he
+  approved all three recommendations: (1) the column is born as a level now — ruling **28⑭**; Tuesday builds 0 and 2
+  only; (2) the skill owns copy + the layer and records structural findings for a UCD review instead of moving screens;
+  (3) an admin door exists only where the target already has an admin-sets-per-user screen. UCD itself (his follow-up
+  question, delegated): a knowledge profile on the `domain-profiles` shelf + a separate retrofit skill after Tuesday —
+  recorded in `PROJECT_MASTER §4ב`. His later idea — ask scope and constraints first, measure size, declare the agent
+  plan before touching a string — went into SKILL.md §2 as the opening step.
+- 🔴 **The rule-21 fresh-eyes pass on the one-line reopening found six Tuesday blockers, five of them older than the
+  reopening** — the plan and 28⑤ still cut the branch from `dev`; `db_roadmap` still ordered the session to stop on
+  the default; two incompatible `<Hint>` contracts; 28①'s tail still said three policies suffice; the write-back
+  column still forbade the separate migration. **And one genuine design gap nobody had seen: "`update`, never
+  `upsert`" has no path for the no-row case — which is every user's default state** (`schema.sql` §32 "אין שורה =
+  הכול כבוי"); `assertRowsAffected` would have turned the very first toggle into a false "אין הרשאה", for every user
+  the CEO switches on. Fixed everywhere (SSOT first): the write is an upsert whose payload is key + column only,
+  PostgREST touches only payload columns; the fourth policy is `for all` (the CEO reads every row to draw the
+  switches); `AuthContext` exposes `onboardingMode`; type is `integer` + named check (the repo has **zero**
+  `smallint` columns — the draft would have introduced the first). Two of these became general lessons in the skill's
+  `mechanism-patterns.md`. ⇒ **Lesson for rule writing: state the failure mode, not the verb.** "Never upsert" was
+  written against one failure (overwriting siblings from local state) and created another (zero rows on first
+  write). The durable rule is "the payload names only this column, and the write must succeed when no record exists".
+- **Eval harness for the skill** (skill-creator flow): a synthetic fixture app (`…-workspace/fixtures/shelftrack/`)
+  carrying the smells on purpose (column-name labels, DB-describing errors, a five-rule empty state, a `title=`
+  warning on an irreversible button, a whole-JSON settings overwrite, tests pinning three strings), three eval
+  prompts (full reset · REG-IN module-5 read-only dry run in Hebrew · a casual "add a tips toggle"), six Opus runs
+  (with / without skill) launched; assertions drafted; grading and the review viewer follow when they return.
 
 ### 06/09/2026 ~08:55–10:15 — module 11 Discovery, session 1: Stage 0 → 1-ב → two cards → blanket delegation → handoff
 
