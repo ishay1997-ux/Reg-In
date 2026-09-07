@@ -1022,7 +1022,7 @@ tr.amber td{background:var(--amber50)}
   <button>תזרים צפוי</button>
   <button>תוספות שטח</button>
   <button>צריכת ציוד</button>
-  <button>עלות שכר חודשית</button>
+  <button>שכר דיילות לפי חודש</button>
 </nav>
 
 <!-- לשונית דיילות — ✏️ 22:1X שישה דפים: מ26 נוסף בהכרעה 24 (M=26) -->

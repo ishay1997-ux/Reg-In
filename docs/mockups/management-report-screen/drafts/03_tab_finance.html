@@ -302,7 +302,7 @@ tr.dim td{color:var(--s500)}
 <header class="top">
   <div>
     <p class="topttl">דו"חות</p>
-    <p class="psub">מנהלת כספים ולקוחות · תפקיד: כספים ולקוחות</p>
+    <p class="psub">מנהלת כספים ולקוחות</p>
   </div>
   <div class="who"><span style="width:36px; height:36px; border-radius:999px; background:var(--teal600);
       color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600">מ</span></div>
@@ -317,11 +317,11 @@ tr.dim td{color:var(--s500)}
   <!-- ארבע לשוניות לפי הרשאת מודול-הבעלים (הכרעה 2 · data-set.md מ1).
        ✏️ התווית השנייה = "כספים" (מילון-נעול), לא "כספים ותזרים".
        ✏️ aria-controls + role="tabpanel" נוספו (ביקורת §3.1). -->
-  <div class="tabs" role="tablist" aria-label="לשוניות דו״חות">
+  <div class="tabs" role="tablist" aria-label="לשוניות הדוחות">
     <button class="tab im-host" role="tab" aria-selected="false" aria-controls="finpanel">הנהלה
       <i class="im" aria-hidden="true" style="top:2px; left:-6px">1</i></button>
     <button class="tab on" role="tab" aria-selected="true" aria-controls="finpanel" id="tab-fin">כספים</button>
-    <button class="tab masked" role="tab" aria-selected="false" aria-disabled="true" title="לא זמין בתפקידך">
+    <button class="tab masked" role="tab" aria-selected="false" aria-disabled="true">
       <span>🔒 דיילות</span><span class="lock-txt">לא זמין בתפקידך</span>
     </button>
     <button class="tab" role="tab" aria-selected="false" aria-controls="finpanel">לקוחות</button>
@@ -335,14 +335,14 @@ tr.dim td{color:var(--s500)}
          שורת-השבבים **נשארת גלויה גם במצב-קידוח** (גיול · שכר) ואינה מתחלפת בפירורי-הלחם —
          היא **ניווט** (באיזה דוח אני), והפירורים הם **הקשר** (באיזו רמה בתוך הדוח).
          מבנית זה מתקיים מאליו: השבבים יושבים מחוץ ל-`.page`, והפירורים בתוכה. ═══ -->
-    <nav class="picker im-host" aria-label="דוחות לשונית כספים" id="picker">
+    <nav class="picker im-host" aria-label="בחירת דוח בלשונית כספים" id="picker">
       <button class="on" data-page="p1" aria-current="true">מבט-על כספים</button>
       <button data-page="p2">רווחיות פרויקטים</button>
       <button data-page="p3">גיול חובות</button>
       <button data-page="p4">תזרים צפוי</button>
       <button data-page="p5">תוספות שטח</button>
       <button data-page="p6">צריכת ציוד</button>
-      <button data-page="p7">עלות שכר חודשית</button>
+      <button data-page="p7">שכר דיילות לפי חודש</button>
       <i class="im" aria-hidden="true" style="top:-9px; right:-5px; left:auto">2</i>
     </nav>
 
@@ -356,7 +356,7 @@ tr.dim td{color:var(--s500)}
 
       <!-- ═══ מסננים גלובליים (ת1): תקופה = 2026 · לקוח = הכול · ייצוא (ת4) ═══ -->
       <div class="filters">
-        <span class="flabel">תקופה:</span>
+        <span class="flabel">תקופה</span>
         <span class="im-host" style="display:inline-flex">
           <button class="pill" aria-pressed="false">החודש</button>
           <i class="im" aria-hidden="true" style="top:-8px; left:-8px">3</i>
@@ -364,7 +364,7 @@ tr.dim td{color:var(--s500)}
         <button class="pill" aria-pressed="false">3 חודשים</button>
         <button class="pill on" aria-pressed="true">השנה (<span class="ltr">2026</span>)</button>
         <button class="pill" aria-pressed="false">הכול</button>
-        <span class="flabel" style="margin-right:8px">לקוח:</span>
+        <span class="flabel" style="margin-right:8px">לקוח</span>
         <span class="im-host" style="display:inline-flex">
           <select class="sel" dir="rtl" aria-label="סינון לפי לקוח">
             <option>הכול</option>
@@ -386,9 +386,9 @@ tr.dim td{color:var(--s500)}
            **אינו מנגנון חדש ואינו סותר את ת4** — ת4 קובע WYSIWYG ("בדיוק מה שעל המסך"), ולכן
            רשימת-העמודות היא בדיוק כותרות-הטבלה הגלויה; ה-JS קורא אותן מה-DOM ואינו מדמיין אותן.
            התקדים ל"לומר בקול לפני פעולה" הוא PreflightPanel ב-src/lib/salaryReport.js. -->
-      <p class="flabel" style="margin:-8px 0 4px">הקובץ שיירד (ת4 — הרמה שעל המסך): <span class="ltr" id="xlsxName"></span></p>
+      <p class="flabel" style="margin:-8px 0 4px">הקובץ שיירד: <span class="ltr" id="xlsxName"></span></p>
       <p class="flabel" style="margin:0 0 14px; line-height:1.6"><b style="color:var(--s600)">העמודות שיירדו</b>
-        (אותן כותרות שבטבלה על המסך): <span id="xlsxCols" style="color:var(--s600)"></span></p>
+        (בדיוק הכותרות שבטבלה שעל המסך): <span id="xlsxCols" style="color:var(--s600)"></span></p>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
      דף 1 · מ7 — מבט-על כספים · "מה מצב הכסף?"
@@ -405,7 +405,7 @@ tr.dim td{color:var(--s500)}
   <!-- ✏️ 07/09/2026 · שורת-"אז מה" עודכנה יחד עם החלפת-הגרף (⏳ב1): הסיפור של הדף הוא
        הירידה מ-354,993 ₪ (12/2025) ל-75,770 ₪ — הערך הנמוך ביותר ב-12 החודשים שנמדדו,
        ואף מסך אחר במערכת אינו מספר אותו. שני מספרים ברצף מופרדים במילה עברית (§3.3). -->
-  <p class="so-what">יתרת-החוב ירדה מ-<span class="ltr">354,993</span> ₪ בדצמבר <span class="ltr">2025</span> ל-<span class="ltr">75,770</span> ₪ — הנמוכה ב-<span class="ltr">12</span> החודשים האחרונים; מהם <span class="ltr">15,609</span> ₪ מעל <span class="ltr">60</span> יום, וצפוי להיכנס החודש <span class="ltr">31,930</span> ₪.</p>
+  <p class="so-what">לגבות <span class="ltr">15,609</span> ₪ שממתינים מעל <span class="ltr">60</span> יום ב-<span class="ltr">3</span> חשבוניות — הוותיקה כבר <span class="ltr">99</span> יום, אצל אלפא סיסטמס בע"מ; יתרת-החוב כולה ירדה ל-<span class="ltr">75,770</span> ₪, הנמוכה ב-<span class="ltr">12</span> החודשים האחרונים.</p>
 
   <!-- אריחים: 📐1 השוואה אמיתית · 📐3 חלון בכל אריח · 📐4 ₪ בלי אגורות -->
   <div class="tiles">
@@ -419,19 +419,19 @@ tr.dim td{color:var(--s500)}
          כמו בדוח 7, ולכן מנהלת שרואה רק את המסך הזה קוראת "צפוי" כהתחייבות. שש מילים סוגרות זאת. -->
     <div class="tile"><span class="lb">צפוי להיכנס ב-<span class="ltr">30</span> יום</span>
       <span class="vl"><span class="ltr">31,930</span> ₪</span>
-      <span class="sub"><span class="ltr">6</span> חשבוניות · <b style="font-weight:600">הערכה לפי התנהגות-תשלום היסטורית</b>, לא התחייבות של הלקוח <span class="tip" title="הפירוט המלא, כולל דיוק-התחזית, בדוח &quot;תזרים צפוי&quot;">[הפירוט בדוח "תזרים צפוי"]</span></span>
-      <span class="cmp"><span class="arrow">▼</span> <span class="tip" title="השוואה רטרוספקטיבית: מה שנכנס בפועל ב-30 הימים האחרונים (24 תשלומים, 07/08–06/09). אינה אותה נוסחה — שחזור התחזית של לפני חודש לא נעשה.">נכנסו בפועל בחודש שחלף: <span class="ltr">134,257</span> ₪</span></span>
+      <span class="sub"><span class="ltr">6</span> חשבוניות · <b style="font-weight:600">הערכה לפי התנהגות-תשלום היסטורית</b>, לא התחייבות של הלקוח <span class="tip" title="דיוק-התחזית ופירוט פר-חשבונית">הפירוט בדוח "תזרים צפוי"</span></span>
+      <span class="cmp"><span class="arrow">▼</span> <span class="tip" title="מה שנכנס בפועל ב-30 הימים האחרונים — 24 תשלומים, 07/08–06/09. זו אינה אותה נוסחה: התחזית של לפני חודש לא שוחזרה.">נכנסו בפועל בחודש שחלף: <span class="ltr">134,257</span> ₪ — לא אותה נוסחה</span></span>
       <span class="win"><span class="ltr">06/09–06/10</span></span></div>
 
-    <div class="tile"><span class="lb">פרויקטים מעל סף-הסטייה החודש</span>
+    <div class="tile"><span class="lb">פרויקטים שחרגו מהתקציב החודש</span>
       <span class="vl"><span class="ltr">0</span></span>
-      <span class="sub tip" title="טרם הסתיים אף פרויקט בספטמבר — חלפו 6 ימים בלבד">טרם הסתיים פרויקט בספטמבר</span>
+      <span class="sub">טרם הסתיים פרויקט בספטמבר — חלפו <span class="ltr">6</span> ימים</span>
       <span class="cmp"><span class="arrow">▼</span> אוגוסט: <span class="ltr">2</span> מתוך <span class="ltr">5</span></span>
       <span class="win"><span class="ltr">01/09–06/09</span></span></div>
 
-    <div class="tile"><span class="lb">עלות-שכר החודש</span>
+    <div class="tile"><span class="lb">שכר דיילות החודש</span>
       <span class="vl"><span class="ltr">0</span> ₪</span>
-      <span class="sub tip" title="אין עדיין משמרות עם שעות-בפועל בספטמבר">‏<span class="ltr">0</span> משמרות בתשלום</span>
+      <span class="sub">‏<span class="ltr">0</span> משמרות בתשלום — חלפו <span class="ltr">6</span> ימים</span>
       <span class="cmp"><span class="arrow">▼</span> אוגוסט: <span class="ltr">18,054</span> ₪ (<span class="ltr">77</span> משמרות)</span>
       <span class="win"><span class="ltr">01/09–06/09</span></span></div>
   </div>
@@ -456,11 +456,13 @@ tr.dim td{color:var(--s500)}
        וזה גם מה שמאפשר את ציר-המאפס ש-📐5 דורש. -->
   <div class="chart-card">
     <h3>יתרת-החוב הפתוחה בסוף כל חודש · <span class="ltr">12</span> החודשים האחרונים (<span class="ltr">10/2025</span>–<span class="ltr">06/09/2026</span>)</h3>
+    <!-- 📐20 (מקטע-זמן לא-שווה מסומן חזותית) · 📐5 (ציר עגול מאפס) · 📐4 (₪ בלי אגורות) —
+         מיושמים בציור ואינם נכתבים על המסך: הקוראת אינה עושה דבר עם המידע הזה (R27/R28).
+         גם המצביע "הפירוט בטבלה הנגישה שלצד הגרף" הוסר — אותה טבלה היא sr-only ואינה נראית. -->
     <p class="chart-note">כל עמודה = מה שהיה פתוח בערב האחרון של אותו חודש.
       🔴 <b>העמודה האחרונה היא "נכון להיום" (<span class="ltr">06/09/2026</span>) ולא סוף-חודש</b> —
-      ספטמבר טרם נגמר, ולכן היא מצוירת בקו מקווקו ואינה מקטע-זמן שווה לשאר (📐20).
-      ערכי-ציר עגולים וציר מתחיל באפס (📐5); ₪ בלי אגורות (📐4).
-      מספר החשבוניות הפתוחות ירד לאורך אותה תקופה מ-<span class="ltr">52</span> (דצמבר) ל-<span class="ltr">11</span> היום — הפירוט המלא בטבלה הנגישה שלצד הגרף.</p>
+      ספטמבר טרם נגמר, ולכן היא מצוירת בקו מקווקו.
+      מספר החשבוניות הפתוחות ירד באותה תקופה מ-<span class="ltr">52</span> (דצמבר) ל-<span class="ltr">11</span> היום.</p>
     <div class="chart-box" dir="ltr" role="figure" aria-label="יתרת-החוב הפתוחה בסוף כל חודש, 12 החודשים האחרונים, עמודות">
       <svg viewBox="0 0 660 285" width="660" height="285" preserveAspectRatio="xMidYMid meet">
         <line x1="80" y1="210" x2="640" y2="210" stroke="#CAD5E2" stroke-width="1.5"/>
@@ -553,20 +555,21 @@ tr.dim td{color:var(--s500)}
           <th scope="col">סכום</th><th scope="col" aria-sort="descending">ימי איחור ▼</th><th scope="col">מדרג</th>
         </tr></thead>
         <tbody>
-          <tr class="click im-host" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1460 · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1460</span><i class="im" aria-hidden="true" style="top:2px; left:-2px">6</i></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">30/04/2026</span></td><td><span class="ltr">10,163</span> ₪</td><td class="over"><span class="ltr">99</span></td><td><span class="ltr">90+</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1468 · מועצה אזורית עמק חפר"><td><span class="ltr">1468</span></td><td>מועצה אזורית עמק חפר</td><td><span class="ltr">11/05/2026</span></td><td><span class="ltr">2,384</span> ₪</td><td class="over"><span class="ltr">88</span></td><td><span class="ltr">61–90</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1505 · האגודה למען המדע הצעיר"><td><span class="ltr">1505</span></td><td>האגודה למען המדע הצעיר</td><td><span class="ltr">03/06/2026</span></td><td><span class="ltr">3,063</span> ₪</td><td class="over"><span class="ltr">65</span></td><td><span class="ltr">61–90</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1537 · אלמנט הפקות"><td><span class="ltr">1537</span></td><td>אלמנט הפקות</td><td><span class="ltr">06/07/2026</span></td><td><span class="ltr">13,762</span> ₪</td><td><span class="ltr">32</span></td><td><span class="ltr">31–60</span></td></tr>
+          <tr class="click im-host" tabindex="0" role="link" aria-label="כרטיס פרויקט 1460 · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1460</span><i class="im" aria-hidden="true" style="top:2px; left:-2px">6</i></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">30/04/2026</span></td><td><span class="ltr">10,163</span> ₪</td><td class="over"><span class="ltr">99</span></td><td><span class="ltr">90+</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1468 · מועצה אזורית עמק חפר"><td><span class="ltr">1468</span></td><td>מועצה אזורית עמק חפר</td><td><span class="ltr">11/05/2026</span></td><td><span class="ltr">2,384</span> ₪</td><td class="over"><span class="ltr">88</span></td><td><span class="ltr">61–90</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1505 · האגודה למען המדע הצעיר"><td><span class="ltr">1505</span></td><td>האגודה למען המדע הצעיר</td><td><span class="ltr">03/06/2026</span></td><td><span class="ltr">3,063</span> ₪</td><td class="over"><span class="ltr">65</span></td><td><span class="ltr">61–90</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1537 · אלמנט הפקות"><td><span class="ltr">1537</span></td><td>אלמנט הפקות</td><td><span class="ltr">06/07/2026</span></td><td><span class="ltr">13,762</span> ₪</td><td><span class="ltr">32</span></td><td><span class="ltr">31–60</span></td></tr>
         </tbody>
       </table>
     </div>
-    <p class="tnote im-host"><b>אלה ארבע הישנות בלבד — אין דפדוף כאן</b> (📐8: פאג'ר סופר את מה שהטבלה מציגה).
+    <p class="tnote im-host"><!-- 📐8 · אין דפדוף כאן בכוונה --><b>אלה ארבע החשבוניות הישנות ביותר — אין דפדוף כאן.</b>
       <button class="lnk" data-goto="p3">כל <span class="ltr">11</span> החשבוניות הפתוחות →</button>
       <i class="im" aria-hidden="true" style="top:-6px; left:120px">7</i></p>
   </div>
 
-  <p class="states-cap">חמשת מצבי-המעטפת שהדף חייב לדעת לצייר (📐10) — הגלריה המצוירת חיה פעם אחת במ1 (הכרעה 15-ו); כאן הנוסח של הדף הזה:</p>
-  <div class="states" aria-label="חמשת מצבי-המעטפת של הדף">
+  <p class="states-cap"><!-- 📐10 · הגלריה המצוירת חיה פעם אחת במ1 (הכרעה 15-ו); כאן הנוסח של הדף הזה -->
+  חמשת המצבים שהדף יודע לצייר:</p>
+  <div class="states" aria-label="חמשת המצבים שהדף יודע לצייר">
     <div class="st"><b>1 · טעינה</b>שלד-אריחים ושלד-טבלה<div class="skel-row" style="width:80%"></div><div class="skel-row" style="width:60%"></div></div>
     <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין חשבוניות פתוחות בתקופה שנבחרה · [נקה מסננים]"</div>
     <div class="st"><b>3 · ריק-באמת</b>"אין נתונים עדיין"</div>
@@ -579,10 +582,11 @@ tr.dim td{color:var(--s500)}
     <b>צפוי</b> = מועד חוזי + חציון-האיחור ההיסטורי של אותו לקוח (<span class="ltr">≥3</span> חשבוניות ששולמו; אחרת סגמנט; אחרת חברה) —
     <b>הערכה סטטיסטית מהתנהגות-העבר, לא התחייבות של הלקוח</b> ·
     <b>מעל <span class="ltr">60</span> יום</b> = סכום מדרגי <span class="ltr">61–90</span> ו-<span class="ltr">90+</span> ·
-    <b>"החודש"</b> = חודש קלנדרי נוכחי (ספטמבר <span class="ltr">2026</span>, שממנו חלפו <span class="ltr">6</span> ימים) ·
+    <b>שכר דיילות החודש</b> = שעות-בפועל × תעריף, לכל הדיילות ששובצו בחודש הקלנדרי הנוכחי ·
+    <b>החודש</b> = חודש קלנדרי נוכחי (ספטמבר <span class="ltr">2026</span>, שממנו חלפו <span class="ltr">6</span> ימים) ·
     <b>סכומים</b> ב-₪ שלמים; מחירי-יחידה בלבד נושאים אגורות.</p>
   <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">06/09/2026</span> — יתרת-חוב היום ולפני חודש · <span class="ltr">4</span> החשבוניות הישנות ·
-    האפסים של ספטמבר ואוגוסט להשוואה · <b>סדרת יתרת-החוב ב-<span class="ltr">12</span> החודשים</b> (נמדדה <span class="ltr">07/09/2026</span> ואומתה שוב בתור שהחליף את הגרף) · 🎭 דמו: אין ·
+    האפסים של ספטמבר ואוגוסט להשוואה · <b>סדרת יתרת-החוב ב-<span class="ltr">12</span> החודשים</b> · 🎭 דמו: אין ·
     📐 נגזר: "צפוי להיכנס ב-<span class="ltr">30</span> יום" · שורת-"אז מה".</p>
 </section>
 
@@ -594,11 +598,13 @@ tr.dim td{color:var(--s500)}
   <h1>רווחיות פרויקטים</h1>
   <p class="psub">אילו פרויקטים דלפו מהתקציב?</p>
   <p class="psub"><span class="ltr">2026</span> (<span class="ltr">01/01–06/09</span>) · כל הלקוחות</p>
-  <p class="pop">אוכלוסייה: פרויקטים שהסתיימו + מבוטלים שדמי-הביטול נפתרו (<span class="ltr">R11</span>), אירוע ב-<span class="ltr">2026</span> ·
+  <!-- הכרעה 24 · ח4 — חתך "חריגה-בזמן-אמת" בוטל אחרי שנמדדו 0 חורגים מתוך 63 פעילים.
+       על המסך נכתב **הנימוק**, לא מספר-ההכרעה: זה מה שהקוראת יכולה להבין ולהסכים איתו. -->
+  <p class="pop">אוכלוסייה: פרויקטים שהסתיימו + מבוטלים שדמי-הביטול נפתרו, אירוע ב-<span class="ltr">2026</span> ·
     הוצאו: פרויקטים פעילים ומבוטלים שלא נפתרו · <span class="ltr">n=215</span>.
-    <b>הדף אינו מציג פרויקטים פעילים</b> — חתך "חריגה-בזמן-אמת" בוטל (הכרעה 24, ח4: נמדד 0 חורגים מתוך 63).</p>
+    <b>הדף אינו מציג פרויקטים פעילים</b> — לפני שהאירוע התקיים השעות-בפועל תמיד קטנות מהמתוכננות, ולכן אין בו חריגה למדוד.</p>
 
-  <p class="so-what"><span class="ltr">30</span> פרויקטים ב-<span class="ltr">2026</span> חרגו מ-<span class="ltr">15%</span> מעלות-העבודה, סה"כ <span class="ltr">6,045</span> ₪ (מול <span class="ltr">21</span> פרויקטים ו-<span class="ltr">4,168</span> ₪ אשתקד).</p>
+  <p class="so-what">לפתוח את פרויקט <span class="ltr">1347</span> — פרימיום אירועים, החריגה הגדולה ביותר השנה: <span class="ltr">30.3%</span> מעל התכנון; בסך-הכול חרגו <span class="ltr">30</span> פרויקטים ב-<span class="ltr">6,045</span> ₪, מול <span class="ltr">21</span> ו-<span class="ltr">4,168</span> ₪ אשתקד.</p>
 
   <div class="tiles">
     <div class="tile"><span class="lb">פרויקטים בתקופה</span>
@@ -607,21 +613,21 @@ tr.dim td{color:var(--s500)}
       <span class="cmp"><span class="arrow">▲</span> <span class="ltr">2025</span> באותו טווח: <span class="ltr">177</span></span>
       <span class="win"><span class="ltr">01/01–06/09</span></span></div>
 
-    <div class="tile"><span class="lb">מעל סף-הסטייה — <span class="ltr">15%</span></span>
+    <div class="tile"><span class="lb">פרויקטים שחרגו מהתקציב</span>
       <span class="vl"><span class="ltr">30</span></span>
-      <span class="sub"><span class="ltr">14.0%</span> מתוך <span class="ltr">215</span> הפרויקטים</span>
+      <span class="sub">מעל סף <span class="ltr">15%</span> · <span class="ltr">14.0%</span> מתוך <span class="ltr">215</span> הפרויקטים</span>
       <span class="cmp"><span class="arrow">▲</span> <span class="ltr">2025</span>: <span class="ltr">21</span> (<span class="ltr">11.9%</span>)</span>
       <span class="win"><span class="ltr">01/01–06/09</span></span></div>
 
-    <div class="tile"><span class="lb">Σ חריגה מעל הסף</span>
+    <div class="tile"><span class="lb">סך החריגה מעל הסף</span>
       <span class="vl"><span class="ltr">6,045</span> ₪</span>
-      <span class="sub">חתום — חריגה-מעלה בלבד</span>
+      <span class="sub">חריגה כלפי-מעלה בלבד — חיסכון אינו מקזז</span>
       <span class="cmp"><span class="arrow">▲</span> <span class="ltr">2025</span>: <span class="ltr">4,168</span> ₪</span>
       <span class="win"><span class="ltr">01/01–06/09</span></span></div>
 
     <div class="tile"><span class="lb">שולי-רווח בתקופה</span>
       <span class="vl"><span class="ltr">60.1%</span></span>
-      <span class="sub">Σ רווח ÷ Σ הכנסה על אותה אוכלוסייה</span>
+      <span class="sub">סך הרווח חלקי סך ההכנסה, על אותה אוכלוסייה</span>
       <span class="cmp"><span class="arrow">▲</span> <span class="ltr">2025</span>: <span class="ltr">58.9%</span></span>
       <span class="win"><span class="ltr">01/01–06/09</span></span></div>
 
@@ -636,10 +642,11 @@ tr.dim td{color:var(--s500)}
     <!-- ✏️ 07/09/2026 · חלון-זמן מפורש על כותרת-הגרף (📐3 · 📐17 · ביקורת-ישי §👤 3):
          התקופה ישבה רק בכותרת-המשנה של הדף, ומי שקרא את הגרף לבדו לא ידע מאיזה טווח נבחרו ה-15. -->
     <h3>סטיית-תקציב ב-₪ לפי פרויקט — <span class="ltr">15</span> הסטיות הגדולות · <span class="ltr">2026</span> (<span class="ltr">01/01–06/09</span>), מתוך <span class="ltr">215</span> פרויקטים</h3>
-    <p class="chart-note">📊 קבע ציר-₪ (לא אחוזים), והנתון נמדד ב-<span class="ltr">data-set.md</span> בסבב <span class="ltr">22:1X</span>.
-      ממוין לפי גודל-הסטייה המוחלט. ציר מלא, בלי קטיעה, עם קו-אפס (📐5).
+    <!-- 📊 קבע ציר-₪ (לא אחוזים); 📐5 — ציר מלא, בלי קטיעה, עם קו-אפס. שני אלה כללי-ציור
+         ואינם נכתבים על המסך (R28 — אין מה לעשות איתם). -->
+    <p class="chart-note">ממוין לפי גודל-הסטייה, מהגדולה לקטנה.
       <b>אף אחד מ-<span class="ltr">15</span> אלה אינו מעל סף-<span class="ltr">15%</span></b> — הסף הוא יחס לעלות-העבודה המתוכננת, לא סכום, ולכן אין כאן עמודה אדומה.</p>
-    <div class="chart-box" dir="ltr" role="figure" aria-label="סטיית-תקציב בשקלים לפי פרויקט, עמודות אופקיות חתומות">
+    <div class="chart-box" dir="ltr" role="figure" aria-label="סטיית-תקציב בשקלים לפי פרויקט, עמודות אופקיות משני צידי קו-אפס">
       <svg viewBox="0 0 660 375" width="660" height="375" preserveAspectRatio="xMidYMid meet">
         <line x1="200" y1="14" x2="200" y2="340" stroke="#F1F5F9"/>
         <line x1="310" y1="14" x2="310" y2="340" stroke="#F1F5F9"/>
@@ -713,7 +720,7 @@ tr.dim td{color:var(--s500)}
         <rect x="333.3" y="332" width="86.7" height="14" fill="#96F7E4" stroke="#009689"/>
         <text class="vlab" x="426" y="342" text-anchor="start">▼ -394 ₪ חיסכון</text>
 
-        <text class="ax" x="420" y="370" text-anchor="middle">סטיית-תקציב ₪ (חתום) · קו-אפס במרכז</text>
+        <text class="ax" x="420" y="370" text-anchor="middle">סטיית-תקציב ב-₪ · חריגה מימין לקו-האפס, חיסכון משמאלו</text>
       </svg>
     </div>
     <div class="legend">
@@ -748,11 +755,11 @@ tr.dim td{color:var(--s500)}
       <button class="pill" id="onlyOver" aria-pressed="false">מעל הסף בלבד</button>
       <i class="im" aria-hidden="true" style="top:-8px; left:-8px">6</i>
     </span>
-    <span class="flabel">מסנן-דף (📑#5) — כבוי כברירת-מחדל</span>
+    <span class="flabel">מסנן של הדף הזה — כבוי כברירת-מחדל</span>
   </div>
 
   <div class="tbl-card">
-    <h3>הפרויקטים שחרגו — כולל שעות-צוות מתוכננות מול בפועל (דוח <span class="ltr">9</span> כעמודה) · <span class="ltr">2026</span> (<span class="ltr">01/01–06/09</span>)</h3>
+    <h3>הפרויקטים שחרגו — עם שעות-הצוות, מתוכננות מול בפועל · <span class="ltr">2026</span> (<span class="ltr">01/01–06/09</span>)</h3>
     <p class="drill">לחיצה על שורה פותחת את הפרויקט במסך הכספים</p>
     <div class="tbl-scroll">
       <!-- ✏️ 07/09/2026 · תיקון-מדידה (m11-ishay-number-checks §א — 🔴 באג-מוקאפ):
@@ -771,27 +778,27 @@ tr.dim td{color:var(--s500)}
           <th scope="col" aria-sort="descending">סטייה % ▼</th><th scope="col">ציון-משוב</th>
         </tr></thead>
         <tbody>
-          <tr class="click im-host" tabindex="0" role="link" aria-label="פתח את פרויקט 1347 במסך הכספים · פרימיום אירועים"><td><span class="ltr">1347</span><i class="im" aria-hidden="true" style="top:2px; left:-2px">7</i></td><td>פרימיום אירועים</td><td><span class="ltr">4,108</span> ₪</td><td><span class="ltr">2,927</span> ₪</td><td><span class="ltr">10.0</span></td><td><span class="ltr">13.0</span></td><td class="over">▲ <span class="ltr">+30.3%</span></td><td>—</td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח את פרויקט 1376 במסך הכספים · עיריית מודיעין"><td><span class="ltr">1376</span></td><td>עיריית מודיעין</td><td><span class="ltr">6,821</span> ₪</td><td><span class="ltr">4,010</span> ₪</td><td><span class="ltr">20.0</span></td><td><span class="ltr">26.0</span></td><td class="over">▲ <span class="ltr">+30.2%</span></td><td>—</td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח את פרויקט 1465 במסך הכספים · קוואנטום רובוטיקה"><td><span class="ltr">1465</span></td><td>קוואנטום רובוטיקה</td><td><span class="ltr">9,310</span> ₪</td><td><span class="ltr">5,624</span> ₪</td><td><span class="ltr">24.0</span></td><td><span class="ltr">31.0</span></td><td class="over">▲ <span class="ltr">+29.1%</span></td><td><span class="ltr">★ 4</span> · טוב</td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח את פרויקט 1488 במסך הכספים · ורד קוסמטיקה טבעית"><td><span class="ltr">1488</span></td><td>ורד קוסמטיקה טבעית</td><td><span class="ltr">4,406</span> ₪</td><td><span class="ltr">2,927</span> ₪</td><td><span class="ltr">7.5</span></td><td><span class="ltr">9.5</span></td><td class="over">▲ <span class="ltr">+27.3%</span></td><td><span class="ltr">★ 4</span> · טוב</td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח את פרויקט 1427 במסך הכספים · נובה פארמה בע&quot;מ"><td><span class="ltr">1427</span></td><td>נובה פארמה בע"מ</td><td><span class="ltr">7,274</span> ₪</td><td><span class="ltr">4,605</span> ₪</td><td><span class="ltr">24.0</span></td><td><span class="ltr">30.5</span></td><td class="over">▲ <span class="ltr">+27.2%</span></td><td><span class="ltr">★ 4</span> · טוב</td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח את פרויקט 1423 במסך הכספים · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1423</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">7,357</span> ₪</td><td><span class="ltr">4,525</span> ₪</td><td><span class="ltr">24.0</span></td><td><span class="ltr">30.0</span></td><td class="over">▲ <span class="ltr">+25.2%</span></td><td><span class="ltr">★ 5</span> · מצוין</td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח את פרויקט 1433 במסך הכספים · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1433</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">2,504</span> ₪</td><td><span class="ltr">1,554</span> ₪</td><td><span class="ltr">8.0</span></td><td><span class="ltr">10</span></td><td class="over">▲ <span class="ltr">+25.0%</span></td><td><span class="ltr">★ 4</span> · טוב</td></tr>
-          <tr class="click dim" tabindex="0" role="link" aria-label="פתח את פרויקט 12 במסך הכספים · קבוצת אחזקות דנוך בע&quot;מ — מתחת לרצפת-המהותיות"><td><span class="ltr">12</span></td><td>קבוצת אחזקות דנוך בע"מ</td><td><span class="ltr">500</span> ₪</td><td><span class="ltr">207</span> ₪</td><td><span class="ltr">1.5</span></td><td><span class="ltr">6</span></td><td><span class="ltr">+300.0%</span> · מתחת לרצפת-המהותיות</td><td><span class="ltr">★ 4</span> · טוב</td></tr>
+          <tr class="click im-host" tabindex="0" role="link" aria-label="פרויקט 1347 במסך הכספים · פרימיום אירועים"><td><span class="ltr">1347</span><i class="im" aria-hidden="true" style="top:2px; left:-2px">7</i></td><td>פרימיום אירועים</td><td><span class="ltr">4,108</span> ₪</td><td><span class="ltr">2,927</span> ₪</td><td><span class="ltr">10.0</span></td><td><span class="ltr">13.0</span></td><td class="over">▲ <span class="ltr">+30.3%</span></td><td>—</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פרויקט 1376 במסך הכספים · עיריית מודיעין"><td><span class="ltr">1376</span></td><td>עיריית מודיעין</td><td><span class="ltr">6,821</span> ₪</td><td><span class="ltr">4,010</span> ₪</td><td><span class="ltr">20.0</span></td><td><span class="ltr">26.0</span></td><td class="over">▲ <span class="ltr">+30.2%</span></td><td>—</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פרויקט 1465 במסך הכספים · קוואנטום רובוטיקה"><td><span class="ltr">1465</span></td><td>קוואנטום רובוטיקה</td><td><span class="ltr">9,310</span> ₪</td><td><span class="ltr">5,624</span> ₪</td><td><span class="ltr">24.0</span></td><td><span class="ltr">31.0</span></td><td class="over">▲ <span class="ltr">+29.1%</span></td><td><span class="ltr">★ 4</span> · טוב</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פרויקט 1488 במסך הכספים · ורד קוסמטיקה טבעית"><td><span class="ltr">1488</span></td><td>ורד קוסמטיקה טבעית</td><td><span class="ltr">4,406</span> ₪</td><td><span class="ltr">2,927</span> ₪</td><td><span class="ltr">7.5</span></td><td><span class="ltr">9.5</span></td><td class="over">▲ <span class="ltr">+27.3%</span></td><td><span class="ltr">★ 4</span> · טוב</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פרויקט 1427 במסך הכספים · נובה פארמה בע&quot;מ"><td><span class="ltr">1427</span></td><td>נובה פארמה בע"מ</td><td><span class="ltr">7,274</span> ₪</td><td><span class="ltr">4,605</span> ₪</td><td><span class="ltr">24.0</span></td><td><span class="ltr">30.5</span></td><td class="over">▲ <span class="ltr">+27.2%</span></td><td><span class="ltr">★ 4</span> · טוב</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פרויקט 1423 במסך הכספים · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1423</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">7,357</span> ₪</td><td><span class="ltr">4,525</span> ₪</td><td><span class="ltr">24.0</span></td><td><span class="ltr">30.0</span></td><td class="over">▲ <span class="ltr">+25.2%</span></td><td><span class="ltr">★ 5</span> · מצוין</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="פרויקט 1433 במסך הכספים · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1433</span></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">2,504</span> ₪</td><td><span class="ltr">1,554</span> ₪</td><td><span class="ltr">8.0</span></td><td><span class="ltr">10</span></td><td class="over">▲ <span class="ltr">+25.0%</span></td><td><span class="ltr">★ 4</span> · טוב</td></tr>
+          <tr class="click dim" tabindex="0" role="link" aria-label="פרויקט 12 במסך הכספים · קבוצת אחזקות דנוך בע&quot;מ — מתחת לרצפת-המהותיות"><td><span class="ltr">12</span></td><td>קבוצת אחזקות דנוך בע"מ</td><td><span class="ltr">500</span> ₪</td><td><span class="ltr">207</span> ₪</td><td><span class="ltr">1.5</span></td><td><span class="ltr">6</span></td><td><span class="ltr">+300.0%</span> · מתחת לרצפת-המהותיות</td><td><span class="ltr">★ 4</span> · טוב</td></tr>
         </tbody>
       </table>
     </div>
     <p class="tnote"><b>שתי עמודות-השעות מודדות את אותו דבר — שעות-צוות:</b> "מתוכננות" = משך-האירוע × מספר
-      הדיילות המשובצות-סופית · "בפועל" = סכום השעות שדיווחו אותן דיילות. ✏️ <b>עד <span class="ltr">07/09/2026</span>
-      העמודה הראשונה הציגה את משך-האירוע הבודד</b> (למשל <span class="ltr">4.00</span> מול <span class="ltr">31.0</span>
-      בפרויקט <span class="ltr">1465</span>) — שני קני-מידה שונים באותה שורה. תוקן: <span class="ltr">24.0</span> מול <span class="ltr">31.0</span>.
-      ברמת-משמרת-בודדת הסטייה האמיתית קטנה — חציון <span class="ltr">0.00</span> שעות ואחוזון-<span class="ltr">99</span> של <span class="ltr">1.50</span> שעות
-      (נמדד על <span class="ltr">3,679</span> משמרות בתשלום).</p>
-    <p class="tnote"><b>רצפת-מהותיות (📑ב#5):</b> פרויקט מתחת ל-<span class="ltr">4</span> שעות מתוכננות
+      הדיילות המשובצות-סופית · "בפועל" = סכום השעות שדיווחו אותן דיילות. <!-- ✏️ עד 07/09/2026 העמודה הראשונה הציגה את משך-האירוע הבודד (4.00 מול 31.0 בפרויקט 1465)
+           — שני קני-מידה שונים באותה שורה. תוקן ל-24.0 מול 31.0. **יומן-שינויים אינו טקסט-מסך**
+           (R28): הקוראת אינה עושה דבר עם מה שהיה כאן אתמול. -->
+      ברמת משמרת בודדת הפער קטן: חציון <span class="ltr">0.00</span> שעות, ורק אחת ממאה משמרות חורגת ביותר
+      מ-<span class="ltr">1.50</span> שעות (נמדד על <span class="ltr">3,679</span> משמרות בתשלום).</p>
+    <p class="tnote"><b>רצפת-מהותיות:</b> פרויקט מתחת ל-<span class="ltr">4</span> שעות מתוכננות
       <b>או</b> ל-<span class="ltr">1,000</span> ₪ עלות-עבודה מתוכננת אינו בדירוג. פרויקט <span class="ltr">12</span>
       (<span class="ltr">1.50</span> שעות · <span class="ltr">500</span> ₪ הכנסה) מוצג באפור בסוף הרשימה ולא בראשה —
-      <span class="ltr">300%</span> על מכנה זעיר. <b>מספר הפרויקטים מתחת לרצפה אינו נמדד ב-<span class="ltr">data-set.md</span></b> ⇒ המונה יוצג בבנייה.</p>
+      <span class="ltr">300%</span> על מכנה זעיר.<!-- מספר הפרויקטים מתחת לרצפה אינו נמדד ב-data-set.md ⇒ המונה יוצג בבנייה (הערת-בנייה, לא טקסט-מסך). --></p>
     <div class="pager">
       <span><span class="ltr">1–8</span> מתוך 30</span>
       <div style="display:flex; gap:8px; align-items:center">
@@ -802,7 +809,7 @@ tr.dim td{color:var(--s500)}
     </div>
   </div>
 
-  <p class="states-cap">חמשת מצבי-המעטפת שהדף חייב לדעת לצייר (📐10):</p>
+  <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
   <div class="states">
     <div class="st"><b>1 · טעינה</b>שלד-אריחים ושלד-טבלה<div class="skel-row" style="width:75%"></div></div>
     <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין פרויקטים בתקופה שנבחרה · [נקה מסננים]"</div>
@@ -811,16 +818,16 @@ tr.dim td{color:var(--s500)}
     <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב] · <b>חסר פרמטר</b>: "חסר פרמטר מערכת: סף_סטיית_תקציב_אחוז"</div>
   </div>
 
-  <p class="def-footer">הגדרות: <b>"דלף"</b> = חריגה כלפי-מעלה בלבד מול עלות-העבודה המתוכננת (יחס חתום) ·
-    <b>סטיית-תקציב</b> = <span class="ltr">budget_deviation</span>, צד-העבודה בלבד ב-₪ (§7.58) — הסחורה אינה תורמת סטייה ·
-    <b>עלות-עבודה מתוכננת</b> = <span class="ltr">planned_hours</span> × Σ תעריפי המשובצות-סופית ·
-    <b>שעות-צוות מתוכננות</b> = משך-האירוע × מספר המשובצות-סופית · <b>שעות-צוות בפועל</b> = Σ <span class="ltr">actual_hours</span> של אותן דיילות —
+  <p class="def-footer">הגדרות: <b>"דלף"</b> = חריגה כלפי-מעלה בלבד מול עלות-העבודה המתוכננת — חיסכון אינו מקזז חריגה ·
+    <b>סטיית-תקציב</b> = ההפרש בצד-העבודה בלבד, ב-₪ — הסחורה אינה תורמת סטייה ·
+    <b>עלות-עבודה מתוכננת</b> = שעות-האירוע המתוכננות × סך תעריפי הדיילות המשובצות-סופית ·
+    <b>שעות-צוות מתוכננות</b> = משך-האירוע × מספר המשובצות-סופית · <b>שעות-צוות בפועל</b> = סך השעות שדיווחו אותן דיילות —
     <b>שתיהן בקנה-מידה אחד</b> ·
-    <b>שולי-רווח</b> = Σ רווח ÷ Σ הכנסה על אוכלוסיית הדף ·
-    <b>ה-%</b> הוא נגזרת-תצוגה על הכרעת §7.58 שקבעה ₪ בלבד.</p>
-  <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">06/09/2026</span> — <span class="ltr">215</span> פרויקטים (<span class="ltr">R11</span>) ·
+    <b>שולי-רווח</b> = סך הרווח חלקי סך ההכנסה, על אוכלוסיית הדף.
+    <!-- ה-% של הסטייה הוא נגזרת-תצוגה על §7.58 שקבעה ₪ בלבד — הערת-אפיון, לא טקסט-מסך. --></p>
+  <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">06/09/2026</span> — <span class="ltr">215</span> פרויקטים ·
     <span class="ltr">30</span> מעל-הסף · <span class="ltr">15</span> הסטיות הגדולות ב-₪ · שמונה שורות-הטבלה · <span class="ltr">2025</span> להשוואה ·
-    🎭 דמו: אין · 📐 נגזר: יחס-הסטייה החתום · <span class="ltr">14.0%</span> · שורת-"אז מה".</p>
+    🎭 דמו: אין · 📐 נגזר: יחס-הסטייה · <span class="ltr">14.0%</span> · שורת-"אז מה".</p>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
@@ -842,13 +849,13 @@ tr.dim td{color:var(--s500)}
   <p class="psub"><span class="ltr">2026</span> (<span class="ltr">01/01–06/09</span>) · כל הלקוחות</p>
   <p class="pop">אוכלוסייה: חשבוניות שנשלחו, טרם שולמו ולא נמחקו כחוב-אבוד · הוצאו: חוב אבוד
     (<span class="ltr">1</span>) ופרויקטים שטרם חויבו · <span class="ltr">n=11</span> ·
-    <b>מדד-מלאי — אינו מושפע ממסנן התקופה</b> (📐3).
-    <br>✏️ <b>ולגרף שלמטה אוכלוסייה צרה יותר (📐2):</b> הוא מציג <b>חוב באיחור בלבד</b> —
+    <b>זהו צילום-רגע ולא סיכום-תקופה — אינו מושפע ממסנן התקופה.</b>
+    <br><b>ולגרף שלמטה אוכלוסייה צרה יותר:</b> הוא מציג <b>חוב באיחור בלבד</b> —
     ארבעת דליי-האיחור, <span class="ltr">4</span> חשבוניות. ‏<b>"שוטף"</b> (<span class="ltr">7</span>
     חשבוניות · <span class="ltr">46,399</span> ₪) <b>הוצא מהגרף</b> לאריח שלצידו, כי טרם הגיע מועד
     תשלומן — הן אינן חוב באיחור. <b>האריחים והטבלה ממשיכים לכסות את כל <span class="ltr">11</span>.</b></p>
 
-  <p class="so-what" id="p3SoWhat">מדרג <span class="ltr">61–90</span> יום: <span class="ltr">5,447</span> ₪ ב-<span class="ltr">2</span> חשבוניות אצל <span class="ltr">2</span> לקוחות; הישנה ממתינה <span class="ltr">88</span> ימים.</p>
+  <p class="so-what" id="p3SoWhat">לגבות <span class="ltr">5,447</span> ₪ מ-<span class="ltr">2</span> לקוחות במדרג <span class="ltr">61–90</span> יום — <span class="ltr">2</span> חשבוניות, והוותיקה ממתינה כבר <span class="ltr">88</span> ימים.</p>
 
   <div class="tiles" id="p3Tiles">
     <div class="tile"><span class="lb">חוב במדרג <span class="ltr">61–90</span> יום</span>
@@ -861,10 +868,10 @@ tr.dim td{color:var(--s500)}
       <span class="sub"><span class="ltr">5,447</span> ₪ מתוך <span class="ltr">75,770</span> ₪</span>
       <span class="cmp"><span class="arrow">▲</span> לפני חודש: <span class="ltr">6.9%</span> (<span class="ltr">10,163</span> מתוך <span class="ltr">148,188</span>)</span>
       <span class="win">נכון ל-<span class="ltr">06/09</span></span></div>
-    <div class="tile"><span class="lb">הישנה ביותר במדרג</span>
+    <div class="tile"><span class="lb">החשבונית הישנה ביותר</span>
       <span class="vl"><span class="ltr">88</span> ימי איחור</span>
       <span class="sub">מועצה אזורית עמק חפר · נשלחה <span class="ltr">11/05/2026</span></span>
-      <span class="cmp none">אין תקופה-קודמת למדד הזה — לא נמדד ב-<span class="ltr">data-set.md</span></span>
+      <span class="cmp none">אין תקופה-קודמת למדד הזה — היא לא נמדדה</span>
       <span class="win">נכון ל-<span class="ltr">06/09</span></span></div>
     <div class="tile"><span class="lb">ימים לתשלום (חציון)</span>
       <span class="vl"><span class="ltr">35</span></span>
@@ -891,19 +898,20 @@ tr.dim td{color:var(--s500)}
          🔻 **והאריח לחיץ:** "שוטף" נשאר מדרג בדריל-דאון (📐13) ⇒ לחיצה עליו יורדת לרמת-הלקוחות
          שלו בדיוק כמו לחיצה על עמודה. -->
     <h3>חוב <b>באיחור</b> לפי מדרג-גיול, מוערם לפי סוג-לקוח · נכון ל-<span class="ltr">06/09/2026</span>
-      <span style="font-weight:400; color:var(--s500)">· ✏️ "שוטף" באריח שלצד הגרף</span></h3>
+      <span style="font-weight:400; color:var(--s500)">· "שוטף" מוצג באריח שלצד הגרף</span></h3>
     <p class="chart-note" style="font-size:12.5px; color:var(--s600); margin-bottom:6px">
       <b>השאלה שהעמודות עונות עליה: כמה כסף <span style="color:var(--teal700)">שכבר איחר</span> יש לנו, וכמה זמן הוא כבר מחכה?</b>
       כל עמודה היא <b>דלי של איחור</b> — כמה ימים עברו מאז שהחשבונית הייתה אמורה להשתלם.
       ככל שהולכים ימינה, הכסף מחכה יותר זמן וקשה יותר לגבות אותו. הצבעים בתוך העמודה מפצלים
       את אותו סכום <b>לפי סוג-הלקוח</b>, כדי לראות אצל מי הכסף תקוע.
-      ✏️ <b>ומה שאינו בגרף:</b> "שוטף" — חשבוניות שטרם הגיע מועד תשלומן — יושב באריח שלצד הגרף,
+      <b>ומה שאינו בגרף:</b> "שוטף" — חשבוניות שטרם הגיע מועד תשלומן — יושב באריח שלצד הגרף,
       כי הוא <b>אינו חוב באיחור</b> ואי-אפשר לגבות אותו השבוע.</p>
-    <p class="chart-note">לחיצה על מדרג <b>יורדת רמה</b> ומציגה את הלקוחות שבו (📐13). כרגע פתוח <b>61–90 יום</b>.
-      ✏️ <b>וגם האריח "שוטף" לחיץ באותה דרך</b> — הוא מדרג לכל דבר בדריל-דאון, רק לא על הציר.
-      מדרג <span class="ltr">1–30</span> ריק היום ואינו לחיץ (📑ב#6). ערכי-הציר עגולים והציר מתחיל באפס
-      <b>בלי קטיעה</b> (📐5) — הוא ירד ל-<span class="ltr">15,000</span> רק משום שהמקסימום שנשאר בו הוא
-      <span class="ltr">13,762</span>. ארבע השכבות נבדלות גם בדפוס-מילוי ובתווית, לא בגוון בלבד (📐19).</p>
+    <!-- 📐13 (דריל) · 📑ב#6 (דלי ריק אינו לחיץ) · 📐5 (הציר ירד ל-15,000 כי המקסימום שנשאר
+         הוא 13,762 — בלי קטיעה) · 📐19 (ארבע השכבות נבדלות בדפוס-מילוי ובתווית, לא בגוון בלבד).
+         כללי-ציור — מיושמים ואינם נכתבים על המסך (R28). -->
+    <p class="chart-note">לחיצה על מדרג <b>יורדת רמה</b> ומציגה את הלקוחות שבו. כרגע פתוח <b>61–90 יום</b>.
+      <b>וגם האריח "שוטף" לחיץ באותה דרך</b> — הוא מדרג לכל דבר, רק לא על הציר.
+      מדרג <span class="ltr">1–30</span> ריק היום ואינו לחיץ.</p>
 
     <div class="chart-row">
       <div class="chart-box" dir="ltr" role="figure" aria-label="חוב באיחור לפי מדרג-גיול, ארבע עמודות מוערמות לפי סוג-לקוח; מדרג 61 עד 90 יום פתוח. הקטגוריה שוטף אינה בגרף ומוצגת באריח שלצידו">
@@ -971,7 +979,7 @@ tr.dim td{color:var(--s500)}
            ולכן לחיצה עליו יורדת בדיוק לאותה רמת-לקוחות שאליה ירדה העמודה שהייתה כאן. -->
       <button type="button" class="tile side-tile im-host" id="p3CurTile" aria-pressed="false"
               aria-label="שוטף: 46,399 ₪ בשבע חשבוניות שטרם הגיע מועד תשלומן. לחיצה יורדת לרמת-הלקוחות">
-        <span class="lb">שוטף — מחוץ לגרף</span>
+        <span class="lb">שוטף — עוד לא באיחור</span>
         <span class="vl"><span class="ltr">46,399</span> ₪</span>
         <span class="sub"><span class="ltr">7</span> חשבוניות · <b>טרם הגיע מועד התשלום</b></span>
         <span class="cmp"><span class="arrow">▼</span> לפני חודש: <span class="ltr">83,862</span> ₪ (<span class="ltr">14</span> חשבוניות)</span>
@@ -991,7 +999,7 @@ tr.dim td{color:var(--s500)}
     </div>
     <!-- ✏️ 07/09/2026 · מקרא-העמודות — כל מדרג במילים של מנהלת-כספים, לא בקוד-דלי -->
     <div class="barkey" aria-label="מה כל עמודה בגרף אומרת">
-      <span>✏️ <b>שוטף</b> — <b>עוד לא הגיע</b> מועד התשלום. הכסף לא מאחר; פשוט טרם הגיע תורו —
+      <span><b>שוטף</b> — <b>עוד לא הגיע</b> מועד התשלום. הכסף לא מאחר; פשוט טרם הגיע תורו —
         <b>ולכן הוא אינו בגרף</b> אלא באריח שלצידו.</span>
       <span><b><span class="ltr">1–30</span></b> — עבר מועד התשלום, ומחכה עד חודש. תזכורת רגילה.</span>
       <span><b><span class="ltr">31–60</span></b> — מחכה בין חודש לחודשיים. כאן מתחילים להתקשר.</span>
@@ -1033,24 +1041,24 @@ tr.dim td{color:var(--s500)}
     </div>
   </div>
 
-  <p class="tnote" style="padding:0 0 14px"><b>חוב אבוד — מחוץ למדרגים וליתרה (📑ב#6):</b>
+  <p class="tnote" style="padding:0 0 14px"><b>חוב אבוד — מחוץ למדרגים וליתרה:</b>
     <span class="ltr">1</span> פרויקט · <span class="ltr">−4,146</span> ₪ — פרויקט <span class="ltr">1115</span> "ערב גאלה שנתי",
-    קוואנטום רובוטיקה (<span class="ltr">written_off = true</span>).</p>
+    קוואנטום רובוטיקה.</p>
 
   <!-- ✏️ 07/09/2026 · תוקן פער-דאטה שהיה **מומצא** (m11-data-fidelity §2.2 — ממצא חמור מס' 2):
        הדף הצהיר ש"לארבע חשבוניות ידוע רק הסך המשותף 25,156 ₪". זו לא הייתה מגבלת-מסד —
        finance_project_money() מחזירה את כל הארבע, ונמדד חי 07/09: 1556=7,250 · 1560=9,878 ·
        1557=5,811 · 1559=2,217 (Σ=25,156, בדיוק הסכום ה"משותף" שהוצג). המספרים הוזנו,
        וההצהרה השגויה הוסרה. הפער היחיד שנשאר בדף הוא עמודת-איש-הקשר, והוא אמיתי. -->
+  <!-- 📐18 מחייב בעל-שם על שורה חורגת (customer_contacts.is_primary); השמות אינם ב-data-set.md,
+       ולכן לא צוירה עמודה שכולה "—" (📑ב#15 אוסר זאת) — היא תתמלא מה-RPC בבנייה.
+       ✏️ ומה שכבר אינו פער: עד 07/09/2026 הוצגו ארבע חשבוניות כ-"—" בטענה שידוע רק הסך המשותף.
+       הטענה הייתה שגויה; הסכומים נשלפים מאותה פונקציית-שרת, נמדדו והוזנו. -->
   <div class="datanote"><b>פער-דאטה אחד שהדף אינו מסתיר:</b>
-    <b>עמודת איש-קשר</b> — 📐18 מחייב בעל-שם על שורה חורגת (<span class="ltr">customer_contacts.is_primary</span>);
-    השמות אינם ב-<span class="ltr">data-set.md</span>, ולכן <b>לא צוירה עמודה שכולה "—"</b> (📑ב#15 אוסר זאת) —
-    היא תתמלא מה-<span class="ltr">RPC</span> בבנייה.
-    <br>✏️ <b>ומה שכבר אינו פער:</b> הסכום של כל <span class="ltr">11</span> החשבוניות ידוע ומוצג. עד <span class="ltr">07/09/2026</span>
-    הוצגו ארבע מהן כ-"—" בטענה שידוע רק הסך המשותף — <b>הטענה הייתה שגויה</b>, הסכומים ניתנים לשליפה מאותה
-    פונקציית-שרת שמזינה את שאר הדוח, והם נמדדו והוזנו.</div>
+    <b>עמודת איש-קשר</b> — לשורה חורגת אמור להתלוות שם של איש-הקשר אצל הלקוח, והשמות עדיין לא נמדדו.
+    <b>לא צוירה עמודה שכולה "—"</b>; היא תתמלא בבנייה.</div>
 
-  <p class="states-cap">חמשת מצבי-המעטפת שהדף חייב לדעת לצייר (📐10):</p>
+  <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
   <div class="states">
     <div class="st"><b>1 · טעינה</b>שלד-אריחים, גרף וטבלה<div class="skel-row" style="width:70%"></div></div>
     <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין חשבוניות במדרג שנבחר · [נקה בחירה]" — המצב של מדרג <span class="ltr">1–30</span></div>
@@ -1059,10 +1067,10 @@ tr.dim td{color:var(--s500)}
     <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב] · <b>חסר פרמטר</b>: "חסר פרמטר מערכת: תנאי_תשלום_ימים"</div>
   </div>
 
-  <p class="def-footer">הגדרות: <b>מדרג-גיול</b> נמדד מול <b>מועד-הפירעון</b> (<span class="ltr">invoice_sent_at</span> + <span class="ltr">תנאי_תשלום_ימים</span>=<span class="ltr">30</span>), לא מול יום השליחה ·
-    ✏️ <b>"שוטף"</b> = טרם הגיע מועד-הפירעון, לא "שולם" — <b>ולכן הוא מוצג באריח נפרד לצד הגרף, לא כעמודה בו</b> ·
+  <p class="def-footer">הגדרות: <b>מדרג-גיול</b> נמדד מול <b>מועד-הפירעון</b> (יום שליחת החשבונית + <span class="ltr">30</span> ימי תנאי-תשלום), לא מול יום השליחה ·
+    <b>"שוטף"</b> = טרם הגיע מועד-הפירעון, לא "שולם" — <b>ולכן הוא מוצג באריח נפרד לצד הגרף, לא כעמודה בו</b> ·
     <b>ימים לתשלום (חציון)</b> = חציון (תאריך-תשלום − תאריך-חשבונית) על חשבוניות ששולמו, כל הזמנים — <b>אינו <span class="ltr">DSO</span></b> ·
-    <b>חוב אבוד</b> = <span class="ltr">written_off = true</span>, מוחרג לגמרי מהמדרגים ומהיתרה.</p>
+    <b>חוב אבוד</b> = חוב שהוחלט לוותר עליו — מוחרג לגמרי מהמדרגים ומהיתרה.</p>
   <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">06/09/2026</span> — <span class="ltr">11</span> חשבוניות פתוחות · חמשת המדרגים היום ולפני חודש ·
     הערמה לפי סוג-לקוח · חציון ימים-לתשלום (<span class="ltr">699</span>) · החוב האבוד · 🎭 דמו: אין ·
     📐 נגזר: "מעל <span class="ltr">60</span> יום" (<span class="ltr">15,609</span> ₪) · חלק-מסך-החוב <span class="ltr">7.2%</span> · צירופי-הקידוח פר-לקוח · שורת-"אז מה".</p>
@@ -1080,35 +1088,35 @@ tr.dim td{color:var(--s500)}
     (<span class="ltr">46,399</span> ₪) ו-<span class="ltr">4</span> שכבר עבר מועדן (<span class="ltr">29,371</span> ₪) ·
     הוצאו: חוב אבוד וחשבוניות ששולמו · <span class="ltr">n=11</span>.</p>
 
-  <p class="so-what">עיריות משלמות באיחור חציוני <span class="ltr">68.5</span> יום מול <span class="ltr">34</span> לחברות; <span class="ltr">31,930</span> ₪ מהחודש יגיעו בפועל בחודש הבא.</p>
+  <p class="so-what">לתכנן את החודש על <span class="ltr">31,930</span> ₪ הצפויים ולא על <span class="ltr">46,399</span> ₪ החוזיים — <span class="ltr">14,468</span> ₪ של עיריית נתניה יגיעו רק ב-<span class="ltr">14/10</span>; עיריות מאחרות חציונית <span class="ltr">68.5</span> יום מול <span class="ltr">34</span> לחברות.</p>
 
   <div class="filters" style="margin-bottom:12px">
-    <span class="flabel">אופק:</span>
+    <span class="flabel">אופק</span>
     <span class="im-host" style="display:inline-flex">
       <button class="pill on" aria-pressed="true"><span class="ltr">30</span> יום</button>
       <i class="im" aria-hidden="true" style="top:-8px; left:-8px">6</i>
     </span>
     <button class="pill" aria-pressed="false"><span class="ltr">60</span> יום</button>
     <button class="pill" aria-pressed="false"><span class="ltr">90</span> יום</button>
-    <span class="flabel">ברירת-המחדל <span class="ltr">30</span> יום — כדי שהשם "מה ייכנס החודש" והתוכן ייפגשו (📑ב#7)</span>
+    <span class="flabel">ברירת-המחדל <span class="ltr">30</span> יום</span>
   </div>
 
   <div class="tiles">
     <div class="tile"><span class="lb">צפוי להיכנס ב-<span class="ltr">30</span> יום</span>
       <span class="vl"><span class="ltr">31,930</span> ₪</span>
       <span class="sub"><span class="ltr">6</span> חשבוניות</span>
-      <span class="cmp"><span class="arrow">▼</span> <span class="tip" title="השוואה רטרוספקטיבית: מה שנכנס בפועל ב-30 הימים האחרונים (24 תשלומים). אינה אותה נוסחה.">נכנסו בפועל בחודש שחלף: <span class="ltr">134,257</span> ₪</span></span>
+      <span class="cmp"><span class="arrow">▼</span> <span class="tip" title="מה שנכנס בפועל ב-30 הימים האחרונים — 24 תשלומים. זו אינה אותה נוסחה.">נכנסו בפועל בחודש שחלף: <span class="ltr">134,257</span> ₪ — לא אותה נוסחה</span></span>
       <span class="win"><span class="ltr">06/09–06/10</span></span></div>
     <div class="tile"><span class="lb">חוזי ב-<span class="ltr">30</span> יום</span>
       <span class="vl"><span class="ltr">46,399</span> ₪</span>
-      <span class="sub"><span class="ltr">7</span> חשבוניות במועד החוזי</span>
-      <span class="cmp none">לא נמדד לתקופה קודמת ב-<span class="ltr">data-set.md</span></span>
+      <span class="sub"><span class="ltr">7</span> חשבוניות · המועד שבהסכם, לא מתי שהכסף באמת נכנס</span>
+      <span class="cmp none">לא נמדדה תקופה קודמת למדד הזה</span>
       <span class="win"><span class="ltr">06/09–06/10</span></span></div>
-    <div class="tile"><span class="lb">עבר מועדו — מחוץ לציר-הזמן</span>
+    <div class="tile"><span class="lb">כסף שעבר מועדו</span>
       <span class="vl"><span class="ltr">29,371</span> ₪</span>
-      <span class="sub"><span class="ltr">4</span> חשבוניות (<span class="ltr">1460 · 1468 · 1505 · 1537</span>)</span>
+      <span class="sub"><span class="ltr">4</span> חשבוניות (<span class="ltr">1460 · 1468 · 1505 · 1537</span>) · אינן על ציר-הזמן שבגרף</span>
       <span class="cmp"><span class="arrow">▼</span> לפני חודש: <span class="ltr">64,326</span> ₪ (<span class="ltr">9</span> חשבוניות)</span>
-      <span class="win">נכון ל-<span class="ltr">06/09</span> · אינו מושפע במסנן-האופק</span></div>
+      <span class="win">נכון ל-<span class="ltr">06/09</span> · אינו מושפע ממסנן-האופק</span></div>
     <div class="tile"><span class="lb">עיריות — ימים לתשלום (חציון)</span>
       <span class="vl"><span class="ltr">68.5</span></span>
       <span class="sub">מול <span class="ltr">34</span> אצל חברה-פרטית · <span class="ltr">56</span> חשבוניות</span>
@@ -1125,7 +1133,7 @@ tr.dim td{color:var(--s500)}
        אם הזריעה תשתנה, משפט קבוע יהפוך לשקר על המסך. -->
   <div class="datanote" style="border-style:solid; border-color:var(--s200)">
     <b>איך "צפוי" מחושב, ומה הוא שווה.</b>
-    <b>צפוי</b> = מועד חוזי (<span class="ltr">invoice_sent_at</span> + <span class="ltr">30</span> יום)
+    <b>צפוי</b> = מועד חוזי (יום שליחת החשבונית + <span class="ltr">30</span> יום)
     <b>+ חציון-האיחור ההיסטורי של אותו לקוח</b>, על <span class="ltr">≥3</span> חשבוניות ששולמו;
     אין די היסטוריה ⇐ חציון-הסגמנט; אין גם זה ⇐ חציון-החברה.
     <b>זו הערכה סטטיסטית מהתנהגות-העבר — לא התחייבות של הלקוח.</b>
@@ -1138,8 +1146,8 @@ tr.dim td{color:var(--s500)}
 
   <div class="chart-card">
     <h3>תזרים צפוי לפי שבוע — מועד חוזי מול מועד צפוי · <span class="ltr">12</span> השבועות הקרובים (<span class="ltr">31/08–22/11/2026</span>)</h3>
-    <p class="chart-note"><span class="ltr">12</span> שבועות קדימה משבוע-<span class="ltr">ISO</span> <span class="ltr">2026-36</span>.
-      מקטעים שווים (📐20) · ערכי-ציר עגולים והציר מתחיל באפס (📐5) ·
+    <!-- 📐20 (מקטעים שווים) · 📐5 (ציר עגול מאפס) — כללי-ציור, אינם נכתבים על המסך (R28). -->
+    <p class="chart-note"><span class="ltr">12</span> שבועות קדימה, החל משבוע <span class="ltr">36</span> של <span class="ltr">2026</span>.
       <b>"עבר מועדו" אינו על הציר</b> — הוא אריח נפרד למעלה.</p>
     <div class="chart-box" dir="ltr" role="figure" aria-label="תזרים צפוי שבועי — מועד חוזי מול מועד צפוי, גרף קווים">
       <svg viewBox="0 0 660 268" width="660" height="268" preserveAspectRatio="xMidYMid meet">
@@ -1181,7 +1189,7 @@ tr.dim td{color:var(--s500)}
         <text class="ax" x="530" y="228" text-anchor="middle">45</text>
         <text class="ax" x="580" y="228" text-anchor="middle">46</text>
         <text class="ax" x="630" y="228" text-anchor="middle">47</text>
-        <text class="ax" x="360" y="248" text-anchor="middle">שבוע-ISO 2026 · ₪ (מוקדם משמאל)</text>
+        <text class="ax" x="360" y="248" text-anchor="middle">שבוע בשנת 2026 · ₪ (המוקדם משמאל)</text>
       </svg>
     </div>
     <div class="legend">
@@ -1206,9 +1214,8 @@ tr.dim td{color:var(--s500)}
         <tr data-testid="fc-row-47"><td>2026-47</td><td>0</td><td>0</td></tr>
       </tbody>
     </table>
-    <p class="chart-note" style="margin:10px 0 0"><b>מה עוד לא נבנה כאן:</b> 📑#7 מבקש "לחיצה על שבוע ← החשבוניות".
-      שיוך כל חשבונית לשבוע-<span class="ltr">ISO</span> אינו ב-<span class="ltr">data-set.md</span> (הסדרה נמדדה מצרפית),
-      ולכן <b>הגרף אינו לחיץ במוקאפ</b> — ולא צויר קרוס-פילטר שאין לו דאטה.</p>
+    <p class="chart-note" style="margin:10px 0 0"><b>מה עוד לא נבנה כאן:</b> לחיצה על שבוע אמורה להציג את החשבוניות שבו.
+      שיוך חשבונית לשבוע עדיין לא נמדד, ולכן <b>הגרף אינו לחיץ במוקאפ</b> — ולא צויר סינון-צולב שאין לו נתונים.</p>
   </div>
 
   <div class="tbl-card">
@@ -1218,20 +1225,20 @@ tr.dim td{color:var(--s500)}
       <table class="data">
         <thead><tr>
           <th scope="col">פרויקט</th><th scope="col">לקוח</th><th scope="col">מועד חוזי</th>
-          <th scope="col">חשבוניות ששולמו</th><th scope="col">חציון-איחור אישי</th><th scope="col" aria-sort="ascending">מועד צפוי ▲</th>
+          <th scope="col">חשבוניות ששילם בעבר</th><th scope="col">חציון-איחור אישי</th><th scope="col" aria-sort="ascending">מועד צפוי ▲</th>
         </tr></thead>
         <tbody>
-          <tr class="click im-host" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1460 · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1460</span><i class="im" aria-hidden="true" style="top:2px; left:-2px">7</i></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">30/05/2026</span></td><td><span class="ltr">160</span></td><td><span class="ltr">+3</span> ימים</td><td><span class="ltr">02/06/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1505 · האגודה למען המדע הצעיר"><td><span class="ltr">1505</span></td><td>האגודה למען המדע הצעיר</td><td><span class="ltr">03/07/2026</span></td><td><span class="ltr">7</span></td><td><span class="ltr">+12</span> ימים</td><td><span class="ltr">15/07/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1468 · מועצה אזורית עמק חפר"><td><span class="ltr">1468</span></td><td>מועצה אזורית עמק חפר</td><td><span class="ltr">10/06/2026</span></td><td><span class="ltr">11</span></td><td><span class="ltr">+41</span> ימים</td><td><span class="ltr">21/07/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1537 · אלמנט הפקות"><td><span class="ltr">1537</span></td><td>אלמנט הפקות</td><td><span class="ltr">05/08/2026</span></td><td><span class="ltr">3</span></td><td><span class="ltr">−9</span> ימים</td><td><span class="ltr">27/07/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1556 · ספיר ייעוץ ארגוני"><td><span class="ltr">1556</span></td><td>ספיר ייעוץ ארגוני</td><td><span class="ltr">14/09/2026</span></td><td><span class="ltr">11</span></td><td><span class="ltr">+3</span> ימים</td><td><span class="ltr">17/09/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1553 · פלטינום נדל&quot;ן"><td><span class="ltr">1553</span></td><td>פלטינום נדל"ן</td><td><span class="ltr">08/09/2026</span></td><td><span class="ltr">9</span></td><td><span class="ltr">+9</span> ימים</td><td><span class="ltr">17/09/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1560 · אינפיניטי גיימינג"><td><span class="ltr">1560</span></td><td>אינפיניטי גיימינג</td><td><span class="ltr">19/09/2026</span></td><td><span class="ltr">4</span></td><td><span class="ltr">−1.5</span> ימים</td><td><span class="ltr">17/09/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1559 · קול ובמה בע&quot;מ"><td><span class="ltr">1559</span></td><td>קול ובמה בע"מ</td><td><span class="ltr">20/09/2026</span></td><td><span class="ltr">11</span></td><td><span class="ltr">−1</span> יום</td><td><span class="ltr">19/09/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1557 · קרן הצפון להשקעות"><td><span class="ltr">1557</span></td><td>קרן הצפון להשקעות</td><td><span class="ltr">20/09/2026</span></td><td><span class="ltr">5</span></td><td><span class="ltr">0</span> ימים</td><td><span class="ltr">20/09/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1561 · עמק חפר אגרו-טק"><td><span class="ltr">1561</span></td><td>עמק חפר אגרו-טק</td><td><span class="ltr">23/09/2026</span></td><td><span class="ltr">6</span></td><td><span class="ltr">−2</span> ימים</td><td><span class="ltr">21/09/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1552 · עיריית נתניה"><td><span class="ltr">1552</span></td><td>עיריית נתניה</td><td><span class="ltr">06/09/2026</span></td><td><span class="ltr">29</span></td>
+          <tr class="click im-host" tabindex="0" role="link" aria-label="כרטיס פרויקט 1460 · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1460</span><i class="im" aria-hidden="true" style="top:2px; left:-2px">7</i></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">30/05/2026</span></td><td><span class="ltr">160</span></td><td><span class="ltr">+3</span> ימים</td><td><span class="ltr">02/06/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1505 · האגודה למען המדע הצעיר"><td><span class="ltr">1505</span></td><td>האגודה למען המדע הצעיר</td><td><span class="ltr">03/07/2026</span></td><td><span class="ltr">7</span></td><td><span class="ltr">+12</span> ימים</td><td><span class="ltr">15/07/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1468 · מועצה אזורית עמק חפר"><td><span class="ltr">1468</span></td><td>מועצה אזורית עמק חפר</td><td><span class="ltr">10/06/2026</span></td><td><span class="ltr">11</span></td><td><span class="ltr">+41</span> ימים</td><td><span class="ltr">21/07/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1537 · אלמנט הפקות"><td><span class="ltr">1537</span></td><td>אלמנט הפקות</td><td><span class="ltr">05/08/2026</span></td><td><span class="ltr">3</span></td><td><span class="ltr">−9</span> ימים</td><td><span class="ltr">27/07/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1556 · ספיר ייעוץ ארגוני"><td><span class="ltr">1556</span></td><td>ספיר ייעוץ ארגוני</td><td><span class="ltr">14/09/2026</span></td><td><span class="ltr">11</span></td><td><span class="ltr">+3</span> ימים</td><td><span class="ltr">17/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1553 · פלטינום נדל&quot;ן"><td><span class="ltr">1553</span></td><td>פלטינום נדל"ן</td><td><span class="ltr">08/09/2026</span></td><td><span class="ltr">9</span></td><td><span class="ltr">+9</span> ימים</td><td><span class="ltr">17/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1560 · אינפיניטי גיימינג"><td><span class="ltr">1560</span></td><td>אינפיניטי גיימינג</td><td><span class="ltr">19/09/2026</span></td><td><span class="ltr">4</span></td><td><span class="ltr">−1.5</span> ימים</td><td><span class="ltr">17/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1559 · קול ובמה בע&quot;מ"><td><span class="ltr">1559</span></td><td>קול ובמה בע"מ</td><td><span class="ltr">20/09/2026</span></td><td><span class="ltr">11</span></td><td><span class="ltr">−1</span> יום</td><td><span class="ltr">19/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1557 · קרן הצפון להשקעות"><td><span class="ltr">1557</span></td><td>קרן הצפון להשקעות</td><td><span class="ltr">20/09/2026</span></td><td><span class="ltr">5</span></td><td><span class="ltr">0</span> ימים</td><td><span class="ltr">20/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1561 · עמק חפר אגרו-טק"><td><span class="ltr">1561</span></td><td>עמק חפר אגרו-טק</td><td><span class="ltr">23/09/2026</span></td><td><span class="ltr">6</span></td><td><span class="ltr">−2</span> ימים</td><td><span class="ltr">21/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1552 · עיריית נתניה"><td><span class="ltr">1552</span></td><td>עיריית נתניה</td><td><span class="ltr">06/09/2026</span></td><td><span class="ltr">29</span></td>
             <td><span class="tip ltr" title="לקוח זה משלם באיחור חציוני 38 יום מעבר למועד החוזי (68 יום מקבלת החשבונית, על סמך 29 חשבוניות ששולמו)">+38</span> ימים</td>
             <td class="over"><span class="ltr">14/10/2026</span></td></tr>
         </tbody>
@@ -1269,11 +1276,11 @@ tr.dim td{color:var(--s500)}
       </table>
     </div>
     <p class="tnote"><b>למה גם "כמה זמן" וגם "מה תקוע":</b> החציון מחושב רק על מה שכבר <b>עבר</b> את השלב, ולכן הוא
-      <b>מתעלם מהתקועים</b> — חמשת הפרויקטים שממתינים כרגע אינם בו, כי אין להם <span class="ltr">invoice_sent_at</span> (📑ב#7).
+      <b>מתעלם מהתקועים</b> — חמשת הפרויקטים שממתינים כרגע אינם בו, כי טרם נשלחה להם חשבונית.
       עמודה אחת בלי השנייה מציגה תמונה ורודה מדי.</p>
     <!-- ⑧ 10.6 · 🔵 להכרעת-ישי: הערת-ישי הייתה גם "מה **עושים** עם המספר" (§👤 8). 📐16 מחייב
          הגדרת-מונח, לא הוראת-פעולה, ואין הכרעה רשומה שמתירה שורת-פעולה בדוח-בקרה ⇒ לא נוספה כאן. -->
-    <p class="tnote" style="color:var(--s400)"><b>מה עדיין פתוח (⑧ 10.6):</b> האם מתחת לטבלה תיווסף שורה שאומרת
+    <p class="tnote" style="color:var(--s400)"><b>מה עדיין פתוח:</b> האם מתחת לטבלה תיווסף שורה שאומרת
       <b>מה לעשות</b> עם המספר (למשל: "שלב שחורג מ-<span class="ltr">7</span> ימים ⇐ לבדוק מול מנהלת-הפרויקטים"),
       או שהדוח נשאר מדידה בלבד — <b>הכרעתך</b>.</p>
   </div>
@@ -1285,11 +1292,11 @@ tr.dim td{color:var(--s500)}
       <table class="data">
         <thead><tr><th scope="col">פרויקט</th><th scope="col">לקוח</th><th scope="col">אירוע</th><th scope="col">נסגר תפעולית</th><th scope="col" aria-sort="descending">ימים מאז האירוע ▼</th></tr></thead>
         <tbody>
-          <tr class="click im-host" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1558 · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1558</span><i class="im" aria-hidden="true" style="top:2px; left:-2px">8</i></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">16/08/2026</span></td><td><span class="ltr">18/08/2026</span></td><td class="over"><span class="ltr">21</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1565 · נובה פארמה בע&quot;מ"><td><span class="ltr">1565</span></td><td>נובה פארמה בע"מ</td><td><span class="ltr">25/08/2026</span></td><td><span class="ltr">26/08/2026</span></td><td><span class="ltr">12</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1566 · מטריקס דאטה בע&quot;מ"><td><span class="ltr">1566</span></td><td>מטריקס דאטה בע"מ</td><td><span class="ltr">26/08/2026</span></td><td><span class="ltr">29/08/2026</span></td><td><span class="ltr">11</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1567 · פלטינום נדל&quot;ן"><td><span class="ltr">1567</span></td><td>פלטינום נדל"ן</td><td><span class="ltr">26/08/2026</span></td><td><span class="ltr">30/08/2026</span></td><td><span class="ltr">11</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1568 · עיריית רעננה"><td><span class="ltr">1568</span></td><td>עיריית רעננה</td><td><span class="ltr">27/08/2026</span></td><td><span class="ltr">29/08/2026</span></td><td><span class="ltr">10</span></td></tr>
+          <tr class="click im-host" tabindex="0" role="link" aria-label="כרטיס פרויקט 1558 · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1558</span><i class="im" aria-hidden="true" style="top:2px; left:-2px">8</i></td><td>אלפא סיסטמס בע"מ</td><td><span class="ltr">16/08/2026</span></td><td><span class="ltr">18/08/2026</span></td><td class="over"><span class="ltr">21</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1565 · נובה פארמה בע&quot;מ"><td><span class="ltr">1565</span></td><td>נובה פארמה בע"מ</td><td><span class="ltr">25/08/2026</span></td><td><span class="ltr">26/08/2026</span></td><td><span class="ltr">12</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1566 · מטריקס דאטה בע&quot;מ"><td><span class="ltr">1566</span></td><td>מטריקס דאטה בע"מ</td><td><span class="ltr">26/08/2026</span></td><td><span class="ltr">29/08/2026</span></td><td><span class="ltr">11</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1567 · פלטינום נדל&quot;ן"><td><span class="ltr">1567</span></td><td>פלטינום נדל"ן</td><td><span class="ltr">26/08/2026</span></td><td><span class="ltr">30/08/2026</span></td><td><span class="ltr">11</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1568 · עיריית רעננה"><td><span class="ltr">1568</span></td><td>עיריית רעננה</td><td><span class="ltr">27/08/2026</span></td><td><span class="ltr">29/08/2026</span></td><td><span class="ltr">10</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -1303,23 +1310,23 @@ tr.dim td{color:var(--s500)}
     </div>
   </div>
 
-  <p class="states-cap">חמשת מצבי-המעטפת שהדף חייב לדעת לצייר (📐10):</p>
+  <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
   <div class="states">
     <div class="st"><b>1 · טעינה</b>שלד-אריחים, גרף ושלוש טבלאות<div class="skel-row" style="width:70%"></div></div>
     <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין חשבוניות באופק שנבחר · [נקה מסננים]"</div>
     <div class="st"><b>3 · ריק-באמת</b>"אין נתונים עדיין" — שלוש הטבלאות ריקות</div>
     <div class="st"><b>4 · אין-הרשאה</b>"לא זמין בתפקידך"</div>
-    <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב] · לקוח בלי היסטוריה ⇒ "צפוי" נופל ל-"חוזי" + בועה</div>
+    <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב] · לקוח בלי היסטוריית-תשלום ⇒ "צפוי" מוצג לפי המועד החוזי, עם הסבר</div>
   </div>
 
   <p class="def-footer">הגדרות: <b>"צפוי"</b> = מועד חוזי + חציון-האיחור של אותו לקוח (<span class="ltr">≥3</span> ששולמו; אחרת סגמנט; אחרת חברה) —
-    <b>לא</b> ממוצע ולא "סבב ה-<span class="ltr">10</span> לחודש" (נמדד <span class="ltr">1/56</span> ונדחה) ·
+    <b>לא</b> ממוצע ולא "סבב ה-<span class="ltr">10</span> לחודש" ·
     <b>חציון-איחור אישי</b> נמדד מעבר למועד החוזי, לא מיום קבלת החשבונית (<span class="ltr">38</span> מעבר לחוזי = <span class="ltr">68</span> מהחשבונית) ·
-    <b>"צוואר-בקבוק"</b> = חציון-ימים בין שתי חותמות-זמן, אינו ספירת תקועים ·
+    <b>"צוואר-בקבוק"</b> = חציון-הימים בין שני מועדים בתהליך; אינו ספירת התקועים ·
     <b>"תקוע"</b> = נסגר תפעולית וטרם נשלחה חשבונית — אינו בחישוב החציון.</p>
   <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">06/09/2026</span> — <span class="ltr">11</span> חשבוניות + חציון-איחור אישי ·
     הסדרה השבועית · חציוני צווארי-הבקבוק · חמשת התקועים · חציון עיריות <span class="ltr">68.5</span> ·
-    מדרגי-הגיול לפני חודש · 🎭 דמו: אין · 📐 נגזר: מועד-צפוי · "עבר מועדו" (<span class="ltr">29,371</span> ₪ · <span class="ltr">64,326</span> ₪ אשתקד-חודש) · שורת-"אז מה".</p>
+    מדרגי-הגיול לפני חודש · 🎭 דמו: אין · 📐 נגזר: מועד-צפוי · "עבר מועדו" (<span class="ltr">29,371</span> ₪ · <span class="ltr">64,326</span> ₪ לפני חודש) · שורת-"אז מה".</p>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
@@ -1333,10 +1340,10 @@ tr.dim td{color:var(--s500)}
   <p class="pop">אוכלוסייה: כל <span class="ltr">16</span> שורות שינויי-התכולה שבמסד · הוצאו: אין ·
     <span class="ltr">n=16</span> ב-<span class="ltr">13</span> פרויקטים מתוך <span class="ltr">827</span>.</p>
 
-  <div class="basebanner"><b>בסיס:</b> <span class="ltr">16</span> שינויי-תכולה ב-<span class="ltr">13</span> מתוך <span class="ltr">827</span> פרויקטים
-    (<span class="ltr">1.6%</span>) — כל אחוז שנגזר מכאן הוא רעש עד שהזריעה (הכרעה <span class="ltr">11</span>) תרוץ.</div>
+  <div class="basebanner"><b>בסיס קטן:</b> <span class="ltr">16</span> שינויי-תכולה ב-<span class="ltr">13</span> מתוך <span class="ltr">827</span> פרויקטים
+    (<span class="ltr">1.6%</span>) — כל אחוז שנגזר מכאן עדיין רועש.</div>
 
-  <p class="so-what">תוספות הוסיפו <span class="ltr">4,368</span> ₪ נטו (<span class="ltr">0.1%</span> מהמחזור) ב-<span class="ltr">12</span> אירועים; שולי-התוספות <span class="ltr">52.4%</span> מול <span class="ltr">60.1%</span> בחברה.</p>
+  <p class="so-what">לבדוק את תמחור התוספות: שולי <span class="ltr">52.4%</span> מול <span class="ltr">60.1%</span> בחברה, על <span class="ltr">4,368</span> ₪ נטו ב-<span class="ltr">12</span> אירועים — אך הבסיס הוא <span class="ltr">16</span> שינויים ב-<span class="ltr">13</span> מתוך <span class="ltr">827</span> פרויקטים, ולכן זו עדיין לא מסקנה.</p>
 
   <!-- ✏️ 07/09/2026 · תיקון אריתמטי (m11-data-fidelity §2.1 · m11-ishay-number-checks §ו — ממצא חמור מס' 3):
        הערכים הקודמים (4,743 · −375) חוברו מ**שמונה קבוצות-ה-sku של הגרף למטה** ולא מסכימת
@@ -1346,17 +1353,17 @@ tr.dim td{color:var(--s500)}
          Σ(delta_qty×unit_price_snapshot) על 12 שורות חיוביות = 4,884 ₪
          Σ על 4 שורות שליליות = −516 ₪ · נטו = 4,368 ₪ (הנטו כבר היה נכון ולא שונה). -->
   <div class="tiles">
-    <div class="tile"><span class="lb">ברוטו-תוספות</span>
+    <div class="tile"><span class="lb">תוספות — ברוטו</span>
       <span class="vl"><span class="ltr">4,884</span> ₪</span>
-      <span class="sub"><span class="ltr">12</span> שורות עם <span class="ltr">delta_qty &gt; 0</span></span>
+      <span class="sub"><span class="ltr">12</span> שורות שבהן נוספה כמות</span>
       <span class="cmp none">אין תקופה-קודמת — כל <span class="ltr">16</span> השורות נזרעו ב-<span class="ltr">03/09/2026</span></span>
       <span class="win">כל הזמנים</span></div>
-    <div class="tile"><span class="lb">ברוטו-צמצומים</span>
+    <div class="tile"><span class="lb">צמצומים — ברוטו</span>
       <span class="vl"><span class="ltr">−516</span> ₪</span>
-      <span class="sub"><span class="ltr">4</span> שורות עם <span class="ltr">delta_qty &lt; 0</span></span>
+      <span class="sub"><span class="ltr">4</span> שורות שבהן הופחתה כמות</span>
       <span class="cmp none">אין תקופה-קודמת — כנ"ל</span>
       <span class="win">כל הזמנים</span></div>
-    <div class="tile"><span class="lb">נטו — השפעת-הכנסה</span>
+    <div class="tile"><span class="lb">השפעת-הכנסה נטו</span>
       <span class="vl"><span class="ltr">4,368</span> ₪</span>
       <span class="sub"><span class="ltr">4,368</span> ₪ מתוך מחזור של <span class="ltr">4,752,043</span> ₪ = <span class="ltr">0.1%</span></span>
       <span class="cmp none">אין תקופה-קודמת — כנ"ל</span>
@@ -1369,11 +1376,11 @@ tr.dim td{color:var(--s500)}
   </div>
 
   <div class="chart-card">
-    <h3>השפעת-הכנסה לפי סוג-תוספת — ✏️ <b>עמודות אופקיות, ממוין יורד</b> · כל הזמנים (כל <span class="ltr">16</span> שינויי-התכולה)</h3>
-    <p class="chart-note">✏️ <b>תוויות-השורות הן שמות-המוצרים</b> (<span class="ltr">products.item_name</span>), לא קודי-מק"ט —
-      המק"ט עצמו יושב לצד השם בעמודת "מוצר (מק"ט)" בטבלה למטה, למי שמזמין מהספק.
-      <b>שימו לב:</b> הסכומים בגרף מקובצים <b>לפי מוצר</b>, ולכן מוצר עם תוספות וצמצומים באותו שם מוצג
-      בערך-הנטו שלו — זו הסיבה ש"תג שם רגיל (חלק)" מופיע כ-<span class="ltr">+27</span> ₪ ולא כשתי עמודות. ✏️ <b>ומאז המעבר לאופקי — כשורה אחת, לא כעמודה אחת.</b></p>
+    <h3>השפעת-הכנסה לפי סוג-תוספת · כל הזמנים (כל <span class="ltr">16</span> שינויי-התכולה)</h3>
+    <p class="chart-note"><b>תוויות-השורות הן שמות-המוצרים</b>, לא קודי-מק"ט —
+      המק"ט עצמו יושב לצד השם בעמודת "מוצר (מק"ט)" בטבלה למטה, למי שמזמינה מהספק.
+      הסכומים בגרף מקובצים <b>לפי מוצר</b>, ולכן מוצר שהיו לו גם תוספות וגם צמצומים מוצג בערך-הנטו שלו —
+      זו הסיבה ש"תג שם רגיל (חלק)" מופיע כשורה אחת של <span class="ltr">+27</span> ₪ ולא כשתיים.</p>
     <!-- ✏️ 07/09/2026 (סבב מאוחר) · **הכרעת-ישי: עמודות אנכיות ⇐ אופקיות ממוינות יורד.**
          🔍 **מה נמדד:** 2,400 מול 1,080 · 510 · 390 · 336 · 27 · −165 · −210 ⇒ **6 מתוך 8 העמודות
          מתחת לרבע-הגובה**, ושלוש מהן פס דק שאי-אפשר להשוות בעין.
@@ -1387,15 +1394,13 @@ tr.dim td{color:var(--s500)}
          ⚠️ **ומה שנשאר חסר וסומן ככזה:** 📊 מבקש לדוח 8 **שתי סדרות — הכנסה · עלות**, ובגרף יש
          **אחת**. פילוח-העלות פר-מוצר אינו ב-data-set.md, וזה בדיוק פריט ⑧ 11.3 שעודנו 🔵 פתוח.
          **לא הומצאה סדרת-עלות** כדי לקיים את 📊. -->
-    <p class="chart-note">✏️ <b>הגרף אופקי וממוין יורד</b> — <b>אותו דפוס בדיוק</b> כמו גרף
-      סטיית-התקציב בדוח <span class="ltr">5</span> באותה לשונית: עמודות אופקיות, קו-אפס אנכי,
-      רוחב יורד, שם מימין וערך לצד העמודה. ‏<b>למה:</b> ‏<span class="ltr">2,400</span> ₪ מול
-      <span class="ltr">27</span> ₪ על ציר אנכי אחד הופכים שש מתוך שמונה העמודות לפס דק —
-      אופקית כל שורה מקבלת <b>תווית מלאה בשורה אחת</b> ואת ערכה לצידה.
-      ממוין לפי המדד שהגרף מציג — השפעת-הכנסה יורדת, וצמצומים בסוף (📐7).
-      ערכי-ציר עגולים, קו-אפס גלוי, <b>בלי קטיעת-ציר ובלי סקאלה לוגריתמית</b> (📐5).
-      <b>פילוח-העלות פר-מוצר אינו ב-<span class="ltr">data-set.md</span></b>
-      ולכן 📊 שמבקש "הכנסה · עלות" מיושם כאן <b>בחצי</b> — ר' כרטיס-המסך ⑧ <span class="ltr">11.3</span>.</p>
+    <!-- נימוקי-העיצוב, שאינם טקסט-מסך (R28): הגרף אופקי וממוין יורד — אותו דפוס כמו גרף
+         סטיית-התקציב בדוח 5 באותה לשונית (עמודות אופקיות, קו-אפס אנכי, שם מימין וערך לצידו).
+         למה: 2,400 ₪ מול 27 ₪ על ציר אנכי אחד הופכים שש מתוך שמונה העמודות לפס דק.
+         📐7 — ממוין לפי המדד המוצג, וצמצומים בסוף · 📐5 — בלי קטיעת-ציר ובלי סקאלה לוגריתמית.
+         📊 מבקש "הכנסה · עלות" ומיושם כאן בחצי; ר' כרטיס-המסך ⑧ 11.3. -->
+    <p class="chart-note"><b>הגרף מציג הכנסה בלבד, לא עלות</b> — פילוח-העלות פר-מוצר עדיין לא נמדד.
+      העלות והרווח של כל שורה יושבים בטבלה שמתחת.</p>
     <div class="chart-box" dir="ltr" role="figure" aria-label="השפעת-הכנסה לפי סוג-תוספת, עמודות אופקיות ממוינות מהגבוה לנמוך, כולל שני ערכים שליליים; קו-אפס אנכי">
       <svg viewBox="0 0 660 276" width="660" height="276" preserveAspectRatio="xMidYMid meet">
         <line x1="222" y1="14" x2="222" y2="226" stroke="#F1F5F9"/>
@@ -1445,16 +1450,16 @@ tr.dim td{color:var(--s500)}
         <rect x="258.5" y="204" width="26.5" height="16" fill="#96F7E4" stroke="#009689"/>
         <text class="vlab" x="291" y="216" text-anchor="start">▼ -210 ₪ צמצום</text>
 
-        <text class="ax" x="411" y="264" text-anchor="middle">השפעת-הכנסה ₪ (חתום) · קו-אפס אנכי · מוצר בכל שורה</text>
+        <text class="ax" x="411" y="264" text-anchor="middle">השפעת-הכנסה ב-₪ · תוספת מימין לקו-האפס, צמצום משמאלו</text>
       </svg>
     </div>
     <div class="legend">
       <span><i style="background:#009689"></i>תוספת (הכנסה חיובית)</span>
-      <span><i style="background:#96F7E4; border-color:#009689"></i>צמצום-תכולה (הכנסה שלילית) — ✏️ העמודה פונה <b>שמאלה מקו-האפס</b>, ולצד ערכה כתוב <span class="ltr">▼</span> ו<b>"צמצום"</b> (📐19 — לא צבע לבדו)</span>
+      <span><i style="background:#96F7E4; border-color:#009689"></i>צמצום-תכולה (הכנסה שלילית) — העמודה פונה <b>שמאלה מקו-האפס</b>, ולצד ערכה כתוב <span class="ltr">▼</span> ו<b>"צמצום"</b></span>
     </div>
     <table class="sr-only">
       <caption>השפעת-הכנסה לפי סוג-תוספת</caption>
-      <thead><tr><th scope="col">מוצר (מק"ט)</th><th scope="col">שורות</th><th scope="col">Σ delta_qty</th><th scope="col">השפעת-הכנסה ₪</th></tr></thead>
+      <thead><tr><th scope="col">מוצר (מק"ט)</th><th scope="col">שורות</th><th scope="col">שינוי-כמות מצטבר</th><th scope="col">השפעת-הכנסה ₪</th></tr></thead>
       <tbody>
         <tr data-testid="chg-row-host"><td>דיילת נוספת (hostess_count)</td><td>3</td><td>3</td><td>2,400</td></tr>
         <tr data-testid="chg-row-bsatlan"><td>שרוך סאטן - ממותג (B-SAT-LAN)</td><td>3</td><td>120</td><td>1,080</td></tr>
@@ -1492,21 +1497,21 @@ tr.dim td{color:var(--s500)}
            סה"כ שמונה השורות שעל העמוד: הכנסה 2,479 ₪ · עלות 1,205 ₪ · רווח 1,274 ₪
          ⚠️ הרווח ב-₪ שלמים (📐4) — האגורות שייכות למחיר/עלות-יחידה בלבד, כפי שכבר כתוב
          בשורת-ההגדרות; הרווח הוא מכפלה מצטברת ולא מחיר-יחידה. -->
-    <p class="tnote"><b>שמונה השורות שעל העמוד</b> (📐8 — הפאג'ר סופר את מה שהטבלה מציגה):
+    <p class="tnote"><b>שמונה השורות שעל העמוד</b>:
       הכנסה <span class="ltr">2,479</span> ₪ · עלות <span class="ltr">1,205</span> ₪ · <b>רווח <span class="ltr">1,274</span> ₪</b>.
       הסכומים של <b>כל <span class="ltr">16</span> השורות</b> יושבים באריחים שלמעלה, לא כאן.</p>
     <div class="tbl-scroll">
       <table class="data">
         <thead><tr><th scope="col">#</th><th scope="col">פרויקט</th><th scope="col">לקוח</th><th scope="col">מוצר (מק"ט)</th><th scope="col">שינוי-כמות</th><th scope="col">מחיר שנשמר</th><th scope="col">עלות שנשמרה</th><th scope="col">רווח</th><th scope="col" aria-sort="descending">תאריך ▼</th></tr></thead>
         <tbody>
-          <tr class="click im-host" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: כנס לקוח — רישום והכוונה · הפקות דרור"><td><span class="ltr">18</span><i class="im" aria-hidden="true" style="top:2px; left:-2px">6</i></td><td>כנס לקוח — רישום והכוונה</td><td>הפקות דרור</td><td style="white-space:normal">תג שם רגיל (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">REG-TAG</span></td><td><span class="ltr">−30</span></td><td><span class="ltr">2.20</span> ₪</td><td><span class="ltr">1.00</span> ₪</td><td><span class="ltr">−36</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: ערב גאלה שנתי · אופק ביטוח ופיננסים"><td><span class="ltr">17</span></td><td>ערב גאלה שנתי</td><td>אופק ביטוח ופיננסים</td><td style="white-space:normal">שרוך סאטן - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-SAT-LAN</span></td><td><span class="ltr">+40</span></td><td><span class="ltr">9.00</span> ₪</td><td><span class="ltr">4.00</span> ₪</td><td><span class="ltr">200</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: יום עיון ללקוחות · נובה פארמה בע&quot;מ"><td><span class="ltr">16</span></td><td>יום עיון ללקוחות</td><td>נובה פארמה בע"מ</td><td style="white-space:normal">דיילת נוספת<br><span style="font-size:11px; color:var(--s500)">אינו מק"ט</span></td><td><span class="ltr">+1</span></td><td><span class="ltr">800.00</span> ₪</td><td><span class="ltr">420.00</span> ₪</td><td><span class="ltr">380</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: טקס פרסים עירוני · עיריית נתניה"><td><span class="ltr">15</span></td><td>טקס פרסים עירוני</td><td>עיריית נתניה</td><td style="white-space:normal">שרוך בד (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">FAB-LAN</span></td><td><span class="ltr">+60</span></td><td><span class="ltr">3.70</span> ₪</td><td><span class="ltr">1.50</span> ₪</td><td><span class="ltr">132</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: טקס פרסים עירוני · עיריית נתניה"><td><span class="ltr">14</span></td><td>טקס פרסים עירוני</td><td>עיריית נתניה</td><td style="white-space:normal">תג שם רגיל (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">REG-TAG</span></td><td><span class="ltr">+60</span></td><td><span class="ltr">2.80</span> ₪</td><td><span class="ltr">1.00</span> ₪</td><td><span class="ltr">108</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: מפגש משקיעים רבעוני · מוטורס ישראל בע&quot;מ"><td><span class="ltr">13</span></td><td>מפגש משקיעים רבעוני</td><td>מוטורס ישראל בע"מ</td><td style="white-space:normal">תג שם רגיל - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-REG-TAG</span></td><td><span class="ltr">−30</span></td><td><span class="ltr">5.50</span> ₪</td><td><span class="ltr">2.50</span> ₪</td><td><span class="ltr">−90</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: ערב גאלה שנתי · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">12</span></td><td>ערב גאלה שנתי</td><td>אלפא סיסטמס בע"מ</td><td style="white-space:normal">שרוך סאטן - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-SAT-LAN</span></td><td><span class="ltr">+40</span></td><td><span class="ltr">9.00</span> ₪</td><td><span class="ltr">4.00</span> ₪</td><td><span class="ltr">200</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט: השקה מסחרית · הפקות דרור"><td><span class="ltr">11</span></td><td>השקה מסחרית</td><td>הפקות דרור</td><td style="white-space:normal">דיילת נוספת<br><span style="font-size:11px; color:var(--s500)">אינו מק"ט</span></td><td><span class="ltr">+1</span></td><td><span class="ltr">800.00</span> ₪</td><td><span class="ltr">420.00</span> ₪</td><td><span class="ltr">380</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
+          <tr class="click im-host" tabindex="0" role="link" aria-label="כרטיס פרויקט: כנס לקוח — רישום והכוונה · הפקות דרור"><td><span class="ltr">18</span><i class="im" aria-hidden="true" style="top:2px; left:-2px">6</i></td><td>כנס לקוח — רישום והכוונה</td><td>הפקות דרור</td><td style="white-space:normal">תג שם רגיל (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">REG-TAG</span></td><td><span class="ltr">−30</span></td><td><span class="ltr">2.20</span> ₪</td><td><span class="ltr">1.00</span> ₪</td><td><span class="ltr">−36</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט: ערב גאלה שנתי · אופק ביטוח ופיננסים"><td><span class="ltr">17</span></td><td>ערב גאלה שנתי</td><td>אופק ביטוח ופיננסים</td><td style="white-space:normal">שרוך סאטן - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-SAT-LAN</span></td><td><span class="ltr">+40</span></td><td><span class="ltr">9.00</span> ₪</td><td><span class="ltr">4.00</span> ₪</td><td><span class="ltr">200</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט: יום עיון ללקוחות · נובה פארמה בע&quot;מ"><td><span class="ltr">16</span></td><td>יום עיון ללקוחות</td><td>נובה פארמה בע"מ</td><td style="white-space:normal">דיילת נוספת<br><span style="font-size:11px; color:var(--s500)">אינו מק"ט</span></td><td><span class="ltr">+1</span></td><td><span class="ltr">800.00</span> ₪</td><td><span class="ltr">420.00</span> ₪</td><td><span class="ltr">380</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט: טקס פרסים עירוני · עיריית נתניה"><td><span class="ltr">15</span></td><td>טקס פרסים עירוני</td><td>עיריית נתניה</td><td style="white-space:normal">שרוך בד (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">FAB-LAN</span></td><td><span class="ltr">+60</span></td><td><span class="ltr">3.70</span> ₪</td><td><span class="ltr">1.50</span> ₪</td><td><span class="ltr">132</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט: טקס פרסים עירוני · עיריית נתניה"><td><span class="ltr">14</span></td><td>טקס פרסים עירוני</td><td>עיריית נתניה</td><td style="white-space:normal">תג שם רגיל (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">REG-TAG</span></td><td><span class="ltr">+60</span></td><td><span class="ltr">2.80</span> ₪</td><td><span class="ltr">1.00</span> ₪</td><td><span class="ltr">108</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט: מפגש משקיעים רבעוני · מוטורס ישראל בע&quot;מ"><td><span class="ltr">13</span></td><td>מפגש משקיעים רבעוני</td><td>מוטורס ישראל בע"מ</td><td style="white-space:normal">תג שם רגיל - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-REG-TAG</span></td><td><span class="ltr">−30</span></td><td><span class="ltr">5.50</span> ₪</td><td><span class="ltr">2.50</span> ₪</td><td><span class="ltr">−90</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט: ערב גאלה שנתי · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">12</span></td><td>ערב גאלה שנתי</td><td>אלפא סיסטמס בע"מ</td><td style="white-space:normal">שרוך סאטן - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-SAT-LAN</span></td><td><span class="ltr">+40</span></td><td><span class="ltr">9.00</span> ₪</td><td><span class="ltr">4.00</span> ₪</td><td><span class="ltr">200</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט: השקה מסחרית · הפקות דרור"><td><span class="ltr">11</span></td><td>השקה מסחרית</td><td>הפקות דרור</td><td style="white-space:normal">דיילת נוספת<br><span style="font-size:11px; color:var(--s500)">אינו מק"ט</span></td><td><span class="ltr">+1</span></td><td><span class="ltr">800.00</span> ₪</td><td><span class="ltr">420.00</span> ₪</td><td><span class="ltr">380</span> ₪</td><td><span class="ltr">03/09/2026</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -1520,25 +1525,25 @@ tr.dim td{color:var(--s500)}
     </div>
   </div>
 
-  <p class="states-cap">חמשת מצבי-המעטפת שהדף חייב לדעת לצייר (📐10):</p>
+  <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
   <div class="states">
     <div class="st"><b>1 · טעינה</b>שלד-אריחים, גרף וטבלה<div class="skel-row" style="width:65%"></div></div>
-    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין שינויי-תכולה בתקופה שנבחרה · [נקה מסננים]"</div>
+    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין שינויי-תכולה ללקוח שנבחר · [נקה מסננים]"</div>
     <div class="st"><b>3 · ריק-באמת</b>"אין נתונים עדיין"</div>
     <div class="st"><b>4 · אין-הרשאה</b>"לא זמין בתפקידך"</div>
-    <div class="st"><b>5 · תקלה</b><span class="ltr">project_changes</span> היא <span class="ltr">deny-all</span> ⇒ ה-<span class="ltr">RPC</span> הרוחבי נכשל = "לא ניתן לטעון את הנתונים.", <b>לא</b> טבלה ריקה</div>
+    <div class="st"><b>5 · תקלה</b>הרשאת-הקריאה לשינויי-התכולה חסומה ⇒ "לא ניתן לטעון את הנתונים.", <b>לא</b> טבלה ריקה</div>
   </div>
 
-  <p class="def-footer">הגדרות: <b>"תוספת-שטח"</b> = שורת <span class="ltr">project_changes</span> עם <span class="ltr">delta_qty &gt; 0</span> — שינוי שנרשם אחרי אישור ההצעה ·
-    <b>"צמצום"</b> = <span class="ltr">delta_qty &lt; 0</span>, נספר באותו דוח עם הכנסה שלילית ·
-    <b>מחיר/עלות שנשמרה</b> = <span class="ltr">unit_price_snapshot</span> / <span class="ltr">unit_cost_snapshot</span> — הערך בזמן השינוי, לא המחירון היום (מחירי-יחידה, ולכן עם אגורות) ·
-    <b>"מחזור"</b> = Σ ההכנסה של <span class="ltr">701</span> הפרויקטים שהסתיימו, כל הזמנים ·
+  <p class="def-footer">הגדרות: <b>"תוספת-שטח"</b> = הוספת כמות שנרשמה אחרי אישור ההצעה ·
+    <b>"צמצום"</b> = הפחתת כמות; נספרת באותו דוח, עם הכנסה שלילית ·
+    <b>מחיר/עלות שנשמרה</b> = הערך שנשמר ברגע השינוי, לא המחירון של היום (מחירי-יחידה, ולכן עם אגורות) ·
+    <b>"מחזור"</b> = סך ההכנסה של <span class="ltr">701</span> הפרויקטים שהסתיימו, כל הזמנים ·
     <b>שולי-התוספות</b> = (הכנסה − עלות) ÷ הכנסה ·
-    ✏️ <b>"רווח" (בטבלה)</b> = שינוי-כמות × (מחיר שנשמר − עלות שנשמרה), ב-₪ שלמים — <b>שורה שרווחה קרוב לאפס היא תוספת שניתנה במחיר-העלות</b>, וזה בדיוק הממצא שהדוח קיים בשבילו.</p>
-  <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">06/09/2026</span> — כל <span class="ltr">16</span> שורות <span class="ltr">project_changes</span> ·
+    <b>"רווח" (בטבלה)</b> = שינוי-כמות × (מחיר שנשמר − עלות שנשמרה), ב-₪ שלמים — <b>שורה שרווחה קרוב לאפס היא תוספת שניתנה במחיר-העלות</b>, וזה בדיוק הממצא שהדוח קיים בשבילו.</p>
+  <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">06/09/2026</span> — כל <span class="ltr">16</span> שורות שינויי-התכולה ·
     שמונת הסוגים · המחזור <span class="ltr">4,752,043</span> ₪ · שולי-<span class="ltr">2026</span> <span class="ltr">60.1%</span> להשוואה ·
-    שמות-המוצרים מ-<span class="ltr">products.item_name</span> ·
-    🎭 דמו: אין — <span class="ltr">data-set.md</span> תייג את כל הדף 🌱 · 📐 נגזר: ברוטו-תוספות <span class="ltr">4,884</span> ₪ · ברוטו-צמצומים <span class="ltr">−516</span> ₪ · שולי-התוספות · שורת-"אז מה".</p>
+    שמות-המוצרים מקטלוג-המוצרים ·
+    🎭 דמו: אין — כל הדף מהמסד 🌱 · 📐 נגזר: תוספות-ברוטו <span class="ltr">4,884</span> ₪ · צמצומים-ברוטו <span class="ltr">−516</span> ₪ · שולי-התוספות · שורת-"אז מה".</p>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
@@ -1548,11 +1553,11 @@ tr.dim td{color:var(--s500)}
 
   <h1>צריכת ציוד</h1>
   <p class="psub">כמה ציוד נצרך וכמה להזמין?</p>
-  <p class="psub">כל הזמנים · כל הלקוחות · אריחי-<span class="ltr">YTD</span> נחתכים ל-<span class="ltr">01/01–06/09</span></p>
+  <p class="psub">כל הזמנים · כל הלקוחות · אריחי "מתחילת השנה" נחתכים ל-<span class="ltr">01/01–06/09</span></p>
   <p class="pop">אוכלוסייה: כל <span class="ltr">1,771</span> שורות הלוגיסטיקה, כלל-הזמנים, כולל פרויקטים מבוטלים ·
     הוצאו: אין · <span class="ltr">n=1,771</span>. בלוק ההזמנה למטה חותך לאירועים שטרם התקיימו (<span class="ltr">06/09–06/10</span>).</p>
 
-  <p class="so-what">שרוך סאטן - ממותג (<span class="ltr">B-SAT-LAN</span>): הוזמנו <span class="ltr">58,490</span>, הגיעו <span class="ltr">54,110</span> (פער <span class="ltr">7.5%</span>); עלות <span class="ltr">233,480</span> ₪. להזמנה בחודש הקרוב: תג שם אקולוגי (חלק) — <span class="ltr">2,940</span> יחידות ב-<span class="ltr">9</span> אירועים.</p>
+  <p class="so-what">להזמין <span class="ltr">2,940</span> יחידות של "תג שם אקולוגי (חלק)" ל-<span class="ltr">9</span> האירועים שבחודש הקרוב — הכמות הגדולה ביותר בטבלת-ההזמנה; והפער הגדול ביותר בין מה שהוזמן למה שהגיע הוא ב"שרוך סאטן - ממותג", <span class="ltr">7.5%</span>.</p>
 
   <!-- ✏️ 07/09/2026 · שתי הבהרות-קנה-מידה, ששתיהן ממצאי-ביקורת ולא תוספת-תוכן:
        (1) m11-ishay-number-checks §ג — ישי קרא 58,490 כמספר של אירוע אחד ("סביר בין 100 ל-800").
@@ -1560,7 +1565,7 @@ tr.dim td{color:var(--s500)}
            ו-648 מתוך 825 (78.5%) נופלים בדיוק בטווח שהוא נקב. הדאטה תקינה; חסר היה **עוגן פר-אירוע**.
        (2) ביקורת-ישי §👤 14 — 2.5% באריח מול 7.5% בשורת-"אז מה" על אותו דף, בלי שכתוב מה מפריד ביניהם. -->
   <p class="chart-note" style="margin:-8px 0 14px; font-size:12px; color:var(--s600)">
-    <b>קנה-מידה, כדי ששני המספרים לא ייקראו לא-נכון:</b>
+    <b>קנה-מידה, כדי ששני המספרים לא ייקראו לא נכון:</b>
     <b>אירוע ממוצע צורך כ-<span class="ltr">530</span> יחידות ציוד</b> (חציון <span class="ltr">461</span>, על <span class="ltr">825</span> אירועים
     עם שורות-לוגיסטיקה) — ולכן <span class="ltr">58,490</span> הוא <b>סכום כל-החברה לאורך כל השנים למוצר אחד</b>, לא כמות של אירוע.
     · <b>ושני אחוזי-הפער אינם סותרים:</b> <span class="ltr">2.5%</span> באריח הוא <b>הפער הכולל על כל המוצרים ב-<span class="ltr">2026</span></b>
@@ -1569,12 +1574,12 @@ tr.dim td{color:var(--s500)}
 
   <!-- 📑ב#11 — אריחים ב-₪ ולא בכמות-מסוכמת (סכימה חוצת-יחידות היא סכום חסר-משמעות) -->
   <div class="tiles">
-    <div class="tile"><span class="lb">עלות ציוד (מוזמן × עלות-יחידה)</span>
+    <div class="tile"><span class="lb">עלות ציוד בתקופה</span>
       <span class="vl"><span class="ltr">339,001</span> ₪</span>
       <span class="sub"><span class="ltr">514</span> שורות-לוגיסטיקה בתקופה</span>
       <span class="cmp"><span class="arrow">▲</span> <span class="ltr">2025</span> באותו טווח: <span class="ltr">268,293</span> ₪ (<span class="ltr">+26.4%</span>)</span>
       <span class="win"><span class="ltr">01/01–06/09</span></span></div>
-    <div class="tile"><span class="lb">פער הוזמן ← הגיע</span>
+    <div class="tile"><span class="lb">פער הוזמן מול הגיע</span>
       <span class="vl"><span class="ltr">2.5%</span></span>
       <span class="sub"><span class="ltr">3,010</span> יחידות מתוך <span class="ltr">122,788</span> מתוכננות</span>
       <span class="cmp"><span class="arrow">▼</span> <span class="ltr">2025</span> באותו טווח: <span class="ltr">4.5%</span></span>
@@ -1584,10 +1589,10 @@ tr.dim td{color:var(--s500)}
       <span class="sub">סכום תשעת המוצרים בטבלה למטה</span>
       <span class="cmp none">מדד מצטבר — אין תקופה-קודמת מהגדרה</span>
       <span class="win">כל הזמנים</span></div>
-    <div class="tile"><span class="lb">שורות ציוד שהמחיר שלהן מוערך ולא נמדד (㉗)</span>
+    <div class="tile"><span class="lb">שורות ציוד במחיר מוערך</span>
       <span class="vl"><span class="ltr">3</span></span>
-      <span class="sub">מתוך <span class="ltr">1,771</span> שורות · <span class="tip" title="120 יחידות של &quot;שרוך סאטן - ממותג&quot; × עלות-יחידה נגזרת 3.99 ₪ (233,480 ₪ ÷ 58,490 יחידות)">כ-<span class="ltr">479</span> ₪ שהמחיר שלהם מוערך</span></span>
-      <span class="cmp none">לא נמדד לתקופה קודמת ב-<span class="ltr">data-set.md</span></span>
+      <span class="sub">מתוך <span class="ltr">1,771</span> שורות · <span class="tip" title="120 יחידות של &quot;שרוך סאטן - ממותג&quot; × עלות-יחידה מוערכת של 3.99 ₪">כ-<span class="ltr">479</span> ₪ שהמחיר שלהן מוערך</span></span>
+      <span class="cmp none">לא נמדדה תקופה קודמת למדד הזה</span>
       <span class="win">כל הזמנים</span></div>
   </div>
 
@@ -1598,8 +1603,9 @@ tr.dim td{color:var(--s500)}
        🚫 לא נמחק: האודיט עצמו מסמן זאת "הכרעת-עיצוב, לא ממצא" ⇒ הכרעתך. -->
   <div class="chart-card">
     <h3>עלות לפי מוצר — המדד שאפשר לסכום · כל הזמנים</h3>
-    <p class="chart-note">‏₪ הוא המדד היחיד שמותר לסכום בין מק"טים (<span class="ltr">01WEB</span> נמדד ביחידות-שירות, ~<span class="ltr">1,200</span> ₪ ליחידה, לצד תגים של ~<span class="ltr">4</span> ₪).
-      ממוין לפי העלות שהוא מציג (📐7) · ערכי-ציר עגולים, ציר מאפס (📐5).</p>
+    <!-- 📐7 (ממוין לפי המדד המוצג) · 📐5 (ציר עגול מאפס) — כללי-ציור, לא טקסט-מסך (R28). -->
+    <p class="chart-note">‏₪ הוא המדד היחיד שמותר לסכום בין מוצרים — "הקמת אתר רישום" נמדד ביחידות-שירות,
+      כ-<span class="ltr">1,200</span> ₪ ליחידה, לצד תגים של כ-<span class="ltr">4</span> ₪. ממוין לפי העלות.</p>
     <div class="chart-box" dir="ltr" role="figure" aria-label="עלות לפי מוצר, עמודות">
       <svg viewBox="0 0 660 278" width="660" height="278" preserveAspectRatio="xMidYMid meet">
         <line x1="70" y1="215" x2="640" y2="215" stroke="#CAD5E2" stroke-width="1"/>
@@ -1651,12 +1657,12 @@ tr.dim td{color:var(--s500)}
         <text class="axn sub" x="541" y="242" text-anchor="middle">(חלק)</text>
         <text class="axn" x="604" y="231" text-anchor="middle">תג שם רגיל</text>
         <text class="axn sub" x="604" y="242" text-anchor="middle">(חלק)</text>
-        <text class="ax" x="360" y="270" text-anchor="middle">מוצר · עלות ₪ (מוזמן × closing_unit_cost)</text>
+        <text class="ax" x="360" y="270" text-anchor="middle">מוצר · עלות ₪ (מוזמן × מחיר-העלות)</text>
       </svg>
     </div>
     <div class="legend">
       <span><i style="background:#009689"></i>מק"ט פיזי (תגים · שרוכים)</span>
-      <span><i style="background:#96F7E4; border-color:#009689"></i>יחידת-שירות (<span class="ltr">01WEB</span>) — מסומן גם בתווית</span>
+      <span><i style="background:#96F7E4; border-color:#009689"></i>יחידת-שירות ("הקמת אתר רישום") — מסומנת גם בתווית</span>
     </div>
     <table class="sr-only">
       <caption>עלות לפי מוצר, כל הזמנים</caption>
@@ -1677,9 +1683,11 @@ tr.dim td{color:var(--s500)}
 
   <div class="chart-card">
     <h3>הוזמן מול הגיע — מוצרים פיזיים בלבד · כל הזמנים</h3>
-    <p class="chart-note"><b><span class="ltr">01WEB</span> הוצא מהגרף הזה</b>: <span class="ltr">118</span> מול <span class="ltr">58,490</span> על ציר אחד הופך אותו לקו-אפס (📑ב#11).
-      ערכיו: מתוכנן <span class="ltr">118</span> · בפועל <span class="ltr">106</span> · פער <span class="ltr">10.2%</span>.
-      ממוין לפי הכמות שהגרף מציג (📐7) · עמודת "הגיע" נבדלת גם בדפוס-מילוי (📐19).</p>
+    <!-- 📑ב#11 (יחידת-שירות מוצאת מגרף-הכמויות) · 📐7 (מיון לפי המדד המוצג) ·
+         📐19 (עמודת "הגיע" נבדלת גם בדפוס-מילוי) — כללי-ציור, לא טקסט-מסך (R28). -->
+    <p class="chart-note"><b>"הקמת אתר רישום" הוצא מהגרף הזה</b> — <span class="ltr">118</span> יחידות מול
+      <span class="ltr">58,490</span> על ציר אחד הופכות אותו לקו-אפס.
+      ערכיו: מתוכנן <span class="ltr">118</span> · בפועל <span class="ltr">106</span> · פער <span class="ltr">10.2%</span>.</p>
     <div class="chart-box" dir="ltr" role="figure" aria-label="הוזמן מול הגיע לפי מוצר, עמודות מקובצות">
       <svg viewBox="0 0 660 272" width="660" height="272" preserveAspectRatio="xMidYMid meet">
         <defs>
@@ -1726,8 +1734,8 @@ tr.dim td{color:var(--s500)}
       </svg>
     </div>
     <div class="legend">
-      <span><i style="background:#009689"></i>הוזמן (<span class="ltr">planned_qty</span>) — בסיס-הכמות והחיוב</span>
-      <span><i style="background:#96F7E4; border-color:#00786F"></i>הגיע (<span class="ltr">actual_qty</span>) — מילוי מקווקו</span>
+      <span><i style="background:#009689"></i>הוזמן — בסיס-הכמות והחיוב</span>
+      <span><i style="background:#96F7E4; border-color:#00786F"></i>הגיע — מילוי מקווקו</span>
     </div>
     <table class="sr-only">
       <caption>הוזמן מול הגיע לפי מוצר, מוצרים פיזיים</caption>
@@ -1752,15 +1760,15 @@ tr.dim td{color:var(--s500)}
       <table class="data">
         <thead><tr><th scope="col">מוצר (מק"ט)</th><th scope="col">הוזמן</th><th scope="col">הגיע</th><th scope="col">פער יחידות</th><th scope="col">פער %</th><th scope="col" aria-sort="descending">עלות ▼</th></tr></thead>
         <tbody>
-          <tr class="click im-host" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם שרוך סאטן - ממותג"><td style="white-space:normal">שרוך סאטן - ממותג<i class="im" aria-hidden="true" style="top:2px; left:-2px">6</i><br><span class="ltr" style="font-size:11px; color:var(--s500)">B-SAT-LAN</span></td><td><span class="ltr">58,490</span></td><td><span class="ltr">54,110</span></td><td><span class="ltr">4,380</span></td><td><span class="ltr">7.5%</span></td><td><span class="ltr">233,480</span> ₪</td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם שרוך בד - ממותג"><td style="white-space:normal">שרוך בד - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-FAB-LAN</span></td><td><span class="ltr">58,200</span></td><td><span class="ltr">52,650</span></td><td><span class="ltr">5,550</span></td><td><span class="ltr">9.5%</span></td><td><span class="ltr">174,600</span> ₪</td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם תג שם אקולוגי - ממותג"><td style="white-space:normal">תג שם אקולוגי - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-ECO-TAG</span></td><td><span class="ltr">49,597</span></td><td><span class="ltr">43,590</span></td><td><span class="ltr">6,007</span></td><td><span class="ltr">12.1%</span></td><td><span class="ltr">173,590</span> ₪</td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם הקמת אתר רישום"><td style="white-space:normal">הקמת אתר רישום · יחידת-שירות<br><span class="ltr" style="font-size:11px; color:var(--s500)">01WEB</span></td><td><span class="ltr">118</span></td><td><span class="ltr">106</span></td><td><span class="ltr">12</span></td><td><span class="ltr">10.2%</span></td><td><span class="ltr">141,600</span> ₪</td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם תג שם רגיל - ממותג"><td style="white-space:normal">תג שם רגיל - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-REG-TAG</span></td><td><span class="ltr">53,150</span></td><td><span class="ltr">48,960</span></td><td><span class="ltr">4,190</span></td><td><span class="ltr">7.9%</span></td><td><span class="ltr">132,875</span> ₪</td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם תג שם אקולוגי (חלק)"><td style="white-space:normal">תג שם אקולוגי (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">ECO-TAG</span></td><td><span class="ltr">57,410</span></td><td><span class="ltr">50,930</span></td><td><span class="ltr">6,480</span></td><td><span class="ltr">11.3%</span></td><td><span class="ltr">103,338</span> ₪</td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם שרוך סאטן (חלק)"><td style="white-space:normal">שרוך סאטן (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">SAT-LAN</span></td><td><span class="ltr">48,860</span></td><td><span class="ltr">43,270</span></td><td><span class="ltr">5,590</span></td><td><span class="ltr">11.4%</span></td><td><span class="ltr">97,720</span> ₪</td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם שרוך בד (חלק)"><td style="white-space:normal">שרוך בד (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">FAB-LAN</span></td><td><span class="ltr">49,350</span></td><td><span class="ltr">44,170</span></td><td><span class="ltr">5,180</span></td><td><span class="ltr">10.5%</span></td><td><span class="ltr">74,025</span> ₪</td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את הפרויקטים עם תג שם רגיל (חלק)"><td style="white-space:normal">תג שם רגיל (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">REG-TAG</span></td><td><span class="ltr">60,580</span></td><td><span class="ltr">55,000</span></td><td><span class="ltr">5,580</span></td><td><span class="ltr">9.2%</span></td><td><span class="ltr">60,580</span> ₪</td></tr>
+          <tr class="click im-host" tabindex="0" role="link" aria-label="הפרויקטים עם שרוך סאטן - ממותג"><td style="white-space:normal">שרוך סאטן - ממותג<i class="im" aria-hidden="true" style="top:2px; left:-2px">6</i><br><span class="ltr" style="font-size:11px; color:var(--s500)">B-SAT-LAN</span></td><td><span class="ltr">58,490</span></td><td><span class="ltr">54,110</span></td><td><span class="ltr">4,380</span></td><td><span class="ltr">7.5%</span></td><td><span class="ltr">233,480</span> ₪</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הפרויקטים עם שרוך בד - ממותג"><td style="white-space:normal">שרוך בד - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-FAB-LAN</span></td><td><span class="ltr">58,200</span></td><td><span class="ltr">52,650</span></td><td><span class="ltr">5,550</span></td><td><span class="ltr">9.5%</span></td><td><span class="ltr">174,600</span> ₪</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הפרויקטים עם תג שם אקולוגי - ממותג"><td style="white-space:normal">תג שם אקולוגי - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-ECO-TAG</span></td><td><span class="ltr">49,597</span></td><td><span class="ltr">43,590</span></td><td><span class="ltr">6,007</span></td><td><span class="ltr">12.1%</span></td><td><span class="ltr">173,590</span> ₪</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הפרויקטים עם הקמת אתר רישום"><td style="white-space:normal">הקמת אתר רישום · יחידת-שירות<br><span class="ltr" style="font-size:11px; color:var(--s500)">01WEB</span></td><td><span class="ltr">118</span></td><td><span class="ltr">106</span></td><td><span class="ltr">12</span></td><td><span class="ltr">10.2%</span></td><td><span class="ltr">141,600</span> ₪</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הפרויקטים עם תג שם רגיל - ממותג"><td style="white-space:normal">תג שם רגיל - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-REG-TAG</span></td><td><span class="ltr">53,150</span></td><td><span class="ltr">48,960</span></td><td><span class="ltr">4,190</span></td><td><span class="ltr">7.9%</span></td><td><span class="ltr">132,875</span> ₪</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הפרויקטים עם תג שם אקולוגי (חלק)"><td style="white-space:normal">תג שם אקולוגי (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">ECO-TAG</span></td><td><span class="ltr">57,410</span></td><td><span class="ltr">50,930</span></td><td><span class="ltr">6,480</span></td><td><span class="ltr">11.3%</span></td><td><span class="ltr">103,338</span> ₪</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הפרויקטים עם שרוך סאטן (חלק)"><td style="white-space:normal">שרוך סאטן (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">SAT-LAN</span></td><td><span class="ltr">48,860</span></td><td><span class="ltr">43,270</span></td><td><span class="ltr">5,590</span></td><td><span class="ltr">11.4%</span></td><td><span class="ltr">97,720</span> ₪</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הפרויקטים עם שרוך בד (חלק)"><td style="white-space:normal">שרוך בד (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">FAB-LAN</span></td><td><span class="ltr">49,350</span></td><td><span class="ltr">44,170</span></td><td><span class="ltr">5,180</span></td><td><span class="ltr">10.5%</span></td><td><span class="ltr">74,025</span> ₪</td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="הפרויקטים עם תג שם רגיל (חלק)"><td style="white-space:normal">תג שם רגיל (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">REG-TAG</span></td><td><span class="ltr">60,580</span></td><td><span class="ltr">55,000</span></td><td><span class="ltr">5,580</span></td><td><span class="ltr">9.2%</span></td><td><span class="ltr">60,580</span> ₪</td></tr>
         </tbody>
       </table>
     </div>
@@ -1782,20 +1790,20 @@ tr.dim td{color:var(--s500)}
       <table class="data">
         <thead><tr><th scope="col">מוצר (מק"ט)</th><th scope="col" aria-sort="descending">כמות להזמנה ▼</th><th scope="col">אירועים</th></tr></thead>
         <tbody>
-          <tr class="click im-host" tabindex="0" role="link" aria-label="הצג את האירועים שדורשים תג שם אקולוגי (חלק) בחודש הקרוב"><td style="white-space:normal">תג שם אקולוגי (חלק)<i class="im" aria-hidden="true" style="top:2px; left:-2px">7</i><br><span class="ltr" style="font-size:11px; color:var(--s500)">ECO-TAG</span></td><td><span class="ltr">2,940</span></td><td><span class="ltr">9</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את האירועים שדורשים שרוך סאטן - ממותג בחודש הקרוב"><td style="white-space:normal">שרוך סאטן - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-SAT-LAN</span></td><td><span class="ltr">2,210</span></td><td><span class="ltr">10</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את האירועים שדורשים שרוך בד - ממותג בחודש הקרוב"><td style="white-space:normal">שרוך בד - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-FAB-LAN</span></td><td><span class="ltr">2,210</span></td><td><span class="ltr">7</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את האירועים שדורשים תג שם רגיל - ממותג בחודש הקרוב"><td style="white-space:normal">תג שם רגיל - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-REG-TAG</span></td><td><span class="ltr">1,940</span></td><td><span class="ltr">8</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את האירועים שדורשים שרוך סאטן (חלק) בחודש הקרוב"><td style="white-space:normal">שרוך סאטן (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">SAT-LAN</span></td><td><span class="ltr">1,750</span></td><td><span class="ltr">7</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את האירועים שדורשים שרוך בד (חלק) בחודש הקרוב"><td style="white-space:normal">שרוך בד (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">FAB-LAN</span></td><td><span class="ltr">1,410</span></td><td><span class="ltr">6</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את האירועים שדורשים תג שם רגיל (חלק) בחודש הקרוב"><td style="white-space:normal">תג שם רגיל (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">REG-TAG</span></td><td><span class="ltr">1,360</span></td><td><span class="ltr">6</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את האירועים שדורשים תג שם אקולוגי - ממותג בחודש הקרוב"><td style="white-space:normal">תג שם אקולוגי - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-ECO-TAG</span></td><td><span class="ltr">1,320</span></td><td><span class="ltr">5</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="הצג את האירועים שדורשים הקמת אתר רישום בחודש הקרוב"><td style="white-space:normal">הקמת אתר רישום · יחידת-שירות<br><span class="ltr" style="font-size:11px; color:var(--s500)">01WEB</span></td><td><span class="ltr">5</span></td><td><span class="ltr">5</span></td></tr>
+          <tr class="click im-host" tabindex="0" role="link" aria-label="האירועים שדורשים תג שם אקולוגי (חלק) בחודש הקרוב"><td style="white-space:normal">תג שם אקולוגי (חלק)<i class="im" aria-hidden="true" style="top:2px; left:-2px">7</i><br><span class="ltr" style="font-size:11px; color:var(--s500)">ECO-TAG</span></td><td><span class="ltr">2,940</span></td><td><span class="ltr">9</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="האירועים שדורשים שרוך סאטן - ממותג בחודש הקרוב"><td style="white-space:normal">שרוך סאטן - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-SAT-LAN</span></td><td><span class="ltr">2,210</span></td><td><span class="ltr">10</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="האירועים שדורשים שרוך בד - ממותג בחודש הקרוב"><td style="white-space:normal">שרוך בד - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-FAB-LAN</span></td><td><span class="ltr">2,210</span></td><td><span class="ltr">7</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="האירועים שדורשים תג שם רגיל - ממותג בחודש הקרוב"><td style="white-space:normal">תג שם רגיל - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-REG-TAG</span></td><td><span class="ltr">1,940</span></td><td><span class="ltr">8</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="האירועים שדורשים שרוך סאטן (חלק) בחודש הקרוב"><td style="white-space:normal">שרוך סאטן (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">SAT-LAN</span></td><td><span class="ltr">1,750</span></td><td><span class="ltr">7</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="האירועים שדורשים שרוך בד (חלק) בחודש הקרוב"><td style="white-space:normal">שרוך בד (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">FAB-LAN</span></td><td><span class="ltr">1,410</span></td><td><span class="ltr">6</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="האירועים שדורשים תג שם רגיל (חלק) בחודש הקרוב"><td style="white-space:normal">תג שם רגיל (חלק)<br><span class="ltr" style="font-size:11px; color:var(--s500)">REG-TAG</span></td><td><span class="ltr">1,360</span></td><td><span class="ltr">6</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="האירועים שדורשים תג שם אקולוגי - ממותג בחודש הקרוב"><td style="white-space:normal">תג שם אקולוגי - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-ECO-TAG</span></td><td><span class="ltr">1,320</span></td><td><span class="ltr">5</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="האירועים שדורשים הקמת אתר רישום בחודש הקרוב"><td style="white-space:normal">הקמת אתר רישום · יחידת-שירות<br><span class="ltr" style="font-size:11px; color:var(--s500)">01WEB</span></td><td><span class="ltr">5</span></td><td><span class="ltr">5</span></td></tr>
         </tbody>
       </table>
     </div>
-    <p class="tnote"><b>זו תקרה עליונה, לא נטו-להזמין:</b> המספר הוא <span class="ltr">planned_qty</span> של אירועים שטרם התקיימו.
-      אם הזמנת-רכש כבר בוצעה חלקית, המספר <b>אינו</b> מפחית אותה — <span class="ltr">logistics</span> אינה נושאת סטטוס "כבר הוזמן מהספק".</p>
+    <p class="tnote"><b>זו תקרה עליונה, לא הכמות המדויקת להזמנה:</b> המספר הוא מה שהוזמן לאירועים שטרם התקיימו.
+      אם כבר בוצעה הזמנת-רכש חלקית, המספר <b>אינו</b> מפחית אותה — המערכת אינה מנהלת סטטוס "כבר הוזמן מהספק".</p>
     <!-- ✏️ 07/09/2026 · תיקון-אוכלוסייה (m11-data-fidelity ממצא חמור מס' 4): ארבע משורות הטבלה
          כללו את פרויקט 15, שהוא **מבוטל** — בניגוד לכלל-האוכלוסייה של הטבלה עצמה
          (project_status <> 'cancelled'). נמדד חי 07/09 והוחלף, פר-שורה:
@@ -1805,9 +1813,9 @@ tr.dim td{color:var(--s500)}
            הקמת אתר רישום          6/6  ⇐     5/5    (−1, −1)
          חמש השורות האחרות אינן מושפעות — לפרויקט 15 אין בהן שורת-לוגיסטיקה.
          סדר-המיון (📐7) עודכן: "תג שם אקולוגי - ממותג" (1,320) ירד מתחת ל"תג שם רגיל (חלק)" (1,360). -->
-    <p class="tnote" style="color:var(--s500)">✏️ <b>מה תוקן כאן ב-<span class="ltr">07/09/2026</span>:</b> ארבע שורות
-      כללו בטעות אירוע <b>מבוטל</b> (פרויקט <span class="ltr">15</span>) — בניגוד לאוכלוסייה שהטבלה עצמה מצהירה עליה.
-      הכמויות ומספרי-האירועים חושבו מחדש מול המסד.</p>
+    <!-- ✏️ 07/09/2026 · ארבע שורות כללו בטעות אירוע מבוטל (פרויקט 15) — בניגוד לאוכלוסייה
+         שהטבלה מצהירה עליה. הכמויות ומספרי-האירועים חושבו מחדש מול המסד.
+         **יומן-שינויים אינו טקסט-מסך** (R28) — ההערה ירדה מהמסך ונשמרה כאן. -->
     <div class="pager">
       <span><span class="ltr">1–9</span> מתוך 9</span>
       <div style="display:flex; gap:8px; align-items:center">
@@ -1819,7 +1827,7 @@ tr.dim td{color:var(--s500)}
   </div>
 
   <div class="tbl-card">
-    <h3>שלוש שורות-ציוד שהמחיר שלהן מוערך ולא נמדד (㉗) — ואינן נכנסות לחישוב העלות</h3>
+    <h3>שלוש שורות-ציוד שהמחיר שלהן מוערך — ואינן נכנסות לחישוב העלות</h3>
     <!-- ✏️ 07/09/2026 · ניסוח-מחדש (ביקורת-ישי §👤 15: "שורות בלי מקור עלות" — לא מובן;
          m11-ishay-number-checks §ה אישר שהמספר נכון וש**רק הניסוח** דורש תרגום לעברית לא-טכנית).
          העובדה עצמה לא השתנתה: 3 שורות · sku B-SAT-LAN · 40 יח' כל אחת · פרויקטים 1581·1594·1606. -->
@@ -1828,15 +1836,15 @@ tr.dim td{color:var(--s500)}
       אמור להיות "מאיפה היא הגיעה" — או מהצעת-המחיר, או משינוי-תכולה — <b>וזה מה שקובע את מחיר-העלות שלה</b>.
       בשלוש האלה הקישור הזה <b>לא נשמר במסד</b>, ולכן המערכת לא יכולה למשוך את המחיר המדויק
       ומעריכה אותו לפי ממוצע-המוצר (<span class="ltr">3.99</span> ₪ ליחידה) — כ-<span class="ltr">479</span> ₪ בסך-הכול.
-      <b>זה מבני ובכוונה</b> (סייג ㉗), לא שכחה: הפונקציה שיוצרת תוספת-שטח אינה כותבת את הקישור הזה.</p>
+      <b>זה מבני ובכוונה</b>, לא שכחה: הפעולה שיוצרת תוספת-שטח אינה שומרת את הקישור הזה.</p>
     <p class="drill">לחיצה על שורה פותחת את כרטיס הפרויקט</p>
     <div class="tbl-scroll">
       <table class="data">
         <thead><tr><th scope="col">פרויקט</th><th scope="col">לקוח</th><th scope="col">מוצר (מק"ט)</th><th scope="col">מתוכנן</th><th scope="col">בפועל</th></tr></thead>
         <tbody>
-          <tr class="click im-host" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1581 · סמארט-סיטי פתרונות"><td><span class="ltr">1581</span><i class="im" aria-hidden="true" style="top:2px; left:-2px">8</i></td><td>סמארט-סיטי פתרונות</td><td style="white-space:normal">שרוך סאטן - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-SAT-LAN</span></td><td><span class="ltr">40</span></td><td><span class="ltr">0</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1594 · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1594</span></td><td>אלפא סיסטמס בע"מ</td><td style="white-space:normal">שרוך סאטן - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-SAT-LAN</span></td><td><span class="ltr">40</span></td><td><span class="ltr">0</span></td></tr>
-          <tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט 1606 · אופק ביטוח ופיננסים"><td><span class="ltr">1606</span></td><td>אופק ביטוח ופיננסים</td><td style="white-space:normal">שרוך סאטן - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-SAT-LAN</span></td><td><span class="ltr">40</span></td><td><span class="ltr">0</span></td></tr>
+          <tr class="click im-host" tabindex="0" role="link" aria-label="כרטיס פרויקט 1581 · סמארט-סיטי פתרונות"><td><span class="ltr">1581</span><i class="im" aria-hidden="true" style="top:2px; left:-2px">8</i></td><td>סמארט-סיטי פתרונות</td><td style="white-space:normal">שרוך סאטן - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-SAT-LAN</span></td><td><span class="ltr">40</span></td><td><span class="ltr">0</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1594 · אלפא סיסטמס בע&quot;מ"><td><span class="ltr">1594</span></td><td>אלפא סיסטמס בע"מ</td><td style="white-space:normal">שרוך סאטן - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-SAT-LAN</span></td><td><span class="ltr">40</span></td><td><span class="ltr">0</span></td></tr>
+          <tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט 1606 · אופק ביטוח ופיננסים"><td><span class="ltr">1606</span></td><td>אופק ביטוח ופיננסים</td><td style="white-space:normal">שרוך סאטן - ממותג<br><span class="ltr" style="font-size:11px; color:var(--s500)">B-SAT-LAN</span></td><td><span class="ltr">40</span></td><td><span class="ltr">0</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -1850,12 +1858,13 @@ tr.dim td{color:var(--s500)}
     </div>
   </div>
 
-  <div class="datanote"><b>מקבלת-ההחלטה אינה יכולה לפתוח את הדף:</b> מנהלת-הלוגיסטיקה חסומה על 'דו"חות'
-    במטריצת-ההרשאות החיה, ולכן בלוק ההזמנה מגיע אליה דרך המנכ"ל. הפריט פתוח להכרעת-ישי (⏳<span class="ltr">1</span>) ולא הוכרע כאן.
-    <br><b>ועוד פער שנמדד:</b> אף שורת-לוגיסטיקה אינה מקושרת ל-<span class="ltr">project_change_id</span> (<span class="ltr">0</span> מתוך <span class="ltr">1,771</span>) —
-    מסלול-העלות דרך שינויי-תכולה קיים באפיון ואינו מופעל בדאטה.</div>
+  <!-- הפריט פתוח להכרעת-ישי (⏳1) ולא הוכרע כאן.
+       ועוד פער שנמדד: אף שורת-לוגיסטיקה אינה מקושרת ל-project_change_id (0 מתוך 1,771) —
+       מסלול-העלות דרך שינויי-תכולה קיים באפיון ואינו מופעל בדאטה. הערת-בנייה, לא טקסט-מסך. -->
+  <div class="datanote"><b>מקבלת-ההחלטה אינה יכולה לפתוח את הדף:</b> מנהלת-הלוגיסטיקה חסומה על
+    מודול הדו"חות, ולכן בלוק-ההזמנה מגיע אליה דרך המנכ"ל.</div>
 
-  <p class="states-cap">חמשת מצבי-המעטפת שהדף חייב לדעת לצייר (📐10):</p>
+  <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
   <div class="states">
     <div class="st"><b>1 · טעינה</b>שלד-אריחים, שני גרפים ושלוש טבלאות<div class="skel-row" style="width:70%"></div></div>
     <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין שורות-לוגיסטיקה בתקופה שנבחרה · [נקה מסננים]"</div>
@@ -1864,57 +1873,57 @@ tr.dim td{color:var(--s500)}
     <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב]</div>
   </div>
 
-  <p class="def-footer">הגדרות: <b>"הוזמן"</b> = <span class="ltr">planned_qty</span> — בסיס-החיוב והעלות (הכרעה <span class="ltr">5</span>) ·
-    <b>"הגיע"</b> = <span class="ltr">actual_qty</span> — שאלת-רכש, לא שאלת-כסף ·
-    <b>עלות</b> = מוזמן × <span class="ltr">closing_unit_cost</span>, מחיר-העלות הקפוא בסגירת ההצעה ·
+  <p class="def-footer">הגדרות: <b>"הוזמן"</b> = הכמות שהוזמנה לאירוע — בסיס-החיוב והעלות ·
+    <b>"הגיע"</b> = הכמות שהגיעה בפועל — שאלת-רכש, לא שאלת-כסף ·
+    <b>עלות</b> = מוזמן × מחיר-העלות שנקבע בסגירת ההצעה ·
     <b>"פער"</b> = הפרש יחידות, אינו מתורגם לכסף ·
-    <b>㉗ "המחיר מוערך ולא נמדד"</b> = שורת-ציוד בלי קישור להצעת-המחיר ובלי קישור לשינוי-התכולה שיצר אותה, ולכן אין לה מחיר-עלות מדויק ומחושב לה ממוצע — <b>מבני, לא השמטה</b> ·
-    <b>"כמות להזמנה"</b> = <span class="ltr">planned_qty</span> של אירועים שטרם התקיימו ב-<span class="ltr">30</span> הימים הקרובים.</p>
+    <b>"מחיר מוערך"</b> = שורת-ציוד בלי קישור להצעת-המחיר ובלי קישור לשינוי-התכולה שיצר אותה, ולכן אין לה מחיר-עלות מדויק ומחושב לה ממוצע — <b>מבני, לא השמטה</b> ·
+    <b>"כמות להזמנה"</b> = הכמות שהוזמנה לאירועים שטרם התקיימו ב-<span class="ltr">30</span> הימים הקרובים.</p>
   <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">06/09/2026</span> — <span class="ltr">1,771</span> שורות לוגיסטיקה ·
-    תשעת המוצרים עם עלות · חתכי <span class="ltr">YTD 2025/2026</span> · שלוש שורות ㉗ · בלוק ההזמנה ל-<span class="ltr">30</span> יום ·
-    🎭 דמו: אין · 📐 נגזר: פער-יחידות ופער-% · עלות כל-הזמנים <span class="ltr">1,191,808</span> ₪ · ה-₪ המוערך ב-㉗ (כ-<span class="ltr">479</span> ₪) · שורת-"אז מה".</p>
+    תשעת המוצרים עם עלות · חתכי מתחילת-השנה <span class="ltr">2025/2026</span> · שלוש שורות במחיר מוערך · בלוק ההזמנה ל-<span class="ltr">30</span> יום ·
+    🎭 דמו: אין · 📐 נגזר: פער-יחידות ופער-% · עלות כל-הזמנים <span class="ltr">1,191,808</span> ₪ · ה-₪ המוערך (כ-<span class="ltr">479</span> ₪) · שורת-"אז מה".</p>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
      דף 7 · מ13 — דוח 16 · "כמה עלה השכר לפי חודש?"
      🔻 דריל-דאון היררכי (📐13 · הכרעה 23): חודש ← דיילת.
      ═══════════════════════════════════════════════════════════════════════════ -->
-<section class="page" id="p7" aria-label="עלות שכר חודשית">
+<section class="page" id="p7" aria-label="שכר דיילות לפי חודש">
 
   <nav class="crumbs im-host" aria-label="מיקום בדוח" id="p7Crumbs">
-    <span aria-current="page">עלות שכר חודשית</span>
+    <span aria-current="page">שכר דיילות לפי חודש</span>
     <i class="im" aria-hidden="true" style="top:-8px; left:-8px">8</i>
   </nav>
 
   <div class="hrow">
     <div>
-      <h1>עלות שכר חודשית</h1>
+      <h1>שכר דיילות לפי חודש</h1>
       <p class="psub">כמה עלה השכר לפי חודש?</p>
       <p class="psub"><span class="ltr">2026</span> (<span class="ltr">01/01–06/09</span>) · כל הלקוחות</p>
     </div>
     <!-- 📑ב#16 — תגית-מצב קבועה בכותרת, ונכנסת גם לשם-קובץ-האקסל -->
     <span class="srcchip" id="p7SrcChip">מקור: שיבוצים</span>
   </div>
-  <p class="pop">אוכלוסייה: שיבוצים עם שעות-בפועל <span class="ltr">&gt; 0</span> ("משמרות בתשלום") ·
+  <p class="pop">אוכלוסייה: שיבוצים שדווחו בהם שעות-בפועל ("משמרות בתשלום") ·
     הוצאו: שיבוצים בלי שעות-בפועל · <span class="ltr">n=1,130</span> משמרות בתשלום, ינואר–אוגוסט
     <span class="ltr">2026</span> (ספטמבר <span class="ltr">0</span> — <span class="ltr">6</span> ימים חלפו).</p>
 
-  <p class="so-what" id="p7SoWhat">עלות-שעה ממוצעת <span class="ltr">44.16</span> ₪; נסיעות <span class="ltr">8.9%</span> מהשכר. השכר גדל <span class="ltr">35.7%</span> מול אשתקד — מהר יותר מההכנסות (<span class="ltr">21.1%</span>).</p>
+  <p class="so-what" id="p7SoWhat">להעביר לרו"ח את שכר אוגוסט — <span class="ltr">18,054</span> ₪ ב-<span class="ltr">77</span> משמרות, החודש המלא האחרון; מתחילת השנה השכר גדל <span class="ltr">35.7%</span> מול אשתקד, מהר יותר מההכנסות (<span class="ltr">21.1%</span>).</p>
 
   <div class="filters" style="margin-bottom:12px">
     <label class="switch im-host"><input type="checkbox" id="closedSalary"> לפי דוח-שכר סגור
       <i class="im" aria-hidden="true" style="top:-8px; left:-8px">6</i></label>
-    <span class="flabel">כבוי = מחושב משיבוצים · דלוק = <span class="ltr">salary_report_lines</span></span>
+    <span class="flabel">כבוי = מחושב מהשיבוצים · דלוק = מתוך דוחות-שכר שכבר הופקו</span>
   </div>
 
   <div id="p7Live">
     <div class="tiles" id="p7Tiles">
-      <div class="tile"><span class="lb">Σ שכר (בלי נסיעות ובונוסים)</span>
+      <div class="tile"><span class="lb">סך שכר הדיילות</span>
         <span class="vl"><span class="ltr">288,185</span> ₪</span>
-        <span class="sub"><span class="ltr">1,130</span> משמרות בתשלום</span>
+        <span class="sub"><span class="ltr">1,130</span> משמרות בתשלום · בלי נסיעות ובונוסים</span>
         <span class="cmp"><span class="arrow">▲</span> <span class="ltr">2025</span> באותם חודשים: <span class="ltr">212,320</span> ₪ (<span class="ltr">+35.7%</span>)</span>
         <span class="win"><span class="ltr">01/01–31/08</span></span></div>
-      <div class="tile"><span class="lb">Σ נסיעות</span>
+      <div class="tile"><span class="lb">סך הנסיעות</span>
         <span class="vl"><span class="ltr">25,538</span> ₪</span>
         <span class="sub"><span class="ltr">8.9%</span> מהשכר</span>
         <span class="cmp"><span class="arrow">▲</span> <span class="ltr">2025</span>: <span class="ltr">19,639</span> ₪ (<span class="ltr">+30.0%</span>)</span>
@@ -1922,20 +1931,21 @@ tr.dim td{color:var(--s500)}
       <div class="tile"><span class="lb">עלות-שעה ממוצעת</span>
         <span class="vl"><span class="ltr">44.16</span> ₪</span>
         <span class="sub">על <span class="ltr">6,525.5</span> שעות-בפועל</span>
-        <span class="cmp"><span class="arrow">▲</span> <span class="ltr">2025</span>: <span class="ltr">42.86</span> ₪ (<span class="ltr">212,320 ÷ 4,954</span>)</span>
+        <span class="cmp"><span class="arrow">▲</span> <span class="ltr">2025</span>: <span class="ltr">42.86</span> ₪</span>
         <span class="win"><span class="ltr">01/01–31/08</span></span></div>
-      <div class="tile"><span class="lb">Σ בונוסים אישיים</span>
+      <div class="tile"><span class="lb">סך הבונוסים האישיים</span>
         <span class="vl"><span class="ltr">0</span> ₪</span>
-        <span class="sub tip" title="אין עדיין שורת-שיבוץ עם personal_bonus גדול מאפס">טרם נזרעו — <span class="ltr">0</span> שורות</span>
-        <span class="cmp none">לא נמדד לתקופה קודמת ב-<span class="ltr">data-set.md</span></span>
+        <span class="sub">לא נרשם בונוס אישי באף משמרת</span>
+        <span class="cmp none">לא נמדדה תקופה קודמת למדד הזה</span>
         <span class="win"><span class="ltr">01/01–31/08</span></span></div>
     </div>
 
     <div class="chart-card">
       <h3>עלות-שכר לפי חודש — שכר · נסיעות · בונוסים · <span class="ltr">2026</span> (<span class="ltr">01/01–30/09</span>)</h3>
-      <p class="chart-note">עמודות מוערמות; <b>תווית-הערך מעל העמודה היא "סה"כ"</b> (שכר + נסיעות + בונוסים) ולא השכר לבדו (📑ב#16).
-        שכבת-הבונוסים היא <span class="ltr">0</span> ₪ בכל החודשים ולכן אינה נראית — עובדה במסד, לא כשל-ציור.
-        <b>ספטמבר מצויר כעמודת-אפס</b> ולא נעלם מהסדרה. ערכי-ציר עגולים, ציר מאפס (📐5).</p>
+      <!-- 📑ב#16 (תווית-הערך היא הסה"כ) · 📐5 (ציר עגול מאפס) — כללי-ציור, לא טקסט-מסך (R28). -->
+      <p class="chart-note"><b>תווית-הערך מעל כל עמודה היא הסה"כ</b> — שכר + נסיעות + בונוסים, לא השכר לבדו.
+        שכבת-הבונוסים היא <span class="ltr">0</span> ₪ בכל החודשים ולכן אינה נראית — כך זה בנתונים, לא תקלת-ציור.
+        <b>ספטמבר מצויר כעמודת-אפס</b> ולא נעלם מהסדרה.</p>
       <div class="chart-box" dir="ltr" role="figure" aria-label="עלות-שכר לפי חודש, עמודות מוערמות">
         <svg viewBox="0 0 660 272" width="660" height="272" preserveAspectRatio="xMidYMid meet">
           <defs>
@@ -2009,7 +2019,7 @@ tr.dim td{color:var(--s500)}
 
     <div class="tbl-card" id="p7MonthCard">
       <h3>שכר לפי חודש · <span class="ltr">2026</span> (<span class="ltr">01/01–30/09</span>)</h3>
-      <p class="drill">לחיצה על שורת-חודש <b>יורדת רמה</b> — לפירוט לפי דיילת (📐13)</p>
+      <p class="drill">לחיצה על שורת-חודש <b>יורדת רמה</b> — לפירוט לפי דיילת</p>
       <div class="tbl-scroll">
         <table class="data">
           <thead><tr><th scope="col" aria-sort="ascending">חודש ▲</th><th scope="col">שכר</th><th scope="col">נסיעות</th><th scope="col">בונוסים</th><th scope="col">משמרות בתשלום</th><th scope="col">נסיעות % מהשכר</th></tr></thead>
@@ -2027,7 +2037,7 @@ tr.dim td{color:var(--s500)}
         </table>
       </div>
       <p class="tnote"><b>ספטמבר <span class="ltr">2026</span> מוצג כשורת-אפס ולא נעלם:</b> אין עדיין משמרת עם שעות-בפועל בחודש
-        (<span class="ltr">6</span> ימים חלפו). זו אותה עובדה שמייצרת את אריח "עלות-שכר החודש = <span class="ltr">0</span> ₪" במבט-על.</p>
+        (<span class="ltr">6</span> ימים חלפו). זו אותה עובדה שמייצרת את אריח "שכר דיילות החודש = <span class="ltr">0</span> ₪" במבט-על.</p>
       <div class="pager">
         <span><span class="ltr">1–9</span> מתוך 9</span>
         <div style="display:flex; gap:8px; align-items:center">
@@ -2046,11 +2056,11 @@ tr.dim td{color:var(--s500)}
           <thead><tr><th scope="col">דיילת</th><th scope="col">משמרות</th><th scope="col">שעות</th><th scope="col">שכר</th><th scope="col">נסיעות</th><th scope="col">בונוס</th></tr></thead>
           <tbody>
             <tr><td colspan="6" style="white-space:normal; padding:22px 16px; color:var(--s500)">
-              <b style="color:var(--s600)">הרמה קיימת, השורות עדיין לא:</b> פירוט-השכר <b>פר-דיילת</b> אינו נמדד ב-<span class="ltr">data-set.md</span>
-              (המדידה שם מצרפית — פר-חודש). ‏<b>לא הומצאו שמות וסכומים</b>; המבנה מצויר כאן כדי לקבע את דפוס-הדריל
-              (פירורי-לחם · אריחים ושורת-"אז מה" שיורדים עם הרמה · ייצוא-הרמה · מצב בכתובת),
-              והשורות יגיעו מה-<span class="ltr">RPC</span> בבנייה — <span class="ltr">assignments</span> נושאת
-              <span class="ltr">hostess_id · actual_hours · hourly_rate_snapshot · travel_amount · personal_bonus</span>, כך שאין חסר-סכימה.
+              <!-- המדידה ב-data-set.md מצרפית (פר-חודש) ולכן פירוט פר-דיילת אינו שם. אין חסר-סכימה:
+                   assignments נושאת hostess_id · actual_hours · hourly_rate_snapshot · travel_amount ·
+                   personal_bonus, והשורות יגיעו מה-RPC בבנייה. הערת-בנייה, לא טקסט-מסך (R28). -->
+              <b style="color:var(--s600)">הרמה קיימת, השורות עדיין לא:</b> פירוט-השכר <b>לפי דיילת</b> עדיין לא נמדד,
+              ו<b>לא הומצאו כאן שמות וסכומים</b>. המבנה מצויר כדי לקבע את דפוס-הקידוח, והשורות יגיעו בבנייה.
             </td></tr>
           </tbody>
         </table>
@@ -2071,14 +2081,13 @@ tr.dim td{color:var(--s500)}
     <div class="tbl-card">
       <div class="empty">
         <p class="ttl">אין דוחות-שכר סגורים עדיין</p>
-        <p class="hint">המתג מציג את השכר לפי <span class="ltr">salary_report_lines</span> של דוחות-שכר שהופקו במסך הכספים.
-          כרגע יש <span class="ltr">0</span> דוחות במסד.</p>
-        <button class="btn btn-outline" id="backToLive">חזרה לחישוב משיבוצים</button>
+        <p class="hint">המתג מציג את השכר לפי דוחות-שכר שכבר הופקו במסך הכספים. כרגע לא הופק אף דוח.</p>
+        <button class="btn btn-outline" id="backToLive">חזרה לחישוב לפי שיבוצים</button>
       </div>
     </div>
   </div>
 
-  <p class="states-cap">חמשת מצבי-המעטפת שהדף חייב לדעת לצייר (📐10):</p>
+  <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
   <div class="states">
     <div class="st"><b>1 · טעינה</b>שלד-אריחים, גרף וטבלה<div class="skel-row" style="width:70%"></div></div>
     <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין משמרות בתקופה שנבחרה · [נקה מסננים]"</div>
@@ -2087,15 +2096,15 @@ tr.dim td{color:var(--s500)}
     <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב]</div>
   </div>
 
-  <p class="def-footer">הגדרות: <b>Σ שכר</b> = שעות-בפועל × תעריף-שנשמר — <b>בלי</b> נסיעות ובונוסים ·
-    <b>עלות-שעה ממוצעת</b> = Σ שכר ÷ Σ שעות-בפועל (ממוצע משוקלל, לא ממוצע-התעריפים) ·
-    <b>"משמרת בתשלום"</b> = שורת-שיבוץ עם <span class="ltr">actual_hours &gt; 0</span> ·
-    <b>"דוח-שכר סגור"</b> = <span class="ltr">salary_reports.period</span> — התקופה כפי שננעלה בהפקה במ8; שני המצבים יכולים להראות מספרים שונים לאותו חודש, וזה נכון ·
-    <b>נסיעות</b> = <span class="ltr">travel_amount</span>; ברירת-המחדל <span class="ltr">22.60</span> ₪ למשמרת היא ערך-בדין ולא סכום מאומת מול רו"ח ·
+  <p class="def-footer">הגדרות: <b>סך שכר הדיילות</b> = שעות-בפועל × התעריף שנשמר — <b>בלי</b> נסיעות ובונוסים ·
+    <b>עלות-שעה ממוצעת</b> = סך השכר חלקי סך השעות-בפועל (ממוצע משוקלל, לא ממוצע-התעריפים) ·
+    <b>"משמרת בתשלום"</b> = שיבוץ שדווחו בו שעות-בפועל ·
+    <b>"דוח-שכר סגור"</b> = התקופה כפי שננעלה בהפקת דוח-השכר במסך הכספים; שני המצבים יכולים להראות מספרים שונים לאותו חודש, וזה נכון ·
+    <b>נסיעות</b> = החזר-הנסיעות שנרשם לשיבוץ; ברירת-המחדל <span class="ltr">22.60</span> ₪ למשמרת היא ערך-ברירת-מחדל שטרם אומת מול רו"ח ·
     <b>סכומים</b> ב-₪ שלמים; <b>עלות-שעה</b> היא מחיר-יחידה ולכן נושאת אגורות.</p>
   <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">06/09/2026</span> — שמונה חודשי שכר ונסיעות · ספטמבר <span class="ltr">0</span> ·
     <span class="ltr">0</span> בונוסים · <span class="ltr">0</span> דוחות-שכר · סה"כ <span class="ltr">2025</span> להשוואה (<span class="ltr">212,320</span> ₪ · <span class="ltr">19,639</span> ₪ · <span class="ltr">4,954</span> שעות) ·
-    🎭 דמו: אין — <span class="ltr">data-set.md</span> תייג את כל הדף 🌱 · 📐 נגזר: עלות-שעה <span class="ltr">44.16</span>/<span class="ltr">42.86</span> ₪ · נסיעות-% פר-חודש · שורת-"אז מה".</p>
+    🎭 דמו: אין — כל הדף מהמסד 🌱 · 📐 נגזר: עלות-שעה <span class="ltr">44.16</span>/<span class="ltr">42.86</span> ₪ · נסיעות-% פר-חודש · שורת-"אז מה".</p>
 </section>
 
     </div>
@@ -2120,7 +2129,7 @@ tr.dim td{color:var(--s500)}
     p4: { slug: 'cashflow',      name: 'תזרים צפוי',        file: 'תזרים-צפוי' },
     p5: { slug: 'changes',       name: 'תוספות שטח',        file: 'תוספות-שטח' },
     p6: { slug: 'equipment',     name: 'צריכת ציוד',        file: 'צריכת-ציוד' },
-    p7: { slug: 'payroll',       name: 'עלות שכר חודשית',    file: 'עלות-שכר-חודשית' }
+    p7: { slug: 'payroll',       name: 'שכר דיילות לפי חודש',    file: 'עלות-שכר-חודשית' }
   };
 
   var picker  = document.getElementById('picker');
@@ -2174,6 +2183,13 @@ tr.dim td{color:var(--s500)}
   function n(v) { return v === null || v === undefined ? '—' : Number(v).toLocaleString('he-IL'); }
   function ltr(v) { return '<span class="ltr">' + v + '</span>'; }
   function money(v) { return v === null || v === undefined ? '—' : ltr(n(v)) + ' ₪'; }
+  // עברית: כמות 1 מחייבת יחיד. בלי זה המסך אומר "1 חשבוניות" / "1 לקוחות" —
+  // נצפה בריצה חיה 07/09/2026 ברמת-הלקוח ובדליים 31–60 · 90+.
+  function pl(k, one, many) { return Number(k) === 1 ? one : many; }
+  function inv(k) { return ltr(k) + ' ' + pl(k, 'חשבונית', 'חשבוניות'); }
+  function cust(k) { return ltr(k) + ' ' + pl(k, 'לקוח', 'לקוחות'); }
+  function days(k) { return ltr(k) + ' ' + pl(k, 'יום', 'ימים'); }
+
   function bucket(k) { for (var i = 0; i < AG_BUCKETS.length; i++) { if (AG_BUCKETS[i].k === k) { return AG_BUCKETS[i]; } } return null; }
 
   function tile(lb, vl, sub, cmp, win, cmpNone) {
@@ -2227,7 +2243,7 @@ tr.dim td{color:var(--s500)}
       xlsxCol.textContent = cols.length ? cols.join(' · ') : 'אין טבלה לייצוא בדף הזה';
     }
     xlsxBtn.title = 'ייצוא ' + meta.name + (sfx.label ? ' · ' + sfx.label : '') +
-      ' — הרמה שעל המסך (ת4). הקובץ: ' + fname +
+      ' — הרמה שעל המסך. הקובץ: ' + fname +
       (cols.length ? '\nהעמודות שיירדו: ' + cols.join(' · ') : '');
     urlbar.textContent = '/reports?tab=finance&page=' + meta.slug + '&period=2026&customer=all' + sfx.url;
   }
@@ -2296,23 +2312,25 @@ tr.dim td{color:var(--s500)}
     if (state.agLevel === 0) {
       p3.crumbs.innerHTML = '<span aria-current="page">גיול חובות</span>';
       tiles =
-        tile('יתרת-חוב פתוחה', money(75770), ltr(11) + ' חשבוניות פתוחות',
-          '<span class="arrow">▼</span> לפני חודש: ' + money(148188) + ' (' + ltr(23) + ' חשבוניות)',
+        tile('יתרת-חוב פתוחה', money(75770), inv(11) + ' פתוחות',
+          '<span class="arrow">▼</span> לפני חודש: ' + money(148188) + ' (' + inv(23) + ')',
           'נכון ל-' + ltr('06/09') + ' · אינו מושפע ממסנן התקופה') +
-        tile('מעל ' + ltr(60) + ' יום', money(15609), ltr(3) + ' חשבוניות אצל ' + ltr(3) + ' לקוחות',
+        tile('מעל ' + ltr(60) + ' יום', money(15609), inv(3) + ' אצל ' + cust(3),
           '<span class="arrow">▲</span> לפני חודש: ' + money(10163) + ' (' + ltr(1) + ' חשבונית)',
           'נכון ל-' + ltr('06/09')) +
-        tile('מדרג ' + ltr('90+'), money(10163), ltr(1) + ' חשבונית · אלפא סיסטמס בע"מ',
+        tile('מדרג ' + ltr('90+'), money(10163), inv(1) + ' · אלפא סיסטמס בע"מ',
           '<span class="arrow">▲</span> לפני חודש: ' + ltr(0) + ' חשבוניות במדרג',
           'נכון ל-' + ltr('06/09')) +
         tile('ימים לתשלום (חציון)', ltr(35), 'על ' + ltr(699) + ' חשבוניות ששולמו, כל הזמנים · אינו ' + ltr('DSO'),
           'מדד כלל-זמני — אין תקופה-קודמת מהגדרה', 'כל הזמנים · אינו מושפע ממסנן התקופה', true);
-      sw = ltr('15,609') + ' ₪ מעל ' + ltr(60) + ' יום — ' + ltr(3) + ' חשבוניות אצל ' + ltr(3) + ' לקוחות; הגדול: אלפא סיסטמס בע"מ.';
+      // 📐23 — פעולה קודמת לעובדה, והפועל נגזר מסוג-הדוח (תומך-החלטה ⇒ "לגבות").
+      sw = 'לגבות ' + ltr('15,609') + ' ₪ מ-' + ltr(3) + ' לקוחות — הכסף שממתין מעל ' + ltr(60) +
+        ' יום; הגדול שבהם אלפא סיסטמס בע"מ, ' + money(10163) + '.';
       title = 'כל החשבוניות הפתוחות';
       drill = 'לחיצה על שורה פותחת את כרטיס הפרויקט · לחיצה על מדרג בגרף יורדת רמה';
       head = '<tr><th scope="col">פרויקט</th><th scope="col">לקוח</th><th scope="col">נשלחה</th><th scope="col">מועד-פירעון חוזי</th><th scope="col">סכום</th><th scope="col" aria-sort="descending">ימי איחור ▼</th><th scope="col">מדרג</th></tr>';
       rows = AG_INV.slice().sort(function (a, b) { return b.days - a.days; }).map(function (iv) {
-        return '<tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט ' + iv.id + ' · ' + iv.cust + '">' +
+        return '<tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט ' + iv.id + ' · ' + iv.cust + '">' +
           '<td>' + ltr(iv.id) + '</td><td>' + iv.cust + '</td><td>' + ltr(iv.sent) + '</td><td>' + ltr(iv.due) + '</td>' +
           '<td>' + money(iv.sum) + '</td>' +
           '<td' + (iv.days > 60 ? ' class="over"' : '') + '>' + (iv.days > 0 ? ltr(iv.days) : '—') + '</td>' +
@@ -2327,19 +2345,25 @@ tr.dim td{color:var(--s500)}
       var share = (bk.sum / 75770 * 100).toFixed(1);
       var prevShare = bk.prevSum ? (bk.prevSum / 148188 * 100).toFixed(1) : null;
       tiles =
-        tile('חוב ' + agIn(bk), money(bk.sum), ltr(bk.n) + ' חשבוניות · ' + ltr(custs.length) + ' לקוחות',
-          '<span class="arrow">' + (bk.sum < bk.prevSum ? '▼' : '▲') + '</span> לפני חודש במדרג זה: ' + money(bk.prevSum) + ' (' + ltr(bk.prevN) + ')',
+        tile('חוב ' + agIn(bk), money(bk.sum), inv(bk.n) + ' · ' + cust(custs.length),
+          '<span class="arrow">' + (bk.sum < bk.prevSum ? '▼' : '▲') + '</span> לפני חודש במדרג זה: ' + money(bk.prevSum) + ' (' + inv(bk.prevN) + ')',
           'נכון ל-' + ltr('06/09') + ' · אינו מושפע ממסנן התקופה') +
         tile('חלק מסך-החוב הפתוח', ltr(share + '%'), money(bk.sum) + ' מתוך ' + money(75770),
           prevShare ? ('<span class="arrow">' + (Number(share) > Number(prevShare) ? '▲' : '▼') + '</span> לפני חודש: ' + ltr(prevShare + '%')) : 'לא היה חוב במדרג זה לפני חודש',
           'נכון ל-' + ltr('06/09'), !prevShare) +
-        tile('הישנה ביותר במדרג', oldest ? ltr(oldest) + ' ימי איחור' : '—',
+        tile('החשבונית הישנה ביותר', oldest ? ltr(oldest) + ' ' + pl(oldest, 'יום איחור', 'ימי איחור') : '—',
           oname || 'טרם הגיע מועד-הפירעון',
-          'אין תקופה-קודמת למדד הזה — לא נמדד ב-' + ltr('data-set.md'), 'נכון ל-' + ltr('06/09'), true) +
+          'אין תקופה-קודמת למדד הזה — היא לא נמדדה', 'נכון ל-' + ltr('06/09'), true) +
         tile('ימים לתשלום (חציון)', ltr(35), 'על ' + ltr(699) + ' חשבוניות ששולמו, כל הזמנים · אינו ' + ltr('DSO'),
           'מדד כלל-זמני — אין תקופה-קודמת מהגדרה', 'כל הזמנים · אינו מושפע ממסנן התקופה', true);
-      sw = agName(bk) + ': ' + money(bk.sum) + ' ב-' + ltr(bk.n) + ' חשבוניות אצל ' + ltr(custs.length) + ' לקוחות' +
-        (oldest ? '; הישנה ממתינה ' + ltr(oldest) + ' ימים.' : '; טרם הגיע מועד-הפירעון לאף אחת.');
+      // 📐23 — דלי שיש בו איחור מקבל פועל; "שוטף" אינו ניתן לגבייה ולכן אין להמציא לו פעולה.
+      // לקוח יחיד נקוב בשמו ולא נספר ("מ-1 לקוח") — גם עברית תקינה וגם 📐23: החריגה בשם.
+      var who = custs.length === 1 ? 'מהלקוח ' + custs[0].cust : 'מ-' + cust(custs.length);
+      sw = oldest
+        ? 'לגבות ' + money(bk.sum) + ' ' + who + ' ' + agIn(bk) + ' — ' + inv(bk.n) + ', ' +
+          pl(bk.n, 'שממתינה', 'והוותיקה ממתינה') + ' כבר ' + days(oldest) + '.'
+        : 'אין מה לגבות ' + agIn(bk) + ' — ' + money(bk.sum) + ' ב-' + inv(bk.n) +
+          ' שטרם הגיע מועד תשלומן.';
       title = 'הלקוחות ' + agIn(bk);
       drill = 'לחיצה על שורה יורדת רמה — לחשבוניות של אותו לקוח';
       head = '<tr><th scope="col">לקוח</th><th scope="col">חשבוניות</th><th scope="col" aria-sort="descending">₪ ▼</th><th scope="col">ימי איחור (הישנה)</th></tr>';
@@ -2358,21 +2382,25 @@ tr.dim td{color:var(--s500)}
       var sum = 0, known = true, dmax = 0;
       mine.forEach(function (iv) { if (iv.sum === null) { known = false; } else { sum += iv.sum; } if (iv.days > dmax) { dmax = iv.days; } });
       tiles =
-        tile('חוב הלקוח ' + agIn(bk), known ? money(sum) : '—', ltr(mine.length) + ' חשבוניות · ' + state.agCust,
-          'אין תקופה-קודמת ברמת-לקוח — לא נמדד ב-' + ltr('data-set.md'), 'נכון ל-' + ltr('06/09'), true) +
+        tile('חוב הלקוח ' + agIn(bk), known ? money(sum) : '—', inv(mine.length) + ' · ' + state.agCust,
+          'אין תקופה-קודמת ברמת-לקוח — היא לא נמדדה', 'נכון ל-' + ltr('06/09'), true) +
         tile('ימי איחור (הישנה)', dmax ? ltr(dmax) : '—', 'מעבר למועד-הפירעון החוזי',
           'אין תקופה-קודמת ברמת-לקוח', 'נכון ל-' + ltr('06/09'), true) +
         tile('נשלחה', ltr(mine[0].sent), 'חשבונית ראשונה במדרג',
           'אינו מדד-תקופתי', 'נכון ל-' + ltr('06/09'), true) +
         tile('מועד-פירעון חוזי', ltr(mine[0].due), 'שוטף' + ltr('+30'),
           'אינו מדד-תקופתי', 'נכון ל-' + ltr('06/09'), true);
-      sw = state.agCust + ': ' + (known ? money(sum) : 'סכום לא נמדד') + ' ב-' + ltr(mine.length) + ' חשבוניות ' + agIn(bk) +
-        (dmax ? ', ממתינות ' + ltr(dmax) + ' ימים.' : '.');
+      // 📐23 · "מהלקוח X" ולא "ל-X" — מבנה שנשאר תקין בעברית לכל שם-לקוח, כולל שם שנפתח ב-ה'.
+      sw = dmax
+        ? 'לגבות ' + (known ? money(sum) : 'את החוב') + ' מהלקוח ' + state.agCust + ' — ' +
+          inv(mine.length) + ', ' + pl(mine.length, 'שממתינה', 'והוותיקה ממתינה') + ' כבר ' + days(dmax) + '.'
+        : 'אין מה לגבות מהלקוח ' + state.agCust + ' — ' + (known ? money(sum) : 'הסכום') + ' ב-' +
+          inv(mine.length) + ' שטרם הגיע מועד תשלומן.';
       title = 'החשבוניות של ' + state.agCust + ' ' + agIn(bk);
       drill = 'לחיצה על שורה פותחת את כרטיס הפרויקט';
       head = '<tr><th scope="col">פרויקט</th><th scope="col">נשלחה</th><th scope="col">מועד-פירעון חוזי</th><th scope="col">סכום</th><th scope="col" aria-sort="descending">ימי איחור ▼</th></tr>';
       rows = mine.map(function (iv) {
-        return '<tr class="click" tabindex="0" role="link" aria-label="פתח כרטיס פרויקט ' + iv.id + ' · ' + iv.cust + '">' +
+        return '<tr class="click" tabindex="0" role="link" aria-label="כרטיס פרויקט ' + iv.id + ' · ' + iv.cust + '">' +
           '<td>' + ltr(iv.id) + '</td><td>' + ltr(iv.sent) + '</td><td>' + ltr(iv.due) + '</td><td>' + money(iv.sum) + '</td>' +
           '<td' + (iv.days > 60 ? ' class="over"' : '') + '>' + (iv.days > 0 ? ltr(iv.days) : '—') + '</td></tr>';
       });
@@ -2403,7 +2431,7 @@ tr.dim td{color:var(--s500)}
       if (!bk || bk.n === 0) { say('מדרג ' + bk.label + ' ריק — אין לאן לרדת'); return; }
       state.agBucket = bk.k; state.agLevel = 1; state.agCust = null;
       renderP3();
-      say('ירידה למדרג ' + bk.label + '; ' + bk.n + ' חשבוניות');
+      say('ירידה למדרג ' + bk.label + '; ' + bk.n + ' ' + pl(bk.n, 'חשבונית', 'חשבוניות'));
     });
   });
   // ✏️ 07/09/2026 · האריח "שוטף" — אותו נתיב-קידוח בדיוק של עמודת-מדרג (📐13).
@@ -2412,7 +2440,7 @@ tr.dim td{color:var(--s500)}
     var bk = bucket('cur');
     state.agBucket = bk.k; state.agLevel = 1; state.agCust = null;
     renderP3();
-    say('ירידה לשוטף — טרם הגיע מועד התשלום; ' + bk.n + ' חשבוניות');
+    say('ירידה לשוטף — טרם הגיע מועד התשלום; ' + bk.n + ' ' + pl(bk.n, 'חשבונית', 'חשבוניות'));
   });
   p3.crumbs.addEventListener('click', function (e) {
     var b = e.target.closest('button[data-lvl]');
@@ -2430,7 +2458,7 @@ tr.dim td{color:var(--s500)}
       state.agCust = cust; state.agLevel = 2; renderP3();
       say('ירידה ללקוח ' + cust);
     } else {
-      say('במסך החי: מעבר לכרטיס הפרויקט (' + tr.getAttribute('aria-label') + ')');
+      say('במסך החי: מעבר אל ' + tr.getAttribute('aria-label'));
     }
   }
 
@@ -2447,26 +2475,27 @@ tr.dim td{color:var(--s500)}
 
   function renderP7Level() {
     if (!state.salMonth) {
-      p7.crumbs.innerHTML = '<span aria-current="page">עלות שכר חודשית</span><i class="im" aria-hidden="true" style="top:-8px; left:-8px">8</i>';
+      p7.crumbs.innerHTML = '<span aria-current="page">שכר דיילות לפי חודש</span><i class="im" aria-hidden="true" style="top:-8px; left:-8px">8</i>';
       p7.tiles.innerHTML = P7_ROOT_TILES;
       p7.soWhat.innerHTML = P7_ROOT_SOWHAT;
       p7.monthCard.hidden = false; p7.hostCard.hidden = true;
     } else {
       var m = SAL[state.salMonth];
-      p7.crumbs.innerHTML = '<button data-lvl="0">עלות שכר חודשית</button><span class="sep" aria-hidden="true">|</span>' +
+      p7.crumbs.innerHTML = '<button data-lvl="0">שכר דיילות לפי חודש</button><span class="sep" aria-hidden="true">|</span>' +
         '<span aria-current="page">' + ltr(state.salMonth + '/2026') + '</span>' +
         '<i class="im" aria-hidden="true" style="top:-8px; left:-8px">8</i>';
       p7.tiles.innerHTML =
-        tile('שכר בחודש', money(m.sal), ltr(m.sh) + ' משמרות בתשלום',
+        tile('שכר דיילות בחודש', money(m.sal), ltr(m.sh) + ' משמרות בתשלום',
           'לא נמדד לתקופה-מקבילה ב-' + ltr('2025') + ' (המדידה שם שנתית)', ltr('01/' + state.salMonth + '–31/' + state.salMonth + '/2026'), true) +
         tile('נסיעות בחודש', money(m.trv), ltr(m.pct) + ' מהשכר',
           'לא נמדד לתקופה-מקבילה ב-' + ltr('2025'), ltr('01/' + state.salMonth + '–31/' + state.salMonth + '/2026'), true) +
-        tile('משמרות בתשלום', ltr(m.sh), 'שיבוצים עם שעות-בפועל ' + ltr('> 0'),
+        tile('משמרות בתשלום', ltr(m.sh), 'שיבוצים שדווחו בהם שעות-בפועל',
           'לא נמדד לתקופה-מקבילה ב-' + ltr('2025'), ltr('01/' + state.salMonth + '–31/' + state.salMonth + '/2026'), true) +
         tile('חלק מהשכר השנתי', ltr((m.sal / 288185 * 100).toFixed(1) + '%'), money(m.sal) + ' מתוך ' + money(288185),
           'לא נמדד לתקופה-מקבילה ב-' + ltr('2025'), 'ינואר–אוגוסט ' + ltr('2026'), true);
-      p7.soWhat.innerHTML = 'חודש ' + ltr(state.salMonth + '/2026') + ': ' + money(m.sal) + ' שכר ב-' + ltr(m.sh) +
-        ' משמרות בתשלום; נסיעות ' + ltr(m.pct) + ' מהשכר.';
+      // 📐23 — תפעולי/סטנדרטי ⇒ הפועל הוא "להעביר לרו"ח" (הכרעה 22 · 🧭).
+      p7.soWhat.innerHTML = 'להעביר לרו"ח את שכר ' + ltr(state.salMonth + '/2026') + ' — ' + money(m.sal) +
+        ' ב-' + ltr(m.sh) + ' משמרות בתשלום; נסיעות ' + ltr(m.pct) + ' מהשכר.';
       p7.hostTitle.innerHTML = 'פירוט לפי דיילת — ' + ltr(state.salMonth + '/2026');
       p7.monthCard.hidden = true; p7.hostCard.hidden = false;
     }
@@ -2485,7 +2514,7 @@ tr.dim td{color:var(--s500)}
     p7.closed.hidden = !p7.sw.checked;
     p7.chip.textContent = p7.sw.checked ? 'מקור: דוח-שכר סגור' : 'מקור: שיבוצים';
     refreshChrome();
-    say(p7.sw.checked ? 'מקור הנתונים: דוח-שכר סגור — אין דוחות במסד' : 'מקור הנתונים: שיבוצים');
+    say(p7.sw.checked ? 'מקור הנתונים: דוח-שכר סגור — טרם הופק אף דוח' : 'מקור הנתונים: שיבוצים');
   }
   p7.sw.addEventListener('change', renderP7Source);
   document.getElementById('backToLive').addEventListener('click', function () { p7.sw.checked = false; renderP7Source(); });
@@ -2499,12 +2528,12 @@ tr.dim td{color:var(--s500)}
     if (tr.closest('#p3Body')) { p3RowAction(tr); return; }
     var m = tr.getAttribute('data-m');
     if (m) { state.salMonth = m; renderP7Level(); say('ירידה לחודש ' + m + '/2026'); return; }
-    say('במסך החי: ' + (tr.getAttribute('aria-label') || 'פתיחת הישות המקושרת'));
+    say('במסך החי: מעבר אל ' + (tr.getAttribute('aria-label') || 'היעד המקושר'));
   });
   document.addEventListener('click', function (e) {
     var tr = e.target.closest ? e.target.closest('tr.click') : null;
     if (!tr || tr.closest('#p3Body') || tr.getAttribute('data-m')) { return; }
-    say('במסך החי: ' + (tr.getAttribute('aria-label') || 'פתיחת הישות המקושרת'));
+    say('במסך החי: מעבר אל ' + (tr.getAttribute('aria-label') || 'היעד המקושר'));
   });
 
   // ═══ כלי-מוקאפ: כיבוי סימוני-האינטראקציה (📐14ב) ═══
