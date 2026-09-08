@@ -46,6 +46,12 @@
 
 ## Session Log (newest first)
 
+### 09/09/2026 (00:4X–00:5X) — ui-copy night, session 2, stage 3: the home screen
+- **One Sonnet writer, full reset of `src/modules/07_dashboard/*` + `src/lib/dashboard.js`.** Finding: the screen (built 03/09 with a wording pass) already met the locked guide almost entirely — the writer verified more than it rewrote. Two changes: the partial-sums banner ⇒ guide §4 example 4 verbatim; the eight `assertDashboardShape` messages that printed internal field names ⇒ one generic `יש תקלה בנתונים.` (B8/R10, R30, R18). 🔴 **Declared deviation, not silent:** the module's own closing audit (03/09, T-2) ruled the field name must stay on screen for diagnosis; the later Ishay-locked guide forbids it and names this string in the plan's stage-3 example. Applied the guide; the diagnostic channel stays off-screen (`err.code` + `console.error` with the field name). Recorded in `module-7.md` §9 and flagged to Ishay in the chat report — he may reverse (a one-line revert in `api.js`).
+- **Structural finding S-07:** `missingParamsMessage` prints raw `params` names on the dashboard banner — deliberate per the code comment (a CEO diagnosis surface) ⇒ recorded for the UCD audit, not changed.
+- **Gates:** CI-parity 79 קבצים / 1,851 ירוקות (בלי מ6 שבעריכה מקבילה) · vite build · eslint · npm run smoke ירוק · e2e/dashboard.spec.js 6/6. BEFORE/AFTER screenshots of the home screen in both onboarding states — BEFORE captured from a separate `git archive` build of `8a8005d` served on port 4175 (no `git stash` while four module-6 writers edit the shared tree; the archive + `node_modules` junction pattern is the reusable mechanism, in the scratchpad's `playwright.before.config.js`).
+- **Estimation #2 closed** (~35 min vs 45–60 estimated; the writer verified rather than rewrote). Agents: 13 of 50 after this stage (the four module-6 writers are counted at their own stage).
+
 ### 08–09/09/2026 (23:2X–00:XX) — ui-copy night, session 2, stage 2: shared components reset + feminine address across all nine modules
 - **Baton received** (`a859a1b`, handoff §5 protocol; acceptance test — 10 brief questions + 4 handoff questions — answered from disk before the first action). One settled contradiction: the plan's stage-3 banner draft vs the locked guide's example 4 ⇒ the guide wins.
 - **Ishay's ruling 09/09 00:0X — 🛑 stop 2 CANCELLED:** *"קבל שינוי. בטל עצירה מולי. עצירה רק שהכל מבוצע מאשר קבלה?"* ⇒ after each module: short report, no waiting; the only remaining stop is the final acceptance. Recorded verbatim in handoff §2.

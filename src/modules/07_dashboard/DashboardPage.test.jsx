@@ -168,14 +168,15 @@ describe('DashboardPage — טעינה ושגיאה', () => {
     expect(screen.queryByText(/permission denied/)).not.toBeInTheDocument()
   })
 
+  // ✏️ 09/09/2026 (לילה-הטקסטים, שלב 3 · מ7): המחרוזת הסינתטית כאן עודכנה לנוסח הגנרי
+  // האמיתי שה-api מייצר עכשיו (SHAPE_DRIFT_MESSAGE ב-api.js — B8/R10, בלי שם-שדה). הבדיקה
+  // עצמה עדיין בודקת את אותה חוטית: קוד=DASHBOARD_SHAPE_DRIFT ⇒ ה-message מגיע למסך.
   it('🔴 דריפט-צורה: ההודעה העברית של שער-הצורה מגיעה למסך ולא רק לקונסול', async () => {
-    const err = new Error('חסרים שדות בנתוני מסך-הבית: monthly_profit.')
+    const err = new Error('יש תקלה בנתונים.')
     err.code = 'DASHBOARD_SHAPE_DRIFT'
     getDashboardSummary.mockRejectedValueOnce(err)
     renderPage()
-    expect(
-      await screen.findByText('חסרים שדות בנתוני מסך-הבית: monthly_profit.'),
-    ).toBeInTheDocument()
+    expect(await screen.findByText('יש תקלה בנתונים.')).toBeInTheDocument()
   })
 
   it('🔴 פרויקט בלי הצעת-מחיר: נאמר מה קרה ומה לעשות — בנוסח שלנו, בלי מזהה פנימי', async () => {
@@ -184,7 +185,7 @@ describe('DashboardPage — טעינה ושגיאה', () => {
     err.cause = { message: 'לא ניתן לחשב כספים לפרויקט 22 — אין לו הצעת מחיר מקושרת.' }
     getDashboardSummary.mockRejectedValueOnce(err)
     renderPage()
-    expect(await screen.findByText(/אין לו הצעת מחיר מקושרת, או שההצעה ריקה/)).toBeInTheDocument()
+    expect(await screen.findByText(/הסכומים כאן חלקיים/)).toBeInTheDocument()
     // §7.34 — מזהה פנימי אינו מוצג במסך.
     expect(screen.queryByText(/לפרויקט 22/)).not.toBeInTheDocument()
   })
