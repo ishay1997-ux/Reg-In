@@ -1265,7 +1265,7 @@ describe('תיקון תאריך-תשלום שהוקלד שגוי', () => {
     await renderLoaded()
     expect(screen.getByTestId('closing-payment-block')).toBeInTheDocument()
     expect(screen.getByTestId('closing-payment-date')).toHaveValue('2026-08-04')
-    expect(screen.getByTestId('closing-save-payment')).toHaveTextContent('עדכון תאריך התשלום')
+    expect(screen.getByTestId('closing-save-payment')).toHaveTextContent('עדכני תאריך תשלום')
   })
 
   it('אותו תאריך אינו מופיע פעמיים — תא-הקריאה נסוג מפני השדה העריך', async () => {

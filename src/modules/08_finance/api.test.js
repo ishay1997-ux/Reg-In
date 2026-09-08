@@ -285,9 +285,7 @@ describe('שורות-הנושא (N-1 — נעולות)', () => {
 describe('validateInvoiceFile', () => {
   it('בלי קובץ — הנוסח הנעול של §3.7, לא הודעה שהומצאה כאן', () => {
     expect(validateInvoiceFile(null)).toBe(INVOICE_FILE_REQUIRED_NOTE)
-    expect(INVOICE_FILE_REQUIRED_NOTE).toBe(
-      'חסום: יש לבחור קובץ — שליחה בלי חשבונית אינה אפשרית (כרטיס-P1).',
-    )
+    expect(INVOICE_FILE_REQUIRED_NOTE).toBe('חסום: יש לבחור קובץ — שליחה בלי חשבונית אינה אפשרית.')
   })
 
   it('סוג לא-נתמך נחסם לפני ההעלאה — הבאקט מתיר PDF/JPEG/PNG בלבד', () => {
@@ -607,7 +605,7 @@ describe('קריאות S1/S2', () => {
 describe('פעולות-הכתיבה (RPC)', () => {
   it('תשובה בלי ok:true נזרקת — חוזה שנשבר אינו "הצלחה חלקית"', async () => {
     routeRpc({ archive_project: { data: { final_profit: 3650 }, error: null } })
-    await expect(archiveProject(13)).rejects.toThrow('הארכוב נכשל.')
+    await expect(archiveProject(13)).rejects.toThrow('הארכוב נכשל — תשובת השרת לא הייתה תקינה.')
   })
 
   it('שער-הארכוב החסום מוצג בנוסח-השרת', async () => {
@@ -757,7 +755,7 @@ describe('sendInvoiceAndRecord (P1)', () => {
   it('בלי מייל-לחיוב נעצרת לפני האחסון ולפני המייל', async () => {
     await expect(
       sendInvoiceAndRecord({ project: PROJECT, customer: { company_name: 'א' }, file: fakeFile() }),
-    ).rejects.toThrow('אין כתובת מייל לחיוב בכרטיס הלקוח — לא ניתן לשלוח את החשבונית.')
+    ).rejects.toThrow('יש להשלים כתובת מייל לחיוב בכרטיס הלקוח — בלעדיה אי-אפשר לשלוח את החשבונית.')
     expect(uploadMock).not.toHaveBeenCalled()
     expect(mocks.sendEmail).not.toHaveBeenCalled()
   })
@@ -786,7 +784,7 @@ describe('sendInvoiceAndRecord (P1)', () => {
     await expect(
       sendInvoiceAndRecord({ project: PROJECT, customer: CUSTOMER, file: photo }),
     ).rejects.toThrow(
-      'הקובץ גדול מדי לשליחה אוטומטית במייל — יש להקטין אותו (סריקה או צילום ברזולוציה נמוכה יותר) ולנסות שוב. שום דבר לא נשלח ולא נשמר.',
+      'יש להקטין את הקובץ (סריקה או צילום ברזולוציה נמוכה יותר) ולנסות שוב — הוא גדול מדי לשליחה אוטומטית במייל, ושום דבר לא נשלח ולא נשמר.',
     )
 
     expect(uploadMock).not.toHaveBeenCalled()

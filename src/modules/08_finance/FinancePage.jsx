@@ -68,7 +68,7 @@ import SalaryReportDialog from './SalaryReportDialog'
 // יושב בקומפוננטה שלו: זהו טקסט של משטח יחיד. **כולן בלשון-נקבה** (S-28).
 const PAGE_TITLE = 'כספים'
 const PAGE_SUBTITLE = 'בקרת גבייה, סגירת-תיקים ודו"ח-שכר'
-const SALARY_BUTTON_LABEL = 'הפקת דוח-שכר'
+const SALARY_BUTTON_LABEL = 'הפקת דוח שכר דיילות'
 const NO_PERMISSION_SENTENCE = 'אין לך הרשאה לצפות בנתוני הכספים.'
 const FILTERED_EMPTY_TITLE = 'אין פרויקט התואם לסינון שבחרת.'
 const CLEAR_FILTER_LABEL = 'נקי סינון'
