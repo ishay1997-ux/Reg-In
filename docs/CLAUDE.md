@@ -16,6 +16,7 @@
 | `db_roadmap.md` + `migrations/` | ציר שינויי-ה-DB |
 | `docs/archive/` | גרסאות-עבר מלאות (CLAUDE.md · STATUS · יומן) — קריאה בלבד |
 | `docs/toolbox.md` | אילו כלים דלוקים/כבויים ומתי להדליק |
+| `docs/guides/01_estimation_log.md` | **יומן-הכיול המקומי** — גורמי-הסיכון של הקודבייס הזה (תוספות-זמן מדודות, `n=`) + רשומות הערכה-מול-בפועל. **נקרא לפני כל הערכת-זמן/סוכנים**; השיטה עצמה בקובץ הגלובלי `~/.claude/references/estimation-and-agents.md`, שמפנה לכאן *(נוצר 08/09/2026)* |
 | `docs/specs/module_04_hostesses/module4_smart_match_research.md` | **מפרט-האלגוריתם המלא של Smart Match** — 6 סבבי-הכרעות + מחקר-שוק; **לקרוא לפני כל דיון-מ4, לא לנחש** (ישי, 01/08) |
 | `docs/reference_spec/products_and_params.md` | קטלוג-המוצרים ו-53 פרמטרי-ה-Seed (עריך — לא קפוא כמו C5/C6) |
 | `docs/plans/` | תוכניות-עבר מאושרות; מתות עם המיזוג, ההכרעות שבהן חיות ב-§7 |
