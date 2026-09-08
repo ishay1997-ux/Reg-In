@@ -233,7 +233,7 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
         ))}
 
         <span className="mr-auto text-[12px] text-slate-400">
-          ממוין: חסרים תחילה, לפי קרבת האירוע
+          ממוין: חסרים תחילה, ובתוכם לפי קרבת האירוע
         </span>
 
         {/* 🔴 מכובה כש-N=0 ולא נעלם (כרטיס §①) — ובלי חלון-אישור, במכוון: *"אפס שיקול

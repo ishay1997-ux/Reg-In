@@ -571,13 +571,18 @@ function NewItemRow({ state, index, addableProducts, submitting, onChange, onRem
         </select>
         <div className="mt-0.5 text-[11.5px] text-slate-500">
           לא היה בהצעה
+          {/* ✏️ שלב 4 (R12: כפתור = פועל בנקבה, לא שם-עצם) — "הסרה" הוחלף בפועל. נבחר
+              "בטלי הוספה" ולא "הסירי" כדי לשמור על ההבחנה המכוונת מול "הסירי פריט"
+              (פח-מול-ארכיון, src/CLAUDE.md): זו שורת-טופס שטרם נשמרה, לא פריט מהאירוע —
+              והניסוח מקביל בכוונה ל"בטלי הסרה" שכבר בשימוש באותו דיאלוג בדיוק לאותו רעיון
+              (ביטול פעולה שטרם בוצעה). */}
           <button
             type="button"
             className="mr-2 text-red-600"
             onClick={() => onRemove(row.key)}
-            aria-label="הסרת השורה החדשה"
+            aria-label="ביטול הוספת השורה החדשה"
           >
-            הסרה
+            בטלי הוספה
           </button>
         </div>
       </td>
@@ -631,11 +636,13 @@ function MoneyRow({ label, amount, quoteReadable, bold, testId }) {
 
 // בלוק-הכסף "התוספת לחיוב" — חמש השורות בסדר המאושר, שנגמרות ב"תוספת לחיוב".
 // 🚫 לעולם לא `revenue_delta_total` של ה-RPC בתור השורה האחרונה — הוא טרום-הנחה וטרום-מע"מ.
-function MoneySummary({ money, quote }) {
+function MoneySummary({ money }) {
   const readable = money !== null
   return (
     <div>
-      <div className="text-xs font-bold text-slate-700">התוספת לחיוב</div>
+      {/* ✏️ שלב 4 (R11: אותו מונח בכל המסך) — הכותרת הייתה "התוספת לחיוב" מול שורת-הסיכום
+          המודגשת שמתחתיה "תוספת לחיוב" (בלי "ה"): אוחדו לצורה אחת. */}
+      <div className="text-xs font-bold text-slate-700">תוספת לחיוב</div>
       <div className="mt-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1">
         <MoneyRow label="סכום השינוי" amount={money?.changeAmount} quoteReadable={readable} />
         <MoneyRow
@@ -661,11 +668,12 @@ function MoneySummary({ money, quote }) {
           bold
           testId="scope-money-total"
         />
+        {/* ✏️ שלב 4 — משפט אחד (R13): הפירוק ל-5%+10% הוא נוסחה (④), ולא סייג — שורת-ההנחה
+            שמעל כבר מציגה את האחוז המאוחד; הפירוט עצמו רשום כמועמד לשכבה בדוח-הכתיבה. מה
+            שנשאר כאן הוא הסייג שכן חיוני: המע"מ קפוא, לא מחושב לפי שיעור-היום. */}
         {readable ? (
           <div className="pb-2 text-[11px] text-slate-500">
-            ההנחה זהה לזו שבהצעה — <Ltr>{`${Number(quote.applied_customer_discount) || 0}%`}</Ltr>{' '}
-            הנחת-לקוח ועוד <Ltr>{`${Number(quote.manual_discount) || 0}%`}</Ltr> הנחה ידנית. מע"מ
-            לפי השיעור שהוקפא באישור ההצעה.
+            מע"מ לפי השיעור שהוקפא באישור ההצעה.
           </div>
         ) : null}
       </div>
@@ -942,10 +950,12 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
       </div>
 
       <div>
+        {/* ✏️ שלב 4 — משפט אחד (R13): "משנים כמויות בלבד" מוביל (B13), ואחריו הקפאת-המחיר —
+            במונח-המילון "קפוא" (§3ב), לא בניסוח משלו. */}
         <div className="text-xs font-bold text-slate-700">
           מה משתנה{' '}
           <span className="font-normal text-slate-500">
-            — מחירי היחידה מגיעים מההצעה המאושרת ואינם ניתנים לעריכה. משנים כמויות בלבד.
+            — משנים כמויות בלבד; מחיר היחידה קפוא מההצעה שאושרה.
           </span>
         </div>
 
@@ -1001,7 +1011,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
               ])
             }
           >
-            + הוספת פריט שאינו בהצעה
+            + הוסיפי פריט שאינו בהצעה
           </button>
           <span className="mr-2 text-[11.5px] text-slate-400">
             פריט חדש נכנס לפי מדרגת-המחיר בקטלוג היום, ומקבל את הנחת ההצעה
@@ -1019,7 +1029,14 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
         </div>
       ) : null}
 
-      {/* ② צמצום — מי משחרר: מנהלת הגיוס, במסך שלה. לא מכאן (ההבחנה ⑤-מול-צמצום). */}
+      {/* ② צמצום — מי משחרר: מנהלת הגיוס, במסך שלה. לא מכאן (ההבחנה ⑤-מול-צמצום).
+          ✏️ שלב 4 (R7: "המערכת" רק כשהיא מודה בכישלון — וזו לא) — "המערכת לא תשחרר"
+          הוחלף בניסוח-הנושא-הסביל שכבר מאושר לאותה אזהרה במסך האחות (משטח 4, "שנה כמות
+          דיילות"): "אף אחת לא תשוחרר אוטומטית" (screens-approved.md:1146, §⑦). אותה
+          אזהרה בדיוק, לכן אותו נוסח (R30/R11) — עם שורת-המייל שמעבר לה, ספציפית לדיאלוג הזה.
+          🔴 והנושא-המצוטט תוקן: "חל שינוי בתכולה" לא היה נושא-אמת של שום מייל — הנושא
+          האמיתי של מייל-השחרור הוא `releaseSubject` ב-`src/lib/shiftEmails.js:44`, "עדכון
+          על המשמרת — {שם האירוע}". */}
       {hostessReduction ? (
         <div
           className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800"
@@ -1028,8 +1045,8 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
           <b>
             ⚠ הדרישה תרד ל-<Ltr>{String(hostessState.target)}</Ltr> דיילות.
           </b>{' '}
-          המערכת <b>לא</b> תשחרר אף דיילת מכאן — <b>מנהלת הגיוס בוחרת את מי לשחרר</b> במסך שלה,
-          והמשוחררות יקבלו את מייל "חל שינוי בתכולה".
+          <b>אף אחת לא תשוחרר אוטומטית</b> — <b>מנהלת הגיוס בוחרת את מי לשחרר</b>, והמשוחררות יקבלו
+          את מייל "עדכון על המשמרת".
         </div>
       ) : null}
 
@@ -1039,7 +1056,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
         </div>
       ))}
 
-      <MoneySummary money={money} quote={quote} />
+      <MoneySummary money={money} />
 
       {/* בלוק-ההשלכה — מדווח ולא מבצע ⇒ לבן+מסגרת, לא ענבר (כרטיס §⑧ח) */}
       <div>
@@ -1063,7 +1080,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
             <b>לא יישלח מייל לאף דיילת.</b> גיוס הדיילות הנוספות נעשה במסך השיבוץ של מנהלת הגיוס.
           </ConsequenceRow>
           <ConsequenceRow label="חיוב">
-            ההצעה המאושרת אינה משתנה. סה"כ לפרויקט אחרי השינוי:{' '}
+            ההצעה המאושרת אינה משתנה. סה"כ לפרויקט אחרי השינוי —{' '}
             <b className="whitespace-nowrap">
               {totalAfterChange !== null ? <Money exact amount={totalAfterChange} /> : <Ltr>—</Ltr>}
             </b>
@@ -1083,7 +1100,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
           value={reason}
           disabled={submitting}
           data-testid="scope-reason"
-          placeholder="למשל: רון גל הודיע ב-12/08 שיגיעו עוד 80 אורחים וביקש להוסיף 2 דיילות"
+          placeholder="לדוגמה: רון גל הודיע ב-12/08 שיגיעו עוד 80 אורחים וביקש להוסיף 2 דיילות"
           className={`w-full resize-y rounded-lg border px-3 py-2 text-right text-sm outline-none focus-visible:ring-2 focus-visible:ring-teal-300 ${
             reasonEmpty && changedCount > 0 ? 'border-red-600' : 'border-slate-300'
           }`}
@@ -1098,15 +1115,16 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
             {EMPTY_REASON_MESSAGE}
           </span>
         ) : (
+          // ✏️ שלב 4 — משפט אחד (R3/R13): "חובה" ו"בלי סיבה אי-אפשר לשמור" אמרו את אותו
+          // דבר פעמיים (R27) — ומה שהיה חסר, נכנס: מותנית בזה שהסיבה גם נשמרת בהיסטוריה.
           <span className="text-[11px] text-slate-500">
-            חובה. בלי סיבה אי-אפשר לשמור. הסיבה נשמרת עם השינוי ומוצגת בהיסטוריה שבלשונית
-            הלוגיסטיקה.
+            חובה למלא — הסיבה נשמרת עם השינוי ומוצגת בהיסטוריה שבלשונית הלוגיסטיקה.
           </span>
         )}
       </div>
 
       <div className="text-[11px] text-slate-500">
-        יירשם אוטומטית: {user?.fullName ?? user?.email ?? '—'} ·{' '}
+        יירשם אוטומטית — {user?.fullName ?? user?.email ?? '—'} ·{' '}
         <Ltr>{formatTimestamp(loadedAt.toISOString())}</Ltr>
       </div>
 
@@ -1155,9 +1173,11 @@ export default function ScopeChangeDialog({ project, open, onOpenChange, onSaved
       <DialogContent dir="rtl" className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>שינוי תכולה</DialogTitle>
+          {/* ✏️ שלב 4 — איפוס מלא: תיאור-דיאלוג = טקסט-עזר (R3/R13, משפט קצר אחד). המקור
+              היה שני משפטים שחוזרים בגוף-הדיאלוג עצמו ("מה משתנה") ובבלוק "חיוב" — נמחקו
+              משם (R27), נשאר כאן רק מה שהם לא אמרו: איפה השינוי נרשם. */}
           <DialogDescription>
-            משנים <b>כמויות בלבד</b>. ההצעה שהלקוח אישר נשארת כפי שהיא — השינוי נרשם בשורה נפרדת
-            ומתווסף לחיוב.
+            השינוי נרשם כאן ומתווסף לחיוב — ההצעה המקורית אינה משתנה.
           </DialogDescription>
         </DialogHeader>
         {open && project ? (

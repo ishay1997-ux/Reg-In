@@ -42,3 +42,5 @@
 - 🚫 **אין מסלול-סגירה לאירוע ללא דיילות** — הכרעת-מציאות ישי 21/08 ("אין דבר כזה במציאות"). ‏`closingValidationSummary` מחזיר *"לא ניתן לסגור: לא שובצו דיילות לאירוע."* על מערך ריק, והשרת מסרב ממילא. **אל "תשפרו" עם מסך-ריק-חוקי — הוא הוסר במכוון.**
 
 </div>
+
+- ✏️ **09/09/2026 (לילה-הטקסטים, שלב 4):** גם `src/lib/closingDraft.js` נושא נוסחי-ולידציה שהם **העתק-בייט של `raise`** — **8** (לא 4): `EVENT_HOURS_ERROR` · `EVENT_GUESTS_ERROR` · `reportFileErrorText` · `attendanceMissingError` · `qualityMissingError` · `NEGATIVE_REASON_ERROR` · `rowHoursError` · המחרוזת ב-`isStalenessMessage`. ו-`CANCELLED_SCOPE_REASON` ב-`projectTeam.js` **אינו** העתק-בייט (השרת: `הפרויקט בוטל ולא ניתן לשנות את תכולתו.`) — כיתוב-מקדים בצד-לקוח בלבד. הכלל נשאר: לספור מול `grep -rn "raise exception" supabase/migrations/*.sql`, לא מכאן.

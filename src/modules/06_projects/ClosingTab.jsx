@@ -95,8 +95,11 @@ import ScopeChangeDialog from './ScopeChangeDialog'
 
 // ההשלכה של ㉔ (as-built ⑥): הדיאלוג כותב למסד מיד, בעוד טיוטת-הסגירה רק בזיכרון — בלי
 // המשפט הזה, נטישת הסגירה אחרי רישום-שינוי נקראת כ"השינוי אבד". (הנחתי — נוסח שלי.)
+// ✏️ שלב 4 (איפוס-קופי): "נרשם במסד" הוסר (ז'רגון-מסד, R10/B8) — מה שנשאר הוא מה שהיא
+// חייבת לדעת: השינוי כבר סופי ונכנס לחיוב, גם אם הסגירה לא תושלם. הנימוק *למה* זה שונה
+// משאר הלשונית (שכאן לא כלום נשמר לפני "שמרי ושלחי") עבר למועמד לשכבה (ר' דוח-הכתיבה).
 const SCOPE_COMMITS_NOW_NOTE =
-  'שינוי שנשמר בדיאלוג נרשם במסד מיד — גם אם הסגירה לא תושלם, השינוי יישאר רשום וייכנס לחיוב.'
+  'שינוי שנשמר בדיאלוג נכנס לתוקף מיד — הוא יישאר וייכנס לחיוב, גם אם הסגירה לא תושלם.'
 
 // שמות המיילים כפי שהם נקראים על המסך בכשל — "המסך אומר בשם איזה מייל נכשל".
 const REPORT_MAIL_NAME = 'מייל דוח-הסיכום'
@@ -293,7 +296,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
           ok: false,
           surveyMarked: false,
           message:
-            'המיילים לא יצאו — ללקוח אין כתובת מייל זמינה. אפשר לשלוח שוב אחרי עדכון הכתובת.',
+            'המיילים לא יצאו — ללקוח אין כתובת מייל זמינה, ואפשר לשלוח שוב אחרי עדכון הכתובת.',
         }
       }
 
@@ -513,11 +516,10 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
       {/* ═══ 🅰️ מה קרה בפועל — ברמת האירוע ═══ */}
       <section className="mb-4">
         <h2 className="text-sm font-bold text-slate-700">מה קרה בפועל — ברמת האירוע</h2>
-        <p className="mb-2.5 mt-0.5 text-[11.5px] text-slate-500">
-          שלושת השדות חובה. בלעדיהם לא ניתן לשמור ולשלוח.
-        </p>
-
-        <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
+        {/* ✏️ שלב 4: "שלושת השדות חובה. בלעדיהם לא ניתן לשמור ולשלוח." הוסר — כל שדה כבר
+            נושא "· חובה" משלו, ופס-המוכנות שמתחת מפרט מה חסר בזמן-אמת (R27: חוזר על מה
+            שהמסך כבר אומר). */}
+        <div className="mt-2 grid grid-cols-1 gap-3.5 md:grid-cols-3">
           <div className="flex flex-col gap-1">
             <label htmlFor="closing-hours" className="text-xs text-slate-500">
               <span className="font-semibold text-slate-600">שעות ביצוע בפועל</span> · חובה
@@ -544,9 +546,8 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
               מתוכנן: {plannedRange ? <Ltr>{plannedRange}</Ltr> : '—'} ·{' '}
               <Ltr>{String(plannedHours)}</Ltr> שעות
             </span>
-            <span className="text-[11px] text-slate-500">
-              קובע את ברירת-המחדל בעמודת "שעות בפועל" של כל דיילת — וניתן לדרוס אותה פר-שורה
-            </span>
+            {/* ✏️ שלב 4: "קובע את ברירת-המחדל בעמודת 'שעות בפועל'..." הוסר לבסיס — היא
+                עצמה מדגימה זאת (הערך ממולא-מראש), וה"למה" עבר למועמד לשכבה (מונח ⑤). */}
             {hoursTouched && hoursInvalid && (
               <span
                 className="text-[11px] font-semibold text-red-600"
@@ -626,7 +627,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                         setTimeout(() => URL.revokeObjectURL(url), 60_000)
                       }}
                     >
-                      הורדה
+                      הורידי
                     </button>
                     {canAct && (
                       <button
@@ -635,7 +636,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                         onClick={() => fileInputRef.current?.click()}
                         data-testid="closing-file-replace"
                       >
-                        החלפת קובץ
+                        החליפי קובץ
                       </button>
                     )}
                   </span>
@@ -650,7 +651,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                       onClick={() => fileInputRef.current?.click()}
                       data-testid="closing-file-pick"
                     >
-                      בחירת קובץ
+                      בחרי קובץ
                     </button>
                   )}
                 </>
@@ -754,15 +755,9 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
           </div>
         )}
 
-        {rows.length > 0 && (
-          <p className="mt-2.5 text-[11.5px] leading-relaxed text-slate-400">
-            בחירת <b>"לא לשלוח שוב"</b> פותחת מתחת לשורה שדה סיבה — <b>חובה</b>, ובלעדיו לא ניתן
-            לשמור.
-            <br />
-            הסימון נשמר מול <b>{project?.customer_name ?? 'הלקוח'}</b> ומשפיע רק על שיבוצים עתידיים
-            אצל הלקוח הזה.
-          </p>
-        )}
+        {/* ✏️ שלב 4: שני המשפטים שהיו כאן הוסרו מהבסיס. הראשון (מה קורה בבחירת "לא לשלוח
+            שוב") מוכח חי — שדה-הסיבה נפתח בפועל, ושגיאתו-שלו כבר אומרת "חובה". השני
+            (ההיקף — פר-לקוח) הוא הגדרת-מונח (③), ומקומה בשכבה ולא בבסיס. שניהם במועמדים. */}
       </section>
 
       {/* ═══ שינויי תכולה שהתגלו באירוע (㉔ · B7) ═══ */}
@@ -814,8 +809,8 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
               role="alert"
               data-testid="closing-stale"
             >
-              <b>רשימת-הסגירה השתנתה מאז שהמסך נטען.</b>
-              <br />
+              {/* ✏️ שלב 4: הכותרת הקבועה שהייתה כאן ("רשימת-הסגירה השתנתה מאז שהמסך
+                  נטען.") הוסרה — היא חוזרת מילה-במילה על הודעת-השרת שמתחתיה (R27). */}
               {staleMessage}
               <br />
               {/* היושר של as-built ③: הציות ל"רענני" מוחק את הטיוטה — נאמר, לא מופתע. */}
@@ -831,7 +826,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                   }}
                   data-testid="closing-stale-refresh"
                 >
-                  רענון הרשימה
+                  רעני את הרשימה
                 </button>
               </div>
             </div>
@@ -1103,7 +1098,7 @@ function ScopeChangesSection({ changes, canAct, onOpen }) {
                 onClick={onOpen}
                 data-testid="closing-change-link"
               >
-                רישום שינוי שהתגלה באירוע
+                רשמי שינוי שהתגלה באירוע
               </button>
             </div>
           )}
@@ -1132,7 +1127,7 @@ function ScopeChangesSection({ changes, canAct, onOpen }) {
                 onClick={onOpen}
                 data-testid="closing-change-link"
               >
-                רישום שינוי שהתגלה באירוע
+                רשמי שינוי שהתגלה באירוע
               </button>
             </div>
           )}

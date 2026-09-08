@@ -69,10 +69,12 @@ export function eventPassedSentence(days) {
   return `התקיים לפני ${days} ימים`
 }
 
+// שלושת הערכים המדויקים של ה-CHECK במסד (schema.sql:1407) — לא "internal", שאינו ערך
+// חוקי ומעולם לא היה יכול להתאים. אותה שלישייה בדיוק כמו CANCEL_TYPE_LABELS ב-lib/projectCard.js.
 const CANCEL_TYPE_NAMES = {
   customer: 'ביטול לקוח',
-  internal: 'ביטול פנימי',
   force_majeure: 'כוח עליון',
+  other: 'אחר',
 }
 
 // עמודת "מה חסר" (⑧): משפט במילים, לעולם לא ציון. סדר הענפים = סדר-הקדימות:

@@ -296,18 +296,13 @@ function lastChangeSub(changes, now) {
 function ImpactTile({ error, hasChanges, hidden, money }) {
   if (error) {
     return (
-      <StatTile
-        label="השפעת השינויים על ההכנסה"
-        value={null}
-        emptyText="—"
-        testId="logistics-tile-impact"
-      />
+      <StatTile label="השפעה על ההכנסה" value={null} emptyText="—" testId="logistics-tile-impact" />
     )
   }
   if (!hasChanges) {
     return (
       <StatTile
-        label="השפעת השינויים על ההכנסה"
+        label="השפעה על ההכנסה"
         value={null}
         emptyText="אין שינויים עדיין"
         testId="logistics-tile-impact"
@@ -317,7 +312,7 @@ function ImpactTile({ error, hasChanges, hidden, money }) {
   if (hidden) {
     return (
       <StatTile
-        label="השפעת השינויים על ההכנסה"
+        label="השפעה על ההכנסה"
         value="—"
         sub={<span data-testid="logistics-impact-no-permission">🔒 {MONEY_HIDDEN_SENTENCE}</span>}
         testId="logistics-tile-impact"
@@ -326,7 +321,7 @@ function ImpactTile({ error, hasChanges, hidden, money }) {
   }
   return (
     <StatTile
-      label="השפעת השינויים על ההכנסה"
+      label="השפעה על ההכנסה"
       value={<Ltr>{signedShekelCents(money.afterDiscount)}</Ltr>}
       sub={money.discountPercent > 0 ? 'אחרי הנחת הלקוח' : undefined}
       testId="logistics-tile-impact"
@@ -336,7 +331,8 @@ function ImpactTile({ error, hasChanges, hidden, money }) {
 
 // 🔒 תווית תת-שורת-ההערה (㉒). הקבוע יושב כאן ולא ב-`src/lib/projectLogistics.js` כי
 // האדווה הזאת מצומצמת לקובץ הזה; אתר-קריאה שני יעביר אותו לספרייה (כלל 14).
-const NOTE_LABEL = 'הערת הלוגיסטיקה:'
+// ✏️ שלב 4 — קו-מפריד ולא נקודתיים (R2: תווית לא מסתיימת ב-":"), עקבי עם שאר הקובץ.
+const NOTE_LABEL = 'הערת הלוגיסטיקה —'
 
 // טבלת-הפריטים: 4 עמודות, קריאה בלבד. תקציב-הצבע: אפס שורות אדומות; ענבר רק על
 // "הוגדל מ-…" (הגדלה יוצרת חוסר); הקטנה אפורה (עובדה).
@@ -430,8 +426,7 @@ function MainTable({ rows, changes, productName }) {
         </tbody>
       </table>
       <div className="mt-2 text-[11.5px] text-slate-400">
-        שלושת מצבי הפריט, לפי הסדר: <b>טרם החל</b>, <b>הוזמן</b>, <b>מוכן</b>. מי שמעדכנת אותם היא
-        מנהלת הלוגיסטיקה, במסך שלה. כאן הם לקריאה בלבד.
+        הסטטוסים כאן לקריאה בלבד — מעדכנת אותם מנהלת הלוגיסטיקה, במסך שלה.
       </div>
     </>
   )
@@ -530,7 +525,9 @@ function HistorySection({ changes, rows, project, productName, hidden, money }) 
               className="mt-2.5 border-t border-slate-200 pt-2.5 text-[12.5px] text-slate-600"
               data-testid="logistics-totals"
             >
-              סך שינויי התכולה:{' '}
+              {/* ✏️ שלב 4 — קו-מפריד ולא נקודתיים (R2), עקבי עם שאר הקובץ; לא נמצא תקדים
+                  ל"תווית:" בשום מקום אחר ב-`src/modules` (נבדק). */}
+              סך שינויי התכולה —{' '}
               <b>
                 <Ltr>{signedShekelCents(money.preDiscount)}</Ltr>
               </b>{' '}
@@ -538,7 +535,7 @@ function HistorySection({ changes, rows, project, productName, hidden, money }) 
               {money.discountPercent > 0 && (
                 <>
                   {' '}
-                  אחרי הנחת הלקוח שנקבעה בהצעה (<Ltr>{`${money.discountPercent}%`}</Ltr>):{' '}
+                  אחרי הנחת הלקוח שנקבעה בהצעה (<Ltr>{`${money.discountPercent}%`}</Ltr>) —{' '}
                   <b>
                     <Ltr>{signedShekelCents(money.afterDiscount)}</Ltr>
                   </b>

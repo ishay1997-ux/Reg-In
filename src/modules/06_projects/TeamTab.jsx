@@ -47,9 +47,7 @@ import {
   TEAM_NO_PERMISSION_SENTENCE,
   NO_INVITES_TITLE,
   SORT_LINE,
-  SCOPE_NOTE,
   SMART_MATCH_CLARIFICATION,
-  RAW_STATUS_NOTE,
   SHIFT_LEAD_LABEL,
   assignmentMeaning,
   teamHeadline,
@@ -76,7 +74,10 @@ const POST_EVENT_STATUSES = ['event_finished', 'awaiting_invoice', 'awaiting_pay
 // במצב-השגיאה המפורש של הלשונית — ולא הופך בשקט כל זימון פג ל"ממתינה למענה", שהוא בדיוק
 // המצב שהמשפט-האדום של המסך קיים בשבילו.
 const TEAM_PARAM_NAMES = [HOSTESS_PARAM_NAMES.inviteValidityHours]
-const SCOPE_BLOCKED_TITLE = "אחרי האירוע, שינויים מוזנים בלשונית 'סגירת אירוע'"
+// 🧹 שוכתב מ"אחרי האירוע, שינויים מוזנים בלשונית 'סגירת אירוע'" (B13: פעולה קודמת לעובדה).
+// ⚠️ אותה קבועה בדיוק יושבת גם ב-ProjectCardPage.jsx:66 (מחוץ לסט הקבצים שלי) — דווח כ"פגיעה
+// מחוץ לסט" כדי שהניסוח יתאזן בשני המקומות.
+const SCOPE_BLOCKED_TITLE = "עברי ללשונית 'סגירת אירוע' לשינוי תכולה אחרי האירוע"
 
 export default function TeamTab({
   project,
@@ -208,7 +209,9 @@ export default function TeamTab({
         <StatTile
           label="אושרו סופית"
           value={<Ltr>{String(confirmed)}</Ltr>}
-          sub="המדד: מאושרות ≥ נדרשות"
+          // 🧹 היה "המדד: מאושרות ≥ נדרשות" (תנאי מופשט) — הבסיס מציג את המספרים עצמם
+          // (docs/plans/ui-copy-and-onboarding-mode.md §4, שלב 4·מ6, הדוגמה המלאה).
+          sub={`${confirmed} מתוך ${required} אושרו סופית`}
           testId="team-tile-confirmed"
         />
         {!noInvites && (
@@ -338,10 +341,15 @@ function ActionsBar({ project, canEdit, canReadHostesses, onScopeChange, showSor
         )}
         {showSortLine && <span className="mr-auto text-xs text-slate-400">{SORT_LINE}</span>}
       </div>
-      {(canEdit || canReadHostesses) && (
+      {/* 🧹 SCOPE_NOTE ("שינוי הכמות נרשם כשינוי-תכולה…") הוסר — ScopeChangeDialog כבר אומר
+          את זה בפועל ברגע שהיא לוחצת (R27). מה שנשאר כאן אמיתי-לכל מי שרואה 'דיילות':
+          שהיעד של "פתחי שיבוץ חכם" הוא מסך-צפייה בשבילה. גם מי שאין לה 'עריכה' (מנהלת
+          הגיוס) צריכה את זה — לכן התנאי הוא canReadHostesses בלבד, לא canEdit||canReadHostesses
+          (הזוג היחיד עם canEdit במטריצה — מנכ"ל ומנהלת פרויקטים — גם קורא 'דיילות' תמיד,
+          screens-approved.md §⑤). */}
+      {canReadHostesses && (
         <p className="mb-3 text-[11.5px] leading-relaxed text-slate-400">
-          {SCOPE_NOTE}
-          {canReadHostesses && <> · {SMART_MATCH_CLARIFICATION}</>}
+          {SMART_MATCH_CLARIFICATION}
         </p>
       )}
     </>
@@ -477,7 +485,6 @@ function RoundsHistory({ rows, finalCount, open, onToggle }) {
         >
           {open ? `הסתירי (${rows.length} שורות)` : `הציגי (${rows.length} שורות)`}
         </button>
-        {open && <span className="mr-auto text-xs text-slate-400">{RAW_STATUS_NOTE}</span>}
       </div>
 
       {open && (
@@ -487,7 +494,10 @@ function RoundsHistory({ rows, finalCount, open, onToggle }) {
               <tr className="border-b border-slate-300 text-right text-xs font-semibold text-slate-500">
                 <th className="w-[9%] px-2 py-1.5">סבב</th>
                 <th className="w-[23%] px-2 py-1.5">דיילת</th>
-                <th className="w-[22%] px-2 py-1.5">סטטוס גולמי</th>
+                {/* 🧹 היה "סטטוס גולמי" — "גולמי/נגזר" הוא ז'רגון-בנאים שאינו נכנס למילון
+                    (§3ג של המדריך). "מקורי" נושא את אותה הבחנה (זה לא התווית הנגזרת שלמעלה)
+                    במילה שדיילת הייתה מבינה. */}
+                <th className="w-[22%] px-2 py-1.5">סטטוס מקורי</th>
                 <th className="w-[16%] px-2 py-1.5">תעריף מוקפא</th>
                 <th className="w-[15%] px-2 py-1.5">זימון נשלח</th>
                 <th className="w-[15%] px-2 py-1.5">נענה</th>

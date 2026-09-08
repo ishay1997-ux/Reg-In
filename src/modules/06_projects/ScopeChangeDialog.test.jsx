@@ -355,8 +355,9 @@ describe('ScopeChangeDialog — הודעת חציית-מדרגה (③ↄ)', () =
   it('מוצגת כשהיעד נכנס למדרגה זולה יותר, ובלי שום ספרת ₪', async () => {
     await renderDialog()
     fireEvent.change(screen.getByLabelText(TAGS_INPUT), { target: { value: '420' } })
+    // ✏️ שלב 4 — הנוסח אופס (ר' projectChanges.js/projectChanges.test.js); הבדיקה עודכנה בהתאם.
     const notice = screen.getByTestId('scope-tier-notice')
-    expect(notice.textContent).toContain('מדרגת מחיר זולה יותר')
+    expect(notice.textContent).toContain('מדרגת המחיר הזולה יותר')
     expect(notice.textContent).not.toContain('₪')
   })
 
@@ -666,10 +667,12 @@ describe('ScopeChangeDialog — הסרה = הקלדת 0 (M5-7 · ㊱ · ㉚)', (
 
       fireEvent.click(screen.getByTestId('scope-add-item'))
       const newRow = screen.getByTestId('scope-new-row-select-0').closest('tr')
-      // הקישור שכבר קיים בשורה החדשה נשאר כלשונו — **"הסרה"**, והוא מוחק שורת-טופס שלא
-      // נשמרה. הפקד החדש הוא **"הסירי פריט"**, והוא מסיר פריט מהאירוע. שני נוסחים שונים
-      // בכוונה, כי טעות ביניהם היא בדיוק ההבחנה פח-מול-ארכיון של `src/CLAUDE.md`.
-      expect(within(newRow).getByText('הסרה')).toBeInTheDocument()
+      // ✏️ שלב 4 — הקישור בשורה החדשה שונה מ"הסרה" (שם-עצם, R12) ל**"בטלי הוספה"**
+      // (פועל בנקבה) כדי לעמוד ב-R12 מבלי לאבד את ההבחנה המכוונת מהפקד השני: הוא מוחק
+      // שורת-טופס שלא נשמרה, לא פריט מהאירוע. הפקד השני הוא **"הסירי פריט"**, ומסיר פריט
+      // אמיתי. שני נוסחים שונים בכוונה — טעות ביניהם היא בדיוק ההבחנה פח-מול-ארכיון של
+      // `src/CLAUDE.md`.
+      expect(within(newRow).getByText('בטלי הוספה')).toBeInTheDocument()
       expect(within(newRow).queryByRole('button', { name: /^הסירי פריט/ })).toBeNull()
     })
 

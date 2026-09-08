@@ -523,7 +523,7 @@ describe('㉔ — דיאלוג-שינוי-התכולה מעל הטיוטה (B7 �
   it('משפט-ההשלכה של הרישום-המיידי מוצג במקטע עצמו', async () => {
     renderTab()
     await screen.findByTestId('closing-changes-section')
-    expect(screen.getByTestId('closing-change-note')).toHaveTextContent('נרשם במסד מיד')
+    expect(screen.getByTestId('closing-change-note')).toHaveTextContent('נכנס לתוקף מיד')
   })
 })
 

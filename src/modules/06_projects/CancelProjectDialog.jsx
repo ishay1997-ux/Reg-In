@@ -62,7 +62,9 @@ const CANCEL_TYPES = [
   {
     value: 'customer',
     title: 'הלקוח ביטל',
-    description: 'הפרת-הסכם מצידו — אנחנו היינו מוכנים ומסוגלים לבצע.',
+    // ✏️ שלב 4: "אנחנו היינו מוכנים ומסוגלים לבצע" הוסר (R7 — "אנחנו" רק כשהמערכת מודה
+    // בכישלון שלה; כאן זו לא הודאה). העובדה שנשארת: האירוע היה ניתן לביצוע מהצד שלנו.
+    description: 'הפרת-הסכם מצד הלקוח — האירוע היה ניתן לביצוע.',
     moneyLine: 'הפיצוי לדיילות נקבע לפי מרחק-הזמן מהאירוע.',
   },
   {
@@ -472,7 +474,7 @@ function CancelProjectBody({ project, onOpenChange, onCancelled, now }) {
           value={reason}
           disabled={submitting}
           data-testid="cancel-reason"
-          placeholder="למשל: הלקוח דחה את האירוע לרבעון הבא"
+          placeholder="לדוגמה: הלקוח דחה את האירוע לרבעון הבא"
           className={`w-full resize-y rounded-lg border px-3 py-2 text-right text-sm outline-none focus-visible:ring-2 focus-visible:ring-teal-300 ${
             reasonEmpty && cancelType ? 'border-red-600' : 'border-slate-300'
           }`}
@@ -488,14 +490,13 @@ function CancelProjectBody({ project, onOpenChange, onCancelled, now }) {
           </span>
         ) : (
           <span className="text-[11px] text-slate-500">
-            נשמרת בכרטיס הפרויקט וזמינה לדו"חות. חובה בכל אחד משלושת הסוגים.
+            נשמרת בכרטיס הפרויקט וזמינה לדו"חות — חובה בכל אחד משלושת הסוגים.
           </span>
         )}
       </div>
 
-      <div className="text-[11px] leading-relaxed text-slate-500">
-        התאריך, השעה ומי ביצעה את הביטול — נחתמים אוטומטית עם האישור, ואינם ניתנים לעריכה.
-      </div>
+      {/* ✏️ שלב 4: "התאריך, השעה ומי ביצעה את הביטול נחתמים אוטומטית..." הוסר מהבסיס —
+          לא משנה מה שהיא עושה עכשיו (R28); עבר למועמדים (④ מקור-הנתון). */}
 
       {serverError ? (
         <p

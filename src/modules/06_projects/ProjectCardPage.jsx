@@ -63,7 +63,7 @@ import ClosingTab from './ClosingTab'
 // הסטטוסים שאחרי הסגירה התפעולית — "שינוי תכולה" מושבת-ומנומק עליהם (חסימת-מצב, ㉔),
 // בשונה מחסימת-הרשאה שמעלימה. ‏cancelled מטופל בנפרד (הכפתור הראשי יורד מפרויקט מת).
 const POST_EVENT_STATUSES = ['event_finished', 'awaiting_invoice', 'awaiting_payment', 'finished']
-const SCOPE_BLOCKED_TITLE = "אחרי האירוע, שינויים מוזנים בלשונית 'סגירת אירוע'"
+const SCOPE_BLOCKED_TITLE = "עברי ללשונית 'סגירת אירוע' לשינוי תכולה אחרי האירוע"
 
 const TAB_KEYS = { logistics: 'logistics', team: 'team', closing: 'closing' }
 
@@ -513,8 +513,10 @@ function IdentityCard({
               <Val>
                 <Ltr>{String(quoteMeta.estimated_guests)}</Ltr>
               </Val>
-              {/* תמיד המתוכנן — actual_guests שייך למשטח 5 ואינו קלט-חיוב (⑳). */}
-              <Sub>מההצעה — לא מספר סופי</Sub>
+              {/* תמיד המתוכנן — actual_guests שייך למשטח 5 ואינו קלט-חיוב (⑳). "לא מספר
+                  סופי" הוסר: התווית "אורחים מוערכים" כבר אומרת את זה (R27) — נשאר רק
+                  המקור, בניסוח-עובדה חיובי במקום שלילה (④, ראה דוח-הסשן). */}
+              <Sub>מהצעת המחיר</Sub>
             </>
           ) : (
             <>
