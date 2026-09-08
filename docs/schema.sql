@@ -9,7 +9,10 @@
 -- ⚠️ זהו SNAPSHOT שנוצר מתוך שאילתות על המסד החי. **מקור-אמת לשינויים = `supabase/migrations/`**
 --    (ולא הקובץ הזה). כל שינוי DB נכתב כקובץ מיגרציה חדש, מוחל, ואז הקובץ הזה נוצר מחדש.
 --
--- 📅 נוצר: 14/08/2026 · **רוענן לאחרונה: 03/09/2026 23:2X (מיזוג שני סשנים)** (מודול 7, צעדים 1.2–1.3 — שתי מיגרציות,
+-- 📅 נוצר: 14/08/2026 · **רוענן לאחרונה: 08/09/2026 22:5X** (מצב-הטמעה, מיגרציה `20260908221959_onboarding_mode`:
+--    סעיף 32 — עמודה `onboarding_mode integer` + אילוץ-בשם + הערת-עמודה + הערת-טבלה מעודכנת + מדיניות רביעית
+--    `notification_preferences_ceo_all`; **אומת מול `pg_catalog` אחרי ההחלה** — 4 policies, 0 smallint בסכמה.
+--    אפס טבלאות/פונקציות חדשות) · רוענן קודם: 03/09/2026 23:2X (מיזוג שני סשנים) (מודול 7, צעדים 1.2–1.3 — שתי מיגרציות,
 --    `20260903182735_module7_dashboard_summary_rpc` + תיקון-קדימה `20260903184711_…_cancelled_on_calendar_and_profit`:
 --    **פונקציה חדשה** `get_dashboard_summary(date)`,
 --    סעיף 24 בלוק "מודול 7"; אפס טבלאות/עמודות/policies. ⚠️ **ובאותה שעה, מסשן מקביל:**
@@ -1796,28 +1799,40 @@ create policy hostess_languages_write_by_permission on hostess_languages
 -- ⚠️ **`on update no action` נכתב במפורש, ואינו שכחה.** שינוי-מייל צריך להיכשל **בקול**
 --    על ה-FK עד שיגיע סנכרון-Auth (§7.64, נדחה) — `cascade` היה הופך כשל רועש
 --    לנעילה שקטה. ‏`on delete cascade`: משתמש שנמחק לוקח את ההעדפה איתו.
--- 🔴 **אין שורה = שני המתגים כבויים.** אין Seed ואין ברירת-מחדל בצד המסד מעבר
---    ל-`false` — קוד שלא מוצא שורה חייב להציג "כבוי", לא "לא ידוע".
+-- 🔴 **אין שורה = שתי העדפות-ההתראה כבויות ורמת-ההטמעה 0.** אין Seed ואין ברירת-מחדל
+--    בצד המסד מעבר ל-`false`/`0` — קוד שלא מוצא שורה חייב להציג "כבוי", לא "לא ידוע".
+--    *(✏️ 08/09/2026: היה "שני המתגים כבויים" — עכשיו שלוש עמודות-העדפה, אחת מהן רמה.)*
 -- ⚠️ **`sms_last_minute` קיימת והערוץ אינו קיים** (R-4): המתג מוצג כבוי ונעול עם
 --    "אין ערוץ SMS במערכת". העמודה נוצרה עכשיו כדי שלא תידרש מיגרציה כשהערוץ יגיע.
--- 🔴 **שלוש מדיניות בלבד — אין DELETE.** אין פעולת-מחיקה במסך; מחיקה מגיעה רק
---    דרך ה-cascade של `users`.
+-- 🆕 **`onboarding_mode` — רמת "מצב הטמעה" 0/1/2** (מיגרציה `20260908221959_onboarding_mode`,
+--    הכרעה 28⑭): `integer`, לא בוליאני — 0 נקי · 1 מכוון · 2 מודרך; אילוץ-בשם 0..2.
+--    ברירת-המחדל 0 (הכרעת-ישי 28⑫(א)). `<Hint>` בכל מסך קורא אותה מ-`AuthContext`.
+-- 🔴 **ארבע מדיניות — שלוש עצמי + אחת למנכ"ל (`for all`) — ואין DELETE.** *(✏️ 08/09/2026:
+--    היה "שלוש מדיניות בלבד".)* הרביעית, `notification_preferences_ceo_all`, היא הדלת
+--    שדרכה המנכ"ל קורא וכותב את רמת-ההטמעה של אחרת ממסך ניהול-המשתמשים (הכרעה 28⑨) —
+--    אותו פרדיקט כמו `users_write_ceo_only` (סעיף 4). מחיקה מגיעה רק דרך ה-cascade של `users`.
 create table notification_preferences (
   email              text        not null,
   email_new_projects boolean     not null default false,
   sms_last_minute    boolean     not null default false,
   created_at         timestamptz not null default now(),
   updated_at         timestamptz not null default now(),
+  onboarding_mode    integer     not null default 0,
   constraint notification_preferences_pkey primary key (email),
   constraint notification_preferences_email_fkey
-    foreign key (email) references users (email) on update no action on delete cascade
+    foreign key (email) references users (email) on update no action on delete cascade,
+  constraint notification_preferences_onboarding_mode_check
+    check (onboarding_mode >= 0 and onboarding_mode <= 2)
 );
 
 alter table notification_preferences enable row level security;
 
 -- הערת-טבלה (comment on table)
--- 'העדפות-התראות פר-משתמש (מודול 9 שומר, מודול 10 שולח). אין שורה = הכל כבוי.
---  SMS: העמודה קיימת, הערוץ לא (R-4).'
+-- 'העדפות פר-משתמשת: שתי העדפות-התראה (מודול 9 שומר, מודול 10 שולח) ורמת מצב-ההטמעה
+--  (onboarding_mode). אין שורה = הכל כבוי ורמה 0. SMS: העמודה קיימת, הערוץ לא (R-4).'
+-- הערת-עמודה (comment on column onboarding_mode)
+-- 'רמת מצב-ההטמעה של המשתמשת: 0 נקי (ברירת-מחדל, אין שורה = 0) · 1 מכוון (מונח · מקור-המספר ·
+--  נימוק-סידור, שורה לכל אחד — טרם נכתב) · 2 מודרך (ההסבר המלא). הכרעה 28⑭, 07/09/2026.'
 
 -- אינדקסים
 -- notification_preferences_pkey — unique btree (email) [נוצר ע"י האילוץ notification_preferences_pkey]
@@ -1828,7 +1843,7 @@ create trigger notification_preferences_set_updated_at
   before update on notification_preferences
   for each row execute function moddatetime('updated_at');
 
--- מדיניות RLS (3) — מדיניות-עצמי, בתקדים users_update_self
+-- מדיניות RLS (4) — שלוש מדיניות-עצמי בתקדים users_update_self, ואחת למנכ"ל בתקדים users_write_ceo_only
 create policy notification_preferences_select_self on notification_preferences
   for select to authenticated
   using (email = (select auth.email()));
@@ -1841,7 +1856,13 @@ create policy notification_preferences_update_self on notification_preferences
   for update to authenticated
   using (email = (select auth.email()))
   with check (email = (select auth.email()));
---   → supabase/migrations/20260902211550_module9_b_notification_preferences.sql
+
+create policy notification_preferences_ceo_all on notification_preferences
+  for all to authenticated
+  using      ((select current_user_role_id()) = (select role_id from roles where role_name = 'מנכ"ל'))
+  with check ((select current_user_role_id()) = (select role_id from roles where role_name = 'מנכ"ל'));
+--   → supabase/migrations/20260902211550_module9_b_notification_preferences.sql (הטבלה + 3 מדיניות-עצמי)
+--   → supabase/migrations/20260908221959_onboarding_mode.sql (העמודה + האילוץ + ההערות + המדיניות הרביעית)
 
 
 -- ============================================================

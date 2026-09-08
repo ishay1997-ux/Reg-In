@@ -201,6 +201,8 @@ Lockout also auto-expires after 15 min, and Google Sign-In bypasses it entirely.
 
 ## 9. 📝 Deviations & Tech-Debt Log
 
+- **`08/09/2026 22:4X` — CROSS-MODULE EDIT by the ui-copy night (branch `ishay/ui-copy-rewrite`; module 1 is closed — this is the required ripple record).** ↳ as-built: `src/modules/01_auth/UsersManagementPage.jsx` gains the **"מצב הטמעה" column** — a per-row `Switch`, CEO-only (`roleName === CEO_ROLE_NAME`; the RLS policy `notification_preferences_ceo_all` is the real wall), writing through `saveOnboardingMode(level, { email })` of module 9's `api.js` (the table's owner, iron rule 14 — the page's own direct-`supabase` calls were not extended). Levels load separately after users (`listOnboardingModes`); a load failure shows "—" per row instead of a false "off". Optimistic flip + rollback + `toast.error`, the `handleToggleStatus` shape. Ruling 28⑨(b)/28⑭, `docs/specs/module_11_reports/processes-approved.md`. **And the first-ever test file for this module:** `UsersManagementPage.test.jsx` — 7 baseline tests written BEFORE the change (table · load-error+retry · add-dialog validation · deactivate+RLS-silent-block · self-protection), then 7 for the column (14 green). ⚠️ The pre-existing `react-hooks/exhaustive-deps` warning on the `useEffect` is untouched — not this night's scope. *(The 74-string masculine-address debt of this module — `🚧 מ12` below — is being paid in stage 2 of the same night, not here.)*
+
 - 🚧 מ12 — 🔴 **12/08/2026 — §7.24's "the 5 test-user passwords will NOT be rotated" is SUPERSEDED, and
   this guide never recorded the reversal.** That ruling (06/07, §3 Ledger + §4 "accepted limitations"
   + the 06/07 backlog line) rested explicitly on *"internal closed system"* — **and the system was

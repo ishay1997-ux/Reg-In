@@ -5,6 +5,7 @@
 // שוב ושוב את שאילתת "מי אני ומה מותר לי". זהו מקור-אמת יחיד בצד-הלקוח למצב המשתמש:
 //   • user        — הזהות והסטטוס: { email, fullName, phone, status, roleId, roleName }
 //   • permissions — מפת ההרשאות:   { [module_name]: 'edit' | 'view' | 'blocked' }
+//   • onboardingMode — רמת "מצב הטמעה" (0/1/2) ש-<Hint> קורא בכל מסך (הכרעה 28⑭)
 // חשוב: האכיפה האמיתית היא ב-DB (RLS). השכבה כאן היא נוחות/תצוגה בלבד ואי אפשר
 // להסתמך עליה לביטחון — לקוח יכול לשקר, ה-DB לא.
 // ============================================================================
@@ -52,6 +53,13 @@ export function AuthProvider({ children }) {
   // ולכן צריך מקום מרכזי לשדר ממנו את השגיאה חזרה למסך ההתחברות.
   const [authError, setAuthError] = useState(null)
 
+  // onboardingMode — רמת "מצב הטמעה" של המשתמשת (0 נקי · 1 מכוון · 2 מודרך), מעמודת
+  // `notification_preferences.onboarding_mode` (הכרעה 28⑭). נטענת כאן, פעם אחת עם המשתמש,
+  // כדי ש-`<Hint>` בכל מסך יקרא אותה מהקונטקסט ולא יריץ שאילתה משלו. **כשל-טעינה = 0,
+  // בשקט** (התוכנית §3.3): הבסיס תקין-לחלוטין בהגדרה, אז אין מה להודיע — ובניגוד להרשאות,
+  // "לא הצלחנו לטעון" ו"רמה 0" נראים אותו דבר בכוונה, כי לשניהם אותה תוצאה על המסך.
+  const [onboardingMode, setOnboardingMode] = useState(0)
+
   // דגל "האם הרכיב עדיין מותקן". loadUser אסינכרוני, ואם המשתמש התנתק/ניווט בזמן
   // ה-await אסור לקרוא ל-setState על רכיב מפורק (דליפת זיכרון + אזהרת React).
   // בחרנו ב-ref ולא ב-state: עדכון הדגל לא אמור לגרום רינדור, ואנחנו צריכים ערך "חי"
@@ -77,6 +85,7 @@ export function AuthProvider({ children }) {
       setUser(null)
       setPermissions({})
       setPermissionsError(false)
+      setOnboardingMode(0)
       setLoading(false)
       return
     }
@@ -154,7 +163,26 @@ export function AuthProvider({ children }) {
       setPermissionsError(false)
     }
 
+    // 4) רמת מצב-ההטמעה — `maybeSingle`: אין שורה = 0 (חוזה הטבלה, "אין שורה = הכול כבוי").
+    //    שגיאה ⇒ 0 בשקט (ר' ההערה ליד ה-state) — לא מנתקים, לא מודיעים, לא מציגים.
+    const { data: prefsRow, error: prefsError } = await supabase
+      .from('notification_preferences')
+      .select('onboarding_mode')
+      .eq('email', email)
+      .maybeSingle()
+    if (!mountedRef.current) return
+    const mode = prefsError ? 0 : prefsRow?.onboarding_mode
+    setOnboardingMode(Number.isInteger(mode) ? mode : 0)
+
     setLoading(false)
+  }, [])
+
+  // עדכון-מקומי של הרמה אחרי שמירה מוצלחת — כדי שהמתג יהפוך את כל ה-<Hint> **חי**, בלי
+  // `reload()` (שמדליק `loading=true` ומפרק את המסך הנוכחי, מוקש מתועד ב-01_auth/CLAUDE.md).
+  // הקורא (מסך-הפרופיל, ניהול-משתמשים-על-עצמו) קורא לזה רק אחרי ש-`saveOnboardingMode`
+  // החזירה שורה — לעולם לא לפני, כדי שלא ייווצר מצג-שווא של "דלוק" מול שורה שלא נכתבה.
+  const updateOnboardingMode = useCallback((level) => {
+    setOnboardingMode(Number.isInteger(level) ? level : 0)
   }, [])
 
   useEffect(() => {
@@ -189,6 +217,7 @@ export function AuthProvider({ children }) {
     setUser(null)
     setPermissions({})
     setPermissionsError(false)
+    setOnboardingMode(0)
   }, [])
 
   // ניקוי ידני של authError — מסך ההתחברות קורא לזה כשהמשתמש מתחיל להקליד/מנסה מחדש,
@@ -204,6 +233,8 @@ export function AuthProvider({ children }) {
         permissionsError,
         authError,
         clearAuthError,
+        onboardingMode,
+        updateOnboardingMode,
         reload: loadUser,
         signOut,
       }}

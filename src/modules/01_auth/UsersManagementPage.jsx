@@ -34,18 +34,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { EMAIL_REGEX, ISRAELI_MOBILE_REGEX } from '@/lib/validators'
+import { CEO_ROLE_NAME } from '@/lib/constants'
+import { ONBOARDING_OFF, ONBOARDING_ON } from '@/lib/onboardingCopy'
+import { listOnboardingModes, saveOnboardingMode } from '@/modules/09_settings/api'
 import { cn } from '@/lib/utils'
 
+// עמודת "מצב הטמעה" (הכרעה 28⑨(ב), 07/09/2026) — הדלת המנוהלת: המנכ"ל מדליק/מכבה פר-משתמשת
+// מכאן, כמו שהוא קובע הרשאות פר-תפקיד במטריצה. הכתיבה עוברת דרך `saveOnboardingMode(level,
+// {email})` של מודול 9 (הטבלה שלו — כלל 14) תחת המדיניות הרביעית `notification_preferences_ceo_all`;
+// מי שאינה מנכ"ל אינה רואה את העמודה — וגם אילו ראתה, ה-RLS היה מחזיר 0 שורות ⇒ "אין הרשאה".
+// המתג הוא כן/לא וממופה ל-0/2 (28⑭). כשהמנכ"ל מדליק לעצמו — הקונטקסט מתעדכן גם, כדי שההסברים
+// יידלקו לו חי בלי רענון (אותו דפוס כמו בפרופיל).
 export default function UsersManagementPage() {
-  const { user: currentUser } = useAuth()
+  const { user: currentUser, updateOnboardingMode } = useAuth()
   const confirm = useConfirm() // חלון-וידוא משותף (במקום window.confirm) — לפני השבתת משתמש
   const toast = useToast() // התראה אחידה (במקום window.alert) — כשל השבתה/הפעלה
+  const isCeo = currentUser?.roleName === CEO_ROLE_NAME
 
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [users, setUsers] = useState([])
   const [roles, setRoles] = useState([])
+  // email → רמה (0/2). null = הרמות לא נטענו (כשל נפרד מהמשתמשים — הטבלה עצמה עדיין עובדת).
+  const [onboardingModes, setOnboardingModes] = useState({})
+  const [onboardingSaving, setOnboardingSaving] = useState('') // ה-email שנשמר כרגע
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState(null) // null = מצב הוספה; אחרת = עריכת השורה הזו
@@ -80,7 +94,35 @@ export default function UsersManagementPage() {
 
     setUsers(usersData || [])
     setRoles(rolesData || [])
+
+    // הרמות נטענות בנפרד ואחרי המשתמשים: כשל כאן אינו מפיל את מסך-הניהול — העמודה מציגה "—"
+    // (הכשל השקט המרכזי הוא "נראה כבוי" כשלא ידוע, ולכן null ולא {}). למי שאינה מנכ"ל אין
+    // מה לטעון — המדיניות הרביעית ממילא לא מחזירה לה שורות של אחרות.
+    if (isCeo) {
+      try {
+        setOnboardingModes(await listOnboardingModes())
+      } catch {
+        setOnboardingModes(null)
+      }
+    }
     setLoading(false)
+  }
+
+  async function handleOnboardingToggle(targetUser, nextChecked) {
+    const level = nextChecked ? ONBOARDING_ON : ONBOARDING_OFF
+    const previous = onboardingModes?.[targetUser.email] ?? ONBOARDING_OFF
+    setOnboardingModes((modes) => ({ ...(modes ?? {}), [targetUser.email]: level })) // אופטימי
+    setOnboardingSaving(targetUser.email)
+    try {
+      const saved = await saveOnboardingMode(level, { email: targetUser.email })
+      if (targetUser.email === currentUser?.email) updateOnboardingMode(saved)
+      toast.success(nextChecked ? 'מצב הטמעה הודלק' : 'מצב הטמעה כובה')
+    } catch (err) {
+      setOnboardingModes((modes) => ({ ...(modes ?? {}), [targetUser.email]: previous }))
+      toast.error(err.message || 'שמירת מצב ההטמעה נכשלה.')
+    } finally {
+      setOnboardingSaving('')
+    }
   }
 
   function resetForm() {
@@ -337,6 +379,7 @@ export default function UsersManagementPage() {
             <th className="py-2 font-medium">טלפון</th>
             <th className="py-2 font-medium">תפקיד</th>
             <th className="py-2 font-medium">סטטוס</th>
+            {isCeo && <th className="py-2 font-medium">מצב הטמעה</th>}
             <th className="py-2 font-medium">פעולות</th>
           </tr>
         </thead>
@@ -363,6 +406,25 @@ export default function UsersManagementPage() {
                     {isActive ? 'פעיל' : 'לא פעיל'}
                   </span>
                 </td>
+                {isCeo && (
+                  <td className="py-3">
+                    {onboardingModes === null ? (
+                      <span className="text-slate-400" title="מצב ההטמעה לא נטען">
+                        —
+                      </span>
+                    ) : (
+                      <Switch
+                        checked={
+                          (onboardingModes[targetUser.email] ?? ONBOARDING_OFF) > ONBOARDING_OFF
+                        }
+                        onCheckedChange={(next) => handleOnboardingToggle(targetUser, next)}
+                        disabled={onboardingSaving === targetUser.email}
+                        aria-label={`מצב הטמעה — ${targetUser.full_name}`}
+                        data-testid={`users-onboarding-${targetUser.email}`}
+                      />
+                    )}
+                  </td>
+                )}
                 <td className="py-3">
                   <div className="flex items-center gap-3">
                     <Button

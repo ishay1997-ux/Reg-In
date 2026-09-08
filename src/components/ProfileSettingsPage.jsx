@@ -8,7 +8,13 @@ import { supabase } from '@/supabaseClient'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
-import { getNotificationPreferences, saveNotificationPreferences } from '@/modules/09_settings/api'
+import {
+  getNotificationPreferences,
+  saveNotificationPreferences,
+  saveOnboardingMode,
+} from '@/modules/09_settings/api'
+import { ONBOARDING_OFF, ONBOARDING_ON } from '@/lib/onboardingCopy'
+import Hint from '@/components/Hint'
 import { CEO_ROLE_NAME } from '@/lib/constants'
 import { ISRAELI_MOBILE_REGEX, MIN_PASSWORD_LENGTH } from '@/lib/validators'
 import { Button } from '@/components/ui/button'
@@ -264,11 +270,18 @@ function SecuritySection({ user }) {
 // לא "עד שהתכונה תפותח" — אין כרגע ערוץ SMS במערכת (R-4), ולכן הוא תמיד כבוי ותמיד נשלח
 // כ-false בשמירה. שליחת המייל בפועל (מנוע-ההתראות) היא עדיין מודול 10 — טקסט-העזר אומר זאת
 // במפורש כדי שלא ייווצר רושם שהמייל כבר יוצא.
+// מתג "מצב הטמעה" (הכרעה 28, 07/09/2026) — הדלת של המשתמשת לעצמה (28⑨(א)); הדלת השנייה,
+// המנכ"ל פר-משתמשת, במסך ניהול-המשתמשים. אותה טבלה, אותו דפוס-החזרה-לאחור כמו מתג-המייל,
+// אבל **פונקציית-שמירה נפרדת** (`saveOnboardingMode` — מטען של העמודה בלבד, בלי `Boolean()`):
+// המתג הוא כן/לא וממופה ל-0/2 (28⑭). אחרי שמירה מוצלחת הרמה נכתבת גם לקונטקסט כדי שכל
+// `<Hint>` במערכת יהפוך חי, בלי רענון-דף (28⑧(1)).
 function NotificationsSection() {
   const toast = useToast()
+  const { updateOnboardingMode } = useAuth()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [emailNewProjects, setEmailNewProjects] = useState(false)
+  const [onboardingOn, setOnboardingOn] = useState(false)
   const [saving, setSaving] = useState(false)
   const [reloadTick, setReloadTick] = useState(0)
 
@@ -287,6 +300,7 @@ function NotificationsSection() {
         const prefs = await getNotificationPreferences()
         if (cancelled) return
         setEmailNewProjects(prefs.emailNewProjects)
+        setOnboardingOn((prefs.onboardingMode ?? ONBOARDING_OFF) > ONBOARDING_OFF)
       } catch (err) {
         if (!cancelled) setError(err.message || 'לא ניתן לטעון את ההגדרות.')
       } finally {
@@ -309,6 +323,22 @@ function NotificationsSection() {
     } catch (err) {
       setEmailNewProjects(previous) // שחזור בכשל - לא משאירים מצג-שווא של "נשמר"
       toast.error(err.message || 'שמירת ההעדפה נכשלה.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleOnboardingToggle(nextChecked) {
+    const previous = onboardingOn
+    setOnboardingOn(nextChecked) // אופטימי, כמו מתג-המייל
+    setSaving(true)
+    try {
+      const level = await saveOnboardingMode(nextChecked ? ONBOARDING_ON : ONBOARDING_OFF)
+      updateOnboardingMode(level) // רק אחרי שהשורה נכתבה — ההסברים נדלקים/נכבים בכל המסכים
+      toast.success('ההגדרות נשמרו')
+    } catch (err) {
+      setOnboardingOn(previous)
+      toast.error(err.message || 'שמירת מצב ההטמעה נכשלה.')
     } finally {
       setSaving(false)
     }
@@ -348,6 +378,22 @@ function NotificationsSection() {
           <p className="text-xs text-slate-500">אין ערוץ SMS במערכת</p>
         </div>
         <Switch checked={false} disabled data-testid="settings-notify-sms" />
+      </div>
+
+      <div className="flex flex-col gap-2 pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-slate-800">מצב הטמעה</p>
+            <p className="text-xs text-slate-500">מציג משפטי הסבר לצד כל מסך</p>
+          </div>
+          <Switch
+            checked={onboardingOn}
+            onCheckedChange={handleOnboardingToggle}
+            disabled={saving}
+            data-testid="settings-onboarding-mode"
+          />
+        </div>
+        <Hint id="onboarding.self" />
       </div>
     </div>
   )

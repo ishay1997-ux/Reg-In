@@ -24,6 +24,7 @@
 import { supabase } from '@/supabaseClient'
 import { fetchAll } from '@/api/fetchAll'
 import { toError, assertRowsAffected } from '@/lib/apiError'
+import { ONBOARDING_LEVEL, isValidOnboardingLevel } from '@/lib/onboardingCopy'
 
 // קוד-שגיאה סינתטי שה-UI בודק כדי להסתיר את פאנל-השכר-מתחת-למינימום במקום להציג שגיאה
 // אדומה למי שאינה בעלת הפרמטר ואינה עורכת 'הגדרות מערכת' — ר' `listBelowMinWage` למטה.
@@ -178,19 +179,60 @@ async function currentUserEmail() {
 }
 
 // שורה חסרה = שתי ההעדפות כבויות (§2.8 "Absent row = both false") — לא שגיאה ולא ברירת-מחדל
-// שממציאים כאן; זהו החוזה שהמיגרציה קבעה.
+// שממציאים כאן; זהו החוזה שהמיגרציה קבעה. אותו חוזה לרמת-ההטמעה: אין שורה = רמה 0
+// (מיגרציה `20260908221959_onboarding_mode`, הכרעה 28⑭).
 export async function getNotificationPreferences() {
   const email = await currentUserEmail()
   const { data, error } = await supabase
     .from('notification_preferences')
-    .select('email_new_projects, sms_last_minute')
+    .select('email_new_projects, sms_last_minute, onboarding_mode')
     .eq('email', email)
     .maybeSingle()
   if (error) throw toError(error, 'שגיאה בטעינת העדפות ההתראות.')
   return {
     emailNewProjects: data?.email_new_projects ?? false,
     smsLastMinute: data?.sms_last_minute ?? false,
+    onboardingMode: data?.onboarding_mode ?? ONBOARDING_LEVEL.CLEAN,
   }
+}
+
+// ---- onboarding_mode: "מצב הטמעה" — פונקציה נפרדת, בכוונה (הכרעה 28⑭(א)) ----
+
+// 🔴 למה לא דרך `saveNotificationPreferences`: היא שולחת את **שתי** העדפות-ההתראה מה-state
+// המקומי בכל קריאה ועוטפת ב-`Boolean()` — ו-`Boolean(2) === true`. שינוי-רמה דרכה היה דורס
+// בשקט העדפת-מייל שהמנכ"ל לא רואה על המסך שלו. כאן המטען הוא **המפתח + העמודה בלבד**:
+// PostgREST כותב ב-`on conflict do update` רק את עמודות-המטען ⇒ `email_new_projects` /
+// `sms_last_minute` נשמרות; ושורה חדשה (לרוב המשתמשות אין שורה — "אין שורה = הכול כבוי")
+// נוצרת עם ברירות-המחדל שלה. `upsert` ולא `update`, כי `update` על אין-שורה מעדכן 0 שורות
+// ש-`assertRowsAffected` מציג כ-"אין הרשאה" כוזב — גם למשתמשת שהמנכ"ל מדליק לה בפעם הראשונה.
+//
+// `email` אופציונלי: בלעדיו — המשתמשת המחוברת (דלת "ההגדרות שלי"); איתו — המנכ"ל כותב
+// לשורה של אחרת (דלת ניהול-המשתמשים, 28⑨) תחת המדיניות הרביעית `notification_preferences_ceo_all`.
+// מי שאינה מנכ"ל ותנסה email זר תקבל 0 שורות ⇒ תישמע כ-"אין הרשאה", לא תיראה כהצלחה.
+export async function saveOnboardingMode(level, { email } = {}) {
+  if (!isValidOnboardingLevel(level)) {
+    throw toError({ code: 'ONBOARDING_LEVEL_INVALID' }, 'רמת מצב-ההטמעה חייבת להיות 0, 1 או 2.')
+  }
+  const targetEmail = email ?? (await currentUserEmail())
+  const { data, error } = await supabase
+    .from('notification_preferences')
+    .upsert({ email: targetEmail, onboarding_mode: level }, { onConflict: 'email' })
+    .select('email, onboarding_mode')
+  if (error) throw toError(error, 'שמירת מצב ההטמעה נכשלה.')
+  assertRowsAffected(data, 'אין הרשאה לשנות את מצב ההטמעה.')
+  return data[0].onboarding_mode
+}
+
+// כל השורות שהקוראת רשאית לראות — למנכ"ל (המדיניות הרביעית) זה כל המשתמשות; לאחרת — שורתה
+// בלבד. מסך ניהול-המשתמשים מצייר מזה את המתג פר-שורה; משתמשת בלי שורה = 0.
+export async function listOnboardingModes() {
+  const { data, error } = await supabase
+    .from('notification_preferences')
+    .select('email, onboarding_mode')
+  if (error) throw toError(error, 'שגיאה בטעינת מצב ההטמעה של המשתמשות.')
+  const byEmail = {}
+  for (const row of data ?? []) byEmail[row.email] = row.onboarding_mode ?? ONBOARDING_LEVEL.CLEAN
+  return byEmail
 }
 
 // `upsert` ולא `update`+`insert` נפרדים — ובניגוד ל-`params` זה **בטוח** כאן: שתי העמודות
