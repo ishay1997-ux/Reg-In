@@ -420,7 +420,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                     onOpenCard(hostess.hostess_id)
                   }
                 }}
-                aria-label={`פתח כרטיס דיילת: ${hostess.full_name}`}
+                aria-label={`פתחי כרטיס דיילת: ${hostess.full_name}`}
                 className={`cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500 ${hostess.status === 'active' ? '' : 'bg-slate-50'}`}
                 data-testid={`repository-row-${hostess.hostess_id}`}
               >
@@ -534,11 +534,11 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                     </span>
                   ))}
                   <span className="mt-2 block">
-                    <b>שחרר מהאירועים (מומלץ)</b> — כל שיבוץ יסומן כ"שוחררה" והדיילת תקבל מייל-ביטול
-                    על כל אירוע. האירוע חוזר לחסר-איוש, וזה נספר כשחרור-שלנו — לא לרעתה.
+                    <b>שחררי מהאירועים (מומלץ)</b> — כל שיבוץ יסומן כ"שוחררה" והדיילת תקבל
+                    מייל-ביטול על כל אירוע. האירוע חוזר לחסר-איוש, וזה נספר כשחרור-שלנו — לא לרעתה.
                   </span>
                   <span className="mt-2 block">
-                    <b>השבת — תשלים את מה שהתחייבה</b> — השיבוצים העתידיים נשארים על כנם; היא רק
+                    <b>השביתי — תשלים את מה שהתחייבה</b> — השיבוצים העתידיים נשארים על כנם; היא רק
                     מפסיקה לקבל הזמנות חדשות.
                   </span>
                 </DialogDescription>
@@ -556,7 +556,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                   className="h-auto w-full py-2.5 px-4 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700"
                   data-testid="deactivate-release"
                 >
-                  {releasing ? 'משחרר...' : 'שחרר מהאירועים'}
+                  {releasing ? 'משחרר...' : 'שחררי מהאירועים'}
                 </Button>
                 <Button
                   type="button"
@@ -566,7 +566,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                   className="h-auto w-full py-2.5 px-4 rounded-lg border-slate-300 text-slate-700"
                   data-testid="deactivate-keep"
                 >
-                  השבת — תשלים את מה שהתחייבה
+                  השביתי — תשלים את מה שהתחייבה
                 </Button>
                 <Button
                   type="button"
@@ -620,7 +620,7 @@ function EmptyState({ filtered, canEdit, onAdd, onClear }) {
             className="mt-2 h-auto p-0 text-xs font-semibold text-teal-700"
             data-testid="repository-clear-filters"
           >
-            נקה סינון
+            נקי סינון
           </Button>
         </div>
       </div>

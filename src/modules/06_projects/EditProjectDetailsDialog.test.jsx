@@ -123,7 +123,7 @@ describe('EditProjectDetailsDialog — הנוסחים המדויקים של המ
     // הפוטר: הפעולה הראשית ואז "ביטול" — סדר ה-DOM כמו במוקאפ (justify-start, הראשית מימין).
     const save = screen.getByTestId('edit-project-save')
     const cancel = screen.getByTestId('edit-project-cancel')
-    expect(save).toHaveTextContent('שמור ושלח זימון מחדש')
+    expect(save).toHaveTextContent('שמרי ושלחי זימון מחדש')
     expect(cancel).toHaveTextContent('ביטול')
     expect(save.compareDocumentPosition(cancel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })

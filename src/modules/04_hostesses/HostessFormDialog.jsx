@@ -475,7 +475,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                         onClick={() => setRanges((prev) => prev.filter((_, i) => i !== index))}
                         className="h-auto p-0 text-xs text-slate-600"
                       >
-                        הסר
+                        הסירי
                       </Button>
                     </div>
                   ))}
@@ -517,7 +517,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                       className="h-auto rounded-lg border-slate-300 px-3 py-2 text-xs text-slate-700"
                       data-testid="hostess-range-add"
                     >
-                      + הוסף טווח
+                      + הוסיפי טווח
                     </Button>
                   </div>
                 </div>
@@ -541,7 +541,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
               className="h-auto rounded-lg bg-teal-600 px-4 py-2.5 font-semibold text-white"
               data-testid="hostess-save"
             >
-              {saving ? 'שומר...' : isEdit ? 'שמור שינויים' : 'שמור דיילת'}
+              {saving ? 'שומרת…' : isEdit ? 'שמרי שינויים' : 'שמרי דיילת'}
             </Button>
           </DialogFooter>
         </form>

@@ -327,7 +327,7 @@ export default function QuoteBuilderPage() {
       const proceed = await confirm({
         title: 'שליחה בלי שינוי',
         message: NO_CHANGES_SEND_CONFIRM,
-        confirmLabel: 'המשך לשליחה',
+        confirmLabel: 'המשיכי לשליחה',
       })
       if (!proceed) return
       // בלי `saveQuoteEdit` — וזו כל הנקודה: אין כתיבה, ולכן `updated_at` והתפוגה נשמרים.
@@ -755,7 +755,7 @@ export default function QuoteBuilderPage() {
             onSave={handleSave}
             onCancel={() => navigate('/quotes')}
             saving={saving}
-            saveLabel={isEditMode ? 'עדכן ושלח' : 'שמור ושלח'}
+            saveLabel={isEditMode ? 'עדכני ושלחי' : 'שמרי ושלחי'}
           />
         ) : (
           // הפאנל (וכפתור השמירה שבתוכו) לא ניתן לחישוב כשסכום ההנחות חורג מ-100% —
@@ -768,7 +768,7 @@ export default function QuoteBuilderPage() {
             <p className="text-sm font-medium text-red-800">
               ההנחות חורגות מ-100% ({Number(form.appliedDiscount)}% +{' '}
               {Number(form.manualDiscount) || 0}
-              %) — לא ניתן לחשב סיכום ולא ניתן לשמור. תקנו את ההנחה הנוספת.
+              %) — לא ניתן לחשב סיכום ולא ניתן לשמור. תקני את ההנחה הנוספת.
             </p>
           </div>
         )}

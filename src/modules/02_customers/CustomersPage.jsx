@@ -491,7 +491,7 @@ export default function CustomersPage() {
           title:
             revenueByCustomer === null ? 'טרם ידוע אם יש הצעות פתוחות' : 'ללקוח יש הצעות פתוחות',
           message,
-          confirmLabel: 'העבר לארכיון',
+          confirmLabel: 'העבירי לארכיון',
         })
         if (!ok) return
       }
@@ -584,7 +584,7 @@ export default function CustomersPage() {
               className="h-auto py-1.5 px-3 rounded-lg border-amber-300 text-amber-800 shrink-0"
               data-testid="customers-revenue-retry"
             >
-              נסה שוב
+              נסי שוב
             </Button>
           </div>
         )}
@@ -607,7 +607,7 @@ export default function CustomersPage() {
               className="h-auto py-1.5 px-3 rounded-lg border-amber-300 text-amber-800 shrink-0"
               data-testid="customers-screen-params-retry"
             >
-              נסה שוב
+              נסי שוב
             </Button>
           </div>
         )}
@@ -618,7 +618,7 @@ export default function CustomersPage() {
             <p className="text-slate-500 font-medium">אין לקוחות במערכת עדיין.</p>
             {canEdit && (
               <p className="text-slate-400 text-sm mt-1">
-                לחצו על "+ לקוח חדש" כדי להוסיף את הלקוח הראשון.
+                לחצי על "+ לקוח חדש" כדי להוסיף את הלקוח הראשון.
               </p>
             )}
           </div>
@@ -764,7 +764,7 @@ export default function CustomersPage() {
                   <>
                     <p className="text-slate-500 font-medium">אין לקוחות התואמים את החיפוש.</p>
                     <p className="text-slate-500 text-sm mt-1">
-                      נסו לשנות את מונחי החיפוש או לנקות את הסינון.
+                      נסי לשנות את מונחי החיפוש או לנקות את הסינון.
                     </p>
                   </>
                 ) : statusView === 'inactive' ? (
@@ -860,7 +860,7 @@ export default function CustomersPage() {
                               openCard(customer.customer_id)
                             }
                           }}
-                          aria-label={`פתח כרטיס לקוח: ${customer.company_name}`}
+                          aria-label={`פתחי כרטיס לקוח: ${customer.company_name}`}
                           className={cn(
                             'border-b border-slate-100 cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500',
                             !isActive && 'opacity-60',
@@ -953,8 +953,8 @@ export default function CustomersPage() {
                                 <Button
                                   type="button"
                                   variant="link"
-                                  title="ערוך לקוח"
-                                  aria-label={`ערוך לקוח: ${customer.company_name}`}
+                                  title="ערכי לקוח"
+                                  aria-label={`ערכי לקוח: ${customer.company_name}`}
                                   onClick={() => openEditDialog(customer)}
                                   className="h-auto p-0 text-teal-600 hover:text-teal-700"
                                   data-testid={`customer-edit-${customer.customer_id}`}
@@ -968,8 +968,8 @@ export default function CustomersPage() {
                                   <Button
                                     type="button"
                                     variant="link"
-                                    title="העבר לארכיון"
-                                    aria-label={`העבר לארכיון: ${customer.company_name}`}
+                                    title="העבירי לארכיון"
+                                    aria-label={`העבירי לארכיון: ${customer.company_name}`}
                                     onClick={() => handleToggleStatus(customer)}
                                     className="h-auto p-0"
                                     data-testid={`customer-archive-${customer.customer_id}`}
@@ -982,8 +982,8 @@ export default function CustomersPage() {
                                   <Button
                                     type="button"
                                     variant="link"
-                                    title="שחזר מהארכיון"
-                                    aria-label={`שחזר מהארכיון: ${customer.company_name}`}
+                                    title="שחזרי מהארכיון"
+                                    aria-label={`שחזרי מהארכיון: ${customer.company_name}`}
                                     onClick={() => handleToggleStatus(customer)}
                                     className="h-auto p-0"
                                     data-testid={`customer-restore-${customer.customer_id}`}
@@ -1026,7 +1026,7 @@ export default function CustomersPage() {
           <DialogContent dir="rtl" className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>שליחת חומר שיווקי</DialogTitle>
-              <DialogDescription>העלו חומר ושלחו אותו ללקוחות שאישרו קבלת דיוור.</DialogDescription>
+              <DialogDescription>העלי חומר ושלחי אותו ללקוחות שאישרו קבלת דיוור.</DialogDescription>
             </DialogHeader>
             <MarketingPanel refreshKey={consentedSignature} embedded />
           </DialogContent>

@@ -80,9 +80,10 @@ describe('NotificationsSection — הנוסח הנעול ואפס "(בקרוב)"
     await openNotificationsTab()
 
     expect(screen.getByText('מייל על פרויקטים חדשים')).toBeInTheDocument()
-    expect(
-      screen.getByText('ההתראות עצמן יישלחו כשמנוע ההתראות יעלה (מודול 10)'),
-    ).toBeInTheDocument()
+    // ✏️ 08/09/2026 (שלב 2, מדריך-הסגנון B8): "מודול 10" הוא ז'רגון-בנאים ולא טקסט-מסך —
+    // הוסר. הנוסח נבדק כאן בלי מספר-מודול פנימי.
+    expect(screen.getByText('ההתראות יתחילו להישלח בפועל כשמנוע ההתראות יופעל')).toBeInTheDocument()
+    expect(screen.queryByText(/מודול 10/)).not.toBeInTheDocument()
     expect(screen.getByText('SMS על שיבוץ ברגע האחרון')).toBeInTheDocument()
     expect(screen.getByText('אין ערוץ SMS במערכת')).toBeInTheDocument()
 

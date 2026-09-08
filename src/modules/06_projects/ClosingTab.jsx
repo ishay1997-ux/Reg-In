@@ -859,7 +859,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
               )}
               data-testid="closing-save"
             >
-              {sending ? 'שומר ושולח…' : 'שמור ושלח'}
+              {sending ? 'שומרת ושולחת…' : 'שמרי ושלחי'}
             </button>
             {validationSummary ? (
               <span
@@ -1325,7 +1325,7 @@ function ClosedView({
             className="rounded-lg border border-amber-300 bg-white px-3 py-1 text-xs font-semibold text-amber-800 disabled:cursor-not-allowed disabled:opacity-50"
             data-testid="closing-resend"
           >
-            {sending ? 'שולח…' : 'שליחה חוזרת'}
+            {sending ? 'שולחת…' : 'שליחה חוזרת'}
           </button>
         </div>
       )}

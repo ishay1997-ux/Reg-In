@@ -269,7 +269,7 @@ export default function TeamTab({
               className="text-xs font-semibold text-teal-700"
               data-testid="team-empty-smart-match-link"
             >
-              פתח שיבוץ חכם →
+              פתחי שיבוץ חכם →
             </Link>
           }
           testId="team-state-no-invites"
@@ -322,7 +322,7 @@ function ActionsBar({ project, canEdit, canReadHostesses, onScopeChange, showSor
             )}
             data-testid="team-scope-button"
           >
-            שנה כמות דיילות
+            שני כמות דיילות
           </button>
         )}
         {/* 🔗 נושא את הפרויקט איתו — ר' ההערה על הקישור התאום למעלה. */}
@@ -333,7 +333,7 @@ function ActionsBar({ project, canEdit, canReadHostesses, onScopeChange, showSor
             className="text-xs font-semibold text-teal-700"
             data-testid="team-smart-match-link"
           >
-            פתח שיבוץ חכם →
+            פתחי שיבוץ חכם →
           </Link>
         )}
         {showSortLine && <span className="mr-auto text-xs text-slate-400">{SORT_LINE}</span>}
@@ -475,7 +475,7 @@ function RoundsHistory({ rows, finalCount, open, onToggle }) {
           className="text-xs font-semibold text-teal-700"
           data-testid="team-history-toggle"
         >
-          {open ? `הסתר (${rows.length} שורות)` : `הצג (${rows.length} שורות)`}
+          {open ? `הסתירי (${rows.length} שורות)` : `הציגי (${rows.length} שורות)`}
         </button>
         {open && <span className="mr-auto text-xs text-slate-400">{RAW_STATUS_NOTE}</span>}
       </div>
@@ -593,7 +593,7 @@ function CancelledVariant({ project, finalRows, canEdit, canReadHostesses }) {
             className="cursor-not-allowed rounded-lg border border-slate-300 bg-white px-4 py-1.5 text-[13px] font-medium text-slate-700 opacity-50"
             data-testid="team-scope-button"
           >
-            שנה כמות דיילות
+            שני כמות דיילות
           </button>
           <span className="text-[11.5px] text-slate-400" data-testid="team-cancelled-reason">
             {CANCELLED_SCOPE_REASON}

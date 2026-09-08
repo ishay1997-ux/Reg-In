@@ -489,8 +489,8 @@ test.describe('מודול 4 · משטח 4 — תפריט-הפעולות פר-ש�
       await page.getByTestId(`row-menu-${byLabel[label][0]}`).click()
       await expect(page.getByRole('menuitem').first()).toBeVisible()
 
-      const resend = page.getByRole('menuitem').filter({ hasText: 'שלח את הקישור שוב' })
-      const newInvite = page.getByRole('menuitem').filter({ hasText: 'פתח זימון חדש' })
+      const resend = page.getByRole('menuitem').filter({ hasText: 'שלחי את הקישור שוב' })
+      const newInvite = page.getByRole('menuitem').filter({ hasText: 'פתחי זימון חדש' })
       const resendCount = await resend.count()
       const newInviteCount = await newInvite.count()
 

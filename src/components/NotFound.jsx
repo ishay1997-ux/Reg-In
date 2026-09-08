@@ -12,7 +12,7 @@ export default function NotFound() {
     >
       <p className="text-5xl font-bold text-slate-300">404</p>
       <h1 className="text-lg font-bold text-slate-800">הדף לא נמצא</h1>
-      <p className="text-slate-500">הכתובת שביקשתם אינה קיימת במערכת.</p>
+      <p className="text-slate-500">הכתובת שביקשת אינה קיימת במערכת.</p>
       <Link
         to="/"
         className="inline-flex items-center gap-2 h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"

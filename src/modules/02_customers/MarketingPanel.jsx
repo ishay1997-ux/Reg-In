@@ -146,7 +146,7 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
         <div>
           <h2 className="text-lg font-bold text-slate-800">אזור שיווק</h2>
           <p className="text-sm text-slate-500 mt-1">
-            העלו חומר שיווקי, בחרו נמענים מבין הלקוחות שאישרו דיוור, ושלחו.
+            העלי חומר שיווקי, בחרי נמענים מבין הלקוחות שאישרו דיוור, ושלחי.
           </p>
         </div>
       )}
@@ -160,13 +160,13 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
           data-testid="marketing-upload-label"
         >
           <Upload className="size-4" />
-          {uploaded ? 'החלף קובץ' : 'העלה קובץ'}
+          {uploaded ? 'החליפי קובץ' : 'העלי קובץ'}
           <input
             type="file"
             accept={MARKETING_ALLOWED_MIME.join(',')}
             onChange={handleFileChange}
             disabled={busy}
-            aria-label={uploaded ? 'החלף קובץ שיווקי' : 'העלה קובץ שיווקי'}
+            aria-label={uploaded ? 'החליפי קובץ שיווקי' : 'העלי קובץ שיווקי'}
             className="sr-only"
             data-testid="marketing-file-input"
           />
@@ -181,8 +181,8 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
             <Button
               type="button"
               variant="link"
-              title="הסר קובץ"
-              aria-label="הסר את הקובץ שהועלה"
+              title="הסירי קובץ"
+              aria-label="הסירי את הקובץ שהועלה"
               onClick={handleRemove}
               className="h-auto p-0 text-red-600 hover:text-red-700"
               data-testid="marketing-remove"
@@ -225,8 +225,8 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
           className="text-amber-700 text-sm bg-amber-50 border border-amber-200 rounded-lg p-3"
           data-testid="marketing-toolong"
         >
-          רשימת הנמענים ארוכה מדי לשליחה דרך תוכנת הדוא"ל (חלק מהנמענים היו נחתכים בשקט). בטלו חלק
-          מהנמענים, השתמשו ב"העתק רשימת נמענים" ושלחו ידנית, או המתינו לשליחת-השרת (מודול 10).
+          רשימת הנמענים ארוכה מדי לשליחה דרך תוכנת הדוא"ל (חלק מהנמענים היו נחתכים בשקט). בטלי חלק
+          מהנמענים, השתמשי ב"העתק רשימת נמענים" ושלחי ידנית, או המתיני לשליחת-השרת (מודול 10).
         </p>
       )}
 
@@ -239,7 +239,7 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
             data-testid="marketing-send"
           >
             <Send className="size-4" />
-            שלח לנמענים שנבחרו
+            שלחי לנמענים שנבחרו
           </a>
         ) : (
           <span
@@ -252,7 +252,7 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
             data-testid="marketing-send-disabled"
           >
             <Send className="size-4" />
-            שלח לנמענים שנבחרו
+            שלחי לנמענים שנבחרו
           </span>
         )}
 
@@ -356,7 +356,7 @@ function RecipientsSection({
           className="h-auto p-0 text-teal-600 hover:text-teal-700 text-sm"
           data-testid="marketing-recipients-toggle-all"
         >
-          {allSelected ? 'נקה הכל' : 'בחר הכל'}
+          {allSelected ? 'נקי הכל' : 'בחרי הכל'}
         </Button>
       </div>
       <div className="max-h-56 overflow-y-auto rounded-lg border border-slate-200 divide-y divide-slate-100">
@@ -371,7 +371,7 @@ function RecipientsSection({
               checked={!excludedIds.has(r.customer_id)}
               onChange={() => onToggleRecipient(r.customer_id)}
               className="size-4 shrink-0 accent-teal-600"
-              aria-label={`שלח ל${r.company_name}`}
+              aria-label={`שלחי ל${r.company_name}`}
               data-testid="marketing-recipient-checkbox"
             />
             <div className="flex-1 min-w-0">

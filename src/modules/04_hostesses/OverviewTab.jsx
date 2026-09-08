@@ -48,7 +48,7 @@ const OVERVIEW_PARAM_NAMES = [
 // הנוסח עצמו לא זז; רק המספר בתוכו נגזר.
 const filterLabels = (urgentHours) => ({
   all: 'הכול',
-  missing: 'הצג חסרים בלבד',
+  missing: 'הציגי חסרים בלבד',
   urgent: `דחוף (עד ${urgentHours} שעות)`,
 })
 
@@ -247,7 +247,7 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
             className="h-auto rounded-lg border-amber-200 bg-amber-50 px-3 py-1.5 text-[12px] font-semibold text-amber-700 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
             data-testid="overview-resend-all"
           >
-            {`שלח שוב למי שפג תוקפן (${resendableCount})`}
+            {`שלחי שוב למי שפג תוקפן (${resendableCount})`}
           </Button>
         )}
       </div>
@@ -414,7 +414,7 @@ function OverviewRow({ row, today, cutoffHours, canEdit, sending, onOpen, onRese
               className="h-auto whitespace-nowrap rounded-lg border-amber-200 bg-amber-50 px-3 py-1.5 text-[12px] font-semibold text-amber-700 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
               data-testid={`overview-resend-${project.project_id}`}
             >
-              {`שלח שוב (${counts.expired})`}
+              {`שלחי שוב (${counts.expired})`}
             </Button>
           )}
         </Td>
@@ -460,7 +460,7 @@ function EmptyState({ filtered, onClear, canReadProjects }) {
         <span className="mb-1 block text-[22px]">⚠️</span>
         לא ניתן להציג את האירועים — אין לך הרשאת צפייה במודול <b>פרויקטים</b>.
         <div className="mt-1 text-slate-500">
-          זו אינה רשימה ריקה: המסך לא הצליח לקרוא את האירועים. פני למנכ״ל להרשאה.
+          זו אינה רשימה ריקה: המסך לא הצליח לקרוא את האירועים. יש לפנות למנכ"ל להרשאה.
         </div>
       </div>
     )
@@ -482,7 +482,7 @@ function EmptyState({ filtered, onClear, canReadProjects }) {
             className="mt-2 h-auto p-0 text-xs font-semibold text-teal-700"
             data-testid="overview-clear-filters"
           >
-            נקה סינון
+            נקי סינון
           </Button>
         </div>
       </div>

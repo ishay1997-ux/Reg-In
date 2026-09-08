@@ -809,7 +809,7 @@ export default function CustomerDetailsPage() {
                   role="alert"
                   data-testid="customer-sent-history-error"
                 >
-                  לא ניתן היה לבדוק אילו הצעות כבר נשלחו ללקוח — בדקו בחלון המסמך לפני שליחה.
+                  לא ניתן היה לבדוק אילו הצעות כבר נשלחו ללקוח — בדקי בחלון המסמך לפני שליחה.
                 </p>
               )}
               {showControls && (
@@ -1124,7 +1124,7 @@ function ProjectsTabContent({
           className="h-auto py-2 px-4 rounded-lg border-slate-300 text-slate-700"
           data-testid="customer-projects-retry"
         >
-          נסה שוב
+          נסי שוב
         </Button>
       </div>
     )
@@ -1179,7 +1179,7 @@ function ProjectsTabContent({
             className="text-teal-700 hover:text-teal-800 font-semibold"
             data-testid="customer-projects-clear-search"
           >
-            נקה חיפוש
+            נקי חיפוש
           </button>
         </p>
       ) : (
@@ -1283,7 +1283,7 @@ function ProjectRow({ project, today, vatRate }) {
           goToCard()
         }
       }}
-      aria-label={`פתח כרטיס פרויקט: ${project.event_name}`}
+      aria-label={`פתחי כרטיס פרויקט: ${project.event_name}`}
       data-testid={`customer-project-${project.project_id}`}
     >
       <td className="py-2.5 px-3 text-sm text-slate-600">

@@ -183,7 +183,6 @@ export default function MySettingsPage() {
         loading={loading}
         error={loadError}
         onRetry={loadError ? loadData : undefined}
-        retryLabel="נסי שוב"
         retryTestId="settings-my-retry"
         skeleton={{ variant: 'table', rows: 4, cols: 3 }}
       />

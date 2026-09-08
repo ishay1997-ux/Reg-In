@@ -222,7 +222,7 @@ export function classifySendError(error) {
 export function sendResultMessage(result, { failedMessage } = {}) {
   switch (result) {
     case EMAIL_SEND_RESULT.UNKNOWN:
-      return 'לא התקבל אישור שהמייל נשלח. בדוק בתיבת "נשלחו" שלך לפני שליחה חוזרת, כדי לא לשלוח פעמיים.'
+      return 'לא התקבל אישור שהמייל נשלח. בדקי בתיבת "נשלחו" שלך לפני שליחה חוזרת, כדי לא לשלוח פעמיים.'
     case EMAIL_SEND_RESULT.FAILED:
       return failedMessage ?? 'המייל לא נשלח. יש לנסות שוב.'
     default:

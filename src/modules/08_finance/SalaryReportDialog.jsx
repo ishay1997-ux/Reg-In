@@ -365,7 +365,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
     const approved = await confirm({
       title: 'הפקת דוח-שכר',
       message: generateConfirmMessage(periodLabel),
-      confirmLabel: 'ייצא ושלח',
+      confirmLabel: 'ייצאי ושלחי',
     })
     if (!approved) return
     setPhase('submitting')
@@ -571,7 +571,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
         {phase === 'select' && historyError && (
           <p className="text-[11.5px] text-amber-700" role="status">
             לא ניתן היה לבדוק אם החודש כבר הופק ({historyError}) — הבדיקה הסופית תמיד תתבצע במסד
-            בלחיצה על "ייצא ושלח".
+            בלחיצה על "ייצאי ושלחי".
           </p>
         )}
 
@@ -645,7 +645,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
                 className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700 disabled:opacity-50"
                 data-testid="salary-report-generate"
               >
-                {phase === 'submitting' ? 'מפיקה ושולחת…' : 'ייצא ושלח'}
+                {phase === 'submitting' ? 'מפיקה ושולחת…' : 'ייצאי ושלחי'}
               </Button>
               <Button
                 type="button"
@@ -799,7 +799,7 @@ function PreflightPanel({
         <b className="block">שורות הדוח עצמן אינן מוצגות כאן.</b>
         הן נאספות ונחתמות ברגע ההפקה, ואי-אפשר לחשב אותן בלי לכתוב אותן. מיד אחרי הלחיצה תוצג כאן
         הטבלה המלאה, והקובץ יישמר בהיסטוריה שלמטה — להורדה ולשליחה חוזרת.
-        <b className="mt-1 block">הלחיצה על "ייצא ושלח" אינה הפיכה:</b> אי-אפשר להפיק את אותו חודש
+        <b className="mt-1 block">הלחיצה על "ייצאי ושלחי" אינה הפיכה:</b> אי-אפשר להפיק את אותו חודש
         פעמיים, והשורות שייאספו לא ייאספו שוב לדוח הבא.
       </p>
     </div>
@@ -1148,12 +1148,7 @@ export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
       {rows === null && !error ? (
         <LoadingOrError loading skeleton={{ variant: 'table' }} />
       ) : error ? (
-        <LoadingOrError
-          error={error}
-          onRetry={retry}
-          retryLabel="נסי שוב"
-          retryTestId="salary-history-retry"
-        />
+        <LoadingOrError error={error} onRetry={retry} retryTestId="salary-history-retry" />
       ) : rows?.length === 0 ? (
         <div
           className="flex flex-col items-center gap-1 py-8 text-center"
@@ -1241,7 +1236,7 @@ export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
                           className="h-auto rounded-lg px-2 py-1 text-[11px] font-semibold"
                           data-testid={`salary-history-resend-${row.report_id}`}
                         >
-                          {resendingId === row.report_id ? 'שולחת…' : 'שלח שוב'}
+                          {resendingId === row.report_id ? 'שולחת…' : 'שלחי שוב'}
                         </Button>
                       )}
                     </div>

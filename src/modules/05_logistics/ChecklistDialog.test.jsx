@@ -844,7 +844,7 @@ describe('ChecklistDialog — מצבי ריק, חסימה וכשל-טעינה', 
     // השלד עצמו דקורטיבי ⇒ בלי ההכרזה ה-sr-only שלצידו קורא-מסך אינו שומע דבר.
     const status = screen.getByRole('status')
     expect(status).toContainElement(skeleton)
-    expect(status).toHaveTextContent('טוען...')
+    expect(status).toHaveTextContent('טוען…')
 
     // 🚫 ולא "דיאלוג ריק": אין שורות-פריט, אין כפתור-סגירה ואין מסך-שגיאה — והדיאלוג
     // בכל זאת נושא שם נגיש כל זמן הטעינה.

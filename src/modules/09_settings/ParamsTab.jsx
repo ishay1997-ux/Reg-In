@@ -201,7 +201,6 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
         loading={loading}
         error={loadError}
         onRetry={loadError ? loadData : undefined}
-        retryLabel="נסי שוב"
         retryTestId="settings-retry"
         skeleton={{ variant: 'table', rows: 6, cols: 3 }}
       />

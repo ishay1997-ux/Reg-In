@@ -505,3 +505,5 @@ calendar is a report, and a home screen is not a report.
   nothing asserts against.
 
 **Regression after both:** `npm run gate` exit 0 — 88 files / **2,295** tests.
+
+- **`09/09/2026 00:1X` — CROSS-MODULE EDIT by the ui-copy night, stage 2 (branch `ishay/ui-copy-rewrite`; module 7 is closed — this is the required ripple record).** ↳ as-built: address alignment to the locked style guide `docs/plans/ui-copy-styleguide.md` §1 — masculine imperative ⇒ direct feminine, plural ⇒ feminine singular, slash forms removed, a person referred to ⇒ feminine, progress states (`שומר...`) ⇒ feminine participle with a single ellipsis (`שומרת…`, B9; R30 precedent: module 8's `מפיקה ושולחת…`). **Files:** `CalendarGrid.jsx` (`הציגי פחות`). Nothing else in this module carried masculine address; the dashboard's full copy reset is stage 3. No business logic, no `<Hint>`, no layer copy (brief rule ⑥); the module's full copy reset is its own later stage. Full CI-parity suite + `npm run smoke` + the affected E2E specs green at the stage-2 commit (see `CLAUDE_CODE_LOG.md`, 08–09/09).

@@ -151,9 +151,9 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
     } catch (err) {
       if (err.code === '23505') {
         // המק"ט הוא PK טבעי — כפילות מגיעה כ-23505, בדיוק כמו ח"פ במודול 2.
-        setFormError(`המק"ט ${form.sku.trim()} כבר קיים בקטלוג. בחרו מק"ט אחר.`)
+        setFormError(`המק"ט ${form.sku.trim()} כבר קיים בקטלוג. בחרי מק"ט אחר.`)
       } else {
-        setFormError(err.message || 'שמירה נכשלה. נסו שוב.')
+        setFormError(err.message || 'שמירה נכשלה. נסי שוב.')
       }
     } finally {
       setSaving(false)
@@ -214,7 +214,7 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
                   )}
                   data-testid="product-form-category"
                 >
-                  <SelectValue placeholder="בחרו קטגוריה" />
+                  <SelectValue placeholder="בחרי קטגוריה" />
                 </SelectTrigger>
                 <SelectContent dir="rtl">
                   {Object.entries(PRODUCT_CATEGORY_LABELS).map(([value, label]) => (
@@ -266,7 +266,7 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
                   )}
                   data-testid="product-form-unit"
                 >
-                  <SelectValue placeholder="בחרו יחידה" />
+                  <SelectValue placeholder="בחרי יחידה" />
                 </SelectTrigger>
                 <SelectContent dir="rtl">
                   {PRODUCT_UNITS.map((u) => (
@@ -356,7 +356,7 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
               className="w-full h-auto p-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
               data-testid="product-form-submit"
             >
-              {saving ? 'שומר...' : isEdit ? 'שמור שינויים' : 'הוסף מוצר'}
+              {saving ? 'שומרת…' : isEdit ? 'שמרי שינויים' : 'הוסיפי מוצר'}
             </Button>
           </DialogFooter>
         </form>

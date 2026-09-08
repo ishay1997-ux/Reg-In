@@ -252,7 +252,7 @@ function CancelFooter({ confirmDisabled, submitting, onConfirm, onBack }) {
         data-testid="cancel-confirm"
         onClick={onConfirm}
       >
-        {submitting ? 'מבטל...' : 'בטל את הפרויקט'}
+        {submitting ? 'מבטלת…' : 'בטלי את הפרויקט'}
       </Button>
       <Button
         type="button"

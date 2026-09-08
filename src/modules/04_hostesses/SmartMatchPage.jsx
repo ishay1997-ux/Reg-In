@@ -581,7 +581,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
               className="mt-3 h-auto w-full rounded-lg bg-green-700 px-4 py-2 text-[13px] font-semibold text-white"
               data-testid="sm-approve-all"
             >
-              {`שלח אישור סופי לכל מי שאישרה זמינות (${waitingCount})`}
+              {`שלחי אישור סופי לכל מי שאישרה זמינות (${waitingCount})`}
             </Button>
           )}
         </section>
@@ -674,7 +674,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
                 className="mt-3 h-auto w-full rounded-lg bg-teal-600 px-4 py-2 text-[13px] font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400"
                 data-testid="sm-send-invites"
               >
-                {`שלח מייל תיאום (${selected.length} נבחרו)`}
+                {`שלחי מייל תיאום (${selected.length} נבחרו)`}
               </Button>
               {/* 🔑 **אין מספר שהמערכת מציעה** (`§ב3`, C5:311 — שיקול דעת אנושי טהור).
                   והנימוק אינו נימוס: שליחה נדיבה מדי **שוחקת את שיעור-ההיענות**, שהוא
@@ -812,7 +812,7 @@ function CandidateCard({
           checked={checked}
           onChange={onToggle}
           className="mt-1 size-4 accent-teal-600"
-          aria-label={`בחר את ${candidate.full_name}`}
+          aria-label={`בחרי את ${candidate.full_name}`}
           data-testid={`sm-pick-${candidate.hostess_id}`}
         />
       )}

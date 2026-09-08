@@ -99,7 +99,7 @@ function PersonalDetailsSection({ user, reload }) {
     setSaving(false)
 
     if (updateError || !updated || updated.length === 0) {
-      setError('שמירה נכשלה. נסה שוב.')
+      setError('שמירה נכשלה. נסי שוב.')
       return
     }
 
@@ -116,7 +116,7 @@ function PersonalDetailsSection({ user, reload }) {
             שינוי תפקיד נעשה רק ע"י המנכ"ל דרך מסך ניהול משתמשים. הרמז מוסתר למנכ"ל עצמו -
             אין לו את מי לפנות אליו, וההודעה נשמעה מוזרה כשהמנכ"ל צופה בפרופיל של עצמו. */}
         {user?.roleName !== CEO_ROLE_NAME && (
-          <p className="text-xs text-slate-400 mt-0.5">לשינוי תפקיד פנה למנכ"ל.</p>
+          <p className="text-xs text-slate-400 mt-0.5">שינוי תפקיד נעשה בניהול המשתמשים</p>
         )}
       </div>
 
@@ -139,6 +139,10 @@ function PersonalDetailsSection({ user, reload }) {
             placeholder="שם פרטי ומשפחה"
             className="h-auto p-3 text-right rounded-lg border-slate-300 max-w-xs"
           />
+          {/* placeholder נשאר "שם פרטי ומשפחה" ולא הפך ל"לדוגמה: ..." (R5) בכוונה: אותו שדה
+              בדיוק (הוספת/עריכת משתמש) נושא את אותו placeholder ב-UsersManagementPage.jsx
+              (מודול 1, מחוץ לתחום השכתוב הזה) — שינוי כאן בלבד היה יוצר שני נוסחים לאותו
+              שדה (R30/R11). מועמד לאיחוד בשלב שבו מודול 1 עובר שכתוב-מלא. */}
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -160,7 +164,7 @@ function PersonalDetailsSection({ user, reload }) {
           disabled={saving}
           className="w-fit h-auto py-2 px-4 mt-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
         >
-          {saving ? 'שומר...' : 'שמור שינויים'}
+          {saving ? 'שומרת…' : 'שמרי שינויים'}
         </Button>
       </form>
     </div>
@@ -199,7 +203,8 @@ function SecuritySection({ user }) {
 
     if (reauthError) {
       setSaving(false)
-      setError('הסיסמה הנוכחית שגויה.')
+      // R18 אוסר "שגוי"/"שגויה" (מילת-האשמה) — "אינה תואמת" אומרת את אותה עובדה בלי להאשים.
+      setError('הסיסמה הנוכחית אינה תואמת.')
       return
     }
 
@@ -207,7 +212,7 @@ function SecuritySection({ user }) {
     setSaving(false)
 
     if (updateError) {
-      setError('עדכון הסיסמה נכשל. נסה שוב.')
+      setError('עדכון הסיסמה נכשל. נסי שוב.')
       return
     }
 
@@ -257,7 +262,7 @@ function SecuritySection({ user }) {
         disabled={saving}
         className="w-fit h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
       >
-        {saving ? 'מעדכן...' : 'עדכון סיסמה'}
+        {saving ? 'מעדכנת…' : 'עדכני סיסמה'}
       </Button>
     </form>
   )
@@ -360,9 +365,7 @@ function NotificationsSection() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-slate-800">מייל על פרויקטים חדשים</p>
-          <p className="text-xs text-slate-500">
-            ההתראות עצמן יישלחו כשמנוע ההתראות יעלה (מודול 10)
-          </p>
+          <p className="text-xs text-slate-500">ההתראות יתחילו להישלח בפועל כשמנוע ההתראות יופעל</p>
         </div>
         <Switch
           checked={emailNewProjects}

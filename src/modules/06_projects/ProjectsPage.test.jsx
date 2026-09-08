@@ -168,7 +168,7 @@ describe('ProjectsPage — מצב ⑤: כשל-טעינה', () => {
 })
 
 describe('ProjectsPage — מצב ②: ריק אמיתי', () => {
-  it('שני המשפטים הנעולים + ניווט למסך הצעות מחיר (ההפך מ"נקה סינון")', async () => {
+  it('שני המשפטים הנעולים + ניווט למסך הצעות מחיר (ההפך מ"נקי סינון")', async () => {
     listProjectsOverview.mockResolvedValue([])
     renderPage()
     expect(await screen.findByText('עדיין אין פרויקטים במערכת.')).toBeInTheDocument()
@@ -176,7 +176,7 @@ describe('ProjectsPage — מצב ②: ריק אמיתי', () => {
       screen.getByText('פרויקט נוצר מעצמו ברגע שהצעת מחיר מאושרת — אין כאן יצירה ידנית.'),
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'למסך הצעות מחיר →' })).toBeInTheDocument()
-    expect(screen.queryByText('נקה סינון')).not.toBeInTheDocument()
+    expect(screen.queryByText('נקי סינון')).not.toBeInTheDocument()
   })
 })
 
@@ -308,9 +308,9 @@ describe('ProjectsPage — לשונית "הכול": גלולות ומסנן', ()
     expect(cancelled.className).not.toContain('bg-red-50')
   })
 
-  it('מצב ③ — ריק אחרי סינון: המשפטים הנעולים + "נקה סינון" שבאמת מנקה (ההפך ממצב ②)', async () => {
+  it('מצב ③ — ריק אחרי סינון: המשפטים הנעולים + "נקי סינון" שבאמת מנקה (ההפך ממצב ②)', async () => {
     // ‏window=all — הבדיקה הזו בודקת את מסנן-הסטטוס, לא את חלון-הזמן; #104 (לפני 146 ימים)
-    // חייב להישאר בפנים כדי ש"נקה סינון" יחזיר את כל שמונת השורות כפי שהיה לפני 04/09.
+    // חייב להישאר בפנים כדי ש"נקי סינון" יחזיר את כל שמונת השורות כפי שהיה לפני 04/09.
     renderPage('/projects?tab=all&status=awaiting_invoice&window=all')
     expect(await screen.findByText('אין פרויקט התואם למסנן שבחרת.')).toBeInTheDocument()
     expect(screen.getByText('8 פרויקטים קיימים ואינם מוצגים כרגע.')).toBeInTheDocument()

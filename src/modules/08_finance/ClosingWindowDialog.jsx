@@ -790,7 +790,7 @@ function FeeActions({ busy, actions }) {
           className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700"
           onClick={actions.onSaveFee}
         >
-          {busy === 'fee' ? 'שומר...' : 'שמור דמי-ביטול'}
+          {busy === 'fee' ? 'שומרת…' : 'שמרי דמי-ביטול'}
         </Button>
         <Button
           type="button"
@@ -1025,7 +1025,7 @@ function InvoiceUploadBlock({
           className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700"
           onClick={onSend}
         >
-          {busy === 'invoice' ? 'שולח...' : 'שמור ושלח'}
+          {busy === 'invoice' ? 'שולחת…' : 'שמרי ושלחי'}
         </Button>
         <InvoiceGateNote
           billingUnknown={billingUnknown}
@@ -1072,7 +1072,7 @@ function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, bu
           className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700"
           onClick={onSave}
         >
-          {busy === 'payment' ? 'שומר...' : alreadyPaid ? 'עדכון תאריך התשלום' : 'שמור תשלום'}
+          {busy === 'payment' ? 'שומרת…' : alreadyPaid ? 'עדכון תאריך התשלום' : 'שמרי תשלום'}
         </Button>
         <Button
           type="button"
@@ -1291,7 +1291,7 @@ function FeedbackBlock({
               className="h-auto p-0 text-[12px] font-semibold text-slate-600 underline"
               onClick={onOpenScoreEdit}
             >
-              שנה ציון
+              שני ציון
             </Button>
           )}
         </FeedbackTag>
@@ -1501,7 +1501,7 @@ function ClosingFooter({
             className="h-auto rounded-lg border-slate-300 px-4 py-2 text-slate-700"
             onClick={onSaveFeedback}
           >
-            {busy === 'feedback' ? 'שומר...' : 'שמור סטטוס'}
+            {busy === 'feedback' ? 'שומרת…' : 'שמרי סטטוס'}
           </Button>
           {feedbackGate ? (
             <GateNote testId="closing-feedback-gate" id={FEEDBACK_GATE_ID} fullWidth>
@@ -1523,7 +1523,7 @@ function ClosingFooter({
             className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700"
             onClick={onArchive}
           >
-            {busy === 'archive' ? 'מארכב...' : 'העבר לארכיון'}
+            {busy === 'archive' ? 'מארכבת...' : 'העבירי לארכיון'}
           </Button>
           {gateNote ? (
             <GateNote testId="closing-archive-gate" id={ARCHIVE_GATE_ID} fullWidth>
@@ -1861,7 +1861,7 @@ function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThres
       dialog: {
         title: 'העברה לארכיון',
         message: ARCHIVE_CONFIRM_MESSAGE,
-        confirmLabel: 'העבר לארכיון',
+        confirmLabel: 'העבירי לארכיון',
       },
       key: 'archive',
       fn: () => archiveProject(projectId),

@@ -39,7 +39,7 @@ export default function CustomersFilterSheet({ filters, onChange }) {
           className="h-auto p-0 text-teal-600 hover:text-teal-700 text-sm"
           data-testid="customers-filter-clear"
         >
-          נקה הכל
+          נקי הכל
         </Button>
       </div>
 

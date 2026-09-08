@@ -187,7 +187,7 @@ describe('UsersManagementPage — טעינה ורינדור הטבלה', () => {
     expect(screen.getByText('לא פעיל')).toBeInTheDocument()
   })
 
-  it('כשל-טעינה מציג את הנוסח הנעול וכפתור "נסה שוב" עם test id ייעודי', async () => {
+  it('כשל-טעינה מציג את הנוסח הנעול וכפתור "נסי שוב" עם test id ייעודי', async () => {
     usersQueue.push({ data: null, error: { message: 'network fail' } })
     rolesQueue.push({ data: [], error: null })
     renderPage()
@@ -213,7 +213,7 @@ describe('UsersManagementPage — דיאלוג הוספת משתמש: ולידצ
     const nameInput = await openAddDialog()
     const callsBefore = supabase.from.mock.calls.length
     fireEvent.change(nameInput, { target: { value: 'א' } })
-    fireEvent.click(screen.getByRole('button', { name: 'הוסף משתמש' }))
+    fireEvent.click(screen.getByRole('button', { name: 'הוסיפי משתמש' }))
 
     expect(await screen.findByText('שם מלא חייב להכיל לפחות 2 תווים.')).toBeInTheDocument()
     // אין קריאת-רשת נוספת מעבר לטעינה הראשונית - הולידציה נעצרת לפני כל מגע ב-Supabase.
@@ -237,7 +237,7 @@ describe('UsersManagementPage — דיאלוג הוספת משתמש: ולידצ
     fireEvent.change(screen.getByPlaceholderText('email@regin.co.il'), {
       target: { value: 'not-an-email' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'הוסף משתמש' }))
+    fireEvent.click(screen.getByRole('button', { name: 'הוסיפי משתמש' }))
 
     expect(await screen.findByText('יש להזין כתובת דוא"ל תקינה.')).toBeInTheDocument()
     // גם כאן: תקלת-הולידציה נתפסת לפני insert לשרת - אין קריאת-Supabase נוספת.
@@ -254,7 +254,7 @@ describe('UsersManagementPage — השבתת משתמש', () => {
     renderPage()
     await screen.findByText('ישי כהן')
 
-    fireEvent.click(screen.getByTitle('השבת משתמש'))
+    fireEvent.click(screen.getByTitle('השביתי משתמש'))
 
     expect(await screen.findByTestId('confirm-dialog-title')).toHaveTextContent('השבתת משתמש')
     expect(screen.getByTestId('confirm-dialog-message')).toHaveTextContent('דנה לוי')
@@ -273,18 +273,18 @@ describe('UsersManagementPage — השבתת משתמש', () => {
     expect(usersQueue).toHaveLength(0)
   })
 
-  it('{data: [], error: null} (חסימת RLS שקטה) מציג "השבתת המשתמש נכשלה. נסה שוב." ואינו מרענן', async () => {
+  it('{data: [], error: null} (חסימת RLS שקטה) מציג "השבתת המשתמש נכשלה. נסי שוב." ואינו מרענן', async () => {
     queueSuccessfulLoad()
     usersQueue.push({ data: [], error: null }) // תוצאת ה-update - חסימה שקטה
     renderPage()
     await screen.findByText('ישי כהן')
 
-    fireEvent.click(screen.getByTitle('השבת משתמש'))
+    fireEvent.click(screen.getByTitle('השביתי משתמש'))
     await screen.findByTestId('confirm-dialog-title')
     fireEvent.click(screen.getByTestId('confirm-dialog-confirm'))
 
     expect(await screen.findByTestId('toast-error')).toHaveTextContent(
-      'השבתת המשתמש נכשלה. נסה שוב.',
+      'השבתת המשתמש נכשלה. נסי שוב.',
     )
     // ה-update אכן נשלח (לא רק "לא קרה כלום") - התוצאה שקטה, {data:[], error:null}, ולכן
     // המסך חייב לזהות זאת לבד ולא להסתפק בהיעדר-שגיאה.

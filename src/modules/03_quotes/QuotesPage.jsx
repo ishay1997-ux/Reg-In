@@ -445,7 +445,7 @@ export default function QuotesPage() {
           role="alert"
           data-testid="quotes-sent-history-error"
         >
-          לא ניתן היה לבדוק אילו הצעות כבר נשלחו ללקוח — בדקו בחלון המסמך לפני שליחה.
+          לא ניתן היה לבדוק אילו הצעות כבר נשלחו ללקוח — בדקי בחלון המסמך לפני שליחה.
         </p>
       )}
 
@@ -685,7 +685,7 @@ export default function QuotesPage() {
                 <p className="text-slate-500 font-medium">אין הצעות מחיר במערכת עדיין.</p>
                 {canEdit && (
                   <p className="text-slate-400 text-sm mt-1">
-                    לחצו על "+ הצעה חדשה" כדי ליצור את ההצעה הראשונה.
+                    לחצי על "+ הצעה חדשה" כדי ליצור את ההצעה הראשונה.
                   </p>
                 )}
               </>
@@ -693,7 +693,7 @@ export default function QuotesPage() {
               <>
                 <p className="text-slate-500 font-medium">אין הצעות התואמות את החיפוש.</p>
                 <p className="text-slate-500 text-sm mt-1">
-                  נסו לשנות את מונחי החיפוש או לנקות את הסינון.
+                  נסי לשנות את מונחי החיפוש או לנקות את הסינון.
                 </p>
               </>
             ) : (

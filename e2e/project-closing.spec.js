@@ -138,7 +138,7 @@ test.describe('מודול 6 · דיאלוג-הביטול — המסלול החס
     // לפני כל בחירה: הכפתור ההרסני מושבת (אין סוג-ביטול ואין סיבה).
     const confirm = page.getByTestId('cancel-confirm')
     await expect(confirm).toBeDisabled()
-    await expect(confirm).toHaveText('בטל את הפרויקט')
+    await expect(confirm).toHaveText('בטלי את הפרויקט')
 
     // גם אחרי בחירת-סוג — סיבה ריקה מחזיקה את החסימה, והשגיאה נוקבת בנימוק המדויק
     // (זהה-בייט למה שה-RPC זורק — הדיאלוג והשרת אומרים את אותו משפט).

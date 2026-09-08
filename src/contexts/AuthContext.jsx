@@ -108,7 +108,7 @@ export function AuthProvider({ children }) {
       // ראשונה (user עדיין null), MainLayout ינווט ל-/login — ולכן authError, שאחרת
       // המשתמש היה מגיע למסך-כניסה בלי מילת-הסבר אחת.
       setPermissionsError(true)
-      setAuthError('תקלה זמנית בטעינת פרטי החשבון. נסה שוב בעוד רגע.')
+      setAuthError('תקלה זמנית בטעינת פרטי החשבון. נסי שוב בעוד רגע.')
       setLoading(false)
       return
     }
@@ -120,7 +120,7 @@ export function AuthProvider({ children }) {
     if (!myRow) {
       await supabase.auth.signOut()
       if (!mountedRef.current) return
-      setAuthError('החשבון שאיתו התחברת אינו מורשה במערכת. פנה למנכ"ל.')
+      setAuthError('החשבון שאיתו התחברת אינו מורשה במערכת. יש לפנות למנכ"ל.')
       setUser(null)
       setPermissions({})
       setPermissionsError(false)

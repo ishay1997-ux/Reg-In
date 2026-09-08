@@ -218,7 +218,7 @@ export default function QuoteDocumentDialog({
       const proceed = await confirm({
         title: 'שליחה חוזרת',
         message: 'ההצעה כבר נשלחה ללקוח. לשלוח שוב?',
-        confirmLabel: 'שלח שוב',
+        confirmLabel: 'שלחי שוב',
       })
       if (!proceed) return
     }
@@ -229,7 +229,7 @@ export default function QuoteDocumentDialog({
       const proceed = await confirm({
         title: 'סטטוס-שליחה לא ידוע',
         message: SEND_HISTORY_UNKNOWN_CONFIRM,
-        confirmLabel: 'המשך לשליחה',
+        confirmLabel: 'המשיכי לשליחה',
       })
       if (!proceed) return
     }
@@ -396,11 +396,7 @@ export default function QuoteDocumentDialog({
               data-testid="quote-document-send"
             >
               <Mail className="size-4" />
-              {sending
-                ? 'שולח...'
-                : alreadySent && !sendError
-                  ? 'שליחה חוזרת'
-                  : 'שליחת ההצעה במייל'}
+              {sending ? 'שולחת…' : alreadySent && !sendError ? 'שליחה חוזרת' : 'שליחת ההצעה במייל'}
             </Button>
           )}
           <Button

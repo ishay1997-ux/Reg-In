@@ -186,7 +186,7 @@ export default function UsersManagementPage() {
       setSaving(false)
 
       if (error || !updated || updated.length === 0) {
-        setFormError('שמירת השינויים נכשלה. נסה שוב.')
+        setFormError('שמירת השינויים נכשלה. נסי שוב.')
         return
       }
     } else {
@@ -211,7 +211,7 @@ export default function UsersManagementPage() {
         if (error.code === '23505') {
           setFormError('כבר קיים משתמש עם כתובת הדוא"ל הזו.')
         } else {
-          setFormError('שמירה נכשלה. נסה שוב.')
+          setFormError('שמירה נכשלה. נסי שוב.')
         }
         return
       }
@@ -230,8 +230,8 @@ export default function UsersManagementPage() {
     if (nextStatus === 'inactive') {
       const confirmed = await confirm({
         title: 'השבתת משתמש',
-        message: `להשבית את המשתמש "${targetUser.full_name}"? הוא לא יוכל להתחבר למערכת עד שיוחזר לפעיל.`,
-        confirmLabel: 'השבת משתמש',
+        message: `להשבית את המשתמשת "${targetUser.full_name}"? היא לא תוכל להתחבר למערכת עד שתוחזר לפעיל.`,
+        confirmLabel: 'השביתי משתמש',
       })
       if (!confirmed) return
     }
@@ -245,7 +245,7 @@ export default function UsersManagementPage() {
 
     if (error || !updated || updated.length === 0) {
       toast.error(
-        nextStatus === 'inactive' ? 'השבתת המשתמש נכשלה. נסה שוב.' : 'הפעלת המשתמש נכשלה. נסה שוב.',
+        nextStatus === 'inactive' ? 'השבתת המשתמש נכשלה. נסי שוב.' : 'הפעלת המשתמש נכשלה. נסי שוב.',
       )
       return
     }
@@ -292,7 +292,7 @@ export default function UsersManagementPage() {
               <DialogDescription>
                 {editingUser
                   ? 'עדכון שם, טלפון ותפקיד. לשינוי כתובת דוא"ל יש ליצור משתמש חדש.'
-                  : 'המשתמש יתווסף לטבלת המשתמשים במערכת.'}
+                  : 'היא לא תוכל להתחבר עד שתיצרי לה חשבון-כניסה בנפרד'}
               </DialogDescription>
             </DialogHeader>
 
@@ -338,7 +338,7 @@ export default function UsersManagementPage() {
                   disabled={editingUser?.email === currentUser?.email}
                 >
                   <SelectTrigger className="w-full h-auto p-3 rounded-lg border-slate-300">
-                    <SelectValue placeholder="בחר תפקיד" />
+                    <SelectValue placeholder="בחרי תפקיד" />
                   </SelectTrigger>
                   <SelectContent dir="rtl">
                     {roles.map((role) => (
@@ -363,7 +363,7 @@ export default function UsersManagementPage() {
                   disabled={saving}
                   className="w-full h-auto p-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
                 >
-                  {saving ? 'שומר...' : editingUser ? 'שמור שינויים' : 'הוסף משתמש'}
+                  {saving ? 'שומרת…' : editingUser ? 'שמרי שינויים' : 'הוסיפי משתמש'}
                 </Button>
               </DialogFooter>
             </form>
@@ -430,7 +430,7 @@ export default function UsersManagementPage() {
                     <Button
                       type="button"
                       variant="link"
-                      title="ערוך משתמש"
+                      title="ערכי משתמש"
                       onClick={() => openEditDialog(targetUser)}
                       className="h-auto p-0 text-teal-600 hover:text-teal-700"
                     >
@@ -441,7 +441,7 @@ export default function UsersManagementPage() {
                         type="button"
                         variant="link"
                         disabled={isSelf}
-                        title={isSelf ? 'לא ניתן להשבית את החשבון שלך' : 'השבת משתמש'}
+                        title={isSelf ? 'לא ניתן להשבית את החשבון שלך' : 'השביתי משתמש'}
                         onClick={() => handleToggleStatus(targetUser)}
                         className="h-auto p-0 text-red-600 hover:text-red-700"
                       >
@@ -451,7 +451,7 @@ export default function UsersManagementPage() {
                       <Button
                         type="button"
                         variant="link"
-                        title="הפעל משתמש מחדש"
+                        title="הפעילי משתמש מחדש"
                         onClick={() => handleToggleStatus(targetUser)}
                         className="h-auto p-0 text-teal-600 hover:text-teal-700"
                       >

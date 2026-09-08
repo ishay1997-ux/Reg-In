@@ -17,7 +17,7 @@ import { WINDOW_OPTIONS } from '@/lib/listWindow'
 export function WindowChips({ value, onChange, hiddenCount = 0, testId = 'list-window' }) {
   return (
     <div className="flex flex-wrap items-center gap-1.5" data-testid={testId} role="group">
-      <span className="text-[12px] text-slate-500">מציג:</span>
+      <span className="text-[12px] text-slate-500">מציג</span>
       {WINDOW_OPTIONS.map((option) => (
         <FilterPill
           key={option.key}

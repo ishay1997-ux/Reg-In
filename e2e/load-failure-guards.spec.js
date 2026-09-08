@@ -134,7 +134,7 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
     const cleanRow = page
       .locator('[data-testid^="customer-row-"]')
       .filter({ hasText: CLEAN_COMPANY_NAME })
-    await cleanRow.getByTitle('העבר לארכיון').click()
+    await cleanRow.getByTitle('העבירי לארכיון').click()
     await expect(page.getByTestId('confirm-dialog-title')).toHaveText('טרם ידוע אם יש הצעות פתוחות')
     // מבטלים — הבדיקה מוכיחה את השאלה, לא מארכבת שורה אמיתית.
     await page.getByTestId('confirm-dialog-cancel').click()
@@ -145,14 +145,14 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
     await expect(page.getByTestId('customers-revenue-error')).toBeHidden()
 
     // רגרסיה (א): לקוח נקי מאורכב **בלי שאלה** — הכרעת-11/07 נשמרת.
-    await cleanRow.getByTitle('העבר לארכיון').click()
+    await cleanRow.getByTitle('העבירי לארכיון').click()
     await expect(page.getByTestId('confirm-dialog-title')).toHaveCount(0)
     await expect(page.getByText(CLEAN_COMPANY_NAME)).toBeHidden()
 
     // רגרסיה (ב): לקוח עם הצעה פתוחה מקבל את האזהרה הרגילה (§7.34) ולא את "טרם ידוע".
     await page.getByTestId('customers-search').fill('')
     const busyRow = page.locator('[data-testid^="customer-row-"]').first()
-    await busyRow.getByTitle('העבר לארכיון').click()
+    await busyRow.getByTitle('העבירי לארכיון').click()
     await expect(page.getByTestId('confirm-dialog-title')).toHaveText('ללקוח יש הצעות פתוחות')
     await page.getByTestId('confirm-dialog-cancel').click()
   })

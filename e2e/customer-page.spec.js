@@ -260,7 +260,7 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
     // ⚠️ ממתינים שנתוני-ההצעות ייטענו (הבקשה השנייה) **לפני** הלחיצה — אחרת נבדק ענף
     // "טרם ידוע" במקום ענף "יש הצעות פתוחות". עמודת ההכנסות היא הסימן שהמפה הגיעה.
     await expect(row.getByText('₪')).toBeVisible()
-    await row.getByTitle('העבר לארכיון').click()
+    await row.getByTitle('העבירי לארכיון').click()
 
     const dialog = page.getByTestId('confirm-dialog')
     await expect(dialog).toBeVisible()

@@ -143,12 +143,12 @@ export function rowMenuItems(row, context = {}) {
   const { isWithinFinalDay, hasShiftLead } = context
 
   if (status === 'pending') {
-    const resend = item(ASSIGNMENT_ACTION.RESEND, 'שלח את הקישור שוב', {
+    const resend = item(ASSIGNMENT_ACTION.RESEND, 'שלחי את הקישור שוב', {
       sendsEmail: true,
       disabledReason: resendDisabledReason(row, context),
     })
-    const available = item(ASSIGNMENT_ACTION.MARK_AVAILABLE, 'סמן: אישרה זמינות', { tone: 'good' })
-    const declined = item(ASSIGNMENT_ACTION.MARK_DECLINED, 'סמן: סירבה', { tone: 'bad' })
+    const available = item(ASSIGNMENT_ACTION.MARK_AVAILABLE, 'סמני: אישרה זמינות', { tone: 'good' })
+    const declined = item(ASSIGNMENT_ACTION.MARK_DECLINED, 'סמני: סירבה', { tone: 'bad' })
     // ⚠️ **אינה "סמן:" ואינה סימון** — היא מוציאה לדיילת את פרטי האירוע. הפריט היחיד
     // משלושת פריטי-הטלפון ששולח מייל, ולכן הוא נקרא בשמו המלא (§⑧①).
     const byPhone = item(ASSIGNMENT_ACTION.APPROVE_BY_PHONE, 'אושרה סופית — סוכם בטלפון', {
@@ -165,14 +165,14 @@ export function rowMenuItems(row, context = {}) {
 
   if (status === 'confirmed_available') {
     return [
-      item(ASSIGNMENT_ACTION.APPROVE_FINAL, 'אשר סופית ושלח פרטים', {
+      item(ASSIGNMENT_ACTION.APPROVE_FINAL, 'אשרי סופית ושלחי פרטים', {
         sendsEmail: true,
         isPrimary: true,
         tone: 'good',
       }),
       // "חזרה בה" — המסלול של דיילת שהתקשרה לפני האישור הסופי (`§ב8`). אין מסלול-קישור.
-      item(ASSIGNMENT_ACTION.MARK_DECLINED, 'סמן: סירבה (חזרה בה)', { tone: 'bad' }),
-      item(ASSIGNMENT_ACTION.RELEASE, 'שחרר — המשרה אוישה', { sendsEmail: true, tone: 'muted' }),
+      item(ASSIGNMENT_ACTION.MARK_DECLINED, 'סמני: סירבה (חזרה בה)', { tone: 'bad' }),
+      item(ASSIGNMENT_ACTION.RELEASE, 'שחררי — המשרה אוישה', { sendsEmail: true, tone: 'muted' }),
     ]
   }
 
@@ -181,7 +181,7 @@ export function rowMenuItems(row, context = {}) {
     return [
       item(
         isLead ? ASSIGNMENT_ACTION.CLEAR_SHIFT_LEAD : ASSIGNMENT_ACTION.SET_SHIFT_LEAD,
-        isLead ? 'בטל סימון אחראית משמרת' : 'סמן כאחראית משמרת',
+        isLead ? 'בטלי סימון אחראית משמרת' : 'סמני כאחראית משמרת',
         {
           // 📌 `הנחתי` (נרשם ב-§10): האפיון אומר *"ביטלה ⇒ הסימון משתחרר, המנהלת מסמנת
           // אחרת"* ואינו אומר מה קורה בלחיצה כשכבר יש אחראית. במסד יש אינדקס-ייחוד חלקי
@@ -190,19 +190,19 @@ export function rowMenuItems(row, context = {}) {
             !isLead && hasShiftLead ? 'כבר מסומנת אחראית משמרת אחרת לאירוע הזה' : null,
         },
       ),
-      item(ASSIGNMENT_ACTION.RELEASE, 'שחרר מהאירוע (צמצום תקנים)', {
+      item(ASSIGNMENT_ACTION.RELEASE, 'שחררי מהאירוע (צמצום תקנים)', {
         sendsEmail: true,
         tone: 'muted',
       }),
       // 🔴 **רושם בלבד — אינו שולח מייל.** מפת-הלחיצות (§①) מסמנת 🚫, ומקרא-המוקאפ מונה
       // אותה תחת "רק רושמות"; ההערה שמתחת לתפריט במוקאפ אומרת ההפך **והיא הטעות**.
-      item(ASSIGNMENT_ACTION.MARK_WITHDRAWN, 'סמן: ביטלה אחרי אישור', { tone: 'bad' }),
+      item(ASSIGNMENT_ACTION.MARK_WITHDRAWN, 'סמני: ביטלה אחרי אישור', { tone: 'bad' }),
     ]
   }
 
   // 🔴 סירבה / שוחררה ⇒ **שורה שנייה בלבד.** הישנה נשארת כהיסטוריה ומזינה את הציון.
   if (status === 'declined' || status === 'released') {
-    return [item(ASSIGNMENT_ACTION.NEW_INVITE, 'פתח זימון חדש', { sendsEmail: true })]
+    return [item(ASSIGNMENT_ACTION.NEW_INVITE, 'פתחי זימון חדש', { sendsEmail: true })]
   }
 
   // `approval_withdrawn` — שורת היסטוריה. המחליפה נבחרת ב-Smart Match, לא כאן.

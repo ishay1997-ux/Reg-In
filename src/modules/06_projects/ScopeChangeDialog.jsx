@@ -430,7 +430,7 @@ function RemovalButton({
   submitting,
   onQtyChange,
 }) {
-  const label = marked ? 'בטל הסרה' : 'הסר פריט'
+  const label = marked ? 'בטלי הסרה' : 'הסירי פריט'
   return (
     <button
       type="button"
@@ -448,7 +448,7 @@ function RemovalButton({
       // לשדה (משפט אחד, שני פקדים). 🔴 ולא `title`: לכפתור מושבת אין hit-test ולכן
       // tooltip עליו לעולם אינו נפתח — הסיבה חייבת להיות טקסט גלוי, והקישור ל-AT מפורש.
       aria-describedby={blockedReason ? descriptionId : undefined}
-      // שם-הפריט בתווית: על המסך יושבים כמה כפתורי-הסרה זהים, ו"הסר פריט" לבדו אינו
+      // שם-הפריט בתווית: על המסך יושבים כמה כפתורי-הסרה זהים, ו"הסירי פריט" לבדו אינו
       // אומר לקורא-מסך **איזה** פריט (אותו דפוס כמו תווית שדה-הכמות).
       aria-label={`${label} — ${model.name}`}
       data-testid={`scope-remove-${model.key}`}
@@ -475,7 +475,7 @@ function ExistingLineRow({ state, quoteReadable, submitting, onQtyChange }) {
   // מסלול-הסרה קיים רק לשורת-לוגיסטיקה שיש לה שורת-לוגיסטיקה תואמת: שורת-דיילות אינה
   // פריט (AR-10 — ואת כמות-הדיילות מקטינים, לא "מסירים"), ובלי `serial_number` אין לשרת
   // מה להסיר. שורה חדשה שטרם נשמרה אינה כאן בכלל — יש לה קישור "הסרה" משלה, שמוחק שורת
-  // טופס ולא פריט מהאירוע, ולכן הנוסח כאן **"הסר פריט"** ולא "הסרה".
+  // טופס ולא פריט מהאירוע, ולכן הנוסח כאן **"הסירי פריט"** ולא "הסרה".
   const showRemoval = model.kind === 'logistics' && model.editable
   return (
     <tr className={changed ? '' : 'bg-slate-50 text-slate-500'}>
@@ -562,7 +562,7 @@ function NewItemRow({ state, index, addableProducts, submitting, onChange, onRem
           data-testid={`scope-new-row-select-${index}`}
           onChange={(e) => onChange(row.key, { sku: e.target.value })}
         >
-          <option value="">בחר/י מוצר מהקטלוג</option>
+          <option value="">בחרי מוצר מהקטלוג</option>
           {addableProducts.map((p) => (
             <option key={p.sku} value={p.sku}>
               {p.item_name}
@@ -1128,7 +1128,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
           data-testid="scope-save"
           onClick={handleSave}
         >
-          {submitting ? 'שומר...' : 'שמור שינוי תכולה'}
+          {submitting ? 'שומרת…' : 'שמרי שינוי תכולה'}
         </Button>
         <Button
           type="button"

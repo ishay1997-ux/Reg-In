@@ -326,7 +326,7 @@ function FeedbackForm({
         data-testid="feedback-submit"
         className="mt-auto h-auto rounded-xl bg-teal-600 py-3.5 text-[15px] font-bold text-white hover:bg-teal-700"
       >
-        שלח
+        שליחה
       </Button>
     </div>
   )

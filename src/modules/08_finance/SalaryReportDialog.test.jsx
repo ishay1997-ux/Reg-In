@@ -429,7 +429,7 @@ describe('SalaryReportDialog — חלונית-הווידוא של "ייצא וש
     await waitFor(() => expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument())
     expect(generateAndSendSalaryReport).not.toHaveBeenCalled()
     // הכפתור חוזר לנוסחו הרגיל (לא "מפיקה ושולחת…") ואין טבלת-תוצאה.
-    expect(screen.getByTestId('salary-report-generate')).toHaveTextContent('ייצא ושלח')
+    expect(screen.getByTestId('salary-report-generate')).toHaveTextContent('ייצאי ושלחי')
     expect(screen.queryByTestId('salary-report-result')).not.toBeInTheDocument()
   })
 
