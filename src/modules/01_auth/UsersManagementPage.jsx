@@ -2,7 +2,7 @@
 // ה-Route כבר מוגן ב-ProtectedRoute allow={SYSTEM_MODULES} (App.jsx - permission-driven, לא role
 // קשיח) ו-RLS אוכף גם ברמת ה-DB, לכן אין כאן בדיקת session/role עצמאית כפולה - רק טעינת הדאטה
 // בפועל דרך useAuth().
-// טבלת עובדים, הוספת משתמש חדש, ומצב פעיל/לא-פעיל דו-כיווני (status='active'/'inactive').
+// טבלת עובדים, הוספת משתמשת חדשה, ומצב פעיל/לא-פעיל דו-כיווני (status='active'/'inactive').
 // ⚠️ בכוונה אין כאן שום מסגור של "מחיקה": אין טקסט/אייקון "מחק", ואין הסתרה חד-כיוונית -
 // שורות inactive מוצגות בטבלה עם תג סטטוס, וניתן להחזיר אותן ל-active מאותו כפתור בדיוק.
 // אותה מוסכמה (status דו-כיווני, לא "מחיקה") חלה גם על מסכי לקוחות (מודול 2) ודיילות
@@ -194,7 +194,7 @@ export default function UsersManagementPage() {
       const cleanEmail = formEmail.trim()
       if (!EMAIL_REGEX.test(cleanEmail)) {
         setSaving(false)
-        setFormError('יש להזין כתובת דוא״ל תקינה.')
+        setFormError('יש להזין כתובת אימייל תקינה.')
         return
       }
 
@@ -210,7 +210,7 @@ export default function UsersManagementPage() {
 
       if (error) {
         if (error.code === '23505') {
-          setFormError('כבר קיים משתמש עם כתובת הדוא״ל הזו.')
+          setFormError('כבר קיימת משתמשת עם כתובת האימייל הזו.')
         } else {
           setFormError('שמירה נכשלה — נסי שוב.')
         }
@@ -279,7 +279,7 @@ export default function UsersManagementPage() {
           onClick={openAddDialog}
           className="h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"
         >
-          + הוספת משתמש חדש
+          + משתמשת חדשה
         </Button>
 
         <Dialog
@@ -291,10 +291,10 @@ export default function UsersManagementPage() {
         >
           <DialogContent dir="rtl">
             <DialogHeader>
-              <DialogTitle>{editingUser ? 'עריכת משתמש' : 'הוספת משתמש חדש'}</DialogTitle>
+              <DialogTitle>{editingUser ? 'עריכת משתמש' : 'הוספת משתמשת חדשה'}</DialogTitle>
               <DialogDescription>
                 {editingUser
-                  ? 'עדכון שם, טלפון ותפקיד — לשינוי כתובת דוא״ל יש ליצור משתמש חדש'
+                  ? 'עדכון שם, טלפון ותפקיד — לשינוי כתובת אימייל יש ליצור משתמשת חדשה'
                   : 'היא לא תוכל להתחבר עד שתיצרי לה חשבון-כניסה בנפרד'}
               </DialogDescription>
             </DialogHeader>
@@ -303,7 +303,7 @@ export default function UsersManagementPage() {
 
             <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm text-slate-700">דוא״ל</label>
+                <label className="text-sm text-slate-700">אימייל</label>
                 <Input
                   type="email"
                   value={formEmail}
@@ -382,7 +382,7 @@ export default function UsersManagementPage() {
         <thead>
           <tr className="border-b border-slate-200 text-sm text-slate-500">
             <th className="py-2 font-medium">שם מלא</th>
-            <th className="py-2 font-medium">דוא״ל</th>
+            <th className="py-2 font-medium">אימייל</th>
             <th className="py-2 font-medium">טלפון</th>
             <th className="py-2 font-medium">תפקיד</th>
             <th className="py-2 font-medium">סטטוס</th>

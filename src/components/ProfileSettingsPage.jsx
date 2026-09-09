@@ -121,7 +121,7 @@ function PersonalDetailsSection({ user, reload }) {
       </div>
 
       <div>
-        <p className="text-sm text-slate-500">דוא"ל</p>
+        <p className="text-sm text-slate-500">אימייל</p>
         <p className="text-slate-800 font-medium">{user?.email}</p>
         {/* שינוי אימייל עצמאי לא נתמך כרגע - ראו CLAUDE_CODE_LOG.md (email = מפתח זיהוי RLS+FK) */}
       </div>

@@ -225,7 +225,7 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
           className="text-amber-700 text-sm bg-amber-50 border border-amber-200 rounded-lg p-3"
           data-testid="marketing-toolong"
         >
-          רשימת הנמענים ארוכה מדי לשליחה דרך תוכנת הדוא"ל (חלק מהנמענים היו נחתכים בשקט). בטלי חלק
+          רשימת הנמענים ארוכה מדי לשליחה דרך תוכנת האימייל (חלק מהנמענים היו נחתכים בשקט). בטלי חלק
           מהנמענים, השתמשי ב"העתק רשימת נמענים" ושלחי ידנית, או המתיני לשליחת-השרת (מודול 10).
         </p>
       )}

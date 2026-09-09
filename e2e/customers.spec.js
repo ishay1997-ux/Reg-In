@@ -29,7 +29,7 @@ const TEST_COMPANY_NAME = `בדיקת E2E ${TEST_COMPANY_NUMBER}`
 
 async function login(page, email, password) {
   await page.goto('/login')
-  await page.getByPlaceholder('כתובת דוא״ל').fill(email)
+  await page.getByPlaceholder('כתובת אימייל').fill(email)
   await page.getByPlaceholder('סיסמה').fill(password)
   await page.getByRole('button', { name: 'התחברות', exact: true }).click()
   // login מוצלח = שרשרת קריאות-רשת ארוכה לפני הניווט (כמו בשאר הספים) — timeout מורחב מונע כשל-שווא.

@@ -112,7 +112,7 @@ test.describe('בדיקת-עשן', () => {
     // התחברות. כל כשל כאן מסומן כ-auth — העוטפן מתרגם ל-exit 2 (סיסמה/משתמש, לא באג).
     try {
       await page.goto('/login')
-      await page.getByPlaceholder('כתובת דוא״ל').fill(CEO_EMAIL)
+      await page.getByPlaceholder('כתובת אימייל').fill(CEO_EMAIL)
       await page.getByPlaceholder('סיסמה').fill(CEO_PASSWORD)
       await page.getByRole('button', { name: 'התחברות', exact: true }).click()
       await expect(page).toHaveURL('/', { timeout: 30_000 })

@@ -1013,7 +1013,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
               ])
             }
           >
-            + הוסיפי פריט שאינו בהצעה
+            + פריט שאינו בהצעה
           </button>
           <span className="mr-2 text-[11.5px] text-slate-400">
             פריט חדש נכנס לפי מדרגת-המחיר בקטלוג היום, ומקבל את הנחת ההצעה

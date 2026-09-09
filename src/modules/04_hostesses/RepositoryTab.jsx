@@ -374,7 +374,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
             className="h-auto rounded-lg bg-teal-600 px-4 py-1.5 text-[13px] font-semibold text-white"
             data-testid="repository-add"
           >
-            + הוספת דיילת
+            + דיילת חדשה
           </Button>
         )}
       </div>
@@ -647,7 +647,7 @@ function EmptyState({ filtered, canEdit, onAdd, onClear }) {
             onClick={onAdd}
             className="mt-2 h-auto rounded-lg bg-teal-600 px-3 py-1.5 text-[12.5px] font-semibold text-white"
           >
-            + הוספת דיילת
+            + דיילת חדשה
           </Button>
         </div>
       )}

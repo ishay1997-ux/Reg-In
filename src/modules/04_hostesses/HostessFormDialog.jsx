@@ -535,7 +535,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                       className="h-auto rounded-lg border-slate-300 px-3 py-2 text-xs text-slate-700"
                       data-testid="hostess-range-add"
                     >
-                      + הוסיפי טווח
+                      + טווח חדש
                     </Button>
                   </div>
                 </div>

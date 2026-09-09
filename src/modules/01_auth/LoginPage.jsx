@@ -29,7 +29,7 @@ export default function LoginPage() {
     const cleanEmail = email.trim()
 
     if (!cleanEmail) {
-      setErrorMsg('יש להזין כתובת דוא״ל.')
+      setErrorMsg('יש להזין כתובת אימייל.')
       return
     }
     if (password.length < 6) {
@@ -128,7 +128,7 @@ export default function LoginPage() {
   async function handleForgotPassword() {
     const cleanEmail = email.trim()
     if (!cleanEmail) {
-      setErrorMsg('הזיני קודם את כתובת הדוא״ל שלך בשדה למעלה.')
+      setErrorMsg('הזיני קודם את כתובת האימייל שלך בשדה למעלה.')
       return
     }
     setErrorMsg('')
@@ -136,7 +136,7 @@ export default function LoginPage() {
     if (error) {
       setErrorMsg('לא הצלחנו לשלוח מייל איפוס — בדקי את הכתובת.')
     } else {
-      setInfoMsg('נשלח אליך מייל לאיפוס הסיסמה — בדקי את תיבת הדוא״ל.')
+      setInfoMsg('נשלח אליך מייל לאיפוס הסיסמה — בדקי את תיבת האימייל.')
     }
   }
 
@@ -154,7 +154,7 @@ export default function LoginPage() {
 
         <Input
           type="email"
-          placeholder="כתובת דוא״ל"
+          placeholder="כתובת אימייל"
           value={email}
           onChange={(e) => {
             setEmail(e.target.value)

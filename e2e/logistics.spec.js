@@ -111,7 +111,7 @@ async function installWriteGuard(page) {
 
 async function login(page, email, password) {
   await page.goto('/login')
-  await page.getByPlaceholder('כתובת דוא״ל').fill(email)
+  await page.getByPlaceholder('כתובת אימייל').fill(email)
   await page.getByPlaceholder('סיסמה').fill(password)
   await page.getByRole('button', { name: 'התחברות', exact: true }).click()
   // התחברות מוצלחת = שרשרת קריאות ארוכה לפני הניווט; תקרה מורחבת מונעת כשל-שווא ברשת איטית.

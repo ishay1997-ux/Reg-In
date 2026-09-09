@@ -24,7 +24,7 @@ const CLEAN_COMPANY_NAME = `בדיקת שומרים ${CLEAN_COMPANY_NUMBER}`
 
 async function login(page, email, password) {
   await page.goto('/login')
-  await page.getByPlaceholder('כתובת דוא״ל').fill(email)
+  await page.getByPlaceholder('כתובת אימייל').fill(email)
   await page.getByPlaceholder('סיסמה').fill(password)
   await page.getByRole('button', { name: 'התחברות', exact: true }).click()
   await expect(page).toHaveURL('/', { timeout: 30_000 })
@@ -288,7 +288,7 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
       route.fulfill({ status: 500, contentType: 'application/json', body: '{"message":"forced"}' }),
     )
     await page.goto('/login')
-    await page.getByPlaceholder('כתובת דוא״ל').fill(CEO_EMAIL)
+    await page.getByPlaceholder('כתובת אימייל').fill(CEO_EMAIL)
     await page.getByPlaceholder('סיסמה').fill(CEO_PASSWORD)
     await page.getByRole('button', { name: 'התחברות', exact: true }).click()
 
@@ -305,8 +305,8 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
     // ‏`goto` פותח עץ-React טרי שבו האירוע האסינכרוני היחיד הוא הלחיצה של הבדיקה עצמה.
     await page.unroute('**/rest/v1/users*')
     await page.goto('/login')
-    await expect(page.getByPlaceholder('כתובת דוא״ל')).toBeVisible()
-    await page.getByPlaceholder('כתובת דוא״ל').fill(CEO_EMAIL)
+    await expect(page.getByPlaceholder('כתובת אימייל')).toBeVisible()
+    await page.getByPlaceholder('כתובת אימייל').fill(CEO_EMAIL)
     await page.getByPlaceholder('סיסמה').fill(CEO_PASSWORD)
     await page.getByRole('button', { name: 'התחברות', exact: true }).click()
     await expect(page).toHaveURL('/', { timeout: 30_000 })

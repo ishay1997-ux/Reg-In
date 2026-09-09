@@ -131,7 +131,7 @@ function renderPage() {
 
 // פותחת את דיאלוג ההוספה ומחכה שהטופס יעלה (השדה "שם מלא" זמין).
 async function openAddDialog() {
-  fireEvent.click(screen.getByRole('button', { name: '+ הוספת משתמש חדש' }))
+  fireEvent.click(screen.getByRole('button', { name: '+ משתמשת חדשה' }))
   return screen.findByPlaceholderText('לדוגמה: דנה כהן')
 }
 
@@ -239,7 +239,7 @@ describe('UsersManagementPage — דיאלוג הוספת משתמש: ולידצ
     })
     fireEvent.click(screen.getByRole('button', { name: 'הוסיפי משתמש' }))
 
-    expect(await screen.findByText('יש להזין כתובת דוא״ל תקינה.')).toBeInTheDocument()
+    expect(await screen.findByText('יש להזין כתובת אימייל תקינה.')).toBeInTheDocument()
     // גם כאן: תקלת-הולידציה נתפסת לפני insert לשרת - אין קריאת-Supabase נוספת.
     expect(supabase.from.mock.calls.length).toBe(callsBefore)
   })

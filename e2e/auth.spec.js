@@ -10,7 +10,7 @@ test.describe('התחברות (מודול 1)', () => {
     // .first() תופס את הראשון בעץ (<html>) - הבדיקה מאשרת שה-RTL קיים, לא היכן הוא מוגדר.
     await expect(page.locator('[dir="rtl"]').first()).toBeVisible()
     await expect(page.getByRole('heading', { name: 'כניסה למערכת' })).toBeVisible()
-    await expect(page.getByPlaceholder('כתובת דוא״ל')).toBeVisible()
+    await expect(page.getByPlaceholder('כתובת אימייל')).toBeVisible()
     await expect(page.getByPlaceholder('סיסמה')).toBeVisible()
   })
 
@@ -25,7 +25,7 @@ test.describe('התחברות (מודול 1)', () => {
   }) => {
     test.skip(!CEO_EMAIL, 'E2E_CEO_EMAIL לא הוגדר ב-.env.local')
     await page.goto('/login')
-    await page.getByPlaceholder('כתובת דוא״ל').fill(CEO_EMAIL)
+    await page.getByPlaceholder('כתובת אימייל').fill(CEO_EMAIL)
     await page.getByPlaceholder('סיסמה').fill('wrong-password-just-once')
     await page.getByRole('button', { name: 'התחברות', exact: true }).click()
     // עד שההודעה מוצגת עוברות 3 קריאות-רשת עוקבות (check_login_lock → Auth → register_failed_login),
@@ -38,7 +38,7 @@ test.describe('התחברות (מודול 1)', () => {
   test('התחברות מוצלחת עם CEO מגיעה למסך הבית (MainLayout)', async ({ page }) => {
     test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
     await page.goto('/login')
-    await page.getByPlaceholder('כתובת דוא״ל').fill(CEO_EMAIL)
+    await page.getByPlaceholder('כתובת אימייל').fill(CEO_EMAIL)
     await page.getByPlaceholder('סיסמה').fill(CEO_PASSWORD)
     await page.getByRole('button', { name: 'התחברות', exact: true }).click()
     // login מוצלח = שרשרת קריאות-רשת ארוכה (lock-check, Auth, reset, שליפת users) לפני הניווט -
