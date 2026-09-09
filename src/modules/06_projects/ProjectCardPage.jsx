@@ -20,6 +20,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import Hint from '@/components/Hint'
 import LoadingOrError from '@/components/LoadingOrError'
 import PermissionAwareEmpty from '@/components/PermissionAwareEmpty'
 import StatusTag from '@/components/StatusTag'
@@ -517,6 +518,7 @@ function IdentityCard({
                   סופי" הוסר: התווית "אורחים מוערכים" כבר אומרת את זה (R27) — נשאר רק
                   המקור, בניסוח-עובדה חיובי במקום שלילה (④, ראה דוח-הסשן). */}
               <Sub>מהצעת המחיר</Sub>
+              <Hint id="project.guestsEstimate" />
             </>
           ) : (
             <>

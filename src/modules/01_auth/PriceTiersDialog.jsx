@@ -15,6 +15,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import LoadingOrError from '@/components/LoadingOrError'
+import Hint from '@/components/Hint'
 import {
   Dialog,
   DialogContent,
@@ -128,6 +129,8 @@ export default function PriceTiersDialog({ open, onOpenChange, product, onSaved 
           </DialogTitle>
           <DialogDescription>ללא מדרגות, ההצעה מתומחרת לפי מחיר הבסיס</DialogDescription>
         </DialogHeader>
+
+        <Hint id="prices.tierRule" />
 
         {/* ⚠️ הטרנרי נשאר: LoadingOrError מחזיר את ענף-השגיאה בלי תנאי, ולכן רינדור
             לא-שמור שלו היה מוסיף <p> אדום ריק לדיאלוג התקין. */}

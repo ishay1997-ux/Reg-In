@@ -13,6 +13,12 @@ import { listProjectsOverview } from './api'
 
 vi.mock('./api', () => ({ listProjectsOverview: vi.fn() }))
 
+// ⚠️ שלב 9 (Hint) — הוספת `<Hint id="projects.sort" />` מייבאת `@/contexts/AuthContext`,
+// שמייבאת `@/supabaseClient` (יוצר לקוח אמיתי בטעינה) — קובץ זה לא ייבא אף אחת מהן קודם.
+// בלי המוק הזה הבדיקה קורסת ב-`supabaseUrl is required` (מוקש `src/CLAUDE.md`), לא נכשלת
+// על טענה. רמה 0 ⇒ `<Hint>` מחזיר null ואינו משנה את מה שהבדיקות האלה בודקות.
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ onboardingMode: 0 }) }))
+
 // תאריכים יחסיים להיום האמיתי — העמוד קורא את השעון בעצמו, וקיבוע תאריך היה מזייף את
 // חישוב-הקרבה. אותו חישוב-UTC כמו eventDaysFromToday, כדי שלא ייווצר פער סביב חצות.
 function offsetIso(days) {

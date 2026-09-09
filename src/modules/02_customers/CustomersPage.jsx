@@ -22,6 +22,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useConfirm } from '@/components/ConfirmDialog'
 import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
+import Hint from '@/components/Hint'
 import {
   CUSTOMER_TYPE_LABELS,
   SATISFACTION_THRESHOLD_PARAM_NAME,
@@ -779,238 +780,242 @@ export default function CustomersPage() {
                 )}
               </div>
             ) : (
-              // עטיפת-גלילה אופקית: 11 עמודות גולשות במסך צר (מובייל) — min-w שומר על רוחב קריא
-              // והעטיפה גוללת במקום לרסק עמודות; במסך רחב w-full נמתח כרגיל.
-              <div className="overflow-x-auto">
-                <table
-                  className="w-full min-w-[56rem] text-right border-collapse"
-                  data-testid="customers-table"
-                >
-                  <thead>
-                    <tr className="border-b border-slate-200 text-sm text-slate-500">
-                      <SortableHeader
-                        label="שם לקוח"
-                        colKey="company_name"
-                        sortKey={sortKey}
-                        sortDir={sortDir}
-                        onSort={toggleSort}
-                      />
-                      <th className="py-2 font-medium">ח"פ</th>
-                      <SortableHeader
-                        label="סוג לקוח"
-                        colKey="customer_type"
-                        sortKey={sortKey}
-                        sortDir={sortDir}
-                        onSort={toggleSort}
-                      />
-                      {/* 🔴 שלוש עמודות (שם · טלפון · אימייל) אוחדו לאחת — הכרעת-ישי 02/09/2026,
+              <>
+                <Hint id="customers.satisfactionAverage" />
+                {/* עטיפת-גלילה אופקית: 11 עמודות גולשות במסך צר (מובייל) — min-w שומר על רוחב קריא
+                    והעטיפה גוללת במקום לרסק עמודות; במסך רחב w-full נמתח כרגיל. */}
+                <div className="overflow-x-auto">
+                  <table
+                    className="w-full min-w-[56rem] text-right border-collapse"
+                    data-testid="customers-table"
+                  >
+                    <thead>
+                      <tr className="border-b border-slate-200 text-sm text-slate-500">
+                        <SortableHeader
+                          label="שם לקוח"
+                          colKey="company_name"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={toggleSort}
+                        />
+                        <th className="py-2 font-medium">ח"פ</th>
+                        <SortableHeader
+                          label="סוג לקוח"
+                          colKey="customer_type"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={toggleSort}
+                        />
+                        {/* 🔴 שלוש עמודות (שם · טלפון · אימייל) אוחדו לאחת — הכרעת-ישי 02/09/2026,
                           אחרי שראה את הטבלה חיה ואמר "נראה קצת צפוף". **העוגן אינו טעם אלא תקדים
                           בתוך המערכת:** `03_quotes/QuotesPage.jsx` כבר מציג שם+טלפון+קישור-מייל
                           בתא אחד — כלומר המסך הזה היה החריג, לא האיחוד. ⚠️ **והאימייל ירד מהטבלה
                           ולא נמחק:** הוא חי בכרטיס-הלקוח, שם C5 §5.6.3 שם אותו מלכתחילה
                           ("תצוגת כרטיס לקוח… כוללת את כלל הפרטים"); הרשימה היא לסריקה. */}
-                      <th className="py-2 font-medium">איש קשר</th>
-                      <SortableHeader
-                        label="% הנחה"
-                        colKey="discount_percent"
-                        sortKey={sortKey}
-                        sortDir={sortDir}
-                        onSort={toggleSort}
-                      />
-                      {/* ✏️ לילה-הטקסטים (09/09/2026): "תוכן שיווקי" ⇒ "מאושר לדיוור" — R11,
+                        <th className="py-2 font-medium">איש קשר</th>
+                        <SortableHeader
+                          label="% הנחה"
+                          colKey="discount_percent"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={toggleSort}
+                        />
+                        {/* ✏️ לילה-הטקסטים (09/09/2026): "תוכן שיווקי" ⇒ "מאושר לדיוור" — R11,
                           אותו שדה (marketing_consent) נקרא "מאושר לדיוור" בכרטיס-הלקוח
                           (Detail, למטה בקובץ הזה) ובפאנל-השיווק; "תוכן שיווקי" היה שם שלישי
                           לאותו דבר, בלי בדיקה שנשענת על הניסוח. */}
-                      <th className="py-2 font-medium">מאושר לדיוור</th>
-                      {/* צעד 3.5 — "מי הלקוחות הגדולים שלי?". הכרעת-ישי: עמודה עם מיון ולא
+                        <th className="py-2 font-medium">מאושר לדיוור</th>
+                        {/* צעד 3.5 — "מי הלקוחות הגדולים שלי?". הכרעת-ישי: עמודה עם מיון ולא
                           מסננת, כי מסננת מחייבת להמציא סף שרירותי ("מעל כמה ₪?") ומיון עונה
                           ישירות. הערך נגזר מההצעות המאושרות דרך ה-SSOT של התמחור.
                           🔴 E3 (🟢 RULED 14/08, מודול 6 · משטח 8): התווית "סה"כ הכנסות" שיקרה —
                           המדד סופר הצעות מאושרות גם כשהפרויקט שנולד מהן בוטל. שני מקומות
                           מציגים את אותו מספר (כאן ובכרטיס-הלקוח) ושניהם עברו לתווית המדויקת. */}
-                      <SortableHeader
-                        label={'סה"כ הצעות מאושרות'}
-                        colKey="total_revenue"
-                        sortKey={sortKey}
-                        sortDir={sortDir}
-                        onSort={toggleSort}
-                      />
-                      <th className="py-2 font-medium">שביעות רצון</th>
-                      <SortableHeader
-                        label="סטטוס"
-                        colKey="status"
-                        sortKey={sortKey}
-                        sortDir={sortDir}
-                        onSort={toggleSort}
-                      />
-                      <th className="py-2 font-medium">פעולות</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pagedCustomers.map((customer) => {
-                      const isActive = customer.status === 'active'
-                      // N2 (02/09/2026): שם/טלפון/אימייל של איש-הקשר הראשי הם שורת
-                      // `customer_contacts` עם `is_primary`, לא עמודות על `customers`.
-                      // `listCustomers()` מביא את האמדב; primaryContact היא נקודת-הבחירה היחידה.
-                      const contact = primaryContact(customer)
-                      return (
-                        <tr
-                          key={customer.customer_id}
-                          data-testid={`customer-row-${customer.customer_id}`}
-                          onClick={() => openCard(customer.customer_id)}
-                          // נגישות-מקלדת (תיקון 11/07): השורה נפתחה רק בעכבר. tabIndex+onKeyDown פותחים
-                          // ב-Enter/רווח; focus-ring מסמן מיקוד. (סמנטיקת-row-as-button המלאה — מעבר a11y מ12.)
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault()
-                              openCard(customer.customer_id)
-                            }
-                          }}
-                          aria-label={`פתחי כרטיס לקוח: ${customer.company_name}`}
-                          className={cn(
-                            'border-b border-slate-100 cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500',
-                            !isActive && 'opacity-60',
-                          )}
-                        >
-                          <td className="py-3 font-medium">{customer.company_name}</td>
-                          <td className="py-3 text-slate-600" dir="ltr">
-                            {customer.company_number}
-                          </td>
-                          <td className="py-3 text-slate-600">
-                            {CUSTOMER_TYPE_LABELS[customer.customer_type] ?? customer.customer_type}
-                          </td>
-                          <td className="py-3 text-slate-600">
-                            <div>{contact?.contact_name}</div>
-                            {/* טלפון מתחת לשם, קטן ואפור — הדפוס של QuotesPage. `dir="ltr"` על
+                        <SortableHeader
+                          label={'סה"כ הצעות מאושרות'}
+                          colKey="total_revenue"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={toggleSort}
+                        />
+                        <th className="py-2 font-medium">שביעות רצון</th>
+                        <SortableHeader
+                          label="סטטוס"
+                          colKey="status"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={toggleSort}
+                        />
+                        <th className="py-2 font-medium">פעולות</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pagedCustomers.map((customer) => {
+                        const isActive = customer.status === 'active'
+                        // N2 (02/09/2026): שם/טלפון/אימייל של איש-הקשר הראשי הם שורת
+                        // `customer_contacts` עם `is_primary`, לא עמודות על `customers`.
+                        // `listCustomers()` מביא את האמדב; primaryContact היא נקודת-הבחירה היחידה.
+                        const contact = primaryContact(customer)
+                        return (
+                          <tr
+                            key={customer.customer_id}
+                            data-testid={`customer-row-${customer.customer_id}`}
+                            onClick={() => openCard(customer.customer_id)}
+                            // נגישות-מקלדת (תיקון 11/07): השורה נפתחה רק בעכבר. tabIndex+onKeyDown פותחים
+                            // ב-Enter/רווח; focus-ring מסמן מיקוד. (סמנטיקת-row-as-button המלאה — מעבר a11y מ12.)
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault()
+                                openCard(customer.customer_id)
+                              }
+                            }}
+                            aria-label={`פתחי כרטיס לקוח: ${customer.company_name}`}
+                            className={cn(
+                              'border-b border-slate-100 cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500',
+                              !isActive && 'opacity-60',
+                            )}
+                          >
+                            <td className="py-3 font-medium">{customer.company_name}</td>
+                            <td className="py-3 text-slate-600" dir="ltr">
+                              {customer.company_number}
+                            </td>
+                            <td className="py-3 text-slate-600">
+                              {CUSTOMER_TYPE_LABELS[customer.customer_type] ??
+                                customer.customer_type}
+                            </td>
+                            <td className="py-3 text-slate-600">
+                              <div>{contact?.contact_name}</div>
+                              {/* טלפון מתחת לשם, קטן ואפור — הדפוס של QuotesPage. `dir="ltr"` על
                                 האלמנט שנושא את הערך עצמו, לא על עוטף: תווית-RTL שנפרדת מערך-LTR
                                 היא הכשל שחזר שלוש פעמים (src/CLAUDE.md). */}
-                            {contact?.phone && (
-                              <div dir="ltr" className="text-[11.5px] text-slate-500 text-right">
-                                {contact.phone}
-                              </div>
-                            )}
-                            {/* ✉ מחליף את עמודת-האימייל שירדה: הכתובת עצמה אינה נסרקת בעין,
+                              {contact?.phone && (
+                                <div dir="ltr" className="text-[11.5px] text-slate-500 text-right">
+                                  {contact.phone}
+                                </div>
+                              )}
+                              {/* ✉ מחליף את עמודת-האימייל שירדה: הכתובת עצמה אינה נסרקת בעין,
                                 אבל **הפעולה** כן נדרשת. `mailto:` ולא כתובת-Gmail — שני תקדימים
                                 בבית (`lib/marketing.js`, `QuotesPage`) ואפס שימוש ב-mail.google.com;
                                 ובאותה הערה ב-QuotesPage יושבת הכרעת-ישי שהורידה את `tel:` דווקא
                                 משום שאינו עושה דבר במחשב — כלומר ה-mailto נבחן ונשאר.
                                 `encodeURIComponent` הוא load-bearing: כתובת עם `?`/`&` הייתה
                                 מוזרקת ככותרות-mailto. */}
-                            {contact?.email && (
-                              <a
-                                href={`mailto:${encodeURIComponent(contact.email)}`}
-                                title={`מייל ל${contact.contact_name || 'איש הקשר'}`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-block mt-1 text-[11px] text-teal-700 bg-teal-50 border border-teal-200 rounded-md px-1.5 py-0.5"
-                                data-testid={`customer-mailto-${customer.customer_id}`}
-                              >
-                                ✉ מייל
-                              </a>
-                            )}
-                          </td>
-                          <td className="py-3 text-slate-600">
-                            {Number(customer.discount_percent ?? 0)}%
-                          </td>
-                          {/* stopPropagation: פקד תוך-שורה (מתג/כפתורים) לא פותח את כרטיס-הלקוח */}
-                          <td className="py-3" onClick={(e) => e.stopPropagation()}>
-                            {canEdit ? (
-                              <ConsentSwitch
-                                customer={customer}
-                                saving={consentSavingId === customer.customer_id}
-                                onToggle={handleConsentToggle}
-                              />
-                            ) : (
-                              // מצב view: מציגים את העובדה בלבד, בלי פקד משנה (edit-vs-view, סעיף 4).
-                              <span className="text-sm text-slate-600">
-                                {customer.marketing_consent ? 'מאושר' : 'לא מאושר'}
-                              </span>
-                            )}
-                          </td>
-                          {/* "—" מבדיל בכוונה בין "עדיין נטען / אין הרשאה להצעות" (null) לבין
-                              "0 ₪" שהוא עובדה נכונה על לקוח שטרם סגר עסקה. */}
-                          <td className="py-3 text-slate-700">
-                            {customer.total_revenue == null ? (
-                              <span className="text-slate-400">—</span>
-                            ) : (
-                              <Money amount={customer.total_revenue} />
-                            )}
-                          </td>
-                          <td className="py-3">
-                            <SatisfactionCell
-                              average={customer.avg_feedback}
-                              threshold={satisfactionThreshold}
-                            />
-                          </td>
-                          <td className="py-3">
-                            <span
-                              className={cn(
-                                'px-2 py-1 rounded-full text-xs font-medium',
-                                isActive
-                                  ? 'bg-green-100 text-green-700'
-                                  : 'bg-slate-200 text-slate-600',
-                              )}
-                            >
-                              {isActive ? 'פעיל' : 'לא פעיל'}
-                            </span>
-                          </td>
-                          <td className="py-3" onClick={(e) => e.stopPropagation()}>
-                            {canEdit ? (
-                              <div className="flex items-center gap-3">
-                                <Button
-                                  type="button"
-                                  variant="link"
-                                  title="ערכי לקוח"
-                                  aria-label={`ערכי לקוח: ${customer.company_name}`}
-                                  onClick={() => openEditDialog(customer)}
-                                  className="h-auto p-0 text-teal-600 hover:text-teal-700"
-                                  data-testid={`customer-edit-${customer.customer_id}`}
+                              {contact?.email && (
+                                <a
+                                  href={`mailto:${encodeURIComponent(contact.email)}`}
+                                  title={`מייל ל${contact.contact_name || 'איש הקשר'}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-block mt-1 text-[11px] text-teal-700 bg-teal-50 border border-teal-200 rounded-md px-1.5 py-0.5"
+                                  data-testid={`customer-mailto-${customer.customer_id}`}
                                 >
-                                  <Pencil className="size-4" />
-                                </Button>
-                                {/* אפשרות ב (הכרעת-ישי 11/07): צ'יפ צבוע-לפי-פעולה — ענבר לארכוב, טורקיז
+                                  ✉ מייל
+                                </a>
+                              )}
+                            </td>
+                            <td className="py-3 text-slate-600">
+                              {Number(customer.discount_percent ?? 0)}%
+                            </td>
+                            {/* stopPropagation: פקד תוך-שורה (מתג/כפתורים) לא פותח את כרטיס-הלקוח */}
+                            <td className="py-3" onClick={(e) => e.stopPropagation()}>
+                              {canEdit ? (
+                                <ConsentSwitch
+                                  customer={customer}
+                                  saving={consentSavingId === customer.customer_id}
+                                  onToggle={handleConsentToggle}
+                                />
+                              ) : (
+                                // מצב view: מציגים את העובדה בלבד, בלי פקד משנה (edit-vs-view, סעיף 4).
+                                <span className="text-sm text-slate-600">
+                                  {customer.marketing_consent ? 'מאושר' : 'לא מאושר'}
+                                </span>
+                              )}
+                            </td>
+                            {/* "—" מבדיל בכוונה בין "עדיין נטען / אין הרשאה להצעות" (null) לבין
+                              "0 ₪" שהוא עובדה נכונה על לקוח שטרם סגר עסקה. */}
+                            <td className="py-3 text-slate-700">
+                              {customer.total_revenue == null ? (
+                                <span className="text-slate-400">—</span>
+                              ) : (
+                                <Money amount={customer.total_revenue} />
+                              )}
+                            </td>
+                            <td className="py-3">
+                              <SatisfactionCell
+                                average={customer.avg_feedback}
+                                threshold={satisfactionThreshold}
+                              />
+                            </td>
+                            <td className="py-3">
+                              <span
+                                className={cn(
+                                  'px-2 py-1 rounded-full text-xs font-medium',
+                                  isActive
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-slate-200 text-slate-600',
+                                )}
+                              >
+                                {isActive ? 'פעיל' : 'לא פעיל'}
+                              </span>
+                            </td>
+                            <td className="py-3" onClick={(e) => e.stopPropagation()}>
+                              {canEdit ? (
+                                <div className="flex items-center gap-3">
+                                  <Button
+                                    type="button"
+                                    variant="link"
+                                    title="ערכי לקוח"
+                                    aria-label={`ערכי לקוח: ${customer.company_name}`}
+                                    onClick={() => openEditDialog(customer)}
+                                    className="h-auto p-0 text-teal-600 hover:text-teal-700"
+                                    data-testid={`customer-edit-${customer.customer_id}`}
+                                  >
+                                    <Pencil className="size-4" />
+                                  </Button>
+                                  {/* אפשרות ב (הכרעת-ישי 11/07): צ'יפ צבוע-לפי-פעולה — ענבר לארכוב, טורקיז
                                   לשחזור — כדי שההבחנה בין "ארכב" ל"שחזר" תהיה מיידית (האייקונים לבדם,
                                   שתי קופסאות דומות, בלבלו). לא "פח אדום": ארכוב הפיך, לא מחיקה. */}
-                                {isActive ? (
-                                  <Button
-                                    type="button"
-                                    variant="link"
-                                    title="העבירי לארכיון"
-                                    aria-label={`העבירי לארכיון: ${customer.company_name}`}
-                                    onClick={() => handleToggleStatus(customer)}
-                                    className="h-auto p-0"
-                                    data-testid={`customer-archive-${customer.customer_id}`}
-                                  >
-                                    <span className="inline-flex size-7 items-center justify-center rounded-md bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">
-                                      <Archive className="size-4" />
-                                    </span>
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    type="button"
-                                    variant="link"
-                                    title="שחזרי מהארכיון"
-                                    aria-label={`שחזרי מהארכיון: ${customer.company_name}`}
-                                    onClick={() => handleToggleStatus(customer)}
-                                    className="h-auto p-0"
-                                    data-testid={`customer-restore-${customer.customer_id}`}
-                                  >
-                                    <span className="inline-flex size-7 items-center justify-center rounded-md bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors">
-                                      <ArchiveRestore className="size-4" />
-                                    </span>
-                                  </Button>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-slate-400 text-sm">—</span>
-                            )}
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                                  {isActive ? (
+                                    <Button
+                                      type="button"
+                                      variant="link"
+                                      title="העבירי לארכיון"
+                                      aria-label={`העבירי לארכיון: ${customer.company_name}`}
+                                      onClick={() => handleToggleStatus(customer)}
+                                      className="h-auto p-0"
+                                      data-testid={`customer-archive-${customer.customer_id}`}
+                                    >
+                                      <span className="inline-flex size-7 items-center justify-center rounded-md bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">
+                                        <Archive className="size-4" />
+                                      </span>
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      type="button"
+                                      variant="link"
+                                      title="שחזרי מהארכיון"
+                                      aria-label={`שחזרי מהארכיון: ${customer.company_name}`}
+                                      onClick={() => handleToggleStatus(customer)}
+                                      className="h-auto p-0"
+                                      data-testid={`customer-restore-${customer.customer_id}`}
+                                    >
+                                      <span className="inline-flex size-7 items-center justify-center rounded-md bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors">
+                                        <ArchiveRestore className="size-4" />
+                                      </span>
+                                    </Button>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-slate-400 text-sm">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
 
             {/* דפדוף (מעבר-האחידות) — ישירות מתחת לטבלה, בתוך אותו כרטיס. */}

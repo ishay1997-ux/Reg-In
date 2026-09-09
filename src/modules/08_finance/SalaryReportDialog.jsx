@@ -32,6 +32,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Calendar, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import Hint from '@/components/Hint'
 import {
   Dialog,
   DialogContent,
@@ -733,6 +734,7 @@ function PreflightPanel({
         <p>
           <b>שעות שבוצעו בפועל</b> בפרויקטים שנסגרו תפעולית וטרם שולמו.
         </p>
+        <Hint id="salary.formula" />
         {/* סולם-הפיצוי לפי ה24; היעדר בונוס/נסיעות בשורות-פיצוי-ביטול לפי ה29. */}
         <p>
           <b>פיצוי-ביטול</b> לדיילות שאושרו סופית בפרויקטים שבוטלו, לפי סולם דמי-הביטול — בלי בונוס

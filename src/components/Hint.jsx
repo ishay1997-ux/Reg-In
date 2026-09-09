@@ -19,8 +19,19 @@ import { useAuth } from '@/contexts/AuthContext'
 import { ONBOARDING_LEVEL, getOnboardingCopy } from '@/lib/onboardingCopy'
 import { cn } from '@/lib/utils'
 
+// 🔴 מחוץ ל-<AuthProvider> — `useAuth` זורק בכוונה (חוזה של כל המסכים). Hint הוא החריג היחיד
+// שבולע זאת ומתנהג כרמה 0: הוא קישוט שאסור לו להפיל מסך, וקומפוננטות רבות מרונדרות בבדיקות
+// בלי provider (נמדד 09/09/2026, שלב 9: 7 מסכי-יעד). אותה פילוסופיה של "מפתח חסר ⇒ null".
+function useOnboardingModeSafe() {
+  try {
+    return useAuth().onboardingMode
+  } catch {
+    return ONBOARDING_LEVEL.CLEAN
+  }
+}
+
 export default function Hint({ id, level = ONBOARDING_LEVEL.GUIDED, className }) {
-  const { onboardingMode } = useAuth()
+  const onboardingMode = useOnboardingModeSafe()
   const mode = Number.isInteger(onboardingMode) ? onboardingMode : ONBOARDING_LEVEL.CLEAN
 
   if (mode < level) return null

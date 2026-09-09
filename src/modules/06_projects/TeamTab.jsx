@@ -20,6 +20,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import Hint from '@/components/Hint'
 import StatTile from '@/components/StatTile'
 import StatusTag from '@/components/StatusTag'
 import PermissionAwareEmpty from '@/components/PermissionAwareEmpty'
@@ -489,6 +490,7 @@ function RoundsHistory({ rows, finalCount, open, onToggle }) {
 
       {open && (
         <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-3 pb-2 pt-1">
+          <Hint id="team.rawStatus" />
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b border-slate-300 text-right text-xs font-semibold text-slate-500">

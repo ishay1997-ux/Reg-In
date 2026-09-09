@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useConfirm } from '@/components/ConfirmDialog'
 import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
+import Hint from '@/components/Hint'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -297,6 +298,8 @@ export default function UsersManagementPage() {
                   : 'היא לא תוכל להתחבר עד שתיצרי לה חשבון-כניסה בנפרד'}
               </DialogDescription>
             </DialogHeader>
+
+            {!editingUser && <Hint id="users.addLoginAccount" />}
 
             <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">

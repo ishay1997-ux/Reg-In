@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import { useConfirm } from '@/components/ConfirmDialog'
 import LoadingOrError from '@/components/LoadingOrError'
+import Hint from '@/components/Hint'
 import StatTile from '@/components/StatTile'
 import StatusTag from '@/components/StatusTag'
 import { Button } from '@/components/ui/button'
@@ -371,7 +372,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
         !(await confirm({
           title: `${name} ביטלה אחרי האישור הסופי?`,
           message:
-            'האירוע יחזור להיות חסר, והביטול ייספר במרכיב האמינות שלה. זה שונה משחרור: בשחרור המערכת מסיימת את השיבוץ, וכאן היא זו שחזרה בה.',
+            'האירוע יחזור להיות חסר, והביטול ייספר במרכיב-האמינות שלה. זה שונה משחרור: בשחרור המערכת מסיימת את השיבוץ, וכאן היא זו שחזרה בה.',
           confirmLabel: 'סמני שביטלה',
         }))
       ) {
@@ -619,6 +620,10 @@ export default function SmartMatchPage({ projectId, onBack }) {
             </p>
           )}
 
+          {candidates.some((c) => c.flags.notEnoughAnswers) && (
+            <Hint id="smartMatch.newHostessRanking" />
+          )}
+
           {/* 🔴 **ארבע הזוויות מסדרות בלבד — אינן מסננות.** שכבות 1–3 רצות זהה בכל אחת,
               והצ'יפים אינם משתנים. סינון היה מאבד למנהלת מועמדת בלי שתדע. */}
           <div className="mb-1 flex flex-wrap gap-1.5" data-testid="sm-sort-angles">
@@ -650,19 +655,24 @@ export default function SmartMatchPage({ projectId, onBack }) {
             </p>
           )}
 
+          {candidates.length > 0 && <Hint id="smartMatch.angles" />}
+
           {candidates.length === 0 ? (
-            <p
-              className="rounded-lg border border-dashed border-slate-200 px-3 py-6 text-center text-[12.5px] text-slate-500"
-              data-testid="sm-candidates-empty"
-            >
-              {/* 🔴 **איפוס 09/09/2026 — חמשת חוקי-הפסילה ירדו לשכבת-ההסבר** (`research-onboarding-content.md`
-                  §7 מחרוזת 4): חמישה תנאים ברצף, כשהמערכת יודעת בדיוק איזה מהם ירה, היו כשל-5
-                  ("חמישה חוקים בנשימה אחת") — והמרחק ביניהם היה קבוע (`40 ק"מ`) בעוד שהוא
-                  פרמטר. הבסיס נשאר עם המצב ועם הדרך קדימה בלבד; חמשת החוקים ⇒ מועמד לשכבה
-                  (`onboardingCopy.js smartMatch.emptyGateRules`, לא נכתב כאן). */}
-              בדקי במאגר הדיילות אם יש דיילת שהסינון האוטומטי לא כלל — אף אחת לא עברה אותו לאירוע
-              הזה כרגע.
-            </p>
+            <>
+              <p
+                className="rounded-lg border border-dashed border-slate-200 px-3 py-6 text-center text-[12.5px] text-slate-500"
+                data-testid="sm-candidates-empty"
+              >
+                {/* 🔴 **איפוס 09/09/2026 — חמשת חוקי-הפסילה ירדו לשכבת-ההסבר** (`research-onboarding-content.md`
+                    §7 מחרוזת 4): חמישה תנאים ברצף, כשהמערכת יודעת בדיוק איזה מהם ירה, היו כשל-5
+                    ("חמישה חוקים בנשימה אחת") — והמרחק ביניהם היה קבוע (`40 ק"מ`) בעוד שהוא
+                    פרמטר. הבסיס נשאר עם המצב ועם הדרך קדימה בלבד; חמשת החוקים ⇒ מועמד לשכבה
+                    (`onboardingCopy.js smartMatch.emptyGateRules`, לא נכתב כאן). */}
+                בדקי במאגר הדיילות אם יש דיילת שהסינון האוטומטי לא כלל — אף אחת לא עברה אותו לאירוע
+                הזה כרגע.
+              </p>
+              <Hint id="smartMatch.emptyGateRules" />
+            </>
           ) : (
             <ul className="flex max-h-[520px] flex-col gap-1.5 overflow-y-auto pl-1">
               {candidates.map((candidate) => (
@@ -705,6 +715,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
               <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
                 כל זימון עודף שייסגר ישלח לדיילת הודעה ש&apos;המשרה כבר אוישה&apos;.
               </p>
+              <Hint id="smartMatch.roundsWhy" />
             </>
           )}
         </section>

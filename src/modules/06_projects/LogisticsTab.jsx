@@ -24,6 +24,7 @@
 //   זו בחירה מוצרית (מ6 אינו מציג מקור), ולא "אין מה להציג".
 
 import { Fragment, useCallback, useEffect, useState } from 'react'
+import Hint from '@/components/Hint'
 import StatTile from '@/components/StatTile'
 import StatusTag from '@/components/StatusTag'
 import PermissionAwareEmpty from '@/components/PermissionAwareEmpty'
@@ -428,6 +429,7 @@ function MainTable({ rows, changes, productName }) {
       <div className="mt-2 text-[11.5px] text-slate-400">
         הסטטוסים כאן לקריאה בלבד — מעדכנת אותם מנהלת הלוגיסטיקה, במסך שלה.
       </div>
+      <Hint id="project.logisticsStatuses" />
     </>
   )
 }

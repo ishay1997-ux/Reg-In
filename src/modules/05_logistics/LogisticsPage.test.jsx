@@ -22,6 +22,15 @@ vi.mock('./api', () => ({
   listProducts: vi.fn(),
 }))
 
+// 🆕 שלב 9 (לילה-הטקסטים) — `<Hint>` (בתוך `AmberLegend`) מייבא `useAuth`, שמייבא
+// `@/contexts/AuthContext`, שמייבא `@/supabaseClient` — והבנייה האמיתית קוראת ל-`createClient`
+// בזמן-הייבוא. הקובץ מצהיר למעלה "אין Supabase בבדיקה"; הממוקק שומר על זה בלי שהמסך יקרוס
+// תחת הסביבה-תואמת-CI (`VITE_SUPABASE_URL=` ריק, `src/CLAUDE.md §🔴`). `Hint` עצמו כבר בולע
+// כשל-`useAuth` (רמה-0 בטוחה) — זה כאן מונע את הכשל המוקדם-יותר, בזמן-הייבוא.
+vi.mock('@/supabaseClient', () => ({
+  supabase: { from: vi.fn(), rpc: vi.fn(), auth: { getSession: vi.fn() } },
+}))
+
 // 🔄 סף-הענבר ירד ל-`params` (מודול 9 · צעד 2.3) והמסך טוען אותו בעצמו — הקורא המשותף
 // ממוקק כמו כל שאר ה-API. הערך `'10'` הוא **מחרוזת**, כפי שהמסד מחזיר (`param_value` הוא `text`).
 vi.mock('@/api/params', () => ({ getParamValues: vi.fn() }))

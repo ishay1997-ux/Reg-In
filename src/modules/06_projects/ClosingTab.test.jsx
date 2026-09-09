@@ -51,6 +51,11 @@ vi.mock('@/api/email', () => ({
   getLastSuccessfulSend: vi.fn(),
 }))
 
+// ⚠️ שלב 9 (Hint) — שני `<Hint>` חדשים מייבאים `@/contexts/AuthContext` ← `@/supabaseClient`
+// (לקוח אמיתי בטעינה); הקובץ הזה לא ייבא אף אחת מהן קודם. בלי המוק הזה הבדיקה קורסת
+// ב-`supabaseUrl is required` (מוקש `src/CLAUDE.md`), לא נכשלת על טענה. רמה 0 ⇒ null.
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ onboardingMode: 0 }) }))
+
 // דיאלוג-שינוי-התכולה האמיתי נבדק בקובץ שלו; כאן stub שחושף פתיחה/שמירה — מספיק כדי
 // להוכיח שהטיוטה שורדת את הפתיחה ושהלשונית קוראת-מחדש את נתוני-השינויים אחרי שמירה.
 vi.mock('./ScopeChangeDialog', () => ({

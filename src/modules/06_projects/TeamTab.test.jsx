@@ -19,6 +19,12 @@ vi.mock('./api', () => ({
 // הערך `'48'` **מחרוזת**, כפי שהמסד מחזיר (`param_value` הוא `text`).
 vi.mock('@/api/params', () => ({ getParamValues: vi.fn() }))
 
+// ⚠️ שלב 9 (Hint) — `<Hint id="team.rawStatus" />` מייבאת `@/contexts/AuthContext` ←
+// `@/supabaseClient` (לקוח אמיתי בטעינה); הקובץ הזה לא ייבא אף אחת מהן קודם. בלי המוק
+// הזה הבדיקה קורסת ב-`supabaseUrl is required` (מוקש `src/CLAUDE.md`), לא נכשלת על טענה.
+// רמה 0 ⇒ null.
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ onboardingMode: 0 }) }))
+
 // תאריכים יחסיים לשעון האמיתי — הלשונית קוראת את השעון בעצמה, ותוקף-הזימון נגזר ממנו
 // (‏48 שעות, מ-`params`).
 function hoursAgo(hours) {

@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Pencil } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import LoadingOrError from '@/components/LoadingOrError'
+import Hint from '@/components/Hint'
 import StatTile from '@/components/StatTile'
 import StatusTag from '@/components/StatusTag'
 import RatingStars from '@/components/RatingStars'
@@ -281,7 +282,7 @@ function CardBody({
         <div className="mb-3 flex flex-wrap gap-2">
           <StatTile label="התרשמות המנהלת" value={<RatingStars value={hostess.rating} />} />
           <StatTile
-            label="שיעור היענות"
+            label="שיעור-היענות"
             // 🔴 `null` ולא `0 מ-0`: לדיילת חדשה אין רקורד, ו"0" נקרא כשיפוט שלילי
             // על מי שפשוט טרם קיבלה זימון. אותו כלל בדיוק כמו `טרם נצבר מידע` בציון.
             value={
@@ -294,6 +295,9 @@ function CardBody({
           <StatTile label="יש רכב" value={hostess.has_car ? 'כן' : 'לא'} />
           <StatTile label="אירועים ברבעון האחרון" value={String(derived.quarterEvents)} />
         </div>
+
+        <Hint id="hostess.responsivenessRate" />
+        <Hint id="hostesses.quarterEvents" />
 
         <div className="mb-4 flex flex-wrap gap-1.5">
           {derived.weeksSinceWorkedStale && (
@@ -345,6 +349,7 @@ function CardBody({
                   תקלה — ולכן הטקסט אינו מזכיר מודול או טבלה (ר' ממצא-מבנה בדיווח). */}
         <Section title="העדפות של לקוחות">
           <Muted>טרם נרשמו העדפות</Muted>
+          <Hint id="hostess.clientPreferences" />
         </Section>
 
         <Section title="פרטי קשר">

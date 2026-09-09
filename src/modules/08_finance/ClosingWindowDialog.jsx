@@ -48,6 +48,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import Hint from '@/components/Hint'
 import Ltr from '@/components/Ltr'
 import Money from '@/components/Money'
 import RatingStars from '@/components/RatingStars'
@@ -770,6 +771,7 @@ function FeeAmountFields({ amount, note, cancelType, onAmount, onNote }) {
           "נשמר במסד" / "עמודות" / "נגזרים-מחדש" הם ז'רגון-מפתחים; שום מילה בו לא נדרשה כדי
           ללחוץ על הכפתור הנכון. העובדה היחידה שכן מעניינת — מה קפוא ומה עוד יזוז — עברה
           לשכבה כ-`closing.frozenAmount`. */}
+      <Hint id="closing.frozenAmount" />
     </>
   )
 }
@@ -819,6 +821,7 @@ function FeeActions({ busy, actions }) {
           מהבסיס — עברה בדיקת-H2 (ר' דוח-המסירה): שני הכפתורים נושאים את המונחים הנעולים,
           וכל תוצאה בלתי-הפיכה כבר מופיעה במלואה בחלונית-הווידוא לפני הכתיבה (WAIVE_/
           WRITE_OFF_CONFIRM_MESSAGE). מועמד-שכבה: candidates §③ "ויתור מול סגור-ללא-תשלום". */}
+      <Hint id="closing.terms" />
       <div className="mt-1 flex flex-col gap-1">
         {actions.saveNote ? (
           <GateNote testId="closing-fee-save-gate" id={FEE_SAVE_GATE_ID} fullWidth>
@@ -1453,6 +1456,7 @@ function CancelledProfitBlock({ detail }) {
             נימוק-סידור; מה שנשאר הוא העובדה שאין מאזן ולמה בקצרה, בלי הנגזרת המלאה. */}
         אין תחשיב-מאזן לפרויקט מבוטל — האירוע לא התקיים, ולכן אין הכנסות לחשב מולן.
       </Sub>
+      <Hint id="closing.cancelledProfit" />
     </div>
   )
 }

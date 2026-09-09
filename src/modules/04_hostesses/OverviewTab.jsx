@@ -17,6 +17,7 @@ import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
 import FilterPill from '@/components/FilterPill'
 import StatTile from '@/components/StatTile'
+import Hint from '@/components/Hint'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/dates'
 import {
@@ -251,6 +252,8 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
           </Button>
         )}
       </div>
+
+      {visible.length > 0 && <Hint id="projects.sort" />}
 
       {visible.length === 0 ? (
         <EmptyState

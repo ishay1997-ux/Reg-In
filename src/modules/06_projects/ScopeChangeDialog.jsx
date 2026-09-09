@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import Hint from '@/components/Hint'
 import Money from '@/components/Money'
 import Ltr from '@/components/Ltr'
 import StatusTag from '@/components/StatusTag'
@@ -676,6 +677,7 @@ function MoneySummary({ money }) {
             מע"מ לפי השיעור שהוקפא באישור ההצעה.
           </div>
         ) : null}
+        <Hint id="scope.discountFormula" />
       </div>
     </div>
   )

@@ -16,6 +16,12 @@ vi.mock('./api', () => ({
   DASHBOARD_SHAPE_DRIFT_CODE: 'DASHBOARD_SHAPE_DRIFT',
 }))
 
+// ⚠️ שלב 9 (Hint) — `<Hint id="dashboard.partialSums" />` מייבאת `@/contexts/AuthContext`
+// ← `@/supabaseClient` (לקוח אמיתי בטעינה); הקובץ הזה לא ייבא אף אחת מהן קודם. בלי המוק
+// הזה הבדיקה קורסת ב-`supabaseUrl is required` (מוקש `src/CLAUDE.md`), לא נכשלת על טענה.
+// רמה 0 ⇒ null.
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ onboardingMode: 0 }) }))
+
 function project(overrides) {
   return {
     project_id: 1,

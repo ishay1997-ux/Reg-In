@@ -20,6 +20,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import LoadingOrError from '@/components/LoadingOrError'
+import Hint from '@/components/Hint'
 import PermissionAwareEmpty, { DENIED_MARK } from '@/components/PermissionAwareEmpty'
 import StatusTag from '@/components/StatusTag'
 import FilterPill from '@/components/FilterPill'
@@ -667,6 +668,7 @@ function AmberLegend() {
     <div className="mt-2.5 text-[11.5px] leading-[1.8] text-slate-500">
       <span className="font-bold text-amber-700">⏱ שורה בענבר</span> = דורש תשומת-לב. שום דבר לא
       ננעל.
+      <Hint id="logistics.amberWhy" />
     </div>
   )
 }

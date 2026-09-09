@@ -16,6 +16,7 @@
 // לכל השאר הלשונית קריאה-בלבד — קיימת, לא מושבתת-בלי-הסבר.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Hint from '@/components/Hint'
 import Ltr from '@/components/Ltr'
 import Money from '@/components/Money'
 import StatusTag from '@/components/StatusTag'
@@ -688,10 +689,11 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
           <div>
             <h2 className="text-sm font-bold text-slate-700">מה קרה עם כל דיילת</h2>
             <p className="mb-2.5 mt-0.5 max-w-2xl text-[11.5px] text-slate-500">
-              <b>נוכחות</b> היא עובדה — היא מזינה את ציון-האמינות בשיבוץ החכם. <b>סימון-איכות</b>{' '}
+              <b>נוכחות</b> היא עובדה — היא מזינה את מרכיב-האמינות בשיבוץ החכם. <b>סימון-איכות</b>{' '}
               הוא שיפוט — הוא קובע את מי נציע ל{project?.customer_name ?? 'לקוח'} בפעם הבאה. שתי
               שאלות שונות, ושתיהן חובה בכל שורה.
             </p>
+            <Hint id="closing.attendanceReliability" />
           </div>
           {counter && (
             <span className="pb-2.5 text-[11.5px] text-slate-400" data-testid="closing-counter">
@@ -758,6 +760,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
         {/* ✏️ שלב 4: שני המשפטים שהיו כאן הוסרו מהבסיס. הראשון (מה קורה בבחירת "לא לשלוח
             שוב") מוכח חי — שדה-הסיבה נפתח בפועל, ושגיאתו-שלו כבר אומרת "חובה". השני
             (ההיקף — פר-לקוח) הוא הגדרת-מונח (③), ומקומה בשכבה ולא בבסיס. שניהם במועמדים. */}
+        <Hint id="closing.doNotSendAgain" />
       </section>
 
       {/* ═══ שינויי תכולה שהתגלו באירוע (㉔ · B7) ═══ */}

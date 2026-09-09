@@ -8,13 +8,20 @@ import Hint from './Hint'
 import { ONBOARDING_COPY } from '@/lib/onboardingCopy'
 
 const authState = { onboardingMode: 0 }
-vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => authState }))
+// `authState.throwOutsideProvider` מדמה רינדור מחוץ ל-<AuthProvider>, שם useAuth האמיתי זורק.
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => {
+    if (authState.throwOutsideProvider) throw new Error('useAuth חייב להיקרא בתוך <AuthProvider>')
+    return authState
+  },
+}))
 
 const KNOWN_ID = 'onboarding.self'
 const KNOWN_TEXT = ONBOARDING_COPY[KNOWN_ID].guided
 
 beforeEach(() => {
   authState.onboardingMode = 0
+  authState.throwOutsideProvider = false
 })
 
 afterEach(() => {
@@ -48,6 +55,12 @@ describe('Hint — נראוּת לפי רמת-ההטמעה', () => {
 
   it('onboardingMode חסר בקונטקסט (למשל בבדיקות ישנות) ⇒ מתנהג כרמה 0', () => {
     authState.onboardingMode = undefined
+    const { container } = render(<Hint id={KNOWN_ID} />)
+    expect(container).toBeEmptyDOMElement()
+  })
+
+  it('מחוץ ל-<AuthProvider> (useAuth זורק) ⇒ לא זורק ולא מרנדר — קישוט לעולם לא מפיל מסך', () => {
+    authState.throwOutsideProvider = true
     const { container } = render(<Hint id={KNOWN_ID} />)
     expect(container).toBeEmptyDOMElement()
   })

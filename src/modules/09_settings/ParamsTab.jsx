@@ -24,6 +24,7 @@ import { Search } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Input } from '@/components/ui/input'
 import LoadingOrError from '@/components/LoadingOrError'
+import Hint from '@/components/Hint'
 import { useToast } from '@/components/ToastProvider'
 import {
   PARAM_GROUPS,
@@ -243,6 +244,8 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
           {GROUP_LEADS[activeType] && (
             <p className="mt-1 mb-3 text-xs text-slate-500">{GROUP_LEADS[activeType]}</p>
           )}
+
+          {activeType === 'pricing_timing' && <Hint id="params.pricingTimingGroup" />}
 
           {paneReadOnly && (
             <p

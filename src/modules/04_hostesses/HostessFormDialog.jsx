@@ -13,6 +13,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
+import Hint from '@/components/Hint'
 import RatingStars from '@/components/RatingStars'
 import ChipToggle from '@/components/ChipToggle'
 import StatusTag from '@/components/StatusTag'
@@ -280,6 +281,8 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
               : 'בשמירה, הדיילת נכנסת מיידית למאגר בסטטוס "פעילה"'}
           </DialogDescription>
         </DialogHeader>
+
+        {!isEdit && <Hint id="hostesses.addFormWhen" />}
 
         <form onSubmit={handleSubmit} noValidate>
           {loading ? (
