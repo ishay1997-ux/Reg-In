@@ -435,6 +435,12 @@ reaches the screen** · shape drift shows its Hebrew · a known `P0001` shows ou
 **an unmapped DB message falls through to the generic screen**. The last two are the guard being
 watched *fail*, per `src/CLAUDE.md`'s "a guard never seen failing is not a guard".
 
+⚠️ **התיישן חלקית — ר' `🔎 09/09/2026` בסוף הפרק.** המנגנון שהפרק הזה מתאר
+(`ATTENTION_CAP`/`pickWithGroupRepresentation`/`attentionSummary`/`attentionAllLabel`, וכן
+המקרא-שורה מתחת ללוח) הוסר לגמרי ב-09/09/2026 והוחלף בארבעה כרטיסי-מחלקה קבועים
+(`attentionCategories`). הנרטיב למטה נשאר כרשומת-היסטוריה נכונה לזמנה — הוא לא מתאר את המסך
+היום.
+
 ### 🎨 Post-merge layout change — 04/09/2026 (Ishay's own use of the live screen)
 
 Module 7 was already in production when Ishay opened it, used it, and brought three things back.
@@ -511,3 +517,59 @@ calendar is a report, and a home screen is not a report.
 - **`09/09/2026 00:5X` — CROSS-MODULE EDIT by the ui-copy night, stage 3 (branch `ishay/ui-copy-rewrite`; module 7 is closed — this is the required ripple record).** ↳ as-built: the module's FULL copy reset to the locked style guide — one Sonnet writer read every string of `src/modules/07_dashboard/*` + `src/lib/dashboard.js` and found the screen already conformant except two families: **(a)** the partial-sums banner (`DashboardPage.jsx`, `SERVER_MESSAGE_RULES`) ⇒ the guide's settled example 4: `השלימי את הצעת המחיר של הפרויקט במסך הפרויקטים — עד אז הסכומים כאן חלקיים.` (B13 · R13 · R28 · R26/H2); **(b)** the eight `assertDashboardShape` errors in `api.js` that printed internal field names (`profit_visible`, `quotes_visible`, `projects`, `params`…) on screen ⇒ one generic `יש תקלה בנתונים.` (B8/R10 · R30 · R18). ⚠️ **Declared deviation from this module's own closing-audit ruling (03/09, T-2: *the field name must stay on screen*):** the later, Ishay-locked style guide forbids internal terms on screen and names this exact string in its plan example; the diagnostic channel is kept off-screen — `err.code = DASHBOARD_SHAPE_DRIFT_CODE` + `console.error(err)` in `DashboardPage.jsx` still carry the field name for an engineer. Recorded in `CLAUDE_CODE_LOG.md`; Ishay may reverse. Everything else (KPI labels, ④ qualifiers like `על סמך N משובים`, calendar legend, attention panel, `MASKED_TEXT`, the `<h1>`) stands. Tests: `api.test.js` (6 assertions loosened from field-name regexes + 1 new for the generic text), `DashboardPage.test.jsx` (banner assertion). Gates at the stage-3 commit: CI-parity 79 קבצים / 1,851 ירוקות (בלי מ6 שבעריכה מקבילה) · vite build · eslint · npm run smoke ירוק · e2e/dashboard.spec.js 6/6. Structural finding S-07 recorded (raw `params` names printed by `missingParamsMessage` — deliberate per `quotes.js`, left for the UCD audit).
 - **`09/09/2026 12:0X` — CROSS-MODULE EDIT by the ui-copy night, stage 9 (branch `ishay/ui-copy-rewrite`; module 7 is closed — this is the required ripple record).** ↳ as-built: the explanation LAYER (level 2, "מודרך") — copy lives ONLY in `src/lib/onboardingCopy.js` (27 keys, one voice: writer W13/Opus from `stage9-layer-proposal.md`, decided by session 4 in `ui-copy-candidates.md` column "הכרעת שלב 9"); the screens gained `<Hint id=…/>` placements only (no base-string changes except the glossary-form alignments named). `<Hint>` renders nothing at level 0 and is provider-safe (renders nothing outside `<AuthProvider>`, `Hint.jsx` 09/09). **Placement:** `DashboardPage.jsx` — `dashboard.partialSums` (guide §4 ex. 4, verbatim) — 🔴 the guide describes it "inside the banner", but the built screen has no banner: the base sentence lives in `SERVER_MESSAGE_RULES` and is shown by the error branch that replaces the whole screen, so the Hint is placed in that branch, guarded `{error.detail === SERVER_MESSAGE_RULES[0].text && …}` (otherwise it would fire on a network failure). Recorded as an addendum to **S-01** (the partial-sums state should be a banner over the numbers, not an error page). **Test:** `DashboardPage.test.jsx` gained the AuthContext mock (import-time `supabaseUrl` crash, see module 6). Gates at the stage-9 commit: CI-parity 98 files / 2,403 tests green (+1: Hint outside a provider) · `vite build` ✓ · eslint 0 errors (1 pre-existing warning, `UsersManagementPage.jsx:75`) · prettier ✓ on all changed files · smoke green (one red run while the implementers were still editing — `#quote-ratio` not found under HMR — then green twice on a quiet tree) (session dev server 64343) · full `npm run test:e2e`: 167 passed · 7 skipped · 4 failed — 2 pre-night (`customer-page.spec.js:130` · `prices.spec.js:218`) + 2 load timeouts in `accessibility.spec.js` (login-field fill 10s · `route.fetch` to Supabase) while E2E, screenshots and four evaluators ran concurrently; re-run alone on a fresh build: **7/7 passed** · `npm run gate`: every step green except the pre-existing `check:docs-structure` finding (`cards-finance.md:483`, m11 discovery file, not in CI) — a first run under machine load had 3 vitest worker-start timeouts (`Failed to start forks worker`), the re-run on a quieter machine passed 98/2,403 · screenshots of every screen in both states (55 files, S4 scratchpad `evidence9/`) — whole-document pass by eye: done on the `-on` shots after fixing the evidence spec (it intercepted only the write, so every full navigation reloaded level 0 from the DB — all earlier `-on` shots were effectively `-off`; now the GET is intercepted too and returns level 2). Smart Match, repository, hostess card, logistics, projects: the grey teal-bordered paragraphs sit where the proposal put them, one voice across screens; the two stacked hints above the repository table read as one block and stay..
 - **`09/09/2026 12:3X` — CROSS-MODULE EDIT by the ui-copy night, stage 10 (branch `ishay/ui-copy-rewrite`; module is closed — this is the required ripple record).** ↳ as-built: `<Hint id="dashboard.attention" />` placed in `AttentionPanel.jsx` after the header block (above the empty/rows ternary) — three of four evaluators measured the first screen on stage as the only one with no layer at all (its single key lived in the error branch). Text by W14 (Opus, W13's voice; source `src/lib/dashboard.js` — `attentionRows`, `deriveCalendarColor`, the legend labels): what 'חוסר' is here (the same rule as the projects screen), what the header counters count versus the cards shown, 'הסתיים ולא חויב', and why a cancelled event stays on the calendar but not in the strip. No digits (the N-day window is `warningDays` in params). `DashboardPage.test.jsx` unchanged (mocked AuthContext ⇒ level 0). Gates: at the stage-10 commit — see `CLAUDE_CODE_LOG.md`.
+
+### 🔎 09/09/2026 — UCD pass on the calendar legend and attention strip (Ishay's own question)
+
+Ishay asked whether the calendar's four categories (shortage-within-14 · shortage-beyond-14 ·
+no-shortage · cancelled) were the right split by UCD principles, then whether the split should
+be by project status at all, then proposed grouping the attention strip by department. §7.94
+itself was **not reopened** — only what sat on top of it.
+
+**Three anchors, verified live (screenshot `test-results/dashboard-ceo.png`, 09/09 17:46, plus a
+fresh check via the logged-in CEO session in `claude-in-chrome`):**
+1. Count chips carried only a dot + number; the legend defining them sat ~550px below.
+2. "כנס מכירות" (09/09) was red on the calendar but showed a **yellow** dot on its attention-strip
+   card — same shortage-and-soon group, two colors on one screen.
+3. "טקס פרסים" (01/09, status `event_finished`) rendered identically to a ready, upcoming event —
+   green, full readiness icons — while the strip separately reported 17 such events as unbilled.
+
+**Ishay's rulings, in his words, and what got built:**
+- **R1** — chip words (`דחוף`/`לטיפול`/`מוכן`/`התקיים`/`בוטל` + number), legend row deleted
+  ("למחוק את השורה ומילה ליד כל ציפ"), search box shrunk to fit the row
+  ("להקטין את החיפוש שהכל יהיה בשורה אחת"). Definition text moved to `title` on each chip/pill
+  (`calendarColorMeta`, `staffingRatioLabel`, `logisticsRatioLabel` — `src/lib/dashboard.js`).
+- **R2** — the shortage-and-soon tone became red everywhere (calendar and strip alike); the
+  quote-expiring branch stays yellow.
+- **R3** — a fifth calendar color, `'past'`: any inactive, non-cancelled status. Grey chip, tagged
+  `התקיים`, no readiness icons, own filter pill (on by default), excluded from the `מוכן` count.
+- **R5** — a project's readiness icon renders **only for the dimension that is short** ("אייקון
+  יופיע רק כשמשהו באמת חסר… מאשר רעיון טוב"); a fully-ready project now shows no icon at all.
+- **R6** — the attention strip stopped being a capped, ranked list of individual rows and became
+  **four fixed department cards** — כספים (`/finance`, מנהלת כספים) · דיילות (`/hostesses`,
+  מנהלת גיוס) · לוגיסטיקה (`/logistics`, מנהלת לוגיסטיקה) · הצעות (`/quotes`, מנהלת פרויקטים,
+  masked when `quotes_visible=false`). Answering "who does the CEO talk to?" directly: each card
+  names the role that owns it, verified against `e2e/dashboard.spec.js`'s role fixtures (`quotes:
+  true` only for ceo/finance/**projects** — quotes belong to the projects manager, not a separate
+  sales role). An empty category keeps its card, showing `✓ אין`, rather than disappearing.
+
+**Removed:** `ATTENTION_CAP`, `ATTENTION_GROUP_DEFS`, `pickWithGroupRepresentation`,
+`attentionSummary`, `attentionAllLabel`, the calendar `Legend`/`LegendSwatch` components — all
+superseded by `calendarColorMeta` and `attentionCategories`. `shortageRows`/`shortageWhy` split
+into `staffingShortageRows`/`staffingWhy` and `logisticsShortageRows`/`logisticsWhy`;
+`attentionRows` keeps its four-branch order as the engine `attentionCategories` reads from.
+
+**Docs corrected in the same pass:** `src/lib/onboardingCopy.js`'s `dashboard.attention` guided
+hint described the old cap/group-count mechanism (numbers in the header bigger than the cards
+below) — that sentence no longer matched the screen and was rewritten to describe the four
+department cards. `PROJECT_MASTER_sec7.md` §7.94 got a ✅ append (mechanism note, not a reopen).
+
+**Regression:** unit tests rewritten alongside the change (not just re-run) — 98 files / 2,402
+tests green under the CI-parity env (`VITE_SUPABASE_URL= VITE_SUPABASE_ANON_KEY=`) · `vite build`
+✓ · `eslint` 0 · `knip` 0 (no new dead exports) · `npm run smoke` 1/1 green. Verified visually on
+the logged-in CEO session: five chips + search fit one row; days 1–8/09 render grey/no-icon
+(`טקס פרסים` included — the exact anchor that started this); "כנס מכירות" is red on both the
+calendar and its card; hover titles read `חוסר ואירוע בתוך 14 יום` / `לוגיסטיקה 0/4`; the four
+department cards show 17/8/11/✓אין with the correct role names and hrefs.
+
+**Anchor for the "why", one sentence:** the color is the status plus the one thing status alone
+never answers — how much time is left; the strip is organized by who acts on it, not by rank.
