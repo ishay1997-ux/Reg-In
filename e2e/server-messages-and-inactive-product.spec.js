@@ -62,7 +62,7 @@ async function pickQuoteWithHostessLine(page) {
 
 async function login(page, email, password) {
   await page.goto('/login')
-  await page.getByPlaceholder('כתובת דוא״ל').fill(email)
+  await page.getByPlaceholder('כתובת אימייל').fill(email)
   await page.getByPlaceholder('סיסמה').fill(password)
   await page.getByRole('button', { name: 'התחברות', exact: true }).click()
   await expect(page).toHaveURL('/', { timeout: 30_000 })
@@ -189,10 +189,10 @@ test.describe('הודעות-הכשל של המסד מגיעות למסך (סבב
     await qty.fill('9')
     await qty.blur()
 
-    // ⚠️ התווית היא **'עדכן ושלח'** (‏`QuoteBuilderPage.jsx:748`, אותה הכרעה —
+    // ⚠️ התווית היא **'עדכני ושלחי'** (‏`QuoteBuilderPage.jsx:748`, אותה הכרעה —
     // השמירה פותחת את חלון-השליחה). עד 04/08 עמד כאן 'עדכון ההצעה', שם שכבר לא קיים
     // במוצר, והבדיקה נפלה ב-timeout על כפתור שאינו — כלומר לא בדקה דבר.
-    await page.getByRole('button', { name: 'עדכן ושלח' }).click()
+    await page.getByRole('button', { name: 'עדכני ושלחי' }).click()
 
     const toast = page.getByTestId('toast-error')
     await expect(toast).toBeVisible()

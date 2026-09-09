@@ -30,7 +30,7 @@ const FINANCE_PASSWORD = process.env.E2E_FINANCE_PASSWORD
 
 async function login(page, email, password) {
   await page.goto('/login')
-  await page.getByPlaceholder('כתובת דוא״ל').fill(email)
+  await page.getByPlaceholder('כתובת אימייל').fill(email)
   await page.getByPlaceholder('סיסמה').fill(password)
   await page.getByRole('button', { name: 'התחברות', exact: true }).click()
   await expect(page).toHaveURL('/', { timeout: 30_000 })
@@ -161,7 +161,7 @@ test.describe('מודול 6 · מבט-העל — מצבי-ריק', () => {
     await login(page, CEO_EMAIL, CEO_PASSWORD)
   })
 
-  test('ריק-אחרי-סינון: נוסח משלו + "נקה סינון" — שונה מנוסח הריק-האמיתי', async ({ page }) => {
+  test('ריק-אחרי-סינון: נוסח משלו + "נקי סינון" — שונה מנוסח הריק-האמיתי', async ({ page }) => {
     await gotoProjects(page, '?tab=all')
 
     // הסטטוס הריק נבחר בזמן-ריצה מגלולה שמונה 0 (מכובה ⇒ לא לחיצה — מגיעים אליה דרך

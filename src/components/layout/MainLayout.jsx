@@ -20,7 +20,7 @@ export default function MainLayout() {
         aria-live="polite"
         className="min-h-screen flex items-center justify-center bg-slate-50"
       >
-        <p className="text-slate-500">טוען...</p>
+        <p className="text-slate-500">טוען…</p>
       </div>
     )
   }
@@ -36,16 +36,19 @@ export default function MainLayout() {
       <div dir="rtl" className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="bg-white p-8 rounded-2xl shadow-md max-w-sm text-center flex flex-col gap-4">
           <p className="text-red-600 font-semibold">
-            חשבון זה אינו פעיל במערכת. פנה למנכ"ל לצורך בירור.
+            חשבון זה אינו פעיל במערכת. יש לפנות למנכ"ל לבירור.
           </p>
           {/* התנתקות (תיקון 11/07): בלי זה המסך היה מבוי-סתום — ה-session חי ב-sessionStorage
-              והמשתמש נתקע. signOut מאפס את user ⇒ הרינדור הבא מפנה ל-login. */}
+              והמשתמש נתקע. signOut מאפס את user ⇒ הרינדור הבא מפנה ל-login.
+              ✏️ 08/09/2026: "התנתקי מהמערכת" — מאוחד עם הפריט המקביל ב-Topbar.jsx (R30,
+              מדריך-הסגנון §2א): אותה פעולה בדיוק, ועד עכשיו נשאה שני נוסחים ("התנתקות" כאן
+              מול "צא מהמערכת" שם). */}
           <button
             type="button"
             onClick={signOut}
             className="mx-auto h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"
           >
-            התנתקות
+            התנתקי מהמערכת
           </button>
         </div>
       </div>

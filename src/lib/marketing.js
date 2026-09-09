@@ -69,6 +69,6 @@ export function isMailtoTooLong(href) {
 // **U+2014 (מקף ארוך)** — הקלדה מחדש עם `-` רגיל שוברת את החוזה בשקט.
 export function disabledSendReason({ hasFile, selectedCount, consentedCount }) {
   if (!hasFile) return 'יש להעלות קובץ תחילה'
-  if (selectedCount > 0) return 'רשימת הנמענים ארוכה מדי — השתמשו בהעתקה'
+  if (selectedCount > 0) return 'רשימת הנמענים ארוכה מדי — השתמשי בהעתקה'
   return consentedCount === 0 ? 'אין לקוחות שאישרו דיוור' : 'לא נבחרו נמענים לשליחה'
 }

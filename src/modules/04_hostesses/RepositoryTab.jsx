@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
 import FilterPill from '@/components/FilterPill'
+import Hint from '@/components/Hint'
 import StatusTag from '@/components/StatusTag'
 import RatingStars from '@/components/RatingStars'
 import Money from '@/components/Money'
@@ -373,7 +374,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
             className="h-auto rounded-lg bg-teal-600 px-4 py-1.5 text-[13px] font-semibold text-white"
             data-testid="repository-add"
           >
-            + הוספת דיילת
+            + דיילת חדשה
           </Button>
         )}
       </div>
@@ -388,118 +389,122 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
           onClear={clearFilters}
         />
       ) : (
-        <table className="w-full border-collapse" data-testid="repository-table">
-          <thead>
-            <tr>
-              <Th>שם</Th>
-              <Th>עיר</Th>
-              <Th>טלפון</Th>
-              <Th>התרשמות</Th>
-              {/* 🔴 עמודת השכר אינה קיימת לתפקיד-צפייה — נתון עלות שאינו רלוונטי לה
+        <>
+          <Hint id="hostesses.noAnswerPill" />
+          <Hint id="hostesses.quarterEvents" />
+          <table className="w-full border-collapse" data-testid="repository-table">
+            <thead>
+              <tr>
+                <Th>שם</Th>
+                <Th>עיר</Th>
+                <Th>טלפון</Th>
+                <Th>התרשמות</Th>
+                {/* 🔴 עמודת השכר אינה קיימת לתפקיד-צפייה — נתון עלות שאינו רלוונטי לה
                   (מצויר במפורש בפאנל "פעולה חסומה" של המוקאפ המאושר). */}
-              {canEdit && <Th>שכר שעתי</Th>}
-              <Th>מצב</Th>
-              <Th>
-                אירועים
-                <span className="block text-[10px] font-normal text-slate-400">רבעון אחרון</span>
-              </Th>
-              {canEdit && <Th>פעולה</Th>}
-            </tr>
-          </thead>
-          <tbody>
-            {paged.pageRows.map(({ hostess, state, streak, quarterEvents, futureActive }) => (
-              <tr
-                key={hostess.hostess_id}
-                onClick={() => onOpenCard(hostess.hostess_id)}
-                // ⌨️ אותו דפוס בדיוק כמו `CustomersPage` (תיקון 11/07 שם) — שורה שלמה לחיצה,
-                // לא רק השם: לחיצה בכל מקום פותחת את כרטיס הדיילת. ‏Enter/רווח עושים אותו דבר.
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    onOpenCard(hostess.hostess_id)
-                  }
-                }}
-                aria-label={`פתח כרטיס דיילת: ${hostess.full_name}`}
-                className={`cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500 ${hostess.status === 'active' ? '' : 'bg-slate-50'}`}
-                data-testid={`repository-row-${hostess.hostess_id}`}
-              >
-                <Td>
-                  <span
-                    className={`font-semibold hover:text-teal-700 hover:underline ${
-                      hostess.status === 'active' ? 'text-slate-800' : 'text-slate-500'
-                    }`}
-                    data-testid={`repository-name-${hostess.hostess_id}`}
-                  >
-                    {hostess.full_name}
-                  </span>
-                  {streak && (
-                    <span className="block text-[10.5px] text-amber-700">{streak.label}</span>
-                  )}
-                </Td>
-                <Td>{hostess.city}</Td>
-                <Td>
-                  {/* בידוד-כיווניות תואם למוקאפ המאושר (`.num{direction:ltr;unicode-bidi:isolate}`,
-                      חל על ארבע העמודות המספריות בשורה) — `dir` לבדו אינו מספיק בתא עצמאי. */}
-                  <span className="inline-block" dir="ltr" style={{ unicodeBidi: 'isolate' }}>
-                    {hostess.phone}
-                  </span>
-                </Td>
-                <Td>
-                  <RatingStars value={hostess.rating} variant="compact" />
-                </Td>
-                {canEdit && (
-                  <Td>
-                    <Money amount={Number(hostess.hourly_rate)} />
-                  </Td>
-                )}
-                <Td>
-                  <StatusTag
-                    label={state.label}
-                    tone={state.tone}
-                    testId={`repository-state-${hostess.hostess_id}`}
-                  />
-                  {state.note && (
-                    <span className="block text-[10px] text-slate-500">הערה: {state.note}</span>
-                  )}
-                </Td>
-                <Td>
-                  <span className="inline-block" dir="ltr" style={{ unicodeBidi: 'isolate' }}>
-                    {quarterEvents}
-                  </span>
-                </Td>
-                {canEdit && (
-                  // stopPropagation: פקדי-פעולה תוך-שורה (עריכה/מתג) לא פותחים את כרטיס-הדיילת
-                  <Td onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => onEdit(hostess.hostess_id)}
-                        title="עריכה"
-                        aria-label={`עריכת ${hostess.full_name}`}
-                        className="h-7 w-7 rounded-md border-slate-200 p-0 text-slate-600"
-                        data-testid={`repository-edit-${hostess.hostess_id}`}
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                      <Switch
-                        checked={hostess.status === 'active'}
-                        onCheckedChange={() => toggleStatus({ hostess, futureActive })}
-                        aria-label={
-                          hostess.status === 'active'
-                            ? `השבתת ${hostess.full_name}`
-                            : `הפעלת ${hostess.full_name}`
-                        }
-                        data-testid={`repository-toggle-${hostess.hostess_id}`}
-                      />
-                    </div>
-                  </Td>
-                )}
+                {canEdit && <Th>שכר שעתי</Th>}
+                <Th>סטטוס</Th>
+                <Th>
+                  אירועים
+                  <span className="block text-[10px] font-normal text-slate-400">רבעון אחרון</span>
+                </Th>
+                {canEdit && <Th>פעולה</Th>}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {paged.pageRows.map(({ hostess, state, streak, quarterEvents, futureActive }) => (
+                <tr
+                  key={hostess.hostess_id}
+                  onClick={() => onOpenCard(hostess.hostess_id)}
+                  // ⌨️ אותו דפוס בדיוק כמו `CustomersPage` (תיקון 11/07 שם) — שורה שלמה לחיצה,
+                  // לא רק השם: לחיצה בכל מקום פותחת את כרטיס הדיילת. ‏Enter/רווח עושים אותו דבר.
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onOpenCard(hostess.hostess_id)
+                    }
+                  }}
+                  aria-label={`פתחי כרטיס דיילת: ${hostess.full_name}`}
+                  className={`cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500 ${hostess.status === 'active' ? '' : 'bg-slate-50'}`}
+                  data-testid={`repository-row-${hostess.hostess_id}`}
+                >
+                  <Td>
+                    <span
+                      className={`font-semibold hover:text-teal-700 hover:underline ${
+                        hostess.status === 'active' ? 'text-slate-800' : 'text-slate-500'
+                      }`}
+                      data-testid={`repository-name-${hostess.hostess_id}`}
+                    >
+                      {hostess.full_name}
+                    </span>
+                    {streak && (
+                      <span className="block text-[10.5px] text-amber-700">{streak.label}</span>
+                    )}
+                  </Td>
+                  <Td>{hostess.city}</Td>
+                  <Td>
+                    {/* בידוד-כיווניות תואם למוקאפ המאושר (`.num{direction:ltr;unicode-bidi:isolate}`,
+                      חל על ארבע העמודות המספריות בשורה) — `dir` לבדו אינו מספיק בתא עצמאי. */}
+                    <span className="inline-block" dir="ltr" style={{ unicodeBidi: 'isolate' }}>
+                      {hostess.phone}
+                    </span>
+                  </Td>
+                  <Td>
+                    <RatingStars value={hostess.rating} variant="compact" />
+                  </Td>
+                  {canEdit && (
+                    <Td>
+                      <Money amount={Number(hostess.hourly_rate)} />
+                    </Td>
+                  )}
+                  <Td>
+                    <StatusTag
+                      label={state.label}
+                      tone={state.tone}
+                      testId={`repository-state-${hostess.hostess_id}`}
+                    />
+                    {state.note && (
+                      <span className="block text-[10px] text-slate-500">הערה: {state.note}</span>
+                    )}
+                  </Td>
+                  <Td>
+                    <span className="inline-block" dir="ltr" style={{ unicodeBidi: 'isolate' }}>
+                      {quarterEvents}
+                    </span>
+                  </Td>
+                  {canEdit && (
+                    // stopPropagation: פקדי-פעולה תוך-שורה (עריכה/מתג) לא פותחים את כרטיס-הדיילת
+                    <Td onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => onEdit(hostess.hostess_id)}
+                          title="עריכה"
+                          aria-label={`עריכת ${hostess.full_name}`}
+                          className="h-7 w-7 rounded-md border-slate-200 p-0 text-slate-600"
+                          data-testid={`repository-edit-${hostess.hostess_id}`}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Switch
+                          checked={hostess.status === 'active'}
+                          onCheckedChange={() => toggleStatus({ hostess, futureActive })}
+                          aria-label={
+                            hostess.status === 'active'
+                              ? `השבתת ${hostess.full_name}`
+                              : `הפעלת ${hostess.full_name}`
+                          }
+                          data-testid={`repository-toggle-${hostess.hostess_id}`}
+                        />
+                      </div>
+                    </Td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
       )}
 
       {/* דפדוף — ישירות מתחת לטבלה, בתוך אותה כרטיסייה. */}
@@ -534,15 +539,16 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                     </span>
                   ))}
                   <span className="mt-2 block">
-                    <b>שחרר מהאירועים (מומלץ)</b> — כל שיבוץ יסומן כ"שוחררה" והדיילת תקבל מייל-ביטול
-                    על כל אירוע. האירוע חוזר לחסר-איוש, וזה נספר כשחרור-שלנו — לא לרעתה.
+                    <b>שחררי מהאירועים (מומלץ)</b> — כל שיבוץ יסומן כ"שוחררה", הדיילת תקבל
+                    מייל-ביטול על כל אירוע, והאירוע חוזר לחסר-איוש.
                   </span>
                   <span className="mt-2 block">
-                    <b>השבת — תשלים את מה שהתחייבה</b> — השיבוצים העתידיים נשארים על כנם; היא רק
+                    <b>השביתי — תשלים את מה שהתחייבה</b> — השיבוצים העתידיים נשארים על כנם; היא רק
                     מפסיקה לקבל הזמנות חדשות.
                   </span>
                 </DialogDescription>
               </DialogHeader>
+              <Hint id="hostesses.releaseWhy" />
               <DialogFooter className="gap-2 sm:gap-2 sm:flex-col">
                 <Button
                   type="button"
@@ -556,7 +562,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                   className="h-auto w-full py-2.5 px-4 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700"
                   data-testid="deactivate-release"
                 >
-                  {releasing ? 'משחרר...' : 'שחרר מהאירועים'}
+                  {releasing ? 'משחררת...' : 'שחררי מהאירועים'}
                 </Button>
                 <Button
                   type="button"
@@ -566,7 +572,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                   className="h-auto w-full py-2.5 px-4 rounded-lg border-slate-300 text-slate-700"
                   data-testid="deactivate-keep"
                 >
-                  השבת — תשלים את מה שהתחייבה
+                  השביתי — תשלים את מה שהתחייבה
                 </Button>
                 <Button
                   type="button"
@@ -611,7 +617,7 @@ function EmptyState({ filtered, canEdit, onAdd, onClear }) {
         data-testid="repository-empty-filtered"
       >
         <span className="mb-1 block text-[22px]">🔍</span>
-        לא נמצאו דיילות התואמות לסינון
+        אין דיילות התואמות לסינון
         <div>
           <Button
             type="button"
@@ -620,7 +626,7 @@ function EmptyState({ filtered, canEdit, onAdd, onClear }) {
             className="mt-2 h-auto p-0 text-xs font-semibold text-teal-700"
             data-testid="repository-clear-filters"
           >
-            נקה סינון
+            נקי סינון
           </Button>
         </div>
       </div>
@@ -641,7 +647,7 @@ function EmptyState({ filtered, canEdit, onAdd, onClear }) {
             onClick={onAdd}
             className="mt-2 h-auto rounded-lg bg-teal-600 px-3 py-1.5 text-[12.5px] font-semibold text-white"
           >
-            + הוספת דיילת
+            + דיילת חדשה
           </Button>
         </div>
       )}

@@ -89,8 +89,8 @@ export default function CustomerPicker({
           <Button
             type="button"
             variant="link"
-            title="החלפת לקוח"
-            aria-label={`החלפת לקוח (נבחר: ${selectedCustomer.company_name})`}
+            title="החליפי לקוח"
+            aria-label={`החליפי לקוח (נבחר: ${selectedCustomer.company_name})`}
             onClick={() => onSelect(null)}
             className="h-auto p-0 text-slate-400 hover:text-slate-600"
             data-testid="quote-customer-clear"

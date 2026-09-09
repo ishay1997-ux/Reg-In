@@ -24,6 +24,7 @@ import { Search } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Input } from '@/components/ui/input'
 import LoadingOrError from '@/components/LoadingOrError'
+import Hint from '@/components/Hint'
 import { useToast } from '@/components/ToastProvider'
 import {
   PARAM_GROUPS,
@@ -56,9 +57,13 @@ const DEFAULT_PANE_COMPONENTS = { templates: TemplateEditor, smart_match: SmartM
 // 🔤 משפטי-הפתיחה של הקבוצות — **רק לשתי הקבוצות שהמוקאפ המאושר צייר להן משפט.**
 // לארבע האחרות לא נכתב משפט בשום מקור, וניסוח-עצמאי כאן היה המצאת-טקסט-מוצר
 // (הודגש לאורקסטרטור בדוח-הבנייה). קבוצה בלי משפט פשוט לא מציגה אחד.
+// ✏️ (לילה-הטקסטים, שלב 8) — משפט-הפתיחה של "תמחור ותזמון" איפס: המשפט הראשון של הנוסח
+// שהמוקאפ צייר ("הערכים שמנוע התמחור וההצעות קורא") מגדיר מונח-מערכת ("מנוע התמחור") ולא
+// אומר למי שקוראת מה לעשות אחרת — הגדרת-מונח שייכת לשכבה (H1/③), לא לבסיס. מה שנשאר הוא
+// המשפט השני, שהוא ⑥-כמו (תוצאת-עריכה שאינה נראית מיד): הצעה שכבר אושרה אינה מתעדכנת.
 const GROUP_LEADS = {
   pricing_timing:
-    'הערכים שמנוע התמחור וההצעות קורא. שינוי משפיע על הצעות חדשות בלבד — הצעה שכבר אושרה שומרת את הערכים שהוקפאו בה.',
+    'שינוי כאן משפיע על הצעות חדשות בלבד — הצעה שכבר אושרה שומרת את הערכים שהוקפאו בה.',
   smart_match: 'הערכים שקובעים איך המערכת מדרגת מועמדות לשיבוץ.',
 }
 
@@ -201,7 +206,6 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
         loading={loading}
         error={loadError}
         onRetry={loadError ? loadData : undefined}
-        retryLabel="נסי שוב"
         retryTestId="settings-retry"
         skeleton={{ variant: 'table', rows: 6, cols: 3 }}
       />
@@ -226,7 +230,7 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="חיפוש לפי שם ההגדרה או שם הפרמטר במערכת"
+          placeholder="חיפוש לפי שם ההגדרה או שם הפרמטר"
           className="h-auto rounded-lg border-slate-300 py-2.5 pr-10 pl-3 text-right"
           data-testid="settings-search"
         />
@@ -240,6 +244,8 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
           {GROUP_LEADS[activeType] && (
             <p className="mt-1 mb-3 text-xs text-slate-500">{GROUP_LEADS[activeType]}</p>
           )}
+
+          {activeType === 'pricing_timing' && <Hint id="params.pricingTimingGroup" />}
 
           {paneReadOnly && (
             <p

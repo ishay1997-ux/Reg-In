@@ -734,7 +734,9 @@ describe('ChecklistDialog — ㊲ מרוץ-הביטול ונעילת ㉝/㊴', (
     // 🔓 ㊴ — הכמות בפועל היא הפקד היחיד שנשאר פתוח, ומנומק.
     const qty = screen.getByTestId('checklist-qty-B-REG-TAG-1')
     expect(qty).toBeEnabled()
-    expect(qty).toHaveAttribute('title', 'הפרויקט בוטל — אך אפשר לרשום סחורה שהגיעה (㊴)')
+    // ✏️ 09/09/2026, לילה-הטקסטים שלב 8: הוסר `(㊴)` — סימוכין-פנימי שהתגלגל לתוך המחרוזת
+    // המוצגת בפועל (title בדפדפן), לא רק להערת-קוד. תוכן-הכלל לא השתנה.
+    expect(qty).toHaveAttribute('title', 'הפרויקט בוטל — אך אפשר לרשום סחורה שהגיעה')
     // ומצב-הפריט עדיין חוסם: `טרם החל` נשאר מושבת גם תחת ㊴ (㉕ — עריך ב`הוזמן`/`מוכן` בלבד).
     expect(screen.getByTestId('checklist-qty-B-SAT-LAN-1')).toBeDisabled()
     // §⑧-9ב — שורת-המשנה מושמטת בתצוגה המבוטלת; המדד נשאר כי הוא עובדה.
@@ -844,7 +846,7 @@ describe('ChecklistDialog — מצבי ריק, חסימה וכשל-טעינה', 
     // השלד עצמו דקורטיבי ⇒ בלי ההכרזה ה-sr-only שלצידו קורא-מסך אינו שומע דבר.
     const status = screen.getByRole('status')
     expect(status).toContainElement(skeleton)
-    expect(status).toHaveTextContent('טוען...')
+    expect(status).toHaveTextContent('טוען…')
 
     // 🚫 ולא "דיאלוג ריק": אין שורות-פריט, אין כפתור-סגירה ואין מסך-שגיאה — והדיאלוג
     // בכל זאת נושא שם נגיש כל זמן הטעינה.

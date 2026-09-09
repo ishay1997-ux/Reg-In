@@ -29,7 +29,7 @@ export default function LoginPage() {
     const cleanEmail = email.trim()
 
     if (!cleanEmail) {
-      setErrorMsg('יש להזין כתובת דוא״ל.')
+      setErrorMsg('יש להזין כתובת אימייל.')
       return
     }
     if (password.length < 6) {
@@ -44,7 +44,7 @@ export default function LoginPage() {
     //    (data=null) והכניסה ממשיכה כרגיל — הנעילה לעולם לא חוסמת התחברות תקינה.
     const { data: lockedUntil } = await supabase.rpc('check_login_lock', { p_email: cleanEmail })
     if (lockedUntil) {
-      setErrorMsg('החשבון ננעל זמנית עקב ריבוי ניסיונות כושלים. נסה שוב מאוחר יותר.')
+      setErrorMsg('החשבון ננעל זמנית עקב ריבוי ניסיונות כושלים — נסי שוב מאוחר יותר.')
       setLoading(false)
       return
     }
@@ -61,8 +61,8 @@ export default function LoginPage() {
       })
       setErrorMsg(
         nowLockedUntil
-          ? 'החשבון ננעל עקב 5 ניסיונות כושלים. נסה שוב בעוד כ-15 דקות.'
-          : 'מייל או סיסמה שגויים. נסה שוב.',
+          ? 'החשבון ננעל עקב 5 ניסיונות כושלים — נסי שוב בעוד כ-15 דקות.'
+          : 'מייל או סיסמה שגויים — נסי שוב.',
       )
       setLoading(false)
       return
@@ -86,21 +86,21 @@ export default function LoginPage() {
     // וזה המצב היחיד שבו ההודעה המאשימה נכונה. כל שגיאה אחרת (רשת/500) אמרה למשתמש
     // לגיטימי שהוא אינו מורשה, וניתקה אותו — האשמה על תקלה שאינה שלו.
     if (dbError && dbError.code !== 'PGRST116') {
-      setErrorMsg('תקלה זמנית בטעינת פרטי החשבון. נסה שוב בעוד רגע.')
+      setErrorMsg('תקלה זמנית בטעינת פרטי החשבון — נסי שוב בעוד רגע.')
       await supabase.auth.signOut()
       setLoading(false)
       return
     }
 
     if (!userData) {
-      setErrorMsg('משתמש זה אינו מורשה במערכת. פנה למנהל.')
+      setErrorMsg('חשבון זה אינו מורשה במערכת — יש לפנות למנכ"ל.')
       await supabase.auth.signOut()
       setLoading(false)
       return
     }
 
     if (userData.status === 'inactive') {
-      setErrorMsg('חשבון זה אינו פעיל במערכת. פנה למנכ"ל לצורך בירור.')
+      setErrorMsg('חשבון זה אינו פעיל במערכת — יש לפנות למנכ"ל לבירור.')
       await supabase.auth.signOut()
       setLoading(false)
       return
@@ -121,22 +121,22 @@ export default function LoginPage() {
       options: { redirectTo: window.location.origin },
     })
     if (error) {
-      setErrorMsg('ההתחברות עם Google נכשלה. נסה שוב.')
+      setErrorMsg('ההתחברות עם Google נכשלה — נסי שוב.')
     }
   }
 
   async function handleForgotPassword() {
     const cleanEmail = email.trim()
     if (!cleanEmail) {
-      setErrorMsg('הזן קודם את כתובת הדוא״ל שלך בשדה למעלה.')
+      setErrorMsg('הזיני קודם את כתובת האימייל שלך בשדה למעלה.')
       return
     }
     setErrorMsg('')
     const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail)
     if (error) {
-      setErrorMsg('לא הצלחנו לשלוח מייל איפוס. בדוק את הכתובת.')
+      setErrorMsg('לא הצלחנו לשלוח מייל איפוס — בדקי את הכתובת.')
     } else {
-      setInfoMsg('נשלח אליך מייל לאיפוס הסיסמה. בדוק את תיבת הדוא״ל.')
+      setInfoMsg('נשלח אליך מייל לאיפוס הסיסמה — בדקי את תיבת האימייל.')
     }
   }
 
@@ -154,7 +154,7 @@ export default function LoginPage() {
 
         <Input
           type="email"
-          placeholder="כתובת דוא״ל"
+          placeholder="כתובת אימייל"
           value={email}
           onChange={(e) => {
             setEmail(e.target.value)
@@ -186,7 +186,7 @@ export default function LoginPage() {
           disabled={loading}
           className="w-full h-auto p-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"
         >
-          {loading ? 'מתחבר...' : 'התחברות'}
+          {loading ? 'מתחברת…' : 'התחברות'}
         </Button>
 
         {/* מפריד "או" בין כניסת סיסמה לכניסת Google */}

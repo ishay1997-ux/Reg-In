@@ -20,6 +20,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import Hint from '@/components/Hint'
 import LoadingOrError from '@/components/LoadingOrError'
 import PermissionAwareEmpty from '@/components/PermissionAwareEmpty'
 import StatusTag from '@/components/StatusTag'
@@ -316,6 +317,7 @@ export default function ProjectsPage() {
               <WindowChips value={windowKey} onChange={setWindowKey} hiddenCount={hiddenCount} />
               <span className="mr-auto text-[12px] text-slate-400">{SORT_LINE}</span>
             </div>
+            {visible.length > 0 && <Hint id="projects.sort" />}
             {visible.length === 0 ? (
               <EmptyRows
                 filtered={tab === 'all' && statusFilter !== 'all'}
@@ -467,7 +469,7 @@ function EmptyRows({ filtered, tab, total, onClear }) {
             className="h-auto p-0 text-xs font-semibold text-teal-700"
             data-testid="projects-clear-filter"
           >
-            נקה סינון
+            נקי סינון
           </Button>
         }
         testId="projects-empty-filtered"
@@ -495,7 +497,7 @@ function ProjectsTable({ rows, closing, today, onOpen }) {
           {/* בלשונית "לסגירה" עמודת הלוגיסטיקה יוצאת — אחרי שהאירוע התקיים היא כבר אינה
               עבודה (המוקאפ, מצב 2). */}
           {!closing && <Th>לוגיסטיקה</Th>}
-          <Th>מצב</Th>
+          <Th>סטטוס</Th>
           <Th>מה חסר</Th>
           <Th />
         </tr>

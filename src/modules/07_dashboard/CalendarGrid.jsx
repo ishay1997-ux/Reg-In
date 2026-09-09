@@ -223,7 +223,7 @@ function DayCell({ cell, today, projects }) {
           className="px-[3px] text-right text-[10.5px] font-semibold text-slate-400 hover:text-teal-700"
           data-testid={`dashboard-less-${cell.date}`}
         >
-          הצג פחות
+          הציגי פחות
         </button>
       )}
     </div>

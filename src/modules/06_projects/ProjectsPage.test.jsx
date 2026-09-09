@@ -13,6 +13,12 @@ import { listProjectsOverview } from './api'
 
 vi.mock('./api', () => ({ listProjectsOverview: vi.fn() }))
 
+// ⚠️ שלב 9 (Hint) — הוספת `<Hint id="projects.sort" />` מייבאת `@/contexts/AuthContext`,
+// שמייבאת `@/supabaseClient` (יוצר לקוח אמיתי בטעינה) — קובץ זה לא ייבא אף אחת מהן קודם.
+// בלי המוק הזה הבדיקה קורסת ב-`supabaseUrl is required` (מוקש `src/CLAUDE.md`), לא נכשלת
+// על טענה. רמה 0 ⇒ `<Hint>` מחזיר null ואינו משנה את מה שהבדיקות האלה בודקות.
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ onboardingMode: 0 }) }))
+
 // תאריכים יחסיים להיום האמיתי — העמוד קורא את השעון בעצמו, וקיבוע תאריך היה מזייף את
 // חישוב-הקרבה. אותו חישוב-UTC כמו eventDaysFromToday, כדי שלא ייווצר פער סביב חצות.
 function offsetIso(days) {
@@ -168,7 +174,7 @@ describe('ProjectsPage — מצב ⑤: כשל-טעינה', () => {
 })
 
 describe('ProjectsPage — מצב ②: ריק אמיתי', () => {
-  it('שני המשפטים הנעולים + ניווט למסך הצעות מחיר (ההפך מ"נקה סינון")', async () => {
+  it('שני המשפטים הנעולים + ניווט למסך הצעות מחיר (ההפך מ"נקי סינון")', async () => {
     listProjectsOverview.mockResolvedValue([])
     renderPage()
     expect(await screen.findByText('עדיין אין פרויקטים במערכת.')).toBeInTheDocument()
@@ -176,7 +182,7 @@ describe('ProjectsPage — מצב ②: ריק אמיתי', () => {
       screen.getByText('פרויקט נוצר מעצמו ברגע שהצעת מחיר מאושרת — אין כאן יצירה ידנית.'),
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'למסך הצעות מחיר →' })).toBeInTheDocument()
-    expect(screen.queryByText('נקה סינון')).not.toBeInTheDocument()
+    expect(screen.queryByText('נקי סינון')).not.toBeInTheDocument()
   })
 })
 
@@ -217,7 +223,7 @@ describe('ProjectsPage — לשונית "בעבודה" (ברירת-מחדל)', (
     expect(
       screen.getByText('2 זימונים ממתינים למענה — וגם אם שתיהן יאשרו, עדיין חסרות 3'),
     ).toBeInTheDocument()
-    expect(screen.getByText('לא נשלח אף זימון — איש לא נגע בפרויקט מאז שנוצר')).toBeInTheDocument()
+    expect(screen.getByText('לא נשלח אף זימון לדיילת')).toBeInTheDocument()
     // הנתיב המדורד המתועד: בלי confirmed_available המשפט של #11 נופל ל"חסרות N" — לא שגוי.
     // לשון-יחיד גם בנתיב המדורד — "חסרה 1" בשני התאים של אותה שורה: עמודת-הדיילות
     // (staffingCell) ועמודת "מה חסר" (gapSentence) מספרות את אותו חוסר באותן מילים (תוקן 19/08).
@@ -308,9 +314,9 @@ describe('ProjectsPage — לשונית "הכול": גלולות ומסנן', ()
     expect(cancelled.className).not.toContain('bg-red-50')
   })
 
-  it('מצב ③ — ריק אחרי סינון: המשפטים הנעולים + "נקה סינון" שבאמת מנקה (ההפך ממצב ②)', async () => {
+  it('מצב ③ — ריק אחרי סינון: המשפטים הנעולים + "נקי סינון" שבאמת מנקה (ההפך ממצב ②)', async () => {
     // ‏window=all — הבדיקה הזו בודקת את מסנן-הסטטוס, לא את חלון-הזמן; #104 (לפני 146 ימים)
-    // חייב להישאר בפנים כדי ש"נקה סינון" יחזיר את כל שמונת השורות כפי שהיה לפני 04/09.
+    // חייב להישאר בפנים כדי ש"נקי סינון" יחזיר את כל שמונת השורות כפי שהיה לפני 04/09.
     renderPage('/projects?tab=all&status=awaiting_invoice&window=all')
     expect(await screen.findByText('אין פרויקט התואם למסנן שבחרת.')).toBeInTheDocument()
     expect(screen.getByText('8 פרויקטים קיימים ואינם מוצגים כרגע.')).toBeInTheDocument()

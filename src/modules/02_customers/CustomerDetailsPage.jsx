@@ -809,7 +809,7 @@ export default function CustomerDetailsPage() {
                   role="alert"
                   data-testid="customer-sent-history-error"
                 >
-                  לא ניתן היה לבדוק אילו הצעות כבר נשלחו ללקוח — בדקו בחלון המסמך לפני שליחה.
+                  לא ניתן היה לבדוק אילו הצעות כבר נשלחו ללקוח — בדקי בחלון המסמך לפני שליחה.
                 </p>
               )}
               {showControls && (
@@ -826,7 +826,7 @@ export default function CustomerDetailsPage() {
                     className="h-9 w-64 rounded-lg border border-slate-200 px-3 text-sm text-slate-700"
                   />
                   {[
-                    ['all', 'הכל'],
+                    ['all', 'הכול'],
                     ['in_progress', 'בתהליך'],
                     ['approved', 'מאושרות'],
                     ['rejected', 'נדחו'],
@@ -1124,7 +1124,7 @@ function ProjectsTabContent({
           className="h-auto py-2 px-4 rounded-lg border-slate-300 text-slate-700"
           data-testid="customer-projects-retry"
         >
-          נסה שוב
+          נסי שוב
         </Button>
       </div>
     )
@@ -1179,7 +1179,7 @@ function ProjectsTabContent({
             className="text-teal-700 hover:text-teal-800 font-semibold"
             data-testid="customer-projects-clear-search"
           >
-            נקה חיפוש
+            נקי חיפוש
           </button>
         </p>
       ) : (
@@ -1235,7 +1235,7 @@ function ProjectsSection({ title, definition, rows, today, vatRate }) {
               <th className="text-right font-medium py-2.5 px-3">תאריך אירוע</th>
               <th className="text-right font-medium py-2.5 px-3">שם האירוע</th>
               <th className="text-right font-medium py-2.5 px-3">סכום</th>
-              <th className="text-right font-medium py-2.5 px-3">מצב</th>
+              <th className="text-right font-medium py-2.5 px-3">סטטוס</th>
               <th className="text-right font-medium py-2.5 px-3">שביעות רצון</th>
               <th className="py-2.5 px-3" />
             </tr>
@@ -1283,7 +1283,7 @@ function ProjectRow({ project, today, vatRate }) {
           goToCard()
         }
       }}
-      aria-label={`פתח כרטיס פרויקט: ${project.event_name}`}
+      aria-label={`פתחי כרטיס פרויקט: ${project.event_name}`}
       data-testid={`customer-project-${project.project_id}`}
     >
       <td className="py-2.5 px-3 text-sm text-slate-600">

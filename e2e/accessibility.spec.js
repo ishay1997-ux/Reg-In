@@ -40,7 +40,7 @@ const CONTRAST_IS_ADVISORY = new Set(['color-contrast'])
 
 async function login(page) {
   await page.goto('/login')
-  await page.getByPlaceholder('כתובת דוא״ל').fill(CEO_EMAIL)
+  await page.getByPlaceholder('כתובת אימייל').fill(CEO_EMAIL)
   await page.getByPlaceholder('סיסמה').fill(CEO_PASSWORD)
   await page.getByRole('button', { name: 'התחברות', exact: true }).click()
   await expect(page).toHaveURL('/', { timeout: 30_000 })
@@ -352,7 +352,7 @@ test.describe('נגישות (axe-core) — מודול 9, "ההגדרות שלי"
 
   test('סריקה על "ההגדרות שלי" עם שורות אמיתיות', async ({ page }) => {
     await page.goto('/login')
-    await page.getByPlaceholder('כתובת דוא״ל').fill(FINANCE_EMAIL)
+    await page.getByPlaceholder('כתובת אימייל').fill(FINANCE_EMAIL)
     await page.getByPlaceholder('סיסמה').fill(FINANCE_PASSWORD)
     await page.getByRole('button', { name: 'התחברות', exact: true }).click()
     await expect(page).toHaveURL('/', { timeout: 30_000 })

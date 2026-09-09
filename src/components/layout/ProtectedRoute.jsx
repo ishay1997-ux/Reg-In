@@ -18,7 +18,7 @@ export default function ProtectedRoute({ allow, children }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <p className="text-slate-500">טוען...</p>
+        <p className="text-slate-500">טוען…</p>
       </div>
     )
   }

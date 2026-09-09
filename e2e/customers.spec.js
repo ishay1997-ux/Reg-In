@@ -29,7 +29,7 @@ const TEST_COMPANY_NAME = `בדיקת E2E ${TEST_COMPANY_NUMBER}`
 
 async function login(page, email, password) {
   await page.goto('/login')
-  await page.getByPlaceholder('כתובת דוא״ל').fill(email)
+  await page.getByPlaceholder('כתובת אימייל').fill(email)
   await page.getByPlaceholder('סיסמה').fill(password)
   await page.getByRole('button', { name: 'התחברות', exact: true }).click()
   // login מוצלח = שרשרת קריאות-רשת ארוכה לפני הניווט (כמו בשאר הספים) — timeout מורחב מונע כשל-שווא.
@@ -109,7 +109,7 @@ test.describe('לקוחות (מודול 2) — קבלה E2E (guide ⑦)', () => 
       .filter({ hasText: TEST_COMPANY_NAME })
     await expect(row).toBeVisible()
     // ארכוב → הלקוח יוצא מרשימת הפעילים (בלי חלון-וידוא — פעולה הפיכה, הכרעת-ישי 11/07).
-    await row.getByTitle('העבר לארכיון').click()
+    await row.getByTitle('העבירי לארכיון').click()
     await expect(table.getByText(TEST_COMPANY_NAME)).toBeHidden()
     // כפתור "ארכיון" מוביל לרשימת הארכיון בלבד (הכרעת-ישי 11/07) — השורה חוזרת מסומנת לא-פעיל.
     await page.getByTestId('customers-archive-toggle').click()
@@ -118,7 +118,7 @@ test.describe('לקוחות (מודול 2) — קבלה E2E (guide ⑦)', () => 
       .filter({ hasText: TEST_COMPANY_NAME })
     await expect(archivedRow.getByText('לא פעיל')).toBeVisible()
     // שחזור → חוזר לפעיל; הכפתור עכשיו "חזרה לפעילים" — לוחצים ורואים אותו שוב כפעיל (הפיכוּת מלאה).
-    await archivedRow.getByTitle('שחזר מהארכיון').click()
+    await archivedRow.getByTitle('שחזרי מהארכיון').click()
     await page.getByTestId('customers-archive-toggle').click()
     const restoredRow = page
       .locator('[data-testid^="customer-row-"]')

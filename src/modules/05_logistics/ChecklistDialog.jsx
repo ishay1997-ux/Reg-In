@@ -79,7 +79,9 @@ const NOTE_PLACEHOLDER = 'הערה חופשית — מה שכדאי שמנהלת
 // `actual_qty` מעל 0 בשורה שלא נגעו בה — ובכך **לנעול לעצמה** את פקד-ההסרה של אותה שורה (㊱).
 const QTY_LOCKED_BY_ITEM = 'הפריט טרם הוזמן — הכמות בפועל נפתחת לעריכה אחרי סימון "הוזמן"'
 const CANCELLED_CONTROL_TITLE = 'הפרויקט בוטל — לא ניתן לעדכן'
-const CANCELLED_QTY_TITLE = 'הפרויקט בוטל — אך אפשר לרשום סחורה שהגיעה (㊴)'
+// ✏️ 09/09/2026 — הוסר סימוכין-פנימי `(㊴)` שהתגלגל לתוך המחרוזת עצמה (מוצג כ-title בדפדפן,
+// ולא כהערת-קוד). הכלל עצמו מצוטט מעליי בשורת-ההערה, כרגיל.
+const CANCELLED_QTY_TITLE = 'הפרויקט בוטל — אך אפשר לרשום סחורה שהגיעה'
 // 🔒 העתק-בייט של ה-`raise` במיגרציה `20260826002447_module5_checklist_rpc.sql` (‏§3.7 · G4,
 // הכרעת-ישי 25/08). כאן הוא **נימוק-הנעילה שלפני-השליחה** — אותו כלל AR-9 שמחזיק את
 // `NEGATIVE_QTY_SENTENCE`: שני נוסחים לאותה שגיאה הם מה שהכלל מונע.
@@ -97,17 +99,13 @@ const AUTOFILL_TAG = 'מולא אוטומטית'
 // **העוגן שלפיו הוכרע:** הכרעת-ישי `O-5` (26/08/2026) נתנה בדיוק לאח-התאום של המשפט הזה
 // צורת-יחיד — `יחידה אחת עדיין בדרך` (`projectLogistics.js`, `plainReason`) — ולכן אותה
 // צורה בדיוק מוחלת כאן. ⚠️ **מדווח כהכרעה-על-עוגן, הפיכה: ישי רשאי לעקוף בנוסח אחר.**
-const SHORTFALL = {
-  lead: 'נרשם חוסר של ',
-  oneUnit: 'יחידה אחת',
-  inOne: ' ב',
-  inSingle: ' יחידות ב',
-  inMany: ' יחידות ב-',
-  itemsWord: ' פריטים',
-  dash: ' — ',
-  emphasis: 'הוא מתועד ואינו עוצר את הפרויקט',
-  period: '.',
-}
+// ✏️ 09/09/2026, לילה-הטקסטים שלב 8 — נכתב-מחדש **במקום**: שמונה קבועי-מחרוזת נפרדים
+// שהיו מורכבים בשלוש ענפי-JSX שונים הוחלפו בפונקציה אחת (`shortfallClause`) שמחזירה את
+// חלק-היחיד/רבים בלבד; המשפט השלם מורכב פעם אחת ב-`CompletionBanner`. **התוכן לא זז —
+// זו הכרעת-ישי O-5 מאושרת, מילה-במילה** — רק הצורה שממנה הוא נבנה. `UC37` (יחיד/רבים
+// נבדק בהרצה עם n=1) אומת מול הבדיקות הקיימות: `יחידה אחת` ולא `1 יחידות` (`ChecklistDialog.test.jsx`).
+const SHORTFALL_LEAD = 'נרשם חוסר של '
+const SHORTFALL_EMPHASIS = 'הוא מתועד ואינו עוצר את הפרויקט'
 
 // כרטיס משטח-2 §② (שורת "מדד השיבוץ"): מדד-האיוש הוצא מהמסך בכוונה — אבל *"בלעדיו סימון
 // הפריט האחרון לא יקדם את הפרויקט; זה נאמר בהודעה ברגע שזה קורה, ולא כמדד קבוע"*. ההודעה
@@ -614,6 +612,27 @@ function CancelBanner({ project }) {
   )
 }
 
+// חלק-היחיד/רבים של משפט-החוסר בלבד — ראו הערת-ה-✏️ שמעל `SHORTFALL_LEAD`.
+// 🔴 היחיד נגזר מ-`units`, לא מ-`items` — המילה שאחרי המספר מתארת **יחידות**. חוסר של
+// יחידה אחת נמצא תמיד בפריט אחד, ולכן הענף הזה מכסה גם את שם-הפריט (`UC37`, n=1).
+function shortfallClause({ units, items, name }) {
+  if (units === 1) {
+    return <>יחידה אחת ב&quot;{name}&quot;</>
+  }
+  if (items === 1) {
+    return (
+      <>
+        <Ltr>{String(units)}</Ltr> יחידות ב&quot;{name}&quot;
+      </>
+    )
+  }
+  return (
+    <>
+      <Ltr>{String(units)}</Ltr> יחידות ב-<Ltr>{String(items)}</Ltr> פריטים
+    </>
+  )
+}
+
 function CompletionBanner({ completion }) {
   return (
     <div
@@ -627,30 +646,8 @@ function CompletionBanner({ completion }) {
       כל הפריטים סומנו מוכנים והאיוש מלא.{' '}
       {completion.items > 0 && (
         <span data-testid="checklist-shortfall">
-          {SHORTFALL.lead}
-          {/* 🔴 היחיד נגזר מ-`units`, לא מ-`items` — המילה שאחרי המספר מתארת **יחידות**.
-              חוסר של יחידה אחת נמצא תמיד בפריט אחד, ולכן הענף הזה מכסה גם את שם-הפריט. */}
-          {completion.units === 1 ? (
-            <>
-              {SHORTFALL.oneUnit}
-              {SHORTFALL.inOne}&quot;{completion.name}&quot;
-            </>
-          ) : completion.items === 1 ? (
-            <>
-              <Ltr>{String(completion.units)}</Ltr>
-              {SHORTFALL.inSingle}&quot;{completion.name}&quot;
-            </>
-          ) : (
-            <>
-              <Ltr>{String(completion.units)}</Ltr>
-              {SHORTFALL.inMany}
-              <Ltr>{String(completion.items)}</Ltr>
-              {SHORTFALL.itemsWord}
-            </>
-          )}
-          {SHORTFALL.dash}
-          <b>{SHORTFALL.emphasis}</b>
-          {SHORTFALL.period}
+          {SHORTFALL_LEAD}
+          {shortfallClause(completion)} — <b>{SHORTFALL_EMPHASIS}</b>.
         </span>
       )}
     </div>

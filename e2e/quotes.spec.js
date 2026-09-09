@@ -57,7 +57,7 @@ const REJECTED_COUNT = 3
 
 async function login(page, email, password) {
   await page.goto('/login')
-  await page.getByPlaceholder('כתובת דוא״ל').fill(email)
+  await page.getByPlaceholder('כתובת אימייל').fill(email)
   await page.getByPlaceholder('סיסמה').fill(password)
   await page.getByRole('button', { name: 'התחברות', exact: true }).click()
   await expect(page).toHaveURL('/', { timeout: 30_000 })
@@ -526,7 +526,7 @@ test.describe('הנחות חורגות מ-100% במסך-הבנייה — הפא�
   })
 })
 
-test.describe('שמירה פותחת את חלון-השליחה (C5 §5.5.4 "שמור ושלח", 01/08)', () => {
+test.describe('שמירה פותחת את חלון-השליחה (C5 §5.5.4 "שמרי ושלחי", 01/08)', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
 
   // ⚠️ **הבדיקה הזו חייבת לרוץ בלי לשמור הצעה אמיתית, וזו לא קפדנות — זו נכונות.**
@@ -690,7 +690,7 @@ test.describe('שמירה פותחת את חלון-השליחה (C5 §5.5.4 "ש�
   })
 })
 
-test.describe('"עדכן ושלח" בלי שינוי — לא שומרים, והתוקף לא מתאפס (הכרעת-ישי 01/08)', () => {
+test.describe('"עדכני ושלחי" בלי שינוי — לא שומרים, והתוקף לא מתאפס (הכרעת-ישי 01/08)', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_EMAIL/E2E_CEO_PASSWORD לא הוגדרו ב-.env.local')
 
   // ⚠️ **מה זה מגן עליו:** עדכון-ריק הריץ `update` מלא, וטריגר `moddatetime` הקפיץ את
@@ -698,7 +698,7 @@ test.describe('"עדכן ושלח" בלי שינוי — לא שומרים, וה
   // ⚠️ **אפס כתיבות אמיתיות:** ה-RPC של העריכה מיורט. הבדיקה מודדת **האם הבקשה נשלחה**,
   // ולא משנה את המסד — ההצעה היא שורה אמיתית.
   // 🔄 03/09/2026: #7 (דמו-יולי) נמחקה — נבחרת בזמן-ריצה: הצעה בתהליך שאירועה עתידי (אחרת
-  // הוולידציה של הטופס חוסמת את "עדכן ושלח" לפני שהמסלול הנבדק בכלל רץ).
+  // הוולידציה של הטופס חוסמת את "עדכני ושלחי" לפני שהמסלול הנבדק בכלל רץ).
   async function pickEditableQuote(page) {
     const today = new Date().toISOString().slice(0, 10)
     const id = await page.evaluate(

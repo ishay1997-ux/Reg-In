@@ -177,7 +177,7 @@ export default function EditProjectDetailsDialog({
     toast.success(saveSuccessMessage(result, reinviteOutcome?.sent ?? 0))
     if (result?.reactivated) {
       // התג והלשוניות נגזרים מחדש ברענון של האב — הטוסט רק אומר מה קרה.
-      toast.info('הפרויקט חזר לציר הפעיל.')
+      toast.info('הפרויקט חזר להיות פעיל.')
     }
     reportReinviteOutcome(result, reinviteIds, reinviteOutcome)
     reportUpdateOutcome(updateOutcome)
@@ -299,11 +299,14 @@ export default function EditProjectDetailsDialog({
               id="edit-project-location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="למשל: היכל התרבות, תל אביב"
+              placeholder="לדוגמה: היכל התרבות, תל אביב"
               data-testid="edit-project-location-input"
             />
+            {/* 🧹 היה שני משפטים, כולל "והנקודה על המפה נקבעת מחדש" — מנגנון-גיאוקוד
+                פנימי (R10/B8, מועמד-שכבה). מה שנשאר: האישורים לא מתאפסים (הבטחה) + הדיילות
+                מקבלות עדכון (⑥ — יוצא-החוצה לאדם אמיתי, לעולם לא נעלם מהבסיס). */}
             <span className="text-[11px] text-slate-500">
-              שינוי מיקום אינו מבטל אישורים. הדיילות מקבלות עדכון, והנקודה על המפה נקבעת מחדש.
+              שינוי מיקום אינו מבטל אישורים — הדיילות מקבלות עדכון.
             </span>
             <FieldError name="location" message={errors.location} />
           </div>
@@ -333,8 +336,9 @@ export default function EditProjectDetailsDialog({
                 data-testid="edit-project-end-input"
               />
             </div>
+            {/* 🧹 מוזג לשתי-משפטים לאחד (R13, קו-מפריד אינו משפט שני) — אותו תוכן. */}
             <span className="text-[11px] text-slate-500">
-              שינוי שעות אינו מבטל אישורים. הדיילות מקבלות עדכון שנוקב בשעות החדשות.
+              שינוי שעות אינו מבטל אישורים — הדיילות מקבלות עדכון עם השעות החדשות.
             </span>
             {/* חוצה-חצות — ענבר, מודיע ואינו חוסם: 22:00–02:00 חוקי לגמרי בענף (S-17). */}
             {crossMidnight && (
@@ -367,7 +371,7 @@ export default function EditProjectDetailsDialog({
             className="h-auto bg-teal-600 px-4 py-2 text-white hover:bg-teal-700"
             data-testid="edit-project-save"
           >
-            שמור ושלח זימון מחדש
+            שמרי ושלחי זימון מחדש
           </Button>
           <Button
             type="button"

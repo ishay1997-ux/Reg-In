@@ -17,7 +17,7 @@ const PROJECTS_PASSWORD = process.env.E2E_PROJECTS_PASSWORD
 
 async function login(page, email, password) {
   await page.goto('/login')
-  await page.getByPlaceholder('כתובת דוא״ל').fill(email)
+  await page.getByPlaceholder('כתובת אימייל').fill(email)
   await page.getByPlaceholder('סיסמה').fill(password)
   await page.getByRole('button', { name: 'התחברות', exact: true }).click()
   await expect(page).toHaveURL('/', { timeout: 30_000 })
@@ -127,7 +127,7 @@ test.describe('מודול 4 · משטח 1 — מבט-על השיבוצים', () 
   // *"אין היום אירוע דחוף"*, כלומר על **מצב הלוח באותו יום**. ב-26/08 היו שני אירועים
   // בתוך 72 שעות (אחד היום, אחד מחר) ⇒ המסנן החזיר שורות, מצב ריק-אחרי-סינון פשוט לא
   // התרחש, ו-`overview-empty-filtered` לא נולד. ⚠️ **ואין מסנן שני שמובטח ריק** —
-  // 'הצג חסרים בלבד' החזיר באותו רגע 4 שורות.
+  // 'הציגי חסרים בלבד' החזיר באותו רגע 4 שורות.
   // 🔴 **ולכן המצב נכפה ברשת ולא נצוד בדאטה** — אותה מוסכמה בדיוק כמו מצב T-24 שמתחת
   // (`e2e/CLAUDE.md`: יירוט הוא הדרך היחידה לייצר מצב): אירוע יחיד, **רחוק ומאויש
   // במלואו**, ולכן שני המסננים גם יחד מובטחים ריקים עליו — בכל יום, לנצח.
@@ -195,7 +195,7 @@ test.describe('מודול 4 · משטח 1 — מבט-על השיבוצים', () 
   // 🔴 **הכלל שהבדיקה נושאת בשמה — "אינו נעלם" — הוא הכלל האמיתי** (§11.4): פקד שנעלם
   // מלמד שהמערכת לא-עקבית; פקד מכובה עם מספר מלמד **למה**. ⇒ נבדק שהוא תמיד קיים,
   // ושמצב-הכיבוי **עקבי עם המספר שעליו** — טענה שאינה תלויה בשעון.
-  test('"שלח שוב למי שפג תוקפן" אינו נעלם, ומצב-הכיבוי שלו עקבי עם המספר שעליו', async ({
+  test('"שלחי שוב למי שפג תוקפן" אינו נעלם, ומצב-הכיבוי שלו עקבי עם המספר שעליו', async ({
     page,
   }) => {
     await login(page, RECRUIT_EMAIL, RECRUIT_PASSWORD)
@@ -619,7 +619,7 @@ test.describe('מודול 4 · משטח 3 — חלון ההשבתה', () => {
     await expect(page.getByTestId('deactivate-keep')).toBeVisible()
     await expect(page.getByTestId('deactivate-cancel')).toBeVisible()
 
-    // 🚫 **"שחרר מהאירועים" לעולם לא נלחץ כאן** — הוא שולח מייל-ביטול אמיתי. יוצאים בביטול.
+    // 🚫 **"שחררי מהאירועים" לעולם לא נלחץ כאן** — הוא שולח מייל-ביטול אמיתי. יוצאים בביטול.
     await page.getByTestId('deactivate-cancel').click()
     await expect(page.getByTestId('deactivate-dialog')).toHaveCount(0)
     await expect(page.getByTestId('repository-row-999001')).toBeVisible()

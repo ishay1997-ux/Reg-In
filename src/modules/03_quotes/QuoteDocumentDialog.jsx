@@ -217,8 +217,8 @@ export default function QuoteDocumentDialog({
     if (alreadySent) {
       const proceed = await confirm({
         title: 'שליחה חוזרת',
-        message: 'ההצעה כבר נשלחה ללקוח. לשלוח שוב?',
-        confirmLabel: 'שלח שוב',
+        message: 'ההצעה כבר נשלחה ללקוח — לשלוח שוב?',
+        confirmLabel: 'שלחי שוב',
       })
       if (!proceed) return
     }
@@ -229,7 +229,7 @@ export default function QuoteDocumentDialog({
       const proceed = await confirm({
         title: 'סטטוס-שליחה לא ידוע',
         message: SEND_HISTORY_UNKNOWN_CONFIRM,
-        confirmLabel: 'המשך לשליחה',
+        confirmLabel: 'המשיכי לשליחה',
       })
       if (!proceed) return
     }
@@ -240,7 +240,7 @@ export default function QuoteDocumentDialog({
       const pdfBase64 = await blobToBase64(blob)
       // תקרת-Make: חריגה נדחית בצד-Make, כלומר אחרי שהמשתמש כבר קיבל "נשלח".
       if (isAttachmentTooLarge(pdfBase64)) {
-        setSendError('המסמך גדול מדי לשליחה אוטומטית. יש להוריד אותו ולשלוח ידנית.')
+        setSendError('המסמך גדול מדי לשליחה אוטומטית — יש להוריד אותו ולשלוח ידנית.')
         toast.error('המסמך גדול מדי לשליחה — יש להוריד ולשלוח ידנית.')
         return
       }
@@ -252,9 +252,9 @@ export default function QuoteDocumentDialog({
       if (unknownFields.length > 0) {
         const list = unknownFields.join(', ')
         setSendError(
-          `תבנית המייל מכילה שדה שהמערכת אינה מכירה: ${list}. יש לתקן את התבנית בהגדרות.`,
+          `תבנית המייל מכילה משתנה שהמערכת אינה מכירה: ${list} — יש לתקן את התבנית בהגדרות.`,
         )
-        toast.error('תבנית המייל מכילה שדה לא-מוכר — המייל לא נשלח.')
+        toast.error('תבנית המייל מכילה משתנה לא-מוכר — המייל לא נשלח.')
         return
       }
 
@@ -317,7 +317,7 @@ export default function QuoteDocumentDialog({
             הצעת מחיר {quote?.quote_id} — {quote?.event_name}
           </DialogTitle>
           <DialogDescription>
-            המסמך כפי שהלקוח {quote?.customers?.company_name} יקבל אותו.
+            המסמך כפי שיתקבל אצל {quote?.customers?.company_name}.
           </DialogDescription>
         </DialogHeader>
 
@@ -337,7 +337,7 @@ export default function QuoteDocumentDialog({
             data-testid="quote-document-frame"
           />
         ) : (
-          <p className="text-slate-500 py-8 text-center">מפיק את המסמך...</p>
+          <p className="text-slate-500 py-8 text-center">מפיקה את המסמך…</p>
         )}
 
         {/* חיווי "נשלח כבר" מהמסד — מוצג **גם בפתיחה ראשונה אחרי רענון-דף**, כלומר הוא
@@ -396,11 +396,7 @@ export default function QuoteDocumentDialog({
               data-testid="quote-document-send"
             >
               <Mail className="size-4" />
-              {sending
-                ? 'שולח...'
-                : alreadySent && !sendError
-                  ? 'שליחה חוזרת'
-                  : 'שליחת ההצעה במייל'}
+              {sending ? 'שולחת…' : alreadySent && !sendError ? 'שלחי שוב' : 'שלחי במייל'}
             </Button>
           )}
           <Button
@@ -416,7 +412,7 @@ export default function QuoteDocumentDialog({
             data-testid="quote-document-download"
           >
             <Download className="size-4" />
-            הורדת PDF
+            הורדה
           </Button>
         </DialogFooter>
       </DialogContent>

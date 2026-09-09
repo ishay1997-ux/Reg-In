@@ -8,7 +8,13 @@ import { supabase } from '@/supabaseClient'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
-import { getNotificationPreferences, saveNotificationPreferences } from '@/modules/09_settings/api'
+import {
+  getNotificationPreferences,
+  saveNotificationPreferences,
+  saveOnboardingMode,
+} from '@/modules/09_settings/api'
+import { ONBOARDING_OFF, ONBOARDING_ON } from '@/lib/onboardingCopy'
+import Hint from '@/components/Hint'
 import { CEO_ROLE_NAME } from '@/lib/constants'
 import { ISRAELI_MOBILE_REGEX, MIN_PASSWORD_LENGTH } from '@/lib/validators'
 import { Button } from '@/components/ui/button'
@@ -93,7 +99,7 @@ function PersonalDetailsSection({ user, reload }) {
     setSaving(false)
 
     if (updateError || !updated || updated.length === 0) {
-      setError('שמירה נכשלה. נסה שוב.')
+      setError('שמירה נכשלה. נסי שוב.')
       return
     }
 
@@ -110,12 +116,12 @@ function PersonalDetailsSection({ user, reload }) {
             שינוי תפקיד נעשה רק ע"י המנכ"ל דרך מסך ניהול משתמשים. הרמז מוסתר למנכ"ל עצמו -
             אין לו את מי לפנות אליו, וההודעה נשמעה מוזרה כשהמנכ"ל צופה בפרופיל של עצמו. */}
         {user?.roleName !== CEO_ROLE_NAME && (
-          <p className="text-xs text-slate-400 mt-0.5">לשינוי תפקיד פנה למנכ"ל.</p>
+          <p className="text-xs text-slate-400 mt-0.5">שינוי תפקיד נעשה בניהול המשתמשים</p>
         )}
       </div>
 
       <div>
-        <p className="text-sm text-slate-500">דוא"ל</p>
+        <p className="text-sm text-slate-500">אימייל</p>
         <p className="text-slate-800 font-medium">{user?.email}</p>
         {/* שינוי אימייל עצמאי לא נתמך כרגע - ראו CLAUDE_CODE_LOG.md (email = מפתח זיהוי RLS+FK) */}
       </div>
@@ -130,7 +136,7 @@ function PersonalDetailsSection({ user, reload }) {
           <Input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="שם פרטי ומשפחה"
+            placeholder="לדוגמה: דנה כהן"
             className="h-auto p-3 text-right rounded-lg border-slate-300 max-w-xs"
           />
         </div>
@@ -154,7 +160,7 @@ function PersonalDetailsSection({ user, reload }) {
           disabled={saving}
           className="w-fit h-auto py-2 px-4 mt-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
         >
-          {saving ? 'שומר...' : 'שמור שינויים'}
+          {saving ? 'שומרת…' : 'שמרי שינויים'}
         </Button>
       </form>
     </div>
@@ -193,7 +199,8 @@ function SecuritySection({ user }) {
 
     if (reauthError) {
       setSaving(false)
-      setError('הסיסמה הנוכחית שגויה.')
+      // R18 אוסר "שגוי"/"שגויה" (מילת-האשמה) — "אינה תואמת" אומרת את אותה עובדה בלי להאשים.
+      setError('הסיסמה הנוכחית אינה תואמת.')
       return
     }
 
@@ -201,7 +208,7 @@ function SecuritySection({ user }) {
     setSaving(false)
 
     if (updateError) {
-      setError('עדכון הסיסמה נכשל. נסה שוב.')
+      setError('עדכון הסיסמה נכשל. נסי שוב.')
       return
     }
 
@@ -251,7 +258,7 @@ function SecuritySection({ user }) {
         disabled={saving}
         className="w-fit h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
       >
-        {saving ? 'מעדכן...' : 'עדכון סיסמה'}
+        {saving ? 'מעדכנת…' : 'עדכני סיסמה'}
       </Button>
     </form>
   )
@@ -264,11 +271,18 @@ function SecuritySection({ user }) {
 // לא "עד שהתכונה תפותח" — אין כרגע ערוץ SMS במערכת (R-4), ולכן הוא תמיד כבוי ותמיד נשלח
 // כ-false בשמירה. שליחת המייל בפועל (מנוע-ההתראות) היא עדיין מודול 10 — טקסט-העזר אומר זאת
 // במפורש כדי שלא ייווצר רושם שהמייל כבר יוצא.
+// מתג "מצב הטמעה" (הכרעה 28, 07/09/2026) — הדלת של המשתמשת לעצמה (28⑨(א)); הדלת השנייה,
+// המנכ"ל פר-משתמשת, במסך ניהול-המשתמשים. אותה טבלה, אותו דפוס-החזרה-לאחור כמו מתג-המייל,
+// אבל **פונקציית-שמירה נפרדת** (`saveOnboardingMode` — מטען של העמודה בלבד, בלי `Boolean()`):
+// המתג הוא כן/לא וממופה ל-0/2 (28⑭). אחרי שמירה מוצלחת הרמה נכתבת גם לקונטקסט כדי שכל
+// `<Hint>` במערכת יהפוך חי, בלי רענון-דף (28⑧(1)).
 function NotificationsSection() {
   const toast = useToast()
+  const { updateOnboardingMode } = useAuth()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [emailNewProjects, setEmailNewProjects] = useState(false)
+  const [onboardingOn, setOnboardingOn] = useState(false)
   const [saving, setSaving] = useState(false)
   const [reloadTick, setReloadTick] = useState(0)
 
@@ -287,6 +301,7 @@ function NotificationsSection() {
         const prefs = await getNotificationPreferences()
         if (cancelled) return
         setEmailNewProjects(prefs.emailNewProjects)
+        setOnboardingOn((prefs.onboardingMode ?? ONBOARDING_OFF) > ONBOARDING_OFF)
       } catch (err) {
         if (!cancelled) setError(err.message || 'לא ניתן לטעון את ההגדרות.')
       } finally {
@@ -314,6 +329,22 @@ function NotificationsSection() {
     }
   }
 
+  async function handleOnboardingToggle(nextChecked) {
+    const previous = onboardingOn
+    setOnboardingOn(nextChecked) // אופטימי, כמו מתג-המייל
+    setSaving(true)
+    try {
+      const level = await saveOnboardingMode(nextChecked ? ONBOARDING_ON : ONBOARDING_OFF)
+      updateOnboardingMode(level) // רק אחרי שהשורה נכתבה — ההסברים נדלקים/נכבים בכל המסכים
+      toast.success('ההגדרות נשמרו')
+    } catch (err) {
+      setOnboardingOn(previous)
+      toast.error(err.message || 'שמירת מצב ההטמעה נכשלה.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (loading || error) {
     return (
       <LoadingOrError
@@ -330,9 +361,7 @@ function NotificationsSection() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-slate-800">מייל על פרויקטים חדשים</p>
-          <p className="text-xs text-slate-500">
-            ההתראות עצמן יישלחו כשמנוע ההתראות יעלה (מודול 10)
-          </p>
+          <p className="text-xs text-slate-500">ההתראות יתחילו להישלח בפועל כשמנוע ההתראות יופעל</p>
         </div>
         <Switch
           checked={emailNewProjects}
@@ -348,6 +377,22 @@ function NotificationsSection() {
           <p className="text-xs text-slate-500">אין ערוץ SMS במערכת</p>
         </div>
         <Switch checked={false} disabled data-testid="settings-notify-sms" />
+      </div>
+
+      <div className="flex flex-col gap-2 pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-slate-800">מצב הטמעה</p>
+            <p className="text-xs text-slate-500">מציג משפטי הסבר לצד כל מסך</p>
+          </div>
+          <Switch
+            checked={onboardingOn}
+            onCheckedChange={handleOnboardingToggle}
+            disabled={saving}
+            data-testid="settings-onboarding-mode"
+          />
+        </div>
+        <Hint id="onboarding.self" />
       </div>
     </div>
   )

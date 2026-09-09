@@ -33,9 +33,9 @@ export default class ErrorBoundary extends Component {
         <p className="text-4xl">😕</p>
         <h1 className="text-xl font-bold text-slate-800">משהו השתבש</h1>
         <p className="max-w-sm text-slate-500">
-          קרתה שגיאה בלתי צפויה במסך. רענון הדף בדרך כלל פותר את זה. אם זה חוזר — פנה למנכ״ל.
+          קרתה שגיאה בלתי צפויה במסך. רענון הדף בדרך כלל פותר את זה. אם זה חוזר, יש לפנות למנכ״ל.
         </p>
-        <Button onClick={this.handleReload}>רענן את הדף</Button>
+        <Button onClick={this.handleReload}>רענני את הדף</Button>
       </div>
     )
   }

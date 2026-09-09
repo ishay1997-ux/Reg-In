@@ -15,6 +15,7 @@
 // של /system כבר תופסות את רמת-הניווט הזו — רמה שנייה של לשוניות הייתה מבלבלת.
 
 import { useCallback, useEffect, useState } from 'react'
+import Hint from '@/components/Hint'
 import { Pencil } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
@@ -88,7 +89,7 @@ export default function PricesManagementPage() {
       await setProductStatus(sku, nextStatus)
     } catch (err) {
       setProducts((prev) => prev.map((p) => (p.sku === sku ? { ...p, status: previous } : p)))
-      setRowError(err.message || 'שינוי הסטטוס לא נשמר.')
+      setRowError(err.message || 'שינוי הסטטוס לא נשמר — נסי שוב.')
     } finally {
       setSavingStatusSku(null)
     }
@@ -140,6 +141,7 @@ export default function PricesManagementPage() {
 
         {/* עטיפת-גלילה אופקית: 9 עמודות גולשות במסך צר — min-w שומר על רוחב קריא במקום לרסק */}
         <div className="overflow-x-auto">
+          <Hint id="prices.tiers" />
           <table
             className="w-full min-w-[60rem] text-right border-collapse"
             data-testid="prices-table"

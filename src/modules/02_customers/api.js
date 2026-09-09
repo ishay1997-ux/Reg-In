@@ -301,10 +301,10 @@ export const MARKETING_MAX_BYTES = 10 * 1024 * 1024 // 10MB
 export async function uploadMarketingFile(file) {
   if (!file) throw toError({ code: 'NO_FILE' }, 'לא נבחר קובץ.')
   if (!MARKETING_ALLOWED_MIME.includes(file.type)) {
-    throw toError({ code: 'BAD_TYPE' }, 'סוג קובץ לא נתמך. יש להעלות PDF, JPG או PNG.')
+    throw toError({ code: 'BAD_TYPE' }, 'סוג הקובץ אינו נתמך — יש להעלות PDF, JPG או PNG.')
   }
   if (file.size > MARKETING_MAX_BYTES) {
-    throw toError({ code: 'TOO_LARGE' }, 'הקובץ גדול מדי (מותר עד 10MB).')
+    throw toError({ code: 'TOO_LARGE' }, 'הקובץ גדול מדי — המגבלה היא 10MB.')
   }
   const safeName = file.name.replace(/[^\w.-]/g, '_') // שם-קובץ בטוח לנתיב (לועזי/מספרים/נקודה/מקף)
   const path = `${Date.now()}_${safeName}`

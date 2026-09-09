@@ -2,7 +2,7 @@
 // ה-Route כבר מוגן ב-ProtectedRoute allow={SYSTEM_MODULES} (App.jsx - permission-driven, לא role
 // קשיח) ו-RLS אוכף גם ברמת ה-DB, לכן אין כאן בדיקת session/role עצמאית כפולה - רק טעינת הדאטה
 // בפועל דרך useAuth().
-// טבלת עובדים, הוספת משתמש חדש, ומצב פעיל/לא-פעיל דו-כיווני (status='active'/'inactive').
+// טבלת עובדים, הוספת משתמשת חדשה, ומצב פעיל/לא-פעיל דו-כיווני (status='active'/'inactive').
 // ⚠️ בכוונה אין כאן שום מסגור של "מחיקה": אין טקסט/אייקון "מחק", ואין הסתרה חד-כיוונית -
 // שורות inactive מוצגות בטבלה עם תג סטטוס, וניתן להחזיר אותן ל-active מאותו כפתור בדיוק.
 // אותה מוסכמה (status דו-כיווני, לא "מחיקה") חלה גם על מסכי לקוחות (מודול 2) ודיילות
@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useConfirm } from '@/components/ConfirmDialog'
 import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
+import Hint from '@/components/Hint'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -34,18 +35,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { EMAIL_REGEX, ISRAELI_MOBILE_REGEX } from '@/lib/validators'
+import { CEO_ROLE_NAME } from '@/lib/constants'
+import { ONBOARDING_OFF, ONBOARDING_ON } from '@/lib/onboardingCopy'
+import { listOnboardingModes, saveOnboardingMode } from '@/modules/09_settings/api'
 import { cn } from '@/lib/utils'
 
+// עמודת "מצב הטמעה" (הכרעה 28⑨(ב), 07/09/2026) — הדלת המנוהלת: המנכ"ל מדליק/מכבה פר-משתמשת
+// מכאן, כמו שהוא קובע הרשאות פר-תפקיד במטריצה. הכתיבה עוברת דרך `saveOnboardingMode(level,
+// {email})` של מודול 9 (הטבלה שלו — כלל 14) תחת המדיניות הרביעית `notification_preferences_ceo_all`;
+// מי שאינה מנכ"ל אינה רואה את העמודה — וגם אילו ראתה, ה-RLS היה מחזיר 0 שורות ⇒ "אין הרשאה".
+// המתג הוא כן/לא וממופה ל-0/2 (28⑭). כשהמנכ"ל מדליק לעצמו — הקונטקסט מתעדכן גם, כדי שההסברים
+// יידלקו לו חי בלי רענון (אותו דפוס כמו בפרופיל).
 export default function UsersManagementPage() {
-  const { user: currentUser } = useAuth()
+  const { user: currentUser, updateOnboardingMode } = useAuth()
   const confirm = useConfirm() // חלון-וידוא משותף (במקום window.confirm) — לפני השבתת משתמש
   const toast = useToast() // התראה אחידה (במקום window.alert) — כשל השבתה/הפעלה
+  const isCeo = currentUser?.roleName === CEO_ROLE_NAME
 
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [users, setUsers] = useState([])
   const [roles, setRoles] = useState([])
+  // email → רמה (0/2). null = הרמות לא נטענו (כשל נפרד מהמשתמשים — הטבלה עצמה עדיין עובדת).
+  const [onboardingModes, setOnboardingModes] = useState({})
+  const [onboardingSaving, setOnboardingSaving] = useState('') // ה-email שנשמר כרגע
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState(null) // null = מצב הוספה; אחרת = עריכת השורה הזו
@@ -80,7 +95,35 @@ export default function UsersManagementPage() {
 
     setUsers(usersData || [])
     setRoles(rolesData || [])
+
+    // הרמות נטענות בנפרד ואחרי המשתמשים: כשל כאן אינו מפיל את מסך-הניהול — העמודה מציגה "—"
+    // (הכשל השקט המרכזי הוא "נראה כבוי" כשלא ידוע, ולכן null ולא {}). למי שאינה מנכ"ל אין
+    // מה לטעון — המדיניות הרביעית ממילא לא מחזירה לה שורות של אחרות.
+    if (isCeo) {
+      try {
+        setOnboardingModes(await listOnboardingModes())
+      } catch {
+        setOnboardingModes(null)
+      }
+    }
     setLoading(false)
+  }
+
+  async function handleOnboardingToggle(targetUser, nextChecked) {
+    const level = nextChecked ? ONBOARDING_ON : ONBOARDING_OFF
+    const previous = onboardingModes?.[targetUser.email] ?? ONBOARDING_OFF
+    setOnboardingModes((modes) => ({ ...(modes ?? {}), [targetUser.email]: level })) // אופטימי
+    setOnboardingSaving(targetUser.email)
+    try {
+      const saved = await saveOnboardingMode(level, { email: targetUser.email })
+      if (targetUser.email === currentUser?.email) updateOnboardingMode(saved)
+      toast.success(nextChecked ? 'מצב הטמעה הודלק' : 'מצב הטמעה כובה')
+    } catch (err) {
+      setOnboardingModes((modes) => ({ ...(modes ?? {}), [targetUser.email]: previous }))
+      toast.error(err.message || 'שמירת מצב ההטמעה נכשלה — נסי שוב.')
+    } finally {
+      setOnboardingSaving('')
+    }
   }
 
   function resetForm() {
@@ -144,14 +187,14 @@ export default function UsersManagementPage() {
       setSaving(false)
 
       if (error || !updated || updated.length === 0) {
-        setFormError('שמירת השינויים נכשלה. נסה שוב.')
+        setFormError('שמירת השינויים נכשלה — נסי שוב.')
         return
       }
     } else {
       const cleanEmail = formEmail.trim()
       if (!EMAIL_REGEX.test(cleanEmail)) {
         setSaving(false)
-        setFormError('יש להזין כתובת דוא"ל תקינה.')
+        setFormError('יש להזין כתובת אימייל תקינה.')
         return
       }
 
@@ -167,9 +210,9 @@ export default function UsersManagementPage() {
 
       if (error) {
         if (error.code === '23505') {
-          setFormError('כבר קיים משתמש עם כתובת הדוא"ל הזו.')
+          setFormError('כבר קיימת משתמשת עם כתובת האימייל הזו.')
         } else {
-          setFormError('שמירה נכשלה. נסה שוב.')
+          setFormError('שמירה נכשלה — נסי שוב.')
         }
         return
       }
@@ -188,8 +231,8 @@ export default function UsersManagementPage() {
     if (nextStatus === 'inactive') {
       const confirmed = await confirm({
         title: 'השבתת משתמש',
-        message: `להשבית את המשתמש "${targetUser.full_name}"? הוא לא יוכל להתחבר למערכת עד שיוחזר לפעיל.`,
-        confirmLabel: 'השבת משתמש',
+        message: `להשבית את המשתמשת "${targetUser.full_name}"? היא לא תוכל להתחבר למערכת עד שתוחזר לפעיל.`,
+        confirmLabel: 'השביתי משתמש',
       })
       if (!confirmed) return
     }
@@ -203,7 +246,9 @@ export default function UsersManagementPage() {
 
     if (error || !updated || updated.length === 0) {
       toast.error(
-        nextStatus === 'inactive' ? 'השבתת המשתמש נכשלה. נסה שוב.' : 'הפעלת המשתמש נכשלה. נסה שוב.',
+        nextStatus === 'inactive'
+          ? 'השבתת המשתמש נכשלה — נסי שוב.'
+          : 'הפעלת המשתמש נכשלה — נסי שוב.',
       )
       return
     }
@@ -228,13 +273,13 @@ export default function UsersManagementPage() {
   return (
     <div className="bg-white rounded-2xl shadow-md p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-bold text-slate-800">רשימת עובדים</h2>
+        <h2 className="text-lg font-bold text-slate-800">רשימת משתמשים</h2>
 
         <Button
           onClick={openAddDialog}
           className="h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"
         >
-          + הוספת משתמש חדש
+          + משתמשת חדשה
         </Button>
 
         <Dialog
@@ -246,17 +291,19 @@ export default function UsersManagementPage() {
         >
           <DialogContent dir="rtl">
             <DialogHeader>
-              <DialogTitle>{editingUser ? 'עריכת משתמש' : 'הוספת משתמש חדש'}</DialogTitle>
+              <DialogTitle>{editingUser ? 'עריכת משתמש' : 'הוספת משתמשת חדשה'}</DialogTitle>
               <DialogDescription>
                 {editingUser
-                  ? 'עדכון שם, טלפון ותפקיד. לשינוי כתובת דוא"ל יש ליצור משתמש חדש.'
-                  : 'המשתמש יתווסף לטבלת המשתמשים במערכת.'}
+                  ? 'עדכון שם, טלפון ותפקיד — לשינוי כתובת אימייל יש ליצור משתמשת חדשה'
+                  : 'היא לא תוכל להתחבר עד שתיצרי לה חשבון-כניסה בנפרד'}
               </DialogDescription>
             </DialogHeader>
 
+            {!editingUser && <Hint id="users.addLoginAccount" />}
+
             <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm text-slate-700">דוא"ל</label>
+                <label className="text-sm text-slate-700">אימייל</label>
                 <Input
                   type="email"
                   value={formEmail}
@@ -272,7 +319,7 @@ export default function UsersManagementPage() {
                 <Input
                   value={formFullName}
                   onChange={(e) => setFormFullName(e.target.value)}
-                  placeholder="שם פרטי ומשפחה"
+                  placeholder="לדוגמה: דנה כהן"
                   className="h-auto p-3 text-right rounded-lg border-slate-300"
                 />
               </div>
@@ -296,7 +343,7 @@ export default function UsersManagementPage() {
                   disabled={editingUser?.email === currentUser?.email}
                 >
                   <SelectTrigger className="w-full h-auto p-3 rounded-lg border-slate-300">
-                    <SelectValue placeholder="בחר תפקיד" />
+                    <SelectValue placeholder="בחרי תפקיד" />
                   </SelectTrigger>
                   <SelectContent dir="rtl">
                     {roles.map((role) => (
@@ -309,7 +356,7 @@ export default function UsersManagementPage() {
                 {/* מניעת self-lockout: מנכ"ל שעורך את עצמו לא יכול לשנות את התפקיד של עצמו -
                     אותו עיקרון בדיוק כמו נעילת עמודת המנכ"ל במטריצה ומניעת מחיקה עצמית. */}
                 {editingUser?.email === currentUser?.email && (
-                  <p className="text-xs text-slate-400">לא ניתן לשנות תפקיד לחשבון שלך.</p>
+                  <p className="text-xs text-slate-400">לא ניתן לשנות תפקיד לחשבון שלך</p>
                 )}
               </div>
 
@@ -321,7 +368,7 @@ export default function UsersManagementPage() {
                   disabled={saving}
                   className="w-full h-auto p-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
                 >
-                  {saving ? 'שומר...' : editingUser ? 'שמור שינויים' : 'הוסף משתמש'}
+                  {saving ? 'שומרת…' : editingUser ? 'שמרי שינויים' : 'הוסיפי משתמש'}
                 </Button>
               </DialogFooter>
             </form>
@@ -329,14 +376,17 @@ export default function UsersManagementPage() {
         </Dialog>
       </div>
 
+      {isCeo && <Hint id="users.onboardingColumn" />}
+
       <table className="w-full text-right border-collapse">
         <thead>
           <tr className="border-b border-slate-200 text-sm text-slate-500">
             <th className="py-2 font-medium">שם מלא</th>
-            <th className="py-2 font-medium">דוא"ל</th>
+            <th className="py-2 font-medium">אימייל</th>
             <th className="py-2 font-medium">טלפון</th>
             <th className="py-2 font-medium">תפקיד</th>
             <th className="py-2 font-medium">סטטוס</th>
+            {isCeo && <th className="py-2 font-medium">מצב הטמעה</th>}
             <th className="py-2 font-medium">פעולות</th>
           </tr>
         </thead>
@@ -360,15 +410,34 @@ export default function UsersManagementPage() {
                       isActive ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600',
                     )}
                   >
-                    {isActive ? 'פעיל' : 'לא פעיל'}
+                    {isActive ? 'פעילה' : 'לא פעילה'}
                   </span>
                 </td>
+                {isCeo && (
+                  <td className="py-3">
+                    {onboardingModes === null ? (
+                      <span className="text-slate-400" title="מצב ההטמעה לא נטען">
+                        —
+                      </span>
+                    ) : (
+                      <Switch
+                        checked={
+                          (onboardingModes[targetUser.email] ?? ONBOARDING_OFF) > ONBOARDING_OFF
+                        }
+                        onCheckedChange={(next) => handleOnboardingToggle(targetUser, next)}
+                        disabled={onboardingSaving === targetUser.email}
+                        aria-label={`מצב הטמעה — ${targetUser.full_name}`}
+                        data-testid={`users-onboarding-${targetUser.email}`}
+                      />
+                    )}
+                  </td>
+                )}
                 <td className="py-3">
                   <div className="flex items-center gap-3">
                     <Button
                       type="button"
                       variant="link"
-                      title="ערוך משתמש"
+                      title="ערכי משתמש"
                       onClick={() => openEditDialog(targetUser)}
                       className="h-auto p-0 text-teal-600 hover:text-teal-700"
                     >
@@ -379,7 +448,7 @@ export default function UsersManagementPage() {
                         type="button"
                         variant="link"
                         disabled={isSelf}
-                        title={isSelf ? 'לא ניתן להשבית את החשבון שלך' : 'השבת משתמש'}
+                        title={isSelf ? 'לא ניתן להשבית את החשבון שלך' : 'השביתי משתמש'}
                         onClick={() => handleToggleStatus(targetUser)}
                         className="h-auto p-0 text-red-600 hover:text-red-700"
                       >
@@ -389,7 +458,7 @@ export default function UsersManagementPage() {
                       <Button
                         type="button"
                         variant="link"
-                        title="הפעל משתמש מחדש"
+                        title="הפעילי משתמש מחדש"
                         onClick={() => handleToggleStatus(targetUser)}
                         className="h-auto p-0 text-teal-600 hover:text-teal-700"
                       >

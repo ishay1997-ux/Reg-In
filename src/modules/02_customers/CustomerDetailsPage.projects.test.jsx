@@ -190,8 +190,8 @@ describe('לשונית-פרויקטים — אין הרשאה', () => {
   })
 })
 
-describe('לשונית-פרויקטים — כשל-טעינה ו"נסה שוב"', () => {
-  it('הודעת-השגיאה הנעולה + כפתור "נסה שוב", וניסיון חוזר שמצליח מחזיר את מצב-הריק', async () => {
+describe('לשונית-פרויקטים — כשל-טעינה ו"נסי שוב"', () => {
+  it('הודעת-השגיאה הנעולה + כפתור "נסי שוב", וניסיון חוזר שמצליח מחזיר את מצב-הריק', async () => {
     mockPageApi({ projects: [], projectsRejectOnce: true })
     renderCustomerPage()
     await openProjectsTab()
@@ -200,7 +200,7 @@ describe('לשונית-פרויקטים — כשל-טעינה ו"נסה שוב"'
       'שגיאה בטעינת היסטוריית הפרויקטים.',
     )
     const retry = screen.getByTestId('customer-projects-retry')
-    expect(retry).toHaveTextContent('נסה שוב')
+    expect(retry).toHaveTextContent('נסי שוב')
 
     getCustomerProjects.mockResolvedValueOnce([])
     fireEvent.click(retry)
@@ -209,7 +209,7 @@ describe('לשונית-פרויקטים — כשל-טעינה ו"נסה שוב"'
 })
 
 describe('לשונית-פרויקטים — ריק-אחרי-חיפוש (מעל 8 פרויקטים)', () => {
-  it('"אין פרויקט התואם לחיפוש." + "נקה חיפוש" שבאמת מנקה את התיבה ומחזיר את השורות', async () => {
+  it('"אין פרויקט התואם לחיפוש." + "נקי חיפוש" שבאמת מנקה את התיבה ומחזיר את השורות', async () => {
     const projects = Array.from({ length: 9 }, (_, i) =>
       projectRow({
         project_id: 200 + i,

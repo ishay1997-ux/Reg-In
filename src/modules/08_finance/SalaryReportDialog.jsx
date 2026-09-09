@@ -32,6 +32,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Calendar, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import Hint from '@/components/Hint'
 import {
   Dialog,
   DialogContent,
@@ -163,7 +164,7 @@ function currentMonthIndex(now = new Date()) {
 // וחלונית-הווידוא המשותפת מקבלת **מחרוזת** בכל אתרי-הקריאה שלה בפרויקט, כלומר אין דרך לבודד
 // אותה ב-`<Ltr>`. הנמען המדויק מוצג עם `<Ltr>` בפאנל-הקדם-הפקה שמאחורי החלונית.
 function generateConfirmMessage(periodLabel) {
-  return `דוח השכר לחודש ${periodLabel} ייחתם ויישלח למשרד רואי-החשבון. השורות שייאספו לא ייאספו שוב לדוח הבא, ולא ניתן להפיק את אותו חודש פעמיים. אין ביטול לפעולה.`
+  return `דוח השכר לחודש ${periodLabel} ייחתם ויישלח למשרד רואי-החשבון — השורות שייאספו לא ייאספו שוב לדוח הבא, ולא ניתן להפיק את אותו חודש פעמיים. אין ביטול לפעולה.`
 }
 
 // החודשים שבין הדוח האחרון שהופק לבין החודש הנבחר — **לא רשימת-נוחות אלא היקף-הדוח**: כיוון
@@ -363,9 +364,9 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
     // 🎨 `danger` **לא** מועבר, בכוונה: התקדים הישיר ביותר — ארכוב, שגם הוא בלתי-הפיך —
     // משאיר את כפתור-האישור בטורקיז, ואדום שמור במודול הזה לכשל/הרס (`StatusTag` `danger`).
     const approved = await confirm({
-      title: 'הפקת דוח-שכר',
+      title: 'הפקת דוח שכר דיילות',
       message: generateConfirmMessage(periodLabel),
-      confirmLabel: 'ייצא ושלח',
+      confirmLabel: 'ייצאי ושלחי',
     })
     if (!approved) return
     setPhase('submitting')
@@ -448,12 +449,13 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent dir="rtl" className="sm:max-w-3xl" data-testid="salary-report-dialog">
         <DialogHeader>
-          <DialogTitle>הפקת דוח-שכר חודשי</DialogTitle>
-          {/* ה15: היקף-האיסוף כולל גם פרויקטים שבוטלו-בדמי-ביטול, לא רק פרויקטים שנסגרו
-              תפעולית — הניסוח למנהלת-הכספים למטה אינו נושא את מספר-הסעיף. */}
+          {/* B14 ("של מי?"): "שכר" לבדו הוא מונח-ביתי-למ8 (מילון-הסגנון §3ב), אבל כותרת-דיאלוג
+              נקראת גם בלי ההקשר הזה — "דיילות" נכנס לשם עצמו, לא לתת-כותרת. */}
+          <DialogTitle>הפקת דוח שכר דיילות חודשי</DialogTitle>
+          {/* ה15: היקף-האיסוף המלא (אילו פרויקטים, אילו שורות) כתוב בפירוט בפאנל-הקדם-הפקה
+              שמתחת — התיאור כאן נשאר קצר כדי לא לכפול אותו (R27). */}
           <DialogDescription>
-            אוספת את כל שורות-השכר שטרם שולמו עד סוף החודש שנבחר — פרויקטים שנסגרו תפעולית ופרויקטים
-            שבוטלו בדמי-ביטול.
+            אוספת את שכר-הדיילות שטרם שולם, עד סוף החודש שנבחר, ושולחת אותו לרואה-החשבון.
           </DialogDescription>
         </DialogHeader>
 
@@ -506,7 +508,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
                   className="h-auto rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700"
                   data-testid="salary-report-month-apply"
                 >
-                  אישור
+                  בחרי
                 </Button>
                 <Button
                   type="button"
@@ -571,7 +573,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
         {phase === 'select' && historyError && (
           <p className="text-[11.5px] text-amber-700" role="status">
             לא ניתן היה לבדוק אם החודש כבר הופק ({historyError}) — הבדיקה הסופית תמיד תתבצע במסד
-            בלחיצה על "ייצא ושלח".
+            בלחיצה על "ייצאי ושלחי".
           </p>
         )}
 
@@ -596,7 +598,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
               className="mt-2 h-auto rounded-lg px-2.5 py-1 text-xs font-semibold"
               data-testid="salary-report-view-existing"
             >
-              צפייה בדוח הקיים ↓
+              צפי בדוח הקיים ↓
             </Button>
           </div>
         )}
@@ -645,7 +647,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
                 className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700 disabled:opacity-50"
                 data-testid="salary-report-generate"
               >
-                {phase === 'submitting' ? 'מפיקה ושולחת…' : 'ייצא ושלח'}
+                {phase === 'submitting' ? 'מפיקה ושולחת…' : 'ייצאי ושלחי'}
               </Button>
               <Button
                 type="button"
@@ -726,11 +728,13 @@ function PreflightPanel({
           היא בלוק-השוליים שבתחתית הקובץ הזה עצמו ובמוקאפ המאושר (`.foot-note`): `<p>` עם
           פתיח מודגש. */}
       <div className="space-y-1">
-        {/* ה7: בונוס אישי ונסיעות מתווספים לשורות שעות-בפועל. */}
+        {/* ה7: בונוס אישי ונסיעות מתווספים לשורות שעות-בפועל. הנוסחה המדויקת (שעות × תעריף +
+            בונוס + נסיעות) ירדה מכאן לשכבה — ④ במיפוי research-onboarding-content.md §1:
+            הסייג/ההיקף בבסיס, הנוסחה בשכבה. */}
         <p>
-          <b>שעות שבוצעו בפועל</b> בפרויקטים שנסגרו תפעולית וטרם שולמו — שעות בפועל × התעריף הקפוא,
-          בתוספת בונוס אישי ונסיעות.
+          <b>שעות שבוצעו בפועל</b> בפרויקטים שנסגרו תפעולית וטרם שולמו.
         </p>
+        <Hint id="salary.formula" />
         {/* סולם-הפיצוי לפי ה24; היעדר בונוס/נסיעות בשורות-פיצוי-ביטול לפי ה29. */}
         <p>
           <b>פיצוי-ביטול</b> לדיילות שאושרו סופית בפרויקטים שבוטלו, לפי סולם דמי-הביטול — בלי בונוס
@@ -764,7 +768,7 @@ function PreflightPanel({
               (ועוד <Ltr>{extraMissing}</Ltr>)
             </>
           )}
-          . כל שורה מהחודשים האלה שעומדת בתנאי-האיסוף תיכלל בדוח הזה.
+          . כל שורה מהחודשים האלה שטרם נאספה תיכלל בדוח הזה.
         </p>
       )}
 
@@ -796,10 +800,12 @@ function PreflightPanel({
         role="note"
         data-testid="salary-report-preflight-limit"
       >
+        {/* "ואי-אפשר לחשב אותן בלי לכתוב אותן" (הנימוק הטכני ל"למה אין תצוגה-מקדימה") ירד
+            מכאן לשכבה — ⑤ נימוק-סידור; ה-H2 עצמו (⑥ אי-ההפיכות) נשאר בבסיס במלואו ולא זז. */}
         <b className="block">שורות הדוח עצמן אינן מוצגות כאן.</b>
-        הן נאספות ונחתמות ברגע ההפקה, ואי-אפשר לחשב אותן בלי לכתוב אותן. מיד אחרי הלחיצה תוצג כאן
-        הטבלה המלאה, והקובץ יישמר בהיסטוריה שלמטה — להורדה ולשליחה חוזרת.
-        <b className="mt-1 block">הלחיצה על "ייצא ושלח" אינה הפיכה:</b> אי-אפשר להפיק את אותו חודש
+        הן נאספות ונחתמות רק ברגע ההפקה. מיד אחרי הלחיצה תוצג כאן הטבלה המלאה, והקובץ יישמר
+        בהיסטוריה שלמטה — להורדה ולשליחה חוזרת.
+        <b className="mt-1 block">הלחיצה על "ייצאי ושלחי" אינה הפיכה:</b> אי-אפשר להפיק את אותו חודש
         פעמיים, והשורות שייאספו לא ייאספו שוב לדוח הבא.
       </p>
     </div>
@@ -867,8 +873,8 @@ function ResultView({ result }) {
         >
           <b className="mb-1 block text-[13.5px]">הדוח לא הורכב — אך השורות כבר נחתמו.</b>
           <p>
-            נרשם דוח מספר <Ltr>{result.reportId}</Ltr> במסד, וכל שורות-השכר שנאספו אליו כבר נחתמו
-            על-שמו — הן <b>לא ייאספו שוב</b> לדוח הבא, ואי-אפשר להפיק את אותו חודש פעמיים.
+            דוח מספר <Ltr>{result.reportId}</Ltr> נרשם, וכל שורות-השכר שנאספו אליו כבר נחתמו על-שמו
+            — הן <b>לא ייאספו שוב</b> לדוח הבא, ואי-אפשר להפיק את אותו חודש פעמיים.
           </p>
           {/* ההודעה של השומר שנפל, **מילה-במילה**. היא נכתבה כדי להיאמר ("סכום שורות הדוח אינו
               תואם את הסכום שנרשם במסד") — ו-`api.js` שומרת אותה ב-`mailError` בדיוק לשם כך;
@@ -1014,7 +1020,7 @@ function ResultView({ result }) {
                   </>
                 )}{' '}
                 בסכום <Money amount={0} cents /> נחתמו ונרשמו כדי שלא ייאספו שוב, ואינן נכללות בגוף
-                הקובץ שנשלח (N-4). בקובץ עצמו <Ltr>{totals.fileLineCount}</Ltr> שורות.
+                הקובץ שנשלח. בקובץ עצמו <Ltr>{totals.fileLineCount}</Ltr> שורות.
               </p>
             )}
             {/* ה19: המקור הוא הטבלה המוגנת hostess_bank_details, שקריאה ממנה מוגבלת להרשאת
@@ -1031,8 +1037,8 @@ function ResultView({ result }) {
           className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[12px] text-amber-800"
           data-testid="salary-report-missing-bank"
         >
-          שימו לב: לדיילות הבאות אין פרטי-בנק שמורים בדוח שנשלח —{' '}
-          {result.linesMissingBankDetails.join(', ')}.
+          לדיילות הבאות אין פרטי-בנק שמורים בדוח שנשלח — {result.linesMissingBankDetails.join(', ')}
+          .
         </p>
       )}
     </div>
@@ -1144,16 +1150,11 @@ export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
       )}
       data-testid="salary-history-card"
     >
-      <h3 className="mb-2.5 text-sm font-bold text-slate-800">היסטוריית דוחות-שכר</h3>
+      <h3 className="mb-2.5 text-sm font-bold text-slate-800">היסטוריית דוחות שכר דיילות</h3>
       {rows === null && !error ? (
         <LoadingOrError loading skeleton={{ variant: 'table' }} />
       ) : error ? (
-        <LoadingOrError
-          error={error}
-          onRetry={retry}
-          retryLabel="נסי שוב"
-          retryTestId="salary-history-retry"
-        />
+        <LoadingOrError error={error} onRetry={retry} retryTestId="salary-history-retry" />
       ) : rows?.length === 0 ? (
         <div
           className="flex flex-col items-center gap-1 py-8 text-center"
@@ -1216,11 +1217,7 @@ export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
                         variant="outline"
                         size="sm"
                         disabled={!row.report_file_url}
-                        title={
-                          row.report_file_url
-                            ? fileNameOf(row.report_file_url)
-                            : 'הקובץ לא נשמר באחסון'
-                        }
+                        title={row.report_file_url ? fileNameOf(row.report_file_url) : undefined}
                         onClick={() => handleDownload(row)}
                         className="h-auto rounded-lg px-2 py-1 text-[11px] font-semibold"
                         data-testid={`salary-history-download-${row.report_id}`}
@@ -1234,17 +1231,24 @@ export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
                           variant="outline"
                           size="sm"
                           disabled={!row.report_file_url || resendingId === row.report_id}
-                          title={
-                            row.report_file_url ? undefined : 'אין קובץ שמור — לא ניתן לשלוח שוב'
-                          }
                           onClick={() => handleResend(row)}
                           className="h-auto rounded-lg px-2 py-1 text-[11px] font-semibold"
                           data-testid={`salary-history-resend-${row.report_id}`}
                         >
-                          {resendingId === row.report_id ? 'שולחת…' : 'שלח שוב'}
+                          {resendingId === row.report_id ? 'שולחת…' : 'שלחי שוב'}
                         </Button>
                       )}
                     </div>
+                    {/* UC39: סייג-חסימה לא יושב מאחורי title (טולטיפ, לא נגיש למקלדת/מגע) —
+                        עולה לטקסט גלוי, פעם אחת לשתי הכפתורים, כי שתיהן חסומות מאותה סיבה. */}
+                    {!row.report_file_url && (
+                      <div
+                        className="mt-1 text-[10px] text-slate-400"
+                        data-testid={`salary-history-no-file-${row.report_id}`}
+                      >
+                        אין קובץ שמור
+                      </div>
+                    )}
                   </Td>
                 </tr>
               ))}

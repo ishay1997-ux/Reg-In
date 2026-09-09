@@ -157,9 +157,7 @@ describe('gapSentence — עמודת "מה חסר": משפט במילים, לע�
   }
 
   it('פרויקט שאיש לא נגע בו (עוגן #3)', () => {
-    expect(gapSentence({ ...base, project_status: 'not_started' })).toBe(
-      'לא נשלח אף זימון — איש לא נגע בפרויקט מאז שנוצר',
-    )
+    expect(gapSentence({ ...base, project_status: 'not_started' })).toBe('לא נשלח אף זימון לדיילת')
   })
 
   it('עוגן #8: שני זימונים פתוחים ועדיין חסרות שלוש — הנוסח המאושר מילה-במילה', () => {
@@ -281,9 +279,20 @@ describe('gapSentence — גבולות הזימונים-הפתוחים ולשו�
     )
   })
 
+  it('זימון בודד וחוסר-של-אחת אחריו ⇒ "חסרה 1", לא "חסרות 1" (נמדד על המסך 09/09/2026)', () => {
+    expect(
+      gapSentence({
+        ...base,
+        required_hostess_count: 6,
+        hostesses_confirmed: 4,
+        pending_invites: 1,
+      }),
+    ).toBe('זימון אחד ממתין למענה — וגם אם היא תאשר, עדיין חסרה 1')
+  })
+
   it('זימון בודד ⇒ לשון-יחיד, לא "1 זימונים"', () => {
     expect(gapSentence({ ...base, hostesses_confirmed: 3, pending_invites: 1 })).toBe(
-      'זימון אחד ממתין למענה — וגם אם תאשר, עדיין חסרות 2',
+      'זימון אחד ממתין למענה — וגם אם היא תאשר, עדיין חסרות 2',
     )
     expect(
       gapSentence({

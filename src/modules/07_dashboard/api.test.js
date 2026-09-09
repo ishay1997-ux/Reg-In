@@ -73,22 +73,26 @@ describe('assertDashboardShape', () => {
     expect(assertDashboardShape(row)).toBe(row)
   })
 
-  it('חסר profit_visible ⇒ זורקת ונוקבת בשם השדה', () => {
+  // ✏️ 09/09/2026 (לילה-הטקסטים, שלב 3 · מ7): עד כאן הבדיקות אימתו ששם-השדה נוקב בהודעה
+  // ("ונוקבת בשם השדה") — וזו בדיוק ההפרה ש-B8/R10 של מדריך-הסגנון אוסרים על מסך (שם-עמודה
+  // הוא ז'רגון-בנאים). ההודעה אוחדה לאחת גנרית (SHAPE_DRIFT_MESSAGE ב-api.js); הבדיקות
+  // מוודאות עכשיו רק שהתנאי באמת זורק, לא מה הטקסט המדויק (זה נבדק פעם אחת, למטה).
+  it('חסר profit_visible ⇒ זורקת', () => {
     const row = validRow()
     delete row.profit_visible
-    expect(() => assertDashboardShape(row)).toThrow(/profit_visible/)
+    expect(() => assertDashboardShape(row)).toThrow()
   })
 
-  it('חסר quotes_visible ⇒ זורקת ונוקבת בשם השדה', () => {
+  it('חסר quotes_visible ⇒ זורקת', () => {
     const row = validRow()
     delete row.quotes_visible
-    expect(() => assertDashboardShape(row)).toThrow(/quotes_visible/)
+    expect(() => assertDashboardShape(row)).toThrow()
   })
 
-  it('חסר params ⇒ זורקת ונוקבת בשם השדה', () => {
+  it('חסר params ⇒ זורקת', () => {
     const row = validRow()
     delete row.params
-    expect(() => assertDashboardShape(row)).toThrow(/params/)
+    expect(() => assertDashboardShape(row)).toThrow()
   })
 
   it('שדות-כסף/משוב null (מסך חסום-הרשאה או חודש-ריק) ⇒ מתקבל', () => {
@@ -111,26 +115,34 @@ describe('assertDashboardShape', () => {
 
   it('projects שאינו מערך ⇒ זורקת', () => {
     const row = validRow({ projects: null })
-    expect(() => assertDashboardShape(row)).toThrow(/projects/)
+    expect(() => assertDashboardShape(row)).toThrow()
   })
 
   it('profit_visible לא-בוליאני ⇒ זורקת', () => {
     const row = validRow({ profit_visible: 1 })
-    expect(() => assertDashboardShape(row)).toThrow(/profit_visible/)
+    expect(() => assertDashboardShape(row)).toThrow()
   })
 
   it('active_projects_count שחזר null (שדה שאינו ברשימת ה-nullable) ⇒ זורקת', () => {
     const row = validRow({ active_projects_count: null })
-    expect(() => assertDashboardShape(row)).toThrow(/active_projects_count/)
+    expect(() => assertDashboardShape(row)).toThrow()
   })
 
-  it('params חסר מפתח פנימי ⇒ זורקת ונוקבת בשמו', () => {
+  it('params חסר מפתח פנימי ⇒ זורקת', () => {
     const row = validRow()
     delete row.params.event_warning_days
-    expect(() => assertDashboardShape(row)).toThrow(/event_warning_days/)
+    expect(() => assertDashboardShape(row)).toThrow()
   })
 
   it('שורה null מהשרת ⇒ זורקת', () => {
     expect(() => assertDashboardShape(null)).toThrow()
+  })
+
+  // 🔒 ההודעה שכל שמונת התנאים למעלה זורקים היא זהה בכוונה (R30/R11 — אותו מקום-תצוגה
+  // בדיוק) ובלי שם-שדה (B8/R10). נבדק פעם אחת, לא בכל תנאי בנפרד.
+  it('הודעת-הזריקה גנרית, בלי שם-שדה', () => {
+    const row = validRow()
+    delete row.profit_visible
+    expect(() => assertDashboardShape(row)).toThrow('יש תקלה בנתונים.')
   })
 })

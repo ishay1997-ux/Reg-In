@@ -48,6 +48,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import Hint from '@/components/Hint'
 import Ltr from '@/components/Ltr'
 import Money from '@/components/Money'
 import RatingStars from '@/components/RatingStars'
@@ -137,17 +138,11 @@ const PROPOSAL_FIELDS = [
 const FEEDBACK_REASONS = FEEDBACK_NEGATIVE_REASONS
 
 // 🔤 נוסחים שנקראו מילולית מהמוקאפ המאושר `02_closing_window_approved.html`.
+// ✂️ שלב 5 — B13: הפעולה קודמת לעובדה. הפסקה נקראה בסדר-הפוך (עובדה ואז פעולה) — התיאור
+// עצמו לא זז (מודול-הקופי טרם קבע מונח ל"חשבונית מס" חדש), רק כיוון-הקריאה וגוף-הפועל.
 const INVOICE_BANNER_TITLE = 'המערכת אינה מפיקה חשבונית באופן אוטומטי.' // §7.38
 const INVOICE_BANNER_BODY =
-  'יש להכין אותה בתוכנת הנהלת-החשבונות ולהעלות כאן — PDF או תמונה, עד 10MB.'
-const INVOICE_SEND_TITLE = 'יש לבחור קובץ-חשבונית לפני השליחה'
-const WAIVE_TITLE = 'מאפס את הסכום ל-0 ומחייב הערה — לא מחיקה שקטה'
-const WRITE_OFF_TITLE = 'חוב-אבוד — הרווח נקפא כרגיל, בסיס-צבירה'
-// "ויתור" נעול בכרטיס-P1 (פעולה מפורשת ולא מחיקה שקטה); "צבירה כבסיס" נעולה בכרטיס-P3.
-const CANCEL_ACTIONS_NOTE =
-  '"ויתור" = פעולה מפורשת (סכום 0 + הערת-חובה), לא מחיקה שקטה. "סגור ללא תשלום" = מסלול חוב-אבוד — הפרויקט מקבל תג "הסתיים — לא שולם"; הרווח נקפא גם בלי גבייה בפועל, כי הבסיס הוא צבירה.'
-const FEE_STORAGE_NOTE =
-  'נשמר במסד: הסכום הסופי וההערה בלבד — שלושת הרכיבים שלמעלה נגזרים-מחדש לתצוגה בכל פתיחה, ולא נשמרים כעמודות נפרדות.' // ה28
+  'הכיני את החשבונית בתוכנת הנהלת-החשבונות והעלי אותה כאן — PDF או תמונה, עד 10MB.'
 const LOCKED_BANNER_BODY = 'הרווח-הסופי קפוא ואינו ניתן לעריכה. כל השדות שלמטה לעיון בלבד.' // P3
 const CREDIT_NOTE_LINE = 'נדרשת חשבונית זיכוי'
 // 🔄 **הסף אינו כתוב במשפט יותר** (מודול 9 · צעד 2.3): הוא נקרא מ-`params`
@@ -479,15 +474,15 @@ function MetaStrip({ project, detail, statusLabel }) {
       data-testid="closing-meta"
     >
       <span className="flex items-center gap-1.5">
-        <span className="text-slate-500">מצב הפרויקט:</span>
+        <span className="text-slate-500">מצב הפרויקט</span>
         <StatusTag label={statusLabel} testId="closing-status-tag" />
       </span>
       {/* ‏`operationally_closed_at` אינו ב-RPC של S2 — הוא מגיע משורת-S1 והוא תצוגה בלבד. */}
       {project.operationally_closed_at ? (
-        <MetaItem label="נסגר תפעולית:" value={project.operationally_closed_at} />
+        <MetaItem label="נסגר תפעולית" value={project.operationally_closed_at} />
       ) : null}
-      {detail.cancelled_at ? <MetaItem label="בוטל:" value={detail.cancelled_at} /> : null}
-      {detail.archived_at ? <MetaItem label="הועבר לארכיון:" value={detail.archived_at} /> : null}
+      {detail.cancelled_at ? <MetaItem label="בוטל" value={detail.cancelled_at} /> : null}
+      {detail.archived_at ? <MetaItem label="הועבר לארכיון" value={detail.archived_at} /> : null}
     </div>
   )
 }
@@ -651,9 +646,8 @@ function CompensationComponent({ proposal, cancelType }) {
             />
           </div>
           <Sub className="mt-1 block">
-            זהו הסכום שהחברה משלמת בלי קשר לשאלה מי ביטל. ההחלטה שלך היא{' '}
-            <b>כמה מתוכו להעביר ללקוח</b> — אפס (החברה סופגת) · הסכום המלא · או הסכום בתוספת הסחורה
-            שכבר הוזמנה.
+            ההחלטה שלך: <b>כמה מתוכו להעביר ללקוח</b> — אפס (החברה סופגת), הסכום המלא, או הסכום
+            בתוספת הסחורה שכבר הוזמנה. זהו הסכום שהחברה משלמת לצוות בכל מקרה, בלי קשר למי ביטל.
           </Sub>
         </div>
       ) : null}
@@ -693,7 +687,7 @@ function ManualServiceComponent({ label, amount, onLabel, onAmount }) {
           type="text"
           value={label}
           aria-label="תיאור-שירות ידני"
-          placeholder="למשל: עיצוב גרפי לבמה שכבר הופק"
+          placeholder="לדוגמה: עיצוב גרפי לבמה שכבר הופק"
           data-testid="closing-manual-label"
           onChange={(event) => onLabel(event.target.value)}
           className="h-8 w-full min-w-0 rounded-lg border border-slate-200 bg-white px-2 text-[13px] text-slate-800"
@@ -713,7 +707,7 @@ function ManualServiceComponent({ label, amount, onLabel, onAmount }) {
       </div>
       <Sub className="mt-1 block">
         {/* כרטיס-P1 */}
-        שורה חופשית בלי מעקב-סטטוס במסד — אינה נשמרת, ואינה נכנסת מעצמה לסכום שייחתם.
+        שורה לתיעוד בלבד — אינה נשמרת, ואינה נכנסת אוטומטית לסכום שייחתם.
       </Sub>
     </div>
   )
@@ -733,9 +727,10 @@ function FeeAmountFields({ amount, note, cancelType, onAmount, onNote }) {
           role="note"
           data-testid="closing-fee-manual-only"
         >
-          {/* ה25 */}
-          ביטול בסיווג <b>"אחר"</b> — אין הצעה אוטומטית. הביטול אינו בהכרח באשמת הלקוח, ולכן הסכום
-          נקבע בשיקול-דעתך. התחשיב שמעל מוצג לעיון בלבד.
+          {/* ה25 — ✂️ שלב 5: "הביטול אינו בהכרח באשמת הלקוח" ירד לשכבה כנימוק-סידור (H1/⑤);
+              מה שנשאר בבסיס הוא מה שנחוץ כדי למלא את הסכום נכון. */}
+          ביטול בסיווג <b>"אחר"</b> — אין הצעה אוטומטית; הסכום נקבע בשיקול-דעתך. התחשיב שמעל מוצג
+          לעיון בלבד.
         </p>
       )}
       <div className="mt-2 grid grid-cols-2 gap-3">
@@ -772,7 +767,11 @@ function FeeAmountFields({ amount, note, cancelType, onAmount, onNote }) {
           />
         </div>
       </div>
-      <Sub className="mt-1 block">{FEE_STORAGE_NOTE}</Sub>
+      {/* ✂️ שלב 5 — FEE_STORAGE_NOTE נמחקה מהבסיס (מדריך-הסגנון §4, דוגמה 2 — הכרעה סגורה):
+          "נשמר במסד" / "עמודות" / "נגזרים-מחדש" הם ז'רגון-מפתחים; שום מילה בו לא נדרשה כדי
+          ללחוץ על הכפתור הנכון. העובדה היחידה שכן מעניינת — מה קפוא ומה עוד יזוז — עברה
+          לשכבה כ-`closing.frozenAmount`. */}
+      <Hint id="closing.frozenAmount" />
     </>
   )
 }
@@ -790,12 +789,12 @@ function FeeActions({ busy, actions }) {
           className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700"
           onClick={actions.onSaveFee}
         >
-          {busy === 'fee' ? 'שומר...' : 'שמור דמי-ביטול'}
+          {busy === 'fee' ? 'שומרת…' : 'שמרי דמי-ביטול'}
         </Button>
         <Button
           type="button"
           variant="outline"
-          title={actions.waiveNote ?? WAIVE_TITLE}
+          title={actions.waiveNote ?? undefined}
           disabled={actions.waiveNote != null || busy !== ''}
           aria-describedby={actions.waiveNote ? WAIVE_GATE_ID : undefined}
           data-testid="closing-waive"
@@ -807,7 +806,6 @@ function FeeActions({ busy, actions }) {
         <Button
           type="button"
           variant="outline"
-          title={WRITE_OFF_TITLE}
           disabled={busy !== ''}
           data-testid="closing-write-off-open"
           className="h-auto rounded-lg border-slate-300 px-4 py-2 text-slate-700"
@@ -819,6 +817,11 @@ function FeeActions({ busy, actions }) {
       {/* עמודה ולא שורה: ‏`GateNote` הוא `span`, ושני משפטי-שער זה לצד זה בתוך אב-בלוק
           היו נדבקים לפסקה אחת. ‏`w-full` (ה-`fullWidth`) פועל רק בתוך flex — בדיוק
           התקלה שנמדדה בשורת-הכפתורים של ClosingFooter. */}
+      {/* ✂️ שלב 5 — H2: ‏CANCEL_ACTIONS_NOTE (הגדרת "ויתור" מול "סגור ללא תשלום") ירדה
+          מהבסיס — עברה בדיקת-H2 (ר' דוח-המסירה): שני הכפתורים נושאים את המונחים הנעולים,
+          וכל תוצאה בלתי-הפיכה כבר מופיעה במלואה בחלונית-הווידוא לפני הכתיבה (WAIVE_/
+          WRITE_OFF_CONFIRM_MESSAGE). מועמד-שכבה: candidates §③ "ויתור מול סגור-ללא-תשלום". */}
+      <Hint id="closing.terms" />
       <div className="mt-1 flex flex-col gap-1">
         {actions.saveNote ? (
           <GateNote testId="closing-fee-save-gate" id={FEE_SAVE_GATE_ID} fullWidth>
@@ -830,9 +833,6 @@ function FeeActions({ busy, actions }) {
             {actions.waiveNote}
           </GateNote>
         ) : null}
-        <GateNote testId="closing-fee-actions-note" fullWidth>
-          {CANCEL_ACTIONS_NOTE}
-        </GateNote>
       </div>
     </>
   )
@@ -974,7 +974,7 @@ function InvoiceUploadBlock({
         className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800"
         data-testid="closing-invoice-banner"
       >
-        <b>{INVOICE_BANNER_TITLE}</b> {INVOICE_BANNER_BODY}
+        <b>{INVOICE_BANNER_BODY}</b> {INVOICE_BANNER_TITLE}
       </div>
 
       <div
@@ -1020,12 +1020,11 @@ function InvoiceUploadBlock({
         <Button
           type="button"
           disabled={blocked || busy !== ''}
-          title={file ? undefined : INVOICE_SEND_TITLE}
           data-testid="closing-send-invoice"
           className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700"
           onClick={onSend}
         >
-          {busy === 'invoice' ? 'שולח...' : 'שמור ושלח'}
+          {busy === 'invoice' ? 'שולחת…' : 'שמרי ושלחי'}
         </Button>
         <InvoiceGateNote
           billingUnknown={billingUnknown}
@@ -1072,12 +1071,11 @@ function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, bu
           className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700"
           onClick={onSave}
         >
-          {busy === 'payment' ? 'שומר...' : alreadyPaid ? 'עדכון תאריך התשלום' : 'שמור תשלום'}
+          {busy === 'payment' ? 'שומרת…' : alreadyPaid ? 'עדכני תאריך תשלום' : 'שמרי תשלום'}
         </Button>
         <Button
           type="button"
           variant="outline"
-          title={WRITE_OFF_TITLE}
           disabled={busy !== ''}
           data-testid="closing-write-off-open"
           className="h-auto rounded-lg border-slate-300 px-4 py-2 text-slate-700"
@@ -1105,7 +1103,7 @@ function WriteOffForm({ reason, onReason, onConfirm, onCancel, busy }) {
         rows={2}
         value={reason}
         data-testid="closing-write-off-reason"
-        placeholder="למשל: הלקוח נכנס לפירוק; הגבייה מוצתה"
+        placeholder="לדוגמה: הלקוח נכנס לפירוק; הגבייה מוצתה"
         onChange={(event) => onReason(event.target.value)}
         className="mt-1 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-right text-sm outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
       />
@@ -1118,7 +1116,7 @@ function WriteOffForm({ reason, onReason, onConfirm, onCancel, busy }) {
           className="h-auto rounded-lg border-slate-300 px-4 py-2 text-slate-700"
           onClick={onConfirm}
         >
-          {busy === 'writeOff' ? 'סוגר...' : 'אישור סגירה ללא תשלום'}
+          {busy === 'writeOff' ? 'סוגרת…' : 'סגור ללא תשלום'}
         </Button>
         <Button
           type="button"
@@ -1291,7 +1289,7 @@ function FeedbackBlock({
               className="h-auto p-0 text-[12px] font-semibold text-slate-600 underline"
               onClick={onOpenScoreEdit}
             >
-              שנה ציון
+              שני ציון
             </Button>
           )}
         </FeedbackTag>
@@ -1454,10 +1452,11 @@ function CancelledProfitBlock({ detail }) {
         />
       </div>
       <Sub className="mt-1 block" testId="closing-cancelled-no-balance">
-        {/* Q-3 */}
-        אין תחשיב-מאזן לפרויקט מבוטל: הרווח כאן נגזר מדמי-הביטול בניכוי פיצוי-הצוות ועלות-הסחורה,
-        ולא מהכנסות-האירוע — האירוע לא התקיים ולא נגבה עליו התשלום שבהצעה.
+        {/* Q-3 — ✂️ שלב 5: הנוסחה (מדמי-הביטול, לא מהכנסות-האירוע) ירדה לשכבה כ-⑤
+            נימוק-סידור; מה שנשאר הוא העובדה שאין מאזן ולמה בקצרה, בלי הנגזרת המלאה. */}
+        אין תחשיב-מאזן לפרויקט מבוטל — האירוע לא התקיים, ולכן אין הכנסות לחשב מולן.
       </Sub>
+      <Hint id="closing.cancelledProfit" />
     </div>
   )
 }
@@ -1501,7 +1500,7 @@ function ClosingFooter({
             className="h-auto rounded-lg border-slate-300 px-4 py-2 text-slate-700"
             onClick={onSaveFeedback}
           >
-            {busy === 'feedback' ? 'שומר...' : 'שמור סטטוס'}
+            {busy === 'feedback' ? 'שומרת…' : 'שמרי סטטוס'}
           </Button>
           {feedbackGate ? (
             <GateNote testId="closing-feedback-gate" id={FEEDBACK_GATE_ID} fullWidth>
@@ -1523,7 +1522,7 @@ function ClosingFooter({
             className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700"
             onClick={onArchive}
           >
-            {busy === 'archive' ? 'מארכב...' : 'העבר לארכיון'}
+            {busy === 'archive' ? 'מארכבת...' : 'העבירי לארכיון'}
           </Button>
           {gateNote ? (
             <GateNote testId="closing-archive-gate" id={ARCHIVE_GATE_ID} fullWidth>
@@ -1861,7 +1860,7 @@ function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThres
       dialog: {
         title: 'העברה לארכיון',
         message: ARCHIVE_CONFIRM_MESSAGE,
-        confirmLabel: 'העבר לארכיון',
+        confirmLabel: 'העבירי לארכיון',
       },
       key: 'archive',
       fn: () => archiveProject(projectId),

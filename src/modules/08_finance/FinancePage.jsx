@@ -24,6 +24,7 @@
 // (*"עם פתרונם השורה יורדת"*), והתוצאה נבחרה במודע ב-N-6: היסטוריית-הביטולים היא של מ11.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import Hint from '@/components/Hint'
 import { useSearchParams } from 'react-router-dom'
 import LoadingOrError from '@/components/LoadingOrError'
 import PermissionAwareEmpty, { DENIED_MARK } from '@/components/PermissionAwareEmpty'
@@ -68,7 +69,7 @@ import SalaryReportDialog from './SalaryReportDialog'
 // יושב בקומפוננטה שלו: זהו טקסט של משטח יחיד. **כולן בלשון-נקבה** (S-28).
 const PAGE_TITLE = 'כספים'
 const PAGE_SUBTITLE = 'בקרת גבייה, סגירת-תיקים ודו"ח-שכר'
-const SALARY_BUTTON_LABEL = 'הפקת דוח-שכר'
+const SALARY_BUTTON_LABEL = 'הפקת דוח שכר דיילות'
 const NO_PERMISSION_SENTENCE = 'אין לך הרשאה לצפות בנתוני הכספים.'
 const FILTERED_EMPTY_TITLE = 'אין פרויקט התואם לסינון שבחרת.'
 const CLEAR_FILTER_LABEL = 'נקי סינון'
@@ -645,6 +646,7 @@ export default function FinancePage() {
     <div data-testid="finance-page">
       {header}
       <SummaryTiles summary={summary} />
+      <Hint id="finance.amberRows" />
       <Card>
         <TabsBar active={tab} counts={counts} onSelect={changeTab} />
         <FilterBar filters={filters} onChange={changeFilters} onClear={clearFilters} />

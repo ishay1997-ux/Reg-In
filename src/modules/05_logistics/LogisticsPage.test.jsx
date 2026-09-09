@@ -22,6 +22,15 @@ vi.mock('./api', () => ({
   listProducts: vi.fn(),
 }))
 
+// 🆕 שלב 9 (לילה-הטקסטים) — `<Hint>` (בתוך `AmberLegend`) מייבא `useAuth`, שמייבא
+// `@/contexts/AuthContext`, שמייבא `@/supabaseClient` — והבנייה האמיתית קוראת ל-`createClient`
+// בזמן-הייבוא. הקובץ מצהיר למעלה "אין Supabase בבדיקה"; הממוקק שומר על זה בלי שהמסך יקרוס
+// תחת הסביבה-תואמת-CI (`VITE_SUPABASE_URL=` ריק, `src/CLAUDE.md §🔴`). `Hint` עצמו כבר בולע
+// כשל-`useAuth` (רמה-0 בטוחה) — זה כאן מונע את הכשל המוקדם-יותר, בזמן-הייבוא.
+vi.mock('@/supabaseClient', () => ({
+  supabase: { from: vi.fn(), rpc: vi.fn(), auth: { getSession: vi.fn() } },
+}))
+
 // 🔄 סף-הענבר ירד ל-`params` (מודול 9 · צעד 2.3) והמסך טוען אותו בעצמו — הקורא המשותף
 // ממוקק כמו כל שאר ה-API. הערך `'10'` הוא **מחרוזת**, כפי שהמסד מחזיר (`param_value` הוא `text`).
 vi.mock('@/api/params', () => ({ getParamValues: vi.fn() }))
@@ -338,7 +347,10 @@ describe('LogisticsPage — סעיף-היציאה (㉓ · S-7 · ㊷)', () => {
     const section = await screen.findByTestId('logistics-outbound')
     expect(within(section).queryAllByRole('checkbox')).toHaveLength(0)
     expect(within(section).queryAllByRole('button')).toHaveLength(0)
-    expect(section.textContent).toContain('הסעיף מיידע בלבד')
+    // ✏️ 09/09/2026: המקרא "הסעיף מיידע בלבד" ירד מהבסיס (הכרעת-ישי) — הכותרת נושאת את המשמעות
+    expect(
+      within(section).getByRole('heading', { name: 'יוצא עד יום העסקים הבא' }),
+    ).toBeInTheDocument()
   })
 })
 
@@ -533,29 +545,27 @@ describe('LogisticsPage — פתיחת הצ׳קליסט (㉔ · ㊷) ורענו�
   })
 })
 
-describe('LogisticsPage — מקרא-הענבר נועל את שתי הסיבות (Q1, הכרעת-ישי 26/08)', () => {
-  it('המקרא נושא גם את פסוקית-הטריגר-השני של ㊶ — אובדן-שורה-שקט הוא המשפחה המתועדת', async () => {
+// ✏️ 09/09/2026, לילה-הטקסטים שלב 8 — **הבסיס אופס** (`ui-copy-and-onboarding-mode.md` §4 שלב 8,
+// הדוגמה המלאה): 254 תווים ⇒ "שורה בענבר = דורש תשומת-לב. שום דבר לא ננעל." שני חוקי-הטריגר
+// שהמקרא הסביר במלואם עברו למועמד-שכבה (לא נבנה הלילה — אין הסבר-מלל ל-`onboardingCopy.js`
+// בשלבים 2–8). ⇒ המקרא כבר אינו נושא את שני הנימוקים, וגם אינו נושא את הסף המספרי; זה עדיין
+// מתפקד — הטריגר הפיזי מוסבר בגליף הפר-שורה (`amberGlyphTitle`), ואיחור-הגעה מוסבר בשורת-הנימוק
+// של השורה עצמה (`lateArrivalReason`, לא כאן). הבדיקות הוסבו בהתאם: מוטציית-הסף (5↔12) עדיין
+// רצה — רק דרך הגליף, ערוץ שממילא נבדק במקביל למקרא.
+describe('LogisticsPage — מקרא-הענבר, הבסיס הקצר (לילה-הטקסטים 09/09, שלב 8)', () => {
+  it('המקרא הוא הבסיס המוסכם, בלי מספר ובלי שני חוקי-הטריגר', async () => {
     render(<LogisticsPage />)
     await screen.findByTestId('logistics-queue-table')
     const legend = screen.getByText(/שורה בענבר/).closest('div')
-    // שתי הסיבות, באותו מקרא: טריגר-⑳ (פיזי + 10 ימי-עסקים) והטריגר השני של ㊶ (איחור-משלוח) —
-    // הפסוקית השנייה היא הנוסח שישי אישר מילה-במילה ("מאשר לפי המלצתך").
-    expect(legend.textContent).toContain('פריט פיזי טרם הוזמן')
-    expect(legend.textContent).toContain('או: משלוח שתאריכו המובטח עבר וטרם הגיע.')
-    expect(legend.textContent).toContain('אינה נספרת — הסף נגזר מזמן ייצור של דפוס.')
+    expect(legend.textContent).toBe('⏱ שורה בענבר = דורש תשומת-לב. שום דבר לא ננעל.')
   })
 
-  // 🔬 בדיקת-המוטציה של צעד 2.3: **שינוי השורה ב-`params` משנה את מה שכתוב על המסך.**
-  // אילו המספר היה נשאר קפוא בשתי המחרוזות, שני האתרים היו ממשיכים לומר "10" בעוד
-  // הצבע עצמו נקבע לפי 5 — כלומר המסך היה מסביר את עצמו לא נכון, בלי שום שגיאה.
-  it('🔬 סף 5 ב-`params` ⇒ המקרא **וגם** כיתוב-הגליף אומרים 5, לא 10', async () => {
+  // 🔬 בדיקת-המוטציה של צעד 2.3 נשארת — היא עברה לערוץ שעדיין נושא את הסף המספרי:
+  // כיתוב-הגליף הפר-שורה, לא המקרא (שהבסיס הקצר אינו כולל בו מספר עוד).
+  it('🔬 סף 5 ב-`params` ⇒ כיתוב-הגליף אומר 5, לא 10', async () => {
     getParamValues.mockResolvedValue({ סף_לוגיסטיקה_ימי_עסקים: '5' })
     render(<LogisticsPage />)
     await screen.findByTestId('logistics-queue-table')
-
-    const legend = screen.getByText(/שורה בענבר/).closest('div')
-    expect(legend.textContent).toContain('בתוך 5 ימי עסקים')
-    expect(legend.textContent).not.toContain('בתוך 10 ימי עסקים')
 
     // ‏#107 הוא 8 ימי-עסקים ⇒ בסף 5 הוא כבר **אינו** בענבר, ולכן אין לו כיתוב-גליף
     // כלל: הצבע והכיתוב זזו יחד, וזה בדיוק מה שהבדיקה נועלת.

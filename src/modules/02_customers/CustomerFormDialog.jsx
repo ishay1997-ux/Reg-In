@@ -283,9 +283,9 @@ export default function CustomerFormDialog({
     } catch (err) {
       if (err.code === '23505') {
         // מרוץ: הח"פ נוסף ע"י משתמש אחר אחרי שהרשימה נטענה — אותה זרימת-§7.11, בלי פירוט-כרטיס.
-        setFormError('חברה זו כבר רשומה במערכת. רעננו את הרשימה כדי לראות את הכרטיס הקיים.')
+        setFormError('חברה זו כבר רשומה במערכת — רענני את הרשימה כדי לראות את הכרטיס הקיים.')
       } else {
-        setFormError(err.message || 'שמירה נכשלה. נסה שוב.')
+        setFormError(err.message || 'שמירה נכשלה. נסי שוב.')
       }
     } finally {
       setSaving(false)
@@ -332,10 +332,11 @@ export default function CustomerFormDialog({
           <DialogTitle data-testid="customer-dialog-title">
             {isEdit ? `עריכת לקוח: ${editingCustomer.company_name}` : 'לקוח חדש'}
           </DialogTitle>
-          <DialogDescription>
-            {isEdit
-              ? 'עדכון פרטי הלקוח. מספר הח"פ קבוע ואינו ניתן לשינוי.'
-              : 'הלקוח יתווסף לרשימת הלקוחות במערכת.'}
+          {/* טקסט-עזר מתחת לכותרת-דיאלוג (מבחן-הקבלה של מדריך-הסגנון §7 סבב 2): משפט קצר אחד,
+              בלי נקודה בסוף. במצב-הוספה אין עובדה שהשדות עצמם לא כבר אומרים — sr-only שומר
+              על aria-describedby בלי למלא את המסך במשפט מקשט (R9/R27). */}
+          <DialogDescription className={isEdit ? undefined : 'sr-only'}>
+            {isEdit ? 'מספר הח"פ קבוע ואינו ניתן לשינוי' : 'טופס הוספת לקוח חדש'}
           </DialogDescription>
         </DialogHeader>
 
@@ -384,9 +385,9 @@ export default function CustomerFormDialog({
                         וה-`*` עדיין מחזיר את עמודת-האב **הקפואה** ⇒ הקריאה הישנה הציגה מחרוזת
                         ריקה לכל לקוח שנוצר אחרי `N2ג`, ושם **מיושן** ללקוח שאיש-הקשר שלו נערך
                         מאז. אחרי `N2ד` היא תהיה `undefined`. **שני המצבים שקטים — אין שגיאה.** */}
-                    חברה זו כבר רשומה במערכת: {duplicate.customer.company_name} (איש קשר:{' '}
+                    חברה זו כבר קיימת במערכת — {duplicate.customer.company_name}, איש קשר{' '}
                     {primaryContact(duplicate.customer)?.contact_name ?? '—'}, ח"פ{' '}
-                    {duplicate.customer.company_number}).
+                    {duplicate.customer.company_number}.
                   </p>
                   <Button
                     type="button"
@@ -395,14 +396,14 @@ export default function CustomerFormDialog({
                     className="h-auto p-0 self-start text-teal-700 hover:text-teal-800 font-semibold"
                     data-testid="customer-duplicate-edit-existing"
                   >
-                    ערוך את הכרטיס הקיים
+                    ערכי את הכרטיס הקיים
                   </Button>
                 </>
               ) : (
                 <>
                   <p className="text-sm text-amber-800 font-medium">
                     הלקוח {duplicate.customer.company_name} (ח"פ {duplicate.customer.company_number}
-                    ) קיים בארכיון — לשחזר?
+                    ) נמצא בארכיון.
                   </p>
                   <Button
                     type="button"
@@ -412,7 +413,7 @@ export default function CustomerFormDialog({
                     className="h-auto p-0 self-start text-teal-700 hover:text-teal-800 font-semibold"
                     data-testid="customer-duplicate-restore"
                   >
-                    שחזר מהארכיון ופתח לעריכה
+                    שחזרי מהארכיון ופתחי לעריכה
                   </Button>
                 </>
               )}
@@ -429,7 +430,7 @@ export default function CustomerFormDialog({
                 )}
                 data-testid="customer-form-type"
               >
-                <SelectValue placeholder="בחר סוג לקוח" />
+                <SelectValue placeholder="בחרי סוג לקוח" />
               </SelectTrigger>
               <SelectContent dir="rtl">
                 {/* §7.3: התוויות מהאפיון הקפוא בלבד — מיובאות מ-SSOT, לא כתובות כאן ידנית */}
@@ -469,14 +470,14 @@ export default function CustomerFormDialog({
               role="alert"
               data-testid="customer-contacts-load-error"
             >
-              לא ניתן לטעון את אנשי הקשר כרגע. שאר פרטי הלקוח יישמרו כרגיל; נסו שוב מאוחר יותר
-              לעריכת אנשי הקשר.
+              טעינת אנשי הקשר נכשלה — שאר הפרטים יישמרו כרגיל, ונסי שוב בעריכה הבאה.
             </p>
           ) : (
             <div className="flex flex-col gap-2" data-testid="customer-contacts-section">
               <label className="text-sm text-slate-700">אנשי קשר</label>
               <p className="text-xs text-slate-500">
-                איש קשר אחד חייב להיות מסומן כראשי. הוא זה שמופיע בהצעת המחיר ומקבל את המיילים.
+                איש קשר אחד חייב להיות מסומן כראשי — הפרטים שלו מופיעים בהצעת המחיר והוא מקבל את
+                המיילים
               </p>
 
               {primaryError && (
@@ -518,7 +519,7 @@ export default function CustomerFormDialog({
                         className="h-auto p-0 text-xs font-semibold text-slate-600 hover:text-slate-800"
                         data-testid="contact-make-primary"
                       >
-                        הפוך לראשי
+                        הפכי לראשי
                       </Button>
                     )}
                     <span className="flex-1" />
@@ -526,8 +527,8 @@ export default function CustomerFormDialog({
                       type="button"
                       variant="link"
                       // מוסכמת-הבית (MarketingPanel/marketing.js): פקד חסום נושא title שמסביר למה.
-                      title={c.is_primary ? NO_PRIMARY_MSG : 'הסר איש קשר'}
-                      aria-label={c.is_primary ? 'מחיקה חסומה' : `הסר איש קשר ${idx + 1}`}
+                      title={c.is_primary ? NO_PRIMARY_MSG : 'הסירי איש קשר'}
+                      aria-label={c.is_primary ? 'מחיקה חסומה' : `הסירי איש קשר ${idx + 1}`}
                       disabled={c.is_primary}
                       onClick={() => removeContactRow(c._rk)}
                       className="h-auto p-0 text-red-600 hover:text-red-700 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:text-slate-300"
@@ -621,7 +622,7 @@ export default function CustomerFormDialog({
                 data-testid="contact-add-row"
               >
                 <Plus className="size-4" />
-                הוסף איש קשר
+                הוסיפי איש קשר
               </Button>
             </div>
           )}
@@ -661,7 +662,7 @@ export default function CustomerFormDialog({
               className="w-full h-auto p-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
               data-testid="customer-form-submit"
             >
-              {saving ? 'שומר...' : isEdit ? 'שמור שינויים' : 'הוסף לקוח'}
+              {saving ? 'שומרת…' : isEdit ? 'שמרי שינויים' : 'הוסיפי לקוח'}
             </Button>
           </DialogFooter>
         </form>
