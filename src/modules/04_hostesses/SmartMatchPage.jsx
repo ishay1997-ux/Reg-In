@@ -193,13 +193,17 @@ export default function SmartMatchPage({ projectId, onBack }) {
 
   const weights = params ? activeWeights(params) : null
 
-  async function run(label, action) {
+  // 🔴 **`failureMessage` הוא משפט שלם, לא תווית** — תיקון 09/09/2026: הגרסה הקודמת בנתה
+  // `${label} נכשל` מתווית-פעולה גנרית, ומחצית התוויות נקביות ("שליחת הזימונים",
+  // "שליחת הקישור", "פתיחת הזימון") ⇒ ה"נכשל" הזכרי לא הסכים איתן בדקדוק. משפט מלא
+  // לכל קורא — באותו נוסח שכבר קיים במסך ("לא הצלחנו לטעון…") — פותר את זה מהשורש.
+  async function run(failureMessage, action) {
     setBusy(true)
     try {
       await action()
       refresh()
     } catch (err) {
-      toast.error(err.message ?? `${label} נכשל.`)
+      toast.error(err.message ?? failureMessage)
     } finally {
       setBusy(false)
     }
@@ -210,7 +214,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
   function reportMail({ sent, unknown, failed }, verb) {
     const parts = []
     if (sent > 0) parts.push(`${sent} ${verb}`)
-    if (unknown > 0) parts.push(`${unknown} — לא ידוע אם יצאו (ייתכן שכן; לא לשלוח שוב מיד)`)
+    if (unknown > 0) parts.push(`${unknown} — לא ידוע אם יצאו (ייתכן שכן; אל תשלחי שוב מיד)`)
     if (failed > 0) parts.push(`${failed} נכשלו`)
     if (parts.length === 0) return
     if (unknown > 0 || failed > 0) toast.error(parts.join(' · '))
@@ -257,7 +261,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
   }
 
   async function sendInvites() {
-    await run('שליחת הזימונים', async () => {
+    await run('לא הצלחנו לשלוח את הזימונים.', async () => {
       const outcome = await createShiftInvites({
         projectId,
         hostessIds: selected,
@@ -283,7 +287,11 @@ export default function SmartMatchPage({ projectId, onBack }) {
       adding: waiting.length,
       subjectLabel: waiting.length === 1 ? waiting[0].hostesses?.full_name : undefined,
     })
-    if (notice && !(await confirm({ title: notice.title, message: notice.note }))) return
+    if (
+      notice &&
+      !(await confirm({ title: notice.title, message: notice.note, confirmLabel: 'אשרי בכל זאת' }))
+    )
+      return
 
     // מי תשוחרר אוטומטית אחרי האישור — נאמר **לפני** ולא מתגלה אחרי (`local-13`).
     const releasing = autoReleaseTargets(
@@ -296,13 +304,14 @@ export default function SmartMatchPage({ projectId, onBack }) {
       releasing.length > 0 &&
       !(await confirm({
         title: `המכסה תיסגר — ${releasing.length} דיילות שאישרו זמינות ישוחררו`,
-        message: `${releasing.map((r) => r.hostesses?.full_name).join(' · ')} — כל אחת מהן תקבל הודעה שהמשרה אוישה. להמשיך?`,
+        message: `${releasing.map((r) => r.hostesses?.full_name).join(' · ')} — כל אחת מהן תקבל הודעה שהמשרה אוישה.`,
+        confirmLabel: 'אשרי ושחררי',
       }))
     ) {
       return
     }
 
-    await run('האישור הסופי', async () => {
+    await run('לא הצלחנו לאשר סופית.', async () => {
       const result = await approveFinalAndRelease({
         projectId,
         hostessIds: waiting.map((row) => row.hostess_id),
@@ -322,7 +331,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
     const name = row.hostesses?.full_name ?? ''
 
     if (menuItem.action === ASSIGNMENT_ACTION.RESEND) {
-      return run('שליחת הקישור', async () => {
+      return run('לא הצלחנו לשלוח את הקישור.', async () => {
         reportMail(await resendInvite(row, window.location.origin), 'קישור נשלח מחדש')
       })
     }
@@ -330,7 +339,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
     // 🔴 **שורה שנייה, לא רענון** — הישנה נשארת כהיסטוריה. שתי הפעולות נראות דומות
     // ואינן: איחודן היה מוחק סירוב שקדם, וההיענות היא 40% מהציון.
     if (menuItem.action === ASSIGNMENT_ACTION.NEW_INVITE) {
-      return run('פתיחת הזימון', async () => {
+      return run('לא הצלחנו לפתוח זימון חדש.', async () => {
         const outcome = await createShiftInvites({
           projectId,
           hostessIds: [row.hostess_id],
@@ -345,12 +354,13 @@ export default function SmartMatchPage({ projectId, onBack }) {
         !(await confirm({
           title: `לשחרר את ${name} מהאירוע?`,
           message:
-            'היא תקבל הודעה שהמשרה אוישה. 🚫 שחרור אינו נספר לרעתה בשום צד של הדירוג — הוא פעולת מערכת.',
+            'היא תקבל הודעה שהמשרה אוישה. שחרור אינו נספר לרעתה בשום צד של הדירוג — הוא פעולת מערכת.',
+          confirmLabel: 'שחררי',
         }))
       ) {
         return
       }
-      return run('השחרור', async () => {
+      return run('לא הצלחנו לשחרר.', async () => {
         const { mail } = await releaseAssignment(row)
         reportRelease(name, mail)
       })
@@ -361,26 +371,27 @@ export default function SmartMatchPage({ projectId, onBack }) {
         !(await confirm({
           title: `${name} ביטלה אחרי האישור הסופי?`,
           message:
-            'האירוע יחזור להיות חסר, והביטול ייספר במרכיב האמינות שלה. 🚫 זה אינו "שחרור" — שם אנחנו ויתרנו עליה, וכאן היא חזרה בה.',
+            'האירוע יחזור להיות חסר, והביטול ייספר במרכיב האמינות שלה. זה שונה משחרור: בשחרור המערכת מסיימת את השיבוץ, וכאן היא זו שחזרה בה.',
+          confirmLabel: 'סמני שביטלה',
         }))
       ) {
         return
       }
-      return run('הסימון', async () => {
+      return run('לא הצלחנו לעדכן את הסימון.', async () => {
         await markAssignmentStatus(row, 'approval_withdrawn')
         toast.success(`${name} סומנה כמי שביטלה אחרי אישור`)
       })
     }
 
     if (menuItem.action === ASSIGNMENT_ACTION.MARK_AVAILABLE) {
-      return run('הסימון', async () => {
+      return run('לא הצלחנו לעדכן את הסימון.', async () => {
         await markAssignmentStatus(row, 'confirmed_available')
         toast.success(`${name} סומנה כמי שאישרה זמינות`)
       })
     }
 
     if (menuItem.action === ASSIGNMENT_ACTION.MARK_DECLINED) {
-      return run('הסימון', async () => {
+      return run('לא הצלחנו לעדכן את הסימון.', async () => {
         await markAssignmentStatus(row, 'declined')
         toast.success(`${name} סומנה כמי שסירבה`)
       })
@@ -398,9 +409,17 @@ export default function SmartMatchPage({ projectId, onBack }) {
         adding: 1,
         subjectLabel: name,
       })
-      if (notice && !(await confirm({ title: notice.title, message: notice.note }))) return
+      if (
+        notice &&
+        !(await confirm({
+          title: notice.title,
+          message: notice.note,
+          confirmLabel: 'אשרי בכל זאת',
+        }))
+      )
+        return
 
-      return run('האישור הסופי', async () => {
+      return run('לא הצלחנו לאשר סופית.', async () => {
         const result = await approveFinalAndRelease({ projectId, hostessIds: [row.hostess_id] })
         reportMail(result.mail, 'אישור נשלח')
         for (const failure of result.failed) toast.error(`${failure.name}: ${failure.message}`)
@@ -414,7 +433,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
       menuItem.action === ASSIGNMENT_ACTION.CLEAR_SHIFT_LEAD
     ) {
       const marking = menuItem.action === ASSIGNMENT_ACTION.SET_SHIFT_LEAD
-      return run('הסימון', async () => {
+      return run('לא הצלחנו לעדכן את הסימון.', async () => {
         await setShiftLead(row, marking)
         toast.success(marking ? `${name} סומנה כאחראית משמרת` : 'סימון אחראית המשמרת בוטל')
       })
@@ -518,7 +537,10 @@ export default function SmartMatchPage({ projectId, onBack }) {
           className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] leading-relaxed text-slate-600"
           data-testid="sm-reliability-off"
         >
-          ⓘ <b>מרכיב "אמינות הגעה" כבוי</b> — הוא עדיין אינו נכלל בציון.{' '}
+          {/* 🔴 **איפוס 09/09/2026 — `מרכיב-האמינות`, לא `מרכיב "אמינות הגעה"`** (R11/R30):
+              המונח נעול במילון (`ui-copy-styleguide.md §3ב`) בצורה המקפית הזאת, וזה היה
+              המופע הראשון שסטה ממנה בטקסט-מסך בפועל (שאר 9 המופעים חיים בהערות-קוד). */}
+          ⓘ <b>מרכיב-האמינות כבוי</b> — הוא עדיין אינו נכלל בציון.{' '}
           {/* 🔬 **כל אחוז צמוד למילה שלו — ולא זוג `62% / 38%`.** נמדד בדפדפן דרך `Range`
               ש-`38%` נחת **משמאל** ל-`62%`: הצמד מתפרק לשני רצפים שה-bidi מסדר הפוך, ומי
               שקורא את הסוגריים לבדם מקבל את המשקולות מוחלפות. זו המשפחה שנתפסה כבר שמונה
@@ -633,14 +655,13 @@ export default function SmartMatchPage({ projectId, onBack }) {
               className="rounded-lg border border-dashed border-slate-200 px-3 py-6 text-center text-[12.5px] text-slate-500"
               data-testid="sm-candidates-empty"
             >
-              אין מועמדות פנויות לאירוע הזה כרגע.
-              <span className="mt-1 block text-[11.5px] text-slate-400">
-                כולן נפסלו בשער: לא פעילות · משובצות באותו תאריך · הצהירו אי-זמינות · רחוקות מ-
-                {params?.gateDistanceKm ?? '—'} ק"מ · או מסומנות "לא-לשלוח" אצל הלקוח הזה.
-              </span>
-              <span className="mt-1 block text-[11.5px] text-slate-400">
-                אפשר לבדוק במאגר הדיילות אם יש עוד מישהי שמתאימה ולא נכנסה לסינון.
-              </span>
+              {/* 🔴 **איפוס 09/09/2026 — חמשת חוקי-הפסילה ירדו לשכבת-ההסבר** (`research-onboarding-content.md`
+                  §7 מחרוזת 4): חמישה תנאים ברצף, כשהמערכת יודעת בדיוק איזה מהם ירה, היו כשל-5
+                  ("חמישה חוקים בנשימה אחת") — והמרחק ביניהם היה קבוע (`40 ק"מ`) בעוד שהוא
+                  פרמטר. הבסיס נשאר עם המצב ועם הדרך קדימה בלבד; חמשת החוקים ⇒ מועמד לשכבה
+                  (`onboardingCopy.js smartMatch.emptyGateRules`, לא נכתב כאן). */}
+              בדקי במאגר הדיילות אם יש דיילת שהסינון האוטומטי לא כלל — אף אחת לא עברה אותו לאירוע
+              הזה כרגע.
             </p>
           ) : (
             <ul className="flex max-h-[520px] flex-col gap-1.5 overflow-y-auto pl-1">
@@ -676,12 +697,13 @@ export default function SmartMatchPage({ projectId, onBack }) {
               >
                 {`שלחי מייל תיאום (${selected.length} נבחרו)`}
               </Button>
-              {/* 🔑 **אין מספר שהמערכת מציעה** (`§ב3`, C5:311 — שיקול דעת אנושי טהור).
-                  והנימוק אינו נימוס: שליחה נדיבה מדי **שוחקת את שיעור-ההיענות**, שהוא
-                  40% מהדירוג — כלומר היא מענישה את הדיילות על החלטה שלנו. */}
+              {/* 🔴 **איפוס 09/09/2026 — דוגמה 3 של `ui-copy-styleguide.md` §4, פסוקה זו היא
+                  ה-SSOT להכרעה.** הבסיס נושא רק את ⑥ (מה יקרה כשהיא תלחץ — יוצא-החוצה לדיילת
+                  אמיתית, לעולם לא מאחורי המתג). הנימוק *"למה אין מספר"* ⑤ עבר לשכבה כמועמד
+                  (`onboardingCopy.js smartMatch.roundsWhy`, לא נכתב כאן) — כולל התיקון שהמשקל
+                  אינו קבוע (`0.62/0.38` הוא המחשה, `activeWeights`). */}
               <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
-                <b>אין מספר שהמערכת מציעה.</b> שולחים בסבבים, ומחליטים בכל סבב מחדש כמה — כל זימון
-                עודף שנסגר שולח "המשרה כבר אוישה", ושליחה נדיבה מדי שוחקת את שיעור-ההיענות.
+                כל זימון עודף שייסגר ישלח לדיילת הודעה ש&apos;המשרה כבר אוישה&apos;.
               </p>
             </>
           )}
@@ -863,13 +885,15 @@ function CandidateCard({
 
           {/* 🔴 **סימוני-חוסר נאמרים בקול ולעולם אינם אפס שקט** — אפס היה מעניש דיילת
               על תקלה של המערכת, ו"דיילת חדשה" הוא **לא ציון נמוך**: היא מדורגת
-              על ממוצע-החברה בדיוק בגלל זה. */}
+              על ממוצע-החברה בדיוק בגלל זה.
+              🔴 **איפוס 09/09/2026 — `title=` הוסר, ולא הוחלף בכלום:** שני פגמים מאותה
+              משפחה (`research-onboarding-content.md` §3 כשל 4 — הסבר בטולטיפ-דפדפן,
+              לא נגיש למגע/מקלדת) **וגם `src/CLAUDE.md` "מספר בפרמטר לא נכתב כקבוע"** —
+              הטקסט אמר "פחות מ-3" בעוד הסף הוא `params.minAnswersForScore`. הצ'יפ
+              "דיילת חדשה" מדבר בעד עצמו; ה"למה" (הריסון מול ממוצע-החברה) עבר כמועמד
+              (`onboardingCopy.js smartMatch.newHostessRanking`, לא נכתב כאן). */}
           {candidate.flags.notEnoughAnswers && (
-            <Chip
-              family="grey"
-              testId={`sm-chip-noinfo-${candidate.hostess_id}`}
-              title="פחות מ-3 מענים — מדורגת לפי ממוצע החברה"
-            >
+            <Chip family="grey" testId={`sm-chip-noinfo-${candidate.hostess_id}`}>
               דיילת חדשה
             </Chip>
           )}

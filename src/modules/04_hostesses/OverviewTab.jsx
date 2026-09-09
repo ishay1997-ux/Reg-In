@@ -460,7 +460,7 @@ function EmptyState({ filtered, onClear, canReadProjects }) {
         <span className="mb-1 block text-[22px]">⚠️</span>
         לא ניתן להציג את האירועים — אין לך הרשאת צפייה במודול <b>פרויקטים</b>.
         <div className="mt-1 text-slate-500">
-          זו אינה רשימה ריקה: המסך לא הצליח לקרוא את האירועים. יש לפנות למנכ"ל להרשאה.
+          זו אינה רשימה ריקה — המסך לא הצליח לקרוא את האירועים, ויש לפנות למנכ"ל להרשאה.
         </div>
       </div>
     )

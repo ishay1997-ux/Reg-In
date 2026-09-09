@@ -337,7 +337,9 @@ test.describe('מודול 4 · מסך 2 — שיבוץ חכם', () => {
     await page.locator('[data-testid^="overview-row-"]').first().click()
 
     await expect(page.getByTestId('smart-match-retry')).toBeVisible({ timeout: 30_000 })
-    await expect(page.locator('body')).not.toContainText('אין מועמדות פנויות')
+    // ✏️ 09/09/2026 (לילה-הטקסטים, שלב 6): הטענה הייתה על הנוסח הישן של מצב-הריק; מאז השכתוב
+    // מאתרים לפי ה-testid — אותה כוונה (כשל-טעינה אינו מתחזה למצב-ריק), בלי תלות במילים.
+    await expect(page.getByTestId('sm-candidates-empty')).toHaveCount(0)
   })
 })
 

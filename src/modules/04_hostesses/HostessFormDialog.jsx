@@ -35,7 +35,9 @@ import {
   minWageError,
   duplicateEmailWarning,
   unavailabilityLabel,
+  optionalNumber,
 } from '@/lib/hostesses'
+import { SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
 import {
   listHostesses,
   getHostess,
@@ -148,7 +150,9 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
     const found = {}
 
     for (const [field, label] of Object.entries(REQUIRED_FIELDS)) {
-      if (String(form[field] ?? '').trim() === '') found[field] = `${label} הוא שדה חובה`
+      // 🔴 לא `${label} הוא שדה חובה` — "תעודת זהות"/"עיר" הם שמות-עצם בנקבה, ו"הוא"
+      // שגוי דקדוקית עליהם. "יש למלא X" נכון לכל שם-עצם בלי תלות במינו.
+      if (String(form[field] ?? '').trim() === '') found[field] = `יש למלא ${label}`
     }
 
     // 🔴 ת"ז — **חוסמת**, ונבדקת תוך כדי ההקלדה (השדה היחיד שאינו ממתין ליציאה מהשדה).
@@ -168,6 +172,10 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
   // 🟡 אימייל כפול — **מזהיר ולא חוסם** (§7.65): תיבה משפחתית משותפת היא מקרה לגיטימי,
   // ואת כפילות-האדם מונעת הת"ז ממילא. 🚫 אין UNIQUE על העמודה במסד, במכוון.
   const emailWarning = duplicateEmailWarning(form.email, peers, isEdit ? hostessId : null)
+
+  // 🔴 שער-המרחק של Smart Match (`שער_מרחק_קמ`) הוא `params`, לא קבוע — ר' ההערה ליד
+  // ההינט של "יש רכב?" למטה. `null` כל עוד `params` עדיין נטען (ADD פותח מיד, לפני הטעינה).
+  const gateDistanceKm = optionalNumber(params[SMART_MATCH_PARAM_NAMES.gateDistanceKm])
 
   const blocked = Object.keys(errors).length > 0
 
@@ -262,10 +270,14 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
               {isEdit && <StatusTag label={HOSTESS_STATUS_LABELS[status]} />}
             </span>
           </DialogTitle>
+          {/* 🔴 טקסט-עזר מתחת לכותרת-דיאלוג = משפט קצר אחד, בלי נקודה בסוף (styleguide §1,
+              הבהרת סבב-2 של מבחן-הקבלה). "תעודת הזהות קבועה" עבר ליד השדה עצמו (R20: שגיאה/
+              מידע יושבים ליד מקורם) — כאן נשאר רק מה שאין לה דרך אחרת לדעת: לאן פונים
+              להפעלה/השבתה, כי הכרטיס הזה לא נושא את הפעולה הזאת בכלל. */}
           <DialogDescription>
             {isEdit
-              ? 'עדכון פרטי הדיילת. תעודת הזהות קבועה ואינה ניתנת לשינוי — היא המזהה שלה במערכת. הפעלה/השבתה נעשית משורת הדיילת בטבלת המאגר, לא מכאן.'
-              : 'הכרטיס נפתח רק אחרי שדיברת עם הדיילת בטלפון — היא לא רואה את הטופס הזה ולא ממלאת אותו בעצמה. בשמירה היא נכנסת מיידית למאגר בסטטוס "פעילה".'}
+              ? 'הפעלה והשבתה מתבצעות משורת הדיילת בטבלת המאגר, לא כאן'
+              : 'בשמירה, הדיילת נכנסת מיידית למאגר בסטטוס "פעילה"'}
           </DialogDescription>
         </DialogHeader>
 
@@ -279,17 +291,17 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
             <div className="max-h-[65vh] overflow-y-auto pl-1">
               <Field
                 label="תעודת זהות"
-                required
-                hint={isEdit ? null : 'בדיקת ספרת-ביקורת תוך כדי ההקלדה'}
                 // 🔴 בעריכה — **נעולה**, אותו דפוס בדיוק כמו ח"פ-לקוח (§7.64: ת"ז יצאה
-                // מהמפתח, אבל היא עדיין המזהה האנושי, והחלפתה היא החלפת אדם).
+                // מהמפתח, אבל היא עדיין המזהה האנושי, והחלפתה היא החלפת אדם). ההסבר
+                // יושב כאן, ליד השדה החסום עצמו — לא בתיאור-הדיאלוג הרחוק ממנו.
+                hint={isEdit ? 'לא ניתנת לשינוי' : 'בדיקת ספרת-ביקורת תוך כדי ההקלדה'}
                 error={isEdit ? null : errors.id_number}
               >
                 <Input
                   value={form.id_number}
                   onChange={(e) => set('id_number')(e.target.value)}
                   disabled={isEdit}
-                  placeholder="9 ספרות"
+                  placeholder="302894506"
                   dir="ltr"
                   className="text-right"
                   data-testid="hostess-id-number"
@@ -297,7 +309,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
               </Field>
 
               <div className="grid grid-cols-2 gap-3">
-                <Field label="שם מלא" required error={showError('full_name')}>
+                <Field label="שם מלא" error={showError('full_name')}>
                   <Input
                     value={form.full_name}
                     onChange={(e) => set('full_name')(e.target.value)}
@@ -306,7 +318,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                     data-testid="hostess-full-name"
                   />
                 </Field>
-                <Field label="טלפון" required error={showError('phone')}>
+                <Field label="טלפון" error={showError('phone')}>
                   <Input
                     value={form.phone}
                     onChange={(e) => set('phone')(e.target.value)}
@@ -319,7 +331,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                 </Field>
               </div>
 
-              <Field label="אימייל" required error={showError('email')} warning={emailWarning}>
+              <Field label="אימייל" error={showError('email')} warning={emailWarning}>
                 <Input
                   value={form.email}
                   onChange={(e) => set('email')(e.target.value)}
@@ -332,7 +344,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
               </Field>
 
               <div className="grid grid-cols-2 gap-3">
-                <Field label="עיר" required error={showError('city')}>
+                <Field label="עיר" error={showError('city')}>
                   <Input
                     value={form.city}
                     onChange={(e) => set('city')(e.target.value)}
@@ -341,7 +353,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                     data-testid="hostess-city"
                   />
                 </Field>
-                <Field label="כתובת מלאה" hint="רחוב ומספר — משמש לחישוב הקרבה לאירוע">
+                <Field label="כתובת מלאה (לא חובה)" hint="משמש לחישוב הקרבה לאירוע">
                   <Input
                     value={form.address}
                     onChange={(e) => set('address')(e.target.value)}
@@ -353,7 +365,6 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
 
               <Field
                 label="שכר שעתי (₪)"
-                required
                 error={showError('hourly_rate')}
                 // 🔴 הסכום עובר דרך `Money` ולא נכתב ידנית בתוך המשפט. **נמדד בדפדפן
                 // 09/08/2026:** הנוסח הידני הציג את ה-₪ **משמאל** לספרות, בעוד `Money`
@@ -377,15 +388,15 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                 />
                 {isEdit && (
                   <span className="mt-1 block text-[11px] text-amber-700">
-                    שינוי כאן <b>לא ישנה</b> תעריף של שיבוץ עתידי שכבר קיים — הוא הוקפא ברגע השיבוץ.
-                    ההעלאה תחול על השיבוץ הבא בלבד.
+                    שינוי כאן <b>לא משפיע</b> על תעריף שכבר הוקפא בשיבוץ קיים — הוא יחול רק על
+                    השיבוץ הבא
                   </span>
                 )}
               </Field>
 
               <p className="mb-2 mt-4 text-xs font-semibold text-slate-500">פרטי בנק</p>
               <div className="grid grid-cols-3 gap-3">
-                <Field label="בנק" required error={showError('bank_name')}>
+                <Field label="בנק" error={showError('bank_name')}>
                   <Input
                     value={form.bank_name}
                     onChange={(e) => set('bank_name')(e.target.value)}
@@ -394,7 +405,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                     data-testid="hostess-bank-name"
                   />
                 </Field>
-                <Field label="סניף" required error={showError('bank_branch')}>
+                <Field label="סניף" error={showError('bank_branch')}>
                   <Input
                     value={form.bank_branch}
                     onChange={(e) => set('bank_branch')(e.target.value)}
@@ -405,7 +416,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                     data-testid="hostess-bank-branch"
                   />
                 </Field>
-                <Field label="מס׳ חשבון" required error={showError('bank_account')}>
+                <Field label="מס׳ חשבון" error={showError('bank_account')}>
                   <Input
                     value={form.bank_account}
                     onChange={(e) => set('bank_account')(e.target.value)}
@@ -419,13 +430,23 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
               </div>
 
               <Field
-                label="התרשמות המנהלת (1–5)"
-                hint='לא "דירוג": זו דעתך, לא ציון-מערכת. אינה חלק מ-Smart Match'
+                label="התרשמות המנהלת (1–5, לא חובה)"
+                hint="זו דעתך, לא ציון של המערכת — ואינה חלק מהדירוג בשיבוץ חכם"
               >
                 <RatingStars value={form.rating} onChange={set('rating')} testId="hostess-rating" />
               </Field>
 
-              <Field label="יש רכב?" hint='מעל 40 ק"מ בלי רכב = פסילה בשיבוץ, לא ניקוד'>
+              <Field
+                label="יש רכב? (לא חובה)"
+                // 🔴 40 ק"מ אינו קבוע-בקוד — `שער_מרחק_קמ` הוא פרמטר (`SMART_MATCH_PARAM_NAMES`),
+                // ולכן ההינט קורא את הערך החי מ-`params` ולא כותב אותו כמספר קבוע (styleguide §4
+                // דוגמה 3). כשהוא עדיין לא נטען (רגע ה-ADD הראשון) — נוסח בלי מספר.
+                hint={
+                  gateDistanceKm !== null
+                    ? `מעל ${gateDistanceKm} ק"מ בלי רכב פוסלת מהשיבוץ, לא רק פוגעת בציון`
+                    : 'מעבר למרחק מסוים בלי רכב פוסלת מהשיבוץ, לא רק פוגעת בציון'
+                }
+              >
                 <Switch
                   checked={form.has_car}
                   onCheckedChange={set('has_car')}
@@ -435,8 +456,8 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
               </Field>
 
               <Field
-                label="שפות"
-                hint="שדה-מידע בלבד. לא שער ולא עמודה בטבלת-המאגר — המנהלת בוחרת ידנית מי לזמן לכל תפקיד"
+                label="שפות (לא חובה)"
+                hint="שדה-מידע בלבד ולא שער — הבחירה מי לזמן לכל תפקיד תמיד ידנית"
               >
                 <ChipToggle
                   options={LANGUAGES}
@@ -454,10 +475,9 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
 
               {isEdit && (
                 <div className="mt-4 border-t border-slate-200 pt-3">
-                  <p className="mb-2 text-xs font-semibold text-slate-500">
-                    אי-זמינות מוצהרת{' '}
-                    <span className="font-normal">— טווח תאריכים + הערה, לא תאריך יחיד</span>
-                  </p>
+                  {/* R27: שני שדות "מ-תאריך"/"עד-תאריך" מתחת כבר אומרים שזה טווח —
+                      הערה שחוזרת על זה נמחקת. */}
+                  <p className="mb-2 text-xs font-semibold text-slate-500">אי-זמינות מוצהרת</p>
 
                   {ranges.map((range, index) => (
                     <div
@@ -552,12 +572,14 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
 
 // שדה-טופס: תווית + קלט + שגיאה **מתחתיו**, בדיוק כמו `CustomerFormDialog` — לא מומצא,
 // זו שפת-הדיאלוגים היחידה שכבר בנויה בקוד.
-function Field({ label, required, hint, error, warning, children, compact, grow }) {
+// 🔴 R6: שדה-חובה לא מסומן בכוכבית — הלא-חובה מסומן במילים בסוף התווית ("(לא חובה)").
+// תשעת שדות-החובה של הטופס הם ברירת-המחדל; ארבעת השדות הלא-חובה (כתובת מלאה · התרשמות ·
+// יש רכב · שפות) נושאים את הסימון בתווית שלהם עצמה, לא כאן.
+function Field({ label, hint, error, warning, children, compact, grow }) {
   return (
     <div className={`${compact ? 'mb-0' : 'mb-3'} ${grow ? 'flex-1 min-w-[160px]' : ''}`}>
       <label className="mb-1 block text-xs font-medium text-slate-600">
         {label}
-        {required && <span className="text-red-600"> *</span>}
         {hint && <span className="font-normal text-slate-400"> — {hint}</span>}
       </label>
       {children}

@@ -534,8 +534,8 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                     </span>
                   ))}
                   <span className="mt-2 block">
-                    <b>שחררי מהאירועים (מומלץ)</b> — כל שיבוץ יסומן כ"שוחררה" והדיילת תקבל
-                    מייל-ביטול על כל אירוע. האירוע חוזר לחסר-איוש, וזה נספר כשחרור-שלנו — לא לרעתה.
+                    <b>שחררי מהאירועים (מומלץ)</b> — כל שיבוץ יסומן כ"שוחררה", הדיילת תקבל
+                    מייל-ביטול על כל אירוע, והאירוע חוזר לחסר-איוש.
                   </span>
                   <span className="mt-2 block">
                     <b>השביתי — תשלים את מה שהתחייבה</b> — השיבוצים העתידיים נשארים על כנם; היא רק
@@ -556,7 +556,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                   className="h-auto w-full py-2.5 px-4 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700"
                   data-testid="deactivate-release"
                 >
-                  {releasing ? 'משחרר...' : 'שחררי מהאירועים'}
+                  {releasing ? 'משחררת...' : 'שחררי מהאירועים'}
                 </Button>
                 <Button
                   type="button"
@@ -611,7 +611,7 @@ function EmptyState({ filtered, canEdit, onAdd, onClear }) {
         data-testid="repository-empty-filtered"
       >
         <span className="mb-1 block text-[22px]">🔍</span>
-        לא נמצאו דיילות התואמות לסינון
+        אין דיילות התואמות לסינון
         <div>
           <Button
             type="button"
