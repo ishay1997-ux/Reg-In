@@ -36,7 +36,7 @@ export async function listProducts() {
 export async function createProduct(product) {
   const { cost, ...productRow } = product
   const { data, error } = await supabase.from('products').insert(productRow).select().single()
-  if (error) throw toError(error, 'יצירת המוצר נכשלה.')
+  if (error) throw toError(error, 'יצירת המוצר נכשלה — נסי שוב.')
 
   const { error: costError } = await supabase
     .from('product_costs')
@@ -58,7 +58,7 @@ export async function updateProduct(sku, patch) {
   delete safePatch.status
   delete safePatch.cost
   const { data, error } = await supabase.from('products').update(safePatch).eq('sku', sku).select()
-  if (error) throw toError(error, 'שמירת השינויים במוצר נכשלה.')
+  if (error) throw toError(error, 'שמירת השינויים במוצר נכשלה — נסי שוב.')
   assertRowsAffected(data, 'אין הרשאה לעדכן מוצר זה.')
 
   // upsert ולא update: מוצר שנוצר לפני סבב G, או שכתיבת-העלות שלו נכשלה, אין לו שורה כלל —
@@ -68,7 +68,7 @@ export async function updateProduct(sku, patch) {
       .from('product_costs')
       .upsert({ sku, cost: Number(patch.cost) }, { onConflict: 'sku' })
       .select()
-    if (costError) throw toError(costError, 'שמירת עלות המוצר נכשלה.')
+    if (costError) throw toError(costError, 'שמירת עלות המוצר נכשלה — נסי שוב.')
     assertRowsAffected(costData, 'אין הרשאה לעדכן את עלות המוצר.')
   }
 
@@ -77,7 +77,7 @@ export async function updateProduct(sku, patch) {
 
 export async function setProductStatus(sku, status) {
   const { data, error } = await supabase.from('products').update({ status }).eq('sku', sku).select()
-  if (error) throw toError(error, 'שינוי סטטוס המוצר נכשל.')
+  if (error) throw toError(error, 'שינוי סטטוס המוצר נכשל — נסי שוב.')
   assertRowsAffected(data, 'אין הרשאה לשנות את סטטוס המוצר.')
   return data[0]
 }
@@ -121,7 +121,7 @@ export async function replacePriceTiers(sku, tiers) {
       .from('price_tiers')
       .upsert(rows, { onConflict: 'sku,min_qty' })
       .select()
-    if (error) throw toError(error, 'שמירת מדרגות המחיר נכשלה.')
+    if (error) throw toError(error, 'שמירת מדרגות המחיר נכשלה — נסי שוב.')
     // כתיבה שנחסמה ע"י RLS חוזרת כ-0 שורות עם error: null — הכשל השקט המרכזי של הפרויקט.
     saved = assertRowsAffected(data, 'אין הרשאה לשמור מדרגות מחיר.')
   }
@@ -133,7 +133,7 @@ export async function replacePriceTiers(sku, tiers) {
     deleteQuery = deleteQuery.not('min_qty', 'in', `(${rows.map((r) => r.min_qty).join(',')})`)
   }
   const { error: delError } = await deleteQuery
-  if (delError) throw toError(delError, 'שמירת מדרגות המחיר נכשלה.')
+  if (delError) throw toError(delError, 'שמירת מדרגות המחיר נכשלה — נסי שוב.')
 
   return saved
 }

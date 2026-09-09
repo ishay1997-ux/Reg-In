@@ -104,7 +104,7 @@ export default function PermissionsMatrixPage() {
 
     if (error || !data || data.length === 0) {
       setPermMap((prev) => ({ ...prev, [key]: current })) // rollback לערך שלפני הקליק
-      setCellError('השינוי לא נשמר. נסי שוב.')
+      setCellError('השינוי לא נשמר — נסי שוב.')
     }
   }
 

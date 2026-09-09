@@ -132,7 +132,7 @@ function renderPage() {
 // פותחת את דיאלוג ההוספה ומחכה שהטופס יעלה (השדה "שם מלא" זמין).
 async function openAddDialog() {
   fireEvent.click(screen.getByRole('button', { name: '+ הוספת משתמש חדש' }))
-  return screen.findByPlaceholderText('שם פרטי ומשפחה')
+  return screen.findByPlaceholderText('לדוגמה: דנה כהן')
 }
 
 beforeAll(() => {
@@ -220,7 +220,7 @@ describe('UsersManagementPage — דיאלוג הוספת משתמש: ולידצ
     expect(supabase.from.mock.calls.length).toBe(callsBefore)
   })
 
-  it('דוא"ל לא תקין מציג "יש להזין כתובת דוא"ל תקינה." — רק אחרי שתפקיד כבר נבחר (הוא נבדק קודם)', async () => {
+  it('דוא"ל לא תקין מציג "יש להזין כתובת דוא״ל תקינה." — רק אחרי שתפקיד כבר נבחר (הוא נבדק קודם)', async () => {
     queueSuccessfulLoad()
     renderPage()
     await screen.findByText('ישי כהן')
@@ -239,7 +239,7 @@ describe('UsersManagementPage — דיאלוג הוספת משתמש: ולידצ
     })
     fireEvent.click(screen.getByRole('button', { name: 'הוסיפי משתמש' }))
 
-    expect(await screen.findByText('יש להזין כתובת דוא"ל תקינה.')).toBeInTheDocument()
+    expect(await screen.findByText('יש להזין כתובת דוא״ל תקינה.')).toBeInTheDocument()
     // גם כאן: תקלת-הולידציה נתפסת לפני insert לשרת - אין קריאת-Supabase נוספת.
     expect(supabase.from.mock.calls.length).toBe(callsBefore)
   })
@@ -273,7 +273,7 @@ describe('UsersManagementPage — השבתת משתמש', () => {
     expect(usersQueue).toHaveLength(0)
   })
 
-  it('{data: [], error: null} (חסימת RLS שקטה) מציג "השבתת המשתמש נכשלה. נסי שוב." ואינו מרענן', async () => {
+  it('{data: [], error: null} (חסימת RLS שקטה) מציג "השבתת המשתמש נכשלה — נסי שוב." ואינו מרענן', async () => {
     queueSuccessfulLoad()
     usersQueue.push({ data: [], error: null }) // תוצאת ה-update - חסימה שקטה
     renderPage()
@@ -284,7 +284,7 @@ describe('UsersManagementPage — השבתת משתמש', () => {
     fireEvent.click(screen.getByTestId('confirm-dialog-confirm'))
 
     expect(await screen.findByTestId('toast-error')).toHaveTextContent(
-      'השבתת המשתמש נכשלה. נסי שוב.',
+      'השבתת המשתמש נכשלה — נסי שוב.',
     )
     // ה-update אכן נשלח (לא רק "לא קרה כלום") - התוצאה שקטה, {data:[], error:null}, ולכן
     // המסך חייב לזהות זאת לבד ולא להסתפק בהיעדר-שגיאה.

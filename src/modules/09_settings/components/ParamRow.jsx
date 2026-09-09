@@ -83,7 +83,6 @@ export default function ParamRow({ row, value, onChange, canEdit, error }) {
   const errorId = error ? `settings-error-${name}` : undefined
   const isTemplate = entry.kind === 'templates'
   const isBoolean = entry.kind === 'boolean'
-  const isUnknown = entry.hint === 'הגדרה ללא הגדרת-תצוגה'
   const isWideText = WIDE_TEXT_KINDS.has(entry.kind)
 
   return (
@@ -169,7 +168,6 @@ export default function ParamRow({ row, value, onChange, canEdit, error }) {
 
       <td className="py-3 text-xs text-slate-500">
         <p>{entry.hint}</p>
-        {isUnknown && <p className="mt-1 text-amber-800">שורה זו אינה מוכרת למרשם התצוגה.</p>}
         {entry.affects && <p className="mt-1 text-amber-800">↳ משפיע: {entry.affects}</p>}
         {error && (
           <p id={errorId} role="alert" className="mt-1 font-medium text-red-600">

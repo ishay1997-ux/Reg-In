@@ -88,7 +88,7 @@ export default function PricesManagementPage() {
       await setProductStatus(sku, nextStatus)
     } catch (err) {
       setProducts((prev) => prev.map((p) => (p.sku === sku ? { ...p, status: previous } : p)))
-      setRowError(err.message || 'שינוי הסטטוס לא נשמר.')
+      setRowError(err.message || 'שינוי הסטטוס לא נשמר — נסי שוב.')
     } finally {
       setSavingStatusSku(null)
     }

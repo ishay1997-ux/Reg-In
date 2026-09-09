@@ -209,7 +209,7 @@ export default function MySettingsPage() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="חיפוש לפי שם ההגדרה או שם הפרמטר במערכת"
+            placeholder="חיפוש לפי שם ההגדרה או שם הפרמטר"
             className="h-auto rounded-lg border-slate-300 py-2.5 pr-10 pl-3 text-right"
             data-testid="settings-my-search"
           />

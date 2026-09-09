@@ -44,7 +44,7 @@ export default function LoginPage() {
     //    (data=null) והכניסה ממשיכה כרגיל — הנעילה לעולם לא חוסמת התחברות תקינה.
     const { data: lockedUntil } = await supabase.rpc('check_login_lock', { p_email: cleanEmail })
     if (lockedUntil) {
-      setErrorMsg('החשבון ננעל זמנית עקב ריבוי ניסיונות כושלים. נסי שוב מאוחר יותר.')
+      setErrorMsg('החשבון ננעל זמנית עקב ריבוי ניסיונות כושלים — נסי שוב מאוחר יותר.')
       setLoading(false)
       return
     }
@@ -61,8 +61,8 @@ export default function LoginPage() {
       })
       setErrorMsg(
         nowLockedUntil
-          ? 'החשבון ננעל עקב 5 ניסיונות כושלים. נסי שוב בעוד כ-15 דקות.'
-          : 'מייל או סיסמה שגויים. נסי שוב.',
+          ? 'החשבון ננעל עקב 5 ניסיונות כושלים — נסי שוב בעוד כ-15 דקות.'
+          : 'מייל או סיסמה שגויים — נסי שוב.',
       )
       setLoading(false)
       return
@@ -86,21 +86,21 @@ export default function LoginPage() {
     // וזה המצב היחיד שבו ההודעה המאשימה נכונה. כל שגיאה אחרת (רשת/500) אמרה למשתמש
     // לגיטימי שהוא אינו מורשה, וניתקה אותו — האשמה על תקלה שאינה שלו.
     if (dbError && dbError.code !== 'PGRST116') {
-      setErrorMsg('תקלה זמנית בטעינת פרטי החשבון. נסי שוב בעוד רגע.')
+      setErrorMsg('תקלה זמנית בטעינת פרטי החשבון — נסי שוב בעוד רגע.')
       await supabase.auth.signOut()
       setLoading(false)
       return
     }
 
     if (!userData) {
-      setErrorMsg('חשבון זה אינו מורשה במערכת. יש לפנות למנכ"ל.')
+      setErrorMsg('חשבון זה אינו מורשה במערכת — יש לפנות למנכ"ל.')
       await supabase.auth.signOut()
       setLoading(false)
       return
     }
 
     if (userData.status === 'inactive') {
-      setErrorMsg('חשבון זה אינו פעיל במערכת. יש לפנות למנכ"ל לבירור.')
+      setErrorMsg('חשבון זה אינו פעיל במערכת — יש לפנות למנכ"ל לבירור.')
       await supabase.auth.signOut()
       setLoading(false)
       return
@@ -121,7 +121,7 @@ export default function LoginPage() {
       options: { redirectTo: window.location.origin },
     })
     if (error) {
-      setErrorMsg('ההתחברות עם Google נכשלה. נסי שוב.')
+      setErrorMsg('ההתחברות עם Google נכשלה — נסי שוב.')
     }
   }
 
@@ -134,9 +134,9 @@ export default function LoginPage() {
     setErrorMsg('')
     const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail)
     if (error) {
-      setErrorMsg('לא הצלחנו לשלוח מייל איפוס. בדקי את הכתובת.')
+      setErrorMsg('לא הצלחנו לשלוח מייל איפוס — בדקי את הכתובת.')
     } else {
-      setInfoMsg('נשלח אליך מייל לאיפוס הסיסמה. בדקי את תיבת הדוא״ל.')
+      setInfoMsg('נשלח אליך מייל לאיפוס הסיסמה — בדקי את תיבת הדוא״ל.')
     }
   }
 

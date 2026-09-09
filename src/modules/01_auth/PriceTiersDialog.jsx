@@ -110,7 +110,7 @@ export default function PriceTiersDialog({ open, onOpenChange, product, onSaved 
         onSaved?.()
       }, 900)
     } catch (err) {
-      setFormError(err.message || 'שמירת מדרגות המחיר נכשלה.')
+      setFormError(err.message || 'שמירת מדרגות המחיר נכשלה — נסי שוב.')
     } finally {
       setSaving(false)
     }
@@ -126,10 +126,7 @@ export default function PriceTiersDialog({ open, onOpenChange, product, onSaved 
           <DialogTitle data-testid="tiers-dialog-title">
             מדרגות מחיר — {product.item_name}
           </DialogTitle>
-          <DialogDescription>
-            המדרגה שכמות-המינימום שלה היא הגבוהה ביותר מבין אלה שאינן עולות על הכמות בהצעה — היא
-            שקובעת את המחיר. ללא מדרגות, ההצעה מתומחרת לפי מחיר הבסיס.
-          </DialogDescription>
+          <DialogDescription>ללא מדרגות, ההצעה מתומחרת לפי מחיר הבסיס</DialogDescription>
         </DialogHeader>
 
         {/* ⚠️ הטרנרי נשאר: LoadingOrError מחזיר את ענף-השגיאה בלי תנאי, ולכן רינדור

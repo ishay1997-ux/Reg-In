@@ -58,7 +58,7 @@ const FILTERED_EMPTY_TITLE = 'אין פרויקט התואם למסנן שבחר
 const OUTBOUND_HEADING = 'יוצא עד יום העסקים הבא'
 // ‏`src/modules/05_logistics/ChecklistDialog.jsx`:
 const CANCELLED_CONTROL_TITLE = 'הפרויקט בוטל — לא ניתן לעדכן'
-const CANCELLED_QTY_TITLE = 'הפרויקט בוטל — אך אפשר לרשום סחורה שהגיעה (㊴)'
+const CANCELLED_QTY_TITLE = 'הפרויקט בוטל — אך אפשר לרשום סחורה שהגיעה'
 const QTY_LOCKED_BY_ITEM = 'הפריט טרם הוזמן — הכמות בפועל נפתחת לעריכה אחרי סימון "הוזמן"'
 const CANCEL_BANNER_LINE = 'אין לעדכן מצב או הערה בפרויקט מבוטל.'
 const CANCEL_BANNER_QTY_LINE = 'אפשר עדיין לרשום כמות שהגיעה — שאר הפקדים נעולים.'

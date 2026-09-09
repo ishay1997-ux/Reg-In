@@ -58,10 +58,10 @@ function validateProductField(name, value) {
   const text = String(value ?? '').trim()
   switch (name) {
     case 'sku':
-      if (text === '') return 'שדה חובה'
+      if (text === '') return 'יש להזין מק"ט'
       return isValidSku(text) ? '' : 'אותיות גדולות, ספרות ומקפים בלבד (לא בתחילת המק"ט)'
     case 'item_name':
-      return text === '' ? 'שדה חובה' : ''
+      return text === '' ? 'יש להזין שם פריט' : ''
     case 'category':
       return text === '' ? 'יש לבחור קטגוריה' : ''
     case 'unit':
@@ -151,9 +151,9 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
     } catch (err) {
       if (err.code === '23505') {
         // המק"ט הוא PK טבעי — כפילות מגיעה כ-23505, בדיוק כמו ח"פ במודול 2.
-        setFormError(`המק"ט ${form.sku.trim()} כבר קיים בקטלוג. בחרי מק"ט אחר.`)
+        setFormError(`המק"ט ${form.sku.trim()} כבר קיים בקטלוג — בחרי מק"ט אחר.`)
       } else {
-        setFormError(err.message || 'שמירה נכשלה. נסי שוב.')
+        setFormError(err.message || 'שמירה נכשלה — נסי שוב.')
       }
     } finally {
       setSaving(false)
@@ -176,8 +176,8 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
           </DialogTitle>
           <DialogDescription>
             {isEdit
-              ? 'עדכון פרטי המוצר. המק"ט קבוע ואינו ניתן לשינוי.'
-              : 'המוצר יתווסף לקטלוג ויהיה זמין לבחירה בהצעות מחיר חדשות.'}
+              ? 'עדכון פרטי המוצר — המק"ט קבוע ואינו ניתן לשינוי'
+              : 'המוצר יתווסף לקטלוג ויהיה זמין לבחירה בהצעות מחיר חדשות'}
           </DialogDescription>
         </DialogHeader>
 
@@ -242,7 +242,7 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm text-slate-700">תיאור (רשות)</label>
+            <label className="text-sm text-slate-700">תיאור (לא חובה)</label>
             {/* אין Textarea ב-shadcn של הפרויקט — textarea טבעי מעוצב, כמו בהערות-השיווק */}
             <textarea
               rows={2}
@@ -280,7 +280,7 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm text-slate-700">קישור לתמונה (רשות)</label>
+              <label className="text-sm text-slate-700">קישור לתמונה (לא חובה)</label>
               <Input
                 value={form.image_url}
                 dir="ltr"

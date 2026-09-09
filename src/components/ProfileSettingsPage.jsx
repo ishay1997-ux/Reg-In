@@ -136,13 +136,9 @@ function PersonalDetailsSection({ user, reload }) {
           <Input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="שם פרטי ומשפחה"
+            placeholder="לדוגמה: דנה כהן"
             className="h-auto p-3 text-right rounded-lg border-slate-300 max-w-xs"
           />
-          {/* placeholder נשאר "שם פרטי ומשפחה" ולא הפך ל"לדוגמה: ..." (R5) בכוונה: אותו שדה
-              בדיוק (הוספת/עריכת משתמש) נושא את אותו placeholder ב-UsersManagementPage.jsx
-              (מודול 1, מחוץ לתחום השכתוב הזה) — שינוי כאן בלבד היה יוצר שני נוסחים לאותו
-              שדה (R30/R11). מועמד לאיחוד בשלב שבו מודול 1 עובר שכתוב-מלא. */}
         </div>
 
         <div className="flex flex-col gap-1.5">

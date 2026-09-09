@@ -119,7 +119,7 @@ export default function UsersManagementPage() {
       toast.success(nextChecked ? 'מצב הטמעה הודלק' : 'מצב הטמעה כובה')
     } catch (err) {
       setOnboardingModes((modes) => ({ ...(modes ?? {}), [targetUser.email]: previous }))
-      toast.error(err.message || 'שמירת מצב ההטמעה נכשלה.')
+      toast.error(err.message || 'שמירת מצב ההטמעה נכשלה — נסי שוב.')
     } finally {
       setOnboardingSaving('')
     }
@@ -186,14 +186,14 @@ export default function UsersManagementPage() {
       setSaving(false)
 
       if (error || !updated || updated.length === 0) {
-        setFormError('שמירת השינויים נכשלה. נסי שוב.')
+        setFormError('שמירת השינויים נכשלה — נסי שוב.')
         return
       }
     } else {
       const cleanEmail = formEmail.trim()
       if (!EMAIL_REGEX.test(cleanEmail)) {
         setSaving(false)
-        setFormError('יש להזין כתובת דוא"ל תקינה.')
+        setFormError('יש להזין כתובת דוא״ל תקינה.')
         return
       }
 
@@ -209,9 +209,9 @@ export default function UsersManagementPage() {
 
       if (error) {
         if (error.code === '23505') {
-          setFormError('כבר קיים משתמש עם כתובת הדוא"ל הזו.')
+          setFormError('כבר קיים משתמש עם כתובת הדוא״ל הזו.')
         } else {
-          setFormError('שמירה נכשלה. נסי שוב.')
+          setFormError('שמירה נכשלה — נסי שוב.')
         }
         return
       }
@@ -245,7 +245,9 @@ export default function UsersManagementPage() {
 
     if (error || !updated || updated.length === 0) {
       toast.error(
-        nextStatus === 'inactive' ? 'השבתת המשתמש נכשלה. נסי שוב.' : 'הפעלת המשתמש נכשלה. נסי שוב.',
+        nextStatus === 'inactive'
+          ? 'השבתת המשתמש נכשלה — נסי שוב.'
+          : 'הפעלת המשתמש נכשלה — נסי שוב.',
       )
       return
     }
@@ -291,14 +293,14 @@ export default function UsersManagementPage() {
               <DialogTitle>{editingUser ? 'עריכת משתמש' : 'הוספת משתמש חדש'}</DialogTitle>
               <DialogDescription>
                 {editingUser
-                  ? 'עדכון שם, טלפון ותפקיד. לשינוי כתובת דוא"ל יש ליצור משתמש חדש.'
+                  ? 'עדכון שם, טלפון ותפקיד — לשינוי כתובת דוא״ל יש ליצור משתמש חדש'
                   : 'היא לא תוכל להתחבר עד שתיצרי לה חשבון-כניסה בנפרד'}
               </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm text-slate-700">דוא"ל</label>
+                <label className="text-sm text-slate-700">דוא״ל</label>
                 <Input
                   type="email"
                   value={formEmail}
@@ -314,7 +316,7 @@ export default function UsersManagementPage() {
                 <Input
                   value={formFullName}
                   onChange={(e) => setFormFullName(e.target.value)}
-                  placeholder="שם פרטי ומשפחה"
+                  placeholder="לדוגמה: דנה כהן"
                   className="h-auto p-3 text-right rounded-lg border-slate-300"
                 />
               </div>
@@ -351,7 +353,7 @@ export default function UsersManagementPage() {
                 {/* מניעת self-lockout: מנכ"ל שעורך את עצמו לא יכול לשנות את התפקיד של עצמו -
                     אותו עיקרון בדיוק כמו נעילת עמודת המנכ"ל במטריצה ומניעת מחיקה עצמית. */}
                 {editingUser?.email === currentUser?.email && (
-                  <p className="text-xs text-slate-400">לא ניתן לשנות תפקיד לחשבון שלך.</p>
+                  <p className="text-xs text-slate-400">לא ניתן לשנות תפקיד לחשבון שלך</p>
                 )}
               </div>
 
@@ -375,7 +377,7 @@ export default function UsersManagementPage() {
         <thead>
           <tr className="border-b border-slate-200 text-sm text-slate-500">
             <th className="py-2 font-medium">שם מלא</th>
-            <th className="py-2 font-medium">דוא"ל</th>
+            <th className="py-2 font-medium">דוא״ל</th>
             <th className="py-2 font-medium">טלפון</th>
             <th className="py-2 font-medium">תפקיד</th>
             <th className="py-2 font-medium">סטטוס</th>
