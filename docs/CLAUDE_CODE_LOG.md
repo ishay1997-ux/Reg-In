@@ -46,6 +46,11 @@
 
 ## Session Log (newest first)
 
+### 09/09/2026 (18:2X) — PR #125 merged into `dev` on Ishay's "מזג" — the ui-copy night is closed
+- **Evidence, verbatim:** `git log -1 origin/dev` ⇒ `4f4f164 09/09 18:19 Merge PR #125…` · `git merge-base --is-ancestor <branch HEAD> origin/dev` ⇒ YES · `gh pr view 125` ⇒ `MERGED 2026-09-09T15:19:39Z`. CI before the merge: Lint·Test·Build pass (1m42s) · gitleaks pass · deno type-check pass · Vercel pass; `mergeStateStatus CLEAN`.
+- Merge performed by Claude on Ishay's explicit one-word instruction (precedent 03/09, LOG). Branch `ishay/ui-copy-rewrite` is dead (140 commits, all on `dev`); this entry lands from `ishay/ui-copy-postmerge` (cut from `origin/dev`) because rule 10 forbids pushing to `dev` and rule 10 forbids stacking on a merged branch.
+- **Open after the night:** C-01 migration (needs a Supabase-connected session + Ishay's typed echo) · `regin-docs-sync` (Ishay's click) · module 11 blueprint on fresh `dev` with `<Hint>` from the start (plan §4 stage 1).
+
 ### 09/09/2026 (18:1X) — PR #125 opened to `dev` on Ishay's explicit one-time instruction
 - *"תעשה בשבילי חד פעמי אישור ממני תחסוך לי עבודה טובה"* ⇒ `gh pr create --base dev` (gh authenticated as ishay1997-ux). Pre-checks: 140 ahead / 0 behind `origin/dev`, `git merge-tree` clean, no existing PR for the branch. The PR body names what else the branch carries (m11 discovery docs — the branch was cut from `module-11-reports`). **Merging is not covered by the instruction** — irreversible, Ishay's. Recorded in handoff §2.
 
