@@ -362,109 +362,52 @@ describe('DashboardPage — לוח החודש', () => {
   })
 })
 
-describe('DashboardPage — מה דורש טיפול', () => {
-  it('סדר-הענפים של attentionRows: הסתיים-ולא-חויב → חוסר → הצעה-פגה', async () => {
+describe('DashboardPage — מה דורש טיפול (R6 09/09/2026: ארבעה כרטיסי-מחלקה קבועים)', () => {
+  it('ארבעה כרטיסים קבועים, כל אחד עם התפקיד שמטפל בו ואת הפריט הדחוף ביותר', async () => {
     renderPage()
     await screen.findByTestId('kpi-active')
-    const rows = screen.getAllByTestId(/^dashboard-attention-row-/)
-    expect(rows).toHaveLength(4)
-    expect(within(rows[0]).getByText('פסטיבל קיץ עירוני')).toBeInTheDocument()
-    expect(within(rows[0]).getByText('הסתיים לפני 8 ימים, לא חויב')).toBeInTheDocument()
-    expect(within(rows[3]).getByText('הצעה #41')).toBeInTheDocument()
-    expect(within(rows[3]).getByText('פגה בעוד 3 ימים')).toBeInTheDocument()
+
+    const unbilledCard = screen.getByTestId('dashboard-attention-card-unbilled')
+    expect(within(unbilledCard).getByText(/מנהלת כספים/)).toBeInTheDocument()
+    expect(within(unbilledCard).getByText(/פסטיבל קיץ עירוני/)).toBeInTheDocument()
+    expect(within(unbilledCard).getByText(/הסתיים לפני 8 ימים, לא חויב/)).toBeInTheDocument()
+
+    const staffingCard = screen.getByTestId('dashboard-attention-card-staffing')
+    expect(within(staffingCard).getByText(/מנהלת גיוס/)).toBeInTheDocument()
+
+    const quoteCard = screen.getByTestId('dashboard-attention-card-quote')
+    expect(within(quoteCard).getByText(/מנהלת פרויקטים/)).toBeInTheDocument()
+    expect(within(quoteCard).getByText(/הצעה #41/)).toBeInTheDocument()
+    expect(within(quoteCard).getByText(/פגה בעוד 3 ימים/)).toBeInTheDocument()
+
+    // מסך-הפרויקטים כאן בלי אף פרויקט עם חוסר-לוגיסטיקה — הכרטיס נשאר, מציג "✓ אין".
+    const logisticsCard = screen.getByTestId('dashboard-attention-card-logistics')
+    expect(within(logisticsCard).getByText('✓ אין')).toBeInTheDocument()
   })
 
-  it('רשימה ריקה מציגה שורה אחת מנומקת ולא כלום', async () => {
+  it('רשימה ריקה ⇒ ארבעת הכרטיסים נשארים, כולם "✓ אין" — לא נעלמים ולא כלום', async () => {
     getDashboardSummary.mockResolvedValue(summaryFixture({ projects: [], pending_quotes: [] }))
     renderPage()
     await screen.findByTestId('kpi-active')
-    expect(screen.getByText('✓ אין פריטים הדורשים טיפול')).toBeInTheDocument()
-    expect(screen.queryByTestId(/^dashboard-attention-row-/)).not.toBeInTheDocument()
+    expect(screen.getAllByText('✓ אין')).toHaveLength(4)
   })
-})
 
-describe('DashboardPage — מה דורש טיפול: תיקרה וקבוצות (הכרעת-ישי 03/09/2026 19:3X)', () => {
-  // ארבעה "הסתיים ולא חויב" (ותיק→חדש) + ארבעה "חוסר קרוב" (קרוב→רחוק) + שתי הצעות = 10.
-  // 🔴 תקרה 4 + ייצוג-קבוצות (04/09/2026) ⇒ 2 חיוב · 1 חוסר · 1 הצעה, ו-6 מוסתרות.
-  function unbilled(id, date) {
-    return project({
-      project_id: id,
-      event_name: `הסתיים ${id}`,
-      final_event_date: date,
-      project_status: 'event_finished',
-      required_hostess_count: 1,
-      hostesses_confirmed: 1,
-      logistics_ready: 1,
-      logistics_total: 1,
-    })
-  }
-  function shortage(id, date) {
-    return project({
-      project_id: id,
-      event_name: `חוסר ${id}`,
-      final_event_date: date,
-      project_status: 'in_progress',
-      required_hostess_count: 2,
-      hostesses_confirmed: 0,
-      logistics_ready: 1,
-      logistics_total: 1,
-    })
-  }
-
-  it('10 פריטים (4+4+2) ⇒ 4 כרטיסים, שורת-קבוצות מלאה, וקישור "כל 10 הפריטים" ל-/projects', async () => {
+  it('מנהלת-גיוס (quotes_visible=false): כרטיס-ההצעות ממוסך, לא "0"', async () => {
     getDashboardSummary.mockResolvedValue(
-      summaryFixture({
-        projects: [
-          unbilled(401, '2026-08-20'),
-          unbilled(402, '2026-08-21'),
-          unbilled(403, '2026-08-22'),
-          unbilled(404, '2026-08-23'),
-          shortage(405, '2026-09-04'),
-          shortage(406, '2026-09-05'),
-          shortage(407, '2026-09-06'),
-          shortage(408, '2026-09-07'),
-        ],
-        pending_quotes: [
-          { quote_id: 41, updated_at: '2026-08-07T09:00:00+00:00' }, // daysLeft=3
-          { quote_id: 42, updated_at: '2026-08-08T09:00:00+00:00' }, // daysLeft=4
-        ],
-      }),
+      summaryFixture({ quotes_visible: false, pending_quotes_count: null, pending_quotes: null }),
     )
     renderPage()
     await screen.findByTestId('kpi-active')
-
-    const cards = screen.getAllByTestId(/^dashboard-attention-row-/)
-    expect(cards).toHaveLength(4)
-    // 🔴 בלי ייצוג-קבוצות ארבעת ה"לא חויב" היו בולעים את כל התקרה, ו-"חוסר קרוב (4)"
-    // היה מוכרז במונה בלי שאף פריט שלו נראה על המסך — הפגם שישי תפס בשימוש חי.
-    expect(within(cards[2]).getByText(/חסרות|דיילות|לוגיסטיקה/)).toBeInTheDocument()
-    expect(within(cards[3]).getByText(/פגה/)).toBeInTheDocument()
-
-    // 🔑 המונים סופרים על **כל** הרשימה ולא על הארבעה המוצגים — גודל-הבעיה נשאר גלוי
-    // גם כשהתיקרה נמוכה. זו כל הסיבה שהתיקרה מותרת מלכתחילה.
-    const groupLine = screen.getByTestId('dashboard-attention-groups').textContent
-    expect(groupLine).toContain('הסתיים ולא חויב (4)')
-    expect(groupLine).toContain('חוסר קרוב (4)')
-    expect(groupLine).toContain('הצעה שפגה בקרוב (2)')
-
-    const more = screen.getByTestId('dashboard-attention-more')
-    // הנוסח מתאר כמה יש לטפל, לא כמה הוסתרו (04/09/2026).
-    expect(more).toHaveTextContent('כל 10 הפריטים')
-    // היעד הוא המסך שבו יושבת השורה הראשונה שנחתכה — כאן החמישית, שהיא "חוסר קרוב".
-    expect(more.getAttribute('href')).toBe('/projects')
+    const quoteCard = screen.getByTestId('dashboard-attention-card-quote')
+    expect(within(quoteCard).getByText('לא זמין בתפקידך')).toBeInTheDocument()
   })
 
-  it('3 פריטים בלבד (מתחת לתיקרה) ⇒ בלי קישור-הכול', async () => {
-    getDashboardSummary.mockResolvedValue(
-      summaryFixture({
-        projects: [unbilled(409, '2026-08-20'), shortage(410, '2026-09-04')],
-        pending_quotes: [{ quote_id: 43, updated_at: '2026-08-07T09:00:00+00:00' }],
-      }),
-    )
+  it('לחיצה על כרטיס-לוגיסטיקה פותחת את /logistics — לא פרויקט בודד', async () => {
     renderPage()
     await screen.findByTestId('kpi-active')
-
-    expect(screen.getAllByTestId(/^dashboard-attention-row-/)).toHaveLength(3)
-    expect(screen.queryByTestId('dashboard-attention-more')).not.toBeInTheDocument()
+    expect(screen.getByTestId('dashboard-attention-card-logistics')).toHaveAttribute(
+      'href',
+      '/logistics',
+    )
   })
 })

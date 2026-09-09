@@ -1,7 +1,9 @@
-// רצועת "מה דורש טיפול" — שורות מ-attentionSummary בלבד (src/lib/dashboard.js): תיקרה
-// קבועה (ATTENTION_CAP) על הכרטיסים המוצגים, שורת-קבוצות שסופרת על הרשימה המלאה, וקישור
-// "כל N הפריטים" כשיש מה שנחתך. הרכיב מצייר נקודה+כותרת+"למה" ואינו ממיין/מסנן/מחשב דבר
-// בעצמו (כלל 14) — כולל יעד קישור-ה"הכול", שנגזר כאן רק כי הוא בחירת-ניווט של ה-UI.
+// רצועת "מה דורש טיפול" — R6 09/09/2026 (הכרעת-ישי): ארבעה כרטיסי-מחלקה קבועים
+// מ-attentionCategories (src/lib/dashboard.js), לא רשימת-שורות עם תיקרה. כל כרטיס
+// שייך בדיוק לתפקיד אחד שמטפל בו (כספים/דיילות/לוגיסטיקה/הצעות), ולחיצה עליו פותחת
+// את מסך המודול של אותה מנהלת — זו התשובה בפועל ל"עם איזה מנהל לדבר", לא רק מונה.
+// הרכיב מצייר נקודה+כותרת+תפקיד+מונה+שורת-הפריט-הדחוף, ואינו ממיין/מסנן/מחשב דבר
+// בעצמו (כלל 14).
 //
 // 🔴 **04/09/2026 — מעמודה-בצד לפס-אופקי מתחת ללוח (מוקאפ מאושר: "מאשר את המוקאפ בנה ככה").**
 // הפאנל תפס שליש מרוחב המסך בשביל רשימה, והלוח — הגיבור של המסך — נשאר עם תאים בני ~90px
@@ -11,88 +13,55 @@
 
 import { Link } from 'react-router-dom'
 import Hint from '@/components/Hint'
-import { attentionSummary, attentionAllLabel } from '@/lib/dashboard'
+import { attentionCategories, MASKED_TEXT } from '@/lib/dashboard'
 import Ltr from '@/components/Ltr'
 
 const DOT_CLASS = { red: 'bg-red-500', yellow: 'bg-amber-500' }
 
-// unbilled/shortage מקורם במסך-הפרויקטים; quote במסך-ההצעות — קישור-ה"הכול" הולך לאן
-// שהשורה הראשונה-שנחתכה שייכת, לא ליעד קבוע.
-const PROJECT_KINDS = new Set(['unbilled', 'shortage'])
-
 export default function AttentionPanel({ summary }) {
-  const today = summary?.today
-  const { rows, hidden, firstHidden, groups, total } = attentionSummary(summary, today)
-
-  // יעד ה"הכול": השורה הראשונה שנשארה בחוץ קובעת (לא ברירת-מחדל) — כך שהקישור תמיד
-  // פותח את המסך שבו יושב הבא-בתור לטיפול, לא מסך אקראי. ‏`firstHidden` מגיע מוכן
-  // מ-`attentionSummary` (04/09/2026): עם ייצוג-קבוצות אי-אפשר לגזור אותו מהאינדקס.
-  const overflowHref =
-    hidden > 0 && firstHidden
-      ? PROJECT_KINDS.has(firstHidden.kind)
-        ? '/projects'
-        : '/quotes'
-      : null
+  const categories = attentionCategories(summary, summary?.today)
 
   return (
     <div
       className="rounded-xl border border-slate-200 bg-white p-4"
       data-testid="dashboard-attention"
     >
-      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="text-base font-bold text-slate-800">מה דורש טיפול</h2>
-        {groups.length > 0 && (
-          <p className="text-xs text-slate-500" data-testid="dashboard-attention-groups">
-            {groups.map((group, i) => (
-              <span key={group.kind}>
-                {i > 0 && ' · '}
-                {group.label} (<Ltr>{group.count}</Ltr>)
-              </span>
-            ))}
-          </p>
-        )}
-        {hidden > 0 && (
-          <Link
-            to={overflowHref}
-            data-testid="dashboard-attention-more"
-            className="text-xs font-semibold text-teal-700"
-          >
-            {attentionAllLabel(total)}
-          </Link>
-        )}
-      </div>
-
+      <h2 className="mb-3 text-base font-bold text-slate-800">מה דורש טיפול</h2>
       <Hint id="dashboard.attention" />
 
-      {rows.length === 0 ? (
-        // אותה מוסכמת-ניסוח כמו "✓ אין פריטים" (src/lib/projects.js) — וי + "אין X" לעובדה טובה.
-        <p className="text-sm text-slate-400">✓ אין פריטים הדורשים טיפול</p>
-      ) : (
-        // ‏auto-fit + minmax: ארבעה כרטיסים בשורה על מסך רחב, ומתקפלים לשניים/אחד בצר —
-        // בלי media-query ובלי מספר-עמודות קשיח שיישבר בפריסה אחרת.
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(215px,1fr))] gap-2">
-          {rows.map((row, i) => (
-            // הכרטיס כולו הוא הקישור — קודם היה "פתח ←" נפרד בסוף שורה, וכאן שטח-הלחיצה
-            // הגדול הוא גם נוח יותר וגם חוסך פקד שאינו נושא מידע.
-            <Link
-              key={`${row.kind}-${row.title}-${i}`}
-              to={row.href}
-              className="flex min-w-0 items-start gap-2 rounded-lg border border-slate-200 p-2.5 hover:border-teal-300 hover:bg-teal-50/40"
-              data-testid={`dashboard-attention-row-${i}`}
-            >
-              <span
-                className={`mt-[5px] size-[7px] shrink-0 rounded-full ${DOT_CLASS[row.tone]}`}
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] font-medium text-slate-800">
-                  {row.title}
+      {/* ארבעה כרטיסים קבועים, לא רשימה שמתכווצת/מתרחבת — קטגוריה ריקה נשארת על המסך
+          עם "✓ אין" (הכרעת-ישי, פריסה יציבה), במקום להיעלם ולזוז לכל השאר. */}
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2">
+        {categories.map((cat) => (
+          <Link
+            key={cat.kind}
+            to={cat.href}
+            className="flex min-w-0 flex-col gap-1 rounded-lg border border-slate-200 p-2.5 hover:border-teal-300 hover:bg-teal-50/40"
+            data-testid={`dashboard-attention-card-${cat.kind}`}
+          >
+            <span className="flex items-center gap-1.5 text-[11px] text-slate-500">
+              <span className={`size-[7px] shrink-0 rounded-full ${DOT_CLASS[cat.tone]}`} />
+              {cat.label} · {cat.role}
+            </span>
+            {cat.masked ? (
+              <span className="text-sm font-semibold text-slate-400">{MASKED_TEXT}</span>
+            ) : (
+              <>
+                <span className="text-xl font-bold text-slate-800">
+                  {cat.count === 0 ? (
+                    <span className="text-sm font-semibold text-slate-400">✓ אין</span>
+                  ) : (
+                    <Ltr>{cat.count}</Ltr>
+                  )}
                 </span>
-                <span className="block text-[11.5px] text-slate-500">{row.why}</span>
-              </span>
-            </Link>
-          ))}
-        </div>
-      )}
+                {cat.topLine && (
+                  <span className="block truncate text-[11.5px] text-slate-500">{cat.topLine}</span>
+                )}
+              </>
+            )}
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }

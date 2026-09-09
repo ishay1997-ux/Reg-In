@@ -23,6 +23,9 @@ import { cn } from '@/lib/utils'
 import {
   colorProjects,
   colorCounts,
+  calendarColorMeta,
+  staffingRatioLabel,
+  logisticsRatioLabel,
   hebrewMonthTitle,
   monthGridCells,
   projectsByDate,
@@ -31,12 +34,13 @@ import {
 import { StaffingIcon, LogisticsIcon } from './dimIcons'
 
 const WEEKDAYS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש']
-const ALL_COLORS = ['red', 'yellow', 'green', 'cancelled']
+const ALL_COLORS = ['red', 'yellow', 'green', 'past', 'cancelled']
 
 const SWATCH_CLASS = {
   red: 'bg-red-500',
   yellow: 'bg-amber-500',
   green: 'bg-green-500',
+  past: 'bg-slate-300',
   cancelled: 'bg-slate-400',
 }
 
@@ -44,8 +48,13 @@ const CHIP_CLASS = {
   red: 'bg-red-100 text-red-700',
   yellow: 'bg-amber-100 text-amber-800',
   green: 'bg-green-100 text-green-700',
+  past: 'bg-slate-50 text-slate-400',
   cancelled: 'bg-slate-100 text-slate-500 line-through',
 }
+
+// תג-טקסט קבוע לצ'יפ שאין לו אייקוני-ממד בכלל (R5 09/09/2026): מבוטל/התקיים אינם
+// נשאלים על חוסר, ובלי תג היו זהים-לעין לצ'יפ-ירוק (גם הוא בלי אייקונים אחרי R5).
+const STATUS_TAG = { past: 'התקיים', cancelled: 'מבוטל' }
 
 // שני תנאי-"מלא" של סמלי-הצ'יפ: זהים בייט-לבייט ל-`logisticsComplete` הפרטית (לא מיוצאת)
 // ול-תנאי ≥ הישיר של staffingCell ב-src/lib/projects.js — אך שתיהן שם מחזירות מבנה-תא
@@ -64,6 +73,9 @@ export default function CalendarGrid({ summary, monthStartIso, onPrev, onNext, o
   const [query, setQuery] = useState('')
 
   const warningDays = summary?.params?.event_warning_days
+  // R1/R4 09/09/2026: המקרא-שורה מתחת ללוח נמחק (הכרעת-ישי) — ההגדרה חיה כ-title
+  // על צ'יפי-הספירה עצמם, ולכן חייבת להיגזר מכאן ולא מהמוקאפ (המספר "14" קבוע בו).
+  const colorMeta = useMemo(() => calendarColorMeta(warningDays), [warningDays])
   const colored = useMemo(
     () => colorProjects(summary?.projects, summary?.today, warningDays),
     [summary, warningDays],
@@ -124,25 +136,31 @@ export default function CalendarGrid({ summary, monthStartIso, onPrev, onNext, o
         >
           היום
         </Button>
-        <div className="relative min-w-[10rem] flex-1">
-          {/* זכוכית-מגדלת בצד ימין של תיבת-חיפוש — מעבר-האחידות (CustomersPage.jsx). */}
+        <div className="relative w-36 shrink-0">
+          {/* זכוכית-מגדלת בצד ימין של תיבת-חיפוש — מעבר-האחידות (CustomersPage.jsx).
+              🆕 09/09/2026 (הכרעת-ישי): רוחב-קבוע וקטן, לא flex-1 — כך שחמשת
+              צ'יפי-הספירה (אחרי R1/R3) נכנסים לצידה בשורה אחת. */}
           <Search className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="חיפוש פרויקט…"
+            placeholder="חיפוש…"
             className="h-auto rounded-lg border-slate-300 py-1.5 pr-9 pl-3 text-right text-xs"
             data-testid="dashboard-cal-search"
           />
         </div>
+        {/* R1 09/09/2026 (הכרעת-ישי, "למחוק את השורה ומילה ליד כל ציפ"): כל צ'יפ נושא
+            מילה+מספר, וה-title מחזיק את ההגדרה המדויקת שהמקרא-שורה נשא קודם. */}
         {ALL_COLORS.map((color) => (
           <FilterPill
             key={color}
             on={activeColors.has(color)}
             onClick={() => toggleColor(color)}
             testId={`dashboard-filter-${color}`}
+            title={colorMeta[color].title}
           >
             <span className={cn('inline-block size-2 rounded-full', SWATCH_CLASS[color])} />
+            {colorMeta[color].label}
             <Ltr className="mr-1">{String(counts[color])}</Ltr>
           </FilterPill>
         ))}
@@ -170,8 +188,6 @@ export default function CalendarGrid({ summary, monthStartIso, onPrev, onNext, o
           />
         ))}
       </div>
-
-      <Legend warningDays={warningDays} />
     </div>
   )
 }
@@ -230,8 +246,15 @@ function DayCell({ cell, today, projects }) {
   )
 }
 
+// R5 09/09/2026 (הכרעת-ישי, "אייקון יופיע רק כשמשהו באמת חסר… מאשר רעיון טוב"):
+// כל ממד מוצג רק כשהוא חסר — לא עוד זוג-קבוע "מלא/קו" על כל צ'יפ. פרויקט ירוק
+// (שני הממדים מלאים) יוצא בלי שום svg, בדיוק כמו past/cancelled; פרויקט עם חוסר
+// אחד בלבד מציג אייקון אחד, לא שניים. ה-title על כל אייקון מחזיק את המספר המדויק
+// (R4) — התחליף לשורת-המקרא שנמחקה.
 function DayChip({ project }) {
-  const cancelled = project.color === 'cancelled'
+  const tag = STATUS_TAG[project.color]
+  const staffingShort = !isStaffingComplete(project)
+  const logisticsShort = !isLogisticsComplete(project)
   return (
     <Link
       to={`/projects/${project.project_id}`}
@@ -242,57 +265,24 @@ function DayChip({ project }) {
       data-testid={`dashboard-chip-${project.project_id}`}
     >
       <span className="min-w-0 flex-1 truncate">{project.event_name}</span>
-      {cancelled ? (
-        <span className="shrink-0 text-[9px] font-normal">מבוטל</span>
+      {tag ? (
+        <span className="shrink-0 text-[9px] font-normal">{tag}</span>
       ) : (
-        <span className="flex shrink-0 items-center gap-[2px]">
-          <StaffingIcon filled={isStaffingComplete(project)} />
-          <LogisticsIcon filled={isLogisticsComplete(project)} />
-        </span>
+        (staffingShort || logisticsShort) && (
+          <span className="flex shrink-0 items-center gap-[2px]">
+            {staffingShort && (
+              <span title={staffingRatioLabel(project)}>
+                <StaffingIcon filled={false} />
+              </span>
+            )}
+            {logisticsShort && (
+              <span title={logisticsRatioLabel(project)}>
+                <LogisticsIcon filled={false} />
+              </span>
+            )}
+          </span>
+        )
       )}
     </Link>
-  )
-}
-
-function Legend({ warningDays }) {
-  // המספר במקרא דינמי מ-params, לא מועתק-קשיח מהמוקאפ (ששם "14" קבוע) — אחרת שינוי-פרמטר
-  // עתידי (event_warning_days) היה משאיר מקרא שקרי. סף לא-נטען ⇒ נוסח כללי בלי מספר.
-  // ניסוח (הערת-ישי בשער 3.4, 03/09/2026): תוויות-מקרא הן צירופי-שם קצרים, לא משפטים —
-  // מעבר-הניסוח של src/CLAUDE.md. ההסבר הקצר לאייקונים נשאר, כפריט אחד ולא כמשפט על כל אייקון.
-  const soonLabel = warningDays != null ? `חוסר בתוך ${warningDays} יום` : 'חוסר קרוב'
-  const laterLabel = warningDays != null ? `חוסר מעבר ל-${warningDays} יום` : 'חוסר רחוק'
-  return (
-    <div className="mt-3 flex flex-wrap items-center gap-4 text-[11px] text-slate-500">
-      <LegendSwatch className={SWATCH_CLASS.red} label={soonLabel} />
-      <LegendSwatch className={SWATCH_CLASS.yellow} label={laterLabel} />
-      <LegendSwatch className={SWATCH_CLASS.green} label="ללא חוסר" />
-      {/* מבוטל: צבע-לוח רביעי (הכרעת-ישי 03/09, אחרי אישור-המוקאפ) — לא מופיע במוקאפ הסטטי,
-          נוסף כאן כדי שהמקרא יישאר נאמן לצ'יפי-הסינון שמעליו. */}
-      <LegendSwatch className={SWATCH_CLASS.cancelled} label="מבוטל" />
-      {/* 🐞 **תוקן 04/09/2026 — ישי תפס את זה במקרא, והלוח עצמו היה תקין כל הזמן.**
-          קודם עמדו כאן שלושה פריטים שהשתמשו ב-`StaffingIcon` **שלוש פעמים**: "איוש",
-          "לוגיסטיקה" (עם אייקון-קופסה) ואז "הושלם · חסר" — שוב עם אייקון-דיילת. התוצאה:
-          המסך הראה שלושה אייקוני-דיילת, **ולסימול-החסר של הלוגיסטיקה לא היה ייצוג כלל**,
-          כך שקורא לא יכול היה לדעת איך נראית לוגיסטיקה חסרה. שני צמדים סימטריים — מלא
-          וקו לצד כל אחד מהם — אומרים את שני הממדים בבת-אחת ובלי לתאר אחד מהם בעזרת השני. */}
-      <span className="flex items-center gap-1">
-        <StaffingIcon filled />
-        <StaffingIcon filled={false} /> איוש
-      </span>
-      <span className="flex items-center gap-1">
-        <LogisticsIcon filled />
-        <LogisticsIcon filled={false} /> לוגיסטיקה
-      </span>
-      <span>מלא = הושלם · קו = חסר</span>
-    </div>
-  )
-}
-
-function LegendSwatch({ className, label }) {
-  return (
-    <span className="flex items-center gap-1">
-      <span className={cn('inline-block size-2.5 rounded-full', className)} />
-      {label}
-    </span>
   )
 }
