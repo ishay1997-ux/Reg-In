@@ -259,7 +259,7 @@ function LinesTable({ lines }) {
   return (
     <View>
       <View style={styles.th} fixed>
-        <Text style={{ ...CELL_GAP, ...RTL, width: COLS.sku }}>קוד פריט</Text>
+        <Text style={{ ...CELL_GAP, ...RTL, width: COLS.sku }}>מק&quot;ט</Text>
         <Text style={{ ...CELL_GAP, ...RTL, width: COLS.name }}>תיאור השירות</Text>
         <Text style={{ ...CELL_GAP, ...RTL, width: COLS.qty }}>כמות</Text>
         <Text style={{ ...CELL_GAP, ...RTL, width: COLS.color }}>צבע</Text>
@@ -308,7 +308,7 @@ function LinesTable({ lines }) {
 // המנוע מסרב, ולא המסך שמעליו, כי הוא נקודת-החנק היחידה: שלושת המסכים מגיעים אליו,
 // ומודול 10 ירים אותו לשרת לשליחה אוטומטית — שם אין מסך שיגן.
 export const MISSING_VAT_MESSAGE =
-  'שיעור המע"מ אינו מוגדר בהגדרות המערכת — לא ניתן להפיק מסמך ללקוח. יש להוסיף את הפרמטר אחוז_מעמ בהגדרות המערכת.'
+  'יש להוסיף את הפרמטר אחוז_מעמ בהגדרות המערכת — בלעדיו אי-אפשר להפיק מסמך-הצעה ללקוח.'
 
 // קוד-שגיאה סינתטי כדי שהקורא יבחין בין "פרמטר חסר" (הודעה שאומרת מה לתקן) לבין כשל-הפקה
 // כללי. אותה תבנית כמו `RLS_DENIED` ב-`02_customers/api.js`.
@@ -347,7 +347,7 @@ export function buildQuoteDocument(quote) {
         <View style={styles.head}>
           <Image src={regInLogo} style={styles.logo} />
           <View>
-            <Text style={styles.docTitle}>הצעת מחיר ללקוח</Text>
+            <Text style={styles.docTitle}>הצעת מחיר</Text>
             <View style={styles.metaBox}>
               <View style={styles.metaRow}>
                 <Text style={styles.metaKey}>מספר הצעה</Text>

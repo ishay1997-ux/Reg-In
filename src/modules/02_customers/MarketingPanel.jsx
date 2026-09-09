@@ -197,7 +197,7 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
       {/* המגבלה נגזרת מ-MARKETING_MAX_BYTES ולא מוקלדת — היא נאכפת ב-api.uploadMarketingFile,
           וטקסט מקודד-קשיח כאן היה סוטה ממנה בשקט ביום שהמגבלה תשתנה. */}
       <p className="text-xs text-slate-500">
-        קבצים נתמכים: PDF, JPG, PNG · עד {MARKETING_MAX_BYTES / 1024 / 1024}MB.
+        קבצים נתמכים: PDF, JPG, PNG · עד {MARKETING_MAX_BYTES / 1024 / 1024}MB
       </p>
 
       {/* תצוגה-מקדימה של החומר שהועלה (רדיזיין 11/07) — כדי לראות מה נשלח לפני השליחה. גודל בינוני. */}

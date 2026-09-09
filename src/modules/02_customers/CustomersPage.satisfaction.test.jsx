@@ -197,7 +197,9 @@ describe('רשימת-הלקוחות — צ\'יפ "טעון בירור" (A3)', ()
     expect(screen.getByTestId('customers-table')).toBeInTheDocument()
     const banner = screen.getByTestId('customers-screen-params-error')
     expect(banner).toHaveTextContent('לקוחות רדומים')
-    expect(banner).toHaveTextContent('עמודת ההתרשמות')
+    // ✏️ לילה-הטקסטים (09/09/2026): "עמודת ההתרשמות" ⇒ "עמודת שביעות הרצון" — R11, אותו מונח
+    // שהעמודה עצמה נושאת בכל מסכי המודול (ר' ההערה ב-CustomersPage.jsx ליד הבאנר).
+    expect(banner).toHaveTextContent('עמודת שביעות הרצון')
     expect(screen.getByTestId('customers-screen-params-retry')).toBeInTheDocument()
   })
 })

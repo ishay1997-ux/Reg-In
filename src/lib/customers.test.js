@@ -469,10 +469,10 @@ describe('validateCustomerField — ולידציה פר-שדה', () => {
     expect(validateCustomerField('שדה-שלא-קיים', 'x')).toBe('')
   })
 
-  it('ח"פ = 9 ספרות בדיוק, עם מחרוזת-האפיון המילולית', () => {
+  it('ח"פ = 9 ספרות בדיוק, בתבנית-השגיאה האחידה של הקובץ (✏️ לילה-הטקסטים 09/09/2026: הוסר "שגיאה:" — R18/R30, ראו ההערה ליד COMPANY_ID_ERROR)', () => {
     expect(validateCustomerField('company_number', '514000001')).toBe('')
     expect(validateCustomerField('company_number', '5140000')).toBe(
-      'שגיאה: מספר ח.פ. חייב להכיל 9 ספרות בדיוק',
+      'מספר ח"פ חייב להכיל 9 ספרות בדיוק',
     )
   })
 

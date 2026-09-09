@@ -661,7 +661,7 @@ export default function QuotesPage() {
                 className="text-xs text-slate-500 underline"
                 data-testid="quotes-date-clear"
               >
-                ניקוי
+                נקי תאריכים
               </button>
             )}
           </div>

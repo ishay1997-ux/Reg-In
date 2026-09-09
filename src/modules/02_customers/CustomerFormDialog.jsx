@@ -283,7 +283,7 @@ export default function CustomerFormDialog({
     } catch (err) {
       if (err.code === '23505') {
         // מרוץ: הח"פ נוסף ע"י משתמש אחר אחרי שהרשימה נטענה — אותה זרימת-§7.11, בלי פירוט-כרטיס.
-        setFormError('חברה זו כבר רשומה במערכת. רענני את הרשימה כדי לראות את הכרטיס הקיים.')
+        setFormError('חברה זו כבר רשומה במערכת — רענני את הרשימה כדי לראות את הכרטיס הקיים.')
       } else {
         setFormError(err.message || 'שמירה נכשלה. נסי שוב.')
       }
@@ -332,10 +332,11 @@ export default function CustomerFormDialog({
           <DialogTitle data-testid="customer-dialog-title">
             {isEdit ? `עריכת לקוח: ${editingCustomer.company_name}` : 'לקוח חדש'}
           </DialogTitle>
-          <DialogDescription>
-            {isEdit
-              ? 'עדכון פרטי הלקוח. מספר הח"פ קבוע ואינו ניתן לשינוי.'
-              : 'הלקוח יתווסף לרשימת הלקוחות במערכת.'}
+          {/* טקסט-עזר מתחת לכותרת-דיאלוג (מבחן-הקבלה של מדריך-הסגנון §7 סבב 2): משפט קצר אחד,
+              בלי נקודה בסוף. במצב-הוספה אין עובדה שהשדות עצמם לא כבר אומרים — sr-only שומר
+              על aria-describedby בלי למלא את המסך במשפט מקשט (R9/R27). */}
+          <DialogDescription className={isEdit ? undefined : 'sr-only'}>
+            {isEdit ? 'מספר הח"פ קבוע ואינו ניתן לשינוי' : 'טופס הוספת לקוח חדש'}
           </DialogDescription>
         </DialogHeader>
 
@@ -384,9 +385,9 @@ export default function CustomerFormDialog({
                         וה-`*` עדיין מחזיר את עמודת-האב **הקפואה** ⇒ הקריאה הישנה הציגה מחרוזת
                         ריקה לכל לקוח שנוצר אחרי `N2ג`, ושם **מיושן** ללקוח שאיש-הקשר שלו נערך
                         מאז. אחרי `N2ד` היא תהיה `undefined`. **שני המצבים שקטים — אין שגיאה.** */}
-                    חברה זו כבר רשומה במערכת: {duplicate.customer.company_name} (איש קשר:{' '}
+                    חברה זו כבר קיימת במערכת — {duplicate.customer.company_name}, איש קשר{' '}
                     {primaryContact(duplicate.customer)?.contact_name ?? '—'}, ח"פ{' '}
-                    {duplicate.customer.company_number}).
+                    {duplicate.customer.company_number}.
                   </p>
                   <Button
                     type="button"
@@ -402,7 +403,7 @@ export default function CustomerFormDialog({
                 <>
                   <p className="text-sm text-amber-800 font-medium">
                     הלקוח {duplicate.customer.company_name} (ח"פ {duplicate.customer.company_number}
-                    ) קיים בארכיון — לשחזר?
+                    ) נמצא בארכיון.
                   </p>
                   <Button
                     type="button"
@@ -469,14 +470,14 @@ export default function CustomerFormDialog({
               role="alert"
               data-testid="customer-contacts-load-error"
             >
-              לא ניתן לטעון את אנשי הקשר כרגע. שאר פרטי הלקוח יישמרו כרגיל; נסי שוב מאוחר יותר
-              לעריכת אנשי הקשר.
+              טעינת אנשי הקשר נכשלה — שאר הפרטים יישמרו כרגיל, ונסי שוב בעריכה הבאה.
             </p>
           ) : (
             <div className="flex flex-col gap-2" data-testid="customer-contacts-section">
               <label className="text-sm text-slate-700">אנשי קשר</label>
               <p className="text-xs text-slate-500">
-                איש קשר אחד חייב להיות מסומן כראשי. הוא זה שמופיע בהצעת המחיר ומקבל את המיילים.
+                איש קשר אחד חייב להיות מסומן כראשי — הפרטים שלו מופיעים בהצעת המחיר והוא מקבל את
+                המיילים
               </p>
 
               {primaryError && (
