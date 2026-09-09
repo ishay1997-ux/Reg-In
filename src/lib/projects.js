@@ -115,7 +115,10 @@ export function gapSentence(project) {
   const staffing = staffingMetric3(confirmed, required)
   const logistics = { complete: logisticsComplete(project) }
   if (staffing.complete && logistics.complete) return '✓ מוכן לאירוע'
-  if (rowCount === 0) return 'לא נשלח אף זימון — איש לא נגע בפרויקט מאז שנוצר'
+  // ✏️ 09/09/2026 (לילה-הטקסטים, שלב 10): הזנב "— איש לא נגע בפרויקט מאז שנוצר" ירד — נושא-משפט
+  // בזכר על צוות שכולו נשים (המדריך §1) ו"נגע" אינה מילה של מנהלת-פרויקטים (R10). הנוסח שנשאר
+  // הוא הגדרת-"אדום" המאושרת מילה-במילה (screens-approved.md §⑥: "לא נשלח אף זימון לדיילת").
+  if (rowCount === 0) return 'לא נשלח אף זימון לדיילת'
 
   const gap = Math.max(required - confirmed, 0)
   // המקרה של #11: כל החוסר הוא דיילת אחת שכבר אישרה זמינות — הכדור אצל דנה, לא אצלה.
@@ -134,16 +137,19 @@ export function gapSentence(project) {
 // טופל). לשון-היחיד לזימון בודד — אותה תבנית-הרחבה שישי הנהן לה בנוסחי-הולידציה של הסגירה;
 // "1 זימונים ממתינים" הוא עברית שבורה על המסך. וכשהזימונים מכסים את החוסר — הצורה הקצרה,
 // לעולם לא "עדיין חסרות 0" (שער-2.9, מוטציה שהוכיחה שהגבול לא היה מכוסה).
+// ✏️ 09/09/2026 (שלב 10): "וגם אם תאשר" נקרא על המסך כפנייה בזכר לקוראת — מעריך-טרי נפל בזה —
+// ולכן "וגם אם היא תאשר"; והחוסר שנותר עובר דרך gapWord, כך ש-"חסרות 1" (שנמדד על המסך) הופך
+// ל-"חסרה 1" כמו בעמודת-הדיילות באותה שורה.
 function pendingInvitesSentence(pending, gap) {
   const stillMissing = gap - pending
   if (pending === 1) {
     return stillMissing > 0
-      ? `זימון אחד ממתין למענה — וגם אם תאשר, עדיין חסרות ${stillMissing}`
+      ? `זימון אחד ממתין למענה — וגם אם היא תאשר, עדיין ${gapWord(stillMissing)}`
       : 'זימון אחד ממתין למענה'
   }
   const answerers = pending === 2 ? 'שתיהן' : 'כולן'
   if (stillMissing > 0) {
-    return `${pending} זימונים ממתינים למענה — וגם אם ${answerers} יאשרו, עדיין חסרות ${stillMissing}`
+    return `${pending} זימונים ממתינים למענה — וגם אם ${answerers} יאשרו, עדיין ${gapWord(stillMissing)}`
   }
   return `${pending} זימונים ממתינים למענה`
 }

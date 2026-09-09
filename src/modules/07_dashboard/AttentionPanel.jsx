@@ -10,6 +10,7 @@
 // **עוגן:** Monday · Google Calendar · Notion Calendar — כולם לוח מלא-רוחב, ובצד רק מסננים.
 
 import { Link } from 'react-router-dom'
+import Hint from '@/components/Hint'
 import { attentionSummary, attentionAllLabel } from '@/lib/dashboard'
 import Ltr from '@/components/Ltr'
 
@@ -60,6 +61,8 @@ export default function AttentionPanel({ summary }) {
           </Link>
         )}
       </div>
+
+      <Hint id="dashboard.attention" />
 
       {rows.length === 0 ? (
         // אותה מוסכמת-ניסוח כמו "✓ אין פריטים" (src/lib/projects.js) — וי + "אין X" לעובדה טובה.

@@ -826,7 +826,7 @@ export default function CustomerDetailsPage() {
                     className="h-9 w-64 rounded-lg border border-slate-200 px-3 text-sm text-slate-700"
                   />
                   {[
-                    ['all', 'הכל'],
+                    ['all', 'הכול'],
                     ['in_progress', 'בתהליך'],
                     ['approved', 'מאושרות'],
                     ['rejected', 'נדחו'],

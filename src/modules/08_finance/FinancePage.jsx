@@ -24,6 +24,7 @@
 // (*"עם פתרונם השורה יורדת"*), והתוצאה נבחרה במודע ב-N-6: היסטוריית-הביטולים היא של מ11.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import Hint from '@/components/Hint'
 import { useSearchParams } from 'react-router-dom'
 import LoadingOrError from '@/components/LoadingOrError'
 import PermissionAwareEmpty, { DENIED_MARK } from '@/components/PermissionAwareEmpty'
@@ -645,6 +646,7 @@ export default function FinancePage() {
     <div data-testid="finance-page">
       {header}
       <SummaryTiles summary={summary} />
+      <Hint id="finance.amberRows" />
       <Card>
         <TabsBar active={tab} counts={counts} onSelect={changeTab} />
         <FilterBar filters={filters} onChange={changeFilters} onClear={clearFilters} />

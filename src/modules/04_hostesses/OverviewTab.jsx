@@ -253,7 +253,8 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
         )}
       </div>
 
-      {visible.length > 0 && <Hint id="projects.sort" />}
+      {/* ✏️ 12:2X (שלב 10): היה projects.sort המשותף — שני מעריכים מדדו ש"חסר" כאן = איוש בלבד (44 מול 48), H6 ⇒ מפתח נפרד. */}
+      {visible.length > 0 && <Hint id="hostesses.overviewSort" />}
 
       {visible.length === 0 ? (
         <EmptyState

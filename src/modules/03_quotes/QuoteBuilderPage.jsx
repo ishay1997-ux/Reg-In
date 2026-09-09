@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import { useConfirm } from '@/components/ConfirmDialog'
 import LoadingOrError from '@/components/LoadingOrError'
+import Hint from '@/components/Hint'
 import LtrFieldGroup from '@/components/LtrFieldGroup'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -636,6 +637,7 @@ export default function QuoteBuilderPage() {
                     {errors.guests || errors.ratio || errors.hostessCount}
                   </p>
                 )}
+                <Hint id="quoteBuilder.ratio" />
               </div>
             </div>
 

@@ -273,7 +273,7 @@ export default function UsersManagementPage() {
   return (
     <div className="bg-white rounded-2xl shadow-md p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-bold text-slate-800">רשימת עובדים</h2>
+        <h2 className="text-lg font-bold text-slate-800">רשימת משתמשים</h2>
 
         <Button
           onClick={openAddDialog}
@@ -376,6 +376,8 @@ export default function UsersManagementPage() {
         </Dialog>
       </div>
 
+      {isCeo && <Hint id="users.onboardingColumn" />}
+
       <table className="w-full text-right border-collapse">
         <thead>
           <tr className="border-b border-slate-200 text-sm text-slate-500">
@@ -408,7 +410,7 @@ export default function UsersManagementPage() {
                       isActive ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600',
                     )}
                   >
-                    {isActive ? 'פעיל' : 'לא פעיל'}
+                    {isActive ? 'פעילה' : 'לא פעילה'}
                   </span>
                 </td>
                 {isCeo && (

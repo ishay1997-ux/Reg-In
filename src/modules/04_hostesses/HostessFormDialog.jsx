@@ -375,7 +375,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                 hint={
                   <>
                     מתחת ל-
-                    <Money amount={Number(params[HOSTESS_PARAM_NAMES.minHourlyWage])} /> (שכר
+                    <Money amount={Number(params[HOSTESS_PARAM_NAMES.minHourlyWage])} exact /> (שכר
                     מינימום) חוסם שמירה
                   </>
                 }

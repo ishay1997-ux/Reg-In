@@ -489,33 +489,37 @@ function OutboundRow({ entry, today, onOpen }) {
 
 function QueueTable({ entries, products, today, amberDays, onOpen }) {
   return (
-    <table className="w-full border-collapse" data-testid="logistics-queue-table">
-      <thead>
-        <tr>
-          <Th className="w-[26%]">אירוע</Th>
-          <Th className="w-[16%]">מתי</Th>
-          {/* 📛 `מוכנות` ולא `התקדמות` (AS-7, הכרעת 22/08): זהו אותו מספר בדיוק ואותה
+    <>
+      {/* ✏️ 12:1X (שלב 10): הרמז ישב במקרא שבתחתית עמוד בן ~3,400px — מעריך-טרי מדד; עלה אל הטבלה שהוא מסביר (H4). */}
+      {entries.length > 0 && <Hint id="logistics.amberWhy" />}
+      <table className="w-full border-collapse" data-testid="logistics-queue-table">
+        <thead>
+          <tr>
+            <Th className="w-[26%]">אירוע</Th>
+            <Th className="w-[16%]">מתי</Th>
+            {/* 📛 `מוכנות` ולא `התקדמות` (AS-7, הכרעת 22/08): זהו אותו מספר בדיוק ואותה
               פונקציה (`logisticsMetric`) שהסעיף שלמעלה מציג ⇒ שם אחד. שני שמות לאותו נתון
               באותו מסך נקראים כשני מדדים שונים. */}
-          <Th className="w-[13%]">מוכנות</Th>
-          <Th className="w-[12%]">מצב</Th>
-          <Th className="w-[24%]">מה חסר</Th>
-          <Th className="w-[9%]" />
-        </tr>
-      </thead>
-      <tbody>
-        {entries.map((entry) => (
-          <QueueRow
-            key={entry.project.project_id}
-            entry={entry}
-            products={products}
-            today={today}
-            amberDays={amberDays}
-            onOpen={onOpen}
-          />
-        ))}
-      </tbody>
-    </table>
+            <Th className="w-[13%]">מוכנות</Th>
+            <Th className="w-[12%]">מצב</Th>
+            <Th className="w-[24%]">מה חסר</Th>
+            <Th className="w-[9%]" />
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map((entry) => (
+            <QueueRow
+              key={entry.project.project_id}
+              entry={entry}
+              products={products}
+              today={today}
+              amberDays={amberDays}
+              onOpen={onOpen}
+            />
+          ))}
+        </tbody>
+      </table>
+    </>
   )
 }
 
@@ -668,7 +672,6 @@ function AmberLegend() {
     <div className="mt-2.5 text-[11.5px] leading-[1.8] text-slate-500">
       <span className="font-bold text-amber-700">⏱ שורה בענבר</span> = דורש תשומת-לב. שום דבר לא
       ננעל.
-      <Hint id="logistics.amberWhy" />
     </div>
   )
 }

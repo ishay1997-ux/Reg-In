@@ -223,7 +223,7 @@ describe('ProjectsPage — לשונית "בעבודה" (ברירת-מחדל)', (
     expect(
       screen.getByText('2 זימונים ממתינים למענה — וגם אם שתיהן יאשרו, עדיין חסרות 3'),
     ).toBeInTheDocument()
-    expect(screen.getByText('לא נשלח אף זימון — איש לא נגע בפרויקט מאז שנוצר')).toBeInTheDocument()
+    expect(screen.getByText('לא נשלח אף זימון לדיילת')).toBeInTheDocument()
     // הנתיב המדורד המתועד: בלי confirmed_available המשפט של #11 נופל ל"חסרות N" — לא שגוי.
     // לשון-יחיד גם בנתיב המדורד — "חסרה 1" בשני התאים של אותה שורה: עמודת-הדיילות
     // (staffingCell) ועמודת "מה חסר" (gapSentence) מספרות את אותו חוסר באותן מילים (תוקן 19/08).

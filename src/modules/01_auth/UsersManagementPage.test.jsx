@@ -183,8 +183,8 @@ describe('UsersManagementPage — טעינה ורינדור הטבלה', () => {
     expect(screen.getByText('—')).toBeInTheDocument()
 
     // תגי-סטטוס: שני פעילים, אחת לא-פעילה.
-    expect(screen.getAllByText('פעיל')).toHaveLength(2)
-    expect(screen.getByText('לא פעיל')).toBeInTheDocument()
+    expect(screen.getAllByText('פעילה')).toHaveLength(2)
+    expect(screen.getByText('לא פעילה')).toBeInTheDocument()
   })
 
   it('כשל-טעינה מציג את הנוסח הנעול וכפתור "נסי שוב" עם test id ייעודי', async () => {

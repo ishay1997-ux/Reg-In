@@ -10,6 +10,7 @@
 // המסננים והמיון הם **כולם צד-לקוח**, בדיוק כמו מסך הלקוחות של מודול 2.
 
 import { useEffect, useMemo, useState } from 'react'
+import Hint from '@/components/Hint'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CalendarDays, Check, Eye, Pencil, Search, X } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -66,7 +67,7 @@ import RejectQuoteDialog from '@/modules/03_quotes/RejectQuoteDialog'
 // דורשת סטטוס חדש, "פג תוקף" היא סיבת-דחייה (§7.41) שכבר נראית בתוך "נדחו", ו"פג בקרוב"
 // אינה יכולה להיות לשונית כי הצעה היא בתהליך **וגם** פגה-בקרוב באותו רגע — ולכן היא מסנן.
 const TABS = [
-  { key: 'all', label: 'הכל', status: null },
+  { key: 'all', label: 'הכול', status: null },
   { key: 'in_progress', label: 'בתהליך', status: 'in_progress' },
   { key: 'approved', label: 'מאושרות', status: 'approved' },
   { key: 'rejected', label: 'נדחו', status: 'rejected' },
@@ -702,6 +703,7 @@ export default function QuotesPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
+            <Hint id="quotes.approvalRate" />
             <table
               className="w-full min-w-[52rem] text-right border-collapse text-sm"
               data-testid="quotes-table"
