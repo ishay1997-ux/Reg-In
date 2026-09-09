@@ -227,7 +227,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
   // 🔑 אותן שלוש תוצאות בדיוק כמו ב-`reportMail`, כי זו אותה הבחנה: פסק-זמן אינו כשל.
   function reportRelease(who, { unknown, failed }) {
     if (failed > 0) {
-      toast.error(`${who} שוחררה — אך ההודעה אליה לא נשלחה. כדאי ליידע אותה טלפונית.`)
+      toast.error(`${who} שוחררה, אבל ההודעה אליה לא נשלחה — כדאי ליידע אותה טלפונית.`)
       return
     }
     if (unknown > 0) {

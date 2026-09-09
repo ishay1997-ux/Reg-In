@@ -230,7 +230,7 @@ export default function MySettingsPage() {
           className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500"
           data-testid="settings-my-empty"
         >
-          אין הגדרות בבעלות התפקיד שלך
+          לתפקיד שלך אין הגדרות משלו — כולן מנוהלות בניהול המערכת
         </p>
       ) : (
         <section className="rounded-xl border border-slate-200 bg-white p-4">

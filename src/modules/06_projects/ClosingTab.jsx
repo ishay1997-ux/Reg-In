@@ -382,7 +382,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
     if (outcome.ok) {
       const recipient = outcome.recipientName || project?.customer_name || 'הלקוח'
       // משפט-ההצלחה של הכרטיס (④), בשם החי של איש-הקשר.
-      toast.success(`האירוע נסגר. הדוח נשלח ל${recipient}, והפרויקט עבר למנהלת הכספים.`)
+      toast.success(`האירוע נסגר — הדוח נשלח ל${recipient} והפרויקט עבר למנהלת הכספים.`)
       if (envelope?.preferences_saved === false && rows.some((r) => r.qualityLabel)) {
         // 2.3 as-built ②: customer_id ריק ⇒ ה-upsert דולג והסגירה מושלמת — לומר, לא לשקר.
         toast.info('סימוני-האיכות לא נשמרו — לפרויקט אין לקוח משויך.')

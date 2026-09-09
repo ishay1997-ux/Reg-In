@@ -402,7 +402,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                 {/* 🔴 עמודת השכר אינה קיימת לתפקיד-צפייה — נתון עלות שאינו רלוונטי לה
                   (מצויר במפורש בפאנל "פעולה חסומה" של המוקאפ המאושר). */}
                 {canEdit && <Th>שכר שעתי</Th>}
-                <Th>מצב</Th>
+                <Th>סטטוס</Th>
                 <Th>
                   אירועים
                   <span className="block text-[10px] font-normal text-slate-400">רבעון אחרון</span>

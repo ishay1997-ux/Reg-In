@@ -89,7 +89,6 @@ const REASON_TONES = {
 // ── המחרוזות שמקורן המוקאפ המאושר (S-3 · S-2, מדריך-המיקרו §3.7) ─────────────
 // 🚫 מועתקות בייט-בבייט ואינן מנוסחות מחדש. הן יושבות כאן ולא ב-`src/lib` מאותו טעם
 // ש-`SORT_LINE` של מבט-העל במ6 יושב בקומפוננטה שלו: זהו טקסט של משטח יחיד.
-const OUTBOUND_LEGEND = 'הסעיף מיידע בלבד — אין כאן סימון "יצא" ואין מה לשמור.'
 // 🔄 המספר ירד ל-`params` (`סף_לוגיסטיקה_ימי_עסקים`, מודול 9 · צעד 2.3) ולכן הוא מוזרק
 // ולא כתוב. ⚠️ **ולמה זה לא ניואנס-ניסוח:** הצבע על השורה נגזר מהסף החי, וכיתוב שנשאר
 // על מספר קפוא היה מסביר את הצבע **לא נכון** — למשתמשת אין דרך לדעת מי משניהם צודק.
@@ -116,31 +115,6 @@ function todayIso() {
   }).formatToParts(new Date())
   const at = (type) => parts.find((part) => part.type === type)?.value ?? ''
   return `${at('year')}-${at('month')}-${at('day')}`
-}
-
-function addDaysIso(isoDate, days) {
-  const [year, month, day] = String(isoDate).split('-').map(Number)
-  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return null
-  return new Date(Date.UTC(year, month - 1, day) + days * 86_400_000).toISOString().slice(0, 10)
-}
-
-// יום-העסקים הבא לשורת-ההסבר של הסעיף. 🔴 **נגזר מ-`businessDaysUntil` ולא מלוח-שנה שני** —
-// ㉓ מורה מפורשות *"אין להמציא חישוב שני"*: המועמד הראשון שהמרחק אליו הוא בדיוק יום-עסקים
-// אחד. כלל סוף-השבוע נשאר כולו אצל הפונקציה המשותפת; כאן רק חשבון-ימים.
-function nextBusinessDayIso(today) {
-  for (let offset = 1; offset <= 7; offset += 1) {
-    const candidate = addDaysIso(today, offset)
-    if (candidate && businessDaysUntil(today, candidate) === 1) return candidate
-  }
-  return null
-}
-
-// `DD/MM` לשורת-ההסבר. 🔴 **נגזר מ-`formatDate` הנעולה ולא מפרסר שני:** `dayMonthOf` כבר
-// קיימת ב-`src/lib/projectLogistics.js` אך **אינה מיוצאת**, וייצואה היא שינוי-`src/lib`
-// שאינו בבעלות הצעד הזה (מדווח). חיתוך של הפורמט הנעול משאיר מקור-אמת אחד לפענוח —
-// ‏`formatDate` כבר דוחה קלט שאינו `YYYY-MM-DD` ומחזירה מחרוזת ריקה.
-function dayMonth(isoDate) {
-  return formatDate(isoDate).slice(0, 5)
 }
 
 // שורת-הנימוק של שורת-התור. 🔴 **הטריגר השני של ㊶ (נוסח O-1) כותב את השורה רק כשלא נשאר
@@ -408,18 +382,15 @@ function PillsBar({ counts, pill, onSelect }) {
 }
 
 function OutboundSection({ entries, today, onOpen }) {
-  const next = nextBusinessDayIso(today)
   return (
     <section
       className="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
       data-testid="logistics-outbound"
     >
       <h2 className="text-lg font-bold text-slate-800">יוצא עד יום העסקים הבא</h2>
-      <p className="mt-1 mb-3 text-[12px] leading-[1.7] text-slate-500">
-        החלון: מהיום ועד יום העסקים הבא בכלל. היום <Ltr>{dayMonth(today)}</Ltr> — יום{' '}
-        {weekdayOf(today)}, ושישי ושבת אינם ימי עבודה ⇒ יום העסקים הבא הוא {weekdayOf(next)}{' '}
-        <Ltr>{dayMonth(next)}</Ltr>.
-      </p>
+      {/* ✏️ 09/09/2026 13:0X — הכרעת-ישי ("1. מאשר"): פסקת-החלון (§⑧-3 ①) והמקרא (②) ירדו מהבסיס —
+          הכותרת נושאת את המשמעות; ה"למה" (ימי-עסקים · מיידע בלבד) חי בשכבה, `logistics.outboundWindow`. */}
+      <Hint id="logistics.outboundWindow" />
       {entries.length === 0 ? (
         // מצב ⑥ — **הסעיף נשאר על המסך** (S-7). סעיף שנעלם מלמד אותה שהוא לא תמיד שם,
         // ואז היא תפסיק לסמוך עליו — וזה הרוב המוחלט של הימים.
@@ -450,7 +421,6 @@ function OutboundSection({ entries, today, onOpen }) {
           </tbody>
         </table>
       )}
-      <div className="mt-2.5 text-[11.5px] leading-[1.8] text-slate-500">{OUTBOUND_LEGEND}</div>
     </section>
   )
 }
@@ -501,7 +471,7 @@ function QueueTable({ entries, products, today, amberDays, onOpen }) {
               פונקציה (`logisticsMetric`) שהסעיף שלמעלה מציג ⇒ שם אחד. שני שמות לאותו נתון
               באותו מסך נקראים כשני מדדים שונים. */}
             <Th className="w-[13%]">מוכנות</Th>
-            <Th className="w-[12%]">מצב</Th>
+            <Th className="w-[12%]">סטטוס</Th>
             <Th className="w-[24%]">מה חסר</Th>
             <Th className="w-[9%]" />
           </tr>

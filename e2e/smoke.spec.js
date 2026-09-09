@@ -187,7 +187,9 @@ test.describe('בדיקת-עשן', () => {
     // לא ליקוי. העוגן הוא שהמסך **עולה ואומר זאת במילים**, ולא נופל ולא מציג טבלה ריקה.
     await page.goto('/my-settings')
     await expect(page.getByTestId('settings-my-page')).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByTestId('settings-my-empty')).toHaveText('אין הגדרות בבעלות התפקיד שלך')
+    await expect(page.getByTestId('settings-my-empty')).toHaveText(
+      'לתפקיד שלך אין הגדרות משלו — כולן מנוהלות בניהול המערכת',
+    )
 
     // פרויקטים (מודול 6, נוסף 19/08/2026): מבט-העל עולה עם הלוח האמיתי. 🔄 03/09/2026:
     // "האירוע הידוע" (#8 של דמו-יולי) נמחק; נשאר האינווריאנט העצמי — לשונית "הכול" מציגה

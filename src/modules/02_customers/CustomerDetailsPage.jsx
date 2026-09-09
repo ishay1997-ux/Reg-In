@@ -1235,7 +1235,7 @@ function ProjectsSection({ title, definition, rows, today, vatRate }) {
               <th className="text-right font-medium py-2.5 px-3">תאריך אירוע</th>
               <th className="text-right font-medium py-2.5 px-3">שם האירוע</th>
               <th className="text-right font-medium py-2.5 px-3">סכום</th>
-              <th className="text-right font-medium py-2.5 px-3">מצב</th>
+              <th className="text-right font-medium py-2.5 px-3">סטטוס</th>
               <th className="text-right font-medium py-2.5 px-3">שביעות רצון</th>
               <th className="py-2.5 px-3" />
             </tr>

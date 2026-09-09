@@ -347,7 +347,10 @@ describe('LogisticsPage — סעיף-היציאה (㉓ · S-7 · ㊷)', () => {
     const section = await screen.findByTestId('logistics-outbound')
     expect(within(section).queryAllByRole('checkbox')).toHaveLength(0)
     expect(within(section).queryAllByRole('button')).toHaveLength(0)
-    expect(section.textContent).toContain('הסעיף מיידע בלבד')
+    // ✏️ 09/09/2026: המקרא "הסעיף מיידע בלבד" ירד מהבסיס (הכרעת-ישי) — הכותרת נושאת את המשמעות
+    expect(
+      within(section).getByRole('heading', { name: 'יוצא עד יום העסקים הבא' }),
+    ).toBeInTheDocument()
   })
 })
 

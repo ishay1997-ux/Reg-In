@@ -283,6 +283,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
         </DialogHeader>
 
         {!isEdit && <Hint id="hostesses.addFormWhen" />}
+        <Hint id="hostessForm.whatCounts" />
 
         <form onSubmit={handleSubmit} noValidate>
           {loading ? (
@@ -297,7 +298,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                 // 🔴 בעריכה — **נעולה**, אותו דפוס בדיוק כמו ח"פ-לקוח (§7.64: ת"ז יצאה
                 // מהמפתח, אבל היא עדיין המזהה האנושי, והחלפתה היא החלפת אדם). ההסבר
                 // יושב כאן, ליד השדה החסום עצמו — לא בתיאור-הדיאלוג הרחוק ממנו.
-                hint={isEdit ? 'לא ניתנת לשינוי' : 'בדיקת ספרת-ביקורת תוך כדי ההקלדה'}
+                hint={isEdit ? 'לא ניתנת לשינוי' : 'נבדקת תוך כדי הקלדה'}
                 error={isEdit ? null : errors.id_number}
               >
                 <Input
@@ -356,7 +357,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                     data-testid="hostess-city"
                   />
                 </Field>
-                <Field label="כתובת מלאה (לא חובה)" hint="משמש לחישוב הקרבה לאירוע">
+                <Field label="כתובת מלאה (לא חובה)" hint="לחישוב הקרבה לאירוע">
                   <Input
                     value={form.address}
                     onChange={(e) => set('address')(e.target.value)}
@@ -432,10 +433,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                 </Field>
               </div>
 
-              <Field
-                label="התרשמות המנהלת (1–5, לא חובה)"
-                hint="זו דעתך, לא ציון של המערכת — ואינה חלק מהדירוג בשיבוץ חכם"
-              >
+              <Field label="התרשמות המנהלת (1–5, לא חובה)" hint="דעתך בלבד — לא נכנסת לדירוג">
                 <RatingStars value={form.rating} onChange={set('rating')} testId="hostess-rating" />
               </Field>
 
@@ -458,10 +456,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                 />
               </Field>
 
-              <Field
-                label="שפות (לא חובה)"
-                hint="שדה-מידע בלבד ולא שער — הבחירה מי לזמן לכל תפקיד תמיד ידנית"
-              >
+              <Field label="שפות (לא חובה)" hint="לא משפיע על השיבוץ">
                 <ChipToggle
                   options={LANGUAGES}
                   selected={form.languages}
@@ -581,10 +576,10 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
 function Field({ label, hint, error, warning, children, compact, grow }) {
   return (
     <div className={`${compact ? 'mb-0' : 'mb-3'} ${grow ? 'flex-1 min-w-[160px]' : ''}`}>
-      <label className="mb-1 block text-xs font-medium text-slate-600">
-        {label}
-        {hint && <span className="font-normal text-slate-400"> — {hint}</span>}
-      </label>
+      {/* ✏️ 09/09/2026 13:1X — הכרעת-ישי ("מוצר בוגר בבסיס, הסברים לשכבה"): ההסבר אינו חלק מהתווית
+          (R1: תווית 1–3 מילים) אלא שורת-עזר מתחתיה (R3); שני מעריכי-שלב-10 מדדו "תווית — הרצאה" בשישה שדות. */}
+      <label className="mb-1 block text-xs font-medium text-slate-600">{label}</label>
+      {hint && <span className="-mt-0.5 mb-1 block text-[11px] text-slate-400">{hint}</span>}
       {children}
       {error && (
         <span className="mt-1 block text-[11px] font-semibold text-red-600" role="alert">
