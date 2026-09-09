@@ -85,7 +85,7 @@ function waitForContactsLoaded() {
   return screen.findAllByTestId('contact-row')
 }
 
-const NO_PRIMARY_MSG = 'אי אפשר למחוק את איש הקשר הראשי. סמן קודם אחר כראשי.'
+const NO_PRIMARY_MSG = 'אי אפשר למחוק את איש הקשר הראשי. סמני קודם אחר כראשי.'
 
 beforeEach(() => {
   vi.clearAllMocks()

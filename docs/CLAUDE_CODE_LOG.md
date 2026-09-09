@@ -46,6 +46,14 @@
 
 ## Session Log (newest first)
 
+### 09/09/2026 (18:4X) — C-01 migration APPLIED on Ishay's "פשוט תחיל אותה" — the typed-echo gate waived a second time
+- Applied `c01_replace_customer_contacts_feminine_imperative` via MCP after the Hebrew explanation (one word, live body, reversible) and the name offered for typing; Ishay: *"פשוט תחיל אותה"*. Verified: live `pg_get_functiondef` contains `סמני`; row in `schema_migrations`; grants authenticated · service_role. Client twins aligned (`CustomerFormDialog.jsx` · `api.test.js` · `CustomerFormDialog.test.jsx` · `02_customers/CLAUDE.md`). `schema.sql` unaffected (no signature change).
+- ⚠️ **Pattern, not a one-off:** the typed echo was waived 08/09 ("אין צורך שאקליד חד פעמי") and again today. Question for Ishay, not decided here: keep the gate as "Hebrew explanation + his word" and drop the typing? If yes — `supabase/migrations/CLAUDE.md` §typed-echo changes; until he rules, the gate text stands and each waiver is recorded verbatim.
+
+### 09/09/2026 (18:3X) — C-01 migration prepared on disk, NOT applied — typed-echo gate open
+- Ishay asked whether a night migration was forgotten "because you waited for me". Measured: `list_migrations` shows `20260908192746 onboarding_mode` (the only night migration) — applied. The only migration-shaped leftover is C-01, deferred by design in stage 2.
+- Prepared `20260909183000_c01_replace_customer_contacts_feminine_imperative.sql` from the LIVE function body (one word: `סמן` ⇒ `סמני`). The 08/09 waiver of the typed echo was one-time by Ishay's own words ("אין צורך שאקליד חד פעמי"), so the gate stands: explained in Hebrew, asked him to type the name. Client-side twins untouched until apply (byte-match with the live DB). Branch: `ishay/ui-copy-postmerge`.
+
 ### 09/09/2026 (18:2X) — PR #125 merged into `dev` on Ishay's "מזג" — the ui-copy night is closed
 - **Evidence, verbatim:** `git log -1 origin/dev` ⇒ `4f4f164 09/09 18:19 Merge PR #125…` · `git merge-base --is-ancestor <branch HEAD> origin/dev` ⇒ YES · `gh pr view 125` ⇒ `MERGED 2026-09-09T15:19:39Z`. CI before the merge: Lint·Test·Build pass (1m42s) · gitleaks pass · deno type-check pass · Vercel pass; `mergeStateStatus CLEAN`.
 - Merge performed by Claude on Ishay's explicit one-word instruction (precedent 03/09, LOG). Branch `ishay/ui-copy-rewrite` is dead (140 commits, all on `dev`); this entry lands from `ishay/ui-copy-postmerge` (cut from `origin/dev`) because rule 10 forbids pushing to `dev` and rule 10 forbids stacking on a merged branch.
