@@ -92,7 +92,7 @@ Supabase (Auth + Postgres 17) · react-router-dom 7 · עברית RTL מלאה.
 
 | נוגע ב… | הקובץ שנטען אוטומטית ומכיל את הפרוטוקול המלא |
 |---|---|
-| **מיגרציה / DB** | **`supabase/migrations/CLAUDE.md`** — שער ה-typed-echo, `apply_migration`, ‏`schema.sql`, ‏`db_roadmap` |
+| **מיגרציה / DB** | **`supabase/migrations/CLAUDE.md`** — שער ההסבר-והמילה *(✏️ 09/09/2026 — היה typed-echo)*, `apply_migration`, ‏`schema.sql`, ‏`db_roadmap` |
 | קוד (`src/`) | `src/CLAUDE.md` — מודל-אבטחה, SSOT ללוגיקה, מוקשי-קוד |
 | תיעוד (`docs/`) | `docs/CLAUDE.md` — מקורות-אמת, §7, מראות 🔗, מקרא-אימוג'י |
 

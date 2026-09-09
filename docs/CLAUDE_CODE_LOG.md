@@ -46,6 +46,10 @@
 
 ## Session Log (newest first)
 
+### 09/09/2026 (18:5X) — migration gate changed by Ishay's ruling: Hebrew explanation + his word, no typed name
+- Two waivers in two days, then *"קדימה נו… לא לעצור סיים כבר"* on the recommendation ⇒ `supabase/migrations/CLAUDE.md` §gate rewritten (what stays: the explanation, per-migration approval, the quote; what went: typing the name as a ritual). Root `CLAUDE.md` pointer updated. The DoD typed signature in `module-close` is untouched — he did not rule on it.
+- Also on his "סיים כבר": #126 merged when CI went green, this change rides in #127 and is merged the same way; STATUS written to the final state.
+
 ### 09/09/2026 (18:4X) — C-01 migration APPLIED on Ishay's "פשוט תחיל אותה" — the typed-echo gate waived a second time
 - Applied `c01_replace_customer_contacts_feminine_imperative` via MCP after the Hebrew explanation (one word, live body, reversible) and the name offered for typing; Ishay: *"פשוט תחיל אותה"*. Verified: live `pg_get_functiondef` contains `סמני`; row in `schema_migrations`; grants authenticated · service_role. Client twins aligned (`CustomerFormDialog.jsx` · `api.test.js` · `CustomerFormDialog.test.jsx` · `02_customers/CLAUDE.md`). `schema.sql` unaffected (no signature change).
 - ⚠️ **Pattern, not a one-off:** the typed echo was waived 08/09 ("אין צורך שאקליד חד פעמי") and again today. Question for Ishay, not decided here: keep the gate as "Hebrew explanation + his word" and drop the typing? If yes — `supabase/migrations/CLAUDE.md` §typed-echo changes; until he rules, the gate text stands and each waiver is recorded verbatim.
