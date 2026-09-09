@@ -191,7 +191,7 @@ describe('replaceCustomerContacts — RPC יחיד במקום insert-then-delete
   })
 
   it('שגיאת-שרת P0001 (הניסוח של ישי על מחיקת-הראשי האחרון) מגיעה לקורא כלשונה', async () => {
-    const serverMessage = 'אי אפשר למחוק את איש הקשר הראשי. סמן קודם אחר כראשי.'
+    const serverMessage = 'אי אפשר למחוק את איש הקשר הראשי. סמני קודם אחר כראשי.'
     supabase.rpc.mockResolvedValue({
       data: null,
       error: { code: 'P0001', message: serverMessage },
