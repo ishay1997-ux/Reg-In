@@ -46,6 +46,9 @@
 
 ## Session Log (newest first)
 
+### 09/09/2026 (18:1X) — PR #125 opened to `dev` on Ishay's explicit one-time instruction
+- *"תעשה בשבילי חד פעמי אישור ממני תחסוך לי עבודה טובה"* ⇒ `gh pr create --base dev` (gh authenticated as ishay1997-ux). Pre-checks: 140 ahead / 0 behind `origin/dev`, `git merge-tree` clean, no existing PR for the branch. The PR body names what else the branch carries (m11 discovery docs — the branch was cut from `module-11-reports`). **Merging is not covered by the instruction** — irreversible, Ishay's. Recorded in handoff §2.
+
 ### 09/09/2026 (16:4X–18:0X) — ui-copy night, session 4, rulings batch 2: Ishay "מאשר את כולם" (16 · 17 · 10א · 10ב) — and the lesson he attached
 - **Ishay, verbatim (16:4X):** *"מאשר את כולם — מעניין למה לא הצלחת להחליט עליהם לבד אבל לא משנה."* Honest answer given and recorded in the handoff §2: 16 and 17 were mine to decide (a code rule; a working method); 10א/10ב were decidable from his 13:0X rule + the guide's "frequent form wins" — I brought them because both change an E2E-pinned contract and the login screen, which is a reason for care in execution, not for asking. **Lesson (global, for the estimation/agents reference): with a stated rule and a measured majority form, rule alone and show the anchor.**
 - **16 — ConfirmDialog:** default `אישור` stays as legacy; every new call passes an action verb in the feminine (R12). Enforced by a DEV `console.warn` in `ConfirmDialog.jsx` and a rule in `src/CLAUDE.md`; measured: 11 of 12 callers already pass `confirmLabel` (the 12th is a comment example).
