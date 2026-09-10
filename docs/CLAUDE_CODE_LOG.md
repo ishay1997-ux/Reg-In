@@ -46,6 +46,53 @@
 
 ## Session Log (newest first)
 
+### 10/09/2026 (22:2X) — m11 stage 2: visual sign-off on all 19 drawn pages, and the population line as a defect class
+
+**What this pass was.** Not a scan against a baseline — each page read as a document, with
+every number on it re-measured by an independent query, **including numbers that were never
+in the baseline**. That distinction is the whole finding: all five defects below were invisible
+to a baseline comparison, because none of the five numbers existed in it.
+
+**Five defects, and four of the five live in the same sentence — the population line (📐2).**
+- **מ21** — `52 + 4 + 3 = 59` against 61 customers. Two exclusions were silent. Measured 52/3/**6**;
+  the two unnamed are קמפוס טכנולוגי צפון and גוגל ישראל, whose only events are in the future.
+- **מ20** — `125 שלא נשלחו כלל` is the **all-time** `not_sent` count sitting in a line whose other
+  numbers are 2026-only; the three summed to 342, a number meaning nothing. In-window: 163 · 54 · **19**
+  = **236**, the same event count the executive tab names.
+- **מ14** — `181 זימונים שלא נענו` measures **180** under every variant tried. Corrected, the five
+  groups sum exactly to **2,401** = every assignment in the window; that total was added, because
+  four numbers with nothing to add up to cannot be checked at a glance.
+- **מ10 vs מ9** — 23 overdue invoices on one page, 25 on the next. **Both correct**: 25 against the
+  contractual due date, 23 against the expected date (due + that customer's median lateness). The
+  drawing agent had found this and written *"מדווח לישי, לא מוכרע כאן"* **into an HTML comment**.
+  No number changed; a bridging sentence went onto each page.
+- **מ21/מ19 (not a population line)** — the customers tab computed money on `finished` only while
+  its own population (52), cadences, names, the 676-gap histogram and the 10 dormant already ran
+  on ruling 36. One page, two bases. Aligned.
+
+**🪤 The trap worth carrying forward: I nearly disqualified a correct asset, twice.**
+- I first reported `330,445 ₪` as wrong by 14,269. It was not — **I had measured the numerator on
+  ruling 36's population and the denominator on `finished`.** `2,402,325` reproduces to the shekel
+  as `finished`-only over 294 projects. Reconstructing before disqualifying (Ishay's standing rule)
+  is what caught it, and it changed the diagnosis from "wrong number" to "one page, two bases" —
+  a narrower and more useful finding.
+- `n=1,730` would not reproduce for me (I got 1,723) until I found that **`approval_withdrawn`
+  counts as attendance** ("ויתרה" on the reliability scale). The drawer was right; I was undercounting.
+- `"הוצאו: חובות אבודים (2)"` looks wrong against 7 `written_off` rows — it is right: only **2**
+  of the 7 ever had an invoice sent, so the other five were never in the population.
+⇒ **Three near-misses in one pass, all in the same direction: my own measurement was the wrong one.**
+The rule that saved all three was mechanical — *reconstruct the definition that would make the
+existing number true, before calling it false.*
+
+**➕ Mechanism finding (this is the "how we work" species the harvest note above warns about):**
+an agent that finds something outside its brief has **no channel**. Both drawing agents here wrote
+their escalation into an HTML comment — a place no human reads and no tool greps. A brief that says
+"declare your judgement calls" must also say **where**, and the where cannot be the artifact itself.
+
+**Also:** `check:docs-structure` went red from my own earlier commit — `71b56172` added the word
+"נסגר" to a line already containing "8/8", which is enough for the surface-count guard to fire.
+Reworded, not exempted. `npm run gate` green (exit 0) after both commits.
+
 ### 09/09/2026 (20:0X) — module 7 dashboard: UCD pass on the calendar legend and attention strip, branch `ishay/dashboard-legend-ucd`
 - Ishay asked whether the calendar's four categories were right by UCD, floated project-status as an alternative split, then proposed grouping the attention strip by department. Plan approved ("אשר"), execution scheduled via `CronCreate` for exactly 1h1m later per his instruction; fired and built as scheduled.
 - Verified live via a real, logged-in Chrome session (`claude-in-chrome`) at three points during the build, not just unit tests — this is the same screen `dashboard-ceo.png` (09/09 17:46) had shown as the trigger for the question.
