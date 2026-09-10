@@ -153,19 +153,21 @@ body.onb-2 .hint{display:flex; gap:7px; align-items:flex-start; width:100%;
 .flabel{font-size:12px; color:var(--s500)}
 /* ── אריח-KPI (§2.2 · G8: ארבעה רבדים) — לבן+מסגרת, לעולם לא מילוי (§④) ── */
 .tiles{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px}
-/* ⚠️ רשת-ביטחון, לא התיקון. הכרעת-קלוד 10/09/2026 · בהאצלת-ישי.
-   🔴 התיקון האמיתי הוא **מיקום**: רמז הוא שורה מתחת לרצועה ולא ילד של אריח
-   (`FinancePage.jsx:648-649`, הדפוס שרץ ב-34 מסכים) — ר' `onboarding-layer-contract.md` §4ב.
-   נמדד בקובץ הזה: 15 רמזים, **5 מהם עדיין בתוך `.tile`**, והם שמותחים 192px ⇒ 373px.
-   הכלל למטה מונע את המתיחה גם כשזה קורה, ואינו פוטר מהעברתם. פריטי-פלקס מתמתחים לגובה הגבוה,
-   ולכן במצב-מודרך אריח עם רמז ארוך מתח את כולם — נמדד במ2: 191px ⇒ 373px, ואריח
-   בלי רמז מקבל שטח לבן בתחתיתו. התיקון מוגבל למצב-מודרך בלבד ⇒ רמה 0 אינה זזה כלל.
-   🚫 ולא נבחרה החלופה "רמז רביעי לכל אריח" — היא מחייבת להמציא הסבר כדי למלא שורה,
-   ומשפט מיותר בשכבה מרעיל את האמון בכולה (עקרון §5 בסקיל-השכבה). */
-body.onb-2 .tiles{align-items:flex-start}
+
+/* `position:relative` בשביל `.ha` בלבד — עוגן-הרמז הוא badge מרחף ולא פריט-flex,
+   ולכן אינו משנה את גובה-האריח ורצועת-האריחים שומרת בדיוק את גובה רמה 0. */
 .tile{border:1px solid var(--s200); background:#fff; border-radius:var(--r-xl); padding:14px 16px 12px;
-      display:flex; flex-direction:column; align-items:flex-start; gap:0;
+      display:flex; flex-direction:column; align-items:flex-start; gap:0; position:relative;
       min-width:210px; flex:1 1 210px; max-width:340px}
+/* עוגן-רמז על האלמנט המוסבר (`onboarding-layer-contract.md` §4ב:
+   "הסימן על מה שמוסבר, והשורה שמסבירה נפתחת באותה אות").
+   המכניקה מועתקת מ-`.im` שכבר הוכרע בקובץ הזה — badge בפינה, `box-shadow` לבן להפרדה —
+   והשוני היחיד הוא הגוון: `s600` כמו `.hint > .hl`, כדי ששני סוגי-הסימון לא ייקראו כמשפחה אחת. */
+.ha{display:none}
+body.onb-2 .tile > .ha{position:absolute; top:-8px; left:-8px; z-index:40; display:flex;
+     align-items:center; justify-content:center; width:17px; height:17px; border-radius:999px;
+     background:var(--s600); color:#fff; font:700 10px/1 'Geist Variable',sans-serif;
+     box-shadow:0 0 0 2px #fff; pointer-events:none}
 .tile .lb{font-size:11.5px; font-weight:600; color:var(--s500); line-height:1.35; letter-spacing:.1px}
 .tile .vl{font-size:27px; font-weight:700; color:var(--s800); line-height:1.15;
       margin-top:7px; letter-spacing:-.4px}
@@ -373,12 +375,11 @@ tr.dim td{color:var(--s500)}
   <p class="hint" data-onb="reports.execOverview.purpose"><span class="hl" aria-hidden="true">א</span><span class="ht">הדף נבנה מהאירועים שכבר התקיימו וסגורים תפעולית — הוא מודד את מה שקרה, לא את מה שבצנרת. תתחילי בשורת-הפתיחה ובארבעת האריחים: אם השוליים ירדו מול אשתקד בזמן שההכנסה עלתה, המקום לרדת אליו הוא הדוח "מגמות רב-שנתיות".</span></p>
 
   <div class="tiles">
-    <div class="tile"><span class="lb">הכנסות מתחילת השנה</span>
+    <div class="tile"><span class="ha" aria-hidden="true">ב</span><span class="lb">הכנסות מתחילת השנה</span>
       <span class="vl"><span class="ltr">1,922,441</span> ₪</span>
       <span class="sub"><span class="ltr">236</span> אירועים שהסתיימו</span>
       <span class="cmp"><span class="arrow">▲</span> <span class="ltr">2025</span> באותו טווח: <span class="ltr">1,385,815</span> ₪ (<span class="ltr">178</span> אירועים)</span>
-      <span class="win"><span class="ltr">01/01–10/09/2026</span></span>
-      <p class="hint" data-onb="reports.execOverview.revenueBasis"><span class="hl" aria-hidden="true">ב</span><span class="ht">הסכום מסכם את ההכנסה שפונקציית-הכספים מחזירה לכל אירוע שהסתיים מתחילת השנה ועד היום, וההשוואה שמתחתיו נלקחה מאותו טווח-ימים בדיוק אשתקד — כדי שהצמיחה לא תיראה גדולה רק מפני שהשנה שעברה נמדדה במלואה.</span></p></div>
+      <span class="win"><span class="ltr">01/01–10/09/2026</span></span></div>
 
     <div class="tile"><span class="lb">שולי-רווח גולמי</span>
       <span class="vl"><span class="ltr">58.3%</span></span>
@@ -395,13 +396,17 @@ tr.dim td{color:var(--s500)}
     <!-- 📑ב · מבט-על הנהלה: מכנה גלוי לאריח-הריכוזיות + תת-שורה בשקלים.
          ✏️ 10/09/2026 · האריח הזה הוא כעת הסימן היחיד לריכוזיות בכל הלשונית — דף הפארטו
          (מ5) נדחה בהכרעת-ישי; ר' ⑧ G4 בכרטיס. -->
-    <div class="tile"><span class="lb">נתח <span class="ltr">5</span> הלקוחות הגדולים</span>
+    <div class="tile"><span class="ha" aria-hidden="true">ג</span><span class="lb">נתח <span class="ltr">5</span> הלקוחות הגדולים</span>
       <span class="vl"><span class="ltr">45.5%</span></span>
       <span class="sub"><span class="ltr">2,637,121</span> ₪ מתוך <span class="ltr">5,793,488</span> ₪ · אצל <span class="ltr">55</span> לקוחות עם הכנסה (מתוך <span class="ltr">61</span> רשומים)</span>
       <span class="cmp"><span class="arrow">▼</span> לפני שנה, אותו חישוב: <span class="ltr">47.7%</span> (אז <span class="ltr">47</span> לקוחות עם הכנסה)</span>
-      <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span>
-      <p class="hint" data-onb="reports.execOverview.top5Share"><span class="hl" aria-hidden="true">ג</span><span class="ht">הנתח מחושב על כל ההיסטוריה — הכנסת חמשת הלקוחות הגדולים חלקי הכנסת כל הלקוחות — ולכן הוא היחיד בדף שאינו זז כשאת מחליפה תקופה. זה מכוון: תלות בלקוח נבנית לאורך שנים, וחיתוך לרבעון היה הופך אותה לרעש.</span></p></div>
+      <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
   </div>
+
+  <!-- שכבת-הטמעה · רמז הוא שורה עצמאית מתחת לרצועת-האריחים ולעולם לא ילד של אריח
+       (`onboarding-layer-contract.md` §4ב · `FinancePage.jsx:648-649`). אות-העוגן `.ha` נשארה על האריח. -->
+  <p class="hint" data-onb="reports.execOverview.revenueBasis"><span class="hl" aria-hidden="true">ב</span><span class="ht">הסכום מסכם את ההכנסה שפונקציית-הכספים מחזירה לכל אירוע שהסתיים מתחילת השנה ועד היום, וההשוואה שמתחתיו נלקחה מאותו טווח-ימים בדיוק אשתקד — כדי שהצמיחה לא תיראה גדולה רק מפני שהשנה שעברה נמדדה במלואה.</span></p>
+  <p class="hint" data-onb="reports.execOverview.top5Share"><span class="hl" aria-hidden="true">ג</span><span class="ht">הנתח מחושב על כל ההיסטוריה — הכנסת חמשת הלקוחות הגדולים חלקי הכנסת כל הלקוחות — ולכן הוא היחיד בדף שאינו זז כשאת מחליפה תקופה. זה מכוון: תלות בלקוח נבנית לאורך שנים, וחיתוך לרבעון היה הופך אותה לרעש.</span></p>
 
   <div class="chart-card">
     <h3>הכנסה ורווח לפי חודש · <span class="ltr">2026</span> מול <span class="ltr">2025</span> (<span class="ltr">01/01–10/09</span> בשתי השנים)</h3>
@@ -798,13 +803,16 @@ tr.dim td{color:var(--s500)}
       <span class="cmp"><span class="arrow">▼</span> לפני שנה: <span class="ltr">8.8</span> נק' — הפער הצטמצם</span>
       <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
 
-    <div class="tile"><span class="lb">שיעור אישור הצעות</span>
+    <div class="tile"><span class="ha" aria-hidden="true">ב</span><span class="lb">שיעור אישור הצעות</span>
       <span class="vl"><span class="ltr">71.3%</span></span>
       <span class="sub"><span class="ltr">253</span> אושרו מתוך <span class="ltr">355</span> שהוכרעו השנה</span>
       <span class="cmp"><span class="arrow">▼</span> <span class="ltr">2025</span> באותו טווח: <span class="ltr">73.6%</span> (<span class="ltr">204</span> מתוך <span class="ltr">277</span>)</span>
-      <span class="win"><span class="ltr">01/01–10/09/2026</span> לפי תאריך ההצעה</span>
-      <p class="hint" data-onb="reports.discounts.approvalPopulation"><span class="hl" aria-hidden="true">ב</span><span class="ht">האחוז נספר על הצעות-מחיר ולא על אירועים — אושרו, חלקי אושרו-ועוד-נדחו — ולכן הוא היחיד בדף שנמדד על אוכלוסייה אחרת משאר האריחים. הצעה שממתינה לתשובת הלקוח אינה נספרת באף צד, כי היא לא ניצחה ולא הפסידה.</span></p></div>
+      <span class="win"><span class="ltr">01/01–10/09/2026</span> לפי תאריך ההצעה</span></div>
   </div>
+
+  <!-- שכבת-הטמעה · רמז הוא שורה עצמאית מתחת לרצועת-האריחים ולעולם לא ילד של אריח
+       (`onboarding-layer-contract.md` §4ב · `FinancePage.jsx:648-649`). אות-העוגן `.ha` נשארה על האריח. -->
+  <p class="hint" data-onb="reports.discounts.approvalPopulation"><span class="hl" aria-hidden="true">ב</span><span class="ht">האחוז נספר על הצעות-מחיר ולא על אירועים — אושרו, חלקי אושרו-ועוד-נדחו — ולכן הוא היחיד בדף שנמדד על אוכלוסייה אחרת משאר האריחים. הצעה שממתינה לתשובת הלקוח אינה נספרת באף צד, כי היא לא ניצחה ולא הפסידה.</span></p>
 
   <div class="chart-card">
     <h3>שולי-רווח לפי מדרג-הנחה · היום מול לפני שנה</h3>
@@ -945,12 +953,11 @@ tr.dim td{color:var(--s500)}
   <p class="hint" data-onb="reports.staffing.purpose"><span class="hl" aria-hidden="true">א</span><span class="ht">הדף משווה, לכל אירוע שהתקיים, את מספר האורחים שנרשם בהצעה מול המספר שנרשם בסגירת האירוע. תתחילי מהיחס החציוני: הוא אומר אם האיוש בפועל נדיב מהתכנון או הדוק ממנו, וזה מה שקובע אם פרמטר-התכנון עדיין מתאר את המציאות.</span></p>
 
   <div class="tiles">
-    <div class="tile"><span class="lb">יחס חציוני: אורחים לדיילת</span>
+    <div class="tile"><span class="ha" aria-hidden="true">ב</span><span class="lb">יחס חציוני: אורחים לדיילת</span>
       <span class="vl"><span class="ltr">40.8</span></span>
       <span class="sub">מול פרמטר-התכנון <span class="ltr">50</span> · נמדד על <span class="ltr">717</span> אירועים</span>
       <span class="cmp"><span class="arrow">▼</span> לפני שנה, אותו חישוב: <span class="ltr">41.0</span></span>
-      <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span>
-      <p class="hint" data-onb="reports.staffing.medianRatio"><span class="hl" aria-hidden="true">ב</span><span class="ht">היחס נמדד פר-אירוע — אורחים בפועל חלקי הדיילות שאויישו בו — ורק אז נלקח החציון, לא הממוצע. החציון נבחר כדי שאירוע חריג אחד, שהגיעו אליו הרבה אורחים עם דיילת בודדת, לא ימשוך את כל המספר אחריו.</span></p></div>
+      <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
 
     <div class="tile"><span class="lb">אירועים שהגיעו בהם יותר אורחים מהצפי</span>
       <span class="vl"><span class="ltr">135</span></span>
@@ -958,12 +965,11 @@ tr.dim td{color:var(--s500)}
       <span class="cmp"><span class="arrow">▼</span> לפני שנה: <span class="ltr">77</span> מתוך <span class="ltr">387</span> (<span class="ltr">19.9%</span>)</span>
       <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
 
-    <div class="tile"><span class="lb">אירועים שבהם היחס עלה על <span class="ltr">50</span></span>
+    <div class="tile"><span class="ha" aria-hidden="true">ג</span><span class="lb">אירועים שבהם היחס עלה על <span class="ltr">50</span></span>
       <span class="vl"><span class="ltr">31</span></span>
       <span class="sub"><span class="ltr">4.3%</span> — יותר מ-<span class="ltr">50</span> אורחים לכל דיילת בפועל</span>
       <span class="cmp"><span class="arrow">▼</span> לפני שנה: <span class="ltr">20</span> מתוך <span class="ltr">387</span> (<span class="ltr">5.2%</span>)</span>
-      <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span>
-      <p class="hint" data-onb="reports.staffing.planningParam"><span class="hl" aria-hidden="true">ג</span><span class="ht">הסף שבכותרת האריח הוא פרמטר-התכנון שנקבע בהגדרות, והמספר סופר את האירועים שעברו אותו בפועל. הוא אינו יעד ואינו סף-איכות: אירוע מעליו אינו כשל ואירוע מתחתיו אינו בזבוז, עד שמישהי תכריע שהוא כזה.</span></p></div>
+      <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
 
     <!-- 📑ב#10 · האריח שמצהיר על החור בדאטה עצמו -->
     <div class="tile"><span class="lb">אירועים שיש להם שני המספרים</span>
@@ -972,6 +978,11 @@ tr.dim td{color:var(--s500)}
       <span class="cmp"><span class="arrow">▼</span> לפני שנה: <span class="ltr">387</span> מתוך <span class="ltr">387</span> (<span class="ltr">100%</span>)</span>
       <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
   </div>
+
+  <!-- שכבת-הטמעה · רמז הוא שורה עצמאית מתחת לרצועת-האריחים ולעולם לא ילד של אריח
+       (`onboarding-layer-contract.md` §4ב · `FinancePage.jsx:648-649`). אות-העוגן `.ha` נשארה על האריח. -->
+  <p class="hint" data-onb="reports.staffing.medianRatio"><span class="hl" aria-hidden="true">ב</span><span class="ht">היחס נמדד פר-אירוע — אורחים בפועל חלקי הדיילות שאויישו בו — ורק אז נלקח החציון, לא הממוצע. החציון נבחר כדי שאירוע חריג אחד, שהגיעו אליו הרבה אורחים עם דיילת בודדת, לא ימשוך את כל המספר אחריו.</span></p>
+  <p class="hint" data-onb="reports.staffing.planningParam"><span class="hl" aria-hidden="true">ג</span><span class="ht">הסף שבכותרת האריח הוא פרמטר-התכנון שנקבע בהגדרות, והמספר סופר את האירועים שעברו אותו בפועל. הוא אינו יעד ואינו סף-איכות: אירוע מעליו אינו כשל ואירוע מתחתיו אינו בזבוז, עד שמישהי תכריע שהוא כזה.</span></p>
 
   <div class="chart-card">
     <h3>הערכת אורחים מול אורחים בפועל · <span class="ltr">717</span> אירועים</h3>

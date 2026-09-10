@@ -1912,33 +1912,37 @@ tr.dim td{color:var(--s500)}
       כ-<span class="ltr">1,200</span> ₪ ליחידה, לצד תגים של כ-<span class="ltr">4</span> ₪. ממוין לפי העלות.</p>
     <div class="chart-box" dir="ltr" role="figure" aria-label="עלות לפי מוצר, עמודות">
       <svg viewBox="0 0 660 278" width="660" height="278" preserveAspectRatio="xMidYMid meet">
+        <!-- ✏️ 10/09/2026 · קו-השיא היה 250,000 והרווחים יצאו 70px · 70px · 35px — הרווח האחרון חצי,
+             וקווי-רשת לא-אחידים נקראים כסולם לא-אחיד גם כשהמיפוי עצמו נכון.
+             עכשיו 0 · 100,000 · 200,000 · 300,000 — שלושה רווחים שווים של 58.33px בתוך אותו שטח-ציור (215→40),
+             וכל עמודה צוירה מחדש לפי 175px / 300,000 ₪. הערכים לא זזו — רק המיפוי — ויחסי-הגובה בין העמודות נשמרו. -->
         <line x1="70" y1="215" x2="640" y2="215" stroke="#CAD5E2" stroke-width="1"/>
-        <line x1="70" y1="145" x2="640" y2="145" stroke="#F1F5F9"/>
-        <line x1="70" y1="75" x2="640" y2="75" stroke="#F1F5F9"/>
+        <line x1="70" y1="156.67" x2="640" y2="156.67" stroke="#F1F5F9"/>
+        <line x1="70" y1="98.33" x2="640" y2="98.33" stroke="#F1F5F9"/>
         <line x1="70" y1="40" x2="640" y2="40" stroke="#F1F5F9"/>
         <text class="ax" x="62" y="219" text-anchor="end">0</text>
-        <text class="ax" x="62" y="149" text-anchor="end">100,000</text>
-        <text class="ax" x="62" y="79" text-anchor="end">200,000</text>
-        <text class="ax" x="62" y="44" text-anchor="end">250,000</text>
+        <text class="ax" x="62" y="160.67" text-anchor="end">100,000</text>
+        <text class="ax" x="62" y="102.33" text-anchor="end">200,000</text>
+        <text class="ax" x="62" y="44" text-anchor="end">300,000</text>
 
-        <rect x="80" y="51.6" width="40" height="163.4" fill="#009689" rx="2"/>
-        <text class="vlab" x="100" y="45" text-anchor="middle">233,480</text>
-        <rect x="143" y="92.8" width="40" height="122.2" fill="#009689" rx="2"/>
-        <text class="vlab" x="163" y="86" text-anchor="middle">174,600</text>
-        <rect x="206" y="93.5" width="40" height="121.5" fill="#009689" rx="2"/>
-        <text class="vlab" x="226" y="87" text-anchor="middle">173,590</text>
-        <rect x="269" y="115.9" width="40" height="99.1" fill="#96F7E4" stroke="#009689" rx="2"/>
-        <text class="vlab" x="289" y="109" text-anchor="middle">141,600</text>
-        <rect x="332" y="122.0" width="40" height="93.0" fill="#009689" rx="2"/>
-        <text class="vlab" x="352" y="115" text-anchor="middle">132,875</text>
-        <rect x="395" y="142.7" width="40" height="72.3" fill="#009689" rx="2"/>
-        <text class="vlab" x="415" y="136" text-anchor="middle">103,338</text>
-        <rect x="458" y="146.6" width="40" height="68.4" fill="#009689" rx="2"/>
-        <text class="vlab" x="478" y="140" text-anchor="middle">97,720</text>
-        <rect x="521" y="163.2" width="40" height="51.8" fill="#009689" rx="2"/>
-        <text class="vlab" x="541" y="157" text-anchor="middle">74,025</text>
-        <rect x="584" y="172.6" width="40" height="42.4" fill="#009689" rx="2"/>
-        <text class="vlab" x="604" y="166" text-anchor="middle">60,580</text>
+        <rect x="80" y="78.80" width="40" height="136.20" fill="#009689" rx="2"/>
+        <text class="vlab" x="100" y="72" text-anchor="middle">233,480</text>
+        <rect x="143" y="113.15" width="40" height="101.85" fill="#009689" rx="2"/>
+        <text class="vlab" x="163" y="106" text-anchor="middle">174,600</text>
+        <rect x="206" y="113.74" width="40" height="101.26" fill="#009689" rx="2"/>
+        <text class="vlab" x="226" y="107" text-anchor="middle">173,590</text>
+        <rect x="269" y="132.40" width="40" height="82.60" fill="#96F7E4" stroke="#009689" rx="2"/>
+        <text class="vlab" x="289" y="126" text-anchor="middle">141,600</text>
+        <rect x="332" y="137.49" width="40" height="77.51" fill="#009689" rx="2"/>
+        <text class="vlab" x="352" y="131" text-anchor="middle">132,875</text>
+        <rect x="395" y="154.72" width="40" height="60.28" fill="#009689" rx="2"/>
+        <text class="vlab" x="415" y="148" text-anchor="middle">103,338</text>
+        <rect x="458" y="158.00" width="40" height="57.00" fill="#009689" rx="2"/>
+        <text class="vlab" x="478" y="151" text-anchor="middle">97,720</text>
+        <rect x="521" y="171.82" width="40" height="43.18" fill="#009689" rx="2"/>
+        <text class="vlab" x="541" y="165" text-anchor="middle">74,025</text>
+        <rect x="584" y="179.66" width="40" height="35.34" fill="#009689" rx="2"/>
+        <text class="vlab" x="604" y="173" text-anchor="middle">60,580</text>
 
         <!-- ✏️ 07/09/2026 · מק"ט ⇐ שם-מוצר (products.item_name, נשלף מהמסד החי 07/09).
              השם המלא נפרס לשתי שורות ב-9px כדי להיכנס לרוחב-העמודה בלי לקצר אותו. -->
@@ -2017,6 +2021,29 @@ tr.dim td{color:var(--s500)}
         <rect x="505" y="91.6" width="24" height="123.4" fill="#009689" rx="2"/><rect x="533" y="104.6" width="24" height="110.4" fill="url(#qtyHatch)" rx="2"/>
         <rect x="576" y="92.8" width="24" height="122.2" fill="#009689" rx="2"/><rect x="604" y="106.8" width="24" height="108.2" fill="url(#qtyHatch)" rx="2"/>
 
+        <!-- ✏️ 10/09/2026 · תוויות-ערך. זה היה הגרף היחיד במודול עם אפס תוויות על 16 עמודות,
+             והוא דווקא זה שמבקש להשוות שתי סדרות בעין. הדפוס מועתק מגרף-המדרגים שבלשונית
+             "הנהלה" (`02_tab_executive.html` · "שולי-רווח לפי מדרג-הנחה"): כל עמודה מתוייגת,
+             ותווית הסדרה המשנית נושאת את גוון הסדרה שלה. גודל `sm` (9px) כמו בגרף-החוב של הקובץ הזה,
+             כי העמודות צפופות; שתי תוויות של אותו זוג לעולם אינן באותו גובה,
+             כי "הגיע" נמוך מ"הוזמן" בכל שמונת המוצרים. -->
+        <text class="vlab sm" x="91"  y="56"  text-anchor="middle">60,580</text>
+        <text class="vlab sm" x="119" y="70"  text-anchor="middle" fill="#00786F">55,000</text>
+        <text class="vlab sm" x="162" y="62"  text-anchor="middle">58,490</text>
+        <text class="vlab sm" x="190" y="73"  text-anchor="middle" fill="#00786F">54,110</text>
+        <text class="vlab sm" x="233" y="62"  text-anchor="middle">58,200</text>
+        <text class="vlab sm" x="261" y="76"  text-anchor="middle" fill="#00786F">52,650</text>
+        <text class="vlab sm" x="304" y="64"  text-anchor="middle">57,410</text>
+        <text class="vlab sm" x="332" y="81"  text-anchor="middle" fill="#00786F">50,930</text>
+        <text class="vlab sm" x="375" y="75"  text-anchor="middle">53,150</text>
+        <text class="vlab sm" x="403" y="86"  text-anchor="middle" fill="#00786F">48,960</text>
+        <text class="vlab sm" x="446" y="84"  text-anchor="middle">49,597</text>
+        <text class="vlab sm" x="474" y="99"  text-anchor="middle" fill="#00786F">43,590</text>
+        <text class="vlab sm" x="517" y="85"  text-anchor="middle">49,350</text>
+        <text class="vlab sm" x="545" y="98"  text-anchor="middle" fill="#00786F">44,170</text>
+        <text class="vlab sm" x="588" y="86"  text-anchor="middle">48,860</text>
+        <text class="vlab sm" x="616" y="100" text-anchor="middle" fill="#00786F">43,270</text>
+
         <!-- ✏️ 07/09/2026 · מק"ט ⇐ שם-מוצר (products.item_name) — כמו בגרף שמעל -->
         <text class="axn" x="105" y="231" text-anchor="middle">תג שם רגיל</text>
         <text class="axn sub" x="105" y="242" text-anchor="middle">(חלק)</text>
@@ -2039,7 +2066,7 @@ tr.dim td{color:var(--s500)}
     </div>
     <div class="legend">
       <span><i style="background:#009689"></i>הוזמן — בסיס-הכמות והחיוב</span>
-      <span><i style="background:#96F7E4; border-color:#00786F"></i>הגיע — מילוי מקווקו</span>
+      <span><i style="background:#96F7E4; border-color:#00786F"></i>הגיע — מילוי מקווקו, והתוויות שלו באותו גוון</span>
     </div>
     <table class="sr-only">
       <caption>הוזמן מול הגיע לפי מוצר, מוצרים פיזיים</caption>
