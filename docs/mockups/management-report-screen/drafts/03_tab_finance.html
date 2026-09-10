@@ -333,6 +333,13 @@ tr.dim td{color:var(--s500)}
 .skel-row{height:10px; border-radius:4px; background:var(--s200); margin-top:4px;
      animation:pulse 1.4s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1} 50%{opacity:.5}}
+
+/* ✏️ 10/09/2026 · הכרעה 30 — שבב של דף שנדחה. מסומן ולא נמחק, כי הדף מצויר ואומת
+   והכרעה 30 קובעת שאינו יורד מהאפיון. בבנייה השבב אינו קיים כלל. */
+.picker button.deferred{opacity:.55; border-style:dashed}
+.picker button.deferred:hover{opacity:.8}
+.deferred-note{margin:8px 16px 0; font-size:12px; line-height:1.6; color:var(--s600);
+     border-right:2px solid var(--amber800); padding-right:10px}
 </style>
 </head>
 <body>
@@ -391,12 +398,21 @@ tr.dim td{color:var(--s500)}
       <button class="on" data-page="p1" aria-current="true">מבט-על כספים</button>
       <button data-page="p2">רווחיות פרויקטים</button>
       <button data-page="p3">גיול חובות</button>
-      <button data-page="p4">תזרים צפוי</button>
-      <button data-page="p5">תוספות שטח</button>
+      <!-- ✏️ 10/09/2026 23:5X · הכרעה 30 באישרור-ישי — **שלושת אלה אינם נבנים לכנס.**
+           הלשונית צוירה 07/09 עם שבעה דפים; ההכרעה נכתבה 10/09 ודחתה שלושה מהם, ואיש
+           לא הוריד אותם. **המוצר נושא ארבעה שבבים: מבט-על · רווחיות · גיול · צריכת ציוד.**
+           🚫 **ולמה הם לא נמחקו מהמוקאפ:** הכרעה 30 אומרת *"אינם יורדים מהאפיון"* —
+           הם צוירו, אומתו מספר-מספר, ויש להם טריגר-החזרה (מ13 הוא המחליף הראשון).
+           ⇒ **הם נשארים כאן קריאים ומסומנים; בבנייה לא נוגעים בהם.** -->
+      <button data-page="p4" class="deferred" title="נדחה — הכרעה 30. אינו נבנה לכנס">⏸️ תזרים צפוי</button>
+      <button data-page="p5" class="deferred" title="נדחה — הכרעה 30. אינו נבנה לכנס">⏸️ תוספות שטח</button>
       <button data-page="p6">צריכת ציוד</button>
-      <button data-page="p7">שכר דיילות לפי חודש</button>
+      <button data-page="p7" class="deferred" title="נדחה — הכרעה 30. אינו נבנה לכנס">⏸️ שכר דיילות לפי חודש</button>
       <i class="im" aria-hidden="true" style="top:-9px; right:-5px; left:auto">2</i>
     </nav>
+    <p class="deferred-note">⏸️ <b>שלושה דפים כאן נדחו בהכרעה 30 ואינם נבנים לכנס</b> —
+      תזרים צפוי · תוספות שטח · שכר דיילות. הם מצוירים ואומתו, ונשארים באפיון עם טריגר-החזרה.
+      <b>לשונית-הכספים במוצר נושאת ארבעה דפים</b>, כמו שאר הלשוניות.</p>
 
     <!-- כלי-מוקאפ: שורת-הכתובת (📐13 סעיף 4 — "המצב בכתובת-הדף"). אינה רכיב במסך. -->
     <div class="urlbar">
