@@ -1008,6 +1008,22 @@ missed — a per-surface run would have caught them more cheaply.)*
 > **Runs standalone.** Stages 0–2 have already run; **do not repeat them.** What you need from them is
 > on disk: the requirements ledger, the two approved files, the mockups, and the registers.
 
+> 🔴 **And one register that is easy to skip and expensive to lack — `stage2-review/signoff-baseline-<date>.md`.**
+> **One per module: every number the module displays, with the definition it was measured under, plus the
+> ones that came out wrong and how they were corrected.** ⚠️ **It is a REQUIRED read for anyone writing
+> `spec.md` or building the module** — put it in the handoff's numbered reading list, not the optional one.
+> **Why it earns the line:** without it the next session either re-measures, which wastes a turn, or quotes
+> a number without measuring, which is the failure mode this project actually has. 📊 **Measured
+> 10–11/09/2026 in m11: five numbers were reported wrong in one day, and every one of them came from
+> measuring a *reconstruction* of a definition rather than the definition** — aging buckets counted from
+> the invoice date instead of the due date and missed a fifth bucket · a no-show denominator that kept the
+> rows `attendanceCounts` excludes from both sides · an approval rate that kept the 15 quotes §7.82 removes
+> · a guests-per-hostess ratio taken from the plan in the report about plan-versus-actual · and a revenue
+> tile called wrong because numerator and denominator were measured on different populations. **Four of
+> the five had already been handed to subagents before anyone noticed** — a baseline error multiplies by
+> the number of agents reading it. **The register is what makes the definition, not just the number,
+> survive to the next session.**
+
 ## ו · Assembly — in Hebrew
 
 🔴 **Remember who the reader is: Claude, who will silently fill every hole you leave.**
