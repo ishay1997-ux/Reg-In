@@ -252,7 +252,7 @@ export default function ProjectCardPage() {
                 disabled={POST_EVENT_STATUSES.includes(status)}
                 title={POST_EVENT_STATUSES.includes(status) ? SCOPE_BLOCKED_TITLE : undefined}
                 className={cn(
-                  'rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700',
+                  'rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800',
                   'disabled:cursor-not-allowed disabled:opacity-50',
                 )}
                 onClick={() => {

@@ -786,7 +786,7 @@ function FeeActions({ busy, actions }) {
           title={actions.saveNote ?? undefined}
           aria-describedby={actions.saveNote ? FEE_SAVE_GATE_ID : undefined}
           data-testid="closing-save-fee"
-          className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700"
+          className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800"
           onClick={actions.onSaveFee}
         >
           {busy === 'fee' ? 'שומרת…' : 'שמרי דמי-ביטול'}
@@ -1021,7 +1021,7 @@ function InvoiceUploadBlock({
           type="button"
           disabled={blocked || busy !== ''}
           data-testid="closing-send-invoice"
-          className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700"
+          className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800"
           onClick={onSend}
         >
           {busy === 'invoice' ? 'שולחת…' : 'שמרי ושלחי'}
@@ -1068,7 +1068,7 @@ function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, bu
           type="button"
           disabled={value === '' || busy !== ''}
           data-testid="closing-save-payment"
-          className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700"
+          className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800"
           onClick={onSave}
         >
           {busy === 'payment' ? 'שומרת…' : alreadyPaid ? 'עדכני תאריך תשלום' : 'שמרי תשלום'}
@@ -1519,7 +1519,7 @@ function ClosingFooter({
             title={gateNote ?? undefined}
             aria-describedby={gateNote ? ARCHIVE_GATE_ID : undefined}
             data-testid="closing-archive"
-            className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700"
+            className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800"
             onClick={onArchive}
           >
             {busy === 'archive' ? 'מארכבת...' : 'העבירי לארכיון'}

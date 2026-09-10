@@ -184,7 +184,7 @@ export default function LoginPage() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-auto p-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"
+          className="w-full h-auto p-3 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold"
         >
           {loading ? 'מתחברת…' : 'התחברות'}
         </Button>

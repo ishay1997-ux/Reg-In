@@ -15,7 +15,7 @@ export default function NotFound() {
       <p className="text-slate-500">הכתובת שביקשת אינה קיימת במערכת.</p>
       <Link
         to="/"
-        className="inline-flex items-center gap-2 h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"
+        className="inline-flex items-center gap-2 h-auto py-2 px-4 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold"
       >
         חזרה לדף הבית
       </Link>

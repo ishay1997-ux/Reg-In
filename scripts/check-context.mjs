@@ -117,10 +117,15 @@ if (!toolbox) {
 for (const f of ['CLAUDE.md', 'src/CLAUDE.md', 'docs/CLAUDE.md', 'supabase/migrations/CLAUDE.md']) {
   if (!existsSync(join(ROOT, f))) problems.push(`חסר בעץ ה-CLAUDE.md: ${f}`)
 }
-// שער ה-typed-echo הוא בלתי-הפיך — לוודא שהוא לא נעלם בעריכה
+// שער-המיגרציה הוא בלתי-הפיך — לוודא שהוא לא נעלם בעריכה.
+// ✏️ 10/09/2026: הבדיקה חיפשה את המחרוזת 'typed-echo', אבל **הכרעת-ישי 09/09/2026 18:5X
+// החליפה את השער** ל"הסבר-בעברית + המילה של ישי" (`supabase/migrations/CLAUDE.md` §🔻,
+// עם הערת-✏️ שמסבירה למה: ההקלדה הייתה טקס, וישי ויתר עליה פעמיים ביומיים). ⇒ הבדיקה
+// נכשלה על שער שהוסר **בכוונה** וצעקה זאב מ-09/09 — כולל בכל פתיחת-סשן. **הנכס שאסור
+// שייעלם אינו שם-השער אלא עצם קיומו**, ולכן היא נועלת עכשיו על הכותרת היציבה.
 const dbProtocol = read('supabase/migrations/CLAUDE.md')
-if (dbProtocol && !dbProtocol.includes('typed-echo')) {
-  problems.push('שער ה-typed-echo נעלם מ-supabase/migrations/CLAUDE.md — זה שער בלתי-הפיך.')
+if (dbProtocol && !dbProtocol.includes('השער הבלתי-הפיך')) {
+  problems.push('שער-המיגרציה הבלתי-הפיך נעלם מ-supabase/migrations/CLAUDE.md.')
 }
 // מודול בנוי בלי קובץ-מוקשים (module-close §4c מחייב)
 if (existsSync(join(ROOT, 'src/modules'))) {

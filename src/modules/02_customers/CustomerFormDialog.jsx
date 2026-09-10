@@ -659,7 +659,7 @@ export default function CustomerFormDialog({
               // מנוטרל גם כשמזוהה כפילות-ח"פ (§7.11): הפעולה הנכונה אז היא "ערוך את הכרטיס הקיים",
               // לא submit חוזר שרק יריץ שוב את אותה בדיקה — נטרול מונע לחיצות-סרק שמרגישות כמו באג.
               disabled={saving || savedOk || !!duplicate}
-              className="w-full h-auto p-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
+              className="w-full h-auto p-3 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold disabled:opacity-50"
               data-testid="customer-form-submit"
             >
               {saving ? 'שומרת…' : isEdit ? 'שמרי שינויים' : 'הוסיפי לקוח'}

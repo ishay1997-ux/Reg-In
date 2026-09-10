@@ -81,7 +81,7 @@ export default function SaveRow({
           onClick={onSave}
           disabled={saving || disabled || dirtyCount === 0}
           aria-describedby={reason ? reasonId : undefined}
-          className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700 disabled:opacity-50"
+          className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800 disabled:opacity-50"
           data-testid="settings-save-button"
         >
           {saving ? 'שומרת…' : failedMessage ? 'נסי שוב' : 'שמרי שינויים'}

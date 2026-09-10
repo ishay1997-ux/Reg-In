@@ -283,8 +283,8 @@ function FeedbackForm({
                   className={`cursor-pointer rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                     selected
                       ? score <= 3
-                        ? 'bg-amber-600 text-white shadow-xs'
-                        : 'bg-teal-600 text-white shadow-xs'
+                        ? 'bg-amber-700 text-white shadow-xs'
+                        : 'bg-teal-700 text-white shadow-xs'
                       : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                   }`}
                 >
@@ -324,7 +324,7 @@ function FeedbackForm({
         disabled={!score || submitting}
         onClick={onSubmit}
         data-testid="feedback-submit"
-        className="mt-auto h-auto rounded-xl bg-teal-600 py-3.5 text-[15px] font-bold text-white hover:bg-teal-700"
+        className="mt-auto h-auto rounded-xl bg-teal-700 py-3.5 text-[15px] font-bold text-white hover:bg-teal-800"
       >
         שליחה
       </Button>

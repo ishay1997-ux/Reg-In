@@ -1143,7 +1143,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
       <DialogFooter>
         <Button
           type="button"
-          className="h-auto rounded-lg bg-teal-600 px-4 py-2 text-white hover:bg-teal-700"
+          className="h-auto rounded-lg bg-teal-700 px-4 py-2 text-white hover:bg-teal-800"
           disabled={saveDisabled}
           data-testid="scope-save"
           onClick={handleSave}

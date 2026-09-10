@@ -109,7 +109,7 @@ export default function QuoteSummaryPanel({
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="h-auto w-full rounded-lg bg-teal-600 py-2 font-semibold text-white hover:bg-teal-700"
+          className="h-auto w-full rounded-lg bg-teal-700 py-2 font-semibold text-white hover:bg-teal-800"
           data-testid="quote-save"
         >
           {saving ? 'שומרת…' : saveLabel}

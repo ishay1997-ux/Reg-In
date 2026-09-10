@@ -494,7 +494,7 @@ export default function QuotesPage() {
           {canEdit && (
             <Button
               onClick={() => navigate('/quotes/new')}
-              className="mr-auto self-center h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"
+              className="mr-auto self-center h-auto py-2 px-4 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold"
               data-testid="quote-add-button"
             >
               + הצעה חדשה

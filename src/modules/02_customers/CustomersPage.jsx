@@ -543,7 +543,7 @@ export default function CustomersPage() {
               </Button>
               <Button
                 onClick={openAddDialog}
-                className="h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"
+                className="h-auto py-2 px-4 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold"
                 data-testid="customer-add-button"
               >
                 + לקוח חדש
@@ -650,7 +650,7 @@ export default function CustomersPage() {
                 <SlidersHorizontal className="size-4" />
                 סינון
                 {activeFilterCount > 0 && (
-                  <span className="bg-teal-600 text-white text-xs rounded-full px-1.5 py-0.5">
+                  <span className="bg-teal-700 text-white text-xs rounded-full px-1.5 py-0.5">
                     {activeFilterCount}
                   </span>
                 )}
@@ -667,7 +667,7 @@ export default function CustomersPage() {
                 className={cn(
                   'h-auto py-2.5 px-4 rounded-lg gap-2',
                   filters.marketingConsent === true
-                    ? 'bg-teal-600 hover:bg-teal-700 text-white'
+                    ? 'bg-teal-700 hover:bg-teal-800 text-white'
                     : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
                 )}
                 data-testid="customers-preset-marketing"
