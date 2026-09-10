@@ -462,9 +462,13 @@ tr.hi:hover td{background:var(--amber100)}
 
   <!-- 📐23 · מבט-על הוא שער, ולכן הפועל נגזר מהדף שהוא פותח.
        האריח הראשון פותח את "שביעות רצון" — דוח **בקרה** ⇒ הפועל "לפתוח את X". -->
-  <p class="so-what">לפתוח את "שביעות רצון" ולראות מה מכעיס את <span class="ltr">10</span> הלקוחות
-    הלא-מרוצים — הם לא הזמינו כבר <span class="ltr">206</span> ימים (חציון), מול <span class="ltr">15</span>
-    ימים אצל <span class="ltr">24</span> המרוצים.</p>
+  <!-- ✏️ 10/09/2026 · הכרעת-ישי — "מרוצים" נשא שתי אוכלוסיות באותה לשונית: **משובים**
+       בציון 4–5 ("שיעור המרוצים") מול **לקוחות** שממוצעם 4.5+. חתך-הלקוחות מקבל שם משלו,
+       ו"שיעור המרוצים" נשאר למשובים. אותה מילה, שני מונים — עכשיו מובחנים. -->
+  <p class="so-what">לפתוח את "שביעות רצון" ולראות מה מכעיס את <span class="ltr">10</span>
+    <b>הלקוחות הלא-מרוצים</b> (ממוצע מתחת ל-<span class="ltr">3.5</span>) — הם לא הזמינו כבר
+    <span class="ltr">206</span> ימים (חציון), מול <span class="ltr">15</span> ימים אצל
+    <span class="ltr">24</span> <b>הלקוחות המרוצים</b> (ממוצע <span class="ltr">4.5+</span>).</p>
 
   <!-- א · reports.customersOverview.why — רמה 2 בלבד. פותח במקור ורק אז בנימוק. -->
   <p class="hint-line" data-hint="reports.customersOverview.why"><i class="hm" aria-hidden="true">א</i>
@@ -479,8 +483,9 @@ tr.hi:hover td{background:var(--amber100)}
             aria-label="שביעות רצון מנבאת חזרה — פתיחת דוח שביעות רצון">
       <span class="lb">שביעות-רצון מנבאת חזרה</span>
       <span class="vl"><span class="ltr">15</span> מול <span class="ltr">206</span></span>
-      <span class="sub">חציון ימים מאז האירוע האחרון: מרוצים (<span class="ltr">4.5+</span>)
-        מול לא-מרוצים (מתחת ל-<span class="ltr">3.5</span>)</span>
+      <span class="sub">חציון ימים מאז האירוע האחרון: <b>לקוחות מרוצים</b>
+        (ממוצע <span class="ltr">4.5+</span>) מול <b>לקוחות לא-מרוצים</b>
+        (ממוצע מתחת ל-<span class="ltr">3.5</span>)</span>
       <span class="cmp"><span class="arrow">▬</span> הבינוניים באמצע: <span class="ltr">62</span> ימים —
         הסדר מונוטוני בשלושת הדליים</span>
       <span class="win">כל הזמנים · <span class="ltr">46</span> לקוחות עם <span class="ltr">3+</span> משובים ·
@@ -735,8 +740,10 @@ tr.hi:hover td{background:var(--amber100)}
   <p class="def-footer">הגדרות:
     <b>ממוצע שביעות-רצון</b> = ממוצע ציון <span class="ltr">1–5</span> על משובים שהלקוח מילא בלבד;
     משוב שנשלח ולא נענה אינו נספר ·
-    <b>מרוצה / בינוני / לא-מרוצה</b> = ממוצע הציונים של אותו לקוח, על <span class="ltr">3</span> משובים לפחות:
-    <span class="ltr">4.5+</span> · <span class="ltr">3.5–4.4</span> · מתחת ל-<span class="ltr">3.5</span> ·
+    <b>לקוח מרוצה / בינוני / לא-מרוצה</b> = ממוצע הציונים של <b>אותו לקוח</b>, על <span class="ltr">3</span>
+    משובים לפחות: <span class="ltr">4.5+</span> · <span class="ltr">3.5–4.4</span> · מתחת ל-<span class="ltr">3.5</span>.
+    ⚠️ <b>זהו חתך של לקוחות ואינו "שיעור המרוצים"</b>, שנמדד על <b>משובים</b> בציון
+    <span class="ltr">4</span>–<span class="ltr">5</span> — שני מונים שונים, ולכן שני שמות ·
     <b>ימים מאז האירוע האחרון</b> = היום פחות תאריך האירוע האחרון שהתקיים ולא בוטל ·
     <b>הכנסת <span class="ltr">12</span> החודשים</b> = סך ההכנסה מאירועים שהתקיימו ויצאה להם חשבונית
     (הכרעה <span class="ltr">36</span>), שתאריך האירוע שלהם ב-<span class="ltr">12</span> החודשים האחרונים ·
