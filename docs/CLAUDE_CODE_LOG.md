@@ -46,6 +46,56 @@
 
 ## Session Log (newest first)
 
+### 11/09/2026 (01:0X) — the compact-loss mechanism: a script, a hook, and a test that found my own sloppiness
+
+**What triggered it.** Ishay noticed his judgement-quality intuition ("היה לך שיפוט ממש טוב
+לפני הקומפקט") and asked three escalating questions: can you measure your context · can you
+re-read and audit yourself · **can this run before every handoff, and how would I know it did.**
+The last one is the design constraint — a promise is not an answer.
+
+**What was built.**
+- `~/.claude/scripts/read-session.mjs` — extracts every word both sides wrote, from line one
+  **including everything before a compact**, keeps tool calls as one-line markers, drops payloads.
+  📏 **98.4% of a 10MB transcript is payload; the conversation is ~170KB.** Two modes: `--full`
+  (~62K, for writing a handoff) · `--voice` (his words + the open-items trail **as a checklist**).
+- `~/.claude/hooks/post-compact-reload.mjs` — SessionStart, fires only on `source=compact`,
+  prints ~200 tokens of priority order. 🚫 **Deliberately injects nothing:** priority ① is the
+  files the next step needs, and a hook cannot know what that step is.
+- `~/.claude/scripts/read-session.test.mjs` — 17 assertions over two real transcripts, every
+  count recomputed by an **independent parser**.
+
+**🪤 Why the open-items trail is a checklist and not prose — the finding that shaped the design.**
+The items that broke on 10/09 were **not forgotten**. §7.96, two §6 debts and three PRs were all
+**inherited as stale claims and repeated without a check** — one PR was reported "waiting" in
+**five consecutive reports** while already merged. ⇒ **Re-reading would not have saved any of
+them. Checking would.** The mechanism therefore optimises for verification, not recall.
+
+**🔴 The test suite earned its keep on the first run — against me, twice.**
+Two assertions failed and **both were my test being wrong, not the script**: one demanded that
+harness boilerplate survive (the script correctly strips skill bodies and keeps only what Ishay
+typed), the other asserted a size ratio that fails on any session where he pasted heavily. ⚠️ **But
+the second failure also exposed a real gap:** `--voice` is only cheap when he did not paste much —
+measured **271KB / ~91K tokens** on one transcript. It is **not trimmed** (his words are the
+payload; silently cutting them is the exact failure this exists to prevent) — it now prints a
+**budget verdict** so the caller can apply the guide's priority order instead of overspending blind.
+
+**➕ And Ishay inverted my economics, correctly.** I priced reading (~62K) against zero and called
+it expensive. He priced it against the real alternative: *"הכיול של קלוד אחרי קומפקט לפעמים הגיע
+ל-250 אלף כי הוא פספס דברים"*, and set the budget at **150K** — *"שווה לי הרבה יותר מאשר התסכול
+אחרי זה."* **His stronger point outranked both of my modes:** the most valuable thing to reload is
+**the files the next step needs, in full** — which is exactly what the compacted session lacked
+today (the approval protocol and the `approved/` path, two files no amount of re-reading the
+conversation would have surfaced). Recorded in `docs/guides/01_estimation_log.md`.
+
+**And the handoff itself was rewritten from the full read**, which found **two blockers three
+earlier handoffs had missed**: the mockups sit in `drafts/` while the blueprint walks `approved/`,
+and `screens-approved.md` says in its own parenthesis that a blanket "מאשר" is **not** the approval
+that promotes them. Neither was visible from the compacted summary.
+
+Gate green on this tree (exit 0). ⚠️ A later re-run died in `knip` with
+`FATAL ERROR: Zone Allocation failed - process out of memory` — machine, not code, and the tree
+did not change between the green run and it.
+
 ### 10/09/2026 (22:2X) — m11 stage 2: visual sign-off on all 19 drawn pages, and the population line as a defect class
 
 **What this pass was.** Not a scan against a baseline — each page read as a document, with
