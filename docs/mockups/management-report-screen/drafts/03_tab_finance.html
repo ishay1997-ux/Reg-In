@@ -14,6 +14,14 @@
      **הכרעה 36** (10/09/2026): finished · awaiting_payment · awaiting_invoice · event_finished.
      הכרעה 34 סגרה את ⏳1 — מנהלת-הלוגיסטיקה קיבלה view על מודול הדו"חות.
      ארבע סדרות-הגרף שנוספו ל-data-set.md, ודריל-דאון היררכי בשני דפים (📐13).
+  ✏️ שכבת-הטמעה + אודיט-גיאומטריה (10/09/2026, ערב): נוסף **מתג בינארי "מצב הטמעה" (0 · נקי ⇄
+     2 · מודרך)** בכרום-המוקאפ, ועימו **25 שורות-Hint** בשבעת הדפים, מסומנות בעוגני א·ב·ג·ד
+     (אות עברית בעיגול — לא ספרה; 📐14ב תפס ספרות). דף אחד לכל דוח, לא שני עותקים.
+     החוזה: `docs/specs/module_11_reports/onboarding-layer-contract.md` · `design-contract.md §⑧`.
+     **ושלושה פגמי-גיאומטריה שנמדדו ותוקנו:** ‏① `.barkey span` ⇐ `.barkey > span` (4 מספרי-LTR
+     מקוננים רונדרו כבלוקים ברוחב 225px, תא-מקרא גדל 33px⇐50px) · ② `.tile .cmp` ‏`flex` ⇐ `block`
+     (‏41 `.ltr` בלוקיפיו לפריטי-פלקס ⇒ **5 פיצולי תווית-ערך נמדדו**) · ③ עמודת 27 ₪ בדף 5
+     ‏0.51px ⇐ **2px** (רוחב-מינימום; העוגן `minPointSize` של Recharts). הפירוט בכל אחד במקומו.
   מקורות מחייבים (לא שוכפלו כאן, רק יושמו):
     · docs/specs/module_11_reports/processes-approved.md  — 📐 (כללי-דוח) · 📑 + 📑ב · 🏷️ · 🧭 ·
       🔒 מילון-נעול · 📊 · ת1 · ת4 · ת8 · §🗳️ 2·4·5·6·15·18·19·21·22·23·24 · ⚖️ · ⏳
@@ -100,6 +108,29 @@ h1{font-size:20px; font-weight:700; color:var(--s800)}
     box-shadow:0 0 0 2px #fff; pointer-events:none}
 body.hide-markers .im{display:none}
 
+/* ══ ✏️ 10/09/2026 · שכבת-ההטמעה — `onboarding-layer-contract.md` · `design-contract.md §⑧` ══
+   🔴 **אין כאן המצאה — זו מראה של רכיב קיים.** ‏`src/components/Hint.jsx` מרנדר
+   `<p class="text-sm text-slate-600 border-r-2 border-teal-500 pr-3 my-1">`, וארבעת הערכים
+   האלה הם בדיוק אותם טוקנים: ‏`text-sm`=14px · ‏`text-slate-600`=`--s600` · ‏`border-teal-500`=
+   `--teal500` · ‏`pr-3`=12px · ‏`my-1`=4px. **אינליין ולא ריחוף** (H4 — מקלדת ומגע רואים אותו),
+   ‏**רמה אחת בלי "קרא עוד"** (H5), ו**לעולם לא מכסה נתון**.
+   **המתג בינארי — 0 · נקי ⇄ 2 · מודרך** (הכרעת-ישי: אין רמה אמצעית במערכת אקדמית;
+   ‏`pointer` ריק ב-37 מתוך 37 המפתחות **בכוונה**). ‏`body.onb-guided` כאן = `onboardingMode=2`
+   ‏(`notification_preferences.onboarding_mode`) בייצור. ══ */
+.hint{display:none; font-size:14px; color:var(--s600); line-height:1.55;
+     border-right:2px solid var(--teal500); padding-right:12px; margin:4px 0 12px; max-width:82ch}
+body.onb-guided .hint{display:block}
+.hint b{color:var(--s700)}
+/* עוגן-רמז — **אות עברית בעיגול (א · ב · ג), ולא ספרה**: 📐14ב כבר תפס ספרות לאינטראקציות,
+   ו-①②③ תפוסים בשתי משמעויות נוספות בתיקייה ⇒ משמעות רביעית באותו סימן היא חידה.
+   הגוון שונה מ-`.im` בכוונה (ענבר ולא טורקיז) כדי ששתי מפות-הסימון לא ייקראו כאחת.
+   ניגודיות לבן על `--amber700` = 5.09:1 (מחושב) ⇒ עובר AA. */
+.oa{display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px;
+     border-radius:999px; background:var(--amber700); color:#fff;
+     font:700 10.5px/1 'Geist Variable','Geist',sans-serif; margin-left:6px; vertical-align:1px}
+.onbbar b{color:var(--s600)}
+.onbbar .onbnote{color:var(--s500); font-size:11px}
+
 /* ── כלי-מוקאפ (אינם רכיבי-מסך): מתג-הסימונים ושורת-הכתובת ── */
 .mocktools{position:fixed; bottom:12px; left:12px; z-index:50; display:flex; gap:8px;
      align-items:center; border:1px dashed var(--s300); background:#fff; border-radius:999px;
@@ -174,8 +205,18 @@ body.hide-markers .im{display:none}
 /* רובד 3 — המכנה: ממה המספר עשוי */
 .tile .sub{font-size:12px; color:var(--s600); margin-top:4px; line-height:1.4}
 /* רובד 4 — ההקשר, מופרד בקו-שיער: ✏️ שורת-השוואה (📐1 · הכרעה 15-ב) ואז חלון (📐3) */
-.tile .cmp{font-size:11px; color:var(--s500); display:flex; align-items:baseline; gap:4px;
-      flex-wrap:wrap; width:100%; margin-top:11px; padding-top:9px; border-top:1px solid var(--s100)}
+/* 🔴 ✏️ 10/09/2026 · **היה `display:flex; gap:4px; flex-wrap:wrap` — ותוקן ל-`block`.**
+   ‏`flex` **מבלק-יפיי** כל ילד, ולכן 41 מתוך 46 ה-`.ltr` שנמדדו כ-`display:block` בדף הזה
+   ישבו כאן. התוצאה אינה תיאורטית: כל `<span class="ltr">` הפך ל**פריט-פלקס עצמאי**, כלומר
+   **נקודת-שבירה חוקית** — והשובר שבר בין מספר-LTR למילה העברית שצמודה לו. **חמישה פיצולים
+   נמדדו בפועל ב-1280px:** ‏p3 «(2 ⏎ חשבוניות)» · p3 «(14 ⏎ חשבוניות)» ·
+   p5 «…לפני ⏎ 01/2026» · p7 «₪ ( ⏎ +33.5%)» · p7 «₪ ( ⏎ +33.6%)».
+   ‏`block` מחזיר זרימת-טקסט inline רגילה ⇒ אלגוריתם ה-bidi והשובר עובדים כרגיל, והרווח
+   הלבן שכבר קיים ב-HTML מחליף את ה-`gap`. **המראה זהה; מה שהשתנה הוא נקודות-השבירה.**
+   ⚠️ **וזה אינו פגם של הקובץ הזה בלבד:** אותה שורה יושבת ב-`design-contract.md §⑥` (שורה 733)
+   ובשלוש הלשוניות האחרות — **מדווח, לא נגעתי בהן.** */
+.tile .cmp{font-size:11px; color:var(--s500); display:block;
+      width:100%; margin-top:11px; padding-top:9px; border-top:1px solid var(--s100)}
 .tile .cmp .arrow{color:inherit; font-size:10px}
 .tile .cmp.none{font-style:italic}
 /* ✏️ חלון-הזמן של האריח (📐3) — שורה קבועה בכל אריח */
@@ -215,7 +256,13 @@ svg{display:block}
 .barkey{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:6px 14px;
      margin-top:10px; padding-top:10px; border-top:1px solid var(--s100); font-size:11.5px; color:var(--s600)}
 .barkey b{color:var(--s700)}
-.barkey span{display:block; line-height:1.45}
+/* 🔴 ✏️ 10/09/2026 · `‏.barkey span` (0,1,1) גובר על `‏.ltr` (0,1,0) והפך כל מספר-LTR **מקונן**
+   ל-block. נמדד לפני התיקון: ארבעת טווחי-הגיול (`1–30` · `31–60` · `61–90` · `90+`) רונדרו
+   כבלוקים ברוחב **225px** במקום inline-block, וכל תא-מקרא גדל מ-33px ל-**50px** — כלומר
+   ה-`<b>` נשבר משורת-הכותרת ונפל לשורה משלו. `‏>` מצמצם לילדים-ישירים ומחזיר את הקינון
+   ל-inline-block. **אותו תיקון כבר בוצע היום בשלוש הלשוניות האחרות**; הקובץ הזה הוחזק
+   בידי סוכן ולכן פוגר. */
+.barkey > span{display:block; line-height:1.45}
 
 /* ── שורת-"אז מה" (מילון-נעול · הכרעה 15-ג) — ✏️ somuch → so-what (ביקורת §6 שורה 40) ── */
 .so-what{background:none; border:none; border-right:3px solid var(--teal600); border-radius:0;
@@ -357,6 +404,19 @@ tr.dim td{color:var(--s500)}
       <code class="ltr" id="urlbar">/reports?tab=finance&amp;page=overview&amp;period=2026&amp;customer=all</code>
     </div>
 
+    <!-- ✏️ 10/09/2026 · כלי-מוקאפ: מתג רמת-ההטמעה (`onboarding-layer-contract.md §4`).
+         🚫 **אינו פקד במסך-הדוחות.** בייצור זו העדפה של המשתמשת, יושבת ב"העדפות והתראות"
+         ונשמרת ב-`notification_preferences.onboarding_mode`; כאן היא מדומה כדי שאפשר יהיה
+         להראות את שני המצבים **על אותו דף** במקום לצייר כל דף פעמיים (‏2×7 = 14 דפים
+         שיידרפטו זה מזה בעדכון הראשון). המתג מחליף את המצב **חי**, בדיוק כפי ש-`<Hint>`
+         מתנהג בייצור: הקונטקסט משתנה ⇒ כל Hint מרונדר מחדש, בלי רענון. -->
+    <div class="urlbar onbbar" role="group" aria-label="מצב הטמעה (כלי-מוקאפ)">
+      <span><b>מצב הטמעה</b> (כלי-מוקאפ — בייצור זו העדפה של המשתמשת, לא פקד במסך):</span>
+      <button class="pill on" id="onbClean" aria-pressed="true"><span class="ltr">0</span> · נקי</button>
+      <button class="pill" id="onbGuided" aria-pressed="false"><span class="ltr">2</span> · מודרך</button>
+      <span class="onbnote">שתי רמות בלבד, בלי רמה אמצעית · העוגנים <span class="oa">א</span><span class="oa">ב</span><span class="oa">ג</span> הם המפתח לטבלת-השכבה בסעיף ⑩ של כרטיס-המסך</span>
+    </div>
+
     <div style="min-width:0">
 
       <!-- ═══ מסננים גלובליים (ת1): תקופה = 2026 · לקוח = הכול · ייצוא (ת4) ═══ -->
@@ -418,6 +478,12 @@ tr.dim td{color:var(--s500)}
        והיא **עלתה** מול לפני חודש. הצורה (פעולה ⇐ ואז העובדה שמצדיקה אותה, 📐23) לא נגעה. -->
   <p class="so-what">לגבות <span class="ltr">23,384</span> ₪ שממתינים מעל <span class="ltr">60</span> יום ב-<span class="ltr">4</span> חשבוניות — הוותיקה כבר <span class="ltr">574</span> יום, אצל מועצה מקומית שוהם; יתרת-החוב כולה עומדת על <span class="ltr">236,382</span> ₪, אחרי שעלתה מ-<span class="ltr">204,963</span> ₪ לפני חודש.</p>
 
+  <!-- ✏️ שכבת-הטמעה · עוגן א — "למה הדוח קיים · מה לעשות בו קודם" (רמה 2).
+       מפתח: reports.overview.whyAndFirst · עוגן-בייצור: אחרי שורת-"אז מה" (.so-what) -->
+  <p class="hint" data-key="reports.overview.whyAndFirst"><span class="oa">א</span>הדף בנוי מארבעה מספרים
+    שכולם נמדדים מהחשבוניות שכבר יצאו ומהתשלומים שכבר נכנסו — התחילי מיתרת-החוב הפתוחה,
+    כי היא היחידה כאן שאת יכולה להזיז השבוע, ורק אחריה עברי לצפי ולחריגות.</p>
+
   <!-- אריחים: 📐1 השוואה אמיתית · 📐3 חלון בכל אריח · 📐4 ₪ בלי אגורות -->
   <div class="tiles">
     <div class="tile"><span class="lb">יתרת-חוב פתוחה</span>
@@ -446,6 +512,13 @@ tr.dim td{color:var(--s500)}
       <span class="cmp"><span class="arrow">▼</span> אוגוסט: <span class="ltr">19,253</span> ₪ (<span class="ltr">83</span> משמרות)</span>
       <span class="win"><span class="ltr">01/09–10/09</span></span></div>
   </div>
+
+  <!-- ✏️ שכבת-הטמעה · עוגן ב — "מקור-הנתון פר-אריח" (רמה 2).
+       מפתח: reports.overview.tileBasis · עוגן-בייצור: מתחת ל-`.tiles`, לפני הגרף -->
+  <p class="hint" data-key="reports.overview.tileBasis"><span class="oa">ב</span>שני האריחים הימניים
+    סופרים חשבוניות שנשלחו וטרם שולמו, והשניים השמאליים נמדדים מהאירועים ומהמשמרות של החודש
+    הקלנדרי הנוכחי — ולכן אריח שמראה אפס בתחילת חודש אינו תקלה אלא חודש שרק התחיל,
+    וההשוואה לחודש הקודם היא מה שנותן לו קנה-מידה.</p>
 
   <!-- ⏳ב1 · ✅ **הוכרע 07/09/2026 (הכרעת-ישי) — גרף-התזרים הוחלף, לא נמחק.**
        ישי: *"יש פה כפילות עם הגרף במבט-על, צריך לבחור מקום אחד"* — וההכרעה שנרשמה ב-⏳ב1:
@@ -556,7 +629,20 @@ tr.dim td{color:var(--s500)}
         <tr data-testid="debt-row-today"><td>10/09/2026 — נכון להיום, לא סוף-חודש</td><td>236,382</td><td>35</td></tr>
       </tbody>
     </table>
+    <!-- ✏️ שכבת-הטמעה · עוגן ג — "מקור-הנתון" של הגרף (רמה 2).
+         מפתח: reports.overview.debtSeriesBasis · עוגן-בייצור: בתוך `.chart-card`, מתחת למקרא -->
+    <p class="hint" data-key="reports.overview.debtSeriesBasis"><span class="oa">ג</span>כל עמודה בגרף
+      נמדדת מאותן חשבוניות בדיוק, נכון לערב האחרון של אותו חודש — והאחרונה נכון להיום ולא לסוף-חודש;
+      ולכן היא מצוירת מקווקוות: היא היחידה שעוד יכולה לזוז עד שהחודש ייגמר, ואין להשוות אותה
+      לגובה של חודש מלא.</p>
   </div>
+
+  <!-- ✏️ שכבת-הטמעה · עוגן ד — "נימוק-הסידור" (רמה 2).
+       מפתח: reports.overview.oldestSort · עוגן-בייצור: מעל כותרת-הטבלה -->
+  <p class="hint" data-key="reports.overview.oldestSort"><span class="oa">ד</span>הטבלה נבחרת מתוך
+    כל החשבוניות הפתוחות וממוינת לפי ימי-איחור בסדר יורד — כי סדר-הגבייה מתחיל מהוותיקה ביותר,
+    שם הכסף הכי בסיכון; ולכן חשבונית גדולה וצעירה לא תופיע כאן, והיא אינה נעלמת אלא ממתינה
+    בדוח "גיול חובות".</p>
 
   <!-- 📑ב · מבט-על כספים: "4 הישנות ביותר" בלי פאג'ר + קישור לדוח 6 -->
   <div class="tbl-card">
@@ -628,6 +714,13 @@ tr.dim td{color:var(--s500)}
 
   <p class="so-what">לפתוח את פרויקט <span class="ltr">1560</span> — אינפיניטי גיימינג, החריגה הגדולה ביותר השנה: <span class="ltr">32.4%</span> מעל התכנון; בסך-הכול חרגו <span class="ltr">30</span> פרויקטים ב-<span class="ltr">5,280</span> ₪, מול <span class="ltr">17</span> ו-<span class="ltr">2,937</span> ₪ אשתקד.</p>
 
+  <!-- ✏️ שכבת-הטמעה · עוגן א — "למה הדוח קיים · מה לעשות בו קודם" (רמה 2).
+       מפתח: reports.profitability.whyAndFirst · עוגן-בייצור: אחרי שורת-"אז מה" -->
+  <p class="hint" data-key="reports.profitability.whyAndFirst"><span class="oa">א</span>כל שורה בדף
+    מגיעה מאירועים שכבר התקיימו ויצאה להם חשבונית, ומשווה את שעות-הצוות שתוכננו לשעות שדווחו
+    בפועל — התחילי מהפרויקט שבראש הטבלה, כי אחוז-הסטייה שלו הוא הגדול ביותר; פרויקט פעיל לא
+    יופיע כאן בכלל, כי לפני שהאירוע קרה השעות-בפועל תמיד נמוכות מהמתוכננות ואין מה למדוד.</p>
+
   <div class="tiles">
     <div class="tile"><span class="lb">פרויקטים בתקופה</span>
       <span class="vl"><span class="ltr">236</span></span>
@@ -659,6 +752,13 @@ tr.dim td{color:var(--s500)}
       <span class="cmp"><span class="arrow">▼</span> <span class="ltr">2025</span>: <span class="ltr">0.0%</span></span>
       <span class="win"><span class="ltr">01/01–10/09</span></span></div>
   </div>
+
+  <!-- ✏️ שכבת-הטמעה · עוגן ב — "מקור-הנתון פר-אריח" (רמה 2).
+       מפתח: reports.profitability.tileBasis · עוגן-בייצור: מתחת ל-`.tiles` -->
+  <p class="hint" data-key="reports.profitability.tileBasis"><span class="oa">ב</span>חמשת האריחים
+    נמדדים על אותה אוכלוסייה בדיוק — אירועים שהתקיימו וחויבו בתקופה שבחרת — ולכן "חרגו" ו"סך
+    החריגה" סופרים חריגה כלפי-מעלה בלבד: חיסכון בפרויקט אחד אינו מקזז חריגה באחר, וזו הסיבה
+    שחציון-הסטייה יכול להיות שלילי בעוד סך-החריגה חיובי.</p>
 
   <div class="chart-card">
     <!-- ✏️ 07/09/2026 · חלון-זמן מפורש על כותרת-הגרף (📐3 · 📐17 · ביקורת-ישי §👤 3):
@@ -773,6 +873,13 @@ tr.dim td{color:var(--s500)}
     </table>
   </div>
 
+  <!-- ✏️ שכבת-הטמעה · עוגן ג — "נימוק-הסידור" (רמה 2).
+       מפתח: reports.profitability.sortWhy · עוגן-בייצור: בין כרטיס-הגרף לטבלה -->
+  <p class="hint" data-key="reports.profitability.sortWhy"><span class="oa">ג</span>הגרף ממוין לפי
+    גודל-הסטייה ב-₪ והטבלה לפי אחוז-הסטייה — שני מדדים שונים, בכוונה: ה-₪ אומר כמה כסף זז,
+    והאחוז אומר כמה זה חמור יחסית לגודל הפרויקט; ולכן פרויקט קטן יכול לעמוד בראש הטבלה ולא
+    להופיע בגרף כלל, ושורה שמסומנת "מתחת לרצפת-המהותיות" יורדת לסוף כי המכנה שלה זעיר מדי.</p>
+
   <div class="filters" style="margin-bottom:12px">
     <span class="im-host" style="display:inline-flex">
       <button class="pill" id="onlyOver" aria-pressed="false">מעל הסף בלבד</button>
@@ -880,6 +987,13 @@ tr.dim td{color:var(--s500)}
 
   <p class="so-what" id="p3SoWhat">לגבות <span class="ltr">5,438</span> ₪ מלקוח אחד במדרג <span class="ltr">61–90</span> יום — <span class="ltr">1</span> חשבונית, שממתינה כבר <span class="ltr">69</span> ימים.</p>
 
+  <!-- ✏️ שכבת-הטמעה · עוגן א — "למה הדוח קיים · מה לעשות בו קודם" (רמה 2).
+       מפתח: reports.aging.whyAndFirst · עוגן-בייצור: אחרי שורת-"אז מה" -->
+  <p class="hint" data-key="reports.aging.whyAndFirst"><span class="oa">א</span>כל חשבונית בדף
+    נמדדת מיום שליחתה ומהתשלום שטרם נכנס — התחילי מהדלי "מעל שלושה חודשים", כי שם הסיכוי לגבות
+    הוא הנמוך ביותר וכל שבוע נוסף מוריד אותו; ורק אחריו רדי למדרגים הצעירים, שם עדיין מספיקה
+    תזכורת רגילה.</p>
+
   <div class="tiles" id="p3Tiles">
     <div class="tile"><span class="lb">חוב במדרג <span class="ltr">61–90</span> יום</span>
       <span class="vl"><span class="ltr">5,438</span> ₪</span>
@@ -902,6 +1016,18 @@ tr.dim td{color:var(--s500)}
       <span class="cmp none">מדד כלל-זמני — אין תקופה-קודמת מהגדרה</span>
       <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
   </div>
+
+  <!-- ✏️ שכבת-הטמעה · עוגן ב — 🔴 **הרמז החשוב ביותר בלשונית.** "מקור-הנתון" (רמה 2).
+       מפתח: reports.aging.overdueBasis · עוגן-בייצור: מתחת ל-`.tiles`, מעל הגרף.
+       ⚠️ **ההבחנה שהמשפט הזה סוגר הטעתה את סשן-הבנייה פעמיים ביום אחד (10/09/2026):**
+       "ימי-איחור" נמדדים מול **מועד-הפירעון** (שליחה + ימי-תנאי-התשלום) ולא מול יום השליחה.
+       ‏`deriveDaysOverdue` בקוד עושה בדיוק זאת, ו-`def-footer` כבר אומר זאת ברמה 0 —
+       אבל הוא אומר את **ההגדרה**; מה שחסר הוא **ההשלכה** ("ולכן חשבונית בת חודש ויום…"),
+       וזו אמירת-רמה-2 ולא הגדרה. -->
+  <p class="hint" data-key="reports.aging.overdueBasis"><span class="oa">ב</span>ימי-האיחור נספרים
+    מ<b>מועד-הפירעון</b> — יום שליחת החשבונית ועוד ימי תנאי-התשלום שנקבעו בהגדרות — ולא מיום
+    השליחה עצמו; ולכן חשבונית שנשלחה לפני חודש ויום עדיין תופיע כ"שוטף" ולא כמאחרת, וזה נכון:
+    היא עדיין בתוך התנאים שסוכמו איתו.</p>
 
   <div class="chart-card">
     <!-- ✏️ 07/09/2026 · מובנוּת גרף-הגיול (ביקורת-ישי §👤 6: "הסתכלתי עליו חמש דקות ולא הבנתי").
@@ -1047,6 +1173,18 @@ tr.dim td{color:var(--s500)}
         <tr data-testid="age-row-90"><td>90+</td><td>7,783</td><td>0</td><td>10,163</td><td>0</td><td>17,946</td><td>3</td></tr>
       </tbody>
     </table>
+    <!-- ✏️ שכבת-הטמעה · עוגן ג — "נימוק-הסידור" (רמה 2).
+         מפתח: reports.aging.bucketOrder · עוגן-בייצור: בתוך `.chart-card`, מתחת למקרא-העמודות -->
+    <p class="hint" data-key="reports.aging.bucketOrder"><span class="oa">ג</span>העמודות מסודרות
+      לפי ותק-האיחור ולא לפי הסכום, וזה מכוון — הדלי הגדול ביותר בכסף הוא לרוב דווקא הצעיר ביותר,
+      והוא לא זה שדורש טיפול היום; הסדר הזה קבוע ואינו מושפע ממסנן התקופה, כי הדף הוא צילום-רגע
+      ולא סיכום-תקופה.</p>
+    <!-- ✏️ שכבת-הטמעה · עוגן ד — "מקור-הנתון" של האריח שיצא מהגרף (רמה 2).
+         מפתח: reports.aging.currentTile · עוגן-בייצור: מתחת לאריח "שוטף" (`.side-tile`) -->
+    <p class="hint" data-key="reports.aging.currentTile"><span class="oa">ד</span>האריח שלצד הגרף
+      סופר חשבוניות שטרם הגיע מועד תשלומן, ולכן הן אינן עמודה בגרף — הגרף עונה על "את מי לגבות
+      השבוע", וכסף שעדיין לא איחר אינו חלק מהשאלה הזו; האריחים והטבלה כן ממשיכים לכסות גם אותו,
+      ולכן הסכום שלהם גדול מסכום העמודות.</p>
   </div>
 
   <div class="tbl-card">
@@ -1131,6 +1269,13 @@ tr.dim td{color:var(--s500)}
 
   <p class="so-what">לתכנן את החודש על <span class="ltr">65,930</span> ₪ הצפויים ולא על <span class="ltr">68,585</span> ₪ החוזיים — <span class="ltr">6,511</span> ₪ של עיריית נתניה נדחים ל-<span class="ltr">05/11</span>; עיריות מאחרות חציונית <span class="ltr">68.5</span> יום מול <span class="ltr">34</span> לחברות.</p>
 
+  <!-- ✏️ שכבת-הטמעה · עוגן א — "למה הדוח קיים · מה לעשות בו קודם" (רמה 2).
+       מפתח: reports.cashflow.whyAndFirst · עוגן-בייצור: אחרי שורת-"אז מה" -->
+  <p class="hint" data-key="reports.cashflow.whyAndFirst"><span class="oa">א</span>שני הקווים בגרף
+    נמדדים מאותן חשבוניות פתוחות בדיוק — האחד לפי המועד שבהסכם, והשני לפי אותו מועד ועוד
+    חציון-האיחור ההיסטורי של אותו לקוח; תכנני על הקו הרציף, כי הוא זה שמתחשב באיך שהלקוח שילם
+    בפועל ולא רק במה שהתחייב.</p>
+
   <div class="filters" style="margin-bottom:12px">
     <span class="flabel">אופק</span>
     <span class="im-host" style="display:inline-flex">
@@ -1164,6 +1309,13 @@ tr.dim td{color:var(--s500)}
       <span class="cmp none">מדד כלל-זמני — אין תקופה-קודמת מהגדרה</span>
       <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
   </div>
+
+  <!-- ✏️ שכבת-הטמעה · עוגן ב — "מקור-הנתון פר-אריח" (רמה 2).
+       מפתח: reports.cashflow.overdueTile · עוגן-בייצור: מתחת ל-`.tiles` -->
+  <p class="hint" data-key="reports.cashflow.overdueTile"><span class="oa">ב</span>אריח "כסף שעבר
+    מועדו" נמדד על החשבוניות שמועדן כבר חלף, ולכן הן אינן יושבות על ציר-הזמן שבגרף — הוא מוצג
+    בנפרד כדי שהגרף יישאר תחזית קדימה ולא ערבוב של עבר ועתיד; שני האריחים לצידו הם אותן
+    חשבוניות בשתי שיטות-חישוב, ולא שני סכומים שיש לחבר.</p>
 
   <!-- 📑ב#7 — הצהרת-שיטה קבועה על המסך, וזה גם המשפט לכנס.
        ✏️ 07/09/2026 · הוחלפה לפי m11-contractual-vs-expected §4.1 (🅰️) ו-§4.2 (🅱️):
@@ -1268,6 +1420,13 @@ tr.dim td{color:var(--s500)}
     <p class="chart-note" style="margin:10px 0 0"><b>מה עוד לא נבנה כאן:</b> לחיצה על שבוע אמורה להציג את החשבוניות שבו.
       שיוך חשבונית לשבוע עדיין לא נמדד, ולכן <b>הגרף אינו לחיץ במוקאפ</b> — ולא צויר סינון-צולב שאין לו נתונים.</p>
   </div>
+
+  <!-- ✏️ שכבת-הטמעה · עוגן ג — "נימוק-הסידור" (רמה 2).
+       מפתח: reports.cashflow.sortWhy · עוגן-בייצור: מעל כותרת-הטבלה -->
+  <p class="hint" data-key="reports.cashflow.sortWhy"><span class="oa">ג</span>הטבלה ממוינת לפי
+    המועד הצפוי בסדר עולה ולא לפי הסכום — כי השאלה כאן היא <b>מתי</b> הכסף מגיע ולא כמה;
+    חשבונית גדולה שתגיע בעוד חודשיים אינה הדבר הראשון לטפל בו, וזו גם הסיבה שהשורות שמועדן כבר
+    חלף יושבות בראש הרשימה ולא בסופה.</p>
 
   <div class="tbl-card">
     <h3>מתי כל חשבונית פתוחה תגיע בפועל · <span class="ltr">35</span> החשבוניות הפתוחות, נכון ל-<span class="ltr">10/09/2026</span></h3>
@@ -1434,6 +1593,13 @@ tr.dim td{color:var(--s500)}
 
   <p class="so-what">לבדוק את תמחור התוספות: שולי <span class="ltr">48.8%</span> מול <span class="ltr">58.3%</span> בחברה, על <span class="ltr">16,368</span> ₪ נטו ב-<span class="ltr">20</span> אירועים — אך הבסיס הוא <span class="ltr">30</span> שינויים ב-<span class="ltr">27</span> מתוך <span class="ltr">837</span> פרויקטים, ולכן זו עדיין לא מסקנה.</p>
 
+  <!-- ✏️ שכבת-הטמעה · עוגן א — "למה הדוח קיים · מה לעשות בו קודם" (רמה 2).
+       מפתח: reports.changes.whyAndFirst · עוגן-בייצור: אחרי שורת-"אז מה", מתחת לבאנר-הבסיס -->
+  <p class="hint" data-key="reports.changes.whyAndFirst"><span class="oa">א</span>כל השורות בדף מגיעות
+    משינויי-התכולה שנרשמו בשטח — שלושים שורות בסך-הכול, בעשרים ושבעה פרויקטים — ולכן קראי קודם
+    את שולי-התוספות מול שולי-החברה: זו השאלה היחידה שהדף עונה עליה. כל אחוז אחר כאן נשען על
+    אותו בסיס קטן, ולכן הוא כיוון ולא מסקנה.</p>
+
   <!-- ✏️ 07/09/2026 · תיקון אריתמטי (m11-data-fidelity §2.1 · m11-ishay-number-checks §ו — ממצא חמור מס' 3):
        הערכים הקודמים (4,743 · −375) חוברו מ**שמונה קבוצות-ה-sku של הגרף למטה** ולא מסכימת
        השורות לפי סימן delta_qty, שהיא מה שהתווית מבטיחה. ל-sku ‏REG-TAG יש שלוש שורות
@@ -1465,6 +1631,13 @@ tr.dim td{color:var(--s500)}
       <span class="cmp none">אין תקופה-קודמת — כנ"ל</span>
       <span class="win">כל הזמנים · ההשוואה לשולי-החברה על <span class="ltr">2026</span></span></div>
   </div>
+
+  <!-- ✏️ שכבת-הטמעה · עוגן ב — "מקור-הנתון פר-אריח" (רמה 2).
+       מפתח: reports.changes.tileBasis · עוגן-בייצור: מתחת ל-`.tiles` -->
+  <p class="hint" data-key="reports.changes.tileBasis"><span class="oa">ב</span>"תוספות" ו"צמצומים"
+    נמדדים מסכימת השורות לפי סימן שינוי-הכמות, וה"נטו" הוא ההפרש ביניהם — ולכן מוצר שהיו לו
+    גם תוספת וגם צמצום נספר בשני האריחים הראשונים ומופיע בגרף פעם אחת בלבד, בערך-הנטו שלו;
+    זו הסיבה ששורה בגרף יכולה להיראות קטנה בהרבה ממה שהתרחש בשטח.</p>
 
   <div class="chart-card">
     <h3>השפעת-הכנסה לפי סוג-תוספת · כל הזמנים (כל <span class="ltr">30</span> שינויי-התכולה)</h3>
@@ -1532,7 +1705,19 @@ tr.dim td{color:var(--s500)}
         <text class="vlab" x="299" y="138" text-anchor="start">336 ₪</text>
 
         <text class="axh" x="195" y="164" text-anchor="end">תג שם רגיל (חלק)</text>
-        <rect x="285.0" y="152" width="0.51" height="16" fill="#009689" rx="2"/>
+        <!-- 🔴 ✏️ 10/09/2026 · **רוחב-מינימום 2px, ולא 0.51px.**
+             **מה נמדד:** ‏27 ₪ מול 14,400 ₪ = יחס **533:1** ⇒ על הסקאלה הלינארית העמודה יוצאת
+             **0.51px** ב-1280px (‏viewBox 660 מרונדר 1:1 — נמדד). **עמודה מתחת ל-1px אינה
+             נראית**, והקוראת מסיקה "אפס" — שגיאה גדולה יותר מהעיוות שהתיקון מכניס.
+             **מה נעשה:** ‏0.51 ⇐ **2px**. ‏🚫 **הציר לא נקטע ולא עבר ללוגריתמי** (📐5 אוסר),
+             **אף מספר לא זז**, ותווית-הערך "27 ₪" צמודה לעמודה וקוראת את הערך האמיתי.
+             **המונוטוניות נשמרה:** ‏27→2px · ‏−165→3.09px · ‏−210→3.94px · ‏336→6.3px.
+             🔑 **והעוגן אינו המצאה — זו יכולת מובנית בספרייה שכבר מותקנת:** ‏`minPointSize`
+             על `<Bar>` ב-Recharts (‏`node_modules/recharts/types/cartesian/Bar.d.ts:113`,
+             נבדק 10/09/2026). ⇒ **בבנייה זה `minPointSize={2}` ולא חישוב-יד.**
+             ⚠️ **הסייג שהספרייה עצמה מתעדת** (אותו קובץ, שורה 104): בעמודות **מוערמות**
+             ‏`minPointSize` אינו מובטח — כאן הגרף אינו מוערם, ולכן הסייג אינו חל. -->
+        <rect x="285.0" y="152" width="2" height="16" fill="#009689" rx="2"/>
         <text class="vlab" x="294" y="164" text-anchor="start">27 ₪</text>
 
         <text class="axh" x="195" y="190" text-anchor="end">תג שם רגיל - ממותג</text>
@@ -1564,6 +1749,14 @@ tr.dim td{color:var(--s500)}
         <tr data-testid="chg-row-becotag"><td>תג שם אקולוגי - ממותג (B-ECO-TAG)</td><td>1</td><td>-30</td><td>-210</td></tr>
       </tbody>
     </table>
+    <!-- ✏️ שכבת-הטמעה · עוגן ג — "נימוק-הסידור" + קנה-המידה של העמודה הזעירה (רמה 2).
+         מפתח: reports.changes.sortAndScale · עוגן-בייצור: בתוך `.chart-card`, מתחת למקרא.
+         🔑 **המשפט הזה הוא מה שמצדיק את רוחב-המינימום שהוחל על העמודה של 27 ₪** — הוא אומר
+         לקוראת במפורש לקרוא את הערך ולא את אורך הפס. -->
+    <p class="hint" data-key="reports.changes.sortAndScale"><span class="oa">ג</span>הגרף ממוין לפי
+      השפעת-ההכנסה בסדר יורד, עם הצמצומים בסוף, וכל העמודות נמדדות על אותו ציר-₪ — ולכן שורה של
+      עשרות שקלים מצוירת כפס דק מאוד לצד שורה של אלפים; <b>הערך הכתוב לצד העמודה הוא המספר,
+      לא אורך הפס</b>, והציר לא נקטע כדי "לתקן" את זה: קטיעה הייתה מנפחת את מה שנראה גדול.</p>
   </div>
 
   <div class="tbl-card">
@@ -1669,6 +1862,13 @@ tr.dim td{color:var(--s500)}
     (<span class="ltr">4,182</span> מתוך <span class="ltr">126,650</span>), ו-<span class="ltr">12.1%</span> בשורה למעלה הוא הפער של
     <b>מוצר אחד לאורך כל הזמנים</b>.</p>
 
+  <!-- ✏️ שכבת-הטמעה · עוגן א — "למה הדוח קיים · מה לעשות בו קודם" (רמה 2).
+       מפתח: reports.equipment.whyAndFirst · עוגן-בייצור: אחרי שורת-"אז מה" -->
+  <p class="hint" data-key="reports.equipment.whyAndFirst"><span class="oa">א</span>הדף נמדד מכל
+    שורות-הלוגיסטיקה שבמסד, כולל אירועים שטרם התקיימו — התחילי מטבלת "כמה להזמין לחודש הקרוב",
+    כי היא היחידה כאן שיוצאת ממנה פעולה; שני הגרפים והטבלה הגדולה הם הרקע שמסביר אותה, ולא
+    משימה בפני עצמה.</p>
+
   <!-- 📑ב#11 — אריחים ב-₪ ולא בכמות-מסוכמת (סכימה חוצת-יחידות היא סכום חסר-משמעות) -->
   <div class="tiles">
     <div class="tile"><span class="lb">עלות ציוד בתקופה</span>
@@ -1692,6 +1892,13 @@ tr.dim td{color:var(--s500)}
       <span class="cmp none">לא נמדדה תקופה קודמת למדד הזה</span>
       <span class="win">כל הזמנים</span></div>
   </div>
+
+  <!-- ✏️ שכבת-הטמעה · עוגן ב — "מקור-הנתון פר-אריח" (רמה 2).
+       מפתח: reports.equipment.tileBasis · עוגן-בייצור: מתחת ל-`.tiles` -->
+  <p class="hint" data-key="reports.equipment.tileBasis"><span class="oa">ב</span>אריחי-העלות נמדדים
+    ב-₪ ולא בכמות, כי ₪ הוא המדד היחיד שאפשר לסכום בין מוצרים — יחידת-שירות אחת עולה כמו מאות
+    תגים, וסכימת יחידות ביניהם הייתה נותנת מספר בלי משמעות; לעומתם אריח "פער הוזמן מול הגיע"
+    נמדד ביחידות בכוונה, כי הוא שאלת-רכש ולא שאלת-כסף.</p>
 
   <!-- ⑧ 12.8 · 🔵 להכרעת-ישי — חפיפה פנימית (m11-duplication-audit §2 ח10 · §3 פעולה 6):
        תשע שורות מוצגות שלוש פעמים בדף — גרף-העלות, גרף-הכמויות, והטבלה שנושאת את שתי הסדרות.
@@ -1848,6 +2055,12 @@ tr.dim td{color:var(--s500)}
         <tr data-testid="log-satlan"><td>שרוך סאטן (חלק) (SAT-LAN)</td><td>48,860</td><td>43,270</td><td>11.4</td></tr>
       </tbody>
     </table>
+    <!-- ✏️ שכבת-הטמעה · עוגן ג — "נימוק-הסידור" (רמה 2). מפתח: reports.equipment.sortWhy ·
+         עוגן-בייצור: בתוך כרטיס-הגרף השני, מתחת למקרא (הוא מסביר את שני הגרפים יחד) -->
+    <p class="hint" data-key="reports.equipment.sortWhy"><span class="oa">ג</span>גרף-העלות שמעל
+      ממוין לפי ₪ והגרף הזה לפי הכמות שהוזמנה — ולכן אותו מוצר עומד במקום אחר בכל אחד מהם,
+      וזה מכוון: המוצר היקר ביותר אינו בהכרח זה שנצרך הכי הרבה. "הקמת אתר רישום" מופיעה רק
+      בגרף-העלות, כי מאה יחידות-שירות מול עשרות-אלפי תגים היו הופכות אותה לקו-אפס.</p>
   </div>
 
   <div class="tbl-card">
@@ -1878,6 +2091,13 @@ tr.dim td{color:var(--s500)}
       </div>
     </div>
   </div>
+
+  <!-- ✏️ שכבת-הטמעה · עוגן ד — "מקור-הנתון" של טבלת-ההחלטה (רמה 2).
+       מפתח: reports.equipment.orderCeiling · עוגן-בייצור: מעל כותרת טבלת-ההזמנה -->
+  <p class="hint" data-key="reports.equipment.orderCeiling"><span class="oa">ד</span>"כמות להזמנה"
+    נמדדת ממה שהוזמן לאירועים שטרם התקיימו בחודש הקרוב, והמערכת אינה יודעת מה כבר הוזמן מהספק —
+    ולכן זו <b>תקרה עליונה</b> שצריך להפחית ממנה הזמנות-רכש שכבר יצאו, ולא כמות להעתיק כמות-שהיא
+    להזמנה.</p>
 
   <!-- הכרעה 24 · ח5 — שורת-ההחלטה: כמה להזמין לחודש הקרוב -->
   <div class="tbl-card">
@@ -2009,11 +2229,29 @@ tr.dim td{color:var(--s500)}
 
   <p class="so-what" id="p7SoWhat">להעביר לרו"ח את שכר אוגוסט — <span class="ltr">19,253</span> ₪ ב-<span class="ltr">83</span> משמרות, החודש המלא האחרון; מתחילת השנה השכר גדל <span class="ltr">33.5%</span> מול אשתקד — לאט יותר מההכנסות (<span class="ltr">39.9%</span>).</p>
 
+  <!-- ✏️ שכבת-הטמעה · עוגן א — "למה הדוח קיים · מה לעשות בו קודם" (רמה 2).
+       מפתח: reports.payroll.whyAndFirst · עוגן-בייצור: אחרי שורת-"אז מה" -->
+  <p class="hint" data-key="reports.payroll.whyAndFirst"><span class="oa">א</span>כל המספרים בדף
+    נמדדים מהמשמרות שדווחו בהן שעות-בפועל — התחילי מהחודש המלא האחרון, כי הוא היחיד שסגור וניתן
+    להעביר אותו לרו"ח; החודש הנוכחי כמעט תמיד ייראה נמוך פשוט כי עוד לא כל המשמרות שלו דווחו,
+    וזה אינו סימן שהעלות ירדה.</p>
+
   <div class="filters" style="margin-bottom:12px">
     <label class="switch im-host"><input type="checkbox" id="closedSalary"> לפי דוח-שכר סגור
       <i class="im" aria-hidden="true" style="top:-8px; left:-8px">6</i></label>
     <span class="flabel">כבוי = מחושב מהשיבוצים · דלוק = מתוך דוחות-שכר שכבר הופקו</span>
   </div>
+
+  <!-- ✏️ שכבת-הטמעה · עוגן ב — 🔴 **הרמז השני-בחשיבותו בלשונית.** "מקור-הנתון" (רמה 2).
+       מפתח: reports.payroll.sourceSwitch · עוגן-בייצור: **מיד מתחת למתג**, לפני האריחים.
+       ⚠️ למה דווקא כאן: המתג אינו מסנן — הוא **מחליף את בסיס-החישוב של כל מספר בדף**.
+       שורת-ההגדרות ברמה 0 כבר אומרת ששני המצבים יכולים להראות מספרים שונים "וזה נכון";
+       מה שהיא אינה אומרת הוא **למה**, וזו בדיוק אמירת-רמה-2. -->
+  <p class="hint" data-key="reports.payroll.sourceSwitch"><span class="oa">ב</span>כשהמתג כבוי
+    המספרים מחושבים <b>מהשיבוצים עצמם</b> — שעות-בפועל כפול התעריף שנשמר; כשהוא דלוק הם נלקחים
+    <b>מדוחות-השכר שכבר הופקו</b> במסך הכספים. אלה שני מקורות שונים ולא שתי תצוגות של אותו מספר:
+    המצב הדלוק מציג רק חודשים שהופק להם דוח, והמצב הכבוי מציג גם חודשים פתוחים שהמספר בהם עוד
+    יכול לזוז.</p>
 
   <div id="p7Live">
     <div class="tiles" id="p7Tiles">
@@ -2038,6 +2276,13 @@ tr.dim td{color:var(--s500)}
         <span class="cmp"><span class="arrow">▲</span> <span class="ltr">2025</span> באותם חודשים: <span class="ltr">15,405</span> ₪ (<span class="ltr">+33.6%</span>)</span>
         <span class="win"><span class="ltr">01/01–31/08</span></span></div>
     </div>
+
+    <!-- ✏️ שכבת-הטמעה · עוגן ג — "מקור-הנתון פר-אריח" (רמה 2).
+         מפתח: reports.payroll.tileVsChart · עוגן-בייצור: מתחת ל-`.tiles`, מעל הגרף -->
+    <p class="hint" data-key="reports.payroll.tileVsChart"><span class="oa">ג</span>אריח "סך שכר
+      הדיילות" נמדד <b>בלי</b> נסיעות ובלי בונוסים, ואילו תווית-הערך מעל כל עמודה בגרף היא
+      <b>הסה"כ של שלושתם</b> — ולכן האריח והעמודה אינם אמורים להיות אותו מספר; שני האריחים
+      שלצידו הם בדיוק שני הרכיבים שנוספו בגרף.</p>
 
     <div class="chart-card">
       <h3>עלות-שכר לפי חודש — שכר · נסיעות · בונוסים · <span class="ltr">2026</span> (<span class="ltr">01/01–30/09</span>)</h3>
@@ -2120,6 +2365,13 @@ tr.dim td{color:var(--s500)}
         </tbody>
       </table>
     </div>
+
+    <!-- ✏️ שכבת-הטמעה · עוגן ד — "נימוק-הסידור" (רמה 2).
+         מפתח: reports.payroll.zeroMonth · עוגן-בייצור: מעל כותרת טבלת-החודשים -->
+    <p class="hint" data-key="reports.payroll.zeroMonth"><span class="oa">ד</span>הגרף והטבלה
+      מסודרים לפי חודש ולא לפי הסכום, וספטמבר מוצג כשורת-אפס במקום להיעלם — כי חודש שנעלם
+      מהסדרה נקרא כאילו לא היה בו שכר כלל, וכאן הוא פשוט טרם דווח; לחיצה על שורת-חודש יורדת
+      לפירוט לפי דיילת, ולא מחליפה את הדוח.</p>
 
     <div class="tbl-card" id="p7MonthCard">
       <h3>שכר לפי חודש · <span class="ltr">2026</span> (<span class="ltr">01/01–30/09</span>)</h3>
@@ -2689,6 +2941,24 @@ tr.dim td{color:var(--s500)}
     tm.setAttribute('aria-pressed', hidden ? 'false' : 'true');
     tm.textContent = hidden ? 'הצג סימוני-אינטראקציה' : 'הסתר סימוני-אינטראקציה';
   });
+
+  // ═══ ✏️ 10/09/2026 · כלי-מוקאפ: מתג רמת-ההטמעה (0 · נקי ⇄ 2 · מודרך) ═══
+  // מדמה את `notification_preferences.onboarding_mode`. `body.onb-guided` = רמה 2.
+  // 🔴 **מתג בינארי בכוונה** — אין רמה אמצעית (`pointer` ריק ב-37/37 המפתחות, הכרעת-ישי).
+  // אין רענון ואין ציור-מחדש של הדף: בדיוק כמו בייצור, שינוי-הרמה מגלה/מסתיר את שורות-ה-Hint
+  // ותו לא — וזו הראיה שהשכבה **מפרידה** אמירות ואינה מכפילה מסכים.
+  var onbClean = document.getElementById('onbClean');
+  var onbGuided = document.getElementById('onbGuided');
+  function setOnb(guided) {
+    document.body.classList.toggle('onb-guided', guided);
+    onbGuided.classList.toggle('on', guided);
+    onbClean.classList.toggle('on', !guided);
+    onbGuided.setAttribute('aria-pressed', guided ? 'true' : 'false');
+    onbClean.setAttribute('aria-pressed', guided ? 'false' : 'true');
+    say(guided ? 'מצב הטמעה: מודרך — שורות-ההסבר מוצגות' : 'מצב הטמעה: נקי — שורות-ההסבר מוסתרות');
+  }
+  onbClean.addEventListener('click', function () { setOnb(false); });
+  onbGuided.addEventListener('click', function () { setOnb(true); });
 
   renderP3();
   renderP7Level();
