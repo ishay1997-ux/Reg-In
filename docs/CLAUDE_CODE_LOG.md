@@ -92,6 +92,32 @@ earlier handoffs had missed**: the mockups sit in `drafts/` while the blueprint 
 and `screens-approved.md` says in its own parenthesis that a blanket "מאשר" is **not** the approval
 that promotes them. Neither was visible from the compacted summary.
 
+**↳ closing additions (01:5X), and two of them were Ishay's questions finding real gaps.**
+
+**① "ואת הקבצים שהוא צריך לקרוא הוא יקרא כחלק מפרומפט המסירה?"** — yes for a NEW session, and
+**no for a compacted one**: there is no paste block mid-session, and `STATUS.md` never named the
+handoff. 🔴 **The single case the whole mechanism exists for had no address.** STATUS now opens
+with the live handoff's path and section map, and the hook sends the session there as step ②.
+
+**② "הפרומפט הקצר אותו פרומפט?"** — **no.** He had raised the post-compact budget 100K → 150K;
+I updated the guide, the hook and the journal, and **missed the one artifact he actually pastes**.
+🪤 Recorded in `01_estimation_log.md` as a maintenance trap, not a correction: **a figure living in
+four places moves in three and is forgotten in the fourth.** Needs a sweep, never memory.
+
+**③ The citation rule was extended to cover INHERITED claims** (`~/.claude/CLAUDE.md`). It governed
+what you compose and said nothing about what you repeat — which is where it actually fails, because
+restating a STATUS line does not feel like a citation. Guide **§4ה** splits the audit by price:
+mechanical claim-checking on every inheritance (~2K, would have caught all four of that night's
+false claims) versus the fresh-eyes agent (~198K) reserved for a document leaving for a session
+you will never see. 🚫 **Explicitly not an agent per compact.**
+
+**④ The measurement register is now required per module** (`module-discovery/template.md`, Stage 3)
+rather than a file that happened to exist for m11.
+
+⚠️ **And observed, not touched:** `.agents/`, `.codex/` and `AGENTS.md` appeared untracked in the
+tree at 01:56 while this session was working. **Not mine.** Left alone under rule 16 and reported
+to Ishay as טעון בדיקה.
+
 Gate green on this tree (exit 0). ⚠️ A later re-run died in `knip` with
 `FATAL ERROR: Zone Allocation failed - process out of memory` — machine, not code, and the tree
 did not change between the green run and it.
