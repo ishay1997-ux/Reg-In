@@ -1,0 +1,1653 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ מ11 · לשונית הנהלה (מ2 · מ3 · מ4 · מ6)</title>
+<!--
+  ═════════════════════════════════════════════════════════════════════════════
+  מוקאפ טיוטה · מודול 11 · לשונית "הנהלה" — ארבעה דפים במסמך אחד.
+  🔴 **ארבעה, לא חמישה: מ5 (ריכוזיות לקוחות / פארטו) נדחה בהכרעת-ישי 10/09/2026 ואינו מצויר.**
+     ⚠️ שני קבצים עדיין מונים חמישה דפים ללשונית הזו — `processes-approved.md §🏷️` ו-
+     `design-contract.md §⑥.1` — ר' ⑧ G4 בכרטיס. לא תוקנו כאן: הם SSOT ואינם שלי לערוך.
+
+  "היום" = **10/09/2026** (הכרעת-ישי 10/09/2026 · 📐22). כל תאריך בקובץ נקרא ביחס אליו.
+  ⚠️ לשונית הכספים (`03_tab_finance.html`) עדיין מצהירה 06/09 ותרוענן בנפרד.
+  תקופה = 2026 · לקוח = הכול · **הצופה: מנכ"ל** ⇒ ארבע הלשוניות פתוחות, אף אחת אינה ממוסכת.
+
+  מקורות מחייבים (יושמו, לא שוכפלו):
+    · processes-approved.md — 📐1–📐23 · 📑 + 📑ב · 🏷️ · 🧭 · 🔒 · 📊 · ת1 · ת4 · ת8 ·
+      §🗳️ 2·4·6·10·15·18·19·21·22·23·24·29
+    · design-contract.md — §① פלטה · §② רכיבים · §③ RTL · §④ כלל-מילוי · §⑤ חוזה-גרפים · §⑥ שלד
+    · stage2-cards/cards-finance.md + drafts/03_tab_finance.html — הצורה המשותפת (G8 · G9)
+
+  🚫 אין המצאת מספר/שם/תאריך. כל מספר נמדד מול המסד ב-10/09/2026 (Supabase, קריאה-בלבד);
+     השאילתות עצמן יושבות בסעיף ③ של כל כרטיס ב-`stage2-cards/cards-management.md`.
+  הגרפים הם SVG סטטי שמחקה Recharts (המימוש: design-contract §5.3).
+  ═════════════════════════════════════════════════════════════════════════════
+-->
+<style>
+/* ═══ טוקנים — הועתקו מילולית מ-design-contract.md §⑥. אל תשנה ערך. ═══ */
+:root{
+  --primary:#0D9488;
+  --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4;
+  --teal500:#00BBA7; --teal600:#009689; --teal700:#00786F;
+  --green100:#DCFCE7; --green700:#008236;
+  --amber50:#FFFBEB; --amber100:#FEF3C6; --amber200:#FEE685;
+  --amber700:#BB4D00; --amber800:#973C00;
+  --red100:#FFE2E2; --red600:#E7000B; --red700:#C10007;
+  --s50:#F8FAFC; --s100:#F1F5F9; --s200:#E2E8F0; --s300:#CAD5E2;
+  --s400:#90A1B9; --s500:#62748E; --s600:#45556C; --s700:#314158; --s800:#1D293D;
+  --r-md:8px; --r-lg:10px; --r-xl:14px; --r-2xl:18px;
+  --sidebar:240px; --topbar:64px;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  background:var(--s50); color:var(--s800);
+  font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif;
+  font-size:14px; line-height:1.5;
+}
+.ltr{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+  clip:rect(0,0,0,0); white-space:nowrap; border:0}
+[hidden]{display:none !important}
+
+/* ── מעטפת: סרגל ימני + סרגל עליון ── */
+.side{position:fixed; top:0; right:0; width:var(--sidebar); height:100vh; background:#fff;
+      border-left:1px solid var(--s200); display:flex; flex-direction:column; z-index:30}
+.side .logo{height:var(--topbar); display:flex; align-items:center; justify-content:center;
+      border-bottom:1px solid var(--s100); font-weight:700; color:var(--teal700); letter-spacing:.5px}
+.side nav{padding:12px 8px; display:flex; flex-direction:column; gap:4px}
+.nav-i{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--r-lg);
+      font-size:14px; font-weight:500; color:var(--s600); text-decoration:none}
+.nav-i .ic{width:20px; text-align:center; font-size:15px; flex:none}
+.nav-i.on{background:var(--teal50); color:var(--teal700)}
+.top{position:fixed; top:0; left:0; right:var(--sidebar); height:var(--topbar); background:#fff;
+     border-bottom:1px solid var(--s200); display:flex; align-items:center;
+     justify-content:space-between; padding:0 24px; z-index:20}
+main{margin-right:var(--sidebar); padding:calc(var(--topbar) + 24px) 24px 40px; position:relative}
+h1{font-size:20px; font-weight:700; color:var(--s800)}
+.psub{font-size:12px; color:var(--s500); margin-top:2px}
+
+/* ── חותמת "היום" (הכרעה 15-ז) · ניגודיות s500 לפי design-contract §⑥ ── */
+.stamp{position:absolute; top:calc(var(--topbar) + 8px); left:24px; font-size:11px; color:var(--s500)}
+/* ── שורת-מקורות (הכרעה 15-ז) ── */
+.src-footer{margin-top:24px; padding-top:10px; border-top:1px solid var(--s100);
+     font-size:11px; color:var(--s500)}
+/* ── שורת-הגדרות-מדדים (📐16) ── */
+.def-footer{margin-top:12px; font-size:11px; color:var(--s500); line-height:1.7}
+.def-footer b{color:var(--s600)}
+/* ── שורת-הצהרת-אוכלוסייה (📐2) ── */
+.pop{font-size:11.5px; color:var(--s500); margin:4px 0 14px}
+.pop b{color:var(--s600)}
+/* ── פירורי-לחם לדריל-דאון (📐13) — התקדים Crumbs שב-ProjectCardPage.jsx (מפריד "|") ── */
+.crumbs{display:flex; align-items:center; gap:8px; margin:0 0 6px; font-size:12px; color:var(--s500)}
+.crumbs button{border:none; background:none; font:inherit; font-weight:600; color:var(--teal700);
+     cursor:pointer; padding:0; text-decoration:underline}
+.crumbs .sep{color:var(--s300)}
+.crumbs [aria-current="page"]{color:var(--s700); font-weight:600}
+/* ── מפת-לחיצות ויזואלית (📐14ב) — ספרות רגילות 1,2,3 ולא ①②③ ── */
+.im-host{position:relative}
+.im{position:absolute; top:-8px; left:-8px; z-index:40; display:flex; align-items:center;
+    justify-content:center; width:18px; height:18px; border-radius:999px;
+    background:var(--teal600); color:#fff; font:700 10px/1 'Geist Variable',sans-serif;
+    box-shadow:0 0 0 2px #fff; pointer-events:none}
+body.hide-markers .im{display:none}
+/* ── כלי-מוקאפ (אינם רכיבי-מסך) ── */
+.mocktools{position:fixed; bottom:12px; left:12px; z-index:50; display:flex; gap:8px;
+     align-items:center; border:1px dashed var(--s300); background:#fff; border-radius:999px;
+     padding:5px 12px; font-size:11.5px; color:var(--s500)}
+.mocktools button{border:1px solid var(--s300); background:#fff; color:var(--s600); font:inherit;
+     font-size:11.5px; border-radius:999px; padding:2px 10px; cursor:pointer}
+.urlbar{display:flex; align-items:center; gap:8px; border:1px dashed var(--s300); background:#fff;
+     border-radius:var(--r-md); padding:5px 10px; margin-bottom:14px; font-size:11px; color:var(--s500)}
+.urlbar code{font-family:ui-monospace,Consolas,monospace; font-size:11px; color:var(--s600)}
+/* ── לשוניות (§2.4 · הכרעה 15-ה) ── */
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--s200); margin:0 0 16px}
+.tab{border:none; background:none; border-bottom:2px solid transparent; margin-bottom:-1px;
+     padding:10px 16px; font-size:14px; font-weight:500; color:var(--s500); cursor:pointer;
+     display:flex; flex-direction:column; align-items:center; gap:2px; font-family:inherit}
+.tab.on{border-color:var(--teal600); font-weight:600; color:var(--teal700)}
+.tab.masked{color:var(--s400); cursor:not-allowed}
+.tab.masked .lock-txt{font-size:10.5px; font-weight:400; color:var(--s400)}
+/* ── בורר-דוח: שורת-שבבים אופקית מתחת ללשוניות (הכרעה 29 · צורת FilterPill) ── */
+.picker{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0 0 14px; width:100%}
+.picker button{border:1px solid var(--s200); background:#fff; color:var(--s600);
+     border-radius:999px; padding:5px 12px; font:inherit; font-size:12.5px; cursor:pointer;
+     white-space:nowrap; line-height:1.3}
+.picker button:hover{background:var(--s50)}
+.picker button.on{border-color:var(--teal200); background:var(--teal50);
+     font-weight:600; color:var(--teal700)}
+.picker button:focus-visible{outline:2px solid var(--teal500); outline-offset:2px}
+/* ── שורת-מסננים גלובליים ── */
+.filters{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:16px}
+.pill{border:1px solid var(--s200); background:#fff; color:var(--s600);
+     border-radius:999px; padding:4px 12px; font:inherit; font-size:12.5px; cursor:pointer}
+.pill.on{background:var(--teal50); border-color:var(--teal200); color:var(--teal700); font-weight:600}
+.sel{border:1px solid var(--s300); background:#fff; color:var(--s700); border-radius:var(--r-md);
+     padding:4px 10px; font:inherit; font-size:12.5px}
+.clear-chip{border:1px solid var(--s200); background:#fff; color:var(--s600);
+     border-radius:999px; padding:4px 10px; font:inherit; font-size:12px; cursor:pointer}
+.flabel{font-size:12px; color:var(--s500)}
+/* ── אריח-KPI (§2.2 · G8: ארבעה רבדים) — לבן+מסגרת, לעולם לא מילוי (§④) ── */
+.tiles{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px}
+.tile{border:1px solid var(--s200); background:#fff; border-radius:var(--r-xl); padding:14px 16px 12px;
+      display:flex; flex-direction:column; align-items:flex-start; gap:0;
+      min-width:210px; flex:1 1 210px; max-width:340px}
+.tile .lb{font-size:11.5px; font-weight:600; color:var(--s500); line-height:1.35; letter-spacing:.1px}
+.tile .vl{font-size:27px; font-weight:700; color:var(--s800); line-height:1.15;
+      margin-top:7px; letter-spacing:-.4px}
+.tile .sub{font-size:12px; color:var(--s600); margin-top:4px; line-height:1.4}
+.tile .cmp{font-size:11px; color:var(--s500); display:flex; align-items:baseline; gap:4px;
+      flex-wrap:wrap; width:100%; margin-top:11px; padding-top:9px; border-top:1px solid var(--s100)}
+.tile .cmp .arrow{color:inherit; font-size:10px}
+.tile .cmp.none{font-style:italic}
+.tile .win{font-size:10.5px; color:var(--s500); margin-top:4px; line-height:1.4}
+/* ── כרטיס-גרף (§⑤) ── */
+.chart-card{border:1px solid var(--s200); background:#fff; border-radius:var(--r-xl);
+     padding:16px; margin-bottom:16px}
+.chart-card h3{font-size:13.5px; font-weight:600; color:var(--s700); margin-bottom:4px}
+.chart-note{font-size:11px; color:var(--s500); margin-bottom:10px; line-height:1.6}
+.chart-note b{color:var(--s600)}
+.legend{display:flex; flex-wrap:wrap; gap:14px; margin-top:8px; font-size:11.5px; color:var(--s600)}
+.legend i{display:inline-block; width:14px; height:10px; border-radius:2px; margin-left:5px;
+     vertical-align:-1px; border:1px solid var(--s300)}
+.chart-box{width:100%; overflow-x:auto}
+.chart-row{display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap}
+.chart-row .chart-box{width:auto; max-width:100%}
+.panel-ttl{font-size:12px; font-weight:600; color:var(--s600); margin-bottom:4px}
+svg{display:block}
+.ax{font-size:10px; fill:var(--s500)}
+.axh{font-size:10.5px; fill:var(--s600)}
+.vlab{font-size:10px; fill:var(--s600); font-weight:600}
+.vlab.sm{font-size:9px}
+.refl{font-size:10px; fill:var(--s600); font-weight:600}
+/* מקרא-עמודות: "מה כל עמודה אומרת" */
+.barkey{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:6px 14px;
+     margin-top:10px; padding-top:10px; border-top:1px solid var(--s100); font-size:11.5px; color:var(--s600)}
+.barkey b{color:var(--s700)}
+.barkey span{display:block; line-height:1.45}
+/* ── שורת-"אז מה" (מילון-נעול · הכרעה 15-ג · 📐23) ── */
+.so-what{background:none; border:none; border-right:3px solid var(--teal600); border-radius:0;
+     padding:6px 14px; font-size:13px; font-weight:600; color:var(--teal700); margin-bottom:16px}
+/* ── טבלה + חלון-דפדוף (§2.5) ── */
+.tbl-card{border:1px solid var(--s200); background:#fff; border-radius:var(--r-xl);
+     margin-bottom:16px; overflow:hidden}
+.tbl-card > h3{font-size:13.5px; font-weight:600; color:var(--s700); padding:14px 16px 0}
+.tbl-scroll{width:100%; overflow-x:auto}
+table.data{width:100%; border-collapse:collapse}
+table.data th{font-size:12px; font-weight:600; color:var(--s500); text-align:right;
+   padding:8px 10px; border-bottom:1px solid var(--s200); white-space:nowrap}
+table.data td{padding:10px; border-bottom:1px solid var(--s100); vertical-align:middle;
+   font-size:13px; white-space:nowrap}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--s50)}
+tr.click:focus-visible{outline:2px solid var(--teal500); outline-offset:-2px}
+tr.click:focus-visible td{background:var(--teal50)}
+tr.dim td{color:var(--s500)}
+.pager{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px;
+     border-top:1px solid var(--s100); padding:8px 12px; font-size:12.5px; color:var(--s500)}
+.lnk{border:none; background:none; color:var(--teal700); font:inherit; font-size:12.5px;
+     font-weight:600; cursor:pointer; text-decoration:underline; padding:0}
+.over{color:var(--red700); font-weight:600}
+.tip{border-bottom:1px dotted var(--s500); cursor:help}
+.drill{font-size:11.5px; color:var(--s500); padding:4px 16px 10px; margin:0}
+.tnote{font-size:11px; color:var(--s500); padding:0 16px 12px; margin:0; line-height:1.6}
+.tnote b{color:var(--s600)}
+/* ── כפתורים ── */
+.btn{border-radius:var(--r-lg); font:inherit; font-size:14px; font-weight:600;
+     padding:8px 16px; border:1px solid transparent; cursor:pointer; white-space:nowrap}
+.btn-primary{background:var(--teal600); color:#fff}
+.btn-outline{background:#fff; border-color:var(--s300); color:var(--s700); font-weight:500}
+/* ── הערת-דאטה (מה חסר במסד — לא הומצא) ── */
+.datanote{border:1px dashed var(--s300); border-radius:var(--r-lg); padding:10px 12px;
+     font-size:11.5px; color:var(--s500); margin-bottom:16px; background:#fff; line-height:1.6}
+.datanote b{color:var(--s600)}
+/* ── כותרת-הדף (הכרעה 18): שם קצר ככותרת · השאלה ככותרת-משנה ── */
+.topttl{font-size:17px; font-weight:700; color:var(--s800)}
+.page > h1{margin-bottom:2px}
+/* ── חמשת מצבי-המעטפת פר-דף (📐10) — רצועה סטטית, לא switcher ── */
+.states-cap{font-size:11px; color:var(--s500); margin:18px 0 6px}
+.states{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px}
+.st{flex:1 1 180px; border:1px dashed var(--s300); border-radius:var(--r-lg); padding:8px 10px;
+     background:#fff; font-size:11px; color:var(--s500)}
+.st b{display:block; color:var(--s600); font-size:11.5px; margin-bottom:2px}
+.skel-row{height:10px; border-radius:4px; background:var(--s200); margin-top:4px;
+     animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1} 50%{opacity:.5}}
+</style>
+</head>
+<body>
+
+<aside class="side">
+  <div class="logo">REG-IN</div>
+  <nav>
+    <a class="nav-i" href="#"><span class="ic">🏠</span>מסך הבית</a>
+    <a class="nav-i" href="#"><span class="ic">👥</span>לקוחות</a>
+    <a class="nav-i" href="#"><span class="ic">📄</span>הצעות מחיר</a>
+    <a class="nav-i" href="#"><span class="ic">📁</span>פרויקטים</a>
+    <a class="nav-i" href="#"><span class="ic">👤</span>דיילות</a>
+    <a class="nav-i" href="#"><span class="ic">📦</span>לוגיסטיקה</a>
+    <a class="nav-i" href="#"><span class="ic">💰</span>כספים</a>
+    <a class="nav-i on" href="#"><span class="ic">📊</span>דו"חות</a>
+  </nav>
+</aside>
+
+<header class="top">
+  <div>
+    <p class="topttl">דו"חות</p>
+    <p class="psub">מנכ"ל</p>
+  </div>
+  <div class="who"><span style="width:36px; height:36px; border-radius:999px; background:var(--teal600);
+      color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600">מ</span></div>
+</header>
+
+<main>
+  <span class="stamp">היום: 10/09/2026</span>
+
+  <!-- 📐9 — אזור-הכרזה יחיד ללשונית, קיים בדף מראש ולא נוצר בלחיצה -->
+  <p class="sr-only" aria-live="polite" id="live"></p>
+
+  <!-- ארבע לשוניות לפי הרשאת מודול-הבעלים (הכרעה 2).
+       הצופה כאן הוא **מנכ"ל** — `edit` על כל המודולים ⇒ אף לשונית אינה ממוסכת.
+       דפוס-המיסוך עצמו מצויר בלשונית הכספים (מנהלת כספים ולקוחות) ובמעטפת מ1. -->
+  <div class="tabs" role="tablist" aria-label="לשוניות הדוחות">
+    <button class="tab on im-host" role="tab" aria-selected="true" aria-controls="execpanel" id="tab-exec">הנהלה
+      <i class="im" aria-hidden="true" style="top:2px; left:-6px">1</i></button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="execpanel">כספים</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="execpanel">דיילות</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="execpanel">לקוחות</button>
+  </div>
+
+  <div id="execpanel" role="tabpanel" aria-labelledby="tab-exec">
+
+    <!-- ═══ בורר-דוח · שורת-שבבים (הכרעה 29). תוויות = השם הקצר מטבלת 🏷️, מילה-במילה. ═══
+         🔴 **ארבעה שבבים ולא חמישה** — "ריכוזיות לקוחות" (מ5) נדחה בהכרעת-ישי 10/09/2026. ═══ -->
+    <nav class="picker im-host" aria-label="בחירת דוח בלשונית הנהלה" id="picker">
+      <button class="on" data-page="p1" aria-current="true">מבט-על הנהלה</button>
+      <button data-page="p2">מגמות רב-שנתיות</button>
+      <button data-page="p3">הנחות ורווחיות</button>
+      <button data-page="p4">קהל מול צוות</button>
+      <i class="im" aria-hidden="true" style="top:-9px; right:-5px; left:auto">2</i>
+    </nav>
+
+    <!-- כלי-מוקאפ: שורת-הכתובת (📐13 ④ — "המצב בכתובת-הדף"). אינה רכיב במסך. -->
+    <div class="urlbar">
+      <span>כתובת-הדף (בדפדפן, לא רכיב במסך):</span>
+      <code class="ltr" id="urlbar">/reports?tab=executive&amp;page=overview&amp;period=2026&amp;customer=all</code>
+    </div>
+
+    <div style="min-width:0">
+
+      <!-- ═══ מסננים גלובליים (ת1): תקופה = 2026 · לקוח = הכול · ייצוא (ת4) ═══ -->
+      <div class="filters">
+        <span class="flabel">תקופה</span>
+        <span class="im-host" style="display:inline-flex">
+          <button class="pill" aria-pressed="false">החודש</button>
+          <i class="im" aria-hidden="true" style="top:-8px; left:-8px">3</i>
+        </span>
+        <button class="pill" aria-pressed="false">3 חודשים</button>
+        <button class="pill on" aria-pressed="true">השנה (<span class="ltr">2026</span>)</button>
+        <button class="pill" aria-pressed="false">הכול</button>
+        <span class="flabel" style="margin-right:8px">לקוח</span>
+        <span class="im-host" style="display:inline-flex">
+          <select class="sel" dir="rtl" aria-label="סינון לפי לקוח">
+            <option>הכול</option>
+            <option>אלפא סיסטמס בע"מ</option>
+            <option>נובה פארמה בע"מ</option>
+            <option>טכנולוגיות ענן ישראל</option>
+            <option>הפקות דרור</option>
+            <option>עיריית נתניה</option>
+          </select>
+          <i class="im" aria-hidden="true" style="top:-8px; left:-8px">4</i>
+        </span>
+        <span class="im-host" style="margin-right:auto; display:inline-flex">
+          <button class="btn btn-outline" id="xlsx" title="">ייצוא לאקסל</button>
+          <i class="im" aria-hidden="true" style="top:-6px; left:-6px">5</i>
+        </span>
+      </div>
+      <!-- תצוגה-מקדימה של הייצוא (ת4 · WYSIWYG): העמודות נקראות מה-DOM של הטבלה הגלויה. -->
+      <p class="flabel" style="margin:-8px 0 4px">הקובץ שיירד: <span class="ltr" id="xlsxName"></span></p>
+      <p class="flabel" style="margin:0 0 14px; line-height:1.6"><b style="color:var(--s600)">העמודות שיירדו</b>
+        (בדיוק הכותרות שבטבלה שעל המסך): <span id="xlsxCols" style="color:var(--s600)"></span></p>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     דף 1 · מ2 — מבט-על הנהלה · "מה מצב העסק השנה?" · סוג: בקרה (🧭)
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="page" id="p1" aria-label="מבט-על הנהלה">
+
+  <h1>מבט-על הנהלה</h1>
+  <p class="psub">מה מצב העסק השנה?</p>
+  <p class="psub"><span class="ltr">2026</span> (<span class="ltr">01/01–10/09</span>) · כל הלקוחות</p>
+  <!-- 📐2 · הצהרת-אוכלוסייה. הסטטוסים נכתבים בשמם העברי כפי שהמשתמשת מכירה אותם מהמסכים. -->
+  <p class="pop">אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית —
+    <b>הסתיים · אירוע הסתיים · ממתין לחשבונית · ממתין לתשלום</b> · הוצאו: אירועים שטרם התקיימו,
+    אירועים בתהליך ואירועים מבוטלים · <span class="ltr">n=236</span> (מתוך <span class="ltr">837</span> אירועים במערכת).</p>
+
+  <!-- 📐23 · מבט-על נושא את הפועל של הדף שהוא פותח — כאן "מגמות רב-שנתיות", שהוא אסטרטגי ⇒ "לשים לב ש…" -->
+  <p class="so-what">לשים לב שהצמיחה השנה לא באה על חשבון הרווח — <span class="ltr">1,922,441</span> ₪ עד
+    <span class="ltr">10/09</span>, גידול של <span class="ltr">38.7%</span> מול אותו טווח אשתקד,
+    ושולי-הרווח דווקא עלו ל-<span class="ltr">58.2%</span>. הפירוט בדוח "מגמות רב-שנתיות".</p>
+
+  <div class="tiles">
+    <div class="tile"><span class="lb">הכנסות מתחילת השנה</span>
+      <span class="vl"><span class="ltr">1,922,441</span> ₪</span>
+      <span class="sub"><span class="ltr">236</span> אירועים שהסתיימו</span>
+      <span class="cmp"><span class="arrow">▲</span> <span class="ltr">2025</span> באותו טווח: <span class="ltr">1,385,815</span> ₪ (<span class="ltr">178</span> אירועים)</span>
+      <span class="win"><span class="ltr">01/01–10/09/2026</span></span></div>
+
+    <div class="tile"><span class="lb">שולי-רווח גולמי</span>
+      <span class="vl"><span class="ltr">58.2%</span></span>
+      <span class="sub"><span class="ltr">1,118,098</span> ₪ רווח מתוך <span class="ltr">1,922,441</span> ₪ הכנסה</span>
+      <span class="cmp"><span class="arrow">▲</span> <span class="ltr">2025</span> באותו טווח: <span class="ltr">55.9%</span></span>
+      <span class="win"><span class="ltr">01/01–10/09/2026</span></span></div>
+
+    <div class="tile"><span class="lb">אירועים שהסתיימו</span>
+      <span class="vl"><span class="ltr">236</span></span>
+      <span class="sub">הסתיימו, אירוע-הסתיים, ממתינים לחשבונית וממתינים לתשלום</span>
+      <span class="cmp"><span class="arrow">▲</span> <span class="ltr">2025</span> באותו טווח: <span class="ltr">178</span></span>
+      <span class="win"><span class="ltr">01/01–10/09/2026</span></span></div>
+
+    <!-- 📑ב · מבט-על הנהלה: מכנה גלוי לאריח-הריכוזיות + תת-שורה בשקלים.
+         ✏️ 10/09/2026 · האריח הזה הוא כעת הסימן היחיד לריכוזיות בכל הלשונית — דף הפארטו
+         (מ5) נדחה בהכרעת-ישי; ר' ⑧ G4 בכרטיס. -->
+    <div class="tile"><span class="lb">נתח <span class="ltr">5</span> הלקוחות הגדולים</span>
+      <span class="vl"><span class="ltr">45.5%</span></span>
+      <span class="sub"><span class="ltr">2,637,121</span> ₪ מתוך <span class="ltr">5,793,488</span> ₪ · אצל <span class="ltr">55</span> לקוחות עם הכנסה (מתוך <span class="ltr">61</span> רשומים)</span>
+      <span class="cmp"><span class="arrow">▼</span> לפני שנה, אותו חישוב: <span class="ltr">47.7%</span> (אז <span class="ltr">47</span> לקוחות עם הכנסה)</span>
+      <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
+  </div>
+
+  <div class="chart-card">
+    <h3>הכנסה ורווח לפי חודש · <span class="ltr">2026</span> מול <span class="ltr">2025</span> (<span class="ltr">01/01–10/09</span> בשתי השנים)</h3>
+    <p class="chart-note">התוויות מעל העמודות הן ההכנסה ב-<span class="ltr">2026</span>; שאר הערכים בטבלה שמתחת לגרף.
+      🔴 <b>עמודות ספטמבר מצוירות בקו מקווקו בשתי השנים</b> — הן מכסות <span class="ltr">10</span> ימים ולא חודש שלם,
+      ולכן אינן ברות-השוואה לשאר החודשים (אבל כן ברות-השוואה זו לזו).</p>
+    <div class="chart-box" dir="ltr" role="figure" aria-label="הכנסה ורווח לפי חודש, 2026 מול 2025, עמודות וקו">
+      <svg viewBox="0 0 920 300" width="920" height="300" preserveAspectRatio="xMidYMid meet" style="max-width:100%">
+        <line x1="90" y1="250" x2="900" y2="250" stroke="#CAD5E2" stroke-width="1.5"/>
+        <line x1="90" y1="192.5" x2="900" y2="192.5" stroke="#F1F5F9"/>
+        <line x1="90" y1="135" x2="900" y2="135" stroke="#F1F5F9"/>
+        <line x1="90" y1="77.5" x2="900" y2="77.5" stroke="#F1F5F9"/>
+        <line x1="90" y1="20" x2="900" y2="20" stroke="#F1F5F9"/>
+        <text class="ax" x="82" y="254" text-anchor="end">0</text>
+        <text class="ax" x="82" y="196" text-anchor="end">100,000</text>
+        <text class="ax" x="82" y="139" text-anchor="end">200,000</text>
+        <text class="ax" x="82" y="81" text-anchor="end">300,000</text>
+        <text class="ax" x="82" y="24" text-anchor="end">400,000</text>
+
+        <rect x="103" y="113.5" width="30" height="136.5" fill="#009689" rx="2"/>
+        <rect x="137" y="150.1" width="30" height="99.9"  fill="#90A1B9" rx="2"/>
+        <rect x="193" y="63.1"  width="30" height="186.9" fill="#009689" rx="2"/>
+        <rect x="227" y="162.0" width="30" height="88.0"  fill="#90A1B9" rx="2"/>
+        <rect x="283" y="95.3"  width="30" height="154.7" fill="#009689" rx="2"/>
+        <rect x="317" y="140.2" width="30" height="109.8" fill="#90A1B9" rx="2"/>
+        <rect x="373" y="148.3" width="30" height="101.7" fill="#009689" rx="2"/>
+        <rect x="407" y="198.9" width="30" height="51.1"  fill="#90A1B9" rx="2"/>
+        <rect x="463" y="70.2"  width="30" height="179.8" fill="#009689" rx="2"/>
+        <rect x="497" y="161.2" width="30" height="88.8"  fill="#90A1B9" rx="2"/>
+        <rect x="553" y="113.1" width="30" height="136.9" fill="#009689" rx="2"/>
+        <rect x="587" y="115.3" width="30" height="134.7" fill="#90A1B9" rx="2"/>
+        <rect x="643" y="181.3" width="30" height="68.7"  fill="#009689" rx="2"/>
+        <rect x="677" y="148.6" width="30" height="101.4" fill="#90A1B9" rx="2"/>
+        <rect x="733" y="168.9" width="30" height="81.1"  fill="#009689" rx="2"/>
+        <rect x="767" y="175.9" width="30" height="74.1"  fill="#90A1B9" rx="2"/>
+        <!-- ספטמבר · 10 ימים בלבד בשתי השנים ⇒ חלול + מסגרת מקווקוות (📐20) -->
+        <rect x="823" y="191.0" width="30" height="59.0" fill="#FFFFFF" stroke="#009689" stroke-width="1.5" stroke-dasharray="4 3" rx="2"/>
+        <rect x="857" y="201.0" width="30" height="49.0" fill="#FFFFFF" stroke="#90A1B9" stroke-width="1.5" stroke-dasharray="4 3" rx="2"/>
+
+        <polyline fill="none" stroke="#00786F" stroke-width="2" stroke-dasharray="6 3"
+          points="135,168.6 225,143.3 315,161.4 405,193.5 495,147.1 585,172.8 675,211.7 765,202.8 855,205.9"/>
+        <circle cx="135" cy="168.6" r="3.5" fill="#00786F"/><circle cx="225" cy="143.3" r="3.5" fill="#00786F"/>
+        <circle cx="315" cy="161.4" r="3.5" fill="#00786F"/><circle cx="405" cy="193.5" r="3.5" fill="#00786F"/>
+        <circle cx="495" cy="147.1" r="3.5" fill="#00786F"/><circle cx="585" cy="172.8" r="3.5" fill="#00786F"/>
+        <circle cx="675" cy="211.7" r="3.5" fill="#00786F"/><circle cx="765" cy="202.8" r="3.5" fill="#00786F"/>
+        <circle cx="855" cy="205.9" r="3.5" fill="#00786F"/>
+
+        <text class="vlab sm" x="118" y="108.5" text-anchor="middle">237,415</text>
+        <text class="vlab sm" x="208" y="58.1"  text-anchor="middle">325,119</text>
+        <text class="vlab sm" x="298" y="90.3"  text-anchor="middle">269,003</text>
+        <text class="vlab sm" x="388" y="143.3" text-anchor="middle">176,912</text>
+        <text class="vlab sm" x="478" y="65.2"  text-anchor="middle">312,756</text>
+        <text class="vlab sm" x="568" y="108.1" text-anchor="middle">238,118</text>
+        <text class="vlab sm" x="658" y="176.3" text-anchor="middle">119,482</text>
+        <text class="vlab sm" x="748" y="163.9" text-anchor="middle">141,027</text>
+        <text class="vlab sm" x="838" y="186.0" text-anchor="middle" fill="#00786F">102,608</text>
+
+        <text class="ax" x="135" y="266" text-anchor="middle">ינואר</text>
+        <text class="ax" x="225" y="266" text-anchor="middle">פברואר</text>
+        <text class="ax" x="315" y="266" text-anchor="middle">מרץ</text>
+        <text class="ax" x="405" y="266" text-anchor="middle">אפריל</text>
+        <text class="ax" x="495" y="266" text-anchor="middle">מאי</text>
+        <text class="ax" x="585" y="266" text-anchor="middle">יוני</text>
+        <text class="ax" x="675" y="266" text-anchor="middle">יולי</text>
+        <text class="ax" x="765" y="266" text-anchor="middle">אוגוסט</text>
+        <text class="axh" x="855" y="266" text-anchor="middle" fill="#00786F">ספטמבר</text>
+        <text class="ax"  x="855" y="279" text-anchor="middle" fill="#00786F">10 ימים</text>
+        <text class="ax" x="495" y="296" text-anchor="middle">חודש האירוע · ₪ (המוקדם משמאל)</text>
+      </svg>
+    </div>
+    <div class="legend">
+      <span><i style="background:#009689"></i>הכנסה <span class="ltr">2026</span></span>
+      <span><i style="background:#90A1B9"></i>הכנסה <span class="ltr">2025</span> (אותו טווח)</span>
+      <span><i style="background:#fff; border:1.5px dashed #00786F"></i>רווח גולמי <span class="ltr">2026</span> (קו)</span>
+      <span><i style="background:#fff; border:1.5px dashed #009689"></i>ספטמבר — <span class="ltr">10</span> ימים בלבד</span>
+    </div>
+    <div class="tbl-scroll" style="margin-top:12px">
+      <table class="data">
+        <caption class="sr-only">הכנסה ורווח לפי חודש, 2026 מול 2025, אותו טווח</caption>
+        <thead><tr><th scope="col">חודש</th><th scope="col">אירועים <span class="ltr">2026</span></th>
+          <th scope="col">הכנסה <span class="ltr">2026</span></th><th scope="col">רווח <span class="ltr">2026</span></th>
+          <th scope="col">הכנסה <span class="ltr">2025</span></th></tr></thead>
+        <tbody id="p1MonthBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="tbl-card">
+    <h3><span class="ltr">8</span> האירועים הגדולים ביותר · <span class="ltr">2026</span> (<span class="ltr">01/01–10/09</span>)</h3>
+    <p class="drill">לחיצה על שורה פותחת את כרטיס האירוע</p>
+    <div class="tbl-scroll">
+      <table class="data">
+        <thead><tr>
+          <th scope="col">אירוע</th><th scope="col">לקוח</th><th scope="col">תאריך</th>
+          <th scope="col" aria-sort="descending">הכנסה ▼</th><th scope="col">רווח</th><th scope="col">שולי-רווח</th>
+        </tr></thead>
+        <tbody id="p1TopBody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span><span class="ltr">1–8</span> מתוך <span class="ltr">236</span></span>
+      <span class="im-host"><button class="lnk" data-goto="p2">כל השנים בדוח "מגמות רב-שנתיות" →</button>
+        <i class="im" aria-hidden="true" style="top:-7px; left:-8px">7</i></span>
+    </div>
+  </div>
+
+  <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
+  <div class="states" aria-label="חמשת המצבים שהדף יודע לצייר">
+    <div class="st"><b>1 · טעינה</b>שלד-אריחים ושלד-טבלה<div class="skel-row" style="width:80%"></div><div class="skel-row" style="width:60%"></div></div>
+    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין אירועים שהסתיימו בתקופה שנבחרה · [נקה מסננים]"</div>
+    <div class="st"><b>3 · ריק-באמת</b>"אין נתונים עדיין"</div>
+    <div class="st"><b>4 · אין-הרשאה</b>"לא זמין בתפקידך" — לשונית ההנהלה ממוסכת למי שאין לה הרשאת 'כספים' (הכרעה 2). למנכ"ל היא פתוחה, ולכן אינה ממוסכת במסך הזה.</div>
+    <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב]</div>
+  </div>
+
+  <p class="def-footer">הגדרות: <b>אירוע שהסתיים</b> = אירוע שהתאריך שלו עבר והוא באחד מארבעת המצבים
+    "הסתיים · אירוע הסתיים · ממתין לחשבונית · ממתין לתשלום" ·
+    <b>הכנסה</b> ו-<b>רווח גולמי</b> = מה שפונקציית-הכספים של המערכת מחזירה לכל אירוע
+    (<span class="ltr">finance_project_money</span>), ולא חישוב חוזר במסך ·
+    <b>שולי-רווח</b> = סך הרווח חלקי סך ההכנסה על אותה אוכלוסייה — לא ממוצע של אחוזים ·
+    <b>נתח <span class="ltr">5</span> הגדולים</b> = הכנסת חמשת הלקוחות הגדולים חלקי הכנסת כל הלקוחות,
+    <b>כל הזמנים</b>, ולכן אינו זז עם מסנן התקופה ·
+    <b>סכומים</b> ב-₪ שלמים; אחוזים בספרה עשרונית אחת.</p>
+  <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">10/09/2026</span> — ארבעת האריחים · שתי הסדרות החודשיות ·
+    <span class="ltr">8</span> האירועים הגדולים · נתח-<span class="ltr">5</span> היום ולפני שנה ·
+    🎭 דמו: אין · 📐 נגזר: שורת-"אז מה" · אחוזי-השינוי.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     דף 2 · מ3 — מגמות רב-שנתיות · "האם הצמיחה שומרת על שולי-הרווח?"
+     סוג: אסטרטגי (🧭) · **דוח-דריל** — שנה ← חודש ← אירוע (📐13)
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="page" id="p2" aria-label="מגמות רב-שנתיות" hidden>
+
+  <!-- 📐13 ① · פירורי-לחם מעל הכותרת, מפריד "|" לפי התקדים ProjectCardPage.jsx -->
+  <nav class="crumbs" id="p2Crumbs" aria-label="מיקום בתוך הדוח"></nav>
+
+  <h1>מגמות רב-שנתיות</h1>
+  <p class="psub">האם הצמיחה שומרת על שולי-הרווח?</p>
+  <p class="psub" id="p2Range"><span class="ltr">2024–2026</span> · כל הלקוחות</p>
+  <p class="pop">אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית —
+    <b>הסתיים · אירוע הסתיים · ממתין לחשבונית · ממתין לתשלום</b> · הוצאו: אירועים שטרם התקיימו,
+    אירועים בתהליך ואירועים מבוטלים · <span class="ltr">n=731</span> בשלוש השנים
+    (<span class="ltr">209</span> · <span class="ltr">286</span> · <span class="ltr">236</span>).
+    <b><span class="ltr">2026</span> היא שנה חלקית</b> — עד <span class="ltr">10/09</span> — ואינה ברת-השוואה לשנים מלאות.</p>
+
+  <p class="so-what" id="p2SoWhat"></p>
+
+  <div class="tiles" id="p2Tiles"></div>
+
+  <!-- ═══ גרף א' — הכנסה · רווח · שולי-רווח לפי שנה ═══ -->
+  <div class="chart-card">
+    <h3>הכנסה, רווח ושולי-רווח לפי שנה · <span class="ltr">2024–2026</span></h3>
+    <p class="chart-note">עמודות <span class="ltr">2026</span> מצוירות בדפוס-מילוי מקווקו כי השנה טרם נגמרה
+      (<b>עד <span class="ltr">10/09</span></b>) — <b>אין כאן "קצב שנתי" משוער</b>, רק מה שכבר קרה.
+      קו שולי-הרווח נמדד על ציר-אחוזים <span class="ltr">0–100</span> קבוע, כדי ששינוי של נקודה או שתיים
+      לא ייראה כמפולת.</p>
+    <div class="chart-box" dir="ltr" role="figure" aria-label="הכנסה, רווח ושולי-רווח לפי שנה, עמודות וקו">
+      <svg viewBox="0 0 920 300" width="920" height="300" preserveAspectRatio="xMidYMid meet" style="max-width:100%">
+        <defs>
+          <pattern id="hatchTeal" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+            <rect width="6" height="6" fill="#FFFFFF"/><line x1="0" y1="0" x2="0" y2="6" stroke="#009689" stroke-width="3"/>
+          </pattern>
+          <pattern id="hatchTealLight" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+            <rect width="6" height="6" fill="#FFFFFF"/><line x1="0" y1="0" x2="0" y2="6" stroke="#96F7E4" stroke-width="3"/>
+          </pattern>
+        </defs>
+        <line x1="90" y1="250" x2="880" y2="250" stroke="#CAD5E2" stroke-width="1.5"/>
+        <line x1="90" y1="204" x2="880" y2="204" stroke="#F1F5F9"/>
+        <line x1="90" y1="158" x2="880" y2="158" stroke="#F1F5F9"/>
+        <line x1="90" y1="112" x2="880" y2="112" stroke="#F1F5F9"/>
+        <line x1="90" y1="66"  x2="880" y2="66"  stroke="#F1F5F9"/>
+        <line x1="90" y1="20"  x2="880" y2="20"  stroke="#F1F5F9"/>
+        <text class="ax" x="82" y="254" text-anchor="end">0</text>
+        <text class="ax" x="82" y="208" text-anchor="end">500,000</text>
+        <text class="ax" x="82" y="162" text-anchor="end">1,000,000</text>
+        <text class="ax" x="82" y="116" text-anchor="end">1,500,000</text>
+        <text class="ax" x="82" y="70"  text-anchor="end">2,000,000</text>
+        <text class="ax" x="82" y="24"  text-anchor="end">2,500,000</text>
+        <text class="ax" x="888" y="254" text-anchor="start">0%</text>
+        <text class="ax" x="888" y="196" text-anchor="start">25%</text>
+        <text class="ax" x="888" y="139" text-anchor="start">50%</text>
+        <text class="ax" x="888" y="81"  text-anchor="start">75%</text>
+        <text class="ax" x="888" y="24"  text-anchor="start">100%</text>
+
+        <rect x="157" y="100.4" width="60" height="149.6" fill="#009689" rx="2"/>
+        <rect x="227" y="167.9" width="60" height="82.1"  fill="#96F7E4" stroke="#009689" rx="2"/>
+        <rect x="420" y="43.4"  width="60" height="206.6" fill="#009689" rx="2"/>
+        <rect x="490" y="134.7" width="60" height="115.3" fill="#96F7E4" stroke="#009689" rx="2"/>
+        <rect x="683" y="73.1"  width="60" height="176.9" fill="url(#hatchTeal)" stroke="#009689" rx="2"/>
+        <rect x="753" y="147.1" width="60" height="102.9" fill="url(#hatchTealLight)" stroke="#009689" rx="2"/>
+
+        <polyline fill="none" stroke="#00786F" stroke-width="2.5" points="222,123.7 485,121.7 748,116.1"/>
+        <circle cx="222" cy="123.7" r="4" fill="#00786F"/>
+        <circle cx="485" cy="121.7" r="4" fill="#00786F"/>
+        <circle cx="748" cy="116.1" r="4" fill="#00786F"/>
+        <!-- הילת-לבן על תוויות-הקו: הן עוברות מעל עמודות טורקיז, ובלעדיה הן נבלעות בהן -->
+        <text class="vlab" x="222" y="116" text-anchor="middle" fill="#00786F" stroke="#fff" stroke-width="3" paint-order="stroke">54.9%</text>
+        <text class="vlab" x="485" y="114" text-anchor="middle" fill="#00786F" stroke="#fff" stroke-width="3" paint-order="stroke">55.8%</text>
+        <text class="vlab" x="748" y="108" text-anchor="middle" fill="#00786F" stroke="#fff" stroke-width="3" paint-order="stroke">58.2%</text>
+
+        <text class="vlab" x="187" y="95"  text-anchor="middle">1,625,647</text>
+        <text class="vlab" x="257" y="163" text-anchor="middle">892,706</text>
+        <text class="vlab" x="450" y="38"  text-anchor="middle">2,245,400</text>
+        <text class="vlab" x="520" y="130" text-anchor="middle">1,253,047</text>
+        <text class="vlab" x="713" y="68"  text-anchor="middle">1,922,441</text>
+        <text class="vlab" x="783" y="142" text-anchor="middle">1,118,098</text>
+
+        <text class="axh" x="222" y="268" text-anchor="middle">2024</text>
+        <text class="ax"  x="222" y="281" text-anchor="middle">209 אירועים</text>
+        <text class="axh" x="485" y="268" text-anchor="middle">2025</text>
+        <text class="ax"  x="485" y="281" text-anchor="middle">286 אירועים</text>
+        <text class="axh" x="748" y="268" text-anchor="middle" fill="#00786F">2026 — עד 10/09</text>
+        <text class="ax"  x="748" y="281" text-anchor="middle" fill="#00786F">236 אירועים</text>
+      </svg>
+    </div>
+    <div class="legend">
+      <span><i style="background:#009689"></i>הכנסה</span>
+      <span><i style="background:#96F7E4; border-color:#009689"></i>רווח גולמי</span>
+      <span><i style="background:#fff; border:1.5px solid #00786F"></i>שולי-רווח % (קו, ציר ימני)</span>
+      <span><i style="background:repeating-linear-gradient(45deg,#009689 0 3px,#fff 3px 6px)"></i><span class="ltr">2026</span> — שנה חלקית עד <span class="ltr">10/09</span></span>
+    </div>
+    <!-- §5.2 #6 · טבלה מקבילה לקורא-מסך: SVG אינו נקרא כטבלה, ואין fallback בספרייה -->
+    <table class="sr-only">
+      <caption>הכנסה, רווח ושולי-רווח לפי שנה</caption>
+      <thead><tr><th scope="col">שנה</th><th scope="col">אירועים</th><th scope="col">הכנסה ₪</th><th scope="col">רווח ₪</th><th scope="col">שולי-רווח</th></tr></thead>
+      <tbody>
+        <tr><td>2024</td><td>209</td><td>1,625,647</td><td>892,706</td><td>54.9%</td></tr>
+        <tr><td>2025</td><td>286</td><td>2,245,400</td><td>1,253,047</td><td>55.8%</td></tr>
+        <tr><td>2026 — עד 10/09, שנה חלקית</td><td>236</td><td>1,922,441</td><td>1,118,098</td><td>58.2%</td></tr>
+      </tbody>
+    </table>
+    <p class="tnote" style="padding:10px 0 0"><b>מקור הרווח:</b> הרווח הגולמי שפונקציית-הכספים מחזירה לכל אירוע.
+      ב-<span class="ltr">2024</span> וב-<span class="ltr">2025</span> כל האירועים כבר נסגרו כספית;
+      ב-<span class="ltr">2026</span> נסגרו <span class="ltr">206</span> מתוך <span class="ltr">236</span>,
+      ובשלושה מהם הרווח שנקבע בסגירה נמוך בסך-הכול ב-<span class="ltr">1,030</span> ₪ מהמחושב — פער של
+      <span class="ltr">0.09</span> פרומיל, שאינו משנה אף מספר במסך.</p>
+  </div>
+
+  <!-- ═══ גרף ב' — הכרעה 24 · ח6: מחיר לשעה מול עלות לשעה ═══ -->
+  <div class="chart-card">
+    <h3>מחיר לשעה מול עלות לשעה · <span class="ltr">2024–2026</span></h3>
+    <p class="chart-note"><b>שני ציריםנפרדים בכוונה, וכל אחד מתחיל באפס</b> — מחיר-לשעה ועלות-לשעה נבדלים
+      פי-שישה בגודלם, ואיור שלהם על ציר אחד היה מצייר את העלות כקו שטוח. <b>ההשוואה היא בין קצבי-הגידול</b>,
+      והם כתובים מתחת לכל לוח.</p>
+    <div class="chart-row">
+      <div>
+        <p class="panel-ttl">מחיר לשעה (₪)</p>
+        <div class="chart-box" dir="ltr" role="figure" aria-label="מחיר לשעה לפי שנה, עמודות">
+          <svg viewBox="0 0 450 250" width="450" height="250" preserveAspectRatio="xMidYMid meet" style="max-width:100%">
+            <line x1="80" y1="200" x2="420" y2="200" stroke="#CAD5E2" stroke-width="1.5"/>
+            <line x1="80" y1="140" x2="420" y2="140" stroke="#F1F5F9"/>
+            <line x1="80" y1="80"  x2="420" y2="80"  stroke="#F1F5F9"/>
+            <line x1="80" y1="20"  x2="420" y2="20"  stroke="#F1F5F9"/>
+            <text class="ax" x="72" y="204" text-anchor="end">0</text>
+            <text class="ax" x="72" y="144" text-anchor="end">100</text>
+            <text class="ax" x="72" y="84"  text-anchor="end">200</text>
+            <text class="ax" x="72" y="24"  text-anchor="end">300</text>
+            <rect x="107" y="47.8" width="60" height="152.2" fill="#009689" rx="2"/>
+            <rect x="220" y="43.9" width="60" height="156.1" fill="#009689" rx="2"/>
+            <rect x="333" y="22.5" width="60" height="177.5" fill="url(#hatchTeal)" stroke="#009689" rx="2"/>
+            <text class="vlab" x="137" y="42" text-anchor="middle">253.7</text>
+            <text class="vlab" x="250" y="38" text-anchor="middle">260.2</text>
+            <text class="vlab" x="363" y="17" text-anchor="middle">295.9</text>
+            <text class="ax" x="137" y="218" text-anchor="middle">2024</text>
+            <text class="ax" x="250" y="218" text-anchor="middle">2025</text>
+            <text class="ax" x="363" y="218" text-anchor="middle" fill="#00786F">2026 · עד 10/09</text>
+            <text class="axh" x="250" y="240" text-anchor="middle">מ-2024 ל-2026: ‎+16.6%</text>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <p class="panel-ttl">עלות לשעה (₪)</p>
+        <div class="chart-box" dir="ltr" role="figure" aria-label="עלות לשעה לפי שנה, עמודות">
+          <svg viewBox="0 0 450 250" width="450" height="250" preserveAspectRatio="xMidYMid meet" style="max-width:100%">
+            <line x1="80" y1="200" x2="420" y2="200" stroke="#CAD5E2" stroke-width="1.5"/>
+            <line x1="80" y1="110" x2="420" y2="110" stroke="#F1F5F9"/>
+            <line x1="80" y1="20"  x2="420" y2="20"  stroke="#F1F5F9"/>
+            <text class="ax" x="72" y="204" text-anchor="end">0</text>
+            <text class="ax" x="72" y="114" text-anchor="end">25</text>
+            <text class="ax" x="72" y="24"  text-anchor="end">50</text>
+            <rect x="107" y="40.9" width="60" height="159.1" fill="#62748E" rx="2"/>
+            <rect x="220" y="34.8" width="60" height="165.2" fill="#62748E" rx="2"/>
+            <rect x="333" y="29.7" width="60" height="170.3" fill="#62748E" fill-opacity="0.55" stroke="#62748E" stroke-dasharray="4 3" rx="2"/>
+            <text class="vlab" x="137" y="35" text-anchor="middle">44.2</text>
+            <text class="vlab" x="250" y="29" text-anchor="middle">45.9</text>
+            <text class="vlab" x="363" y="24" text-anchor="middle">47.3</text>
+            <text class="ax" x="137" y="218" text-anchor="middle">2024</text>
+            <text class="ax" x="250" y="218" text-anchor="middle">2025</text>
+            <text class="ax" x="363" y="218" text-anchor="middle" fill="#00786F">2026 · עד 10/09</text>
+            <text class="axh" x="250" y="240" text-anchor="middle">מ-2024 ל-2026: ‎+7.0%</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="barkey">
+      <span><b>מחיר לשעה</b> = כל ההכנסה של השנה חלקי כל שעות-העבודה שדווחו בה.</span>
+      <span><b>עלות לשעה</b> = שכר הדיילות ובונוסים אישיים של אותה שנה, חלקי אותן שעות.
+        נסיעות אינן נכללות — הן סכום קבוע למשמרת ולא תשלום לפי שעה.</span>
+    </div>
+    <div class="tbl-scroll" style="margin-top:12px">
+      <table class="data">
+        <caption class="sr-only">מחיר לשעה מול עלות לשעה לפי שנה</caption>
+        <thead><tr><th scope="col">שנה</th><th scope="col">שעות-בפועל</th>
+          <th scope="col">מחיר לשעה</th><th scope="col">עלות לשעה</th><th scope="col">מרווח לשעה</th></tr></thead>
+        <tbody>
+          <tr><td><span class="ltr">2024</span></td><td><span class="ltr">6,409</span></td><td><span class="ltr">253.7</span> ₪</td><td><span class="ltr">44.2</span> ₪</td><td><span class="ltr">209.5</span> ₪</td></tr>
+          <tr><td><span class="ltr">2025</span></td><td><span class="ltr">8,629</span></td><td><span class="ltr">260.2</span> ₪</td><td><span class="ltr">45.9</span> ₪</td><td><span class="ltr">214.3</span> ₪</td></tr>
+          <tr class="dim"><td><span class="ltr">2026</span> · עד <span class="ltr">10/09</span></td><td><span class="ltr">6,498</span></td><td><span class="ltr">295.9</span> ₪</td><td><span class="ltr">47.3</span> ₪</td><td><span class="ltr">248.6</span> ₪</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ טבלת-הדריל: שנה ← חודש ← אירוע (📐13) ═══ -->
+  <div class="tbl-card">
+    <h3 id="p2TblTitle"></h3>
+    <p class="drill" id="p2Drill"></p>
+    <div class="tbl-scroll">
+      <table class="data">
+        <thead id="p2Head"></thead>
+        <tbody id="p2Body"></tbody>
+      </table>
+    </div>
+    <div class="pager"><span id="p2Pager"></span><span id="p2Total"></span></div>
+  </div>
+
+  <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
+  <div class="states" aria-label="חמשת המצבים שהדף יודע לצייר">
+    <div class="st"><b>1 · טעינה</b>שלד-אריחים ושלד-טבלה<div class="skel-row" style="width:80%"></div><div class="skel-row" style="width:55%"></div></div>
+    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין אירועים שהסתיימו בתקופה שנבחרה · [נקה מסננים]"</div>
+    <div class="st"><b>3 · ריק-באמת</b>"אין נתונים עדיין"</div>
+    <div class="st"><b>4 · אין-הרשאה</b>"לא זמין בתפקידך" (הלשונית ממוסכת ללא הרשאת 'כספים')</div>
+    <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב]</div>
+  </div>
+
+  <p class="def-footer">הגדרות: <b>שנה</b> = השנה שבה התקיים האירוע, לא השנה שבה שולם ·
+    <b>מחיר לשעה</b> = הכנסת השנה חלקי שעות-העבודה שדווחו בה ·
+    <b>עלות לשעה</b> = שכר ובונוסים אישיים חלקי אותן שעות; <b>נסיעות אינן נכללות</b> — הן סכום קבוע למשמרת ·
+    <b>מרווח לשעה</b> = מחיר לשעה פחות עלות לשעה ·
+    <b>שולי-רווח</b> = סך הרווח חלקי סך ההכנסה, לא ממוצע של אחוזים ·
+    <b><span class="ltr">2026</span> חלקית</b> = מכסה <span class="ltr">01/01–10/09</span> בלבד ·
+    <b>סכומים</b> ב-₪ שלמים, מחיר ועלות לשעה בספרה עשרונית אחת.</p>
+  <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">10/09/2026</span> — שלוש שורות-השנה · שעות ושכר לפי שנה ·
+    כל החודשים בשלוש השנים · האירועים הגדולים בכל חודש · <span class="ltr">206/236</span> הסגירות הכספיות ·
+    🎭 דמו: אין · 📐 נגזר: מחיר-לשעה · עלות-לשעה · מרווח-לשעה · אחוזי-הגידול · שורת-"אז מה".</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     דף 3 · מ4 — הנחות ורווחיות · "האם הנחות עמוקות שוחקות את הרווח?"
+     סוג: אסטרטגי (🧭) · סינון-צולב בלבד, אין דריל היררכי (📐13)
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="page" id="p3" aria-label="הנחות ורווחיות" hidden>
+
+  <h1>הנחות ורווחיות</h1>
+  <p class="psub">האם הנחות עמוקות שוחקות את הרווח?</p>
+  <p class="psub">כל הזמנים · כל הלקוחות</p>
+  <!-- 📐2 + 📑ב#2: שתי אוכלוסיות, מופרדות ומוצהרות, כל אחת עם n משלה. -->
+  <p class="pop"><b>שתי אוכלוסיות שונות בדף אחד, ובכוונה:</b>
+    <b>שיעור-האישור</b> נמדד על <b>הצעות מחיר</b> — <span class="ltr">837</span> אושרו ו-<span class="ltr">337</span> נדחו
+    (הצעות שנסגרו בסיבה "נפתחה בטעות" אינן נספרות כדחייה) ·
+    <b>שולי-הרווח</b> נמדדים על <b>האירועים שנולדו מההצעות המאושרות וכבר התקיימו</b> —
+    <span class="ltr">n=731</span>; <span class="ltr">106</span> הצעות מאושרות טרם הפכו לאירוע שהתקיים ואינן כאן.
+    <br>🔴 <b>הדף אינו מגיב למסנן התקופה</b> — מדרג-הנחה הוא חתך של כל ההיסטוריה, וחיתוכו לשנה בודדת
+    היה מותיר <span class="ltr">21</span> אירועים במדרג העמוק ביותר.</p>
+
+  <p class="so-what">לשים לב שכל מדרג-הנחה עמוק יותר מוריד את שולי-הרווח, בלי יוצא מן הכלל —
+    מ-<span class="ltr">57.7%</span> בלי הנחה ועד <span class="ltr">50.4%</span> מעל <span class="ltr">10%</span> הנחה,
+    פער של <span class="ltr">7.3</span> נקודות; ההנחה לא מוחזרת בנפח.</p>
+
+  <div class="tiles">
+    <div class="tile"><span class="lb">שולי-רווח ללא הנחה</span>
+      <span class="vl"><span class="ltr">57.7%</span></span>
+      <span class="sub"><span class="ltr">305</span> אירועים · <span class="ltr">2,396,556</span> ₪</span>
+      <span class="cmp"><span class="arrow">▲</span> לפני שנה, אותו חישוב: <span class="ltr">56.6%</span> (<span class="ltr">164</span> אירועים)</span>
+      <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
+
+    <div class="tile"><span class="lb">שולי-רווח בהנחה מעל <span class="ltr">10%</span></span>
+      <span class="vl"><span class="ltr">50.4%</span></span>
+      <span class="sub"><span class="ltr">50</span> אירועים · <span class="ltr">372,801</span> ₪</span>
+      <span class="cmp"><span class="arrow">▲</span> לפני שנה, אותו חישוב: <span class="ltr">47.8%</span> (<span class="ltr">23</span> אירועים)</span>
+      <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
+
+    <div class="tile"><span class="lb">הפרש בין הקצוות</span>
+      <span class="vl"><span class="ltr">7.3</span> נק'</span>
+      <span class="sub"><span class="ltr">57.7%</span> ללא הנחה, מול <span class="ltr">50.4%</span> מעל <span class="ltr">10%</span></span>
+      <span class="cmp"><span class="arrow">▼</span> לפני שנה: <span class="ltr">8.8</span> נק' — הפער הצטמצם</span>
+      <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
+
+    <div class="tile"><span class="lb">שיעור אישור הצעות</span>
+      <span class="vl"><span class="ltr">71.3%</span></span>
+      <span class="sub"><span class="ltr">253</span> אושרו מתוך <span class="ltr">355</span> שהוכרעו השנה</span>
+      <span class="cmp"><span class="arrow">▼</span> <span class="ltr">2025</span> באותו טווח: <span class="ltr">73.6%</span> (<span class="ltr">204</span> מתוך <span class="ltr">277</span>)</span>
+      <span class="win"><span class="ltr">01/01–10/09/2026</span> לפי תאריך ההצעה</span></div>
+  </div>
+
+  <div class="chart-card">
+    <h3>שולי-רווח לפי מדרג-הנחה · היום מול לפני שנה</h3>
+    <p class="chart-note">לחיצה על עמודה מסננת את הטבלה למדרג הזה; לחיצה חוזרת מבטלת.
+      <b>ציר-האחוזים נעול על <span class="ltr">0–100</span></b> ואינו נגזר מהמקסימום — כך שפער של
+      <span class="ltr">7</span> נקודות נראה כפער של <span class="ltr">7</span> נקודות.</p>
+    <div class="chart-box" dir="ltr" role="figure" aria-label="שולי-רווח לפי מדרג-הנחה, עמודות, היום מול לפני שנה">
+      <svg viewBox="0 0 920 300" width="920" height="300" preserveAspectRatio="xMidYMid meet" style="max-width:100%" id="p3Svg">
+        <line x1="100" y1="250" x2="880" y2="250" stroke="#CAD5E2" stroke-width="1.5"/>
+        <line x1="100" y1="192.5" x2="880" y2="192.5" stroke="#F1F5F9"/>
+        <line x1="100" y1="135" x2="880" y2="135" stroke="#F1F5F9"/>
+        <line x1="100" y1="77.5" x2="880" y2="77.5" stroke="#F1F5F9"/>
+        <line x1="100" y1="20" x2="880" y2="20" stroke="#F1F5F9"/>
+        <text class="ax" x="92" y="254" text-anchor="end">0%</text>
+        <text class="ax" x="92" y="196" text-anchor="end">25%</text>
+        <text class="ax" x="92" y="139" text-anchor="end">50%</text>
+        <text class="ax" x="92" y="81"  text-anchor="end">75%</text>
+        <text class="ax" x="92" y="24"  text-anchor="end">100%</text>
+
+        <rect x="133" y="117.3" width="60" height="132.7" fill="#009689" rx="2" class="p3bar" data-b="t0" role="button" tabindex="0" aria-label="מדרג ללא הנחה, שולי-רווח 57.7 אחוז"/>
+        <rect x="201" y="119.8" width="60" height="130.2" fill="#90A1B9" rx="2"/>
+        <rect x="328" y="119.8" width="60" height="130.2" fill="#009689" rx="2" class="p3bar" data-b="t1" role="button" tabindex="0" aria-label="מדרג 1 עד 5 אחוז, שולי-רווח 56.6 אחוז"/>
+        <rect x="396" y="121.2" width="60" height="128.8" fill="#90A1B9" rx="2"/>
+        <rect x="523" y="124.9" width="60" height="125.1" fill="#009689" rx="2" class="p3bar" data-b="t2" role="button" tabindex="0" aria-label="מדרג 6 עד 10 אחוז, שולי-רווח 54.4 אחוז"/>
+        <rect x="591" y="127.4" width="60" height="122.6" fill="#90A1B9" rx="2"/>
+        <rect x="718" y="134.1" width="60" height="115.9" fill="#009689" rx="2" class="p3bar" data-b="t3" role="button" tabindex="0" aria-label="מדרג מעל 10 אחוז, שולי-רווח 50.4 אחוז"/>
+        <rect x="786" y="140.1" width="60" height="109.9" fill="#90A1B9" rx="2"/>
+
+        <rect id="p3Sel" x="0" y="0" width="0" height="0" fill="none" stroke="#00786F" stroke-width="2" rx="3" visibility="hidden"/>
+
+        <text class="vlab" x="163" y="112" text-anchor="middle">57.7%</text>
+        <text class="vlab" x="231" y="115" text-anchor="middle" fill="#62748E">56.6%</text>
+        <text class="vlab" x="358" y="115" text-anchor="middle">56.6%</text>
+        <text class="vlab" x="426" y="116" text-anchor="middle" fill="#62748E">56.0%</text>
+        <text class="vlab" x="553" y="120" text-anchor="middle">54.4%</text>
+        <text class="vlab" x="621" y="122" text-anchor="middle" fill="#62748E">53.3%</text>
+        <text class="vlab" x="748" y="129" text-anchor="middle">50.4%</text>
+        <text class="vlab" x="816" y="135" text-anchor="middle" fill="#62748E">47.8%</text>
+
+        <text class="axh" x="197" y="268" text-anchor="middle">ללא הנחה</text>
+        <text class="ax"  x="197" y="281" text-anchor="middle">305 אירועים</text>
+        <text class="axh" x="392" y="268" text-anchor="middle">1–5%</text>
+        <text class="ax"  x="392" y="281" text-anchor="middle">267 אירועים</text>
+        <text class="axh" x="587" y="268" text-anchor="middle">6–10%</text>
+        <text class="ax"  x="587" y="281" text-anchor="middle">109 אירועים</text>
+        <text class="axh" x="782" y="268" text-anchor="middle">10%+ (פתוח)</text>
+        <text class="ax"  x="782" y="281" text-anchor="middle">50 אירועים</text>
+      </svg>
+    </div>
+    <div class="legend">
+      <span><i style="background:#009689"></i>שולי-רווח היום (כל ההיסטוריה עד <span class="ltr">10/09/2026</span>)</span>
+      <span><i style="background:#90A1B9"></i>אותו חישוב לפני שנה (עד <span class="ltr">10/09/2025</span>)</span>
+      <span class="im-host"><i style="background:#fff; border:1.5px solid #00786F"></i>העמודה שנבחרה
+        <i class="im" aria-hidden="true" style="top:-9px; left:-9px">6</i></span>
+    </div>
+    <!-- 📑ב#2 · הערת-שוליים נגד קריאה סיבתית -->
+    <p class="tnote" style="padding:10px 0 0">🔴 <b>זו השוואה בין מדרגים, לא ניסוי.</b>
+      ההנחה לא הוגרלה — היא ניתנה ללקוחות מסוימים, בסוגי אירועים מסוימים ובגדלים מסוימים.
+      הטבלה מראה <b>שהמדרגים העמוקים מרוויחים פחות</b>, לא <b>שההנחה היא שגרמה לכך</b>.
+      <b>מה שכן ניתן להסיק:</b> אין במדרגים העמוקים נפח או יעילות שמפצים על ההנחה.</p>
+    <div class="tbl-scroll" style="margin-top:12px">
+      <table class="data">
+        <caption class="sr-only">שולי-רווח, מספר אירועים והכנסה לפי מדרג-הנחה</caption>
+        <thead><tr><th scope="col">מדרג-הנחה</th><th scope="col">הצעות מאושרות</th>
+          <th scope="col">אירועים שהתקיימו</th><th scope="col">הכנסה</th>
+          <th scope="col">שולי-רווח</th><th scope="col">לפני שנה</th></tr></thead>
+        <tbody>
+          <tr><td>ללא הנחה</td><td><span class="ltr">353</span></td><td><span class="ltr">305</span></td><td><span class="ltr">2,396,556</span> ₪</td><td><span class="ltr">57.7%</span></td><td><span class="ltr">56.6%</span></td></tr>
+          <tr><td><span class="ltr">1–5%</span></td><td><span class="ltr">301</span></td><td><span class="ltr">267</span></td><td><span class="ltr">2,145,884</span> ₪</td><td><span class="ltr">56.6%</span></td><td><span class="ltr">56.0%</span></td></tr>
+          <tr><td><span class="ltr">6–10%</span></td><td><span class="ltr">125</span></td><td><span class="ltr">109</span></td><td><span class="ltr">878,246</span> ₪</td><td><span class="ltr">54.4%</span></td><td><span class="ltr">53.3%</span></td></tr>
+          <tr><td><span class="ltr">10%+</span> (פתוח)</td><td><span class="ltr">58</span></td><td><span class="ltr">50</span></td><td><span class="ltr">372,801</span> ₪</td><td><span class="ltr">50.4%</span></td><td><span class="ltr">47.8%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="tbl-card">
+    <h3 id="p3TblTitle"></h3>
+    <p class="drill">לחיצה על שורה פותחת את הצעת המחיר</p>
+    <div class="tbl-scroll">
+      <table class="data">
+        <thead><tr>
+          <th scope="col">הצעה</th><th scope="col">לקוח</th><th scope="col">אירוע</th>
+          <th scope="col">הופקה</th><th scope="col" aria-sort="descending">הנחה ▼</th>
+          <th scope="col">הכנסה</th><th scope="col">שולי-רווח</th>
+        </tr></thead>
+        <tbody id="p3Body"></tbody>
+      </table>
+    </div>
+    <div class="pager"><span id="p3Pager"></span>
+      <button class="clear-chip" id="p3Clear" hidden>× נקה בחירה</button></div>
+  </div>
+
+  <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
+  <div class="states" aria-label="חמשת המצבים שהדף יודע לצייר">
+    <div class="st"><b>1 · טעינה</b>שלד-אריחים ושלד-טבלה<div class="skel-row" style="width:75%"></div><div class="skel-row" style="width:55%"></div></div>
+    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין הצעות במדרג שנבחר · [נקה בחירה]"</div>
+    <div class="st"><b>3 · ריק-באמת</b>"אין נתונים עדיין"</div>
+    <div class="st"><b>4 · אין-הרשאה</b>"לא זמין בתפקידך" (הלשונית ממוסכת ללא הרשאת 'כספים')</div>
+    <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב]</div>
+  </div>
+
+  <p class="def-footer">הגדרות: <b>מדרג-הנחה</b> = ההנחה הקבועה של הלקוח ועוד ההנחה הידנית שניתנה בהצעה, יחד ·
+    <b>הצעה מאושרת</b> = הצעה שהלקוח אישר, גם אם האירוע שלה טרם התקיים ·
+    <b>אירוע שהתקיים</b> = אירוע שנולד מההצעה, התאריך שלו עבר והוא סגור תפעולית ·
+    <b>שולי-רווח של מדרג</b> = סך הרווח של אירועי המדרג חלקי סך ההכנסה שלהם — <b>לא ממוצע של אחוזים</b>,
+    כדי שאירוע קטן לא ישקול כמו אירוע גדול ·
+    <b>שיעור אישור</b> = הצעות שאושרו חלקי הצעות שהוכרעו (אושרו + נדחו), <b>בלי</b> הצעות שנסגרו בסיבה
+    "נפתחה בטעות" ·
+    <b>"לפני שנה"</b> = בדיוק אותו חישוב, על מה שהיה במערכת עד <span class="ltr">10/09/2025</span>.</p>
+  <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">10/09/2026</span> — ארבעת המדרגים (הצעות · אירועים · הכנסה · שוליים) ·
+    אותם ארבעה נכון ל-<span class="ltr">10/09/2025</span> · שיעור-האישור בשני הטווחים ·
+    <span class="ltr">8</span> ההצעות המובילות בכל מדרג · 🎭 דמו: אין ·
+    📐 נגזר: הפרש-הקצוות · שורת-"אז מה".</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     דף 4 · מ6 — קהל מול צוות · "כמה דיילות לאורח באמת נדרשו?"
+     סוג: אסטרטגי (🧭) · סינון-צולב בלבד
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="page" id="p4" aria-label="קהל מול צוות" hidden>
+
+  <h1>קהל מול צוות</h1>
+  <p class="psub">כמה דיילות לאורח באמת נדרשו?</p>
+  <p class="psub">כל הזמנים · כל הלקוחות</p>
+  <p class="pop">אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית
+    (<b>הסתיים · אירוע הסתיים · ממתין לחשבונית · ממתין לתשלום</b>) <b>ושיש להם גם הערכת-אורחים בהצעה
+    וגם מספר אורחים בפועל</b> · <span class="ltr">n=717</span> מתוך <span class="ltr">731</span>;
+    הוצאו <span class="ltr">14</span> אירועים שבהם לא נרשם מספר האורחים בפועל בסגירה — כולם מ-<span class="ltr">2026</span>.
+    <br>🔴 <b>הדף אינו מגיב למסנן התקופה</b> — היחס נמדד על כל ההיסטוריה, כי <span class="ltr">31</span>
+    האירועים החורגים פרוסים על שלוש שנים.</p>
+
+  <p class="so-what">לשים לב שהאיוש בפועל נדיב מהתכנון ולא הפוך — יחס חציוני של
+    <span class="ltr">40.8</span> אורחים לדיילת מול פרמטר-תכנון <span class="ltr">50</span>,
+    ורק ב-<span class="ltr">31</span> אירועים מתוך <span class="ltr">717</span> (<span class="ltr">4.3%</span>)
+    היחס עלה על <span class="ltr">50</span>.</p>
+
+  <div class="tiles">
+    <div class="tile"><span class="lb">יחס חציוני: אורחים לדיילת</span>
+      <span class="vl"><span class="ltr">40.8</span></span>
+      <span class="sub">מול פרמטר-התכנון <span class="ltr">50</span> · נמדד על <span class="ltr">717</span> אירועים</span>
+      <span class="cmp"><span class="arrow">▼</span> לפני שנה, אותו חישוב: <span class="ltr">41.0</span></span>
+      <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
+
+    <div class="tile"><span class="lb">אירועים שהגיעו בהם יותר אורחים מהצפי</span>
+      <span class="vl"><span class="ltr">135</span></span>
+      <span class="sub"><span class="ltr">18.8%</span> מתוך <span class="ltr">717</span> האירועים שיש להם שני המספרים</span>
+      <span class="cmp"><span class="arrow">▼</span> לפני שנה: <span class="ltr">77</span> מתוך <span class="ltr">387</span> (<span class="ltr">19.9%</span>)</span>
+      <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
+
+    <div class="tile"><span class="lb">אירועים שבהם היחס עלה על <span class="ltr">50</span></span>
+      <span class="vl"><span class="ltr">31</span></span>
+      <span class="sub"><span class="ltr">4.3%</span> — יותר מ-<span class="ltr">50</span> אורחים לכל דיילת בפועל</span>
+      <span class="cmp"><span class="arrow">▼</span> לפני שנה: <span class="ltr">20</span> מתוך <span class="ltr">387</span> (<span class="ltr">5.2%</span>)</span>
+      <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
+
+    <!-- 📑ב#10 · האריח שמצהיר על החור בדאטה עצמו -->
+    <div class="tile"><span class="lb">אירועים שיש להם שני המספרים</span>
+      <span class="vl"><span class="ltr">717</span></span>
+      <span class="sub">מתוך <span class="ltr">731</span> (<span class="ltr">98.1%</span>) · ב-<span class="ltr">14</span> אירועים לא נרשם מספר האורחים בפועל, כולם מ-<span class="ltr">2026</span></span>
+      <span class="cmp"><span class="arrow">▼</span> לפני שנה: <span class="ltr">387</span> מתוך <span class="ltr">387</span> (<span class="ltr">100%</span>)</span>
+      <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
+  </div>
+
+  <div class="chart-card">
+    <h3>הערכת אורחים מול אורחים בפועל · <span class="ltr">717</span> אירועים</h3>
+    <p class="chart-note"><b>הקו האלכסוני הוא "ההערכה התקיימה בדיוק"</b> — נקודה מעליו = הגיעו יותר
+      אורחים מהצפי, מתחתיו = הגיעו פחות. <b>ההבדל מסומן בצורה ולא בצבע בלבד</b>: משולש להגעה מעל הצפי,
+      עיגול חלול להגעה בצפי או מתחתיו.
+      <br>מוצגות <span class="ltr">72</span> נקודות מתוך <span class="ltr">717</span> —
+      <b>כל נקודה עשירית לפי סדר ההערכה</b>, כדי שהצורה תישאר קריאה במוקאפ.
+      <b>במסך החי מוצגות כל <span class="ltr">717</span>.</b></p>
+    <div class="chart-box" dir="ltr" role="figure" aria-label="פיזור: הערכת אורחים מול אורחים בפועל, עם קו הערכה-מדויקת">
+      <svg viewBox="0 0 700 620" width="700" height="620" preserveAspectRatio="xMidYMid meet" style="max-width:100%">
+        <line x1="90" y1="570" x2="620" y2="570" stroke="#CAD5E2" stroke-width="1.5"/>
+        <line x1="90" y1="570" x2="90"  y2="40"  stroke="#CAD5E2" stroke-width="1.5"/>
+        <line x1="90" y1="486.1" x2="620" y2="486.1" stroke="#F1F5F9"/>
+        <line x1="90" y1="402.3" x2="620" y2="402.3" stroke="#F1F5F9"/>
+        <line x1="90" y1="318.4" x2="620" y2="318.4" stroke="#F1F5F9"/>
+        <line x1="90" y1="234.5" x2="620" y2="234.5" stroke="#F1F5F9"/>
+        <line x1="90" y1="150.6" x2="620" y2="150.6" stroke="#F1F5F9"/>
+        <line x1="90" y1="66.8"  x2="620" y2="66.8"  stroke="#F1F5F9"/>
+        <text class="ax" x="82" y="574" text-anchor="end">0</text>
+        <text class="ax" x="82" y="490" text-anchor="end">100</text>
+        <text class="ax" x="82" y="406" text-anchor="end">200</text>
+        <text class="ax" x="82" y="322" text-anchor="end">300</text>
+        <text class="ax" x="82" y="238" text-anchor="end">400</text>
+        <text class="ax" x="82" y="154" text-anchor="end">500</text>
+        <text class="ax" x="82" y="71"  text-anchor="end">600</text>
+        <text class="ax" x="173.9" y="588" text-anchor="middle">100</text>
+        <text class="ax" x="257.7" y="588" text-anchor="middle">200</text>
+        <text class="ax" x="341.6" y="588" text-anchor="middle">300</text>
+        <text class="ax" x="425.5" y="588" text-anchor="middle">400</text>
+        <text class="ax" x="509.4" y="588" text-anchor="middle">500</text>
+        <text class="ax" x="593.2" y="588" text-anchor="middle">600</text>
+        <text class="axh" x="355" y="608" text-anchor="middle">אורחים שהוערכו בהצעה</text>
+        <text class="axh" x="18" y="300" text-anchor="middle" transform="rotate(-90 18 300)">אורחים בפועל</text>
+
+        <!-- 📐6 · קו-ייחוס אלכסוני y=x — "ההערכה התקיימה בדיוק" -->
+        <line x1="90" y1="570" x2="610" y2="50" stroke="#00786F" stroke-width="1.5" stroke-dasharray="6 4"/>
+        <text class="refl" x="560" y="88" text-anchor="end" fill="#00786F">ההערכה התקיימה בדיוק</text>
+
+        <g id="p4Points"></g>
+      </svg>
+    </div>
+    <!-- §5.2 #6 · טבלה מקבילה לקורא-מסך, נבנית מאותו מערך-נקודות שמצייר את הגרף -->
+    <table class="sr-only">
+      <caption>הערכת אורחים מול אורחים בפועל — 72 הנקודות המוצגות</caption>
+      <thead><tr><th scope="col">הוערכו</th><th scope="col">הגיעו</th><th scope="col">מעל או מתחת לצפי</th></tr></thead>
+      <tbody id="p4PtsTable"></tbody>
+    </table>
+    <div class="legend">
+      <span><i style="background:#009689; border-radius:999px"></i>הגיעו יותר אורחים מהצפי (משולש) — <span class="ltr">135</span> מכלל <span class="ltr">717</span></span>
+      <span><i style="background:#fff; border:1.5px solid #62748E; border-radius:999px"></i>הגיעו בצפי או פחות (עיגול חלול)</span>
+      <span><i style="background:#fff; border:1.5px dashed #00786F"></i>קו ההערכה-המדויקת</span>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <h3>כמה אורחים לכל דיילת היו בפועל · התפלגות על <span class="ltr">717</span> אירועים</h3>
+    <p class="chart-note">רוחב הדלי: <b><span class="ltr">5</span> אורחים לדיילת</b>. הדלי
+      <span class="ltr">50–55</span> כולל <span class="ltr">2</span> אירועים שבהם היחס היה בדיוק
+      <span class="ltr">50</span>, ולכן הוא מונה <span class="ltr">28</span> בעוד האריח למעלה
+      (<b>מעל</b> <span class="ltr">50</span>) מונה <span class="ltr">31</span> יחד עם הדלי האחרון.</p>
+    <div class="chart-box" dir="ltr" role="figure" aria-label="התפלגות אורחים-לדיילת בפועל, היסטוגרמה">
+      <svg viewBox="0 0 920 300" width="920" height="300" preserveAspectRatio="xMidYMid meet" style="max-width:100%">
+        <line x1="90" y1="250" x2="880" y2="250" stroke="#CAD5E2" stroke-width="1.5"/>
+        <line x1="90" y1="204" x2="880" y2="204" stroke="#F1F5F9"/>
+        <line x1="90" y1="158" x2="880" y2="158" stroke="#F1F5F9"/>
+        <line x1="90" y1="112" x2="880" y2="112" stroke="#F1F5F9"/>
+        <line x1="90" y1="66"  x2="880" y2="66"  stroke="#F1F5F9"/>
+        <line x1="90" y1="20"  x2="880" y2="20"  stroke="#F1F5F9"/>
+        <text class="ax" x="82" y="254" text-anchor="end">0</text>
+        <text class="ax" x="82" y="208" text-anchor="end">50</text>
+        <text class="ax" x="82" y="162" text-anchor="end">100</text>
+        <text class="ax" x="82" y="116" text-anchor="end">150</text>
+        <text class="ax" x="82" y="70"  text-anchor="end">200</text>
+        <text class="ax" x="82" y="24"  text-anchor="end">250</text>
+
+        <rect x="91.4"  y="220.6" width="96" height="29.4"  fill="#009689"/>
+        <rect x="190.2" y="214.1" width="96" height="35.9"  fill="#009689"/>
+        <rect x="288.9" y="185.6" width="96" height="64.4"  fill="#009689"/>
+        <rect x="387.7" y="92.7"  width="96" height="157.3" fill="#009689"/>
+        <rect x="486.4" y="43.9"  width="96" height="206.1" fill="#009689"/>
+        <rect x="585.2" y="113.8" width="96" height="136.2" fill="#009689"/>
+        <rect x="683.9" y="224.2" width="96" height="25.8"  fill="#009689"/>
+        <rect x="782.7" y="245.4" width="96" height="4.6"   fill="#009689"/>
+
+        <!-- 📐6 · קו-ייחוס: פרמטר-התכנון. מתויג במפורש "לא יעד" (הכרעה 6). -->
+        <line x1="682.5" y1="14" x2="682.5" y2="256" stroke="#00786F" stroke-width="2" stroke-dasharray="5 3"/>
+        <text class="refl" x="676" y="30" text-anchor="end" fill="#00786F">פרמטר-תכנון 50 — לא יעד</text>
+
+        <text class="vlab" x="139.4" y="215" text-anchor="middle">32</text>
+        <text class="vlab" x="238.1" y="209" text-anchor="middle">39</text>
+        <text class="vlab" x="336.9" y="180" text-anchor="middle">70</text>
+        <text class="vlab" x="435.6" y="87"  text-anchor="middle">171</text>
+        <text class="vlab" x="534.4" y="38"  text-anchor="middle">224</text>
+        <text class="vlab" x="633.1" y="108" text-anchor="middle">148</text>
+        <text class="vlab" x="731.9" y="219" text-anchor="middle">28</text>
+        <text class="vlab" x="830.6" y="240" text-anchor="middle">5</text>
+
+        <text class="ax" x="139.4" y="268" text-anchor="middle">עד 25</text>
+        <text class="ax" x="238.1" y="268" text-anchor="middle">25–30</text>
+        <text class="ax" x="336.9" y="268" text-anchor="middle">30–35</text>
+        <text class="ax" x="435.6" y="268" text-anchor="middle">35–40</text>
+        <text class="ax" x="534.4" y="268" text-anchor="middle">40–45</text>
+        <text class="ax" x="633.1" y="268" text-anchor="middle">45–50</text>
+        <text class="ax" x="731.9" y="268" text-anchor="middle">50–55</text>
+        <text class="ax" x="830.6" y="268" text-anchor="middle">55 ומעלה</text>
+        <text class="ax" x="485" y="290" text-anchor="middle">אורחים לכל דיילת בפועל · מספר אירועים (הנמוך משמאל)</text>
+      </svg>
+    </div>
+    <!-- §5.2 #6 · טבלה מקבילה לקורא-מסך -->
+    <table class="sr-only">
+      <caption>התפלגות אורחים-לדיילת בפועל, 717 אירועים</caption>
+      <thead><tr><th scope="col">אורחים לדיילת</th><th scope="col">אירועים</th></tr></thead>
+      <tbody>
+        <tr><td>עד 25</td><td>32</td></tr><tr><td>25–30</td><td>39</td></tr>
+        <tr><td>30–35</td><td>70</td></tr><tr><td>35–40</td><td>171</td></tr>
+        <tr><td>40–45</td><td>224</td></tr><tr><td>45–50</td><td>148</td></tr>
+        <tr><td>50–55</td><td>28</td></tr><tr><td>55 ומעלה</td><td>5</td></tr>
+      </tbody>
+    </table>
+    <div class="barkey">
+      <span><b>מה הגרף אומר</b> — רוב האירועים (<span class="ltr">543</span> מתוך <span class="ltr">717</span>) נופלים בין
+        <span class="ltr">35</span> ל-<span class="ltr">50</span> אורחים לדיילת, כלומר <b>מתחת לפרמטר-התכנון ולא מעליו</b>.</span>
+      <span><b>מה הוא אינו אומר</b> — <span class="ltr">50</span> אינו יעד ואינו סף.
+        אירוע ביחס <span class="ltr">55</span> אינו "כשל", ואירוע ביחס <span class="ltr">30</span> אינו "בזבוז"
+        עד שמישהו יכריע שהוא כזה.</span>
+    </div>
+  </div>
+
+  <div class="tbl-card">
+    <h3><span class="ltr">8</span> האירועים שהגיעו בהם הכי הרבה אורחים מעבר לצפי</h3>
+    <p class="drill">לחיצה על שורה פותחת את כרטיס האירוע</p>
+    <div class="tbl-scroll">
+      <table class="data">
+        <thead><tr>
+          <th scope="col">אירוע</th><th scope="col">לקוח</th><th scope="col">תאריך</th>
+          <th scope="col">הוערכו</th><th scope="col">הגיעו</th>
+          <th scope="col" aria-sort="descending">פער ▼</th>
+          <th scope="col">דיילות</th><th scope="col">אורחים לדיילת</th>
+        </tr></thead>
+        <tbody id="p4Body"></tbody>
+      </table>
+    </div>
+    <div class="pager"><span><span class="ltr">1–8</span> מתוך <span class="ltr">135</span></span></div>
+    <p class="tnote"><b>השורה הראשונה חריגה ואינה מייצגת:</b> באירוע <span class="ltr">12</span> הוערכו
+      <span class="ltr">50</span> אורחים והגיעו <span class="ltr">100</span>, עם דיילת אחת —
+      <span class="ltr">100</span> אורחים לדיילת, היחס הגבוה ביותר בכל ההיסטוריה.
+      שבע השורות שאחריה הן אירועים גדולים שחרגו ב-<span class="ltr">3.6%–4.9%</span> בלבד.</p>
+  </div>
+
+  <!-- ✂️ מה שהדף אינו מציג, ולמה — כדי שלא ייקרא כהשמטה -->
+  <div class="datanote">✂️ <b>"מוזמנים לדקה לעמדה" אינו מוצג ואינו ניתן לחישוב</b> — אין במערכת מושג של
+    "עמדה" ואין מונה כניסות; הנתון היחיד הוא מספר האורחים בסוף האירוע.
+    <br>✂️ <b>"כמה דיילות היו נדרשות" אינו מוצג כהמלצה</b> — פרמטר-התכנון
+    <span class="ltr">50</span> הוא בסיס-תכנון ולא יעד (הכרעה <span class="ltr">6</span>: אין צביעה מול יעד),
+    ולכן הדף מראה את היחס שהיה בפועל ומשאיר את ההכרעה למנכ"ל.</div>
+
+  <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
+  <div class="states" aria-label="חמשת המצבים שהדף יודע לצייר">
+    <div class="st"><b>1 · טעינה</b>שלד-אריחים ושלד-גרף<div class="skel-row" style="width:80%"></div><div class="skel-row" style="width:60%"></div></div>
+    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין אירועים עם שני מספרי-האורחים בתקופה שנבחרה · [נקה מסננים]"</div>
+    <div class="st"><b>3 · ריק-באמת</b>"אין נתונים עדיין"</div>
+    <div class="st"><b>4 · אין-הרשאה</b>"לא זמין בתפקידך" (הלשונית ממוסכת ללא הרשאת 'כספים')</div>
+    <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב]</div>
+  </div>
+
+  <p class="def-footer">הגדרות: <b>הוערכו</b> = מספר האורחים שנרשם בהצעת המחיר ·
+    <b>הגיעו</b> = מספר האורחים שנרשם בסגירה התפעולית של האירוע ·
+    <b>דיילות</b> = דיילות שאושרו סופית לאירוע, ולא דיילות שהוזמנו ·
+    <b>אורחים לדיילת</b> = הגיעו חלקי דיילות ·
+    <b>יחס חציוני</b> = החציון על פני האירועים — <b>לא</b> סך האורחים חלקי סך הדיילות,
+    כדי שאירוע ענק לא יקבע את המספר לבדו ·
+    <b>פרמטר-תכנון <span class="ltr">50</span></b> = הערך שהמערכת משתמשת בו כדי להציע כמה דיילות לשבץ; <b>אינו יעד</b> ·
+    <b>מספרים</b> בספרה עשרונית אחת.</p>
+  <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">10/09/2026</span> — ארבעת האריחים היום ולפני שנה ·
+    <span class="ltr">72</span> נקודות-הפיזור · שמונת דליי-ההתפלגות · <span class="ltr">8</span> החריגות הגדולות ·
+    הפרמטר <span class="ltr">יחס_אורחים_לדיילת</span>=<span class="ltr">50</span> · 🎭 דמו: אין ·
+    📐 נגזר: אחוזים · שורת-"אז מה".</p>
+</section>
+
+    </div>
+  </div>
+</main>
+
+<!-- כלי-מוקאפ, לא רכיב-מסך: כיבוי עיגולי מפת-הלחיצות לפני מסירת צילום (📐14ב) -->
+<div class="mocktools">
+  <span>כלי-מוקאפ:</span>
+  <button id="toggleMarkers" aria-pressed="true">הסתר סימוני-אינטראקציה</button>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ═══ מטא-דפים: השם הקצר (הכרעה 18) + ה-slug לכתובת ולשם-קובץ-האקסל (ת4) ═══ */
+  var PAGES = {
+    /* `period:false` = דף שאינו מגיב למסנן-התקופה ⇒ שם-הקובץ אינו נושא שנה מטעה (📐3 · ת4) */
+    p1: { slug: 'overview',  name: 'מבט-על הנהלה',     file: 'מבט-על-הנהלה',    period: true },
+    p2: { slug: 'trends',    name: 'מגמות רב-שנתיות',  file: 'מגמות-רב-שנתיות', period: false },
+    p3: { slug: 'discounts', name: 'הנחות ורווחיות',   file: 'הנחות-ורווחיות',  period: false },
+    p4: { slug: 'staffing',  name: 'קהל מול צוות',     file: 'קהל-מול-צוות',    period: false }
+  };
+
+  /* ═══ כל הנתונים למטה נמדדו חי מול המסד ב-10/09/2026, קריאה-בלבד.
+         השאילתות עצמן: stage2-cards/cards-management.md, סעיף ③ של כל כרטיס. ═══ */
+
+  /* חודשי 2026 ו-2025 (אותו טווח, 01/01–10/09) — [mm, n, revenue, profit] */
+  var M26 = [['01',29,237415,141575],['02',35,325119,185558],['03',35,269003,154112],
+             ['04',25,176912,98317],['05',35,312756,178945],['06',31,238118,134177],
+             ['07',15,119482,66675],['08',18,141027,82039],['09',13,102608,76699]];
+  var M25YTD = { '01':173717,'02':153005,'03':191005,'04':88942,'05':154371,
+                 '06':234319,'07':176327,'08':128868,'09':85261 };
+  var MONTH_HE = {'01':'ינואר','02':'פברואר','03':'מרץ','04':'אפריל','05':'מאי','06':'יוני',
+                  '07':'יולי','08':'אוגוסט','09':'ספטמבר','10':'אוקטובר','11':'נובמבר','12':'דצמבר'};
+
+  /* שנים מלאות לדריל — [mm, n, revenue, profit] */
+  var MONTHS = {
+    2024: [['01',13,131512,73251],['02',12,79814,46575],['03',14,98190,51833],['04',8,60765,35175],
+           ['05',17,143447,78492],['06',16,134009,74400],['07',11,82355,46659],['08',14,140777,78665],
+           ['09',24,178389,93335],['10',16,120156,63822],['11',33,240310,132171],['12',31,215922,118329]],
+    2025: [['01',22,173717,99689],['02',19,153005,86998],['03',26,191005,110575],['04',10,88942,45352],
+           ['05',23,154371,88116],['06',28,234319,130677],['07',19,176327,93332],['08',17,128868,74203],
+           ['09',29,215744,119355],['10',15,121896,64868],['11',35,269908,149810],['12',43,337298,190070]],
+    2026: M26
+  };
+
+  var YEARS = [
+    { y:2024, n:209, rev:1625647, prof:892706, margin:'54.9', hrs:'6,409', price:'253.7', cost:'44.2' },
+    { y:2025, n:286, rev:2245400, prof:1253047, margin:'55.8', hrs:'8,629', price:'260.2', cost:'45.9' },
+    { y:2026, n:236, rev:1922441, prof:1118098, margin:'58.2', hrs:'6,498', price:'295.9', cost:'47.3', partial:true }
+  ];
+  /* YTD מקביל, לצורך השוואה כנה של 2026 החלקית */
+  var YTD = { 2024:{n:114,rev:949252,prof:525480,margin:'55.4'},
+              2025:{n:178,rev:1385815,prof:774665,margin:'55.9'},
+              2026:{n:236,rev:1922441,prof:1118098,margin:'58.2'} };
+
+  /* אירועים גדולים לכל חודש — [id, event, customer, dd/mm, revenue, margin] */
+  var EV = {
+    '2026-01':[[1358,'כנס לקוחות שנתי','מיטב מוצרי חשמל','19/01',16116,'58.1'],[1357,'כנס טכנולוגיה שנתי','אופק ביטוח ופיננסים','19/01',15808,'56.4'],[1365,'תערוכה מקצועית','קונספט הפקות בע"מ','26/01',14060,'65.5'],[1367,'ערב גאלה שנתי','פלטינום נדל"ן','27/01',14046,'53.8'],[1364,'כנס טכנולוגיה שנתי','רשת אופנה גל בע"מ','25/01',11705,'65.1']],
+    '2026-02':[[1395,'כנס חינוך שנתי','עיריית מודיעין','22/02',18692,'54.7'],[1394,'ערב גאלה שנתי','אלפא סיסטמס בע"מ','22/02',18643,'49.7'],[1403,'ערב גאלה שנתי','בנק העסקים הקטנים','26/02',17798,'51.9'],[1389,'ערב גאלה שנתי','נובה פארמה בע"מ','17/02',17442,'53.4'],[1378,'כנס טכנולוגיה שנתי','דלתא לוגיסטיקה','08/02',17075,'57.8']],
+    '2026-03':[[1411,'ערב גאלה שנתי','אלפא סיסטמס בע"מ','04/03',18639,'57.1'],[1422,'ערב גאלה שנתי','ספיר ייעוץ ארגוני','16/03',15702,'53.4'],[1412,'כנס טכנולוגיה שנתי','רשת אופנה גל בע"מ','08/03',14126,'62.9'],[1405,'ערב גאלה שנתי','ספיר ייעוץ ארגוני','02/03',13581,'50.3'],[1415,'כנס לקוח — רישום והכוונה','הפקות דרור','10/03',13534,'48.0']],
+    '2026-04':[[1457,'ערב גאלה שנתי','אלפא סיסטמס בע"מ','22/04',13899,'55.7'],[1448,'כנס לקוחות שנתי','דלתא לוגיסטיקה','14/04',12917,'49.7'],[1461,'יום עיון ללקוחות','נטוורק פלוס בע"מ','27/04',10350,'49.0'],[1460,'כנס טכנולוגיה שנתי','אלפא סיסטמס בע"מ','26/04',10163,'37.8'],[1465,'השקת מוצר','קוואנטום רובוטיקה','30/04',9310,'59.7']],
+    '2026-05':[[1487,'כנס טכנולוגיה שנתי','מוטורס ישראל בע"מ','14/05',18219,'67.0'],[1472,'כנס לקוחות שנתי','מוטורס ישראל בע"מ','05/05',17861,'50.9'],[1479,'ערב גאלה שנתי','נובה פארמה בע"מ','11/05',17392,'61.4'],[1496,'תערוכה מקצועית','קונספט הפקות בע"מ','25/05',16997,'47.8'],[1477,'כנס חינוך שנתי','מועצה אזורית עמק חפר','10/05',16025,'58.5']],
+    '2026-06':[[1531,'תערוכה מקצועית','לייב אירועים בע"מ','24/06',16619,'52.4'],[1523,'תערוכה מקצועית','זירה הפקות','17/06',14944,'41.2'],[1534,'ערב גאלה שנתי','אלפא סיסטמס בע"מ','25/06',14784,'60.2'],[1506,'כנס לקוחות שנתי','טכנולוגיות ענן ישראל','02/06',14090,'56.0'],[1510,'כנס טכנולוגיה שנתי','קרן הצפון להשקעות','04/06',14075,'60.1']],
+    '2026-07':[[1539,'ערב גאלה שנתי','אלפא סיסטמס בע"מ','02/07',17452,'48.8'],[1542,'כנס טכנולוגיה שנתי','נובה פארמה בע"מ','14/07',13796,'71.9'],[1537,'תערוכה מקצועית','אלמנט הפקות','01/07',13762,'40.8'],[1550,'כנס לקוחות שנתי','דלתא לוגיסטיקה','29/07',12088,'56.0'],[1543,'כנס חינוך שנתי','עיריית נתניה','16/07',11851,'61.9']],
+    '2026-08':[[1552,'פסטיבל קיץ עירוני','עיריית נתניה','04/08',16968,'51.6'],[1567,'כנס לקוחות שנתי','פלטינום נדל"ן','26/08',13768,'49.3'],[1560,'כנס לקוחות שנתי','אינפיניטי גיימינג','18/08',12253,'61.6'],[1569,'כנס טכנולוגיה שנתי','בנק העסקים הקטנים','31/08',11868,'75.1'],[1554,'יום עיון ללקוחות','אלפא סיסטמס בע"מ','09/08',10089,'50.1']],
+    '2026-09':[[1575,'כנס לקוחות שנתי','אלפא סיסטמס בע"מ','06/09',13427,'73.5'],[1582,'כנס לקוחות שנתי','אלפא סיסטמס בע"מ','09/09',12698,'69.5'],[1578,'כנס לקוח — רישום והכוונה','הפקות דרור','08/09',12158,'77.6'],[1571,'כנס לקוחות שנתי','דלתא לוגיסטיקה','01/09',11138,'73.7'],[1581,'כנס מכירות','סמארט-סיטי פתרונות','09/09',9745,'78.4']],
+    '2025-01':[[1046,'כנס לקוח — רישום והכוונה','הפקות דרור','15/01',17370,'50.3'],[1047,'כנס טכנולוגיה שנתי','נטוורק פלוס בע"מ','15/01',15884,'57.4'],[1043,'כנס לקוחות שנתי','בנק העסקים הקטנים','12/01',14764,'62.3'],[1054,'כנס טכנולוגיה שנתי','אלפא סיסטמס בע"מ','27/01',13828,'63.7']],
+    '2025-02':[[1064,'כנס טכנולוגיה שנתי','אלפא סיסטמס בע"מ','09/02',17164,'59.1'],[1075,'כנס טכנולוגיה שנתי','סייבר-שילד בע"מ','24/02',13311,'52.9'],[1076,'כנס לקוחות שנתי','מיטב מוצרי חשמל','26/02',12656,'54.4'],[1074,'ערב גאלה שנתי','טכנולוגיות ענן ישראל','24/02',10283,'58.6']],
+    '2025-03':[[1098,'ערב גאלה שנתי','בנק העסקים הקטנים','20/03',16155,'50.8'],[1081,'כנס לקוחות שנתי','אלפא סיסטמס בע"מ','04/03',16082,'64.0'],[1086,'כנס טכנולוגיה שנתי','מטריקס דאטה בע"מ','10/03',15908,'61.5'],[1079,'כנס טכנולוגיה שנתי','גלובל שיפינג בע"מ','02/03',13408,'55.6']],
+    '2025-04':[[1117,'כנס טכנולוגיה שנתי','אלפא סיסטמס בע"מ','28/04',15024,'54.8'],[1108,'תערוכה מקצועית','קונספט הפקות בע"מ','02/04',14780,'40.5'],[1110,'תערוכה מקצועית','הפקות דרור','06/04',13182,'51.0'],[1111,'כנס לקוחות שנתי','אלפא סיסטמס בע"מ','07/04',9952,'55.2']],
+    '2025-05':[[1122,'כנס טכנולוגיה שנתי','עמק חפר אגרו-טק','06/05',14153,'59.6'],[1136,'כנס חינוך שנתי','עיריית נתניה','21/05',13305,'57.7'],[1135,'ערב גאלה שנתי','סייבר-שילד בע"מ','21/05',11311,'59.5'],[1129,'ערב גאלה שנתי','נובה פארמה בע"מ','14/05',11063,'49.0']],
+    '2025-06':[[1142,'כנס לקוחות שנתי','שחף תעופה ואחזקה','04/06',17928,'62.9'],[1166,'כנס טכנולוגיה שנתי','אלפא סיסטמס בע"מ','24/06',16745,'54.1'],[1146,'כנס לקוחות שנתי','בנק העסקים הקטנים','03/06',14771,'43.1'],[1153,'כנס חינוך שנתי','עיריית כפר סבא','11/06',14720,'50.0']],
+    '2025-07':[[1176,'ערב גאלה שנתי','ברק שיווק דיגיטלי','10/07',18447,'58.6'],[1178,'כנס טכנולוגיה שנתי','אלפא סיסטמס בע"מ','14/07',16965,'47.1'],[1172,'כנס לקוח — רישום והכוונה','קונספט הפקות בע"מ','02/07',15501,'49.4'],[1188,'כנס לקוחות שנתי','גלובל שיפינג בע"מ','30/07',15310,'56.5']],
+    '2025-08':[[1205,'כנס לקוחות שנתי','סייבר-שילד בע"מ','27/08',13492,'50.2'],[1199,'כנס לקוחות שנתי','אלפא סיסטמס בע"מ','18/08',13489,'58.1'],[1203,'כנס לקוחות שנתי','אלפא סיסטמס בע"מ','25/08',12934,'49.0'],[1193,'כנס טכנולוגיה שנתי','אלפא סיסטמס בע"מ','05/08',11967,'53.2']],
+    '2025-09':[[1233,'כנס לקוחות שנתי','ורד קוסמטיקה טבעית','21/09',17165,'52.7'],[1238,'ערב גאלה שנתי','אלפא סיסטמס בע"מ','25/09',13926,'48.0'],[1240,'כנס לקוחות שנתי','ספיר ייעוץ ארגוני','29/09',13504,'56.7'],[1228,'כנס חינוך שנתי','עיריית נתניה','15/09',12143,'58.6']],
+    '2025-10':[[1251,'כנס טכנולוגיה שנתי','אלפא סיסטמס בע"מ','23/10',14058,'53.8'],[1248,'תערוכה מקצועית','הפקות דרור','19/10',12396,'50.7'],[1244,'ערב גאלה שנתי','גלובל שיפינג בע"מ','12/10',11978,'51.2'],[1255,'כנס טכנולוגיה שנתי','מגדלי הים התיכון','29/10',11645,'53.1']],
+    '2025-11':[[1266,'ערב גאלה שנתי','טכנולוגיות ענן ישראל','06/11',15768,'50.4'],[1285,'ערב גאלה שנתי','אלפא סיסטמס בע"מ','25/11',15146,'63.6'],[1268,'ערב גאלה שנתי','נובה פארמה בע"מ','11/11',14179,'59.6'],[1286,'כנס טכנולוגיה שנתי','רשת אופנה גל בע"מ','25/11',13211,'49.1']],
+    '2025-12':[[1321,'כנס לקוחות שנתי','אלפא סיסטמס בע"מ','18/12',17108,'52.8'],[1303,'ערב גאלה שנתי','אלפא סיסטמס בע"מ','07/12',17090,'56.3'],[1320,'ערב גאלה שנתי','אלפא סיסטמס בע"מ','17/12',16085,'56.6'],[1329,'ערב גאלה שנתי','פלטינום נדל"ן','25/12',15383,'54.3']],
+    '2024-01':[[819,'כנס טכנולוגיה שנתי','נטוורק פלוס בע"מ','10/01',16908,'59.4'],[823,'כנס טכנולוגיה שנתי','טכנולוגיות ענן ישראל','22/01',16224,'52.6'],[827,'כנס טכנולוגיה שנתי','קליק פינטק בע"מ','28/01',16097,'58.4'],[818,'כנס טכנולוגיה שנתי','אלפא סיסטמס בע"מ','09/01',14986,'53.0']],
+    '2024-02':[[838,'כנס טכנולוגיה שנתי','לב הנגב תיירות','20/02',18560,'58.6'],[831,'השקת מוצר','ויז\'ן אופטיקה בע"מ','05/02',10095,'62.5'],[836,'כנס טכנולוגיה שנתי','בנק העסקים הקטנים','15/02',8976,'57.9'],[835,'כנס תושבים','מועצה אזורית עמק חפר','14/02',8390,'55.1']],
+    '2024-03':[[849,'כנס טכנולוגיה שנתי','ויז\'ן אופטיקה בע"מ','19/03',16045,'48.2'],[847,'כנס לקוח — רישום והכוונה','הפקות דרור','13/03',16008,'44.3'],[843,'ערב גאלה שנתי','נובה פארמה בע"מ','05/03',12577,'58.2'],[842,'יום עיון ללקוחות','אלפא סיסטמס בע"מ','04/03',8893,'55.4']],
+    '2024-04':[[862,'כנס לקוחות שנתי','קליק פינטק בע"מ','30/04',14397,'60.5'],[860,'כנס לקוחות שנתי','אלפא סיסטמס בע"מ','10/04',11613,'54.9'],[856,'כנס שותפים','ורד קוסמטיקה טבעית','01/04',8310,'58.3'],[861,'ערב הוקרה לעובדים','אינפיניטי גיימינג','15/04',8266,'53.2']],
+    '2024-05':[[866,'כנס טכנולוגיה שנתי','אלפא סיסטמס בע"מ','03/05',17810,'49.5'],[872,'כנס טכנולוגיה שנתי','אלפא סיסטמס בע"מ','14/05',16585,'54.6'],[876,'כנס טכנולוגיה שנתי','אלפא סיסטמס בע"מ','26/05',14511,'54.6'],[867,'כנס לקוחות שנתי','טכנולוגיות ענן ישראל','06/05',11468,'56.3']],
+    '2024-06':[[885,'ערב גאלה שנתי','בנק העסקים הקטנים','05/06',16221,'49.8'],[898,'פסטיבל קיץ','הפקות דרור','30/06',15600,'58.6'],[889,'כנס לקוחות שנתי','דלתא לוגיסטיקה','16/06',12071,'49.4'],[891,'ערב גאלה שנתי','אלפא סיסטמס בע"מ','18/06',12036,'50.6']],
+    '2024-07':[[900,'כנס טכנולוגיה שנתי','סמארט-סיטי פתרונות','09/07',12030,'51.1'],[902,'יריד תעסוקה','נטוורק פלוס בע"מ','16/07',9447,'57.8'],[901,'יריד קהילה','עיריית כפר סבא','15/07',9379,'58.2'],[905,'כנס מכירות','ברק שיווק דיגיטלי','25/07',8427,'62.3']],
+    '2024-08':[[910,'כנס טכנולוגיה שנתי','נובה פארמה בע"מ','05/08',17898,'50.1'],[925,'ערב גאלה שנתי','ביו-לוג מעבדות','28/08',15244,'52.2'],[915,'ערב גאלה שנתי','אלפא סיסטמס בע"מ','18/08',14783,'46.5'],[923,'כנס חינוך שנתי','מועצה מקומית שוהם','27/08',13211,'70.0']],
+    '2024-09':[[933,'כנס לקוחות שנתי','אלפא סיסטמס בע"מ','09/09',16144,'44.4'],[941,'כנס טכנולוגיה שנתי','סייבר-שילד בע"מ','18/09',14414,'46.7'],[934,'כנס חינוך שנתי','עיריית נתניה','10/09',12945,'53.4'],[949,'יום עיון ללקוחות','אינפיניטי גיימינג','30/09',10417,'53.1']],
+    '2024-10':[[962,'כנס חינוך שנתי','עיריית נתניה','28/10',12579,'60.9'],[964,'ערב הוקרה לעובדים','נובה פארמה בע"מ','29/10',10789,'48.8'],[960,'כנס לקוחות שנתי','אלפא סיסטמס בע"מ','21/10',10134,'48.5'],[955,'כנס שותפים','אלפא סיסטמס בע"מ','08/10',9720,'52.2']],
+    '2024-11':[[986,'כנס חינוך שנתי','עיריית רעננה','18/11',18006,'49.6'],[976,'כנס לקוח — רישום והכוונה','זירה הפקות','06/11',12624,'47.5'],[968,'כנס לקוחות שנתי','נובה פארמה בע"מ','01/11',12074,'53.3'],[974,'תערוכה מקצועית','הפקות דרור','05/11',11582,'56.8']],
+    '2024-12':[[1032,'כנס לקוחות שנתי','ויז\'ן אופטיקה בע"מ','29/12',16671,'46.7'],[1033,'כנס טכנולוגיה שנתי','בנק העסקים הקטנים','30/12',14514,'49.6'],[1010,'כנס לקוחות שנתי','נובה פארמה בע"מ','10/12',12567,'59.7'],[1030,'ערב גאלה שנתי','טכנולוגיות ענן ישראל','25/12',12173,'58.9']]
+  };
+
+  /* 8 האירועים הגדולים ב-2026 (מ2) */
+  var TOP26 = [
+    [1395,'כנס חינוך שנתי','עיריית מודיעין','22/02/2026',18692,10220,'54.7'],
+    [1394,'ערב גאלה שנתי','אלפא סיסטמס בע"מ','22/02/2026',18643,9258,'49.7'],
+    [1411,'ערב גאלה שנתי','אלפא סיסטמס בע"מ','04/03/2026',18639,10639,'57.1'],
+    [1487,'כנס טכנולוגיה שנתי','מוטורס ישראל בע"מ','14/05/2026',18219,12206,'67.0'],
+    [1472,'כנס לקוחות שנתי','מוטורס ישראל בע"מ','05/05/2026',17861,9090,'50.9'],
+    [1403,'ערב גאלה שנתי','בנק העסקים הקטנים','26/02/2026',17798,9237,'51.9'],
+    [1539,'ערב גאלה שנתי','אלפא סיסטמס בע"מ','02/07/2026',17452,8518,'48.8'],
+    [1389,'ערב גאלה שנתי','נובה פארמה בע"מ','17/02/2026',17442,9316,'53.4']
+  ];
+
+  /* מדרגי-ההנחה (מ4) */
+  var TIERS = {
+    t0:{ label:'ללא הנחה', slug:'ללא-הנחה', quotes:353, proj:305, rev:2396556, margin:'57.7', prev:'56.6', box:[133,117.3,60,132.7] },
+    t1:{ label:'1–5%',     slug:'הנחה-1-5',  quotes:301, proj:267, rev:2145884, margin:'56.6', prev:'56.0', box:[328,119.8,60,130.2] },
+    t2:{ label:'6–10%',    slug:'הנחה-6-10', quotes:125, proj:109, rev:878246,  margin:'54.4', prev:'53.3', box:[523,124.9,60,125.1] },
+    t3:{ label:'10%+',     slug:'הנחה-מעל-10', quotes:58, proj:50, rev:372801,  margin:'50.4', prev:'47.8', box:[718,134.1,60,115.9] }
+  };
+  /* 8 ההצעות המובילות בכל מדרג — [quote, customer, event, issued, discount, revenue, margin] */
+  var QUOTES = {
+    t0:[[2045,'עיריית מודיעין','כנס חינוך שנתי','05/09/2025','0.0',18692,'54.7'],[1246,'לב הנגב תיירות','כנס טכנולוגיה שנתי','11/09/2023','0.0',18560,'58.6'],[1465,'עיריית רעננה','כנס חינוך שנתי','08/07/2024','0.0',18006,'49.6'],[1365,'נובה פארמה בע"מ','כנס טכנולוגיה שנתי','24/05/2024','0.0',17898,'50.1'],[2057,'בנק העסקים הקטנים','ערב גאלה שנתי','20/10/2025','0.0',17798,'51.9'],[2037,'נובה פארמה בע"מ','ערב גאלה שנתי','30/08/2025','0.0',17442,'53.4'],[2161,'נובה פארמה בע"מ','ערב גאלה שנתי','18/01/2026','0.0',17392,'61.4'],[2022,'דלתא לוגיסטיקה','כנס טכנולוגיה שנתי','04/12/2025','0.0',17075,'57.8']],
+    t1:[[2044,'אלפא סיסטמס בע"מ','ערב גאלה שנתי','23/12/2025','5.0',18643,'49.7'],[2066,'אלפא סיסטמס בע"מ','ערב גאלה שנתי','09/09/2025','5.0',18639,'57.1'],[1295,'אלפא סיסטמס בע"מ','כנס טכנולוגיה שנתי','02/12/2023','5.0',17810,'49.5'],[2247,'אלפא סיסטמס בע"מ','ערב גאלה שנתי','21/02/2026','5.0',17452,'48.8'],[1569,'אלפא סיסטמס בע"מ','כנס טכנולוגיה שנתי','28/10/2024','5.0',17164,'59.1'],[1931,'אלפא סיסטמס בע"מ','כנס לקוחות שנתי','13/08/2025','5.0',17108,'52.8'],[1909,'אלפא סיסטמס בע"מ','ערב גאלה שנתי','20/07/2025','5.0',17090,'56.3'],[1745,'אלפא סיסטמס בע"מ','כנס טכנולוגיה שנתי','28/03/2025','5.0',16965,'47.1']],
+    t2:[[1542,'הפקות דרור','כנס לקוח — רישום והכוונה','25/07/2024','10.0',17370,'50.3'],[1260,'הפקות דרור','כנס לקוח — רישום והכוונה','13/01/2024','10.0',16008,'44.3'],[1346,'הפקות דרור','פסטיבל קיץ','17/03/2024','10.0',15600,'58.6'],[2222,'זירה הפקות','תערוכה מקצועית','15/01/2026','10.0',14944,'41.2'],[1697,'הפקות דרור','תערוכה מקצועית','12/03/2025','10.0',14373,'55.8'],[1928,'מאסטר-פלאן הפקות','כנס לקוח — רישום והכוונה','18/08/2025','10.0',14169,'56.1'],[2295,'פלטינום נדל"ן','כנס לקוחות שנתי','06/05/2026','10.0',13768,'49.3'],[2244,'אלמנט הפקות','תערוכה מקצועית','29/01/2026','10.0',13762,'40.8']],
+    t3:[[1907,'מגה-אירוע הפקות','השקה מסחרית','31/10/2025','22.0',7579,'52.3'],[2288,'הפקות דרור','השקה מסחרית','24/07/2026','20.0',7146,'54.6'],[1689,'הפקות דרור','השקה מסחרית','05/04/2025','20.0',6085,'47.1'],[1618,'אורות הפקות אירועים','ערב ספונסרים','09/03/2025','20.0',1164,'49.2'],[1852,'מגה-אירוע הפקות','כנס לקוח — רישום והכוונה','19/07/2025','17.0',9552,'46.9'],[2154,'אלפא סיסטמס בע"מ','כנס טכנולוגיה שנתי','23/02/2026','15.0',14538,'46.5'],[1751,'אלפא סיסטמס בע"מ','ערב גאלה שנתי','11/04/2025','15.0',13329,'40.1'],[1865,'אלפא סיסטמס בע"מ','ערב גאלה שנתי','23/08/2025','15.0',12874,'54.1']]
+  };
+
+  /* פיזור מ6 — כל נקודה עשירית לפי סדר ההערכה: [הוערכו, הגיעו] */
+  var PTS = [[40,32],[40,38],[50,43],[50,48],[50,100],[60,52],[60,59],[70,57],[70,61],[70,65],[70,72],
+    [80,68],[80,71],[80,78],[80,84],[90,86],[90,91],[100,88],[100,97],[110,110],[120,107],[130,106],
+    [130,119],[140,124],[150,134],[160,141],[170,149],[170,170],[180,149],[180,184],[190,168],[190,185],
+    [200,170],[200,189],[210,181],[210,205],[220,178],[220,216],[230,208],[230,239],[240,209],[240,229],
+    [250,236],[260,217],[260,254],[260,269],[270,245],[270,282],[280,276],[290,249],[290,283],[300,266],
+    [300,314],[320,303],[330,288],[340,355],[360,346],[380,351],[390,397],[400,415],[420,363],[440,430],
+    [460,471],[480,423],[490,498],[510,440],[520,522],[540,438],[550,536],[570,464],[580,522],[590,588]];
+
+  /* 8 החריגות הגדולות (מ6) — [id, event, customer, date, est, actual, gap, gap%, hostesses, ratio] */
+  var P4ROWS = [
+    [12,'כנס משקיעים שנתי','קבוצת אחזקות דנוך בע"מ','19/08/2026',50,100,50,'100.0',1,'100.0'],
+    [1184,'ערב גאלה שנתי','אלפא סיסטמס בע"מ','24/07/2025',530,556,26,'4.9',11,'50.5'],
+    [1043,'כנס לקוחות שנתי','בנק העסקים הקטנים','12/01/2025',510,534,24,'4.7',11,'48.5'],
+    [1205,'כנס לקוחות שנתי','סייבר-שילד בע"מ','27/08/2025',560,583,23,'4.1',13,'44.8'],
+    [817,'כנס טכנולוגיה שנתי','אלפא סיסטמס בע"מ','08/01/2024',470,493,23,'4.9',9,'54.8'],
+    [1472,'כנס לקוחות שנתי','מוטורס ישראל בע"מ','05/05/2026',560,580,20,'3.6',12,'48.3'],
+    [925,'ערב גאלה שנתי','ביו-לוג מעבדות','28/08/2024',510,530,20,'3.9',11,'48.2'],
+    [1329,'ערב גאלה שנתי','פלטינום נדל"ן','25/12/2025',510,529,19,'3.7',12,'44.1']
+  ];
+
+  /* ═══ עזרים ═══ */
+  var live = document.getElementById('live');
+  function say(m) { live.textContent = m; }
+  function n(v) { return v === null || v === undefined ? '—' : Number(v).toLocaleString('he-IL'); }
+  function ltr(v) { return '<span class="ltr">' + v + '</span>'; }
+  function money(v) { return v === null || v === undefined ? '—' : ltr(n(v)) + ' ₪'; }
+  /* עברית: כמות 1 מחייבת יחיד. בלי זה המסך אומר "1 אירועים". */
+  function pl(k, one, many) { return Number(k) === 1 ? one : many; }
+  function ev(k) { return ltr(k) + ' ' + pl(k, 'אירוע', 'אירועים'); }
+  function pct(a, b) { return (100 * a / b).toFixed(1) + '%'; }
+  function marginOf(prof, rev) { return (100 * prof / rev).toFixed(1) + '%'; }
+  function tile(lb, vl, sub, cmp, win, cmpNone) {
+    return '<div class="tile"><span class="lb">' + lb + '</span><span class="vl">' + vl + '</span>' +
+      '<span class="sub">' + sub + '</span>' +
+      '<span class="cmp' + (cmpNone ? ' none' : '') + '">' + cmp + '</span>' +
+      '<span class="win">' + win + '</span></div>';
+  }
+
+  var state = { page: 'p1', trYear: null, trMonth: null, tier: null };
+
+  /* ═══════════ דף 1 — מבט-על ═══════════ */
+  (function renderP1() {
+    var mb = document.getElementById('p1MonthBody'), h = '';
+    M26.forEach(function (r) {
+      var partial = r[0] === '09';
+      h += '<tr' + (partial ? ' class="dim"' : '') + '><td>' + MONTH_HE[r[0]] +
+        (partial ? ' <b>(10 ימים)</b>' : '') + '</td><td>' + ltr(r[1]) + '</td><td>' + money(r[2]) +
+        '</td><td>' + money(r[3]) + '</td><td>' + money(M25YTD[r[0]]) + '</td></tr>';
+    });
+    mb.innerHTML = h;
+
+    var tb = document.getElementById('p1TopBody'), t = '';
+    TOP26.forEach(function (r) {
+      t += '<tr class="click" tabindex="0" aria-label="כרטיס אירוע ' + r[0] + ' · ' + r[2] + '">' +
+        '<td>' + r[1] + ' <span class="ltr" style="color:var(--s500)">#' + r[0] + '</span></td>' +
+        '<td>' + r[2] + '</td><td>' + ltr(r[3]) + '</td><td>' + money(r[4]) + '</td>' +
+        '<td>' + money(r[5]) + '</td><td>' + ltr(r[6]) + '</td></tr>';
+    });
+    tb.innerHTML = t;
+  })();
+
+  /* ═══════════ דף 2 — דריל היררכי: שנה ← חודש ← אירוע (📐13) ═══════════ */
+  var p2 = {
+    crumbs: document.getElementById('p2Crumbs'), soWhat: document.getElementById('p2SoWhat'),
+    tiles: document.getElementById('p2Tiles'), range: document.getElementById('p2Range'),
+    title: document.getElementById('p2TblTitle'), drill: document.getElementById('p2Drill'),
+    head: document.getElementById('p2Head'), body: document.getElementById('p2Body'),
+    pager: document.getElementById('p2Pager'), total: document.getElementById('p2Total')
+  };
+
+  function yearRow(y) { for (var i = 0; i < YEARS.length; i++) { if (YEARS[i].y === y) { return YEARS[i]; } } return null; }
+  function monthRow(y, mm) {
+    var a = MONTHS[y] || [];
+    for (var i = 0; i < a.length; i++) { if (a[i][0] === mm) { return a[i]; } } return null;
+  }
+
+  function renderP2() {
+    var c = '<span>מגמות רב-שנתיות</span>';
+    if (state.trYear) {
+      c = '<button data-lvl="1">כל השנים</button><span class="sep">|</span>';
+      if (state.trMonth) {
+        c += '<button data-lvl="2">' + state.trYear + '</button><span class="sep">|</span>' +
+             '<span aria-current="page">' + MONTH_HE[state.trMonth] + ' ' + state.trYear + '</span>';
+      } else {
+        c += '<span aria-current="page">' + state.trYear + '</span>';
+      }
+    } else {
+      c = '<span aria-current="page">כל השנים</span>';
+    }
+    p2.crumbs.innerHTML = c;
+
+    /* ── רמה 3: חודש ── */
+    if (state.trYear && state.trMonth) {
+      var mr = monthRow(state.trYear, state.trMonth);
+      var prev = monthRow(state.trYear - 1, state.trMonth);
+      var key = state.trYear + '-' + state.trMonth;
+      var rows = EV[key] || [];
+      var partial = (key === '2026-09');
+      p2.range.innerHTML = MONTH_HE[state.trMonth] + ' ' + ltr(state.trYear) +
+        (partial ? ' (' + ltr('01/09–10/09') + ', ' + ltr('10') + ' ימים)' : '') + ' · כל הלקוחות';
+      var cmpTxt = prev
+        ? (mr[2] >= prev[2] ? '▲' : '▼') + ' ' + MONTH_HE[state.trMonth] + ' ' + ltr(state.trYear - 1) + ': '
+        : null;
+      p2.tiles.innerHTML =
+        tile('הכנסה בחודש', money(mr[2]), ev(mr[1]),
+          prev ? cmpTxt + money(prev[2]) : 'אין חודש מקביל — ' + ltr('2024') + ' היא השנה הראשונה במערכת',
+          MONTH_HE[state.trMonth] + ' ' + ltr(state.trYear), !prev) +
+        tile('רווח גולמי בחודש', money(mr[3]), 'מתוך ' + money(mr[2]) + ' הכנסה',
+          prev ? (mr[3] >= prev[3] ? '▲' : '▼') + ' ' + MONTH_HE[state.trMonth] + ' ' + ltr(state.trYear - 1) + ': ' + money(prev[3])
+               : 'אין חודש מקביל — ' + ltr('2024') + ' היא השנה הראשונה במערכת',
+          MONTH_HE[state.trMonth] + ' ' + ltr(state.trYear), !prev) +
+        tile('שולי-רווח בחודש', ltr(marginOf(mr[3], mr[2])), 'סך הרווח חלקי סך ההכנסה בחודש',
+          prev ? (parseFloat(marginOf(mr[3], mr[2])) >= parseFloat(marginOf(prev[3], prev[2])) ? '▲' : '▼') + ' ' + MONTH_HE[state.trMonth] + ' ' + ltr(state.trYear - 1) + ': ' + ltr(marginOf(prev[3], prev[2]))
+               : 'אין חודש מקביל למדוד מולו',
+          MONTH_HE[state.trMonth] + ' ' + ltr(state.trYear), !prev) +
+        tile('אירועים בחודש', ltr(mr[1]), partial ? 'החודש טרם נגמר — חלפו ' + ltr('10') + ' ימים' : 'אירועים שהסתיימו',
+          prev ? (mr[1] >= prev[1] ? '▲' : '▼') + ' ' + MONTH_HE[state.trMonth] + ' ' + ltr(state.trYear - 1) + ': ' + ltr(prev[1])
+               : 'אין חודש מקביל למדוד מולו',
+          MONTH_HE[state.trMonth] + ' ' + ltr(state.trYear), !prev);
+      p2.soWhat.innerHTML = 'לשים לב ששולי-הרווח ב' + MONTH_HE[state.trMonth] + ' ' + ltr(state.trYear) +
+        ' עמדו על ' + ltr(marginOf(mr[3], mr[2])) + ' על ' + ev(mr[1]) +
+        (prev ? ', מול ' + ltr(marginOf(prev[3], prev[2])) + ' באותו חודש אשתקד.' : '.');
+      p2.title.innerHTML = 'האירועים הגדולים ביותר · ' + MONTH_HE[state.trMonth] + ' ' + ltr(state.trYear);
+      p2.drill.innerHTML = 'זו הרמה האחרונה. לחיצה על שורה פותחת את כרטיס האירוע.';
+      p2.head.innerHTML = '<tr><th scope="col">אירוע</th><th scope="col">לקוח</th><th scope="col">תאריך</th>' +
+        '<th scope="col" aria-sort="descending">הכנסה ▼</th><th scope="col">שולי-רווח</th></tr>';
+      var hh = '';
+      rows.forEach(function (r) {
+        hh += '<tr class="click" tabindex="0" aria-label="כרטיס אירוע ' + r[0] + ' · ' + r[2] + '">' +
+          '<td>' + r[1] + ' <span class="ltr" style="color:var(--s500)">#' + r[0] + '</span></td><td>' + r[2] + '</td>' +
+          '<td>' + ltr(r[3] + '/' + String(state.trYear).slice(2)) + '</td><td>' + money(r[4]) + '</td><td>' + ltr(r[5]) + '</td></tr>';
+      });
+      p2.body.innerHTML = hh;
+      p2.pager.innerHTML = ltr('1–' + rows.length) + ' מתוך ' + ltr(mr[1]);
+      p2.total.innerHTML = 'סך הכנסת החודש: ' + money(mr[2]);
+      refreshChrome();
+      return;
+    }
+
+    /* ── רמה 2: שנה ── */
+    if (state.trYear) {
+      var yr = yearRow(state.trYear), pv = yearRow(state.trYear - 1);
+      var months = MONTHS[state.trYear];
+      p2.range.innerHTML = ltr(state.trYear) + (yr.partial ? ' (' + ltr('01/01–10/09') + ', שנה חלקית)' : '') + ' · כל הלקוחות';
+      p2.tiles.innerHTML =
+        tile('הכנסה בשנה', money(yr.rev), ev(yr.n),
+          pv ? (yr.rev >= pv.rev ? '▲' : '▼') + ' ' + ltr(state.trYear - 1) + ' המלאה: ' + money(pv.rev)
+             : 'אין שנה קודמת — ' + ltr('2024') + ' היא הראשונה במערכת',
+          yr.partial ? ltr('01/01–10/09/' + yr.y) : 'שנת ' + ltr(yr.y), !pv) +
+        tile('רווח גולמי בשנה', money(yr.prof), 'מתוך ' + money(yr.rev) + ' הכנסה',
+          pv ? (yr.prof >= pv.prof ? '▲' : '▼') + ' ' + ltr(state.trYear - 1) + ' המלאה: ' + money(pv.prof)
+             : 'אין שנה קודמת למדוד מולה',
+          yr.partial ? ltr('01/01–10/09/' + yr.y) : 'שנת ' + ltr(yr.y), !pv) +
+        tile('שולי-רווח בשנה', ltr(yr.margin + '%'), 'סך הרווח חלקי סך ההכנסה',
+          pv ? (parseFloat(yr.margin) >= parseFloat(pv.margin) ? '▲' : '▼') + ' ' + ltr(state.trYear - 1) + ': ' + ltr(pv.margin + '%')
+             : 'אין שנה קודמת למדוד מולה',
+          yr.partial ? ltr('01/01–10/09/' + yr.y) : 'שנת ' + ltr(yr.y), !pv) +
+        tile('מחיר לשעה מול עלות לשעה', ltr(yr.price + ' ₪ / ' + yr.cost + ' ₪'), ltr(yr.hrs) + ' שעות-בפועל בשנה',
+          pv ? '▲ ' + ltr(state.trYear - 1) + ': ' + ltr(pv.price + ' ₪ / ' + pv.cost + ' ₪')
+             : 'אין שנה קודמת למדוד מולה',
+          yr.partial ? ltr('01/01–10/09/' + yr.y) : 'שנת ' + ltr(yr.y), !pv);
+      p2.soWhat.innerHTML = 'לשים לב ששולי-הרווח ב-' + ltr(yr.y) + ' עמדו על ' + ltr(yr.margin + '%') +
+        ' על ' + ev(yr.n) + ', עם מחיר לשעה של ' + ltr(yr.price) + ' ₪ מול עלות לשעה של ' + ltr(yr.cost) + ' ₪.';
+      p2.title.innerHTML = 'לפי חודש · ' + ltr(yr.y);
+      p2.drill.innerHTML = 'לחיצה על שורה יורדת לאירועים של אותו חודש';
+      p2.head.innerHTML = '<tr><th scope="col">חודש</th><th scope="col">אירועים</th>' +
+        '<th scope="col">הכנסה</th><th scope="col">רווח</th><th scope="col">שולי-רווח</th></tr>';
+      var mh = '', sum = 0;
+      months.forEach(function (r) {
+        sum += r[2];
+        var partialM = (yr.y === 2026 && r[0] === '09');
+        mh += '<tr class="click' + (partialM ? ' dim' : '') + '" tabindex="0" data-m="' + r[0] +
+          '" aria-label="ירידה לאירועי ' + MONTH_HE[r[0]] + ' ' + yr.y + '">' +
+          '<td>' + MONTH_HE[r[0]] + (partialM ? ' <b>(10 ימים)</b>' : '') + '</td><td>' + ltr(r[1]) + '</td>' +
+          '<td>' + money(r[2]) + '</td><td>' + money(r[3]) + '</td><td>' + ltr(marginOf(r[3], r[2])) + '</td></tr>';
+      });
+      p2.body.innerHTML = mh;
+      p2.pager.innerHTML = ltr('1–' + months.length) + ' מתוך ' + ltr(months.length) + ' חודשים';
+      p2.total.innerHTML = 'סך הכנסת השנה: ' + money(sum);
+      refreshChrome();
+      return;
+    }
+
+    /* ── רמה 1: כל השנים ── */
+    p2.range.innerHTML = ltr('2024–2026') + ' · כל הלקוחות';
+    p2.tiles.innerHTML =
+      tile('מחיר לשעה', ltr('295.9') + ' ₪', money(1922441) + ' ÷ ' + ltr('6,498') + ' שעות-בפועל',
+        '▲ ' + ltr('2025') + ': ' + ltr('260.2') + ' ₪ — עלייה של ' + ltr('16.6%') + ' מ-' + ltr('2024'),
+        'שנת ' + ltr('2026') + ' עד ' + ltr('10/09')) +
+      tile('עלות לשעה', ltr('47.3') + ' ₪', money(307496) + ' שכר ובונוסים ÷ אותן ' + ltr('6,498') + ' שעות',
+        '▲ ' + ltr('2025') + ': ' + ltr('45.9') + ' ₪ — עלייה של ' + ltr('7.0%') + ' מ-' + ltr('2024'),
+        'שנת ' + ltr('2026') + ' עד ' + ltr('10/09')) +
+      tile('שולי-רווח', ltr('58.2%'), money(1118098) + ' רווח מתוך ' + money(1922441),
+        '▲ ' + ltr('2025') + ' המלאה: ' + ltr('55.8%') + ' · ' + ltr('2024') + ': ' + ltr('54.9%'),
+        'שנת ' + ltr('2026') + ' עד ' + ltr('10/09')) +
+      tile('אירועים שהסתיימו', ltr('236'), 'בשלוש השנים יחד: ' + ltr('731'),
+        '▲ ' + ltr('2025') + ' באותו טווח: ' + ltr('178'),
+        ltr('01/01–10/09/2026'));
+    p2.soWhat.innerHTML = 'לשים לב שהמחיר לשעה עלה מהר מהעלות — מ-' + ltr('253.7') + ' ₪ ל-' + ltr('295.9') +
+      ' ₪ לשעה (' + ltr('16.6%') + ' בשנתיים), מול עלייה של ' + ltr('7.0%') + ' בעלות לשעה; ' +
+      'זו הסיבה ששולי-הרווח עלו ל-' + ltr('58.2%') + ' במקום להישחק.';
+    p2.title.innerHTML = 'לפי שנה';
+    p2.drill.innerHTML = 'לחיצה על שורה יורדת לחודשים של אותה שנה';
+    p2.head.innerHTML = '<tr><th scope="col">שנה</th><th scope="col">אירועים</th><th scope="col">הכנסה</th>' +
+      '<th scope="col">רווח</th><th scope="col">שולי-רווח</th><th scope="col">מחיר לשעה</th><th scope="col">עלות לשעה</th></tr>';
+    var yh = '';
+    YEARS.forEach(function (r) {
+      yh += '<tr class="click' + (r.partial ? ' dim' : '') + '" tabindex="0" data-y="' + r.y +
+        '" aria-label="ירידה לחודשי ' + r.y + '">' +
+        '<td>' + ltr(r.y) + (r.partial ? ' <b>(עד 10/09)</b>' : '') + '</td><td>' + ltr(r.n) + '</td>' +
+        '<td>' + money(r.rev) + '</td><td>' + money(r.prof) + '</td><td>' + ltr(r.margin + '%') + '</td>' +
+        '<td>' + ltr(r.price) + ' ₪</td><td>' + ltr(r.cost) + ' ₪</td></tr>';
+    });
+    p2.body.innerHTML = yh;
+    p2.pager.innerHTML = ltr('1–3') + ' מתוך ' + ltr('3') + ' שנים';
+    p2.total.innerHTML = 'סך הכנסת שלוש השנים: ' + money(5793488);
+    refreshChrome();
+  }
+
+  p2.crumbs.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-lvl]');
+    if (!b) { return; }
+    if (b.getAttribute('data-lvl') === '1') { state.trYear = null; state.trMonth = null; say('חזרה לרמת השנים'); }
+    else { state.trMonth = null; say('חזרה לרמת החודשים של ' + state.trYear); }
+    renderP2();
+  });
+  p2.body.addEventListener('click', function (e) { p2Row(e.target.closest('tr')); });
+  function p2Row(tr) {
+    if (!tr) { return; }
+    if (tr.getAttribute('data-y')) {
+      state.trYear = Number(tr.getAttribute('data-y')); state.trMonth = null;
+      say('ירידה לחודשי ' + state.trYear); renderP2(); return;
+    }
+    if (tr.getAttribute('data-m')) {
+      state.trMonth = tr.getAttribute('data-m');
+      say('ירידה לאירועי ' + MONTH_HE[state.trMonth] + ' ' + state.trYear); renderP2(); return;
+    }
+    say('במסך החי: מעבר אל ' + (tr.getAttribute('aria-label') || 'היעד המקושר'));
+  }
+
+  /* ═══════════ דף 3 — סינון-צולב על מדרג-ההנחה ═══════════ */
+  var p3 = {
+    body: document.getElementById('p3Body'), title: document.getElementById('p3TblTitle'),
+    pager: document.getElementById('p3Pager'), clear: document.getElementById('p3Clear'),
+    sel: document.getElementById('p3Sel')
+  };
+  function renderP3() {
+    var rows, ttl, total;
+    if (state.tier) {
+      var t = TIERS[state.tier];
+      rows = QUOTES[state.tier];
+      ttl = 'הצעות מאושרות במדרג ' + t.label + ' שהאירוע שלהן כבר התקיים';
+      /* 📐8 · הפאג'ר סופר את מה שהטבלה מציגה: כל שורה כאן נושאת הכנסה ⇒ המכנה הוא
+         האירועים שהתקיימו (109), לא כל ההצעות המאושרות במדרג (125). */
+      total = t.proj;
+      p3.sel.setAttribute('x', t.box[0] - 3); p3.sel.setAttribute('y', t.box[1] - 3);
+      p3.sel.setAttribute('width', t.box[2] + 6); p3.sel.setAttribute('height', t.box[3] + 6);
+      p3.sel.setAttribute('visibility', 'visible');
+      p3.clear.hidden = false;
+    } else {
+      rows = QUOTES.t3;
+      ttl = '<span class="ltr">8</span> ההצעות בעלות ההנחה הגבוהה ביותר שהאירוע שלהן כבר התקיים';
+      total = 731;
+      p3.sel.setAttribute('visibility', 'hidden');
+      p3.clear.hidden = true;
+    }
+    p3.title.innerHTML = ttl;
+    var h = '';
+    rows.forEach(function (r) {
+      h += '<tr class="click" tabindex="0" aria-label="הצעת מחיר ' + r[0] + ' · ' + r[1] + '">' +
+        '<td>' + ltr(r[0]) + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td>' + ltr(r[3]) + '</td>' +
+        '<td>' + ltr(r[4] + '%') + '</td><td>' + money(r[5]) + '</td><td>' + ltr(r[6] + '%') + '</td></tr>';
+    });
+    p3.body.innerHTML = h;
+    p3.pager.innerHTML = ltr('1–' + rows.length) + ' מתוך ' + ltr(total);
+    refreshChrome();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.p3bar'), function (b) {
+    function toggle() {
+      var k = b.getAttribute('data-b');
+      state.tier = (state.tier === k) ? null : k;
+      renderP3();
+      say(state.tier ? 'מסונן למדרג ' + TIERS[k].label + '; ' + QUOTES[k].length + ' שורות מוצגות'
+                     : 'הבחירה במדרג בוטלה');
+    }
+    b.addEventListener('click', toggle);
+    b.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); toggle(); }
+    });
+  });
+  p3.clear.addEventListener('click', function () { state.tier = null; renderP3(); say('הבחירה במדרג בוטלה'); });
+
+  /* ═══════════ דף 4 — פיזור + טבלה ═══════════ */
+  (function renderP4() {
+    var K = 520 / 620, g = document.getElementById('p4Points'), s = '';
+    PTS.forEach(function (p) {
+      var x = 90 + p[0] * K, y = 570 - p[1] * K;
+      if (p[1] > p[0]) {
+        /* משולש = הגיעו יותר אורחים מהצפי — צורה, לא רק צבע (📐19) */
+        s += '<polygon points="' + x + ',' + (y - 5) + ' ' + (x - 4.5) + ',' + (y + 3.5) + ' ' +
+             (x + 4.5) + ',' + (y + 3.5) + '" fill="#009689"/>';
+      } else {
+        s += '<circle cx="' + x + '" cy="' + y + '" r="3.6" fill="#fff" stroke="#62748E" stroke-width="1.3"/>';
+      }
+    });
+    g.innerHTML = s;
+
+    /* §5.2 #6 · אותן נקודות בדיוק, כטבלה לקורא-מסך */
+    var pt = '';
+    PTS.forEach(function (p) {
+      pt += '<tr><td>' + p[0] + '</td><td>' + p[1] + '</td><td>' +
+        (p[1] > p[0] ? 'מעל הצפי' : (p[1] === p[0] ? 'בדיוק בצפי' : 'מתחת לצפי')) + '</td></tr>';
+    });
+    document.getElementById('p4PtsTable').innerHTML = pt;
+
+    var tb = document.getElementById('p4Body'), h = '';
+    P4ROWS.forEach(function (r, i) {
+      h += '<tr class="click' + (i === 0 ? ' dim' : '') + '" tabindex="0" aria-label="כרטיס אירוע ' + r[0] + ' · ' + r[2] + '">' +
+        '<td>' + r[1] + ' <span class="ltr" style="color:var(--s500)">#' + r[0] + '</span></td><td>' + r[2] + '</td>' +
+        '<td>' + ltr(r[3]) + '</td><td>' + ltr(r[4]) + '</td><td>' + ltr(r[5]) + '</td>' +
+        '<td>' + ltr('+' + r[6]) + ' (' + ltr(r[7] + '%') + ')</td><td>' + ltr(r[8]) + '</td>' +
+        '<td>' + ltr(r[9]) + '</td></tr>';
+    });
+    tb.innerHTML = h;
+  })();
+
+  /* ═══ שם-קובץ-האקסל · תצוגת-העמודות · כתובת-הדף — נגזרים מהמצב, כולל רמת-הקידוח (📐13 ③④) ═══ */
+  var picker = document.getElementById('picker');
+  var pages = Array.prototype.slice.call(document.querySelectorAll('.page'));
+  var urlbar = document.getElementById('urlbar');
+  var xlsxBtn = document.getElementById('xlsx');
+  var xlsxNm = document.getElementById('xlsxName');
+  var xlsxCol = document.getElementById('xlsxCols');
+
+  function levelSuffix() {
+    if (state.page === 'p2') {
+      if (state.trMonth) {
+        return { file: '_' + state.trYear + '-' + state.trMonth, url: '&level=month:' + state.trMonth + '-' + state.trYear,
+                 label: MONTH_HE[state.trMonth] + ' ' + state.trYear };
+      }
+      if (state.trYear) { return { file: '_שנת-' + state.trYear, url: '&level=year:' + state.trYear, label: 'שנת ' + state.trYear }; }
+      return { file: '_כל-השנים', url: '', label: 'כל השנים' };
+    }
+    if (state.page === 'p3' && state.tier) {
+      return { file: '_' + TIERS[state.tier].slug,
+               url: '&tier=' + encodeURIComponent(TIERS[state.tier].label), label: 'מדרג ' + TIERS[state.tier].label };
+    }
+    return { file: '', url: '', label: '' };
+  }
+  function hiddenWithin(el, root) {
+    for (var x = el; x && x !== root; x = x.parentElement) { if (x.hidden) { return true; } }
+    return false;
+  }
+  function pageColumns(id) {
+    var sec = document.getElementById(id);
+    if (!sec) { return []; }
+    var cards = sec.querySelectorAll('.tbl-card');
+    for (var i = 0; i < cards.length; i++) {
+      if (hiddenWithin(cards[i], sec)) { continue; }
+      var ths = cards[i].querySelectorAll('thead th');
+      if (!ths.length) { continue; }
+      var out = [];
+      for (var j = 0; j < ths.length; j++) {
+        out.push(ths[j].textContent.replace(/[▼▲]/g, '').replace(/\s+/g, ' ').trim());
+      }
+      return out;
+    }
+    return [];
+  }
+  function refreshChrome() {
+    var meta = PAGES[state.page], sfx = levelSuffix();
+    var fname = meta.file + (meta.period ? '_2026' : '') + (sfx.file || (meta.period ? '' : '_כל-הזמנים')) + '.xlsx';
+    var cols = pageColumns(state.page);
+    xlsxNm.textContent = fname;
+    xlsxCol.textContent = cols.length ? cols.join(' · ') : 'אין טבלה לייצוא בדף הזה';
+    xlsxBtn.title = 'ייצוא ' + meta.name + (sfx.label ? ' · ' + sfx.label : '') +
+      ' — הרמה שעל המסך. הקובץ: ' + fname +
+      (cols.length ? '\nהעמודות שיירדו: ' + cols.join(' · ') : '');
+    urlbar.textContent = '/reports?tab=executive&page=' + meta.slug + '&period=2026&customer=all' + sfx.url;
+  }
+
+  /* ═══ ניווט בין דפי-הלשונית ═══ */
+  function show(id) {
+    state.page = id;
+    pages.forEach(function (p) { p.hidden = (p.id !== id); });
+    Array.prototype.forEach.call(picker.querySelectorAll('button'), function (b) {
+      var on = b.getAttribute('data-page') === id;
+      b.classList.toggle('on', on);
+      if (on) { b.setAttribute('aria-current', 'true'); } else { b.removeAttribute('aria-current'); }
+    });
+    refreshChrome();
+    window.scrollTo(0, 0);
+  }
+  picker.addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-page]');
+    if (btn) { show(btn.getAttribute('data-page')); }
+  });
+  document.addEventListener('click', function (e) {
+    var g = e.target.closest('[data-goto]');
+    if (g) { show(g.getAttribute('data-goto')); say('מעבר לדוח ' + PAGES[g.getAttribute('data-goto')].name); }
+  });
+
+  /* ═══ מקלדת: Enter/Space על שורה לחיצה — מאזין keydown אמיתי, לא רק tabindex ═══ */
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') { return; }
+    var tr = e.target.closest ? e.target.closest('tr.click') : null;
+    if (!tr) { return; }
+    e.preventDefault();
+    if (tr.hasAttribute('data-y') || tr.hasAttribute('data-m')) { p2Row(tr); return; }
+    say('במסך החי: מעבר אל ' + (tr.getAttribute('aria-label') || 'היעד המקושר'));
+  });
+  document.addEventListener('click', function (e) {
+    var tr = e.target.closest ? e.target.closest('tr.click') : null;
+    /* 🔴 שורת-דריל מזוהה לפי התכונה שלה ולא לפי ההורה: אחרי הקידוח היא כבר מנותקת מה-DOM,
+       ו-`closest('#p2Body')` היה מחזיר null ⇒ ההכרזה ב-aria-live נשמעה פעמיים. */
+    if (!tr || tr.hasAttribute('data-y') || tr.hasAttribute('data-m')) { return; }
+    say('במסך החי: מעבר אל ' + (tr.getAttribute('aria-label') || 'היעד המקושר'));
+  });
+
+  /* ═══ כלי-מוקאפ: כיבוי סימוני-האינטראקציה (📐14ב) ═══ */
+  var tm = document.getElementById('toggleMarkers');
+  tm.addEventListener('click', function () {
+    var hidden = document.body.classList.toggle('hide-markers');
+    tm.setAttribute('aria-pressed', hidden ? 'false' : 'true');
+    tm.textContent = hidden ? 'הצג סימוני-אינטראקציה' : 'הסתר סימוני-אינטראקציה';
+  });
+
+  renderP2();
+  renderP3();
+  show('p1');
+})();
+</script>
+
+</body>
+</html>
