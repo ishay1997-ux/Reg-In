@@ -11,6 +11,9 @@
      בהכרעת-ישי 10/09/2026** ואינם מצוירים כאן — גם לא כשבב מנוטרל בבורר. כשהם יחזרו,
      הם נכנסים לבורר באותה צורה בדיוק (הכרעה 29).
   🕓 **"היום" של המוקאפ הזה = 10/09/2026** (📐22). כל תאריך בקובץ נקרא ביחס אליו.
+  🔄 **רוענן 10/09/2026 אחרי סבב-הזריעה השני** (הכרעות 32 · 35 · 37 · 38 + תיקון-פיזור §א1):
+     תור-האמינות נבנה מחדש (**6 אדומות, כולן פעילות**), התעריפים הוזזו כדי לפתוח את שני
+     הריבועים של דוח 14, וכל מספר בקובץ נמדד **מחדש** ב-`execute_sql` באותו יום.
      ⚠️ לשונית הכספים (`03_tab_finance.html`) עדיין מצהירה 06/09/2026 ותרוענן בנפרד —
      עד אז שני הקבצים מצהירים ימים שונים, וזה מוצהר ולא נסתר.
   מקורות מחייבים (לא שוכפלו כאן, רק יושמו):
@@ -117,7 +120,7 @@ body.hide-markers .im{display:none}
 .picker button:hover{background:var(--s50)}
 .picker button.on{border-color:var(--teal200); background:var(--teal50);
      font-weight:600; color:var(--teal700)}
-.picker button:focus-visible{outline:2px solid var(--teal500); outline-offset:2px}
+.picker button:focus-visible{outline:2px solid var(--teal700); outline-offset:2px}
 
 /* ── שורת-מסננים גלובליים ── */
 .filters{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:16px}
@@ -156,20 +159,28 @@ button.tile:focus-visible{outline:2px solid var(--teal700); outline-offset:2px}
 .legend{display:flex; flex-wrap:wrap; gap:14px; margin-top:8px; font-size:11.5px; color:var(--s600)}
 .legend i{display:inline-block; width:14px; height:10px; border-radius:2px; margin-left:5px;
      vertical-align:-1px; border:1px solid var(--s300)}
+/* מדגם-קטן: מסגרת מקווקוות ולא עמעום-גוון. 📐19 (ההבחנה בצורה) + ניגודיות-סימן ≥3:1 —
+   ‏`opacity:.55` על טורקיז נמדד 2.01:1 מול לבן ונפל; המסגרת ב-`--s500` נמדדת 4.76:1. */
+.legend i.dashed{background:#fff; border:1.4px dashed var(--s500)}
 .chart-box{width:100%; overflow-x:auto}
 .zone{font-size:12.5px; font-weight:600; color:var(--s700); margin:18px 0 8px;
      padding-right:9px; border-right:3px solid var(--s300)}
-.zone span{display:block; font-weight:400; font-size:11.5px; color:var(--s500); margin-top:2px}
+/* 🔴 `‏.zone span` / `‏.barkey span` (0,1,1) גוברים על `‏.ltr` (0,1,0) והפכו כל
+   `‏<span class="ltr">` שבתוכם ל-`display:block` — הכותרת "אזור 1 · הוגנות…" נשברה לחמש שורות,
+   ותא-ה-barkey תפח מ-33px ל-217px (מספר בשורה). ‏**נמדד בדפדפן ב-10/09/2026, ולא נתפס
+   בסבב הקודם.** ‏`‏.barkey` נפתר בצירוף-ילד (שם ה-`‏.ltr` מקוננים); ‏`‏.zone` דורש גם
+   `‏:not(.ltr)`, כי שם ה-`‏.ltr` הוא **ילד ישיר** בדיוק כמו כותרת-המשנה. */
+.zone > span:not(.ltr){display:block; font-weight:400; font-size:11.5px; color:var(--s500); margin-top:2px}
 svg{display:block}
 .ax{font-size:10px; fill:var(--s500)}
 .axh{font-size:10.5px; fill:var(--s600)}
-.axs{font-size:8.5px; fill:var(--s400)}
+.axs{font-size:8.5px; fill:var(--s500)}
 .vlab{font-size:10px; fill:var(--s600); font-weight:600}
 .vlab.sm{font-size:9px}
 .barkey{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:6px 14px;
      margin-top:10px; padding-top:10px; border-top:1px solid var(--s100); font-size:11.5px; color:var(--s600)}
 .barkey b{color:var(--s700)}
-.barkey span{display:block; line-height:1.45}
+.barkey > span{display:block; line-height:1.45}
 .hit{cursor:pointer}
 .hit:focus-visible{outline:2px solid var(--teal700)}
 .selbox{fill:none; stroke:var(--teal700); stroke-width:1.5; stroke-dasharray:3 2}
@@ -190,7 +201,7 @@ table.data td{padding:10px; border-bottom:1px solid var(--s100); vertical-align:
    font-size:13px; white-space:nowrap}
 tr.click{cursor:pointer}
 tr.click:hover td{background:var(--s50)}
-tr.click:focus-visible{outline:2px solid var(--teal500); outline-offset:-2px}
+tr.click:focus-visible{outline:2px solid var(--teal700); outline-offset:-2px}
 tr.click:focus-visible td{background:var(--teal50)}
 tr.dim td{color:var(--s500)}
 .pager{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px;
@@ -365,27 +376,27 @@ tr.dim td{color:var(--s500)}
   <p class="pop">אוכלוסייה: שיבוצים שסומנה בהם נוכחות, באירוע שכבר התקיים ובפרויקט שלא בוטל ·
     <span class="ltr">n=1,730</span> שיבוצים אצל <span class="ltr">100</span> דיילות ·
     <b>הוצאו:</b> <span class="ltr">72</span> היעדרויות באישור מראש ומחלה (לא נספרות לא במונה ולא במכנה) ·
-    <span class="ltr">347</span> סירובים · <span class="ltr">180</span> זימונים שלא נענו ·
+    <span class="ltr">347</span> סירובים · <span class="ltr">181</span> זימונים שלא נענו ·
     <span class="ltr">72</span> שיבוצים שנוכחותם טרם סומנה.</p>
 
   <!-- 📐23 · מבט-על הוא **שער**, ולכן הפועל נגזר מהדף שהוא פותח (אמינות והתייצבות = תומך-החלטה),
        ולא "לפתוח את X" הגנרי. §📐23, הסייג של 07/09 16:1X. -->
-  <p class="so-what">לא לשלוח את רותם עמר לאירוע הקרוב — היא היחידה מבין <span class="ltr">6</span> הדיילות
-    האדומות שעדיין פעילה, עם <span class="ltr">3</span> אי-הגעות ב-<span class="ltr">11</span> משמרות;
+  <p class="so-what">לא לשלוח את שש הדיילות האדומות לאירועים הקרובים — <b>כולן פעילות</b>,
+    כולן מוצעות היום בשיבוץ, ובראשן רותם עמר עם <span class="ltr">3</span> אי-הגעות ב-<span class="ltr">11</span> משמרות;
     בשנה שקדמה לא הייתה אף אדומה.</p>
 
   <div class="tiles">
     <div class="tile"><span class="lb">הגעה בזמן</span>
-      <span class="vl"><span class="ltr">87.6%</span></span>
-      <span class="sub"><span class="ltr">1,516</span> מתוך <span class="ltr">1,730</span> שיבוצים שסומנה בהם נוכחות</span>
+      <span class="vl"><span class="ltr">87.3%</span></span>
+      <span class="sub"><span class="ltr">1,510</span> מתוך <span class="ltr">1,730</span> שיבוצים שסומנה בהם נוכחות</span>
       <span class="cmp"><span class="arrow">▼</span> <span class="ltr">12</span> החודשים שלפני כן: <span class="ltr">88.7%</span> (<span class="ltr">1,253</span> מתוך <span class="ltr">1,412</span>)</span>
       <span class="win"><span class="ltr">10/09/2025–10/09/2026</span></span></div>
 
     <button class="tile im-host" id="tRed" data-goto="p2">
       <span class="lb">דיילות אדומות</span>
       <span class="vl"><span class="ltr">6</span></span>
-      <span class="sub"><span class="ltr">6</span> מתוך <span class="ltr">87</span> דיילות עם <span class="ltr">3</span> משמרות ומעלה · ועוד <span class="ltr">3</span> בענבר</span>
-      <span class="cmp"><span class="arrow">▲</span> <span class="ltr">12</span> החודשים שלפני כן: <span class="ltr">0</span> אדומות (<span class="ltr">6</span> ענבר מתוך <span class="ltr">84</span>)</span>
+      <span class="sub"><span class="ltr">6</span> מתוך <span class="ltr">87</span> דיילות עם <span class="ltr">3</span> משמרות ומעלה · ועוד <span class="ltr">4</span> בענבר · <b>כל השש פעילות</b></span>
+      <span class="cmp"><span class="arrow">▲</span> <span class="ltr">12</span> החודשים שלפני כן: <span class="ltr">0</span> אדומות (<span class="ltr">6</span> ענבר מתוך <span class="ltr">83</span>)</span>
       <span class="win"><span class="ltr">10/09/2025–10/09/2026</span> · חלון קפוא, אינו מושפע ממסנן התקופה</span>
       <span class="hintline">פתחי את "אמינות והתייצבות" →</span>
       <i class="im" aria-hidden="true" style="top:-8px; left:-8px">6</i>
@@ -407,8 +418,8 @@ tr.dim td{color:var(--s500)}
          src/lib/projects.js) ואינה הגדרה חמישית. נכנס כאריח ולא כדף. -->
     <div class="tile im-host"><span class="lb">אירועים קרובים עם חוסר</span>
       <span class="vl"><span class="ltr">11</span></span>
-      <span class="sub">מתוך <span class="ltr">24</span> אירועים ב-<span class="ltr">30</span> הימים הקרובים · <span class="ltr">39</span> מקומות פנויים · <span class="ltr">10</span> זימונים ממתינים לתשובה</span>
-      <span class="cmp"><span class="arrow">▲</span> ‏<span class="ltr">31–60</span> הימים הבאים: <span class="ltr">14</span> מתוך <span class="ltr">27</span> — <b style="font-weight:600">אין תקופה-קודמת למדד קדימה-מבט</b></span>
+      <span class="sub">מתוך <span class="ltr">24</span> אירועים ב-<span class="ltr">30</span> הימים הקרובים · <span class="ltr">39</span> מקומות פנויים · <span class="ltr">8</span> זימונים ממתינים לתשובה</span>
+      <span class="cmp"><span class="arrow">▲</span> ‏<span class="ltr">31–60</span> הימים הבאים: <span class="ltr">8</span> מתוך <span class="ltr">19</span> — <b style="font-weight:600">אין תקופה-קודמת למדד קדימה-מבט</b></span>
       <span class="win"><span class="ltr">10/09–10/10/2026</span> · אינו מושפע ממסנן התקופה</span>
       <i class="im" aria-hidden="true" style="top:-8px; left:-8px">8</i></div>
   </div>
@@ -420,7 +431,10 @@ tr.dim td{color:var(--s500)}
     <p class="chart-note">כל עמודה היא <b>שיעור</b> ולא ספירה, ומספר השיבוצים שממנו הוא חושב כתוב מתחת לחודש —
       חודש עם <span class="ltr">76</span> שיבוצים ל<b>א</b> נקרא כמו חודש עם <span class="ltr">232</span>.
       🔴 <b>ספטמבר <span class="ltr">2026</span> אינו בגרף</b>: <span class="ltr">13</span> אירועים כבר התקיימו החודש,
-      אך <span class="ltr">75</span> השיבוצים שלהם טרם נסגרו תפעולית ולכן אין בהם סימון-נוכחות למדוד.</p>
+      אך <span class="ltr">75</span> השיבוצים שלהם טרם נסגרו תפעולית ולכן אין בהם סימון-נוכחות למדוד.
+      <br>⚠️ <b>יולי <span class="ltr">2026</span> חורג</b>: <span class="ltr">10.8%</span> אי-הגעה — פי חמישה מהחודש שלפניו —
+      <b>אך על <span class="ltr">74</span> שיבוצים בלבד</b>, החודש הדל בשנה. שמונה אי-הגעות בחודש קטן קופצות את השיעור;
+      מספר האירועים, ולא רק השיעור, הוא מה שקובע כמה משקל לתת לעמודה.</p>
     <div class="chart-box" dir="ltr" role="figure" aria-label="איחורים ואי-הגעה באחוזים לפי חודש, שתים-עשרה עמודות זוגיות">
       <svg viewBox="0 0 660 265" width="660" height="265" preserveAspectRatio="xMidYMid meet">
         <line x1="80" y1="210" x2="640" y2="210" stroke="#CAD5E2" stroke-width="1.5"/>
@@ -435,44 +449,44 @@ tr.dim td{color:var(--s500)}
         <text class="ax" x="72" y="44"  text-anchor="end">16%</text>
 
         <!-- איחור (מלא) + אי-הגעה (מקווקו/מודגש בדפוס) — 📐19 -->
-        <rect x="84"    y="103.75" width="18" height="106.25" fill="#009689" rx="2"/><rect x="104"   y="198.31" width="18" height="11.69" fill="url(#hatch)" stroke="#00786F" rx="2"/>
-        <rect x="130.5" y="55.94"  width="18" height="154.06" fill="#009689" rx="2"/><rect x="150.5" y="210"    width="18" height="0"     fill="url(#hatch)" stroke="#00786F" rx="2"/>
-        <rect x="177"   y="133.50" width="18" height="76.50"  fill="#009689" rx="2"/><rect x="197"   y="168.56" width="18" height="41.44" fill="url(#hatch)" stroke="#00786F" rx="2"/>
-        <rect x="223.5" y="122.87" width="18" height="87.13"  fill="#009689" rx="2"/><rect x="243.5" y="178.12" width="18" height="31.88" fill="url(#hatch)" stroke="#00786F" rx="2"/>
-        <rect x="270"   y="69.75"  width="18" height="140.25" fill="#009689" rx="2"/><rect x="290"   y="182.37" width="18" height="27.63" fill="url(#hatch)" stroke="#00786F" rx="2"/>
-        <rect x="316.5" y="87.81"  width="18" height="122.19" fill="#009689" rx="2"/><rect x="336.5" y="187.69" width="18" height="22.31" fill="url(#hatch)" stroke="#00786F" rx="2"/>
-        <rect x="363"   y="76.12"  width="18" height="133.88" fill="#009689" rx="2"/><rect x="383"   y="198.31" width="18" height="11.69" fill="url(#hatch)" stroke="#00786F" rx="2"/>
-        <rect x="409.5" y="147.31" width="18" height="62.69"  fill="#009689" rx="2"/><rect x="429.5" y="191.94" width="18" height="18.06" fill="url(#hatch)" stroke="#00786F" rx="2"/>
-        <rect x="456"   y="105.87" width="18" height="104.13" fill="#009689" rx="2"/><rect x="476"   y="188.75" width="18" height="21.25" fill="url(#hatch)" stroke="#00786F" rx="2"/>
-        <rect x="502.5" y="118.62" width="18" height="91.38"  fill="#009689" rx="2"/><rect x="522.5" y="188.75" width="18" height="21.25" fill="url(#hatch)" stroke="#00786F" rx="2"/>
-        <rect x="549"   y="123.94" width="18" height="86.06"  fill="#009689" rx="2"/><rect x="569"   y="181.31" width="18" height="28.69" fill="url(#hatch)" stroke="#00786F" rx="2"/>
+        <rect x="84" y="103.75" width="18" height="106.25" fill="#009689" rx="2"/><rect x="104" y="198.31" width="18" height="11.69" fill="url(#hatch)" stroke="#00786F" rx="2"/>
+        <rect x="130.5" y="55.94" width="18" height="154.06" fill="#009689" rx="2"/><rect x="150.5" y="210" width="18" height="0" fill="url(#hatch)" stroke="#00786F" rx="2"/>
+        <rect x="177" y="133.50" width="18" height="76.50" fill="#009689" rx="2"/><rect x="197" y="180.25" width="18" height="29.75" fill="url(#hatch)" stroke="#00786F" rx="2"/>
+        <rect x="223.5" y="122.88" width="18" height="87.12" fill="#009689" rx="2"/><rect x="243.5" y="182.38" width="18" height="27.62" fill="url(#hatch)" stroke="#00786F" rx="2"/>
+        <rect x="270" y="69.75" width="18" height="140.25" fill="#009689" rx="2"/><rect x="290" y="188.75" width="18" height="21.25" fill="url(#hatch)" stroke="#00786F" rx="2"/>
+        <rect x="316.5" y="87.81" width="18" height="122.19" fill="#009689" rx="2"/><rect x="336.5" y="187.69" width="18" height="22.31" fill="url(#hatch)" stroke="#00786F" rx="2"/>
+        <rect x="363" y="76.12" width="18" height="133.88" fill="#009689" rx="2"/><rect x="383" y="203.62" width="18" height="6.38" fill="url(#hatch)" stroke="#00786F" rx="2"/>
+        <rect x="409.5" y="147.31" width="18" height="62.69" fill="#009689" rx="2"/><rect x="429.5" y="191.94" width="18" height="18.06" fill="url(#hatch)" stroke="#00786F" rx="2"/>
+        <rect x="456" y="105.87" width="18" height="104.13" fill="#009689" rx="2"/><rect x="476" y="188.75" width="18" height="21.25" fill="url(#hatch)" stroke="#00786F" rx="2"/>
+        <rect x="502.5" y="118.62" width="18" height="91.38" fill="#009689" rx="2"/><rect x="522.5" y="153.69" width="18" height="56.31" fill="url(#hatch)" stroke="#00786F" rx="2"/>
+        <rect x="549" y="123.94" width="18" height="86.06" fill="#009689" rx="2"/><rect x="569" y="95.25" width="18" height="114.75" fill="url(#hatch)" stroke="#00786F" rx="2"/>
         <rect x="595.5" y="109.06" width="18" height="100.94" fill="#009689" rx="2"/><rect x="615.5" y="197.25" width="18" height="12.75" fill="url(#hatch)" stroke="#00786F" rx="2"/>
 
-        <text class="vlab sm" x="93"    y="99"     text-anchor="middle">10.0</text>
-        <text class="vlab sm" x="139.5" y="51"     text-anchor="middle">14.5</text>
-        <text class="vlab sm" x="186"   y="129"    text-anchor="middle">7.2</text>
-        <text class="vlab sm" x="232.5" y="118"    text-anchor="middle">8.2</text>
-        <text class="vlab sm" x="279"   y="65"     text-anchor="middle">13.2</text>
-        <text class="vlab sm" x="325.5" y="83"     text-anchor="middle">11.5</text>
-        <text class="vlab sm" x="372"   y="71"     text-anchor="middle">12.6</text>
-        <text class="vlab sm" x="418.5" y="143"    text-anchor="middle">5.9</text>
-        <text class="vlab sm" x="465"   y="101"    text-anchor="middle">9.8</text>
-        <text class="vlab sm" x="511.5" y="114"    text-anchor="middle">8.6</text>
-        <text class="vlab sm" x="558"   y="119"    text-anchor="middle">8.1</text>
-        <text class="vlab sm" x="604.5" y="105"    text-anchor="middle">9.5</text>
+        <text class="vlab sm" x="93"    y="100" text-anchor="middle">10.0</text><text class="vlab sm" x="113"   y="194" text-anchor="middle">1.1</text>
+        <text class="vlab sm" x="139.5" y="52" text-anchor="middle">14.5</text><text class="vlab sm" x="159.5" y="206" text-anchor="middle">0.0</text>
+        <text class="vlab sm" x="186"   y="130" text-anchor="middle">7.2</text><text class="vlab sm" x="206"   y="176" text-anchor="middle">2.8</text>
+        <text class="vlab sm" x="232.5" y="119" text-anchor="middle">8.2</text><text class="vlab sm" x="252.5" y="178" text-anchor="middle">2.6</text>
+        <text class="vlab sm" x="279"   y="66" text-anchor="middle">13.2</text><text class="vlab sm" x="299"   y="185" text-anchor="middle">2.0</text>
+        <text class="vlab sm" x="325.5" y="84" text-anchor="middle">11.5</text><text class="vlab sm" x="345.5" y="184" text-anchor="middle">2.1</text>
+        <text class="vlab sm" x="372"   y="72" text-anchor="middle">12.6</text><text class="vlab sm" x="392"   y="200" text-anchor="middle">0.6</text>
+        <text class="vlab sm" x="418.5" y="143" text-anchor="middle">5.9</text><text class="vlab sm" x="438.5" y="188" text-anchor="middle">1.7</text>
+        <text class="vlab sm" x="465"   y="102" text-anchor="middle">9.8</text><text class="vlab sm" x="485"   y="185" text-anchor="middle">2.0</text>
+        <text class="vlab sm" x="511.5" y="115" text-anchor="middle">8.6</text><text class="vlab sm" x="531.5" y="150" text-anchor="middle">5.3</text>
+        <text class="vlab sm" x="558"   y="120" text-anchor="middle">8.1</text><text class="vlab sm" x="578"   y="91" text-anchor="middle">10.8</text>
+        <text class="vlab sm" x="604.5" y="105" text-anchor="middle">9.5</text><text class="vlab sm" x="624.5" y="193" text-anchor="middle">1.2</text>
 
-        <text class="ax" x="103"   y="226" text-anchor="middle">09/25</text><text class="axs" x="103"   y="238" text-anchor="middle">n=90</text>
-        <text class="ax" x="149.5" y="226" text-anchor="middle">10/25</text><text class="axs" x="149.5" y="238" text-anchor="middle">n=76</text>
-        <text class="ax" x="196"   y="226" text-anchor="middle">11/25</text><text class="axs" x="196"   y="238" text-anchor="middle">n=180</text>
-        <text class="ax" x="242.5" y="226" text-anchor="middle">12/25</text><text class="axs" x="242.5" y="238" text-anchor="middle">n=232</text>
-        <text class="ax" x="289"   y="226" text-anchor="middle">01/26</text><text class="axs" x="289"   y="238" text-anchor="middle">n=151</text>
-        <text class="ax" x="335.5" y="226" text-anchor="middle">02/26</text><text class="axs" x="335.5" y="238" text-anchor="middle">n=192</text>
-        <text class="ax" x="382"   y="226" text-anchor="middle">03/26</text><text class="axs" x="382"   y="238" text-anchor="middle">n=175</text>
-        <text class="ax" x="428.5" y="226" text-anchor="middle">04/26</text><text class="axs" x="428.5" y="238" text-anchor="middle">n=119</text>
-        <text class="ax" x="475"   y="226" text-anchor="middle">05/26</text><text class="axs" x="475"   y="238" text-anchor="middle">n=205</text>
-        <text class="ax" x="521.5" y="226" text-anchor="middle">06/26</text><text class="axs" x="521.5" y="238" text-anchor="middle">n=152</text>
-        <text class="ax" x="568"   y="226" text-anchor="middle">07/26</text><text class="axs" x="568"   y="238" text-anchor="middle">n=74</text>
-        <text class="ax" x="614.5" y="226" text-anchor="middle">08/26</text><text class="axs" x="614.5" y="238" text-anchor="middle">n=84</text>
+        <text class="ax" x="103"     y="226" text-anchor="middle">09/25</text><text class="axs" x="103"     y="238" text-anchor="middle">n=90</text>
+        <text class="ax" x="149.5"   y="226" text-anchor="middle">10/25</text><text class="axs" x="149.5"   y="238" text-anchor="middle">n=76</text>
+        <text class="ax" x="196"     y="226" text-anchor="middle">11/25</text><text class="axs" x="196"     y="238" text-anchor="middle">n=180</text>
+        <text class="ax" x="242.5"   y="226" text-anchor="middle">12/25</text><text class="axs" x="242.5"   y="238" text-anchor="middle">n=232</text>
+        <text class="ax" x="289"     y="226" text-anchor="middle">01/26</text><text class="axs" x="289"     y="238" text-anchor="middle">n=151</text>
+        <text class="ax" x="335.5"   y="226" text-anchor="middle">02/26</text><text class="axs" x="335.5"   y="238" text-anchor="middle">n=192</text>
+        <text class="ax" x="382"     y="226" text-anchor="middle">03/26</text><text class="axs" x="382"     y="238" text-anchor="middle">n=175</text>
+        <text class="ax" x="428.5"   y="226" text-anchor="middle">04/26</text><text class="axs" x="428.5"   y="238" text-anchor="middle">n=119</text>
+        <text class="ax" x="475"     y="226" text-anchor="middle">05/26</text><text class="axs" x="475"     y="238" text-anchor="middle">n=205</text>
+        <text class="ax" x="521.5"   y="226" text-anchor="middle">06/26</text><text class="axs" x="521.5"   y="238" text-anchor="middle">n=152</text>
+        <text class="ax" x="568"     y="226" text-anchor="middle">07/26</text><text class="axs" x="568"     y="238" text-anchor="middle">n=74</text>
+        <text class="ax" x="614.5"   y="226" text-anchor="middle">08/26</text><text class="axs" x="614.5"   y="238" text-anchor="middle">n=84</text>
         <text class="ax" x="360" y="258" text-anchor="middle">חודש (המוקדם משמאל) · אחוז מתוך השיבוצים שסומנה בהם נוכחות</text>
       </svg>
     </div>
@@ -490,15 +504,15 @@ tr.dim td{color:var(--s500)}
       <tbody>
         <tr data-testid="rel-row-2025-09"><td>09/2025</td><td>90</td><td>10.0</td><td>1.1</td></tr>
         <tr data-testid="rel-row-2025-10"><td>10/2025</td><td>76</td><td>14.5</td><td>0.0</td></tr>
-        <tr data-testid="rel-row-2025-11"><td>11/2025</td><td>180</td><td>7.2</td><td>3.9</td></tr>
-        <tr data-testid="rel-row-2025-12"><td>12/2025</td><td>232</td><td>8.2</td><td>3.0</td></tr>
-        <tr data-testid="rel-row-2026-01"><td>01/2026</td><td>151</td><td>13.2</td><td>2.6</td></tr>
+        <tr data-testid="rel-row-2025-11"><td>11/2025</td><td>180</td><td>7.2</td><td>2.8</td></tr>
+        <tr data-testid="rel-row-2025-12"><td>12/2025</td><td>232</td><td>8.2</td><td>2.6</td></tr>
+        <tr data-testid="rel-row-2026-01"><td>01/2026</td><td>151</td><td>13.2</td><td>2.0</td></tr>
         <tr data-testid="rel-row-2026-02"><td>02/2026</td><td>192</td><td>11.5</td><td>2.1</td></tr>
-        <tr data-testid="rel-row-2026-03"><td>03/2026</td><td>175</td><td>12.6</td><td>1.1</td></tr>
+        <tr data-testid="rel-row-2026-03"><td>03/2026</td><td>175</td><td>12.6</td><td>0.6</td></tr>
         <tr data-testid="rel-row-2026-04"><td>04/2026</td><td>119</td><td>5.9</td><td>1.7</td></tr>
         <tr data-testid="rel-row-2026-05"><td>05/2026</td><td>205</td><td>9.8</td><td>2.0</td></tr>
-        <tr data-testid="rel-row-2026-06"><td>06/2026</td><td>152</td><td>8.6</td><td>2.0</td></tr>
-        <tr data-testid="rel-row-2026-07"><td>07/2026</td><td>74</td><td>8.1</td><td>2.7</td></tr>
+        <tr data-testid="rel-row-2026-06"><td>06/2026</td><td>152</td><td>8.6</td><td>5.3</td></tr>
+        <tr data-testid="rel-row-2026-07"><td>07/2026</td><td>74</td><td>8.1</td><td>10.8</td></tr>
         <tr data-testid="rel-row-2026-08"><td>08/2026</td><td>84</td><td>9.5</td><td>1.2</td></tr>
       </tbody>
     </table>
@@ -511,21 +525,22 @@ tr.dim td{color:var(--s500)}
       <table class="data">
         <thead><tr>
           <th scope="col">דיילת</th><th scope="col">סטטוס</th><th scope="col">משמרות בחלון</th>
-          <th scope="col">אי-הגעה</th><th scope="col" aria-sort="ascending">ציון אמינות ▲</th>
+          <th scope="col">הבריזה בחלון</th><th scope="col" aria-sort="ascending">ציון אמינות ▲</th>
           <th scope="col">משמרת אחרונה</th>
         </tr></thead>
         <tbody>
-          <tr class="click im-host" tabindex="0" aria-label="כרטיס הדיילת שני נחום"><td>שני נחום<i class="im" aria-hidden="true" style="top:2px; left:-2px">7</i></td><td class="tg-none">לא פעילה</td><td><span class="ltr">5</span></td><td class="over"><span class="ltr">2</span></td><td class="over"><span class="ltr">0.736</span></td><td><span class="ltr">17/12/2025</span></td></tr>
-          <tr class="click" tabindex="0" aria-label="כרטיס הדיילת רותם עמר"><td><b>רותם עמר</b></td><td><b>פעילה</b></td><td><span class="ltr">11</span></td><td class="over"><span class="ltr">3</span></td><td class="over"><span class="ltr">0.760</span></td><td><span class="ltr">09/09/2026</span></td></tr>
-          <tr class="click" tabindex="0" aria-label="כרטיס הדיילת נטע רזניק"><td>נטע רזניק</td><td class="tg-none">לא פעילה</td><td><span class="ltr">10</span></td><td class="over"><span class="ltr">3</span></td><td class="over"><span class="ltr">0.761</span></td><td><span class="ltr">01/12/2025</span></td></tr>
-          <tr class="click" tabindex="0" aria-label="כרטיס הדיילת הילה שפירא"><td>הילה שפירא</td><td class="tg-none">לא פעילה</td><td><span class="ltr">6</span></td><td class="over"><span class="ltr">2</span></td><td class="over"><span class="ltr">0.765</span></td><td><span class="ltr">28/05/2026</span></td></tr>
-          <tr class="click" tabindex="0" aria-label="כרטיס הדיילת עדי קדוש"><td>עדי קדוש</td><td class="tg-none">לא פעילה</td><td><span class="ltr">6</span></td><td class="over"><span class="ltr">1</span></td><td class="over"><span class="ltr">0.793</span></td><td><span class="ltr">21/01/2026</span></td></tr>
-          <tr class="click" tabindex="0" aria-label="כרטיס הדיילת נועה נחום"><td>נועה נחום</td><td class="tg-none">לא פעילה</td><td><span class="ltr">16</span></td><td class="over"><span class="ltr">3</span></td><td class="over"><span class="ltr">0.810</span></td><td><span class="ltr">04/03/2026</span></td></tr>
+          <tr class="click im-host" tabindex="0" aria-label="כרטיס הדיילת רותם עמר"><td><b>רותם עמר</b><i class="im" aria-hidden="true" style="top:2px; left:-2px">7</i></td><td><b>פעילה</b></td><td><span class="ltr">11</span></td><td class="over"><span class="ltr">3</span></td><td class="over"><span class="ltr">0.759</span></td><td><span class="ltr">20/08/2026</span></td></tr>
+          <tr class="click" tabindex="0" aria-label="כרטיס הדיילת מעיין קדוש"><td>מעיין קדוש</td><td><b>פעילה</b></td><td><span class="ltr">6</span></td><td class="over"><span class="ltr">2</span></td><td class="over"><span class="ltr">0.764</span></td><td><span class="ltr">26/08/2026</span></td></tr>
+          <tr class="click" tabindex="0" aria-label="כרטיס הדיילת ירדן תורג'מן"><td>ירדן תורג'מן</td><td><b>פעילה</b></td><td><span class="ltr">12</span></td><td class="over"><span class="ltr">3</span></td><td class="over"><span class="ltr">0.775</span></td><td><span class="ltr">26/08/2026</span></td></tr>
+          <tr class="click" tabindex="0" aria-label="כרטיס הדיילת מיקה סופר"><td>מיקה סופר</td><td><b>פעילה</b></td><td><span class="ltr">31</span></td><td class="over"><span class="ltr">6</span></td><td class="over"><span class="ltr">0.798</span></td><td><span class="ltr">26/08/2026</span></td></tr>
+          <tr class="click" tabindex="0" aria-label="כרטיס הדיילת אורית ביטון"><td>אורית ביטון</td><td><b>פעילה</b></td><td><span class="ltr">23</span></td><td class="over"><span class="ltr">4</span></td><td class="over"><span class="ltr">0.813</span></td><td><span class="ltr">26/08/2026</span></td></tr>
+          <tr class="click" tabindex="0" aria-label="כרטיס הדיילת גפן שמואלי"><td>גפן שמואלי</td><td><b>פעילה</b></td><td><span class="ltr">34</span></td><td class="over"><span class="ltr">3</span></td><td class="over"><span class="ltr">0.814</span></td><td><span class="ltr">18/08/2026</span></td></tr>
         </tbody>
       </table>
     </div>
     <p class="tnote im-host"><!-- 📐8 · אין דפדוף כאן בכוונה --><b>אלה כל <span class="ltr">6</span> האדומות — אין דפדוף כאן.</b>
-      <span style="color:var(--s600)">חמש מהן כבר מסומנות "לא פעילה" ואינן מוצעות בשיבוץ; <b>רותם עמר היא היחידה שכן.</b></span>
+      <span style="color:var(--s600)"><b>כל השש מסומנות "פעילה"</b> ומוצעות היום בשיבוץ — ולכן כל שורה כאן היא החלטה פתוחה,
+      ולא רשומה היסטורית. ‏<span class="ltr">4</span> דיילות נוספות בענבר, וכולן כבר "לא פעילה".</span>
       <button class="lnk" data-goto="p2">כל <span class="ltr">87</span> הדיילות עם <span class="ltr">3</span> משמרות ומעלה →</button></p>
   </div>
 
@@ -539,7 +554,7 @@ tr.dim td{color:var(--s500)}
   </div>
 
   <p class="def-footer">הגדרות: <b>הגעה בזמן</b> = שיבוצים שסומן בהם "הגיעה" בלי דרגת-איחור, מתוך כל השיבוצים שסומנה בהם נוכחות ·
-    <b>דיילת אדומה</b> = ציון-אמינות נמוך מ-<span class="ltr">87%</span> מממוצע החברה (<span class="ltr">0.9623</span>) — כלומר מתחת ל-<span class="ltr">0.837</span>; <b>ענבר</b> = מתחת ל-<span class="ltr">95%</span> ממנו (<span class="ltr">0.914</span>) ·
+    <b>דיילת אדומה</b> = ציון-אמינות נמוך מ-<span class="ltr">87%</span> מממוצע החברה (<span class="ltr">0.9588</span>) — כלומר מתחת ל-<span class="ltr">0.834</span>; <b>ענבר</b> = מתחת ל-<span class="ltr">95%</span> ממנו (<span class="ltr">0.911</span>) ·
     <b>ג'יני</b> = מדד ריכוזיות בין <span class="ltr">0</span> (כל דיילת מקבלת אותו מספר משמרות) ל-<span class="ltr">1</span> (דיילת אחת מקבלת הכול), על <span class="ltr">106</span> הדיילות שעבדו ב-<span class="ltr">12</span> החודשים ·
     <b>דיילת פעילה</b> = הסטטוס <span class="ltr">'פעילה'</span> בכרטיס שלה — <b>אינו</b> "עבדה לאחרונה" ·
     <b>אירוע עם חוסר</b> = אירוע שטרם התקיים ומספר המשובצות-סופית בו קטן ממספר הדיילות הנדרש ·
@@ -564,9 +579,8 @@ tr.dim td{color:var(--s500)}
     כדי שדיילת שהודיעה מראש לא תיענש כמי שהבריזה.</p>
 
   <!-- 📐23 · תומך-החלטה ⇒ הפועל הוא "לא לשלוח" / "להזהיר", והעובדה באה אחריו. -->
-  <p class="so-what">לא לשלוח את רותם עמר, ולהזהיר את גפן שמואלי ומעיין קדוש — אלה שלוש הדיילות
-    ה<b>פעילות</b> היחידות מתוך <span class="ltr">9</span> המסומנות; שש הנותרות כבר מסומנות "לא פעילה"
-    ואינן מוצעות בשיבוץ ממילא.</p>
+  <p class="so-what">לא לשלוח את שש הדיילות האדומות — <b>כל השש פעילות</b> ומוצעות היום בשיבוץ,
+    ובראשן רותם עמר ומעיין קדוש; ארבע הענבר אינן דורשות פעולה עכשיו — כולן כבר "לא פעילה".</p>
 
   <div class="pagefilters">
     <span class="flabel">מסנני-דף</span>
@@ -580,27 +594,27 @@ tr.dim td{color:var(--s500)}
 
   <div class="tiles">
     <div class="tile"><span class="lb">הגעה בזמן</span>
-      <span class="vl"><span class="ltr">87.6%</span></span>
-      <span class="sub"><span class="ltr">1,516</span> מתוך <span class="ltr">1,730</span> שיבוצים שסומנה בהם נוכחות</span>
+      <span class="vl"><span class="ltr">87.3%</span></span>
+      <span class="sub"><span class="ltr">1,510</span> מתוך <span class="ltr">1,730</span> שיבוצים שסומנה בהם נוכחות</span>
       <span class="cmp"><span class="arrow">▼</span> <span class="ltr">12</span> החודשים שלפני כן: <span class="ltr">88.7%</span></span>
       <span class="win"><span class="ltr">10/09/2025–10/09/2026</span> · חלון קפוא</span></div>
 
     <div class="tile"><span class="lb">איחור</span>
       <span class="vl"><span class="ltr">9.8%</span></span>
-      <span class="sub"><span class="ltr">170</span> שיבוצים · מהם <span class="ltr">8</span> באיחור רב</span>
+      <span class="sub"><span class="ltr">170</span> שיבוצים · מהם <span class="ltr">20</span> באיחור רב</span>
       <span class="cmp"><span class="arrow">—</span> <span class="ltr">12</span> החודשים שלפני כן: <span class="ltr">9.8%</span> (<span class="ltr">139</span> שיבוצים) — ללא שינוי</span>
       <span class="win"><span class="ltr">10/09/2025–10/09/2026</span> · חלון קפוא</span></div>
 
     <div class="tile"><span class="lb">אי-הגעה (הבריזה)</span>
-      <span class="vl"><span class="ltr">2.1%</span></span>
-      <span class="sub"><span class="ltr">37</span> שיבוצים · מחלה והיעדרות באישור אינן כאן</span>
+      <span class="vl"><span class="ltr">2.5%</span></span>
+      <span class="sub"><span class="ltr">43</span> שיבוצים · מחלה והיעדרות באישור אינן כאן</span>
       <span class="cmp"><span class="arrow">▲</span> <span class="ltr">12</span> החודשים שלפני כן: <span class="ltr">1.4%</span> (<span class="ltr">20</span> שיבוצים)</span>
       <span class="win"><span class="ltr">10/09/2025–10/09/2026</span> · חלון קפוא</span></div>
 
     <div class="tile"><span class="lb">דיילות מסומנות</span>
-      <span class="vl"><span class="ltr">6</span> אדומות · <span class="ltr">3</span> ענבר</span>
-      <span class="sub">מתוך <span class="ltr">87</span> · <b><span class="ltr">3</span> מהן פעילות</b> — ורק הן ניתנות לפעולה</span>
-      <span class="cmp"><span class="arrow">▲</span> <span class="ltr">12</span> החודשים שלפני כן: <span class="ltr">0</span> אדומות · <span class="ltr">6</span> ענבר מתוך <span class="ltr">84</span></span>
+      <span class="vl"><span class="ltr">6</span> אדומות · <span class="ltr">4</span> ענבר</span>
+      <span class="sub">מתוך <span class="ltr">87</span> · <b><span class="ltr">6</span> מהן פעילות — וכולן האדומות</b>; ארבע הענבר כבר "לא פעילה"</span>
+      <span class="cmp"><span class="arrow">▲</span> <span class="ltr">12</span> החודשים שלפני כן: <span class="ltr">0</span> אדומות · <span class="ltr">6</span> ענבר מתוך <span class="ltr">83</span></span>
       <span class="win"><span class="ltr">10/09/2025–10/09/2026</span> · חלון קפוא</span></div>
   </div>
 
@@ -609,14 +623,18 @@ tr.dim td{color:var(--s500)}
     <b>כך נקבע התג, במספרים.</b>
     ציון-האמינות של דיילת הוא ממוצע-הנוכחות שלה, <b>ממותן אל ממוצע החברה</b>: לדיילת עם חמש משמרות
     בלבד אין מספיק היסטוריה כדי לקבוע עליה, ולכן הנוסחה מוסיפה לה <span class="ltr">3</span> משמרות
-    וירטואליות בגובה ממוצע-החברה — ‏(סכום-הנוכחות <span class="ltr">+ 3 × 0.9623</span>) ÷ (מספר המשמרות <span class="ltr">+ 3</span>).
-    <b>ממוצע החברה בחלון: <span class="ltr">0.9623</span></b> ·
-    <b>אדום</b> מתחת ל-<span class="ltr">87%</span> ממנו, כלומר <span class="ltr">0.837</span> ·
-    <b>ענבר</b> מתחת ל-<span class="ltr">95%</span> ממנו, כלומר <span class="ltr">0.914</span>.
+    וירטואליות בגובה ממוצע-החברה — ‏(סכום-הנוכחות <span class="ltr">+ 3 × 0.9588</span>) ÷ (מספר המשמרות <span class="ltr">+ 3</span>).
+    <b>ממוצע החברה בחלון: <span class="ltr">0.9588</span></b> ·
+    <b>אדום</b> מתחת ל-<span class="ltr">87%</span> ממנו, כלומר <span class="ltr">0.834</span> ·
+    <b>ענבר</b> מתחת ל-<span class="ltr">95%</span> ממנו, כלומר <span class="ltr">0.911</span>.
     ערך הנוכחות לכל משמרת: הגיעה או איחור קל <span class="ltr">1.00</span> · איחור בינוני <span class="ltr">0.75</span> ·
     איחור רב או ביטול אחרי אישור <span class="ltr">0.50</span> · הבריזה <span class="ltr">0</span>.
     <br>⚠️ <b>שני הסִפים אינם שורות בטבלת הפרמטרים היום</b> — נמדדו כלא-קיימים ב-<span class="ltr">10/09/2026</span>,
     ונוצרים במיגרציה של מודול <span class="ltr">11</span> (הכרעה <span class="ltr">14</span>).
+    <br>🔗 <b>אותו ציון מזין גם את השיבוץ האוטומטי.</b> מרכיב-האמינות ב-Smart&nbsp;Match <b>דלוק</b>
+    (<span class="ltr">מרכיב_אמינות_פעיל = true</span>, משקולת <span class="ltr">0.35</span> — נמדד ב-<span class="ltr">10/09/2026</span>,
+    הכרעה <span class="ltr">38</span>) ⇒ דיילת שיורדת כאן יורדת גם בדירוג-ההמלצה של מסך השיבוץ.
+    <b>זה אותו מספר, בשני מסכים</b> — ולא שני חישובים שעלולים להתפצל.
   </div>
 
   <!-- 📊 — "13: עמודות לפי יום-בשבוע: איחור/אי-הגעה %". 📐7 — סדר-דליים טבעי גובר.
@@ -624,7 +642,8 @@ tr.dim td{color:var(--s500)}
   <div class="chart-card">
     <h3>איחור ואי-הגעה לפי יום בשבוע · <span class="ltr">12</span> החודשים האחרונים</h3>
     <p class="chart-note">לחיצה על יום מסננת את הטבלה שמתחת. <b>שישי נמדד על <span class="ltr">26</span> שיבוצים בלבד</b> —
-      שיעור על מדגם כזה זז בשלמים, ולכן העמודה מעומעמת ואינה נקראת כמו שאר הימים. שבת אינה בגרף: אין אירועים בשבת במסד.</p>
+      שיעור על מדגם כזה זז בשלמים, ולכן זוג-העמודות של שישי נושא <b>מסגרת מקווקוות</b> ואינו נקרא כמו שאר הימים.
+      שבת אינה בגרף: אין אירועים בשבת במסד.</p>
     <div class="chart-box" dir="ltr" role="figure" aria-label="איחור ואי-הגעה באחוזים לפי יום בשבוע, שש עמודות זוגיות">
       <svg viewBox="0 0 660 265" width="660" height="265" preserveAspectRatio="xMidYMid meet">
         <line x1="80" y1="210" x2="640" y2="210" stroke="#CAD5E2" stroke-width="1.5"/>
@@ -639,37 +658,37 @@ tr.dim td{color:var(--s500)}
         <text class="ax" x="72" y="44"  text-anchor="end">12%</text>
 
         <g id="dowHits">
-          <g class="hit" data-dow="0" tabindex="0" role="button" aria-label="יום ראשון — איחור 10.4 אחוז, אי-הגעה 2.7 אחוז, 298 שיבוצים">
+          <g class="hit" data-dow="0" tabindex="0" role="button" aria-label="יום ראשון — איחור 10.4 אחוז, אי-הגעה 3.4 אחוז, 298 שיבוצים">
             <rect x="80" y="36" width="88" height="178" fill="transparent"/>
             <rect x="84"  y="62.70"  width="34" height="147.30" fill="#009689" rx="2"/>
-            <rect x="124" y="171.75" width="34" height="38.25"  fill="url(#hatch)" stroke="#00786F" rx="2"/></g>
+            <rect x="124" y="161.83" width="34" height="48.17"  fill="url(#hatch)" stroke="#00786F" rx="2"/></g>
           <g class="hit" data-dow="1" tabindex="0" role="button" aria-label="יום שני — איחור 10.5 אחוז, אי-הגעה 1.7 אחוז, 295 שיבוצים">
             <rect x="172.5" y="36" width="88" height="178" fill="transparent"/>
             <rect x="176.5" y="61.20"  width="34" height="148.80" fill="#009689" rx="2"/>
             <rect x="216.5" y="185.92" width="34" height="24.08"  fill="url(#hatch)" stroke="#00786F" rx="2"/></g>
-          <g class="hit" data-dow="2" tabindex="0" role="button" aria-label="יום שלישי — איחור 8.7 אחוז, אי-הגעה 1.6 אחוז, 368 שיבוצים">
+          <g class="hit" data-dow="2" tabindex="0" role="button" aria-label="יום שלישי — איחור 8.7 אחוז, אי-הגעה 1.9 אחוז, 368 שיבוצים">
             <rect x="265" y="36" width="88" height="178" fill="transparent"/>
             <rect x="269" y="86.70"  width="34" height="123.30" fill="#009689" rx="2"/>
-            <rect x="309" y="187.33" width="34" height="22.67"  fill="url(#hatch)" stroke="#00786F" rx="2"/></g>
-          <g class="hit" data-dow="3" tabindex="0" role="button" aria-label="יום רביעי — איחור 9.0 אחוז, אי-הגעה 2.6 אחוז, 391 שיבוצים">
+            <rect x="309" y="183.08" width="34" height="26.92"  fill="url(#hatch)" stroke="#00786F" rx="2"/></g>
+          <g class="hit" data-dow="3" tabindex="0" role="button" aria-label="יום רביעי — איחור 9.0 אחוז, אי-הגעה 3.3 אחוז, 391 שיבוצים">
             <rect x="357.5" y="36" width="88" height="178" fill="transparent"/>
             <rect x="361.5" y="82.50"  width="34" height="127.50" fill="#009689" rx="2"/>
-            <rect x="401.5" y="173.17" width="34" height="36.83"  fill="url(#hatch)" stroke="#00786F" rx="2"/></g>
+            <rect x="401.5" y="163.25" width="34" height="46.75"  fill="url(#hatch)" stroke="#00786F" rx="2"/></g>
           <g class="hit" data-dow="4" tabindex="0" role="button" aria-label="יום חמישי — איחור 10.8 אחוז, אי-הגעה 2.3 אחוז, 352 שיבוצים">
             <rect x="450" y="36" width="88" height="178" fill="transparent"/>
-            <rect x="454" y="57.00"  width="34" height="153.00" fill="#009689" rx="2"/>
+            <rect x="454" y="57"  width="34" height="153.00" fill="#009689" rx="2"/>
             <rect x="494" y="177.42" width="34" height="32.58"  fill="url(#hatch)" stroke="#00786F" rx="2"/></g>
           <g class="hit" data-dow="5" tabindex="0" role="button" aria-label="יום שישי — איחור 11.5 אחוז, אי-הגעה 0 אחוז, 26 שיבוצים בלבד">
             <rect x="542.5" y="36" width="88" height="178" fill="transparent"/>
-            <rect x="546.5" y="47.10"  width="34" height="162.90" fill="#009689" rx="2" opacity="0.55"/>
+            <rect x="546.5" y="47.10"  width="34" height="162.90" fill="#009689" rx="2" stroke="#62748E" stroke-width="1.4" stroke-dasharray="4 3"/>
             <rect x="586.5" y="210"    width="34" height="0"      fill="url(#hatch)" stroke="#00786F" rx="2"/></g>
         </g>
         <rect id="dowSel" class="selbox" x="0" y="0" width="0" height="0" rx="3"/>
 
-        <text class="vlab" x="101"   y="58"  text-anchor="middle">10.4</text><text class="vlab sm" x="141"   y="167" text-anchor="middle">2.7</text>
+        <text class="vlab" x="101"   y="58"  text-anchor="middle">10.4</text><text class="vlab sm" x="141"   y="157" text-anchor="middle">3.4</text>
         <text class="vlab" x="193.5" y="57"  text-anchor="middle">10.5</text><text class="vlab sm" x="233.5" y="181" text-anchor="middle">1.7</text>
-        <text class="vlab" x="286"   y="82"  text-anchor="middle">8.7</text> <text class="vlab sm" x="326"   y="183" text-anchor="middle">1.6</text>
-        <text class="vlab" x="378.5" y="78"  text-anchor="middle">9.0</text> <text class="vlab sm" x="418.5" y="169" text-anchor="middle">2.6</text>
+        <text class="vlab" x="286"   y="82"  text-anchor="middle">8.7</text> <text class="vlab sm" x="326"   y="179" text-anchor="middle">1.9</text>
+        <text class="vlab" x="378.5" y="78"  text-anchor="middle">9.0</text> <text class="vlab sm" x="418.5" y="159" text-anchor="middle">3.3</text>
         <text class="vlab" x="471"   y="53"  text-anchor="middle">10.8</text><text class="vlab sm" x="511"   y="173" text-anchor="middle">2.3</text>
         <text class="vlab" x="563.5" y="43"  text-anchor="middle">11.5</text><text class="vlab sm" x="603.5" y="206" text-anchor="middle">0.0</text>
 
@@ -685,16 +704,16 @@ tr.dim td{color:var(--s500)}
     <div class="legend">
       <span><i style="background:#009689"></i>איחור</span>
       <span><i style="background:#fff; border:1.5px solid #00786F"></i>אי-הגעה — הבריזה</span>
-      <span><i style="background:#009689; opacity:.55"></i>מדגם מתחת ל-<span class="ltr">30</span> שיבוצים — נקרא בזהירות</span>
+      <span><i class="dashed"></i>מדגם מתחת ל-<span class="ltr">30</span> שיבוצים — מסומן במסגרת מקווקוות, נקרא בזהירות</span>
     </div>
     <table class="sr-only">
       <caption>איחור ואי-הגעה באחוזים לפי יום בשבוע</caption>
       <thead><tr><th scope="col">יום</th><th scope="col">שיבוצים</th><th scope="col">איחור %</th><th scope="col">אי-הגעה %</th></tr></thead>
       <tbody>
-        <tr data-testid="dow-row-0"><td>ראשון</td><td>298</td><td>10.4</td><td>2.7</td></tr>
+        <tr data-testid="dow-row-0"><td>ראשון</td><td>298</td><td>10.4</td><td>3.4</td></tr>
         <tr data-testid="dow-row-1"><td>שני</td><td>295</td><td>10.5</td><td>1.7</td></tr>
-        <tr data-testid="dow-row-2"><td>שלישי</td><td>368</td><td>8.7</td><td>1.6</td></tr>
-        <tr data-testid="dow-row-3"><td>רביעי</td><td>391</td><td>9.0</td><td>2.6</td></tr>
+        <tr data-testid="dow-row-2"><td>שלישי</td><td>368</td><td>8.7</td><td>1.9</td></tr>
+        <tr data-testid="dow-row-3"><td>רביעי</td><td>391</td><td>9.0</td><td>3.3</td></tr>
         <tr data-testid="dow-row-4"><td>חמישי</td><td>352</td><td>10.8</td><td>2.3</td></tr>
         <tr data-testid="dow-row-5"><td>שישי</td><td>26</td><td>11.5</td><td>0.0</td></tr>
       </tbody>
@@ -708,7 +727,9 @@ tr.dim td{color:var(--s500)}
       <table class="data">
         <thead><tr>
           <th scope="col">דיילת</th><th scope="col">סטטוס</th><th scope="col">משמרות</th>
-          <th scope="col">הגיעה בזמן</th><th scope="col">איחורים</th><th scope="col">הבריזה</th>
+          <th scope="col">הגיעה בזמן</th><th scope="col">איחורים</th>
+          <th scope="col">הבריזה · ב-<span class="ltr">12</span> חודשים</th>
+          <th scope="col">אי-הגעה · אי-פעם</th>
           <th scope="col">ביטלה אחרי אישור</th><th scope="col" aria-sort="ascending">ציון אמינות ▲</th>
         </tr></thead>
         <tbody id="relBody"></tbody>
@@ -716,7 +737,8 @@ tr.dim td{color:var(--s500)}
     </div>
     <div class="pager">
       <span id="relPager"></span>
-      <span class="im-host"><span>מוצגות <span class="ltr">10</span> שורות במוקאפ; במסך החי <span class="ltr">50</span> לעמוד</span>
+      <span class="im-host"><span>מוצגות <span class="ltr">11</span> שורות במוקאפ (<span class="ltr">10</span> מסומנות ועוד השורה
+        הראשונה מעליהן); במסך החי <span class="ltr">50</span> לעמוד</span>
         <i class="im" aria-hidden="true" style="top:-8px; left:-8px">7</i></span>
     </div>
     <p class="tnote" id="relEmpty" hidden><b>אין דיילות מתחת לסף בתקופה שנבחרה.</b>
@@ -734,13 +756,18 @@ tr.dim td{color:var(--s500)}
     <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב]</div>
   </div>
 
-  <p class="def-footer">הגדרות: <b>ציון אמינות</b> = ‏(סכום ערכי-הנוכחות <span class="ltr">+ 3 × 0.9623</span>) ÷ (מספר המשמרות <span class="ltr">+ 3</span>) — ממוצע ממותן אל ממוצע החברה ·
+  <p class="def-footer">הגדרות: <b>ציון אמינות</b> = ‏(סכום ערכי-הנוכחות <span class="ltr">+ 3 × 0.9588</span>) ÷ (מספר המשמרות <span class="ltr">+ 3</span>) — ממוצע ממותן אל ממוצע החברה ·
     <b>איחור</b> נספר לפי דרגה: קל אינו מוריד מהציון, בינוני מוריד רבע, רב מוריד חצי ·
-    <b>הבריזה</b> = לא הגיעה ולא הודיעה — <b>רק היא</b> מאפסת את הציון של אותה משמרת; מחלה והיעדרות באישור מראש אינן נספרות כלל ·
+    <b>שתי עמודות אי-ההגעה, ואף אחת מהן אינה "הנכונה"</b> (הכרעה <span class="ltr">37</span>) —
+    <b>"הבריזה · ב-<span class="ltr">12</span> חודשים"</b> היא ההגדרה שהציון עצמו עובד לפיה: <b>רק</b> אי-הגעה בלי הודעה, ורק בחלון הקפוא
+    (לפי דירוג: <span class="ltr">6.5% / 2.8% / 0.5%</span> לדירוגים <span class="ltr">3 / 4 / 5</span>) ·
+    <b>"אי-הגעה · אי-פעם"</b> היא <b>כל</b> סיבות אי-ההגעה — כולל מחלה והיעדרות באישור — ועל כל ההיסטוריה
+    (<span class="ltr">14.6% / 4.9% / 1.2%</span>). ‏<b>שתיהן נכונות בהגדרתן</b>, והדוח אינו בוחר ביניהן ·
+    <b>הבריזה</b> = לא הגיעה ולא הודיעה — <b>רק היא</b> מאפסת את הציון של אותה משמרת; מחלה והיעדרות באישור מראש אינן נספרות בציון כלל ·
     <b>ביטלה אחרי אישור</b> = הודיעה שלא תגיע אחרי שכבר אושרה סופית — נספר כחצי משמרת ·
     <b>החלון</b> = <span class="ltr">12</span> חודשים אחורה מהיום, <b>קפוא</b> ואינו נגרר אחרי מסנן-התקופה שלמעלה: בחודש גרוע במיוחד כולן היו נראות מסתדרות ·
     <b>אחוזים</b> בספרה עשרונית אחת; הציון בשלוש.</p>
-  <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">10/09/2026</span> — <span class="ltr">87</span> הציונים, שתי תקופות-ההשוואה, פילוח-הימים והפירוט פר-דיילת ·
+  <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">10/09/2026</span> (נמדד מחדש אחרי סבב-הזריעה השני) — <span class="ltr">87</span> הציונים, שתי תקופות-ההשוואה, פילוח-הימים, שתי עמודות אי-ההגעה והפירוט פר-דיילת ·
     🎭 דמו: אין · 📐 נגזר: הציון עצמו (הנוסחה שוחזרה מקובץ הקוד <span class="ltr">smartMatch.js</span>) · התגים · שורת-"אז מה".</p>
 </section>
 
@@ -756,11 +783,11 @@ tr.dim td{color:var(--s500)}
     <b>הוצאו:</b> <span class="ltr">136</span> דיילות שסטטוסן "לא פעילה", כי אין החלטת-תעריף לקבל עליהן ·
     <b>התעריף והדירוג הם ערכי-היום בכרטיס הדיילת</b>, לא ממוצע היסטורי.</p>
 
-  <!-- 📐23 · תומך-החלטה. הפועל כאן אינו "להעלות תעריף" — נמדד שאין אף חריגה בריבוע
-       "יקרה ובעלת דירוג נמוך" — אלא הפעולה שכן פתוחה: להשלים את הדירוגים החסרים. -->
-  <p class="so-what">לדרג את <span class="ltr">17</span> הדיילות הפעילות שאין להן דירוג — ובראשן אביב יוסף,
-    העמוסה ביותר במאגר עם <span class="ltr">48</span> משמרות; בלעדיהן שליש מהמאגר הפעיל אינו על הגרף,
-    ואין על מה לבסס החלטת-תעריף.</p>
+  <!-- 📐23 · תומך-החלטה ⇒ הפועל ראשון. הריבוע שמחייב החלטה אינו ריק עוד: שתי דיילות
+       בדירוג 3 מתומחרות מעל החציון, ושתיהן גם אדומות בדוח האמינות. -->
+  <p class="so-what">להוריד את התעריף של מיקה סופר וירדן תורג'מן, או להפסיק לשלוח אותן —
+    <span class="ltr">44.60</span> ‏₪ כל אחת, מעל חציון-המאגר, בדירוג <span class="ltr">3</span>,
+    <b>ושתיהן גם אדומות בדוח האמינות</b>; ובמקביל לדרג את <span class="ltr">17</span> הפעילות שאין להן דירוג.</p>
 
   <div class="pagefilters">
     <span class="flabel">מסנני-דף</span>
@@ -784,14 +811,15 @@ tr.dim td{color:var(--s500)}
 
     <div class="tile"><span class="lb">תעריף שעתי חציוני, פעילות</span>
       <span class="vl"><span class="ltr">43.27</span> ₪</span>
-      <span class="sub">לפי דירוג: <span class="ltr">40.4</span> ‏₪ בדירוג <span class="ltr">3</span> · <span class="ltr">44.0</span> ‏₪ בדירוג <span class="ltr">4</span> · <span class="ltr">47.7</span> ‏₪ בדירוג <span class="ltr">5</span></span>
+      <span class="sub">לפי דירוג: <span class="ltr">41.7</span> ‏₪ בדירוג <span class="ltr">3</span> · <span class="ltr">44.0</span> ‏₪ בדירוג <span class="ltr">4</span> · <span class="ltr">46.9</span> ‏₪ בדירוג <span class="ltr">5</span></span>
       <span class="cmp">מול חציון כלל-המאגר (<span class="ltr">186</span> רשומות): <span class="ltr">44.00</span> ₪</span>
       <span class="win">נכון ל-<span class="ltr">10/09/2026</span> · אינו מושפע ממסנן התקופה</span></div>
 
     <div class="tile"><span class="lb">תעריף מעל החציון <b>וגם</b> דירוג <span class="ltr">3</span> ומטה</span>
-      <span class="vl"><span class="ltr">0</span></span>
-      <span class="sub">זו התשובה, לא חסר-נתונים: כל שש הדיילות בדירוג <span class="ltr">3</span> מתומחרות מתחת לחציון</span>
-      <span class="cmp none">הריבוע הזה ריק — ואין לו ערך-עבר שמור להשוואה</span>
+      <span class="vl"><span class="ltr">2</span></span>
+      <span class="sub">מיקה סופר · ירדן תורג'מן — <span class="ltr">44.60</span> ‏₪ כל אחת מול חציון <span class="ltr">43.27</span> ‏₪;
+        <b>שתיהן גם אדומות בדוח האמינות</b></span>
+      <span class="cmp none">אין ערך-עבר שמור — לתעריף ולדירוג אין היסטוריה בכרטיס הדיילת</span>
       <span class="win">נכון ל-<span class="ltr">10/09/2026</span></span></div>
 
     <div class="tile"><span class="lb">מסומנות "לא לשלוח" אצל לקוח כלשהו</span>
@@ -808,8 +836,9 @@ tr.dim td{color:var(--s500)}
        הסטייה מוצהרת בכרטיס-המסך ⑧ H5. -->
   <div class="chart-card">
     <h3>תעריף שעתי מול דירוג · <span class="ltr">50</span> הדיילות הפעילות</h3>
-    <p class="chart-note">שני הקווים המקווקווים הם החציונים; הריבוע שהם יוצרים <b>מימין-למטה</b> —
-      תעריף מעל החציון ודירוג נמוך — הוא הריבוע שמחייב החלטה, <b>והוא ריק</b>.
+    <p class="chart-note">שני הקווים המקווקווים הם החציונים. <b>שני הריבועים שהם יוצרים ואומרים משהו:</b>
+      ‏<b>מימין-למטה</b> — תעריף מעל החציון ודירוג נמוך — <b>שתי דיילות, ושתיהן אדומות בדוח האמינות</b>;
+      ‏<b>משמאל-למעלה</b> — תעריף מתחת לחציון ודירוג <span class="ltr">5</span> — <b>שתי דיילות שמקבלות פחות ממה שהן שוות</b>.
       🔴 <b><span class="ltr">17</span> הדיילות שאין להן דירוג אינן יכולות לשבת על ציר <span class="ltr">1–5</span></b>,
       ולכן הן מצוירות ברצועה נפרדת מתחתיו — לא כ-"<span class="ltr">0</span>" ולא כ-"<span class="ltr">3</span>".
       ‏<b>הנקודות הוזזו מעט למעלה ולמטה</b> כדי שדיילות באותו דירוג לא יסתירו זו את זו; המיקום האופקי — התעריף — מדויק.</p>
@@ -835,22 +864,22 @@ tr.dim td{color:var(--s500)}
         <text class="ax" x="82" y="184" text-anchor="end">2</text>
         <text class="ax" x="82" y="224" text-anchor="end">1</text>
 
-        <!-- דירוג 5 — 10 נקודות רגילות -->
+        <!-- דירוג 5 — 10 נקודות רגילות. שתיים משמאל לחציון (41.80 ₪) הן הריבוע "זולה ומדורגת גבוה". -->
+        <circle cx="261" cy="53" r="5" fill="#009689"/>
+        <circle cx="261" cy="67" r="5" fill="#009689"/>
         <circle cx="478.8" cy="67" r="5" fill="#009689"/>
-        <circle cx="486.0" cy="60" r="5" fill="#009689"/>
-        <circle cx="493.7" cy="53" r="5" fill="#009689"/>
+        <circle cx="486" cy="60" r="5" fill="#009689"/>
         <circle cx="502.2" cy="67" r="5" fill="#009689"/>
-        <circle cx="519.3" cy="60" r="5" fill="#009689"/>
-        <circle cx="522.0" cy="53" r="5" fill="#009689"/>
-        <circle cx="539.1" cy="67" r="5" fill="#009689"/>
-        <circle cx="543.2" cy="53" r="5" fill="#009689"/>
-        <circle cx="576.5" cy="60" r="5" fill="#009689"/>
-        <circle cx="593.6" cy="67" r="5" fill="#009689"/>
+        <circle cx="522" cy="60" r="5" fill="#009689"/>
+        <circle cx="539.1" cy="53" r="5" fill="#009689"/>
+        <circle cx="543.15" cy="67" r="5" fill="#009689"/>
+        <circle cx="576.45" cy="60" r="5" fill="#009689"/>
+        <circle cx="593.55" cy="67" r="5" fill="#009689"/>
         <!-- דירוג 5 — 4 מסומנות "לא לשלוח" -->
-        <rect x="472.1" y="55.5" width="9" height="9" fill="#fff" stroke="#C10007" stroke-width="1.6"/>
+        <rect x="472.05" y="55.5" width="9" height="9" fill="#fff" stroke="#C10007" stroke-width="1.6"/>
         <rect x="500.4" y="48.5" width="9" height="9" fill="#fff" stroke="#C10007" stroke-width="1.6"/>
-        <rect x="530.6" y="62.5" width="9" height="9" fill="#fff" stroke="#C10007" stroke-width="1.6"/>
-        <rect x="598.1" y="48.5" width="9" height="9" fill="#fff" stroke="#C10007" stroke-width="1.6"/>
+        <rect x="530.55" y="62.5" width="9" height="9" fill="#fff" stroke="#C10007" stroke-width="1.6"/>
+        <rect x="598.05" y="48.5" width="9" height="9" fill="#fff" stroke="#C10007" stroke-width="1.6"/>
 
         <!-- דירוג 4 — 10 נקודות רגילות -->
         <circle cx="295.7" cy="93"  r="5" fill="#009689"/>
@@ -868,13 +897,13 @@ tr.dim td{color:var(--s500)}
         <rect x="353.7" y="88.5"  width="9" height="9" fill="#fff" stroke="#C10007" stroke-width="1.6"/>
         <rect x="419.0" y="95.5"  width="9" height="9" fill="#fff" stroke="#C10007" stroke-width="1.6"/>
 
-        <!-- דירוג 3 — 5 נקודות רגילות + 1 מסומנת -->
-        <circle cx="174.2" cy="140" r="5" fill="#009689"/>
-        <circle cx="180.5" cy="133" r="5" fill="#009689"/>
-        <circle cx="191.3" cy="140" r="5" fill="#009689"/>
-        <circle cx="221.0" cy="134" r="5" fill="#009689"/>
-        <circle cx="246.2" cy="146" r="5" fill="#009689"/>
-        <rect x="179.6" y="142.5" width="9" height="9" fill="#fff" stroke="#C10007" stroke-width="1.6"/>
+        <!-- דירוג 3 — 5 נקודות רגילות + 1 מסומנת. שתיים מהן על 44.60 ₪, מימין לחציון. -->
+        <circle cx="174.15" cy="140" r="5" fill="#009689"/>
+        <circle cx="180.45" cy="133" r="5" fill="#009689"/>
+        <circle cx="191.25" cy="147" r="5" fill="#009689"/>
+        <circle cx="220.95" cy="134" r="5" fill="#009689"/>
+        <circle cx="387" cy="147" r="5" fill="#009689"/>
+        <rect x="382.5" y="128.5" width="9" height="9" fill="#fff" stroke="#C10007" stroke-width="1.6"/>
 
         <!-- רצועת "ללא דירוג" — מופרדת מהציר, ואינה ערך עליו -->
         <line x1="90" y1="258" x2="640" y2="258" stroke="#E2E8F0" stroke-dasharray="3 3"/>
@@ -898,13 +927,20 @@ tr.dim td{color:var(--s500)}
         <rect x="324.9" y="294.5" width="9" height="9" fill="#fff" stroke="#C10007" stroke-width="1.6"/>
         <rect x="327.2" y="280.5" width="9" height="9" fill="#fff" stroke="#C10007" stroke-width="1.6"/>
 
-        <!-- שלוש הנקודות שהשורות "אז מה" והאזהרה מדברות עליהן, מסומנות בשם -->
+        <!-- ארבע הנקודות ששורת-"אז מה" מדברת עליהן, מסומנות בשם.
+             📐19 — הטבעת היא **צורה** ולא גוון נוסף; הגוון חוזר על משמעות שכבר קיימת בדף
+             (אדום = חריגה שדורשת פעולה · טורקיז = דיילת תקינה). -->
+        <rect x="377" y="124" width="20" height="32" rx="6" fill="none" stroke="#C10007" stroke-width="1.6" stroke-dasharray="4 3"/>
+        <text class="axs" x="387" y="172" text-anchor="middle" fill="#C10007">מיקה סופר · ירדן תורג'מן — 44.60 ₪ בדירוג 3</text>
+        <text class="axs" x="387" y="182" text-anchor="middle" fill="#C10007">מעל החציון, ושתיהן אדומות בדוח האמינות</text>
+
+        <rect x="251" y="44" width="20" height="32" rx="6" fill="none" stroke="#00786F" stroke-width="1.6" stroke-dasharray="4 3"/>
+        <text class="axs" x="261" y="38" text-anchor="middle" fill="#00786F">הילה מזרחי · עדי שפירא — 41.80 ₪ בדירוג 5, מתחת לחציון</text>
+
         <circle cx="257.9" cy="278" r="8" fill="none" stroke="#00786F" stroke-width="1.4"/>
         <text class="axs" x="257.9" y="267" text-anchor="middle" fill="#00786F">אביב יוסף · 48 משמרות</text>
         <rect x="325.7" y="279" width="12" height="12" fill="none" stroke="#C10007" stroke-width="2.2"/>
         <text class="axs" x="352" y="322" text-anchor="middle" fill="#C10007">רותם עמר — אדומה בדוח האמינות</text>
-        <circle cx="602.6" cy="53" r="8" fill="none" stroke="#00786F" stroke-width="1.4"/>
-        <text class="axs" x="602.6" y="40" text-anchor="middle" fill="#00786F">שקד ניסים · 49.39 ₪</text>
 
         <text class="ax" x="90"  y="342" text-anchor="middle">38</text>
         <text class="ax" x="180" y="342" text-anchor="middle">40</text>
@@ -920,10 +956,12 @@ tr.dim td{color:var(--s500)}
     <div class="legend">
       <span><i style="background:#009689; border-radius:999px; width:11px; height:11px"></i>דיילת פעילה</span>
       <span><i style="background:#fff; border:1.6px solid #C10007; border-radius:2px; width:11px; height:11px"></i>מסומנת "לא לשלוח" אצל לקוח אחד לפחות — <b>צורה שונה, לא רק צבע</b></span>
+      <span><i style="background:#fff; border:1.6px dashed #62748E; border-radius:4px"></i>טבעת = נקודה ששורת-"אז מה" מדברת עליה בשמה</span>
     </div>
     <div class="barkey">
-      <span><b>מה קוראים כאן:</b> ככל שהדירוג עולה, התעריף עולה — <span class="ltr">40.4</span> ‏₪ בדירוג <span class="ltr">3</span>,
-        ‏<span class="ltr">44.0</span> ‏₪ בדירוג <span class="ltr">4</span>, ו-<span class="ltr">47.7</span> ‏₪ בדירוג <span class="ltr">5</span>. <b>אין חריגה מהקו הזה.</b></span>
+      <span><b>מה קוראים כאן:</b> בממוצע התעריף עולה עם הדירוג — <span class="ltr">41.7</span> ‏₪ בדירוג <span class="ltr">3</span>,
+        ‏<span class="ltr">44.0</span> ‏₪ בדירוג <span class="ltr">4</span>, ו-<span class="ltr">46.9</span> ‏₪ בדירוג <span class="ltr">5</span> —
+        <b>אבל הממוצע מסתיר ארבע חריגות</b>, ואלה בדיוק ההחלטות שהדף מוליד.</span>
       <span><b>מה עדיין פתוח:</b> הרצועה התחתונה. שבע מהדיילות שבה עבדו <span class="ltr">30</span> משמרות ומעלה השנה,
         ובלי דירוג אי-אפשר לומר עליהן אם התעריף שלהן נכון.</span>
     </div>
@@ -931,9 +969,9 @@ tr.dim td{color:var(--s500)}
       <caption>תעריף שעתי ממוצע לפי דירוג, דיילות פעילות</caption>
       <thead><tr><th scope="col">דירוג</th><th scope="col">דיילות פעילות</th><th scope="col">תעריף שעתי ממוצע ₪</th></tr></thead>
       <tbody>
-        <tr data-testid="qc-row-3"><td>3</td><td>6</td><td>40.43</td></tr>
+        <tr data-testid="qc-row-3"><td>3</td><td>6</td><td>41.71</td></tr>
         <tr data-testid="qc-row-4"><td>4</td><td>13</td><td>43.97</td></tr>
-        <tr data-testid="qc-row-5"><td>5</td><td>14</td><td>47.70</td></tr>
+        <tr data-testid="qc-row-5"><td>5</td><td>14</td><td>46.92</td></tr>
         <tr data-testid="qc-row-none"><td>ללא דירוג</td><td>17</td><td>42.26</td></tr>
       </tbody>
     </table>
@@ -976,8 +1014,9 @@ tr.dim td{color:var(--s500)}
     <b>חציון</b> ולא ממוצע — דיילת אחת יקרה במיוחד אינה מזיזה אותו ·
     <b>"מצוינת" / "לא לשלוח"</b> = סימון שלקוח נתן לדיילת מסוימת; לאותה דיילת יכולים להיות שני הסימונים אצל לקוחות שונים ·
     <b>תעריף</b> מוצג באגורות כי הוא מחיר-יחידה, ולא בשקלים שלמים כמו סכומים מצטברים.</p>
-  <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">10/09/2026</span> — <span class="ltr">50</span> נקודות-הפיזור, שני החציונים,
-    ספירות-הסימונים ומספרי-המשמרות · 🎭 דמו: אין · 📐 נגזר: ההזזה האנכית הקטנה של הנקודות (הצגה בלבד) · שורת-"אז מה".</p>
+  <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">10/09/2026</span> (נמדד מחדש אחרי תיקון-הפיזור של סבב-הזריעה) —
+    <span class="ltr">50</span> נקודות-הפיזור, שני החציונים, ארבע נקודות-הריבועים, ספירות-הסימונים ומספרי-המשמרות ·
+    🎭 דמו: אין · 📐 נגזר: ההזזה האנכית הקטנה של הנקודות (הצגה בלבד) · שורת-"אז מה".</p>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
@@ -1017,9 +1056,11 @@ tr.dim td{color:var(--s500)}
 
     <div class="tile"><span class="lb">אימוץ המלצת Smart&nbsp;Match (דרג <span class="ltr">1</span>)</span>
       <span class="vl">—</span>
-      <span class="sub"><b>טרם נמדד:</b> העמודה שרושמת איזה דרג הומלץ בזימון עדיין לא קיימת במסד</span>
+      <span class="sub"><b>נמדד מ-— · אין עדיין נתון.</b> העמודה <span class="ltr">assignments.recommended_rank</span>,
+        שהייתה רושמת איזה דרג המערכת המליצה בזימון, <b>אינה קיימת במסד</b> — נבדק ב-<span class="ltr">10/09/2026</span>
+        והשאילתה נפלה ב-<span class="ltr">column "recommended_rank" does not exist</span></span>
       <span class="cmp none">אין ולא היה — לא <span class="ltr">0%</span>, שהיה נקרא "אף פעם לא מאמצים את ההמלצה"</span>
-      <span class="win">יימדד מהיום שבו העמודה תיווצר, במיגרציה של מודול <span class="ltr">11</span></span></div>
+      <span class="win">"נמדד מ-" יתמלא ביום שבו העמודה תיווצר, במיגרציה של מודול <span class="ltr">11</span></span></div>
   </div>
 
   <!-- 📊 — "14א: עקומת-לורנץ מול קו-השוויון + אריח-ג'יני". 📐6 — קו-שוויון מתויג, domain 0–100 בשניהם. -->
@@ -1232,20 +1273,24 @@ tr.dim td{color:var(--s500)}
   function sh(k) { return ltr(k) + ' ' + pl(k, 'משמרת', 'משמרות'); }
 
   // ═══════════ דוח 13 — הדיילות והפירוט שלהן ═══════════
-  // כל שורה נמדדה חי ב-10/09/2026 בנוסחה שב-`src/lib/smartMatch.js`, ששוחזרה ב-SQL מילה-במילה.
+  // כל שורה נמדדה חי ב-10/09/2026 בנוסחה שב-`src/lib/smartMatch.js`, ששוחזרה ב-SQL מילה-במילה,
+  // **אחרי סבב-הזריעה השני** (הכרעות 32 · 35). ‏C=0.958815 · אדום<0.8342 · ענבר<0.9109.
   // ar=הגיעה בזמן · ll/lm/lh=איחור קל/בינוני/רב · gh=הבריזה · wd=ביטלה אחרי אישור.
+  // ev/ens = ההגדרה השנייה של הכרעה 37: כל השיבוצים שסומנה בהם נוכחות **אי-פעם**, וכמה מהם
+  //          אי-הגעה **מכל סיבה** (כולל מחלה והיעדרות-באישור). שתי ההגדרות זו לצד זו, בלי לבחור.
   // inc = פילוח אותם אירועים לפי יום-בשבוע (0=ראשון), לצורך הסינון-הצולב מהגרף.
   var REL = [
-    { nm:'שני נחום',   act:false, n:5,  ar:2,  ll:1, lm:0, lh:0, gh:2, wd:0, sc:0.736, tag:'red',   inc:{2:[0,2,0], 3:[1,0,0]} },
-    { nm:'רותם עמר',   act:true,  n:11, ar:6,  ll:1, lm:1, lh:0, gh:3, wd:0, sc:0.760, tag:'red',   inc:{2:[0,1,0], 4:[2,2,0]} },
-    { nm:'נטע רזניק',  act:false, n:10, ar:5,  ll:2, lm:0, lh:0, gh:3, wd:0, sc:0.761, tag:'red',   inc:{0:[0,2,0], 1:[1,0,0], 2:[1,0,0], 4:[0,1,0]} },
-    { nm:'הילה שפירא', act:false, n:6,  ar:4,  ll:0, lm:0, lh:0, gh:2, wd:0, sc:0.765, tag:'red',   inc:{3:[0,1,0], 4:[0,1,0]} },
-    { nm:'עדי קדוש',   act:false, n:6,  ar:3,  ll:0, lm:1, lh:1, gh:1, wd:0, sc:0.793, tag:'red',   inc:{3:[1,1,0], 4:[1,0,0]} },
-    { nm:'נועה נחום',  act:false, n:16, ar:10, ll:1, lm:2, lh:0, gh:3, wd:0, sc:0.810, tag:'red',   inc:{1:[1,1,0], 3:[1,1,0], 4:[1,1,0]} },
-    { nm:'גפן שמואלי', act:true,  n:34, ar:24, ll:1, lm:1, lh:0, gh:1, wd:7, sc:0.869, tag:'amber', inc:{0:[0,0,1], 1:[1,1,3], 2:[1,0,0], 3:[0,0,1], 4:[0,0,2]} },
-    { nm:'מעיין קדוש', act:true,  n:6,  ar:5,  ll:0, lm:0, lh:0, gh:1, wd:0, sc:0.876, tag:'amber', inc:{4:[0,1,0]} },
-    { nm:'נטע אטיאס',  act:false, n:26, ar:21, ll:0, lm:3, lh:0, gh:2, wd:0, sc:0.901, tag:'amber', inc:{2:[2,0,0], 3:[1,2,0]} },
-    { nm:'ניצן דהן',   act:false, n:10, ar:7,  ll:2, lm:0, lh:0, gh:1, wd:0, sc:0.914, tag:'none',  inc:{2:[1,1,0], 3:[1,0,0]} }
+    { nm:'רותם עמר',    act:true,  n:11, ar:6,  ll:1, lm:1, lh:0, gh:3, wd:0, ev:11, ens:3,  sc:0.759, tag:'red',   inc:{2:[0,1,0], 4:[2,2,0]} },
+    { nm:'מעיין קדוש',  act:true,  n:6,  ar:4,  ll:0, lm:0, lh:0, gh:2, wd:0, ev:7,  ens:3,  sc:0.764, tag:'red',   inc:{0:[0,1,0], 4:[0,1,0]} },
+    { nm:"ירדן תורג'מן", act:true, n:12, ar:6, ll:2, lm:1, lh:0, gh:3, wd:0, ev:13, ens:4,  sc:0.775, tag:'red',   inc:{0:[0,1,0], 1:[0,1,0], 2:[1,0,0], 3:[2,1,0]} },
+    { nm:'מיקה סופר',   act:true,  n:31, ar:20, ll:3, lm:1, lh:1, gh:6, wd:0, ev:35, ens:10, sc:0.798, tag:'red',   inc:{0:[2,2,0], 1:[0,1,0], 2:[1,1,0], 3:[1,1,0], 4:[1,1,0]} },
+    { nm:'אורית ביטון', act:true,  n:23, ar:15, ll:1, lm:3, lh:0, gh:4, wd:0, ev:23, ens:4,  sc:0.813, tag:'red',   inc:{2:[2,1,0], 3:[1,3,0], 4:[1,0,0]} },
+    { nm:'גפן שמואלי',  act:true,  n:34, ar:22, ll:1, lm:1, lh:0, gh:3, wd:7, ev:29, ens:5,  sc:0.814, tag:'red',   inc:{0:[0,0,1], 1:[1,1,3], 2:[1,1,0], 3:[0,0,1], 4:[0,1,2]} },
+    { nm:'שני נחום',    act:false, n:5,  ar:3,  ll:1, lm:0, lh:0, gh:1, wd:0, ev:30, ens:4,  sc:0.860, tag:'amber', inc:{2:[0,1,0], 3:[1,0,0]} },
+    { nm:'נועה נחום',   act:false, n:16, ar:11, ll:1, lm:2, lh:0, gh:2, wd:0, ev:24, ens:6,  sc:0.862, tag:'amber', inc:{1:[1,0,0], 3:[1,1,0], 4:[1,1,0]} },
+    { nm:'נטע אטיאס',   act:false, n:26, ar:21, ll:0, lm:3, lh:0, gh:2, wd:0, ev:35, ens:2,  sc:0.901, tag:'amber', inc:{2:[2,0,0], 3:[1,2,0]} },
+    { nm:'עדי קדוש',    act:false, n:6,  ar:4,  ll:0, lm:1, lh:1, gh:0, wd:0, ev:7,  ens:1,  sc:0.903, tag:'amber', inc:{3:[1,0,0], 4:[1,0,0]} },
+    { nm:'ניצן דהן',    act:false, n:10, ar:7,  ll:2, lm:0, lh:0, gh:1, wd:0, ev:11, ens:2,  sc:0.914, tag:'none',  inc:{2:[1,1,0], 3:[1,0,0]} }
   ];
   var DOW_NAMES = ['ראשון','שני','שלישי','רביעי','חמישי','שישי'];
   var DOW_BOX_X = [80, 172.5, 265, 357.5, 450, 542.5];
@@ -1283,16 +1328,18 @@ tr.dim td{color:var(--s500)}
         '<td>' + (dayMode ? '<span class="tg-none">—</span>' : ltr(r.ar)) + '</td>' +
         '<td>' + late + '</td>' +
         '<td' + (ghost ? ' class="over"' : '') + '>' + (ghost ? ltr(ghost) : '—') + '</td>' +
+        // 📐22 · "אי-פעם" אינו תלוי-חלון ואינו תלוי-יום ⇒ נשאר כפי שהוא גם במצב-יום.
+        '<td>' + ltr(r.ens) + ' מתוך ' + ltr(r.ev) + '</td>' +
         '<td>' + (wdrw ? ltr(wdrw) : '—') + '</td>' +
         '<td>' + (dayMode ? tagCell(r.tag) : ltr(r.sc.toFixed(3)) + ' ' + tagCell(r.tag)) + '</td></tr>';
     }).join('');
 
     document.getElementById('relEmpty').hidden = rows.length > 0;
     // 📐8 — הפאג'ר סופר את מה שהטבלה מציגה, אחרי המסננים ואחרי הבחירה בגרף.
-    // ארבעת המספרים נמדדו חי (10/09/2026) על אותה נוסחה: 87 בדוח · 9 מסומנות ·
-    // 27 פעילות בדוח · 3 פעילות-ומסומנות. אין כאן מספר משוער.
+    // ארבעת המספרים נמדדו חי (10/09/2026, אחרי סבב-הזריעה השני) על אותה נוסחה:
+    // 87 בדוח · 10 מסומנות · 27 פעילות בדוח · 6 פעילות-ומסומנות. אין כאן מספר משוער.
     var total = state.onlyFlag
-      ? (state.onlyActive ? 3 : 9)
+      ? (state.onlyActive ? 6 : 10)
       : (state.onlyActive ? 27 : 87);
     var label = dayMode
       ? 'מוצגות ' + host(rows.length) + ' שהיה להן אירוע ביום ' + DOW_NAMES[state.dow]
@@ -1300,7 +1347,7 @@ tr.dim td{color:var(--s500)}
     document.getElementById('relPager').innerHTML = label;
     document.getElementById('relTitle').innerHTML = dayMode
       ? 'דיילות שהיה להן איחור, אי-הגעה או ביטול ביום ' + DOW_NAMES[state.dow] +
-        ' · <span class="tg-none">הספירות בטבלה הן של אותו יום בלבד</span>'
+        ' · <span class="tg-none">ספירות-החלון הוחלפו בספירות אותו יום; עמודת "אי-פעם" אינה תלוית-יום ונשארת כפי שהיא</span>'
       : 'דיילות לפי ציון-אמינות · מהנמוך לגבוה';
     document.getElementById('clearDow').hidden = !dayMode;
     var sel = document.getElementById('dowSel');
@@ -1327,14 +1374,14 @@ tr.dim td{color:var(--s500)}
     { nm:'רותם עמר',   rate:'43.37', rt:null, s:13, exc:1,  blk:1, cu:14 }
   ];
   var QC_ALL = [
-    { nm:'אביב יוסף',   rate:'41.73', rt:null, s:48, exc:6, blk:0, cu:32 },
-    { nm:'סיון סבן',    rate:'43.96', rt:4,    s:46, exc:5, blk:1, cu:39 },
-    { nm:'נופר הרוש',   rate:'42.27', rt:null, s:46, exc:8, blk:1, cu:36 },
-    { nm:'ענבר שפירא',  rate:'44.77', rt:4,    s:46, exc:5, blk:0, cu:30 },
+    { nm:'אביב יוסף',   rate:'41.73', rt:null, s:48, exc:6,  blk:0, cu:32 },
+    { nm:'נופר הרוש',   rate:'42.27', rt:null, s:46, exc:8,  blk:1, cu:36 },
+    { nm:'סיון סבן',    rate:'43.96', rt:4,    s:46, exc:5,  blk:1, cu:39 },
+    { nm:'ענבר שפירא',  rate:'44.77', rt:4,    s:46, exc:5,  blk:0, cu:30 },
     { nm:'סיון דהן',    rate:'42.08', rt:null, s:45, exc:10, blk:2, cu:35 },
-    { nm:'ליאן אוחנה',  rate:'44.59', rt:4,    s:44, exc:4, blk:0, cu:27 },
-    { nm:'טליה עמר',    rate:'47.22', rt:5,    s:44, exc:5, blk:2, cu:27 },
-    { nm:'טליה אברהם',  rate:'45.41', rt:4,    s:41, exc:6, blk:1, cu:35 }
+    { nm:'טליה עמר',    rate:'47.22', rt:5,    s:44, exc:5,  blk:2, cu:27 },
+    { nm:'ליאן אוחנה',  rate:'44.59', rt:4,    s:44, exc:4,  blk:0, cu:27 },
+    { nm:'טליה אברהם',  rate:'45.41', rt:4,    s:41, exc:6,  blk:1, cu:35 }
   ];
   function renderQc() {
     var rows = state.onlyNoRating ? QC_NORATING : QC_ALL;
@@ -1376,7 +1423,7 @@ tr.dim td{color:var(--s500)}
     { nm:'הילה שפירא',  act:false, rt:3, inv:14, ans:7,  rr:'50.0',  med:'26.6' },
     { nm:'סיון עמר',    act:true,  rt:3, inv:4,  ans:4,  rr:'100.0', med:'26.6' },
     { nm:'מיקה סופר',   act:true,  rt:3, inv:47, ans:47, rr:'100.0', med:'26.5' },
-    { nm:'ירדן תורגמן', act:true,  rt:3, inv:18, ans:18, rr:'100.0', med:'26.3' }
+    { nm:"ירדן תורג'מן", act:true, rt:3, inv:18, ans:18, rr:'100.0', med:'26.3' }
   ];
   function renderFairness() {
     document.getElementById('topBody').innerHTML = TOP.map(function (r) {
