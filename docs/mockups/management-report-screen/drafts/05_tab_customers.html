@@ -40,6 +40,22 @@
      teal500→teal700 · `.btn-primary` teal600→teal700 · קו-הייחוס המקווקו s400→s500 ·
      צירי-הבסיס s300→s500 · טקסט s400→s500 · תוויות-ערך לבנות בתוך עמודה הוצאו מהעמודה ל-s600.
      🚫 **אף צבע לא הומצא — כולם טוקנים קיימים מ-design-contract §1.4.**
+
+  ═══ 🅰️ שכבת-ההטמעה · 10/09/2026 — נוספה (onboarding-layer-contract.md · design-contract §⑧) ═══
+  **שני מצבים בלבד — 0 נקי · 2 מודרך** (הכרעת-ישי: אין רמה אמצעית). ⇒ **דף אחד ומתג בינארי**
+  בכרום של המוקאפ (`#toggleGuided`), שמחליף את המצב חי על אותו דף — בדיוק כפי ש-`<Hint>`
+  מתנהג בייצור. 🚫 **לא שני עותקים של כל דף.**
+  ‏**12 מפתחות, 3 לכל משטח**, כולם ב-§⑩ של הכרטיס עם עמודת "מה נשאר ברמה 0".
+  ‏`.hint-line` הוא **העתק בית-בבית של `src/components/Hint.jsx`** — לא עיצוב חדש.
+  🔴 **עוגני-רמז באות עברית בעיגול (א·ב·ג) ולא בספרה** — 📐14ב תפס ספרות לאינטראקציות.
+  **נשאר ברמה 0:** שורת-אוכלוסייה (📐2) · שורת-"אז מה" (📐23) · שורת-הגדרות (📐16).
+
+  ═══ 📏 אודיט-גאומטריה · 10/09/2026 — ממצא אחד תוקן ═══
+  **`.tile .cmp` היה `display:flex`** ⇒ כל ילד ישיר הוקשח לפריט-פלקס, ו-`display` המחושב
+  של **13 מספרי-`.ltr`** היה `block` ולא `inline-block` (design-contract §3.2), ו-`gap:4px`
+  דחף נקודתיים וסוגר **4px** ממספרם ("2024 :" במקום "2024:"). **תוקן ל-`display:block`.**
+  אותה משפחת-כשל של `.barkey span`, בכלי אחר. **המדידה החוזרת: 14 ⇒ 1** (נותר `.urlbar`,
+  שאינו רכיב-מסך). **רגרסיה: כל פיקסל של כל עמודה ונקודה זהה לפני ואחרי.** הפירוט: §📏 בכרטיס.
   ═════════════════════════════════════════════════════════════════════════════
 -->
 <style>
@@ -104,6 +120,29 @@ h1{font-size:20px; font-weight:700; color:var(--s800)}
     box-shadow:0 0 0 2px #fff; pointer-events:none}
 body.hide-markers .im{display:none}
 
+/* ═══ שכבת-ההטמעה (onboarding-layer-contract.md · design-contract §⑧) ═══
+   שני מצבים בלבד — 0 נקי · 2 מודרך (הכרעת-ישי: אין רמה אמצעית, ו-`pointer`
+   ב-`src/lib/onboardingCopy.js` ריק בכוונה ב-37 מתוך 37). ⇒ מתג **בינארי**,
+   ודף אחד ולא שני עותקים.
+   🔴 `.hint-line` הוא **העתק מדויק של `src/components/Hint.jsx`** ולא עיצוב חדש:
+   שם `className={cn('text-sm text-slate-600 border-r-2 border-teal-500 pr-3 my-1')}`
+   ⇒ 14px · s600 · גבול-ימני 2px teal500 · ריפוד-ימני 12px · שוליים 4px.
+   אינליין ולא ריחוף (H4), רמה אחת בלי "קרא עוד" (H5), ולעולם אינו מכסה נתון. */
+.hint-line{position:relative; font-size:14px; color:var(--s600); line-height:1.6;
+     border-right:2px solid var(--teal500); padding-right:12px; margin:4px 0 12px}
+body:not(.guided) .hint-line{display:none}
+
+/* עוגן-רמז — 🔴 **אות עברית בעיגול (א · ב · ג) ולא ספרה**: 📐14ב כבר תפס
+   ספרות לאינטראקציות, ו-①②③ תפוסים בשתי משמעויות נוספות בתיקייה הזו.
+   גוון שונה מ-`.im` הטורקיז — `--amber800` (#973C00), טוקן קיים מ-§1.4. */
+.hm{position:absolute; top:-8px; right:-9px; z-index:41; display:flex; align-items:center;
+     justify-content:center; width:18px; height:18px; border-radius:999px;
+     background:var(--amber800); color:#fff; font:700 10px/1 'Geist Variable',sans-serif;
+     box-shadow:0 0 0 2px #fff; pointer-events:none}
+body:not(.guided) .hm{display:none}
+.mocktools button[aria-pressed="true"]{border-color:var(--teal200); background:var(--teal50);
+     color:var(--teal700); font-weight:600}
+
 /* ── כלי-מוקאפ (אינם רכיבי-מסך) ── */
 .mocktools{position:fixed; bottom:12px; left:12px; z-index:50; display:flex; gap:8px;
      align-items:center; border:1px dashed var(--s300); background:#fff; border-radius:999px;
@@ -152,9 +191,15 @@ body.hide-markers .im{display:none}
       margin-top:7px; letter-spacing:-.4px}
 .tile .vl.sm{font-size:21px}
 .tile .sub{font-size:12px; color:var(--s600); margin-top:4px; line-height:1.4}
-.tile .cmp{font-size:11px; color:var(--s500); display:flex; align-items:baseline; gap:4px;
-      flex-wrap:wrap; width:100%; margin-top:11px; padding-top:9px; border-top:1px solid var(--s100)}
-.tile .cmp .arrow{color:inherit; font-size:10px}
+/* 🔴 `.cmp` **אינו `flex`** — נמדד 10/09/2026 באודיט-הגאומטריה. `display:flex` הפך כל
+   ילד ישיר ל"פריט-פלקס" ⇒ ‏`display` המחושב של כל `.ltr` בתוכו היה **`block`** ולא
+   `inline-block` (14 מופעים), ו-`gap:4px` החליף את רווח-הטקסט הטבעי ⇒ **נקודתיים
+   שהוצמדו למספר במקור נדחפו ממנו 4px** (`<span class="ltr">2024</span>:` נקרא
+   "2024 :"), וגם סוגר-סוגריים התנתק. זו בדיוק משפחת-הכשל של `.barkey span`.
+   הזרימה כאן היא טקסט, לא פריסה ⇒ `block`, והחץ מקבל שוליים משלו. */
+.tile .cmp{font-size:11px; color:var(--s500); display:block;
+      width:100%; margin-top:11px; padding-top:9px; border-top:1px solid var(--s100)}
+.tile .cmp .arrow{color:inherit; font-size:10px; margin-left:4px}
 .tile .cmp.none{font-style:italic}
 .tile .win{font-size:10.5px; color:var(--s500); margin-top:4px; line-height:1.4}
 
@@ -421,6 +466,12 @@ tr.hi:hover td{background:var(--amber100)}
     הלא-מרוצים — הם לא הזמינו כבר <span class="ltr">206</span> ימים (חציון), מול <span class="ltr">15</span>
     ימים אצל <span class="ltr">24</span> המרוצים.</p>
 
+  <!-- א · reports.customersOverview.why — רמה 2 בלבד. פותח במקור ורק אז בנימוק. -->
+  <p class="hint-line" data-hint="reports.customersOverview.why"><i class="hm" aria-hidden="true">א</i>
+    ארבעת האריחים כאן נמדדים מהמשובים ומהאירועים שכבר התקיימו, ולא ממדדי מסך הבית —
+    ולכן כל אחד מהם הוא דלת לדוח אחר ולא מדד שעומד בפני עצמו. מתחילי מהאריח הראשון:
+    הוא היחיד שמראה קשר בין שני דברים שאת כבר מודדת בנפרד.</p>
+
   <!-- ארבעת אריחי-הדלת. כל אריח הוא <button> אמיתי, ולכן מקבל מיקוד ופעולה במקלדת. -->
   <div class="tiles">
 
@@ -483,6 +534,12 @@ tr.hi:hover td{background:var(--amber100)}
       <i class="im" aria-hidden="true" style="top:-8px; left:-8px">9</i>
     </div>
   </div>
+
+  <!-- ב · reports.customersOverview.tilesBasis — מקור-הנתון פר-אריח (רמה 2). -->
+  <p class="hint-line" data-hint="reports.customersOverview.tilesBasis"><i class="hm" aria-hidden="true">ב</i>
+    המספרים בארבעת האריחים נמדדים על כל הזמנים ולא על התקופה שבחרת למעלה — משוב אחד לחודש
+    הוא מדגם קטן מדי מכדי לראות בו כיוון. לכן מסנן התקופה משנה את הגרף ואת הטבלה ולא את
+    האריחים, וכל אריח אומר זאת בשורה התחתונה שלו.</p>
 
   <!-- 📊 קובע למבטי-על "עמודות לפי חודש", ומסמן במפורש "המוקאפ מכריע סופית".
        🔴 **סטייה מוצהרת, ונימוקה שני כללי-📐 שמתנגשים בעמודות:** 📐5 מחייב ציר-ערך
@@ -582,6 +639,12 @@ tr.hi:hover td{background:var(--amber100)}
     <h3><span class="ltr">8</span> הלקוחות הגדולים ב-<span class="ltr">12</span> החודשים האחרונים ·
       נכון ל-<span class="ltr">10/09/2026</span></h3>
     <p class="drill">לחיצה על שורה פותחת את כרטיס הלקוח</p>
+    <!-- ג · reports.customersOverview.tableSort — נימוק-הסידור (רמה 2). -->
+    <p class="hint-line" data-hint="reports.customersOverview.tableSort"
+       style="margin:0 16px 12px"><i class="hm" aria-hidden="true">ג</i>
+      הטבלה נשענת על הכנסת שנים-עשר החודשים האחרונים מפרויקטים שכבר הסתיימו, וממוינת לפיה
+      מהגבוה לנמוך. הסדר הזה נבחר כדי שלקוח גדול לא ייבלע בין שורות — לא כדי לדרג לקוחות
+      זה מול זה.</p>
     <div class="tbl-scroll">
       <table class="data">
         <thead><tr>
@@ -696,6 +759,12 @@ tr.hi:hover td{background:var(--amber100)}
   <p class="so-what">לפתוח את <span class="ltr">10</span> המשובים שתויגו "אחר" — הם הסיבה השלילית
     הגדולה השנה, גדולה משלוש הקטגוריות הקיימות יחד, ואיש לא קרא את הטקסט שבהם.</p>
 
+  <!-- א · reports.satisfaction.why — למה הדוח קיים + מה לעשות קודם (רמה 2). -->
+  <p class="hint-line" data-hint="reports.satisfaction.why"><i class="hm" aria-hidden="true">א</i>
+    הדוח נבנה מהמשובים שלקוחות מילאו בפועל ולא ממה שנשלח אליהם, כדי שמי שלא ענה לא ייספר
+    לא לטובה ולא לרעה. מתחילי מהסיבות השליליות: הן קטנות במספר, וכל אחת מהן היא אירוע אחד
+    שאפשר לברר עם הלקוח.</p>
+
   <div class="tiles">
     <div class="tile"><span class="lb">שיעור המרוצים (<span class="ltr">4–5</span>)</span>
       <span class="vl"><span class="ltr">88.3%</span></span>
@@ -737,6 +806,16 @@ tr.hi:hover td{background:var(--amber100)}
     אחת</b> — ולכן הספירות כאן מסתכמות למספר המשובים, ולא מעליו. הספירות מוצגות כ"<b>כמה מתוך כמה</b>"
     ולא כאחוז. <b>כל משוב סימן או סיבה חיובית או סיבה שלילית, אף אחד לא סימן את שתיהן.</b>
   </div>
+
+  <!-- ב · reports.satisfaction.reasonsBasis — מקור-הנתון של ספירות-הסיבות (רמה 2).
+       🔴 הנוסח נאמן ל**מדידה** ולא לניסוח-הכלל: 📐11 מנסח "הסכום עולה על מספר המשובים",
+       ובמדידת 10/09/2026 (`array_length(...) > 1` על 552 המשובים ⇒ **0 מופעים**) זה אינו
+       נכון כאן. המשפט אומר את המנגנון ואת המדידה, ואינו מתקן אף אחד מהם. -->
+  <p class="hint-line" data-hint="reports.satisfaction.reasonsBasis"><i class="hm" aria-hidden="true">ב</i>
+    ספירות הסיבות נקראות מתוך שדה שמאפשר ללקוח לסמן יותר מסיבה אחת, ולכן הן מוצגות
+    כ"כמה מתוך כמה" ולא באחוזים. במדידה של היום כל משוב סימן סיבה אחת בדיוק, ולכן הספירות
+    מסתכמות בדיוק למספר המשובים; ביום שבו לקוחה תסמן שתיים, הסכום יעלה על מספר המשובים —
+    וזה יהיה תקין, לא תקלה.</p>
 
   <div class="chart-card">
     <h3>התפלגות הציונים · <span class="ltr">163</span> משובים ב-<span class="ltr">2026</span>
@@ -924,6 +1003,11 @@ tr.hi:hover td{background:var(--amber100)}
     <h3><span class="ltr">19</span> המשובים שסימנו סיבה שלילית · <span class="ltr">2026</span>
       (<span class="ltr">01/01–10/09</span>)</h3>
     <p class="drill">לחיצה על שורה פותחת את כרטיס הפרויקט · לחיצה על עמודה בגרף השלילי מסננת את הטבלה לאותה סיבה</p>
+    <!-- ג · reports.satisfaction.tableSort — נימוק-הסידור (רמה 2). -->
+    <p class="hint-line" data-hint="reports.satisfaction.tableSort"
+       style="margin:0 16px 12px"><i class="hm" aria-hidden="true">ג</i>
+      הטבלה מציגה רק את המשובים שסימנו סיבה שלילית, ממוינים לפי הציון מהנמוך לגבוה.
+      הנמוך ראשון כי הוא הלקוח שהכי כדאי לברר איתו היום — ולא כי הוא האחרון שהגיע.</p>
     <div class="tbl-scroll">
       <table class="data">
         <thead><tr>
@@ -1053,6 +1137,14 @@ tr.hi:hover td{background:var(--amber100)}
     שתיהן שקטו פי <span class="ltr">3</span> ופי <span class="ltr">2.4</span> מהקצב שלהן,
     יחד <span class="ltr">124,180</span> ₪ בשנה האחרונה, ו<b>שתיהן עדיין לא נחשבות "רדומות"</b>.</p>
 
+  <!-- א · reports.drifting.why — למה הדוח קיים ולמה נחתך כך (רמה 2).
+       🔑 זו ההגדרה שאי-אפשר לנחש מהמסך: "מתרחק" **אינו סף קבוע**. -->
+  <p class="hint-line" data-hint="reports.drifting.why"><i class="hm" aria-hidden="true">א</i>
+    הדגל "מתרחק" נמדד מול המרווח הרגיל של אותו לקוח עצמו — חציון הימים בין האירועים שלו,
+    על כל ההיסטוריה, ורק ללקוח שיש לו מספיק אירועים כדי לחשב אותו. לכן הוא תופס לקוחה
+    שמזמינה כל חודש ושתקה חודשיים, בעוד סף אחיד לכולם רואה אותה תקינה; ארבעה מתוך שנים-עשר
+    ברשימה נראים רק כך.</p>
+
   <div class="tiles">
     <div class="tile"><span class="lb">לקוחות מתרחקים</span>
       <span class="vl"><span class="ltr">12</span></span>
@@ -1087,6 +1179,12 @@ tr.hi:hover td{background:var(--amber100)}
         <span class="ltr">2.43</span> על <span class="ltr">7</span> משובים — הנמוך ברשימה</span>
       <span class="win">אירוע אחרון <span class="ltr">08/09/2025</span></span></div>
   </div>
+
+  <!-- ב · reports.drifting.revenueBasis — מקור-הנתון פר-אריח (רמה 2). -->
+  <p class="hint-line" data-hint="reports.drifting.revenueBasis"><i class="hm" aria-hidden="true">ב</i>
+    ההכנסה שבאריחים נספרת מפרויקטים שכבר הסתיימו בשנים-עשר החודשים האחרונים — כלומר כסף
+    שכבר נכנס, ולא תחזית. לא מוצג כאן "סכום בסיכון" כי במערכת אין דרך לדעת אם לקוחה
+    שמתרחקת תחזור, ומספר כזה היה נראה מדוד בלי שאיש מדד אותו.</p>
 
   <!-- ההסבר שבלעדיו הדף אינו משכנע: מה עושה השיטה שכלל-120-הימים אינו עושה. -->
   <div class="basebanner">
@@ -1173,6 +1271,12 @@ tr.hi:hover td{background:var(--amber100)}
     <h3><span class="ltr">12</span> הלקוחות המתרחקים · נכון ל-<span class="ltr">10/09/2026</span></h3>
     <p class="drill">לחיצה על שורה פותחת את כרטיס הלקוח · השורות המודגשות הן אלה שכלל
       <span class="ltr">120</span> הימים אינו תופס</p>
+    <!-- ג · reports.drifting.tableSort — נימוק-הסידור (רמה 2). -->
+    <p class="hint-line" data-hint="reports.drifting.tableSort"
+       style="margin:0 16px 12px"><i class="hm" aria-hidden="true">ג</i>
+      הטבלה ממוינת לפי הכנסת שנים-עשר החודשים מהגבוה לנמוך, ורק אחר כך לפי פי-כמה-מהקצב.
+      הסדר הזה נבחר כדי שלקוחה גדולה שהתחילה להתרחק תעמוד ראשונה — מיון לפי היחס לבדו היה
+      מעלה למעלה לקוחה קטנה ששתקה שנה, והיא נראית חמורה יותר רק במספר.</p>
     <div class="tbl-scroll">
       <table class="data">
         <thead><tr>
@@ -1337,6 +1441,14 @@ tr.hi:hover td{background:var(--amber100)}
   <p class="so-what">להריץ את הניתוח על <span class="ltr">426</span> ההערות — <span class="ltr">33</span>
     מהן שייכות למשובים שתויגו "אחר", והן הדלי השלילי הגדול במערכת ואיש עדיין לא קרא אותן.</p>
 
+  <!-- א · reports.notes.why — למה הדוח קיים + מה לעשות קודם (רמה 2).
+       🔑 ההנחה שאי-אפשר לנחש מהמסך: הערה שנקראת כתלונה יושבת על שורה **בלי** תגית
+       שלילית כלל — וזו העילה של הדוח, לא פגם בנתונים. -->
+  <p class="hint-line" data-hint="reports.notes.why"><i class="hm" aria-hidden="true">א</i>
+    הדוח קורא את הטקסט החופשי שהלקוחות כתבו ולא את התגית שהם סימנו, ולכן הוא רואה גם
+    תלונות שיושבות על משוב בלי אף תגית שלילית — לפעמים אפילו על משוב בציון הגבוה ביותר.
+    מתחילי מההערות שתויגו "אחר": הן הדלי השלילי הגדול במערכת, ואיש עדיין לא קרא אותן.</p>
+
   <!-- ═══ מ25 · פס-מצב סיווג-ההערות (ת2), בתוך דף 20 ═══ -->
   <div class="runbar warn im-host" id="runbar">
     <div>
@@ -1347,6 +1459,12 @@ tr.hi:hover td{background:var(--amber100)}
     <button class="btn btn-primary btn-sm" id="runBtn">הרץ ניתוח</button>
     <i class="im" aria-hidden="true" style="top:-8px; left:-8px">13</i>
   </div>
+
+  <!-- ב · reports.notes.runGate — למה הדוח נחתך כך ולא אחרת (רמה 2). -->
+  <p class="hint-line" data-hint="reports.notes.runGate"><i class="hm" aria-hidden="true">ב</i>
+    הדוח מציג רק ריצה שמישהי בדקה בה עשרים דוגמאות ואישרה, ולכן עד לאישור הראשון הוא ריק
+    ולא שגוי. ההפרדה בין ההרצה לאישור נבחרה כדי שסיווג שמודל הפיק לא יופיע על המסך לפני
+    שאדם ראה אותו.</p>
 
   <p class="states-cap">חמשת המצבים של פס-הניתוח (מ25) — הם נפרדים מחמשת מצבי-הדף:</p>
   <div class="runstates" aria-label="חמשת המצבים של פס-הניתוח">
@@ -1405,6 +1523,12 @@ tr.hi:hover td{background:var(--amber100)}
         <span class="cmp none"><span class="arrow">▬</span> יימדד אחרי הריצה הראשונה</span>
         <span class="win">—</span></div>
     </div>
+
+    <!-- ג · reports.notes.tilesBasis — מקור-הנתון פר-אריח (רמה 2). -->
+    <p class="hint-line" data-hint="reports.notes.tilesBasis"><i class="hm" aria-hidden="true">ג</i>
+      המספרים באריחים נספרים מהערות שנכתבו בפועל, על כל הזמנים ובלי קשר למסנן התקופה.
+      "דגלים אדומים" מוצג כ"טרם אושרה ריצה" ולא כאפס — אפס כאן היה נקרא "אין בעיות",
+      וזו אמירה שאיש עדיין לא בדק.</p>
 
     <div class="datanote">
       <b>מה כבר אפשר לומר בלי המודל, ומה לא.</b>
@@ -1595,6 +1719,10 @@ tr.hi:hover td{background:var(--amber100)}
 <!-- כלי-מוקאפ, לא רכיבי-מסך -->
 <div class="mocktools">
   <span>כלי-מוקאפ:</span>
+  <!-- 🔴 מתג **בינארי** של שכבת-ההטמעה — 0 נקי ⇄ 2 מודרך. הוא מחליף את המצב **חי, על
+       אותו דף**, בדיוק כפי ש-<Hint> מתנהג בייצור (הקונטקסט משתנה ⇒ כל Hint מרונדר
+       מחדש, בלי רענון). ⇒ **דף אחד, לא שני עותקים.** -->
+  <button id="toggleGuided" aria-pressed="false">מצב הטמעה: נקי ⇄ מודרך</button>
   <button id="toggleMarkers" aria-pressed="true">הסתר סימוני-אינטראקציה</button>
   <button id="toggleDemo" aria-pressed="false">דף 20: הצג מצב "אחרי ריצה מאושרת"</button>
 </div>
@@ -1717,6 +1845,15 @@ tr.hi:hover td{background:var(--amber100)}
   });
 
   // ═══ כלי-מוקאפ ═══
+  // ═══ מתג שכבת-ההטמעה (0 נקי ⇄ 2 מודרך) — מחליף מצב על אותו דף, בלי רענון ═══
+  var tg = document.getElementById('toggleGuided');
+  tg.addEventListener('click', function () {
+    var on = document.body.classList.toggle('guided');
+    tg.setAttribute('aria-pressed', on ? 'true' : 'false');
+    tg.textContent = on ? 'מצב הטמעה: מודרך ⇄ נקי' : 'מצב הטמעה: נקי ⇄ מודרך';
+    say(on ? 'מצב הטמעה דלוק — משפטי-ההסבר מוצגים' : 'מצב הטמעה כבוי — המסך נקי');
+  });
+
   var tm = document.getElementById('toggleMarkers');
   tm.addEventListener('click', function () {
     var hidden = document.body.classList.toggle('hide-markers');
