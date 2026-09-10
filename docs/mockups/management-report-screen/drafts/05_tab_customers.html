@@ -27,6 +27,19 @@
   🚫 אין המצאת מספר/שם/תאריך. כל מספר כאן נמדד ב-Supabase MCP `execute_sql` (קריאה-בלבד),
      פרויקט yfeovxppnfoafmfbdfvh, בתאריך **10/09/2026**. השאילתות עצמן: cards-customers.md §③.
      הגרפים הם SVG סטטי שמחקה Recharts (המימוש: design-contract §5.3).
+
+  ═══ 🔄 סבב-רענון · 10/09/2026 (אחרי שהדאטה נכתבה מחדש) — שלושה שינויים מהותיים ═══
+  ① **כל ציטוט של הערת-לקוח בקובץ הזה נשלף מחדש מהמסד והוחלף.** הרקע: הממצא שדווח כאן
+     (תגית מול טקסט שאינם מתיישבים) אומת והתברר גדול משנמדד — ‏**כל 63 ההערות שיושבות על
+     תגית שלילית נכתבו מחדש**, כל אחת ייחודית וכל אחת מסכימה עם התגית. נמדד עכשיו:
+     ‏**426 הערות · 356 נוסחים** (היה 162) · **63/63 השליליות ייחודיות** · חזרה מרבית 5.
+     ⇒ הציטוטים שהיו כאן מתו, והוחלפו אחד-לאחד לפי `project_id`.
+     **המספרים לא זזו ואומתו מחדש:** 552 משובים · 70 שליליים · 33 "אחר" · 12 מתרחקים מתוך 52.
+  ② **אריח 3 של מבט-העל הוחלף** — דלתו הובילה למ5, שהכרעה 30 דחתה. ר' ההערה באריח עצמו.
+  ③ **תיקוני-ניגודיות WCAG 2.1** (הטבלה המלאה: cards-customers.md §🎨): טבעות-מיקוד
+     teal500→teal700 · `.btn-primary` teal600→teal700 · קו-הייחוס המקווקו s400→s500 ·
+     צירי-הבסיס s300→s500 · טקסט s400→s500 · תוויות-ערך לבנות בתוך עמודה הוצאו מהעמודה ל-s600.
+     🚫 **אף צבע לא הומצא — כולם טוקנים קיימים מ-design-contract §1.4.**
   ═════════════════════════════════════════════════════════════════════════════
 -->
 <style>
@@ -107,8 +120,8 @@ body.hide-markers .im{display:none}
      padding:10px 16px; font-size:14px; font-weight:500; color:var(--s500); cursor:pointer;
      display:flex; flex-direction:column; align-items:center; gap:2px; font-family:inherit}
 .tab.on{border-color:var(--teal600); font-weight:600; color:var(--teal700)}
-.tab.masked{color:var(--s400); cursor:not-allowed}
-.tab.masked .lock-txt{font-size:10.5px; font-weight:400; color:var(--s400)}
+.tab.masked{color:var(--s500); cursor:not-allowed}
+.tab.masked .lock-txt{font-size:10.5px; font-weight:400; color:var(--s500)}
 
 /* ── בורר-דוח · שורת-שבבים אופקית מתחת ללשוניות (הכרעה 29) ── */
 .picker{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0 0 14px; width:100%}
@@ -118,7 +131,7 @@ body.hide-markers .im{display:none}
 .picker button:hover{background:var(--s50)}
 .picker button.on{border-color:var(--teal200); background:var(--teal50);
      font-weight:600; color:var(--teal700)}
-.picker button:focus-visible{outline:2px solid var(--teal500); outline-offset:2px}
+.picker button:focus-visible{outline:2px solid var(--teal700); outline-offset:2px}
 
 /* ── שורת-מסננים גלובליים ── */
 .filters{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:16px}
@@ -174,7 +187,10 @@ svg{display:block}
 .barkey{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:6px 14px;
      margin-top:10px; padding-top:10px; border-top:1px solid var(--s100); font-size:11.5px; color:var(--s600)}
 .barkey b{color:var(--s700)}
-.barkey span{display:block; line-height:1.45}
+/* 🔴 `.barkey span` (0,1,1) גובר על `.ltr` (0,1,0) והופך כל מספר-LTR מקונן ל-block.
+   נמדד 10/09/2026 בלשונית-דיילות: תא-barkey תפח מ-33px ל-217px, מספר בכל שורה.
+   הפתרון: צירוף-ילד — משפיע על ה-span הישיר ולא על ה-.ltr שבתוכו. */
+.barkey > span{display:block; line-height:1.45}
 
 /* ── שורת-"אז מה" (מילון-נעול · 📐23) ── */
 .so-what{background:none; border:none; border-right:3px solid var(--teal600); border-radius:0;
@@ -193,7 +209,7 @@ table.data td{padding:10px; border-bottom:1px solid var(--s100); vertical-align:
 table.data td.wrap{white-space:normal; min-width:260px; color:var(--s600); font-size:12.5px}
 tr.click{cursor:pointer}
 tr.click:hover td{background:var(--s50)}
-tr.click:focus-visible{outline:2px solid var(--teal500); outline-offset:-2px}
+tr.click:focus-visible{outline:2px solid var(--teal700); outline-offset:-2px}
 tr.click:focus-visible td{background:var(--teal50)}
 tr.hi td{background:var(--amber50)}
 tr.hi:hover td{background:var(--amber100)}
@@ -215,7 +231,7 @@ tr.hi:hover td{background:var(--amber100)}
 .stag.g{background:var(--green100); color:var(--green700)}
 .stag.y{background:var(--amber100); color:var(--amber800)}
 .stag.r{background:var(--red100); color:var(--red700)}
-.stag.n{background:var(--s100); color:var(--s500)}
+.stag.n{background:var(--s100); color:var(--s600)}
 
 /* ── תגי-דגל טקסטואליים (📑ב#18 · 📐19: צורה ולא רק צבע) ── */
 .flag{border-radius:var(--r-md); padding:1px 8px; font-size:11px; font-weight:600; white-space:nowrap;
@@ -226,7 +242,7 @@ tr.hi:hover td{background:var(--amber100)}
 /* ── כפתורים ── */
 .btn{border-radius:var(--r-lg); font:inherit; font-size:14px; font-weight:600;
      padding:8px 16px; border:1px solid transparent; cursor:pointer; white-space:nowrap}
-.btn-primary{background:var(--teal600); color:#fff}
+.btn-primary{background:var(--teal700); color:#fff}
 .btn-outline{background:#fff; border-color:var(--s300); color:var(--s700); font-weight:500}
 .btn-sm{font-size:12.5px; padding:5px 12px; border-radius:var(--r-md)}
 
@@ -379,10 +395,13 @@ tr.hi:hover td{background:var(--amber100)}
      מבט-על-הדוח אומר לאן זה הולך**, ו**כל אריח במבט-על הוא דלת לדף** — כולל דפים
      בלשוניות אחרות. ⇒ ארבעת האריחים כאן הם ארבע **דלתות**, כל אחת נושאת אמירת-כיוון
      או קשר שאינו מופיע על הדף שהיא פותחת:
-       ① יחס שביעות-רצון↔חזרה  → שביעות רצון (מ20, אותה לשונית)
-       ② גודל הכתם העיוור      → ניתוח הערות (מ22, אותה לשונית)
-       ③ ריכוזיות ההכנסות      → ריכוזיות לקוחות (מ5, **לשונית הנהלה**)
-       ④ קצב-התשלום לפי סוג     → גיול חובות (מ9, **לשונית כספים**)
+       ① יחס שביעות-רצון↔חזרה   → שביעות רצון (מ20, אותה לשונית)
+       ② גודל הכתם העיוור       → ניתוח הערות (מ22, אותה לשונית)
+       ③ ריכוזיות ↔ התרחקות     → לקוחות מתרחקים (מ21, אותה לשונית)
+       ④ קצב-התשלום לפי סוג      → גיול חובות (מ9, **לשונית כספים**)
+     🔴 **אריח ③ הוחלף ב-10/09/2026.** הוא הצביע על "ריכוזיות לקוחות" (מ5) — דף
+        ש**הכרעה 30 דחתה ולא ייבנה**. במקומו נבחרה ההצלבה שהכרעה 24·ח7 כבר שמה
+        **בדוח 18**, והיא פותחת את מ21 — הדף היחיד בלשונית שנשאר בלי דלת.
      🚫 **ואף אחד מהם אינו אחד מארבעת אריחי מסך-הבית** (פרויקטים פעילים · שביעות
         רצון 90 יום · רווח חודשי משוער · הצעות ממתינות — `src/lib/dashboard.js`,
         `kpiCards`), שנקראו לפני הציור.
@@ -432,18 +451,25 @@ tr.hi:hover td{background:var(--amber100)}
       <i class="im" aria-hidden="true" style="top:-8px; left:-8px">7</i>
     </button>
 
-    <div class="tile im-host">
-      <span class="lb">תלות בחמשת הלקוחות הגדולים</span>
-      <span class="vl"><span class="ltr">43.3%</span></span>
-      <span class="sub"><span class="ltr">1,039,749</span> ₪ מתוך <span class="ltr">2,402,325</span> ₪
-        אצל <span class="ltr">51</span> לקוחות מניבים</span>
-      <span class="cmp"><span class="arrow">▬</span> הגדול לבדו — אלפא סיסטמס בע"מ —
-        <span class="ltr">21.8%</span> מההכנסות</span>
+    <!-- 🔴 האריח הזה הוחלף ב-10/09/2026. **מה הוא היה:** "תלות בחמשת הגדולים · 43.3%",
+         ודלתו הובילה ל"ריכוזיות לקוחות" (מ5) — **דף ש-הכרעה 30 דחתה ולא ייבנה.**
+         דלת לדף שאינו קיים גרועה מאין-דלת. **מה שנבחר במקומו, ולמה:** הכרעה 24 · ח7 קובעת
+         שההצלבה בין ריכוזיות למתרחקים יושבת **בדוח 18** — כלומר בדף "לקוחות מתרחקים" של
+         הלשונית הזו, שעד עכשיו היה הדף היחיד בלי דלת. האריח נושא בדיוק את ההצלבה הזו. -->
+    <button type="button" class="tile im-host" data-goto="c3"
+            aria-label="הריכוזיות והנטישה עוד לא נפגשות — פתיחת דוח לקוחות מתרחקים">
+      <span class="lb">הריכוזיות והנטישה עוד לא נפגשות</span>
+      <span class="vl"><span class="ltr">0</span> מתוך <span class="ltr">5</span></span>
+      <span class="sub">אף אחד מחמשת הלקוחות הגדולים — יחד <span class="ltr">43.3%</span> מהכנסת
+        <span class="ltr">12</span> החודשים — אינו מסומן <b style="font-weight:600">"מתרחק"</b></span>
+      <span class="cmp"><span class="arrow">▬</span> הגדול הראשון שכן: <b style="font-weight:600">גלובל
+        שיפינג</b>, מקום <span class="ltr">9</span> ברשימת המניבים — שקטה <span class="ltr">80</span> ימים
+        מול קצב של <span class="ltr">27</span></span>
       <span class="win"><span class="ltr">12</span> החודשים האחרונים (<span class="ltr">10/09/2025–10/09/2026</span>) ·
-        אינו מושפע ממסנן התקופה</span>
-      <span class="door"><span class="xtab">לשונית הנהלה →</span> "ריכוזיות לקוחות"</span>
+        הדגל נכון ל-<span class="ltr">10/09</span> · אינו מושפע ממסנן התקופה</span>
+      <span class="door">← לדוח "לקוחות מתרחקים"</span>
       <i class="im" aria-hidden="true" style="top:-8px; left:-8px">8</i>
-    </div>
+    </button>
 
     <div class="tile im-host">
       <span class="lb">קצב-התשלום תלוי בסוג הלקוח</span>
@@ -472,7 +498,7 @@ tr.hi:hover td{background:var(--amber100)}
     <div class="chart-box" dir="ltr" role="figure"
          aria-label="ממוצע שביעות-הרצון לפי חודש, 2026, קו על ציר 1 עד 5">
       <svg viewBox="0 0 660 285" width="660" height="285" preserveAspectRatio="xMidYMid meet">
-        <line x1="80" y1="210" x2="640" y2="210" stroke="#CAD5E2" stroke-width="1.5"/>
+        <line x1="80" y1="210" x2="640" y2="210" stroke="#62748E" stroke-width="1.5"/>
         <line x1="80" y1="167.5" x2="640" y2="167.5" stroke="#F1F5F9"/>
         <line x1="80" y1="125" x2="640" y2="125" stroke="#F1F5F9"/>
         <line x1="80" y1="82.5" x2="640" y2="82.5" stroke="#F1F5F9"/>
@@ -484,7 +510,7 @@ tr.hi:hover td{background:var(--amber100)}
         <text class="ax" x="72" y="44"  text-anchor="end">5</text>
 
         <!-- 📐15 · בסיס-ההשוואה הוא הערך המדוד של השנה הקודמת, לא סף מומצא -->
-        <line x1="80" y1="71.9" x2="640" y2="71.9" stroke="#90A1B9" stroke-width="1.2" stroke-dasharray="5 4"/>
+        <line x1="80" y1="71.9" x2="640" y2="71.9" stroke="#62748E" stroke-width="1.2" stroke-dasharray="5 4"/>
         <text class="ax" x="636" y="68" text-anchor="end" fill="#62748E">ממוצע 2025 · 4.25</text>
 
         <polyline fill="none" stroke="#009689" stroke-width="2.5"
@@ -530,7 +556,7 @@ tr.hi:hover td{background:var(--amber100)}
     </div>
     <div class="legend">
       <span><i style="background:#009689"></i>ממוצע החודש</span>
-      <span><i style="background:#fff; border:1.5px dashed #90A1B9"></i>ממוצע <span class="ltr">2025</span> המלאה
+      <span><i style="background:#fff; border:1.5px dashed #62748E"></i>ממוצע <span class="ltr">2025</span> המלאה
         (<span class="ltr">4.25</span> על <span class="ltr">222</span> משובים)</span>
     </div>
     <table class="sr-only">
@@ -624,7 +650,9 @@ tr.hi:hover td{background:var(--amber100)}
       <button class="lnk" data-goto="c3">מי מהם מתרחק? ←</button>
     </div>
     <p class="tnote"><b>אף אחד משמונת הגדולים אינו מסומן "מתרחק"</b> — לכולם יש אירוע עתידי במערכת,
-      וזה התנאי הראשון של ההגדרה. <b><span class="ltr">8</span> שורות במוקאפ, <span class="ltr">50</span> בבנייה</b>
+      וזה התנאי הראשון של ההגדרה. <b>הראשון שכן מסומן יושב במקום <span class="ltr">9</span>, שורה אחת
+      מתחת לטבלה הזו</b> — אריח <span class="ltr">3</span> נוקב בו בשמו ופותח את הדוח שמראה את כולם.
+      <b><span class="ltr">8</span> שורות במוקאפ, <span class="ltr">50</span> בבנייה</b>
       (§7.98 · הכרעה 15-יא).</p>
   </div>
 
@@ -717,7 +745,7 @@ tr.hi:hover td{background:var(--amber100)}
       אף פעם השנה</b> — העמודה מצוירת בגובה אפס ואינה נעלמת מהסדרה.</p>
     <div class="chart-box" dir="ltr" role="figure" aria-label="התפלגות ציוני המשוב 1 עד 5, עמודות">
       <svg viewBox="0 0 660 285" width="660" height="285" preserveAspectRatio="xMidYMid meet">
-        <line x1="80" y1="210" x2="640" y2="210" stroke="#CAD5E2" stroke-width="1.5"/>
+        <line x1="80" y1="210" x2="640" y2="210" stroke="#62748E" stroke-width="1.5"/>
         <line x1="80" y1="167.5" x2="640" y2="167.5" stroke="#F1F5F9"/>
         <line x1="80" y1="125" x2="640" y2="125" stroke="#F1F5F9"/>
         <line x1="80" y1="82.5" x2="640" y2="82.5" stroke="#F1F5F9"/>
@@ -769,7 +797,7 @@ tr.hi:hover td{background:var(--amber100)}
       <p class="chart-note">ממוין לפי ספירה, מהגדול לקטן. הסולם עצמאי ואינו משותף לגרף השלילי שלצידו.</p>
       <div class="chart-box" dir="ltr" role="figure" aria-label="סיבות חיוביות לפי ספירה, עמודות אופקיות">
         <svg viewBox="0 0 420 175" width="420" height="175" preserveAspectRatio="xMidYMid meet">
-          <line x1="135" y1="10" x2="135" y2="160" stroke="#CAD5E2" stroke-width="1.5"/>
+          <line x1="135" y1="10" x2="135" y2="160" stroke="#62748E" stroke-width="1.5"/>
           <rect x="135" y="18"  width="265"   height="22" fill="#009689" rx="2"/>
           <rect x="135" y="53"  width="117.4" height="22" fill="#009689" rx="2"/>
           <rect x="135" y="88"  width="109.8" height="22" fill="#009689" rx="2"/>
@@ -778,7 +806,7 @@ tr.hi:hover td{background:var(--amber100)}
           <text class="axh" x="129" y="69"  text-anchor="end">עמידה בזמנים</text>
           <text class="axh" x="129" y="104" text-anchor="end">ניהול ותקשורת</text>
           <text class="axh" x="129" y="139" text-anchor="end">איכות תגים וציוד</text>
-          <text class="vlab" x="406" y="34"  text-anchor="end" fill="#fff">70</text>
+          <text class="vlab" x="404" y="34"  text-anchor="start">70</text>
           <text class="vlab" x="258" y="69"  text-anchor="start">31</text>
           <text class="vlab" x="250" y="104" text-anchor="start">29</text>
           <text class="vlab" x="194" y="139" text-anchor="start">14</text>
@@ -786,6 +814,18 @@ tr.hi:hover td{background:var(--amber100)}
       </div>
       <p class="chart-note" style="margin:8px 0 0"><b>מקצועיות הדיילות</b> היא הסיבה החיובית של
         <span class="ltr">70</span> מתוך <span class="ltr">144</span> — כמעט מחצית ממי שסימן משהו טוב.</p>
+      <!-- design-contract §5.2 סעיף 6 — טבלת-sr-only מקבילה לכל גרף. נוספה 10/09/2026
+           אחרי שנמדד בדפדפן ש-3 מ-4 הגרפים בדף הזה היו בלעדיה. -->
+      <table class="sr-only">
+        <caption>סיבות חיוביות לפי ספירה, 2026 עד 10/09</caption>
+        <thead><tr><th scope="col">הסיבה</th><th scope="col">משובים</th></tr></thead>
+        <tbody>
+          <tr data-testid="pos-1"><td>מקצועיות הדיילות</td><td>70</td></tr>
+          <tr data-testid="pos-2"><td>עמידה בזמנים</td><td>31</td></tr>
+          <tr data-testid="pos-3"><td>ניהול ותקשורת</td><td>29</td></tr>
+          <tr data-testid="pos-4"><td>איכות תגים וציוד</td><td>14</td></tr>
+        </tbody>
+      </table>
     </div>
 
     <div class="chart-card chart-half">
@@ -794,7 +834,7 @@ tr.hi:hover td{background:var(--amber100)}
         לא ישתנה מחודש לחודש. שלוש הקטגוריות הראשונות שוות בגודלן (<span class="ltr">3</span> כל אחת).</p>
       <div class="chart-box" dir="ltr" role="figure" aria-label="סיבות שליליות לפי ספירה, עמודות אופקיות">
         <svg viewBox="0 0 420 175" width="420" height="175" preserveAspectRatio="xMidYMid meet">
-          <line x1="135" y1="10" x2="135" y2="160" stroke="#CAD5E2" stroke-width="1.5"/>
+          <line x1="135" y1="10" x2="135" y2="160" stroke="#62748E" stroke-width="1.5"/>
           <rect x="135" y="18"  width="79.5" height="22" fill="#62748E" rx="2"/>
           <rect x="135" y="53"  width="79.5" height="22" fill="#62748E" rx="2"/>
           <rect x="135" y="88"  width="79.5" height="22" fill="#62748E" rx="2"/>
@@ -806,11 +846,22 @@ tr.hi:hover td{background:var(--amber100)}
           <text class="vlab" x="220" y="34"  text-anchor="start">3</text>
           <text class="vlab" x="220" y="69"  text-anchor="start">3</text>
           <text class="vlab" x="220" y="104" text-anchor="start">3</text>
-          <text class="vlab" x="406" y="139" text-anchor="end" fill="#fff">10</text>
+          <text class="vlab" x="404" y="139" text-anchor="start">10</text>
         </svg>
       </div>
       <p class="chart-note" style="margin:8px 0 0"><b>"איחור דיילות" אינו על הגרף</b> — הוא קטגוריה
         קיימת בטופס, ואיש לא בחר בה השנה. כל הזמנים: <span class="ltr">2</span> משובים בלבד.</p>
+      <table class="sr-only">
+        <caption>סיבות שליליות לפי ספירה, 2026 עד 10/09</caption>
+        <thead><tr><th scope="col">הסיבה</th><th scope="col">משובים</th></tr></thead>
+        <tbody>
+          <tr data-testid="neg-1"><td>ניהול לקוי</td><td>3</td></tr>
+          <tr data-testid="neg-2"><td>תפקוד דיילות</td><td>3</td></tr>
+          <tr data-testid="neg-3"><td>איכות תגים</td><td>3</td></tr>
+          <tr data-testid="neg-4"><td>אחר</td><td>10</td></tr>
+          <tr data-testid="neg-5"><td>איחור דיילות</td><td>0</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -821,7 +872,7 @@ tr.hi:hover td{background:var(--amber100)}
       עמודתה מקווקוות; אין לצידה "קצב שנתי" מחושב.</p>
     <div class="chart-box" dir="ltr" role="figure" aria-label="שיעור המרוצים לפי שנה, עמודות">
       <svg viewBox="0 0 440 250" width="440" height="250" preserveAspectRatio="xMidYMid meet">
-        <line x1="70" y1="190" x2="420" y2="190" stroke="#CAD5E2" stroke-width="1.5"/>
+        <line x1="70" y1="190" x2="420" y2="190" stroke="#62748E" stroke-width="1.5"/>
         <line x1="70" y1="152.5" x2="420" y2="152.5" stroke="#F1F5F9"/>
         <line x1="70" y1="115" x2="420" y2="115" stroke="#F1F5F9"/>
         <line x1="70" y1="77.5" x2="420" y2="77.5" stroke="#F1F5F9"/>
@@ -855,6 +906,15 @@ tr.hi:hover td{background:var(--amber100)}
       <span><i style="background:#fff; border:1.5px dashed #009689"></i><b>שנה חלקית</b> —
         <span class="ltr">2026</span> עד <span class="ltr">10/09</span> בלבד</span>
     </div>
+    <table class="sr-only">
+      <caption>שיעור המרוצים לפי שנה, 2024 עד 2026</caption>
+      <thead><tr><th scope="col">שנה</th><th scope="col">שיעור מרוצים</th><th scope="col">משובים</th></tr></thead>
+      <tbody>
+        <tr data-testid="yr-2024"><td>2024</td><td>92.8%</td><td>167</td></tr>
+        <tr data-testid="yr-2025"><td>2025</td><td>82.4%</td><td>222</td></tr>
+        <tr data-testid="yr-2026"><td>2026 (עד 10/09, שנה חלקית)</td><td>88.3%</td><td>163</td></tr>
+      </tbody>
+    </table>
     <p class="chart-note" style="margin:10px 0 0"><b>הקריאה:</b> <span class="ltr">2025</span> הייתה
       השנה החלשה, ו-<span class="ltr">2026</span> מטפסת חזרה אך טרם חזרה ל-<span class="ltr">2024</span>.
       אותה תמונה בממוצע: <span class="ltr">4.45</span> ← <span class="ltr">4.25</span> ← <span class="ltr">4.34</span>.</p>
@@ -877,7 +937,7 @@ tr.hi:hover td{background:var(--amber100)}
             <td>גלובל שיפינג בע"מ</td><td><span class="ltr">22/06/2026</span></td>
             <td><span class="score"><span class="stars">★★<span class="off">★★★</span></span><span class="stag r">טעון בירור</span></span></td>
             <td>תפקוד דיילות</td>
-            <td class="wrap">"טוב מאוד. השרוכים הגיעו קצת מאוחר אבל לפני שהאורחים הגיעו, אז לא נורא."</td></tr>
+            <td class="wrap">"שתיים מהבנות לא ידעו להפעיל את הסורק ורשמו הכל ידנית. זה יצר תור ארוך."</td></tr>
           <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1441 · עמותת אור לנוער">
             <td>טקס הוקרה לתורמים</td><td>עמותת אור לנוער</td><td><span class="ltr">30/03/2026</span></td>
             <td><span class="score"><span class="stars">★★<span class="off">★★★</span></span><span class="stag r">טעון בירור</span></span></td>
@@ -887,32 +947,32 @@ tr.hi:hover td{background:var(--amber100)}
             <td>אירוע חברה שנתי</td><td>מגה-אירוע הפקות</td><td><span class="ltr">01/01/2026</span></td>
             <td><span class="score"><span class="stars">★★<span class="off">★★★</span></span><span class="stag r">טעון בירור</span></span></td>
             <td>איכות תגים</td>
-            <td class="wrap">"המנהלת שלכם ניהלה את הכניסה כמו שעון — כשהגיעה קבוצה גדולה פתאום, פתחה עמדה נוספת בלי שביקשנו."</td></tr>
+            <td class="wrap">"הזמנו תגים בצבע כחול וקיבלנו ירוקים. זה לא תאם את המיתוג של האירוע."</td></tr>
           <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1544 · מיטב מוצרי חשמל">
             <td>יום עיון ללקוחות</td><td>מיטב מוצרי חשמל</td><td><span class="ltr">19/07/2026</span></td>
             <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
             <td class="over">אחר</td>
-            <td class="wrap">"התקשורת מולכם לפני האירוע הייתה איטית מאוד. ענו לנו יום לפני על שאלה ששאלנו שבוע קודם."</td></tr>
+            <td class="wrap">"לא היה ברור מתי הצוות אמור להגיע. הבנות הגיעו מוקדם ולא היה מי שיקבל אותן."</td></tr>
           <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1516 · מועצה אזורית עמק חפר">
             <td>כנס תושבים</td><td>מועצה אזורית עמק חפר</td><td><span class="ltr">10/06/2026</span></td>
             <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
             <td class="over">אחר</td>
-            <td class="wrap">"ביקשנו דוברת אנגלית ולא קיבלנו. איש לא עדכן אותנו שזה לא יקרה."</td></tr>
+            <td class="wrap">"הבקשה שלנו לתגים נוספים ביום האירוע לא נענתה, אף שיש לכם מלאי."</td></tr>
           <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1485 · גלובל שיפינג בע&quot;מ">
             <td>יום עיון ללקוחות</td><td>גלובל שיפינג בע"מ</td><td><span class="ltr">14/05/2026</span></td>
             <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
             <td class="over">אחר</td>
-            <td class="wrap">"הציוד הגיע, הדיילות הגיעו, אבל אף אחד לא תיאם ביניהם. חבל, כי הבנות היו מצוינות."</td></tr>
+            <td class="wrap">"התיאום מול מנהל האולם נפל עלינו במקום עליכם."</td></tr>
           <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1475 · ורד קוסמטיקה טבעית">
             <td>כנס שותפים</td><td>ורד קוסמטיקה טבעית</td><td><span class="ltr">06/05/2026</span></td>
             <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
             <td class="over">אחר</td>
-            <td class="wrap">"החלפתם לנו דיילת יומיים לפני בלי להודיע, וגילינו את זה רק בבוקר האירוע."</td></tr>
+            <td class="wrap">"החלפתם את המנהלת שלנו בין האירועים בלי להודיע וההיכרות התחילה מאפס."</td></tr>
           <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1465 · קוואנטום רובוטיקה">
             <td>השקת מוצר</td><td>קוואנטום רובוטיקה</td><td><span class="ltr">30/04/2026</span></td>
             <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
             <td class="over">אחר</td>
-            <td class="wrap">"העמדה קרסה מול 40 איש ולקח כמעט שעה עד שמישהו טיפל בזה. הדיילות עצמן היו נהדרות."</td></tr>
+            <td class="wrap">"לא קיבלנו סיכום אחרי האירוע. היינו רוצים לדעת כמה בפועל הגיעו."</td></tr>
         </tbody>
       </table>
     </div>
@@ -925,13 +985,33 @@ tr.hi:hover td{background:var(--amber100)}
       הטבלה מציגה "— ללא הערה" ולא שורה ריקה.</p>
   </div>
 
-  <!-- ⚠️ ממצא-דאטה שנמדד ואינו מוסתר. הוא **אינו** באג במסך. -->
+  <!-- 🔴 הבלוק הזה הוחלף ב-10/09/2026. **מה הוא אמר:** שבשלוש שורות התגית והטקסט אינם
+       מתיישבים. **הממצא היה אמיתי והדאטה תוקנה** — כל 63 ההערות שיושבות על תגית שלילית
+       נכתבו מחדש, כל אחת ייחודית וכל אחת מסכימה עם התגית שלה (נמדד 10/09/2026: 63/63).
+       ⇒ הממצא הישן אינו קיים עוד, והבלוק אינו מוחק אלא **מוחלף בממצא שכן קיים** —
+       ושהוא בדיוק העילה של דוח 20. -->
   <div class="datanote">
-    <b>⚠️ הערה על הדאטה, לא על המסך:</b> בשלוש מהשורות שלמעלה <b>הטקסט של ההערה אינו מתיישב עם
-    הסיבה שסומנה</b> — למשל אירוע שתויג "איכות תגים" ובהערה שבח על ניהול הכניסה. הצלבה מול המסד
-    (<span class="ltr">10/09/2026</span>) מצאה שהתגיות והטקסטים נזרעו כשתי סדרות עצמאיות, ולכן חלק
-    מהצירופים אקראיים. <b>המסך מציג נאמנה את מה שבמסד</b>; היישוב עצמו הוא פריט זריעה, ורשום ככזה
-    בכרטיס-המסך.
+    <b>🔎 מה שהתגיות לא תופסות — וזו בדיוק העילה של דוח "ניתוח הערות":</b>
+    <span class="ltr">19</span> השורות שלמעלה הן מי ש<b>סימן</b> סיבה שלילית. אבל בשנת <span class="ltr">2026</span>
+    יש <b><span class="ltr">104</span> משובים <u>בלי</u> אף תגית שלילית שכן נכתבה בהם הערה</b> —
+    ומתוכם <b><span class="ltr">20</span> מתארים תקלה בשירות שלנו</b>, <b><span class="ltr">9</span>
+    מהם על משוב שקיבל ציון <span class="ltr">5</span>.</b><br>
+    שלוש דוגמאות מהמסד (<span class="ltr">10/09/2026</span>), כולן <b>ללא תגית שלילית</b>:
+    <b>דלתא לוגיסטיקה</b>, <span class="ltr">07/07/2026</span>, ציון <span class="ltr">5</span>,
+    תגית <i>"מקצועיות הדיילות"</i> — <i>"לא היה ברור מי אחראית בשטח. כששאלנו — המנהלת שלכם הפנתה
+    למשרד."</i> · <b>מוטורס ישראל</b>, <span class="ltr">30/06/2026</span>, ציון
+    <span class="ltr">4</span>, תגית <i>"עמידה בזמנים"</i> — <i>"הדיילות היו על הטלפון בזמן
+    שאורחים חיכו."</i> · <b>קונספט הפקות</b>, <span class="ltr">12/04/2026</span>, ציון
+    <span class="ltr">5</span>, תגית <i>"מקצועיות הדיילות"</i> — <i>"נאלצנו לפתוח את הדלתות בלי
+    דיילת אחת (איחרה <span class="ltr">21</span> דק')."</i><br>
+    <b>ולכן הדף הזה אינו מספיק, והבא אחריו קיים:</b> הטבלה שלמעלה נאמנה
+    למה שהלקוח <b>סימן</b>; דוח "ניתוח הערות" קורא את מה שהלקוח <b>כתב</b>. <b>זו אינה תקלה
+    בנתונים — כך אנשים ממלאים טפסים.</b>
+    <span style="display:block; margin-top:6px">⚙️ <b>איך המספר נמדד, כדי שאפשר יהיה לבדוק אותו:</b>
+    סינון-מילות-מפתח על <span class="ltr">104</span> ההערות (<i>איחרה · באיחור · לא הכירה את
+    רשימת · לא ידעה לענות · לא היה ברור מי אחראית · על הטלפון · חסרה יד מכוונת</i> ועוד).
+    <b>זהו רצפה, לא ספירה מלאה</b> — קריאה ידנית מוצאת עוד מעטות. <b>וזה בדיוק ההבדל בין סינון-מילים
+    למודל, ולכן דוח 20 אינו קישוט.</b></span>
   </div>
 
   <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
@@ -1030,7 +1110,7 @@ tr.hi:hover td{background:var(--amber100)}
     <div class="chart-box" dir="ltr" role="figure"
          aria-label="התפלגות המרווחים בין אירועים עוקבים, דליים של 30 ימים">
       <svg viewBox="0 0 660 285" width="660" height="285" preserveAspectRatio="xMidYMid meet">
-        <line x1="80" y1="210" x2="640" y2="210" stroke="#CAD5E2" stroke-width="1.5"/>
+        <line x1="80" y1="210" x2="640" y2="210" stroke="#62748E" stroke-width="1.5"/>
         <line x1="80" y1="169.5" x2="640" y2="169.5" stroke="#F1F5F9"/>
         <line x1="80" y1="129" x2="640" y2="129" stroke="#F1F5F9"/>
         <line x1="80" y1="88.5" x2="640" y2="88.5" stroke="#F1F5F9"/>
@@ -1332,9 +1412,11 @@ tr.hi:hover td{background:var(--amber100)}
       שתויגו "אחר", והדלי הזה גדל משנה לשנה. ‏<b>אי אפשר:</b> על מה ההערות מדברות, האם המודל היה
       מסווג אותן אחרת מהלקוח, וכמה מהן נושאות דגל אדום — <b>כל אלה תוצרי הריצה, ולא נכתב כאן ניחוש
       במקומם.</b><br>
-      ⚠️ <b>וממצא-זריעה שנמדד:</b> <span class="ltr">426</span> ההערות נבנות מ-<span class="ltr">162</span>
-      נוסחים שונים בלבד — כלומר נוסחים חוזרים. הריצה תסווג את כולן, אך מדד ההסכמה יהיה מבוסס על פחות
-      טקסטים ייחודיים מכפי שנראה מהספירה.
+      ✅ <b>ומה שנמדד מחדש ב-<span class="ltr">10/09/2026</span>:</b> <span class="ltr">426</span> ההערות
+      נושאות <b><span class="ltr">356</span> נוסחים שונים</b>, ו<b>כל <span class="ltr">63</span> ההערות
+      שיושבות על משוב עם תגית שלילית ייחודיות</b> — אין ולו נוסח שלילי אחד שחוזר. החזרות שנותרו הן
+      שבחים קצרים, והחזרה המרבית היא <span class="ltr">5</span>. ⇒ <b>מדד ההסכמה יימדד על טקסטים
+      אמיתיים, לא על נוסח מועתק.</b>
     </div>
   </div>
 
@@ -1365,25 +1447,25 @@ tr.hi:hover td{background:var(--amber100)}
           </tr></thead>
           <tbody>
             <tr><td><b>אחר</b></td><td><span class="ltr">33</span></td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td>
-              <td style="color:var(--s400)">—</td></tr>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td>
+              <td style="color:var(--s500)">—</td></tr>
             <tr><td>איכות תגים</td><td><span class="ltr">14</span></td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td>
-              <td style="color:var(--s400)">—</td></tr>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td>
+              <td style="color:var(--s500)">—</td></tr>
             <tr><td>תפקוד דיילות</td><td><span class="ltr">13</span></td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td>
-              <td style="color:var(--s400)">—</td></tr>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td>
+              <td style="color:var(--s500)">—</td></tr>
             <tr><td>ניהול לקוי</td><td><span class="ltr">8</span></td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td>
-              <td style="color:var(--s400)">—</td></tr>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td>
+              <td style="color:var(--s500)">—</td></tr>
             <tr><td>איחור דיילות</td><td><span class="ltr">2</span></td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td>
-              <td style="color:var(--s400)">—</td></tr>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td>
+              <td style="color:var(--s500)">—</td></tr>
           </tbody>
         </table>
       </div>
@@ -1398,7 +1480,8 @@ tr.hi:hover td{background:var(--amber100)}
       <div class="tbl-scroll">
         <table class="data">
           <thead><tr>
-            <th scope="col">לקוח</th><th scope="col">תאריך</th>
+            <th scope="col">לקוח</th>
+            <th scope="col" aria-sort="descending">תאריך ▼</th>
             <th scope="col">ציון (לקוח)</th>
             <th scope="col">ההערה שנכתבה</th>
             <th scope="col">נושא (מודל)</th>
@@ -1406,54 +1489,54 @@ tr.hi:hover td{background:var(--amber100)}
             <th scope="col">דגל אדום</th>
           </tr></thead>
           <tbody>
-            <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1465 · קוואנטום רובוטיקה">
-              <td>קוואנטום רובוטיקה</td><td><span class="ltr">30/04/2026</span></td>
-              <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
-              <td class="wrap">"העמדה קרסה מול 40 איש ולקח כמעט שעה עד שמישהו טיפל בזה. הדיילות עצמן היו נהדרות."</td>
-              <td style="color:var(--s400)">— ימולא בריצה</td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td></tr>
-            <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1516 · מועצה אזורית עמק חפר">
-              <td>מועצה אזורית עמק חפר</td><td><span class="ltr">10/06/2026</span></td>
-              <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
-              <td class="wrap">"ביקשנו דוברת אנגלית ולא קיבלנו. איש לא עדכן אותנו שזה לא יקרה."</td>
-              <td style="color:var(--s400)">— ימולא בריצה</td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td></tr>
-            <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1475 · ורד קוסמטיקה טבעית">
-              <td>ורד קוסמטיקה טבעית</td><td><span class="ltr">06/05/2026</span></td>
-              <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
-              <td class="wrap">"החלפתם לנו דיילת יומיים לפני בלי להודיע, וגילינו את זה רק בבוקר האירוע."</td>
-              <td style="color:var(--s400)">— ימולא בריצה</td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td></tr>
-            <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1373 · גלובל שיפינג בע&quot;מ">
-              <td>גלובל שיפינג בע"מ</td><td><span class="ltr">03/02/2026</span></td>
-              <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
-              <td class="wrap">"הצוות היה מקצועי אבל אף אחד לא ידע להגיד לנו מי אחראי מטעמכם. רצנו בין שלוש דיילות עד שמצאנו תשובה."</td>
-              <td style="color:var(--s400)">— ימולא בריצה</td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td></tr>
-            <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1362 · מיטב מוצרי חשמל">
-              <td>מיטב מוצרי חשמל</td><td><span class="ltr">21/01/2026</span></td>
-              <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
-              <td class="wrap">"הגיעו פחות דיילות ממה שסיכמנו ואף אחד לא יידע אותנו מראש שזה מה שיהיה."</td>
-              <td style="color:var(--s400)">— ימולא בריצה</td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td></tr>
-            <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1356 · אורן תעשיות מזון">
-              <td>אורן תעשיות מזון</td><td><span class="ltr">18/01/2026</span></td>
-              <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
-              <td class="wrap">"האירוע עבר בסדר גמור אבל הרגשנו שאין מנהל אחראי, כל בעיה קטנה הפכה לחיפוש אחרי מישהו."</td>
-              <td style="color:var(--s400)">— ימולא בריצה</td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td></tr>
             <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1544 · מיטב מוצרי חשמל">
               <td>מיטב מוצרי חשמל</td><td><span class="ltr">19/07/2026</span></td>
               <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
-              <td class="wrap">"התקשורת מולכם לפני האירוע הייתה איטית מאוד. ענו לנו יום לפני על שאלה ששאלנו שבוע קודם."</td>
-              <td style="color:var(--s400)">— ימולא בריצה</td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td></tr>
+              <td class="wrap">"לא היה ברור מתי הצוות אמור להגיע. הבנות הגיעו מוקדם ולא היה מי שיקבל אותן."</td>
+              <td style="color:var(--s500)">— ימולא בריצה</td>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td></tr>
+            <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1516 · מועצה אזורית עמק חפר">
+              <td>מועצה אזורית עמק חפר</td><td><span class="ltr">10/06/2026</span></td>
+              <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
+              <td class="wrap">"הבקשה שלנו לתגים נוספים ביום האירוע לא נענתה, אף שיש לכם מלאי."</td>
+              <td style="color:var(--s500)">— ימולא בריצה</td>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td></tr>
             <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1485 · גלובל שיפינג בע&quot;מ">
               <td>גלובל שיפינג בע"מ</td><td><span class="ltr">14/05/2026</span></td>
               <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
-              <td class="wrap">"הציוד הגיע, הדיילות הגיעו, אבל אף אחד לא תיאם ביניהם. חבל, כי הבנות היו מצוינות."</td>
-              <td style="color:var(--s400)">— ימולא בריצה</td>
-              <td style="color:var(--s400)">—</td><td style="color:var(--s400)">—</td></tr>
+              <td class="wrap">"התיאום מול מנהל האולם נפל עלינו במקום עליכם."</td>
+              <td style="color:var(--s500)">— ימולא בריצה</td>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td></tr>
+            <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1475 · ורד קוסמטיקה טבעית">
+              <td>ורד קוסמטיקה טבעית</td><td><span class="ltr">06/05/2026</span></td>
+              <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
+              <td class="wrap">"החלפתם את המנהלת שלנו בין האירועים בלי להודיע וההיכרות התחילה מאפס."</td>
+              <td style="color:var(--s500)">— ימולא בריצה</td>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td></tr>
+            <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1468 · מועצה אזורית עמק חפר">
+              <td>מועצה אזורית עמק חפר</td><td><span class="ltr">03/05/2026</span></td>
+              <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
+              <td class="wrap">"היה חוסר בהירות מי מספק את החשמל לעמדה. הסתדרנו עם מאריך."</td>
+              <td style="color:var(--s500)">— ימולא בריצה</td>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td></tr>
+            <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1465 · קוואנטום רובוטיקה">
+              <td>קוואנטום רובוטיקה</td><td><span class="ltr">30/04/2026</span></td>
+              <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
+              <td class="wrap">"לא קיבלנו סיכום אחרי האירוע. היינו רוצים לדעת כמה בפועל הגיעו."</td>
+              <td style="color:var(--s500)">— ימולא בריצה</td>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td></tr>
+            <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1373 · גלובל שיפינג בע&quot;מ">
+              <td>גלובל שיפינג בע"מ</td><td><span class="ltr">03/02/2026</span></td>
+              <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
+              <td class="wrap">"המערכת שלכם לא זיהתה מוזמנים שנרשמו ביום האחרון והוספנו ידנית."</td>
+              <td style="color:var(--s500)">— ימולא בריצה</td>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td></tr>
+            <tr class="click" tabindex="0" aria-label="כרטיס פרויקט 1362 · מיטב מוצרי חשמל">
+              <td>מיטב מוצרי חשמל</td><td><span class="ltr">21/01/2026</span></td>
+              <td><span class="score"><span class="stars">★★★<span class="off">★★</span></span><span class="stag y">בינוני</span></span></td>
+              <td class="wrap">"ביקשנו סידור שונה של השולחנות ולא הועבר לצוות בשטח."</td>
+              <td style="color:var(--s500)">— ימולא בריצה</td>
+              <td style="color:var(--s500)">—</td><td style="color:var(--s500)">—</td></tr>
           </tbody>
         </table>
       </div>
@@ -1464,7 +1547,11 @@ tr.hi:hover td{background:var(--amber100)}
       <p class="tnote"><b>שני הסולמות אינם אותו סולם:</b> "ציון (לקוח)" הוא מה שהלקוח סימן
         <span class="ltr">1–5</span>; "סנטימנט (מודל)" הוא הערכת המודל על אותו סולם. הם מוצגים בשתי
         עמודות נפרדות ומתויגות כדי שלא ייקראו כמספר אחד.<br>
-        <b>שם הלקוח בעמודה משלו ולא בתוך הציטוט</b> — הציטוט הוא מה שנכתב, בלי תוספות.</p>
+        <b>שם הלקוח בעמודה משלו ולא בתוך הציטוט</b> — הציטוט הוא מה שנכתב, בלי תוספות.<br>
+        <b>מיון ברירת-מחדל: תאריך יורד</b> (📐7 — לפי המדד המוצג; אין כאן ציון מדורג לפי המודל
+        עדיין). שמונה השורות הן <b>שמונה הראשונות בפועל</b> מתוך <span class="ltr">33</span>, ולא
+        מדגם — כל <span class="ltr">33</span> נמדדו ב-<span class="ltr">10/09/2026</span>, ולכולן
+        יש הערה חופשית.</p>
     </div>
 
     <div class="basebanner" style="border-color:var(--teal200); background:var(--teal50); color:var(--teal700)">
