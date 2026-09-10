@@ -231,6 +231,37 @@ where (e.entity_type in ('shift','invoice','project','project_report')
 ⚠️ **והלקח הרחב:** בדיקת-מסד לבדה לא יכלה למצוא את זה — היא הייתה סופרת 1,834 שורות-יומן
 ומדווחת "תקין". **המסך הוא שהראה את המקף.**
 
+## מ13 · 🗺️ מפת-התלויות — הרווח הקפוא תואם את החישוב החי ✅ **נוסף 10/09/2026**
+**למה זה המבחן החשוב ביותר:** ‏`final_profit` הוא **ערך קפוא** שנשמר בסגירת הפרויקט ואינו
+מחשב את עצמו מחדש. ⇒ **כל שינוי-זריעה באחד מארבעת רכיביו מייצר סטייה שקטה.**
+
+**הנוסחה, מ-`20260827144459_module8_finance_money_ssot_and_readers.sql` (שורות 14–20):**
+```
+רווח = הכנסות − סחורה − עבודה − נסיעות
+  הכנסות = preVat של ההצעה + Σ שינויי-תכולה (בסימן)  ← quote_services · project_changes
+  סחורה  = Σ (qty + Σdelta) × closing_unit_cost        ← quote_services 🚫 בלי category='hostess'
+  עבודה  = Σ (actual_hours × hourly_rate_snapshot + personal_bonus)  ← assignments
+  נסיעות = `סכום_נסיעות_למשמרת` × שיבוצים עם actual_hours > 0        ← params · assignments
+```
+🔴 **נגיעה ב-`attendance_status` · `personal_bonus` · `quote_services` · `project_changes` ·
+`params` מחייבת חישוב-מחדש.** ‏`hourly_rate` **אינו** ברשימה — הרווח נשען על
+`hourly_rate_snapshot` הקפוא בשיבוץ.
+```sql
+with recalc as materialized (
+  select pf.project_id, pf.final_profit frozen, m.gross_profit computed
+  from project_finance pf join projects p using(project_id)
+  cross join lateral finance_project_money(pf.project_id) m
+  where p.project_status='finished' and pf.final_profit is not null)
+select count(*) filter (where abs(computed-frozen) > 1) drifted from recalc;
+```
+**עובר:** ‏**0**. 🔑 **התיקון לעולם אינו חישוב-יד — מריצים את `finance_project_money`, שהיא
+ה-SSOT.** *(‏`UPDATE` ישיר עליה נכשל — set-returning; נדרש `cross join lateral`.)*
+**נמדד 10/09:** ‏**481 מתוך 701 סטו** אחרי סבב-הזריעה (**+417,409 ₪** מצטבר) ⇒ חושבו מחדש ⇒ **0**.
+**ושני ערכים שקריים התגלו בדרך:** פרויקטים 823 ו-1108 היו רשומים בהפסד ~6,000 ₪ בעוד
+שהכנסתם 16,224 ועלויותיהם 7,442 — **הפסד בלתי-אפשרי, שריד-זריעה.**
+✅ **זנב-ההפסדים שרד: 12, כולם פרויקטים מבוטלים** — נכון יותר עסקית מהפסד באירוע שהתקיים במלואו.
+📈 **ורווח שנתי: 893,000 ⇒ 1,031,812 ₪** — מכסה סוף-סוף חמש משרות מלאות.
+
 ## 🎯 מבחן-הרגישות — הוכחה שהמבחן יורה, לא רק שהוא ירוק
 **הורץ 10/09/2026.** שתילה היפותטית (בלי כתיבה למסד): הדיילת עתירת-המשמרות בדירוג-5
 "הופכת" ל-40% אי-הגעה. **מ1 צנח מ-9.9 ל-2.8 — מתחת לסף, כלומר נכשל כנדרש.**
