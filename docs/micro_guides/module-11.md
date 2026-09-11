@@ -137,9 +137,12 @@ says **"~21 פונקציות-שרת"** and marks the choice `⚙️ הכרעת-�
 silently.** Decide it at step 1.0 and write it down — a drill report may need one function with
 parameters or three.
 
-### 3.4 🚧 Cross-module debts targeted at m11 — **10 rows in `PROJECT_MASTER §6`, each mapped**
-✏️ **Mapped 11/09 — six of seven were already covered by name; the seventh was not, and it is the one
-that would have produced a "why is this NULL?" question mid-build.**
+### 3.4 🚧 Cross-module debts targeted at m11 — **every one mapped**
+✏️ **Mapped 11/09.** 🔑 **And first, the arithmetic, because `grep '🚧 מ11'` on §6 returns 10 lines and
+there are not 10 debts:** ‏**8 distinct items** — 7 standalone `🚧 מ11 ←` rows, plus **one embedded inside
+m4's row** *(the shared email engine, `🚧 מ11 ← מ3`)*. The other two hits are a **continuation line** of
+that same item and a **forward pointer** from an m5 row. ⇒ **counting the grep gives 10 and hides that one
+of the eight lives inside someone else's bullet.** All eight are below.
 
 | The debt | Where it lands here |
 |---|---|
@@ -150,6 +153,7 @@ that would have produced a "why is this NULL?" question mid-build.**
 | `🚧 מ11 ← מ8` — the supply contract | §🔗 in `spec.md`, the profitability + salary RPCs |
 | `🚧 מ11 ← (scope)` — no operating/net profit | §7.93, closed; m11 gets cash-flow instead |
 | 🔴 **`🚧 מ11 ← מ5` — scope-change logistics rows** | **was unmapped. Now: phase 2, the equipment and additions RPCs** |
+| ✏️ **`🚧 מ11 ← מ3` — the shared email engine + `email_log`** | 🟢 **NOT REQUIRED — and it looks required if you only read §6.** Ruled `לא-נדרש` by `processes-approved.md` **R1**: m11 sends no mail at all. The only file-producing action is *"ייצוא לאקסל"*, a **browser download, not a send** ⇒ no `email_log` entity, nothing to add to the CHECK or to `ENTITY_MODULE`. **The §6 row now says so** *(written back 11/09 — R1 mandated it and it had never been done)*. 🚫 **Do not extend `email_log` for m11.** |
 
 🔴 **The seventh, in full, because it looks like a bug and is not:** `apply_scope_change` inserts the
 `logistics` row **before** the `project_changes` row exists in the same iteration ⇒ `change_id` is not
@@ -414,6 +418,30 @@ principles + the primitive map for Lorenz · Pareto · stacked · scatter · his
 shell that all the others reuse. 🔴 **RTL is the risk:** the time axis runs LTR inside an RTL page, and
 that is a ruled decision, not an invention.
 
+**Step 3.0ג · 🔴 The Excel export — one mechanism, reused by all 16** *(added 11/09 — the word "ייצוא"
+appeared **zero** times in this guide, while all four card files spec the button on every page)*
+**It is not an afterthought and it is not per-page.** Each of the four `cards-*.md` §⑤ row 5 defines the
+same control: it downloads **the level currently on screen** — filters and drill state included *(ת4)* —
+and **two caption lines under the filter row say what will come down before the click**: the expected
+filename and `#xlsxCols`, the column names read from the visible table's DOM.
+🔑 **The mechanism is already in the repo and must be reused, not re-chosen** *(iron rule 14)*:
+‏**`write-excel-file`** *(`package.json`, `^2.3.10`)*, the browser entry — **the one existing caller is
+`src/lib/salaryReport.js:39`**, `writeSalaryReportXlsx`.
+🔴 **Copy one option from it deliberately: `rightToLeft: true`.** Its own comment says why — *"otherwise
+Excel opens a Hebrew document with column A on the left"*. **A Hebrew export without it is wrong in a way
+no test in this repo would catch.**
+⚠️ **And m11's export is NOT m8's.** m8 builds a fixed document and uploads it to the `finance` bucket;
+m11 downloads **what the RPC already returned — no second query** *(`processes-approved.md §📤`)*, filtered
+and drilled to the screen state. ⇒ **shared library, new call site; do not route it through m8's code.**
+**Empty and table-less states are specified, not invented:** a table with no rows ⇒ the button is
+**disabled** with *"אין שורות לייצא"* · a page with no table at all ⇒ the column line reads
+*"אין טבלה לייצוא בדף הזה"* · report 20 before an approved run ⇒ *"אין שורות לייצא — טרם אושרה ריצת-ניתוח"*
+*(`cards-customers.md` G-ל8, locked verbatim to ת4)*.
+🚫 **No separate export permission** — whoever can see the page can export it *(§📤, ⚙️ delegated)*.
+**Verify:** one shared export helper with its own `*.test.js` · the file opens RTL · a drilled, filtered
+export contains exactly the visible rows · the two caption lines match the file that actually lands ·
+all three empty states.
+
 **Steps 3.1–3.4 · One tab per step.** ✏️ **The surface→step map is written out 11/09 — until then it was
 only implied by the order the files sit in, and a builder had to infer it.**
 
@@ -479,5 +507,5 @@ reality-kill row** *(§3.3)*.
 | **D-2** | 🔴 **מ1, the shell, has no mockup** | It is one of four ⬜ surfaces. §📐10 requires every page to know the five envelope states and the gallery is drawn **once, in מ1**. ⇒ **Step 3.0 builds it from `design-contract §⑥` without a drawn reference**, which is the single largest guess in this guide. **Ishay may prefer to draw it first.** |
 | **D-3** | §7's RLS matrix row for m11 reads *"none (5 reports as Views/RPC, read-only)"* | Written before the Discovery. **Corrected once, in Phase 4**, with all three writes — correcting it now would describe tables that do not exist. |
 | **D-4** | `docs/schema.sql` missing three live columns | Fixed in step 1.1 before anything depends on it. |
-| **D-5** | The step guide `module_11_reports.md` §① still says **"5 דו"חות"** | The Discovery produced **16 surfaces**. The truth hierarchy puts the guide last and it says so itself — **but it is the file Ishay pastes from**, so §⑥1 needs updating with the same commit that approves this guide. |
+| ~~**D-5**~~ | ~~The step guide §① still says **"5 דו"חות"**~~ | ✅ **CLOSED 11/09/2026 — verified this turn, not remembered.** The guide was rewritten end to end: §① now reads **16**, and the old sentence survives only struck through with its correction note *(`module_11_reports.md:15–16`)*. ⚠️ **Left as a closed row rather than deleted, because a builder who inherits "the guide says 5" from anywhere else needs to see it was checked and when.** |
 | ~~**D-6**~~ | ~~`מתחילי` appears twice in live `src/` strings~~ | ❌ **WITHDRAWN 11/09/2026 — the claim was wrong, and a fresh-context reviewer caught it.** Re-measured: **zero** occurrences in `src/` and `e2e/`. The three hits are `מתחילים`, a valid word, **all inside code comments**. The cause is the error class this guide keeps warning about: a `grep` on a **prefix** matched a different word — I measured my reconstruction of the search instead of the word. It was inherited from `spec.md`, now corrected there too. **No debt.** |
