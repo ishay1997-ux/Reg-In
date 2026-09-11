@@ -412,6 +412,21 @@ against the numbers already measured: **33 "אחר"**, and the 20 complaints car
 🔐 **Every write goes through Ishay's gate.** ⚠️ **And the run is done and approved BEFORE the
 conference** *(card ת2: on stage there is no live call).*
 
+🔴 **Two things this step owes beyond the data, added 11/09/2026 — they are what make story ④ *scheduled*
+rather than *hoped for*:**
+**‏① When this step lands, flip the story.** Conference story ④ — *"the model read what the tag missed"* —
+**is false until this step runs**, because מ22 declares four times that no run exists. ⇒ **the last action of
+this step is to change the ⚠️ row in `HANDOFF-stage3-2026-09-10-02.md §6` to ✅ and say so to Ishay.**
+Without that, the story stays flagged forever and nobody knows it became true.
+**‏② And it has a dependency Claude cannot discharge: the Gemini key is step 2ב.1, a 🧩 Ishay step.**
+⇒ **If the run is not approved by `08/10/2026` — a week before the conference — story ④ is replaced, not
+postponed.** 🔑 **The replacement needs nothing and is true today**, straight off the approved מ22:
+> *"‏426 הערות חופשיות נכתבו במשוב. ‏**33 מהן יושבות על משוב שתויג 'אחר'** — הדלי השלילי הגדול ביותר
+> במערכת, **ואיש עדיין לא קרא אותן.** זה בדיוק מה שדוח ניתוח-ההערות נבנה בשבילו."*
+**Both figures are on screen** *(`05_tab_customers_approved.html`, the מ22 tiles)*, it passes all five story
+rules in `seed-plan.md §1`, and it sets up the AI layer as **the answer** rather than claiming it already ran.
+*(Date is my recommendation, not a ruling — Ishay may move it.)*
+
 ### Phase 3 — UI
 **Step 3.0 · Build מ1 — the shell — FIRST.** Four tabs · the chip row *(ruling 29: tabs with an underline
 for role, pills for report)* · global filters · **the five envelope states**, which §📐10 requires every page
