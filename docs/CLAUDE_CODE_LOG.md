@@ -46,6 +46,17 @@
 
 ## Session Log (newest first)
 
+### 11/09/2026 (11:3X–12:0X) — Ishay looked at the shell and caught a layout the approved mockups had abandoned
+
+**His words, on the file I had just sent:** *"לא סיכמנו בלי סרגל צד ועם טאבים למעלה?"* · *"הכוונה לעשות כפתורים שלוחצים וזה פותח את הלשוניות של הדוחות"* · *"אסור שבפיתוח יפלו בזה גם"*.
+
+**He was right, and the source was not his mockups.** All four approved tabs render `.picker` as `display:flex; flex-wrap:wrap; width:100%` — **a horizontal chip row above the page**. **The skeleton in `design-contract §⑥` renders it as `flex-direction:column; width:220px`, inside a two-column flex wrapper** — **a second vertical rail in a screen that already has one.** I built the shell from the skeleton, so it inherited a layout the approved mockups had already left behind.
+
+🔑 **And his third sentence is the one that mattered, not the first two.** ‏§⑥ is labelled *"שלד-HTML להעתקה"* and is what a build session copies ⇒ **fixing only my mockup would have left the mine armed for the build, while making the symptom invisible.** Fixed in both; the CSS is lifted **verbatim** from `03_tab_finance_approved.html:168-175` with the reason recorded beside it, and the two-column wrapper is gone from both files.
+➕ **And the chips now do what he described** — clicking one marks it current and opens that report: the page heading becomes its short name and the line beneath it the question, **both copied word-for-word from the four approved mockups’ banners** *(ruling 18: short name in navigation, question as subtitle)*.
+⚠️ **One bug of mine, caught by verifying instead of assuming:** `querySelector('h1')` grabbed the **top-bar** heading, so the first chip click renamed the app chrome from `דו"חות` to the report name and left the page heading untouched. Explicit id now. Re-verified in the browser: top bar stays, heading and question follow the chip, zero console errors, no horizontal scroll at 1280.
+🔑 **The durable lesson, and it is the same class as §⑥.1 an hour earlier:** **a skeleton labelled "copy this" is a source of truth for appearance, and when the drawings move on, nobody re-opens the skeleton.** Both of today’s layout defects lived there, and both were found by someone looking at a rendered page — not by reading the file.
+
 ### 11/09/2026 (10:0X–11:3X) — the shell drawn, §⑥.1 gone over, and two agents that broke a conference story
 
 **Ishay: *"סגור מה שאתה יכול, העזר בסוכנים אם תרצה"*.**
