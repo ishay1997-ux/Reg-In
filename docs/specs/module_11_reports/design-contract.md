@@ -726,12 +726,17 @@ body.hide-markers .im{display:none}
 .tab.masked .lock-txt{font-size:10.5px; font-weight:400; color:var(--s400)}
 
 /* ── בורר-דוח (§2.7) — עמודה ימנית, GroupList כתקדים ── */
-.picker{display:flex; flex-direction:column; gap:4px; width:220px; flex:none}
-.picker button{display:flex; align-items:center; justify-content:space-between; gap:8px;
-     border:1px solid transparent; border-radius:var(--r-lg); padding:8px 12px;
-     font-size:13.5px; text-align:right; background:none; cursor:pointer; color:var(--s600)}
+/* 🔴 ✏️ 11/09/2026 — שורת-שבבים אופקית, לא סרגל אנכי. הכרעת-ישי, ומועתק מילה-במילה
+   מ-`03_tab_finance_approved.html:168-175`. מה שעמד כאן היה `flex-direction:column; width:220px`,
+   כלומר **סרגל-צד שני** בתוך מסך שכבר יש לו סרגל-צד — וארבעת המוקאפים המאושרים מעולם לא נראו כך. */
+.picker{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0 0 14px; width:100%}
+.picker button{border:1px solid var(--s200); background:#fff; color:var(--s600);
+     border-radius:999px; padding:5px 12px; font:inherit; font-size:12.5px; cursor:pointer;
+     white-space:nowrap; line-height:1.3}
+.picker button:hover{background:var(--s50)}
 .picker button.on{border-color:var(--teal200); background:var(--teal50);
-     font-weight:600; color:var(--s800)}
+     font-weight:600; color:var(--teal700)}
+.picker button:focus-visible{outline:2px solid var(--teal700); outline-offset:2px}
 
 /* ── שורת-מסננים גלובליים (תקופה·לקוח) — FilterPill ── */
 .filters{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:16px}
@@ -849,7 +854,7 @@ tr.amber td{background:var(--amber50)}
     <button class="tab" role="tab" aria-selected="false">לקוחות</button>
   </div>
 
-  <div style="display:flex; gap:20px; align-items:flex-start">
+  <div>
     <!-- בורר-דוח (§2.7) — ✏️ 22:1X **תוויות = השם הקצר מטבלת 🏷️** (הכרעה 18), לא השאלה.
          ההערה שהייתה כאן ("תוויות = כותרות-השאלה מ-📑") הוסרה — היא הכתיבה את הצורה שהכרעה 18 ביטלה.
          שלושת בוררי-הלשוניות האחרים (כספים/דיילות/לקוחות): §⑥.1 למטה. -->
@@ -864,7 +869,7 @@ tr.amber td{background:var(--amber50)}
       <button>קהל מול צוות</button>
     </nav>
 
-    <div style="flex:1; min-width:0">
+    <div>
       <!-- ✏️ 22:1X כותרת-הדף: שם קצר (הכרעה 18) · השאלה · **התקופה** (📐17) · **הצהרת-אוכלוסייה** (📐2).
            <h1> אמיתי ברמת-העמוד הוא גם דרישת §5.2 #11 (waitForReady בסריקת-הנגישות). -->
       <h1>מבט-על הנהלה</h1>

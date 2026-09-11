@@ -102,12 +102,17 @@ body.hide-markers .im{display:none}
 .tab.masked .lock-txt{font-size:10.5px; font-weight:400; color:var(--s400)}
 
 /* ── בורר-דוח (§2.7) — עמודה ימנית, GroupList כתקדים ── */
-.picker{display:flex; flex-direction:column; gap:4px; width:220px; flex:none}
-.picker button{display:flex; align-items:center; justify-content:space-between; gap:8px;
-     border:1px solid transparent; border-radius:var(--r-lg); padding:8px 12px;
-     font-size:13.5px; text-align:right; background:none; cursor:pointer; color:var(--s600)}
+/* 🔴 ✏️ 11/09/2026 — שורת-שבבים אופקית, לא סרגל אנכי. הכרעת-ישי, ומועתק מילה-במילה
+   מ-`03_tab_finance_approved.html:168-175`. מה שעמד כאן היה `flex-direction:column; width:220px`,
+   כלומר **סרגל-צד שני** בתוך מסך שכבר יש לו סרגל-צד — וארבעת המוקאפים המאושרים מעולם לא נראו כך. */
+.picker{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0 0 14px; width:100%}
+.picker button{border:1px solid var(--s200); background:#fff; color:var(--s600);
+     border-radius:999px; padding:5px 12px; font:inherit; font-size:12.5px; cursor:pointer;
+     white-space:nowrap; line-height:1.3}
+.picker button:hover{background:var(--s50)}
 .picker button.on{border-color:var(--teal200); background:var(--teal50);
-     font-weight:600; color:var(--s800)}
+     font-weight:600; color:var(--teal700)}
+.picker button:focus-visible{outline:2px solid var(--teal700); outline-offset:2px}
 
 /* ── שורת-מסננים גלובליים (תקופה·לקוח) — FilterPill ── */
 .filters{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:16px}
@@ -247,7 +252,7 @@ body.onb-2 .hint{display:block; font-size:13px; color:var(--s600);
     <button class="tab" role="tab" aria-selected="false" data-tab="לקוחות">לקוחות</button>
   </div>
 
-  <div style="display:flex; gap:20px; align-items:flex-start">
+  <div>
     <!-- בורר-דוח (§2.7) — ✏️ 22:1X **תוויות = השם הקצר מטבלת 🏷️** (הכרעה 18), לא השאלה.
          ההערה שהייתה כאן ("תוויות = כותרות-השאלה מ-📑") הוסרה — היא הכתיבה את הצורה שהכרעה 18 ביטלה.
          שלושת בוררי-הלשוניות האחרים (כספים/דיילות/לקוחות): §⑥.1 למטה. -->
@@ -280,7 +285,7 @@ body.onb-2 .hint{display:block; font-size:13px; color:var(--s600);
       <button>ניתוח הערות</button>
     </nav>
 
-    <div style="flex:1; min-width:0">
+    <div>
       <!-- ✏️ 22:1X כותרת-הדף: שם קצר (הכרעה 18) · השאלה · **התקופה** (📐17) · **הצהרת-אוכלוסייה** (📐2).
            <h1> אמיתי ברמת-העמוד הוא גם דרישת §5.2 #11 (waitForReady בסריקת-הנגישות). -->
       <div class="intro">
@@ -295,7 +300,7 @@ body.onb-2 .hint{display:block; font-size:13px; color:var(--s600);
         <br>התוכן שבאמצע הוא <b>דף-דוגמה ("מבט-על הנהלה")</b> ואינו חלק ממ1 — הוא כאן רק כדי
         שהמעטפת תיראה עם משהו בתוכה. הדף עצמו מאושר בקובץ <code>02_tab_executive_approved.html</code>.
       </div>
-      <h1>מבט-על הנהלה</h1>
+      <h1 id="pageTitle">מבט-על הנהלה</h1>
       <p class="psub">מה מצב העסק השנה?</p>
       <p class="psub">2026 (01/01–06/09) · כל הלקוחות</p>
       <p class="pop">אוכלוסייה: פרויקטים שהסתיימו + מבוטלים שדמי-הביטול נפתרו ·
@@ -479,6 +484,47 @@ body.onb-2 .hint{display:block; font-size:13px; color:var(--s600);
       Array.prototype.forEach.call(pickers, function (p) {
         p.hidden = p.getAttribute('data-tab') !== name;
       });
+    });
+  });
+
+  /* ═══ שבב-דוח = הניווט. לחיצה פותחת את הדוח (הכרעת-ישי 11/09/2026).
+     השאלות מועתקות מכותרות-הבאנר של ארבעת המוקאפים המאושרים, מילה-במילה —
+     השם הקצר ב-<h1>, השאלה ככותרת-משנה (הכרעה 18). ═══ */
+  var Q = {
+    'מבט-על הנהלה': 'מה מצב העסק השנה?',
+    'מגמות רב-שנתיות': 'האם הצמיחה שומרת על שולי-הרווח?',
+    'הנחות ורווחיות': 'האם הנחות עמוקות שוחקות את הרווח?',
+    'קהל מול צוות': 'כמה דיילות לאורח באמת נדרשו?',
+    'מבט-על כספים': 'מה מצב הכסף?',
+    'רווחיות פרויקטים': 'אילו פרויקטים דלפו מהתקציב?',
+    'גיול חובות': 'את מי לגבות השבוע?',
+    '⏸️ תזרים צפוי': 'מה ייכנס החודש? — נדחה, אינו נבנה לכנס',
+    '⏸️ תוספות שטח': 'האם תוספות-שטח מתומחרות? — נדחה, אינו נבנה לכנס',
+    'צריכת ציוד': 'כמה ציוד נצרך וכמה להזמין?',
+    '⏸️ שכר דיילות לפי חודש': 'כמה עלה השכר לפי חודש? — נדחה, אינו נבנה לכנס',
+    'מבט-על דיילות': 'מה מצב המאגר?',
+    'אמינות והתייצבות': 'את מי לא לשלוח, ואת מי להזהיר?',
+    'איכות מול עלות': 'מי שווה את התעריף שלה?',
+    'הוגנות השיבוץ': 'האם השיבוץ הוגן ומהיר?',
+    'מבט-על לקוחות': 'מה הלקוחות מרגישים?',
+    'שביעות רצון': 'מה משמח ומה מכעיס לקוחות?',
+    'לקוחות מתרחקים': 'למי להתקשר החודש?',
+    'ניתוח הערות': 'מה ההערות אומרות שהתגיות לא תפסו?',
+  };
+  /* 🔴 `querySelector('h1')` תופס את כותרת הסרגל-העליון ("דו\"חות"), לא את כותרת-הדף —
+     נתפס בהרצה 11/09/2026: לחיצה על שבב שינתה את הסרגל העליון. מזהה מפורש, לא סדר. */
+  var pageH1 = document.getElementById('pageTitle');
+  var pageQ = document.querySelector('#pageTitle ~ .psub');
+  Array.prototype.forEach.call(document.querySelectorAll('.picker button'), function (b) {
+    b.addEventListener('click', function () {
+      var row = b.closest('.picker');
+      Array.prototype.forEach.call(row.querySelectorAll('button'), function (x) {
+        x.classList.toggle('on', x === b);
+        if (x === b) { x.setAttribute('aria-current', 'true'); } else { x.removeAttribute('aria-current'); }
+      });
+      var name = b.textContent.trim();
+      if (pageH1) { pageH1.textContent = name.replace('⏸️ ', ''); }
+      if (pageQ) { pageQ.textContent = Q[name] || ''; }
     });
   });
 
