@@ -137,10 +137,29 @@ says **"~21 פונקציות-שרת"** and marks the choice `⚙️ הכרעת-�
 silently.** Decide it at step 1.0 and write it down — a drill report may need one function with
 parameters or three.
 
-### 3.4 🚧 Cross-module debts targeted at m11 — **10 rows in `PROJECT_MASTER §6`**
-Read each to its tail. Three carry build consequences: **`🚧 מ11 ← מ5`** (cost basis — closed by
-ruling 5: `planned_qty`) · **`🚧 מ11 ← מ8`** (the supply contract for profitability + salary) ·
-**`🚧 מ11 ← מ4`** (two data holes the reports would otherwise discover too late).
+### 3.4 🚧 Cross-module debts targeted at m11 — **10 rows in `PROJECT_MASTER §6`, each mapped**
+✏️ **Mapped 11/09 — six of seven were already covered by name; the seventh was not, and it is the one
+that would have produced a "why is this NULL?" question mid-build.**
+
+| The debt | Where it lands here |
+|---|---|
+| `🚧 מ11 ← מ4` — two data holes | step 1.5 · `invite_sent_at` overwrite noted in §5 🔮 |
+| `🚧 מ11 ← מ6` — the reports were invented without a guiding question | answered by the Discovery; `spec.md` is the product truth |
+| `🚧 מ11 ← מ5` — cost basis | ruling 5 ⇒ `planned_qty`; §7.22, step 1.4 |
+| `🚧 מ11 ← מ6` — "when did it change" | §5 🔮 row, accepted |
+| `🚧 מ11 ← מ8` — the supply contract | §🔗 in `spec.md`, the profitability + salary RPCs |
+| `🚧 מ11 ← (scope)` — no operating/net profit | §7.93, closed; m11 gets cash-flow instead |
+| 🔴 **`🚧 מ11 ← מ5` — scope-change logistics rows** | **was unmapped. Now: phase 2, the equipment and additions RPCs** |
+
+🔴 **The seventh, in full, because it looks like a bug and is not:** `apply_scope_change` inserts the
+`logistics` row **before** the `project_changes` row exists in the same iteration ⇒ `change_id` is not
+yet available and **the function structurally cannot fill `logistics.project_change_id`**. There is no
+later `update` that completes it. ⇒ **a logistics row born from a scope change carries a permanent
+`NULL` there**, and "planned vs actual" is not computable on it.
+✅ **And the spec already answers it — the builder must not invent a second answer:** §📑 report 11
+routes scope-change rows through `project_changes.unit_cost_snapshot`, and **a row with no pointer
+increments a visible *"ללא מקור-עלות"* counter** *(ruling ㉗)*. **Do not back-fill, do not guess a cost,
+do not hide the row.** The counter carries ₪ as well as a count — 3 rows can be 40 ₪ or 40,000 ₪.
 
 ### 3.5 ⏳ Deferred, recorded — the phase door asks only if newly relevant
 **⏳1** report 11 vs the logistics manager's permission · **⏳2** "queue memory" *(first write path in a
@@ -395,8 +414,21 @@ principles + the primitive map for Lorenz · Pareto · stacked · scatter · his
 shell that all the others reuse. 🔴 **RTL is the risk:** the time axis runs LTR inside an RTL page, and
 that is a ruled decision, not an invention.
 
-**Steps 3.1–3.4 · One tab per step**, in the order the approved files sit: executive · finance ·
-hostesses · customers. **Each step ends with the 🎨 UX gate and a 🗣️ screenshot to Ishay.**
+**Steps 3.1–3.4 · One tab per step.** ✏️ **The surface→step map is written out 11/09 — until then it was
+only implied by the order the files sit in, and a builder had to infer it.**
+
+| Step | The approved file it builds from | Surfaces | Their cards |
+|---|---|---|---|
+| **3.1** | `approved/02_tab_executive_approved.html` | **מ2** מבט-על הנהלה · **מ3** מגמות רב-שנתיות · **מ4** הנחות ורווחיות · **מ6** קהל מול צוות | `cards-management.md` |
+| **3.2** | `approved/03_tab_finance_approved.html` | **מ7** מבט-על כספים · **מ8** רווחיות פרויקטים · **מ9** גיול חובות · **מ12** צריכת ציוד | `cards-finance.md` |
+| **3.3** | `approved/04_tab_hostesses_approved.html` | **מ14** מבט-על דיילות · **מ15** אמינות והתייצבות · **מ16** איכות מול עלות · **מ17** הוגנות השיבוץ | `cards-hostesses.md` |
+| **3.4** | `approved/05_tab_customers_approved.html` | **מ19** מבט-על לקוחות · **מ20** שביעות רצון · **מ21** לקוחות מתרחקים · **מ22** ניתוח הערות *(מ25 lives inside it)* | `cards-customers.md` |
+
+⚠️ **The finance file also carries מ10 · מ11 · מ13, deferred by ruling 30** — they are drawn, verified,
+and **not built for the conference.** They sit there with a return trigger; **מ13 is the first
+replacement.** 🚫 **Do not build them because they are in the file.**
+
+**Each step ends with the 🎨 UX gate and a 🗣️ screenshot to Ishay.**
 ⚠️ **And each of these is four full surfaces — charts, drill-down, five states, the onboarding anchors.**
 A rehearsal flagged the granularity as optimistic. **Split a tab into per-surface sub-steps the moment
 one of them slips**; the phase door is the tab, the work unit may be the surface.
