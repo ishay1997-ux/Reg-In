@@ -1,8 +1,14 @@
 # REG-IN — Micro-Guide | Module 11: Management Reports
 
-> 🟨 **DRAFT.** This file is `module-11.draft.md` on purpose: the Stop hook does not enforce iron
-> rule 15 for m11 while the name carries `.draft`. **Rename to `module-11.md` at approval, before
-> step 1.0.** Until then nothing in it has been executed.
+> ✅ **APPROVED AND ACTIVE — renamed from `module-11.draft.md` on 11/09/2026.** From this moment
+> iron rule 15 is enforced for m11: step transitions update the status header **in the same session**,
+> and a deviation gets an `↳ as-built` note plus a line in §9.
+> **Nothing in it has been executed yet** — phase 0, step 1.0 is the next action.
+>
+> **What it went through before the rename:** a fresh-context reviewer on three lenses (compliance ·
+> Contrarian · Outsider) and an **execution rehearsal** that walked it as the builder and stopped at
+> **12 of ~30 steps**. Both sets of findings are closed in the text, and the ones deliberately left
+> open are named in §9 rather than removed.
 >
 > **Reader:** a future zero-memory Claude session. **Language:** English, per `docs/CLAUDE.md`; Hebrew
 > appears only as data — UI strings, module/role names, §7 quotes, migration names.
@@ -13,7 +19,7 @@
 
 | | |
 |---|---|
-| **Phase** | **0 — not started.** Nothing in this guide has run. |
+| **Phase** | **0 — not started.** Step 1.0 (the phase door) is the next action. |
 | **Branch** | `ishay/dashboard-legend-ucd` — ⚠️ **not** the `ishay/module-11-reports` the step guide names. See §9 D-1. |
 | **Spec** | `docs/specs/module_11_reports/spec.md` — approved 11/09/2026 |
 | **Surfaces** | **16**, in **4** files under `docs/mockups/management-report-screen/approved/` |
@@ -41,8 +47,8 @@ envelope states)*, מ23, מ24, מ25. 🔴 **מ1 is the real gap — see §9 D-2.
 ### 2.3 Existing files this module touches (non-additive surface)
 | File | Why | Risk |
 |---|---|---|
-| `src/App.jsx` | one `<Route>` + `<ProtectedRoute allow='דו"חות'>` | route left unguarded = open screen; `App.routes.test.jsx` catches it |
-| `src/components/Sidebar.jsx` | `MODULE_META` row | missing ⇒ module invisible, **silently** |
+| `src/App.jsx` | ✏️ **the route already exists** — `App.jsx:216`, `path="reports"`, wrapped in `<ProtectedRoute allow='דו"חות'>` around `UnderConstruction`. ⇒ **this is a replacement, not an addition** | the guard is already there; `App.routes.test.jsx` keeps it |
+| ~~`src/components/Sidebar.jsx`~~ ✏️ **wrong path** | the file is `src/components/layout/Sidebar.jsx`, and it derives from `BUSINESS_MODULES` — **the `'דו"חות'` row with `/reports` is already at `src/lib/constants.js:24`** | **nothing to add here.** Two facts this guide had wrong until 11/09 |
 | `src/modules/09_settings/**` | 4 new `params` rows surface in the existing screen | none new |
 | `src/modules/04_hostesses/api.js` | `insertInviteRow` · `writeInviteToken` gain `recommended_rank` | 🔴 **merged m4 code ⇒ full m4 regression** |
 | `src/lib/onboardingCopy.js` | +70 keys | wrong key ⇒ `null`, silent in production |
@@ -211,7 +217,7 @@ report 20's entire point.
 > | T5 | The four `params` need ceiling/floor like every other numeric param (pattern merged in PR #104) **and** a row each in `paramsRegistry.js` | 1.4 |
 > | T6 | `moddatetime` lives in `extensions` — `execute function extensions.moddatetime('updated_at')` | 1.2 |
 > | T7 | New functions: `revoke … from public, anon, authenticated` then grant `authenticated`; verify `proacl` | 1.2 |
-> | T8 | While this file is `.draft.md` the Stop hook does not enforce rule 15 — **rename at approval** | approval |
+> | ~~T8~~ | ✅ **Done 11/09/2026** — renamed to `module-11.md`; rule 15 is live for m11 from now on | approval |
 
 **Step 1.0 · 🔻👤 Phase door**
 **🤖 half:** `git fetch origin` · `git log origin/dev..HEAD` · MCP live (`select version()`) ·
@@ -341,8 +347,21 @@ conference** *(card ת2: on stage there is no live call).*
 *(ruling 29: tabs with an underline for role, pills for report)* · global filters · **the five
 envelope states**, which §📐10 requires every page to know. **See §9 D-2: this is the one surface
 with no mockup.**
+**Step 3.0ב · 🔴 The first chart in this repository** *(added 11/09 — the guide never mentioned it)*
+‏`recharts@3.10.1` is in `package.json` and has **zero usages in `src/`** — measured. ⇒ **every chart
+convention is established here, not inherited.** Read `design-contract §⑤` *(the 12 binding chart
+principles + the primitive map for Lorenz · Pareto · stacked · scatter · histogram)* and
+`stage2-review/m11-charts-rtl-a11y.md` **before the first `<BarChart>`**, and build **one** chart-card
+shell that all the others reuse. 🔴 **RTL is the risk:** the time axis runs LTR inside an RTL page, and
+that is a ruled decision, not an invention.
+
 **Steps 3.1–3.4 · One tab per step**, in the order the approved files sit: executive · finance ·
 hostesses · customers. **Each step ends with the 🎨 UX gate and a 🗣️ screenshot to Ishay.**
+⚠️ **And each of these is four full surfaces — charts, drill-down, five states, the onboarding anchors.**
+A rehearsal flagged the granularity as optimistic. **Split a tab into per-surface sub-steps the moment
+one of them slips**; the phase door is the tab, the work unit may be the surface.
+🔑 **Each tab step reads its surface cards in full** — nine sections each — **and is not closed until
+every ruling in §3.3(ג) that touches those surfaces is visible on screen.**
 **Step 3.5 · The onboarding layer** — 70 keys copied **verbatim** from each card's §⑩ into
 `onboardingCopy.js`. 🔴 **Convert every `<span class="ltr">` to LRI…PDI** *(`onboarding-layer-contract §5ב`)*.
 
@@ -366,6 +385,8 @@ Closing audit in a **fresh** session (`module-close`).
 | E2E | one journey per tab + the masked-tab case; the drill-down on all four drill reports |
 | Visual | 1280px, zero console errors, `scrollWidth − clientWidth = 0`, both onboarding modes |
 | 🔴 Acceptance oracle | the hand-computed numbers of `spec.md §🔢` — **never a test this session authored** |
+| ⚠️ Oracle coverage | ✏️ **`spec.md §🔢` covers the aging report only.** The other fifteen surfaces are anchored in `signoff-baseline-2026-09-10.md`, **which is a measurement register, not a hand-computed expectation** — it is an independent channel (live SQL) and that is what makes it usable, but **it is not the same guarantee.** ⇒ **before building a surface whose headline number matters, hand-compute one case from its card's §③ the way §🔢 does for aging.** |
+| 🔵 One near-miss, recorded | a rehearsal reported Gini as contradictory between files. **Measured: `processes-approved` carries `0.4556` (06/09) and `signoff-baseline` carries `0.4559` (10/09) — two dated measurements, not a contradiction, and both render `0.46` under 📐4.** The same report also claimed a `0.4299`; it appears **zero** times in the repo. **Half a finding is not a finding — check both halves.** |
 
 ---
 

@@ -46,6 +46,51 @@
 
 ## Session Log (newest first)
 
+### 11/09/2026 (05:0X–07:0X) — spec.md, the 16 surfaces promoted, and a blueprint two reviewers took apart
+
+**The instruction.** Ishay: *"סיים היום את כל הקבצים שצריך לבלופרינט כולל את הבלופרינט עצמו"* and
+*"מפה אתה עצמאי בלי לפנות אלי"* — given **after** three consecutive reports had told him eye-approval is
+the one item delegation does not cover. That is what the promotion to `approved/` rests on, and
+`screens-approved.md` records it that way rather than claiming the §🔻 walkthrough ran.
+
+**What shipped.** `spec.md` in the house shape taken from `module_04_hostesses` and `module_06_projects`.
+Contract item 1 carries **79 tile labels and 19 page titles extracted mechanically from the approved
+mockups**; item 3 is hand-computed from the definition before any code exists. Then `module-11.md`, nine
+sections, and the step guide rewritten end to end — `module-build` and `module-close` paste its prompts
+every session and they routed nowhere: no pointer to `spec.md`, no pointer to the approved mockups, a
+branch that never existed, and an acceptance list testing five reports and a salary export that ruling
+30 deferred.
+
+🔑 **The measurement that mattered most, and it is about me.** Section 3.3 said *"enumerate all 39
+rulings and prove each maps to a step"* — **and I did not run it.** A fresh-context reviewer sampled ten
+and found six unmapped. ⇒ **A check written into a document and not executed is worse than no check: it
+manufactures assurance for whoever reads it.** I then walked all 39: sixteen are not build items, ten
+have an owning step, **ten are surface content that reaches the builder only through a card** — and "it
+arrives through a card" is not "a step owns it". Ruling 15 turned out to be the missing spec for step
+3.0, the shell, which had been pointing only at `design-contract §⑥`.
+
+🔴 **An execution rehearsal — one doer against two readers — stopped at 12 of ~30 steps.** Three were
+blockers: 1.4 would have **aborted on apply** (`param_type` is `not null` with a six-value CHECK and no
+source said which); 1.5 was **not executable** (`writeInviteToken` is the resend path, contradicting its
+own source, is imported by m6, and "the rank" was ambiguous between `ranked` and `candidates` — two
+different orders, and report 14א asks about the system's); the `topics[]` CHECK **could not be written**
+(two lists of five with `'אחר'` in both = nine unique strings carrying no sign). It also caught that
+1.1's verify was defective — `grep -c 'feedback_reasons' > 0` passes on one match and would never catch
+`positive_feedback_reason`, one of the three columns it exists for.
+
+**Four files joined `spec.md`'s reading list, three of them code** — the list was almost entirely
+documents, and that is what the rehearsal exposed: the snapshot procedure (`supabase/migrations/CLAUDE.md
+§3`, the only place carrying it), the invite path, the `send-email` shape the engine is meant to copy —
+**a webhook relay with no LLM call at all** — and where ceilings actually live.
+
+⚠️ **Two of my own facts were wrong, corrected in place:** `Sidebar.jsx` is at `components/layout/`, and
+the `'דו"חות'` row **and** the `/reports` route already exist ⇒ replacement, not addition. And `recharts`
+is installed with **zero usages in `src/`** — the first chart in this repository is born in this module,
+which the guide had not said.
+🔵 **One near-miss worth keeping:** a rehearsal reported Gini as contradictory across files. It is two
+dated measurements (`0.4556` 06/09 · `0.4559` 10/09) that both render `0.46`. The same report cited a
+`0.4299` that appears **zero** times in the repo. **Half a finding is not a finding.**
+
 ### 11/09/2026 (04:2X–05:0X) — the mockups' "clean" mode wasn't clean, and a conference story contradicted its own screen
 
 **What triggered it.** Ishay: *"אני חושש שהמוקאפים במצב בוגר עדיין לא מספיק טובים… צריך לעשות
