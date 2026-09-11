@@ -34,7 +34,7 @@
 <style>
 /* ═══ טוקנים — הועתקו מילולית מ-design-contract.md §⑥ (ומ-03_tab_finance.html). אל תשנה ערך. ═══ */
 :root{
-  --primary:#0D9488;
+  --primary:#0F766E;
   --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4;
   --teal500:#00BBA7; --teal600:#009689; --teal700:#00786F;
   --green100:#DCFCE7; --green700:#008236;
@@ -458,25 +458,31 @@ tr.dim td{color:var(--s500)}
       <i class="im" aria-hidden="true" style="top:-8px; left:-8px">6</i>
     </button>
 
-    <div class="tile im-host"><span class="lb">ריכוזיות המשמרות (מדד ג'יני)</span><i class="imh" aria-hidden="true" title="עוגן-רמז ג">ג</i>
+    <!-- כ8 · התווית ירדה ל-2 מילים; "מדד ג'יני" עבר לתת-השורה ונשאר בשורת-ההגדרות.
+         המונח עצמו נשמר בכוונה — §4.1 של `m11-copy-rules.md` ("מינוחים מקצועיים ומקובלים"). -->
+    <div class="tile im-host"><span class="lb">ריכוזיות המשמרות</span><i class="imh" aria-hidden="true" title="עוגן-רמז ג">ג</i>
       <span class="vl"><span class="ltr">0.46</span></span>
-      <span class="sub">רבע הדיילות העמוסות ביותר מקבלות <span class="ltr">55.3%</span> מהמשמרות; מחצית המאגר מקבלת <span class="ltr">16.2%</span></span>
-      
-      <span class="cmp"><span class="arrow">▲</span> <span class="ltr">12</span> החודשים שלפני כן: <span class="ltr">0.43</span> (על <span class="nb"><span class="ltr">95</span> דיילות</span> מול <span class="nb"><span class="ltr">106</span> היום</span>)</span>
+      <span class="sub">מדד ג'יני · רבע הדיילות העמוסות ביותר מקבלות <span class="ltr">55.3%</span> מהמשמרות; מחצית המאגר מקבלת <span class="ltr">16.2%</span></span>
+
+      <!-- כ14 · הסייג עלה לטקסט הגלוי, בנוסח זהה לזה שבאריח המקביל במ17 (R30) -->
+      <span class="cmp"><span class="arrow">▲</span> <span class="ltr">12</span> החודשים שלפני כן: <span class="ltr">0.43</span> על <span class="nb"><span class="ltr">95</span> דיילות</span>, מול <span class="ltr">106</span> היום — חלק מהעלייה הוא שינוי-אוכלוסייה</span>
       <span class="win"><span class="ltr">10/09/2025–10/09/2026</span> · אינו מושפע ממסנן התקופה</span></div>
 
     <div class="tile"><span class="lb">דיילות פעילות</span>
       <span class="vl"><span class="ltr">50</span></span>
       <span class="sub">מתוך <span class="ltr">186</span> רשומות במאגר · <span class="ltr">106</span> עבדו בפועל ב-<span class="ltr">12</span> החודשים האחרונים</span>
-      <span class="cmp none">מונה-מצב, לא מדד-תקופה — <span class="ltr">'active'</span> נכון לרגע הצפייה, ואין לו ערך היסטורי שמור</span>
+      <!-- כ5 · שם-ערך-במסד ('active') ומונח-BI ("מונה-מצב") יצאו מהטקסט הנראה.
+           הנוסח מיושר ל-`03_tab_finance.html` ("זהו צילום-רגע ולא סיכום-תקופה") — R30. -->
+      <span class="cmp none">זהו צילום-רגע ולא סיכום-תקופה — הסטטוס נכון לרגע הצפייה, ואין לו ערך היסטורי שמור</span>
       <span class="win">נכון ל-<span class="ltr">10/09/2026</span> · אינו מושפע ממסנן התקופה</span></div>
 
     <!-- הכרעה 24 · ח2 — האריח החמישי. ההגדרה **זהה לזו שכבר חיה בקוד** (`overviewHasGap`,
          src/lib/projects.js) ואינה הגדרה חמישית. נכנס כאריח ולא כדף. -->
-    <div class="tile im-host"><span class="lb">אירועים קרובים עם חוסר</span>
+    <!-- כ8 · "קרובים" ירד מהתווית — החלון כתוב בתת-השורה ובשורת-החלון ממילא -->
+    <div class="tile im-host"><span class="lb">אירועים עם חוסר</span>
       <span class="vl"><span class="ltr">11</span></span>
       <span class="sub">מתוך <span class="ltr">24</span> אירועים ב-<span class="ltr">30</span> הימים הקרובים · <span class="ltr">39</span> מקומות פנויים · <span class="ltr">8</span> זימונים ממתינים לתשובה</span>
-      <span class="cmp"><span class="arrow">▲</span> ‏<span class="ltr">31–60</span> הימים הבאים: <span class="ltr">8</span> מתוך <span class="ltr">19</span> — <b style="font-weight:600">אין תקופה-קודמת למדד קדימה-מבט</b></span>
+      <span class="cmp"><span class="arrow">▲</span> ‏<span class="ltr">31–60</span> הימים הבאים: <span class="ltr">8</span> מתוך <span class="ltr">19</span> — <b style="font-weight:600">אין תקופה-קודמת למדד שמסתכל קדימה</b></span>
       <span class="win"><span class="ltr">10/09–10/10/2026</span> · אינו מושפע ממסנן התקופה</span>
       <i class="im" aria-hidden="true" style="top:-8px; left:-8px">8</i></div>
   </div>
@@ -618,8 +624,9 @@ tr.dim td{color:var(--s500)}
     <b>דיילת אדומה</b> = ציון-אמינות נמוך מ-<span class="ltr">87%</span> מממוצע החברה (<span class="ltr">0.9588</span>) — כלומר מתחת ל-<span class="ltr">0.834</span>; <b>ענבר</b> = מתחת ל-<span class="ltr">95%</span> ממנו (<span class="ltr">0.911</span>) ·
     <b>ג'יני</b> = מדד ריכוזיות בין <span class="ltr">0</span> (כל דיילת מקבלת אותו מספר משמרות) ל-<span class="ltr">1</span> (דיילת אחת מקבלת הכול), על <span class="ltr">106</span> הדיילות שעבדו ב-<span class="ltr">12</span> החודשים ·
     <b>דיילת פעילה</b> = הסטטוס <span class="ltr">'פעילה'</span> בכרטיס שלה — <b>אינו</b> "עבדה לאחרונה" ·
-    <b>אירוע עם חוסר</b> = אירוע שטרם התקיים ומספר המשובצות-סופית בו קטן ממספר הדיילות הנדרש ·
-    <b>אחוזים</b> בספרה עשרונית אחת; ג'יני בשתיים.</p>
+    <b>אירוע עם חוסר</b> = אירוע שטרם התקיים ומספר המשובצות-סופית בו קטן ממספר הדיילות הנדרש.
+    <!-- כ7 · הצהרת-ציות ל-📐4 ("אחוזים בספרה עשרונית אחת; ג'יני בשתיים") ירדה מהמסך:
+         הקוראת רואה את הדיוק במספרים עצמם. הכלל מיושם בציור, לא מוכרז. --></p>
   <div class="hint-terms" aria-label="הסברי-המונחים · מוצגים רק במצב מודרך">
     <p style="font-weight:600; border:0; padding:0; margin:0 0 2px; color:var(--s500)"><b>(ה)</b> ההסברים שמאחורי שורת-ההגדרות:</p>
     <p data-hint="reports.hostessOverview.term.onTime"><b>הגעה בזמן</b> — מתוך כל המשמרות שסגרת בהן נוכחות, בכמה הדיילת הגיעה בזמן. משמרת שלא סימנת בה נוכחות אינה נספרת כאן בכלל.</p>
@@ -660,7 +667,10 @@ tr.dim td{color:var(--s500)}
       <i class="im" aria-hidden="true" style="top:-8px; left:-8px">6</i>
     </span>
     <button class="pill" id="onlyActive" aria-pressed="false">פעילות בלבד</button>
-    <button class="pill" id="clearDow" hidden>× נקי את בחירת היום</button>
+    <!-- R30 · צורת-הבית לכפתור-ניקוי היא `נקי <שם-עצם>` בלי "את" —
+         `נקי הכל` (CustomersFilterSheet.jsx:42) · `נקי חיפוש` (CustomerDetailsPage.jsx:1182) ·
+         `נקי סינון` (OverviewTab.jsx:489) · `נקי תאריכים` (QuotesPage.jsx:665). -->
+    <button class="pill" id="clearDow" hidden>× נקי בחירה</button>
   </div>
 
   <div class="tiles">
@@ -776,7 +786,8 @@ tr.dim td{color:var(--s500)}
     <div class="legend">
       <span><i style="background:#009689"></i>איחור</span>
       <span><i style="background:#fff; border:1.5px solid #00786F"></i>אי-הגעה — הבריזה</span>
-      <span><i class="dashed"></i>מדגם מתחת ל-<span class="ltr">30</span> שיבוצים — מסומן במסגרת מקווקוות, נקרא בזהירות</span>
+      <!-- כ7 · "מסומן במסגרת מקווקוות" ירד: הסימן עצמו יושב בתיבת-המקרא שמשמאל למשפט -->
+      <span><i class="dashed"></i>מדגם מתחת ל-<span class="ltr">30</span> שיבוצים — נקרא בזהירות</span>
     </div>
     <table class="sr-only">
       <caption>איחור ואי-הגעה באחוזים לפי יום בשבוע</caption>
@@ -839,8 +850,8 @@ tr.dim td{color:var(--s500)}
     (<span class="ltr">14.6% / 4.9% / 1.2%</span>). ‏<b>שתיהן נכונות בהגדרתן</b>, והדוח אינו בוחר ביניהן ·
     <b>הבריזה</b> = לא הגיעה ולא הודיעה — <b>רק היא</b> מאפסת את הציון של אותה משמרת; מחלה והיעדרות באישור מראש אינן נספרות בציון כלל ·
     <b>ביטלה אחרי אישור</b> = הודיעה שלא תגיע אחרי שכבר אושרה סופית — נספר כחצי משמרת ·
-    <b>החלון</b> = <span class="ltr">12</span> חודשים אחורה מהיום, <b>קפוא</b> ואינו נגרר אחרי מסנן-התקופה שלמעלה: בחודש גרוע במיוחד כולן היו נראות מסתדרות ·
-    <b>אחוזים</b> בספרה עשרונית אחת; הציון בשלוש.</p>
+    <b>החלון</b> = <span class="ltr">12</span> חודשים אחורה מהיום, <b>קפוא</b> ואינו נגרר אחרי מסנן-התקופה שלמעלה: בחודש גרוע במיוחד כולן היו נראות מסתדרות.
+    <!-- כ7 · הצהרת-ציות ל-📐4 ("אחוזים בספרה עשרונית אחת; הציון בשלוש") ירדה מהמסך. --></p>
   <div class="hint-terms" aria-label="הסברי-המונחים · מוצגים רק במצב מודרך">
     <p style="font-weight:600; border:0; padding:0; margin:0 0 2px; color:var(--s500)"><b>(ה)</b> ההסברים שמאחורי שורת-ההגדרות:</p>
     <p data-hint="reports.reliability.term.score"><b>ציון אמינות</b> — הציון אינו ממוצע פשוט. לדיילת עם חמש משמרות אין מספיק היסטוריה כדי לקבוע עליה, ולכן המערכת מוסיפה לה שלוש משמרות דמיוניות ברמת הממוצע — כך שדיילת עם <span class="ltr">1</span> מתוך <span class="ltr">1</span> לא תיראה מושלמת ודיילת עם טעות אחת מתוך <span class="ltr">30</span> לא תיפול.</p>
@@ -887,28 +898,37 @@ tr.dim td{color:var(--s500)}
   </div>
 
   <div class="tiles">
-    <div class="tile"><span class="lb">דיילות פעילות בלי דירוג</span>
+    <!-- כ8 · "פעילות" ירד מהתווית ונשאר בתת-השורה — כל הדף הוא ממילא 50 הפעילות
+         (שורת-האוכלוסייה). 📑ב#14 מונה את האריח כ-"N דיילות פעילות בלי דירוג";
+         המידע נשמר, הוא זז שורה אחת. -->
+    <div class="tile"><span class="lb">דיילות בלי דירוג</span>
       <span class="vl"><span class="ltr">17</span></span>
       <span class="sub">מתוך <span class="ltr">50</span> הפעילות · <span class="ltr">7</span> מהן עבדו <span class="ltr">30</span> משמרות ומעלה השנה</span>
       <span class="cmp none">אין ערך-עבר להשוואה — הדירוג נשמר כערך נוכחי בכרטיס הדיילת, בלי היסטוריה</span>
       <span class="win">נכון ל-<span class="ltr">10/09/2026</span> · אינו מושפע ממסנן התקופה</span></div>
 
-    <div class="tile"><span class="lb">תעריף שעתי חציוני, פעילות</span>
+    <!-- כ8 · האוכלוסייה ירדה מהתווית לתת-השורה -->
+    <div class="tile"><span class="lb">תעריף שעתי חציוני</span>
       <span class="vl"><span class="ltr">43.27</span> ₪</span>
-      <span class="sub">לפי דירוג: <span class="ltr">41.7</span> ‏₪ בדירוג <span class="ltr">3</span> · <span class="ltr">44.0</span> ‏₪ בדירוג <span class="ltr">4</span> · <span class="ltr">46.9</span> ‏₪ בדירוג <span class="ltr">5</span></span>
+      <span class="sub">על <span class="ltr">50</span> הדיילות הפעילות · לפי דירוג: <span class="ltr">41.7</span> ‏₪ בדירוג <span class="ltr">3</span> · <span class="ltr">44.0</span> ‏₪ בדירוג <span class="ltr">4</span> · <span class="ltr">46.9</span> ‏₪ בדירוג <span class="ltr">5</span></span>
       <span class="cmp">מול חציון כלל-המאגר (<span class="nb"><span class="ltr">186</span> רשומות</span>): <span class="nb"><span class="ltr">44.00</span> ₪</span></span>
       <span class="win">נכון ל-<span class="ltr">10/09/2026</span> · אינו מושפע ממסנן התקופה</span></div>
 
-    <div class="tile"><span class="lb">תעריף מעל החציון <b>וגם</b> דירוג <span class="ltr">3</span> ומטה</span>
+    <!-- כ8 · כ13 · התווית אומרת מה הריבוע *הוא*, לא את הנוסחה שמגדירה אותו;
+         הקריטריון ירד לתת-השורה. "יקרות ומדורגות נמוך" אינו מונח חדש — זה בדיוק
+         הניסוח שכרטיס-המסך כבר משתמש בו לריבוע הזה (`cards-hostesses.md` ⑥ · "שני הריבועים"). -->
+    <div class="tile"><span class="lb">יקרות ומדורגות נמוך</span>
       <span class="vl"><span class="ltr">2</span></span>
-      <span class="sub">מיקה סופר · ירדן תורג'מן — <span class="ltr">44.60</span> ‏₪ כל אחת מול חציון <span class="ltr">43.27</span> ‏₪;
+      <span class="sub">תעריף מעל החציון ובדירוג <span class="ltr">3</span> ומטה ·
+        מיקה סופר · ירדן תורג'מן — <span class="ltr">44.60</span> ‏₪ כל אחת מול חציון <span class="ltr">43.27</span> ‏₪;
         <b>שתיהן גם אדומות בדוח האמינות</b></span>
       <span class="cmp none">אין ערך-עבר שמור — לתעריף ולדירוג אין היסטוריה בכרטיס הדיילת</span>
       <span class="win">נכון ל-<span class="ltr">10/09/2026</span></span></div>
 
-    <div class="tile"><span class="lb">מסומנות "לא לשלוח" אצל לקוח כלשהו</span>
+    <!-- כ8 · "אצל לקוח כלשהו" ירד לתת-השורה, בניסוח של המקרא בגרף ("אצל לקוח אחד לפחות") -->
+    <div class="tile"><span class="lb">מסומנות "לא לשלוח"</span>
       <span class="vl"><span class="ltr">12</span></span>
-      <span class="sub">מתוך <span class="ltr">50</span> הפעילות · בכל המאגר <span class="ltr">48</span> סימונים אצל <span class="ltr">39</span> דיילות</span>
+      <span class="sub">אצל לקוח אחד לפחות · מתוך <span class="ltr">50</span> הפעילות · בכל המאגר <span class="ltr">48</span> סימונים אצל <span class="ltr">39</span> דיילות</span>
       <span class="cmp none">לסימוני-הלקוח אין תאריך במסד — אי-אפשר להשוות לתקופה קודמת</span>
       <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
   </div>
@@ -1041,7 +1061,9 @@ tr.dim td{color:var(--s500)}
     <div class="legend">
       <span><i style="background:#009689; border-radius:999px; width:11px; height:11px"></i>דיילת פעילה</span>
       <span><i style="background:#fff; border:1.6px solid #C10007; border-radius:2px; width:11px; height:11px"></i>מסומנת "לא לשלוח" אצל לקוח אחד לפחות — <b>צורה שונה, לא רק צבע</b></span>
-      <span><i style="background:#fff; border:1.6px dashed #62748E; border-radius:4px"></i>טבעת = נקודה ששורת-"אז מה" מדברת עליה בשמה</span>
+      <!-- כ4 · "שורת-אז מה" הוא מזהה-אפיון (🔒 מילון-נעול) ואינו מחרוזת שהקוראת יכולה
+           לפענח על המסך. השם הנעול לא הוחלף — הוא פשוט אינו נאמר בקול כאן. -->
+      <span><i style="background:#fff; border:1.6px dashed #62748E; border-radius:4px"></i>טבעת = דיילת שמוזכרת בשמה במשפט שבראש הדף</span>
     </div>
     <div class="barkey">
       <span><b>מה קוראים כאן:</b> בממוצע התעריף עולה עם הדירוג — <span class="ltr">41.7</span> ‏₪ בדירוג <span class="ltr">3</span>,
@@ -1090,8 +1112,10 @@ tr.dim td{color:var(--s500)}
       <span class="im-host"><span>מוצגות <span class="ltr">8</span> שורות במוקאפ; במסך החי <span class="ltr">50</span> לעמוד</span>
         <i class="im" aria-hidden="true" style="top:-8px; left:-8px">8</i></span>
     </div>
-    <p class="tnote"><b>"מצוינת אצל <span class="ltr">N</span>" ו-"לא לשלוח אצל <span class="ltr">M</span>" הן ספירות של לקוחות, לא ציון</b> —
-      והמכנה, מספר הלקוחות שהדיילת עבדה אצלם בפועל, כתוב בבועה על כל תא.</p>
+    <!-- כ4 · ה-N וה-M היו סימון-אפיון על המסך; העמודות נקובות עכשיו בשמן.
+         כ15 · המשפט הפסיק להפנות לבועה שהקוראת אינה רואה — המכנה ממילא כתוב בתא עצמו. -->
+    <p class="tnote"><b>"מצוינת אצל" ו-"לא לשלוח אצל" הן ספירות של לקוחות, לא ציון</b> —
+      והמכנה שבכל תא הוא מספר הלקוחות שהדיילת עבדה אצלם בפועל.</p>
   </div>
 
   <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
@@ -1146,26 +1170,36 @@ tr.dim td{color:var(--s500)}
     <span>נמדד על <span class="ltr">106</span> הדיילות שעבדו לפחות משמרת אחת בחלון</span></div>
 
   <div class="tiles">
-    <div class="tile"><span class="lb">ריכוזיות המשמרות (מדד ג'יני)</span>
+    <!-- כ8 · התווית ירדה ל-2 מילים; "מדד ג'יני" פותח את תת-השורה ונשאר בשורת-ההגדרות.
+         המונח נשמר בכוונה (§4.1). הסייג המתודולוגי התקצר אך שני ה-`n` נשארו צמודים לחץ,
+         כפי ש-📑ב#14א מחייב במפורש. הנוסח זהה לאריח המקביל במ14 (R30). -->
+    <div class="tile"><span class="lb">ריכוזיות המשמרות</span>
       <span class="vl"><span class="ltr">0.46</span></span>
-      <span class="sub"><span class="ltr">0</span> = כל דיילת מקבלת אותו מספר משמרות · <span class="ltr">1</span> = דיילת אחת מקבלת הכול</span>
-      <span class="cmp"><span class="arrow">▲</span> <span class="ltr">12</span> החודשים שלפני כן: <span class="ltr">0.43</span> —
-        <b style="font-weight:600">אך שם היו <span class="nb"><span class="ltr">95</span> דיילות</span> ולא <span class="ltr">106</span></b>, וחלק מהעלייה הוא שינוי-אוכלוסייה ולא שינוי-התנהגות</span>
+      <span class="sub">מדד ג'יני · <span class="ltr">0</span> = חלוקה שווה בין הדיילות · <span class="ltr">1</span> = דיילת אחת מקבלת הכול</span>
+      <span class="cmp"><span class="arrow">▲</span> <span class="ltr">12</span> החודשים שלפני כן: <span class="ltr">0.43</span> על
+        <b style="font-weight:600"><span class="nb"><span class="ltr">95</span> דיילות</span>, מול <span class="ltr">106</span> היום</b> — חלק מהעלייה הוא שינוי-אוכלוסייה</span>
       <span class="win"><span class="ltr">10/09/2025–10/09/2026</span> · אינו מושפע ממסנן התקופה</span></div>
 
-    <div class="tile"><span class="lb">רבע הדיילות העמוסות ביותר</span>
+    <!-- כ8 · "ביותר" מיותר אחרי "רבע" — התווית ירדה ל-3 מילים -->
+    <div class="tile"><span class="lb">רבע הדיילות העמוסות</span>
       <span class="vl"><span class="ltr">55.3%</span></span>
       <span class="sub"><span class="ltr">27</span> דיילות מתוך <span class="ltr">106</span> · מחצית המאגר מקבלת <span class="ltr">16.2%</span></span>
       <span class="cmp">העמוסה ביותר, אביב יוסף, מחזיקה <span class="nb"><span class="ltr">48</span> משמרות</span> — <span class="nb"><span class="ltr">2.6%</span> מהסך</span>; החציון הוא <span class="nb"><span class="ltr">13.5</span> משמרות</span></span>
       <span class="win"><span class="ltr">10/09/2025–10/09/2026</span></span></div>
 
-    <div class="tile"><span class="lb">אימוץ המלצת Smart&nbsp;Match (דרג <span class="ltr">1</span>)</span>
+    <!-- כ8 · "(דרג 1)" ירד לתת-השורה.
+         כ5 · שם-העמודה והודעת-השגיאה יצאו מהטקסט הנראה ויושבים כאן, כדי ש-grep ימצא אותם:
+         העמודה החסרה היא `assignments.recommended_rank`; שאילתה ישירה נופלת ב-
+         `column "recommended_rank" does not exist` (נבדק 10/09/2026 מול
+         `information_schema.columns` — 22 עמודות ב-`assignments`, ואין ביניהן זו).
+         📑ב#14א מחייב "—" ולא "0%" ואת המשפט "נמדד מ-<תאריך>" — שניהם עומדים. -->
+    <div class="tile"><span class="lb">אימוץ המלצת Smart&nbsp;Match</span>
       <span class="vl">—</span>
-      <span class="sub"><b>נמדד מ-— · אין עדיין נתון.</b> העמודה <span class="ltr">assignments.recommended_rank</span>,
-        שהייתה רושמת איזה דרג המערכת המליצה בזימון, <b>אינה קיימת במסד</b> — נבדק ב-<span class="ltr">10/09/2026</span>
-        והשאילתה נפלה ב-<span class="ltr">column "recommended_rank" does not exist</span></span>
+      <span class="sub">דרג <span class="ltr">1</span> = הדיילת שהמערכת דירגה ראשונה ·
+        <b>נמדד מ-— · אין עדיין נתון:</b> המערכת אינה רושמת היום איזה דרג היא המליצה בזימון,
+        ולכן אין מול מה להשוות — נבדק ב-<span class="ltr">10/09/2026</span></span>
       <span class="cmp none">אין ולא היה — לא <span class="ltr">0%</span>, שהיה נקרא "אף פעם לא מאמצים את ההמלצה"</span>
-      <span class="win">"נמדד מ-" יתמלא ביום שבו העמודה תיווצר, במיגרציה של מודול <span class="ltr">11</span></span></div>
+      <span class="win">"נמדד מ-" יתמלא ביום שבו המערכת תתחיל לרשום את הדרג שהמליצה, במיגרציה של מודול <span class="ltr">11</span></span></div>
   </div>
 
   <!-- 📊 — "14א: עקומת-לורנץ מול קו-השוויון + אריח-ג'יני". 📐6 — קו-שוויון מתויג, domain 0–100 בשניהם. -->
@@ -1220,7 +1254,8 @@ tr.dim td{color:var(--s500)}
     <div class="legend">
       <span><i style="background:#009689"></i>החלוקה בפועל</span>
       <span><i style="background:#fff; border:1.4px dashed #62748E"></i>חלוקה שווה — קו-הייחוס</span>
-      <span><i style="background:#fff; border:1.4px dashed #C10007"></i>נקודת-החצי, מסומנת כי היא המשפט שאומרים עליה</span>
+      <!-- כ13 · המקרא אומר מה הסימן *הוא*, לא למה הוא צויר -->
+      <span><i style="background:#fff; border:1.4px dashed #C10007"></i>נקודת-החצי — מחצית הדיילות מול חלקן במשמרות</span>
     </div>
     <table class="sr-only">
       <caption>עקומת לורנץ — אחוז מצטבר של משמרות לפי אחוז מצטבר של דיילות</caption>
@@ -1336,8 +1371,9 @@ tr.dim td{color:var(--s500)}
     <b>משמרת</b> = שיבוץ שאושר סופית ושתאריך האירוע שלו כבר עבר ·
     <b>זמן-תגובה</b> = מרגע שליחת הזימון האחרון ועד שהדיילת ענתה, בשעות — <b>לא</b> מרגע פתיחת האירוע ·
     <b>אחוזון <span class="ltr">90</span></b> = הערך שתשע מכל עשר תשובות מהירות ממנו ·
-    <b>אחוז היענות</b> = ענו ÷ זומנו; מי שלא ענתה כלל נספרת במכנה ·
-    <b>אחוזים</b> בספרה עשרונית אחת · <b>ג'יני</b> בשתיים · <b>שעות</b> בעשרונית אחת.</p>
+    <b>אחוז היענות</b> = ענו ÷ זומנו; מי שלא ענתה כלל נספרת במכנה.
+    <!-- כ7 · הצהרת-ציות ל-📐4 ("אחוזים בספרה עשרונית אחת · ג'יני בשתיים · שעות בעשרונית אחת")
+         ירדה מהמסך — הדיוק נראה במספרים עצמם. --></p>
   <div class="hint-terms" aria-label="הסברי-המונחים · מוצגים רק במצב מודרך">
     <p style="font-weight:600; border:0; padding:0; margin:0 0 2px; color:var(--s500)"><b>(ד)</b> ההסברים שמאחורי שורת-ההגדרות:</p>
     <p data-hint="reports.fairness.term.gini"><b>מדד ג'יני</b> — מספר אחד שאומר עד כמה המשמרות מתחלקות שווה. אין לו סף "נכון" — מה שמעניין הוא לאן הוא זז, ולכן הוא מוצג תמיד ליד הערך של השנה שעברה.</p>
@@ -1349,7 +1385,7 @@ tr.dim td{color:var(--s500)}
   </div>
   <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">10/09/2026</span> — מדד ג'יני בשני החלונות, שתים-עשרה נקודות-לורנץ,
     שמונה העמוסות, זמני-התגובה ואחוזי-ההיענות · 🎭 דמו: אין ·
-    📐 נגזר: ג'יני ולורנץ (נוסחה על ספירות-המשמרות) · שורת-"אז מה" · <b>ריק:</b> אימוץ דרג <span class="ltr">1</span> — אין עמודה במסד.</p>
+    📐 נגזר: ג'יני ולורנץ (נוסחה על ספירות-המשמרות) · שורת-"אז מה" · <b>ריק:</b> אימוץ המלצת Smart&nbsp;Match — המערכת עדיין אינה רושמת את הדרג שהמליצה.</p>
 </section>
 
     </div><!-- /min-width:0 -->
@@ -1464,8 +1500,11 @@ tr.dim td{color:var(--s500)}
     var total = state.onlyFlag
       ? (state.onlyActive ? 6 : 10)
       : (state.onlyActive ? 27 : 87);
+    // כ12 · הפועל והכינוי חייבים להתאים למספר, לא רק שם-העצם: עם שורה אחת
+    // המשפט היה "מוצגות 1 דיילת שהיה להן…". נבדק בהרצה עם k=1.
     var label = dayMode
-      ? 'מוצגות ' + host(rows.length) + ' שהיה להן אירוע ביום ' + DOW_NAMES[state.dow]
+      ? pl(rows.length, 'מוצגת ', 'מוצגות ') + host(rows.length) +
+        pl(rows.length, ' שהיה לה אירוע ביום ', ' שהיה להן אירוע ביום ') + DOW_NAMES[state.dow]
       : ltr('1–' + rows.length) + ' מתוך ' + ltr(total);
     document.getElementById('relPager').innerHTML = label;
     document.getElementById('relTitle').innerHTML = dayMode
@@ -1655,8 +1694,10 @@ tr.dim td{color:var(--s500)}
   function pickDow(d) {
     state.dow = (state.dow === d) ? null : d;   // לחיצה חוזרת מבטלת (הכרעה 15-ד)
     renderRel();
+    // כ12 · ההכרזה ל-`aria-live` נשמעת בקול: "1 שורות" הוא בדיוק מה שקורא-המסך היה אומר.
+    var cnt = document.querySelectorAll('#relBody tr').length;
     say(state.dow === null ? 'בחירת היום בוטלה'
-      : 'מסונן ליום ' + DOW_NAMES[d] + '; ' + document.querySelectorAll('#relBody tr').length + ' שורות');
+      : 'מסונן ליום ' + DOW_NAMES[d] + '; ' + cnt + pl(cnt, ' שורה', ' שורות'));
   }
   var hits = document.getElementById('dowHits');
   hits.addEventListener('click', function (e) {

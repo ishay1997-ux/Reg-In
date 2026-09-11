@@ -61,7 +61,7 @@
 <style>
 /* ═══ טוקנים — הועתקו מילולית מ-design-contract.md §⑥ / 03_tab_finance.html. אל תשנה ערך. ═══ */
 :root{
-  --primary:#0D9488;
+  --primary:#0F766E;
   --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4;
   --teal500:#00BBA7; --teal600:#009689; --teal700:#00786F;
   --green100:#DCFCE7; --green700:#008236;
@@ -489,7 +489,7 @@ tr.hi:hover td{background:var(--amber100)}
         (ממוצע <span class="ltr">4.5+</span>) מול <b>לקוחות לא-מרוצים</b>
         (ממוצע מתחת ל-<span class="ltr">3.5</span>)</span>
       <span class="cmp"><span class="arrow">▬</span> הבינוניים באמצע: <span class="ltr">62</span> ימים —
-        הסדר מונוטוני בשלושת הדליים</span>
+        ככל שהציון נמוך יותר, כך חלף יותר זמן מאז ההזמנה האחרונה</span>
       <span class="win">כל הזמנים · <span class="ltr">46</span> לקוחות עם <span class="ltr">3+</span> משובים ·
         אינו מושפע ממסנן התקופה</span>
       <span class="door">← לדוח "שביעות רצון"</span>
@@ -657,9 +657,9 @@ tr.hi:hover td{background:var(--amber100)}
       <table class="data">
         <thead><tr>
           <th scope="col">לקוח</th>
-          <th scope="col">סוג</th>
+          <th scope="col">סוג הלקוח</th>
           <th scope="col" aria-sort="descending">הכנסת <span class="ltr">12</span> החודשים ▼</th>
-          <th scope="col">ממוצע משוב</th>
+          <th scope="col">ממוצע המשוב שלו</th>
           <th scope="col">אירוע אחרון</th>
           <th scope="col">האירוע הבא</th>
         </tr></thead>
@@ -724,16 +724,16 @@ tr.hi:hover td{background:var(--amber100)}
       <button class="lnk" data-goto="c3">מי מהם מתרחק? ←</button>
     </div>
     <p class="tnote"><b>אף אחד משמונת הגדולים אינו מסומן "מתרחק"</b> — לכולם יש אירוע עתידי במערכת,
-      וזה התנאי הראשון של ההגדרה. <b>הראשון שכן מסומן יושב במקום <span class="ltr">12</span>, ארבע
-      שורות מתחת לטבלה הזו</b> — אריח <span class="ltr">3</span> נוקב בו בשמו ופותח את הדוח שמראה את כולם.
-      <b><span class="ltr">8</span> שורות במוקאפ, <span class="ltr">50</span> בבנייה</b>
-      (§7.98 · הכרעה 15-יא).</p>
+      וזה התנאי הראשון של ההגדרה. <b>הראשון שכן מסומן יושב במקום <span class="ltr">12</span>, ארבעה
+      מקומות אחרי השורה האחרונה כאן</b> — אריח <span class="ltr">3</span> נוקב בו בשמו ופותח את הדוח שמראה את כולם.
+      <!-- §7.98 · הכרעה 15-יא — המזהים ירדו מהטקסט הנראה (כ4) -->
+      <b><span class="ltr">8</span> שורות במוקאפ, <span class="ltr">50</span> בבנייה</b>.</p>
   </div>
 
   <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
   <div class="states" aria-label="חמשת המצבים שהדף יודע לצייר">
     <div class="st"><b>1 · טעינה</b>שלד-אריחים ושלד-טבלה<div class="skel-row" style="width:80%"></div><div class="skel-row" style="width:60%"></div></div>
-    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין משובים בתקופה שנבחרה · [נקה מסננים]"</div>
+    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין משובים בתקופה שנבחרה · [נקי מסננים]"</div>
     <div class="st"><b>3 · ריק-באמת</b>"אין נתונים עדיין"</div>
     <div class="st"><b>4 · אין-הרשאה</b>"לא זמין בתפקידך" (לשונית לקוחות ממוסכת)</div>
     <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב]</div>
@@ -747,8 +747,9 @@ tr.hi:hover td{background:var(--amber100)}
     ⚠️ <b>זהו חתך של לקוחות ואינו "שיעור המרוצים"</b>, שנמדד על <b>משובים</b> בציון
     <span class="ltr">4</span>–<span class="ltr">5</span> — שני מונים שונים, ולכן שני שמות ·
     <b>ימים מאז האירוע האחרון</b> = היום פחות תאריך האירוע האחרון שהתקיים ולא בוטל ·
-    <b>הכנסת <span class="ltr">12</span> החודשים</b> = סך ההכנסה מאירועים שהתקיימו ויצאה להם חשבונית
-    (הכרעה <span class="ltr">36</span>), שתאריך האירוע שלהם ב-<span class="ltr">12</span> החודשים האחרונים ·
+    <!-- הכרעה 36 — המזהה ירד מהטקסט הנראה (כ4) -->
+    <b>הכנסת <span class="ltr">12</span> החודשים</b> = סך ההכנסה מאירועים שהתקיימו ויצאה להם חשבונית,
+    שתאריך האירוע שלהם ב-<span class="ltr">12</span> החודשים האחרונים ·
     <b>ימים לתשלום (חציון)</b> = חציון (תאריך-תשלום פחות תאריך-חשבונית) על חשבוניות ששולמו, כל הזמנים ·
     <b>סכומים</b> ב-₪ שלמים.</p>
   <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">10/09/2026</span> — כל אריח, הגרף והטבלה ·
@@ -838,7 +839,9 @@ tr.hi:hover td{background:var(--amber100)}
   <div class="chart-card">
     <h3>התפלגות הציונים · <span class="ltr">163</span> משובים ב-<span class="ltr">2026</span>
       (<span class="ltr">01/01–10/09</span>)</h3>
-    <p class="chart-note">ציר הכמות מתחיל באפס ואינו קטוע. <b>ציון <span class="ltr">1</span> לא ניתן
+    <!-- כ7 · הצהרת-הציות "ציר הכמות מתחיל באפס ואינו קטוע" ירדה מהמסך; הכלל (📐5) מיושם בציור.
+         מה שנשאר הוא ההסבר לחריגה הנראית — עמודה בגובה אפס. -->
+    <p class="chart-note"><b>ציון <span class="ltr">1</span> לא ניתן
       אף פעם השנה</b> — העמודה מצוירת בגובה אפס ואינה נעלמת מהסדרה.</p>
     <div class="chart-box" dir="ltr" role="figure" aria-label="התפלגות ציוני המשוב 1 עד 5, עמודות">
       <svg viewBox="0 0 660 285" width="660" height="285" preserveAspectRatio="xMidYMid meet">
@@ -891,7 +894,10 @@ tr.hi:hover td{background:var(--amber100)}
   <div class="chart-row">
     <div class="chart-card chart-half">
       <h3>מה משמח · <span class="ltr">144</span> משובים סימנו סיבה חיובית</h3>
-      <p class="chart-note">ממוין לפי ספירה, מהגדול לקטן. הסולם עצמאי ואינו משותף לגרף השלילי שלצידו.</p>
+      <!-- כ7 · "ממוין לפי ספירה, מהגדול לקטן" ירד — הקוראת רואה את הסדר. נשאר מה שאינו נראה:
+           שני הגרפים אינם חולקים סולם, ולכן אין להשוות ביניהם אורך-עמודה. -->
+      <p class="chart-note">הסולם כאן עצמאי ואינו משותף לגרף השלילי שלצידו — אורך עמודה בגרף אחד
+        אינו מייצג את אותו מספר בגרף השני.</p>
       <div class="chart-box" dir="ltr" role="figure" aria-label="סיבות חיוביות לפי ספירה, עמודות אופקיות">
         <svg viewBox="0 0 420 175" width="420" height="175" preserveAspectRatio="xMidYMid meet">
           <line x1="135" y1="10" x2="135" y2="160" stroke="#62748E" stroke-width="1.5"/>
@@ -1014,7 +1020,11 @@ tr.hi:hover td{background:var(--amber100)}
     </table>
     <p class="chart-note" style="margin:10px 0 0"><b>הקריאה:</b> <span class="ltr">2025</span> הייתה
       השנה החלשה, ו-<span class="ltr">2026</span> מטפסת חזרה אך טרם חזרה ל-<span class="ltr">2024</span>.
-      אותה תמונה בממוצע: <span class="ltr">4.45</span> ← <span class="ltr">4.25</span> ← <span class="ltr">4.34</span>.</p>
+      <!-- כ10 · שני חצים בתוך שורת-RTL הוחלפו במילים, וכל מספר קיבל את השנה שלו (כ1).
+           אף ערך לא זז: 4.45 · 4.25 · 4.34, והשנים כבר נאמרות במשפט שלפניו. -->
+      אותה תמונה בממוצע: <span class="ltr">4.45</span> ב-<span class="ltr">2024</span>,
+      <span class="ltr">4.25</span> ב-<span class="ltr">2025</span> ו-<span class="ltr">4.34</span>
+      ב-<span class="ltr">2026</span> עד כה.</p>
   </div>
 
   <div class="tbl-card">
@@ -1082,7 +1092,8 @@ tr.hi:hover td{background:var(--amber100)}
       <span><span class="ltr">1–8</span> מתוך <span class="ltr">19</span></span>
       <span><span class="ltr">8</span> שורות במוקאפ, <span class="ltr">50</span> לעמוד בבנייה</span>
     </div>
-    <p class="tnote"><b>מיון ברירת-מחדל: ציון עולה</b> — הנמוך ביותר ראשון (📐7: לפי המדד המוצג).
+    <!-- 📐7 · המזהה ירד מהטקסט הנראה (כ4) -->
+    <p class="tnote"><b>מיון ברירת-מחדל: ציון עולה</b> — הנמוך ביותר ראשון.
       <b><span class="ltr">2</span> משובים מתוך <span class="ltr">19</span> נשלחו בלי הערה חופשית</b>, ובהם
       הטבלה מציגה "— ללא הערה" ולא שורה ריקה.</p>
   </div>
@@ -1119,7 +1130,7 @@ tr.hi:hover td{background:var(--amber100)}
   <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
   <div class="states" aria-label="חמשת המצבים שהדף יודע לצייר">
     <div class="st"><b>1 · טעינה</b>שלד-אריחים, שלד-גרף ושלד-טבלה<div class="skel-row" style="width:75%"></div><div class="skel-row" style="width:55%"></div></div>
-    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין משובים בתקופה שנבחרה · [נקה מסננים]"</div>
+    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין משובים בתקופה שנבחרה · [נקי מסננים]"</div>
     <div class="st"><b>3 · ריק-באמת</b>"אין נתונים עדיין"</div>
     <div class="st"><b>4 · אין-הרשאה</b>"לא זמין בתפקידך"</div>
     <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב]</div>
@@ -1314,7 +1325,7 @@ tr.hi:hover td{background:var(--amber100)}
           <th scope="col">איש קשר</th>
           <th scope="col" aria-sort="descending">הכנסת <span class="ltr">12</span> החודשים ▼</th>
           <th scope="col">אירוע אחרון</th>
-          <th scope="col">ימים מאז</th>
+          <th scope="col">ימים מאז האירוע</th>
           <th scope="col">הקצב שלו</th>
           <th scope="col">פי כמה מהקצב</th>
           <th scope="col">ציון אחרון · ממוצעו</th>
@@ -1422,7 +1433,7 @@ tr.hi:hover td{background:var(--amber100)}
   <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
   <div class="states" aria-label="חמשת המצבים שהדף יודע לצייר">
     <div class="st"><b>1 · טעינה</b>שלד-אריחים ושלד-טבלה<div class="skel-row" style="width:80%"></div><div class="skel-row" style="width:62%"></div></div>
-    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין לקוחות מתרחקים בסינון שנבחר · [נקה מסננים]"</div>
+    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין לקוחות מתרחקים בסינון שנבחר · [נקי מסננים]"</div>
     <div class="st"><b>3 · ריק-באמת</b>"אין לקוח מתרחק כרגע" — משפט חיובי, לא טבלה ריקה</div>
     <div class="st"><b>4 · אין-הרשאה</b>"לא זמין בתפקידך"</div>
     <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב]</div>
@@ -1437,8 +1448,9 @@ tr.hi:hover td{background:var(--amber100)}
     <b>רדום</b> = הדגל הקיים במערכת: אין אירוע עתידי <b>וגם</b> עברו יותר מ-<span class="ltr">120</span>
     ימים. הוא חל על כל הלקוחות, גם על אלה עם פחות משלושה אירועים ·
     <b>אירוע</b> = פרויקט שתאריך האירוע שלו כבר עבר ולא בוטל ·
+    <!-- הכרעה 36 — המזהה ירד מהטקסט הנראה (כ4) -->
     <b>הכנסת <span class="ltr">12</span> החודשים</b> = סך ההכנסה מאירועים שהתקיימו בשנה האחרונה
-    ויצאה להם חשבונית (הכרעה <span class="ltr">36</span>) — לא רק מאלה שכבר שולמו במלואם.
+    ויצאה להם חשבונית — לא רק מאלה שכבר שולמו במלואם.
     <b>זהו סכום שכבר הורווח, לא סכום שצפוי להיאבד.</b></p>
   <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">10/09/2026</span> — <span class="ltr">12</span>
     השורות במלואן, ההיסטוגרמה, מספר המתרחקים היום ולפני חודש, ההשוואה לכלל <span class="ltr">120</span>
@@ -1580,9 +1592,11 @@ tr.hi:hover td{background:var(--amber100)}
   <!-- ═══ מצב שני: איך הדף ייראה אחרי ריצה מאושרת — הדגמת-צורה 🎭 ═══ -->
   <div id="c4Demo" hidden>
     <div class="basebanner">
-      🎭 <b>הדגמת-צורה, לא תוצאת מודל.</b> אין ריצה במערכת (הטבלאות
-      <span class="ltr">feedback_ai_runs</span> ו-<span class="ltr">feedback_ai_insights</span>
-      טרם נוצרו — נמדד <span class="ltr">10/09/2026</span>). <b>כל מה שמלא כאן נמדד מהמסד:</b>
+      <!-- כ5 · שמות-הטבלאות `feedback_ai_runs` / `feedback_ai_insights` ירדו מהטקסט הנראה
+           ונשמרו כאן. אותה תנועה כמו `project_changes … deny-all` בלשונית-הכספים. -->
+      🎭 <b>הדגמת-צורה, לא תוצאת מודל.</b> אין ריצה במערכת — <b>הטבלאות שבהן נשמרות הריצות
+      ותוצאות הסיווג טרם נוצרו במסד</b> (נמדד <span class="ltr">10/09/2026</span>).
+      <b>כל מה שמלא כאן נמדד מהמסד:</b>
       שם הלקוח, מה הלקוח תייג, הציון, וטקסט ההערה. <b>כל מה שהמודל אמור למלא מוצג כ-"—" ומסומן
       "ימולא בריצה"</b> — כדי שלא ייראה על המסך סיווג שאיש לא הפיק.
     </div>
@@ -1705,8 +1719,9 @@ tr.hi:hover td{background:var(--amber100)}
         <span class="ltr">1–5</span>; "סנטימנט (מודל)" הוא הערכת המודל על אותו סולם. הם מוצגים בשתי
         עמודות נפרדות ומתויגות כדי שלא ייקראו כמספר אחד.<br>
         <b>שם הלקוח בעמודה משלו ולא בתוך הציטוט</b> — הציטוט הוא מה שנכתב, בלי תוספות.<br>
-        <b>מיון ברירת-מחדל: תאריך יורד</b> (📐7 — לפי המדד המוצג; אין כאן ציון מדורג לפי המודל
-        עדיין). שמונה השורות הן <b>שמונה הראשונות בפועל</b> מתוך <span class="ltr">33</span>, ולא
+        <!-- 📐7 · המזהה ירד מהטקסט הנראה (כ4) -->
+        <b>מיון ברירת-מחדל: תאריך יורד</b> — אין כאן עדיין ציון שהמודל דירג לפיו.
+        שמונה השורות הן <b>שמונה הראשונות בפועל</b> מתוך <span class="ltr">33</span>, ולא
         מדגם — כל <span class="ltr">33</span> נמדדו ב-<span class="ltr">10/09/2026</span>, ולכולן
         יש הערה חופשית.</p>
     </div>
@@ -1720,7 +1735,7 @@ tr.hi:hover td{background:var(--amber100)}
   <p class="states-cap">חמשת המצבים שהדף יודע לצייר (נפרדים ממצבי פס-הניתוח):</p>
   <div class="states" aria-label="חמשת המצבים שהדף יודע לצייר">
     <div class="st"><b>1 · טעינה</b>שלד-פס, שלד-אריחים ושלד-טבלה<div class="skel-row" style="width:70%"></div><div class="skel-row" style="width:52%"></div></div>
-    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין הערות מסווגות ללקוח שנבחר · [נקה מסננים]"</div>
+    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין הערות מסווגות ללקוח שנבחר · [נקי מסננים]"</div>
     <div class="st"><b>3 · ריק-באמת</b>"טרם אושרה ריצת-ניתוח" + הכפתור — <b>וזה המצב היום</b></div>
     <div class="st"><b>4 · אין-הרשאה</b>"לא זמין בתפקידך" · צפייה בלי הרשאת עריכה = בלי הכפתור</div>
     <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב]</div>
@@ -1738,8 +1753,8 @@ tr.hi:hover td{background:var(--amber100)}
     <b>דגל אדום</b> = הערה שהמודל סימן כדורשת התייחסות מיידית.</p>
   <p class="src-footer">מקורות: 🌱 מסד <span class="ltr">10/09/2026</span> — <span class="ltr">426</span>
     הערות · <span class="ltr">33</span> "אחר" ופילוחן לפי שנה · ספירות ארבע הקטגוריות ·
-    טקסט ההערות · <b>היעדר הטבלאות</b> <span class="ltr">feedback_ai_runs</span> /
-    <span class="ltr">feedback_ai_insights</span> ·
+    <!-- כ5 · השמות `feedback_ai_runs` / `feedback_ai_insights` ירדו מהטקסט הנראה -->
+    טקסט ההערות · <b>היעדר הטבלאות של ריצות-הניתוח ותוצאות הסיווג</b> ·
     🎭 דמו: <b>הבלוק השני בלבד, ובו רק המבנה</b> — אין ולו סיווג-מודל אחד ·
     📐 נגזר: <span class="ltr">77.2%</span> · שורת-"אז מה".</p>
 </section>

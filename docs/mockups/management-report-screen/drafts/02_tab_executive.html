@@ -32,7 +32,7 @@
 <style>
 /* ═══ טוקנים — הועתקו מילולית מ-design-contract.md §⑥. אל תשנה ערך. ═══ */
 :root{
-  --primary:#0D9488;
+  --primary:#0F766E;
   --teal50:#F0FDFA; --teal100:#CBFBF1; --teal200:#96F7E4;
   --teal500:#00BBA7; --teal600:#009689; --teal700:#00786F;
   --green100:#DCFCE7; --green700:#008236;
@@ -367,7 +367,7 @@ tr.dim td{color:var(--s500)}
   <p class="psub"><span class="ltr">2026</span> (<span class="ltr">01/01–10/09</span>) · כל הלקוחות</p>
   <!-- 📐2 · הצהרת-אוכלוסייה. הסטטוסים נכתבים בשמם העברי כפי שהמשתמשת מכירה אותם מהמסכים. -->
   <p class="pop">אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית —
-    <b>הסתיים · אירוע הסתיים · ממתין לחשבונית · ממתין לתשלום</b> <b>(הכרעה 36)</b> · הוצאו: אירועים שטרם התקיימו,
+    <b>פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום</b><!-- הכרעה 36 --> · הוצאו: אירועים שטרם התקיימו,
     אירועים בתהליך ואירועים מבוטלים · <span class="ltr">n=236</span> (מתוך <span class="ltr">837</span> אירועים במערכת).</p>
 
   <!-- 📐23 · מבט-על נושא את הפועל של הדף שהוא פותח — כאן "מגמות רב-שנתיות", שהוא אסטרטגי ⇒ "לשים לב ש…" -->
@@ -391,7 +391,7 @@ tr.dim td{color:var(--s500)}
 
     <div class="tile"><span class="lb">אירועים שהסתיימו</span>
       <span class="vl"><span class="ltr">236</span></span>
-      <span class="sub">הסתיימו, אירוע-הסתיים, ממתינים לחשבונית וממתינים לתשלום</span>
+      <span class="sub">ארבעת המצבים — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום</span>
       <span class="cmp"><span class="arrow">▲</span> <span class="ltr">2025</span> באותו טווח: <span class="ltr">178</span></span>
       <span class="win"><span class="ltr">01/01–10/09/2026</span></span></div>
 
@@ -519,16 +519,16 @@ tr.dim td{color:var(--s500)}
   <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
   <div class="states" aria-label="חמשת המצבים שהדף יודע לצייר">
     <div class="st"><b>1 · טעינה</b>שלד-אריחים ושלד-טבלה<div class="skel-row" style="width:80%"></div><div class="skel-row" style="width:60%"></div></div>
-    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין אירועים שהסתיימו בתקופה שנבחרה · [נקה מסננים]"</div>
+    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין אירועים שהסתיימו בתקופה שנבחרה · [נקי מסננים]"</div>
     <div class="st"><b>3 · ריק-באמת</b>"אין נתונים עדיין"</div>
-    <div class="st"><b>4 · אין-הרשאה</b>"לא זמין בתפקידך" — לשונית ההנהלה ממוסכת למי שאין לה הרשאת 'כספים' (הכרעה 2). למנכ"ל היא פתוחה, ולכן אינה ממוסכת במסך הזה.</div>
+    <div class="st"><b>4 · אין-הרשאה</b>"לא זמין בתפקידך" — לשונית ההנהלה ממוסכת למי שאין לה הרשאת 'כספים'.<!-- הכרעה 2 --> למנכ"ל היא פתוחה, ולכן אינה ממוסכת במסך הזה.</div>
     <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב]</div>
   </div>
 
   <p class="def-footer">הגדרות: <b>אירוע שהסתיים</b> = אירוע שהתאריך שלו עבר והוא באחד מארבעת המצבים
-    "הסתיים · אירוע הסתיים · ממתין לחשבונית · ממתין לתשלום" ·
-    <b>הכנסה</b> ו-<b>רווח גולמי</b> = מה שפונקציית-הכספים של המערכת מחזירה לכל אירוע
-    (<span class="ltr">finance_project_money</span>), ולא חישוב חוזר במסך ·
+    "פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום" ·
+    <b>הכנסה</b> ו-<b>רווח גולמי</b> = מה שפונקציית-הכספים של המערכת מחזירה לכל אירוע<!-- finance_project_money -->,
+    ולא חישוב חוזר במסך ·
     <b>שולי-רווח</b> = סך הרווח חלקי סך ההכנסה על אותה אוכלוסייה — לא ממוצע של אחוזים ·
     <b>נתח <span class="ltr">5</span> הגדולים</b> = הכנסת חמשת הלקוחות הגדולים חלקי הכנסת כל הלקוחות,
     <b>כל הזמנים</b>, ולכן אינו זז עם מסנן התקופה ·
@@ -551,7 +551,7 @@ tr.dim td{color:var(--s500)}
   <p class="psub">האם הצמיחה שומרת על שולי-הרווח?</p>
   <p class="psub" id="p2Range"><span class="ltr">2024–2026</span> · כל הלקוחות</p>
   <p class="pop">אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית —
-    <b>הסתיים · אירוע הסתיים · ממתין לחשבונית · ממתין לתשלום</b> <b>(הכרעה 36)</b> · הוצאו: אירועים שטרם התקיימו,
+    <b>פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום</b><!-- הכרעה 36 --> · הוצאו: אירועים שטרם התקיימו,
     אירועים בתהליך ואירועים מבוטלים · <span class="ltr">n=731</span> בשלוש השנים
     (<span class="ltr">209</span> · <span class="ltr">286</span> · <span class="ltr">236</span>).
     <b><span class="ltr">2026</span> היא שנה חלקית</b> — עד <span class="ltr">10/09</span> — ואינה ברת-השוואה לשנים מלאות.</p>
@@ -654,7 +654,7 @@ tr.dim td{color:var(--s500)}
   <!-- ═══ גרף ב' — הכרעה 24 · ח6: מחיר לשעה מול עלות לשעה ═══ -->
   <div class="chart-card">
     <h3>מחיר לשעה מול עלות לשעה · <span class="ltr">2024–2026</span></h3>
-    <p class="chart-note"><b>שני ציריםנפרדים בכוונה, וכל אחד מתחיל באפס</b> — מחיר-לשעה ועלות-לשעה נבדלים
+    <p class="chart-note"><b>שני צירים נפרדים בכוונה, וכל אחד מתחיל באפס</b> — מחיר-לשעה ועלות-לשעה נבדלים
       פי-שישה בגודלם, ואיור שלהם על ציר אחד היה מצייר את העלות כקו שטוח. <b>ההשוואה היא בין קצבי-הגידול</b>,
       והם כתובים מתחת לכל לוח.</p>
     <div class="chart-row">
@@ -745,7 +745,7 @@ tr.dim td{color:var(--s500)}
   <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
   <div class="states" aria-label="חמשת המצבים שהדף יודע לצייר">
     <div class="st"><b>1 · טעינה</b>שלד-אריחים ושלד-טבלה<div class="skel-row" style="width:80%"></div><div class="skel-row" style="width:55%"></div></div>
-    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין אירועים שהסתיימו בתקופה שנבחרה · [נקה מסננים]"</div>
+    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין אירועים שהסתיימו ללקוח שנבחר · [נקי מסננים]"</div>
     <div class="st"><b>3 · ריק-באמת</b>"אין נתונים עדיין"</div>
     <div class="st"><b>4 · אין-הרשאה</b>"לא זמין בתפקידך" (הלשונית ממוסכת ללא הרשאת 'כספים')</div>
     <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב]</div>
@@ -776,7 +776,7 @@ tr.dim td{color:var(--s500)}
   <p class="pop"><b>שתי אוכלוסיות שונות בדף אחד, ובכוונה:</b>
     <b>שיעור-האישור</b> נמדד על <b>הצעות מחיר</b> — <span class="ltr">837</span> אושרו ו-<span class="ltr">337</span> נדחו
     (הצעות שנסגרו בסיבה "נפתחה בטעות" אינן נספרות כדחייה) ·
-    <b>שולי-הרווח</b> נמדדים על <b>האירועים שנולדו מההצעות המאושרות וכבר התקיימו</b> <b>(הכרעה 36)</b> —
+    <b>שולי-הרווח</b> נמדדים על <b>האירועים שנולדו מההצעות המאושרות וכבר התקיימו</b><!-- הכרעה 36 --> —
     <span class="ltr">n=731</span>; <span class="ltr">106</span> הצעות מאושרות טרם הפכו לאירוע שהתקיים ואינן כאן.
     <br>🔴 <b>הדף אינו מגיב למסנן התקופה</b> — מדרג-הנחה הוא חתך של כל ההיסטוריה, וחיתוכו לשנה בודדת
     היה מותיר <span class="ltr">21</span> אירועים במדרג העמוק ביותר.</p>
@@ -894,7 +894,7 @@ tr.dim td{color:var(--s500)}
   <div class="tbl-card">
     <h3 id="p3TblTitle"></h3>
     <p class="drill">לחיצה על שורה פותחת את הצעת המחיר</p>
-    <p class="hint" data-onb="reports.discounts.tierSort"><span class="hl" aria-hidden="true">ג</span><span class="ht">הטבלה שולפת את ההצעות של המדרג שנבחר בגרף וממיינת אותן לפי עומק ההנחה מהגבוה לנמוך — אותו מדד שהדף כולו חותך לפיו. לחיצה על עמודה בגרף מצרה את הטבלה למדרג אחד, ו"נקה בחירה" מחזיר את כולן.</span></p>
+    <p class="hint" data-onb="reports.discounts.tierSort"><span class="hl" aria-hidden="true">ג</span><span class="ht">הטבלה שולפת את ההצעות של המדרג שנבחר בגרף וממיינת אותן לפי עומק ההנחה מהגבוה לנמוך — אותו מדד שהדף כולו חותך לפיו. לחיצה על עמודה בגרף מצרה את הטבלה למדרג אחד, ו"נקי בחירה" מחזיר את כולן.</span></p>
     <div class="tbl-scroll">
       <table class="data">
         <thead><tr>
@@ -906,13 +906,13 @@ tr.dim td{color:var(--s500)}
       </table>
     </div>
     <div class="pager"><span id="p3Pager"></span>
-      <button class="clear-chip" id="p3Clear" hidden>× נקה בחירה</button></div>
+      <button class="clear-chip" id="p3Clear" hidden>× נקי בחירה</button></div>
   </div>
 
   <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
   <div class="states" aria-label="חמשת המצבים שהדף יודע לצייר">
     <div class="st"><b>1 · טעינה</b>שלד-אריחים ושלד-טבלה<div class="skel-row" style="width:75%"></div><div class="skel-row" style="width:55%"></div></div>
-    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין הצעות במדרג שנבחר · [נקה בחירה]"</div>
+    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין הצעות במדרג שנבחר · [נקי בחירה]"</div>
     <div class="st"><b>3 · ריק-באמת</b>"אין נתונים עדיין"</div>
     <div class="st"><b>4 · אין-הרשאה</b>"לא זמין בתפקידך" (הלשונית ממוסכת ללא הרשאת 'כספים')</div>
     <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב]</div>
@@ -942,7 +942,7 @@ tr.dim td{color:var(--s500)}
   <p class="psub">כמה דיילות לאורח באמת נדרשו?</p>
   <p class="psub">כל הזמנים · כל הלקוחות</p>
   <p class="pop">אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית
-    (<b>הסתיים · אירוע הסתיים · ממתין לחשבונית · ממתין לתשלום</b> <b>(הכרעה 36)</b>) <b>ושיש להם גם הערכת-אורחים בהצעה
+    (<b>פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום</b><!-- הכרעה 36 -->) <b>ושיש להם גם הערכת-אורחים בהצעה
     וגם מספר אורחים בפועל</b> · <span class="ltr">n=717</span> מתוך <span class="ltr">731</span>;
     הוצאו <span class="ltr">14</span> אירועים שבהם לא נרשם מספר האורחים בפועל בסגירה — כולם מ-<span class="ltr">2026</span>.
     <br>🔴 <b>הדף אינו מגיב למסנן התקופה</b> — היחס נמדד על כל ההיסטוריה, כי <span class="ltr">31</span>
@@ -961,20 +961,20 @@ tr.dim td{color:var(--s500)}
       <span class="cmp"><span class="arrow">▼</span> לפני שנה, אותו חישוב: <span class="ltr">41.0</span></span>
       <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
 
-    <div class="tile"><span class="lb">אירועים שהגיעו בהם יותר אורחים מהצפי</span>
+    <div class="tile"><span class="lb">אירועים מעל הצפי</span>
       <span class="vl"><span class="ltr">135</span></span>
-      <span class="sub"><span class="ltr">18.8%</span> מתוך <span class="ltr">717</span> האירועים שיש להם שני המספרים</span>
+      <span class="sub">הגיעו יותר אורחים מההערכה שבהצעה · <span class="ltr">18.8%</span> מתוך <span class="ltr">717</span> האירועים עם שני המספרים</span>
       <span class="cmp"><span class="arrow">▼</span> לפני שנה: <span class="ltr">77</span> מתוך <span class="ltr">387</span> (<span class="ltr">19.9%</span>)</span>
       <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
 
-    <div class="tile"><span class="ha" aria-hidden="true">ג</span><span class="lb">אירועים שבהם היחס עלה על <span class="ltr">50</span></span>
+    <div class="tile"><span class="ha" aria-hidden="true">ג</span><span class="lb">אירועים ביחס מעל <span class="ltr">50</span></span>
       <span class="vl"><span class="ltr">31</span></span>
       <span class="sub"><span class="ltr">4.3%</span> — יותר מ-<span class="ltr">50</span> אורחים לכל דיילת בפועל</span>
       <span class="cmp"><span class="arrow">▼</span> לפני שנה: <span class="ltr">20</span> מתוך <span class="ltr">387</span> (<span class="ltr">5.2%</span>)</span>
       <span class="win">כל הזמנים · אינו מושפע ממסנן התקופה</span></div>
 
     <!-- 📑ב#10 · האריח שמצהיר על החור בדאטה עצמו -->
-    <div class="tile"><span class="lb">אירועים שיש להם שני המספרים</span>
+    <div class="tile"><span class="lb">אירועים עם שני המספרים</span>
       <span class="vl"><span class="ltr">717</span></span>
       <span class="sub">מתוך <span class="ltr">731</span> (<span class="ltr">98.1%</span>) · ב-<span class="ltr">14</span> אירועים לא נרשם מספר האורחים בפועל, כולם מ-<span class="ltr">2026</span></span>
       <span class="cmp"><span class="arrow">▼</span> לפני שנה: <span class="ltr">387</span> מתוך <span class="ltr">387</span> (<span class="ltr">100%</span>)</span>
@@ -989,8 +989,7 @@ tr.dim td{color:var(--s500)}
   <div class="chart-card">
     <h3>הערכת אורחים מול אורחים בפועל · <span class="ltr">717</span> אירועים</h3>
     <p class="chart-note"><b>הקו האלכסוני הוא "ההערכה התקיימה בדיוק"</b> — נקודה מעליו = הגיעו יותר
-      אורחים מהצפי, מתחתיו = הגיעו פחות. <b>ההבדל מסומן בצורה ולא בצבע בלבד</b>: משולש להגעה מעל הצפי,
-      עיגול חלול להגעה בצפי או מתחתיו.
+      אורחים מהצפי, מתחתיו = הגיעו פחות. משולש = מעל הקו · עיגול חלול = על הקו או מתחתיו.<!-- 📐19 — לא צבע לבדו; מיושם בציור -->
       <br>מוצגות <span class="ltr">72</span> נקודות מתוך <span class="ltr">717</span> —
       <b>כל נקודה עשירית לפי סדר ההערכה</b>, כדי שהצורה תישאר קריאה במוקאפ.
       <b>במסך החי מוצגות כל <span class="ltr">717</span>.</b></p>
@@ -1111,7 +1110,7 @@ tr.dim td{color:var(--s500)}
         <span class="ltr">35</span> ל-<span class="ltr">50</span> אורחים לדיילת, כלומר <b>מתחת לפרמטר-התכנון ולא מעליו</b>.</span>
       <span><b>מה הוא אינו אומר</b> — <span class="ltr">50</span> אינו יעד ואינו סף.
         אירוע ביחס <span class="ltr">55</span> אינו "כשל", ואירוע ביחס <span class="ltr">30</span> אינו "בזבוז"
-        עד שמישהו יכריע שהוא כזה.</span>
+        עד שמישהי תכריע שהוא כזה.</span>
     </div>
   </div>
 
@@ -1140,13 +1139,13 @@ tr.dim td{color:var(--s500)}
   <div class="datanote">✂️ <b>"מוזמנים לדקה לעמדה" אינו מוצג ואינו ניתן לחישוב</b> — אין במערכת מושג של
     "עמדה" ואין מונה כניסות; הנתון היחיד הוא מספר האורחים בסוף האירוע.
     <br>✂️ <b>"כמה דיילות היו נדרשות" אינו מוצג כהמלצה</b> — פרמטר-התכנון
-    <span class="ltr">50</span> הוא בסיס-תכנון ולא יעד (הכרעה <span class="ltr">6</span>: אין צביעה מול יעד),
+    <span class="ltr">50</span> הוא בסיס-תכנון ולא יעד,<!-- הכרעה 6: אין צביעה מול יעד -->
     ולכן הדף מראה את היחס שהיה בפועל ומשאיר את ההכרעה למנכ"ל.</div>
 
   <p class="states-cap">חמשת המצבים שהדף יודע לצייר:</p>
   <div class="states" aria-label="חמשת המצבים שהדף יודע לצייר">
     <div class="st"><b>1 · טעינה</b>שלד-אריחים ושלד-גרף<div class="skel-row" style="width:80%"></div><div class="skel-row" style="width:60%"></div></div>
-    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין אירועים עם שני מספרי-האורחים בתקופה שנבחרה · [נקה מסננים]"</div>
+    <div class="st"><b>2 · ריק-אחרי-סינון</b>"אין אירועים עם שני מספרי-האורחים ללקוח שנבחר · [נקי מסננים]"</div>
     <div class="st"><b>3 · ריק-באמת</b>"אין נתונים עדיין"</div>
     <div class="st"><b>4 · אין-הרשאה</b>"לא זמין בתפקידך" (הלשונית ממוסכת ללא הרשאת 'כספים')</div>
     <div class="st"><b>5 · תקלה</b>"לא ניתן לטעון את הנתונים." · [נסי שוב]</div>
@@ -1574,7 +1573,9 @@ tr.dim td{color:var(--s500)}
       var k = b.getAttribute('data-b');
       state.tier = (state.tier === k) ? null : k;
       renderP3();
-      say(state.tier ? 'מסונן למדרג ' + TIERS[k].label + '; ' + QUOTES[k].length + ' שורות מוצגות'
+      /* עברית: כמות 1 מחייבת יחיד — בלי זה ההכרזה אומרת "1 שורות מוצגות" */
+      say(state.tier ? 'מסונן למדרג ' + TIERS[k].label + '; ' + QUOTES[k].length +
+                       pl(QUOTES[k].length, ' שורה מוצגת', ' שורות מוצגות')
                      : 'הבחירה במדרג בוטלה');
     }
     b.addEventListener('click', toggle);
