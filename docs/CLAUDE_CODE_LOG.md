@@ -46,6 +46,14 @@
 
 ## Session Log (newest first)
 
+### 11/09/2026 (13:0X–13:3X) — story ④ is not fixable yet, so it got a return trigger and a dated fallback instead
+
+**Ishay:** *"רוצה לסדר עכשיו או מיותר?"* — **measured before answering, rather than reasoning about it:** the two AI tables do **not** exist in `docs/schema.sql` and `supabase/functions/classify-feedback` does **not** exist. ⇒ *"fix it now"* means **building the whole AI layer out of order**, and it depends on a Gemini key only Ishay can install *(step 2ב.1, a 🧩 step)*. **Answer: not now.**
+
+✅ **But two cheap things were genuinely missing, and they are the difference between *scheduled* and *hoped for*:**
+**‏① A return trigger.** Step 2ב.4 already names story ④ by name — good — **but nothing said that when the run lands, someone flips the ⚠️ row in the handoff to ✅.** ⇒ **the story would have stayed flagged forever and nobody would learn it became true.** That is now the step’s last action. 🔑 **This is the same class as the three stale items found earlier today** *(D-2 · ⏳1 · `0.4299`)*: **a flag with no one responsible for clearing it is not a flag, it is a permanent scar.**
+**‏② A dated fallback instead of a hope.** The step depends on something Claude cannot discharge ⇒ **if the run is not approved by `08/10/2026`, story ④ is *replaced*, not postponed**, and the replacement is written out rather than left to be invented under pressure: *"‏426 free-text comments; **33 sit on feedback tagged 'אחר'** — the largest negative bucket in the system, **and nobody has read them yet.**"* **Both figures are on the approved מ22 today**, it needs no run, no key and no tables, it passes all five story rules, and **it frames the AI layer as the answer rather than claiming it already ran.** *(The date is marked as a recommendation, not a ruling.)*
+
 ### 11/09/2026 (12:3X–13:0X) — the shell mockup deleted on Ishay's call, and the permission item closed on his approval
 
 **Two calls of his, and the measurement backed him on both.**
