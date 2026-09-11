@@ -96,6 +96,34 @@ and three card files as unwritten; `STATUS.md` said "ארבעה-עשר" coherenc
 **Gates:** `format:check` · `check:docs-structure` · `check:bidi` all exit 0. CR bytes = 0 in all
 nine touched files (the Windows/CRLF mine).
 
+**Then Ishay asked the sharper follow-up — "will the onboarding be consistent with the existing one?
+I think the existing is good" — and then narrowed it: "I mean the copy itself."** Measured rather
+than judged: 37 production `guided` strings vs the 67 hints in the four mockups. **Voice is the same
+— avg 253 chars / median 234 vs 232 / 221, both averaging 2 sentences, feminine address 20/37 vs
+33/67.** The m11 aging hint even reproduces production's own no-digits convention verbatim
+("שנקבעו בהגדרות").
+⚠️ **A measurement bug worth recording, because it nearly became a reported finding:** the first pass
+returned *0% feminine address on both corpora*. That is a broken regex — **`\b` does not work on
+Hebrew in JS** — not a copy defect. Re-measured with explicit delimiters.
+
+🔴 **The one real gap, and it is structural rather than stylistic:** 13 of the 67 hints carry numbers
+— **28 numbers, every one isolated with `<span class="ltr">`.** But `Hint.jsx` renders a flat string
+(`{text}` inside a `<p>`, lines 56–61) ⇒ **the isolation cannot travel through `onboardingCopy.js`.**
+Copying "word for word", as the card instructs, drops it, and the number flips inside a Hebrew
+sentence with no error — the failure mode `src/CLAUDE.md` already documents nine times. The
+conversion exists here and is not an invention: **LRI…PDI (U+2066…U+2069)**, as used by
+`plainTextToEmailHtml` and `minWageError`. Written into `onboarding-layer-contract.md §5ב` with a
+pointer from `design-contract §⑧`, so the builder converts instead of dropping. ⚠️ Note
+`reports.reliability.scoreBasis` carries **two** isolated runs inside one formula — the ninth-incident
+pattern exactly.
+
+**Recorded, deliberately NOT decided:** `onboardingCopy.js:47–48` sets *"zero digits on purpose"* and
+production holds it at **0/37**; m11 is at **13/67**, twelve of them on the hostesses tab. The
+difference is not only consistency — production's avoided digits were **params thresholds**, while
+most of m11's are **data counts** (106 · 186 · 87 · 2,483) that move whenever the data moves, and no
+test covers a hint sentence ⇒ they go stale silently. Recommendation written (drop the data counts,
+keep the formula with LRI/PDI); **left for Ishay because it is twelve sentences a user reads.**
+
 **Still open — and not mine to close:** §2's eye-approval. `screens-approved.md` states it in Ishay's
 own words, and the blanket delegation explicitly excludes it.
 
