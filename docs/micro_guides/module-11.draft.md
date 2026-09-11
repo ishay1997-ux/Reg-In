@@ -95,13 +95,41 @@ cards. **All 🟢, each read to its tail. No §7 item blocks this module.**
 layer, two modes) · **35** (reliability coefficients) · **18** (report names) · **19** (clickable row) ·
 **22** (report type determines the lens) · **2** (tab opens by the owning module's permission).
 
-### 3.3 🔴 Ruling-coverage back-check — **run it, do not skip it**
-The template makes this mandatory for a module **with** an approved spec, because the other passes
-test *sufficiency* and a ruling silently dropped from the steps produces **no guess and no
-contradiction** — it is invisible to every other check.
-⇒ **Enumerate all 39 rulings + every `הכרעות-מציאות` row, and prove each maps to exactly one of:
-an owning build step · an explicit `🚧 מN` deferral · a reality-kill row.** The ruling list is the
-denominator — walk it, do not walk the guide and hope.
+### 3.3 🔴 Ruling-coverage back-check — **RUN 11/09/2026, and this is the result**
+> ⚠️ **This section previously said "enumerate all 39 and prove each maps to a step" — and the
+> enumeration was never run.** A reviewer sampled ten and found six unmapped. **A check described but
+> not executed is worse than no check: it manufactures assurance.** It has now been walked, all 39.
+
+**Denominator: 39 rulings + 3 `הכרעות-מציאות` rows.** Each maps to exactly one of —
+**(א) not a build item** *(process, seeding, agent method)*: **3 · 8 · 9 · 10 · 11 · 12 · 13 · 16 · 17 ·
+20 · 21 · 26 · 27 · 29 · 31 · 32** — sixteen. ⚠️ **Except ruling 25's phase ב, which IS a build item and
+now owns step 2ב.4.**
+**(ב) has an owning step:** **1** ⇒ 2ב · **2** ⇒ §4.1–4.2 · **5** ⇒ 1.4/§7.22 · **14 · 35** ⇒ 1.4 ·
+**23** ⇒ 📐13 in phase 3 · **28** ⇒ 3.5 · **30** ⇒ §2.2 · **34** ⇒ open, §3.5 · **36** ⇒ §2.5/RPC
+populations.
+**(ג) 🔴 surface content with no step of its own — the gap this check exists to find:**
+
+| Ruling | What it decides | Where it must land |
+|:-:|---|---|
+| **4** | interactivity level: cross-filter · drill-through · global filters · a comparison half in **every** tile · an "אז מה" line on **every** page | **phase 3, every tab step** |
+| **6** | no target colouring; the comparison is the **company median** | phase 3 + the RPCs that return it |
+| **15** | **the shell's visual grammar — eleven items** (chip labels · the uncoloured ▲/▼ · the "אז מה" line · cross-filter colours · masked tab · the five states · the date stamp · number formats · chart colours · the customer filter · the pager) | 🔴 **step 3.0 — this IS the מ1 spec, and 3.0 pointed only at `design-contract §⑥`** |
+| **19** | one drill target per page, **the whole row clickable**, no repeated "פתח…" link | phase 3, every tab step |
+| **22** | the report's **type** determines the lens it is judged by | phase 3 + the closing audit |
+| **24** | five in-scope decisions: report 11's scope · a column in 18 · a tile in 1/2 · a tile in 14 | the owning tab steps |
+| **33** | every overview tile is **a door to a page**, including across tabs | phase 3, the four overview surfaces |
+| **37** | report 13 shows no-show in **two columns** and does not choose between them | the hostesses tab step |
+| **38** | the reliability component in Smart Match **stays on** — same score, two screens | phase 2, the reliability RPC |
+| **39** | the discount tiers `0 · 1–5 · 6–10 · 10+` are a **ruling**, not an inheritance | the executive tab step |
+
+🔑 **They all reach the builder through the surface cards — but "it arrives through a card" is not "a
+step owns it".** ⇒ **Every phase-3 tab step reads its surface's card in full, nine sections, and the
+step is not closed until each of the rulings above that touches that surface is visible on screen.**
+
+⚠️ **And one count to settle before phase 2:** this guide says **"~16 RPCs"**; `processes-approved.md`
+says **"~21 פונקציות-שרת"** and marks the choice `⚙️ הכרעת-בלופרינט`. **The guide changed the number
+silently.** Decide it at step 1.0 and write it down — a drill report may need one function with
+parameters or three.
 
 ### 3.4 🚧 Cross-module debts targeted at m11 — **10 rows in `PROJECT_MASTER §6`**
 Read each to its tail. Three carry build consequences: **`🚧 מ11 ← מ5`** (cost basis — closed by
@@ -178,7 +206,7 @@ report 20's entire point.
 > |---|---|---|
 > | T1 | `docs/schema.sql` lacks `negative_feedback_reasons` · `positive_feedback_reasons` · `positive_feedback_reason`, which **exist live**. Verifying a column against the snapshot will reject a real one | **1.1** |
 > | T2 | RLS-on with zero policies = deny-all returning `error: null`. Both new tables ship their read policy **in the same migration** | 1.2 |
-> | T3 | The taxonomy CHECK for `topics[]` is the existing `negative_/positive_feedback_reasons` constraint (D14) — **do not invent a second list** | 1.2 |
+> | T3 | ✏️ **Corrected 11/09 — the original said "one `topics[]` over the ten categories" and that CHECK cannot be written.** They are **two lists of five** and **`'אחר'` is in both** ⇒ 9 unique strings with no sign. **Two columns — `negative_topics` and `positive_topics`** — each with its own existing list. **Still do not invent a new list** | 1.2 |
 > | T4 | `assignments` PK is a **triple**; 797 duplicate pairs exist. Pull it from `pg_constraint` | 1.3 |
 > | T5 | The four `params` need ceiling/floor like every other numeric param (pattern merged in PR #104) **and** a row each in `paramsRegistry.js` | 1.4 |
 > | T6 | `moddatetime` lives in `extensions` — `execute function extensions.moddatetime('updated_at')` | 1.2 |
@@ -192,9 +220,16 @@ re-measure: `params` count · policies on the two new tables (expect 0, they do 
 **👤 half:** ask Ishay whether another session is writing (rule 16) · ⏳1 if still open.
 **🔻👤 Verify:** measurements reported.
 
-**Step 1.1 · Regenerate `docs/schema.sql`**
+**Step 1.1 · Regenerate `docs/schema.sql`** ✏️ **method and Verify fixed 11/09.**
 **Goal:** the top of the truth hierarchy stops lying before anything is built on it.
-**Verify:** the three feedback columns appear; `grep -c 'feedback_reasons' docs/schema.sql` > 0.
+🔴 **How — it is not obvious and there is no script:** the snapshot is produced from catalogue queries
+against the live DB. **The procedure is in `supabase/migrations/CLAUDE.md §3`** — read it there; it is
+the only place that carries it, **and it is not on `spec.md`'s reading list.**
+⚠️ **The original Verify was defective:** `grep -c 'feedback_reasons' > 0` passes on **one** match and
+would never catch `positive_feedback_reason` *(singular)* — one of the three columns it exists for.
+**Verify, per column:** all three of `negative_feedback_reasons` · `positive_feedback_reasons` ·
+`positive_feedback_reason` present, **and** a live `information_schema` count of `projects` columns equals
+the snapshot's. **A gate that only confirms the healthy state is not a gate.**
 
 **Step 1.2 · Migration A — the two AI tables + their policies**
 **Files:** `supabase/migrations/<ts>_module11_a_feedback_ai.sql`.
@@ -206,19 +241,55 @@ is *asserted*, not observed.
 **Verify:** column exists, nullable; **the 5,674 seeded rows stay `NULL`** (no back-fill);
 `pg_constraint` confirms the PK triple is untouched.
 
-**Step 1.4 · Migration C — the four `params` + registry rows**
-**Verify:** four rows, `owner_role_id` = מנכ"ל, each with ceiling/floor; `paramsRegistry.js` has four
-matching rows; **a missing row surfaces as *"חסר פרמטר מערכת: X"*, never a silent default** *(§7.83)*.
+**Step 1.4 · Migration C — the four `params` + registry rows** ✏️ **re-specified 11/09: it would have
+aborted on apply.**
+🔴 **`params.param_type` is `not null` with a CHECK on six values** *(`schema.sql:583`)*, and no source
+said which one these four take. An insert without the column fails; with a guessed value it fails the
+CHECK. **The anchor, read from the existing rows rather than chosen by taste:** display/alert thresholds
+carry `control_alerts` *(`ימי_אזהרה_קדם_אירוע` · `שעות_תזכורת_לדיילת`)*, while `smart_match` is the
+weights group *(`משקולת_*`)*.
+⇒ **all four are `control_alerts`** — they are thresholds a report paints by, not scoring weights.
 
-**Step 1.5 · 🔴 The m4 write — MOVED HERE from Phase 4** *(added 11/09 on a reviewer's Contrarian lens)*
-**Goal:** `recommended_rank` is written at invite time by merged m4 code.
-🔑 **Why it moved:** the change touches `insertInviteRow` and `writeInviteToken`
-(`src/modules/04_hostesses/api.js`) — the path that produces an **irreversible** side effect, an invite
-that went out. m4 closed on 12/08 with an audit that included two real emails. Leaving the full m4
-regression in Phase 4 means **if it fails, it fails the week before the conference, with all the UI
-already built on top of it.** ⇒ **the column and its writer land together, and m4's E2E runs here.**
-**Verify:** a new invite writes the rank; **a resend does not overwrite it**; a forced write failure
-leaves `NULL` + `console.warn` and **the invite still goes out**; **m4's full E2E green.**
+| `param_name` | value | `param_type` | `owner_role_id` |
+|---|:-:|---|---|
+| `מכפיל_מרווח_מתרחק` | `1.5` | `control_alerts` | מנכ"ל |
+| `סף_סטיית_תקציב_אחוז` | `15` | `control_alerts` | מנכ"ל |
+| `מקדם_אמינות_אדום` | `0.87` | `control_alerts` | מנכ"ל |
+| `מקדם_אמינות_ענבר` | `0.95` | `control_alerts` | מנכ"ל |
+
+🔴 **And the ceiling/floor do NOT live in `params`** — that table has no such columns. They live in
+`src/lib/paramsRegistry.js` as type rules, and **its own comment says `min`/`max`/`decimals` are not
+enforced anywhere.** ⇒ **"with ceiling/floor" means a registry row, not a DB constraint.** Say which, or
+the step is a guess. *(If enforcement is wanted, that is a new decision and not this step.)*
+**Verify:** four rows exist with those exact types · four matching registry rows · **a missing row
+surfaces as *"חסר פרמטר מערכת: X"*, never a silent default** *(§7.83)*.
+
+**Step 1.5 · 🔴 The m4 write — MOVED HERE from Phase 4, and RE-SPECIFIED** *(11/09 — an execution
+rehearsal found the original version not executable; the Contrarian lens moved it)*
+
+🔑 **Why it moved:** it touches the path that produces an **irreversible** side effect — an invite that
+went out — in a module that closed in August. Leaving its regression in Phase 4 means that if it fails,
+it fails the week before the conference with all the UI already built on top of it.
+
+🔴 **And why it had to be re-specified — measured 11/09 in `src/modules/04_hostesses/api.js`:**
+| What the old version said | What is actually there |
+|---|---|
+| "write in `insertInviteRow` **and** `writeInviteToken`" | `writeInviteToken` is the **resend / token** path — and M11-4 itself says the rank is *"not overwritten on resend"*. **The two instructions contradict each other.** |
+| — | ‏`writeInviteToken` is **imported by m6** (`06_projects/api.js:34,311`, `sendDateChangeReinvites`), where no rank exists at all ⇒ writing there is a **third** ripple into merged code, unnamed anywhere |
+| "the rank" | **Two different orders exist.** `ranked` = `rankCandidates(...)` (the system's score order) · `candidates` = `sortByAngle(ranked.filter(...))` (the lens the manager picked). Report 14א asks *"did she take the system's #1"* ⇒ **`ranked` is the source. `candidates` is not.** |
+| — | ‏`createShiftInvites({ projectId, hostessIds, origin })` takes **ids only**; `insertInviteRow({ project, hostess, nowIso })` never sees a rank. **A signature has to change, and no step allowed that.** |
+
+**⇒ The executable version:**
+1. **`createShiftInvites` gains one optional argument** — `ranks`, a `hostessId → rank` map derived from
+   **`ranked`** in `SmartMatchPage`, before `sortByAngle`. Absent ⇒ every row `NULL`.
+2. **`insertInviteRow` writes it once, on insert.** 🚫 **`writeInviteToken` is not touched at all.**
+3. **An invite from the row menu (`NEW_INVITE`) for a hostess filtered out of the list gets `NULL`** —
+   correct, and exactly what report 14א means: adoption is measured only where a recommendation existed.
+4. A failed rank write **must not fail the invite** — `NULL` + `console.warn`.
+
+**Verify:** a Smart-Match invite writes the rank from `ranked` · a **resend leaves it unchanged** ·
+a row-menu invite for a filtered-out hostess is `NULL` · **m6's `sendDateChangeReinvites` still compiles
+and its path is untouched** · a forced write failure still sends the invite · **m4's full E2E green.**
 
 ### Phase 2 — Logic
 **Step 2.1 · The aging function, first, test-first** *(iron rule 14)*
