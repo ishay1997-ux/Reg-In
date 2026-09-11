@@ -318,10 +318,50 @@ declared in the function comment exactly as §📐2 states it on screen.
 **Verify:** the function reads the key; a missing key surfaces as
 *"מפתח ה-AI לא הוגדר במערכת — פנה למנכ"ל"*, and **no run row is created.**
 
-**Step 2ב.2 · The edge function `classify-feedback`** — in the **`send-email` shape**: JWT →
-`assert_module_permission('דו"חות', ['edit'])` → batch of ~20 comments → `temperature 0` → JSON per
-the schema in card ת2. **Writes rows one at a time, immediately** *(a mid-run quota hit must keep what
-was classified)*.
+**Step 2ב.2 · The edge function `classify-feedback`** ✏️ **specified 11/09 — a rehearsal listed eight
+unknowns here, and "in the `send-email` shape" answered none of them.**
+
+🔴 **First, what the template actually is — read, not assumed** *(`supabase/functions/send-email/index.ts`,
+214 lines, the repo's **only** edge function)*: it is a **webhook relay with no LLM call anywhere**, there
+is no `supabase/config.toml`, no `_shared/`, and no test. ⇒ **what it gives you is the request skeleton;
+everything model-related is new.**
+🔴 **And one thing the old text got wrong: it does NOT call `assert_module_permission`.** That is a
+plpgsql helper used by the RPCs. The function does a **manual two-stage check**, and the order is a
+written contract, not style:
+
+| From the template — copy this, it is load-bearing | Why it is written there |
+|---|---|
+| missing secret ⇒ **`500` with a Hebrew message, before anything else** | *"a missing secret is a configuration fault, not a user fault"* — returning success here would confirm an action that never happened |
+| `Authorization` header → `auth.getUser()` ⇒ `401` | without it the function is an open relay to anyone who knows its address |
+| **the permission gate runs BEFORE body validation** | otherwise a blocked user gets `400` instead of `403` and learns she *would* have passed. `e2e/quote-email.spec.js` locks both halves |
+| the permission lookup is **two queries, filtered by the user's `role_id`** | `permissions_select_all` is `using (true)`; filtering by module alone returns 5 rows, `maybeSingle()` fails, and **everyone** gets 403 — the bug caught on 30/07 |
+| `status='active'` is part of the check | a soft-deleted user gets an empty map in the client; the server must refuse equally |
+
+**What this step must decide, and the anchor for each:**
+- **Secret name `GEMINI_API_KEY`** — the template's convention *(`MAKE_EMAIL_WEBHOOK_URL`)*: purpose-named,
+  read with `Deno.env.get`, **never printed**. 🧩 Ishay installs it in step 2ב.1.
+- **Batch = 20 comments per call** — card **ת2** says *"~20 הערות לקריאה"*.
+- **`temperature 0`** — ת2. Classification must be reproducible across runs.
+- **Who writes `partial`:** the function itself, in the `catch`/timeout path, **before it returns** — so a
+  quota hit leaves a readable run rather than a row stuck on `running`.
+- **How a run starts:** a client call from the report-20 bar, by a user with `edit` on `'דו"חות'` (ת2).
+  **No scheduler exists in this project** *(D17)* — do not invent one.
+- **Response schema** — one object per comment: `sentiment` 1–5 · `negative_topics` **enum-constrained to
+  the five negative reasons** · `positive_topics` **enum-constrained to the five positive** · `quote`
+  (one sentence) · `red_flag` · or `unclassifiable`. 🔑 **The enums are the DB CHECK lists, verbatim** —
+  that is what makes the human↔model agreement matrix possible at all.
+
+⚠️ **And the provider call is the one thing NOT frozen here.** As of 11/09/2026 the Developer API takes
+the key in an **`x-goog-api-key` header**, and structured output is requested with a **JSON mime type plus
+a response schema carrying `enum` and array fields** — but Google moved this surface at least once
+*(a newer `interactions` endpoint alongside the legacy `generateContent`)*.
+🔴 **⇒ Step 1 of this step is to open the current doc and confirm endpoint · model id · and the exact
+config field names before writing the call.** **Do not copy the shape above as fact** — it is a
+starting point with a date on it, and a model id in particular will be stale.
+**Sources:** [Structured outputs — Gemini API](https://ai.google.dev/gemini-api/docs/structured-output) ·
+[Generating content](https://ai.google.dev/api/generate-content)
+
+**Writes rows one at a time, immediately** *(a mid-run quota hit must keep what was classified)*.
 **Verify the failure paths, not the happy one:** quota/timeout ⇒ run goes `partial`, the bar reads
 *"נעצר: N/M · [המשך]"*, and **the continue sends only the remainder** · invalid JSON for one comment ⇒
 that comment is *"לא ניתן לסווג (שגיאת-פורמט)"* **and the run continues** · double-click ⇒ the second
