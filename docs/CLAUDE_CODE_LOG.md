@@ -46,6 +46,16 @@
 
 ## Session Log (newest first)
 
+### 11/09/2026 (13:3X-14:0X) - the acceptance check had no file pointers, and the conference stories were in neither check
+
+**Ishay:** *"bebedikot hosaft et kol hakvatzim she-ya-azru lahem sham lehafeel shikul daat nachon? gam al hamasachim vegam al hasipurim?"* - **the answer was no, on both.**
+
+**Gap ①: not one item in the acceptance list said WHICH FILE to open.** A tester without the file in hand **verifies against memory**, and that is precisely the failure that recurred five times in one day in this module - *measuring a reconstruction of the definition instead of the definition*. **Every row now carries its file and section**: the baseline register for the authoritative numbers · card §③ for where each figure comes from · rulings 2 and 15-heh for the masking · §📐13 for the drill · `spec.md §🔢` for the aging oracle **and** the Gini variant · the onboarding contract for the toggle · and **`src/lib/salaryReport.js:39` for `rightToLeft:true`**, the one export detail no test in this repo catches. 🔑 **A filename costs a line; a search costs the check.**
+
+🔴 **Gap ②, and it is the serious one: the four conference stories appeared in NEITHER the acceptance list nor the QA matrix.** **The backbone of the hour, unchecked in both places.** They now have a section of their own - per story: **the sentence said aloud · the page behind him · and exactly what to check** - carrying the three traps found today: the word *"מאגר"* means **106** on מ17 and **186** on מ14 **in the same file** · the drifting-customers table draws **8 of 12 rows** sorted by revenue, so **a judge counting highlighted rows counts three while Ishay says four** · and story ④ is untrue until the run lands. **The forbidden sentence is listed with its replacement, and the replacement is marked unverified rather than quietly promoted.**
+➕ **The QA matrix gets the matching row with the reason it must exist:** **no automated test can catch a story that contradicts its screen** - a test checks that the number is right, not that the sentence said about it is right. **Both pasted prompts now route there**, so build and close each see it.
+✏️ **Four stale items corrected while in the file:** the entry-state section wrote *"six §7 items"* and listed **four** - **the same defect as the blueprint header, in the second file**, and the two it dropped are the two step 1.4 leans on · the reading list said **13** where there are **17** · the debt count said **seven** where there are **eight** · and three rows under *"what the build must bring you"* were closed today and still read as open.
+
 ### 11/09/2026 (13:0X–13:3X) — story ④ is not fixable yet, so it got a return trigger and a dated fallback instead
 
 **Ishay:** *"רוצה לסדר עכשיו או מיותר?"* — **measured before answering, rather than reasoning about it:** the two AI tables do **not** exist in `docs/schema.sql` and `supabase/functions/classify-feedback` does **not** exist. ⇒ *"fix it now"* means **building the whole AI layer out of order**, and it depends on a Gemini key only Ishay can install *(step 2ב.1, a 🧩 step)*. **Answer: not now.**
