@@ -46,6 +46,59 @@
 
 ## Session Log (newest first)
 
+### 11/09/2026 (04:2X–05:0X) — the mockups' "clean" mode wasn't clean, and a conference story contradicted its own screen
+
+**What triggered it.** Ishay: *"אני חושש שהמוקאפים במצב בוגר עדיין לא מספיק טובים… צריך לעשות
+שם מצב 0 ומצב 2 מחדש? או שזה בסדר ככה ויעשו את זה בפיתוח? חושש שיבלבל אותם"* — plus a blanket
+delegation to decide and execute without stopping.
+
+**What was measured, not assumed** (Playwright at 1280px over a local HTTP server — `file://` is
+blocked and the preview pane serves local files as `data:`, so neither could drive the page's JS).
+On opening `04_tab_hostesses.html` at level 0: **14 `.im` + 18 `.imh` = 32 annotation circles**, a
+`.urlbar` box that *labels itself* "לא רכיב במסך", and two export-spec lines — all rendered **above
+the report title**. That is what made the mature state look immature, and per
+`onboarding-layer-contract.md §4ב` a mockup is a build contract, so a developer would have built them.
+
+**The decision: no redraw.** Both modes' *content* is right; the packaging leaked. Evidence that
+settled it — **every onboardingCopy key in each mockup has a matching row in its card's §⑩: 70 keys,
+4/4 pairs, zero mismatches** (15·25·18·12). The build contract was already whole.
+⇒ `<body class="hide-markers">` by default; the tool button became **"הצג סימוני-מוקאפ"** and now
+governs `.im` · `.imh` · `.urlbar` · a new `.specnote`.
+🔴 **Caught only by running it:** the finance tab's onboarding switch lives inside `div.urlbar onbbar`
+⇒ the first rule **hid the switch itself**. Fixed with `.urlbar:not(.onbbar)`. Verified in all four:
+level 0 = 0/0/0, switch reachable, level 2 = 15·25·14·13 hints, round-trip clean.
+
+**Deliberately NOT unified — and recorded in `screens-approved.md §🗂️א2`:** the four tabs implement
+the layer four different ways (`.hint`/`.hint-line` · `data-onb`/`data-key`/`data-hint` ·
+`.hl`/`.oa`/`.imh`/`.hm` · `onb-2`/`onb-guided`/`onb`), because they were drawn in parallel
+(ruling 16) and the contract fixes the *concept*, not the *markup*. **None of it reaches production**
+— that is `<Hint id="…" />` reading `onboardingCopy.js`. Rewriting four working files for zero
+product change fails ruling 23's calibration in both directions.
+
+**The separate find, and the one that mattered most.** Cross-checking the four conference stories
+against their own pages: story ① said *"אחת צברה **156**, יש עם **0** · ג'יני 0.4559"*, while מ17
+says *"העמוסה ביותר… **48** משמרות; החציון **13.5**"* on **n=106**, and **excludes the 80 who worked
+zero shifts**. The 156/0 pair came from `story-evidence-2026-09-09.md`, measured on **50 active
+hostesses** (Gini **0.605**) — the population §ח8#1 **rejected**. Two measurements, two populations,
+glued into one sentence, **sitting in the handoff the next session reads**. Corrected in §6 with the
+provenance kept. Also: the cities figure on screen is **68.5**, not the handoff's "69"; and story ④'s
+"20 complaints without a tag" is real (`cards-customers.md` 20.7) but **is not on מ22** — logged for
+Ishay's eye-approval round, not silently drawn in.
+
+**Doc drift fixed in passing:** `cards-finance.md` §③ still carried the pre-seed invoice counts
+(11 / 23 / tiers 7-0-1-2-1) while the same file's §⑩, the mockup and the signoff baseline all said
+**35 / 28 / 10-13-8-1-3** — the ₪ had been refreshed on 10/09 and the counts had not. The row's
+"rounding-gap" caveat turned out to be an artifact of the stale numbers: under 10/09 data the
+buckets sum to **236,382 ₪ exactly**. Also `design-contract §①/§⑥` still declared `--primary:#0D9488`
+(the skeleton future surfaces copy) → `#0F766E`; `screens-approved §🗂️` still listed three mockups
+and three card files as unwritten; `STATUS.md` said "ארבעה-עשר" coherence tests → **16** (מ1…מ16).
+
+**Gates:** `format:check` · `check:docs-structure` · `check:bidi` all exit 0. CR bytes = 0 in all
+nine touched files (the Windows/CRLF mine).
+
+**Still open — and not mine to close:** §2's eye-approval. `screens-approved.md` states it in Ishay's
+own words, and the blanket delegation explicitly excludes it.
+
 ### 11/09/2026 (01:0X) — the compact-loss mechanism: a script, a hook, and a test that found my own sloppiness
 
 **What triggered it.** Ishay noticed his judgement-quality intuition ("היה לך שיפוט ממש טוב

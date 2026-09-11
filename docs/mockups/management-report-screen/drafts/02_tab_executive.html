@@ -96,6 +96,8 @@ h1{font-size:20px; font-weight:700; color:var(--s800)}
     background:var(--teal700); color:#fff; font:700 10px/1 'Geist Variable',sans-serif;
     box-shadow:0 0 0 2px #fff; pointer-events:none}
 body.hide-markers .im{display:none}
+body.hide-markers .urlbar:not(.onbbar){display:none}
+body.hide-markers .specnote{display:none}
 /* ── שכבת-ההטמעה (`onboarding-layer-contract.md` · `design-contract.md` §⑧) ──
    שני מצבים בלבד: **0 · נקי** (ברירת-המחדל — זה המסך שנבנה) ו-**2 · מודרך**.
    אין רמה אמצעית (הכרעת-ישי) ⇒ המתג בינארי, והדף אחד — לא שני עותקים.
@@ -261,7 +263,7 @@ tr.dim td{color:var(--s500)}
 @keyframes pulse{0%,100%{opacity:1} 50%{opacity:.5}}
 </style>
 </head>
-<body>
+<body class="hide-markers">
 
 <aside class="side">
   <div class="logo">REG-IN</div>
@@ -351,8 +353,8 @@ tr.dim td{color:var(--s500)}
         </span>
       </div>
       <!-- תצוגה-מקדימה של הייצוא (ת4 · WYSIWYG): העמודות נקראות מה-DOM של הטבלה הגלויה. -->
-      <p class="flabel" style="margin:-8px 0 4px">הקובץ שיירד: <span class="ltr" id="xlsxName"></span></p>
-      <p class="flabel" style="margin:0 0 14px; line-height:1.6"><b style="color:var(--s600)">העמודות שיירדו</b>
+      <p class="flabel specnote" style="margin:-8px 0 4px">הקובץ שיירד: <span class="ltr" id="xlsxName"></span></p>
+      <p class="flabel specnote" style="margin:0 0 14px; line-height:1.6"><b style="color:var(--s600)">העמודות שיירדו</b>
         (בדיוק הכותרות שבטבלה שעל המסך): <span id="xlsxCols" style="color:var(--s600)"></span></p>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
@@ -1171,7 +1173,7 @@ tr.dim td{color:var(--s500)}
 <!-- כלי-מוקאפ, לא רכיב-מסך: כיבוי עיגולי מפת-הלחיצות לפני מסירת צילום (📐14ב) -->
 <div class="mocktools">
   <span>כלי-מוקאפ:</span>
-  <button id="toggleMarkers" aria-pressed="true">הסתר סימוני-אינטראקציה</button>
+  <button id="toggleMarkers" aria-pressed="false">הצג סימוני-מוקאפ</button>
   <span class="sep">|</span>
   <span>מצב הטמעה:</span>
   <button id="onbToggle" role="switch" aria-checked="false"
@@ -1714,7 +1716,7 @@ tr.dim td{color:var(--s500)}
   tm.addEventListener('click', function () {
     var hidden = document.body.classList.toggle('hide-markers');
     tm.setAttribute('aria-pressed', hidden ? 'false' : 'true');
-    tm.textContent = hidden ? 'הצג סימוני-אינטראקציה' : 'הסתר סימוני-אינטראקציה';
+    tm.textContent = hidden ? 'הצג סימוני-מוקאפ' : 'הסתר סימוני-מוקאפ';
   });
 
   /* ═══ מתג שכבת-ההטמעה — שני מצבים בלבד (0 נקי / 2 מודרך). אין רמה אמצעית. ═══

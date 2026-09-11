@@ -119,6 +119,8 @@ h1{font-size:20px; font-weight:700; color:var(--s800)}
     background:var(--teal600); color:#fff; font:700 10px/1 'Geist Variable',sans-serif;
     box-shadow:0 0 0 2px #fff; pointer-events:none}
 body.hide-markers .im{display:none}
+body.hide-markers .urlbar:not(.onbbar){display:none}
+body.hide-markers .specnote{display:none}
 
 /* ═══ שכבת-ההטמעה (onboarding-layer-contract.md · design-contract §⑧) ═══
    שני מצבים בלבד — 0 נקי · 2 מודרך (הכרעת-ישי: אין רמה אמצעית, ו-`pointer`
@@ -335,7 +337,7 @@ tr.hi:hover td{background:var(--amber100)}
 @keyframes pulse{0%,100%{opacity:1} 50%{opacity:.5}}
 </style>
 </head>
-<body>
+<body class="hide-markers">
 
 <aside class="side">
   <div class="logo">REG-IN</div>
@@ -425,8 +427,8 @@ tr.hi:hover td{background:var(--amber100)}
           <i class="im" aria-hidden="true" style="top:-6px; left:-6px">5</i>
         </span>
       </div>
-      <p class="flabel" style="margin:-8px 0 4px">הקובץ שיירד: <span class="ltr" id="xlsxName"></span></p>
-      <p class="flabel" style="margin:0 0 14px; line-height:1.6"><b style="color:var(--s600)">העמודות שיירדו</b>
+      <p class="flabel specnote" style="margin:-8px 0 4px">הקובץ שיירד: <span class="ltr" id="xlsxName"></span></p>
+      <p class="flabel specnote" style="margin:0 0 14px; line-height:1.6"><b style="color:var(--s600)">העמודות שיירדו</b>
         (בדיוק הכותרות שבטבלה שעל המסך): <span id="xlsxCols" style="color:var(--s600)"></span></p>
 
 
@@ -1754,7 +1756,7 @@ tr.hi:hover td{background:var(--amber100)}
        אותו דף**, בדיוק כפי ש-<Hint> מתנהג בייצור (הקונטקסט משתנה ⇒ כל Hint מרונדר
        מחדש, בלי רענון). ⇒ **דף אחד, לא שני עותקים.** -->
   <button id="toggleGuided" aria-pressed="false">מצב הטמעה: נקי ⇄ מודרך</button>
-  <button id="toggleMarkers" aria-pressed="true">הסתר סימוני-אינטראקציה</button>
+  <button id="toggleMarkers" aria-pressed="false">הצג סימוני-מוקאפ</button>
   <button id="toggleDemo" aria-pressed="false">דף 20: הצג מצב "אחרי ריצה מאושרת"</button>
 </div>
 
@@ -1889,7 +1891,7 @@ tr.hi:hover td{background:var(--amber100)}
   tm.addEventListener('click', function () {
     var hidden = document.body.classList.toggle('hide-markers');
     tm.setAttribute('aria-pressed', hidden ? 'false' : 'true');
-    tm.textContent = hidden ? 'הצג סימוני-אינטראקציה' : 'הסתר סימוני-אינטראקציה';
+    tm.textContent = hidden ? 'הצג סימוני-מוקאפ' : 'הסתר סימוני-מוקאפ';
   });
 
   var td = document.getElementById('toggleDemo');
