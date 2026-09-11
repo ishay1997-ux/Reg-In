@@ -91,6 +91,30 @@ which the guide had not said.
 dated measurements (`0.4556` 06/09 · `0.4559` 10/09) that both render `0.46`. The same report cited a
 `0.4299` that appears **zero** times in the repo. **Half a finding is not a finding.**
 
+**Closing the tail (07:0X).** The classification engine was the remaining item most likely to send the
+build back with questions — a rehearsal listed eight unknowns under it, and *"in the `send-email` shape"*
+answered none. Read the template instead of assuming it: **214 lines, the repo's only edge function, a
+webhook relay with no LLM call anywhere**, no `config.toml`, no `_shared`, no test. It also does **not**
+call `assert_module_permission` as the guide had claimed — that is a plpgsql helper the RPCs use; the
+function does a manual two-stage check whose **order is a written contract**: missing secret fails loudly
+first, the permission gate runs **before** body validation, and the lookup filters by the user's
+`role_id` because `permissions_select_all` is `using (true)` and filtering by module alone gives everyone
+a 403 — the bug caught on 30/07. All five properties are now quoted into the step with their reasons.
+⚠️ **And the provider call is deliberately not frozen.** The current shape was fetched from the live doc
+and written in **with its date and a "confirm before writing the call" instruction** — Google has moved
+this surface at least once, and a model id in particular will be stale.
+
+**Last open copy proposal closed:** `"שכר דיילות"` is locked in §🔒. It had waited since 07/09 because
+the other three tabs were not drawn — and once they were, the gap appeared exactly as the proposal
+predicted: three forms of the same amount, and an Excel file still downloading as `עלות-שכר-חודשית`.
+
+**Integrity check, run last:** **70/70 onboarding keys match** mockup↔card across all four pairs ·
+`approved/` is **byte-identical** to the drafts · **13 of 14 referenced paths exist**, and the
+fourteenth is the struck-through wrong path kept on purpose so the correction stays legible.
+**Calibration entry #11** records the round: seven agents, **1,703K**, ~2.5h — and that the four
+reviewers were the unpriced part, with the rule for next time being **price a reviewer per handoff
+artefact, not just the work**.
+
 ### 11/09/2026 (04:2X–05:0X) — the mockups' "clean" mode wasn't clean, and a conference story contradicted its own screen
 
 **What triggered it.** Ishay: *"אני חושש שהמוקאפים במצב בוגר עדיין לא מספיק טובים… צריך לעשות
