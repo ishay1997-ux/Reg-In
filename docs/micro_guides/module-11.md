@@ -464,6 +464,13 @@ one of them slips**; the phase door is the tab, the work unit may be the surface
 every ruling in §3.3(ג) that touches those surfaces is visible on screen.**
 **Step 3.5 · The onboarding layer** — 70 keys copied **verbatim** from each card's §⑩ into
 `onboardingCopy.js`. 🔴 **Convert every `<span class="ltr">` to LRI…PDI** *(`onboarding-layer-contract §5ב`)*.
+🔴 **And no data count enters the copy file** *(`§5ג`, Ishay's ruling 11/09 — 23 were stripped from the
+cards and mockups that day)*. **A number stays only if it is structural** — a threshold *(`3 משמרות ומעלה`)*,
+a window *(`12 החודשים`)*, a scale *(`1 עד 5`, `אחוזון 90`), a formula constant *(`שלוש משמרות דמיוניות`)*.
+⚠️ **The migration is exactly where this breaks:** in the mockup a live count is a **dated picture** and is
+fine; the same string inside `onboardingCopy.js` is a **hard-coded literal no query updates** ⇒ it becomes a
+quiet lie, and **no test covers a hint sentence.** ✅ **One declared exception:** the Gini comparison hint
+must carry both `n` *(📑ב#14א)* — **inject it from the same query that feeds the tile, never type it.**
 
 ### Phase 4 — Ripples & integration
 ✏️ **The m4 write moved out of here to step 1.5** — see the reasoning there.
