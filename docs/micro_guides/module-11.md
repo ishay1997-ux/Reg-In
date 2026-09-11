@@ -41,8 +41,12 @@ operational screens were never built to answer — *"את מי לגבות השב
 *(מ3 · מ4 · מ6 · מ8 · מ9 · מ12 · מ15 · מ16 · מ17 · מ20 · מ21 · מ22)*.
 **⏸️ Deferred by ruling 30, drawn and kept in the spec with a return trigger:** מ5 · מ10 · מ11 · מ13 ·
 מ18 · מ26. **מ13 is the first replacement.**
-**⬜ Not drawn at all:** **מ1 — the shell** *(4 tabs · report chip row · global filters · the five
-envelope states)*, מ23, מ24, מ25. 🔴 **מ1 is the real gap — see §9 D-2.**
+**⬜ No standalone mockup file:** **מ1 — the shell** *(4 tabs · report chip row · global filters · the five
+envelope states)*, מ23, מ24, מ25. ✏️ **11/09 — and מ1 is NOT a gap, which is the opposite of what this line said until today.**
+Its markup is `design-contract §⑥` *(401 lines, five states included)* + §⑥.1, **and all four approved
+mockups render the live shell** *(measured: each carries `side`·`tabs`·`picker`·`filters`·`stamp`; three of
+four carry the masked tab)*. **A fifth file was built, shown to Ishay and deleted on his ruling** — `§⑥.2`
+carries the reasoning. **See §9 D-2.**
 
 ### 2.3 Existing files this module touches (non-additive surface)
 | File | Why | Risk |
@@ -72,8 +76,11 @@ m4 owns `assignments`. **m11 owns none of them** — it reads.
 ### 2.7 🔑 Test identities (MANDATORY — RLS + role-gated UI)
 Each tab opens on the module that owns its data *(ruling 2)*: הנהלה+כספים ⇐ `'כספים'` ·
 דיילות ⇐ `'דיילות'` · לקוחות ⇐ `'לקוחות'`. **Test with at least: מנכ"ל · מנהלת כספים ולקוחות ·
-מנהלת גיוס · מנהלת לוגיסטיקה** — the last one is exactly ⏳1: she is `blocked` on module 6 and
-therefore cannot reach report 11, which is the report written for her.
+מנהלת גיוס · מנהלת לוגיסטיקה** — the last one is the ⏳1 case, **closed 10/09 23:0X**: she is `blocked` on
+module 6, so the finance tab does not open for her and **report 11 is correctly unreachable**. ✅ **That is
+the expected result, not a bug** — the matrix stays, she works through her own m5 logistics screen, and the
+page declares the gap on screen *(`cards-finance.md` ⑧12.7)*. 🔴 **Test that she is masked out, and that the
+declaration is visible — do not "fix" it by granting a permission.**
 
 ### 2.8 Product source of truth
 `docs/specs/module_11_reports/spec.md` → its numbered reading list. **Nothing else.**
@@ -406,10 +413,16 @@ against the numbers already measured: **33 "אחר"**, and the 20 complaints car
 conference** *(card ת2: on stage there is no live call).*
 
 ### Phase 3 — UI
-**Step 3.0 · 🔴 Build מ1 — the shell — FIRST, and it was never drawn.** Four tabs · the chip row
-*(ruling 29: tabs with an underline for role, pills for report)* · global filters · **the five
-envelope states**, which §📐10 requires every page to know. **See §9 D-2: this is the one surface
-with no mockup.**
+**Step 3.0 · Build מ1 — the shell — FIRST.** Four tabs · the chip row *(ruling 29: tabs with an underline
+for role, pills for report)* · global filters · **the five envelope states**, which §📐10 requires every page
+to know.
+✏️ **11/09 — "it was never drawn" is struck; it was wrong.** **Copy `design-contract §⑥`** — a 401-line
+skeleton written for this step, with **real markup for all five states** — **and §⑥.1** for the four pickers,
+**then cross-check against any one of the four approved mockups**, which all render the live shell.
+🔴 **And the one thing to get right, because the skeleton carried it wrong until 11/09:** the report picker is
+a **horizontal chip row above the page** *(`flex-wrap:wrap; width:100%`)*, **not a 220px vertical rail.**
+Ishay caught it by eye within minutes of seeing it rendered. **Clicking a chip opens that report** — the page
+`<h1>` becomes the short name and the line beneath it the question *(ruling 18)*.
 **Step 3.0ב · 🔴 The first chart in this repository** *(added 11/09 — the guide never mentioned it)*
 ‏`recharts@3.10.1` is in `package.json` and has **zero usages in `src/`** — measured. ⇒ **every chart
 convention is established here, not inherited.** Read `design-contract §⑤` *(the 12 binding chart
@@ -512,7 +525,7 @@ reality-kill row** *(§3.3)*.
 | # | Deviation | Why it is recorded, not silently accepted |
 |---|---|---|
 | **D-1** | Branch is `ishay/dashboard-legend-ucd`, not the `ishay/module-11-reports` the step guide names | That branch **does not exist** — verified 11/09 on local and origin. All Discovery output, 73 commits, sits here. Cutting a new branch now either fragments the work or needs a 73-commit merge first. The blueprint's actual requirement — *not on `main`/`dev`* — holds. |
-| **D-2** | 🔴 **מ1, the shell, has no mockup** | It is one of four ⬜ surfaces. §📐10 requires every page to know the five envelope states and the gallery is drawn **once, in מ1**. ⇒ **Step 3.0 builds it from `design-contract §⑥` without a drawn reference**, which is the single largest guess in this guide. **Ishay may prefer to draw it first.** |
+| ~~**D-2**~~ | ~~🔴 **מ1, the shell, has no mockup** — the single largest guess in this guide~~ | ✅ **CLOSED 11/09/2026, and the original wording was wrong twice over.** ① **"No drawn reference" was false:** `design-contract §⑥` is a **401-line copyable HTML skeleton written for מ1** — sidebar, four tabs, chip row, filters, the "אז מה" line, and **real markup for all five envelope states** — plus §⑥.1 with the four pickers. ② **"It has no mockup" was true but irrelevant:** measured across the four approved files, **every one renders `side` · `tabs` · `picker` · `filters` · `stamp`, and three of four render the masked tab.** ⇒ **the shell is drawn four times over; a fifth file would have shown the same screen a fifth time.** **Ishay ruled it deleted** *(11/09: "המעטפת לא טובה תמחק לדעתי מיותרת גם")*, and `§⑥.2` records the reasoning. 🔑 **What the exercise did produce, and it was the real defect:** the skeleton rendered the picker as a **220px vertical rail** while the approved mockups render a **horizontal chip row** — and **§⑥ is what the build copies**, so it would have shipped with no visible symptom. **Fixed in §⑥.** ⚠️ **The lesson, not the file: a gap recorded once as "no reference" is never re-checked, and it kept being repeated to Ishay as a blocker.** |
 | **D-3** | §7's RLS matrix row for m11 reads *"none (5 reports as Views/RPC, read-only)"* | Written before the Discovery. **Corrected once, in Phase 4**, with all three writes — correcting it now would describe tables that do not exist. |
 | **D-4** | `docs/schema.sql` missing three live columns | Fixed in step 1.1 before anything depends on it. |
 | ~~**D-5**~~ | ~~The step guide §① still says **"5 דו"חות"**~~ | ✅ **CLOSED 11/09/2026 — verified this turn, not remembered.** The guide was rewritten end to end: §① now reads **16**, and the old sentence survives only struck through with its correction note *(`module_11_reports.md:15–16`)*. ⚠️ **Left as a closed row rather than deleted, because a builder who inherits "the guide says 5" from anywhere else needs to see it was checked and when.** |
