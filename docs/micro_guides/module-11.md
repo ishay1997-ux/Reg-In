@@ -20,7 +20,7 @@
 | | |
 |---|---|
 | **Phase** | **0 — not started.** Step 1.0 (the phase door) is the next action. |
-| **Branch** | `ishay/dashboard-legend-ucd` — ⚠️ **not** the `ishay/module-11-reports` the step guide names. See §9 D-1. |
+| **Branch** | 🔴 ✏️ **16/09/2026 — cut a FRESH branch from `dev`.** `ishay/dashboard-legend-ucd` is **merged and dead**: `git rev-list --left-right --count ishay/dashboard-legend-ucd...origin/dev` ⇒ **0 ahead · 6 behind**, and the six it lacks include this module's own rulings. **Building on it reads stale spec files with no symptom.** See §9 D-1. |
 | **Spec** | `docs/specs/module_11_reports/spec.md` — approved 11/09/2026 |
 | **Surfaces** | **16**, in **4** files under `docs/mockups/management-report-screen/approved/` |
 | **Deadline** | 🔴 **Conference 15/10/2026.** m11 is zero lines of code today. |
@@ -185,7 +185,7 @@ increments a visible *"ללא מקור-עלות"* counter** *(ruling ㉗)*. **Do
 do not hide the row.** The counter carries ₪ as well as a count — 3 rows can be 40 ₪ or 40,000 ₪.
 
 ### 3.5 ⏳ Deferred, recorded — the phase door asks only if newly relevant
-**⏳1** report 11 vs the logistics manager's permission · **⏳2** "queue memory" *(first write path in a
+~~**⏳1** report 11 vs the logistics manager's permission~~ ✅ **CLOSED 10/09 23:0X** *(§2.7 carries the ruling; this line missed it until 16/09)* · **⏳2** "queue memory" *(first write path in a
 read-only module)* · **⏳3** click-to-sort on all 22 pages. **All three are Ishay's.**
 
 ---
@@ -265,7 +265,7 @@ report 20's entire point.
 **🤖 half:** `git fetch origin` · `git log origin/dev..HEAD` · MCP live (`select version()`) ·
 re-measure: `params` count · policies on the two new tables (expect 0, they do not exist yet) ·
 **and re-read `db_roadmap` M11-2…M11-5 to their tails.**
-**👤 half:** ask Ishay whether another session is writing (rule 16) · ⏳1 if still open.
+**👤 half:** ask Ishay whether another session is writing (rule 16). ✏️ **16/09: ⏳1 was here as "if still open" — it closed 10/09, so there is nothing to ask.**
 **🔻👤 Verify:** measurements reported.
 
 **Step 1.1 · Regenerate `docs/schema.sql`** ✏️ **method and Verify fixed 11/09.**
@@ -458,7 +458,7 @@ principles + the primitive map for Lorenz · Pareto · stacked · scatter · his
 shell that all the others reuse. 🔴 **RTL is the risk:** the time axis runs LTR inside an RTL page, and
 that is a ruled decision, not an invention.
 🆕 🪤 **And read `design-contract §⑤` for what it does NOT promise, not only for what it rules**
-*(added 15/09/2026)*: **twelve of its items carry `לא אומת`** — among them `orientation="right"` under
+*(added 15/09/2026)*: **ten of its items carry `לא אומת`** *(✏️ counted 16/09; "twelve" was written from memory on 15/09)* — among them `orientation="right"` under
 RTL, whether `dir` is inherited into the tooltip box, and keyboard-equivalence for `onClick` on
 `<Bar>`/`<Cell>`. **They are marked unverified because recharts has never run in this repo**, so there
 was nothing to verify them against. ⇒ **this step verifies them in a real browser and writes the answer
@@ -569,7 +569,7 @@ reality-kill row** *(§3.3)*.
 
 | # | Deviation | Why it is recorded, not silently accepted |
 |---|---|---|
-| **D-1** | Branch is `ishay/dashboard-legend-ucd`, not the `ishay/module-11-reports` the step guide names | That branch **does not exist** — verified 11/09 on local and origin. All Discovery output, 73 commits, sits here. Cutting a new branch now either fragments the work or needs a 73-commit merge first. The blueprint's actual requirement — *not on `main`/`dev`* — holds. |
+| **D-1** | Branch is `ishay/dashboard-legend-ucd`, not the `ishay/module-11-reports` the step guide names | That branch **does not exist** — verified 11/09. ✏️ **16/09/2026 — and this row is now HISTORY, not instruction: `ishay/dashboard-legend-ucd` was merged to `dev` (PRs #131/#133/#134) and is 0 ahead / 6 behind. The build starts from a fresh branch off `dev`.** The "73 commits" figure here was never re-measured; at merge time it was 97. Cutting a new branch now either fragments the work or needs a 73-commit merge first. The blueprint's actual requirement — *not on `main`/`dev`* — holds. |
 | ~~**D-2**~~ | ~~🔴 **מ1, the shell, has no mockup** — the single largest guess in this guide~~ | ✅ **CLOSED 11/09/2026, and the original wording was wrong twice over.** ① **"No drawn reference" was false:** `design-contract §⑥` is a **401-line copyable HTML skeleton written for מ1** — sidebar, four tabs, chip row, filters, the "אז מה" line, and **real markup for all five envelope states** — plus §⑥.1 with the four pickers. ② **"It has no mockup" was true but irrelevant:** measured across the four approved files, **every one renders `side` · `tabs` · `picker` · `filters` · `stamp`, and three of four render the masked tab.** ⇒ **the shell is drawn four times over; a fifth file would have shown the same screen a fifth time.** **Ishay ruled it deleted** *(11/09: "המעטפת לא טובה תמחק לדעתי מיותרת גם")*, and `§⑥.2` records the reasoning. 🔑 **What the exercise did produce, and it was the real defect:** the skeleton rendered the picker as a **220px vertical rail** while the approved mockups render a **horizontal chip row** — and **§⑥ is what the build copies**, so it would have shipped with no visible symptom. **Fixed in §⑥.** ⚠️ **The lesson, not the file: a gap recorded once as "no reference" is never re-checked, and it kept being repeated to Ishay as a blocker.** |
 | **D-3** | §7's RLS matrix row for m11 reads *"none (5 reports as Views/RPC, read-only)"* | Written before the Discovery. **Corrected once, in Phase 4**, with all three writes — correcting it now would describe tables that do not exist. |
 | **D-4** | `docs/schema.sql` missing three live columns | Fixed in step 1.1 before anything depends on it. |
