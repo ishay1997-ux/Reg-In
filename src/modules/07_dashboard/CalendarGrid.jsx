@@ -24,6 +24,7 @@ import {
   colorProjects,
   colorCounts,
   calendarColorMeta,
+  isWithinWarningWindow,
   staffingRatioLabel,
   logisticsRatioLabel,
   hebrewMonthTitle,
@@ -34,20 +35,23 @@ import {
 import { StaffingIcon, LogisticsIcon } from './dimIcons'
 
 const WEEKDAYS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש']
-const ALL_COLORS = ['red', 'yellow', 'green', 'past', 'cancelled']
+const ALL_COLORS = ['ready', 'in_progress', 'not_started', 'past', 'cancelled']
 
 const SWATCH_CLASS = {
-  red: 'bg-red-500',
-  yellow: 'bg-amber-500',
-  green: 'bg-green-500',
+  ready: 'bg-green-500',
+  in_progress: 'bg-amber-500',
+  not_started: 'border border-dashed border-slate-400 bg-white',
   past: 'bg-slate-300',
   cancelled: 'bg-slate-400',
 }
 
+// 🎨 `not_started` הוא **מתאר בלי מילוי** ולא צבע שישי — כלל 8 (לא ממציאים צבעים).
+// ולמה מתאר-שקט ולא היפוך-היררכיה: "טרם החל" רחוק-בזמן אינו מדאיג. הוא מדאיג רק
+// בהצטלבות עם קרבה — וזו בדיוק המשימה של סימון תא-היום, לא של הצ'יפ.
 const CHIP_CLASS = {
-  red: 'bg-red-100 text-red-700',
-  yellow: 'bg-amber-100 text-amber-800',
-  green: 'bg-green-100 text-green-700',
+  ready: 'bg-green-100 text-green-700',
+  in_progress: 'bg-amber-100 text-amber-800',
+  not_started: 'border border-dashed border-slate-400 bg-white text-slate-600',
   past: 'bg-slate-50 text-slate-400',
   cancelled: 'bg-slate-100 text-slate-500 line-through',
 }
@@ -73,13 +77,8 @@ export default function CalendarGrid({ summary, monthStartIso, onPrev, onNext, o
   const [query, setQuery] = useState('')
 
   const warningDays = summary?.params?.event_warning_days
-  // R1/R4 09/09/2026: המקרא-שורה מתחת ללוח נמחק (הכרעת-ישי) — ההגדרה חיה כ-title
-  // על צ'יפי-הספירה עצמם, ולכן חייבת להיגזר מכאן ולא מהמוקאפ (המספר "14" קבוע בו).
-  const colorMeta = useMemo(() => calendarColorMeta(warningDays), [warningDays])
-  const colored = useMemo(
-    () => colorProjects(summary?.projects, summary?.today, warningDays),
-    [summary, warningDays],
-  )
+  const colorMeta = useMemo(() => calendarColorMeta(), [])
+  const colored = useMemo(() => colorProjects(summary?.projects), [summary])
   // ספירת-הצ'יפים (③ ליד סרגל-הלוח) משקפת את החודש המוצג בלבד — לא את כל הפרויקטים.
   const monthProjects = useMemo(
     () => Object.values(projectsByDate(colored, monthStartIso)).flat(),
@@ -150,14 +149,14 @@ export default function CalendarGrid({ summary, monthStartIso, onPrev, onNext, o
           />
         </div>
         {/* R1 09/09/2026 (הכרעת-ישי, "למחוק את השורה ומילה ליד כל ציפ"): כל צ'יפ נושא
-            מילה+מספר, וה-title מחזיק את ההגדרה המדויקת שהמקרא-שורה נשא קודם. */}
+            מילה+מספר. ה-title נמחק 16/09 — התוויות הן עכשיו מונחי-הסטטוס שהמשתמשת
+            כבר מכירה, ולכן אין הגדרה להסתיר בריחוף. */}
         {ALL_COLORS.map((color) => (
           <FilterPill
             key={color}
             on={activeColors.has(color)}
             onClick={() => toggleColor(color)}
             testId={`dashboard-filter-${color}`}
-            title={colorMeta[color].title}
           >
             <span className={cn('inline-block size-2 rounded-full', SWATCH_CLASS[color])} />
             {colorMeta[color].label}
@@ -184,6 +183,7 @@ export default function CalendarGrid({ summary, monthStartIso, onPrev, onNext, o
             key={cell.date ?? `empty-${i}`}
             cell={cell}
             today={summary?.today}
+            inWarningWindow={isWithinWarningWindow(cell.date, summary?.today, warningDays)}
             projects={cell.date ? (byDate[cell.date] ?? []) : []}
           />
         ))}
@@ -198,7 +198,7 @@ export default function CalendarGrid({ summary, monthStartIso, onPrev, onNext, o
 // ו"+N עוד" נותר מנגנון-קצה שנדלק פעמיים בכל הדאטה — לא מסלול יומיומי.
 const MAX_CHIPS_PER_DAY = 3
 
-function DayCell({ cell, today, projects }) {
+function DayCell({ cell, today, inWarningWindow, projects }) {
   // ⚠️ ה-hook לפני היציאה-המוקדמת — כללי-ה-hooks אוסרים קריאה מותנית.
   const [expanded, setExpanded] = useState(false)
   if (!cell.inMonth) return <div />
@@ -214,7 +214,19 @@ function DayCell({ cell, today, projects }) {
       )}
       data-testid={`dashboard-day-${cell.date}`}
     >
-      <Ltr className="px-[2px] text-[11px] font-semibold text-slate-600">{String(cell.day)}</Ltr>
+      {/* 🔴 **הערוץ השני: קרבה-בזמן יושבת על התאריך, לא על הפרויקט.** מספר-היום בתוך
+          חלון-האזהרה נצבע בענבר — והצטלבות של יום-מסומן עם צ'יפ שאינו "מוכן לביצוע"
+          היא בדיוק מה שהאדום הישן ניסה לומר במספר אחד. שתי עובדות, והעין מחברת. */}
+      <span data-warning={inWarningWindow ? 'true' : undefined}>
+        <Ltr
+          className={cn(
+            'px-[2px] text-[11px] font-semibold',
+            inWarningWindow ? 'text-amber-600' : 'text-slate-600',
+          )}
+        >
+          {String(cell.day)}
+        </Ltr>
+      </span>
       {shown.map((project) => (
         <DayChip key={project.project_id} project={project} />
       ))}

@@ -4,11 +4,11 @@
 //
 // הקלט הוא ה-jsonb של get_dashboard_summary() (RPC יחיד למסך-הבית) — ר' הכותרת
 // של supabase/migrations/20260903182735_module7_dashboard_summary_rpc.sql לצורת
-// הפלט המלאה. ⛔ לוגיקה שכבר קיימת (ACTIVE_PROJECT_STATUSES, overviewHasGap,
+// הפלט המלאה. ⛔ לוגיקה שכבר קיימת (ACTIVE_PROJECT_STATUSES, PROJECT_STATUS_LABELS,
 // eventDaysFromToday מ-src/lib/projects.js; deriveQuoteExpiry מ-src/lib/quotes.js)
 // לא משוכפלת כאן — הקובץ הזה רק מרכיב אותה מחדש לצורת מסך-הבית.
 
-import { ACTIVE_PROJECT_STATUSES, overviewHasGap, eventDaysFromToday } from '@/lib/projects'
+import { ACTIVE_PROJECT_STATUSES, PROJECT_STATUS_LABELS, eventDaysFromToday } from '@/lib/projects'
 import { deriveQuoteExpiry, missingParamsMessage } from '@/lib/quotes'
 
 // אותה סמנטיקה בדיוק כמו paramNumber הפרטית ב-quotes.js ("לא נטען ≠ אפס") — מועתקת
@@ -21,53 +21,64 @@ function paramNumber(value) {
   return Number.isFinite(n) ? n : null
 }
 
-// ── צבע-הלוח (§7.94 · R3 09/09/2026) ────────────────────────────────────────
-// "חוסר" הוא בדיוק overviewHasGap (src/lib/projects.js) על פרויקט פעיל — לא הגדרה
-// מקבילה. red = יש חוסר וגם האירוע בתוך warningDays ימים מהיום (כולל; אירוע שכבר
-// עבר ועדיין פעיל נחשב "בתוך" — כל days<=warningDays, גם שלילי). yellow = חוסר
-// רחוק יותר. green = בלי חוסר (פעיל, שני הממדים מלאים).
-// 🆕 R3 (09/09/2026, הכרעת-ישי): סטטוס לא-פעיל ושאינו מבוטל (event_finished/
-// awaiting_invoice/awaiting_payment/finished) הופך ל-`'past'`, צבע חמישי משלו — לא
-// עוד `green`. **הפגם שזה מתקן, נמדד על המסך החי (09/09):** "טקס פרסים" מ-01/09,
-// סטטוס "ממתין לסגירה", הוצג ירוק עם אייקוני-מוכנות מלאים — זהה בדיוק לאירוע-מוכן
-// עתידי, בעוד רצועת "מה דורש טיפול" מכריזה על 17 אירועים כאלה שלא חויבו. §7.94
-// עצמו לא נפתח מחדש: הצבע-רביעי (מבוטל) והכלל האדום/צהוב/ירוק על הציר הפעיל נשארו
-// כפי שהוכרעו — זה רק מפצל את מה שהיה "ירוק תמיד" לשני מובנים שונים באמת.
-export function deriveCalendarColor(project, todayIso, warningDays) {
+// ── צבע-הלוח (§7.94 ↳ 16/09/2026) ───────────────────────────────────────────
+// 🔴 **הצבע הוא סטטוס-הפרויקט — לא כלל שני שהומצא ללוח.**
+//
+// מה שהיה, ולמה הוחלף: עד 16/09 אדום פירושו "יש חוסר **וגם** האירוע בתוך
+// warningDays ימים **מהיום**". "מהיום" הוא תכונה של השעון של הצופה, לא של האירוע
+// ⇒ **בכל חודש עתידי התנאי קבוע-שקר**, החודש כולו קורס לצהוב/ירוק, והצבע מפסיק
+// להבחין. זה נכון גם עם נתונים מושלמים, ולכן זה פגם מבני ולא פגם-דאטה.
+//
+// 📏 **ומה שהמדידה הראתה (16/09/2026, כל 62 האירועים הפעילים-העתידיים):** הסטטוס
+// שהמסד כבר מחשב **הוא** מדד-המוכנות — `not_started` 14/14 עם חוסר · `in_progress`
+// 43/43 עם חוסר · `ready` 5/5 בלי חוסר. **התאמה 1:1, אפס חריגים.** ⇒ המעבר לסטטוס
+// אינו מאבד מידע; הוא מחליף כלל-לוח פרטי בכלל שכבר חי בכל המערכת.
+//
+// 🚫 **ומה שבמכוון לא נבנה:** נוסחת-דחיפות משוקללת (קרבה × עומק-חוסר) — בדיוק
+// הנוסחה ש-§7.9 ביטל ב-13/08. הקרבה-בזמן עברה לערוץ נפרד: **תא-היום** מסמן את
+// חלון-האזהרה, והעין מצליבה. שתי עובדות מוצגות, ואף מספר לא חושב במקום המנהלת.
+//
+// ⚠️ הפונקציה **אינה תלויה עוד בשעון ולא בפרמטר** — היא פונקציה של הפרויקט בלבד.
+// שני הארגומנטים הישנים (todayIso, warningDays) הוסרו; קורא שמעביר אותם יקבל
+// שגיאת-לינט, לא התנהגות שקטה.
+export function deriveCalendarColor(project) {
   // הכרעת-ישי 03/09/2026 ~18:4X: מבוטל נשאר בלוח — כמו Monday / Google Calendar,
-  // לא נעלם ממנו. המנהלת צריכה לדעת שהתאריך התפנה, לא רק "לשכוח" את הפרויקט —
-  // ולכן זה צבע משלו, נבדק לפני שאלת-החוסר (מבוטל אינו "פעיל" וגם לא
-  // "ירוק כאילו-תקין"; הוא עובדה שונה לגמרי).
+  // לא נעלם ממנו. המנהלת צריכה לדעת שהתאריך התפנה, לא רק "לשכוח" את הפרויקט.
   if (project?.project_status === 'cancelled') return 'cancelled'
+  // R3 09/09/2026: סטטוס לא-פעיל ושאינו מבוטל (event_finished/awaiting_invoice/
+  // awaiting_payment/finished) הוא 'past' — נמדד על המסך החי: "טקס פרסים" מ-01/09
+  // הוצג ירוק וזהה-לעין לאירוע-מוכן עתידי.
   if (!ACTIVE_PROJECT_STATUSES.includes(project?.project_status)) return 'past'
-  if (!overviewHasGap(project)) return 'green'
-
-  const warning = paramNumber(warningDays)
-  // ⚠️ סף לא-נטען ⇒ אף פעם לא אדום (בלי ברירת-מחדל מומצאת) — כל חוסר נשאר צהוב עד
-  // שמישהו יגדיר את הסף בפועל.
-  if (warning === null) return 'yellow'
-
-  const days = eventDaysFromToday(project.final_event_date, todayIso)
-  if (days !== null && days <= warning) return 'red'
-  return 'yellow'
+  return project.project_status
 }
 
-// ── מטא-הצבע (R1/R4, 09/09/2026) ────────────────────────────────────────────
-// הכרעת-ישי: מילים בכל צ'יפי-הספירה ("דחוף 13" ולא נקודה+מספר), ושורת-המקרא
-// מתחת ללוח נמחקת — ההגדרה המדויקת (מה "דחוף" אומר בפועל) חיה ב-title לריחוף.
-// warningDays עובר כפרמטר ולא קשיח (המספר "14" קבוע במוקאפ, לא בקוד — כלל 14):
-// שינוי-פרמטר עתידי לא ישאיר ניסוח שקרי, בדיוק כמו שהמקרא הקודם דאג לזה.
-export function calendarColorMeta(warningDays) {
-  const warning = paramNumber(warningDays)
-  const soonTitle = warning === null ? 'חוסר, הסף לא נטען' : `חוסר ואירוע בתוך ${warning} יום`
-  const laterTitle = warning === null ? 'חוסר, הסף לא נטען' : `חוסר, האירוע מעבר ל-${warning} יום`
+// ── מטא-הצבע ────────────────────────────────────────────────────────────────
+// 🔒 התוויות הן **`PROJECT_STATUS_LABELS` מילה-במילה** ולא ניסוח מקביל: מונח אחד,
+// שם אחד, בכל מקום. "מוכן לביצוע" ולא "מוכן" — קיצור בלוח בלבד היה יוצר שני שמות
+// לאותו מצב, והמשתמשת רואה את המונח הזה גם בכרטיס-הפרויקט וגם ברשימה.
+//
+// 🔑 ואין כאן יותר `title` עם הגדרה. שלושת המצבים הם מונחים שהמשתמשת כבר מכירה
+// מכרטיס-הפרויקט — הם אינם דורשים הסבר באף רמה. הקודם ("חוסר ואירוע בתוך 14 יום")
+// היה מונח שהמצאנו, ולכן **חייב** הגדרה — שישבה ב-tooltip, כלומר בלתי-נראית במגע
+// ולא נגישה במקלדת. ⇒ המעבר לא רק מבהיר את הלוח, הוא מוחק חוב-הסבר.
+export function calendarColorMeta() {
   return {
-    red: { label: 'דחוף', title: soonTitle },
-    yellow: { label: 'לטיפול', title: laterTitle },
-    green: { label: 'מוכן', title: 'איוש ולוגיסטיקה מלאים' },
-    past: { label: 'התקיים', title: 'האירוע כבר קרה' },
-    cancelled: { label: 'בוטל', title: 'הפרויקט בוטל' },
+    ready: { label: PROJECT_STATUS_LABELS.ready },
+    in_progress: { label: PROJECT_STATUS_LABELS.in_progress },
+    not_started: { label: PROJECT_STATUS_LABELS.not_started },
+    past: { label: 'התקיים' },
+    cancelled: { label: PROJECT_STATUS_LABELS.cancelled },
   }
+}
+
+// חלון-האזהרה עבר מהצבע אל **תא-היום**: קרבה היא תכונה של התאריך, לא של הפרויקט,
+// וזו הסיבה שהיא לא יכלה לחיות בצ'יפ. `null` כשהפרמטר לא נטען ⇒ בלי סימון כלל,
+// בלי ברירת-מחדל מומצאת.
+export function isWithinWarningWindow(dateIso, todayIso, warningDays) {
+  const warning = paramNumber(warningDays)
+  if (warning === null) return false
+  const days = eventDaysFromToday(dateIso, todayIso)
+  return days !== null && days >= 0 && days <= warning
 }
 
 // כותרות-ריחוף על אייקוני-הממד בצ'יפ (R4/R5) — "איוש 2/4"/"לוגיסטיקה 0/4". שני
@@ -87,10 +98,10 @@ export function logisticsRatioLabel(project) {
 
 // טהורה: מחזירה מערך חדש עם שדה color נוסף, לא נוגעת במקור (§ עקרון-הגריעה — UI
 // שממיין/מקבץ לפי צבע לא צריך לדעת איך הוא מחושב).
-export function colorProjects(projects, todayIso, warningDays) {
+export function colorProjects(projects) {
   return (projects ?? []).map((project) => ({
     ...project,
-    color: deriveCalendarColor(project, todayIso, warningDays),
+    color: deriveCalendarColor(project),
   }))
 }
 
@@ -132,7 +143,14 @@ export function kpiCards(summary) {
     },
     {
       key: 'profit',
-      label: 'רווח חודשי משוער',
+      // 🔴 **האריח נוקב בחודש שלו (16/09/2026).** שלושת האריחים האחרים מדברים על
+      // "עכשיו", אבל הרווח מחושב ב-RPC לפי **החודש המוצג בלוח** (`p_month`) — ולכן
+      // ניווט לנובמבר שינה בשקט את משמעות האריח, והמסך הציג ארבעה מספרים שנראים
+      // באותו אופק-זמן ואינם. שם-החודש נגזר מ-`month_start` שה-RPC מחזיר, כלומר
+      // מאותו ערך שבו הוא חישב — לא משעון-הדפדפן ולא מפרמטר-הכתובת.
+      label: summary?.month_start
+        ? `רווח משוער · ${hebrewMonthTitle(summary.month_start)}`
+        : 'רווח חודשי משוער',
       // §7.97: profit_visible=false ⇒ ממוסך; profit_visible=true עם monthly_profit
       // null ⇒ "חודש ריק" (מוסכמת "אין נתון" הכללית של הפרויקט — שונה מ-masked).
       // אף פעם אין להמיר null ל-0, בשני המקרים.
@@ -328,28 +346,74 @@ function quoteExpiryWhy(daysLeft) {
 // שייכות למנהלת-פרויקטים, לא לתפקיד-מכירות נפרד). ⇒ ארבעה כרטיסים קבועים, כל אחד עם
 // נקודת-צבע + מונה + הפריט הדחוף ביותר שבו, ולחיצה עליו פותחת את מסך המודול של
 // המנהלת שבאמת מטפלת בו — זו התשובה בפועל ל"עם מי מדברים", לא רק מספר.
+//
+// 🔴 **ולמה לכל כרטיס יש `noun` (16/09/2026).** הכרטיס הציג "כספים · מנהלת כספים" ואז
+// "22" — בלי מילה אחת שאומרת 22 **של מה**. ישי, במילותיו: *"לא ברור לי מזה המספרים
+// האלא מה הם מייצגים"*.
+// 🔑 **ושם-עצם לבדו לא פותר, וזה החלק שקל לפספס:** הכרטיס של הגיוס מציג 4, אבל יש
+// **38 אירועים עתידיים עם חוסר-דיילות** — הוא סופר רק את אלה שבתוך חלון-האזהרה.
+// מספר עם מסנן-אוכלוסייה **נסתר** אינו חסר בראש הקורא, הוא **שגוי** בראשו. ⇒ החלון
+// נאמר על המסך, כחלק משם-העצם. שני הענפים שאין להם חלון (חיוב · הצעות) לא ממציאים אחד.
 const ATTENTION_CATEGORY_DEFS = [
-  { kind: 'unbilled', label: 'כספים', role: 'מנהלת כספים', href: '/finance', tone: 'red' },
-  { kind: 'staffing', label: 'דיילות', role: 'מנהלת גיוס', href: '/hostesses', tone: 'red' },
+  {
+    kind: 'unbilled',
+    label: 'כספים',
+    role: 'מנהלת כספים',
+    href: '/finance',
+    tone: 'red',
+    noun: 'אירועים שהסתיימו ולא חויבו',
+  },
+  {
+    kind: 'staffing',
+    label: 'דיילות',
+    role: 'מנהלת גיוס',
+    href: '/hostesses',
+    tone: 'red',
+    noun: 'אירועים חסרי דיילות',
+    windowed: true,
+  },
   {
     kind: 'logistics',
     label: 'לוגיסטיקה',
     role: 'מנהלת לוגיסטיקה',
     href: '/logistics',
     tone: 'red',
+    noun: 'אירועים חסרי ציוד',
+    windowed: true,
   },
-  { kind: 'quote', label: 'הצעות', role: 'מנהלת פרויקטים', href: '/quotes', tone: 'yellow' },
+  {
+    kind: 'quote',
+    label: 'הצעות',
+    role: 'מנהלת פרויקטים',
+    href: '/quotes',
+    tone: 'yellow',
+    noun: 'הצעות שפגות בקרוב',
+  },
 ]
 
 // `topLine` הוא הפריט הדחוף ביותר בקטגוריה, בניסוח-שם+"למה" זהה למה שהיה מוצג בשורה
 // הבודדת קודם (title + why) — כי אלה כבר הניסוחים שאושרו, לא הומצא ניסוח חדש.
-function categoryCard(kind, rows) {
+//
+// 🔗 **וה-`href` הוא של הפריט שהכרטיס נוקב בשמו** (הכרעת-ישי 16/09, במילותיו:
+// *"חשבתי שמוביל לפרויקט הכי דורש טיפול באותו מודול (סוג של רצועה למנכ"ל)"*).
+// **מה שאתה רואה הוא מה שאתה לוחץ.** ‏`attentionRows` כבר נושאת `href` לכל שורה —
+// היא פשוט נזרקה כאן. כרטיס ריק או ממוסך נופל חזרה לכתובת-המודול, כי אין פריט לנקוב בו.
+function categoryCard(def, rows) {
   const first = rows?.[0]
   return {
     count: rows ? rows.length : null,
     topLine: first ? `${first.title} — ${first.why}` : null,
+    href: first?.href ?? def.href,
     masked: rows === null,
   }
+}
+
+// שם-העצם כפי שהוא נאמר על המסך, עם מסנן-האוכלוסייה בתוכו. סף לא-נטען ⇒ בלי הסייג
+// (ואז גם הרשימה ריקה ממילא — `staffingShortageRows` מחזירה [] בלי סף).
+function categoryNoun(def, warningDays) {
+  const warning = paramNumber(warningDays)
+  if (!def.windowed || warning === null) return def.noun
+  return `${def.noun} ב-${warning} הימים הקרובים`
 }
 
 export function attentionCategories(summary, todayIso) {
@@ -371,7 +435,8 @@ export function attentionCategories(summary, todayIso) {
 
   return ATTENTION_CATEGORY_DEFS.map((def) => ({
     ...def,
-    ...categoryCard(def.kind, rowsByKind[def.kind]),
+    noun: categoryNoun(def, warning),
+    ...categoryCard(def, rowsByKind[def.kind]),
   }))
 }
 
@@ -453,7 +518,7 @@ export function projectsByDate(projects, monthStartIso) {
   return byDate
 }
 
-// סינון-הלוח: צ'יפ-צבעים (Set, ארבעה ערכים — red/yellow/green/cancelled) וחיפוש-
+// סינון-הלוח: צ'יפ-צבעים (Set, חמישה ערכים — שלושת מצבי-הציר-הפעיל + past/cancelled) וחיפוש-
 // חופשי על שם-אירוע/שם-לקוח — אותו כלל-סלחנות (trim + lowercase) כמו
 // matchesQuoteFilters ב-quotes.js. `colors` שלא נמסר ⇒ בלי סינון-צבע כלל; `colors`
 // שנמסר (גם ריק) מסנן לפי חברות-בקבוצה — כל הצ'יפים כבויים באמת מסתירים הכול,
@@ -472,7 +537,7 @@ export function filterCalendarProjects(projects, { colors, query } = {}) {
 
 // מונה-הצ'יפים (③ ליד סרגל-הלוח). מקבל פרויקטים שכבר עברו colorProjects.
 export function colorCounts(coloredProjects) {
-  const counts = { red: 0, yellow: 0, green: 0, past: 0, cancelled: 0 }
+  const counts = { ready: 0, in_progress: 0, not_started: 0, past: 0, cancelled: 0 }
   for (const project of coloredProjects ?? []) {
     if (project.color in counts) counts[project.color] += 1
   }
