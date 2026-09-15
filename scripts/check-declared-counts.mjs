@@ -94,6 +94,44 @@ if (guide && spec) {
   }
 }
 
+/** spec.md §1.4 declares how many tile labels its own table holds. */
+if (spec) {
+  const m = spec.match(/\*\*‏?(\d+) תוויות-אריח/)
+  const table = spec.split('\n').filter((l) => /^\| \*\*(הנהלה|כספים|דיילות|לקוחות)\*\* \|/.test(l))
+  const labels = table.reduce((n, row) => n + (row.split('|')[3] ?? '').split('·').length, 0)
+  if (m && table.length === 4) {
+    RULES.push({
+      file: SPEC,
+      what: 'תוויות-אריח ב-§1.4',
+      declared: Number(m[1]),
+      actual: labels,
+      how: 'ערכים מופרדי-· בעמודת-התוויות של ארבע שורות הלשוניות',
+    })
+  }
+}
+
+/** The blueprint and the guide both state how many chart behaviours are unverified. */
+const CONTRACT = 'docs/specs/module_11_reports/design-contract.md'
+const contract = read(CONTRACT)
+const micro = read('docs/micro_guides/module-11.md')
+if (contract && micro) {
+  // the claim counts ITEMS, so the check counts lines carrying the marker, not
+  // occurrences of it: one line once carried it twice, and an occurrence-count
+  // silently measured something the sentence never said.
+  const actual = contract.split('\n').filter((l) => l.includes('לא אומת')).length
+  const WORDS = { ten: 10, eleven: 11, twelve: 12, nine: 9 }
+  const m = micro.match(/\*\*(\w+) of its items carry `לא אומת`\*\*/)
+  if (m && WORDS[m[1]] !== undefined) {
+    RULES.push({
+      file: 'docs/micro_guides/module-11.md',
+      what: 'התנהגויות-גרף שלא אומתו',
+      declared: WORDS[m[1]],
+      actual,
+      how: `מופעי "לא אומת" ב-${CONTRACT}`,
+    })
+  }
+}
+
 const problems = RULES.filter((r) => r.declared !== null && r.declared !== r.actual)
 
 if (problems.length > 0) {
