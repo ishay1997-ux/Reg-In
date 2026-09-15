@@ -104,7 +104,7 @@
 | מ9 | דוח 6 — גיול-חובות | כספים | **תומך-החלטה** | כספים · מנכ"ל | ✅ | `…/approved/03_tab_finance_approved.html` | `stage2-cards/cards-finance.md#מ9` |
 | מ10 | דוח 7 — תזרים צפוי (+3 צווארי-בקבוק) | כספים | בקרה + תכנון | כספים · מנכ"ל | ⏸️ **נדחה — הכרעה 30** | `…/approved/03_tab_finance_approved.html` | `stage2-cards/cards-finance.md#מ10` |
 | מ11 | דוח 8 — תוספות-שטח | כספים | בקרה | מנכ"ל | ⏸️ **נדחה — הכרעה 30** | `…/approved/03_tab_finance_approved.html` | `stage2-cards/cards-finance.md#מ11` |
-| מ12 | דוח 11 — ציוד מתכלה *(בסיס-כמות — הכרעת-ישי פתוחה)* | כספים | **תומך-החלטה** | כספים · לוגיסטיקה (דרך מנכ"ל) | ✅ | `…/approved/03_tab_finance_approved.html` | `stage2-cards/cards-finance.md#מ12` |
+| מ12 | דוח 11 — ציוד מתכלה *(✅ בסיס-כמות הוכרע 15/09/2026: `planned_qty` — ר' `spec.md` §🎯)* | כספים | **תומך-החלטה** | כספים · לוגיסטיקה (דרך מנכ"ל) | ✅ | `…/approved/03_tab_finance_approved.html` | `stage2-cards/cards-finance.md#מ12` |
 | מ13 | דוח 16 — שכר + נסיעות לפי חודש (תפעולי; ההפקה במ8) | כספים | תפעולי/סטנדרטי | כספים · מנכ"ל | ⏸️ **נדחה — הכרעה 30** | `…/approved/03_tab_finance_approved.html` | `stage2-cards/cards-finance.md#מ13` |
 | מ14 | מבט-על דיילות ו-Smart Match | דיילות | בקרה | גיוס · מנכ"ל | ✅ | `…/approved/04_tab_hostesses_approved.html` | `stage2-cards/cards-hostesses.md#מ14` |
 | מ15 | דוח 13 — אמינות: איחורים/אי-הגעה | דיילות | **תומך-החלטה** | גיוס | ✅ | `…/approved/04_tab_hostesses_approved.html` | `stage2-cards/cards-hostesses.md#מ15` |
