@@ -46,6 +46,28 @@
 
 ## Session Log (newest first)
 
+### 16/09/2026 - the sign-off sweep, three rulings by delegation, and two gates that were never there
+
+**Ishay's ask, twice:** close every corner before the build, and *"sign that I can really start building in a new session."* Then, on the rulings: *"can't you just decide for me now?"* - so they were ruled under delegation, each with its evidence, each reversible in one word.
+
+**‏① The three open rulings - and measuring turned three product questions into one.**
+- **Report 11's quantity basis ⇒ `planned_qty`.** The live DB settled it: `logistics` has 1,771 rows all carrying `actual_qty`, but **`actual_qty_autofilled = true` on 1,609 (90.9%)** - "actual" was copied from "planned" and nobody measured. Only **162** are real, and the flag holds both ways: all 162 differ from planned, 1,607 of the 1,609 copies are identical to it. 💰 Ordered **1,192,288 ₪** vs "used" **1,076,024 ₪** ⇒ a report on the actual column would have shown a **116,264 ₪ saving that is mostly an echo**, under a label saying otherwise. Agrees with m8's ה17. The gap stays on screen with its population declared.
+- **Charts per page ⇒ not a ruling.** Counted on the four pages that get built: 2·1·2·2. The "8" had counted three pages ruling 30 deferred - a count over a population that does not exist.
+- **Equipment cost column ⇒ `עלות מוזמנת (₪)`.** 🪤 *"עלות כוללת"* does appear in the approved file - in an HTML comment on a **different, deferred** page where the ruling was already *"profit, not cost"*. **A grep for the string alone closes the wrong item.**
+
+🔴 **② The blocker, and it was mine.** Two audit agents walked the spec set and the blueprint. Eight findings, all verified here before acting - **and three had been created by this session hours earlier.** The worst: **`ishay/dashboard-legend-ucd` is `0 ahead · 6 behind` - merged and dead** - while all four paste-blocks, the guide and the blueprint header ordered a build session onto it. That session would have read **stale versions of exactly the spec files its own reading list names**, with nothing looking wrong because the files exist and parse. 🔑 **And step 1.0's check could not catch it:** it runs `origin/dev..HEAD` only, which is empty for a fresh branch *and* for a dead one. `module-build` now runs both directions.
+
+**③ Two gates, and both were verified by breaking them.**
+- **`check:iron-rules`** - **400+ call sites cite iron rules by ordinal and nothing checked the ordinal resolved.** Removing rule 10's row exits 1 and names the 16 citing files.
+- **`check:declared-counts`** - a declared number must equal what its source contains. ⚠️ **One rule failed on first run and the CHECK was wrong, not the number:** the sentence counts *items*, the check counted *occurrences*. **A check that measures something other than the claim is a check that lies.**
+
+**④ What I got wrong today, in order** *(kept because the pattern is the lesson)*: claimed the 285→241 compression dropped rules 15/16 - it did not, they predate it · claimed the rule interface was "already broken" - `dev` carries a **redirect table** and my grep matched bold headers, not table rows · wrote *"every drift was a number"* - **about half were status markers**, and the honest class is **restated state**, which is invisible on re-reading because it looks equally true at any value.
+
+**⑤ Ishay's rulings recorded elsewhere:** the `CLAUDE.md` collision went to the council at his ask (4 Sonnet + 1 Opus). **Outcome: keep his restructured tree** *(root 241→86, and `src`/`docs`/`migrations`/`e2e` all cut under 80 - it matched current Anthropic guidance, which targets **under 200**, and `@import` does **not** reduce context)* **and restore only the index** - root is 124 lines and every pointer resolves. ➕ **Three rules added to the global `~/.claude/CLAUDE.md`** under Execution safety, in English to match that file, at his approval.
+
+**Merges:** #134 · #135 · #137 ⇒ `dev` · #136 ⇒ `main` (`d7185dc0`). **Gate on both branches: 2,402 tests · docs-structure 114 · iron-rules 17/17 · declared-counts 6/6.**
+✋ **Not verified, and stated as such everywhere:** the live production site was never opened - the deployment URL is behind a Vercel login. **And nobody read `cards-*.md` line-by-line** (3,408 lines), which is where §③ *"source for every number"* lives and what the build copies most.
+
 ### 15/09/2026 - pre-build readiness sweep for module 11, and two inherited "facts" that were false
 
 **Ishay's ask:** verify nobody else is writing, then *"tsa'er le-gamrei al ha-mismachim ha-kayamim"* - challenge the existing documents - rewrite the ⑥2 block the `module-build` skill reads on every activation, and merge to `dev` and to production. **No code for module 11 was to be written, and none was.**
