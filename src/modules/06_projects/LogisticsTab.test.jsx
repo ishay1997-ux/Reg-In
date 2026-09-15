@@ -288,11 +288,13 @@ describe('הכפתור "שינוי תכולה" — הוסר מהלשונית ב�
 })
 
 describe('טבלת-הפריטים — קריאה בלבד, בסדר "רחוק ממוכן תחילה"', () => {
+  // ✏️ שלב 4 — איפוס-מלא (R13/R27): שלושה משפטים (כולל מניית-הסדר שהמסך כבר מראה בתגים
+  // עצמם) אוחדו לאחד — מה שנשאר הוא מה שהמסך לא אומר לבד: שזו קריאה-בלבד, ומי מעדכנת.
   it('המסביר מופיע מילולית, והסטטוסים תגים ולא פקדים', async () => {
     mockHappyPath()
     await renderTab()
     expect(
-      screen.getByText(/מי שמעדכנת אותם היא מנהלת הלוגיסטיקה, במסך שלה\. כאן הם לקריאה בלבד\./),
+      screen.getByText('הסטטוסים כאן לקריאה בלבד — מעדכנת אותם מנהלת הלוגיסטיקה, במסך שלה.'),
     ).toBeInTheDocument()
     expect(screen.getAllByText('טרם החל').length).toBeGreaterThan(0)
   })
@@ -340,7 +342,8 @@ describe('טבלת-הפריטים — קריאה בלבד, בסדר "רחוק מ
     await renderTab()
 
     const noteRow = screen.getByTestId('logistics-note-B-REG-TAG-1')
-    expect(noteRow).toHaveTextContent('הערת הלוגיסטיקה:')
+    // ✏️ שלב 4 — קו-מפריד ולא נקודתיים (R2), עדכון-בדיקה תואם.
+    expect(noteRow).toHaveTextContent('הערת הלוגיסטיקה —')
     expect(noteRow).toHaveTextContent('הוזמן בבית-הדפוס — הובטחה אספקה בתחילת השבוע הבא.')
     // ברוחב מלא — ארבע העמודות הקיימות אינן משנות רוחב בגלל ההערה.
     expect(noteRow.querySelector('td')).toHaveAttribute('colspan', '4')

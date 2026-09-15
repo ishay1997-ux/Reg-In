@@ -58,7 +58,7 @@ const FILTERED_EMPTY_TITLE = 'אין פרויקט התואם למסנן שבחר
 const OUTBOUND_HEADING = 'יוצא עד יום העסקים הבא'
 // ‏`src/modules/05_logistics/ChecklistDialog.jsx`:
 const CANCELLED_CONTROL_TITLE = 'הפרויקט בוטל — לא ניתן לעדכן'
-const CANCELLED_QTY_TITLE = 'הפרויקט בוטל — אך אפשר לרשום סחורה שהגיעה (㊴)'
+const CANCELLED_QTY_TITLE = 'הפרויקט בוטל — אך אפשר לרשום סחורה שהגיעה'
 const QTY_LOCKED_BY_ITEM = 'הפריט טרם הוזמן — הכמות בפועל נפתחת לעריכה אחרי סימון "הוזמן"'
 const CANCEL_BANNER_LINE = 'אין לעדכן מצב או הערה בפרויקט מבוטל.'
 const CANCEL_BANNER_QTY_LINE = 'אפשר עדיין לרשום כמות שהגיעה — שאר הפקדים נעולים.'
@@ -111,7 +111,7 @@ async function installWriteGuard(page) {
 
 async function login(page, email, password) {
   await page.goto('/login')
-  await page.getByPlaceholder('כתובת דוא״ל').fill(email)
+  await page.getByPlaceholder('כתובת אימייל').fill(email)
   await page.getByPlaceholder('סיסמה').fill(password)
   await page.getByRole('button', { name: 'התחברות', exact: true }).click()
   // התחברות מוצלחת = שרשרת קריאות ארוכה לפני הניווט; תקרה מורחבת מונעת כשל-שווא ברשת איטית.

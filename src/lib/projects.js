@@ -69,7 +69,13 @@ export function eventPassedSentence(days) {
   return `התקיים לפני ${days} ימים`
 }
 
-const ALL_DONE = 'הכול סגור — אין מה לעשות'
+// שלושת הערכים המדויקים של ה-CHECK במסד (schema.sql:1407) — לא "internal", שאינו ערך
+// חוקי ומעולם לא היה יכול להתאים. אותה שלישייה בדיוק כמו CANCEL_TYPE_LABELS ב-lib/projectCard.js.
+const CANCEL_TYPE_NAMES = {
+  customer: 'ביטול לקוח',
+  force_majeure: 'כוח עליון',
+  other: 'אחר',
+}
 
 // עמודת "מה חסר" (⑧): משפט במילים, לעולם לא ציון. סדר הענפים = סדר-הקדימות:
 // מצב-החיים של הפרויקט קודם, ורק בתוך המצבים הפעילים נשאלת שאלת-החוסר.
@@ -83,13 +89,20 @@ export function gapSentence(project) {
     pending_invites: pending,
     assignments_row_count: rowCount,
     confirmed_available: confirmedAvailable,
+    cancel_type: cancelType,
   } = project
 
   // מצבים שאינם של מנהלת הפרויקטים: אצל הכספים / סגורים סופית.
   if (status === 'awaiting_invoice' || status === 'awaiting_payment') {
     return 'אצל מנהלת הכספים — אינו דורש ממך פעולה'
   }
-  if (status === 'finished' || status === 'cancelled') return ALL_DONE
+  if (status === 'finished') return '✓ נסגר בהצלחה'
+  if (status === 'cancelled') {
+    if (cancelType && CANCEL_TYPE_NAMES[cancelType]) {
+      return `בוטל — ${CANCEL_TYPE_NAMES[cancelType]}`
+    }
+    return 'הפרויקט בוטל'
+  }
 
   // ממתין לסגירה: ההבחנה היא האם אי-פעם נשלח זימון — ‏#7 הוא המקרה החי של "מעולם לא".
   if (status === 'event_finished') {
@@ -101,8 +114,11 @@ export function gapSentence(project) {
   // מצבים פעילים — שאלת-החוסר עצמה.
   const staffing = staffingMetric3(confirmed, required)
   const logistics = { complete: logisticsComplete(project) }
-  if (staffing.complete && logistics.complete) return ALL_DONE
-  if (rowCount === 0) return 'לא נשלח אף זימון — איש לא נגע בפרויקט מאז שנוצר'
+  if (staffing.complete && logistics.complete) return '✓ מוכן לאירוע'
+  // ✏️ 09/09/2026 (לילה-הטקסטים, שלב 10): הזנב "— איש לא נגע בפרויקט מאז שנוצר" ירד — נושא-משפט
+  // בזכר על צוות שכולו נשים (המדריך §1) ו"נגע" אינה מילה של מנהלת-פרויקטים (R10). הנוסח שנשאר
+  // הוא הגדרת-"אדום" המאושרת מילה-במילה (screens-approved.md §⑥: "לא נשלח אף זימון לדיילת").
+  if (rowCount === 0) return 'לא נשלח אף זימון לדיילת'
 
   const gap = Math.max(required - confirmed, 0)
   // המקרה של #11: כל החוסר הוא דיילת אחת שכבר אישרה זמינות — הכדור אצל דנה, לא אצלה.
@@ -121,16 +137,19 @@ export function gapSentence(project) {
 // טופל). לשון-היחיד לזימון בודד — אותה תבנית-הרחבה שישי הנהן לה בנוסחי-הולידציה של הסגירה;
 // "1 זימונים ממתינים" הוא עברית שבורה על המסך. וכשהזימונים מכסים את החוסר — הצורה הקצרה,
 // לעולם לא "עדיין חסרות 0" (שער-2.9, מוטציה שהוכיחה שהגבול לא היה מכוסה).
+// ✏️ 09/09/2026 (שלב 10): "וגם אם תאשר" נקרא על המסך כפנייה בזכר לקוראת — מעריך-טרי נפל בזה —
+// ולכן "וגם אם היא תאשר"; והחוסר שנותר עובר דרך gapWord, כך ש-"חסרות 1" (שנמדד על המסך) הופך
+// ל-"חסרה 1" כמו בעמודת-הדיילות באותה שורה.
 function pendingInvitesSentence(pending, gap) {
   const stillMissing = gap - pending
   if (pending === 1) {
     return stillMissing > 0
-      ? `זימון אחד ממתין למענה — וגם אם תאשר, עדיין חסרות ${stillMissing}`
+      ? `זימון אחד ממתין למענה — וגם אם היא תאשר, עדיין ${gapWord(stillMissing)}`
       : 'זימון אחד ממתין למענה'
   }
   const answerers = pending === 2 ? 'שתיהן' : 'כולן'
   if (stillMissing > 0) {
-    return `${pending} זימונים ממתינים למענה — וגם אם ${answerers} יאשרו, עדיין חסרות ${stillMissing}`
+    return `${pending} זימונים ממתינים למענה — וגם אם ${answerers} יאשרו, עדיין ${gapWord(stillMissing)}`
   }
   return `${pending} זימונים ממתינים למענה`
 }
@@ -223,10 +242,24 @@ function gapWord(gap) {
 // אחרי מסירה/ביטול). הטון: miss (אדום) רק כשאיש לא נגע — אפס שורות שיבוץ; hint (ענבר)
 // לחוסר שיש לו מענה בדרך; done לעובדה סגורה. ‏≥ ולא = (§7.43): ‏7/6 הוא מאויש.
 export function staffingCell(project) {
-  if (HANDED_OFF_STATUSES.includes(project.project_status)) return { hidden: true }
+  if (project.project_status === 'cancelled') {
+    return { hidden: true }
+  }
   const required = Number(project.required_hostess_count) || 0
   const confirmed = Number(project.hostesses_confirmed) || 0
   const ratio = `${confirmed}/${required}`
+
+  // פרויקט שהסתיים או שנמסר לכספים — מציג את עובדת האיוש הסופית בטון רגוע (done), לעולם לא ריק או אדום
+  if (
+    project.project_status === 'finished' ||
+    project.project_status === 'awaiting_invoice' ||
+    project.project_status === 'awaiting_payment'
+  ) {
+    if (required === 0) return { ratio: null, sub: '✓ אין דיילות', tone: 'done' }
+    if (confirmed >= required) return { ratio, sub: '✓ מאויש', tone: 'done' }
+    return { ratio, sub: confirmed > 0 ? `${confirmed} שובצו` : 'לא שובצו', tone: 'done' }
+  }
+
   if (confirmed >= required && required > 0) return { ratio, sub: '✓ מאויש', tone: 'done' }
   const gap = Math.max(required - confirmed, 0)
   if ((project.assignments_row_count ?? 0) === 0) {
@@ -243,11 +276,23 @@ export function staffingCell(project) {
 // ניתן לאימות מהנתונים (פריט ordered שטרם הגיע היה הופך את המשפט לשקר). degraded-never-wrong.
 // אחרי שהאירוע עבר הטון calm — הלוגיסטיקה כבר אינה עבודה (הערת-המוקאפ בלשונית "לסגירה").
 export function logisticsCell(project) {
-  if (HANDED_OFF_STATUSES.includes(project.project_status)) return { hidden: true }
+  if (project.project_status === 'cancelled') {
+    return { hidden: true }
+  }
   const total = project.logistics_total ?? 0
   const ready = project.logistics_ready ?? 0
   if (total === 0) return { ratio: null, sub: '✓ אין פריטים', tone: 'done' }
   if (ready >= total) return { ratio: `${ready}/${total}`, sub: '✓ מוכן', tone: 'done' }
+
+  // פרויקט שהסתיים או שנמסר לכספים — מציג את נתוני הלוגיסטיקה שהושלמה בטון done רגוע
+  if (
+    project.project_status === 'finished' ||
+    project.project_status === 'awaiting_invoice' ||
+    project.project_status === 'awaiting_payment'
+  ) {
+    return { ratio: `${ready}/${total}`, sub: '✓ הושלם', tone: 'done' }
+  }
+
   const remaining = total - ready
   return {
     ratio: `${ready}/${total}`,

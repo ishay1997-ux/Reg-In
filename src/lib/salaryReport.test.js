@@ -293,7 +293,7 @@ describe('שומרי תיפול-ברעש (R4-F9) — מסמך שמספריו א�
       ...payload,
       lines: [{ ...compensationLines[0], travel: 22.6, line_total: 108.6 }],
     }
-    expect(() => buildSalaryReportLines(withTravel)).toThrow(/נוגד את ה24\/ה29/)
+    expect(() => buildSalaryReportLines(withTravel)).toThrow(/אינו אפשרי בשורת-פיצוי/)
   })
 
   it('סכום השורות שאינו תואם את total_amount של המסד ⇒ הדוח לא מורכב', () => {

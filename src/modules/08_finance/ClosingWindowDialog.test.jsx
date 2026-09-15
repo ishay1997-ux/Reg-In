@@ -675,10 +675,10 @@ describe('בלוק-המשוב', () => {
     expect(screen.getByTestId('closing-feedback-tag')).toBeInTheDocument()
     // ⛔ השלילה — האפשרות החדשה **אינה** הופכת את המסך למסך-הזנה.
     expect(screen.queryByTestId('closing-feedback-stars')).not.toBeInTheDocument()
-    expect(screen.getByTestId('closing-feedback-score-edit')).toHaveTextContent('שנה ציון')
+    expect(screen.getByTestId('closing-feedback-score-edit')).toHaveTextContent('שני ציון')
   })
 
-  it('"שנה ציון" מחזיר את הכוכבים — ובלי "לא ענה לסקר", שסותר ציון קיים', async () => {
+  it('"שני ציון" מחזיר את הכוכבים — ובלי "לא ענה לסקר", שסותר ציון קיים', async () => {
     await renderLoaded()
     fireEvent.click(screen.getByTestId('closing-feedback-score-edit'))
     expect(screen.getByTestId('closing-feedback-stars')).toBeInTheDocument()
@@ -1265,7 +1265,7 @@ describe('תיקון תאריך-תשלום שהוקלד שגוי', () => {
     await renderLoaded()
     expect(screen.getByTestId('closing-payment-block')).toBeInTheDocument()
     expect(screen.getByTestId('closing-payment-date')).toHaveValue('2026-08-04')
-    expect(screen.getByTestId('closing-save-payment')).toHaveTextContent('עדכון תאריך התשלום')
+    expect(screen.getByTestId('closing-save-payment')).toHaveTextContent('עדכני תאריך תשלום')
   })
 
   it('אותו תאריך אינו מופיע פעמיים — תא-הקריאה נסוג מפני השדה העריך', async () => {

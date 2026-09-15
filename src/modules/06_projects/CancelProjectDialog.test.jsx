@@ -250,11 +250,11 @@ describe('CancelProjectDialog — שלושת הסוגים והוולידציה',
     )
   })
 
-  it('הפוטר: "בטל את הפרויקט" (מסגרת אדומה, לא מילוי) ואז "חזרה" — לעולם לא "ביטול"', async () => {
+  it('הפוטר: "בטלי את הפרויקט" (מסגרת אדומה, לא מילוי) ואז "חזרה" — לעולם לא "ביטול"', async () => {
     await renderDialog()
     const confirm = screen.getByTestId('cancel-confirm')
     const back = screen.getByTestId('cancel-back')
-    expect(confirm.textContent).toBe('בטל את הפרויקט')
+    expect(confirm.textContent).toBe('בטלי את הפרויקט')
     expect(back.textContent).toBe('חזרה')
     // הדפוס השלילי היחיד ב-src/ (RowAction): מסגרת אדומה על רקע בהיר, בלי מילוי מלא.
     expect(confirm.className).toContain('border-red-200')
@@ -299,8 +299,12 @@ describe('CancelProjectDialog — האישור, המיילים והסירובי�
     expect(successText).toContain('הפרויקט בוטל. 4 שיבוצים שוחררו, ופריטי הלוגיסטיקה לא השתנו.')
     expect(successText).toContain('4 מיילי "האירוע בוטל" נשלחו')
     expect(screen.queryByTestId('toast-error')).not.toBeInTheDocument()
-    // הכפתור השלישי ("סגירה") איננו — §3.7 מתיר רק ביטול/חזרה.
-    expect(screen.queryByText('סגירה')).not.toBeInTheDocument()
+    // הכפתור השלישי ("סגירה") איננו בפוטר — §3.7 מתיר רק ביטול/חזרה. ✏️ 08/09/2026 (שלב 2):
+    // הבדיקה סוקפה ל-`dialog-footer` ולא לכל המסמך — התווית הנגישה-בלבד (sr-only) של כפתור-ה-X
+    // המובנה של Radix הפכה בעצמה ל"סגירה" (רכיב-משותף, שינוי מקביל), ובדיקה על כל המסמך הייתה
+    // תופסת אותה בטעות ומדווחת כפתור-שלישי שאינו קיים.
+    const footer = document.querySelector('[data-slot="dialog-footer"]')
+    expect(within(footer).queryByText('סגירה')).not.toBeInTheDocument()
   })
 
   it('ה-RPC נכשל ⇒ אף מייל לא נשלח, וההודעה העברית של השרת מוצגת כלשונה', async () => {

@@ -1,12 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import {
   deriveCalendarColor,
+  calendarColorMeta,
+  staffingRatioLabel,
+  logisticsRatioLabel,
   colorProjects,
   kpiCards,
   MASKED_TEXT,
   attentionRows,
-  attentionSummary,
-  attentionAllLabel,
+  attentionCategories,
   monthStartOf,
   shiftMonth,
   hebrewMonthTitle,
@@ -103,7 +105,10 @@ describe('deriveCalendarColor — גבול 14 הימים ו-warningDays חסר',
   })
 })
 
-describe('deriveCalendarColor — סטטוס לא-פעיל ⇒ ירוק תמיד, גם עם חוסר עצום', () => {
+// 🆕 R3 09/09/2026 (הכרעת-ישי): היה "ירוק תמיד" — הפך ל-`'past'`, צבע חמישי משלו.
+// העוגן: "טקס פרסים" 01/09 (סטטוס "ממתין לסגירה"=event_finished) הוצג ירוק עם
+// אייקוני-מוכנות מלאים, זהה לאירוע-מוכן עתידי, בזמן שהרצועה מדווחת 17 כאלה שלא חויבו.
+describe('deriveCalendarColor — סטטוס לא-פעיל ⇒ past תמיד, גם עם חוסר עצום (R3 09/09/2026)', () => {
   const hugeGap = {
     project_id: 3,
     required_hostess_count: 10,
@@ -114,9 +119,9 @@ describe('deriveCalendarColor — סטטוס לא-פעיל ⇒ ירוק תמיד
   }
 
   it.each(['event_finished', 'awaiting_invoice', 'awaiting_payment', 'finished'])(
-    'סטטוס "%s" ⇒ ירוק בלי קשר למונים',
+    'סטטוס "%s" ⇒ past בלי קשר למונים',
     (status) => {
-      expect(deriveCalendarColor({ ...hugeGap, project_status: status }, TODAY, 14)).toBe('green')
+      expect(deriveCalendarColor({ ...hugeGap, project_status: status }, TODAY, 14)).toBe('past')
     },
   )
 })
@@ -172,7 +177,8 @@ describe('colorProjects — טהורה, מוסיפה color בלי לגעת במ�
       },
     ]
     const result = colorProjects(projects, TODAY, 14)
-    expect(result.map((p) => p.color)).toEqual(['red', 'green'])
+    // 🆕 R3: סטטוס 'finished' (לא-פעיל, לא-מבוטל) ⇒ 'past', לא 'green'.
+    expect(result.map((p) => p.color)).toEqual(['red', 'past'])
     expect(projects[0].color).toBeUndefined()
   })
 })
@@ -372,25 +378,29 @@ describe('attentionRows — סדר בין שלושת הענפים ובתוך כ�
     ],
   }
 
-  it('הסדר המלא: הסתיים-ולא-חויב (ותיק→חדש) → חוסר-וקרוב (קרוב→רחוק) → הצעה-פגה', () => {
+  // 🆕 R2/R6 09/09/2026: הענף "shortage" מתפצל ל-`staffing`/`logistics` — קבוצה-קבועה
+  // ולא עוד "קרוב-לרחוק" חוצה-ממדים; 103 (חוסר-איוש בלבד) נופל בקבוצת staffing,
+  // 104 (חוסר-לוגיסטיקה בלבד) בקבוצת logistics, וסדר-הקבוצות קבוע (staffing→logistics)
+  // בלי קשר לקרבת-התאריך בין שתי הקבוצות.
+  it('הסדר המלא: הסתיים-ולא-חויב (ותיק→חדש) → חוסר-איוש → חוסר-לוגיסטיקה → הצעה-פגה', () => {
     const rows = attentionRows(summary, TODAY)
     expect(rows.map((r) => r.title)).toEqual([
       'פסטיבל קיץ עירוני',
       'השקת מוצר — סייברארק',
-      'כנס פתיחת שנה',
       'כנס לקוחות שנתי',
+      'כנס פתיחת שנה',
       'הצעה #41',
     ])
     expect(rows.map((r) => r.kind)).toEqual([
       'unbilled',
       'unbilled',
-      'shortage',
-      'shortage',
+      'staffing',
+      'logistics',
       'quote',
     ])
   })
 
-  it('why/tone/href מדויקים לכל שורה — הנוסחים מהמוקאפ המאושר', () => {
+  it('why/tone/href מדויקים לכל שורה — הנוסחים מהמוקאפ המאושר, tone אדום ל-R2', () => {
     const rows = attentionRows(summary, TODAY)
     expect(rows[0]).toMatchObject({
       tone: 'red',
@@ -398,15 +408,16 @@ describe('attentionRows — סדר בין שלושת הענפים ובתוך כ�
       href: '/projects/101',
     })
     expect(rows[1]).toMatchObject({ tone: 'red', why: 'הסתיים לפני 2 ימים, לא חויב' })
+    // R2: tone הפך מ-yellow ל-red — אותה הגדרת-חוסר-וקרוב בדיוק כמו הצבע האדום בלוח.
     expect(rows[2]).toMatchObject({
-      tone: 'yellow',
-      why: 'לוגיסטיקה 1/3, 8 בחודש',
-      href: '/projects/104',
-    })
-    expect(rows[3]).toMatchObject({
-      tone: 'yellow',
+      tone: 'red',
       why: '0/6 דיילות, 17 בחודש',
       href: '/projects/103',
+    })
+    expect(rows[3]).toMatchObject({
+      tone: 'red',
+      why: 'לוגיסטיקה 1/3, 8 בחודש',
+      href: '/projects/104',
     })
     expect(rows[4]).toMatchObject({
       tone: 'yellow',
@@ -437,7 +448,7 @@ describe('attentionRows — סדר בין שלושת הענפים ובתוך כ�
       ...summary,
       params: { ...summary.params, event_warning_days: null },
     })
-    expect(rows.some((r) => r.kind === 'shortage')).toBe(false)
+    expect(rows.some((r) => r.kind === 'staffing' || r.kind === 'logistics')).toBe(false)
     expect(rows.some((r) => r.kind === 'unbilled')).toBe(true) // ענפים אחרים לא מושפעים
   })
 })
@@ -462,8 +473,8 @@ describe('attentionRows — ענף-החוסר יושר מול צבע-הלוח (0
     const rows = attentionRows(summary, TODAY)
     expect(rows).toHaveLength(1)
     expect(rows[0]).toMatchObject({
-      kind: 'shortage',
-      tone: 'yellow',
+      kind: 'staffing',
+      tone: 'red',
       title: 'אירוע שעבר ועדיין פעיל',
       why: '1/4 דיילות, 29 בחודש',
     })
@@ -505,12 +516,15 @@ describe('attentionRows — ניסוחי-קצה: יום בודד', () => {
   })
 })
 
-// ── attentionSummary / attentionAllLabel — תיקרה, לא סינון ─────────────────
-// (הכרעת-ישי 03/09/2026 19:3X, "זה מעולה" על ההמלצה: הפאנל מוגבל, לא מסונן ולא מעומד.)
+// ── attentionCategories — ארבעה כרטיסי-מחלקה (R6 09/09/2026) ───────────────
+// (הכרעת-ישי 09/09/2026 — תשובה ל"עם איזה מנהל לדבר": מחליף את attentionSummary/
+// pickWithGroupRepresentation/ATTENTION_CAP/attentionAllLabel; הרשימה המשותפת-עם-
+// תיקרה הפכה לארבעה כרטיסים קבועים, אחד לכל מחלקה.)
 
-describe('attentionSummary — תיקרה על 12 שורות (5 unbilled + 5 shortage + 2 quote)', () => {
+describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbilled + 5 staffing + 0 logistics + 2 quote)', () => {
   const bigSummary = {
     today: TODAY,
+    quotes_visible: true,
     params: {
       event_warning_days: '14',
       quote_validity_days: '30',
@@ -626,95 +640,102 @@ describe('attentionSummary — תיקרה על 12 שורות (5 unbilled + 5 sho
     ],
   }
 
-  // 🔴 התיקרה ירדה 8 ⇒ 4 ב-04/09/2026, ובאותו יום נוסף **ייצוג-קבוצות** (הכרעת-ישי):
-  // ‏4 מקומות ו-3 קבוצות ⇒ כל קבוצה מביאה את הדחוף-ביותר שבה, והמקום הרביעי הולך
-  // לבא-בתור לפי סדר-הדחיפות (unbilled#2). בלי זה — 5 ה-unbilled היו בולעים הכול.
-  it('12 שורות; cap=4 ⇒ כל קבוצה מיוצגת (2 חיוב · 1 חוסר · 1 הצעה), hidden=8, total=12', () => {
-    const full = attentionRows(bigSummary, TODAY)
-    expect(full).toHaveLength(12)
-    const { rows, hidden, total } = attentionSummary(bigSummary, TODAY)
-    expect(rows).toHaveLength(4)
-    expect(rows.map((r) => r.kind)).toEqual(['unbilled', 'unbilled', 'shortage', 'quote'])
-    // כל נציג הוא הראשון-בתור של הקבוצה שלו — כלומר הדחוף ביותר שבה.
-    // (‏toEqual ולא toBe: attentionRows נקראת פעמיים ומחזירה אובייקטים שקולים, לא זהים.)
-    expect(rows[0]).toEqual(full.find((r) => r.kind === 'unbilled'))
-    expect(rows[2]).toEqual(full.find((r) => r.kind === 'shortage'))
-    expect(rows[3]).toEqual(full.find((r) => r.kind === 'quote'))
-    // הפלט שומר על סדר-הדחיפות המקורי, לא על סדר-הבחירה: הכותרות עולות באותו סדר
-    // שבו הן מופיעות ב-full.
-    const order = rows.map((r) => full.findIndex((f) => f.title === r.title && f.why === r.why))
-    expect(order).toEqual([...order].sort((a, b) => a - b))
-    expect(hidden).toBe(8)
-    expect(total).toBe(12)
+  it('ארבעה כרטיסים בסדר קבוע, עם המונה הנכון לכל אחד', () => {
+    const categories = attentionCategories(bigSummary, TODAY)
+    expect(categories.map((c) => c.kind)).toEqual(['unbilled', 'staffing', 'logistics', 'quote'])
+    expect(categories.map((c) => c.count)).toEqual([5, 5, 0, 2])
   })
 
-  it('‏firstHidden הוא הראשון שנשאר בחוץ — ולא `all[cap]`, שאינו נכון עם ייצוג-קבוצות', () => {
-    const full = attentionRows(bigSummary, TODAY)
-    const { rows, firstHidden } = attentionSummary(bigSummary, TODAY)
-    const shownTitles = new Set(rows.map((r) => r.title))
-    expect(firstHidden).toEqual(full.find((r) => !shownTitles.has(r.title)))
-    // 🔑 השומר: `all[cap]` **אינו** התשובה כאן — הוא היה נותן ליעד-הקישור שורה שמוצגת.
-    expect(firstHidden.title).not.toBe(full[4].title)
+  it('topLine הוא הפריט הדחוף ביותר בכל קטגוריה — שם + "למה", ואותו ניסוח כמו attentionRows', () => {
+    const categories = attentionCategories(bigSummary, TODAY)
+    const byKind = Object.fromEntries(categories.map((c) => [c.kind, c]))
+    expect(byKind.unbilled.topLine).toBe('הסתיים 1 — הסתיים לפני 5 ימים, לא חויב')
+    expect(byKind.staffing.topLine).toBe('חוסר 1 — 0/2 דיילות, 4 בחודש')
+    expect(byKind.quote.topLine).toBe('הצעה #70 — פגה היום')
   })
 
-  it('קבוצה יחידה ⇒ התנהגות זהה ל-slice רגיל (אין למי לשמור מקום)', () => {
-    const onlyUnbilled = {
-      ...bigSummary,
-      projects: bigSummary.projects.filter((p) => p.project_status === 'event_finished'),
-      pending_quotes: [],
-    }
-    const full = attentionRows(onlyUnbilled, TODAY)
-    const { rows } = attentionSummary(onlyUnbilled, TODAY)
-    expect(rows).toEqual(full.slice(0, 4))
+  it('קטגוריה בת-0 (logistics): count=0, topLine=null — הכרטיס נשאר, לא נעלם', () => {
+    const categories = attentionCategories(bigSummary, TODAY)
+    const logistics = categories.find((c) => c.kind === 'logistics')
+    expect(logistics).toMatchObject({ count: 0, topLine: null, masked: false })
   })
 
-  it('תקרה קטנה ממספר-הקבוצות (cap=2) ⇒ שתי הקבוצות הראשונות בקדימות, השלישית בחוץ', () => {
-    const { rows } = attentionSummary(bigSummary, TODAY, 2)
-    expect(rows.map((r) => r.kind)).toEqual(['unbilled', 'shortage'])
-  })
-
-  it('groups סופרים על הרשימה המלאה (12), לא על הארבע המוצגות', () => {
-    const { groups } = attentionSummary(bigSummary, TODAY)
-    expect(groups).toEqual([
-      { kind: 'unbilled', label: 'הסתיים ולא חויב', count: 5 },
-      { kind: 'shortage', label: 'חוסר קרוב', count: 5 },
-      { kind: 'quote', label: 'הצעה שפגה בקרוב', count: 2 },
+  it('תפקיד/יעד-ניווט/tone קבועים לכל כרטיס — התשובה ל"עם איזה מנהל לדבר"', () => {
+    const categories = attentionCategories(bigSummary, TODAY)
+    expect(categories).toEqual([
+      expect.objectContaining({
+        kind: 'unbilled',
+        label: 'כספים',
+        role: 'מנהלת כספים',
+        href: '/finance',
+        tone: 'red',
+      }),
+      expect.objectContaining({
+        kind: 'staffing',
+        label: 'דיילות',
+        role: 'מנהלת גיוס',
+        href: '/hostesses',
+        tone: 'red',
+      }),
+      expect.objectContaining({
+        kind: 'logistics',
+        label: 'לוגיסטיקה',
+        role: 'מנהלת לוגיסטיקה',
+        href: '/logistics',
+        tone: 'red',
+      }),
+      expect.objectContaining({
+        kind: 'quote',
+        label: 'הצעות',
+        role: 'מנהלת פרויקטים',
+        href: '/quotes',
+        tone: 'yellow',
+      }),
     ])
   })
 
-  it('קבוצה בת-0 מדולגת: בלי פרויקטים פעילים ⇒ אין "חוסר קרוב" ברשימת הקבוצות', () => {
-    const noShortage = {
-      ...bigSummary,
-      projects: bigSummary.projects.filter((p) => p.project_status === 'event_finished'),
-    }
-    const { groups } = attentionSummary(noShortage, TODAY)
-    expect(groups.map((g) => g.kind)).toEqual(['unbilled', 'quote'])
+  it('quotes_visible=false ⇒ כרטיס-ההצעות ממוסך (§7.97, MASKED_TEXT), לא "0"', () => {
+    const categories = attentionCategories(
+      { ...bigSummary, quotes_visible: false, pending_quotes: null },
+      TODAY,
+    )
+    const quote = categories.find((c) => c.kind === 'quote')
+    expect(quote).toMatchObject({ masked: true, count: null, topLine: null })
   })
 
-  it('cap מותאם-אישית (פרמטר שלישי): cap=3 מציג 3 שורות — אחת מכל קבוצה, hidden=9', () => {
-    const { rows, hidden } = attentionSummary(bigSummary, TODAY, 3)
-    expect(rows).toHaveLength(3)
-    expect(rows.map((r) => r.kind)).toEqual(['unbilled', 'shortage', 'quote'])
-    expect(hidden).toBe(9)
-  })
-
-  it('רשימה ריקה ⇒ rows/groups ריקים, hidden=0, firstHidden=null, total=0', () => {
-    const empty = attentionSummary({ today: TODAY, projects: [], pending_quotes: [] }, TODAY)
-    expect(empty).toEqual({ rows: [], hidden: 0, firstHidden: null, groups: [], total: 0 })
+  it('רשימה ריקה ⇒ ארבעה כרטיסים, כולם count=0 (או ממוסך אם quotes_visible חסר)', () => {
+    const categories = attentionCategories(
+      { today: TODAY, projects: [], pending_quotes: [] },
+      TODAY,
+    )
+    expect(categories.map((c) => c.count)).toEqual([0, 0, 0, null])
+    expect(categories.find((c) => c.kind === 'quote').masked).toBe(true)
   })
 })
 
-describe('attentionAllLabel', () => {
-  it('0 ⇒ מחרוזת ריקה (בלי קישור)', () => {
-    expect(attentionAllLabel(0)).toBe('')
+describe('calendarColorMeta — R1/R4 09/09/2026: מילים בצ׳יפים, הגדרה מדויקת ל-title', () => {
+  it('מספר-סף אמיתי ⇒ title נוקב במספר (לא קשיח כמו "14" במוקאפ)', () => {
+    const meta = calendarColorMeta('21')
+    expect(meta.red).toMatchObject({ label: 'דחוף', title: 'חוסר ואירוע בתוך 21 יום' })
+    expect(meta.yellow).toMatchObject({ label: 'לטיפול', title: 'חוסר, האירוע מעבר ל-21 יום' })
+    expect(meta.green.label).toBe('מוכן')
+    expect(meta.past.label).toBe('התקיים')
+    expect(meta.cancelled.label).toBe('בוטל')
   })
 
-  it('1 ⇒ לשון-יחיד ("כל 1 הפריטים" הייתה עברית שבורה)', () => {
-    expect(attentionAllLabel(1)).toBe('פריט אחד ←')
+  it('סף לא-נטען ⇒ title כללי בלי מספר, בלי ברירת-מחדל מומצאת', () => {
+    const meta = calendarColorMeta(null)
+    expect(meta.red.title).toBe('חוסר, הסף לא נטען')
+    expect(meta.yellow.title).toBe('חוסר, הסף לא נטען')
   })
+})
 
-  it('2 ומעלה ⇒ המספר הכולל, לא המוסתר — "כמה יש לטפל" ולא "כמה הוסתרו"', () => {
-    expect(attentionAllLabel(21)).toBe('כל 21 הפריטים ←')
+describe('staffingRatioLabel / logisticsRatioLabel — כותרות-ריחוף על אייקוני-הצ׳יפ (R4)', () => {
+  it('שני המספרים כלשונם מהפרויקט', () => {
+    expect(staffingRatioLabel({ hostesses_confirmed: 2, required_hostess_count: 4 })).toBe(
+      'איוש 2/4',
+    )
+    expect(logisticsRatioLabel({ logistics_ready: 0, logistics_total: 4 })).toBe('לוגיסטיקה 0/4')
   })
 })
 
@@ -825,14 +846,15 @@ describe('colorCounts', () => {
       { color: 'red' },
       { color: 'yellow' },
       { color: 'green' },
+      { color: 'past' },
       { color: 'cancelled' },
       { color: 'cancelled' },
       { color: 'cancelled' },
     ]
-    expect(colorCounts(projects)).toEqual({ red: 2, yellow: 1, green: 1, cancelled: 3 })
+    expect(colorCounts(projects)).toEqual({ red: 2, yellow: 1, green: 1, past: 1, cancelled: 3 })
   })
 
-  it('רשימה ריקה ⇒ אפסים לארבעת הצבעים, לא קריסה', () => {
-    expect(colorCounts([])).toEqual({ red: 0, yellow: 0, green: 0, cancelled: 0 })
+  it('רשימה ריקה ⇒ אפסים לחמשת הצבעים, לא קריסה', () => {
+    expect(colorCounts([])).toEqual({ red: 0, yellow: 0, green: 0, past: 0, cancelled: 0 })
   })
 })

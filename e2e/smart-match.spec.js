@@ -20,7 +20,7 @@ const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY
 
 async function login(page, email, password) {
   await page.goto('/login')
-  await page.getByPlaceholder('כתובת דוא״ל').fill(email)
+  await page.getByPlaceholder('כתובת אימייל').fill(email)
   await page.getByPlaceholder('סיסמה').fill(password)
   await page.getByRole('button', { name: 'התחברות', exact: true }).click()
   await expect(page).toHaveURL('/', { timeout: 30_000 })
@@ -337,7 +337,9 @@ test.describe('מודול 4 · מסך 2 — שיבוץ חכם', () => {
     await page.locator('[data-testid^="overview-row-"]').first().click()
 
     await expect(page.getByTestId('smart-match-retry')).toBeVisible({ timeout: 30_000 })
-    await expect(page.locator('body')).not.toContainText('אין מועמדות פנויות')
+    // ✏️ 09/09/2026 (לילה-הטקסטים, שלב 6): הטענה הייתה על הנוסח הישן של מצב-הריק; מאז השכתוב
+    // מאתרים לפי ה-testid — אותה כוונה (כשל-טעינה אינו מתחזה למצב-ריק), בלי תלות במילים.
+    await expect(page.getByTestId('sm-candidates-empty')).toHaveCount(0)
   })
 })
 
@@ -489,8 +491,8 @@ test.describe('מודול 4 · משטח 4 — תפריט-הפעולות פר-ש�
       await page.getByTestId(`row-menu-${byLabel[label][0]}`).click()
       await expect(page.getByRole('menuitem').first()).toBeVisible()
 
-      const resend = page.getByRole('menuitem').filter({ hasText: 'שלח את הקישור שוב' })
-      const newInvite = page.getByRole('menuitem').filter({ hasText: 'פתח זימון חדש' })
+      const resend = page.getByRole('menuitem').filter({ hasText: 'שלחי את הקישור שוב' })
+      const newInvite = page.getByRole('menuitem').filter({ hasText: 'פתחי זימון חדש' })
       const resendCount = await resend.count()
       const newInviteCount = await newInvite.count()
 

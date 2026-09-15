@@ -34,7 +34,7 @@ const CTX = {
 
 const labelsOf = (items) => items.map((item) => item.label)
 
-describe('nextAssignmentNumber — "פתח זימון חדש" יוצר שורה שנייה', () => {
+describe('nextAssignmentNumber — "פתחי זימון חדש" יוצר שורה שנייה', () => {
   it('אין שורה לצמד ⇒ 1', () => {
     expect(nextAssignmentNumber([], 8, 1)).toBe(1)
   })
@@ -176,12 +176,12 @@ describe('resendDisabledReason — שלושה מצבים, לא אחד (מסך 4 
 })
 
 describe('rowMenuItems — התוכן נגזר מהסטטוס, לעולם לא רשימה שטוחה', () => {
-  it('🔴 ממתינה: ארבעה פריטים, ו"שלח את הקישור שוב" ראשי', () => {
+  it('🔴 ממתינה: ארבעה פריטים, ו"שלחי את הקישור שוב" ראשי', () => {
     const items = rowMenuItems(row(), CTX)
     expect(labelsOf(items)).toEqual([
-      'שלח את הקישור שוב',
-      'סמן: אישרה זמינות',
-      'סמן: סירבה',
+      'שלחי את הקישור שוב',
+      'סמני: אישרה זמינות',
+      'סמני: סירבה',
       'אושרה סופית — סוכם בטלפון',
     ])
     expect(items[0].isPrimary).toBe(true)
@@ -196,9 +196,9 @@ describe('rowMenuItems — התוכן נגזר מהסטטוס, לעולם לא �
     const items = rowMenuItems(row(), { ...CTX, isWithinFinalDay: true })
     expect(labelsOf(items)).toEqual([
       'אושרה סופית — סוכם בטלפון',
-      'סמן: אישרה זמינות',
-      'סמן: סירבה',
-      'שלח את הקישור שוב',
+      'סמני: אישרה זמינות',
+      'סמני: סירבה',
+      'שלחי את הקישור שוב',
     ])
     expect(items[0].isPrimary).toBe(true)
     expect(items[3].disabledReason).toBe('האירוע בתוך 24 שעות — קישור חדש כבר לא ייפתח')
@@ -207,18 +207,18 @@ describe('rowMenuItems — התוכן נגזר מהסטטוס, לעולם לא �
   it('🔴 אישרה זמינות: אין "שלח שוב" — היא כבר ענתה', () => {
     const items = rowMenuItems(row({ assignment_status: 'confirmed_available' }), CTX)
     expect(labelsOf(items)).toEqual([
-      'אשר סופית ושלח פרטים',
-      'סמן: סירבה (חזרה בה)',
-      'שחרר — המשרה אוישה',
+      'אשרי סופית ושלחי פרטים',
+      'סמני: סירבה (חזרה בה)',
+      'שחררי — המשרה אוישה',
     ])
   })
 
   it('🔴 אושרה סופית: שלוש הפעולות שאין לאף שורה אחרת', () => {
     const items = rowMenuItems(row({ assignment_status: 'finally_approved' }), CTX)
     expect(labelsOf(items)).toEqual([
-      'סמן כאחראית משמרת',
-      'שחרר מהאירוע (צמצום תקנים)',
-      'סמן: ביטלה אחרי אישור',
+      'סמני כאחראית משמרת',
+      'שחררי מהאירוע (צמצום תקנים)',
+      'סמני: ביטלה אחרי אישור',
     ])
   })
 
@@ -227,7 +227,7 @@ describe('rowMenuItems — התוכן נגזר מהסטטוס, לעולם לא �
       row({ assignment_status: 'finally_approved', is_shift_lead: true }),
       { ...CTX, hasShiftLead: true },
     )
-    expect(items[0].label).toBe('בטל סימון אחראית משמרת')
+    expect(items[0].label).toBe('בטלי סימון אחראית משמרת')
     expect(items[0].disabledReason).toBe(null)
   })
 
@@ -239,15 +239,15 @@ describe('rowMenuItems — התוכן נגזר מהסטטוס, לעולם לא �
     expect(items[0].disabledReason).toBe('כבר מסומנת אחראית משמרת אחרת לאירוע הזה')
   })
 
-  it('🔴 סירבה ⇒ "פתח זימון חדש" בלבד — ולעולם לא "שלח את הקישור שוב"', () => {
+  it('🔴 סירבה ⇒ "פתחי זימון חדש" בלבד — ולעולם לא "שלחי את הקישור שוב"', () => {
     const items = rowMenuItems(row({ assignment_status: 'declined' }), CTX)
-    expect(labelsOf(items)).toEqual(['פתח זימון חדש'])
+    expect(labelsOf(items)).toEqual(['פתחי זימון חדש'])
     expect(items[0].action).toBe(ASSIGNMENT_ACTION.NEW_INVITE)
   })
 
-  it('🔴 שוחררה ⇒ גם היא "פתח זימון חדש", כשתקן נפתח מחדש', () => {
+  it('🔴 שוחררה ⇒ גם היא "פתחי זימון חדש", כשתקן נפתח מחדש', () => {
     expect(labelsOf(rowMenuItems(row({ assignment_status: 'released' }), CTX))).toEqual([
-      'פתח זימון חדש',
+      'פתחי זימון חדש',
     ])
   })
 
@@ -272,14 +272,14 @@ describe('rowMenuItems — התוכן נגזר מהסטטוס, לעולם לא �
 
   it('🔴 כל פריט מצהיר אם הוא מגיע לדיילת — המסך חייב להבדיל', () => {
     const sending = rowMenuItems(row(), CTX).filter((item) => item.sendsEmail)
-    expect(labelsOf(sending)).toEqual(['שלח את הקישור שוב', 'אושרה סופית — סוכם בטלפון'])
+    expect(labelsOf(sending)).toEqual(['שלחי את הקישור שוב', 'אושרה סופית — סוכם בטלפון'])
     const marking = rowMenuItems(row({ assignment_status: 'finally_approved' }), CTX)
     // 🔴 **המוקאפ סותר את עצמו כאן, והכרטיס מכריע:** ההערה שמתחת לתפריט אומרת *"שתי
     // האחרונות שולחות מייל"*, בעוד **מפת-הלחיצות** (`screens-approved` מסך 4 §①) מסמנת
     // `סמן: ביטלה אחרי אישור` כ-🚫 **ומקרא-המוקאפ עצמו** מונה אותה תחת *"רק רושמות"*.
     // ⇒ שתיים מול אחת, והבוררות ממילא נותנת התנהגות לאפיון. **היא אינה שולחת מייל.**
-    expect(marking.find((i) => i.label === 'סמן: ביטלה אחרי אישור').sendsEmail).toBe(false)
-    expect(marking.find((i) => i.label === 'שחרר מהאירוע (צמצום תקנים)').sendsEmail).toBe(true)
-    expect(marking.find((i) => i.label === 'סמן כאחראית משמרת').sendsEmail).toBe(false)
+    expect(marking.find((i) => i.label === 'סמני: ביטלה אחרי אישור').sendsEmail).toBe(false)
+    expect(marking.find((i) => i.label === 'שחררי מהאירוע (צמצום תקנים)').sendsEmail).toBe(true)
+    expect(marking.find((i) => i.label === 'סמני כאחראית משמרת').sendsEmail).toBe(false)
   })
 })

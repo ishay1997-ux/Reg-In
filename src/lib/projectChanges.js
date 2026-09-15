@@ -231,12 +231,15 @@ export function lateChangeBanner(hoursUntilEventValue) {
 // כדי שהשוואת-המדרגות כאן לעולם לא תסטה ממנה שבונה את ההצעה המקורית.
 // 🚫 **בלי סכום ₪ בטקסט** — התוספת מחויבת לפי מחיר-ההצעה הקפוא, לא לפי מחיר-הקטלוג של היום,
 // וספרה כאן הייתה עלולה להתפרש כמחיר-הקטלוג.
+// ✏️ שלב 4 — איפוס-מלא (R13/R9): שני משפטים שאמרו את אותו רעיון משני צדדים ("יש מדרגה
+// זולה" / "לא משתמשים בה") אוחדו למשפט אחד שפותח במה שקורה בפועל (B13) — מה שמחויב —
+// ואחריו הנימוק. `targetQty` נשאר במשפט כי היא מזהה איזו שורה זו.
 export function tierCrossingNotice(product, tiers, plannedQty, targetQty) {
   const oldPrice = resolveUnitPrice(product, tiers, plannedQty)
   const newPrice = resolveUnitPrice(product, tiers, targetQty)
   if (newPrice >= oldPrice) return null
   return (
-    `${targetQty} יחידות נכנסות בקטלוג למדרגת מחיר זולה יותר. ` +
-    'התוספת מחויבת לפי המחיר שאושר בהצעה — לא לפי מחיר הקטלוג של היום.'
+    `התוספת ל-${targetQty} יחידות מחויבת לפי המחיר שאושר בהצעה — ` +
+    'לא לפי מדרגת המחיר הזולה יותר שהיא נכנסת אליה בקטלוג.'
   )
 }

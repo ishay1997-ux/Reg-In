@@ -31,6 +31,9 @@ export function useConfirm() {
   return confirm
 }
 
+// ✏️ 09/09/2026 16:4X — הכרעת-ישי (קובץ-הבוקר §3 פריט 16): ברירת-המחדל `אישור` נשארת כמורשת, אבל
+// **כל קריאה חדשה מעבירה `confirmLabel` שהוא פועל-הפעולה בנקבה** (R12: "בטלי את הפרויקט", לא "אישור").
+// האכיפה: אזהרת-פיתוח למטה. 11 מ-12 הקוראים כבר מעבירים תווית (נמדד 09/09).
 const DEFAULTS = {
   title: 'אישור פעולה',
   message: '',
@@ -44,6 +47,11 @@ export function ConfirmProvider({ children }) {
   const resolverRef = useRef(null)
 
   const confirm = useCallback((opts) => {
+    if (import.meta.env.DEV && !opts?.confirmLabel) {
+      console.warn(
+        'ConfirmDialog: קריאה בלי confirmLabel — הכפתור יציג "אישור"; העבירי פועל-פעולה (R12).',
+      )
+    }
     return new Promise((resolve) => {
       resolverRef.current = resolve
       setOptions({ ...DEFAULTS, ...opts })

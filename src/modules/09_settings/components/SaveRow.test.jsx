@@ -66,10 +66,10 @@ describe('SaveRow', () => {
     expect(screen.getByTestId('settings-save-button')).toHaveTextContent('נסי שוב')
   })
 
-  it('בזמן שמירה הכפתור נעול ואומר "שומר..."', () => {
+  it('בזמן שמירה הכפתור נעול ואומר "שומרת…"', () => {
     render(<SaveRow dirtyCount={1} total={7} saving onCancel={() => {}} onSave={() => {}} />)
     expect(screen.getByTestId('settings-save-button')).toBeDisabled()
-    expect(screen.getByTestId('settings-save-button')).toHaveTextContent('שומר...')
+    expect(screen.getByTestId('settings-save-button')).toHaveTextContent('שומרת…')
   })
   // 🔴 **סיבת-ההשבתה יושבת ליד הכפתור** (אודיט-סגירת מ9, 554px). בלי זה הכפתור מושבת
   // והמשפט המסביר נמצא מחוץ למסך — הפגם שהבדיקות האלה נועלות.

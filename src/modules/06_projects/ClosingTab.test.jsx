@@ -51,6 +51,11 @@ vi.mock('@/api/email', () => ({
   getLastSuccessfulSend: vi.fn(),
 }))
 
+// ⚠️ שלב 9 (Hint) — שני `<Hint>` חדשים מייבאים `@/contexts/AuthContext` ← `@/supabaseClient`
+// (לקוח אמיתי בטעינה); הקובץ הזה לא ייבא אף אחת מהן קודם. בלי המוק הזה הבדיקה קורסת
+// ב-`supabaseUrl is required` (מוקש `src/CLAUDE.md`), לא נכשלת על טענה. רמה 0 ⇒ null.
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ onboardingMode: 0 }) }))
+
 // דיאלוג-שינוי-התכולה האמיתי נבדק בקובץ שלו; כאן stub שחושף פתיחה/שמירה — מספיק כדי
 // להוכיח שהטיוטה שורדת את הפתיחה ושהלשונית קוראת-מחדש את נתוני-השינויים אחרי שמירה.
 vi.mock('./ScopeChangeDialog', () => ({
@@ -425,7 +430,7 @@ describe('מצב-העייפות (staleness, as-built ③) — מצב-בשם, ל�
 })
 
 describe('השבתת-שלב-השליחה — שומר ה-double-log של email_log', () => {
-  it('בזמן השליחה הכפתור מושבת ומציג "שומר ושולח…" עד סוף השלב כולו', async () => {
+  it('בזמן השליחה הכפתור מושבת ומציג "שומרת ושולחת…" עד סוף השלב כולו', async () => {
     let releaseSend
     sendEmail.mockImplementation(
       () =>
@@ -441,7 +446,7 @@ describe('השבתת-שלב-השליחה — שומר ה-double-log של email_l
 
     // ה-RPC כבר עבר, המייל תלוי-ועומד — הבקרה חייבת להיות מושבתת בדיוק עכשיו.
     await waitFor(() => expect(screen.getByTestId('closing-save')).toBeDisabled())
-    expect(screen.getByTestId('closing-save')).toHaveTextContent('שומר ושולח…')
+    expect(screen.getByTestId('closing-save')).toHaveTextContent('שומרת ושולחת…')
     releaseSend()
   })
 })
@@ -523,12 +528,12 @@ describe('㉔ — דיאלוג-שינוי-התכולה מעל הטיוטה (B7 �
   it('משפט-ההשלכה של הרישום-המיידי מוצג במקטע עצמו', async () => {
     renderTab()
     await screen.findByTestId('closing-changes-section')
-    expect(screen.getByTestId('closing-change-note')).toHaveTextContent('נרשם במסד מיד')
+    expect(screen.getByTestId('closing-change-note')).toHaveTextContent('נכנס לתוקף מיד')
   })
 })
 
 describe('קריאה-בלבד — הלשונית אינה משטח-פעולה למי שאינו מפעיל אותה (מה-ייחשב-עובד #6)', () => {
-  it('canEdit בלי דיילות (מנהלת לוגיסטיקה) ⇒ אין "שמור ושלח" ואין פקדים, ומצב-ריק מודע-הרשאות', async () => {
+  it('canEdit בלי דיילות (מנהלת לוגיסטיקה) ⇒ אין "שמרי ושלחי" ואין פקדים, ומצב-ריק מודע-הרשאות', async () => {
     getProjectAssignments.mockResolvedValue([])
     renderTab({ canEdit: true, canReadHostesses: false })
     await screen.findByTestId('closing-tab')

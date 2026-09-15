@@ -43,7 +43,7 @@ const TAB_KEYS = ['awaiting_invoice', 'awaiting_payment', 'finished']
 
 async function login(page) {
   await page.goto('/login')
-  await page.getByPlaceholder('כתובת דוא״ל').fill(FINANCE_EMAIL)
+  await page.getByPlaceholder('כתובת אימייל').fill(FINANCE_EMAIL)
   await page.getByPlaceholder('סיסמה').fill(FINANCE_PASSWORD)
   await page.getByRole('button', { name: 'התחברות', exact: true }).click()
   await expect(page).toHaveURL('/', { timeout: 30_000 })

@@ -1,5 +1,5 @@
 // בדיקות לשונית צוות-הדיילות (משטח 4, צעד 3.4) — ה-API ממוקק. מה שנעול כאן: הקיפול
-// (9 שורות במסד ⇒ 6 דיילות על המסך) · הנגזרות בטבלה החיה מול הסטטוס הגולמי בהיסטוריה ·
+// (9 שורות בהיסטוריה ⇒ 6 דיילות על המסך) · הנגזרות בטבלה החיה מול הסטטוס המקורי בהיסטוריה ·
 // המשפט-האדום-היחיד בנוסחו המאושר · שני הווריאנטים (טרם נשלח זימון · פרויקט שבוטל) ·
 // ומצב-ההרשאה המוצהר למי שחסומה על 'דיילות' (לעולם לא טבלה ריקה בשקט).
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -18,6 +18,12 @@ vi.mock('./api', () => ({
 // 🔄 סף-תוקף-הזימון ירד ל-`params` (מודול 9 · צעד 2.3) והלשונית טוענת אותו בעצמה.
 // הערך `'48'` **מחרוזת**, כפי שהמסד מחזיר (`param_value` הוא `text`).
 vi.mock('@/api/params', () => ({ getParamValues: vi.fn() }))
+
+// ⚠️ שלב 9 (Hint) — `<Hint id="team.rawStatus" />` מייבאת `@/contexts/AuthContext` ←
+// `@/supabaseClient` (לקוח אמיתי בטעינה); הקובץ הזה לא ייבא אף אחת מהן קודם. בלי המוק
+// הזה הבדיקה קורסת ב-`supabaseUrl is required` (מוקש `src/CLAUDE.md`), לא נכשלת על טענה.
+// רמה 0 ⇒ null.
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ onboardingMode: 0 }) }))
 
 // תאריכים יחסיים לשעון האמיתי — הלשונית קוראת את השעון בעצמה, ותוקף-הזימון נגזר ממנו
 // (‏48 שעות, מ-`params`).
@@ -174,7 +180,7 @@ describe('סף-תוקף-הזימון חסר — מצב-שגיאה מוצהר, ל
   })
 })
 
-describe('הקיפול — 9 שורות במסד, 6 דיילות על המסך', () => {
+describe('הקיפול — 9 שורות בהיסטוריה, 6 דיילות על המסך', () => {
   it('הטבלה הראשית מציגה שורה אחת פר-דיילת, לפי הסבב האחרון', async () => {
     await renderTab()
     expect(screen.getAllByTestId(/^team-row-/)).toHaveLength(6)
@@ -196,12 +202,19 @@ describe('הקיפול — 9 שורות במסד, 6 דיילות על המסך',
     await renderTab()
     fireEvent.click(screen.getByTestId('team-history-toggle'))
     expect(screen.getByTestId('team-history-footnote')).toHaveTextContent(
-      '9 שורות במסד, 6 דיילות על המסך',
+      '9 שורות בהיסטוריה, 6 דיילות על המסך',
     )
+  })
+
+  // 🔬 שלב 4 — הבסיס של "אושרו סופית" הוא המספרים עצמם, לא התנאי המופשט (guide §4, שלב 4·מ6).
+  it('אריח "אושרו סופית" נוקב במספרים, לא בתנאי ≥', async () => {
+    await renderTab()
+    expect(screen.getByTestId('team-tile-confirmed')).toHaveTextContent('1 מתוך 6 אושרו סופית')
+    expect(screen.getByTestId('team-tile-confirmed')).not.toHaveTextContent('≥')
   })
 })
 
-describe('נגזרות בטבלה החיה — סטטוס גולמי בהיסטוריה (הכלל חל על שתי הנגזרות)', () => {
+describe('נגזרות בטבלה החיה — סטטוס מקורי בהיסטוריה (הכלל חל על שתי הנגזרות)', () => {
   it('זימון שפג: "פג תוקף" למעלה, "ממתינה למענה" בהיסטוריה', async () => {
     await renderTab()
     expect(screen.getByTestId('team-status-h3')).toHaveTextContent('פג תוקף')
@@ -244,7 +257,7 @@ describe('המשפט האדום היחיד — המילים נושאות אות�
       'בפנים. היא אחראית המשמרת של האירוע',
     )
     // שוחררה מול ביטלה — נראות דומות בתג ושונות במילים (§⑥).
-    expect(screen.getByTestId('team-meaning-h4')).toHaveTextContent('אנחנו ויתרנו עליה')
+    expect(screen.getByTestId('team-meaning-h4')).toHaveTextContent('שוחררה מהשיבוץ')
     expect(screen.getByTestId('team-meaning-h6')).toHaveTextContent('כן נספר באמינות ההגעה שלה')
   })
 

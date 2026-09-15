@@ -21,20 +21,25 @@ function paramNumber(value) {
   return Number.isFinite(n) ? n : null
 }
 
-// ── צבע-הלוח (§7.94) ───────────────────────────────────────────────────────
+// ── צבע-הלוח (§7.94 · R3 09/09/2026) ────────────────────────────────────────
 // "חוסר" הוא בדיוק overviewHasGap (src/lib/projects.js) על פרויקט פעיל — לא הגדרה
 // מקבילה. red = יש חוסר וגם האירוע בתוך warningDays ימים מהיום (כולל; אירוע שכבר
 // עבר ועדיין פעיל נחשב "בתוך" — כל days<=warningDays, גם שלילי). yellow = חוסר
-// רחוק יותר. green = בלי חוסר. סטטוס לא-פעיל שאינו מבוטל (event_finished/
-// awaiting_invoice/awaiting_payment/finished) אינו נשאל בכלל — ירוק תמיד, בדיוק כפי
-// שהוכרע ב-§7.94 ("שאלת-החוסר עצמה" שייכת רק למצבים הפעילים).
+// רחוק יותר. green = בלי חוסר (פעיל, שני הממדים מלאים).
+// 🆕 R3 (09/09/2026, הכרעת-ישי): סטטוס לא-פעיל ושאינו מבוטל (event_finished/
+// awaiting_invoice/awaiting_payment/finished) הופך ל-`'past'`, צבע חמישי משלו — לא
+// עוד `green`. **הפגם שזה מתקן, נמדד על המסך החי (09/09):** "טקס פרסים" מ-01/09,
+// סטטוס "ממתין לסגירה", הוצג ירוק עם אייקוני-מוכנות מלאים — זהה בדיוק לאירוע-מוכן
+// עתידי, בעוד רצועת "מה דורש טיפול" מכריזה על 17 אירועים כאלה שלא חויבו. §7.94
+// עצמו לא נפתח מחדש: הצבע-רביעי (מבוטל) והכלל האדום/צהוב/ירוק על הציר הפעיל נשארו
+// כפי שהוכרעו — זה רק מפצל את מה שהיה "ירוק תמיד" לשני מובנים שונים באמת.
 export function deriveCalendarColor(project, todayIso, warningDays) {
   // הכרעת-ישי 03/09/2026 ~18:4X: מבוטל נשאר בלוח — כמו Monday / Google Calendar,
   // לא נעלם ממנו. המנהלת צריכה לדעת שהתאריך התפנה, לא רק "לשכוח" את הפרויקט —
-  // ולכן זה צבע רביעי משלו, נבדק לפני שאלת-החוסר (מבוטל אינו "פעיל" וגם לא
+  // ולכן זה צבע משלו, נבדק לפני שאלת-החוסר (מבוטל אינו "פעיל" וגם לא
   // "ירוק כאילו-תקין"; הוא עובדה שונה לגמרי).
   if (project?.project_status === 'cancelled') return 'cancelled'
-  if (!ACTIVE_PROJECT_STATUSES.includes(project?.project_status)) return 'green'
+  if (!ACTIVE_PROJECT_STATUSES.includes(project?.project_status)) return 'past'
   if (!overviewHasGap(project)) return 'green'
 
   const warning = paramNumber(warningDays)
@@ -45,6 +50,39 @@ export function deriveCalendarColor(project, todayIso, warningDays) {
   const days = eventDaysFromToday(project.final_event_date, todayIso)
   if (days !== null && days <= warning) return 'red'
   return 'yellow'
+}
+
+// ── מטא-הצבע (R1/R4, 09/09/2026) ────────────────────────────────────────────
+// הכרעת-ישי: מילים בכל צ'יפי-הספירה ("דחוף 13" ולא נקודה+מספר), ושורת-המקרא
+// מתחת ללוח נמחקת — ההגדרה המדויקת (מה "דחוף" אומר בפועל) חיה ב-title לריחוף.
+// warningDays עובר כפרמטר ולא קשיח (המספר "14" קבוע במוקאפ, לא בקוד — כלל 14):
+// שינוי-פרמטר עתידי לא ישאיר ניסוח שקרי, בדיוק כמו שהמקרא הקודם דאג לזה.
+export function calendarColorMeta(warningDays) {
+  const warning = paramNumber(warningDays)
+  const soonTitle = warning === null ? 'חוסר, הסף לא נטען' : `חוסר ואירוע בתוך ${warning} יום`
+  const laterTitle = warning === null ? 'חוסר, הסף לא נטען' : `חוסר, האירוע מעבר ל-${warning} יום`
+  return {
+    red: { label: 'דחוף', title: soonTitle },
+    yellow: { label: 'לטיפול', title: laterTitle },
+    green: { label: 'מוכן', title: 'איוש ולוגיסטיקה מלאים' },
+    past: { label: 'התקיים', title: 'האירוע כבר קרה' },
+    cancelled: { label: 'בוטל', title: 'הפרויקט בוטל' },
+  }
+}
+
+// כותרות-ריחוף על אייקוני-הממד בצ'יפ (R4/R5) — "איוש 2/4"/"לוגיסטיקה 0/4". שני
+// המספרים כבר יושבים על הפרויקט (מה-RPC); זו רק ניסוח-המשפט, ולכן כאן ולא ברכיב
+// (כלל 14: כל משפט של המסך נולד בקובץ הזה).
+export function staffingRatioLabel(project) {
+  const confirmed = Number(project?.hostesses_confirmed) || 0
+  const required = Number(project?.required_hostess_count) || 0
+  return `איוש ${confirmed}/${required}`
+}
+
+export function logisticsRatioLabel(project) {
+  const total = project?.logistics_total ?? 0
+  const ready = project?.logistics_ready ?? 0
+  return `לוגיסטיקה ${ready}/${total}`
 }
 
 // טהורה: מחזירה מערך חדש עם שדה color נוסף, לא נוגעת במקור (§ עקרון-הגריעה — UI
@@ -119,7 +157,7 @@ function satisfactionSub(count) {
 // ── שורת-פרמטר חסרה (הכרעת-ישי 03/09/2026, אודיט-הסגירה T-1) ────────────────
 // 🔴 **הכשל שזה מונע, במילים של המסך:** בלי `ימי_אזהרה_קדם_אירוע` הלוח **לעולם לא מאדים**
 // ‏(`deriveCalendarColor` מחזיר yellow) ורצועת "מה דורש טיפול" **מוותרת על ענף-החוסר לגמרי**
-// (`shortageRows` מחזירה []) — ואז המסך מכריז "✓ אין פריטים הדורשים טיפול" בזמן שלאירוע
+// (`staffingShortageRows`/`logisticsShortageRows` מחזירות []) — ואז המסך מכריז "✓ אין" בזמן שלאירוע
 // בעוד שלושה ימים חסרות דיילות. הסירוב להמציא ברירת-מחדל נכון ונשאר; מה שחסר היה **לומר**.
 // אותו באנר ואותו נוסח בדיוק כמו מסך-ההצעות — `missingParamsMessage` ב-`src/lib/quotes.js`.
 //
@@ -137,20 +175,22 @@ export function missingDashboardParamsMessage(summary) {
   return missingParamsMessage(values)
 }
 
-// ── "מה דורש טיפול" (המוקאפ המאושר) ─────────────────────────────────────────
-// שלושה ענפים בסדר-קדימות קבוע: הסתיים-ולא-חויב (אדום) → חוסר-וקרוב (צהוב) →
-// הצעה-פגה-בקרוב (צהוב). כל ענף ממוין בפני עצמו ואז מחובר — הסדר בין הענפים
-// עצמו הוא ההיררכיה של "מה הכי דחוף" באותו מסך.
-// ⚠️ מבוטל לעולם לא מופיע כאן, גם שהוא נשאר בלוח (03/09/2026) — אין "מה לטפל בו"
-// באירוע שלא יתקיים; שני הענפים הבאים כבר מסננים לפי סטטוס ומעולם לא כוללים
-// cancelled (לא event_finished/awaiting_invoice, לא ACTIVE_PROJECT_STATUSES).
+// ── "מה דורש טיפול" (המוקאפ המאושר; R2/R6 09/09/2026) ────────────────────────
+// ארבעה ענפים בסדר-קדימות קבוע: הסתיים-ולא-חויב (אדום) → חוסר-איוש (אדום, R2) →
+// חוסר-לוגיסטיקה (אדום, R2) → הצעה-פגה-בקרוב (צהוב). כל ענף ממוין בפני עצמו ואז
+// מחובר — משמש כמנוע-הביניים ל-`attentionCategories` (R6), שממיין את השורות
+// לארבעת כרטיסי-המחלקה. ⚠️ מבוטל לעולם לא מופיע כאן, גם שהוא נשאר בלוח (03/09) —
+// אין "מה לטפל בו" באירוע שלא יתקיים; שלושת הענפים האחרונים כבר מסננים לפי סטטוס
+// ומעולם לא כוללים cancelled (לא event_finished/awaiting_invoice, לא ACTIVE_PROJECT_STATUSES).
 export function attentionRows(summary, todayIso) {
   const today = todayIso ?? summary?.today
   const projects = summary?.projects ?? []
+  const warning = summary?.params?.event_warning_days
 
   return [
     ...unbilledRows(projects, today),
-    ...shortageRows(projects, today, summary?.params?.event_warning_days),
+    ...staffingShortageRows(projects, today, warning),
+    ...logisticsShortageRows(projects, today, warning),
     ...quoteExpiringRows(summary?.pending_quotes, today, summary?.params),
   ]
 }
@@ -179,39 +219,70 @@ function unbilledWhy(daysPassed) {
   return `${whenPart}, לא חויב`
 }
 
-// (ב) חוסר וקרוב: פרויקט פעיל עם overviewHasGap שהאירוע שלו בטווח days<=warningDays
-// (כולל שלילי — 03/09/2026 יושר מול כלל-צבע-הלוח שמעל: פרויקט שעדיין in_progress
-// אחרי שתאריך-האירוע שלו כבר עבר, ועדיין עם חוסר, הוא המקרה **הכי** דחוף, לא פחות
-// דחוף — "קרוב" כלל לא היה הקריטריון הנכון לענף הזה, "עדיין-לא-טופל" הוא). סף
-// לא-נטען ⇒ אי-אפשר לשפוט "בתוך-הסף" בכלל, ולכן שום פרויקט לא נכלל — בלי ברירת-
-// מחדל מומצאת (אותה משמעת כמו missingPricingParamsMessage ב-quotes.js).
-function shortageRows(projects, todayIso, warningDaysRaw) {
+// (ב) חוסר וקרוב, מפוצל לשני ממדים (R2/R6, 09/09/2026 — היה ענף אחד "shortage").
+// **R2:** ה-tone הפך מ-yellow ל-red — זו אותה הגדרת-"חוסר-וקרוב" בדיוק כמו הצבע
+// האדום בלוח (deriveCalendarColor), ולא היה הגיוני שהן ייצבעו אחרת באותו מסך (נמדד
+// על "כנס מכירות" 09/09: אדום בלוח, נקודה צהובה ברצועה — אותה שורה בדיוק).
+// **R6:** הפיצול לאיוש/לוגיסטיקה מאפשר שני כרטיסי-מחלקה נפרדים (מנהלת-גיוס מול
+// מנהלת-לוגיסטיקה) — פרויקט עם שני החוסרים נספר בשניהם, במכוון (זה מה שכל מנהלת
+// צריכה לראות בתור שלה). "קרוב" הוא אותו טווח days<=warningDays כולל שלילי (03/09:
+// פרויקט שעדיין in_progress אחרי שתאריך-האירוע עבר הוא המקרה הכי דחוף, לא פחות).
+// סף לא-נטען ⇒ אי-אפשר לשפוט "בתוך-הסף" בכלל, ולכן שום פרויקט לא נכלל — בלי
+// ברירת-מחדל מומצאת (אותה משמעת כמו missingPricingParamsMessage ב-quotes.js).
+function staffingShortageRows(projects, todayIso, warningDaysRaw) {
   const warning = paramNumber(warningDaysRaw)
   if (warning === null) return []
   return projects
-    .filter((p) => ACTIVE_PROJECT_STATUSES.includes(p.project_status) && overviewHasGap(p))
+    .filter(
+      (p) =>
+        ACTIVE_PROJECT_STATUSES.includes(p.project_status) &&
+        (Number(p.hostesses_confirmed) || 0) < (Number(p.required_hostess_count) || 0),
+    )
     .map((p) => ({ p, days: eventDaysFromToday(p.final_event_date, todayIso) }))
     .filter(({ days }) => days !== null && days <= warning)
     .sort((a, b) => a.days - b.days)
     .map(({ p }) => ({
-      kind: 'shortage',
-      tone: 'yellow',
+      kind: 'staffing',
+      tone: 'red',
       title: p.event_name,
-      why: shortageWhy(p),
+      why: staffingWhy(p),
       href: `/projects/${p.project_id}`,
     }))
 }
 
-// עדיפות-תצוגה: איוש קודם ללוגיסטיקה (אותו סדר-ענפים כמו gapSentence ב-projects.js).
-// נקרא רק על שורה שכבר ידועה כ-overviewHasGap===true, ולכן "לא חסרה איוש" גוררת
-// בהכרח חוסר-לוגיסטיקה — אין צורך לבדוק שוב.
-function shortageWhy(project) {
+function staffingWhy(project) {
   const required = Number(project.required_hostess_count) || 0
   const confirmed = Number(project.hostesses_confirmed) || 0
   const dayOfMonth = dayOfMonthOf(project.final_event_date)
-  if (confirmed < required) return `${confirmed}/${required} דיילות, ${dayOfMonth} בחודש`
+  return `${confirmed}/${required} דיילות, ${dayOfMonth} בחודש`
+}
+
+function logisticsShortageRows(projects, todayIso, warningDaysRaw) {
+  const warning = paramNumber(warningDaysRaw)
+  if (warning === null) return []
+  return projects
+    .filter((p) => {
+      if (!ACTIVE_PROJECT_STATUSES.includes(p.project_status)) return false
+      const total = p.logistics_total ?? 0
+      const ready = p.logistics_ready ?? 0
+      return total > 0 && ready < total
+    })
+    .map((p) => ({ p, days: eventDaysFromToday(p.final_event_date, todayIso) }))
+    .filter(({ days }) => days !== null && days <= warning)
+    .sort((a, b) => a.days - b.days)
+    .map(({ p }) => ({
+      kind: 'logistics',
+      tone: 'red',
+      title: p.event_name,
+      why: logisticsWhy(p),
+      href: `/projects/${p.project_id}`,
+    }))
+}
+
+function logisticsWhy(project) {
   const total = project.logistics_total ?? 0
   const ready = project.logistics_ready ?? 0
+  const dayOfMonth = dayOfMonthOf(project.final_event_date)
   return `לוגיסטיקה ${ready}/${total}, ${dayOfMonth} בחודש`
 }
 
@@ -249,85 +320,59 @@ function quoteExpiryWhy(daysLeft) {
   return `פגה בעוד ${daysLeft} ימים`
 }
 
-// ── תקציר-הפאנל: תיקרה, לא סינון (הכרעת-ישי 03/09/2026 19:3X, "זה מעולה") ───────
-// המסך הוא מסך-טריאז' ולא דוח (§7.9: "רשימה אחת ממוינת, וכל שורה אומרת למה היא שם").
-// התיקרה שומרת את הרצועה קריאה בחודש-שיא — בלי לחתוך את גודל-הבעיה: שורת-הקבוצות
-// סופרת על **כל** הרשימה, לא רק על השורות המוצגות. הרשימה המלאה חיה במסכי
-// הפרויקטים/ההצעות שכבר ממיינים ומסננים — הפאנל הזה לא צריך לשכפל את זה.
-//
-// 🔴 **‏8 ⇒ 4 ב-04/09/2026 (הכרעת-ישי על המוקאפ: "מאשר את המוקאפ בנה ככה").** הרצועה עברה
-// מעמודה-בצד לפס-אופקי מתחת ללוח, וארבעה כרטיסים הם מה שנכנס בשורה אחת. **וזה לא רק
-// התאמה לפריסה:** רצועה בת 8–21 שורות בצד היא *דוח*, ומסך-בית אינו דוח — ארבעה כרטיסים
-// אומרים "יש N, הנה הדחופים", והמונים לצידם משאירים את גודל-הבעיה גלוי.
-// ‏🔒 לא מיוצא: מאז שהפאנל מקבל `firstHidden` מוכן (04/09/2026) אין לו צרכן חיצוני,
-// ו-`knip` חוסם ייצוא-ללא-צרכן. הוא נשאר ברירת-המחדל של הפרמטר השלישי.
-const ATTENTION_CAP = 4
-
-const ATTENTION_GROUP_DEFS = [
-  { kind: 'unbilled', label: 'הסתיים ולא חויב' },
-  { kind: 'shortage', label: 'חוסר קרוב' },
-  { kind: 'quote', label: 'הצעה שפגה בקרוב' },
+// ── ארבעה כרטיסי-מחלקה (R6, 09/09/2026 — מחליף את מנגנון-התקרה/ייצוג-הקבוצות) ──
+// עד כאן הרצועה הציגה תקרה של 4 שורות-פרויקט בודדות מתוך רשימה משותפת. ישי שאל
+// "זה יעזור למנכ"ל עם איזה מנהל לדבר?" — והתשובה היא שהחלוקה הנכונה היא **לפי
+// מחלקה**, לא לפי שורה: כל קטגוריה שייכת בדיוק לתפקיד אחד (נמדד ב-e2e/dashboard.spec.js
+// שורות 21-25: `quotes:true` רק אצל ceo/finance/**projects** — כלומר הצעות-מחיר
+// שייכות למנהלת-פרויקטים, לא לתפקיד-מכירות נפרד). ⇒ ארבעה כרטיסים קבועים, כל אחד עם
+// נקודת-צבע + מונה + הפריט הדחוף ביותר שבו, ולחיצה עליו פותחת את מסך המודול של
+// המנהלת שבאמת מטפלת בו — זו התשובה בפועל ל"עם מי מדברים", לא רק מספר.
+const ATTENTION_CATEGORY_DEFS = [
+  { kind: 'unbilled', label: 'כספים', role: 'מנהלת כספים', href: '/finance', tone: 'red' },
+  { kind: 'staffing', label: 'דיילות', role: 'מנהלת גיוס', href: '/hostesses', tone: 'red' },
+  {
+    kind: 'logistics',
+    label: 'לוגיסטיקה',
+    role: 'מנהלת לוגיסטיקה',
+    href: '/logistics',
+    tone: 'red',
+  },
+  { kind: 'quote', label: 'הצעות', role: 'מנהלת פרויקטים', href: '/quotes', tone: 'yellow' },
 ]
 
-// 🔴 **ייצוג-קבוצות: כל קבוצה לא-ריקה מקבלת לפחות מקום אחד** (הכרעת-ישי 04/09/2026,
-// *"ואלה אחלה רעיון בנה לפי המלצה"*). **הפגם שזה מתקן, ונמדד על המסך החי:** התקרה ירדה
-// 8 ⇒ 4 באותו יום, ו-9 פריטי "הסתיים ולא חויב" בלעו את כל ארבעת המקומות — כך ש-13 פריטי
-// "חוסר קרוב" **לא היו מיוצגים על המסך אפילו פעם אחת**, בזמן שהמונה לידם הכריז "13".
-// ‏🔑 **וזה `slice` הוגן ולא מסנן** — עדיין "רשימה אחת ממוינת" (§7.9, ובלי לסתור את
-// "בלי מסננים" מ-03/09): אין פקד חדש, אין מצב לזכור, והמסך פשוט מפסיק להסתיר קטגוריה
-// שלמה כבר בטעינה הראשונה. **הפריט שכל קבוצה תורמת הוא הדחוף ביותר שבה**, כי `attentionRows`
-// כבר ממיינת בתוך כל ענף (ותיק-קודם בחיוב · קרוב-קודם בחוסר · פג-קודם בהצעות).
-function pickWithGroupRepresentation(all, cap) {
-  if (all.length <= cap) return all
-  const picked = new Set()
-  // סבב א' — נציג אחד לכל קבוצה, לפי סדר-הקדימות של ATTENTION_GROUP_DEFS. כשהתקרה
-  // קטנה ממספר הקבוצות, הקבוצות האחרונות נשארות בחוץ — וזה בלתי-נמנע ולא באג.
-  for (const { kind } of ATTENTION_GROUP_DEFS) {
-    if (picked.size >= cap) break
-    const first = all.find((row) => row.kind === kind)
-    if (first) picked.add(first)
-  }
-  // סבב ב' — המקומות שנותרו מתמלאים לפי סדר-הדחיפות המקורי.
-  for (const row of all) {
-    if (picked.size >= cap) break
-    picked.add(row)
-  }
-  // הפלט חוזר לסדר של `all` ולא לסדר-הבחירה — המשתמשת רואה את אותה היררכיה שהיא
-  // מכירה מכל מסך אחר, ולא רשימה שסודרה לפי מנגנון פנימי.
-  return all.filter((row) => picked.has(row))
-}
-
-export function attentionSummary(summary, todayIso, cap = ATTENTION_CAP) {
-  const all = attentionRows(summary, todayIso)
-  const rows = pickWithGroupRepresentation(all, cap)
-  const shown = new Set(rows)
-  const hiddenRows = all.filter((row) => !shown.has(row))
-  // ספירה על all, לא על rows — מונה-הקבוצה חייב לשקף את גודל-הבעיה האמיתי, לא רק
-  // את מה שנחתך לתוך התקרה. קבוצה בת-0 מדולגת (בלי "הצעה שפגה בקרוב (0)").
-  const groups = ATTENTION_GROUP_DEFS.map(({ kind, label }) => ({
-    kind,
-    label,
-    count: all.filter((row) => row.kind === kind).length,
-  })).filter((group) => group.count > 0)
-  // ‏`firstHidden` מוחזר מכאן ולא נגזר שוב אצל הקורא: עם ייצוג-קבוצות "השורה שאחרי
-  // התקרה" כבר אינה `all[cap]`, והחישוב-מחדש היה נותן יעד שגוי לקישור-ה"הכול".
-  // ➕ וזה גם סוגר את חוב T-4 מאודיט-הסגירה (AttentionPanel חישב את הרשימה פעם שנייה).
+// `topLine` הוא הפריט הדחוף ביותר בקטגוריה, בניסוח-שם+"למה" זהה למה שהיה מוצג בשורה
+// הבודדת קודם (title + why) — כי אלה כבר הניסוחים שאושרו, לא הומצא ניסוח חדש.
+function categoryCard(kind, rows) {
+  const first = rows?.[0]
   return {
-    rows,
-    hidden: hiddenRows.length,
-    firstHidden: hiddenRows[0] ?? null,
-    groups,
-    total: all.length,
+    count: rows ? rows.length : null,
+    topLine: first ? `${first.title} — ${first.why}` : null,
+    masked: rows === null,
   }
 }
 
-// קישור-ה"הכול" של הרצועה. 🔴 **הנוסח שונה 04/09/2026 מ-"+N נוספים" ל-"כל N הפריטים"**
-// (המוקאפ המאושר): "+13 נוספים" מתאר את מה ש**הוסתר**, וזו אמירה על המסך ולא על העבודה;
-// "כל 21 הפריטים" מתאר את מה שיש **לטפל בו**, שזה מה שהמשתמשת מחפשת. אותה תבנית-לשון-יחיד
-// שאושרה ב-gapWord/proximitySentence (projects.js) — "כל 1 הפריטים" הייתה עברית שבורה.
-export function attentionAllLabel(total) {
-  if (!total) return ''
-  return total === 1 ? 'פריט אחד ←' : `כל ${total} הפריטים ←`
+export function attentionCategories(summary, todayIso) {
+  const today = todayIso ?? summary?.today
+  const projects = summary?.projects ?? []
+  const warning = summary?.params?.event_warning_days
+  // הצעות ממוסך: אותו predicate בדיוק כמו kpiCards (§7.97) — quotes_visible=false ⇒
+  // pending_quotes הוא null מה-RPC, ואין לחייב חישוב על אוכלוסייה שלא קיימת אצלה.
+  const quotesVisible = Boolean(summary?.quotes_visible)
+
+  const rowsByKind = {
+    unbilled: unbilledRows(projects, today),
+    staffing: staffingShortageRows(projects, today, warning),
+    logistics: logisticsShortageRows(projects, today, warning),
+    quote: quotesVisible
+      ? quoteExpiringRows(summary?.pending_quotes, today, summary?.params)
+      : null,
+  }
+
+  return ATTENTION_CATEGORY_DEFS.map((def) => ({
+    ...def,
+    ...categoryCard(def.kind, rowsByKind[def.kind]),
+  }))
 }
 
 // יום-בחודש (timezone-safe) — אותו תרגיל Date.UTC כמו weekdayOf ב-dates.js: פענוח
@@ -427,7 +472,7 @@ export function filterCalendarProjects(projects, { colors, query } = {}) {
 
 // מונה-הצ'יפים (③ ליד סרגל-הלוח). מקבל פרויקטים שכבר עברו colorProjects.
 export function colorCounts(coloredProjects) {
-  const counts = { red: 0, yellow: 0, green: 0, cancelled: 0 }
+  const counts = { red: 0, yellow: 0, green: 0, past: 0, cancelled: 0 }
   for (const project of coloredProjects ?? []) {
     if (project.color in counts) counts[project.color] += 1
   }

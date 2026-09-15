@@ -110,20 +110,18 @@ describe('EditProjectDetailsDialog — הנוסחים המדויקים של המ
       screen.getByText(/שינוי כאן משנה את הפרויקט בלבד — ההצעה שהלקוח אישר נשארת כפי שהיא\./),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(
-        'שינוי מיקום אינו מבטל אישורים. הדיילות מקבלות עדכון, והנקודה על המפה נקבעת מחדש.',
-      ),
+      screen.getByText('שינוי מיקום אינו מבטל אישורים — הדיילות מקבלות עדכון.'),
     ).toBeInTheDocument()
     expect(
-      screen.getByText('שינוי שעות אינו מבטל אישורים. הדיילות מקבלות עדכון שנוקב בשעות החדשות.'),
+      screen.getByText('שינוי שעות אינו מבטל אישורים — הדיילות מקבלות עדכון עם השעות החדשות.'),
     ).toBeInTheDocument()
     expect(screen.getByPlaceholderText('DD/MM/YYYY')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('למשל: היכל התרבות, תל אביב')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('לדוגמה: היכל התרבות, תל אביב')).toBeInTheDocument()
     expect(screen.getAllByPlaceholderText('HH:MM')).toHaveLength(2)
     // הפוטר: הפעולה הראשית ואז "ביטול" — סדר ה-DOM כמו במוקאפ (justify-start, הראשית מימין).
     const save = screen.getByTestId('edit-project-save')
     const cancel = screen.getByTestId('edit-project-cancel')
-    expect(save).toHaveTextContent('שמור ושלח זימון מחדש')
+    expect(save).toHaveTextContent('שמרי ושלחי זימון מחדש')
     expect(cancel).toHaveTextContent('ביטול')
     expect(save.compareDocumentPosition(cancel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })

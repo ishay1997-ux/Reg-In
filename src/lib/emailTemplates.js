@@ -158,27 +158,29 @@ export function templateSaveVerdict(name, body) {
       missingRequired,
       missingOptional,
       unknown,
-      message: `בלי ${token} ${consequence}`,
+      message: `בלי ${token} ${consequence}.`,
     }
   }
 
   if (unknown.length > 0) {
+    const label = unknown.length > 1 ? 'משתנים לא מוכרים בתבנית' : 'משתנה לא מוכר בתבנית'
     return {
       status: 'blocked',
       missingRequired,
       missingOptional,
       unknown,
-      message: `משתנה לא מוכר בתבנית: ${unknown.join(', ')}`,
+      message: `${label}: ${unknown.join(', ')}.`,
     }
   }
 
   if (missingOptional.length > 0) {
+    const label = missingOptional.length > 1 ? 'חסרים משתנים אופציונליים' : 'חסר משתנה אופציונלי'
     return {
       status: 'warning',
       missingRequired,
       missingOptional,
       unknown,
-      message: `חסרים משתנים אופציונליים: ${missingOptional.join(', ')}`,
+      message: `${label}: ${missingOptional.join(', ')}.`,
     }
   }
 

@@ -24,8 +24,10 @@ import {
   getNotificationPreferences,
   listBelowMinWage,
   listMyParams,
+  listOnboardingModes,
   listParams,
   saveNotificationPreferences,
+  saveOnboardingMode,
   updateParams,
 } from './api'
 
@@ -300,11 +302,11 @@ describe('getNotificationPreferences', () => {
     supabase.from.mockReturnValue(chain)
 
     const result = await getNotificationPreferences()
-    expect(result).toEqual({ emailNewProjects: true, smsLastMinute: false })
+    expect(result).toEqual({ emailNewProjects: true, smsLastMinute: false, onboardingMode: 0 })
     expect(chain.eq).toHaveBeenCalledWith('email', 'noa@regin.co.il')
   })
 
-  it('אין שורה (משתמש שמעולם לא שמר) — שתי ההעדפות false, לא שגיאה', async () => {
+  it('אין שורה (משתמש שמעולם לא שמר) — שתי ההעדפות false ורמת-ההטמעה 0, לא שגיאה', async () => {
     mockSession('new-user@regin.co.il')
     const chain = makeChain({ data: null, error: null })
     supabase.from.mockReturnValue(chain)
@@ -312,7 +314,114 @@ describe('getNotificationPreferences', () => {
     expect(await getNotificationPreferences()).toEqual({
       emailNewProjects: false,
       smsLastMinute: false,
+      onboardingMode: 0,
     })
+  })
+
+  it('רמת-ההטמעה נקראת מהשורה כמספר, ולא מומרת לבוליאני (2 נשאר 2)', async () => {
+    mockSession('noa@regin.co.il')
+    const chain = makeChain({
+      data: { email_new_projects: false, sms_last_minute: false, onboarding_mode: 2 },
+      error: null,
+    })
+    supabase.from.mockReturnValue(chain)
+
+    expect((await getNotificationPreferences()).onboardingMode).toBe(2)
+    expect(chain.select).toHaveBeenCalledWith(
+      'email_new_projects, sms_last_minute, onboarding_mode',
+    )
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// saveOnboardingMode / listOnboardingModes — מצב הטמעה (הכרעה 28⑭(א)): מטען של העמודה בלבד
+// ═══════════════════════════════════════════════════════════════════════════════
+describe('saveOnboardingMode', () => {
+  it('upsert עם {email, onboarding_mode} בלבד — שתי העדפות-ההתראה אינן במטען (לא נדרסות)', async () => {
+    mockSession('noa@regin.co.il')
+    const chain = makeChain({
+      data: [{ email: 'noa@regin.co.il', onboarding_mode: 2 }],
+      error: null,
+    })
+    supabase.from.mockReturnValue(chain)
+
+    expect(await saveOnboardingMode(2)).toBe(2)
+    expect(chain.upsert).toHaveBeenCalledWith(
+      { email: 'noa@regin.co.il', onboarding_mode: 2 },
+      { onConflict: 'email' },
+    )
+    const payload = chain.upsert.mock.calls[0][0]
+    expect(Object.keys(payload).sort()).toEqual(['email', 'onboarding_mode'])
+  })
+
+  it('הערך הנשמר הוא המספר 2 — לא true (אין Boolean())', async () => {
+    mockSession('noa@regin.co.il')
+    const chain = makeChain({
+      data: [{ email: 'noa@regin.co.il', onboarding_mode: 2 }],
+      error: null,
+    })
+    supabase.from.mockReturnValue(chain)
+
+    await saveOnboardingMode(2)
+    expect(chain.upsert.mock.calls[0][0].onboarding_mode).toBe(2)
+    expect(chain.upsert.mock.calls[0][0].onboarding_mode).not.toBe(true)
+  })
+
+  it('דלת-המנכ"ל: email מפורש כותב לשורה של אחרת, בלי לקרוא את ה-session', async () => {
+    const chain = makeChain({
+      data: [{ email: 'dana@regin.co.il', onboarding_mode: 2 }],
+      error: null,
+    })
+    supabase.from.mockReturnValue(chain)
+
+    expect(await saveOnboardingMode(2, { email: 'dana@regin.co.il' })).toBe(2)
+    expect(supabase.auth.getSession).not.toHaveBeenCalled()
+    expect(chain.upsert).toHaveBeenCalledWith(
+      { email: 'dana@regin.co.il', onboarding_mode: 2 },
+      { onConflict: 'email' },
+    )
+  })
+
+  it('רמה מחוץ ל-0..2 (3, -1, true, "2") נדחית לפני שנוגעת ב-Supabase', async () => {
+    mockSession('noa@regin.co.il')
+    for (const bad of [3, -1, true, '2', 1.5, null, undefined]) {
+      await expect(saveOnboardingMode(bad)).rejects.toThrow()
+    }
+    expect(supabase.from).not.toHaveBeenCalled()
+  })
+
+  it('0 שורות (RLS חסם — למשל לא-מנכ"ל על email זר) ⇒ זורקת, לעולם לא "נשמר"', async () => {
+    const chain = makeChain({ data: [], error: null })
+    supabase.from.mockReturnValue(chain)
+
+    await expect(saveOnboardingMode(2, { email: 'dana@regin.co.il' })).rejects.toThrow()
+  })
+})
+
+describe('listOnboardingModes', () => {
+  it('ממפה email → רמה; שורה בלי ערך נקראת 0', async () => {
+    const chain = makeChain({
+      data: [
+        { email: 'a@regin.co.il', onboarding_mode: 2 },
+        { email: 'b@regin.co.il', onboarding_mode: 0 },
+        { email: 'c@regin.co.il', onboarding_mode: null },
+      ],
+      error: null,
+    })
+    supabase.from.mockReturnValue(chain)
+
+    expect(await listOnboardingModes()).toEqual({
+      'a@regin.co.il': 2,
+      'b@regin.co.il': 0,
+      'c@regin.co.il': 0,
+    })
+    expect(chain.select).toHaveBeenCalledWith('email, onboarding_mode')
+  })
+
+  it('שגיאת-שליפה זורקת (המסך מציג שגיאה, לא "כולן כבויות")', async () => {
+    const chain = makeChain({ data: null, error: { code: '08006', message: 'net' } })
+    supabase.from.mockReturnValue(chain)
+    await expect(listOnboardingModes()).rejects.toThrow()
   })
 })
 

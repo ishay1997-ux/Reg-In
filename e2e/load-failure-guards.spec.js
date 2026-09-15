@@ -24,7 +24,7 @@ const CLEAN_COMPANY_NAME = `בדיקת שומרים ${CLEAN_COMPANY_NUMBER}`
 
 async function login(page, email, password) {
   await page.goto('/login')
-  await page.getByPlaceholder('כתובת דוא״ל').fill(email)
+  await page.getByPlaceholder('כתובת אימייל').fill(email)
   await page.getByPlaceholder('סיסמה').fill(password)
   await page.getByRole('button', { name: 'התחברות', exact: true }).click()
   await expect(page).toHaveURL('/', { timeout: 30_000 })
@@ -134,7 +134,7 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
     const cleanRow = page
       .locator('[data-testid^="customer-row-"]')
       .filter({ hasText: CLEAN_COMPANY_NAME })
-    await cleanRow.getByTitle('העבר לארכיון').click()
+    await cleanRow.getByTitle('העבירי לארכיון').click()
     await expect(page.getByTestId('confirm-dialog-title')).toHaveText('טרם ידוע אם יש הצעות פתוחות')
     // מבטלים — הבדיקה מוכיחה את השאלה, לא מארכבת שורה אמיתית.
     await page.getByTestId('confirm-dialog-cancel').click()
@@ -145,14 +145,14 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
     await expect(page.getByTestId('customers-revenue-error')).toBeHidden()
 
     // רגרסיה (א): לקוח נקי מאורכב **בלי שאלה** — הכרעת-11/07 נשמרת.
-    await cleanRow.getByTitle('העבר לארכיון').click()
+    await cleanRow.getByTitle('העבירי לארכיון').click()
     await expect(page.getByTestId('confirm-dialog-title')).toHaveCount(0)
     await expect(page.getByText(CLEAN_COMPANY_NAME)).toBeHidden()
 
     // רגרסיה (ב): לקוח עם הצעה פתוחה מקבל את האזהרה הרגילה (§7.34) ולא את "טרם ידוע".
     await page.getByTestId('customers-search').fill('')
     const busyRow = page.locator('[data-testid^="customer-row-"]').first()
-    await busyRow.getByTitle('העבר לארכיון').click()
+    await busyRow.getByTitle('העבירי לארכיון').click()
     await expect(page.getByTestId('confirm-dialog-title')).toHaveText('ללקוח יש הצעות פתוחות')
     await page.getByTestId('confirm-dialog-cancel').click()
   })
@@ -288,7 +288,7 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
       route.fulfill({ status: 500, contentType: 'application/json', body: '{"message":"forced"}' }),
     )
     await page.goto('/login')
-    await page.getByPlaceholder('כתובת דוא״ל').fill(CEO_EMAIL)
+    await page.getByPlaceholder('כתובת אימייל').fill(CEO_EMAIL)
     await page.getByPlaceholder('סיסמה').fill(CEO_PASSWORD)
     await page.getByRole('button', { name: 'התחברות', exact: true }).click()
 
@@ -305,8 +305,8 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
     // ‏`goto` פותח עץ-React טרי שבו האירוע האסינכרוני היחיד הוא הלחיצה של הבדיקה עצמה.
     await page.unroute('**/rest/v1/users*')
     await page.goto('/login')
-    await expect(page.getByPlaceholder('כתובת דוא״ל')).toBeVisible()
-    await page.getByPlaceholder('כתובת דוא״ל').fill(CEO_EMAIL)
+    await expect(page.getByPlaceholder('כתובת אימייל')).toBeVisible()
+    await page.getByPlaceholder('כתובת אימייל').fill(CEO_EMAIL)
     await page.getByPlaceholder('סיסמה').fill(CEO_PASSWORD)
     await page.getByRole('button', { name: 'התחברות', exact: true }).click()
     await expect(page).toHaveURL('/', { timeout: 30_000 })

@@ -75,7 +75,7 @@ describe('MySettingsPage — ריק (V-7: פאיל-סייף)', () => {
     listMyParams.mockResolvedValue([])
     renderPage()
     expect(await screen.findByTestId('settings-my-empty')).toHaveTextContent(
-      'אין הגדרות בבעלות התפקיד שלך',
+      'לתפקיד שלך אין הגדרות משלו — כולן מנוהלות בניהול המערכת',
     )
     expect(screen.queryByTestId('settings-save-button')).not.toBeInTheDocument()
   })
@@ -178,7 +178,7 @@ describe('MySettingsPage — חיפוש (UX-6)', () => {
 
     fireEvent.change(screen.getByTestId('settings-my-search'), { target: { value: 'תשלום' } })
     expect(screen.queryByText('אחוז מע"מ')).not.toBeInTheDocument()
-    expect(screen.getByText('תנאי תשלום')).toBeInTheDocument()
+    expect(screen.getByText('תנאי תשלום ללקוח')).toBeInTheDocument()
 
     fireEvent.change(screen.getByTestId('settings-my-search'), { target: { value: 'זזזז' } })
     expect(screen.getByTestId('settings-my-no-results')).toBeInTheDocument()

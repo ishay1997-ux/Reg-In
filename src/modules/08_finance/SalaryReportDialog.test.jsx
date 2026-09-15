@@ -413,7 +413,7 @@ describe('SalaryReportDialog — חלונית-הווידוא של "ייצא וש
     expect(message).toHaveTextContent('ספטמבר 2026')
     expect(message).toHaveTextContent('לא ייאספו שוב')
     expect(message).toHaveTextContent('אין ביטול לפעולה')
-    expect(screen.getByTestId('confirm-dialog-title')).toHaveTextContent('הפקת דוח-שכר')
+    expect(screen.getByTestId('confirm-dialog-title')).toHaveTextContent('הפקת דוח שכר דיילות')
     expect(generateAndSendSalaryReport).not.toHaveBeenCalled()
   })
 
@@ -429,7 +429,7 @@ describe('SalaryReportDialog — חלונית-הווידוא של "ייצא וש
     await waitFor(() => expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument())
     expect(generateAndSendSalaryReport).not.toHaveBeenCalled()
     // הכפתור חוזר לנוסחו הרגיל (לא "מפיקה ושולחת…") ואין טבלת-תוצאה.
-    expect(screen.getByTestId('salary-report-generate')).toHaveTextContent('ייצא ושלח')
+    expect(screen.getByTestId('salary-report-generate')).toHaveTextContent('ייצאי ושלחי')
     expect(screen.queryByTestId('salary-report-result')).not.toBeInTheDocument()
   })
 
@@ -913,6 +913,9 @@ describe('SalaryReportHistoryCard', () => {
     expect(
       within(tr).queryByTestId(`salary-history-resend-${row.report_id}`),
     ).not.toBeInTheDocument()
+    expect(
+      within(tr).queryByTestId(`salary-history-no-file-${row.report_id}`),
+    ).not.toBeInTheDocument()
   })
 
   it('שורה נכשלת עם קובץ שמור מציגה "שלח שוב" — לחיצה קוראת ל-resend ומרעננת', async () => {
@@ -950,6 +953,9 @@ describe('SalaryReportHistoryCard', () => {
     expect(resendBtn).toBeDisabled()
     const downloadBtn = screen.getByTestId('salary-history-download-10')
     expect(downloadBtn).toBeDisabled()
+    // UC39: הסייג-שהיה מאחורי title (`אין קובץ שמור — לא ניתן לשלוח שוב`) עכשיו טקסט גלוי —
+    // לא רק ריחוף שאינו נגיש למקלדת/מגע.
+    expect(screen.getByTestId('salary-history-no-file-10')).toHaveTextContent('אין קובץ שמור')
   })
 
   it('כפתור-ההורדה יוצר קישור-חתום ופותח אותו בכרטיסייה חדשה', async () => {

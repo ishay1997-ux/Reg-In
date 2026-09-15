@@ -60,47 +60,56 @@ const REQUIRED_PARAM_FIELDS = [
 // ההבחנה הייתה נשענת על סוג-החריגה (`Error` מול `TypeError`) — הבחנה שנשברת בשקט.
 export const DASHBOARD_SHAPE_DRIFT_CODE = 'DASHBOARD_SHAPE_DRIFT'
 
-function shapeError(message) {
-  const e = new Error(message)
+// 🔴 09/09/2026 (לילה-הטקסטים, שלב 3 · מ7) — הודעה אחת, בלי שם-שדה. עד כאן כל תנאי נשא הודעה
+// שנוקבת בשם-השדה (`profit_visible` וכד') כדי "להסביר למה מסך שעבד אתמול לא עובד היום" (ר'
+// היסטוריית-הקובץ) — וזו בדיוק הפרה של B8/R10 של מדריך-הסגנון (`docs/plans/ui-copy-styleguide.md`
+// §2א/§3ג): שם-עמודה הוא ז'רגון-בנאים ואסור על המסך. שמונת התנאים למטה מגיעים לאותו מקום-תצוגה
+// בדיוק (PermissionAwareEmpty, state='error', detail) — ולכן אותה הודעה לכולם (R30/R11).
+// ⚠️ המחיר: אבחון "איזה שדה בדיוק" לא נמצא יותר על המסך — `err.code` (הקבוע הזה) ועיון
+// בתשובת ה-RPC בכרטיסיית-הרשת עדיין מזהים את המסלול; זה קיזוז מכוון, לא פספוס.
+const SHAPE_DRIFT_MESSAGE = 'יש תקלה בנתונים.'
+
+function shapeError() {
+  const e = new Error(SHAPE_DRIFT_MESSAGE)
   e.code = DASHBOARD_SHAPE_DRIFT_CODE
   return e
 }
 
 export function assertDashboardShape(row) {
   if (row === null || row === undefined || typeof row !== 'object') {
-    throw shapeError('לא התקבל מסך-בית מהשרת.')
+    throw shapeError()
   }
 
   const missing = REQUIRED_TOP_LEVEL_FIELDS.filter(
     (field) => !Object.hasOwn(row, field) || row[field] === undefined,
   )
   if (missing.length > 0) {
-    throw shapeError(`חסרים שדות בנתוני מסך-הבית: ${missing.join(', ')}.`)
+    throw shapeError()
   }
 
   for (const field of REQUIRED_TOP_LEVEL_FIELDS) {
     if (!NULLABLE_FIELDS.has(field) && row[field] === null) {
-      throw shapeError(`שדה "${field}" חסר ערך (חזר null) בנתוני מסך-הבית.`)
+      throw shapeError()
     }
   }
 
   if (typeof row.profit_visible !== 'boolean') {
-    throw shapeError('שדה "profit_visible" אינו בוליאני בנתוני מסך-הבית.')
+    throw shapeError()
   }
   if (typeof row.quotes_visible !== 'boolean') {
-    throw shapeError('שדה "quotes_visible" אינו בוליאני בנתוני מסך-הבית.')
+    throw shapeError()
   }
   if (!Array.isArray(row.projects)) {
-    throw shapeError('שדה "projects" אינו מערך בנתוני מסך-הבית.')
+    throw shapeError()
   }
   if (row.params === null || typeof row.params !== 'object' || Array.isArray(row.params)) {
-    throw shapeError('שדה "params" חסר או שגוי בנתוני מסך-הבית.')
+    throw shapeError()
   }
   const missingParams = REQUIRED_PARAM_FIELDS.filter(
     (field) => !Object.hasOwn(row.params, field) || row.params[field] === undefined,
   )
   if (missingParams.length > 0) {
-    throw shapeError(`חסרים שדות ב-params של מסך-הבית: ${missingParams.join(', ')}.`)
+    throw shapeError()
   }
 
   return row

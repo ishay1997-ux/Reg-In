@@ -17,7 +17,7 @@ import LoadingOrError from '@/components/LoadingOrError'
 const CYCLE = ['edit', 'view', 'blocked']
 
 const LEVEL_STYLE = {
-  edit: { Icon: Check, className: 'bg-teal-600 text-white border-teal-600', label: 'צפייה ועריכה' },
+  edit: { Icon: Check, className: 'bg-teal-700 text-white border-teal-600', label: 'צפייה ועריכה' },
   view: { Icon: Eye, className: 'bg-white text-teal-600 border-teal-500', label: 'צפייה בלבד' },
   blocked: {
     Icon: Minus,
@@ -104,7 +104,7 @@ export default function PermissionsMatrixPage() {
 
     if (error || !data || data.length === 0) {
       setPermMap((prev) => ({ ...prev, [key]: current })) // rollback לערך שלפני הקליק
-      setCellError('השינוי לא נשמר. נסה שוב.')
+      setCellError('השינוי לא נשמר — נסי שוב.')
     }
   }
 
@@ -128,6 +128,11 @@ export default function PermissionsMatrixPage() {
           </div>
         ))}
       </div>
+      {/* ✏️ 09/09/2026 (לילה-הטקסטים, שלב 10): מעריך-טרי מדד שאין כפתור-שמירה ואף מילה על מה
+          לחיצה עושה. תוצאת-לחיצה (⑥) יושבת בבסיס תמיד, לא בשכבה (המדריך H2) — משפט-עזר אחד, בלי נקודה (R3). */}
+      <p className="-mt-4 mb-6 text-xs text-slate-500" data-testid="perm-click-note">
+        לחיצה על עיגול מחליפה את ההרשאה ושומרת אותה מיד
+      </p>
 
       {cellError && <p className="text-red-600 text-sm mb-4">{cellError}</p>}
 

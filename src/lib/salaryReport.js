@@ -192,7 +192,7 @@ function shapeLine(row, index) {
   if (!isActual && ((bonusRaw ?? 0) !== 0 || (travelRaw ?? 0) !== 0)) {
     throw salaryReportError(
       'SALARY_COMPENSATION_LINE_HAS_EXTRAS',
-      `שורת פיצוי-ביטול ${position} הגיעה עם בונוס או נסיעות — נוגד את ה24/ה29.`,
+      `שורת פיצוי-ביטול ${position} הגיעה עם בונוס או נסיעות, וזה אינו אפשרי בשורת-פיצוי — הדוח לא הורכב.`,
     )
   }
 

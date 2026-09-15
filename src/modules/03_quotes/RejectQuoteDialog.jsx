@@ -37,7 +37,7 @@ export default function RejectQuoteDialog({ open, onOpenChange, quote, onConfirm
       tone="reject"
       title={`דחיית הצעה ${quote?.quote_id ?? ''}`}
       description={`${quote?.event_name ?? ''} · ${quote?.customers?.company_name ?? ''}. ההצעה תיסגר ולא ניתן יהיה לערוך אותה שוב.`}
-      confirmLabel="דחיית ההצעה"
+      confirmLabel="דחי את ההצעה"
       savingLabel="דוחה..."
       fallbackError="דחיית ההצעה נכשלה."
       onConfirm={handleConfirm}
@@ -47,7 +47,7 @@ export default function RejectQuoteDialog({ open, onOpenChange, quote, onConfirm
       {({ clearError }) => (
         <>
           <fieldset className="flex flex-col gap-2">
-            <legend className="text-sm font-medium text-slate-700 mb-2">סיבת דחייה *</legend>
+            <legend className="text-sm font-medium text-slate-700 mb-2">סיבת דחייה</legend>
             {MANUAL_REJECTION_REASONS.map((option) => (
               <label
                 key={option}
@@ -77,7 +77,7 @@ export default function RejectQuoteDialog({ open, onOpenChange, quote, onConfirm
           {needsNotes && (
             <div className="flex flex-col gap-1.5">
               <label htmlFor="rejection-notes" className="text-sm font-medium text-slate-700">
-                פירוט *
+                פירוט
               </label>
               <Input
                 id="rejection-notes"

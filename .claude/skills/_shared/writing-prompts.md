@@ -205,6 +205,20 @@ nothing to sort — which is why the user-walk before "done" is a separate gate.
     The same prompt's target file was one of six that a Discovery-stage prompt
     writes without a single commit instruction.)*
 
+21. 🔴 **Write the paste-block LAST — after the conversation's final ruling — and once it is
+    reviewed, freeze it.** A ruling that arrives afterwards goes into the plan the block
+    points at, never into the block. If you must reopen it, one edit, one fresh-eyes pass,
+    then frozen again. ⚠️ **Not a ritual for every prompt** — only for a paste-block that a
+    session will execute from, where decisions were still moving while it was written.
+    *(Measured 07/09/2026: a brief written at 03:45, then patched ~10 times over 13 hours as
+    rulings kept arriving, went 141 → 306 lines and needed **three** fresh-eyes rounds — 7
+    blockers, then 7 more, mostly in the patches themselves (one would have wiped every
+    document off the disk at 22:05). The plan it pointed at, written once by a fresh agent
+    from finished research, needed only small corrections. Ishay: *"מה הקטע עם כל הסבבים…
+    כנראה התוכנית לא נכתבה טוב מהיסוד"* — it was not the plan; it was writing the block
+    before the deciding was done. The right order: freeze → write once → one round → fix →
+    done.)*
+
 🚫 **Considered and rejected — heartbeat file + receipt-ack on every message**
 (the sixth of that 01/08 batch): measured here, **zero messages have ever been lost**
 — the platform queues across session death, proven in the 05:28 crash. It solves a

@@ -728,7 +728,7 @@ describe('S1 — מסלול-הכניסה ל-S3 (הכרעת Q-2)', () => {
   it('כפתור "הפקת דוח-שכר" קיים בכותרת ופותח את הדיאלוג', async () => {
     await renderPage()
     const button = screen.getByTestId('finance-open-salary')
-    expect(button).toHaveTextContent('הפקת דוח-שכר')
+    expect(button).toHaveTextContent('הפקת דוח שכר דיילות')
     expect(screen.getByTestId('salary-dialog')).toHaveAttribute('data-open', 'false')
     fireEvent.click(button)
     expect(screen.getByTestId('salary-dialog')).toHaveAttribute('data-open', 'true')

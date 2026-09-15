@@ -160,7 +160,7 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
                         data-testid={`quote-line-product-${line.key}`}
                         aria-describedby={isInactiveProduct ? inactiveNoticeId : undefined}
                       >
-                        <SelectValue placeholder="בחירת מוצר..." />
+                        <SelectValue placeholder="בחרי מוצר" />
                       </SelectTrigger>
                       <SelectContent dir="rtl">
                         {productGroupsFor(line.sku).map((group) =>
@@ -297,8 +297,8 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
                       <Button
                         type="button"
                         variant="link"
-                        title="הסרת פריט"
-                        aria-label={`הסרת פריט: ${line.itemName || 'ללא מוצר'}`}
+                        title="הסירי פריט"
+                        aria-label={`הסירי פריט: ${line.itemName || 'ללא מוצר'}`}
                         onClick={() => removeLine(line.key)}
                         className="h-auto p-0"
                         data-testid={`quote-line-remove-${line.key}`}
@@ -332,7 +332,7 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
             data-testid="quote-line-add"
           >
             <Plus className="size-4" />
-            הוספת פריט
+            הוסיפי פריט
           </Button>
         )}
         {error && (

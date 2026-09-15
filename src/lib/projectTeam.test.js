@@ -53,10 +53,12 @@ describe('assignmentMeaning — משפט לכל מצב, לעולם לא ציון
     )
   })
 
+  // 🔬 שלב 4 — R7: "אנחנו ויתרנו עליה" (הנוסח הקודם) הוא גוף-ראשון-רבים שאינו הודאה-בתקלה.
   it('שוחררה וביטלה נבדלות במילים — הן נראות זהות בתג ואינן (§⑥)', () => {
     const released = assignmentMeaning({ status: 'released' })
     const withdrawn = assignmentMeaning({ status: 'approval_withdrawn' })
-    expect(released).toContain('אינו נספר לה לרעה')
+    expect(released).toContain('לא נספר לרעתה')
+    expect(released).not.toContain('אנחנו')
     expect(withdrawn).toContain('כן נספר באמינות ההגעה שלה')
     expect(released).not.toBe(withdrawn)
   })
@@ -204,14 +206,15 @@ describe('נגזרות-הזמן של זימון', () => {
 })
 
 describe('historyFootnote — הקיפול גלוי במספרים חיים, לא מועתקים', () => {
-  it('‏9 שורות ⇒ 6 דיילות, בנוסח המוקאפ', () => {
+  // 🔬 שלב 4 — "במסד" הוחלף ב"בהיסטוריה" (B8/R10: "מסד" הוא ז'רגון-DB).
+  it("‏9 שורות ⇒ 6 דיילות, בלי ז'רגון-מסד", () => {
     expect(historyFootnote(9, 6)).toBe(
-      '9 שורות במסד, 6 דיילות על המסך: הסטטוס הקובע לכל דיילת הוא של הסבב האחרון שלה. הסבבים הקודמים נשמרים ואינם נמחקים.',
+      '9 שורות בהיסטוריה, 6 דיילות על המסך: הסטטוס הקובע לכל דיילת הוא של הסבב האחרון שלה. הסבבים הקודמים נשמרים ואינם נמחקים.',
     )
   })
 
   it('לשון-יחיד — "1 שורות" היא עברית שבורה', () => {
-    expect(historyFootnote(1, 1)).toContain('שורה אחת במסד, דיילת אחת על המסך')
+    expect(historyFootnote(1, 1)).toContain('שורה אחת בהיסטוריה, דיילת אחת על המסך')
   })
 })
 
@@ -245,9 +248,12 @@ describe('וריאנט הביטול ומקטע שינויי-הכמות', () => {
     expect(hostessCountChanges(changes).map((change) => change.change_id)).toEqual([2])
   })
 
-  it('שורת-העובדה נוקבת בכמות ובמועד-האישור', () => {
+  // 🔬 שלב 4 — המשפט האמצעי ("כל שינוי יופיע כאן בשורה משלו — מה השתנה · בכמה · מי ביצע ·
+  // מתי · והסיבה שנרשמה") הוסר: תיאור-מראש של שורה שהיא עדיין לא ראתה (R28), ו-ScopeChangesSection
+  // מדגים את הצורה בעצמו ברגע שיש שינוי ראשון.
+  it('שורת-העובדה נוקבת בכמות ובמועד-האישור, ובהבטחת-הקיפאון', () => {
     const sentence = scopeFactSentence({ required: 6, approvedOnText: '12/08/2026' })
     expect(sentence).toContain('הכמות עומדת על 6 מאז אישור ההצעה (12/08/2026)')
-    expect(sentence).toContain('מה השתנה · בכמה · מי ביצע · מתי · והסיבה שנרשמה')
+    expect(sentence).toContain('ההצעה עצמה נשארת קפואה ואינה משתנה לעולם')
   })
 })

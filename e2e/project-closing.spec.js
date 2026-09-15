@@ -28,7 +28,7 @@ const ROW_SELECTOR = '[data-testid^="projects-row-"]'
 
 async function login(page, email, password) {
   await page.goto('/login')
-  await page.getByPlaceholder('כתובת דוא״ל').fill(email)
+  await page.getByPlaceholder('כתובת אימייל').fill(email)
   await page.getByPlaceholder('סיסמה').fill(password)
   await page.getByRole('button', { name: 'התחברות', exact: true }).click()
   await expect(page).toHaveURL('/', { timeout: 30_000 })
@@ -138,7 +138,7 @@ test.describe('מודול 6 · דיאלוג-הביטול — המסלול החס
     // לפני כל בחירה: הכפתור ההרסני מושבת (אין סוג-ביטול ואין סיבה).
     const confirm = page.getByTestId('cancel-confirm')
     await expect(confirm).toBeDisabled()
-    await expect(confirm).toHaveText('בטל את הפרויקט')
+    await expect(confirm).toHaveText('בטלי את הפרויקט')
 
     // גם אחרי בחירת-סוג — סיבה ריקה מחזיקה את החסימה, והשגיאה נוקבת בנימוק המדויק
     // (זהה-בייט למה שה-RPC זורק — הדיאלוג והשרת אומרים את אותו משפט).

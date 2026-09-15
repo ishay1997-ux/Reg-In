@@ -39,7 +39,7 @@ export default function CustomersFilterSheet({ filters, onChange }) {
           className="h-auto p-0 text-teal-600 hover:text-teal-700 text-sm"
           data-testid="customers-filter-clear"
         >
-          נקה הכל
+          נקי הכל
         </Button>
       </div>
 
@@ -121,10 +121,10 @@ export default function CustomersFilterSheet({ filters, onChange }) {
               className="w-full h-auto p-2 rounded-lg border-slate-300 text-sm"
               data-testid="customers-filter-has-discount"
             >
-              <SelectValue placeholder="הכל" />
+              <SelectValue placeholder="הכול" />
             </SelectTrigger>
             <SelectContent dir="rtl">
-              <SelectItem value={ANY_DISCOUNT}>הכל</SelectItem>
+              <SelectItem value={ANY_DISCOUNT}>הכול</SelectItem>
               <SelectItem value="yes">יש הנחה</SelectItem>
               <SelectItem value="no">בלי הנחה</SelectItem>
             </SelectContent>

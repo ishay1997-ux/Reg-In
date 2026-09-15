@@ -39,7 +39,7 @@ export default function Topbar({ collapsed }) {
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
         <input
           type="text"
-          placeholder="חיפוש..."
+          placeholder="חיפוש…"
           disabled
           className="w-full h-9 rounded-lg border border-slate-200 bg-slate-50 pr-9 pl-3 text-sm text-slate-500 placeholder:text-slate-400 cursor-not-allowed"
         />
@@ -56,7 +56,7 @@ export default function Topbar({ collapsed }) {
               <span className="text-sm font-medium text-slate-800">{user?.fullName}</span>
               <span className="text-xs text-slate-500">{user?.roleName}</span>
             </span>
-            <span className="size-9 rounded-full bg-teal-600 text-white flex items-center justify-center font-semibold">
+            <span className="size-9 rounded-full bg-teal-700 text-white flex items-center justify-center font-semibold">
               {user?.fullName?.charAt(0) || <User className="size-4" />}
             </span>
           </button>
@@ -78,9 +78,11 @@ export default function Topbar({ collapsed }) {
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
+          {/* ✏️ 08/09/2026: "התנתקי מהמערכת" — מאוחד עם הכפתור המקביל ב-MainLayout.jsx (R30),
+              במקום "צא מהמערכת" (ציווי-זכר) שנשא נוסח שונה לאותה פעולה בדיוק. */}
           <DropdownMenuItem variant="destructive" onClick={handleLogout}>
             <LogOut className="size-4" />
-            צא מהמערכת
+            התנתקי מהמערכת
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

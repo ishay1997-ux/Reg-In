@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import { useConfirm } from '@/components/ConfirmDialog'
 import LoadingOrError from '@/components/LoadingOrError'
+import Hint from '@/components/Hint'
 import LtrFieldGroup from '@/components/LtrFieldGroup'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -78,7 +79,7 @@ const EMPTY_FORM = {
 // בשמונה אתרי-קריאה, כי אתר-קריאה שיישכח חוזר בשקט למצב הקודם.
 // ‏`aria-invalid` הוא גם מה שמפעיל את הגבול האדום המובנה של `Input` (`ui/input.jsx:13`) —
 // אין כאן צבע חדש (כלל 8), ובורר-התכונה גובר בספציפיות על `border-slate-300` שבאתר-הקריאה.
-function Field({ id, label, error, children, className }) {
+function Field({ id, label, error, children, className, helper }) {
   const errorId = `${id}-error`
   const markedChild =
     error && isValidElement(children)
@@ -90,6 +91,9 @@ function Field({ id, label, error, children, className }) {
         {label}
       </label>
       {markedChild}
+      {/* R4/R26: עובדה שרוב המשתמשות צריכות לפני שהן כותבות כאן (המסמך יוצא ללקוח) —
+          לא מאחורי מתג, אבל גם לא בתווית עצמה (R1: תווית = 1–3 מילים). */}
+      {helper && !error && <p className="mt-1 text-xs text-slate-500">{helper}</p>}
       {error && (
         <p
           id={errorId}
@@ -177,7 +181,9 @@ export default function QuoteBuilderPage() {
 
         if (isEditMode) {
           if (!quote) {
-            setLoadError('ההצעה לא נמצאה, או שאין לך הרשאה לצפות בה.')
+            // R30: אותו נוסח כמו ארבעת אתרי-"לא נמצא/ה" של מודול 4 (HostessFormDialog.jsx,
+            // HostessViewCard.jsx, api.js×2) — "X לא נמצא/ה, או שאין לך הרשאה אליו/ה".
+            setLoadError('ההצעה לא נמצאה, או שאין לך הרשאה אליה.')
           } else if (quote.quote_status !== 'in_progress') {
             // טריגר-הנעילה (§7.50) יסרב לעדכון ממילא — עדיף לומר זאת לפני שממלאים טופס שלם.
             setLoadError('לא ניתן לערוך הצעה שאינה בסטטוס "בתהליך".')
@@ -309,7 +315,7 @@ export default function QuoteBuilderPage() {
     setSubmitAttempted(true)
     const found = validateQuoteForm(form, lines, freshToday)
     if (Object.keys(found).length > 0) {
-      toast.error('יש שדות שדורשים תיקון לפני השמירה.')
+      toast.error('יש לתקן את השדות המסומנים לפני השמירה.')
       return
     }
 
@@ -327,7 +333,7 @@ export default function QuoteBuilderPage() {
       const proceed = await confirm({
         title: 'שליחה בלי שינוי',
         message: NO_CHANGES_SEND_CONFIRM,
-        confirmLabel: 'המשך לשליחה',
+        confirmLabel: 'המשיכי לשליחה',
       })
       if (!proceed) return
       // בלי `saveQuoteEdit` — וזו כל הנקודה: אין כתיבה, ולכן `updated_at` והתפוגה נשמרים.
@@ -441,7 +447,9 @@ export default function QuoteBuilderPage() {
             data-testid="quote-back"
           >
             <ArrowRight className="size-4" />
-            לרשימת ההצעות
+            {/* R30: אותו נוסח כמו כפתורי-החזרה של מודול 2 (CustomerDetailsPage/CustomersPage) —
+                "חזרה ל…", לא רק "ל…". */}
+            חזרה לרשימת ההצעות
           </Button>
         </div>
       </div>
@@ -460,7 +468,7 @@ export default function QuoteBuilderPage() {
                 id="quote-customer"
                 // התווית קצרה בכוונה: ההסבר מה החיפוש מוצא כבר כתוב בתוך התיבה עצמה
                 // (placeholder), וכפילות של אותו מידע בשתי שורות היא רעש.
-                label="לקוח *"
+                label="לקוח"
                 error={errors.customerId}
                 className="md:col-span-5"
               >
@@ -475,7 +483,7 @@ export default function QuoteBuilderPage() {
 
               <Field
                 id="quote-event-name"
-                label="שם האירוע *"
+                label="שם האירוע"
                 error={errors.eventName}
                 className="md:col-span-4"
               >
@@ -490,7 +498,7 @@ export default function QuoteBuilderPage() {
 
               <Field
                 id="quote-event-date"
-                label="תאריך משוער *"
+                label="תאריך משוער"
                 error={errors.eventDate}
                 className="md:col-span-3"
               >
@@ -506,7 +514,7 @@ export default function QuoteBuilderPage() {
 
               <Field
                 id="quote-location"
-                label="מיקום *"
+                label="מיקום"
                 error={errors.location}
                 className="md:col-span-3"
               >
@@ -528,7 +536,7 @@ export default function QuoteBuilderPage() {
                   items={[
                     {
                       id: 'quote-start-time',
-                      label: 'שעת התחלה *',
+                      label: 'שעת התחלה',
                       invalid: Boolean(errors.startTime),
                       inputProps: {
                         type: 'time',
@@ -539,7 +547,7 @@ export default function QuoteBuilderPage() {
                     { op: '→' },
                     {
                       id: 'quote-end-time',
-                      label: 'שעת סיום *',
+                      label: 'שעת סיום',
                       invalid: Boolean(errors.endTime),
                       inputProps: {
                         type: 'time',
@@ -575,7 +583,7 @@ export default function QuoteBuilderPage() {
                   items={[
                     {
                       id: 'quote-guests',
-                      label: 'אורחים *',
+                      label: 'אורחים',
                       invalid: Boolean(errors.guests),
                       inputProps: {
                         type: 'number',
@@ -599,7 +607,7 @@ export default function QuoteBuilderPage() {
                     { op: '=' },
                     {
                       id: 'quote-hostess-count',
-                      label: 'דיילות *',
+                      label: 'דיילות',
                       invalid: Boolean(errors.hostessCount),
                       inputProps: {
                         type: 'number',
@@ -621,7 +629,7 @@ export default function QuoteBuilderPage() {
                       className="mt-1 h-auto p-0 text-xs text-teal-600 hover:text-teal-700"
                       data-testid="quote-hostess-reset"
                     >
-                      ההמלצה: {recommendedHostesses} — החזרה
+                      החזירי להמלצה ({recommendedHostesses})
                     </Button>
                   )}
                 {(errors.guests || errors.ratio || errors.hostessCount) && (
@@ -629,6 +637,7 @@ export default function QuoteBuilderPage() {
                     {errors.guests || errors.ratio || errors.hostessCount}
                   </p>
                 )}
+                <Hint id="quoteBuilder.ratio" />
               </div>
             </div>
 
@@ -671,8 +680,8 @@ export default function QuoteBuilderPage() {
                 זו שמבטאת את הכוונה, והפער שמעניין הוא בינה לבין השורות שבפועל. */}
             {actualHostesses > 0 && actualHostesses !== Number(form.hostessCount) && (
               <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                בשורות המפרט {actualHostesses} דיילות, ובפרטי האירוע נקבעו{' '}
-                {Number(form.hostessCount)}.
+                מספר הדיילות במפרט ({actualHostesses}) שונה מהמספר שנקבע בפרטי האירוע (
+                {Number(form.hostessCount)}).
               </p>
             )}
           </section>
@@ -724,7 +733,8 @@ export default function QuoteBuilderPage() {
 
               <Field
                 id="quote-notes"
-                label="הערות להצעה — מופיעות במסמך שנשלח ללקוח"
+                label="הערות (לא חובה)"
+                helper="מופיעות במסמך שנשלח ללקוח"
                 className="md:col-span-8"
               >
                 <textarea
@@ -755,7 +765,7 @@ export default function QuoteBuilderPage() {
             onSave={handleSave}
             onCancel={() => navigate('/quotes')}
             saving={saving}
-            saveLabel={isEditMode ? 'עדכן ושלח' : 'שמור ושלח'}
+            saveLabel={isEditMode ? 'עדכני ושלחי' : 'שמרי ושלחי'}
           />
         ) : (
           // הפאנל (וכפתור השמירה שבתוכו) לא ניתן לחישוב כשסכום ההנחות חורג מ-100% —
@@ -768,7 +778,7 @@ export default function QuoteBuilderPage() {
             <p className="text-sm font-medium text-red-800">
               ההנחות חורגות מ-100% ({Number(form.appliedDiscount)}% +{' '}
               {Number(form.manualDiscount) || 0}
-              %) — לא ניתן לחשב סיכום ולא ניתן לשמור. תקנו את ההנחה הנוספת.
+              %) — תקני את ההנחה הנוספת כדי לחשב ולשמור.
             </p>
           </div>
         )}

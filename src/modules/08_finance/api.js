@@ -74,7 +74,12 @@ async function callWriteRpc(fn, args, fallbackMessage) {
   const { data, error } = await supabase.rpc(fn, args)
   if (error) throw toRpcError(error, fallbackMessage)
   if (data?.ok !== true) {
-    throw toError({ code: 'FINANCE_RPC_SHAPE' }, `${fallbackMessage} (תשובת השרת לא הייתה תקינה.)`)
+    // 🔤 R13 — שגיאה = משפט אחד: הבסיס (`fallbackMessage`, כבר מסתיים בנקודה) מאבד אותה
+    // ומצטרף בקו-מפריד, לא בשתי נקודות נפרדות.
+    throw toError(
+      { code: 'FINANCE_RPC_SHAPE' },
+      `${fallbackMessage.replace(/\.$/, '')} — תשובת השרת לא הייתה תקינה.`,
+    )
   }
   return data
 }
@@ -300,8 +305,7 @@ export const FINANCE_MAX_BYTES = 10 * 1024 * 1024
 export const FINANCE_ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png']
 
 // 🔤 נוסח נעול (מדריך-המיקרו §3.7 — כרטיס-P1): שליחה בלי קובץ אינה אפשרית.
-export const INVOICE_FILE_REQUIRED_NOTE =
-  'חסום: יש לבחור קובץ — שליחה בלי חשבונית אינה אפשרית (כרטיס-P1).'
+export const INVOICE_FILE_REQUIRED_NOTE = 'חסום: יש לבחור קובץ — שליחה בלי חשבונית אינה אפשרית.'
 
 // ולידציה טהורה של קובץ-החשבונית **לפני** ההעלאה. מחזירה סיבה בעברית או מחרוזת ריקה.
 // ⚠️ הבדיקה כאן אינה מחליפה את הבאקט — הוא דוחה בעצמו; היא קיימת כדי שהמנהלת תראה משפט
@@ -498,9 +502,11 @@ export async function sendInvoiceAndRecord({ project, customer, file } = {}) {
   const reason = validateInvoiceFile(file)
   if (reason) throw toError({ code: 'INVALID_FILE' }, reason)
   if (!customer?.email) {
+    // 🔤 B13 — פעולה קודמת לעובדה: "יש להשלים..." פותח ונושא את כל מה שצריך לעשות;
+    // המחסום עצמו יושב מאחורי קו-המפריד ולא לפניו.
     throw toError(
       { code: 'NO_BILLING_EMAIL' },
-      'אין כתובת מייל לחיוב בכרטיס הלקוח — לא ניתן לשלוח את החשבונית.',
+      'יש להשלים כתובת מייל לחיוב בכרטיס הלקוח — בלעדיה אי-אפשר לשלוח את החשבונית.',
     )
   }
 
@@ -525,9 +531,12 @@ export async function sendInvoiceAndRecord({ project, customer, file } = {}) {
   // של מודול 6 (`REPORT_MAX_BYTES = 2MB`, עם בדיוק הנימוק הזה) — תקרה שנמוכה מקיר-המייל כבר
   // בבחירת-הקובץ; היא דורשת גם שינוי-מסך וגם מיגרציית-באקט, ולכן אינה נעשית כאן בשקט.
   if (isAttachmentTooLarge(attachmentBase64)) {
+    // 🔤 B13 + R13 — פעולה ("יש להקטין... ולנסות שוב") פותחת ונושאת את מה שצריך לעשות;
+    // הסייג-החיוני (כלום לא נשלח/נשמר, H2) יושב מאחורי קו-מפריד באותו משפט, לא בשני
+    // משפטים נפרדים.
     throw toError(
       { code: 'ATTACHMENT_TOO_LARGE' },
-      'הקובץ גדול מדי לשליחה אוטומטית במייל — יש להקטין אותו (סריקה או צילום ברזולוציה נמוכה יותר) ולנסות שוב. שום דבר לא נשלח ולא נשמר.',
+      'יש להקטין את הקובץ (סריקה או צילום ברזולוציה נמוכה יותר) ולנסות שוב — הוא גדול מדי לשליחה אוטומטית במייל, ושום דבר לא נשלח ולא נשמר.',
     )
   }
 

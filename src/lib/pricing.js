@@ -237,7 +237,7 @@ export function validateTierRows(rows, product = {}) {
     // סבב-ניקוי E): עד אז אותו כלל בדיוק היה כתוב פעמיים — נבדק שם, נאכף כאן — ושתי
     // הגרסאות יכלו לסטות בשקט. הניסוח של ההודעה נשאר כאן, כי הוא של המסך ולא של הכלל.
     if (!isValidPositiveInt(minRaw)) {
-      rowErrors[i].min_qty = 'מספר שלם גדול מאפס'
+      rowErrors[i].min_qty = 'מספר שלם גדול מ-0'
     } else if (minQtyCounts.get(minRaw) > 1) {
       rowErrors[i].min_qty = 'כמות זו מופיעה כבר במדרגה אחרת'
     }
@@ -245,14 +245,14 @@ export function validateTierRows(rows, product = {}) {
     // ריק = "ללא הגבלה", וזה חוקי לגמרי (כך נראית המדרגה העליונה בכל מוצר בקטלוג).
     if (maxRaw !== '') {
       if (!isValidPositiveInt(maxRaw)) {
-        rowErrors[i].max_qty = 'מספר שלם גדול מאפס, או ריק לללא הגבלה'
+        rowErrors[i].max_qty = 'מספר שלם גדול מ-0, או ריק ללא הגבלה'
       } else if (min !== null && max < min) {
-        rowErrors[i].max_qty = 'לא יכול להיות קטן מ"מכמות"'
+        rowErrors[i].max_qty = 'לא יכולה להיות קטנה מ"מכמות"'
       }
     }
 
     if (!isValidPositivePrice(priceRaw)) {
-      rowErrors[i].special_price = 'מחיר גדול מאפס'
+      rowErrors[i].special_price = 'מחיר גדול מ-0'
     } else if (cost !== null && price < cost) {
       warnings[i].special_price = `מתחת לעלות (${cost} ₪)`
     }

@@ -26,7 +26,7 @@ function renderWith(authState) {
 describe('ProtectedRoute', () => {
   it('מציג טעינה כשעוד לא נטען', () => {
     renderWith({ loading: true, user: null, permissions: {} })
-    expect(screen.getByText('טוען...')).toBeInTheDocument()
+    expect(screen.getByText('טוען…')).toBeInTheDocument()
   })
 
   it('דורש התחברות כשאין משתמש', () => {
@@ -53,7 +53,7 @@ describe('ProtectedRoute', () => {
 
   // ⚠️ שלוש הבדיקות הבאות שומרות על ההבחנה שנולדה בסבב-התיקון של 31/07: "לא הצלחנו
   // לטעון הרשאות" אינו "אין לך הרשאה". בלעדיהן, החזרת שתי ההודעות לאחת לא תפיל דבר.
-  it('כשל בטעינת ההרשאות ⇒ הסבר + "נסה שוב", ולא האשמת המשתמש', () => {
+  it('כשל בטעינת ההרשאות ⇒ הסבר + "נסי שוב", ולא האשמת המשתמשת', () => {
     renderWith({
       loading: false,
       user: { roleName: 'לוגיסטיקה' },
@@ -62,11 +62,11 @@ describe('ProtectedRoute', () => {
       reload: vi.fn(),
     })
     expect(screen.getByText(/לא הצלחנו לטעון את ההרשאות/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'נסה שוב' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'נסי שוב' })).toBeInTheDocument()
     expect(screen.queryByText(/אין לך הרשאה/)).not.toBeInTheDocument()
   })
 
-  it('"נסה שוב" קורא ל-reload של הקונטקסט', () => {
+  it('"נסי שוב" קורא ל-reload של הקונטקסט', () => {
     const reload = vi.fn()
     renderWith({
       loading: false,
@@ -75,7 +75,7 @@ describe('ProtectedRoute', () => {
       permissionsError: true,
       reload,
     })
-    fireEvent.click(screen.getByRole('button', { name: 'נסה שוב' }))
+    fireEvent.click(screen.getByRole('button', { name: 'נסי שוב' }))
     expect(reload).toHaveBeenCalledTimes(1)
   })
 

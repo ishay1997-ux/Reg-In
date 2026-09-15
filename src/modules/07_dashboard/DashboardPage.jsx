@@ -10,6 +10,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import Hint from '@/components/Hint'
 import LoadingOrError from '@/components/LoadingOrError'
 import PermissionAwareEmpty from '@/components/PermissionAwareEmpty'
 import { cn } from '@/lib/utils'
@@ -129,6 +130,7 @@ export default function DashboardPage() {
           onRetry={refresh}
           testId="dashboard-error"
         />
+        {error.detail === SERVER_MESSAGE_RULES[0].text && <Hint id="dashboard.partialSums" />}
       </div>
     )
   }
@@ -185,7 +187,7 @@ const NO_PERMISSION_SENTENCE = 'אין לך הרשאה לצפות במסך הב�
 const SERVER_MESSAGE_RULES = [
   {
     prefix: 'לא ניתן לחשב כספים לפרויקט',
-    text: 'החודש המוצג כולל פרויקט שאי-אפשר לחשב לו כספים — אין לו הצעת מחיר מקושרת, או שההצעה ריקה. יש להשלים אותה במסך הפרויקטים.',
+    text: 'השלימי את הצעת המחיר של הפרויקט במסך הפרויקטים — עד אז הסכומים כאן חלקיים.',
   },
 ]
 

@@ -174,7 +174,7 @@ function AwaitingAnswer({ invite, saving, onAnswer }) {
           disabled={saving}
           onClick={() => onAnswer(SHIFT_RESPONSE.confirm)}
           data-testid="shift-confirm"
-          className="h-auto rounded-xl bg-teal-600 py-3.5 text-[15px] font-bold text-white hover:bg-teal-700"
+          className="h-auto rounded-xl bg-teal-700 py-3.5 text-[15px] font-bold text-white hover:bg-teal-800"
         >
           ✓ אני מגיעה
         </Button>

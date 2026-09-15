@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Pencil } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import LoadingOrError from '@/components/LoadingOrError'
+import Hint from '@/components/Hint'
 import StatTile from '@/components/StatTile'
 import StatusTag from '@/components/StatusTag'
 import RatingStars from '@/components/RatingStars'
@@ -267,8 +268,8 @@ function CardBody({
             type="button"
             variant="outline"
             onClick={onEdit}
-            title="עריכה"
-            aria-label={`עריכת ${hostess.full_name}`}
+            title="ערכי דיילת"
+            aria-label={`ערכי דיילת: ${hostess.full_name}`}
             className="absolute left-12 top-4 h-7 w-7 rounded-md border-slate-200 p-0 text-slate-600"
             data-testid="hostess-card-edit"
           >
@@ -281,7 +282,7 @@ function CardBody({
         <div className="mb-3 flex flex-wrap gap-2">
           <StatTile label="התרשמות המנהלת" value={<RatingStars value={hostess.rating} />} />
           <StatTile
-            label="שיעור היענות"
+            label="שיעור-היענות"
             // 🔴 `null` ולא `0 מ-0`: לדיילת חדשה אין רקורד, ו"0" נקרא כשיפוט שלילי
             // על מי שפשוט טרם קיבלה זימון. אותו כלל בדיוק כמו `טרם נצבר מידע` בציון.
             value={
@@ -294,6 +295,9 @@ function CardBody({
           <StatTile label="יש רכב" value={hostess.has_car ? 'כן' : 'לא'} />
           <StatTile label="אירועים ברבעון האחרון" value={String(derived.quarterEvents)} />
         </div>
+
+        <Hint id="hostess.responsivenessRate" />
+        <Hint id="hostesses.quarterEvents" />
 
         <div className="mb-4 flex flex-wrap gap-1.5">
           {derived.weeksSinceWorkedStale && (
@@ -308,7 +312,7 @@ function CardBody({
           )}
         </div>
 
-        <Section title="שיבוצים קרובים" note="מה שהיא כרגע מחויבת אליו">
+        <Section title="שיבוצים קרובים">
           {derived.upcoming.length === 0 ? (
             <Muted>אין לה כרגע שיבוץ פעיל</Muted>
           ) : (
@@ -320,7 +324,7 @@ function CardBody({
           )}
         </Section>
 
-        <Section title="עבדה אצל" note="לפי לקוח, לא רק ספירה שטוחה">
+        <Section title="עבדה אצל">
           {derived.customers.length === 0 ? (
             <Muted>עדיין לא עבדה אצל אף לקוח</Muted>
           ) : (
@@ -341,9 +345,11 @@ function CardBody({
         </Section>
 
         {/* 🔴 **ריק מוצהר, לא ריק שקט.** הטבלה נכתבת ע"י מודול 6 ותישאר ריקה עד
-                  שייבנה — והמסך אומר זאת במפורש. פאנל ריק בלי הסבר היה נקרא כתקלה. */}
-        <Section title="העדפת-לקוחות" note="שכבה 2 של Smart Match">
-          <Muted>⚠️ עדיין לא זמין — הטבלה נכתבת ע״י מודול 6 ותישאר ריקה עד שהוא ייבנה.</Muted>
+                  שייבנה. כלפי הקוראת זה נראה כמו "עוד אין נתונים" לגיטימי — לא כמו
+                  תקלה — ולכן הטקסט אינו מזכיר מודול או טבלה (ר' ממצא-מבנה בדיווח). */}
+        <Section title="העדפות של לקוחות">
+          <Muted>טרם נרשמו העדפות</Muted>
+          <Hint id="hostess.clientPreferences" />
         </Section>
 
         <Section title="פרטי קשר">
@@ -363,7 +369,7 @@ function CardBody({
         {/* 🔴 בנק ות"ז **רק להרשאת-עריכה** (`processes-approved.md §0`) — התנאי חל
                   בתוך הכרטיס עצמו, לא רק על הגישה אליו. */}
         {canEdit && (
-          <Section title="פרטים עסקיים" note="רק למי שיש לה הרשאת-עריכה">
+          <Section title="פרטים עסקיים">
             <div className="grid grid-cols-2 gap-2">
               <KeyValue label="תעודת זהות" value={hostess.id_number} ltr />
               <KeyValue label="שכר שעתי" value={<Money amount={Number(hostess.hourly_rate)} />} />
@@ -404,7 +410,7 @@ function CardBody({
           )}
         </Section>
 
-        <Section title="היסטוריה" note="לא כולל את השיבוץ הפעיל שכבר מופיע למעלה">
+        <Section title="היסטוריה">
           {derived.history.length === 0 ? (
             <Muted>דיילת חדשה, עדיין אין לה היסטוריית שיבוצים</Muted>
           ) : (

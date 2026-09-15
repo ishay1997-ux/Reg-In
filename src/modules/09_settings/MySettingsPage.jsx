@@ -183,7 +183,6 @@ export default function MySettingsPage() {
         loading={loading}
         error={loadError}
         onRetry={loadError ? loadData : undefined}
-        retryLabel="נסי שוב"
         retryTestId="settings-my-retry"
         skeleton={{ variant: 'table', rows: 4, cols: 3 }}
       />
@@ -210,7 +209,7 @@ export default function MySettingsPage() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="חיפוש לפי שם ההגדרה או שם הפרמטר במערכת"
+            placeholder="חיפוש לפי שם ההגדרה או שם הפרמטר"
             className="h-auto rounded-lg border-slate-300 py-2.5 pr-10 pl-3 text-right"
             data-testid="settings-my-search"
           />
@@ -231,7 +230,7 @@ export default function MySettingsPage() {
           className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500"
           data-testid="settings-my-empty"
         >
-          אין הגדרות בבעלות התפקיד שלך
+          לתפקיד שלך אין הגדרות משלו — כולן מנוהלות בניהול המערכת
         </p>
       ) : (
         <section className="rounded-xl border border-slate-200 bg-white p-4">

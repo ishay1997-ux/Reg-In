@@ -300,6 +300,6 @@ describe('useParamsForm — שמירה וכשל', () => {
 
     expect(outcome).toEqual({ ok: false, written: ['אחוז_מעמ'] })
     expect(result.current.dirtyNames).toEqual(['תנאי_תשלום_ימים'])
-    expect(result.current.saveError).toBe(saveFailedMessage('תנאי תשלום', 'נפילת רשת'))
+    expect(result.current.saveError).toBe(saveFailedMessage('תנאי תשלום ללקוח', 'נפילת רשת'))
   })
 })

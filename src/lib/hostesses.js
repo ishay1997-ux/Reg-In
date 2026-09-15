@@ -147,9 +147,9 @@ export function minWageError(hourlyRate, minWageParamValue) {
   if (min === null) return 'שכר המינימום אינו מוגדר בהגדרות המערכת — לא ניתן לשמור דיילת.'
 
   const rate = optionalNumber(hourlyRate)
-  if (rate === null) return 'יש להזין תעריף שעתי.'
+  if (rate === null) return 'יש להזין שכר שעתי.'
 
-  return rate < min ? `השכר השעתי חייב להיות לפחות ${isolatedShekels(min)} (שכר מינימום)` : null
+  return rate < min ? `השכר השעתי חייב להיות לפחות ${isolatedShekels(min)} (שכר מינימום).` : null
 }
 
 // אימייל כפול — **מזהיר ולא חוסם** (§7.65, הכרעת-ישי 31/07): תיבה משפחתית משותפת היא

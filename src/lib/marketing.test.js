@@ -53,7 +53,7 @@ describe('disabledSendReason — סיבת-השבתת כפתור השליחה', (
 
   it('יש קובץ ויש נמענים ⇒ הודעת ה-mailto-הארוך (הסיבה הנותרת היחידה)', () => {
     expect(disabledSendReason({ hasFile: true, selectedCount: 60, consentedCount: 60 })).toBe(
-      'רשימת הנמענים ארוכה מדי — השתמשו בהעתקה',
+      'רשימת הנמענים ארוכה מדי — השתמשי בהעתקה',
     )
   })
 
