@@ -41,6 +41,18 @@ operational screens were never built to answer — *"את מי לגבות השב
 *(מ3 · מ4 · מ6 · מ8 · מ9 · מ12 · מ15 · מ16 · מ17 · מ20 · מ21 · מ22)*.
 **⏸️ Deferred by ruling 30, drawn and kept in the spec with a return trigger:** מ5 · מ10 · מ11 · מ13 ·
 מ18 · מ26. **מ13 is the first replacement.**
+🆕 **⏸️ Deferred by Ishay's ruling 15/09/2026, same return-trigger treatment: מ23 · מ24.**
+*(‏מ23 = the no-show risk dot beside a hostess's name in m4's `SmartMatchPage` · מ24 = the
+"פירעון צפוי" column in m8's `FinancePage`, tab "ממתין לתשלום".)* 🔴 **Why this row had to be
+written at all: they had no step in ANY phase, and three files disagreed about whether they
+were m11's job** — `processes-approved.md` §1-ג2 called each *"אדווה לקוד מוזג = **פריט-בנייה של
+מ11**"*, `data-set.md` §summary marked both *"מחוץ-להיקף (§מ2–§מ22 בלבד)"*, and
+`processes-approved.md` §⏳ג item 1 stated flatly *"מ23 · מ24 — **אין להם בית**"*. **Ruling 30
+counted 16 built and 6 deferred = 22 of the 26 rows; these two were in neither list**, which is
+how they stayed invisible. ⚠️ **And the cost is what settled it, not the code size:** each is a
+handful of lines, but each lands in **merged, working code** ⇒ a full E2E regression of m4 and
+of m8 respectively, plus its own approval gate — the exact expense ruling 30 cut scope to avoid.
+**Return trigger: after the conference, together with the other six.**
 **⬜ No standalone mockup file:** **מ1 — the shell** *(4 tabs · report chip row · global filters · the five
 envelope states)*, מ23, מ24, מ25. ✏️ **11/09 — and מ1 is NOT a gap, which is the opposite of what this line said until today.**
 Its markup is `design-contract §⑥` *(401 lines, five states included)* + §⑥.1, **and all four approved
@@ -445,6 +457,14 @@ principles + the primitive map for Lorenz · Pareto · stacked · scatter · his
 `stage2-review/m11-charts-rtl-a11y.md` **before the first `<BarChart>`**, and build **one** chart-card
 shell that all the others reuse. 🔴 **RTL is the risk:** the time axis runs LTR inside an RTL page, and
 that is a ruled decision, not an invention.
+🆕 🪤 **And read `design-contract §⑤` for what it does NOT promise, not only for what it rules**
+*(added 15/09/2026)*: **twelve of its items carry `לא אומת`** — among them `orientation="right"` under
+RTL, whether `dir` is inherited into the tooltip box, and keyboard-equivalence for `onClick` on
+`<Bar>`/`<Cell>`. **They are marked unverified because recharts has never run in this repo**, so there
+was nothing to verify them against. ⇒ **this step verifies them in a real browser and writes the answer
+back into `§⑤`** — do not treat an unverified line as a specification, and do not treat it as a gap
+either. 🔑 **Why it matters here specifically: a chart that renders mirrored is not a red test** — it
+looks plausible, and the first person to notice is a judge.
 
 **Step 3.0ג · 🔴 The Excel export — one mechanism, reused by all 16** *(added 11/09 — the word "ייצוא"
 appeared **zero** times in this guide, while all four card files spec the button on every page)*
@@ -490,6 +510,15 @@ A rehearsal flagged the granularity as optimistic. **Split a tab into per-surfac
 one of them slips**; the phase door is the tab, the work unit may be the surface.
 🔑 **Each tab step reads its surface cards in full** — nine sections each — **and is not closed until
 every ruling in §3.3(ג) that touches those surfaces is visible on screen.**
+🆕 🪤 **Step 3.5's first trap is WHERE you copy from, before it is what you copy** *(added 15/09/2026)*:
+**the four approved mockups carry four different markup conventions for the same layer** — `.hint`/
+`.hint-line` · `data-onb`/`data-key`/`data-hint` · `.hl`/`.oa`/`.imh`/`.hm` · body classes `onb-2`/
+`onb-guided`/`onb`. **This was measured and deliberately NOT unified** (`screens-approved.md` §🗂️,
+the "Two Facts" note) **because none of the four ever reaches production** — the production shape is
+`<Hint id="…" />` + a key in `onboardingCopy.js`. ⇒ **copy the layer from each card's §⑩, never from a
+mockup's HTML.** ⚠️ **The failure is silent in both directions:** a mockup class renders nothing, and a
+wrong key renders `null`.
+
 **Step 3.5 · The onboarding layer** — 70 keys copied **verbatim** from each card's §⑩ into
 `onboardingCopy.js`. 🔴 **Convert every `<span class="ltr">` to LRI…PDI** *(`onboarding-layer-contract §5ב`)*.
 🔴 **And no data count enters the copy file** *(`§5ג`, Ishay's ruling 11/09 — 23 were stripped from the
@@ -544,5 +573,7 @@ reality-kill row** *(§3.3)*.
 | ~~**D-2**~~ | ~~🔴 **מ1, the shell, has no mockup** — the single largest guess in this guide~~ | ✅ **CLOSED 11/09/2026, and the original wording was wrong twice over.** ① **"No drawn reference" was false:** `design-contract §⑥` is a **401-line copyable HTML skeleton written for מ1** — sidebar, four tabs, chip row, filters, the "אז מה" line, and **real markup for all five envelope states** — plus §⑥.1 with the four pickers. ② **"It has no mockup" was true but irrelevant:** measured across the four approved files, **every one renders `side` · `tabs` · `picker` · `filters` · `stamp`, and three of four render the masked tab.** ⇒ **the shell is drawn four times over; a fifth file would have shown the same screen a fifth time.** **Ishay ruled it deleted** *(11/09: "המעטפת לא טובה תמחק לדעתי מיותרת גם")*, and `§⑥.2` records the reasoning. 🔑 **What the exercise did produce, and it was the real defect:** the skeleton rendered the picker as a **220px vertical rail** while the approved mockups render a **horizontal chip row** — and **§⑥ is what the build copies**, so it would have shipped with no visible symptom. **Fixed in §⑥.** ⚠️ **The lesson, not the file: a gap recorded once as "no reference" is never re-checked, and it kept being repeated to Ishay as a blocker.** |
 | **D-3** | §7's RLS matrix row for m11 reads *"none (5 reports as Views/RPC, read-only)"* | Written before the Discovery. **Corrected once, in Phase 4**, with all three writes — correcting it now would describe tables that do not exist. |
 | **D-4** | `docs/schema.sql` missing three live columns | Fixed in step 1.1 before anything depends on it. |
+| 🆕 **D-7** | **‏מ23 and מ24 had no owning step in any phase, and three files disagreed about whether they were m11's job at all** | ✅ **RULED 15/09/2026 — Ishay: defer both, with a return trigger** *(§2.2)*. **The defect was not the scope — it was that the scope was never stated:** ruling 30 enumerated **16 built + 6 deferred = 22** of the 26 surface rows, and **these two fell in the gap between the two lists**, so every later sweep read past them. `processes-approved.md` §1-ג2 billed them as m11 build items, `data-set.md` marked them out-of-scope, and `processes-approved.md` §⏳ג recorded plainly that they *"have no home"* — **three live statements, in the same spec folder, never reconciled.** 🔑 **The lesson for the closing audit: an enumeration is only a control if its parts sum to the whole** — 22 of 26 looked complete because nobody subtracted. |
+| 🆕 **D-8** | **The module-11 seed exists only as live rows in the production database — no migration, no script** | Recorded 15/09/2026. The `seed(m11):` commits touch **markdown only** — measured with `git show --name-only`; **zero SQL**. In-database snapshots exist (`bak_projects_20260910` · `bak_assignments_20260910` · `bak_project_finance_20260910`) but **no copy outside the database**. ⇒ **every number the sixteen surfaces display, and all four conference stories, rest on state that `supabase db reset` + migrations cannot rebuild.** **Ishay's ruling 15/09: snapshot now, and a real re-seed script is a debt for after the conference** — see `PROJECT_MASTER §6` and `db_roadmap`. ⚠️ **Not a blocker for the build**; it is a blocker for recovery. |
 | ~~**D-5**~~ | ~~The step guide §① still says **"5 דו"חות"**~~ | ✅ **CLOSED 11/09/2026 — verified this turn, not remembered.** The guide was rewritten end to end: §① now reads **16**, and the old sentence survives only struck through with its correction note *(`module_11_reports.md:15–16`)*. ⚠️ **Left as a closed row rather than deleted, because a builder who inherits "the guide says 5" from anywhere else needs to see it was checked and when.** |
 | ~~**D-6**~~ | ~~`מתחילי` appears twice in live `src/` strings~~ | ❌ **WITHDRAWN 11/09/2026 — the claim was wrong, and a fresh-context reviewer caught it.** Re-measured: **zero** occurrences in `src/` and `e2e/`. The three hits are `מתחילים`, a valid word, **all inside code comments**. The cause is the error class this guide keeps warning about: a `grep` on a **prefix** matched a different word — I measured my reconstruction of the search instead of the word. It was inherited from `spec.md`, now corrected there too. **No debt.** |
