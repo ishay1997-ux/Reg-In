@@ -371,7 +371,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
           <Button
             type="button"
             onClick={onAdd}
-            className="h-auto rounded-lg bg-teal-600 px-4 py-1.5 text-[13px] font-semibold text-white"
+            className="h-auto rounded-lg bg-teal-700 px-4 py-1.5 text-[13px] font-semibold text-white"
             data-testid="repository-add"
           >
             + דיילת חדשה
@@ -559,7 +559,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                       futureActive: deactivateChoice.futureActive,
                     })
                   }
-                  className="h-auto w-full py-2.5 px-4 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700"
+                  className="h-auto w-full py-2.5 px-4 rounded-lg bg-teal-700 text-white font-semibold hover:bg-teal-800"
                   data-testid="deactivate-release"
                 >
                   {releasing ? 'משחררת...' : 'שחררי מהאירועים'}
@@ -645,7 +645,7 @@ function EmptyState({ filtered, canEdit, onAdd, onClear }) {
           <Button
             type="button"
             onClick={onAdd}
-            className="mt-2 h-auto rounded-lg bg-teal-600 px-3 py-1.5 text-[12.5px] font-semibold text-white"
+            className="mt-2 h-auto rounded-lg bg-teal-700 px-3 py-1.5 text-[12.5px] font-semibold text-white"
           >
             + דיילת חדשה
           </Button>

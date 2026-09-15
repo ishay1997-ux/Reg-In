@@ -17,7 +17,7 @@ import LoadingOrError from '@/components/LoadingOrError'
 const CYCLE = ['edit', 'view', 'blocked']
 
 const LEVEL_STYLE = {
-  edit: { Icon: Check, className: 'bg-teal-600 text-white border-teal-600', label: 'צפייה ועריכה' },
+  edit: { Icon: Check, className: 'bg-teal-700 text-white border-teal-600', label: 'צפייה ועריכה' },
   view: { Icon: Eye, className: 'bg-white text-teal-600 border-teal-500', label: 'צפייה בלבד' },
   blocked: {
     Icon: Minus,

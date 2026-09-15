@@ -353,7 +353,7 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
             <Button
               type="submit"
               disabled={saving || savedOk}
-              className="w-full h-auto p-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
+              className="w-full h-auto p-3 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold disabled:opacity-50"
               data-testid="product-form-submit"
             >
               {saving ? 'שומרת…' : isEdit ? 'שמרי שינויים' : 'הוסיפי מוצר'}

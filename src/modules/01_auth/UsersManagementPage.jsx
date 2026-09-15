@@ -277,7 +277,7 @@ export default function UsersManagementPage() {
 
         <Button
           onClick={openAddDialog}
-          className="h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"
+          className="h-auto py-2 px-4 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold"
         >
           + משתמשת חדשה
         </Button>
@@ -366,7 +366,7 @@ export default function UsersManagementPage() {
                 <Button
                   type="submit"
                   disabled={saving}
-                  className="w-full h-auto p-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
+                  className="w-full h-auto p-3 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold disabled:opacity-50"
                 >
                   {saving ? 'שומרת…' : editingUser ? 'שמרי שינויים' : 'הוסיפי משתמש'}
                 </Button>

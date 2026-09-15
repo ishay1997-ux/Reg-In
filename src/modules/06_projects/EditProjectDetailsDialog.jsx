@@ -368,7 +368,7 @@ export default function EditProjectDetailsDialog({
             type="button"
             onClick={save}
             disabled={saving}
-            className="h-auto bg-teal-600 px-4 py-2 text-white hover:bg-teal-700"
+            className="h-auto bg-teal-700 px-4 py-2 text-white hover:bg-teal-800"
             data-testid="edit-project-save"
           >
             שמרי ושלחי זימון מחדש

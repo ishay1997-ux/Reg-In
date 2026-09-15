@@ -258,7 +258,7 @@ export default function PriceTiersDialog({ open, onOpenChange, product, onSaved 
             type="button"
             onClick={handleSave}
             disabled={saving || savedOk || !loaded}
-            className="w-full h-auto p-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
+            className="w-full h-auto p-3 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold disabled:opacity-50"
             data-testid="tiers-save"
           >
             {saving ? 'שומרת…' : 'שמירת המדרגות'}

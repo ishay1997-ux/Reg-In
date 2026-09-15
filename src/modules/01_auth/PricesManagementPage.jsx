@@ -125,7 +125,7 @@ export default function PricesManagementPage() {
             <Button
               type="button"
               onClick={() => openProductDialog(null)}
-              className="h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"
+              className="h-auto py-2 px-4 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold"
               data-testid="prices-add-product"
             >
               + מוצר חדש

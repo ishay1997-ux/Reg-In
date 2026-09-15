@@ -56,7 +56,7 @@ export default function Topbar({ collapsed }) {
               <span className="text-sm font-medium text-slate-800">{user?.fullName}</span>
               <span className="text-xs text-slate-500">{user?.roleName}</span>
             </span>
-            <span className="size-9 rounded-full bg-teal-600 text-white flex items-center justify-center font-semibold">
+            <span className="size-9 rounded-full bg-teal-700 text-white flex items-center justify-center font-semibold">
               {user?.fullName?.charAt(0) || <User className="size-4" />}
             </span>
           </button>

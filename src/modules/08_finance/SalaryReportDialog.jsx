@@ -505,7 +505,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
                   type="button"
                   size="sm"
                   onClick={applyPicker}
-                  className="h-auto rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700"
+                  className="h-auto rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-800"
                   data-testid="salary-report-month-apply"
                 >
                   בחרי
@@ -627,7 +627,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
             <Button
               type="button"
               onClick={() => handleClose(false)}
-              className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700"
+              className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800"
               data-testid="salary-report-close"
             >
               סגירה
@@ -644,7 +644,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
                 title={
                   existingForSelected === undefined ? 'בודקת אם כבר הופק דוח לחודש זה' : undefined
                 }
-                className="h-auto rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-700 disabled:opacity-50"
+                className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800 disabled:opacity-50"
                 data-testid="salary-report-generate"
               >
                 {phase === 'submitting' ? 'מפיקה ושולחת…' : 'ייצאי ושלחי'}

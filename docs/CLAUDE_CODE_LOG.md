@@ -26,7 +26,7 @@
 ## Current State (snapshot — rewritten, not appended)
 <!-- target ~15 lines · no internal dates (F4) · over budget? compress / move to journal -->
 
-**Module 11 (דו"חות) Discovery is MID-FLIGHT on `ishay/module-11-reports` — Stage 0 · 1-א · 1-ב · all eight process cards · cross-module contracts · 18 report definitions · 21 cross-cutting report rules (📐) · `world-sources.md` · `design-contract.md` · `data-set.md` · `seed-plan.md` · `seed-phase-a.md` are on disk, and **28 numbered rulings** sit in `processes-approved.md §🗳️` — that file is the ONLY one in the folder allowed to state a product rule. **M = 26 surfaces approved; 1 of 5 tab mockups drawn** (`drafts/03_tab_finance.html`, 7 pages) and reviewed by Ishay himself. ⚠️ **`screens-approved.md` does NOT exist** — the cards live in `stage2-cards/cards-<tab>.md`, while the template, the handoff and `module_playbook.md` all name `screens-approved.md`, and blueprint/build open it BY NAME; it is to be created at the end of stage 2 as the parent file (מצב table for all 26 surfaces + a pointer per tab). Stage 2 is a HARD STOP until every surface is approved (Ishay). The whole flow runs under his blanket delegation (ruling 3) via `docs/specs/module_11_reports/next-session-prompt.md`.
+**Module 11 (דו"חות) Discovery is COMPLETE and the module is blueprinted but UNBUILT — zero lines of code.** Branch: **`ishay/dashboard-legend-ucd`** *(the `ishay/module-11-reports` older files name was never created — verified local and origin)*. On disk: `spec.md` approved · `screens-approved.md` with **16 surfaces all ✅** · **39 numbered rulings** in `processes-approved.md §🗳️`, the only file in the folder allowed to state a product rule · four approved tab mockups in `mockups/management-report-screen/approved/` *(4 files = 16 surfaces, one per tab)* · nine-section cards per surface in `stage2-cards/`. The blueprint is **`docs/micro_guides/module-11.md`**, live under iron rule 15, five phases, next action **step 1.0**. Four DB items owed: `db_roadmap` **M11-2…M11-5**. All six §7 items closed. 🔴 **The three things a builder must not re-decide: `writeInviteToken` is NOT touched by the rank write** *(it is the resend path and m6 imports it)* · **the export is `write-excel-file` with `rightToLeft: true`** · **Gini is the population variant**, hand-case in `spec.md §🔢 3.3`.
 ✅ **The two 1-line src fixes that were parked for immediately-post-merge are DONE** — verified in code 02/09/2026, not assumed: `QuotesPage.jsx` wraps the address in `encodeURIComponent` (with the `?`/`&` injection reason in a comment beside it), and `QuoteLineEditor.jsx` drives both Selects from controlled values (`line.sku || ''`, `line.color || NO_COLOR_VALUE`) using the sentinel convention. **This line said "parked" until today** — it outlived the work it described, which is the ordinary way a Current-State line goes stale: the fix lands in a commit that has no reason to come back and edit the snapshot.
 `docs/schema.sql` measure command: `grep -c '^create table' docs/schema.sql` (23 at the last audit).
 
@@ -45,6 +45,393 @@
 ---
 
 ## Session Log (newest first)
+
+### 15/09/2026 - pre-build readiness sweep for module 11, and two inherited "facts" that were false
+
+**Ishay's ask:** verify nobody else is writing, then *"tsa'er le-gamrei al ha-mismachim ha-kayamim"* - challenge the existing documents - rewrite the ⑥2 block the `module-build` skill reads on every activation, and merge to `dev` and to production. **No code for module 11 was to be written, and none was.**
+
+**‏① The question he asked first, answered with evidence:** every one of 25 sessions returns `isRunning:false`, last Reg-In activity 11/09; single worktree, no `index.lock`, no rebase or merge in flight. **Only this session was writing.**
+
+🔴 **② Two inherited claims, both false, both repeated to him before this turn:**
+- **The SessionStart hook:** *"16 commits exist only on this machine, among them the `seed_registry` migration - if the machine disappears the table is unrecoverable."* ⇒ `git rev-list --count backup-m11-seed-2026-09-10 --not --remotes=origin` = **0**, and `20260903180958_seed_registry_and_helpers.sql` is on `origin/main` **and** `origin/dev`. **The scariest line in the session banner was the stalest.**
+- **`STATUS.md` roadmap row 955:** *"🧭 Discovery ba-emtsa (06/09)"* ⇒ Discovery closed, `spec.md` approved and the blueprint approved, **all three on 11/09 by 08:15**. The file was last edited at 08:32 that day - **17 minutes after the milestones it does not mention.**
+🔑 **The pattern worth keeping: both were written by a session that was correct when it wrote them.** Neither rotted through neglect of the file - they rotted because the *world* moved and nothing re-reads a banner. ⇒ **a status line needs an expiry, not an author.**
+
+**③ The ⑥2 rewrite, and the request I did not execute literally.** Ishay asked the block to carry *"full guidance on which files to read"*. **`module-build/SKILL.md` forbids exactly that**, in writing: *"Read the list itself; do not work from a list restated here or anywhere else"* - **and carries the measurement underneath it: on 08/08/2026 the same rule was written into a ⑥2 and into the skill hours apart, and the two contradicted each other within nine hours.** ⇒ **the block still routes to `spec.md §①`; what changed is that the routing is now unskippable.** Told him so plainly rather than complying and letting the duplicate rot. **Five additions, each lifted from a guide that already proved it:** a **reading mandate** (nothing like it exists in any guide - read end-to-end, `grep` is not reading because §7 and `processes-approved` grow *head-then-tail* so a quote from the opening quotes the **question**, 310KB is over the read-tool ceiling, **and report in one line what was read in full** - without it a session that read and a session that skipped emit identical output) · the **DB gate** from `module_05` *(the only guide carrying it, and m11's phase 1 is five migrations plus a seed run)* · **the definition beside every number** from `module_06` *(aging is measured against the DUE DATE, which is what conference story ② rests on)* · `kra, al tenachesh` from `module_04` · **and the two closing lines `module_08` kept when it trimmed from 85 lines** - which m11's own 11/09 trim had dropped while claiming to copy m8.
+
+**④ What the challenge actually found** (the part that justifies the sweep):
+- **‏מ23 · מ24 had no step in any phase**, and **three live statements in one spec folder disagreed**: §1-ג2 *"build item of m11"* · `data-set.md` *"out of scope"* · §⏳ג *"they have no home"*. **Root cause: ruling 30 enumerated 16 built + 6 deferred = 22 of 26 surface rows, and these two fell in the gap between the two lists.** 🔑 **An enumeration is only a control if its parts sum to the whole.** ⇒ **Ishay ruled 15/09: defer both with a return trigger** (D-7).
+- **Five §⏳ items were being read as live blockers; four were already dead** - ⏳7 · ⏳12 · ⏳ב1 · ⏳ב2 all required a surface ruling 30 deferred on **10/09**, and nobody closed the rows. **Two are genuinely live** - ⏳10 and **⏳13, whose page is מ12, which IS built, in step 3.2** - plus `מ12`'s own row carrying `(basis - Ishay's ruling open)`. **All three copied into `spec.md §🎯`, because that is where ⑥2 sends the build session**; they had been sitting in a 310KB file it never has to open whole.
+- **`db_roadmap` M11-1**: the status cell still read *"⬜ Not applied"* while **the head of the same row** recorded the apply on 08/09. Verified live: migration file present, `schema.sql:1820`. **A sweep reads the status column** - a stale cell under a corrected header is invisible in the one direction that matters.
+
+**⑤ The finding nobody asked for, and it is the biggest.** **The module-11 seed is not in version control at all.** `git show --name-only` over every `seed(m11):` commit: **markdown only, zero SQL.** ⇒ `supabase db reset` + every migration yields a correct **empty** schema and **not one number the sixteen surfaces display**. **Ishay ruled: snapshot now, real re-seed script deferred past the conference.** Done: `scripts/seed-snapshot/` - capture into a dedicated `seed_snapshot` schema (**not `public`**, because build step 1.1 regenerates `docs/schema.sql` and would have swallowed 23 backup tables), **23 tables / 20,996 rows, verified 23/23 `MATCH`**, plus a deliberately-locked restore script and a README. ⚠️ **Stated honestly to him and in all three documents: this is an IN-DATABASE copy** - it survives a bad `UPDATE`, **not a lost project**. The off-database dump needs the DB password and is **his to run**; Claude does not enter credentials.
+
+**⑦ The `CLAUDE.md` collision — and three of my own claims that did not survive checking.** The merge to `dev` surfaced a conflict in root `CLAUDE.md`: `dev` carried 241 lines of numbered iron rules, the branch carried 86 lines of architectural runbook with **zero** numbered rules, while **400+ call sites and 11 skills address those rules by ordinal**. Put it to Ishay rather than resolving it — deleting the rule interface is not a merge decision. He asked for the council (Sonnet ×4 + Opus ×1).
+
+🔴 **What I got wrong, in order, and what corrected each:**
+- **"The compression 285→241 dropped rules 15 and 16."** False — checked the pre-compression file; they were not there either. I measured my reconstruction of a cause instead of the cause.
+- **"The breakage has already happened."** False — `dev`'s file carries a **redirect table** (*"הכללים שנגרעו מכאן — ואיפה הם חיים עכשיו"*) routing all nine rules not written out in full. My grep pattern matched bold headers and not table rows, so I read a working router as a hole. **A negative grep result is a claim about the pattern, not about the file.**
+- **"The branch deleted the rules."** Incomplete, and this was the one that mattered. The branch rewrote **the whole tree**, consistently: root 241→86 · `src/` 458→73 · `supabase/migrations/` 224→80 · `docs/` 175→66 · `e2e/` 133→62 — **every file under 80 lines**, with each of the six items I thought were lost living in its correctly-scoped file. **It was a coherent restructure, not a deletion**, and only the rules index was genuinely gone.
+
+📚 **Then checked the current guidance instead of reasoning from priors** (Ishay's push: *"what was true six months ago isn't necessarily true now"*). Anthropic's published target is **under 200 lines**, restated in four live places incl. a June-2026 blog — **not 80, and not relaxed for newer models.** Three facts that reshaped the options: `@import` **does not reduce context** (*"imported files still load at launch"*) · content moved to an ordinary doc **stops loading entirely** — which would have buried it · and `CLAUDE.md` is meant to be *"an index pointing to other files"*.
+
+✅ **Resolution: keep the branch's whole restructured tree, restore ONLY the index.** Root is **124 lines** — the 86-line runbook plus a 17-row rules index with each rule's address, and rule 10 written out in full because it is a gate, not a lookup. Both goals met: Ishay's lean tree survives, and every one of the 400+ pointers resolves.
+
+🆕 **And the thing that stops this recurring — `scripts/check-iron-rules.mjs`, wired into `npm run gate`.** Every `iron rule N` / `כלל ברזל N` cited anywhere must resolve to an index row. 🔑 **Verified by BREAKING it, not by watching it pass:** removed rule 10's row ⇒ exit 1, naming 16 citing files; restored ⇒ byte-identical, exit 0. **This is what was missing all along** — the rules were an interface with 400 callers and no resolver, so the one failure mode nobody could see is now a red build.
+
+**⑥ Rule 10, and where I stopped.** His instruction was *"merge to dev and then to production"*. **Rule 10 as he himself amended it on 10/09 permits the `dev` merge** (explicit, present-tense, first-person, in-chat - it was) **and in the same paragraph says pushing to `main` without a PR stays forbidden *"including under an explicit instruction"***. A PR is not a direct push, so the path is legal - **but he wrote that the carve-out stops at `dev` on purpose**, so I put it to him rather than deciding. **He extended it explicitly (15/09).** 🔑 **Recorded here as a dated authorization for this chain - `CLAUDE.md` rule 10 itself was NOT rewritten.** Widening a standing rule is his sentence to write, not my inference from an answer to a question.
+
+### 11/09/2026 (13:3X-14:0X) - the acceptance check had no file pointers, and the conference stories were in neither check
+
+**Ishay:** *"bebedikot hosaft et kol hakvatzim she-ya-azru lahem sham lehafeel shikul daat nachon? gam al hamasachim vegam al hasipurim?"* - **the answer was no, on both.**
+
+**Gap ①: not one item in the acceptance list said WHICH FILE to open.** A tester without the file in hand **verifies against memory**, and that is precisely the failure that recurred five times in one day in this module - *measuring a reconstruction of the definition instead of the definition*. **Every row now carries its file and section**: the baseline register for the authoritative numbers · card §③ for where each figure comes from · rulings 2 and 15-heh for the masking · §📐13 for the drill · `spec.md §🔢` for the aging oracle **and** the Gini variant · the onboarding contract for the toggle · and **`src/lib/salaryReport.js:39` for `rightToLeft:true`**, the one export detail no test in this repo catches. 🔑 **A filename costs a line; a search costs the check.**
+
+🔴 **Gap ②, and it is the serious one: the four conference stories appeared in NEITHER the acceptance list nor the QA matrix.** **The backbone of the hour, unchecked in both places.** They now have a section of their own - per story: **the sentence said aloud · the page behind him · and exactly what to check** - carrying the three traps found today: the word *"מאגר"* means **106** on מ17 and **186** on מ14 **in the same file** · the drifting-customers table draws **8 of 12 rows** sorted by revenue, so **a judge counting highlighted rows counts three while Ishay says four** · and story ④ is untrue until the run lands. **The forbidden sentence is listed with its replacement, and the replacement is marked unverified rather than quietly promoted.**
+➕ **The QA matrix gets the matching row with the reason it must exist:** **no automated test can catch a story that contradicts its screen** - a test checks that the number is right, not that the sentence said about it is right. **Both pasted prompts now route there**, so build and close each see it.
+✏️ **Four stale items corrected while in the file:** the entry-state section wrote *"six §7 items"* and listed **four** - **the same defect as the blueprint header, in the second file**, and the two it dropped are the two step 1.4 leans on · the reading list said **13** where there are **17** · the debt count said **seven** where there are **eight** · and three rows under *"what the build must bring you"* were closed today and still read as open.
+
+### 11/09/2026 (13:0X–13:3X) — story ④ is not fixable yet, so it got a return trigger and a dated fallback instead
+
+**Ishay:** *"רוצה לסדר עכשיו או מיותר?"* — **measured before answering, rather than reasoning about it:** the two AI tables do **not** exist in `docs/schema.sql` and `supabase/functions/classify-feedback` does **not** exist. ⇒ *"fix it now"* means **building the whole AI layer out of order**, and it depends on a Gemini key only Ishay can install *(step 2ב.1, a 🧩 step)*. **Answer: not now.**
+
+✅ **But two cheap things were genuinely missing, and they are the difference between *scheduled* and *hoped for*:**
+**‏① A return trigger.** Step 2ב.4 already names story ④ by name — good — **but nothing said that when the run lands, someone flips the ⚠️ row in the handoff to ✅.** ⇒ **the story would have stayed flagged forever and nobody would learn it became true.** That is now the step’s last action. 🔑 **This is the same class as the three stale items found earlier today** *(D-2 · ⏳1 · `0.4299`)*: **a flag with no one responsible for clearing it is not a flag, it is a permanent scar.**
+**‏② A dated fallback instead of a hope.** The step depends on something Claude cannot discharge ⇒ **if the run is not approved by `08/10/2026`, story ④ is *replaced*, not postponed**, and the replacement is written out rather than left to be invented under pressure: *"‏426 free-text comments; **33 sit on feedback tagged 'אחר'** — the largest negative bucket in the system, **and nobody has read them yet.**"* **Both figures are on the approved מ22 today**, it needs no run, no key and no tables, it passes all five story rules, and **it frames the AI layer as the answer rather than claiming it already ran.** *(The date is marked as a recommendation, not a ruling.)*
+
+### 11/09/2026 (12:3X–13:0X) — the shell mockup deleted on Ishay's call, and the permission item closed on his approval
+
+**Two calls of his, and the measurement backed him on both.**
+
+🗑️ **The shell mockup is deleted.** *"המעטפת לא טובה תמחק לדעתי מיותרת גם לא?"* — **measured before agreeing:** all four approved mockups already render the complete shell (**each carries `side`·`tabs`·`picker`·`filters`·`stamp`; three of four also render the masked tab**). ⇒ **a fifth file would not have shown a sixteenth surface — it would have shown the same screen a fifth time**, and every cross-cutting edit *(the hint data-counts stripped that same morning, for one)* would have had to touch five files and stay consistent across them. Recoverable from `git log`.
+✅ **What the exercise did produce is kept, and it was the real defect:** the `§⑥` skeleton laid the report picker out as a **220px vertical rail** while the approved mockups lay it out as a **horizontal chip row** — and **§⑥ is labelled "HTML to copy"**, i.e. what a build session reads ⇒ **it would have shipped with no visible symptom.** **Ishay caught it by eye within minutes of the file rendering**, which is the whole argument for showing him a rendered page rather than describing one.
+🔴 **And D-2 is closed with the correction stated, because D-2 is what caused all of it.** It said the shell had *"no drawn reference"* and called it *"the single largest guess in this guide"*. **The first half was simply false** — `§⑥` is 401 lines with real markup for all five envelope states — **and the second half followed from it.** ‏**I repeated it to Ishay as a blocker more than once without ever reopening the file that disproves it.** §2.2, step 3.0 and the screens register are aligned to the same truth. 🔑 **The class, again, and it is the third instance today: an item recorded once as a gap is never re-checked — it is only re-quoted.**
+✅ **⏳1 closed on his approval**, and the three stale cells aligned: ruling 34's status cell, the spec table, and a card line claiming *"ruling 34 closed ⏳1"* — **wrong twice over**, since ruling 34 itself calls the `view` grant *"צעד הכרחי ולא מספיק"* (the finance tab opens on module 6). **What actually closed it is his 23:0X ruling: the matrix stays, each role works through her own operational screen, and the gap is declared on the page.** ➕ **And the blueprint's test-identity note was rewritten accordingly** — the logistics manager being masked out of report 11 is now marked as **the expected result to assert, not a bug to fix by granting a permission.**
+
+### 11/09/2026 (12:0X–12:3X) — the conference story whose page was deferred out from under it, and five rules derived from four failures
+
+**Ishay:** *"לגבי הסיפורים לדעתי כתבו על זה כללים לא באמת אכפת לי איזה סיפורים רק שיהיה הגיוני ומעניין אתה יודע"*. **He was right that rules exist**, and they are not mine to re-invent: **ruling 7** is the method — *"חשיבה מעמיקה סביב איזה סיפור רוצים לספר, בונים תוכנית זריעה וזורעים… לא להתרגש"* — and **`seed-plan.md §1` is the shape**: stage sentence · data pattern · what is measured today · mechanism · **and what must not be seeded.** The replacement is written in that shape, not a new one.
+
+🔑 **The finding that matters more than the replacement: story ② never broke — its page was deferred out from under it.** The measurement *(‏68.5 vs 34 by `customer_type`, `n=56`/`519`)* **is still valid.** But `68.5` renders **only on מ10**, and **ruling 30 deferred מ10 on 10/09 — a month after the story was written — and nobody went back over the stories.** The original stays in the file as history: if מ10 returns, the story returns with it, after fixing its two labels.
+**The replacement — "the forgotten invoice", on מ9, which is built:** open debt **236,382 ₪ across 35 invoices**, median **35 days**, against an oldest invoice open **574 days** *(מועצה מקומית שוהם, sent 14/01/2025)*. ‏**Four reasons it was chosen and not just any built page:** ‏① **zero seeding** — every figure is already on the approved screen · ② it rests on **the one number in this module hand-computed before any code existed** *(`spec.md §🔢`)* ⇒ **the story and the acceptance oracle are the same object and cannot drift apart** · ③ it carries its own *"why did you build it this way"* — aging is measured **against the due date, not the send date**, and measuring from the send date inflates every bucket by the payment terms · ④ it keeps the original's spirit *(a government customer paying slowly)* on a page that will be on screen.
+🔒 **And five story rules, derived from the four failures rather than asserted:** ‏① the number must be on screen character-for-character *(① once said 156 where the page says 48)* · ② **the population in the sentence must be the population the page declares** — *the most common failure and the invisible one: two correct numbers, two populations, one sentence* · ③ the label must mean what the sentence says *(② — "days to pay" is not "days late")* · ④ what the sentence claims happened must already have happened *(④ — the page declares four times that no run exists; **step 2ב.4 is what makes it true, and it must not be told before that step runs**)* · ⑤ 🔴 **the page must be a page that gets built** ⇒ **any scope ruling now triggers a pass over the four stories.**
+➕ **And his delegation line is recorded beside them:** *"לא באמת אכפת לי איזה סיפורים רק שיהיה הגיוני ומעניין"* ⇒ **the choice is delegated; the five rules are not** — an interesting story that fails one of them breaks the hour, because the judge is looking at the screen while the sentence is said.
+
+### 11/09/2026 (11:3X–12:0X) — Ishay looked at the shell and caught a layout the approved mockups had abandoned
+
+**His words, on the file I had just sent:** *"לא סיכמנו בלי סרגל צד ועם טאבים למעלה?"* · *"הכוונה לעשות כפתורים שלוחצים וזה פותח את הלשוניות של הדוחות"* · *"אסור שבפיתוח יפלו בזה גם"*.
+
+**He was right, and the source was not his mockups.** All four approved tabs render `.picker` as `display:flex; flex-wrap:wrap; width:100%` — **a horizontal chip row above the page**. **The skeleton in `design-contract §⑥` renders it as `flex-direction:column; width:220px`, inside a two-column flex wrapper** — **a second vertical rail in a screen that already has one.** I built the shell from the skeleton, so it inherited a layout the approved mockups had already left behind.
+
+🔑 **And his third sentence is the one that mattered, not the first two.** ‏§⑥ is labelled *"שלד-HTML להעתקה"* and is what a build session copies ⇒ **fixing only my mockup would have left the mine armed for the build, while making the symptom invisible.** Fixed in both; the CSS is lifted **verbatim** from `03_tab_finance_approved.html:168-175` with the reason recorded beside it, and the two-column wrapper is gone from both files.
+➕ **And the chips now do what he described** — clicking one marks it current and opens that report: the page heading becomes its short name and the line beneath it the question, **both copied word-for-word from the four approved mockups’ banners** *(ruling 18: short name in navigation, question as subtitle)*.
+⚠️ **One bug of mine, caught by verifying instead of assuming:** `querySelector('h1')` grabbed the **top-bar** heading, so the first chip click renamed the app chrome from `דו"חות` to the report name and left the page heading untouched. Explicit id now. Re-verified in the browser: top bar stays, heading and question follow the chip, zero console errors, no horizontal scroll at 1280.
+🔑 **The durable lesson, and it is the same class as §⑥.1 an hour earlier:** **a skeleton labelled "copy this" is a source of truth for appearance, and when the drawings move on, nobody re-opens the skeleton.** Both of today’s layout defects lived there, and both were found by someone looking at a rendered page — not by reading the file.
+
+### 11/09/2026 (10:0X–11:3X) — the shell drawn, §⑥.1 gone over, and two agents that broke a conference story
+
+**Ishay: *"סגור מה שאתה יכול, העזר בסוכנים אם תרצה"*.**
+
+🔴 **First, a correction I owed him twice.** I had reported מ1 (the shell) as *"the single largest guess in this guide — no drawn reference"* and as *"the one item that actually blocks you."* **Both were inherited from D-2 and both were wrong.** ‏`design-contract §⑥` holds a **401-line copyable HTML skeleton written for it** — sidebar, four tabs, chip row, global filters, the "אז מה" line, and **real markup for all five envelope states** — plus §⑥.1 with the four tab pickers. **What was missing was a file anyone could open.** Built it: **`drafts/01_shell.html`, 505 lines** — the same skeleton plus live tab-switching, the two mockup toggles in the house convention, and a masked tab that **actually refuses the click**. **Rendered and measured, not assumed:** zero console errors · `scrollWidth − clientWidth = 0` at 1280 · finance shows 7 chips with 3 `deferred` · clicking the masked tab leaves `aria-selected="false"` and does not switch the picker. Draft; `approved/` only after his eyes. 🔑 **The lesson is about the class, not this file:** *a gap recorded once as "no reference" stays that way in every later report, because nobody re-opens the file that would disprove it.*
+
+✏️ **§⑥.1, on his explicit instruction, and it was carrying three defects a copier inherits:** ‏① the chip lists gave **hostesses 7 where the approved mockup shows 4**, and finance 7 **without the `deferred` marking** — while the note directly above them says *"ארבעה שבבים, לא חמישה או שישה"*. **A correction written as prose over code nobody changed is not a correction; the drawer copies the code.** ② the drafts path it names, **`docs/mockups/reports-screen/`, does not exist** — `ls docs/mockups/` returns thirteen directories and none is it ⇒ obeying the line creates a new folder and loses the four approved files from view. ③ the shared "today" stamp is **10/09/2026** in all four approved mockups, not the 06/09 it claimed. ➕ **And a genuine conflict resolved toward the mockup:** §⑥.1 said a deferred page's chip is *removed*, the approved finance mockup *dims it*. **Ishay's own rule — *"מראה ⇐ המוקאפ מכריע"*** ⇒ the note was corrected, not the drawing. *(Both patterns are live and that is deliberate: deferred **inside** a built tab is marked; what took a whole tab off the board is gone.)*
+
+🔴 **Two agents (Opus story-check · Sonnet drift-sweep), and between them four blockers — two of which were mine from this same session.**
+**The heavy one — conference story ② is broken, and not because of its number.** ‏**(א)** `68.5` is **not on מ9**; it is at `03_tab_finance_approved.html:1330`, inside **`דף 4 · מ10`** *(section 1272–1602, verified)*, and **מ10 is ⏸️ deferred by ruling 30** ⇒ **the sentence points at a screen that will not be behind him.** ‏**(ב)** the tile reads *"ימים לתשלום"* while the page's own definitions line *(1593)* says lateness is measured **beyond the contractual date** — *"38 מעבר לחוזי = 68 מהחשבונית"* ⇒ real lateness is **~38 vs ~4**, not "68.5 vs 34"; **the tile is right and the spoken so-what line is not.** ‏**(ג)** the on-screen denominator *"38 חשבוניות"* has **no source**, and the one that exists says **56** *(`data-set.md:583`)*. **Recorded in the handoff with a recommendation — replace the story with one that sits on a built page — and left as his ruling.** ⚠️ **Story ④ is not broken but is *not yet true*:** the page declares four times that no run exists, and **step 2ב.4 is what makes the sentence true** ⇒ it must not be told before that step runs.
+🔴 **And the two that were mine, today:** ‏**①** the **Live Status Header still listed four §7 items** after §3.1 was corrected to six — *the correction never travelled to the line a resuming session reads first*, and the two it dropped are the two step 1.4 needs. **②** the QA-matrix row whose entire point is *"half a finding is not a finding — check both halves"* asserted `0.4299` **appears zero times in the repo**. **It appears five times.** *I did not check that half.* ➕ **and a third, from the same class:** I wrote *"90 onboarding keys"* from a `grep` on `reports.*` that also matches `salary_reports.total_amount` — **the count is 70**, and my measurement only ever proved the key **sets** still match after the edit. ➕ **Also fixed:** `screens-approved.md` contradicted its own table in a note sitting **between the legend and the table**, claiming the seven finance surfaces were still 🔶.
+
+### 11/09/2026 (07:3X–10:0X) — the three checks that had not run, a read-through that found a spec instruction the code cannot execute, and the hint counts stripped
+
+**Two questions from Ishay drove this, and the second one is the reason there is anything here.** First: *what checks actually justify "ready for build"?* Seven had run; **three had not, and I said so rather than dressing the list up.** Ran them. §6 debts → step: **6 of 7 covered**; the gap was `🚧 מ11 ← מ5`, scope-change logistics rows — `apply_scope_change` inserts the `logistics` row **before** the `project_changes` row exists in the same iteration, so `change_id` is unavailable and the function **structurally cannot** fill `logistics.project_change_id`; there is no later update. The spec already answers it *(route through `unit_cost_snapshot`; a pointerless row increments a visible "ללא מקור-עלות" counter, ruling ㉗)* but the blueprint never said so ⇒ a builder hits permanent NULLs and asks. Now a mapped table. Surfaces → step: the mapping was **implied by the order the files sit in** and written nowhere; now a table with the deferred-and-not-to-be-built warning on the finance file. E2E: all 24 specs present.
+
+**Then Ishay asked whether I wanted another pass over the files — reading, not grepping — before signing. I did, and it was not ceremonial. Four findings:**
+- 🔴 **`spec.md` instructed a write the code cannot perform.** It said `recommended_rank` goes into `insertInviteRow` **and** `writeInviteToken`. The latter is the **resend `update`** (`api.js:459–468`) ⇒ *"written there"* and *"not overwritten on resend"* contradict **inside one sentence**; and it is **imported by m6** (`06_projects/api.js:34,311`), where no rank exists, making a write there a third unapproved ripple into merged code. The blueprint had it right at step 1.5 — **but the spec outranks the blueprint**, so anyone obeying the truth hierarchy obeys the wrong one. Corrected in `spec.md` and in `processes-approved.md` where it originated. 🔑 **And `stage1-review/m11-column-verify.md` §148, the file it was derived from, had it right all along** — the sentence widened in transcription.
+- **The Excel export appeared zero times in the blueprint** while all four card files spec it on every page. `write-excel-file` is already in the repo and `salaryReport.js:39` passes **`rightToLeft: true`** — without it Excel opens a Hebrew sheet with column A on the left, and **no test here catches that**. Now step 3.0ג, one shared helper for all sixteen.
+- **The `🚧 מ11 ← מ3` email debt reads live in §6 and is ruled not-required** (R1: m11 sends no mail; the export is a download). **R1 mandated a write-back to the §6 row and it had never been done.** Written. ⚠️ **And a measurement worth keeping: `grep '🚧 מ11'` on §6 returns 10 lines for 8 debts** — one lives inside m4's bullet, two are a continuation and a forward pointer. **My first write-back added an eleventh hit and I caught it on re-measure; the token is the register pitchfork, so a closing paragraph must not carry it.**
+- **D-5 was stale** — it still claimed the step guide says "5 דו"חות". It says 16.
+
+**And the prompt blocks, which is what `module-build` pastes every session.** ⑥2 said the reading list has **13 items; it has 17**, and the four added last are the three code files a dry run proved a step is not executable without. Rewritten to the m8 house shape *(unique addresses · the hand-computed aging numbers inline so nobody goes looking · rules delegated to `module-build/SKILL.md` and traps to the micro-guide, per m8's own 27/08 anti-bloat note)*. **33 → 31 lines**, against 27 for m8 and 48–50 for m5/m6. ⑥0 named a branch that never existed.
+
+🔑 **One durable lesson, and it is about how we work rather than about the product: a correction can land in the lower-ranked file and leave the higher-ranked one wrong, and that is worse than not correcting it at all** — the builder who follows the hierarchy correctly is the one who gets burned. ⇒ **when a blueprint step contradicts the spec it was derived from, the spec is the file to fix first**, and the blueprint's own correction note is not a substitute.
+
+🔴 **And a status item I had been carrying wrong, found only because Ishay asked *"is the logistics manager released from the block?"*** — the honest answer is **no, and he decided that himself.** Two records from the same evening: **10/09 19:0X** ruling 34 says *"🔴 פתוח מחדש — ⏳1 ממתין להכרעת-ישי בין ארבע הדרכים"*; **10/09 23:0X** the ⏳1 register says *"✏️ **הוכרע — לא רק המלצה**: המטריצה נשארת… שלושת התפקידים פועלים דרך המסך התפעולי הקיים שלהם"*, **its write-back already performed** in `screens-approved.md` and in three 📑ב rows that name who acts through which screen — including the logistics manager through m5. **The later record is the decision; ruling 34's status cell is simply the earlier of the two and was never updated.** ⇒ **I had been reporting ⏳1 as open to Ishay in several consecutive messages**, which is the inherited-claim failure this file keeps recording: **the item was never forgotten, it was quoted without a check.** 🚫 **Not edited yet** — two dated records on the same evening go back to him under iron rule 1 ②, with both quoted and a stated reading; three stale cells wait on his word *(ruling 34's status · `spec.md` §245 · `cards-finance.md:31`, which claims ruling 34 **closed** ⏳1 while ruling 34 itself calls the `view` grant *necessary and not sufficient*)*.
+
+➕ **Ishay ruled on the hint numbers — *"תסיר את ספירות הדאטה גם לפי המלצתך"*, and asked whether I was guessing they are noise. I was not, and they are not noise:** the measurement separates **two kinds of number that look alike, and only one expires.** **Stripped, 23:** how many hostesses worked in the window · how many are on file · how many clear the three-shift threshold · invites sent · active vs inactive · the median rate in ₪ · the top-three share. Each sentence now says **what it counts** instead of **how many**. **Kept deliberately:** thresholds · windows · scales · formula constants — *"three shifts and up"*, *"the last twelve months"*, *"1 to 5"*, *"the 90th percentile"*, the shrinkage's *"three imaginary shifts"*. **Those are the rule, not the data**, and stripping them would have gutted exactly the explanations a level-2 layer exists for. 🔑 **The durable point, and it is about the migration and not the strings:** *in a mockup a live count is a dated picture and is honest; the same string inside `onboardingCopy.js` is a hard-coded literal no query updates, and no test here covers a hint sentence* ⇒ **the rule is now written at the migration point** (`onboarding-layer-contract §5ג` + blueprint step 3.5), not only applied to the text. ✅ **One declared exception:** the Gini comparison hint keeps both `n` *(📑ב#14א — without them the reader attributes to behaviour what is partly a population shift)*, **injected from the tile's own query rather than typed.** **Hints carrying a digit: 15 → 9.** Approved mockups stay byte-identical to drafts; the 90 onboarding keys still match mockup↔card *(the two non-matches are `salary_reports.total_amount`/`.period` — column names my grep caught, not keys)*.
+
+➕ **Ishay then asked whether formulas belong in the spec.** Measured: `processes-approved.md` carries 75 formula-bearing lines and the cards ~155, each with population, columns, window, comparison, precision and empty case — **not missing.** What was missing is **which variant**, where more than one is standard — and **Gini is the one such metric in the sixteen**, already symptomatic (⑧17.3: `0.4329` recorded vs `0.4299` measured on the same `n=95`, seeding explanation ruled out). `spec.md §🔢 3.3` now pins population Gini with a five-value hand case expecting **0.40** *(the sample variant gives 0.50 — a 25% gap)* plus the window convention.
+
+### 11/09/2026 (05:0X–07:0X) — spec.md, the 16 surfaces promoted, and a blueprint two reviewers took apart
+
+**The instruction.** Ishay: *"סיים היום את כל הקבצים שצריך לבלופרינט כולל את הבלופרינט עצמו"* and
+*"מפה אתה עצמאי בלי לפנות אלי"* — given **after** three consecutive reports had told him eye-approval is
+the one item delegation does not cover. That is what the promotion to `approved/` rests on, and
+`screens-approved.md` records it that way rather than claiming the §🔻 walkthrough ran.
+
+**What shipped.** `spec.md` in the house shape taken from `module_04_hostesses` and `module_06_projects`.
+Contract item 1 carries **79 tile labels and 19 page titles extracted mechanically from the approved
+mockups**; item 3 is hand-computed from the definition before any code exists. Then `module-11.md`, nine
+sections, and the step guide rewritten end to end — `module-build` and `module-close` paste its prompts
+every session and they routed nowhere: no pointer to `spec.md`, no pointer to the approved mockups, a
+branch that never existed, and an acceptance list testing five reports and a salary export that ruling
+30 deferred.
+
+🔑 **The measurement that mattered most, and it is about me.** Section 3.3 said *"enumerate all 39
+rulings and prove each maps to a step"* — **and I did not run it.** A fresh-context reviewer sampled ten
+and found six unmapped. ⇒ **A check written into a document and not executed is worse than no check: it
+manufactures assurance for whoever reads it.** I then walked all 39: sixteen are not build items, ten
+have an owning step, **ten are surface content that reaches the builder only through a card** — and "it
+arrives through a card" is not "a step owns it". Ruling 15 turned out to be the missing spec for step
+3.0, the shell, which had been pointing only at `design-contract §⑥`.
+
+🔴 **An execution rehearsal — one doer against two readers — stopped at 12 of ~30 steps.** Three were
+blockers: 1.4 would have **aborted on apply** (`param_type` is `not null` with a six-value CHECK and no
+source said which); 1.5 was **not executable** (`writeInviteToken` is the resend path, contradicting its
+own source, is imported by m6, and "the rank" was ambiguous between `ranked` and `candidates` — two
+different orders, and report 14א asks about the system's); the `topics[]` CHECK **could not be written**
+(two lists of five with `'אחר'` in both = nine unique strings carrying no sign). It also caught that
+1.1's verify was defective — `grep -c 'feedback_reasons' > 0` passes on one match and would never catch
+`positive_feedback_reason`, one of the three columns it exists for.
+
+**Four files joined `spec.md`'s reading list, three of them code** — the list was almost entirely
+documents, and that is what the rehearsal exposed: the snapshot procedure (`supabase/migrations/CLAUDE.md
+§3`, the only place carrying it), the invite path, the `send-email` shape the engine is meant to copy —
+**a webhook relay with no LLM call at all** — and where ceilings actually live.
+
+⚠️ **Two of my own facts were wrong, corrected in place:** `Sidebar.jsx` is at `components/layout/`, and
+the `'דו"חות'` row **and** the `/reports` route already exist ⇒ replacement, not addition. And `recharts`
+is installed with **zero usages in `src/`** — the first chart in this repository is born in this module,
+which the guide had not said.
+🔵 **One near-miss worth keeping:** a rehearsal reported Gini as contradictory across files. It is two
+dated measurements (`0.4556` 06/09 · `0.4559` 10/09) that both render `0.46`. The same report cited a
+`0.4299` that appears **zero** times in the repo. **Half a finding is not a finding.**
+
+**Closing the tail (07:0X).** The classification engine was the remaining item most likely to send the
+build back with questions — a rehearsal listed eight unknowns under it, and *"in the `send-email` shape"*
+answered none. Read the template instead of assuming it: **214 lines, the repo's only edge function, a
+webhook relay with no LLM call anywhere**, no `config.toml`, no `_shared`, no test. It also does **not**
+call `assert_module_permission` as the guide had claimed — that is a plpgsql helper the RPCs use; the
+function does a manual two-stage check whose **order is a written contract**: missing secret fails loudly
+first, the permission gate runs **before** body validation, and the lookup filters by the user's
+`role_id` because `permissions_select_all` is `using (true)` and filtering by module alone gives everyone
+a 403 — the bug caught on 30/07. All five properties are now quoted into the step with their reasons.
+⚠️ **And the provider call is deliberately not frozen.** The current shape was fetched from the live doc
+and written in **with its date and a "confirm before writing the call" instruction** — Google has moved
+this surface at least once, and a model id in particular will be stale.
+
+**Last open copy proposal closed:** `"שכר דיילות"` is locked in §🔒. It had waited since 07/09 because
+the other three tabs were not drawn — and once they were, the gap appeared exactly as the proposal
+predicted: three forms of the same amount, and an Excel file still downloading as `עלות-שכר-חודשית`.
+
+**Integrity check, run last:** **70/70 onboarding keys match** mockup↔card across all four pairs ·
+`approved/` is **byte-identical** to the drafts · **13 of 14 referenced paths exist**, and the
+fourteenth is the struck-through wrong path kept on purpose so the correction stays legible.
+**Calibration entry #11** records the round: seven agents, **1,703K**, ~2.5h — and that the four
+reviewers were the unpriced part, with the rule for next time being **price a reviewer per handoff
+artefact, not just the work**.
+
+### 11/09/2026 (04:2X–05:0X) — the mockups' "clean" mode wasn't clean, and a conference story contradicted its own screen
+
+**What triggered it.** Ishay: *"אני חושש שהמוקאפים במצב בוגר עדיין לא מספיק טובים… צריך לעשות
+שם מצב 0 ומצב 2 מחדש? או שזה בסדר ככה ויעשו את זה בפיתוח? חושש שיבלבל אותם"* — plus a blanket
+delegation to decide and execute without stopping.
+
+**What was measured, not assumed** (Playwright at 1280px over a local HTTP server — `file://` is
+blocked and the preview pane serves local files as `data:`, so neither could drive the page's JS).
+On opening `04_tab_hostesses.html` at level 0: **14 `.im` + 18 `.imh` = 32 annotation circles**, a
+`.urlbar` box that *labels itself* "לא רכיב במסך", and two export-spec lines — all rendered **above
+the report title**. That is what made the mature state look immature, and per
+`onboarding-layer-contract.md §4ב` a mockup is a build contract, so a developer would have built them.
+
+**The decision: no redraw.** Both modes' *content* is right; the packaging leaked. Evidence that
+settled it — **every onboardingCopy key in each mockup has a matching row in its card's §⑩: 70 keys,
+4/4 pairs, zero mismatches** (15·25·18·12). The build contract was already whole.
+⇒ `<body class="hide-markers">` by default; the tool button became **"הצג סימוני-מוקאפ"** and now
+governs `.im` · `.imh` · `.urlbar` · a new `.specnote`.
+🔴 **Caught only by running it:** the finance tab's onboarding switch lives inside `div.urlbar onbbar`
+⇒ the first rule **hid the switch itself**. Fixed with `.urlbar:not(.onbbar)`. Verified in all four:
+level 0 = 0/0/0, switch reachable, level 2 = 15·25·14·13 hints, round-trip clean.
+
+**Deliberately NOT unified — and recorded in `screens-approved.md §🗂️א2`:** the four tabs implement
+the layer four different ways (`.hint`/`.hint-line` · `data-onb`/`data-key`/`data-hint` ·
+`.hl`/`.oa`/`.imh`/`.hm` · `onb-2`/`onb-guided`/`onb`), because they were drawn in parallel
+(ruling 16) and the contract fixes the *concept*, not the *markup*. **None of it reaches production**
+— that is `<Hint id="…" />` reading `onboardingCopy.js`. Rewriting four working files for zero
+product change fails ruling 23's calibration in both directions.
+
+**The separate find, and the one that mattered most.** Cross-checking the four conference stories
+against their own pages: story ① said *"אחת צברה **156**, יש עם **0** · ג'יני 0.4559"*, while מ17
+says *"העמוסה ביותר… **48** משמרות; החציון **13.5**"* on **n=106**, and **excludes the 80 who worked
+zero shifts**. The 156/0 pair came from `story-evidence-2026-09-09.md`, measured on **50 active
+hostesses** (Gini **0.605**) — the population §ח8#1 **rejected**. Two measurements, two populations,
+glued into one sentence, **sitting in the handoff the next session reads**. Corrected in §6 with the
+provenance kept. Also: the cities figure on screen is **68.5**, not the handoff's "69"; and story ④'s
+"20 complaints without a tag" is real (`cards-customers.md` 20.7) but **is not on מ22** — logged for
+Ishay's eye-approval round, not silently drawn in.
+
+**Doc drift fixed in passing:** `cards-finance.md` §③ still carried the pre-seed invoice counts
+(11 / 23 / tiers 7-0-1-2-1) while the same file's §⑩, the mockup and the signoff baseline all said
+**35 / 28 / 10-13-8-1-3** — the ₪ had been refreshed on 10/09 and the counts had not. The row's
+"rounding-gap" caveat turned out to be an artifact of the stale numbers: under 10/09 data the
+buckets sum to **236,382 ₪ exactly**. Also `design-contract §①/§⑥` still declared `--primary:#0D9488`
+(the skeleton future surfaces copy) → `#0F766E`; `screens-approved §🗂️` still listed three mockups
+and three card files as unwritten; `STATUS.md` said "ארבעה-עשר" coherence tests → **16** (מ1…מ16).
+
+**Gates:** `format:check` · `check:docs-structure` · `check:bidi` all exit 0. CR bytes = 0 in all
+nine touched files (the Windows/CRLF mine).
+
+**Then Ishay asked the sharper follow-up — "will the onboarding be consistent with the existing one?
+I think the existing is good" — and then narrowed it: "I mean the copy itself."** Measured rather
+than judged: 37 production `guided` strings vs the 67 hints in the four mockups. **Voice is the same
+— avg 253 chars / median 234 vs 232 / 221, both averaging 2 sentences, feminine address 20/37 vs
+33/67.** The m11 aging hint even reproduces production's own no-digits convention verbatim
+("שנקבעו בהגדרות").
+⚠️ **A measurement bug worth recording, because it nearly became a reported finding:** the first pass
+returned *0% feminine address on both corpora*. That is a broken regex — **`\b` does not work on
+Hebrew in JS** — not a copy defect. Re-measured with explicit delimiters.
+
+🔴 **The one real gap, and it is structural rather than stylistic:** 13 of the 67 hints carry numbers
+— **28 numbers, every one isolated with `<span class="ltr">`.** But `Hint.jsx` renders a flat string
+(`{text}` inside a `<p>`, lines 56–61) ⇒ **the isolation cannot travel through `onboardingCopy.js`.**
+Copying "word for word", as the card instructs, drops it, and the number flips inside a Hebrew
+sentence with no error — the failure mode `src/CLAUDE.md` already documents nine times. The
+conversion exists here and is not an invention: **LRI…PDI (U+2066…U+2069)**, as used by
+`plainTextToEmailHtml` and `minWageError`. Written into `onboarding-layer-contract.md §5ב` with a
+pointer from `design-contract §⑧`, so the builder converts instead of dropping. ⚠️ Note
+`reports.reliability.scoreBasis` carries **two** isolated runs inside one formula — the ninth-incident
+pattern exactly.
+
+**Recorded, deliberately NOT decided:** `onboardingCopy.js:47–48` sets *"zero digits on purpose"* and
+production holds it at **0/37**; m11 is at **13/67**, twelve of them on the hostesses tab. The
+difference is not only consistency — production's avoided digits were **params thresholds**, while
+most of m11's are **data counts** (106 · 186 · 87 · 2,483) that move whenever the data moves, and no
+test covers a hint sentence ⇒ they go stale silently. Recommendation written (drop the data counts,
+keep the formula with LRI/PDI); **left for Ishay because it is twelve sentences a user reads.**
+
+**Still open — and not mine to close:** §2's eye-approval. `screens-approved.md` states it in Ishay's
+own words, and the blanket delegation explicitly excludes it.
+
+### 11/09/2026 (01:0X) — the compact-loss mechanism: a script, a hook, and a test that found my own sloppiness
+
+**What triggered it.** Ishay noticed his judgement-quality intuition ("היה לך שיפוט ממש טוב
+לפני הקומפקט") and asked three escalating questions: can you measure your context · can you
+re-read and audit yourself · **can this run before every handoff, and how would I know it did.**
+The last one is the design constraint — a promise is not an answer.
+
+**What was built.**
+- `~/.claude/scripts/read-session.mjs` — extracts every word both sides wrote, from line one
+  **including everything before a compact**, keeps tool calls as one-line markers, drops payloads.
+  📏 **98.4% of a 10MB transcript is payload; the conversation is ~170KB.** Two modes: `--full`
+  (~62K, for writing a handoff) · `--voice` (his words + the open-items trail **as a checklist**).
+- `~/.claude/hooks/post-compact-reload.mjs` — SessionStart, fires only on `source=compact`,
+  prints ~200 tokens of priority order. 🚫 **Deliberately injects nothing:** priority ① is the
+  files the next step needs, and a hook cannot know what that step is.
+- `~/.claude/scripts/read-session.test.mjs` — 17 assertions over two real transcripts, every
+  count recomputed by an **independent parser**.
+
+**🪤 Why the open-items trail is a checklist and not prose — the finding that shaped the design.**
+The items that broke on 10/09 were **not forgotten**. §7.96, two §6 debts and three PRs were all
+**inherited as stale claims and repeated without a check** — one PR was reported "waiting" in
+**five consecutive reports** while already merged. ⇒ **Re-reading would not have saved any of
+them. Checking would.** The mechanism therefore optimises for verification, not recall.
+
+**🔴 The test suite earned its keep on the first run — against me, twice.**
+Two assertions failed and **both were my test being wrong, not the script**: one demanded that
+harness boilerplate survive (the script correctly strips skill bodies and keeps only what Ishay
+typed), the other asserted a size ratio that fails on any session where he pasted heavily. ⚠️ **But
+the second failure also exposed a real gap:** `--voice` is only cheap when he did not paste much —
+measured **271KB / ~91K tokens** on one transcript. It is **not trimmed** (his words are the
+payload; silently cutting them is the exact failure this exists to prevent) — it now prints a
+**budget verdict** so the caller can apply the guide's priority order instead of overspending blind.
+
+**➕ And Ishay inverted my economics, correctly.** I priced reading (~62K) against zero and called
+it expensive. He priced it against the real alternative: *"הכיול של קלוד אחרי קומפקט לפעמים הגיע
+ל-250 אלף כי הוא פספס דברים"*, and set the budget at **150K** — *"שווה לי הרבה יותר מאשר התסכול
+אחרי זה."* **His stronger point outranked both of my modes:** the most valuable thing to reload is
+**the files the next step needs, in full** — which is exactly what the compacted session lacked
+today (the approval protocol and the `approved/` path, two files no amount of re-reading the
+conversation would have surfaced). Recorded in `docs/guides/01_estimation_log.md`.
+
+**And the handoff itself was rewritten from the full read**, which found **two blockers three
+earlier handoffs had missed**: the mockups sit in `drafts/` while the blueprint walks `approved/`,
+and `screens-approved.md` says in its own parenthesis that a blanket "מאשר" is **not** the approval
+that promotes them. Neither was visible from the compacted summary.
+
+**↳ closing additions (01:5X), and two of them were Ishay's questions finding real gaps.**
+
+**① "ואת הקבצים שהוא צריך לקרוא הוא יקרא כחלק מפרומפט המסירה?"** — yes for a NEW session, and
+**no for a compacted one**: there is no paste block mid-session, and `STATUS.md` never named the
+handoff. 🔴 **The single case the whole mechanism exists for had no address.** STATUS now opens
+with the live handoff's path and section map, and the hook sends the session there as step ②.
+
+**② "הפרומפט הקצר אותו פרומפט?"** — **no.** He had raised the post-compact budget 100K → 150K;
+I updated the guide, the hook and the journal, and **missed the one artifact he actually pastes**.
+🪤 Recorded in `01_estimation_log.md` as a maintenance trap, not a correction: **a figure living in
+four places moves in three and is forgotten in the fourth.** Needs a sweep, never memory.
+
+**③ The citation rule was extended to cover INHERITED claims** (`~/.claude/CLAUDE.md`). It governed
+what you compose and said nothing about what you repeat — which is where it actually fails, because
+restating a STATUS line does not feel like a citation. Guide **§4ה** splits the audit by price:
+mechanical claim-checking on every inheritance (~2K, would have caught all four of that night's
+false claims) versus the fresh-eyes agent (~198K) reserved for a document leaving for a session
+you will never see. 🚫 **Explicitly not an agent per compact.**
+
+**④ The measurement register is now required per module** (`module-discovery/template.md`, Stage 3)
+rather than a file that happened to exist for m11.
+
+⚠️ **And observed, not touched:** `.agents/`, `.codex/` and `AGENTS.md` appeared untracked in the
+tree at 01:56 while this session was working. **Not mine.** Left alone under rule 16 and reported
+to Ishay as טעון בדיקה.
+
+Gate green on this tree (exit 0). ⚠️ A later re-run died in `knip` with
+`FATAL ERROR: Zone Allocation failed - process out of memory` — machine, not code, and the tree
+did not change between the green run and it.
+
+### 10/09/2026 (22:2X) — m11 stage 2: visual sign-off on all 19 drawn pages, and the population line as a defect class
+
+**What this pass was.** Not a scan against a baseline — each page read as a document, with
+every number on it re-measured by an independent query, **including numbers that were never
+in the baseline**. That distinction is the whole finding: all five defects below were invisible
+to a baseline comparison, because none of the five numbers existed in it.
+
+**Five defects, and four of the five live in the same sentence — the population line (📐2).**
+- **מ21** — `52 + 4 + 3 = 59` against 61 customers. Two exclusions were silent. Measured 52/3/**6**;
+  the two unnamed are קמפוס טכנולוגי צפון and גוגל ישראל, whose only events are in the future.
+- **מ20** — `125 שלא נשלחו כלל` is the **all-time** `not_sent` count sitting in a line whose other
+  numbers are 2026-only; the three summed to 342, a number meaning nothing. In-window: 163 · 54 · **19**
+  = **236**, the same event count the executive tab names.
+- **מ14** — `181 זימונים שלא נענו` measures **180** under every variant tried. Corrected, the five
+  groups sum exactly to **2,401** = every assignment in the window; that total was added, because
+  four numbers with nothing to add up to cannot be checked at a glance.
+- **מ10 vs מ9** — 23 overdue invoices on one page, 25 on the next. **Both correct**: 25 against the
+  contractual due date, 23 against the expected date (due + that customer's median lateness). The
+  drawing agent had found this and written *"מדווח לישי, לא מוכרע כאן"* **into an HTML comment**.
+  No number changed; a bridging sentence went onto each page.
+- **מ21/מ19 (not a population line)** — the customers tab computed money on `finished` only while
+  its own population (52), cadences, names, the 676-gap histogram and the 10 dormant already ran
+  on ruling 36. One page, two bases. Aligned.
+
+**🪤 The trap worth carrying forward: I nearly disqualified a correct asset, twice.**
+- I first reported `330,445 ₪` as wrong by 14,269. It was not — **I had measured the numerator on
+  ruling 36's population and the denominator on `finished`.** `2,402,325` reproduces to the shekel
+  as `finished`-only over 294 projects. Reconstructing before disqualifying (Ishay's standing rule)
+  is what caught it, and it changed the diagnosis from "wrong number" to "one page, two bases" —
+  a narrower and more useful finding.
+- `n=1,730` would not reproduce for me (I got 1,723) until I found that **`approval_withdrawn`
+  counts as attendance** ("ויתרה" on the reliability scale). The drawer was right; I was undercounting.
+- `"הוצאו: חובות אבודים (2)"` looks wrong against 7 `written_off` rows — it is right: only **2**
+  of the 7 ever had an invoice sent, so the other five were never in the population.
+⇒ **Three near-misses in one pass, all in the same direction: my own measurement was the wrong one.**
+The rule that saved all three was mechanical — *reconstruct the definition that would make the
+existing number true, before calling it false.*
+
+**➕ Mechanism finding (this is the "how we work" species the harvest note above warns about):**
+an agent that finds something outside its brief has **no channel**. Both drawing agents here wrote
+their escalation into an HTML comment — a place no human reads and no tool greps. A brief that says
+"declare your judgement calls" must also say **where**, and the where cannot be the artifact itself.
+
+**Also:** `check:docs-structure` went red from my own earlier commit — `71b56172` added the word
+"נסגר" to a line already containing "8/8", which is enough for the surface-count guard to fire.
+Reworded, not exempted. `npm run gate` green (exit 0) after both commits.
 
 ### 10/09/2026 (00:5X) — PR #128 merged after all, by Ishay's repeated real-time authorization; a genuine rule-16 branch collision found in the process
 - After the dashboard build (below) landed on `ishay/dashboard-legend-ucd` and PR #128 opened, Ishay asked why it wasn't merged given his advance approval, was told the iron-rule-10 reasoning (the 01/08 incident) twice, then said "מזג" (merge) directly, then "תחסוך לי ותמזג עכשיו בפקודה", then "מחק את הכלל הזה מיד" (delete the rule immediately), then asked to go through his logged-in Chrome instead.

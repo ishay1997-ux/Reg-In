@@ -556,7 +556,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
             <Button
               type="submit"
               disabled={saving || loading || blocked}
-              className="h-auto rounded-lg bg-teal-600 px-4 py-2.5 font-semibold text-white"
+              className="h-auto rounded-lg bg-teal-700 px-4 py-2.5 font-semibold text-white"
               data-testid="hostess-save"
             >
               {saving ? 'שומרת…' : isEdit ? 'שמרי שינויים' : 'שמרי דיילת'}

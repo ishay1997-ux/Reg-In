@@ -49,9 +49,18 @@
 
 ## 🔒 לא מושפעים כלל מהצמצום
 
-- **הסקילים של REG-IN** (`.claude/skills/`, **תשעה** — נספר מחדש ב-`git ls-files .claude/skills/`, 26/08/2026): `module-discovery` · `module-blueprint` · `module-build` · `module-close` ·
-  `section7-rulings` · `post-merge` · `quality-audit` · **`skill-scan`** · **`advisor`** —
+- **הסקילים של REG-IN** (`.claude/skills/`, ✏️ **שמונה** — נספר מחדש ב-`git ls-files .claude/skills/`, 11/09/2026): `module-discovery` · `module-blueprint` · `module-build` · `module-close` ·
+  `section7-rulings` · `post-merge` · `quality-audit` · **`advisor`** —
   **בריפו, תמיד זמינים.**
+  ✏️ **11/09/2026 — `skill-scan` יצא מהרשימה ועבר לגלובלי בהכרעת-ישי.** העותק הפרויקטי נמחק;
+  ‏`~/.claude/skills/skill-scan/SKILL.md` **קיים ומעודכן** *(351 שורות מול 326 בפרויקטי)* ⇒
+  **הסקיל עדיין נטען ועדיין נדלק על אותם ניסוחים** — רק שיש לו עותק אחד במקום שניים.
+  ‏**נמדד: זהו הסקיל היחיד שהיה כפול** *(השוואת `.claude/skills/` מול `~/.claude/skills/`)*,
+  כלומר זו קונסולידציה נקודתית ולא מעבר גורף. 🔗 האזכורים ב-`CLAUDE.md` §זרימת-מודול,
+  ב-`advisor/SKILL.md` וב-`_shared/discipline.md` **נשארים תקפים** — הם נוקבים בשם, לא בנתיב.
+  ⚠️ **וטעון בדיקה, נמדד אגב-אורחא ולא תוקן:** תחת `.claude/skills/` מקומטות גם
+  **`Nate's Frontend Design`** ו-**`Skill Builder`** — שתי תיקיות שמעולם לא היו ברשימה הזו,
+  כי אינן סקילים שנכתבו כאן. **הספירה "שמונה" מתייחסת לסקילים של REG-IN, לא למספר התיקיות.**
   ↳ **`module-discovery` (נוסף 13/08/2026, קומיט `e6c2655`):** מריץ Discovery מלא למודול — *"פתח דיסקברי למודול N"* · *"בוא נאפיין את מודול N"* — ומפיק את `docs/specs/module_NN_*/`. **קודם ל-`module-blueprint` בשרשרת המודול.** *(השורה מנתה שמונה סקילים והשמיטה אותו מאז 13/08; תוקן ב-`regin-docs-sync` 26/08/2026. אותה השמטה חיה גם ב-`CLAUDE_CODE_LOG.md §Templates & hooks` ובעותק החי של הרוטינה — ר' היומן.)*
   ↳ **`advisor` (נוסף 05/08/2026):** היועץ של ישי — מייעץ **לישי בלבד**, לעולם לא כתובת-דיווח
   לסשנים אחרים. שמונה מצבים, כל אחד על ביטוי-טריגר: **"אתה היועץ שלי"** (פתיחת משמרת) ·

@@ -235,7 +235,7 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
         {canSend ? (
           <a
             href={mailtoHref}
-            className="inline-flex items-center gap-2 h-auto py-2.5 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"
+            className="inline-flex items-center gap-2 h-auto py-2.5 px-4 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold"
             data-testid="marketing-send"
           >
             <Send className="size-4" />

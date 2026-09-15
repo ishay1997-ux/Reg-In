@@ -702,7 +702,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
                 type="button"
                 disabled={selected.length === 0 || busy}
                 onClick={sendInvites}
-                className="mt-3 h-auto w-full rounded-lg bg-teal-600 px-4 py-2 text-[13px] font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400"
+                className="mt-3 h-auto w-full rounded-lg bg-teal-700 px-4 py-2 text-[13px] font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400"
                 data-testid="sm-send-invites"
               >
                 {`שלחי מייל תיאום (${selected.length} נבחרו)`}

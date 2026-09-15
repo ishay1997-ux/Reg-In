@@ -158,7 +158,7 @@ function PersonalDetailsSection({ user, reload }) {
         <Button
           type="submit"
           disabled={saving}
-          className="w-fit h-auto py-2 px-4 mt-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
+          className="w-fit h-auto py-2 px-4 mt-2 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold disabled:opacity-50"
         >
           {saving ? 'שומרת…' : 'שמרי שינויים'}
         </Button>
@@ -256,7 +256,7 @@ function SecuritySection({ user }) {
       <Button
         type="submit"
         disabled={saving}
-        className="w-fit h-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold disabled:opacity-50"
+        className="w-fit h-auto py-2 px-4 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold disabled:opacity-50"
       >
         {saving ? 'מעדכנת…' : 'עדכני סיסמה'}
       </Button>

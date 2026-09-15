@@ -391,7 +391,7 @@ export default function QuoteDocumentDialog({
                 // (הפעולה הראשית של המסך) לסגנון-משני, וזה מה שמונע לחיצה שנייה מאינרציה.
                 // ⚠️ טורקיז-מלא שמור לפעולה הראשית האחת — ר' src/CLAUDE.md מעבר (3).
                 // ‏`alreadySent` ולא `sent`: הצעה שנשלחה בסשן קודם נראית כך גם בפתיחה חדשה.
-                !(alreadySent && !sendError) && 'bg-teal-600 hover:bg-teal-700 text-white',
+                !(alreadySent && !sendError) && 'bg-teal-700 hover:bg-teal-800 text-white',
               )}
               data-testid="quote-document-send"
             >
@@ -407,7 +407,7 @@ export default function QuoteDocumentDialog({
             variant={canSend ? 'outline' : undefined}
             className={cn(
               'h-auto py-2 px-4 rounded-lg font-semibold gap-2',
-              !canSend && 'bg-teal-600 hover:bg-teal-700 text-white',
+              !canSend && 'bg-teal-700 hover:bg-teal-800 text-white',
             )}
             data-testid="quote-document-download"
           >
