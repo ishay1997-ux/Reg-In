@@ -24,9 +24,10 @@
     "check:docs-structure": "node scripts/check-docs-structure.mjs",
     "check:bidi": "node scripts/check-bidi-glyphs.mjs",
     "verify": "npm run lint && npm run format:check && npm run test:run && npm run build",
-    "gate": "npm run verify && npm run dup && npm run deadcode && npm run audit && npm run check:bidi && npm run check:context && npm run check:docs-structure && npm run check:iron-rules",
+    "gate": "npm run verify && npm run dup && npm run deadcode && npm run audit && npm run check:bidi && npm run check:context && npm run check:docs-structure && npm run check:iron-rules && npm run check:declared-counts",
     "prepare": "husky",
-    "check:iron-rules": "node scripts/check-iron-rules.mjs"
+    "check:iron-rules": "node scripts/check-iron-rules.mjs",
+    "check:declared-counts": "node scripts/check-declared-counts.mjs"
   },
   "lint-staged": {
     "*.{js,jsx}": [
