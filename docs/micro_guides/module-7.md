@@ -573,3 +573,59 @@ department cards show 17/8/11/✓אין with the correct role names and hrefs.
 
 **Anchor for the "why", one sentence:** the color is the status plus the one thing status alone
 never answers — how much time is left; the strip is organized by who acts on it, not by rank.
+### 🔎 16/09/2026 — the colour becomes the status, and the numbers say what they count
+
+Ishay looked at the live screen after the 09/09 merge and raised three things: the attention-card
+numbers do not say what they count; every upcoming event is yellow or green, so the colour no
+longer separates anything; and the seed data itself looked wrong ("make all the projects ready
+for execution, and maybe one here and there short a hostess or two").
+
+**Why the colour rule had to change, and it is structural, not a data bug.** 🔴 was defined as
+"has a gap **and** the event is within `ימי_אזהרה_קדם_אירוע` days **of today**". *Of today* is a
+property of the viewer's clock, not of the event — so in any future month the condition is
+permanently false, the whole month collapses to 🟡/🟢, and the colour stops distinguishing. That
+holds with perfect data too.
+
+**The measurement that licensed the replacement** (16/09, all 62 active upcoming events, live DB):
+`not_started` 14/14 have a gap · `in_progress` 43/43 have a gap · `ready` 5/5 have none.
+**A 1:1 match, no exceptions** ⇒ the status the database already computes *is* the readiness
+measure, so moving to it loses no information; it replaces a calendar-private rule with one that
+already lives in the project card and the projects list.
+
+**Two channels, not a composite score.** Colour = state (`טרם החל` dashed outline, no fill ·
+`בתהליך` amber · `מוכן לביצוע` green · `past` grey · `בוטל`). Day cell = proximity (the day number
+turns amber inside the warning window). A marked day carrying a chip that is not "מוכן לביצוע" is
+what the old red was trying to say. 🚫 The weighted urgency score §7.9 cancelled was **not**
+rebuilt — the two facts are shown separately and the eye crosses them.
+
+**Cards.** Each carries a noun **and** its population filter: `4 אירועים חסרי דיילות ב-14 הימים
+הקרובים`, not `4`. 🔑 The qualifier is not decoration — the recruitment card counts only what is
+inside the warning window while 38 upcoming events are short of hostesses, so without it the number
+is not incomplete in the reader's head, it is **wrong** there. Each card now links to the event it
+names (`attentionRows` already carried the `href`; `categoryCard` was dropping it), and the strip
+moved above the calendar — it was the only actionable panel on the screen and it sat below the
+fold. The profit tile names its month, because it is the one tile computed for the *displayed*
+month while the other three mean "now".
+
+**Seed.** `scripts/dashboard-readiness-fix.mjs` — 94 logistics items marked arrived through
+`update_logistics_item` (the same server function the screen calls; a raw UPDATE would have
+produced a "ready" item with zero arrived quantity and no arrival date, which that function exists
+to prevent) and 52 assignments created, with 6 events left short 1–2 hostesses, 2 short one item,
+one October event left `not_started`, and December onward untouched. `project_status` is never
+written by hand — the recompute trigger derives it. Coherence tests מ1/מ2/מ3 re-measured green
+afterwards; the 52 new rows' response times were corrected to follow the rating bands so מ3 does
+not rest on 1% of uniform noise.
+
+**Deleted on purpose:** the locked 14-day boundary tests (13/14 ⇒ red · 15 ⇒ yellow). They proved a
+rule that no longer exists. Replaced by a full status→colour mapping and a guard that the colour
+does **not** move when the day does.
+
+**Regression:** 98 files / 2,410 tests green under the CI-parity env · `npm run gate` fully green
+(lint · prettier · build · jscpd · knip · audit · bidi · context · docs-structure · iron-rules ·
+declared-counts). Verified visually on the logged-in CEO session against this branch's own dev
+server: October reads **17 מוכן לביצוע · 3 בתהליך · 1 טרם החל · 1 בוטל**, matching the database
+count exactly; the profit tile reads `רווח משוער · אוקטובר 2026`; the September grid shows the
+warning-window days in amber from the 16th on.
+
+**Anchor for the "why", one sentence:** the colour is the status the system already computes, and
+time-left is a property of the date, so it lives on the date.
