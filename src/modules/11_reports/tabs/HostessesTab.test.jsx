@@ -356,6 +356,9 @@ const m16 = () =>
       xKey: 'hourly_rate',
       unit: 'money',
       domain: [1, 5],
+      // ✏️ i2: ‏`x_domain` נועל את ציר-התעריף ל-⁦38⁩–⁦51⁩ במקום לפתוח אותו מאפס (📐5 נכתב
+      // לסכומים; תעריף שעתי שכל ערכיו 41–49 נמחץ לימין הכרטיס). נמדד במטען החי היום.
+      x_domain: [38, 51],
       series: [
         { key: 'hourly_rate', label: 'תעריף שעתי' },
         { key: 'rating', label: 'דירוג' },
@@ -367,7 +370,7 @@ const m16 = () =>
       // ✏️ I1: תווית קו-הייחוס עברה לשקלים שלמים (📐4), והערת-הגרף מצהירה על 17 הנקודות
       // שאינן עליו — שתיהן נמדדו במטען החי היום (`results/payloads_h5`).
       refLines: [{ axis: 'x', value: 43.27, label: 'חציון התעריף 43 ₪' }],
-      note: "⁦17⁩ דיילות ללא דירוג אינן בגרף — ראי את השבב 'רק בלי דירוג' בטבלה.",
+      note: "⁦17⁩ דיילות ללא דירוג אינן בגרף — ראי את השבב 'בלי דירוג בלבד' בטבלה.",
     },
     columns: [
       { key: 'hostess_name', label: 'דיילת', format: 'text', align: 'start' },
@@ -914,39 +917,48 @@ const follows = (first, second) =>
   Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING)
 
 const HINT_PLACEMENT = [
-  ['מ14 · מבט-על דיילות', SURFACES.m14, m14, 'hostessOverview', 'redCount', 'redTableSort'],
-  ['מ15 · אמינות והתייצבות', SURFACES.m15, m15, 'reliability', null, 'absenceColumns'],
-  ['מ16 · איכות מול עלות', SURFACES.m16, m16, 'qualityCost', 'scatterBasis', 'tableSort'],
-  ['מ17 · הוגנות השיבוץ', SURFACES.m17, m17, 'fairness', 'giniBasis', null],
+  ['מ14 · מבט-על דיילות', SURFACES.m14, m14, 'hostessOverview', 'redCount', null, 'redTableSort'],
+  ['מ15 · אמינות והתייצבות', SURFACES.m15, m15, 'reliability', null, null, 'absenceColumns'],
+  ['מ16 · איכות מול עלות', SURFACES.m16, m16, 'qualityCost', null, 'scatterBasis', 'tableSort'],
+  ['מ17 · הוגנות השיבוץ', SURFACES.m17, m17, 'fairness', null, 'giniBasis', null],
 ]
 
 describe('מיקום שכבת-ההטמעה (רמה 2)', () => {
   it.each(HINT_PLACEMENT)(
     '%s · כל רמז מתחת לבלוק שהוא מסביר',
-    async (_name, surface, make, slug, beforeChartKey, beforeTableKey) => {
+    async (_name, surface, make, slug, beforeChartKey, chartFooterKey, beforeTableKey) => {
       callReport.mockResolvedValue(make())
       renderTab(surface)
       const purpose = await screen.findByTestId(`hint-reports.${slug}.purpose`)
-      const population = screen.getByTestId('report-population')
+      const soWhat = screen.getByTestId('report-so-what')
       const tiles = screen.getByTestId('report-tiles')
       const table = screen.getAllByTestId('report-table-card')[0]
       const definitions = screen.getByTestId('report-definitions')
+      const figure = screen.getAllByTestId('chart-figure')[0]
 
-      // ‏renderTop — הרמז מעל שורת-האוכלוסייה, ומעל כל השאר.
-      expect(follows(purpose, population)).toBe(true)
+      // ‏⑩א · `renderAfterSoWhat` — **אחרי** שורת-"אז מה" ו**לפני** רצועת-האריחים.
+      // 🔴 זו בדיוק ההיפוך שהמעבר תיקן: קודם הרמז ישב מעל שורת-האוכלוסייה שהוא מסביר.
+      expect(follows(soWhat, purpose)).toBe(true)
+      expect(follows(purpose, tiles)).toBe(true)
 
       if (beforeChartKey) {
+        // רמז-אריח — מתחת לרצועת-האריחים, לפני הגרף.
         const hint = screen.getByTestId(`hint-reports.${slug}.${beforeChartKey}`)
-        const figure = screen.getAllByTestId('chart-figure')[0]
         expect(follows(tiles, hint)).toBe(true)
         expect(follows(hint, figure)).toBe(true)
+      }
+      if (chartFooterKey) {
+        // רמז-קריאת-גרף — **מתחת לדמות ובתוך כרטיס-הגרף**.
+        const hint = screen.getByTestId(`hint-reports.${slug}.${chartFooterKey}`)
+        expect(follows(figure, hint)).toBe(true)
+        expect(figure.closest('[data-testid^="chart-card-"]').contains(hint)).toBe(true)
       }
       if (beforeTableKey) {
         const hint = screen.getByTestId(`hint-reports.${slug}.${beforeTableKey}`)
         expect(follows(hint, table)).toBe(true)
         expect(follows(screen.getByTestId('report-table-title'), hint)).toBe(true)
       }
-      // ‏renderExtras — בלוק-המונחים **אחרי** שורת-ההגדרות שהוא מפרש, ולא לפניה.
+      // ‏renderExtras — בלוק-המונחים **אחרי** שורת-ההגדרות שהוא מפרש.
       const firstTerm = screen.getAllByTestId(/^hint-reports\..+\.term\./)[0]
       expect(follows(definitions, firstTerm)).toBe(true)
     },

@@ -42,8 +42,9 @@ import {
 // מול `onboardingCopy.m11.hostesses.js`, מפתח-מפתח.
 const HINTS = {
   'hostess-overview': {
-    top: ['reports.hostessOverview.purpose'],
+    afterSoWhat: ['reports.hostessOverview.purpose'],
     beforeChart: ['reports.hostessOverview.redCount', 'reports.hostessOverview.gini'],
+    chartFooter: [],
     beforeTable: ['reports.hostessOverview.redTableSort'],
     extras: [
       'reports.hostessOverview.term.onTime',
@@ -55,8 +56,9 @@ const HINTS = {
     ],
   },
   reliability: {
-    top: ['reports.reliability.purpose'],
+    afterSoWhat: ['reports.reliability.purpose'],
     beforeChart: [],
+    chartFooter: [],
     beforeTable: ['reports.reliability.absenceColumns'],
     extras: [
       'reports.reliability.scoreBasis',
@@ -70,8 +72,9 @@ const HINTS = {
     ],
   },
   'quality-cost': {
-    top: ['reports.qualityCost.purpose'],
-    beforeChart: ['reports.qualityCost.scatterBasis'],
+    afterSoWhat: ['reports.qualityCost.purpose'],
+    beforeChart: [],
+    chartFooter: ['reports.qualityCost.scatterBasis'],
     beforeTable: ['reports.qualityCost.tableSort'],
     extras: [
       'reports.qualityCost.term.hourlyRate',
@@ -83,8 +86,9 @@ const HINTS = {
     ],
   },
   fairness: {
-    top: ['reports.fairness.purpose'],
-    beforeChart: ['reports.fairness.giniBasis'],
+    afterSoWhat: ['reports.fairness.purpose'],
+    beforeChart: [],
+    chartFooter: ['reports.fairness.giniBasis'],
     beforeTable: [],
     extras: [
       'reports.fairness.responseTime',
@@ -224,7 +228,13 @@ export default function HostessesTab({ surface, filters, drill, onDrill, onWindo
     setChipState({ slug: surface.slug, value: { ...chips, [key]: value } })
 
   const selectedDow = Number.isInteger(drill?.dow) ? drill.dow : null
-  const hints = HINTS[surface.slug] ?? { top: [], beforeChart: [], beforeTable: [], extras: [] }
+  const hints = HINTS[surface.slug] ?? {
+    afterSoWhat: [],
+    beforeChart: [],
+    chartFooter: [],
+    beforeTable: [],
+    extras: [],
+  }
   const transformPayload = useCallback(
     (payload) => transformFor(surface.slug, payload, chips),
     [surface.slug, chips],
@@ -283,13 +293,22 @@ export default function HostessesTab({ surface, filters, drill, onDrill, onWindo
       // ‏`[rawPayload, transformPayload]` (‏11f347a9), ופונקציה חדשה בכל רינדור מבטלת את
       // המימואיזציה בשקט: הסינון היה רץ מחדש בכל הקלדה בכל פקד עתידי בדף.
       transformPayload={transformPayload}
-      renderTop={(payload) => (
-        <>
-          <HintBlock ids={hints.top} testId="report-hints-top" />
-          {renderChips(payload)}
-        </>
+      renderTop={(payload) => renderChips(payload)}
+      // ✏️ ⑩א — **בין "אז מה" לאריחים**, החריץ שנולד בדיוק לזה (`fb7bcd26`). ארבעת רמזי-
+      // ה-`purpose` ישבו ב-`renderTop`, כלומר **מעל שורת-האוכלוסייה שהם מסבירים** — היפוך
+      // של `onboarding-layer-contract §4ב` ("שורה עצמאית **מתחת** לבלוק שהוא מסביר").
+      renderAfterSoWhat={() => (
+        <HintBlock ids={hints.afterSoWhat} testId="report-hints-after-so-what" />
       )}
+      // רמזי-אריח (מ14 ב · ג) — מתחת לרצועת-האריחים ולפני הגרף, כפי שהיו.
       renderBeforeChart={() => <HintBlock ids={hints.beforeChart} testId="report-hints-chart" />}
+      // ✏️ רמזי-**קריאת-גרף** יורדים אל תוך כרטיס-הגרף, מתחת לדמות (מ16 ב · מ17 ב).
+      // ‏`index === 0` כי לשני המשטחים האלה יש גרף אחד; משטח עם שניים היה חייב לבחור.
+      renderChartFooter={(payload, index) =>
+        index === 0 ? (
+          <HintBlock ids={hints.chartFooter} testId="report-hints-chart-footer" />
+        ) : null
+      }
       renderBeforeTable={(payload) => (
         <>
           <h3

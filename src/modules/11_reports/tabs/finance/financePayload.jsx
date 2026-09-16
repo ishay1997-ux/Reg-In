@@ -6,7 +6,7 @@
 // ① **מיפוי-תוויות של סדרת-גרף** לפי `chart.label_source` (תיקון-C8 מ-16/09) —
 //    מ9 מחזיר `government`/`nonprofit` כמפתחות-enum של המסד ונוקב בקבוע העברי.
 //    🔴 **מקרא שמציג `private_company` הוא בדיוק הכשל שהשדה הזה נולד למנוע.**
-// ② **מפתחות-דלי-גיול ⇒ תוויות-מסך** בעמודת "מדרג" של מ9 — ר' `AGING_BUCKET_LABELS`.
+// ② **מפתחות-דלי-גיול ⇒ תוויות-מסך** בעמודת "מדרג" של מ9 — ר' `bucketLabel`.
 // ③ **סימון העמודה הממוינת** (`columns[].sorted` ⇒ `aria-sort`, 📐9) — ר' ההערה המלאה
 //    אצל `markSortedColumns`; **המועמדת מגיעה מהכרטיס, והכיוון נמדד על השורות שיורדו.**
 //
@@ -48,20 +48,26 @@ const LABEL_SOURCES = { CUSTOMER_TYPE_LABELS }
 // מבודד כיחידה אחת** ולא כשתי ספרות נפרדות (`reportsFormat.js`: *"לערך בודד בלבד"*).
 // 🚫 **ותווית עברית טהורה (`שוטף`) אינה מבודדת** — אין בה ניטרלי בין ספרות, והבידוד היה
 // רעש בלתי-נראה בנתונים.
-// ⚠️ **מחיר מוצהר, ואינו שלי לסגור:** הערך המבודד הוא גם מה ש-`ReportSurface` מוסר ל-
-// `ExportBar`, ו-`cellFor` (‏`reportsExport.js`) מעביר `text` כ-`String(value)` חשוף ⇒
-// **שני תווי-הבידוד נוחתים בתא ה-xlsx.** הם בלתי-נראים באקסל אך שוברים סינון-טקסט מדויק.
-// **התיקון הנכון הוא שורה אחת בספרייה** (‏`format: 'textLtr'` ב-`reportsFormat`, או פשיטת
-// ‏`⁦⁩` בענף-ברירת-המחדל של `cellFor`) — ושני הקבצים מחוץ להרשאת-הכתיבה שלי. **מדווח.**
+// ✅ **והמחיר שהוצהר כאן קודם נסגר במקום הנכון:** הבידוד דלף לתא ה-xlsx, ו-`reportsExport`
+// מוחק אותו היום **בגבול-הייצוא** — כלל אחד לכל העמודות במקום זכירה פר-לשונית.
+//
+// 🔻 **ומה שמתבטל מעצמו כשהשרת יכריז `textLtr`:** ‏`formatByType` תבודד את הערך בעצמה, ולכן
+// הבידוד כאן **מותנה בהכרזת-העמודה** ואינו מוחל פעמיים.
+// 🚫 **המיפוי עצמו אינו מתבטל, וזו הנקודה:** ‏`textLtr` **מבודד ואינו מתרגם**, ומיגרציית i2
+// ממשיכה לשים בשורה את **קוד-הדלי** (`'bucket', bucket_key` — נמדד בקובץ, שורה 832), בעוד
+// אותה פונקציה בדיוק שמה בגרף את **התווית** (`'bucket', b.l`, שורה 804). ⇒ בלי המיפוי כאן
+// המסך יציג `d90p` מבודד יפה. **מדווח: אם השורה תישא את `b.l` כמו הגרף, הקוד הזה מת מעצמו.**
 const ISOLATE_WHEN_DIGITS = /[0-9]/
-const AGING_BUCKET_LABELS = Object.freeze(
-  Object.fromEntries(
-    AGING_BUCKETS.map((bucket) => [
-      bucket.key,
-      ISOLATE_WHEN_DIGITS.test(bucket.label) ? isolateLtr(bucket.label) : bucket.label,
-    ]),
-  ),
-)
+// פורמטים שהפורמטר כבר מבודד בעצמם ⇒ אין לבודד שוב באתר-הקריאה (בידוד מקונן אינו no-op).
+const ISOLATING_FORMATS = new Set(['textLtr'])
+
+function bucketLabel(key, columnFormat) {
+  const bucket = AGING_BUCKETS.find((b) => b.key === key)
+  if (!bucket) return null
+  const needsIsolation =
+    ISOLATE_WHEN_DIGITS.test(bucket.label) && !ISOLATING_FORMATS.has(columnFormat)
+  return needsIsolation ? isolateLtr(bucket.label) : bucket.label
+}
 
 /**
  * מפרט ארבעת המשטחים של הלשונית — **דאטה, לא קוד**, וזו הסיבה שיש כאן רכיב אחד ולא ארבעה:
@@ -69,20 +75,25 @@ const AGING_BUCKET_LABELS = Object.freeze(
  * כפי שהאדנדום מזהיר. **ההבדל בין המשטחים הוא הנתונים שבטבלה הזו.**
  *
  * `hints` — מפתחות §⑩ של הכרטיס, לפי נקודת-ההרחבה שבה הם נמסרים.
+ *   ✏️ **עוגנו מחדש כשהמעטפת פתחה שלוש נקודות נוספות (16/09/2026):** `afterSoWhat` — בין
+ *   שורת-"אז מה" לאריחים, **העוגן שהכרטיסים באמת נוקבים בו** (`renderTop` היה מעל
+ *   שורת-האוכלוסייה) · `chartFooter[index]` — **בתוך** כרטיס-הגרף, מתחת ל-`.legend`/`.barkey`.
+ *   🔑 **וה-`index` אינו קישוט:** רמז-ג של מ12 מעוגן בכרטיס-הגרף **השני**, לא בראשון.
  * `sort` — ר' `markSortedColumns`.
  * 🚫 **ומה שכבר אינו כאן:** `rowsOpenProject`. עד 16/09 הלשונית מסרה ל-`ReportSurface` עותק
  *   של `surface` עם `drill: true` רק כדי שהשורות ייפתחו (הכרעה 19). **המעטפת המשותפת פותחת
  *   היום שורה על כל `drill_key` שסוגו נתיב** (GAP 2 · `ROW_DOOR_KINDS`), והדגל הפך למזיק:
  *   `surface.drill` מדכא את הסינון-הצולב האוטומטי ומצייר פירורים אם יגיעו שתי רמות.
- * `bucketColumn` — מ9: העמודה שערכיה הם מפתחות-דלי, ר' `AGING_BUCKET_LABELS`.
+ * `bucketColumn` — מ9: העמודה שערכיה הם מפתחות-דלי, ר' `bucketLabel`.
  * `currentBucketTile` — מ9: אריח "שוטף" יושב ב-`meta.current_tile` ולא ב-`tiles`.
  * `openInvoicesDoor` — מ7: הקישור "כל N החשבוניות הפתוחות →" לדוח-הגיול (📑ב).
  */
 export const FINANCE_SURFACE_SPECS = Object.freeze({
   'finance-overview': Object.freeze({
     hints: Object.freeze({
-      top: ['reports.overview.whyAndFirst'],
-      chart: ['reports.overview.tileBasis', 'reports.overview.debtSeriesBasis'],
+      afterSoWhat: ['reports.overview.whyAndFirst'],
+      chart: ['reports.overview.tileBasis'],
+      chartFooter: { 0: ['reports.overview.debtSeriesBasis'] },
       table: ['reports.overview.oldestSort'],
       extras: [],
     }),
@@ -93,7 +104,7 @@ export const FINANCE_SURFACE_SPECS = Object.freeze({
   }),
   profitability: Object.freeze({
     hints: Object.freeze({
-      top: ['reports.profitability.whyAndFirst'],
+      afterSoWhat: ['reports.profitability.whyAndFirst'],
       chart: ['reports.profitability.tileBasis'],
       table: ['reports.profitability.sortWhy'],
       extras: [],
@@ -107,12 +118,11 @@ export const FINANCE_SURFACE_SPECS = Object.freeze({
   }),
   aging: Object.freeze({
     hints: Object.freeze({
-      top: ['reports.aging.whyAndFirst'],
-      chart: [
-        'reports.aging.overdueBasis',
-        'reports.aging.bucketOrder',
-        'reports.aging.currentTile',
-      ],
+      afterSoWhat: ['reports.aging.whyAndFirst'],
+      chart: ['reports.aging.overdueBasis'],
+      // ג מעוגן *"בתוך .chart-card, מתחת ל-.barkey"* ו-ד *"צמוד לאריח, בתוך .chart-card"* —
+      // שניהם **בתוך** הכרטיס, ולכן שניהם ב-footer של הגרף היחיד.
+      chartFooter: { 0: ['reports.aging.bucketOrder', 'reports.aging.currentTile'] },
       table: [],
       extras: [],
     }),
@@ -124,12 +134,15 @@ export const FINANCE_SURFACE_SPECS = Object.freeze({
       byLevel: { 1: [{ key: 'amount', direction: 'descending' }] },
     }),
     bucketColumn: 'bucket',
-    currentBucketTile: true,
+    // האריח יושב **לצד** הגרף ובתוך הכרטיס (כרטיס מ9 ①6ב · §⑩ד) — `renderChartAside`.
+    currentBucketTile: 0,
   }),
   equipment: Object.freeze({
     hints: Object.freeze({
-      top: ['reports.equipment.whyAndFirst'],
-      chart: ['reports.equipment.tileBasis', 'reports.equipment.sortWhy'],
+      afterSoWhat: ['reports.equipment.whyAndFirst'],
+      chart: ['reports.equipment.tileBasis'],
+      // ג מעוגן *"בתוך .chart-card **השני**, מתחת ל-.legend"* — ולכן אינדקס 1, לא 0.
+      chartFooter: { 1: ['reports.equipment.sortWhy'] },
       table: [],
       extras: ['reports.equipment.orderCeiling'],
     }),
@@ -146,12 +159,13 @@ export const FINANCE_SURFACE_SPECS = Object.freeze({
 /** מפתחות-דלי בעמודה אחת ⇒ התוויות של `AGING_BUCKETS`. ערך שאינו מפתח מוכר נשאר כפי שהוא. */
 function withBucketLabels(payload, columnKey) {
   if (!columnKey || !payload.rows?.length) return payload
-  if (!payload.columns?.some((c) => c.key === columnKey)) return payload
-  if (!payload.rows.some((row) => AGING_BUCKET_LABELS[row[columnKey]])) return payload
+  const column = payload.columns?.find((c) => c.key === columnKey)
+  if (!column) return payload
+  if (!payload.rows.some((row) => bucketLabel(row[columnKey], column.format))) return payload
   return {
     ...payload,
     rows: payload.rows.map((row) => {
-      const label = AGING_BUCKET_LABELS[row[columnKey]]
+      const label = bucketLabel(row[columnKey], column.format)
       return label ? { ...row, [columnKey]: label } : row
     }),
   }

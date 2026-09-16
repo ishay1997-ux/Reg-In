@@ -924,6 +924,30 @@ describe('מצבים ושכבת-הטמעה', () => {
     expect(tiles.querySelector('[data-testid^="hint-"]')).toBeNull()
   })
 
+  it('🔴 רמז-ה-`barkey` נשאר על הלוח האחרון גם כשמיגרציית i2 מפצלת אותו לשניים', async () => {
+    // 🪤 **הרגרסיה שהבדיקה הזו נועלת מראש:** ‏`i2` מפצלת את לוח מחיר/עלות לשני כרטיסים
+    // מאפסים (⁦2⁩ גרפים ⇐ ⁦3⁩). אינדקס קשיח `=== 1` היה מצמיד את הרמז ללוח **המחיר** בעוד
+    // הוא מסביר את ה**עלות**, ובמוקאפ ה-`.barkey` יושב אחרי שני הלוחות (שורות 708–713).
+    const split = m3Root()
+    const [yearChart, combined] = split.chart
+    split.chart = [
+      yearChart,
+      { ...combined, title: 'מחיר לשעה, לפי שנה', series: [combined.series[0]] },
+      { ...combined, title: 'עלות לשעה, לפי שנה', series: [combined.series[1]] },
+    ]
+    callReport.mockResolvedValueOnce(split)
+    renderTab('מ3')
+    await screen.findAllByText('מחיר לשעה')
+
+    const cards = screen.getAllByTestId(/^chart-card-/)
+    expect(cards).toHaveLength(3)
+    expect(cards[1].querySelector('[data-testid="hint-reports.trends.costPerHour"]')).toBeNull()
+    expect(cards[2].querySelector('[data-testid="hint-reports.trends.costPerHour"]')).not.toBeNull()
+    // וכל אחד מהשניים מאפס — `domain: null` ⇒ `[0,'auto']` ב-`ChartCard.valueDomain`.
+    expect(split.chart[1].domain).toBeNull()
+    expect(split.chart[2].domain).toBeNull()
+  })
+
   it('🔴 רמזי-הגרף יושבים בתוך כרטיס-הגרף שהם מסבירים, ולא מעל שניהם יחד', async () => {
     callReport.mockResolvedValueOnce(m3Root())
     renderTab('מ3')

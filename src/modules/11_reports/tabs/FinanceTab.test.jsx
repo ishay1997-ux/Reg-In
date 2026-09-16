@@ -78,6 +78,14 @@ async function click(element) {
   })
 }
 
+// מפתחות-הרמז של מפרט אחד. ‏`chartFooter` הוא **מפה לפי אינדקס-גרף** ולא מערך (רמז-ג של
+// מ12 מעוגן בכרטיס השני), ולכן איסוף שטוח חייב לרדת גם דרכה.
+function hintIdsOf(spec) {
+  return Object.values(spec.hints).flatMap((slot) =>
+    Array.isArray(slot) ? slot : Object.values(slot ?? {}).flat(),
+  )
+}
+
 function renderTab({ slug, drill = null, onDrill = vi.fn(), onWindow = vi.fn() } = {}) {
   render(
     <MemoryRouter initialEntries={[`/reports?tab=finance&report=${slug}`]}>
@@ -544,11 +552,34 @@ describe('מ9 · גיול חובות (דוח-דריל)', () => {
     expect(table.textContent).not.toContain('⁦שוטף⁩')
   })
 
+  it('כשהשרת יכריז textLtr — הלשונית מתרגמת ומפסיקה לבודד (בלי בידוד כפול)', async () => {
+    // 🔻 **הענף שמתבטל מעצמו.** מיגרציית i2 מכריזה `format: 'textLtr'` על עמודת-המדרג
+    // (נמדד בקובץ, שורה 1033) ו-`formatByType` תבודד את הערך בעצמה — אבל היא **מבודדת
+    // ואינה מתרגמת**, וה-RPC ממשיך לשים בשורה את קוד-הדלי. ⇒ המיפוי נשאר, הבידוד יורד.
+    // ⚠️ נכון לרגע הכתיבה i2 **טרם הוחל** (נמדד חי: `bucket:text`), ולכן שני הענפים חיים.
+    const payload = agingRootPayload()
+    payload.columns = payload.columns.map((c) =>
+      c.key === 'bucket' ? { ...c, format: 'textLtr' } : c,
+    )
+    callReport.mockResolvedValue(payload)
+    renderTab({ slug: 'aging' })
+    const table = await screen.findByTestId('report-table-card')
+    expect(plain(table)).toContain('90+')
+    expect(table.textContent).not.toContain('d90p')
+    // הערך שנמסר לרכיב נקי — הבידוד הוא של הפורמטר, ולא מקונן.
+    expect(table.textContent).not.toContain('⁦⁦90+')
+  })
+
   it('אריח "שוטף — עוד לא באיחור" מצויר לצד הגרף ויורד רמה בלחיצה', async () => {
     callReport.mockResolvedValue(agingRootPayload())
     const { onDrill } = renderTab({ slug: 'aging' })
 
     const tile = await screen.findByTestId('aging-current-tile')
+    // 🔴 **בתוך כרטיס-הגרף ולצידו** (כרטיס ①6ב: *"באריח נפרד לצד הגרף, לא כעמודה בו"*) —
+    // עד שנקודת-ה-`aside` נפתחה הוא ישב בשורה נפרדת **מעל** הכרטיס.
+    expect(
+      within(screen.getByTestId('chart-card-stackedBar')).getByTestId('chart-aside'),
+    ).toContainElement(tile)
     expect(plain(tile)).toContain('שוטף — עוד לא באיחור')
     expect(plain(tile)).toContain('48,746 ₪')
     expect(plain(tile)).toContain('101,679 ₪')
@@ -622,6 +653,18 @@ describe('מ12 · צריכת ציוד', () => {
 
     await click(screen.getByTestId('report-clear-crossfilter'))
     expect(within(mainTable()).getAllByTestId('report-row')).toHaveLength(2)
+  })
+
+  it('רמז-ג יושב בכרטיס-הגרף השני, לא בראשון (עוגן §⑩ג)', async () => {
+    state.onboardingMode = 2
+    callReport.mockResolvedValue(equipmentPayload())
+    renderTab({ slug: 'equipment' })
+    await screen.findAllByTestId('report-table-card')
+    const cards = screen.getAllByTestId(/^chart-card-/)
+    expect(cards).toHaveLength(2)
+    // "גרף-העלות שמעל … והגרף הזה לפי הכמות שהוזמנה" — המשפט מדבר מתוך הגרף השני.
+    expect(within(cards[1]).getByTestId('hint-reports.equipment.sortWhy')).toBeInTheDocument()
+    expect(within(cards[0]).queryByTestId('hint-reports.equipment.sortWhy')).toBeNull()
   })
 
   it('שורות הטבלה אינן לחיצות — יעד-הקידוח של ה-sku אינו מסך קיים (⑧12.1 פתוח)', async () => {
@@ -708,9 +751,7 @@ describe('חמשת המצבים והייצוא', () => {
 
 describe('שכבת-ההטמעה (§2ב C3)', () => {
   it('כל מפתח שהלשונית משתילה קיים בקובץ-הקופי שלה', () => {
-    const used = Object.values(FINANCE_SURFACE_SPECS).flatMap((spec) =>
-      Object.values(spec.hints).flat(),
-    )
+    const used = Object.values(FINANCE_SURFACE_SPECS).flatMap(hintIdsOf)
     expect(used).toHaveLength(15)
     for (const id of used) {
       expect(M11_FINANCE_COPY, `מפתח חסר: ${id}`).toHaveProperty(id)
@@ -726,7 +767,7 @@ describe('שכבת-ההטמעה (§2ב C3)', () => {
     callReport.mockResolvedValue(overviewPayload())
     renderTab({ slug: 'finance-overview' })
     await screen.findByTestId('report-tile-open_debt')
-    for (const id of Object.values(FINANCE_SURFACE_SPECS['finance-overview'].hints).flat()) {
+    for (const id of hintIdsOf(FINANCE_SURFACE_SPECS['finance-overview'])) {
       expect(screen.getByTestId(`hint-${id}`)).toBeInTheDocument()
     }
     // 🔴 **מיקום נמדד ולא מונח.** השם הישן הבטיח "בעוגנים שלהם" בעוד הגוף בדק נוכחות
@@ -736,12 +777,19 @@ describe('שכבת-ההטמעה (§2ב C3)', () => {
         screen.getByTestId(a).compareDocumentPosition(screen.getByTestId(b)) &
         Node.DOCUMENT_POSITION_FOLLOWING,
       )
-    // `whyAndFirst` מעל שורת-האוכלוסייה (renderTop · אדנדום §2).
-    expect(before('hint-reports.overview.whyAndFirst', 'report-population')).toBe(true)
-    // `tileBasis` ו-`debtSeriesBasis` בין האריחים לכרטיס-הגרף.
+    // `whyAndFirst` — **בין שורת-"אז מה" לאריחים**, בדיוק כפי שהכרטיס מעגן (renderAfterSoWhat).
+    expect(before('report-so-what', 'hint-reports.overview.whyAndFirst')).toBe(true)
+    expect(before('hint-reports.overview.whyAndFirst', 'report-tiles')).toBe(true)
+    // `tileBasis` — בין האריחים לכרטיס-הגרף.
     expect(before('report-tiles', 'hint-reports.overview.tileBasis')).toBe(true)
     expect(before('hint-reports.overview.tileBasis', 'chart-card-bar')).toBe(true)
-    expect(before('hint-reports.overview.debtSeriesBasis', 'chart-card-bar')).toBe(true)
+    // `debtSeriesBasis` — **בתוך** הכרטיס, מתחת לציור (renderChartFooter).
+    expect(
+      within(screen.getByTestId('chart-card-bar')).getByTestId(
+        'hint-reports.overview.debtSeriesBasis',
+      ),
+    ).toBeInTheDocument()
+    expect(before('chart-figure', 'hint-reports.overview.debtSeriesBasis')).toBe(true)
     // `oldestSort` בין הגרף לטבלה.
     expect(before('chart-card-bar', 'hint-reports.overview.oldestSort')).toBe(true)
     expect(before('hint-reports.overview.oldestSort', 'report-table-card')).toBe(true)

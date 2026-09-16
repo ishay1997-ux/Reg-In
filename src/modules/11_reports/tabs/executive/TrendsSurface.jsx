@@ -32,6 +32,8 @@ const ROW_ACTION = [
 ]
 
 const levelOf = (payload) => payload.drill?.level ?? 0
+const chartCount = (payload) =>
+  Array.isArray(payload.chart) ? payload.chart.length : payload.chart ? 1 : 0
 
 /**
  * 📐20 · **רמה 0 — שנה חלקית.** התווית מועתקת מהמוקאפ המאושר מילה-במילה
@@ -66,12 +68,17 @@ export default function TrendsSurface(props) {
       {...props}
       transformPayload={transformPayload}
       renderAfterSoWhat={() => <SurfaceHint hintId="reports.trends.purpose" />}
-      // §⑩ ב — הרמז מעוגן ל**הערת-הגרף** של גרף-השנים, ו-⑩ ג ל-`.barkey` של לוח
-      // מחיר/עלות. שניהם יושבים עכשיו **בתוך כרטיס-הגרף הנכון** ולא לפני שניהם יחד.
+      // §⑩ ב — הרמז מעוגן ל**הערת-הגרף** של גרף-השנים (הראשון), ו-⑩ ג ל-`.barkey` של
+      // לוחות מחיר/עלות. 🔑 **ולמה "האחרון" ולא אינדקס קשיח:** במוקאפ ה-`.barkey` יושב
+      // **אחרי** ה-`.chart-row` שמחזיק את שני הלוחות (שורות 708–713), כלומר מתחת לאחרון
+      // מביניהם — וזה נשאר נכון גם כשמיגרציית `i2` מפצלת את הלוח המשולב לשני כרטיסים
+      // נפרדים (⁦2⁩ גרפים ⇐ ⁦3⁩). אינדקס קשיח היה נשבר בשקט ביום שהפיצול נוחת.
       renderChartFooter={(payload, index) => {
         if (levelOf(payload) !== 0) return null
         if (index === 0) return <SurfaceHint hintId="reports.trends.partialYear" />
-        return index === 1 ? <SurfaceHint hintId="reports.trends.costPerHour" /> : null
+        return index === chartCount(payload) - 1 ? (
+          <SurfaceHint hintId="reports.trends.costPerHour" />
+        ) : null
       }}
       renderBeforeTable={(payload) => (
         <TableLead rowAction={ROW_ACTION[levelOf(payload)]} hintId="reports.trends.drillPath" />

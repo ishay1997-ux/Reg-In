@@ -65,8 +65,10 @@ function CurrentBucketTile({ currentTile, onOpen }) {
           },
     target: currentTile.drill ?? null,
   }
+  // 🚫 בלי שורת-flex משלו: `ChartCard` נותן ל-`aside` טור ברוחב 210px לצד הציור (F9),
+  // ועטיפה נוספת הייתה נלחמת בו.
   return (
-    <div className="mb-3 flex flex-wrap gap-3" data-testid="aging-current-tile">
+    <div data-testid="aging-current-tile">
       <KpiTile tile={tile} onOpenTarget={onOpen} />
     </div>
   )
@@ -123,15 +125,19 @@ export default function FinanceSurface({ surface, spec, filters, drill, onDrill,
       onDrill={onDrill}
       onWindow={onWindow}
       transformPayload={transformPayload}
-      renderTop={() => <HintRow ids={spec.hints.top} />}
-      renderBeforeChart={(payload) => (
-        <>
-          <HintRow ids={spec.hints.chart} />
-          {spec.currentBucketTile && (
-            <CurrentBucketTile currentTile={payload.meta?.current_tile} onOpen={onDrill} />
-          )}
-        </>
-      )}
+      // 🔴 **`afterSoWhat` ולא `renderTop` — וזה עוגן-כרטיס, לא טעם:** §⑩ של ארבעת הכרטיסים
+      // מעגן את רמז-ה-`whyAndFirst` *"אחרי שורת-'אז מה', מעל .tiles"*. עד שהמעטפת פתחה את
+      // הנקודה הזו הוא נתלה מעל שורת-האוכלוסייה — קרוב, אבל לא מה שהכרטיס אומר.
+      renderAfterSoWhat={() => <HintRow ids={spec.hints.afterSoWhat} />}
+      renderBeforeChart={() => <HintRow ids={spec.hints.chart} />}
+      // אריח-הצד של מ9 יושב **בתוך** כרטיס-הגרף ולצידו (כרטיס ①6ב) — ולא בשורה מעליו.
+      renderChartAside={(payload, index) =>
+        index === spec.currentBucketTile ? (
+          <CurrentBucketTile currentTile={payload.meta?.current_tile} onOpen={onDrill} />
+        ) : null
+      }
+      // רמזים שהכרטיס מעגן **מתחת ל-`.legend`/`.barkey`** — כלומר בתוך הכרטיס, לא מעליו.
+      renderChartFooter={(payload, index) => <HintRow ids={spec.hints.chartFooter?.[index]} />}
       renderBeforeTable={() => <HintRow ids={spec.hints.table} />}
       renderExtras={(payload) => (
         <>
