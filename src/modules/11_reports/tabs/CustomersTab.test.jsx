@@ -1,21 +1,23 @@
 // בדיקות לשונית "לקוחות" (מ19 · מ20 · מ21 · מ22 · מ25).
 //
-// 🔑 **מה הן באמת שומרות עליו, ומה לא:** ‏`ReportSurface` כבר נבדק אצלו; כאן נבדק **מה
-// שהלשונית מוסיפה** — ארבע הכרעות שאין להן שום שער אחר שיתפוס אותן אם ייפלו:
-// ‏**הכרעה 19** (השורה כולה דלת, ויעד נכון לכל דף) · **הכרעה 33** (אריח-דלת, ותרגום
-// התווית העברית לכתובת) · **המיסוך** (₪ של מ21 כפוף למודול 'כספים') · **מ25** (שני
-// הכפתורים, חמשת המצבים, ושהם אינם קיימים בלי `edit` על 'דו"חות').
-// ⚠️ **ומפתחות-ההטמעה** — מפתח שגוי מרנדר `null` **בשקט בייצור**, ולכן יש כאן בדיקה
-// שקוראת את קוד-הלשונית עצמו ומוודאת שכל `reports.*` שמופיע בו קיים בקובץ-הקופי.
+// 🔑 **מה הן באמת שומרות עליו, ומה לא:** ‏`ReportSurface` · `ReportsPage` · `KpiTile`
+// נבדקים אצלם — כולל נתב-הדלתות ושורת-המשנה של האריח. **כאן נבדק רק מה שהלשונית מוסיפה**,
+// ואחרי סבב-היישור של 16/09 11:1X זה בדיוק שלושה דברים: **המיסוך** (₪ של מ21 כפוף למודול
+// 'כספים' ולא ל'לקוחות') · **מיפויי-התצוגה** (אנום ⇐ עברית · מערך ⇐ תא · בוליאני ⇐ עברית ·
+// תאריך שהוכרז `text`) · **מ25** (חמשת המצבים, שני הכפתורים, ושהם אינם קיימים בלי `edit`
+// על 'דו"חות'). ⚠️ **ומפתחות-ההטמעה** — מפתח שגוי מרנדר `null` **בשקט בייצור**, ולכן יש
+// כאן בדיקה שקוראת את קוד-הלשונית עצמו ומוודאת שכל `reports.*` שבו קיים בקובץ-הקופי.
+//
+// 🚪 **הדלתות נבדקות כאן כ*חוזה* ולא כניווט:** הלשונית מעבירה את `onDrill` של המעטפת
+// הלאה בלי לגעת בו, ולכן מה שיש לאמת הוא **מה נמסר לו** — ‏`{kind, id}` מהשורה,
+// `{tab, report}` מהאריח. הניווט עצמו נבדק ב-`ReportsPage.test.jsx`.
 //
 // 🔴 **ולמה אף בדיקה כאן אינה מריצה סיווג אמיתי:** *"הרץ ניתוח"* קורא לפונקציית-שרת
 // ששורפת מכסת-ספק. ‏`supabase.functions.invoke` ממוקם — **נבדק מסלול-הקריאה, לא הספק.**
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, within, fireEvent } from '@testing-library/react'
-import { MemoryRouter, useLocation } from 'react-router-dom'
 import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 
 const invoke = vi.fn()
 vi.mock('@/supabaseClient', () => ({
@@ -108,16 +110,16 @@ const base = (over = {}) => ({
   so_what: null,
   definitions: '',
   drill: null,
-  meta: { missing_params: [], notes: [], run: null },
+  meta: { missing_params: [], notes: [], run: null, export_blocked_reason: null },
   ...over,
 })
 
-// ── מטענים בצורת C8, עם המספרים שנמדדו חי מה-RPC ב-16/09/2026 ────────────────
+// ── מטענים בצורת C8, עם הצורות והמספרים שנמשכו חי מה-RPC ב-16/09/2026 אחרי G2/H2 ──
 const overviewPayload = () =>
   base({
     population: {
       n: 163,
-      label: 'אוכלוסייה: משובים שהלקוח מילא · n=163 משובים מתוך 217 שנשלחו, אצל 61 לקוחות.',
+      label: 'אוכלוסייה: משובים שהלקוח מילא · ⁦n=163⁩ משובים מתוך ⁦217⁩ שנשלחו, אצל ⁦42⁩ לקוחות.',
       excluded: { 'נשלח ולא נענה': 54 },
     },
     tiles: [
@@ -126,7 +128,8 @@ const overviewPayload = () =>
         label: 'שביעות-רצון מנבאת חזרה',
         value: 16,
         format: 'days',
-        window: 'כל הזמנים · 46 לקוחות עם 3+ משובים · אינו מושפע ממסנן התקופה',
+        sub: 'חציון ימים מאז האירוע האחרון: לקוחות מרוצים מול לקוחות לא-מרוצים',
+        window: 'כל הזמנים · אינו מושפע ממסנן התקופה',
         compare: { value: 212, label: 'לקוחות לא-מרוצים', direction: 'flat' },
         target: { tab: 'לקוחות', report: 'שביעות רצון', drill: null },
       },
@@ -135,6 +138,7 @@ const overviewPayload = () =>
         label: 'קצב-התשלום תלוי בסוג הלקוח',
         value: 69,
         format: 'days',
+        sub: 'חציון ימים מחשבונית לתשלום, לפי סוג הלקוח',
         window: 'כל הזמנים',
         compare: null,
         target: { tab: 'כספים', report: 'גיול חובות', drill: null },
@@ -163,13 +167,25 @@ const overviewPayload = () =>
     },
     columns: [
       { key: 'company_name', label: 'לקוח', format: 'text', align: 'start' },
-      { key: 'customer_type', label: 'סוג הלקוח', format: 'text', align: 'start' },
-      { key: 'revenue_12m', label: 'הכנסת 12 החודשים', format: 'money', align: 'end' },
+      {
+        key: 'customer_type',
+        label: 'סוג הלקוח',
+        format: 'text',
+        align: 'start',
+        label_source: 'CUSTOMER_TYPE_LABELS',
+      },
+      {
+        key: 'revenue_12m',
+        label: 'הכנסת 12 החודשים',
+        format: 'money',
+        align: 'end',
+        sorted: 'descending',
+      },
       { key: 'last_event', label: 'אירוע אחרון', format: 'text', align: 'start' },
     ],
     rows: [
       {
-        drill_key: 401,
+        drill_key: { kind: 'customer', id: 401 },
         customer_id: 401,
         company_name: 'אלפא סיסטמס בע"מ',
         customer_type: 'private_company',
@@ -194,13 +210,14 @@ const chartOf = (title) => ({
 
 const satisfactionPayload = () =>
   base({
-    population: { n: 163, label: 'אוכלוסייה: משובים שהלקוח מילא · n=163', excluded: {} },
+    population: { n: 163, label: 'אוכלוסייה: משובים שהלקוח מילא · ⁦n=163⁩', excluded: {} },
     tiles: [
       {
         key: 'satisfied_share',
         label: 'שיעור המרוצים (4–5)',
         value: 88.3,
         format: 'percent',
+        sub: '⁦144⁩ מתוך ⁦163⁩ משובים',
         window: '01/01/2026–16/09/2026',
         compare: { value: 80.1, label: 'אשתקד באותו טווח', direction: 'up' },
         target: null,
@@ -215,13 +232,13 @@ const satisfactionPayload = () =>
     columns: [
       { key: 'company_name', label: 'לקוח', format: 'text', align: 'start' },
       { key: 'final_event_date', label: 'תאריך', format: 'text', align: 'start' },
-      { key: 'feedback_score', label: 'ציון', format: 'int', align: 'end' },
+      { key: 'feedback_score', label: 'ציון', format: 'int', align: 'end', sorted: 'ascending' },
       { key: 'reasons', label: 'הסיבה שסומנה', format: 'text', align: 'start' },
       { key: 'feedback_notes', label: 'ההערה שנכתבה', format: 'text', align: 'start' },
     ],
     rows: [
       {
-        drill_key: 1527,
+        drill_key: { kind: 'project', id: 1527 },
         project_id: 1527,
         company_name: 'גלובל שיפינג בע"מ',
         final_event_date: '2026-06-22',
@@ -236,23 +253,24 @@ const satisfactionPayload = () =>
 
 const driftingPayload = () =>
   base({
-    population: { n: 52, label: 'אוכלוסייה: 52 לקוחות שקיימו 3 אירועים לפחות', excluded: {} },
+    population: { n: 52, label: 'אוכלוסייה: ⁦52⁩ לקוחות שקיימו ⁦3⁩ אירועים לפחות', excluded: {} },
     tiles: [
       {
         key: 'drifting_count',
         label: 'לקוחות מתרחקים',
         value: 12,
         format: 'int',
+        sub: 'מתוך ⁦52⁩ לקוחות עם ⁦3+⁩ אירועים (⁦23.1%⁩)',
         window: 'נכון ל-16/09',
         compare: { value: 10, label: 'לפני חודש', direction: 'up' },
         target: null,
-        detail: { eligible: 52 },
       },
       {
         key: 'marked_revenue_12m',
         label: 'הכנסת 12 החודשים של הלקוחות המסומנים',
         value: 320743.08,
         format: 'money',
+        sub: '⁦11.5%⁩ מ-⁦2,786,544 ₪⁩ שהעסק הכניס ב-⁦12⁩ החודשים',
         window: '16/09/2025–16/09/2026',
         compare: null,
         target: null,
@@ -262,6 +280,7 @@ const driftingPayload = () =>
         label: 'נתפסים רק בקצב האישי',
         value: 3,
         format: 'int',
+        sub: '⁦161,009 ₪⁩ בשנה האחרונה',
         window: 'נכון ל-16/09',
         compare: null,
         target: null,
@@ -281,13 +300,19 @@ const driftingPayload = () =>
     columns: [
       { key: 'company_name', label: 'לקוח', format: 'text', align: 'start' },
       { key: 'contact_name', label: 'איש קשר', format: 'text', align: 'start' },
-      { key: 'revenue_12m', label: 'הכנסת 12 החודשים', format: 'money', align: 'end' },
+      {
+        key: 'revenue_12m',
+        label: 'הכנסת 12 החודשים',
+        format: 'money',
+        align: 'end',
+        sorted: 'descending',
+      },
       { key: 'ratio', label: 'פי כמה מהקצב', format: 'ratio', align: 'end' },
       { key: 'flag', label: 'דגל', format: 'text', align: 'start' },
     ],
     rows: [
       {
-        drill_key: 426,
+        drill_key: { kind: 'customer', id: 426 },
         customer_id: 426,
         company_name: 'גלובל שיפינג בע"מ',
         contact_name: 'ענבר אשכנזי',
@@ -297,7 +322,7 @@ const driftingPayload = () =>
         flag: 'מתרחק בלבד',
       },
       {
-        drill_key: 444,
+        drill_key: { kind: 'customer', id: 444 },
         customer_id: 444,
         company_name: 'מגה-אירוע הפקות',
         contact_name: 'דניאל אברהם',
@@ -311,32 +336,44 @@ const driftingPayload = () =>
     definitions: 'הגדרות: מתרחק = אין אירוע עתידי וגם פי 1.5 מהמרווח הרגיל.',
   })
 
+// ‏`meta.run` אחרי G2-1: איחוד שתי הריצות המאושרות. ⚠️ `sent_count` כאן הוא **סכום**
+// (⁦812⁩) ולא מכנה — הפס לעולם אינו מחלק בו.
 const APPROVED_RUN = {
   run_id: 6,
   status: 'done',
-  model: 'gemini-3.5-flash-lite',
+  run_count: 2,
+  model: 'gemini-3.5-flash-lite + gemini-3.8-flash',
   approved_at: '2026-09-16T04:28:26.605176+00:00',
   approved_by: 'ishay1997@gmail.com',
-  sent_count: 386,
-  ok_count: 386,
+  sent_count: 812,
+  ok_count: 426,
   failed_count: 0,
-  classified: 386,
+  classified: 426,
   unclassifiable: 0,
 }
 
-const notesPayload = ({ run = APPROVED_RUN } = {}) =>
+// ‏`meta.run_in_progress` כפי שהוא **חי היום**: ריצה 4 במצב `failed` — קיימת, ואינה "בתהליך".
+const FAILED_RUN_IN_PROGRESS = {
+  run_id: 4,
+  status: 'failed',
+  model: 'gemini-3.8-flash',
+  ok_count: 0,
+  failed_count: 0,
+  sent_count: 426,
+  started_at: '2026-09-16T03:05:52.311548+00:00',
+  finished_at: '2026-09-16T03:06:01.201+00:00',
+}
+
+const notesPayload = ({ run = APPROVED_RUN, runInProgress = FAILED_RUN_IN_PROGRESS } = {}) =>
   base({
-    population: {
-      n: 426,
-      label: 'אוכלוסייה: הערות חופשיות · 426 הערות מתוך 552 משובים',
-      excluded: {},
-    },
+    population: { n: 426, label: 'אוכלוסייה: הערות חופשיות · ⁦426⁩ הערות', excluded: {} },
     tiles: [
       {
         key: 'free_notes',
         label: 'הערות חופשיות שנכתבו',
         value: 426,
         format: 'int',
+        sub: 'מתוך ⁦552⁩ משובים שהושלמו',
         window: 'כל הזמנים',
         compare: null,
         target: null,
@@ -346,6 +383,7 @@ const notesPayload = ({ run = APPROVED_RUN } = {}) =>
         label: 'מהן שייכות למשוב שתויג "אחר"',
         value: 33,
         format: 'int',
+        sub: 'לכל ⁦33⁩ יש טקסט',
         window: 'כל הזמנים',
         compare: null,
         target: null,
@@ -365,8 +403,9 @@ const notesPayload = ({ run = APPROVED_RUN } = {}) =>
       {
         key: 'red_flags',
         label: 'דגלים אדומים',
-        value: run ? 24 : null,
+        value: run ? 25 : null,
         format: run ? 'int' : 'text',
+        sub: run ? 'מתוך ⁦426⁩ הערות מסווגות · ⁦2⁩ ריצות מאושרות' : 'טרם אושרה ריצה — לא 0',
         window: run ? 'הריצה מ-16/09/2026' : '—',
         compare: null,
         target: null,
@@ -378,13 +417,19 @@ const notesPayload = ({ run = APPROVED_RUN } = {}) =>
           { key: 'final_event_date', label: 'תאריך', format: 'text', align: 'start' },
           { key: 'feedback_notes', label: 'ההערה שנכתבה', format: 'text', align: 'start' },
           { key: 'model_topics', label: 'נושא (מודל)', format: 'text', align: 'start' },
-          { key: 'red_flag', label: 'דגל אדום', format: 'text', align: 'start' },
+          {
+            key: 'red_flag',
+            label: 'דגל אדום',
+            format: 'text',
+            align: 'start',
+            sorted: 'descending',
+          },
         ]
       : [],
     rows: run
       ? [
           {
-            drill_key: 1455,
+            drill_key: { kind: 'project', id: 1455 },
             project_id: 1455,
             company_name: 'ורד קוסמטיקה טבעית',
             final_event_date: '2026-04-21',
@@ -396,15 +441,16 @@ const notesPayload = ({ run = APPROVED_RUN } = {}) =>
       : [],
     so_what: run ? 'לשקול קטגוריה חדשה בטופס-המשוב.' : 'להריץ את הניתוח על 426 ההערות.',
     definitions: 'הגדרות: הערה חופשית = טקסט שהלקוח כתב.',
-    meta: { missing_params: [], notes: [], run },
+    meta: {
+      missing_params: [],
+      notes: [],
+      run,
+      run_in_progress: runInProgress,
+      export_blocked_reason: run ? null : EXPORT_NO_APPROVED_RUN,
+    },
   })
 
-function LocationProbe() {
-  const location = useLocation()
-  return <p data-testid="probe">{`${location.pathname}${location.search}`}</p>
-}
-
-function renderTab(surface, { onRetry = vi.fn() } = {}) {
+function renderTab(surface, { onRetry = vi.fn(), onDrill = vi.fn() } = {}) {
   const filters = {
     period: 'year',
     from: '2026-01-01',
@@ -416,19 +462,16 @@ function renderTab(surface, { onRetry = vi.fn() } = {}) {
     clearFilters: vi.fn(),
   }
   const utils = render(
-    <MemoryRouter initialEntries={['/reports?tab=customers']}>
-      <CustomersTab
-        surface={surface}
-        filters={filters}
-        drill={null}
-        onDrill={vi.fn()}
-        onWindow={vi.fn()}
-        onRetry={onRetry}
-      />
-      <LocationProbe />
-    </MemoryRouter>,
+    <CustomersTab
+      surface={surface}
+      filters={filters}
+      drill={null}
+      onDrill={onDrill}
+      onWindow={vi.fn()}
+      onRetry={onRetry}
+    />,
   )
-  return { ...utils, onRetry }
+  return { ...utils, onRetry, onDrill }
 }
 
 beforeEach(() => {
@@ -438,9 +481,9 @@ beforeEach(() => {
 })
 
 describe('מ19 · מבט-על לקוחות', () => {
-  it('מצייר אריחים בתוויות §1.4, שורת-אוכלוסייה, "אז מה" והגדרות — והשורה כולה דלת לכרטיס-הלקוח', async () => {
+  it('מצייר אריחים בתוויות §1.4, שורת-אוכלוסייה, "אז מה" והגדרות — ומעביר את דלת-השורה למעטפת', async () => {
     callReport.mockResolvedValue(overviewPayload())
-    renderTab(SURFACES.מ19)
+    const { onDrill } = renderTab(SURFACES.מ19)
 
     expect(await screen.findByText('שביעות-רצון מנבאת חזרה')).toBeInTheDocument()
     // ‏`⁦`/`⁩` = LRI…PDI — הבידוד ש-`reportsFormat` מוסיף לכל ערך לא-עברי.
@@ -457,29 +500,30 @@ describe('מ19 · מבט-על לקוחות', () => {
     expect(row).toHaveTextContent('15/09/2026')
 
     fireEvent.click(row)
-    expect(screen.getByTestId('probe')).toHaveTextContent('/customers/401')
+    // 🚪 הלשונית אינה מנווטת — היא מוסרת את המפתח לנתב של המעטפת (`ReportsPage.openDoor`).
+    expect(onDrill).toHaveBeenCalledWith({ kind: 'customer', id: 401 }, expect.any(Object))
   })
 
-  it('הכרעה 33 — אריח-דלת מנווט לדוח היעד, ואריח שיעדו ממוסך מאבד את הדלת ולא את הנתון', async () => {
+  it('הכרעה 33 — אריח-דלת מוסר את היעד בתוויות של §🏷️, גם כשהיעד בלשונית אחרת', async () => {
     callReport.mockResolvedValue(overviewPayload())
-    renderTab(SURFACES.מ19)
+    const { onDrill } = renderTab(SURFACES.מ19)
 
     fireEvent.click(await screen.findByTestId('report-tile-link-satisfaction_vs_return'))
-    expect(screen.getByTestId('probe')).toHaveTextContent('tab=customers')
-    expect(screen.getByTestId('probe')).toHaveTextContent('report=satisfaction')
+    expect(onDrill).toHaveBeenCalledWith({ tab: 'לקוחות', report: 'שביעות רצון', drill: null })
+
+    fireEvent.click(screen.getByTestId('report-tile-link-payment_cadence_by_type'))
+    expect(onDrill).toHaveBeenLastCalledWith({ tab: 'כספים', report: 'גיול חובות', drill: null })
   })
 
-  it('מנהלת-פרויקטים (חסומה על כספים) רואה את אריח קצב-התשלום בלי דלת', async () => {
-    permissions = PROJECTS
+  it('הצהרת-המיון של השרת עוברת כמות שהיא — הלשונית אינה מזריקה `sorted` משלה', async () => {
     callReport.mockResolvedValue(overviewPayload())
     renderTab(SURFACES.מ19)
-
-    expect(await screen.findByTestId('report-tile-payment_cadence_by_type')).toHaveTextContent(
-      '⁦69⁩ ימים',
+    await screen.findByTestId('report-table-card')
+    expect(screen.getByRole('columnheader', { name: /הכנסת 12 החודשים/ })).toHaveAttribute(
+      'aria-sort',
+      'descending',
     )
-    expect(screen.queryByTestId('report-tile-link-payment_cadence_by_type')).toBeNull()
-    // והדלת שבתוך הלשונית נשארת פתוחה לה.
-    expect(screen.getByTestId('report-tile-link-satisfaction_vs_return')).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'לקוח' })).not.toHaveAttribute('aria-sort')
   })
 
   it('`tiles[].detail` מוצג כגילוי ולא כאריח שני, עם התוויות העבריות של סוג-הלקוח', async () => {
@@ -492,7 +536,7 @@ describe('מ19 · מבט-על לקוחות', () => {
 })
 
 describe('מ20 · שביעות רצון', () => {
-  it('מצייר את ארבעת הגרפים של המוקאפ — שניים מהמעטפת ושניים מעל תקרת-C8', async () => {
+  it('מצייר את ארבעת הגרפים של המוקאפ המאושר', async () => {
     callReport.mockResolvedValue(satisfactionPayload())
     renderTab(SURFACES.מ20)
     for (const title of ['התפלגות הציונים', 'מה משמח', 'מה מכעיס', 'שיעור המרוצים לפי שנה']) {
@@ -500,21 +544,19 @@ describe('מ20 · שביעות רצון', () => {
     }
   })
 
-  it('רשימת-סיבות מוצגת כטקסט אחד, הערה ריקה אינה תא ריק, והמיון המוצהר הוא ציון עולה', async () => {
+  it('רשימת-סיבות מוצגת כטקסט אחד, והערה ריקה אינה תא ריק', async () => {
     callReport.mockResolvedValue(satisfactionPayload())
     renderTab(SURFACES.מ20)
     const row = await screen.findByTestId('report-row-drillable')
     expect(row).toHaveTextContent('תפקוד דיילות · ניהול לקוי')
     expect(row).toHaveTextContent('— ללא הערה')
-    const scoreHeader = screen.getByRole('columnheader', { name: /ציון/ })
-    expect(scoreHeader).toHaveAttribute('aria-sort', 'ascending')
   })
 
-  it('הכרעה 19 — השורה פותחת את כרטיס הפרויקט', async () => {
+  it('הכרעה 19 — השורה מוסרת דלת אל כרטיס הפרויקט', async () => {
     callReport.mockResolvedValue(satisfactionPayload())
-    renderTab(SURFACES.מ20)
+    const { onDrill } = renderTab(SURFACES.מ20)
     fireEvent.click(await screen.findByTestId('report-row-drillable'))
-    expect(screen.getByTestId('probe')).toHaveTextContent('/projects/1527')
+    expect(onDrill).toHaveBeenCalledWith({ kind: 'project', id: 1527 }, expect.any(Object))
   })
 })
 
@@ -528,11 +570,14 @@ describe('מ21 · לקוחות מתרחקים', () => {
     expect(banner).toHaveTextContent('3')
     const rows = screen.getAllByTestId('report-row-drillable')
     expect(rows[0]).toHaveTextContent('ענבר אשכנזי')
-    expect(rows[0]).toHaveTextContent('055-1794584')
+    // 🔴 מקף בלתי-שביר (`‑`) ולא ASCII — נמדד בדפדפן שהתא הצר שבר את המספר לשתי
+    // שורות (*"· -055"* / *"1794584"*). המספר נשאר שלם, והמקף נראה זהה.
+    expect(rows[0]).toHaveTextContent('055‑1794584')
+    expect(rows[0].textContent).not.toContain('055-1794584')
     expect(rows[0]).toHaveTextContent('מתרחק בלבד')
   })
 
-  it('🔒 ללא הרשאת כספים — אריח-הכסף והעמודה ממוסכים, והמיון נופל למיון המשני', async () => {
+  it('🔒 ללא הרשאת כספים — האריח, שורת-המשנה שיש בה ₪, והעמודה ממוסכים, והמיון נופל למשני', async () => {
     permissions = PROJECTS
     callReport.mockResolvedValue(driftingPayload())
     renderTab(SURFACES.מ21)
@@ -540,6 +585,12 @@ describe('מ21 · לקוחות מתרחקים', () => {
     expect(await screen.findByTestId('report-tile-marked_revenue_12m')).toHaveTextContent(
       MASKED_TEXT,
     )
+    // 🔴 הדליפה שנפתחה כש-`KpiTile` התחיל לרנדר `tiles[].sub`: אריח שאינו אריח-כסף
+    // ושורת-המשנה שלו נושאת ₪.
+    const personal = screen.getByTestId('report-tile-only_personal_cadence')
+    expect(personal).not.toHaveTextContent('₪')
+    expect(personal).toHaveTextContent('⁦3⁩')
+
     const rows = screen.getAllByTestId('report-row-drillable')
     expect(rows[0]).toHaveTextContent(MASKED_TEXT)
     // ⑧21.4 — הסדר נופל ל"פי כמה מהקצב" יורד, ולכן 36.1 ראשונה ולא 3.2.
@@ -547,6 +598,10 @@ describe('מ21 · לקוחות מתרחקים', () => {
     expect(screen.getByRole('columnheader', { name: /פי כמה מהקצב/ })).toHaveAttribute(
       'aria-sort',
       'descending',
+    )
+    // ו-`aria-sort` **ירד** מהעמודה הממוסכת — אחרת הוא היה מצביע על מספר שאינו על המסך.
+    expect(screen.getByRole('columnheader', { name: /הכנסת 12 החודשים/ })).not.toHaveAttribute(
+      'aria-sort',
     )
   })
 
@@ -576,7 +631,52 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
     expect(screen.queryByTestId('m22-no-run')).toBeNull()
   })
 
-  it('בלי ריצה מאושרת — "טרם אושרה ריצת-ניתוח", והייצוא נושא את הנוסח הנעול', async () => {
+  it('🔴 `run_in_progress` במצב `failed` אינו "ריצה בתהליך" — הדף מתנהג כאילו אין אחת', async () => {
+    callReport.mockResolvedValue(notesPayload({ run: null }))
+    renderTab(SURFACES.מ22)
+    // המטען נושא את ריצה 4 (`failed`) — ובכל זאת:
+    expect(await screen.findByTestId('m25-run-text')).toHaveTextContent('הערות טרם סווגו')
+    expect(screen.getByTestId('m25-run-button')).toHaveTextContent('הרץ ניתוח')
+    expect(screen.getByTestId('m25-run-button')).toBeEnabled()
+  })
+
+  it('ריצה `running` שהתחילה במקום אחר — הפס מדווח עליה והכפתור מנוטרל', async () => {
+    callReport.mockResolvedValue(
+      notesPayload({
+        run: null,
+        runInProgress: { ...FAILED_RUN_IN_PROGRESS, status: 'running', ok_count: 120 },
+      }),
+    )
+    renderTab(SURFACES.מ22)
+    expect(await screen.findByTestId('m25-run-text')).toHaveTextContent('מסווג…')
+    expect(screen.getByTestId('m25-run-text')).toHaveTextContent('120/426')
+    expect(screen.getByTestId('m25-run-button')).toBeDisabled()
+    expect(screen.getByTestId('m25-run-bar')).toHaveTextContent('ריצת-ניתוח כבר פועלת.')
+  })
+
+  it('ריצה `partial` שהתחילה במקום אחר — [המשך] פעיל ושולח את ה-run_id של השרת', async () => {
+    callReport.mockResolvedValue(
+      notesPayload({
+        run: null,
+        runInProgress: { ...FAILED_RUN_IN_PROGRESS, status: 'partial', ok_count: 300, run_id: 7 },
+      }),
+    )
+    renderTab(SURFACES.מ22)
+    expect(await screen.findByTestId('m25-run-text')).toHaveTextContent('נעצר')
+    expect(screen.getByTestId('m25-run-text')).toHaveTextContent('300/426')
+    invoke.mockResolvedValueOnce({
+      data: { status: 'done', run_id: 7, ok: 426, failed: 0, remaining: 0 },
+      error: null,
+    })
+    fireEvent.click(screen.getByTestId('m25-run-button'))
+    await waitFor(() =>
+      expect(invoke).toHaveBeenCalledWith('classify-feedback', {
+        body: { action: 'continue', run_id: 7 },
+      }),
+    )
+  })
+
+  it('בלי ריצה מאושרת — "טרם אושרה ריצת-ניתוח", והייצוא נושא את הנוסח הנעול של השרת', async () => {
     callReport.mockResolvedValue(notesPayload({ run: null }))
     renderTab(SURFACES.מ22)
     expect(await screen.findByTestId('m25-run-text')).toHaveTextContent('הערות טרם סווגו')
@@ -599,11 +699,11 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
 
   it('"הרץ ניתוח" קורא ל-classify-feedback, ותשובת `partial` מציגה נעצר N/M עם [המשך]', async () => {
     callReport.mockResolvedValue(notesPayload({ run: null }))
+    renderTab(SURFACES.מ22)
     invoke.mockResolvedValueOnce({
       data: { status: 'partial', run_id: 7, ok: 300, failed: 0, remaining: 126 },
       error: null,
     })
-    renderTab(SURFACES.מ22)
 
     fireEvent.click(await screen.findByTestId('m25-run-button'))
     await waitFor(() => expect(screen.getByTestId('m25-run-text')).toHaveTextContent('נעצר'))
@@ -622,13 +722,13 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
     })
   })
 
-  it('"אשר להצגה" קורא ל-RPC המגודר ומבקש טעינה מחדש; שגיאת P0001 מוצגת בעברית', async () => {
+  it('"אשר להצגה" קורא ל-RPC המגודר ומבקש טעינה מחדש', async () => {
     callReport.mockResolvedValue(notesPayload({ run: null }))
+    const { onRetry } = renderTab(SURFACES.מ22)
     invoke.mockResolvedValue({
       data: { status: 'done', run_id: 7, ok: 426, failed: 0, remaining: 0 },
       error: null,
     })
-    const { onRetry } = renderTab(SURFACES.מ22)
     fireEvent.click(await screen.findByTestId('m25-run-button'))
     await waitFor(() => expect(screen.getByTestId('m25-run-button')).toHaveTextContent('אשר להצגה'))
 
@@ -640,6 +740,7 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
 
   it('תשובת-שגיאה של פונקציית-השרת מוצגת בעברית מתוך גוף-התשובה ולא כטקסט של הספרייה', async () => {
     callReport.mockResolvedValue(notesPayload({ run: null }))
+    renderTab(SURFACES.מ22)
     invoke.mockResolvedValueOnce({
       data: null,
       error: {
@@ -647,7 +748,6 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
         context: { json: async () => ({ error: 'מפתח ה-AI לא הוגדר במערכת — פנה למנכ"ל' }) },
       },
     })
-    renderTab(SURFACES.מ22)
     fireEvent.click(await screen.findByTestId('m25-run-button'))
     expect(await screen.findByRole('alert')).toHaveTextContent('מפתח ה-AI לא הוגדר במערכת')
   })
@@ -667,10 +767,6 @@ describe('מצבי-מעטפת ושכבת-ההטמעה', () => {
   })
 
   it('`meta.missing_params` מוצג כמשפט עברי מלא', async () => {
-    callReport.mockResolvedValue(
-      driftingPayload({ meta: { missing_params: ['מכפיל_מרווח_מתרחק'], notes: [], run: null } }),
-    )
-    // המטען נבנה מחדש כדי שה-meta יוחלף בשלמותו.
     callReport.mockResolvedValue({
       ...driftingPayload(),
       meta: { missing_params: ['מכפיל_מרווח_מתרחק'], notes: [], run: null },
@@ -690,13 +786,11 @@ describe('מצבי-מעטפת ושכבת-ההטמעה', () => {
   })
 
   it('כל מפתח-הטמעה שהלשונית משתמשת בו קיים בקובץ-הקופי, וכל 12 המפתחות בשימוש', () => {
-    const files = ['./customers/CustomerSurface.jsx'].map((relative) =>
-      readFileSync(fileURLToPath(new URL(relative, import.meta.url)), 'utf8'),
-    )
+    // 🔑 נתיב יחסי ל-`cwd` (שורש-הריפו, כפי ש-Vitest מדפיס בראש הריצה) ולא
+    // `import.meta.url` — הוא אינו `file:` תחת ה-runner הזה, וזה הפיל את הבדיקה.
+    const source = readFileSync('src/modules/11_reports/tabs/customers/CustomerSurface.jsx', 'utf8')
     const used = new Set()
-    for (const source of files) {
-      for (const match of source.matchAll(/'(reports\.[A-Za-z.]+)'/g)) used.add(match[1])
-    }
+    for (const match of source.matchAll(/'(reports\.[A-Za-z.]+)'/g)) used.add(match[1])
     expect(used.size).toBeGreaterThan(0)
     for (const id of used) expect(M11_CUSTOMERS_COPY[id]).toBeTruthy()
     expect([...used].sort()).toEqual(Object.keys(M11_CUSTOMERS_COPY).sort())
@@ -722,87 +816,7 @@ describe('מצבי-מעטפת ושכבת-ההטמעה', () => {
     expect(screen.getByTestId('hint-reports.drifting.revenueBasis')).toBeInTheDocument()
     expect(screen.getByTestId('hint-reports.drifting.tableSort')).toBeInTheDocument()
   })
-})
 
-describe('אורקל-התוויות — §1.4 מול המטען', () => {
-  it('שש-עשרה תוויות-האריחים של הלשונית נבדקות מול המטען ולא מהזיכרון', () => {
-    const labels = [
-      ...overviewPayload().tiles,
-      ...satisfactionPayload().tiles,
-      ...driftingPayload().tiles,
-      ...notesPayload().tiles,
-    ].map((tile) => tile.label)
-    // 🔑 התוויות מגיעות מה-payload (C8) ואינן נכתבות בלשונית — הבדיקה מוודאת שאף
-    // טרנספורמציה אינה נוגעת בהן.
-    expect(labels).toContain('שביעות-רצון מנבאת חזרה')
-    expect(labels).toContain('שיעור המרוצים (4–5)')
-    expect(labels).toContain('הכנסת 12 החודשים של הלקוחות המסומנים')
-    expect(labels).toContain('מהן שייכות למשוב שתויג "אחר"')
-  })
-})
-
-// 🔭 **תאימות-קדימה, ולא ספקולציה:** מיגרציית-התיקון `…_module11_g2_rpcs_customers_fixes.sql`
-// יושבת בריפו ו**טרם הוחלה על המסד** (נמדד על המטען החי 16/09/2026 — `drill_key` עדיין
-// סקלר, `columns[].sorted` ריק, `export_blocked_reason` נעדר). הבדיקות האלה נועלות את
-// שתי הצורות **יחד**, כדי שהחלת התיקון לא תשבור את הלשונית ולא תכפיל הצהרה.
-describe('תאימות לשתי צורות-המטען — לפני מיגרציית-התיקון G2 ואחריה', () => {
-  it('`drill_key` בצורת `{kind, id}` מנתב לפי ה-kind ולא לפי המשטח', async () => {
-    callReport.mockResolvedValue({
-      ...driftingPayload(),
-      rows: driftingPayload().rows.map((row) => ({
-        ...row,
-        drill_key: { kind: 'customer', id: row.customer_id },
-      })),
-    })
-    renderTab(SURFACES.מ21)
-    fireEvent.click((await screen.findAllByTestId('report-row-drillable'))[0])
-    expect(screen.getByTestId('probe')).toHaveTextContent('/customers/426')
-  })
-
-  it('`drill_key` של `project` מנתב לכרטיס-הפרויקט גם ממ22', async () => {
-    const payload = notesPayload()
-    callReport.mockResolvedValue({
-      ...payload,
-      rows: payload.rows.map((row) => ({ ...row, drill_key: { kind: 'project', id: 1455 } })),
-    })
-    renderTab(SURFACES.מ22)
-    fireEvent.click(await screen.findByTestId('report-row-drillable'))
-    expect(screen.getByTestId('probe')).toHaveTextContent('/projects/1455')
-  })
-
-  it('הצהרת-מיון של השרת גוברת על ההצהרה של הלשונית — ואינה נוספת עליה', async () => {
-    const payload = overviewPayload()
-    callReport.mockResolvedValue({
-      ...payload,
-      columns: payload.columns.map((column) =>
-        column.key === 'company_name' ? { ...column, sorted: 'ascending' } : column,
-      ),
-    })
-    renderTab(SURFACES.מ19)
-    await screen.findByTestId('report-table-card')
-    expect(screen.getByRole('columnheader', { name: 'לקוח' })).toHaveAttribute(
-      'aria-sort',
-      'ascending',
-    )
-    expect(screen.getByRole('columnheader', { name: /הכנסת 12 החודשים/ })).not.toHaveAttribute(
-      'aria-sort',
-    )
-  })
-
-  it('`meta.export_blocked_reason` מהשרת מוצג כמות שהוא ואינו נדרס', async () => {
-    const payload = notesPayload({ run: null })
-    callReport.mockResolvedValue({
-      ...payload,
-      meta: { ...payload.meta, export_blocked_reason: EXPORT_NO_APPROVED_RUN },
-    })
-    renderTab(SURFACES.מ22)
-    expect(await screen.findByTestId('reports-export-file')).toHaveTextContent(
-      EXPORT_NO_APPROVED_RUN,
-    )
-  })
-})
-
-describe('שורת-הדלת אינה שוברת את מצבי-הריק', () => {
   it('מטען ריק לגמרי — מצב "אין נתונים עדיין" ולא טבלה ריקה', async () => {
     callReport.mockResolvedValue(base())
     renderTab(SURFACES.מ19)

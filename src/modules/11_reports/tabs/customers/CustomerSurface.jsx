@@ -10,12 +10,14 @@
 // מ21 ובלוק "טרם אושרה ריצת-ניתוח" של מ22 חייבים להיות גלויים **ברמה 0** — הכרטיס אומר
 // זאת במפורש (*"הורדת ה-`basebanner` לשכבה תשבור את המבחן"*). הרמזים, ורק הם, יושבים
 // ב-`<Hint>` ונעלמים ברמה 0.
+//
+// ✂️ **נמחק בסבב-היישור 16/09 11:1X:** רינדור הגרפים שמעבר לתקרת-המעטפת. ‏`CHART_CAP`
+// עלה מ-2 ל-4 (‏§9 D-28), והמוקאפ המאושר של מ20 מצייר בדיוק ארבעה ⇒ המעטפת מציירת את
+// כולם, ושתי אתרי-רינדור לאותו גרף היו הופכים להכפלה ביום שהתקרה תזוז שוב.
 
 import Hint from '@/components/Hint'
 import { paymentCadenceRows } from '@/lib/reportsCustomers'
 import { formatByType, formatIsraelDate, isolateLtr } from '@/lib/reportsFormat'
-import { normalizeCharts } from '../../api'
-import ChartCard from '../../components/ChartCard'
 import ReportSurface from '../../components/ReportSurface'
 import AnalysisRunBar from './AnalysisRunBar'
 import { hasApprovedRun } from './payload'
@@ -48,25 +50,6 @@ const HINTS = {
 }
 
 const findTile = (payload, key) => (payload.tiles ?? []).find((tile) => tile.key === key) ?? null
-
-/**
- * 📐5/📐6 · **הגרפים שמעבר לתקרת-השתיים של המעטפת.** ‏`normalizeCharts` חותך ל-2 (C8),
- * והמוקאפ המאושר של מ20 מצייר **ארבעה** — ‏📑ב#17 אף אוסר לאחד את שני גרפי-הסיבות.
- * ⇒ העודף מצויר כאן, **באותו `ChartCard`** ובמקומו בסדר-הקריאה של המוקאפ (מעל הטבלה).
- * 🔑 **הכמות נגזרת מ-`normalizeCharts` עצמה** ולא מהמספר 2, כדי שהעלאת-תקרה לא תכפיל גרף.
- */
-function OverflowCharts({ payload }) {
-  const all = Array.isArray(payload.chart) ? payload.chart : []
-  const rest = all.slice(normalizeCharts(payload.chart).length)
-  if (rest.length === 0) return null
-  return (
-    <>
-      {rest.map((chart, index) => (
-        <ChartCard key={chart.title ?? `overflow-${index}`} chart={chart} />
-      ))}
-    </>
-  )
-}
 
 /**
  * מ21 · **באנר שתי-השיטות — בסיס, לא רמז** (⑩א: *"`div.basebanner` מציג את ההשוואה
@@ -205,12 +188,7 @@ export default function CustomerSurface({
           {isDrifting && <TwoMethodsBanner payload={payload} />}
         </>
       )}
-      renderBeforeTable={(payload) => (
-        <>
-          <OverflowCharts payload={payload} />
-          {hints.table && <Hint id={hints.table} />}
-        </>
-      )}
+      renderBeforeTable={hints.table ? () => <Hint id={hints.table} /> : undefined}
       renderExtras={(payload) => (
         <>
           {surface.id === 'מ19' && <PaymentCadenceDetails payload={payload} />}

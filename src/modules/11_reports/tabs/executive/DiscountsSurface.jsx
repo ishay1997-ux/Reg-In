@@ -4,24 +4,19 @@
 // מצייר אותם, **ושורת-השבבים נותנת לכל אחד `n` צמוד** (📑ב#2: *"מדרג עם 4 הצעות נראה כמו
 // מדרג עם 400"*). הגרף עצמו אינו נושא מונה מתחת לעמודה, ולכן בלי השבבים ה-`n` היה נעלם.
 //
-// 🔴 **ולמה שבבים ולא לחיצה על עמודת-הגרף, כפי שהמוקאפ צייר:** ‏`design-contract §⑤ #7`
-// (‏Issues #1946/#4809) קובע ש-`onClick` על `<Bar>`/`<Cell>` **אינו** הופך לניתן-להפעלה
-// במקלדת, והכרטיס עצמו מסמן זאת ①: *"בבנייה על Recharts זה `לא-אומת` עד מבחן-דפדפן ידני"*.
-// ‏**שבב הוא `<button>` אמיתי** — טאב, Enter/Space ו-`aria-pressed` בלי שורת-קוד אחת של
-// שקילות-מקלדת מדומה. הסינון עצמו זהה: הוא נוסע ב-`p_drill` ונחתך **בשרת**.
+// 🔴 **ולמה שבבים ולא לחיצה על עמודת-הגרף:** ‏`design-contract §⑤ #7` (‏Issues #1946/#4809)
+// קובע ש-`onClick` על `<Bar>` אינו ניתן-להפעלה במקלדת, והכרטיס עצמו מסמן זאת ① כ`לא-אומת`.
+// ‏**שבב הוא `<button>` אמיתי** — טאב, Enter/Space ו-`aria-pressed`. והסינון עצמו **רץ
+// בשרת**: הוא נוסע ב-`p_drill`, ו-`meta.row_total` יורד ⁦736⁩ ⇐ ⁦110⁩ (נמדד חי).
+// ⇒ ‏**ולכן `filter_key: false`** — הקרוס-פילטר האוטומטי של `ReportSurface` (16/09 11:1X)
+// היה מזהה כאן `tier` ומסנן את אותה טבלה **פעם שנייה, בלקוח**. שני מסננים על טבלה אחת הם
+// המצב שבו הפאג'ר מציג מספר ואיש אינו יודע מה הוא סופר.
 
 import { useMemo } from 'react'
 import FilterPill from '@/components/FilterPill'
 import { isolateLtr } from '@/lib/reportsFormat'
-import ReportSurface from '../../components/ReportSurface'
-import { ChartLead, SurfaceLead, TableLead } from './surfaceKit'
-import {
-  useSurfaceDoors,
-  withCharts,
-  withLabelAxis,
-  withRowDoors,
-  withTileSubRows,
-} from './surfaceDoors'
+import { ChartLead, SurfaceLead, TableLead, ExecutiveSurface } from './surfaceKit'
+import { withCharts, withLabelAxis, withoutCrossFilter } from './chartShape'
 
 // 🔤 מילה-במילה מהמוקאפ המאושר (`02_tab_executive_approved.html:896 · 909`).
 // ‏`נקי` ולא `נקה` — ‏S-28 · `m11-copy-rules §4.2`, שהופרך ותוקן ב-17 מופעים ב-11/09/2026.
@@ -32,7 +27,7 @@ const CHIPS_LABEL = 'סינון לפי מדרג-הנחה'
 const chartOf = (payload) => (Array.isArray(payload.chart) ? payload.chart[0] : payload.chart)
 
 function transformPayload(payload) {
-  return withCharts(withTileSubRows(payload), (chart) => withLabelAxis(chart))
+  return withCharts(payload, (chart) => withoutCrossFilter(withLabelAxis(chart)))
 }
 
 /**
@@ -75,35 +70,37 @@ function TierChips({ payload, selected, onSelect }) {
   )
 }
 
-export default function DiscountsSurface({ surface, filters, drill, onDrill, onWindow }) {
-  const openDoor = useSurfaceDoors(onDrill)
+export default function DiscountsSurface(props) {
+  const { drill, onDrill } = props
   // 🔑 **המדרג הנבחר חי בכתובת** ולא ב-`useState` (📐13④ · §4.2 של `CLAUDE.md`): קישור
   // לדוח מסונן ניתן לשליחה, ו"חזור" מחזיר את הבחירה במקום למחוק אותה.
   const selected = drill?.tier ?? null
-  const rowDoorSurface = useMemo(() => withRowDoors(surface), [surface])
+  // ⚠️ `renderTop` נסגר מעל `selected`, ולכן הוא נבנה מחדש בכל רינדור בכוונה; ‏`transformPayload`
+  // **חייב** להישאר יציב (ברמת-המודול) כי `ReportSurface` ממומואיז עליו.
+  const renderTop = useMemo(
+    () =>
+      function TierTop(payload) {
+        return (
+          <SurfaceLead hintId="reports.discounts.purpose">
+            <TierChips
+              payload={payload}
+              selected={selected}
+              onSelect={(tier) => onDrill(tier ? { tier } : null)}
+            />
+          </SurfaceLead>
+        )
+      },
+    [selected, onDrill],
+  )
 
   return (
-    <ReportSurface
-      surface={rowDoorSurface}
-      filters={filters}
-      drill={drill}
-      onDrill={openDoor}
-      onWindow={onWindow}
+    <ExecutiveSurface
+      {...props}
       transformPayload={transformPayload}
-      renderTop={(payload) => (
-        <SurfaceLead hintId="reports.discounts.purpose">
-          <TierChips
-            payload={payload}
-            selected={selected}
-            onSelect={(tier) => onDrill(tier ? { tier } : null)}
-          />
-        </SurfaceLead>
-      )}
-      renderBeforeChart={() => (
-        <ChartLead hintIds={['reports.discounts.approvalPopulation']} note={null} />
-      )}
-      renderBeforeTable={(payload) => (
-        <TableLead payload={payload} rowAction={ROW_ACTION} hintId="reports.discounts.tierSort" />
+      renderTop={renderTop}
+      renderBeforeChart={() => <ChartLead hintIds={['reports.discounts.approvalPopulation']} />}
+      renderBeforeTable={() => (
+        <TableLead rowAction={ROW_ACTION} hintId="reports.discounts.tierSort" />
       )}
     />
   )

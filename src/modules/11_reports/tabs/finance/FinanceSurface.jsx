@@ -9,7 +9,7 @@
 // שייכים ל-`ReportSurface` ולרכיבים המשותפים (§2ב C6 — **הדרך היחידה**), והרכיב הזה רק
 // ממלא את חמש נקודות-ההרחבה שלהם.
 
-import { useCallback, useMemo } from 'react'
+import { useCallback } from 'react'
 import Hint from '@/components/Hint'
 import Ltr from '@/components/Ltr'
 import KpiTile from '../../components/KpiTile'
@@ -109,17 +109,15 @@ function RowCapAndDoor({ shown, total, onOpen }) {
 }
 
 export default function FinanceSurface({ surface, spec, filters, drill, onDrill, onWindow }) {
-  // הכרעה 19 — ר' `rowsOpenProject` ב-`FINANCE_SURFACE_SPECS`. **עותק ולא מוטציה**:
-  // `REPORT_TABS` קפוא, והמעטפת ממשיכה להחזיק את המקור.
-  const effectiveSurface = useMemo(
-    () => (spec.rowsOpenProject ? { ...surface, drill: true } : surface),
-    [surface, spec.rowsOpenProject],
-  )
+  // 🔴 **`transformPayload` חייב להיות יציב** — `ReportSurface` ממטמן עליו (GAP 13), ופונקציה
+  // חדשה בכל רינדור הייתה מבטלת את המטמון. `spec` הוא קבוע-מודול קפוא ⇒ הזהות נשמרת.
+  // 🚫 **ו-`surface` נמסר כמו שהוא** — בלי `{...surface, drill:true}`: המעטפת פותחת שורות
+  // מ-`drill_key` בעצמה, והדגל היה מדכא את הסינון-הצולב.
   const transformPayload = useCallback((payload) => transformFinancePayload(payload, spec), [spec])
 
   return (
     <ReportSurface
-      surface={effectiveSurface}
+      surface={surface}
       filters={filters}
       drill={drill}
       onDrill={onDrill}

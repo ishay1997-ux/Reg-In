@@ -12,17 +12,12 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
-import { MemoryRouter, useSearchParams } from 'react-router-dom'
+import { MemoryRouter } from 'react-router-dom'
 
 const state = vi.hoisted(() => ({ mode: 2 }))
-const navigate = vi.hoisted(() => vi.fn())
 
 vi.mock('@/supabaseClient', () => ({ supabase: { rpc: vi.fn(), from: vi.fn() } }))
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ onboardingMode: state.mode }) }))
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal()
-  return { ...actual, useNavigate: () => navigate }
-})
 
 // ⚠️ מוק-`recharts` שמחזיר אלמנטים אמיתיים (ולא `null`), כדי שאפשר יהיה לאמת **מה נמסר**
 // לגרף — סוג-התרשים, מפתח-הציר וקווי-הייחוס. ‏jsdom אינו מודד SVG ולכן אין מה לצייר.
@@ -93,11 +88,6 @@ const filters = {
   clearFilters: vi.fn(),
 }
 
-function Probe() {
-  const [params] = useSearchParams()
-  return <span data-testid="probe">{params.toString()}</span>
-}
-
 function renderTab(id, { drill = null, onDrill = vi.fn() } = {}) {
   render(
     <MemoryRouter>
@@ -108,7 +98,6 @@ function renderTab(id, { drill = null, onDrill = vi.fn() } = {}) {
         onDrill={onDrill}
         onWindow={vi.fn()}
       />
-      <Probe />
     </MemoryRouter>,
   )
   return { onDrill }
@@ -194,8 +183,8 @@ const m2Payload = () =>
     ],
     chart: {
       type: 'bar',
-      unit: '₪',
-      xKey: 'month',
+      unit: 'money',
+      xKey: 'label',
       title: 'הכנסה ורווח לפי חודש',
       domain: null,
       refLines: [],
@@ -257,7 +246,7 @@ const m3Root = () =>
         unit: '₪',
         xKey: 'year',
         title: 'הכנסה, רווח ושולי-רווח לפי שנה',
-        domain: [0, 100],
+        domain: null,
         refLines: [],
         series: [
           { key: 'revenue', label: 'הכנסה', kind: 'bar', axis: 'left' },
@@ -454,7 +443,6 @@ const chartProps = (name) =>
 beforeEach(() => {
   state.mode = 2
   callReport.mockReset()
-  navigate.mockReset()
 })
 
 // ── מ2 · מבט-על הנהלה ────────────────────────────────────────────────────────
@@ -471,9 +459,10 @@ describe('מ2 · מבט-על הנהלה', () => {
     // 📐4 — ₪ בלי אגורות · אחוז בספרה אחת, שניהם מבודדים.
     expect(screen.getByText(isolateLtr('1,962,981 ₪'))).toBeInTheDocument()
     expect(screen.getByText(isolateLtr('58.6%'))).toBeInTheDocument()
-    // 📑ב — `tiles[].sub` ו-`compare.note` מקופלים לשורות שהאריח מרנדר.
-    expect(screen.getByText(/241 אירועים שהסתיימו/)).toBeInTheDocument()
-    expect(screen.getByText('184 אירועים')).toBeInTheDocument()
+    // 📑ב — `tiles[].sub` מרונדר **פעם אחת**, ע"י `KpiTile` (GAP 1 של השכבה המשותפת).
+    // ⚠️ ‏`compare.note` עדיין אינו מרונדר ע"י אף רכיב — ר' הדיווח; הבדיקה אינה מתחזה לכך שכן.
+    expect(screen.getAllByTestId('kpi-sub')).toHaveLength(4)
+    expect(screen.getByText('241 אירועים שהסתיימו')).toBeInTheDocument()
     // 📐4 — חצי-ההשוואה מעוצב כמו האריח, ולא נשפך כמספר גולמי (נמדד כפגם 16/09).
     expect(screen.getByText(isolateLtr('1,425,659 ₪'))).toBeInTheDocument()
     expect(screen.getByText(isolateLtr('55.9%'))).toBeInTheDocument()
@@ -487,64 +476,76 @@ describe('מ2 · מבט-על הנהלה', () => {
     callReport.mockResolvedValueOnce(m2Payload())
     renderTab('מ2')
 
-    expect(await screen.findByTestId('report-chart-note')).toHaveTextContent(
+    expect(await screen.findByTestId('chart-note')).toHaveTextContent(
       `מכסה ${isolateLtr('16')} ימים ולא חודש שלם`,
     )
+    // 📐20 ① — הערוץ שהשכבה המשותפת פתחה: העמודה החלקית מסומנת `is_today`.
+    expect(chartProps('Cell').some((props) => props.strokeDasharray)).toBe(true)
     // ציר-הקטגוריה עבר ל-`label`, והתווית החלקית נושאת את אורך-החלון.
     expect(chartProps('XAxis')[0].dataKey).toBe('label')
     expect(screen.getByText(`ספטמבר (${isolateLtr('16')} ימים)`)).toBeInTheDocument()
+    // §9 D-25 — שורה אחת, בנוסח של השלד המשותף.
+    expect(screen.getAllByTestId('report-row-cap')).toHaveLength(1)
     expect(screen.getByTestId('report-row-cap')).toHaveTextContent(
-      `מוצגות ${isolateLtr('1')} שורות מתוך ${isolateLtr('241')} שנמדדו`,
+      `מוצגות ${isolateLtr('1')} מתוך ${isolateLtr('241')} שורות`,
     )
   })
 
   it('הכרעה 19 — לחיצה על שורה פותחת את כרטיס-האירוע, והשורה כולה היא הדלת', async () => {
     callReport.mockResolvedValueOnce(m2Payload())
-    renderTab('מ2')
+    const { onDrill } = renderTab('מ2')
 
     const row = (await screen.findByText('כנס חינוך שנתי')).closest('tr')
     expect(row).toHaveAttribute('role', 'button')
     fireEvent.click(row)
-    expect(navigate).toHaveBeenCalledWith('/projects/1395')
+    expect(onDrill).toHaveBeenCalledWith({ kind: 'project', id: 1395 }, expect.any(Object))
     expect(screen.getByTestId('report-row-action')).toHaveTextContent(
       'לחיצה על שורה פותחת את כרטיס האירוע',
     )
   })
 
-  it('הכרעה 33 — אריח-מבט-על הוא דלת, גם חוצת-לשונית, והיא נכתבת לכתובת', async () => {
+  it('הכרעה 33 — אריח-מבט-על מוסר את היעד לנתב-הדלתות של המעטפת, בלי לכתוב לכתובת בעצמו', async () => {
     callReport.mockResolvedValueOnce(m2Payload())
-    renderTab('מ2')
+    const { onDrill } = renderTab('מ2')
 
     fireEvent.click(await screen.findByTestId('report-tile-link-finished_events'))
-    const params = new URLSearchParams(screen.getByTestId('probe').textContent)
-    expect(params.get('tab')).toBe('finance')
-    expect(params.get('report')).toBe('profitability')
-    expect(params.get('drill')).toBeNull()
+    expect(onDrill).toHaveBeenCalledWith({
+      tab: 'כספים',
+      report: 'report_m08_profitability',
+      drill: null,
+    })
   })
 
-  it('הקישור "כל השנים" מוביל לדוח המגמות באותה לשונית', async () => {
+  it('הקישור "כל השנים" נוסע באותו נתב-דלתות, ולא בניווט שני', async () => {
     callReport.mockResolvedValueOnce(m2Payload())
-    renderTab('מ2')
+    const { onDrill } = renderTab('מ2')
 
     fireEvent.click(await screen.findByTestId('exec-overview-trends-link'))
-    const params = new URLSearchParams(screen.getByTestId('probe').textContent)
-    expect(params.get('tab')).toBe('exec')
-    expect(params.get('report')).toBe('trends')
+    expect(onDrill).toHaveBeenCalledWith({
+      tab: 'הנהלה',
+      report: 'report_m03_trends',
+      drill: null,
+    })
   })
 })
 
 // ── מ3 · מגמות רב-שנתיות ─────────────────────────────────────────────────────
 
 describe('מ3 · מגמות רב-שנתיות', () => {
-  it('גרף-השנים מומר לצורה שנצבעת בפועל — עמודה + קו על ציר ימני, בלי `domain` של אחוזים', async () => {
+  it('גרף-השנים מצויר ע"י `ComposedBody` — שתי עמודות-₪ וקו-אחוזים על ציר ימני נעול', async () => {
     callReport.mockResolvedValueOnce(m3Root())
     renderTab('מ3')
 
     await screen.findAllByText('מחיר לשעה')
+    // 🔴 הרגרסיה שהבדיקה הזו שומרת עליה: עד 16/09 הלשונית המירה את הגרף ל-`pareto`
+    // **ואיבדה את עמודת-הרווח**. שלוש הסדרות מצוירות עכשיו, ואף אחת אינה נופלת.
     expect(screen.getAllByTestId('recharts-ComposedChart')).toHaveLength(1)
-    // ‏`domain` של המטען היה `[0,100]` והוא שייך לציר-הימני; השארתו הייתה חותכת ₪.
-    const leftAxis = chartProps('YAxis').find((props) => props.yAxisId === 'left')
-    expect(leftAxis.domain).toEqual([0, 'auto'])
+    expect(chartProps('Bar').map((props) => props.dataKey)).toEqual(['revenue', 'profit'])
+    expect(chartProps('Line').map((props) => props.dataKey)).toContain('margin')
+    const right = chartProps('YAxis').find((props) => props.yAxisId === 'right')
+    expect(right.domain).toEqual([0, 100])
+    const left = chartProps('YAxis').find((props) => props.yAxisId === 'left')
+    expect(left.domain).toEqual([0, 'auto'])
   })
 
   it('📐13 — שורת-הפעולה משתנה עם הרמה, והשורה יורדת רמה', async () => {
@@ -555,18 +556,18 @@ describe('מ3 · מגמות רב-שנתיות', () => {
       'לחיצה על שורה יורדת לחודשים של אותה שנה',
     )
     fireEvent.click(screen.getByText('שנה').closest('table').querySelector('tbody tr'))
-    expect(onDrill).toHaveBeenCalledWith({ kind: 'year', year: 2024 })
+    expect(onDrill).toHaveBeenCalledWith({ kind: 'year', year: 2024 }, expect.any(Object))
   })
 
   it('ברמה האחרונה יש פירורים, אין גרף, והשורה פותחת את כרטיס-האירוע', async () => {
     callReport.mockResolvedValueOnce(m3Month())
-    renderTab('מ3', { drill: { year: 2026, month: 2 } })
+    const { onDrill } = renderTab('מ3', { drill: { year: 2026, month: 2 } })
 
     expect(await screen.findByTestId('report-crumbs')).toHaveTextContent('כל השנים')
     expect(screen.getByTestId('report-row-action')).toHaveTextContent('זו הרמה האחרונה')
     expect(screen.queryByTestId('recharts-ComposedChart')).toBeNull()
     fireEvent.click(screen.getByText('כנס חינוך שנתי').closest('tr'))
-    expect(navigate).toHaveBeenCalledWith('/projects/1395')
+    expect(onDrill).toHaveBeenCalledWith({ kind: 'project', id: 1395 }, expect.any(Object))
   })
 })
 
@@ -622,10 +623,20 @@ describe('מ4 · הנחות ורווחיות', () => {
     expect(screen.getByTestId('reports-export-file')).toHaveTextContent('אין שורות לייצא')
 
     callReport.mockResolvedValueOnce(m4Payload())
-    renderTab('מ4')
+    const { onDrill } = renderTab('מ4')
     const rows = await screen.findAllByText(isolateLtr('1,907'))
     fireEvent.click(rows[0].closest('tr'))
-    expect(navigate).toHaveBeenCalledWith('/quotes/1907/edit')
+    expect(onDrill).toHaveBeenCalledWith({ kind: 'quote', id: 1907 }, expect.any(Object))
+  })
+
+  it('הקרוס-פילטר האוטומטי כבוי במפורש — הסינון של מ4 רץ בשרת, ולא פעמיים', async () => {
+    callReport.mockResolvedValueOnce(m4Payload())
+    renderTab('מ4')
+
+    await screen.findByTestId('discount-tier-chips')
+    // ‏`ReportSurface` מוסר `onSelect` לגרף **רק** כשיש מפתח-סינון; `filter_key:false` מכבה.
+    expect(chartProps('Bar').every((props) => props.cursor === undefined)).toBe(true)
+    expect(screen.queryByTestId('report-clear-crossfilter')).toBeNull()
   })
 })
 
@@ -647,6 +658,29 @@ describe('מ6 · קהל מול צוות', () => {
       { x: 0, y: 0 },
       { x: 520, y: 520 },
     ])
+  })
+
+  it('📑ב#10 — הסטייה מקודדת בצורה (משולש / עיגול-חלול) ולא בגודל ולא בגוון', async () => {
+    callReport.mockResolvedValueOnce(m6Payload())
+    renderTab('מ6')
+
+    await screen.findByText('יחס חציוני: אורחים לדיילת')
+    const shapes = chartProps('Scatter').map((props) => props.shape)
+    expect(shapes).toEqual(['triangle', 'circle'])
+    // עיגול **חלול**: מתאר בלבד. ‏`fill:'none'` הוא ההבחנה, ולא גוון שני (📐19).
+    expect(chartProps('Scatter').find((props) => props.shape === 'circle').fill).toBe('none')
+    const legend = screen.getByTestId('chart-shape-legend')
+    expect(legend).toHaveTextContent('הגיעו יותר אורחים מהצפי')
+    expect(legend).toHaveTextContent('הגיעו כמו הצפי או פחות')
+  })
+
+  it('אין במ6 סינון-צולב — הכרטיס מתעד זאת, והכיבוי מפורש', async () => {
+    callReport.mockResolvedValueOnce(m6Payload())
+    renderTab('מ6')
+
+    await screen.findByText('יחס חציוני: אורחים לדיילת')
+    expect(chartProps('Scatter').every((props) => props.cursor === undefined)).toBe(true)
+    expect(screen.queryByTestId('report-clear-crossfilter')).toBeNull()
   })
 
   it('קו-הפרמטר ממופה לדלי שלו, והמשפט "אינו יעד" נשאר בבסיס', async () => {

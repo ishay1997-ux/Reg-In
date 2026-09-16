@@ -42,6 +42,22 @@ export function filterRows(payload, keep) {
   return { ...payload, rows: payload.rows.filter(keep) }
 }
 
+// 🔴 **מ16 · כיבוי מפורש של הסינון-הצולב — וזו הכרעת-משמעות, לא כיוונון.**
+// המעטפת מזהה מפתח-סינון אוטומטית כש-`chart.xKey` הוא גם מפתח-שורה, וערכיהם נפגשים
+// (`ReportSurface.autoFilterKey`). בפיזור של מ16 שני התנאים מתקיימים על **`hourly_rate`**
+// — נמדד: `xKey='hourly_rate'`, העמודה קיימת, והערכים נפגשים ⇒ הזיהוי תופס.
+// ⚠️ **ומה שהיה קורה אז:** לחיצה על נקודה הייתה מסננת את הטבלה **לכל הדיילות שתעריפן זהה**
+// — קבוצה שאין לה שום משמעות מוצרית. שאלת-הדף היא *"מי שווה את התעריף שלה"*, כלומר
+// ה**נקודה** היא דיילת, לא התעריף. 🚫 מזהה-דיילת אינו במטען-הגרף כמפתח-שורה
+// (`hostess_id` בגרף מול `drill_key.id` בשורות), ולכן אין מה לסנן לפיו **מהלקוח**.
+// ⇒ **כבוי כאן בשורה אחת**, והתיקון הנכון — `chart.filter_key: 'hostess_id'` מהשרת עם
+// אותו מפתח בשורות — מדווח ואינו נעשה כאן (`C8` · `ReportSurface` ①).
+export function disableCrossFilter(payload) {
+  if (!payload.chart || Array.isArray(payload.chart)) return payload
+  if (payload.chart.filter_key === false) return payload
+  return { ...payload, chart: { ...payload.chart, filter_key: false } }
+}
+
 /** מ15 · שבב *"אדומות וענבר בלבד"* — ‏`rows[].band` הוא `'red'`/`'amber'`, ו-`null` ללא-מסומנת. */
 export const isFlagged = (row) => row.band != null
 
@@ -69,29 +85,6 @@ export function fixResponseTimeUnit(payload) {
     ...payload,
     tiles: payload.tiles.map((tile) =>
       HOURS_TILES.has(tile.key) && tile.format === 'days' ? { ...tile, format: 'ratio' } : tile,
-    ),
-  }
-}
-
-// 🔴 **חצי-ההשוואה של 📐1 איבד את היחידה ואת הדיוק על המסך — נמדד בדפדפן 16/09/2026,
-// ואף שער לא תפס אותו.** ‏C8 מגדיר `compare: {value, label, direction}` **בלי `format`**,
-// ואילו `KpiTile.CompareLine` מעצב דרך `formatByType(compare.value, compare.format)` ⇒
-// ‏`undefined` נופל ל-`text` ומדפיס את המספר הגולמי. **מה שנראה בפועל בדפדפן:**
-// *"התקופה המקבילה אשתקד: ⁦89⁩"* במקום `88.7%`, ו-*"(n=91): 0.3873"* במקום `0.39`
-// **בעוד ערך-האריח באותו אריח בדיוק מוצג `0.46`** — שני דיוקים לאותו מדד, באותו אריח.
-// ⇒ **התיקון הנכון אינו כאן** (או `compare.format` מה-RPC, או נפילה-אחורה ב-`KpiTile`,
-// שניהם נוגעים בארבע הלשוניות) — והוא מדווח. עד שינחת, האריח יורש את פורמט-הערך שלו:
-// זו **תוספת-מפתח בלבד**, אינה מוחקת דבר, ומפסיקה לפעול ברגע ש-`compare.format` יגיע.
-export function inheritCompareFormat(payload) {
-  if (!payload.tiles.some((tile) => tile.compare && tile.compare.format === undefined)) {
-    return payload
-  }
-  return {
-    ...payload,
-    tiles: payload.tiles.map((tile) =>
-      tile.compare && tile.compare.format === undefined
-        ? { ...tile, compare: { ...tile.compare, format: tile.format } }
-        : tile,
     ),
   }
 }

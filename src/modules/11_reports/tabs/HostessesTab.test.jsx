@@ -57,6 +57,7 @@ vi.mock('../api', async (importOriginal) => {
 
 import { M11_HOSTESSES_COPY } from '@/lib/onboardingCopy.m11.hostesses'
 import HostessesTab from './HostessesTab'
+import ReportSurface from '../components/ReportSurface'
 
 const SURFACES = {
   m14: {
@@ -120,7 +121,7 @@ const m14 = () =>
   base({
     population: {
       n: 1699,
-      label: 'אוכלוסייה: שיבוצים שסומנה בהם נוכחות · n=1699 שיבוצים אצל 98 דיילות',
+      label: 'אוכלוסייה: שיבוצים שסומנה בהם נוכחות · ⁦n=1,699⁩ שיבוצים אצל ⁦98⁩ דיילות',
       excluded: {},
     },
     tiles: [
@@ -185,13 +186,15 @@ const m14 = () =>
     columns: [
       { key: 'hostess_name', label: 'דיילת', format: 'text', align: 'start' },
       { key: 'status', label: 'סטטוס', format: 'text', align: 'start' },
-      { key: 'reliability', label: 'ציון אמינות', format: 'ratio', align: 'end' },
+      { key: 'reliability', label: 'ציון אמינות', format: 'score', align: 'end' },
+      { key: 'last_shift_date', label: 'משמרת אחרונה', format: 'date', align: 'end' },
     ],
     rows: [
       {
         hostess_name: 'רותם עמר',
         status: 'פעילה',
         reliability: 0.7589,
+        last_shift_date: '2026-08-20',
         drill_key: { kind: 'hostess', id: 449 },
       },
     ],
@@ -203,7 +206,11 @@ const m14 = () =>
 // ── מ15 · אמינות והתייצבות ──────────────────────────────────────────────────
 const m15 = (selectedDow = null) =>
   base({
-    population: { n: 87, label: 'אוכלוסייה: דיילות עם 3 משמרות מסומנות ומעלה', excluded: {} },
+    population: {
+      n: 87,
+      label: 'אוכלוסייה: דיילות עם ⁦3⁩ משמרות מסומנות ומעלה · ⁦n=87⁩ דיילות, ⁦1,683⁩ שיבוצים',
+      excluded: {},
+    },
     window: { from: '2025-09-16', to: '2026-09-16', label: 'חלון קפוא · 12 החודשים האחרונים' },
     tiles: [
       {
@@ -331,17 +338,24 @@ const m16 = () =>
         { key: 'hourly_rate', label: 'תעריף שעתי' },
         { key: 'rating', label: 'דירוג' },
       ],
-      data: [{ hourly_rate: 49.39, rating: 5, hostess_name: 'שקד ניסים' }],
+      data: [
+        { hourly_rate: 49.39, rating: 5, hostess_name: 'שקד ניסים' },
+        { hourly_rate: 47.98, rating: 5, hostess_name: 'גלי אוחיון' },
+      ],
       refLines: [{ axis: 'x', value: 43.27, label: 'חציון התעריף 43.27 ₪' }],
     },
     columns: [
       { key: 'hostess_name', label: 'דיילת', format: 'text', align: 'start' },
+      { key: 'hourly_rate', label: 'תעריף שעתי', format: 'money', align: 'end' },
       { key: 'rating', label: 'דירוג', format: 'int', align: 'end' },
     ],
+    // ⚠️ `hourly_rate` יושב **גם** בשורות ו**גם** ב-`chart.xKey`, בדיוק כמו במטען החי —
+    // וזה מה שמפעיל את הזיהוי-האוטומטי של המעטפת. פיקסצ'ר בלי זה היה הופך את מבחן-הכיבוי
+    // לריק (נמדד: הוא נכשל, וזו הייתה הסיבה).
     rows: [
-      { row_key: 1, hostess_name: 'אביב יוסף', rating: null },
-      { row_key: 2, hostess_name: 'שקד ניסים', rating: 5 },
-      { row_key: 3, hostess_name: 'גלי אוחיון', rating: 5 },
+      { row_key: 1, hostess_name: 'אביב יוסף', hourly_rate: 41.73, rating: null },
+      { row_key: 2, hostess_name: 'שקד ניסים', hourly_rate: 49.39, rating: 5 },
+      { row_key: 3, hostess_name: 'גלי אוחיון', hourly_rate: 47.98, rating: 5 },
     ],
     so_what: 'להוריד את התעריף של 2 הדיילות שמעל חציון-המאגר.',
     definitions: 'הגדרות: תעריף שעתי = …',
@@ -357,7 +371,11 @@ const m16 = () =>
 // ── מ17 · הוגנות השיבוץ ─────────────────────────────────────────────────────
 const m17 = () =>
   base({
-    population: { n: 106, label: 'אוכלוסייה: כל דיילת עם משמרת מאושרת אחת לפחות', excluded: {} },
+    population: {
+      n: 106,
+      label: 'אוכלוסייה: כל דיילת עם משמרת מאושרת אחת לפחות — ⁦n=106⁩ דיילות, ⁦1,869⁩ משמרות',
+      excluded: {},
+    },
     tiles: [
       {
         key: 'rank1_adoption',
@@ -465,24 +483,29 @@ describe('מ14 · מבט-על דיילות', () => {
     expect(screen.getByTestId('report-tile-on_time')).toHaveTextContent('87.2%')
     expect(screen.getByTestId('report-tile-gini')).toHaveTextContent('0.46')
     // 📐2 · 📐23 · 📐16 — שלוש שורות-הבסיס, שאינן שכבת-הטמעה.
-    expect(screen.getByTestId('report-population')).toHaveTextContent('n=1699')
+    expect(screen.getByTestId('report-population')).toHaveTextContent('n=1,699')
     expect(screen.getByTestId('report-so-what')).toHaveTextContent('לא לשלוח')
     expect(screen.getByTestId('report-definitions')).toHaveTextContent('הגדרות')
   })
 
-  it('חצי-ההשוואה יורש את פורמט-האריח — אחוז נשאר אחוז, וריכוזיות בשתי ספרות (📐1 · 📐4)', async () => {
+  it('השורה כולה דלת לכרטיס-הדיילת (הכרעה 19) — גם במשטח שאינו דוח-דריל', async () => {
+    // ✏️ 16/09 11:2X — נסגר בשכבה המשותפת (11f347a9): `ReportSurface` מוסר `onDrill`
+    // ל-`ReportTable` על כל שורה עם `drill_key` שה-`kind` שלה נתיב (ROW_DOOR_KINDS),
+    // ולא רק כש-`surface.drill`. לפני כן `report-row-drillable` היה 0 בכל ארבעת המשטחים.
+    callReport.mockResolvedValue(m14())
+    const onDrill = renderTab(SURFACES.m14)
+    const row = (await screen.findAllByTestId('report-row-drillable'))[0]
+    fireEvent.click(row)
+    expect(onDrill).toHaveBeenCalledWith({ kind: 'hostess', id: 449 }, expect.anything())
+  })
+
+  it('תאריך וציון מעוצבים לפי הפורמטים של H2 — לא ISO ולא ספרה אחת', async () => {
     callReport.mockResolvedValue(m14())
     renderTab(SURFACES.m14)
-    // 🔴 בלי הירושה `compare.format` הוא `undefined` ⇒ `formatByType` נופל ל-`text`,
-    // והמסך הראה `88.7` בלי `%` ו-`0.4383` בארבע ספרות ליד ערך-אריח בשתיים. נמדד בדפדפן.
-    const compare = await screen.findAllByTestId('kpi-compare')
-    expect(
-      within(screen.getByTestId('report-tile-on_time')).getByTestId('kpi-compare'),
-    ).toHaveTextContent('88.7%')
-    expect(
-      within(screen.getByTestId('report-tile-gini')).getByTestId('kpi-compare'),
-    ).toHaveTextContent('0.44')
-    expect(compare.length).toBeGreaterThan(1)
+    const row = (await screen.findAllByTestId('report-row-drillable'))[0]
+    // `date` ⇒ DD/MM/YYYY · `score` ⇒ שלוש ספרות (‏`ratio` היה משטח את שש האדומות ל-0.8).
+    expect(row).toHaveTextContent('20/08/2026')
+    expect(row).toHaveTextContent('0.759')
   })
 
   it('כותרת-הטבלה נגזרת ממספר השורות שנשארו ולא מוקלדת', async () => {
@@ -577,6 +600,65 @@ describe('מ16 · איכות מול עלות', () => {
     fireEvent.click(chip)
     expect(within(mainTable()).getAllByTestId('report-row')).toHaveLength(3)
     expect(screen.getByTestId('report-table-title')).toHaveTextContent('כל הדיילות הפעילות')
+  })
+})
+
+describe('הסינון-הצולב של המעטפת', () => {
+  it('מ16 · הפיזור מכובה מפורשות — `hourly_rate` אינו משמעות-הדף', async () => {
+    // 🔴 **מבחן דו-צדדי, אחרת הוא ריק:** ‏`ReportSurface` מוסר `onSelect` ל-`ChartCard`
+    // **רק** כשנפתר מפתח-סינון, ולכן היעדר כפתורי-הבחירה בטבלת-קורא-המסך הוא בדיוק
+    // ההוכחה. ① דרך הלשונית — אין אף כפתור. ② אותו מטען דרך המעטפת **בלי** הטרנספורמציה —
+    // הזיהוי-האוטומטי תופס `hourly_rate` ומייצר אותם. הצד השני הוא מה שמוכיח שהכיבוי
+    // הוא שלי ולא מקריות של הפיקסצ'ר.
+    callReport.mockResolvedValue(m16())
+    const { unmount } = render(
+      <HostessesTab
+        surface={SURFACES.m16}
+        filters={filters}
+        drill={null}
+        onDrill={vi.fn()}
+        onWindow={() => {}}
+      />,
+    )
+    await screen.findByTestId('report-table-title')
+    expect(screen.queryAllByTestId(/^chart-select-/)).toHaveLength(0)
+    unmount()
+
+    callReport.mockResolvedValue(m16())
+    render(
+      <ReportSurface
+        surface={SURFACES.m16}
+        filters={filters}
+        drill={null}
+        onDrill={vi.fn()}
+        onWindow={() => {}}
+      />,
+    )
+    await screen.findByTestId('report-tiles')
+    expect(screen.queryAllByTestId(/^chart-select-/).length).toBeGreaterThan(0)
+  })
+
+  it('מ14 · מ15 · מ17 — אין מפתח-סינון אוטומטי (month · dow · x אינם מפתחות-שורה)', async () => {
+    for (const [surface, payload] of [
+      [SURFACES.m14, m14()],
+      [SURFACES.m15, m15()],
+      [SURFACES.m17, m17()],
+    ]) {
+      callReport.mockResolvedValue(payload)
+      const { unmount } = render(
+        <HostessesTab
+          surface={surface}
+          filters={filters}
+          drill={null}
+          onDrill={vi.fn()}
+          onWindow={() => {}}
+        />,
+      )
+      await screen.findByTestId('report-table-title')
+      // אין כפתורי-בחירה בכלל ⇒ המעטפת לא פתרה מפתח ⇒ אין סינון-צולב על המשטח הזה.
+      expect(screen.queryAllByTestId(/^chart-select-/)).toHaveLength(0)
+      unmount()
+    }
   })
 })
 

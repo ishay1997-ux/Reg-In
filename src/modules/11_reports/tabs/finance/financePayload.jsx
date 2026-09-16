@@ -6,18 +6,38 @@
 // ① **מיפוי-תוויות של סדרת-גרף** לפי `chart.label_source` (תיקון-C8 מ-16/09) —
 //    מ9 מחזיר `government`/`nonprofit` כמפתחות-enum של המסד ונוקב בקבוע העברי.
 //    🔴 **מקרא שמציג `private_company` הוא בדיוק הכשל שהשדה הזה נולד למנוע.**
-// ② **סימון העמודה הממוינת** (`columns[].sorted` ⇒ `aria-sort`, 📐9) — ר' ההערה המלאה
+// ② **מפתחות-דלי-גיול ⇒ תוויות-מסך** בעמודת "מדרג" של מ9 — ר' `AGING_BUCKET_LABELS`.
+// ③ **סימון העמודה הממוינת** (`columns[].sorted` ⇒ `aria-sort`, 📐9) — ר' ההערה המלאה
 //    אצל `markSortedColumns`; **המועמדת מגיעה מהכרטיס, והכיוון נמדד על השורות שיורדו.**
-// ③ **תיקון פורמט לעמודת-תאריך שהוכרזה `text`** — ר' ההערה אצל `withDateFormats`.
-// ④ **השלמת `format` לחצי-ההשוואה של האריח** — ר' ההערה אצל `withCompareFormat`.
+//
+// ✏️ **שתי פעולות נוספות הוסרו מכאן 16/09/2026 אחרי שהשכבה המשותפת נחתה (11f347a9 · 902bbc7f),
+// וזה בדיוק הסדר הנכון — תיקון-לשונית הוא פיגום עד שהמקור מתוקן:**
+// ‏· **השלמת `format` לחצי-ההשוואה** — `KpiTile` נופל היום ל-`compare.format ?? tile.format`
+//   (GAP 8), ולכן אין עוד צורך להשלים אותו פר-לשונית.
+// ‏· **תיקון `format:'text'` על עמודות-תאריך** — מיגרציה H2 שינתה את `sent_date`/`due_date`
+//   של מ7 ומ9 ל-`format:'date'` במקור. **אומת בקריאה חיה אחרי H2**: חמש עמודות-התאריך
+//   בשני המשטחים מחזירות `date`, ולכן התיקון היה הופך לקוד-מת שנראה פעיל.
 //
 // 🚫 **ומה שהוא בכוונה אינו עושה:** אינו מסנן שורות ואינו מוסיף אריח. שני אלה היו מזיזים
 // את המספר שהאוכלוסייה (📐2) והפאג'ר (📐8) מצהירים עליו, והם מגיעים מהשרת בלבד.
 
 import { CUSTOMER_TYPE_LABELS } from '@/lib/customers'
+import { AGING_BUCKETS } from '@/lib/reportsFinance'
 
 // מפת הקבועים ש-`chart.label_source` רשאי לנקוב בהם. **טבלה ולא `if`** — מקור חדש הוא שורה.
 const LABEL_SOURCES = { CUSTOMER_TYPE_LABELS }
+
+// 🔴 **מפתח-דלי ⇐ התווית שעל המסך — פגם שנראה בעין בדפדפן ואף בדיקה לא תפסה (16/09/2026).**
+// עמודת "מדרג" של מ9 מחזירה את **מפתח-המסד** (`d90p` · `d61_90` · `current`), והמסך הציג
+// חמש מחרוזות באנגלית בטור עברי — בעוד **הגרף באותו דף** מציג את אותם דליים כ-`1–30` ·
+// `61–90` · `90+`. ⇒ שתי איותים לאותו דבר על מסך אחד.
+// 🔑 **התוויות אינן מומצאות כאן:** `AGING_BUCKETS` (`src/lib/reportsFinance.js`) הוא ה-SSOT
+// שלהן, וההערה שם קובעת במפורש *"התוויות הן מה שמופיע על המסך (spec §1.4 · כרטיס מ9 §⑥)"*
+// — כולל מקף-הטווח `–` (en-dash). ⚠️ **וזו אותה משפחה בדיוק של `chart.label_source`**,
+// רק שאין ל-C8 שדה מקביל לעמודה; ⇒ מדווח כבקשת-שדה, וממופה כאן בינתיים.
+const AGING_BUCKET_LABELS = Object.freeze(
+  Object.fromEntries(AGING_BUCKETS.map((bucket) => [bucket.key, bucket.label])),
+)
 
 /**
  * מפרט ארבעת המשטחים של הלשונית — **דאטה, לא קוד**, וזו הסיבה שיש כאן רכיב אחד ולא ארבעה:
@@ -26,11 +46,11 @@ const LABEL_SOURCES = { CUSTOMER_TYPE_LABELS }
  *
  * `hints` — מפתחות §⑩ של הכרטיס, לפי נקודת-ההרחבה שבה הם נמסרים.
  * `sort` — ר' `markSortedColumns`.
- * `dateColumns` — ר' `withDateFormats`.
- * `rowsOpenProject` — הכרעה 19: השורה **כולה** דלת לכרטיס-הפרויקט. ⚠️ המעטפת מעבירה
- *   `onDrill` לטבלה **רק** כש-`surface.drill`, ולכן משטח שאינו דוח-דריל מקבל כאן דגל
- *   והלשונית מוסרת ל-`ReportSurface` עותק של `surface` עם `drill: true` (הפירורים נשארים
- *   ריקים מעצמם — `payload.drill` הוא `null`, ו-`DrillCrumbs` מחזיר `null` מתחת לשתי רמות).
+ * 🚫 **ומה שכבר אינו כאן:** `rowsOpenProject`. עד 16/09 הלשונית מסרה ל-`ReportSurface` עותק
+ *   של `surface` עם `drill: true` רק כדי שהשורות ייפתחו (הכרעה 19). **המעטפת המשותפת פותחת
+ *   היום שורה על כל `drill_key` שסוגו נתיב** (GAP 2 · `ROW_DOOR_KINDS`), והדגל הפך למזיק:
+ *   `surface.drill` מדכא את הסינון-הצולב האוטומטי ומצייר פירורים אם יגיעו שתי רמות.
+ * `bucketColumn` — מ9: העמודה שערכיה הם מפתחות-דלי, ר' `AGING_BUCKET_LABELS`.
  * `currentBucketTile` — מ9: אריח "שוטף" יושב ב-`meta.current_tile` ולא ב-`tiles`.
  * `openInvoicesDoor` — מ7: הקישור "כל N החשבוניות הפתוחות →" לדוח-הגיול (📑ב).
  */
@@ -45,8 +65,6 @@ export const FINANCE_SURFACE_SPECS = Object.freeze({
     // כרטיס מ7 §⑩ ד: *"ממוינת לפי ימי-איחור בסדר יורד"* + *"aria-sort על עמודת ימי-האיחור"*,
     // וכך גם ה-`<th aria-sort="descending">ימי איחור ▼</th>` שבמוקאפ המאושר (שורה 672).
     sort: Object.freeze({ columns: [{ key: 'days_overdue', direction: 'descending' }] }),
-    dateColumns: ['sent_date', 'due_date'],
-    rowsOpenProject: true,
     openInvoicesDoor: true,
   }),
   profitability: Object.freeze({
@@ -62,7 +80,6 @@ export const FINANCE_SURFACE_SPECS = Object.freeze({
       columns: [{ key: 'deviation', direction: 'descending' }],
       groupKey: 'below_materiality',
     }),
-    rowsOpenProject: true,
   }),
   aging: Object.freeze({
     hints: Object.freeze({
@@ -82,7 +99,7 @@ export const FINANCE_SURFACE_SPECS = Object.freeze({
       columns: [{ key: 'days_overdue', direction: 'descending' }],
       byLevel: { 1: [{ key: 'amount', direction: 'descending' }] },
     }),
-    dateColumns: ['sent_date', 'due_date'],
+    bucketColumn: 'bucket',
     currentBucketTile: true,
   }),
   equipment: Object.freeze({
@@ -102,42 +119,18 @@ export const FINANCE_SURFACE_SPECS = Object.freeze({
   }),
 })
 
-const DATE_FORMAT = 'date'
-
-/**
- * 🔴 **עמודת-תאריך שהוכרזה `text` — הפגם, ולמה הוא מתוקן כאן ולא נבלע.**
- * ארבע עמודות בשני משטחים (`sent_date` · `due_date`) מוכרזות `format: 'text'`, וערכן
- * `YYYY-MM-DD`. ⇒ המסך היה מציג **2025-01-14**, בעוד המוקאפ המאושר מצייר **14/01/2025**
- * *(שורה 675 של `approved/03_tab_finance_approved.html`)* ו-`reportsFormat` כבר נושא `date`.
- * **הייצוא לאקסל נושא את אותו פגם** — `cellFor` מטפל ב-`date` ומפיל `text` לגלם.
- * ⚠️ **התיקון הנכון יושב ב-RPC** (`format` הוא שדה של C8), ולכן ההחלה כאן **מותנית**:
- * היא נוגעת רק בעמודה שהוכרזה `text`, ומתבטלת מעצמה ברגע שהשרת יכריז `date`.
- */
-function withDateFormats(columns, dateColumns) {
-  if (!dateColumns?.length || !columns?.length) return columns
-  const fixable = (c) => dateColumns.includes(c.key) && c.format === 'text'
-  if (!columns.some(fixable)) return columns
-  return columns.map((c) => (fixable(c) ? { ...c, format: DATE_FORMAT } : c))
-}
-
-/**
- * 🔴 **חצי-ההשוואה (📐1) ירד למסך כמספר גולמי — וזה נמדד, לא הונח.**
- * `KpiTile` מעצב את ערך-ההשוואה ב-`formatByType(compare.value, compare.format)`, ו**אף אחד
- * מ-17 אריחי-הכספים אינו מחזיר `compare.format`** (נמדד חי 16/09/2026) ⇒ `format` הוא
- * `undefined`, הפורמטר נופל ל-`text`, והשורה הציגה **206002** במקום **206,382 ₪** —
- * כלומר 📐4 ("₪ בלי אגורות בכל מקום · אחוז בספרה אחת") נשבר בדיוק בחצי שנועד להשוות.
- * ✅ **וההשלמה אינה המצאה:** חצי-ההשוואה הוא **אותו מדד** של האריח בהגדרת 📐1, ולכן הוא
- * יורש את `tile.format` — ורק כשה-payload לא הכריז אחרת.
- * ⚠️ **התיקון הרוחבי הנכון הוא שורה אחת ב-`KpiTile`** (`compare.format ?? tile.format`),
- * שהייתה סוגרת את זה לכל שישה-עשר המשטחים; כאן הוא מוחל על הלשונית הזו בלבד, ומדווח.
- */
-function withCompareFormat(tiles) {
-  if (!tiles?.length) return tiles
-  const needsFormat = (t) => t.compare && t.compare.format === undefined && t.format
-  if (!tiles.some(needsFormat)) return tiles
-  return tiles.map((t) =>
-    needsFormat(t) ? { ...t, compare: { ...t.compare, format: t.format } } : t,
-  )
+/** מפתחות-דלי בעמודה אחת ⇒ התוויות של `AGING_BUCKETS`. ערך שאינו מפתח מוכר נשאר כפי שהוא. */
+function withBucketLabels(payload, columnKey) {
+  if (!columnKey || !payload.rows?.length) return payload
+  if (!payload.columns?.some((c) => c.key === columnKey)) return payload
+  if (!payload.rows.some((row) => AGING_BUCKET_LABELS[row[columnKey]])) return payload
+  return {
+    ...payload,
+    rows: payload.rows.map((row) => {
+      const label = AGING_BUCKET_LABELS[row[columnKey]]
+      return label ? { ...row, [columnKey]: label } : row
+    }),
+  }
 }
 
 function mapSeriesLabels(chart) {
@@ -249,11 +242,6 @@ function markSortedColumns(payload, sort) {
 
 /** `transformPayload` של הלשונית — שלוש הפעולות של הכותרת, בסדר הזה. */
 export function transformFinancePayload(payload, spec) {
-  const labelled = mapChartLabels(payload)
-  const fixed = {
-    ...labelled,
-    tiles: withCompareFormat(labelled.tiles),
-    columns: withDateFormats(labelled.columns, spec.dateColumns),
-  }
-  return markSortedColumns(fixed, spec.sort)
+  const labelled = withBucketLabels(mapChartLabels(payload), spec.bucketColumn)
+  return markSortedColumns(labelled, spec.sort)
 }

@@ -10,7 +10,7 @@
 // `<Hint>` קורא ממנו את רמת-ההטמעה — וזה מה שמאפשר את **מבחן-המחיקה** (רמה 0 מול רמה 2).
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
-import { MemoryRouter, useLocation } from 'react-router-dom'
+import { MemoryRouter } from 'react-router-dom'
 
 const state = vi.hoisted(() => ({ onboardingMode: 2 }))
 
@@ -78,15 +78,9 @@ async function click(element) {
   })
 }
 
-function LocationProbe() {
-  const location = useLocation()
-  return <span data-testid="location">{`${location.pathname}${location.search}`}</span>
-}
-
 function renderTab({ slug, drill = null, onDrill = vi.fn(), onWindow = vi.fn() } = {}) {
   render(
     <MemoryRouter initialEntries={[`/reports?tab=finance&report=${slug}`]}>
-      <LocationProbe />
       <FinanceTab
         surface={surfaceBySlug(slug)}
         filters={filters}
@@ -155,7 +149,7 @@ const overviewPayload = () =>
     columns: [
       { key: 'project_id', label: 'פרויקט', format: 'int', align: 'start' },
       { key: 'customer_name', label: 'לקוח', format: 'text', align: 'start' },
-      { key: 'sent_date', label: 'נשלחה', format: 'text', align: 'start' },
+      { key: 'sent_date', label: 'נשלחה', format: 'date', align: 'start' },
       { key: 'amount', label: 'סכום', format: 'money', align: 'end' },
       { key: 'days_overdue', label: 'ימי איחור', format: 'days', align: 'end' },
     ],
@@ -248,20 +242,24 @@ const agingRootPayload = () =>
     },
     columns: [
       { key: 'project_id', label: 'פרויקט', format: 'int', align: 'start' },
-      { key: 'sent_date', label: 'נשלחה', format: 'text', align: 'start' },
+      { key: 'sent_date', label: 'נשלחה', format: 'date', align: 'start' },
       { key: 'days_overdue', label: 'ימי איחור', format: 'days', align: 'end' },
+      { key: 'bucket', label: 'מדרג', format: 'text', align: 'start' },
     ],
+    // ‏`bucket` מגיע מהשרת כ**מפתח-מסד** — וזה מה שהטבלה הציגה בדפדפן עד 16/09.
     rows: [
       {
         project_id: 1040,
         sent_date: '2025-01-14',
         days_overdue: 580,
+        bucket: 'd90p',
         drill_key: { kind: 'project', id: 1040 },
       },
       {
         project_id: 1460,
         sent_date: '2026-04-30',
         days_overdue: 109,
+        bucket: 'd61_90',
         drill_key: { kind: 'project', id: 1460 },
       },
     ],
@@ -443,7 +441,7 @@ describe('מ7 · מבט-על כספים', () => {
     expect(screen.getAllByTestId('report-row-drillable')).toHaveLength(2)
   })
 
-  it('📐9 · aria-sort יושב על "ימי איחור" בלבד, ועמודת-התאריך יורדת בצורה הישראלית', async () => {
+  it('📐9 · aria-sort יושב על "ימי איחור" בלבד, והתאריך יורד בצורה הישראלית (H2)', async () => {
     callReport.mockResolvedValue(overviewPayload())
     renderTab({ slug: 'finance-overview' })
     await screen.findByTestId('report-table-card')
@@ -455,29 +453,39 @@ describe('מ7 · מבט-על כספים', () => {
     expect(plain(screen.getByTestId('report-table-card'))).toContain('14/01/2025')
   })
 
-  it('הכרעה 19 · לחיצה על שורה פותחת את כרטיס-הפרויקט', async () => {
+  it('הכרעה 19 · השורה כולה דלת — המפתח נמסר למעטפת, שהיא הנתב היחיד', async () => {
     callReport.mockResolvedValue(overviewPayload())
-    renderTab({ slug: 'finance-overview' })
+    const { onDrill } = renderTab({ slug: 'finance-overview' })
     const rows = await screen.findAllByTestId('report-row-drillable')
     await click(rows[0])
-    expect(screen.getByTestId('location')).toHaveTextContent('/projects/1040')
+    // המעטפת מוסרת `(drill_key, row)`; הניווט ל-`/projects/1040` נבדק ב-`ReportsPage.test.jsx`,
+    // שם יושב הנתב. 🚫 **לא שני נתבים** — ר' הערת-הפרופס ב-`FinanceTab.jsx`.
+    expect(onDrill.mock.calls[0][0]).toEqual({ kind: 'project', id: 1040 })
   })
 
-  it('הכרעה 33 · אריח-דלת ו"כל N החשבוניות →" מעבירים לדוח גיול חובות דרך הכתובת', async () => {
+  it('הכרעה 33 · אריח-דלת ו"כל N החשבוניות →" מוסרים יעד {tab, report} למעטפת', async () => {
     callReport.mockResolvedValue(overviewPayload())
-    renderTab({ slug: 'finance-overview' })
+    const { onDrill } = renderTab({ slug: 'finance-overview' })
 
     // 📐8 — הפאג'ר סופר את מה שמוצג; ההצהרה שלצידו נושאת את הסך האמיתי מ-`open_invoice_count`.
     const cap = await screen.findByTestId('finance-row-cap')
     expect(plain(cap)).toContain('אלה 2 החשבוניות הישנות ביותר מתוך 35 הפתוחות.')
+    // 🔴 **ושתי ההצהרות אינן יכולות להצטייר יחד:** ההערה המשותפת (§9 D-25) נקראת מ-
+    // `meta.row_total`, ומ7 אינו מחזיר אותו — נמדד חי אחרי H2 על ארבעת משטחי-הכספים.
+    expect(screen.queryByTestId('report-row-cap')).not.toBeInTheDocument()
     const door = screen.getByTestId('finance-open-invoices-door')
     expect(plain(door)).toBe('כל 35 החשבוניות הפתוחות →')
     await click(door)
-    expect(screen.getByTestId('location')).toHaveTextContent('report=aging')
+    expect(onDrill.mock.calls[0][0]).toEqual({
+      tab: 'כספים',
+      report: 'report_m09_aging',
+      drill: null,
+    })
 
     await click(screen.getByTestId('report-tile-link-open_debt'))
-    expect(screen.getByTestId('location')).toHaveTextContent('tab=finance')
-    expect(screen.getByTestId('location')).toHaveTextContent('report=aging')
+    expect(onDrill.mock.calls[1][0]).toEqual(
+      overviewPayload().tiles.find((t) => t.key === 'open_debt').target,
+    )
   })
 })
 
@@ -517,6 +525,17 @@ describe('מ9 · גיול חובות (דוח-דריל)', () => {
     expect(legend.textContent).not.toContain('private_company')
   })
 
+  it('עמודת "מדרג" מציגה תוויות-מסך ולא מפתחות-מסד', async () => {
+    callReport.mockResolvedValue(agingRootPayload())
+    renderTab({ slug: 'aging' })
+    const table = await screen.findByTestId('report-table-card')
+    // 🔴 נראה בעין בדפדפן 16/09: הטור הציג `d90p`/`d61_90` בעוד הגרף באותו דף מציג `90+`/`61–90`.
+    expect(plain(table)).toContain('90+')
+    expect(plain(table)).toContain('61–90')
+    expect(table.textContent).not.toContain('d90p')
+    expect(table.textContent).not.toContain('d61_90')
+  })
+
   it('אריח "שוטף — עוד לא באיחור" מצויר לצד הגרף ויורד רמה בלחיצה', async () => {
     callReport.mockResolvedValue(agingRootPayload())
     const { onDrill } = renderTab({ slug: 'aging' })
@@ -526,7 +545,7 @@ describe('מ9 · גיול חובות (דוח-דריל)', () => {
     expect(plain(tile)).toContain('48,746 ₪')
     expect(plain(tile)).toContain('101,679 ₪')
     await click(screen.getByTestId('report-tile-link-current_bucket'))
-    expect(onDrill).toHaveBeenCalledWith({ bucket: 'current' })
+    expect(onDrill.mock.calls[0][0]).toEqual({ bucket: 'current' })
   })
 
   it('רמה 1 · פירורים, אריחי-הרמה, ולחיצה על שורה יורדת ללקוח', async () => {
@@ -539,7 +558,11 @@ describe('מ9 · גיול חובות (דוח-דריל)', () => {
 
     const rows = screen.getAllByTestId('report-row-drillable')
     await click(rows[0])
-    expect(onDrill).toHaveBeenCalledWith({ kind: 'customer', bucket: 'd61_90', customer_id: 401 })
+    expect(onDrill.mock.calls[0][0]).toEqual({
+      kind: 'customer',
+      bucket: 'd61_90',
+      customer_id: 401,
+    })
     // 📐9 — ברמה הזו השורות ממוינות לפי ₪, לא לפי ימי-איחור.
     const headers = screen.getAllByRole('columnheader')
     expect(headers.find((h) => h.textContent.includes('סכום'))).toHaveAttribute(
@@ -553,7 +576,7 @@ describe('מ9 · גיול חובות (דוח-דריל)', () => {
     const { onDrill } = renderTab({ slug: 'aging', drill: { kind: 'bucket', bucket: 'd61_90' } })
     await screen.findByTestId('report-crumbs')
     await click(screen.getByTestId('report-crumb-0'))
-    expect(onDrill).toHaveBeenCalledWith(null)
+    expect(onDrill.mock.calls[0][0]).toBeNull()
   })
 })
 
@@ -573,6 +596,24 @@ describe('מ12 · צריכת ציוד', () => {
     expect(plain(extras[0])).toContain('2,607')
     // 📐9 חל גם על טבלה נוספת: "כמות להזמנה" היא העמודה שהיא ממוינת לפיה.
     expect(within(extras[0]).getByText(/כמות להזמנה/)).toHaveAttribute('aria-sort', 'descending')
+  })
+
+  it('סינון-צולב · לחיצה על מוצר בגרף מצמצמת את הטבלה, ושבב-הניקוי מחזיר אותה', async () => {
+    callReport.mockResolvedValue(equipmentPayload())
+    renderTab({ slug: 'equipment' })
+    // ‏`report-row` חי גם בשתי הטבלאות הנוספות ⇒ הספירה מתוחמת לטבלה הראשית בלבד.
+    const mainTable = () => screen.getAllByTestId('report-table-card')[0]
+    await screen.findAllByTestId('report-table-card')
+    expect(within(mainTable()).getAllByTestId('report-row')).toHaveLength(2)
+
+    // הנתיב שקיים במקלדת: הכפתור בטבלת-קורא-המסך של `ChartCard` (‏onClick על `<rect>` אינו
+    // ניתן-להפעלה במקלדת — §⑤ #7). המפתח `item_name` מזוהה אוטומטית ומאומת מול השורות.
+    await click(screen.getAllByTestId('chart-select-0')[0])
+    expect(within(mainTable()).getAllByTestId('report-row')).toHaveLength(1)
+    expect(plain(screen.getByTestId('report-crossfilter-label'))).toContain('שרוך סאטן - ממותג')
+
+    await click(screen.getByTestId('report-clear-crossfilter'))
+    expect(within(mainTable()).getAllByTestId('report-row')).toHaveLength(2)
   })
 
   it('שורות הטבלה אינן לחיצות — יעד-הקידוח של ה-sku אינו מסך קיים (⑧12.1 פתוח)', async () => {

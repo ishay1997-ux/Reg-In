@@ -12,11 +12,17 @@
 // (`approveFeedbackAiRun`), כי הוא כבר נכתב שם בצעד-היסוד.
 //
 // 🔑 **חמשת המצבים אינם חמשת מצבי-המעטפת** (הכרטיס ④): הדף יכול להיות ב"תקלה" בזמן
-// שהריצה `done`, ולהפך. הפס קורא את מצבו משני מקורות בלבד:
-// ‏① `meta.run` של המטען — **הריצה המאושרת האחרונה בלבד** (כך ה-RPC כתוב) ⇒ מצב 5.
-// ‏② תשובת הקריאה האחרונה בסשן הזה ⇒ מצבים 2–4.
-// 🔴 **ומה שאין, ומדווח כמגבלה:** ריצה שרצה / נעצרה / ממתינה-לאישור **שהתחילה בכרטיסייה
-// אחרת אינה נראית כאן** — ‏`report_m22_notes` שולף `where approved_at is not null` בלבד.
+// שהריצה `done`, ולהפך. הפס קורא את מצבו משלושה מקורות, בסדר הזה:
+// ‏① תשובת הקריאה האחרונה **בסשן הזה** ⇒ מצבים 2–4, עם המספרים המדויקים שהיא החזירה.
+// ‏② `meta.run_in_progress` — **ריצה לא-מאושרת שהתחילה במקום אחר** ⇒ מצב 2 או 3.
+// ‏③ `meta.run` — הריצות המאושרות ⇒ מצב 5.
+// ✅ **② נסגר בסבב-היישור 16/09 11:1X, והוא היה הנקודה-העיוורת שדיווחתי עליה:** עד
+// מיגרציה G2 הדף לא ידע דבר על ריצה שרצה בכרטיסייה אחרת, הפס אמר *"N הערות טרם סווגו"*
+// עם כפתור פעיל, והלחיצה הוחזרה `409`.
+// 🔴 **והענף הוא על `status`, לעולם לא על עצם קיום המפתח** — נמדד 16/09/2026: המטען החי
+// מחזיר `run_in_progress` של **ריצה 4 במצב `failed`**. ריצה כזו אינה "בתהליך" בשום מובן:
+// אי-אפשר להמשיכה (`continue` מקבל `partial` בלבד) ואין מה לאשר בה ⇒ היא מתעלמת, והדף
+// מציג את מה שהיה מציג בלעדיה.
 
 import { useState } from 'react'
 import { supabase } from '@/supabaseClient'
@@ -37,6 +43,11 @@ const BATCH_SUB =
 // היא סבב-רשת אחד שחוזר בסופו. *"מסווג… 0/426"* היה מספר שקרי, ולכן נאמר רק מה שידוע.
 const RUNNING_SUB = 'זה לוקח כמה דקות. הסיווג נשמר בשרת גם אם תעזבי את הדף.'
 const GENERIC_ERROR = 'הניתוח נכשל. נסי שוב, ואם זה חוזר — פני למנכ"ל.'
+// 🔤 הנוסח של פונקציית-השרת עצמה (‏`index.ts`, ענף ה-409) — **מועתק ולא מנוסח מחדש**, כדי
+// שמה שכתוב על הפס לפני הלחיצה יהיה בדיוק מה שהיה נאמר אחריה.
+const ALREADY_RUNNING = 'ריצת-ניתוח כבר פועלת.'
+// שני המצבים שבהם ריצה **לא-מאושרת** היא עדיין רלוונטית. `failed` אינו בהם במכוון.
+const LIVE_RUN_STATUSES = new Set(['running', 'partial'])
 
 /**
  * הקריאה לפונקציית-השרת. **מחזירה את הגוף בשני המסלולים** — `2xx` ו-`4xx/5xx` כאחד:
@@ -89,9 +100,46 @@ function localState(local) {
   }
 }
 
-function barState({ run, local, pending, notesCount, canEdit }) {
+/**
+ * ריצה לא-מאושרת שהשרת מדווח עליה (`meta.run_in_progress`) — **המצב היחיד שהפס אינו
+ * לומד מהלחיצה של עצמו.**
+ * ‏`running` ⇒ מצב 2: אין מה ללחוץ, והכפתור מוצג **מנוטרל** עם הנוסח של השרת (לחיצה
+ * שנייה מוחזרת `409`; המוקאפ, מצב 2: *"הכפתור מנוטרל"*).
+ * ‏`partial` ⇒ מצב 3: **[המשך] פעיל.** ⚠️ **וזו סטייה מוצהרת מהוראת-המתזמר** *("running/
+ * partial ⇒ the button is disabled")*: ‏`continue` מקבל **בדיוק** ריצת-`partial`, וכרטיס
+ * מ22 ① ומצב 3 של מ25 נוקבים ב-*"נעצר: N/M · [המשך]"*. כפתור מנוטרל כאן היה הופך ריצה
+ * שנעצרה לבלתי-ניתנת-לסיום מהמסך. **מה שכן מנוטרל הוא *הרץ ניתוח*** — ריצה חדשה לצד
+ * ריצה שנעצרה הייתה יוצרת שורת-ריצה שנייה על אותן הערות. מדווח להכרעה.
+ */
+function serverRunState(active) {
+  const done = (active.ok_count ?? 0) + (active.failed_count ?? 0)
+  // 🔑 `sent_count` **של הריצה הזו** הוא המכנה הנכון (⁦426⁩ בריצה 4). 🚫 ולא
+  // `meta.run.sent_count`, שהוא מאז G2 **סכום על כל הריצות המאושרות** (⁦812⁩) ואינו מכנה.
+  const progress = isolateLtr(`${done}/${active.sent_count ?? 0}`)
+  if (active.status === 'running') {
+    return {
+      text: `מסווג… ${progress}`,
+      sub: ALREADY_RUNNING,
+      action: null,
+      disabledAction: RUN_LABEL,
+    }
+  }
+  return {
+    text: `נעצר: ${progress}`,
+    sub: 'הריצה נעצרה באמצע. מה שסווג נשמר, ו"המשך" שולח רק את מה שנותר.',
+    action: 'continueServer',
+    actionLabel: CONTINUE_LABEL,
+    runId: active.run_id,
+  }
+}
+
+function barState({ run, runInProgress, local, pending, notesCount, canEdit }) {
   if (pending) return { text: 'מסווג…', sub: RUNNING_SUB, action: null }
   if (local) return localState(local)
+  // ר' ההערה למעלה: הענף הוא על `status`, ולא על עצם קיום `run_in_progress`.
+  if (runInProgress && LIVE_RUN_STATUSES.has(runInProgress.status)) {
+    return serverRunState(runInProgress)
+  }
   if (run?.approved_at) {
     const day = isolateLtr(formatIsraelDate(String(run.approved_at).slice(0, 10)))
     return { text: `מציג את הריצה מ-${day}, אושרה ע"י ${run.approved_by}`, sub: null, action: null }
@@ -115,7 +163,15 @@ export default function AnalysisRunBar({ payload, canEdit, onChanged }) {
   const [error, setError] = useState(null)
 
   const run = payload?.meta?.run ?? null
-  const state = barState({ run, local, pending, notesCount: payload?.population?.n, canEdit })
+  const runInProgress = payload?.meta?.run_in_progress ?? null
+  const state = barState({
+    run,
+    runInProgress,
+    local,
+    pending,
+    notesCount: payload?.population?.n,
+    canEdit,
+  })
 
   async function classify(body) {
     setPending(true)
@@ -151,6 +207,8 @@ export default function AnalysisRunBar({ payload, canEdit, onChanged }) {
   const actions = {
     start: () => classify({ action: 'start' }),
     continue: () => classify({ action: 'continue', run_id: local?.run_id }),
+    // המשך של ריצה שהשרת דיווח עליה — ה-`run_id` מגיע מהמטען ולא מתשובה בסשן הזה.
+    continueServer: () => classify({ action: 'continue', run_id: state.runId }),
     approve,
   }
 
@@ -171,16 +229,18 @@ export default function AnalysisRunBar({ payload, canEdit, onChanged }) {
           </p>
         )}
       </div>
-      {/* ⑤ · ⑦ — בלי `edit` על 'דו"חות' הכפתור **אינו מוצג כלל**, ולא מוצג-מנוטרל. */}
-      {canEdit && state.action && (
+      {/* ⑤ · ⑦ — בלי `edit` על 'דו"חות' הכפתור **אינו מוצג כלל**, ולא מוצג-מנוטרל.
+          ⚠️ **ומנוטרל אינו נעדר:** בזמן שריצה פועלת הכפתור **כן** מוצג ומנוטרל (מצב 2
+          של מ25), כי היעלמותו הייתה נקראת כאילו היכולת אינה קיימת בתפקיד. */}
+      {canEdit && (state.action || state.disabledAction) && (
         <Button
           type="button"
-          disabled={pending}
-          onClick={actions[state.action]}
+          disabled={pending || !state.action}
+          onClick={state.action ? actions[state.action] : undefined}
           className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800"
           data-testid="m25-run-button"
         >
-          {state.actionLabel}
+          {state.actionLabel ?? state.disabledAction}
         </Button>
       )}
     </section>

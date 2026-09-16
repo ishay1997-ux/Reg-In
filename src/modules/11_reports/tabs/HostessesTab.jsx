@@ -9,23 +9,27 @@
 //
 // 🔴 **שלוש נקודות שכל קורא של הקובץ צריך מראש:**
 // ① **אין דריל בלשונית הזו** (§9 D-14 · C8 מתוקן 16/09): קבוצת-הדריל היא מ3 · מ9 בלבד.
-//    ‏`onDrill` כאן משמש **רק** לבחירת יום-בשבוע של מ15, שהיא `p_drill` אמיתי בשרת.
+//    ‏`onDrill` כאן משמש לשניים: בחירת יום-בשבוע של מ15 (‏`p_drill` אמיתי בשרת), ו**דלתות**
+//    — אריח עם `target` ושורה עם `drill_key` — שנתב-הדלתות של המעטפת מנתב (11f347a9).
 // ② **מ17 מחזיר את זמני-התגובה בשעות ומכריז `days`** — ר' `payloadTransforms.js` · הדיווח.
-// ③ **‏`KpiTile` אינו מרנדר `tiles[].sub` ולא `compare.note`** (נמדד; רשום גם בכותרת
-//    מיגרציית F2). תת-השורה של המוקאפ אינה מגיעה למסך באף אחת מארבע הלשוניות —
-//    **פגם ברכיב משותף, מדווח ולא מתוקן כאן** (הקובץ מחוץ לשטח-הכתיבה של הצעד).
+// ③ **הסינון-הצולב של מ16 כבוי מפורשות** (`disableCrossFilter`): הזיהוי-האוטומטי של
+//    המעטפת תופס שם `hourly_rate`, וסינון-לפי-תעריף אינו המשמעות של הדף. ר' הנימוק בשם.
+// ✏️ **16/09 11:2X — שלוש עקיפות שהיו כאן נמחקו כי השכבה המשותפת סגרה אותן:** ‏`KpiTile`
+//    מרנדר עכשיו `tiles[].sub` ו-`compare.note` ומעצב את חצי-ההשוואה דרך
+//    `compare.format ?? tile.format` ⇒ `inheritCompareFormat` נמחקה · שורת-תקרת-השורות
+//    ו-`so_what` מעל האריחים הן של המעטפת ⇒ מעולם לא נבנו כאן.
 
-import { useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { WEEKDAY_NAMES_HE } from '@/lib/dates'
 import { isolateLtr } from '@/lib/reportsFormat'
 import ReportSurface from '../components/ReportSurface'
 import ChipRow from './hostesses/ChipRow'
 import HintBlock from './hostesses/HintBlock'
 import {
+  disableCrossFilter,
   filterRows,
   fixResponseTimeUnit,
   hasNoRating,
-  inheritCompareFormat,
   isActive,
   isFlagged,
   mapChartLabels,
@@ -120,7 +124,12 @@ const TABLE_TITLES = {
   fairness: () => 'הדיילות לפי מספר המשמרות בחלון · מהעמוסה',
 }
 
-function transformSurface(slug, payload, chips) {
+// 🔍 **הסינון-הצולב של המעטפת, פר-משטח — נמדד ולא הונח** (סקריפט על ארבעת המטענים החיים,
+// 16/09 11:2X, שמריץ את `autoFilterKey` של `ReportSurface` מילה-במילה):
+// ‏**מ14** `xKey='month'` · **מ15** `xKey='dow'` · **מ17** `xKey='x'` — אף אחד מהם אינו
+// מפתח-שורה ⇒ הזיהוי מחזיר `null` וממילא אין סינון-צולב. **מ16** `xKey='hourly_rate'` —
+// **כן** מפתח-שורה, והערכים נפגשים ⇒ הזיהוי תופס, ולכן הוא מכובה במפורש.
+function transformFor(slug, payload, chips) {
   if (slug === 'reliability') {
     // מיפוי תוויות-הציר קודם לסינון: שתי הפעולות עצמאיות, והסדר נבחר כך שבורר-היום
     // ב-`renderTop` יקרא שמות-ימים ולא ספרות.
@@ -130,16 +139,11 @@ function transformSurface(slug, payload, chips) {
     return next
   }
   if (slug === 'quality-cost') {
-    return chips.onlyNoRating ? filterRows(payload, hasNoRating) : payload
+    const next = disableCrossFilter(payload)
+    return chips.onlyNoRating ? filterRows(next, hasNoRating) : next
   }
   if (slug === 'fairness') return fixResponseTimeUnit(payload)
   return payload
-}
-
-// ‏`inheritCompareFormat` חל על **כל ארבעת המשטחים** ולא על אחד — חצי-ההשוואה קיים בכל
-// אריח שיש לו תקופה-קודמת (📐1), והפגם אינו תלוי-משטח. ר' הנימוק המלא ב-`payloadTransforms`.
-function transformFor(slug, payload, chips) {
-  return inheritCompareFormat(transformSurface(slug, payload, chips))
 }
 
 // בורר יום-בשבוע של מ15 — **הימים נגזרים מנתוני-הגרף עצמם** ולא מרשימה קשיחה: במסד אין
@@ -197,13 +201,23 @@ export default function HostessesTab({ surface, filters, drill, onDrill, onWindo
     slug: surface.slug,
     value: DEFAULT_CHIPS[surface.slug] ?? {},
   })
-  const chips =
-    chipState.slug === surface.slug ? chipState.value : (DEFAULT_CHIPS[surface.slug] ?? {})
+  // 🔴 **`useMemo` ולא ביטוי-תנאי חשוף, וזה לא ניקיון:** ‏`chips` נכנס למערך-התלויות של
+  // ה-`transformPayload` שלמטה, וביטוי-תנאי מייצר אובייקט **חדש בכל רינדור** כשהמשטח
+  // התחלף ⇒ הזהות משתנה, המימואיזציה של `ReportSurface` מתבטלת בשקט, והטרנספורמציה רצה
+  // מחדש על כל רינדור. ‏`react-hooks/exhaustive-deps` סימן בדיוק את זה.
+  const chips = useMemo(
+    () => (chipState.slug === surface.slug ? chipState.value : (DEFAULT_CHIPS[surface.slug] ?? {})),
+    [chipState, surface.slug],
+  )
   const setChip = (key, value) =>
     setChipState({ slug: surface.slug, value: { ...chips, [key]: value } })
 
   const selectedDow = Number.isInteger(drill?.dow) ? drill.dow : null
   const hints = HINTS[surface.slug] ?? { top: [], beforeChart: [], beforeTable: [], extras: [] }
+  const transformPayload = useCallback(
+    (payload) => transformFor(surface.slug, payload, chips),
+    [surface.slug, chips],
+  )
 
   const renderChips = (payload) => {
     if (surface.slug === 'reliability') {
@@ -250,7 +264,10 @@ export default function HostessesTab({ surface, filters, drill, onDrill, onWindo
       drill={drill}
       onDrill={onDrill}
       onWindow={onWindow}
-      transformPayload={(payload) => transformFor(surface.slug, payload, chips)}
+      // 🔴 **זהות יציבה, ולא חץ-אינליין** — ‏`ReportSurface` ממואיז את התוצאה על
+      // ‏`[rawPayload, transformPayload]` (‏11f347a9), ופונקציה חדשה בכל רינדור מבטלת את
+      // המימואיזציה בשקט: הסינון היה רץ מחדש בכל הקלדה בכל פקד עתידי בדף.
+      transformPayload={transformPayload}
       renderTop={(payload) => (
         <>
           <HintBlock ids={hints.top} testId="report-hints-top" />
