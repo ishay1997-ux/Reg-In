@@ -1,0 +1,678 @@
+// בדיקות-רכיב ללשונית **כספים** — ארבעת המשטחים, חמשת המצבים, שלוש הדלתות ושכבת-ההטמעה.
+//
+// 🔑 **המספרים שבמתקנים אינם מומצאים:** כולם הועתקו מ-payload חי שנקרא מארבע פונקציות-השרת
+// ב-16/09/2026 בהתחזות מנכ"ל (`report_m07_finance_overview` · `m08` · `m09` · `m12`).
+// ⚠️ **ולכן הם אורקל-צורה ולא אורקל-מספר:** הבדיקות כאן מוכיחות ש**מה שהשרת החזיר מצויר
+// נכון**, לא שהשרת חישב נכון — זה נמדד מול `spec.md §🔢` וקו-הבסיס, לא כאן.
+//
+// `recharts` ממוקם כי jsdom אינו מרנדר SVG; ‏`@/supabaseClient` ממוקם כדי שהבדיקה לא תיפול
+// ב-CI על היעדר `.env.local` (מלכודת מוכרת, `CLAUDE.md §3`). ‏`AuthContext` ממוקם כי
+// `<Hint>` קורא ממנו את רמת-ההטמעה — וזה מה שמאפשר את **מבחן-המחיקה** (רמה 0 מול רמה 2).
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { MemoryRouter, useLocation } from 'react-router-dom'
+
+const state = vi.hoisted(() => ({ onboardingMode: 2 }))
+
+vi.mock('@/supabaseClient', () => ({ supabase: { rpc: vi.fn(), from: vi.fn() } }))
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({ onboardingMode: state.onboardingMode, permissions: { כספים: 'edit' } }),
+}))
+// עטיפות-recharts מוחלפות ב-`null`: מה שנבדק כאן הוא המקרא והטבלה-לקורא-מסך של `ChartCard`,
+// ושניהם JSX רגיל שמצויר מאותו `chart.series` — כלומר בדיוק היכן שמיפוי-התוויות נופל או עובד.
+vi.mock('recharts', () => {
+  const Stub = () => null
+  return {
+    Bar: Stub,
+    BarChart: Stub,
+    CartesianGrid: Stub,
+    Cell: Stub,
+    ComposedChart: Stub,
+    Label: Stub,
+    Line: Stub,
+    LineChart: Stub,
+    ReferenceLine: Stub,
+    ResponsiveContainer: Stub,
+    Scatter: Stub,
+    ScatterChart: Stub,
+    Tooltip: Stub,
+    XAxis: Stub,
+    YAxis: Stub,
+    ZAxis: Stub,
+  }
+})
+const callReport = vi.fn()
+vi.mock('../api', async (importOriginal) => {
+  const actual = await importOriginal()
+  return { ...actual, callReport: (...args) => callReport(...args) }
+})
+
+import { M11_FINANCE_COPY } from '@/lib/onboardingCopy.m11.finance'
+import { REPORT_TABS } from '../reportsCatalog'
+import { FINANCE_SURFACE_SPECS } from './finance/financePayload'
+import FinanceTab from './FinanceTab'
+
+const FINANCE_SURFACES = REPORT_TABS.find((t) => t.key === 'finance').surfaces
+const surfaceBySlug = (slug) => FINANCE_SURFACES.find((s) => s.slug === slug)
+
+const clearFilters = vi.fn()
+const filters = {
+  from: '2026-01-01',
+  to: '2026-09-16',
+  customerId: null,
+  windowLabel: '2026',
+  isFiltered: false,
+  reloadTick: 0,
+  clearFilters,
+}
+
+// LRI/PDI בלתי-נראים בכוונה (`reportsFormat`), ולכן טקסט מושווה אחרי הסרתם — אחרת כל
+// טענת-טקסט בקובץ הזה הייתה נכשלת על תו שאיש אינו רואה.
+const plain = (node) => node.textContent.replaceAll('⁦', '').replaceAll('⁩', '')
+
+// `user-event` אינו מותקן בריפו (נמדד) — `fireEvent` עטוף ב-`act` הוא הדפוס הקיים
+// (`ReportsPage.test.jsx`). העטיפה נחוצה כי הלחיצה מפעילה `setSearchParams` ואז effect שקורא לשרת.
+async function click(element) {
+  await act(async () => {
+    fireEvent.click(element)
+  })
+}
+
+function LocationProbe() {
+  const location = useLocation()
+  return <span data-testid="location">{`${location.pathname}${location.search}`}</span>
+}
+
+function renderTab({ slug, drill = null, onDrill = vi.fn(), onWindow = vi.fn() } = {}) {
+  render(
+    <MemoryRouter initialEntries={[`/reports?tab=finance&report=${slug}`]}>
+      <LocationProbe />
+      <FinanceTab
+        surface={surfaceBySlug(slug)}
+        filters={filters}
+        drill={drill}
+        onDrill={onDrill}
+        onWindow={onWindow}
+      />
+    </MemoryRouter>,
+  )
+  return { onDrill, onWindow }
+}
+
+// ---------------------------------------------------------------- מתקני-payload (C8)
+
+const base = (extra) => ({
+  population: { n: 0, label: 'אוכלוסייה', excluded: {} },
+  window: { from: null, to: null, label: 'נכון להיום' },
+  tiles: [],
+  chart: null,
+  columns: [],
+  rows: [],
+  so_what: null,
+  definitions: null,
+  drill: null,
+  meta: {},
+  ...extra,
+})
+
+const overviewPayload = () =>
+  base({
+    population: { n: 35, label: 'אוכלוסייה: חשבוניות שנשלחו וטרם שולמו · n=35', excluded: {} },
+    window: { from: '2026-01-01', to: '2026-09-16', label: '01/01–16/09/2026' },
+    tiles: [
+      {
+        key: 'open_debt',
+        label: 'יתרת-חוב פתוחה',
+        value: 236382,
+        format: 'money',
+        window: 'נכון להיום · אינו מושפע ממסנן התקופה',
+        compare: { label: 'לפני חודש', value: 206002, direction: 'up' },
+        target: { tab: 'כספים', report: 'report_m09_aging', drill: null },
+      },
+      {
+        key: 'hostess_pay_month',
+        label: 'שכר דיילות החודש',
+        value: 0,
+        format: 'money',
+        window: '01/09–16/09',
+        compare: { label: 'אוגוסט', value: 19253, direction: 'down' },
+        target: null,
+      },
+    ],
+    chart: {
+      type: 'bar',
+      unit: '₪',
+      xKey: 'month',
+      title: 'יתרת-החוב הפתוחה בסוף כל חודש',
+      series: [{ key: 'open_amount', label: 'יתרת-חוב פתוחה' }],
+      data: [
+        { month: '08/2026', open_amount: 248233, is_today: false },
+        { month: '09/2026', open_amount: 236382, is_today: true },
+      ],
+      domain: null,
+      refLines: [],
+    },
+    columns: [
+      { key: 'project_id', label: 'פרויקט', format: 'int', align: 'start' },
+      { key: 'customer_name', label: 'לקוח', format: 'text', align: 'start' },
+      { key: 'sent_date', label: 'נשלחה', format: 'text', align: 'start' },
+      { key: 'amount', label: 'סכום', format: 'money', align: 'end' },
+      { key: 'days_overdue', label: 'ימי איחור', format: 'days', align: 'end' },
+    ],
+    rows: [
+      {
+        project_id: 1040,
+        customer_name: 'מועצה מקומית שוהם',
+        sent_date: '2025-01-14',
+        amount: 2899,
+        days_overdue: 580,
+        drill_key: { kind: 'project', id: 1040 },
+      },
+      {
+        project_id: 1460,
+        customer_name: 'אלפא סיסטמס בע"מ',
+        sent_date: '2026-04-30',
+        amount: 10163,
+        days_overdue: 109,
+        drill_key: { kind: 'project', id: 1460 },
+      },
+    ],
+    so_what: 'לגבות 46,038 ₪ שממתינים מעל 60 יום',
+    definitions: 'יתרת-חוב פתוחה = חשבונית שנשלחה, טרם שולמה ולא נמחקה כחוב-אבוד',
+    meta: { open_invoice_count: 35, notes: ['חובות אבודים: 2 חשבוניות'], missing_params: [] },
+  })
+
+const profitabilityPayload = () =>
+  base({
+    population: { n: 236, label: 'אוכלוסייה: אירועים שהתקיימו · n=236', excluded: {} },
+    tiles: [
+      {
+        key: 'over_threshold',
+        label: 'פרויקטים שחרגו מהתקציב',
+        value: 30,
+        format: 'int',
+        window: 'התקופה שנבחרה',
+        compare: { label: '2025', value: 17, direction: 'up' },
+        target: null,
+      },
+    ],
+    columns: [
+      { key: 'project_id', label: 'פרויקט', format: 'int', align: 'start' },
+      { key: 'deviation', label: 'סטייה ₪', format: 'money', align: 'end' },
+      { key: 'deviation_pct', label: 'סטייה %', format: 'percent', align: 'end' },
+    ],
+    // הסדר החי: ממוין לפי ₪ יורד **בתוך** כל אחת משתי קבוצות-המהותיות (📑ב#5 · §⑦).
+    rows: [
+      { project_id: 1416, deviation: 361, deviation_pct: 21.1, below_materiality: false },
+      { project_id: 1340, deviation: 202, deviation_pct: 15, below_materiality: false },
+      { project_id: 1465, deviation: 285, deviation_pct: 29.1, below_materiality: true },
+      { project_id: 1458, deviation: 23, deviation_pct: 16.7, below_materiality: true },
+    ],
+    so_what: 'לפתוח את פרויקט 1427',
+    definitions: 'סטיית-תקציב = צד-העבודה בלבד',
+    meta: { missing_params: [] },
+  })
+
+const agingBuckets = [
+  { key: 'current', label: 'שוטף', n: 8, amount: 48746 },
+  { key: 'd61_90', label: '61–90', n: 4, amount: 28092 },
+]
+
+const agingRootPayload = () =>
+  base({
+    population: { n: 35, label: 'אוכלוסייה: חשבוניות שנשלחו · n=35', excluded: { 'חוב אבוד': 2 } },
+    tiles: [
+      {
+        key: 'over_60',
+        label: 'מעל 60 יום',
+        value: 46038,
+        format: 'money',
+        window: 'נכון להיום',
+        compare: { label: 'לפני חודש', value: 17946, direction: 'up' },
+        target: { tab: 'כספים', report: 'report_m09_aging', drill: { bucket: 'd90p' } },
+      },
+    ],
+    chart: {
+      type: 'stackedBar',
+      unit: '₪',
+      xKey: 'bucket',
+      title: 'חוב באיחור לפי מדרג-גיול וסוג-לקוח',
+      label_source: 'CUSTOMER_TYPE_LABELS',
+      series: [
+        { key: 'government', label: 'government' },
+        { key: 'private_company', label: 'private_company' },
+      ],
+      data: [{ bucket: '61–90', government: 9384, private_company: 13270 }],
+      domain: null,
+      refLines: [],
+    },
+    columns: [
+      { key: 'project_id', label: 'פרויקט', format: 'int', align: 'start' },
+      { key: 'sent_date', label: 'נשלחה', format: 'text', align: 'start' },
+      { key: 'days_overdue', label: 'ימי איחור', format: 'days', align: 'end' },
+    ],
+    rows: [
+      {
+        project_id: 1040,
+        sent_date: '2025-01-14',
+        days_overdue: 580,
+        drill_key: { kind: 'project', id: 1040 },
+      },
+      {
+        project_id: 1460,
+        sent_date: '2026-04-30',
+        days_overdue: 109,
+        drill_key: { kind: 'project', id: 1460 },
+      },
+    ],
+    so_what: 'לגבות 46,038 ₪ מ-4 לקוחות',
+    definitions: 'מדרג-גיול נמדד מול מועד-הפירעון',
+    drill: {
+      level: 0,
+      levels: ['מדרג', 'לקוח', 'חשבונית'],
+      crumbs: [{ label: 'גיול חובות', drill: null }],
+      buckets: agingBuckets,
+      echo: null,
+    },
+    meta: {
+      missing_params: [],
+      current_tile: {
+        label: 'שוטף — עוד לא באיחור',
+        value: 48746,
+        count: 8,
+        compare_value: 101679,
+        compare_count: 14,
+        drill: { bucket: 'current' },
+      },
+    },
+  })
+
+const agingLevel1Payload = () => {
+  const payload = agingRootPayload()
+  return {
+    ...payload,
+    tiles: [
+      {
+        key: 'bucket_amount',
+        label: 'חוב במדרג 61–90 יום',
+        value: 28092,
+        format: 'money',
+        window: 'נכון להיום',
+        compare: { label: 'לפני חודש במדרג זה', value: 15047, direction: 'up' },
+        target: null,
+      },
+    ],
+    columns: [
+      { key: 'customer_name', label: 'לקוח', format: 'text', align: 'start' },
+      { key: 'amount', label: 'סכום', format: 'money', align: 'end' },
+      { key: 'days_overdue', label: 'ימי איחור (הוותיקה)', format: 'days', align: 'end' },
+    ],
+    rows: [
+      {
+        customer_name: 'אלפא סיסטמס בע"מ',
+        amount: 13270,
+        days_overdue: 66,
+        drill_key: { kind: 'customer', bucket: 'd61_90', customer_id: 401 },
+      },
+      {
+        customer_name: 'האגודה למען המדע הצעיר',
+        amount: 5438,
+        days_overdue: 75,
+        drill_key: { kind: 'customer', bucket: 'd61_90', customer_id: 456 },
+      },
+    ],
+    drill: {
+      level: 1,
+      levels: ['מדרג', 'לקוח', 'חשבונית'],
+      crumbs: [
+        { label: 'גיול חובות', drill: null },
+        { label: 'מדרג 61–90 יום', drill: { kind: 'bucket', bucket: 'd61_90' } },
+      ],
+      buckets: agingBuckets,
+      echo: { kind: 'bucket', bucket: 'd61_90' },
+    },
+  }
+}
+
+const equipmentPayload = () =>
+  base({
+    population: { n: 1771, label: 'אוכלוסייה: כל 1,771 שורות הלוגיסטיקה', excluded: {} },
+    tiles: [
+      {
+        key: 'cost_window',
+        label: 'עלות ציוד בתקופה',
+        value: 350944,
+        format: 'money',
+        window: 'התקופה שנבחרה',
+        compare: { label: '2025 באותו טווח', value: 274038, direction: 'up' },
+        target: null,
+      },
+    ],
+    chart: [
+      {
+        type: 'bar',
+        unit: '₪',
+        xKey: 'item_name',
+        title: 'עלות לפי מוצר',
+        series: [{ key: 'cost', label: 'עלות מוזמנת' }],
+        data: [{ item_name: 'שרוך סאטן - ממותג', cost: 233480 }],
+        domain: null,
+        refLines: [],
+      },
+      {
+        type: 'bar',
+        unit: 'יחידות',
+        xKey: 'item_name',
+        title: 'הוזמן מול הגיע',
+        series: [
+          { key: 'ordered', label: 'הוזמן' },
+          { key: 'arrived', label: 'הגיע' },
+        ],
+        data: [{ item_name: 'שרוך סאטן - ממותג', ordered: 58490, arrived: 57340 }],
+        domain: null,
+        refLines: [],
+      },
+    ],
+    columns: [
+      { key: 'item_name', label: 'מוצר (מק"ט)', format: 'text', align: 'start' },
+      { key: 'ordered_cost', label: 'עלות מוזמנת (₪)', format: 'money', align: 'end' },
+    ],
+    rows: [
+      {
+        item_name: 'שרוך סאטן - ממותג',
+        ordered_cost: 233480,
+        drill_key: { kind: 'sku', sku: 'B-SAT-LAN' },
+      },
+      {
+        item_name: 'שרוך בד - ממותג',
+        ordered_cost: 174600,
+        drill_key: { kind: 'sku', sku: 'B-FAB-LAN' },
+      },
+    ],
+    so_what: 'להזמין 2,607 יחידות',
+    definitions: '"הוזמן" = הכמות המתוכננת',
+    meta: {
+      missing_params: [],
+      notes: ['נמדד על 82 שורות מתוך 1,771'],
+      extra_tables: [
+        {
+          title: 'כמה להזמין לחודש הקרוב',
+          columns: [
+            { key: 'item_name', label: 'מוצר (מק"ט)', format: 'text', align: 'start' },
+            { key: 'qty', label: 'כמות להזמנה', format: 'int', align: 'end' },
+          ],
+          rows: [
+            { item_name: 'תג שם אקולוגי - ממותג', qty: 2607 },
+            { item_name: 'תג שם אקולוגי (חלק)', qty: 1800 },
+          ],
+        },
+        {
+          title: 'שורות ציוד במחיר מוערך',
+          columns: [{ key: 'project_id', label: 'פרויקט', format: 'int', align: 'start' }],
+          rows: [{ project_id: 1594 }],
+        },
+      ],
+    },
+  })
+
+beforeEach(() => {
+  state.onboardingMode = 2
+  callReport.mockReset()
+  clearFilters.mockReset()
+})
+
+// ---------------------------------------------------------------- מ7 · מבט-על כספים
+
+describe('מ7 · מבט-על כספים', () => {
+  it('מצייר את האריחים בתוויות §1.4, שורת-אוכלוסייה, "אז מה", הגדרות וטבלה', async () => {
+    callReport.mockResolvedValue(overviewPayload())
+    renderTab({ slug: 'finance-overview' })
+
+    const tile = await screen.findByTestId('report-tile-open_debt')
+    expect(plain(tile)).toContain('יתרת-חוב פתוחה')
+    expect(plain(tile)).toContain('236,382 ₪')
+    // 📐1 — חצי-ההשוואה מעוצב ככסף ולא כמספר גולמי (ר' `withCompareFormat`).
+    expect(plain(tile)).toContain('206,002 ₪')
+    // 📐3 — חלון-הזמן על האריח, כולל ההצהרה שהוא אינו מגיב למסנן.
+    expect(plain(tile)).toContain('אינו מושפע ממסנן התקופה')
+
+    expect(plain(screen.getByTestId('report-population'))).toContain('n=35')
+    expect(plain(screen.getByTestId('report-so-what'))).toContain('מעל 60 יום')
+    expect(plain(screen.getByTestId('report-definitions'))).toContain('יתרת-חוב פתוחה =')
+    expect(plain(screen.getByTestId('report-notes'))).toContain('חובות אבודים')
+    expect(screen.getAllByTestId('report-row-drillable')).toHaveLength(2)
+  })
+
+  it('📐9 · aria-sort יושב על "ימי איחור" בלבד, ועמודת-התאריך יורדת בצורה הישראלית', async () => {
+    callReport.mockResolvedValue(overviewPayload())
+    renderTab({ slug: 'finance-overview' })
+    await screen.findByTestId('report-table-card')
+
+    const headers = screen.getAllByRole('columnheader')
+    const overdue = headers.find((h) => h.textContent.includes('ימי איחור'))
+    expect(overdue).toHaveAttribute('aria-sort', 'descending')
+    expect(headers.filter((h) => h.hasAttribute('aria-sort'))).toHaveLength(1)
+    expect(plain(screen.getByTestId('report-table-card'))).toContain('14/01/2025')
+  })
+
+  it('הכרעה 19 · לחיצה על שורה פותחת את כרטיס-הפרויקט', async () => {
+    callReport.mockResolvedValue(overviewPayload())
+    renderTab({ slug: 'finance-overview' })
+    const rows = await screen.findAllByTestId('report-row-drillable')
+    await click(rows[0])
+    expect(screen.getByTestId('location')).toHaveTextContent('/projects/1040')
+  })
+
+  it('הכרעה 33 · אריח-דלת ו"כל N החשבוניות →" מעבירים לדוח גיול חובות דרך הכתובת', async () => {
+    callReport.mockResolvedValue(overviewPayload())
+    renderTab({ slug: 'finance-overview' })
+
+    // 📐8 — הפאג'ר סופר את מה שמוצג; ההצהרה שלצידו נושאת את הסך האמיתי מ-`open_invoice_count`.
+    const cap = await screen.findByTestId('finance-row-cap')
+    expect(plain(cap)).toContain('אלה 2 החשבוניות הישנות ביותר מתוך 35 הפתוחות.')
+    const door = screen.getByTestId('finance-open-invoices-door')
+    expect(plain(door)).toBe('כל 35 החשבוניות הפתוחות →')
+    await click(door)
+    expect(screen.getByTestId('location')).toHaveTextContent('report=aging')
+
+    await click(screen.getByTestId('report-tile-link-open_debt'))
+    expect(screen.getByTestId('location')).toHaveTextContent('tab=finance')
+    expect(screen.getByTestId('location')).toHaveTextContent('report=aging')
+  })
+})
+
+// ---------------------------------------------------------------- מ8 · רווחיות פרויקטים
+
+describe('מ8 · רווחיות פרויקטים', () => {
+  it('ממיין לפי ₪ בתוך כל קבוצת-מהותיות, ומסמן aria-sort על עמודת-הסטייה', async () => {
+    callReport.mockResolvedValue(profitabilityPayload())
+    renderTab({ slug: 'profitability' })
+    await screen.findByTestId('report-table-card')
+
+    const headers = screen.getAllByRole('columnheader')
+    const deviation = headers.find((h) => h.textContent.includes('סטייה ₪'))
+    expect(deviation).toHaveAttribute('aria-sort', 'descending')
+    expect(headers.filter((h) => h.hasAttribute('aria-sort'))).toHaveLength(1)
+  })
+
+  it('מצייר את אריח החריגות עם חצי-ההשוואה כמספר שלם', async () => {
+    callReport.mockResolvedValue(profitabilityPayload())
+    renderTab({ slug: 'profitability' })
+    const tile = await screen.findByTestId('report-tile-over_threshold')
+    expect(plain(tile)).toContain('פרויקטים שחרגו מהתקציב')
+    expect(plain(tile)).toContain('30')
+    expect(plain(tile)).toContain('2025: 17')
+  })
+})
+
+// ---------------------------------------------------------------- מ9 · גיול חובות
+
+describe('מ9 · גיול חובות (דוח-דריל)', () => {
+  it('מתרגם את סדרות-הגרף דרך CUSTOMER_TYPE_LABELS ואינו מציג enum באנגלית', async () => {
+    callReport.mockResolvedValue(agingRootPayload())
+    renderTab({ slug: 'aging' })
+    const legend = await screen.findByTestId('chart-legend')
+    expect(plain(legend)).toContain('חברה ממשלתית')
+    expect(plain(legend)).toContain('חברה פרטית')
+    expect(legend.textContent).not.toContain('private_company')
+  })
+
+  it('אריח "שוטף — עוד לא באיחור" מצויר לצד הגרף ויורד רמה בלחיצה', async () => {
+    callReport.mockResolvedValue(agingRootPayload())
+    const { onDrill } = renderTab({ slug: 'aging' })
+
+    const tile = await screen.findByTestId('aging-current-tile')
+    expect(plain(tile)).toContain('שוטף — עוד לא באיחור')
+    expect(plain(tile)).toContain('48,746 ₪')
+    expect(plain(tile)).toContain('101,679 ₪')
+    await click(screen.getByTestId('report-tile-link-current_bucket'))
+    expect(onDrill).toHaveBeenCalledWith({ bucket: 'current' })
+  })
+
+  it('רמה 1 · פירורים, אריחי-הרמה, ולחיצה על שורה יורדת ללקוח', async () => {
+    callReport.mockResolvedValue(agingLevel1Payload())
+    const { onDrill } = renderTab({ slug: 'aging', drill: { kind: 'bucket', bucket: 'd61_90' } })
+
+    const crumbs = await screen.findByTestId('report-crumbs')
+    expect(plain(crumbs)).toContain('מדרג 61–90 יום')
+    expect(plain(await screen.findByTestId('report-tile-bucket_amount'))).toContain('28,092 ₪')
+
+    const rows = screen.getAllByTestId('report-row-drillable')
+    await click(rows[0])
+    expect(onDrill).toHaveBeenCalledWith({ kind: 'customer', bucket: 'd61_90', customer_id: 401 })
+    // 📐9 — ברמה הזו השורות ממוינות לפי ₪, לא לפי ימי-איחור.
+    const headers = screen.getAllByRole('columnheader')
+    expect(headers.find((h) => h.textContent.includes('סכום'))).toHaveAttribute(
+      'aria-sort',
+      'descending',
+    )
+  })
+
+  it('פירור-השורש מחזיר לרמה 0', async () => {
+    callReport.mockResolvedValue(agingLevel1Payload())
+    const { onDrill } = renderTab({ slug: 'aging', drill: { kind: 'bucket', bucket: 'd61_90' } })
+    await screen.findByTestId('report-crumbs')
+    await click(screen.getByTestId('report-crumb-0'))
+    expect(onDrill).toHaveBeenCalledWith(null)
+  })
+})
+
+// ---------------------------------------------------------------- מ12 · צריכת ציוד
+
+describe('מ12 · צריכת ציוד', () => {
+  it('מצייר שני גרפים ואת שתי הטבלאות הנוספות עם הכותרות שלהן', async () => {
+    callReport.mockResolvedValue(equipmentPayload())
+    renderTab({ slug: 'equipment' })
+
+    // שלוש טבלאות בדף ⇒ שלושה `report-table-card`: הראשית ושתי `meta.extra_tables`.
+    expect(await screen.findAllByTestId('report-table-card')).toHaveLength(3)
+    expect(screen.getAllByTestId(/^chart-card-/)).toHaveLength(2)
+    const extras = screen.getAllByTestId('report-extra-table')
+    expect(extras).toHaveLength(2)
+    expect(within(extras[0]).getByRole('heading')).toHaveTextContent('כמה להזמין לחודש הקרוב')
+    expect(plain(extras[0])).toContain('2,607')
+    // 📐9 חל גם על טבלה נוספת: "כמות להזמנה" היא העמודה שהיא ממוינת לפיה.
+    expect(within(extras[0]).getByText(/כמות להזמנה/)).toHaveAttribute('aria-sort', 'descending')
+  })
+
+  it('שורות הטבלה אינן לחיצות — יעד-הקידוח של ה-sku אינו מסך קיים (⑧12.1 פתוח)', async () => {
+    callReport.mockResolvedValue(equipmentPayload())
+    renderTab({ slug: 'equipment' })
+    await screen.findAllByTestId('report-table-card')
+    expect(screen.queryAllByTestId('report-row-drillable')).toHaveLength(0)
+    expect(screen.getAllByTestId('report-row').length).toBeGreaterThan(0)
+  })
+})
+
+// ---------------------------------------------------------------- מצבים · ייצוא · הטמעה
+
+describe('חמשת המצבים והייצוא', () => {
+  it('payload ריק ⇒ ריק-לגמרי, ולא מסך שמתיימר להיות טעון', async () => {
+    callReport.mockResolvedValue(base({}))
+    renderTab({ slug: 'finance-overview' })
+    expect(await screen.findByTestId('report-finance-overview-blank')).toBeInTheDocument()
+  })
+
+  it('כשל-רשת ⇒ מצב-תקלה עם "נסי שוב", והלחיצה קוראת שוב לשרת', async () => {
+    callReport.mockRejectedValueOnce(new Error('boom')).mockResolvedValue(overviewPayload())
+    renderTab({ slug: 'finance-overview' })
+
+    expect(await screen.findByTestId('report-finance-overview-error')).toBeInTheDocument()
+    expect(screen.queryByText('אין נתונים עדיין')).not.toBeInTheDocument()
+    await click(screen.getByRole('button', { name: 'נסי שוב' }))
+    expect(await screen.findByTestId('report-tile-open_debt')).toBeInTheDocument()
+    expect(callReport).toHaveBeenCalledTimes(2)
+  })
+
+  it('חוסר-הרשאה ⇒ מעטפת-הרשאה עם שם-הדוח, בלי כפתור-ניסיון', async () => {
+    const denied = Object.assign(new Error('denied'), { code: '42501' })
+    callReport.mockRejectedValue(denied)
+    renderTab({ slug: 'aging' })
+    const envelope = await screen.findByTestId('report-aging-no-permission')
+    expect(plain(envelope)).toContain('אין לך הרשאה לצפות בגיול חובות')
+    expect(screen.queryByRole('button', { name: 'נסי שוב' })).not.toBeInTheDocument()
+  })
+
+  it('פרמטר-מערכת חסר ⇒ הודעה עברית בשם הפרמטר', async () => {
+    const payload = overviewPayload()
+    payload.meta.missing_params = ['תנאי_תשלום_ימים']
+    callReport.mockResolvedValue(payload)
+    renderTab({ slug: 'finance-overview' })
+    expect(plain(await screen.findByTestId('report-missing-params'))).toContain(
+      'חסר פרמטר מערכת: תנאי_תשלום_ימים',
+    )
+  })
+
+  it('טבלה בלי שורות ⇒ כפתור-הייצוא מנוטרל עם "אין שורות לייצא"', async () => {
+    const payload = overviewPayload()
+    payload.rows = []
+    callReport.mockResolvedValue(payload)
+    renderTab({ slug: 'finance-overview' })
+    const button = await screen.findByTestId('reports-export-button')
+    expect(button).toBeDisabled()
+    expect(plain(screen.getByTestId('reports-export-file'))).toBe('אין שורות לייצא')
+  })
+})
+
+describe('שכבת-ההטמעה (§2ב C3)', () => {
+  it('כל מפתח שהלשונית משתילה קיים בקובץ-הקופי שלה', () => {
+    const used = Object.values(FINANCE_SURFACE_SPECS).flatMap((spec) =>
+      Object.values(spec.hints).flat(),
+    )
+    expect(used).toHaveLength(15)
+    for (const id of used) {
+      expect(M11_FINANCE_COPY, `מפתח חסר: ${id}`).toHaveProperty(id)
+      expect(M11_FINANCE_COPY[id].guided.length).toBeGreaterThan(40)
+    }
+    // ② רק `guided` — רמה 1 אינה נכתבת (הכרעת-ישי).
+    for (const entry of Object.values(M11_FINANCE_COPY)) {
+      expect(Object.keys(entry)).toEqual(['guided'])
+    }
+  })
+
+  it('רמה 2 · ארבעת הרמזים של מבט-על מצוירים בעוגנים שלהם', async () => {
+    callReport.mockResolvedValue(overviewPayload())
+    renderTab({ slug: 'finance-overview' })
+    await screen.findByTestId('report-tile-open_debt')
+    for (const id of Object.values(FINANCE_SURFACE_SPECS['finance-overview'].hints).flat()) {
+      expect(screen.getByTestId(`hint-${id}`)).toBeInTheDocument()
+    }
+  })
+
+  it('מבחן-המחיקה · ברמה 0 אין אף רמז, והדף עומד במלואו', async () => {
+    state.onboardingMode = 0
+    callReport.mockResolvedValue(overviewPayload())
+    renderTab({ slug: 'finance-overview' })
+
+    await screen.findByTestId('report-tile-open_debt')
+    expect(document.querySelectorAll('[data-testid^="hint-"]')).toHaveLength(0)
+    // הבסיס (📐2 · 📐23 · 📐16 · טבלה · ייצוא · דלת) נשאר על המסך.
+    expect(screen.getByTestId('report-population')).toBeInTheDocument()
+    expect(screen.getByTestId('report-so-what')).toBeInTheDocument()
+    expect(screen.getByTestId('report-definitions')).toBeInTheDocument()
+    expect(screen.getByTestId('report-table-card')).toBeInTheDocument()
+    expect(screen.getByTestId('reports-export-button')).toBeInTheDocument()
+    expect(screen.getByTestId('finance-row-cap')).toBeInTheDocument()
+    expect(screen.getByTestId('finance-open-invoices-door')).toBeInTheDocument()
+  })
+})

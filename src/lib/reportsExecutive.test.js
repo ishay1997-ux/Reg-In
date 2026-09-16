@@ -31,6 +31,7 @@ import {
   pricePerHour,
   summariseDiscountTiers,
   totalDiscountOf,
+  ratioBucketLabelFor,
 } from './reportsExecutive'
 import { medianOf } from './reportsHostesses'
 
@@ -273,5 +274,40 @@ describe('היסטוגרמת-היחס — שמונה דליים ברוחב 5, ע
     const values = [5, 25, 35, 45, 55, 65, 75]
     const total = buildRatioHistogram(values).reduce((sum, b) => sum + b.count, 0)
     expect(total).toBe(values.length)
+  })
+})
+
+// 🔴 **האורקל של עוגן קו-הייחוס במ6.** ‏`ratioBucketLabelFor` היא התאום של
+// ‏`v_param_bucket` ב-`report_m06_staffing`: ציר-ההיסטוגרמה קטגוריאלי, ולכן קו
+// פרמטר-התכנון נתלה על **תווית-דלי** ולא על מספר. המקרים כאן הם בדיוק הגבולות שבהם
+// טעות היא קו שמצויר דלי אחד מהמקום — או שאינו מצויר כלל.
+describe('ratioBucketLabelFor — לאיזה דלי שייך ערך', () => {
+  it('פרמטר-התכנון החי (50) נופל בדלי «50–55», כי הגבול התחתון שייך לדלי', () => {
+    expect(ratioBucketLabelFor(50)).toBe('50–55')
+  })
+
+  it('‏49.99 עדיין ב-«45–50» — הגבול העליון אינו שייך לדלי', () => {
+    expect(ratioBucketLabelFor(49.99)).toBe('45–50')
+  })
+
+  it('שני הזנבות הפתוחים תופסים', () => {
+    expect(ratioBucketLabelFor(0)).toBe('מתחת ל-25')
+    expect(ratioBucketLabelFor(24.999)).toBe('מתחת ל-25')
+    expect(ratioBucketLabelFor(55)).toBe('55 ומעלה')
+    expect(ratioBucketLabelFor(100)).toBe('55 ומעלה')
+  })
+
+  it('ערך שאינו מספר מחזיר `null` — ואז אין קו, ולא קו במקום שרירותי', () => {
+    expect(ratioBucketLabelFor(null)).toBeNull()
+    expect(ratioBucketLabelFor(undefined)).toBeNull()
+    expect(ratioBucketLabelFor('')).toBeNull()
+    expect(ratioBucketLabelFor(Number.NaN)).toBeNull()
+  })
+
+  it('כל תווית שהפונקציה מחזירה קיימת בסדרת-הדליים שהגרף מצייר', () => {
+    const labels = RATIO_HISTOGRAM_BUCKETS.map((b) => b.label)
+    for (const v of [0, 25, 30, 35, 40, 45, 50, 55, 999]) {
+      expect(labels).toContain(ratioBucketLabelFor(v))
+    }
   })
 })

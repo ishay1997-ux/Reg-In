@@ -95,7 +95,7 @@ export function personalCadence(eventDates) {
  * נקרא על המסך כ"אין לקוחות מתרחקים".
  *
  * ⚠️ **חציון-מרווח 0** (שני אירועים באותו יום) ⇒ היחס `null` והלקוח **אינו** מסומן;
- * הוא נשפט בכלל-הרדום בלבד (`cards-customers.md` ⑦ מ21). בלי הסייג הזה `days > 1.5×0`
+ * הוא נשפט בכלל-הרדום בלבד (`cards-customers.md` ⑦ מ21). בלי הסייג הזה `days > 1.5 × 0`
  * היה מסמן כמעט כל לקוח.
  *
  * @returns {{eligible: boolean, drifting: boolean|null, reason: string|null,
