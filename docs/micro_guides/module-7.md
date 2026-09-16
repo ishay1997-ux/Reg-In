@@ -629,3 +629,46 @@ warning-window days in amber from the 16th on.
 
 **Anchor for the "why", one sentence:** the colour is the status the system already computes, and
 time-left is a property of the date, so it lives on the date.
+
+### 🔎 16/09/2026 (late) — what the seed script broke in the hostess metrics, and the fix
+
+Ishay asked the question that found all of this: *"do we have a report or a metric or a hostess
+score that is affected by this?"* — after being told the 52 new assignments would have no
+`email_log` rows. Three things were measured, not assumed.
+
+**① `email_log` — real, and the pattern was already there to break.** From January 2026 onward
+**every invitation has a log row: 1,527 of 1,527 across nine months.** The script's rows skip the
+invite path, so they were the only break in it; September had dropped to 46 of 102. 🚫 **The script
+still does not write those rows, and that is deliberate** — `email_log` has no client write policy
+on purpose (`send-email/index.ts`: *"a log the browser can write to is not evidence"*), the only
+writer is the service role, and calling the edge function would send real mail to hostess
+addresses. The script detects the gap and hands over the exact insert; the backfill was run
+separately. **All 2026 invitations now have a log row, and מ12 (orphan log rows) is still 0.**
+
+**② The metric that actually mattered was not the one in the question.** `responsivenessCounts`
+(`src/lib/smartMatch.js`) counts `finally_approved` in **both** numerator and denominator, so a row
+born approved reads as *"invited, answered, said yes"* for a hostess who was never invited.
+📏 Measured after the first run: one hostess went **1/2 → 4/4** (score 0.706 → 0.933 at `m=3`), and
+the company average — which damps **every** hostess's score, including the 69 never touched — moved
+**0.842679 → 0.844449**. 37 hostesses shifted, mean 0.019, max **0.228**.
+**The root cause was narrative, not technical:** 52 invitations with a 100% acceptance rate. The
+world's own rate is 15.7%. ⇒ the script now generates declines **per hire** (`p/(1−p)` — a per-project
+rate rounds to zero on rounds of one or two and reproduces the same flat 100%). After the backfill:
+company average **0.842961** against an original 0.842679, and the largest per-hostess move is
+**0.131 in both directions** instead of 0.228 upward.
+
+**③ The eligibility filter had a hole that erased a real decision.** It checked that a hostess was
+not booked that **day**, never that she already had a row on that **event** — so `max+1` opened a
+second round. Two such rows existed, and **one overrode a genuine decline**: the deciding status is
+the one on `MAX(assignment_number)`, so her actual answer vanished from every counter. Both rows
+were deleted and the two events re-staffed with hostesses who had no prior row there.
+
+**What was checked and found clean, so it is not re-checked next time:** מ13 (frozen vs computed
+profit) — 0 rows with `actual_hours > 0`, 0 on finished projects · report 13 and the reliability
+score — 0 rows carry `attendance_status` · `reminder_sent` and `invite_token` — **no metric in the
+codebase reads either**. מ1 `14.6 / 4.9 / 1.2` · מ3 `25.2 / 10.0 / 4.0` · same-day double-booking 0.
+
+🔑 **The transferable lesson, and it is not about email:** the question *"which metric reads this?"*
+is answered by reading the metric, not the table. The missing `email_log` rows turned out to feed
+**nothing**; the damage was in a column that was present and correct — `assignment_status` — read by
+a model that infers a history from a final state.

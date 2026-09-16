@@ -49,6 +49,20 @@
  *
  *    🔑 אין צורך לגעת ב-`projects.project_status`: הטריגרים על שתי הטבלאות רצים גם
  *       על DELETE ועל UPDATE, ומחזירים כל פרויקט לסטטוס שהמסד גוזר מהמצב שחזר.
+ *
+ *    ⚠️ ושורה שלישית, אם מילאת את יומן-המיילים (ר' `reportEmailLogGap` למטה) — היא
+ *       חייבת לרוץ **לפני** מחיקת השיבוצים, אחרת אין לפי מה לזהות אותן:
+ *
+ *      delete from public.email_log e
+ *       where e.template_name = 'shift_invite'
+ *         and exists (select 1 from public.assignments a
+ *                      join public.hostesses h on h.hostess_id = a.hostess_id
+ *                     where a.project_id = e.entity_id and h.email = e.recipient
+ *                       and e.created_at = a.invite_sent_at
+ *                       and not exists (select 1 from seed_snapshot.assignments_20260915 s
+ *                                        where s.project_id = a.project_id
+ *                                          and s.hostess_id = a.hostess_id
+ *                                          and s.assignment_number = a.assignment_number));
  */
 
 import { connectAsCeo, SeedDb, loadEnvLocal } from './seed-lib/db.mjs'
@@ -90,6 +104,22 @@ const write = process.argv.includes('--write')
 // ⚠️ הריצה של 16/09/2026 יצאה לפני שהרצועות נכנסו ונתנה זמן אקראי אחיד; 52 השורות
 // תוקנו בדיעבד לפי אותן רצועות (נמדד אחרי: 27.6 / 9.2 / 3.8 שעות — פער 86%).
 const RESPONSE_BANDS = { 5: [1, 8], 4: [4, 18], 3: [12, 40] }
+
+// שיעור-הסירוב של העולם הזה, נמדד 16/09/2026 על השורה הקובעת לכל (פרויקט, דיילת):
+// ‏4,253 "כן" מתוך 5,047 שענו ⇒ **15.7% סירוב**. לא מספר שנבחר — המצב שהיה לפני שנגעתי.
+const DECLINE_RATE = 0.157
+
+// 🔴 **והמודל חייב להיות פר-הזמנה, לא פר-אירוע.** ניסיון ראשון חישב
+// `round(need × 0.157)` לכל פרויקט — ומכיוון שרוב הסבבים מזמינים 1–2 דיילות, הוא החזיר
+// **אפס** כמעט תמיד (נמדד: 5 סירובים על 52 שיבוצים = 8.8%, מול 15.7% בעולם). הצורה
+// הנכונה: כל **גיוס** דרש בממוצע `1/(1−p)` הזמנות, ולכן על כל אישור מוטלת מטבע אחת.
+// ⇒ תוחלת של `52 × 0.157/0.843 ≈ 9.7` סירובים, והפיזור נשאר אקראי-קבוע (אותו זרע).
+const DECLINES_PER_HIRE = DECLINE_RATE / (1 - DECLINE_RATE)
+function declineCount(need) {
+  let n = 0
+  for (let i = 0; i < need; i += 1) if (rng.chance(DECLINES_PER_HIRE)) n += 1
+  return n
+}
 function responseHours(rating) {
   const [min, max] = RESPONSE_BANDS[rating] ?? [4, 18]
   return rng.float(min, max)
@@ -115,7 +145,7 @@ async function main() {
         ['gte', 'final_event_date', today],
       ],
     ),
-    db.select('hostesses', 'hostess_id, id_number, full_name, hourly_rate, rating, status', [
+    db.select('hostesses', 'hostess_id, id_number, full_name, email, hourly_rate, rating, status', [
       ['eq', 'status', 'active'],
     ]),
     db.select(
@@ -142,6 +172,7 @@ async function main() {
       .map((a) => `${a.hostess_id}@${a.event_date}`),
   )
   const hasAnyAssignment = new Set(approved.map((a) => a.project_id))
+  const hasRowInProject = new Set(approved.map((a) => `${a.project_id}:${a.hostess_id}`))
   const maxNumber = new Map() // project_id:hostess_id -> max(assignment_number)
   const hasLead = new Set() // project_id שכבר יש בו אחראית-משמרת
   const confirmed = new Map() // project_id -> מספר המאושרות סופית (לפי MAX per hostess)
@@ -191,6 +222,7 @@ async function main() {
 
   // ── ② איוש ───────────────────────────────────────────────────────────────
   const staffingPlan = []
+  const declinePlan = []
   for (const project of targets) {
     if (KEEP_SHORT_STAFF.has(project.project_id)) continue
     const need = project.required_hostess_count - (confirmed.get(project.project_id) ?? 0)
@@ -198,12 +230,19 @@ async function main() {
 
     const date = project.final_event_date
     const eligible = pool.filter((h) => {
+      // 🔴 **המסנן שנשכח בריצה הראשונה, ושהוא-הוא הבאג.** בדקתי שהדיילת אינה תפוסה
+      // באותו **יום**, אבל לא שכבר יש לה שורה **באותו אירוע** — ואז `max+1` עשה בדיוק
+      // מה שהוא אמור: פתח "סיבוב שני". נמדד: שתי שורות כאלה נוצרו, ואחת מהן **דרסה
+      // סירוב אמיתי** (הסטטוס הקובע הוא של `MAX(assignment_number)`), כלומר מחקה
+      // החלטה של דיילת מכל מונה במערכת. השנייה דרסה הזמנה שעוד המתינה למענה.
+      if (hasRowInProject.has(`${project.project_id}:${h.hostess_id}`)) return false
       if (bookedDay.has(`${h.hostess_id}@${date}`)) return false
       if (blocked.has(`${project.customer_id}:${h.hostess_id}`)) return false
       if (overlapsUnavailability(unavailByHostess.get(h.hostess_id) ?? [], date)) return false
       return true
     })
-    if (eligible.length < need) {
+    const declines = declineCount(need)
+    if (eligible.length < need + declines) {
       throw new Error(`פרויקט ${project.project_id}: ${eligible.length} פנויות מול ${need} נדרשות`)
     }
 
@@ -235,6 +274,33 @@ async function main() {
         created_at: sentAt,
         is_shift_lead: lead,
         travel_amount: travelAmount,
+      })
+    }
+
+    // 🔴 **הסירובים, וזה לא קישוט.** סבב-איוש בלי אף סירוב הוא 100% היענות, ו-Smart
+    // Match קורא בדיוק את המספר הזה: `responsivenessCounts` (src/lib/smartMatch.js)
+    // סופר `finally_approved` **גם במונה וגם במכנה**, ולכן שורה שנולדה מאושרת היא
+    // "הוזמנה, ענתה, אמרה כן" — מענה מושלם למי שלא קיבלה הזמנה. 📏 נמדד אחרי הריצה
+    // הראשונה: שרון כהן עברה מ-1/2 ל-4/4, וממוצע-החברה (`C`) זז מ-0.842679 ל-0.844449
+    // — וה-`C` הזה מרסן את הציון של **כל** דיילת, גם של מי שלא נגעתי בה.
+    // ⇒ הסבב מקבל סירובים ביחס האמיתי של העולם הזה.
+    for (let i = 0; i < declines; i += 1) {
+      const pick = eligible.splice(Math.floor(rng.next() * eligible.length), 1)[0]
+      const sentAt = atLocal(inviteDay, rng.int(9, 18), rng.int(0, 59))
+      const respondedAt = new Date(
+        new Date(sentAt).getTime() + responseHours(pick.rating) * 3600 * 1000,
+      ).toISOString()
+      declinePlan.push({
+        project_id: project.project_id,
+        hostess_id: pick.hostess_id,
+        assignment_number: (maxNumber.get(`${project.project_id}:${pick.hostess_id}`) ?? 0) + 1,
+        assignment_status: 'declined',
+        hourly_rate_snapshot: Math.max(minWage, Math.round(pick.hourly_rate)),
+        invite_sent_at: sentAt,
+        responded_at: respondedAt,
+        created_at: sentAt,
+        is_shift_lead: false,
+        travel_amount: 0,
       })
     }
   }
@@ -287,7 +353,7 @@ async function main() {
 
   console.log(`אירועים בטווח (${today} → ${WINDOW_END}): ${targets.length}`)
   console.log(`פריטי-ציוד לעדכון: ${logisticsPlan.length}`)
-  console.log(`שיבוצים חדשים: ${staffingPlan.length}`)
+  console.log(`שיבוצים חדשים: ${staffingPlan.length} · סירובים נלווים: ${declinePlan.length}`)
   console.log(
     `נשארים חסרי דיילות: ${KEEP_SHORT_STAFF.size} · חסרי ציוד: ${KEEP_ONE_ITEM_OPEN.size}`,
   )
@@ -314,6 +380,55 @@ async function main() {
 
   if (staffingPlan.length) await db.insert('assignments', staffingPlan)
   console.log(`שיבוצים: ${staffingPlan.length} ✓`)
+  if (declinePlan.length) await db.insert('assignments', declinePlan)
+  console.log(`סירובים: ${declinePlan.length} ✓`)
+
+  await reportEmailLogGap(db, [...staffingPlan, ...declinePlan], projects, hostesses)
+}
+
+// ── יומן-המיילים ─────────────────────────────────────────────────────────────
+// 🔴 **מה שנשבר בריצה הראשונה, ולמה זה לא פער תיאורטי.** נמדד 16/09/2026: מינואר 2026
+// ואילך **לכל זימון יש שורת-יומן — 1,527 מתוך 1,527, תשעה חודשים רצופים.** הסקריפט
+// יוצר שיבוץ "מאושר סופית" ישירות, בלי לעבור את מסלול-ההזמנה, ולכן 50 הזימונים שהוא
+// כתב היו החריגה היחידה בדפוס הזה (ספטמבר ירד ל-46/102).
+//
+// 🚫 **ולמה הסקריפט אינו כותב את זה בעצמו — וזה מכוון, לא חוסר.** ל-`email_log` אין
+// policy-כתיבה ללקוח **בכוונה**, והנימוק כתוב בפונקציית-הקצה `send-email/index.ts`:
+// *"יומן שהדפדפן יכול לכתוב אליו אינו ראיה."* הכותב היחיד הוא ה-service-role, והמפתח
+// שלו אינו ב-`.env.local` ואינו אמור להיות שם. לקרוא ל-`send-email` היה **שולח 50
+// מיילים אמיתיים** לכתובות של דיילות. ⇒ הסקריפט **מזהה ומדווח**, ומוסר את ה-SQL
+// המדויק להרצה בהרשאת-שרת. הוא לא מעמיד פנים שביצע.
+async function reportEmailLogGap(db, staffingPlan, projects, hostesses) {
+  if (!staffingPlan.length) return
+  const projectIds = [...new Set(staffingPlan.map((a) => a.project_id))]
+  const logged = await db.select('email_log', 'entity_id, recipient', [
+    ['eq', 'template_name', 'shift_invite'],
+    ['in', 'entity_id', projectIds],
+  ])
+  const have = new Set(logged.map((e) => `${e.entity_id}|${e.recipient}`))
+  const emailOf = new Map(hostesses.map((h) => [h.hostess_id, h.email]))
+  const missing = staffingPlan.filter(
+    (a) => !have.has(`${a.project_id}|${emailOf.get(a.hostess_id)}`),
+  )
+  if (!missing.length) {
+    console.log('יומן-מיילים: כל הזימונים רשומים ✓')
+    return
+  }
+  console.log(`\n⚠️ יומן-מיילים: ${missing.length} זימונים בלי שורת-יומן.`)
+  console.log('   הסקריפט אינו יכול לכתוב לטבלה הזו (ר׳ ההערה מעל reportEmailLogGap).')
+  console.log('   להריץ בהרשאת-שרת — הצורה זהה ל-1,570 השורות הקיימות:\n')
+  console.log(`insert into public.email_log
+  (entity_type, entity_id, recipient, template_name, subject, status, sent_by_email, created_at)
+select 'shift', a.project_id, h.email, 'shift_invite',
+       'זימון למשמרת — ' || p.event_name, 'sent', 'recruit.test@regin.co.il', a.invite_sent_at
+  from public.assignments a
+  join public.hostesses h on h.hostess_id = a.hostess_id
+  join public.projects   p on p.project_id = a.project_id
+ where a.invite_sent_at is not null
+   and a.project_id in (${projectIds.join(', ')})
+   and not exists (select 1 from public.email_log e
+                    where e.template_name = 'shift_invite'
+                      and e.entity_id = a.project_id and e.recipient = h.email);\n`)
 }
 
 main().catch((error) => {
