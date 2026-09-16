@@ -49,6 +49,20 @@
  *
  *    🔑 אין צורך לגעת ב-`projects.project_status`: הטריגרים על שתי הטבלאות רצים גם
  *       על DELETE ועל UPDATE, ומחזירים כל פרויקט לסטטוס שהמסד גוזר מהמצב שחזר.
+ *
+ *    ⚠️ ושורה שלישית, אם מילאת את יומן-המיילים (ר' `reportEmailLogGap` למטה) — היא
+ *       חייבת לרוץ **לפני** מחיקת השיבוצים, אחרת אין לפי מה לזהות אותן:
+ *
+ *      delete from public.email_log e
+ *       where e.template_name = 'shift_invite'
+ *         and exists (select 1 from public.assignments a
+ *                      join public.hostesses h on h.hostess_id = a.hostess_id
+ *                     where a.project_id = e.entity_id and h.email = e.recipient
+ *                       and e.created_at = a.invite_sent_at
+ *                       and not exists (select 1 from seed_snapshot.assignments_20260915 s
+ *                                        where s.project_id = a.project_id
+ *                                          and s.hostess_id = a.hostess_id
+ *                                          and s.assignment_number = a.assignment_number));
  */
 
 import { connectAsCeo, SeedDb, loadEnvLocal } from './seed-lib/db.mjs'
@@ -115,7 +129,7 @@ async function main() {
         ['gte', 'final_event_date', today],
       ],
     ),
-    db.select('hostesses', 'hostess_id, id_number, full_name, hourly_rate, rating, status', [
+    db.select('hostesses', 'hostess_id, id_number, full_name, email, hourly_rate, rating, status', [
       ['eq', 'status', 'active'],
     ]),
     db.select(
@@ -314,6 +328,53 @@ async function main() {
 
   if (staffingPlan.length) await db.insert('assignments', staffingPlan)
   console.log(`שיבוצים: ${staffingPlan.length} ✓`)
+
+  await reportEmailLogGap(db, staffingPlan, projects, hostesses)
+}
+
+// ── יומן-המיילים ─────────────────────────────────────────────────────────────
+// 🔴 **מה שנשבר בריצה הראשונה, ולמה זה לא פער תיאורטי.** נמדד 16/09/2026: מינואר 2026
+// ואילך **לכל זימון יש שורת-יומן — 1,527 מתוך 1,527, תשעה חודשים רצופים.** הסקריפט
+// יוצר שיבוץ "מאושר סופית" ישירות, בלי לעבור את מסלול-ההזמנה, ולכן 50 הזימונים שהוא
+// כתב היו החריגה היחידה בדפוס הזה (ספטמבר ירד ל-46/102).
+//
+// 🚫 **ולמה הסקריפט אינו כותב את זה בעצמו — וזה מכוון, לא חוסר.** ל-`email_log` אין
+// policy-כתיבה ללקוח **בכוונה**, והנימוק כתוב בפונקציית-הקצה `send-email/index.ts`:
+// *"יומן שהדפדפן יכול לכתוב אליו אינו ראיה."* הכותב היחיד הוא ה-service-role, והמפתח
+// שלו אינו ב-`.env.local` ואינו אמור להיות שם. לקרוא ל-`send-email` היה **שולח 50
+// מיילים אמיתיים** לכתובות של דיילות. ⇒ הסקריפט **מזהה ומדווח**, ומוסר את ה-SQL
+// המדויק להרצה בהרשאת-שרת. הוא לא מעמיד פנים שביצע.
+async function reportEmailLogGap(db, staffingPlan, projects, hostesses) {
+  if (!staffingPlan.length) return
+  const projectIds = [...new Set(staffingPlan.map((a) => a.project_id))]
+  const logged = await db.select('email_log', 'entity_id, recipient', [
+    ['eq', 'template_name', 'shift_invite'],
+    ['in', 'entity_id', projectIds],
+  ])
+  const have = new Set(logged.map((e) => `${e.entity_id}|${e.recipient}`))
+  const emailOf = new Map(hostesses.map((h) => [h.hostess_id, h.email]))
+  const missing = staffingPlan.filter(
+    (a) => !have.has(`${a.project_id}|${emailOf.get(a.hostess_id)}`),
+  )
+  if (!missing.length) {
+    console.log('יומן-מיילים: כל הזימונים רשומים ✓')
+    return
+  }
+  console.log(`\n⚠️ יומן-מיילים: ${missing.length} זימונים בלי שורת-יומן.`)
+  console.log('   הסקריפט אינו יכול לכתוב לטבלה הזו (ר׳ ההערה מעל reportEmailLogGap).')
+  console.log('   להריץ בהרשאת-שרת — הצורה זהה ל-1,570 השורות הקיימות:\n')
+  console.log(`insert into public.email_log
+  (entity_type, entity_id, recipient, template_name, subject, status, sent_by_email, created_at)
+select 'shift', a.project_id, h.email, 'shift_invite',
+       'זימון למשמרת — ' || p.event_name, 'sent', 'recruit.test@regin.co.il', a.invite_sent_at
+  from public.assignments a
+  join public.hostesses h on h.hostess_id = a.hostess_id
+  join public.projects   p on p.project_id = a.project_id
+ where a.invite_sent_at is not null
+   and a.project_id in (${projectIds.join(', ')})
+   and not exists (select 1 from public.email_log e
+                    where e.template_name = 'shift_invite'
+                      and e.entity_id = a.project_id and e.recipient = h.email);\n`)
 }
 
 main().catch((error) => {
