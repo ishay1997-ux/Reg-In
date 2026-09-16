@@ -62,13 +62,21 @@ function HeaderCell({ column, sort }) {
   )
 }
 
-function Row({ columns, row, index, onDrill }) {
+// מפתח-שורה יציב: `row_key` אם ה-RPC נתן · אחרת `drill_key` מסורלז (הוא אובייקט) · אחרת מיקום בעמוד.
+function rowKey(row, page, index) {
+  if (row.row_key != null) return String(row.row_key)
+  if (row.drill_key != null) {
+    return typeof row.drill_key === 'object' ? JSON.stringify(row.drill_key) : String(row.drill_key)
+  }
+  return `${page}-${index}`
+}
+
+function Row({ columns, row, onDrill }) {
   // הכרעה 19: דלת-דריל אחת לשורה, והשורה כולה היא הדלת. `drill_key` מגיע מה-RPC (C8).
   const drillable = Boolean(onDrill && row.drill_key)
   const open = () => onDrill(row.drill_key, row)
   return (
     <tr
-      key={row.drill_key ?? index}
       className={cn(drillable && 'cursor-pointer hover:bg-slate-50')}
       onClick={drillable ? open : undefined}
       // 🔴 שקילות-מקלדת אמיתית, לא הצהרה: `<tr>` אינו אלמנט-פעולה, ולכן גם `role`,
@@ -136,7 +144,9 @@ export default function ReportTable({
           <tbody>
             {view.pageRows.map((row, index) => (
               <Row
-                key={row.drill_key ?? `${page}-${index}`}
+                // ‏`drill_key` הוא אובייקט ({kind, id…}) — כמפתח-React הוא היה מתקפל ל-"[object Object]"
+                // ואותו מפתח לכל שורה לחיצה (נמצא באימות-הכספים 16/09). מחרוזת יציבה במקומו.
+                key={rowKey(row, page, index)}
                 columns={columns}
                 row={row}
                 index={index}
