@@ -113,6 +113,7 @@ function sortFromColumns(columns) {
 
 // C8 `meta.extra_tables` — משטח שצריך יותר מטבלה אחת (מ12: בלוק-ההזמנות ושורות ㉗ · מ15:
 // אי-הגעה לפי דירוג) — כל טבלה נוספת עם כותרת משלה ופאג'ר משלה, **דרך אותו `ReportTable`**.
+// ‏`table.sort` (אם ה-RPC נתן) קודם ל-`columns[].sorted` — אותו סדר-עדיפות כמו בטבלה הראשית (נמצא באימות-הדיילות 16/09).
 function ExtraTable({ table }) {
   const [page, setPage] = useState(1)
   return (
@@ -123,7 +124,7 @@ function ExtraTable({ table }) {
         rows={table.rows}
         page={page}
         onPage={setPage}
-        sort={sortFromColumns(table.columns)}
+        sort={table.sort ?? sortFromColumns(table.columns)}
         caption={table.title}
       />
     </section>

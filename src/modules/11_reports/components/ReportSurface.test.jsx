@@ -88,6 +88,7 @@ describe('ReportSurface — extension slots', () => {
           extra_tables: [
             {
               title: 'אי-הגעה לפי דירוג',
+              sort: { key: 'rating', direction: 'ascending' },
               columns: [
                 { key: 'rating', label: 'דירוג', format: 'int' },
                 { key: 'm12', label: '12 חודשים', format: 'percent' },
@@ -105,6 +106,8 @@ describe('ReportSurface — extension slots', () => {
     const extra = await screen.findByTestId('report-extra-table')
     expect(within(extra).getByRole('heading', { level: 3 })).toHaveTextContent('אי-הגעה לפי דירוג')
     expect(within(extra).getAllByTestId('report-row')).toHaveLength(2)
+    // ‏`table.sort` של ה-RPC מנצח את `columns[].sorted` — אחרת אין `aria-sort` על טבלה נוספת.
+    expect(within(extra).getAllByRole('columnheader')[0]).toHaveAttribute('aria-sort', 'ascending')
   })
 
   it('does not run transformPayload on a failed load and keeps the error envelope', async () => {
