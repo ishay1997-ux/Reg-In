@@ -1,0 +1,167 @@
+// עיצוב-מספרים למודול 11 — **טהור**, בלי שעון, בלי Supabase, בלי DOM.
+//
+// 🔴 למה הקובץ קיים בכלל, ומה הוא **אינו**: הוא אינו פורמטר-כסף שני. ‏📐4
+// (`processes-approved.md`) קובע *"דיוק אחיד — ₪ בלי אגורות בכל מקום · אחוזים בספרה עשרונית
+// אחת · ג'יני בשתיים"*, ושישה-עשר משטחים עומדים להציג את אותם מדדים. בלי מקום אחד שגוזר
+// את הכלל הזה, כל בונה-לשונית יכתוב `toFixed` משלו — וזה בדיוק הפגם ש-📐4 נולד ממנו
+// *(נמדד שם: `75,769.90` בדף אחד מול `75,770` בדף אחר)*.
+//
+// ⇒ **כל מה שכבר קיים בריפו נקרא מכאן ולא משוכפל** (כלל-ברזל 14): הכסף דרך
+// `formatShekelWhole` (`src/lib/pricing.js`) והתאריך דרך `formatDate` (`src/lib/dates.js`).
+// מה שנוסף כאן הוא רק מה ש-📐4 דורש ולא היה קיים: אחוז בספרה אחת, ג'יני בשתיים, וחצי-
+// ההשוואה של 📐1.
+//
+// ⚠️ **ולמה `formatPercent` כאן אינו זה שב-`src/lib/projectFinance.js`:** זה שם מעגל
+// **לשלם** (`69%`) לפי המוקאפ המאושר של מודול 8, וזהו חוזה-תצוגה של אותו מודול. ‏📐4 דורש
+// **ספרה עשרונית אחת** לדוחות (`60.1%`). שתי מוסכמות שונות לשני מודולים — ולכן שתי
+// פונקציות, כל אחת עם הנימוק שלה, ולא דגל על אחת מהן.
+
+import { formatShekelWhole, toFiniteNumber } from '@/lib/pricing'
+import { formatDate } from '@/lib/dates'
+
+// 🔤 **"אין נתון" — מקף אחד, בכל המודול.** אותו תקדים בדיוק כמו `DENIED_MARK`
+// (`PermissionAwareEmpty`) ו-`NOT_APPLICABLE` (`salaryReport.js`): `0` נקרא כעובדה שנמדדה,
+// `—` נקרא כ"אין לי את הנתון". במודול שכולו מספרים ההבחנה הזו היא כל ההבדל.
+export const NO_VALUE = '—'
+
+// 🔴 **תווי-הבידוד U+2066 (LRI) ו-U+2069 (PDI) — מרוכזים בקבוע עם שם, לא מודבקים בתוך
+// מחרוזות.** זה אינו טעם: הריפו כבר נכווה מ-`U+200F` נסתר שאיש לא ידע שהוא שם ושיבש ספירה
+// (`src/lib/hostesses.js`, המופע השביעי). התווים בלתי-נראים בכוונה, ולכן חייבים להיות
+// נקובים-בשם כדי שאפשר יהיה לחפש אותם.
+const LRI = '⁦'
+const PDI = '⁩'
+
+/**
+ * עוטף רצף לא-עברי בבידוד-כיווניות טקסטואלי (LRI…PDI) — התאום של `unicode-bidi:isolate`
+ * למחרוזת שטוחה שאין לה JSX לעטוף בו.
+ *
+ * 🔴 **מתי זה הכרחי ולא קישוט:** `<Hint>` מרנדר מחרוזת שטוחה (`Hint.jsx`), וכך גם
+ * `tickFormatter` של Recharts ו-`aria-label` של כרטיס-גרף — בכל שלושתם `<Ltr>` אינו קיים
+ * כאפשרות. בלי הבידוד, אלגוריתם ה-bidi מעביר את ה-₪ אל **שמאל** הספרות, ואותו סכום מופיע
+ * במסך אחד משני צדדים שונים *(נמדד בדפדפן אמיתי 09/08/2026, לא הונח)*.
+ * ⚠️ **לערך בודד בלבד** — לרצף בן שני ערכים (`62% / 38%`) אין סדר נכון בכלל, והתיקון שם
+ * הוא לפרק את הרצף למשפטים נפרדים ולא לבודד אותו (§5.2 #4 · `src/CLAUDE.md`, המופע התשיעי).
+ */
+export function isolateLtr(text) {
+  if (text === null || text === undefined || text === '') return ''
+  return `${LRI}${text}${PDI}`
+}
+
+/**
+ * ‏`1250` ⇒ `"⁦1,250 ₪⁩"` (מבודד) · חסר ⇒ `"—"`. ‏📐4: שקלים שלמים, בלי אגורות, **בכל מקום**.
+ *
+ * 🔑 הסכום עצמו נגזר פעם אחת ב-`formatShekelWhole` (כלל-ברזל 14); מה שנוסף כאן הוא **הבידוד**.
+ *
+ * 🔴 **ולמה הבידוד כאן ולא באתר-הקריאה — נמדד בדפדפן 16/09/2026, וזה היה פגם אמיתי:**
+ * הגרסה הראשונה החזירה מחרוזת חשופה, והמסך הציג **`₪ 46,400` — הגליף משמאל לספרות** —
+ * בטולטיפ-הגרף ובטבלת-קורא-המסך. זו בדיוק משפחת-הכשל שנתפסה בריפו **תשע פעמים**
+ * (`src/CLAUDE.md`), והפעם היא חזרה כי שני המקומות האלה הם **טקסט שטוח**: אין בהם
+ * `<Money>` ואין `<Ltr>` לעטוף בהם.
+ * ⚠️ **ו-`npm run check:bidi` אינו רשת-ביטחון** — §3.7 של חוזה-העיצוב אומר זאת במפורש:
+ * הסורק תופס ספרה **צמודה** ל-₪ בקוד-המקור, ולא מחרוזת שנבנית בזמן-ריצה ונחתת בטולטיפ.
+ * **המבחן היחיד היה לפתוח בדפדפן ולהסתכל**, וזה מה שתפס את זה.
+ * ⇒ **הפורמטר מבודד בעצמו**, וכך כל אתר-קריאה — JSX, `aria-label`, טולטיפ, `tickFormatter` —
+ * מקבל מחרוזת נכונה בלי לזכור דבר.
+ */
+export function formatMoney(amount) {
+  const text = formatShekelWhole(amount)
+  return text === NO_VALUE ? NO_VALUE : isolateLtr(text)
+}
+
+/**
+ * ‏`60.14` ⇒ `"⁦60.1%⁩"` (מבודד) · חסר ⇒ `"—"`. ‏📐4: ספרה עשרונית אחת, תמיד — גם `60` ⇒ `60.0%`.
+ * 🔴 מבודד מאותו נימוק כמו `formatMoney`: `%` הוא תו-נייטרלי, ובהקשר עברי הוא נודד לצד
+ * השני של המספר בדיוק כמו ₪.
+ */
+export function formatPercent(value) {
+  const n = toFiniteNumber(value)
+  if (n === null) return NO_VALUE
+  return isolateLtr(`${n.toFixed(1)}%`)
+}
+
+/**
+ * ‏`0.4299` ⇒ `"0.43"` · חסר ⇒ `"—"`. ‏📐4: שתי ספרות, תמיד.
+ * 🔑 **שתיים ולא ארבע, וזה מוכרע ולא טעם:** `spec.md §🔢 3.3` מתעד שתי מדידות של אותה
+ * אוכלוסייה — `0.4329` מול `0.4299` — ו**שתיהן מרנדרות `0.43`**. העיגול הוא מה שמונע
+ * מהמסך להציג פער שאינו משמעותי כאילו הוא ממצא.
+ */
+export function formatGini(value) {
+  const n = toFiniteNumber(value)
+  if (n === null) return NO_VALUE
+  return n.toFixed(2)
+}
+
+// הפורמטים שאריח/עמודה יכולים להכריז עליהם בחוזה-ה-RPC (מדריך-המיקרו §2ב C8, עמודת `format`).
+// 🔑 המיפוי חי **כאן ולא ברכיב**: `KpiTile` ו-`ReportTable` מציגים את אותו `format` בדיוק,
+// ושתי מפות-מקרים היו נפרדות ביום הראשון (המחלה של `StatTile`, `src/CLAUDE.md`).
+const FORMATTERS = {
+  money: formatMoney,
+  percent: formatPercent,
+  gini: formatGini,
+  int: (v) => {
+    const n = toFiniteNumber(v)
+    return n === null ? NO_VALUE : isolateLtr(Math.round(n).toLocaleString('he-IL'))
+  },
+  days: (v) => {
+    const n = toFiniteNumber(v)
+    return n === null ? NO_VALUE : `${isolateLtr(Math.round(n).toLocaleString('he-IL'))} ימים`
+  },
+  ratio: (v) => {
+    const n = toFiniteNumber(v)
+    return n === null ? NO_VALUE : isolateLtr(n.toFixed(1))
+  },
+  date: (v) => formatIsraelDate(v),
+  text: (v) => (v === null || v === undefined || v === '' ? NO_VALUE : String(v)),
+}
+
+/**
+ * מעצב ערך לפי ה-`format` שה-RPC הכריז עליו (C8). ‏`format` לא-מוכר ⇒ `text`, בלי שגיאה:
+ * המסך לא ייפול על מחרוזת-פורמט שנוספה בשרת לפני שהלקוח מכיר אותה — הוא יציג את הערך הגולמי.
+ */
+export function formatByType(value, format) {
+  return (FORMATTERS[format] ?? FORMATTERS.text)(value)
+}
+
+/**
+ * חצי-ההשוואה של 📐1 — **הסימן לפני הספרות**, והוא מבודד יחד איתן.
+ * ‏`+12.4` בפורמט `percent` ⇒ `"+12.4%"` · `-3` ⇒ `"-3.0%"` · `0` ⇒ `"—"` *(אין שינוי)*.
+ *
+ * 🔴 **למה הסימן חייב להיות בתוך אותו בידוד ולא צמוד מבחוץ:** ערך+סיומת כשני צמתים נפרדים
+ * כבר הציג `"5/4.7"` הפוך במסך-הבית — נתפס בצילום-אימות 03/09/2026 (`KpiStrip.jsx`, מקרה
+ * `satisfaction`). סימן-מינוס הוא בדיוק אותה משפחה: ה-bidi ידחוף אותו לצד השני של המספר.
+ * 🚫 **ואין כאן צבע ואין חץ** — הם באים מ-`KpiTile` (📐1: ▲/▼ **לא-צבוע**, וכלל-המילוי §④
+ * אוסר ירוק לעובדה-טובה). הפונקציה מחזירה טקסט בלבד.
+ */
+export function formatDelta(value, format = 'percent') {
+  const n = toFiniteNumber(value)
+  if (n === null) return NO_VALUE
+  if (n === 0) return NO_VALUE
+  const sign = n > 0 ? '+' : '-'
+  const body = formatByType(Math.abs(n), format)
+  if (body === NO_VALUE) return NO_VALUE
+  // הפורמטרים המספריים כבר מבודדים בעצמם (`int`/`ratio`) או נושאים גליף צמוד (`money`/
+  // `percent`); הסימן נכנס **פנימה** לבידוד אחד משותף, ולכן מפרקים בידוד קיים ולא מקננים.
+  return isolateLtr(`${sign}${body.replaceAll(LRI, '').replaceAll(PDI, '')}`)
+}
+
+/** ‏`"2026-09-16"` ⇒ `"16/09/2026"` · חסר/חותמת-זמן ⇒ `"—"` (‏`formatDate` דוחה חותמת במכוון). */
+export function formatIsraelDate(isoDate) {
+  return formatDate(isoDate, NO_VALUE)
+}
+
+/**
+ * שורת-התקופה של 📐17 — *"2026 (01/01–06/09) · כל הלקוחות"*.
+ * 🔑 **המחרוזת נבנית כאן ולא ב-JSX** כי היא נכנסת גם ל-`aria-label` ולשם-קובץ-האקסל, ושם
+ * אין JSX. שני התאריכים הם **טווח אחד** ⇒ בידוד אחד סביב שניהם, בדיוק כמו הפאג'ר
+ * (`ListWindow.jsx`: רק `from–to` מבודד) — ולא שני בידודים נפרדים שה-bidi יסדר ביניהם.
+ */
+export function formatWindowLabel({ from, to, customerName } = {}) {
+  const parts = []
+  const fromText = formatDate(from, '')
+  const toText = formatDate(to, '')
+  if (fromText && toText) parts.push(isolateLtr(`${fromText}–${toText}`))
+  else if (fromText) parts.push(`מ-${isolateLtr(fromText)}`)
+  else if (toText) parts.push(`עד ${isolateLtr(toText)}`)
+  parts.push(customerName ? customerName : 'כל הלקוחות')
+  return parts.join(' · ')
+}
