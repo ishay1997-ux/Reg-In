@@ -344,6 +344,37 @@ test.describe('נגישות (axe-core) — מסכים ראשיים על פני �
     })
     await scan(page, 'הגדרות מערכת · פאנל Smart Match (מודול 9)')
   })
+
+  // ── מודול 11 (נוסף 16/09/2026, צעד 3.6) — **דף-ברירת-המחדל של כל אחת מארבע הלשוניות** ──
+  // 🔴 **ארבע סריקות ולא אחת, ומאותו נימוק בדיוק כמו מודול 9 מעליו:** ארבע הלשוניות הן
+  // ארבעה DOM-ים שונים — גרף מוערם מול פיזור מול קו, טבלה אחת מול שלוש, שורת-שבבים,
+  // פס-מצב-ריצה — ו-axe בודק DOM. ממצא של אחת אינו נבדק אצל האחרות.
+  // ⚠️ **וההמתנה היא לתוכן של המשטח ולא ל-`h1` לבדו:** ‏`<h1>` מגיע מהקטלוג ומצויר **לפני**
+  // שה-RPC חזר, כלומר `waitForReady` לבדו היה סורק שלד — בדיוק הכשל שנרשם למעלה
+  // (11 הצמתים של `/system/prices`). ⇒ ממתינים ל-`report-table-card` **ולטבלה עם שורות**.
+  // 🚫 **כמנכ"ל בלבד** — הוא היחיד שארבע הלשוניות פתוחות אצלו; לכל תפקיד אחר לפחות אחת
+  // ממוסכת, וסריקה על לשונית ממוסכת בודקת פסקה אחת ומדווחת "ירוק" על מסך שלא צויר.
+  test('סריקה על ארבע לשוניות-הדוחות (מודול 11)', async ({ page }) => {
+    test.setTimeout(180_000)
+    await login(page)
+
+    for (const [tab, report, label] of [
+      ['exec', 'exec-overview', 'דוחות · הנהלה (מודול 11)'],
+      ['finance', 'finance-overview', 'דוחות · כספים (מודול 11)'],
+      ['hostesses', 'hostess-overview', 'דוחות · דיילות (מודול 11)'],
+      ['customers', 'customers-overview', 'דוחות · לקוחות (מודול 11)'],
+    ]) {
+      await page.goto(`/reports?tab=${tab}&report=${report}`)
+      await expect(page.getByTestId(`report-${report}`)).toBeVisible({ timeout: 30_000 })
+      const rows = page
+        .getByTestId('report-table-card')
+        .first()
+        .locator('[data-testid="report-row"], [data-testid="report-row-drillable"]')
+      await expect(rows.first()).toBeVisible({ timeout: 30_000 })
+      expect(await rows.count(), `${label} — נסרק בלי שורות, מכנה 0`).toBeGreaterThan(0)
+      await scan(page, label)
+    }
+  })
 })
 
 // ── מודול 9 · "ההגדרות שלי" — נסרק **כמנהלת הכספים ולא כמנכ"ל** (נוסף 02/09/2026) ───────

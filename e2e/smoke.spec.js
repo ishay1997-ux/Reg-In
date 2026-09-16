@@ -47,6 +47,13 @@ const ALLOWED_WRITE_PATHS = [
   // קוראת-בלבד (מיגרציה `20260903182735`) — אותו נימוק בדיוק כמו ארבע השורות שמעל.
   // בלעדיה המסע היה מתחיל בכשל-טעינה של מסך-הבית עוד לפני המסך הראשון שהוא באמת בודק.
   '/rest/v1/rpc/get_dashboard_summary',
+  // מודול 11 (16/09/2026, צעד 3.6): `report_m02_exec_overview` — ה-RPC של דף-ברירת-המחדל
+  // שהמסע פותח. אותו נימוק בדיוק כמו חמש השורות שמעל, **ובגרסה החזקה שלו**: הפונקציה
+  // מוכרזת `stable` (`20260916052600_module11_d_rpcs_executive.sql`), ו-Postgres **אוסר**
+  // על פונקציה `stable` לכתוב — כלומר זו אינה הבטחה אלא אילוץ של המנוע.
+  // 🚫 ואף אחת מהאחרות אינה כאן: המסע נוגע במסך אחד של המודול, וכתיבה אמיתית
+  // (`approve_feedback_ai_run`, ‏`classify-feedback`) לעולם לא תיכנס לרשימה הזו.
+  '/rest/v1/rpc/report_m02_exec_overview',
 ]
 
 test.describe('בדיקת-עשן', () => {
@@ -182,13 +189,29 @@ test.describe('בדיקת-עשן', () => {
     )
     await expect(page.getByTestId('settings-value-אחוז_מעמ')).toHaveValue(anchors.settings.vat)
 
-    // "ההגדרות שלי" — הדלת השנייה (מודול 9). 🔴 העשן רץ כמנכ"ל, והוא **אינו בעלים של אף
-    // שורה** (`owner_role_id IS NULL` = CEO-בלבד, §2.7) ⇒ מצב-הריק הוא התשובה הנכונה כאן,
-    // לא ליקוי. העוגן הוא שהמסך **עולה ואומר זאת במילים**, ולא נופל ולא מציג טבלה ריקה.
+    // "ההגדרות שלי" — הדלת השנייה (מודול 9).
+    // 🔄 **עודכן 16/09/2026, וזו אדווה של מודול 11 ולא תיקון-בדיקה:** הטענה כאן הייתה
+    // *"המנכ"ל אינו בעלים של אף שורה ⇒ מצב-הריק הוא התשובה הנכונה"*, והיא הייתה נכונה
+    // ב-02/09. מיגרציה `20260916043500_module11_c_report_params.sql` **נתנה למנכ"ל בעלות
+    // על ארבעה פרמטרים חדשים** (`מכפיל_מרווח_מתרחק` · `סף_סטיית_תקציב_אחוז` ·
+    // `מקדם_אמינות_אדום` · `מקדם_אמינות_ענבר`, כולם `param_type='control_alerts'` עם
+    // ‏`owner_role_id` של מנכ"ל) ⇒ **המסך מציג לו טבלה, וזו ההתנהגות הנכונה.**
+    // 🔴 **מה שלא נחלש:** במקום מחרוזת-ריק נעוצה יש כאן **אינווריאנט עצמי** — המספר
+    // שהמסך מצהיר עליו בכותרת-המשנה שווה לספירת-השורות שרונדרו. אין כאן מספר נעוץ
+    // (הרשימה תגדל כשתפקידים נוספים יקבלו בעלות), ואפס שורות אצל המנכ"ל **יפיל** את
+    // הריצה — כי מאז מיגרציה C זו כבר לא תשובה אפשרית אלא סימן ל-RLS/הזדהות שבורים.
     await page.goto('/my-settings')
     await expect(page.getByTestId('settings-my-page')).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByTestId('settings-my-empty')).toHaveText(
-      'לתפקיד שלך אין הגדרות משלו — כולן מנוהלות בניהול המערכת',
+    const myRows = page.getByTestId('settings-row')
+    await expect(myRows.first()).toBeVisible({ timeout: 30_000 })
+    const myRowCount = await myRows.count()
+    expect(
+      myRowCount,
+      'המנכ"ל אינו רואה אף הגדרה בבעלותו — מאז מיגרציה C של מודול 11 יש לו ארבע, ולכן זה RLS/הזדהות ולא "אין דאטה"',
+    ).toBeGreaterThan(0)
+    await expect(page.getByTestId('settings-my-empty')).toHaveCount(0)
+    await expect(page.getByTestId('settings-my-page')).toContainText(
+      myRowCount === 1 ? 'הגדרה אחת בבעלותך' : `${myRowCount} הגדרות בבעלותך`,
     )
 
     // פרויקטים (מודול 6, נוסף 19/08/2026): מבט-העל עולה עם הלוח האמיתי. 🔄 03/09/2026:
@@ -286,6 +309,58 @@ test.describe('בדיקת-עשן', () => {
       financeKnownProjectFound,
       `פרויקט #${anchors.finance.knownProjectId} ("${anchors.finance.knownProjectName}") לא נמצא באף לשונית — הזדהות/RLS שבורים, לא "העוגן זז" (אם הוא רק עבר לשונית, זה עדכון-עוגן לגיטימי)`,
     ).toBe(true)
+
+    // דו"חות (מודול 11, נוסף 16/09/2026): המעטפת עולה עם הקטלוג האמיתי ועם דאטה חיה.
+    // 🔴 **אין כאן מספר נעוץ אחד** — ברירת-המחדל היא חלון "השנה" מול "היום" שהשרת מוסר,
+    // כלומר כל סכום/מונה שהיה נעוץ כאן היה מרקיב תוך יממה. מה שנעוץ: ארבע הלשוניות,
+    // ארבעת הדוחות של לשונית-ברירת-המחדל, שם-הדף ושאלתו, וארבע גלולות-התקופה —
+    // כולם מ-`reportsCatalog.js`/`reportsPeriod.js` ולא מדאטה. הטענה המספרית היחידה היא
+    // **אינווריאנט עצמי**: "מתוך N" בפאג'ר מול ספירת-השורות שרונדרו, כמו projects/logistics.
+    // ⚠️ המסע רץ כמנכ"ל, והוא היחיד שארבע הלשוניות פתוחות אצלו (המיסוך נבדק ב-reports.spec.js).
+    await expect(page.getByRole('link', { name: anchors.reports.sidebarLink })).toBeVisible()
+    await page.goto('/reports')
+    // הלשוניות מצוירות מיד, אבל המשטח עצמו מגיע רק אחרי ה-RPC ⇒ ממתינים למשטח,
+    // לא ל-`reports-page` שמרונדר גם במצב-הטעינה (הלקח של logistics/projects).
+    await expect(page.getByTestId('report-exec-overview')).toBeVisible({ timeout: 30_000 })
+    const reportTabs = page.locator('[data-testid^="reports-tab-"]')
+    await expect(reportTabs).toHaveCount(anchors.reports.tabs.length)
+    for (const [index, label] of anchors.reports.tabs.entries()) {
+      await expect(reportTabs.nth(index)).toContainText(label)
+    }
+    const reportChips = page.locator('[data-testid^="reports-chip-"]')
+    await expect(reportChips).toHaveCount(anchors.reports.chips.length)
+    for (const [index, label] of anchors.reports.chips.entries()) {
+      await expect(reportChips.nth(index)).toHaveText(label)
+    }
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      anchors.reports.firstSurfaceName,
+    )
+    await expect(page.getByText(anchors.reports.firstSurfaceQuestion)).toBeVisible()
+    const periodPills = page.locator('[data-testid^="reports-period-"]')
+    await expect(periodPills).toHaveCount(anchors.reports.periodPills.length)
+    for (const [index, label] of anchors.reports.periodPills.entries()) {
+      await expect(periodPills.nth(index)).toHaveText(label)
+    }
+    // 📐2 · 📐23 — שתי שורות-הבסיס שכל דף חייב, ושתיהן נכתבות ע"י ה-RPC: ריקות = מטען שבור.
+    await expect(page.getByTestId('report-population')).toContainText('אוכלוסייה')
+    await expect(page.getByTestId('report-so-what')).not.toBeEmpty()
+    // האינווריאנט העצמי: הטבלה מציגה min(המונה שבפאג'ר, 50) שורות.
+    const reportRows = page
+      .getByTestId('report-table-card')
+      .first()
+      .locator('[data-testid="report-row"], [data-testid="report-row-drillable"]')
+    const reportRangeText = await page.getByTestId('report-pager-range').first().innerText()
+    const reportTotal = Number(
+      reportRangeText
+        .split('מתוך')
+        .pop()
+        .replace(/[^0-9]/g, ''),
+    )
+    expect(
+      reportTotal,
+      'מונה-השורות של הדוח הראשון הוא 0 אצל המנכ"ל — הזדהות/RLS שבורים, לא "אין דאטה"',
+    ).toBeGreaterThan(0)
+    await expect(reportRows).toHaveCount(Math.min(reportTotal, 50))
 
     // המנגנונים — לא הבטחות: אפס ניסיונות-כתיבה, אפס יעדים חיצוניים, אפס שגיאות-קונסול.
     expect(blockedWrites, 'מסך ניסה לכתוב למסד בזמן קריאה-בלבד').toEqual([])
