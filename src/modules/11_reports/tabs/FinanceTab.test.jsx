@@ -68,6 +68,12 @@ const filters = {
 
 // LRI/PDI בלתי-נראים בכוונה (`reportsFormat`), ולכן טקסט מושווה אחרי הסרתם — אחרת כל
 // טענת-טקסט בקובץ הזה הייתה נכשלת על תו שאיש אינו רואה.
+// 🔤 תווי-הבידוד בשמם. הם **בלתי-נראים בכוונה** (`reportsFormat.js`), ומחרוזת-מקור
+// שנושאת אותם כליטרל היא בדיוק מה שהריפו כבר נכווה ממנו — אי-אפשר לחפש אותה.
+const LRI = '⁦'
+const PDI = '⁩'
+const iso = (text) => `${LRI}${text}${PDI}`
+
 const plain = (node) => node.textContent.replaceAll('⁦', '').replaceAll('⁩', '')
 
 // `user-event` אינו מותקן בריפו (נמדד) — `fireEvent` עטוף ב-`act` הוא הדפוס הקיים
@@ -231,6 +237,17 @@ const agingRootPayload = () =>
         format: 'money',
         window: 'נכון להיום',
         compare: { label: 'לפני חודש', value: 17946, direction: 'up' },
+        // i2 ③ — האריח הוא **צבר** של שני מדרגים, ואין קידוח שנושא אותו ⇒ אין דלת.
+        target: null,
+      },
+      {
+        key: 'bucket_90p',
+        // i2 ④ — טווח-הספרות מבודד **בשרת**, כיחידה אחת.
+        label: `מדרג ${iso('90+')}`,
+        value: 17946,
+        format: 'money',
+        window: 'נכון להיום',
+        compare: { label: 'לפני חודש', value: 2899, direction: 'up' },
         target: { tab: 'כספים', report: 'report_m09_aging', drill: { bucket: 'd90p' } },
       },
     ],
@@ -253,22 +270,28 @@ const agingRootPayload = () =>
       { key: 'project_id', label: 'פרויקט', format: 'int', align: 'start' },
       { key: 'sent_date', label: 'נשלחה', format: 'date', align: 'start' },
       { key: 'days_overdue', label: 'ימי איחור', format: 'days', align: 'end' },
-      { key: 'bucket', label: 'מדרג', format: 'text', align: 'start' },
+      // i2 ⑤/⑥ — עמודת 📐18 מוצהרת, ועמודת-המדרג מוכרזת `textLtr` (הפורמטר מבודד).
+      { key: 'owner', label: 'איש קשר', format: 'text', align: 'start' },
+      { key: 'bucket', label: 'מדרג', format: 'textLtr', align: 'start' },
     ],
-    // ‏`bucket` מגיע מהשרת כ**מפתח-מסד** — וזה מה שהטבלה הציגה בדפדפן עד 16/09.
+    // ‏`bucket` נושא היום את **התווית**, והקוד עבר ל-`bucket_key` (i2). אין מיפוי בלשונית.
     rows: [
       {
         project_id: 1040,
         sent_date: '2025-01-14',
         days_overdue: 580,
-        bucket: 'd90p',
+        bucket: '90+',
+        bucket_key: 'd90p',
+        owner: 'ליהי סבן',
         drill_key: { kind: 'project', id: 1040 },
       },
       {
         project_id: 1460,
         sent_date: '2026-04-30',
         days_overdue: 109,
-        bucket: 'd61_90',
+        bucket: '61–90',
+        bucket_key: 'd61_90',
+        owner: 'ניר נחום',
         drill_key: { kind: 'project', id: 1460 },
       },
     ],
@@ -301,7 +324,7 @@ const agingLevel1Payload = () => {
     tiles: [
       {
         key: 'bucket_amount',
-        label: 'חוב במדרג 61–90 יום',
+        label: `חוב במדרג ${iso('61–90')} יום`,
         value: 28092,
         format: 'money',
         window: 'נכון להיום',
@@ -309,20 +332,27 @@ const agingLevel1Payload = () => {
         target: null,
       },
     ],
+    // צורת i2 החיה ברמה 1: לקוח · איש קשר · חשבוניות · סכום · ימי איחור.
     columns: [
       { key: 'customer_name', label: 'לקוח', format: 'text', align: 'start' },
+      { key: 'owner', label: 'איש קשר', format: 'text', align: 'start' },
+      { key: 'invoices', label: 'חשבוניות', format: 'int', align: 'end' },
       { key: 'amount', label: 'סכום', format: 'money', align: 'end' },
       { key: 'days_overdue', label: 'ימי איחור (הוותיקה)', format: 'days', align: 'end' },
     ],
     rows: [
       {
         customer_name: 'אלפא סיסטמס בע"מ',
+        owner: 'ניר נחום',
+        invoices: 2,
         amount: 13270,
         days_overdue: 66,
         drill_key: { kind: 'customer', bucket: 'd61_90', customer_id: 401 },
       },
       {
         customer_name: 'האגודה למען המדע הצעיר',
+        owner: 'ליאור ביטון',
+        invoices: 1,
         amount: 5438,
         days_overdue: 75,
         drill_key: { kind: 'customer', bucket: 'd61_90', customer_id: 456 },
@@ -333,7 +363,7 @@ const agingLevel1Payload = () => {
       levels: ['מדרג', 'לקוח', 'חשבונית'],
       crumbs: [
         { label: 'גיול חובות', drill: null },
-        { label: 'מדרג 61–90 יום', drill: { kind: 'bucket', bucket: 'd61_90' } },
+        { label: `מדרג ${iso('61–90')} יום`, drill: { kind: 'bucket', bucket: 'd61_90' } },
       ],
       buckets: agingBuckets,
       echo: { kind: 'bucket', bucket: 'd61_90' },
@@ -534,40 +564,46 @@ describe('מ9 · גיול חובות (דוח-דריל)', () => {
     expect(legend.textContent).not.toContain('private_company')
   })
 
-  it('עמודת "מדרג" מציגה תוויות-מסך ולא מפתחות-מסד', async () => {
+  it('📐18 · עמודת איש-הקשר מצוירת בשלוש הרמות, כפי שהשרת מצהיר אותה', async () => {
+    // ⑧9.6 היה 🔵 פתוח ("לא ציירתי עמודה שכולה —"), ומיגרציית i2 סגרה אותו בהצהרת העמודה.
+    // 🔑 **ללשונית אין כאן קוד** — `ReportTable` מצייר עמודות מוצהרות; הבדיקה מוודאת
+    // שלא נשאר בלשונית שום סינון-עמודות שיבליע אותה כשהשרת יוסיף עוד אחת.
     callReport.mockResolvedValue(agingRootPayload())
     renderTab({ slug: 'aging' })
-    const table = await screen.findByTestId('report-table-card')
-    // 🔴 נראה בעין בדפדפן 16/09: הטור הציג `d90p`/`d61_90` בעוד הגרף באותו דף מציג `90+`/`61–90`.
-    expect(plain(table)).toContain('90+')
-    expect(plain(table)).toContain('61–90')
-    expect(table.textContent).not.toContain('d90p')
-    expect(table.textContent).not.toContain('d61_90')
-    // 🔴 ולא רק מתורגמת — **מבודדת**: בלי LRI…PDI ה-bidi הפך את `1–30` ל-`30–1` ואת
-    // `90+` ל-`+90` בתא, בעוד הגרף (שיושב ב-`dir="ltr"`) הציג אותם נכון. jsdom אינו
-    // מסדר bidi ⇒ מה שנבדק כאן הוא **נוכחות תווי-הבידוד**, והסדר עצמו נמדד בדפדפן.
-    expect(table.textContent).toContain('⁦90+⁩')
-    expect(table.textContent).toContain('⁦61–90⁩')
-    // תווית עברית טהורה אינה מבודדת — אין בה ניטרלי בין ספרות.
-    expect(table.textContent).not.toContain('⁦שוטף⁩')
+    expect(
+      within(await screen.findByTestId('report-table-card')).getByText('ליהי סבן'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'איש קשר' })).toBeInTheDocument()
   })
 
-  it('כשהשרת יכריז textLtr — הלשונית מתרגמת ומפסיקה לבודד (בלי בידוד כפול)', async () => {
-    // 🔻 **הענף שמתבטל מעצמו.** מיגרציית i2 מכריזה `format: 'textLtr'` על עמודת-המדרג
-    // (נמדד בקובץ, שורה 1033) ו-`formatByType` תבודד את הערך בעצמה — אבל היא **מבודדת
-    // ואינה מתרגמת**, וה-RPC ממשיך לשים בשורה את קוד-הדלי. ⇒ המיפוי נשאר, הבידוד יורד.
-    // ⚠️ נכון לרגע הכתיבה i2 **טרם הוחל** (נמדד חי: `bucket:text`), ולכן שני הענפים חיים.
+  it('📐18 · ועמודת איש-הקשר יורדת גם עם הרמה', async () => {
+    callReport.mockResolvedValue(agingLevel1Payload())
+    renderTab({ slug: 'aging', drill: { kind: 'bucket', bucket: 'd61_90' } })
+    expect(
+      within(await screen.findByTestId('report-table-card')).getByText('ניר נחום'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'איש קשר' })).toBeInTheDocument()
+  })
+
+  it('עמודת "מדרג" נמסרת מהשרת כתווית מבודדת, והלשונית אינה נוגעת בה', async () => {
+    // 🗑️ **הבדיקה הזו החליפה שתיים.** עד i2 הלשונית מיפתה `d90p` ⇒ `90+` וגם בידדה את
+    // הטווח, כי הטור הציג קוד-מסד ואז הציג `30–1` הפוך. **i2 סגרה את שניהם במקור:**
+    // `rows[].bucket` נושא את התווית (הקוד ב-`rows[].bucket_key`) והעמודה מוכרזת
+    // `textLtr`, כך ש-`formatByType` מבודדת. ⇒ מה שנבדק כאן הוא **שקיפות**: מה שהשרת
+    // שלח הוא מה שירד למסך, בלי מיפוי-צל ובלי בידוד כפול.
     const payload = agingRootPayload()
-    payload.columns = payload.columns.map((c) =>
-      c.key === 'bucket' ? { ...c, format: 'textLtr' } : c,
-    )
     callReport.mockResolvedValue(payload)
     renderTab({ slug: 'aging' })
     const table = await screen.findByTestId('report-table-card')
+
     expect(plain(table)).toContain('90+')
+    expect(plain(table)).toContain('61–90')
+    // קוד-המסד חי ב-`bucket_key` ואינו מוצהר כעמודה ⇒ אינו מגיע למסך.
+    expect(payload.rows[0].bucket_key).toBe('d90p')
     expect(table.textContent).not.toContain('d90p')
-    // הערך שנמסר לרכיב נקי — הבידוד הוא של הפורמטר, ולא מקונן.
-    expect(table.textContent).not.toContain('⁦⁦90+')
+    // בידוד **אחד**, של הפורמטר. שניים היו אומרים שהלשונית בידדה שוב.
+    expect(table.textContent).toContain(iso('90+'))
+    expect(table.textContent).not.toContain(`${LRI}${LRI}90+`)
   })
 
   it('אריח "שוטף — עוד לא באיחור" מצויר לצד הגרף ויורד רמה בלחיצה', async () => {

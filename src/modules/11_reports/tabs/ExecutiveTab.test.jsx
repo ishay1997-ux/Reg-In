@@ -227,7 +227,8 @@ const m2Payload = () =>
 const m3Root = () =>
   base({
     population: { n: 736, label: 'אוכלוסייה: כל השנים · n=736', excluded: {} },
-    so_what: 'לשים לב שהמחיר לשעה עלה מהר מהעלות.',
+    so_what:
+      'לשים לב שהמחיר לשעה עלה מהר מהעלות — מ-260 ₪ ל-305 ₪ לשעה, מול עלייה מ-46 ₪ ל-47 ₪ בעלות; זו הסיבה ששולי-הרווח עמדו על 58.6%.',
     tiles: [
       {
         key: 'price_per_hour',
@@ -270,11 +271,15 @@ const m3Root = () =>
           },
         ],
       },
+      // ✏️ **נמדד חי 16/09 20:2X, אחרי שמיגרציית `i2` נחתה** — הלוח המשולב פוצל לשני
+      // לוחות **מאפסים** (⑧ 3.1), ו**לוח-העלות הוא האחרון**. 🔑 זה מה שהופך את עוגן
+      // ה-`costPerHour` (*"הגרף האחרון"*) לנכון, וזו הייתה נקודת-העיוורון המוצהרת של
+      // הסבב הקודם: הפיקסצ'ר היה פיצול שבניתי ביד, והכותרות כאן מועתקות מהמטען.
       {
         type: 'line',
         unit: 'money',
         xKey: 'year',
-        title: 'מחיר לשעה מול עלות לשעה',
+        title: 'מחיר לשעה ומרווח לשעה, לפי שנה',
         domain: null,
         refLines: [],
         series: [
@@ -285,7 +290,6 @@ const m3Root = () =>
             kind: 'line',
             axis: 'left',
           },
-          { key: 'cost_per_hour', label: 'עלות לשעה', format: 'money', kind: 'line', axis: 'left' },
           {
             key: 'margin_per_hour',
             label: 'מרווח לשעה',
@@ -295,14 +299,23 @@ const m3Root = () =>
           },
         ],
         data: [
-          { year: 2024, price_per_hour: 253.67, cost_per_hour: 44.19, margin_per_hour: 209.48 },
-          {
-            year: 2026,
-            price_per_hour: 305.12,
-            cost_per_hour: 47.37,
-            margin_per_hour: 257.75,
-            partial: true,
-          },
+          { year: 2024, price_per_hour: 253.67, margin_per_hour: 209.48, partial: false },
+          { year: 2026, price_per_hour: 305.12, margin_per_hour: 257.75, partial: true },
+        ],
+      },
+      {
+        type: 'line',
+        unit: 'money',
+        xKey: 'year',
+        title: 'עלות לשעה, לפי שנה',
+        domain: null,
+        refLines: [],
+        series: [
+          { key: 'cost_per_hour', label: 'עלות לשעה', format: 'money', kind: 'line', axis: 'left' },
+        ],
+        data: [
+          { year: 2024, cost_per_hour: 44.19, partial: false },
+          { year: 2026, cost_per_hour: 47.37, partial: true },
         ],
       },
     ],
@@ -924,43 +937,35 @@ describe('מצבים ושכבת-הטמעה', () => {
     expect(tiles.querySelector('[data-testid^="hint-"]')).toBeNull()
   })
 
-  it('🔴 רמז-ה-`barkey` נשאר על הלוח האחרון גם כשמיגרציית i2 מפצלת אותו לשניים', async () => {
-    // 🪤 **הרגרסיה שהבדיקה הזו נועלת מראש:** ‏`i2` מפצלת את לוח מחיר/עלות לשני כרטיסים
-    // מאפסים (⁦2⁩ גרפים ⇐ ⁦3⁩). אינדקס קשיח `=== 1` היה מצמיד את הרמז ללוח **המחיר** בעוד
-    // הוא מסביר את ה**עלות**, ובמוקאפ ה-`.barkey` יושב אחרי שני הלוחות (שורות 708–713).
-    const split = m3Root()
-    const [yearChart, combined] = split.chart
-    split.chart = [
-      yearChart,
-      { ...combined, title: 'מחיר לשעה, לפי שנה', series: [combined.series[0]] },
-      { ...combined, title: 'עלות לשעה, לפי שנה', series: [combined.series[1]] },
-    ]
-    callReport.mockResolvedValueOnce(split)
-    renderTab('מ3')
-    await screen.findAllByText('מחיר לשעה')
-
-    const cards = screen.getAllByTestId(/^chart-card-/)
-    expect(cards).toHaveLength(3)
-    expect(cards[1].querySelector('[data-testid="hint-reports.trends.costPerHour"]')).toBeNull()
-    expect(cards[2].querySelector('[data-testid="hint-reports.trends.costPerHour"]')).not.toBeNull()
-    // וכל אחד מהשניים מאפס — `domain: null` ⇒ `[0,'auto']` ב-`ChartCard.valueDomain`.
-    expect(split.chart[1].domain).toBeNull()
-    expect(split.chart[2].domain).toBeNull()
-  })
-
-  it('🔴 רמזי-הגרף יושבים בתוך כרטיס-הגרף שהם מסבירים, ולא מעל שניהם יחד', async () => {
+  it('🔴 רמזי-הגרף יושבים בכרטיס שהם מסבירים — וה-`barkey` על לוח-העלות, האחרון', async () => {
+    // 🪤 **הרגרסיה שהבדיקה נועלת:** ‏`i2` פיצלה את לוח מחיר/עלות לשני לוחות מאפסים
+    // (⁦2⁩ גרפים ⇐ ⁦3⁩). אינדקס קשיח `=== 1` היה מצמיד את רמז-ה-`barkey` ללוח **המחיר**
+    // בעוד הוא מסביר את ה**עלות**; במוקאפ ה-`.barkey` יושב אחרי שני הלוחות (שורות 708–713),
+    // ולכן העוגן הוא "הגרף האחרון".
+    // ✅ **והפיקסצ'ר הוא המטען החי** (נמדד 16/09 20:2X, אחרי ש-i2 נחתה) ולא פיצול שבניתי
+    // ביד — זו בדיוק נקודת-העיוורון שהסבב הקודם הצהיר עליה: סדר-הלוחות הוא של השרת,
+    // ולוח-העלות הוא **האחרון** בפועל.
     callReport.mockResolvedValueOnce(m3Root())
     renderTab('מ3')
     await screen.findAllByText('מחיר לשעה')
 
     const cards = screen.getAllByTestId(/^chart-card-/)
-    expect(cards).toHaveLength(2)
-    // ⑩ ב — הערת-גרף-השנים ⇒ הכרטיס הראשון · ⑩ ג — ה-`barkey` של מחיר/עלות ⇒ השני.
+    expect(cards).toHaveLength(3)
+    expect(cards.map((card) => card.querySelector('h3')?.textContent)).toEqual([
+      'הכנסה, רווח ושולי-רווח לפי שנה',
+      'מחיר לשעה ומרווח לשעה, לפי שנה',
+      'עלות לשעה, לפי שנה',
+    ])
+    // ⑩ ב — הערת-גרף-השנים ⇒ הכרטיס הראשון.
     expect(cards[0].querySelector('[data-testid="hint-reports.trends.partialYear"]')).not.toBeNull()
-    expect(cards[1].querySelector('[data-testid="hint-reports.trends.costPerHour"]')).not.toBeNull()
+    // ⑩ ג — ה-`barkey` ⇒ הכרטיס האחרון (העלות), ולא זה שלפניו.
+    expect(cards[1].querySelector('[data-testid="hint-reports.trends.costPerHour"]')).toBeNull()
+    expect(cards[2].querySelector('[data-testid="hint-reports.trends.costPerHour"]')).not.toBeNull()
+    // ושני לוחות-הקצב **מאפסים**: `domain: null` ⇒ `[0,'auto']` ב-`ChartCard.valueDomain`.
+    const leftAxes = chartProps('YAxis').filter((props) => props.yAxisId !== 'right')
+    expect(leftAxes.every((props) => props.domain[0] === 0)).toBe(true)
     // ושניהם **מתחת** לגרף שבכרטיסם (F10), לא מעליו.
     const footer = cards[0].querySelector('[data-testid="chart-footer"]')
-    expect(footer).not.toBeNull()
     expect(comesBefore(cards[0].querySelector('[data-testid="chart-figure"]'), footer)).toBe(true)
   })
 

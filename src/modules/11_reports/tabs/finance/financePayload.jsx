@@ -6,8 +6,7 @@
 // ① **מיפוי-תוויות של סדרת-גרף** לפי `chart.label_source` (תיקון-C8 מ-16/09) —
 //    מ9 מחזיר `government`/`nonprofit` כמפתחות-enum של המסד ונוקב בקבוע העברי.
 //    🔴 **מקרא שמציג `private_company` הוא בדיוק הכשל שהשדה הזה נולד למנוע.**
-// ② **מפתחות-דלי-גיול ⇒ תוויות-מסך** בעמודת "מדרג" של מ9 — ר' `bucketLabel`.
-// ③ **סימון העמודה הממוינת** (`columns[].sorted` ⇒ `aria-sort`, 📐9) — ר' ההערה המלאה
+// ② **סימון העמודה הממוינת** (`columns[].sorted` ⇒ `aria-sort`, 📐9) — ר' ההערה המלאה
 //    אצל `markSortedColumns`; **המועמדת מגיעה מהכרטיס, והכיוון נמדד על השורות שיורדו.**
 //
 // ✏️ **שתי פעולות נוספות הוסרו מכאן 16/09/2026 אחרי שהשכבה המשותפת נחתה (11f347a9 · 902bbc7f),
@@ -20,54 +19,18 @@
 //
 // 🚫 **ומה שהוא בכוונה אינו עושה:** אינו מסנן שורות ואינו מוסיף אריח. שני אלה היו מזיזים
 // את המספר שהאוכלוסייה (📐2) והפאג'ר (📐8) מצהירים עליו, והם מגיעים מהשרת בלבד.
+//
+// 🗑️ **ומה שנמחק מכאן 16/09/2026, וזה הסדר הנכון:** מיפוי מפתחות-דלי-הגיול לתוויות-המסך
+// (`withBucketLabels`) ובידודם. שניהם היו **פיגום** מול שני פגמים אמיתיים — הטור הציג
+// `d90p`, ואז הציג `30–1` הפוך — ומיגרציית i2 סגרה את שניהם **במקור**: השורה נושאת היום
+// את התווית ב-`rows[].bucket` (הקוד עבר ל-`rows[].bucket_key`), והעמודה מוכרזת
+// `format: 'textLtr'` כך ש-`formatByType` מבודדת בעצמה. ⇒ **פיגום שנשאר אחרי שהבניין
+// עומד הוא הגדרה שנייה שתסטה** — הוא הוסר, ולא הושאר "ליתר ביטחון".
 
 import { CUSTOMER_TYPE_LABELS } from '@/lib/customers'
-import { AGING_BUCKETS } from '@/lib/reportsFinance'
-import { isolateLtr } from '@/lib/reportsFormat'
 
 // מפת הקבועים ש-`chart.label_source` רשאי לנקוב בהם. **טבלה ולא `if`** — מקור חדש הוא שורה.
 const LABEL_SOURCES = { CUSTOMER_TYPE_LABELS }
-
-// 🔴 **מפתח-דלי ⇐ התווית שעל המסך — פגם שנראה בעין בדפדפן ואף בדיקה לא תפסה (16/09/2026).**
-// עמודת "מדרג" של מ9 מחזירה את **מפתח-המסד** (`d90p` · `d61_90` · `current`), והמסך הציג
-// חמש מחרוזות באנגלית בטור עברי — בעוד **הגרף באותו דף** מציג את אותם דליים כ-`1–30` ·
-// `61–90` · `90+`. ⇒ שתי איותים לאותו דבר על מסך אחד.
-// 🔑 **התוויות אינן מומצאות כאן:** `AGING_BUCKETS` (`src/lib/reportsFinance.js`) הוא ה-SSOT
-// שלהן, וההערה שם קובעת במפורש *"התוויות הן מה שמופיע על המסך (spec §1.4 · כרטיס מ9 §⑥)"*
-// — כולל מקף-הטווח `–` (en-dash). ⚠️ **וזו אותה משפחה בדיוק של `chart.label_source`**,
-// רק שאין ל-C8 שדה מקביל לעמודה; ⇒ מדווח כבקשת-שדה, וממופה כאן בינתיים.
-//
-// 🔴 **והתיקון השני, שהתיקון הראשון ייצר — נראה בעין בצילום-המסך ולא ע"י שער:** התווית
-// הנכונה הודפסה **הפוכה**. `1–30` נראה `30–1` ו-`90+` נראה `+90`, כי `format: 'text'` הוא
-// `String(v)` חשוף (`reportsFormat.js`), התא הוא `<td>` בתוך מסמך `dir="rtl"`, וכלל N1 של
-// אלגוריתם ה-bidi פותר את המקף/הפלוס — תו **נייטרלי** בין שתי ריצות-ספרות — לכיוון-הפסקה.
-// ⚠️ **והגרף באותו דף היה תקין**, כי `ChartCard` עוטף את הציור ב-`dir="ltr"` — כלומר שתי
-// צורות של אותו דלי על מסך אחד, וזו בדיוק משפחת-הכשל שנתפסה בריפו תשע פעמים.
-// ✅ **הפתרון הוא `isolateLtr` (‏U+2066…U+2069)** — התאום הטקסטואלי של `unicode-bidi:isolate`
-// לערך שאין לו JSX לעטוף בו, בדיוק כפי ש-`formatMoney`/`formatPercent` כבר עושות. **הטווח
-// מבודד כיחידה אחת** ולא כשתי ספרות נפרדות (`reportsFormat.js`: *"לערך בודד בלבד"*).
-// 🚫 **ותווית עברית טהורה (`שוטף`) אינה מבודדת** — אין בה ניטרלי בין ספרות, והבידוד היה
-// רעש בלתי-נראה בנתונים.
-// ✅ **והמחיר שהוצהר כאן קודם נסגר במקום הנכון:** הבידוד דלף לתא ה-xlsx, ו-`reportsExport`
-// מוחק אותו היום **בגבול-הייצוא** — כלל אחד לכל העמודות במקום זכירה פר-לשונית.
-//
-// 🔻 **ומה שמתבטל מעצמו כשהשרת יכריז `textLtr`:** ‏`formatByType` תבודד את הערך בעצמה, ולכן
-// הבידוד כאן **מותנה בהכרזת-העמודה** ואינו מוחל פעמיים.
-// 🚫 **המיפוי עצמו אינו מתבטל, וזו הנקודה:** ‏`textLtr` **מבודד ואינו מתרגם**, ומיגרציית i2
-// ממשיכה לשים בשורה את **קוד-הדלי** (`'bucket', bucket_key` — נמדד בקובץ, שורה 832), בעוד
-// אותה פונקציה בדיוק שמה בגרף את **התווית** (`'bucket', b.l`, שורה 804). ⇒ בלי המיפוי כאן
-// המסך יציג `d90p` מבודד יפה. **מדווח: אם השורה תישא את `b.l` כמו הגרף, הקוד הזה מת מעצמו.**
-const ISOLATE_WHEN_DIGITS = /[0-9]/
-// פורמטים שהפורמטר כבר מבודד בעצמם ⇒ אין לבודד שוב באתר-הקריאה (בידוד מקונן אינו no-op).
-const ISOLATING_FORMATS = new Set(['textLtr'])
-
-function bucketLabel(key, columnFormat) {
-  const bucket = AGING_BUCKETS.find((b) => b.key === key)
-  if (!bucket) return null
-  const needsIsolation =
-    ISOLATE_WHEN_DIGITS.test(bucket.label) && !ISOLATING_FORMATS.has(columnFormat)
-  return needsIsolation ? isolateLtr(bucket.label) : bucket.label
-}
 
 /**
  * מפרט ארבעת המשטחים של הלשונית — **דאטה, לא קוד**, וזו הסיבה שיש כאן רכיב אחד ולא ארבעה:
@@ -84,7 +47,6 @@ function bucketLabel(key, columnFormat) {
  *   של `surface` עם `drill: true` רק כדי שהשורות ייפתחו (הכרעה 19). **המעטפת המשותפת פותחת
  *   היום שורה על כל `drill_key` שסוגו נתיב** (GAP 2 · `ROW_DOOR_KINDS`), והדגל הפך למזיק:
  *   `surface.drill` מדכא את הסינון-הצולב האוטומטי ומצייר פירורים אם יגיעו שתי רמות.
- * `bucketColumn` — מ9: העמודה שערכיה הם מפתחות-דלי, ר' `bucketLabel`.
  * `currentBucketTile` — מ9: אריח "שוטף" יושב ב-`meta.current_tile` ולא ב-`tiles`.
  * `openInvoicesDoor` — מ7: הקישור "כל N החשבוניות הפתוחות →" לדוח-הגיול (📑ב).
  */
@@ -133,7 +95,6 @@ export const FINANCE_SURFACE_SPECS = Object.freeze({
       columns: [{ key: 'days_overdue', direction: 'descending' }],
       byLevel: { 1: [{ key: 'amount', direction: 'descending' }] },
     }),
-    bucketColumn: 'bucket',
     // האריח יושב **לצד** הגרף ובתוך הכרטיס (כרטיס מ9 ①6ב · §⑩ד) — `renderChartAside`.
     currentBucketTile: 0,
   }),
@@ -155,21 +116,6 @@ export const FINANCE_SURFACE_SPECS = Object.freeze({
     }),
   }),
 })
-
-/** מפתחות-דלי בעמודה אחת ⇒ התוויות של `AGING_BUCKETS`. ערך שאינו מפתח מוכר נשאר כפי שהוא. */
-function withBucketLabels(payload, columnKey) {
-  if (!columnKey || !payload.rows?.length) return payload
-  const column = payload.columns?.find((c) => c.key === columnKey)
-  if (!column) return payload
-  if (!payload.rows.some((row) => bucketLabel(row[columnKey], column.format))) return payload
-  return {
-    ...payload,
-    rows: payload.rows.map((row) => {
-      const label = bucketLabel(row[columnKey], column.format)
-      return label ? { ...row, [columnKey]: label } : row
-    }),
-  }
-}
 
 function mapSeriesLabels(chart) {
   const dictionary = LABEL_SOURCES[chart?.label_source]
@@ -278,8 +224,7 @@ function markSortedColumns(payload, sort) {
   }
 }
 
-/** `transformPayload` של הלשונית — שלוש הפעולות של הכותרת, בסדר הזה. */
+/** `transformPayload` של הלשונית — שתי הפעולות של הכותרת, בסדר הזה. */
 export function transformFinancePayload(payload, spec) {
-  const labelled = withBucketLabels(mapChartLabels(payload), spec.bucketColumn)
-  return markSortedColumns(labelled, spec.sort)
+  return markSortedColumns(mapChartLabels(payload), spec.sort)
 }

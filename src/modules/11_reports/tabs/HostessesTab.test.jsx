@@ -133,7 +133,8 @@ const m14 = () =>
         format: 'percent',
         window: '12 החודשים האחרונים',
         compare: { label: 'התקופה המקבילה אשתקד', value: 88.7, direction: 'down' },
-        target: null,
+        // ✏️ i2: הכרעה 33 מושלמת — חמישה מתוך חמישה אריחים הם דלתות.
+        target: { tab: 'דיילות', drill: null, report: 'report_m15_reliability' },
       },
       {
         key: 'red_hostesses',
@@ -142,7 +143,7 @@ const m14 = () =>
         format: 'int',
         window: 'חלון קפוא · 12 חודשים',
         compare: { label: 'התקופה המקבילה אשתקד', value: 0, direction: 'up' },
-        target: { tab: 'דיילות', report: 'אמינות והתייצבות', drill: null },
+        target: { tab: 'דיילות', drill: null, report: 'report_m15_reliability' },
       },
       {
         key: 'gini',
@@ -151,7 +152,7 @@ const m14 = () =>
         format: 'gini',
         window: '12 החודשים האחרונים',
         compare: { label: 'התקופה המקבילה אשתקד (n=97)', value: 0.4383, direction: 'up' },
-        target: { tab: 'דיילות', report: 'הוגנות השיבוץ', drill: null },
+        target: { tab: 'דיילות', drill: null, report: 'report_m17_fairness' },
       },
       {
         key: 'active_hostesses',
@@ -160,7 +161,7 @@ const m14 = () =>
         format: 'int',
         window: 'נכון ל-16/09/2026',
         compare: null,
-        target: { tab: 'דיילות', report: 'איכות מול עלות', drill: null },
+        target: { tab: 'דיילות', drill: null, report: 'report_m16_quality_cost' },
       },
       {
         key: 'gap_events',
@@ -169,7 +170,8 @@ const m14 = () =>
         format: 'int',
         window: '30 הימים הקרובים',
         compare: { label: '31–60 הימים הבאים', value: 2, direction: 'up' },
-        target: null,
+        // 🔴 **דלת חוצת-לשונית** (הכרעה 33): לשונית "הנהלה", שהרשאתה `'כספים'`.
+        target: { tab: 'הנהלה', drill: null, report: 'report_m06_staffing' },
       },
     ],
     chart: {
@@ -303,7 +305,10 @@ const m15 = (selectedDow = null) =>
       },
     ],
     so_what: 'לא לשלוח את 6 הדיילות האדומות.',
-    definitions: 'הגדרות: ציון אמינות = …',
+    // ✏️ i2 (חי, נמדד 16/09 20:3X): שורת-ההגדרות נושאת עכשיו את **שני הספים במספרים**
+    // ואת **משפט הכרעה 38**. מועתקת מילה-במילה מהמטען החי — זו הצורה שמבחן-המחיקה נמדד עליה.
+    definitions:
+      'הגדרות: ציון אמינות = (סכום ערכי-הנוכחות + 3 × 0.9584) ÷ (מספר המשמרות + 3) — ממוצע ממותן אל ממוצע החברה · איחור נספר לפי דרגה: קל אינו מוריד מהציון, בינוני מוריד רבע, רב מוריד חצי · שתי עמודות אי-ההגעה, ואף אחת מהן אינה "הנכונה": "הבריזה · ב-12 חודשים" היא ההגדרה שהציון עצמו עובד לפיה — רק אי-הגעה בלי הודעה, ורק בחלון הקפוא · "אי-הגעה · אי-פעם" היא כל סיבות אי-ההגעה — כולל מחלה והיעדרות באישור — ועל כל ההיסטוריה. שתיהן נכונות בהגדרתן, והדוח אינו בוחר ביניהן · הבריזה = לא הגיעה ולא הודיעה — רק היא מאפסת את הציון של אותה משמרת · ביטלה אחרי אישור = הודיעה שלא תגיע אחרי שכבר אושרה סופית — נספר כחצי משמרת · החלון = 12 חודשים אחורה מהיום, קפוא ואינו נגרר אחרי מסנן-התקופה · דיילת אדומה = ציון-אמינות נמוך מ-87% ממוצע החברה (0.9584), כלומר מתחת ל-0.8338 · דיילת ענבר = מתחת ל-95% ממנו, כלומר מתחת ל-0.9104 · הציון הוא בדיוק reliabilityScore של Smart Match (הכרעה 38) — אותה נוסחה שמדרגת את הדיילות בשיבוץ, ולא מדד שנולד לדוח הזה.',
     meta: {
       missing_params: [],
       notes: ['מתחת לסף המדגם: 11 דיילות'],
@@ -451,6 +456,8 @@ const m17 = () =>
         value: null,
         format: 'percent',
         window: 'טרם נמדד',
+        // ✏️ i2: *"נמדד מ-—"* (מילת-יחס ואחריה מקף) הוחלף ב-*"טרם נמדד · אין עדיין נתון"*.
+        sub: 'דרג ⁦1⁩ = הדיילת שהמערכת דירגה ראשונה · טרם נמדד · אין עדיין נתון: המערכת התחילה לרשום את הדרג שהמליצה רק מעכשיו, ועד שייצברו שיבוצים המדד מציג "—" ולא ⁦0%⁩',
         compare: null,
         target: null,
       },
@@ -645,6 +652,55 @@ describe('מ14 · מבט-על דיילות', () => {
   })
 })
 
+describe('מה ש-i2 הוסיף לשרת, ומה שהוא משנה על המסך', () => {
+  it('מ14 · חמישה אריחים וחמש דלתות — הכרעה 33 מושלמת, כולל דלת חוצת-לשונית', async () => {
+    callReport.mockResolvedValue(m14())
+    const onDrill = renderTab(SURFACES.m14)
+    await screen.findByTestId('report-tiles')
+    // ⚠️ הספירה נגזרת מהמטען ולא מוקלדת: `report-tile-link-*` הוא העטיפה ש-`KpiTile`
+    // מוסיף **רק** לאריח עם `target` (הכרעה 33).
+    const doors = screen.getAllByTestId(/^report-tile-link-/)
+    expect(doors).toHaveLength(m14().tiles.filter((t) => t.target).length)
+    expect(doors).toHaveLength(5)
+
+    // הדלת שהיא **חוצת-לשונית** — האריח היחיד שיעדו מחוץ ללשונית "דיילות".
+    fireEvent.click(screen.getByTestId('report-tile-link-gap_events'))
+    expect(onDrill).toHaveBeenCalledWith(
+      expect.objectContaining({ tab: 'הנהלה', report: 'report_m06_staffing' }),
+    )
+  })
+
+  it('מ15 · שני הספים והכרעה 38 על המסך **ברמה 0** — מבחן-המחיקה של C3', async () => {
+    onboardingMode.value = 0
+    callReport.mockResolvedValue(m15())
+    renderTab(SURFACES.m15)
+    const definitions = await screen.findByTestId('report-definitions')
+    // 🔴 זה הליבה של הממצא שהסקירה מדדה: המילים "אדומה"/"ענבר" הופיעו על הדף שלוש פעמים
+    // ומעולם לא נאמר **במספרים** מה הן, אלא ברמה 2 בלבד או משטח אחד אחורה במ14.
+    expect(definitions).toHaveTextContent('דיילת אדומה')
+    expect(definitions).toHaveTextContent('0.8338')
+    expect(definitions).toHaveTextContent('דיילת ענבר')
+    expect(definitions).toHaveTextContent('0.9104')
+    // הכרעה 38 — הציון הוא אותו `reliabilityScore` של Smart Match, ולא מדד שנולד לדוח.
+    expect(definitions).toHaveTextContent('הכרעה 38')
+    expect(definitions).toHaveTextContent('Smart Match')
+    // ⚠️ וברמה 0 אין אף רמז — כלומר כל זה **בסיס**, לא שכבה.
+    expect(document.body.querySelectorAll('[data-testid^="hint-"]')).toHaveLength(0)
+  })
+
+  it('מ15 · `scoreBasis` נשאר צמוד לשורת-ההגדרות שנושאת עכשיו את הנוסחה והספים', async () => {
+    callReport.mockResolvedValue(m15())
+    renderTab(SURFACES.m15)
+    const hint = await screen.findByTestId('hint-reports.reliability.scoreBasis')
+    const definitions = screen.getByTestId('report-definitions')
+    // 🔑 **זו ההכרעה שנבדקה מחדש מול הכרטיס אחרי i2**: עוגן ב הוא פסקת `div.datanote`
+    // שנושאת נוסחה · C · שני הספים · טבלת-ערכי-הנוכחות — וכל אלה חיים עכשיו בשורת-ההגדרות.
+    // ⇒ החריץ הנכון הוא `renderExtras`, שמרונדר מיד אחריה — ולא `renderChartFooter`,
+    // שהיה תולה אותו מתחת לגרף יום-בשבוע שהוא אינו מדבר עליו.
+    expect(follows(definitions, hint)).toBe(true)
+  })
+})
+
 describe('מ15 · אמינות והתייצבות', () => {
   it('ממפה `dow` 0–6 לשמות-ימים דרך `chart.label_source` — הציר אינו ספרות', async () => {
     callReport.mockResolvedValue(m15())
@@ -790,7 +846,15 @@ describe('מ17 · הוגנות השיבוץ', () => {
     const tile = await screen.findByTestId('report-tile-rank1_adoption')
     expect(tile).toHaveTextContent('אימוץ המלצת Smart Match')
     expect(tile).toHaveTextContent('טרם נמדד')
-    expect(tile).not.toHaveTextContent('%')
+    // 🔴 **הטענה היא על ה*ערך*, לא על נוכחות התו `%` באריח** — וזה תוקן אחרי i2:
+    // תת-השורה עצמה **מצטטת** את *"המדד מציג '—' ולא ⁦0%⁩"*, כלומר מסבירה למה אין אחוז.
+    // אריח שערכו `null` מצייר את `emptyText` (`NO_VALUE`) בצומת-הערך — ‏`StatTile.jsx:37-38`
+    // — וזו ההצהרה שהכרעת-📑ב#14א דורשת: מקף, לעולם לא `0%`.
+    expect(tile.children[1].textContent).toBe('—')
+    expect(tile.children[1].textContent).not.toMatch(/%/)
+    // ✏️ i2: הנוסח *"נמדד מ-—"* (מילת-יחס ואחריה מקף) ירד; תת-השורה אומרת "טרם נמדד".
+    expect(within(tile).getByTestId('kpi-sub')).toHaveTextContent('אין עדיין נתון')
+    expect(within(tile).getByTestId('kpi-sub')).not.toHaveTextContent('נמדד מ-—')
     expect(screen.getByTestId('report-meta-notes')).toHaveTextContent('אין עדיין נתון')
   })
 
