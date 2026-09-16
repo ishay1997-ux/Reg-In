@@ -129,6 +129,7 @@ describe('ReportSurface — extension slots', () => {
 
 describe('ReportSurface — request identity', () => {
   it('does not refetch when drill/onWindow change identity but not content', async () => {
+    callReport.mockClear()
     callReport.mockResolvedValue(payload())
     const onWindow = vi.fn()
     const { rerender } = render(
