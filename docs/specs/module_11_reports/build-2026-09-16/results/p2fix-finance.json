@@ -1,0 +1,106 @@
+{
+  "migration": "supabase/migrations/20260916063400_module11_e2_rpcs_finance_fixes.sql (1,569 lines · CR=0 · four functions rebuilt from the live body; md5(prosrc) of E was pulled and compared to the file bodies before writing — all four identical)",
+  "applied": true,
+  "applied_note": "Applied through MCP apply_migration in three calls, because two residual defects were found by the post-apply verification itself and the file is still an uncommitted draft: (1) `module11_e2_rpcs_finance_fixes` — the whole file; (2) `module11_e2b_finance_m07_threshold_comment` — the m07 why-comment quoted the literal it had removed, so `position('0.15' in prosrc)` came back 2348 on TEXT, not code, and the agreed mechanical check would have failed forever; (3) `module11_e2c_finance_m12_population_separators` — m12's population line still printed 1771 with no thousands separator, the one residual F5 hit. THE FILE ON DISK NOW EQUALS THE DB EXACTLY: md5(prosrc) == md5 of each $function$ body, four for four (m07 03530a7043684c1cd0faf99378f7815e/26510B · m08 8c93ef4389144c45691a44a51c4a272b/18169B · m09 fee95ba960a529d3b65d2dc8534a0de1/32824B · m12 0fbde1633b5b4e468f2a11a2915af9ee/19464B). ⚠️ ORCHESTRATOR DECISION NEEDED: supabase_migrations.schema_migrations now holds three rows for one file. Either accept it (the hostesses builder already has three rows for one file: m14/m15/m16), or squash by re-applying the file once under one name.",
+  "signature_change": "report_m07_finance_overview and report_m09_aging gained a fifth parameter `p_asof date default null`; both 4-parameter overloads were DROPPED first (drop ⇒ create ⇒ comment ⇒ revoke/grant), so exactly one overload exists per function (verified: count(*) over (partition by proname) = 1 for all four). Expand-Contract was checked this turn, not assumed: `git ls-tree origin/main | grep module11_e_rpcs_finance` = 0, `git grep '<each rpc name>' origin/main -- src e2e` = 0 files, same on origin/dev ⇒ no deployed code calls them. The drop was mandatory, not tidy: create-or-replace on 5 args would have left the 4-arg alive as a second overload and PostgREST's 4-parameter call (callReport sends exactly four) would have failed as ambiguous. m08 and m12 keep their signatures. The client never sends p_asof; verifiers do.",
+  "per_finding": [
+    {
+      "id": "F1",
+      "severity": "blocker",
+      "fix": "Aging is a snapshot as of Israel-today, not as of p_to. m09: `v_asof := coalesce(p_asof, v_today)` drives days_overdue, the bucket column, the chart, over-60, 90+, the previous-month snapshot and meta.current_tile; window is now {from:null, to:null, label:'נכון להיום'}; p_from/p_to are echoed in meta.period_filter_ignored so it is visible they arrived and were not used. m07: the same for the open-debt tile and its compare, the 4-row table's days_overdue, expected_30d and its received-in-30d compare, and the written-off note; the tile window text is 'נכון להיום · אינו מושפע ממסנן התקופה' with no filter date; the 12-month chart stays on the period end, but its last point now carries is_today only when v_to = v_asof (it used to draw a dashed 'today' column on 30/06).",
+      "reverified_by": "Four signed-in calls as FINANCE (Node script, deleted after). p_to='2026-06-30' and p_to='2026-12-31' now return buckets IDENTICAL to the default call — current:8/48746 · d1_30:12/83313 · d31_60:8/58285 · d61_90:4/28092 · d90p:3/17946 (today = 16/09/2026). Before E2 the same p_to values returned 32/1/1/0/1 and 0/0/0/0/35. p_asof='2026-09-10' reproduces the hand-computed oracle digit for digit.",
+      "result": "PASS. filter_moves_buckets = false. p_asof=10/09/2026 ⇒ n=35 · 10/13/8/1/3 · 68,585 / 87,574 / 56,839 / 5,438 / 17,946 · total 236,382 ₪ · over-60 tile value 23,384 ₪ count 4. window = {from:null, to:null, label:'נכון להיום'}."
+    },
+    {
+      "id": "F2",
+      "severity": "major",
+      "fix": "m07 reads `params.סף_סטיית_תקציב_אחוז` exactly like m08 and compares `r > v_threshold / 100.0`; missing ⇒ the name is appended to meta.missing_params (m07 can now report two missing params) and the over_threshold_month tile returns value null, sub null and compare null.",
+      "reverified_by": "pg_proc: position('0.15' in prosrc) = 0 on all four functions; position('סף_סטיית_תקציב_אחוז' in prosrc) = 2830 (m07) and 1211 (m08). Live payload: meta.threshold_pct = 15, meta.missing_params = [].",
+      "result": "PASS — but only after the second apply: the first E2 left the literal inside the Hebrew why-comment that documented its removal, so the mechanical check returned 2348 on a comment. The comment was reworded to carry no digits at all, and the check is now a real check."
+    },
+    {
+      "id": "F3",
+      "severity": "major",
+      "fix": "m09 computes a full previous-month snapshot (open as of v_asof-30, days measured from that date, bucketed the same way) once, and feeds five tiles from it: root over_60.compare, root bucket_90p.compare, level-1 bucket_amount.compare (with count), level-1 share_of_open.compare (with a '₪ מתוך ₪' note). Level 2 deliberately keeps compare:null — the approved mockup states there is no customer-level previous period. m08's median_deviation.compare is the same formula on the previous year.",
+      "reverified_by": "Live payload at p_asof=10/09/2026, plus an independent SQL query of the 11/08/2026 snapshot run before the migration was written.",
+      "result": "PASS, all five, matching the mockup's numbers: over_60 compare {value 17946, count 3, direction up} · bucket_90p compare {value 2899, count 1, up} · L1 d61_90 compare {value 15047, count 2, down} · L1 share compare {value 7.3, note '15,047 ₪ מתוך 204,963 ₪', down} against a current 2.3 · m08 median compare {value 0, label 2025, down}."
+    },
+    {
+      "id": "F4",
+      "severity": "major",
+      "fix": "The missing `and (v_level = 1 or customer_id = v_cust)` guard was added to the customer-count expression — it was the only one of the four level-scoped expressions without it. Hebrew number agreement added throughout the level sentence and subs (1 חשבונית / חשבוניות · לקוח אחד / N לקוחות · יום / ימים), and the level-2 sentence names the customer instead of counting to one, as the mockup does.",
+      "reverified_by": "Live drill p_drill={bucket:'d90p', customer_id:401} as FINANCE.",
+      "result": "PASS. tiles[0] = {label:'חוב הלקוח במדרג 90+ יום', value:10163, count:1, customers:1}, rows = 1, so_what = 'לגבות 10,163 ₪ מהלקוח אלפא סיסטמס בע\"מ במדרג 90+ יום — 1 חשבונית, שממתינה כבר 103 ימים.' (was: customers 3 and '1 חשבוניות'). Level 1 on d61_90: 'לגבות 5,438 ₪ מלקוח אחד במדרג 61–90 יום — 1 חשבונית, שממתינה כבר 69 ימים.'"
+    },
+    {
+      "id": "F5",
+      "severity": "major",
+      "fix": "All four functions now declare v_lri/v_pdi (chr(8294)/chr(8297)) and every number inside a server-built sentence is wrapped LRI…PDI, with money through `to_char(round(x),'FM999,999,999') || ' ₪'` — exactly the executive migration's pattern. Covered: so_what, population.label, definitions, meta.notes, tiles[].sub, tiles[].window, compare.label and compare.note.",
+      "reverified_by": "Scripted scan of the live payloads of all four surfaces (plus the m09 level-2 drill) for any run of 4+ digits inside those fields, excluding 4-digit years.",
+      "result": "PASS with ONE DELIBERATE EXCEPTION, named: m08's so_what contains 'פרויקט 1427' — a project identifier, which is never thousand-separated (the approved mockup prints ids plain, `ltr(iv.id)`), and it IS LRI-isolated. Everything else is clean: m07 0 hits · m09 0 · m09-L2 0 · m12 0. The m12 population line was a real hit ('1771' twice) and was fixed in the third apply."
+    },
+    {
+      "id": "F6",
+      "severity": "major",
+      "fix": "tiles[].sub added to every tile on all four surfaces, and compare.count/compare.note where the mockup prints one. m07: over_threshold_month sub 'מתוך N אירועים שהתקיימו ב<חודש>' (+ '— אף אחד לא חרג' at zero) with compare {value, count = the previous month's denominator, label = the Hebrew month name}; hostess_pay_month compare carries count = shifts. m12: gap_pct sub '<gap> יחידות מתוך <planned> מתוכננות'. The Hebrew month name comes from the same constant array the executive migration uses.",
+      "reverified_by": "Live payloads. Denominators were measured independently in SQL before the migration was written (Sep 01–10 = 13 of which 0 over · Aug = 18 of which 4 · rolling-30 = 27 of which 3 · Aug shifts 83 · m12 gap 4,182 of 126,650 on the 01/01–10/09 window).",
+      "result": "PASS. At p_asof/p_to = 10/09/2026: sub 'מתוך 13 אירועים שהתקיימו בספטמבר — אף אחד לא חרג', compare {value 4, count 18, label 'אוגוסט', note '4 מתוך 18 אירועים'}; hostess compare {value 19257, count 83, label 'אוגוסט'}. m12 gap sub on today's window: '6,793 יחידות מתוך 130,092 מתוכננות' (the 4,182/126,650 pair is what the same tile returns on the 10/09 window)."
+    },
+    {
+      "id": "F7",
+      "severity": "major",
+      "fix": "Every drill_key on all four surfaces is now `{kind, …}`: m07/m08/m09-root/m09-level-2/m12-㉗-rows ⇒ {kind:'project', id}; m09 level-1 ⇒ {kind:'customer', bucket, customer_id} (its fields are exactly the next level's p_drill); m12 main and order tables ⇒ {kind:'sku', sku[, upcoming]}.",
+      "reverified_by": "Live payloads, one row from each of the six row-sets.",
+      "result": "PASS: m07 {kind:'project',id:1040} · m08 {kind:'project',id:1416} · m09 root {kind:'project',id:1040} · m09 L1 {kind:'customer',bucket:'d61_90',customer_id:456} · m09 L2 {kind:'project',id:1460} · m12 {kind:'sku',sku:'B-SAT-LAN'} · m12 upcoming {kind:'sku',sku:'SAT-LAN',upcoming:true} · m12 ㉗ {kind:'project',id:1594}. ⚠️ 'sku' is NOT in C8's enumerated kind list (project|quote|year|month|tier|bucket|customer|hostess) — the orchestrator's F7 ruling named it explicitly, so it was used; C8's list needs a one-word amendment."
+    },
+    {
+      "id": "F8",
+      "severity": "minor",
+      "fix": "m08's population.excluded now names what is genuinely outside n — projects in the window whose status is not one of the four (active/cancelled), counted live. The materiality floor moved to meta.below_materiality {count, amount ₪} and is stated inside population.label as 'בתוך האוכלוסייה, מחוץ לדירוג' and in meta.notes with its ₪.",
+      "reverified_by": "Live payload plus an independent count query.",
+      "result": "PASS. On today's default window: n = 241, excluded = {'פרויקטים פעילים ומבוטלים': 12}, meta.below_materiality = {count:125, amount:700697}. (On the 01/01–10/09 window the same expressions give n=236, excluded 11, floor 123 / 694,808 ₪ — the verifier's numbers.)"
+    },
+    {
+      "id": "F9",
+      "severity": "minor",
+      "fix": "so_what returns null when the parameter the sentence depends on is absent: m07 and m09 on `תנאי_תשלום_ימים`, m08 on `סף_סטיית_תקציב_אחוז`. The tab shows the missing-param message instead of a sentence.",
+      "reverified_by": "🔴 NOT EXECUTED — proving it live means deleting a row from the live `params` table, which is a destructive write on the single shared database and is outside this task's read-only mandate. Verified instead against the LIVE function source (pg_proc.prosrc, not the file, not memory): m07 carries `'so_what', case when v_terms is null then null`, m08 carries `'so_what', case when v_threshold is null then null`, m09 carries `v_so_what := case when v_terms is null then null` (and the level branch has the same guard).",
+      "result": "CODE PATH PRESENT IN THE LIVE FUNCTION — not exercised. This is the one finding whose fix has no live evidence."
+    },
+    {
+      "id": "F10",
+      "severity": "minor",
+      "fix": "(a) hostess_pay_month rounds per row then sums — `sum(round(actual_hours * hourly_rate_snapshot))` — for the value, the previous month and the rolling-30 measurement; (b) m12 gap_pct: v_gap_pct and v_prev_gap_pct are computed into variables, compare is null when the previous denominator is 0, and direction has an explicit flat branch and returns null when the current ratio is null; (c) m09 window = {from:null, to:null, label:'נכון להיום'}; (d) m12 returns meta.sku_count (and meta.gap_units {planned, actual, gap}); (e) the d90p level name is 'מדרג 90+ יום' and the level-2 tile label is 'חוב הלקוח ב…'.",
+      "reverified_by": "Live payloads + pg_proc source for the branches that today's data does not exercise.",
+      "result": "PASS with ONE DECLARED DIVERGENCE. (a) ⚠️ per-row rounding returns 19,257 ₪ for August 2026 while the approved mockup and the signoff baseline both say 19,253 ₪ (= round of the 19,252.5 sum). Both satisfy '₪ without agorot'; they differ by 4 ₪ because the ruling names the ORDER. Implemented as ruled, declared in the migration header, and reported here rather than silently reconciled (C5: a baseline mismatch is a finding, never a number to fix) — one line from the orchestrator flips it to `round(sum(...))` if the mockup wins. (b) flat branch and the null guards are present in prosrc; today's data gives direction 'up' (5.2 vs 4.5) so the flat path is not exercised live. (c)(d)(e) all confirmed live: window {null,null,'נכון להיום'} · meta.sku_count = 9 · crumbs 'מדרג 90+ יום' · level-1 label 'חוב במדרג 90+ יום' vs level-2 'חוב הלקוח במדרג 90+ יום'."
+    },
+    {
+      "id": "shell (verifier finding #8 — React key from an object)",
+      "severity": "major",
+      "fix": "NOT MINE — outside my write scope. Checked this turn rather than assumed: the orchestrator fixed it in commit cd6869b5; ReportTable.jsx:68-69 now serialises an object drill_key with JSON.stringify.",
+      "reverified_by": "Read of src/modules/11_reports/components/ReportTable.jsx after `git log`.",
+      "result": "CLOSED BY THE ORCHESTRATOR. My drill_keys are unique per row within every row-set, so the serialised keys are unique."
+    }
+  ],
+  "tests": "src/lib/reportsFinance.test.js: 73 → 81 tests, and src/lib/projectFinance.test.js unchanged — `npx vitest run src/lib/reportsFinance.test.js src/lib/projectFinance.test.js` exit 0, 81/81. Three guards added, each aimed at one line of the verifier's `tests_pass_but_would_not_catch`: (1) the rounding ORDER through `summariseAging` itself — two fixtures (3 × 1.4 ⇒ 3, and 3 × 1.6 ⇒ 6) where sum-then-round and round-per-row disagree, because the existing 35-invoice fixture holds integers and cannot separate them; (2) AGING_BUCKETS keys+labels compared to the live SQL `drill.buckets` copied from a signed-in call; (3) a new exported JS twin `isOverBudgetThreshold(ratio, thresholdPct)` implementing `r > t/100`, with the boundary asserted (exactly on the threshold is NOT over), plus 'missing threshold ⇒ null, not false'. 🔴 THE GUARDS WERE MUTATION-TESTED, not just run: deleting the `Math.round` in `addTo` fails 2 of them and flipping `>` to `>=` fails the third (measured, exit 1, then restored and re-run green). eslint 0 · prettier clean · CR=0 on both lib files and the migration · knip reports no unused export in reportsFinance (its only finding, `medianOf` in reportsExecutive.js, is another builder's file).",
+  "not_verified": [
+    "F9 was never executed — see its entry. Deleting a live `params` row to prove the missing-param path is a destructive write on the shared production database; only the code path in the live prosrc was read.",
+    "No browser. Everything here is payload-level. The LRI/PDI isolation was asserted by scanning the returned strings, not by looking at a rendered screen; reportsFormat.js's own record says `npm run check:bidi` does not catch runtime-built strings, so the RTL of these sentences is still unobserved. The two charts per surface, the stacked-bar legend through CUSTOMER_TYPE_LABELS and the 📐20 dashed today-column were not rendered.",
+    "`npm run gate` / jscpd were not run — three other builders are writing in parallel and a whole-tree gate would measure their work. `npm run check:bidi` WAS run: it fails, on `src/lib/reportsCustomers.js:98`, which is not my file; my files are clean.",
+    "Identities exercised: FINANCE (200 on all four), RECRUIT and STAFF (403 / 42501 / 'אין לך הרשאה לבצע פעולה זו במודול כספים' on all four — never an empty object), CEO (200, n=35, which also proves a 4-parameter call still resolves after the signature change). PROJECTS was not called.",
+    "`docs/schema.sql` not refreshed — checked, not assumed: it contains none of the four report functions (grep = 0), so no schema snapshot is owed. It is outside my write scope in any case.",
+    "Supabase advisors were not re-run; the four `authenticated_security_definer_function_executable` notices the E header predicts still apply.",
+    "m12's 5.2% gap and m08's n=241 differ from the verifier's 3.3% and 236 only because the default window now ends 16/09 instead of 10/09 — I did not re-derive every baseline number on the 10/09 window, only the ones the rulings name.",
+    "C8's six additive fields include `meta.row_total` (📐8) and `columns[].sorted` (📐9). Neither was in the rulings and neither was added; m09 still returns all 35 rows uncapped with no row_total. Left for the tab builder or a later ruling.",
+    "Three migration registry rows for one file (see applied_note) — a bookkeeping state the orchestrator should resolve before committing."
+  ],
+  "blind_spot": "**The previous-month snapshot that now fills five tiles is my own reconstruction, and nothing external checks it.** F3 asked for specific numbers and I hit them exactly — but the query that produces them is a copy of the current-period query with `v_asof - 30` substituted, written by me, and the numbers I 'confirmed' it against came from another query I also wrote, in the same shape, minutes earlier. The agreement proves the two runs are consistent, not that the definition of 'the aging snapshot one month ago' is right. The mockup's four numbers (3/17,946 · 1/2,899 · 2/15,047 · 7.3%) are the only external anchor, and they were themselves produced by whoever drew the mockup. **The concrete thing someone can still check, and I did not:** whether 'a month ago' should be `v_asof - 30` (what I built, and what the pre-existing open-debt compare already used) or the same calendar day of the previous month — on 10/09 the two agree to the day (11/08 vs 10/08 differ by one day), and any invoice whose due date falls in that one-day gap moves a bucket. A second, smaller one: the 4 ₪ hostess-pay divergence is the only place where E2 knowingly leaves the payload disagreeing with the approved mockup, and I implemented the ruling rather than the mockup — if the orchestrator meant `round(sum(...))`, that is a one-word change and my report is the only place it is visible.",
+  "assumed": [
+    "That the client keeps sending exactly four parameters (`callReport` in src/modules/11_reports/api.js was read: p_from, p_to, p_customer_id, p_drill). If a tab builder ever adds p_asof, the aging page becomes time-travellable from the UI — the parameter has no guard beyond nobody sending it.",
+    "That m07's calendar-month tiles (over_threshold_month, hostess_pay_month) and its 12-month chart are genuinely period-driven and should keep following p_to, while only the open-invoice snapshot moved to v_asof. The ruling said 'מ7's aging parts'; I drew the line at 'anything computed from invoices that are unpaid right now'.",
+    "That the ₪ figure for `meta.below_materiality` is the revenue of those projects (the ruling said 'count + ₪' without naming which ₪). Their summed budget_deviation would be the more decision-relevant number if the orchestrator prefers it.",
+    "That `population.excluded` for m08 means 'in the window but not in the four statuses' (12 today). Projects outside the window are excluded by the window, not by a reason, and counting them would make the number meaningless.",
+    "That identifiers (project ids) are never thousand-separated inside sentences, so m08's 'פרויקט 1427' is correct and not an F5 miss — the approved mockup prints ids plain.",
+    "That editing the E2 file after applying it is permitted because it is an uncommitted draft (the repo's own frozen-files hook says so explicitly), and that the DB matching the file byte-for-byte matters more than the number of registry rows it took to get there."
+  ]
+}

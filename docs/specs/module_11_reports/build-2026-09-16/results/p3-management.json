@@ -1,0 +1,489 @@
+{
+  "tab": "הנהלה (exec) — מ2 · מ3 · מ4 · מ6",
+  "files": [
+    "src/modules/11_reports/tabs/ExecutiveTab.jsx",
+    "src/modules/11_reports/tabs/executive/surfaceKit.jsx",
+    "src/modules/11_reports/tabs/executive/chartShape.js",
+    "src/modules/11_reports/tabs/executive/ExecOverviewSurface.jsx",
+    "src/modules/11_reports/tabs/executive/TrendsSurface.jsx",
+    "src/modules/11_reports/tabs/executive/DiscountsSurface.jsx",
+    "src/modules/11_reports/tabs/executive/StaffingSurface.jsx",
+    "src/modules/11_reports/tabs/ExecutiveTab.test.jsx",
+    "src/lib/onboardingCopy.m11.exec.js"
+  ],
+  "surfaces": [
+    {
+      "id": "מ2 · מבט-על הנהלה (exec-overview)",
+      "checklist": {
+        "population": true,
+        "tiles_compare": true,
+        "charts": 1,
+        "table_sorted": true,
+        "row_clickable": true,
+        "so_what": true,
+        "definitions": true,
+        "export": true,
+        "states": true,
+        "doors": true,
+        "drill": null,
+        "hints": [
+          "reports.execOverview.purpose",
+          "reports.execOverview.revenueBasis",
+          "reports.execOverview.top5Share",
+          "reports.execOverview.topEventsSort"
+        ],
+        "deletion_test": true
+      },
+      "deviations_from_mockup": [
+        {
+          "what": "The mockup draws the profit series as a LINE on the same ₪ axis as the two revenue bar series (⑧2.1, still 🔵 open). As built it renders as a third BAR.",
+          "why": "ChartCard has no chart type for 'N bars + 1 line on one axis'. `pareto` is exactly one bar + one line on a right 0–100 axis. Dropping a series the RPC declares is worse than drawing it as a bar; the three series are all ₪ and of comparable magnitude (237k / 173k / 141k), so nothing is distorted. The `series[].kind:'line'` the RPC declares is simply not honoured by BarBody.",
+          "rule": "C2 (appearance ⇐ mockup) vs C6 (shared components are the only renderer) — C6 wins; ⑧2.1 is open for Ishay anyway"
+        },
+        {
+          "what": "The mockup paints the partial September bars hollow/dashed in both years. As built there is no per-bar pattern.",
+          "why": "ChartCard's hatch is per-SERIES (it is the colour-blind secondary encoding measured in §⑤), not per-bar. 📐20's second arm is used instead: the x-axis label carries the declared length ('ספטמבר (⁦16⁩ ימים)' — verified in the browser) and the chart note repeats it.",
+          "rule": "📐20 (equal time segments OR a declared length in the label)"
+        },
+        {
+          "what": "The mockup's `.lnk[data-goto=p2]` link sits inside the pager row; as built it renders under the definitions line (renderExtras).",
+          "why": "The pager lives inside `ReportTable`, a shared component the tab may not touch. The only slot after the table is `renderExtras`.",
+          "rule": "C6 · addendum §2 (five slots, no shell copying)"
+        },
+        {
+          "what": "The mockup draws the 'אז מה' line ABOVE the tile strip; the shell renders it BELOW the tiles, so the §⑩ `purpose` hint (anchored 'below the so-what line') is rendered at the very top of the surface instead.",
+          "why": "`ReportSurface` fixes the order for all 16 surfaces. Anchoring the page-level explanation literally below so_what would put it after the numbers it is meant to introduce.",
+          "rule": "onboarding-layer-contract §4ב (the hint is its own line under the block it explains) — the block moved, the hint followed"
+        }
+      ],
+      "labels_changed": []
+    },
+    {
+      "id": "מ3 · מגמות רב-שנתיות (trends)",
+      "checklist": {
+        "population": true,
+        "tiles_compare": true,
+        "charts": 2,
+        "table_sorted": true,
+        "row_clickable": true,
+        "so_what": true,
+        "definitions": true,
+        "export": true,
+        "states": true,
+        "doors": false,
+        "drill": true,
+        "hints": [
+          "reports.trends.purpose",
+          "reports.trends.partialYear",
+          "reports.trends.costPerHour",
+          "reports.trends.drillPath"
+        ],
+        "deletion_test": true
+      },
+      "deviations_from_mockup": [
+        {
+          "what": "🔴 **The level-0 year chart drops the profit BAR.** The mockup (and the RPC) carry three series — revenue bar + profit bar on the ₪ axis, margin line on a locked 0–100 right axis. As built the chart renders revenue (bar) + margin (line, right axis 0–100) through `pareto`; profit stays in the table's 'רווח' column, and the chart note says so.",
+          "why": "`ParetoBody` is the ONLY ChartCard body with a right-hand 0–100 axis (⑧3.4, a CLOSED decision) and it renders exactly series[0] as a bar and series[1] as a line. Rendering all three as bars (type 'bar') would make the 58.6 margin bar invisible next to 1.9M — the 0.51px defect class the geometry audit names. Measured in the browser after the transform: left axis 0–2,400,000, right axis 0–100. Without `domain: null` the left ₪ axis would have inherited the payload's [0,100] and clipped every bar.",
+          "rule": "⑧3.4 (closed) + 📐5 (zero-based value axis) vs C8's three-series chart — the renderer cannot express both"
+        },
+        {
+          "what": "No `barkey` definitions block under the price/cost chart.",
+          "why": "The card's ⑩ג requires the definition to stay in BASE. It already is: `definitions` (📐16, rendered by `Footers`) carries 'מחיר לשעה = … · עלות לשעה = שכר-הבסיס והבונוסים האישיים … נסיעות אינן נכללות'. A second copy would be two definitions of one metric on one page.",
+          "rule": "📐16 · iron rule 14 (no second source for the same sentence)"
+        }
+      ],
+      "labels_changed": []
+    },
+    {
+      "id": "מ4 · הנחות ורווחיות (discounts)",
+      "checklist": {
+        "population": true,
+        "tiles_compare": true,
+        "charts": 1,
+        "table_sorted": true,
+        "row_clickable": true,
+        "so_what": true,
+        "definitions": true,
+        "export": true,
+        "states": true,
+        "doors": false,
+        "drill": null,
+        "hints": [
+          "reports.discounts.purpose",
+          "reports.discounts.approvalPopulation",
+          "reports.discounts.tierSort"
+        ],
+        "deletion_test": true
+      },
+      "deviations_from_mockup": [
+        {
+          "what": "The tier cross-filter is a CHIP ROW above the population line, not a click on the chart bar.",
+          "why": "design-contract §⑤#7 (recharts Issues #1946/#4809): `onClick` on `<Bar>`/`<Cell>` is not keyboard-operable, and the card ① itself marks it `לא-אומת` for a recharts build. `ReportSurface` also never wires `ChartCard.onSelect`. A `FilterPill` is a real `<button>` with `aria-pressed`; the filter itself is unchanged — it travels in `p_drill` and is cut in the SERVER (`meta.row_total` 736 ⇒ 110, verified live).",
+          "rule": "§⑤#7 · 📐14ב③ (no keyboard claim without a measured keydown)"
+        },
+        {
+          "what": "Each chip carries the tier's `n` ('6–10% · ⁦110⁩'); the mockup put the n under the bar.",
+          "why": "📑ב#2 requires an n adjacent to every tier ('a tier with 4 quotes looks like a tier with 400'), and ChartCard draws no per-bar counter.",
+          "rule": "📑ב#2"
+        },
+        {
+          "what": "The non-causality paragraph (⑧4.4 requires a VISIBLE paragraph, not a footnote) renders as the second line of `meta.notes` at the bottom of the page, at 11px.",
+          "why": "The RPC chose `meta.notes` as the transport and the shell renders notes in the footer. Not patched in the UI — reported.",
+          "rule": "⑧4.4 vs C8 `meta.notes`"
+        }
+      ],
+      "labels_changed": [
+        {
+          "from": "…לחיצה על עמודה בגרף מצרה את הטבלה למדרג אחד, ו«נקה בחירה» מחזיר את כולן.",
+          "to": "…בחירת מדרג בשורת-השבבים שמעל מצרה את הטבלה למדרג אחד, ו«נקי בחירה» מחזיר את כולן.",
+          "rule": "‏spec.md §1.5 + m11-copy-rules §4.2 (S-28, feminine imperative — 4/4 live call sites are `נקי`, and the approved mockup line 897 already says `נקי בחירה`) · and C7: a hint may not describe an interaction that does not exist (the cross-filter is a chip row, not a bar click)"
+        }
+      ]
+    },
+    {
+      "id": "מ6 · קהל מול צוות (staffing)",
+      "checklist": {
+        "population": true,
+        "tiles_compare": true,
+        "charts": 2,
+        "table_sorted": true,
+        "row_clickable": true,
+        "so_what": true,
+        "definitions": true,
+        "export": true,
+        "states": true,
+        "doors": false,
+        "drill": null,
+        "hints": [
+          "reports.staffing.purpose",
+          "reports.staffing.medianRatio",
+          "reports.staffing.planningParam",
+          "reports.staffing.scatterSample"
+        ],
+        "deletion_test": true
+      },
+      "deviations_from_mockup": [
+        {
+          "what": "The scatter does NOT encode deviation by shape (triangle above the line / hollow circle on-or-below). All points are identical dots.",
+          "why": "`ScatterBody` renders one `<Scatter>` with a single fill; ChartCard has no per-point shape channel. 📑ב#10's demand ('deviation moves out of point size into a binary shape') is therefore unmet — and it is NOT met by colour either, so nothing false is shown; the information is simply absent. The diagonal reference line still separates above/below visually.",
+          "rule": "📑ב#10 · 📐19 — reported, not worked around"
+        },
+        {
+          "what": "The histogram carries only the 'what it does NOT say' half of the mockup's `barkey`; the '543 of 717 fall between 35 and 50' half is omitted.",
+          "why": "onboarding-layer-contract §5ג / C3 — that sentence is a live data count; in a mockup it is a dated picture, in code it is a literal no query updates. The critical half (ruling 6: the parameter is not a target and not a threshold) is kept in BASE as ⑩ג requires.",
+          "rule": "§5ג (no data counts in authored copy) · ⑩ג (the sentence is deliberately doubled)"
+        }
+      ],
+      "labels_changed": [
+        {
+          "from": "הפיזור מצייר במוקאפ כל נקודה עשירית לפי סדר ההערכה, ובמסך החי מצוירים כל האירועים — הצורה זהה, מספר הנקודות אינו. הקו האלכסוני הוא «ההערכה התקיימה בדיוק», ולכן…",
+          "to": "הקו האלכסוני הוא «ההערכה התקיימה בדיוק», ולכן כל מה שמעליו הוא אירוע שהגיעו אליו יותר אורחים מהצפי.",
+          "rule": "C2 + כ4 — the dropped sentence describes the MOCKUP's drawing limit (⑧G7), not the live screen, which draws all 717 (measured: 725 svg paths). The approved mockup's own hint at `02_tab_executive_approved.html:995` already carries only the surviving sentence."
+        }
+      ]
+    }
+  ],
+  "strings_authored": [
+    {
+      "text": "החודש האחרון בגרף מכסה ⁦N⁩ ימים ולא חודש שלם — הוא אינו בר-השוואה לשאר החודשים, אבל כן לאותו חודש בשנה שעברה.",
+      "rule": "📐20 · adapted from the approved mockup's chart-note (02_tab_executive_approved.html:415-417); the mockup's 'התוויות מעל העמודות' and 'מקווקו' clauses were dropped because neither exists in the built chart. N comes from `window.to`, never from `new Date()`."
+    },
+    {
+      "text": "⁦YYYY⁩ היא שנה חלקית — נספרת עד DD/MM/YYYY בלבד, ואין כאן «קצב שנתי» משוער. קו שולי-הרווח נמדד על ציר-אחוזים קבוע, כדי ששינוי של נקודה או שתיים לא ייראה כמפולת; הרווח הגולמי עצמו מופיע בעמודה בטבלה שמתחת.",
+      "rule": "📐20 + ⑧3.4 + 📑ב#1 — adapted from the mockup's chart-note (line 567-571); the 'דפוס מקווקו' clause dropped (not rendered) and the last clause added so the chart TITLE ('הכנסה, רווח ושולי-רווח') does not promise a series that is not drawn."
+    },
+    {
+      "text": "מה הגרף אינו אומר — פרמטר-התכנון אינו יעד ואינו סף. אירוע ביחס גבוה ממנו אינו «כשל», ואירוע ביחס נמוך ממנו אינו «בזבוז», עד שמישהי תכריע שהוא כזה.",
+      "rule": "ruling 6 + ⑩ג ('the critical sentence is doubled on purpose') — from the mockup's `.barkey` (lines 1111-1113) with its live counts stripped per §5ג"
+    },
+    {
+      "text": "מוצגות ⁦N⁩ שורות מתוך ⁦T⁩ שנמדדו.",
+      "rule": "📐8 + §7.98 — `meta.row_total` (241 · 736 · 110 · 135) is never displayed by the shell, whose pager counts the 50 rows that arrived. Wording measured and revised: 'השורות הראשונות' promised a next page that does not exist for מ2's top-8 list."
+    },
+    {
+      "text": "מסונן למדרג <label>; ⁦N⁩ שורות מוצגות",
+      "rule": "📐9③④ — the `aria-live=\"polite\"` region exists on the page from the first render and is empty until a tier is chosen; `ReportTable`'s own `announcement` prop is not passed by the shell."
+    },
+    {
+      "text": "סינון לפי מדרג-הנחה  (aria-label on the chip group)",
+      "rule": "WCAG — a group of related toggles needs a name; not visible text"
+    },
+    {
+      "text": "<tier label> · ⁦n⁩  (chip text) and '<n> אירועים במדרג' (chip title)",
+      "rule": "📑ב#2 (n adjacent to every tier)"
+    }
+  ],
+  "reused_verbatim_not_authored": [
+    "לחיצה על שורה פותחת את כרטיס האירוע (mockup:501 · 1119)",
+    "לחיצה על שורה פותחת את הצעת המחיר (mockup:896)",
+    "לחיצה על שורה יורדת לחודשים של אותה שנה · לחיצה על שורה יורדת לאירועים של אותו חודש · זו הרמה האחרונה. לחיצה על שורה פותחת את כרטיס האירוע. (mockup JS:1496 · 1458 · 1417)",
+    "× נקי בחירה (mockup:909)",
+    "כל השנים בדוח \"מגמות רב-שנתיות\" → (mockup:514; the → is locked by m11-copy-rules §4.2)"
+  ],
+  "tests": "‏20 tests in `ExecutiveTab.test.jsx` (whole module: 148 green, exit 0). Fixtures are C8-shaped and carry LIVE numbers fetched as CEO on 16/09/2026, not the card's 10/09 numbers. Per surface: §1.4 tile labels + 📐4 formatting (₪ whole / % one decimal, both isolated) · the folded `sub` and `compare.note` · population / so_what / definitions present · 📐20 partial-month label AND chart note · 📐8 row-cap line · ruling 19 row click → `/projects/1395` with `role=\"button\"` on the `<tr>` · ruling 33 tile door → `tab=finance&report=profitability` in the URL (cross-tab) · the 'כל השנים' link → `tab=exec&report=trends` · מ3: the year chart really becomes a ComposedChart and the LEFT axis domain is `[0,'auto']` (the [0,100] trap) · row action text per drill level · level 2 has crumbs, no chart, and rows open the project card · מ4: four chips with their n, chip → `onDrill({tier})`, pressed state, announce text, `נקי בחירה` → `onDrill(null)`, row → `/quotes/1907/edit`, empty table ⇒ export disabled with 'אין שורות לייצא' · מ6: scatter gets both axes, the diagonal spans the data max, the category ref-line maps to '50–55', the 'not a target' sentence, and `missing_params` ⇒ 'חסר פרמטר מערכת: יחס_אורחים_לדיילת' · envelope states: api error ⇒ 'נסי שוב' + retry re-calls `callReport` (2 calls), empty payload ⇒ 'אין נתונים עדיין' · onboarding: mode 2 renders all four מ2 hints, mode 0 renders none while population/so_what/definitions/tiles/table/row-action all stay (the deletion test) · 🔴 a mechanical hint-key test that READS the six tab source files with `node:fs`, regexes every `'reports.*'` literal and asserts the set equals the 15 keys of `M11_EXEC_COPY` exactly (no missing key, no dead key), and that each entry has `guided` and no `pointer`.",
+  "gates": {
+    "vitest_module": "npx vitest run src/modules/11_reports → exit 0 · 8 files · 148 tests",
+    "vitest_tab": "npx vitest run src/modules/11_reports/tabs/ExecutiveTab.test.jsx → exit 0 · 20 tests",
+    "eslint": "npx eslint src/modules/11_reports/tabs src/lib/onboardingCopy.m11.exec.js → exit 0 (cognitive complexity ≤ 20; the react-refresh/only-export-components error that fired on the first cut is why logic and components sit in two files)",
+    "prettier": "npx prettier --check on all nine owned files → exit 0",
+    "dup": "npm run dup → exit 0 · jsx 1.09% · zero clones in `11_reports/tabs/executive`",
+    "deadcode": "npm run deadcode (knip) → exit 0 · `RowCapNote` un-exported after the coordinator's note; log at results/knip-management.log",
+    "check_bidi": "npm run check:bidi → exit 0",
+    "cr": "perl tr/\\r// on all nine files → CR=0 each",
+    "browser": "Chromium 1280×1400, signed in as CEO, all seven states (מ2 · מ3 root/year/month · מ4 root/tier · מ6): 0 console errors · 0 pageerrors · `scrollWidth-clientWidth = 0` on all seven · one tile row per surface (strip height 146–162px, tile widths 136–244px) · screenshots + DOM probes in results/exec-shots/"
+  },
+  "payload_changes_reconciled": [
+    "d2 `chart.xKey` 'month'⇒'label' (m02): my `withLabelAxis` is now a no-op for m02 and still load-bearing for m04, whose xKey is still 'tier' (re-fetched 09:1X).",
+    "d2 `chart[0].domain` [0,100]⇒null (m03): my `toComboChart` sets it to null anyway; no conflict. **`type` is still 'bar' with three series, so the pareto conversion is still required** — without it the margin line is not drawn at all.",
+    "d2 scatter `series` ⇒ pair (m06): `withScatterAxes` now returns the chart untouched (guard `series.length >= 2`). Kept as a defensive guard, documented as such.",
+    "d2 diagonal `from`/`to` added (m06): 🔴 **I changed my code because of this** — `withDiagonalBounds` was overwriting the values; it is now fallback-only (`!ref.to`). Server values (0,0)→(630,630) now win.",
+    "d2 histogram refLine value 50 ⇒ '50–55' (m06): `withCategoryRefLines` skips non-numeric values; no-op.",
+    "d2 `chart.unit` ⇒ format names ('money'/'percent'/'int') and `series[].format` added: consumed by ChartCard's tooltip and sr-table with no tab change.",
+    "d2 `meta.sort` added on all four (level-dependent for m03): consumed by `ReportSurface` ahead of `columns[].sorted`; the 'asc' vs 'ascending' aria-sort trap the fixer found is therefore closed.",
+    "d2 label fix `50.` ⇒ `50` in m06 so_what / tiles[].sub / ref-line label: confirmed clean in the re-fetched payload and on screen.",
+    "d2 removed the dead `medianOf` re-export from `src/lib/reportsExecutive.js`: knip is now green (it was red because this tab takes every number finished from the RPC and imports nothing from that file).",
+    "🔴 NOT fixed by d2 and still carried by my code: `tiles[].compare` has **no `format`**. See findings #1."
+  ],
+  "slots_used": {
+    "מ2": [
+      "transformPayload",
+      "renderTop",
+      "renderBeforeChart",
+      "renderBeforeTable",
+      "renderExtras"
+    ],
+    "מ3": [
+      "transformPayload",
+      "renderTop",
+      "renderBeforeChart",
+      "renderBeforeTable"
+    ],
+    "מ4": [
+      "transformPayload",
+      "renderTop",
+      "renderBeforeChart",
+      "renderBeforeTable"
+    ],
+    "מ6": [
+      "transformPayload",
+      "renderTop",
+      "renderBeforeChart",
+      "renderBeforeTable"
+    ]
+  },
+  "findings_for_other_owners": [
+    {
+      "id": 1,
+      "severity": "blocker (was live on screen)",
+      "where": "src/modules/11_reports/components/KpiTile.jsx `CompareLine` + C8 `tiles[].compare`",
+      "what": "📐1's comparison half was rendered as a RAW number: the screen showed 'תרווח 2025 באותו טווח: 1425658.65' and '55.9443559648728' and '47.53143924185967'. `CompareLine` formats through `formatByType(compare.value, compare.format)` but C8 never defines `format` inside `compare`, so it is `undefined`, `formatByType` falls back to `text`, and 📐4 is broken on every tile of every tab that has a comparison.",
+      "evidence": "Screenshot results/exec-shots/m2.png (first run) + DOM probe. After the fix: '⁦1,425,659 ₪⁩' / '⁦55.9%⁩'.",
+      "my_workaround": "`withCompareFormat` in `tabs/executive/surfaceDoors.jsx` inherits `tile.format` into `compare` (the comparison is the same metric by definition).",
+      "proper_fix": "Either C8 adds `compare.format` and the four RPC files emit it, or `KpiTile` falls back to `tile.format` itself. 🔴 **The other three tabs are almost certainly showing raw numbers right now** — this is one line in a shared component."
+    },
+    {
+      "id": 2,
+      "severity": "major",
+      "where": "src/modules/11_reports/components/KpiTile.jsx",
+      "what": "`tiles[].sub` and `tiles[].compare.note` — the two additive C8 fields whose amendment says 'Tab builders render them when present' — are **not rendered by KpiTile at all**. Without them a percentage tile shows no denominator, which is exactly what 📑ב exists to prevent.",
+      "my_workaround": "`withTileSubRows` folds them into the one slot KpiTile does render (`tile.window`), as three stacked lines inside a `max-w-[210px]` block. 🔬 The width cap is measured, not decorative: as one long string the מ2 tile strip grew to 3 rows and 367px with tiles 248–535px wide; after the change it is one row, 162px, tiles 191–244px.",
+      "proper_fix": "`KpiTile` renders `sub` and `compare.note` as their own width-capped lines; then every tab passes plain strings."
+    },
+    {
+      "id": 3,
+      "severity": "major",
+      "where": "src/modules/11_reports/components/ReportSurface.jsx:~295",
+      "what": "Row clickability is gated on `surface.drill`, which in C8 means 'has hierarchical drill LEVELS' (📐13). Ruling 19's row-door exists on every surface whose rows carry `drill_key` — so מ2, מ4 and מ6 rows would have been dead, while the RPC returns `drill_key` to the project card / the quote for each of them.",
+      "my_workaround": "`withRowDoors(surface)` passes `{...surface, drill: true}`. Harmless for crumbs: `DrillCrumbs` returns null below two levels and `payload.drill` is null on all three.",
+      "proper_fix": "Pass `onDrill` unconditionally — `ReportTable.Row` already computes `Boolean(onDrill && row.drill_key)` itself."
+    },
+    {
+      "id": 4,
+      "severity": "major",
+      "where": "src/modules/11_reports/ReportsPage.jsx `onDrill`",
+      "what": "Ruling 33's tile door cannot work through the shell's `onDrill`, which only ever writes the `drill` URL param. A tile `target` is `{tab:'<Hebrew label>', report:'<RPC name>', drill}` — writing that into `drill` would send it to the RPC as `p_drill` garbage. The `report` value is also an RPC name while the URL expects a slug.",
+      "my_workaround": "`useSurfaceDoors` in `tabs/executive/surfaceDoors.jsx` wraps `onDrill`, resolves `{tab,report}` through `REPORT_TABS` and writes `tab`/`report` to the URL itself (the URL is the documented source of truth, 📐13④ · S-18); `drill_key.kind === 'project' | 'quote'` navigates to `/projects/:id` / `/quotes/:id/edit`; everything else falls through to the original `onDrill`.",
+      "proper_fix": "The shell owns URL writing — `ReportsPage.onDrill` should branch on `next.tab` and on cross-screen `drill_key` kinds, once, for all four tabs."
+    },
+    {
+      "id": 5,
+      "severity": "minor",
+      "where": "spec.md §1.4, הנהלה row",
+      "what": "The locked label reads **'נתח 5'** while the payload, the card and the approved mockup all say **'נתח 5 הלקוחות הגדולים'**. The 11/09 mechanical extraction split the label on the `<span class=\"ltr\">5</span>` boundary. The screen shows the payload's full label (C8/invariant 3), so nothing on screen is wrong — the spec row is.",
+      "proper_fix": "Fix the spec row; `check:declared-counts` counts the row, so the count stays 74 either way."
+    },
+    {
+      "id": 6,
+      "severity": "minor",
+      "where": "ExportBar / src/lib/reportsExport.js",
+      "what": "The export caption renders 'יירד: מבט-על-הנהלה_(01-01–09-16-2026)_כל-הלקוחות.xlsx' — the window label's `DD/MM–DD/MM/YYYY` is slug-ified into something that reads as a US date. Not mine, not blocking.",
+      "proper_fix": "Owner of `buildExportFileName`."
+    },
+    {
+      "id": 7,
+      "severity": "minor",
+      "where": "ChartCard `ScatterBody`",
+      "what": "📑ב#10 requires deviation encoded by SHAPE (triangle vs hollow circle) rather than size or colour. ChartCard renders one uniform dot per point; the payload carries `over_estimate` per row and it is unused.",
+      "proper_fix": "A `<Scatter shape=…>` branch driven by a declared row flag."
+    }
+  ],
+  "assumed": [
+    "הנחתי — **door destinations for row `drill_key`:** `{kind:'project'}` ⇒ `/projects/:id` and `{kind:'quote'}` ⇒ `/quotes/:quoteId/edit`. Checked against `src/App.jsx:172-188` (both routes exist) and `src/modules/03_quotes/QuotesPage.jsx` (the list has NO deep-link param, so `/quotes` alone could not locate one quote). ⚠️ Both routes are `ProtectedRoute allow=\"פרויקטים\"` / `\"הצעות מחיר\"`, so a FINANCE user without those modules lands on the block screen — the same accepted cross-module door pattern as ruling 33's cross-tab tiles.",
+    "הנחתי — **hint slot mapping.** The card anchors hints to mockup DOM ids; the shell has five fixed slots. Mapping used: `purpose` ⇒ renderTop · tile hints ⇒ renderBeforeChart (the first slot after the tile strip) · chart-note hints ⇒ renderBeforeChart · `trends.costPerHour` (anchored to the second chart's barkey) ⇒ renderBeforeTable, first · table hints ⇒ renderBeforeTable, last. Source checked: `ReportSurface.jsx` render order, lines 246-310.",
+    "הנחתי — **`תתחילי` ⇒ `התחילי` in all four `purpose` hints.** `spec.md §1.5` names this explicitly ('`מתחילי` אינה צורת-ציווי — הנכונה `התחילי`', fixed in 4 mockups); the card's §⑩ still carries the old form. Checked in `02_tab_executive_approved.html:377` (the mockup already says `התחילי`).",
+    "הנחתי — **the partial-month/partial-year day count is derived from `window.to`** (`'2026-09-16'.slice(8,10)`), never from `new Date()` — the clock mine in `src/CLAUDE.md`.",
+    "הנחתי — **the chips' announce region reads `meta.row_total`** (110 for the filtered tier) rather than `rows.length` (50, the payload cap), because 📐9's announcement is about what the filter matched."
+  ],
+  "not_verified": [
+    "🔴 **The onboarding layer at mode 2 was never seen in a real browser.** The CEO identity's `notification_preferences.onboarding_mode` is 0 in the live DB, and flipping it is a write to real data that nobody approved. All 15 hints are covered by unit tests (mode 2 renders them, mode 0 renders none) and `<Hint>` itself has its own tests — but **nobody has looked at the guided screen**, and the card's ⑩ measurement ('identical strip height in both modes') is therefore unreproduced here.",
+    "**Keyboard operation was not exercised.** `role=\"button\"` + `tabIndex` + `onKeyDown` on `<tr>` come from `ReportTable` and are asserted structurally in the test; no Enter/Space was actually pressed in the browser (📐14ב③ explicitly says structure is not evidence).",
+    "**The four surfaces were only opened as CEO.** FINANCE (edit on 'כספים') should see exactly the same screens and RECRUIT/STAFF should get the masked tab — neither was opened. The permission gate lives in `assert_module_permission` inside the RPC, which this tab never touches.",
+    "**Export was never clicked.** `ExportBar` is the shell's; only the disabled/empty caption path is asserted in tests.",
+    "**The cross-tab doors were not followed to their destination.** The test asserts the URL params the door writes; nobody confirmed that `tab=customers&report=drifting` actually renders מ21 (that tab was being built in parallel).",
+    "**`npm run gate` as a whole** was not run — `verify`, `audit`, `check:context`, `check:docs-structure` and `check:declared-counts` are the orchestrator's. Run here: vitest (module), eslint, prettier, dup, deadcode, check:bidi, CR.",
+    "**Chart legibility at widths other than 1280px.** 📐21's measurement is 1280; nothing narrower was opened."
+  ],
+  "blind_spot": "🔴 **The blind spot this round CLOSED, and what replaced it.** The mini-round declared that my `costPerHour` anchor and its test were verified only against a fixture I had split by hand — self-consistent, not server-matched — and named the exact check: re-fetch m03 and confirm the LAST panel names עלות. It was run, it passed (`chart[2].title = 'עלות לשעה, לפי שנה'`), and the hand-built fixture is now deleted in favour of the live shape. **That item is closed by measurement, not by argument.**\n\n**What is still open, unchanged and untouched by i2:** `is_today`, `over_estimate` and `filter_key` are flags my transforms write that no one reconciles against the server's own view. i2 moved m03's chart shape but emitted no `is_today` — so the partial-year hatch on screen is still MY derivation from `row.partial`, and the three-panel split means it is now derived for three charts where I apply it to one (index 0 only, by the documented choice that a rate series is not a sum). **The concrete check, one minute:** `select public.report_m03_trends(null,null,null,null) -> 'chart'` and confirm that exactly one row per chart carries `partial:true` and that it is the year of `window.to`; then decide, as a product question rather than a code one, whether the two rate panels should carry the partial-year mark at all — the card's ⑧3.1 argues the comparison there is between growth rates, which is why I left them unmarked, but nobody has ruled it. **If the answer is 'yes they should', the fix is one line in `TrendsSurface.transformPayload` (drop the `index === 0` guard) and the 📐20 declaration then covers all three panels.**",
+  "reconcile_with_shared_layer_16_09_11_1X": {
+    "commit_read": "11f347a9 · results/p3-shared.json",
+    "removed": [
+      "tabs/executive/surfaceDoors.jsx — DELETED as a file. It held `useSurfaceDoors` (the tab's own three-branch door router), `withRowDoors`, `foldTileSubRows`/`tileSubLines`/`withTileSubRows`, `withCompareFormat`. Every one existed only because a shared component had a gap; the gaps are closed, and a surviving workaround is double rendering, not a safety net.",
+      "tabs/executive/surfaceKit.jsx — the local `RowCapNote` (§9 D-25: ONE note, in the shell, wording 'מוצגות N מתוך M שורות').",
+      "TrendsSurface — `toComboChart`, and with it m3's whole `transformPayload`. ChartCard's new `ComposedBody` reads `series[].kind`/`axis` itself.",
+      "ExecutiveTab.test.jsx — the `useNavigate` mock, the `Probe`/`useSearchParams` URL assertions and the `report-chart-note` id: the tab no longer writes the URL and no longer renders a chart note of its own."
+    ],
+    "changed": [
+      "All four surfaces hand `surface · filters · drill · onDrill · onWindow` to the shell UNCHANGED — the tab writes nothing to the URL and navigates nowhere.",
+      "m2 — the partial-month transform now also sets `is_today: true` (📐20 ①, the shell's new hollow-and-dashed channel) and moves the authored sentence into `chart.note`, i.e. inside the chart card, where the mockup's `.chart-note` sits. Verified live: 1 dashed bar, note rendered, axis label 'ספטמבר (⁦16⁩ ימים)'.",
+      "m3 — no transform at all. Verified live that ComposedBody draws ALL THREE series: 6 bar rectangles (revenue+profit × 3 years) + the margin line, left axis 0–2,400,000 ₪ and right axis 0–100. 🔑 The profit bar that `toComboChart` was costing us is back, and ⑧3.4's locked percent axis is still locked.",
+      "m2 bonus, unasked-for and measured: the profit series now draws as a LINE (`kind:'line'`) — exactly what ⑧2.1 drew and what the bar-only renderer could not do. Measured 18 bars + 1 line.",
+      "m4 — `chart.filter_key = false` in the transform. The chip row stays: the filter runs in the SERVER through `p_drill` (row_total 736 ⇒ 110), and the shell's auto cross-filter would have detected `tier` and filtered the same table a second time in the client. Verified live: no `report-clear-crossfilter` chip, no pointer cursor on the bars.",
+      "m6 — `chart.shape_key = 'over_estimate'` + `shape_labels` (📑ב#10 finally satisfied: two distinct scatter symbol paths measured live — triangle and hollow circle — with the mockup's own wording), and `filter_key = false` on BOTH charts (the card records no cross-filter on מ6).",
+      "m6 — `over_estimate` is derived per point when the payload lacks it, from ⑦ מ6's own definition (`actual > estimated`, strict, only when both numbers exist). The live payload already carries it, so the derivation is a fallback.",
+      "surfaceKit — new `ExecutiveSurface` wrapper. jscpd flagged the repeated 10-line prop block between `ExecOverviewSurface` and `StaffingSurface`; §2ב C6 says that threshold is structure, not discipline."
+    ],
+    "workarounds_kept_and_why": [
+      "`withLabelAxis` — still load-bearing for m4 ONLY (`xKey:'tier'` with a Hebrew `label` on every row). Dropped from m2/m3, which d2 fixed server-side.",
+      "m6 `withScatterAxes` · `withDiagonalBounds` · `withCategoryRefLines` — all three are no-ops against today's payload (d2 ships the series pair, the diagonal's from/to and the '50–55' category). Kept as documented FALLBACKS, because each guards a failure mode that renders a plausible-looking wrong picture with no error and no red test."
+    ],
+    "gates_after": {
+      "vitest_module": "npx vitest run src/modules/11_reports → exit 0 · 9 files · 208 tests (my own file 23/23)",
+      "eslint": "exit 0 on all owned files (complexity ≤ 20)",
+      "prettier": "exit 0",
+      "dup": "npm run dup → exit 0, and ZERO clones naming tabs/executive after the `ExecutiveSurface` extraction (there was one 10-line/58-token clone before it)",
+      "deadcode": "npm run deadcode → exit 0 (results/knip-management.log). ⚠️ Two earlier runs died on machine resources (OOM / fork failure) with many agents running; the recorded run is the clean one.",
+      "check_bidi": "exit 0",
+      "cr": "CR=0 on all nine owned files",
+      "browser": "Chromium 1280×1400 as CEO, all seven states re-taken AFTER the refactor (results/exec-shots/, final.json): 0 console errors · 0 pageerrors · overflow 0 everywhere · so_what now ABOVE the tiles on all seven · exactly 4 `kpi-sub` lines and at most ONE `report-row-cap` per surface · no cross-filter chip on any executive surface"
+    },
+    "new_findings": [
+      {
+        "severity": "major (visible on screen)",
+        "where": "report_m03_trends · columns[] · the 'שנה' column",
+        "what": "The year column declares `format:'int'`, so 📐4's thousands separator turns 2024/2025/2026 into 2,024 / 2,025 / 2,026 in the table. The chart axis is correct; only the table lies.",
+        "fix": "`format: 'text'` on that column in the executive migration. NOT patched in the tab — this round was about deleting tab-level patches, not adding one."
+      },
+      {
+        "severity": "major (visible on screen)",
+        "where": "report_m03_trends drill level 1 · tiles[3] 'מחיר לשעה מול עלות לשעה'",
+        "what": "That tile's value is a composed string so its `format` is text; `compare.value` is a raw number, and KpiTile's new `compare.format ?? tile.format` therefore still falls to text. Measured live: '▲⁦2025⁩: מחיר לשעה: 259.7790478394169'.",
+        "fix": "Give that compare its own `compare.format: 'money'` in the RPC (C8 allows it; the shell already prefers it)."
+      },
+      {
+        "severity": "minor",
+        "where": "components/KpiTile.jsx",
+        "what": "`tiles[].compare.note` is still rendered by nobody. 9 of the 16 executive tiles carry one ('⁦184⁩ אירועים', 'מתוך ⁦393⁩', '⁦208 מתוך 284⁩') — the 📑ב denominator for the COMPARISON half. My fold that used to show it was deleted this round, as instructed.",
+        "fix": "Render it beside the compare line, the same way `sub` was taken in (GAP 1)."
+      }
+    ]
+  },
+  "round_3_16_09_19_0X": {
+    "verdict_source": "results/p3r-management.json — 12 verdicts, exactly ONE with owner:'tab' (#3). Read in full; the other eleven are shell (7), rpc (1), ishay (3) and are recorded below as not-mine.",
+    "fixed": [
+      "#3 (major, tab) — 📐20 on the m3 level-0 year chart. The partial current year was declared in NONE of the three channels while the payload already carried `partial: true`. Now: `is_today` on the partial row (the shell draws it hollow-and-dashed), the axis tick reads '2026 — עד ⁦16/09⁩' verbatim from the approved mockup line 628, and `chart.note` says it in words inside the chart card. Measured live at 1280: 2 dashed bars on the year chart, note rendered, tick text correct under the chart's dir=ltr wrapper (the bidi risk I flagged before writing it).",
+      "#3 extended to m3 level 1 on the same evidence — its monthly chart carries a partial September too, and 📐20 is not level-specific. Measured: 3 dashed bars (one per bar series).",
+      "The three 📐20 channels are now ONE shared function (`chartShape.withPartialSegment` + `withPartialMonth`), used by m2 and both m3 levels. jscpd caught my first cut as a 6-line/58-token clone between the two files — §2ב C6 treats that threshold as structure, not discipline."
+    ],
+    "changed": [
+      "(a) THE NEW SLOTS LANDED WHILE I WORKED (commit fd06c8fa) — I re-checked `ReportSurface.jsx` before finishing, as instructed, and found all three. Re-anchored accordingly: the four §⑩ `purpose` hints moved from `renderTop` to `renderAfterSoWhat` (the card's anchor, 'below .so-what above .tiles', measured in the mockup 470<476<482); `trends.partialYear` → `renderChartFooter(payload, 0)`; `trends.costPerHour` → `renderChartFooter(payload, 1)` (its anchor is the price/cost panel's barkey); `staffing.scatterSample` → `renderChartFooter(payload, 0)`. `renderChartAside` is not used by this tab — no card anchor calls for it.",
+      "`SurfaceLead` no longer carries a hint (it is now the m4 chip row only); a new one-line `SurfaceHint` carries a §⑩ key into whichever slot the card anchors it to.",
+      "(b) chip wording unchanged — `DiscountsSurface.jsx` already says `× נקי בחירה`, per S-28 and the approved mockup line 909.",
+      "(c) the three ishay-closed items need no tab change and got none: the population sentence is the RPC's and does not print '(הכרעה 36)'; per-hour whole-₪ is RPC prose; card 8.2.2 stays as built — no value labels above bars, the sr-only twin table remains the a11y path.",
+      "(d) fixtures re-aligned to the payloads re-fetched AFTER i1 landed: m3's `year` column is now `format:'text'` (this was my own round-2 finding — i1 fixed it, and the screen now shows 2024, not 2,024); m3 chart 2 carries its three ₪ series; the m6 scatter fixture carries the live series PAIR (the single-series fallback keeps its own test); m2's chart unit is `money`.",
+      "Test assertions on `onDrill` now check only the FIRST argument (the tab's own promise). The shell added `as:'level'` and then a third `'level'` argument during this session, and `toHaveBeenCalledWith` demands exact arity — a false red that says nothing about the tab."
+    ],
+    "not_mine_recorded": [
+      "#1 shell (major) — the m6 y=x diagonal is still not drawn: ScatterBody gives `domain` to the YAxis only, so Recharts discards the segment. My tab supplies the endpoints; the axis is the shell's.",
+      "#2 shell (major) — empty-after-filter is unreachable on all 16 surfaces (`ReportSurface` derives emptiness from tiles||charts||rows). Blast radius exceeds this tab.",
+      "#4 rpc (major) — m3 chart 2 still crams three ₪ series of two magnitudes on one 0–320 axis; the mockup splits them into two zero-based panels. Visible in results/exec-shots/r3-m3-onb2.png.",
+      "#5 shell (minor) — only one of the two m2 year series is dashed. My `is_today` flag marks the row; how many series honour it is `barCells`.",
+      "#7 · #8 · #10 ishay (minor) — ruled, no tab change.",
+      "#9 · #11 · #12 shell (minor)."
+    ],
+    "gates": {
+      "vitest_tab": "npx vitest run src/modules/11_reports/tabs/ExecutiveTab.test.jsx → exit 0 · 27 tests",
+      "vitest_module": "exit 1 — 3 failures, ALL in FinanceTab.test.jsx and ReportsPage.test.jsx, both being edited by other agents while I ran (ReportsPage.jsx was mid-save: my browser pass caught a live HMR 'does not provide an export named default' from it). Zero failures in my file or in the shared-component suites.",
+      "eslint": "exit 0",
+      "prettier": "exit 0",
+      "dup": "npm run dup → exit 0, zero clones naming tabs/executive (after extracting the month helper)",
+      "deadcode": "npm run deadcode → exit 0 (dayOfMonth un-exported once knip flagged it)",
+      "check_bidi": "exit 0",
+      "cr": "CR=0 on all nine owned files",
+      "browser": "port 5181, Chromium 1280×1400 as CEO, seven states × BOTH onboarding modes via the PostgREST intercept (the same helper as e2e/reports.spec.js:128 — a GET rewrite, never a write to the DB). 0 console errors, 0 pageerrors, overflow 0 on all fourteen. Screenshots results/exec-shots/r3-<surface>-onb{0,2}.png + r3.json."
+    },
+    "onboarding_finally_seen": "🔴 The item that sat in `not_verified` since round 1 is closed: guided mode was rendered in a real browser. Mode 0 → 0 hints on all seven states; mode 2 → 4 (m2) · 4 (m3 root) · 2 (m3 year) · 2 (m3 month) · 3 (m4) · 3 (m4 tier) · 4 (m6), and the base layer (population · so_what · definitions · tiles · table · row-action) is identical in both."
+  },
+  "mini_round_16_09_19_4X": {
+    "head": "fb7bcd26",
+    "fixed": [
+      "(1) `tabs/executive/surfaceKit.jsx` — the `SurfaceHint` why-comment rewritten. The old one described ONE hint's anchor ('below .so-what, above .tiles') inside a GENERIC one-key component that also carries the chart-footer and table hints, so a reader could take it as a description of the component's own placement. It now says what the component is (it does not know where it renders — the surface picks the slot) and lists where each family of §⑩ keys actually lands, keeping the 19:0X move as dated history. 🔑 And it names what really holds the placement true: the `compareDocumentPosition` test, not the comment — a comment is not measured, which is exactly why the previous one survived three rounds after it stopped describing the code."
+    ],
+    "changed": [
+      "(2, the half that does not depend on i2) `TrendsSurface` — the `costPerHour` chart-footer hint is no longer anchored to a hard index. It anchors to the LAST chart of level 0, because in the approved mockup the `.barkey` sits AFTER the `.chart-row` holding both panels (lines 708-713). That is index 1 today (one combined panel) and index 2 after i2 splits it (price · cost) — the same rule, no edit needed when the split lands. A hard `=== 1` would have silently pinned the hint to the PRICE panel while its text explains the COST.",
+      "A test now locks that: a three-chart level-0 fixture asserts the hint is absent from the price card and present in the cost card, and that both split panels carry `domain: null` (which `ChartCard.valueDomain` turns into `[0,'auto']`, i.e. the zero-based axis ⑧3.1 asks for).",
+      "(b) chip wording untouched — already `× נקי בחירה`."
+    ],
+    "gates": {
+      "vitest_tab": "npx vitest run …/ExecutiveTab.test.jsx → exit 0 · 28 tests",
+      "vitest_module": "npx vitest run src/modules/11_reports → exit 0 · 332 tests · 0 failures (the FinanceTab failures that were red mid-session cleared)",
+      "eslint": "exit 0",
+      "prettier": "exit 0",
+      "dup": "npm run dup → exit 0 · zero clones naming tabs/executive",
+      "deadcode": "npm run deadcode → exit 0",
+      "check_bidi": "exit 0",
+      "cr": "CR=0 on all nine owned files",
+      "browser": "port 5181, Chromium 1280×1400 as CEO, five states × both onboarding modes via the PostgREST GET intercept. 0 console errors, 0 pageerrors, overflow 0 on all ten. Chart-footer anchors confirmed live: partialYear in m3 card 0, costPerHour in m3 card 1 (the last price/cost panel today), scatterSample in m6 card 0; mode 0 renders 0 hints, mode 2 renders all 15. Screenshots results/exec-shots/mini-<surface>-onb{0,2}.png + mini.json."
+    },
+    "i2_status": "🔴 NOT LANDED at the time of this report, and therefore NOT verified. The migration FILE exists (`supabase/migrations/20260916194500_module11_i2_rpc_round3.sql`, and its header §🩹① · ② describe exactly the two m03 items), but the live function is unchanged: `report_m03_trends` still returns TWO charts at level 0 (the combined price/cost/margin panel), and the per-hour rates in `so_what` and in the level-1 text tile still read `305.1 ₪` / `47.4 ₪` rather than whole ₪ — re-fetched six times over the session, last at 19:4X. `results/p2-fixB2.json` has not been written. A background watcher is armed on that file."
+  },
+  "i2_verified_16_09_20_2X": {
+    "what_landed": "i2 is live for report_m03_trends. Re-fetched all three levels as CEO at 20:2X; the payloads are saved at results/payloads_i2/report_m03_trends__{L0,L1,L2}.json.",
+    "chart_titles_level_0": [
+      "chart[0] = 'הכנסה, רווח ושולי-רווח לפי שנה'",
+      "chart[1] = 'מחיר לשעה ומרווח לשעה, לפי שנה'",
+      "chart[2] = 'עלות לשעה, לפי שנה'  ← the LAST panel is the cost panel"
+    ],
+    "anchor_resolved": "🔑 This settles the mini-round's declared blind spot in my favour, MEASURED rather than assumed: I had written the `costPerHour` anchor as 'the last chart of level 0' and flagged that if i2 emitted cost FIRST the rule would pin the hint to the price panel with tests still green. The live split puts price+margin at index 1 and cost at index 2, so the anchor lands on the panel its text explains. No code change was needed — only the verification that was missing.",
+    "rate_strings": {
+      "so_what_level_0": "לשים לב שהמחיר לשעה עלה מהר מהעלות — מ-⁦260 ₪⁩ ל-⁦305 ₪⁩ לשעה, מול עלייה מ-⁦46 ₪⁩ ל-⁦47 ₪⁩ בעלות; זו הסיבה ששולי-הרווח עמדו על ⁦58.6%⁩.",
+      "so_what_level_1": "לשים לב ששולי-הרווח ב-⁦2026⁩ עמדו על ⁦58.6%⁩ על ⁦241⁩ אירועים, עם מחיר לשעה של ⁦305 ₪⁩ מול עלות לשעה של ⁦47 ₪⁩.",
+      "level_1_text_tile": "מחיר לשעה מול עלות לשעה = ⁦305 ₪ / 47 ₪⁩",
+      "tiles_level_0": "מחיר לשעה = ⁦305 ₪⁩ · עלות לשעה = ⁦47 ₪⁩",
+      "verdict": "whole ₪ everywhere — i2 item ② confirmed. The raw `tiles[].value` are untouched (305.118… / 47.372…); only the prose rounds, which is what 📐4 asks of the text."
+    },
+    "zero_based": "Both split panels carry `domain: null` ⇒ `ChartCard.valueDomain` → [0,'auto']. Confirmed on screen: the price/margin panel's Y axis runs 0·80·160·240·320 and the cost panel's runs 0·15·30·45·60 — the cost curve is legible for the first time (it was the ~2px flat line that verdict #4 described).",
+    "fixtures_resynced": "`m3Root()` in ExecutiveTab.test.jsx now carries the LIVE three-chart shape with the real titles and series (price+margin_per_hour, then cost alone) and the real whole-₪ so_what. 🔴 My hand-built split fixture was DELETED and its test merged into the real one — the two chart-hint tests became a single test driven by the payload, which is precisely what the blind spot asked for: the fixture is no longer something I authored to match my own rule.",
+    "tests": "ExecutiveTab.test.jsx 27 passed (one fewer than before because two tests merged into one) · module suite `npx vitest run src/modules/11_reports` 331 passed, exit 0.",
+    "gates": "eslint 0 · prettier 0 · dup 0 (zero clones naming tabs/executive) · deadcode 0 · check:bidi 0 · CR=0 on all nine owned files.",
+    "screens": [
+      "results/exec-shots/i2-m3-onb0.png (mode 0 — 0 hints)",
+      "results/exec-shots/i2-m3-onb2.png (mode 2 — 4 hints; partialYear under the year chart, costPerHour under the cost panel)",
+      "results/exec-shots/i2.json — the DOM probe behind both: 0 console errors, 0 pageerrors, overflow 0, the three card titles in order, and which footer hint sits in which card."
+    ],
+    "cross_check_against_p2_fixB2": {
+      "read_at": "p2-fixB2.json landed after my verification; read it anyway and compared its m03 `payload_changes` to what I measured independently from the live payload.",
+      "agreement": "Both m03 entries match my measurement exactly — '3 chart objects; chart[1] = price + margin, chart[2] = cost, both domain:null' and the whole-₪ prose. Nothing to reconcile in my code or fixtures; no edit followed from reading it.",
+      "one_of_their_open_items_is_now_closed": "🔴 Their `not_verified` says *\"m03's three charts at level 0 fit under CHART_CAP=4 — but the third chart has never been rendered on screen\"* and *\"the screen itself was not opened\"*. **It has been now**: results/exec-shots/i2-m3-onb{0,2}.png show all three cards rendering, both rate panels zero-based (0·80·160·240·320 and 0·15·30·45·60), 0 console errors and overflow 0. Worth handing back to them rather than leaving it open on both sides."
+    }
+  }
+}

@@ -35,6 +35,40 @@ plan-file quote and a summary quote as a finding, not as noise.
 
 ---
 
+## §0א · READ THIS FIRST — written 16/09/2026 20:4X by the orchestrating session at its stop, for a session with NO memory of the chat
+
+> **Why this block exists:** §4 (08:5X), §4ב (17:5X) and §4ג (20:3X) below are three snapshots of one day and disagree with each other. **This block supersedes all three.** Everything in §1–§3, §5–§9 is still valid as *history, rulings, traps and reading order*; only the STATE lives here. Every line carries its re-check — run it before you repeat it.
+
+### A · Where things stand (re-check each)
+| # | State | Re-check |
+|---|---|---|
+| 1 | Branch `ishay/module-11-build`, HEAD `01537fb2 m11 handoff: §4ג stop record 20:3X — what remains in order after the quota reset` **pushed**, working tree clean | `git status --short` · `git log --oneline origin/ishay/module-11-build..HEAD` (must be empty) |
+| 2 | **Phase 0–2 complete, Phase 3 built and verified, Phase 4 docs written. Not done: the final full gate, the 16×4×2 screen evidence, the two copy evaluations, the E2E re-run on the settled tree, the closing audit, the merge.** | this table row 5 |
+| 3 | DB: 17 report/approve functions live, every body md5-equal to its latest migration file (files A B C H0 H1 D D2 E E2 E3 F F2 G G2 G3 H2 I1 I2 — 18 files, ≈52 registry rows, D-20); `feedback_ai_insights` 426 rows, runs 5+6 approved (`approved_at`, never `status`); `assignments.recommended_rank` null on all pre-existing rows by design | `python3 docs/specs/module_11_reports/build-2026-09-16/scripts/fn_md5.py` (adapt its glob to `module11_*`) vs `select proname, md5(prosrc) from pg_proc where proname like 'report_m%'` (MCP execute_sql, project `yfeovxppnfoafmfbdfvh`) · `docs/schema.sql §24` names the live file per function |
+| 4 | Suites at HEAD: `npx vitest run src/modules/11_reports src/modules/09_settings` = 469/469 · `e2e/reports.spec.js` 26 green + accessibility 8/8 + smoke green + m4 specs 32 green (measured 18:1X on commit 731969e7; NOT re-run on the final tree) · doc gates (`check:docs-structure` · `check:declared-counts` · `check:iron-rules` · `check:context`) exit 0 at 20:2X · **`npm run gate` on the final tree = exit 0 (20:4X, run by the orchestrator, no agent): lint 0 errors (1 pre-existing warning in module 1 `UsersManagementPage.jsx:76` exhaustive-deps) · prettier · 2,993/2,993 unit tests in 115 files · build · jscpd 32 clones under 3 % · knip 0 · audit · bidi · context · docs-structure · iron-rules · declared-counts** — log: `docs/specs/module_11_reports/build-2026-09-16/results/gate-final.log` | run them |
+| 5 | **What remains, in this order:** ① gate agent (Sonnet) — `build-2026-09-16/tasks/p3-gate-evidence.md` §P3-G · ② evidence agent (Opus) — same file §P3-S, onboarding mode 2 via the PostgREST intercept (pattern `e2e/reports.spec.js` ~128), never a DB write · ③ two copy evaluators (`tasks/p3-copy-eval.md`, one per mode) · ④ E2E re-run on the settled tree from `tasks/p3-e2e.md` + two durable cases (a per-character bidi-order probe on מ9's מדרג cell + the contact column; a `[data-testid^="chart-card-"]` wait before every axe scan) · ⑤ one fix round if ①–④ find anything — route by owner (tab / shell / rpc / doc) exactly as `results/p3r-*.json` did; builders are re-dispatched from `tasks/p3-tab-<tab>.md` + `p3-common.md` + `p3-common-addendum.md` with the findings list (the original agents are dead — see C) · ⑥ **closing audit** by a fresh Opus agent: `tasks/p5-close.md` + `tasks/p5-close-addendum.md` · ⑦ one fix round · ⑧ `gh pr create` ⇒ `dev`, CI green ⇒ `gh pr merge`; PR `dev` ⇒ `main` ⇒ merge; `gh api repos/ishay1997-ux/Reg-In/deployments` shows Production on the main SHA · ⑨ post-merge: STATUS line + micro-guide header ✅ MERGED + LOG · ⑩ close estimation record #12 milestone (b) with the clock time | `docs/micro_guides/module-11.md` status header · `docs/guides/01_estimation_log.md` #12 |
+
+### B · Ishay's authorizations and rulings — verbatim, do not paraphrase (all also in `docs/micro_guides/module-11.md §9 D-9` and the plan `C:\Users\ishay\.claude\plans\cuddly-tinkering-kazoo.md` §2)
+- Merge: *"כן — מזג ל-dev וגם ל-main בלי לשאול"* (04:0X, one-time, not a precedent) · typed-echo gates: *"על כולם — מיגרציות (~8) · חתימת-DoD · ריצת-הזריעה של הסיווג"* · mockups: *"רציתי לפי המלצתך אבל שכן תיקח את המוקאפ בחשבון מסוים אבל במידה"* · onboarding: *"מצב הטמעה צריך מצבים 0 ו-2"* · one writer: *"רק אתה כותב היום ומנהל הכל"*.
+- 17:4X on the eight morning-table items (D-27 · D-28 · D-29 · D-30 · D-31 · H-4 · ⑧19.2 · run-5 rows · bak_*): *"מעולה לפי המלצות... רק בבקשה תנסה לא להשאיר לי פינות פתוחות אני באמת רוצה שאתה תסיים מקצה לקצה את המודול בלי קיצורי דרך"* ⇒ every deferral must sit in §9 or PROJECT_MASTER §6 with a reason; the 12-month default pill and the hostess-card door were built the same day because of it.
+- 20:3X: *"תעצור בנחת בנקודת עצירה נוחה הבאה"* (the 5-hour usage window) — the stop this block records.
+
+### C · What a new session cannot do, and what it does instead
+- **It cannot resume the ~65 agents of 16/09** — they lived in the dead session. Their briefs are in `build-2026-09-16/tasks/` (37 files) and their reports in `build-2026-09-16/results/` (39 JSON — some were repaired from the Workflow journal, all parse with `json.loads(..., strict=False)`); re-dispatch from the brief, never from memory.
+- **Pacing (D-33): ≤ 5 concurrent agents; a Workflow fan-out is charged all at once** — the 12-agent lens Workflow burned 2.8 M tokens in 23 minutes and killed the window; the 46-refuter stage was stopped at 4/46 for the same reason. One verifier per tab, one refuter per tab.
+- **Killed agents lose their report, not their writes** (D-24): after any kill, re-derive from `git status`, the registry (`list_migrations`) and md5 — never from the last message.
+- The scratchpad of the dead session (`C:\Users\ishay\AppData\Local\Temp\claude\C--Users-ishay-Reg-In\719c2c51-…\scratchpad`) may still exist (screenshots under `results/evidence`, `results/*-shots`, `results/visual*`, payloads under `results/payloads*`) — useful, not required.
+
+### D · Three new traps found after §6 was written
+- **A chunk-applied migration looks finished from outside at every intermediate state** — I2 read "8 of 9 applied" twice, twenty minutes apart, before m09 landed; compare registry NAMES to the file's chunk list, never the count (§9 D-35 in the guide).
+- **`onDrill`'s drill-intent is a positional third argument** (`api.js` `DRILL_INTENT`): a tab that wraps `onDrill` drops it silently and מ9's bucket rows would navigate instead of drilling — `grep -n onDrill src/modules/11_reports/tabs/` must show pass-through only.
+- **A DOM probe that collects every `<th>` also collects ChartCard's sr-only data table** — column indexes then point at the wrong table (it produced a false "contact cells empty" finding); scope probes to the main table's `thead`.
+
+### E · Acceptance test for THIS block — answer from the file alone before acting
+1. Which three things are NOT done, and what is the first command you run? *(gate · evidence · closing audit; `git status --short` then `python3 …/fn_md5.py`)*
+2. Where is the brief for the closing audit, and which two files does it read first? *(`build-2026-09-16/tasks/p5-close.md` + `p5-close-addendum.md`; the micro-guide §9 and `results/p3r-*.json`)*
+3. Who authorized the merge to `main`, in which words, and where is it written? *(Ishay, "כן — מזג ל-dev וגם ל-main בלי לשאול", §9 D-9 and the plan §2 ✅2)*
+
 ## 1 · Who reads this, and where we are in one paragraph
 
 **The reader is this same session after an automatic context compaction** (one already fired at ~07:3X),

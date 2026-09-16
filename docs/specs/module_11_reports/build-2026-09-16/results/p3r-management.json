@@ -1,0 +1,167 @@
+{
+  "tab": "management",
+  "head_checked": "04ccafff — src/modules/11_reports/** is clean in the working tree (git status --porcelain empty for that path), so every code citation below is a HEAD citation, not the 17:45-18:05 tree the verifier measured",
+  "verdicts": [
+    {
+      "index": 1,
+      "lens": "B",
+      "surface": "m6 staffing scatter",
+      "claim": "The y=x diagonal reference line is not drawn on the live scatter although the hint, the shape legend and the card speak about it; its Label would not render either.",
+      "real": true,
+      "corrected_severity": "major",
+      "owner": "shell",
+      "fix_hint": "ScatterBody (ChartCard.jsx:451-468) gives `domain` to the YAxis only — pass the same domain to the XAxis (and/or ifOverflow=\"extendDomain\" on the diagonal in renderRefLines:217-229), then render the segment label as visible text.",
+      "reason": "Reproduces on HEAD and in the payload: report_m06 chart[0].domain=[0,630] with refLines[0].to={x:630,y:630} while data x max = 600, and ScatterBody's XAxis carries no domain, so Recharts discards the segment. Not a duplicate of the routed m17 Lorenz item — LineBody pins the Lorenz X axis to [0,100] explicitly (ChartCard.jsx:563), so that surface fails for a different reason and only the label half converges."
+    },
+    {
+      "index": 2,
+      "lens": "B",
+      "surface": "all four executive surfaces — envelope states",
+      "claim": "State 2 (empty-after-filter) is unreachable: filtering to a customer with no events renders four zeroed tiles, a zeroed chart and a header-only table, with no empty sentence and no clear-filters door.",
+      "real": true,
+      "corrected_severity": "major",
+      "owner": "shell",
+      "fix_hint": "ReportSurface.jsx:356 — stop deciding emptiness from `tiles.length > 0 || charts.length > 0 || rows.length > 0`; derive it from `rows.length === 0 && (population?.n ?? 0) === 0` so the Envelope 'empty'/'blank' branch (358-366) and its clear-filters door can fire.",
+      "reason": "Code-proven on HEAD and systemic to all 16 surfaces, not just this tab: every measured payload returns 4 tiles unconditionally (report_m02 baseline and customer-filtered both show tiles=4), so the OR can never be false; no ruling in §9 (D-9…D-33) or §2ב covers it, and ReportTable renders no empty-rows sentence of its own."
+    },
+    {
+      "index": 3,
+      "lens": "A",
+      "surface": "m3 trends level 0 — year chart",
+      "claim": "The partial current year is declared nowhere inside the year chart: no hollow-dashed 2026 bar, no length in the tick label, no chart note.",
+      "real": true,
+      "corrected_severity": "major",
+      "owner": "tab",
+      "fix_hint": "TrendsSurface.jsx has no transformPayload — copy ExecOverviewSurface.jsx's `withPartialMonth` pattern (is_today on the row + a label carrying the window length + chart.note) keyed on the payload's existing `partial: true` flag; no migration needed.",
+      "reason": "Verified in the payload (m03 chart data rows carry `partial` and no `is_today`; chart.note null) and in code (the shell already consumes both channels: todayCellProps ChartCard.jsx:274-281, chart.note ChartCard.jsx:800). Owner stays the tab, and the RPC route the finding hinted at is unnecessary, because the same tab already implements all three 📐20 channels for m2 in the tab layer."
+    },
+    {
+      "index": 4,
+      "lens": "A",
+      "surface": "m3 trends level 0 — chart 2 (price/hour vs cost/hour)",
+      "claim": "Three shekel series of two magnitudes share one 0-320 axis, flattening the cost curve to ~2 px — exactly what the approved mockup's own note exists to prevent; the mockup splits them into separate zero-based panels.",
+      "real": true,
+      "corrected_severity": "major",
+      "owner": "rpc",
+      "fix_hint": "report_m03_trends should return the second chart as two chart objects (price panel, cost panel), each zero-based, as the mockup draws them — CHART_CAP is 4 since D-28, so the array fits.",
+      "reason": "Payload confirms all three series declare axis:'left' with format money (price ~254-305 vs cost ~44-47), and the mockup's chart-note at 02_tab_executive_approved.html:657-659 says in its own words that one axis would draw the cost as a flat line. No shell/tab route exists: ComposedBody's right axis is hard-locked 0-100 (ChartCard.jsx:513-519) and D-32 deliberately deleted the tab-side chart surgery (toComboChart), so 'which charts' stays the RPC's declaration per C2/C8."
+    },
+    {
+      "index": 5,
+      "lens": "A",
+      "surface": "m2 exec overview — monthly chart",
+      "claim": "September is hollow-and-dashed in one of the two year series only, while card 8.2.3 is closed on 'both years' and the mockup carries a fourth legend key.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "shell",
+      "fix_hint": "ChartCard.jsx:375 renders `barCells(...)` only for `index === 0`, so todayCellProps (and over_threshold, and the cross-filter dimming) never reach series 2+ — emit Cells for every bar series, keeping each series' hatch fill as the cell fill.",
+      "reason": "Mechanism reproduces on HEAD, and the data supports the fix because `is_today` is per ROW (the m2 September row carries partial:true and the tab's withPartialMonth sets is_today), so both years' September bars sit on the same marked row. Visual-declaration completeness only — the correct year is already marked — hence minor."
+    },
+    {
+      "index": 6,
+      "lens": "A",
+      "surface": "all four — section 10 hint anchors",
+      "claim": "5 of 15 hint keys do not render where the card anchors them; the four purpose hints are the first node of the surface, above the population line, and surfaceKit.jsx's comment claiming they sit under the so-what line is false.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "shell",
+      "fix_hint": "ReportSurface.jsx:403-404 calls `renderTop` before <PopulationLine/> and offers no slot between so_what and the tiles — add one (or move renderTop below the so-what block) and fix the stale claim in surfaceKit.jsx:48-54 at the same time.",
+      "reason": "Both halves check out against HEAD: the render order in ReportSurface is DrillCrumbs → renderTop → PopulationLine → ExportBar → so_what → tiles, and the tab has no other slot to use; the surfaceKit comment asserting the hint 'again' sits below the so-what line is a false why-comment (iron rule 3). Re-owned tab→shell because ReportSurface is the only place the slot can exist. Anchoring nuance only, hence minor."
+    },
+    {
+      "index": 7,
+      "lens": "A",
+      "surface": "all four — population line",
+      "claim": "The population sentence does not carry the explicit '(הכרעה 36)' citation that closed card item G2 requires of these four pages.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "ishay",
+      "fix_hint": "One ruling: either the four RPC population labels append the citation, or G2's on-screen half is corrected in the card — neither side is patched first.",
+      "reason": "The card requirement is real and closed (cards-management.md:53 and :38 both state that the four pages cite it verbatim) and no payload label contains it — but C2's 'no report numbers on screen' and the copy style guide pull the other way, so this is a C7 conflict question owned by Ishay, not an RPC defect (re-owned rpc→ishay)."
+    },
+    {
+      "index": 8,
+      "lens": "A",
+      "surface": "m3 trends — level 0 vs level 1",
+      "claim": "The same rate is rendered three ways inside one report: tile 47 ILS, so-what 47.4 ILS, level-1 text tile '305.1 / 47.4'.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "ishay",
+      "fix_hint": "Fold into the existing D-29 whole-shekel-rate row on the morning table: one ruling on per-hour rate decimals that binds the money tiles, the `text` tiles and the server prose together.",
+      "reason": "Reproduces digit for digit in the payloads (level-0 money tiles 305.118…/47.372… rendered whole-shekel by the format rule, so_what keeps one decimal, level-1 price_vs_cost is the literal string '305.1 ILS / 47.4 ILS'), but it is the same open class D-29 already routed to Ishay; the within-one-page variant adds an instance, not a new decision."
+    },
+    {
+      "index": 9,
+      "lens": "B",
+      "surface": "tab blank state (STAFF on /reports)",
+      "claim": "The no-permission sentence addresses the user in the masculine imperative while spec 1.5 locks the feminine.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "shell",
+      "fix_hint": "Feminine form in ReportsPage.jsx:46 and tabs/customers/AnalysisRunBar.jsx:39 (plus the e2e/reports.spec.js:43 constant), logged with the copy rule that fired (S-28 / spec 1.5), and a doc ripple to processes-approved.md:616 and cards-customers.md:511,533 which carry the masculine wording too.",
+      "reason": "String verified on HEAD at ReportsPage.jsx:46; the wording is faithfully copied from the approved spec, and C2 permits a label change exactly when a written copy rule fires — so it is a licensed fix plus a doc ripple, and the true scope is three sentences across four code files, not one string."
+    },
+    {
+      "index": 10,
+      "lens": "A",
+      "surface": "m2 · m3 · m4 — chart cards",
+      "claim": "Neither half of the mockup's chart reading aid is on screen: no value labels above the bars, and the per-row table under the chart is sr-only rather than visible.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "ishay",
+      "fix_hint": "Card 8.2.2 is still open (cards-management.md:199) — Ishay picks between 'one label per month + a visible table' and dropping the labels; the sr-only twin table stays as the screen-reader/keyboard path either way.",
+      "reason": "The measured difference is real, but the sr-only table is a documented a11y mechanism (ChartCard.jsx:85-91) and the reading aid is an unruled card item, so C7 makes it a conflict question rather than a defect to patch."
+    },
+    {
+      "index": 11,
+      "lens": "A",
+      "surface": "all four — element order",
+      "claim": "ExportBar renders inside every surface between the population line and the so-what line; the approved mockup puts the Excel export in the shell's global-filters row.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "shell",
+      "fix_hint": "Hoist ExportBar into the shell's filters row (the active surface can publish columns/rows/window/drill labels through reportsShellContext.js, which already carries shell-to-surface state) so the button and its two caption lines sit where the mockup and card row 5 put them.",
+      "reason": "Both binding sources were re-read and agree: the export button plus its two caption lines live inside the global-filters div of 02_tab_executive_approved.html:328-355, and cards-management.md row 5 says the captions sit under the filters row; HEAD renders ExportBar inside ReportSurface (jsx:409-416). Placement only — behaviour (WYSIWYG rows, disabled + reason) is correct."
+    },
+    {
+      "index": 12,
+      "lens": "B",
+      "surface": "m2 overview tiles (ruling 33 doors)",
+      "claim": "A tile that is a door shows no pointer affordance: the tile button computes cursor:default while a clickable table row computes cursor:pointer.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "shell",
+      "fix_hint": "Add `cursor-pointer` to the door button's className in KpiTile.jsx:152 (Tailwind v4 leaves buttons at the UA default), matching ReportTable.jsx:80 which sets it explicitly for drillable rows.",
+      "reason": "Reproduces on HEAD — the KpiTile button class list carries only rounding, alignment and focus-visible styles, and the module sets cursor-pointer explicitly everywhere else it means clickable; keyboard and aria are already correct, so affordance only."
+    }
+  ],
+  "summary": {
+    "real": 12,
+    "refuted": 0,
+    "by_owner": {
+      "shell": 7,
+      "tab": 1,
+      "rpc": 1,
+      "ishay": 3,
+      "doc": 0
+    },
+    "by_severity": {
+      "blocker": 0,
+      "major": 4,
+      "minor": 8,
+      "none": 0
+    },
+    "severity_changes": [
+      "#6 re-owned tab→shell (ReportSurface is the only place the missing slot can exist)",
+      "#7 re-owned rpc→ishay (recorded-decision conflict, C7 — a ruling, not a payload patch)",
+      "#3 kept major and kept at tab, with the m2 precedent named so the fixer does not open a migration for it",
+      "no severity was raised or lowered from the verifier's grades; all four majors survived re-measurement"
+    ],
+    "notes": [
+      "Nothing was refuted on shell-round-2 grounds: the landed fixes (formatted axis ticks, compare.note, masked-target doors, chart.layout, 0-count bars, cap note under a selection, 12m preset, report-meta-notes) touch none of these 12 mechanisms, and src/modules/11_reports/** is clean in the working tree, so the verifier's 17:45-18:05 measurements are still HEAD measurements.",
+      "#1 overlaps the routed m17 Lorenz item only in its label half; the line-discarded half is scatter-specific (X axis without a domain) and would survive a Lorenz-only fix.",
+      "#2 is the one finding whose blast radius exceeds this tab: the dead branch is in the shared shell and is therefore dead on all 16 surfaces.",
+      "Not re-measured by me: the live customer=213 screen (n=0) — I proved #2 from the code path and from tiles=4 in every measured payload, which kills the OR regardless of the filter used."
+    ]
+  }
+}

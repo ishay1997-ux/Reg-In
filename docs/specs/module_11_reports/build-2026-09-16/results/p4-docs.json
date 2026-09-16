@@ -1,0 +1,138 @@
+{
+  "agent": "P4-DOCS",
+  "finished_at": "2026-09-16 20:3X",
+  "committed": false,
+  "files_written": [
+    "docs/db_roadmap.md",
+    "docs/schema.sql",
+    "docs/PROJECT_MASTER.md",
+    "docs/CODE_MAP.md",
+    "docs/guides/modules/module_11_reports.md",
+    "docs/guides/01_estimation_log.md",
+    "docs/micro_guides/module-11.md",
+    "docs/micro_guides/module-9.md",
+    "docs/specs/module_11_reports/spec.md",
+    "docs/specs/module_11_reports/processes-approved.md",
+    "docs/specs/module_11_reports/HANDOFF-stage3-2026-09-10-02.md",
+    "docs/specs/module_11_reports/stage2-cards/cards-management.md",
+    "docs/specs/module_11_reports/stage2-cards/cards-finance.md",
+    "docs/specs/module_11_reports/stage2-cards/cards-customers.md",
+    "src/modules/09_settings/ParamsTab.jsx",
+    "src/modules/09_settings/ParamsTab.test.jsx",
+    "e2e/settings.spec.js",
+    "docs/CLAUDE_CODE_LOG.md",
+    "STATUS.md"
+  ],
+  "files_NOT_written_and_why": {
+    "docs/PROJECT_MASTER_sec7.md": "The task brief sent the RLS-matrix correction here. The row is not in this file - `grep -n 'Views/RPC' docs/PROJECT_MASTER_sec7.md` returns nothing. The matrix that carries the m11 row is `docs/db_roadmap.md` section 7 ('RLS rollout matrix (module x tables it WRITES; base input for 7.63)'), which is what module-11.md section 5 and D-3 mean by \"section 7's RLS matrix\". Corrected there, and the wrong pointer is annotated in db_roadmap so the next reader does not repeat it."
+  },
+  "debts_struck": [
+    {
+      "debt": "m11 <- m6 - the reports were invented without a guiding question",
+      "evidence": "Discovery closed 11/09; processes-approved.md section-rulings holds 39 dated rulings; spec.md section-names gives each of the 16 surfaces a first-person question as the on-screen subtitle (ruling 18); every one of the 17 functions carries a comment on function declaring its population in the words that appear on screen (checkable: select proname, obj_description(oid,'pg_proc') from pg_proc where proname like 'report_m%')."
+    },
+    {
+      "debt": "m11 <- m5 - scope-change logistics rows have no cost source",
+      "evidence": "The row asked for a DECISION between three options; the third was taken with a visible counter - report_m12_equipment returns the 'no cost source' rows in meta.extra_tables per ruling 27, with a count AND shekels. apply_scope_change was not reordered, nothing was back-filled, no cost was guessed."
+    },
+    {
+      "debt": "m11 <- m5 - cost basis actual_qty vs planned_qty",
+      "evidence": "Ruling 5 => planned_qty, 7.22 closed on it, and it is live: comment on function report_m12_equipment says the quantity basis is planned_qty and actual_qty is shown as a gap column only."
+    }
+  ],
+  "debts_annotated_half_paid": [
+    {
+      "debt": "m11 <- m4 - two data holes",
+      "boundary": "The reader arrived and ruled, and BOTH holes stay open by ruling, not by neglect: (a) 'how many reminders until she answered' is not computable - report_m17_fairness measures response time 'since the LAST invite' and says so in its own function comment, because a resend overwrites invite_sent_at (R2); (b) status history was not built and no surface needed it. A third hole WAS closed: assignments.recommended_rank (M11-4) is written from now on, with no back-fill, and report 14a declares the absence instead of printing 0%."
+    },
+    {
+      "debt": "m11 <- m8 - the supply contract",
+      "boundary": "Profitability half consumed in full (report_m08_profitability reads finance_project_money and computes no second profit). Salary half NOT consumed: surface m13 is deferred by ruling 30, and none of the 17 functions reads salary_reports / salary_report_lines (grep -l salary_report supabase/migrations/20260916*). The row's own warning - 'the m11 roles' read permission on salary_reports was never tested' - stands verbatim and travels with m13."
+    },
+    {
+      "debt": "m11 <- m6 - 'when did it change'",
+      "boundary": "Reached its reader and stays open by ruling: none of the 16 surfaces asks it, so nothing was built and nothing was closed."
+    },
+    {
+      "debt": "m11 <- (scope) - no operating/net profit, cash flow instead",
+      "boundary": "LOUD FINDING, and it stays fully open. 7.93 closed the half that was never going to be built, ON CONDITION that m11 builds cash flow instead - and surface m10 ('expected cash flow') is deferred by ruling 30. Measured: reportsCatalog.js lists 16 surfaces, none is m10; grep -c report_m10 supabase/migrations/20260916* = 0. Anyone reading '7.93 closed' and concluding 'there is a cash-flow report' is wrong."
+    }
+  ],
+  "debts_added": [
+    "bak_* x6: hardened by H0, NOT dropped - dropping is Ishay's, and only after a re-seed script exists (D-11 / D-8)",
+    "No gate compares docs/schema.sql to the live catalogue - step 1.1 found 16 deltas that had survived months; the cheap implementation (check:schema-drift over the five-count query now written into schema.sql section 24) is named in the debt",
+    "Five params rows with owner_role_id is null - card t6 calls one of them 'the only one'; giving an owner changes who may edit an existing row, so it is Ishay's (D-13)",
+    "3-digit exclusion counts in m14/m15 server sentences are unformatted and will diverge when they cross 999 - H2 formatted 4+ digits only (D-26)",
+    "Uniform re-classification of run 5's 40 rows needs a DELETE first (feedback_ai_insights.project_id is UNIQUE and loadCandidates skips classified projects) - nothing documented it (D-23 iii)",
+    "Homoglyph guard in classify-feedback - 425/426 quotes verbatim; project 1249 differs by an Arabic YEH for a Hebrew YOD, which position() misses and the eye cannot see (D-23 ii)",
+    "SUPABASE_ACCESS_TOKEN in .env.local returns 401 from the Management API - the CLI deploy path is dead, MCP deploy works (D-23 iv)",
+    "listCustomers() customer-filter list is a second RLS-gated read that degrades to [] with error:null for RECRUIT/STAFF; the right fix is a gated list from the report RPC (D-16)",
+    "Three 04-05/09 migrations are absent from schema_migrations - a from-scratch rebuild would not get the three projects feedback columns that reports 20 and 22 read (D-13)",
+    "Root CLAUDE.md section 3 still quotes the CR idiom measured broken (grep -c $'\\r' returns 0 on a real CRLF file here) - routed to m12 because editing the iron rules is outside a module's scope (D-12)"
+  ],
+  "already_present_verified_not_re_added": [
+    "re-seed script (D-8) - PROJECT_MASTER section 6 already carries it; annotated with what changed (16 built screens now read those rows, and the bak_* tables are now the only in-DB copy)",
+    "module-4 door '?hostess=<id>' (D-30 iv) - NOT added: it was built in shell round 2 (commit 04ccafff names it)"
+  ],
+  "gates": {
+    "declared_counts": 0,
+    "docs_structure": 0,
+    "iron_rules": 0,
+    "context": 0,
+    "bidi": 0,
+    "prettier_check_on_touched_files": 0,
+    "vitest_src_modules_09_settings": 0,
+    "evidence": "each exit code captured from its own log under <scratchpad>/p4/ (g-dc2.log, g-ds2.log, g-ir2.log, g-ctx2.log, g-bidi.log, g-prettier.log, vt-m9.log); CR=0 measured per file with perl -ne '$n+=tr/\\r//'"
+  },
+  "schema_sql_refresh": {
+    "method": "in place, never regenerated - the file is a curated annotated snapshot and a wholesale regen would delete the annotations (module-11 step 1.1 ruled this; supabase/migrations/CLAUDE.md:45's older 'regenerate' instruction loses)",
+    "added": [
+      "section 34 feedback_ai_runs (13 columns, 2 CHECKs, 4 indexes incl. the H1 partial unique, 1 trigger, 1 read policy, table+column comments)",
+      "section 35 feedback_ai_insights (11 columns incl. free_topic and unclassifiable, 2 array CHECKs byte-identical to the projects lists, 3 indexes, 1 read policy)",
+      "section 18 assignments.recommended_rank + its CHECK + its column comment + migration pointer",
+      "section 12 pointer for the four m11 params rows (data, not DDL) + the 'ceiling/floor lives in paramsRegistry and is enforced nowhere' note + the five owner-less rows",
+      "section 24: 17 module-11 functions with signature, security mode, gate module, and the migration file whose body is live",
+      "header: the bak_* paragraph rewritten - it described the world BEFORE H0, which was applied the same day"
+    ],
+    "section_24_count": "50 => 67, and the query that produces it (plus base_tables/policies/indexes/triggers) is written directly above the number so the next value is measured, not inherited. Live 16/09 19:4X: 38 base tables / 67 functions / 65 policies / 77 indexes / 29 triggers. grep -c '^create table' docs/schema.sql = 32."
+  },
+  "not_verified": [
+    "I did not render a single screen. Every claim about what is on screen comes from function comments, payload contracts and other agents' reports - not from a browser.",
+    "I did not re-run the md5(prosrc)-vs-file check for any function. The 16/16 result is inherited from 08:0X and predates I1 and I2 entirely; the close audit owes it.",
+    "I did not verify that every one of the 17 function comments matches the population sentence actually printed on screen. I quoted the comments as the DB holds them.",
+    "The E2E and unit suites for module 11 were not re-run by me. The only suite I ran is src/modules/09_settings (10 files / 134 tests green), because that is the code I touched.",
+    "npm run gate as a whole was not run (jscpd / knip / audit / build). Only the four doc gates named in my brief, plus bidi and prettier on the files I touched.",
+    "The four cards and processes-approved.md were not read end to end - they are 310KB+. I opened each anchor I edited and its surrounding rows, and nothing further.",
+    "Whether module11_i2_m09 was left out deliberately or failed. I measured its absence three times (19:4X, 20:1X, 20:3X) and did not investigate the cause - that is outside a docs agent's write scope."
+  ],
+  "blind_spot": [
+    "CONCRETE AND CHECKABLE #1 - the Stop-hook ordering will break again, and not by my hand. At 20:3X docs/micro_guides/module-11.md (mtime 1789578854) was newer than the newest src/modules/11_reports file (1789578826) and LOG+STATUS were newest (1789578870). But tab tests were re-written by parallel work TWICE while I was finishing. Check: `git status --porcelain -uall -- . ':!docs/CLAUDE_CODE_LOG.md' ':!STATUS.md' | cut -c4- | xargs -I{} stat -c '%Y %n' {} | sort -rn | head -3` against `stat -c '%Y %n' docs/CLAUDE_CODE_LOG.md STATUS.md`. Whoever writes last must re-touch module-11.md, then LOG, then STATUS.",
+    "RESOLVED at 20:4X - the schema.sql section 24 per-function arrows were stale (they named i1 for nine functions whose live body is now i2). Rewritten and verified: the block holds 10 mentions of the i2 file (9 arrows + 1 in the applied note), 4 functions still name i1 as live body (m07/m08/m12/m16), 3 name d2 (m02/m04/m06).",
+    "CONCRETE AND CHECKABLE #3 - the paid/half-paid verdicts on the six cross-module debts rest on function comments and file greps, NOT on the screens. Specifically: I struck 'm11 <- m5 cost basis' on the strength of comment on function report_m12_equipment saying planned_qty. If that page's table were in fact rendering actual_qty, my strike would be wrong and nothing in this session would have caught it. The cheapest disproof: open the equipment page and compare its quantity column against `select sum(planned_qty), sum(actual_qty) from logistics`.",
+    "CONCRETE AND CHECKABLE #4 - three backticked identifiers were silently eaten out of module-11.md D-35 by an inline `python -c` inside a double-quoted bash string (bash ran them as command substitutions). I caught it by reading the file back and repaired it from a script FILE. The same failure class could have hit any of my other inline edits; the ones written via files (all the rest) are immune. Check: `grep -n ':  is the one missing' docs/micro_guides/module-11.md` must return nothing, and more generally `grep -nE ' {2,}(is|kept|and it is),' docs/micro_guides/module-11.md`.",
+    "CONCRETE AND CHECKABLE #5 - the i2 arrows are correct for the bodies as of 20:4X, and nothing in the repo re-checks them. If a further fix migration lands, the arrows rot silently again. The standing check is the md5 sweep the close audit owes (p2-fixB2.json has the shape); the cheap machine version is the check:schema-drift debt already registered in PROJECT_MASTER section 6."
+  ],
+  "assumed": [
+    "That 'section 7's RLS matrix' in module-11.md section 5 / D-3 means db_roadmap section 7 and not some row in PROJECT_MASTER_sec7.md. Basis: the exact stale string 'none (5 reports as Views/RPC, read-only)' occurs in db_roadmap section 7 and nowhere else in the repo.",
+    "That the four params rows count as a module-9 ripple requiring a module-9.md deviations line. Basis: the Stop hook's enforcement 0 blocks on src/modules/09_settings/** changing without module-9.md, and I changed two files there.",
+    "That extending two truncated labels in spec.md 1.4 does not move the declared count of 74. Basis: check-declared-counts.mjs counts '.'-separated values per row, and neither replacement introduces a separator. Verified by running the gate, not only by reading it.",
+    "That the I2 row belongs in the ledger as a migration FILE even while mid-apply, rather than being omitted until it lands. Basis: D-20 makes the ledger track files, and an omitted file is invisible; a row that carries its own measurement time and check command is not."
+  ],
+  "one_correction_worth_naming": "I nearly recorded a finding that module-11.md section 3.4's claim - 'the section 6 row now says so (written back 11/09)' about ruling R1 - had never been done, because grep on the line carrying the '(bulldozer) m11 <- m3' token returned no 'R1'. It IS done, four lines further down in the same bullet's continuation. Checked before writing, not after. Same class as the three inherited pointers D-35 records.",
+  "i2_followup_20_4X": {
+    "verified_before_writing": "9 registry rows live (module11_i2_m17,_m21,_m20,_m22,_m14,_m15,_m19,_m03,_m09; m09 at version 20260916171421) + p2-fixB2.json gates.md5_after_apply 9/9 file==live. Queried the registry myself rather than taking the count from the message.",
+    "schema_sql": "section 24: the nine i2 functions now carry TWO pointers - i1 relabelled as the round-2 source, i2 as the live body. Rewrite walked the block tracking the current function name, because the i1 arrow line is byte-identical 13 times and exactly 9 had to move; asserted moved_hits==9. The other eight untouched: m07/m08/m12/m16 on i1, m02/m04/m06 on d2, approve_feedback_ai_run on a. The teun-bdika block is replaced by the applied fact + the md5 evidence + the check query.",
+    "db_roadmap": "section 10b first row flipped to APPLIED with the nine row names, the three measurement times (0 at 19:4X / 8 at 20:1X and 20:3X / 9 at 20:4X) and the md5 9/9 + 13 signed-in 200s + 9/9 42501 + 0 numeric payload moves.",
+    "re_touched_in_order": [
+      "docs/micro_guides/module-11.md",
+      "docs/CLAUDE_CODE_LOG.md",
+      "STATUS.md"
+    ],
+    "gates": {
+      "docs_structure": 0,
+      "declared_counts": 0,
+      "prettier_on_touched": 0
+    },
+    "ordering_at_finish": "newest_other=1789579447 < log=status=1789579458 - OK at this instant; parallel tab writes had broken it twice earlier, so whoever writes last re-touches micro-guide -> LOG -> STATUS."
+  }
+}

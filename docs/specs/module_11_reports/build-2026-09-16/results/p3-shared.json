@@ -1,0 +1,245 @@
+{
+  "agent": "P3-SHARED",
+  "finished_at": "2026-09-16 10:5X",
+  "committed": false,
+  "changes": [
+    {
+      "file": "src/modules/11_reports/components/KpiTile.jsx",
+      "what": "GAP 1 — renders tiles[].sub as its own line under the value and above the compare line (data-testid=\"kpi-sub\", max-w-[210px], hidden when masked). Order .lb/.vl/.sub/.cmp/.win measured on all four approved mockups. The 210px cap is copied from the executive tab's own measurement (a wide sub-line stretches the flex tile: measured 248-535px tiles / three rows without it).",
+      "test": "components/KpiTile.test.jsx (new, 11 tests): renders sub, document order value->sub->compare->window, absent sub renders nothing, masked hides sub AND compare but keeps the window line."
+    },
+    {
+      "file": "src/modules/11_reports/components/KpiTile.jsx",
+      "what": "GAP 8 — CompareLine now formats through compare.format ?? tile.format. Measured: 0 of 99 live compare halves carry their own format, so formatByType fell to 'text' and the screen printed 206002 next to 236,382 ₪. A compare.value that is already a string passes through unformatted (a tab that patched this in its own transform is not double-formatted).",
+      "test": "KpiTile.test.jsx: inherits tile.format; own format wins; string value passes through; arrow stays uncoloured + aria-hidden."
+    },
+    {
+      "file": "src/modules/11_reports/components/ReportSurface.jsx",
+      "what": "GAP 2 — onDrill is passed to ReportTable when surface.drill OR any row carries a drill_key whose kind is routable (ROW_DOOR_KINDS). Extra tables (meta.extra_tables) get the same door. DrillCrumbs stays drill-only. Measured: all 16 payloads return per-row drill_key (3-386 door rows each), so 14 of 16 surfaces had an unopenable door.",
+      "test": "ReportSurface.test.jsx: non-drill surface opens rows and passes (drill_key, row); a {sku} key is NOT a door (cards-finance 12.1: no screen exists); row doors do not draw crumbs."
+    },
+    {
+      "file": "src/modules/11_reports/components/ReportSurface.jsx",
+      "what": "GAP 3 — chart->table cross-filter built once: selection state keyed to requestKey (a filter/period/drill change resets it in render, not in an effect), rows filtered by String(row[filterKey]) === String(datum[xKey]), the pager counts the filtered rows, ReportTable's aria-live gets \"מסונן ל<label>; N שורות\" (singular \"שורה אחת\", zero \"אין שורות\"), a FilterPill chip \"× נקה בחירה\" (data-testid=\"report-clear-crossfilter\") clears it, a second click on the same datum clears it, and the selected column stays teal while the rest drop to slate-300 (ruling 15-ד). Key resolution: chart.filter_key === false -> off; a string -> the server's declaration; otherwise auto-detect, which is SKIPPED on drill surfaces.",
+      "test": "ReportSurface.test.jsx (13 cross-filter tests) + ChartCard.test.jsx (selected-column highlight). Keyboard path verified through ChartCard's sr-only table buttons, which is the path that exists (onClick on an SVG bar is not keyboard-operable)."
+    },
+    {
+      "file": "src/modules/11_reports/components/ReportSurface.jsx",
+      "what": "GAP 3b — the auto-detected key is VERIFIED against the data: the chart's x values must intersect the rows' values. This caught two real silent breakages: m09's chart carries bucket:\"1–30\" (a label) while its rows carry bucket:\"d1_30\" (a key), and m08's chart draws the top-15 deviations while the table lists other projects. Both would have filtered to zero rows with no error.",
+      "test": "ReportSurface.test.jsx: 'xKey whose name matches but whose values never meet the rows => no cross-filter at all'."
+    },
+    {
+      "file": "src/modules/11_reports/components/ReportSurface.jsx",
+      "what": "GAP 3c — ת4 export: ExportBar now receives the FILTERED rows and the selection label joins the drill label in the file name (measured live: צריכת-ציוד_2026-(01-01–16-09)_שרוך-סאטן-ממותג.xlsx). A selection with no rows disables the button with the locked sentence אין שורות לייצא from reportsExport.js (not reworded).",
+      "test": "ReportSurface.test.jsx: file name carries the selection; empty selection disables export."
+    },
+    {
+      "file": "src/modules/11_reports/components/ReportSurface.jsx",
+      "what": "GAP 5 — so_what moved ABOVE the tiles (C2: order <= the mockup). Measured, not assumed: all 19 report pages across the four approved mockups place .so-what before .tiles in document order, 19/19, and design-contract §⑥'s own HTML skeleton does the same.",
+      "test": "ReportSurface.test.jsx document-order assertion; also verified in the browser on מ12 and מ14."
+    },
+    {
+      "file": "src/modules/11_reports/components/ReportSurface.jsx",
+      "what": "GAP 7 — one shared row-cap note above the table when meta.row_total > rows.length, wording verbatim from the recorded ruling §9 D-25: \"מוצגות N מתוך M שורות\" (data-testid=\"report-row-cap\", numbers through reportsFormat isolation). The pager total is untouched (📐8).",
+      "test": "ReportSurface.test.jsx: renders when row_total > rows; absent when equal or missing."
+    },
+    {
+      "file": "src/modules/11_reports/components/ReportSurface.jsx",
+      "what": "GAP 13 — transformPayload is memoised on [rawPayload, transformPayload]; the JSDoc now states that a tab MUST pass a stable transform (module-level fn or useCallback).",
+      "test": "ReportSurface.test.jsx: a same-identity rerender does not call transformPayload again."
+    },
+    {
+      "file": "src/modules/11_reports/components/ChartCard.jsx",
+      "what": "GAP 6 — ComposedBody: any chart whose series mix kind 'bar' and 'line' renders through ComposedChart; a series with axis:'right' gets a right YAxis locked to 0-100 (📐6). Measured on the live m02/m03 payloads (kinds [bar,bar,line]; m03's margin line is axis:'right'). Per-series unit=format so the Hebrew tooltip formats ₪ and % separately. ParetoBody is now a thin derivation of the same body (it was the same skeleton copied).",
+      "test": "ChartCard.test.jsx (6 tests) with the m03 series verbatim: line not bar, right axis 0-100 with the line on it, single axis when no series asks for right, per-series unit, all-line charts stay LineChart, pareto derives the same frame."
+    },
+    {
+      "file": "src/modules/11_reports/components/ChartCard.jsx",
+      "what": "GAP 9 — chart.note renders under the chart title (data-testid=\"chart-note\", 11px slate-500). No live RPC emits it yet; covered by a fixture.",
+      "test": "ChartCard.test.jsx: rendered after the heading when present, absent otherwise."
+    },
+    {
+      "file": "src/modules/11_reports/components/ChartCard.jsx",
+      "what": "GAP 10 — 📐20: a datum with is_today:true renders its bar hollow-and-dashed (fillOpacity .55, strokeDasharray '4 2') without changing its hue (📐19). m07's 12-month chart marks its last point that way.",
+      "test": "ChartCard.test.jsx: only the marked cell gets the dash; the hue is unchanged."
+    },
+    {
+      "file": "src/modules/11_reports/components/ChartCard.jsx",
+      "what": "GAP 14 — scatter shape channel (📑ב#10): chart.shape_key splits the points into two Scatter series, triangle for true and a HOLLOW circle for false, with a legend row that uses chart.shape_labels when the payload supplies them (fallback describes the relation to the reference line). Absent shape_key keeps today's single dot series.",
+      "test": "ChartCard.test.jsx (4 tests): one series without the key; correct split, hollow fill and shared stroke; legend text overridden by the payload; no legend without the key."
+    },
+    {
+      "file": "src/modules/11_reports/components/ChartCard.jsx",
+      "what": "Refactor forced by the jscpd gate: one seriesNode() renders every bar/line series for all bodies (BarBody, LineBody, ComposedBody, Pareto). It also closed two silent divergences the copies had: the composed chart's Bar had no stackId and its Line had no activeDot.",
+      "test": "Covered by the existing ChartCard suite (26 tests) — no assertion changed except the pareto one, which now describes the derived frame."
+    },
+    {
+      "file": "src/modules/11_reports/api.js",
+      "what": "GAP 4 — CHART_CAP 2 => 4, with a why-comment quoting both sources and the date (spec ⏳10's \"2 per page\" measured on the four FINANCE pages vs Ishay's newer ✅4 \"structure/order/which charts <= the mockup\", plus C8's own 16/09 amendment) and marking it a conflict question for the morning table, matching the recorded §9 D-28. Also added the ROW_DOOR_KINDS contract constant next to REPORT_REQUIRED_KEYS (a component file may not export a non-component — react-refresh/only-export-components is an error in this repo — and both ReportSurface and ReportsPage import the one list).",
+      "test": "api.test.js: four charts pass whole (m20's approved mockup draws four); a fifth is still cut."
+    },
+    {
+      "file": "src/modules/11_reports/ReportsPage.jsx",
+      "what": "GAP 11 — one door router in the shell. (a) {tab, report} => tab+report (+drill) in the URL, scrollTo top, and NOTHING when the target tab is masked (ת8) or when the target is not in the catalogue (previously it fell through and wrote ?drill={\"tab\":...}); (b) {kind,id} in ROW_DOOR_KINDS => navigate to the entity screen; (c) everything else => drill state, as before.",
+      "test": "ReportsPage.test.jsx (6 new tests) through the hostesses tab (the executive tab wraps onDrill in its own router, so testing through it would measure that one): tile door switches tab+report, RPC-named and Hebrew-named targets both resolve, a masked target does nothing, an unknown target writes no drill, customer/project/hostess doors land on three different screens, and a {dow:N} chip still travels as p_drill."
+    },
+    {
+      "file": "src/lib/reportsFormat.js",
+      "what": "GAP 12 — 'score' format: three decimals, no unit, isolated (0.834). ratio stays at one decimal (m6's 40.8 guests-per-hostess). Unknown formats still fall back to text.",
+      "test": "reportsFormat.test.js: three scores that ratio would flatten to two values render as three distinct values under score; missing => dash; 0 => 0.000."
+    },
+    {
+      "file": "src/modules/11_reports/api.js + src/modules/11_reports/ReportsPage.jsx",
+      "what": "GAP 15 (16/09 late) — 'quote' added to ROW_DOOR_KINDS and routed to /quotes/:quoteId/edit. Route verified in src/App.jsx (guarded by ProtectedRoute allow=הצעות מחיר, so a user without that permission gets the system's block screen, not a broken page). Measured: only מ4 emits kind:'quote' — 50 rows in every live מ4 payload — and cards-management row 8 names the quote itself, not the list, as its only drill target; /quotes alone cannot deep-link one quote. Side effect (intended): מ4's rows are now doors through the shared rule instead of through the executive tab's surface.drill=true workaround.",
+      "test": "ReportsPage.test.jsx: a {kind:'quote', id} row lands on the quote screen (a fourth route added to the door-test router alongside project/customer/hostess)."
+    }
+  ],
+  "crossfilter_surfaces": [
+    {
+      "rpc": "report_m04_discounts",
+      "filter_key": "tier",
+      "how": "auto",
+      "note": "cards-management #6 explicitly requires this cross-filter. Key is a row key, not a column key."
+    },
+    {
+      "rpc": "report_m06_staffing",
+      "filter_key": "estimated",
+      "how": "auto",
+      "note": "CONFLICT: the scatter now cross-filters, but cards-management records מ6 as deliberately having NO cross-filter (and flags that absence as its own deviation ③ from 📐13). The tab can turn it off with chart.filter_key=false in its transform — one line, no shared-code change."
+    },
+    {
+      "rpc": "report_m12_equipment",
+      "filter_key": "item_name",
+      "how": "auto",
+      "note": "Both charts. The card says the bars are 'not clickable' because מ12 is not a drill report — but 📐13 assigns cross-filter to the other 18 pages, so this implements the cross-surface rule. Proven live."
+    },
+    {
+      "rpc": "report_m16_quality_cost",
+      "filter_key": "hourly_rate",
+      "how": "auto",
+      "note": "Scatter; one click narrows the table to the hostesses on that rate."
+    }
+  ],
+  "crossfilter_off": [
+    {
+      "rpc": "report_m02_exec_overview",
+      "why": "xKey 'label' is not a column or row key"
+    },
+    {
+      "rpc": "report_m03_trends",
+      "why": "drill surface — the chart click is a level, not a filter (📐13)"
+    },
+    {
+      "rpc": "report_m07_finance_overview",
+      "why": "xKey 'month' is not a column or row key"
+    },
+    {
+      "rpc": "report_m08_profitability",
+      "why": "'project_id' exists on both sides but the chart's top-15 and the table's rows never intersect — a filter would show zero rows"
+    },
+    {
+      "rpc": "report_m09_aging",
+      "why": "drill surface (and its chart's bucket values are labels while the rows carry keys)"
+    },
+    {
+      "rpc": "report_m14_hostess_overview",
+      "why": "xKey 'month' is not a column or row key"
+    },
+    {
+      "rpc": "report_m15_reliability",
+      "why": "xKey 'dow' is not a column or row key — the card's day cross-filter is a SERVER filter the tab already drives through p_drill"
+    },
+    {
+      "rpc": "report_m17_fairness",
+      "why": "lorenz xKey 'x' is not a row key"
+    },
+    {
+      "rpc": "report_m19_customers_overview",
+      "why": "xKey 'month' is not a column or row key"
+    },
+    {
+      "rpc": "report_m20_satisfaction",
+      "why": "all four charts key on score/reason/year, none of which is a column or row key — yet cards-customers REQUIRES these three cross-filters. Needs chart.filter_key from the RPC (or a row column to join on)."
+    },
+    {
+      "rpc": "report_m21_drifting",
+      "why": "histogram xKey 'label' is not a row key (the card itself records 21.5 as an open item: the histogram deliberately does not filter)"
+    },
+    {
+      "rpc": "report_m22_notes",
+      "why": "xKey 'human_tag' is not a column or row key — the card's tag x topic matrix cross-filter is not buildable from this payload"
+    }
+  ],
+  "so_what_order": {
+    "measured": {
+      "method": "python scan of the four approved files, per <section class=\"page\">: first .so-what offset vs first .tiles offset",
+      "02_tab_executive_approved.html": "4/4 pages so_what first",
+      "03_tab_finance_approved.html": "7/7 pages so_what first",
+      "04_tab_hostesses_approved.html": "4/4 pages so_what first",
+      "05_tab_customers_approved.html": "4/4 pages so_what first",
+      "total": "19/19 — unanimous",
+      "corroboration": "design-contract §⑥'s copy-paste HTML skeleton also puts .so-what above .tiles"
+    },
+    "changed": true
+  },
+  "chart_cap": 4,
+  "tab_tests": {
+    "before": "09:11, before any edit: `npx vitest run src/modules/11_reports` = exit 0, 8 files / 148 tests, all green (the four tabs' test files all existed — newest mtime 09:06).",
+    "after": "Last run on a CONSISTENT tree (10:4X): 10 files / 228 tests — 226 passed, 2 failed, both in ExecutiveTab.test.jsx ('Found multiple elements') from that tab's own duplicated workarounds. A run a few minutes later shows 30 failures, and NONE of them are mine: the executive tab's owner is mid-edit — `tabs/executive/surfaceDoors.jsx` is DELETED on disk while DiscountsSurface/ExecOverviewSurface/StaffingSurface/TrendsSurface still import it, so ReportsPage renders an empty <div/> and every page-level test cascades. Checkable with `git status` + `grep -rn surfaceDoors src/modules/11_reports`. It resolves when they finish; re-measure then.",
+    "red_before": [],
+    "red_after_and_why": [
+      "ExecutiveTab.test.jsx:475 — `getByText(/241 אירועים שהסתיימו/)` now finds TWO nodes: KpiTile's new kpi-sub line and the executive tab's `foldTileSubRows`, which folds tiles[].sub into tile.window. FIX (tab owner, one deletion): drop `foldTileSubRows`/`withTileSubRows`/`tileSubLines` from `tabs/executive/surfaceDoors.jsx` and the `withTileSubRows` call site — the file's own comment already says '📄 התיקון הנכון, לדיווח: KpiTile ירנדר את שניהם כשורות משלו'. `withCompareFormat` becomes a no-op too (harmless, but dead).",
+      "ExecutiveTab.test.jsx:496 — `getByTestId('report-row-cap')` now finds TWO nodes: the shared note and the tab's local `RowCapNote` in `tabs/executive/surfaceKit.jsx:64`. §9 D-25 rules there is ONE note in the shared shell, so the local one is deleted; the assertion's expected text must change to D-25's wording (`מוצגות ⁦1⁩ מתוך ⁦241⁩ שורות`)."
+    ]
+  },
+  "workarounds_now_unnecessary": [
+    "tabs/executive/surfaceDoors.jsx — `withRowDoors(surface)` (returns {...surface, drill:true} just to make rows clickable). GAP 2 makes it unnecessary; it is also now HARMFUL, because surface.drill=true suppresses the auto cross-filter and would draw DrillCrumbs if the payload ever carried two levels.",
+    "tabs/executive/surfaceDoors.jsx — `foldTileSubRows` + `tileSubLines` + `withTileSubRows` (GAP 1) and `withCompareFormat` (GAP 8). Both are now double-rendered / redundant.",
+    "tabs/executive/surfaceKit.jsx:64 — local `RowCapNote` (GAP 7, §9 D-25: one shared note).",
+    "tabs/executive/surfaceDoors.jsx — `useSurfaceDoors` (the tab's own three-branch router). GAP 11 puts the same router in the shell; keeping the tab's copy means two routers with two different rules (its quote branch navigates to /quotes/:id/edit, the shell's does not).",
+    "tabs/customers/* — the customers builder's `openDoor` in CustomersTab.jsx (matches target.report against surface.name only, so a target carrying an RPC name would miss). Its tests are green either way; the shell router handles both spellings.",
+    "tabs/hostesses/payloadTransforms — `inheritCompareFormat` (GAP 8). Harmless duplicate: it sets exactly what KpiTile now falls back to.",
+    "The customers tab's `drill: true` workaround the task mentioned: no longer needed — GAP 2 opens rows from drill_key."
+  ],
+  "screenshots": [
+    "<scratchpad>/results/shared/crossfilter.png — מ12, after clicking the first bar: the selected column stays teal and the other eight drop to slate-300 (15-ד), the table is filtered to one row, the pager reads 1–1 מתוך 1, the chip '× נקה בחירה' carries the selection label, and the export caption shows ...‏_שרוך-סאטן-ממותג.xlsx. so_what sits above the tiles and every tile shows its sub line.",
+    "<scratchpad>/results/shared/aging-bar.png — מ9 after a bar click: no clear chip, empty announcement (the drill surface is NOT cross-filtered), 35 drillable rows.",
+    "<scratchpad>/results/shared/drifting-before.png — מ21 with 12 drillable rows.",
+    "<scratchpad>/results/shared/row-door-landing.png — clicking a מ21 row lands on /customers/426, the real customer card (גלובל שיפינג בע\"מ).",
+    "<scratchpad>/results/shared/tiles-order.png — מ14: so_what above the tiles, five kpi-sub lines, compare halves formatted (86.8% / 89.0%).",
+    "<scratchpad>/results/shared/tile-door-landing.png — a מ14 tile door lands on the reliability report (tab+report switched in the URL).",
+    "<scratchpad>/results/shared/proof.log — the full run transcript (CEO login, no console errors)."
+  ],
+  "gates": {
+    "vitest": "exit 1 — 226/228; the two ExecutiveTab duplications are expected and owned by that tab",
+    "eslint (src/modules/11_reports + reportsFormat)": "exit 0",
+    "prettier --check (same)": "exit 0",
+    "npm run dup": "exit 0 — 31 clones, 0.77% total (the guide's recorded baseline is 0.82%); the one remaining clone touching my files is ReportsPage.jsx's writeParams/resolveNext block, which is a deliberate pre-existing copy from ProjectsPage",
+    "npm run deadcode (knip)": "exit 0",
+    "npm run check:bidi": "exit 0",
+    "CR count": "0 on all 12 touched files (perl -ne 'tr/\\r//')",
+    "browser": "vite --port 5190 --strictPort, CEO identity from .env.local via Playwright; server stopped afterwards",
+    "dup": "exit 0 — 31 clones, 0.77% total (guide baseline 0.82%)"
+  },
+  "not_verified": [
+    "The two red ExecutiveTab tests were NOT fixed — the fix is a deletion inside tabs/**, which I am forbidden to touch and whose owner may still be writing (StaffingSurface.jsx changed at 09:12, mid-run). Until that deletion lands, מ2 shows every tile's sub line twice and the row-cap note twice ON SCREEN. This is the one user-visible regression of my work and it is the first thing the orchestrator should route.",
+    "chart.note, is_today, shape_key and the 'score' format are covered by fixtures only — no live RPC emits any of them today (measured on all 16 payloads: 0 notes, 0 is_today outside m07's own chart, 0 shape_key, 0 score columns). The m07 is_today path was read from the payload but never rendered in a browser, because the finance tab's m07 chart was not part of my browser run.",
+    "The cross-filter was proven in the browser on מ12 only. מ4, מ6 and מ16 were measured from payloads, not clicked.",
+    "Keyboard operation of the cross-filter was proven through ChartCard's sr-only table buttons in jsdom, not with a real Tab/Enter in Chromium. §⑤ #7 still marks SVG-bar keyboard activation as לא-אומת and this does not change that.",
+    "I did not measure whether the shell's scrollTo-on-door-open behaves well with the sticky table header — the door tests assert the URL, not the scroll.",
+    "`hostess` doors land on /hostesses (the LIST), not on the hostess card: HostessesPage opens the card from local state (cardHostessId), so there is no address for it. Adding ?hostess=<id> is a change inside merged module-4 code (ripple + its full regression) — reported, not done.",
+    "The payload files under <scratchpad>/results/payloads/ were being rewritten by other agents during my run (m02/m03 changed at 09:12 while I was measuring). Every number in this report comes from the LAST measurement, run at the end.",
+    "I did not run the whole-repo gate (npm run gate / test:run) — only the module's suite plus reportsFormat, as the task specified.",
+    "Another session committed my work as 11f347a9 at 10:08 while I was still adding the quote door — I never committed. That commit OMITTED `src/modules/11_reports/ReportsPage.test.jsx`, so the six door-router tests (plus the new quote one) are still uncommitted on disk. Checkable: `git show --name-only 11f347a9 | grep ReportsPage`. My three remaining uncommitted files are api.js + ReportsPage.jsx + ReportsPage.test.jsx (the quote door and those tests).",
+    "The final gate numbers (eslint 0, prettier 0, dup 0.77%, knip 0, bidi 0, CR 0, vitest 226/228) were measured BEFORE the executive tab's in-progress deletion landed. Nothing of mine changed since, but a gate run right now inherits their half-applied edit."
+  ],
+  "conflicts_reported_not_decided": [
+    "The clear chip's wording is ruling 15-ד's '× נקה בחירה', not the task file's 'נקה סינון'. A recorded product decision outranks a task-file phrasing (C7).",
+    "The chip's PLACE is recorded twice: 15-ד puts it in the filters row (which belongs to the shell, not to ReportSurface) and cards-management #7 puts it in the pager row. I put it directly above the table — the nearer of the two that lives inside the surface.",
+    "The row-cap wording follows §9 D-25 verbatim ('מוצגות N מתוך M שורות'). The executive builder measured that meta.row_total means two different things (a real cap in מ4: 50 of 731, vs a complete top-list in מ2: 8 of 241) and chose 'שנמדדו' so as not to promise a page that does not exist. That is a wording question for the morning table, not mine to decide.",
+    "target.report is NOT uniform across the RPCs: מ2/מ7/מ9 return the FUNCTION NAME (report_m09_aging) and מ14/מ16/מ19 return the SHORT HEBREW NAME (גיול חובות). The router accepts both, but the contract should pick one.",
+    "Auto-detection turns the cross-filter ON for מ6's scatter, whose card records a deliberate absence. One line in that tab's transform (chart.filter_key = false) closes it without touching shared code.",
+    "Where the cards REQUIRE a cross-filter (מ20's three charts, מ22's matrix), no key can be auto-detected because the chart's x is not a row column. Those RPCs must declare chart.filter_key (or add the column to the rows)."
+  ],
+  "blind_spot": "The auto-detection is a NAME match with a value check, and the value check only proves that SOME row meets SOME datum — not that the join is the one the product means. Concretely checkable: on `report_m16_quality_cost` the key is `hourly_rate`, so clicking one scatter point filters the table to EVERY hostess who shares that hourly rate, not to the hostess whose point was clicked. With the live payload that is 50 rows over a small set of rates, so a click can leave several rows and read as a bug rather than a filter. Nothing in my tests catches this, because they assert the mechanism, not the meaning. Whoever verifies should open /reports?tab=hostesses&report=quality-cost as CEO, click a point, and check whether the resulting row set is the intended one; if it is not, the fix is for the RPC to declare chart.filter_key (e.g. the hostess id) rather than to weaken the shared rule. The same question applies, less sharply, to מ6's `estimated`."
+}

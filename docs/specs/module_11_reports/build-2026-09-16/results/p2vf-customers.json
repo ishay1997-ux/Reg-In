@@ -1,0 +1,236 @@
+{
+  "tab": "customers",
+  "findings": [
+    {
+      "surface": "מ22",
+      "severity": "blocker",
+      "lens": "population",
+      "claim_refuted": "p2-customers.json / the G file header: report_m22_notes renders the approved classification. It rendered 386 of 426 — one approved run out of two.",
+      "evidence": "SQL in G: `select ... into v_run from feedback_ai_runs where approved_at is not null order by approved_at desc, run_id desc LIMIT 1`, then every insight query filters `i.run_id = v_run.run_id`. Live: `select run_id,status,model,approved_at from feedback_ai_runs` => run 5 partial/gemini-3.8-flash/40 rows approved 04:28:26.411478, run 6 done/gemini-3.5-flash-lite/386 rows approved 04:28:26.605176. Union query: 426 rows, 426 DISTINCT project_id, 25 red_flag, 0 unclassifiable, free_topic non-null 34. Signed-in CEO payload BEFORE fix: rows=386, tiles[3].value=24, chart.title '...מתוך 386 הערות מסווגות', meta.run.model='gemini-3.5-flash-lite' — while the SAME payload's population.label said 426. 40 classified comments were invisible and nothing on screen said so. Card ⑥ (cards-customers.md:519) locks the plural: 'הדוח מציג רק ריצות מאושרות'.",
+      "conflict_question": null,
+      "fixed_in_g2": true,
+      "reverified_by": "signed-in CEO + FINANCE call after apply",
+      "result": "rows=426 · red_flags=25 · classified=426 · unclassifiable=0 · matrix denominators 12+10+6+2+33=63 · free_topics n>=3 = [חשבונית 6, איחור קייטרינג 4, חניה באולם 3] + 21 singletons = 34 · meta.run.model='gemini-3.5-flash-lite + gemini-3.8-flash'"
+    },
+    {
+      "surface": "מ19",
+      "severity": "major",
+      "lens": "population",
+      "claim_refuted": "The 📐2 population line was measured correctly on the wrong world — the customer counter was the whole customers table.",
+      "evidence": "SQL in G: `select count(*)::integer into v_pop_cust from public.customers c where (p_customer_id is null or ...)`. Rendered: 'n=163 משובים מתוך 217 שנשלחו, אצל 61 לקוחות'. Independent live query, window 2026-01-01..2026-09-10 closed: completed=163 ✓, sent=217 ✓, no_response=54 ✓, but count(distinct customer_id) behind those 163 = 42 (47 distinct customers received a form). 61 is `count(*) from customers`, i.e. every customer in the system including those with no project in the window. Under p_customer_id=401 it printed the broken singular 'אצל 1 לקוחות'.",
+      "conflict_question": null,
+      "fixed_in_g2": true,
+      "reverified_by": "signed-in CEO call, baseline and cust401",
+      "result": "'… ⁦n=163⁩ משובים מתוך ⁦217⁩ שנשלחו, אצל ⁦42⁩ לקוחות (מתוך ⁦61⁩ במערכת).' · cust401 => 'אצל לקוח אחד (מתוך ⁦1⁩ במערכת)'"
+    },
+    {
+      "surface": "מ19 · מ20 · מ21 · מ22",
+      "severity": "major",
+      "lens": "contract",
+      "claim_refuted": "C8 amendment: `drill_key` shape is `{kind, …}`, uniform across tabs. The customers tab was the only one returning a bare scalar.",
+      "evidence": "`select proname, substring(prosrc from '''drill_key''[^\\n]{0,160}') from pg_proc where proname like 'report_m%'` — 12 of 16 return `jsonb_build_object('kind','project'|'quote'|'year'|'sku'|'hostess','id',…)`; m19 returned `r.customer_id`, m20/m22 `p.project_id`, m21 `d.customer_id`. Commit cd6869b5 states 'ReportTable row key is a stable string (drill_key is an object)'.",
+      "conflict_question": null,
+      "fixed_in_g2": true,
+      "reverified_by": "payload diff pre/post",
+      "result": "m19/m21 rows carry {kind:'customer',id}; m20/m22 {kind:'project',id}. CustomersTab.jsx:33-39 already reads `kind` first and falls back to the per-surface map, so the parallel tab is unaffected."
+    },
+    {
+      "surface": "מ21",
+      "severity": "major",
+      "lens": "contract",
+      "claim_refuted": "Money inside server-built Hebrew sentences carried thousands separators but NO directional isolation — the exact class E2's F5 fixed for finance.",
+      "evidence": "Payload scan for 4+ digit runs not inside U+2066…U+2069: tiles[1].sub '11.5% מ-2,786,544 ₪ שהעסק הכניס ב-12 החודשים' · tiles[2].sub '161,009 ₪ בשנה האחרונה' · so_what 'יחד 122,124 ₪ בשנה האחרונה'. E2 header F5 names the same failure verbatim.",
+      "conflict_question": null,
+      "fixed_in_g2": true,
+      "reverified_by": "post-fix payload scan over all four surfaces",
+      "result": "0 unisolated 4+ digit runs in any sentence field (population.label · tiles[].sub/.window/.compare.label · so_what · definitions · chart[].title · meta.notes) across m19/m20/m21/m22. Remaining raw digits are data fields only: rows[].contact_phone and meta.measured_at."
+    },
+    {
+      "surface": "מ22",
+      "severity": "major",
+      "lens": "contract",
+      "claim_refuted": "C8 amendment names report 22 by name for `meta.export_blocked_reason`; the key was absent from all four payloads.",
+      "evidence": "`select count(*) from regexp_matches(prosrc,'export_blocked_reason','g')` per function: m07/m08/m09/m12 = 1 each (E2), m14-m17 and m19-m22 = 0. `ReportSurface.jsx:271` passes `payload.meta?.export_blocked_reason` to ExportBar, and `reportsExport.js:23` holds the locked sentence EXPORT_NO_APPROVED_RUN.",
+      "conflict_question": null,
+      "fixed_in_g2": true,
+      "reverified_by": "signed-in call",
+      "result": "present on all four (null where exportable); m22 returns the locked sentence 'אין שורות לייצא — טרם אושרה ריצת-ניתוח' only when no approved run exists. The client-side shim at customers/payload.jsx:150-154 now falls through by design (its own comment says so)."
+    },
+    {
+      "surface": "מ22",
+      "severity": "major",
+      "lens": "contract",
+      "claim_refuted": "meta.notes declared 'אריחי המצאי … אינם מושפעים ממסנן הלקוח' — false for one tile of four.",
+      "evidence": "Signed-in CEO call with p_customer_id=401: tiles free_notes=426, other_tagged_notes=33, other_vs_categories=33 (unfiltered, as declared) but red_flags=24 => 5. The red-flag tile IS customer-filtered while the sentence said no tile is.",
+      "conflict_question": null,
+      "fixed_in_g2": true,
+      "reverified_by": "signed-in call",
+      "result": "note now names the three; `meta.customer_filter_ignored` returns the exact tile keys on all four surfaces (m20 = [] — it is fully filterable, and says so)."
+    },
+    {
+      "surface": "מ19 · מ20 · מ21 · מ22",
+      "severity": "major",
+      "lens": "contract",
+      "claim_refuted": "📐9 requires aria-sort on the sorted column; no customers surface returned `columns[].sorted`, and ReportSurface derives aria-sort from nothing else.",
+      "evidence": "`ReportSurface.jsx:108` — `const column = (columns ?? []).find((c) => c.sorted)`; live payloads had zero `sorted` keys in all four. Card מ19 ⑩ג names `aria-sort=\"descending\"` on the revenue column as level-0 content that must survive the deletion test.",
+      "conflict_question": null,
+      "fixed_in_g2": true,
+      "reverified_by": "payload diff + cross-check against the row order actually returned",
+      "result": "m19 revenue_12m descending · m20 feedback_score ascending · m21 revenue_12m descending · m22 red_flag descending. NOTE for the tab builder: `declareColumns` in customers/payload.jsx guesses 'ratio' for מ21 and 'final_event_date' for מ22; the real primary sorts are revenue_12m and red_flag. Its own `serverDeclared` guard means the payload now wins — nothing to change, and the two guesses are now dead."
+    },
+    {
+      "surface": "מ22",
+      "severity": "major",
+      "lens": "contract",
+      "claim_refuted": "Coordinator 09:3X: an unapproved run (running/partial/done-unapproved) was invisible to the payload, so the מ25 bar would show a live button whose click 409s on the H1 unique index.",
+      "evidence": "Every insights query and meta.run filtered `approved_at is not null`; runs 1-4 (failed) and any future running row returned nothing to the payload.",
+      "conflict_question": null,
+      "fixed_in_g2": true,
+      "reverified_by": "signed-in call",
+      "result": "`meta.run_in_progress` = {run_id:4, status:'failed', model:'gemini-3.8-flash', sent_count:426, ok_count:0, failed_count:0, started_at, finished_at} — the newest row with approved_at null. ⚠️ It is a FAILED run right now, not a running one: the bar must branch on `status`, never on the key's presence. Rows/tiles semantics unchanged."
+    },
+    {
+      "surface": "מ19",
+      "severity": "minor",
+      "lens": "contract",
+      "claim_refuted": "C8 amendment `chart.label_source` exists because 'A legend showing private_company is the failure this line prevents' — and מ19 returned the raw enum with no pointer to the Hebrew constant.",
+      "evidence": "`customers.customer_type` reaches the payload raw in columns[1], every row, and tiles[3].detail.rows: government · nonprofit · private_company · production_company. No label_source anywhere in the payload. The migration's own comment names CUSTOMER_TYPE_LABELS but the payload never said so.",
+      "conflict_question": null,
+      "fixed_in_g2": true,
+      "reverified_by": "payload diff",
+      "result": "columns[1].label_source = 'CUSTOMER_TYPE_LABELS' and tiles[3].detail.label_source = same. (Separately: the card §③ calls the `government` bucket 'עירייה/רשות' while src/lib/customers.js:16 defines it as 'חברה ממשלתית' — the code constant is SSOT per iron rule 14; a doc note, not a code change.)"
+    },
+    {
+      "surface": "מ21",
+      "severity": "minor",
+      "lens": "contract",
+      "claim_refuted": "The approved mockup's 'נתפסים רק בקצב האישי' sub adds '— כולל שלושת הגדולים ברשימה' and its compare says 'ואת ארבעת אלה הוא מפספס'; the payload carries neither.",
+      "evidence": "05_tab_customers_approved.html:1206-1212 vs the live sub '⁦161,009 ₪⁩ בשנה האחרונה' and compare 'ואת אלה הוא מפספס'.",
+      "conflict_question": null,
+      "fixed_in_g2": false,
+      "reverified_by": "not fixed — reported",
+      "result": "NOT fixed. The builder deliberately dropped an unverified claim rather than assert it (the same discipline the `lowest_avg` branch applies). Adding it is a one-line conditional if Ishay wants the mockup's fuller sentence; it is a content choice, not a defect."
+    },
+    {
+      "surface": "מ21",
+      "severity": "minor",
+      "lens": "baseline",
+      "claim_refuted": null,
+      "evidence": "Independent query anchored at today=2026-09-10: only_personal revenue sum-then-round = 186,940 ₪; the approved mockup writes 186,939 ₪ (round-per-row-then-sum).",
+      "conflict_question": {
+        "source_a": "The RPC and the definition: `round(sum(revenue))` — sum then round.",
+        "source_b": "05_tab_customers_approved.html:1208 and the 10/09 baseline: 186,939 ₪ — round per row then sum. Identical to §9 D-15's recorded rounding-order conflict (236,382 vs 236,380 in finance); the definition still does not say which."
+      },
+      "fixed_in_g2": false,
+      "reverified_by": "independent SQL at the card's anchor",
+      "result": "NOT fixed — 1 ₪, and choosing a side is a product ruling, not a verifier's."
+    },
+    {
+      "surface": "מ21",
+      "severity": "minor",
+      "lens": "contract",
+      "claim_refuted": null,
+      "evidence": "The tile label the payload returns is 'הכנסת 12 החודשים של הלקוחות המסומנים'. `spec.md §1.4` (line 101) lists the short 'הכנסת 12 החודשים'.",
+      "conflict_question": {
+        "source_a": "spec.md §1.4 — 'הכנסת 12 החודשים' (the 74-label mechanical extraction of 11/09).",
+        "source_b": "processes-approved.md §🔒 locked dictionary AND the approved mockup 05_tab_customers_approved.html:1192 — 'הכנסת 12 החודשים של הלקוחות המסומנים' (the §1.4 extractor truncated at the nested `<span class=\"ltr\">12</span>` inside the label)."
+      },
+      "fixed_in_g2": false,
+      "reverified_by": "grep of the approved mockup + §🔒",
+      "result": "NOT fixed — the payload follows §🔒 + the mockup, which C8 explicitly instructs. Doc reconciliation for Phase 4, the same class as §9 D-19."
+    }
+  ],
+  "baseline_table": [
+    { "metric": "מ19 population n / sent / no_response", "definition_ref": "card מ19 §③ + 📐2", "independent_value": "163 / 217 / 54", "rpc_value": "163 / 217 / 54", "baseline": "163 · 54", "verdict": "match" },
+    { "metric": "מ19 customers behind the population", "definition_ref": "📐2 'who is in'", "independent_value": "42 (47 received a form)", "rpc_value": "was 61 → now 42", "baseline": "not in the baseline", "verdict": "mismatch → fixed (G2-5)" },
+    { "metric": "מ19 tile ① medians satisfied/middle/unsatisfied + counts", "definition_ref": "card §③ 'אריח ① 15 · 62 · 206 … 24 · 12 · 10'", "independent_value": "15 / 62 / 206 on 24 / 12 / 10, below-min 9 (anchor 10/09)", "rpc_value": "16 / 68 / 212 on 24 / 12 / 10, below-min 9 (anchor 16/09)", "baseline": "15 · 62 · 206 · 24/12/10 · 9", "verdict": "match at the card's anchor; the live delta is pure date drift (📐22)" },
+    { "metric": "מ19 tile ② 'אחר' vs the four categories", "definition_ref": "card §③ 'אריח ② 33 מתוך 70'", "independent_value": "33 / 70", "rpc_value": "33 / 70", "baseline": "33 · 70", "verdict": "match" },
+    { "metric": "מ19 tile ③ top5 revenue / total / producing / first drifting", "definition_ref": "card §③ 'אריח ③ ✏️10/09'", "independent_value": "1,207,282 / 2,790,032 / 53 producing / 0 of top-5 drifting / first = גלובל שיפינג rank 12, 68,180 ₪, 80 days, cadence 27, ratio 3.0 (anchor 10/09)", "rpc_value": "same at the card's anchor; live 16/09 => 43.7%, rank 12, 86 days", "baseline": "43.3% · 0 מתוך 5 · מקום 12 · 68,180 ₪", "verdict": "match at the anchor" },
+    { "metric": "מ19 tile ④ payment medians by customer type", "definition_ref": "card §③ 'אריח ④ 69 · 46 · 34 · 31'", "independent_value": "69 (n=51, 6 cust) · 46 (22, 3) · 34 (503, 33) · 31 (99, 12); Σ=675", "rpc_value": "identical, top=69, compare 'על 675 חשבוניות ששולמו'", "baseline": "69/46/34/31 on 51/22/503/99", "verdict": "match" },
+    { "metric": "מ19 reference line (2025 full year)", "definition_ref": "card §③ 'קו-ייחוס 4.25 על 222'", "independent_value": "4.25 on 222", "rpc_value": "4.25 on 222", "baseline": "4.25 · 222", "verdict": "match" },
+    { "metric": "מ19 table — 8 largest", "definition_ref": "card §③ table row, with its ✏️10/09 correction", "independent_value": "אלפא · נובה · טכנולוגיות ענן · עיריית נתניה · הפקות דרור · אופק · מיטב מוצרי חשמל · מוטורס", "rpc_value": "same eight, same order", "baseline": "the ✏️10/09 corrected order (מיטב enters at 7, רשת אופנה גל drops out)", "verdict": "match — amounts slide with the 12-month window (📐22)" },
+    { "metric": "מ20 satisfied share / response rate / average / with-negative", "definition_ref": "card מ20 §③", "independent_value": "88.3% (144/163) · 75.1% (163/217) · 4.34 · 19", "rpc_value": "identical", "baseline": "163/144/54/19/4.34", "verdict": "match" },
+    { "metric": "מ20 previous year same range", "definition_ref": "card §③ 'אשתקד'", "independent_value": "81.1% (107/132) · 74.2% (132/178) · 4.21 · 25", "rpc_value": "identical", "baseline": "132/107/46/4.21", "verdict": "match" },
+    { "metric": "מ20 distribution 1-5", "definition_ref": "card §③ 'התפלגות 0 · 3 · 16 · 67 · 77'", "independent_value": "0·3·16·67·77", "rpc_value": "0·3·16·67·77 (score 1 drawn at height zero)", "baseline": "0·3·16·67·77", "verdict": "match" },
+    { "metric": "מ20 positive / negative reasons", "definition_ref": "card §③", "independent_value": "70/31/29/14 and 3·3·3·10 with איחור דיילות = 0", "rpc_value": "identical, 'אחר' last in both (📐7)", "baseline": "70/31/29/14 · 3·3·3·10", "verdict": "match" },
+    { "metric": "מ20 yearly trend", "definition_ref": "card §③ 'מגמה שנתית'", "independent_value": "2024 92.8% (167) · 2025 82.4% (222) · 2026 88.3% (163, partial)", "rpc_value": "identical, partial flag set on 2026", "baseline": "92.8 · 82.4 · 88.3", "verdict": "match" },
+    { "metric": "מ21 population 52 of 61, excluded 6 + 3", "definition_ref": "card מ21 §③ + baseline '61 = 52 + 3 + 6'", "independent_value": "52 / 61 / 6 / 3", "rpc_value": "52 / 61 / 6 / 3", "baseline": "12 מתרחקים מתוך 52 (61 = 52+3+6)", "verdict": "match" },
+    { "metric": "מ21 drifting count and rows", "definition_ref": "§🧾ח7 (no future event AND days_since > multiplier × personal median gap AND >= 3 held)", "independent_value": "12 (anchor 10/09), all 12 rows returned", "rpc_value": "12, rows=12", "baseline": "12", "verdict": "match — story ③ shows all 12" },
+    { "metric": "מ21 marked revenue 12m / company revenue", "definition_ref": "ruling 36 population, 12-month window", "independent_value": "344,714 ₪ of 2,790,032 ₪ (anchor 10/09)", "rpc_value": "same at the anchor; live 320,743 of 2,786,544", "baseline": "344,714 · 2,790,032 · 12.4%", "verdict": "match at the anchor" },
+    { "metric": "מ21 only-personal-cadence count and revenue", "definition_ref": "card + mockup", "independent_value": "4 customers, 186,940 ₪ sum-then-round (anchor 10/09)", "rpc_value": "4 at the anchor; live 3 (one crossed 120 days between 10/09 and 16/09)", "baseline": "4 · 186,939 ₪", "verdict": "count match; ₪ differs by 1 — the D-15 rounding-order conflict, reported not fixed" },
+    { "metric": "מ21 dormant-rule-alone count", "definition_ref": "סף_לקוח_רדום_ימים = 120", "independent_value": "10 (anchor 10/09)", "rpc_value": "10 at the anchor; live 11", "baseline": "10", "verdict": "match at the anchor" },
+    { "metric": "מ21 cadence histogram", "definition_ref": "📑ב#18, bucket width 30, last bucket open, boundary (lo,hi]", "independent_value": "ceil: 401·98·61·36·20·16·44 on 676 · floor: 399·96·64·35·20·17·45", "rpc_value": "ceil — 401·98·61·36·20·16·44 on 676 at the anchor", "baseline": "401·98·61·36·20·16·44 on 676", "verdict": "match — the migration's declared ceil choice is the only one that reproduces" },
+    { "metric": "מ22 free notes / completed / distinct wordings", "definition_ref": "card מ22 §③", "independent_value": "426 / 552 / 356", "rpc_value": "426 / 552 / 356 (77.2%)", "baseline": "552 · 426 · 356", "verdict": "match" },
+    { "metric": "מ22 'אחר' tag count and its text coverage", "definition_ref": "card §③ '33 מהן … ולכל 33 יש טקסט'", "independent_value": "33 with text 33; rest = 37; Σ negative = 70", "rpc_value": "33 / 33 / 37 / 70", "baseline": "33 · 37 · 70", "verdict": "match" },
+    { "metric": "מ22 red flags", "definition_ref": "feedback_ai_insights.red_flag over approved runs", "independent_value": "25 across both approved runs (1 + 24)", "rpc_value": "was 24 → now 25", "baseline": "p2b-finish.json red_flags 25", "verdict": "mismatch → fixed (G2-1)" },
+    { "metric": "מ22 classified / unclassifiable / free_topic non-null", "definition_ref": "p2b-finish.json totals", "independent_value": "426 / 0 / 34", "rpc_value": "was 386 / 0 / 33 → now 426 / 0 / 34 (3 topics at n>=3 + 21 singletons = 34)", "baseline": "426 · 0 · 34", "verdict": "mismatch → fixed (G2-1)" }
+  ],
+  "g2": {
+    "file": "supabase/migrations/20260916082900_module11_g2_rpcs_customers_fixes.sql",
+    "applied_as": [
+      "module11_g2_customers_m19",
+      "module11_g2_customers_m20",
+      "module11_g2_customers_m21",
+      "module11_g2_customers_m22",
+      "module11_g2_customers_m22b_run_in_progress"
+    ],
+    "md5_match": "4/4",
+    "md5_detail": {
+      "report_m19_customers_overview": "13ce300f0098e5b2199faf84df29a802",
+      "report_m20_satisfaction": "84393f08eeb96f59ea9417faccec19f3",
+      "report_m21_drifting": "3e893608a3db20c56bf291fd186b4b5f",
+      "report_m22_notes": "1386a8ee1e923b1295349332d6267f96"
+    },
+    "note": "m22 was applied twice: the second chunk adds only meta.run_in_progress (the coordinator's 09:3X item). The file holds ONE definition per function and its four $function$ bodies md5-equal the live prosrc — verified with scratchpad/fn_md5.py after the last apply. CR=0, LF only, supabase/migrations is in .prettierignore."
+  },
+  "payload_changes": [
+    { "rpc": "all four", "key": "meta.export_blocked_reason", "change": "NEW key. null on m19/m20/m21 and on m22 with an approved run; on m22 with none it carries EXPORT_NO_APPROVED_RUN verbatim." },
+    { "rpc": "all four", "key": "meta.customer_filter_ignored", "change": "NEW key, array of tile keys that ignore p_customer_id. m19 all four · m21 all four · m22 three of four (NOT red_flags) · m20 empty." },
+    { "rpc": "all four", "key": "meta.drill_echo", "change": "NEW key — the p_drill echo, null in all four (no drill surface here, 📐13/D-14)." },
+    { "rpc": "all four", "key": "columns[].sorted", "change": "NEW key on exactly one column per surface: m19 revenue_12m descending · m20 feedback_score ascending · m21 revenue_12m descending · m22 red_flag descending." },
+    { "rpc": "all four", "key": "rows[].drill_key", "change": "SHAPE CHANGE — scalar integer to {kind,id}. The only non-additive change in G2; it aligns with the other 12 RPCs and C8. CustomersTab.jsx:33-39 already reads both shapes, so no tab change is needed." },
+    { "rpc": "all four", "key": "every server-built sentence", "change": "LABEL/FORMAT: each digit run is wrapped in chr(8294)…chr(8297); every integer count carries FM999,999,999 separators; `n=` sits INSIDE the isolate. format() was replaced by || so the isolation is visible in code. No numeric value changed (verified by a full pre/post payload diff that strips isolates and separators: zero numeric diffs)." },
+    { "rpc": "report_m19_customers_overview", "key": "population.label", "change": "VALUE — the customer counter is now the distinct customers behind the population (42), with the system total in parentheses (61), and a singular branch ('לקוח אחד')." },
+    { "rpc": "report_m19_customers_overview", "key": "columns[1].label_source · tiles[3].detail.label_source", "change": "NEW — 'CUSTOMER_TYPE_LABELS', so the tab maps government/nonprofit/private_company/production_company through the code constant." },
+    { "rpc": "report_m22_notes", "key": "rows · tiles[3].value · chart.title · so_what", "change": "VALUE — now computed over ALL approved runs, one row per project. rows 386→426, red flags 24→25, classified 386→426, so_what 'ניהול לקוי ב-23' → 'ב-24'." },
+    { "rpc": "report_m22_notes", "key": "meta.run.model", "change": "VALUE — 'gemini-3.5-flash-lite' → 'gemini-3.5-flash-lite + gemini-3.8-flash' (string key kept, both models named)." },
+    { "rpc": "report_m22_notes", "key": "meta.run.models · meta.run.runs · meta.run.run_count · meta.models", "change": "NEW — per-model row counts [{model,runs,rows}], the full approved-run array, and the count. sent/ok/failed_count in meta.run are now sums over approved runs (812/426/0) so the block is internally consistent with classified=426." },
+    { "rpc": "report_m22_notes", "key": "meta.run_in_progress", "change": "NEW — the newest run with approved_at null, as {run_id,status,model,sent_count,ok_count,failed_count,started_at,finished_at}, or null. Today it is run 4, status 'failed' — the מ25 bar must branch on status." },
+    { "rpc": "report_m22_notes", "key": "tiles[3].sub · tiles[3].window · tiles[3].detail.models · meta.notes", "change": "VALUE/NEW — the tile says how many approved runs feed it; a third note names the run count and the models when more than one run is shown." }
+  ],
+  "m22_now": {
+    "insights_read": 426,
+    "runs_read": [5, 6],
+    "models": ["gemini-3.5-flash-lite (386 rows, 1 run)", "gemini-3.8-flash (40 rows, 1 run)"]
+  },
+  "bidi_fix": "src/lib/reportsCustomers.js:98 — the JSDoc prose `days > 1.5×0` glued a digit to ×. The scanner skips only lines starting with //, not block comments, and the gate is right to insist the separation be visible in code rather than waived. Rewritten as `days > 1.5 × 0`. npm run check:bidi exits 0; CR=0; eslint 0; prettier clean; npx vitest run src/lib/reportsCustomers.test.js 32/32 green. No raw U+2066/U+2069 was introduced into src — the isolates live only in the SQL via chr(8294)/chr(8297).",
+  "live_calls": [
+    { "rpc": "all four", "identity": "CEO", "http_or_error": "200", "cases": "default · baseline 01/01-10/09/2026 · p_customer_id=401", "n": "m19 163 / m20 163 / m21 52 / m22 426", "tiles": 4, "rows": "m19 8 · m20 19 · m21 12 · m22 426 (cust401: 1 · 0 · 0 · 96)" },
+    { "rpc": "all four", "identity": "FINANCE", "http_or_error": "200", "cases": "default · baseline", "n": "identical to CEO", "tiles": 4, "rows": "identical to CEO" },
+    { "rpc": "all four", "identity": "RECRUIT", "http_or_error": "42501 'אין לך הרשאה לבצע פעולה זו במודול לקוחות'", "n": null, "tiles": null, "rows": null },
+    { "rpc": "all four", "identity": "STAFF (מנהלת לוגיסטיקה)", "http_or_error": "42501 same message", "n": null, "tiles": null, "rows": null }
+  ],
+  "permission_lens": "All four: prosecdef=true · proconfig search_path=\"\" · provolatile=s (stable) · proacl {postgres,service_role,authenticated} with no anon and no PUBLIC · assert_module_permission('לקוחות', array['edit','view']) present exactly once and as the first statement · comment on function present on all four and rewritten to match the SQL where clause (m19 now states the distinct-customer counter; m22 states the multi-run union and the per-tile customer-filter split).",
+  "tests_pass_but_would_not_catch": [
+    "src/lib/reportsCustomers.test.js is 32 pure-lib tests with zero DB contact. Not one of the seven defects would have failed it: the single-approved-run read, the drill_key shape, the missing meta keys, the missing columns[].sorted, the bidi isolation, the wrong customer counter, and the false customer-filter note all live in SQL the suite never executes.",
+    "The histogram bucketing is tested in the lib (30 in bucket 1, 31 in bucket 2) and the SQL independently uses ceil — they agree today, but the test constrains only the lib. A future SQL change to floor would keep the suite green and silently move 401·98·61 to 399·96·64.",
+    "classifyDrifting is tested with hand-built fixtures; a wrong population in the SQL (e.g. counting cancelled events, or events dated in the future) reproduces the same lib behaviour and passes.",
+    "No test asserts anything about the payload contract. A renamed tile key, a dropped compare, or a missing so_what would not be seen by any test in this file.",
+    "The agreement-matrix tests build their own input arrays; they cannot see that the SQL was reading one run out of two — the exact blocker."
+  ],
+  "not_verified": [
+    "Nothing was rendered in a browser. LRI/PDI isolation is verified as bytes in the payload, not as pixels; the coordinator's Chromium measurement of the `n=` case was taken on trust and applied.",
+    "The no-approved-run branch of מ22 was reasoned from the SQL, never executed — un-approving a run is forbidden. `export_blocked_reason`, `rows=[]`, `chart=null`, `red_flags=null` and the 'טרם אושרה ריצת-ניתוח' note all sit behind `v_run.run_id is null`, which is unreachable while runs 5 and 6 are approved.",
+    "The missing-param branches (מכפיל_מרווח_מתרחק · מינימום_תשובות_להצגת_ציון · סף_לקוח_רדום_ימים) were read in the SQL but not exercised — all three rows exist, so meta.missing_params is [] in every call I made.",
+    "Overlap handling in the new `pick` CTE (one row per project when two approved runs classify the same project) is correct by construction but untested against real data: today 426 rows = 426 distinct projects, so the distinct on never has to choose.",
+    "npm run gate was not run end to end — only check:bidi, eslint, prettier and the one vitest file. Other agents are writing in src/ concurrently and a full gate would have measured their work, not mine.",
+    "E2E / Playwright was not run."
+  ],
+  "blind_spot": "meta.run.sent_count is now the SUM over approved runs = 812, while the report classifies 426 comments. That is arithmetically right (run 5 was SENT 426 and only 40 came back) but it reads like a doubled corpus, and a מ25 bar that renders 'X מתוך sent_count' would print '426 מתוך 812'. Checkable in one query: `select sum(sent_count), sum(ok_count) from feedback_ai_runs where approved_at is not null` => 812 / 426; then grep the tab for `meta.run.sent_count` — if the bar divides by it, the percentage is wrong by construction. I chose the sum so the block would be internally consistent with classified=426 rather than quoting one run's 386; the alternative (ok_count only) is a one-line change and is the tab builder's to call.",
+  "assumed": [
+    "הנחתי that unioning all approved runs is a mechanism fix and not a product decision — the basis is the card's own plural ('הדוח מציג רק ריצות מאושרות', cards-customers.md:519), the fact that runs 5 and 6 were approved 194 ms apart by the same person and are exactly disjoint, and that the page's own population line already declared 426. If Ishay actually meant 'the latest run only', this is a conflict question and G2-1 should be reverted.",
+    "הנחתי that `meta.run.model` may change value (one name to two) since C8 forbids renaming or removing keys, not correcting a value that was hiding half the data.",
+    "הנחתי that formatting integer counts with FM999,999,999 is right for counts and wrong for numerics — so medians, scores, ratios, percentages, years and the params (מכפיל 1.5, רדום 120) are deliberately NOT formatted. to_char(1.5,'FM999,999,999') would have printed '2'.",
+    "הנחתי that adding `columns[].sorted` for מ21 on revenue_12m (not ratio) and for מ22 on red_flag (not final_event_date) is right, because those are the primary ORDER BY keys the rows actually come back in — measured against the returned row order, not the card's prose."
+  ]
+}

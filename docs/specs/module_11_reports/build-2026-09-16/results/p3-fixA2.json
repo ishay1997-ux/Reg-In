@@ -1,0 +1,135 @@
+{
+ "agent": "P3-FIX-A round 3 (18 shell verdicts + 3 E2E findings + the orchestrator's rulings)",
+ "head_at_start": "731969e7 (E2E) on top of 04ccafff (my round-2 work, committed by the orchestrator)",
+ "committed": false,
+ "changes": [
+  {
+   "id": "F1 (BLOCKER)",
+   "file": "components/ReportSurface.jsx + ChartCard.jsx",
+   "what": "On a drill surface a chart bar now DRILLS. New module-level chartDrill(chart, onDrillLevel) reads chart.drill_param ?? chart.xKey for the state key and chart.drill_key ?? `<xKey>_key` for the datum field (the live m09 data already carries bucket_key, so a click writes {bucket:'d1_30'} — D-30①). No datum carries the key field ⇒ no onSelect at all, so a bar never looks clickable without being one. The 0-count guard and the sr-table keyboard path are ChartCard's and unchanged.",
+   "test": "ReportSurface.test.jsx 'לחיצה על עמודה בדף-דריל יורדת רמה' (6 tests: the KEY not the label, the open bucket stays marked, a 0-count bucket is disabled, the last level offers no bar click, the row intent, no intent at the last level)"
+  },
+  {
+   "id": "M2 · F8 · C7",
+   "file": "components/ReportSurface.jsx",
+   "what": "Emptiness is now rows.length === 0 && (population?.n ?? 0) === 0 (was tiles||charts||rows, which every one of the 16 RPCs made permanently true ⇒ 📐10 state 2 was dead code module-wide).",
+   "test": "ReportSurface.test.jsx 'ריקות נמדדת באוכלוסייה' (3) + ReportsPage.test.jsx (the two envelope tests now carry n=0, plus a new counter-test that a large population with 0 rows is NOT an empty screen)"
+  },
+  {
+   "id": "H1",
+   "file": "components/ChartCard.jsx + components/reportsCopy.js (NEW)",
+   "what": "data.length === 0 ⇒ title + the locked 📐10 sentence, and no legend / LTR figure / sr-table. The two empty sentences moved out of Envelope.jsx into reportsCopy.js so the shell and the chart say the same words (a .js file because react-refresh forbids a component file exporting a constant).",
+   "test": "ChartCard.test.jsx '📐10: גרף ריק אומר זאת' (3)"
+  },
+  {
+   "id": "M5",
+   "file": "components/ChartCard.jsx",
+   "what": "Cells are emitted for EVERY bar series (was index === 0 only), each with its own hatch fill, so the 📐20 today-dash and the cross-filter dimming reach series 2+. over_threshold deliberately stays on series 0: the flag describes the row's measure, not last year's bar.",
+   "test": "ChartCard.test.jsx 'תאים נפלטים לכל סדרת-עמודות' (3)"
+  },
+  {
+   "id": "M1",
+   "file": "components/ChartCard.jsx",
+   "what": "ScatterBody gives the XAxis the same domain as the Y (m06 declares [0,630] while the data maxes at 600, so the y=x segment fell outside the axis and recharts discarded it). PROVEN in the browser: the diagonal is now drawn (line 64,226 → 950,8). Its LABEL still does not render — a measured recharts 3.10.1 limit for segment reference lines — so a new DiagonalLegend renders the payload's own refLines[].label under the chart legend (x/y reference lines keep their in-chart label and get no legend).",
+   "test": "ChartCard.test.jsx 'פיזור: תחום הציר' (3) + 'מקרא לאלכסון' (3)"
+  },
+  {
+   "id": "📐5 ruling 19:4X",
+   "file": "components/ChartCard.jsx",
+   "what": "ScatterBody honours an additive chart.x_domain for the XAxis when the payload declares it (m16's hourly rate 41-49 drawn across 1-49 is unreadable), falling back to the Y domain and then to [0,'auto']. refLines still clamp to the axes.",
+   "test": "ChartCard.test.jsx 'x_domain של השרת גובר על תחום-ציר-Y, ואינו נוגע ב-Y'"
+  },
+  {
+   "id": "E2E (c)",
+   "file": "components/ChartCard.jsx",
+   "what": "The sr-only data table expands as an ABSOLUTE overlay (state-driven), not via focus-within:not-sr-only. It was returning to document flow on expand, so mousedown on the clear chip collapsed it, the page reflowed between mousedown and mouseup and no click event fired at all. Both states are now out of flow ⇒ no reflow, no lost click. The chart card gained `relative` as the anchor.",
+   "test": "ChartCard.test.jsx 'טבלת-קורא-המסך נפרשת כשכבה' (3)"
+  },
+  {
+   "id": "M6 · C9 · F9 · F10",
+   "file": "components/ReportSurface.jsx + ChartCard.jsx",
+   "what": "Three new extension slots — see \"slots\" below.",
+   "test": "ReportSurface.test.jsx 'renderAfterSoWhat · renderChartAside · renderChartFooter' (2) + ChartCard.test.jsx 'aside · footer' (4)"
+  },
+  {
+   "id": "H4",
+   "file": "components/ReportSurface.jsx",
+   "what": "RowCapNote is measured against the RAW pre-transform rows. m16 returns rows=50 / row_total=50 (no cap at all), and the tab's client chip shrank rows to 17, so the note appeared and read 'מוצגות 17 מתוך 50' over a pager saying '1–17 מתוך 17' — a client filter reading as a server cap.",
+   "test": "ReportSurface.test.jsx 'תקרת-השורות נמדדת מול השורות הגולמיות' (2)"
+  },
+  {
+   "id": "M11",
+   "file": "ReportsPage.jsx + FiltersBar.jsx + components/reportsShellContext.js + ReportSurface.jsx",
+   "what": "ExportBar is rendered into the shell's filters row, where the approved mockup puts it (02_tab_executive_approved.html:328-355). MECHANISM DEVIATION, declared: the shell publishes a DOM node through the context and the surface draws into it with createPortal — rather than hoisting columns/rows/labels up as state. Hoisting would need an effect writing to the parent on every render (rows is a new array on every selection) ⇒ a render loop. The two caption lines travel with the button; with no shell the bar stays where it was, so no tab test changes.",
+   "test": "ReportsPage.test.jsx 'הייצוא יושב בשורת-המסננים' (3, incl. exactly one button on screen)"
+  },
+  {
+   "id": "C8 · E2E (a)",
+   "file": "ReportsPage.jsx",
+   "what": "📐17's subtitle now names the selected customer — formatWindowLabel has taken customerName since it was written and module 11 passed it NOWHERE, so a filtered page said '· כל הלקוחות' while the export caption on the same screen said 'לקוח-נבחר'. The id comparison is string-based on purpose (URL string vs numeric customer_id).",
+   "test": "ReportsPage.test.jsx '📐17: הכותרת נוקבת באוכלוסייה' (3)"
+  },
+  {
+   "id": "E2E (b)",
+   "file": "api.js (DRILL_INTENT) + ReportSurface.jsx + ReportsPage.jsx",
+   "what": "A drill surface with a FURTHER level passes DRILL_INTENT as a THIRD ARGUMENT to onDrill, and openDoor(next, row, intent) checks it before the door branch. Until now a row {kind:'customer', bucket:'d90p', customer_id:401} drilled only because `id` was absent — the day the RPC adds `id`, that same click would have navigated to the customer card with nothing going red. Third argument rather than a field inside the object: the object is written to ?drill= and sent as p_drill, so a display field there would need a delete-before-write that can be forgotten.",
+   "test": "ReportSurface.test.jsx (2 tests: intent present with a further level, absent at the last level)"
+  },
+  {
+   "id": "M12 · C11 · C15",
+   "file": "components/KpiTile.jsx + ReportSurface.jsx",
+   "what": "Door tiles get cursor-pointer (Tailwind v4 leaves buttons at cursor:default while ReportTable sets it for drillable rows). compare.value null/undefined renders the label ALONE — three m21/m22 tiles printed '… לא סכום שצפוי להיאבד: —', a dash reading as 'no data' on a sentence that never had a number. The compare line is capped at max-w-[210px] and each tile is wrapped in the mockup's own box (min-w 210 / max-w 340 / basis 210), which is what broke m19's four tiles into 2+2 at 1280px. flex-wrap is untouched (Ishay's 08/08 flex-not-grid ruling).",
+   "test": "KpiTile.test.jsx 'חצי-השוואה בלי ערך' (2) + 'הדלת נראית כדלת' (2) + ReportSurface.test.jsx 'גבולות-רוחב של האריח'"
+  },
+  {
+   "id": "M9 + chip wording",
+   "file": "ReportsPage.jsx + ReportSurface.jsx + FiltersBar.jsx + e2e/reports.spec.js",
+   "what": "Feminine imperative: NO_TABS_SENTENCE 'פנה' ⇒ 'פני', and the cross-filter chip 'נקה בחירה' ⇒ 'נקי בחירה' (spec §1.5 + S-28 + the approved mockup line 897). FiltersBar's dead clear-chip block (nobody passed crossFilterLabel/onClearCrossFilter) is deleted, so one chip with one wording survives. The two e2e/reports.spec.js constants are aligned.",
+   "test": "ReportsPage.test.jsx 'ציווי בנקבה' + ReportSurface.test.jsx 'נוסח הצ׳יפ'"
+  },
+  {
+   "id": "finance 19:2X",
+   "file": "src/lib/reportsFormat.js + components/ReportTable.jsx + src/lib/reportsExport.js",
+   "what": "(a) New `textLtr` format — formatByType isolates the string as one LTR unit, so a digit-range cell ('1–30', '90+', '61–90') stops rendering mirrored in an RTL <td> (the en-dash is a neutral between two digit runs). ReportTable already routes every cell through formatByType, so it applies with no call-site change. (b) reportsExport's cellFor text branch strips ALL bidi controls (U+200E/200F/061C/2066-2069/202A-202E) so exported cells are plain — the finance tab's own isolation was leaking two invisible characters into the xlsx, where they stick to any VLOOKUP the accountant runs.",
+   "test": "reportsFormat.test.js 'formatByType — textLtr' (3) + reportsExport.test.js 'תאי-טקסט יוצאים נקיים מתווי-כיווניות' (4)"
+  }
+ ],
+ "slots": {
+  "renderAfterSoWhat(payload)": "Between the so_what paragraph and the tiles — where every card anchors the §⑩ `why` hint (mockup: so-what 470 < hint 476 < tiles 482). All four tabs currently hang it on renderTop, i.e. ABOVE the population line.",
+  "renderChartAside(payload, index)": "Beside the chart figure, INSIDE the chart card — m09's 'שוטף — עוד לא באיחור' side tile, which the card anchors 'בתוך .chart-card' and which measured at full page width above the chart.",
+  "renderChartFooter(payload, index)": "Under the figure and above the chart's so-what line, inside the card — where cards anchor §⑩ hints 'מתחת ל-.legend/.barkey'. Rendered even when the chart is empty (it explains how to read).",
+  "note_for_tab_builders": "Both chart slots receive the CHART INDEX, so a surface with two charts picks which one. All seven slots receive the payload AFTER transformPayload."
+ },
+ "not_applied": [
+  "M6's second half — the false why-comment in tabs/executive/surfaceKit.jsx:48-54 claiming the hint sits under the so-what line. That file belongs to the executive builder; the slot it needs now exists.",
+  "M9's doc ripple — processes-approved.md:616 and cards-customers.md:511,533 carry the same masculine imperative, and so does tabs/customers/AnalysisRunBar.jsx:39 (the customers builder's file, flagged as instructed, not edited).",
+  "F9/F10 second half — moving the m09 side tile and the finance hints into the new slots is the finance builder's edit; the slots are in place and named above.",
+  "Anything a p3r verdict marks owner != shell (skipped as instructed)."
+ ],
+ "screens": [
+  "<scratchpad>/results/fixA2/m09-drilled-chart.png — F1 PROVEN: after clicking the 1–30 bar the URL carries ?drill={\"bucket\":\"d1_30\"}, the crumbs read 'גיול חובות | מדרג 1–30 יום', and the open bucket stays teal (BOTH series, the hatched one included) while the other three dim to slate-300. That single shot proves F1 and M5 together.",
+  "<scratchpad>/results/fixA2/m09-before-drill.png + proof.log — all 11 bar cells carry cursor:pointer at the root level (they were cursor:default and did nothing).",
+  "<scratchpad>/results/fixA2/empty-after-filter.png + proof2.log — 📐10 state 2 PROVEN live on מ7 with customer 411 / period=month: 'אין נתונים בתקופה שנבחרה' + 'נקי מסננים'. Clicking it returns to ?period=all and the table comes back (after clear: envelope=0, table=1).",
+  "<scratchpad>/results/fixA2/probe4.log — the measurement behind that: on finance/finance-overview 5 of 8 customers now reach the envelope, while customers/drifting correctly does NOT (its population is 52 customers regardless of the filter, so an empty table there is a true answer). That is the two-condition rule doing exactly what it is for.",
+  "<scratchpad>/results/fixA2/m06-diagonal.png + proof2.log — M1 PROVEN: the y=x segment is drawn (line 64,226 → 950,8) and the legend reads 'ההערכה התקיימה בדיוק', the payload's own words.",
+  "<scratchpad>/results/fixA2/m19-filters-row.png + proof.log — export button inside the filters row (exactly 1 on screen), 📐17 subtitle '01/01/2026–16/09/2026 · אופק ביטוח ופיננסים', and the four tiles on ONE row (count 4, distinctRows 1)."
+ ],
+ "gates": {
+  "vitest_module": "exit=0 — 10 files, 326/326 (was 248 at 04ccafff). Log: <scratchpad>/results/vt-fixA2.log",
+  "vitest_lib": "exit=0 — reportsFormat + reportsExport, 56/56. Log: <scratchpad>/results/vt-fixA2-lib.log",
+  "eslint": "exit=0 on src/modules/11_reports + src/lib + e2e. ⚠️ ReportSurface hit cognitive complexity 39/20 when the drill branch went in — fixed by extracting SurfaceCharts and drillHandlers to module level, not by raising anything.",
+  "prettier_check": "exit=0 · dup: exit=0, 0.80% total (threshold 3%), one pre-existing module clone (ReportsPage writeParams/resolveNext vs ProjectsPage) · knip: exit=0 · check:bidi: exit=0 · check:declared-counts: exit=0",
+  "CR": "CR=0 on all 19 files I touched",
+  "tab_tests": "All green. One tab test (ExecutiveTab.test.jsx מ3) went red on the third onDrill argument and its OWNER fixed it concurrently with a firstDrillArg helper — I did not touch tabs/**."
+ },
+ "not_verified": [
+  "The x_domain path (📐5 ruling) is fixture-only — no live payload declares x_domain yet, so m16's rate axis still runs 1–49 on screen. The RPC owner emits it and nothing else changes.",
+  "chart.drill_param / chart.drill_key are fixture-only too: m09's data carries bucket_key so the DEFAULT derivation is what the browser proof exercised. A surface whose key field is named otherwise has never run.",
+  "The sr-table overlay fix was proven in jsdom (class swap, no flow change) — I did NOT reproduce the original lost-click in Chromium and then re-run it. The mechanism is removed by construction (both states are out of flow), but the E2E agent's exact keyboard-then-mouse sequence was not replayed.",
+  "textLtr has no live consumer: no RPC declares it yet (the finance tab still isolates in its own transform). The export strip protects the xlsx either way, and is proven by unit test only — I never opened a produced file.",
+  "The empty-after-filter envelope was proven on מ7 and מ2 only; מ20/מ22 (C7's own surfaces) were not driven to n=0.",
+  "Only the CEO identity was driven this round.",
+  "The DiagonalLegend places the label under the chart legend, NOT at the mockup's in-chart anchor. That is a recharts limitation and a placement deviation — worth one look by whoever owns the card."
+ ],
+ "blind_spot": "The drill-intent marker is a POSITIONAL THIRD ARGUMENT, and a positional argument is exactly the kind of thing a wrapper drops in silence. Concretely checkable in one step: any tab that later writes `onDrill={(next) => onDrill(next)}` instead of passing the prop through degrades m09 back to today's behaviour — a bucket row would navigate to the customer card instead of drilling — and NOTHING goes red, because the shell tests call ReportSurface directly and the tab tests mock onDrill. Today all four tabs pass onDrill through unwrapped and say so in writing (tabs/executive/surfaceKit.jsx: 'נמסרים לשלד כפי שהתקבלו, בלי עטיפה'), which is why I chose the argument over a field in the object — a field would have to be deleted before every URL write, and one forgotten delete sends the server a p_drill key it does not know. Both designs trade one silent failure for another; I picked the one whose precondition is greppable (`grep -n onDrill src/modules/11_reports/tabs/`). The durable fix is for onDrill to take one object ({ drill, row, intent }) so nothing is positional — a contract change across four tab owners, which is why I did not make it in a fixer round."
+}

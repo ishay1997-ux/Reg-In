@@ -1,0 +1,45 @@
+# Task P4 · Documentation ripples for module 11 (iron rules 13 · 15) — after the code is green
+
+**Session type:** build (docs only). **Repo:** `C:\Users\ishay\Reg-In`, branch `ishay/module-11-build`. Write ONLY the files listed. **Never commit.** English in Claude-facing files (micro-guides, LOG), Hebrew in Ishay-facing files (STATUS, PROJECT_MASTER, db_roadmap, step guide). LF only (`perl -ne '$n+=tr/\r//; END{print "CR=$n\n"}' <file>` = 0).
+
+## 🔴 The one top mine
+`npm run check:declared-counts` and `npm run check:docs-structure` run at the gate and they read the files you are about to edit. **Before you report, run both** (`npm run check:declared-counts; echo exit=$?` · `npm run check:docs-structure; echo exit=$?`) and paste the exit codes. A declared number you change in one place must change in the counted place too (screens-approved `סיכום-מצב` · `spec.md §1.4` · step guide open-items count · micro-guide `לא אומת` count · design-contract). Also `npm run check:iron-rules` (a cited rule number must exist in root `CLAUDE.md`).
+
+## Read first
+1. `docs/micro_guides/module-11.md` — whole file (status header · §2ב · §3 · §6 with all `↳ as-built` lines · §9 D-1…D-13 and any later rows). It is the source of every fact below — **do not restate from memory; quote it.**
+2. `docs/CLAUDE.md` §2 (SSOT map: what each doc may and may not contain) and §4 (ripple order).
+3. `docs/db_roadmap.md` lines 278–306 (M11-1…M11-5) and its §10 Done-list (grep `## 10` / `Done`), plus how earlier modules wrote their Done rows (copy the shape of an m8 row).
+4. `docs/PROJECT_MASTER.md` §6 — every `🚧 מ11` line (grep; 10 hits, 8 items — guide §3.4 explains the arithmetic) and how a paid debt is struck (`~~🚧 מN~~` + date + evidence).
+5. `docs/PROJECT_MASTER_sec7.md` — the RLS matrix row for module 11 (grep `דו"חות` and `Views/RPC`) — it reads *"none (5 reports as Views/RPC, read-only)"* and is stale (guide §9 D-3): correct it ONCE with all three writes (`notification_preferences.onboarding_mode` · the two AI tables · `assignments.recommended_rank`) + the 17 RPCs; annotate at the line (`🔴 גובר: … 16/09/2026 · module-11.md §9 D-3`), never rewrite history.
+6. `docs/guides/modules/module_11_reports.md` — §② (entry state), ⑥2/⑥3 blocks (stamp the branch and date; the "5,674" figure if present ⇒ 5,741 with the measurement), §⑦.
+7. `docs/CODE_MAP.md` — how modules are listed (add `src/modules/11_reports/` with its files and `src/lib/reports*.js`, in the file's own style; line counts measured with `(Get-Content -LiteralPath X).Count` or `wc -l`, never `Measure-Object -Line`).
+8. `docs/CLAUDE_CODE_LOG.md` — the maintenance policy at its head (grep `Size self-check`), then the `## Current State` block (rewrite it) and the top of `## Session Log` (prepend one entry).
+9. `STATUS.md` lines 1–45 (the banner and the "עודכן לאחרונה" line) and the module table row for 11 (grep `| 11 |`).
+10. `src/modules/09_settings/ParamsTab.jsx:2`, `ParamsTab.test.jsx:49`, `e2e/settings.spec.js:5` — three comments saying "43 שורות": **remove the number** (write "כל שורות ה-`params`") rather than updating it — the house rule "a number that rotted gets removed, not updated" — and add one `↳ as-built` line to `docs/micro_guides/module-9.md`'s deviations log saying m11 added four rows (the Stop hook demands the m9 guide be newer than those m9 files).
+
+## What to write
+- `docs/db_roadmap.md`: M11-2…M11-5 status cells ⇒ ✅ APPLIED with date, migration file name and what landed (copy facts from the guide's as-built lines, incl. `free_topic`); §10 Done rows for A · B · C · H0 · D · E · F · G (one per migration file under `supabase/migrations/20260916*`); a row for H0 explaining the `bak_*` hardening and that dropping them is Ishay's decision; the 5,741 correction.
+- `docs/PROJECT_MASTER.md §6`: strike the `🚧 מ11` debts the guide §3.4 marks as paid (with date + evidence pointer), leave the ones it marks open, and ADD new dated `🚧` lines the guide §9 names as debts: a re-seed script (D-8, already there — verify), a `schema.sql`-vs-catalogue gate script (D-11/step 1.1 blind spot), the `bak_*` drop decision, the five owner-less `params`, the migration-ledger gap for the three 04–05/09 files, root `CLAUDE.md` §3's CR idiom (D-12). Each line in the house shape `🚧 מN ← מ11 · what · source: micro_guides/module-11.md §9 D-x`.
+- `docs/PROJECT_MASTER_sec7.md`: the RLS-matrix annotation (step 5).
+- `docs/guides/modules/module_11_reports.md`: the stale figures + a dated ✏️ note in §② that the build ran 16/09/2026 on `ishay/module-11-build`.
+- `docs/CODE_MAP.md`: module 11 entry.
+- `docs/CLAUDE_CODE_LOG.md`: rewrite `Current State` (module 11 built on `ishay/module-11-build`, what is live in the DB, what awaits: close audit ⇒ PR ⇒ dev ⇒ main); prepend a Session-Log entry for 16/09/2026 with: the rulings (D-9), the phases and agent counts, the four findings (bak_* exposure · seed_registry loss · CR idiom · rank-source conflict), the migrations applied, and `artifact: pending (close audit)`. Keep the narrative ≤ 25 lines; do not compact older entries (that is the close audit's job).
+- `STATUS.md`: the "עודכן לאחרונה" line (new first paragraph in the existing style, with `*(הקודם:)*` demotion) and the module-11 row ⇒ `🔨 נבנה 16/09/2026 — ממתין לאודיט-סגירה` (the close audit later sets "ממתין ל-PR/merge"). Hebrew, plain, no jargon.
+- The three m9 comment fixes + one line in `docs/micro_guides/module-9.md` deviations log.
+
+## Output (final message = data)
+`{ "files_written": [...], "debts_struck": [...], "debts_added": [...], "gates": { "declared_counts": exit, "docs_structure": exit, "iron_rules": exit }, "not_verified", "blind_spot", "assumed" }`
+
+## Additions 16/09 08:3X (orchestrator) — do these too
+- `docs/specs/module_11_reports/HANDOFF-stage3-2026-09-10-02.md` §6 (~line 117): flip the ⚠️ row for conference story ④ to ✅ — the classification is done and approved (module-11.md step 2ב.4 as-built has the facts; quote them, do not restate from memory).
+- PROJECT_MASTER §6 gets, from module-11.md §9 D-23: ① card-20.7 keyword filter 16/13 vs 20/17 (denominator 104 reproduces) · ③ run 5's 40 rows need a delete before uniform re-classification (`feedback_ai_insights.project_id` unique) · ④ `SUPABASE_ACCESS_TOKEN` in `.env.local` returns 401 (CLI deploy dead, MCP deploy works). And D-23 ② (homoglyph quote guard) as a debt on `classify-feedback`.
+- `db_roadmap` §10: one row per FILE (D-20: rows-per-file is bookkeeping) — the applied files are A · B · C · H0 · H1 · D · E · E2 · F · F2 · G (+ D2 · G2 · E3 · F3 if they exist on disk by the time you run — check `ls supabase/migrations/20260916*`).
+- `docs/guides/01_estimation_log.md` record #12: add the D-24 lesson line (quota kill loses the report, not the writes ⇒ verifiers write findings incrementally) — the record itself is closed by the orchestrator at the end with the two clock times.
+
+## Additions 16/09 11:0X (orchestrator) — doc ripples found by the Phase-2/3 agents
+- `docs/micro_guides/module-11.md` §2ב C8: the `format` value list gains `score` (3 decimals, reliability scores) and `date` (DD/MM/YYYY); `drill_key.kind` already carries `sku`; `chart.filter_key`, `chart.note`, `chart.shape_key`, `data[].is_today`, `compare.format` (or the KpiTile fallback to `tile.format`), `meta.row_total` rendered as a cap note — read `<scratchpad>/results/p3-shared.json` for the exact additive fields the shell now honours and list them once in C8 (each with the date 16/09).
+- `docs/specs/module_11_reports/spec.md §1.4`: two labels truncated by the 11/09 extraction at a nested `<span class="ltr">` — הנהלה row *"נתח 5"* ⇒ *"נתח 5 הלקוחות הגדולים"*; לקוחות row *"הכנסת 12 החודשים"* ⇒ *"הכנסת 12 החודשים של הלקוחות המסומנים"* (both confirmed against the approved mockups and §🔒). Keep `check:declared-counts` green (it counts rows, 74).
+- `stage2-cards/cards-finance.md` מ9 §⑩ row `reports.aging.whyAndFirst`: replace the card sentence with the approved mockup's (§9 D-29 — the card's "מיום שליחתה" contradicts the due-date definition).
+- `stage2-cards/cards-customers.md` מ19 §③: `government` is labelled *"עירייה/רשות"* in the card but `src/lib/customers.js:16` (SSOT, rule 14) says *"חברה ממשלתית"* — align the card to the code.
+- `docs/guides/db_roadmap.md` §10: the applied files are A · B · C · H0 · H1 · D · D2 · E · E2 · E3 · F · F2 · G · G2 · H2 (+ any later fix file on disk) — one row per FILE; registry rows per file are bookkeeping (§9 D-20).
+- PROJECT_MASTER §6 debts to add: (a) quantity-class number formatting in server sentences (H2 formatted only 4+ digit counts; exclusion counts < 1,000 in m14/m15 are unformatted and will diverge when they cross 999 — one-line `to_char` each); (b) `feedback_ai_runs` re-classification of run 5's 40 rows needs a delete first; (c) `SUPABASE_ACCESS_TOKEN` in `.env.local` returns 401; (d) six `bak_*` tables — Ishay decides on dropping; (e) five owner-less params; (f) migration ledger gap for the 04–05/09 files (§9 D-13); (g) `listCustomers()` RLS-gated filter list (§9 D-16); (h) homoglyph quote guard in `classify-feedback` (§9 D-23 ②).

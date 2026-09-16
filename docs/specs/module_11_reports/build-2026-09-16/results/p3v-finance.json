@@ -1,0 +1,158 @@
+{
+  "tab": "finance",
+  "lenses": "A+B+C in one agent (D-33 pacing)",
+  "measured_against": {
+    "code_head": "b199fa22 (guide-only commit). Tab files unchanged since af4ef4b9 — FinanceTab.jsx 10:13:35, finance/FinanceSurface.jsx 10:13:22, finance/financePayload.jsx 10:22:27, onboardingCopy.m11.finance.js 09:14:53.",
+    "shell_files_in_flight": "components/ReportSurface.jsx 17:35:10, components/KpiTile.jsx 17:34:22, components/ChartCard.jsx 11:04:58, ReportsPage.jsx 17:34:52 — uncommitted, the shell fixer was writing during this run. TWO ROUTED ISSUES WERE ALREADY FIXED in that tree and are therefore NOT reported again: chart Y-axis tick thousands separators (m07 shows 600,000 / 450,000) and tiles[].compare.note (rendered on m07's 'צפוי להיכנס ב-30 יום' tile).",
+    "db": "live payloads fetched 16/09 ~17:5X as CEO: m07/m08/m09/m12 with p_from/p_to null and with the 01/01–10/09 baseline window, plus m09 p_drill levels 1 and 2",
+    "browser": "vite on :5182 (a server was ALREADY listening there when this run started — reused, not spawned), Chromium 1280x900, identities CEO / RECRUIT / STAFF, onboarding modes 0 and 2 (mode 2 by rewriting the PostgREST GET on notification_preferences with page.route — no DB write)"
+  },
+  "findings": [
+    {
+      "lens": "A",
+      "surface": "מ9 · גיול חובות",
+      "severity": "blocker",
+      "claim": "The aging chart's bucket columns are dead: no drill, no selected state, cursor:default. The card names them as the page's drill control (📐13), and with them missing three of the five buckets have NO entry point anywhere on the page.",
+      "evidence": "Browser (results/lensB-finance/pass-ceo.json actions.m09_chart_click): 11 bars, mouse.down→up on the first bar, URL unchanged, clearChip 0, cursorOnBar 'default', srTableButtons 0. Cause: ReportSurface.jsx:379 allowAutoFilter=!surface.drill and :446 onSelect only exists when a filter key exists, so a drill surface's chart gets no handler at all — there is no chart→onDrill path in the shell. Reachable buckets measured from the payload: tiles 'מעל 60 יום' and 'מדרג 90+' both target {bucket:'d90p'}, meta.current_tile.drill={bucket:'current'}; level-0 rows carry drill_key {kind:'project'} ⇒ d1_30, d31_60, d61_90 unreachable. Card: cards-finance.md:310 row 6 'עמודת-מדרג בגרף … 🔻 יורדת רמה (📐13): רמה 0 ← רמה 1'; selected state 'מסגרת teal-700 סביב הערימה + ✓'. Screenshot results/lensB-finance/m09-after-chart-click.png.",
+      "owner": "shell"
+    },
+    {
+      "lens": "A",
+      "surface": "מ9 · גיול חובות",
+      "severity": "major",
+      "claim": "The 'מעל 60 יום' tile door lands on a different number than the tile shows: the tile reads 46,038 ₪ · 7 חשבוניות אצל 4 לקוחות and its target is {bucket:'d90p'} — the 90+ level, 17,946 ₪ · 3 · 3.",
+      "evidence": "Live payload (<scratchpad>/lensfin/payloads/m09_default.json): tiles[1] label 'מעל 60 יום' value 46038, sub '⁦7⁩ חשבוניות אצל ⁦4⁩ לקוחות', target {\"tab\":\"כספים\",\"drill\":{\"bucket\":\"d90p\"},\"report\":\"report_m09_aging\"} — identical to tiles[2] ('מדרג 90+', 17946). Clicked in the browser: URL became ?drill={\"bucket\":\"d90p\"} and the level-1 tile reads 'חוב במדרג 90+ יום 17,946 ₪ · 3 חשבוניות · 3 לקוחות' (results/lensB-finance/m09-level1-from-tile.png, pass-ceo.json actions.m09_tile_door). 'מעל 60 יום' = d61_90 + d90p (src/lib/reportsFinance.js:38 OVER_SIXTY_KEYS), so no single-bucket drill can carry it.",
+      "owner": "rpc"
+    },
+    {
+      "lens": "A",
+      "surface": "מ9 · גיול חובות",
+      "severity": "major",
+      "claim": "📐18's contact column is not on screen although the RPC already computes it: every row at levels 0/1/2 carries `owner` (the customer's primary contact) and `columns` declares no column for it, so ReportTable never renders it.",
+      "evidence": "Payload m09_default.json rows[0] = {..., \"owner\":\"ליהי סבן\", ...}; columns = project_id · customer_name · sent_date · due_date · amount · days_overdue · bucket (7, no owner). Browser <th> list identical (pass-ceo.json mode0.m09.ths). Source of owner: supabase/migrations/20260916063400_module11_e2_rpcs_finance_fixes.sql:880 (customer_contacts.is_primary) → :956 'owner', contact_name. Requirement: processes-approved.md:870 '**6 · גיול** | **עמודת איש-הקשר** (📐18)' and :798 📐18.",
+      "conflict_question": "processes-approved.md:870 (📑ב, tier-2, 'part of the definition, not a note') requires the contact column on report 6 · the approved mockup 03_tab_finance_approved.html #p3 draws the table WITHOUT it (measured TH list: לקוח · חשבוניות · ₪ ▼ · ימי איחור (הישנה)). C2 gives 'which columns' to the mockup and 'data' to processes-approved.",
+      "owner": "rpc"
+    },
+    {
+      "lens": "A",
+      "surface": "מ8 · רווחיות פרויקטים",
+      "severity": "major",
+      "claim": "The table's sort key (₪) is contradicted by two onboarding sentences and by the 'אז מה' line that sit on the same screen — the user is told to start at the top row because its PERCENT is the largest, and the top row's percent is not the largest.",
+      "evidence": "Browser at mode 2 (results/lensB-finance/m08-mode2.png + pass-3.json m08): aria-sort='descending' on 'סטייה ₪', none on 'סטייה %'; rows 1..4 = 1,416 (361 ₪ / 21.1%), 1,554 (320 / 19.6%), 1,467 (315 / 15.2%), 1,427 (286 / 27.2%). Hint א on screen: 'התחילי מהפרויקט שבראש הטבלה, כי אחוז-הסטייה שלו הוא הגדול ביותר'. Hint ג on screen: 'הגרף ממוין לפי גודל-הסטייה ב-₪ והטבלה לפי אחוז-הסטייה'. so_what on screen: 'לפתוח את פרויקט ⁦1427⁩ … החריגה הגדולה ביותר בתקופה: ⁦27.2%⁩' — 1427 is the 4th row. The approved mockup draws 'סטייה % ▼' (mockup TH list, page #p2). The card's §⑩ 'מה נשאר ברמה 0' column even says 'aria-sort על עמודת-ה-%'.",
+      "conflict_question": "processes-approved.md:864 📑ב '5 · רווחיות' — '**מיון ברירת-מחדל לפי ₪-חריגה** ולא לפי %' (and 📑ב's own header: where it names a sort, it wins) — which the RPC and the tab implement · vs cards-finance.md §⑩ג + §⑩א + the approved mockup's aria-sort, which say the table ranks by %. Exactly the D-29 shape (card text vs the metric's own definition); D-29 was ruled by the orchestrator, so this one is a ruling, not a patch.",
+      "owner": "ishay"
+    },
+    {
+      "lens": "A",
+      "surface": "מ8 · רווחיות פרויקטים",
+      "severity": "major",
+      "claim": "The chart titled '15 הסטיות הגדולות ב-₪' renders 15 exclusively NEGATIVE bars — i.e. the fifteen biggest SAVINGS — on a page whose question is 'אילו פרויקטים דלפו מהתקציב?' and whose table contains only positive deviations. Not one of the 15 charted projects appears in the table.",
+      "evidence": "Payload m08_default.json chart.data[0..2] = {deviation:-2695, project_id:1585}, {-2688,1571}, {-2408,1569}; measured intersection of the chart's 15 project_ids with the table's 30 rows = 0. Browser: the y-axis runs -550 … -2,750 and every bar points down (results/lensB-finance/m08-mode2.png). Largest positive deviation in the table is 361 ₪, so 'largest deviations in ₪' by absolute value is always the savings side. The shared layer measured the same disjointness but only used it to switch the cross-filter off (results/p3-shared.json crossfilter_off report_m08_profitability); as a reading failure it was never routed.",
+      "owner": "rpc"
+    },
+    {
+      "lens": "B",
+      "surface": "מ9 · גיול חובות",
+      "severity": "major",
+      "claim": "The מדרג column renders every bucket range MIRRORED — '1–30' as '30–1', '31–60' as '60–31', '61–90' as '90–61', '90+' as '+90' — while the chart's x-axis on the same page shows them correctly. The same 'two spellings of one bucket on one screen' defect D-32 recorded as fixed, in a new form.",
+      "evidence": "Per-character Range.getBoundingClientRect probe (results/lensB-finance/pass-3.json m09.bucketCells): DOM '90+' → screen order '+90'; DOM '61–90' → screen order '90–61'. Visible in results/lensB-finance/m09-mode0.png (table column) against the chart axis in the same image. Cause: financePayload.jsx withBucketLabels writes AGING_BUCKETS[].label into the `bucket` column, whose payload format is 'text', and src/lib/reportsFormat.js:124 text:(v)=>String(v) applies no isolation; the en-dash is a neutral, so the two digit runs swap under the RTL paragraph. reportsFormat.js:217 already isolates a from–to range for window labels, so the house pattern exists. npm run check:bidi is GREEN and cannot see this — its own header (scripts/check-bidi-glyphs.mjs:13-16) states 'it does NOT catch the two adjacent numbers reorder bug shape … needs a live Range measurement in a real browser'.",
+      "owner": "tab"
+    },
+    {
+      "lens": "B",
+      "surface": "מ9 · גיול חובות (levels 0/1/2)",
+      "severity": "major",
+      "claim": "The same mirroring hits RPC-authored strings that the tab cannot reach: the level-0 tile 'מדרג 90+' renders 'מדרג +90', the crumb and level-1 tile 'מדרג 90+ יום' / 'חוב במדרג 61–90 יום' mirror the same way, and the export file name inherits it.",
+      "evidence": "pass-3.json m09.tiles: DOM 'מדרג 90+…' → screen order shows '+90' left of the word. Browser screenshot results/lensB-finance/m09-level1-from-tile.png: crumb reads 'גיול חובות | מדרג +90 יום', level-1 tile 'חוב במדרג +90 יום', export caption 'גיול-חובות_נכון-להיום_מדרג-+90-יום.xlsx'. spec.md §1.4 spells the label 'חוב במדרג 61–90', which will mirror to '90–61' the moment that bucket is opened. H2 isolated n= and thousands separators (D-26) but not ranges/plus signs.",
+      "owner": "rpc"
+    },
+    {
+      "lens": "B",
+      "surface": "all four finance surfaces",
+      "severity": "major",
+      "claim": "The empty-after-filter envelope (📐10 state 2, card §④/§⑧ 'אין חשבוניות פתוחות בתקופה שנבחרה · [נקה מסננים]') can never appear on this tab: the shell only shows it when tiles AND charts AND rows are all empty, and all four finance RPCs always return 4–5 tiles.",
+      "evidence": "ReportSurface.jsx:357 hasContent = payload.tiles.length>0 || charts.length>0 || payload.rows.length>0. Measured live on 12 customers: every one returns 5 tiles on m08; customer 231 (גוגל ישראל) returns rows 0 and chart data 0. Browser with ?customer=231 (results/lensB-finance/m08-empty-customer231.png, pass-2.json empty): 5 tiles, table card present with 0 body rows, no pager, no empty sentence, no 'נקה מסננים' button (clearFilters []); only the export button is disabled. So a filter that matches nothing reads as a page that loaded fine.",
+      "owner": "shell"
+    },
+    {
+      "lens": "B",
+      "surface": "מ9 · גיול חובות",
+      "severity": "minor",
+      "claim": "The 'שוטף — עוד לא באיחור' side tile renders ABOVE the chart at full page width, not beside it — refuting the builder's own report line 'rendered beside the chart through KpiTile'.",
+      "evidence": "pass-3.json m09.sideTileBox: tile {x:24, y:640, w:992}, chart {x:41, y:839, w:958} — the tile occupies its own full-width row above the chart card. Visible in results/lensB-finance/m09-mode0.png. The approved mockup's #p3 element order is chart-card → chart-note → side-tile → legend → barkey (measured on 03_tab_finance_approved.html), i.e. the tile lives inside the chart card. Cause: FinanceSurface.jsx renders CurrentBucketTile from renderBeforeChart, which is the only slot available.",
+      "owner": "tab"
+    },
+    {
+      "lens": "B",
+      "surface": "מ7 · מבט-על · מ9 · גיול",
+      "severity": "minor",
+      "claim": "Two hint anchors drift from the card and are not in the builder's deviations list: reports.overview.debtSeriesBasis sits ABOVE the chart card (card: 'בתוך .chart-card, מתחת ל-.legend'), and מ9's three chart hints are stacked together above the chart rather than at their separate anchors.",
+      "evidence": "Mode-2 document-order probe (pass-2.json mode2): m07 debtSeriesBasis at node 227, chart at 231 (above the card, not inside it); m09 overdueBasis/bucketOrder/currentTile at 219/220/221 with the chart at 245. Card §⑩ anchors: cards-finance.md m7 row ג and m9 §⑩. The builder listed the same class for hint א and for m12's orderCeiling but not for these.",
+      "owner": "tab"
+    },
+    {
+      "lens": "C",
+      "surface": "FinanceTab.test.jsx",
+      "severity": "major",
+      "claim": "The test called 'רמה 2 · ארבעת הרמזים של מבט-על מצוירים בעוגנים שלהם' never measures an anchor — it only asserts each hint is in the document. A build that stacked all four hints at the bottom of the page passes it, and three anchors in this tab really do deviate.",
+      "evidence": "FinanceTab.test.jsx:694-702 — the whole body is `for (const id of …) expect(screen.getByTestId('hint-'+id)).toBeInTheDocument()`. No document-order or parent assertion. Contrast the same file's so-what/tiles ordering, which is not asserted either. The live anchors (finding above) show the gap is not theoretical.",
+      "owner": "tab"
+    },
+    {
+      "lens": "C",
+      "surface": "FinanceTab.test.jsx",
+      "severity": "major",
+      "claim": "The test written FOR the bucket-label defect cannot see the defect that shipped: it asserts DOM containment of '90+' and '61–90', and jsdom has no bidi layout, so the mirrored rendering passes it.",
+      "evidence": "FinanceTab.test.jsx:528-538 — expect(plain(table)).toContain('90+') / toContain('61–90') / not.toContain('d90p'). The shipped page satisfies all three while showing '+90' and '90–61' (pass-3.json m09.bucketCells). The repo already knows this: scripts/check-bidi-glyphs.mjs:13-16 says this bug shape 'needs a live Range measurement in a real browser, not static text'. The builder's own browser pass (p3-finance.json browser_pass) measured overflow, console, aria-sort and dates — not character order.",
+      "owner": "tab"
+    },
+    {
+      "lens": "C",
+      "surface": "FinanceTab.test.jsx",
+      "severity": "minor",
+      "claim": "No test exercises the empty-after-filter envelope: the shared filters fixture hard-codes isFiltered:false for all 22 tests, so the Envelope state='empty' branch and the clearFilters door are dead in this suite.",
+      "evidence": "FinanceTab.test.jsx:60-68 — `const filters = { …, isFiltered: false, clearFilters }`; `clearFilters` is reset in beforeEach (line 419) and asserted nowhere. ReportSurface.jsx:360-366 chooses 'empty' vs 'blank' on isFiltered. The only empty test (line 631) passes a fully blank payload and asserts the 'blank' testid. Matches the live gap above.",
+      "owner": "tab"
+    },
+    {
+      "lens": "C",
+      "surface": "src/lib/onboardingCopy.m11.finance.js",
+      "severity": "minor",
+      "claim": "The file's header contradicts the file's own body about D-29: lines 26-29 state that the aging key carries the CARD's wording and 'הפער מדווח להכרעה', while lines 68-79 record that D-29 was ruled and the MOCKUP's wording applied — which is what the constant actually holds.",
+      "evidence": "onboardingCopy.m11.finance.js:26-29 'כאן יושב נוסח **הכרטיס**, כפי ש-C3 מורה, והפער מדווח להכרעה' vs :68-79 '**המפתח היחיד בקובץ שאינו מטבלת §⑩** … **הנוסח שנבחר הוא של המוקאפ המאושר**' and the value at :79, which I byte-compared: 14/15 entries are byte-equal to the card, the 15th (reports.aging.whyAndFirst) is not (<scratchpad>/lensfin/copycheck.py output).",
+      "owner": "tab"
+    }
+  ],
+  "checked": [
+    "Onboarding copy: 15 keys in the file, all 15 used by FINANCE_SURFACE_SPECS, 14 byte-equal to cards-finance.md §⑩ and the 15th equal to the D-29 mockup wording; 0 digits, 0 leftover <span class=\"ltr\"> markup, `guided` only; the 10 deferred-page keys (cashflow/changes/payroll) correctly not ported.",
+    "Mode 2 SEEN IN A BROWSER on all four finance surfaces — 4 · 3 · 4 · 4 hints, horizontal overflow 0 on every one, zero console errors/warnings in the whole mode-2 session. This closes the builder's '🔴 MODE 2 WAS NEVER SEEN ON SCREEN' for this tab.",
+    "Mode-0 deletion test on the real screen: 0 hint nodes on all four surfaces while population · so_what · definitions · notes · tiles · charts · tables · export · the m07 cap note and its door all render.",
+    "so_what above tiles on all four surfaces (document-order probe: 178/179, 178/179, 177/178, 178/179).",
+    "Horizontal overflow scrollWidth−clientWidth = 0 on all four surfaces at 1280px, in both onboarding modes.",
+    "aria-sort: exactly one marked column per table and the direction agrees with the rendered rows — m07 ימי איחור ▼, m08 סטייה ₪ ▼, m09 ימי איחור ▼ at level 0 and סכום ▼ at level 1, m12 עלות מוזמנת (₪) ▼ plus כמות להזמנה ▼ on the order table; scope=\"col\" on every header; the aria-live region exists before any click.",
+    "Numeric columns align to the row end and text columns to the start (computed textAlign measured on every <th>).",
+    "Money/percent/day isolation: every RPC-formatted number measured with a per-character Range probe renders digits LTR with ₪ / % / 'ימים' on the correct side (m07, m09, m12 tiles; m09 amount and days cells).",
+    "📐20 today bar: exactly one of m07's twelve bars carries stroke-dasharray '4 2' (the 09/2026 column), hue unchanged.",
+    "chart.label_source: the m09 legend and screen-reader table read חברה ממשלתית · עמותה · חברה פרטית · חברת הפקה — no DB enum anywhere on the page.",
+    "Row doors (ruling 19): m07 4/4 rows drillable, m08 30/30, m09 35/35 at level 0 and 3/3 at level 1, m12 0 sku rows (deliberate, ⑧12.1 open) and 3/3 project rows on the ㉗ table.",
+    "Keyboard equivalence PROVEN in a real browser, not inferred: focusing a drillable row on m12 and pressing Enter navigated to /projects/1594 (📐14ב③ satisfied for row doors).",
+    "Drill: level 1 rows carry drill_key {kind:'customer', bucket, customer_id} with no `id` field, so the shell's row-door branch (ReportsPage.jsx:323, requires next.id) is skipped and the key travels as p_drill — level 2 verified live (crumbs גיול חובות | מדרג 61–90 יום | אלפא סיסטמס בע\"מ, 2 invoice rows).",
+    "Error state: page.route abort on report_m07 ⇒ the error envelope with 'נסי שוב', the retry re-calls the RPC, and 'אין נתונים' never appears. Loading state: a 4 s delay shows 3 skeleton blocks, not an empty page.",
+    "Permissions: RECRUIT sees הנהלה/כספים/לקוחות as role=\"tab\" aria-selected=false aria-disabled=true with 'לא זמין בתפקידך' and lands on דיילות; STAFF sees all four masked plus 'אין דוחות זמינים בתפקידך — פנה למנכ\"ל'. No data leaked in either.",
+    "m07's row-cap note and door read from meta.open_invoice_count ('אלה 4 החשבוניות הישנות ביותר מתוך 35 הפתוחות. · כל 35 החשבוניות הפתוחות →'), the shared report-row-cap is absent (no finance payload returns meta.row_total), and the pager reads 1–4 מתוך 4.",
+    "Cross-filter: m12 auto-detects item_name, a bar click narrows the main table to one row, the chip '× נקה בחירה' + the label 'שרוך סאטן - ממותג' appear and the aria-live region reads 'מסונן לשרוך סאטן - ממותג; שורה אחת' (singular). m07 (xKey month) and m08 (project_id, intersection 0 of 15 re-measured) correctly get none.",
+    "Labels vs spec §1.4: the four page titles and 16 tile labels are byte-equal; the four exceptions the builder listed are real and complete for level 0 ('צפוי להיכנס ב-30 יום' — the C8-documented one; 'חוב במדרג 61–90 יום'; 'מעל 60 יום' and 'מדרג 90+' absent from §1.4). Three more drill-level labels are also absent from §1.4 ('חוב בשוטף', 'חוב במדרג 90+ יום', 'חוב הלקוח במדרג 61–90 יום') — the D-19 class, a doc reconciliation, not a tab defect.",
+    "㉗: the 'ללא מקור-עלות' counter carries ₪ ('⁦3⁩ שורות ציוד ללא מקור-עלות · כ-⁦480 ₪⁩') in meta.notes on screen, and the column 'עלות מוזמנת (₪)' is present verbatim (spec ⏳13).",
+    "Gates re-run this turn on the tab's five files: vitest FinanceTab.test.jsx exit 0 (22/22) · vitest src/modules/11_reports exit 0 (10 files / 248 tests, green on the current mixed tree) · eslint exit 0 · prettier --check exit 0 · npm run check:bidi exit 0 · CR=0 on all five files (perl tr/\\r//) · no ms-/me-/ps-/pe-/start-/end- utilities · no supabase.* in the tab files."
+  ],
+  "not_verified": [
+    "npm run dup (jscpd) and npm run deadcode (knip) were not re-run — the tree carries another agent's uncommitted shell edits, so a whole-tree duplication number would measure their work, not the tab's.",
+    "m07's two ruling-33 tile doors were exercised only in jsdom (the suite) and through the shell's own ReportsPage tests; in the browser I clicked only m09's tile door.",
+    "The export file is never actually downloaded — I read the caption and the disabled state, not an .xlsx.",
+    "m12's two extra-table pagers were not paged past page 1, and the m09 level-2 screen was verified through the RPC, not in a browser.",
+    "Only CEO, RECRUIT and STAFF were driven. FINANCE (blocked on דיילות, open on כספים) was not.",
+    "The 'loading' skeleton was measured by class count (3 animate-pulse blocks), not compared to the mockup's skeleton drawing.",
+    "The dev server on :5182 was already running when this task started — I reused it rather than spawning one, so the module graph it served was whatever was on disk at page-load time; every page was loaded fresh during this run and the file mtimes above are the ones I measured against."
+  ],
+  "blind_spot": "מ9's level-1 → level-2 drill works by accident, and nothing in the repo would catch the day it stops. ReportsPage.jsx:323 routes a row door only when `next.id != null`; the m09 level-1 rows carry drill_key {kind:'customer', bucket:'d61_90', customer_id:401} — the kind IS in ROW_DOOR_KINDS, but the id field is named customer_id, so the branch is skipped and the key falls through to p_drill, which is what the card requires ('רמה 1 ⇒ יורדת רמה'). Rename that field to `id` in the RPC (or broaden the shell's check), and every level-1 row silently stops drilling and navigates to /customers/401 instead — the report is left, not deepened. No test covers it: ReportsPage.test.jsx:536 tests exactly the OTHER shape ({kind:'customer', id:401} ⇒ navigate), and FinanceTab.test.jsx's level-1 test only asserts that onDrill received the key. Checkable in one edit: change customer_id to id in the m09 level-1 row builder (migration 20260916063400_module11_e2_rpcs_finance_fixes.sql:966 area) and run `npx vitest run src/modules/11_reports` — it stays green while the page breaks. (Separately, and resolved rather than left hanging: the ▼ displacement my per-character probe reported on m07's fourth tile was a wrap artefact — re-measured at 1280 and 900, the arrow sits at the compare line's right edge in both, see results/lensB-finance/m07-tile4-1280.png.)"
+}
