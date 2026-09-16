@@ -104,6 +104,22 @@ const write = process.argv.includes('--write')
 // ⚠️ הריצה של 16/09/2026 יצאה לפני שהרצועות נכנסו ונתנה זמן אקראי אחיד; 52 השורות
 // תוקנו בדיעבד לפי אותן רצועות (נמדד אחרי: 27.6 / 9.2 / 3.8 שעות — פער 86%).
 const RESPONSE_BANDS = { 5: [1, 8], 4: [4, 18], 3: [12, 40] }
+
+// שיעור-הסירוב של העולם הזה, נמדד 16/09/2026 על השורה הקובעת לכל (פרויקט, דיילת):
+// ‏4,253 "כן" מתוך 5,047 שענו ⇒ **15.7% סירוב**. לא מספר שנבחר — המצב שהיה לפני שנגעתי.
+const DECLINE_RATE = 0.157
+
+// 🔴 **והמודל חייב להיות פר-הזמנה, לא פר-אירוע.** ניסיון ראשון חישב
+// `round(need × 0.157)` לכל פרויקט — ומכיוון שרוב הסבבים מזמינים 1–2 דיילות, הוא החזיר
+// **אפס** כמעט תמיד (נמדד: 5 סירובים על 52 שיבוצים = 8.8%, מול 15.7% בעולם). הצורה
+// הנכונה: כל **גיוס** דרש בממוצע `1/(1−p)` הזמנות, ולכן על כל אישור מוטלת מטבע אחת.
+// ⇒ תוחלת של `52 × 0.157/0.843 ≈ 9.7` סירובים, והפיזור נשאר אקראי-קבוע (אותו זרע).
+const DECLINES_PER_HIRE = DECLINE_RATE / (1 - DECLINE_RATE)
+function declineCount(need) {
+  let n = 0
+  for (let i = 0; i < need; i += 1) if (rng.chance(DECLINES_PER_HIRE)) n += 1
+  return n
+}
 function responseHours(rating) {
   const [min, max] = RESPONSE_BANDS[rating] ?? [4, 18]
   return rng.float(min, max)
@@ -156,6 +172,7 @@ async function main() {
       .map((a) => `${a.hostess_id}@${a.event_date}`),
   )
   const hasAnyAssignment = new Set(approved.map((a) => a.project_id))
+  const hasRowInProject = new Set(approved.map((a) => `${a.project_id}:${a.hostess_id}`))
   const maxNumber = new Map() // project_id:hostess_id -> max(assignment_number)
   const hasLead = new Set() // project_id שכבר יש בו אחראית-משמרת
   const confirmed = new Map() // project_id -> מספר המאושרות סופית (לפי MAX per hostess)
@@ -205,6 +222,7 @@ async function main() {
 
   // ── ② איוש ───────────────────────────────────────────────────────────────
   const staffingPlan = []
+  const declinePlan = []
   for (const project of targets) {
     if (KEEP_SHORT_STAFF.has(project.project_id)) continue
     const need = project.required_hostess_count - (confirmed.get(project.project_id) ?? 0)
@@ -212,12 +230,19 @@ async function main() {
 
     const date = project.final_event_date
     const eligible = pool.filter((h) => {
+      // 🔴 **המסנן שנשכח בריצה הראשונה, ושהוא-הוא הבאג.** בדקתי שהדיילת אינה תפוסה
+      // באותו **יום**, אבל לא שכבר יש לה שורה **באותו אירוע** — ואז `max+1` עשה בדיוק
+      // מה שהוא אמור: פתח "סיבוב שני". נמדד: שתי שורות כאלה נוצרו, ואחת מהן **דרסה
+      // סירוב אמיתי** (הסטטוס הקובע הוא של `MAX(assignment_number)`), כלומר מחקה
+      // החלטה של דיילת מכל מונה במערכת. השנייה דרסה הזמנה שעוד המתינה למענה.
+      if (hasRowInProject.has(`${project.project_id}:${h.hostess_id}`)) return false
       if (bookedDay.has(`${h.hostess_id}@${date}`)) return false
       if (blocked.has(`${project.customer_id}:${h.hostess_id}`)) return false
       if (overlapsUnavailability(unavailByHostess.get(h.hostess_id) ?? [], date)) return false
       return true
     })
-    if (eligible.length < need) {
+    const declines = declineCount(need)
+    if (eligible.length < need + declines) {
       throw new Error(`פרויקט ${project.project_id}: ${eligible.length} פנויות מול ${need} נדרשות`)
     }
 
@@ -249,6 +274,33 @@ async function main() {
         created_at: sentAt,
         is_shift_lead: lead,
         travel_amount: travelAmount,
+      })
+    }
+
+    // 🔴 **הסירובים, וזה לא קישוט.** סבב-איוש בלי אף סירוב הוא 100% היענות, ו-Smart
+    // Match קורא בדיוק את המספר הזה: `responsivenessCounts` (src/lib/smartMatch.js)
+    // סופר `finally_approved` **גם במונה וגם במכנה**, ולכן שורה שנולדה מאושרת היא
+    // "הוזמנה, ענתה, אמרה כן" — מענה מושלם למי שלא קיבלה הזמנה. 📏 נמדד אחרי הריצה
+    // הראשונה: שרון כהן עברה מ-1/2 ל-4/4, וממוצע-החברה (`C`) זז מ-0.842679 ל-0.844449
+    // — וה-`C` הזה מרסן את הציון של **כל** דיילת, גם של מי שלא נגעתי בה.
+    // ⇒ הסבב מקבל סירובים ביחס האמיתי של העולם הזה.
+    for (let i = 0; i < declines; i += 1) {
+      const pick = eligible.splice(Math.floor(rng.next() * eligible.length), 1)[0]
+      const sentAt = atLocal(inviteDay, rng.int(9, 18), rng.int(0, 59))
+      const respondedAt = new Date(
+        new Date(sentAt).getTime() + responseHours(pick.rating) * 3600 * 1000,
+      ).toISOString()
+      declinePlan.push({
+        project_id: project.project_id,
+        hostess_id: pick.hostess_id,
+        assignment_number: (maxNumber.get(`${project.project_id}:${pick.hostess_id}`) ?? 0) + 1,
+        assignment_status: 'declined',
+        hourly_rate_snapshot: Math.max(minWage, Math.round(pick.hourly_rate)),
+        invite_sent_at: sentAt,
+        responded_at: respondedAt,
+        created_at: sentAt,
+        is_shift_lead: false,
+        travel_amount: 0,
       })
     }
   }
@@ -301,7 +353,7 @@ async function main() {
 
   console.log(`אירועים בטווח (${today} → ${WINDOW_END}): ${targets.length}`)
   console.log(`פריטי-ציוד לעדכון: ${logisticsPlan.length}`)
-  console.log(`שיבוצים חדשים: ${staffingPlan.length}`)
+  console.log(`שיבוצים חדשים: ${staffingPlan.length} · סירובים נלווים: ${declinePlan.length}`)
   console.log(
     `נשארים חסרי דיילות: ${KEEP_SHORT_STAFF.size} · חסרי ציוד: ${KEEP_ONE_ITEM_OPEN.size}`,
   )
@@ -328,8 +380,10 @@ async function main() {
 
   if (staffingPlan.length) await db.insert('assignments', staffingPlan)
   console.log(`שיבוצים: ${staffingPlan.length} ✓`)
+  if (declinePlan.length) await db.insert('assignments', declinePlan)
+  console.log(`סירובים: ${declinePlan.length} ✓`)
 
-  await reportEmailLogGap(db, staffingPlan, projects, hostesses)
+  await reportEmailLogGap(db, [...staffingPlan, ...declinePlan], projects, hostesses)
 }
 
 // ── יומן-המיילים ─────────────────────────────────────────────────────────────
