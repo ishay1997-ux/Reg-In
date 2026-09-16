@@ -24,20 +24,28 @@ import { PERIOD_OPTIONS } from '../reportsPeriod'
 
 const LABEL_CLASS = 'text-xs text-slate-500'
 
-function CustomerPicker({ customers, customerId, onCustomerChange }) {
+function CustomerPicker({ customers, customerId, onCustomerChange, disabledReason }) {
   return (
     <>
+      {/* 🔤 **בלי נקודתיים** (‏`m11-copy-rules §2.5`, כלל כ19 · R2: *"התו האחרון הוא `:`
+          או `.`? מחקי אותו"*) — תוקן 17/09/2026, פריט C1 של הערכת-הניסוח. */}
       <label className={`${LABEL_CLASS} mr-2`} htmlFor="reports-customer">
-        לקוח:
+        לקוח
       </label>
+      {/* 🔴 **פקד שאינו חל על הדף — מושבת ומנומק, ולא מוסתר** (㉚ · אותה הכרעה כמו
+          הלשונית הממוסכת): ארבעת משטחי-הדיילות מצהירים `meta.customer_filter_ignored: true`,
+          וה-RPC שלהם אינו מקבל `p_customer_id` כלל. עד 17/09/2026 הבורר היה פתוח שם,
+          כלומר בחירה בו הייתה משנה כותרת ולא נתונים (פריט [8]). */}
       <select
         id="reports-customer"
         // ⚠️ `<select>` מקורי ולא Radix: אין כאן portal ⇒ אין את המוקש של §3.5
         // (*"כל משטח שנפתח ב-portal מקבל `dir=\"rtl\"` מפורש"*), והפקד יורש את כיוון-הדף.
         value={customerId ?? ''}
         onChange={(e) => onCustomerChange(e.target.value || null)}
+        disabled={Boolean(disabledReason)}
+        title={disabledReason || undefined}
         data-testid="reports-customer-filter"
-        className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[12.5px] text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+        className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[12.5px] text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:opacity-50"
       >
         <option value="">כל הלקוחות</option>
         {customers.map((c) => (
@@ -46,16 +54,37 @@ function CustomerPicker({ customers, customerId, onCustomerChange }) {
           </option>
         ))}
       </select>
+      {/* 🔴 **הנימוק חייב להיות **גלוי**, לא רק ב-`title`** — פקד `disabled` אינו מקבל
+          hit-test, ולכן הדפדפן אינו מרנדר לו tooltip **כלל** (הנימוק המלא ב-`FilterPill`,
+          ששם הפתרון היה עטיפת-`span`). כאן המשפט קצר ויושב על המסך, בדיוק כמו *"לא זמין
+          בתפקידך"* של הלשונית הממוסכת — ‏`title` לבדו אינו נגיש למקלדת. */}
+      {disabledReason && (
+        <span className={`${LABEL_CLASS} mr-1`} data-testid="reports-customer-disabled">
+          {disabledReason}
+        </span>
+      )}
     </>
   )
 }
 
+/**
+ * ‏`periodDisabledReason` · `customerDisabledReason` — ✏️ **נוספו 17/09/2026** (פריטים
+ * ‏[3] · [8] · [28] של סבב-הראיות). מחרוזת ⇒ הפקד **מושבת ומנומק**; ‏`null` ⇒ כרגיל.
+ *
+ * 🔴 **למה מושבת ולא מוסתר, ולמה בכלל:** נמדד שמ22 מריצה את אותן ⁦426⁩ שורות בדיוק בכל
+ * חמש הגלולות (‏`probe-filters.log` 1–6) — כלומר הגלולות **זזו ולא סיננו**, והדבר היחיד
+ * שהשתנה על המסך היה תווית-החלון. פקד שנראה עובד ואינו עושה דבר הוא ההטעיה שהמודול הזה
+ * נבנה נגדה; והסתרתו הייתה משאירה את המשתמשת בלי לדעת שהיכולת קיימת במקומות אחרים —
+ * **אותה הכרעה בדיוק כמו הלשונית הממוסכת** (הכרעה 2 · 15-ה).
+ */
 export default function FiltersBar({
   period,
   onPeriodChange,
+  periodDisabledReason,
   customers = [],
   customerId,
   onCustomerChange,
+  customerDisabledReason,
   exportSlot,
 }) {
   return (
@@ -65,22 +94,32 @@ export default function FiltersBar({
       role="group"
       aria-label="מסננים"
     >
-      <span className={LABEL_CLASS}>תקופה:</span>
+      {/* 🔤 **בלי נקודתיים** — ר' הנימוק אצל תווית-הלקוח (כ19 · R2). */}
+      <span className={LABEL_CLASS}>תקופה</span>
       {PERIOD_OPTIONS.map((option) => (
         <FilterPill
           key={option.key}
           on={period === option.key}
           onClick={() => onPeriodChange(option.key)}
+          disabled={Boolean(periodDisabledReason)}
+          title={periodDisabledReason || undefined}
           testId={`reports-period-${option.key}`}
         >
           {option.label}
         </FilterPill>
       ))}
+      {/* הנימוק גלוי, לא רק ב-`title` — ר' הנימוק אצל בורר-הלקוח. */}
+      {periodDisabledReason && (
+        <span className={LABEL_CLASS} data-testid="reports-period-disabled">
+          {periodDisabledReason}
+        </span>
+      )}
 
       <CustomerPicker
         customers={customers}
         customerId={customerId}
         onCustomerChange={onCustomerChange}
+        disabledReason={customerDisabledReason}
       />
 
       {/* ✏️ **צ'יפ-ניקוי-הקרוס-פילטר נמחק מכאן 16/09/2026 — הוא היה קוד-מת:** אף אתר-קריאה

@@ -102,10 +102,27 @@ const FORMATTERS = {
     const n = toFiniteNumber(v)
     return n === null ? NO_VALUE : isolateLtr(Math.round(n).toLocaleString('he-IL'))
   },
+  // ✏️ **התאמת-מספר בעברית (כ12 · UC37 של `docs/plans/ui-copy-styleguide.md`)** — נוסף
+  // 17/09/2026 אחרי שהמסך הציג *"⁦1⁩ ימים"* בטבלת מ9 (נמדד בהערכת-הניסוח, פריט C2).
+  // 🔑 **הכלל מועתק מהמוקאפ המאושר ואינו מומצא כאן:** ‏`pl(k, one, many)` ב-
+  // `03_tab_finance_approved.html:2639` — ‏`Number(k) === 1 ? 'יום' : 'ימים'`, ורק ⁦1⁩ חריג;
+  // ‏"יומיים" **אינו** שם במכוון, והמסך שסביבו סופר ⁦2⁩ כרבים.
   days: (v) => {
     const n = toFiniteNumber(v)
-    return n === null ? NO_VALUE : `${isolateLtr(Math.round(n).toLocaleString('he-IL'))} ימים`
+    if (n === null) return NO_VALUE
+    const whole = Math.round(n)
+    const unit = whole === 1 ? 'יום' : 'ימים'
+    return `${isolateLtr(whole.toLocaleString('he-IL'))} ${unit}`
   },
+  // ✏️ **`id` — מזהה, ולא כמות** (נוסף 17/09/2026, פריט [2] של סבב-הראיות).
+  // 🔴 **הפגם שנמדד על המסך:** עמודת *"הצעה"* של מ4 הכריזה `format:'int'`, ו-`int` מריץ
+  // ‏`toLocaleString('he-IL')` ⇒ מספר-הצעה ⁦1907⁩ הופיע כ-**`1,907`**, כלומר מזהה נקרא
+  // כ"אלף תשע-מאות ושבע דברים". אותו דבר במ8 עם מספרי-פרויקט (`1,416`).
+  // 🔑 **בלי מפריד-אלפים ובלי עיגול — ובכל זאת מבודד:** מזהה הוא רצף-ספרות בתוך משפט/טבלה
+  // עברית, ובלי LRI…PDI הוא נדבק לתו-הנייטרלי שלצידו בדיוק כמו כל מספר אחר.
+  // ⚠️ **והערך נמסר כמחרוזת ולא כמספר** — מזהה יכול להיות `'Q-1907'`, ו-`toFiniteNumber`
+  // היה מחזיר עליו `—`, כלומר מוחק נתון קיים.
+  id: (v) => (v === null || v === undefined || v === '' ? NO_VALUE : isolateLtr(String(v))),
   ratio: (v) => {
     const n = toFiniteNumber(v)
     return n === null ? NO_VALUE : isolateLtr(n.toFixed(1))
@@ -218,14 +235,40 @@ export function formatIsraelDate(isoDate) {
  * 🔑 **המחרוזת נבנית כאן ולא ב-JSX** כי היא נכנסת גם ל-`aria-label` ולשם-קובץ-האקסל, ושם
  * אין JSX. שני התאריכים הם **טווח אחד** ⇒ בידוד אחד סביב שניהם, בדיוק כמו הפאג'ר
  * (`ListWindow.jsx`: רק `from–to` מבודד) — ולא שני בידודים נפרדים שה-bidi יסדר ביניהם.
+ *
+ * ✏️ **שלושת הארגומנטים שנוספו 17/09/2026, וכל אחד נולד מפער שנמדד על המסך:**
+ * ‏`surfaceLabel` — **התווית שהשרת מדד בפועל** (`payload.window.label`). כשהמשטח אינו
+ *   משתמש במסנן-התקופה (מ3 · מ4 · מ6 · מ9), הטווח שנגזר מהגלולה הוא **הצהרה שקרית**:
+ *   הכותרת אמרה *"⁦01/01/2026–16/09/2026⁩"* בעוד שורת-האוכלוסייה אומרת *"בכל השנים"*
+ *   ושם-קובץ-הייצוא אומר *"כל-הזמנים"* (פריטים [3] · [28] של סבב-הראיות). ⇒ **מי שמדד,
+ *   מצהיר.**
+ * ‏`periodLabel` — נוסח-הגלולה, כשאין טווח **ואין** תווית-שרת: מצב-התקלה ומצב-הטעינה,
+ *   שבהם "היום" של השרת עדיין אינו ידוע. בלעדיו השורה התכווצה ל-*"כל הלקוחות"* לבד בעוד
+ *   הגלולה מסומנת *"12 חודשים"* — אוכלוסייה בלי תאריך (פריט [27]).
+ * ‏`hideCustomer` — משטח שה-RPC שלו מצהיר `customer_filter_ignored: true` (ארבעת משטחי
+ *   הדיילות) **אינו מהדהד את שם-הלקוח**: הדהוד כזה מצהיר מסנן שהדוח אינו מחיל (פריט [8]).
+ *
+ * 🔑 **ואי-הכפילות אינה קישוט:** חלק מתוויות-השרת כבר נוקבות בלקוח בעצמן (מ4/מ6:
+ * *"כל הזמנים · כל הלקוחות"*), ואחרות לא (מ3: *"2024–2026"*) — ולכן חלק-הלקוח נוסף
+ * **רק אם אינו כבר שם**, ולא לפי רשימת-משטחים שתירקב.
  */
-export function formatWindowLabel({ from, to, customerName } = {}) {
+export function formatWindowLabel({
+  from,
+  to,
+  customerName,
+  surfaceLabel,
+  periodLabel,
+  hideCustomer,
+} = {}) {
   const parts = []
   const fromText = formatDate(from, '')
   const toText = formatDate(to, '')
-  if (fromText && toText) parts.push(isolateLtr(`${fromText}–${toText}`))
+  if (surfaceLabel) parts.push(surfaceLabel)
+  else if (fromText && toText) parts.push(isolateLtr(`${fromText}–${toText}`))
   else if (fromText) parts.push(`מ-${isolateLtr(fromText)}`)
   else if (toText) parts.push(`עד ${isolateLtr(toText)}`)
-  parts.push(customerName ? customerName : 'כל הלקוחות')
+  else if (periodLabel) parts.push(periodLabel)
+  const scope = hideCustomer ? null : customerName || 'כל הלקוחות'
+  if (scope && !parts.some((part) => part.includes(scope))) parts.push(scope)
   return parts.join(' · ')
 }

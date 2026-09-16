@@ -391,11 +391,26 @@ describe('מ1 — מצבי-המעטפת (📐10)', () => {
 
   // 🔴 **הצד השני של אותה הכרעה, והוא זה שתופס רגרסיה:** דף שאוכלוסייתו גדולה וטבלתו
   // ריקה (רשימת-חריגים בלי חריגים) **אינו** מסך-ריק — הוא תשובה אמיתית, והאריחים נשארים.
-  it('אוכלוסייה קיימת עם אפס שורות אינה מסך-ריק — הדוח מוצג', async () => {
+  // ✏️ **הבדיקה נמדדת עכשיו **בלי מסנן** (17/09/2026, פריט [9]) — וזה תיקון-בדיקה ולא
+  // ויתור על הכלל:** ‏D-34② נולד למקרה של *רשימת-חריגים בלי חריגים*, שהוא **מצב-בסיס**
+  // ולא תוצאה של בחירה. הבדיקה הקודמת הפעילה אותו דרך `?customer=42`, ובכך תיארה בדיוק
+  // את המצב שנמדד שבור על מ21 (ר' הבדיקה הבאה).
+  it('אוכלוסייה קיימת עם אפס שורות ובלי מסנן אינה מסך-ריק — הדוח מוצג', async () => {
     callReport.mockResolvedValue(payload({ population: { n: 241, label: 'אוכלוסייה · n=241' } }))
-    renderPage('/reports?customer=42')
+    renderPage('/reports?period=all')
     expect(await screen.findByTestId('report-population')).toHaveTextContent('n=241')
     expect(screen.queryByTestId('reports-clear-filters')).toBeNull()
+  })
+
+  // 🔴 **פריט [9], נמדד על מ21 (`probe-filters.log` 12–16):** לקוח שנבחר הותיר טבלה עם
+  // שורת-כותרת בלבד — בלי שורות, בלי פאג'ר ובלי משפט — בעוד שורת-האוכלוסייה, שורת-"אז מה"
+  // וארבעת האריחים נשארו **זהים בתו** למסך הלא-מסונן (ה-RPC אינו מסנן אותם, וזו הפאה שלו).
+  // ⇒ אפס שורות **תחת מסנן-לקוח** הוא מצב 2 של 📐10, יהיה `population.n` אשר יהיה.
+  it('לקוח שנבחר והטבלה התרוקנה ⇒ "ריק-אחרי-סינון", גם כשהאוכלוסייה גדולה', async () => {
+    callReport.mockResolvedValue(payload({ population: { n: 52, label: 'אוכלוסייה · n=52' } }))
+    renderPage('/reports?customer=411')
+    expect(await screen.findByText('אין נתונים בתקופה שנבחרה')).toBeInTheDocument()
+    expect(screen.getByTestId('reports-clear-filters')).toBeInTheDocument()
   })
 })
 
@@ -691,5 +706,120 @@ describe('מ1 — ציווי בנקבה', () => {
   it('משפט "אין דוחות" פונה בנקבה', () => {
     expect(NO_TABS_SENTENCE).toContain('פני')
     expect(NO_TABS_SENTENCE).not.toContain('פנה')
+  })
+})
+
+// ── ✏️ סבב-התיקון 17/09/2026: הכותרת והמסננים מצייתים למה שהמשטח באמת מדד ──────────
+
+// 🌱 צורות-המטען כאן נקראו מגוף ה-SQL החי, לא הומצאו: מ3/מ4/מ6 מחזירים `'from', null`
+// (`…i2_rpc_round3.sql:609`, `…d2_rpcs_executive_fixes.sql:1217,1545`) וארבעת משטחי-
+// הדיילות מחזירים `'customer_filter_ignored', true` (`…i2_rpc_round3.sql:1706,2184,2616`).
+const ignoresPeriod = () =>
+  payload({
+    window: { from: null, to: '2026-09-16', label: 'כל הזמנים' },
+    population: { n: 736, label: 'אוכלוסייה · n=736 בכל השנים' },
+  })
+
+const ignoresCustomer = () =>
+  payload({
+    window: { from: '2025-09-16', to: '2026-09-16', label: 'נכון להיום · 12 חודשים' },
+    meta: { missing_params: [], notes: [], customer_filter_ignored: true },
+  })
+
+describe('מ1 — 📐17: הכותרת מצהירה מה נמדד, ולא מה שנבחר בגלולה (פריטים [3] · [28])', () => {
+  // 🔴 נמדד: שלושה משטחים שמודדים את כל ההיסטוריה הציגו בכותרת
+  // "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות" — בעוד שורת-האוכלוסייה מתחתיה אומרת "בכל השנים".
+  it('משטח שאינו מחיל תקופה ⇒ תווית-החלון של השרת, ולא הטווח שנגזר מהגלולה', async () => {
+    callReport.mockResolvedValue(ignoresPeriod())
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByTestId('reports-window-label')).toHaveTextContent('כל הזמנים')
+    })
+    expect(screen.getByTestId('reports-window-label')).not.toHaveTextContent('01/01/2026')
+  })
+
+  // ㉚ — הפקד שאינו חל **מושבת ומנומק**, ולא נעלם.
+  it('גלולות-התקופה מושבתות שם, עם נימוק גלוי', async () => {
+    callReport.mockResolvedValue(ignoresPeriod())
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByTestId('reports-period-month')).toBeDisabled()
+    })
+    expect(screen.getByTestId('reports-period-disabled')).toBeInTheDocument()
+    expect(screen.getByTestId('reports-customer-filter')).not.toBeDisabled()
+  })
+
+  // 🔑 **הצד השני, והוא זה שתופס רגרסיה:** משטח שכן מסונן-לפי-תקופה לא זז מילימטר.
+  it('משטח שכן מחיל תקופה — הכותרת והגלולות כפי שהיו', async () => {
+    callReport.mockResolvedValue(payload())
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByTestId('reports-window-label')).toHaveTextContent('01/01/2026')
+    })
+    expect(screen.getByTestId('reports-period-month')).not.toBeDisabled()
+    expect(screen.queryByTestId('reports-period-disabled')).toBeNull()
+  })
+})
+
+describe('מ1 — משטח שאינו מחיל מסנן-לקוח (פריט [8])', () => {
+  const CUSTOMERS = [{ customer_id: 414, company_name: 'בטא הפקות' }]
+
+  // 🔴 נמדד: `grep -rn customer_filter_ignored src/` החזיר ⁦0⁩ — כל ארבעת משטחי-הדיילות
+  // הצהירו את הדגל, ואיש לא קרא אותו: הכותרת הדהדה שם-לקוח שה-RPC אינו מקבל כלל.
+  it('שם-הלקוח אינו מהודהד בכותרת', async () => {
+    listCustomers.mockResolvedValueOnce(CUSTOMERS)
+    callReport.mockResolvedValue(ignoresCustomer())
+    renderPage('/reports?customer=414')
+    await waitFor(() => {
+      expect(screen.getByTestId('reports-customer-filter')).toBeDisabled()
+    })
+    expect(screen.getByTestId('reports-window-label')).not.toHaveTextContent('בטא הפקות')
+    expect(screen.getByTestId('reports-customer-disabled')).toBeInTheDocument()
+  })
+
+  // 🔑 **והכתובת ממשיכה לעבוד:** ‏`?customer=` נשאר, ולכן מעבר למשטח שכן מסנן לפיו
+  // מחזיר את הבחירה — מה שנחסם הוא השינוי מכאן, לא המצב.
+  it('הפרמטר בכתובת אינו נמחק, ומשטח אחר עדיין מהדהד את הלקוח', async () => {
+    listCustomers.mockResolvedValueOnce(CUSTOMERS)
+    callReport.mockResolvedValue(payload())
+    renderPage('/reports?customer=414')
+    await waitFor(() => {
+      expect(screen.getByTestId('reports-window-label')).toHaveTextContent('בטא הפקות')
+    })
+    expect(screen.getByTestId('reports-customer-filter')).not.toBeDisabled()
+  })
+})
+
+describe('מ1 — הכותרת לפני שהשרת מסר "היום" (פריט [27])', () => {
+  // 🔴 נמדד במצב-התקלה של מ14: השורה התכווצה ל-"כל הלקוחות" לבד — בלי טווח — בעוד
+  // הגלולה מסומנת "12 חודשים". `serverToday` מגיע מהמטען, ומטען שנכשל אינו מוסר אותו.
+  it('בלי תשובה מהשרת — הכותרת נוקבת בגלולה, ולא באוכלוסייה בלי תאריך', async () => {
+    callReport.mockReturnValue(new Promise(() => {}))
+    renderPage('/reports?period=12m')
+    const label = await screen.findByTestId('reports-window-label')
+    expect(label).toHaveTextContent('12 חודשים')
+    expect(label).toHaveTextContent('כל הלקוחות')
+  })
+
+  // ⚠️ ב-"הכול" אין טווח מלכתחילה — והשורה נשארת בדיוק כפי שהייתה.
+  it('בתקופת "הכול" השורה נשארת "כל הלקוחות" לבדה', async () => {
+    callReport.mockReturnValue(new Promise(() => {}))
+    renderPage('/reports?period=all')
+    expect(await screen.findByTestId('reports-window-label')).toHaveTextContent('כל הלקוחות')
+    expect(screen.getByTestId('reports-window-label')).not.toHaveTextContent('הכול')
+  })
+})
+
+describe('מ1 — מנעול הלשונית הממוסכת (פריט [26])', () => {
+  // ‏`src/CLAUDE.md §4.3`: אייקון `size-4` מ-`lucide-react`. אמוג'י מרנדר בצבעי-הפונט שלו.
+  it('אייקון ולא אמוג' + "'" + 'י, והטקסט הגלוי לא זז', async () => {
+    permissions = FINANCE
+    renderPage()
+    const masked = await screen.findByTestId('reports-tab-hostesses')
+    expect(masked.textContent).not.toContain('🔒')
+    expect(masked.querySelector('svg')).toBeInTheDocument()
+    expect(masked.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
+    expect(within(masked).getByText(MASKED_TEXT)).toBeInTheDocument()
+    expect(masked).toHaveAttribute('aria-disabled', 'true')
   })
 })

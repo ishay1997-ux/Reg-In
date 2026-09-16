@@ -16,6 +16,7 @@
 // **תמיד**. הסתרה הייתה משאירה את המשתמשת בלי לדעת שהיכולת קיימת.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Lock } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { listCustomers } from '@/modules/02_customers/api'
@@ -26,7 +27,7 @@ import { DRILL_INTENT, ROW_DOOR_KINDS } from './api'
 import { REPORT_TABS, canOpenTab, findSurface, findTab } from './reportsCatalog'
 import Envelope from './components/Envelope'
 import FiltersBar from './components/FiltersBar'
-import { DEFAULT_PERIOD, parsePeriodParam, periodRange } from './reportsPeriod'
+import { DEFAULT_PERIOD, PERIOD_OPTIONS, parsePeriodParam, periodRange } from './reportsPeriod'
 import ReportChips from './components/ReportChips'
 import { ReportsShellContext } from './components/reportsShellContext'
 import ExecutiveTab from './tabs/ExecutiveTab'
@@ -104,6 +105,48 @@ const DOOR_PATHS = Object.freeze({
   quote: (id) => `/quotes/${id}/edit`,
 })
 
+/**
+ * 🔎 **מה המשטח הטעון מצהיר על המסננים — נקרא מהמטען עצמו, ולא מרשימת-משטחים כתובה.**
+ *
+ * 🔴 **הפגם שזה סוגר, נמדד 16/09/2026 (פריטים [3] · [8] · [28]):** הכותרת אמרה
+ * *"⁦01/01/2026–16/09/2026⁩ · כל הלקוחות"* בשלושה משטחים שמודדים **את כל ההיסטוריה**, בעוד
+ * שורת-האוכלוסייה שמתחתיה אומרת *"בכל השנים"* ושם-קובץ-הייצוא אומר *"כל-הזמנים"* — שתי
+ * הצהרות סותרות על אותו מסך. ובארבעת משטחי-הדיילות הכותרת הדהדה **שם-לקוח** שה-RPC אינו
+ * מקבל כלל (`grep -rn customer_filter_ignored src/` החזיר ⁦0⁩ עד היום).
+ *
+ * ⚠️ **ושתי המדידות שהקריאה נשענת עליהן — נקראו מגוף ה-SQL, לא הונחו מהשם:**
+ * ‏① `meta.customer_filter_ignored` **אינו בוליאני בכל המשטחים**: בדיילות הוא `true`,
+ *    בהנהלה `false`, **ובלשונית-הלקוחות הוא מערך** של מפתחות-אריחים שאינם מסוננים
+ *    (`…i2_rpc_round3.sql:3160`, ובמ20 `'[]'::jsonb`). ‏`Boolean([])` הוא `true` ⇒ קריאה
+ *    בוליאנית נאיבית הייתה מכבה את בורר-הלקוח על מ20 בלי סיבה. ⇒ **`=== true` בלבד.**
+ * ‏② `meta.period_filter_ignored` קיים **רק במ9**, ושם הוא **אובייקט-הד** של הפרמטרים
+ *    (`jsonb_build_object('p_from', p_from, …)`). הסימן שכן קיים בכל ארבעת המשטחים
+ *    שמתעלמים מהתקופה (מ3 · מ4 · מ6 · מ9) הוא `window.from = null` **בזמן שהמשתמשת בחרה
+ *    תקופה** — ‏`'from', null` כתוב מפורשות בגוף כל אחד מהם.
+ * 🚫 **ומ22 נשארת בחוץ ביודעין:** היא מהדהדת `'from', v_from` אף שאינה משתמשת בו (הוא
+ * מחושב בשורה אחת ואינו מופיע באף שאילתה — `…i2_rpc_round3.sql:4142`). **זה פגם-RPC של
+ * שורה אחת**, והמעטפת תרים אותו מעצמה ביום שהוא יתוקן. מדווח ולא מתוקן כאן.
+ */
+function readScope(serverWindow, meta, rpc) {
+  if (!rpc) return null
+  return {
+    rpc,
+    label: serverWindow?.label ?? null,
+    periodIgnored: serverWindow?.from == null || meta?.period_filter_ignored != null,
+    customerIgnored: meta?.customer_filter_ignored === true,
+  }
+}
+
+const sameScope = (a, b) =>
+  a?.rpc === b?.rpc &&
+  a?.label === b?.label &&
+  a?.periodIgnored === b?.periodIgnored &&
+  a?.customerIgnored === b?.customerIgnored
+
+// 🔤 שני הנימוקים שמופיעים ליד פקד מושבת — משפט אחד כל אחד, בלי ז'רגון ובלי שם-שדה.
+const PERIOD_IGNORED_REASON = 'הדף הזה אינו מושפע ממסנן התקופה'
+const CUSTOMER_IGNORED_REASON = 'הדף הזה אינו מושפע ממסנן הלקוח'
+
 function TabButton({ tab, active, masked, onSelect }) {
   return (
     <button
@@ -125,12 +168,13 @@ function TabButton({ tab, active, masked, onSelect }) {
             : 'border-transparent font-medium text-slate-500',
       )}
     >
-      <span>
-        {masked && (
-          <span aria-hidden="true" className="ml-1">
-            🔒
-          </span>
-        )}
+      <span className="flex items-center">
+        {/* ✏️ **מנעול-lucide ולא אמוג'י** (17/09/2026, פריט [26]): ‏`🔒` מרונדר בצבעי-הפונט
+            שלו — כתום-חום בתוך לוח טורקיז/צפחה — ו-`src/CLAUDE.md §4.3` נועל *"אייקונים
+            בגודל `size-4` מ-`lucide-react`"*, ו-§2.8 של השורש אוסר צבע מומצא.
+            🚫 **והטקסט לא זז:** *"לא זמין בתפקידך"* ו-`aria-disabled` נשארים כפי שהם —
+            ‏E2E נשען על שניהם. האייקון `aria-hidden`, כי המשפט כבר אומר את מה שהוא מצייר. */}
+        {masked && <Lock aria-hidden="true" className="ml-1 size-4 shrink-0 text-slate-400" />}
         {tab.label}
       </span>
       {/* 🔤 המשפט **גלוי** בשורה שנייה ולא רק ב-`title` (הכרעה 15-ה) — ‏`title` לבדו אינו
@@ -164,6 +208,9 @@ export default function ReportsPage() {
   const [reloadTick, setReloadTick] = useState(0)
   // "היום" בשעון-ישראל, כפי שהשרת החזיר אותו (ר' הנימוק אצל `periodRange` למטה).
   const [serverToday, setServerToday] = useState(null)
+  // ✏️ **מה שהמשטח הטעון הצהיר על עצמו** (17/09/2026) — ר' `readScope` למטה:
+  // ‏`{ rpc, label, periodIgnored, customerIgnored }` או `null` לפני התשובה הראשונה.
+  const [surfaceScope, setSurfaceScope] = useState(null)
   // 🔤 **מקום-הייצוא בשורת-המסננים** — ר' `components/reportsShellContext.js`.
   // ‏`useState` ולא `useRef`: הצומת נוצר ברינדור הראשון, והמשטח חייב **להתרנדר שוב** כדי
   // לשתול לתוכו; ‏`ref` לא היה מפעיל רינדור והייצוא לא היה מופיע עד השינוי הבא.
@@ -257,7 +304,25 @@ export default function ReportsPage() {
   // ⚠️ **והשוואת-המזהה היא מחרוזתית בכוונה:** הכתובת מחזירה מחרוזת ו-`customer_id` הוא
   // מספר; `===` בין השניים היה נכשל בשקט ומחזיר את המסך ל"כל הלקוחות".
   const selectedCustomer = customers.find((c) => String(c.customer_id) === String(customerId))
-  const windowLabel = formatWindowLabel({ from, to, customerName: selectedCustomer?.company_name })
+  // ✏️ **ההצהרה חלה רק על המשטח שהחזיר אותה** (17/09/2026): מפתח-ה-RPC נבדק מפורשות, אחרת
+  // דגלים של הדוח הקודם היו חלים על הדוח הבא בזמן שהוא עוד נטען — כלומר בורר שנכבה על
+  // מסך שהוא כן רלוונטי לו.
+  const scope = surfaceScope?.rpc === activeSurface?.rpc ? surfaceScope : null
+  const periodIgnored = Boolean(scope?.periodIgnored)
+  const customerIgnored = Boolean(scope?.customerIgnored)
+  const windowLabel = formatWindowLabel({
+    from,
+    to,
+    customerName: selectedCustomer?.company_name,
+    // 🔑 **מי שמדד, מצהיר** — תווית-השרת גוברת רק כשהמשטח הצהיר שהתקופה אינה חלה עליו.
+    surfaceLabel: periodIgnored ? scope.label : null,
+    // ⚠️ **ורק כשנבחרה תקופה**: ב-"הכול" אין טווח מלכתחילה, והמילה *"הכול"* בכותרת הייתה
+    // מוסיפה רעש ולא מידע. ‏`periodLabel` קיים בשביל מצב-הטעינה ומצב-התקלה, שבהם "היום"
+    // של השרת עדיין אינו ידוע (פריט [27]): בלעדיו השורה מתכווצת ל-*"כל הלקוחות"* לבד
+    // בעוד הגלולה מסומנת *"12 חודשים"*, כלומר אוכלוסייה בלי תאריך.
+    periodLabel: period === 'all' ? null : PERIOD_OPTIONS.find((o) => o.key === period)?.label,
+    hideCustomer: customerIgnored,
+  })
 
   function setTab(value) {
     const next = resolveNext(value, activeTab?.key)
@@ -280,11 +345,14 @@ export default function ReportsPage() {
   // 🔴 **`useCallback` ולא חץ-אינליין — וזה לא ניקיון:** `onWindow` יושב במערך-התלויות של
   // ה-effect שקורא ל-RPC, ופונקציה חדשה בכל רינדור הייתה מייצרת **לולאת-קריאות אינסופית**.
   // (‏`exhaustive-deps` מסמן בדיוק את זה; השתקתו הייתה מסתירה את הלולאה, לא מונעת אותה.)
-  const handleWindow = useCallback((serverWindow) => {
+  const handleWindow = useCallback((serverWindow, meta, rpc) => {
     // נקבע פעם אחת ליום-עבודה: השרת מהדהד את ה-`to` ששלחנו, ולכן אין כאן לולאה — אבל
     // ההשוואה מפורשת כדי שרינדור נוסף לא ייווצר על ערך זהה.
     const day = serverWindow?.to ?? null
     setServerToday((current) => (day && day !== current ? day : current))
+    // ✏️ **מה שהמשטח באמת מדד — ולא מה שהגלולה בחרה** (17/09/2026, פריטים [3] · [8] · [28]).
+    const next = readScope(serverWindow, meta, rpc)
+    setSurfaceScope((current) => (sameScope(current, next) ? current : next))
   }, [])
 
   const filters = {
@@ -341,10 +409,16 @@ export default function ReportsPage() {
       return
     }
     // 🚪 **ענף-הדלת נבדק אחרי סימן-הכוונה, ולא לפניו** (16/09/2026, ר' `DRILL_INTENT`
-    // ב-`api.js`): משטח-דריל שיש לו **רמה נוספת** מוסר את הסימן כארגומנט שלישי, ולכן
-    // `drill_key` שנושא `kind` מרשימת-הדלתות **יורד רמה** במקום לנווט — גם ביום שה-RPC
-    // יוסיף לו `id`, שהיעדרו הוא כל מה שהחזיק עד היום את ההתנהגות הנכונה.
+    // ב-`api.js`): מפתח שנושא `kind` מרשימת-הדלתות **יורד רמה** במקום לנווט, גם ביום
+    // שה-RPC יוסיף לו `id` — שהיעדרו הוא כל מה שהחזיק עד אז את ההתנהגות הנכונה.
     // ⚠️ **וברמה האחרונה** אין סימן, והדלת היא הישות עצמה — וזו ההתנהגות הנכונה שם.
+    //
+    // 🔴 **והסימן נקבע **לפי מפתח-השורה** ולא לפי המשטח — תוקן 17/09/2026, פריט [E1]:**
+    // עד כאן `drillHandlers` מסר את הסימן לכל שורה במשטח שיש לו רמה נוספת, ולכן **שורת-
+    // השורש של מ9** — `{kind:'project', id:1040}`, דלת מוצהרת של הכרעה 19 — ירדה רמה
+    // במקום לנווט אל `/projects/1040`. **נמדד פעמיים כ-E2E אדום** (`e2e/reports.spec.js`
+    // *"מ9 בשורש: השורה כולה דלת אל כרטיס-הפרויקט"*), ו**הכרעה 19 עומדת בעינה**.
+    // ⇒ המשטח מסמן היום רק מפתח ש**חוזר על הממד של הרמה הפתוחה** (ר' `ReportSurface`).
     if (intent !== DRILL_INTENT && next?.id != null && ROW_DOOR_KINDS.includes(next.kind)) {
       navigate(DOOR_PATHS[next.kind](next.id))
       return
@@ -394,9 +468,15 @@ export default function ReportsPage() {
         onPeriodChange={(next) =>
           writeParams({ period: next === tabDefaultPeriod ? undefined : next })
         }
+        // ✏️ **הפקד מושבת על המשטח שאינו מחיל אותו** (17/09/2026) — ר' `readScope`.
+        // 🔑 **והכתובת ממשיכה לעבוד:** ‏`?period=`/`?customer=` נשמרים כפי שהם ונשארים
+        // בתוקף ברגע שהמשתמשת עוברת למשטח שכן מסנן לפיהם. מה שנחסם הוא **השינוי מכאן**,
+        // לא המצב עצמו — קישור-לדוח-מסונן ששותף נפתח בדיוק כפי שנשלח.
+        periodDisabledReason={periodIgnored ? PERIOD_IGNORED_REASON : null}
         customers={customers}
         customerId={customerId}
         onCustomerChange={(next) => writeParams({ customer: next })}
+        customerDisabledReason={customerIgnored ? CUSTOMER_IGNORED_REASON : null}
         exportSlot={<div ref={setExportSlotEl} data-testid="reports-export-slot" />}
       />
       {/* 🚫 **אין כאן `<Hint>`, ובכוונה.** ‏§2ב C3 מחייב שכל מפתח-הטמעה של מ11 **מועתק

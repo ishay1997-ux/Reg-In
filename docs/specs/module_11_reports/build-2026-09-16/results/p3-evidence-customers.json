@@ -1,0 +1,158 @@
+{
+  "tab": "customers",
+  "agent": "P3-S · evidence · customers (מ19 · מ20 · מ21 · מ22)",
+  "runner": {
+    "command": "node evidence-run.mjs --tab customers --extras empty --stagger 60",
+    "exit": 0,
+    "log": "results/evidence-run-customers.log",
+    "json": "results/evidence-run-customers.json",
+    "failures": [],
+    "logins": { "CEO": 1, "FINANCE": 1, "RECRUIT": 1, "STAFF": 1 }
+  },
+  "screenshots": 34,
+  "surfaces": [
+    {
+      "id": "מ19",
+      "slug": "customers-overview",
+      "identity_matrix": { "CEO": "rendered", "FINANCE": "rendered", "RECRUIT": "masked", "STAFF": "masked" },
+      "scroll_overflow_px": 0,
+      "console_errors": 0,
+      "hints_m2": 3,
+      "hints_m0": 0,
+      "charts": 1,
+      "tiles": 4,
+      "rows_page1": 8,
+      "pager_total": 8,
+      "five_pass": {
+        "direction": "8/8 money pairs measured by geometry, not by eye — digits left of the ₪ glyph in every table cell (probe-shekel.log: \"635,764 ₪\" numLeft=487 < shLeft=550), zero \"₪50\" forms; the window label is one LTR isolate \"⁦01/01/2026–16/09/2026⁩ · כל הלקוחות\"; scrollWidth − clientWidth = 0.",
+        "inventory": "4 tiles (all four are doors — tile_doors=4) · 1 line chart · 1 table · 1 export block · 1 disclosure \"קצב-התשלום תלוי בסוג הלקוח — הפילוח המלא\"; the only filled-teal control on the page is the selected period pill \"השנה\", no duplicate buttons.",
+        "consistency": "One card shape for all four tiles, each closed by its own basis line \"כל הזמנים · אינו מושפע ממסנן התקופה\"; teal only (selected pill · so-what bar · chart line · hint bars) — no purple/orange anywhere in CEO-m2-customers-overview.png.",
+        "copy": "All four tile labels are byte-identical to spec.md §1.4 (שביעות-רצון מנבאת חזרה · הסיבה השלילית הגדולה אינה קטגוריה · הריכוזיות והנטישה עוד לא נפגשות · קצב-התשלום תלוי בסוג הלקוח) — including the 16/09 extraction fix; they are, as §1.4 itself warns, sentences and not noun phrases (open item, see anomaly A3).",
+        "empty_input": "No free-text field exists on the surface; the only control that could be empty is the customer <select>, whose resting option reads \"כל הלקוחות\" rather than a blank — the placeholder rule has nothing to bind to here."
+      }
+    },
+    {
+      "id": "מ20",
+      "slug": "satisfaction",
+      "identity_matrix": { "CEO": "rendered", "FINANCE": "rendered", "RECRUIT": "masked", "STAFF": "masked" },
+      "scroll_overflow_px": 0,
+      "console_errors": 0,
+      "hints_m2": 3,
+      "hints_m0": 0,
+      "charts": 4,
+      "tiles": 4,
+      "rows_page1": 19,
+      "pager_total": 19,
+      "five_pass": {
+        "direction": "No ₪ on this surface (0 money pairs in the geometry probe); percentages are digits-then-% everywhere (88.3% · 75.1% · 80.1% · 73.9%), the four charts sit in dir=ltr cards with their Hebrew titles outside, overflow 0.",
+        "inventory": "4 tiles · 4 bar charts (chart-card-bar ×4 — the customers cap is 4 per §9 D-28, measured exactly 4, not over) · 1 table · 1 export block; each chart carries exactly one note (\"הסולם כאן עצמאי ואינו משותף לגרף השני\") and it is printed once, from the server.",
+        "consistency": "All four charts share one bar styling and axis treatment; every tile closes with the same comparison row \"▲/▼ אשתקד באותו טווח (…) · 01/01/2026–16/09/2026\".",
+        "copy": "Labels match spec.md §1.4 word for word (שיעור המרוצים (4–5) · שיעור המענה למשוב · ממוצע הציון (1–5) · משובים שסימנו סיבה שלילית), and the definitions row keeps the two numerators apart: \"זהו חתך של לקוחות ואינו 'שיעור המרוצים', שנמדד על משובים בציון 4–5 — שני מונים שונים, ולכן שני שמות\".",
+        "empty_input": "No free-text field; the one interactive empty-ish state is the chart cross-filter, and it clears through the locked chip — probe-crossfilter2.log: clicking the negative-reasons bar took the table 19 → 3 rows and rendered \"× נקי בחירה\" with the label \"איכות תגים\"."
+      }
+    },
+    {
+      "id": "מ21",
+      "slug": "drifting",
+      "identity_matrix": { "CEO": "rendered", "FINANCE": "rendered", "RECRUIT": "masked", "STAFF": "masked" },
+      "scroll_overflow_px": 0,
+      "console_errors": 0,
+      "hints_m2": 3,
+      "hints_m0": 0,
+      "charts": 1,
+      "tiles": 4,
+      "rows_page1": 12,
+      "pager_total": 12,
+      "five_pass": {
+        "direction": "16/16 money pairs digits-left-of-₪ by geometry (tile \"320,743 ₪\" numLeft=647 < shLeft=731; so-what \"⁦122,124 ₪⁩\" carries LRI…PDI in the DOM string); phone numbers render LTR inside RTL cells; the histogram axis (0–30 … 181+) is LTR with a Hebrew title above it; overflow 0.",
+        "inventory": "4 tiles · the amber two-methods banner · 1 histogram · a 9-column table · 1 export block. The banner is base, not hint layer: CEO-m0-drifting.png shows it with the three hint paragraphs gone, and its three numbers (12 מתרחקים · 11 רדומים · 3) agree with tiles 1 and 3.",
+        "consistency": "Teal for the so-what bar and hint bars; the amber banner is the only non-teal block on the page and it carries a definition, not an action — no second styling for the same job.",
+        "copy": "Four labels match spec.md §1.4 including the full \"הכנסת 12 החודשים של הלקוחות המסומנים\"; both terms the page turns on (\"מתרחק\", \"רדום\") are defined on screen in the definitions row, so the flag column is not a term without a definition.",
+        "empty_input": "The customer <select> again has no blank state. The filtered-to-empty case is where this pass fails — see anomaly A1: selecting a customer with no drifting flag leaves a table that is a header row and nothing else, with no sentence."
+      }
+    },
+    {
+      "id": "מ22",
+      "slug": "notes",
+      "identity_matrix": { "CEO": "rendered", "FINANCE": "rendered", "RECRUIT": "masked", "STAFF": "masked" },
+      "scroll_overflow_px": 0,
+      "console_errors": 0,
+      "hints_m2": 2,
+      "hints_m0": 0,
+      "charts": 1,
+      "tiles": 4,
+      "rows_page1": 50,
+      "pager_total": 426,
+      "five_pass": {
+        "direction": "No money on the surface; scores and dates are digit-first and isolated; the model columns are suffixed in Hebrew (\"נושא (מודל)\" · \"תג חופשי (מודל)\" · \"סנטימנט (מודל)\"), so no English leaks into a header; overflow 0.",
+        "inventory": "4 tiles · the run bar (\"מציג את הריצה מ-16/09/2026, אושרה ע\\\"י …\") · 1 agreement-matrix chart · an 8-column table · 1 export block. The five period pills are the exception — they are rendered and live on a page that declares it ignores the period (anomaly A2).",
+        "consistency": "Same tile and card shapes as the other three surfaces; the chart legend uses one teal/hatched-grey pair for \"המודל הסכים\" vs \"לא ניתן לסווג\".",
+        "copy": "Four labels match spec.md §1.4 (הערות חופשיות שנכתבו · מהן שייכות למשוב שתויג \"אחר\" · גודל \"אחר\" מול הקטגוריות · דגלים אדומים); the run-gate hint explains the two-step gate in one sentence without repeating the run bar's own text.",
+        "empty_input": "No free-text field. hints_m2 = 2 rather than 3 is not a missing key: reports.notes.tilesBasis is anchored inside the no-approved-run branch only (CustomerSurface.jsx:52-53 and the ⑩ג comment above it), and 426 approved insights exist — so that branch, and its hint, were unreachable (see not_verified)."
+      }
+    }
+  ],
+  "anomalies": [
+    {
+      "surface": "מ21 · drifting",
+      "what": "A customer filter that empties the table leaves the page saying two different things at once, and nothing tells the user the selection matched nothing: the table shrinks to a bare header row (no rows, no pager, no empty-state sentence), while the population line, the so-what line, the two-methods banner and all four tiles stay byte-identical to the unfiltered page. The only signal is the disabled export caption \"אין שורות לייצא\".",
+      "evidence": "probe-filters.log lines 12-16 (customer=411 אופק ביטוח ופיננסים): rows=0, pager=\"\", export=\"אין שורות לייצא\", window=\"⁦01/01/2026–16/09/2026⁩ · אופק ביטוח ופיננסים\" — yet population=\"אוכלוסייה: ⁦52⁩ לקוחות … מתוך ⁦61⁩\" and so_what=\"להתקשר השבוע לענבר אשכנזי מגלובל שיפינג בע\\\"מ ולמיכל תורג'מן…\" are identical to the unfiltered run (lines 7-11), and the tiles still read 12 / 320,743 ₪ / 3. Screenshot: CEO-m2-drifting-empty-filter.png (table area cropped in crop-empty-filter-bottom.png — header row, then straight to the definitions row). Cause in code: ReportSurface.jsx:510 gates the 📐10 state-2 envelope on `payload.rows.length === 0 && (payload.population?.n ?? 0) === 0`, and the m21 RPC keeps population.n global under a customer filter, so the envelope (and its \"נקי מסננים\" action) can never fire for this path.",
+      "severity": "defect",
+      "owner": "shell (ReportSurface.jsx:510) — with an rpc facet: report_m21_drifting does not scope population/tiles to p_customer_id"
+    },
+    {
+      "surface": "מ22 · notes",
+      "what": "The five period pills are live on a page that states it ignores the period: switching them changes only the shell's window label, nothing else on the screen.",
+      "evidence": "probe-filters.log lines 1-6 — period=year/month/all all give rows=50, pager \"1–50 מתוך 426\", the same population line (\"… כל הזמנים … הדף אינו מגיב למסנן התקופה\") and the same export name \"ניתוח-הערות_כל-הזמנים-·-נכון-ל-16-09-2026.xlsx\"; only window_label moves (⁦01/01/2026–16/09/2026⁩ → ⁦01/09/2026–16/09/2026⁩ → \"כל הלקוחות\"). Header therefore prints a period the page does not use. Nearest precedent: the ruled מ9/מ7 case, where the period-independent block says \"נכון להיום\" instead of carrying a period.",
+      "severity": "cosmetic",
+      "owner": "shell"
+    },
+    {
+      "surface": "מ19 · customers-overview",
+      "what": "All four tile labels are sentences, not noun phrases — the copy pass (src/CLAUDE.md §4.4) fails on this surface and only on this surface.",
+      "evidence": "CEO-m2-customers-overview.png: \"שביעות-רצון מנבאת חזרה\" · \"הסיבה השלילית הגדולה אינה קטגוריה\" · \"הריכוזיות והנטישה עוד לא נפגשות\" · \"קצב-התשלום תלוי בסוג הלקוח\". Already registered, not new: spec.md §1.4 marks them 🔵 open for Ishay (cards-customers.md ⑧19.1 · ⑧19.6) and says \"נשארו כפי שהן; ההכרעה שלו\". Reported as a question so the gate does not read the copy pass as clean.",
+      "severity": "question",
+      "owner": "doc"
+    }
+  ],
+  "not_verified": [
+    "FINANCE at onboarding mode 2 on all four surfaces. The mode-2 intercept cannot reach this identity: probe-mode2.log shows the notification_preferences GET returns an empty array for FINANCE (arrayLen=0) and one row for CEO (arrayLen=1), so forceOnboardingMode's .map() has nothing to rewrite and AuthContext.jsx:174 falls back to 0 — \"אין שורה = 0\", the table contract. This is a harness limit, not a product defect; the FINANCE hint layer stays unmeasured (all 8 FINANCE runs show hints=0 in both modes).",
+    "The error envelope and its \"נסי שוב\" recovery on the customers tab — my dispatch gave --extras empty only; that extra ran on another agent's tab (hostesses).",
+    "מ22's no-approved-run branch: the NoApprovedRun block (\"טרם אושרה ריצת-ניתוח\"), its four zeroed tiles and the hint reports.notes.tilesBasis. 426 approved insights exist in the live DB, so the branch is unreachable from the UI without a DB write, which I am forbidden to make.",
+    "The four tile doors of מ19 (tile_doors=4) were never clicked — no drill extra on this tab, so where those doors land is unmeasured.",
+    "Keyboard navigation, screen-reader output and colour contrast. Everything here is headless Chromium at 1280×800, light theme, one clock reading (16/09/2026)."
+  ],
+  "blind_spot": "Every judgement above rests on one dataset at one clock reading, and the single mechanism it structurally cannot reach is מ22's empty branch: `hasApprovedRun(payload) === false` in src/modules/11_reports/tabs/customers/CustomerSurface.jsx (NoApprovedRun + the ⑩ג hint reports.notes.tilesBasis). While an approved run exists in the shared DB, no URL, filter or permission can render it, so the sentence \"טרם אושרה ריצת-ניתוח\" and the claim that the four tiles then read that instead of 0 have never been seen on screen in this run — only in unit tests (CustomersTab.test.jsx:842). Checkable true-or-false by anyone who may write: stub report_m22_notes to return approved_run=null (or run against a DB with no approved run) and confirm the four tiles say \"טרם אושרה ריצה\" rather than 0, since a 0 there would read as \"אין בעיות\".",
+  "extras": {
+    "empty_after_filter": {
+      "surface": "drifting",
+      "customer_options": 61,
+      "picked": "411 · אופק ביטוח ופיננסים",
+      "state": "rendered",
+      "rows": 0,
+      "export_disabled": true,
+      "export_caption": "אין שורות לייצא",
+      "png": "CEO-m2-drifting-empty-filter.png"
+    },
+    "probes_i_added": [
+      "probe-mode2.mjs → results/probe-mode2.log — why mode 2 lifts hints for CEO and not for FINANCE (prints only HTTP status and derived booleans; no body, no token, no email).",
+      "probe-shekel-geometry.mjs → results/probe-shekel.log — the direction pass by client-rect geometry instead of by eye: 24 money pairs on מ19+מ21, 24/24 digits left of ₪, 0 \"₪50\" forms.",
+      "probe-crossfilter.mjs → results/probe-crossfilter.log + probe-crossfilter2.log — D-34 ③: the cross-filter chip reads exactly \"× נקי בחירה\" (19 → 3 rows, label \"איכות תגים\"); the first run also showed the positive-reasons chart is correctly NOT cross-filterable (its x-values do not meet the table's rows — autoFilterKey's verification step).",
+      "probe-filters.mjs → results/probe-filters.log — what the period filter does on מ22 and what the customer filter does on מ21.",
+      "crop.mjs — crops a band out of a 5,000-px-tall PNG so it can actually be read; it changes nothing measured."
+    ],
+    "checklist": {
+      "scroll_overflow_px_nonzero": "none (0 on all 32 runs)",
+      "console_errors": "none (0 on all 32 runs)",
+      "hints_m0_nonzero": "none",
+      "chart_cap": "1 · 4 · 1 · 1 — the customers cap is 4 (D-28); nothing over",
+      "rows_page1_vs_total": "8/8 · 19/19 · 12/12 · 50/426 — page 1 shows min(total, 50) on all four",
+      "junk_tokens": "no [object Object] / NaN / undefined / null / Infinity in any captured string",
+      "english_leak": "none in UI text (only the \".xlsx\" extension in the export caption and data-testid values)",
+      "ruling_36_leak": "none — no population sentence prints \"(הכרעה 36)\"",
+      "clear_chip": "\"× נקי בחירה\" verified live on מ20",
+      "mode0_base_layer": "population · so-what · definitions byte-identical between m0 and m2 on all four surfaces (C3 deletion test passes)",
+      "masked_identity_leak": "none — RECRUIT falls back to its own hostesses overview, STAFF gets \"אין דוחות זמינים בתפקידך — פני למנכ\\\"ל\" with 0 tiles and 0 charts"
+    }
+  }
+}

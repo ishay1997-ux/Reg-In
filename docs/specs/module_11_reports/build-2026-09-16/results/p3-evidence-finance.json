@@ -1,0 +1,206 @@
+{
+  "tab": "finance",
+  "generated_at": "2026-09-16T20:50:24.128Z",
+  "head": "300e80dc · frozen preview build on :5189 (HTTP 200 verified before the run)",
+  "runner": {
+    "exit": 0,
+    "failures": [],
+    "logins": {
+      "CEO": {
+        "ok": true,
+        "attempts": 1,
+        "reused": false
+      },
+      "FINANCE": {
+        "ok": true,
+        "attempts": 1,
+        "reused": false
+      },
+      "RECRUIT": {
+        "ok": true,
+        "attempts": 1,
+        "reused": false
+      },
+      "STAFF": {
+        "ok": true,
+        "attempts": 1,
+        "reused": false
+      }
+    },
+    "extras": "drill (מ9 level 1 and level 2)"
+  },
+  "added_probes": [
+    "finance-probe.mjs — text-only DOM dump (tile strings, chart titles, headers, first rows, ₪/% tokens, Latin runs) for the four CEO m2 surfaces. Adds nothing to measure(); no screenshots, no writes.",
+    "finance-probe2.mjs — the מ8 footnote plus all 30 table rows with their classes, to test the declared materiality floor against the rendered order.",
+    "finance-probe3.mjs — one chart-bar click per non-drill surface to read the cross-filter chip wording (D-34 ③); produced CEO-m2-equipment-crossfilter.png."
+  ],
+  "screenshots": 35,
+  "surfaces": [
+    {
+      "id": "מ7",
+      "slug": "finance-overview",
+      "identity_matrix": {
+        "CEO": "rendered",
+        "FINANCE": "rendered",
+        "RECRUIT": "masked",
+        "STAFF": "masked"
+      },
+      "scroll_overflow_px": 0,
+      "console_errors": 0,
+      "hints_m2": 4,
+      "hints_m0": 0,
+      "charts": 1,
+      "tiles": 4,
+      "rows_page1": 4,
+      "pager_total": 4,
+      "five_pass": {
+        "direction": "PASS — CEO-m2-finance-overview.png: every amount on the page puts ₪ after the digits and never before — tiles \"236,382 ₪\" / \"82,898 ₪\", table \"2,899 ₪\", chart sr-table \"205,131 ₪\"; dates DD/MM/YYYY; scrollWidth−clientWidth = 0.",
+        "inventory": "PASS — 4 tiles · 1 chart · 1 table · 1 export block, nothing without a job; all four tiles carry the 📐1 comparison half (\"▲ לפני חודש: 206,002 ₪\", \"▼ אוגוסט: 19,253 ₪\"); the only teal-filled control is the one door \"כל 35 החשבוניות הפתוחות →\".",
+        "consistency": "PASS — the page agrees with מ9 to the shekel: tile \"יתרת-חוב פתוחה 236,382 ₪ · 35 חשבוניות\" = מ9 tile, and the so-what \"לגבות 46,038 ₪ ... מעל 60 יום ב-7 חשבוניות\" = מ9 tile \"מעל 60 יום 46,038 ₪ · 7 חשבוניות\".",
+        "copy": "PASS with one doc note — h1 \"מבט-על כספים\" + subtitle \"מה מצב הכסף?\" are §🏷️ word for word; tile labels match spec §1.4 except \"צפוי להיכנס ב-30 יום\" where §1.4 carries the shorter \"צפוי להיכנס ב-30\" (see anomaly 4). No verbs-as-labels, no imported metaphors.",
+        "empty_input": "N/A-PASS — the surface has no free-text field; the single input is the customer <select>, whose resting option reads \"כל הלקוחות\" (a select cannot carry a placeholder), and the period chips are radio-like buttons with \"השנה\" selected."
+      }
+    },
+    {
+      "id": "מ8",
+      "slug": "profitability",
+      "identity_matrix": {
+        "CEO": "rendered",
+        "FINANCE": "rendered",
+        "RECRUIT": "masked",
+        "STAFF": "masked"
+      },
+      "scroll_overflow_px": 0,
+      "console_errors": 0,
+      "hints_m2": 3,
+      "hints_m0": 0,
+      "charts": 1,
+      "tiles": 5,
+      "rows_page1": 30,
+      "pager_total": 30,
+      "five_pass": {
+        "direction": "PASS — negative values isolate correctly: tile \"חציון-סטייה ‎-1.8%\" and the chart axis \"‎-2,750 / ‎-2,200 …\" keep the minus to the left of the digits inside the LTR island; ₪ always trails (\"361 ₪\"), and every ₪ on the page is whole (📐4). Overflow 0.",
+        "inventory": "PARTIAL — 5 tiles · 1 chart · 1 table, none redundant, but the fifth tile (חציון-סטייה) drops alone onto a second row of the 4-column grid (CEO-m2-profitability.png), reading as an orphan rather than as part of the row (anomaly 7).",
+        "consistency": "FAIL — the chart, the table and the hint all rank by סטיית-תקציב ב-₪ (header \"סטייה ₪▼\", row 1 = 1,416 · 361 ₪), while the \"אז מה\" line sends the reader to פרויקט 1427 (row 4 · 286 ₪ · 27.2%) as \"החריגה הגדולה ביותר בתקופה\" — two different first actions on one screen (anomaly 1). The declared materiality floor is also not applied to the ranking (anomaly 2).",
+        "copy": "PASS — h1 \"רווחיות פרויקטים\" + subtitle \"אילו פרויקטים דלפו מהתקציב?\" match §🏷️; the five tile labels match §1.4 exactly; the two 16/09-corrected hints now say \"סכום-הסטייה\" and \"גודל-הסטייה ב-₪\" (D-34 ⑧), no % left in them.",
+        "empty_input": "N/A-PASS — no free-text input; the לקוח select rests on \"כל הלקוחות\", period chips on \"השנה\"."
+      }
+    },
+    {
+      "id": "מ9",
+      "slug": "aging",
+      "identity_matrix": {
+        "CEO": "rendered",
+        "FINANCE": "rendered",
+        "RECRUIT": "masked",
+        "STAFF": "masked"
+      },
+      "scroll_overflow_px": 0,
+      "console_errors": 0,
+      "hints_m2": 4,
+      "hints_m0": 0,
+      "charts": 1,
+      "tiles": 4,
+      "rows_page1": 35,
+      "pager_total": 35,
+      "five_pass": {
+        "direction": "PASS — CEO-m2-aging.png: ₪ trails the digits in all four tiles, in the side tile (\"48,746 ₪\") and in all 35 table rows; the bucket names 1–30 / 31–60 / 61–90 / 90+ keep their LTR order inside the RTL sentence; both date columns DD/MM/YYYY; scrollWidth−clientWidth = 0.",
+        "inventory": "PASS — 4 tiles + the \"שוטף — עוד לא באיחור\" side tile beside the chart (D-34 ⑪ slot) + 1 stacked chart + 1 table; the four bucket labels double as the drill doors (D-34 ①), so no extra drill control was added; the 📐18 owner column \"איש קשר\" is populated on every row seen (ליהי סבן · ניר נחום · לירון צור), not a column of dashes.",
+        "consistency": "PASS — the page closes on itself: 48,746 (שוטף) + 83,313 (1–30) + 58,285 (31–60) + 28,092 (61–90 = 46,038 − 17,946) + 17,946 (90+) = 236,382 ₪, exactly the open-debt tile, and 8+12+8+4+3 = 35 = the pager total; \"מעל 60 יום\" (46,038 ₪ · 7 חשבוניות) = 61–90 plus 90+.",
+        "copy": "PASS on §🏷️, FAIL on §1.4 — h1 \"גיול חובות\" + subtitle \"את מי לגבות השבוע?\" are §🏷️ word for word, but none of the root tile labels \"מעל 60 יום\" / \"מדרג 90+\" / (מ9-owned) \"יתרת-חוב פתוחה\" appears in spec §1.4; the labels it does list for מ9 are the drill-level-1 tiles (anomaly 3).",
+        "empty_input": "N/A-PASS — no free-text field on the surface; the only input is the customer select, resting on \"כל הלקוחות\". The period chips render and stay clickable on a surface that declares \"אינו מושפע ממסנן התקופה\" — that pairing is the ruled behaviour and is not reported."
+      }
+    },
+    {
+      "id": "מ12",
+      "slug": "equipment",
+      "identity_matrix": {
+        "CEO": "rendered",
+        "FINANCE": "rendered",
+        "RECRUIT": "masked",
+        "STAFF": "masked"
+      },
+      "scroll_overflow_px": 0,
+      "console_errors": 0,
+      "hints_m2": 4,
+      "hints_m0": 0,
+      "charts": 2,
+      "tiles": 4,
+      "rows_page1": 9,
+      "pager_total": 9,
+      "five_pass": {
+        "direction": "PASS — CEO-m2-equipment.png: ₪ after the digits in the tiles (\"361,102 ₪\" · \"1,191,808 ₪\") and in every cost cell; percentages to one decimal (\"5.2%\" · \"2.0%\") per 📐4; the two charts sit inside their LTR island with the Hebrew titles outside; overflow 0.",
+        "inventory": "PASS — 4 tiles · 2 charts (the cap outside the customers tab) · 1 main table · 2 named extra tables (\"כמה להזמין לחודש הקרוב\" · \"שורות ציוד במחיר מוערך\"), each with its own pager; the two all-time tiles carry no comparison half, which is the documented exception (\"אין — מדד מצטבר, מוצהר\", cards-finance.md:593), not a 📐1 miss.",
+        "consistency": "PASS with one open question — chart \"עלות לפי מוצר\" and the main table run in the same ₪ order (233,480 · 174,600 · 173,590 …) and the second chart is ordered by הוזמן exactly as its hint says; the cross-filter click (CEO-m2-equipment-crossfilter.png) narrows the table to one row with the pager \"1–1 מתוך 1\" (📐8) and the chip reads \"× נקי בחירה\" (D-34 ③) — but the second chart shows no selection state (anomaly 6).",
+        "copy": "PASS — h1 \"צריכת ציוד\" + subtitle \"כמה ציוד נצרך וכמה להזמין?\" match the 22:1X updated §🏷️ row; the four tile labels match §1.4 word for word; the only Latin on the page is the \"xlsx\" of the export caption.",
+        "empty_input": "N/A-PASS — no free-text input on the surface; the customer select rests on \"כל הלקוחות\"."
+      }
+    }
+  ],
+  "anomalies": [
+    {
+      "surface": "מ8 profitability",
+      "what": "The \"אז מה\" action line and the mode-2 hint name two different first rows — the line sends the reader to a row that is fourth in the table.",
+      "evidence": "CEO-m2-profitability.png — so-what: \"לפתוח את פרויקט 1427 — נובה פארמה בע\"מ, החריגה הגדולה ביותר בתקופה: 27.2% מעל התכנון\"; directly under it the hint reports.profitability.whyAndFirst: \"התחילי מהפרויקט שבראש הטבלה, כי סכום-הסטייה שלו הוא הגדול ביותר\". Table header \"סטייה ₪▼\": row 1 = 1,416 · 361 ₪ · 21.1%; 1,427 is row 4 · 286 ₪ · 27.2% (finance-probe2.json rows[0] and rows[3]). This is the residue of D-34 ⑧, which corrected the two hints that said % and left the server prose untouched.",
+      "severity": "defect",
+      "owner": "rpc (report_m08_profitability so_what) — tab if that line turns out to be composed client-side"
+    },
+    {
+      "surface": "מ8 profitability",
+      "what": "The materiality floor the page declares in its own footnote is not applied to the ranked table: two below-floor projects sit inside the ranking, unmarked, one of them 12th of 30 with a 300.0% deviation.",
+      "evidence": "Footnote (finance-probe2.json.tail): \"125 פרויקטים · 700,697 ₪ מתחת לרצפת-המהותיות (פחות מ-4 שעות מתוכננות או פחות מ-1,000 ₪ עלות-עבודה מתוכננת) — הם בתוך האוכלוסייה ומחוץ לדירוג בלבד\". Row 12 = פרויקט 12 · שעות-צוות מתוכננות 1.5 · סטייה 203 ₪ · 300.0%; row 30 = פרויקט 1,458 · 3.0 שעות. Both are under 4 planned hours. All 30 rows carry the identical class \"cursor-pointer hover:bg-slate-50\" and no marker text anywhere in the cells, while the hint reports.profitability.sortWhy promises \"ושורה שמסומנת \"מתחת לרצפת-המהותיות\" יורדת לסוף הטבלה\".",
+      "severity": "defect",
+      "owner": "rpc (ranking + flag) with tab for the missing row marker"
+    },
+    {
+      "surface": "מ9 aging",
+      "what": "spec §1.4 — the locked-label table the copy pass compares against — carries none of מ9's root-screen tile labels; the ones it carries belong to drill level 1.",
+      "evidence": "Root screen (CEO-m2-aging.png): \"יתרת-חוב פתוחה · מעל 60 יום · מדרג 90+ · ימים לתשלום (חציון)\" plus the side tile \"שוטף — עוד לא באיחור\". spec.md line 101, כספים row: \"… חוב במדרג 61–90 · חלק מסך-החוב הפתוח · החשבונית הישנה ביותר · ימים לתשלום (חציון) · שוטף — עוד לא באיחור\". CEO-m2-aging-drill1.png shows exactly those three at drill level 1 (\"חוב במדרג 90+ יום · חלק מסך-החוב הפתוח · החשבונית הישנה ביותר\") — the mockup §1.4 was extracted from was drawn at level 1 (cards-finance.md ⑨9.1: \"הדף מצויר ברמה שנייה … במסך החי הדף נפתח בשורש\"). A session comparing screen to doc meets three labels it cannot resolve, in the direction §1.4's own 16/09 note calls the dangerous one.",
+      "severity": "question",
+      "owner": "doc (spec §1.4 — check:declared-counts counts these values, it never compares them to a screen)"
+    },
+    {
+      "surface": "מ7 finance-overview",
+      "what": "A tile label on screen is one word longer than spec §1.4 — the same truncation class as the two labels repaired on 16/09.",
+      "evidence": "Screen: \"צפוי להיכנס ב-30 יום\" (finance-probe.json tiles[1]); spec.md line 101: \"צפוי להיכנס ב-30\". The label arrives from the payload (micro-guide §2ב C8), so the screen is the authority and the document is short; the count stays 74 either way, which is why check:declared-counts cannot see it.",
+      "severity": "cosmetic",
+      "owner": "doc"
+    },
+    {
+      "surface": "מ9 aging (drill level 1)",
+      "what": "At drill level the population sentence still declares the root population while the tiles, the table and the pager show one bucket.",
+      "evidence": "CEO-m2-aging-drill1.png — crumbs \"גיול חובות | מדרג 90+ יום\", pager \"1–3 מתוך 3\", tile \"חוב במדרג 90+ יום 17,946 ₪\", and above them the unchanged \"… n=35 · נכון להיום\" plus a chart narrative that still walks all four buckets. Readable the other way too (the tile \"חלק מסך-החוב הפתוח 7.6%\" deliberately keeps the whole in view), which is why this is a question and not a defect.",
+      "severity": "question",
+      "owner": "tab"
+    },
+    {
+      "surface": "מ12 equipment",
+      "what": "A cross-filter selection paints chart 1 and filters the main table, but the second chart on the same page shows no selection state.",
+      "evidence": "CEO-m2-equipment-crossfilter.png — after clicking the \"שרוך סאטן - ממותג\" bar: chart 1 keeps that bar teal and greys the other eight, the chip row reads \"שרוך סאטן - ממותג | × נקי בחירה\", the main table is one row (\"1–1 מתוך 1\"), while the chart \"הוזמן מול הגיע\" below still draws all nine products in full colour.",
+      "severity": "question",
+      "owner": "tab"
+    },
+    {
+      "surface": "מ8 profitability",
+      "what": "The fifth tile falls alone onto a second row of the four-column tile grid.",
+      "evidence": "CEO-m2-profitability.png and CEO-m0-profitability.png — tiles 1–4 in one row and \"חציון-סטייה\" alone underneath on the right; measure.tiles = 5 on the grid the other three surfaces fill with 4.",
+      "severity": "cosmetic",
+      "owner": "tab"
+    },
+    {
+      "surface": "all four (evidence harness, not the product)",
+      "what": "Onboarding mode 2 did not take effect for the FINANCE identity: its m2 screens are mode-0 screens (0 hints), so that column proves rendering, not the guided layer.",
+      "evidence": "evidence-run-finance.json — CEO m2 hints_visible 4/3/4/4 against FINANCE m2 hints_visible 0/0/0/0 on the same four surfaces with identical states. Mechanism, read rather than measured: evidence-common.mjs forceOnboardingMode maps the rows of a PostgREST array, so an identity with no notification_preferences row gets [] back unchanged, and AuthContext.jsx:168-175 (maybeSingle ⇒ null ⇒ 0) resolves to mode 0. Hint.jsx has no permission gate, so this is not a product difference — but I ran no database query, so it stays a hypothesis.",
+      "severity": "question",
+      "owner": "runner (scratchpad evidence-common.mjs) — the orchestrator decides whether to re-shoot"
+    }
+  ],
+  "not_verified": [
+    "Onboarding mode 2 for FINANCE (anomaly 8). For RECRUIT and STAFF the question is moot: both are masked on this tab, so no hint can render either way.",
+    "The clear-chip wording on מ7 and מ8 — a bar click on those two produced no cross-filter selection at all (finance-probe3.json: crossfilter_label null, url unchanged). Whether those surfaces are meant to have a cross-filter is not something I established; only מ12 was verified (\"× נקי בחירה\").",
+    "The export-caption, error-envelope and empty-after-filter extras — my dispatch was --extras drill; those three run once for the whole matrix under the other tabs' agents.",
+    "The RPC against the §3.2 hand-computed baseline of 10/09/2026 (שוטף 10 · 1–30 13 · 31–60 8 · 61–90 1 · 90+ 3). Today the buckets are 8 · 12 · 8 · 4 · 3. I verified only that today's five numbers close on the same 35 invoices and the same 236,382 ₪; I did not re-derive deriveDaysOverdue against the baseline definition.",
+    "Keyboard, screen-reader and print behaviour; any viewport other than 1280×800; the Excel file itself (only the on-screen export caption was read)."
+  ],
+  "blind_spot": "Every number here is one date, and the aging surface is a pure function of that date. Today (16/09/2026) not one of the 35 open invoices sits exactly on its מועד-פירעון — the nearest is one day past it (פרויקט 1,554, sent 15/08, due 15/09) and eight sit at \"0 ימים · שוטף\" before it. That is precisely the boundary spec §3.1 says broke five times in one day (−1 ⇒ 0 ⇒ \"שוטף\"), and this run never touches it: no row exercises the boundary, so a sign error there would render as a clean page in all 35 screenshots. Checkable without me: put one invoice whose invoice_sent_at + תנאי_תשלום_ימים equals the run date into the data and confirm it renders \"שוטף · 0 ימים\" and is counted in the side tile rather than in 1–30."
+}

@@ -625,3 +625,130 @@ test.describe('מודול 11 · כשל-רשת ⇒ "נסי שוב", ולעולם 
     expect(await mainTableRows(page).count()).toBeGreaterThan(0)
   })
 })
+
+// ── סדר-התווים בתא (נוסף 17/09/2026) — אינווריאנט 5 של `src/modules/11_reports/CLAUDE.md` ──
+// 🔴 **למה בדיקה משלה, ולמה דווקא ב-E2E:** שני הפגמים שנמדדו בבנייה — `₪ 46,400` שהגליף
+// שלו נדד **משמאל** לספרות, ותא-מדרג שהציג `30–1` במקום `1–30` — שרדו קומפילציה, בדיקות-
+// יחידה, `npm run check:bidi` **וגם את העין**: התווים שמתקנים אותם בלתי-נראים, ואלגוריתם
+// ה-bidi מסדר את התא רק כשיש `<td dir="rtl">` אמיתי סביבו. ⇒ הטענה היחידה שתופסת אותם היא
+// **השוואת-תווים על מה שהדפדפן צייר בפועל מול מה שהשרת שלח**.
+// 🔑 **ואין כאן ולו שם אחד נעוץ** (`e2e/CLAUDE.md §2.2`): מפתחות-העמודות נגזרים מ-`columns[]`
+// של המטען שנתפס, והשורה שנבדקת היא הראשונה שיש בה גם מדרג וגם איש-קשר.
+
+// 🔤 תווי-הבידוד נקובים ב**קוד-נקודה ולא מודבקים כתווים חיים**: הם בלתי-נראים, וקובץ שנושא
+// אותם כמות-שהם אי-אפשר לקרוא בעין ואי-אפשר לחפש בו (אותו נימוק בדיוק כמו `LRI`/`PDI`
+// ב-`src/lib/reportsFormat.js`, ואותה כווייה: `U+200F` נסתר ששיבש ספירה ב-`hostesses.js`).
+const ISOLATE_CHARS = /[\u2066\u2067\u2068\u2069]/
+const HEBREW_LETTER = /[\u0590-\u05FF]/
+const NO_VALUE_MARK = '—'
+
+// הפורמטים ש-`FORMATTERS` (`src/lib/reportsFormat.js`) מבודד בעצמו. ‏`gini` **אינו** כאן
+// בכוונה — הוא מחזיר `toFixed(2)` חשוף, ודרישת-בידוד עליו הייתה טענה שגויה.
+const ISOLATING_FORMATS = new Set(['money', 'percent', 'int', 'days', 'ratio', 'score', 'textLtr'])
+
+const stripIsolates = (text) => String(text ?? '').replace(/[\u2066\u2067\u2068\u2069]/g, '')
+
+// מפקד-הבידוד על **כל** תאי-העמוד שעמודתם הוכרזה בפורמט-מבודד: מי חסר בידוד (`offenders`),
+// כמה תאים נמדדו בכלל (המכנה — סריקה על טבלה ריקה אינה ירוקה, היא לא רצה) וכמה מהם
+// מערבבים ספרות ועברית (`⁦45⁩ ימים`) — הצורה שבלי בידוד נשברת ואיש אינו רואה.
+function isolationCensus(columns, grid) {
+  const offenders = []
+  let checked = 0
+  let mixed = 0
+  for (const [index, column] of columns.entries()) {
+    if (!ISOLATING_FORMATS.has(column.format)) continue
+    for (const cells of grid) {
+      const raw = cells[index]
+      const text = stripIsolates(raw)
+      if (text.trim() === '' || text === NO_VALUE_MARK) continue
+      checked += 1
+      if (!ISOLATE_CHARS.test(raw)) offenders.push(`${column.label}: ${text}`)
+      if (/\d/.test(text) && HEBREW_LETTER.test(text)) mixed += 1
+    }
+  }
+  return { offenders, checked, mixed }
+}
+
+test.describe('מודול 11 · סדר-תווים בתא (מ9 · אינווריאנט 5 · 📐18)', () => {
+  test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_* לא הוגדרו ב-.env.local')
+
+  test('מ9: תא-המדרג ותא-איש-הקשר תו-בתו מול המטען, וכל מספר בעמוד מבודד', async ({ page }) => {
+    test.setTimeout(120_000)
+
+    // 🚫 **אפס שינוי בתשובה** (`e2e/CLAUDE.md §2.1`): היירוט מושך את התשובה האמיתית, שומר
+    // עותק, ומגיש אותה **כפי שהיא**. מה שהמסך צייר נגזר מה-JSON שנשמר כאן — ולא מהנחה.
+    let captured = null
+    await page.route('**/rest/v1/rpc/report_m09_aging', async (route) => {
+      const response = await route.fetch()
+      const body = await response.text()
+      try {
+        captured = JSON.parse(body)
+      } catch {
+        captured = null
+      }
+      await route.fulfill({ response, body })
+    })
+
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await openReport(page, 'finance', 'aging')
+
+    expect(captured, 'מטען-ה-RPC של מ9 לא נתפס — אין מול מה להשוות').not.toBeNull()
+    const columns = captured.columns
+    // 🔑 העמודות נמצאות **לפי מה שהמטען מצהיר**: המדרג הוא העמודה שהוכרזה `textLtr` (i2),
+    // ואיש-הקשר לפי מפתחה. שינוי-תווית בשרת לא ישבור את הבדיקה, ושינוי-חוזה כן — כרצוי.
+    const bucketIndex = columns.findIndex((column) => column.format === 'textLtr')
+    const contactIndex = columns.findIndex((column) => /owner|contact/i.test(String(column.key)))
+    expect(bucketIndex, 'אין במ9 עמודה שמוצהרת `textLtr` — חוזה-הפורמט השתנה').toBeGreaterThan(-1)
+    expect(contactIndex, 'אין במ9 עמודת איש-קשר (📐18)').toBeGreaterThan(-1)
+
+    // כל תאי-העמוד בקריאה אחת: `textContent` הגולמי, **לפני** הפשטת הבידוד — הוא הראיה.
+    const grid = await page
+      .getByTestId('report-table-card')
+      .first()
+      .evaluate((card) =>
+        Array.from(card.querySelectorAll('tbody tr')).map((tr) =>
+          Array.from(tr.querySelectorAll('td')).map((td) => td.textContent),
+        ),
+      )
+    expect(grid.length, 'הטבלה נמדדה בלי שורות — מכנה 0').toBeGreaterThan(0)
+    expect(grid.length, 'העמוד מציג יותר שורות מכפי שהמטען נושא').toBeLessThanOrEqual(
+      captured.rows.length,
+    )
+
+    // גודל-העמוד נקרא מהמסך ולא מקבוע מועתק, ולכן `PAGE_SIZE` אינו מוגדר כאן פעם שנייה.
+    const pageRows = captured.rows.slice(0, grid.length)
+    const hasText = (value) => typeof value === 'string' && value.trim() !== ''
+    const rowIndex = pageRows.findIndex(
+      (row) => hasText(row[columns[contactIndex].key]) && hasText(row[columns[bucketIndex].key]),
+    )
+    test.skip(rowIndex === -1, 'אין בעמוד-הראשון שורה שיש בה גם מדרג וגם איש-קשר')
+
+    const row = pageRows[rowIndex]
+    const cells = grid[rowIndex]
+    expect(cells.length, 'מספר התאים בשורה אינו מספר העמודות שהמטען הכריז').toBe(columns.length)
+
+    // 🔴 **ההשוואה היא תו-בתו** (`Array.from` על מחרוזת מפרק לנקודות-קוד): מקף שנדד, ספרה
+    // שהתהפכה או שם שהתפצל מהמספר שלו — כולם נראים כאן, ואף אחד מהם אינו נראה ב-`toContain`.
+    for (const index of [bucketIndex, contactIndex]) {
+      const column = columns[index]
+      expect(
+        Array.from(stripIsolates(cells[index])),
+        `תא "${column.label}" — סדר-התווים על המסך אינו סדר-המטען`,
+      ).toEqual(Array.from(String(row[column.key])))
+    }
+
+    // ותא-המדרג נושא את הבידוד עצמו — בלעדיו `1–30` מרונדר `30–1` ואף שער לא תופס.
+    expect(
+      ISOLATE_CHARS.test(cells[bucketIndex]),
+      'תא-המדרג הגיע בלי תו-בידוד — `format: textLtr` אינו בתוקף',
+    ).toBe(true)
+
+    const census = isolationCensus(columns, grid)
+    expect(census.offenders, 'תאים בפורמט-מבודד שהגיעו בלי תו-בידוד').toEqual([])
+    expect(census.checked, 'לא נמדד אף תא מספרי — מכנה 0').toBeGreaterThan(0)
+    expect(
+      census.mixed,
+      'אין בעמוד ולו תא אחד שמערבב ספרות ועברית — הצורה שאינווריאנט 5 קיים בשבילה לא נבדקה',
+    ).toBeGreaterThan(0)
+  })
+})

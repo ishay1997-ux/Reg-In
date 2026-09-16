@@ -1,0 +1,213 @@
+{
+  "state": 0,
+  "persona": "A software engineer at a partner company opening /reports for the first time — does it read as a mature product, or as something a programmer built for himself?",
+  "report_file": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\p3-copy-0-1.json",
+  "verdict_table": [
+    {
+      "surface": "exec-overview",
+      "verdict": "mixed",
+      "finding": "The filter labels end in a colon (all 16 surfaces share this bar). Two row counters disagree on the same screen — the caption above the table and the pager below it. The same report name is quoted two ways on one screen: guillemets in the so-what line, straight quotes in the footer link.",
+      "evidence": ["תקופה:", "לקוח:", "מוצגות 8 מתוך 241 שורות", "1–8 מתוך 8", "הפירוט בדוח «מגמות רב-שנתיות»", "כל השנים בדוח \"מגמות רב-שנתיות\" →"],
+      "rule": "כ19 · R2 (colon — verified visible in exec-overview.png) · taste, no rule (the two counters; the quoting — closest is R30)"
+    },
+    {
+      "surface": "trends",
+      "verdict": "mixed",
+      "finding": "Three scope statements on one screen that do not agree: the subtitle prints a period range, the period chip 'השנה' is active, the footer says the page ignores the period filter, and the population line says all years. aging solves the same case by dropping the range from its subtitle.",
+      "evidence": ["01/01/2026–16/09/2026 · כל הלקוחות", "הדף אינו מגיב למסנן התקופה — הוא ציר-שנים בהגדרתו, ונמדד על כל ההיסטוריה עד התאריך הנוכחי.", "n=736 בכל השנים"],
+      "rule": "taste, no rule (verified visible in trends.png; NOT the ruled מ7/מ9 item — that ruling is about the numbers, this is about the subtitle still printing the ignored range)"
+    },
+    {
+      "surface": "discounts",
+      "verdict": "mixed",
+      "finding": "Same subtitle/footer scope contradiction. The same quoted phrase appears with two quote conventions on one page — guillemets in the population line, straight quotes in the definitions line.",
+      "evidence": ["01/01/2026–16/09/2026 · כל הלקוחות", "הדף אינו מגיב למסנן התקופה — מדרג-הנחה הוא חתך של כל ההיסטוריה", "הצעות שנסגרו בסיבה «נפתחה בטעות» אינן נספרות כדחייה", "הצעות שנסגרו כי \"נפתחה בטעות\" אינן נספרות כדחייה"],
+      "rule": "taste, no rule"
+    },
+    {
+      "surface": "staffing",
+      "verdict": "mixed",
+      "finding": "A footer sentence exists to tell the reader about a metric the system does not have and was never asked for — nothing she does changes after reading it. Same subtitle/footer scope contradiction.",
+      "evidence": ["אין במערכת מושג \"עמדה\" ואין מונה מוזמנים-לדקה — \"מוזמנים לדקה לעמדה\" אינו נמדד כאן.", "01/01/2026–16/09/2026 · כל הלקוחות", "הדף אינו מגיב למסנן התקופה — היחס נמדד על כל ההיסטוריה"],
+      "rule": "R28"
+    },
+    {
+      "surface": "finance-overview",
+      "verdict": "mixed",
+      "finding": "Two zero tiles stand side by side; the budget one explains its zero, the salary one does not. On 16/09 a reader sees 'salary this month = 0 ₪' with nothing saying why (no closed salary report yet), which reads as a broken number rather than a true one.",
+      "evidence": ["פרויקטים שחרגו מהתקציב החודש · 0 · מתוך 18 אירועים שהתקיימו בספטמבר — אף אחד לא חרג", "שכר דיילות החודש · 0 ₪ · 0 משמרות בתשלום"],
+      "rule": "taste, no rule (closest R23 — a zero and an absence are not the same statement)"
+    },
+    {
+      "surface": "profitability",
+      "verdict": "mixed",
+      "finding": "The chart under a page asking 'which projects leaked from the budget' shows fifteen bars that are all negative, titled as the largest deviations, with no axis label saying which side is an overrun and which a saving — while the tile beside it says overruns only. The approved mockup carried exactly that direction label; here it is gone.",
+      "evidence": ["אילו פרויקטים דלפו מהתקציב?", "15 הסטיות הגדולות ב-₪", "-2,695 ₪", "סך החריגה מעל הסף · 5,280 ₪ · חריגה כלפי-מעלה בלבד — חיסכון בפרויקט אחד אינו מקזז חריגה באחר"],
+      "rule": "כ11 (verified visible in profitability.png)"
+    },
+    {
+      "surface": "aging",
+      "verdict": "programmer-built",
+      "finding": "A seven-line paragraph above the chart narrates every bar with its live numbers and tells the reader what to do per bucket — at mode 0 the base is carrying the guided layer's job, and it repeats what the bars and tiles already show. Separately, one table row prints '1 ימים'.",
+      "evidence": ["השאלה שהעמודות עונות עליה: כמה כסף שכבר איחר יש לנו, וכמה זמן הוא כבר מחכה?", "31–60 — מחכה בין חודש לחודשיים; כאן מתחילים להתקשר: 58,285 ₪ ב-8 חשבוניות.", "גובה העמודה = הסכום שממתין באותו דלי; המספר שמתחת לשם הדלי = כמה חשבוניות.", "1 ימים"],
+      "rule": "R27 · R13 · onboarding-layer-contract §3 (מה לעשות בו קודם / למה נחתך כך = רמה 2) · כ12/UC37 for '1 ימים' (both verified visible in aging.png)"
+    },
+    {
+      "surface": "equipment",
+      "verdict": "mixed",
+      "finding": "Money column headers carry a unit the cells already carry, in a form no other surface uses. 'כלל-הזמנים' and 'כל הזמנים' both appear on the same screen for the same scope.",
+      "evidence": ["עלות מוזמנת (₪)", "עלות מוערכת (₪)", "233,480 ₪", "כל 1,771 שורות הלוגיסטיקה, כלל-הזמנים", "עלות ציוד — כל הזמנים"],
+      "rule": "R30 · R11"
+    },
+    {
+      "surface": "hostess-overview",
+      "verdict": "programmer-built",
+      "finding": "The definitions line prints raw six-decimal internal scores. The chart's month labels are ISO 'yyyy-mm' while the finance chart uses 'mm/yyyy' and the customers chart uses 'ינואר 2026'. 'חלון קפוא' re-uses a locked glossary word that already means something else in this product (a price frozen at closing).",
+      "evidence": ["דיילת אדומה = ציון-אמינות נמוך מ-87% מממוצע החברה (0.958358) — כלומר מתחת ל-0.833771; ענבר = מתחת ל-95% ממנו (0.910440)", "2025-09", "2026-08", "חלון קפוא · 12 חודשים"],
+      "rule": "taste, no rule (the floats) · R30 (date format) · R11 + ui-copy-styleguide §3ב/§3ד (קפוא) — all verified visible in hostess-overview.png"
+    },
+    {
+      "surface": "reliability",
+      "verdict": "programmer-built",
+      "finding": "The definitions line ends with an English camelCase identifier and a spec ruling number, both on the live screen. The same red/amber thresholds are printed here at four decimals and on מבט-על דיילות at six.",
+      "evidence": ["הציון הוא בדיוק reliabilityScore של Smart Match (הכרעה 38) — אותה נוסחה שמדרגת את הדיילות בשיבוץ", "דיילת אדומה = ציון-אמינות נמוך מ-87% ממוצע החברה (0.9584), כלומר מתחת ל-0.8338", "ציון אמינות = (סכום ערכי-הנוכחות + 3 × 0.9584) ÷ (מספר המשמרות + 3)"],
+      "rule": "כ4 / UC30 (rule identifiers never on screen) · R10 (internal identifier) · R30 (two precisions for one threshold)"
+    },
+    {
+      "surface": "quality-cost",
+      "verdict": "mixed",
+      "finding": "The median hourly rate is shown as a whole ₪ in one tile and un-rounded, without a currency, in the tile beside it — the same number in two forms on one screen, and the un-rounded form is the one the ruling on whole-₪ rates was meant to remove. A third quoting convention appears here (single quotes).",
+      "evidence": ["תעריף שעתי חציוני · 43 ₪ · על 50 הדיילות הפעילות", "יקרות ומדורגות נמוך · 2 · תעריף מעל החציון (43.27) וגם דירוג 3 ומטה", "17 דיילות ללא דירוג אינן בגרף — ראי את השבב 'בלי דירוג בלבד' בטבלה."],
+      "rule": "📐4 · R30"
+    },
+    {
+      "surface": "fairness",
+      "verdict": "mixed",
+      "finding": "One tile's sub-line explains the display convention and repeats, word for word, the sentence already printed in the page footer. The population line points the reader at a page region called 'אזור המהירות' that is nowhere labelled on the screen. Tile sub-lines here run to essay length.",
+      "evidence": ["אין עדיין נתון: המערכת התחילה לרשום את הדרג שהמליצה רק מעכשיו, ועד שייצברו שיבוצים המדד מציג \"—\" ולא 0%", "אימוץ המלצת Smart Match — אין עדיין נתון: המערכת התחילה לרשום את הדרג שהמליצה רק מעכשיו, ועד שייצברו שיבוצים המדד מציג \"—\" ולא 0%.", "אזור המהירות נמדד על אוכלוסייה אחרת: 2,479 זימונים שנשלחו בחלון", "שעות · אחת מכל עשר תשובות מגיעה לאט מזה — שם יושב הכאב של איוש שנתקע, לא בחציון"],
+      "rule": "R27 (verbatim duplication) · כ15 + R11 (pointing at an unlabelled region) · R3/R13 (helper length)"
+    },
+    {
+      "surface": "customers-overview",
+      "verdict": "mixed",
+      "finding": "One tile's comparison row reads as a broken sentence — a label that already contains the number, followed by the same number as its value. In another tile the same company is feminine and masculine inside one sentence. (The four tile labels being full sentences is filed under locked_label_findings.)",
+      "evidence": ["קצב-התשלום תלוי בסוג הלקוח · 69 ימים · חציון ימים מחשבונית לתשלום, לפי סוג הלקוח · על 675 חשבוניות ששולמו: 675", "הגדול הראשון שכן: גלובל שיפינג בע\"מ — שקטה 86 ימים מול קצב של 27 · מקומו ברשימת המניבים: 12"],
+      "rule": "taste, no rule (the comparison row — verified visible in customers-overview.png) · ui-copy-styleguide §1 (one gender per subject)"
+    },
+    {
+      "surface": "satisfaction",
+      "verdict": "mixed",
+      "finding": "The footer prints a spec rule code and a Latin-letter placeholder pair as screen text. The so-what line asserts something the system cannot know — that nobody has read those comments.",
+      "evidence": ["הספירות מוצגות כ\"N מתוך M\" ולא באחוזים (📐11).", "לפתוח את 10 המשובים שתויגו \"אחר\" — הם הסיבה השלילית הגדולה בתקופה, גדולה מכל הקטגוריות הקיימות יחד (9), ואיש לא קרא את הטקסט שבהם."],
+      "rule": "כ4 / UC30 (the 📐11 token) · R10 (N/M) · taste, no rule (the unknowable claim)"
+    },
+    {
+      "surface": "drifting",
+      "verdict": "programmer-built",
+      "finding": "The footer explains the internal permission mechanism to the reader. A tile's comparison row again pairs a label with a value that contradicts the tile's own number (tile = 3, comparison row = 11). A paragraph in the middle of the page carries the 'why it is cut this way' reasoning that mode 0 is supposed to be free of.",
+      "evidence": ["עמודות ואריחי ה-₪ בדף זה כפופים להרשאת מודול כספים; המיסוך מתבצע בלשונית.", "נתפסים רק בקצב האישי · 3 · 161,009 ₪ בשנה האחרונה · כלל 120 הימים לבדו מוצא 11 לקוחות, ואת אלה הוא מפספס: 11", "שתי שיטות לאותה שאלה, וההפרש הוא הדף הזה. \"רדום\" — הדגל שכבר קיים במערכת — שואל את אותה שאלה על כל הלקוחות."],
+      "rule": "R10 + R28 (המיסוך מתבצע בלשונית) · taste, no rule (the comparison row) · onboarding-layer-contract §3 (reasoning = level 2)"
+    },
+    {
+      "surface": "notes",
+      "verdict": "programmer-built",
+      "finding": "A raw email address stands where a person's name belongs, and the footer prints the language-model version strings. One table column is transliterated English ('סנטימנט') showing bare 1–5 values, and it is the only column the definitions line does not define.",
+      "evidence": ["מציג את הריצה מ-16/09/2026, אושרה ע\"י ishay1997@gmail.com", "2 ריצות-ניתוח מאושרות מוצגות יחד, שורה אחת לכל פרויקט; המודלים: gemini-3.5-flash-lite, gemini-3.8-flash.", "נושא (מודל) · תג חופשי (מודל) · סנטימנט (מודל)"],
+      "rule": "R10 · כ5 (a stored value is not screen text) · 📐16/R11 (a metric on screen with no definition)"
+    },
+    {
+      "surface": "trends-drill1",
+      "verdict": "mixed",
+      "finding": "The export caption shows the year twice in one filename. The chart legend names a series ('הכנסה 2023') whose twelve values are all empty. The tile label says 'מול' while its value joins the two numbers with a slash.",
+      "evidence": ["יירד: מגמות-רב-שנתיות_2024-·-כל-הלקוחות_2024.xlsx", "הכנסה 2023", "ינואר | — (all twelve months of the 2023 series)", "מחיר לשעה מול עלות לשעה · 254 ₪ / 44 ₪"],
+      "rule": "taste, no rule (filename) · כ15 + R27 (a legend for a series that is not there) · כ10 (a sign is not a word)"
+    },
+    {
+      "surface": "aging-drill1",
+      "verdict": "mixed",
+      "finding": "Breadcrumb, tiles, so-what line and export filename all follow the drill correctly — the only finding is that the seven-line chart paragraph is reprinted identically at this level, so the reader meets the same wall of text twice in one task.",
+      "evidence": ["גיול חובות | מדרג 90+ יום", "לגבות 17,946 ₪ מ-3 לקוחות במדרג 90+ יום — 3 חשבוניות, והוותיקה ממתינה כבר 580 ימים.", "השאלה שהעמודות עונות עליה: כמה כסף שכבר איחר יש לנו, וכמה זמן הוא כבר מחכה?"],
+      "rule": "R27"
+    },
+    {
+      "surface": "export-caption",
+      "verdict": "mature",
+      "finding": "אין הערות. Button, resulting filename and the column list, in Hebrew, no jargon. (The trailing colon in 'עמודות:' is part of the shared colon finding on exec-overview, not a second one.)",
+      "evidence": ["ייצוא לאקסל", "יירד: מבט-על-הנהלה_2026-(01-01–16-09)-·-כל-הלקוחות.xlsx", "עמודות: אירוע · לקוח · תאריך · הכנסה · רווח · שולי-רווח"],
+      "rule": "n/a"
+    },
+    {
+      "surface": "hostess-overview-error",
+      "verdict": "mature",
+      "finding": "אין הערות. The failure says what happened and offers the way back, in the house wording, in the feminine imperative, and the page keeps its filters and chips.",
+      "evidence": ["לא ניתן לטעון את הנתונים.", "נסי שוב"],
+      "rule": "R17 · ui-copy-styleguide §1"
+    },
+    {
+      "surface": "masked-STAFF",
+      "verdict": "mixed",
+      "finding": "The empty state addresses the reader by pointing her at a role name. The style guide's rule is that a role name is a data value and the sentence routes around it; the guide's own example is this exact shape.",
+      "evidence": ["אין דוחות זמינים בתפקידך — פני למנכ\"ל", "לא זמין בתפקידך"],
+      "rule": "ui-copy-styleguide §1 (🚫 שמות-תפקידים אינם פנייה) + §5 (מנכ\"ל is a data value in RLS)"
+    }
+  ],
+  "cross_surface_inconsistencies": [
+    {
+      "term": "month label on a chart axis",
+      "surfaces": ["hostess-overview", "finance-overview", "customers-overview", "exec-overview", "trends-drill1"],
+      "variants": ["2025-09 … 2026-08", "10/2025 … 09/2026", "ינואר 2026 … אוגוסט 2026", "ינואר … ספטמבר (16 ימים)", "ינואר … דצמבר"]
+    },
+    {
+      "term": "quotation marks around a term or a report name",
+      "surfaces": ["exec-overview", "trends", "discounts", "staffing", "quality-cost", "aging", "satisfaction", "notes"],
+      "variants": ["«מגמות רב-שנתיות»", "\"מגמות רב-שנתיות\"", "'בלי דירוג בלבד'"]
+    },
+    {
+      "term": "unit in a money / time column header",
+      "surfaces": ["equipment", "profitability", "fairness", "exec-overview", "aging"],
+      "variants": ["עלות מוזמנת (₪)", "סטייה ₪", "זמן-תגובה חציוני (שעות)", "הכנסה", "סכום"]
+    },
+    {
+      "term": "subtitle of a page that declares it ignores the period filter",
+      "surfaces": ["trends", "discounts", "staffing", "notes", "aging"],
+      "variants": ["01/01/2026–16/09/2026 · כל הלקוחות (printed although the page says it ignores it)", "כל הלקוחות (range dropped)"]
+    },
+    {
+      "term": "the red/amber reliability threshold",
+      "surfaces": ["hostess-overview", "reliability"],
+      "variants": ["מממוצע החברה (0.958358) — כלומר מתחת ל-0.833771 … (0.910440)", "ממוצע החברה (0.9584), כלומר מתחת ל-0.8338 … 0.9104"]
+    },
+    {
+      "term": "telling the reader she is seeing part of the rows",
+      "surfaces": ["exec-overview", "reliability", "quality-cost", "finance-overview"],
+      "variants": ["מוצגות 8 מתוך 241 שורות", "מוצגות 87 שורות", "מוצגות 17 שורות", "אלה 4 החשבוניות הישנות ביותר מתוך 35 הפתוחות."]
+    },
+    {
+      "term": "all of time",
+      "surfaces": ["equipment"],
+      "variants": ["כלל-הזמנים", "כל הזמנים"]
+    }
+  ],
+  "locked_label_findings": [
+    {
+      "label": "שביעות-רצון מנבאת חזרה · הסיבה השלילית הגדולה אינה קטגוריה · הריכוזיות והנטישה עוד לא נפגשות · קצב-התשלום תלוי בסוג הלקוח",
+      "surface": "customers-overview",
+      "issue": "Four tile labels are full sentences, not noun phrases; read in a row they make the screen look like a slide deck rather than a dashboard, and they are the only tile labels in the module built this way. Reported only — spec.md §1.4 already marks them 🔵 פתוח להכרעת-ישי, and they render on screen exactly as the table locks them.",
+      "rule": "כ8 · R1 (and spec.md §1.4's own ⚠️ note)"
+    },
+    {
+      "label": "שולי-רווח גולמי",
+      "surface": "exec-overview (locked) vs trends · profitability (שולי-רווח / שולי-רווח בתקופה)",
+      "issue": "The same measure carrying the same value, 58.6%, is labelled 'שולי-רווח גולמי' on מבט-על הנהלה and 'שולי-רווח' one chip away on מגמות רב-שנתיות; the definitions lines of both pages define it identically. Only the first is in the §1.4 table, so resolving it means touching a locked label — Ishay's call, not a change.",
+      "rule": "R11 · R30 (locked by spec.md §1.4)"
+    }
+  ],
+  "not_verified": [
+    "Mode 2 (hints on) — not part of this state; every dump here carries hints_visible: 0.",
+    "Whether any of the mixed-script values renders in the wrong order. The dumps show that values on the הנהלה/כספים tabs are wrapped in direction isolates (U+2066/U+2069 appear around them in the .txt) while the sub-lines on the דיילות tab are not (e.g. '1,482 מתוך 1,699', 'n=97 מול n=106'); at 1280px I cannot read the digit order in the PNGs reliably, and I drove no browser.",
+    "reliability: 'מוצגות 87 שורות' and 'בחירת היום בוטלה; 87 שורות' appear in the innerText but I could not locate them in reliability.png — they may be an aria-live/sr-only region rather than visible text, so I filed no finding on them.",
+    "PNGs opened: exec-overview · trends · profitability · aging · hostess-overview · reliability · customers-overview · masked-STAFF. For discounts, staffing, equipment, quality-cost, fairness, satisfaction, drifting, notes, the two drills and the error envelope I judged from the text dump alone — findings there assume the line is visible and not screen-reader-only.",
+    "The .xlsx files themselves were not produced or opened; only the on-screen export caption was judged."
+  ],
+  "blind_spot": "innerText includes screen-reader-only text, and this module has plenty of it — every chart is followed by an sr-only <table> repeating its values (proven by exec-overview.png, where the 'קטגוריה | הכנסה 2026 | …' block in the dump is nowhere on the screen). So any finding of mine that rests on a line I did not also see in a PNG could be text no sighted reader ever meets. The mechanical check, on eight of my rows: grep the reports module for the class that hides a node (sr-only) on the elements that render 'השאלה שהעמודות עונות עליה', 'אין במערכת מושג \"עמדה\"', 'המיסוך מתבצע בלשונית', 'הספירות מוצגות כ\"N מתוך M\" ולא באחוזים (📐11)' and the model-name footer of ניתוח הערות — each hit voids that finding, each miss confirms it."
+}

@@ -267,3 +267,88 @@ describe('formatByType — textLtr', () => {
     expect(formatByType('אלפא סיסטמס', 'text')).toBe('אלפא סיסטמס')
   })
 })
+
+// ✏️ **`id` — מזהה ולא כמות** (פריט [2] של סבב-הראיות, 17/09/2026). נמדד על המסך:
+// עמודת *"הצעה"* של מ4 הציגה `1,907` כי ה-RPC הכריז `format:'int'`.
+describe('formatByType — id: מזהה בלי מפריד-אלפים', () => {
+  it('מספר-הצעה נשאר רצף-ספרות, ובכל זאת מבודד', () => {
+    expect(formatByType(1907, 'id')).toBe(`${LRI}1907${PDI}`)
+    expect(formatByType(1416, 'id')).toBe(`${LRI}1416${PDI}`)
+  })
+
+  // 🔴 המבחן שמפריד בין `id` ל-`int`, והוא הסיבה ששני הפורמטים קיימים.
+  it('אותו ערך ב-int נושא פסיק — וזה בדיוק הפגם', () => {
+    expect(formatByType(1907, 'int')).toBe(`${LRI}1,907${PDI}`)
+    expect(formatByType(1907, 'id')).not.toBe(formatByType(1907, 'int'))
+  })
+
+  it('מזהה שאינו מספר אינו נמחק ל-"—"', () => {
+    expect(formatByType('Q-1907', 'id')).toBe(`${LRI}Q-1907${PDI}`)
+  })
+
+  it('חסר ⇒ מקף', () => {
+    expect(formatByType(null, 'id')).toBe(NO_VALUE)
+    expect(formatByType('', 'id')).toBe(NO_VALUE)
+  })
+})
+
+// ✏️ **כ12 · UC37 — התאמת-מספר בעברית** (פריט C2 של הערכת-הניסוח): המסך הציג "⁦1⁩ ימים".
+describe('formatByType — days: יחיד ורבים', () => {
+  it('‏1 ⇒ "יום", והשאר ⇒ "ימים"', () => {
+    expect(formatByType(1, 'days')).toBe(`${LRI}1${PDI} יום`)
+    expect(formatByType(0, 'days')).toBe(`${LRI}0${PDI} ימים`)
+    expect(formatByType(2, 'days')).toBe(`${LRI}2${PDI} ימים`)
+    expect(formatByType(580, 'days')).toBe(`${LRI}580${PDI} ימים`)
+  })
+
+  // ⚠️ העיגול קודם להתאמה: `0.6` הוא "יום אחד" על המסך, ולכן גם ביחיד.
+  it('הצורה נגזרת מהערך המעוגל, לא מהגולמי', () => {
+    expect(formatByType(1.4, 'days')).toBe(`${LRI}1${PDI} יום`)
+  })
+})
+
+// ✏️ פריטים [3] · [8] · [27] · [28] — הכותרת מצהירה מה שנמדד, ולא מה שנבחר בגלולה.
+describe('formatWindowLabel — תווית-השרת, נוסח-הגלולה והשמטת-הלקוח', () => {
+  it('תווית-שרת גוברת על הטווח שנגזר מהגלולה', () => {
+    expect(
+      formatWindowLabel({ from: '2026-01-01', to: '2026-09-16', surfaceLabel: 'כל הזמנים' }),
+    ).toBe('כל הזמנים · כל הלקוחות')
+  })
+
+  // 🔑 תווית-שרת שכבר נוקבת בלקוח (מ4/מ6) אינה מקבלת אותו פעם שנייה.
+  it('הלקוח אינו נאמר פעמיים', () => {
+    expect(
+      formatWindowLabel({ surfaceLabel: 'כל הזמנים · בטא הפקות', customerName: 'בטא הפקות' }),
+    ).toBe('כל הזמנים · בטא הפקות')
+  })
+
+  it('תווית-שרת בלי לקוח (מ3) מקבלת את חלק-הלקוח מהמעטפת', () => {
+    expect(formatWindowLabel({ surfaceLabel: '2024–2026', customerName: 'בטא הפקות' })).toBe(
+      '2024–2026 · בטא הפקות',
+    )
+  })
+
+  it('בלי טווח ובלי תווית-שרת ⇒ נוסח-הגלולה, ולא אוכלוסייה בלי תאריך', () => {
+    expect(formatWindowLabel({ periodLabel: '12 חודשים' })).toBe('12 חודשים · כל הלקוחות')
+  })
+
+  // ⚠️ הטווח, כשהוא ידוע, עדיין גובר על נוסח-הגלולה.
+  it('טווח ידוע גובר על נוסח-הגלולה', () => {
+    expect(
+      formatWindowLabel({ from: '2026-01-01', to: '2026-09-06', periodLabel: '12 חודשים' }),
+    ).toBe(`${LRI}01/01/2026–06/09/2026${PDI} · כל הלקוחות`)
+  })
+
+  // 🔴 משטח שמצהיר `customer_filter_ignored` אינו מהדהד לקוח שאינו מסנן דבר.
+  it('hideCustomer ⇒ אין חלק-לקוח בכלל', () => {
+    expect(
+      formatWindowLabel({
+        from: '2026-01-01',
+        to: '2026-09-06',
+        customerName: 'בטא הפקות',
+        hideCustomer: true,
+      }),
+    ).toBe(`${LRI}01/01/2026–06/09/2026${PDI}`)
+    expect(formatWindowLabel({ surfaceLabel: 'נכון להיום', hideCustomer: true })).toBe('נכון להיום')
+  })
+})

@@ -461,7 +461,12 @@ describe('ReportSurface — request identity', () => {
     )
     await new Promise((r) => setTimeout(r, 0))
     expect(callReport).toHaveBeenCalledTimes(1)
-    expect(onWindow).toHaveBeenCalledWith(expect.objectContaining({ label: 'חלון' }))
+    // ✏️ **הערוץ למעטפת נושא שלושה ארגומנטים מאז 17/09/2026**: החלון · `meta` הגולמי ·
+    // שם-ה-RPC. שם חיים הדגלים שקובעים אם המסננים חלים על הדף, והמעטפת חייבת לדעת **של
+    // מי** הם (`readScope` ב-`ReportsPage`).
+    expect(onWindow).toHaveBeenCalledTimes(1)
+    expect(onWindow.mock.calls[0][0]).toEqual(expect.objectContaining({ label: 'חלון' }))
+    expect(onWindow.mock.calls[0][2]).toBe(surface.rpc)
   })
 
   // 🔴 **הטרנספורם רץ פעם אחת למטען, ולא בכל רינדור** — הפיזור של מ6 (⁦717⁩ נקודות) נבנה
@@ -645,14 +650,52 @@ describe('ReportSurface — 🚪 לחיצה על עמודה בדף-דריל יו
 
   // 🔴 **הפגם הסמוי:** ‏`{kind:'customer', …, id:401}` הוא `kind` מרשימת-הדלתות, ועד עכשיו
   // הוא ירד רמה **רק** כי `id` חסר. עכשיו הכוונה מוצהרת — והיא שקובעת.
-  it('שורה בדף-דריל עם רמה נוספת מוסרת סימן-ירידה, גם כשיש לה id', async () => {
+  // ✏️ **ומאז 17/09/2026 (פריט [E1]) היא נקבעת לפי מפתח-השורה ולא לפי המשטח:** מפתח
+  // ש**חוזר על הממד של הרמה הפתוחה** (`bucket`, זה שיושב ב-`?drill=`) הוא ירידת-רמה —
+  // וזה שורד גם את היום שבו ה-RPC יוסיף `id` לשורת-הדלי, שהוא כל מה ש-`DRILL_INTENT` נולד
+  // בשבילו. 🌱 צורת-המפתח כאן היא זו שנמדדה בריצה חיה על רמת-הדלי של מ9.
+  it('שורה בדף-דריל שחוזרת על ממד-הרמה מוסרת סימן-ירידה, גם כשיש לה id', async () => {
     const onDrill = vi.fn()
-    callReport.mockResolvedValueOnce(agingPayload())
+    callReport.mockResolvedValueOnce(
+      agingPayload({
+        drill: { level: 1, levels: ['הכול', 'מדרג', 'לקוח'], crumbs: [{ label: 'הכול' }] },
+        rows: [
+          {
+            row_key: 1,
+            name: 'אלפא',
+            drill_key: { kind: 'customer', bucket: 'd90p', customer_id: 401, id: 401 },
+          },
+        ],
+      }),
+    )
+    render(
+      <ReportSurface
+        surface={DRILL_SURFACE}
+        filters={filters}
+        drill={{ bucket: 'd90p' }}
+        onDrill={onDrill}
+      />,
+    )
+    fireEvent.click((await screen.findAllByTestId('report-row-drillable'))[0])
+    expect(onDrill.mock.calls[0][2]).toBe('level')
+  })
+
+  // 🚪 **הצד השני של אותה הכרעה, והוא זה ש-E2E מדד אדום פעמיים (הכרעה 19):** בשורש של
+  // מ9 אין ממד פתוח, ולכן שורה שנושאת `{kind:'project', id}` היא **דלת אל כרטיס-הפרויקט**
+  // — ‏`ReportsPage.openDoor` מנווט אליה, ואינו כותב `?drill=`.
+  it('שורת-שורש עם kind+id היא דלת — בלי סימן-ירידה', async () => {
+    const onDrill = vi.fn()
+    callReport.mockResolvedValueOnce(
+      agingPayload({
+        rows: [{ row_key: 1, name: 'אלפא', drill_key: { kind: 'project', id: 1040 } }],
+      }),
+    )
     render(
       <ReportSurface surface={DRILL_SURFACE} filters={filters} drill={null} onDrill={onDrill} />,
     )
     fireEvent.click((await screen.findAllByTestId('report-row-drillable'))[0])
-    expect(onDrill.mock.calls[0][2]).toBe('level')
+    expect(onDrill.mock.calls[0][0]).toEqual({ kind: 'project', id: 1040 })
+    expect(onDrill.mock.calls[0][2]).toBeNull()
   })
 
   it('ברמה האחרונה אין סימן — הדלת היא הישות עצמה', async () => {

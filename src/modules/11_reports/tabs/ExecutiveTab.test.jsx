@@ -772,7 +772,8 @@ describe('מ4 · הנחות ורווחיות', () => {
 
     callReport.mockResolvedValueOnce(m4Payload())
     const { onDrill } = renderTab('מ4')
-    const rows = await screen.findAllByText(isolateLtr('1,907'))
+    // ✏️ 17/09/2026 — מזהה-הצעה מרונדר כמזהה (format:'id' — ספרות בלי מפריד-אלפים), לא ככמות.
+    const rows = await screen.findAllByText(isolateLtr('1907'))
     fireEvent.click(rows[0].closest('tr'))
     expect(firstDrillArg(onDrill)).toEqual({ kind: 'quote', id: 1907 })
   })

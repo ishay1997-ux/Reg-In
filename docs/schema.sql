@@ -2529,12 +2529,16 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (הגוף החי)
 -- report_m08_profitability(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים'
---   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (הגוף החי)
+--   🔴 **רצפת-המהותיות מוצאת את השורות מ-`rows`** (📑ב#5 — *"אינו בדירוג"*), ולא רק ממיינת
+--      אותן לסוף. ‏`meta.below_materiality` ממשיך למנות אותן על כל האוכלוסייה.
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4)
 -- report_m09_aging(p_from date, p_to date, p_customer_id integer, p_drill jsonb, p_asof date) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים' · **דוח-קידוח** · **חתימה בת 5**
 --   🔴 ימי-האיחור נמדדים מול **מועד-הפירעון** (`invoice_sent_at` + `תנאי_תשלום_ימים`), לא מול יום-השליחה.
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
---   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (הגוף החי, סבב 3)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4)
 -- report_m12_equipment(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים'
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (הגוף החי)
@@ -2542,15 +2546,18 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'דיילות'
 --   → supabase/migrations/20260916052359_module11_f_rpcs_hostesses.sql (המקור)
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
---   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (הגוף החי, סבב 3)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4)
 -- report_m15_reliability(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'דיילות'
 --   הציון הוא `reliabilityScore` של Smart Match מילה-במילה (הכרעה 38); הספים 0.87/0.95 נקראים מ-`params`.
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
---   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (הגוף החי, סבב 3)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4)
 -- report_m16_quality_cost(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'דיילות'
---   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (הגוף החי)
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4)
 -- report_m17_fairness(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'דיילות'
 --   → supabase/migrations/20260916065642_module11_f2_rpcs_hostesses_fixes.sql (המקור)
@@ -2564,17 +2571,20 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 -- report_m20_satisfaction(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'לקוחות'
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
---   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (הגוף החי, סבב 3)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4)
 -- report_m21_drifting(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'לקוחות'
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
---   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (הגוף החי, סבב 3)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4)
 -- report_m22_notes(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'לקוחות'
 --   בלי ריצת-סיווג מאושרת: `rows` ריק · `meta.run` ריק · `meta.export_blocked_reason` נעול ·
 --   אריח הדגלים האדומים מחזיר `null` **ולא 0** — "אין נתון" אינו "אפס".
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
---   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (הגוף החי, סבב 3)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4 — `meta.run.approved_by` נושא שם-אדם, הדוא"ל ב-`approved_by_email`)
 -- approve_feedback_ai_run(p_run_id bigint) returns jsonb
 --   SD · **volatile** · plpgsql · [authenticated, service_role]   ← **חדשה** · שער **edit** על 'דו"חות'
 --   🔴 **פונקציית-הכתיבה היחידה של מודול 11.** מסרבת לריצה ב-`running`, לריצה `failed` ולאישור שני

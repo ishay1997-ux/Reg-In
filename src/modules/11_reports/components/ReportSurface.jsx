@@ -268,13 +268,26 @@ function chartDrill(chart, onDrillLevel) {
  * אותה לפני ענף-הדלת — **בלי לגעת באובייקט** שנכתב לכתובת ונשלח כ-`p_drill`.
  * ⚠️ **ורק כשיש רמה נוספת**: ברמה האחרונה הדלת היא **הישות עצמה**, וזו ההתנהגות הנכונה.
  */
-function drillHandlers(surface, payload, onDrill) {
+const isLevelKey = (drillKey, drill) =>
+  Boolean(drill) && Object.keys(drill).some((dimension) => drillKey?.[dimension] !== undefined)
+
+function drillHandlers(surface, payload, onDrill, drill) {
   const levels = payload.drill?.levels?.length ?? 0
   const hasFurtherLevel = Boolean(surface.drill) && (payload.drill?.level ?? 0) < levels - 1
   if (!hasFurtherLevel) return { drillSurface: null, rowDrill: onDrill }
   return {
     drillSurface: (next) => onDrill(next, null, DRILL_INTENT),
-    rowDrill: (drillKey, row) => onDrill(drillKey, row, DRILL_INTENT),
+    // ✏️ **הסימן לפי מפתח-השורה, לא לפי המשטח — תוקן 17/09/2026 (פריט [E1]).**
+    // 🔴 **הפגם שהיה כאן, נמדד פעמיים כ-E2E אדום:** הסימן נמסר ל**כל** שורה במשטח שיש לו
+    // רמה נוספת, ולכן שורת-השורש של מ9 — `{kind:'project', id:1040}`, דלת מוצהרת של
+    // הכרעה 19 — ירדה רמה במקום לנווט לכרטיס-הפרויקט.
+    // 🔑 **המבחן שמפריד, והוא מדוד:** ברמת-הדלי השורה נושאת `{kind:'customer',
+    // bucket:'d90p', customer_id:401}` — היא **חוזרת על הממד של הרמה הפתוחה** (`bucket`,
+    // שהוא בדיוק המפתח שיושב ב-`?drill=`). בשורש `drill` הוא `null` ⇒ אין ממד לחזור עליו
+    // ⇒ מפתח עם `id` הוא דלת. ⚠️ **וזה עובד גם ביום שה-RPC יוסיף `id` לשורת-הדלי**:
+    // החזרה-על-הממד שורדת את התוספת, בעוד המבחן הישן (*"אין `id`"*) היה נשבר בשקט.
+    rowDrill: (drillKey, row) =>
+      onDrill(drillKey, row, isLevelKey(drillKey, drill) ? DRILL_INTENT : null),
   }
 }
 
@@ -342,6 +355,50 @@ const selectHandler = (key, chart, index, onToggle) =>
 
 const selectedValue = (selection, index) =>
   selection?.chartIndex === index ? selection.value : undefined
+
+/**
+ * 🔴 **מהי "ריק" — הכרעה 16/09/2026, וזה היה מצב שלא היה ניתן להגיע אליו:**
+ * המבחן הקודם היה `tiles.length || charts.length || rows.length`, וכל שישה-עשר ה-RPC מחזירים
+ * אריחים **תמיד** (מערך-ליטרל קבוע בשרת) ⇒ התנאי **לעולם לא התקיים**, ומצב 2 של 📐10
+ * (*"ריק-אחרי-סינון"* + *"נקי מסננים"*) היה **קוד-מת בכל המודול**.
+ * ✅ **המבחן הוא האוכלוסייה עצמה** (הכרעת-המתזייר 16/09): אפס שורות **ו** `population.n = 0`.
+ *
+ * ✏️ **ותנאי שני, שנוסף 17/09/2026 (פריט [9]):** ‏`rows = 0` **ולקוח מסונן** ⇒ גם זה מצב 2,
+ * יהיה `population.n` אשר יהיה.
+ * 🔴 **הפגם שנמדד על מ21 (`probe-filters.log` 12–16):** בחירת *"אופק ביטוח ופיננסים"* הותירה
+ * טבלה עם **שורת-כותרת בלבד** — בלי שורות, בלי פאג'ר ובלי משפט — בעוד שורת-האוכלוסייה,
+ * שורת-"אז מה" וארבעת האריחים נשארו **זהים בתו** למסך הלא-מסונן. הסימן היחיד לכך שהבחירה
+ * לא מצאה דבר היה כיתוב-הייצוא המנוטרל.
+ * 🔑 **ולמה זה נכון גם כשהאוכלוסייה גדולה:** `population.n` של מ21 אינו מסונן ללקוח (זו הפאה
+ * שב-RPC, מדווחת ולא מתוקנת כאן) — ולכן התנאי הקודם, ששאל **גם** על `n`, לעולם לא התקיים שם.
+ * ✅ **וכלל D-34② נשמר במלואו למקרה שאין סינון**: טבלה ריקה מול אוכלוסייה גדולה בלי מסנן
+ * (רשימת-חריגים בלי חריגים) היא **תשובה אמיתית** ולא מסך ריק.
+ */
+const isEmptyAfterLoad = (payload, customerId) =>
+  payload.rows.length === 0 && ((payload.population?.n ?? 0) === 0 || Boolean(customerId))
+
+/**
+ * ‏§⑥ מצבים 2 · 3 — ריק-אחרי-סינון מול ריק-לגמרי. ‏`isFiltered` נגזר במעטפת, ר' שם.
+ *
+ * ✏️ **ושורת-הייצוא נשארת על המסך גם כאן (17/09/2026)** — ‏`rows` ריק, ולכן הכיתוב הוא
+ * הנוסח הנעול *"אין שורות לייצא"* והכפתור מנוטרל.
+ * 🔴 **וזה אינו קישוט:** ת4 מציב את ההבטחה-שלפני-הלחיצה **בשורת-המסננים של המעטפת**, ופקד
+ * שנעלם ממנה במצב אחד מתוך חמישה משאיר את המשתמשת בלי לדעת אם היכולת נעלמה או שהיא בין שני
+ * מסכים. ‏`e2e/reports.spec.js` (*"משטח שהסינון רוקן"*) בודק בדיוק את הצירוף: כפתור מנוטרל
+ * **ועליו** הנוסח הנעול.
+ */
+function EmptyPage({ surface, isFiltered, clearFilters, exportSlot, exportBar }) {
+  return (
+    <>
+      {exportSlot ? createPortal(exportBar, exportSlot) : null}
+      <Envelope
+        state={isFiltered ? 'empty' : 'blank'}
+        testId={`report-${surface.slug}`}
+        onClearFilters={isFiltered ? clearFilters : undefined}
+      />
+    </>
+  )
+}
 
 /**
  * ‏`surface` · `filters` · `drill` · `onDrill` — חוזה-הפרופס של רכיב-לשונית (ר' `tabs/ExecutiveTab.jsx`).
@@ -436,7 +493,12 @@ export default function ReportSurface({
         // אותו דפוס בדיוק כמו מ7, שמחזיר `today`/`month_start` בגוף התשובה מהסיבה הזו
         // (מסך שנטען אחרי חצות היה מציג חודש שגוי). בלי זה, גלולות-התקופה היו משנות את
         // הכתובת ושולחות `null` בכל מקרה — מסנן שנראה עובד ואינו מסנן דבר.
-        onWindowRef.current?.(data.window)
+        // ✏️ **גם `meta` וגם שם-ה-RPC נמסרים למעטפת** (17/09/2026): שם חיים הדגלים
+        // שקובעים אם המסננים בכלל חלים על הדף (`readScope` ב-`ReportsPage`), והמעטפת
+        // חייבת לדעת **של איזה משטח** הם — אחרת דגל של דוח קודם חל על דוח שעוד נטען.
+        // ⚠️ **ומ-`data` הגולמי ולא מ-`payload` המותמר**: הדגלים הם הצהרת-שרת, והטרנספורם
+        // של הלשונית הוא שכבת-תצוגה שאין לה רשות לשנות אותם.
+        onWindowRef.current?.(data.window, data.meta, surface.rpc)
       })
       .catch((err) => {
         if (cancelled) return
@@ -498,26 +560,8 @@ export default function ReportSurface({
   if (!payload) return <Envelope state="blank" testId={`report-${surface.slug}`} />
 
   const charts = normalizeCharts(payload.chart)
-  // 🔴 **מהי "ריק" — הכרעה 16/09/2026, וזה היה מצב שלא היה ניתן להגיע אליו:**
-  // המבחן הקודם היה `tiles.length || charts.length || rows.length`, וכל שישה-עשר ה-RPC מחזירים
-  // אריחים **תמיד** (מערך-ליטרל קבוע בשרת) ⇒ התנאי **לעולם לא התקיים**, ומצב 2 של
-  // 📐10 (*"ריק-אחרי-סינון"* + *"נקי מסננים"*) היה **קוד-מת בכל המודול**. נמדד
-  // בשלוש לשוניות בנפרד: לקוח בלי אירועים נתן ארבעה אריחים מאופסים וטבלה בלי גוף,
-  // בלי משפט ובלי כפתור — בדיוק מצג-השווא ש§4.3 מכנה הסיכון המרכזי של המודול.
-  // ✅ **המבחן החדש הוא האוכלוסייה עצמה** (הכרעת-המתזייר 16/09): אפס שורות **ו**
-  // `population.n = 0`. 🔑 שני התנאים ולא אחד: דף שהטבלה שלו ריקה בעוד האוכלוסייה גדולה
-  // (למשל רשימת-חריגים שאין בה אף חריג) הוא תשובה אמיתית ולא מסך ריק.
-  const isEmptyPage = payload.rows.length === 0 && (payload.population?.n ?? 0) === 0
-  if (isEmptyPage) {
-    // ריק-אחרי-סינון מול ריק-לגמרי (§⑥ מצבים 2 · 3) — ‏`isFiltered` נגזר במעטפת, ר' שם.
-    return (
-      <Envelope
-        state={isFiltered ? 'empty' : 'blank'}
-        testId={`report-${surface.slug}`}
-        onClearFilters={isFiltered ? clearFilters : undefined}
-      />
-    )
-  }
+  // ר' `isEmptyAfterLoad` למעלה — שני התנאים והנימוק המלא של כל אחד.
+  const isEmptyPage = isEmptyAfterLoad(payload, customerId)
 
   const crumbs = payload.drill?.crumbs ?? []
   const drillLabel = crumbs.length > 1 ? crumbs[crumbs.length - 1].label : null
@@ -525,7 +569,7 @@ export default function ReportSurface({
   // 🚪 הכרעה 19 — הדלת נפתחת בכל משטח שיש בו `drill_key`, לא רק בשני משטחי-הדריל.
   const rowDoors = surface.drill || hasRowDoor(payload.rows)
 
-  const { drillSurface, rowDrill } = drillHandlers(surface, payload, onDrill)
+  const { drillSurface, rowDrill } = drillHandlers(surface, payload, onDrill, drill)
 
   // 📐6 — **זיהוי-אוטומטי מושבת בדפי-דריל, והצהרת-שרת מפורשת עדיין עובדת בכולם.**
   // 🔴 **הנימוק מדוד ולא זהיר-סתם:** ‏📐13 מקצה לארבעת דפי-הדריל **קידוח** ולשאר
@@ -549,6 +593,18 @@ export default function ReportSurface({
       blockedReason={payload.meta?.export_blocked_reason}
     />
   )
+
+  if (isEmptyPage) {
+    return (
+      <EmptyPage
+        surface={surface}
+        isFiltered={isFiltered}
+        clearFilters={clearFilters}
+        exportSlot={shell?.exportSlot}
+        exportBar={exportBar}
+      />
+    )
+  }
 
   function toggleSelection(chartIndex, key, chart, datum) {
     const value = datum?.[chart.xKey]

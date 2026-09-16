@@ -1,0 +1,170 @@
+{
+  "status": "done",
+  "files": [
+    "C:\\Users\\ishay\\Reg-In\\docs\\specs\\module_11_reports\\spec.md",
+    "C:\\Users\\ishay\\Reg-In\\docs\\micro_guides\\module-11.md"
+  ],
+  "corrections": [
+    {
+      "item": "[12] מ3 tile labels missing from §1.4",
+      "file:line": "docs/specs/module_11_reports/spec.md:108 (הנהלה row)",
+      "from": "… נתח 5 הלקוחות הגדולים · שולי-רווח ללא הנחה …",
+      "to": "… נתח 5 הלקוחות הגדולים · מחיר לשעה · עלות לשעה · שולי-רווח · שולי-רווח ללא הנחה …",
+      "count_changed": "הנהלה column 12 ⇒ 15 labels (spec.md §1.4 table)",
+      "evidence": "screen copy-0/trends.txt:101-115 (4 tiles: מחיר לשעה · עלות לשעה · שולי-רווח · אירועים שהסתיימו) AND approved mockup 02_tab_executive_approved.html:1480-1490 tile('מחיר לשעה'…) / tile('עלות לשעה'…) / tile('שולי-רווח'…). The 4th, אירועים שהסתיימו, was already in the row (it is also a מ2 tile) — that is why 3 were added, not 4."
+    },
+    {
+      "item": "[13] מ9 root tile labels missing from §1.4 (the row carried drill-level-1 labels)",
+      "file:line": "docs/specs/module_11_reports/spec.md:109 (כספים row)",
+      "from": "… חציון-סטייה · חוב במדרג 61–90 …",
+      "to": "… חציון-סטייה · מעל 60 יום · מדרג 90+ · חוב במדרג 61–90 …",
+      "count_changed": "כספים column 29 ⇒ 31 labels (spec.md §1.4 table)",
+      "evidence": "root screen copy-0/aging.txt:99-135 (יתרת-חוב פתוחה · מעל 60 יום · מדרג 90+ · ימים לתשלום (חציון) + side tile שוטף — עוד לא באיחור) AND approved mockup 03_tab_finance_approved.html:2760-2775. NOT a product question: the mockup and the screen agree, so the two missing root labels are an extraction repair. The three drill labels already in the row are RIGHT and were KEPT — copy-0/aging-drill1.txt:100,105,111 shows them at level 1."
+    },
+    {
+      "item": "[22] מ7 tile label truncated in §1.4",
+      "file:line": "docs/specs/module_11_reports/spec.md:109 (כספים row)",
+      "from": "צפוי להיכנס ב-30",
+      "to": "צפוי להיכנס ב-30 יום",
+      "count_changed": "none — a truncated label is still one ·-separated value",
+      "evidence": "copy-0/finance-overview.txt:106 and finance-probe.json tiles[1]; mockup 03_tab_finance_approved.html:514 and :1314 write it as `צפוי להיכנס ב-<span class=\"ltr\">30</span> יום` — the 11/09 mechanical extraction stopped at the closing </span>, exactly the «נתח 5» class of 16/09."
+    },
+    {
+      "item": "declared count + its source line",
+      "file:line": "docs/specs/module_11_reports/spec.md:104",
+      "from": "**‏74 תוויות-אריח + 19 כותרות-דף** … `sed -n '98,101p' spec.md | cut -d'|' -f4` ⇒ 12+29+17+16 = 74",
+      "to": "**‏79 תוויות-אריח + 19 כותרות-דף** … source is now `npm run check:declared-counts` (rule \"תוויות-אריח ב-§1.4\") + a line-number-free grep ⇒ 15+31+17+16 = 79",
+      "count_changed": "74 ⇒ 79, spec.md §1.4 header line. NOTE: the old `sed -n '98,101p'` already pointed at the WRONG lines (the four tab rows were 100–103 before my edit) — line numbers are out of that paragraph for good."
+    },
+    {
+      "item": "new ✏️ 17/09/2026 paragraph in §1.4 recording the three repairs with their sources, and the root-vs-drill question it does not close",
+      "file:line": "docs/specs/module_11_reports/spec.md:96-102",
+      "from": "(did not exist)",
+      "to": "three-bullet ✏️ paragraph + the 74⇒79 explanation (\"not a revert to the 79 deleted on 16/09 — that was a miscount of the same table, this is a new value of a table that grew by five\")",
+      "count_changed": "n/a"
+    },
+    {
+      "item": "item 3 — C8 note on columns[].format = 'id'",
+      "file:line": "docs/micro_guides/module-11.md:193 (§2ב C8, the additive-fields bullet list, directly above tiles[].compare.format)",
+      "from": "(did not exist)",
+      "to": "🆕 **`columns[].format` accepts `'id'`** — digits, no thousands separator, LTR-isolated; the shell also treats a key ending in `_id` as an id (`הנחתי`, shell fixer 17/09). Written first as טעון בדיקה, then upgraded to a verified statement with locations.",
+      "count_changed": "n/a",
+      "caveat": "checked TWICE in this turn. First grep (before the shell fixer's edits landed): ZERO hits, so the line was written as טעון בדיקה. Re-checked after `git status` showed src/lib/reportsFormat.js and ReportTable.jsx modified: reportsFormat.js:125 `id: (v) => … isolateLtr(String(v))` · ReportTable.jsx:29 `'id'` in NUMERIC_FORMATS · ReportTable.jsx:48-49 `ID_KEY_SUFFIX = /_id$/` + `formatOf`. The line now states it as fact WITH those locations, and D-36 item ③ records both passes."
+    },
+    {
+      "item": "item 2 + 2ב — the morning-table row D-36",
+      "file:line": "docs/micro_guides/module-11.md:723 (§9, inserted after D-35)",
+      "from": "(did not exist; last row was D-35)",
+      "to": "one 3-column row dated 17/09/2026, \"evidence step ② findings recorded, not decided\" — sections (א) the 7 anomaly questions, (ב) the two orchestrator items, (ג) the 8 copy-evaluation questions, (ד) the 5 E2E failures marked טעון בדיקה",
+      "count_changed": "n/a",
+      "note": "three literal `|` characters inside quoted screen strings are escaped as `\\|` so the row stays 3 cells (verified: 4 unescaped pipes ⇒ 3 cells)."
+    },
+    {
+      "item": "D-36 item ③ rewritten after the C8 re-check",
+      "file:line": "docs/micro_guides/module-11.md:723 (§9 D-36, third column)",
+      "from": "③ … ⇒ **השורה נושאת \"טעון בדיקה\" ואת הפקודה שמכריעה אותה.**",
+      "to": "③ … נבדקה פעמיים … **בבדיקה חוזרת באותו סבב היא נחתה, והשורה עודכנה לעובדה עם המיקומים** — reportsFormat.js:125 · ReportTable.jsx:29 · :48–49. 🔑 הלקח: מסירה שמתארת מה סוכן אחר \"עשה\" היא דיווח, לא מדידה.",
+      "count_changed": "n/a",
+      "note": "the doc and my report had to agree after the second check — \"everything is present\" and \"everything agrees\" are two passes."
+    }
+  ],
+  "recorded": [
+    "[10] three charts on מ3 vs the ≤2 cap — does D-28's 2⇒4 raise (made for the customers mockup) apply to הנהלה? (evidence/CEO-m2-trends.png · chart_types=[bar,line,line])",
+    "[14]+[21] at drill level the population sentence still describes the root — מ9 (CEO-m2-aging-drill1.png: crumbs \"מדרג 90+ יום\", pager \"1–3 מתוך 3\", above them \"n=35\") and מ3 (CEO-m2-trends-drill1.png: crumbs \"2024\", above them \"n=736 בכל השנים\"); readable the other way too, hence a question",
+    "[15] מ12 cross-filter paints chart 1 + the table but not chart 2 (CEO-m2-equipment-crossfilter.png)",
+    "[18] מ19's four tile labels are sentences — POINTER ONLY to the 🔵 open item already in spec.md §1.4 (cards-customers ⑧19.1 · ⑧19.6); not duplicated",
+    "[20] two totals on one screen — pager \"1–50 מתוך 50\" vs row-cap \"מוצגות 50 מתוך 736 שורות\" (D-25 wording, not 📐8)",
+    "[23] מ8's fifth tile \"חציון-סטייה\" alone on a second row of the 4-column grid",
+    "[25] two מ15 column labels contain the `·` the export caption uses as its column separator ⇒ the caption reads as 10 columns for an 8-column table",
+    "(orchestrator a) approve_feedback_ai_run live body differs from file A in COMMENTS ONLY (md5 e03df921… vs 69221f3e…, 1,239 vs 1,369 chars, logic byte-identical) — Ishay's ruling 16/09 23:4X: goes to the closing audit's close-findings, not fixed now; the 16 report functions ARE md5-equal, 16/16",
+    "(orchestrator b) harness lesson: a full-page Playwright capture restarts the recharts animation and can freeze a chart at frame 0 (מ6 scatter looked empty; a fixed-viewport probe found 717 symbols + 8 bars) ⇒ chart evidence = element screenshots or animations disabled; and an identity with no notification_preferences row cannot be forced to mode 2 by mapping an empty array (runner now synthesises one row, still no DB write)",
+    "(copy) year-ago comparison row in FOUR wordings across NINE surfaces — one wording ruling, then one migration",
+    "(copy) מ9 mode-0 chart narrative, seven lines with live numbers — base doing the guided layer's job (R27/R13, onboarding-layer-contract §3) vs the card that asked for it",
+    "(copy) month-axis date formats differ per tab: \"2025-09\" מ14 · \"09/2025\"-style finance · \"ינואר 2026\" customers (R30)",
+    "(copy) \"חלון קפוא\" on מ14 reuses a glossary word that already means a price frozen at closing (ui-copy-styleguide §3ב/§3ד)",
+    "(copy) the no-tabs sentence addresses a role name — a LOCKED sentence in the spec, therefore a question",
+    "(copy) the page-level hint on a drilled surface (מ3 · מ9) is the root's hint and describes a screen that is no longer there (H1); per-level hint keys would be a contract change",
+    "(copy) \"דו״חות\" (module name, h1, sidebar) vs \"דוחות\"/\"דוח\" in body text",
+    "(copy) the six מ19/מ22/מ21 locked-label findings — pointer to the 🔵 item, plus the two labels that item does not cover: \"גודל ״אחר״ מול הקטגוריות\" (מ22) and \"נתפסים רק בקצב האישי\" (מ21)",
+    "(E2E) five failures in OTHER modules' specs, deterministic on this tree, written as \"טעון בדיקה — baseline on dev pending\": customer-page.spec.js:130 · dashboard.spec.js:82 · finance.spec.js:141 · prices.spec.js:218 · projects.spec.js:235"
+  ],
+  "questions_for_ishay": [
+    {
+      "item": "[10] chart cap on הנהלה",
+      "one_line": "מ3 draws three charts; D-28 raised CHART_CAP 2⇒4 for the customers mockup — does the raise apply to הנהלה, or does spec ⏳10's \"2 לדף\" still bind there?",
+      "evidence": "anomalies [10] · evidence/CEO-m2-trends.png · micro-guide §9 D-28 (module-11.md:714 before my insert)"
+    },
+    {
+      "item": "[14]+[21] population sentence at drill level",
+      "one_line": "At drill level on מ3 and מ9 the population sentence still declares the root population while crumbs, tiles and pager show one bucket/year — narrow it per level, or keep the whole in view on purpose?",
+      "evidence": "CEO-m2-aging-drill1.png · CEO-m2-trends-drill1.png"
+    },
+    {
+      "item": "[15] cross-filter on a two-chart page",
+      "one_line": "On מ12 a cross-filter selection paints chart 1 and the table but leaves chart 2 in full colour — should the second chart follow the selection?",
+      "evidence": "CEO-m2-equipment-crossfilter.png"
+    },
+    {
+      "item": "[18] מ19 tile labels are sentences",
+      "one_line": "Already 🔵 open in spec §1.4 and in cards-customers ⑧19.1/⑧19.6 — the evidence round only confirms it is the only surface built this way; the ruling is still yours.",
+      "evidence": "spec.md §1.4 ⚠️ note · CEO-m2-customers-overview.png"
+    },
+    {
+      "item": "[20] two totals on one screen",
+      "one_line": "The pager says \"1–50 מתוך 50\" and the line above the table says \"מוצגות 50 מתוך 736 שורות\" — two denominators for one table; a D-25 wording ruling, not a 📐8 change.",
+      "evidence": "CEO-m2-discounts.png · anomalies [20]"
+    },
+    {
+      "item": "[23] מ8's fifth tile",
+      "one_line": "מ8 has five tiles on a four-column grid, so \"חציון-סטייה\" sits alone on a second row — drop it, merge it, or accept the orphan row?",
+      "evidence": "CEO-m2-profitability.png · CEO-m0-profitability.png"
+    },
+    {
+      "item": "[25] מ15 column labels contain the export separator",
+      "one_line": "\"הבריזה · ב-12 חודשים\" and \"אי-הגעה · אי-פעם\" contain the same \"·\" the export caption uses between columns, so the caption reads as ten columns for eight.",
+      "evidence": "CEO-m2-reliability.png · anomalies [25]"
+    },
+    {
+      "item": "root-vs-drill labels in §1.4 (raised by my own fix, not by an anomaly)",
+      "one_line": "The §1.4 table has no field saying whether a label belongs to the root screen or to a drill level — מ9 now carries both kinds side by side; should the table gain that column?",
+      "evidence": "spec.md §1.4 כספים row (מעל 60 יום · מדרג 90+ are root; חוב במדרג 61–90 · חלק מסך-החוב הפתוח · החשבונית הישנה ביותר are level 1, copy-0/aging-drill1.txt:100,105,111)"
+    },
+    {
+      "item": "the nine copy questions",
+      "one_line": "The four year-ago wordings · מ9's mode-0 narrative · three month-axis date formats · \"חלון קפוא\" · the role-name sentence · the root hint on a drilled surface · דו״חות vs דוחות · the two locked labels the 🔵 item does not cover",
+      "evidence": "micro-guide §9 D-36 section (ג) · scratchpad/results/copy-summary.md"
+    }
+  ],
+  "gates": {
+    "npm run check:docs-structure": "exit=0 — final run after every edit (scratchpad/logs/ds3.log)",
+    "npm run check:declared-counts": "exit=0 — final run, 6 declared numbers all match (scratchpad/logs/dc4.log)",
+    "npm run check:iron-rules": "exit=0 — final run (scratchpad/logs/ir3.log)",
+    "npm run check:context": "exit=0 — final run (scratchpad/logs/ctx3.log)",
+    "npm run check:bidi": "exit=0 — final run (scratchpad/logs/bidi3.log); not in the brief, run because I inserted Hebrew prose with ₪/× glyphs",
+    "CR": "CR=0 on both files I touched (perl tr/\\r// — spec.md and micro_guides/module-11.md)",
+    "prettier note": "format:check does not cover these files — .prettierignore lists `*.md` and `docs`",
+    "git diff --stat": "only my two files: docs/micro_guides/module-11.md (+2) and docs/specs/module_11_reports/spec.md (+13/-3). The modified src/** and e2e/** files in `git status` are the other two fixers' and the E2E agent's — untouched by me."
+  },
+  "not_done": [
+    {
+      "item": "docs/guides/modules/module_11_reports.md carries the SAME label count twice and both are now wrong-or-accidentally-right: `:75` says \"79 תוויות-אריח\" (stale since the 16/09 correction to 74, now accidentally correct again) and `:208` says \"74 תוויות-אריח ו-19 כותרות-דף\" (now stale). `check:declared-counts` does NOT read either — its GUIDE rule only counts the deliberately-open items.",
+      "why": "The step guide is outside my file set (shell/rpc/doc split). Verified same-turn with `sed -n '75p;208p'`. Needs one edit: :208 74 ⇒ 79, and :75 reworded so the two stop being independent copies."
+    },
+    {
+      "item": "docs/PROJECT_MASTER.md §6 — no new cross-module debt written",
+      "why": "The only cross-module candidates are the five E2E failures in other modules' specs, and they are \"טעון בדיקה — baseline on dev pending\". A §6 row would declare a state nobody has measured yet. They are captured durably in micro-guide §9 D-36 (ד) with file:line; the orchestrator fills the verdict and owns the §6 decision."
+    },
+    {
+      "item": "cards-*.md — nothing edited",
+      "why": "The brief allows a card edit only where an item names a card. Items [12] [13] [22] name the spec table and the mockups, no card. [18] points at cards-customers ⑧19.1/⑧19.6 as an EXISTING 🔵 open item — pointing, not editing, is what the brief asked for."
+    }
+  ],
+  "not_verified": [
+    "I opened NO evidence PNG. Every label I added was read from the innerText dumps (copy-0/*.txt) AND cross-checked against the approved mockup source. An innerText dump can include sr-only text (the copy agent's own blind spot); the mockup cross-check makes that unlikely for these six labels but does not exclude it. The settling check: open evidence/CEO-m2-trends.png, CEO-m2-aging.png, CEO-m2-finance-overview.png and read the tile row.",
+    "The five E2E failures: I did not run E2E and did not run the dev baseline. I restated the brief's file:line list and verified each line is a `test(` declaration; I did not verify the failure itself or its baseline status.",
+    "The approve_feedback_ai_run md5 figures (e03df921… / 69221f3e…, 1,239 vs 1,369 chars) and the 16/16 function equality are the orchestrator's measurement, recorded as reported, not re-measured by me.",
+    "The \"19 כותרות-דף\" half of the declared line is NOT machine-checked — `check-declared-counts` only counts the labels column. I counted 4+7+4+4 = 19 by hand from the table and left the number unchanged.",
+    "The `_id`-suffix FALLBACK is verified as code (ReportTable.jsx:48-49) but I did not verify on a rendered screen that מ4's quote column now prints `1907` instead of `1,907` — the shell fixer owns that, and no PNG was re-shot after the change."
+  ],
+  "blind_spot": "The §1.4 table is a per-TAB SET of labels, not a per-tile list, and nothing in the document or in check-declared-counts says so. I relied on that reading to add THREE of מ3's four labels and TWO of מ9's five: \"אירועים שהסתיימו\" is already in the הנהלה row from מ2, and \"יתרת-חוב פתוחה\" / \"ימים לתשלום (חציון)\" / \"שוטף — עוד לא באיחור\" are already in the כספים row from מ7 and מ9's own root. That judgement is mine, not a rule. Checkable true-or-false in two commands: `grep -o \"אירועים שהסתיימו\" docs/specs/module_11_reports/spec.md` on the הנהלה row returns ONE occurrence, while both scratchpad/results/copy-0/exec-overview.txt and copy-0/trends.txt render it as a tile label — i.e. one table value serving two tiles. If the table is instead meant to be one value per tile, my fix is short by three (מ3's fourth, מ9's יתרת-חוב פתוחה and its ימים לתשלום), the declared number should be 82 and not 79, and a future screen-vs-document pass will \"find\" exactly those three and add duplicates — with `check:declared-counts` green either way, because it only checks that the number matches the table it is counting."
+}

@@ -1,0 +1,335 @@
+{
+  "state": 2,
+  "persona": "A new office employee in her first week, no one to ask - on each surface, does she know what to do next and why, from the hints alone?",
+  "report_file": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\p3-copy-2-1.json",
+  "verdict_table": [
+    {
+      "surface": "exec-overview",
+      "verdict": "partly",
+      "finding": "The page hint tells her exactly where to start, but two of the four hints use words a first-week employee cannot have: a pipeline metaphor and an internal software term. 'צנרת' appears exactly once in the whole 21-file dump set, and 'פונקציית-הכספים' names a piece of code, not a source she can go and look at.",
+      "evidence": [
+        "הדף נבנה מהאירועים שכבר התקיימו וסגורים תפעולית — הוא מודד את מה שקרה, לא את מה שבצנרת. התחילי בשורת-הפתיחה ובארבעת האריחים",
+        "הסכום מסכם את ההכנסה שפונקציית-הכספים מחזירה לכל אירוע שהסתיים מתחילת השנה ועד היום"
+      ],
+      "rule": "R10"
+    },
+    {
+      "surface": "trends",
+      "verdict": "partly",
+      "finding": "The hint under the table restates the chart note two blocks above it, and one hint ends on a fact she cannot check or act on - four definitions were tested, but not which four, by whom, or where.",
+      "evidence": [
+        "השנה הנוכחית נספרת עד ⁦16/09⁩ בלבד ומסומנת בדפוס מקווקו — אין כאן «קצב שנתי» משוער, רק מה שכבר קרה.",
+        "השנה הנוכחית נספרת עד היום בלבד, ולכן אין לצידה קצב-שנתי משוער.",
+        "וכיוון המסקנה זהה בכל אחת מארבע ההגדרות שנבדקו"
+      ],
+      "rule": "R27 · R28"
+    },
+    {
+      "surface": "discounts",
+      "verdict": "knows-what-to-do",
+      "finding": "אין הערות. All three hints open with where the number comes from and end with what she does: the page hint names the tile to start from and what the number is for, the tile hint explains why one tile counts a different population, the table hint explains the chip row and how to clear it.",
+      "evidence": [
+        "התחילי מאריח «הפרש בין הקצוות»: הוא אומר בכמה נקודות רווח עולה לנו הנחה עמוקה, וזה המספר שכדאי לקחת לשיחת-התמחור הבאה.",
+        "בחירת מדרג בשורת-השבבים שמעל מצרה את הטבלה למדרג אחד, ו«נקי בחירה» מחזיר את כולן."
+      ],
+      "rule": "n/a - no finding"
+    },
+    {
+      "surface": "staffing",
+      "verdict": "partly",
+      "finding": "The same ruling - the planning parameter is not a target and not a threshold - is written three times on one screen: in the tile hint, in the note under the histogram, and on the chart's own reference label. The third copy is where a new reader stops reading the layer at all.",
+      "evidence": [
+        "הוא אינו יעד ואינו סף-איכות: אירוע מעליו אינו כשל ואירוע מתחתיו אינו בזבוז, עד שמישהי תכריע שהוא כזה.",
+        "מה הגרף אינו אומר — פרמטר-התכנון אינו יעד ואינו סף. אירוע ביחס גבוה ממנו אינו «כשל», ואירוע ביחס נמוך ממנו אינו «בזבוז», עד שמישהי תכריע שהוא כזה.",
+        "פרמטר-תכנון 50 — לא יעד"
+      ],
+      "rule": "R27"
+    },
+    {
+      "surface": "finance-overview",
+      "verdict": "knows-what-to-do",
+      "finding": "אין הערות. The page hint names the one number she can move this week and the order to read the rest; the table hint pre-empts the question a newcomer actually asks - why isn't the big invoice here - and says where it is instead.",
+      "evidence": [
+        "התחילי מיתרת-החוב הפתוחה, כי היא היחידה כאן שאת יכולה להזיז השבוע, ורק אחריה עברי לצפי ולחריגות.",
+        "ולכן חשבונית גדולה וצעירה לא תופיע כאן, והיא אינה נעלמת אלא ממתינה בדוח \"גיול חובות\"."
+      ],
+      "rule": "n/a - no finding"
+    },
+    {
+      "surface": "profitability",
+      "verdict": "partly",
+      "finding": "The table hint points her at a row marker she cannot see, and the behaviour it promises is not what the rendered table does: no row of the 30 carries the text 'מתחת לרצפת-המהותיות', and project 12 - 1.5 planned hours, below the 4-hour floor the notes line defines - sits at row 12 of 30, not at the end. Separately the definitions line defines 'דלף', a word that appears nowhere else on any of the 16 surfaces (1 occurrence in 21 files).",
+      "evidence": [
+        "ושורה שמסומנת \"מתחת לרצפת-המהותיות\" יורדת לסוף הטבלה כי המכנה שלה זעיר מדי",
+        "⁦125⁩ פרויקטים · ⁦700,697 ₪⁩ מתחת לרצפת-המהותיות (פחות מ-⁦4⁩ שעות מתוכננות או פחות מ-⁦1,000 ₪⁩ עלות-עבודה מתוכננת)",
+        "⁦12⁩\tקבוצת אחזקות דנוך בע\"מ\t⁦3,000 ₪⁩\t⁦1,507 ₪⁩\t⁦1.5⁩\t⁦6.0⁩\t⁦203 ₪⁩\t⁦300.0%⁩\t⁦5⁩",
+        "\"דלף\" = חריגה כלפי-מעלה בלבד"
+      ],
+      "rule": "כ15 · R11"
+    },
+    {
+      "surface": "aging",
+      "verdict": "knows-what-to-do",
+      "finding": "The four hints carry the page: what a bucket is, why days are counted from the due date and not from the send date, why the order is by age and not by amount, and why the side tile is not a column in the chart. One soft spot, taste only: the page hint sends her to 'the bucket the action line points to', and the action line names a range that spans two of the four buckets rather than naming one.",
+      "evidence": [
+        "הדף מדרג חשבוניות שנשלחו וטרם שולמו לפי כמה זמן עבר מהמועד שסוכם עם הלקוח — ולכן התחילי במדרג שאליו מצביעה שורת-הפעולה שבראש הדף.",
+        "לגבות ⁦46,038 ₪⁩ מ-⁦4⁩ לקוחות — הכסף שממתין מעל ⁦60⁩ יום; הגדול שבהם אלפא סיסטמס בע\"מ, ⁦10,163 ₪⁩.",
+        "ימי-האיחור נספרים ממועד-הפירעון — יום שליחת החשבונית ועוד ימי תנאי-התשלום שנקבעו בהגדרות — ולא מיום השליחה עצמו"
+      ],
+      "rule": "taste, no rule"
+    },
+    {
+      "surface": "equipment",
+      "verdict": "partly",
+      "finding": "The 'upper ceiling' caveat is written three times on one screen (definitions line, notes line, hint) - the hint adds nothing the base has not already said twice. And the action line at the top instructs her to order the exact quantity those three lines say must not be used as-is, which is כ3's test: the verb rests on a number that does not justify it unchanged.",
+      "evidence": [
+        "\"כמות להזמנה\" = מה שהוזמן לאירועים שטרם התקיימו בחודש הקרוב, והיא תקרה עליונה — המערכת אינה יודעת מה כבר הוזמן מהספק",
+        "\"כמות להזמנה\" היא תקרה עליונה: יש להפחית ממנה הזמנות-רכש שכבר יצאו.",
+        "\"כמות להזמנה\" נמדדת ממה שהוזמן לאירועים שטרם התקיימו בחודש הקרוב, והמערכת אינה יודעת מה כבר הוזמן מהספק — ולכן זו תקרה עליונה שצריך להפחית ממנה הזמנות-רכש שכבר יצאו, ולא כמות להעתיק כמות-שהיא להזמנה.",
+        "להזמין ⁦2,810⁩ יחידות של \"שרוך סאטן (חלק)\" ל-⁦8⁩ האירועים שבחודש הקרוב — הכמות הגדולה ביותר בטבלת-ההזמנה."
+      ],
+      "rule": "R27 · כ3"
+    },
+    {
+      "surface": "hostess-overview",
+      "verdict": "partly",
+      "finding": "Six of the ten hints are rendered as a stack at the very bottom of the page, below the definitions and notes lines, detached from the five tiles they define - and not one of them names its tile. Read where they actually sit, 'מספר אחד שאומר עד כמה המשמרות מתחלקות באופן שווה' has no subject a newcomer can attach it to. Verified visually in hostess-overview.png: six hint bars in a row at the page bottom, while the four anchored hints sit correctly under the block they explain (contract §4ב). Second finding on the same surface: the definitions line prints the red/amber thresholds to six decimals while the score column beside it prints three, so she cannot compare 0.759 to 0.833771 without counting digits; and the action line reads as if only some of the red hostesses are active when in fact all six are.",
+      "evidence": [
+        "מתוך כל המשמרות שסגרת בהן נוכחות, בכמה הדיילת הגיעה בזמן. משמרת שלא סימנת בה נוכחות אינה נספרת כאן בכלל.",
+        "מספר אחד שאומר עד כמה המשמרות מתחלקות באופן שווה. אין לו סף \"נכון\" — מה שמעניין הוא לאן הוא זז משנה לשנה.",
+        "דיילת אדומה = ציון-אמינות נמוך מ-87% מממוצע החברה (0.958358) — כלומר מתחת ל-0.833771; ענבר = מתחת ל-95% ממנו (0.910440)",
+        "רותם עמר\tפעילה\t⁦11⁩\t⁦3⁩\t⁦0.759⁩\t20/08/2026",
+        "לא לשלוח את 6 הדיילות האדומות לאירועים הקרובים — 6 מהן פעילות ומוצעות היום בשיבוץ."
+      ],
+      "rule": "R30 · כ12 · taste, no rule (contract §4ב: \"הרמז הוא שורה עצמאית מתחת לבלוק שהוא מסביר\")"
+    },
+    {
+      "surface": "reliability",
+      "verdict": "partly",
+      "finding": "The definitions line ends on a code identifier and a spec token: 'reliabilityScore' is the only camelCase word on any of the 16 surfaces, and '(הכרעה 38)' is exactly the token כ4 sends to an HTML comment. A first-week employee can decode neither, and neither changes anything she does. The same screen also has the bottom hint repeating the notes line above it almost word for word, and calling one window '12 חודשים' in the base and 'שנה' in the layer.",
+      "evidence": [
+        "הציון הוא בדיוק reliabilityScore של Smart Match (הכרעה 38) — אותה נוסחה שמדרגת את הדיילות בשיבוץ, ולא מדד שנולד לדוח הזה.",
+        "החלון כאן קבוע על 12 חודשים ואינו זז עם מסנן התקופה — בחודש גרוע במיוחד כל הדיילות היו נראות מסתדרות, וגם ממוצע החברה היה נע איתן.",
+        "החלון כאן קבוע על שנה ואינו זז עם המסנן שלמעלה. בחודש גרוע במיוחד כל הדיילות היו נראות מסתדרות — ואת צריכה לראות מגמה, לא רגע."
+      ],
+      "rule": "כ4 · כ5 · R27 · R30"
+    },
+    {
+      "surface": "quality-cost",
+      "verdict": "partly",
+      "finding": "Four of the six bottom hints restate the definitions line rendered immediately above them, and a fifth restates the page hint at the top of the same screen word for word. Cover the layer and nothing unclear is left - which is R27's own test. Separately the median rate is printed '43 ₪' in its own tile and in the chart line, and '(43.27)' in the neighbouring tile's sub-line: two values for one median on one screen.",
+      "evidence": [
+        "חציון ולא ממוצע — דיילת אחת יקרה במיוחד אינה מזיזה אותו",
+        "בחרנו חציון ולא ממוצע כדי שדיילת אחת יקרה במיוחד לא תמשוך את הקו כלפי מעלה ותסתיר את התמונה.",
+        "הצעד הראשון הוא שני הריבועים שבגרף: על מי את משלמת יותר ממה שקיבלת, ואת מי את עלולה לאבד למתחרה כי היא זולה מדי.",
+        "שני הריבועים האלה הם כל הדוח. הימני-תחתון אומר לך על מי את משלמת יותר ממה שקיבלת, והשמאלי-עליון אומר לך את מי את עלולה לאבד למתחרה כי היא זולה מדי.",
+        "תעריף מעל החציון (43.27) וגם דירוג 3 ומטה"
+      ],
+      "rule": "R27 · R30"
+    },
+    {
+      "surface": "fairness",
+      "verdict": "lost",
+      "finding": "On the Smart Match tile the layer contradicts the base, and she has no way to tell which is true: the tile and the notes line say the system HAS started recording the recommended rank, the hint says it does NOT record it yet. This is also the most repetitive surface in the set - the Lorenz sentence is duplicated between the chart note and the bottom hint with two of its three sentences identical, 'הכאב של איוש שנתקע' is written three times, and the invitation-time caveat twice.",
+      "evidence": [
+        "טרם נמדד · אין עדיין נתון: המערכת התחילה לרשום את הדרג שהמליצה רק מעכשיו, ועד שייצברו שיבוצים המדד מציג \"—\" ולא ⁦0%⁩",
+        "המדד הזה עוד לא נמדד: המערכת עדיין לא רושמת איזה דרג היא המליצה בזימון. מרגע שתתחיל לרשום, תראי כאן אחוז — ולא אפס.",
+        "הקו הישר הוא חלוקה שווה לגמרי. ככל שהעקומה נופלת ממנו, החלוקה ריכוזית יותר, והשטח שביניהם הוא בדיוק מה שמדד ג'יני מודד.",
+        "הקו הישר הוא חלוקה שווה לגמרי. ככל שהעקומה נופלת ממנו — כך מעט דיילות מחזיקות יותר מהעבודה. השטח שביניהם הוא בדיוק מה שמדד ג'יני מודד."
+      ],
+      "rule": "H1 (hint contradicts base) · R27"
+    },
+    {
+      "surface": "customers-overview",
+      "verdict": "knows-what-to-do",
+      "finding": "אין הערות on the layer. The three hints are anchored under the block they explain, and the tiles hint earns its place: the base says four times that the tiles ignore the period filter, and only the hint says why (one feedback a month is too small a sample to see direction). The four tile labels themselves are a separate matter - reported in locked_label_findings, not here.",
+      "evidence": [
+        "התחילי מהאריח הראשון: הוא היחיד שמראה קשר בין שני דברים שאת כבר מודדת בנפרד.",
+        "המספרים בארבעת האריחים נמדדים על כל הזמנים ולא על התקופה שבחרת למעלה — משוב אחד לחודש הוא מדגם קטן מדי מכדי לראות בו כיוון."
+      ],
+      "rule": "n/a - no finding"
+    },
+    {
+      "surface": "satisfaction",
+      "verdict": "partly",
+      "finding": "The notes line ends with a spec rule code and a formula notation on the visible screen: '(📐11)' is the exact token כ4 sends to an HTML comment - the only such leak in the whole set - and 'N מתוך M' asks a first-week employee to read two Latin placeholder letters as numbers. The hint above it also restates the same multi-reason caveat the notes line carries.",
+      "evidence": [
+        "הספירות מוצגות כ\"N מתוך M\" ולא באחוזים (📐11).",
+        "ספירות הסיבות נקראות מתוך שדה שמאפשר ללקוח לסמן יותר מסיבה אחת, ולכן הן מוצגות כ\"כמה מתוך כמה\" ולא באחוזים.",
+        "הטופס מאפשר יותר מסיבה אחת; בפועל, בכל המשובים בתקופה נבחרה בדיוק אחת."
+      ],
+      "rule": "כ4 · כ5 · R27"
+    },
+    {
+      "surface": "drifting",
+      "verdict": "partly",
+      "finding": "The hints are good and anchored, but the third tile prints two different answers to the same question and the hint sides with one of them: the tile's own number is 3, its compare line ends '…ואת אלה הוא מפספס: ⁦11⁩', and the hint says three customers are visible only by the personal-rate method. A newcomer reading top to bottom gets 3, then 11, then 3.",
+      "evidence": [
+        "נתפסים רק בקצב האישי\n⁦3⁩\n⁦161,009 ₪⁩ בשנה האחרונה\nכלל ⁦120⁩ הימים לבדו מוצא ⁦11⁩ לקוחות, ואת אלה הוא מפספס: ⁦11⁩",
+        "המדידה היום: ⁦12⁩ מתרחקים מול ⁦11⁩ רדומים, ו-⁦3⁩ לקוחות נראים רק בשיטה האישית."
+      ],
+      "rule": "taste, no rule (suspected wrong value in the compare slot - a builder can check it against the tile's own query)"
+    },
+    {
+      "surface": "notes",
+      "verdict": "partly",
+      "finding": "Two engineering artifacts reach the screen. The approver is named by login address where every other person on these screens is named by name, and the notes line ends with two vendor model ids. A first-week employee can do nothing with either. Adjacent to the ruled run-bar item (addendum §2) and not re-raising it: the run bar says 'הריצה' (one run) and the notes line says two approved runs are shown together, which for a newcomer reads as a contradiction.",
+      "evidence": [
+        "מציג את הריצה מ-⁦16/09/2026⁩, אושרה ע\"י ishay1997@gmail.com",
+        "⁦2⁩ ריצות-ניתוח מאושרות מוצגות יחד, שורה אחת לכל פרויקט; המודלים: gemini-3.5-flash-lite, gemini-3.8-flash.",
+        "הדוח מציג רק ריצה שמישהי בדקה בה עשרים דוגמאות ואישרה, ולכן עד לאישור הראשון הוא ריק ולא שגוי."
+      ],
+      "rule": "R10 · R30"
+    },
+    {
+      "surface": "trends-drill1",
+      "verdict": "partly",
+      "finding": "The page hint is byte-identical to the root's and now describes a screen that is no longer there: it says the table is one row per year while the drilled table is one row per month (1–12 מתוך 12, ינואר…דצמבר) and the click line says a row opens the events of that month. The table hint, by contrast, does its job - it says the drill only narrows and that the crumbs are the way back. The export file name also carries the year twice.",
+      "evidence": [
+        "הדף מקבץ כל אירוע שהתקיים לשנה שבה הוא התקיים, שורה לשנה. התחילי בעמודת שולי-הרווח ולא בעמודת ההכנסה",
+        "לחיצה על שורה יורדת לאירועים של אותו חודש",
+        "הטבלה מציגה את אותה אוכלוסייה בשלוש רמות: שורת-שנה נפתחת לחודשים שלה, ושורת-חודש נפתחת לאירועים שבו. הקידוח אינו משנה מסננים ואינו מחשב מחדש — הוא רק מצר, והפירורים שמעל הכותרת הם הדרך חזרה.",
+        "יירד: מגמות-רב-שנתיות_2024-·-כל-הלקוחות_2024.xlsx"
+      ],
+      "rule": "H1 · taste, no rule (duplicated year in the export file name)"
+    },
+    {
+      "surface": "aging-drill1",
+      "verdict": "partly",
+      "finding": "Everything that should narrow narrows - the action line, the tiles, the crumbs and the export file name all follow the bucket. Only the page hint stays at root level and tells her to start at the bucket the action line points to, while she is already standing inside one. Same class as the trends drill: the page-level hint does not know it has been drilled.",
+      "evidence": [
+        "לגבות ⁦17,946 ₪⁩ מ-⁦3⁩ לקוחות במדרג ⁦90+⁩ יום — ⁦3⁩ חשבוניות, והוותיקה ממתינה כבר ⁦580⁩ ימים.",
+        "הדף מדרג חשבוניות שנשלחו וטרם שולמו לפי כמה זמן עבר מהמועד שסוכם עם הלקוח — ולכן התחילי במדרג שאליו מצביעה שורת-הפעולה שבראש הדף.",
+        "יירד: גיול-חובות_נכון-להיום_מדרג-90+-יום.xlsx"
+      ],
+      "rule": "R27"
+    },
+    {
+      "surface": "export-caption",
+      "verdict": "knows-what-to-do",
+      "finding": "אין הערות. Three lines and she knows what the button does, what lands on her computer and what will be inside it - with no hint needed, which is what H2 asks of the base.",
+      "evidence": [
+        "ייצוא לאקסל",
+        "יירד: מבט-על-הנהלה_2026-(01-01–16-09)-·-כל-הלקוחות.xlsx",
+        "עמודות: אירוע · לקוח · תאריך · הכנסה · רווח · שולי-רווח"
+      ],
+      "rule": "n/a - no finding"
+    },
+    {
+      "surface": "hostess-overview-error",
+      "verdict": "knows-what-to-do",
+      "finding": "אין הערות. The failed load says a load failed and offers the retry - not 'אין נתונים' - and it is the house wording word for word. No hint appears at mode 2 and none is needed: the layer carries nothing she needs here, which is H2 passing.",
+      "evidence": [
+        "לא ניתן לטעון את הנתונים.",
+        "נסי שוב"
+      ],
+      "rule": "n/a - no finding"
+    },
+    {
+      "surface": "masked-STAFF",
+      "verdict": "partly",
+      "finding": "She learns that nothing is open to her and that is correct (the masked tabs row is the ruled result). The wording is the problem: the sentence sends her to a role name, which the locked style guide says is a data value and not someone the copy addresses - its own example is the near-identical 'פנה למנכ\"ל'. There is also no hint on this screen at mode 2, so the layer says nothing about what happens next.",
+      "evidence": [
+        "אין דוחות זמינים בתפקידך — פני למנכ\"ל",
+        "🔒הנהלה",
+        "לא זמין בתפקידך"
+      ],
+      "rule": "ui-copy-styleguide §1 (שמות-תפקידים אינם פנייה)"
+    }
+  ],
+  "cross_surface_inconsistencies": [
+    {
+      "term": "the year-ago comparison row under every tile",
+      "surfaces": ["exec-overview", "discounts", "staffing", "profitability", "equipment", "satisfaction", "hostess-overview", "reliability", "fairness"],
+      "variants": [
+        "▲⁦2025⁩ באותו טווח: …",
+        "▲לפני שנה, אותו חישוב: …",
+        "▲התקופה המקבילה אשתקד: …",
+        "▲אשתקד באותו טווח (⁦109⁩ מתוך ⁦136⁩): …"
+      ]
+    },
+    {
+      "term": "the filter labels above every report",
+      "surfaces": ["all 19 rendered dumps - 16 surfaces + both drills + the error screen"],
+      "variants": [
+        "תקופה:",
+        "לקוח:",
+        "(m11-copy-rules §2.5 records both as fixed in the approved mockup under כ19 · R2 - the trailing colon is back on the built screen)"
+      ]
+    },
+    {
+      "term": "the aging bucket",
+      "surfaces": ["aging", "aging-drill1"],
+      "variants": ["מדרג (8 occurrences)", "דלי / דליי-האיחור (4 occurrences)"]
+    },
+    {
+      "term": "the Gini tile explanation - same tile, same key, two screens",
+      "surfaces": ["hostess-overview", "fairness"],
+      "variants": [
+        "מספר אחד שאומר עד כמה המשמרות מתחלקות באופן שווה. אין לו סף \"נכון\" — מה שמעניין הוא לאן הוא זז משנה לשנה.",
+        "מספר אחד שאומר עד כמה המשמרות מתחלקות שווה. אין לו סף \"נכון\" — מה שמעניין הוא לאן הוא זז, ולכן הוא מוצג תמיד ליד הערך של השנה שעברה."
+      ]
+    },
+    {
+      "term": "the red / amber reliability thresholds",
+      "surfaces": ["hostess-overview", "reliability"],
+      "variants": ["0.958358 · 0.833771 · 0.910440", "0.9584 · 0.8338 · 0.9104"]
+    },
+    {
+      "term": "the module's own name",
+      "surfaces": ["masked-STAFF (h1 + sidebar)", "every report body text"],
+      "variants": ["דו\"חות", "דוחות · דוח"]
+    }
+  ],
+  "locked_label_findings": [
+    {
+      "label": "שביעות-רצון מנבאת חזרה",
+      "surface": "customers-overview",
+      "issue": "A full sentence where a noun phrase belongs, and the number under it is '⁦16⁩ ימים' - a first-week employee cannot see what days have to do with prediction until she reads three more lines. spec §1.4 already marks the four מבט-על-לקוחות labels 🔵 open for Ishay.",
+      "rule": "כ8 · כ1 (reported only - spec.md §1.4)"
+    },
+    {
+      "label": "הסיבה השלילית הגדולה אינה קטגוריה",
+      "surface": "customers-overview",
+      "issue": "A sentence, and a negative one: the label states a conclusion while the tile's number (⁦33⁩) counts feedbacks. She has to read the sub-line to learn that the number is not the conclusion the label states.",
+      "rule": "כ8 (reported only - spec.md §1.4)"
+    },
+    {
+      "label": "הריכוזיות והנטישה עוד לא נפגשות",
+      "surface": "customers-overview",
+      "issue": "The label is a finding, the value is ⁦0⁩, and the tile then spends two lines saying which zero it is. Read alone - the way a newcomer reads a tile - it is the least decodable label in the set.",
+      "rule": "כ8 · כ1 (reported only - spec.md §1.4)"
+    },
+    {
+      "label": "קצב-התשלום תלוי בסוג הלקוח",
+      "surface": "customers-overview",
+      "issue": "A sentence, and the value beside it ('⁦69⁩ ימים') is a single median that does not itself show the dependency the label asserts; the split is in another report.",
+      "rule": "כ8 (reported only - spec.md §1.4)"
+    },
+    {
+      "label": "גודל \"אחר\" מול הקטגוריות",
+      "surface": "notes",
+      "issue": "The label promises a comparison and the tile shows one number (⁦33⁩); the other side of the comparison (⁦37⁩) sits in the compare row below it. The neighbouring tile shows the same ⁦33⁩ under a different label ('מהן שייכות למשוב שתויג \"אחר\"'), so two tiles on one screen carry the same number.",
+      "rule": "כ1 · R11 (reported only - spec.md §1.4)"
+    },
+    {
+      "label": "נתפסים רק בקצב האישי",
+      "surface": "drifting",
+      "issue": "Locked label, and the tile under it is the one carrying the 3-versus-11 mismatch reported in the verdict row. The label itself gives her no owner ('caught by what, out of what') - כ1's test read alone.",
+      "rule": "כ1 (reported only - spec.md §1.4)"
+    }
+  ],
+  "not_verified": [
+    "Which paragraphs are base and which are layer: verified visually on two screens only (aging.png and hostess-overview.png, where hints carry a vertical bar). On the other 19 dumps the base/layer split is inferred from innerText position and from index.json's hints_visible count.",
+    "The bottom-of-page orphan hint block: seen in hostess-overview.png. On reliability, quality-cost and fairness the same pattern is inferred from innerText order alone - their PNGs were not opened.",
+    "Whether a table row on profitability carries a non-text marker (colour, icon) for 'מתחת לרצפת-המהותיות' that innerText cannot capture - profitability.png was not opened. The finding stands either way, because project 12 is below the declared floor and is not at the end of the table.",
+    "Numbers in the hostesses-tab tile sub-lines and population lines are printed WITHOUT the U+2066/U+2069 isolation that every other tab uses ('1,482 מתוך 1,699 שיבוצים'). On the 16/09 data the screenshot renders correctly, so I did not raise it as a defect; whether other data values can flip a number there is unverified.",
+    "Missing hints cannot be detected from this dump at all: a wrong key in onboardingCopy.js renders null silently (spec 🔴.5), and both my count and index.json's hints_visible read the same DOM. Concretely: equipment's two action tables ('כמה להזמין לחודש הקרוב' and 'שורות ציוד במחיר מוערך') carry no hint although the page hint calls the first one the only place action comes from, and every other table in the set has one.",
+    "The 'לא לשלוח את 6 הדיילות האדומות … 6 מהן פעילות' reading assumes the string is built by concatenation; whether it is a template or a hand-written string was not checked (no repo file was opened beyond the floor)."
+  ],
+  "blind_spot": "Every row of mine that says 'the hint repeats the base' rests on my mapping of which paragraph is which, and I verified that mapping on exactly two screens (aging.png, hostess-overview.png). If on the hostesses and customers tabs both paragraphs of a pair are hints, then the duplication sits inside the layer and the fix is a different one - delete one key rather than delete the sentence from the layer. Nobody can settle that from the mode-2 dump alone, and the check is mechanical and cheap: diff `scratchpad/results/copy-0/<slug>.txt` against `scratchpad/results/copy-2/<slug>.txt` for staffing, quality-cost, fairness, equipment and trends - whatever appears in both files is base, whatever appears only in copy-2 is the layer. I could not run it because copy-0 was not given to me.",
+  "files_opened_beyond_floor": [
+    "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\copy-2\\aging.png - opened because the text alone could not tell a hint from a chart note; it showed that hints carry a vertical bar and that the long bucket paragraph is base",
+    "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\copy-2\\hostess-overview.png - opened to find out where the six unanchored hint sentences are rendered; they are a stack at the very bottom of the page"
+  ]
+}

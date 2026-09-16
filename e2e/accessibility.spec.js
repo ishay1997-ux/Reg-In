@@ -76,8 +76,24 @@ async function waitForReady(page) {
   await page.locator('h1').first().waitFor({ state: 'visible', timeout: 10_000 })
 }
 
+// 🆕 🔴 **ותוספת 17/09/2026 — משטח-דוח נסרק רק אחרי שהגרף צויר, וזה אותו כשל בדיוק בלבוש
+// שלישי.** ‏`waitForReady` ממתין ל-`h1` **של העמוד**, וב-`/reports` ה-`h1` מגיע מהקטלוג
+// ומצויר **לפני** שה-RPC חזר; ה-SVG של Recharts נכנס ל-DOM מאוחר יותר, אחרי שה-
+// `ResponsiveContainer` נמדד. ⇒ סריקה שרצה ביניהם בודקת שלד, מחזירה אפס violations
+// ונראית ירוקה בעוד היא מדדה כלום — "מדידה שהמכנה שלה 0" (`e2e/CLAUDE.md §3`), בדיוק כמו
+// ‏11 הצמתים של `/system/prices` ושלד-הדיאלוג של מודול 5.
+// 🔑 **ההמתנה יושבת כאן ולא בבדיקה** כדי שגם סריקת-דוחות שתיכתב מחר תקבל אותה בלי לזכור.
+// ⚠️ **ומוגבלת ל-`/reports`** — לשאר המסכים אין `chart-card` כלל, והמתנה גורפת הייתה תולה
+// כל סריקה בריפו. **והמחיר, מוצהר:** משטח-דוח עתידי **בלי** גרף ייתלה כאן 30 שניות
+// וייכשל; היום לכל אחד מארבעת דפי-ברירת-המחדל יש לפחות גרף אחד.
 async function scan(page, label) {
   await waitForReady(page)
+  if (new URL(page.url()).pathname.startsWith('/reports')) {
+    await page
+      .locator('[data-testid^="chart-card-"]')
+      .first()
+      .waitFor({ state: 'visible', timeout: 30_000 })
+  }
   const results = await new AxeBuilder({ page }).analyze()
   const blocking = results.violations.filter(
     (v) => ['critical', 'serious'].includes(v.impact) && !CONTRAST_IS_ADVISORY.has(v.id),

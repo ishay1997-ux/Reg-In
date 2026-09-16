@@ -1,0 +1,66 @@
+{
+  "files_edited": [
+    "e2e/reports.spec.js",
+    "e2e/accessibility.spec.js"
+  ],
+  "tests_added": [
+    {
+      "file": "e2e/reports.spec.js",
+      "name": "מודול 11 · סדר-תווים בתא (מ9 · אינווריאנט 5 · 📐18) › מ9: תא-המדרג ותא-איש-הקשר תו-בתו מול המטען, וכל מספר בעמוד מבודד",
+      "what_it_asserts": "captures the live report_m09_aging payload via page.route(route.fetch -> fulfil unchanged); finds the bucket column by format=='textLtr' and the contact column by key /owner|contact/ from payload.columns[] (no hard-coded name); picks at runtime the first row of the rendered page that has both values; compares the rendered <td> textContent (isolates stripped) code-point by code-point against the payload string for both cells; asserts the bucket cell itself carries an isolate; then censuses every cell on the page whose column format is isolating (money/percent/int/days/ratio/score/textLtr): zero offenders without an isolate, denominator > 0, and at least one cell mixing digits with Hebrew (invariant 5 of src/modules/11_reports/CLAUDE.md).",
+      "result": "pass"
+    },
+    {
+      "file": "e2e/accessibility.spec.js",
+      "name": "scan() helper — chart-card wait guarded by the /reports route (applies to all four reports scans in 'סריקה על ארבע לשוניות-הדוחות (מודול 11)')",
+      "what_it_asserts": "before every axe scan whose URL pathname starts with /reports, waits for [data-testid^=\"chart-card-\"] first/visible/30s, so the scan runs on the rendered SVG instead of the loading skeleton (the denominator-0 trap of e2e/CLAUDE.md §3).",
+      "result": "pass"
+    }
+  ],
+  "runs": {
+    "test_e2e": {
+      "exit": 1,
+      "totals": "185 passed · 6 failed · 7 skipped (18.5m)",
+      "failed": [
+        "e2e/reports.spec.js:427 מ9 בשורש: השורה כולה דלת אל כרטיס-הפרויקט (הכרעה 19)",
+        "e2e/customer-page.spec.js:130 העמוד: מדדים חיים, לשוניות, סיבת-דחייה על השורה, ופעולות לפי סטטוס",
+        "e2e/dashboard.spec.js:82 מנכ\"ל: ניווט-חודש משנה את הכתובת ואת הכותרת, ו\"היום\" מחזיר",
+        "e2e/finance.spec.js:141 S2: לחיצה על השורה הידועה פותחת את חלון-הסגירה עם שער-חשבונית גלוי",
+        "e2e/prices.spec.js:218 יחס-אורחים לא-תקין (0) חוסם שמירה — ואף כתיבה לא יוצאת",
+        "e2e/projects.spec.js:235 ריק-כדין על פרויקט בלי מוצרים, ותקלה מיוצרת-ברשת — הנוסחים שונים"
+      ]
+    },
+    "smoke": {
+      "exit": 0,
+      "note": "1 passed (59.7s) on a dev server I started on 5173 and stopped after (PID 11592); port 5189 untouched."
+    },
+    "m4": {
+      "exit": 0,
+      "totals": "32 passed (3.3m)",
+      "failed": []
+    }
+  },
+  "reruns": [
+    "Rerun once of the six failing files (customer-page · dashboard · finance · prices · projects · reports), same config, log e2e-rerun-failures.log: exit=1, 50 passed · 6 failed · 2 skipped (5.9m) — the SAME six tests failed with byte-identical messages (customer-page still Expected 3 / Received 6; prices still the same two wordings). ⇒ none of them is a flake; all six are deterministic on this tree.",
+    "Both new cases passed in both runs: reports.spec.js:675 ok in the full run (3.6s) and ok in the rerun (3.1s); the module-11 accessibility scan with the new chart-card wait ok (15.5s)."
+  ],
+  "populations_moved": [
+    "No module-11 report population moved during this work: the full run ran 00:05–00:24 on 17/09/2026, i.e. BEFORE the three pg_cron jobs (01:00 module3-quote-expiry · 01:30 module1-login-attempts-cleanup · 02:00 module6-event-finished), and the reports spec writes nothing. The m9 failure is a routing-behaviour conflict, not a number that moved.",
+    "customer-page.spec.js:130 — projects tab counter 3 vs 6 rendered project rows, identical in both runs. A stable disagreement between two surfaces of the same population, not a number that drifted between runs; naming which side is right needs a DB read, which this agent is not allowed to do.",
+    "dashboard.spec.js:82 / projects.spec.js:235 / finance.spec.js:141 — shaped like population/fixture rot (a month with no change of first-h2, no project without products, the 'known row' no longer at the invoice stage), but I have no before/after number for any of them: no baseline run of these files exists on this tree."
+  ],
+  "lint": {
+    "eslint_exit": 0,
+    "prettier_exit": 0,
+    "cr": 0
+  },
+  "not_verified": [
+    "Whether the five non-module-11 failures pre-date my two additions: I never ran the full suite before editing, and the only prior measurement in the addendum (18:1X on 731969e7) covers reports+accessibility+smoke+m4 only, not the 198-test suite. Causally they cannot be mine (different spec files, my test runs last in its own file), but 'pre-existing' is an inference, not a measurement I made.",
+    "reports.spec.js:427 (מ9 בשורש) — I did NOT change either side. Evidence that it is a code change and not data: the spec was written in 731969e7 (16/09 18:29) and DRILL_INTENT was introduced in fb7bcd26 (16/09 19:32, `git log -S DRILL_INTENT`); drillHandlers() in ReportSurface.jsx:271 now passes DRILL_INTENT whenever the surface has a further level, and m9 root (level 0 of 3) does — so ReportsPage.openDoor:348 skips the navigate branch and writes ?drill={\"id\":1040,\"kind\":\"project\"} instead of /projects/1040. Which side is correct is ruling 19 and Ishay's call, not mine.",
+    "prices.spec.js:218 is a copy drift, not data: the screen says 'ערך חוקי: מספר שלם בין 1 ל-150' and the test expects 'ערך חוקי: מספר שלם חיובי'. I did not trace which commit changed the wording.",
+    "The chart-card wait assumes every /reports surface that is ever scanned has a chart. Measured true tonight for the four default surfaces (the module-11 scan passed, 15.5s); a future chartless reports surface would hang that wait 30s and fail the scan — stated in the comment beside it, not prevented."
+  ],
+  "blind_spot": "My new case can go green by going silent. It ends with `test.skip(rowIndex === -1, …)` when no row on the first page of m9 carries BOTH a bucket label and an owner value — and a Playwright skip prints '-' next to 'ok' in the same list, with the suite still exit 0. Tonight it really ran (list line 'ok 166 … (3.6s)' in e2e-full.log, 'ok 58 … (3.1s)' in the rerun), but nothing turns red the day the aging population loses its owner column or empties after the 01:00 quote-expiry job. Checkable in one command: `npx playwright test --config=playwright.e2e.config.js e2e/reports.spec.js --reporter=line` and look at the line for 'סדר-תווים בתא' — 'ok' means it measured, '-' means it measured nothing and the suite stayed green. Making it fail loudly instead (expect(rowIndex).toBeGreaterThan(-1)) is a one-line change I did not make, because the addendum specified the skip.",
+  "report_file": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\p3-e2e-rerun.json",
+  "dev_server_stopped": true
+}
