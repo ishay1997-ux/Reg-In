@@ -20,6 +20,12 @@ import { CANCELLATION_PARAM_NAMES } from './projectCancellation'
 // ⚠️ **קבוע-בדיקה מתוארך, לא לגזור-מחדש בלי מדידה חדשה.** ה-Seed החי **אחרי מיגרציה A**
 // (נמדד 02/09/2026 21:20 — 43 שמות, מוזרק ע"י האורכסטרטור מהמדריך). שם שגוי בתו אחד כאן
 // היה הופך את בדיקת-שני-הכיוונים לחסרת-משמעות (עוברת גם על מרשם שגוי).
+// 🆕 ✏️ **16/09/2026 — 47: ארבע שורות מודול 11 (M11-5) נוספו ל-`control_alerts`.**
+// 🔴 **וההצהרה כאן חייבת להיות מדויקת:** 43 מתוך 47 נמדדו חיים (`select count(*) from params`
+// ⇒ 43, נמדד 16/09/2026), וארבע החדשות **טרם הוחלו** — הן נולדות ב-
+// `supabase/migrations/20260916043500_module11_c_report_params.sql`, שממתינה לשער-האישור.
+// ⇒ הקבוע הזה מתאר מעכשיו את **אוכלוסיית-היעד אחרי מיגרציה C**, ולא צילום של המסד ברגע זה.
+// כשהמיגרציה תוחל, המדידה החוזרת חייבת להחזיר 47 — ואם לא, הבדיקה הזו היא שתתפוס.
 const LIVE_SEED_PARAM_NAMES = {
   pricing_timing: [
     'אחוז_מעמ',
@@ -39,6 +45,11 @@ const LIVE_SEED_PARAM_NAMES = {
     'שעות_תזכורת_לדיילת',
     'סף_שביעות_רצון',
     'סף_לוגיסטיקה_ימי_עסקים',
+    // ארבע שורות מודול 11 (M11-5) — נולדות במיגרציה C, טרם הוחלו (ר' ההערה למעלה).
+    'מכפיל_מרווח_מתרחק',
+    'סף_סטיית_תקציב_אחוז',
+    'מקדם_אמינות_אדום',
+    'מקדם_אמינות_ענבר',
   ],
   smart_match: [
     'גולפוסט_מרחק_קמ',
@@ -74,10 +85,10 @@ const LIVE_SEED_PARAM_NAMES = {
 
 const LIVE_SEED_NAMES_FLAT = Object.values(LIVE_SEED_PARAM_NAMES).flat()
 
-describe('PARAM_REGISTRY — 43 שורות, זהות-בית לזרע החי אחרי מיגרציה A (שני כיוונים)', () => {
-  it('43 שורות בדיוק', () => {
-    expect(PARAM_REGISTRY).toHaveLength(43)
-    expect(LIVE_SEED_NAMES_FLAT).toHaveLength(43)
+describe('PARAM_REGISTRY — 47 שורות, זהות-בית לאוכלוסיית-היעד (שני כיוונים)', () => {
+  it('47 שורות בדיוק', () => {
+    expect(PARAM_REGISTRY).toHaveLength(47)
+    expect(LIVE_SEED_NAMES_FLAT).toHaveLength(47)
   })
 
   it('כל שם במרשם קיים בזרע החי (כיוון א׳ — לא נשאר שם-רפאים במרשם)', () => {
@@ -493,5 +504,50 @@ describe('כללי-רוחב יחסיים — סדר, לא תקרה', () => {
     expect(expiryWarningOrderOk('40', '30')).toBe(false)
     expect(expiryWarningOrderOk('30', '30')).toBe(false)
     expect(expiryWarningOrderOk(undefined, '30')).toBe(true)
+  })
+})
+
+// 🆕 ארבע שורות מודול 11 (M11-5 · כרטיס ת6 · הכרעה 35). **הבדיקה אינה על "יש שורה"** —
+// היא על שלושת הדברים שנשברים בשקט: שם שאינו זהה לשם שבמיגרציה (⇒ המסך מציג שם גולמי
+// בלי תווית), קבוצה שאינה `control_alerts` (⇒ הפרמטר נוחת בכרטיסייה הלא-נכונה), וגבולות
+// שמסרבים לערך שהמיגרציה עצמה מכניסה (⇒ המנכ"ל פותח את המסך ורואה שגיאה על ערך תקין).
+describe('פרמטרי מודול 11 — שם · קבוצה · והערך מהמיגרציה עובר ולידציה', () => {
+  const M11_PARAMS = [
+    ['מכפיל_מרווח_מתרחק', '1.5'],
+    ['סף_סטיית_תקציב_אחוז', '15'],
+    ['מקדם_אמינות_אדום', '0.87'],
+    ['מקדם_אמינות_ענבר', '0.95'],
+  ]
+
+  it.each(M11_PARAMS)('%s — קיימת במרשם עם תווית אמיתית (לא fallback)', (name) => {
+    const entry = getParamEntry(name)
+    expect(entry.label).not.toBe(name)
+    expect(entry.hint).not.toBe('הגדרה ללא הגדרת-תצוגה')
+    expect(entry.kind).not.toBe('text')
+  })
+
+  it.each(M11_PARAMS)('%s — בקבוצת control_alerts', (name) => {
+    expect(getParamEntry(name).group).toBe('control_alerts')
+  })
+
+  it.each(M11_PARAMS)('%s — הערך %s מהמיגרציה תקין תחת ה-kind שלה', (name, value) => {
+    expect(validateParamValue(getParamEntry(name), value).ok).toBe(true)
+  })
+
+  // 🔴 הכיוון השני — גבול שלא ראית נכשל אינו גבול.
+  it('מכפיל קטן מ-1 נדחה, ומקדם-אמינות מעל 1 נדחה', () => {
+    expect(validateParamValue(getParamEntry('מכפיל_מרווח_מתרחק'), '0.5').ok).toBe(false)
+    expect(validateParamValue(getParamEntry('מקדם_אמינות_אדום'), '1.2').ok).toBe(false)
+    expect(validateParamValue(getParamEntry('סף_סטיית_תקציב_אחוז'), '0').ok).toBe(false)
+  })
+
+  // ⚠️ 0.87 ו-0.95 ולא 0.8/0.9 (הכרעה 35): ב-0.8 תור-הסימון היה ריק, וב-0.9 לענבר
+  // היו אפס חברות. הבדיקה נועלת את הערכים כך ששינוי-בטעות ייתפס כאן ולא בכנס.
+  it('הערכים הנעולים הם 0.87 ו-0.95, והענבר גבוה מהאדום', () => {
+    const red = Number(M11_PARAMS[2][1])
+    const amber = Number(M11_PARAMS[3][1])
+    expect(red).toBe(0.87)
+    expect(amber).toBe(0.95)
+    expect(red).toBeLessThan(amber)
   })
 })
