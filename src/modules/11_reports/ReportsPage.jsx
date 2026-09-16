@@ -79,7 +79,12 @@ function locateDoor(next) {
 
 /**
  * 🔗 **המסכים שדלת-שורה מובילה אליהם — נמדדו ב-`src/App.jsx`, לא הונחו.**
- * ‏`project` ⇒ `/projects/:id` · `customer` ⇒ `/customers/:customerId` — שני מסכים אמיתיים.
+ * ‏`project` ⇒ `/projects/:id` · `customer` ⇒ `/customers/:customerId` · `quote` ⇒
+ * `/quotes/:quoteId/edit` — שלושה מסכים אמיתיים, כל אחד אומת בקובץ-הניתוב.
+ * ⚠️ **ולמה `/quotes/:quoteId/edit` ולא `/quotes`:** רשימת-ההצעות אינה יכולה לקשר להצעה
+ * אחת, ו-`cards-management` שורה 8 נוקב ב**הצעת-המחיר עצמה** כיעד-הקידוח היחיד של מ4.
+ * זהו גם הנתיב שהמנתב המקומי של לשונית-ההנהלה כבר השתמש בו. 🔒 המסך גדור `'הצעות מחיר'`
+ * ב-`ProtectedRoute`, ולכן מי שאין לו הרשאה מקבל את מסך-החסימה של המערכת ולא דף שבור.
  * 🔴 **`hostess` הוא חצי-דלת, ומוצהר ככזה:** ל**כרטיס-הדיילת אין כתובת** — ‏`HostessesPage`
  * פותח אותו ממצב מקומי (`cardHostessId`), ולכן הלחיצה נוחתת על **מסך-הדיילות** ולא על
  * הכרטיס עצמו. הוספת `?hostess=<id>` היא נגיעה בקוד **מוזג של מודול 4** (אדווה + רגרסיה
@@ -89,6 +94,7 @@ const DOOR_PATHS = Object.freeze({
   project: (id) => `/projects/${id}`,
   customer: (id) => `/customers/${id}`,
   hostess: () => '/hostesses',
+  quote: (id) => `/quotes/${id}/edit`,
 })
 
 function TabButton({ tab, active, masked, onSelect }) {

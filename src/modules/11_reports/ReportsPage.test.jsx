@@ -10,12 +10,19 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 // ⚠️ חובה (מלכודת `.env.local` מול CI): בלי המוק, כל בדיקת-רכיב שנוגעת ב-api קורסת ב-CI.
 vi.mock('@/supabaseClient', () => ({ supabase: { rpc: vi.fn(), from: vi.fn() } }))
 vi.mock('recharts', () => ({}))
+// 🔑 **הגרף מנוטרל ברמת-הכרטיס ולא ברמת-הספרייה** — המוק של `recharts` כאן הוא `{}`, ולכן
+// מטען שיש בו `chart` היה מפיל את `ChartCard` על `ResponsiveContainer` שאינו קיים. המעטפת
+// אינה יודעת דבר על גרפים (`ReportSurface` מצייר אותם), ולכן אין מה לבדוק כאן דרכם.
+vi.mock('./components/ChartCard', () => ({ default: () => null }))
 
+// 🔴 **מוק חלקי ולא מלא** — ‏`api.js` מייצא גם **קבועי-חוזה** שהמעטפת נשענת עליהם
+// (‏`ROW_DOOR_KINDS`, שלפיו המנתב מחליט אם `drill_key` הוא דלת). מוק שמחליף את המודול
+// כולו היה מוחק אותם והופך את הבדיקה לבדיקה של **הרשימה שכתבתי בבדיקה**, לא של הקוד.
 const callReport = vi.fn()
-vi.mock('./api', () => ({
-  callReport: (...args) => callReport(...args),
-  normalizeCharts: (chart) => (chart ? [chart] : []),
-}))
+vi.mock('./api', async (importOriginal) => {
+  const actual = await importOriginal()
+  return { ...actual, callReport: (...args) => callReport(...args) }
+})
 
 const listCustomers = vi.fn(() => Promise.resolve([]))
 vi.mock('@/modules/02_customers/api', () => ({ listCustomers: (...a) => listCustomers(...a) }))
@@ -323,5 +330,190 @@ describe('מ1 — כותרת-העמוד', () => {
   it('📐17 — התקופה מוצגת בכותרת-המשנה', async () => {
     renderPage()
     expect(await screen.findByTestId('reports-window-label')).toHaveTextContent('כל הלקוחות')
+  })
+})
+
+// ── 🚪 מנתב-הדלתות של המעטפת (הכרעה 33 · הכרעה 19) ──────────────────────────
+//
+// 🔴 **מה שלא עבד עד 16/09/2026, ולמה זה לא נראה שבור:** ‏`onDrill` כתב **כל** ערך שקיבל
+// אל `?drill=` — כלומר גם יעד-אריח וגם דלת-שורה נחתו כ`p_drill` של אותו דוח, והמסך פשוט
+// נשאר במקומו. הבדיקות כאן מפרידות את שלושת הענפים זה מזה.
+//
+// ⚠️ **דרך לשונית-הדיילות ובכוונה:** לשונית-ההנהלה עוטפת את `onDrill` במנתב משלה
+// (`tabs/executive/surfaceDoors.jsx`), ולכן בדיקה דרכה הייתה מודדת **אותו** ולא את המעטפת.
+
+const doorPayload = (over = {}) =>
+  payload({
+    tiles: [
+      {
+        key: 'red',
+        label: 'דיילות אדומות',
+        value: 6,
+        format: 'int',
+        compare: null,
+        target: { tab: 'לקוחות', report: 'לקוחות מתרחקים', drill: null },
+      },
+    ],
+    columns: [{ key: 'name', label: 'שם', format: 'text' }],
+    ...over,
+  })
+
+function renderDoors(initialEntry = '/reports?tab=hostesses') {
+  return render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <Routes>
+        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/projects/:id" element={<p>מסך פרויקט</p>} />
+        <Route path="/customers/:customerId" element={<p>מסך לקוח</p>} />
+        <Route path="/hostesses" element={<p>מסך דיילות</p>} />
+        <Route path="/quotes/:quoteId/edit" element={<p>מסך הצעת מחיר</p>} />
+      </Routes>
+    </MemoryRouter>,
+  )
+}
+
+describe('מ1 — מנתב-הדלתות', () => {
+  it('① יעד-אריח מעביר לשונית ודוח, ולא נכתב כמצב-דריל', async () => {
+    permissions = CEO
+    callReport.mockResolvedValue(doorPayload())
+    renderDoors()
+    await click(await screen.findByTestId('report-tile-link-red'))
+    // הכתובת היא מקור-האמת: הלשונית והדוח התחלפו, ו-`drill` לא נכתב.
+    expect(await screen.findByTestId('reports-chip-drifting')).toHaveAttribute(
+      'aria-current',
+      'true',
+    )
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('לקוחות מתרחקים')
+  })
+
+  // 🔴 נמדד: מ2/מ7/מ9 מחזירים **שם-פונקציה** ומ14/מ16/מ19 **שם עברי קצר** — המנתב מקבל
+  // את שניהם, והפער עצמו דווח כשאלת-חוזה.
+  it('① יעד שנוקב בשם-ה-RPC עובד בדיוק כמו יעד שנוקב בשם העברי', async () => {
+    permissions = CEO
+    callReport.mockResolvedValue(
+      doorPayload({
+        tiles: [
+          {
+            key: 'red',
+            label: 'דיילות אדומות',
+            value: 6,
+            format: 'int',
+            compare: null,
+            target: { tab: 'לקוחות', report: 'report_m21_drifting', drill: null },
+          },
+        ],
+      }),
+    )
+    renderDoors()
+    await click(await screen.findByTestId('report-tile-link-red'))
+    expect(await screen.findByTestId('reports-chip-drifting')).toHaveAttribute(
+      'aria-current',
+      'true',
+    )
+  })
+
+  // ת8 — מיסוך אינו נעקף דרך אריח: מנהלת-גיוס אינה רואה את לשונית-הלקוחות כלל.
+  it('① יעד בלשונית ממוסכת אינו פותח דבר', async () => {
+    permissions = RECRUIT
+    callReport.mockResolvedValue(doorPayload())
+    renderDoors()
+    await click(await screen.findByTestId('report-tile-link-red'))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('מבט-על דיילות')
+  })
+
+  it('② דלת-שורה מנווטת למסך של הישות', async () => {
+    permissions = CEO
+    callReport.mockResolvedValue(
+      doorPayload({
+        rows: [{ row_key: 1, name: 'נועה', drill_key: { kind: 'hostess', id: 449 } }],
+      }),
+    )
+    renderDoors()
+    await click((await screen.findAllByTestId('report-row-drillable'))[0])
+    expect(await screen.findByText('מסך דיילות')).toBeInTheDocument()
+  })
+
+  it('② דלת-לקוח ודלת-פרויקט מגיעות לשני מסכים שונים', async () => {
+    permissions = CEO
+    callReport.mockResolvedValue(
+      doorPayload({
+        rows: [{ row_key: 1, name: 'אלפא', drill_key: { kind: 'customer', id: 401 } }],
+      }),
+    )
+    const { unmount } = renderDoors()
+    await click((await screen.findAllByTestId('report-row-drillable'))[0])
+    expect(await screen.findByText('מסך לקוח')).toBeInTheDocument()
+    unmount()
+
+    callReport.mockResolvedValue(
+      doorPayload({
+        rows: [{ row_key: 2, name: 'כנס', drill_key: { kind: 'project', id: 1395 } }],
+      }),
+    )
+    renderDoors()
+    await click((await screen.findAllByTestId('report-row-drillable'))[0])
+    expect(await screen.findByText('מסך פרויקט')).toBeInTheDocument()
+  })
+
+  // 🌱 שורת-מ4 — `cards-management` שורה 8: *"יעד-הקידוח היחיד: הצעת-המחיר"*. נמדד ⁦50⁩
+  // שורות כאלה בכל מטען-מ4 חי, וכולן `{kind:'quote', id}`.
+  it('② דלת-הצעה נוחתת על ההצעה עצמה, לא על רשימת-ההצעות', async () => {
+    permissions = CEO
+    callReport.mockResolvedValue(
+      doorPayload({
+        rows: [{ row_key: 1, name: 'ערב גאלה', drill_key: { kind: 'quote', id: 1907 } }],
+      }),
+    )
+    renderDoors()
+    await click((await screen.findAllByTestId('report-row-drillable'))[0])
+    expect(await screen.findByText('מסך הצעת מחיר')).toBeInTheDocument()
+  })
+
+  it('③ כל השאר נשאר מצב-דריל של הדוח הנוכחי, ונשלח כ-p_drill', async () => {
+    permissions = CEO
+    // שבב-יום-בשבוע של מ15 — `{ dow: N }`: לא יעד-אריח ולא דלת-שורה, ולכן ענף ③.
+    callReport.mockResolvedValue(
+      doorPayload({
+        chart: {
+          type: 'bar',
+          title: 'לפי יום בשבוע',
+          xKey: 'dow',
+          label_source: 'WEEKDAY_NAMES_HE',
+          series: [{ key: 'n', label: 'אירועים' }],
+          // ‏`mapChartLabels` של הלשונית ממפה את המספר לשם-היום; הבורר גוזר ממנו חזרה את ה-`dow`.
+          data: [{ dow: 4, n: 2 }],
+        },
+      }),
+    )
+    renderDoors('/reports?tab=hostesses&report=reliability')
+    await screen.findByTestId('reports-chips-dow')
+    callReport.mockClear()
+    await click(screen.getByTestId('reports-chips-dow-dow-4'))
+    await waitFor(() => expect(callReport).toHaveBeenCalled())
+    expect(callReport.mock.calls.at(-1)[1].drill).toEqual({ dow: 4 })
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('אמינות והתייצבות')
+  })
+
+  // 🚫 יעד שאינו בקטלוג (משטח נדחה, שם שהשתנה) — **לא מנווטים ולא כותבים מצב-זבל**.
+  it('יעד-אריח שאינו בקטלוג אינו כותב מצב-דריל ואינו מנווט', async () => {
+    permissions = CEO
+    callReport.mockResolvedValue(
+      doorPayload({
+        tiles: [
+          {
+            key: 'red',
+            label: 'דיילות אדומות',
+            value: 6,
+            format: 'int',
+            compare: null,
+            target: { tab: 'לקוחות', report: 'דוח שנדחה', drill: null },
+          },
+        ],
+      }),
+    )
+    renderDoors()
+    await click(await screen.findByTestId('report-tile-link-red'))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('מבט-על דיילות')
+    expect(callReport.mock.calls.at(-1)[1].drill).toBeNull()
   })
 })
