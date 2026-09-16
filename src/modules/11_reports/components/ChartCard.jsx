@@ -40,6 +40,9 @@ import { formatByType } from '@/lib/reportsFormat'
 // 🚫 בלי ירוק, בלי כתום, בלי גרדיאנטים (`grep gradient src/` = 0, אומת 06/09/2026).
 const SERIES_COLORS = ['#009689', '#62748E']
 const OVER_THRESHOLD = '#E7000B'
+// ‏`slate-300` — **עמודה שאינה נבחרת בסינון-צולב** (הכרעה 15-ד). 🚫 אין כאן גוון רביעי:
+// זו אותה משפחת-סלייט של §①, בדרגה שהמוקאפ המאושר נוקב בה.
+const UNSELECTED = '#CAD5E2'
 // ‏`slate-400` — ל**קווי-רשת וצירים בלבד**, לעולם לא לטקסט על לבן (§⑤ #10: יחס 2.63:1).
 const AXIS_COLOR = '#90A1B9'
 // טקסט-בתוך-גרף יורד דרגה אחת, בדיוק כפי ש§⑥ תיקן (`--s400` → `--s500`) מאותו נימוק.
@@ -221,12 +224,88 @@ function HatchDefs({ idPrefix, series }) {
 const fillFor = (idPrefix, index) =>
   index === 0 ? seriesColor(0) : `url(#${idPrefix}-hatch-${index})`
 
-function BarSeries({ idPrefix, data, xKey, series, onSelect, stacked }) {
-  return series.map((s, index) => (
+// 📐20 · **עמודת-"היום" חלולה ומקווקוות** — *"נכון ל-16/09, לא סוף-חודש"*.
+// 🔴 **וזו הצהרה ולא קישוט:** עמודה אחרונה מלאה בגובה 60% מקודמתה נקראת כ**ירידה**, בעוד
+// שהיא פשוט **תקופה חלקית**. המוקאפ המאושר מצהיר זאת שלוש פעמים (צורה · תווית · מקרא),
+// והצורה היא החצי שהקוד אחראי לו. ‏`is_today` מגיע פר-שורה מה-RPC (C8, תוספת 16/09).
+const todayCellProps = (row) =>
+  row.is_today
+    ? { fillOpacity: 0.55, strokeDasharray: '4 2', strokeWidth: 1.5, stroke: seriesColor(0) }
+    : {}
+
+// תאי-הסדרה-הראשונה: כלל-המילוי §④ (אדום יחיד מעל-סף) + הצהרת-📐20 (עמודת-"היום").
+// 🔑 **פונקציה אחת לשני הגופים** (`BarBody` ו-`ComposedBody`) — שני עותקים היו נפרדים ביום
+// שבו אחד מהם יתוקן, וזה בדיוק מה ש-jscpd (3%) קיים כדי לתפוס.
+function barCells({ data, xKey, selected }) {
+  return data.map((row, rowIndex) => {
+    // 🔤 **הכרעה 15-ד, מילה-במילה:** *"העמודה הנבחרת טורקיז-600, השאר slate-300"*.
+    // 🔴 **וזה לא קישוט — בלעדיו הסינון-הצולב חסר את חצי-המשוב שלו:** הטבלה מתכווצת,
+    // והגרף שגרם לזה נראה בדיוק כמו קודם. הצ'יפ אומר *מה* נבחר, והגוון אומר *איפה*.
+    const dimmed = selected != null && String(row[xKey]) !== String(selected)
+    return (
+      <Cell
+        key={`${row[xKey]}-${rowIndex}`}
+        fill={dimmed ? UNSELECTED : row.over_threshold ? OVER_THRESHOLD : seriesColor(0)}
+        {...todayCellProps(row)}
+      />
+    )
+  })
+}
+
+/**
+ * 🔑 **מרנדר-סדרה אחד לכל שבעת סוגי-הגרף** — עמודה או קו, לפי `series[].kind` (C8).
+ *
+ * 🔴 **למה אחד ולא שלושה:** ‏jscpd מדד שלושה עותקים של אותו בלוק-פרופס (עמודה ב-`BarBody`,
+ * עמודה ב-`ComposedBody`, קו ב-`LineBody`) — ובדיוק בזה נולד הפער שהמאמת תפס: ל-`Bar`
+ * של הלוח-המעורב **לא** היה `stackId`, ול-`Line` שלו **לא** היה `activeDot`, כי כל עותק
+ * קיבל תיקון אחר. **מרנדר אחד הוא מה שמונע את הסטייה הבאה, לא מה שמנקה את הקודמת.**
+ *
+ * ‏`axisIds` — לוח דו-צירי (`ComposedChart`) מחייב `yAxisId` על כל סדרה; ‏`BarChart`/
+ * `LineChart` נושאים ציר-ערך יחיד **בלי מזהה**, ו-`yAxisId` שם היה מנתק את הסדרה מהציר.
+ * ‏`defaultKind` — סדרה שאינה מצהירה `kind`: עמודה בגרף-עמודות, קו בגרף-קווים.
+ */
+function seriesNode({
+  s,
+  index,
+  idPrefix,
+  data = [],
+  xKey,
+  onSelect,
+  selected,
+  defaultKind = 'bar',
+  axisIds = false,
+  stacked = false,
+}) {
+  const kind = s.kind ?? defaultKind
+  const yAxisId = axisIds ? (s.axis === 'right' ? 'right' : 'left') : undefined
+  if (kind === 'line') {
+    return (
+      <Line
+        key={s.key}
+        yAxisId={yAxisId}
+        type="monotone"
+        dataKey={s.key}
+        name={s.label}
+        unit={s.format}
+        stroke={seriesColor(index)}
+        strokeWidth={2}
+        // 🔴 קידוד-משני לקו: הפער בגוון בין טורקיז לסלייט נמדד כבלתי-מספיק (ר' הכותרת).
+        strokeDasharray={index === 0 ? undefined : '6 3'}
+        dot={{ r: 3 }}
+        activeDot={{
+          r: 5,
+          onClick: onSelect ? (_, payload) => onSelect(payload?.payload) : undefined,
+        }}
+      />
+    )
+  }
+  return (
     <Bar
       key={s.key}
+      yAxisId={yAxisId}
       dataKey={s.key}
       name={s.label}
+      unit={s.format}
       stackId={stacked ? 'a' : undefined}
       fill={fillFor(idPrefix, index)}
       radius={[4, 4, 0, 0]}
@@ -235,35 +314,19 @@ function BarSeries({ idPrefix, data, xKey, series, onSelect, stacked }) {
     >
       {/* כלל-המילוי §④: **אדום יחיד** לערך שחוצה סף מוגדר; שאר העמודות אינן משנות גוון.
           ‏`over_threshold` מגיע פר-שורה מה-RPC — הסף מוכרע בשרת, לא נגזר במסך. */}
-      {index === 0 &&
-        data.map((row, rowIndex) => (
-          <Cell
-            key={`${row[xKey]}-${rowIndex}`}
-            fill={row.over_threshold ? OVER_THRESHOLD : seriesColor(0)}
-          />
-        ))}
+      {index === 0 && barCells({ data, xKey, selected })}
     </Bar>
-  ))
+  )
+}
+
+function BarSeries({ idPrefix, data, xKey, series, onSelect, selected, stacked }) {
+  return series.map((s, index) =>
+    seriesNode({ s, index, idPrefix, data, xKey, onSelect, selected, stacked, defaultKind: 'bar' }),
+  )
 }
 
 function LineSeries({ series, onSelect }) {
-  return series.map((s, index) => (
-    <Line
-      key={s.key}
-      type="monotone"
-      dataKey={s.key}
-      name={s.label}
-      stroke={seriesColor(index)}
-      strokeWidth={2}
-      // 🔴 קידוד-משני לקו: הפער בגוון בין טורקיז לסלייט נמדד כבלתי-מספיק (ר' הכותרת).
-      strokeDasharray={index === 0 ? undefined : '6 3'}
-      dot={{ r: 3 }}
-      activeDot={{
-        r: 5,
-        onClick: onSelect ? (_, payload) => onSelect(payload?.payload) : undefined,
-      }}
-    />
-  ))
+  return series.map((s, index) => seriesNode({ s, index, onSelect, defaultKind: 'line' }))
 }
 
 // 🔑 **סוג-גרף אחד = פונקציה אחת.** הפיצול אינו סגנון: `ChartBody` אחד ששולט בשבעת
@@ -280,6 +343,35 @@ const commonTooltip = (unit) => (
 const categoryAxis = (xKey) => <XAxis dataKey={xKey} reversed={false} {...axisProps()} />
 
 const CHART_MARGIN = { top: 8, right: 8, bottom: 4, left: 4 }
+
+/**
+ * ‏**ערוץ-הצורה בפיזור** (`chart.shape_key`, תוספת C8 16/09) — 📑ב#10, במילותיו:
+ * *"הסטייה יוצאת מגודל-הנקודה… לצורה בינארית"*, ובנימוק שכתוב שם: **קידוד-שטח הוא הקידוד
+ * שהעין הגרועה בו ביותר**. ⇒ ‏`true` = משולש (מעל קו-הייחוס) · `false` = **עיגול חלול**.
+ * 🔑 **שני `<Scatter>` ולא צורה-פר-נקודה:** ‏Recharts קובע צורה ברמת-הסדרה, ופיצול לשתי
+ * סדרות הוא הדרך היחידה שבה גם המקרא וגם ה-DOM מבחינים ביניהן. ‏`shape_key` חסר ⇒ סדרה
+ * אחת ונקודה רגילה, בדיוק כמו קודם.
+ * 🚫 **ולא גוון** — 📐19 נועל גוון למשמעות אחת, וסטייה כבר מקודדת בצורה.
+ */
+function scatterParts(data, shapeKey) {
+  if (!shapeKey) return [{ key: 'all', data, fill: seriesColor(0) }]
+  return [
+    {
+      key: 'shape-on',
+      data: data.filter((row) => Boolean(row[shapeKey])),
+      shape: 'triangle',
+      fill: seriesColor(0),
+    },
+    {
+      key: 'shape-off',
+      data: data.filter((row) => !row[shapeKey]),
+      shape: 'circle',
+      // עיגול **חלול**: מתאר בלבד, בלי מילוי — ההבחנה היא בצורה ולא בכמות-הדיו.
+      fill: 'none',
+      stroke: seriesColor(0),
+    },
+  ]
+}
 
 function ScatterBody({ chart, onSelect }) {
   const { data = [], xKey, series = [], domain, refLines, unit } = chart
@@ -299,50 +391,75 @@ function ScatterBody({ chart, onSelect }) {
       <ZAxis dataKey="z" range={[40, 260]} />
       {renderRefLines(refLines)}
       {commonTooltip(unit)}
-      <Scatter
-        data={data}
-        fill={seriesColor(0)}
-        cursor={onSelect ? 'pointer' : undefined}
-        onClick={onSelect ? (point) => onSelect(point?.payload ?? point) : undefined}
-      />
+      {scatterParts(data, chart.shape_key).map((part) => (
+        <Scatter
+          key={part.key}
+          data={part.data}
+          shape={part.shape}
+          fill={part.fill}
+          stroke={part.stroke}
+          cursor={onSelect ? 'pointer' : undefined}
+          onClick={onSelect ? (point) => onSelect(point?.payload ?? point) : undefined}
+        />
+      ))}
     </ScatterChart>
   )
 }
 
-function ParetoBody({ chart, idPrefix, onSelect }) {
+/**
+ * ‏**סדרה מעורבת — עמודות וקו באותו לוח** (`series[].kind` · `series[].axis`, תוספת C8 16/09).
+ *
+ * 🔴 **נמדד 16/09/2026 ע"י מאמת-ההנהלה, וזה היה פגם חזותי אמיתי:** ‏`BarBody` צייר **כל**
+ * סדרה כעמודה על ציר-ה-₪ היחיד ⇒ קו-שולי-הרווח של מ3 (**אחוזים**, טווח 0–100) נחת כעמודה
+ * שלישית בגובה ~55 יחידות ליד עמודות של **1.9 מיליון ₪** — פס בלתי-נראה שנקרא כ"אפס".
+ * ⇒ `kind: 'line'` מצייר קו · `axis: 'right'` נותן לו ציר-ימני **נעול 0–100** (📐6), בדיוק
+ * כפי ש-`ParetoBody` דורש לסדרה-המצטברת שלו — ולכן שניהם אותו גוף.
+ *
+ * ⚠️ **ומה שלא נפתר כאן ומדווח:** ‏`refLines` של C8 אינם נוקבים באיזה ציר הם יושבים
+ * (רק `x`/`y`/`diagonal`) ⇒ בלוח דו-צירי הם נתלים על **הימני כשהוא קיים**, כמו בפארטו.
+ * דף שיצטרך קו-ייחוס על ציר-ה-₪ בלוח דו-צירי יידרש לשדה נוסף — פריט-חוזה, לא באג.
+ */
+function ComposedBody({ chart, idPrefix, onSelect, selected }) {
   const { data = [], xKey, series = [], domain, refLines, unit } = chart
-  // ⚠️ **שני צירי-Y — וזו סטייה מודעת מכלל כללי של "ציר אחד".** §5.2ב מכתיב
-  // `ComposedChart` עם `Bar` שמאלי ו-`Line` מצטבר ימני, ו-📐6 נועל את הימני ל-0–100.
-  // **חוזה-העיצוב גובר** (הוא ה-SSOT לאיך מצוירים גרפי מ11), והפער מדווח ולא מוכרע כאן.
+  const hasRight = series.some((s) => s.axis === 'right')
   return (
     <ComposedChart data={data} accessibilityLayer margin={CHART_MARGIN}>
       <HatchDefs idPrefix={idPrefix} series={series} />
       {commonGrid()}
       {categoryAxis(xKey)}
       <YAxis yAxisId="left" domain={valueDomain(domain)} {...axisProps()} />
-      <YAxis yAxisId="right" orientation="right" domain={[0, 100]} {...axisProps()} />
-      {renderRefLines(refLines, 'right')}
+      {hasRight && <YAxis yAxisId="right" orientation="right" domain={[0, 100]} {...axisProps()} />}
+      {renderRefLines(refLines, hasRight ? 'right' : 'left')}
       {commonTooltip(unit)}
-      <Bar
-        yAxisId="left"
-        dataKey={series[0]?.key}
-        name={series[0]?.label}
-        fill={seriesColor(0)}
-        radius={[4, 4, 0, 0]}
-        cursor={onSelect ? 'pointer' : undefined}
-        onClick={onSelect ? (_, index) => onSelect(data[index], index) : undefined}
-      />
-      <Line
-        yAxisId="right"
-        type="monotone"
-        dataKey={series[1]?.key}
-        name={series[1]?.label}
-        stroke={seriesColor(1)}
-        strokeWidth={2}
-        strokeDasharray="6 3"
-        dot={false}
-      />
+      {series.map((s, index) =>
+        seriesNode({ s, index, idPrefix, data, xKey, onSelect, selected, axisIds: true }),
+      )}
     </ComposedChart>
+  )
+}
+
+/**
+ * פארטו — **מקרה פרטי של הלוח המעורב, ולא גוף שני.**
+ * §5.2ב מכתיב `ComposedChart` עם `Bar` שמאלי ו-`Line` מצטבר ימני, ו-📐6 נועל את הימני
+ * ל-0–100 — כלומר בדיוק `kind`/`axis` של `ComposedBody`, רק שהמטען אינו מצהיר עליהם.
+ * ⇒ הם נגזרים כאן, והשלד אחד. 🔑 **וזה לא ניקיון:** שני עותקים של אותו שלד-`ComposedChart`
+ * נמדדו ע"י jscpd (7 שורות · 67 טוקנים), והשני הוא זה שהיה סוטה ביום שבו הראשון יתוקן.
+ * ⚠️ **ההפרש היחיד שנשאר:** הקו המצטבר מקבל עכשיו נקודות-קטגוריה (`dot`) כמו כל קו אחר.
+ * **אף מטען חי אינו מסוג `pareto` היום** (נמדד על 16 המטענים, 16/09) ⇒ אין כאן שינוי-מסך.
+ */
+function ParetoBody({ chart, idPrefix, onSelect, selected }) {
+  const series = (chart.series ?? []).map((s, index) => ({
+    ...s,
+    kind: index === 0 ? 'bar' : 'line',
+    axis: index === 0 ? 'left' : 'right',
+  }))
+  return (
+    <ComposedBody
+      chart={{ ...chart, series }}
+      idPrefix={idPrefix}
+      onSelect={onSelect}
+      selected={selected}
+    />
   )
 }
 
@@ -366,7 +483,7 @@ function LineBody({ chart, onSelect }) {
   )
 }
 
-function BarBody({ chart, idPrefix, onSelect }) {
+function BarBody({ chart, idPrefix, onSelect, selected }) {
   const { type, data = [], xKey, series = [], domain, refLines, unit, layout } = chart
   return (
     <BarChart
@@ -384,7 +501,15 @@ function BarBody({ chart, idPrefix, onSelect }) {
       <YAxis domain={valueDomain(domain)} {...axisProps()} />
       {renderRefLines(refLines)}
       {commonTooltip(unit)}
-      {BarSeries({ idPrefix, data, xKey, series, onSelect, stacked: type === 'stackedBar' })}
+      {BarSeries({
+        idPrefix,
+        data,
+        xKey,
+        series,
+        onSelect,
+        selected,
+        stacked: type === 'stackedBar',
+      })}
     </BarChart>
   )
 }
@@ -401,11 +526,24 @@ const CHART_BODIES = {
   histogram: BarBody,
 }
 
-function ChartBody({ chart, idPrefix, onSelect }) {
+// 🔑 **סדרה מעורבת נקבעת מ-`series[].kind` ולא מ-`chart.type`** — ‏`type` אומר *"זה גרף
+// עמודות"*, ו-`kind` אומר *"הסדרה השלישית בו היא קו"*. ‏`pareto` פטור: הוא **כבר** לוח
+// דו-צירי ייעודי, ו-`ComposedBody` היה מכפיל אותו.
+const hasMixedSeries = (chart) => {
+  const series = chart.series ?? []
+  return series.some((s) => s.kind === 'line') && series.some((s) => (s.kind ?? 'bar') === 'bar')
+}
+
+function ChartBody({ chart, idPrefix, onSelect, selected }) {
+  if (chart.type !== 'pareto' && hasMixedSeries(chart)) {
+    return (
+      <ComposedBody chart={chart} idPrefix={idPrefix} onSelect={onSelect} selected={selected} />
+    )
+  }
   // סוג לא-מוכר נופל ל-`bar` ואינו מפיל את המסך — אותו עיקרון כמו `format` לא-מוכר
   // ב-`reportsFormat`: שרת שהוסיף סוג לפני שהלקוח מכיר אותו מקבל תצוגה סבירה.
   const Body = CHART_BODIES[chart.type] ?? BarBody
-  return <Body chart={chart} idPrefix={idPrefix} onSelect={onSelect} />
+  return <Body chart={chart} idPrefix={idPrefix} onSelect={onSelect} selected={selected} />
 }
 
 /**
@@ -413,6 +551,25 @@ function ChartBody({ chart, idPrefix, onSelect }) {
  * 🔑 שתי סיבות, שתיהן מדודות: ① §⑤ #2 — טקסט עברי נשאר בזרימת-ה-RTL של הכרטיס ·
  * ② ה"דגימה" חייבת להראות את **הדפוס** ולא רק את הגוון, כי הגוון לבדו נמדד כבלתי-מספיק.
  */
+// 🔑 **הדגימה מראה את מה שהעין באמת צריכה להבחין בו:** סדרת-קו מדגימה **קו** (ולא מלבן
+// מלא שנראה כמו עמודה), וסדרת-עמודה שנייה ואילך מדגימה את **הדפוס** ולא רק את הגוון.
+function swatchStyle(s, index) {
+  const color = seriesColor(index)
+  if (s.kind === 'line') {
+    return {
+      background: 'transparent',
+      borderTop: `2px ${index === 0 ? 'solid' : 'dashed'} ${color}`,
+      height: '2px',
+      marginBlock: '4px',
+    }
+  }
+  if (index === 0) return { background: color }
+  return {
+    background: `repeating-linear-gradient(45deg, ${color} 0 3px, transparent 3px 6px)`,
+    outline: `1px solid ${color}`,
+  }
+}
+
 function ChartLegend({ series }) {
   if (series.length < 2) return null
   return (
@@ -425,14 +582,7 @@ function ChartLegend({ series }) {
           <span
             aria-hidden="true"
             className="inline-block h-2.5 w-4 rounded-sm"
-            style={
-              index === 0
-                ? { background: seriesColor(0) }
-                : {
-                    background: `repeating-linear-gradient(45deg, ${seriesColor(index)} 0 3px, transparent 3px 6px)`,
-                    outline: `1px solid ${seriesColor(index)}`,
-                  }
-            }
+            style={swatchStyle(s, index)}
           />
           {s.label}
         </li>
@@ -441,13 +591,44 @@ function ChartLegend({ series }) {
   )
 }
 
+// 🔤 **נוסח-הגיבוי, ולמה הוא לא הומצא:** ערוץ-הצורה נקוב ב-📑ב#10 **במקום אחד בלבד** —
+// הפיזור של מ6, שבו האלכסון הוא *"ההערכה התקיימה בדיוק"* ומעליו *"הגיעו יותר אורחים מהצפי"*.
+// ⇒ הגיבוי מתאר את **היחס לקו-הייחוס**, וכל מטען שמשמעותו אחרת מוסר `chart.shape_labels`
+// ‏(`{ on, off }`) ודורס אותו. 🚫 אין כאן ניסוח-מוצר חדש.
+const SHAPE_FALLBACK = Object.freeze({ on: 'מעל קו-הייחוס', off: 'על הקו או מתחתיו' })
+
+function ShapeLegend({ chart }) {
+  if (!chart.shape_key) return null
+  const labels = { ...SHAPE_FALLBACK, ...(chart.shape_labels ?? {}) }
+  return (
+    <ul
+      className="mb-2 flex flex-wrap gap-3 text-[11.5px] text-slate-600"
+      data-testid="chart-shape-legend"
+    >
+      <li className="flex items-center gap-1.5">
+        <span aria-hidden="true">▲</span>
+        {labels.on}
+      </li>
+      <li className="flex items-center gap-1.5">
+        <span aria-hidden="true">○</span>
+        {labels.off}
+      </li>
+    </ul>
+  )
+}
+
 /**
  * ‏`chart` — אובייקט-גרף של C8:
- * `{ type, title, series: [{key,label,format?}], data, xKey, domain, refLines, unit }`.
+ * `{ type, title, note?, series: [{key,label,format?,kind?,axis?}], data, xKey, domain,
+ *    refLines, unit, shape_key?, shape_labels? }`.
+ * ‏`series[].kind:'line'` + `axis:'right'` ⇒ לוח מעורב עם ציר-ימני נעול 0–100 (ר' `ComposedBody`).
+ * ‏`shape_key` ⇒ ערוץ-צורה בינארי בפיזור (📑ב#10) · `note` ⇒ שורת-פירוש מתחת לכותרת.
+ * ‏`data[].is_today` ⇒ עמודה חלולה-ומקווקוות (📐20) · `data[].over_threshold` ⇒ אדום (§④).
  * ‏`soWhat` — שורת-📐23, **מחוץ** לעטיפת-ה-LTR ומתחת לגרף.
  * ‏`onSelect(row, index)` — קרוס-פילטר; מחווט גם לעכבר (Cell/Bar) וגם למקלדת (הטבלה).
+ * ‏`selected` — ערך-ה-`xKey` שנבחר: העמודה שלו נשארת טורקיז והשאר יורדות ל-slate-300 (15-ד).
  */
-export default function ChartCard({ chart, soWhat, height = 260, onSelect }) {
+export default function ChartCard({ chart, soWhat, height = 260, onSelect, selected }) {
   const idPrefix = useId().replace(/:/g, '')
   if (!chart) return null
   const { title, series = [], data = [], xKey = 'x', unit } = chart
@@ -459,7 +640,17 @@ export default function ChartCard({ chart, soWhat, height = 260, onSelect }) {
     >
       {/* §⑤ #2 — הכותרת העברית נשארת **מחוץ** לעטיפת-ה-LTR, ברמת הכרטיס. */}
       <h3 className="mb-2.5 text-[13.5px] font-semibold text-slate-700">{title}</h3>
+      {/* ‏`chart.note` (תוספת C8 16/09) — **שורת-פירוש מתחת לכותרת**: מה העמודות אומרות,
+          מה קו-הייחוס מסמן, ואילו שורות נכללו. ⚠️ **בסיס ולא רמז** (📐2 · ⑩): הכרטיס של
+          גרף-הגיול נוקב במפורש בשורת-פירוש לכל דלי, ובלי המקום הזה היא הייתה מומצאת
+          שוב בכל לשונית. שכבת-ההטמעה (`<Hint>`) היא שכבה נפרדת ואינה מחליפה אותה. */}
+      {chart.note && (
+        <p className="mb-2 text-[11px] leading-relaxed text-slate-500" data-testid="chart-note">
+          {chart.note}
+        </p>
+      )}
       <ChartLegend series={series} />
+      <ShapeLegend chart={chart} />
 
       {/* §⑤ #1 — `dir="ltr"` על ה-div העוטף ולא על `<BarChart>`: Recharts אינו מכבד `dir`
           שיורש מהורה (Issues #263/#682/#4214).
@@ -474,7 +665,7 @@ export default function ChartCard({ chart, soWhat, height = 260, onSelect }) {
         data-testid="chart-figure"
       >
         <ResponsiveContainer width="100%" height="100%">
-          <ChartBody chart={chart} idPrefix={idPrefix} onSelect={onSelect} />
+          <ChartBody chart={chart} idPrefix={idPrefix} onSelect={onSelect} selected={selected} />
         </ResponsiveContainer>
       </div>
 

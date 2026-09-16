@@ -23,10 +23,46 @@ const MASKED_NODE = <span className="text-sm font-normal text-slate-400">{MASKED
 
 const ARROW = { up: '▲', down: '▼' }
 
-function CompareLine({ compare }) {
+/**
+ * ‏📑ב · שורת-המכנה-הגלוי (`tiles[].sub`, תוספת C8 16/09/2026) — *"⁦144⁩ מתוך ⁦163⁩ משובים"*.
+ *
+ * 🔴 **למה היא מתחת לערך ומעל שורת-ההשוואה, ולא היכן שנוח:** נמדד על **כל ארבעת המוקאפים
+ * המאושרים** — `.tile > .lb · .vl · .sub · .cmp · .win` בסדר הזה בדיוק, בכל אריח.
+ * ⚠️ **וכשהאריח ממוסך היא נעלמת יחד עם הערך** — מכנה בלי מונה מספר למי שאין לו הרשאה
+ * בדיוק את מה ש-§7.97 חוסם *(*"מתוך 163 משובים"* לבדו הוא עדיין נתון)*.
+ */
+function SubLine({ sub }) {
+  if (!sub) return null
+  return (
+    // 🔴 **`max-w-[210px]` — רוחב מדוד ולא טעם.** ‏`StatTile` הוא `flex` שאינו נמתח, ולכן
+    // שורת-מכנה ארוכה **מרחיבה את האריח**: נמדד בדפדפן (1280px, 16/09) שרצועת-האריחים של
+    // מ2 תפחה לשלוש שורות ולאריחים ברוחב ⁦248⁩–⁦535⁩px, בעוד ⑩ של הכרטיס מודד *"ארבעת
+    // האריחים על שורה אחת"*. הערך מועתק מהעותק המקומי של לשונית-ההנהלה, שם הוא נמדד.
+    <span
+      className="mt-1 block max-w-[210px] text-[12px] leading-[1.4] text-slate-600"
+      data-testid="kpi-sub"
+    >
+      {sub}
+    </span>
+  )
+}
+
+/**
+ * ‏`fallbackFormat` — ‏`tile.format` של האריח עצמו.
+ * 🔴 **נמדד 16/09/2026, וזה היה פגם ולא ליטוש:** ‏`compare` של C8 אינו נושא `format` משלו
+ * (נמדד: **0 מתוך 99** חצאי-השוואה בכל המטענים החיים) ⇒ `formatByType(206002, undefined)`
+ * נפל ל-`text` והמסך הציג **`206002`** ליד ערך שמעליו כתוב `236,382 ₪`. ‏📐4 דורש *"אותו
+ * מדד = אותו עיגול בכל דף"*, וכאן זה נשבר **בתוך אריח אחד**.
+ * ⚠️ **וערך שכבר מחרוזת עובר כמות-שהוא** — לשונית שתיקנה את זה אצלה בטרנספורם מוסרת
+ * מחרוזת מעוצבת, ועיצוב-כפול היה מחזיר `—` (‏`Number("⁦206,002 ₪⁩")` אינו מספר).
+ */
+function CompareLine({ compare, fallbackFormat }) {
   if (!compare) return null
+  const format = compare.format ?? fallbackFormat
   const glyph = ARROW[compare.direction]
-  const delta = compare.delta === undefined ? null : formatDelta(compare.delta, compare.format)
+  const delta = compare.delta === undefined ? null : formatDelta(compare.delta, format)
+  const valueText =
+    typeof compare.value === 'string' ? compare.value : formatByType(compare.value, format)
   return (
     // ⚠️ `display:block` ולא `flex` — 🔴 **זה היה שורש רב-קבצי** (§⑥, תיקון 10/09/2026):
     // פלקס הופך כל ילד ישיר לפריט-פלקס, `.ltr` מאבד את `inline-block`, ו-`gap` נדחף גם
@@ -39,7 +75,7 @@ function CompareLine({ compare }) {
           {glyph}
         </span>
       )}
-      {compare.label}: <Ltr>{formatByType(compare.value, compare.format)}</Ltr>
+      {compare.label}: <Ltr>{valueText}</Ltr>
       {delta && delta !== NO_VALUE && <> ({delta})</>}
     </span>
   )
@@ -47,7 +83,8 @@ function CompareLine({ compare }) {
 
 /**
  * ‏`tile` הוא שורת-אריח של C8:
- * `{ key, label, value, format, window, compare: {value,label,direction,delta?} | null, target }`.
+ * `{ key, label, value, format, sub, window, compare: {value,label,direction,delta?} | null, target }`.
+ * ‏`sub` — 📑ב, המכנה-הגלוי (*"⁦144⁩ מתוך ⁦163⁩ משובים"*); מגיע **מעוצב מהשרת** כמחרוזת.
  *
  * ‏`masked` — האריח קיים והערך חסום-הרשאה (§7.97). ⚠️ **שונה מ"אין נתון"**: `MASKED_TEXT`
  * אומר *"לא זמין בתפקידך"*, ו-`—` אומר *"אין לי את הנתון"*. אין להחליף ביניהם.
@@ -64,7 +101,9 @@ export default function KpiTile({ tile, masked = false, onOpenTarget }) {
       value={value}
       sub={
         <>
-          <CompareLine compare={masked ? null : tile.compare} />
+          {/* 📑ב — שורת-המכנה-הגלוי, מתחת לערך ומעל ההשוואה (סדר-המוקאפ). */}
+          <SubLine sub={masked ? null : tile.sub} />
+          <CompareLine compare={masked ? null : tile.compare} fallbackFormat={tile.format} />
           {/* 📐3: חלון-הזמן בכל אריח — ואריח שאינו מגיב למסנן נושא זאת במפורש. */}
           {tile.window && (
             <span className="block text-[10.5px] text-slate-500" data-testid="kpi-window">

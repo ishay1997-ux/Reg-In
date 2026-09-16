@@ -16,12 +16,13 @@
 // **תמיד**. הסתרה הייתה משאירה את המשתמשת בלי לדעת שהיכולת קיימת.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { listCustomers } from '@/modules/02_customers/api'
 import { MASKED_TEXT } from '@/lib/dashboard'
 import { formatIsraelDate, formatWindowLabel } from '@/lib/reportsFormat'
 import { cn } from '@/lib/utils'
+import { ROW_DOOR_KINDS } from './api'
 import { REPORT_TABS, canOpenTab, findSurface, findTab } from './reportsCatalog'
 import Envelope from './components/Envelope'
 import FiltersBar from './components/FiltersBar'
@@ -42,6 +43,53 @@ const TAB_COMPONENTS = {
 // 🔤 ת8 #5, מילה-במילה: תפקיד בלי אף לשונית מקבל **מסך עם ארבע לשוניות ממוסכות והודעה
 // אחת** — לא מסך ריק ולא הפניה. הנוסח הוא של האפיון ואינו מנוסח מחדש.
 export const NO_TABS_SENTENCE = 'אין דוחות זמינים בתפקידך — פנה למנכ"ל'
+
+/**
+ * 🚪 **מנתב-הדלתות של המעטפת — אחד לכל ארבע הלשוניות** (הכרעה 33 · הכרעה 19).
+ *
+ * 🔴 **הפגם שהוא סוגר, נמדד 16/09/2026:** ‏`onDrill` כתב *כל* ערך שקיבל אל `?drill=`, ולכן
+ * יעד-אריח (`{tab, report, drill}`) ודלת-שורה (`{kind, id}`) נחתו שניהם כ**מצב-דריל** של
+ * הדוח הנוכחי — כלומר נשלחו כ-`p_drill` לאותו RPC, וכלום לא ניווט לשום מקום *(נמדד: לחיצה
+ * על "דיילות אדומות" נשארה על מ14)*. **שלוש משמעויות באותו callback, אחת מהן מיושמת.**
+ *
+ * ‏**שלושת הענפים, לפי סדר:**
+ * ‏① `{tab, report}` ⇒ **דלת-משטח**, גם חוצת-לשונית: הכתובת מקבלת לשונית+דוח (+`drill`
+ *    כשהיעד נושא רמה, כמו אריח *"מעל 60 יום"* של מ9 שנפתח בדלי `d90p`). **לשונית ממוסכת
+ *    ⇒ לא קורה כלום** — ת8 אינו מתיר לעקוף מיסוך דרך אריח.
+ * ‏② `{kind, id}` מתוך `ROW_DOOR_KINDS` ⇒ **ניווט אמיתי** למסך של הישות.
+ * ‏③ כל השאר (`year`/`month`/`tier`/`bucket`/`sku`/פירור/`null`) ⇒ **מצב-דריל בכתובת**,
+ *    בדיוק כפי שהיה.
+ *
+ * ⚠️ **ושתי מדידות שהמימוש נשען עליהן, ולא הנחות:**
+ * ‏① `target.tab` הוא **התווית העברית** (`'כספים'`), לא ה-`key`. ⁦99⁩ מתוך ⁦99⁩ היעדים החיים.
+ * ‏② `target.report` **אינו אחיד בין ה-RPC-ים**: מ2/מ7/מ9 מחזירים **שם-פונקציה**
+ *    (`report_m09_aging`) ומ14/מ16/מ19 מחזירים **שם קצר בעברית** (`'גיול חובות'`).
+ *    ⇒ המנתב מקבל את שניהם (וגם `slug`), **והפער מדווח כשאלת-חוזה** — לא מתוקן כאן.
+ */
+function locateDoor(next) {
+  if (!next?.tab || !next?.report) return null
+  const tab = REPORT_TABS.find((t) => t.label === next.tab || t.key === next.tab)
+  if (!tab) return null
+  const surface = tab.surfaces.find(
+    (s) => s.rpc === next.report || s.name === next.report || s.slug === next.report,
+  )
+  // יעד שאינו בקטלוג (משטח נדחה, למשל) — **לא מנווטים לשום מקום** ולא זורקים.
+  return surface ? { tab, surface, drill: next.drill ?? null } : null
+}
+
+/**
+ * 🔗 **המסכים שדלת-שורה מובילה אליהם — נמדדו ב-`src/App.jsx`, לא הונחו.**
+ * ‏`project` ⇒ `/projects/:id` · `customer` ⇒ `/customers/:customerId` — שני מסכים אמיתיים.
+ * 🔴 **`hostess` הוא חצי-דלת, ומוצהר ככזה:** ל**כרטיס-הדיילת אין כתובת** — ‏`HostessesPage`
+ * פותח אותו ממצב מקומי (`cardHostessId`), ולכן הלחיצה נוחתת על **מסך-הדיילות** ולא על
+ * הכרטיס עצמו. הוספת `?hostess=<id>` היא נגיעה בקוד **מוזג של מודול 4** (אדווה + רגרסיה
+ * מלאה שלו) ⇒ **פריט-המשך מדווח, לא תיקון שקט.**
+ */
+const DOOR_PATHS = Object.freeze({
+  project: (id) => `/projects/${id}`,
+  customer: (id) => `/customers/${id}`,
+  hostess: () => '/hostesses',
+})
 
 function TabButton({ tab, active, masked, onSelect }) {
   return (
@@ -97,6 +145,7 @@ function PageHeading({ surface, windowLabel }) {
 
 export default function ReportsPage() {
   const { permissions } = useAuth()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   // ריענון ידני אחרי תקלה — אותו דפוס `reloadTick` בדיוק כמו `DashboardPage`.
   const [reloadTick, setReloadTick] = useState(0)
@@ -219,6 +268,33 @@ export default function ReportsPage() {
     clearFilters: () => writeParams({ period: 'all', customer: undefined }),
   }
 
+  // 🚪 שלושת הענפים — ר' `locateDoor`/`DOOR_PATHS` למעלה.
+  function openDoor(next) {
+    if (next?.tab && next?.report) {
+      const door = locateDoor(next)
+      // 🚫 יעד שאינו בקטלוג (משטח נדחה · שם שהשתנה) ⇒ **לא מנווטים ולא כותבים מצב-זבל**;
+      // בלי זה הוא היה נופל לענף ③ ונכתב כ-`?drill={"tab":…}` — אותה תקלה, כניסה אחרת.
+      // ת8 — ומיסוך אינו נעקף דרך אריח: הדלת פשוט אינה נפתחת, בלי שגיאה ובלי ניווט-חצי.
+      if (!door || !canOpenTab(door.tab, permissions)) return
+      writeParams({
+        tab: door.tab.key,
+        report: door.surface.slug,
+        drill: door.drill ? JSON.stringify(door.drill) : undefined,
+        page: undefined,
+      })
+      // דלת פותחת **דף אחר** — והמשתמשת עומדת בגובה-הגלילה של הדף הקודם.
+      // ⚠️ `?.()` על המתודה עצמה: ‏`scrollTo` אינו ממומש ב-jsdom (אותו תקדים מדויק כמו
+      // `scrollIntoView` ב-`SalaryReportDialog.jsx:596`), ובלי זה כל בדיקת-דלת רועשת.
+      window.scrollTo?.({ top: 0, behavior: 'smooth' })
+      return
+    }
+    if (next?.id != null && ROW_DOOR_KINDS.includes(next.kind)) {
+      navigate(DOOR_PATHS[next.kind](next.id))
+      return
+    }
+    writeParams({ drill: next ? JSON.stringify(next) : undefined })
+  }
+
   if (!activeTab) {
     return (
       <div data-testid="reports-page">
@@ -269,9 +345,7 @@ export default function ReportsPage() {
         surface={activeSurface}
         filters={filters}
         drill={drill}
-        onDrill={(nextDrill) =>
-          writeParams({ drill: nextDrill ? JSON.stringify(nextDrill) : undefined })
-        }
+        onDrill={openDoor}
         onWindow={handleWindow}
         onRetry={() => setReloadTick((t) => t + 1)}
       />

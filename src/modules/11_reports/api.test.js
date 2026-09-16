@@ -147,15 +147,28 @@ describe('approveFeedbackAiRun — הכתיבה היחידה של המודול',
   })
 })
 
-describe('normalizeCharts — תקרת שני גרפים לדף (C8)', () => {
+describe('normalizeCharts — תקרת ארבעת הגרפים לדף (C8 · §9 D-28)', () => {
   it('אובייקט יחיד ⇒ מערך בן אחד · null ⇒ ריק', () => {
     expect(normalizeCharts({ type: 'bar' })).toEqual([{ type: 'bar' }])
     expect(normalizeCharts(null)).toEqual([])
   })
 
-  it('מערך נחתך לשניים — גרף שלישי היה נראה תקין לחלוטין', () => {
-    expect(normalizeCharts([{ type: 'bar' }, { type: 'line' }, { type: 'scatter' }])).toHaveLength(
-      2,
-    )
+  // 🔴 **המקרה שהעלה את התקרה:** המוקאפ המאושר של מ20 מצייר **ארבעה** גרפים, ו-📑ב#17
+  // אוסר לאחד את שני גרפי-הסיבות ⇒ תקרה של 2 הייתה **מוחקת שני גרפים מאושרים** בשקט.
+  it('ארבעה גרפים עוברים במלואם — המוקאפ המאושר של מ20 מצייר ארבעה', () => {
+    const four = [{ type: 'bar' }, { type: 'bar' }, { type: 'bar' }, { type: 'bar' }]
+    expect(normalizeCharts(four)).toHaveLength(4)
+  })
+
+  it('מעל התקרה עדיין נחתך — גרף חמישי היה נראה תקין לחלוטין', () => {
+    const five = [
+      { type: 'bar' },
+      { type: 'line' },
+      { type: 'scatter' },
+      { type: 'histogram' },
+      { type: 'pareto' },
+    ]
+    expect(normalizeCharts(five)).toHaveLength(4)
+    expect(normalizeCharts(five).at(-1)).toEqual({ type: 'histogram' })
   })
 })

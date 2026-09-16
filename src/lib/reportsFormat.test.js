@@ -155,6 +155,23 @@ describe('formatByType — המיפוי שהחוזה (C8) מכריז עליו', 
     expect(formatByType(68, 'days')).toBe(`${LRI}68${PDI} ימים`)
     expect(formatByType(2.35, 'ratio')).toBe(`${LRI}2.4${PDI}`)
     expect(formatByType('2026-09-16', 'date')).toBe('16/09/2026')
+    expect(formatByType(0.8342, 'score')).toBe(`${LRI}0.834${PDI}`)
+  })
+
+  // 🔴 **המבחן שמפריד בין `score` ל-`ratio`, ולכן הוא הסיבה ששני הפורמטים קיימים:** שלוש
+  // דיילות שציוניהן 0.834 · 0.871 · 0.902 מרנדרות **שלושה ערכים שונים** ב-`score`, ושני
+  // ערכים בלבד ב-`ratio` — כלומר העמודה שהדוח ממוין לפיה הייתה מציגה שוויון שאינו קיים.
+  it('score מבחין בין ציונים ש-ratio היה משטח, ו-ratio נשאר בספרה אחת', () => {
+    const scores = [0.834, 0.871, 0.902]
+    expect(new Set(scores.map((s) => formatByType(s, 'score'))).size).toBe(3)
+    expect(new Set(scores.map((s) => formatByType(s, 'ratio'))).size).toBe(2)
+    expect(formatByType(40.82, 'ratio')).toBe(`${LRI}40.8${PDI}`)
+  })
+
+  it('score חסר ⇒ מקף, ואינו 0.000', () => {
+    expect(formatByType(null, 'score')).toBe(NO_VALUE)
+    expect(formatByType(undefined, 'score')).toBe(NO_VALUE)
+    expect(formatByType(0, 'score')).toBe(`${LRI}0.000${PDI}`)
   })
 
   // 🔑 פורמט שהשרת הוסיף והלקוח עוד לא מכיר — הערך מוצג גולמי, המסך לא נופל.

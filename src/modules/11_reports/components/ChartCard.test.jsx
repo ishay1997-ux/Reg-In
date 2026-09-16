@@ -146,6 +146,204 @@ describe('ChartCard — חוזה §⑤', () => {
   })
 })
 
+// 🔴 **הפגם שהמדידה תפסה 16/09/2026:** ‏`BarBody` צייר כל סדרה כעמודה על ציר-ה-₪ היחיד,
+// ולכן קו-שולי-הרווח של מ3 (**אחוזים**, ~55) נחת כעמודה שלישית ליד עמודות של 1.9 מיליון ₪.
+describe('ChartCard — סדרה מעורבת (series[].kind · series[].axis)', () => {
+  // 🌱 שלוש הסדרות של מ3, מילה-במילה מהמטען החי (`report_m03_trends`, 16/09/2026).
+  const MIXED = {
+    type: 'bar',
+    title: 'הכנסה ושולי-רווח לפי שנה',
+    xKey: 'year',
+    unit: 'money',
+    series: [
+      { key: 'revenue', label: 'הכנסה', kind: 'bar', axis: 'left', format: 'money' },
+      { key: 'revenue_prev', label: 'הכנסה אשתקד', kind: 'bar', axis: 'left', format: 'money' },
+      { key: 'margin', label: 'שולי-רווח', kind: 'line', axis: 'right', format: 'percent' },
+    ],
+    data: [
+      { year: 2024, revenue: 1385815, revenue_prev: 1100000, margin: 55.9 },
+      { year: 2025, revenue: 1922441, revenue_prev: 1385815, margin: 58.3 },
+    ],
+  }
+
+  it('סדרת kind:"line" מצוירת כקו ולא כעמודה שלישית', () => {
+    render(<ChartCard chart={MIXED} />)
+    expect(screen.getByTestId('recharts-ComposedChart')).toBeInTheDocument()
+    expect(screen.queryByTestId('recharts-BarChart')).toBeNull()
+    expect(screen.getAllByTestId('recharts-Bar')).toHaveLength(2)
+    const line = screen.getByTestId('recharts-Line')
+    expect(JSON.parse(line.dataset.props).dataKey).toBe('margin')
+  })
+
+  // 📐6 — ציר-אחוזים נעול 0–100; בלי זה הקו היה נמדד מול טווח-ה-₪ ונראה שטוח.
+  it('axis:"right" מייצר ציר-ימני נעול 0–100, והקו יושב עליו', () => {
+    render(<ChartCard chart={MIXED} />)
+    const axes = screen.getAllByTestId('recharts-YAxis').map((n) => JSON.parse(n.dataset.props))
+    const right = axes.find((a) => a.orientation === 'right')
+    expect(right.domain).toEqual([0, 100])
+    expect(right.yAxisId).toBe('right')
+    expect(JSON.parse(screen.getByTestId('recharts-Line').dataset.props).yAxisId).toBe('right')
+    const bars = screen.getAllByTestId('recharts-Bar').map((n) => JSON.parse(n.dataset.props))
+    expect(bars.every((b) => b.yAxisId === 'left')).toBe(true)
+  })
+
+  it('בלי axis:"right" נשאר ציר אחד, והכול עליו', () => {
+    const leftOnly = {
+      ...MIXED,
+      series: MIXED.series.map((s) => ({ ...s, axis: 'left', format: 'money' })),
+    }
+    render(<ChartCard chart={leftOnly} />)
+    const axes = screen.getAllByTestId('recharts-YAxis').map((n) => JSON.parse(n.dataset.props))
+    expect(axes.filter((a) => a.orientation === 'right')).toHaveLength(0)
+  })
+
+  // ⚠️ הטולטיפ מעצב פר-סדרה: ₪ לעמודות, % לקו — אותו לוח, שתי יחידות.
+  it('כל סדרה נושאת את הפורמט שלה כ-unit, לטולטיפ', () => {
+    render(<ChartCard chart={MIXED} />)
+    expect(JSON.parse(screen.getByTestId('recharts-Line').dataset.props).unit).toBe('percent')
+    const bars = screen.getAllByTestId('recharts-Bar').map((n) => JSON.parse(n.dataset.props))
+    expect(bars.map((b) => b.unit)).toEqual(['money', 'money'])
+  })
+
+  it('סדרות שכולן קו נשארות LineChart — הפיצול נקבע בערבוב, לא ב-kind לבדו', () => {
+    const allLines = {
+      ...MIXED,
+      type: 'line',
+      series: MIXED.series.map((s) => ({ ...s, kind: 'line', axis: 'left' })),
+    }
+    render(<ChartCard chart={allLines} />)
+    expect(screen.getByTestId('recharts-LineChart')).toBeInTheDocument()
+    expect(screen.queryByTestId('recharts-ComposedChart')).toBeNull()
+  })
+
+  // פארטו **הוא** הלוח המעורב, עם `kind`/`axis` שנגזרים ולא מוצהרים במטען (§5.2ב).
+  it('פארטו נגזר לאותו שלד: עמודה אחת שמאלה וקו מצטבר על ציר ימני נעול', () => {
+    render(<ChartCard chart={{ ...MIXED, type: 'pareto' }} />)
+    expect(screen.getAllByTestId('recharts-Bar')).toHaveLength(1)
+    const axes = screen.getAllByTestId('recharts-YAxis').map((n) => JSON.parse(n.dataset.props))
+    expect(axes.find((a) => a.orientation === 'right').domain).toEqual([0, 100])
+    const lines = screen.getAllByTestId('recharts-Line').map((n) => JSON.parse(n.dataset.props))
+    expect(lines.every((l) => l.yAxisId === 'right')).toBe(true)
+  })
+})
+
+describe('ChartCard — 📐20: עמודת-"היום" חלולה ומקווקוות', () => {
+  const TODAY_CHART = {
+    ...BAR_CHART,
+    series: [BAR_CHART.series[0]],
+    data: [
+      { period: 'ינואר', revenue: 46400 },
+      { period: 'ספטמבר', revenue: 25000, is_today: true },
+    ],
+  }
+
+  it('רק העמודה שסומנה is_today מקבלת מתאר מקווקו', () => {
+    render(<ChartCard chart={TODAY_CHART} />)
+    const cells = screen.getAllByTestId('recharts-Cell').map((n) => JSON.parse(n.dataset.props))
+    expect(cells[0].strokeDasharray).toBeUndefined()
+    expect(cells[1].strokeDasharray).toBe('4 2')
+    expect(cells[1].fillOpacity).toBe(0.55)
+  })
+
+  // 🚫 הסימון הוא **צורה**, לא גוון — 📐19 נועל גוון למשמעות אחת, וכאן היא כבר תפוסה.
+  it('הסימון אינו משנה את הגוון של העמודה', () => {
+    render(<ChartCard chart={TODAY_CHART} />)
+    const cells = screen.getAllByTestId('recharts-Cell').map((n) => JSON.parse(n.dataset.props))
+    expect(cells[1].fill).toBe(cells[0].fill)
+  })
+})
+
+describe('ChartCard — הכרעה 15-ד: העמודה הנבחרת מסומנת', () => {
+  // 🔴 בלי זה הסינון-הצולב חסר את חצי-המשוב שלו: הטבלה מתכווצת, והגרף נראה כמו קודם.
+  it('העמודה הנבחרת נשארת טורקיז והשאר יורדות ל-slate-300', () => {
+    render(<ChartCard chart={BAR_CHART} selected="פברואר" />)
+    const cells = screen.getAllByTestId('recharts-Cell').map((n) => JSON.parse(n.dataset.props))
+    expect(cells[0].fill).toBe('#CAD5E2')
+    // ⚠️ הנבחרת שומרת על הגוון שלה — כאן היא גם חוצת-סף, ולכן אדומה (§④).
+    expect(cells[1].fill).toBe('#E7000B')
+  })
+
+  it('בלי בחירה אף עמודה אינה מעומעמת', () => {
+    render(<ChartCard chart={BAR_CHART} />)
+    const cells = screen.getAllByTestId('recharts-Cell').map((n) => JSON.parse(n.dataset.props))
+    expect(cells.some((c) => c.fill === '#CAD5E2')).toBe(false)
+  })
+})
+
+describe('ChartCard — 📑ב#10: ערוץ-הצורה בפיזור', () => {
+  const SCATTER = {
+    type: 'scatter',
+    title: 'קהל מול צוות',
+    xKey: 'estimated',
+    series: [
+      { key: 'estimated', label: 'הערכה' },
+      { key: 'actual', label: 'בפועל' },
+    ],
+    data: [
+      { estimated: 100, actual: 140, above: true },
+      { estimated: 200, actual: 180, above: false },
+      { estimated: 300, actual: 320, above: true },
+    ],
+  }
+
+  it('בלי shape_key — סדרה אחת, נקודה רגילה (התנהגות קודמת נשמרת)', () => {
+    render(<ChartCard chart={SCATTER} />)
+    const scatters = screen.getAllByTestId('recharts-Scatter')
+    expect(scatters).toHaveLength(1)
+    expect(JSON.parse(scatters[0].dataset.props).shape).toBeUndefined()
+  })
+
+  it('shape_key מפצל למשולש ולעיגול-חלול, ומחלק את הנקודות נכון', () => {
+    render(<ChartCard chart={{ ...SCATTER, shape_key: 'above' }} />)
+    const props = screen.getAllByTestId('recharts-Scatter').map((n) => JSON.parse(n.dataset.props))
+    const triangle = props.find((p) => p.shape === 'triangle')
+    const circle = props.find((p) => p.shape === 'circle')
+    expect(triangle.data).toHaveLength(2)
+    expect(circle.data).toHaveLength(1)
+    // עיגול **חלול**: מתאר בלבד — ההבחנה בצורה, לא בכמות-הדיו ולא בגוון.
+    expect(circle.fill).toBe('none')
+    expect(circle.stroke).toBe(triangle.fill)
+  })
+
+  it('המקרא מסביר את שתי הצורות, ונוסח מהמטען דורס את נוסח-הגיבוי', () => {
+    const { rerender } = render(<ChartCard chart={{ ...SCATTER, shape_key: 'above' }} />)
+    expect(screen.getByTestId('chart-shape-legend')).toHaveTextContent('מעל קו-הייחוס')
+    rerender(
+      <ChartCard
+        chart={{
+          ...SCATTER,
+          shape_key: 'above',
+          shape_labels: { on: 'הגיעו יותר מהצפי', off: 'כצפי או פחות' },
+        }}
+      />,
+    )
+    expect(screen.getByTestId('chart-shape-legend')).toHaveTextContent('הגיעו יותר מהצפי')
+  })
+
+  it('בלי shape_key אין מקרא-צורות כלל', () => {
+    render(<ChartCard chart={SCATTER} />)
+    expect(screen.queryByTestId('chart-shape-legend')).toBeNull()
+  })
+})
+
+describe('ChartCard — chart.note', () => {
+  it('שורת-הפירוש מוצגת מתחת לכותרת כשהמטען נתן אותה', () => {
+    const note = 'כל עמודה היא דלי של איחור — כמה ימים עברו מאז מועד הפירעון.'
+    render(<ChartCard chart={{ ...BAR_CHART, note }} />)
+    const noteNode = screen.getByTestId('chart-note')
+    expect(noteNode).toHaveTextContent(note)
+    const heading = screen.getByRole('heading', { name: BAR_CHART.title })
+    expect(
+      heading.compareDocumentPosition(noteNode) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  })
+
+  it('בלי note אין שורה ריקה', () => {
+    render(<ChartCard chart={BAR_CHART} />)
+    expect(screen.queryByTestId('chart-note')).toBeNull()
+  })
+})
+
 describe('ChartCard — 📐5/📐6: ציר מאפס וקווי-ייחוס', () => {
   it('בלי domain מה-RPC — הציר מתחיל באפס ואינו נקטע', () => {
     render(<ChartCard chart={BAR_CHART} />)
