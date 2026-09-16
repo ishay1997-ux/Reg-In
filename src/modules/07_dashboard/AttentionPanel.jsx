@@ -47,13 +47,17 @@ export default function AttentionPanel({ summary }) {
               <span className="text-sm font-semibold text-slate-400">{MASKED_TEXT}</span>
             ) : (
               <>
-                <span className="text-xl font-bold text-slate-800">
-                  {cat.count === 0 ? (
-                    <span className="text-sm font-semibold text-slate-400">✓ אין</span>
-                  ) : (
-                    <Ltr>{cat.count}</Ltr>
-                  )}
-                </span>
+                {/* 🔴 המספר לעולם לא לבדו (16/09/2026): `4` הופך ל-`4 אירועים חסרי
+                    דיילות ב-14 הימים הקרובים`. שם-העצם **וגם** מסנן-האוכלוסייה נולדים
+                    ב-src/lib/dashboard.js (כלל 14) — הרכיב רק מציב אותם זה לצד זה. */}
+                {cat.count === 0 ? (
+                  <span className="text-sm font-semibold text-slate-400">✓ אין</span>
+                ) : (
+                  <span className="text-[13px] leading-snug text-slate-600">
+                    <Ltr className="ml-1 text-xl font-bold text-slate-800">{cat.count}</Ltr>
+                    {cat.noun}
+                  </span>
+                )}
                 {cat.topLine && (
                   <span className="block truncate text-[11.5px] text-slate-500">{cat.topLine}</span>
                 )}

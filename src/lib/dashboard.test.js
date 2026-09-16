@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   deriveCalendarColor,
   calendarColorMeta,
+  isWithinWarningWindow,
   staffingRatioLabel,
   logisticsRatioLabel,
   colorProjects,
@@ -17,130 +18,106 @@ import {
   filterCalendarProjects,
   colorCounts,
 } from '@/lib/dashboard'
+import { PROJECT_STATUS_LABELS } from '@/lib/projects'
 
 const TODAY = '2026-09-03'
 
 // ── deriveCalendarColor / colorProjects (§7.94) ──────────────────────────────
 
-describe('deriveCalendarColor — הזוג הראשי: חוסר = staffingIncomplete OR logisticsIncomplete', () => {
-  const farFromToday = {
+// ✏️ **16/09/2026 — הבדיקות של "גבול 14 הימים" נמחקו במודע, לא התיישנו מאליהן.**
+// הן היו ההוכחה הנעולה של §7.94 בנוסחו הישן (13/14 ⇒ אדום · 15 ⇒ צהוב). מרגע
+// ש-`deriveCalendarColor` מפסיקה לתלות בשעון, אין להן מה להוכיח — והמחיקה נרשמת כאן
+// כדי שלא תיקרא בסקירה הבאה כאובדן-כיסוי שקט. במקומן: טבלת-מיפוי מלאה + השומר
+// שהפונקציה **אינה זזה** כשמזיזים את היום.
+describe('deriveCalendarColor — הצבע הוא הסטטוס, מיפוי מלא', () => {
+  const base = {
     project_id: 1,
-    project_status: 'in_progress',
-    final_event_date: '2026-12-01', // 89 ימים מהיום — מעבר לכל warningDays סביר
-  }
-
-  it('איוש מלא + לוגיסטיקה חסרה ⇒ חוסר (רחוק ⇒ צהוב)', () => {
-    const project = {
-      ...farFromToday,
-      required_hostess_count: 5,
-      hostesses_confirmed: 5,
-      logistics_ready: 1,
-      logistics_total: 3,
-    }
-    expect(deriveCalendarColor(project, TODAY, 14)).toBe('yellow')
-  })
-
-  it('איוש חסר + לוגיסטיקה מלאה ⇒ חוסר (רחוק ⇒ צהוב)', () => {
-    const project = {
-      ...farFromToday,
-      required_hostess_count: 5,
-      hostesses_confirmed: 2,
-      logistics_ready: 3,
-      logistics_total: 3,
-    }
-    expect(deriveCalendarColor(project, TODAY, 14)).toBe('yellow')
-  })
-
-  it('שני המדדים מלאים ⇒ ירוק', () => {
-    const project = {
-      ...farFromToday,
-      required_hostess_count: 5,
-      hostesses_confirmed: 5,
-      logistics_ready: 3,
-      logistics_total: 3,
-    }
-    expect(deriveCalendarColor(project, TODAY, 14)).toBe('green')
-  })
-
-  it('logistics_total=0 נחשב הושלם (אירוע בלי פריטי-לוגיסטיקה אינו "0% מוכן")', () => {
-    const project = {
-      ...farFromToday,
-      required_hostess_count: 4,
-      hostesses_confirmed: 4,
-      logistics_ready: 0,
-      logistics_total: 0,
-    }
-    expect(deriveCalendarColor(project, TODAY, 14)).toBe('green')
-  })
-})
-
-describe('deriveCalendarColor — גבול 14 הימים ו-warningDays חסר', () => {
-  // איוש חסר קבוע (2/4) לכל המקרים — רק התאריך/הסף משתנים.
-  const shortageBase = {
-    project_id: 2,
-    project_status: 'in_progress',
-    required_hostess_count: 4,
+    final_event_date: '2026-12-01',
+    required_hostess_count: 5,
     hostesses_confirmed: 2,
-    logistics_ready: 3,
+    logistics_ready: 1,
     logistics_total: 3,
   }
 
   it.each([
-    ['2026-09-16', 13, 'red'],
-    ['2026-09-17', 14, 'red'],
-    ['2026-09-18', 15, 'yellow'],
-  ])('בעוד %i ימים (%s) עם warningDays=14 ⇒ %s', (date, _daysAway, expected) => {
-    const project = { ...shortageBase, final_event_date: date }
-    expect(deriveCalendarColor(project, TODAY, 14)).toBe(expected)
+    ['not_started', 'not_started'],
+    ['in_progress', 'in_progress'],
+    ['ready', 'ready'],
+    ['event_finished', 'past'],
+    ['awaiting_invoice', 'past'],
+    ['awaiting_payment', 'past'],
+    ['finished', 'past'],
+    ['cancelled', 'cancelled'],
+  ])('סטטוס "%s" ⇒ צבע "%s"', (status, expected) => {
+    expect(deriveCalendarColor({ ...base, project_status: status })).toBe(expected)
   })
 
-  it('אירוע שעבר (-2 ימים) ועדיין פעיל, עם חוסר ⇒ אדום (עבר נחשב "בתוך")', () => {
-    const project = { ...shortageBase, final_event_date: '2026-09-01' }
-    expect(deriveCalendarColor(project, TODAY, 14)).toBe('red')
+  it('חמישה צבעים בלבד — שלושת מצבי-הציר-הפעיל, past ו-cancelled', () => {
+    const all = [
+      'not_started',
+      'in_progress',
+      'ready',
+      'event_finished',
+      'awaiting_invoice',
+      'awaiting_payment',
+      'finished',
+      'cancelled',
+    ].map((project_status) => deriveCalendarColor({ ...base, project_status }))
+    expect(new Set(all)).toEqual(
+      new Set(['not_started', 'in_progress', 'ready', 'past', 'cancelled']),
+    )
   })
 
-  it('warningDays חסר (null) ⇒ חוסר תמיד צהוב, לעולם לא אדום — גם אירוע מחר', () => {
-    const project = { ...shortageBase, final_event_date: '2026-09-04' }
-    expect(deriveCalendarColor(project, TODAY, null)).toBe('yellow')
+  // 🔴 **השומר של השינוי כולו.** הכלל הישן היה פונקציה של השעון, ולכן אותו אירוע
+  // בדיוק שינה צבע בלי שאיש נגע בו. כאן: אותו פרויקט, שלושה "היום" שונים — ואם
+  // מישהו יחזיר תלות בזמן, הבדיקה הזו נופלת.
+  it('הצבע אינו משתנה כשמזיזים את "היום" או את סף-האזהרה', () => {
+    const project = { ...base, project_status: 'in_progress', final_event_date: '2026-09-17' }
+    const color = deriveCalendarColor(project)
+    expect(color).toBe('in_progress')
+    expect(deriveCalendarColor(project, '2026-09-16', 14)).toBe(color)
+    expect(deriveCalendarColor(project, '2026-12-31', 0)).toBe(color)
+    expect(deriveCalendarColor(project, TODAY, null)).toBe(color)
+  })
+
+  // המונים אינם משתתפים יותר בהחלטה — הם חיים באייקוני-הצ'יפ וברצועה בלבד.
+  it('שני הממדים מלאים או ריקים — הצבע עדיין הסטטוס, לא המונים', () => {
+    const full = {
+      ...base,
+      project_status: 'in_progress',
+      hostesses_confirmed: 5,
+      logistics_ready: 3,
+    }
+    const empty = { ...base, project_status: 'ready', hostesses_confirmed: 0, logistics_ready: 0 }
+    expect(deriveCalendarColor(full)).toBe('in_progress')
+    expect(deriveCalendarColor(empty)).toBe('ready')
+  })
+})
+
+describe('isWithinWarningWindow — הקרבה עברה לתא-היום', () => {
+  it.each([
+    ['2026-09-03', true],
+    ['2026-09-16', true],
+    ['2026-09-17', true],
+    ['2026-09-18', false],
+  ])('תאריך %s עם סף 14 ⇒ %s', (date, expected) => {
+    expect(isWithinWarningWindow(date, TODAY, 14)).toBe(expected)
+  })
+
+  it('יום שעבר אינו בחלון — "בעוד כמה ימים" ולא "לפני"', () => {
+    expect(isWithinWarningWindow('2026-09-01', TODAY, 14)).toBe(false)
+  })
+
+  it('סף לא-נטען ⇒ שום יום אינו מסומן, בלי ברירת-מחדל מומצאת', () => {
+    expect(isWithinWarningWindow('2026-09-04', TODAY, null)).toBe(false)
   })
 })
 
 // 🆕 R3 09/09/2026 (הכרעת-ישי): היה "ירוק תמיד" — הפך ל-`'past'`, צבע חמישי משלו.
 // העוגן: "טקס פרסים" 01/09 (סטטוס "ממתין לסגירה"=event_finished) הוצג ירוק עם
 // אייקוני-מוכנות מלאים, זהה לאירוע-מוכן עתידי, בזמן שהרצועה מדווחת 17 כאלה שלא חויבו.
-describe('deriveCalendarColor — סטטוס לא-פעיל ⇒ past תמיד, גם עם חוסר עצום (R3 09/09/2026)', () => {
-  const hugeGap = {
-    project_id: 3,
-    required_hostess_count: 10,
-    hostesses_confirmed: 0,
-    logistics_ready: 0,
-    logistics_total: 5,
-    final_event_date: '2026-09-04', // מחר — היה אדום אילו הסטטוס היה פעיל
-  }
-
-  it.each(['event_finished', 'awaiting_invoice', 'awaiting_payment', 'finished'])(
-    'סטטוס "%s" ⇒ past בלי קשר למונים',
-    (status) => {
-      expect(deriveCalendarColor({ ...hugeGap, project_status: status }, TODAY, 14)).toBe('past')
-    },
-  )
-})
-
-describe('deriveCalendarColor — מבוטל: צבע רביעי משלו, לא ירוק (הכרעת-ישי 03/09/2026)', () => {
-  it('מבוטל עם חוסר-איוש עצום ואירוע בעוד 3 ימים ⇒ "cancelled", לא "red"', () => {
-    const project = {
-      project_id: 9,
-      project_status: 'cancelled',
-      final_event_date: '2026-09-06', // בעוד 3 ימים — היה אדום אילו הסטטוס היה פעיל
-      required_hostess_count: 10,
-      hostesses_confirmed: 0,
-      logistics_ready: 0,
-      logistics_total: 5,
-    }
-    expect(deriveCalendarColor(project, TODAY, 14)).toBe('cancelled')
-  })
-
-  it('מבוטל בלי חוסר בכלל — גם אז "cancelled", לא "green"', () => {
+describe('deriveCalendarColor — מבוטל: צבע משלו, נבדק לפני הכול (הכרעת-ישי 03/09/2026)', () => {
+  it('מבוטל בלי חוסר בכלל — עדיין "cancelled", לא "ready"', () => {
     const project = {
       project_id: 10,
       project_status: 'cancelled',
@@ -150,7 +127,7 @@ describe('deriveCalendarColor — מבוטל: צבע רביעי משלו, לא �
       logistics_ready: 1,
       logistics_total: 1,
     }
-    expect(deriveCalendarColor(project, TODAY, 14)).toBe('cancelled')
+    expect(deriveCalendarColor(project)).toBe('cancelled')
   })
 })
 
@@ -176,9 +153,9 @@ describe('colorProjects — טהורה, מוסיפה color בלי לגעת במ�
         logistics_total: 0,
       },
     ]
-    const result = colorProjects(projects, TODAY, 14)
-    // 🆕 R3: סטטוס 'finished' (לא-פעיל, לא-מבוטל) ⇒ 'past', לא 'green'.
-    expect(result.map((p) => p.color)).toEqual(['red', 'past'])
+    const result = colorProjects(projects)
+    // 🆕 R3: סטטוס 'finished' (לא-פעיל, לא-מבוטל) ⇒ 'past'.
+    expect(result.map((p) => p.color)).toEqual(['in_progress', 'past'])
     expect(projects[0].color).toBeUndefined()
   })
 })
@@ -660,38 +637,47 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
     expect(logistics).toMatchObject({ count: 0, topLine: null, masked: false })
   })
 
-  it('תפקיד/יעד-ניווט/tone קבועים לכל כרטיס — התשובה ל"עם איזה מנהל לדבר"', () => {
+  it('תפקיד/tone קבועים לכל כרטיס — התשובה ל"עם איזה מנהל לדבר"', () => {
     const categories = attentionCategories(bigSummary, TODAY)
-    expect(categories).toEqual([
-      expect.objectContaining({
-        kind: 'unbilled',
-        label: 'כספים',
-        role: 'מנהלת כספים',
-        href: '/finance',
-        tone: 'red',
-      }),
-      expect.objectContaining({
-        kind: 'staffing',
-        label: 'דיילות',
-        role: 'מנהלת גיוס',
-        href: '/hostesses',
-        tone: 'red',
-      }),
-      expect.objectContaining({
-        kind: 'logistics',
-        label: 'לוגיסטיקה',
-        role: 'מנהלת לוגיסטיקה',
-        href: '/logistics',
-        tone: 'red',
-      }),
-      expect.objectContaining({
-        kind: 'quote',
-        label: 'הצעות',
-        role: 'מנהלת פרויקטים',
-        href: '/quotes',
-        tone: 'yellow',
-      }),
+    expect(categories.map((c) => [c.kind, c.label, c.role, c.tone])).toEqual([
+      ['unbilled', 'כספים', 'מנהלת כספים', 'red'],
+      ['staffing', 'דיילות', 'מנהלת גיוס', 'red'],
+      ['logistics', 'לוגיסטיקה', 'מנהלת לוגיסטיקה', 'red'],
+      ['quote', 'הצעות', 'מנהלת פרויקטים', 'yellow'],
     ])
+  })
+
+  // 🔗 הכרעת-ישי 16/09: "מה שאתה רואה הוא מה שאתה לוחץ" — הכרטיס מוביל לפריט
+  // שהוא נוקב בשמו ב-topLine, ולא למסך-המודול. כרטיס ריק נופל חזרה למודול.
+  it('הקישור הוא של הפריט הדחוף שהכרטיס מציג; כרטיס ריק ⇒ כתובת-המודול', () => {
+    const categories = attentionCategories(bigSummary, TODAY)
+    const byKind = Object.fromEntries(categories.map((c) => [c.kind, c]))
+    // "הסתיים 1" הוא הוותיק מבין החמישה (29/08) ⇒ ראש-הרשימה, והקישור הוא שלו.
+    expect(byKind.unbilled.topLine).toContain('הסתיים 1')
+    expect(byKind.unbilled.href).toBe('/projects/301')
+    // logistics ריק בתרחיש הזה (count=0) ⇒ אין פריט לנקוב בו
+    expect(byKind.logistics.count).toBe(0)
+    expect(byKind.logistics.href).toBe('/logistics')
+  })
+
+  // 🔴 המספר לעולם לא לבדו, והסייג נאמר על המסך: כרטיס-הגיוס סופר רק את מה
+  // שבתוך חלון-האזהרה, ובלי שהחלון ייאמר המספר אינו חסר בראש הקורא אלא שגוי.
+  it('שם-העצם נושא את מסנן-האוכלוסייה; ענף בלי חלון אינו ממציא אחד', () => {
+    const categories = attentionCategories(bigSummary, TODAY)
+    const byKind = Object.fromEntries(categories.map((c) => [c.kind, c]))
+    expect(byKind.staffing.noun).toBe('אירועים חסרי דיילות ב-14 הימים הקרובים')
+    expect(byKind.logistics.noun).toBe('אירועים חסרי ציוד ב-14 הימים הקרובים')
+    expect(byKind.unbilled.noun).toBe('אירועים שהסתיימו ולא חויבו')
+    expect(byKind.quote.noun).toBe('הצעות שפגות בקרוב')
+  })
+
+  it('סף-אזהרה לא-נטען ⇒ שם-העצם בלי סייג, בלי מספר מומצא', () => {
+    const categories = attentionCategories(
+      { ...bigSummary, params: { ...bigSummary.params, event_warning_days: null } },
+      TODAY,
+    )
+    const staffing = categories.find((c) => c.kind === 'staffing')
+    expect(staffing.noun).toBe('אירועים חסרי דיילות')
   })
 
   it('quotes_visible=false ⇒ כרטיס-ההצעות ממוסך (§7.97, MASKED_TEXT), לא "0"', () => {
@@ -713,20 +699,27 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
   })
 })
 
-describe('calendarColorMeta — R1/R4 09/09/2026: מילים בצ׳יפים, הגדרה מדויקת ל-title', () => {
-  it('מספר-סף אמיתי ⇒ title נוקב במספר (לא קשיח כמו "14" במוקאפ)', () => {
-    const meta = calendarColorMeta('21')
-    expect(meta.red).toMatchObject({ label: 'דחוף', title: 'חוסר ואירוע בתוך 21 יום' })
-    expect(meta.yellow).toMatchObject({ label: 'לטיפול', title: 'חוסר, האירוע מעבר ל-21 יום' })
-    expect(meta.green.label).toBe('מוכן')
+describe('calendarColorMeta — התוויות הן מונחי-הסטטוס מילה-במילה', () => {
+  // 🔒 UC11+UC42: מונח אחד, שם אחד, בכל מקום. הבדיקה מצליבה מול המקור עצמו, כך
+  // ששינוי-גלוסרי עתידי ב-PROJECT_STATUS_LABELS ייפול כאן אם הלוח לא ילך אחריו.
+  it('שלושת מצבי-הציר-הפעיל זהים ל-PROJECT_STATUS_LABELS', () => {
+    const meta = calendarColorMeta()
+    expect(meta.ready.label).toBe(PROJECT_STATUS_LABELS.ready)
+    expect(meta.in_progress.label).toBe(PROJECT_STATUS_LABELS.in_progress)
+    expect(meta.not_started.label).toBe(PROJECT_STATUS_LABELS.not_started)
+    expect(meta.ready.label).toBe('מוכן לביצוע')
+  })
+
+  it('past ו-cancelled: "התקיים" ו-"בוטל"', () => {
+    const meta = calendarColorMeta()
     expect(meta.past.label).toBe('התקיים')
     expect(meta.cancelled.label).toBe('בוטל')
   })
 
-  it('סף לא-נטען ⇒ title כללי בלי מספר, בלי ברירת-מחדל מומצאת', () => {
-    const meta = calendarColorMeta(null)
-    expect(meta.red.title).toBe('חוסר, הסף לא נטען')
-    expect(meta.yellow.title).toBe('חוסר, הסף לא נטען')
+  // ה-tooltip שהחזיק את ההגדרה נמחק: אין יותר מונח-שהמצאנו שדורש הסבר.
+  it('אין יותר title על אף צבע', () => {
+    const meta = calendarColorMeta()
+    for (const entry of Object.values(meta)) expect(entry.title).toBeUndefined()
   })
 })
 
@@ -798,27 +791,29 @@ describe('projectsByDate', () => {
 
 describe('filterCalendarProjects', () => {
   const projects = [
-    { project_id: 1, event_name: 'כנס אדום', customer_name: 'לקוח א', color: 'red' },
-    { project_id: 2, event_name: 'כנס צהוב', customer_name: 'לקוח ב', color: 'yellow' },
-    { project_id: 3, event_name: 'כנס ירוק', customer_name: 'לקוח ג', color: 'green' },
+    { project_id: 1, event_name: 'כנס טרם החל', customer_name: 'לקוח א', color: 'not_started' },
+    { project_id: 2, event_name: 'כנס בתהליך', customer_name: 'לקוח ב', color: 'in_progress' },
+    { project_id: 3, event_name: 'כנס מוכן', customer_name: 'לקוח ג', color: 'ready' },
     { project_id: 4, event_name: 'כנס מבוטל', customer_name: 'לקוח ד', color: 'cancelled' },
   ]
 
   it('צ׳יפ-צבעים מסנן לפי חברות-בקבוצה', () => {
-    const result = filterCalendarProjects(projects, { colors: new Set(['red', 'yellow']) })
+    const result = filterCalendarProjects(projects, {
+      colors: new Set(['not_started', 'in_progress']),
+    })
     expect(result.map((p) => p.project_id)).toEqual([1, 2])
   })
 
-  it('cancelled הוא צבע-צ׳יפ רביעי לכל דבר — ברירת-מחדל-ארבעתם-דלוקים כוללת אותו', () => {
+  it('cancelled הוא צבע-צ׳יפ לכל דבר — ברירת-המחדל כוללת אותו', () => {
     const result = filterCalendarProjects(projects, {
-      colors: new Set(['red', 'yellow', 'green', 'cancelled']),
+      colors: new Set(['not_started', 'in_progress', 'ready', 'cancelled']),
     })
     expect(result).toHaveLength(4)
   })
 
   it('כיבוי הצ׳יפ cancelled מסתיר רק אותו', () => {
     const result = filterCalendarProjects(projects, {
-      colors: new Set(['red', 'yellow', 'green']),
+      colors: new Set(['not_started', 'in_progress', 'ready']),
     })
     expect(result.map((p) => p.project_id)).toEqual([1, 2, 3])
   })
@@ -842,19 +837,31 @@ describe('filterCalendarProjects', () => {
 describe('colorCounts', () => {
   it('סופרת כל צבע בנפרד, כולל cancelled — נתונים לא-אחידים', () => {
     const projects = [
-      { color: 'red' },
-      { color: 'red' },
-      { color: 'yellow' },
-      { color: 'green' },
+      { color: 'not_started' },
+      { color: 'not_started' },
+      { color: 'in_progress' },
+      { color: 'ready' },
       { color: 'past' },
       { color: 'cancelled' },
       { color: 'cancelled' },
       { color: 'cancelled' },
     ]
-    expect(colorCounts(projects)).toEqual({ red: 2, yellow: 1, green: 1, past: 1, cancelled: 3 })
+    expect(colorCounts(projects)).toEqual({
+      ready: 1,
+      in_progress: 1,
+      not_started: 2,
+      past: 1,
+      cancelled: 3,
+    })
   })
 
   it('רשימה ריקה ⇒ אפסים לחמשת הצבעים, לא קריסה', () => {
-    expect(colorCounts([])).toEqual({ red: 0, yellow: 0, green: 0, past: 0, cancelled: 0 })
+    expect(colorCounts([])).toEqual({
+      ready: 0,
+      in_progress: 0,
+      not_started: 0,
+      past: 0,
+      cancelled: 0,
+    })
   })
 })

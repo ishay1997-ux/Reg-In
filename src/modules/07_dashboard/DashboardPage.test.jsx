@@ -37,7 +37,7 @@ function project(overrides) {
   }
 }
 
-// לוח-הבדיקה: 201 אדום (9/9, חוסר-איוש בתוך 14 יום) · 202 ירוק (11/9) · 203/204/205 באותו
+// לוח-הבדיקה: 201 "בתהליך" (9/9, חוסר-איוש) · 202 "מוכן לביצוע" (11/9) · 203/204/205 באותו
 // יום (17/9 — שלושתם מוצגים מאז 04/09, ר' MAX_CHIPS_PER_DAY) · 206 מבוטל (7/9) · 207 event_finished מחוץ לחודש (26/8,
 // לא-מחויב) שנבדק רק בפאנל-הטיפול, לא בלוח. ה-pending_quotes מכיל הצעה #41 שפגה בעוד 3 ימים
 // (updated_at 7/8 + תוקף 30 יום = 6/9, מול "היום" 3/9).
@@ -56,12 +56,14 @@ function board() {
       event_name: 'כנס הייטק גרופ',
       customer_name: 'הייטק גרופ',
       final_event_date: '2026-09-11',
+      project_status: 'ready',
     }),
     project({
       project_id: 203,
       event_name: 'כנס לקוחות שנתי',
       customer_name: 'לקוח א',
       final_event_date: '2026-09-17',
+      project_status: 'not_started',
       required_hostess_count: 6,
       hostesses_confirmed: 0,
     }),
@@ -276,7 +278,11 @@ describe('DashboardPage — רצועת ה-KPI', () => {
     renderPage()
     await screen.findByTestId('kpi-active')
     // הטקסט המדויק (לא "0" ולא emptyText הכללי של StatTile) — שתי אמירות שונות (§7.97).
-    expect(screen.getByTestId('kpi-profit').textContent).toBe('רווח חודשי משוערלא זמין בתפקידך')
+    // 🔴 האריח נוקב בחודש שלו: שלושת האחרים הם "עכשיו", אבל הרווח מחושב לפי החודש
+    // המוצג בלוח — בלי השם, ניווט לנובמבר שינה את משמעות המספר בשקט.
+    expect(screen.getByTestId('kpi-profit').textContent).toBe(
+      'רווח משוער · ספטמבר 2026לא זמין בתפקידך',
+    )
     expect(screen.getByTestId('kpi-quotes').textContent).toBe('הצעות ממתינותלא זמין בתפקידך')
   })
 })
@@ -285,8 +291,12 @@ describe('DashboardPage — לוח החודש', () => {
   it('צ׳יפים בצבע הנכון, ויום עם שלושה פרויקטים מציג את שלושתם בלי "עוד"', async () => {
     renderPage()
     await screen.findByTestId('kpi-active')
-    expect(screen.getByTestId('dashboard-chip-201').className).toContain('bg-red-100')
+    // הצבע הוא הסטטוס: בתהליך ⇒ ענבר · מוכן לביצוע ⇒ ירוק · טרם החל ⇒ מתאר מקווקו
+    // בלי מילוי (כלל 8 — לא הומצא צבע שישי).
+    expect(screen.getByTestId('dashboard-chip-201').className).toContain('bg-amber-100')
     expect(screen.getByTestId('dashboard-chip-202').className).toContain('bg-green-100')
+    expect(screen.getByTestId('dashboard-chip-203').className).toContain('border-dashed')
+    expect(screen.getByTestId('dashboard-chip-203').className).toContain('bg-white')
     // 🔢 שלושה שבבים ליום (04/09/2026) — נמדד שזה מכסה 99.6% מהימים במסד.
     expect(screen.getByTestId('dashboard-chip-203')).toBeInTheDocument()
     expect(screen.getByTestId('dashboard-chip-204')).toBeInTheDocument()
@@ -345,12 +355,24 @@ describe('DashboardPage — לוח החודש', () => {
     expect(screen.getByTestId('dashboard-chip-203')).toBeInTheDocument()
   })
 
-  it('כיבוי צ׳יפ-הסינון האדום מסתיר את הצ׳יפ האדום בלבד', async () => {
+  it('כיבוי צ׳יפ-הסינון "בתהליך" מסתיר רק את האירועים שבתהליך', async () => {
     renderPage()
     await screen.findByTestId('kpi-active')
-    fireEvent.click(screen.getByTestId('dashboard-filter-red'))
+    fireEvent.click(screen.getByTestId('dashboard-filter-in_progress'))
     expect(screen.queryByTestId('dashboard-chip-201')).not.toBeInTheDocument()
     expect(screen.getByTestId('dashboard-chip-202')).toBeInTheDocument()
+    expect(screen.getByTestId('dashboard-chip-203')).toBeInTheDocument()
+  })
+
+  // 🔴 הערוץ השני: קרבה-בזמן על תא-היום, לא על הצ'יפ. "היום" בבדיקות הוא 03/09
+  // וסף-האזהרה 14 ⇒ 17/09 בפנים, 18/09 בחוץ.
+  it('מספר-היום מסומן בתוך חלון-האזהרה בלבד', async () => {
+    renderPage()
+    await screen.findByTestId('kpi-active')
+    const inside = screen.getByTestId('dashboard-day-2026-09-17')
+    const outside = screen.getByTestId('dashboard-day-2026-09-18')
+    expect(inside.querySelector('[data-warning="true"]')).not.toBeNull()
+    expect(outside.querySelector('[data-warning="true"]')).toBeNull()
   })
 
   it('› קורא ל-getDashboardSummary עם החודש הבא, והכתובת מתעדכנת', async () => {

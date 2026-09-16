@@ -150,14 +150,18 @@ export default function DashboardPage() {
         </p>
       )}
       <KpiStrip cards={kpiCards(summary)} />
-      {/* 🔴 **04/09/2026 — הלוח מלא-רוחב, והרצועה מתחתיו (מוקאפ מאושר).** קודם היה
-          `grid-cols-[2fr_1fr]`, כלומר שליש מהמסך הוקצע לרשימה — והלוח, שהוא הגיבור של
-          המסך, נשאר עם תאים בני ~90px שחתכו את שם-האירוע. `flex-col` ולא grid: אין כאן
-          יותר שתי עמודות, רק שני בלוקים אחד מתחת לשני. */}
+      {/* 🔴 **04/09/2026 — הלוח מלא-רוחב, והרצועה מעליו.** קודם היה `grid-cols-[2fr_1fr]`,
+          כלומר שליש מהמסך הוקצע לרשימה — והלוח, שהוא הגיבור של המסך, נשאר עם תאים בני
+          ~90px שחתכו את שם-האירוע. `flex-col` ולא grid: אין כאן יותר שתי עמודות.
+          ✏️ **16/09/2026 — הרצועה עלתה מעל הלוח (הכרעת-ישי).** נמדד על המסך החי: הפאנל
+          הפעיל היחיד ישב מתחת לקו-הקיפול, בעוד פאנל-ההתמצאות מעליו — צריך היה לגלול כדי
+          להגיע למה שדורש טיפול. ⚠️ ואין סתירה להכרעת 04/09: שם הבעיה הייתה עמודה **בצד**
+          שגזלה **רוחב**; כאן משתנה סדר אנכי בלבד, והלוח נשאר מלא-רוחב. */}
       <div
         className={cn('flex flex-col gap-4', refreshing && 'opacity-60 transition-opacity')}
         aria-busy={refreshing}
       >
+        <AttentionPanel summary={summary} />
         <CalendarGrid
           summary={summary}
           monthStartIso={monthStartIso}
@@ -165,7 +169,6 @@ export default function DashboardPage() {
           onNext={handleNext}
           onToday={handleToday}
         />
-        <AttentionPanel summary={summary} />
       </div>
     </div>
   )
