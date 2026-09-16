@@ -14,7 +14,7 @@
 // משטח מחזיר שגיאת-"פונקציה לא נמצאה", והמסך מציג את **מצב-התקלה** עם *"נסי שוב"* —
 // 🔴 **ולעולם לא "אין נתונים"**, שהוא בדיוק מצג-השווא שמדריך-המיקרו §4.3 אוסר.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { callReport, normalizeCharts } from '../api'
 import ChartCard from './ChartCard'
 import DrillCrumbs from './DrillCrumbs'
@@ -183,9 +183,20 @@ export default function ReportSurface({
   const [result, setResult] = useState({ key: null, payload: null, error: null })
   const loading = result.key !== requestKey
 
+  // 🔴 **ה-effect תלוי בפרימיטיבים בלבד.** `drill` הוא אובייקט שנפרס מהכתובת בכל רינדור
+  // ו-`onWindow` היא פונקציה — שניהם מקבלים זהות חדשה בלי שהבקשה השתנתה, וברשימת-התלויות
+  // הם היו מפעילים שליפה חוזרת (ובמקרה הרע לולאה: השליפה קוראת ל-`onWindow`, המעטפת
+  // מתרנדרת, הפונקציה מתחלפת, השליפה חוזרת). לכן: `drill` נבנה מחדש מ-`drillKey` בתוך
+  // ה-effect, ו-`onWindow` נקראת דרך ref שמתעדכן בכל רינדור (נמצא בביקורת-המסירה 16/09).
+  const onWindowRef = useRef(onWindow)
+  useEffect(() => {
+    onWindowRef.current = onWindow
+  })
+
   useEffect(() => {
     let cancelled = false
-    callReport(surface.rpc, { from, to, customerId, drill })
+    const drillArg = drillKey ? JSON.parse(drillKey) : null
+    callReport(surface.rpc, { from, to, customerId, drill: drillArg })
       .then((data) => {
         if (cancelled) return
         setResult({ key: requestKey, payload: data, error: null })
@@ -193,7 +204,7 @@ export default function ReportSurface({
         // אותו דפוס בדיוק כמו מ7, שמחזיר `today`/`month_start` בגוף התשובה מהסיבה הזו
         // (מסך שנטען אחרי חצות היה מציג חודש שגוי). בלי זה, גלולות-התקופה היו משנות את
         // הכתובת ושולחות `null` בכל מקרה — מסנן שנראה עובד ואינו מסנן דבר.
-        onWindow?.(data.window)
+        onWindowRef.current?.(data.window)
       })
       .catch((err) => {
         if (cancelled) return
@@ -203,7 +214,7 @@ export default function ReportSurface({
     return () => {
       cancelled = true
     }
-  }, [requestKey, surface.rpc, from, to, customerId, drill, onWindow])
+  }, [requestKey, surface.rpc, from, to, customerId, drillKey])
 
   // 📐8 · עמוד — **נגזר ולא מאופס ב-effect.** כל שינוי-מסנן מחזיר לעמוד 1 (עמוד 3 של
   // תקופה אחת אינו קיים בהכרח באחרת), וההשוואה מול `filterKey` עושה זאת **בזמן הרינדור**

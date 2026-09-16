@@ -126,3 +126,35 @@ describe('ReportSurface — extension slots', () => {
     expect(transformPayload).not.toHaveBeenCalled()
   })
 })
+
+describe('ReportSurface — request identity', () => {
+  it('does not refetch when drill/onWindow change identity but not content', async () => {
+    callReport.mockResolvedValue(payload())
+    const onWindow = vi.fn()
+    const { rerender } = render(
+      <ReportSurface
+        surface={surface}
+        filters={filters}
+        drill={{ kind: 'bucket', bucket: 'd90p' }}
+        onDrill={() => {}}
+        onWindow={onWindow}
+      />,
+    )
+    await screen.findByTestId('report-population')
+    expect(callReport).toHaveBeenCalledTimes(1)
+    expect(callReport.mock.calls[0][1].drill).toEqual({ kind: 'bucket', bucket: 'd90p' })
+    // אותו תוכן, זהות חדשה — כמו שהמעטפת מייצרת בכל רינדור.
+    rerender(
+      <ReportSurface
+        surface={surface}
+        filters={{ ...filters }}
+        drill={{ kind: 'bucket', bucket: 'd90p' }}
+        onDrill={() => {}}
+        onWindow={vi.fn()}
+      />,
+    )
+    await new Promise((r) => setTimeout(r, 0))
+    expect(callReport).toHaveBeenCalledTimes(1)
+    expect(onWindow).toHaveBeenCalledWith(expect.objectContaining({ label: 'חלון' }))
+  })
+})
