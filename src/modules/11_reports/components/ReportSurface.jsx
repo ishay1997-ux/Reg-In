@@ -102,10 +102,45 @@ function Footers({ definitions, notes }) {
   )
 }
 
+// 📐9 — `aria-sort` על העמודה הממוינת: ה-RPC מסמן `columns[].sorted` (C8, תוספת 16/09);
+// ‏`meta.sort` הישן נשמר כעדיפות ראשונה כדי לא לשבור payload שכבר נבדק.
+function sortFromColumns(columns) {
+  const column = (columns ?? []).find((c) => c.sorted)
+  if (!column) return undefined
+  const direction = column.sorted === 'ascending' ? 'ascending' : 'descending'
+  return { key: column.key, direction }
+}
+
+// C8 `meta.extra_tables` — משטח שצריך יותר מטבלה אחת (מ12: בלוק-ההזמנות ושורות ㉗ · מ15:
+// אי-הגעה לפי דירוג) — כל טבלה נוספת עם כותרת משלה ופאג'ר משלה, **דרך אותו `ReportTable`**.
+function ExtraTable({ table }) {
+  const [page, setPage] = useState(1)
+  return (
+    <section className="mb-4" data-testid="report-extra-table">
+      <h3 className="mb-1.5 text-[13px] font-semibold text-slate-700">{table.title}</h3>
+      <ReportTable
+        columns={table.columns}
+        rows={table.rows}
+        page={page}
+        onPage={setPage}
+        sort={sortFromColumns(table.columns)}
+        caption={table.title}
+      />
+    </section>
+  )
+}
+
 /**
  * ‏`surface` · `filters` · `drill` · `onDrill` — חוזה-הפרופס של רכיב-לשונית (ר' `tabs/ExecutiveTab.jsx`).
- * ‏`renderExtras(payload)` — נקודת-ההרחבה של בונה-הלשונית למה שייחודי למשטח שלו
- * *(למשל פס-האישור של מ25 בדף 20)*, בלי לשכפל את השלד.
+ *
+ * 🔌 **חמש נקודות-ההרחבה של בונה-הלשונית — והן הדרך היחידה להוסיף, בלי לשכפל את השלד:**
+ * ‏`transformPayload(payload) ⇒ payload'` — סינון-לקוח (למשל שבב *"רק בלי דירוג"* במ16 —
+ *   הפאג'ר סופר את מה שמוצג, 📐8) · מיפוי תוויות (`chart.label_source` ⇒ הקבוע העברי) ·
+ *   מיסוך-אריח. **מקבל ומחזיר את צורת C8; לעולם לא מוחק מפתח.**
+ * ‏`renderTop(payload)` — מעל שורת-האוכלוסייה: רמז-ה-`purpose`/`whyAndFirst` של §⑩, שבבים.
+ * ‏`renderBeforeChart(payload)` · `renderBeforeTable(payload)` — רמזי "איך לקרוא את הגרף/הטבלה".
+ * ‏`renderExtras(payload)` — בתחתית: מה שייחודי למשטח *(פס-האישור של מ25 בדף 20, רמזי-מונחים)*.
+ * כל הארבעה מקבלים את ה-payload **אחרי** `transformPayload`.
  */
 export default function ReportSurface({
   surface,
@@ -113,6 +148,10 @@ export default function ReportSurface({
   drill,
   onDrill,
   onWindow,
+  transformPayload,
+  renderTop,
+  renderBeforeChart,
+  renderBeforeTable,
   renderExtras,
 }) {
   const [reloadTick, setReloadTick] = useState(0)
@@ -173,7 +212,9 @@ export default function ReportSurface({
   const page = pageState.key === filterKey ? pageState.page : 1
   const setPage = (next) => setPageState({ key: filterKey, page: next })
 
-  const { payload, error } = result
+  const { payload: rawPayload, error } = result
+  // הטרנספורמציה של הלשונית רצה על payload שנטען בלבד — `null` (כשל/טרם) נשאר `null`.
+  const payload = rawPayload && transformPayload ? transformPayload(rawPayload) : rawPayload
 
   if (loading) return <Envelope state="loading" testId={`report-${surface.slug}`} />
   if (error?.kind === 'noPermission') {
@@ -217,6 +258,7 @@ export default function ReportSurface({
     <div data-testid={`report-${surface.slug}`}>
       {/* 📐13① — פירורים **רק** בדפי-הדריל, ורק כשיש יותר מרמה אחת. */}
       {surface.drill && <DrillCrumbs crumbs={crumbs} onNavigate={(next) => onDrill(next)} />}
+      {renderTop?.(payload)}
       <PopulationLine population={payload.population} />
       <MissingParamsBanner names={payload.meta?.missing_params} />
 
@@ -241,19 +283,24 @@ export default function ReportSurface({
         </p>
       )}
 
+      {charts.length > 0 && renderBeforeChart?.(payload)}
       {charts.map((chart, index) => (
         <ChartCard key={chart.title ?? index} chart={chart} />
       ))}
 
+      {payload.columns?.length > 0 && renderBeforeTable?.(payload)}
       <ReportTable
         columns={payload.columns}
         rows={payload.rows}
         page={page}
         onPage={setPage}
-        sort={payload.meta?.sort}
+        sort={payload.meta?.sort ?? sortFromColumns(payload.columns)}
         onDrill={surface.drill ? (drillKey) => onDrill(drillKey) : undefined}
         caption={surface.name}
       />
+      {payload.meta?.extra_tables?.map((table) => (
+        <ExtraTable key={table.title} table={table} />
+      ))}
 
       <Footers definitions={payload.definitions} notes={payload.meta?.notes} />
       {renderExtras?.(payload)}
