@@ -71,8 +71,27 @@ function maskSentence(text) {
 function maskTile(tile) {
   if (tile.format === 'money') return { ...tile, masked: true }
   const sub = maskSentence(tile.sub)
-  const compare = tile.compare ? { ...tile.compare, label: maskSentence(tile.compare.label) } : null
-  if (sub === tile.sub && compare?.label === tile.compare?.label) return tile
+  // 🔴 **גם `compare.value`, ומאז i2 זה לא תיאורטי:** חצי-ההשוואה מחזיר עכשיו **מחרוזת**
+  // במקום מספר היכן שהפילוח הוא הסיפור (*"⁦2024⁩: ⁦4⁩ · ⁦2025⁩: ⁦19⁩"*), והמעטפת
+  // מעבירה מחרוזת כמות שהיא בלי לעצב. ⇒ סכום שייכתב שם יעקוף מסנן שבודק רק את התווית.
+  // **היום אין שם ₪** (נמדד על ארבעת המטענים) — וזו בדיוק הסיבה לסגור את זה עכשיו.
+  const compare = tile.compare
+    ? {
+        ...tile.compare,
+        label: maskSentence(tile.compare.label),
+        value:
+          typeof tile.compare.value === 'string'
+            ? maskSentence(tile.compare.value)
+            : tile.compare.value,
+      }
+    : null
+  if (
+    sub === tile.sub &&
+    compare?.label === tile.compare?.label &&
+    compare?.value === tile.compare?.value
+  ) {
+    return tile
+  }
   return { ...tile, sub, compare }
 }
 

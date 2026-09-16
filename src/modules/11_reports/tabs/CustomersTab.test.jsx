@@ -134,13 +134,35 @@ const overviewPayload = () =>
         target: { tab: 'לקוחות', report: 'report_m20_satisfaction', drill: null },
       },
       {
+        key: 'biggest_negative_is_other',
+        label: 'הסיבה השלילית הגדולה אינה קטגוריה',
+        value: 33,
+        format: 'int',
+        sub: 'משובים שליליים שתויגו "אחר" מתוך ⁦70⁩',
+        window: 'כל הזמנים',
+        // i2 — היה `{value: 33, label: 'פילוח לפי שנה', direction: 'up'}`: חזרה על ערך-האריח
+        // עם ▲ מומצא, במקום הפילוח שהמוקאפ מצייר באותה שורה.
+        compare: {
+          value: '⁦2024⁩: ⁦4⁩ · ⁦2025⁩: ⁦19⁩ · ⁦2026⁩: ⁦10⁩',
+          label: 'פילוח לפי שנה (השנה הנוכחית חלקית)',
+          direction: 'flat',
+        },
+        target: { tab: 'לקוחות', report: 'report_m22_notes', drill: null },
+      },
+      {
         key: 'payment_cadence_by_type',
         label: 'קצב-התשלום תלוי בסוג הלקוח',
         value: 69,
         format: 'days',
         sub: 'חציון ימים מחשבונית לתשלום, לפי סוג הלקוח',
         window: 'כל הזמנים',
-        compare: null,
+        // i2 — בלי `format` חצי-ההשוואה ירש `days` והדפיס "⁦675⁩ ימים" על ספירת-חשבוניות.
+        compare: {
+          value: 675,
+          label: 'על ⁦675⁩ חשבוניות ששולמו',
+          format: 'int',
+          direction: 'flat',
+        },
         target: { tab: 'כספים', report: 'report_m09_aging', drill: null },
         detail: {
           rows: [
@@ -158,9 +180,10 @@ const overviewPayload = () =>
     chart: {
       type: 'line',
       title: 'ממוצע שביעות-הרצון לפי חודש',
-      xKey: 'month',
+      // i2 — ציר-הזמן נושא שם-חודש עברי ולא `2026-01`.
+      xKey: 'label',
       series: [{ key: 'avg_score', label: 'ממוצע' }],
-      data: [{ month: '2026-01', avg_score: 4.06, n: 18 }],
+      data: [{ label: 'ינואר ⁦2026⁩', month: '2026-01', avg_score: 4.06, n: 18 }],
       domain: [1, 5],
       refLines: [],
       unit: 'ציון',
@@ -181,6 +204,8 @@ const overviewPayload = () =>
         align: 'end',
         sorted: 'descending',
       },
+      // i2 — `avg_feedback:ratio` (ששיטח ⁦4.63⁩ ל-⁦4.6⁩) הוחלף בזוג שהשרת בונה.
+      { key: 'avg_feedback_pair', label: 'ממוצע המשוב שלו', format: 'text', align: 'end' },
       { key: 'last_event', label: 'אירוע אחרון', format: 'date', align: 'start' },
     ],
     rows: [
@@ -190,6 +215,8 @@ const overviewPayload = () =>
         company_name: 'אלפא סיסטמס בע"מ',
         customer_type: 'private_company',
         revenue_12m: 635764.43,
+        avg_feedback: 4.63,
+        avg_feedback_pair: '⁦4.63⁩ (⁦n=129⁩)',
         last_event: '2026-09-15',
       },
     ],
@@ -228,8 +255,16 @@ const satisfactionPayload = () =>
     ],
     chart: [
       chartOf('התפלגות הציונים', { xKey: 'score', filter_key: false, data: [{ score: 2, n: 3 }] }),
-      chartOf('מה משמח', { layout: 'horizontal', filter_key: false }),
-      chartOf('מה מכעיס', { layout: 'horizontal', filter_key: 'negative_reason' }),
+      chartOf('מה משמח', {
+        layout: 'horizontal',
+        filter_key: false,
+        note: 'הסולם כאן עצמאי ואינו משותף לגרף השלילי שלצידו',
+      }),
+      chartOf('מה מכעיס', {
+        layout: 'horizontal',
+        filter_key: 'negative_reason',
+        note: 'הסולם כאן עצמאי ואינו משותף לגרף החיובי שלצידו',
+      }),
       chartOf('שיעור המרוצים לפי שנה', {
         xKey: 'year',
         filter_key: false,
@@ -281,7 +316,11 @@ const driftingPayload = () =>
         format: 'money',
         sub: '⁦11.5%⁩ מ-⁦2,786,544 ₪⁩ שהעסק הכניס ב-⁦12⁩ החודשים',
         window: '16/09/2025–16/09/2026',
-        compare: null,
+        compare: {
+          value: null,
+          label: 'זהו סכום שכבר הורווח — לא סכום שצפוי להיאבד',
+          direction: 'flat',
+        },
         target: null,
       },
       {
@@ -330,7 +369,7 @@ const driftingPayload = () =>
         contact_phone: '055-1794584',
         revenue_12m: 68180.17,
         ratio: 3.2,
-        score_pair: '⁦2⁩ · ממוצעו ⁦2.90⁩',
+        score_pair: '⁦2⁩ · ⁦2.90⁩ (⁦n=10⁩)',
         flag: 'מתרחק בלבד',
       },
       {
@@ -341,7 +380,7 @@ const driftingPayload = () =>
         contact_phone: '057-5880953',
         revenue_12m: 43068.86,
         ratio: 36.1,
-        score_pair: '⁦3⁩ · ממוצעו ⁦3.20⁩',
+        score_pair: '⁦3⁩ · ⁦3.20⁩ (⁦n=5⁩)',
         flag: 'מתרחק · גם רדום',
       },
     ],
@@ -400,7 +439,12 @@ const notesPayload = ({ run = APPROVED_RUN, runInProgress = FAILED_RUN_IN_PROGRE
         format: 'int',
         sub: 'לכל ⁦33⁩ יש טקסט',
         window: 'כל הזמנים',
-        compare: null,
+        // i2 — חצי-ההשוואה נושא את הפילוח עצמו כמחרוזת, ולא חוזר על ערך-האריח.
+        compare: {
+          value: '⁦2024⁩: ⁦4⁩ · ⁦2025⁩: ⁦19⁩ · ⁦2026⁩: ⁦10⁩',
+          label: 'פילוח לפי שנה (השנה הנוכחית חלקית)',
+          direction: 'flat',
+        },
         target: null,
         detail: {
           other: 33,
@@ -422,6 +466,7 @@ const notesPayload = ({ run = APPROVED_RUN, runInProgress = FAILED_RUN_IN_PROGRE
         format: run ? 'int' : 'text',
         sub: run ? 'מתוך ⁦426⁩ הערות מסווגות · ⁦2⁩ ריצות מאושרות' : 'טרם אושרה ריצה — לא 0',
         window: run ? 'הריצה מ-16/09/2026' : '—',
+        // i2 — היה 'יימדד אחרי הריצה הראשונה' על אריח שכבר מציג ⁦25⁩. עכשיו: אין השוואה.
         compare: null,
         target: null,
       },
@@ -550,6 +595,41 @@ describe('מ19 · מבט-על לקוחות', () => {
     expect(screen.getByRole('columnheader', { name: 'לקוח' })).not.toHaveAttribute('aria-sort')
   })
 
+  // 🔬 **מה ש-i2 תיקן — נבדק על המסך ולא על המטען.** שלושת אלה היו ממצאי סבב-הביקורת
+  // בבעלות ה-RPC, והם הסוג שנראה תקין במטען ושקרי באריח: פורמט שנורש מהאריח, חצי-השוואה
+  // שחוזר על הערך, ודיוק שהשתטח. **בדיקה שקוראת את המטען לא הייתה תופסת אף אחד מהם.**
+  it('i2 · חצי-ההשוואה של אריח קצב-התשלום הוא ספירה ולא "ימים", והפילוח מציג שלוש שנים', async () => {
+    callReport.mockResolvedValue(overviewPayload())
+    renderTab(SURFACES.מ19)
+
+    const payment = await screen.findByTestId('report-tile-payment_cadence_by_type')
+    // הערך עצמו ימים; חצי-ההשוואה ספירת-חשבוניות — ולכן "⁦675⁩ ימים" שם הוא הפגם.
+    expect(payment).toHaveTextContent('⁦69⁩ ימים')
+    const compare = within(payment).getByTestId('kpi-compare')
+    expect(compare).toHaveTextContent('על ⁦675⁩ חשבוניות ששולמו')
+    expect(compare.textContent).not.toMatch(/675.{0,3}ימים/)
+
+    // הפילוח לפי שנה נושא את **שלוש השנים**, ולא חוזר על ערך-האריח עם ▲ מומצא.
+    const other = within(screen.getByTestId('report-tile-biggest_negative_is_other')).getByTestId(
+      'kpi-compare',
+    )
+    expect(other).toHaveTextContent('⁦2024⁩')
+    expect(other).toHaveTextContent('⁦2025⁩')
+    expect(other).toHaveTextContent('⁦2026⁩')
+    expect(other).toHaveTextContent('פילוח לפי שנה')
+    // ▲/▼ הוא סימן-כיוון; על פילוח אין כיוון, ולכן `direction: 'flat'` אינו מצייר חץ.
+    expect(other.textContent).not.toContain('▲')
+  })
+
+  it('i2 · ממוצע-המשוב בטבלה מוצג בשתי ספרות ולא משוטח לאחת', async () => {
+    callReport.mockResolvedValue(overviewPayload())
+    renderTab(SURFACES.מ19)
+    const row = await screen.findByTestId('report-row-drillable')
+    // העמודה `ratio` הציגה ⁦4.6⁩ במקום ⁦4.63⁩ שבמוקאפ; i2 מחזיר זוג-מחרוזת עם מונה-המדגם.
+    expect(row).toHaveTextContent('⁦4.63⁩')
+    expect(row).toHaveTextContent('n=129')
+  })
+
   it('`tiles[].detail` מוצג כגילוי ולא כאריח שני, עם התוויות העבריות של סוג-הלקוח', async () => {
     callReport.mockResolvedValue(overviewPayload())
     renderTab(SURFACES.מ19)
@@ -668,6 +748,19 @@ describe('מ21 · לקוחות מתרחקים', () => {
 })
 
 describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
+  it('מ25 · פס-הניתוח יושב בין שורת-"אז מה" לאריחים, כסדר המוקאפ', async () => {
+    callReport.mockResolvedValue(notesPayload())
+    renderTab(SURFACES.מ22)
+    const bar = await screen.findByTestId('m25-run-bar')
+    const follows = (a, b) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+    // המוקאפ של דף מ22: `so-what → רמז א → runbar → רמז ב → אריחים`.
+    expect(follows(screen.getByTestId('report-so-what'), bar)).toBe(true)
+    expect(follows(screen.getByTestId('hint-reports.notes.why'), bar)).toBe(true)
+    expect(follows(bar, screen.getByTestId('hint-reports.notes.runGate'))).toBe(true)
+    expect(follows(bar, screen.getByTestId('report-tiles'))).toBe(true)
+  })
+
   it('ריצה מאושרת — הפס אומר מי אישר ומתי, והטבלה מציגה עברית ולא בוליאני', async () => {
     callReport.mockResolvedValue(notesPayload())
     renderTab(SURFACES.מ22)
@@ -906,13 +999,16 @@ describe('מצבי-מעטפת ושכבת-ההטמעה', () => {
     const follows = (a, b) =>
       Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
 
+    const soWhat = screen.getByTestId('report-so-what')
     const tiles = screen.getByTestId('report-tiles')
     const banner = screen.getByTestId('drifting-two-methods')
     const table = screen.getByTestId('report-table-card')
 
-    // ⑩א · מעל האריחים. ⚠️ **והחצי השני של עוגן-הכרטיס — *"מתחת לשורת-אז-מה"* — אינו
-    // מתקיים**: המעטפת מרנדרת את `renderTop` לפני שורת-"אז מה", ואין לה עדיין סלוט
-    // ‏`renderAfterSoWhat`. נבדק בשלד ב-16/09 12:1X ואינו קיים; מדווח, לא נעקף.
+    // ⑩א · **שני חצאי-העוגן, סוף-סוף:** *"מתחת לשורת-אז-מה, מעל האריחים"*. עד
+    // ‏HEAD fb7bcd26 החצי הראשון לא היה בר-קיום — `renderTop` יושב מעל שורת-האוכלוסייה —
+    // והבדיקה נעלה רק את החצי השני. הסלוט `renderAfterSoWhat` נולד, הרמז עבר אליו,
+    // ו**זו הבדיקה שתתפוס אם מישהו יחזיר אותו ל-`renderTop`**.
+    expect(follows(soWhat, why)).toBe(true)
     expect(follows(why, tiles)).toBe(true)
     // ⑩ב · מתחת לאריחים ומעל הבאנר שהוא מסביר.
     expect(follows(tiles, basis)).toBe(true)
