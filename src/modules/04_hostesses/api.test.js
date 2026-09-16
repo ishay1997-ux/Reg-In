@@ -29,6 +29,8 @@ import { sendEmail, getEmailTemplate } from '@/api/email'
 import { geocodeAddress } from '@/api/geocode'
 import { SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
 import { HOSTESS_PARAM_NAMES } from '@/lib/hostesses'
+// המיין האמיתי של המסך, לא מוק: הבדיקה שלמטה מראה שהוא באמת משנה את הסדר.
+import { sortByAngle } from '@/lib/sortAngles'
 import {
   listStaffingOverview,
   releaseAssignment,
@@ -39,6 +41,9 @@ import {
   updateHostess,
   getHostess,
   listHostesses,
+  createShiftInvites,
+  resendInvite,
+  buildRecommendedRanks,
 } from './api'
 
 // ── עוזר-מוקינג: "בילדר" שרשרתי אחד לכל הקריאות ─────────────────────────────────
@@ -711,5 +716,235 @@ describe('getHostessScreenParams — פרמטר חסר זורק ונוקב בש�
 
     expect(params[HOSTESS_PARAM_NAMES.inviteValidityHours]).toBe('1')
     expect(params[SMART_MATCH_PARAM_NAMES.gateDistanceKm]).toBe('1')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// (6) דרג-השיבוץ `recommended_rank` — M11-4 · כרטיס ת5 · מדריך-המיקרו של מ11 צעד 1.5
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🔴 **ארבע ההתנהגויות שהצעד מחייב, וכל אחת מהן נשברת בשקט:** (1) הדרג נגזר מ-`ranked`
+// (סדר-הציון של המערכת) ולא מ-`candidates` (הזווית שהמנהלת בחרה) · (2) הוא נכתב **פעם
+// אחת, ב-insert**, ו-`writeInviteToken` — נתיב השליחה-החוזרת, המיובא גם ע"י מודול 6 —
+// אינו נוגע בו כלל · (3) זימון שלא נולד ברשימת-ההמלצות (תפריט-השורה) נשאר `NULL` ·
+// (4) כשל-כתיבה של הדרג **אינו מפיל את הזימון**: ניסיון-חוזר בלי הדרג + `console.warn`.
+//
+// ⚠️ **העמודה `assignments.recommended_rank` טרם קיימת במסד** כשהבדיקות האלה נכתבו
+// (`db_roadmap` M11-4 — המיגרציה מוחלת בנפרד), ולכן כולן ממוקקות; ה-E2E של מ4 הוא מה
+// שיבדוק את הכתיבה מול מסד חי.
+
+const RANK_INVITE_TEMPLATE = 'היי [שם_דיילת], לאישור: [לינק_אישור_משמרת]'
+const rankProject = {
+  project_id: 8,
+  event_name: 'כנס לקוחות שנתי',
+  final_event_date: '2026-10-01',
+  final_start_time: '18:00:00',
+  final_end_time: '22:00:00',
+  final_location: 'אקספו תל אביב, ביתן 2',
+}
+const rankHostess = {
+  hostess_id: 21,
+  full_name: 'נועה שגיא',
+  email: 'noa@example.test',
+  hourly_rate: 45,
+}
+const rankInsertedRow = { project_id: 8, hostess_id: 21, assignment_number: 1 }
+
+// עוטף את `supabase.from` שכבר הותקן ע"י `setupFrom`, ואוסף את ה"בילדרים" שנוצרו — כדי
+// שאפשר יהיה לבדוק **מה נשלח בפועל** ל-`insert`/`update`, ולא רק מה חזר. כל קריאה ל-
+// `supabase.from(...)` מחזירה בילדר טרי ⇒ לכל אחד מהם לכל היותר קריאה אחת לכל מתודה.
+function captureBuilders() {
+  const created = []
+  const installed = supabase.from.getMockImplementation()
+  supabase.from.mockImplementation((table) => {
+    const builder = installed(table)
+    created.push(builder)
+    return builder
+  })
+  return created
+}
+
+function payloadsOf(builders, method) {
+  return builders
+    .filter((builder) => builder[method].mock.calls.length > 0)
+    .map((builder) => builder[method].mock.calls[0][0])
+}
+
+// תור-הטבלאות לזרימת-זימון אחת מלאה: פרויקט · דיילות · קריאת-השורות-הקיימות ·
+// ה-insertים שהבדיקה מבקשת · ועדכון-הטוקן של `writeInviteToken`.
+function queueInviteFlow(insertResults) {
+  const queues = {}
+  queueTable(queues, 'projects', { data: rankProject, error: null })
+  queueTable(queues, 'hostesses', { data: [rankHostess], error: null })
+  queueTable(queues, 'assignments', { data: [], error: null })
+  for (const result of insertResults) queueTable(queues, 'assignments', result)
+  queueTable(queues, 'assignments', { data: [rankInsertedRow], error: null })
+  setupFrom(queues)
+  return captureBuilders()
+}
+
+describe('buildRecommendedRanks — הדרג הוא המיקום ב-ranked, לא ברשימה שעל המסך', () => {
+  const ranked = [
+    { hostess_id: 21, hourly_rate: 60, tieBreak: 'a' },
+    { hostess_id: 34, hourly_rate: 40, tieBreak: 'b' },
+    { hostess_id: 77, hourly_rate: 50, tieBreak: 'c' },
+  ]
+
+  it('מיקום 1-based לכל מועמדת, לפי סדר-הציון של המערכת', () => {
+    expect(buildRecommendedRanks(ranked)).toEqual({ 21: 1, 34: 2, 77: 3 })
+  })
+
+  it('🔴 זווית-התצוגה הייתה משנה את המספרים — ולכן היא אינה המקור', () => {
+    const shown = sortByAngle(ranked, 'cheapest')
+
+    expect(buildRecommendedRanks(shown)).not.toEqual(buildRecommendedRanks(ranked))
+    expect(buildRecommendedRanks(shown)[34]).toBe(1)
+    expect(buildRecommendedRanks(ranked)[34]).toBe(2)
+  })
+
+  it('רשימה ריקה או חסרה ⇒ מפה ריקה, בלי זריקה', () => {
+    expect(buildRecommendedRanks([])).toEqual({})
+    expect(buildRecommendedRanks(undefined)).toEqual({})
+  })
+})
+
+describe('createShiftInvites — הדרג נכתב פעם אחת, ב-insert בלבד', () => {
+  beforeEach(() => {
+    getEmailTemplate.mockResolvedValue(RANK_INVITE_TEMPLATE)
+    sendEmail.mockResolvedValue({})
+  })
+
+  it('🔴 הדרג מהמפה נכתב על שורת-השיבוץ החדשה', async () => {
+    const builders = queueInviteFlow([{ data: rankInsertedRow, error: null }])
+
+    const outcome = await createShiftInvites({
+      projectId: 8,
+      hostessIds: [21],
+      origin: 'https://reg-in.test',
+      ranks: { 21: 3 },
+    })
+
+    expect(outcome.sent).toBe(1)
+    expect(payloadsOf(builders, 'insert')[0]).toMatchObject({
+      project_id: 8,
+      hostess_id: 21,
+      assignment_status: 'pending',
+      recommended_rank: 3,
+    })
+  })
+
+  it('בלי `ranks` כלל (כל הקוראים הקיימים) ⇒ העמודה אינה נשלחת והשורה נשארת NULL', async () => {
+    const builders = queueInviteFlow([{ data: rankInsertedRow, error: null }])
+
+    await createShiftInvites({ projectId: 8, hostessIds: [21], origin: 'https://reg-in.test' })
+
+    expect(payloadsOf(builders, 'insert')[0]).not.toHaveProperty('recommended_rank')
+  })
+
+  it('🔴 דיילת שאינה במפה — זימון מתפריט-השורה למי שסוננה מהרשימה ⇒ NULL', async () => {
+    const builders = queueInviteFlow([{ data: rankInsertedRow, error: null }])
+
+    await createShiftInvites({
+      projectId: 8,
+      hostessIds: [21],
+      origin: 'https://reg-in.test',
+      ranks: { 99: 1 },
+    })
+
+    expect(payloadsOf(builders, 'insert')[0]).not.toHaveProperty('recommended_rank')
+  })
+
+  it('🔴 כשל שניתן לייחס לעמודת-הדרג אינו מפיל את הזימון — ניסיון-חוזר בלי הדרג + אזהרה', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const builders = queueInviteFlow([
+      {
+        data: null,
+        error: {
+          code: 'PGRST204',
+          message:
+            "Could not find the 'recommended_rank' column of 'assignments' in the schema cache",
+        },
+      },
+      { data: rankInsertedRow, error: null },
+    ])
+
+    const outcome = await createShiftInvites({
+      projectId: 8,
+      hostessIds: [21],
+      origin: 'https://reg-in.test',
+      ranks: { 21: 1 },
+    })
+
+    const inserts = payloadsOf(builders, 'insert')
+    expect(inserts).toHaveLength(2)
+    expect(inserts[0].recommended_rank).toBe(1)
+    expect(inserts[1]).not.toHaveProperty('recommended_rank')
+    expect(outcome.sent).toBe(1)
+    expect(outcome.failed).toBe(0)
+    expect(warn).toHaveBeenCalled()
+    warn.mockRestore()
+  })
+
+  it('רגרסיה: מרוץ `23505` עדיין מקבל ניסיון-חוזר אחד — והדרג נשמר גם בו', async () => {
+    const queues = {}
+    queueTable(queues, 'projects', { data: rankProject, error: null })
+    queueTable(queues, 'hostesses', { data: [rankHostess], error: null })
+    queueTable(queues, 'assignments', { data: [], error: null })
+    queueTable(queues, 'assignments', {
+      data: null,
+      error: { code: '23505', message: 'duplicate' },
+    })
+    // הניסיון-החוזר של מרוץ-המפתח קורא את השורות מחדש ומחשב מספר-שיבוץ חדש.
+    queueTable(queues, 'assignments', { data: [rankInsertedRow], error: null })
+    queueTable(queues, 'assignments', {
+      data: { ...rankInsertedRow, assignment_number: 2 },
+      error: null,
+    })
+    queueTable(queues, 'assignments', { data: [rankInsertedRow], error: null })
+    setupFrom(queues)
+    const builders = captureBuilders()
+
+    const outcome = await createShiftInvites({
+      projectId: 8,
+      hostessIds: [21],
+      origin: 'https://reg-in.test',
+      ranks: { 21: 2 },
+    })
+
+    const inserts = payloadsOf(builders, 'insert')
+    expect(inserts).toHaveLength(2)
+    expect(inserts[1]).toMatchObject({ assignment_number: 2, recommended_rank: 2 })
+    expect(outcome.sent).toBe(1)
+  })
+})
+
+describe('resendInvite — שליחה-חוזרת אינה נוגעת בדרג', () => {
+  // 🔴 **זה בדיוק הנתיב ש-`writeInviteToken` ממממש**, והוא מיובא גם ע"י מודול 6
+  // (`06_projects/api.js` · `sendDateChangeReinvites`), שם אין דרג כלל. כתיבת-דרג שם
+  // סותרת את M11-4 עצמו (*"אינו נדרס בשליחה-חוזרת"*) **וגם מפילה אדווה שלישית על קוד מוזג.**
+  it('🔴 מטען-העדכון מכיל טוקן ו-invite_sent_at בלבד — ולעולם לא את הדרג', async () => {
+    getEmailTemplate.mockResolvedValue(RANK_INVITE_TEMPLATE)
+    sendEmail.mockResolvedValue({})
+    const queues = {}
+    queueTable(queues, 'assignments', { data: [rankInsertedRow], error: null })
+    setupFrom(queues)
+    const builders = captureBuilders()
+
+    const outcome = await resendInvite(
+      {
+        project_id: 8,
+        hostess_id: 21,
+        assignment_number: 1,
+        hourly_rate_snapshot: 45,
+        invite_sent_at: '2026-09-01T10:00:00.000Z',
+        hostesses: rankHostess,
+        projects: rankProject,
+      },
+      'https://reg-in.test',
+    )
+
+    expect(outcome.sent).toBe(1)
+    const updates = payloadsOf(builders, 'update')
+    expect(updates).toHaveLength(1)
+    expect(Object.keys(updates[0])).toEqual(['invite_token', 'invite_sent_at'])
   })
 })

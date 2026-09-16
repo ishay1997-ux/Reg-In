@@ -53,6 +53,7 @@ import AssignmentRowMenu from './AssignmentRowMenu'
 import {
   getSmartMatchData,
   createShiftInvites,
+  buildRecommendedRanks,
   resendInvite,
   approveFinalAndRelease,
   markAssignmentStatus,
@@ -266,6 +267,18 @@ export default function SmartMatchPage({ projectId, onBack }) {
       const outcome = await createShiftInvites({
         projectId,
         hostessIds: selected,
+        // 🔴 **`ranked` ולא `candidates`** — דרג-ההמלצה נשמר על שורת-השיבוץ (מ11 צעד 1.5,
+        // כרטיס ת5) כדי שדוח 14א יוכל לשאול *"האם נלקחה ההמלצה מס' 1 של המערכת"*.
+        // ‏`candidates` הוא `sortByAngle(...)` — העדשה שהמנהלת בחרה ברגע זה; לו הוא היה
+        // המקור, החלפת זווית הייתה משנה את הדרג הנשמר **בלי שאף בדיקה תיפול**, והדוח היה
+        // מודד את סדר-התצוגה במקום את ההמלצה.
+        // ✏️ הכרעת-בנאי 16/09/2026 (הפיכה, מ11 §9): הדרג נמדד על `ranked` **אחרי** סינון
+        // הדיילות שכבר יש להן שורה באירוע (`assignedIds`) — אותו סינון שהמסך עושה לפני
+        // `sortByAngle`, בלי העדשה. אחרת דיילת שכבר שובצה ומדורגת #1 הייתה מזיזה את כל
+        // המוזמנות מקום אחד למטה, ודוח 14א היה סופר "לקחה את השנייה" כשעל המסך היא הייתה
+        // הראשונה הזמינה. זה מיישב את כרטיס ת5 ("השלישית ברשימה") עם צעד 1.5 ("ranked ולא
+        // candidates") — שניהם מדברים על סדר-הציון של המערכת, לא על סדר-התצוגה.
+        ranks: buildRecommendedRanks(ranked.filter((c) => !assignedIds.has(c.hostess_id))),
         // 🔗 `window.location.origin` ולא קבוע: מייל שנשלח מסביבת-פיתוח חייב להצביע
         // לסביבת-פיתוח, אחרת "בדקתי את הקישור" בודק את הפרודקשן ולא את מה שנבנה.
         origin: window.location.origin,
@@ -344,6 +357,10 @@ export default function SmartMatchPage({ projectId, onBack }) {
         const outcome = await createShiftInvites({
           projectId,
           hostessIds: [row.hostess_id],
+          // 🚫 **בלי `ranks`, במכוון** (מ11 צעד 1.5 §3): כל מי שמגיעה לכאן כבר יש לה שורה
+          // באירוע ⇒ היא סוננה מרשימת-המועמדות (`assignedIds`), ולא הוצגה כהמלצה בזימון
+          // הזה. דוח 14א מודד אימוץ-המלצה **רק היכן שהייתה המלצה**, ולכן `NULL` כאן הוא
+          // הערך הנכון ולא נתון חסר.
           origin: window.location.origin,
         })
         reportMail(outcome, 'זימון חדש נשלח')
