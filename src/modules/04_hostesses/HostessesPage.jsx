@@ -9,7 +9,7 @@
 // ולא עמודים** — `processes-approved.md` מצטט את C5 מפורשות: *"באותו מסך"*.
 
 import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import RepositoryTab from './RepositoryTab'
 import OverviewTab from './OverviewTab'
 import HostessFormDialog from './HostessFormDialog'
@@ -32,7 +32,6 @@ export default function HostessesPage() {
   // הנתונים חיים בשכבת-ה-API, ומצב-מסך שמשכפל אותם מתיישן בשקט.
   const [reloadKey, setReloadKey] = useState(0)
   const [formHostessId, setFormHostessId] = useState(undefined) // undefined=סגור · null=חדשה · מספר=עריכה
-  const [cardHostessId, setCardHostessId] = useState(null)
 
   // 🔴 **מסך השיבוץ מחליף את העמוד ואינו חלון מעליו** — בשונה מ-3ב/3ג/3ד. זו החלטה
   // שהמוקאפ המאושר קובע: הוא מצייר **מסך מלא** עם `← חזרה למבט-על` משלו, ולא פופ-אפ.
@@ -49,6 +48,43 @@ export default function HostessesPage() {
   const [smartMatchProjectId, setSmartMatchProjectId] = useState(
     () => location.state?.smartMatchProjectId ?? null,
   )
+
+  // 🔗 **`?hostess=<id>` פותח את כרטיס-הדיילת בדיוק כמו לחיצת-שורה** — הדלת נבנתה עבור
+  // מנתב-הדלתות של מ11 (`ReportsPage.jsx` `DOOR_PATHS.hostess`), שעד עכשיו הייתה "חצי-
+  // דלת" מוצהרת שנוחתת על מסך-הרשימה בלבד ולא על הכרטיס. אידיום writeParams זהה ל-
+  // ‏CustomersPage/ProjectsPage — ר' src/CLAUDE.md §3.
+  // 🔴 **הפרמטר הוא מקור-האמת היחיד, לא עותק שמחכה לסנכרון:** `cardHostessId` נגזר
+  // ישירות מ-`searchParams` בכל רינדור (בלי `useEffect`+`setState`) — בדיוק כמו `page`/
+  // ‏`status` ב-`ProjectsPage`. אילו היה גם `useState` נפרד, הוא היה יכול להיסחף מהכתובת
+  // (בדיוק המוקש שהוביל למלכודת ה-`resolveNext` שם), ובנוסף חוסם את שער-ה-lint
+  // ‏`react-hooks/set-state-in-effect` (סנכרון-מצב שיכול להיגזר ברינדור אינו effect).
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  function writeParams(patch) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        for (const [key, value] of Object.entries(patch)) {
+          if (value === undefined || value === null) next.delete(key)
+          else next.set(key, String(value))
+        }
+        return next
+      },
+      { replace: true },
+    )
+  }
+
+  const rawCardHostessId = searchParams.get('hostess')
+  const parsedCardHostessId = rawCardHostessId == null ? NaN : Number(rawCardHostessId)
+  const cardHostessId = Number.isFinite(parsedCardHostessId) ? parsedCardHostessId : null
+
+  function openCard(id) {
+    writeParams({ hostess: id })
+  }
+
+  function closeCard() {
+    writeParams({ hostess: undefined })
+  }
 
   function handleSaved() {
     setFormHostessId(undefined)
@@ -104,7 +140,7 @@ export default function HostessesPage() {
             reloadKey={reloadKey}
             onAdd={() => setFormHostessId(null)}
             onEdit={(id) => setFormHostessId(id)}
-            onOpenCard={(id) => setCardHostessId(id)}
+            onOpenCard={openCard}
           />
         ) : (
           <OverviewTab
@@ -130,9 +166,9 @@ export default function HostessesPage() {
       {cardHostessId !== null && (
         <HostessViewCard
           hostessId={cardHostessId}
-          onClose={() => setCardHostessId(null)}
+          onClose={closeCard}
           onEdit={(id) => {
-            setCardHostessId(null)
+            closeCard()
             setFormHostessId(id)
           }}
         />

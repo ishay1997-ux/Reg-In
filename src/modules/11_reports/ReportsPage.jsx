@@ -28,6 +28,7 @@ import Envelope from './components/Envelope'
 import FiltersBar from './components/FiltersBar'
 import { DEFAULT_PERIOD, parsePeriodParam, periodRange } from './reportsPeriod'
 import ReportChips from './components/ReportChips'
+import { ReportsShellContext } from './components/reportsShellContext'
 import ExecutiveTab from './tabs/ExecutiveTab'
 import FinanceTab from './tabs/FinanceTab'
 import HostessesTab from './tabs/HostessesTab'
@@ -85,15 +86,16 @@ function locateDoor(next) {
  * אחת, ו-`cards-management` שורה 8 נוקב ב**הצעת-המחיר עצמה** כיעד-הקידוח היחיד של מ4.
  * זהו גם הנתיב שהמנתב המקומי של לשונית-ההנהלה כבר השתמש בו. 🔒 המסך גדור `'הצעות מחיר'`
  * ב-`ProtectedRoute`, ולכן מי שאין לו הרשאה מקבל את מסך-החסימה של המערכת ולא דף שבור.
- * 🔴 **`hostess` הוא חצי-דלת, ומוצהר ככזה:** ל**כרטיס-הדיילת אין כתובת** — ‏`HostessesPage`
- * פותח אותו ממצב מקומי (`cardHostessId`), ולכן הלחיצה נוחתת על **מסך-הדיילות** ולא על
- * הכרטיס עצמו. הוספת `?hostess=<id>` היא נגיעה בקוד **מוזג של מודול 4** (אדווה + רגרסיה
- * מלאה שלו) ⇒ **פריט-המשך מדווח, לא תיקון שקט.**
+ * ✏️ **`hostess` תוקן 16/09/2026 — כבר לא חצי-דלת.** עד עכשיו לכרטיס-הדיילת לא הייתה
+ * כתובת, והלחיצה נחתה על **מסך-הדיילות** ולא על הכרטיס עצמו. `HostessesPage` מכבדת
+ * עכשיו `?hostess=<id>` ופותחת את הכרטיס **באותו state ואותה טעינת-נתונים כמו לחיצת-
+ * שורה** (`src/modules/04_hostesses/HostessesPage.jsx`, `writeParams` — אותו אידיום
+ * כמו `CustomersPage`/`ProjectsPage`, ר' `src/CLAUDE.md §3`).
  */
 const DOOR_PATHS = Object.freeze({
   project: (id) => `/projects/${id}`,
   customer: (id) => `/customers/${id}`,
-  hostess: () => '/hostesses',
+  hostess: (id) => `/hostesses?hostess=${id}`,
   quote: (id) => `/quotes/${id}/edit`,
 })
 
@@ -221,7 +223,12 @@ export default function ReportsPage() {
     ? (findSurface(activeTab, searchParams.get('report')) ?? activeTab.surfaces[0])
     : null
 
-  const period = parsePeriodParam(searchParams.get('period'))
+  // ✏️ **ברירת-מחדל פר-לשונית (הכרעת-ישי 16/09/2026 17:4X)** — ר' `defaultPeriod` ב-
+  // `reportsCatalog.js`: לשונית-הדיילות נפתחת על ⁦12⁩ חודשים מתגלגלים, כי כך כרטיסיה מוגדרים.
+  // 🔴 **והכתובת גוברת תמיד:** ברירת-המחדל חלה **רק** כש-`?period=` אינו בכתובת — אחרת
+  // קישור-לדוח-מסונן ששותף היה נפתח אצל המקבל על תקופה אחרת מזו שהשולחת ראתה.
+  const tabDefaultPeriod = activeTab?.defaultPeriod ?? DEFAULT_PERIOD
+  const period = parsePeriodParam(searchParams.get('period'), tabDefaultPeriod)
   const customerId = searchParams.get('customer')
   // 🔴 **"היום" מגיע מהשרת ולעולם לא מ-`new Date()`** (מוקש-השעון, `src/CLAUDE.md`; התקדים
   // המלא ב-`07_dashboard/api.js`). ⇒ **הטעינה הראשונה שולחת `null`**, ה-RPC בוחר את
@@ -273,6 +280,25 @@ export default function ReportsPage() {
     isFiltered,
     clearFilters: () => writeParams({ period: 'all', customer: undefined }),
   }
+
+  /**
+   * 🚪 **האם דלת-אריח תיפתח בכלל** — ר' `components/reportsShellContext.js`.
+   * 🔴 **והיקף השאלה מצומצם בכוונה לשאלת-ההרשאה:** יעד שאינו בקטלוג (שם-משטח שהשתנה,
+   * ‏RPC שמחזיר `report` שגוי) **נשאר דלת שנראית** — ‏`openDoor` בולם אותו בלי לנווט,
+   * והבדיקה *"יעד-אריח שאינו בקטלוג אינו כותב מצב-דריל"* היא מה שתופס שבירת-חוזה כזו.
+   * ⚠️ הסתרת הדלת שם הייתה **מבליעה** פגם-מטען לתוך מסך שנראה תקין.
+   */
+  const canOpenTarget = useCallback(
+    (target) => {
+      const door = locateDoor(target)
+      if (!door) return true
+      return canOpenTab(door.tab, permissions)
+    },
+    [permissions],
+  )
+
+  // ⚠️ ממומואיז — אובייקט-ערך חדש בכל רינדור של המעטפת היה מרנדר מחדש **כל** אריח בדף.
+  const shellValue = useMemo(() => ({ canOpenTarget }), [canOpenTarget])
 
   // 🚪 שלושת הענפים — ר' `locateDoor`/`DOOR_PATHS` למעלה.
   function openDoor(next) {
@@ -336,8 +362,10 @@ export default function ReportsPage() {
       <PageHeading surface={activeSurface} windowLabel={windowLabel} />
       <FiltersBar
         period={period}
+        // ⚠️ **ההשמטה נמדדת מול ברירת-המחדל של הלשונית ולא מול הגלובלית** — אחרת בחירה
+        // בלשונית-הדיילות ב-"השנה" הייתה נכתבת כהשמטה, והדף היה חוזר ל-⁦12⁩ חודשים.
         onPeriodChange={(next) =>
-          writeParams({ period: next === DEFAULT_PERIOD ? undefined : next })
+          writeParams({ period: next === tabDefaultPeriod ? undefined : next })
         }
         customers={customers}
         customerId={customerId}
@@ -347,14 +375,17 @@ export default function ReportsPage() {
           מטבלת §⑩ של הכרטיס**, ול-מ1 (המעטפת) אין כרטיס — היא המשטח היחיד בלי קובץ משלו
           (§⑥.2). מפתח מומצא היה מרנדר `null` בשקט בייצור (`spec.md §🚫.5`), כלומר קוד-מת
           שאף שער לא תופס. שכבת-ההטמעה נבנית בצעד 3.5, מהכרטיסים. */}
-      <TabComponent
-        surface={activeSurface}
-        filters={filters}
-        drill={drill}
-        onDrill={openDoor}
-        onWindow={handleWindow}
-        onRetry={() => setReloadTick((t) => t + 1)}
-      />
+      {/* 🚪 המעטפת היא היחידה שמחזיקה הרשאות — ר' `components/reportsShellContext.js`. */}
+      <ReportsShellContext.Provider value={shellValue}>
+        <TabComponent
+          surface={activeSurface}
+          filters={filters}
+          drill={drill}
+          onDrill={openDoor}
+          onWindow={handleWindow}
+          onRetry={() => setReloadTick((t) => t + 1)}
+        />
+      </ReportsShellContext.Provider>
     </div>
   )
 }

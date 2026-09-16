@@ -5,6 +5,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   NO_VALUE,
+  formatAxisTick,
   formatByType,
   formatDelta,
   formatGini,
@@ -205,5 +206,43 @@ describe('formatWindowLabel — 📐17: התקופה בכותרת-המשנה', (
 
   it('בלי טווח בכלל ⇒ רק הלקוח, בלי מקף מיותר', () => {
     expect(formatWindowLabel({})).toBe('כל הלקוחות')
+  })
+})
+
+// 🔴 **תוויות-ציר — נמדד בדפדפן 16/09/2026 שבלי `tickFormatter` ‏Recharts מדפיס `600000`.**
+// ⚠️ **ולמה זה לא `formatByType`:** אריח מציג ערך אחד, ציר מציג שישה זה מתחת לזה — ₪ שחוזר
+// שש פעמים ו-`.0` שחוזר שש פעמים הם רעש, והיחידה כבר נאמרת בכותרת, במקרא ובטולטיפ.
+describe('formatAxisTick — 📐4 על ציר', () => {
+  it('כסף ⇒ מפריד-אלפים בלי הגליף ₪', () => {
+    expect(formatAxisTick(600000, 'money')).toBe(`${LRI}600,000${PDI}`)
+    expect(formatAxisTick(450000, 'money')).toBe(`${LRI}450,000${PDI}`)
+  })
+
+  it('אחוז ⇒ הסימן נשאר, והאפס העשרוני יורד', () => {
+    expect(formatAxisTick(50, 'percent')).toBe(`${LRI}50%${PDI}`)
+    expect(formatAxisTick(12.46, 'percent')).toBe(`${LRI}12.5%${PDI}`)
+  })
+
+  it('מונה ⇒ מפריד-אלפים', () => {
+    expect(formatAxisTick(1200, 'int')).toBe(`${LRI}1,200${PDI}`)
+  })
+
+  // ג'יני/יחס/ציון חיים בטווח קטן — עיגול-לשלם היה מוחק את כל ההבחנה על הציר.
+  it('מדד-גיני ויחס שומרים ספרות עשרוניות', () => {
+    expect(formatAxisTick(0.43, 'gini')).toBe(`${LRI}0.43${PDI}`)
+    expect(formatAxisTick(4.75, 'ratio')).toBe(`${LRI}4.8${PDI}`)
+  })
+
+  // 🚫 מקף על ציר נקרא כערך שנמדד — ולכן ערך חסר מחזיר מחרוזת ריקה ולא `—`.
+  it('ערך חסר ⇒ ריק, לא מקף', () => {
+    expect(formatAxisTick(null, 'money')).toBe('')
+    expect(formatAxisTick(undefined, 'int')).toBe('')
+    expect(formatAxisTick(null, 'money')).not.toBe(NO_VALUE)
+  })
+
+  it('תווית-קטגוריה ופורמט לא-מוכר עוברים כמות-שהם, בלי עיגול ובלי בידוד', () => {
+    expect(formatAxisTick('ינואר', 'text')).toBe('ינואר')
+    expect(formatAxisTick('2026-09-16', 'date')).toBe('2026-09-16')
+    expect(formatAxisTick('ינואר')).toBe('ינואר')
   })
 })

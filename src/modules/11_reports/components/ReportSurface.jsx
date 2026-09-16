@@ -96,7 +96,7 @@ function Footers({ definitions, notes }) {
       )}
       {/* סייגי-דאטה שהכרטיס מחייב על המסך (C8 `meta.notes`) — למשל "נמדד על N שורות מתוך M". */}
       {notes?.length > 0 && (
-        <p className="mt-2 text-[11px] text-slate-500" data-testid="report-notes">
+        <p className="mt-2 text-[11px] text-slate-500" data-testid="report-meta-notes">
           {notes.join(' · ')}
         </p>
       )}
@@ -470,7 +470,13 @@ export default function ReportSurface({
       )}
 
       {payload.columns?.length > 0 && renderBeforeTable?.(payload)}
-      <RowCapNote rowTotal={payload.meta?.row_total} shown={payload.rows.length} />
+      {/* 🔴 **והשורה נעלמת בזמן סינון-צולב — נמדד 16/09/2026, וזה היה שקר על המסך:**
+          ‏`RowCapNote` נמדד תמיד מול `payload.rows.length` (התקרה שהשרת החזיר), בעוד הטבלה
+          שמתחתיו מציגה את `selectedRows`. ⇒ לחיצה על עמודה שהותירה ⁦2⁩ שורות השאירה מעליה
+          *"מוצגות ⁦50⁩ מתוך ⁦731⁩ שורות"*. 🔑 **ולמה להסתיר ולא לעדכן את המונה:** ההכרזה
+          החיה (📐9) כבר אומרת *"מסונן ל…; ⁦2⁩ שורות"*, ושני מונים שונים לאותה טבלה הם בדיוק
+          הכפילות ש-D-25 נולד כדי למחוק. הצ'יפ *"× נקה בחירה"* מחזיר את השורה. */}
+      {!selection && <RowCapNote rowTotal={payload.meta?.row_total} shown={payload.rows.length} />}
       <ReportTable
         columns={payload.columns}
         rows={selectedRows}

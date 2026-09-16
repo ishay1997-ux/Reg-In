@@ -13,6 +13,7 @@ import { render, screen } from '@testing-library/react'
 vi.mock('@/supabaseClient', () => ({ supabase: { rpc: vi.fn(), from: vi.fn() } }))
 
 import KpiTile from './KpiTile'
+import { ReportsShellContext } from './reportsShellContext'
 import { MASKED_TEXT } from '@/lib/dashboard'
 
 // 🌱 אריח אמיתי מתוך מטען חי (`report_m07_finance_overview`, 16/09/2026) — לא הומצא.
@@ -105,5 +106,70 @@ describe('KpiTile — הכרעה 33 · אריח עם target הוא דלת', () =
     const target = { tab: 'כספים', report: 'report_m09_aging', drill: null }
     render(<KpiTile tile={{ ...TILE, target }} onOpenTarget={vi.fn()} masked />)
     expect(screen.queryByTestId('report-tile-link-open_debt')).toBeNull()
+  })
+
+  // 🚪 **כרטיס ⑧19.2, אפשרות א — הערך נשאר, הדלת נעלמת.** נמדד 16/09/2026 על אריח ⁦4⁩ של
+  // מ19 עבור מנהלת-פרויקטים: הכפתור היה שם, ה-`aria-label` הבטיח *"פתחי את הדוח"*,
+  // והלחיצה לא עשתה **דבר** — ‏`ReportsPage.openDoor` בולם מיסוך, אבל רק אחרי הלחיצה.
+  it('יעד בלשונית ממוסכת אינו דלת — והערך עצמו נשאר על המסך', () => {
+    const target = { tab: 'כספים', report: 'report_m09_aging', drill: null }
+    render(
+      <ReportsShellContext.Provider value={{ canOpenTarget: () => false }}>
+        <KpiTile tile={{ ...TILE, target }} onOpenTarget={vi.fn()} />
+      </ReportsShellContext.Provider>,
+    )
+    expect(screen.queryByTestId('report-tile-link-open_debt')).toBeNull()
+    expect(screen.getByTestId('report-tile-open_debt')).toBeInTheDocument()
+    expect(screen.getByTestId('kpi-sub')).toBeInTheDocument()
+  })
+
+  it('יעד בלשונית פתוחה נשאר דלת מלאה', () => {
+    const target = { tab: 'כספים', report: 'report_m09_aging', drill: null }
+    render(
+      <ReportsShellContext.Provider value={{ canOpenTarget: () => true }}>
+        <KpiTile tile={{ ...TILE, target }} onOpenTarget={vi.fn()} />
+      </ReportsShellContext.Provider>,
+    )
+    expect(screen.getByTestId('report-tile-link-open_debt')).toBeInTheDocument()
+  })
+
+  // ⚠️ בלי מעטפת — הרכיב מצייר דלתות בדיוק כפי שצייר. הקונטקסט מצמצם, לעולם לא מוסיף.
+  it('מחוץ למעטפת אין שינוי התנהגות', () => {
+    const target = { tab: 'כספים', report: 'report_m09_aging', drill: null }
+    render(<KpiTile tile={{ ...TILE, target }} onOpenTarget={vi.fn()} />)
+    expect(screen.getByTestId('report-tile-link-open_debt')).toBeInTheDocument()
+  })
+})
+
+// ‏`tiles[].compare.note` — שדה C8 מ-16/09 שלא היה לו אף קורא, אף ש-⁦9⁩ מתוך ⁦16⁩ אריחי-ההנהלה
+// נושאים אותו. בלי המכנה הזה, חצי-ההשוואה הוא אחוז בלי אוכלוסייה (📐2).
+describe('KpiTile — tiles[].compare.note', () => {
+  const withNote = {
+    ...TILE,
+    compare: { ...TILE.compare, note: '4 מתוך 18 אירועים' },
+  }
+
+  it('ההערה מוצגת מתחת לשורת-ההשוואה', () => {
+    render(<KpiTile tile={withNote} />)
+    expect(screen.getByTestId('kpi-compare-note')).toHaveTextContent('4 מתוך 18 אירועים')
+  })
+
+  it('הסדר הוא sub ⇐ השוואה ⇐ הערת-השוואה ⇐ חלון', () => {
+    render(<KpiTile tile={withNote} />)
+    const ids = ['kpi-sub', 'kpi-compare', 'kpi-compare-note', 'kpi-window']
+    const all = Array.from(document.body.querySelectorAll('[data-testid]'))
+    const positions = ids.map((id) => all.indexOf(screen.getByTestId(id)))
+    expect([...positions].sort((a, b) => a - b)).toEqual(positions)
+  })
+
+  it('השוואה בלי note אינה מייצרת שורה ריקה', () => {
+    render(<KpiTile tile={TILE} />)
+    expect(screen.queryByTestId('kpi-compare-note')).toBeNull()
+  })
+
+  // §7.97 — מכנה בלי מונה הוא עדיין נתון; ההערה נעלמת יחד עם ההשוואה כולה.
+  it('אריח ממוסך אינו מציג את ההערה', () => {
+    render(<KpiTile tile={withNote} masked />)
+    expect(screen.queryByTestId('kpi-compare-note')).toBeNull()
   })
 })

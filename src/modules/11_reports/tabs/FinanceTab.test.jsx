@@ -437,7 +437,7 @@ describe('מ7 · מבט-על כספים', () => {
     expect(plain(screen.getByTestId('report-population'))).toContain('n=35')
     expect(plain(screen.getByTestId('report-so-what'))).toContain('מעל 60 יום')
     expect(plain(screen.getByTestId('report-definitions'))).toContain('יתרת-חוב פתוחה =')
-    expect(plain(screen.getByTestId('report-notes'))).toContain('חובות אבודים')
+    expect(plain(screen.getByTestId('report-meta-notes'))).toContain('חובות אבודים')
     expect(screen.getAllByTestId('report-row-drillable')).toHaveLength(2)
   })
 

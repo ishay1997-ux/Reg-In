@@ -23,10 +23,20 @@ vi.mock('recharts', () => {
   }
   const sanitize = (props) =>
     Object.fromEntries(Object.entries(props).filter(([, v]) => serializable(v)))
+  // 🔑 **`data-ticks` — איך בודקים `tickFormatter` דרך מוק שמסנן פונקציות:** ‏`sanitize`
+  // זורק כל פונקציה (ובצדק — Fiber אינו ניתן להמרה), ולכן `tickFormatter` לא היה נראה
+  // בבדיקה כלל. ⇒ המוק **מפעיל** אותו על שני ערכי-בדיקה ומוסר את התוצאה כמחרוזת.
+  // ⚠️ תוספת בלבד: `data-props` לא השתנה, וכל הבדיקות הקיימות ממשיכות למדוד את מה שמדדו.
+  const tickSamples = (formatter) =>
+    typeof formatter === 'function' ? JSON.stringify([50, 600000].map(formatter)) : undefined
   const stub =
     (name) =>
     ({ children, ...props }) => (
-      <div data-testid={`recharts-${name}`} data-props={JSON.stringify(sanitize(props))}>
+      <div
+        data-testid={`recharts-${name}`}
+        data-props={JSON.stringify(sanitize(props))}
+        data-ticks={tickSamples(props.tickFormatter)}
+      >
         {children}
       </div>
     )
@@ -379,5 +389,178 @@ describe('ChartCard — 📐5/📐6: ציר מאפס וקווי-ייחוס', () 
     const label = refLine.querySelector('[data-testid="recharts-Label"]')
     expect(label).not.toBeNull()
     expect(JSON.parse(label.dataset.props).value).toBe('חלוקה שווה')
+  })
+})
+
+// ── 📐4 · תוויות-הציר ───────────────────────────────────────────────────────
+//
+// 🔴 **נמדד בדפדפן 16/09/2026:** בלי `tickFormatter` ‏Recharts מדפיס את הערך גולמי, והמסך
+// הראה `600000` / `450000` במ7, `240000` במ12 ו-`100000` במ9. ‏`grep tickFormatter` = 0.
+
+// תווי-הבידוד (LRI…PDI) מוסרים לפני ההשוואה — הם בלתי-נראים, וההשוואה כאן היא על הספרות.
+const plainTicks = (element) =>
+  JSON.parse(element.dataset.ticks).map((tick) => tick.replaceAll('⁦', '').replaceAll('⁩', ''))
+
+describe('ChartCard — 📐4: ציר-הערך נושא tickFormatter', () => {
+  it('ציר של כסף מקבל מפריד-אלפים, ובלי הגליף ₪ שהיה חוזר בכל תו-סימון', () => {
+    render(<ChartCard chart={BAR_CHART} />)
+    expect(plainTicks(screen.getAllByTestId('recharts-YAxis')[0])).toEqual(['50', '600,000'])
+  })
+
+  it('ציר של אחוזים נושא % ולא .0', () => {
+    render(
+      <ChartCard
+        chart={{ ...BAR_CHART, unit: 'percent', series: [{ key: 'revenue', label: 'שיעור' }] }}
+      />,
+    )
+    expect(plainTicks(screen.getAllByTestId('recharts-YAxis')[0])[0]).toBe('50%')
+  })
+
+  it('ציר-ימין הנעול 0–100 נשאר אחוז, גם כשציר-שמאל הוא ₪', () => {
+    render(
+      <ChartCard
+        chart={{
+          ...BAR_CHART,
+          unit: 'money',
+          series: [
+            { key: 'revenue', label: 'הכנסה', format: 'money' },
+            { key: 'profit', label: 'שולי רווח', kind: 'line', axis: 'right', format: 'percent' },
+          ],
+        }}
+      />,
+    )
+    const axes = screen.getAllByTestId('recharts-YAxis')
+    expect(plainTicks(axes[0])).toEqual(['50', '600,000'])
+    expect(plainTicks(axes[1])[0]).toBe('50%')
+  })
+
+  // ציר-קטגוריה אינו ציר-ערך — מספר-חודש אינו מקבל פסיקי-אלפים.
+  it('ציר-הקטגוריה אינו מקבל מעצב-ערכים כלל', () => {
+    render(<ChartCard chart={BAR_CHART} />)
+    expect(screen.getAllByTestId('recharts-XAxis')[0].dataset.ticks).toBeUndefined()
+  })
+})
+
+// ── chart.layout: 'horizontal' — עמודות אופקיות ────────────────────────────
+
+const REASONS_CHART = {
+  type: 'bar',
+  title: 'מה מכעיס',
+  xKey: 'reason',
+  layout: 'horizontal',
+  unit: 'int',
+  series: [{ key: 'n', label: 'משובים' }],
+  data: [
+    { reason: 'חוסר מקצועיות של הצוות', n: 7 },
+    { reason: 'איחור', n: 5 },
+  ],
+}
+
+describe('ChartCard — chart.layout: "horizontal"', () => {
+  // 🔴 ‏`layout` לבדו כבר נמסר ל-Recharts, אבל בלי החלפת **סוגי-הצירים** הלוח יוצא ריק.
+  it('הקטגוריה עוברת לציר-Y והערך ל-X', () => {
+    render(<ChartCard chart={REASONS_CHART} />)
+    expect(JSON.parse(screen.getByTestId('recharts-BarChart').dataset.props).layout).toBe(
+      'vertical',
+    )
+    const yAxis = JSON.parse(screen.getAllByTestId('recharts-YAxis')[0].dataset.props)
+    expect(yAxis.dataKey).toBe('reason')
+    expect(yAxis.type).toBe('category')
+    const xAxis = JSON.parse(screen.getAllByTestId('recharts-XAxis')[0].dataset.props)
+    expect(xAxis.type).toBe('number')
+    expect(xAxis.domain).toEqual([0, 'auto'])
+  })
+
+  // 📏 ציר-Y של Recharts קבוע ב-60px; תווית-סיבה עברית נחתכת שם בשקט.
+  it('רוחב ציר-הקטגוריה נגזר מהתווית הארוכה ביותר, ומעל ברירת-המחדל', () => {
+    render(<ChartCard chart={REASONS_CHART} />)
+    const { width } = JSON.parse(screen.getAllByTestId('recharts-YAxis')[0].dataset.props)
+    expect(width).toBeGreaterThan(60)
+    expect(width).toBeLessThanOrEqual(190)
+  })
+
+  it('בלי layout הצירים נשארים כשהיו — הקטגוריה ב-X', () => {
+    render(<ChartCard chart={{ ...REASONS_CHART, layout: undefined }} />)
+    expect(JSON.parse(screen.getByTestId('recharts-BarChart').dataset.props).layout).toBe(
+      'horizontal',
+    )
+    expect(JSON.parse(screen.getAllByTestId('recharts-XAxis')[0].dataset.props).dataKey).toBe(
+      'reason',
+    )
+  })
+
+  // טבלת-קורא-המסך אינה יודעת דבר על כיוון הציור — אותם נתונים בדיוק.
+  it('טבלת-קורא-המסך אינה משתנה עם הכיוון', () => {
+    render(<ChartCard chart={REASONS_CHART} />)
+    expect(screen.getByRole('table')).toHaveTextContent('חוסר מקצועיות של הצוות')
+  })
+})
+
+// ── 🚫 עמודה שספירתה 0 אינה דלת ────────────────────────────────────────────
+
+const ZERO_CHART = {
+  type: 'bar',
+  title: 'אי-הגעה לפי מדרג',
+  xKey: 'bucket',
+  unit: 'int',
+  series: [{ key: 'n', label: 'שורות' }],
+  data: [
+    { bucket: 'א', n: 4 },
+    { bucket: 'ב', n: 0 },
+  ],
+}
+
+describe('ChartCard — עמודה שספירתה 0 אינה נלחצת', () => {
+  it('הכפתור בטבלת-קורא-המסך מנוטרל לעמודת-האפס בלבד', () => {
+    render(<ChartCard chart={ZERO_CHART} onSelect={vi.fn()} />)
+    expect(screen.getByTestId('chart-select-0')).toBeEnabled()
+    expect(screen.getByTestId('chart-select-1')).toBeDisabled()
+  })
+
+  it('לחיצה על עמודת-האפס אינה מפעילה את הקרוס-פילטר', () => {
+    const onSelect = vi.fn()
+    render(<ChartCard chart={ZERO_CHART} onSelect={onSelect} />)
+    screen.getByTestId('chart-select-1').click()
+    expect(onSelect).not.toHaveBeenCalled()
+    screen.getByTestId('chart-select-0').click()
+    expect(onSelect).toHaveBeenCalledTimes(1)
+  })
+
+  // 🔑 הסמן אומר את אותו דבר שהמקלדת אומרת — אחרת אחד משניהם משקר.
+  it('התא של עמודת-האפס נושא cursor: not-allowed, והאחר pointer', () => {
+    render(<ChartCard chart={ZERO_CHART} onSelect={vi.fn()} />)
+    const cells = screen.getAllByTestId('recharts-Cell')
+    expect(JSON.parse(cells[0].dataset.props).cursor).toBe('pointer')
+    expect(JSON.parse(cells[1].dataset.props).cursor).toBe('not-allowed')
+  })
+
+  it('בלי קרוס-פילטר אין סמן כלל — אין מה להבטיח', () => {
+    render(<ChartCard chart={ZERO_CHART} />)
+    const cells = screen.getAllByTestId('recharts-Cell')
+    expect(JSON.parse(cells[1].dataset.props).cursor).toBeUndefined()
+  })
+
+  // ⚠️ מוערם: קטגוריה ריקה היא זו שכל נדבכיה אפס, לא זו שנדבך אחד שלה אפס.
+  it('בגרף מוערם — נדבך אחד ריק אינו מרוקן את הקטגוריה', () => {
+    const onSelect = vi.fn()
+    render(
+      <ChartCard
+        chart={{
+          ...ZERO_CHART,
+          type: 'stackedBar',
+          series: [
+            { key: 'n', label: 'א' },
+            { key: 'm', label: 'ב' },
+          ],
+          data: [
+            { bucket: 'א', n: 0, m: 3 },
+            { bucket: 'ב', n: 0, m: 0 },
+          ],
+        }}
+        onSelect={onSelect}
+      />,
+    )
+    expect(screen.getByTestId('chart-select-0')).toBeEnabled()
+    expect(screen.getByTestId('chart-select-1')).toBeDisabled()
   })
 })

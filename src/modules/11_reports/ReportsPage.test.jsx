@@ -5,7 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, within, fireEvent, act } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useSearchParams } from 'react-router-dom'
 
 // ⚠️ חובה (מלכודת `.env.local` מול CI): בלי המוק, כל בדיקת-רכיב שנוגעת ב-api קורסת ב-CI.
 vi.mock('@/supabaseClient', () => ({ supabase: { rpc: vi.fn(), from: vi.fn() } }))
@@ -264,6 +264,70 @@ describe('מ1 — מצב-התצוגה חי בכתובת (📐13④ · S-18)', ()
   })
 })
 
+// ── ✏️ ברירת-מחדל פר-לשונית — הכרעת-ישי 16/09/2026 17:4X (כרטיס ⑧H2) ────────
+//
+// 🔴 **הפגם שזה סוגר הוא פער-אוכלוסייה, לא נוחות:** כרטיסי-הדיילות מוגדרים על **חלון
+// מתגלגל של ⁦12⁩ חודשים**, והלשונית נפתחה על **שנה קלנדרית** — המסך מדד אוכלוסייה אחת
+// והכרטיס הגדיר אחרת, בלי שאף שער יראה זאת.
+describe('מ1 — ברירת-מחדל של תקופה פר-לשונית', () => {
+  const serverToday = (over = {}) =>
+    payload({ window: { from: '2026-01-01', to: '2026-09-16', label: '2026' }, ...over })
+
+  it('לשונית-הדיילות נפתחת על 12 חודשים מתגלגלים, בלי period בכתובת', async () => {
+    permissions = CEO
+    callReport.mockResolvedValue(serverToday())
+    renderPage('/reports?tab=hostesses')
+    await screen.findByTestId('reports-filters')
+    await waitFor(() => {
+      const last = callReport.mock.calls.at(-1)[1]
+      expect(last.from).toBe('2025-09-16')
+      expect(last.to).toBe('2026-09-16')
+    })
+    // 📐17 — והכותרת-המשנה אומרת את הטווח המתגלגל, לא "2026".
+    expect(screen.getByTestId('reports-window-label').textContent).toContain('16/09/2025')
+  })
+
+  it('לשונית-ההנהלה נשארת על השנה הקלנדרית', async () => {
+    permissions = CEO
+    callReport.mockResolvedValue(serverToday())
+    renderPage('/reports?tab=exec')
+    await screen.findByTestId('reports-filters')
+    await waitFor(() => {
+      const last = callReport.mock.calls.at(-1)[1]
+      expect(last.from).toBe('2026-01-01')
+    })
+  })
+
+  // 🔴 **הכתובת גוברת תמיד** — אחרת קישור-לדוח ששותף היה נפתח אצל המקבל על תקופה אחרת.
+  it('period בכתובת גובר על ברירת-המחדל של הלשונית', async () => {
+    permissions = CEO
+    callReport.mockResolvedValue(serverToday())
+    renderPage('/reports?tab=hostesses&period=month')
+    await screen.findByTestId('reports-filters')
+    await waitFor(() => {
+      expect(callReport.mock.calls.at(-1)[1].from).toBe('2026-09-01')
+    })
+  })
+
+  // הלוך-ושוב בכתובת: בחירה נכתבת, וחזרה לברירת-המחדל של הלשונית משמיטה את הפרמטר.
+  it('בחירה נכתבת לכתובת, ובחירה חוזרת בברירת-המחדל משמיטה אותה', async () => {
+    permissions = CEO
+    callReport.mockResolvedValue(serverToday())
+    renderPage('/reports?tab=hostesses')
+    await screen.findByTestId('reports-filters')
+
+    await click(screen.getByTestId('reports-period-year'))
+    await waitFor(() => {
+      expect(callReport.mock.calls.at(-1)[1].from).toBe('2026-01-01')
+    })
+
+    await click(screen.getByTestId('reports-period-12m'))
+    await waitFor(() => {
+      expect(callReport.mock.calls.at(-1)[1].from).toBe('2025-09-16')
+    })
+  })
+})
+
 describe('מ1 — מצבי-המעטפת (📐10)', () => {
   it('תקלה מציגה את מצב-השגיאה עם "נסי שוב", ולא "אין נתונים"', async () => {
     callReport.mockRejectedValue(Object.assign(new Error('boom'), { code: 'XX000' }))
@@ -358,6 +422,19 @@ const doorPayload = (over = {}) =>
     ...over,
   })
 
+// 🔗 **`?hostess=<id>` — `HostessesPage.jsx` האמיתי הוא זה שקורא אותו וגם פותח את
+// הכרטיס.** כאן מסך-המוק רק מציג את הפרמטר, כדי שהבדיקה תדע שהמנתב (`DOOR_PATHS.hostess`)
+// אכן העביר אותו הלאה בכתובת, ולא רק ניווט ל-`/hostesses` בלי id (תוקן 16/09/2026).
+function HostessDoorScreen() {
+  const [params] = useSearchParams()
+  return (
+    <>
+      <p>מסך דיילות</p>
+      <p data-testid="hostess-door-param">{params.get('hostess') ?? ''}</p>
+    </>
+  )
+}
+
 function renderDoors(initialEntry = '/reports?tab=hostesses') {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
@@ -365,7 +442,7 @@ function renderDoors(initialEntry = '/reports?tab=hostesses') {
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/projects/:id" element={<p>מסך פרויקט</p>} />
         <Route path="/customers/:customerId" element={<p>מסך לקוח</p>} />
-        <Route path="/hostesses" element={<p>מסך דיילות</p>} />
+        <Route path="/hostesses" element={<HostessDoorScreen />} />
         <Route path="/quotes/:quoteId/edit" element={<p>מסך הצעת מחיר</p>} />
       </Routes>
     </MemoryRouter>,
@@ -413,12 +490,28 @@ describe('מ1 — מנתב-הדלתות', () => {
   })
 
   // ת8 — מיסוך אינו נעקף דרך אריח: מנהלת-גיוס אינה רואה את לשונית-הלקוחות כלל.
-  it('① יעד בלשונית ממוסכת אינו פותח דבר', async () => {
+  //
+  // ✏️ **הבדיקה שונתה 16/09/2026 — והשינוי הוא ההתנהגות, לא הניסוח:** עד היום האריח נשאר
+  // ‏`<button>` עם `aria-label` *"פתחי את הדוח"* שלחיצה עליו לא עשתה **דבר** (נמדד ע"י בונה-
+  // הלקוחות על אריח ⁦4⁩ של מ19 למנהלת-פרויקטים). כרטיס ⑧19.2 ממליץ על אפשרות **א** — *הערך
+  // נשאר, הדלת נעלמת* — והמעטפת היא היחידה שיודעת מה ממוסך ⇒ `ReportsShellContext`.
+  it('① יעד בלשונית ממוסכת אינו דלת כלל — הערך נשאר, הכפתור נעלם', async () => {
     permissions = RECRUIT
     callReport.mockResolvedValue(doorPayload())
     renderDoors()
-    await click(await screen.findByTestId('report-tile-link-red'))
+    // האריח עצמו על המסך, עם הערך — רק הדלת אינה קיימת.
+    expect(await screen.findByTestId('report-tile-red')).toHaveTextContent('דיילות אדומות')
+    expect(screen.queryByTestId('report-tile-link-red')).toBeNull()
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('מבט-על דיילות')
+  })
+
+  // 🔑 **אותו אריח בדיוק, למנכ"ל — הדלת שם.** בלי הצד הזה הבדיקה שמעל הייתה עוברת גם אילו
+  // הדלת נעלמה לכולם.
+  it('① אותו יעד לתפקיד שיש לו את הלשונית — נשאר דלת', async () => {
+    permissions = CEO
+    callReport.mockResolvedValue(doorPayload())
+    renderDoors()
+    expect(await screen.findByTestId('report-tile-link-red')).toBeInTheDocument()
   })
 
   it('② דלת-שורה מנווטת למסך של הישות', async () => {
@@ -431,6 +524,9 @@ describe('מ1 — מנתב-הדלתות', () => {
     renderDoors()
     await click((await screen.findAllByTestId('report-row-drillable'))[0])
     expect(await screen.findByText('מסך דיילות')).toBeInTheDocument()
+    // ✏️ 16/09/2026 — הדלת כבר לא חצי-דלת (ר' `DOOR_PATHS.hostess`): ה-id עובר בכתובת,
+    // ‏`HostessesPage` פותחת ממנו את כרטיס-הדיילת עצמו ולא רק את מסך-הרשימה.
+    expect(screen.getByTestId('hostess-door-param')).toHaveTextContent('449')
   })
 
   it('② דלת-לקוח ודלת-פרויקט מגיעות לשני מסכים שונים', async () => {

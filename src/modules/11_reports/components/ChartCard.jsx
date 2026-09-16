@@ -33,7 +33,7 @@ import {
   YAxis,
   ZAxis,
 } from 'recharts'
-import { formatByType } from '@/lib/reportsFormat'
+import { formatAxisTick, formatByType } from '@/lib/reportsFormat'
 
 // 🎨 **שלושה צבעים, ואין רביעי** (§⑤ · §①): טורקיז לסדרה-עיקרית · אפור-סלייט לתקופה-קודמת/
 // סדרה-משנית · אדום **רק** לערך שחוצה סף מוגדר (כלל-המילוי §④).
@@ -49,6 +49,32 @@ const AXIS_COLOR = '#90A1B9'
 const AXIS_TEXT = '#62748E'
 
 const seriesColor = (index) => SERIES_COLORS[index % SERIES_COLORS.length]
+
+/**
+ * 🚫 **דאטום שכל סדרותיו אפס אינו דלת-סינון** — הכרטיס נוקב בזה מפורשות: *עמודה שספירתה ⁦0⁩
+ * מראה `cursor: not-allowed` ואינה עושה דבר*.
+ *
+ * 🔴 **ולמה זה מבחן אחד ולא שלושה:** אותה שאלה נשאלת בשלושה מקומות — הגוון-והסמן על התא,
+ * ה-`onClick` על העמודה, והכפתור בטבלת-קורא-המסך. שלושה עותקים היו מתפצלים ביום שבו אחד
+ * מהם יתוקן, והמשתמשת הייתה מקבלת סמן-חסום על עמודה שכן נלחצת (או להפך).
+ * ⚠️ **המבחן הוא על כל הסדרות ולא על הראשונה בלבד** — בגרף-מוערם עמודה "ריקה" היא זו שכל
+ * הנדבכים שלה אפס; נדבך אחד ריק אינו מרוקן את הקטגוריה.
+ */
+function isEmptyDatum(row, series) {
+  return !(series ?? []).some((s) => {
+    const value = Number(row?.[s.key])
+    return Number.isFinite(value) && value !== 0
+  })
+}
+
+// 🔑 **`onSelect` שמסנן בעצמו** — כך שאף אתר-קריאה אינו צריך לזכור את המבחן שמעליו.
+function guardedSelect(onSelect, series) {
+  if (!onSelect) return undefined
+  return (row, index) => {
+    if (isEmptyDatum(row, series)) return
+    onSelect(row, index)
+  }
+}
 
 /**
  * שקילות-מקלדת לקרוס-פילטר — **הפער שהתיעוד מסמן ואינו פותר** (§⑤ #7 · Issues #1946/#4809):
@@ -85,7 +111,11 @@ function AccessibleDataTable({ title, xKey, series, data, onSelect, unit }) {
                   <button
                     type="button"
                     onClick={() => onSelect(row, index)}
-                    className="font-semibold text-teal-700 underline"
+                    // 🚫 קטגוריה שכל ערכיה אפס — הכפתור **מנוטרל** ולא "נלחץ ולא קורה כלום":
+                    // נתיב-המקלדת חייב לומר את אותו דבר שהעכבר אומר (`cursor: not-allowed`),
+                    // אחרת קוראת-מסך שומעת דלת שאינה קיימת.
+                    disabled={isEmptyDatum(row, series)}
+                    className="font-semibold text-teal-700 underline disabled:cursor-not-allowed disabled:text-slate-400 disabled:no-underline"
                     data-testid={`chart-select-${index}`}
                   >
                     {row[xKey]}
@@ -145,6 +175,22 @@ function axisProps(extra = {}) {
 // 🚫 קטיעת-ציר מנפחת את גודל-האפקט הנתפס, וסימון-קטיעה אינו מנטרל זאת (arXiv 1907.02035).
 function valueDomain(domain) {
   return Array.isArray(domain) && domain.length === 2 ? domain : [0, 'auto']
+}
+
+/**
+ * ‏**הפורמט של ציר-הערך נגזר מהסדרות שיושבות עליו**, ו-`chart.unit` הוא הגיבוי.
+ * 🔴 **ולא `chart.unit` לבדו:** בלוח דו-צירי (`ComposedBody`) ציר-שמאל הוא ₪ וציר-ימין אחוזים
+ * — ‏`unit` אחד לשניהם היה מסמן את ציר-הימין בפסיקי-אלפים של כסף.
+ */
+function valueFormat(series, unit, side = 'left') {
+  const onSide = (series ?? []).filter((s) => (s.axis === 'right' ? 'right' : 'left') === side)
+  return (onSide[0] ?? (series ?? [])[0])?.format ?? unit
+}
+
+// 📐4 · **ציר-ערך נושא `tickFormatter` תמיד** — ר' `formatAxisTick`: בלעדיו Recharts מדפיס
+// `600000`. זו הדרך היחידה שבה ציר מצויר במודול, ולכן אין "ציר שנשכח".
+function valueAxisProps(format, extra = {}) {
+  return axisProps({ tickFormatter: (value) => formatAxisTick(value, format), ...extra })
 }
 
 function renderRefLines(refLines, yAxisId) {
@@ -236,16 +282,20 @@ const todayCellProps = (row) =>
 // תאי-הסדרה-הראשונה: כלל-המילוי §④ (אדום יחיד מעל-סף) + הצהרת-📐20 (עמודת-"היום").
 // 🔑 **פונקציה אחת לשני הגופים** (`BarBody` ו-`ComposedBody`) — שני עותקים היו נפרדים ביום
 // שבו אחד מהם יתוקן, וזה בדיוק מה ש-jscpd (3%) קיים כדי לתפוס.
-function barCells({ data, xKey, selected }) {
+function barCells({ data, xKey, selected, series, selectable }) {
   return data.map((row, rowIndex) => {
     // 🔤 **הכרעה 15-ד, מילה-במילה:** *"העמודה הנבחרת טורקיז-600, השאר slate-300"*.
     // 🔴 **וזה לא קישוט — בלעדיו הסינון-הצולב חסר את חצי-המשוב שלו:** הטבלה מתכווצת,
     // והגרף שגרם לזה נראה בדיוק כמו קודם. הצ'יפ אומר *מה* נבחר, והגוון אומר *איפה*.
     const dimmed = selected != null && String(row[xKey]) !== String(selected)
+    // 🚫 הסמן אומר את האמת על התא עצמו — ר' `isEmptyDatum`. ‏`cursor` על `<Cell>` נכתב על
+    // צורת-ה-SVG ולכן גובר על ה-`cursor` שנקבע ברמת-ה-`<Bar>`.
+    const cursor = selectable ? (isEmptyDatum(row, series) ? 'not-allowed' : 'pointer') : undefined
     return (
       <Cell
         key={`${row[xKey]}-${rowIndex}`}
         fill={dimmed ? UNSELECTED : row.over_threshold ? OVER_THRESHOLD : seriesColor(0)}
+        cursor={cursor}
         {...todayCellProps(row)}
       />
     )
@@ -275,9 +325,14 @@ function seriesNode({
   defaultKind = 'bar',
   axisIds = false,
   stacked = false,
+  allSeries,
+  radius = [4, 4, 0, 0],
 }) {
   const kind = s.kind ?? defaultKind
   const yAxisId = axisIds ? (s.axis === 'right' ? 'right' : 'left') : undefined
+  // 🚫 עמודה/נקודה שכל סדרותיה אפס אינה נלחצת — מבחן אחד לכל שלושת אתרי-הקריאה.
+  const series = allSeries ?? [s]
+  const select = guardedSelect(onSelect, series)
   if (kind === 'line') {
     return (
       <Line
@@ -294,7 +349,7 @@ function seriesNode({
         dot={{ r: 3 }}
         activeDot={{
           r: 5,
-          onClick: onSelect ? (_, payload) => onSelect(payload?.payload) : undefined,
+          onClick: select ? (_, payload) => select(payload?.payload) : undefined,
         }}
       />
     )
@@ -308,25 +363,40 @@ function seriesNode({
       unit={s.format}
       stackId={stacked ? 'a' : undefined}
       fill={fillFor(idPrefix, index)}
-      radius={[4, 4, 0, 0]}
+      // ‏`radius` מגיע מבחוץ כי בעמודה **אופקית** הקצה המעוגל הוא הימני ולא העליון.
+      radius={radius}
       cursor={onSelect ? 'pointer' : undefined}
-      onClick={onSelect ? (_, barIndex) => onSelect(data[barIndex], barIndex) : undefined}
+      onClick={select ? (_, barIndex) => select(data[barIndex], barIndex) : undefined}
     >
       {/* כלל-המילוי §④: **אדום יחיד** לערך שחוצה סף מוגדר; שאר העמודות אינן משנות גוון.
           ‏`over_threshold` מגיע פר-שורה מה-RPC — הסף מוכרע בשרת, לא נגזר במסך. */}
-      {index === 0 && barCells({ data, xKey, selected })}
+      {index === 0 && barCells({ data, xKey, selected, series, selectable: Boolean(onSelect) })}
     </Bar>
   )
 }
 
-function BarSeries({ idPrefix, data, xKey, series, onSelect, selected, stacked }) {
+function BarSeries({ idPrefix, data, xKey, series, onSelect, selected, stacked, radius }) {
   return series.map((s, index) =>
-    seriesNode({ s, index, idPrefix, data, xKey, onSelect, selected, stacked, defaultKind: 'bar' }),
+    seriesNode({
+      s,
+      index,
+      idPrefix,
+      data,
+      xKey,
+      onSelect,
+      selected,
+      stacked,
+      radius,
+      allSeries: series,
+      defaultKind: 'bar',
+    }),
   )
 }
 
 function LineSeries({ series, onSelect }) {
-  return series.map((s, index) => seriesNode({ s, index, onSelect, defaultKind: 'line' }))
+  return series.map((s, index) =>
+    seriesNode({ s, index, onSelect, allSeries: series, defaultKind: 'line' }),
+  )
 }
 
 // 🔑 **סוג-גרף אחד = פונקציה אחת.** הפיצול אינו סגנון: `ChartBody` אחד ששולט בשבעת
@@ -334,7 +404,11 @@ function LineSeries({ series, onSelect }) {
 // הריפו זיהה נכון** שאף קורא לא מחזיק שבעה ענפים בראש בבת-אחת.
 
 // חלקים שחוזרים בכל הסוגים, מוגדרים פעם אחת (jscpd יתפוס אותם כפולים בשבעה מקומות).
-const commonGrid = () => <CartesianGrid stroke="#F1F5F9" vertical={false} />
+// קווי-הרשת רצים **בניצב לציר-הערך**: עמודות אנכיות ⇒ קווים אופקיים · עמודות אופקיות ⇒
+// אנכיים. רשת שנשארת אופקית מעל עמודות אופקיות מציירת קו בין קטגוריה לקטגוריה ולא בין ערך לערך.
+const commonGrid = (horizontalBars = false) => (
+  <CartesianGrid stroke="#F1F5F9" vertical={horizontalBars} horizontal={!horizontalBars} />
+)
 const commonTooltip = (unit) => (
   <Tooltip content={<HebrewTooltip unit={unit} />} cursor={{ fill: '#F1F5F9' }} />
 )
@@ -380,13 +454,18 @@ function ScatterBody({ chart, onSelect }) {
       {commonGrid()}
       {/* §5.2ב: `type="number"` מפורש — ברירת-המחדל של Recharts היא `category`, וזו
           הטעות הנפוצה שמייצרת ציר שגוי בפיזור. */}
-      <XAxis dataKey={xKey} type="number" name={series[0]?.label} {...axisProps()} />
+      <XAxis
+        dataKey={xKey}
+        type="number"
+        name={series[0]?.label}
+        {...valueAxisProps(series[0]?.format ?? unit)}
+      />
       <YAxis
         dataKey={series[1]?.key ?? 'y'}
         type="number"
         name={series[1]?.label}
         domain={valueDomain(domain)}
-        {...axisProps()}
+        {...valueAxisProps(series[1]?.format ?? unit)}
       />
       <ZAxis dataKey="z" range={[40, 260]} />
       {renderRefLines(refLines)}
@@ -427,8 +506,20 @@ function ComposedBody({ chart, idPrefix, onSelect, selected }) {
       <HatchDefs idPrefix={idPrefix} series={series} />
       {commonGrid()}
       {categoryAxis(xKey)}
-      <YAxis yAxisId="left" domain={valueDomain(domain)} {...axisProps()} />
-      {hasRight && <YAxis yAxisId="right" orientation="right" domain={[0, 100]} {...axisProps()} />}
+      <YAxis
+        yAxisId="left"
+        domain={valueDomain(domain)}
+        {...valueAxisProps(valueFormat(series, unit, 'left'))}
+      />
+      {/* ציר-ימין נעול ⁦0⁩–⁦100⁩ (📐6) ⇒ תו-הסימון שלו **תמיד אחוז**, גם כשהסדרה לא הכריזה. */}
+      {hasRight && (
+        <YAxis
+          yAxisId="right"
+          orientation="right"
+          domain={[0, 100]}
+          {...valueAxisProps('percent')}
+        />
+      )}
       {renderRefLines(refLines, hasRight ? 'right' : 'left')}
       {commonTooltip(unit)}
       {series.map((s, index) =>
@@ -471,11 +562,14 @@ function LineBody({ chart, onSelect }) {
       {commonGrid()}
       {/* לורנץ: ציר-X מצטבר מספרי 0–100, לא קטגוריה — אחרת קו-השוויון האלכסוני מאבד זווית. */}
       {lorenz ? (
-        <XAxis dataKey={xKey} type="number" domain={[0, 100]} {...axisProps()} />
+        <XAxis dataKey={xKey} type="number" domain={[0, 100]} {...valueAxisProps('percent')} />
       ) : (
         categoryAxis(xKey)
       )}
-      <YAxis domain={lorenz ? [0, 100] : valueDomain(domain)} {...axisProps()} />
+      <YAxis
+        domain={lorenz ? [0, 100] : valueDomain(domain)}
+        {...valueAxisProps(lorenz ? 'percent' : valueFormat(series, unit))}
+      />
       {renderRefLines(refLines)}
       {commonTooltip(unit)}
       {LineSeries({ series, onSelect })}
@@ -483,8 +577,57 @@ function LineBody({ chart, onSelect }) {
   )
 }
 
+/**
+ * 📏 **רוחב ציר-הקטגוריה האנכי, נגזר מהתווית הארוכה ביותר.**
+ * 🔴 **ולמה לא ברירת-המחדל:** ‏`YAxis` של Recharts קבוע ב-⁦60⁩px, ותווית-סיבה עברית בת ארבע
+ * מילים (*"חוסר מקצועיות של הצוות"*) נחתכת שם **בשקט** — בלי שגיאה ובלי שינוי-פריסה.
+ * ⚠️ **האומדן הוא אומדן ומוצהר ככזה:** ‏`jsdom` אינו מודד טקסט, ולכן הרוחב נגזר מספירת-תווים
+ * ב-⁦11⁩px (‏`axisProps`) ונחסם משני הצדדים — ⁦190⁩px היא התקרה שמעבר לה הציר אוכל את הגרף.
+ */
+const CATEGORY_CHAR_PX = 6.6
+function categoryAxisWidth(data, xKey) {
+  const longest = (data ?? []).reduce(
+    (max, row) => Math.max(max, String(row?.[xKey] ?? '').length),
+    0,
+  )
+  return Math.min(190, Math.max(64, Math.round(longest * CATEGORY_CHAR_PX) + 12))
+}
+
+/**
+ * ‏**שני צירי גרף-העמודות, ומי מהם הקטגוריה** (`chart.layout`, תוספת 16/09/2026).
+ *
+ * 🔴 **`layout` לבדו לא הספיק, וזה היה פגם ולא פער-תיעוד:** הקוד כבר העביר
+ * `layout="vertical"` ל-`BarChart`, אבל ‏Recharts מחליף צירים רק כשגם **סוגי-הצירים**
+ * מתחלפים — ציר-ערך שנשאר `YAxis` וציר-קטגוריה שנשאר `XAxis` מייצרים לוח **ריק**, בלי
+ * שגיאה. ⇒ ‏`layout: 'horizontal'` ⇒ `YAxis` קטגוריאלי + `XAxis` מספרי, שניהם כאן.
+ * 🔤 **והמקור אינו טעם:** המוקאפ המאושר של מ20 מצייר את שני גרפי-הסיבות כעמודות אופקיות
+ * (ארבע תוויות-הקטגוריה נמדדו כולן ב-`x=129` ב-SVG) — 📑ב#17 אוסר גם למזג ביניהם.
+ */
+function BarAxes({ horizontal, xKey, data, domain, format }) {
+  if (horizontal) {
+    return (
+      <>
+        <XAxis type="number" domain={valueDomain(domain)} {...valueAxisProps(format)} />
+        <YAxis
+          dataKey={xKey}
+          type="category"
+          width={categoryAxisWidth(data, xKey)}
+          {...axisProps()}
+        />
+      </>
+    )
+  }
+  return (
+    <>
+      {categoryAxis(xKey)}
+      <YAxis domain={valueDomain(domain)} {...valueAxisProps(format)} />
+    </>
+  )
+}
+
 function BarBody({ chart, idPrefix, onSelect, selected }) {
   const { type, data = [], xKey, series = [], domain, refLines, unit, layout } = chart
+  const horizontal = layout === 'horizontal'
   return (
     <BarChart
       data={data}
@@ -493,12 +636,17 @@ function BarBody({ chart, idPrefix, onSelect, selected }) {
       // §5.2ב: היסטוגרמה = `BarChart` על דליים מחושבים-מראש, עם `barCategoryGap={0}`
       // לרצף-חזותי. אין ב-Recharts primitive ייעודי.
       barCategoryGap={type === 'histogram' ? 0 : '20%'}
-      layout={layout === 'horizontal' ? 'vertical' : 'horizontal'}
+      layout={horizontal ? 'vertical' : 'horizontal'}
     >
       <HatchDefs idPrefix={idPrefix} series={series} />
-      {commonGrid()}
-      {categoryAxis(xKey)}
-      <YAxis domain={valueDomain(domain)} {...axisProps()} />
+      {commonGrid(horizontal)}
+      <BarAxes
+        horizontal={horizontal}
+        xKey={xKey}
+        data={data}
+        domain={domain}
+        format={valueFormat(series, unit)}
+      />
       {renderRefLines(refLines)}
       {commonTooltip(unit)}
       {BarSeries({
@@ -509,6 +657,8 @@ function BarBody({ chart, idPrefix, onSelect, selected }) {
         onSelect,
         selected,
         stacked: type === 'stackedBar',
+        // עמודה אופקית גדלה ימינה ⇒ הפינות המעוגלות הן הימניות.
+        radius: horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0],
       })}
     </BarChart>
   )
@@ -625,7 +775,10 @@ function ShapeLegend({ chart }) {
  * ‏`shape_key` ⇒ ערוץ-צורה בינארי בפיזור (📑ב#10) · `note` ⇒ שורת-פירוש מתחת לכותרת.
  * ‏`data[].is_today` ⇒ עמודה חלולה-ומקווקוות (📐20) · `data[].over_threshold` ⇒ אדום (§④).
  * ‏`soWhat` — שורת-📐23, **מחוץ** לעטיפת-ה-LTR ומתחת לגרף.
+ * ‏`layout: 'horizontal'` ⇒ **עמודות אופקיות** — ציר-קטגוריה אנכי (ר' `BarAxes`).
  * ‏`onSelect(row, index)` — קרוס-פילטר; מחווט גם לעכבר (Cell/Bar) וגם למקלדת (הטבלה).
+ * 🚫 **דאטום שכל סדרותיו אפס אינו נלחץ בשום נתיב** (ר' `isEmptyDatum`): סמן-חסום על התא,
+ * ‏`onClick` שאינו מפעיל, וכפתור **מנוטרל** בטבלת-קורא-המסך.
  * ‏`selected` — ערך-ה-`xKey` שנבחר: העמודה שלו נשארת טורקיז והשאר יורדות ל-slate-300 (15-ד).
  */
 export default function ChartCard({ chart, soWhat, height = 260, onSelect, selected }) {

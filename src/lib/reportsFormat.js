@@ -132,6 +132,51 @@ export function formatByType(value, format) {
   return (FORMATTERS[format] ?? FORMATTERS.text)(value)
 }
 
+// ‏`he-IL` נותן ספרות לטיניות ומפריד-אלפים בפסיק — אותה מוסכמת-קיבוץ בדיוק כמו `FORMATTERS.int`
+// למעלה, ולכן אין כאן "עוד פורמטר" אלא אותו קיבוץ בלי היחידה.
+const groupWhole = (n) => Math.round(n).toLocaleString('he-IL')
+
+// 🔑 **תוויות-ציר לפי פורמט** — ר' `formatAxisTick`. ‏`gini`/`ratio`/`score` שומרים ספרות
+// עשרוניות כי הטווח שלהן קטן (⁦0⁩–⁦1⁩, ⁦1⁩–⁦5⁩) ועיגול-לשלם היה מוחק את כל ההבחנה על הציר.
+const AXIS_TICKS = {
+  money: groupWhole,
+  int: groupWhole,
+  days: groupWhole,
+  // ‏`50` ⇒ `50%` ולא `50.0%`: תו-סימון עגול הוא הנפוץ על ציר, ו-`.0` שחוזר שש פעמים הוא רעש.
+  percent: (n) => `${Number.isInteger(n) ? n : Number(n.toFixed(1))}%`,
+  gini: (n) => n.toLocaleString('he-IL', { maximumFractionDigits: 2 }),
+  ratio: (n) => n.toLocaleString('he-IL', { maximumFractionDigits: 1 }),
+  score: (n) => n.toLocaleString('he-IL', { maximumFractionDigits: 2 }),
+}
+
+// פורמטים שאינם מספר — ערך-הציר נמסר כמות-שהוא (ציר-קטגוריה, ציר-תאריך).
+const AXIS_PASSTHROUGH = new Set(['text', 'date'])
+
+/**
+ * ‏**תווית-ציר.** ‏`600000` ב-`money` ⇒ `"⁦600,000⁩"` · `50` ב-`percent` ⇒ `"⁦50%⁩"` ·
+ * `1200` ב-`int` ⇒ `"⁦1,200⁩"`.
+ *
+ * 🔴 **למה זה פגם ולא ליטוש — נמדד 16/09/2026:** בלי `tickFormatter` ‏Recharts מדפיס את
+ * ערך-הציר **גולמי**, והמסך הראה `600000` / `450000` במ7, `240000` במ12 ו-`100000` במ9 —
+ * בדיוק המספר ש-📐4 (*"דיוק אחיד"*) קיים כדי שלא יופיע. ‏`grep tickFormatter` החזיר 0.
+ *
+ * ⚠️ **ולמה לא פשוט `formatByType`, שכבר קיים:** אריח מציג ערך **אחד**, ציר מציג **חמישה-שישה
+ * זה מתחת לזה**. ‏`formatMoney` היה חוזר על הגליף ₪ בכל תו-סימון ו-`formatPercent` היה מוסיף
+ * `.0` לכל אחד. היחידה נאמרת פעם אחת — בכותרת, במקרא ובטולטיפ — ⇒ **הציר נושא את המספר**,
+ * למעט `%` שהוא צר, ושבלעדיו ציר ⁦0⁩–⁦100⁩ אינו נבדל מציר של מונים.
+ *
+ * 🔤 **מבודד כמו כל מספר שמגיע כטקסט-שטוח** (ר' `isolateLtr`): תו-הסימון נחת ב-SVG, שם אין
+ * `<Ltr>` לעטוף בו. 🚫 **וערך שאינו מספר מחזיר מחרוזת ריקה ולא `—`** — מקף על ציר נקרא
+ * כערך שנמדד, וזו בדיוק ההבחנה ש-`NO_VALUE` קיים בשבילה.
+ */
+export function formatAxisTick(value, format) {
+  if (value === null || value === undefined) return ''
+  if (AXIS_PASSTHROUGH.has(format)) return String(value)
+  const n = toFiniteNumber(value)
+  if (n === null) return String(value)
+  return isolateLtr((AXIS_TICKS[format] ?? groupWhole)(n))
+}
+
 /**
  * חצי-ההשוואה של 📐1 — **הסימן לפני הספרות**, והוא מבודד יחד איתן.
  * ‏`+12.4` בפורמט `percent` ⇒ `"+12.4%"` · `-3` ⇒ `"-3.0%"` · `0` ⇒ `"—"` *(אין שינוי)*.

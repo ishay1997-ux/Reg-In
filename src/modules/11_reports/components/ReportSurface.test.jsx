@@ -299,8 +299,13 @@ describe('ReportSurface — סינון-צולב (📐6 · 📐8 · 📐9)', () =
     expect(screen.getByTestId('reports-export-file').textContent).toContain('דירוג-5')
   })
 
+  // ✏️ **הדאטום כאן נושא `n: 3` ולא `n: 0`, ומסיבה מדודה (16/09/2026):** מאז שכלל
+  // "עמודה שספירתה ⁦0⁩ אינה נלחצת" נכנס ל-`ChartCard`, עמודת-אפס **מנוטרלת** ואינה יכולה
+  // לייצר בחירה כלל. 🔑 **והמקרה שהבדיקה הזו באמת שומרת עליו נשאר בדיוק אותו מקרה**:
+  // דאטום שיש לו ערך על הגרף ו**אין לו ולו שורה אחת בטבלה** — הפער בין האוכלוסייה שהגרף
+  // מודד לזו שהטבלה מודדת. ⚠️ עמודת-האפס עצמה נבדקת בכרטיס-הגרף, שם היא חיה.
   it('בחירה שאין לה שורות ⇒ הכרזה כנה והייצוא מנוטרל', async () => {
-    const chart = { ...CHART, data: [...CHART.data, { rating: 1, label: 'דירוג 1', n: 0 }] }
+    const chart = { ...CHART, data: [...CHART.data, { rating: 1, label: 'דירוג 1', n: 3 }] }
     callReport.mockResolvedValueOnce(crossPayload(chart))
     renderCross()
     await screen.findAllByTestId('report-row')
@@ -309,6 +314,22 @@ describe('ReportSurface — סינון-צולב (📐6 · 📐8 · 📐9)', () =
       'מסונן לדירוג 1; אין שורות',
     )
     expect(screen.getByTestId('reports-export-button')).toBeDisabled()
+  })
+
+  // 🔴 **נמדד 16/09/2026:** שורת-התקרה נגזרה מ-`payload.rows.length` בעוד הטבלה מתחתיה כבר
+  // הציגה את השורות המסוננות — כלומר *"מוצגות ⁦3⁩ מתוך ⁦731⁩"* מעל טבלה בת שורה אחת.
+  it('📐8 — שורת-תקרת-השורות נעלמת בזמן בחירה, וחוזרת עם הניקוי', async () => {
+    callReport.mockResolvedValueOnce({ ...crossPayload(), meta: { row_total: 731 } })
+    renderCross()
+    expect((await screen.findByTestId('report-row-cap')).textContent).toContain('731')
+
+    fireEvent.click(screen.getByTestId('chart-select-0'))
+    // ההכרזה החיה (📐9) כבר אומרת כמה שורות מוצגות — מונה שני היה סותר אותה.
+    expect(screen.queryByTestId('report-row-cap')).toBeNull()
+    expect(screen.getByTestId('report-table-announce').textContent).toBe('מסונן לדירוג 5; שורה אחת')
+
+    fireEvent.click(screen.getByTestId('report-clear-crossfilter'))
+    expect(screen.getByTestId('report-row-cap').textContent).toContain('731')
   })
 
   it('15-ד — הבחירה מסומנת על הגרף עצמו, ולא רק בשבב', async () => {

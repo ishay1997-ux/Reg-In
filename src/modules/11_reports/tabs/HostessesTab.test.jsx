@@ -670,7 +670,7 @@ describe('מ17 · הוגנות השיבוץ', () => {
     expect(tile).toHaveTextContent('אימוץ המלצת Smart Match')
     expect(tile).toHaveTextContent('טרם נמדד')
     expect(tile).not.toHaveTextContent('%')
-    expect(screen.getByTestId('report-notes')).toHaveTextContent('אין עדיין נתון')
+    expect(screen.getByTestId('report-meta-notes')).toHaveTextContent('אין עדיין נתון')
   })
 
   it('זמני-התגובה מוצגים בערכם, ולא כ"ימים" מעוגלים (תיקון-יחידה מוצהר)', async () => {

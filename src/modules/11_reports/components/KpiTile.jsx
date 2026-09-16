@@ -16,6 +16,8 @@ import StatTile from '@/components/StatTile'
 import Ltr from '@/components/Ltr'
 import { MASKED_TEXT } from '@/lib/dashboard'
 import { NO_VALUE, formatByType, formatDelta } from '@/lib/reportsFormat'
+import { useContext } from 'react'
+import { ReportsShellContext } from './reportsShellContext'
 
 // 🔑 מועתק מ-`KpiStrip.jsx` (מ7) — **התקדים המדויק לאריח-דוח ממוסך**, וההערה שם מסבירה
 // למה זה `text-slate-400`: הוא מראה של קוד מוזג, ושינוי-גוון כאן הוא אדווה למודול 7.
@@ -64,20 +66,33 @@ function CompareLine({ compare, fallbackFormat }) {
   const valueText =
     typeof compare.value === 'string' ? compare.value : formatByType(compare.value, format)
   return (
-    // ⚠️ `display:block` ולא `flex` — 🔴 **זה היה שורש רב-קבצי** (§⑥, תיקון 10/09/2026):
-    // פלקס הופך כל ילד ישיר לפריט-פלקס, `.ltr` מאבד את `inline-block`, ו-`gap` נדחף גם
-    // לאן שאין רווח — נמדד `(19.9%)` שמרונדר `( 19.9% )` ו-`2024:` כ-`2024 :`.
-    // הריווח מוחזר במפורש ב-`margin` על החץ בלבד.
-    <span className="block text-[11px] text-slate-500" data-testid="kpi-compare">
-      {glyph && (
-        // 🚫 `color:inherit` — החץ **אינו צבוע** (📐1). הוא סימן-כיוון, לא שיפוט.
-        <span aria-hidden="true" className="ml-1 text-[10px] text-inherit">
-          {glyph}
+    <>
+      {/* ⚠️ `display:block` ולא `flex` — 🔴 **זה היה שורש רב-קבצי** (§⑥, תיקון 10/09/2026):
+          פלקס הופך כל ילד ישיר לפריט-פלקס, `.ltr` מאבד את `inline-block`, ו-`gap` נדחף גם
+          לאן שאין רווח — נמדד `(19.9%)` שמרונדר `( 19.9% )` ו-`2024:` כ-`2024 :`.
+          הריווח מוחזר במפורש ב-`margin` על החץ בלבד. */}
+      <span className="block text-[11px] text-slate-500" data-testid="kpi-compare">
+        {glyph && (
+          // 🚫 `color:inherit` — החץ **אינו צבוע** (📐1). הוא סימן-כיוון, לא שיפוט.
+          <span aria-hidden="true" className="ml-1 text-[10px] text-inherit">
+            {glyph}
+          </span>
+        )}
+        {compare.label}: <Ltr>{valueText}</Ltr>
+        {delta && delta !== NO_VALUE && <> ({delta})</>}
+      </span>
+      {/* ‏`compare.note` — שדה C8 מ-16/09/2026 שלא היה לו **אף קורא** (נמדד: `grep
+          compare.note src/` = 0), בעוד ⁦9⁩ מתוך ⁦16⁩ אריחי-ההנהלה נושאים אותו
+          *("⁦4⁩ מתוך ⁦18⁩ אירועים")*. 🔴 **וזה לא קישוט:** ההערה היא **המכנה של ההשוואה** —
+          "עלה ב-⁦12%⁩" בלי "⁦4⁩ מתוך ⁦18⁩" הוא בדיוק הסוג של מספר ש-📐2 קיים כדי לא להשאיר
+          בלי אוכלוסייה. ⚠️ **ונעלמת עם האריח הממוסך**, כמו `sub`: `compare` כולו הוא `null`
+          שם, ולכן אין כאן ענף נוסף לשכוח. */}
+      {compare.note && (
+        <span className="block text-[10.5px] text-slate-500" data-testid="kpi-compare-note">
+          {compare.note}
         </span>
       )}
-      {compare.label}: <Ltr>{valueText}</Ltr>
-      {delta && delta !== NO_VALUE && <> ({delta})</>}
-    </span>
+    </>
   )
 }
 
@@ -91,8 +106,14 @@ function CompareLine({ compare, fallbackFormat }) {
  *
  * ‏`onOpenTarget` — הכרעה 33: **כל אריח במבט-על הוא דלת לדף**, גם חוצת-לשונית. אריח עם
  * `target` נעטף ב-`<button>` ומקבל מקלדת ומיקוד; אריח בלי `target` נשאר טקסט.
+ *
+ * 🚪 **ואריח שהיעד שלו יושב בלשונית ממוסכת אינו דלת** (כרטיס ⑧19.2, אפשרות א —
+ * *הערך נשאר, הדלת נעלמת*): ההרשאה נשאלת מהמעטפת דרך `ReportsShellContext`, כי המשטח
+ * אינו יודע מהן ההרשאות. ר' `reportsShellContext.js` למדידה שהולידה את זה.
  */
 export default function KpiTile({ tile, masked = false, onOpenTarget }) {
+  // ‏בלי מעטפת (בדיקת-לשונית, רינדור בודד) אין מי שיודע — וכל יעד נחשב פתיח.
+  const canOpenTarget = useContext(ReportsShellContext)?.canOpenTarget
   const value = masked ? MASKED_NODE : renderValue(tile)
 
   const body = (
@@ -117,7 +138,10 @@ export default function KpiTile({ tile, masked = false, onOpenTarget }) {
     />
   )
 
+  // 🚫 **לא `<button>` שאינו עושה דבר** — ר' הערת-הרכיב: דלת שאינה נפתחת גרועה מהיעדר דלת,
+  // כי `aria-label` כבר הבטיח *"פתחי את הדוח"* וקוראת-מסך שמעה קישור.
   if (!tile.target || !onOpenTarget || masked) return body
+  if (canOpenTarget && !canOpenTarget(tile.target)) return body
 
   return (
     <button
