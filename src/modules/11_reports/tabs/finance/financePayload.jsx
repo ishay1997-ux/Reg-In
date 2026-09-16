@@ -23,6 +23,7 @@
 
 import { CUSTOMER_TYPE_LABELS } from '@/lib/customers'
 import { AGING_BUCKETS } from '@/lib/reportsFinance'
+import { isolateLtr } from '@/lib/reportsFormat'
 
 // מפת הקבועים ש-`chart.label_source` רשאי לנקוב בהם. **טבלה ולא `if`** — מקור חדש הוא שורה.
 const LABEL_SOURCES = { CUSTOMER_TYPE_LABELS }
@@ -35,8 +36,31 @@ const LABEL_SOURCES = { CUSTOMER_TYPE_LABELS }
 // שלהן, וההערה שם קובעת במפורש *"התוויות הן מה שמופיע על המסך (spec §1.4 · כרטיס מ9 §⑥)"*
 // — כולל מקף-הטווח `–` (en-dash). ⚠️ **וזו אותה משפחה בדיוק של `chart.label_source`**,
 // רק שאין ל-C8 שדה מקביל לעמודה; ⇒ מדווח כבקשת-שדה, וממופה כאן בינתיים.
+//
+// 🔴 **והתיקון השני, שהתיקון הראשון ייצר — נראה בעין בצילום-המסך ולא ע"י שער:** התווית
+// הנכונה הודפסה **הפוכה**. `1–30` נראה `30–1` ו-`90+` נראה `+90`, כי `format: 'text'` הוא
+// `String(v)` חשוף (`reportsFormat.js`), התא הוא `<td>` בתוך מסמך `dir="rtl"`, וכלל N1 של
+// אלגוריתם ה-bidi פותר את המקף/הפלוס — תו **נייטרלי** בין שתי ריצות-ספרות — לכיוון-הפסקה.
+// ⚠️ **והגרף באותו דף היה תקין**, כי `ChartCard` עוטף את הציור ב-`dir="ltr"` — כלומר שתי
+// צורות של אותו דלי על מסך אחד, וזו בדיוק משפחת-הכשל שנתפסה בריפו תשע פעמים.
+// ✅ **הפתרון הוא `isolateLtr` (‏U+2066…U+2069)** — התאום הטקסטואלי של `unicode-bidi:isolate`
+// לערך שאין לו JSX לעטוף בו, בדיוק כפי ש-`formatMoney`/`formatPercent` כבר עושות. **הטווח
+// מבודד כיחידה אחת** ולא כשתי ספרות נפרדות (`reportsFormat.js`: *"לערך בודד בלבד"*).
+// 🚫 **ותווית עברית טהורה (`שוטף`) אינה מבודדת** — אין בה ניטרלי בין ספרות, והבידוד היה
+// רעש בלתי-נראה בנתונים.
+// ⚠️ **מחיר מוצהר, ואינו שלי לסגור:** הערך המבודד הוא גם מה ש-`ReportSurface` מוסר ל-
+// `ExportBar`, ו-`cellFor` (‏`reportsExport.js`) מעביר `text` כ-`String(value)` חשוף ⇒
+// **שני תווי-הבידוד נוחתים בתא ה-xlsx.** הם בלתי-נראים באקסל אך שוברים סינון-טקסט מדויק.
+// **התיקון הנכון הוא שורה אחת בספרייה** (‏`format: 'textLtr'` ב-`reportsFormat`, או פשיטת
+// ‏`⁦⁩` בענף-ברירת-המחדל של `cellFor`) — ושני הקבצים מחוץ להרשאת-הכתיבה שלי. **מדווח.**
+const ISOLATE_WHEN_DIGITS = /[0-9]/
 const AGING_BUCKET_LABELS = Object.freeze(
-  Object.fromEntries(AGING_BUCKETS.map((bucket) => [bucket.key, bucket.label])),
+  Object.fromEntries(
+    AGING_BUCKETS.map((bucket) => [
+      bucket.key,
+      ISOLATE_WHEN_DIGITS.test(bucket.label) ? isolateLtr(bucket.label) : bucket.label,
+    ]),
+  ),
 )
 
 /**

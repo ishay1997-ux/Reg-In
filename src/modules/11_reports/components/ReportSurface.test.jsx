@@ -8,9 +8,28 @@ vi.mock('@/supabaseClient', () => ({ supabase: { rpc: vi.fn(), from: vi.fn() } }
 // invalid". הוא גם מה שמאפשר לבדוק את **נתיב-המקלדת** של הקרוס-פילטר: הכפתורים יושבים
 // בטבלת-קורא-המסך של `ChartCard`, שהיא DOM רגיל ואינה עוברת דרך הספרייה.
 vi.mock('recharts', () => {
+  // ✨ `data-props` נוסף 16/09/2026: בלעדיו אי-אפשר למדוד **מה מסומן על הגרף**
+  // (הדלי הפתוח בדף-דריל). פונקציות וצמתי-React מסוננים — `JSON.stringify` על Fiber נופל.
+  const serializable = (value) => {
+    try {
+      JSON.stringify(value)
+      return typeof value !== 'function' && !(value && value.$$typeof)
+    } catch {
+      return false
+    }
+  }
   const stub =
     (name) =>
-    ({ children }) => <div data-testid={`recharts-${name}`}>{children}</div>
+    ({ children, ...props }) => (
+      <div
+        data-testid={`recharts-${name}`}
+        data-props={JSON.stringify(
+          Object.fromEntries(Object.entries(props).filter(([, v]) => serializable(v))),
+        )}
+      >
+        {children}
+      </div>
+    )
   const names = `Bar BarChart CartesianGrid Cell ComposedChart Label Line LineChart ReferenceLine
     ResponsiveContainer Scatter ScatterChart Tooltip XAxis YAxis ZAxis`.split(/\s+/)
   return Object.fromEntries(names.map((name) => [name, stub(name)]))
@@ -464,5 +483,247 @@ describe('ReportSurface — request identity', () => {
     expect(transformPayload).toHaveBeenCalledTimes(1)
     rerender(<ReportSurface {...props} />)
     expect(transformPayload).toHaveBeenCalledTimes(1)
+  })
+})
+
+// ── 📐10 · מהי "ריק" ────────────────────────────────────────────────────────
+//
+// 🔴 **המבחן הקודם היה `tiles || charts || rows`, וכל 16 ה-RPC מחזירים אריחים תמיד** ⇒
+// מצב 2 של 📐10 (*"ריק-אחרי-סינון"* + *"נקי מסננים"*) היה **קוד-מת בכל המודול**.
+
+describe('ReportSurface — 📐10: ריקות נמדדת באוכלוסייה', () => {
+  const filtered = { ...filters, isFiltered: true, clearFilters: vi.fn() }
+
+  it('אפס שורות ו-n=0 ⇒ מצב "ריק-אחרי-סינון" עם כפתור-ניקוי', async () => {
+    callReport.mockResolvedValueOnce(payload({ rows: [], population: { label: 'אין', n: 0 } }))
+    render(<ReportSurface surface={surface} filters={filtered} drill={null} onDrill={vi.fn()} />)
+    expect(await screen.findByTestId('reports-clear-filters')).toBeInTheDocument()
+    expect(screen.queryByTestId('report-table-card')).toBeNull()
+  })
+
+  // 🔴 **הצד שתופס רגרסיה:** רשימת-חריגים בלי חריגים אינה מסך-ריק — היא תשובה אמיתית.
+  it('אפס שורות עם אוכלוסייה קיימת ⇒ הדוח מוצג במלואו', async () => {
+    callReport.mockResolvedValueOnce(payload({ rows: [], population: { label: 'הכול', n: 106 } }))
+    render(<ReportSurface surface={surface} filters={filtered} drill={null} onDrill={vi.fn()} />)
+    expect(await screen.findByTestId('report-table-card')).toBeInTheDocument()
+    expect(screen.queryByTestId('reports-clear-filters')).toBeNull()
+    expect(screen.getByTestId('report-tiles')).toBeInTheDocument()
+  })
+
+  it('בלי מסנן ⇒ "ריק-לגמרי", בלי הצעה לנקות', async () => {
+    callReport.mockResolvedValueOnce(payload({ rows: [], population: { label: 'אין', n: 0 } }))
+    render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
+    await screen.findByTestId('report-reliability-blank')
+    expect(screen.queryByTestId('reports-clear-filters')).toBeNull()
+  })
+})
+
+// ── ✏️ שלוש נקודות-ההרחבה החדשות ───────────────────────────────────────────
+
+describe('ReportSurface — renderAfterSoWhat · renderChartAside · renderChartFooter', () => {
+  it('⑩א — הרמז יושב בין "אז מה" לאריחים, ולא מעל שורת-האוכלוסייה', async () => {
+    callReport.mockResolvedValueOnce(payload({ so_what: 'לפעול השבוע' }))
+    render(
+      <ReportSurface
+        surface={surface}
+        filters={filters}
+        drill={null}
+        onDrill={vi.fn()}
+        renderAfterSoWhat={() => <p data-testid="why-hint">למה הדוח הזה</p>}
+      />,
+    )
+    const hint = await screen.findByTestId('why-hint')
+    const soWhat = screen.getByTestId('report-so-what')
+    const tiles = screen.getByTestId('report-tiles')
+    const population = screen.getByTestId('report-population')
+    expect(soWhat.compareDocumentPosition(hint) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(hint.compareDocumentPosition(tiles) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(population.compareDocumentPosition(hint) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('אריח-הצד והכיתוב-התחתון נמסרים לכרטיס-הגרף עם מספר-הגרף', async () => {
+    callReport.mockResolvedValueOnce(crossPayload())
+    render(
+      <ReportSurface
+        surface={surface}
+        filters={filters}
+        drill={null}
+        onDrill={vi.fn()}
+        renderChartAside={(p, i) => <span>צד-{i}</span>}
+        renderChartFooter={(p, i) => <span>תחתון-{i}</span>}
+      />,
+    )
+    expect(await screen.findByTestId('chart-aside')).toHaveTextContent('צד-0')
+    expect(screen.getByTestId('chart-footer')).toHaveTextContent('תחתון-0')
+  })
+})
+
+// ── 🚪 דף-דריל: העמודה היא פקד-הקידוח ──────────────────────────────────────
+
+const DRILL_SURFACE = {
+  id: 'm9',
+  slug: 'aging',
+  rpc: 'report_m09_aging',
+  name: 'גיול',
+  drill: true,
+}
+
+// 🌱 צורת-המטען החי של מ9: העמודה מציגה **תווית** והדאטום נושא **מפתח**.
+const agingPayload = (over = {}) =>
+  payload({
+    chart: {
+      type: 'stackedBar',
+      title: 'חוב לפי מדרג',
+      xKey: 'bucket',
+      series: [{ key: 'amount', label: 'חוב' }],
+      data: [
+        { bucket: '1–30', bucket_key: 'd1_30', amount: 82000 },
+        { bucket: '31–60', bucket_key: 'd31_60', amount: 57000 },
+        { bucket: '90+', bucket_key: 'd90p', amount: 0 },
+      ],
+    },
+    drill: { level: 0, levels: ['מדרג', 'לקוח'], crumbs: [{ label: 'הכול', drill: null }] },
+    rows: [{ row_key: 1, name: 'אלפא', drill_key: { kind: 'customer', bucket: 'd1_30', id: 401 } }],
+    ...over,
+  })
+
+describe('ReportSurface — 🚪 לחיצה על עמודה בדף-דריל יורדת רמה', () => {
+  it('הלחיצה מוסרת את ה*מפתח* של הדאטום, לא את התווית', async () => {
+    const onDrill = vi.fn()
+    callReport.mockResolvedValueOnce(agingPayload())
+    render(
+      <ReportSurface surface={DRILL_SURFACE} filters={filters} drill={null} onDrill={onDrill} />,
+    )
+    fireEvent.click(await screen.findByTestId('chart-select-0'))
+    expect(onDrill).toHaveBeenCalledWith({ bucket: 'd1_30' }, null, 'level')
+  })
+
+  // 🔑 בלי זה המשתמשת יורדת רמה והגרף נראה בדיוק כמו קודם.
+  it('הדלי הפתוח נשאר מסומן אחרי הירידה', async () => {
+    callReport.mockResolvedValueOnce(
+      agingPayload({
+        drill: { level: 1, levels: ['מדרג', 'לקוח'], crumbs: [{ label: 'הכול', drill: null }] },
+      }),
+    )
+    render(
+      <ReportSurface
+        surface={DRILL_SURFACE}
+        filters={filters}
+        drill={{ bucket: 'd31_60' }}
+        onDrill={vi.fn()}
+      />,
+    )
+    await screen.findByTestId('report-table-card')
+    const cells = screen.getAllByTestId('recharts-Cell').map((n) => JSON.parse(n.dataset.props))
+    // העמודה הפתוחה נשארת טורקיז, השתיים האחרות יורדות ל-slate-300.
+    expect(cells.filter((c) => c.fill === '#CAD5E2')).toHaveLength(2)
+  })
+
+  // 🚫 מדרג שספירתו אפס אינו דלת — המגן של `ChartCard` ממשיך לחול על נתיב-הדריל.
+  it('מדרג ריק אינו מוריד רמה', async () => {
+    const onDrill = vi.fn()
+    callReport.mockResolvedValueOnce(agingPayload())
+    render(
+      <ReportSurface surface={DRILL_SURFACE} filters={filters} drill={null} onDrill={onDrill} />,
+    )
+    expect(await screen.findByTestId('chart-select-2')).toBeDisabled()
+  })
+
+  // ⚠️ ברמה האחרונה אין רמה לרדת אליה — והעמודה חוזרת להיות לא-לחיצה.
+  it('ברמה האחרונה הגרף אינו מוריד רמה', async () => {
+    callReport.mockResolvedValueOnce(
+      agingPayload({
+        drill: { level: 1, levels: ['מדרג', 'לקוח'], crumbs: [{ label: 'הכול', drill: null }] },
+      }),
+    )
+    render(
+      <ReportSurface surface={DRILL_SURFACE} filters={filters} drill={null} onDrill={vi.fn()} />,
+    )
+    await screen.findByTestId('report-table-card')
+    expect(screen.queryByTestId('chart-select-0')).toBeNull()
+  })
+
+  // 🔴 **הפגם הסמוי:** ‏`{kind:'customer', …, id:401}` הוא `kind` מרשימת-הדלתות, ועד עכשיו
+  // הוא ירד רמה **רק** כי `id` חסר. עכשיו הכוונה מוצהרת — והיא שקובעת.
+  it('שורה בדף-דריל עם רמה נוספת מוסרת סימן-ירידה, גם כשיש לה id', async () => {
+    const onDrill = vi.fn()
+    callReport.mockResolvedValueOnce(agingPayload())
+    render(
+      <ReportSurface surface={DRILL_SURFACE} filters={filters} drill={null} onDrill={onDrill} />,
+    )
+    fireEvent.click((await screen.findAllByTestId('report-row-drillable'))[0])
+    expect(onDrill.mock.calls[0][2]).toBe('level')
+  })
+
+  it('ברמה האחרונה אין סימן — הדלת היא הישות עצמה', async () => {
+    const onDrill = vi.fn()
+    callReport.mockResolvedValueOnce(
+      agingPayload({
+        drill: { level: 1, levels: ['מדרג', 'לקוח'], crumbs: [{ label: 'הכול', drill: null }] },
+      }),
+    )
+    render(
+      <ReportSurface surface={DRILL_SURFACE} filters={filters} drill={null} onDrill={onDrill} />,
+    )
+    fireEvent.click((await screen.findAllByTestId('report-row-drillable'))[0])
+    expect(onDrill.mock.calls[0][2]).toBeUndefined()
+  })
+})
+
+// ── 📐8 · שורת-התקרה מול צמצום-לקוח ────────────────────────────────────────
+
+describe('ReportSurface — תקרת-השורות נמדדת מול השורות הגולמיות', () => {
+  // 🔴 נמדד במ16: השרת מסר 50 מתוך 50 (**אין תקרה**), שבב-לקוח צמצם ל-2, והשורה הופיעה
+  // ואמרה "מוצגות 2 מתוך 50" — כלומר **צמצום-לקוח נקרא כתקרת-שרת**, וזה בדיוק ההפך.
+  it('טרנספורם שמצמצם שורות אינו מדליק את שורת-התקרה', async () => {
+    callReport.mockResolvedValueOnce(payload({ meta: { row_total: 2 } }))
+    const shrink = (p) => ({ ...p, rows: p.rows.slice(0, 1) })
+    render(
+      <ReportSurface
+        surface={surface}
+        filters={filters}
+        drill={null}
+        onDrill={vi.fn()}
+        transformPayload={shrink}
+      />,
+    )
+    await screen.findByTestId('report-table-card')
+    expect(screen.queryByTestId('report-row-cap')).toBeNull()
+  })
+
+  it('תקרת-שרת אמיתית עדיין מוצהרת', async () => {
+    callReport.mockResolvedValueOnce(payload({ meta: { row_total: 731 } }))
+    render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
+    expect((await screen.findByTestId('report-row-cap')).textContent).toContain('731')
+  })
+})
+
+// ── 🔤 נוסח צ'יפ-הניקוי ────────────────────────────────────────────────────
+
+describe('ReportSurface — נוסח הצ׳יפ', () => {
+  // ‏`spec.md §1.5` + S-28 נועלים ציווי בנקבה, והמוקאפ המאושר כותב זאת בשורה 897.
+  it('הצ׳יפ אומר "× נקי בחירה"', async () => {
+    callReport.mockResolvedValueOnce(crossPayload())
+    renderCross()
+    await screen.findAllByTestId('report-row')
+    fireEvent.click(screen.getByTestId('chart-select-0'))
+    expect(screen.getByTestId('report-clear-crossfilter')).toHaveTextContent('× נקי בחירה')
+  })
+})
+
+// ── 📏 תיבת-האריח של המוקאפ ────────────────────────────────────────────────
+
+describe('ReportSurface — גבולות-רוחב של האריח', () => {
+  // 🔴 נמדד במ19: משפט-השוואה ארוך ניפח אריח אחד ושבר את השורה ל-2+2 ב-1280px, בעוד
+  // המוקאפ מצייר ארבעה על שורה אחת (`min-width:210px; flex:1 1 210px; max-width:340px`).
+  it('כל אריח נושא את גבולות-הרוחב, והרצועה נשארת flex-wrap', async () => {
+    callReport.mockResolvedValueOnce(payload())
+    render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
+    const strip = await screen.findByTestId('report-tiles')
+    expect(strip.className).toContain('flex-wrap')
+    const box = strip.firstElementChild
+    expect(box.className).toContain('min-w-[210px]')
+    expect(box.className).toContain('max-w-[340px]')
+    expect(box.className).toContain('basis-[210px]')
   })
 })

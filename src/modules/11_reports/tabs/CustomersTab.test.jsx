@@ -17,7 +17,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, within, fireEvent } from '@testing-library/react'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 
 const invoke = vi.fn()
 vi.mock('@/supabaseClient', () => ({
@@ -131,7 +131,7 @@ const overviewPayload = () =>
         sub: 'חציון ימים מאז האירוע האחרון: לקוחות מרוצים מול לקוחות לא-מרוצים',
         window: 'כל הזמנים · אינו מושפע ממסנן התקופה',
         compare: { value: 212, label: 'לקוחות לא-מרוצים', direction: 'flat' },
-        target: { tab: 'לקוחות', report: 'שביעות רצון', drill: null },
+        target: { tab: 'לקוחות', report: 'report_m20_satisfaction', drill: null },
       },
       {
         key: 'payment_cadence_by_type',
@@ -141,7 +141,7 @@ const overviewPayload = () =>
         sub: 'חציון ימים מחשבונית לתשלום, לפי סוג הלקוח',
         window: 'כל הזמנים',
         compare: null,
-        target: { tab: 'כספים', report: 'גיול חובות', drill: null },
+        target: { tab: 'כספים', report: 'report_m09_aging', drill: null },
         detail: {
           rows: [
             { customer_type: 'government', median_days: 69, invoice_count: 51, customer_count: 6 },
@@ -181,7 +181,7 @@ const overviewPayload = () =>
         align: 'end',
         sorted: 'descending',
       },
-      { key: 'last_event', label: 'אירוע אחרון', format: 'text', align: 'start' },
+      { key: 'last_event', label: 'אירוע אחרון', format: 'date', align: 'start' },
     ],
     rows: [
       {
@@ -197,7 +197,9 @@ const overviewPayload = () =>
     definitions: 'הגדרות: ממוצע שביעות-רצון = ממוצע ציון 1–5.',
   })
 
-const chartOf = (title) => ({
+// G3/I1: שני גרפי-הסיבות חוזרים `layout: 'horizontal'`, ולגרף-השליליות `filter_key`
+// שמצטלב עם עמודת-שורה (`negative_reason`) — כלומר סינון-צולב דרך המעטפת.
+const chartOf = (title, extra = {}) => ({
   type: 'bar',
   title,
   xKey: 'reason',
@@ -206,6 +208,7 @@ const chartOf = (title) => ({
   domain: null,
   refLines: [],
   unit: 'משובים',
+  ...extra,
 })
 
 const satisfactionPayload = () =>
@@ -224,14 +227,19 @@ const satisfactionPayload = () =>
       },
     ],
     chart: [
-      chartOf('התפלגות הציונים'),
-      chartOf('מה משמח'),
-      chartOf('מה מכעיס'),
-      chartOf('שיעור המרוצים לפי שנה'),
+      chartOf('התפלגות הציונים', { xKey: 'score', filter_key: false, data: [{ score: 2, n: 3 }] }),
+      chartOf('מה משמח', { layout: 'horizontal', filter_key: false }),
+      chartOf('מה מכעיס', { layout: 'horizontal', filter_key: 'negative_reason' }),
+      chartOf('שיעור המרוצים לפי שנה', {
+        xKey: 'year',
+        filter_key: false,
+        unit: '%',
+        data: [{ year: 2026, satisfied_share: 88.3 }],
+      }),
     ],
     columns: [
       { key: 'company_name', label: 'לקוח', format: 'text', align: 'start' },
-      { key: 'final_event_date', label: 'תאריך', format: 'text', align: 'start' },
+      { key: 'final_event_date', label: 'תאריך', format: 'date', align: 'start' },
       { key: 'feedback_score', label: 'ציון', format: 'int', align: 'end', sorted: 'ascending' },
       { key: 'reasons', label: 'הסיבה שסומנה', format: 'text', align: 'start' },
       { key: 'feedback_notes', label: 'ההערה שנכתבה', format: 'text', align: 'start' },
@@ -244,6 +252,7 @@ const satisfactionPayload = () =>
         final_event_date: '2026-06-22',
         feedback_score: 2,
         reasons: ['תפקוד דיילות', 'ניהול לקוי'],
+        negative_reason: 'אחר',
         feedback_notes: null,
       },
     ],
@@ -308,6 +317,8 @@ const driftingPayload = () =>
         sorted: 'descending',
       },
       { key: 'ratio', label: 'פי כמה מהקצב', format: 'ratio', align: 'end' },
+      // I1 — העמודה שתווית שלה הבטיחה שני מספרים מחזירה עכשיו את שניהם, כמחרוזת-שרת אחת.
+      { key: 'score_pair', label: 'ציון אחרון · ממוצעו', format: 'text', align: 'end' },
       { key: 'flag', label: 'דגל', format: 'text', align: 'start' },
     ],
     rows: [
@@ -319,6 +330,7 @@ const driftingPayload = () =>
         contact_phone: '055-1794584',
         revenue_12m: 68180.17,
         ratio: 3.2,
+        score_pair: '⁦2⁩ · ממוצעו ⁦2.90⁩',
         flag: 'מתרחק בלבד',
       },
       {
@@ -329,10 +341,13 @@ const driftingPayload = () =>
         contact_phone: '057-5880953',
         revenue_12m: 43068.86,
         ratio: 36.1,
+        score_pair: '⁦3⁩ · ממוצעו ⁦3.20⁩',
         flag: 'מתרחק · גם רדום',
       },
     ],
-    so_what: 'להתקשר השבוע לענבר אשכנזי מגלובל שיפינג בע"מ.',
+    // שורת-"אז מה" של מ21 נושאת סכום — וזה הטקסט שהדליף ₪ לזהות ממוסכת.
+    so_what:
+      'להתקשר השבוע לענבר אשכנזי מגלובל שיפינג בע"מ — שתיהן שקטו, יחד ⁦122,124 ₪⁩ בשנה האחרונה.',
     definitions: 'הגדרות: מתרחק = אין אירוע עתידי וגם פי 1.5 מהמרווח הרגיל.',
   })
 
@@ -411,21 +426,22 @@ const notesPayload = ({ run = APPROVED_RUN, runInProgress = FAILED_RUN_IN_PROGRE
         target: null,
       },
     ],
-    columns: run
-      ? [
-          { key: 'company_name', label: 'לקוח', format: 'text', align: 'start' },
-          { key: 'final_event_date', label: 'תאריך', format: 'text', align: 'start' },
-          { key: 'feedback_notes', label: 'ההערה שנכתבה', format: 'text', align: 'start' },
-          { key: 'model_topics', label: 'נושא (מודל)', format: 'text', align: 'start' },
-          {
-            key: 'red_flag',
-            label: 'דגל אדום',
-            format: 'text',
-            align: 'start',
-            sorted: 'descending',
-          },
-        ]
-      : [],
+    // העמודות חוזרות **גם בלי ריצה מאושרת** — נמדד בגוף ה-SQL: `'columns',
+    // jsonb_build_array(...)` אינו מסועף על הריצה. זה מה שמאפשר ל-`renderBeforeTable`
+    // לירות במצב-הריק, ושם יושב עכשיו בלוק "טרם אושרה ריצת-ניתוח".
+    columns: [
+      { key: 'company_name', label: 'לקוח', format: 'text', align: 'start' },
+      { key: 'final_event_date', label: 'תאריך', format: 'date', align: 'start' },
+      { key: 'feedback_notes', label: 'ההערה שנכתבה', format: 'text', align: 'start' },
+      { key: 'model_topics', label: 'נושא (מודל)', format: 'text', align: 'start' },
+      {
+        key: 'red_flag',
+        label: 'דגל אדום',
+        format: 'text',
+        align: 'start',
+        sorted: 'descending',
+      },
+    ],
     rows: run
       ? [
           {
@@ -509,10 +525,18 @@ describe('מ19 · מבט-על לקוחות', () => {
     const { onDrill } = renderTab(SURFACES.מ19)
 
     fireEvent.click(await screen.findByTestId('report-tile-link-satisfaction_vs_return'))
-    expect(onDrill).toHaveBeenCalledWith({ tab: 'לקוחות', report: 'שביעות רצון', drill: null })
+    expect(onDrill).toHaveBeenCalledWith({
+      tab: 'לקוחות',
+      report: 'report_m20_satisfaction',
+      drill: null,
+    })
 
     fireEvent.click(screen.getByTestId('report-tile-link-payment_cadence_by_type'))
-    expect(onDrill).toHaveBeenLastCalledWith({ tab: 'כספים', report: 'גיול חובות', drill: null })
+    expect(onDrill).toHaveBeenLastCalledWith({
+      tab: 'כספים',
+      report: 'report_m09_aging',
+      drill: null,
+    })
   })
 
   it('הצהרת-המיון של השרת עוברת כמות שהיא — הלשונית אינה מזריקה `sorted` משלה', async () => {
@@ -591,6 +615,14 @@ describe('מ21 · לקוחות מתרחקים', () => {
     expect(personal).not.toHaveTextContent('₪')
     expect(personal).toHaveTextContent('⁦3⁩')
 
+    // 🔴 **הדליפה שסבב-הביקורת תפס (ממצא 1, חוסם):** הדף הסתיר את הסכום באריח, בשורת-המשנה
+    // ובעמודה — והדפיס אותו בשורת-"אז מה" שמעליהם. אין ₪ בשום מקום בדף הזה לזהות הזו.
+    const soWhat = screen.getByTestId('report-so-what')
+    expect(soWhat.textContent).not.toContain('₪')
+    expect(soWhat).toHaveTextContent(MASKED_TEXT)
+    expect(soWhat).toHaveTextContent('להתקשר השבוע לענבר אשכנזי')
+    expect(screen.getByTestId('report-drifting').textContent).not.toContain('122,124')
+
     const rows = screen.getAllByTestId('report-row-drillable')
     expect(rows[0]).toHaveTextContent(MASKED_TEXT)
     // ⑧21.4 — הסדר נופל ל"פי כמה מהקצב" יורד, ולכן 36.1 ראשונה ולא 3.2.
@@ -603,6 +635,23 @@ describe('מ21 · לקוחות מתרחקים', () => {
     expect(screen.getByRole('columnheader', { name: /הכנסת 12 החודשים/ })).not.toHaveAttribute(
       'aria-sort',
     )
+  })
+
+  it('🔒 הכרעת-המתזמר — אותו מיסוך-₪ חל גם על מ19, ולא רק על מ21', async () => {
+    permissions = PROJECTS
+    callReport.mockResolvedValue(overviewPayload())
+    renderTab(SURFACES.מ19)
+
+    const row = await screen.findByTestId('report-row-drillable')
+    expect(row).toHaveTextContent(MASKED_TEXT)
+    expect(row.textContent).not.toContain('635,764')
+    // אותה עמודה בדיוק הופיעה ממוסכת במ21 וגלויה במ19 — לאותה זהות. עכשיו אחיד.
+    expect(screen.getByRole('columnheader', { name: /הכנסת 12 החודשים/ })).not.toHaveAttribute(
+      'aria-sort',
+    )
+    // ומה שאינו כסף נשאר גלוי: התווית העברית של סוג-הלקוח, והתאריך.
+    expect(row).toHaveTextContent('חברה פרטית')
+    expect(row).toHaveTextContent('15/09/2026')
   })
 
   it('עם הרשאת כספים — הסכום מוצג, והמיון נשאר לפי הכנסת 12 החודשים', async () => {
@@ -624,6 +673,9 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
     renderTab(SURFACES.מ22)
     expect(await screen.findByTestId('m25-run-text')).toHaveTextContent('16/09/2026')
     expect(screen.getByTestId('m25-run-text')).toHaveTextContent('ishay1997@gmail.com')
+    // 🎨 ממצא 14 — המוקאפ שומר את הענבר ל-`.runbar.warn`; מצב מיושב שאין בו מה לעשות
+    // מצויר לבן. פס שענבר תמיד — אינו אומר דבר כשהוא באמת צריך לומר.
+    expect(screen.getByTestId('m25-run-bar')).toHaveAttribute('data-tone', 'plain')
     const row = screen.getByTestId('report-row-drillable')
     expect(row).toHaveTextContent('איכות תגים · ניהול לקוי')
     expect(row).toHaveTextContent('כן')
@@ -638,6 +690,7 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
     expect(await screen.findByTestId('m25-run-text')).toHaveTextContent('הערות טרם סווגו')
     expect(screen.getByTestId('m25-run-button')).toHaveTextContent('הרץ ניתוח')
     expect(screen.getByTestId('m25-run-button')).toBeEnabled()
+    expect(screen.getByTestId('m25-run-bar')).toHaveAttribute('data-tone', 'warn')
   })
 
   it('ריצה `running` שהתחילה במקום אחר — הפס מדווח עליה והכפתור מנוטרל', async () => {
@@ -680,7 +733,16 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
     callReport.mockResolvedValue(notesPayload({ run: null }))
     renderTab(SURFACES.מ22)
     expect(await screen.findByTestId('m25-run-text')).toHaveTextContent('הערות טרם סווגו')
-    expect(screen.getByTestId('m22-no-run')).toHaveTextContent('טרם אושרה ריצת-ניתוח')
+    const noRun = screen.getByTestId('m22-no-run')
+    expect(noRun).toHaveTextContent('טרם אושרה ריצת-ניתוח')
+    // ממצא 16 — ההסבר יושב **מעל** הטבלה שהוא מסביר, כמו ב-`basebanner` של המוקאפ,
+    // ולא אחרי שורת-ההגדרות בתחתית הדף.
+    expect(
+      Boolean(
+        noRun.compareDocumentPosition(screen.getByTestId('report-table-card')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBe(true)
     expect(screen.getByTestId('reports-export-file')).toHaveTextContent(EXPORT_NO_APPROVED_RUN)
     expect(screen.getByTestId('reports-export-button')).toBeDisabled()
     // הרמז ⑩ג יושב **בענף המצב-הריק בלבד**.
@@ -691,8 +753,9 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
     permissions = PROJECTS
     callReport.mockResolvedValue(notesPayload({ run: null }))
     renderTab(SURFACES.מ22)
+    // §1.5 — ציווי בנקבה. הכרטיס כתב "פנה"; כלל-הניסוח גובר, ו-C2 מתיר בדיוק את זה.
     expect(await screen.findByTestId('m25-run-text')).toHaveTextContent(
-      'טרם אושרה ריצת-ניתוח — פנה למנכ"ל',
+      'טרם אושרה ריצת-ניתוח — פני למנכ"ל',
     )
     expect(screen.queryByTestId('m25-run-button')).toBeNull()
   })
@@ -777,20 +840,42 @@ describe('מצבי-מעטפת ושכבת-ההטמעה', () => {
     )
   })
 
-  it('טבלה בלי שורות — כפתור-הייצוא מנוטרל עם "אין שורות לייצא"', async () => {
+  it('טבלה בלי שורות — הכותרות נשארות, אין שורות-נתונים, והייצוא מנוטרל עם "אין שורות לייצא"', async () => {
     callReport.mockResolvedValue({ ...overviewPayload(), rows: [] })
     renderTab(SURFACES.מ19)
     await screen.findByTestId('reports-export-button')
     expect(screen.getByTestId('reports-export-button')).toBeDisabled()
     expect(screen.getByTestId('reports-export-file')).toHaveTextContent(EXPORT_NO_ROWS)
+
+    // 🔴 **וזה הגבול שהבדיקה נועלת, ולא הצלחה:** האריחים והגרף שורדים ⇒ `hasContent` נשאר
+    // אמת ⇒ מעטפת-הריק אינה נכנסת, והטבלה מציירת **כותרות בלי גוף**. הכרטיס (שורה 173)
+    // דורש *"ריק-אחרי-סינון, לא שורה ריקה"*. ‏`ReportTable` הוא רכיב משותף ואין לו ענף-ריק
+    // — ‏**ממצא 7 בסבב-הביקורת, בבעלות המעטפת.** נעול כאן כדי שהתיקון שם ייתפס כאן.
+    expect(screen.getByTestId('report-table-card')).toBeInTheDocument()
+    expect(screen.queryAllByTestId('report-row')).toHaveLength(0)
+    expect(screen.queryAllByTestId('report-row-drillable')).toHaveLength(0)
+    expect(screen.queryByTestId('reports-envelope-empty')).toBeNull()
   })
 
   it('כל מפתח-הטמעה שהלשונית משתמשת בו קיים בקובץ-הקופי, וכל 12 המפתחות בשימוש', () => {
     // 🔑 נתיב יחסי ל-`cwd` (שורש-הריפו, כפי ש-Vitest מדפיס בראש הריצה) ולא
     // `import.meta.url` — הוא אינו `file:` תחת ה-runner הזה, וזה הפיל את הבדיקה.
-    const source = readFileSync('src/modules/11_reports/tabs/customers/CustomerSurface.jsx', 'utf8')
+    // 🔴 **כל קבצי-הלשונית, לא רק אחד** (ממצא 18): הסריקה קראה את `CustomerSurface.jsx`
+    // בלבד, ולכן מפתח שגוי ב-`AnalysisRunBar.jsx` או ב-`CustomersTab.jsx` היה מרנדר `null`
+    // בשקט בייצור **והסוויטה הייתה ירוקה**. שוויון דו-כיווני מול קובץ-הקופי נשמר.
+    const dir = 'src/modules/11_reports/tabs/customers'
+    const files = [
+      'src/modules/11_reports/tabs/CustomersTab.jsx',
+      ...readdirSync(dir)
+        .filter((name) => name.endsWith('.jsx'))
+        .map((name) => `${dir}/${name}`),
+    ]
+    expect(files.length).toBeGreaterThan(2)
     const used = new Set()
-    for (const match of source.matchAll(/'(reports\.[A-Za-z.]+)'/g)) used.add(match[1])
+    for (const file of files) {
+      const source = readFileSync(file, 'utf8')
+      for (const match of source.matchAll(/'(reports\.[A-Za-z.]+)'/g)) used.add(match[1])
+    }
     expect(used.size).toBeGreaterThan(0)
     for (const id of used) expect(M11_CUSTOMERS_COPY[id]).toBeTruthy()
     expect([...used].sort()).toEqual(Object.keys(M11_CUSTOMERS_COPY).sort())
@@ -809,16 +894,39 @@ describe('מצבי-מעטפת ושכבת-ההטמעה', () => {
     expect(screen.getAllByTestId('report-row-drillable').length).toBeGreaterThan(0)
   })
 
-  it('ברמה 2 — שלושת הרמזים של המשטח מרונדרים בעוגנים שלהם', async () => {
+  it('ברמה 2 — שלושת הרמזים מרונדרים **בעוגנים שלהם**, לא רק על הדף', async () => {
     callReport.mockResolvedValue(driftingPayload())
     renderTab(SURFACES.מ21)
-    expect(await screen.findByTestId('hint-reports.drifting.why')).toBeInTheDocument()
-    expect(screen.getByTestId('hint-reports.drifting.revenueBasis')).toBeInTheDocument()
-    expect(screen.getByTestId('hint-reports.drifting.tableSort')).toBeInTheDocument()
+    const why = await screen.findByTestId('hint-reports.drifting.why')
+    const basis = screen.getByTestId('hint-reports.drifting.revenueBasis')
+    const tableSort = screen.getByTestId('hint-reports.drifting.tableSort')
+
+    // 🔑 **מיקום ולא נוכחות** — רמז שנחת אחרי הטבלה מסביר משהו שכבר נקרא. `Node.DOCUMENT_
+    // POSITION_FOLLOWING` = הארגומנט מופיע **אחרי** האלמנט בסדר-המסמך.
+    const follows = (a, b) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+
+    const tiles = screen.getByTestId('report-tiles')
+    const banner = screen.getByTestId('drifting-two-methods')
+    const table = screen.getByTestId('report-table-card')
+
+    // ⑩א · מעל האריחים. ⚠️ **והחצי השני של עוגן-הכרטיס — *"מתחת לשורת-אז-מה"* — אינו
+    // מתקיים**: המעטפת מרנדרת את `renderTop` לפני שורת-"אז מה", ואין לה עדיין סלוט
+    // ‏`renderAfterSoWhat`. נבדק בשלד ב-16/09 12:1X ואינו קיים; מדווח, לא נעקף.
+    expect(follows(why, tiles)).toBe(true)
+    // ⑩ב · מתחת לאריחים ומעל הבאנר שהוא מסביר.
+    expect(follows(tiles, basis)).toBe(true)
+    expect(follows(basis, banner)).toBe(true)
+    // ⑩ג · צמוד לטבלה שהוא מסביר, ולפניה.
+    expect(follows(basis, tableSort)).toBe(true)
+    expect(follows(tableSort, table)).toBe(true)
   })
 
   it('מטען ריק לגמרי — מצב "אין נתונים עדיין" ולא טבלה ריקה', async () => {
-    callReport.mockResolvedValue(base())
+    // 🔑 **שני התנאים, לא אחד** — המעטפת שינתה ב-16/09 את מבחן-הריק ל-`rows.length === 0`
+    // **וגם** `population.n === 0`: כל שישה-עשר ה-RPC מחזירים אריחים תמיד, ולכן המבחן
+    // הישן (אריחים-או-גרף-או-שורות) לא התקיים לעולם ומצב-הריק היה קוד-מת.
+    callReport.mockResolvedValue({ ...base(), population: { n: 0, label: '', excluded: {} } })
     renderTab(SURFACES.מ19)
     await waitFor(() =>
       expect(

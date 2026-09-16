@@ -272,17 +272,44 @@ const m3Root = () =>
       },
       {
         type: 'line',
-        unit: '₪',
+        unit: 'money',
         xKey: 'year',
         title: 'מחיר לשעה מול עלות לשעה',
         domain: null,
         refLines: [],
-        series: [{ key: 'price_per_hour', label: 'מחיר לשעה', kind: 'line', axis: 'left' }],
-        data: [{ year: 2024, price_per_hour: 253.67038152453773 }],
+        series: [
+          {
+            key: 'price_per_hour',
+            label: 'מחיר לשעה',
+            format: 'money',
+            kind: 'line',
+            axis: 'left',
+          },
+          { key: 'cost_per_hour', label: 'עלות לשעה', format: 'money', kind: 'line', axis: 'left' },
+          {
+            key: 'margin_per_hour',
+            label: 'מרווח לשעה',
+            format: 'money',
+            kind: 'line',
+            axis: 'left',
+          },
+        ],
+        data: [
+          { year: 2024, price_per_hour: 253.67, cost_per_hour: 44.19, margin_per_hour: 209.48 },
+          {
+            year: 2026,
+            price_per_hour: 305.12,
+            cost_per_hour: 47.37,
+            margin_per_hour: 257.75,
+            partial: true,
+          },
+        ],
       },
     ],
     columns: [
-      { key: 'year', label: 'שנה', format: 'int', align: 'start', sorted: 'asc' },
+      // ✏️ ‏`text` ולא `int` — ‏i1 תיקנה זאת בשרת אחרי שנמדד על המסך `2,024` (📐4 שם
+      // מפריד-אלפים בכל `int`). הפיקסצ'ר עוקב אחרי המטען החי, ולא להפך.
+      { key: 'year', label: 'שנה', format: 'text', align: 'start', sorted: 'asc' },
       { key: 'revenue', label: 'הכנסה', format: 'money', align: 'end', sorted: null },
     ],
     rows: [{ year: 2024, revenue: 1625646.64, drill_key: { kind: 'year', year: 2024 } }],
@@ -293,6 +320,58 @@ const m3Root = () =>
       echo: null,
     },
     meta: { measured_at: null, missing_params: [], notes: [], row_total: 3, run: null },
+  })
+
+// רמה 1 — חודשי ⁦2026⁩, ובהם ספטמבר החלקי. מבנה מהמטען החי (16/09 18:3X).
+const m3Year = () =>
+  base({
+    population: { n: 241, label: 'אוכלוסייה: ⁦2026⁩', excluded: {} },
+    so_what: 'לשים לב ששולי-הרווח עמדו על 58.6%.',
+    tiles: [
+      {
+        key: 'revenue',
+        label: 'הכנסה בשנה',
+        value: 1962981.47,
+        format: 'money',
+        sub: null,
+        window: 'שנת 2026',
+        target: null,
+        compare: null,
+      },
+    ],
+    chart: {
+      type: 'bar',
+      unit: 'money',
+      xKey: 'label',
+      title: 'הכנסה ורווח לפי חודש',
+      domain: null,
+      refLines: [],
+      series: [
+        { key: 'revenue', label: 'הכנסה', format: 'money', kind: 'bar', axis: 'left' },
+        { key: 'profit', label: 'רווח גולמי', format: 'money', kind: 'bar', axis: 'left' },
+      ],
+      data: [
+        { label: 'אוגוסט', month: 8, revenue: 141027.05, profit: 82038.75, partial: false },
+        { label: 'ספטמבר', month: 9, revenue: 143148.18, profit: 106247.18, partial: true },
+      ],
+    },
+    columns: [
+      { key: 'label', label: 'חודש', format: 'text', align: 'start', sorted: 'asc' },
+      { key: 'revenue', label: 'הכנסה', format: 'money', align: 'end', sorted: null },
+    ],
+    rows: [
+      { label: 'ינואר', revenue: 237414.51, drill_key: { kind: 'month', year: 2026, month: 1 } },
+    ],
+    drill: {
+      level: 1,
+      levels: ['כל השנים', 'שנה', 'חודש'],
+      crumbs: [
+        { label: 'כל השנים', drill: null },
+        { label: '2026', drill: { year: 2026 } },
+      ],
+      echo: { year: 2026 },
+    },
+    meta: { measured_at: null, missing_params: [], notes: [], row_total: 9, run: null },
   })
 
 const m3Month = () =>
@@ -400,7 +479,17 @@ const m6Payload = (extra = {}) =>
         title: 'אורחים שהוערכו מול אורחים שהגיעו',
         domain: null,
         refLines: [{ axis: 'diagonal', label: 'ההערכה התקיימה בדיוק', value: 1 }],
-        series: [{ key: 'actual', label: 'אורחים שהגיעו', kind: 'scatter', axis: 'left' }],
+        // ✏️ זוג-סדרות, כפי ש-`d2` מחזיר; הנפילה-לאחור לסדרה בודדת נבדקת בנפרד למטה.
+        series: [
+          {
+            key: 'estimated',
+            label: 'אורחים שהוערכו',
+            format: 'int',
+            kind: 'scatter',
+            axis: 'left',
+          },
+          { key: 'actual', label: 'אורחים שהגיעו', format: 'int', kind: 'scatter', axis: 'left' },
+        ],
         data: [
           { estimated: 40, actual: 35, ratio: 35, project_id: 830 },
           { estimated: 50, actual: 520, ratio: 52, project_id: 12 },
@@ -436,6 +525,18 @@ const m6Payload = (extra = {}) =>
     meta: { measured_at: null, missing_params: [], notes: [], row_total: 135, run: null },
     ...extra,
   })
+
+// 🔑 **מיקום ולא רק קיום.** ‏§⑩ עוגן כל רמז לאלמנט שהוא מסביר, וקיום לבדו עובר גם כשהרמז
+// נחת בתחתית הדף. ‏`compareDocumentPosition` הוא המבחן שמפריד בין השניים:
+// ‏`DOCUMENT_POSITION_FOLLOWING` (‏4) = `b` מגיע **אחרי** `a` בסדר-המסמך.
+const comesBefore = (a, b) =>
+  Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+
+// 🔑 **גבול-הבדיקה: מה ש*הלשונית* מבטיחה הוא הארגומנט הראשון — מפתח-הקידוח של השורה.**
+// ‏`ReportSurface` מוסיף לו ארגומנטים משלו (השורה עצמה, ומאז 16/09 19:0X גם `'level'`),
+// והם חוזה של השלד ומשתנים איתו. ‏`toHaveBeenCalledWith` דורש התאמת-אריות מלאה ולכן
+// היה צובע אדום כל פעם שהשלד מוסיף ארגומנט — כשל-שווא שאינו אומר דבר על הלשונית.
+const firstDrillArg = (onDrill) => onDrill.mock.calls[0]?.[0]
 
 const chartProps = (name) =>
   screen.getAllByTestId(`recharts-${name}`).map((node) => JSON.parse(node.dataset.props))
@@ -498,7 +599,7 @@ describe('מ2 · מבט-על הנהלה', () => {
     const row = (await screen.findByText('כנס חינוך שנתי')).closest('tr')
     expect(row).toHaveAttribute('role', 'button')
     fireEvent.click(row)
-    expect(onDrill).toHaveBeenCalledWith({ kind: 'project', id: 1395 }, expect.any(Object))
+    expect(firstDrillArg(onDrill)).toEqual({ kind: 'project', id: 1395 })
     expect(screen.getByTestId('report-row-action')).toHaveTextContent(
       'לחיצה על שורה פותחת את כרטיס האירוע',
     )
@@ -548,6 +649,40 @@ describe('מ3 · מגמות רב-שנתיות', () => {
     expect(left.domain).toEqual([0, 'auto'])
   })
 
+  it('📐20 — השנה החלקית מוצהרת בשלושת הערוצים: עמודה מקווקוות · תווית-ציר · הערת-גרף', async () => {
+    callReport.mockResolvedValueOnce(m3Root())
+    renderTab('מ3')
+    await screen.findAllByText('מחיר לשעה')
+
+    // ① הצורה — `is_today` על השורה החלקית בלבד, ובלי לשנות גוון (📐19).
+    // **עמודה אחת מקווקוות בכל סדרת-עמודות**, כלומר כל הסדרות של אותה שנה מסומנות יחד
+    // (זה מה שממצא #5 דרש למ2, והשלד מיישם אותו לכל הסדרות).
+    const dashed = chartProps('Cell').filter((props) => props.strokeDasharray)
+    expect(dashed).toHaveLength(chartProps('Bar').length)
+    expect(dashed.length).toBeGreaterThan(0)
+    // ② התווית — אורך-החלון על הציר, בנוסח המוקאפ המאושר (שורה 628).
+    expect(chartProps('XAxis')[0].dataKey).toBe('label')
+    expect(screen.getAllByText(`2026 — עד ${isolateLtr('16/09')}`).length).toBeGreaterThan(0)
+    // ③ המילים — בתוך כרטיס-הגרף, שם `.chart-note` יושב במוקאפ.
+    const note = screen.getAllByTestId('chart-note')[0]
+    expect(note).toHaveTextContent('אין כאן «קצב שנתי» משוער')
+    expect(note).toHaveTextContent('מסומנת בדפוס מקווקו')
+  })
+
+  it('ברמת-החודשים אותה הצהרה נמדדת בימים, ולא בשנה', async () => {
+    callReport.mockResolvedValueOnce(m3Year())
+    renderTab('מ3', { drill: { year: 2026 } })
+    await screen.findByTestId('report-population')
+
+    expect(await screen.findByTestId('chart-note')).toHaveTextContent(
+      `מכסה ${isolateLtr('16')} ימים ולא חודש שלם`,
+    )
+    expect(screen.getByText(`ספטמבר (${isolateLtr('16')} ימים)`)).toBeInTheDocument()
+    const dashedMonths = chartProps('Cell').filter((props) => props.strokeDasharray)
+    expect(dashedMonths).toHaveLength(chartProps('Bar').length)
+    expect(dashedMonths.length).toBeGreaterThan(0)
+  })
+
   it('📐13 — שורת-הפעולה משתנה עם הרמה, והשורה יורדת רמה', async () => {
     callReport.mockResolvedValueOnce(m3Root())
     const { onDrill } = renderTab('מ3')
@@ -556,7 +691,7 @@ describe('מ3 · מגמות רב-שנתיות', () => {
       'לחיצה על שורה יורדת לחודשים של אותה שנה',
     )
     fireEvent.click(screen.getByText('שנה').closest('table').querySelector('tbody tr'))
-    expect(onDrill).toHaveBeenCalledWith({ kind: 'year', year: 2024 }, expect.any(Object))
+    expect(firstDrillArg(onDrill)).toEqual({ kind: 'year', year: 2024 })
   })
 
   it('ברמה האחרונה יש פירורים, אין גרף, והשורה פותחת את כרטיס-האירוע', async () => {
@@ -567,7 +702,7 @@ describe('מ3 · מגמות רב-שנתיות', () => {
     expect(screen.getByTestId('report-row-action')).toHaveTextContent('זו הרמה האחרונה')
     expect(screen.queryByTestId('recharts-ComposedChart')).toBeNull()
     fireEvent.click(screen.getByText('כנס חינוך שנתי').closest('tr'))
-    expect(onDrill).toHaveBeenCalledWith({ kind: 'project', id: 1395 }, expect.any(Object))
+    expect(firstDrillArg(onDrill)).toEqual({ kind: 'project', id: 1395 })
   })
 })
 
@@ -626,7 +761,7 @@ describe('מ4 · הנחות ורווחיות', () => {
     const { onDrill } = renderTab('מ4')
     const rows = await screen.findAllByText(isolateLtr('1,907'))
     fireEvent.click(rows[0].closest('tr'))
-    expect(onDrill).toHaveBeenCalledWith({ kind: 'quote', id: 1907 }, expect.any(Object))
+    expect(firstDrillArg(onDrill)).toEqual({ kind: 'quote', id: 1907 })
   })
 
   it('הקרוס-פילטר האוטומטי כבוי במפורש — הסינון של מ4 רץ בשרת, ולא פעמיים', async () => {
@@ -755,6 +890,56 @@ describe('מצבים ושכבת-הטמעה', () => {
     expect(screen.getByTestId('report-row-action')).toBeInTheDocument()
   })
 
+  it('🔴 הרמזים יושבים במקום שהכרטיס עיגן בו — מיקום, לא רק קיום', async () => {
+    callReport.mockResolvedValueOnce(m2Payload())
+    renderTab('מ2')
+    await screen.findByTestId('report-population')
+
+    const purpose = screen.getByTestId('hint-reports.execOverview.purpose')
+    const population = screen.getByTestId('report-population')
+    const soWhat = screen.getByTestId('report-so-what')
+    const tiles = screen.getByTestId('report-tiles')
+    const revenueHint = screen.getByTestId('hint-reports.execOverview.revenueBasis')
+    const top5Hint = screen.getByTestId('hint-reports.execOverview.top5Share')
+    const chart = screen.getByTestId('chart-figure')
+    const tableHint = screen.getByTestId('hint-reports.execOverview.topEventsSort')
+    const table = screen.getByTestId('report-table-card')
+
+    // ⑩ א — רמז-המטרה יושב **בין שורת-"אז מה" לרצועת-האריחים**, בדיוק כפי שהכרטיס מעגן
+    // אותו (*"מתחת ל-.so-what, מעל .tiles"*) ובדיוק כפי שנמדד במוקאפ (470 < 476 < 482).
+    // 🔴 עד 16/09 19:0X הוא ישב ב-`renderTop`, כלומר מעל שורת-האוכלוסייה — הבדיקה הזו
+    // היא מה שתפס את המעבר, ולא קריאה חוזרת.
+    expect(comesBefore(population, purpose)).toBe(true)
+    expect(comesBefore(soWhat, purpose)).toBe(true)
+    expect(comesBefore(purpose, tiles)).toBe(true)
+    // ⑩ ב · ג — שני רמזי-האריחים **מתחת לרצועת-האריחים ולפני הגרף** (§4ב: שורה עצמאית
+    // מתחת לבלוק שהיא מסבירה, לעולם לא ילד של אריח).
+    expect(comesBefore(tiles, revenueHint)).toBe(true)
+    expect(comesBefore(revenueHint, top5Hint)).toBe(true)
+    expect(comesBefore(top5Hint, chart)).toBe(true)
+    // ⑩ ד — רמז-הטבלה מעל כרטיס-הטבלה, אחרי הגרף.
+    expect(comesBefore(chart, tableHint)).toBe(true)
+    expect(comesBefore(tableHint, table)).toBe(true)
+    // 🚫 ואף רמז אינו **בתוך** אריח — הדפוס שהכרטיס מדד כמתיחת-רצועה ל-373px.
+    expect(tiles.querySelector('[data-testid^="hint-"]')).toBeNull()
+  })
+
+  it('🔴 רמזי-הגרף יושבים בתוך כרטיס-הגרף שהם מסבירים, ולא מעל שניהם יחד', async () => {
+    callReport.mockResolvedValueOnce(m3Root())
+    renderTab('מ3')
+    await screen.findAllByText('מחיר לשעה')
+
+    const cards = screen.getAllByTestId(/^chart-card-/)
+    expect(cards).toHaveLength(2)
+    // ⑩ ב — הערת-גרף-השנים ⇒ הכרטיס הראשון · ⑩ ג — ה-`barkey` של מחיר/עלות ⇒ השני.
+    expect(cards[0].querySelector('[data-testid="hint-reports.trends.partialYear"]')).not.toBeNull()
+    expect(cards[1].querySelector('[data-testid="hint-reports.trends.costPerHour"]')).not.toBeNull()
+    // ושניהם **מתחת** לגרף שבכרטיסם (F10), לא מעליו.
+    const footer = cards[0].querySelector('[data-testid="chart-footer"]')
+    expect(footer).not.toBeNull()
+    expect(comesBefore(cards[0].querySelector('[data-testid="chart-figure"]'), footer)).toBe(true)
+  })
+
   it('🔴 כל מפתח-רמז שנכתב בקבצי הלשונית קיים בקובץ-הקופי, ואין בו מפתח מת', () => {
     // 🔑 **הבדיקה סורקת את הקוד עצמו ולא רשימה שנכתבה ביד** — מפתח שגוי מרנדר `null`
     // בשקט בייצור (`spec.md §🚫.5`), ורשימה ידנית הייתה נשברת יחד עם הקוד.
@@ -762,6 +947,7 @@ describe('מצבים ושכבת-הטמעה', () => {
     const sources = [
       'ExecutiveTab.jsx',
       'executive/surfaceKit.jsx',
+      'executive/chartShape.js',
       'executive/ExecOverviewSurface.jsx',
       'executive/TrendsSurface.jsx',
       'executive/DiscountsSurface.jsx',

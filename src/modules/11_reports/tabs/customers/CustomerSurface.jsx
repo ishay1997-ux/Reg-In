@@ -115,7 +115,7 @@ function PaymentCadenceDetails({ payload }) {
 function NoApprovedRun({ payload, hintId }) {
   const quotes = findTile(payload, 'other_tagged_notes')?.detail?.sample_quotes ?? []
   return (
-    <section className="mt-3" data-testid="m22-no-run">
+    <section className="mb-4" data-testid="m22-no-run">
       <div className="rounded-xl border border-slate-200 bg-white p-4">
         <p className="text-[15px] font-semibold text-slate-800">טרם אושרה ריצת-ניתוח</p>
         <p className="mt-1 text-[12.5px] leading-relaxed text-slate-600">
@@ -188,15 +188,23 @@ export default function CustomerSurface({
           {isDrifting && <TwoMethodsBanner payload={payload} />}
         </>
       )}
-      renderBeforeTable={hints.table ? () => <Hint id={hints.table} /> : undefined}
-      renderExtras={(payload) => (
+      // 🔴 **בלוק "טרם אושרה ריצת-ניתוח" עבר לכאן מ-`renderExtras`** (סבב-ביקורת 16/09,
+      // ממצא 16): ‏`renderExtras` מרונדר **אחרון** — אחרי הטבלה, שורת-ההגדרות
+      // ו-`meta.notes` — ולכן ההסבר על *למה* הדף ריק נחת מתחת לטבלה הריקה שהוא מסביר.
+      // המוקאפ מציב את ה-`basebanner` **מעל** הטבלה (`05_tab_customers_approved.html:1593`
+      // מול ~1608). ‏`report_m22_notes` מחזיר את שמונה העמודות גם בלי ריצה מאושרת (נמדד
+      // בגוף ה-SQL), ולכן הסלוט הזה **כן** נורה שם.
+      renderBeforeTable={(payload) => (
         <>
-          {surface.id === 'מ19' && <PaymentCadenceDetails payload={payload} />}
           {isNotes && !hasApprovedRun(payload) && (
             <NoApprovedRun payload={payload} hintId={hints.emptyTiles} />
           )}
+          {hints.table && <Hint id={hints.table} />}
         </>
       )}
+      renderExtras={(payload) =>
+        surface.id === 'מ19' ? <PaymentCadenceDetails payload={payload} /> : null
+      }
     />
   )
 }

@@ -173,3 +173,40 @@ describe('KpiTile — tiles[].compare.note', () => {
     expect(screen.queryByTestId('kpi-compare-note')).toBeNull()
   })
 })
+
+// ── ✏️ סבב-3 ───────────────────────────────────────────────────────────────
+
+describe('KpiTile — חצי-השוואה בלי ערך', () => {
+  // 🔴 נמדד: שלושה אריחים במ21/מ22 מוסרים `label` שלם עם `value: null`, והמסך הציג
+  // *"… לא סכום שצפוי להיאבד: —"* — מקף שנקרא כ"אין לי את הנתון" על משפט בלי מספר.
+  const sentence = { ...TILE, compare: { label: 'זו הערכה, לא סכום שצפוי להיאבד', value: null } }
+
+  it('התווית לבדה, בלי נקודתיים ובלי מקף', () => {
+    render(<KpiTile tile={sentence} />)
+    const line = screen.getByTestId('kpi-compare')
+    expect(line).toHaveTextContent('זו הערכה, לא סכום שצפוי להיאבד')
+    expect(line.textContent).not.toContain('—')
+    expect(line.textContent.trim().endsWith(':')).toBe(false)
+  })
+
+  it('ערך אפס הוא ערך ולא היעדר — והוא מוצג', () => {
+    render(<KpiTile tile={{ ...TILE, compare: { label: 'אשתקד', value: 0, format: 'money' } }} />)
+    expect(screen.getByTestId('kpi-compare').textContent).toContain('0')
+  })
+})
+
+describe('KpiTile — הדלת נראית כדלת', () => {
+  // 🖱️ Tailwind v4 משאיר `<button>` ב-`cursor:default`; שורה-נלחצת ב-`ReportTable` כן
+  // מציגה אצבע, וכך הדלת נראתה כטקסט.
+  it('כפתור-הדלת נושא cursor-pointer', () => {
+    const target = { tab: 'כספים', report: 'report_m09_aging', drill: null }
+    render(<KpiTile tile={{ ...TILE, target }} onOpenTarget={vi.fn()} />)
+    expect(screen.getByTestId('report-tile-link-open_debt').className).toContain('cursor-pointer')
+  })
+
+  // 📏 משפט-השוואה ארוך ניפח את האריח ושבר את שורת-האריחים — אותו רוחב של `SubLine`.
+  it('שורת-ההשוואה חסומה ברוחב, כמו שורת-המכנה', () => {
+    render(<KpiTile tile={TILE} />)
+    expect(screen.getByTestId('kpi-compare').className).toContain('max-w-[210px]')
+  })
+})

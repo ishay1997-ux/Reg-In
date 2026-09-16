@@ -9,9 +9,15 @@
 // קורא-מסך חייב לשמוע "לחצן לחוץ" ולא "קישור נוכחי".
 //
 // 🔴 **ואזור-ההכרזה הוא חלק מהרכיב ולא תוספת:** ‏📐9④ — אזור `aria-live` חייב להיות בדף
-// **מראש** וריק; אזור שנוצר בלחיצה אינו מוכרז כלל. ‏`ReportTable` נושא אחד כזה אך המעטפת
-// אינה מוסרת לו טקסט (`ReportSurface.jsx` אינו מעביר `announcement`) — ⇒ ההכרזה על תוצאת
-// הסינון יושבת כאן, ליד הפקד שגרם לה.
+// **מראש** וריק; אזור שנוצר בלחיצה אינו מוכרז כלל.
+// ✏️ **תוקן 16/09 (סבב 3, ממצא 6):** ההערה כאן אמרה ש-`ReportSurface` אינו מעביר
+// ‏`announcement` ל-`ReportTable` — **זה כבר לא נכון** (‏`ReportSurface.jsx:487` מעביר).
+// ⚠️ **אבל הוא ממלא אותו רק תחת בחירת-סינון-צולב**, ובלשונית הזו אין סינון-צולב בהצהרה
+// (מ16 מכובה, ובשלושת האחרים אין מפתח) ⇒ **בלי ההכרזה כאן, בחירת-יום מחליפה טבלה שלמה
+// בשקט מוחלט לקורא-מסך.** לכן שתי השורות — מסנני-הדף ובורר-היום — מוסרות טקסט.
+//
+// 🔤 **וקבוצת-השבבים נקובה בשם** (`role="group"` + `aria-labelledby`): בלי זה קורא-מסך
+// מכריז שישה כפתורים בשמות "ראשון…שישי" בלי לומר מה הם מסננים.
 //
 // 🎨 צורת-הגלולה מועתקת מ-`ReportChips`/`FilterPill` — טורקיז בהיר לפעיל, אפור לכבוי.
 // 🚫 בלי utilities לוגיות (`ms-`/`pe-`) — פיזיות בלבד (`src/CLAUDE.md` §2.4).
@@ -23,9 +29,19 @@ export default function ChipRow({ label, chips, announcement = '', testId = 'rep
   // וביום שבו ה-RPC יפסיק לשלוח אותו הרשימה תתרוקן. בלי התנאי הזה המסך היה מציג תווית
   // *"יום בשבוע"* מרחפת בלי אף כפתור — פקד שנראה שבור ואינו אומר למה.
   if (!chips?.length) return null
+  const labelId = `${testId}-label`
   return (
-    <div className="mb-3 flex w-full flex-wrap items-center gap-1.5" data-testid={testId}>
-      {label && <span className="ml-1 text-[11.5px] text-slate-500">{label}</span>}
+    <div
+      className="mb-3 flex w-full flex-wrap items-center gap-1.5"
+      role={label ? 'group' : undefined}
+      aria-labelledby={label ? labelId : undefined}
+      data-testid={testId}
+    >
+      {label && (
+        <span id={labelId} className="ml-1 text-[11.5px] text-slate-500">
+          {label}
+        </span>
+      )}
       {chips.map((chip) => (
         <button
           key={chip.key}

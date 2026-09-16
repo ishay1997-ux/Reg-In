@@ -55,6 +55,7 @@ vi.mock('../api', async (importOriginal) => {
   return { ...actual, callReport: (...args) => callReport(...args) }
 })
 
+import { isolateLtr } from '@/lib/reportsFormat'
 import { M11_HOSTESSES_COPY } from '@/lib/onboardingCopy.m11.hostesses'
 import HostessesTab from './HostessesTab'
 import ReportSurface from '../components/ReportSurface'
@@ -189,6 +190,10 @@ const m14 = () =>
       { key: 'reliability', label: 'ציון אמינות', format: 'score', align: 'end' },
       { key: 'last_shift_date', label: 'משמרת אחרונה', format: 'date', align: 'end' },
     ],
+    // 🔴 **שלוש שורות ולא אחת, וזה לא נוי** (סבב 3, ממצא 15): עם שורה אחת, החלפת
+    // `${isolateLtr(payload.rows.length)}` בליטרל `'1'` הייתה משאירה את בדיקת-הכותרת ירוקה
+    // — כלומר הבדיקה שנכתבה כדי להוכיח **גזירה** לא יכלה להיכשל. שלוש שורות הופכות אותה
+    // למדידה, והשלישית גם מספקת ערך-ציון נוסף לבדיקת פורמט-ה-`score`.
     rows: [
       {
         hostess_name: 'רותם עמר',
@@ -196,6 +201,20 @@ const m14 = () =>
         reliability: 0.7589,
         last_shift_date: '2026-08-20',
         drill_key: { kind: 'hostess', id: 449 },
+      },
+      {
+        hostess_name: 'מעיין קדוש',
+        status: 'פעילה',
+        reliability: 0.7643,
+        last_shift_date: '2026-08-26',
+        drill_key: { kind: 'hostess', id: 512 },
+      },
+      {
+        hostess_name: 'ירדן תורג׳מן',
+        status: 'פעילה',
+        reliability: 0.7752,
+        last_shift_date: '2026-08-26',
+        drill_key: { kind: 'hostess', id: 533 },
       },
     ],
     so_what: 'לא לשלוח את 6 הדיילות האדומות לאירועים הקרובים.',
@@ -262,6 +281,7 @@ const m15 = (selectedDow = null) =>
         band: 'red',
         no_show_12m: 3,
         no_show_ever: 3,
+        drill_key: { kind: 'hostess', id: 449 },
       },
       {
         row_key: 2,
@@ -270,6 +290,7 @@ const m15 = (selectedDow = null) =>
         band: 'amber',
         no_show_12m: 1,
         no_show_ever: 2,
+        drill_key: { kind: 'hostess', id: 539 },
       },
       {
         row_key: 3,
@@ -278,6 +299,7 @@ const m15 = (selectedDow = null) =>
         band: null,
         no_show_12m: 0,
         no_show_ever: 1,
+        drill_key: { kind: 'hostess', id: 551 },
       },
     ],
     so_what: 'לא לשלוח את 6 הדיילות האדומות.',
@@ -342,7 +364,10 @@ const m16 = () =>
         { hourly_rate: 49.39, rating: 5, hostess_name: 'שקד ניסים' },
         { hourly_rate: 47.98, rating: 5, hostess_name: 'גלי אוחיון' },
       ],
-      refLines: [{ axis: 'x', value: 43.27, label: 'חציון התעריף 43.27 ₪' }],
+      // ✏️ I1: תווית קו-הייחוס עברה לשקלים שלמים (📐4), והערת-הגרף מצהירה על 17 הנקודות
+      // שאינן עליו — שתיהן נמדדו במטען החי היום (`results/payloads_h5`).
+      refLines: [{ axis: 'x', value: 43.27, label: 'חציון התעריף 43 ₪' }],
+      note: "⁦17⁩ דיילות ללא דירוג אינן בגרף — ראי את השבב 'רק בלי דירוג' בטבלה.",
     },
     columns: [
       { key: 'hostess_name', label: 'דיילת', format: 'text', align: 'start' },
@@ -353,9 +378,27 @@ const m16 = () =>
     // וזה מה שמפעיל את הזיהוי-האוטומטי של המעטפת. פיקסצ'ר בלי זה היה הופך את מבחן-הכיבוי
     // לריק (נמדד: הוא נכשל, וזו הייתה הסיבה).
     rows: [
-      { row_key: 1, hostess_name: 'אביב יוסף', hourly_rate: 41.73, rating: null },
-      { row_key: 2, hostess_name: 'שקד ניסים', hourly_rate: 49.39, rating: 5 },
-      { row_key: 3, hostess_name: 'גלי אוחיון', hourly_rate: 47.98, rating: 5 },
+      {
+        row_key: 1,
+        hostess_name: 'אביב יוסף',
+        hourly_rate: 41.73,
+        rating: null,
+        drill_key: { kind: 'hostess', id: 394 },
+      },
+      {
+        row_key: 2,
+        hostess_name: 'שקד ניסים',
+        hourly_rate: 49.39,
+        rating: 5,
+        drill_key: { kind: 'hostess', id: 497 },
+      },
+      {
+        row_key: 3,
+        hostess_name: 'גלי אוחיון',
+        hourly_rate: 47.98,
+        rating: 5,
+        drill_key: { kind: 'hostess', id: 496 },
+      },
     ],
     so_what: 'להוריד את התעריף של 2 הדיילות שמעל חציון-המאגר.',
     definitions: 'הגדרות: תעריף שעתי = …',
@@ -378,6 +421,28 @@ const m17 = () =>
     },
     tiles: [
       {
+        key: 'gini',
+        label: 'ריכוזיות המשמרות',
+        value: 0.4581,
+        format: 'gini',
+        window: '12 החודשים האחרונים',
+        compare: {
+          label: 'התקופה המקבילה אשתקד · n=⁦97⁩ מול n=⁦106⁩ היום',
+          value: 0.4383,
+          direction: 'up',
+        },
+        target: null,
+      },
+      {
+        key: 'top_quarter',
+        label: 'רבע הדיילות העמוסות',
+        value: 55.8,
+        format: 'percent',
+        window: '12 החודשים האחרונים',
+        compare: null,
+        target: null,
+      },
+      {
         key: 'rank1_adoption',
         label: 'אימוץ המלצת Smart Match',
         value: null,
@@ -390,7 +455,7 @@ const m17 = () =>
         key: 'median_response',
         label: 'זמן-תגובה חציוני לזימון',
         value: 9.9,
-        format: 'days',
+        format: 'ratio',
         window: '12 החודשים האחרונים',
         compare: { label: 'התקופה המקבילה אשתקד', value: 9.5, direction: 'up' },
         target: null,
@@ -399,9 +464,18 @@ const m17 = () =>
         key: 'p90_response',
         label: 'זמן-תגובה, אחוזון 90',
         value: 20.7,
-        format: 'days',
+        format: 'ratio',
         window: '12 החודשים האחרונים',
         compare: null,
+        target: null,
+      },
+      {
+        key: 'response_rate',
+        label: 'אחוז היענות לזימון',
+        value: 92.6,
+        format: 'percent',
+        window: '12 החודשים האחרונים',
+        compare: { label: 'התקופה המקבילה אשתקד', value: 97.3, direction: 'down' },
         target: null,
       },
     ],
@@ -412,14 +486,29 @@ const m17 = () =>
       unit: 'percent',
       domain: [0, 100],
       series: [{ key: 'y', label: 'אחוז-משמרות מצטבר' }],
-      data: [{ x: 0, y: 0 }],
-      refLines: [],
+      data: [
+        { x: 0, y: 0 },
+        { x: 50, y: 16.3 },
+        { x: 100, y: 100 },
+      ],
+      // ✏️ I1: קו-השוויון האלכסוני של 📐6 נחת במטען (היה חסר בסבב 2 ודווח).
+      refLines: [
+        { axis: 'diagonal', from: { x: 0, y: 0 }, to: { x: 100, y: 100 }, label: 'חלוקה שווה' },
+        { axis: 'y', value: 16.3, label: 'מחצית הדיילות = ⁦16.3%⁩ מהמשמרות' },
+      ],
     },
     columns: [
       { key: 'hostess_name', label: 'דיילת', format: 'text', align: 'start' },
       { key: 'shifts', label: 'משמרות', format: 'int', align: 'end' },
     ],
-    rows: [{ row_key: 1, hostess_name: 'אביב יוסף', shifts: 49 }],
+    rows: [
+      {
+        row_key: 1,
+        hostess_name: 'אביב יוסף',
+        shifts: 49,
+        drill_key: { kind: 'hostess', id: 394 },
+      },
+    ],
     so_what: 'לפתוח את מסך השיבוץ עם רבע הדיילות התחתון.',
     definitions: 'הגדרות: זמן-תגובה = … בשעות',
     meta: {
@@ -446,6 +535,25 @@ const m17 = () =>
 // ⚠️ `meta.extra_tables` מרונדרות דרך אותו `ReportTable` ⇒ אותם `data-testid` בדיוק.
 // ספירת-שורות מתוך `screen` הייתה סופרת גם אותן — ‏`mainTable()` מצמצם לטבלה הראשית.
 const mainTable = () => screen.getAllByTestId('report-table-card')[0]
+// ⚠️ **ספירת-שורות סופרת את שני המזהים.** ‏`ReportTable` מסמן שורה `report-row-drillable`
+// כשהיא נושאת `drill_key` נתיב ו-`report-row` כשלא — וכל שורה חיה בלשונית הזו נושאת אחד
+// (‏`{kind:'hostess', id}`). ספירה של מזהה אחד בלבד הייתה מחזירה 0 ונראית כמו סינון שעבד.
+const rowCount = () =>
+  within(mainTable()).queryAllByTestId('report-row').length +
+  within(mainTable()).queryAllByTestId('report-row-drillable').length
+
+// גרסה שמחזירה את תוצאת-הרינדור (ל-`unmount`), לבדיקות שמרנדרות שני מטענים ברצף.
+function renderTabRaw(surface, { drill = null, onDrill = vi.fn() } = {}) {
+  return render(
+    <HostessesTab
+      surface={surface}
+      filters={filters}
+      drill={drill}
+      onDrill={onDrill}
+      onWindow={() => {}}
+    />,
+  )
+}
 
 function renderTab(surface, { drill = null, onDrill = vi.fn() } = {}) {
   render(
@@ -509,12 +617,22 @@ describe('מ14 · מבט-על דיילות', () => {
   })
 
   it('כותרת-הטבלה נגזרת ממספר השורות שנשארו ולא מוקלדת', async () => {
-    callReport.mockResolvedValue(m14())
-    renderTab(SURFACES.m14)
+    // 🔑 **המבחן הוא ששני מטענים באורכים שונים מייצרים שתי כותרות שונות.** אימות על מטען
+    // אחד אינו מבדיל בין גזירה לליטרל — זה בדיוק מה שממצא 15 מדד.
+    const three = m14()
+    callReport.mockResolvedValue(three)
+    const { unmount } = renderTabRaw(SURFACES.m14)
     expect(await screen.findByTestId('report-table-title')).toHaveTextContent(
-      'הדיילות האדומות · מיון לפי ציון-אמינות, מהנמוך',
+      `${isolateLtr(three.rows.length)} הדיילות האדומות · מיון לפי ציון-אמינות, מהנמוך`,
     )
-    expect(screen.getByTestId('report-table-title').textContent).toMatch(/1/)
+    unmount()
+
+    const two = { ...m14(), rows: m14().rows.slice(0, 2) }
+    callReport.mockResolvedValue(two)
+    renderTabRaw(SURFACES.m14)
+    expect(await screen.findByTestId('report-table-title')).toHaveTextContent(
+      `${isolateLtr(2)} הדיילות האדומות · מיון לפי ציון-אמינות, מהנמוך`,
+    )
   })
 
   it('בלי אדומות — הכותרת אומרת "אין דיילות מתחת לסף" (כרטיס ①7)', async () => {
@@ -548,16 +666,16 @@ describe('מ15 · אמינות והתייצבות', () => {
     callReport.mockResolvedValue(m15())
     renderTab(SURFACES.m15)
     await screen.findByTestId('report-table-title')
-    expect(within(mainTable()).getAllByTestId('report-row')).toHaveLength(3)
+    expect(rowCount()).toBe(3)
     fireEvent.click(screen.getByTestId('reports-chips-reliability-onlyFlag'))
-    expect(within(mainTable()).getAllByTestId('report-row')).toHaveLength(2)
+    expect(rowCount()).toBe(2)
     expect(screen.getByTestId('reports-chips-reliability-onlyFlag')).toHaveAttribute(
       'aria-pressed',
       'true',
     )
     // שני השבבים מצטלבים (כרטיס ①6): מסומנת **וגם** פעילה.
     fireEvent.click(screen.getByTestId('reports-chips-reliability-onlyActive'))
-    expect(within(mainTable()).getAllByTestId('report-row')).toHaveLength(1)
+    expect(rowCount()).toBe(1)
     expect(screen.getByTestId('reports-chips-reliability-announce')).toHaveTextContent('שורות')
   })
 
@@ -592,13 +710,13 @@ describe('מ16 · איכות מול עלות', () => {
     renderTab(SURFACES.m16)
     const chip = await screen.findByTestId('reports-chips-quality-cost-onlyNoRating')
     expect(chip).toHaveAttribute('aria-pressed', 'true')
-    expect(within(mainTable()).getAllByTestId('report-row')).toHaveLength(1)
+    expect(rowCount()).toBe(1)
     expect(screen.getByTestId('report-table-title')).toHaveTextContent(
       'הדיילות הפעילות שאין להן דירוג',
     )
 
     fireEvent.click(chip)
-    expect(within(mainTable()).getAllByTestId('report-row')).toHaveLength(3)
+    expect(rowCount()).toBe(3)
     expect(screen.getByTestId('report-table-title')).toHaveTextContent('כל הדיילות הפעילות')
   })
 })
@@ -683,64 +801,156 @@ describe('מ17 · הוגנות השיבוץ', () => {
   })
 })
 
-describe('מצבי-המעטפת ושכבת-ההטמעה', () => {
-  it('כשל-רשת מציג מעטפת-תקלה עם "נסי שוב", והלחיצה קוראת שוב', async () => {
-    callReport.mockRejectedValueOnce(new Error('network down'))
-    renderTab(SURFACES.m14)
-    expect(await screen.findByText('נסי שוב')).toBeInTheDocument()
-    // 🔴 כשל **לעולם אינו** "אין נתונים" (§4.3 של מדריך-המיקרו).
-    expect(screen.queryByTestId('report-tiles')).toBeNull()
-    callReport.mockResolvedValueOnce(m14())
-    fireEvent.click(screen.getByText('נסי שוב'))
-    expect(await screen.findByTestId('report-tiles')).toBeInTheDocument()
-    expect(callReport).toHaveBeenCalledTimes(2)
-  })
+// ⛳ **רצפת-הבדיקות של ארבעת המשטחים — `it.each` ולא ארבעה עותקים.**
+// 🔴 **למה זה נכתב מחדש בסבב 3 (ממצא 16):** כל בדיקות-הרצפה רונדרו את `SURFACES.m14`
+// בלבד, כלומר הרצפה נמדדה על משטח אחד מארבעה — ומוטציה במ15/מ16/מ17 (שורת-אוכלוסייה
+// שנעלמת · ייצוא שאינו מנוטרל · מצב-שגיאה שהופך ל"אין נתונים") הייתה שורדת ירוקה.
+// 🚫 **וארבעה עותקים אינם הפתרון** — ‏jscpd נופל ב-3%; הפרמטריזציה היא גם הגדר וגם הניקיון.
+const SURFACE_CASES = [
+  ['מ14 · מבט-על דיילות', SURFACES.m14, m14, ['הגעה בזמן', 'דיילות אדומות', 'אירועים עם חוסר']],
+  ['מ15 · אמינות והתייצבות', SURFACES.m15, m15, ['הגעה בזמן', 'דיילות מסומנות']],
+  ['מ16 · איכות מול עלות', SURFACES.m16, m16, ['דיילות בלי דירוג', 'תעריף שעתי חציוני']],
+  [
+    'מ17 · הוגנות השיבוץ',
+    SURFACES.m17,
+    m17,
+    ['אימוץ המלצת Smart Match', 'זמן-תגובה חציוני לזימון', 'אחוז היענות לזימון'],
+  ],
+]
 
-  it('`meta.missing_params` מוצג בעברית, בשם הפרמטר', async () => {
-    callReport.mockResolvedValue({
-      ...m14(),
-      meta: { ...m14().meta, missing_params: ['קבוע_ריסון_m'] },
-    })
-    renderTab(SURFACES.m14)
-    expect(await screen.findByTestId('report-missing-params')).toHaveTextContent(
-      'חסר פרמטר מערכת: קבוע_ריסון_m',
+describe('רצפת-המשטח — כל ארבעת המשטחים', () => {
+  it.each(SURFACE_CASES)(
+    '%s · תוויות §1.4 ושלוש שורות-הבסיס',
+    async (_name, surface, make, labels) => {
+      callReport.mockResolvedValue(make())
+      renderTab(surface)
+      await screen.findByTestId('report-tiles')
+      for (const label of labels) expect(screen.getByText(label)).toBeInTheDocument()
+      expect(screen.getByTestId('report-population')).toBeInTheDocument()
+      expect(screen.getByTestId('report-so-what')).toBeInTheDocument()
+      expect(screen.getByTestId('report-definitions')).toBeInTheDocument()
+    },
+  )
+
+  it.each(SURFACE_CASES)('%s · השורה כולה דלת (הכרעה 19)', async (_name, surface, make) => {
+    callReport.mockResolvedValue(make())
+    const onDrill = renderTab(surface)
+    const row = (await screen.findAllByTestId('report-row-drillable'))[0]
+    fireEvent.click(row)
+    expect(onDrill).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'hostess' }),
+      expect.anything(),
     )
   })
 
-  it('טבלה בלי שורות — כפתור-הייצוא מנוטרל ואומר "אין שורות לייצא"', async () => {
-    callReport.mockResolvedValue({ ...m14(), rows: [] })
-    renderTab(SURFACES.m14)
-    expect(await screen.findByTestId('reports-export-button')).toBeDisabled()
-    expect(screen.getByTestId('reports-export-file')).toHaveTextContent('אין שורות לייצא')
-  })
+  it.each(SURFACE_CASES)(
+    '%s · כשל-רשת ⇒ מעטפת-תקלה ו"נסי שוב", לעולם לא "אין נתונים"',
+    async (_name, surface, make) => {
+      callReport.mockRejectedValueOnce(new Error('network down'))
+      renderTab(surface)
+      expect(await screen.findByText('נסי שוב')).toBeInTheDocument()
+      expect(screen.queryByTestId('report-tiles')).toBeNull()
+      callReport.mockResolvedValueOnce(make())
+      fireEvent.click(screen.getByText('נסי שוב'))
+      expect(await screen.findByTestId('report-tiles')).toBeInTheDocument()
+      expect(callReport).toHaveBeenCalledTimes(2)
+    },
+  )
 
-  it('מטען ריק לגמרי — מצב "ריק" ולא תקלה', async () => {
+  it.each(SURFACE_CASES)(
+    '%s · `missing_params` בעברית, בשם הפרמטר',
+    async (_name, surface, make) => {
+      const payload = make()
+      callReport.mockResolvedValue({
+        ...payload,
+        meta: { ...payload.meta, missing_params: ['קבוע_ריסון_m'] },
+      })
+      renderTab(surface)
+      expect(await screen.findByTestId('report-missing-params')).toHaveTextContent(
+        'חסר פרמטר מערכת: קבוע_ריסון_m',
+      )
+    },
+  )
+
+  it.each(SURFACE_CASES)(
+    '%s · בלי שורות ⇒ ייצוא מנוטרל עם הנוסח הנעול',
+    async (_name, surface, make) => {
+      callReport.mockResolvedValue({ ...make(), rows: [] })
+      renderTab(surface)
+      expect(await screen.findByTestId('reports-export-button')).toBeDisabled()
+      expect(screen.getByTestId('reports-export-file')).toHaveTextContent('אין שורות לייצא')
+    },
+  )
+
+  it.each(SURFACE_CASES)('%s · מטען ריק לגמרי ⇒ "ריק" ולא תקלה', async (_name, surface) => {
     callReport.mockResolvedValue(base({}))
-    renderTab(SURFACES.m14)
-    expect(await screen.findByTestId('report-hostess-overview-blank')).toBeInTheDocument()
+    renderTab(surface)
+    expect(await screen.findByTestId(`report-${surface.slug}-blank`)).toBeInTheDocument()
   })
 
-  it('מבחן-המחיקה: ברמה 0 כל הבסיס נשאר, ואף רמז אינו מרונדר', async () => {
-    onboardingMode.value = 0
-    callReport.mockResolvedValue(m14())
-    renderTab(SURFACES.m14)
-    expect(await screen.findByTestId('report-tiles')).toBeInTheDocument()
-    expect(screen.getByTestId('report-population')).toBeInTheDocument()
-    expect(screen.getByTestId('report-so-what')).toBeInTheDocument()
-    expect(screen.getByTestId('report-definitions')).toBeInTheDocument()
-    expect(screen.getByTestId('report-table-card')).toBeInTheDocument()
-    expect(document.body.querySelectorAll('[data-testid^="hint-"]')).toHaveLength(0)
-  })
+  it.each(SURFACE_CASES)(
+    '%s · מבחן-המחיקה: ברמה 0 הבסיס שלם ואין אף רמז',
+    async (_name, surface, make) => {
+      onboardingMode.value = 0
+      callReport.mockResolvedValue(make())
+      renderTab(surface)
+      expect(await screen.findByTestId('report-tiles')).toBeInTheDocument()
+      expect(screen.getByTestId('report-population')).toBeInTheDocument()
+      expect(screen.getByTestId('report-so-what')).toBeInTheDocument()
+      expect(screen.getByTestId('report-definitions')).toBeInTheDocument()
+      expect(screen.getAllByTestId('report-table-card')[0]).toBeInTheDocument()
+      expect(document.body.querySelectorAll('[data-testid^="hint-"]')).toHaveLength(0)
+    },
+  )
+})
 
-  it('ברמה 2 הרמזים מרונדרים בארבע נקודות-ההרחבה', async () => {
-    callReport.mockResolvedValue(m14())
-    renderTab(SURFACES.m14)
-    expect(await screen.findByTestId('hint-reports.hostessOverview.purpose')).toBeInTheDocument()
-    expect(screen.getByTestId('hint-reports.hostessOverview.redCount')).toBeInTheDocument()
-    expect(screen.getByTestId('hint-reports.hostessOverview.gini')).toBeInTheDocument()
-    expect(screen.getByTestId('hint-reports.hostessOverview.redTableSort')).toBeInTheDocument()
-    expect(screen.getByTestId('hint-reports.hostessOverview.term.onTime')).toBeInTheDocument()
-  })
+// 📐 **מיקום, לא קיום** (סבב 3, ממצא 17). הבדיקה הקודמת ספרה `toBeInTheDocument` על חמישה
+// מזהים — כלומר קיפול כל 38 המפתחות ל-`renderExtras` היה משאיר אותה ירוקה **ומייצר בדיוק
+// את קיר-הרמזים בתחתית הדף** שממצא 7 מדד. ‏`compareDocumentPosition` הוא מה שמודד עוגן.
+// 🔑 **והעוגן של כל חריץ נגזר מ-`onboarding-layer-contract §4ב`:** הרמז הוא שורה עצמאית
+// **מתחת לבלוק שהוא מסביר** — ‏`renderTop` מעל שורת-האוכלוסייה · `renderBeforeChart` אחרי
+// רצועת-האריחים ולפני הגרף · `renderBeforeTable` לפני הטבלה · `renderExtras` אחרי ההגדרות.
+const follows = (first, second) =>
+  Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING)
+
+const HINT_PLACEMENT = [
+  ['מ14 · מבט-על דיילות', SURFACES.m14, m14, 'hostessOverview', 'redCount', 'redTableSort'],
+  ['מ15 · אמינות והתייצבות', SURFACES.m15, m15, 'reliability', null, 'absenceColumns'],
+  ['מ16 · איכות מול עלות', SURFACES.m16, m16, 'qualityCost', 'scatterBasis', 'tableSort'],
+  ['מ17 · הוגנות השיבוץ', SURFACES.m17, m17, 'fairness', 'giniBasis', null],
+]
+
+describe('מיקום שכבת-ההטמעה (רמה 2)', () => {
+  it.each(HINT_PLACEMENT)(
+    '%s · כל רמז מתחת לבלוק שהוא מסביר',
+    async (_name, surface, make, slug, beforeChartKey, beforeTableKey) => {
+      callReport.mockResolvedValue(make())
+      renderTab(surface)
+      const purpose = await screen.findByTestId(`hint-reports.${slug}.purpose`)
+      const population = screen.getByTestId('report-population')
+      const tiles = screen.getByTestId('report-tiles')
+      const table = screen.getAllByTestId('report-table-card')[0]
+      const definitions = screen.getByTestId('report-definitions')
+
+      // ‏renderTop — הרמז מעל שורת-האוכלוסייה, ומעל כל השאר.
+      expect(follows(purpose, population)).toBe(true)
+
+      if (beforeChartKey) {
+        const hint = screen.getByTestId(`hint-reports.${slug}.${beforeChartKey}`)
+        const figure = screen.getAllByTestId('chart-figure')[0]
+        expect(follows(tiles, hint)).toBe(true)
+        expect(follows(hint, figure)).toBe(true)
+      }
+      if (beforeTableKey) {
+        const hint = screen.getByTestId(`hint-reports.${slug}.${beforeTableKey}`)
+        expect(follows(hint, table)).toBe(true)
+        expect(follows(screen.getByTestId('report-table-title'), hint)).toBe(true)
+      }
+      // ‏renderExtras — בלוק-המונחים **אחרי** שורת-ההגדרות שהוא מפרש, ולא לפניה.
+      const firstTerm = screen.getAllByTestId(/^hint-reports\..+\.term\./)[0]
+      expect(follows(definitions, firstTerm)).toBe(true)
+    },
+  )
 })
 
 // 🔴 **הבדיקה שאין לה תחליף: מפתח-הטמעה שגוי מרנדר `null` בשקט בייצור** (`spec.md §🚫.5`).

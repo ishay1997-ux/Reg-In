@@ -14,16 +14,18 @@
 // משטח מחזיר שגיאת-"פונקציה לא נמצאה", והמסך מציג את **מצב-התקלה** עם *"נסי שוב"* —
 // 🔴 **ולעולם לא "אין נתונים"**, שהוא בדיוק מצג-השווא שמדריך-המיקרו §4.3 אוסר.
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import FilterPill from '@/components/FilterPill'
 import { formatByType } from '@/lib/reportsFormat'
-import { ROW_DOOR_KINDS, callReport, normalizeCharts } from '../api'
+import { DRILL_INTENT, ROW_DOOR_KINDS, callReport, normalizeCharts } from '../api'
 import ChartCard from './ChartCard'
 import DrillCrumbs from './DrillCrumbs'
 import Envelope from './Envelope'
 import ExportBar from './ExportBar'
 import KpiTile from './KpiTile'
 import ReportTable from './ReportTable'
+import { ReportsShellContext } from './reportsShellContext'
 
 // 🔒 הודעות-מסד ידועות ⇒ **נוסח משלנו**, לעולם לא המחרוזת הגולמית. אותה תבנית בדיוק כמו
 // `SERVER_MESSAGE_RULES` במ7, ומאותו נימוק: מחרוזת-מסד נושאת אנגלית ושמות-פונקציה, ושניהם
@@ -61,7 +63,16 @@ function Tiles({ tiles, onOpenTarget }) {
     // אריחים עוטפים ואינם נמתחים.
     <div className="mb-4 flex flex-wrap gap-3" data-testid="report-tiles">
       {tiles.map((tile) => (
-        <KpiTile key={tile.key} tile={tile} masked={tile.masked} onOpenTarget={onOpenTarget} />
+        // 📏 **תיבת-האריח של המוקאפ, מילה-במילה** (`.tile { min-width:210px; flex:1 1 210px;
+        // max-width:340px }`) — הקוד לא הציב גבולות כלל, ומשפט-השוואה הארוך של מ19
+        // ניפח אריח אחד ושבר את השורה ל-2+2 ב-1280px (נמדד).
+        // ✅ `flex-wrap` נשמר — הכרעת-ישי 08/08 (*"פלקס ולעולם לא grid"*) אינה נגועת.
+        <div
+          key={tile.key}
+          className="flex min-w-[210px] max-w-[340px] grow basis-[210px] [&>*]:w-full"
+        >
+          <KpiTile tile={tile} masked={tile.masked} onOpenTarget={onOpenTarget} />
+        </div>
       ))}
     </div>
   )
@@ -216,6 +227,123 @@ function announceSelection(label, count) {
 const datumLabel = (datum, xKey) => String(datum?.label ?? datum?.[xKey] ?? '')
 
 /**
+ * 🚪 **שני השדות שקובעים איך עמודה בדף-דריל יורדת רמה** — שניהם אופציונליים, ושניהם
+ * נגזרים מ-`chart.xKey` כשה-RPC לא הצהיר:
+ * ‏`chart.drill_param` — שם-המפתח שנכתב למצב-הדריל (ברירת-מחדל: `xKey`, למשל `bucket`) ·
+ * ‏`chart.drill_key` — שדה-הדאטום שמחזיק את **המפתח** (ברירת-מחדל: `<xKey>_key`).
+ * 🔴 **וההפרדה אינה תיאורטית:** במ9 העמודה מציגה `bucket: "1–30"` (תווית) והשרת מצפה
+ * ל-`d1_30` — המטען החי כבר נושא `bucket_key` בכל דאטום, וזה בדיוק הפער ש-D-30① מתעד.
+ */
+const drillParamOf = (chart) => chart?.drill_param ?? chart?.xKey
+const drillKeyOf = (chart) => chart?.drill_key ?? `${chart?.xKey}_key`
+
+/**
+ * ‏`onSelect` של דף-דריל — **ירידת-רמה**, לא סינון. `null` כשאין לגרף מפתח-דריל בדאטה,
+ * ‏🚫 **ואז הגרף נשאר בדיוק כפי שהיה** (בלי סמן, בלי כפתורים בטבלת-קורא-המסך): עמודה
+ * שנראית לחיצה ואינה מורידה רמה גרועה מעמודה שאינה מתיימרת.
+ */
+function chartDrill(chart, onDrillLevel) {
+  if (!onDrillLevel) return null
+  const param = drillParamOf(chart)
+  const keyField = drillKeyOf(chart)
+  if (!param) return null
+  // ⚠️ אין ולו דאטום אחד שנושא את המפתח ⇒ אין דלת. `{bucket: undefined}` היה נכתב
+  // לכתובת כ-`{}` ומחזיר את הדף לשורש בלי שאיש יבין למה.
+  const usable = (chart?.data ?? []).some((datum) => datum?.[keyField] != null)
+  if (!usable) return null
+  return (datum) => {
+    const value = datum?.[keyField]
+    if (value == null) return
+    onDrillLevel({ [param]: value })
+  }
+}
+
+/**
+ * 🚪 **בדף-דריל שיש לו רמה נוספת, לחיצה היא ירידת-רמה — ולא דלת-ישות.**
+ * 🔴 **נמדד ע"י סוכן-ה-E2E 16/09/2026:** ברמת-הדלי של מ9 השורות נושאות
+ * `{ kind: 'customer', bucket: 'd90p', customer_id: 401 }` — ‏`kind` שנמצא ברשימת-הדלתות,
+ * עם המזהה תחת `customer_id`. היום זה **יורד רמה נכון רק במקרה**, כי `id` חסר; ביום
+ * שה-RPC יוסיף `id` אותה לחיצה תנווט למסך-הלקוח, **בלי שאף בדיקה תאדים**.
+ * ⇒ המשטח מצהיר את הכוונה ב**ארגומנט שלישי** (`DRILL_INTENT`, ר' `api.js`), והמנתב בודק
+ * אותה לפני ענף-הדלת — **בלי לגעת באובייקט** שנכתב לכתובת ונשלח כ-`p_drill`.
+ * ⚠️ **ורק כשיש רמה נוספת**: ברמה האחרונה הדלת היא **הישות עצמה**, וזו ההתנהגות הנכונה.
+ */
+function drillHandlers(surface, payload, onDrill) {
+  const levels = payload.drill?.levels?.length ?? 0
+  const hasFurtherLevel = Boolean(surface.drill) && (payload.drill?.level ?? 0) < levels - 1
+  if (!hasFurtherLevel) return { drillSurface: null, rowDrill: onDrill }
+  return {
+    drillSurface: (next) => onDrill(next, null, DRILL_INTENT),
+    rowDrill: (drillKey, row) => onDrill(drillKey, row, DRILL_INTENT),
+  }
+}
+
+/** הדאטום של הרמה **הפתוחה** — כדי שהעמודה שנפתחה תישאר מסומנת (15-ד) גם אחרי הירידה. */
+function activeDrillLabel(chart, drill) {
+  const param = drillParamOf(chart)
+  const active = drill?.[param]
+  if (active == null) return undefined
+  const keyField = drillKeyOf(chart)
+  const datum = (chart?.data ?? []).find((row) => String(row?.[keyField]) === String(active))
+  return datum ? datum[chart.xKey] : undefined
+}
+
+/**
+ * 🎨 **רשימת-הגרפים כרכיב נפרד — ולא כמיפוי בתוך `ReportSurface`.**
+ * 🔑 **וזה לא סגנון:** ‏SonarJS מדד את המשטח ב-39 מול תקרת-20 ברגע שהוסף לו ענף-הדריל,
+ * כלומר **גלאי-הספגטי של הריפו זיהה נכון** שהפונקציה מחזיקה יותר מדי החלטות בבת-אחת.
+ * כאן חיות שלוש ההחלטות של גרף יחיד: **מה לחיצה עושה** (ירידת-רמה / סינון / כלום),
+ * **מה מסומן** (הרמה הפתוחה / הבחירה), ו**מה נשתל בו** (אריח-צד · כיתוב-תחתון).
+ */
+function SurfaceCharts({
+  charts,
+  payload,
+  allowAutoFilter,
+  isDrill,
+  drillSurface,
+  drill,
+  selection,
+  onToggle,
+  renderChartAside,
+  renderChartFooter,
+}) {
+  return charts.map((chart, index) => {
+    const key = chartFilterKey(chart, payload.columns, payload.rows, allowAutoFilter)
+    // 🚪 **בדף-דריל לחיצה על עמודה היא ירידת-רמה, לא סינון** (הכרעה הנדסית 16/09/2026 על
+    // החוסם של מ9): הכרטיס קובע שעמודת-המדרג היא **פקד-הקידוח** של הדף (📐13), ועד עכשיו
+    // העמודות היו **מתות לגמרי** — זיהוי-אוטומטי כבוי בדפי-דריל וה-RPC אינו מצהיר
+    // `chart.filter_key` ⇒ `onSelect === undefined`.
+    // ⚠️ המפתח נלקח מהדאטום עצמו (`bucket_key`): העמודה מציגה **תווית** (`"1–30"`) והשרת
+    // מצפה ל**מפתח** (`"d1_30"`), והפער הזה הוא בדיוק מה ש-D-30① מתעד.
+    // 🔑 המגן על עמודת-אפס ונתיב-המקלדת מגיעים מ-`ChartCard` בלי שינוי.
+    const drillFromChart = chartDrill(chart, drillSurface)
+    return (
+      <ChartCard
+        key={chart.title ?? index}
+        chart={chart}
+        // 🚫 **`onSelect` נמסר רק כשיש מפתח** — אחרת הגרף היה מקבל `cursor:pointer` וכפתורים
+        // בטבלת-קורא-המסך על אינטראקציה שאינה קיימת (📐14ב③).
+        onSelect={drillFromChart ?? selectHandler(key, chart, index, onToggle)}
+        // 15-ד — הגוון אומר **איפה** נבחר; הצ'יפ אומר **מה**. רק הגרף שהבחירה שייכת לו.
+        // ➕ **ובדף-דריל — הרמה הפתוחה**: הדלי שנפתח נשאר טורקיז והשאר מעומעמים, אחרת
+        // המשתמשת יורדת רמה והגרף נראה בדיוק כמו קודם.
+        // ⚠️ **הסימון מותנה בהיותו דף-דריל ולא בקיום רמה נוספת** — ברמה האחרונה אין לאן
+        // לרדת, אבל **יש מה לסמן**: הדלי שהמשתמשת נמצאת בתוכו.
+        selected={isDrill ? activeDrillLabel(chart, drill) : selectedValue(selection, index)}
+        aside={renderChartAside?.(payload, index)}
+        footer={renderChartFooter?.(payload, index)}
+      />
+    )
+  })
+}
+
+const selectHandler = (key, chart, index, onToggle) =>
+  key ? (datum) => onToggle(index, key, chart, datum) : undefined
+
+const selectedValue = (selection, index) =>
+  selection?.chartIndex === index ? selection.value : undefined
+
+/**
  * ‏`surface` · `filters` · `drill` · `onDrill` — חוזה-הפרופס של רכיב-לשונית (ר' `tabs/ExecutiveTab.jsx`).
  *
  * 🔌 **חמש נקודות-ההרחבה של בונה-הלשונית — והן הדרך היחידה להוסיף, בלי לשכפל את השלד:**
@@ -229,7 +357,18 @@ const datumLabel = (datum, xKey) => String(datum?.label ?? datum?.[xKey] ?? '')
  * ‏`renderTop(payload)` — מעל שורת-האוכלוסייה: רמז-ה-`purpose`/`whyAndFirst` של §⑩, שבבים.
  * ‏`renderBeforeChart(payload)` · `renderBeforeTable(payload)` — רמזי "איך לקרוא את הגרף/הטבלה".
  * ‏`renderExtras(payload)` — בתחתית: מה שייחודי למשטח *(פס-האישור של מ25 בדף 20, רמזי-מונחים)*.
- * כל הארבעה מקבלים את ה-payload **אחרי** `transformPayload`.
+ *
+ * ✏️ **שלוש נקודות נוספות (16/09/2026), וכל אחת נולדה מעוגן-כרטיס שלא היה לו מקום:**
+ * ‏`renderAfterSoWhat(payload)` — **בין שורת-"אז מה" לאריחים**. 🔴 שם הכרטיסים מעגנים את
+ *   רמז-ה-`why` של §⑩ (*"מתחת ל-.so-what, מעל .tiles"* — נמדד במוקאפ: 470 < 476 < 482),
+ *   ובלעדיה ארבע הלשוניות שתלו אותו ב-`renderTop`, כלומר **מעל שורת-האוכלוסייה**.
+ * ‏`renderChartAside(payload, index)` — **לצד** הגרף (אריח-הצד *"שוטף — עוד לא באיחור"*
+ *   של מ9, שהכרטיס מעגן *"בתוך .chart-card"* ושנמדד בפועל ברוחב-דף מלא **מעל** הגרף).
+ * ‏`renderChartFooter(payload, index)` — **מתחת** לגרף, בתוך הכרטיס (רמזי-⑩ שהכרטיס מעגן
+ *   *"מתחת ל-.legend/.barkey"*).
+ * ⚠️ שתי האחרונות מקבלות גם את **מספר הגרף** — משטח עם שני גרפים צריך לבחור לאיזה מהם.
+ *
+ * כל השבע מקבלות את ה-payload **אחרי** `transformPayload`.
  */
 export default function ReportSurface({
   surface,
@@ -239,10 +378,15 @@ export default function ReportSurface({
   onWindow,
   transformPayload,
   renderTop,
+  renderAfterSoWhat,
   renderBeforeChart,
+  renderChartAside,
+  renderChartFooter,
   renderBeforeTable,
   renderExtras,
 }) {
+  // 🚪 המעטפת יודעת מה ממוסך ואיפה יושבת שורת-המסננים; המשטח אינו יודע אף אחד מהשניים.
+  const shell = useContext(ReportsShellContext)
   const [reloadTick, setReloadTick] = useState(0)
 
   const {
@@ -354,8 +498,17 @@ export default function ReportSurface({
   if (!payload) return <Envelope state="blank" testId={`report-${surface.slug}`} />
 
   const charts = normalizeCharts(payload.chart)
-  const hasContent = payload.tiles.length > 0 || charts.length > 0 || payload.rows.length > 0
-  if (!hasContent) {
+  // 🔴 **מהי "ריק" — הכרעה 16/09/2026, וזה היה מצב שלא היה ניתן להגיע אליו:**
+  // המבחן הקודם היה `tiles.length || charts.length || rows.length`, וכל שישה-עשר ה-RPC מחזירים
+  // אריחים **תמיד** (מערך-ליטרל קבוע בשרת) ⇒ התנאי **לעולם לא התקיים**, ומצב 2 של
+  // 📐10 (*"ריק-אחרי-סינון"* + *"נקי מסננים"*) היה **קוד-מת בכל המודול**. נמדד
+  // בשלוש לשוניות בנפרד: לקוח בלי אירועים נתן ארבעה אריחים מאופסים וטבלה בלי גוף,
+  // בלי משפט ובלי כפתור — בדיוק מצג-השווא ש§4.3 מכנה הסיכון המרכזי של המודול.
+  // ✅ **המבחן החדש הוא האוכלוסייה עצמה** (הכרעת-המתזייר 16/09): אפס שורות **ו**
+  // `population.n = 0`. 🔑 שני התנאים ולא אחד: דף שהטבלה שלו ריקה בעוד האוכלוסייה גדולה
+  // (למשל רשימת-חריגים שאין בה אף חריג) הוא תשובה אמיתית ולא מסך ריק.
+  const isEmptyPage = payload.rows.length === 0 && (payload.population?.n ?? 0) === 0
+  if (isEmptyPage) {
     // ריק-אחרי-סינון מול ריק-לגמרי (§⑥ מצבים 2 · 3) — ‏`isFiltered` נגזר במעטפת, ר' שם.
     return (
       <Envelope
@@ -372,6 +525,8 @@ export default function ReportSurface({
   // 🚪 הכרעה 19 — הדלת נפתחת בכל משטח שיש בו `drill_key`, לא רק בשני משטחי-הדריל.
   const rowDoors = surface.drill || hasRowDoor(payload.rows)
 
+  const { drillSurface, rowDrill } = drillHandlers(surface, payload, onDrill)
+
   // 📐6 — **זיהוי-אוטומטי מושבת בדפי-דריל, והצהרת-שרת מפורשת עדיין עובדת בכולם.**
   // 🔴 **הנימוק מדוד ולא זהיר-סתם:** ‏📐13 מקצה לארבעת דפי-הדריל **קידוח** ולשאר
   // **סינון-צולב**, וכרטיס-מ9 (שורה 6) קובע מפורשות שלחיצה על עמודת-מדרג **יורדת רמה**.
@@ -383,6 +538,17 @@ export default function ReportSurface({
   const announcement = selection
     ? announceSelection(selection.label, selectedRows.length)
     : undefined
+
+  const exportBar = (
+    <ExportBar
+      reportName={surface.name}
+      windowLabel={payload.window?.label ?? windowLabel}
+      drillLabel={[drillLabel, selection?.label].filter(Boolean).join(' ') || null}
+      columns={payload.columns}
+      rows={selectedRows}
+      blockedReason={payload.meta?.export_blocked_reason}
+    />
+  )
 
   function toggleSelection(chartIndex, key, chart, datum) {
     const value = datum?.[chart.xKey]
@@ -398,6 +564,9 @@ export default function ReportSurface({
 
   return (
     <div data-testid={`report-${surface.slug}`}>
+      {/* 🔤 שורת-המסננים היא של המעטפת, ולכן הייצוא נשתל לתוכה ב-`createPortal` ולא מורם
+          כ-state. ר' `reportsShellContext.js` לנימוק המלא (לולאת-רינדור על `rows`). */}
+      {shell?.exportSlot ? createPortal(exportBar, shell.exportSlot) : null}
       {/* 📐13① — פירורים **רק** בדפי-הדריל, ורק כשיש יותר מרמה אחת. */}
       {surface.drill && <DrillCrumbs crumbs={crumbs} onNavigate={(next) => onDrill(next)} />}
       {renderTop?.(payload)}
@@ -407,15 +576,10 @@ export default function ReportSurface({
       {/* ת4 — *"בדיוק מה שעל המסך"*: הייצוא מקבל את השורות **אחרי** הבחירה-בגרף, ותווית
           הבחירה נכנסת לשם-הקובץ לצד רמת-הדריל (*"גיול-חובות_2026_61-90.xlsx"*).
           ⚠️ ובחירה שלא הותירה שורות ⇒ הכפתור מנוטרל עם *"אין שורות לייצא"* — הנוסח הנעול
-          של `reportsExport.js`, בלי לגעת בו. */}
-      <ExportBar
-        reportName={surface.name}
-        windowLabel={payload.window?.label ?? windowLabel}
-        drillLabel={[drillLabel, selection?.label].filter(Boolean).join(' ') || null}
-        columns={payload.columns}
-        rows={selectedRows}
-        blockedReason={payload.meta?.export_blocked_reason}
-      />
+          של `reportsExport.js`, בלי לגעת בו.
+          ✏️ **והוא מצויר לתוך שורת-המסננים של המעטפת** (16/09/2026) — שם המוקאפ המאושר
+          מציב אותו, ר' `reportsShellContext.js`. בלי מעטפת הוא נשאר כאן, במקומו הישן. */}
+      {shell?.exportSlot ? null : exportBar}
 
       {/* 📐23 · הכרעה 15-ג — שורת-"אז מה", פעולה קודמת לעובדה.
           🔴 **מעל האריחים, ולא מתחתיהם — נמדד ולא הונח (16/09/2026):** בכל **⁦19⁩ דפי-הדוח**
@@ -432,28 +596,32 @@ export default function ReportSurface({
         </p>
       )}
 
+      {/* ✏️ ⑩א — **בין "אז מה" לאריחים**, בדיוק במקום שהכרטיסים מעגנים בו את רמז-ה-`why`. */}
+      {renderAfterSoWhat?.(payload)}
+
       <Tiles tiles={payload.tiles} onOpenTarget={(target) => onDrill(target)} />
 
       {charts.length > 0 && renderBeforeChart?.(payload)}
-      {charts.map((chart, index) => {
-        const key = chartFilterKey(chart, payload.columns, payload.rows, allowAutoFilter)
-        return (
-          <ChartCard
-            key={chart.title ?? index}
-            chart={chart}
-            // 🚫 **`onSelect` נמסר רק כשיש מפתח** — אחרת הגרף היה מקבל `cursor:pointer`
-            // וכפתורים בטבלת-קורא-המסך על אינטראקציה שאינה קיימת (📐14ב③).
-            onSelect={key ? (datum) => toggleSelection(index, key, chart, datum) : undefined}
-            // 15-ד — הגוון אומר **איפה** נבחר; הצ'יפ אומר **מה**. רק הגרף שהבחירה שייכת לו.
-            selected={selection?.chartIndex === index ? selection.value : undefined}
-          />
-        )
-      })}
+      <SurfaceCharts
+        charts={charts}
+        payload={payload}
+        allowAutoFilter={allowAutoFilter}
+        isDrill={Boolean(surface.drill)}
+        drillSurface={drillSurface}
+        drill={drill}
+        selection={selection}
+        onToggle={toggleSelection}
+        renderChartAside={renderChartAside}
+        renderChartFooter={renderChartFooter}
+      />
 
-      {/* 🔤 *"× נקה בחירה"* — הנוסח של **הכרעה 15-ד**, לא נוסח חדש.
-          📍 **המיקום:** ‏15-ד מציבה אותה בשורת-המסננים (שאינה של הרכיב הזה אלא של המעטפת)
-          ו-`cards-management.md` #7 בשורת-הפאג'ר; כאן היא צמודה לטבלה שהיא מנקה — הקרוב
-          מבין השניים שנמצא בתוך המשטח. **פער-מיקום מדווח, לא הוכרע כאן.** */}
+      {/* 🔤 *"× נקי בחירה"* — ✏️ **הוכרע 16/09/2026:** ‏`spec.md §1.5` נועל **ציווי בנקבה**
+          (וכך גם S-28), והמוקאפ המאושר כותב את המילה הזו בשורה 897. הנוסח *"נקה"* שעמד כאן
+          הועתק מהכרעה 15-ד, ו**כלל-ניסוח כתוב גובר על ציטוט-נוסח** (C2: שינוי-תווית מותר
+          בדיוק כשכלל-ניסוח כתוב יורה עליו).
+          📍 **המיקום:** ‏15-ד מציבה אותה בשורת-המסננים ו-`cards-management.md` #7 בשורת-הפאג'ר;
+          כאן היא צמודה לטבלה שהיא מנקה — הקרוב מבין השניים שנמצא בתוך המשטח.
+          **פער-מיקום מדווח, לא הוכרע כאן.** */}
       {selection && (
         <div className="mb-2 flex items-center gap-2">
           <FilterPill
@@ -461,7 +629,7 @@ export default function ReportSurface({
             onClick={() => setSelectionState({ key: requestKey, selection: null })}
             testId="report-clear-crossfilter"
           >
-            × נקה בחירה
+            × נקי בחירה
           </FilterPill>
           <span className="text-[11.5px] text-slate-500" data-testid="report-crossfilter-label">
             {selection.label}
@@ -475,24 +643,31 @@ export default function ReportSurface({
           שמתחתיו מציגה את `selectedRows`. ⇒ לחיצה על עמודה שהותירה ⁦2⁩ שורות השאירה מעליה
           *"מוצגות ⁦50⁩ מתוך ⁦731⁩ שורות"*. 🔑 **ולמה להסתיר ולא לעדכן את המונה:** ההכרזה
           החיה (📐9) כבר אומרת *"מסונן ל…; ⁦2⁩ שורות"*, ושני מונים שונים לאותה טבלה הם בדיוק
-          הכפילות ש-D-25 נולד כדי למחוק. הצ'יפ *"× נקה בחירה"* מחזיר את השורה. */}
-      {!selection && <RowCapNote rowTotal={payload.meta?.row_total} shown={payload.rows.length} />}
+          הכפילות ש-D-25 נולד כדי למחוק. הצ'יפ *"× נקי בחירה"* מחזיר את השורה. */}
+      {/* ✏️ **והמונה נמדד מול השורות ה*גולמיות*, לפני הטרנספורם של הלשונית (16/09/2026):**
+          🔴 נמדד במ16 — המטען מחזיר `rows=50` ו-`row_total=50` (כלומר **אין תקרה**), אבל
+          שבב-הלקוח *"רק בלי דירוג"* מצמצם ל-⁦17⁩ ⇒ השורה הופיעה ואמרה *"מוצגות ⁦17⁩ מתוך ⁦50⁩
+          שורות"* מעל פאג'ר שאומר *"1–17 מתוך 17"*. **צמצום-לקוח נקרא כתקרת-שרת**, והוא
+          בדיוק ההפך: השרת מסר הכול. ⇒ המונה הוא `rawPayload.rows.length`, וסינון-לקוח
+          פשוט מכבה את השורה. */}
+      {!selection && (
+        <RowCapNote
+          rowTotal={payload.meta?.row_total}
+          shown={rawPayload?.rows?.length ?? payload.rows.length}
+        />
+      )}
       <ReportTable
         columns={payload.columns}
         rows={selectedRows}
         page={page}
         onPage={setPage}
         sort={payload.meta?.sort ?? sortFromColumns(payload.columns)}
-        onDrill={rowDoors ? (drillKey, row) => onDrill(drillKey, row) : undefined}
+        onDrill={rowDoors ? rowDrill : undefined}
         announcement={announcement}
         caption={surface.name}
       />
       {payload.meta?.extra_tables?.map((table) => (
-        <ExtraTable
-          key={table.title}
-          table={table}
-          onDrill={(drillKey, row) => onDrill(drillKey, row)}
-        />
+        <ExtraTable key={table.title} table={table} onDrill={rowDrill} />
       ))}
 
       <Footers definitions={payload.definitions} notes={payload.meta?.notes} />

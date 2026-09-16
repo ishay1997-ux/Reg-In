@@ -14,7 +14,7 @@
 // כל סדרה שנייה ואילך נושאת דפוס, תמיד. 🚫 **הפלטה עצמה לא שונתה** — היא הכרעה מתועדת
 // (כלל-ברזל 8); המדידה מחזקת את החובה לקידוד-משני ואינה מתירה להמציא גוון.
 
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import {
   Bar,
   BarChart,
@@ -34,6 +34,7 @@ import {
   ZAxis,
 } from 'recharts'
 import { formatAxisTick, formatByType } from '@/lib/reportsFormat'
+import { EMPTY_AFTER_FILTER } from './reportsCopy'
 
 // 🎨 **שלושה צבעים, ואין רביעי** (§⑤ · §①): טורקיז לסדרה-עיקרית · אפור-סלייט לתקופה-קודמת/
 // סדרה-משנית · אדום **רק** לערך שחוצה סף מוגדר (כלל-המילוי §④).
@@ -82,13 +83,36 @@ function guardedSelect(onSelect, series) {
  * `accessibilityLayer` מזיז בין נקודות בחצים אך אינו **מפעיל** אותן.
  *
  * ⇒ **הפתרון שנבנה כאן, ואינו המצאה אלא דפוס-דילוג מוכר:** טבלת-קורא-המסך (§⑤ #6) שממילא
- * חייבת להיות שם נושאת `<button>` בכל שורה, והמעטפת שלה `sr-only focus-within:not-sr-only`
- * — כלומר משתמשת-מקלדת שמגיעה אליה **רואה** אותה נפרשת, ולוחצת Enter על כל קטגוריה.
+ * חייבת להיות שם נושאת `<button>` בכל שורה — כלומר משתמשת-מקלדת שמגיעה אליה **רואה** אותה
+ * נפרשת, ולוחצת Enter על כל קטגוריה.
  * 🔑 זה גם מה שהופך את הטבלה מ"נספח לקורא-מסך" ל**נתיב-הפעלה אמיתי**, במקום שני מנגנונים.
+ *
+ * 🔴 **ולמה הפרישה היא `absolute` ולא `focus-within:not-sr-only` — נמדד ע"י סוכן-ה-E2E
+ * 16/09/2026, וזו בדיוק המלכודת של "משטח צף שנסגר ב-blur" (`e2e/CLAUDE.md §3`):**
+ * ‏`not-sr-only` מחזיר את הטבלה ל**זרימת-המסמך**, ולכן פרישתה **דוחפת למטה** את כל מה
+ * שמתחתיה — הצ'יפ *"× נקי בחירה"* ביניהם. לחיצת-עכבר על הצ'יפ מוציאה פוקוס מהטבלה
+ * ב-`mousedown`, הטבלה מתקפלת, הדף **נע כלפי מעלה בין `mousedown` ל-`mouseup`**, ואירוע
+ * ה-`click` **אינו נורה כלל**. ⇒ המצב הפרוש הוא **שכבה מעל** (`absolute`) — הפריסה מתחת
+ * אינה זזה, ולכן אין ריפלואו ואין לחיצה אבודה. ‏`sr-only` עצמו כבר `position:absolute`,
+ * כלומר שני המצבים מחוץ-לזרימה והמעבר ביניהם אינו מזיז דבר.
+ * ⚠️ **ומצב-הפריסה נשמר ב-`state` ולא ב-`focus-within`**: כך `blur` שלא יצא מהטבלה (מעבר
+ * בין כפתורים) אינו מקפל אותה, וסדר-ה-CSS אינו מכריע בין שתי מחלקות שמתנגשות.
  */
 function AccessibleDataTable({ title, xKey, series, data, onSelect, unit }) {
+  const [expanded, setExpanded] = useState(false)
   return (
-    <div className="sr-only focus-within:not-sr-only focus-within:my-2 focus-within:block">
+    <div
+      onFocus={() => setExpanded(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setExpanded(false)
+      }}
+      data-testid="chart-sr-table"
+      className={
+        expanded
+          ? 'absolute inset-x-4 z-10 my-2 block rounded-lg border border-slate-200 bg-white p-2 shadow-md'
+          : 'sr-only'
+      }
+    >
       <table className="w-full border-collapse text-xs">
         <caption className="text-right text-slate-600">{title}</caption>
         <thead>
@@ -274,15 +298,33 @@ const fillFor = (idPrefix, index) =>
 // 🔴 **וזו הצהרה ולא קישוט:** עמודה אחרונה מלאה בגובה 60% מקודמתה נקראת כ**ירידה**, בעוד
 // שהיא פשוט **תקופה חלקית**. המוקאפ המאושר מצהיר זאת שלוש פעמים (צורה · תווית · מקרא),
 // והצורה היא החצי שהקוד אחראי לו. ‏`is_today` מגיע פר-שורה מה-RPC (C8, תוספת 16/09).
-const todayCellProps = (row) =>
+const todayCellProps = (row, seriesIndex = 0) =>
   row.is_today
-    ? { fillOpacity: 0.55, strokeDasharray: '4 2', strokeWidth: 1.5, stroke: seriesColor(0) }
+    ? {
+        fillOpacity: 0.55,
+        strokeDasharray: '4 2',
+        strokeWidth: 1.5,
+        stroke: seriesColor(seriesIndex),
+      }
     : {}
 
-// תאי-הסדרה-הראשונה: כלל-המילוי §④ (אדום יחיד מעל-סף) + הצהרת-📐20 (עמודת-"היום").
-// 🔑 **פונקציה אחת לשני הגופים** (`BarBody` ו-`ComposedBody`) — שני עותקים היו נפרדים ביום
-// שבו אחד מהם יתוקן, וזה בדיוק מה ש-jscpd (3%) קיים כדי לתפוס.
-function barCells({ data, xKey, selected, series, selectable }) {
+/**
+ * תאי-העמודה: כלל-המילוי §④ (אדום יחיד מעל-סף) + הצהרת-📐20 (עמודת-"היום") + עמעום-15-ד.
+ * 🔑 **פונקציה אחת לשני הגופים** (`BarBody` ו-`ComposedBody`) — שני עותקים היו נפרדים ביום
+ * שבו אחד מהם יתוקן, וזה בדיוק מה ש-jscpd (3%) קיים כדי לתפוס.
+ *
+ * ✏️ **ומאז 16/09/2026 — לכל סדרת-עמודות, לא רק לראשונה.** 🔴 **נמדד:** ספטמבר במ2 יצא
+ * חלול-ומקווקו **בשנה אחת מתוך שתיים**, כי `<Cell>` נפלט רק ל-`index === 0` — בעוד
+ * ‏`is_today` הוא דגל **פר-שורה**, כלומר שתי העמודות של אותו חודש יושבות על אותה שורה
+ * מסומנת. אותו פער הפיל גם את **עמעום-הסינון-הצולב** על הסדרה השנייה.
+ * ⚠️ **ומילוי-הבסיס הוא זה של הסדרה עצמה** (`fillFor`) — אחרת הדפוס (hatch) של סדרה 2
+ * היה נעלם ברגע שנוסף לה תא, וההבחנה שהמדידה בכותרת מחייבת הייתה הולכת לאיבוד.
+ * 🚫 **`over_threshold` נשאר על הסדרה הראשונה בלבד, ובמכוון:** הדגל מתאר את **המדד** של
+ * השורה, לא את כל סדרותיה — צביעת עמודת-"אשתקד" באדום כי **השנה** חצתה סף היא קביעה
+ * שהמטען לא עשה (§④: *"אדום יחיד לערך שחוצה סף מוגדר"*).
+ */
+function barCells({ data, xKey, selected, series, selectable, idPrefix, seriesIndex = 0 }) {
+  const baseFill = fillFor(idPrefix, seriesIndex)
   return data.map((row, rowIndex) => {
     // 🔤 **הכרעה 15-ד, מילה-במילה:** *"העמודה הנבחרת טורקיז-600, השאר slate-300"*.
     // 🔴 **וזה לא קישוט — בלעדיו הסינון-הצולב חסר את חצי-המשוב שלו:** הטבלה מתכווצת,
@@ -291,12 +333,13 @@ function barCells({ data, xKey, selected, series, selectable }) {
     // 🚫 הסמן אומר את האמת על התא עצמו — ר' `isEmptyDatum`. ‏`cursor` על `<Cell>` נכתב על
     // צורת-ה-SVG ולכן גובר על ה-`cursor` שנקבע ברמת-ה-`<Bar>`.
     const cursor = selectable ? (isEmptyDatum(row, series) ? 'not-allowed' : 'pointer') : undefined
+    const overThreshold = seriesIndex === 0 && row.over_threshold
     return (
       <Cell
         key={`${row[xKey]}-${rowIndex}`}
-        fill={dimmed ? UNSELECTED : row.over_threshold ? OVER_THRESHOLD : seriesColor(0)}
+        fill={dimmed ? UNSELECTED : overThreshold ? OVER_THRESHOLD : baseFill}
         cursor={cursor}
-        {...todayCellProps(row)}
+        {...todayCellProps(row, seriesIndex)}
       />
     )
   })
@@ -369,8 +412,17 @@ function seriesNode({
       onClick={select ? (_, barIndex) => select(data[barIndex], barIndex) : undefined}
     >
       {/* כלל-המילוי §④: **אדום יחיד** לערך שחוצה סף מוגדר; שאר העמודות אינן משנות גוון.
-          ‏`over_threshold` מגיע פר-שורה מה-RPC — הסף מוכרע בשרת, לא נגזר במסך. */}
-      {index === 0 && barCells({ data, xKey, selected, series, selectable: Boolean(onSelect) })}
+          ‏`over_threshold` מגיע פר-שורה מה-RPC — הסף מוכרע בשרת, לא נגזר במסך.
+          ✏️ **ולכל סדרת-עמודות, לא רק לראשונה** (16/09/2026) — ר' `barCells`. */}
+      {barCells({
+        data,
+        xKey,
+        selected,
+        series,
+        selectable: Boolean(onSelect),
+        idPrefix,
+        seriesIndex: index,
+      })}
     </Bar>
   )
 }
@@ -453,11 +505,27 @@ function ScatterBody({ chart, onSelect }) {
     <ScatterChart accessibilityLayer margin={CHART_MARGIN}>
       {commonGrid()}
       {/* §5.2ב: `type="number"` מפורש — ברירת-המחדל של Recharts היא `category`, וזו
-          הטעות הנפוצה שמייצרת ציר שגוי בפיזור. */}
+          הטעות הנפוצה שמייצרת ציר שגוי בפיזור.
+          🔴 **ו-`domain` נמסר לשני הצירים, לא ליורד בלבד — נמדד 16/09/2026 וזה היה פגם:**
+          במ6 המטען מצהיר `domain: [0, 630]` ו-`refLines[0].to = {x:630, y:630}`, בעוד
+          מקסימום-ה-x בדאטה הוא ⁦600⁩. ציר-x שנגזר מהדאטה בלבד מסתיים ב-⁦600⁩, הקצה של
+          קו-השוויון נופל **מחוץ** לתחום, ו-Recharts **משליך את הקטע כולו** — כלומר
+          האלכסון שהרמז, מקרא-הצורות והכרטיס כולם מדברים עליו פשוט לא צויר.
+          ⚠️ **ובפיזור זה נכון מהותית ולא רק טכנית:** שני הצירים מודדים את **אותו מדד**
+          (צפי מול בפועל), ו-1:1 על שני סולמות שונים אינו קו של ⁦45°⁩. */}
+      {/* ✏️ **`chart.x_domain` — חריג מוצהר ל-📐5, הכרעה 16/09/2026 19:4X:** ציר-מאפס קיים
+          כדי שלא לנפח **סכומים, מונים וכסף**; ציר של **שיעור** הוא סיפור אחר. נמדד במ16:
+          תעריפים שעתיים בטווח ⁦41⁩–⁦49⁩ ₪ נמתחו על ציר ⁦1⁩–⁦49⁩, וכל הנקודות נדחסו לקצה אחד —
+          כלומר ציר שאינו משקר ופשוט **אינו קריא**. ⇒ ה-RPC רשאי להצהיר `x_domain`, והוא
+          **בלבד** — לא נגזר בלקוח. 🔑 בלעדיו ההתנהגות זהה לקודמתה: אותו `domain` של ציר-Y
+          (וזה מה שמחזיר את האלכסון של מ6 למסך), ובהיעדרו `[0, 'auto']`.
+          ⚠️ **וקווי-הייחוס אינם משתנים** — הם נחתכים לצירים, כך שאלכסון 1:1 שהוצא מהתחום
+          פשוט אינו מצויר, בדיוק כמו קודם. */}
       <XAxis
         dataKey={xKey}
         type="number"
         name={series[0]?.label}
+        domain={valueDomain(chart.x_domain ?? domain)}
         {...valueAxisProps(series[0]?.format ?? unit)}
       />
       <YAxis
@@ -768,6 +836,42 @@ function ShapeLegend({ chart }) {
 }
 
 /**
+ * ‏**מקרא לקווי-ייחוס אלכסוניים** — ✏️ נוסף 16/09/2026.
+ *
+ * 🔴 **נמדד בדפדפן, וזו מגבלת-ספרייה ולא בחירה:** ‏`ReferenceLine` עם `segment` מצייר את
+ * הקו (‏`<line x1=64 y1=226 x2=950 y2=8>`, אומת על מ6 אחרי תיקון תחום-הציר) אבל **אינו
+ * מרנדר את ה-`<Label>` שלו כלל** — אפס צמתי-`text` בתוך `.recharts-reference-line`. זו
+ * אותה משפחה בדיוק של הממצא הקודם *(`label={{…}}` אינו מרנדר דבר)*, והפעם גם צורת-הילד
+ * אינה עוזרת. ⚠️ **וקווי `x`/`y` ממשיכים לקבל תווית בתוך הגרף** — הם נמדדו עובדים, ולכן
+ * המקרא הזה חל **על האלכסון בלבד** ואינו מכפיל תווית שכבר מצוירת.
+ *
+ * 🔑 **והטקסט אינו מומצא כאן:** הוא `refLines[].label` של המטען, מילה-במילה
+ * *(מ6: "ההערכה התקיימה בדיוק")* — הועבר למקום שבו הוא **נראה**, ולא נוסח מחדש.
+ */
+function DiagonalLegend({ refLines }) {
+  const diagonals = (refLines ?? []).filter((ref) => ref.axis === 'diagonal' && ref.label)
+  if (diagonals.length === 0) return null
+  return (
+    <ul
+      className="mb-2 flex flex-wrap gap-3 text-[11.5px] text-slate-600"
+      data-testid="chart-refline-legend"
+    >
+      {diagonals.map((ref) => (
+        <li key={ref.label} className="flex items-center gap-1.5">
+          {/* הדגימה מראה **קו מקווקו**, אותו קו שמצויר בגרף — ולא ריבוע צבע. */}
+          <span
+            aria-hidden="true"
+            className="inline-block h-0 w-4"
+            style={{ borderTop: `1px dashed ${AXIS_COLOR}` }}
+          />
+          {ref.label}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+/**
  * ‏`chart` — אובייקט-גרף של C8:
  * `{ type, title, note?, series: [{key,label,format?,kind?,axis?}], data, xKey, domain,
  *    refLines, unit, shape_key?, shape_labels? }`.
@@ -776,19 +880,33 @@ function ShapeLegend({ chart }) {
  * ‏`data[].is_today` ⇒ עמודה חלולה-ומקווקוות (📐20) · `data[].over_threshold` ⇒ אדום (§④).
  * ‏`soWhat` — שורת-📐23, **מחוץ** לעטיפת-ה-LTR ומתחת לגרף.
  * ‏`layout: 'horizontal'` ⇒ **עמודות אופקיות** — ציר-קטגוריה אנכי (ר' `BarAxes`).
+ * ‏`x_domain` ⇒ תחום ציר-ה-X בפיזור כשהשרת מצהיר עליו (שיעור ולא סכום — ר' `ScatterBody`).
  * ‏`onSelect(row, index)` — קרוס-פילטר; מחווט גם לעכבר (Cell/Bar) וגם למקלדת (הטבלה).
  * 🚫 **דאטום שכל סדרותיו אפס אינו נלחץ בשום נתיב** (ר' `isEmptyDatum`): סמן-חסום על התא,
  * ‏`onClick` שאינו מפעיל, וכפתור **מנוטרל** בטבלת-קורא-המסך.
  * ‏`selected` — ערך-ה-`xKey` שנבחר: העמודה שלו נשארת טורקיז והשאר יורדות ל-slate-300 (15-ד).
+ *
+ * ‏`aside` · `footer` — שתי נקודות-הרחקה לבונה-הלשונית (F9/F10, 16/09/2026): ‏`aside` יושב
+ * **לצד** הגרף (אריח-צד כמו *"שוטף — עוד לא באיחור"* של מ9, שהכרטיס מעגן *"בתוך .chart-card"*)
+ * ו-`footer` **מתחתיו** (רמזי-⑩ שהכרטיס מעגן מתחת ל-`.legend`/`.barkey`). ר' `ReportSurface`.
  */
-export default function ChartCard({ chart, soWhat, height = 260, onSelect, selected }) {
+export default function ChartCard({
+  chart,
+  soWhat,
+  height = 260,
+  onSelect,
+  selected,
+  aside,
+  footer,
+}) {
   const idPrefix = useId().replace(/:/g, '')
   if (!chart) return null
   const { title, series = [], data = [], xKey = 'x', unit } = chart
 
   return (
+    // ‏`relative` — עוגן-המיקום של טבלת-קורא-המסך הפרושה (ר' `AccessibleDataTable`).
     <div
-      className="mb-4 rounded-xl border border-slate-200 bg-white p-4"
+      className="relative mb-4 rounded-xl border border-slate-200 bg-white p-4"
       data-testid={`chart-card-${chart.type}`}
     >
       {/* §⑤ #2 — הכותרת העברית נשארת **מחוץ** לעטיפת-ה-LTR, ברמת הכרטיס. */}
@@ -802,35 +920,68 @@ export default function ChartCard({ chart, soWhat, height = 260, onSelect, selec
           {chart.note}
         </p>
       )}
-      <ChartLegend series={series} />
-      <ShapeLegend chart={chart} />
+      {/* 🔴 **גרף שחזר בלי דאטה אומר זאת במילים — נמדד 16/09/2026 וזה היה מסך שקט:**
+          לחיצה אחת על גלולת *"החודש"* במ14 השאירה מסגרת ⁦260⁩px **ריקה לגמרי**, בלי מילה,
+          בלי מקרא ובלי טבלת-קורא-מסך שיש בה שורות. ⇒ 📐10 חל גם על הגרף ולא רק על הדף:
+          כותרת + המשפט הנעול, ו**בלי** מקרא/עטיפת-LTR/טבלה — שלושתם מתארים דאטה שאינה שם.
+          🔤 הנוסח מגיע מ-`reportsCopy.js`, אותו משפט בדיוק שהמעטפת אומרת. */}
+      {data.length === 0 ? (
+        <p className="py-6 text-center text-[12.5px] text-slate-500" data-testid="chart-empty">
+          {EMPTY_AFTER_FILTER}
+        </p>
+      ) : (
+        <>
+          <ChartLegend series={series} />
+          <ShapeLegend chart={chart} />
+          <DiagonalLegend refLines={chart.refLines} />
 
-      {/* §⑤ #1 — `dir="ltr"` על ה-div העוטף ולא על `<BarChart>`: Recharts אינו מכבד `dir`
-          שיורש מהורה (Issues #263/#682/#4214).
-          §⑤ #8 — **גובה מפורש על ההורה**, לא `h-full`/`flex-1`: הורה בלי גובה ⇒ הגרף מקבל
-          `height=0` ולא מצייר כלום, לפעמים רק בדפדפן אחד.
-          §⑤ #6 — `role="figure"` + `aria-label` על מעטפת-הגרף. */}
-      <div
-        dir="ltr"
-        role="figure"
-        aria-label={`${title}, גרף`}
-        style={{ height }}
-        data-testid="chart-figure"
-      >
-        <ResponsiveContainer width="100%" height="100%">
-          <ChartBody chart={chart} idPrefix={idPrefix} onSelect={onSelect} selected={selected} />
-        </ResponsiveContainer>
-      </div>
+          {/* ‏`aside` — אריח-צד שהלשונית שותלת **בתוך** כרטיס-הגרף (F9). ‏`md:flex` כדי
+              שבמסך צר הוא ייפול מתחת לגרף במקום לרסק אותו. */}
+          <div className="md:flex md:items-start md:gap-3">
+            {/* §⑤ #1 — `dir="ltr"` על ה-div העוטף ולא על `<BarChart>`: Recharts אינו מכבד
+                `dir` שיורש מהורה (Issues #263/#682/#4214).
+                §⑤ #8 — **גובה מפורש על ההורה**, לא `h-full`/`flex-1`: הורה בלי גובה ⇒ הגרף
+                מקבל `height=0` ולא מצייר כלום, לפעמים רק בדפדפן אחד.
+                §⑤ #6 — `role="figure"` + `aria-label` על מעטפת-הגרף. */}
+            <div
+              dir="ltr"
+              role="figure"
+              aria-label={`${title}, גרף`}
+              style={{ height }}
+              className="md:min-w-0 md:flex-1"
+              data-testid="chart-figure"
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <ChartBody
+                  chart={chart}
+                  idPrefix={idPrefix}
+                  onSelect={onSelect}
+                  selected={selected}
+                />
+              </ResponsiveContainer>
+            </div>
+            {aside && (
+              <div className="mt-2 md:mt-0 md:w-[210px] md:shrink-0" data-testid="chart-aside">
+                {aside}
+              </div>
+            )}
+          </div>
 
-      {/* §⑤ #6 — אותם נתונים כטבלה לקורא-מסך; וגם נתיב-ההפעלה במקלדת (ר' הערת-הרכיב). */}
-      <AccessibleDataTable
-        title={title}
-        xKey={xKey}
-        series={series}
-        data={data}
-        unit={unit}
-        onSelect={onSelect}
-      />
+          {/* §⑤ #6 — אותם נתונים כטבלה לקורא-מסך; וגם נתיב-ההפעלה במקלדת (ר' הערת-הרכיב). */}
+          <AccessibleDataTable
+            title={title}
+            xKey={xKey}
+            series={series}
+            data={data}
+            unit={unit}
+            onSelect={onSelect}
+          />
+        </>
+      )}
+
+      {/* ‏`footer` — מתחת לגרף ומעל שורת-"אז מה" (F10): שם הכרטיסים מעגנים את רמזי-⑩
+       *"בתוך .chart-card, מתחת ל-.barkey"*. מוצג גם בגרף ריק — הוא מסביר **איך לקרוא**. */}
+      {footer && <div data-testid="chart-footer">{footer}</div>}
 
       {soWhat && (
         // 📐23 · הכרעה 15-ג: שורת-"אז מה" — **בלי מילוי-רקע**, קו-ימני דק בלבד.

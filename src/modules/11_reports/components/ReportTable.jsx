@@ -32,6 +32,10 @@ function alignFor(column) {
 }
 
 function Cell({ column, row }) {
+  // 🔤 **כל עיצוב-התא עובר דרך `formatByType` — כולל `textLtr`** (נוסף 16/09/2026): תא
+  // שערכו טווח-ספרות (`1–30` · `90+`) מרונדר **הפוך** ב-`<td>` של דף RTL, כי המקף הוא תו
+  // נייטרלי בין שני רצפי-ספרות. ⇒ ה-RPC מצהיר `format: 'textLtr'` והבידוד נעשה במקור
+  // אחד — **ולא** בעטיפה ידנית בטרנספורם של לשונית, שדלפה משם אל קובץ-האקסל.
   const text = formatByType(row[column.key], column.format)
   return (
     <td className={cn('border-b border-slate-100 p-2.5 align-middle', alignFor(column))}>

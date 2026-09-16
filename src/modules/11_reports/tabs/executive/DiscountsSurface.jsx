@@ -15,7 +15,7 @@
 import { useMemo } from 'react'
 import FilterPill from '@/components/FilterPill'
 import { isolateLtr } from '@/lib/reportsFormat'
-import { ChartLead, SurfaceLead, TableLead, ExecutiveSurface } from './surfaceKit'
+import { ChartLead, SurfaceHint, SurfaceLead, TableLead, ExecutiveSurface } from './surfaceKit'
 import { withCharts, withLabelAxis, withoutCrossFilter } from './chartShape'
 
 // 🔤 מילה-במילה מהמוקאפ המאושר (`02_tab_executive_approved.html:896 · 909`).
@@ -81,7 +81,7 @@ export default function DiscountsSurface(props) {
     () =>
       function TierTop(payload) {
         return (
-          <SurfaceLead hintId="reports.discounts.purpose">
+          <SurfaceLead>
             <TierChips
               payload={payload}
               selected={selected}
@@ -98,6 +98,7 @@ export default function DiscountsSurface(props) {
       {...props}
       transformPayload={transformPayload}
       renderTop={renderTop}
+      renderAfterSoWhat={() => <SurfaceHint hintId="reports.discounts.purpose" />}
       renderBeforeChart={() => <ChartLead hintIds={['reports.discounts.approvalPopulation']} />}
       renderBeforeTable={() => (
         <TableLead rowAction={ROW_ACTION} hintId="reports.discounts.tierSort" />

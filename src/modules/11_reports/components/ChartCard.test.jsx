@@ -7,7 +7,7 @@
 // ירושת-`dir` לטולטיפ. אלה הפריטים המסומנים ב-§⑤ ונבדקו בצעד 3.0ב בדפדפן — ר' הדיווח.
 
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 
 // ⚠️ המוק מחזיר אלמנטים אמיתיים ולא `null`, כדי שנוכל לאמת שהילדים אכן נמסרו לגרף.
 vi.mock('recharts', () => {
@@ -61,6 +61,7 @@ vi.mock('recharts', () => {
 })
 
 import ChartCard from './ChartCard'
+import { EMPTY_AFTER_FILTER } from './reportsCopy'
 
 const BAR_CHART = {
   type: 'bar',
@@ -562,5 +563,221 @@ describe('ChartCard — עמודה שספירתה 0 אינה נלחצת', () => 
     )
     expect(screen.getByTestId('chart-select-0')).toBeEnabled()
     expect(screen.getByTestId('chart-select-1')).toBeDisabled()
+  })
+})
+
+// ── 📐10 · גרף שחזר בלי דאטה ────────────────────────────────────────────────
+//
+// 🔴 **נמדד 16/09/2026:** לחיצה אחת על גלולת "החודש" במ14 השאירה מסגרת ⁦260⁩px ריקה לגמרי,
+// בלי מילה — ‏`ChartCard` לא היה בו ולו ענף אחד על אורך-הדאטה.
+
+describe('ChartCard — 📐10: גרף ריק אומר זאת', () => {
+  const EMPTY = { ...BAR_CHART, data: [] }
+
+  it('כותרת + משפט-הריקות, ובלי מקרא/עטיפת-LTR/טבלה', () => {
+    render(<ChartCard chart={EMPTY} />)
+    expect(screen.getByRole('heading', { name: BAR_CHART.title })).toBeInTheDocument()
+    expect(screen.getByTestId('chart-empty')).toHaveTextContent('אין נתונים בתקופה שנבחרה')
+    // 🚫 שלושתם מתארים דאטה שאינה שם.
+    expect(screen.queryByTestId('chart-figure')).toBeNull()
+    expect(screen.queryByTestId('chart-legend')).toBeNull()
+    expect(screen.queryByRole('table', { hidden: true })).toBeNull()
+  })
+
+  it('המשפט הוא אותו נוסח שהמעטפת אומרת, ולא ניסוח שני', () => {
+    render(<ChartCard chart={EMPTY} />)
+    expect(screen.getByTestId('chart-empty').textContent).toBe(EMPTY_AFTER_FILTER)
+  })
+
+  it('גרף עם דאטה אינו מציג אותו', () => {
+    render(<ChartCard chart={BAR_CHART} />)
+    expect(screen.queryByTestId('chart-empty')).toBeNull()
+    expect(screen.getByTestId('chart-figure')).toBeInTheDocument()
+  })
+})
+
+// ── 📐20 · תאים לכל סדרת-עמודות ─────────────────────────────────────────────
+
+describe('ChartCard — תאים נפלטים לכל סדרת-עמודות', () => {
+  const TWO_YEARS = {
+    ...BAR_CHART,
+    data: [
+      { period: 'אוגוסט', revenue: 46400, profit: 23200 },
+      { period: 'ספטמבר', revenue: 30000, profit: 15000, is_today: true },
+    ],
+  }
+
+  // 🔴 הפגם: ספטמבר יצא חלול-ומקווקו בשנה אחת מתוך שתיים, כי `<Cell>` נפלט רק ל-index 0.
+  it('עמודת-"היום" מסומנת בשתי הסדרות, וכל אחת בגוון שלה', () => {
+    render(<ChartCard chart={TWO_YEARS} />)
+    const cells = screen.getAllByTestId('recharts-Cell').map((n) => JSON.parse(n.dataset.props))
+    expect(cells).toHaveLength(4)
+    const dashed = cells.filter((c) => c.strokeDasharray === '4 2')
+    expect(dashed).toHaveLength(2)
+    // הסדרה השנייה מקבלת את **המתאר שלה**, לא את זה של הראשונה.
+    expect(dashed.map((c) => c.stroke)).toEqual(['#009689', '#62748E'])
+  })
+
+  it('העמעום של הסינון-הצולב חל גם על הסדרה השנייה', () => {
+    render(<ChartCard chart={TWO_YEARS} selected="ספטמבר" />)
+    const cells = screen.getAllByTestId('recharts-Cell').map((n) => JSON.parse(n.dataset.props))
+    expect(cells.filter((c) => c.fill === '#CAD5E2')).toHaveLength(2)
+  })
+
+  // 🚫 `over_threshold` הוא דגל על **המדד** של השורה, לא על כל סדרותיה: צביעת "אשתקד"
+  // באדום כי **השנה** חצתה סף היא קביעה שהמטען לא עשה.
+  it('אדום-מעל-סף נשאר על הסדרה הראשונה בלבד', () => {
+    render(<ChartCard chart={BAR_CHART} />)
+    const cells = screen.getAllByTestId('recharts-Cell').map((n) => JSON.parse(n.dataset.props))
+    expect(cells.filter((c) => c.fill === '#E7000B')).toHaveLength(1)
+  })
+})
+
+// ── פיזור: אותו תחום לשני הצירים, ו-x_domain של השרת ───────────────────────
+
+const SCATTER = {
+  type: 'scatter',
+  title: 'צפי מול בפועל',
+  xKey: 'estimated',
+  unit: 'int',
+  domain: [0, 630],
+  series: [
+    { key: 'estimated', label: 'צפי' },
+    { key: 'actual', label: 'בפועל' },
+  ],
+  data: [{ estimated: 100, actual: 120 }],
+  refLines: [{ axis: 'diagonal', label: 'ההערכה התקיימה בדיוק', to: { x: 630, y: 630 } }],
+}
+
+describe('ChartCard — פיזור: תחום הציר', () => {
+  const axes = (name) =>
+    screen.getAllByTestId(`recharts-${name}`).map((n) => JSON.parse(n.dataset.props))
+
+  // 🔴 נמדד: `domain:[0,630]` הוגש ל-Y בלבד, ציר-X נגזר מהדאטה (מקסימום ⁦600⁩), הקצה של
+  // האלכסון נפל מחוץ לתחום ו-Recharts השליך את הקטע — האלכסון פשוט לא צויר.
+  it('בהיעדר x_domain שני הצירים מקבלים את אותו תחום', () => {
+    render(<ChartCard chart={SCATTER} />)
+    expect(axes('XAxis')[0].domain).toEqual([0, 630])
+    expect(axes('YAxis')[0].domain).toEqual([0, 630])
+  })
+
+  it('קו-השוויון נמסר כ-segment עם שני הקצוות, ועם תווית', () => {
+    render(<ChartCard chart={SCATTER} />)
+    const refLine = screen.getByTestId('recharts-ReferenceLine')
+    expect(JSON.parse(refLine.dataset.props).segment).toEqual([
+      { x: 0, y: 0 },
+      { x: 630, y: 630 },
+    ])
+    const label = refLine.querySelector('[data-testid="recharts-Label"]')
+    expect(JSON.parse(label.dataset.props).value).toBe('ההערכה התקיימה בדיוק')
+  })
+
+  // ✏️ חריג-📐5 המוצהר: ציר של **שיעור** (תעריף שעתי ⁦41⁩–⁦49⁩ ₪) אינו חייב להתחיל באפס.
+  it('x_domain של השרת גובר על תחום-ציר-Y, ואינו נוגע ב-Y', () => {
+    render(<ChartCard chart={{ ...SCATTER, x_domain: [40, 50] }} />)
+    expect(axes('XAxis')[0].domain).toEqual([40, 50])
+    expect(axes('YAxis')[0].domain).toEqual([0, 630])
+  })
+})
+
+// ── שתי נקודות-ההרחבה של כרטיס-הגרף ────────────────────────────────────────
+
+describe('ChartCard — aside · footer', () => {
+  it('אריח-הצד יושב בתוך הכרטיס, לצד הגרף', () => {
+    render(<ChartCard chart={BAR_CHART} aside={<span>שוטף</span>} />)
+    const aside = screen.getByTestId('chart-aside')
+    expect(aside).toHaveTextContent('שוטף')
+    // 🔑 **בתוך** הכרטיס — זה בדיוק מה שהכרטיס מעגן ומה שלא היה אפשרי קודם.
+    expect(screen.getByTestId('chart-card-bar').contains(aside)).toBe(true)
+  })
+
+  it('הכיתוב-התחתון יושב מתחת לגרף ומעל שורת-"אז מה"', () => {
+    render(<ChartCard chart={BAR_CHART} footer={<span>איך לקרוא</span>} soWhat="לפעול" />)
+    const footer = screen.getByTestId('chart-footer')
+    const soWhat = screen.getByTestId('chart-so-what')
+    expect(screen.getByTestId('chart-figure').compareDocumentPosition(footer)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    )
+    expect(footer.compareDocumentPosition(soWhat)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  })
+
+  // ⚠️ הכיתוב מסביר **איך לקרוא** — ולכן נשאר גם כשאין מה לקרוא.
+  it('הכיתוב-התחתון מוצג גם בגרף ריק, והאריח לא', () => {
+    render(
+      <ChartCard
+        chart={{ ...BAR_CHART, data: [] }}
+        aside={<span>צד</span>}
+        footer={<span>הסבר</span>}
+      />,
+    )
+    expect(screen.getByTestId('chart-footer')).toBeInTheDocument()
+    expect(screen.queryByTestId('chart-aside')).toBeNull()
+  })
+
+  it('בלי שתיהן אין צמתים ריקים', () => {
+    render(<ChartCard chart={BAR_CHART} />)
+    expect(screen.queryByTestId('chart-aside')).toBeNull()
+    expect(screen.queryByTestId('chart-footer')).toBeNull()
+  })
+})
+
+// ── טבלת-קורא-המסך: פרישה כשכבה, לא בזרימה ────────────────────────────────
+//
+// 🔴 **נמדד ע"י סוכן-ה-E2E:** ‏`not-sr-only` החזיר אותה לזרימה, פרישתה דחפה למטה את הצ'יפ
+// *"× נקי בחירה"*, ולחיצת-עכבר עליו **לא ירתה `click` כלל** — הדף זז בין mousedown ל-mouseup.
+
+describe('ChartCard — טבלת-קורא-המסך נפרשת כשכבה', () => {
+  it('במצב סגור היא sr-only, ובפוקוס היא absolute ולא בזרימה', () => {
+    render(<ChartCard chart={BAR_CHART} onSelect={vi.fn()} />)
+    const table = screen.getByTestId('chart-sr-table')
+    expect(table.className).toBe('sr-only')
+
+    fireEvent.focus(screen.getByTestId('chart-select-0'), { bubbles: true })
+    expect(table.className).toContain('absolute')
+    expect(table.className).not.toContain('sr-only')
+  })
+
+  it('מעבר-פוקוס בתוך הטבלה אינו מקפל אותה', () => {
+    render(<ChartCard chart={BAR_CHART} onSelect={vi.fn()} />)
+    const table = screen.getByTestId('chart-sr-table')
+    const first = screen.getByTestId('chart-select-0')
+    const second = screen.getByTestId('chart-select-1')
+    fireEvent.focus(first)
+    fireEvent.blur(first, { relatedTarget: second })
+    expect(table.className).toContain('absolute')
+  })
+
+  it('יציאה החוצה מקפלת אותה חזרה', () => {
+    render(<ChartCard chart={BAR_CHART} onSelect={vi.fn()} />)
+    const table = screen.getByTestId('chart-sr-table')
+    const first = screen.getByTestId('chart-select-0')
+    fireEvent.focus(first)
+    fireEvent.blur(first, { relatedTarget: document.body })
+    expect(table.className).toBe('sr-only')
+  })
+})
+
+// ── מקרא לקו-הייחוס האלכסוני ───────────────────────────────────────────────
+//
+// 🔴 **נמדד בדפדפן:** ‏`ReferenceLine` עם `segment` מצייר את הקו ו**אינו מרנדר את התווית
+// שלו כלל** (אפס צמתי-`text` ב-`.recharts-reference-line`) — אותה משפחה של הממצא הקודם.
+
+describe('ChartCard — מקרא לאלכסון', () => {
+  it('תווית-האלכסון מוצגת כמקרא, מהמטען ומילה-במילה', () => {
+    render(<ChartCard chart={SCATTER} />)
+    expect(screen.getByTestId('chart-refline-legend')).toHaveTextContent('ההערכה התקיימה בדיוק')
+  })
+
+  // ⚠️ קווי `x`/`y` מקבלים תווית **בתוך** הגרף (נמדד עובד) — מקרא שם היה מכפיל אותה.
+  it('קו-ייחוס אופקי אינו מקבל מקרא — התווית שלו מצוירת בגרף', () => {
+    render(
+      <ChartCard chart={{ ...BAR_CHART, refLines: [{ axis: 'y', value: 50, label: 'יעד' }] }} />,
+    )
+    expect(screen.queryByTestId('chart-refline-legend')).toBeNull()
+  })
+
+  it('אלכסון בלי תווית אינו מייצר מקרא ריק', () => {
+    render(<ChartCard chart={{ ...SCATTER, refLines: [{ axis: 'diagonal' }] }} />)
+    expect(screen.queryByTestId('chart-refline-legend')).toBeNull()
   })
 })

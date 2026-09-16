@@ -21,7 +21,6 @@
 
 import FilterPill from '@/components/FilterPill'
 import { PERIOD_OPTIONS } from '../reportsPeriod'
-import { Button } from '@/components/ui/button'
 
 const LABEL_CLASS = 'text-xs text-slate-500'
 
@@ -57,8 +56,6 @@ export default function FiltersBar({
   customers = [],
   customerId,
   onCustomerChange,
-  crossFilterLabel,
-  onClearCrossFilter,
   exportSlot,
 }) {
   return (
@@ -86,20 +83,10 @@ export default function FiltersBar({
         onCustomerChange={onCustomerChange}
       />
 
-      {/* ✏️ צ'יפ-ניקוי-קרוס-פילטר (הכרעה 15-ד) — **מופיע רק כשיש בחירה בגרף**, ונוקב בה
-          בשמה. צ'יפ קבוע היה רעש; צ'יפ בלי שם-הבחירה היה משאיר את המשתמשת בלי לדעת ממה
-          היא מנקה. */}
-      {crossFilterLabel && (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClearCrossFilter}
-          className="h-auto rounded-full border-slate-200 px-2.5 py-1 text-[12px] text-slate-600"
-          data-testid="reports-clear-cross-filter"
-        >
-          <span aria-hidden="true">×</span> נקי בחירה: {crossFilterLabel}
-        </Button>
-      )}
+      {/* ✏️ **צ'יפ-ניקוי-הקרוס-פילטר נמחק מכאן 16/09/2026 — הוא היה קוד-מת:** אף אתר-קריאה
+          לא מסר `crossFilterLabel`/`onClearCrossFilter` (נמדד), והצ'יפ **החי** יושב
+          ב-`ReportSurface`, צמוד לטבלה שהוא מנקה. שני צ'יפים לאותה פעולה הם בדיוק הכפילות
+          שסבב-הפיוס הזה נולד למחוק — ו**הנוסח הנעול נשאר אחד**: *"× נקי בחירה"*. */}
 
       {/* הייצוא נדחף לקצה השמאלי של השורה, בדיוק כמו בשלד (`margin-right:auto` ב-RTL). */}
       {exportSlot && <div className="mr-auto">{exportSlot}</div>}

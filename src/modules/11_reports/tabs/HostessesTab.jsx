@@ -158,6 +158,17 @@ function weekdayOptions(payload) {
     .filter((option) => option.value >= 0)
 }
 
+// 🔤 נוסח-ההכרזה של בורר-היום. **הצורה מועתקת מ-📐9** (*"מסונן ל…; N שורות"*) ומ-
+// `ReportSurface.announceSelection`, כדי ששתי ההכרזות במודול יישמעו אותו דבר.
+// 🚫 **בלי תווי-בידוד, ובכוונה** — אותו נימוק שכתוב שם: הבידוד הוא תיקון **חזותי**, ויש
+// קוראי-מסך שמכריזים את התו עצמו באזור שאיש אינו רואה.
+function weekdayAnnouncement(payload, selectedDow) {
+  const count = payload.rows.length
+  const rows = count === 0 ? 'אין שורות' : count === 1 ? 'שורה אחת' : `${count} שורות`
+  if (selectedDow === null) return `בחירת היום בוטלה; ${rows}`
+  return `מסונן ליום ${WEEKDAY_NAMES_HE[selectedDow] ?? selectedDow}; ${rows}`
+}
+
 function reliabilityChips(chips, setChip) {
   return [
     {
@@ -229,9 +240,13 @@ export default function HostessesTab({ surface, filters, drill, onDrill, onWindo
             announcement={`מוצגות ${isolateLtr(payload.rows.length)} שורות`}
             testId="reports-chips-reliability"
           />
+          {/* 🔴 בורר-היום **חייב** הכרזה משלו (סבב 3, ממצא 6): הבחירה היא סיבוב-שרת
+              שמחליף את כל ספירות-הטבלה, וללא הטקסט הזה קורא-מסך אינו שומע דבר —
+              המעטפת ממלאת את אזור-הטבלה רק תחת סינון-צולב, שאינו קיים בלשונית הזו. */}
           <ChipRow
             label="יום בשבוע"
             chips={weekdayChips(payload, selectedDow, onDrill)}
+            announcement={weekdayAnnouncement(payload, selectedDow)}
             testId="reports-chips-dow"
           />
         </>

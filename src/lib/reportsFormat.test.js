@@ -246,3 +246,24 @@ describe('formatAxisTick — 📐4 על ציר', () => {
     expect(formatAxisTick('ינואר')).toBe('ינואר')
   })
 })
+
+// ✏️ `textLtr` — טקסט שאינו עברית ושסדרו הפנימי חייב להישמר (16/09/2026).
+// 🔴 **הפגם:** תא `format:'text'` שערכו טווח-ספרות (`1–30`) מרונדר **הפוך** ב-`<td>` של דף
+// RTL — המקף הוא תו נייטרלי בין שני רצפי-ספרות, והמסך הציג `30–1`.
+describe('formatByType — textLtr', () => {
+  it('טווח-ספרות מבודד כיחידה אחת', () => {
+    expect(formatByType('1–30', 'textLtr')).toBe(`${LRI}1–30${PDI}`)
+    expect(formatByType('90+', 'textLtr')).toBe(`${LRI}90+${PDI}`)
+  })
+
+  it('חסר ⇒ מקף, כמו כל פורמט אחר', () => {
+    expect(formatByType(null, 'textLtr')).toBe(NO_VALUE)
+    expect(formatByType('', 'textLtr')).toBe(NO_VALUE)
+  })
+
+  // 🚫 `text` רגיל **אינו** מבודד — שם עברי אינו זקוק לכך, ובידוד מיותר עליו הוא רעש.
+  it('text רגיל נשאר חשוף', () => {
+    expect(formatByType('1–30', 'text')).toBe('1–30')
+    expect(formatByType('אלפא סיסטמס', 'text')).toBe('אלפא סיסטמס')
+  })
+})

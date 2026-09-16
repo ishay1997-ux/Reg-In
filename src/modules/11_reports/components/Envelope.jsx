@@ -15,16 +15,10 @@
 import LoadingOrError from '@/components/LoadingOrError'
 import PermissionAwareEmpty from '@/components/PermissionAwareEmpty'
 import { Button } from '@/components/ui/button'
-
-// 🔤 נוסח-הריקות-אחרי-סינון, מהשלד של §⑥ (גלריית-המצבים, מצב 2). ‏`נקי מסננים` הוא תקדים-קוד
-// חי בנקבה (4/4 אתרי-קריאה, `spec.md §1.5`) ואינו מנוסח מחדש.
-// 🚫 **לא מיוצאים** — אין להם צרכן מחוץ לקובץ, ו-knip תופס ייצוא ספקולטיבי בצדק
-// (התקדים המדויק: `isolatedShekels` ב-`src/lib/hostesses.js`). כשלשונית תצטרך את המחרוזת —
-// אז מייצאים, ולא לפני.
-const EMPTY_AFTER_FILTER = 'אין נתונים בתקופה שנבחרה'
-const CLEAR_FILTERS_LABEL = 'נקי מסננים'
-// 🔤 §⑥ מצב 3 — `StatTile` כבר נושא את אותה מחרוזת כברירת-מחדל.
-const EMPTY_ENTIRELY = 'אין נתונים עדיין'
+// ✏️ **שלושת הנוסחים עברו ל-`reportsCopy.js` (16/09/2026)** — ההערה שעמדה כאן אמרה *"לא
+// מיוצאים, אין להם צרכן מחוץ לקובץ"*, ומאז נולד צרכן שני: ‏`ChartCard` של גרף שחזר בלי
+// דאטה. **העברה ולא עותק** — ר' הנימוק המלא שם.
+import { CLEAR_FILTERS_LABEL, EMPTY_AFTER_FILTER, EMPTY_ENTIRELY } from './reportsCopy'
 
 function EmptyAfterFilter({ onClearFilters, testId }) {
   return (

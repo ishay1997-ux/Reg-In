@@ -369,18 +369,33 @@ describe('מ1 — מצבי-המעטפת (📐10)', () => {
 
   // 🔑 שני מצבים שונים, והמסנן הוא מה שמפריד ביניהם: "ריק-לגמרי" אינו מציע לנקות מסננים
   // שלא יעזרו, ו"ריק-אחרי-סינון" כן. מיזוגם היה מציע פעולה חסרת-תועלת.
+  // ✏️ **`population.n = 0` נוסף לשני המצבים 16/09/2026 — וזו ההכרעה, לא ליטוש-בדיקה:**
+  // עד עכשיו "ריק" נמדד כ-`tiles || charts || rows`, וכל שישה-עשר ה-RPC מחזירים אריחים
+  // **תמיד** ⇒ שני המצבים האלה היו **בלתי-נגישים בייצור** ורק המוק כאן הפעיל אותם.
+  // המבחן החדש הוא האוכלוסייה עצמה: אפס שורות **וגם** `n = 0`.
+  const emptyPayload = () => payload({ population: { n: 0, label: 'אוכלוסייה: הכול · n=0' } })
+
   it('ריק בלי מסנן ⇒ "ריק-לגמרי", בלי כפתור-ניקוי', async () => {
-    callReport.mockResolvedValue(payload())
+    callReport.mockResolvedValue(emptyPayload())
     renderPage('/reports?period=all')
     expect(await screen.findByText('אין נתונים עדיין')).toBeInTheDocument()
     expect(screen.queryByTestId('reports-clear-filters')).toBeNull()
   })
 
   it('ריק עם מסנן-לקוח ⇒ "ריק-אחרי-סינון" עם כפתור-ניקוי', async () => {
-    callReport.mockResolvedValue(payload())
+    callReport.mockResolvedValue(emptyPayload())
     renderPage('/reports?customer=42')
     expect(await screen.findByText('אין נתונים בתקופה שנבחרה')).toBeInTheDocument()
     expect(screen.getByTestId('reports-clear-filters')).toBeInTheDocument()
+  })
+
+  // 🔴 **הצד השני של אותה הכרעה, והוא זה שתופס רגרסיה:** דף שאוכלוסייתו גדולה וטבלתו
+  // ריקה (רשימת-חריגים בלי חריגים) **אינו** מסך-ריק — הוא תשובה אמיתית, והאריחים נשארים.
+  it('אוכלוסייה קיימת עם אפס שורות אינה מסך-ריק — הדוח מוצג', async () => {
+    callReport.mockResolvedValue(payload({ population: { n: 241, label: 'אוכלוסייה · n=241' } }))
+    renderPage('/reports?customer=42')
+    expect(await screen.findByTestId('report-population')).toHaveTextContent('n=241')
+    expect(screen.queryByTestId('reports-clear-filters')).toBeNull()
   })
 })
 
@@ -611,5 +626,70 @@ describe('מ1 — מנתב-הדלתות', () => {
     await click(await screen.findByTestId('report-tile-link-red'))
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('מבט-על דיילות')
     expect(callReport.mock.calls.at(-1)[1].drill).toBeNull()
+  })
+})
+
+// ── ✏️ סבב-3: 📐17 · שורת-המסננים · ניסוח ─────────────────────────────────
+
+describe('מ1 — 📐17: הכותרת נוקבת באוכלוסייה', () => {
+  const CUSTOMERS = [
+    { customer_id: 401, company_name: 'אלפא סיסטמס' },
+    { customer_id: 414, company_name: 'בטא הפקות' },
+  ]
+
+  // 🔴 נמדד: עם לקוח מסונן הכותרת אמרה "· כל הלקוחות" בעוד שם-קובץ-הייצוא אמר
+  // "לקוח-נבחר" — שתי הצהרות סותרות על אותו מסך.
+  it('לקוח שנבחר מופיע בשורת-התקופה, ולא "כל הלקוחות"', async () => {
+    listCustomers.mockResolvedValueOnce(CUSTOMERS)
+    renderPage('/reports?customer=414')
+    await waitFor(() => {
+      expect(screen.getByTestId('reports-window-label')).toHaveTextContent('בטא הפקות')
+    })
+    expect(screen.getByTestId('reports-window-label')).not.toHaveTextContent('כל הלקוחות')
+  })
+
+  it('בלי לקוח — "כל הלקוחות", כמו קודם', async () => {
+    listCustomers.mockResolvedValueOnce(CUSTOMERS)
+    renderPage()
+    await screen.findByTestId('reports-filters')
+    expect(screen.getByTestId('reports-window-label')).toHaveTextContent('כל הלקוחות')
+  })
+
+  // ⚠️ הכתובת מחזירה מחרוזת ו-`customer_id` הוא מספר — `===` היה נכשל בשקט.
+  it('מזהה-מחרוזת מהכתובת נפגש עם מזהה-מספר מהרשימה', async () => {
+    listCustomers.mockResolvedValueOnce([{ customer_id: 401, company_name: 'אלפא סיסטמס' }])
+    renderPage('/reports?customer=401')
+    await waitFor(() => {
+      expect(screen.getByTestId('reports-window-label')).toHaveTextContent('אלפא סיסטמס')
+    })
+  })
+})
+
+describe('מ1 — הייצוא יושב בשורת-המסננים', () => {
+  // 🔤 המוקאפ המאושר מציב את הכפתור ושתי שורות-הכיתוב **בתוך** `.global-filters`.
+  it('כפתור-הייצוא מרונדר בתוך שורת-המסננים ולא בתוך הדוח', async () => {
+    renderPage()
+    const button = await screen.findByTestId('reports-export-button')
+    expect(screen.getByTestId('reports-filters').contains(button)).toBe(true)
+  })
+
+  it('שתי שורות-הכיתוב נשארות איתו', async () => {
+    renderPage()
+    expect(await screen.findByTestId('reports-export-file')).toBeInTheDocument()
+  })
+
+  // 🚫 עותק אחד בלבד — לא אחד בשורת-המסננים ועוד אחד בתוך הדוח.
+  it('אין שני כפתורי-ייצוא על המסך', async () => {
+    renderPage()
+    await screen.findByTestId('reports-export-button')
+    expect(screen.getAllByTestId('reports-export-button')).toHaveLength(1)
+  })
+})
+
+describe('מ1 — ציווי בנקבה', () => {
+  // ‏`spec.md §1.5` + S-28 נועלים ציווי בנקבה בכל הממשק.
+  it('משפט "אין דוחות" פונה בנקבה', () => {
+    expect(NO_TABS_SENTENCE).toContain('פני')
+    expect(NO_TABS_SENTENCE).not.toContain('פנה')
   })
 })

@@ -28,6 +28,7 @@ import { useState } from 'react'
 import { supabase } from '@/supabaseClient'
 import { Button } from '@/components/ui/button'
 import { formatIsraelDate, isolateLtr } from '@/lib/reportsFormat'
+import { cn } from '@/lib/utils'
 import { approveFeedbackAiRun } from '../../api'
 
 const FUNCTION_NAME = 'classify-feedback'
@@ -36,7 +37,11 @@ const FUNCTION_NAME = 'classify-feedback'
 const RUN_LABEL = 'הרץ ניתוח'
 const CONTINUE_LABEL = 'המשך'
 const APPROVE_LABEL = 'אשר להצגה'
-const VIEWER_SENTENCE = 'טרם אושרה ריצת-ניתוח — פנה למנכ"ל'
+// 🔤 **`פני` ולא `פנה`** — הכרטיס (מ22 ④) כתב בזכר, ו-`spec.md §1.5` נועל **ציווי בנקבה**
+// על כל הממשק (*"בחרי ×22 · פתחי ×16 · נקי ×4/4 אתרי-קריאה חיים"*). ‏C2 מתיר לשנות תווית
+// **רק** כשהיא שוברת כלל-ניסוח כתוב — וזה בדיוק המקרה. ‏`GENERIC_ERROR` למטה כבר בנקבה,
+// ‏ולכן הצורה הזכרית הייתה גם **סתירה פנימית באותו רכיב**.
+const VIEWER_SENTENCE = 'טרם אושרה ריצת-ניתוח — פני למנכ"ל'
 const BATCH_SUB =
   'הניתוח רץ באצווה, לא בזמן אמת. אחרי שהוא מסיים, את בודקת 20 דוגמאות ומאשרת להצגה — ורק אז הדוח מוצג.'
 // 🔤 נוסח אחד שאינו בכרטיס ואינו במוקאפ — ר' הדיווח: **אין ערוץ-התקדמות חי**, כי ההרצה
@@ -48,6 +53,16 @@ const GENERIC_ERROR = 'הניתוח נכשל. נסי שוב, ואם זה חוז�
 const ALREADY_RUNNING = 'ריצת-ניתוח כבר פועלת.'
 // שני המצבים שבהם ריצה **לא-מאושרת** היא עדיין רלוונטית. `failed` אינו בהם במכוון.
 const LIVE_RUN_STATUSES = new Set(['running', 'partial'])
+
+// 🎨 **שני מראות לפס, מהמוקאפ המאושר** (`05_tab_customers_approved.html:310–316`):
+// ‏`.runbar` הוא **לבן עם מסגרת סלייט**, ו-`.runbar.warn` — ענבר — שמור למצב שבו משהו
+// ממתין לפעולה. הפס היה ענבר בכל חמשת המצבים, כולל המצב המיושב שבו אין מה לעשות
+// (*"מציג את הריצה מ… אושרה ע"י…"*), וזו בדיוק ההגזמה שכלל-המילוי אוסר: צבע שמאבד
+// משמעות כשהוא תמיד דלוק. ⇒ **ענבר רק כשיש פעולה פתוחה** (טרם-סווג · נעצר · נכשל).
+const TONE_CLASS = {
+  warn: 'border-amber-200 bg-amber-50',
+  plain: 'border-slate-200 bg-white',
+}
 
 /**
  * הקריאה לפונקציית-השרת. **מחזירה את הגוף בשני המסלולים** — `2xx` ו-`4xx/5xx` כאחד:
@@ -80,6 +95,7 @@ function localState(local) {
       sub: 'מה שסווג נשמר. "המשך" שולח רק את מה שנותר.',
       action: 'continue',
       actionLabel: CONTINUE_LABEL,
+      tone: 'warn',
     }
   }
   if (local.status === 'done') {
@@ -88,6 +104,7 @@ function localState(local) {
       sub: 'בדקי עשרים דוגמאות לפני האישור — אחרי האישור הן מוצגות בדוח.',
       action: 'approve',
       actionLabel: APPROVE_LABEL,
+      tone: 'plain',
     }
   }
   if (local.status === 'noop') return { text: 'אין הערות חדשות לסיווג.', sub: null, action: null }
@@ -97,6 +114,7 @@ function localState(local) {
     sub: 'אפשר להריץ שוב; ריצה שנכשלה אינה ניתנת להמשכה.',
     action: 'start',
     actionLabel: RUN_LABEL,
+    tone: 'warn',
   }
 }
 
@@ -130,11 +148,12 @@ function serverRunState(active) {
     action: 'continueServer',
     actionLabel: CONTINUE_LABEL,
     runId: active.run_id,
+    tone: 'warn',
   }
 }
 
 function barState({ run, runInProgress, local, pending, notesCount, canEdit }) {
-  if (pending) return { text: 'מסווג…', sub: RUNNING_SUB, action: null }
+  if (pending) return { text: 'מסווג…', sub: RUNNING_SUB, action: null, tone: 'plain' }
   if (local) return localState(local)
   // ר' ההערה למעלה: הענף הוא על `status`, ולא על עצם קיום `run_in_progress`.
   if (runInProgress && LIVE_RUN_STATUSES.has(runInProgress.status)) {
@@ -142,14 +161,20 @@ function barState({ run, runInProgress, local, pending, notesCount, canEdit }) {
   }
   if (run?.approved_at) {
     const day = isolateLtr(formatIsraelDate(String(run.approved_at).slice(0, 10)))
-    return { text: `מציג את הריצה מ-${day}, אושרה ע"י ${run.approved_by}`, sub: null, action: null }
+    return {
+      text: `מציג את הריצה מ-${day}, אושרה ע"י ${run.approved_by}`,
+      sub: null,
+      action: null,
+      tone: 'plain',
+    }
   }
-  if (!canEdit) return { text: VIEWER_SENTENCE, sub: null, action: null }
+  if (!canEdit) return { text: VIEWER_SENTENCE, sub: null, action: null, tone: 'warn' }
   return {
     text: `${isolateLtr(String(notesCount ?? 0))} הערות טרם סווגו`,
     sub: BATCH_SUB,
     action: 'start',
     actionLabel: RUN_LABEL,
+    tone: 'warn',
   }
 }
 
@@ -214,7 +239,11 @@ export default function AnalysisRunBar({ payload, canEdit, onChanged }) {
 
   return (
     <section
-      className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5"
+      className={cn(
+        'mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3.5',
+        TONE_CLASS[state.tone] ?? TONE_CLASS.plain,
+      )}
+      data-tone={state.tone ?? 'plain'}
       aria-label="מצב ריצת-הניתוח"
       data-testid="m25-run-bar"
     >

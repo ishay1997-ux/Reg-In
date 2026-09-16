@@ -15,7 +15,7 @@
 //    בטבלת-הכיסוי, שם זה נרשם כסטייה מוצהרת). הקרוס-פילטר האוטומטי היה מזהה כאן `estimated`
 //    ופותח אינטראקציה שהכרטיס שולל — ולכן היא נסגרת במפורש ולא נשארת לברירת-מחדל.
 
-import { ChartLead, SurfaceLead, SurfaceNote, TableLead, ExecutiveSurface } from './surfaceKit'
+import { ChartLead, SurfaceHint, SurfaceNote, TableLead, ExecutiveSurface } from './surfaceKit'
 import { withCharts, withoutCrossFilter } from './chartShape'
 
 // 🔤 מילה-במילה מהמוקאפ המאושר (`02_tab_executive_approved.html:1119`).
@@ -122,16 +122,15 @@ export default function StaffingSurface(props) {
     <ExecutiveSurface
       {...props}
       transformPayload={transformPayload}
-      renderTop={() => <SurfaceLead hintId="reports.staffing.purpose" />}
+      renderAfterSoWhat={() => <SurfaceHint hintId="reports.staffing.purpose" />}
       renderBeforeChart={() => (
-        <ChartLead
-          hintIds={[
-            'reports.staffing.medianRatio',
-            'reports.staffing.planningParam',
-            'reports.staffing.scatterSample',
-          ]}
-        />
+        <ChartLead hintIds={['reports.staffing.medianRatio', 'reports.staffing.planningParam']} />
       )}
+      // §⑩ ד — הרמז מעוגן ל**הערת-הפיזור**, ולכן הוא יושב בתוך כרטיס-הפיזור עצמו
+      // ולא מעל שני הגרפים יחד.
+      renderChartFooter={(payload, index) =>
+        index === 0 ? <SurfaceHint hintId="reports.staffing.scatterSample" /> : null
+      }
       renderBeforeTable={() => (
         <>
           {/* ⑩ ג — שורת-ההיסטוגרמה יושבת מתחת לגרף השני, כלומר מיד לפני הטבלה. */}

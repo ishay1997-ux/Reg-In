@@ -3,32 +3,21 @@
 // 🔑 **מה מותר כאן ומה אסור** (`ReportSurface` · חוזה נקודות-ההרחבה): הפונקציות מקבלות
 // מטען בצורת C8 ומחזירות **אותה צורה** — לעולם לא מוחקות מפתח ולעולם לא ממציאות מספר.
 // כל מה שהן עושות הוא **מיפוי-תצוגה שהשרת אינו יכול לעשות**: תווית עברית לאנום, איחוד
-// שם-וטלפון לתא אחד, ומיסוך לפי הרשאת-מודול אחר.
+// שם-וטלפון לתא אחד, ו**מיסוך לפי הרשאת-מודול אחר** — שהיא הסיבה שהקובץ הזה קיים בכלל.
 //
 // 🚫 **ואין כאן חישוב עסקי אחד.** כל מספר מגיע גמור מה-RPC (כלל-ברזל 14 · §2ב C5);
 // הקובץ הזה אינו מחשב חציון, אחוז או סכום, וגם לא "מתקן" מספר שנראה מוזר.
 //
-// ✂️ **מה שהיה כאן ונמחק בסבב-היישור של 16/09 11:1X, כי המקור פתר אותו:**
-// ‏① הזרקת `columns[].sorted` — מיגרציה **G2-6** מצהירה אותה בארבעת המשטחים (נמדד על
-//    המטען החי: `revenue_12m/descending` · `feedback_score/ascending` · `revenue_12m` ·
-//    `red_flag/descending`). **והמחיקה אינה ניקיון:** ההזרקה שלי כיוונה את מ22 ל-
-//    `final_event_date`, והשרת ממיין בפועל לפי `red_flag` — הצהרה שלי הייתה **משקרת**.
-// ‏② מילוי `meta.export_blocked_reason` — **G2-2** מחזירה אותו בארבעתן.
-// ‏③ סגירת דלת שיעדה ממוסך — עברה לנתב-הדלתות של המעטפת (`ReportsPage.openDoor`).
-//    ⚠️ **וזו אינה אותה התנהגות, ומדווח:** הכרטיס ⑧19.2 ממליץ (א) *"הנתון נשאר, הדלת
-//    נעלמת"*, והמעטפת מממשת *"הדלת נשארת ואינה עושה דבר"*. **הכרעת-ישי פתוחה.**
+// ✂️ **מה שהיה כאן ונמחק, כי המקור פתר אותו** (סבבי-היישור 16/09):
+// ‏① הזרקת `columns[].sorted` — **G2-6** מצהירה אותה · ② מילוי `meta.export_blocked_reason`
+// — **G2-2** מחזירה אותו · ③ סגירת דלת שיעדה ממוסך — עברה לנתב של המעטפת ·
+// ‏④ **תיקון הכרזת-הפורמט של עמודות-התאריך** — **I1** מכריזה `format: "date"` על
+// ‏`last_event` · `next_event` · `final_event_date` בארבעת המשטחים (נמדד על המטען החי
+// ‏16/09 12:0X). הגשר היה חי בדיוק כל עוד היה צריך, ונמחק ברגע שנמדד מיותר.
 
 import { CUSTOMER_TYPE_LABELS } from '@/lib/customers'
 import { MASKED_TEXT } from '@/lib/dashboard'
 import { isolateLtr } from '@/lib/reportsFormat'
-
-// 🔴 **עמודות-התאריך עדיין מוכרזות `text` בארבעת ה-RPC של הלשונית** — נמדד מחדש על
-// המטען החי **אחרי** מיגרציות G2 ו-H2 (‏16/09/2026 11:2X): `last_event` · `next_event` ·
-// `final_event_date`, כולן `format: "text"` ⇒ `formatByType` היה מדפיס `2026-09-15`.
-// ‏H2 יישרה שבעה RPC אחרים ולא את אלה. הפורמט `date` כבר קיים גם ב-`reportsFormat` וגם
-// ב-`reportsExport`, ולכן זו **הכרזה מתוקנת ולא פורמטר שני**. ⚠️ מדווח — התיקון הנכון
-// יושב ב-SQL, וכאן הוא הגשר עד שיגיע.
-const DATE_COLUMNS = new Set(['last_event', 'next_event', 'final_event_date'])
 
 // 🔤 שני נוסחים שהכרטיס נועל, ושניהם **תא ולא ריק** — תא ריק נקרא כתקלת-נתונים.
 // מ20 ⑦: *"ריק ⇒ '— ללא הערה', לא תא ריק"* · מ21 ⑦: *"אין ראשי ⇒ 'אין איש קשר ראשי'"*.
@@ -39,13 +28,6 @@ const NO_CONTACT = 'אין איש קשר ראשי'
 // ולא ל-"לא" — אין תווית חיובית לעובדה טובה (🔒).
 const RED_FLAG_YES = 'כן'
 
-/** הכרזת-פורמט מתוקנת לעמודות-תאריך. 🚫 **אינה נוגעת ב-`sorted`** — ר' הערת-הכותרת. */
-function fixDateColumns(columns) {
-  return (columns ?? []).map((column) =>
-    DATE_COLUMNS.has(column.key) ? { ...column, format: 'date' } : column,
-  )
-}
-
 // רשימה קצרה (מערך-טקסט מהמסד) ⇒ מחרוזת אחת; ריקה ⇒ `null`, שמתורגם ל-`—`.
 function listText(value) {
   if (!Array.isArray(value)) return value ?? null
@@ -53,28 +35,102 @@ function listText(value) {
   return items.length ? items.join(' · ') : null
 }
 
+// ─────────────────────────── 🔒 מיסוך-הכסף ────────────────────────────────────
+//
+// **הרשאת-הסכום היא של מודול 'כספים', לא של 'לקוחות'** — הכרטיס ⑤ של מ21 (שורות 408–409),
+// ו-`meta.notes` של ה-RPC אומר זאת במפורש: *"עמודות ואריחי ה-₪ בדף זה כפופים להרשאת מודול
+// כספים; המיסוך מתבצע בלשונית"*. **השרת מחזיר את הסכומים תמיד** ומאציל את ההסתרה לכאן.
+//
+// 🔴 **ולמה זה חל גם על מ19 — הכרעת-המתזמר 16/09/2026, ושני המקורות שהיא מיישבת:**
+// ‏`cards-customers.md` ⑤ של **מ19** (204–215) מונה הרשאות **בלי** חריג-כסף, ו-⑤ של **מ21**
+// (408–409) נפתח במילים *"זהות למ19"* ו**מוסיף** את חריג-הכסף. שני מקורות חיים, ואותה
+// עמודה בדיוק (`revenue_12m`, *"הכנסת 12 החודשים"*) הופיעה ממוסכת בדף אחד וגלויה בשני
+// **לאותה זהות**. ⇒ **החריג של מ21 חל על מ19 באותה מידה**, והמיסוך אחיד בשני הדפים.
+//
+// 🔴 **והכשל שסבב-הביקורת תפס, והוא הסיבה שהמיסוך אינו נגמר באריחים ובעמודות:**
+// שורת-"אז מה" של מ21 הדפיסה *"…יחד ⁦122,124 ₪⁩ בשנה האחרונה…"* **מעל** אריחים ממוסכים —
+// כלומר הדף הסתיר את הסכום בשלושה מקומות והדליף אותו במקום רביעי. ⇒ **כל טקסט-שרת** שיש
+// בו סכום עובר את אותו מסנן: `so_what` · `definitions` · `meta.notes` · `tiles[].sub` ·
+// `compare.label`.
+//
+// 🔑 **התבנית תופסת *סכום* ולא את הסימן:** ‏`₪` לבדו (*"סכומים ב-₪ שלמים"* בשורת-ההגדרות,
+// *"עמודות ואריחי ה-₪"* ב-`meta.notes`) הוא **משפט-מדיניות** ולא נתון, והוא נשאר על המסך.
+// מה שמוסתר הוא רצף-ספרות שצמוד ל-₪ — בין שהוא עטוף בבידוד-כיווניות ובין שאינו.
+const MONEY_RUN = /⁦[^⁦⁩]*₪[^⁦⁩]*⁩|\d[\d,.]*\s?₪/g
+// 🔤 **אין כאן ניסוח חדש:** ‏`MASKED_TEXT` הוא המחרוזת הנעולה של `src/lib/dashboard.js`,
+// והסוגריים הם **סימון-השמטה** ולא מילים — בתוך משפט זורם הם אומרים "כאן היה נתון".
+const MASKED_AMOUNT = `(${MASKED_TEXT})`
+
+function maskSentence(text) {
+  if (typeof text !== 'string' || !text.includes('₪')) return text
+  return text.replace(MONEY_RUN, MASKED_AMOUNT)
+}
+
+// אריח-כסף נחסם כולו (‏`KpiTile` מסתיר גם `sub` וגם את חצי-ההשוואה); אריח שאינו אריח-כסף
+// אך נושא סכום בשורת-המשנה או בהשוואה — הסכום לבדו מוסתר, והמשפט נשאר.
+function maskTile(tile) {
+  if (tile.format === 'money') return { ...tile, masked: true }
+  const sub = maskSentence(tile.sub)
+  const compare = tile.compare ? { ...tile.compare, label: maskSentence(tile.compare.label) } : null
+  if (sub === tile.sub && compare?.label === tile.compare?.label) return tile
+  return { ...tile, sub, compare }
+}
+
+/**
+ * ‏`fallbackSortKey` — 📐7 מחייב שהטבלה תהיה ממוינת **לפי המדד המוצג**, ועמודת-המיון של
+ * שני הדפים היא `revenue_12m` — שממוסכת. ‏**מ21:** ⑧21.4 (🔵 פתוח) ממליץ ליפול למיון
+ * המשני (*"פי כמה מהקצב"*), וזה מיושם. ‏**מ19:** אין לו מיון משני מוגדר בשום מקור ⇒
+ * ההצהרה `aria-sort` **יורדת** מהעמודה הממוסכת ולא מוזזת למקום שאיש לא הכריע עליו —
+ * טבלה שמצהירה שהיא ממוינת לפי מספר שאינו על המסך גרועה מטבלה שאינה מצהירה דבר.
+ */
+function maskMoney(payload, rows, { fallbackSortKey = null } = {}) {
+  const moneyKeys = new Set(
+    (payload.columns ?? []).filter((column) => column.format === 'money').map((c) => c.key),
+  )
+  const columns = (payload.columns ?? []).map((column) => {
+    if (moneyKeys.has(column.key)) {
+      return { ...column, format: 'text', align: 'start', sorted: undefined }
+    }
+    return column.key === fallbackSortKey ? { ...column, sorted: 'descending' } : column
+  })
+  const ordered = fallbackSortKey
+    ? [...rows].sort((a, b) => (b[fallbackSortKey] ?? 0) - (a[fallbackSortKey] ?? 0))
+    : rows
+  return {
+    ...payload,
+    tiles: payload.tiles.map(maskTile),
+    columns,
+    rows: ordered.map((row) => {
+      const masked = { ...row }
+      for (const key of moneyKeys) masked[key] = MASKED_TEXT
+      return masked
+    }),
+    so_what: maskSentence(payload.so_what),
+    definitions: maskSentence(payload.definitions),
+    meta: { ...payload.meta, notes: (payload.meta?.notes ?? []).map(maskSentence) },
+  }
+}
+
+// ─────────────────────────── ארבעת המשטחים ───────────────────────────────────
+
 /**
  * מ19 · מבט-על לקוחות — עמודת `סוג הלקוח` חוזרת כאנום אנגלי (`private_company`) והמטען
  * מצהיר `label_source: 'CUSTOMER_TYPE_LABELS'`. **התווית היא SSOT של `src/lib/customers.js`**
  * (‏C8: *"A legend showing `private_company` is the failure this line prevents"*).
  * 🔑 המיפוי **אידמפוטנטי** — ערך שכבר בעברית עובר דרך ה-`??` ונשאר.
  */
-function overviewPayload(payload) {
-  return {
-    ...payload,
-    columns: fixDateColumns(payload.columns),
-    rows: payload.rows.map((row) => ({
-      ...row,
-      customer_type: CUSTOMER_TYPE_LABELS[row.customer_type] ?? row.customer_type,
-    })),
-  }
+function overviewPayload(payload, { canSeeMoney }) {
+  const rows = payload.rows.map((row) => ({
+    ...row,
+    customer_type: CUSTOMER_TYPE_LABELS[row.customer_type] ?? row.customer_type,
+  }))
+  return canSeeMoney ? { ...payload, rows } : maskMoney(payload, rows)
 }
 
 /** מ20 · שביעות רצון — מערך-סיבות לתא אחד, והערה ריקה שאינה תא ריק. */
 function satisfactionPayload(payload) {
   return {
     ...payload,
-    columns: fixDateColumns(payload.columns),
     rows: payload.rows.map((row) => ({
       ...row,
       reasons: listText(row.reasons),
@@ -101,47 +157,11 @@ function contactCell(row) {
   return `${name} · ${isolateLtr(String(row.contact_phone).replaceAll('-', NB_HYPHEN))}`
 }
 
-// 🔒 מיסוך-הכסף של מ21 — **הרשאת-הסכום היא של מודול 'כספים', לא 'לקוחות'** (הכרטיס ⑤,
-// ו-`meta.notes` של ה-RPC אומר במפורש *"המיסוך מתבצע בלשונית"*). ‏`MASKED_TEXT` ולא `—`:
-// *"לא זמין בתפקידך"* ו*"אין לי את הנתון"* אינם אותו דבר.
-// 🔴 **ושורת-המשנה היא דליפה חדשה שנפתחה ב-16/09:** מאז ש-`KpiTile` מרנדר `tiles[].sub`,
-// האריח *"נתפסים רק בקצב האישי"* — שאינו אריח-כסף (`format: 'int'`) ולכן אינו ממוסך —
-// נושא בשורת-המשנה שלו *"⁦161,009 ₪⁩ בשנה האחרונה"*. ‏`KpiTile` מסתיר `sub` באריח ממוסך
-// בלבד, ולכן הסכום הזה **היה מוצג למי שאסור לה לראות סכומים**. ⇒ שורת-משנה שיש בה ₪
-// יורדת גם מאריח שאינו ממוסך.
-const SHEKEL = '₪'
-
-function maskTile(tile) {
-  if (tile.format === 'money') return { ...tile, masked: true }
-  if (typeof tile.sub === 'string' && tile.sub.includes(SHEKEL)) return { ...tile, sub: null }
-  return tile
-}
-
-function maskMoney(payload, rows) {
-  const columns = fixDateColumns(payload.columns).map((column) =>
-    column.format === 'money' ? { ...column, format: 'text', align: 'start' } : column,
-  )
-  return {
-    ...payload,
-    tiles: payload.tiles.map(maskTile),
-    // ⑧21.4 (🔵 פתוח) — **המלצת-הכרטיס מיושמת:** המיון הראשוני הוא עמודה שאינה על המסך
-    // שלה, ולכן הטבלה נופלת ל**מיון המשני** (פי-כמה-מהקצב) — אחרת 📐7 היה שקר עבורה.
-    // 🔑 ההצהרה `sorted` מוזזת יחד עם המיון, כי אחרת `aria-sort` היה מצביע על עמודה ממוסכת.
-    columns: columns.map((column) => {
-      if (column.key === 'ratio') return { ...column, sorted: 'descending' }
-      return column.sorted ? { ...column, sorted: undefined } : column
-    }),
-    rows: [...rows]
-      .sort((a, b) => (b.ratio ?? 0) - (a.ratio ?? 0))
-      .map((row) => ({ ...row, revenue_12m: MASKED_TEXT })),
-  }
-}
-
 /** מ21 · לקוחות מתרחקים. */
 function driftingPayload(payload, { canSeeMoney }) {
   const rows = payload.rows.map((row) => ({ ...row, contact_name: contactCell(row) }))
-  if (!canSeeMoney) return maskMoney(payload, rows)
-  return { ...payload, columns: fixDateColumns(payload.columns), rows }
+  if (canSeeMoney) return { ...payload, rows }
+  return maskMoney(payload, rows, { fallbackSortKey: 'ratio' })
 }
 
 /** האם יש ריצת-ניתוח **מאושרת** — השאלה שקובעת את כל דף מ22 (ת2 · 📑#20). */
@@ -153,7 +173,6 @@ export function hasApprovedRun(payload) {
 function notesPayload(payload) {
   return {
     ...payload,
-    columns: fixDateColumns(payload.columns),
     rows: payload.rows.map((row) => ({
       ...row,
       model_topics: listText(row.model_topics),

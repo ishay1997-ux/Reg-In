@@ -40,12 +40,12 @@ const PROJECTS_PASSWORD = process.env.E2E_PROJECTS_PASSWORD
 // `EXPORT_NO_ROWS`/`EXPORT_NO_APPROVED_RUN` (`src/lib/reportsExport.js`) ·
 // כותרת-הכשל ו-"נסי שוב" (`src/components/PermissionAwareEmpty.jsx`).
 const MASKED_TEXT = 'לא זמין בתפקידך'
-const NO_TABS_SENTENCE = 'אין דוחות זמינים בתפקידך — פנה למנכ"ל'
+const NO_TABS_SENTENCE = 'אין דוחות זמינים בתפקידך — פני למנכ"ל'
 const EXPORT_NO_ROWS = 'אין שורות לייצא'
 const EXPORT_NO_APPROVED_RUN = 'אין שורות לייצא — טרם אושרה ריצת-ניתוח'
 const LOAD_ERROR_TITLE = 'לא ניתן לטעון את הנתונים.'
 const RETRY_LABEL = 'נסי שוב'
-const CLEAR_SELECTION_LABEL = '× נקה בחירה'
+const CLEAR_SELECTION_LABEL = '× נקי בחירה'
 
 // אין עוזר-login משותף ב-`e2e/` (‏`e2e/CLAUDE.md`): כל spec מגדיר אותו זהה. מועתק
 // מ-`permissions.spec.js` מילה-במילה, כולל ה-timeout המורחב ונימוקו.

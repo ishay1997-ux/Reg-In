@@ -47,18 +47,19 @@ export function SurfaceNote({ children, testId }) {
 }
 
 /**
- * ראש-המשטח: רמז-המטרה של §⑩ ומה שהמשטח מוסיף (שורת-שבבים).
- * ✏️ **16/09 11:1X — והמיקום כאן נעשה נאמן למוקאפ בלי שנגעתי בו:** השלד המשותף העביר את
- * שורת-"אז מה" **מעל** רצועת-האריחים (‏19/19 דפי-המוקאפים המאושרים), כך ש-*"מתחת לשורת-
- * אז-מה"* של §⑩ הוא שוב המקום שבו הרמז באמת יושב.
+ * רמז בודד של §⑩ בתוך נקודת-הרחבה — כדי שהמשטח יכתוב מפתח ולא JSX.
+ * ✏️ **16/09 19:0X — הרמזים עברו לנקודות שהשלד פתח להם.** עד אז רמז-ה-`purpose` ישב
+ * ב-`renderTop`, כלומר **מעל שורת-האוכלוסייה**, בעוד §⑩ מעגן אותו *"מתחת ל-`.so-what`,
+ * מעל `.tiles`"* — והמדידה במוקאפ (470 < 476 < 482) היא שהכריעה. ‏`renderAfterSoWhat`
+ * נפתח בדיוק לשם כך, ואיתו `renderChartFooter` לשני רמזי-הגרף.
  */
-export function SurfaceLead({ hintId, children }) {
-  return (
-    <div className="mb-2">
-      {children}
-      {hintId && <Hint id={hintId} />}
-    </div>
-  )
+export function SurfaceHint({ hintId }) {
+  return hintId ? <Hint id={hintId} /> : null
+}
+
+/** ראש-המשטח — מה שאינו רמז: שורת-השבבים של מ4. */
+export function SurfaceLead({ children }) {
+  return <div className="mb-2">{children}</div>
 }
 
 /** רמזי-האריחים והגרף — כולם מתחת לרצועת-האריחים ולפני הגרף הראשון. */

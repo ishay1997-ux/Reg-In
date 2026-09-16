@@ -179,3 +179,27 @@ describe('exportReportRows — הקריאה לספרייה', () => {
     expect(writeXlsxFile).not.toHaveBeenCalled()
   })
 })
+
+// ✏️ **תווי-בידוד אינם יוצאים לאקסל** (16/09/2026).
+// 🔴 המסך מבודד טווח-ספרות כדי שלא יתהפך ב-RTL; אקסל אינו מסך, והתווים הבלתי-נראים
+// נדבקים לכל `VLOOKUP` שהרו"ח יעשה על התא — ואינם נראים לעין שתחפש למה זה לא מתאים.
+describe('buildExportSheet — תאי-טקסט יוצאים נקיים מתווי-כיווניות', () => {
+  const sheetFor = (value, format = 'text') =>
+    buildExportSheet({ columns: [{ key: 'v', label: 'ערך', format }], rows: [{ v: value }] })
+
+  it('LRI…PDI נמחקים מערך-טקסט', () => {
+    expect(sheetFor('\u20661–30\u2069')[1][0]).toEqual({ value: '1–30', type: String })
+  })
+
+  it('גם textLtr יוצא נקי', () => {
+    expect(sheetFor('\u206690+\u2069', 'textLtr')[1][0]).toEqual({ value: '90+', type: String })
+  })
+
+  it('כל משפחת תווי-הכיווניות, לא רק שני הבידודים', () => {
+    expect(sheetFor('\u200eא\u200fב\u202aג\u202c')[1][0]).toEqual({ value: 'אבג', type: String })
+  })
+
+  it('טקסט רגיל אינו משתנה', () => {
+    expect(sheetFor('אלפא סיסטמס')[1][0]).toEqual({ value: 'אלפא סיסטמס', type: String })
+  })
+})

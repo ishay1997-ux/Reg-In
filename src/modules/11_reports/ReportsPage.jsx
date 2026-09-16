@@ -22,7 +22,7 @@ import { listCustomers } from '@/modules/02_customers/api'
 import { MASKED_TEXT } from '@/lib/dashboard'
 import { formatIsraelDate, formatWindowLabel } from '@/lib/reportsFormat'
 import { cn } from '@/lib/utils'
-import { ROW_DOOR_KINDS } from './api'
+import { DRILL_INTENT, ROW_DOOR_KINDS } from './api'
 import { REPORT_TABS, canOpenTab, findSurface, findTab } from './reportsCatalog'
 import Envelope from './components/Envelope'
 import FiltersBar from './components/FiltersBar'
@@ -42,8 +42,13 @@ const TAB_COMPONENTS = {
 }
 
 // 🔤 ת8 #5, מילה-במילה: תפקיד בלי אף לשונית מקבל **מסך עם ארבע לשוניות ממוסכות והודעה
-// אחת** — לא מסך ריק ולא הפניה. הנוסח הוא של האפיון ואינו מנוסח מחדש.
-export const NO_TABS_SENTENCE = 'אין דוחות זמינים בתפקידך — פנה למנכ"ל'
+// אחת** — לא מסך ריק ולא הפניה. הנוסח הוא של האפיון ואינו מנוסח כאן.
+// ✏️ **חוץ מהפועל (16/09/2026):** ‏`spec.md §1.5` ו-S-28 נועלים **ציווי בנקבה** בכל הממשק,
+// והאפיון עצמו כתב *"פנה"*. 🔑 **C2 מתיר שינוי-תווית בדיוק כאן** — כשכלל-ניסוח כתוב יורה
+// עליו — ולכן זה תיקון ולא ניסוח-מחדש. ⚠️ **ואדוות-התיעוד מדווחת ולא בוצעה:**
+// `processes-approved.md:616` ו-`cards-customers.md:511,533` נושאים את אותו זכר,
+// וכך גם `tabs/customers/AnalysisRunBar.jsx:39` — קובץ של בונה-הלקוחות.
+export const NO_TABS_SENTENCE = 'אין דוחות זמינים בתפקידך — פני למנכ"ל'
 
 /**
  * 🚪 **מנתב-הדלתות של המעטפת — אחד לכל ארבע הלשוניות** (הכרעה 33 · הכרעה 19).
@@ -159,6 +164,10 @@ export default function ReportsPage() {
   const [reloadTick, setReloadTick] = useState(0)
   // "היום" בשעון-ישראל, כפי שהשרת החזיר אותו (ר' הנימוק אצל `periodRange` למטה).
   const [serverToday, setServerToday] = useState(null)
+  // 🔤 **מקום-הייצוא בשורת-המסננים** — ר' `components/reportsShellContext.js`.
+  // ‏`useState` ולא `useRef`: הצומת נוצר ברינדור הראשון, והמשטח חייב **להתרנדר שוב** כדי
+  // לשתול לתוכו; ‏`ref` לא היה מפעיל רינדור והייצוא לא היה מופיע עד השינוי הבא.
+  const [exportSlotEl, setExportSlotEl] = useState(null)
 
   const openTabs = useMemo(
     () => REPORT_TABS.filter((tab) => canOpenTab(tab, permissions)),
@@ -240,7 +249,15 @@ export default function ReportsPage() {
   const drillParam = searchParams.get('drill')
   const drill = useMemo(() => parseDrill(drillParam), [drillParam])
 
-  const windowLabel = formatWindowLabel({ from, to })
+  // 🔴 **📐17 — שורת-התקופה נוקבת ב*אוכלוסייה*, ולא רק בטווח (נמדד 16/09/2026):**
+  // ‏`formatWindowLabel` מקבל `customerName` מאז שנכתב, ו**אף אתר-קריאה במודול 11 לא מסר
+  // אותו** ⇒ עם לקוח מסונן הכותרת אמרה *"· כל הלקוחות"* בעוד הבורר מציג את הלקוח
+  // ושם-קובץ-הייצוא אומר *"לקוח-נבחר"* — **שתי הצהרות סותרות על אותו מסך**. השם כבר
+  // נמצא בדף (`customers`, נטען לבורר), ולכן זה ארגומנט אחד ולא שליפה.
+  // ⚠️ **והשוואת-המזהה היא מחרוזתית בכוונה:** הכתובת מחזירה מחרוזת ו-`customer_id` הוא
+  // מספר; `===` בין השניים היה נכשל בשקט ומחזיר את המסך ל"כל הלקוחות".
+  const selectedCustomer = customers.find((c) => String(c.customer_id) === String(customerId))
+  const windowLabel = formatWindowLabel({ from, to, customerName: selectedCustomer?.company_name })
 
   function setTab(value) {
     const next = resolveNext(value, activeTab?.key)
@@ -298,10 +315,13 @@ export default function ReportsPage() {
   )
 
   // ⚠️ ממומואיז — אובייקט-ערך חדש בכל רינדור של המעטפת היה מרנדר מחדש **כל** אריח בדף.
-  const shellValue = useMemo(() => ({ canOpenTarget }), [canOpenTarget])
+  const shellValue = useMemo(
+    () => ({ canOpenTarget, exportSlot: exportSlotEl }),
+    [canOpenTarget, exportSlotEl],
+  )
 
   // 🚪 שלושת הענפים — ר' `locateDoor`/`DOOR_PATHS` למעלה.
-  function openDoor(next) {
+  function openDoor(next, row, intent) {
     if (next?.tab && next?.report) {
       const door = locateDoor(next)
       // 🚫 יעד שאינו בקטלוג (משטח נדחה · שם שהשתנה) ⇒ **לא מנווטים ולא כותבים מצב-זבל**;
@@ -320,10 +340,17 @@ export default function ReportsPage() {
       window.scrollTo?.({ top: 0, behavior: 'smooth' })
       return
     }
-    if (next?.id != null && ROW_DOOR_KINDS.includes(next.kind)) {
+    // 🚪 **ענף-הדלת נבדק אחרי סימן-הכוונה, ולא לפניו** (16/09/2026, ר' `DRILL_INTENT`
+    // ב-`api.js`): משטח-דריל שיש לו **רמה נוספת** מוסר את הסימן כארגומנט שלישי, ולכן
+    // `drill_key` שנושא `kind` מרשימת-הדלתות **יורד רמה** במקום לנווט — גם ביום שה-RPC
+    // יוסיף לו `id`, שהיעדרו הוא כל מה שהחזיק עד היום את ההתנהגות הנכונה.
+    // ⚠️ **וברמה האחרונה** אין סימן, והדלת היא הישות עצמה — וזו ההתנהגות הנכונה שם.
+    if (intent !== DRILL_INTENT && next?.id != null && ROW_DOOR_KINDS.includes(next.kind)) {
       navigate(DOOR_PATHS[next.kind](next.id))
       return
     }
+    // 🔑 האובייקט נכתב לכתובת **כפי שהוא** — הסימן חי בקריאה ולא בתוכו, ולכן אין כאן
+    // מחיקה-לפני-כתיבה שאפשר לשכוח, ו-`p_drill` אינו מקבל מפתח שהשרת אינו מכיר.
     writeParams({ drill: next ? JSON.stringify(next) : undefined })
   }
 
@@ -370,6 +397,7 @@ export default function ReportsPage() {
         customers={customers}
         customerId={customerId}
         onCustomerChange={(next) => writeParams({ customer: next })}
+        exportSlot={<div ref={setExportSlotEl} data-testid="reports-export-slot" />}
       />
       {/* 🚫 **אין כאן `<Hint>`, ובכוונה.** ‏§2ב C3 מחייב שכל מפתח-הטמעה של מ11 **מועתק
           מטבלת §⑩ של הכרטיס**, ול-מ1 (המעטפת) אין כרטיס — היא המשטח היחיד בלי קובץ משלו

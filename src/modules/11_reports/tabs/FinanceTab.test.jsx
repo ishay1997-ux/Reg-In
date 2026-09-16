@@ -135,7 +135,7 @@ const overviewPayload = () =>
     ],
     chart: {
       type: 'bar',
-      unit: '₪',
+      unit: 'money',
       xKey: 'month',
       title: 'יתרת-החוב הפתוחה בסוף כל חודש',
       series: [{ key: 'open_amount', label: 'יתרת-חוב פתוחה' }],
@@ -228,8 +228,9 @@ const agingRootPayload = () =>
     ],
     chart: {
       type: 'stackedBar',
-      unit: '₪',
+      unit: 'money',
       xKey: 'bucket',
+      note: 'כל עמודה היא דלי של איחור.',
       title: 'חוב באיחור לפי מדרג-גיול וסוג-לקוח',
       label_source: 'CUSTOMER_TYPE_LABELS',
       series: [
@@ -349,7 +350,7 @@ const equipmentPayload = () =>
     chart: [
       {
         type: 'bar',
-        unit: '₪',
+        unit: 'money',
         xKey: 'item_name',
         title: 'עלות לפי מוצר',
         series: [{ key: 'cost', label: 'עלות מוזמנת' }],
@@ -359,7 +360,7 @@ const equipmentPayload = () =>
       },
       {
         type: 'bar',
-        unit: 'יחידות',
+        unit: 'int',
         xKey: 'item_name',
         title: 'הוזמן מול הגיע',
         series: [
@@ -534,6 +535,13 @@ describe('מ9 · גיול חובות (דוח-דריל)', () => {
     expect(plain(table)).toContain('61–90')
     expect(table.textContent).not.toContain('d90p')
     expect(table.textContent).not.toContain('d61_90')
+    // 🔴 ולא רק מתורגמת — **מבודדת**: בלי LRI…PDI ה-bidi הפך את `1–30` ל-`30–1` ואת
+    // `90+` ל-`+90` בתא, בעוד הגרף (שיושב ב-`dir="ltr"`) הציג אותם נכון. jsdom אינו
+    // מסדר bidi ⇒ מה שנבדק כאן הוא **נוכחות תווי-הבידוד**, והסדר עצמו נמדד בדפדפן.
+    expect(table.textContent).toContain('⁦90+⁩')
+    expect(table.textContent).toContain('⁦61–90⁩')
+    // תווית עברית טהורה אינה מבודדת — אין בה ניטרלי בין ספרות.
+    expect(table.textContent).not.toContain('⁦שוטף⁩')
   })
 
   it('אריח "שוטף — עוד לא באיחור" מצויר לצד הגרף ויורד רמה בלחיצה', async () => {
@@ -634,6 +642,29 @@ describe('חמשת המצבים והייצוא', () => {
     expect(await screen.findByTestId('report-finance-overview-blank')).toBeInTheDocument()
   })
 
+  it('ריק-אחרי-סינון ⇒ מעטפת "empty" עם "נקי מסננים" שקוראת לניקוי', async () => {
+    // ⚠️ **מה הבדיקה הזו מוכיחה ומה לא:** היא מוכיחה שהלשונית מעבירה `isFiltered`
+    // ו-`clearFilters` נכון, ושהמעטפת בוחרת את הענף הנכון. 🚫 **היא אינה מוכיחה שהמצב
+    // נגיש בייצור בלשונית הזו** — המעטפת גוזרת ריקות מ-`tiles/chart/rows`, וארבעת
+    // משטחי-הכספים מחזירים אריחים תמיד. ⇒ המצב ייפתח לייצור רק כשהמעטפת תגזור ריקות
+    // מ-`rows` + `population.n` (תיקון-מעטפת שטרם נחת; נמדד ב-`ReportSurface.jsx` היום).
+    callReport.mockResolvedValue(base({}))
+    render(
+      <MemoryRouter initialEntries={['/reports?tab=finance&report=finance-overview']}>
+        <FinanceTab
+          surface={surfaceBySlug('finance-overview')}
+          filters={{ ...filters, isFiltered: true }}
+          drill={null}
+          onDrill={vi.fn()}
+          onWindow={vi.fn()}
+        />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByTestId('report-finance-overview-empty')).toBeInTheDocument()
+    await click(screen.getByTestId('reports-clear-filters'))
+    expect(clearFilters).toHaveBeenCalledTimes(1)
+  })
+
   it('כשל-רשת ⇒ מצב-תקלה עם "נסי שוב", והלחיצה קוראת שוב לשרת', async () => {
     callReport.mockRejectedValueOnce(new Error('boom')).mockResolvedValue(overviewPayload())
     renderTab({ slug: 'finance-overview' })
@@ -691,13 +722,29 @@ describe('שכבת-ההטמעה (§2ב C3)', () => {
     }
   })
 
-  it('רמה 2 · ארבעת הרמזים של מבט-על מצוירים בעוגנים שלהם', async () => {
+  it('רמה 2 · ארבעת הרמזים של מבט-על יושבים בעוגנים שלהם, ולא רק על הדף', async () => {
     callReport.mockResolvedValue(overviewPayload())
     renderTab({ slug: 'finance-overview' })
     await screen.findByTestId('report-tile-open_debt')
     for (const id of Object.values(FINANCE_SURFACE_SPECS['finance-overview'].hints).flat()) {
       expect(screen.getByTestId(`hint-${id}`)).toBeInTheDocument()
     }
+    // 🔴 **מיקום נמדד ולא מונח.** השם הישן הבטיח "בעוגנים שלהם" בעוד הגוף בדק נוכחות
+    // בלבד — בנייה שערמה את ארבעת הרמזים בתחתית הדף הייתה עוברת אותו.
+    const before = (a, b) =>
+      Boolean(
+        screen.getByTestId(a).compareDocumentPosition(screen.getByTestId(b)) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      )
+    // `whyAndFirst` מעל שורת-האוכלוסייה (renderTop · אדנדום §2).
+    expect(before('hint-reports.overview.whyAndFirst', 'report-population')).toBe(true)
+    // `tileBasis` ו-`debtSeriesBasis` בין האריחים לכרטיס-הגרף.
+    expect(before('report-tiles', 'hint-reports.overview.tileBasis')).toBe(true)
+    expect(before('hint-reports.overview.tileBasis', 'chart-card-bar')).toBe(true)
+    expect(before('hint-reports.overview.debtSeriesBasis', 'chart-card-bar')).toBe(true)
+    // `oldestSort` בין הגרף לטבלה.
+    expect(before('chart-card-bar', 'hint-reports.overview.oldestSort')).toBe(true)
+    expect(before('hint-reports.overview.oldestSort', 'report-table-card')).toBe(true)
   })
 
   it('מבחן-המחיקה · ברמה 0 אין אף רמז, והדף עומד במלואו', async () => {

@@ -63,6 +63,7 @@ function CompareLine({ compare, fallbackFormat }) {
   const format = compare.format ?? fallbackFormat
   const glyph = ARROW[compare.direction]
   const delta = compare.delta === undefined ? null : formatDelta(compare.delta, format)
+  const hasValue = compare.value !== null && compare.value !== undefined
   const valueText =
     typeof compare.value === 'string' ? compare.value : formatByType(compare.value, format)
   return (
@@ -71,15 +72,30 @@ function CompareLine({ compare, fallbackFormat }) {
           פלקס הופך כל ילד ישיר לפריט-פלקס, `.ltr` מאבד את `inline-block`, ו-`gap` נדחף גם
           לאן שאין רווח — נמדד `(19.9%)` שמרונדר `( 19.9% )` ו-`2024:` כ-`2024 :`.
           הריווח מוחזר במפורש ב-`margin` על החץ בלבד. */}
-      <span className="block text-[11px] text-slate-500" data-testid="kpi-compare">
+      {/* 📏 `max-w-[210px]` — אותו רוחב של `SubLine`, ומאותו נימוק: משפט-השוואה ארוך מרחיב
+          את האריח (פלקס שאינו נמתח) ומפרק את שורת-האריחים. נמדד במ19 שארבעת האריחים
+          נשברו ל-2+2 ב-1280px בעוד המוקאפ מצייר שורה אחת. */}
+      <span
+        className="block max-w-[210px] text-[11px] leading-[1.4] text-slate-500"
+        data-testid="kpi-compare"
+      >
         {glyph && (
           // 🚫 `color:inherit` — החץ **אינו צבוע** (📐1). הוא סימן-כיוון, לא שיפוט.
           <span aria-hidden="true" className="ml-1 text-[10px] text-inherit">
             {glyph}
           </span>
         )}
-        {compare.label}: <Ltr>{valueText}</Ltr>
-        {delta && delta !== NO_VALUE && <> ({delta})</>}
+        {compare.label}
+        {/* ✏️ **חצי-השוואה בלי ערך הוא משפט, לא מדד חסר** (נמדד 16/09/2026): שלושה אריחים
+            במ21/מ22 מוסרים `label` שלם עם `value: null`, והמסך הציג *"… לא סכום שצפוי
+            להיאבד: —"* — מקף שנקרא כ"אין לי את הנתון" על משפט שמלכתחילה אינו נושא מספר.
+            ⇒ התווית לבדה, בלי נקודתיים ובלי `—`. */}
+        {hasValue && (
+          <>
+            : <Ltr>{valueText}</Ltr>
+            {delta && delta !== NO_VALUE && <> ({delta})</>}
+          </>
+        )}
       </span>
       {/* ‏`compare.note` — שדה C8 מ-16/09/2026 שלא היה לו **אף קורא** (נמדד: `grep
           compare.note src/` = 0), בעוד ⁦9⁩ מתוך ⁦16⁩ אריחי-ההנהלה נושאים אותו
@@ -149,7 +165,9 @@ export default function KpiTile({ tile, masked = false, onOpenTarget }) {
       onClick={() => onOpenTarget(tile.target)}
       // 🔑 התווית נאמרת במלואה לקורא-המסך: "פתחי" לבדו אינו אומר לאן.
       aria-label={`${tile.label} — פתחי את הדוח`}
-      className="rounded-xl text-right focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+      // 🖱️ `cursor-pointer` מפורש — Tailwind v4 משאיר `<button>` בברירת-המחדל של הדפדפן
+      // (`cursor:default`), בעוד שורה-נלחצת ב-`ReportTable` כן מציגה אצבע. הדלת נראתה כטקסט.
+      className="w-full cursor-pointer rounded-xl text-right focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
       data-testid={`report-tile-link-${tile.key}`}
     >
       {body}
